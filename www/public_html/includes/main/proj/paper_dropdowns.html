@@ -34,7 +34,7 @@
 			<input type="text" name="txtSpecificStockWeight<?Signature?>" value="<? echo ( $$variable{'txtSpecificStockWeight'.$$variable{'Signature'}} ) ?>" />
 			</li>
 			<li><label>Calliper</label>
-				<? echo ( ssi::input( 'type'=>'number', 'name'=>'txtSpecificStockCalliper'.$$variable{'Signature'}, 'value'=>$$variable{'txtSpecificStockCalliper'.$$variable{'Signature'}}, 'onchange'=>'calc(this.form.name);', 'onkeyup'=>"this.value=this.value.replace(/[^\d\-\.]/g, '' );" ); ) ?>
+				<? echo ( ssi::input( type=>'number', name=>'txtSpecificStockCalliper'.$$variable{'Signature'}, value=>$$variable{'txtSpecificStockCalliper'.$$variable{'Signature'}}, 'onchange'=>'calc(this.form.name);', onkeyup=>"this.value=this.value.replace(/[^\d\-\.]/g, '' );" ); ) ?>
 				inches
 			</li>
 <? eval (
@@ -54,32 +54,32 @@
 <? endif ( @{$$variable{'PaperTypes'}} > 1 ) ?>
 			<li id="SpecificStockSize<?Signature?>">
 				<label>Size</label>
-				<? echo ( ssi::input( 'type'=>'number', 'name'=>'txtSpecificStockWidth'.$$variable{'Signature'}, 'value'=>$$variable{'txtSpecificStockWidth'.$$variable{'Signature'}}, 'onkeyup'=>"ddmStockWeight_onchange(this,'$$variable{Signature}');gsm_to_mweight(this.form,'$$variable{Signature}');paper_price_calc(this,'$$variable{Signature}');" ); ) ?>
+				<? echo ( ssi::input( type=>'number', name=>'txtSpecificStockWidth'.$$variable{'Signature'}, value=>$$variable{'txtSpecificStockWidth'.$$variable{'Signature'}}, onkeyup=>"ddmStockWeight_onchange(this,'$$variable{Signature}');gsm_to_mweight(this.form,'$$variable{Signature}');paper_price_calc(this,'$$variable{Signature}');" ); ) ?>
 				<span id="SpecificStockHeight<?Signature?>" <? echo ( 'style="display: none;"' if $$variable{'StockType'.$$variable{'Signature'}} eq 'Roll' ) ?>> x 
-				<? echo ( ssi::input( 'type'=>'number', 'name'=>'txtSpecificStockHeight'.$$variable{'Signature'}, 'value'=>$$variable{'txtSpecificStockHeight'.$$variable{'Signature'}}, 'onkeyup'=>"ddmStockWeight_onchange(this,'$$variable{Signature}');gsm_to_mweight(this.form,'$$variable{Signature}');paper_price_calc(this,'$$variable{Signature}');" ); ) ?>
+				<? echo ( ssi::input( type=>'number', name=>'txtSpecificStockHeight'.$$variable{'Signature'}, value=>$$variable{'txtSpecificStockHeight'.$$variable{'Signature'}}, onkeyup=>"ddmStockWeight_onchange(this,'$$variable{Signature}');gsm_to_mweight(this.form,'$$variable{Signature}');paper_price_calc(this,'$$variable{Signature}');" ); ) ?>
 </span>
 			</li>
 			<li id="MWeight<?Signature?>" <? echo ( 'style="display: none;"' if $$variable{'StockType'.$$variable{'Signature'}} eq 'Roll' ) ?>>
 				<label>MWeight</label>
-				<? echo ( ssi::input( 'type'=>'number', 'name'=>'txtCustomMWeight'.$$variable{'Signature'}, 'value'=>$$variable{'txtCustomMWeight'.$$variable{'Signature'}}, 'onkeyup'=>"mweight_to_gsm(this.form,'$$variable{Signature}');calc(this.form.name);" ); ) ?>
+				<? echo ( ssi::input( type=>'number', name=>'txtCustomMWeight'.$$variable{'Signature'}, value=>$$variable{'txtCustomMWeight'.$$variable{'Signature'}}, onkeyup=>"mweight_to_gsm(this.form,'$$variable{Signature}');calc(this.form.name);" ); ) ?>
 			</li>
 			<li id="BasisSize<?Signature?>" <? echo ( 'style="display: none;"' if $$variable{'StockType'.$$variable{'Signature'}} ne 'Roll' ) ?>>
 				<label>Basis MWeight</label>
-				<? echo ( ssi::input( 'type'=>'number', 'name'=>'basis_mweight'.$$variable{'Signature'}, 'value'=>$$variable{'basis_mweight'.$$variable{'Signature'}}, 'onkeyup'=>"mweight_to_gsm(this.form,'$$variable{Signature}');calc(this.form.name);" ); ) ?><br/>
+				<? echo ( ssi::input( type=>'number', name=>'basis_mweight'.$$variable{'Signature'}, value=>$$variable{'basis_mweight'.$$variable{'Signature'}}, onkeyup=>"mweight_to_gsm(this.form,'$$variable{Signature}');calc(this.form.name);" ); ) ?><br/>
 				<label>Basis Size</label>
-				<? echo ( ssi::input( 'type'=>'number', 'name'=>'basis_width'.$$variable{'Signature'}, 'value'=>$$variable{'basis_width'.$$variable{'Signature'}} ? $$variable{'basis_width'.$$variable{'Signature'}} : 25, 'onkeyup'=>"gsm_to_mweight(this.form,'$$variable{Signature}');calc(this.form.name);" ); ) ?>
+				<? echo ( ssi::input( type=>'number', name=>'basis_width'.$$variable{'Signature'}, value=>$$variable{'basis_width'.$$variable{'Signature'}} ? $$variable{'basis_width'.$$variable{'Signature'}} : 25, onkeyup=>"gsm_to_mweight(this.form,'$$variable{Signature}');calc(this.form.name);" ); ) ?>
 				x
-				<? echo ( ssi::input( 'type'=>'number', 'name'=>'basis_height'.$$variable{'Signature'}, 'value'=>$$variable{'basis_height'.$$variable{'Signature'}} ? $$variable{'basis_height'.$$variable{'Signature'}} : 38, 'onkeyup'=>"gsm_to_mweight(this.form,'$$variable{Signature}');calc(this.form.name);" ); ) ?>
+				<? echo ( ssi::input( type=>'number', name=>'basis_height'.$$variable{'Signature'}, value=>$$variable{'basis_height'.$$variable{'Signature'}} ? $$variable{'basis_height'.$$variable{'Signature'}} : 38, onkeyup=>"gsm_to_mweight(this.form,'$$variable{Signature}');calc(this.form.name);" ); ) ?>
 			</li>
 			<li>
 				<label>Price</label>
-				<? echo ( ssi::input( 'type'=>'number', 'name'=>'CustomStockPrice'.$$variable{'Signature'}, 'value'=>$$variable{'CustomStockPrice'.$$variable{'Signature'}}, 'onkeyup'=>"paper_price_calc(this,'$$variable{Signature}');calc(this.form.name);" ); ) ?>/cwt
+				<? echo ( ssi::input( type=>'number', name=>'CustomStockPrice'.$$variable{'Signature'}, value=>$$variable{'CustomStockPrice'.$$variable{'Signature'}}, onkeyup=>"paper_price_calc(this,'$$variable{Signature}');calc(this.form.name);" ); ) ?>/cwt
 				<span id="PricePerM<?Signature?>" <? echo ( $$variable{'StockType'.$$variable{'Signature'}} eq 'Roll' ? 'style="display:none;"' : '' ) ?>>
-				<? echo ( ssi::input( 'type'=>'number', 'name'=>'StockPricePerM'.$$variable{'Signature'}, 'value'=>$$variable{'StockPricePerM'.$$variable{'Signature'}}, 'onkeyup'=>"paper_price_calc(this,'$$variable{Signature}');calc(this.form.name);" ); ) ?>/M</span><br/>
+				<? echo ( ssi::input( type=>'number', name=>'StockPricePerM'.$$variable{'Signature'}, value=>$$variable{'StockPricePerM'.$$variable{'Signature'}}, onkeyup=>"paper_price_calc(this,'$$variable{Signature}');calc(this.form.name);" ); ) ?>/M</span><br/>
 				<span id="PaperAlert<?Signature?>"></span>
 			</li>
 			<li><label>GSM</label>
-				<? echo ( ssi::input( 'type'=>'number', 'name'=>'txtStockGSM'.$$variable{'Signature'}, 'value'=>$$variable{'txtStockGSM'.$$variable{'Signature'}}, 'onkeyup'=>"gsm_to_mweight(this.form,'$$variable{Signature}');calc(this.form.name);" ); ) ?>/cwt
+				<? echo ( ssi::input( type=>'number', name=>'txtStockGSM'.$$variable{'Signature'}, value=>$$variable{'txtStockGSM'.$$variable{'Signature'}}, onkeyup=>"gsm_to_mweight(this.form,'$$variable{Signature}');calc(this.form.name);" ); ) ?>/cwt
 			</li>
 			<li><label>Double sided?</label>
 				<input id="CustomSheetDoubleSided<?Signature?>Y" name="CustomSheetDoubleSided<?Signature?>" type="radio" value="Y" onclick="calc(this.form.name);" <? echo ( ssi::checked( $$variable{'CustomSheetDoubleSided'.$$variable{'Signature'}} ne 'N' ); ) ?> />

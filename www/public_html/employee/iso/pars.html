@@ -39,7 +39,7 @@ Please select a PAR to view/edit.<br>
 		<p>
 			<label for="par_id">PAR ID #</label>
 			<input type="number" id="par_id" name="par_id" onkeypress="return input_handler( this, event);" />
-			<? echo ( ssi::writeButton( $log, $dbh, 'Go', 'go.gif', 'f1.submit();','','Go' ); ) ?>
+			<? echo ( ssi::button( 'Go', { onclick=>'f1.submit();', href=>'', text=>'Go' } ); ) ?>
 		</p>
 	</fieldset>
 </form>
@@ -65,12 +65,12 @@ Please select a PAR to view/edit.<br>
 		</p>
 		<p class="buttons">
 			<? echo ( join('',
-				ssi::writeButton( $log, $dbh, 'ShowResults', 'showResults.gif', "load_pars(f2);", '', 'Show Results' ),
-				ssi::writeButton( $log, $dbh, 'Download', 'download.gif', "f2.btnFunction.value='Download in CSV Format';f2.submit();", '', 'Download' ),
-				ssi::writeButton( $log, $dbh, 'Add', 'add.gif', '', 'par.html', 'Add New PAR' ),
+				ssi::button( 'ShowResults', { onclick=>"load_pars(f2);", href=>'', text=>'Show Results' } ),
+				ssi::button( 'Download', { onclick=>"f2.btnFunction.value='Download in CSV Format';f2.submit();", href=>'', text=>'Download' } ),
+				ssi::button( 'Add', { onclick=>'', href=>'par.html', text=>'Add New PAR' } ),
 				); ) ?>
 		</p>
 	</fieldset>
 </form>
 <script type="text/javascript">document.f1.par_id.focus();</script>
-<div id="Results"><!--#include virtual="_par_results.html"--></div>
+<div id="Results"><? echo ( include('_par_results.html'); ) ?></div>

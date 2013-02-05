@@ -28,7 +28,7 @@
 	} // end function
 -->
 </script>	 
-<!--#include virtual="/includes/error_reporting.html"-->
+<? echo ( include('/includes/error_reporting.html'); ) ?>
 <div class="Product"><div class="Search">
 	<form id="f1" name="f1" method="post" action="/product/search.html">
 		<fieldset class="filters unprintable"><legend>Select Search Criteria</legend>
@@ -71,7 +71,7 @@
 					); ) ?>
 			</p>
 		</fieldset>
-		<div id="ProductsList"><!--#include virtual="_search.html"--></div>
+		<div id="ProductsList"><? echo ( include('_search.html'); ) ?></div>
 	</form>
 	</div>
 </div>

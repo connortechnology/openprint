@@ -53,7 +53,7 @@
 <? endwhile ( $$variable{'Project'} = shift @{$$variable{'Projects'}} ) ?>
 </table>
 <? endif ( @{$$variable{'Projects'}} = $$variable{'Order'}->projects(); ) ?>
-<!--#include virtual="/main/order/_totals.html"-->
+<? echo ( include('/main/order/_totals.html'); ) ?>
 	<? if ( $$variable{'AdministratorName'} ne '' ) ?>
 	<tr>
 		<td colspan="3" align="left"><b>Service Representative</b> <?AdministratorName?></td>

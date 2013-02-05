@@ -977,7 +977,7 @@ $dbh->do( 'update paper_prices set strunits=lower(strunits)');
 foreach my $Company ( openprint::Company->find() ) {
 	my $Country;
 	if ( $Company->country() ) {
-		$Company->country('Canada') if $Company->country() eq 'CANADAq';
+		$Company->country('Canada') if $Company->country() eq 'CANADA';
 		if ( $Company->country() =~ /\./ ) {
 			$_ = $Company->country();
 			$_ =~ s/\.//g;
@@ -1076,9 +1076,9 @@ foreach my $Company ( openprint::Company->find() ) {
 			if ( ! $Address ) {
 				$Address = new openprint::Location();
 				$_ = $Address->save({
-					address=>$Company->address1() . ( $Company->address2() ? (  ' ' . $Company->address2() ) : () ),
+					address		=>	$Company->address1() . ( $Company->address2() ? (  ' ' . $Company->address2() ) : () ),
 					postalcode	=>	$Company->postalcode(),
-					type=>'place',
+					type		=>	'place',
 					parent_id	=>	$City->id(),
 				});
 					die $_ if $_;

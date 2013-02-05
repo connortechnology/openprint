@@ -16,8 +16,8 @@
 <fieldset><legend>UPS Shipping</legend>
 	<div class="content">
 	<ul>
-	<!--#include virtual="_project_shipping_quantity.html"-->
+	<? echo ( include('_project_shipping_quantity.html'); ) ?>
 	</ul>
 	</div>
-<!--#include virtual="_project_shipping_address.html"-->
+<? echo ( include('_project_shipping_address.html'); ) ?>
 </fieldset>

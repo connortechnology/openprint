@@ -22,7 +22,7 @@
 				</div>
 			</fieldset>
 			<fieldset><legend>Videos</legend>
-				<div id="Videos"><!--#include virtual="_videos.html"--></div>
+				<div id="Videos"><? echo ( include('_videos.html'); ) ?></div>
 			</fieldset>
 		</form>
 <? else ( $$variable{'Album'}->can_view() ) ?>

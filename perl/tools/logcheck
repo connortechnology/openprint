@@ -10,7 +10,6 @@ require configuration;
 use Date::Parse ();
 use Date::Calc ();
 use Socket ();
-require openprint::Blacklist;
 require openprint::Host;
 
 

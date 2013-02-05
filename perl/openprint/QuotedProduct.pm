@@ -2,12 +2,11 @@ use strict;
 package openprint::QuotedProduct;
 our @ISA = qw(openprint::Product);
 
-use openprint ();
 use vars qw( $debug $table $serial %fields %transforms %defaults );
 
 require Math::Round;
 
-$debug = 1;
+$debug = 0;
 
 $table = 'Quoted_Products';
 $serial = 'Quoted_Products_id_seq';

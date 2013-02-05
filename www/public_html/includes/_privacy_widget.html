@@ -77,7 +77,7 @@
 			<script type="text/javascript">
 			new Ajax.Autocompleter('privacy_name','privacy_name_autocomplete', '/includes/_privacy_name.html', { minChars: 2,afterUpdateElement : privacy_set_users, tokens: ',', callback: privacy_add_user_ids } );
 			</script>
-			<div id="privacy_users"><!--#include virtual="/includes/_privacy_users.html"--></div>
+			<div id="privacy_users"><? echo ( include('/includes/_privacy_users.html'); ) ?></div>
 		</div>
 	</div>
 	<div id="onlyyou_div">

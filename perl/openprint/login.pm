@@ -221,6 +221,7 @@ sub logout {
 		next if sets::isin( $k, [ 'Currency_id', '_session_id','Country' ] );
 		delete $session{$k};
 	} # end foreach
+	sql::update( undef, undef, 'orders', [ 'strsessionid=?', $session{_session_id} ], 'strsessionid', undef );
 } # sub logout
 
 sub email_password {

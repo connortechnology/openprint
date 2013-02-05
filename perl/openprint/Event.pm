@@ -10,7 +10,7 @@ package openprint::Event;
 our @ISA = qw( openprint::Object );
 
 use vars qw( $debug $table $serial %fields %find_fields %transforms %defaults );
-$debug = 1;
+$debug = 0;
 $table = 'events';
 $serial = 'events_id_seq';
 
@@ -34,26 +34,26 @@ $serial = 'events_id_seq';
 	url			=>	'url',
 );
 %find_fields = (
-	'attending'=>	'(SELECT user_id FROM event_attendance WHERE event_id=events.id AND attending=true)',
+	'attending'	=>	'(SELECT user_id FROM event_attendance WHERE event_id=events.id AND attending=true)',
 	#'attending'=>	'(SELECT attending FROM event_attendance WHERE event_id=events.id)',
 	'name+info'	=>	q`name || info`,
 );
 %transforms = (
-	id	=>	[ 's/\D//g' ],
-    name		=>	[ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
-    info		=>	[ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
-    url			=>	[ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
+	id		=>	[ 's/\D//g' ],
+    name	=>	[ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
+    info	=>	[ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
+    url		=>	[ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
 );
 %defaults = (
-	'created_on'	=>	q`'NOW()'`,
-	'updated_on'	=>	q`'NOW()'`,
-	'starting_on'	=>	undef,
-	'ending_on'		=>	undef,
-	'location_id'	=>	undef,
-	#'asset_id'		=>	undef,
-	'time_associated'	=> 0,
-	'created_by'		=> q`$openprint::session{'user_id'}`,
-	'deleted'			=> 0,
+	created_on	=>	q`'NOW()'`,
+	updated_on	=>	q`'NOW()'`,
+	starting_on	=>	undef,
+	ending_on	=>	undef,
+	location_id	=>	undef,
+	#'asset_id		=>	undef,
+	time_associated	=> 0,
+	created_by		=> q`$openprint::session{user_id}`,
+	deleted			=> 0,
 );
 
 sub category {
@@ -63,12 +63,12 @@ sub category {
 			my $Category = openprint::Event_Category->find_one('name lc'=>lc $new );
 			if ( ! $Category ) {
 				$Category = new openprint::Event_Category();
-				$Category->save({'name'=>$_[1]})
+				$Category->save({name=>$_[1]})
 			} # end if	
-			$_[0]{'category_id'} = $Category->id();
+			$_[0]{category_id} = $Category->id();
 			return $Category->name();
 		} else {
-			$_[0]{'category_id'} = undef;
+			$_[0]{category_id} = undef;
 		} # end if	
 	} # end if
 	return new openprint::Event_Category( $_[0]{'category_id'} )->name();
@@ -157,6 +157,7 @@ sub can_view {
 	return 1 if $$User{type} eq 'A';
 	return 1 if $_[0]{created_by} == $$User{id};
 	return 0 if openprint::Blocklist::is_blocked( $openprint::session{user_id},$_[0]{created_by});
+	return 0 if $_[0]{deleted};
 	my $Privacy = $_[0]->Privacy();
 	return 1 if ! $$Privacy{id};
 	return $Privacy->can_view($$User{id});
@@ -292,24 +293,23 @@ sub Invitations {
 	return openprint::Event_Invitation->find('event_id'=>$_[0]{'id'});
 } # end sub Invitations
 
+# Should only ever email people once, and maybe only if it's by email only
 sub send_invitations {
-	my ( $self ) = @_;
+	my ( $self, $message ) = @_;
 
 	my %data;
 	$data{Event} = $self;
 	$data{uri} = 'event';
+	$data{message} = $message;
 	$data{User} = new openprint::User($openprint::session{user_id});
-	my $email_template = misc::load_file( $openprint::log, $openprint::config{SkinPath}.'/email_template.html' );
-	my @attachments;
-	$data{'ReplacementText'} = misc::load_file( $openprint::log, $ENV{DOCUMENT_ROOT}.'/email_content/event_invitation_body.html' );
-	$data{'ReplacementText'} = ssi::variable_substitution( \$data{ReplacementText}, \%data );
+	$data{'ReplacementText'} = ssi::include( '/email_content/event_invitation_body.html', \%data );
 
 	my $Email = new openprint::Email();
-	$Email->html_body( ssi::variable_substitution( \$email_template, \%data ) );
-	my @To = openprint::Event_Invitation->find(event_id=>$$self{id}, 'sent_on is null'=>1);
+	$Email->html_body( ssi::include( '/email_template.html', \%data ) );
+	my @To = openprint::Event_Invitation->find(event_id=>$$self{id}, ( $message ? () : ( 'sent_on is null'=>1) ) );
 	my $results = $Email->send(
 		BCC			=>	new openprint::User( $openprint::session{user_id} ),
-		#'TO'			=>	new openprint::User( $openprint::session{user_id} ),
+		#TO			=>	new openprint::User( $openprint::session{user_id} ),
 		TO			=>	[map { $_->User() } @To ],
 		FROM		=>	$self->Created_By(),
 		SUBJECT		=>	'You are invited to an event:'. $$self{name},

@@ -22,7 +22,7 @@
 			</fieldset>
 			<? if ( $$variable{'Album'}->id() ) ?>
 			<fieldset><legend>Videos</legend>
-				<div id="Videos"><!--#include virtual="_videos.html"-->
+				<div id="Videos"><? echo ( include('_videos.html'); ) ?>
 				</div>
 			</fieldset>
 			<fieldset><legend>Upload Option 1</legend>

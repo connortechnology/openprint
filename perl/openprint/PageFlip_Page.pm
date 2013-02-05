@@ -11,7 +11,7 @@ use vars qw( $log $dbh %config );
 *config = \%openprint::config;
 
 use vars qw( $debug $table $serial %fields %defaults %transforms );
-$debug = 1;
+$debug = 0;
 $table = 'pageflip_page';
 $serial = 'pageflip_page_id_seq';
 

@@ -13,7 +13,7 @@ use vars qw( %config %param %variable $log $dbh %session );
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
 
-my $debug = 1;
+my $debug = 0;
 
 require sql;
 require openprint::Currency;
@@ -154,9 +154,9 @@ $openprint::log->debug("Got product.");
 	 'alsonotify',
 	} = $Order->get('company_name','salutation','firstname','lastname','address1','address2','city','state','postalcode','country','phone','fax','email','alsonotify');
 
-	if ( $variable{'companyname'} eq '' ) {
-		my $Company = new openprint::Company($session{'company_id'});
-		@variable{'companyname',
+	if ( $variable{'company_name'} eq '' ) {
+		my $Company = new openprint::Company($session{company_id});
+		@variable{'company_name',
 			'address1',
 			'address2',
 			'city',
@@ -237,7 +237,8 @@ $openprint::log->debug("Initial price for " . $Product->quantity() . ' is : ' . 
 
 		$variable{'error'} .= openprint::order::store_order_info( $openprint::r, $log, $dbh, $session{'_session_id'}, \%variable );
 		if ( $variable{'error'} ) {
-			$variable{'Redirect'} = '/main/order/information.html';
+			$session{error} = $variable{error};
+			$variable{ExternalRedirect} = '/main/order/information.html';
 			return;
 		} # end if
 	} elsif ( $param{'btnFunction'} eq 'Save Service' ) {
@@ -263,7 +264,6 @@ $openprint::log->debug("Initial price for " . $Product->quantity() . ' is : ' . 
 			next if sets::isin( $ServiceType->name(), [ 'CustomerPickUp','Turnaround'] );
 		
 			foreach my $service_id ( @{$$services{$ServiceType->name()}} ) {
-$log->debug("CHecking Shipping service $service_id " . $ServiceType->name() );
 				my $specs = openprint::service::get_specs_ref( $Project, $service_id );
 # do error checks
 				push @errors, 'Please enter the Shipping Company Name.' if ! $$specs{'ToCompanyName'};
@@ -280,7 +280,7 @@ $log->debug("CHecking Shipping service $service_id " . $ServiceType->name() );
 				} # end if
 	
 				if ( openprint::service::status( $Project->id(), $service_id ) eq 'uncalculated' ) {
-					push @errors, 'Unable to calculate shipping:' . $$specs{'alert'}.'.';
+					push @errors, 'Unable to calculate shipping:' . $$specs{'alert'};
 				} # end if
 			} # end foreach service_id
 		} # end foreach ServiceType
@@ -292,8 +292,8 @@ $log->debug("CHecking Shipping service $service_id " . $ServiceType->name() );
 	if ( @errors ) {
 		%param = ();
 		$param{'order_id'} = $order_id;
-		$variable{'error'} .= join('<br/>', @errors );
-		$variable{'Redirect'} = '/main/order/information.html';
+		$session{error} .= join('<br/>', @errors );
+		$variable{ExternalRedirect} = '/main/order/information.html';
 		return;
 	} # end if
 	
@@ -301,7 +301,7 @@ $log->debug("CHecking Shipping service $service_id " . $ServiceType->name() );
 	@variable{'CurrencyName','CurrencySymbol'} = ( $Currency->name(), $Currency->symbol() );
 	$variable{'Currency'} = $Currency;
 	$variable{'Order'} = $Order;
-
+	$Order->subtotal(undef); # Force a reload
 	foreach my $Tax ( $Order->Taxes() ) {
 		$Tax->amount(undef);
 	} # end foreach Tax

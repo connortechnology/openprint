@@ -58,7 +58,7 @@ if ( 0 ) {
 	} # end if
 	$log->debug("Looking in directory ($config{'ProjectFilesPath'}$destdir$path)");
 
-	my %ProjectFiles = map { $_->filename(), $_ } openprint::File->find('company_id'=>$session{'company_id'}, 'filename_like' => $path.'%' );
+	my %ProjectFiles = map { $_->filename(), $_ } openprint::File->find('company_id'=>$session{'company_id'}, 'filename like' => $path.'%' );
 
 	foreach my $file ( sort @filenames ) {
 		# Do not show hidden files 
@@ -75,7 +75,7 @@ if ( 0 ) {
 		} # end if directory or file
 	} # end foreach
 ) ?>
-<!--#include virtual="/includes/error_reporting.html"-->
+<? echo ( include( '/includes/error_reporting.html' ); ) ?>
 <form id="f1" name="f1" action="upload.html" method="post">
 	<table class="List">
 		<thead>
@@ -122,7 +122,7 @@ if ( 0 ) {
 			) ?>
 <? endif ( @{$$variable{'PROJECT_FILES'}} == 0 ) ?>
 	</table>
-<p class="buttons"><? echo ( ssi::writeButton( $log, $dbh, 'Delete','delete.gif',"if ( confirm('Are you sure?') ) {\$('f1').btnFunction.value='Delete';new Ajax.Updater('FileList', '/upload/_files.html', { parameters: \$('f1').serialize() }); };", '', 'Delete' ); ) ?></p>
+<p class="buttons"><? echo ( ssi::button( 'Delete', { onclick=>"if ( confirm('Are you sure?') ) {\$('f1').btnFunction.value='Delete';new Ajax.Updater('FileList', '/upload/_files.html', { parameters: \$('f1').serialize() }); };", text=> 'Delete' } ); ) ?></p>
 	<input type="hidden" name="btnFunction" />
 </form>
 <iframe scrolling="no" marginwidth="0" marginheight="0" frameborder="0" vspace="0" hspace="0" style="width: 0; height: 0; display:none;" id="SendFileFrame" name="SendFileFrame" src=""></iframe>

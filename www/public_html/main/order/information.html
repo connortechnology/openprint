@@ -4,7 +4,7 @@
 </div>
 <script type="text/javascript" src="<? hash_link( /main/order/order.js ) ?>"></script>
 <div class="Order"><div class="Information">
-	<!--#include virtual="/includes/error_reporting.html"-->
+	<? echo ( include('/includes/error_reporting.html'); ) ?>
 <? if ( $$variable{Order}->id() ) ?>
 	<form method="post" id="f1" name="f1" action="/main/order/submit.html">
 		<div class="Header">
@@ -37,7 +37,7 @@
 							<li class="company_id">
 								<label>Company</label>
 								<span id="CompanyDropDown">
-								<!--#include virtual="_company_dropdown.html"-->
+								<? echo ( include('_company_dropdown.html'); ) ?>
 								</span>
 								<? echo ( ssi::button( 'AddFromBelow', { onclick=>'save_company();', text=>'Save Company' } ); ) ?>
 							</li>
@@ -46,10 +46,10 @@
 					</div>
 				</fieldset>
 			</div><!--Information-->
-			<div id="BillingInformation"><!--#include virtual="_billing_information.html"--></div>
+			<div id="BillingInformation"><? echo ( include('_billing_information.html'); ) ?></div>
 <? if ( $config{'PaymentOnOrderInformation'} ) ?>
 			<div id="PaymentOptions">
-			<!--#include virtual="_payment_options.html"-->
+			<? echo ( include('_payment_options.html'); ) ?>
 			</div>
 <? endif ( $config{'PaymentOnOrderInformation'} ) ?>
 			<? eval ( 

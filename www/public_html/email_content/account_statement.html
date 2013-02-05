@@ -25,8 +25,8 @@ Thank you for using <? echo ( new openprint::User( $session{'user_id'} )->Compan
 
 	# Periods must be defined if there are any invoices.
 	@{$$variable{'Taxes'}} = openprint::Tax->find(
-			'period_end_null_or_>='	=> $period_end,
-			'period_start_null_or_<=' => $period_start,
+			'period_start null_or_<=' => $period_start,
+			'period_end null_or_>='	=> $period_end,
 			'order'		=>	'period_start,name',
 	);
 	foreach my $Invoice ( @Invoices ) {

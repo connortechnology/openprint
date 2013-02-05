@@ -5,7 +5,7 @@
 <form id="f1" name="f1" method="post" action="/content/prin/prin_broc.html">
 	<input type="hidden" id="projecttype_id" name="projecttype_id" value="<? echo ( $$variable{'ProjectType'}->id() ) ?>" />
 	<input type="hidden" id="Status" name="Status" value="<?Status?>" />
-	<!--#include virtual="/includes/error_reporting.html"-->
+	<? echo ( include('/includes/error_reporting.html'); ) ?>
 	<div class="InstantPricing">
 		<div id="instant_price_section">
 		   <div class="top_shadow"><div class="shadow_tl"></div><div class="shadow_tr"></div></div>
@@ -14,7 +14,7 @@
 				<div class="Questions">
 					<h3>Instant Pricing</h3>
 
-					<!--#include virtual="_project_name.html"-->
+					<? echo ( include('_project_name.html'); ) ?>
 					<div class="ProjectSpecifications">
 						<h1>Project Specifications</h1>
 						<div class="Envelopes">
@@ -25,7 +25,7 @@
 										<input type="hidden" id="txtFinalHeight" name="txtFinalHeight" value="<?txtFinalHeight?>" />
 							<div class="content">
 								<ul>
-									<!--#include virtual="_paper_dropdowns.html"-->
+									<? echo ( include('_paper_dropdowns.html'); ) ?>
 									<li><label>Colours</label>
 										<select id="Colours" name="Colours" onchange="calc(this.form.name);">
 											<option value="1/0">Black Ink One Side</option>
@@ -43,20 +43,20 @@
 							<fieldset><legend>Production</legend>
 								<div class="content">
 									<ul>
-									<!--#include virtual="_design.html"-->
-									<!--#include virtual="_proofs.html"-->
-									<!--#include virtual="_turnaround.html"-->
-									<!--#include virtual="_quantity.html"-->
-									<!--#include virtual="_press_type.html"-->
+									<? echo ( include('_design.html'); ) ?>
+									<? echo ( include('_proofs.html'); ) ?>
+									<? echo ( include('_turnaround.html'); ) ?>
+									<? echo ( include('_quantity.html'); ) ?>
+									<? echo ( include('_press_type.html'); ) ?>
 									</ul>
 								</div>
 							</fieldset>
 						</div>
-				<!--#include virtual="_ups.html"-->
+				<? echo ( include('_ups.html'); ) ?>
 						<div id="AlertDiv" style="display:none;"></div>
 						<br class="spacer"/>
 					</div><!--ProjectSpecifications-->
-					<!--#include virtual="_prices.html"-->
+					<? echo ( include('_prices.html'); ) ?>
 				</div><!--Questions-->
 			  </div></div>
 		   <div class="bottom_shadow"><div class="shadow_bl"></div><div class="shadow_br"></div></div>
@@ -67,6 +67,6 @@
 	} # end if
 	return '';
 ) ?>
-		<!--#include virtual="_specials.html"-->
+		<? echo ( include('_specials.html'); ) ?>
 	</div><!--InstantPricing-->
 </form>

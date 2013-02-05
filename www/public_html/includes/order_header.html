@@ -2,7 +2,7 @@
 	<div id="OrderInformation">
 	<fieldset><legend>Order Information</legend>
 		<div class="content"><ul>
-			<li><label>Supplier:</label><? echo ( $$variable{Order}->Supplier()->name() ) ?></li>
+			<li><label>Supplier</label><? echo ( $$variable{Order}->Supplier()->name() ) ?></li>
 			<li><label>P.O.</label>&nbsp;<? echo ( $$variable{'Order'}->po() ) ?></li>
 			<li><label>Order ID</label><? echo ( $$variable{'Order'}->id() ) ?></li>
 		<? if ( $$variable{'Order'}->docket() ) ?>

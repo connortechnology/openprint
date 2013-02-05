@@ -20,7 +20,7 @@ function update_taxes( form ) {
   });
 </script>
 <form id="f1" name="f1" action="edit.html?po_id=<? echo ( $$variable{PurchaseOrder}->id() ) ?>" method="post" enctype="multipart/form-data">
-	<!--#include virtual="/includes/error_reporting.html"-->
+	<? echo ( include('/includes/error_reporting.html'); ) ?>
 	<div class="PO">
 		<p class="buttons" id="buttons">
 		<? echo ( 
@@ -37,7 +37,7 @@ function update_taxes( form ) {
 			<h1>PURCHASE ORDER (<? echo ( $$variable{'PurchaseOrder'}->id() ) ?>)</h1>
 		</div>
 		<div class="Information">
-<!--#include virtual="_vendor.html"-->
+<? echo ( include('_vendor.html'); ) ?>
 		<div class="ShipTo">
 		<fieldset><legend>SHIP TO</legend>
 			<ul>
@@ -91,7 +91,7 @@ function update_taxes( form ) {
 			<li><label for="shipto_email">Email</label><input type="email" name="shipto_email" id="shipto_email" value="<? echo ( $$variable{'PurchaseOrder'}->shipto_email() ) ?>" /></li>
 <? if ( $$variable{'PurchaseOrder'}->id() ) ?>
 			<li><label>Also Notify</label>
-				<div id="notification_div"><!--#include virtual="_notifications.html"--></div>
+				<div id="notification_div"><? echo ( include('_notifications.html'); ) ?></div>
 			</li>
 <? endif ( $$variable{'PurchaseOrder'}->id() ) ?>
 				</ul>
@@ -216,7 +216,7 @@ function update_taxes( form ) {
 		</li>
 	</ul>
 </div>
-		<div id="Assets" class="unprintable"><!--#include virtual="_assets.html"--></div>
+		<div id="Assets" class="unprintable"><? echo ( include('_assets.html'); ) ?></div>
 
 		<div class="leftColumn">
 			<ol>

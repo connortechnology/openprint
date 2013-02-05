@@ -1,4 +1,4 @@
-<!--#include virtual="/includes/error_reporting.html"-->
+<? echo ( include('/includes/error_reporting.html'); ) ?>
 <form id="ShiftForm" name="ShiftForm" action="operator_schedule.html" method="post">
 	<input type="hidden" name="shift_id" value="<? echo ( $$variable{'Shift'}->id() ) ?>" />
 	<input type="hidden" name="func" value="save" />

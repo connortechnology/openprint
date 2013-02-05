@@ -30,9 +30,9 @@
 				</ul>
 				<div id="DieCutting-<?SignatureIndex?>" <? echo ( $$variable{'Needed-'.$$variable{'SignatureIndex'}} ne 'Y' ? 'style="display:none;"' : '' ) ?>>
 				<ul>
-				<!--#include virtual="/includes/main/proj/die_cutting.html"-->
-				<!--#include virtual="/includes/main/proj/signature_imposition_with_override.html"-->
-				<!--#include virtual="/includes/main/proj/signature_equipment.html"-->
+				<? echo ( include('/includes/main/proj/die_cutting.html'); ) ?>
+				<? echo ( include('/includes/main/proj/signature_imposition_with_override.html'); ) ?>
+				<? echo ( include('/includes/main/proj/signature_equipment.html'); ) ?>
 				</ul>
 				</div>
 				</fieldset>
@@ -72,9 +72,9 @@
 	return $html;
 ) ?>
 </li>
-			<!--#include virtual="/includes/main/proj/_quantities.html"-->
-			<!--#include virtual="/includes/main/proj/_unit_price.html"-->
-			<!--#include virtual="/includes/main/proj/_service_price.html"-->
+			<? echo ( include('/includes/main/proj/_quantities.html'); ) ?>
+			<? echo ( include('/includes/main/proj/_unit_price.html'); ) ?>
+			<? echo ( include('/includes/main/proj/_service_price.html'); ) ?>
 <? if ( sets::isin( $session{'user_type'}, ['A','E'] ) ) ?>
 <li><label>&nbsp;</label>
 	<? eval ( $$variable{'QTYIndex'} = 1 ) ?>
@@ -91,7 +91,7 @@
 			</ul>
 		</fieldset>
 		<hr/>
-        <!--#include virtual="/includes/main/proj/add_to_project.html"-->
+        <? echo ( include('/includes/main/proj/add_to_project.html'); ) ?>
         <input type="hidden" name="btnFunction" value="Save Service"/>
         <input type="hidden" name="ProjectIndex" value="<?ProjectIndex?>" />
         <input type="hidden" name="ServiceIndex" value="<?ServiceIndex?>" />

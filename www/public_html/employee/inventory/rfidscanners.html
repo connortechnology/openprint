@@ -1,12 +1,12 @@
 <script type="text/javascript" src="/javascripts/barcode.js"></script>
-<!--#include virtual="/includes/error_reporting.html"-->
+<? echo ( include('/includes/error_reporting.html'); ) ?>
 Please select an RFID Scanner to view/edit.<br/>
 <form id="f1" name="f1" method="post" action="rfidscanner_details.html">
 	<fieldset class="filters"><legend>Choose RFID Scanner</legend>
 		<p>
 			<label for="rfidscanner_id">RFID Scanner ID #</label>
 			<input type="text" id="rfidscanner_id" name="rfidscanner_id" size="10" onkeypress="return input_handler( this, event);" onkeyup="this.value=this.value.replace(/\D/g,'');" />
-			<? echo ( ssi::writeButton( $log, $dbh, 'Go', 'go.gif', 'f1.submit();','','Go' ); ) ?>
+			<? echo ( ssi::button( 'Go', { onclick=>'f1.submit();', href=>'', text=>'Go' } ); ) ?>
 		</p>
 	</fieldset>
 </form>
@@ -41,5 +41,5 @@ Please select an RFID Scanner to view/edit.<br/>
 		</p>
 	</fieldset>
 </form>
-<div id="Results"><!--#include virtual="_rfidscanners.html"--></div>
+<div id="Results"><? echo ( include('_rfidscanners.html'); ) ?></div>
 <script type="text/javascript">document.f1.rfidscanner_id.focus();</script>

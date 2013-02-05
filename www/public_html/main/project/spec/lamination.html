@@ -11,7 +11,7 @@
 		<fieldset><legend><?ServiceTypeName?></legend>
 			<ul>
 
-		<!--#include virtual="/includes/main/proj/finished_dimensions.html"-->
+		<? echo ( include('/includes/main/proj/finished_dimensions.html'); ) ?>
 <? if ( openprint::Service->find( name=>'Lamination' ) ) ?>	
 		<li> 
 			<label><? echo ( ssi::writeTip('Laminating'); ) ?> type:</label>
@@ -40,11 +40,11 @@
 		</fieldset>
 		<fieldset><legend>Results</legend>
 			<ul>
-		<!--#include virtual="/includes/main/proj/quantities_equipment_prices.html"-->
+		<? echo ( include('/includes/main/proj/quantities_equipment_prices.html'); ) ?>
 			</ul>
 		</fieldset>
 		<hr/>
-		<!--#include virtual="/includes/main/proj/add_to_project.html"-->
+		<? echo ( include('/includes/main/proj/add_to_project.html'); ) ?>
 		<input type="hidden" name="btnFunction" value="Save Service"/>
 		<input type="hidden" name="ProjectIndex" value="<?ProjectIndex?>"/>
 		<input type="hidden" name="ServiceIndex" value="<?ServiceIndex?>"/>

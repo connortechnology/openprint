@@ -63,7 +63,7 @@ $log->debug("Sig Papers $id");
 
 			$$variable{'stock_index'} = $indexes{$paper_string};
 			$$variable{'Stock'} = $sig_papers{$paper_string};
-			$html .= ssi::include($ENV{'DOCUMENT_ROOT'}.'/main/project/_stock_line.html');
+			$html .= ssi::include('/main/project/_stock_line.html');
 		} # end foreach stock_index
 		$html .= "</ul></fieldset>\n";
 	} # end foreach signature
@@ -88,14 +88,14 @@ $log->debug("Sig Papers $id");
 		$html .= "</li>\n";
 		$stock_id += 1;
 	} # end foreach stock
-	$html .= ssi::include( $ENV{'DOCUMENT_ROOT'}.'/includes/main/proj/_service_price.html' );
+	$html .= ssi::include( '/includes/main/proj/_service_price.html' );
 	$html .= '</ul></fieldset>';
 	return $html;
 ) ?>
 			
 		</fieldset>
 		<hr/>
-		<!--#include virtual="/includes/main/proj/add_to_project.html"-->
+		<? echo ( include('/includes/main/proj/add_to_project.html'); ) ?>
 		<input type="hidden" name="btnFunction" value="Save Service"/>
 		<input type="hidden" name="ProjectIndex" value="<?ProjectIndex?>">
 		<input type="hidden" name="ServiceIndex" value="<?ServiceIndex?>">

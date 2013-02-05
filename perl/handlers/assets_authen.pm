@@ -1,9 +1,9 @@
 use strict;
-package handlers::images;
+package handlers::assets_authen;
 
 use Apache2::Request ();
 use Apache2::RequestRec ();
-use Apache2::Const -compile => qw(REDIRECT HTTP_INTERNAL_SERVER_ERROR OK DECLINED HTTP_NOT_FOUND HTTP_FORBIDDEN);# Offers OK, Error,etc for web server.
+use Apache2::Const -compile => qw(HTTP_UNAUTHORIZED OK HTTP_NOT_FOUND);# Offers OK, Error,etc for web server.
 use Apache2::Log ();
 use Time::HiRes qw{ time gettimeofday tv_interval }; 
 
@@ -24,17 +24,10 @@ use vars qw( $r %session %config $log $dbh );
 use constant DEBUG => 0;
 
 sub cleanup {
-    if ( $r->connection->aborted( ) ) {
-$log->debug("Was aborted");
-    } else {
-#$log->debug("cleanup");
-    } # end if
     if ( $dbh ) {
         $session{lastupdated} = time;
         untie %session;
         $dbh->disconnect();
-	} else {
-$log->error("No dbh in cleanup");
     } # end if
 } # end sub cleanup
 
@@ -61,14 +54,16 @@ sub handler {
 	configuration::init( $r->dir_config() );
 	if ( $dbh ) {
 		# Need session, have to know who we are!
+$log->debug("Session is: $session{_session_id}");
 		openprint::session_init();
+$log->debug("Session is: $session{_session_id} $session{user_id} $session{company_id}");
 		# If the session was created, then we want to tell it when, otherwise
 		# don't update it so that we don't incur another db update
 		# Do it up here cuz if the browser kills the connection, we will die during sending and won't do this line
 		$session{'lastupdated'} = time if ! $session{'lastupdated'};
 
 		# The asset filename form is id_title.extension, path is either assets or thumbnails
-		my ( $path, $id ) = $r->uri() =~ /^\/(.*)\/(\d+)_.+$/;
+		my ( $path, $id, $filename ) = $r->uri() =~ /^\/(.*)\/(\d+)_(.+)$/;
 		$path =~ s/^assets\///;
 		if ( $id ) {
 			my $Asset = new openprint::Asset( $id );
@@ -82,35 +77,12 @@ sub handler {
 						} # end if
 					} # end foreach Album
 					if ( $can_view ) {
-eval {
-						$r->headers_out->set('Last-Modified'=>Date::Format::time2str( '%a, %d %b %Y %H:%M:%S %Z', Date::Parse::str2time( $Asset->updated_on() ) ));
-						if ( $path eq 'thumbnails' ) {
-							$r->sendfile( $Asset->thumbnail_path() );
-						} elsif ( $path eq 'medium' ) {
-							$r->sendfile( $Asset->medium_path() );
-						} elsif ( $path eq 'large' ) {
-							$r->sendfile( $Asset->large_path() );
-						} elsif ( $path eq 'small' ) {
-							$r->sendfile( $Asset->small_path() );
-						} else {
-							$r->sendfile( $Asset->on_disk_path() );
-						} # end if
-};
-$log->error( "Eval error sending image Reason: " . $@ ) if $@;
+						return Apache2::Const::OK;
 					} else {
-$log->error("FORBIDDEN");
-						$return_code = Apache2::Const::HTTP_FORBIDDEN;
+						return Apache2::Const::HTTP_UNAUTHORIZED;
 					} # end if
 				} else {
-					$r->headers_out->set('Last-Modified'=>Date::Format::time2str( '%a, %d %b %Y %H:%M:%S %Z', Date::Parse::str2time( $Asset->updated_on() ) ));
-					if ( $path eq 'thumbnails' ) {
-						$r->sendfile( $Asset->thumbnail_path() );
-					} elsif ( $path eq 'medium' ) {
-						$r->sendfile( $Asset->medium_path() );
-					} else {
-# No album means has to be an article image, or a generic site image.
-						$r->sendfile( $Asset->on_disk_path() );
-					} # end if
+					return Apache2::Const::OK;
 				} # end if
 			} else {
 $log->error("NOT FOUND");

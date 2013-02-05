@@ -1,8 +1,8 @@
 <? eval (
 	@{$$variable{'Bugs'}} = ();
 	foreach my $Bug ( openprint::Bug->find( 
-		ssi::date_filter( '/bugs/history.html?starting_start', 'starting_start' ),
-		ssi::date_filter( '/bugs/history.html?starting_end', 'starting_end' ),
+		ssi::date_filter( '/bugs/history.html?starting_end', 'starting <=' ),
+		ssi::date_filter( '/bugs/history.html?starting_start', 'starting >=' ),
 		( $session{'/bugs/history.html?company_id'} ? ( 'company_id'	=> $session{'/bugs/history.html?company_id'} ) : () ),
 		( $session{'/bugs/history.html?user_id'} ? ( 'user_id'	=> $session{'/bugs/history.html?user_id'} ) : () ),
 		'order'				=> 'starting',

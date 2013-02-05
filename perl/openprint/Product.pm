@@ -9,29 +9,29 @@ require openprint::Log;
 require sql;
 
 use vars qw( $log $dbh $debug $table $serial %fields %defaults %transforms );
-$debug = 1;
+$debug = 0;
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
 $table = 'products';
 $serial = 'products_id_seq';
 
 %fields = (
-	'id'			=>	'id',
-	'name'			=>	'name',
-	'description'	=>	'description',
-	'weight'		=>	'weight',
-	'taxexempt1'	=>	'taxexempt1',
-	'taxexempt2'	=>	'taxexempt2',
-	'sort'			=>	'sort',
-	'category_id'	=>	'category_id',
-	'category'		=>	undef,
-	'project_id'	=>	'project_id',
-	'deleted'		=>	'deleted',
-	'owner_id'		=>	'owner_id',
-	'created_on'	=>	'created_on',
-	'album_id'		=>	'album_id',
-	'manufacturer_id'	=>	'manufacturer_id',
-	'manufacturer'	=>	undef,
+	id				=>	'id',
+	name			=>	'name',
+	description		=>	'description',
+	weight			=>	'weight',
+	taxexempt1		=>	'taxexempt1',
+	taxexempt2		=>	'taxexempt2',
+	sort			=>	'sort',
+	category_id		=>	'category_id',
+	category		=>	undef,
+	project_id		=>	'project_id',
+	deleted			=>	'deleted',
+	owner_id		=>	'owner_id',
+	created_on		=>	'created_on',
+	album_id		=>	'album_id',
+	manufacturer_id	=>	'manufacturer_id',
+	manufacturer	=>	undef,
 );
 
 %transforms = (

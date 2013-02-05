@@ -7,7 +7,7 @@ package openprint::Bitcoin_Address;
 our @ISA = qw(openprint::Object);
 use vars qw( $debug $table $serial %fields %find_fields %defaults %transforms );
 
-$debug = 1;
+$debug = 0;
 $table = 'bitcoin_addresses';
 $serial = 'bitcoin_addresses_id_seq';
 %fields = (
@@ -47,10 +47,10 @@ sub generate {
 		my $obj = {
 			method  => 'getnewaddress',
 			params  => {
-				account	=>	$openprint::config{getnewaddress},
+				account	=>	$openprint::config{bitcoin_account},
 			},
 		};
-$openprint::log->debug("Asking bitcon for a new addres $uri");
+$openprint::log->debug("Asking bitcon for a new addres user: $openprint::config{bitcoin_user} pass: $openprint::config{bitcoin_pass} at $uri");
 
 		my $res = $client->call( $uri, $obj );
 

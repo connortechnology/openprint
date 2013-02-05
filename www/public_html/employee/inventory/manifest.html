@@ -1,7 +1,7 @@
-<!--#include virtual="/includes/error_reporting.html"-->
-<script type="text/javascript" src="/javascripts/barcode.js"></script>
-<script type="text/javascript" src="/javascripts/paper.js"></script>
-<script type="text/javascript" src="/employee/inventory/manifest.js"></script>
+<? echo ( include('/includes/error_reporting.html'); ) ?>
+<script type="text/javascript" src="<?hash_link(/javascripts/barcode.js)?>"></script>
+<script type="text/javascript" src="<?hash_link(/javascripts/paper.js)?>"></script>
+<script type="text/javascript" src="<?hash_link(/employee/inventory/manifest.js)?>"></script>
 <div class="Manifest">
 	<form name="f1" id="f1" method="post" action="manifest.html" onsubmit="return manifest_onsubmit(this);">
 		<input type="hidden" id="manifest_id" name="manifest_id" value="<? echo ( $$variable{'Manifest'}->id() ) ?>" />

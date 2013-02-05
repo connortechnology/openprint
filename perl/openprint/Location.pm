@@ -396,7 +396,7 @@ sub save_location {
 	my $error;
 
 	if ( $$param{'country'} ) {
-		my $Country = openprint::Location->find_one('name_lc'=> lc $$param{'country'}, 'type'=>'country' );
+		my $Country = openprint::Location->find_one('name lc'=> lc $$param{'country'}, 'type'=>'country' );
 		if ( ! $Country ) {
 			$Country = new openprint::Location();
 			$error .= $Country->save({'name'=>$$param{'country'}, 'type'=>'country'});
@@ -406,7 +406,7 @@ sub save_location {
 		$parent_id = $$param{'country_id'};
 	} # end if
 	if ( $$param{'state'} ) {
-		my $State = openprint::Location->find_one('name_lc'=> lc $$param{'state'}, 'type'=>['state','province']);
+		my $State = openprint::Location->find_one('name lc'=> lc $$param{'state'}, 'type'=>['state','province']);
 		if ( ! $State ) {
 			$State = new openprint::Location();
 			$error .= $State->save({'name'=>$$param{'state'}, 'type'=>'state', 'parent_id'=>$$param{'country_id'}});
@@ -416,7 +416,7 @@ sub save_location {
 		$parent_id = $$param{'state_id'};
 	} # end if
 	if ( $$param{'city'} ) {
-		my $City = openprint::Location->find_one('name_lc'=> lc $$param{'city'}, 'type'=>'city');
+		my $City = openprint::Location->find_one('name lc'=> lc $$param{'city'}, 'type'=>'city');
 		if ( ! $City ) {
 			$City = new openprint::Location();
 			$error .= $City->save({'name'=>$$param{'city'}, 'type'=>'city', 'parent_id'=>$$param{'state_id'}});
@@ -428,12 +428,12 @@ sub save_location {
 	my $Location;
 
 	if ( $$param{'location'} ) {
-		$Location = openprint::Location->find_one('name_lc'=> lc openprint::Location->transform('name',$$param{'location'}),
+		$Location = openprint::Location->find_one('name lc'=> lc openprint::Location->transform('name',$$param{'location'}),
 			( $$param{'address'} ? ( 'address lc'=>lc openprint::Location->transform('address',$$param{'address'}) ) : () ),
 			( $parent_id ? ( 'parent_id'=>$parent_id ) : () ),
 			);
 		if ( ( ! $Location ) and $$param{'address'} ) {
-		$Location = openprint::Location->find_one('name_lc'=> lc openprint::Location->transform('name',$$param{'location'}),
+		$Location = openprint::Location->find_one('name lc'=> lc openprint::Location->transform('name',$$param{'location'}),
 			( $parent_id ? ( 'parent_id'=>$parent_id ) : () ),
 			);
 		} # end if

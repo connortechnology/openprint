@@ -27,10 +27,10 @@ function validate_data(formName) {
 	<form name="f1" method="post" action="/employee/project/view.html">
 		<fieldset><legend>UPS Shipping Services</legend>
 			<div class="leftColumn">
-				<!--#include virtual="/includes/main/proj/shipping_from_address.html"-->
+				<? echo ( include('/includes/main/proj/shipping_from_address.html'); ) ?>
 			</div>
 			<div class="rightColumn">
-				<!--#include virtual="/includes/main/proj/shipping_to_address.html"-->
+				<? echo ( include('/includes/main/proj/shipping_to_address.html'); ) ?>
 			</div>
 			<p>
 				<label>Service Type</label>
@@ -52,7 +52,7 @@ function validate_data(formName) {
 				<label># of items to ship</label>
 				<input type="text" name="txtQuantity<?QTYIndex?>" value="<? echo ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>" size="9" onkeyup="calc(this.form.name);" />
 			</p>
-			<!--#include virtual="_shipping_packages.html"-->
+			<? echo ( include('_shipping_packages.html'); ) ?>
 			<? if ( openprint::usergroup::is_user_in( ['Accounting'], $session{'user_id'} ) ) ?>
 			<p>
 				<label><b>Price (<? echo ( $$variable{'Project'}->Currency()->symbol() ) ?>)</b></label>
@@ -61,7 +61,7 @@ function validate_data(formName) {
 			<? endif ( openprint::usergroup::is_user_in( ['Accounting'], $session{'user_id'} ) ) ?>
 		</fieldset>
 		<hr/>
-		<!--#include virtual="/includes/main/proj/add_to_project.html"-->
+		<? echo ( include('/includes/main/proj/add_to_project.html'); ) ?>
 		<input type="hidden" name="qty_index" value="Used" />
 		<input type="hidden" name="ProjectIndex" value="<?ProjectIndex?>"/>
 		<input type="hidden" name="ServiceIndex" value="<?ServiceIndex?>"/>

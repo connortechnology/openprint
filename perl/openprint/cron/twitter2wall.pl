@@ -14,16 +14,14 @@ require configuration;
 require sql;
 require ssi;
 require misc;
-require openprint::Company;
 require openprint::User;
-require Email::Valid;
-require openprint::Email;
-require openprint::User_Notification;
 require logger;
 require openprint::Wall;
 require Date::Parse;
 require Date::Format;
 require openprint;
+require openprint::Object;
+require openprint::User_Profile_Field;
 require openprint::User_Profile_Entry;
 
 use vars qw( $log $dbh %config );
@@ -33,9 +31,6 @@ use vars qw( $log $dbh %config );
 
 use File::Basename qw(basename);
 use Getopt::Long;
-use Mail::Sendmail;
-use MIME::QuotedPrint;
-use Time::HiRes qw(usleep);
 use Encode qw(encode);
 
 my $program = basename($0);
@@ -43,7 +38,7 @@ my $program = basename($0);
 my @args = @ARGV;
 
 my $opts = {};
-GetOptions($opts, 'help', 'log_file=s', 'log_level=s',
+GetOptions($opts, 'help', 'log_file=s', 'log_level=s', 'config=s',
 	'db_name=s', 'db_host=s', 'db_user=s', 'db_pass=s',
  );
 
@@ -52,9 +47,11 @@ if ($opts->{help}) {
 	exit 0;
 }
 
+$$opts{config} = '/etc/twitter2wall.conf' if ! $$opts{config};
+
 $log = new logger( {'level'=>'debug'});
 # Get our configuration information
-configuration::from_file('/etc/twitter2wall.conf');
+configuration::from_file($$opts{config});
 configuration::merge( $opts );
 $log->level($config{'log_level'}) if $config{'log_level'};
 
@@ -91,10 +88,9 @@ foreach my $Twitter_ID ( openprint::User_Profile_Entry->find('field_id'=>$ID_Fie
 	if ($arg=~ /http:/i) {
 		$content = Encode::encode('utf-8',get($arg));
 		die "Could not retrieve $arg" unless $content;
-$log->debug($content);
+#$log->debug($content);
 # parse the RSS content
 		$rss->parse($content);
-
 # argument is a file
 	} else {
 		$file = $arg;
@@ -106,11 +102,23 @@ $log->debug($content);
 	foreach my $item (@{$rss->{'items'}}) {
 		$$item{title} =~ s/^$$Twitter_ID{value}: //i;
 		my $Wall = openprint::Wall->find_one(
-			'user_id'=>$Twitter_ID->user_id(),
-			'author_id'=>$Twitter_ID->user_id(),
-			'message'=>$$item{'title'},
-			'created_on'	=>	Date::Format::time2str('%Y-%m-%d %H:%M:%S%z', Date::Parse::str2time( $item->{'pubDate'} ) ),
+			user_id		=>	$Twitter_ID->user_id(),
+			author_id	=>	$Twitter_ID->user_id(),
+			message		=>	$$item{'title'},
+			created_on	=>	Date::Format::time2str('%Y-%m-%d %H:%M:%S%z', Date::Parse::str2time( $item->{'pubDate'} ) ),
 		);
+		$$item{title} =~ s/^@(\w+)/<a href="https:\/\/twitter.com\/$1" target="_blank">\@$1<\/a>/;
+		$$item{title} =~ s/([^>])@(\w+)/$1<a href="https:\/\/twitter.com\/$2" target="_blank">\@$2<\/a>/gm;
+
+		if ( $Wall and ! openprint::Wall->find_one(
+            user_id     =>  $Twitter_ID->user_id(),
+            author_id   =>  $Twitter_ID->user_id(),
+            message     =>  $$item{'title'},
+            created_on  =>  Date::Format::time2str('%Y-%m-%d %H:%M:%S%z', Date::Parse::str2time( $item->{'pubDate'} ) ),
+        ) ) {
+			$Wall->delete();
+			$Wall = undef;
+		} # end if
 		next if $Wall;
 		$Wall = new openprint::Wall();
 		$Wall->save({

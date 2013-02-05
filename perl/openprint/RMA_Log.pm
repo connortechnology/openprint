@@ -6,7 +6,7 @@ require openprint::Company;
 
 use vars qw( $debug $table %fields %transforms %defaults @identified_by );
 
-$debug = 1;
+$debug = 0;
 $table = 'rma_logs';
 @identified_by = ( 'rma_id', 'created_on' );
 %fields = (

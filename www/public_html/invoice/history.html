@@ -28,7 +28,7 @@
 	} // end function
 -->
 </script>	 
-<!--#include virtual="/includes/error_reporting.html"-->
+<? echo ( include('/includes/error_reporting.html'); ) ?>
 <? if ( $session{'user_id'} ) ?>
 <form id="f1" name="f1" method="post" action="/invoice/history.html">
 	<input type="hidden" name="btnFunction"/>
@@ -96,16 +96,16 @@
 		<p class="buttons">
 			<? echo (
 				my $html = '';
-				$html .= ssi::writeButton( $log, $dbh, 'ShowResults', 'showResults.gif', "f1.invoice_id.value='';load_invoices(f1);", '', 'Show Results' );
-				$html .= ssi::writeButton( $log, $dbh, 'Download', 'download.gif', "f1.btnFunction.value='Download';f1.submit();", '', 'Download' );
-				$html .= ssi::writeButton( $log, $dbh, 'Reset', 'reset.gif', 'f1.reset();', '', 'Reset' );
-				$html .= ssi::writeButton( $log, $dbh, 'New', 'new.gif', '', 'edit.html', 'New Invoice' );
-				$html .= ssi::writeButton( $log, $dbh, 'AccountStatement', 'account_statement.gif', "if(!\$('company_id').value){alert('Please select a company');} else {f1.btnFunction.value='Account Statement';f1.submit();}", '', 'Account Statement' );
+				$html .= ssi::button( 'ShowResults', { onclick=>"f1.invoice_id.value='';load_invoices(f1);", text=>'Show Results' } );
+				$html .= ssi::button( 'Download', { onclick=>"f1.btnFunction.value='Download';f1.submit();", text=>'Download' } );
+				$html .= ssi::button( 'Reset', { onclick=>'f1.reset();', text=>'Reset' } );
+				$html .= ssi::button( 'New', { href=>'edit.html', text=>'New Invoice' } );
+				$html .= ssi::button( 'AccountStatement', { onclick=>"if(!\$('company_id').value){alert('Please select a company');} else {f1.btnFunction.value='Account Statement';f1.submit();}", text=>'Account Statement' } );
 				return $html;
 			) ?>
 		</p>
 	</fieldset>
-	<div id="InvoiceList"><!--#include virtual="_history.html"--></div>
+	<div id="InvoiceList"><? echo ( include('_history.html'); ) ?></div>
 </form>
 <? else ( $session{'user_id'} ) ?>
 	Only logged in users have an invoice history.

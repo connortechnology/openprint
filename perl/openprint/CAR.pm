@@ -15,7 +15,7 @@ use vars qw( %config $log %session );
 
 use vars qw( $debug $table $serial %fields %defaults %transforms );
 
-$debug = 1;
+$debug = 0;
 $table = 'car';
 $serial = 'car_id_seq';
 %fields = (

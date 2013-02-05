@@ -25,14 +25,14 @@
 		width: 70%;
 	}
 </style>
-<!--#include virtual="/includes/error_reporting.html"-->
+<? echo ( include('/includes/error_reporting.html'); ) ?>
 <form name="jump" method="get" action="rfidscanner_details.html">
 	<fieldset class="filters"><legend>Choose RFIDScanner</legend>
 		<p>
 			<label for="rfidscanner_id">Scanner ID #</label>
 			<input type="text" id="rfidscanner_id" name="rfidscanner_id" size="50" value="<? echo ( $param{rfidscanner_id} ) ?>" onchange="change_handler(this);" onkeypress="return input_handler( this, event);" />
 			<? echo ( join('',
-				ssi::writeButton( $log, $dbh, 'Go', 'go.gif', "if(!jump.rfidscanner_id.value){jump.rfidscanner_id.focus();} else {jump.btnFunction.value='Go';jump.submit();}",'','Go' ),
+				ssi::button( 'Go', { onclick=>"if(!jump.rfidscanner_id.value){jump.rfidscanner_id.focus();} else {jump.btnFunction.value='Go';jump.submit();}", href=>'', text=>'Go' } ),
 				ssi::writeButton( $log, $dbh, 'Previous', 'previous.gif', q`if(!jump.rfidscanner_id.value){jump.rfidscanner_id.focus();} else {jump.btnFunction.value='Previous';jump.submit();}`,'','&lt;&lt;' ),
 				ssi::writeButton( $log, $dbh, 'Next', 'next.gif', q`if(!jump.rfidscanner_id.value){jump.rfidscanner_id.focus();} else {jump.btnFunction.value='Next';jump.submit();}`,'','&gt;&gt;' ),
 			); ) ?>
@@ -113,19 +113,19 @@
 			<p class="buttons">
 				<? echo ( 
 						my $html;
-						$html .= ssi::writeButton( $log, $dbh, 'save', 'save.gif', "if( check_inputs( f1 ) ){f1.btnFunction.value='Save';f1.submit();}", '', 'Save' );
+						$html .= ssi::button( 'save', { onclick=>"if( check_inputs( f1 ) ){f1.btnFunction.value='Save';f1.submit();}", href=>'', text=>'Save' } );
 						if ( $$variable{'RFIDScanner'}->id() ) {
-						$html .= ssi::writeButton( $log, $dbh, 'delete', 'delete.gif', "if(confirm('Are you sure?')){f1.action='rfidscanners.html';f1.btnFunction.value='Delete';f1.submit();}", '', 'Delete' ) if $$variable{'RFIDScanner'}->id();
-						$html .= ssi::writeButton( $log, $dbh, 'addnew', 'add.gif', '', 'rfidscanner_details.html', 'Add New RFIDScanner' );
+						$html .= ssi::button( 'delete', { onclick=>"if(confirm('Are you sure?')){f1.action='rfidscanners.html';f1.btnFunction.value='Delete';f1.submit();}", href=>'', text=>'Delete' } ) if $$variable{'RFIDScanner'}->id();
+						$html .= ssi::button( 'addnew', { onclick=>'', href=>'rfidscanner_details.html', text=>'Add New RFIDScanner' } );
 						} # end if
-						$html .= ssi::writeButton( $log, $dbh, 'reset', 'reset.gif', 'f1.reset();', '', 'Reset' );
-						#$html .= ssi::writeButton( $log, $dbh, 'clear', 'clear.gif', 'clearForm(f1);', '', 'Clear' );
+						$html .= ssi::button( 'reset', { onclick=>'f1.reset();', href=>'', text=>'Reset' } );
+						#$html .= ssi::button( 'clear', { onclick=>'clearForm(f1);', href=>'', text=>'Clear' } );
 						return $html;
 				) ?>
 			</p>
 		</div><!-- column -->
 		<div class="rightColumn" id="Map">
-			<!--#include virtual="_map.html"-->
+			<? echo ( include('_map.html'); ) ?>
 		</div>
 		<br class="spacer"/>
 	</fieldset>
@@ -148,9 +148,9 @@
 			<select name="EndDay"><? echo ( ssi::getdays( $param{'EndDay'} ); ) ?></select>
 			</span>
 			<select name="limit" style="width:auto;"><option value="10">10</option><option value="25">25</option><option value="100">100</option></select>
-			<? echo ( ssi::writeButton( $log, $dbh, 'LoadLog', 'load.gif', "LoadContent( 'Log','_rfidscanner_log.html', \$('f2').serialize() );", '', 'Load' ); ) ?>
+			<? echo ( ssi::button( 'LoadLog', { onclick=>"LoadContent( 'Log','_rfidscanner_log.html', \$('f2').serialize() );", href=>'', text=>'Load' } ); ) ?>
 		</p>
-		<div id="Log"><!--#include virtual="_rfidscanner_log.html"--></div>
+		<div id="Log"><? echo ( include('_rfidscanner_log.html'); ) ?></div>
 	</fieldset>
 </form>
 <? endif ( $$variable{'RFIDScanner'}->id() ) ?>

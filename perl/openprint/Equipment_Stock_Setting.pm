@@ -4,7 +4,7 @@ our @ISA = qw(openprint::Object);
 
 use vars qw( $debug $table $serial %fields %transforms %defaults );
 
-$debug = 1;
+$debug = 0;
 $table = 'Equipment_Stock_Settings';
 $serial= 'equipment_stock_settings_id_seq';
 %fields = (

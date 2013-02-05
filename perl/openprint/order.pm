@@ -14,7 +14,7 @@ use vars qw( %param %variable %config %session $log $dbh );
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
 
-my $debug = 1;
+my $debug = 0;
 
 require sql;
 require openprint::Currency;
@@ -486,7 +486,7 @@ sub store_order_info {
 	$order_id = get_unfinished_order( ) if ! $order_id;
 
 	my $error = '';
-	$error .= 'Company Name is a required field.<br/>' if $param{'companyname'} eq '';
+	$error .= 'Company Name is a required field.<br/>' if $param{'company_name'} eq '';
 	$error .= 'Address is a required field.<br/>' if $param{'address1'} eq '';
 	$error .= 'City is a required field.<br/>' if $param{'city'} eq '';
 	$error .= 'State/Province is a required field.<br/>' if $param{'state'} eq '';

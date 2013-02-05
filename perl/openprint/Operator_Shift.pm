@@ -1,24 +1,15 @@
-package openprint::Operator_Shift;
-@ISA = qw(openprint::Object);
-require openprint::Object;
-
 use strict;
-use openprint ();
-use vars qw(%variable $log $dbh %config %session $table $serial %fields %transforms %defaults );
-*variable = \%openprint::variable;
-*log = \$openprint::log;
-*dbh = \$openprint::dbh;
-*config = \%openprint::config;
-*session = \%openprint::session;
+package openprint::Operator_Shift;
+our @ISA = qw(openprint::Object);
 
-require sql;
+use vars qw( $debug $table $serial %fields %transforms %defaults );
+
 require ssi;
 require misc;
-require Date::Parse;
 require openprint::User;
 require openprint::Equipment_Shift;
 
-my $debug = 1;
+$debug = 0;
 
 $table = 'operator_shifts';
 $serial = 'operator_shifts_id_seq';
@@ -53,7 +44,7 @@ sub get_li {
     my $html;
 	$html .= sprintf( '<li id="item_%d">', $$self{'id'} );
 	$html .= '<span class="Buttons">';
-	$html .= ssi::writeButton( $log, $dbh, 'Remove'.$$self{'id'}, '', "if(confirm('Are you sure?')){f1.schedule_id.value=$$self{'id'};f1.btnFunction.value='RemoveJob';f1.submit();}", '', 'D' );
+	$html .= ssi::button( 'Remove'.$$self{'id'}, { onclick=> "if(confirm('Are you sure?')){f1.schedule_id.value=$$self{'id'};f1.btnFunction.value='RemoveJob';f1.submit();}", text=>'D', title=>'Delete' );
 	$html .= '</span>';
 
 	$html .= "<br/></li>\n";

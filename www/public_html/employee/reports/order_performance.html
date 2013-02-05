@@ -1,6 +1,6 @@
 <div class="PageTitle">
 <h1>REPORTS</h1>
-<h2>Order History</h2>
+<h2>Order Performance</h2>
 </div>
 <form id="f1" name="f1" action="/employee/reports/order_performance.html" method="post">
 	<input type="hidden" name="action" />
@@ -64,4 +64,4 @@
 		 </p>
 	</fieldset>
 </form>
-<div id="Results"><!--#include virtual="/employee/reports/_order_performance.html"--></div>
+<div id="Results"><? echo ( include('/employee/reports/_order_performance.html'); ) ?></div>

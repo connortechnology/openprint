@@ -3,7 +3,6 @@
 <h2>History</h2>
 </div>
 <script type="text/javascript">
-<!--
 	function delete_confirm(form) {
 		var number_of_deleted_bugs = 0;
 		for ( var index = 0; index < form.elements.length; index += 1 ) {
@@ -26,9 +25,8 @@
 		$('BugList').innerHTML = 'Please wait...';
 		new Ajax.Updater('BugList','_history.html', {method:'get',parameters:Form.serialize(form)});
 	} // end function
--->
 </script>	 
-<!--#include virtual="/includes/error_reporting.html"-->
+<? echo ( include('/includes/error_reporting.html'); ) ?>
 <? if ( $session{'user_id'} ) ?>
 <div class="Bug"><div class="History">
 	<form id="f1" name="f1" method="post" action="/bug/history.html">
@@ -80,13 +78,13 @@
 			<br class="spacer"/>
 			<p class="buttons">
 				<? echo ( join('',
-					ssi::writeButton( $log, $dbh, 'ShowResults', 'showResults.gif', "load_bugs(f1);", '', 'Show Results' ),
-					ssi::writeButton( $log, $dbh, 'Reset', 'reset.gif', 'f1.reset();', '', 'Reset' ),
-					ssi::writeButton( $log, $dbh, 'New', 'new.gif', '', '/bug/edit.html', 'New Bug' ),
+					ssi::button( 'ShowResults', { onclick=>"load_bugs(f1);", href=>'', text=>'Show Results' } ),
+					ssi::button( 'Reset', { onclick=>'f1.reset();', href=>'', text=>'Reset' } ),
+					ssi::button( 'New', { onclick=>'', href=>'/bug/edit.html', text=>'New Bug' } ),
 					); ) ?>
 			</p>
 		</fieldset>
-		<div id="BugList"><!--#include virtual="_history.html"--></div>
+		<div id="BugList"><? echo ( include('_history.html'); ) ?></div>
 	</form>
 	</div>
 </div>

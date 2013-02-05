@@ -1,8 +1,8 @@
 <style type="text/css"><? echo ( misc::load_file( $log, $config{'SkinPath'} . '/css/order.css' ); ) ?></style>
 <div class="Order">
-	<!--#include virtual="/email_content/_order_header.html" -->
-	<!--#include virtual="/main/order/_contents.html" -->
-	<!--#include virtual="/main/order/_totals.html" -->
+	<? echo ( include('/email_content/_order_header.html'); ) ?>
+	<? echo ( include('/main/order/_contents.html'); ) ?>
+	<? echo ( include('/main/order/_totals.html'); ) ?>
 	<br class="spacer"/>
 	<div class="Disclaimer"><? echo ( $config{'OrderViewDisclaimer'} ) ?></div>
 </div>

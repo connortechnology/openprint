@@ -54,7 +54,7 @@ flippingBook.settings.zoomHintEnabled = true;
 flippingBook.create();
 -->
 </script>
-<!--#include virtual="/includes/error_reporting.html"-->
+<? echo ( include('/includes/error_reporting.html'); ) ?>
 <? if ( ( $$variable{'PageFlip'}->company_id() == $session{'company_id'} ) or sets::isin( $session{'user_type'}, [ 'A', 'E' ] ) ) ?>
 <p class="buttons">
 	<? echo ( join('',

@@ -4,5 +4,5 @@
 <br/>
 The due date for the following project was changed to <?DueDate?>.<br/><br/>
 <? eval ( openprint::project::get_header( $log, $dbh, $variable, $$variable{'ProjectIndex'} ); ) ?>
-<!--#include virtual="/includes/project_header.html"-->
+<? echo ( include('/includes/project_header.html'); ) ?>
 <br/>

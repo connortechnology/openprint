@@ -1,4 +1,4 @@
-<!--#include virtual="/includes/error_reporting.html"-->
+<? echo ( include('/includes/error_reporting.html'); ) ?>
 <? echo (
 	my $html;
 	if ( $session{'user_type'} eq 'A' or $session{'user_id'} == $$variable{'Survey'}->created_by() ) {

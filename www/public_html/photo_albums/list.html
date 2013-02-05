@@ -1,6 +1,6 @@
 <div class="PhotoAlbums">
 	<div class="List">
-		<!--#include virtual="/includes/error_reporting.html"-->
+		<? echo ( include('/includes/error_reporting.html'); ) ?>
 		<form name="f1" id="f1" method="post">
 			<fieldset class="filters"><legend>Photo Albums</legend>
 				<div class="content">
@@ -23,7 +23,7 @@
 					); ) ?>
 				</p>
 			</fieldset>
-			<div id="Results"><!--#include virtual="_list.html"--></div>
+			<div id="Results"><? echo ( include('_list.html'); ) ?></div>
 		</form>
 	</div>
 </div>

@@ -1,9 +1,9 @@
 <? hecho ( $param{'Signature'} ) ?> has submitted a new credit application.  Click <a href="<? echo ( $openprint::config{ExternalSecureSiteURL} ) ?>/employee/accounting/credit_application.html?credit_index=<?CreditAppIndex?>">here</a> to view it.<br>
 		<br/>
-<!--#include virtual="/email_content/_company_information.html"-->
-<!--#include virtual="/email_content/_business_information.html"-->
-<!--#include virtual="/email_content/_bank_information.html"-->
-<!--#include virtual="/email_content/_trade_references.html"-->
+<? echo ( include('/email_content/_company_information.html'); ) ?>
+<? echo ( include('/email_content/_business_information.html'); ) ?>
+<? echo ( include('/email_content/_bank_information.html'); ) ?>
+<? echo ( include('/email_content/_trade_references.html'); ) ?>
 <fieldset><legend>Credit Application</legend>
 	<p><label>Date of application</label><? echo ( localtime ) ?></p>
 	<p><label>Value of first order (est)</label><? hecho ( $param{FirstOrderValue} ) ?></p>

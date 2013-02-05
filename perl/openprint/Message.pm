@@ -6,9 +6,9 @@ require openprint::Message_To;
 require openprint::Conversation;
 require misc;
 
-
 use vars qw( $debug $table $serial %fields %find_fields %transforms %defaults );
-$debug = 1;
+
+$debug = 0;
 $table = 'messages';
 $serial = 'messages_id_seq';
 

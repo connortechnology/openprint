@@ -1,4 +1,4 @@
-<!--#include virtual="/includes/error_reporting.html"-->
+<? echo ( include('/includes/error_reporting.html'); ) ?>
 <script type="text/javascript">
 	function load_results() {
 		$('Results').innerHTML = 'Please wait. Loading...';
@@ -104,6 +104,6 @@
 			</p>
 			</fieldset>
 		</form>
-		<div id="Results"><!--#include virtual="/account/_search.html"--></div>
+		<div id="Results"><? echo ( include('/account/_search.html'); ) ?></div>
 	</div>
 </div>

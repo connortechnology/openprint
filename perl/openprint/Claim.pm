@@ -3,7 +3,6 @@ package openprint::Claim;
 our @ISA = qw(openprint::Object);
 require openprint::Object;
 
-
 use openprint ();
 use vars qw(%variable $log $dbh %config %session $debug %fields %transforms %defaults $table $serial );
 *variable = \%openprint::variable;
@@ -24,7 +23,7 @@ require openprint::Claim_Tax;
 require openprint::Claim_Asset;
 
 
-$debug = 1;
+$debug = 0;
 
 $table = 'claims';
 $serial = 'claims_id_seq';
@@ -242,8 +241,8 @@ sub Taxes {
     } # end if
     if ( ! @{$$self{'Taxes'}} ) {
         foreach my $Tax ( openprint::Tax->find(
-                    'period_start_null_or_<='   =>  $$self{'created_on'},
-                    'period_end_null_or_>='     =>  $$self{'created_on'},
+                    'period_start null_or_<='   =>  $$self{'created_on'},
+                    'period_end null_or_>='     =>  $$self{'created_on'},
                     'country'   =>  $self->Company()->country(),
                     'state'     =>  $self->Company()->state()),
                 ) {

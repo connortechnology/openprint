@@ -1,4 +1,4 @@
-<!--#include virtual="/includes/error_reporting.html"-->
+<? echo ( include('/includes/error_reporting.html'); ) ?>
 <? echo (
 	my $html = '';
 	my @company_ids;
@@ -6,10 +6,10 @@
 	@company_ids = ( $session{'/employee/reports/stock_usage.html?company_id'} ) if $session{'/employee/reports/stock_usage.html?company_id'};
 
 	my @Orders = openprint::Order->find(
-		'status'		=>	[ 'In Production','Picked Up','Shipped','Waiting For Customer Approval','Complete','Waiting For Pickup','Order Submitted','Paid','Pending Deposit','Re-Opened' ],
+		'status'		=>	[ 'In Production','Picked Up','Shipped','Waiting For QA Approval', 'Waiting For Customer Approval','Complete','Waiting For Pickup','Order Submitted','Paid','Pending Deposit','Re-Opened' ],
 		( @company_ids ? ( 'company_id'	=> \@company_ids ) : () ),
-		ssi::date_filter( '/employee/reports/stock_usage.html?ordered_on_start', 'created_on_start' ),
-		ssi::date_filter( '/employee/reports/stock_usage.html?ordered_on_end', 'created_on_end' ),
+		ssi::date_filter( '/employee/reports/stock_usage.html?ordered_on_end', 'created_on <=' ),
+		ssi::date_filter( '/employee/reports/stock_usage.html?ordered_on_start', 'created_on >=' ),
 	);
 	my %totals;
 	my %Stocks;

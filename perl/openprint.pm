@@ -6,39 +6,61 @@ sub session_init {
 	require Apache2::Cookie;
 	require Apache::Session::Postgres;
 	my $cookies = Apache2::Cookie->fetch( $r );
-	my $cookie = $$cookies{'_session_id'};
-	$cookie = $cookie->value if $cookie;
-
-	if ( ! eval q`tie %session, 'Apache::Session::Postgres', $cookie, { Handle => $dbh, Commit => 0, IDLength => 8 }` ) {
-		$log->debug("Error fetching Session: $cookie: $@");
-		if ( ! eval q`tie %session, 'Apache::Session::Postgres', undef, { Handle		=> $dbh, Commit		=> 0, IDLength	=> 8, };` ) {
-			$log->debug("Error creating Session: ");
+	my $cookie;
+	if ( $$cookies{'_session_id'} ) {
+		$cookie = $$cookies{'_session_id'};
+		$cookie = $cookie->value if $cookie;
+	} else {
+		if ( $r->param('_session_id') ) {
+			$cookie = $r->param('_session_id');
 		} # end if
-		# Store this, will be useful
-		$session{'ip'} = $ENV{'REMOTE_ADDR'};
-		$session{'lastupdated'} = time;
-		$session{'HTTP_USER_AGENT'} = $ENV{'HTTP_USER_AGENT'};
 	} # end if
 
-	if ( $cookie ne $session{_session_id} ) {
-		my $Cookie = Apache2::Cookie->new($r,
-				-name	=> '_session_id',
-				-value => $session{_session_id},
-				-path		=>	'/',
-				);
-		if ( $Cookie ) {
-			$Cookie->bake( $r );
-			$cookie = $Cookie->value;
-		} else {
-			$log->error("No Cookie.  Does db have a sessions table?");
+	if ( $dbh ) {
+		if ( ! eval q`tie %session, 'Apache::Session::Postgres', $cookie, { Handle => $dbh, Commit => 0, IDLength => 8 }` ) {
+			$log->debug("Error fetching Session: $cookie: $@");
+			if ( ! eval q`tie %session, 'Apache::Session::Postgres', undef, { Handle		=> $dbh, Commit		=> 0, IDLength	=> 8, };` ) {
+				$log->debug("Error creating Session: ");
+			} # end if
+			if ( $r->param('_session_id') ) {
+				if ( $session{ip} ne $ENV{REMOTE_ADDR} ) {
+					$log->error("Change of session ip");
+					untie %session;
+					%session = ();
+				} # end if
+			} # end if
+			# Store this, will be useful
+			$session{'ip'} = $ENV{'REMOTE_ADDR'};
+			$session{'lastupdated'} = time;
+			$session{'HTTP_USER_AGENT'} = $ENV{'HTTP_USER_AGENT'};
 		} # end if
+
+		if ( $cookie ne $session{_session_id} ) {
+			my $Cookie = Apache2::Cookie->new($r,
+					-name	=> '_session_id',
+					-value => $session{_session_id},
+					-path		=>	'/',
+					);
+			if ( $Cookie ) {
+				$Cookie->bake( $r );
+				$cookie = $Cookie->value;
+			} else {
+				$log->error("No Cookie.  Does db have a sessions table?");
+			} # end if
+		} # end if
+	} else {
+		%session = ();
 	} # end if
 	$session{'ip'} = $ENV{'REMOTE_ADDR'} if $ENV{'REMOTE_ADDR'} and ! $session{'ip'};
 
 # Now set some defaults right away, if we can
 	if ( $r->param('Country') ) {
 		$session{'Country'} = $r->param('Country');
+	} elsif ( ! $session{'Country'} ) {
+		$session{'Country'} = $r->dir_config('Country');
 	} # end if
+
+	return if ! $dbh;
 
 	if ( $r->param('Currency') ) {
 		$_ = openprint::Currency->find_one( 'short' => $r->param('Currency') );
@@ -70,26 +92,20 @@ sub session_init {
 		} # end if
 	} # end if
 
-	if ( ! $session{'Country'} ) {
-		$session{'Country'} = $r->dir_config('Country');
-		#$log->debug("Setting Country to " . $r->dir_config('Country') );
-	#} else {
-		#$log->debug("Country is " . $session{'Country'} );
-	} # end if
-	if ( $config{'Pricelist'} ) {
-		if ( ! $session{'Pricelist_id'} ) {
-			$_ = openprint::Pricelist->find_one( 'name' => $config{'Pricelist'} );
-			$session{'Pricelist_id'} = $_->id() if $_;
+	if ( $config{Pricelist} ) {
+		if ( ! $session{Pricelist_id} ) {
+			$_ = openprint::Pricelist->find_one( name => $config{Pricelist} );
+			$session{Pricelist_id} = $_->id() if $_;
 		} # end if
 	} # end if
-	if ( ! $session{'Pricelist_id'} ) {
+	if ( ! $session{Pricelist_id} ) {
 		my $Pricelist = new openprint::Pricelist( openprint::pricing::get_pricelist_id( ) );
-		$session{'Pricelist_id'} = $Pricelist->id() if $Pricelist->id();
+		$session{Pricelist_id} = $Pricelist->id() if $Pricelist->id();
 	} else {
-		my $Pricelist = new openprint::Pricelist( $session{'Pricelist_id'} );
+		my $Pricelist = new openprint::Pricelist( $session{Pricelist_id} );
 		if ( ! $Pricelist->id() ) {
 			$Pricelist = new openprint::Pricelist( openprint::pricing::get_pricelist_id( ) );
-			$session{'Pricelist_id'} = $Pricelist->id() if $Pricelist->id();
+			$session{Pricelist_id} = $Pricelist->id() if $Pricelist->id();
 		} # end if
 	} # end if
 

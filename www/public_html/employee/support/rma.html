@@ -7,10 +7,20 @@
 <div class="Support"><div class="RMA">
 <? echo ( include( $ENV{DOCUMENT_ROOT}.'/includes/error_reporting.html' ); ) ?>
 	<form id="f1" name="f1" method="post" action="rma.html">
+		<input type="hidden" name="status_id" value=""/>
 <p class="buttons">
 <? echo ( join("\n",
 		button('Save', { onclick=>q`f1.elements['action'].value='Save';submit_handler(f1);` } ),
 		button('Clear', { onclick=>q`clearForm('f1');` } ),
+	
+map {
+	my $button_id = $_->name();
+	$button_id =~ s/\s//g;
+	button( $button_id, { 
+		onclick	=>	qq`f1.elements['status_id'].value='$$_{id}';f1.elements['action'].value='ChangeStatus';submit_handler(f1);`,
+		text	=>	$$_{name},
+		} );
+} openprint::RMA_Status->find( current_status_id => $$variable{RMA}->status_id(), order => 'sort' ),
 ); ) ?>
 </p>
 		<div class="Information">
@@ -181,13 +191,21 @@
 				<label>Type of Request</label>
 				<? echo ( $$variable{RMA}->type() ) ?>
 			</li>
+			<li class="warranty"><label>Warranty</label>
+				<? echo ( radio( 'warranty', [ 1, 'Yes', 0, 'No' ], $$variable{RMA}->warranty() ); ) ?>
+			</li>
+<? if ( $session{user_type} eq 'A' ) ?>
+			<li class="priority"><label>Priority</label>
+				<? echo ( ssi::select( openprint::RMA_Priority->dropdown(order=>'sort,lower(name)'), $variable{RMA}->priority_id(), { name=>'priority_id', prepend=>['','select'] } ); ) ?>
+			</li>
+<? endif ( $session{user_type} eq 'A' ) ?>
 		</ul>
 	</fieldset>
 	</div>
-	<div class="Faults" id="Faults"><!--#include virtual="_faults.html"--></div>
-	<div class="Upgrades" id="Upgrades"><!--#include virtual="_upgrades.html"--></div>
-	<div class="Tests" id="Tests"><!--#include virtual="_tests.html"--></div>
-	<div class="Parts" id="Parts"><!--#include virtual="_parts.html"--></div>
+	<div class="Faults" id="Faults"><? echo ( include('_faults.html'); ) ?></div>
+	<div class="Upgrades" id="Upgrades"><? echo ( include('_upgrades.html'); ) ?></div>
+	<div class="Tests" id="Tests"><? echo ( include('_tests.html'); ) ?></div>
+	<div class="Parts" id="Parts"><? echo ( include('_parts.html'); ) ?></div>
 
 		<input type="hidden" name="rma_id" value="<? echo ( $$variable{RMA}->id() ) ?>"/>
 		<input type="hidden" name="action"/>
@@ -208,7 +226,9 @@
 	<td class="User">%s</td>
 	<td class="DateTime">%s</td>
 	<td class="description">%s</td>
-</tr>`, $rowclass, $Log->User()->name(), $Log->description() 
+</tr>`, $rowclass, $Log->User()->name(), 
+format_datetime( $Log->created_on() ),
+$Log->description() 
 );
 				$rowclass = $rowclass ? '' : ' class="colRow"'; 
 			} # end foreach Log

@@ -19,10 +19,10 @@
 			my $payment_cycle;
 
 			my @Orders = openprint::Order->find( 
-					'company_id' => $Company->id(),
-					ssi::date_filter( '/employee/reports/customer_performance.html?ordered_on_start', 'created_on_start' ),
-					ssi::date_filter( '/employee/reports/customer_performance.html?ordered_on_end', 'created_on_end' ),
-					'status' => ['Complete','Picked Up', 'Shipped','Waiting For Customer Approval','Order Submitted','In Production','Waiting For Pickup','Re-Opened','Pending Deposit','Paid','Complete' ],
+					company_id	=> $Company->id(),
+					ssi::date_filter( '/employee/reports/customer_performance.html?ordered_on_end', 'created_on <=' ),
+					ssi::date_filter( '/employee/reports/customer_performance.html?ordered_on_start', 'created_on >=' ),
+					'status' => ['Complete','Picked Up', 'Shipped','Waiting For QA Approval', 'Waiting For Customer Approval','Order Submitted','In Production','Waiting For Pickup','Re-Opened','Pending Deposit','Paid','Complete' ],
 					);
 			last if $dbh->errstr();
 			next if ! @Orders;
@@ -39,9 +39,9 @@
 
 				next if openprint::Order->find(
 						company_id => $Company->id(),
-						ssi::date_filter( '/employee/reports/customer_performance.html?not_ordered_on_start', 'created_on_start' ),
-						ssi::date_filter( '/employee/reports/customer_performance.html?not_ordered_on_end', 'created_on_end' ),
-						'status' => ['Complete','Picked Up', 'Shipped','Waiting For Customer Approval','Order Submitted','In Production','Waiting For Pickup','Re-Opened','Pending Deposit','Paid','Complete' ],
+						ssi::date_filter( '/employee/reports/customer_performance.html?not_ordered_on_end', 'created_on <=' ),
+						ssi::date_filter( '/employee/reports/customer_performance.html?not_ordered_on_start', 'created_on >=' ),
+						'status' => ['Complete','Picked Up', 'Shipped','Waiting For QA Approval', 'Waiting For Customer Approval','Order Submitted','In Production','Waiting For Pickup','Re-Opened','Pending Deposit','Paid','Complete' ],
 						);
 			} # end if check for not ordered
 			foreach my $Order ( @Orders ) {

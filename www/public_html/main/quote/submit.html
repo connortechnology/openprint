@@ -13,12 +13,12 @@ Please review the quote below to ensure accuracy.  When ready, click "Submit Quo
 					); ) ?>
 	</p>
 		<div class="Header">
-			<!--#include virtual="/includes/quote_header.html"-->
+			<? echo ( include('/includes/quote_header.html'); ) ?>
 			<br class="spacer"/>
-			<!--#include virtual="/includes/quote_information.html"-->
+			<? echo ( include('/includes/quote_information.html'); ) ?>
 		</div>
-		<!--#include virtual="_projects.html"-->
-		<!--#include virtual="_products_view.html"-->
+		<? echo ( include('_projects.html'); ) ?>
+		<? echo ( include('_products_view.html'); ) ?>
 		<? if ( sets::isin( $session{'user_type'}, ['A', 'E'] ) ) ?>
 			<br/>
 			<fieldset id="SalesRepComments">

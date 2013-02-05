@@ -7,7 +7,7 @@
 		} // end if
 	} //e nd function load_results
 </script>
-<!--#include virtual="/includes/error_reporting.html"-->
+<? echo ( include('/includes/error_reporting.html'); ) ?>
 <form id="f1" name="f1" method="post" action="returns.html">
 	<fieldset class="filters"><legend>Search</legend>
 		<ul>
@@ -16,11 +16,21 @@
 				<? echo ( button('Go', { onclick=>'load_results();' } ); ) ?>
 			</li>
 		<ul>
+<? if ( $session{user_type} eq 'A' ) ?>
+		<li>
+			<label>Supplier</label>
+			<input type="text" onkeyup="filterDDM(this, f1.supplier_id);" class="filter"/>
+			<select name="supplier_id" onchange="if(this.options[this.selectedIndex].value != '') f1.submit();">
+				<option value=""> All</option>
+				<? echo ( openprint::Company::get_dropdown( $session{'/employee/support/returns.html?supplier_id'}, { supplier=>'Y' } ); ) ?>
+			</select>
+		</li>
+<? endif ( $session{user_type} eq 'A' ) ?>
 		<li>
 			<label>Customers</label>
 			<input type="text" onkeyup="filterDDM(this, f1.company_id);" class="filter"/>
 			<select name="company_id" onchange="if(this.options[this.selectedIndex].value != '') f1.submit();">
-				<option value=""> Select a Customer</option>
+				<option value=""> All</option>
 				<? echo ( openprint::Company::get_dropdown( $session{'/employee/support/returns.html?company_id'} ); ) ?>
 			</select>
 		</li><li>
@@ -53,5 +63,5 @@
 ); ) ?>
 		</p>
 	</fieldset>
-	<div id="Results"><!--#include virtual="_returns.html"--></div>
+	<div id="Results"><? echo ( include('_returns.html'); ) ?></div>
 </form>
