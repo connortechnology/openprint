@@ -346,7 +346,7 @@ sub _content_edit {
 } # end sub _content_edit
 sub _content_view {
 	my $Content = $variable{'C'} = new openprint::SRED_Content( $param{'content_id'} );
-	$variable{'Project'} = $C->Project();
+	$variable{'Project'} = $Content->Project();
 	if ( $param{'action'} eq 'Save' ) {
 		save_content( $Content );
 	} # end if
