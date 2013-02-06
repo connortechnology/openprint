@@ -254,7 +254,7 @@ sub edit {
 			# FIXME, update session filters to include this article
 			my $published_on_date = Date::Parse::str2time($Article->published_on());
 			if ( Date::Calc::check_date( @session{ map { '/article/history.html?published_on_start_'.$_ } ( 'year','month','day' )} ) ) {
-				my $session_published_on_date_start = Date::Calc::Mktime(
+				my $session_published_on_date_start = Date::Calc::Date_to_Time(
 					@session{ map { '/article/history.html?published_on_start_'.$_ } ( 'year','month','day' )}, 0,0,0 );
 				if ( $session_published_on_date_start > $published_on_date ) {
 					my ($year,$month,$day, undef, undef, undef ) = Date::Calc::Time_to_Date([$published_on_date]);
@@ -262,7 +262,8 @@ sub edit {
 				} # end if
 			} # end if
 			if ( Date::Calc::check_date( @session{ map { '/article/history.html?published_on_end_'.$_ } ( 'year','month','day' )} ) ) {
-				my $session_published_on_date_end = Date::Calc::Mktime(
+$log->debug(join('-', @session{ map { '/article/history.html?published_on_end_'.$_ } ( 'year','month','day' )}   ) );
+				my $session_published_on_date_end = Date::Calc::Date_to_Time(
 					@session{ map { '/article/history.html?published_on_end_'.$_ } ( 'year','month','day' )}, 0,0,0 );
 				if ( $session_published_on_date_end < $published_on_date ) {
 					my ($year,$month,$day, undef, undef, undef ) = Date::Calc::Time_to_Date([$published_on_date]);
@@ -272,7 +273,7 @@ sub edit {
 
 			my $created_on_date = Date::Parse::str2time($Article->created_on());
 			if ( Date::Calc::check_date( @session{ map { '/article/history.html?created_on_start_'.$_ } ( 'year','month','day' )} ) ) {
-				my $session_created_on_date_start = Date::Calc::Mktime(
+				my $session_created_on_date_start = Date::Calc::Date_to_Time(
 					@session{ map { '/article/history.html?created_on_start_'.$_ } ( 'year','month','day' )}, 0,0,0 );
 				if ( $session_created_on_date_start > $created_on_date ) {
 					my ($year,$month,$day, undef, undef, undef ) = Date::Calc::Time_to_Date([$created_on_date]);
@@ -280,7 +281,7 @@ sub edit {
 				} # end if
 			} # end if
 			if ( Date::Calc::check_date( @session{ map { '/article/history.html?created_on_end_'.$_ } ( 'year','month','day' )} ) ) {
-				my $session_created_on_date_end = Date::Calc::Mktime(
+				my $session_created_on_date_end = Date::Calc::Date_to_Time(
 					@session{ map { '/article/history.html?created_on_end_'.$_ } ( 'year','month','day' )}, 0,0,0 );
 				if ( $session_created_on_date_end < $created_on_date ) {
 					my ($year,$month,$day, undef, undef, undef ) = Date::Calc::Time_to_Date([$created_on_date]);
