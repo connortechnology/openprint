@@ -3,6 +3,7 @@ package openprint::article;
 
 use LWP::UserAgent ();
 use HTML::LinkExtractor ();
+require HTML::Entities;
 use openprint ();
 use vars qw( $r %variable %session %param %config $log $dbh );
 *variable = \%openprint::variable;
@@ -17,6 +18,24 @@ require openprint::Article;
 require openprint::Article_Category;
 require openprint::Article_Asset;
 require XML::RSS;
+
+# recursively fixes %gt; problems.
+sub unescape_substitutions {
+	$_[0] =~ /(.*?)(&lt;\?\s*.*?\s*\?&gt;)(.*)?/ms;
+
+
+	my ( $before, $code, $after ) = ( $1, $2, $3 );
+	if ( $code ) {
+$log->debug("before code($code)");
+		$code =~ s/&gt;/>/g;
+		$code =~ s/&lt;/</g;
+		$code =~ s/&rsquo;/'/g;
+$log->debug("after code($code)");
+		return $before . $code . ( $after ? unescape_substitutions( $after ) : '' );
+	} # end if
+	return $_[0];
+
+} # end unescape_substitutions
 
 sub save_article {
 	my $Article = new openprint::Article( $param{article_id} );
@@ -38,6 +57,7 @@ sub save_article {
 		delete $param{'category_id'};
 	} # end if
 	if ( $param{'source'} ) {
+
 		if ( $param{'source'} =~ /epicurious\.com/ ) {
 			my $ua = LWP::UserAgent->new;
 			$ua->agent("MyApp/0.1 ");
@@ -124,6 +144,8 @@ $log->debug("Found: pre: $pre, a: $a1, $a2, rem: $remainder");
 	} # end while
 	$param{'body'} = $body;
 } 
+	$param{body} = unescape_substitutions( $param{body} );
+
 	if ( ! $Article->id() ) {
 		$variable{'error'} .= $Article->save(\%param);
 		new openprint::Log()->save({'action'=>'Create Article', 'object'=>'Article', 'object_id'=>$Article->id()});

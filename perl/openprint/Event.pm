@@ -39,7 +39,7 @@ $serial = 'events_id_seq';
 	'name+info'	=>	q`name || info`,
 );
 %transforms = (
-	id		=>	[ 's/\D//g' ],
+	id		=>	[ 's/\D//g', '<2147483647' ],
     name	=>	[ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
     info	=>	[ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
     url		=>	[ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],

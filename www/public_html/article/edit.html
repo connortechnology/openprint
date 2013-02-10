@@ -105,7 +105,10 @@
 					</li>
 					<li>
 						<label for="body">Body</label>
-						<textarea class="mce" id="body" name="body" rows="<? echo ( ssi::count_lines( $$variable{Article}->body() ); ) ?>" onkeyup="textarea_resize(this);"><? echo ( ssi::html_escape( $$variable{Article}->body() ) ) ?></textarea>
+						<textarea class="mce" id="body" name="body" rows="<? echo ( ssi::count_lines( $$variable{Article}->body() ); ) ?>" onkeyup="textarea_resize(this);"><? echo ( 
+								my $body = $$variable{Article}->body_escaped();
+								return ssi::html_escape($body);
+								) ?></textarea>
 					</li>
 <? echo (
 	$$variable{Privacy} = $$variable{Article}->Privacy();

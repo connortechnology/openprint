@@ -9,7 +9,7 @@ use vars qw( $debug $table $serial %fields %defaults %transforms %config $log $d
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
 
-$debug = 0;
+$debug = 1;
 
 $table = 'articles';
 $serial = 'articles_id_seq';
@@ -288,5 +288,11 @@ sub Album {
     #return new openprint::Photo_Album( $_[0]{'album_id'} );
 } # end sub Album
 
+sub body_escaped {
+	my $body = $_[0]{body};
+	$body =~ s/<\?\s*(.+?)\s*\?>/&lt;\?\1\?&gt;/g;
+$openprint::log->debug("body: $body");
+	return $body;
+} # end
 1;
 __END__
