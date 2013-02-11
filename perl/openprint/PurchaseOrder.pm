@@ -196,7 +196,7 @@ $log->debug("Results: $results");
 sub send_to_vendor {
 	my ( $self ) = @_;
 
-	my $From = new openprint::User( $session{'user_id'} );
+	my $From = $self->Creator();
 	
 	my %info = (
 			'PurchaseOrder'	=>	$self,
@@ -215,7 +215,7 @@ sub send_to_vendor {
 	my %mail = (
 			SMTP	=> $config{'Mail Server'},
 			FROM	=> sprintf( '"%s" <%s>', $From->name(), $From->email() ),
-			SUBJECT => 'Purchase Order ' . $self->id() . ' from ' . $self->vendor_name(),
+			SUBJECT => 'Purchase Order ' . $self->id() . ' from ' . $From->Company()->name(),
 			);
 
 	my $results = 'PO ' . $$self{'id'} . ' emailed to the following recipients:<br/>';
@@ -231,7 +231,7 @@ sub send_to_vendor {
 		$results .= $Email->send( 
 				TO	=>	[ split(',', $self->shipto_email() ) ],
 				FROM	=>	$mail{'FROM'},
-				SUBJECT	=>	$mail{'SUBJECT'},
+				SUBJECT	=>	'Purchase Order '. $self->id() . ' for ' . $self->vendor_name(),
 				ATTACHMENTS =>	\@attachments,
 				);
 	} # end if
@@ -243,7 +243,7 @@ sub send_to_vendor {
 		$results .= 'Notifications: <br/>' . $Email->send( 
 				TO	=>	[ map { new openprint::User( $_ ) } $self->notifications() ],
 				FROM	=>	$mail{'FROM'},
-				SUBJECT	=>	$mail{'SUBJECT'},
+				SUBJECT	=>	'Purchase Order '. $self->id() . ' for ' . $self->vendor_name(),
 				ATTACHMENTS =>	\@attachments,
 				);
 	} # end if
