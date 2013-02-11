@@ -562,6 +562,23 @@ sub history {
 			} # end if
 		} # end foreach po_id
 		delete $param{'po_id'};
+    } elsif ( $param{'btnFunction'} eq 'AuthorizeAndSend' ) {
+        foreach my $po_id ( ref $param{po_id} eq 'ARRAY' ? @{$param{po_id}} : $param{po_id} ) {
+            my $PO = new openprint::PurchaseOrder( $po_id );
+            next if ! $PO->id();
+            if ( $PO->can_authorize() ) {
+                if ( $_ = $PO->authorize() ) {
+                    $variable{error} .= $_ . '<br/>';
+                } else {
+                    $variable{information} .= 'PO ' . $po_id . ' has been authorized.<br/>';
+					$variable{error} .= $PO->send_to_vendor();
+                } # end if
+            } else {
+                $variable{error} .= 'You are authorized to approve PO ' . $PO->id() . '<br/>';
+            } # end if
+        } # end foreach po_id
+        delete $param{'po_id'};
+
 	} elsif ( $param{'btnFunction'} eq 'Decline' ) {
 		foreach my $po_id ( ref $param{'po_id'} eq 'ARRAY' ? @{$param{'po_id'}} : split(',',$param{'po_id'}) ) {
 			my $PO = new openprint::PurchaseOrder( $po_id );
