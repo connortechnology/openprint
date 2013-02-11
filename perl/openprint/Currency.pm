@@ -13,7 +13,7 @@ use vars qw( $log $dbh $debug $table $serial %fields %transforms %defaults );
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
 
-$debug = 0;
+$debug = 1;
 $table = 'Currencies';
 $serial = 'currencies_id_seq';
 %fields = (
@@ -83,6 +83,23 @@ sub convert_from {
 	return $value;
 } # end sub convert_from
 sub convert_to {
+	my ( $From, $To, $value ) = @_;
+	if ( ! ref $To ) {
+		$To = openprint::Currency->find_one('short'=>$To);
+	} 
+	if ( $From eq 'openprint::Currency' ) {
+		$From = get_current();
+	} # end if
+	if ( ! $To ) {
+		$log->error('No Currency for ' . $_[1] );
+		return undef;
+	} # end if
+	if ( $To and ( $$To{id} != $$From{id} ) ) {
+		my $rate = $From->conversions( $To->id() );
+		$log->debug("Converting $value in $$From{name} to $$To{name}") if $debug;
+		$value *= $rate;
+	} # end if
+	return $value;
 } # end sub
 
 # Takes a ref to a price

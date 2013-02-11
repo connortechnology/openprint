@@ -11,9 +11,6 @@ use LWP::Simple;
 use Data::Dumper;
 require configuration;
 require sql;
-require ssi;
-require misc;
-require openprint::Company;
 require openprint::User;
 require logger;
 require openprint::Article;
@@ -29,9 +26,6 @@ use vars qw( $log $dbh %config );
 
 use File::Basename qw(basename);
 use Getopt::Long;
-use Mail::Sendmail;
-use MIME::QuotedPrint;
-use Time::HiRes qw(usleep);
 use Encode qw(encode);
 
 my $program = basename($0);
@@ -39,7 +33,7 @@ my $program = basename($0);
 my @args = @ARGV;
 
 my $opts = {};
-GetOptions($opts, 'help', 'log_file=s', 'log_level=s',
+GetOptions($opts, 'help', 'log_file=s', 'log_level=s', 'config=s',
 	'db_name=s', 'db_host=s', 'db_user=s', 'db_pass=s',
  );
 
@@ -48,8 +42,10 @@ if ($opts->{help}) {
 	exit 0;
 }
 
+$$opts{config} = '/etc/rss2article.conf' if ! $$opts{config};
+
 $log = new logger( {'level'=>'debug'});
-configuration::from_file('/etc/rss2article.conf');
+configuration::from_file($$opts{config});
 configuration::merge( $opts );
 $log->level($config{'log_level'}) if $config{'log_level'};
 
@@ -68,7 +64,7 @@ $openprint::dbh = sql::open_sql( $log,
 );
 die 'Error opening db' if ! $dbh;
 configuration::init( $log, $dbh, \%CFG::Config );
-configuration::from_file('/etc/rss2article.conf');
+configuration::from_file($$opts{config});
 configuration::merge( $opts );
 
 # create new instance of XML::RSS

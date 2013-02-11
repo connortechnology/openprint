@@ -1,5 +1,6 @@
 <fieldset><legend>Photos</legend>
-	<div id="asset_droparea" class="droparea qq-upload-drop-area">
+	<div id="asset_droparea" class="qq-uploader">
+		<div class="droparea qq-upload-drop-area">
 		<ul id="Assets"><? echo ( include('/article/_assets.html'); ) ?></ul>
 		<div id="uploadinstructions">
 			To upload files,
@@ -8,7 +9,9 @@
 			<span id="formuploadmessage"> click on the Upload button. There is a 1GB file size limit.</span>
 		</div>
 		<? echo ( ssi::button( 'Upload', { class=>'qq-upload-button' } ); ) ?>
+		<span class="qq-drop-processing"><span></span><span class="qq-drop-processing-spinner"></span></span>
 		<ul id="upload_list" class="preview qq-upload-list"></ul>
+	</div>
 	</div>
 	<fieldset><legend>Search for Assets</legend>
 		<ul id="asset_search">
@@ -25,33 +28,29 @@
         $('formuploadmessage').hide();
     }
 
-	var uploader = new qq.FileUploader({
+	var uploader = new qq.FineUploader({
 		debug: true,
 		element: $('asset_droparea'),
 		template: null,
-		droparea: $('asset_droparea'),
-		action: '/upload.htm',
-		limit: 5,
-		allowedExtensions: ['jpg', 'jpeg', 'png', 'gif','bmp','pdf'],
-		sizeLimit: 1024*1024*1024,
-		params: {
-			id: '<? echo ( $$variable{Article}->id() ) ?>',
-			UploadType: '<? echo ( my $type = ref $$variable{'Article'}; $type =~ s/^openprint:://; return $type; ) ?>'
-		},
-		other_types: [ {
-			type: 'application/x-moz-file-promise-dest-filename',
-			onComplete: function(e,item) {
-				 new Ajax.Updater( 'Assets', '/article/_assets.html', { 
-					parameters: { 
-						article_id: '<? echo ( $$variable{'Article'}->id() ) ?>',
-						filename: e.dataTransfer.getData(item),
-						func: 'add',
-						} } );
+		request: {
+			endpoint: '/upload.htm',
+			params: {
+				id: '<? echo ( $$variable{Article}->id() ) ?>',
+				UploadType: '<? echo ( my $type = ref $$variable{Article}; $type =~ s/^openprint:://; return $type; ) ?>'
 			}
-		} ],
-		onComplete: function(id, fileName){
-			new Ajax.Updater( 'Assets', '/article/_assets.html', { parameters: { article_id: '<? echo ( $$variable{'Article'}->id() ) ?>' } } );
-		}
+		},
+		validation: {
+			allowedExtensions: ['jpg', 'jpeg', 'png', 'gif','bmp','pdf'],
+			sizeLimit: 1024*1024*1024,
+		},
+		callbacks: {
+			onComplete: function(id, fileName){
+				new Ajax.Updater( 'Assets', '/article/_assets.html', { parameters: { article_id: '<? echo ( $$variable{'Article'}->id() ) ?>' } } );
+			}
+		},
+	   dragAndDrop: {
+				hideDropzones: false,
+	},
 
 	});
 </script>

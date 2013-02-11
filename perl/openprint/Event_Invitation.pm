@@ -6,7 +6,7 @@ package openprint::Event_Invitation;
 our @ISA = qw( openprint::Object );
 
 use vars qw( $debug $table @identified_by %fields %transforms %defaults );
-$debug = 0;
+$debug = 1;
 $table = 'event_invitations';
 @identified_by = ( 'event_id', 'user_id' );
 

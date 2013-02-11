@@ -95,7 +95,7 @@ $$variable{Timetracks} = [ openprint::Timetrack->find(invoice_id=>$$variable{Inv
 			</tr>
 		</table>
 	</fieldset>
-<? endif ( @{$$variable{'Timetracks'}} ) ?>
+<? endif ( @{$$variable{Timetracks}} ) ?>
 <? echo ( include( '/invoice/_products_view.html' ); ) ?>
 <div class="Notes">
 	<fieldset><legend>Notes</legend>
@@ -121,9 +121,10 @@ $$variable{Timetracks} = [ openprint::Timetrack->find(invoice_id=>$$variable{Inv
 		my $Address = openprint::Bitcoin_Address->find_one(object_id=>$$variable{Invoice}{id},object_type=>'openprint::Invoice');
 		if ( ! $Address ) {
 			$Address = openprint::Bitcoin_Address->generate( $$variable{Invoice} );
+			#$Address->save({object_type=>'openprint::Invoice',object_id=>$$variable{Invoice}{id}});
 		} # end if
-		if ( $Address and ( $Address != 1 ) ) {
-			push @options, 'Bitcoin at ' . $Address;
+		if ( $Address ) {
+			push @options, ( 'Bitcoin at ' . $Address->address() );
 		} # end if
 	} # end if
 	return if ! @options;
