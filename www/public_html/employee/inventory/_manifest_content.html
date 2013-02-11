@@ -39,7 +39,7 @@
 		$html .= '<td class="qty_feet">'.ssi::input( type=>'float', 
 			id		=>	'qty_feet-'.$id,
 			name	=>	'qty_feet-'.$id,
-			value	=>	Math::Round::nearest( 1, (($C->quantity()/$Paper->wpsi())/$Paper->width())/12 ),
+			( ( $Paper->width() and $Paper->wpsi() ) ? ( value	=>	Math::Round::nearest( 1, (($C->quantity()/$Paper->wpsi())/$Paper->width())/12 ) ) : () ),
 			onkeyup	=>	"from_feet(this,'$$variable{type_id}','$$C{id}');",
 			) . '</td>';
 		if ( @SkidContents ) {

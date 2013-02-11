@@ -17,30 +17,32 @@
 		<td class="Skid"><input type="number" id="skid_id-<?type_id?>-" name="skid_id-<?type_id?>-" onkeypress="return input_handler( this, event);" onkeydown="if(event.keyCode == 13){add_content(this.form, <?type_id?> );}" onkeyup="cardinalize(this);" /></td>
 		<td class="Docket"><input type="number" id="docket-<?type_id?>-" name="docket-<?type_id?>-" value="<? echo ( $param{'docket-'.$$variable{'type_id'}} ? $param{'docket-'.$$variable{'type_id'}} : $$variable{'Manifest'}->docket() ) ?>" onkeypress="return input_handler( this, event);" onkeydown="if(event.keyCode == 13){add_content(this.form, <?type_id?> );}" onkeyup="cardinalize(this);" /></td>
 		<td class="qty_lbs">
-<? echo ( ssi::input( type=>'cardinal', id=>'qty_lbs-'.$$variable{type_id}, name=>'qty_lbs-'.$$variable{type_id}, onkeyup=>q`convert_lbs_to_kg( this, $('qty_kgs-`.$$variable{type_id}.q`') );` ); ) ?>
+<? echo ( ssi::input( type=>'cardinal', id=>'qty_lbs-'.$$variable{type_id}.'-', name=>'qty_lbs-'.$$variable{type_id}.'-', onkeyup=>"from_lbs(this,'$$variable{type_id}','');" ); ) ?>
 		</td>
 		<td class="qty_kgs">
-<? echo ( ssi::input( type=>'float', id=>'qty_kgs-'.$$variable{type_id}, name=>'qty_kgs-'.$$variable{type_id}, onkeyup=>q`convert_kg_to_lbs( this, $('qty_lbs-`.$$variable{type_id}.q`') );` ); ) ?>
+<? echo ( ssi::input( type=>'float', id=>'qty_kgs-'.$$variable{type_id}.'-', name=>'qty_kgs-'.$$variable{type_id}.'-', onkeyup=>"from_kg(this,'$$variable{type_id}','');" ); ) ?>
 </td>
 		<td class="qty_feet">
-<? echo ( ssi::input( type=>'cardinal', id=>'qty_feet-'.$$variable{type_id}, name=>'qty_feet-'.$$variable{type_id}, onkeyup=>q`convert_from_feet( '`.$$variable{type_id}.q`') );` ); ) ?>
+<? echo ( ssi::input( type=>'cardinal', id=>'qty_feet-'.$$variable{type_id}.'-', name=>'qty_feet-'.$$variable{type_id}.'-', onkeyup=>"from_feet(this,'$$variable{type_id}','');" ); ) ?>
 </td>
 		<td class="in_stock">&nbsp;</td>
 		<td class="last_seen">&nbsp;</td>
 		<td>&nbsp;</td>
-		<td class="buttons"><? echo ( ssi::button( 'Add'.$$variable{'type_id'}, { onclick=>"add_content( \$('f1'), $$variable{type_id} );", text=>'Add' } ); ) ?></td>
+		<td class="buttons"><? echo ( ssi::button( 'Add'.$$variable{type_id}, { onclick=>"add_content( \$('f1'), $$variable{type_id} );", text=>'Add' } ); ) ?></td>
 	</tr>
 	<? echo (
 		my $html = '';
 		my $total = 0;
 		my $content = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/employee/inventory/_manifest_content.html' );
-		my @Contents = $$variable{'Manifest'}->Contents( type_id=>$$variable{type_id}, order=>'id');
+		my @Contents = $$variable{Manifest}->Contents(type_id=>$$variable{type_id},order=>'id');
 		foreach my $C ( @Contents ) {
 			$$variable{C} = $C;
 			$html .= ssi::variable_substitution( \$content, $variable );
 			$total += $C->quantity();
 		} # end foreach tag_id
-		$html .= sprintf('<tr id="totals-%4$d" class="totals"><td>Totals</td><td colspan="2" id="skidcount-%4$d">%5$d skids/rolls</td><td id="totallbs-%4$d">%1$dlbs</td><td id="totalkgs-%4$d">%2$.4fkg</td><td id="totalfeet-%4$d">%3$dfeet</td><td colspan="4">&nbsp;</td></tr>', $total, $total/2.2046, ( (($total/$$variable{Type}->Paper()->wpsi())/$$variable{Type}->Paper()->width())/12 ), $$variable{'type_id'}, scalar @Contents );
+		my $Paper = $$variable{Type}->Paper();
+
+		$html .= sprintf('<tr id="totals-%4$d" class="totals"><td>Totals</td><td colspan="2" id="skidcount-%4$d">%5$d skids/rolls</td><td id="totallbs-%4$d">%1$dlbs</td><td id="totalkgs-%4$d">%2$.4fkg</td><td id="totalfeet-%4$d">%3$dfeet</td><td colspan="4">&nbsp;</td></tr>', $total, $total/2.2046, ( ( $Paper->wpsi() and $Paper->width() ) ? (($total/$Paper->wpsi())/$Paper->width())/12 : 0 ), $$variable{'type_id'}, scalar @Contents );
 		return $html;
 	) ?>
 </table>

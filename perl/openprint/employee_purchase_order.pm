@@ -3,6 +3,8 @@ package openprint::employee_purchase_order;
 require sql;
 require openprint::PurchaseOrder;
 require openprint::PurchaseOrder_Item;
+require openprint::PurchaseOrder_Content;
+require openprint::PurchaseOrder_Tax;
 require openprint::PurchaseOrder_Department;
 require openprint::Company_Category;
 require openprint::Object_Asset;
@@ -18,10 +20,16 @@ use vars qw( $r $log $dbh %variable %param %session %config );
 
 sub save_supplier {
 	my ( $p ) = @_;
-	my @Companies = openprint::Company->find( 'name lc' => lc openprint::Company->transform('name', $$p{vendor_name} ) );
+
+	my $Company;
+
+	my $ac = sql::start_transaction( $dbh );
+	$dbh->do( 'LOCK TABLE Company IN EXCLUSIVE MODE' ) or $log->error( DBI->errstr );
+
+	my @Companies = openprint::Company->find( 'name lc'=> lc openprint::Company->transform('name', $$p{vendor_name} ) );
 	if ( ! @Companies ) {
-		my $C = new openprint::Company();
-		$C->save({
+		$Company = new openprint::Company();
+		$Company->save({
 				supplier		=> 'Y',
 				name			=> $$p{vendor_name},
 				business_name	=> $$p{vendor_name},
@@ -34,9 +42,7 @@ sub save_supplier {
 				phone			=> $$p{vendor_phone},
 				fax				=> $$p{vendor_fax},
 				} );
-		return $C->id();
 	} else {
-		my $Company;
 		foreach my $C ( @Companies ) {
 			if ( $C->supplier() eq 'Y' ) {
 				$Company = $C;
@@ -47,13 +53,17 @@ sub save_supplier {
 			$Company = $Companies[0];
 			$Company->save( {supplier=>'Y'} );
 		} # end if
-		return $Company->id();
 	} # end if
+	sql::end_transaction( $dbh, $ac );
+	return $Company->id() if $Company;
 	return;
 } # end sub save_supplier
 
 sub save_contact {
 	my ( $p ) = @_;
+
+	my $ac = sql::start_transaction( $dbh );
+	$dbh->do( 'LOCK TABLE Users IN EXCLUSIVE MODE' ) or $log->error( DBI->errstr );
 	my $User = openprint::User->find_one( company_id=>$$p{supplier_id}, email => openprint::User->transform('email', $$p{vendor_email} ) );
 	if ( ! $User ) {
 		$User = new openprint::User();
@@ -72,12 +82,18 @@ sub save_contact {
 				'web_active'	=>	0,
 				} );
 	} # end if
+	sql::end_transaction( $dbh, $ac );
 	return $$User{id};
 } # end sub save_contact
 
 sub save_contents {
 	my ( $PO, $p ) = @_;
 	my %types;
+
+	my $ac = sql::start_transaction( $dbh );
+	$dbh->do( "LOCK TABLE $openprint::PurchaseOrder_Item::table IN EXCLUSIVE MODE" ) or $log->error( DBI->errstr );
+	$dbh->do( "LOCK TABLE $openprint::PurchaseOrder_Department::table IN EXCLUSIVE MODE" ) or $log->error( DBI->errstr );
+	$dbh->do( "LOCK TABLE $openprint::PurchaseOrder_Content::table IN EXCLUSIVE MODE" ) or $log->error( DBI->errstr );
 
 	foreach my $content_id ( ( map { $_->id() } $PO->Contents() ), 'new' ) {
 		next if ( $content_id eq 'new' ) and ! $param{'qty-'.$content_id};
@@ -133,15 +149,15 @@ sub save_contents {
 		my $C = new openprint::PurchaseOrder_Content( $content_id );
 
 		$variable{'error'} .= $C->save( {
-				'po_id'         =>  $PO->id(),
-				'qty'           =>  $$p{'qty-'.$content_id},
-				'product'		=>	$$p{'product-'.$content_id},
-				'item_id'       =>  $$Item{'id'},
-				'description'   =>  $$p{'description-'.$content_id},
-				'docket'        =>  $$p{'docket-'.$content_id},
-				'price'         =>  $$p{'price-'.$content_id},
-				'total'         =>  $$p{'total-'.$content_id},
-				'type_id'		=>	$$p{'type_id-'.$content_id},
+				po_id		=>	$PO->id(),
+				qty			=>	$$p{'qty-'.$content_id},
+				product		=>	$$p{'product-'.$content_id},
+				item_id		=>	$$Item{'id'},
+				description	=>	$$p{'description-'.$content_id},
+				docket		=>	$$p{'docket-'.$content_id},
+				price		=>	$$p{'price-'.$content_id},
+				total		=>	$$p{'total-'.$content_id},
+				type_id		=>	$$p{'type_id-'.$content_id},
 				( $Dept ? ( 'department_id'	=>	$Dept->id() ) : ( ) ),
 				});
 
@@ -154,6 +170,7 @@ sub save_contents {
 			} # end foreach Project
 		} # end if docket
 	} # end foreach Content id
+	sql::end_transaction( $dbh, $ac );
 	return %types;
 } # end sub save_contents
 
@@ -310,36 +327,36 @@ sub edit {
 		} # end if
 
 		$variable{'error'} .= $PO->save( {
-				'created_by'	=>	$session{'user_id'}, 
-				'company_id'	=>	$Me->company_id(),
-				supplier_id		=>	$Project->company_id(),
-				'currency_id'		=>	openprint::Currency::get_current()->id(),
-				'created_by'		=>	$Me->id(),
-				'shipto_contact'	=>	$Me->name(),
-				'shipto_name'		=>	$C->name(),
-				'shipto_address1'	=>	$C->address1(),
-				'shipto_address2'	=>	$C->address2(),
-				'shipto_city'		=>	$C->city(),
-				'shipto_state'		=>	$C->state(),
-				'shipto_country'	=>	$C->country(),
-				'shipto_postalcode'	=>	$C->postalcode(),
-				'shipto_phone'		=>	$C->phone(),
-				'shipto_mobile'		=>	$Me->mobile(),
-				'shipto_fax'		=>	$C->fax(),
-				'shipto_email'		=>	$Me->email(),
-				'shipto_sms'		=>	$Me->sms(),
+				created_by			=>	$session{'user_id'}, 
+				company_id			=>	$Me->company_id(),
+				supplier_id			=>	$Project->company_id(),
+				currency_id			=>	openprint::Currency::get_current()->id(),
+				created_by			=>	$Me->id(),
+				shipto_contact		=>	$Me->name(),
+				shipto_name			=>	$C->name(),
+				shipto_address1		=>	$C->address1(),
+				shipto_address2		=>	$C->address2(),
+				shipto_city			=>	$C->city(),
+				shipto_state		=>	$C->state(),
+				shipto_country		=>	$C->country(),
+				shipto_postalcode	=>	$C->postalcode(),
+				shipto_phone		=>	$C->phone(),
+				shipto_mobile		=>	$Me->mobile(),
+				shipto_fax			=>	$C->fax(),
+				shipto_email		=>	$Me->email(),
+				shipto_sms			=>	$Me->sms(),
 				} );
 $log->debug("Creating PO $$PO{id} from label $variable{error}");
 		
 		my $C = new openprint::PurchaseOrder_Content();
-        $C->save( {
-            'po_id'         => 	$PO->id(),
-            'qty'           =>  1,
-            'item'          =>  'Shipping',
-            'description'   =>  'From: ' . $Label->get_data('from') . ' To: ' . $Label->get_data('to'),
-            'docket'        =>  $Label->Project()->docket(),
-            'type'       	=> 'Other',
-            });
+		$C->save( {
+			'po_id'		 => 	$PO->id(),
+			'qty'			=>	1,
+			'item'			=>	'Shipping',
+			'description'	=>	'From: ' . $Label->get_data('from') . ' To: ' . $Label->get_data('to'),
+			'docket'		=>	$Label->Project()->docket(),
+			'type'			=> 'Other',
+			});
 	
 	} elsif ( $param{'btnFunction'} eq 'Save' ) {
 		if ( ! $param{po_id} ) {
@@ -371,13 +388,15 @@ $log->debug("Creating PO $$PO{id} from label $variable{error}");
 			$param{'delivered_on'} = undef;
 		} # end if
 
+		# We start locking here, because we load the taxes here. Taxes are where the locking becomes important.
+		my $ac = sql::start_transaction( $dbh );
+		$dbh->do( "LOCK TABLE $openprint::PurchaseOrder_Tax::table IN EXCLUSIVE MODE" ) or $log->error( DBI->errstr );
+
 		# Theoretically, the taxes in params are up to date, because any change in country would update them.
 		# This must happen before saving because charging or not for a tax alters the total.
 		foreach my $Tax ( $PO->Taxes() ) {
 			# Order is important here. Also the 1* turns an undef value into a specific boolean 0, because we used a checkbox
 			$Tax->charge(1*$param{'tax_charge-'.$Tax->tax_id()}) if $Tax->charge() != 1*$param{'tax_charge-'.$Tax->tax_id()};
-			#$Tax->amount(undef);
-			#$Tax->save();
 		} # end foreach
 		# Save will recalc taxes as well.
 		$variable{error} .= $PO->save( \%param );
@@ -402,6 +421,7 @@ $log->debug("Creating PO $$PO{id} from label $variable{error}");
 
 		# Save will recalc taxes as well.
 		$variable{error} .= $PO->save( \%param );
+		sql::end_transaction( $dbh, $ac );
 
 		if ( ( ! $variable{'error'} ) and $param{'reason'} ) {
 			my $L = new openprint::PurchaseOrder_Log();
@@ -464,8 +484,8 @@ $log->debug("Creating PO $$PO{id} from label $variable{error}");
 			if ( ! $variable{error} ) {
 				$variable{ExternalRedirect} = '/employee/purchase_order/edit.html?po_id='.$PO->id();
 			} # end if
-        } # end if
-        %param = ();
+		} # end if
+		%param = ();
 
 	} # end if btnFunction
 
@@ -540,6 +560,23 @@ sub history {
 			} # end if
 		} # end foreach po_id
 		delete $param{'po_id'};
+    } elsif ( $param{'btnFunction'} eq 'AuthorizeAndSend' ) {
+        foreach my $po_id ( ref $param{po_id} eq 'ARRAY' ? @{$param{po_id}} : $param{po_id} ) {
+            my $PO = new openprint::PurchaseOrder( $po_id );
+            next if ! $PO->id();
+            if ( $PO->can_authorize() ) {
+                if ( $_ = $PO->authorize() ) {
+                    $variable{error} .= $_ . '<br/>';
+                } else {
+                    $variable{information} .= 'PO ' . $po_id . ' has been authorized.<br/>';
+					$variable{error} .= $PO->send_to_vendor();
+                } # end if
+            } else {
+                $variable{error} .= 'You are authorized to approve PO ' . $PO->id() . '<br/>';
+            } # end if
+        } # end foreach po_id
+        delete $param{'po_id'};
+
 	} elsif ( $param{'btnFunction'} eq 'Decline' ) {
 		foreach my $po_id ( ref $param{'po_id'} eq 'ARRAY' ? @{$param{'po_id'}} : split(',',$param{'po_id'}) ) {
 			my $PO = new openprint::PurchaseOrder( $po_id );
@@ -586,19 +623,19 @@ sub _purchase_order_supplier_address {
 sub _po_content_line {
 	my $PO = new openprint::PurchaseOrder( $param{'po_id'} );
 	$variable{'PurchaseOrder'} = $PO;
-    if ( $param{'action'} eq 'add' ) {
+	if ( $param{'action'} eq 'add' ) {
 		my $C = new openprint::PurchaseOrder_Content( $param{'po_content_id'} );
-        $C->save( {
-            'po_id'         =>  $param{'po_id'},
-            'qty'           =>  $param{'qty'},
-            'item'          =>  $param{'item'},
-			'product'		=>	$param{'product'},
-            'description'   =>  $param{'description'},
-            'docket'        =>  $param{'docket'},
-            'price'         =>  $param{'price'},
-            'total'         =>  $param{'total'},
-            'type_id'       =>  $param{'type_id'},
-            });
+		$C->save( {
+			po_id		=>	$param{po_id},
+			qty			=>	$param{qty},
+			item		=>	$param{item},
+			product		=>	$param{product},
+			description	=>	$param{description},
+			docket		=>	$param{docket},
+			price		=>	$param{price},
+			total		=>	$param{total},
+			type_id		=>	$param{type_id},
+			});
 		$variable{'C'} = $C;
 		$variable{'error'} .= $PO->save();
 	} elsif ( $param{'action'} eq 'delete' ) {
