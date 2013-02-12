@@ -5,7 +5,7 @@ require openprint::Object;
 
 use vars qw( $debug $table $serial %fields %find_fields %transforms %defaults );
 
-$debug = 0;
+$debug = 1;
 
 $table = 'projecttemplate';
 $serial = 'projecttemplate_id_seq';
@@ -32,6 +32,9 @@ $serial = 'projecttemplate_id_seq';
 	finished_height	=>	[ 's/[^\.\d]//g' ],
 	flat_width		=>	[ 's/[^\.\d]//g' ],
 	flat_height		=>	[ 's/[^\.\d]//g' ],
+    type => [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
+    description => [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
+    message => [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
 );
 
 %defaults = (
@@ -39,6 +42,7 @@ $serial = 'projecttemplate_id_seq';
 	finished_height	=> undef,
 	flat_width		=> undef,
 	flat_height		=> undef,
+	message			=> undef,
 );
 
 1;

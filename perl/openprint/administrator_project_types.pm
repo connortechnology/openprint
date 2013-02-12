@@ -176,11 +176,15 @@ sub templates {
 					flat_width			=>	$param{"flatwidth$$Template{id}"},
 					flat_height			=>	$param{"flatheight$$Template{id}"},
 					message				=>	$param{"message$$Template{id}"},
-				} );
+					} );
+			if ( $variable{error} ) {
+				$dbh->rollback();
+				last;
+			} # end if
 			# Add record to audit log - action "Update Project Template".
-			openprint::logs::insertLogRecord('52', "Project Type ID: $$Template{type} - $$Template{description}" );
+			(new openprint::Log())->save({action=>'Update ProjectType Template', note=>"$$Template{type} - $$Template{description}" });
 		} # end foreach Template
-		if ( $param{'typeNew'} ) {
+		if ( (!$variable{error}) and $param{'typeNew'} ) {
 			$variable{'error'} .= new openprint::ProjectType_Template()->save({
 					projecttype_id	=>	$param{ddmProjectType},
 					type			=>	$param{typeNew},
@@ -192,7 +196,7 @@ sub templates {
 					message			=>	$param{messageNew},
 				} );
 			# Add record to audit log - action "New Project Template".
-			openprint::logs::insertLogRecord('55', "Project Type ID: $param{typeNew} - $param{descriptionNew}",);
+			(new openprint::Log())->save({action=>'New ProjectType Template', note=>"$param{typeNew} - $param{descriptionNew}" });
 		} # end if
 		sql::end_transaction( $dbh, $ac );
 	} elsif ( $param{'btnFunction'} eq 'Import Templates' ) {
@@ -266,7 +270,7 @@ sub templates {
 		} # end if
 
 		# Add record to audit log - action "Export Project Templates".
-		openprint::logs::insertLogRecord('54',);
+		(new openprint::Log())->save({action=>'Export ProjectType Templates'});
 	} # end if
 } # end sub templates
 
