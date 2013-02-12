@@ -103,7 +103,17 @@ function AjaxLoadContent( divID, page, parameters, message ) {
 			div.innerHTML = 'Please wait....';
 		} // end if
 	} // end if
-	new Ajax.Updater( divID, page, { method: 'get', parameters: parameters, evalScripts: true } );
+	var method = 'get';
+	//alert( typeof parameters );
+	if ( ! parameters ) { 
+		parameters = '';
+	} else if ( typeof parameters == 'object' ) {
+		parameters = parameters.serialize();
+	} 
+	if ( parameters.length > 8190 ) 
+		method = 'post';
+
+	new Ajax.Updater( divID, page, { method: method, parameters: parameters, evalScripts: true } );
 }
 
 function LoadContent( divID, page, inputs, message ) {
