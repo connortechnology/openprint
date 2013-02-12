@@ -3011,6 +3011,15 @@ foreach my $PT ( openprint::ProjectType->find() ) {
 		$PT->save();
 	} # end if
 } # end foreach
+if ( ! sets::isin( 'projecttemplate' ) ) {
+	$dbh->do( misc::load_file( $log, q{../openprint/sql/ProjectType_Templates.sql}) );
+	die if $dbh->errstr();
+} else {
+	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='projecttemplate'", 'column_name');
+	if ( ! exists $$data{message} ) {
+		$dbh->do('ALTER TABLE projecttemplate ADD message TEXT');
+	}
+} # end if
 if ( ! sets::isin( 'hosts', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/Hosts.sql}) );
 } else {

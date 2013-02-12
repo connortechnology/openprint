@@ -806,15 +806,6 @@ if ( ! sets::isin( 'projecttype_defaults', \@tables ) ) {
 		$dbh->do('ALTER TABLE Projecttype_defaults RENAME COLUMN strdefaultvalue to value');
 	}
 } 
-if ( ! sets::isin( 'projecttemplate' ) ) {
-	$dbh->do( misc::load_file( $log, q{../openprint/sql/ProjectType_Templates.sql}) );
-	die if $dbh->errstr();
-} else {
-	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='projecttemplate'", 'column_name');
-	if ( ! exists $$data{message} ) {
-		$dbh->do('ALTER TABLE projecttemplate ADD message TEXT');
-	}
-} # end if
 if ( ! sets::isin( 'inventoryconditions', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/InventoryConditions.sql}) );
 	die if $dbh->errstr();
