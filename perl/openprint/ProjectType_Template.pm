@@ -19,6 +19,7 @@ $serial = 'projecttemplate_id_seq';
 	finished_height	=>	'dblfinishedheight',
 	flat_width		=>	'dblflatwidth',
 	flat_height		=>	'dblflatheight',
+	message			=>	'message',
 );
 
 %find_fields = (
