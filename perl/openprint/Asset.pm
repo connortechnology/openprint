@@ -1,10 +1,7 @@
 use strict;
 require openprint;
-require Digest::MD5;
 require openprint::Keyword;
-require IPC::Run3;
-use Fcntl qw( :flock );
-
+use Fcntl;
 
 package openprint::Asset_Type;
 our @ISA = qw(openprint::Object);
@@ -144,6 +141,7 @@ sub sized_url {
 				} # end if	
 				$openprint::log->debug("Creating $size at ${width} x $src $dest");
 				my ( $stderr, $stdout );
+				require IPC::Run3;
 				IPC::Run3::run3(qq`convert -adaptive-resize ${width}x "$src" "$dest"`, undef, $stdout, $stderr );
 				if ( $? ) {
 					$openprint::log->error("ERror creating sized image. Reason: ($?) stdout($stdout) stderr($stderr)");
@@ -338,6 +336,7 @@ sub md5 {
 		$_[0]{'md5'} = $_[1];
 	} # end if
 	if ( ( ! $_[0]{'md5'} ) and $_[0]{'data'} ) {
+		require Digest::MD5;
 		$_[0]{'md5'} = Digest::MD5::md5_base64( $_[0]{'data'} );
 	} # end if
 	return $_[0]{'md5'};	
@@ -384,6 +383,7 @@ sub upload {
 	if ( ! $upload ) {
 		return "There was no upload for $_[0]<br/>";
 	} # end if
+	require Digest::MD5;
 	my $data;
 	$upload->slurp( $data );
 	my $md5 = Digest::MD5::md5_base64( $data );
@@ -539,7 +539,7 @@ sub generate_video {
 		$openprint::log->error("Unable to open semaphore at $dest.lck\n");
 		return;
 	} # end if
-	if ( ! flock($lock, Fcntl::LOCK_EX) ) {
+	if ( ! Fcntl::flock($lock, Fcntl::LOCK_EX) ) {
 		$openprint::log->error("Unable to lock semaphore\n");
 	} # end if
 	if ( ! -e $dest ) {

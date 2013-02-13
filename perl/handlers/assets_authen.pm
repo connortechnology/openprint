@@ -84,7 +84,7 @@ $log->debug("Session is: $session{_session_id} $session{user_id} $session{compan
 					return Apache2::Const::OK;
 				} # end if
 			} else {
-$log->error("NOT FOUND");
+$log->error("Asset NOT FOUND.  id was $id");
 				$return_code = Apache2::Const::HTTP_NOT_FOUND;
 			} # end if Asset not found
 		} else {
