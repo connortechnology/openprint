@@ -287,8 +287,8 @@ sub upload_files {
 
 		$_ = $Mail->send(
 						FROM    => $from,
-						#TO		=> \@to,
-						TO		=>	'iconnor@point-one.com',
+						TO		=> \@to,
+						#TO		=>	'iconnor@point-one.com',
 						SUBJECT => $param{'docket'} ? "Files uploaded for docket: $param{'docket'}" : 'Files Uploaded',
 						ATTACHMENTS	=>	[ '', encode_qp(Encode::encode('utf-8',$body)), 'text/html', 'quoted-printable' ],
 				   );
@@ -312,8 +312,8 @@ sub upload_files {
 		} else {
 			$_ = $Mail->send(
 					FROM    => $from,
-					#TO      => \@to,
-					TO		=>	'iconnor@point-one.com',
+					TO      => \@to,
+					#TO		=>	'iconnor@point-one.com',
 					SUBJECT => $param{'docket'} ? "Files uploaded for docket: $param{'docket'}" : 'Files Uploaded',
 					ATTACHMENTS => [ '', encode_qp(Encode::encode('utf-8',$body)), 'text/html', 'quoted-printable' ],
 					);
