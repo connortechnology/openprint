@@ -38,7 +38,17 @@
 	PerlSetVar		db_password	 point-one
 	PerlSetVar		db_driver		Pg
 
+    <Directory "/media/Storage/Project Files/">
+        Options +Indexes
+        SetHandler      perl-script
+        PerlAuthenHandler    handlers::files_authen
+        AuthType Basic
+        AuthName "PointOne FTP Site"
+        Require valid-user
+    </Directory>
+
     <Directory /var/www/point-one/www/public_html>
+        Options -Indexes
 		RewriteEngine on
 		RewriteRule	^(.*);SSL$	http://%{SERVER_NAME}/$1 [R,L]
 		RewriteRule	^(.*);NOSSL$ http://%{SERVER_NAME}/$1 [R,L]

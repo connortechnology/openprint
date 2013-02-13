@@ -87,9 +87,9 @@
 			</p>
 			<p>
 				<label for="ddmDueDateMonth">Due Date:</label>
-				<select style="width: auto;" name="ddmDueDateMonth" onchange="off(this.options[this.selectedIndex]);setDaysDropDown(document.upload.ddmDueDateYear.value,this.value,document.upload.ddmDueDateDay,document.upload.ddmDueDateDay.value);"><? echo ( ssi::getmonths( $$variable{'ddmDueDateMonth'} ); ) ?></select>
-				<select style="width: auto;" name="ddmDueDateDay" onchange="off(this.options[this.selectedIndex]);"><? echo ( ssi::getdays( $$variable{'ddmDueDateDay'} ); ) ?></select>
-				<select style="width: auto;" name="ddmDueDateYear" onchange="off(this.options[this.selectedIndex]);setDaysDropDown(this.value,document.upload.ddmDueDateMonth.value,document.upload.ddmDueDateDay,document.upload.ddmDueDateDay.value);"><? echo ( ssi::return_years( (localtime(time))[5] + 1900, (localtime(time))[5] + 1901, (localtime(time))[5] + 1900 ); ) ?></select>
+				<span class="DateSelector">
+				<? echo ( ssi::date_select( 'duedate', [ @$variable{'ddmDueDateYear','ddmDueDateMonth','ddmDueDateDay'} ] ); ) ?>
+				</span>
 			</p>
 			<p>
 				<label>Size:</label>
@@ -112,7 +112,13 @@
 			<? endif ( $$variable{'txtQuoteNumber'} ) ?>
 			<p>
 				<label for="txtJobDescription">Description:</label>
-				<textarea name="txtJobDescription" rows="4" onkeyup="textarea_resize(this);"></textarea>
+				<textarea name="txtJobDescription" rows="4" onkeyup="textarea_resize(this);">
+			<? if ( $$variable{'txtQuoteNumber'} ) ?>
+				<? echo (
+					new openprint::Project( $$variable{'txtQuoteNumber'} )->reference();
+				) ?>
+			<? endif ( $$variable{'txtQuoteNumber'} ) ?>
+				</textarea>
 			</p>
 			<p class="proof_type">
 				<label>Proof Required:</label>
@@ -142,37 +148,37 @@
 				<tr>
 					<th width="20">&nbsp;</th>
 					<th width="200" nowrap="nowrap" align="left">Select file(s) to upload:</th>
-					<th nowrap="nowrap" align="left">Description (optional)</th>
+					<th class="description" nowrap="nowrap">Description (optional)</th>
 				</tr>
 				<tr>
 					<td>1.</td>
 					<td><input type="file" name="fileUpload1" id="fileUpload1" /></td>
-					<td><input type="text" name="txtDescription1" style="width: 98%;" /></td>
+					<td class="description"><input type="text" name="txtDescription1" /></td>
 				</tr>
 				<tr>
 					<td>2.</td>
 					<td><input type="file" name="fileUpload2" id="fileUpload2" /></td>
-					<td><input type="text" name="txtDescription2" style="width: 98%;" /></td>
+					<td class="description"><input type="text" name="txtDescription2" /></td>
 				</tr>
 				<tr>
 					<td>3.</td>
 					<td><input type="file" name="fileUpload3" id="fileUpload3" /></td>
-					<td><input type="text" name="txtDescription3" style="width: 98%;" /></td>
+					<td class="description"><input type="text" name="txtDescription3" /></td>
 				</tr>
 				<tr>
 					<td>4.</td>
 					<td><input type="file" name="fileUpload4" id="fileUpload4" /></td>
-					<td><input type="text" name="txtDescription4" style="width: 98%;" /></td>
+					<td class="description"><input type="text" name="txtDescription4" /></td>
 				</tr>
 				<tr>
 					<td>5.</td>
 					<td><input type="file" name="fileUpload5" id="fileUpload5" /></td>
-					<td><input type="text" name="txtDescription5" style="width: 98%;" /></td>
+					<td class="description"><input type="text" name="txtDescription5" /></td>
 				</tr>
 			</table>
 			<span style="float: right;">
 				<? echo ( 
-					ssi::writeButton( $log, $dbh, 'Upload', 'uploadFiles.gif', "if ( check_input( upload ) ) { upload.btnFunction.value='Upload Files';startprogress($$variable{serial});document.forms['upload'].submit();}", '', 'Upload Files' );
+					ssi::button( 'Upload', { onclick=>"if ( check_input( upload ) ) { upload.btnFunction.value='Upload Files';startprogress($$variable{serial});document.forms['upload'].submit();}", text=>'Upload Files' } );
 				) ?>					
 			</span>
 			<br class="spacer"/>

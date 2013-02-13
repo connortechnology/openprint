@@ -259,18 +259,12 @@ sub upload_files {
 						} );
 			} # end if
 		} # end foreach
-# Notify CSR, and Customer of upload
-		if (-e $config{'SkinPath'} . '/email_content/uploadfiles_csr_notification.html') {
-			$$variable{'ReplacementText'} = misc::load_file( $log, $config{'SkinPath'} . '/email_content/uploadfiles_csr_notification.html' );
-		} else {
-			$$variable{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/uploadfiles_csr_notification.html' );
-		} # end if
-		$$variable{'ReplacementText'} = ssi::variable_substitution( $r, $log, $dbh, \$$variable{'ReplacementText'}, $variable );
+		# Notify CSR, and Customer of upload
+		$$variable{'ReplacementText'} = ssi::include( '/email_content/uploadfiles_csr_notification.html', $variable );
 		my @to;
 		my $from;
 		if ( $session{'user_id'} ) {
-			my $User = new openprint::User( $session{'user_id'} );
-			$from = sprintf('"%s %s" <%s>', $User->get('firstname','lastname','email') ),
+			$from = new openprint::User( $session{'user_id'} );
 		} else {
 			$from = $param{'txtEmailAddress'};
 			if ( ! Email::Valid->address( $param{'txtEmailAddress'} ) ) {
@@ -292,21 +286,15 @@ sub upload_files {
 		my $Mail = new openprint::Email();
 
 		$_ = $Mail->send(
-						SMTP    => $config{'Mail Server'},
 						FROM    => $from,
-						TO		=> \@to,
-						#BCC		=>	'iconnor@penultima.org',
+						#TO		=> \@to,
+						TO		=>	'iconnor@point-one.com',
 						SUBJECT => $param{'docket'} ? "Files uploaded for docket: $param{'docket'}" : 'Files Uploaded',
 						ATTACHMENTS	=>	[ '', encode_qp(Encode::encode('utf-8',$body)), 'text/html', 'quoted-printable' ],
 				   );
 
 		# Send transcript to uploader
-		if (-e $config{'SkinPath'} . '/email_content/uploadfiles_client_notification.html') {
-			$$variable{'ReplacementText'} = misc::load_file( $log, $config{'SkinPath'} . '/email_content/uploadfiles_client_notification.html' );
-		} else {
-			$$variable{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/uploadfiles_client_notification.html' );
-		} # end if
-		$$variable{'ReplacementText'} = ssi::variable_substitution( $r, $log, $dbh, \$$variable{'ReplacementText'}, $variable );
+		$$variable{'ReplacementText'} = ssi::include( '/email_content/uploadfiles_client_notification.html', $variable );
 		if ( @to == 1 ) {
 			$from = $to[0];
 		} else {
@@ -319,13 +307,17 @@ sub upload_files {
 			@to = ( $param{'txtEmailAddress'} );
 		} # end if
         $body = ssi::variable_substitution( $r, $log, $dbh, \$email_template, $variable );
-        $_ = $Mail->send(
-                        SMTP    => $config{'Mail Server'},
-                        FROM    => $from,
-                        TO      => \@to,
-                        SUBJECT => $param{'docket'} ? "Files uploaded for docket: $param{'docket'}" : 'Files Uploaded',
-						ATTACHMENT => [ '', encode_qp(Encode::encode('utf-8',$body)), 'text/html', 'quoted-printable' ],
-				);
+		if ( ! $body ) {
+			$log->error("EMpty body in send email to client from upload_Files");
+		} else {
+			$_ = $Mail->send(
+					FROM    => $from,
+					#TO      => \@to,
+					TO		=>	'iconnor@point-one.com',
+					SUBJECT => $param{'docket'} ? "Files uploaded for docket: $param{'docket'}" : 'Files Uploaded',
+					ATTACHMENTS => [ '', encode_qp(Encode::encode('utf-8',$body)), 'text/html', 'quoted-printable' ],
+					);
+		} # end if
 	} # end if
 } # end sub upload_files
 

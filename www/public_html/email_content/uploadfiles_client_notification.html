@@ -184,15 +184,18 @@ This email is a confirmation of your upload to <? echo ( $config{'SiteTitle'} ) 
       <thead>
          <tr>
             <th align="left">Filename</th>
-            <th align="left">Description</th>
-			<th align="right">Size</th>
+            <th style="width:200px; text-align:left;">Description</th>
+			<th style="width:100px; text-align:right;">Size</th>
          </tr>
       </thead>
       <tbody>
 <? echo (
 	my $html;
 	foreach my $File ( openprint::File->find('upload_id'=>$param{'serial'} ) ) {
-		$html .= sprintf('<tr><td nowrap="nowrap">%s</td><td>%s</td><td align="right">%s</td></tr>', $File->filename(), $File->description(), $File->size_text() );
+		$html .= sprintf('<tr>
+<td nowrap="nowrap">%s</td>
+<td style="width:200px; text-align:left;">%s</td>
+<td style="width:10px; text-align:right;">%s</td></tr>', $File->filename(), $File->description(), $File->size_text() );
 	} # end foreach File
 	return $html;
 ) ?>
