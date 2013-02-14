@@ -545,7 +545,14 @@ sub save_Paper {
 		} else {
 			$variable{'information'} .= 'Paper created.<br/>';
 		} # end if
-	} elsif ( 1 == @Papers ) {
+	} else {
+		if ( 1 < @Papers ) {
+			$variable{'error'} .= 'Duplicate Paper Detected!.<br/>';
+			$variable{'information'} .= 'The following papers both match, please edit them:<br/>';
+			foreach my $Paper ( @Papers ) {
+				$variable{'information'}	.= '<a href="paper_details.html?paper_id='.$Paper->id().'">'.$Paper->to_string().'</a><br/>';
+			} # end foreach
+		} # end if
 		$Paper = shift @Papers;
 		my $changed = 0;
 # This is so that papers that don't have mweights will get filled in
@@ -581,12 +588,6 @@ sub save_Paper {
 		if ( $changed ) {
 			$Paper->save();
 		} # end if
-	} else {
-		$variable{'error'} .= 'Duplicate Paper Detected!.<br/>';
-		$variable{'information'} .= 'The following papers both match, please edit them:<br/>';
-		foreach my $Paper ( @Papers ) {
-			$variable{'information'}	.= '<a href="paper_details.html?paper_id='.$Paper->id().'">'.$Paper->to_string().'</a><br/>';
-		} # end foreach
 	} # end if
 	return $Paper;
 } # end sub save_Paper

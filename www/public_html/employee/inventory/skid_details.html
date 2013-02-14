@@ -21,7 +21,7 @@
 			<input type="number" id="rfidtag_id" name="rfidtag_id" onkeyup="this.value=this.value.replace(/\s/,'');" onkeypress="return input_handler( this, event);" onkeydown="this.form.skid_id.value='';this.form.rfidtag_hex.value='';if(event.keyCode == 13){$('jump').submit();}" value="<?rfidtag_id?>" />
 			Hex:
 			<input type="text" id="rfidtag_hex" name="rfidtag_hex" onkeyup="this.value=this.value.replace(/\s/,'');" onkeydown="this.form.skid_id.value='';this.form.rfidtag_id.value='';if(event.keyCode == 13){$('jump').submit( );}" />
-			<? echo ( ssi::writeButton( $log, $dbh, 'Load', 'load.gif', "\$('jump').submit();",'','Load' ); ) ?><br/>
+			<? echo ( ssi::button( 'Load', { onclick=>"\$('jump').submit();", href=>'', text=>'Load' } ); ) ?><br/>
 			<? if ( ! $$variable{'Skid'}->id() and $param{'rfidtag_id'} ) ?>
 				<? echo ( return join('<br/>', map { sprintf('<a href="/employee/inventory/rfidtag_details.html?rfidtag_id=%2$s">%2$s</a> <a href="/employee/inventory/skid_details.html?skid_id=%1$d">%1$d</a>', $_->skid_id(), $_->id() ); }  openprint::RFIDTag::find('id_like'=>'%'.$param{'rfidtag_id'}.'%','type'=>'Skid') ); ) ?>
 			<? endif ( ! $$variable{'Skid'}->id() and $param{'rfidtag_id'} ) ?>
@@ -98,8 +98,8 @@
 						) ?>
 				</select>
 				<? echo ( join('',
-				#ssi::writeButton( $log, $dbh, 'updateLocation', 'update.gif', "jsrsExecute( '/jsrs.htm',  cbFillResults, 'openprint::Ekahau::jsrs_find', serialize(f1) );", '', 'Update Location' ),
-				#ssi::writeButton( $log, $dbh, 'showLocation', 'show.gif', "open_window('/ekahau.png?skid_id=$$variable{Skid}{id}','Location','width=640,height=640');", '', 'Show Location' ),
+				#ssi::button( 'updateLocation', { onclick=>"jsrsExecute( '/jsrs.htm',  cbFillResults, 'openprint::Ekahau::jsrs_find', serialize(f1) );", href=>'', text=>'Update Location' } ),
+				#ssi::button( 'showLocation', { onclick=>"open_window('/ekahau.png?skid_id=$$variable{Skid}{id}','Location','width=640,height=640');", href=>'', text=>'Show Location' } ),
 				ssi::button( 'Map', { 'onclick'=>"open_window('/maps/index.html?parent&amp;location_id='+get_ddm_value(f1.ddmLocation)+'&amp;selected_id='+get_ddm_value(f1.ddmLocation)+'&amp;skid_id=$$variable{Skid}{id}','Location','width=400,height=400,scrollbars=yes');" } ),
 				); ) ?>
 			</p>
@@ -121,7 +121,7 @@
 			</p>
 			<? if ( ! $$variable{'Skid'}->id() ) ?>
 			<p class="buttons">
-			<? echo ( ssi::writeButton( $log, $dbh, 'saveLeft', 'save.gif', "if( check_inputs( f1 ) ){f1.btnFunction.value='Save';f1.submit();};", '', 'Save' ); ) ?>
+			<? echo ( ssi::button( 'saveLeft', { onclick=>"if( check_inputs( f1 ) ){f1.btnFunction.value='Save';f1.submit();};", href=>'', text=>'Save' } ); ) ?>
 			</p>
 			<? endif ( ! $$variable{'Skid'}->id() ) ?>
 
@@ -140,20 +140,20 @@
 			<? echo ( 
 					my $html;
 					if ( $$variable{'Skid'}->id() ) {
-						$html .= ssi::writeButton( $log, $dbh, 'label', 'label.gif', "open_window('/employee/inventory/paper_label_window.html?skid_id=$$variable{Skid}{id}', 'label', 'toolbar=no,width=400,height=400,location=no,resizeable=no,scrollbars=no,status=no');", '', 'Print Label' );
-						$html .= ssi::writeButton( $log, $dbh, 'Copy', 'copy.gif', "f1.btnFunction.value='Copy';f1.submit();", '', 'Copy' );
+						$html .= ssi::button( 'label', { onclick=>"open_window('/employee/inventory/paper_label_window.html?skid_id=$$variable{Skid}{id}', 'label', 'toolbar=no,width=400,height=400,location=no,resizeable=no,scrollbars=no,status=no');", href=>'', text=>'Print Label' } );
+						$html .= ssi::button( 'Copy', { onclick=>"f1.btnFunction.value='Copy';f1.submit();", href=>'', text=>'Copy' } );
 					} # end if
-					$html .= ssi::writeButton( $log, $dbh, 'save', 'save.gif', "if( check_inputs( f1 ) ){f1.btnFunction.value='Save';f1.submit();}", '', 'Save' );
+					$html .= ssi::button( 'save', { onclick=>"if( check_inputs( f1 ) ){f1.btnFunction.value='Save';f1.submit();}", href=>'', text=>'Save' } );
 					if ( $$variable{'Skid'}->id() ) {
 						if ( $$variable{'Skid'}->deleted() ) {
-							$html .= ssi::writeButton( $log, $dbh, 'destroy', 'destroy.gif', "f1.action='skids.html?skid_id=$$variable{Skid}{id}';f1.btnFunction.value='Destroy';f1.submit();", '', 'Destroy' );
+							$html .= ssi::button( 'destroy', { onclick=>"f1.action='skids.html?skid_id=$$variable{Skid}{id}';f1.btnFunction.value='Destroy';f1.submit();", href=>'', text=>'Destroy' } );
 						} else {
-							$html .= ssi::writeButton( $log, $dbh, 'delete', 'delete.gif', "if(confirm('You should never do this. You should just check out the contents of the skid.  Are you sure?')){f1.action='skids.html?skid_id=$$variable{Skid}{id}';f1.btnFunction.value='Delete';f1.submit();}", '', 'Delete' );
+							$html .= ssi::button( 'delete', { onclick=>"if(confirm('You should never do this. You should just check out the contents of the skid.  Are you sure?')){f1.action='skids.html?skid_id=$$variable{Skid}{id}';f1.btnFunction.value='Delete';f1.submit();}", href=>'', text=>'Delete' } );
 						} # end if
 					} # end if
-					$html .= ssi::writeButton( $log, $dbh, 'reset', 'reset.gif', 'f1.reset();', '', 'Reset' );
-					#$html .= ssi::writeButton( $log, $dbh, 'clear', 'clear.gif', 'clearForm(f1);', '', 'Clear' );
-					$html .= ssi::writeButton( $log, $dbh, 'addnew', 'add.gif', '', 'skid_details.html', 'Add New Skid' ) if $$variable{'Skid'}->id();
+					$html .= ssi::button( 'reset', { onclick=>'f1.reset();', href=>'', text=>'Reset' } );
+					#$html .= ssi::button( 'clear', { onclick=>'clearForm(f1);', href=>'', text=>'Clear' } );
+					$html .= ssi::button( 'addnew', { onclick=>'', href=>'skid_details.html', text=>'Add New Skid' } ) if $$variable{'Skid'}->id();
 					return $html;
 			) ?>
 		</div>

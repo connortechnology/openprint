@@ -31,6 +31,27 @@ function get_value( obj ) {
 	return obj.value;
 }
 
+function get_checkbox_values( checkboxes ) {
+	if ( checkboxes.length ) {
+		var Values = new Array();
+		for ( var index = 0, len = checkboxes.length; index < len; index += 1 ) {
+			if ( checkboxes[index].checked ) {
+//alert('have checked ' + checkboxes[index].value );
+				Values[Values.length] = checkboxes[index].value;
+			} 
+		} 
+		if ( Values.length == 1 ) {
+			return Values[0];
+		}
+		return Values;
+	} else if ( checkboxes.checked ) {
+//alert('no lenght, but is checked');
+		return checkboxes.value;
+	} 
+//alert('nothing');
+	return;
+} // end function
+
 function get_select_value ( ddm ) {
 	var selected = new Array();
 	if ( ddm ) {

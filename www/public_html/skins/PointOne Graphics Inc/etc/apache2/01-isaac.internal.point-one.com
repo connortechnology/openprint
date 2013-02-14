@@ -12,7 +12,7 @@
 	ScriptAlias /cgi-bin/ /var/www/point-one/cgi-bin/
 	<Directory "/var/www/point-one/cgi-bin">
 		AllowOverride None
-		Options +ExecCGI -MultiViews +SymLinksIfOwnerMatch
+		Options +ExecCGI -MultiViews +SymLinksIfOwnerMatch -Indexes
 		Order allow,deny
 		Allow from all
 	</Directory>
@@ -53,10 +53,14 @@
 	PerlSetVar		db_password	 point-one
 	PerlSetVar		db_driver		Pg
 
-	<DirectoryMatch '^/po'>
-		SetHandler		perl-script
-		PerlHandler	getfile 
-	</DirectoryMatch>
+	<Directory "/media/Storage/Project Files/">
+		Options +Indexes
+		SetHandler      perl-script
+        PerlAuthenHandler    handlers::files_authen
+        AuthType Basic
+        AuthName "PointOne FTP Site"
+        Require valid-user
+	</Directory>
 
 	<Location /images/maps>
 		SetHandler		perl-script
@@ -65,6 +69,7 @@
 
 
 	<Directory /var/www/point-one/www/public_html>
+		Options -Indexes
 		RewriteEngine on
 		RewriteRule	^(.*);SSL$	http://%{SERVER_NAME}/$1 [R,L]
 		RewriteRule	^(.*);NOSSL$ http://%{SERVER_NAME}/$1 [R,L]

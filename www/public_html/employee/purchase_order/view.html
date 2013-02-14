@@ -8,6 +8,7 @@
 	my $html = '';
 	if ( ( ! $$variable{PurchaseOrder}->authorized() ) and $$variable{PurchaseOrder}->can_authorize() ) {
 		$html .= ssi::button( 'Authorize', { onclick=>q`f2.btnFunction.value='Authorize';f2.submit();` } );
+		$html .= ssi::button( 'AuthorizeSend', { onclick=>q`f2.btnFunction.value='AuthorizeAndSend';f2.submit();`, text=>'Authorize and Send' } );
 	} # end if
 	$html .= ssi::button( 'Print', { onclick=>'window.print();' } );
 	if ( $session{user_type} eq 'A' ) {

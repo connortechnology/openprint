@@ -7,9 +7,9 @@
 <script type="text/javascript">
 	var quantities=new Array();
 	<?QUANTITIES?>
-	<?TemplateSizes?>
 	var projectType = "<?ProjectTypeID?>";
 </script>
+<? echo ( include('/main/project/prin/_templates.html'); ) ?>
 <? if ( $$variable{'ProjectTypeID'} eq 'PresentationFolders' ) ?>
 <script type="text/javascript" src="<? echo ( hash_link('/javascripts/proj/calc_presentation_folder.js') ) ?>"></script>
 <script type="text/javascript">

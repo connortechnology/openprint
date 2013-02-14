@@ -100,6 +100,9 @@ sub do_new_substitution {
 		$result = htmlize($result);
 		$result .= variable_substitution( $r, $log, $dbh, $text, $variable ) if $text;
 		return $result;
+	} elsif ( $$command =~ /^include\s*\(\s*'?(.*)'?\s*\)/ms ) {
+$log->debug("Including $1");
+		return include( $1, $variable );
 	} else {
 		my $replacement = $$variable{$$command};
 #my $replacement = variable_substitution( $r, $log, $dbh, $$variable{$command}, $variable );
