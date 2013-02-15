@@ -3,6 +3,7 @@ package openprint::article;
 
 use LWP::UserAgent ();
 use HTML::LinkExtractor ();
+require HTML::Entities;
 use openprint ();
 use vars qw( $r %variable %session %param %config $log $dbh );
 *variable = \%openprint::variable;
@@ -17,6 +18,24 @@ require openprint::Article;
 require openprint::Article_Category;
 require openprint::Article_Asset;
 require XML::RSS;
+
+# recursively fixes %gt; problems.
+sub unescape_substitutions {
+	$_[0] =~ /(.*?)(&lt;\?\s*.*?\s*\?&gt;)(.*)?/ms;
+
+
+	my ( $before, $code, $after ) = ( $1, $2, $3 );
+	if ( $code ) {
+$log->debug("before code($code)");
+		$code =~ s/&gt;/>/g;
+		$code =~ s/&lt;/</g;
+		$code =~ s/&rsquo;/'/g;
+$log->debug("after code($code)");
+		return $before . $code . ( $after ? unescape_substitutions( $after ) : '' );
+	} # end if
+	return $_[0];
+
+} # end unescape_substitutions
 
 sub save_article {
 	my $Article = new openprint::Article( $param{article_id} );
@@ -38,6 +57,7 @@ sub save_article {
 		delete $param{'category_id'};
 	} # end if
 	if ( $param{'source'} ) {
+
 		if ( $param{'source'} =~ /epicurious\.com/ ) {
 			my $ua = LWP::UserAgent->new;
 			$ua->agent("MyApp/0.1 ");
@@ -124,6 +144,8 @@ $log->debug("Found: pre: $pre, a: $a1, $a2, rem: $remainder");
 	} # end while
 	$param{'body'} = $body;
 } 
+	$param{body} = unescape_substitutions( $param{body} );
+
 	if ( ! $Article->id() ) {
 		$variable{'error'} .= $Article->save(\%param);
 		new openprint::Log()->save({'action'=>'Create Article', 'object'=>'Article', 'object_id'=>$Article->id()});
@@ -254,7 +276,7 @@ sub edit {
 			# FIXME, update session filters to include this article
 			my $published_on_date = Date::Parse::str2time($Article->published_on());
 			if ( Date::Calc::check_date( @session{ map { '/article/history.html?published_on_start_'.$_ } ( 'year','month','day' )} ) ) {
-				my $session_published_on_date_start = Date::Calc::Mktime(
+				my $session_published_on_date_start = Date::Calc::Date_to_Time(
 					@session{ map { '/article/history.html?published_on_start_'.$_ } ( 'year','month','day' )}, 0,0,0 );
 				if ( $session_published_on_date_start > $published_on_date ) {
 					my ($year,$month,$day, undef, undef, undef ) = Date::Calc::Time_to_Date([$published_on_date]);
@@ -262,7 +284,8 @@ sub edit {
 				} # end if
 			} # end if
 			if ( Date::Calc::check_date( @session{ map { '/article/history.html?published_on_end_'.$_ } ( 'year','month','day' )} ) ) {
-				my $session_published_on_date_end = Date::Calc::Mktime(
+$log->debug(join('-', @session{ map { '/article/history.html?published_on_end_'.$_ } ( 'year','month','day' )}   ) );
+				my $session_published_on_date_end = Date::Calc::Date_to_Time(
 					@session{ map { '/article/history.html?published_on_end_'.$_ } ( 'year','month','day' )}, 0,0,0 );
 				if ( $session_published_on_date_end < $published_on_date ) {
 					my ($year,$month,$day, undef, undef, undef ) = Date::Calc::Time_to_Date([$published_on_date]);
@@ -272,7 +295,7 @@ sub edit {
 
 			my $created_on_date = Date::Parse::str2time($Article->created_on());
 			if ( Date::Calc::check_date( @session{ map { '/article/history.html?created_on_start_'.$_ } ( 'year','month','day' )} ) ) {
-				my $session_created_on_date_start = Date::Calc::Mktime(
+				my $session_created_on_date_start = Date::Calc::Date_to_Time(
 					@session{ map { '/article/history.html?created_on_start_'.$_ } ( 'year','month','day' )}, 0,0,0 );
 				if ( $session_created_on_date_start > $created_on_date ) {
 					my ($year,$month,$day, undef, undef, undef ) = Date::Calc::Time_to_Date([$created_on_date]);
@@ -280,7 +303,7 @@ sub edit {
 				} # end if
 			} # end if
 			if ( Date::Calc::check_date( @session{ map { '/article/history.html?created_on_end_'.$_ } ( 'year','month','day' )} ) ) {
-				my $session_created_on_date_end = Date::Calc::Mktime(
+				my $session_created_on_date_end = Date::Calc::Date_to_Time(
 					@session{ map { '/article/history.html?created_on_end_'.$_ } ( 'year','month','day' )}, 0,0,0 );
 				if ( $session_created_on_date_end < $created_on_date ) {
 					my ($year,$month,$day, undef, undef, undef ) = Date::Calc::Time_to_Date([$created_on_date]);

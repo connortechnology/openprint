@@ -103,6 +103,9 @@ sub save {
 	my ( $self, $param, $force_insert ) = @_;
 
 	$self->set( $param );
+
+	my $ac = sql::start_transaction( $openprint::dbh );
+	$dbh->do( "LOCK TABLE $openprint::PurchaseOrder_Tax::table IN EXCLUSIVE MODE" ) or $log->error( DBI->errstr );
 	# force recalculation
 	$self->subtotal(undef);
 	foreach my $Tax ( $self->Taxes(1) ) {
@@ -120,6 +123,7 @@ sub save {
 	foreach my $T ( $self->Taxes() ) {
 		$error .= $T->save({'purchaseorder_id'=>$$self{'id'}, 'PurchaseOrder'=>$self});
 	} # end foreach
+	sql::end_transaction( $openprint::dbh, $ac );
 
 	return $error;
 } # end sub save
@@ -194,7 +198,7 @@ $log->debug("Results: $results");
 sub send_to_vendor {
 	my ( $self ) = @_;
 
-	my $From = new openprint::User( $session{user_id} );
+	my $From = $self->Creator();
 	
 	my %info = (
 			'PurchaseOrder'	=>	$self,
@@ -213,7 +217,7 @@ sub send_to_vendor {
 	my $Email = new openprint::Email();
 	$Email->set({
 			from    => $From,
-			subject => 'Purchase Order ' . $self->id() . ' from ' . $self->vendor_name(),
+			subject => 'Purchase Order ' . $self->id() . ' from ' . $From->Company()->name(),
 			ATTACHMENTS => \@attachments,
 			});
 
@@ -227,6 +231,7 @@ sub send_to_vendor {
 	if ( $self->shipto_email() and ( $self->vendor_email() ne $self->shipto_email() ) ) {
 		$results .= $Email->send( 
 				TO	=>	[ split(',', $self->shipto_email() ) ],
+				SUBJECT	=>	'Purchase Order '. $self->id() . ' for ' . $self->vendor_name(),
 				);
 	} # end if
 	if ( $self->notifications() ) {
@@ -402,8 +407,8 @@ sub Taxes {
 		foreach my $Tax ( openprint::Tax->find(
 					'period_start null_or_<='	=>	$created_on,
 					'period_end null_or_>='	 =>	$created_on,
-					'country'	=>	$country,
-					'state'	 =>	$state,
+					country	=>	$country,
+					state	=>	$state,
 				) ) {
 			my $T = new openprint::PurchaseOrder_Tax();
 			$T->set({
@@ -422,7 +427,7 @@ sub Taxes {
 				'period_start null_or_<='	=>	$created_on,
 				'period_end null_or_>='	 	=>	$created_on,
 				country	=>	$country,
-				state	 =>	$state,
+				state	=>	$state,
 			);
 
 		# Clear out any no longer valid taxes
@@ -496,6 +501,7 @@ sub num {
 sub can_authorize {
 	my $User = @_ > 1 ? $_[1] : new openprint::User( $openprint::session{user_id} );
 
+	return 1 if ! $_[0]->total();
 	return 1 if $User->purchasing_limit() and ( $_[0]->total() < $User->purchasing_limit() );
 	my %Totals;
 	my %Types;

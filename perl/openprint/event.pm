@@ -191,12 +191,11 @@ sub view {
 		return;
 	} # end if
 	if ( $param{event_id} =~ /^(\d+)\?user_id=(\d+)$/ ) {
-		$param{event_id}=$1;
+		$param{event_id} = $1;
 		$param{user_id} = $2;
-	} else {
-		$param{event_id} = openprint::Event->transform('id', $param{event_id} );
-		$param{user_id} = openprint::User->transform('id', $param{user_id} );
 	} # end if
+	$param{event_id} = openprint::Event->transform('id', $param{event_id} );
+	$param{user_id} = openprint::User->transform('id', $param{user_id} );
 
 	if ( ! $param{event_id} ) {
 		$variable{error} .= 'Invalid event specified.';

@@ -14,11 +14,11 @@
 			<? echo ( ssi::button( 'Export', { onclick=>"f1.action='templates.html?Download';f1.btnFunction.value='Export Templates';f1.submit();", href=>'', text=>'Export' } ); ) ?>
 		</p>
 	</fieldset>
-	<? echo ( include('/includes/error_reporting.html'); ) ?>
-	<br class="spacer"/>
-	<div id="Templates">
-	<? if ( $param{'ddmProjectType'} ) ?>
-	<? echo ( include('_templates.html'); ) ?>
-	<? endif ( $param{'ddmProjectType'} ) ?>
-	</div>
 </form>
+<?include(/includes/error_reporting.html)?>
+<br class="spacer"/>
+<div id="Templates">
+<? if ( $param{'ddmProjectType'} ) ?>
+<?include(_templates.html)?>
+<? endif ( $param{'ddmProjectType'} ) ?>
+</div>

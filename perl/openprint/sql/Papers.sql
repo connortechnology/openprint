@@ -1,10 +1,8 @@
 /* 
 */
 
-DROP SEQUENCE IF EXISTS PaperName_id_seq;
 CREATE SEQUENCE PaperName_id_seq;
 
-DROP TABLE IF EXISTS PaperNames;
 CREATE TABLE PaperNames (
 	id 	INTEGER NOT NULL default nextval('PaperName_id_seq'),
 	shortname	TEXT NOT NULL,
@@ -12,10 +10,8 @@ CREATE TABLE PaperNames (
 	PRIMARY KEY (id)
 );
 
-DROP SEQUENCE IF EXISTS PaperFinish_id_seq;
 CREATE SEQUENCE PaperFinish_id_seq;
 
-DROP TABLE IF EXISTS PaperFinishes;
 CREATE TABLE PaperFinishes (
 		id  INTEGER NOT NULL default nextval('PaperFinish_id_seq'),
 		shortname   TEXT NOT NULL,
@@ -23,10 +19,8 @@ CREATE TABLE PaperFinishes (
 		PRIMARY KEY (id)
 		);
 
-DROP SEQUENCE IF EXISTS PaperColour_id_seq;
 CREATE SEQUENCE PaperColour_id_seq;
 
-DROP TABLE IF EXISTS PaperColours;
 CREATE TABLE PaperColours (
 		id  INTEGER NOT NULL default nextval('PaperColour_id_seq'),
 		shortname   TEXT NOT NULL,
@@ -34,10 +28,8 @@ CREATE TABLE PaperColours (
 		PRIMARY KEY (id)
 		);
 
-DROP SEQUENCE IF EXISTS PaperWeight_id_seq;
 CREATE SEQUENCE PaperWeight_id_seq;
 
-DROP TABLE IF EXISTS PaperWeights;
 CREATE TABLE PaperWeights (
 		id  INTEGER NOT NULL default nextval('PaperWeight_id_seq'),
 		shortname   TEXT NOT NULL,
@@ -45,9 +37,7 @@ CREATE TABLE PaperWeights (
 		PRIMARY KEY (id)
 		);
 
-DROP SEQUENCE IF EXISTS PaperQuality_id_seq;
 CREATE SEQUENCE PaperQuality_id_seq;
-DROP TABLE IF EXISTS PaperQualities;
 CREATE TABLE PaperQualities (
 		id  INTEGER NOT NULL default nextval('PaperQuality_id_seq'),
 		shortname   TEXT NOT NULL,
@@ -55,20 +45,14 @@ CREATE TABLE PaperQualities (
 		PRIMARY KEY (id)
 );
 
-DROP SEQUENCE IF EXISTS StockPurposes_id_seq CASCADE;
-CREATE SEQUENCE StockPurposes_id_seq;
-DROP TABLE IF EXISTS StockPurposes CASCADE;
 CREATE TABLE StockPurposes (
-	id  INTEGER NOT NULL default nextval('StockPurposes_id_seq'),
+	id  SERIAL,
 	name   TEXT NOT NULL,
 	PRIMARY KEY (id)
 );
 
 
-DROP SEQUENCE IF EXISTS Paper_id_seq;
 CREATE SEQUENCE Paper_id_seq;
-
-DROP TABLE IF EXISTS Papers;
 
 CREATE TABLE Papers (
 	id			INTEGER NOT NULL default nextval('Paper_id_seq'),
