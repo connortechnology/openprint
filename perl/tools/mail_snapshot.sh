@@ -6,7 +6,7 @@
 # rotating backup-snapshots of the path given in the first parameter to the path in the second paramter
 # ----------------------------------------------------------------------
 
-unset PATH      # suggestion from H. Milz: avoid accidental use of $PATH
+unset PATH	  # suggestion from H. Milz: avoid accidental use of $PATH
 
 # ------------- system commands used by this script --------------------
 ID=/usr/bin/id;
@@ -21,28 +21,28 @@ BACKUPS=3;
 
 USAGE="Usage: `/usr/bin/basename $0` [-hv] [-c arg] [ -n int] args"
 
-while getopts hvc: OPT; do
-    case "$OPT" in
-        h)
-            echo $USAGE
-            exit 0
-            ;;
-        v)
-            echo "`basename $0` version 0.1"
-            exit 0
-            ;;
-        c)
-            CHECK_FILE=$OPTARG
-            ;;
-        n)
-            BACKUPS=$OPTARG
-            ;;
-        \?)
-            # getopts issues an error message
-            echo $USAGE >&2
-            exit 1
-            ;;
-    esac
+while getopts hvc:n: OPT; do
+	case "$OPT" in
+		h)
+			echo $USAGE
+			exit 0
+			;;
+		v)
+			echo "`basename $0` version 0.1"
+			exit 0
+			;;
+		c)
+			CHECK_FILE=$OPTARG
+			;;
+		n)
+			BACKUPS=$OPTARG;
+			;;
+		\?)
+			# getopts issues an error message
+			echo $USAGE >&2
+			exit 1
+			;;
+	esac
 done
 shift $((OPTIND-1))
 
@@ -53,15 +53,14 @@ if [ $CHECK_FILE ] ; then
 	fi;
 fi;	
 
-
 if (( "$BACKUPS" <= "0" )) ; then
 	BACKUPS=3
 fi;
 # ------------- the script itself --------------------------------------
 
 # rotating snapshots of /home (fixme: this should be more general)
-	if [ -d "$2.$BACKUPS" ] ; then                     \
-		$RM -rf "$2.$BACKUPS" ;                            \
+	if [ -d "$2.$BACKUPS" ] ; then					 \
+		$RM -rf "$2.$BACKUPS" ;							\
 	else
 		echo "No $2.$BACKUPS to delete"
 	fi ;
