@@ -15,23 +15,29 @@ $table = 'company_credit';
 
 # COD and #DOWNpayment are percentages.  
 %fields = (
-		'limit'			=>	'dbllimit',
-		'hold'			=>	'hold',
-		'denydays'		=>	'denydays',
-		'warndays'		=>	'warndays',
-		'downpayment'	=>	'downpayment',
-		'cod'			=>	'cod',
-		'company_id'	=>	'company_id',
-		'supplier_id'	=>	'supplier_id',
+		limit			=>	'dbllimit',
+		hold			=>	'hold',
+		denydays		=>	'denydays',
+		warndays		=>	'warndays',
+		downpayment		=>	'downpayment',
+		cod				=>	'cod',
+		company_id		=>	'company_id',
+		supplier_id		=>	'supplier_id',
+		late_penalty	=>	'late_penalty',
+		late_units		=>	'late_units',
+		early_payment_discount	=>	'early_payment_discount',
+		early_payment_units	=>	'early_payment_units',
 		);	
 
 %transforms = (
-		'hold'      	=>  [ 's/[^YN]//g' ],
-		'limit'			=>	[ 's/[^\d\.]//g' ],
-		'denydays'		=>	[ 's/\D//g' ],
-		'warndays'		=>	[ 's/\D//g' ],
-		'downpayment'	=>	[ 's/[^\d\.]//g' ],
-		'cod'			=>	[ 's/[^\d\.]//g' ],
+		hold      		=>  [ 's/[^YN]//g' ],
+		limit			=>	[ 's/[^\d\.]//g' ],
+		denydays		=>	[ 's/\D//g' ],
+		warndays		=>	[ 's/\D//g' ],
+		downpayment		=>	[ 's/[^\d\.]//g' ],
+		cod				=>	[ 's/[^\d\.]//g' ],
+		late_penalty	=>	[ 's/[^\d\.]//g' ],
+		early_payment_discount	=>	[ 's/[^\d\.]//g' ],
 		);
 %defaults = (
 	'supplier_id'		=>	undef,
@@ -40,6 +46,10 @@ $table = 'company_credit';
 	'warndays'			=>	undef,
 	'downpayment'		=>	undef,
 	'cod'				=>	undef,
+	late_penalty		=>	undef,
+	late_units			=>	undef,
+	early_payment_discount	=>	undef,
+	early_payment_units		=>	undef,
 );
 
 sub debt {

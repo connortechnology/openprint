@@ -531,11 +531,15 @@ sub company_profiles {
                         ( $Credit->limit() != openprint::Company_Credit->transform('limit', $param{'limit-'.$$Supplier{id}} ) ) or
                         ( $Credit->hold() ne openprint::Company_Credit->transform('hold', $param{'hold-'.$$Supplier{id}} ) ) or
                         ( $Credit->downpayment() != openprint::Company_Credit->transform('downpayment', $param{'downpayment-'.$$Supplier{id}} ) ) or
-                        ( $Credit->cod() != openprint::Company_Credit->transform('cod', $param{'cod-'.$$Supplier{id}} ) )
+                        ( $Credit->cod() != openprint::Company_Credit->transform('cod', $param{'cod-'.$$Supplier{id}} ) ) or
+                        ( $Credit->late_penalty() != openprint::Company_Credit->transform('late_penalty', $param{'late_penalty-'.$$Supplier{id}} ) ) or
+                        ( $Credit->late_units() != openprint::Company_Credit->transform('late_units', $param{'late_units-'.$$Supplier{id}} ) ) or
+                        ( $Credit->early_payment_discount() != openprint::Company_Credit->transform('early_payment_discount', $param{'early_payment_discount-'.$$Supplier{id}} ) ) or
+                        ( $Credit->early_payment_units() != openprint::Company_Credit->transform('early_payment_units', $param{'early_payment_units-'.$$Supplier{id}} ) )
                         ) {
                     my $note = 'Old credit: ' . $Credit->to_string() if $Credit->supplier_id();
 					$variable{'error'} .= $Credit->save( { 'company_id'=>$index, 'supplier_id'=>$Supplier->id(), 
-							map { $_ => $param{$_.'-'.$Supplier->id()} } ( 'denydays','warndays', 'limit', 'hold', 'downpayment', 'cod' ) } );
+							map { $_ => $param{$_.'-'.$Supplier->id()} } ( 'denydays','warndays', 'limit', 'hold', 'downpayment', 'cod', 'late_penalty','late_units','early_payment_discount','early_payment_units' ) } );
                     $note .= '<br/>new credit: ' . $Credit->to_string();
                     $variable{'error'} .= (new openprint::Log())->save( {
                             action		=> 	'Credit Information Changed', 
