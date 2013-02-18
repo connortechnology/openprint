@@ -4,15 +4,14 @@ our @ISA = qw(openprint::Object);
 require openprint::Object;
 
 use openprint ();
-use vars qw($debug $log $dbh %find_fields %fields %transforms %defaults $table $serial );
-*log = \$openprint::log;
+use vars qw($debug $dbh %find_fields %fields %transforms %defaults $table $serial );
 *dbh = \$openprint::dbh;
 
 require sql;
 require openprint::RFIDTagType;
 require openprint::Location;
 
-$debug = 1;
+$debug = 0;
 $table = 'rfidtags';
 $serial = 'rfidtags_id_seq';
 %fields = (

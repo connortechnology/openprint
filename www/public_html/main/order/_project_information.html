@@ -1,7 +1,7 @@
 <? if ( @{$$variable{'Contents'}} > 1 ) ?>
-<!--#include virtual="/main/order/_shipping_type_select.html"-->
+<? echo ( include('/main/order/_shipping_type_select.html'); ) ?>
 <? endif ( @{$$variable{'Contents'}} > 1 ) ?>
-	<!--#include virtual="/main/order/_project_header.html"-->
+	<? echo ( include('/main/order/_project_header.html'); ) ?>
 <? echo (
     if ( $$variable{'Project'}->style_id() ) {
         ssi::include( $config{'SkinPath'}.'/main/project/view_'.$$variable{'Project'}->Template()->name() . '.html' );

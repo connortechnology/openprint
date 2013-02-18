@@ -74,7 +74,7 @@
 						</select>
 					</li>
 				<? endif ( sets::isin( $$variable{'ProjectType'}->name(), 'Covers' ) ) ?>
-				<!--#include virtual="_dimensions.html"-->
+				<? echo ( include('_dimensions.html'); ) ?>
 				<? if ( sets::isin( $$variable{'ProjectType'}->name(), 'ScratchPads' ) ) ?>
 					<li class="PageQuantity">
 						<label>Number of pages per pad</label>
@@ -82,7 +82,7 @@
 					</li>
 				<? endif ( sets::isin( $$variable{'ProjectType'}->name(), 'ScratchPads' ) ) ?>
 				<? if ( sets::isin( $$variable{'ProjectType'}->name(), 'PresentationFolders' ) ) ?>
-				<!--#include virtual="/includes/presentation_folder_printing.html"-->
+				<? echo ( include('/includes/presentation_folder_printing.html'); ) ?>
 				<? endif ( sets::isin( $$variable{'ProjectType'}->name(), 'PresentationFolders' ) ) ?>
 			</ul>
 		</div>

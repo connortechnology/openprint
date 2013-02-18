@@ -122,7 +122,7 @@ function update_total( form ) {
 				</li>
 				</ul>
 				<ul id="Taxes">
-				<!--#include virtual="_expense_taxes.html"-->
+				<? echo ( include('_expense_taxes.html'); ) ?>
 				</ul>
 				<ul>
 				<li><label for="total">Total (<? echo ( $$variable{'Expense'}->Currency()->symbol() ) ?>)</label>

@@ -4,21 +4,21 @@
 </div>
 <? if ( $session{'company_id'} == 0 ) ?>
 You must register for a login, and be logged in before you can apply for credit.<br>
-<!--#include virtual="/includes/customer_login.html"-->
+<? echo ( include('/includes/customer_login.html'); ) ?>
 <? else ( $session{'company_id'} == 0 ) ?>
 	<? if ( $param{'btnFunction'} eq 'Apply' and ! $$variable{'error'} ) ?>
 Thank you. Your information has been received. Someone will contact you in the immediate future.
 	<? else ( $param{'btnFunction'} eq 'Apply' and ! $$variable{'error'} ) ?>
 	<br/>
-	<!--#include virtual="/includes/error_reporting.html"-->
+	<? echo ( include('/includes/error_reporting.html'); ) ?>
 	<p class="required">
 	 denotes required information.<br/><br/>
 	</p>
 	<form id="f1" name="f1" method="post" action="<?SecureSiteURL?>/account/credit_application.html">
 		<div class="CreditApplication">
-			<!--#include virtual="/account/_business_information.html"-->
-			<!--#include virtual="/account/_bank_information.html"-->
-			<!--#include virtual="/account/_trade_references.html"-->
+			<? echo ( include('/account/_business_information.html'); ) ?>
+			<? echo ( include('/account/_bank_information.html'); ) ?>
+			<? echo ( include('/account/_trade_references.html'); ) ?>
 			<div class="Application">
 			<fieldset><legend>Application</legend>
 				I/We do hereby authorize <? echo ( $openprint::config{SiteTitle} ) ?> to verify all or part of the above listed confidential disclosures, and to verify the credit status of existing lines of credit as listed on this application. Further, I/We agree to pay according to terms printed on any invoices for any purchase(s) including discounts, net price and late charges.<br/>

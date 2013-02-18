@@ -3,9 +3,7 @@ package openprint::PAR;
 our @ISA = qw(openprint::Object);
 
 use openprint ();
-use vars qw( %config $log $dbh %session );
-*session = \%openprint::session;
-*config = \%openprint::config;
+use vars qw( $log $dbh );
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
 
@@ -14,7 +12,7 @@ require openprint::PAR_Reason;
 
 use vars qw( $debug $table $serial %fields %defaults %transforms );
 
-$debug = 1;
+$debug = 0;
 
 $table = 'par';
 $serial = 'par_id_seq';
@@ -67,14 +65,14 @@ sub send_notifications {
 	my @Users = openprint::User->find('type'=>['E','A'], 'usergroup @>'=>'Quality Control Notifications');
 
 	if ( @Users ) {
-		my $email_template = misc::load_file( $log, $config{'SkinPath'} . '/email_template.html' );
+		my $email_template = misc::load_file( $log, $openprint::config{'SkinPath'} . '/email_template.html' );
 		my $text = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/email_content/iso_par_notification.html' );
 
 		my %info = ( 'PAR'	=>	$self);
 		$info{'ReplacementText'} = ssi::variable_substitution( \$text, \%info );
 		my $body = ssi::variable_substitution( \$email_template, \%info );
 		new openprint::Email()->send(
-					FROM    => new openprint::User( $session{'user_id'} ),
+					FROM    => new openprint::User( $openprint::session{'user_id'} ),
 					TO      => \@Users,
 					SUBJECT => 'A new PAR has been generated.',
 					ATTACHMENTS	=> [ '', encode_qp($body), 'text/html', 'quoted-printable'],

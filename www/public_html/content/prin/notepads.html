@@ -17,7 +17,7 @@
 <? endif ( sets::isin( $$variable{'ProjectTypeName'}, 'BusinessCards', 'DoorHangers', 'ScratchPads' ) ) ?>
 <? endif ( 0 ) ?>
             <input type="hidden" name="TemplateType" value="<?TemplateType?>" />
-			<!--#include virtual="_sizes.html"-->
+			<? echo ( include('_sizes.html'); ) ?>
 			<ul>
 			<li><label>Colours</label>
 				<select name="Colours" onChange="calc(this.form.name);">
@@ -25,10 +25,10 @@
 					<option value="4/4">4 Colour Both Sides</option>
 				</select>
 			</li>
-			<!--#include virtual="_aqueous.html"-->
+			<? echo ( include('_aqueous.html'); ) ?>
 			<li>
 				<label>Stock Information</label><br/>
-				<!--#include virtual="_paper_dropdowns.html"-->
+				<? echo ( include('_paper_dropdowns.html'); ) ?>
 			</li>
 <? if ( ! sets::isin( $$variable{'ProjectTypeName'}, 'BusinessCards', 'DoorHangers', 'ScratchPads' ) ) ?>
 			<li>
@@ -47,15 +47,15 @@
 				</select>
 			</li>
 <? endif ( ! sets::isin( $$variable{'ProjectTypeName'}, 'BusinessCards', 'DoorHangers', 'ScratchPads' ) ) ?>
-			<!--#include virtual="_drilling.html"-->
-			<!--#include virtual="_scoring.html"-->
-			<!--#include virtual="_perfing.html"-->
-			<!--#include virtual="_ups_shipping.html"-->
-			<!--#include virtual="_turnaround.html"-->
-			<!--#include virtual="_quantity.html"-->
-			<!--#include virtual="_prices.html"-->
+			<? echo ( include('_drilling.html'); ) ?>
+			<? echo ( include('_scoring.html'); ) ?>
+			<? echo ( include('_perfing.html'); ) ?>
+			<? echo ( include('_ups_shipping.html'); ) ?>
+			<? echo ( include('_turnaround.html'); ) ?>
+			<? echo ( include('_quantity.html'); ) ?>
+			<? echo ( include('_prices.html'); ) ?>
 			</ul>
 		</form>
 	</div><!--Questions-->
-	<!--#include virtual="<? echo ( '/content/'.$$variable{'ProjectTypeName'}.'.html' ) ?>" -->
+	<? echo ( include('<? echo ( '/content/'.$$variable{'ProjectTypeName'}.'.html' ) ?>'); ) ?>
 </div><!--InstantPricing-->

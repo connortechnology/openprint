@@ -52,6 +52,13 @@ $openprint::log->error('Photo_in_Album: no aasset in url: ');
 }
 	return $Asset->url();
 } # end sub url 
+sub sized_url {
+	my $Asset = $_[0]->Asset();
+if ( ! $Asset ) {
+$openprint::log->error('Photo_in_Album: no aasset in url: ');
+}
+	return $Asset->sized_url( $_[1] );
+} # end sub sized_url 
 
 sub Album {
 	return new openprint::Photo_Album( $_[0]{'album_id'} );

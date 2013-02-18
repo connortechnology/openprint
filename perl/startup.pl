@@ -11,7 +11,6 @@ BEGIN {
 	use utf8;
 	#use threads;
 	#use threads::shared;
-	#use Apache2 ();
 	use Apache2::Request ();
 	use Apache2::RequestRec ();
 	use Apache2::Connection ();
@@ -26,7 +25,7 @@ BEGIN {
 	#use Apache2::SizeLimit;
 	use Apache::DBI ();
 	use URI::Escape ();
-	#use HTML::Strip ();
+	use HTML::Strip ();
 	use HTML::Entities ();
 	use Data::Dumper ();
 
@@ -51,7 +50,7 @@ BEGIN {
 
 	use openprint::www ();
 	use handlers::upload ();
-	use handlers::images ();
+	use handlers::assets ();
 
 	use Date::Calc ();
 	use Date::Format ();

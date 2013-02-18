@@ -75,7 +75,7 @@
 				<? echo ( ssi::radio( 'travel_associated', [ '1', 'Yes', '0', 'No' ], $$variable{'Timetrack'}->travel_associated() ); ) ?>
 			</li>
 			<li><label for="distance">Distance (km)</label>
-				<? echo ( ssi::input( type=>'number', name=>'distance', id=>'distance', value=>$$variable{'Timetrack'}->distance(), onkeyup=>'floatize(this);' ); ) ?>
+				<? echo ( ssi::input( type=>'float', name=>'distance', id=>'distance', value=>$$variable{'Timetrack'}->distance(), onkeyup=>q`if(this.value){set_rdb_value(this.form.elements['travel_associated'],1);};` ); ) ?>
 			</li>
 			</ul>
 		</div>

@@ -1,5 +1,5 @@
-<script type="text/javascript" src="/javascripts/pricing.js"></script>
-<!--#include virtual="/includes/error_reporting.html"-->
+<script type="text/javascript" src="<?hash_link(/javascripts/pricing.js)?>"></script>
+<? echo ( include( '/includes/error_reporting.html' ); ) ?>
 <div class="Product">
 	<form name="f1" id="f1" method="post" enctype="multipart/form-data" action="edit.html">
 		Please select a product to view/edit. 
@@ -151,8 +151,8 @@
 		my $template = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/product/_specification.html');
 		foreach my $Spec ( $Product->Specifications() ) {
 			$html .= ssi::variable_substitution( \$template, {
-				'Spec'=>$Spec,
-				'rowclass'	=>	$rowclass,
+				Spec		=>	$Spec,
+				rowclass	=>	$rowclass,
 				} );
 			$rowclass = $rowclass ? '' : ' class="colRow"';
 		} # end foreach
@@ -165,12 +165,12 @@
 			</fieldset>
 		</div>
     <? eval ( $$variable{'Album'} = $$variable{'Product'};) ?>
-    <!--#include virtual="/photo_albums/_album_upload.html"-->
+    <?include(/photo_albums/_album_upload.html)?>
 		<br class="spacer"/>
 		<fieldset><legend>Prices</legend>
 			<div id="Prices">
 		<? if ( $$variable{'Product'}->id() ) ?>
-				<!--#include virtual="_prices.html"-->
+				<?include(_prices.html)?>
 		<? else ( $$variable{'Product'}->id() ) ?>
 				Please save your new Product before setting pricing.
 		<? endif ( $$variable{'Product'}->id() ) ?>

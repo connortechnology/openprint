@@ -15,7 +15,7 @@
 </script>
 <form id="f1" name="f1" action="item.html?item_id=<? echo ( $$variable{'Item'}->id() ) ?>" method="post">
 	
-	<!--#include virtual="/includes/error_reporting.html"-->
+	<? echo ( include('/includes/error_reporting.html'); ) ?>
 	<p class="buttons" id="buttons">
 <? echo ( 
 	my $html = '';

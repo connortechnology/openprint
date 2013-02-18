@@ -3,7 +3,7 @@ package openprint::Test;
 our @ISA = qw(openprint::Object);
 
 use vars qw( $debug $table $serial %fields %transforms %defaults );
-$debug = 1;
+$debug = 0;
 $table = 'tests';
 $serial = 'tests_id_seq';
 

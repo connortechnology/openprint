@@ -1,4 +1,4 @@
-<!--#include virtual="/includes/error_reporting.html"-->
+<? echo ( include('/includes/error_reporting.html'); ) ?>
 <? if ( $$variable{'Approved'} ) ?>
 <div class="unprintable">
 Please print this page for your records.
@@ -7,7 +7,7 @@ Please print this page for your records.
 </span>
 </div>
 <? endif ( $$variable{'Approved'} ) ?>
-<!--#include virtual="/includes/project_header.html" -->
+<? echo ( include('/includes/project_header.html'); ) ?>
 <hr/>
 <form name="f1" method="post" action="sign_off.html">
 <span style="font-size: 8pt;">

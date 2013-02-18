@@ -12,10 +12,10 @@
 			<div class="shadow_left"><div class="shadow_right">
 				<div class="Questions">
 					<h3>Instant Pricing</h3>
-					<!--#include virtual="_project_name.html"-->
+					<? echo ( include('_project_name.html'); ) ?>
 					<div class="ProjectSpecifications">
 						<h1>Project Specifications</h1>
-						<!--#include virtual="_sizes.html"-->
+						<? echo ( include('_sizes.html'); ) ?>
 						<div class=">Colours">
 							<fieldset><legend>Colours</legend>
 								<div class="content">
@@ -26,8 +26,8 @@
 												<option value="4/4">4 Colour Both Sides</option>
 											</select>
 										</li>
-										<!--#include virtual="_aqueous.html"-->
-										<!--#include virtual="_uvcoating.html"-->
+										<? echo ( include('_aqueous.html'); ) ?>
+										<? echo ( include('_uvcoating.html'); ) ?>
 									</ul>
 								</div>
 							</fieldset>
@@ -36,7 +36,7 @@
 							<fieldset><legend>Stock</legend>
 								<div class="content">
 									<ul>
-										<!--#include virtual="_paper_dropdowns.html"-->
+										<? echo ( include('_paper_dropdowns.html'); ) ?>
 									</ul>
 								</div>
 							</fieldset>
@@ -45,9 +45,9 @@
 							<fieldset><legend>Finishing</legend>
 								<div class="content">
 									<ul>
-										<!--#include virtual="_scoring.html"-->
-										<!--#include virtual="_shrinkwrapping.html"-->
-										<!--#include virtual="_bundling.html"-->
+										<? echo ( include('_scoring.html'); ) ?>
+										<? echo ( include('_shrinkwrapping.html'); ) ?>
+										<? echo ( include('_bundling.html'); ) ?>
 									</ul>
 								</div>
 							</fieldset>
@@ -56,18 +56,18 @@
 							<fieldset><legend>Production</legend>
 								<div class="content">
 									<ul>
-									<!--#include virtual="_design.html"-->
-									<!--#include virtual="_proofs.html"-->
-									<!--#include virtual="_turnaround.html"-->
-									<!--#include virtual="_quantity.html"-->
+									<? echo ( include('_design.html'); ) ?>
+									<? echo ( include('_proofs.html'); ) ?>
+									<? echo ( include('_turnaround.html'); ) ?>
+									<? echo ( include('_quantity.html'); ) ?>
 									</ul>
 								</div>
 							</fieldset>
 						</div>
-						<!--#include virtual="_ups.html"-->
+						<? echo ( include('_ups.html'); ) ?>
 						<div id="AlertDiv" style="display:none;"></div>
 					</div><!--ProjectSpecifications-->
-					<!--#include virtual="_prices.html"-->
+					<? echo ( include('_prices.html'); ) ?>
 				</div><!--Questions-->
 			</div></div>
 			<div class="bottom_shadow"><div class="shadow_bl"></div><div class="shadow_br"></div></div>
@@ -78,6 +78,6 @@
 	} # end if
 	return '';
 ) ?>
-		<!--#include virtual="_specials.html"-->
+		<? echo ( include('_specials.html'); ) ?>
 	</div><!--InstantPricing-->
 </form>

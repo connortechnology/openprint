@@ -5,7 +5,7 @@
 	} // end function load
 -->
 </script>
-	<!--#include virtual="/includes/error_reporting.html"-->
+	<? echo ( include('/includes/error_reporting.html'); ) ?>
 <div class="SRED"><div class="Projects">
 	<form id="f1" name="f1" action="projects.html" method="post">
 		<input type="hidden" name="action"/>
@@ -57,7 +57,7 @@
 	</form>
 	<form id="f2" name="f2" action="projects.html" method="post">
 		<input type="hidden" name="action"/>
-		<div id="Results"><!--#include virtual="_projects.html"--></div>
+		<div id="Results"><? echo ( include('_projects.html'); ) ?></div>
 	</form>
 </div>
 </div>

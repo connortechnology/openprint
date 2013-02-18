@@ -5,7 +5,7 @@ require openprint::RMA;
 require openprint::Product;
 
 use vars qw( $debug $table $serial %fields %transforms %defaults );
-$debug = 1;
+$debug = 0;
 $table = 'rma_parts';
 $serial = 'rma_parts_id_seq';
 

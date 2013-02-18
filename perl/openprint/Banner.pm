@@ -4,7 +4,7 @@ package openprint::Banner;
 our @ISA = qw( openprint::Object );
 
 use vars qw( $debug $table %fields %transforms %defaults $serial );
-$debug = 1;
+$debug = 0;
 $table = 'banners';
 $serial = 'banners_id_seq';
 %fields = (

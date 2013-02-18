@@ -21,8 +21,8 @@ function validate_data(formName) {
 <div class="Service">
 	<form name="f1" method="post" action="/main/order/submit.html">
 		<fieldset><legend>UPS Shipping Services</legend>
-		<!--#include virtual="/includes/main/proj/shipping_packages.html"-->
-		<!--#include virtual="/includes/main/proj/shipping_address.html"-->
+		<? echo ( include('/includes/main/proj/shipping_packages.html'); ) ?>
+		<? echo ( include('/includes/main/proj/shipping_address.html'); ) ?>
 		<p>
 			<label>Service Type</label>
 			<span id="ServiceTypeDiv">
@@ -52,7 +52,7 @@ function validate_data(formName) {
 		</p>
 		</fieldset>
 		<hr/>
-		<!--#include virtual="/includes/main/proj/add_to_project.html"-->
+		<? echo ( include('/includes/main/proj/add_to_project.html'); ) ?>
 		<input type="hidden" name="OrderID" value="<?OrderID?>">
 		<input type="hidden" name="ProjectIndex" value="<?ProjectIndex?>">
 		<input type="hidden" name="ServiceIndex" value="<?ServiceIndex?>">

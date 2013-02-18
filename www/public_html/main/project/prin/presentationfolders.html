@@ -1,12 +1,12 @@
-<script type="text/javascript" src="/javascripts/printing.js?version=1.0"></script>
-<script type="text/javascript" src="/javascripts/service.js?version=1.0"></script>
-<script type="text/javascript" src="/javascripts/proj/paper.js?version=1.0"></script>
+<script type="text/javascript" src="<?hash_link(/javascripts/printing.js)?>"></script>
+<script type="text/javascript" src="<?hash_link(/javascripts/service.js)?>"></script>
+<script type="text/javascript" src="<?hash_link(/javascripts/proj/paper.js)?>"></script>
 <script type="text/javascript">
 	var quantities=new Array();
 	<?QUANTITIES?>
 	var projectType = "<?ProjectTypeID?>";
 </script>
-<!--#include virtual="/main/project/prin/_templates.html"-->
+<? echo ( include('/main/project/prin/_templates.html'); ) ?>
 <script type="text/javascript" src="/javascripts/proj/calc_presentation_folder.js"></script>
 <script type="text/javascript">
 	function calc( formName, force ) {
@@ -16,24 +16,24 @@
 <script type="text/javascript" src="/javascripts/presentation_folders.js"></script>
 <div class="Service">
 	<form id="f1" name="f1" method="post" action="/main/project/view.html">
-		<!--#include virtual="/includes/main/proj/required_fields.html"-->
+		<? echo ( include('/includes/main/proj/required_fields.html'); ) ?>
 		<fieldset><legend><?ProjectTypeName?></legend>
-			<!--#include virtual="/includes/main/proj/templates/presentation_folders.html" -->
-			<!--#include virtual="/includes/main/proj/dimensions.html"-->
-			<!--#include virtual="/includes/main/proj/presentation_folder_printing.html"-->
+			<? echo ( include('/includes/main/proj/templates/presentation_folders.html'); ) ?>
+			<? echo ( include('/includes/main/proj/dimensions.html'); ) ?>
+			<? echo ( include('/includes/main/proj/presentation_folder_printing.html'); ) ?>
 
-			<!--#include virtual="/includes/main/proj/printing_type.html"-->
-			<!--#include virtual="/includes/main/proj/colours_coatings.html"-->
+			<? echo ( include('/includes/main/proj/printing_type.html'); ) ?>
+			<? echo ( include('/includes/main/proj/colours_coatings.html'); ) ?>
 <br class="spacer"/>
-			<!--#include virtual="/includes/main/proj/bleeds_colourbars.html"-->
-			<!--#include virtual="/includes/main/proj/paper_dropdowns.html"-->
+			<? echo ( include('/includes/main/proj/bleeds_colourbars.html'); ) ?>
+			<? echo ( include('/includes/main/proj/paper_dropdowns.html'); ) ?>
 		</fieldset>
 <fieldset><legend>Results</legend>
-		<!--#include virtual="/includes/main/proj/printing_results.html"-->
+		<? echo ( include('/includes/main/proj/printing_results.html'); ) ?>
 </fieldset>
-		<!--#include virtual="/includes/main/proj/press_approval.html"-->
-		<!--#include virtual="/includes/main/proj/add_to_project.html"-->
-		<!--#include virtual="/includes/main/proj/hdn_fields_printing.html"-->
+		<? echo ( include('/includes/main/proj/press_approval.html'); ) ?>
+		<? echo ( include('/includes/main/proj/add_to_project.html'); ) ?>
+		<? echo ( include('/includes/main/proj/hdn_fields_printing.html'); ) ?>
 		<input type="hidden" name="hdnFolding" value="<?hdnFolding?>" />
 		<input type="hidden" name="hdnCutting" value="<?hdnCutting?>" />
 		<input type="hidden" name="ProjectType" value="<?ProjectTypeID?>"/>

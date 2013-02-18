@@ -1,4 +1,4 @@
-<script type="text/javascript" src="/administrator/stock/stock.js?version=1.1"></script>
+<script type="text/javascript" src="<?hash_link(/administrator/stock/stock.js)?>"></script>
 <script type="text/javascript" >
 	function newPrice( service, pricelist_id ) {
 		new Ajax.Request( '_price_tr.html',
@@ -68,7 +68,7 @@
 	
 	}
 </script>
-<!--#include virtual="/includes/error_reporting.html"-->
+<? echo ( include('/includes/error_reporting.html'); ) ?>
 <div class="Stock">
 <form id="f1" name="f1" method="post" action="stock.html?stock_id=<? echo ( $$variable{'Stock'}->id(); ) ?>">
 	<p class="buttons">
@@ -377,7 +377,7 @@
 	<? if ( $$variable{'stock_id'} ) ?>
 	<div class="Pricing">
 		<fieldset><legend>Pricing</legend>
-			<div id="Prices"><!--#include virtual="_prices.html"--></div>
+			<div id="Prices"><? echo ( include('_prices.html'); ) ?></div>
 		</fieldset>
 	</div>
 	<? endif ( $$variable{'stock_id'} ) ?>

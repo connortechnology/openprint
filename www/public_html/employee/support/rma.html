@@ -202,10 +202,10 @@ map {
 		</ul>
 	</fieldset>
 	</div>
-	<div class="Faults" id="Faults"><!--#include virtual="_faults.html"--></div>
-	<div class="Upgrades" id="Upgrades"><!--#include virtual="_upgrades.html"--></div>
-	<div class="Tests" id="Tests"><!--#include virtual="_tests.html"--></div>
-	<div class="Parts" id="Parts"><!--#include virtual="_parts.html"--></div>
+	<div class="Faults" id="Faults"><? echo ( include('_faults.html'); ) ?></div>
+	<div class="Upgrades" id="Upgrades"><? echo ( include('_upgrades.html'); ) ?></div>
+	<div class="Tests" id="Tests"><? echo ( include('_tests.html'); ) ?></div>
+	<div class="Parts" id="Parts"><? echo ( include('_parts.html'); ) ?></div>
 
 		<input type="hidden" name="rma_id" value="<? echo ( $$variable{RMA}->id() ) ?>"/>
 		<input type="hidden" name="action"/>

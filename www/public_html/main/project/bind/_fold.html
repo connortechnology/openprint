@@ -4,8 +4,9 @@
 			$$variable{$p} = $param{$p};
 		} # end if
 	} # end foreach
+
 ) ?>
-<tr id="Fold-<?SignatureIndex?>-<?QTYIndex?>-<?index?>" <? echo ( ($$variable{'index'} == 4 or $$variable{"FoldQty-$$variable{SignatureIndex}-$$variable{QTYIndex}-$$variable{index}"})  ? '' : 'style="display:none;"' ) ?>>
+<tr id="Fold-<?SignatureIndex?>-<?QTYIndex?>-<?index?>" <? echo ( ($$variable{'index'} == 1 or $$variable{"FoldQty-$$variable{SignatureIndex}-$$variable{QTYIndex}-$$variable{index}"})  ? '' : 'style="display:none;"' ) ?>>
 	<td class="Qty">
 <? echo ( 
 	my $blah = join('-',@$variable{'SignatureIndex','QTYIndex','index'});

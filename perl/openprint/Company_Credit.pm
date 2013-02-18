@@ -9,7 +9,7 @@ our @ISA = qw( openprint::Object );
 
 use vars qw( $debug $table %fields %transforms %defaults @identified_by );
 
-$debug = 1;
+$debug = 0;
 $table = 'company_credit';
 @identified_by = ( 'company_id','supplier_id' );
 

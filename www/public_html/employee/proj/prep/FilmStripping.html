@@ -4,10 +4,10 @@
 <div style="float: left; width: 49%;"/>
 	<form method="post" name="f1" action="/employee/project/view.html?ProjectIndex=<?ProjectIndex?>&ServiceIndex=<?ServiceIndex?>">
 		<fieldset><legend>Production Feedback</legend>
-			<!--#include virtual="/includes/employee/feedback/employee.html"-->
-			<!--#include virtual="/includes/employee/feedback/comments.html"-->
-			<!--#include virtual="/includes/employee/feedback/complete.html"-->
-			<!--#include virtual="/includes/employee/feedback/complete_date.html"-->
+			<? echo ( include('/includes/employee/feedback/employee.html'); ) ?>
+			<? echo ( include('/includes/employee/feedback/comments.html'); ) ?>
+			<? echo ( include('/includes/employee/feedback/complete.html'); ) ?>
+			<? echo ( include('/includes/employee/feedback/complete_date.html'); ) ?>
 			<p id="DueDate">
 				<label>Due Date</label>
 				<span class="DateSelector">
@@ -16,8 +16,8 @@
 			</p>
 			<p class="buttons">
 			<? echo ( join('',
-						ssi::writeButton( $log, $dbh, 'Save','save.gif', "f1.submit();", '', 'Save' ),
-						ssi::writeButton( $log, $dbh, 'Reset','reset.gif', "f1.reset();", '', 'Reset' ),
+						ssi::button( 'Save', { onclick=>"f1.submit();", href=>'', text=>'Save' } ),
+						ssi::button( 'Reset', { onclick=>"f1.reset();", href=>'', text=>'Reset' } ),
 						); ) ?>
 			</p>
 		</fieldset>
@@ -27,5 +27,5 @@
 	</form>
 </div><!-- Column -->
 <div id="Signatures" style="float: right; width: 49%;"/>
-<!--#include virtual="/employee/proj/prep/_filmstripping_signatures.html"-->
+<? echo ( include('/employee/proj/prep/_filmstripping_signatures.html'); ) ?>
 </div><!-- Column -->

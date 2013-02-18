@@ -21,6 +21,11 @@
 		) ) {
 		next if $session{'/administrator/stock/list.html?recommendations'} eq '0' and $Stock->recommendations();
 		next if $session{'/administrator/stock/list.html?recommendations'} eq '1' and ! $Stock->recommendations();
+		if ( $session{'/administrator/stock/list.html?setup_prices'} eq '1' ) {
+			next if ! openprint::PaperPrice->find_one(paper_id=>$$Stock{id}, service=>'Setup');
+		} elsif ( $session{'/administrator/stock/list.html?setup_prices'} eq '0' ) {
+			next if openprint::PaperPrice->find_one(paper_id=>$$Stock{id}, service=>'Setup');
+		} # end if
 		push @{$$variable{'Stocks'}}, $Stock;
 	} # end foreach
 	@{$$variable{'Groups'}} = openprint::StockGroup->find();
@@ -52,33 +57,38 @@
 			</tr>
 		</thead>
 		<tbody>
-<? while ( $$variable{'Stock'} = shift @{$$variable{'Stocks'}} ) ?>
+<? while ( $$variable{Stock} = shift @{$$variable{'Stocks'}} ) ?>
 	<tr>
-		<td class="checkbox"><input type="checkbox" id="chkStock<? echo ( $$variable{'Stock'}{id} ) ?>" name="chkStock" value="<? echo ( $$variable{'Stock'}{'id'} ) ?>"/></td>
-				<? if ( @{$$variable{'InventoryNumbers'}} > 1 ) ?>
-		<td class="inventory"><a href="stock.html?stock_id=<? echo ( $$variable{'Stock'}{'id'} ) ?>"><? hecho ( $$variable{'Stock'}->inventory_number() ) ?></a></td>
-				<? endif ( @{$$variable{'InventoryNumbers'}} > 1 ) ?>
-				<? if ( @{$$variable{'Groups'}} ) ?>
-		<td class="group"><a href="stock.html?stock_id=<? echo ( $$variable{'Stock'}{'id'} ) ?>"><? echo ( $$variable{'Stock'}->group() ) ?></a></td>
-				<? endif ( @{$$variable{'Groups'}} ) ?>
-		<td class="manufacturer"><a href="stock.html?stock_id=<? echo ( $$variable{'Stock'}{'id'} ) ?>"><? echo ( $$variable{'Stock'}->manufacturer() ) ?></a></td>
-		<td class="brand"><a href="stock.html?stock_id=<? echo ( $$variable{'Stock'}{'id'} ) ?>"><? echo ( $$variable{'Stock'}->brand() ) ?></a></td>
-		<td class="finish"><a href="stock.html?stock_id=<? echo ( $$variable{'Stock'}{'id'} ) ?>"><? echo ( $$variable{'Stock'}->finish() ) ?></a></td>
-		<td class="colour"><a href="stock.html?stock_id=<? echo ( $$variable{'Stock'}{'id'} ) ?>"><? echo ( $$variable{'Stock'}->colour() ) ?></a></td>
-		<td class="weight"><a href="stock.html?stock_id=<? echo ( $$variable{'Stock'}{'id'} ) ?>"><? echo ( $$variable{'Stock'}->weight() ) ?></a></td>
-		<td class="quality"><a href="stock.html?stock_id=<? echo ( $$variable{'Stock'}{'id'} ) ?>"><? echo ( $$variable{'Stock'}->quality() ) ?></a></td>
-		<td class="size"><a href="stock.html?stock_id=<? echo ( $$variable{'Stock'}{'id'} ) ?>"><? echo ( $$variable{'Stock'}->size() ) ?></a></td>
-		<td class="calliper"><a href="stock.html?stock_id=<? echo ( $$variable{'Stock'}{'id'} ) ?>"><? echo ( $$variable{'Stock'}->calliper() ) ?></a></td>
-		<td class="mweight"><a href="stock.html?stock_id=<? echo ( $$variable{'Stock'}{'id'} ) ?>"><? echo ( sprintf('%.2f', $$variable{'Stock'}->mweight() ); ) ?></a></td>
-		<td class="gsm"><a href="stock.html?stock_id=<? echo ( $$variable{'Stock'}{'id'} ) ?>"><? echo ( sprintf('%.2f', $$variable{'Stock'}->gsm() ); ) ?></a></td>
-		<td class="spp_min"><a href="stock.html?stock_id=<? echo ( $$variable{'Stock'}{'id'} ) ?>"><? echo ( $$variable{'Stock'}->sheets_per_package().'/'.$$variable{'Stock'}->minimum_order() ) ?></a></td>
-		<td class="pricing"><a href="stock.html?stock_id=<? echo ( $$variable{'Stock'}{'id'} ) ?>"><? echo ( 
-my $Price = openprint::PaperPrice->find_one('stock_id'=>$$variable{'Stock'}->id(), 'service'=>'Material', 'order'=>$openprint::PaperPrice::fields{'pricelist_id'} );
-return sprintf('%.0f*%.0f%=%.0f', @$Price{'cost','markup','price'} ) if $Price;
-return 'No price';
- ) ?></a></td>
+		<td class="checkbox"><input type="checkbox" id="chkStock<? echo ( $$variable{Stock}{id} ) ?>" name="chkStock" value="<? echo ( $$variable{Stock}{'id'} ) ?>"/></td>
+		<? if ( @{$$variable{'InventoryNumbers'}} > 1 ) ?>
+		<td class="inventory"><a href="stock.html?stock_id=<? echo ( $$variable{Stock}{'id'} ) ?>"><? hecho ( $$variable{Stock}->inventory_number() ) ?></a></td>
+		<? endif ( @{$$variable{'InventoryNumbers'}} > 1 ) ?>
+		<? if ( @{$$variable{'Groups'}} ) ?>
+		<td class="group"><a href="stock.html?stock_id=<? echo ( $$variable{Stock}{'id'} ) ?>"><? echo ( $$variable{Stock}->group() ) ?></a></td>
+		<? endif ( @{$$variable{'Groups'}} ) ?>
+		<td class="manufacturer"><a href="stock.html?stock_id=<? echo ( $$variable{Stock}{'id'} ) ?>"><? echo ( $$variable{Stock}->manufacturer() ) ?></a></td>
+		<td class="brand"><a href="stock.html?stock_id=<? echo ( $$variable{Stock}{'id'} ) ?>"><? echo ( $$variable{Stock}->brand() ) ?></a></td>
+		<td class="finish"><a href="stock.html?stock_id=<? echo ( $$variable{Stock}{'id'} ) ?>"><? echo ( $$variable{Stock}->finish() ) ?></a></td>
+		<td class="colour"><a href="stock.html?stock_id=<? echo ( $$variable{Stock}{'id'} ) ?>"><? echo ( $$variable{Stock}->colour() ) ?></a></td>
+		<td class="weight"><a href="stock.html?stock_id=<? echo ( $$variable{Stock}{'id'} ) ?>"><? echo ( $$variable{Stock}->weight() ) ?></a></td>
+		<td class="quality"><a href="stock.html?stock_id=<? echo ( $$variable{Stock}{'id'} ) ?>"><? echo ( $$variable{Stock}->quality() ) ?></a></td>
+		<td class="size"><a href="stock.html?stock_id=<? echo ( $$variable{Stock}{'id'} ) ?>"><? echo ( $$variable{Stock}->size() ) ?></a></td>
+		<td class="calliper"><a href="stock.html?stock_id=<? echo ( $$variable{Stock}{'id'} ) ?>"><? echo ( $$variable{Stock}->calliper() ) ?></a></td>
+		<td class="mweight"><a href="stock.html?stock_id=<? echo ( $$variable{Stock}{'id'} ) ?>"><? echo ( sprintf('%.2f', $$variable{Stock}->mweight() ); ) ?></a></td>
+		<td class="gsm"><a href="stock.html?stock_id=<? echo ( $$variable{Stock}{'id'} ) ?>"><? echo ( sprintf('%.2f', $$variable{Stock}->gsm() ); ) ?></a></td>
+		<td class="spp_min"><a href="stock.html?stock_id=<? echo ( $$variable{Stock}{'id'} ) ?>"><? echo ( $$variable{Stock}->sheets_per_package().'/'.$$variable{Stock}->minimum_order() ) ?></a></td>
+		<td class="pricing"><a href="stock.html?stock_id=<? echo ( $$variable{Stock}{'id'} ) ?>">
+<? echo ( 
+join('<br/>', map { sprintf('%s %s %s $%.0f*%.0f%=$%.0f', $_->Pricelist()->name(), $_->service(), 
+join(' ', 
+( $_->min() ? '>'.$_->min() : '' ),
+( $_->max() ? '<'.$_->max() : '' ),
+),
+$_->cost(), $_->markup(), $_->price() ) } 
+openprint::PaperPrice->find(paper_id=>$$variable{Stock}->id(), 'order'=>$openprint::PaperPrice::fields{'pricelist_id'}.',service' ) );
+) ?></a></td>
 	</tr>
-<? endwhile ( $$variable{'Stock'} = shift @{$$variable{'Stocks'}} ) ?>
+<? endwhile ( $$variable{Stock} = shift @{$$variable{'Stocks'}} ) ?>
 		</tbody>
 	</table>
 <? else ( @{$$variable{'Stocks'}} ) ?>

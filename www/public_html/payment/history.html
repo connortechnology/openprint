@@ -8,7 +8,7 @@
 		new Ajax.Updater('PaymentList','/payment/_history.html', {method:'get',parameters:Form.serialize(form)});
 	} // end function
 </script>	 
-<!--#include virtual="/includes/error_reporting.html"-->
+<? echo ( include('/includes/error_reporting.html'); ) ?>
 <form id="f1" name="f1" method="post" action="/payment/history.html">
    <div class="PaymentHistory">
 		<fieldset class="filters unprintable"><legend>Select Search Criteria</legend>
@@ -57,5 +57,5 @@
 			</p>
 		</fieldset>
 	</div>
-	<div id="PaymentList"><!--#include virtual="_history.html"--></div>
+	<div id="PaymentList"><? echo ( include('_history.html'); ) ?></div>
 </form>

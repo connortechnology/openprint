@@ -58,7 +58,7 @@
 	<hr class="spacer"/>
 	<input type="hidden" name="btnFunction"/>
 </form>
-<div id="Results"><!--#include virtual="_history.html"--></div>
+<div id="Results"><? echo ( include('_history.html'); ) ?></div>
 <? else ( $session{'user_id'} ) ?>
 Only logged in customers have an order history. 
 <? endif ( $session{'user_id'} ) ?>

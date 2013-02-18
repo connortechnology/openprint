@@ -1,19 +1,21 @@
-<!--#include virtual="/includes/error_reporting.html"-->
+<?include(/includes/error_reporting.html)?>
 Please select an allocation to view/edit.<br>
 <form id="f1" name="f1" method="post" action="packingslips.html">
 	<fieldset class="filters"><legend>Search Criteria</legend>
 		<ul>
 		<li>
 			<label>Docket</label>
-			<input type="text" name="docket" size="6" value="<? echo ( $session{'/employee/inventory/packingslips.html?docket'} ) ?>" onkeyup="this.value=this.value.replace(/\D/g,'');" onchange="change_handler(this);" onkeypress="return input_handler( this, event );" onkeydown="if(event.keyCode == 13){LoadContent( 'Results', '/employee/inventory/_packingslips.html', $('f1').serialize() );}" />
-			<? echo ( ssi::writeButton( $log, $dbh, 'Go2', 'go.gif', "LoadContent( 'Results', '/employee/inventory/_packingslips.html', \$('f1').serialize() );",'','Go' ); ) ?>
+			<? echo ( join("\n",
+						input( type=>'cardinal', name=>'docket', value=>$session{'/employee/inventory/packingslips.html?docket'}, onchange=>'change_handler(this);', onkeypress=>'return input_handler( this, event );', onkeydown=>q`if(event.keyCode == 13){LoadContent( 'Results', '/employee/inventory/_packingslips.html', $('f1').serialize() );};` ),
+					ssi::button( 'Go2', { onclick=>q`AjaxLoadContent( 'Results', '/employee/inventory/_packingslips.html', $('f1').serialize() );`,text=>'Go' } ),
+			); ) ?>
 		</li>
 		</ul>
 		<hr/>
 		<ul>
 		<li>
 			<label>Company</label>
-			<input type="text" onKeyUp="filterDDM(this, f1.company_id);" size="4" />
+			<input type="text" onKeyUp="filterDDM(this, f1.company_id);" class="filter" />
 			<select name="company_id" id="company_id">
 				<option value="">All</option>
 				<? echo ( openprint::Company::get_dropdown( $session{'/employee/inventory/packingslips.html?company_id'} ); ) ?>
@@ -22,26 +24,26 @@ Please select an allocation to view/edit.<br>
 		<li><label>Type</label>
 			<select name="type_id" id="type_id">
 				<option value="">All</option>
-				<? echo ( ssi::make_drop_down( openprint::LabelType->dropdown('order'=>'lower(name)'), $session{'/employee/inventory/packingslips.html?type_id'} ); ) ?>
+				<? echo ( ssi::make_drop_down( openprint::LabelType->dropdown( order =>'lower(name)'), $session{'/employee/inventory/packingslips.html?type_id'} ); ) ?>
 			</select>
 		<li>
 			<label>Date Added</label>
 			<span class="DateSelectorCT">
-<? echo ( ssi::date_select_session( '/employee/inventory/packingslips.html', 'created_on_start', { 'with_today'=>1, 'with_clear'=>1 } ); ) ?>
+<? echo ( ssi::date_select_session( '/employee/inventory/packingslips.html', 'created_on_start', { with_today =>1, with_clear=>1 } ); ) ?>
 			</span>
 			to 
 			<span class="DateSelectorCT">
-<? echo ( ssi::date_select_session( '/employee/inventory/packingslips.html', 'created_on_end', { 'with_today'=>1, 'with_clear'=>1 } ); ) ?>
+<? echo ( ssi::date_select_session( '/employee/inventory/packingslips.html', 'created_on_end', { with_today=>1, with_clear=>1 } ); ) ?>
 			</span>
 		</li>
 		</ul>
 		<p class="buttons">
 			<? echo ( join('',
-				ssi::button( 'ShowResults', { 'onclick'=>"LoadContent( 'Results', '/employee/inventory/_packingslips.html', \$('f1').serialize() );", 'text'=>'Show Results' } ),
-				ssi::button( 'Reset', { 'onclick'=>'f1.reset();', 'text'=>'Reset' } ),
+				ssi::button( 'ShowResults', { onclick=>q`LoadContent( 'Results', '/employee/inventory/_packingslips.html', $('f1').serialize() );`, text=>'Show Results' } ),
+				ssi::button( 'Reset', { onclick=>'f1.reset();' } ),
 				); ) ?>
 		</p>
 	</fieldset>
 </form>
-<div id="Results"><!--#include virtual="_packingslips.html"--></div>
-<script type="text/javascript">document.f1.Docket.focus();</script>
+<div id="Results"><?include(_packingslips.html)?></div>
+<script type="text/javascript">document.f1.docket.focus();</script>

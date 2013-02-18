@@ -1,4 +1,4 @@
-<!--#include virtual="/includes/error_reporting.html"-->
+<? echo ( include('/includes/error_reporting.html'); ) ?>
 <form id="split_form" name="split_form">
 	<input type="hidden" name="schedule_id" value="<? echo ( $$variable{Job}->id() ) ?>" />
 	<input type="hidden" name="action" value="split" />

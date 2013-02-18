@@ -33,10 +33,10 @@ There is no current project.
 	<? echo ( ssi::button( 'Print', { onclick=>'window.print();' } ); ) ?>
 </p>
 <div class="Project">
-<!--#include virtual="/includes/project_header.html" -->
+<? echo ( include('/includes/project_header.html'); ) ?>
 <div class="ProjectSummary">
 	<fieldset><legend>Project Information</legend>
-	<!--#include virtual="/includes/main/summ/project_create_edit.html" -->
+	<? echo ( include('/includes/main/summ/project_create_edit.html'); ) ?>
 	</fieldset>
 	<? while ( @$variable{'ServiceIndex','ServiceTypeName','prod_url'} = splice @{$$variable{'SERVICES'}},0,3; ) ?>
 		<? eval ( 
@@ -51,7 +51,7 @@ There is no current project.
 		
 		<fieldset><legend><?ServiceTypeName?> <?txtServiceDescription?></legend>
 			<? if ( $$variable{'prod_url'} ) ?>
-			<!--#include virtual="/main/summ/<?prod_url?>"-->
+			<? echo ( include('/main/summ/<?prod_url?>'); ) ?>
 			<? else ( $$variable{'prod_url'} ) ?>
 			<? endif ( $$variable{'prod_url'} ) ?>
 		</fieldset>

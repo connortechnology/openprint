@@ -10,15 +10,15 @@
 		</p>
 		<p class="buttons">
 			<input type="file" name="fileImport">
-			<? echo ( ssi::writeButton( $log, $dbh, 'Import','import.gif', "f1.action='templates.html';f1.btnFunction.value='Import Templates';f1.submit();", '', 'Import' ); ) ?>
-			<? echo ( ssi::writeButton( $log, $dbh, 'Export','export.gif', "f1.action='templates.html?Download';f1.btnFunction.value='Export Templates';f1.submit();", '', 'Export' ); ) ?>
+			<? echo ( ssi::button( 'Import', { onclick=>"f1.action='templates.html';f1.btnFunction.value='Import Templates';f1.submit();", href=>'', text=>'Import' } ); ) ?>
+			<? echo ( ssi::button( 'Export', { onclick=>"f1.action='templates.html?Download';f1.btnFunction.value='Export Templates';f1.submit();", href=>'', text=>'Export' } ); ) ?>
 		</p>
 	</fieldset>
-	<!--#include virtual="/includes/error_reporting.html"-->
-	<br class="spacer"/>
-	<div id="Templates">
-	<? if ( $param{'ddmProjectType'} ) ?>
-	<!--#include virtual="_templates.html"-->
-	<? endif ( $param{'ddmProjectType'} ) ?>
-	</div>
 </form>
+<?include(/includes/error_reporting.html)?>
+<br class="spacer"/>
+<div id="Templates">
+<? if ( $param{'ddmProjectType'} ) ?>
+<?include(_templates.html)?>
+<? endif ( $param{'ddmProjectType'} ) ?>
+</div>

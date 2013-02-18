@@ -2,7 +2,7 @@
 <h1>Paycheques</h1>
 <h2>History</h2>
 </div>
-<!--#include virtual="/includes/error_reporting.html"-->
+<? echo ( include('/includes/error_reporting.html'); ) ?>
 <script type="text/javascript">
 	function delete_confirm(form) {
 		var number_of_deleted_paycheques = 0;
@@ -67,7 +67,7 @@
 			</p>
 		</fieldset>
 	</div>
-		<div id="PaychequeList"><!--#include virtual="_history.html"--></div>
+		<div id="PaychequeList"><? echo ( include('_history.html'); ) ?></div>
 		<input type="hidden" name="btnFunction"/>
 	</form>
 <? else ( $session{'user_id'} ) ?>

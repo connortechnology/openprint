@@ -60,12 +60,12 @@ sub handler {
 	$r->no_cache(1);
 
 	$starttime = gettimeofday();
-	$r->log->debug( "Beginning of Request: $ENV{HTTP_USER_AGENT} Page: " . $r->uri() );
+	#$r->log->debug( "Beginning of Request: $ENV{HTTP_USER_AGENT} Page: " . $r->uri() );
 
 	$log	= $r->log;
 	$request->push_handlers(PerlCleanupHandler => \&cleanup);
 	my $page = $r->uri();
-	$log->debug( "Beginning of Request: Time (seconds) : $starttime Page: " . $page );
+	$log->debug( "Beginning of Request: Page: " . $page );
 
 	%param = ();
 	# Here we copy the param data into a hash that is sligthly more useful to use.  Wish we didn't have to do this.
@@ -90,11 +90,11 @@ sub handler {
 	}  # end foreach
 
 	$dbh = sql::open_sql( $log, 
-			'database'	=> $r->dir_config('db_name'),
-			'driver'	=> $r->dir_config('db_driver'), 
-			'host'		=> $r->dir_config('db_host'),
-			'login'		=> $r->dir_config('db_user'),
-			'password'	=> $r->dir_config('db_password'),
+			database	=> $r->dir_config('db_name'),
+			driver		=> $r->dir_config('db_driver'), 
+			host		=> $r->dir_config('db_host'),
+			login		=> $r->dir_config('db_user'),
+			password	=> $r->dir_config('db_password'),
 			);
 
 	my $page = $r->uri();
@@ -102,8 +102,8 @@ sub handler {
 
 	# This one has to go here, because it loads data, the others clear data, so they can go after the requires
 	configuration::init( $r->dir_config() );
+	openprint::session_init();
 	if ( $dbh ) {
-		openprint::session_init();
 		if ( ! $page_settings{$config{db_name}} ) {
 			$page_settings{$config{db_name}} = { map { $_->url(), $_ } openprint::Page_Setting->find() };
 		} # end if
@@ -151,8 +151,8 @@ $log->debug("No good, need login");
 				#$r->headers_out->set(Location=>'/error/error_login.html');
 				#$r->status(Apache2::Const::REDIRECT);
 			} # end if
-		} else {
-$log->debug("No pagesetting?");
+		#} else {
+#$log->debug("No pagesetting?");
 		} # end if
 		$variable{'PageSetting'} = $page_settings{$config{db_name}}{$page} ? $page_settings{$config{db_name}}{$page} : new openprint::Page_Setting();
 
@@ -160,7 +160,7 @@ $log->debug("No pagesetting?");
 			('openprint::'.$o)->init_cache();
 		} # end foreach
 
-		$openprint::log->debug("Page: $page");
+		#$openprint::log->debug("Page: $page");
 
 		# Just does timeout
 		openprint::login::verify_user( $r, $log, $dbh, $session{_session_id}, \%variable );
@@ -190,6 +190,12 @@ $log->debug("No pagesetting?");
     } # end if
 
     if ( $variable{'ExternalRedirect'} ) {
+		foreach my $key ( 'error', 'warning', 'information' ) {
+			if ( $variable{$key} ) {
+				$log->debug("Sacing session $key $variable{$key}");
+				$session{$key} = $variable{$key};
+			} # end if
+		} # end foreach
         $r->headers_out->set(Location=>$variable{'ExternalRedirect'});
         $r->status(Apache2::Const::REDIRECT);
         #$r->send_http_header;
@@ -211,7 +217,13 @@ $log->debug("No pagesetting?");
 	$log->debug( "Before loading content: ($page) Elapsed time: " . sprintf('%.4f', tv_interval([$starttime])*1000).' usecs' );
 		if ( ! exists $variable{'PageContent'} ) {
 			my $content;
-			if ( -e ($_ = join('/', $config{'SkinPath'}, $page )) ) {
+			if ( -e ($_ = join('/', $config{'SkinPath'}, 'html', $page )) ) {
+				$content = misc::load_file( $log, $_ );
+				if ( ! $content ) {
+					$log->error("Found no content at $_");
+				} # end if
+			} elsif ( -e ($_ = join('/', $config{'SkinPath'}, $page )) ) {
+$log->error("Deprecated SkinPath layout! $config{SkinPath}");
 				$content = misc::load_file( $log, $_ );
 				if ( ! $content ) {
 					$log->error("Found no content at $_");

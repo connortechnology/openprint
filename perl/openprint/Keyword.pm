@@ -6,7 +6,7 @@ our @ISA=('openprint::Object');
 
 
 use vars qw ( $debug $table $serial %fields %transforms %defaults );
-$debug = 1;
+$debug = 0;
 $table = 'keywords';
 $serial = 'keywords_id_seq';
 %fields = (
@@ -20,7 +20,7 @@ $serial = 'keywords_id_seq';
 package openprint::Object_Keyword;
 our @ISA=('openprint::Object');
 use vars qw ( $debug $table %fields %find_fields %transforms %defaults @identified_by );
-$debug = 1;
+$debug = 0;
 $table = 'object_keywords';
 @identified_by = ( 'object_type_id', 'object_id', 'keyword_id' );
 

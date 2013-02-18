@@ -1,17 +1,17 @@
 <div class="PageTitle">
 <h1>Upload Center</h1>
 </div>
-<script type="text/javascript" src="/javascripts/upload.js?version=1.0"></script>
+<script type="text/javascript" src="<?hash_link(/javascripts/upload.js)?>"></script>
 <script type="text/javascript">
 
 function displayUploadResults(body) {
 	$('PendingCompletion').innerHTML = '';
 	$('uploadResults').innerHTML = body.innerHTML;
 	// Update files list and serial
-	new Ajax.Updater('UploadForm','/upload/_upload_form.html', {method:'get',parameters:document.forms['upload'].serialize()});
+	new Ajax.Updater('UploadForm','/upload/_upload_form.html', {parameters:document.forms['upload'].serialize()});
 	//window.setTimeout("$('UploadCompleteDiv').hide();", 5000);
 	//window.setTimeout("$('UploadForm').show();$('uploadResults').innerHTML='';$('UploadCompleteDiv').hide();", 5000);
-}         
+}		 
 
 function check_input( form ) {
 	var error = '';
@@ -46,12 +46,12 @@ function check_input( form ) {
 	return true;
 } // end function check_input
 </script>
-<link rel="stylesheet" href="/css/upload.css" type="text/css"/>
+<link rel="stylesheet" href="<?hash_link(/css/upload.css)?>" type="text/css"/>
 <div id="uploadContainer">
 	<div id="uploadResults"></div>
 	<!--<iframe style="position: absolute; top: 0px; left: 0px; visibility: hidden;" id="UploadFrame" name="UploadFrame" src=""></iframe>-->
 	<div id="UploadForm">
-	<!--#include virtual="_upload_form.html"-->
+	<? echo ( include('_upload_form.html'); ) ?>
 	</div>
 	<div id="progressMeter" style="display: none;">
 		<p><b>Do not close the browser, or navigate to another site until the upload has completed, or it will be cancelled.</b></p>
@@ -85,31 +85,34 @@ function check_input( form ) {
 		<br/>
 		<p class="buttons">
 		<? echo ( 
-			  my $qry;
-			  if( $param{'docket'} ) {
-				  $qry = '?docket=' . $param{'docket'};
-			  } elsif( $param{'project_id'} ) {
-				  $qry = '?project_id=' . $param{'project_id'};
-			  } # end if
-			ssi::writeButton( $log, $dbh, 'Cancel', 'cancel.gif', "", "/upload/upload_center.html$qry", 'Cancel Upload' );
+				my $qry;
+				if( $param{'docket'} ) {
+					$qry = '?docket=' . $param{'docket'};
+				} elsif( $param{'project_id'} ) {
+					$qry = '?project_id=' . $param{'project_id'};
+				} # end if
+			ssi::button( 'Cancel', { href=>"/upload/upload_center.html$qry", text=>'Cancel Upload' } );
 		) ?>
 		</p>
 	</div>
 	<div id="PendingCompletion" style="display: none;" align="center">
-	  <p>Please wait while we confirm that your upload was successful.</p>
+		<p>Please wait while we confirm that your upload was successful.</p>
 	</div>
 	<div id="UploadCompleteDiv" style="display: none;">
 		<p class="buttons">
 		<? echo ( 
-			  my $qry;
-			  if( $param{'docket'} ) {
-				  $qry = '?docket=' . $param{'docket'};
-			  } elsif( $param{'project_id'} ) {
-				  $qry = '?project_id=' . $param{'project_id'};
-			  } # end if
-			  
-			  ssi::writeButton( $log, $dbh, 'Continue', 'continue.gif', "", "/upload/upload_center.html$qry", 'Upload More Files' ); 
-		) ?> <? echo ( ssi::writeButton( $log, $dbh, 'Home', 'home.gif', "", "/", 'Home' ); ) ?>
+			my $qry;
+			if( $param{'docket'} ) {
+				$qry = '?docket=' . $param{'docket'};
+			} elsif( $param{'project_id'} ) {
+				$qry = '?project_id=' . $param{'project_id'};
+			} # end if
+				
+			return join("\n",
+				ssi::button( 'Continue', { href=>"/upload/upload_center.html$qry", text=>'Upload More Files' } ),
+				ssi::button( 'Home', { href=>'/' } ),
+			);
+		) ?>
 		</p>
 	</div>
 	<iframe scrolling="no" marginwidth="0" marginheight="0" frameborder="0" vspace="0" hspace="0" style="overflow:visible; width:0; height:0; display:none;" id="UploadFrame" name="UploadFrame" src=""></iframe>

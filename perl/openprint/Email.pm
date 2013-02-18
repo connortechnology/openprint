@@ -11,7 +11,7 @@ require MIME::QuotedPrint;
 require Encode;
 
 use vars qw( $debug $table $serial %fields %transforms %defaults );
-$debug = 1;
+$debug = 0;
 
 %fields = (
 	from	=>	'from',

@@ -12,7 +12,7 @@ require openprint::Paper;
 require openprint::PurchaseOrder_Content;
 require Math::Round;
 
-$debug = 1;
+$debug = 0;
 
 $table = 'manifest_content_types';
 $serial = 'manifest_content_types_id_seq';

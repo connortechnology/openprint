@@ -5,7 +5,7 @@ require openprint::User;
 package openprint::Message_To;
 our @ISA = qw( openprint::Object );
 use vars qw( $debug $table %fields %find_fields %defaults @identified_by );
-$debug = 1;
+$debug = 0;
 $table = 'message_to';
 @identified_by = ( 'message_id', 'user_id' );
 %fields = (

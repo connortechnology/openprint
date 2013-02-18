@@ -11,7 +11,7 @@ require openprint::Service;
 require openprint::service;
 require Date::Calc;
 
-my $debug = 1;
+my $debug = 0;
 
 sub find {
 	my %params = @_;

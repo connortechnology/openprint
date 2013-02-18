@@ -1,4 +1,4 @@
-<!--#include virtual="/includes/error_reporting.html"-->
+<? echo ( include('/includes/error_reporting.html'); ) ?>
 <? echo (
 	my @accounting_contacts = sql::execute(undef,undef,'SELECT user_id FROM companies_accountingcontacts WHERE company_id=?', $$variable{'Company'}->id() );
 	my @Users = openprint::User->find('id'=>\@accounting_contacts,'order'=>'lower(firstname),lower(lastname)' ) if @accounting_contacts;
@@ -6,15 +6,15 @@
 	my $html;
 	foreach my $User ( @Users ) {
 		$html .= sprintf('&quot;%s&quot; &lt;%s&gt;', $User->name(), $User->email() );
-		$html .= ssi::writeButton( $log, $dbh, 'X'.$User->id(), 'x.gif', qq`
-			new Ajax.Updater('AccountingContacts','_company_accounting_contacts.html?action=delete', { method: 'get', parameters: { company_id: '$$variable{Company}{id}', user_id: $$User{id} } } );"
-`, '', 'X' );
+		$html .= button( 'X'.$User->id(), { onclick=>qq`
+			new Ajax.Updater('AccountingContacts','_company_accounting_contacts.html?action=delete', { parameters: { company_id: '$$variable{Company}{id}', user_id: $$User{id} } } );"
+`, text=>'X' } );
 		$html .= '<br/>';
 	} # end foreach
 	$html .= '<br/>' if ! @Users;
 	my $company_id = $param{'accounting_contact_company_id'} ? $param{'accounting_contact_company_id'} : $$variable{'Company'}->id();
 	if ( $session{'user_type'} eq 'A' ) {
-		$html .= qq`<select name="accounting_contact_company_id" id="accounting_contact_company_id" onchange="new Ajax.Updater('AccountingContacts','_company_accounting_contacts.html', { method: 'get', parameters: { company_id: '$$variable{Company}{id}', accounting_contact_company_id: this.value } } );">`;
+		$html .= qq`<select name="accounting_contact_company_id" id="accounting_contact_company_id" onchange="new Ajax.Updater('AccountingContacts','_company_accounting_contacts.html', { parameters: { company_id: '$$variable{Company}{id}', accounting_contact_company_id: this.value } } );">`;
 		$html .= ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Company->find('order'=>'lower(name)') ], $company_id );
 		$html .= '</select>';
 	} # end if
@@ -24,7 +24,7 @@
 		$html .= '<select name="new_accounting_contact_id" id="new_accounting_contact_id">';
 		$html .= ssi::make_drop_down( [ map { $_->id(), $_->name() } @Users ] );
 		$html .= '</select>';
-		$html .= ssi::writeButton( $log, $dbh, 'AddAccountingContact', 'add.gif', qq`new Ajax.Updater('AccountingContacts','_company_accounting_contacts.html', { method: 'get', parameters: { company_id: $$variable{Company}{id}, new_accounting_contact_id: \$('new_accounting_contact_id').value, action: 'add' } } );`, '', 'Add' );
+		$html .= ssi::button( 'AddAccountingContact', { onclick=>qq`new Ajax.Updater('AccountingContacts','_company_accounting_contacts.html', { parameters: { company_id: $$variable{Company}{id}, new_accounting_contact_id: \$('new_accounting_contact_id').value, action: 'add' } } );`, text=>'Add' } );
 	} # end if
 	return $html;
 ) ?>

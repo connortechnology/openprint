@@ -37,35 +37,34 @@ if ($opts->{help}) {
     exit 0;
 }
 
-$log = new logger( {'level'=>'warn'});
+$$opts{config} = '/etc/openprint/emailer-scheduler.conf' if ! $$opts{config};
+
+$log = new logger( {level=>'warn'});
 configuration::init( );
-configuration::from_file( $$opts{'config'} ? $$opts{'config'} : '/etc/openprint/emailer-scheduler.conf' );
+configuration::from_file( $$opts{config} );
 configuration::merge( $opts );
 
-# Declare variables
+# required params
 foreach my $param ( 'db_name','db_user','db_pass' ) {
-    $config{$param} = $$opts{$param} if $$opts{$param};
-    if ( ! $config{$param} ) {
-        die "$program: missing required --$param parameter";
-    }
+	die "$program: missing required --$param parameter" if ! $config{$param};
 } # end foreach required-param
 
 
 $log->info("Opening SQL connection");
 $dbh = sql::open_sql( $log, 
-	'host'		=> $config{'db_host'},
-	'database'	=> $config{'db_name'},
-	'driver'	=> 'Pg',
-	'login'		=> $config{'db_user'},
-	'password'	=> $config{'db_pass'},
+	host		=> $config{db_host},
+	database	=> $config{db_name},
+	driver		=> 'Pg',
+	login		=> $config{db_user},
+	password	=> $config{db_pass},
 );
 die 'Error opening db' if ! $dbh;
 configuration::from_db( );
-configuration::from_file( $$opts{'config'} ? $$opts{'config'} : '/etc/openprint/emailer-scheduler.conf' );
+configuration::from_file( $$opts{config} );
 configuration::merge( $opts );
 
-$session{'company_id'} = $config{'owner_id'};
-$ENV{'DOCUMENT_ROOT'} = $config{'DOCUMENT_ROOT'};
+$session{company_id} = $config{owner_id};
+$ENV{DOCUMENT_ROOT} = $config{DOCUMENT_ROOT};
 
 # The first query to execute grabs the ids of all of the email campaigns
 # that are currently set to run

@@ -20,6 +20,10 @@ require openprint::User;
 require openprint::User_Notification;
 require openprint::Email;
 
+use MIME::QuotedPrint;
+use MIME::Base64;
+require Encode;
+
 use openprint ();
 use vars qw( $r %variable %session %param %config $log $dbh );
 *variable = \%openprint::variable;
@@ -285,20 +289,13 @@ $log->error("No destdir");
 		if ( $files ) {
 # Notify CSR, and Customer of upload
 			my $email_template = misc::load_file( $log, $config{'SkinPath'}. '/email_template.html' );
-			$variable{'SiteTitle'} = $config{'SiteTitle'};
-			if (-e $config{'SkinPath'} . '/email_content/uploadfiles_csr_notification.html') {
-				$variable{'ReplacementText'} = misc::load_file( $log, $config{'SkinPath'} . '/email_content/uploadfiles_csr_notification.html' );
-			} else {
-				$variable{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/uploadfiles_csr_notification.html' );
-			} # end if
-			$variable{'ReplacementText'} = ssi::variable_substitution( \$variable{'ReplacementText'}, \%variable );
+			$variable{'ReplacementText'} = ssi::include( '/email_content/uploadfiles_csr_notification.html', \%variable );
 			my $body = ssi::variable_substitution( \$email_template, \%variable );
 			my $Mail = new openprint::Email();
 			my @to;
 			my $from;
 			if ( $session{'user_id'} ) {
-				my $User = new openprint::User( $session{'user_id'} );
-				$from = sprintf('"%s %s" <%s>', $User->get('firstname','lastname','email') ),
+				$from = new openprint::User( $session{'user_id'} );
 			} else {
 				$from = $param{'txtEmailAddress'};
 				if ( ! Email::Valid->address( $param{'txtEmailAddress'} ) ) {
@@ -322,16 +319,11 @@ $log->error("No destdir");
 						TO		=> \@to,
 #BCC		=>	'iconnor@penultima.org',
 						SUBJECT => $param{'docket'} ? "Files uploaded for docket: $param{'docket'}" : 'Files Uploaded',
-						ATTACHMENTS	=>	[ '', MIME::QuotedPrint::encode_qp($body), 'text/html', 'quoted-printable' ],
+						ATTACHMENTS	=>	[ '', MIME::QuotedPrint::encode_qp(Encode::encode('utf-8',$body)), 'text/html', 'quoted-printable' ],
 						);
 
-# Send transcript to uploader
-				if (-e $config{'SkinPath'} . '/email_content/uploadfiles_client_notification.html') {
-					$variable{'ReplacementText'} = misc::load_file( $log, $config{'SkinPath'} . '/email_content/uploadfiles_client_notification.html' );
-				} else {
-					$variable{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/uploadfiles_client_notification.html' );
-				} # end if
-				$variable{'ReplacementText'} = ssi::variable_substitution( \$variable{'ReplacementText'}, \%variable );
+				# Send transcript to uploader
+				$variable{'ReplacementText'} = ssi::include( '/email_content/uploadfiles_client_notification.html', \%variable );
 			} # end if
 
 			if ( @to == 1 ) {
@@ -351,7 +343,7 @@ $log->error("No destdir");
 					FROM    => $from,
 					TO      => \@to,
 					SUBJECT => $param{'docket'} ? "Files uploaded for docket: $param{'docket'}" : 'Files Uploaded',
-					ATTACHMENT => [ '', encode_qp($body), 'text/html', 'quoted-printable' ],
+					ATTACHMENTS => [ '', encode_qp(Encode::encode('utf-8',$body)), 'text/html', 'quoted-printable' ],
 					);
 		} else {
 			$variable{'error'} .= 'No files were uploaded.';

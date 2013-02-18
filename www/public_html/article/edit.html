@@ -16,7 +16,7 @@
 	});
 </script>
 <div class="Article"><div class="Edit">
-	<!--#include virtual="/includes/error_reporting.html"-->
+	<? echo ( include('/includes/error_reporting.html'); ) ?>
 	<form name="f1" id="f1" action="/article/edit.html" method="post" enctype="multipart/form-data">
 		<fieldset><legend>Editing Article<? echo ( $$variable{Article}->id() ? '('.$$variable{Article}->id().')' : '' ) ?></legend>
 			<? if ( $$variable{Article}->deleted() ) ?>
@@ -105,11 +105,14 @@
 					</li>
 					<li>
 						<label for="body">Body</label>
-						<textarea class="mce" id="body" name="body" rows="<? echo ( ssi::count_lines( $$variable{Article}->body() ); ) ?>" onkeyup="textarea_resize(this);"><? echo ( ssi::html_escape( $$variable{Article}->body() ) ) ?></textarea>
+						<textarea class="mce" id="body" name="body" rows="<? echo ( ssi::count_lines( $$variable{Article}->body() ); ) ?>" onkeyup="textarea_resize(this);"><? echo ( 
+								my $body = $$variable{Article}->body_escaped();
+								return ssi::html_escape($body);
+								) ?></textarea>
 					</li>
 <? echo (
 	$$variable{Privacy} = $$variable{Article}->Privacy();
-	return ssi::include( $ENV{DOCUMENT_ROOT}.'/includes/_privacy_widget.html' );
+	return ssi::include( '/includes/_privacy_widget.html' );
 ) ?>
 				</ul>
 			<p class="buttons">
@@ -132,7 +135,7 @@
 			</p>
 			</div>
 			<div class="rightColumn">
-				<!--#include virtual="/article/_upload.html"-->
+				<? echo ( include('/article/_upload.html'); ) ?>
 			</div>
 		</fieldset>
 		<input type="hidden" name="func" />

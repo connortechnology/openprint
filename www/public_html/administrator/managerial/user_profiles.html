@@ -14,7 +14,7 @@ function keepCompany( form ) {
 	form.company_id.selectedIndex = Company;
 }
 </script>
-<!--#include virtual="/includes/error_reporting.html"-->
+<? echo ( include('/includes/error_reporting.html'); ) ?>
 Please select a company or user to obtain login information.<br/>
 <br/>
 <div class="UserProfile">
@@ -33,7 +33,7 @@ Please select a company or user to obtain login information.<br/>
 							<option value="">All Companies</option>
 							<? echo ( openprint::Company::get_dropdown( $param{'ddmCustomer'} ); ) ?>
 						</select>
-						<? echo ( ssi::button( 'Go1', { 'onclick'=>"f1.ddmUser.selectedIndex=-1;f1.btnFunction.value='Go';f1.submit();", 'text'=>'Go' } ); ) ?>
+						<? echo ( ssi::button( 'Go1', { onclick=>"f1.ddmUser.selectedIndex=-1;f1.btnFunction.value='Go';f1.submit();", 'text'=>'Go' } ); ) ?>
 					</li>
 					<li>
 						<label>User Type</label>
@@ -42,7 +42,7 @@ Please select a company or user to obtain login information.<br/>
 							<? echo ( ssi::make_drop_down( [ 'C', 'Customer', 'E', 'Employee','A', 'Administrator' ], $param{'ddmUserRole'} ); ) ?>
 						</select>
 					</li>
-					<li><label>Deleted?</label><? echo ( ssi::radio( 'deleted', [ '1','Yes', '0', 'No', '', 'Both' ], $param{'deleted'}, {'onclick'=>"f1.ddmUser.selectedIndex=-1;f1.btnFunction.value='Go';f1.submit();"} ); ) ?></li>
+					<li><label>Deleted?</label><? echo ( ssi::radio( 'deleted', [ '1','Yes', '0', 'No', '', 'Both' ], $param{'deleted'}, {onclick=>"f1.ddmUser.selectedIndex=-1;f1.btnFunction.value='Go';f1.submit();"} ); ) ?></li>
 					<li>
 						<label>User Name</label>
 						<select name="ddmUser" onchange="f1.btnFunction.value='';f1.submit();">
@@ -137,20 +137,20 @@ Please select a company or user to obtain login information.<br/>
 					</li>
 					<li class="phone"> 
 						<label>Phone</label>
-						<input type="text" name="phone" value="<? hecho ( $$variable{User}->phone() ) ?>" style="width: auto;" size="15" />x
-						<input type="text" name="extension" value="<? hecho ( $$variable{User}->extension() ) ?>" style="width: auto;" size="4" />
+						<input type="tel" name="phone" value="<? hecho ( $$variable{User}->phone() ) ?>" />x
+						<input type="tel" name="extension" value="<? hecho ( $$variable{User}->extension() ) ?>" />
 					</li>
 					<li class="mobile"> 
 						<label>Mobile</label>
-						<input type="text" name="mobile" value="<? hecho ( $$variable{User}->mobile() ) ?>" style="width: auto;" size="15" />
+						<input type="tel" name="mobile" value="<? hecho ( $$variable{User}->mobile() ) ?>" />
 					</li>
 					<li class="sms"> 
 						<label>SMS (email)</label>
-						<input type="text" name="sms" value="<? hecho ( $$variable{User}->sms() ) ?>" style="width: auto;" size="15" />
+						<input type="text" name="sms" value="<? hecho ( $$variable{User}->sms() ) ?>" />
 					</li>
 					<li class="fax"> 
 						<label>Fax</label>
-						<input type="text" name="fax" value="<? hecho ( $$variable{User}->fax() ) ?>" />
+						<input type="tel" name="fax" value="<? hecho ( $$variable{User}->fax() ) ?>" />
 					</li>
 				</ul>
 			</div>
@@ -211,27 +211,25 @@ Please select a company or user to obtain login information.<br/>
 					<? if ( sets::isin( $$variable{User}->type(), ['E','A'] ) ) ?>
 					<li class="commission">
 						<label>Commission Rate</label>
-						<input type="text" name="commission" value="<? echo ( $$variable{User}->commission() ) ?>" onkeyup="this.value=this.value.replace(/[^\d\.\-]/,'');" />%
+						<? echo ( input( type=>'float', name=>'commission', value=>$$variable{User}->commission() ); ) ?>%
 					</li>
 					<li class="wage"> 
 						<label>Wage</label>
-						<input type="text" name="wage" value="<? echo ( $$variable{User}->wage() ) ?>" onkeyup="this.value=this.value.replace(/[^\d\.\-]/,'');" />/Hr
+						<? echo ( input( type=>'float', name=>'wage', value=>$$variable{User}->wage() ); ) ?> /Hr
 					</li>
 					<li class="purchasing_limit">
 						<label>Purchasing Limit (per PO)</label>
-						<input type="text" name="purchasing_limit" value="<? echo ( $$variable{User}->purchasing_limit() ) ?>" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');" />
+						<? echo ( input( type=>'cardinal', name=>'purchasing_limit', value=>$$variable{User}->purchasing_limit() ); ) ?>
 					</li>
 					<li class="purchasing_total_limit"> 
 						<label>Purchasing Limit (Total)</label>
-						<input type="text" name="purchasing_total_limit" value="<? echo ( $$variable{User}->purchasing_total_limit() ) ?>" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');" />
+						<? echo ( input( type=>'cardinal', name=>'purchasing_total_limit', value=>$$variable{User}->purchasing_total_limit() ); ) ?>
 					</li>
 					<? echo (
-						my $html;
-						foreach my $PO_Type ( openprint::PurchaseOrder_ContentType->find('order'=>'lower(name)') ) {
-							
-							$html .= sprintf('<li class="po_limit"><label>Limit for %2$s</label><input type="text" name="po_limit-%1$d" value="%3$s" /></li>', $PO_Type->get('id','name'), $$variable{User}->po_limit( $PO_Type->id() ) );
-						} # end foreach PO_Type
-						return $html;
+						return join("\n",
+							map { 
+							'<li><label>Limit for ' . $_->name() . '</label>'.input( type=>'cardinal', name=>'po_limit-'.$_->id(), value=>$$variable{User}->po_limit( $_->id() ) ).'</li>' } openprint::PurchaseOrder_ContentType->find( order=>'lower(name)')
+							);
 					) ?>
 					<? if ( @{$$variable{'csr_ids'}} = openprint::User->find('id !='=>$$variable{User}->id(), 'type'=>['E','A'], 'usergroup any'=>'Sales', 'order'=>'lower(firstname),lower(lastname)' ) ) ?>
 					<li class="csr_ids">
@@ -312,7 +310,7 @@ Please select a company or user to obtain login information.<br/>
 	</div>
 </div>
 		<? endif ( $$variable{'DoEmail'} ) ?>
-		<!--#include virtual="/account/_user_profile_edit.html"-->
+		<? echo ( include('/account/_user_profile_edit.html'); ) ?>
 		<div class="LoginCredentials">
 			<fieldset><legend>Login Information</legend> 
 				<ul>
@@ -348,13 +346,12 @@ Please select a company or user to obtain login information.<br/>
 			<ul>
 			<? echo ( 
 				my $html;
-				my $n = $$variable{User}->notifications();
-				my %types = sql::execute(undef,undef,'SELECT id,name FROM User_Notification_Types');
-				foreach my $k ( keys %types ) {
-					$html .= '<li><label>'.$types{$k}.'</label>';
-					$html .= sprintf('<input type="text" name="notification_%1$s" value="%2$s" />', $k, $$n{$types{$k}} );
+				my $n = $$variable{'User'}->notifications();
+				foreach my $Type ( openprint::User_Notification_Type->find( order=>'sort,lower(name)' ) ) {
+					$html .= '<li><label>'.$Type->name().'</label>';
+					$html .= ssi::radio( 'notification_'.$Type->id(), [ 'Yes', 'On', '', 'Off' ], $$n{$Type->name()} );
 					$html .= '</li>';
-				} # end foreach k
+				} # end foreach Type
 				return $html;
 			) ?>
 			</ul>
@@ -363,7 +360,7 @@ Please select a company or user to obtain login information.<br/>
 		<? if ( openprint::ServiceType->find_one() ) ?>
 		<div class="ServiceDefaults">
 		<fieldset><legend>Service Defaults</legend>
-			<!--#include virtual="_service_defaults.html"-->
+			<? echo ( include('_service_defaults.html'); ) ?>
 		</fieldset>
 		</div>
 		<? endif ( openprint::ServiceType->find_one() ) ?>

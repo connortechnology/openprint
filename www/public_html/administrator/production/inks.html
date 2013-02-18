@@ -1,4 +1,4 @@
-<!--#include virtual="/includes/error_reporting.html"-->
+<? echo ( include('/includes/error_reporting.html'); ) ?>
 <script type="text/javascript">
 	function load_ddm( type, ink_id ) {
 		new Ajax.Updater( type+'_id-'+ink_id, '_'+type+'_id_ddm.html', { parameters: { ink_id: ink_id } } );
@@ -32,7 +32,7 @@
 </form>
 <form id="f1" name="f1" method="post" action="inks.html" enctype="multipart/form-data">
 	<fieldset>
-		<div id="Results"><!--#include virtual="_inks.html"-->
+		<div id="Results"><? echo ( include('_inks.html'); ) ?>
 		</div>
 		<p class="buttons">
 			<? echo ( join('',

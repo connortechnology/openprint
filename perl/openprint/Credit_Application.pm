@@ -7,7 +7,7 @@ our @ISA = qw(openprint::Object);
 
 use vars qw( $debug $table $serial %fields %defaults %transforms );
 
-$debug = 1;
+$debug = 0;
 
 $table = 'creditapplications';
 $serial = 'lngCreditAppIndex_seq';

@@ -7,7 +7,7 @@ package openprint::Video_Album;
 our @ISA = qw( openprint::Object );
 
 use vars qw( $debug $table $serial %fields %transforms %defaults );
-$debug = 1;
+$debug = 0;
 $serial = 'video_albums_id_seq';
 $table = 'video_albums';
 

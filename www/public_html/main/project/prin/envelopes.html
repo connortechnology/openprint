@@ -15,7 +15,7 @@
 </script>
 <div class="Service">
 	<form id="f1" name="f1" method="post" action="/main/project/view.html">
-		<!--#include virtual="/includes/main/proj/hdn_fields_printing.html"-->
+		<? echo ( include('/includes/main/proj/hdn_fields_printing.html'); ) ?>
 		<input type="hidden" name="hdnFolding" value="<?hdnFolding?>"/>
 		<input type="hidden" name="hdnCutting" value="<?hdnCutting?>"/>
 		<fieldset><legend><?ProjectTypeName?></legend>
@@ -23,23 +23,23 @@
 			<input type="hidden" id="txtHeight" name="txtHeight" value="<?txtHeight?>" />
 			<input type="hidden" id="txtFinalWidth" name="txtFinalWidth" value="<?txtFinalWidth?>" />
 			<input type="hidden" id="txtFinalHeight" name="txtFinalHeight" value="<?txtFinalHeight?>" />
-			<!--#include virtual="/includes/main/proj/paper_dropdowns.html"-->
+			<? echo ( include('/includes/main/proj/paper_dropdowns.html'); ) ?>
 			<br class="spacer"/>
-			<!--#include virtual="/includes/main/proj/printing_type.html"-->
-			<!--#include virtual="/includes/main/proj/screen_type.html"-->
-			<!--#include virtual="/includes/main/proj/colours_coatings.html"-->
+			<? echo ( include('/includes/main/proj/printing_type.html'); ) ?>
+			<? echo ( include('/includes/main/proj/screen_type.html'); ) ?>
+			<? echo ( include('/includes/main/proj/colours_coatings.html'); ) ?>
 			<br class="spacer"/>
-			<!--#include virtual="/includes/main/proj/bleeds_colourbars.html"-->	
+			<? echo ( include('/includes/main/proj/bleeds_colourbars.html'); ) ?>	
 			<br class="spacer"/>
 		</fieldset>
 		<!-- End of Input - Start of Results -->
 		<fieldset><legend>Results</legend>
-			<!--#include virtual="/includes/main/proj/printing_results.html"-->
+			<? echo ( include('/includes/main/proj/printing_results.html'); ) ?>
 		</fieldset>
 		<!-- End of Results -->
 		<hr/>
-		<!--#include virtual="/includes/main/proj/press_approval.html"-->
-		<!--#include virtual="/includes/main/proj/add_to_project.html"-->
+		<? echo ( include('/includes/main/proj/press_approval.html'); ) ?>
+		<? echo ( include('/includes/main/proj/add_to_project.html'); ) ?>
 	</form>
 </div><!-- Service -->
 <script type="text/javascript">addLoadEvent( function () {selectProjectTemplate( 'f1' )});</script>

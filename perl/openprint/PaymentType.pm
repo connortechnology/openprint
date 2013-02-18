@@ -5,7 +5,7 @@ use strict;
 
 use vars qw( $debug $table $serial %fields %transforms %defaults );
 
-$debug = 1;
+$debug = 0;
 $table = 'paymenttypes';
 $serial = 'paymenttypes_id_seq';
 

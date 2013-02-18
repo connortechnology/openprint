@@ -11,7 +11,7 @@ require sql;
 require openprint::Object;
 require openprint::User;
 
-$debug = 1;
+$debug = 0;
 $table = 'companies';
 $serial = 'companies_id_seq';
 
@@ -381,6 +381,28 @@ sub taxexempt2 {
 sub address {
 return join(', ', map { $_ ? $_ : () } @{$_[0]}{'address1','address2','city','state','postalcode','country'} );
 } # end sub address
+
+sub find_filtered {
+    return if ! $openprint::session{user_id};
+    return openprint::Company->find(order=>'lower(strname)') if $openprint::session{user_type} eq 'A';
+
+    my $User = new openprint::User( $openprint::session{user_id} );
+
+    return openprint::Company->find(
+        ( ! openprint::usergroup::is_user_in( ['Estimating','Prepress','Accounting','Shipping','Inventory'], $openprint::session{'user_id'} ) ? (
+        salesrep_id => [ $openprint::session{'user_id'}, $User->csr_ids() ],
+        ) : () ),
+        or		=> 'index='.$User->company_id(),
+        order	=>'lower(strname)',
+    );
+} # end sub find_filtered
+
+sub can_view {
+    return 1 if $openprint::session{'user_type'} eq 'A';
+    return 1 if $_[0]->salesrep_id() == $openprint::session{'user_id'};
+    my $Me = new openprint::User( $openprint::session{'user_id'} );
+    return 1 if $_[0]{'id'} == $$Me{'company_id'} and $$Me{'administrator'} eq 'Y';
+} # end sub can_view
 
 1;
 __END__

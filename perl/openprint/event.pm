@@ -23,15 +23,17 @@ require Email::Valid;
 
 sub history {
 	if ( $param{btnFunction} eq 'Destroy' ) {
-		$param{event_id} = openprint::Event->transform('id', $param{event_id} );
-		my $Event = new openprint::Event( $param{event_id} );
-		$variable{error} .= $Event->destroy();
-		%param = ();
+		my $Event = new openprint::Event( openprint::Event->transform('id', $param{event_id} ) );
+		if ( $Event->can_edit() ) {
+			$variable{error} .= $Event->destroy();
+			%param = ();
+		} # end if
 	} elsif ( $param{btnFunction} eq 'Delete' ) {
-		$param{event_id} = openprint::Event->transform('id', $param{event_id} );
-		my $Event = new openprint::Event( $param{event_id} );
-		$variable{error} .= $Event->delete();
-		%param = ();
+		my $Event = new openprint::Event( openprint::Event->transform('id', $param{event_id} ) );
+		if ( $Event->can_edit() ) {
+			$variable{error} .= $Event->delete();
+			%param = ();
+		} # end if
 	} # end if
 
 	_history();
@@ -130,13 +132,15 @@ sub edit {
 
 			if ( ( ! $param{event_id} ) and ( $_ = openprint::Event->find_one(
 							( $Location ? ( location_id=>$Location->id() ) : () ),
-							, starting_on=>$param{starting_on}, 'name lc'=> lc openprint::Event->transform('name', $param{name} ) ) ) ) {
+							starting_on=>$param{starting_on}, 
+							'name lc'=> lc openprint::Event->transform('name', $param{name} ),
+							) ) ) {
 				$variable{Event} = $Event = $_;
 				$variable{error} .= 'An event with that name at that place at that time already exists.';
 			} else {
 				$param{location_id} = $Location->id() if $Location;
 				$variable{error} .= $Event->save(\%param);
-				(new openprint::Log())->save({action=>($param{event_id} ? 'Update Event' : 'Create Event'), 'object_type'=>'openprint::Event','object_id'=>$Event->id()});
+				(new openprint::Log())->save({action=>($param{event_id} ? 'Update Event' : 'Create Event'), object_type=>'openprint::Event',object_id=>$Event->id()});
 			} # end if
 			if ( ! $variable{error} ) {
 				my $Privacy = $Event->Privacy();
@@ -147,8 +151,8 @@ sub edit {
 			if ( ! $variable{error} ) {
 				$variable{ExternalRedirect} = '/event/view.html?event_id='.$Event->id();
 			} # end if
-		} # end if
-	} # end if
+		} # end if can_edit
+	} # end if function
 } # end sub edit
 
 sub _locations {
@@ -188,12 +192,11 @@ sub view {
 
 	# This is for RSVP's Ithink
 	if ( $param{event_id} =~ /^(\d+)\?user_id=(\d+)$/ ) {
-		$param{event_id}=$1;
+		$param{event_id} = $1;
 		$param{user_id} = $2;
-	} else {
-		$param{event_id} = openprint::Event->transform('id', $param{event_id} );
-		$param{user_id} = openprint::User->transform('id', $param{user_id} );
 	} # end if
+	$param{event_id} = openprint::Event->transform('id', $param{event_id} );
+	$param{user_id} = openprint::User->transform('id', $param{user_id} );
 
 	if ( ! $param{event_id} ) {
 		$variable{error} .= 'Invalid event specified.';
@@ -252,7 +255,6 @@ sub _attendance {
 	} # end if
 	if ( exists $param{attending} ) {
 		my $Attending = new openprint::Event_Attendance( {event_id=>$param{event_id}, user_id=>$param{user_id} } );
-$log->debug("Got: " . $Attending->to_string() );
 		$variable{error} .= $Attending->save({
 			event_id	=>	$param{event_id},
 			user_id		=>	$param{user_id},
@@ -270,7 +272,7 @@ sub _invitation_users {
 	my $Privacy = $Event->Privacy();
 	my $privacy_users = $Privacy->user_id();
 	if ( $param{action} eq 'set' ) {
-		my %old = map { $_->user_id().'_'.$_->company_id(), $_ } $Event->Invitations();
+		my %old = map { $_->user_id().'_'.$_->User()->company_id(), $_ } $Event->Invitations();
 		my @user_ids;
 		foreach my $id ( ref $param{user_id} eq 'ARRAY' ? @{$param{user_id}} : $param{user_id} ) {
 			my ( $user_id, $company_id ) = $id =~ /^(\d*)_(\d*)$/;

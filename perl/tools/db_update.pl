@@ -874,6 +874,14 @@ if ( ! sets::isin( 'locations', \@tables ) ) {
 	if ( ! exists $$data{'deleted'} ) {
 	$dbh->do('ALTER TABLE Locations add deleted BOOLEAN NOT NULL DEFAULT false');
 	} # end if
+	if ( sets::isin( 'location_id_seq', \@sequences ) ) {
+		if ( ! sets::isin( 'locations_id_seq', \@sequences ) ) {
+			$dbh->do('CREATE SEQUENCE locations_id_seq');
+			$dbh->do(q`ALTER TABLE locations ALTER id set default nextval('locations_id_seq')`);
+			$dbh->do(q`SELECT setval('locations_id_seq', (SELECT MAX(id) FROM Locations ) )`);
+		} # end if
+		$dbh->do('DROP SEQUENCE location_id_seq');
+	} # end if
 } # end if
 if ( ! sets::isin( 'addresses', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/Addresses.sql}) );
@@ -2821,20 +2829,29 @@ if ( sets::isin('shifts',\@tables) and ! sets::isin( 'equipment_shifts', \@table
 	die if $dbh->errstr();
 } # end if
 
-my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='equipment_shifts'", 'column_name');
-if ( ! exists $$data{'id'} ) {
-	$dbh->do('ALTER TABLE Equipment_Shifts drop constraint shifts_pkey');
-	$dbh->do('ALTER TABLE Equipment_shifts add id serial');
-	$dbh->do('ALTER TABLE Equipment_shifts add PRIMARY KEY (id)');
-} # end if
-
 @tables = sql::execute( undef, undef, q`SELECT table_name FROM information_schema.tables where table_schema='public'`);
+if ( sets::isin( 'equipment_shifts', \@tables ) ) {
+	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='equipment_shifts'", 'column_name');
+	if ( ! exists $$data{'id'} ) {
+		$dbh->do('ALTER TABLE Equipment_Shifts drop constraint shifts_pkey');
+		$dbh->do('ALTER TABLE Equipment_shifts add id serial');
+		$dbh->do('ALTER TABLE Equipment_shifts add PRIMARY KEY (id)');
+	} # end if
+} # end if
 
 if ( ! sets::isin('shifts',\@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/Shifts.sql}) );
 	die if $dbh->errstr();
 } # end if
 
+if ( ! sets::isin('user_notification_types',\@tables ) ) {
+	$dbh->do( misc::load_file( $log, q{../openprint/sql/User_Notification_Types.sql}) );
+} else {
+	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='user_notification_types'", 'column_name');
+	if ( ! exists $$data{sort} ) {
+		$dbh->do('ALTER TABLE user_notification_types ADD sort INTEGER');
+	} # end if
+} # end if
 if ( ! sets::isin('user_notifications',\@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/User_Notifications.sql}) );
 } # end if
@@ -3002,6 +3019,15 @@ foreach my $PT ( openprint::ProjectType->find() ) {
 		$PT->save();
 	} # end if
 } # end foreach
+if ( ! sets::isin( 'projecttemplate', \@tables ) ) {
+	$dbh->do( misc::load_file( $log, q{../openprint/sql/ProjectType_Templates.sql}) );
+	die if $dbh->errstr();
+} else {
+	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='projecttemplate'", 'column_name');
+	if ( ! exists $$data{message} ) {
+		$dbh->do('ALTER TABLE projecttemplate ADD message TEXT');
+	}
+} # end if
 if ( ! sets::isin( 'hosts', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/Hosts.sql}) );
 } else {
@@ -3346,35 +3372,39 @@ if ( ! sets::isin( 'faults_found', \@tables ) ) {
 		my $ac = sql::start_transaction( $dbh );
 		$dbh->do('ALTER TABLE faults_found ADD column user_id INTEGER');
 		$dbh->do('ALTER TABLE faults_found ADD FOREIGN KEY (user_id) REFERENCES Users (id)');
-		my @data = sql::execute( undef, undef, 'SELECT id, repairedby FROM RMA' );
-		require openprint::Fault_Found;
-		while ( my ( $rma_id, $repaired_by ) = splice @data,0, 2 ) {
-			next if ! $repaired_by;
-			my $User = openprint::User->find_one('firstname lc'=>lc $repaired_by);
-			if ( ! $User ) {
-				$User = new openprint::User();
-				$_ = $User->save({firstname=>$repaired_by, type=>'E' });
-				die $_ if $_;
-			} # end if
-			sql::update(undef,undef,'faults_found', [ 'rma_id=?', $rma_id ], 'user_id', $User->id() );
-		} # end while
-		die $dbh->errstr() if $dbh->errstr();
-		$dbh->do('ALTER TABLE RMA DROP repairedby');
+		if ( exists $$data{repairedby} ) {
+			my @data = sql::execute( undef, undef, 'SELECT id, repairedby FROM RMA' );
+			require openprint::Fault_Found;
+			while ( my ( $rma_id, $repaired_by ) = splice @data,0, 2 ) {
+				next if ! $repaired_by;
+				my $User = openprint::User->find_one('firstname lc'=>lc $repaired_by);
+				if ( ! $User ) {
+					$User = new openprint::User();
+					$_ = $User->save({firstname=>$repaired_by, type=>'E' });
+					die $_ if $_;
+				} # end if
+				sql::update(undef,undef,'faults_found', [ 'rma_id=?', $rma_id ], 'user_id', $User->id() );
+			} # end while
+			die $dbh->errstr() if $dbh->errstr();
+			$dbh->do('ALTER TABLE RMA DROP repairedby');
+		} # end if
 		sql::end_transaction( $dbh, $ac );
 	} # end if
 	if ( ! exists $$data{repaired_on}  ) {
 		my $ac = sql::start_transaction( $dbh );
 		$dbh->do('ALTER TABLE Faults_Found ADD COLUMN repaired_on TIMESTAMP WITH TIME ZONE');
-		my @data = sql::execute( undef, undef, 'SELECT id, daterepaired FROM RMA' );
-		require openprint::Fault_Found;
-		while ( my ( $rma_id, $repaired_on ) = splice @data,0, 2 ) {
-			next if ! $repaired_on;
-			sql::update(undef,undef,'faults_found', [ 'rma_id=?', $rma_id ], 'repaired_on', $repaired_on );
-		} # end while
-		$dbh->do('ALTER TABLE Faults_Found ALTER repaired_on SET default NOW()');
-		#$dbh->do('ALTER TABLE Faults_Found ALTER repaired_on SET not null');
-		$dbh->do('ALTER TABLE RMA DROP daterepaired');
-		die $dbh->errstr() if $dbh->errstr();
+		if ( exists $$data{daterepaired} ) {
+			my @data = sql::execute( undef, undef, 'SELECT id, daterepaired FROM RMA' );
+			require openprint::Fault_Found;
+			while ( my ( $rma_id, $repaired_on ) = splice @data,0, 2 ) {
+				next if ! $repaired_on;
+				sql::update(undef,undef,'faults_found', [ 'rma_id=?', $rma_id ], 'repaired_on', $repaired_on );
+			} # end while
+			$dbh->do('ALTER TABLE Faults_Found ALTER repaired_on SET default NOW()');
+			#$dbh->do('ALTER TABLE Faults_Found ALTER repaired_on SET not null');
+			$dbh->do('ALTER TABLE RMA DROP daterepaired');
+			die $dbh->errstr() if $dbh->errstr();
+		} # end if
 		sql::end_transaction( $dbh, $ac );
 	} # end if 
 }

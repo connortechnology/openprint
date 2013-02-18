@@ -4,7 +4,7 @@ function calc() {
 LoadContent( 'Results', '/employee/reports/_stock.html', document.forms.f1.serialize() );
 }
 </script>
-<!--#include virtual="/includes/error_reporting.html"-->
+<? echo ( include('/includes/error_reporting.html'); ) ?>
 <form id="f1" name="f1" method="post" action="stock.html">
     <fieldset class="filters"><legend>Search Criteria</legend>
         <div class="leftColumn">
@@ -163,4 +163,4 @@ LoadContent( 'Results', '/employee/reports/_stock.html', document.forms.f1.seria
         </p>
     </fieldset>
 </form>
-<div id="Results"><!--#include virtual="_stock.html"--></div>
+<div id="Results"><? echo ( include('_stock.html'); ) ?></div>

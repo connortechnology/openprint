@@ -18,9 +18,13 @@ sub index {
 } # end sub index
 
 sub _label {
-	my $Label = new openprint::Label( $param{'id'} );
-	if ( $param{'action'} eq 'update' ) {
-		$param{'value'} =~ s/<br\/>/\n/ig;
+	my $Label = new openprint::Label( $param{id} );
+	if ( $param{id} and ! $$Label{id} ) {
+		$variable{error} .= "Invalid label specified.  Label $param{id} does not exist.";
+		return;
+	} # end if
+	if ( $param{action} eq 'update' ) {
+		$param{value} =~ s/<br\/>/\n/ig;
 		$Label->set_data($param{'field'}=>$param{'value'});
 		$variable{'error'} .= $Label->save();
 		$variable{'PageContent'} = join('',$Label->get_data($param{'field'}));

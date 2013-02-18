@@ -4,7 +4,7 @@ package openprint::View;
 our @ISA = qw(openprint::Object);
 use vars qw( $debug $table %fields %find_fields %defaults %transforms @identified_by );
 
-$debug = 1;
+$debug = 0;
 $table = 'views';
 @identified_by = ( 'object_type_id', 'object_id', 'user_id' );
 %fields = (

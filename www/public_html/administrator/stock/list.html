@@ -52,7 +52,7 @@
 	<fieldset class="filters"><legend>Go to</legend>
 		<ul>
 			<li><label>Paper #</label><input type="number" name="stock_id" id="stock_id"/>
-				<? echo ( ssi::button( 'Go', { 'onclick'=>q`window.location='/administrator/stock/stock.html?stock_id='+$('stock_id').value;` } ); ) ?>
+				<? echo ( ssi::button( 'Go', { onclick=>q`window.location='/administrator/stock/stock.html?stock_id='+$('stock_id').value;` } ); ) ?>
 			</li>
 		</ul>
 	</fieldset>
@@ -152,36 +152,40 @@
 		</li>
 		<li>
 			<label>Recommendations</label>
-			<? echo ( ssi::radio( 'recommendations', [ '1','Yes','0','No', '', 'All' ], $session{'/administrator/stock/list.html?recommendations'}, { 'onclick'=>'calc(this.form.name);' } ); ) ?>
+			<? echo ( ssi::radio( 'recommendations', [ '1','Yes','0','No', '', 'All' ], $session{'/administrator/stock/list.html?recommendations'}, { onclick=>'calc(this.form.name);' } ); ) ?>
 		</li>
 		<li>
 			<label>Grain Direction</label>
-			<? echo ( ssi::radio( 'grain_direction', [ 'width', 'Width','height', 'Height', '', 'Both' ], $session{'/administrator/stock/list.html?grain_direction'}, { 'onclick'=>'calc(this.form.name);' } ); ) ?>
+			<? echo ( ssi::radio( 'grain_direction', [ 'width', 'Width','height', 'Height', '', 'Both' ], $session{'/administrator/stock/list.html?grain_direction'}, { onclick=>'calc(this.form.name);' } ); ) ?>
 		</li>
 		<li>
 			<label>FSC Code</label>
 			<input type="text" id="fsc_code" name="fsc_code" value="<? echo ( $session{'/administrator/stock/list.html?fsc_code'} ) ?>" size="13" style="width: auto;" />
-			<? echo ( ssi::writeButton( $log, $dbh, 'Go1', 'go.gif', "calc('f1');", '', 'Go' ); ) ?>
+			<? echo ( ssi::button( 'Go1', { onclick=>"calc('f1');", text=>'Go' } ); ) ?>
 		</li>
 		<li>
 			<label>Inventory Code</label>
 			<input type="text" id="inventory_number" name="inventory_number" value="<? echo ( $session{'/administrator/stock/list.html?inventory_number'} ) ?>" size="13" style="width: auto;" />
-			<? echo ( ssi::writeButton( $log, $dbh, 'Go2', 'go.gif', "calc('f1');", '', 'Go' ); ) ?>
+			<? echo ( ssi::button( 'Go2', { onclick=>q`calc('f1');`, text=>'Go' } ); ) ?>
 		</li>
 		<li>
 			<label>Digital</label>
-			<? echo ( ssi::radio( 'digital', [ '1','Yes','0','No', '', 'All' ], $session{'/administrator/stock/list.html?digital'}, { 'onclick'=>'calc(this.form.name);' } ); ) ?>
+			<? echo ( ssi::radio( 'digital', [ '1','Yes','0','No', '', 'All' ], $session{'/administrator/stock/list.html?digital'}, { onclick=>'calc(this.form.name);' } ); ) ?>
+		</li>
+		<li>
+			<label>Has Setup Prices</label>
+			<? echo ( ssi::radio( 'setup_prices', [ '1','Yes','0','No', '', 'All' ], $session{'/administrator/stock/list.html?setup_prices'}, { onclick=>'calc(this.form.name);' } ); ) ?>
 		</li>
 		</ul>
 		</div><br class="spacer"/>
 		<p class="buttons">
 			<? echo ( join('',
-				ssi::button( 'Show', { 'onclick'=>q`calc('f1');` } ),
-				ssi::button( 'applychanges', { 'onclick'=>'popup_window(f1);', 'text'=>'Make Changes' } ),
-				ssi::button( 'New', { 'href'=>'stock.html', 'text'=>'Add A New Stock' } ),
-				ssi::button( 'Delete', { 'onclick'=>"f1.btnFunction.value='Delete';fmChange=2;fmCheck(f1);",'text'=>'Delete Checked Stocks' } ),
-				#ssi::button( 'Save', { 'onclick'=>"show_div('StockRecommendations', event );",'text'=>'Set Stock Recommendations' } ),
-				ssi::button( "Copy", { 'onclick'=>"f1.btnFunction.value='Copy';f1.submit();", 'text'=>'Copy' } ),
+				ssi::button( 'Show', { onclick=>q`calc('f1');` } ),
+				ssi::button( 'applychanges', { onclick=>'popup_window(f1);', text=>'Make Changes' } ),
+				ssi::button( 'New', { href=>'stock.html', text=>'Add A New Stock' } ),
+				ssi::button( 'Delete', { onclick=>"f1.btnFunction.value='Delete';fmChange=2;fmCheck(f1);",text=>'Delete Checked Stocks' } ),
+				#ssi::button( 'Save', { onclick=>"show_div('StockRecommendations', event );",text=>'Set Stock Recommendations' } ),
+				ssi::button( "Copy", { onclick=>"f1.btnFunction.value='Copy';f1.submit();", text=>'Copy' } ),
 			); ) ?>
 		</p>
 	</fieldset>

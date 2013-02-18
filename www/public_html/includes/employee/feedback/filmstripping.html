@@ -1,12 +1,12 @@
-<!--#include virtual="/includes/employee/feedback/line.html"-->
+<? echo ( include('/includes/employee/feedback/line.html'); ) ?>
 <div style="color: red;"><?ErrorMessage?></div>
 <form method="post" name="f1" action="/employee/project/view.html">
 	<div class="row"><b class="lgTxt">Production Feedback</b></div>
 <div style="float: left;"/>
-<!--#include virtual="/includes/employee/feedback/employee.html"-->
-<!--#include virtual="/includes/employee/feedback/comments.html"-->
-<!--#include virtual="/includes/employee/feedback/complete.html"-->
-<!--#include virtual="/includes/employee/feedback/complete_date.html"-->
+<? echo ( include('/includes/employee/feedback/employee.html'); ) ?>
+<? echo ( include('/includes/employee/feedback/comments.html'); ) ?>
+<? echo ( include('/includes/employee/feedback/complete.html'); ) ?>
+<? echo ( include('/includes/employee/feedback/complete_date.html'); ) ?>
     <div class="row">
         <span class="label">Due Date</span>
         <span class="input">
@@ -37,6 +37,6 @@
 <? endwhile ( @$variable{'SignatureIndex','Reference'} = splice @{$$variable{'Signatures'}}, 0, 2; ) ?>
 </div><!-- Column -->
 
-<!--#include virtual="/includes/employee/feedback/buttons.html"-->
-<!--#include virtual="/includes/employee/feedback/hidden_fields.html"-->
+<? echo ( include('/includes/employee/feedback/buttons.html'); ) ?>
+<? echo ( include('/includes/employee/feedback/hidden_fields.html'); ) ?>
 </form>
