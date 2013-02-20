@@ -1,0 +1,28 @@
+<?include(/includes/error_reporting.html)?>
+<table>
+	<tr>
+		<th class="hostname">Hostname</th>
+		<th class="ip">IP</th>
+		<th class="mac">Mac</th>
+		<th class="assigned_on">Assigned On</th>
+		<th class="comment">Comment</th>
+	</tr>
+<? echo ( 
+	my $html;
+	my $rowclass;
+	foreach my $LH ( openprint::License_Host->find( license_id=>$$variable{License}{id}, order=>'created_on' ) ) {
+		my $Host = $LH->Host();
+		$html .= sprintf(q`
+<tr%1$s>
+<td class="hostname"><a href="host.html?host_id=%2$s">%3$s</a></td>
+<td class="ip"><a href="host.html?host_id=%2$s">%4$s</a></td>
+<td class="mac"><a href="host.html?host_id=%2$s">%5$s</a></td>
+<td class="assigned_on"><a href="host.html?host_id=%2$s">%6$s</a></td>
+<td class="comment"><a href="host.html?host_id=%2$s">%7$s</a></td>
+</tr>`, $rowclass, $LH->host_id(), $Host->hostname(), $Host->ip(), join('<br/>', ( $Host->mac() ? @{$Host->mac()} : () ) ), 
+format_date( $LH->created_on() ), $LH->comment() );
+		$rowclass = $rowclass ? '' : ' class="colRow"';
+	} # end foreach $LH
+	return $html;
+) ?>
+</table>
