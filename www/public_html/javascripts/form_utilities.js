@@ -54,6 +54,24 @@ function set_value( obj, value ) {
 	} // end if
 }
 
+function get_checkbox_values( checkboxes ) {
+	if ( checkboxes.length ) {
+		var Values = new Array();
+		for ( var index = 0, len = checkboxes.length; index < len; index += 1 ) {
+			if ( checkboxes[index].checked ) {
+				Values[Values.length] = checkboxes[index].value;
+			} 
+		} 
+		if ( Values.length == 1 ) {
+			return Values[0];
+		}
+		return Values;
+	} else if ( checkboxes.checked ) {
+		return checkboxes.value;
+	} 
+	return;
+} // end function
+
 function get_select_value ( ddm ) {
 	var selected = new Array();
 	if ( ddm ) {
