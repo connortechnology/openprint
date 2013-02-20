@@ -365,6 +365,8 @@ my %config_actions = (
 	'Update ProjectType Template'	=>	52,
 	'New ProjectType Template'	=>	55,
 	'Export ProjectType Templates'	=>	54,
+	'License Assigned'	=>	200,
+	'License Unassigned'	=>	201,
 );
 foreach my $config_action ( keys %config_actions ) {
 	my $Action = openprint::Log_Action->find_one('name'=>$config_action);
