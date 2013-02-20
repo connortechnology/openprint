@@ -190,7 +190,7 @@ if (open($fifoh, "< $config{fifo}")) {
 				$log->error("Unparsed line $line");
 			} # end if
 
-			$log->debug("$line\n");
+			#$log->debug("$line\n");
 			$line = undef;
 		} else {
 			# No input at this time. Sleep for half a second (or less) and check again.

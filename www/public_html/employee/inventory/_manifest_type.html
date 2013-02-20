@@ -129,27 +129,27 @@
 			<input type="radio" id="type-<?type_id?>Roll" name="type-<?type_id?>" value="Roll" onclick="$('PaperHeight-<?type_id?>').hide();$('MWeight-<?type_id?>').hide();" <? echo ( 'checked="checked"' if $param{'type-'.$$variable{'type_id'}} eq 'Roll'; ) ?> />
 			<label class="radio" for="type-<?type_id?>Roll">Roll</label>
 		</p>
-		<p>
+		<p class="size">
 			<label for="width-<?type_id?>">Size</label>
-			<input type="number" id="width-<?type_id?>" name="width-<?type_id?>" value="<? echo ( $param{'width-'.$$variable{'type_id'}} ) ?>" onkeyup="floatize(this);gsm_to_mweight(this.form, '<?type_id?>' );"/>
+			<? echo ( input( type=>'float', id=>'width-'.$$variable{type_id}, name=>'width-'.$$variable{type_id}, value=>$param{'width-'.$$variable{type_id}}, onkeyup=>"gsm_to_mweight(this.form,'$$variable{type_id}');" ); ) ?>
 			<span id="PaperHeight-<?type_id?>"<? echo ( ' style="display: none;"' if $param{'type-'.$$variable{'type_id'}} eq 'Roll' ) ?>>
 			&nbsp;x&nbsp;
-			<input type="number" id="height-<?type_id?>" name="height-<?type_id?>" value="<? echo ( $param{'height-'.$$variable{'type_id'}} ) ?>" onkeyup="floatize(this);gsm_to_mweight(this.form, '<?type_id?>' );"/>
+			<? echo ( input( type=>'float', id=>'height-'.$$variable{type_id}, name=>'height-'.$$variable{type_id}, value=>$param{'height-'.$$variable{type_id}}, onkeyup=>"gsm_to_mweight(this.form,'$$variable{type_id}');" ); ) ?>
 			</span>
 		</p>
 	</div>
 	<div class="rightColumn">
 		<p>
 			<label>Calliper</label>
-			<input type="number" id="calliper-<?type_id?>" name="calliper-<?type_id?>" value="<? echo ( $param{'calliper-'.$$variable{'type_id'}} ) ?>" onkeyup="floatize(this);" />PT
+			<? echo ( input( type=>'float', id=>'calliper-'.$$variable{type_id}, name=>'calliper-'.$$variable{type_id}, value=>$param{'calliper-'.$$variable{type_id}} ); )?>PT
 		</p>
 		<p>
 			<label>GSM</label>
-			<input type="number" id="gsm-<?type_id?>" name="gsm-<?type_id?>" value="<? echo ( $param{'gsm-'.$$variable{'type_id'}} ) ?>" onkeyup="floatize();gsm_to_mweight(this.form);" />
+			<? echo ( input( type=>'float', id=>'gsm-'.$$variable{type_id}, name=>'gsm-'.$$variable{type_id}, value=>$param{'gsm-'.$$variable{type_id}}, onkeyup=>"gsm_to_mweight(this.form,'$$variable{type_id}');" ); ) ?>
 		</p>
 		<p id="MWeight-<?type_id?>" <? echo ( 'style="display:none;"' if $param{'type-'.$$variable{'type_id'}} eq 'Roll' ) ?> >
 			<label>MWeight</label>
-			<input type="number" id="mweight-<?type_id?>" name="mweight-<?type_id?>" value="<? echo ( $param{'mweight-'.$$variable{'type_id'}} ) ?>" onkeyup="floatize();mweight_to_gsm(this.form);" />M
+			<? echo ( input( type=>'float', id=>'mweight-'.$$variable{type_id}, name=>'mweight-'.$$variable{type_id}, value=>$param{'mweight-'.$$variable{type_id}}, onkeyup=>"mweight_to_gsm(this.form,'$$variable{type_id}');" ); ) ?>M
 		</p>
 		<p>
 			<label>FSC Code</label>
@@ -161,9 +161,9 @@
 		</p>
 		<p>
 			<label>Docket</label>
-			<input type="number" id="docket-<?type_id?>" name="docket-<?type_id?>" value="<? echo ( $$variable{'Type'}->docket() ) ?>" onkeyup="cardinalize(this);"/>
-<? echo ( ssi::button( 'LoadPos'.$$variable{'Type'}->id(), { 
-			'onclick'=>"new Ajax.Updater('PurchaseOrders$$variable{Type}{id}','_manifest_purchase_orders.html', { parameters: { supplier_id: \$('supplier_id').value, Docket: \$('docket-$$variable{Type}{id}').value} } );", 'text'=>'Load POs' } ); ) ?>
+			<? echo ( input( type=>'cardinal', id=>'docket-'.$$variable{type_id}, name=>'docket-'.$$variable{type_id}, value=>$$variable{Type}->docket() ); ) ?>
+			<? echo ( ssi::button( 'LoadPos'.$$variable{'Type'}->id(), { 
+			onclick=>"new Ajax.Updater('PurchaseOrders$$variable{Type}{id}','_manifest_purchase_orders.html', { parameters: { supplier_id: \$('supplier_id').value, Docket: \$('docket-$$variable{Type}{id}').value} } );", 'text'=>'Load POs' } ); ) ?>
 		</p>
 		<div id="PurchaseOrders<? echo ( $$variable{'Type'}->id() ) ?>">
 		<? if ( ! $$variable{'Manifest'}->po_id() ) ?>

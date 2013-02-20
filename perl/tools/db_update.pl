@@ -874,6 +874,14 @@ if ( ! sets::isin( 'locations', \@tables ) ) {
 	if ( ! exists $$data{'deleted'} ) {
 	$dbh->do('ALTER TABLE Locations add deleted BOOLEAN NOT NULL DEFAULT false');
 	} # end if
+	if ( sets::isin( 'location_id_seq', \@sequences ) ) {
+		if ( ! sets::isin( 'locations_id_seq', \@sequences ) ) {
+			$dbh->do('CREATE SEQUENCE locations_id_seq');
+			$dbh->do(q`ALTER TABLE locations ALTER id set default nextval('locations_id_seq')`);
+			$dbh->do(q`SELECT setval('locations_id_seq', (SELECT MAX(id) FROM Locations ) )`);
+		} # end if
+		$dbh->do('DROP SEQUENCE location_id_seq');
+	} # end if
 } # end if
 if ( ! sets::isin( 'addresses', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/Addresses.sql}) );
@@ -3011,6 +3019,15 @@ foreach my $PT ( openprint::ProjectType->find() ) {
 		$PT->save();
 	} # end if
 } # end foreach
+if ( ! sets::isin( 'projecttemplate', \@tables ) ) {
+	$dbh->do( misc::load_file( $log, q{../openprint/sql/ProjectType_Templates.sql}) );
+	die if $dbh->errstr();
+} else {
+	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='projecttemplate'", 'column_name');
+	if ( ! exists $$data{message} ) {
+		$dbh->do('ALTER TABLE projecttemplate ADD message TEXT');
+	}
+} # end if
 if ( ! sets::isin( 'hosts', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/Hosts.sql}) );
 } else {

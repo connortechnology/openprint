@@ -5,6 +5,7 @@
 	} 
 	if ( $$variable{'C'} ) {
 		my $C = $$variable{'C'};
+		my $Paper = $C->Type()->Paper();
 		my $tag_id = $C->Skid()->rfidtag_id();
 		my $error;
 		my @SkidContents = $C->Skid()->Contents();
@@ -27,13 +28,19 @@
 			id		=>	'qty_lbs-'.$id,
 			name	=>	'qty_lbs-'.$id,
 			value	=>	$C->quantity(),
-			onkeyup	=>	q`convert_lbs_to_kg( this, $('qty_kgs-`.$id.q`') );`,
+			onkeyup	=>	"from_lbs(this,'$$variable{type_id}','$$C{id}');",
 			) . '</td>';
 		$html .= '<td class="qty_kgs">'.ssi::input( type=>'float', 
 			id		=>	'qty_kgs-'.$id,
 			name	=>	'qty_kgs-'.$id,
 			value	=>	Math::Round::nearest( .1, $C->quantity()/2.2046 ),
-			onkeyup	=>	q`convert_kg_to_lbs( this, $('qty_lbs-`.$id.q`') );`,
+			onkeyup	=>	"from_kg(this,'$$variable{type_id}','$$C{id}');",
+			) . '</td>';
+		$html .= '<td class="qty_feet">'.ssi::input( type=>'float', 
+			id		=>	'qty_feet-'.$id,
+			name	=>	'qty_feet-'.$id,
+			( ( $Paper->width() and $Paper->wpsi() ) ? ( value	=>	Math::Round::nearest( 1, (($C->quantity()/$Paper->wpsi())/$Paper->width())/12 ) ) : () ),
+			onkeyup	=>	"from_feet(this,'$$variable{type_id}','$$C{id}');",
 			) . '</td>';
 		if ( @SkidContents ) {
 			$html .= sprintf( '<td class="in_stock">%d lbs</td>', $SkidContents[0]->quantity() );
@@ -49,8 +56,8 @@
 ) ?>
 <? if ( $param{'action'} and $$variable{'type_id'} ) ?>
 <script type="text/javascript">
-	$('totallbs-<?type_id?>').innerHTML = '<? echo ( sprintf('%.0f', misc::sum( map { $_->quantity() } $$variable{'Manifest'}->Contents('type_id'=>$$variable{'type_id'}) ) ); ) ?>lbs';
-	$('totalkgs-<?type_id?>').innerHTML = '<? echo ( sprintf('%.4f', misc::sum( map { $_->quantity() } $$variable{'Manifest'}->Contents('type_id'=>$$variable{'type_id'}) )/2.2046); ) ?>kg';
-	$('skidcount-<?type_id?>').innerHTML = '<? echo ( $$variable{'Manifest'}->Contents('type_id'=>$$variable{'type_id'}) ) ?> skids/rolls';
+	$('totallbs-<?type_id?>').innerHTML = '<? echo ( Math::Round::nearest( 1, misc::sum( map { $_->quantity() } $$variable{Manifest}->Contents('type_id'=>$$variable{'type_id'}) ) ); ) ?>lbs';
+	$('totalkgs-<?type_id?>').innerHTML = '<? echo ( Math::Round::nearest( 0.01, misc::sum( map { $_->quantity() } $$variable{Manifest}->Contents('type_id'=>$$variable{'type_id'}) )/2.2046); ) ?>kg';
+	$('skidcount-<?type_id?>').innerHTML = '<? echo ( $$variable{Manifest}->Contents('type_id'=>$$variable{'type_id'}) ) ?> skids/rolls';
 </script>
 <? endif ( $param{'action'} and $$variable{'type_id'} ) ?>
