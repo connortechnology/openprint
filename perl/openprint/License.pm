@@ -26,6 +26,8 @@ $serial='licenses_id_seq';
 		comment		=> [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
 		);
 %defaults = (
+	created_on	=>	q`'NOW'`,
+	updated_on	=>	q`'NOW'`,
 	serialkey	=>	undef,
 	max_uses	=>	1,
 	purchased_on	=>	undef,

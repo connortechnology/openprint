@@ -1104,6 +1104,18 @@ foreach my $Company ( openprint::Company->find() ) {
 	} # end if has coutnry
 	
 } # end foreach $Company
+if ( ! sets::isin('software', \@tables ) ) {
+	$dbh->do( misc::load_file( $log, q{../openprint/sql/Software.sql}) );
+	die if $dbh->errstr();
+} # end if
+if ( ! sets::isin('licenses', \@tables ) ) {
+	$dbh->do( misc::load_file( $log, q{../openprint/sql/Licenses.sql}) );
+	die if $dbh->errstr();
+} # end if
+if ( ! sets::isin('license_hosts', \@tables ) ) {
+	$dbh->do( misc::load_file( $log, q{../openprint/sql/License_Hosts.sql}) );
+	die if $dbh->errstr();
+} # end if
 print "done.\n";
 $dbh->disconnect();
 1;

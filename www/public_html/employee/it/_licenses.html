@@ -79,7 +79,7 @@ $log->debug("Enable mac search for $mac_search");
 					', 
 					$rowclass,
 					$License->id(), $License->serialkey(), $License->software(),
-					format_date( $License->expires() ),
+					format_date( $License->expires_on() ),
 					join('<br/>', map { $_->hostname() } $License->Hosts() ),
 					);
 				$rowclass = $rowclass ? '' : ' class="colRow"';

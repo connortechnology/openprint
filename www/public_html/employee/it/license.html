@@ -23,7 +23,7 @@
 					<input type="text" id="software" name="software" style="display:none;" onkeyup="ddm_select_by_text( $('software_id'), this.value, 0 );" />
 					<select name="software_id" id="software_id" onchange="$('software').value='';">
 						<option value="">select</option>
-						<? echo ( ssi::make_drop_down( openprint::Software->dropdown(), $$variable{License}->type_id() ); ) ?>
+						<? echo ( ssi::make_drop_down( openprint::Software->dropdown(), $$variable{License}->software_id() ); ) ?>
 					</select>
 				</li>
 				<li><label>Comment</label>
