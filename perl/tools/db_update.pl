@@ -418,7 +418,20 @@ if ( ! sets::isin( 'invoices', \@tables ) ) {
 	if ( ! exists $$data{num} ) {
 		$dbh->do('ALTER TABLE Invoices ADD num TEXT');
 	} # end if
+	if ( ! exists $$data{late_payment_units} ) {
+		$dbh->do('ALTER TABLE Invoices ADD late_payment_units TEXT');
+	} # end if
+	if ( ! exists $$data{early_payment_units} ) {
+		$dbh->do('ALTER TABLE Invoices ADD early_payment_units TEXT');
+	} # end if
+	if ( ! exists $$data{early_payment_discount} ) {
+		$dbh->do('ALTER TABLE Invoices ADD early_payment_discount TEXT');
+	} # end if
+	if ( ! exists $$data{early_payment_date} ) {
+		$dbh->do('ALTER TABLE Invoices ADD early_payment_date DATE');
+	} # end if
 } # end if
+
 if ( ! sets::isin( 'invoices_id_seq', \@sequences ) ) {
 	$dbh->do('CREATE SEQUENCE invoices_id_seq');
 } # en dif

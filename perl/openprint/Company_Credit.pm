@@ -23,10 +23,11 @@ $table = 'company_credit';
 		cod				=>	'cod',
 		company_id		=>	'company_id',
 		supplier_id		=>	'supplier_id',
-		late_penalty	=>	'late_penalty',
-		late_units		=>	'late_units',
-		early_payment_discount	=>	'early_payment_discount',
+		late_payment_amount	=>	'late_payment_amount',
+		late_payment_units		=>	'late_payment_units',
+		early_payment_amount	=>	'early_payment_amount',
 		early_payment_units	=>	'early_payment_units',
+		early_payment_days	=>	'early_payment_days',
 		);	
 
 %transforms = (
@@ -36,20 +37,23 @@ $table = 'company_credit';
 		warndays		=>	[ 's/\D//g' ],
 		downpayment		=>	[ 's/[^\d\.]//g' ],
 		cod				=>	[ 's/[^\d\.]//g' ],
-		late_penalty	=>	[ 's/[^\d\.]//g' ],
-		early_payment_discount	=>	[ 's/[^\d\.]//g' ],
+		late_payment_amount	=>	[ 's/[^\d\.]//g' ],
+		early_payment_amount	=>	[ 's/[^\d\.]//g' ],
+		early_payment_days		=>	[ 's/[\D]//g' ],
 		);
+
 %defaults = (
-	'supplier_id'		=>	undef,
-	'limit'				=>	undef,
-	'denydays'			=>	undef,
-	'warndays'			=>	undef,
-	'downpayment'		=>	undef,
-	'cod'				=>	undef,
-	late_penalty		=>	undef,
-	late_units			=>	undef,
-	early_payment_discount	=>	undef,
+	supplier_id				=>	undef,
+	limit					=>	undef,
+	denydays				=>	undef,
+	warndays				=>	undef,
+	downpayment				=>	undef,
+	cod						=>	undef,
+	late_payment_amount		=>	undef,
+	late_payment_units		=>	undef,
+	early_payment_amount	=>	undef,
 	early_payment_units		=>	undef,
+	early_payment_days		=>	undef,
 );
 
 sub debt {
