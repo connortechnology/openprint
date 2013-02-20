@@ -21,6 +21,10 @@ CREATE TABLE Invoices (
     paid double precision,
     interest double precision,
     bad_debt boolean DEFAULT false
+	late_payment_units	TEXT,
+	early_payment_discount	float,
+	early_paymenet_units	TEXT,
+	early_payment_date		DATE,
 );
 
 ALTER TABLE ONLY invoices
