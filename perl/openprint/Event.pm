@@ -5,6 +5,7 @@ require openprint::Event_Category;
 require openprint::Comment;
 require openprint::Event_Attendance;
 require openprint::Event_Invitation;
+require openprint::Blocklist;
 
 package openprint::Event;
 our @ISA = qw( openprint::Object );
