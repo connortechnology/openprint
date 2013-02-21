@@ -2,7 +2,6 @@ use strict;
 package openprint::Currency;
 our @ISA = qw(openprint::Object);
 
-require Number::Format;
 require openprint;
 require openprint::Currency_Conversion;
 require openprint::Pricelist;
@@ -13,16 +12,18 @@ use vars qw( $log $dbh $debug $table $serial %fields %transforms %defaults );
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
 
-$debug = 1;
+$debug = 0;
 $table = 'Currencies';
 $serial = 'currencies_id_seq';
 %fields = (
-	'id'		=>	'id',
-	'short'		=>	'short',
-	'name'		=>	'name',
-	'symbol'	=>	'symbol',
+	id		=>	'id',
+	short	=>	'short',
+	name	=>	'name',
+	symbol	=>	'symbol',
 );
 %transforms = (
+    name => [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
+    short => [ 's/\s+//' ],
 );
 %defaults = (
 );
@@ -164,6 +165,7 @@ sub format {
 	$price = 0 if ! $price;
 	$precision = 2 if ! defined $precision;
 
+	require Number::Format;
     my $Formatter = new Number::Format(
             -decimal_digits     =>  $precision,
             -int_curr_symbol    =>  $Currency->symbol(),
