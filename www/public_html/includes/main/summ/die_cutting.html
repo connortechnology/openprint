@@ -1,19 +1,29 @@
 <div class="row"> 
-	<span class="label">Supplied die?</span>
+	<span class="label">Who Supplies die?</span>
 	<span class="value">
-<? if ( $$variable{'rdbSuppliedDie'} eq 'Y' ) ?>
-	Yes</span>
-<? else ( $$variable{'rdbSuppliedDie'} eq 'Y' ) ?>
-	No</span>
+<? if ( $$variable{'rdbSuppliedDie-'.$$variable{SignatureIndex}} eq 'Y' ) ?>
+<? echo ( 
+        if ( $config{Owner} == $$variable{Project}->company_id() ) {
+            return 'The client';
+        }
+        my $Company = new openprint::Company($$variable{Project}->company_id() );
+        if ( $$Company{id} ) {
+            return $Company->name();
+        } # end if
+        return 'You';
+) ?>
+	</span>
+<? else ( $$variable{'rdbSuppliedDie-'.$$variable{SignatureIndex}} eq 'Y' ) ?>
+	<? echo ( new openprint::Company( $config{Owner} )->name() ) ?></span>
 		</div>
 		<div class="row"> 
 		<span class="label">Dimensions of the die cut:</span>
-		<span class="value"> <?txtDieWidth?> x <?txtDieHeight?> <span class="smTbl">(W x H)</span></span>
+		<span class="value"> <? echo ( $$variable{'txtWidth-'.$$variable{SignatureIndex}} ) ?> x <? echo ( $$variable{'txtDieHeight-'.$$variable{SignatureIndex}} ) ?> (W x H)</span>
 		</div>
 		<div class="row"> 
 		<span class="label">Hole clearing:</span>
 		<span class="value"> 
-	<? echo ( $$variable{'rdbHoleClearing'} eq 'Y' ? 'Yes' : 'No' ) ?>
+	<? echo ( $$variable{'rdbHoleClearing-'.$$variable{SignatureIndex}} eq 'Y' ? 'Yes' : 'No' ) ?>
 	</span>
-<? endif ( $$variable{'rdbSuppliedDie'} eq 'Y' ) ?>
+<? endif ( $$variable{'rdbSuppliedDie-'.$$variable{SignatureIndex}} eq 'Y' ) ?>
 </div>

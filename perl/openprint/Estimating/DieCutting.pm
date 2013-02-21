@@ -465,11 +465,21 @@ sub summary {
 	if ( $qty_index ) {
 			return '';
 	} else {
-		if ( $$specs{'rdbSuppliedDie'} eq 'Y' ) {
-			return 'Customer supplied die';
-		} else {
-			return '';
-		} # end if
+		my $summary;
+		my $Owner = new openprint::Company( $openprint::config{Owner} );
+		my @signatures = $Project->signatures();
+
+		foreach my $signature ( @signatures ) {
+			my $Service = $Project->Service($signature);
+			my $sig_specs = $Service->specs();
+
+			if ( $$specs{'rdbSuppliedDie-'.$$sig_specs{SignatureIndex}} eq 'Y' ) {
+				$summary .= 'Customer supplies die' . ( @signatures > 1 ? ' for form '.$$sig_specs{SignatureIndex} : '' ).'<br/>';
+			} else {
+				$summary .= $Owner->name() . ' supplies die'.( @signatures > 1 ? ' for form '.$$sig_specs{SignatureIndex} : '' ).'<br/>';
+			} # end if
+		} # end foreach
+		return $summary;
 	} # end if
 
 	return '';
