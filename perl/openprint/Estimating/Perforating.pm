@@ -284,7 +284,7 @@ sub signature_calc {
 	} # end if
 
 	foreach my $Equipment ( @equipment ) {
-		$Results{'Breakdown'} .= sprintf("\t\tEquipment: %s, ", $Equipment->name() );
+		$Results{'Breakdown'} .= sprintf('Equipment: %s, ', $Equipment->name() );
 
 		my @impositions = ();
 		if ( $Equipment->specification('Type') eq 'Press' ) {
@@ -321,9 +321,14 @@ sub signature_calc {
 
 		my $setupPrice = openprint::service::get_price( 'PerforatingMakeReady', undef, $Equipment );
 		$Results{'Breakdown'} .= sprintf( 'Setup: $%.2f<br/>', $setupPrice );
+		my $max_impo = $Equipment->specification('Maximum Perforation Imposition');
 
 		foreach my $imposition ( @impositions ) {
-			$Results{'Breakdown'} .= "Imposition: " . $imposition->imposition() .": ";
+			$Results{'Breakdown'} .= "Imposition: " . $imposition->imposition() .': ';
+			if ( $max_impo and ( $$imposition{imposition} > $max_impo ) ) {
+				$Results{Breakdown} .= sprintf('Too many out %d > max imposition (%d)<br/>', $$imposition{imposition}, $max_impo );
+				next;
+			} # end if
 			my $width = $imposition->layout_width();
 			my $height = $imposition->layout_height();
 
