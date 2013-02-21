@@ -169,11 +169,11 @@ $log->debug("Redirecting to " . $variable{'ExternalRedirect'} );
 		} # end if _
 		if ( $template ) {
 			#$log->debug("parsing template!");
-			$log->debug("starting variable subst of template " . ( time - $starttime ) );
+			#$log->debug("starting variable subst of template " . ( time - $starttime ) );
 			my $h = ssi::variable_substitution( $r, $log, $dbh, \$template, \%variable );
-			$log->debug("starting variable subst of template " . ( time - $starttime ) );
+			#$log->debug("starting variable subst of template " . ( time - $starttime ) );
 			$r->print( $h );
-			$log->debug("ending variable subst of template " . ( time - $starttime ) );
+			#$log->debug("ending variable subst of template " . ( time - $starttime ) );
 		} else {
 			##$log->warn("No template!");
 		$log->warn($variable{'PageContent'});

@@ -520,5 +520,32 @@ sub can_authorize {
 	return $authorized;
 } # end sub can_authorize
 
+# ( $PO, $Content )
+sub can_see_pricing {
+if ( ! $_[0]{id} ) {
+$log->debug("Ccan see because new PO");
+	return 1;
+} # end if
+	
+	if ( ( $session{user_id} == $_[0]->created_by() ) or ( $session{user_type} eq 'A' ) or openprint::usergroup::is_user_in( ['Accounting','SalesAdmin'], $session{user_id} ) ) {
+$log->debug('can see');
+		return 1;
+	} # end if
+	if ( $_[1] ) {
+		if ( $_[1]->Order()->salesrep_id() == $session{user_id} ) {
+			$log->debug('can see');
+			return 1;
+		} # end if
+	} else {
+		foreach my $C ( $_[0]->Contents() ) {
+			if ( $C->Order()->salesrep_id() == $session{user_id} ) {
+				$log->debug('can see');
+				return 1;
+			} # end if
+		} # end foreach C
+	} # end if
+	return 0;	
+} # end sub can_see_pricing
+
 1;
 __END__
