@@ -20,10 +20,13 @@ CP=/bin/cp;
 TOUCH=/bin/touch;
 RSYNC=/usr/bin/rsync;
 CHMOD=/bin/chmod;
+DU=/usr/bin/du;
+AWK=/usr/bin/awk;
+BACKUPS=3;
 
-USAGE="Usage: `/usr/bin/basename $0` [-hv] [-c arg] args"
+USAGE="Usage: `/usr/bin/basename $0` [-hv] [-n int] [-c arg] args"
 
-while getopts hvc: OPT; do
+while getopts hvn:c: OPT; do
     case "$OPT" in
         h)
             echo $USAGE
@@ -32,6 +35,9 @@ while getopts hvc: OPT; do
         v)
             echo "`basename $0` version 0.1"
             exit 0
+            ;;
+		n)
+			BACKUPS=$OPTARG;
             ;;
         c)
             CHECK_FILE=$OPTARG
@@ -55,26 +61,30 @@ fi;
 	DEST=$2
 
 echo "Backing up from $SOURCE to $DEST"
+if (( "$BACKUPS" <= "0" )) ; then
+    BACKUPS=3
+fi;
 
 # ------------- the script itself --------------------------------------
 
 # rotating snapshots of /home (fixme: this should be more general)
 
 # step 1: delete the oldest snapshot, if it exists:
-if [ -d "$DEST.3" ] ; then                     \
-	$CHMOD a+wr -R "$DEST.3"
-	$RM -rf "$DEST.3" ;                            \
+if [ -d "$DEST.$BACKUPS" ] ; then
+	$CHMOD a+wr -R "$DEST.$BACKUPS"
+	$RM -rf "$DEST.$BACKUPS" ;
 else
-	echo "No $DEST.3 to delete"
+	echo "No $DEST.$BACKUPS to delete"
 fi ;
 
-# step 2: shift the middle snapshots(s) back by one, if they exist
-if [ -d "$DEST.2" ] ; then
-	$MV "$DEST.2" "$DEST.3"
-fi;
-if [ -d "$DEST.1" ] ; then
-	$MV "$DEST.1" "$DEST.2"
-fi;
+while (( "$BACKUPS" > "0" )) ; do
+    # step 2: shift the middle snapshots(s) back by one, if they exist
+    DEC=$(($BACKUPS-1))
+    if [ -d "$DEST.$DEC" ] ; then
+        $MV "$DEST.$DEC" "$DEST.$BACKUPS" ;
+    fi ;
+    let BACKUPS=DEC;
+done
 
 # step 3: make a hard-link-only (except for dirs) copy of the latest snapshot,
 # if that exists
@@ -91,8 +101,11 @@ fi;
 # is unlinked first.  If it were not so, this would copy over the other
 # snapshot(s) too!
 #echo "$RSYNC \"$1\" \"$DEST\""
+OLDDU=`$DU -sh $DEST.1 |$AWK '{print $1}'`
+echo $OLDDU
 $RSYNC -a --exclude .gvfs --delete --delete-excluded "$SOURCE" "$DEST.0"
 
 # step 5: update the mtime of hourly.0 to reflect the snapshot time
 $TOUCH "$DEST.0"
+NEWDU=`$DU -sh $DEST.0 |$AWK '{print $1}'`
 
