@@ -14,7 +14,7 @@ require openprint::Email;
 require openprint::User_Notification;
 require logger;
 require openprint::Upload;
-use openprint ();
+require openprint;
 
 use vars qw( $log $dbh %config );
 *log = \$openprint::log;
@@ -76,8 +76,6 @@ if ( $CFG::Config{'site_url'} ) {
 
 $CFG::Config{'SiteTitle'} = $CFG::Config{'site_title'};
 $CFG::Config{'SkinPath'} = $CFG::Config{'skin_path'};
-
-
 
 $CFG::Config{'log_level'} = 'debug' if ! $CFG::Config{'log_level'};
 $CFG::Config{'sleep'} = 2.0 if ! $CFG::Config{'sleep'};
@@ -384,7 +382,7 @@ $log->debug("Found user $$upload{user} with out company.  Company is $$Company{n
 			if (-e $config{'skin_path'} . '/email_content/ftp_csr_notification.html') {
 				$variable{'ReplacementText'} = misc::load_file( $log, $config{'skin_path'} . '/email_content/ftp_csr_notification.html' );
 			} else {
-				$variable{'ReplacementText'} = misc::load_file( $log, $config{'document_root'} . '/email_content/ftp_csr_notification.html' );
+				$variable{'ReplacementText'} = misc::load_file( $log, $config{DOCUMENT_ROOT} . '/email_content/ftp_csr_notification.html' );
 			} # end if
 			$variable{'ReplacementText'} = ssi::variable_substitution( undef, $log, $dbh, \$variable{'ReplacementText'}, \%variable );
 			my $email_template = misc::load_file( $log, $config{'skin_path'} . '/email_template.html' );
@@ -684,7 +682,14 @@ sub take_evasive_action {
 				$_ = $Host->save({blacklist=>1});
 				$log->error($_) if $_;
 			} # end if
-			(new openprint::logRecord())->save({action_type=>99, ip_address=>$ip, note=>"Host blackisted for FTP violation. User account $username",host_id=>$$Host{id}} );
+			(new openprint::logRecord())->save({
+				action_type	=> 99, 
+				ip_address	=> $ip,
+				note		=> "FTP violation. User account $username",
+				host_id		=> $$Host{id},
+				user_id		=> $$User{id},
+				company_id	=> $$User{company_id},
+				} );
 		} # end if
 	} else {
 		$log->warn("No client to blacklist.");
