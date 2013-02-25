@@ -6,7 +6,7 @@
 # rotating backup-snapshots of the path given in the first parameter to the path in the second paramter
 # ----------------------------------------------------------------------
 
-unset PATH      # suggestion from H. Milz: avoid accidental use of $PATH
+unset PATH	  # suggestion from H. Milz: avoid accidental use of $PATH
 
 # ------------- system commands used by this script --------------------
 ID=/usr/bin/id;
@@ -24,30 +24,33 @@ DU=/usr/bin/du;
 AWK=/usr/bin/awk;
 BACKUPS=3;
 
-USAGE="Usage: `/usr/bin/basename $0` [-hv] [-n int] [-c arg] args"
+USAGE="Usage: `/usr/bin/basename $0` [-hv] [-n int] [-c arg] [-t type] args"
 
-while getopts hvn:c: OPT; do
-    case "$OPT" in
-        h)
-            echo $USAGE
-            exit 0
-            ;;
-        v)
-            echo "`basename $0` version 0.1"
-            exit 0
-            ;;
+while getopts hvn:c:t: OPT; do
+	case "$OPT" in
+		h)
+			echo $USAGE
+			exit 0
+			;;
+		v)
+			echo "`basename $0` version 0.1"
+			exit 0
+			;;
 		n)
 			BACKUPS=$OPTARG;
-            ;;
-        c)
-            CHECK_FILE=$OPTARG
-            ;;
-        \?)
-            # getopts issues an error message
-            echo $USAGE >&2
-            exit 1
-            ;;
-    esac
+			;;
+		c)
+			CHECK_FILE=$OPTARG
+			;;
+		t)
+			TYPE=$OPTARG
+			;;
+		\?)
+			# getopts issues an error message
+			echo $USAGE >&2
+			exit 1
+			;;
+	esac
 done
 shift $((OPTIND-1))
 
@@ -62,7 +65,11 @@ fi;
 
 echo "Backing up from $SOURCE to $DEST"
 if (( "$BACKUPS" <= "0" )) ; then
-    BACKUPS=3
+	BACKUPS=3
+fi;
+
+if [ "$TYPE" != "" ]; then
+    TYPE=".$TYPE"
 fi;
 
 # ------------- the script itself --------------------------------------
@@ -70,30 +77,31 @@ fi;
 # rotating snapshots of /home (fixme: this should be more general)
 
 # step 1: delete the oldest snapshot, if it exists:
-if [ -d "$DEST.$BACKUPS" ] ; then
-	$CHMOD a+wr -R "$DEST.$BACKUPS"
-	$RM -rf "$DEST.$BACKUPS" ;
+if [ -d "$DEST$TYPE.$BACKUPS" ] ; then
+	$CHMOD a+wr -R "$DEST$TYPE.$BACKUPS"
+	$RM -rf "$DEST$TYPE.$BACKUPS" ;
 else
-	echo "No $DEST.$BACKUPS to delete"
+	echo "No $DEST$TYPE.$BACKUPS to delete"
 fi ;
 
 while (( "$BACKUPS" > "0" )) ; do
-    # step 2: shift the middle snapshots(s) back by one, if they exist
-    DEC=$(($BACKUPS-1))
-    if [ -d "$DEST.$DEC" ] ; then
-        $MV "$DEST.$DEC" "$DEST.$BACKUPS" ;
-    fi ;
-    let BACKUPS=DEC;
+	# step 2: shift the middle snapshots(s) back by one, if they exist
+	DEC=$(($BACKUPS-1))
+	if [ -d "$DEST$TYPE.$DEC" ] ; then
+		echo "$MV $DEST$TYPE.$DEC $DEST$TYPE.$BACKUPS"
+		$MV "$DEST$TYPE.$DEC" "$DEST$TYPE.$BACKUPS" ;
+	fi ;
+	let BACKUPS=DEC;
 done
 
 # step 3: make a hard-link-only (except for dirs) copy of the latest snapshot,
 # if that exists
-if [ -d "$DEST.0" ] ; then \
+if [ -d "$DEST$TYPE.0" ] ; then \
 	#echo "$CP -al $DEST.0 $DEST.1"
-	$CP -al "$DEST.0" "$DEST.1"
+	$CP -al "$DEST$TYPE.0" "$DEST$TYPE.1"
 else
-	#echo "Making $DEST.0"
-	$MKDIR -p "$DEST.0"
+	echo "Making $DEST$TYPE.0"
+	$MKDIR -p "$DEST$TYPE.0"
 fi;
 
 # step 4: rsync from the system into the latest snapshot (notice that
@@ -101,11 +109,11 @@ fi;
 # is unlinked first.  If it were not so, this would copy over the other
 # snapshot(s) too!
 #echo "$RSYNC \"$1\" \"$DEST\""
-OLDDU=`$DU -sh $DEST.1 |$AWK '{print $1}'`
+OLDDU=`$DU -b -sh $DEST$TYPE.1 |$AWK '{print $1}'`
 echo $OLDDU
-$RSYNC -a --exclude .gvfs --delete --delete-excluded "$SOURCE" "$DEST.0"
+$RSYNC -a --exclude .gvfs --delete --delete-excluded "$SOURCE" "$DEST$TYPE.0"
 
 # step 5: update the mtime of hourly.0 to reflect the snapshot time
-$TOUCH "$DEST.0"
-NEWDU=`$DU -sh $DEST.0 |$AWK '{print $1}'`
-
+$TOUCH "$DEST$TYPE.0"
+NEWDU=`$DU -b -sh $DEST$TYPE.0 |$AWK '{print $1}'`
+echo $NEWDU
