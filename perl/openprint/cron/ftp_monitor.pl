@@ -30,6 +30,7 @@ use Time::HiRes qw(usleep);
 use Encode ();
 use Data::Dumper;
 
+my @banned_files = ( 'ftpchk3.txt' );
 my $program = basename($0);
 
 my @args = @ARGV;
@@ -138,6 +139,12 @@ if (open($fifoh, "< $config{fifo}")) {
 				# attachments, rather difficult; we have to test to find the difference
 				# between a real underscore in the name, and a substituted underscore.
 				my $path = $5;
+				my $xfer_type = $6;
+				my $action_flag = $7;
+				my $xfer_direction = $8;
+				my $access_mode = $9;
+				my $user_name = $10;
+				my $completion_status = $11;
 
 				unless (-e $path) {
 					# Perform a quick-and-dirty check, on the assumption that all of the
@@ -153,12 +160,20 @@ if (open($fifoh, "< $config{fifo}")) {
 					}
 				}
 
-				my $xfer_type = $6;
-				my $action_flag = $7;
-				my $xfer_direction = $8;
-				my $access_mode = $9;
-				my $user_name = $10;
-				my $completion_status = $11;
+				my $bad = 0;
+				foreach my $banned_re ( @banned_files ) {
+					if ( $path =~ /$banned_re/ ) {
+						# Detected bad file
+						$bad = 1;	
+						last;
+					} # end if
+				} # end foreach banned_re
+				if ( $bad ) {
+					# Take evasive action
+					take_evasive_action($user_name);
+					next;
+				} # end if
+
 
 				my $send_email = $xfer_direction eq 'i' ? 1 : 0;
 
@@ -247,6 +262,7 @@ sub send_email {
 		$$upload{'file_str'} = $file_str;
 		my $regexp = $config{'file_path'}.'(.*)'.$file_str;
 		my ( $company_name ) = $file =~ /^$regexp$/;
+$log->debug("Trying to match ( $regexp in $file_str, got $company_name");
 		if ( $company_name ) {
 			$company_name =~ s/^\/*//g;
 		   my @parts = split('/', $company_name);
@@ -593,6 +609,9 @@ sub get_scoreboard {
 	} # end if
 	return \@scoreboard;
 } # end sub get_scoreboard
+
+sub take_evasive_action {
+} # end sub take_evasive_action
 
 # Read a configuration file
 #   The arg can be a relative or full path, or
