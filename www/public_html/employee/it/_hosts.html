@@ -29,7 +29,7 @@
 	if ( $session{'/employee/it/hosts.html?mac'} and $session{'/employee/it/hosts.html?mac'} =~ /%/ ) {
 		$mac_search = lc $session{'/employee/it/hosts.html?mac'};
 		$mac_search =~ s/%/\.\*/g;
-$log->debug("Enable mac search for $mac_search");
+#$log->debug("Enable mac search for $mac_search");
 	} # end $mac_search
 
 	@{$$variable{'Hosts'}} = ();

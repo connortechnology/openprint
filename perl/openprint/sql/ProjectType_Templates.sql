@@ -1,16 +1,17 @@
-DROP	SEQUENCE ProjectTemplate_Id_seq;
-CREATE	SEQUENCE ProjectTemplate_Id_seq;
+DROP	SEQUENCE IF EXISTS ProjectTemplate_Id_seq;
+CREATE	SEQUENCE ProjectTemplate_id_seq;
 
-DROP TABLE ProjectTemplate;
+DROP TABLE IF EXISTS ProjectTemplate;
 CREATE TABLE ProjectTemplate (
 	id	INTEGER NOT NULL default nextval('ProjectTemplate_id_seq'),
-	ProjectType_id		 INTEGER NOT NULL, FOREIGN KEY (ProjectTYpe_id) REFERENCES Project_Types (lngIndex);
+	projecttype_id		 INTEGER NOT NULL, FOREIGN KEY (ProjectTYpe_id) REFERENCES Project_Types (id),
 	Type				TEXT NOT NULL,
 	Description			TEXT,
 	dblFinishedWidth	NUMERIC(10,4),
 	dblFinishedHeight	NUMERIC(10,4),
 	dblFlatWidth		NUMERIC(10,4),
 	dblFlatHeight		NUMERIC(10,4),
+	message				TEXT,
 	PRIMARY KEY (Id)
 );
 

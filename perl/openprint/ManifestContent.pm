@@ -5,11 +5,7 @@ require openprint::Object;
 
 use Math::Round qw( nearest );
 use openprint ();
-use vars qw(%variable $log $dbh %config $debug $table $serial %fields %find_fields %transforms %defaults );
-*variable = \%openprint::variable;
-*log = \$openprint::log;
-*dbh = \$openprint::dbh;
-*config = \%openprint::config;
+use vars qw( $debug $table $serial %fields %find_fields %transforms %defaults );
 
 require openprint::Manifest_Content_Type;
 require openprint::Manifest;
@@ -79,19 +75,18 @@ sub value {
 
 sub delete {
 	if ( ! $_[0]{'id'} ) {
-		$log->error("Called delete on ManifestContent with no id.");
+		$openprint::log->error("Called delete on ManifestContent with no id.");
 		return;
 	} # end if
 	my @SkidContents = openprint::SkidContent->find('manifestcontent_id'=>$_[0]{'id'});
 	if ( @SkidContents > 1 ) {
-		$log->error("Too many skidContents found for manifestcontent $_[0]{'id'}");
+		$openprint::log->error("Too many skidContents found for manifestcontent $_[0]{'id'}");
 	} # end if
 	foreach my $S (@SkidContents) {
 		if ( $S->manifestcontent_id() != $_[0]->id() ) {
-			$log->error("BLAH!");
 			next;
 		} elsif ( $S->skid_id() != $_[0]->skid_id() ) {
-			$log->error("BLAH! wrong skid id in skidcontent");
+			$openprint::log->error("BLAH! wrong skid id in skidcontent");
 			next;
 		} # end if
 		$S->save({'manifestcontent_id'=>undef});

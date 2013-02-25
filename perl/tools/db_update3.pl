@@ -363,6 +363,11 @@ my %config_actions = (
 	'Credit Information Changed'	=>	105,
 	'Copy Material'	=>	43,
 	'Copy Product'	=>	60,
+	'Update ProjectType Template'	=>	52,
+	'New ProjectType Template'	=>	55,
+	'Export ProjectType Templates'	=>	54,
+	'License Assigned'	=>	200,
+	'License Unassigned'	=>	201,
 );
 foreach my $config_action ( keys %config_actions ) {
 	my $Action = openprint::Log_Action->find_one('name'=>$config_action);
@@ -926,6 +931,18 @@ if ( ! sets::isin( 'company_credit', \@tables ) ) {
 		$dbh->do('ALTER TABLE company_credit add supplier_id INTEGER');
 		$dbh->do('ALTER TABLE company_credit ADD FOREIGN KEY (supplier_id) REFERENCES Companies (id)');
 	} # end if
+	if ( ! exists $$data{late_penalty} ) {
+		$dbh->do('ALTER TABLE company_credit add late_penalty float');
+	} # end if
+	if ( ! exists $$data{late_units} ) {
+		$dbh->do('ALTER TABLE company_credit add late_units TEXT');
+	} # end if
+	if ( ! exists $$data{early_payment_discount} ) {
+		$dbh->do('ALTER TABLE company_credit add early_payment_discount float');
+	} # end if
+	if ( ! exists $$data{early_payment_units} ) {
+		$dbh->do('ALTER TABLE company_credit add early_payment_units TEXT');
+	} # end if
 } # end if
 if ( ! sets::isin( 'affiliates', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/Affiliates.sql}) );
@@ -1077,7 +1094,7 @@ foreach my $Company ( openprint::Company->find() ) {
 			if ( ! $Address ) {
 				$Address = new openprint::Location();
 				$_ = $Address->save({
-					address		=>	$Company->address1() . ( $Company->address2() ? (  ' ' . $Company->address2() ) : () ),
+					address		=>	($Company->address1() ? $Company->address1() : '' ) . ( $Company->address2() ? (  ' ' . $Company->address2() ) : () ),
 					postalcode	=>	$Company->postalcode(),
 					type		=>	'place',
 					parent_id	=>	$City->id(),
@@ -1088,6 +1105,18 @@ foreach my $Company ( openprint::Company->find() ) {
 	} # end if has coutnry
 	
 } # end foreach $Company
+if ( ! sets::isin('software', \@tables ) ) {
+	$dbh->do( misc::load_file( $log, q{../openprint/sql/Software.sql}) );
+	die if $dbh->errstr();
+} # end if
+if ( ! sets::isin('licenses', \@tables ) ) {
+	$dbh->do( misc::load_file( $log, q{../openprint/sql/Licenses.sql}) );
+	die if $dbh->errstr();
+} # end if
+if ( ! sets::isin('license_hosts', \@tables ) ) {
+	$dbh->do( misc::load_file( $log, q{../openprint/sql/License_Hosts.sql}) );
+	die if $dbh->errstr();
+} # end if
 print "done.\n";
 $dbh->disconnect();
 1;

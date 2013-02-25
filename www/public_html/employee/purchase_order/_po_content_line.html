@@ -1,7 +1,7 @@
 <? echo (
-	return '' if $param{'action'} eq 'delete';
+	return '' if $param{action} eq 'delete';
 
-	my $C = $$variable{'C'};
+	my $C = $$variable{C};
 
 	my $html .= sprintf('<tr id="line-%1$d">', $C->id() );
 	$html .= '<td>'.ssi::button( 'del-'.$C->id(), { 'onclick'=>qq`new Ajax.Request('/employee/purchase_order/_po_content_line.html?action=delete&amp;id=$$C{'id'}', { onSuccess: function(){var tr = \$('line-$$C{id}'); tr.remove();update_totals(\$('f1'));} } );`,text=>'Delete' } );

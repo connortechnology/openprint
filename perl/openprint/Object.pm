@@ -571,7 +571,7 @@ sub find {
 	@search{@param_keys} = @$params{@param_keys};
 	
 	foreach my $k ( @param_keys ) {
-		my ( $field, $type, $function ) = $k =~ /^([\w\-]+)(::\w+)?[\s_]*(.*)?$/;
+		my ( $field, $type, $function ) = $k =~ /^([\+\w\-]+)(::\w+)?[\s_]*(.*)?$/;
 		$type = '' if ! defined $type;
 #$log->debug("$object_type param $field($type) $function " . ( ref $search{$k} eq 'ARRAY' ? join(',',@{$search{$k}}) : $search{$k} ) );
 
@@ -794,7 +794,17 @@ sub transform {
 		$openprint::log->debug("Transforms: @transforms") if $debug;
 
 		foreach my $transform ( @transforms ) {
-			eval '$_[2] =~ ' . $transform;
+			if ( $transform =~ /^s\// ) {
+				eval '$_[2] =~ ' . $transform;
+			} elsif ( $transform =~ /^<(\d+)/ ) {
+				if ( $_[2] > $1 ) {
+					$_[2] = undef;
+				} # end if
+			} else {
+$openprint::log->debug('evalling $_[2] '.$transform . " Now value is $_[2]" );
+				eval '$_[2] '.$transform;
+$openprint::log->error("Eval error $@") if $@;
+			};
 $openprint::log->debug("After $transform: $_[2]") if $debug;
 		} # end foreach
 	} else {

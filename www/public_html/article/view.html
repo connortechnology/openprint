@@ -34,7 +34,9 @@ join('',
 	<? endif ( $$variable{'Article'}->source() ) ?>
 	</div><!--header-->
 
-	<div class="body"><? echo ( $$variable{'Article'}->body() ) ?></div>
+	<div class="body"><? echo ( 
+		my $body = $$variable{'Article'}->body();
+		variable_substitution( \$body, $variable ); ) ?></div>
 	<? if ( $session{'user_id'} ) ?>
 		<div id="Opinions"><? echo ( $$variable{'Article'}->opinions() ) ?></div>
 		<div id="comments-<? echo ( $$variable{'Article'}->id() ) ?>" class="Comments"><? echo ( include('_comments.html'); ) ?></div>

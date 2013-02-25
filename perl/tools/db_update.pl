@@ -418,7 +418,20 @@ if ( ! sets::isin( 'invoices', \@tables ) ) {
 	if ( ! exists $$data{num} ) {
 		$dbh->do('ALTER TABLE Invoices ADD num TEXT');
 	} # end if
+	if ( ! exists $$data{late_payment_units} ) {
+		$dbh->do('ALTER TABLE Invoices ADD late_payment_units TEXT');
+	} # end if
+	if ( ! exists $$data{early_payment_units} ) {
+		$dbh->do('ALTER TABLE Invoices ADD early_payment_units TEXT');
+	} # end if
+	if ( ! exists $$data{early_payment_discount} ) {
+		$dbh->do('ALTER TABLE Invoices ADD early_payment_discount TEXT');
+	} # end if
+	if ( ! exists $$data{early_payment_date} ) {
+		$dbh->do('ALTER TABLE Invoices ADD early_payment_date DATE');
+	} # end if
 } # end if
+
 if ( ! sets::isin( 'invoices_id_seq', \@sequences ) ) {
 	$dbh->do('CREATE SEQUENCE invoices_id_seq');
 } # en dif
@@ -873,6 +886,14 @@ if ( ! sets::isin( 'locations', \@tables ) ) {
 	$dbh->do('CREATE INDEX locations_name_idx on locations (name)');
 	if ( ! exists $$data{'deleted'} ) {
 	$dbh->do('ALTER TABLE Locations add deleted BOOLEAN NOT NULL DEFAULT false');
+	} # end if
+	if ( sets::isin( 'location_id_seq', \@sequences ) ) {
+		if ( ! sets::isin( 'locations_id_seq', \@sequences ) ) {
+			$dbh->do('CREATE SEQUENCE locations_id_seq');
+			$dbh->do(q`ALTER TABLE locations ALTER id set default nextval('locations_id_seq')`);
+			$dbh->do(q`SELECT setval('locations_id_seq', (SELECT MAX(id) FROM Locations ) )`);
+		} # end if
+		$dbh->do('DROP SEQUENCE location_id_seq');
 	} # end if
 } # end if
 if ( ! sets::isin( 'addresses', \@tables ) ) {
@@ -3011,6 +3032,15 @@ foreach my $PT ( openprint::ProjectType->find() ) {
 		$PT->save();
 	} # end if
 } # end foreach
+if ( ! sets::isin( 'projecttemplate', \@tables ) ) {
+	$dbh->do( misc::load_file( $log, q{../openprint/sql/ProjectType_Templates.sql}) );
+	die if $dbh->errstr();
+} else {
+	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='projecttemplate'", 'column_name');
+	if ( ! exists $$data{message} ) {
+		$dbh->do('ALTER TABLE projecttemplate ADD message TEXT');
+	}
+} # end if
 if ( ! sets::isin( 'hosts', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/Hosts.sql}) );
 } else {
