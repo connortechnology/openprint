@@ -38,12 +38,13 @@ sub include {
 		$path =~ s/(.*\/).*/$1/;
 		$file = $path . $file;
 	} # end if
-
 	my $content = '';
 	if ( -f $config{SkinPath}.$file ) {
 		$content = misc::load_file( $log, $config{SkinPath}.$file );
-	} elsif ( -f $ENV{DOCUMENT_ROOT}.$file ) {
+	} elsif ( $ENV{DOCUMENT_ROOT} and -f $ENV{DOCUMENT_ROOT}.$file ) {
 		$content = misc::load_file( $log, $ENV{DOCUMENT_ROOT}.$file );
+	} elsif ( $config{DOCUMENT_ROOT} and -f $config{DOCUMENT_ROOT}.$file ) {
+		$content = misc::load_file( $log, $config{DOCUMENT_ROOT}.$file );
 	} else {
 		$content = misc::load_file( $log, $file );
 	} # end if
