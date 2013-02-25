@@ -284,6 +284,7 @@ $log->debug("Trying to match ( $regexp in $file_str, got $company_name");
 	my $Company;
 	my $User;
 
+	my $dbh_count = 1;
 	while ( ! ( $openprint::dbh and $openprint::dbh->ping() ) ) {
 	$openprint::dbh = sql::open_sql( $log, 
 		'host'		=> $CFG::Config{'db_host'},
@@ -292,7 +293,8 @@ $log->debug("Trying to match ( $regexp in $file_str, got $company_name");
 		'login'		=> $CFG::Config{'db_user'},
 		'password'	=> $CFG::Config{'db_pass'},
 	);
-		$log->error("Unable to connect to database. sleeping.");
+		$log->error("Unable to connect to database, try $dbh_count. sleeping.");
+		$dbh_count += 1;
 		sleep(1);
 	} # enw hwhile no db connection
 
