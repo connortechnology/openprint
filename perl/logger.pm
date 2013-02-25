@@ -1,4 +1,5 @@
 package logger;
+use Date::Format;
 use Encode;
 use strict;
 
@@ -35,7 +36,7 @@ sub print {
 			print STDERR "Unable to open $$self{file}. : $!";
 			return $!;
 		} # end if
-		print $fh $message;
+		print $fh Date::Format::time2str( '[%C] ', time ) . $message;
 		close($fh);
 	} else {
 		print STDERR $message;

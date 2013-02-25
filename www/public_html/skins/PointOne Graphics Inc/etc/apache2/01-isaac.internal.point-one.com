@@ -98,6 +98,12 @@
 			PerlResponseHandler	 openprint::www
 		</Files>
 	</Directory>
+	<Directory "/var/www/point-one/skins/PointOne Graphics Inc">
+		<Files ~ "\.html$">
+			SetHandler		perl-script
+			PerlResponseHandler	 openprint::www
+		</Files>
+	</Directory>
 	<Directory "/var/www/point-one/skins/PointOne Graphics Inc/cache">
 		RewriteEngine On
         RewriteCond %{HTTP:Accept-Encoding} gzip

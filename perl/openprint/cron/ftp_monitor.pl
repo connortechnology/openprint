@@ -103,7 +103,7 @@ $openprint::dbh = sql::open_sql( $log,
 );
 die 'Error opening db' if ! $dbh;
 configuration::init_cache( $log, $dbh, \%CFG::Config );
-$openprint::dbh->disconnect();
+#$openprint::dbh->disconnect();
 # Cache of recently completed uploads.  keys are username, value is array of upload hashes.  When the user is no longer logged in or
 # older than a certain age, the email notification should go out, and the hash entry cleared.
 my %uploads;
@@ -170,7 +170,7 @@ if (open($fifoh, "< $config{fifo}")) {
 				} # end foreach banned_re
 				if ( $bad ) {
 					# Take evasive action
-					take_evasive_action($user_name);
+					take_evasive_action($user_name, $client);
 					next;
 				} # end if
 
@@ -613,6 +613,82 @@ sub get_scoreboard {
 } # end sub get_scoreboard
 
 sub take_evasive_action {
+	my ( $username, $client ) = @_;
+
+	my $dbh_count = 1;
+	while ( ! ( $openprint::dbh and $openprint::dbh->ping() ) ) {
+		$openprint::dbh = sql::open_sql( $log, 
+			host		=> $CFG::Config{'db_host'},
+			database	=> $CFG::Config{'db_name'},
+			driver	=> 'Pg',
+			login		=> $CFG::Config{'db_user'},
+			password	=> $CFG::Config{'db_pass'},
+		);
+		$log->error("Unable to connect to database, try $dbh_count. sleeping.");
+		$dbh_count += 1;
+		sleep(1);
+	} # enw hwhile no db connection
+
+	my $User = openprint::User->find_one('email lc'=>lc $username, ftp_active=>'Y' );
+	if ( ! $User ) {
+		$log->warn("unable to load insecure user account for $username");
+		return;
+	} # end if
+
+	my $Company = $User->Company();
+	my @To = ( $config{TechSupportEmail} );
+
+	if ( $Company->salesrep_id() ) {
+		push @To, $Company->CSR();
+	} # end if
+		
+	my %variable;
+	$variable{Company} = $Company;
+	$variable{User} = $User;
+
+	$variable{ReplacementText} = ssi::include( '/email_content/ftp_account_compromised.html', \%variable );
+	if ( $variable{ReplacementText} ) {
+		my $email_template = misc::load_file( $log, $config{'skin_path'} . '/email_template.html' );
+		my $body = ssi::variable_substitution( undef, $log, $dbh, \$email_template, \%variable );
+		my $Mail = new openprint::Email();
+		$Mail->send(
+				FROM    =>	$config{TechSupportEmail},
+				TO      =>	\@To,
+				SUBJECT =>	'FTP Account compromised',
+				ATTACHMENTS => [ '', encode_qp(Encode::encode('utf-8',$body)), 'text/html', 'quoted-printable' ]
+			);
+		$_ = $User->save({ ftp_active=>'N', change_password=>'Y' });
+		$log->error($_) if $_;
+	} else {
+		$log->error("No email content for 'ftp_account_compromised.html'");
+	} # end if
+	if ( $client ) {
+		$log->debug("Blacklisting client $client");
+		my $ip;
+		if ( $client =~ /[^\d\.]/ ) {
+			$_ = gethostbyname($client);
+			if ( defined $_ ) {
+				$ip = Socket::inet_ntoa($_);
+				$log->debug( "Got $ip for $client\n");
+			} # end if
+		} else {
+			$ip = $client;
+		} # end if
+		if ( $ip ) {
+			my $Host = openprint::Host->find_one(ip=>$ip);
+			if ( ! $Host ) {
+				$Host = new openprint::Host();
+				$Host->set({ip=>$ip});
+			} # end if
+			if ( ! ( $Host->blacklist() or $Host->whitelist() ) ) {
+				$_ = $Host->save({blacklist=>1});
+				$log->error($_) if $_;
+			} # end if
+			(new openprint::logRecord())->save({action_type=>99, ip_address=>$ip, note=>"Host blackisted for FTP violation. User account $username",host_id=>$$Host{id}} );
+		} # end if
+	} else {
+		$log->warn("No client to blacklist.");
+	} # end if
 } # end sub take_evasive_action
 
 # Read a configuration file
