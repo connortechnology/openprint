@@ -537,7 +537,8 @@ $log->debug("Coatings: " . join( ',', keys %coatings ) );
 # Now it will return an array of hash refs, which may someday become Objects
 sub get_colours {
 	my ( $specs, $side, $v, $signature ) = @_;
-$openprint::log->debug("Called get_colours");
+	my ( $caller, undef, $line ) = caller;
+$openprint::log->debug("Called get_colours from $caller : $line");
 	my @colours;
 	if ( ( defined $$specs{'sides_the_same'} ) and ( $$specs{'sides_the_same'} eq 'Y' ) and ( $side eq 'SideTwo' ) ) {
 		$side = 'SideOne';
@@ -1871,6 +1872,9 @@ $PaperServiceType = openprint::ServiceType->find_one(name=>'Paper');
 
 	my @side_one_colours = get_colours( $specs, 'SideOne' );
 	my @side_two_colours = get_colours( $specs, 'SideTwo' );
+	$$specs{SideOneColours} = \@side_one_colours;
+	$$specs{SideTwoColours} = \@side_two_colours;
+
 $openprint::log->debug("Side one @side_one_colours twp: @side_two_colours");
 	my %inkCoverage = get_inkcoverage( $Project, $specs );
 	if ( ! ( $$services{'NoPrinting'} or @side_one_colours or @side_two_colours ) ) {
@@ -4542,8 +4546,9 @@ sub get_run_price {
 
 # now work out the press run speed
 
+	# THere should be either a Standard Run Speed
+
 	my $std_speed = $Press->Specification('Standard Run Speed' );
-	$std_speed = $Press->Specification('Run Speed' ) if ! $std_speed;
 	
 	my $speed_mod;
 	if ( $std_speed ) {
@@ -4558,7 +4563,8 @@ sub get_run_price {
 			#$openprint::log->warn("1Press ".$$Press{'strid'}." Calliper: $$Paper{calliper} gsm: $$Paper{gsm} ($running_price) ($run_price{'units'}) STD: ($$std_speed{'value'}) RUN ($run_speed), mod: $speed_mod,  std/run: " . ( $speed_mod ? $run_speed/$speed_mod : $std_speed/$run_speed ) ) if DEBUG or 1;
 		} # end if
 	} else {
-		$openprint::log->error("No standard speed on $$Press{strid}");
+		$run_speed = $Press->Specification('Run Speed') if ! $run_speed;
+		$openprint::log->debug("No standard speed on $$Press{strid}");
 	} # end if
 
 	if ( sets::isin( $run_price{'units'}, ['per m','per 1000 impressions', 'per 1000'] ) ) {

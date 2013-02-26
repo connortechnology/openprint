@@ -23,10 +23,10 @@ use vars qw( $r %variable %session %param %config $log $dbh );
 my %hash_cache;
 
 #Used for writeTip
-my %Glossary;
+my $Glossary;
 
 # Used for translations
-my %Lexicon;
+my $Lexicon;
 
 sub include {
 	my ( $file, $variable ) = @_;
@@ -524,10 +524,10 @@ sub checked {
 
 sub writeTip {
 	my $word = shift;
-	if ( ! %Glossary ) {
-		%Glossary = sql::execute( undef, undef, 'SELECT word, definition FROM Glossary' );
+	if ( ! defined $Glossary ) {
+		%$Glossary = sql::execute( undef, undef, 'SELECT word, definition FROM Glossary' );
 	} # end if
-	if ( $Glossary{$word} ) {
+	if ( $$Glossary{$word} ) {
 		return sprintf(q`<span class="TipLink" onmouseover="tipOn('%1$s',3,event);" onmouseout="tipOff('%1$s');">%1$s</span>`, $word );
 	} else {
 		return $word;
@@ -861,10 +861,10 @@ sub select( $$$ ) {
 } # end sub select($$$)
 
 sub translate($) {
-	if ( ! %Lexicon ) {
-		%Lexicon = sql::execute( undef, undef, 'SELECT word, translation FROM Lexicon '  );
+	if ( ! defined $Lexicon ) {
+		%$Lexicon = sql::execute( undef, undef, 'SELECT word, translation FROM Lexicon '  );
 	} # end if
-	return $Lexicon{$_[0]} if $Lexicon{$_[0]};
+	return $$Lexicon{$_[0]} if $$Lexicon{$_[0]};
 	return $_[0];
 } # end sub translate
 
