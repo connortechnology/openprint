@@ -148,7 +148,7 @@ sub can_edit {
 } # end sub can_edit
 
 sub can_view {
-$openprint::log->debug("Event::can_view $_[1]" . ref $_[1] eq 'openprint::User' ? $_[1]->to_string() : $_[1] );
+#$openprint::log->debug("Event::can_view $_[1]" . ( ref $_[1] eq 'openprint::User' ? $_[1]->to_string() : $_[1] ) );
 	return 1 if ! $_[0]{id};
 	my $User;
 	if ( @_ > 1 ) {

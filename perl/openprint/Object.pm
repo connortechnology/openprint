@@ -784,6 +784,7 @@ sub sort {
 	return sort { $$a{'name'} cmp $$b{'name'} } @_;
 } # end sub sort
 
+# Warning, this is destructive to objects
 sub transform {
 	my $type = ref $_[0];
 	$type = $_[0] if ! $type;
@@ -791,7 +792,7 @@ sub transform {
 
 	if ( defined $$fields{$_[1]} ) {
 		my @transforms = eval('@{$'.$type.'::transforms{$_[1]}}');
-		$openprint::log->debug("Transforms: @transforms") if $debug;
+		$openprint::log->debug("Transforms for $_[1] before $_[2]: @transforms") if $debug;
 
 		foreach my $transform ( @transforms ) {
 			if ( $transform =~ /^s\// ) {

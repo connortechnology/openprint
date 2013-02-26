@@ -131,9 +131,9 @@ sub sized_url {
 			if ( ! -e $dest ) {
 				my $width;
 				if ( $size eq 'medium' ) {
-					$width = $openprint::config{'Medium Asset Width'};
+					$width = $openprint::config{'Medium_Asset_Width'};
 				} elsif ( $size eq 'large' ) {
-					$width = $openprint::config{'Large Asset Width'};
+					$width = $openprint::config{'Large_Asset_Width'};
 				} # end if
 				if ( ! $width ) {
 					$openprint::log->error("No asset size in config for $size");
@@ -165,9 +165,9 @@ sub sized_url {
 			if ( ! -e $dest ) {
 				my $width;
 				if ( $size eq 'medium' ) {
-					$width = $openprint::config{'Medium Asset Width'};
+					$width = $openprint::config{'Medium_Asset_Width'};
 				} elsif ( $size eq 'large' ) {
-					$width = $openprint::config{'Large Asset Width'};
+					$width = $openprint::config{'Large_Asset_Width'};
 				} elsif ( ! $size ) {
 					$size = 'full';
 				} # end if

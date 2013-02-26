@@ -6,6 +6,7 @@ use openprint ();
 require sql;
 require ssi;
 require configuration;
+require Configuration;
 require email;
 require openprint::Currency;
 require openprint::User;
@@ -57,14 +58,27 @@ sub configuration {
 			} );
 		} # end if
 	} elsif ( $param{'btnFunction'} eq 'Save' ) {
-		my @config = sql::execute( $log, $dbh, 'SELECT Name, Value, Type FROM Configuration ORDER BY lower(category), name' );
-		while ( my ( $name, $value, $type ) = splice @config,0,3 ) {
-			my $newvalue = $param{$name};
-			if ( $type eq 'list' ) {
-				$newvalue = join(',', misc::trim( split(',', $newvalue ) ) );
-			}
-			if ( $value ne $newvalue ) {
-				configuration::save_entry( $log, $dbh, $name, $newvalue );
+		foreach my $C ( Configuration->find() ) {
+			if ( ! exists $param{$$C{name}} ) {
+				$log->error("No value in param for $$C{name}");
+				next;
+			} # end if
+
+			my $new_value = $param{$$C{name}};
+			if ( $$C{type} eq 'list' ) {
+				$new_value = join(',', misc::trim( split(',', $new_value ) ) );
+			} # end if
+
+			my $name = $$C{name};
+			if ( $$C{name} ne Configuration->transform('name',$name) ) {
+$log->debug("Name change detected: $$C{name}");
+				$variable{error} .= $C->delete();
+				$C->description( $$C{name} ) if ! $C->description();
+				$variable{error} .= $C->save({value=>$new_value, name=>$$C{name},  });
+			} elsif ( $$C{value} ne $new_value ) {
+				$C->save({ value=>$new_value });
+			} else {
+				$log->debug("Value unchanged for $$C{name}: currnet: $$C{value} new: $param{$$C{name}}");
 			} # end if
 		} # end while
 
@@ -82,11 +96,15 @@ sub _configuration {
 } # end sub _configuration
 
 sub _configuration_popup {
-	my $Entry = {};
-	if ( $param{'name'} ) {
-		@$Entry{'name','value','type','description','category'} = sql::execute( $log, $dbh, 'SELECT Name, Value, Type, Description, category FROM Configuration WHERE name=?', $param{'name'} );
+	if ( $param{name} ) {
+		$variable{Entry} = Configuration->find_one(name=>$param{name});
+		if ( ! $variable{Entry} ) {
+			$variable{Entry} = new Configuration();
+			$variable{error} = "No entry found for $param{name}<br/>";
+		} # end if
+	} else {
+		$variable{Entry} = new Configuration();
 	} # end if
-	$variable{'Entry'} = $Entry;
 } # end sub
 
 sub taxes {
@@ -535,7 +553,7 @@ sub company_profiles {
                         ( $Credit->late_payment_amount() != openprint::Company_Credit->transform('late_payment_amount', $param{'late_payment_amount-'.$$Supplier{id}} ) ) or
                         ( $Credit->late_payment_units() ne openprint::Company_Credit->transform('late_payment_units', $param{'late_payment_units-'.$$Supplier{id}} ) ) or
                         ( $Credit->early_payment_amount() != openprint::Company_Credit->transform('early_payment_discount', $param{'early_payment_discount-'.$$Supplier{id}} ) ) or
-                        ( $Credit->early_payment_units() ne openprint::Company_Credit->transform('early_payment_units', $param{'early_payment_units-'.$$Supplier{id}} ) )
+                        ( $Credit->early_payment_units() ne openprint::Company_Credit->transform('early_payment_units', $param{'early_payment_units-'.$$Supplier{id}} ) ) or
                         ( $Credit->early_payment_days() != openprint::Company_Credit->transform('early_payment_days', $param{'early_payment_days-'.$$Supplier{id}} ) )
                         ) {
                     my $note = 'Old credit: ' . $Credit->to_string() if $Credit->supplier_id();
