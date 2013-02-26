@@ -68,7 +68,7 @@ ssi::button('Export',{ onclick=>q`var form = $('f1');form.btnFunction.value='Exp
 		</p>
 	</fieldset>
 <? if ( $$variable{'CompanyIndex'} ) ?>
-	<fieldset><?include(/includes_credit_edit.html)?>
+	<fieldset><?include(/includes/_credit_edit.html)?>
 	<p class="buttons">
 		<? echo ( join('',
 			ssi::button( 'Save', { onclick=>"if(!f1.ddmCustomer.value){alert('Please select a customer');}else{f1.btnFunction.value='Save';f1.submit();};" } ),
