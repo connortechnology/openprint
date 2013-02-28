@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-use lib '/var/www/p1/perl';
+use lib '/var/www/point-one/perl';
 use Net::Server::PreFork;
 
 @ISA = qw(Net::Server::PreFork);
@@ -96,6 +96,13 @@ sub process_request {
 		my $data;
 		my $tag = '';
 		while ( read(STDIN, $data, 40) ) {
+			while ( ! ( $dbh and $dbh->ping() ) ) {
+				$dbh = sql::open_sql( $log, ('database'=>'point-one', 'driver'=>'Pg','login'=>'point-one', 'password'=>'point-one','host'=>'database') );
+				if ( ! $dbh ) {
+					$self->log("No connection to db.  Sleeping.");
+					sleep 10;
+				} # end if
+			} # end if
 			$tag .= $data;
 			my ( $antenna, $tag_id, $end ) = $tag =~ /<TAG>\[A(\d)\]\s*(\w+)<\/TAG>(.*)/;
 			if ( ! $tag_id ) {

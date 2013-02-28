@@ -327,7 +327,7 @@ sub location {
 		} # end if
 	} # end if
 	return new openprint::Location( $$self{'location_id'} )->name();
-} # end if
+} # end sub location
 
 sub location_id {
 	my ( $self, $new ) = @_;
