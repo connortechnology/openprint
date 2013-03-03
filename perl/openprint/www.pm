@@ -118,7 +118,7 @@ sub handler {
 				my $chunk = join('/', @chunks);
 				$chunk = '/' if ! $chunk; # neccessary to deal with the empty string
 
-					$log->debug("Looking for page setting for $chunk");
+					#$log->debug("Looking for page setting for $chunk");
 				if ( $page_settings{$config{db_name}}{$chunk} ) {
 # Why stuff up the db with entries, just fill the hash with copies.
 					$page_settings{$config{db_name}}{$page} = $page_settings{$config{db_name}}{$chunk};
@@ -530,7 +530,6 @@ $openprint::log->warn('bind');
 					} # end if
 				} # end if main:proj:$third
 			} # end if defined third
-$log->debug("after third");
 
 			openprint::print_project::create_edit_display( $r, $log, $dbh, \%variable )		if $filename eq 'create_edit.html';
 			openprint::main_project::history()			if $filename eq 'history.html';

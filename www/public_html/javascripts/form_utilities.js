@@ -713,17 +713,17 @@ function Country_onchange( country_ddm, state ) {
 	if ( country == 'US' ) {
 		$(state.name+'_container').innerHTML = '<select name="' + state.name + '" id="' + state.id + '" />';
 		new Ajax.Updater( state.name, '/includes/_states.html' );
-		if ( state_label ) state_label.innerHTML='State:';
-		if ( postal_label ) postal_label.innerHTML='ZIP Code:';
+		if ( state_label ) state_label.innerHTML='State';
+		if ( postal_label ) postal_label.innerHTML='ZIP Code';
 	} else if ( country == 'CA' ) {
 		$(state.name+'_container').innerHTML = '<select name="' + state.name + '" id="' + state.id + '" />';
 		new Ajax.Updater( state.name, '/includes/_provinces.html' );
-		if ( state_label ) state_label.innerHTML='Province:';
-		if ( postal_label ) postal_label.innerHTML='Postal Code:';
+		if ( state_label ) state_label.innerHTML='Province';
+		if ( postal_label ) postal_label.innerHTML='Postal Code';
 	} else {
 		$(state.name+'_container').innerHTML = '<input type="text" name="' + state.name + '" id="' + state.id + '" />';
-		if ( state_label ) state_label.innerHTML='State/Province:';
-		if ( postal_label ) postal_label.innerHTML='Postal Code:';
+		if ( state_label ) state_label.innerHTML='State/Province';
+		if ( postal_label ) postal_label.innerHTML='Postal Code';
 	} // end if
 } // end function
 
@@ -749,14 +749,14 @@ function Location_onchange( parent_element, type, options ) {
 		var postal_label = $(parent_element.name + '_postal');
 		var country = get_ddm_text( parent_element );
 		if ( country == 'United States' ) {
-			if ( state_label ) state_label.innerHTML='State:';
-			if ( postal_label ) postal_label.innerHTML='ZIP Code:';
+			if ( state_label ) state_label.innerHTML='State';
+			if ( postal_label ) postal_label.innerHTML='ZIP Code';
 		} else if ( country == 'Canada' ) {
-			if ( state_label ) state_label.innerHTML='Province:';
-			if ( postal_label ) postal_label.innerHTML='Postal Code:';
+			if ( state_label ) state_label.innerHTML='Province';
+			if ( postal_label ) postal_label.innerHTML='Postal Code';
 		} else {
-			if ( state_label ) state_label.innerHTML='State/Province:';
-			if ( postal_label ) postal_label.innerHTML='Postal/ZIP Code:';
+			if ( state_label ) state_label.innerHTML='State/Province';
+			if ( postal_label ) postal_label.innerHTML='Postal/ZIP Code';
 		}  // end if
 	} // end if
 }
