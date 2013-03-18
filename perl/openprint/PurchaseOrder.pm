@@ -531,14 +531,15 @@ $log->debug("Ccan see because new PO");
 $log->debug('can see');
 		return 1;
 	} # end if
+
 	if ( $_[1] ) {
-		if ( $_[1]->Order()->salesrep_id() == $session{user_id} ) {
+			if ( sets::isin( $_[1]->Order()->salesrep_id(), [ $openprint::session{'user_id'}, new openprint::User($openprint::session{'user_id'})->assistant_ids(), new openprint::User($openprint::session{'user_id'})->csr_ids() ] ) ) {
 			$log->debug('can see');
 			return 1;
 		} # end if
 	} else {
 		foreach my $C ( $_[0]->Contents() ) {
-			if ( $C->Order()->salesrep_id() == $session{user_id} ) {
+			if ( sets::isin( $C->Order()->salesrep_id(), [ $openprint::session{'user_id'}, new openprint::User($openprint::session{'user_id'})->assistant_ids(), new openprint::User($openprint::session{'user_id'})->csr_ids() ] ) ) {
 				$log->debug('can see');
 				return 1;
 			} # end if
