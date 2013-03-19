@@ -215,7 +215,8 @@ sub information {
 		$quote_id = $session{'quote_id'};
 	} # end if
 # this should only happen if there was an error creating the quote
-	$quote_id = $session{'quote_id'} if ! $quote_id;
+	$quote_id = $param{quote_id} if ( ! $quote_id ) and $param{quote_id};
+	$quote_id = $session{quote_id} if ! $quote_id;
 
 	my $Quote = $variable{'Quote'} = new openprint::Quote( $quote_id );	
 	$session{'quote_id'} = $quote_id;
@@ -354,9 +355,10 @@ sub submit {
 		} # end foreach
 		foreach my $QP ( $Quote->Products() ) {
 				$variable{'error'} .= $QP->save({
-						'cost'		=> $param{'cost-'.$QP->id()},
-						'markup'	=> $param{'markup-'.$QP->id()},
-						'quantity'	=> $param{'quantity-'.$QP->id()},
+						cost		=> $param{'cost-'.$QP->id()},
+						markup		=> $param{'markup-'.$QP->id()},
+						quantity	=> $param{'quantity-'.$QP->id()},
+						comments	=> $param{'comments-'.$QP->id()},
 				});
 		} # end foreach
     } # end if btnFunction eq Continue

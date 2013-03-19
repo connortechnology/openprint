@@ -18,14 +18,15 @@
 			foreach my $Product ( $$variable{'Quote'}->Products() ) {
 				$html .= sprintf(q`
 <tr%1$s>
-	<td class="description">%3$s</td>
+	<td class="description">%3$s<br/><textarea id="comments-%2$d" name="comments-%2$d" placeholder="comments">%9$s</textarea></td>
 	<td class="quantity"><input type="number" id="quantity-%2$d" name="quantity-%2$d" value="%4$d" onkeyup="calc_from_quantity(this);"/></td>
 	<td class="price"><input type="number" id="cost-%2$d" value="%5$.2f" name="cost-%2$d" onkeyup="calc_from_cost(this);"/></td>
 	<td class="markup"><input type="number" id="markup-%2$d" name="markup-%2$d" value="%6$.2f" onkeyup="calc_from_markup(this);"/></td>
 	<td class="newprice"><input type="number" id="price-%2$d" name="price-%2$d" value="%7$.2f" /></td>
 	<td class="buttons">%8$s</td>
 </tr>`, $rowclass, $Product->id(), $Product->description(), $Product->quantity(), $Product->cost(), $Product->markup(), $Product->price(),
-									ssi::button( 'removeProduct'.$Product->id(), { onclick=>qq`new Ajax.Updater('Products', '_products.html?action=del&amp;product_id=$$Product{id}', { parameters: f1.serialize() } );`, text=>'-', title=>'Remove' } ),
+ssi::button( 'removeProduct'.$Product->id(), { onclick=>qq`new Ajax.Updater('Products', '_products.html?action=del&amp;product_id=$$Product{id}', { parameters: f1.serialize() } );`, text=>'-', title=>'Remove' } ),
+$Product->comments(),
 );
 				$rowclass = $rowclass ? '' : ' class="colRow"';
 				$sub_total += $Product->price();
