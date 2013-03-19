@@ -4617,6 +4617,9 @@ sub press_setup_cost {
 	if ( $Price{'units'} eq 'stock calliper - per plate' ) {
 		%Price = openprint::service::get_price_object( 'PressUnitMakeReady', $calliper, $Press );
 		$Price{'Total'} = $Price{'Price'} * $setup_count;
+	} elsif ( $Price{'units'} eq 'per job' ) {
+		my @signatures = $Project->signatures(type=>$$specs{'txtSignatureType'});
+		$Price{'Total'} = $Price{'Price'} if $signatures[0] == $service_index;
 	} elsif ( $Price{'units'} eq 'per form' ) {
 		my $specs = $$Imposition{specs};
 		%Price = openprint::service::get_price_object( 'PressUnitMakeReady', $$specs{'PreviousForms'.$qty_index} + 1, $Press);

@@ -270,7 +270,7 @@ sub send_email {
 		$$upload{'file_str'} = $file_str;
 		my $regexp = $config{'file_path'}.'(.*)'.$file_str;
 		my ( $company_name ) = $file =~ /^$regexp$/;
-$log->debug("Trying to match ( $regexp in $file_str, got $company_name");
+$log->debug("Trying to match ( $regexp in $file, got $company_name");
 		if ( $company_name ) {
 			$company_name =~ s/^\/*//g;
 		   my @parts = split('/', $company_name);
