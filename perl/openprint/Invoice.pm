@@ -21,31 +21,31 @@ require openprint::Timetrack;
 
 use vars qw( $debug $table $serial %fields %find_fields %defaults %transforms );
 
-$debug = 0;
+$debug = 1;
 
 $table = 'invoices';
 $serial = 'invoices_id_seq';
 
 %fields = (
-	'id'				=>	'id',
-	'invoicer_id'		=>	'invoicer_id',
-	'invoicee_id'		=>	'invoicee_id',
-	'external_notes'	=>	'external_notes',
-	'internal_notes'	=>	'internal_notes',
-	'posted'			=>	'posted',
-	'subtotal'			=>	'subtotal',
-	'total'				=>	'total',
-	'due_on'			=>	'due_on',
-	'posted_on'			=>	'posted_on',
-	'created_on'		=>	'created_on',
-	'updated_on'		=>	'updated_on',
-	'deleted'			=>	'deleted',
-	'currency_id'		=>	'currency_id',
-	'paid'				=>	'paid',
-	'interest'			=>	'interest',
-	'bad_debt'			=>	'bad_debt',
+	id				=>	'id',
+	invoicer_id		=>	'invoicer_id',
+	invoicee_id		=>	'invoicee_id',
+	external_notes	=>	'external_notes',
+	internal_notes	=>	'internal_notes',
+	posted			=>	'posted',
+	subtotal		=>	'subtotal',
+	total			=>	'total',
+	due_on			=>	'due_on',
+	posted_on		=>	'posted_on',
+	created_on		=>	'created_on',
+	updated_on		=>	'updated_on',
+	deleted			=>	'deleted',
+	currency_id		=>	'currency_id',
+	paid				=>	'paid',
+	interest			=>	'interest',
+	bad_debt			=>	'bad_debt',
 	num					=>	'num',
-	'monthly_interest'	=>	'monthly_interest',
+	monthly_interest	=>	'monthly_interest',
 	late_payment_units	=>	'late_payment_units',
 	early_payment_date	=>	'early_payment_date',
 	early_payment_discount	=>	'early_payment_discount',
@@ -106,10 +106,12 @@ sub owing_early {
 #$log->debug("Owing total: " . $_[0]->total() . ' int: ' . $_[0]->interest() . ' paid: ' . $_[0]->paid() );
 	my $owing = $_[0]->total() + $_[0]->interest() - $_[0]->paid();
 	if ( $_[0]{early_payment_units} eq 'amount' ) {
-		return Math::Round::nearest( .01, $owing + $_[0]{early_payment_amount} );
+		return Math::Round::nearest( .01, $owing + $_[0]{early_payment_discount} );
 	} elsif ( $_[0]{early_payment_units} eq 'percent' ) {
-		return Math::Round::nearest( .01, $owing * ( 1 - $_[0]{early_payment_amount}/100 ) );
+$openprint::log->debug("doing early payment percent: $_[0]{early_payment_discount}");
+		return Math::Round::nearest( .01, $owing * ( 1 - $_[0]{early_payment_discount}/100 ) );
 	} else {
+$openprint::log->debug('Unknown units for early_payment '. $_[0]{early_payment_units} );
 		return Math::Round::nearest( .01, $owing );
 	} # end if
 } # end sub owing
