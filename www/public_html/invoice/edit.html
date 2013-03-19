@@ -43,7 +43,7 @@
 	<fieldset><legend><? echo ( $$variable{'Invoice'}->id() ? 'Editing Invoice ' . $$variable{'Invoice'}->id() : 'New Invoice' ) ?></legend>
 		<div class="leftColumn">
 			<ul>
-			<li><label for="invoicee_id" onclick="$('invoicee_id').toggle();$('invoicee').toggle();">Company</label>
+			<li class="invoicee"><label for="invoicee_id" onclick="$('invoicee_id').toggle();$('invoicee').toggle();">Company</label>
 				<select id="invoicee_id" name="invoicee_id" onchange="$('invoicee').value='';">
 					<option value=""> select </option>
 					<? echo ( openprint::Company::get_dropdown( $$variable{'Invoice'}->invoicee_id() ? $$variable{'Invoice'}->invoicee_id() : $session{'company_id'} ); ) ?>
@@ -55,17 +55,20 @@
 			<span class="DateSelector"><? echo ( ssi::date_select( 'posted_on', $$variable{'Invoice'}->posted_on() ); ) ?></span>
 			</p>
 -->
-			<li><label>Due On</label>
-			<span class="DateSelector"><? echo ( ssi::date_select( 'due_on', $$variable{'Invoice'}->due_on() ); ) ?></span>
-			</li>
-			<li><label for="monthly_interest">Interest Rate</label>
-				<? echo ( input( type=>'float', name=>'monthly_interest', id=>'monthly_interest', value=>($$variable{Invoice}->id() ? $$variable{Invoice}->monthly_interest() : $config{'Default Interest'}) ); ) ?>%
-			</li>
-			<li><label for="early_payment_discount">Early Payment Discount</label>
-				<? echo ( join("\n",
-							input(type=>'float', name=>'early_payment_discount', value=>$$variable{Invoice}->early_payment_discount() ), 
-							ssi::select( [ 'percent', 'Percent', 'amount', 'Amount' ], $$variable{Invoice}->early_payment_units(), { name=>'early_payment_unitss' } ),
-				); ) ?>
+				<li class="due_on"><label>Due On</label>
+				<span class="DateSelector"><? echo ( ssi::date_select( 'due_on', $$variable{'Invoice'}->due_on() ); ) ?></span>
+				</li>
+				<li class="monthly_interest"><label for="monthly_interest">Interest Rate</label>
+					<? echo ( input( type=>'float', name=>'monthly_interest', id=>'monthly_interest', value=>($$variable{Invoice}->id() ? $$variable{Invoice}->monthly_interest() : $config{'Default Interest'}) ); ) ?>%
+				</li>
+				<li class="early_payment_discount"><label for="early_payment_discount">Early Payment Discount</label>
+					<? echo ( join("\n",
+								input(type=>'float', id=>'early_payment_discount', name=>'early_payment_discount', value=>$$variable{Invoice}->early_payment_discount() ), 
+								ssi::select( [ 'percent', 'Percent', 'amount', 'Amount' ], $$variable{Invoice}->early_payment_units(), { name=>'early_payment_units' } ),
+					); ) ?>
+				<li class="early_payment_date"><label>Early Payment Date</label>
+				<span class="DateSelector"><? echo ( ssi::date_select( 'early_payment_date', $$variable{'Invoice'}->early_payment_date() ); ) ?></span>
+				</li>
 			</ul>
 		</div>
 		<div class="rightColumn">
