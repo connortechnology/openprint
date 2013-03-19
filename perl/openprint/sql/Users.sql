@@ -19,6 +19,7 @@ CREATE TABLE Users (
 	ysnMailingList	char(1) DEFAULT 'N',
 	web_active	CHAR(1) DEFAULT 'N',
 	ftp_active	boolean not null default false,
+	ftp_root	TEXT not null default '',
 	dblCommission			NUMERIC(6,4),
 	greeting		TEXT,
 	ysnAdministrator		CHAR(1) DEFAULT 'N',

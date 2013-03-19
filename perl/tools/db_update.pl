@@ -298,6 +298,9 @@ if ( ! sets::isin( 'users', \@tables ) ) {
 		if ( ! exists $$data{asset_id} ) {
 			$dbh->do('ALTER TABLE users ADD asset_id INTEGER');
 		} # end if
+		if ( ! exists $$data{ftp_root} ) {
+			$dbh->do(q`alter table users add ftp_root text not null default ''`);
+		} # end if
 	} # end if
 	if ( sets::isin( 'users_index_seq', \@sequences ) ) {
 		if ( ! sets::isin( 'users_id_seq', \@sequences ) ) {
