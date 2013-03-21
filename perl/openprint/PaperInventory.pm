@@ -52,6 +52,8 @@ $serial = 'paperinventory_id_seq';
 
 # Returns a paper object specified by the parameters
 sub find {
+	shift @_ if $_[0] eq 'openprint::PaperInventory';
+	shift @_ if ref $_[0] eq 'openprint::PaperInventory';
 	my %params = @_;
 	@params{lc keys %params} = @params{keys %params};
 	my @values;

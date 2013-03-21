@@ -1530,8 +1530,8 @@ sub inventory_log {
         my @Data;
 
         my @data = sql::execute( $log, $dbh, q{SELECT updated_on, user_id, delta, instock, units, comment, poindex, skid_id, paper_id FROM Paper_Inventory WHERE (updated_on BETWEEN ? AND ? ) ORDER BY updated_on},
-        sprintf('%.4d-%.2d-%.2d %.2d:%.2d:00', @param{'StartYear','StartMonth','StartDay','StartHour','StartMinute'}),
-        sprintf('%.4d-%.2d-%.2d %.2d:%.2d:59', @param{'EndYear','EndMonth','EndDay','EndHour','EndMinute'}),
+        sprintf('%.4d-%.2d-%.2d %.2d:%.2d:00', @param{map { 'updated_on_start_' } ( 'year','month','day','hour','minute')}),
+        sprintf('%.4d-%.2d-%.2d %.2d:%.2d:59', @param{map { 'updated_on_end_' } ( 'year','month','day','hour','minute')}),
         );
         my $total = 0;
         while ( my ( $time, $user_id, $delta, $instock, $units, $comment, $po_id, $skid_id, $paper_id ) = splice @data, 0, 9 ) {
@@ -1558,9 +1558,31 @@ sub inventory_log {
         push @Data, '','','','Totals:',$total,'','','','';
         misc::export_csv( $r, $log, \%variable, 'InventoryLog.csv', \@Header, \@Data );
     } # end if
+	if ( ! exists $session{'/employee/inventory/inventory_log.html?ins'} ) {
+		$session{'/employee/inventory/inventory_log.html?ins'} = 1;
+	} # end if
+	if ( ! exists $session{'/employee/inventory/inventory_log.html?outs'} ) {
+		$session{'/employee/inventory/inventory_log.html?outs'} = 1;
+	} # end if
+	ssi::setup_date_select( '/employee/inventory/inventory_log.html', 'updated_on_start', 0 );
+	ssi::setup_date_select( '/employee/inventory/inventory_log.html', 'updated_on_end', 0 );
+	
+	$session{'/employee/inventory/inventory_log.html?manifests_within_days'} = 7 if ! defined $session{'/employee/inventory/inventory_log.html?manifests_within_days'};
+	$session{'/employee/inventory/inventory_log.html?show_manifests'} = 0 if ! defined $session{'/employee/inventory/inventory_log.html?show_manifests'};
+	ssi::save_params( '/employee/inventory/inventory_log.html', ( 
+( map { 'updated_on_start_'.$_ } ( 'year','month','day', 'hour', 'minute' ) ),
+( map { 'updated_on_end_'.$_ } ( 'year','month','day', 'hour', 'minute' ) ),
+( 'ins', 'outs', 'Type', 'location_id', 'manifests_within_days', 'show_manifests' ) ) );
 } # end sub inventory_log
 
 sub _inventory_log {
+	ssi::save_params( '/employee/inventory/inventory_log.html', ( 
+( map { 'updated_on_start_'.$_ } ( 'year','month','day', 'hour', 'minute' ) ),
+( map { 'updated_on_end_'.$_ } ( 'year','month','day', 'hour', 'minute' ) ),
+( 'ins', 'outs', 'Type', 'location_id', 'manifests_within_days', 'show_manifests' ) ) );
+	$session{'/employee/inventory/inventory_log.html?ins'} = $param{ins};
+	$session{'/employee/inventory/inventory_log.html?outs'} = $param{outs};
+
 	$variable{'Skid'} = new openprint::Skid( $param{'skid_id'} );
 } # end sub inventory_log
 
