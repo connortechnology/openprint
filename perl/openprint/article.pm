@@ -21,17 +21,16 @@ require XML::RSS;
 
 # recursively fixes %gt; problems.
 sub unescape_substitutions {
-	$_[0] =~ /(.*?)(&lt;\?\s*.*?\s*\?&gt;)(.*)?/ms;
-
-
-	my ( $before, $code, $after ) = ( $1, $2, $3 );
-	if ( $code ) {
-$log->debug("before code($code)");
-		$code =~ s/&gt;/>/g;
-		$code =~ s/&lt;/</g;
-		$code =~ s/&rsquo;/'/g;
-$log->debug("after code($code)");
-		return $before . $code . ( $after ? unescape_substitutions( $after ) : '' );
+	if ( $_[0] =~ /(.*?)(&lt;\?\s*.*?\s*\?&gt;)(.*)?/ms ) {
+		my ( $before, $code, $after ) = ( $1, $2, $3 );
+		if ( $code ) {
+	$log->debug("before $before code($code) $after");
+			$code =~ s/&gt;/>/g;
+			$code =~ s/&lt;/</g;
+			$code =~ s/&rsquo;/'/g;
+	$log->debug("after code($code)");
+			return $before . $code . ( $after ? unescape_substitutions( $after ) : '' );
+		} # end if
 	} # end if
 	return $_[0];
 
@@ -144,7 +143,9 @@ $log->debug("Found: pre: $pre, a: $a1, $a2, rem: $remainder");
 	} # end while
 	$param{'body'} = $body;
 } 
+$log->debug("before unescape $param{body} ");
 	$param{body} = unescape_substitutions( $param{body} );
+$log->debug("aftere unescape $param{body} ");
 
 	if ( ! $Article->id() ) {
 		$variable{'error'} .= $Article->save(\%param);
@@ -190,7 +191,7 @@ sub _history {
 		( map { 'published_on_end_'.$_ } ( 'year','month','day' ) ),
 				'published','employee_id','company_id', 'category_id', 'author_id' ) );
 	} 
-	if ( $param{'action'} eq 'Delete' ) {
+	if ( $param{func} eq 'Delete' ) {
 		foreach my $id ( ref $param{'article_id'} eq 'ARRAY' ? @{$param{'article_id'}} : $param{'article_id'} ) {
 			my $Article = new openprint::Article($id);
 			if ( ! $Article->can_edit() ) {
@@ -199,7 +200,7 @@ sub _history {
 			} # end if
 			$variable{'error'} .= $Article->delete();
 		} # end foreach id
-	} elsif ( $param{'action'} eq 'Destroy' ) {
+	} elsif ( $param{func} eq 'Destroy' ) {
 		foreach my $id ( ref $param{'article_id'} eq 'ARRAY' ? @{$param{'article_id'}} : $param{'article_id'} ) {
 			my $Article = new openprint::Article($id);
 			if ( ! $Article->can_edit() ) {
@@ -267,7 +268,7 @@ sub edit {
 		$variable{error} .= 'You do not have rights to edit this article.';
 		return;
 	} # end if
-	if ( $param{'func'} eq 'Save' ) {
+	if ( $param{func} eq 'Save' ) {
 		save_article();
 		if ( $variable{'error'} or $variable{'warning'} ) {
 		} else {
