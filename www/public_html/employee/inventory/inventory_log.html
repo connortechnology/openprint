@@ -30,7 +30,7 @@
 -
 			<select name="StartHour" onchange="AjaxLoadContent( 'Log', '_inventory_log.html', LogForm.serialize() );"><? echo ( ssi::make_drop_down( [ map { $_, sprintf('%.2d',$_) } ( 0 .. 23 ) ], $session{'/employee/inventory/inventory_log.html?StartHour'} ); ) ?></select>:
 			<select name="StartMinute" onchange="AjaxLoadContent( 'Log', '_inventory_log.html', LogForm.serialize() );"><? echo ( ssi::make_drop_down( [ map { $_, sprintf('%.2d',$_) } ( 0 .. 59 ) ], $session{'/employee/inventory/inventory_log.html?StartMinute'} ); ) ?></select>
-			<? echo ( ssi::writeButton( $log, $dbh, 'StartToday', 't.gif', 'set_today( LogForm.StartYear, LogForm.StartMonth, LogForm.StartDay );', '', 'T' ); ) ?>
+			<? echo ( ssi::button( 'StartToday', { onclick=>'set_today( LogForm.StartYear, LogForm.StartMonth, LogForm.StartDay );', href=>'', text=>'T' } ); ) ?>
 			to
 		</span>
 		<span class="DateTimeSelector">
@@ -40,7 +40,7 @@
 -
 			<select name="EndHour" onchange="AjaxLoadContent( 'Log', '_inventory_log.html', LogForm.serialize() );"><? echo ( ssi::make_drop_down( [ map { $_, sprintf('%.2d',$_) } ( 0 .. 23 ) ], $session{'/employee/inventory/inventory_log.html?EndHour'} ); ) ?></select>:
 			<select name="EndMinute" onchange="AjaxLoadContent( 'Log', '_inventory_log.html', LogForm.serialize() );"><? echo ( ssi::make_drop_down( [ map { $_, sprintf('%.2d',$_) } ( 0 .. 59 ) ], $session{'/employee/inventory/inventory_log.html?EndMinute'} ); ) ?></select>
-			<? echo ( ssi::writeButton( $log, $dbh, 'EndToday', 't.gif', 'set_today( LogForm.EndYear, LogForm.EndMonth, LogForm.EndDay );', '', 'T' ); ) ?>
+			<? echo ( ssi::button( 'EndToday', { onclick=>'set_today( LogForm.EndYear, LogForm.EndMonth, LogForm.EndDay );', href=>'', text=>'T' } ); ) ?>
 		</span>
 	</p>
 	<p><label>Ins/Outs</label>
@@ -74,12 +74,17 @@
                 ) ?>
             </select>
         </p>
+		<p><label>Show Manifests:</label>
+			<? echo ( input( type=>'cardinal', name=>'manifests_within_days', value=>$session{'/employee/inventory/inventory_log.html?manifests_within_days'} ); ) ?>
+		</p>
 		<p><label>Docket:</label>
-			<input type="text" id="docket" name="docket" onkeyup="this.value=this.value.replace(/\D/g,'');" onkeydown="if(event.keyCode == 13){AjaxLoadContent( 'Log', '_inventory_log.html', LogForm.serialize() );}" />
+			<? echo ( input( type=>'cardinal', name=>'docket', id=>'docket', onkeydown=>q`if(event.keyCode == 13){AjaxLoadContent( 'Log', '_inventory_log.html', LogForm.serialize() );}` ); ) ?>
 		</p>
 		<p class="buttons">
-			<? echo ( ssi::writeButton( $log, $dbh, 'Load', 'load.gif', "LogForm.btnFunction.value='';AjaxLoadContent( 'Log', '_inventory_log.html', LogForm.serialize() );", '', 'Load' ); ) ?>
-			<? echo ( ssi::writeButton( $log, $dbh, 'Download', 'download.gif', "LogForm.btnFunction.value='Download';LogForm.submit();", '', 'Download' ); ) ?>
+			<? echo ( join("\n",
+						ssi::button( 'Load', { onclick=>"LogForm.btnFunction.value='';AjaxLoadContent( 'Log', '_inventory_log.html', LogForm.serialize() );", href=>'', text=>'Load' } ),
+						ssi::button( 'Download', { onclick=>"LogForm.btnFunction.value='Download';LogForm.submit();" } ),
+); ) ?>
 		</p>
 	</fieldset>
 	<fieldset><legend>Results</legend>
