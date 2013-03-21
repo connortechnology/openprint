@@ -483,7 +483,7 @@ sub googlemap_html {
 } # end sub googlemap_html
 
 sub from_ip {
-	my $gi = Geo::IP->open("/var/lib/geoip/GeoLiteCity.dat");
+	my $gi = Geo::IP->open("/usr/share/GeoIP/GeoIP.dat");
 	return if ! $gi;
 	my $record = $gi->record_by_name(@_ ? $_[0] : $ENV{'REMOTE_ADDR'});
 	return if ! $record;

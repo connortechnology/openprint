@@ -31,7 +31,7 @@
 					';
 			$$variable{'Equipment'} = $Equipment;
 			$$variable{'Pricelist'} = $Pricelist;
-			$html .= ssi::include( $ENV{'DOCUMENT_ROOT'}.'/administrator/services/_prices_table_body.html', $variable );
+			$html .= ssi::include( '/administrator/services/_prices_table_body.html', $variable );
 			$html .= '</tbody></table></fieldset><!--Equipment-->';
 		} # end foreach Equipment
 	} # end if prices

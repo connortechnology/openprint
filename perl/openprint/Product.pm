@@ -35,8 +35,8 @@ $serial = 'products_id_seq';
 );
 
 %transforms = (
-    'name' => [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
-    'description' => [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
+    name		=> [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
+    description => [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
 );
 %defaults = (
 	'weight'		=>	undef,

@@ -1,4 +1,4 @@
-<? echo ( include('/includes/error_reporting.html'); ) ?>
+<?include('/includes/error_reporting.html')?>
 <? if ( $$variable{'Quote'}->Products() ) ?>
 <table class="List">
 	<thead>
@@ -24,7 +24,7 @@
 									<td class="price">%5$s</td>
 									<td class="markup">%6$s</td>
 									<td class="newprice">%7$s</td>
-									</tr>', $rowclass, $Product->id(), $Product->description(), 
+									</tr>', $rowclass, $Product->id(), $Product->name() . ' ' . $Product->description() . ( $Product->description() ? '<br/>'.$Product->comments() : $Product->comments() ), 
 									Number::Format::format_number($Product->quantity()), 
 									openprint::Currency::format( $Product->cost() ), 
 									1*$Product->markup().'%', 

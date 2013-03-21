@@ -39,11 +39,11 @@ sub include {
 		$file = $path . $file;
 	} # end if
 	my $content = '';
-	if ( -f $config{SkinPath}.$file ) {
+	if ( -e $config{SkinPath}.$file ) {
 		$content = misc::load_file( $log, $config{SkinPath}.$file );
-	} elsif ( $ENV{DOCUMENT_ROOT} and -f $ENV{DOCUMENT_ROOT}.$file ) {
+	} elsif ( $ENV{DOCUMENT_ROOT} and ( -e ($ENV{DOCUMENT_ROOT}.$file) ) ) {
 		$content = misc::load_file( $log, $ENV{DOCUMENT_ROOT}.$file );
-	} elsif ( $config{DOCUMENT_ROOT} and -f $config{DOCUMENT_ROOT}.$file ) {
+	} elsif ( $config{DOCUMENT_ROOT} and ( -e $config{DOCUMENT_ROOT}.$file ) ) {
 		$content = misc::load_file( $log, $config{DOCUMENT_ROOT}.$file );
 	} else {
 		$content = misc::load_file( $log, $file );
@@ -121,7 +121,7 @@ sub variable_substitution {
 				$log->error( "Eval error of ($1), Reason: " . $@ ) if $@;
 			} elsif ( $command =~ /^checked\s*\(\s*(.*)\s*\)/ms ) {
 				$result .= checked( eval $1 );
-			} elsif ( $command =~ /^include\s*\(\s*'?(.*)'?\s*\)/ms ) {
+			} elsif ( $command =~ /^include\s*\(\s*'?([^'\)]*)'?\s*\)/ms ) {
 				$result .= include( $1, $variable );
 			} else {
 				$result .= $$variable{$command};

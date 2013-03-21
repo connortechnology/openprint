@@ -9,7 +9,7 @@ use vars qw( $debug $table $serial %fields %defaults %transforms %config $log $d
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
 
-$debug = 0;
+$debug = 1;
 
 $table = 'articles';
 $serial = 'articles_id_seq';
@@ -132,7 +132,7 @@ sub summary {
 } # end sub summary
 
 sub can_view {
-	return 1 if ! $_[0]{'id'};
+	return 1 if ! $_[0]{id};
 	my $User;
 	if ( @_ > 1 ) {
 		$User = ref $_[1] eq 'openprint::User' ? $_[1] : new openprint::User( $_[1] );
@@ -142,9 +142,9 @@ sub can_view {
 
 	return 1 if $$User{type} eq 'A';
 	return 1 if ( $$User{id} == $_[0]{created_by} );
-	if ( $_[0]{'published'} ) {
+	if ( $_[0]{published} ) {
 #$openprint::log->debug("Is published");
-		if ( ! $_[0]{'user_type'} ) {
+		if ( ! $_[0]{user_type} ) {
 #$openprint::log->debug("no usertype");
 			# Anyone can see it
 			return 1;
@@ -154,8 +154,9 @@ sub can_view {
 			return 1 if $_[0]{'user_type'} eq 'C' and sets::isin( $$User{type}, ['E','C'] );
 			return 1 if $_[0]{'user_type'} eq 'E' and sets::isin( $$User{type}, ['E'] );
 		} # end if
-	#} else {
-#$openprint::log->debug("not published");
+	} else {
+		$openprint::log->debug("not published");
+		return 0;
 	} # end if
 	my $Privacy = $_[0]->Privacy();
 	return 1 if ! $$Privacy{id};
