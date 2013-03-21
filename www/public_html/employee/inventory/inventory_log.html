@@ -57,6 +57,23 @@
             <input type="checkbox" id="TypeUnknown" name="Type" value="Unknown" <? echo ( 'checked="checked"' if ( ! $session{'/employee/inventory/inventory_log.html?Type'} ) or sets::isin( 'Unknown', split(',', $session{'/employee/inventory/inventory_log.html?Type'} ) ) ) ?> />
             <label class="radio" for="TypeUnknown">Unknown</label>
         </p>
+       <p>
+            <label>Location:</label>
+            <select id="location_id" name="location_id" multiple="multiple" onchange="calc(this.form.name);">
+                <? echo ( 
+                    my @options =  ('All','All','Unknown','Unknown', map { $_->id(), $_->name() } openprint::Location->find( parent_id=>undef, order=>'lower(name)') );
+                    my @selected = split(',', $session{'/employee/inventory/inventory_log.html?location_id'} );
+                    if ( ! @selected ) {
+                        foreach my $L ( openprint::Location::find('parent_id'=>undef, 'order'=>'lower(name)') ) {
+                            next if $L->name() eq 'Missing';
+                            push @selected, $L->id();
+                        } # end foreach $L
+                    } # end if
+                    $session{'/employee/inventory/inventory_log.html?location_id'} = join(',',sets::intersection( @selected, @options ));
+                    return ssi::make_select( \@options, \@selected );
+                ) ?>
+            </select>
+        </p>
 		<p><label>Docket:</label>
 			<input type="text" id="docket" name="docket" onkeyup="this.value=this.value.replace(/\D/g,'');" onkeydown="if(event.keyCode == 13){AjaxLoadContent( 'Log', '_inventory_log.html', LogForm.serialize() );}" />
 		</p>

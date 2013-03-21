@@ -23,7 +23,6 @@ require openprint::project;
 require openprint::Equipment;
 require openprint::service;
 
-require sql;
 require openprint::Equipment;
 use Time::HiRes qw{ time gettimeofday tv_interval }; 
 
