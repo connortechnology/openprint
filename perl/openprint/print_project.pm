@@ -377,7 +377,7 @@ sub summary {
 
 	$project_index = $openprint::param{'ProjectIndex'} if ! $project_index;
 	if ( ! $project_index ) {
-		$variable{Project} = new openprint::Project();
+		$$variable{Project} = new openprint::Project();
 		return;
 	} # end if
 
