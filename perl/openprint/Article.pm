@@ -205,12 +205,13 @@ sub html {
 } # end  sub html
 
 sub summary_html {
-	my $Article = $_[0];
+	my ( $Article, $options ) = @_;
+	$options = {} if ! $options;
 	my @Comments = $Article->Comments();
 	my @Assets = $Article->Assets();
 	my $html = sprintf(q`
 			<div class="Article">
-			<div class="Assets">%7$s</div>
+			<div class="Assets">%6$s</div>
 			<h1><a href="/article/view.html?article_id=%1$d">%2$s</a></h1>
 			<div class="source_content">%3$s</div>
 			<div class="summary">%4$s</div>
@@ -227,7 +228,10 @@ sub summary_html {
 	if ( $Article->summary() and $Article->summary() ne $Article->body() ) {
 		$html .= sprintf('<a class="readmore" href="/article/view.html?article_id=%1$d">Read more...</a><br/>', $Article->id() );
 	} # end if
-	$html .= sprintf(q`<div class="comments">This article has %s.</div>`, ( @Comments == 1 ? '1 comment' : @Comments . ' comments' ) );
+	if ( (!$$options{'show_no_comments'}) and (@Comments == 0) ) {
+	} else {
+		$html .= sprintf(q`<div class="comments">This article has %s.</div>`, ( @Comments == 1 ? '1 comment' : @Comments . ' comments' ) );
+	} # end if
 	$html .= '</div>';
 	return $html;
 } # end sub summary_html
