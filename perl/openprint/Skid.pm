@@ -52,6 +52,9 @@ $serial = 'skid_id_seq';
 );
 
 sub find {
+	shift @_ if $_[0] eq 'openprint::Skid';
+	shift @_ if ref $_[0] eq 'openprint::Skid';
+
 	my %params = @_;
 	my @values;
 
