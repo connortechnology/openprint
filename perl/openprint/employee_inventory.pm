@@ -179,6 +179,8 @@ sub skids {
 				'Docket','fsc_code','empty', 'withrfid','withoutrfid','location_id','verification_code', 'allocated','contents','hasmanifest',
 				'condition_id',
 				) );
+	$session{'/employee/inventory/skids.html?hasmanifest'} = '' if ! defined $session{'/employee/inventory/skids.html?hasmanifest'};
+	$session{'/employee/inventory/skids.html?Type'} = '' if ! defined $session{'/employee/inventory/skids.html?Type'};
  
 } # end sub skids
 
