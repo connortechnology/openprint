@@ -37,7 +37,7 @@ LoadContent( 'Log', '_inventory_log.html', LogForm.serialize() );
                     my @options =  ('All','All','Unknown','Unknown', map { $_->id(), $_->name() } openprint::Location->find( parent_id=>undef, order=>'lower(name)') );
                     my @selected = split(',', $session{'/employee/inventory/inventory_log.html?location_id'} );
                     if ( ! @selected ) {
-                        foreach my $L ( openprint::Location::find('parent_id'=>undef, 'order'=>'lower(name)') ) {
+                        foreach my $L ( openprint::Location->find( parent_id=>undef, order=>'lower(name)') ) {
                             next if $L->name() eq 'Missing';
                             push @selected, $L->id();
                         } # end foreach $L

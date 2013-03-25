@@ -71,7 +71,19 @@ sub delete {
 } # end sub delete
 
 sub Condition {
-	return new openprint::InventoryCondition( $_[0]{condition_id} );
+	if ( $_[0]{condition_id} ) {
+		return new openprint::InventoryCondition( $_[0]{condition_id} );
+	} elsif ( $_[0]{skid_ids} and ( @{$_[0]{skid_ids}} == 1 ) ) {
+		my @Skids = $_[0]->Skids();
+		my $Skid = $Skids[0];
+		if ( $Skid and $Skid->id() ) {
+		my $C = $Skid->Content( $_[0]->Paper() );
+			if ( $C ) {
+				return $C->Condition();
+			} # end if
+		} # end if
+	} # end if
+	return new openprint::InventoryCondition();
 } # end sub Condition
 
 sub Paper {

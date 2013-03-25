@@ -2,9 +2,9 @@
 <? echo (
 	return '';
 	my $html='';
-	my @Logs = openprint::logRecord::find(
+	my @Logs = openprint::Log->find(
 		'ip_address'=>$$variable{'Host'}->ip(),
-		'action_type in'	=> [ 200, 201 ],
+		'action_id in'	=> [ 200, 201 ],
 		ssi::date_filter( '/employee/it/license.html?log_created_on_start', 'date_time >=' ),
 		ssi::date_filter( '/employee/it/license.html?log_created_on_end', 'date_time <=' ),
 		'order'=>'date_time DESC',
