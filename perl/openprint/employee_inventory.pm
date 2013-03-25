@@ -1749,7 +1749,7 @@ sub _skids_results {
 				'last_seen_start_year','last_seen_start_month','last_seen_start_day',
 				'last_seen_end_year','last_seen_end_month','last_seen_end_day',
 				'Docket','fsc_code','empty', 'withrfid','withoutrfid','location_id','verification_code', 'allocated','contents',
-				'hasmanifest','condition_id',
+				'hasmanifest','condition_id', 'skid_id', 'rfid_id', 'manufacturers_id',
 				) );
 }
 

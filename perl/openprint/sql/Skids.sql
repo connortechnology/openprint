@@ -13,6 +13,7 @@ CREATE TABLE Skids (
 	created_by_id	INTEGER NOT NULL,  FOREIGN KEY (created_by_id) REFERENCES Users (Index),
 	owner_id		INTEGER NOT NULL, FOREIGN KEY (owner_id) REFERENCES Company (Index),
 	type			TEXT,
+	manufacturers_id	TEXT,
 	PRIMARY KEY (id)
 );
 

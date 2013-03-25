@@ -19,34 +19,36 @@ require openprint::Manifest;
 require openprint::ManifestContent;
 require openprint::InventoryCondition;
 
-$debug = 0;
+$debug = 1;
 
 $table = 'Skids';
 $serial = 'skid_id_seq';
 %fields = (
-	'id'			=>	'id',
-	'location_id'	=>	'location_id',
-	'created_on'	=>	'created_on',
-	'created_by_id'	=>	'created_by_id',
-	'owner_id'		=>	'owner_id',
-	'updated_on'	=>	'updated_on',
-	'updated_by'	=>	'updated_by',
-	'used'			=>	'used',
-	'rfidtag_id'	=>	'rfidtag_id',
-	'type'			=>	'type',
-	'deleted'		=>	'deleted',
+	id				=>	'id',
+	location_id		=>	'location_id',
+	created_on		=>	'created_on',
+	created_by_id	=>	'created_by_id',
+	owner_id		=>	'owner_id',
+	updated_on		=>	'updated_on',
+	updated_by		=>	'updated_by',
+	used			=>	'used',
+	rfidtag_id		=>	'rfidtag_id',
+	type			=>	'type',
+	deleted			=>	'deleted',
+	manufacturers_id	=>	'manufacturers_id',
 );
 
 %transforms = (
-	'deleted'	=>	[ 's/[^01]//g' ],
+	deleted	=>	[ 's/[^01]//g' ],
 );
 %defaults = (
-	'location_id'	=>	undef,
-	'rfidtag_id'	=>	undef,
-	'updated_on'	=>	'NOW()',
-	'created_on'	=>	'NOW()',
-	'deleted'		=>	0,
-	'type'		=>	undef,
+	location_id	=>	undef,
+	rfidtag_id	=>	undef,
+	updated_on	=>	'NOW()',
+	created_on	=>	'NOW()',
+	deleted		=>	0,
+	type		=>	undef,
+	manufacturers_id	=>	undef,
 );
 
 sub find {
@@ -99,6 +101,18 @@ sub find {
 	if ( $params{'rfidtag_id'} ) {
 		$sql .= ' AND rfidtag_id=?';
 		push @values, $params{'rfidtag_id'};
+	} # end if
+	if ( $params{'rfidtag_id ilike'} ) {
+		$sql .= ' AND rfidtag_id ilike ?';
+		push @values, $params{'rfidtag_id ilike'};
+	} # end if
+	if ( $params{'manufacturers_id'} ) {
+		$sql .= ' AND manufacturers_id=?';
+		push @values, $params{'manufacturers_id'};
+	} # end if
+	if ( $params{'manufacturers_id ilike'} ) {
+		$sql .= ' AND manufacturers_id ilike ?';
+		push @values, $params{'manufacturers_id ilike'};
 	} # end if
 	if ( $params{'created_on_start'} and $params{'created_on_end'} ) {
 		$sql .= ' AND ( created_on BETWEEN ? AND ? )';

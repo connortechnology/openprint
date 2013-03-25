@@ -44,7 +44,7 @@ table .Condition {
 #SkidResults table .RFID,
 #Allocations table .RFID,
 #CurrentInventory table .RFID {
-	width: 95px;
+	width: 75px;
 }
 
 input#quantity {
