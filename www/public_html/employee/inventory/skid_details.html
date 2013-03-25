@@ -1,5 +1,5 @@
-<script type="text/javascript" src="/javascripts/paper.js"></script>
-<script type="text/javascript" src="/employee/inventory/skid_details.js"></script>
+<script type="text/javascript" src="<?hash_link(/javascripts/paper.js)?>"></script>
+<script type="text/javascript" src="<?hash_link(/employee/inventory/skid_details.js)?>"></script>
 <!--#include virtual="/includes/error_reporting.html"-->
 <? if ( $$variable{'Skid'}->deleted() ) ?>
 <div class="error">Warning: This skid has been deleted.</div>
@@ -7,7 +7,8 @@
 
 <form id="jump" name="jump" method="get" action="skid_details.html">
 	<fieldset class="filters"><legend>Choose Skid</legend>
-		<p>
+		<ul>
+		<li>
 			<label for="skid_id">Skid ID #</label>
 			<input type="number" id="skid_id" name="skid_id" value="<? echo ( $$variable{'Skid'}->id() ) ?>" onchange="change_handler(this);" onkeypress="return input_handler(this, event);" onkeydown="this.form.rfidtag_id.value='';this.form.rfidtag_hex.value='';if(event.keyCode == 13){$('jump').submit();}" />
 			<? echo ( join('',
@@ -15,8 +16,8 @@
 				ssi::button( 'Previous', { 'onclick'=>q`if(!jump.skid_id.value){jump.skid_id.focus();} else {jump.btnFunction.value='Previous';jump.submit();}`,'text'=>'&lt;&lt;' } ),
 				ssi::button( 'Next', { 'onclick'=>q`if(!jump.skid_id.value){jump.skid_id.focus();} else {jump.btnFunction.value='Next';jump.submit();}`,'text'=>'&gt;&gt;' } ),
 			); ) ?>
-		</p>
-		<p>
+		</li>
+		<li>
 			<label for="rfidtag_id">RFID Tag ID #</label>
 			<input type="number" id="rfidtag_id" name="rfidtag_id" onkeyup="this.value=this.value.replace(/\s/,'');" onkeypress="return input_handler( this, event);" onkeydown="this.form.skid_id.value='';this.form.rfidtag_hex.value='';if(event.keyCode == 13){$('jump').submit();}" value="<?rfidtag_id?>" />
 			Hex:
@@ -25,8 +26,12 @@
 			<? if ( ! $$variable{'Skid'}->id() and $param{'rfidtag_id'} ) ?>
 				<? echo ( return join('<br/>', map { sprintf('<a href="/employee/inventory/rfidtag_details.html?rfidtag_id=%2$s">%2$s</a> <a href="/employee/inventory/skid_details.html?skid_id=%1$d">%1$d</a>', $_->skid_id(), $_->id() ); }  openprint::RFIDTag::find('id_like'=>'%'.$param{'rfidtag_id'}.'%','type'=>'Skid') ); ) ?>
 			<? endif ( ! $$variable{'Skid'}->id() and $param{'rfidtag_id'} ) ?>
-		</p>
-		
+		</li>
+		<li>
+			<label for="manufacturers_id">Manufacturers ID</label>
+			<? echo ( input( type=>'text', name=>'manufacturers_id', onkeypress=>'return input_handler(this,event);', onkeydown=>q`this.form.skid_id.value='';this.form.rfidtag_id.value='';this.form.rfidtag_hex.value='';if(event.keyCode==13){$('jump').submit();}`, value=>$$variable{manufacturers_id} ); ) ?>
+		</li>
+		</ul>
 	</fieldset>
 	<input type="hidden" name="btnFunction"/>
 </form>
@@ -50,9 +55,10 @@
 		<? endif ( @{$$variable{'skid_ids'}} > 1 ) ?>
 
 		<div class="column">
+			<ul>
 		<? if ( $$variable{'Skid'}->id() ) ?>
-			<p>
-				<label>Created:</label>
+			<li>
+				<label>Created</label>
 				<? echo ( 
 					my $html;
 					if ( $$variable{'Skid'}->created_on() ) {
@@ -61,9 +67,9 @@
 					} # end if
 					return $html;
 				) ?>
-			</p>
-			<p>
-				<label>Last Updated:</label>
+			</li>
+			<li>
+				<label>Last Updated</label>
 				<? echo (
 					my $html;
 					if ( $$variable{'Skid'}->updated_on() ) {
@@ -72,25 +78,29 @@
 					} # end if
 					return $html;
 				) ?>
-			</p>
+			</li>
 		<? else ( $$variable{'Skid'}->id() ) ?>
-			<p><label># of skids to add:</label>
+			<li><label># of skids to add</label>
 				<input type="number" name="skid_quantity" value="<? echo ( $param{skid_quantity} ) ?>" />
-			</p>
+			</li>
 		<? endif ( $$variable{'Skid'}->id() ) ?>
-			<p><label>RFID Tag:</label>
+			<li><label>RFID Tag</label>
 				<input type="text" id="rfidtag_id" name="rfidtag_id" value="<? echo ( $$variable{'Skid'}->rfidtag_id() ) ?>" />
 				<? if ( $$variable{'Skid'}->rfidtag_id() ) ?>
-					<a href="rfidtag_details.html?rfidtag_id=<? echo ( $$variable{'Skid'}->rfidtag_id() ) ?>">View Tag</a><br/>
+					<? echo ( button( 'ViewTag', { href=>'rfidtag_details.html?rfidtag_id='.$$variable{Skid}->rfidtag_id(), text=>'View Tag' } ); ) ?><br/>
 					Last seen: <? echo ( Date::Format::time2str($config{'DateTimeFormat'}, Date::Parse::str2time($$variable{'Skid'}->RFIDTag()->updated_on()) ); ) ?>
 				<? endif ( $$variable{'Skid'}->rfidtag_id() ) ?>
-			</p>
-			<p><label>Verification:</label>
+			</li>
+			<li>
+				<label for="manufacturers_id">Manufacturers ID</label>
+				<? echo ( input( type=>'text', name=>'manufacturers_id', onkeypress=>'return input_handler(this,event);', value=>$$variable{Skid}->manufacturers_id() ); ) ?>
+			</li>
+			<li><label>Verification</label>
 				<input type="text" id="verification_code" name="verification_code" onchange="change_handler(this);" onkeypress="return input_handler(this,event);" value="<? echo ( $session{'/employee/inventory/skid_details.html?verification_code'} ) ?>" />
-			<? echo ( ssi::writeButton( $log, $dbh, 'vpopulate', '', "f1.verification_code.value='".Date::Format::time2str( '%Y', time )."';", '', 'Verification:' ); ) ?>
-			</p>
-			<p>
-				<label>Location:</label>
+			<? echo ( button( 'vpopulate', { onclick=>"f1.verification_code.value='".Date::Format::time2str( '%Y', time )."';", text=>'Verification:' } ); ) ?>
+			</li>
+			<li>
+				<label>Location</label>
 				<select id="ddmLocation" name="ddmLocation">
 					<option value="">select</option>
 					<? echo ( 
@@ -102,10 +112,10 @@
 				#ssi::button( 'showLocation', { onclick=>"open_window('/ekahau.png?skid_id=$$variable{Skid}{id}','Location','width=640,height=640');", href=>'', text=>'Show Location' } ),
 				ssi::button( 'Map', { 'onclick'=>"open_window('/maps/index.html?parent&amp;location_id='+get_ddm_value(f1.ddmLocation)+'&amp;selected_id='+get_ddm_value(f1.ddmLocation)+'&amp;skid_id=$$variable{Skid}{id}','Location','width=400,height=400,scrollbars=yes');" } ),
 				); ) ?>
-			</p>
+			</li>
 <? if ( $$variable{'Skid'}->id() ) ?>
-			<p>
-				<label>Manifest:</label>
+			<li>
+				<label>Manifest</label>
 				<? echo (
 					my $html = '';
 					foreach my $MC ( openprint::ManifestContent->find('skid_id'=>$$variable{'Skid'}->id() ) ) {
@@ -113,12 +123,13 @@
 					} # end foreach MC
 					return $html;
 				) ?>
-			</p>
+			</li>
 <? endif ( $$variable{'Skid'}->id() ) ?>
-			<p>
-				<label for="Docket">Docket:</label>
-				<input type="number" id="Docket" name="Docket" value="<? echo ( $param{'Docket'} ) ?>" />
-			</p>
+			<li>
+				<label for="Docket">Docket</label>
+				<? echo ( input( type=>'cardinal', id=>'Docket', name=>'Docket', value=>$param{Docket} ); ) ?>
+			</li>
+			</ul>
 			<? if ( ! $$variable{'Skid'}->id() ) ?>
 			<p class="buttons">
 			<? echo ( ssi::button( 'saveLeft', { onclick=>"if( check_inputs( f1 ) ){f1.btnFunction.value='Save';f1.submit();};", href=>'', text=>'Save' } ); ) ?>

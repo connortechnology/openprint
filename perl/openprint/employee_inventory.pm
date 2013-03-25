@@ -614,11 +614,11 @@ sub save_skid {
 	$qty = $param{'Quantity'} if ! defined $qty;
 
 	$Skid->rfidtag_id( $param{'rfidtag_id'} ) if exists $param{'rfidtag_id'};
-$openprint::log->debug("RFID: $param{'rfidtag_id'} $$Skid{'rfidtag_id'}");
 	$Skid->location_id( $param{'location_id'} ) if $param{'location_id'};
 	$Skid->location_id( $param{'ddmLocation'} ) if $param{'ddmLocation'};
 	$Skid->location( $param{'txtLocation'} ) if $param{'txtLocation'};
 	$Skid->id( $param{'skid_id'} ) if $param{'skid_id'} and ! $Skid->id();
+	$Skid->manufacturers_id( $param{manufacturers_id} );
 	if ( my $error = $Skid->save() ) {
 		$variable{'error'} .= $error;
 		return;

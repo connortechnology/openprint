@@ -44,7 +44,7 @@ table .Condition {
 #SkidResults table .RFID,
 #Allocations table .RFID,
 #CurrentInventory table .RFID {
-	width: 75px;
+	width: 95px;
 }
 
 input#quantity {
@@ -88,4 +88,8 @@ padding-left: 100px;
 
 fieldset p.size input[type="number"] {
 	width: 75px;
+}
+table .ManufacturersID {
+	width: 140px;
+	text-align: left;
 }
