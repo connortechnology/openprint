@@ -32,7 +32,6 @@ function calc() {
         </li>
        <li>
             <label>Location</label>
-            <select id="location_id" name="location_id" multiple="multiple" onchange="calc();">
                 <? echo ( 
                     my @options =  ('All','All','Unknown','Unknown', map { $_->id(), $_->name() } openprint::Location->find( parent_id=>undef, order=>'lower(name)') );
                     my @selected = split(',', $session{'/employee/inventory/inventory_log.html?location_id'} );
@@ -43,9 +42,8 @@ function calc() {
                         } # end foreach $L
                     } # end if
                     $session{'/employee/inventory/inventory_log.html?location_id'} = join(',',sets::intersection( @selected, @options ));
-                    return ssi::make_select( \@options, \@selected );
+                    return ssi::select( \@options, \@selected, { id=>'location_id',name=>'location_id', multiple=>1, onchange=>'calc();', size=>@options } );
                 ) ?>
-            </select>
         </li>
 		<li><label>Show Manifests</label>
 			<? echo ( radio( 'show_manifests', [ 1, 'Yes', 0, 'No' ], $session{'/employee/inventory/inventory_log.html?show_manifests'}, { onclick=>'calc();' } ) ) ?>
@@ -59,8 +57,8 @@ days
 		</ul>
 		<p class="buttons">
 			<? echo ( join("\n",
-						ssi::button( 'Load', { onclick=>"LogForm.btnFunction.value='';calc();" } ),
-						ssi::button( 'Download', { onclick=>"LogForm.btnFunction.value='Download';LogForm.submit();" } ),
+						ssi::button( 'Load', { onclick=>"calc();" } ),
+						ssi::button( 'Download', { onclick=>q`$('LogForm').btnFunction.value='Download';$('LogForm').submit();` } ),
 ); ) ?>
 		</p>
 	</fieldset>
