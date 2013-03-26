@@ -344,22 +344,14 @@ sub insert_scanning_proof {
 
 sub insert_press_proof {
 	my ( $Project, $sig_specs, $proof_index, $qty_index, $specs ) = @_;
+	$$sig_specs{SideOneColours} = [openprint::Estimating::Printing::get_colours( $sig_specs, 'SideOne' )] if ! $$sig_specs{SideOneColours};
+	$$sig_specs{SideTwoColours} = [openprint::Estimating::Printing::get_colours( $sig_specs, 'SideTwo' )] if ! $$sig_specs{SideTwoColours};
 	my $quantity = 0;
 	if ( sets::isin( $$sig_specs{'ddmRunStyle'.$qty_index}, ['Web','Sheet Work','Perfecting'] ) ) {
-		if ( ( $$sig_specs{SideOneColours} and @{$$sig_specs{SideOneColours}} ) or openprint::Estimating::Printing::get_colours( $sig_specs, 'SideOne' ) ) {
-			$quantity += 1;
-		} # end if
-		if ( ( $$sig_specs{SideTwoColours} and @{$$sig_specs{SideTwoColours}} ) or openprint::Estimating::Printing::get_colours( $sig_specs, 'SideTwo' ) ) {
-			$quantity += 1;
-		} # end if
+		$quantity += 1 if @{$$sig_specs{SideOneColours}};
+		$quantity += 1 if @{$$sig_specs{SideTwoColours}};
 	} else {
-		if ( 
-				( 	( $$sig_specs{SideOneColours} and @{$$sig_specs{SideOneColours}} ) or openprint::Estimating::Printing::get_colours( $sig_specs, 'SideOne' ) )
-				or 
-				( ( $$sig_specs{SideTwoColours} and @{$$sig_specs{SideTwoColours}} ) or openprint::Estimating::Printing::get_colours( $sig_specs, 'SideTwo' ) )
-				) {
-					$quantity += 1;
-		} # end if
+		$quantity += 1 if @{$$sig_specs{SideOneColours}} or @{$$sig_specs{SideTwoColours}};
 	} # end if
 	insert_new_proof( $specs, $proof_index, $$sig_specs{'SignatureIndex'}, $quantity, undef, undef, 'PressProof', $qty_index );
 } # end sub insert_press_proof
@@ -420,22 +412,15 @@ sub insert_layout_proof {
 		return;
 	} # end if
 
+	$$sig_specs{SideOneColours} = [openprint::Estimating::Printing::get_colours( $sig_specs, 'SideOne' )] if ! $$sig_specs{SideOneColours};
+	$$sig_specs{SideTwoColours} = [openprint::Estimating::Printing::get_colours( $sig_specs, 'SideTwo' )] if ! $$sig_specs{SideTwoColours};
+
 	my $quantity = 0;
 	if ( sets::isin( $$Imposition{'runstyle'}, ['Web','Sheet Work', 'Perfecting'] ) ) {
-		if ( ( $$sig_specs{SideOneColours} and @{$$sig_specs{SideOneColours}} ) or openprint::Estimating::Printing::get_colours( $sig_specs, 'SideOne' ) ) {
-			$quantity += 1;
-		} # end if
-		if ( ( $$sig_specs{SideTwoColours} and @{$$sig_specs{SideTwoColours}} ) or openprint::Estimating::Printing::get_colours( $sig_specs, 'SideTwo' ) ) {
-			$quantity += 1;
-		} # end if
+		$quantity += 1 if @{$$sig_specs{SideOneColours}};
+		$quantity += 1 if @{$$sig_specs{SideTwoColours}};
 	} else {
-		if ( 
-				( 	( $$sig_specs{SideOneColours} and @{$$sig_specs{SideOneColours}} ) or openprint::Estimating::Printing::get_colours( $sig_specs, 'SideOne' ) )
-				or 
-				( ( $$sig_specs{SideTwoColours} and @{$$sig_specs{SideTwoColours}} ) or openprint::Estimating::Printing::get_colours( $sig_specs, 'SideTwo' ) )
-				) {
-			$quantity += 1;
-		} # end if
+		$quantity += 1 if @{$$sig_specs{SideOneColours}} or @{$$sig_specs{SideTwoColours}};
 	} # end if
 
 	insert_new_proof( $specs, $proof_index, $$sig_specs{'SignatureIndex'}, $quantity, $Imposition->stock_width(), $Imposition->stock_height(), $default_proof_type, $qty_index );
