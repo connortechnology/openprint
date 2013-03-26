@@ -60,6 +60,7 @@
 				my @Types = openprint::Manifest_Content_Type->find(
 						manifest_id=>[ map { $_->id() } @Manifests ],
 						paper_id=>$PI->paper_id(),
+						order	=>	'manifest_id',
 						);
 				if ( @Types ) {
 				foreach my $Type ( @Types ) {
@@ -68,8 +69,10 @@
 						type_id => $$Type{id},
 						);
 
-					$html .= sprintf('<tr%1$s><td>Manifest:</td><td colspan="3"><a href="/employee/inventory/manifest.html?manifest_id=%2$d">%3$s</a></td><td class="Quantity">%4$d</td><td colspan="5">&nbsp;</td></tr>',
-							$rowclass, $Type->manifest_id(), $Type->Manifest()->name(), misc::sum( map { $_->quantity() } @Contents ) );
+					$html .= sprintf('<tr%1$s><td>%5$s</td><td>Manifest:</td><td colspan="2"><a href="/employee/inventory/manifest.html?manifest_id=%2$d">%3$s</a></td><td class="Quantity">%4$d</td><td colspan="5">&nbsp;</td></tr>',
+							$rowclass, $Type->manifest_id(), $Type->Manifest()->name(), misc::sum( map { $_->quantity() } @Contents ),
+							format_datetime( $Type->Manifest()->created_on() ),
+							);
 				} # end foreach Type
 				} # end if
 
