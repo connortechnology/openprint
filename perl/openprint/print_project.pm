@@ -307,7 +307,10 @@ sub summary {
 	$log->debug("************************* START OF PROJECT SUMMARY **********************************");
 
 	$project_index = $param{'ProjectIndex'} if ! $project_index;
-	return if ! $project_index;
+	if ( ! $project_index ) {
+		$$variable{Project} = new openprint::Project();
+		return;
+	} # end if
 
 	my $order_id = $param{'Order_Id'};
 	

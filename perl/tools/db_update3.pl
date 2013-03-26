@@ -354,6 +354,7 @@ my %config_actions = (
 	'Login'		=>	2,
 	'Logout'	=>	3,
 	'Service Copy'	=>	27,
+	'Host blacklisted'	=>	99,
 	'Host online'	=>	100,
 	'Host offline'	=>	101,
 	'Host rebooted'	=>	102,

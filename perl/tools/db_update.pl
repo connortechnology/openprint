@@ -1066,6 +1066,9 @@ if ( ! sets::isin( 'skids', \@tables ) ) {
 		if ( ! exists $$data{'deleted'} ) {
 			$dbh->do('alter table skids add deleted BOOLEAN NOT NULL default false');
 		} # end if
+		if ( ! exists $$data{'manufacturers_id'} ) {
+			$dbh->do('alter table skids add manufacturers_id TEXT');
+		} # end if
 	} # end if
 } # end if 1456
 

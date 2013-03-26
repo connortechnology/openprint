@@ -1,14 +1,16 @@
 <? echo (
 	my $html = '';
 	if ( $variable{'error'} ) {
-		return qq`<script type="text/javascript">alert('$$variable{error}');</script>`;
+		$html .= qq`<script type="text/javascript">alert('$$variable{error}');</script>`;
+		delete $variable{error};
 	} 
 	if ( $$variable{'C'} ) {
 		my $C = $$variable{'C'};
 		my $Paper = $C->Type()->Paper();
-		my $tag_id = $C->Skid()->rfidtag_id();
+		my $Skid = $C->Skid();
+		my $tag_id = $Skid->rfidtag_id();
 		my $error;
-		my @SkidContents = $C->Skid()->Contents();
+		my @SkidContents = $Skid->Contents();
 		if ( @SkidContents > 1 ) {
 			$error = 'More than 1 stock on skid.';
 		} elsif ( @SkidContents and ( $SkidContents[0]->paper_id() != $$variable{'Type'}->paper_id() ) ) {
@@ -18,7 +20,18 @@
 		my $id = $$variable{'type_id'}.'-'.$$C{id};
 			
 		$html .= sprintf('<tr id="tr-%1$d"><td class="RFID"><a href="/employee/inventory/rfidtag_details.html?rfidtag_id=%2$s">%2$s</a></td>', $C->id(), $tag_id );
-		$html .= sprintf('<td class="Skid"><a href="/employee/inventory/skid_details.html?skid_id=%2$d">%2$d</a></td>', $C->id(), $C->skid_id() );
+		$html .= sprintf('<td class="Skid"><a href="/employee/inventory/skid_details.html?skid_id=%1$d">%1$d</a></td>', $C->skid_id() );
+	
+		$html .= '<td class="ManufacturersID">';
+		if ( $Skid->manufacturers_id() ) {
+			$html .= sprintf('<a href="/employee/inventory/skid_details.html?skid_id=%1$d">%2$s</a></td>', $C->skid_id(), $Skid->manufacturers_id() );
+		} else {
+			$html .= ssi::input( type=>'text', 
+				id		=>	'manufacturers_id-'.$id,
+				name	=>	'manufacturers_id-'.$id,
+				value	=>	$param{'manufacturers_id-'.$id},
+				).'</td>';
+		} # end if
 		$html .= '<td class="Docket">'.ssi::input( type=>'cardinal', 
 			id		=>	'docket-'.$id,
 			name	=>	'docket-'.$id,

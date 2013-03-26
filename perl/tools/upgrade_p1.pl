@@ -63,6 +63,8 @@ if ( ! $path ) {
 `chmod +x $lib_path/tools/db_update.pl`;
 print "upgrading structures 1...\n";
 `$lib_path/tools/db_update.pl $dst_db point-one point-one ` or $log->error($!);
+print "upgrading folding...\n";
+`$lib_path/tools/fold_update.pl $dst_db point-one point-one ` or $log->error($!);
 print "upgrading structures 2...\n";
 `$lib_path/tools/db_update2.pl $dst_db point-one point-one ` or $log->error($!);
 print "upgrading structures 3...\n";

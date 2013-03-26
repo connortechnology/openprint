@@ -17,7 +17,7 @@
 			<select name="CSR" size="1" onchange="new Ajax.Updater('company_id', '/includes/_company_ddm.html', { parameters: { salesrep_id: get_ddm_value(this), selected_id: get_ddm_value($('company_id')) } } );">
 			<? echo (
 					my @options = ( '', 'All' );
-					push @options, map { $_->id(), $_->name() } openprint::User::find('type'=>['E','A'], 'usergroup'=>'Sales', 'order'=>'lower(strfirstname),lower(strlastname)');
+					push @options, map { $_->id(), $_->name() } openprint::User->find( type=>['E','A'], 'usergroup any'=>'Sales', order=>'lower(firstname),lower(lastname)');
 					return ssi::make_drop_down( \@options, $session{'/employee/reports/project_performance.html?CSR'} );
 					) ?>
 
@@ -38,7 +38,7 @@
 			<select name="estimator">
 			<? echo (
 					my @options = ( '', 'All', 'All Employee', 'All Employee', 'Non Employee', 'Non Employee' );
-					push @options, map { $_->id(), $_->name() } openprint::User::find('type'=>['E','A'], 'usergroup'=>'Sales', 'order'=>'lower(strfirstname),lower(strlastname)');
+					push @options, map { $_->id(), $_->name() } openprint::User->find( type=>['E','A'], 'usergroup any'=>'Sales', order=>'lower(firstname),lower(lastname)');
 					return ssi::make_drop_down( \@options, $session{'/employee/reports/project_performance.html?Estimator'} );
 					) ?>
 			</select>
@@ -48,7 +48,7 @@
 			<select name="estimator_exclude" multiple="multiple">
 			<? echo (
 					my @options = ( '', 'None' );
-					push @options, map { $_->id(), $_->name() } openprint::User::find('type'=>['E','A'], 'usergroup'=>'Sales', 'order'=>'lower(strfirstname),lower(strlastname)');
+					push @options, map { $_->id(), $_->name() } openprint::User->find( type=>['E','A'], 'usergroup any'=>'Sales', order=>'lower(firstname),lower(lastname)');
 					return ssi::make_drop_down( \@options, $session{'/employee/reports/project_performance.html?estimator_exclude'} );
 					) ?>
 			</select>
