@@ -32,7 +32,7 @@
 			next if $Paper->type() and ! sets::isin( $Paper->type(), split(',', $session{$url.'?Type'} ) );
 			next if ( ! $Paper->type() ) and ! sets::isin( 'Unknown', split(',',  $session{$url.'?Type'} ) );
 			my $Skid = $PI->Skid();
-			next if $session{$url.'?location_id'} and $session{$url.'?location_id'} != $Skid->location_id();
+			next if $session{$url.'?location_id'} and ! sets::isin( $Skid->location_id(), [ split(',', $session{$url.'?location_id'} ) ] );
 			
 			$html .= sprintf( '<tr%1$s><td class="DateTime">%2$s</td><td class="Skid"><a href="skid_details.html?skid_id=%3$d">%3$d</a></td><td class="RFID">%4$s</td><td class="paper_name"><a href="paper_details.html?paper_id=%5$d">%6$s</a></td><td class="Quantity">%7$d</td><td class="Quantity">%8$s</td><td class="Quantity">%9$d</td><td class="Location">%10$s</td><td class="Docket">%11$s</td><td class="Comment">%12$s</td></tr>',
 				$rowclass,
