@@ -60,20 +60,46 @@
 				my @Types = openprint::Manifest_Content_Type->find(
 						manifest_id=>[ map { $_->id() } @Manifests ],
 						paper_id=>$PI->paper_id(),
+						'total_quantity_>=' =>	( $total < 0 ? -1*($total+1000) : $total-1000 ),
+						'total_quantity_<=' =>	( $total < 0 ? -1*($total-1000) : $total+1000 ),
 						order	=>	'manifest_id',
 						);
-				if ( @Types ) {
-				foreach my $Type ( @Types ) {
-				my @Contents = openprint::ManifestContent->find(
+				if ( ! @Types ) {
+					@Types = openprint::Manifest_Content_Type->find(
 						manifest_id=>[ map { $_->id() } @Manifests ],
-						type_id => $$Type{id},
+						'total_quantity_>=' =>	( $total < 0 ? -1*($total+1000) : $total-1000 ),
+						'total_quantity_<=' =>	( $total < 0 ? -1*($total-1000) : $total+1000 ),
+						order	=>	'manifest_id',
 						);
+				} # end if
+				if ( ! @Types ) {
+					@Types = openprint::Manifest_Content_Type->find(
+						manifest_id=>[ map { $_->id() } @Manifests ],
+						order	=>	'manifest_id',
+						);
+				} # end if
 
-					$html .= sprintf('<tr%1$s><td>%5$s</td><td>Manifest:</td><td colspan="2"><a href="/employee/inventory/manifest.html?manifest_id=%2$d">%3$s</a></td><td class="Quantity">%4$d</td><td colspan="5">&nbsp;</td></tr>',
-							$rowclass, $Type->manifest_id(), $Type->Manifest()->name(), misc::sum( map { $_->quantity() } @Contents ),
-							format_datetime( $Type->Manifest()->created_on() ),
-							);
-				} # end foreach Type
+				if ( @Types ) {
+					# Foudn a match
+					my $matched;
+					foreach my $Type ( @Types ) {
+						my @Contents = openprint::ManifestContent->find(
+								manifest_id=>[ map { $_->id() } @Manifests ],
+								type_id => $$Type{id},
+								);
+						my $manifest_total = misc::sum( map { $_->quantity() } @Contents );
+						if ( $manifest_total==$total ) {
+							$matched = $Type;
+						} # end if
+						my $class = ' class="'.($manifest_total==$total?'matched':''). ( $rowclass ? ' colRow' : '' ).'"';
+						
+
+						$html .= sprintf('<tr%1$s><td>%5$s</td><td>Manifest:</td><td><a href="/employee/inventory/manifest.html?manifest_id=%2$d">%3$s</a></td><td class="Paper"><a href="/employee/inventory/paper.html?paper_id=%6$d">%7$s</a></td><td class="Quantity">%4$d</td><td colspan="5">&nbsp;</td></tr>',
+								$class, $Type->manifest_id(), $Type->Manifest()->name(), $manifest_total,
+								format_datetime( $Type->Manifest()->created_on() ),
+								$Type->paper_id(), $Type->Paper()->to_string(),
+								);
+					} # end foreach Type
 				} # end if
 
 			} # end if show manifests
