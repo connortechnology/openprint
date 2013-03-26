@@ -42,7 +42,7 @@ function calc() {
                         } # end foreach $L
                     } # end if
                     $session{'/employee/inventory/inventory_log.html?location_id'} = join(',',sets::intersection( @selected, @options ));
-                    return ssi::select( \@options, \@selected, { id=>'location_id',name=>'location_id', multiple=>1, onchange=>'calc();', size=>@options } );
+                    return ssi::select( \@options, \@selected, { id=>'location_id',name=>'location_id', multiple=>1, onchange=>'calc();', size=>scalar @options } );
                 ) ?>
         </li>
 		<li><label>Show Manifests</label>
