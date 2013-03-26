@@ -7,8 +7,7 @@ require openprint::Project;
 require openprint::User;
 require openprint::ServiceType;
 
-use vars qw( $log $debug %fields %find_fields %transforms %defaults $table $serial @identified_by );
-*log = \$openprint::log;
+use vars qw( $debug %fields %find_fields %transforms %defaults $table $serial @identified_by );
 
 $debug = 0;
 %fields = (
@@ -17,6 +16,7 @@ $debug = 0;
 	'operator_id'	=>	'operator_id',
 	'status'		=>	'strstatus',
 	'servicetype_id'	=>	'servicetype_id',
+	service_type	=>	undef,
 	'created_on'	=>	'dtmlastmodified',
 );
 %find_fields = (
@@ -50,6 +50,16 @@ sub specs {
 sub ServiceType {
 	return new openprint::ServiceType( $_[0]{'servicetype_id'} );
 } # end sub ServiceType
+
+sub service_type {
+	if ( @_ > 1 ) {
+		$_[0]{service_type} = $_[1];
+	} # end if
+	if ( ! $_[0]{service_type} ) {
+		$_[0]{service_type} = $_[0]->ServiceType()->type();
+	} # end if
+	return $_[0]{service_type};
+} # end sub service_type
 
 sub Equipment {
 	my ( $self, $qty_index ) = @_;

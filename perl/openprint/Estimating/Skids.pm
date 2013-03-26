@@ -20,7 +20,7 @@ use POSIX qw(ceil);
 
 require openprint::service;
 
-my $debug = 1;
+use constant DEBUG=>0;
 
 my %variables = (
 	'txtFinalWidth'=>['output'],'txtFinalHeight'=>['output'],
@@ -147,7 +147,7 @@ sub calc {
 		} else {
 			@Materials = openprint::Material->find('category'=>$ServiceType->name() );
 		} # end if
-$log->debug("Materials: " . map { $_->name() } @Materials ) if $debug;
+$log->debug("Materials: " . map { $_->name() } @Materials ) if DEBUG;
 		if ( ! @Materials ) {
 			$$specs{'hdnBreakdown'.$qty_index} .= "There are no materials for " . $ServiceType->name();
 		} # end if
