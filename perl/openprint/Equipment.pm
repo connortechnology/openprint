@@ -446,7 +446,7 @@ sub ServiceTypes {
 	return map { new openprint::ServiceType( $_ ); } @{$_[0]{'servicetype_id'}};
 } # end sub ServiceTypes
 
-sub Operator_Shifts {
+sub Equipment_Shifts {
 
 	my @Equipment_Shifts = openprint::Equipment_Shift->find(equipment_id=>$_[0]{id},order=>'starttime_seconds');
 	if ( ! @Equipment_Shifts ) {
@@ -463,7 +463,7 @@ sub Operator_Shifts {
 	} # end foreach Equipment Shift
 	$Last_ES->Next( $Equipment_Shifts[0] );
 	return @Equipment_Shifts;
-} # end sub Operator_Shifts
+} # end sub Equipment_Shifts
 
 sub categories {
 	return map { new openprint::Equipment_Category($_)->name() } ( $_[0]->category_id() ? @{$_[0]->category_id()} : () );

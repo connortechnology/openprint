@@ -246,6 +246,7 @@ sub delete {
 		return $error;
 	} # end if
 	sql::end_transaction( $openprint::dbh, $ac );
+	return;
 } # end sub delete
 
 sub starttime_string {
