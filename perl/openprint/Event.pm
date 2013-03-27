@@ -185,7 +185,8 @@ sub Created_By {
 }
 
 sub html {
-	my $Event = $_[0];
+	my ( $Event, $options ) = @_;
+	$options = {} if ! $options;
 	my $html = sprintf(q`
 			<div class="Event">
 			<div class="Assets"><a class="medium %6$s" href="/event/view.html?event_id=%1$d"><img alt="" src="%7$s"/></a></div>
@@ -193,16 +194,22 @@ sub html {
 			<div class="Category"><a href="/event/view.html?event_id=%1$d">%3$s</a></div>
 			<div class="When">%4$s</div>
 			<div class="Where">%5$s</div>
-			<div class="Attending">%8$s</div>
 			`, $Event->id(), ssi::html_escape($Event->name()), $Event->Category()->name(),
                     $Event->time_string(),
                     $Event->where(),
 			$Event->Asset()->layout(),
 			$Event->Asset()->medium_url(),
-			$Event->attendance( new openprint::User($openprint::session{user_id}) ),
 			);
+	if ( (!$$options{show_no_attendees}) and ( $Event->Attendance() == 0 ) ) {
+	} else {
+		$html .= sprintf('<div class="Attending">%s</div>', $Event->attendance( new openprint::User($openprint::session{user_id}) ) );
+	} # end if
+	
 	my @Comments = $Event->Comments();
-	$html .= sprintf(q`<div class="comments">This event has %s.</div>`, ( @Comments == 1 ? '1 comment' : @Comments . ' comments' ) );
+	if ( (!$$options{show_no_comments}) and ( @Comments == 0 ) ) {
+	} else {
+		$html .= sprintf(q`<div class="comments">This event has %s.</div>`, ( @Comments == 1 ? '1 comment' : @Comments . ' comments' ) );
+	} # en dif
 	$html .= '</div>';
 	return $html;
 } # end  sub html

@@ -459,12 +459,16 @@ sub internal_calc {
 	my $Project = new openprint::Project( $project_index );
     $log->debug("LOCKING Projects for project $$Project{id}");
     $dbh->do( "SELECT * FROM Projects WHERE id=".$$Project{id}. ' FOR UPDATE' );
-	my $specs = get_specs_ref( $Project, $service_index ) if $service_index;
+	my $Service = $Project->Service($service_index) if $service_index;
+	if ( ! $Service ) {
+		$Service = new openprint::ProjectService();
+		$Service->set({ project_id=>$project_index, service_id=>$service_index, service_type=>$service_type });
+	} # end if	
+	my $specs = $Service->specs();
 	my %specs = %{$specs} if $specs;
 
 	if ( ! $service_type ) {
-		my $ServiceType = $Project->ServiceType( $service_index );
-		$service_type = $ServiceType->type();
+		$service_type = $Service->service_type();
 	} # end if
 
 	my $status;
@@ -480,7 +484,7 @@ sub internal_calc {
 		my $elapsed = time - $starttime;
 		$log->debug( "\033" . sprintf( '[41;37m %s calc: (%s) Elapsed seconds: %d (%s)', $service_type, $status, $elapsed, $specs{'alert'} ) );
 
-		status( $project_index, $service_index, $status );
+		$Service->save({status=>$status}) if $status ne $Service->status();
 
 		foreach my $key ( eval( 'openprint::Estimating::'.$service_type.'::variables( $project_index, $service_index, \%specs )') ) {
 			$log->debug("Internal Calc:: looking at $key $specs{$key} :". $specs_cache{$service_index}{$key}) if DEBUG;

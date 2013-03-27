@@ -4307,6 +4307,8 @@ sub select_presses {
 # we do not have to check Image Size here because the the imposition code will take care of that later on.
 # it may be a little faster to eliminate the press now but i'm not sure.
 
+
+
 # we do not need to do any Perfecting checks because imposition code will create or no create perfecting.
 
 # Inline Perfing & Scoring is done as a sperate run, so it dosn't affect our printing press choice.
@@ -4331,16 +4333,25 @@ sub select_presses {
 	#my @Coatings = map { $_->name() } $CoatingsCategory->Services() if $CoatingsCategory;
 	#my @side_one_colours = sets::exclude( \@Coatings, $side_one_colours );
 	#my @side_two_colours = sets::exclude( \@Coatings, $side_one_colours );
+	my $ProjectType = $Project->Type();
 
 	foreach my $Press ( openprint::Equipment->find( 'category any'=>'Printing', 'useinestimating'=>1 ) ) {
 		my $press_id = $Press->id();
+
+		my ( $max_width, $max_length ) = ( $Press->specification( 'Maximum Sheet Width'), $Press->specification('Maximum Sheet Length') );
+
+		if ( $max_width and $max_length ) {
+			if ( ( $max_width < $$specs{txtWidth} or $max_length < $$specs{txtHeight} ) and ( $max_length < $$specs{txtWidth} or $max_width < $$specs{txtHeight} ) ) {
+				$results{$press_id} = 'Project does not fit on press';
+				next;
+			} # end if
+		} # end if
 
 		if ( $$specs{'ScreenType'} eq 'FM' and $Press->specification('FM Screening Capable') ne 'Y' ) {
 			$results{$press_id} = "Can't do FM Screening";
 			next;
 		} # end if
 
-		my $ProjectType = $Project->Type();
 		if ( $_ = $Press->specification('ProjectTypes') ) {
 			my ( @allowed, @disallowed );
 
@@ -4557,14 +4568,16 @@ sub get_run_price {
 # Only load this if not already specified by some inline bindery service
 		$run_speed = $Press->specification('Run Speed', (lc $$std_speed{'units'} eq 'calliper' ? $$Paper{'calliper'} : $Paper->gsm()) ) if ! $run_speed;
 		if ( ! $run_speed ) {
-			$openprint::log->error("No run sped on $$Press{strid} for $$std_speed{'units'} " . ($$std_speed{'units'} eq 'Calliper' ? $$Paper{'calliper'} : $Paper->gsm() ) );
+			$openprint::log->debug("No run sped on $$Press{strid} for $$std_speed{'units'} " . ($$std_speed{'units'} eq 'Calliper' ? $$Paper{'calliper'} : $Paper->gsm() ) ) if DEBUG;
+			$run_speed = $$std_speed{value};
+		
 		} elsif ( $run_speed != $$std_speed{value} ) {
 			$speed_mod = Math::Round::nearest( .001, $$std_speed{'value'} / $run_speed );
 			#$openprint::log->warn("1Press ".$$Press{'strid'}." Calliper: $$Paper{calliper} gsm: $$Paper{gsm} ($running_price) ($run_price{'units'}) STD: ($$std_speed{'value'}) RUN ($run_speed), mod: $speed_mod,  std/run: " . ( $speed_mod ? $run_speed/$speed_mod : $std_speed/$run_speed ) ) if DEBUG or 1;
 		} # end if
 	} else {
 		$run_speed = $Press->Specification('Run Speed') if ! $run_speed;
-		$openprint::log->debug("No standard speed on $$Press{strid}");
+		$openprint::log->debug("No standard speed on $$Press{strid}") if DEBUG;
 	} # end if
 
 	if ( sets::isin( $run_price{'units'}, ['per m','per 1000 impressions', 'per 1000'] ) ) {
