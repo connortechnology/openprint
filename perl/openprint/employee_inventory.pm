@@ -1609,7 +1609,9 @@ sub inventory_log {
 	ssi::setup_date_select( '/employee/inventory/inventory_log.html', 'updated_on_end', 0 );
 	
 	$session{'/employee/inventory/inventory_log.html?manifests_within_days'} = 7 if ! defined $session{'/employee/inventory/inventory_log.html?manifests_within_days'};
+	$session{'/employee/inventory/inventory_log.html?manifests_within_lbs'} = 100 if ! defined $session{'/employee/inventory/inventory_log.html?manifests_within_lbs'};
 	$session{'/employee/inventory/inventory_log.html?show_manifests'} = 0 if ! defined $session{'/employee/inventory/inventory_log.html?show_manifests'};
+	$session{'/employee/inventory/inventory_log.html?show_stock_on_manifests'} = 0 if ! defined $session{'/employee/inventory/inventory_log.html?show_stock_on_manifests'};
 	ssi::save_params( '/employee/inventory/inventory_log.html', ( 
 ( map { 'updated_on_start_'.$_ } ( 'year','month','day', 'hour', 'minute' ) ),
 ( map { 'updated_on_end_'.$_ } ( 'year','month','day', 'hour', 'minute' ) ),
@@ -1620,9 +1622,10 @@ sub _inventory_log {
 	ssi::save_params( '/employee/inventory/inventory_log.html', ( 
 ( map { 'updated_on_start_'.$_ } ( 'year','month','day', 'hour', 'minute' ) ),
 ( map { 'updated_on_end_'.$_ } ( 'year','month','day', 'hour', 'minute' ) ),
-( 'ins', 'outs', 'Type', 'location_id', 'manifests_within_days', 'show_manifests' ) ) );
+( 'ins', 'outs', 'Type', 'location_id', 'manifests_within_days', 'manifests_within_lbs','show_manifests' ) ) );
 	$session{'/employee/inventory/inventory_log.html?ins'} = $param{ins};
 	$session{'/employee/inventory/inventory_log.html?outs'} = $param{outs};
+	$session{'/employee/inventory/inventory_log.html?show_stock_on_manifests'} = $param{show_stock_on_manifests};
 
 	$variable{'Skid'} = new openprint::Skid( $param{'skid_id'} );
 } # end sub inventory_log
