@@ -9,7 +9,7 @@ LoadContent( 'Log', '_inventory_log.html', LogForm.serialize() );
 			<li>
 				<label>Date</label>
 				<span class="DateTimeSelectorT">
-		<? echo ( ssi::datetime_select_session( '/employee/inventory/skids.html', 'updated_on_start', { onchange=>q`calc();`, with_today=>1 } ); ) ?>
+		<? echo ( ssi::datetime_select_session( '/employee/inventory/inventory_log.html', 'updated_on_start', { onchange=>q`calc();`, with_today=>1 } ); ) ?>
 				</span>
 					to
 				<span class="DateTimeSelectorT">
