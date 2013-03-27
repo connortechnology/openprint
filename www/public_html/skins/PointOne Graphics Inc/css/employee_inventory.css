@@ -93,3 +93,7 @@ table .ManufacturersID {
 	width: 140px;
 	text-align: left;
 }
+
+#manifests_within_days, #manifests_within_lbs {
+	width: 40px;
+}
