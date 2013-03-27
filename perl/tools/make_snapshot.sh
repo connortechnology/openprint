@@ -94,7 +94,7 @@ fi;
 #echo "$RSYNC \"$1\" \"$DEST\""
 OLDDU=`$DU -b -sh $DEST$TYPE.new |$AWK '{print $1}'`
 echo $OLDDU
-$RSYNC -a --delete-delay $@ "$SOURCE" "$DEST$TYPE.new"
+$RSYNC -a --delete-delay --delete-excluded $@ "$SOURCE" "$DEST$TYPE.new"
 if [ $? != 0 ]; then
     echo "rsync return non-zero code.  Storing this backup as bad."
 $MV "$DEST$TYPE.new" "$DEST$TYPE.bad";
