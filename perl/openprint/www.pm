@@ -563,6 +563,8 @@ $openprint::log->warn('bind');
 				};
 				$log->warn( "Eval error of ($module $proc), Reason: " . $@ ) if $@;
 			} # end if
+		} else {
+			$log->debug("No firstS");
 		} # end if
 	} # end if $first
 

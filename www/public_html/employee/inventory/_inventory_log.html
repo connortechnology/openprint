@@ -16,8 +16,8 @@
 		my $html;
 		my $url = '/employee/inventory/inventory_log.html';
 		my %params = (
-			ssi::date_filter( $url.'?updated_on_start', 'updated_on_start' ),
-			ssi::date_filter( $url.'?updated_on_end', 'updated_on_end' ),
+			ssi::date_filter( $url.'?updated_on_start', 'updated_on >=' ),
+			ssi::date_filter( $url.'?updated_on_end', 'updated_on <=' ),
 			'order'	=>	'updated_on',
 			);
 		if ( $param{docket} ) {

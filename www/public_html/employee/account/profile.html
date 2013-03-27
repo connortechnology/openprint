@@ -223,24 +223,20 @@
 			} # end foreach PO_Type
 			return $html;
 		) ?>
-			<li>
+			<li class="assistant_to">
 				<label>Assistant to</label>
-				<select name="csr_ids" size="4" multiple="multiple">
-					<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User->find('type'=>['E','A'], 'usergroup any'=>'Sales', 'order'=>'lower(firstname),lower(lastname)' ) ], [$$variable{'User'}->csr_ids()] ); ) ?>
-				</select>
+					<? echo ( ssi::checkboxes( 'csr_ids', [ map { $_->id(), $_->name() } openprint::User->find(type=>['E','A'], 'usergroup any'=>'Sales', order=>'lower(firstname),lower(lastname)' ) ], [$$variable{'User'}->csr_ids()] ); ) ?>
 			</li>
 			<? endif ( sets::isin( $$variable{'User'}->type(), ['E','A'] ) ) ?>
-			<li> 
+			<li class="marketing_categories"> 
 				<label>User Category</label>
-				<select name="marketing_categories" size="4" multiple="multiple">
 				<? echo (
 					my @users_categories;
 					if ( $$variable{'User'}->id() ) {
 						@users_categories = sql::execute( $log, $dbh,'SELECT category_id FROM Users_in_Marketing_Categories WHERE user_id=?', $$variable{'User'}->id() );
 					} # end if
-					ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::MarketingCategory->find('order'=>'lower(name)') ], \@users_categories );
+					ssi::checkboxes( 'marketing_categories', [ map { $_->id(), $_->name() } openprint::MarketingCategory->find('order'=>'lower(name)') ], \@users_categories );
 				) ?>
-				</select>
 			</li>
 		<? endif ( ($session{'user_type'} eq 'A' ) or ( openprint::usergroup::is_user_in( ['UserManagement'], $session{'user_id'} ) ) ) ?>
 			<li>
