@@ -87,13 +87,15 @@ sub neccessary {
 	return 0;
 } # end sub neccessary
 sub signature_needs {
-	my ( $Project, $specs ) = @_;
+	my ( $Project, $sig_specs ) = @_;
 
-	foreach ( openprint::Estimating::Printing::get_colours( $specs, 'SideOne' ) ) {
+    $$sig_specs{SideOneColours} = [openprint::Estimating::Printing::get_colours( $sig_specs, 'SideOne' )] if ! $$sig_specs{SideOneColours};
+	foreach ( @{$$sig_specs{SideOneColours}} ) {
 		return 1 if $$_{'name'} =~ /Aqueous/;
 	} # end foreach colour
 
-	foreach ( openprint::Estimating::Printing::get_colours( $specs, 'SideTwo' ) ) {
+    $$sig_specs{SideTwoColours} = [openprint::Estimating::Printing::get_colours( $sig_specs, 'SideTwo' )] if ! $$sig_specs{SideTwoColours};
+	foreach ( @{$$sig_specs{SideTwoColours}} ) {
 		return 1 if $$_{'name'} =~ /Aqueous/;
 	} # end foreach colour
 } # end sub signature_needs
@@ -207,7 +209,8 @@ sub signature_calc {
 	$bestPrice{'Status'} = 'uncalculated';
 
 	my @front_aq;
-	foreach ( openprint::Estimating::Printing::get_colours( $sig_specs, 'SideOne' ) ) {
+    $$sig_specs{SideOneColours} = [openprint::Estimating::Printing::get_colours( $sig_specs, 'SideOne' )] if ! $$sig_specs{SideOneColours};
+	foreach ( @{$$sig_specs{SideOneColours}} ) {
 		if ( $$_{'name'} =~ /Aqueous/ ) {
 			push @front_aq, $$_{'name'};
 			#$openprint::log->debug("Side one Aqueous: $_");
@@ -215,15 +218,13 @@ sub signature_calc {
 	} # end foreach colour
 
 	my @back_aq;
-	foreach ( openprint::Estimating::Printing::get_colours( $sig_specs, 'SideTwo' ) ) {
+    $$sig_specs{SideTwoColours} = [openprint::Estimating::Printing::get_colours( $sig_specs, 'SideTwo' )] if ! $$sig_specs{SideTwoColours};
+	foreach ( @{$$sig_specs{SideTwoColours}} ) {
 		if ( $$_{'name'} =~ /Aqueous/ ) {
 			push @back_aq, $$_{'name'};
 			#$openprint::log->debug("Side two Aqueous: $_");
 		} # end if
 	} # end foreach colour
-	my %inkCoverage = openprint::Estimating::Printing::get_inkcoverage( $Project, $sig_specs );
-
-	my @different_types = sets::union( @front_aq, @back_aq );
 
 	#$openprint::log->debug("Signature : $signature_service_index");
 	if ( ! ( @front_aq or @back_aq ) ) {
@@ -231,6 +232,9 @@ $openprint::log->warn("Doing AQ when not needed");
 		$bestPrice{'Status'} = 'calculated';	
 		return %bestPrice;
 	} # end if
+	my %inkCoverage = openprint::Estimating::Printing::get_inkcoverage( $Project, $sig_specs );
+
+	my @different_types = sets::union( @front_aq, @back_aq );
 
 	# Should include overs
 	my $impressions = $$sig_specs{"hdnImpressionQuantity$qty_index"} ? $$sig_specs{"hdnImpressionQuantity$qty_index"} : $$specs{"txtQuantity$qty_index"};

@@ -66,7 +66,8 @@ fi;
 	SOURCE=$1
 	DEST=$2
 
-echo "Backing up from $SOURCE to $DEST"
+shift $((2))
+echo "Backing up from $SOURCE to $DEST with $@"
 if (( "$BACKUPS" <= "0" )) ; then
 	BACKUPS=3
 fi;
@@ -76,6 +77,37 @@ if [ "$TYPE" != "" ]; then
 fi;
 
 # ------------- the script itself --------------------------------------
+# step 3: make a hard-link-only (except for dirs) copy of the latest snapshot,
+# if that exists
+if [ -d "$DEST$TYPE.new" ] ; then \
+		echo "$DEST$TYPE.new already exists, is another backup already running?"
+		exit 1
+fi;
+
+if [ -d "$DEST$TYPE.0" ] ; then \
+	$CP -al "$DEST$TYPE.0" "$DEST$TYPE.new"
+else
+	echo "Making $DEST$TYPE.new"
+	$MKDIR -p "$DEST$TYPE.new"
+fi;
+# step 4: rsync from the system into the latest snapshot (notice that
+# rsync behaves like cp --remove-destination by default, so the destination
+# is unlinked first.  If it were not so, this would copy over the other
+# snapshot(s) too!
+#echo "$RSYNC \"$1\" \"$DEST\""
+OLDDU=`$DU -b -sh $DEST$TYPE.new |$AWK '{print $1}'`
+echo $OLDDU
+$TIME$RSYNC -a --delete-delay --delete-excluded $@ "$SOURCE" "$DEST$TYPE.new"
+if [ $? != 0 ]; then
+    echo "rsync return non-zero code.  Storing this backup as bad."
+$MV "$DEST$TYPE.new" "$DEST$TYPE.bad";
+	exit $?
+fi;
+
+# step 5: update the mtime of hourly.0 to reflect the snapshot time
+$TOUCH "$DEST$TYPE.new"
+NEWDU=`$DU -b -sh $DEST$TYPE.new |$AWK '{print $1}'`
+echo $NEWDU
 
 # rotating snapshots of /home (fixme: this should be more general)
 
@@ -97,26 +129,4 @@ while (( "$BACKUPS" > "0" )) ; do
 	let BACKUPS=DEC;
 done
 
-# step 3: make a hard-link-only (except for dirs) copy of the latest snapshot,
-# if that exists
-if [ -d "$DEST$TYPE.0" ] ; then \
-	#echo "$CP -al $DEST.0 $DEST.1"
-	$CP -al "$DEST$TYPE.0" "$DEST$TYPE.1"
-else
-	echo "Making $DEST$TYPE.0"
-	$MKDIR -p "$DEST$TYPE.0"
-fi;
-
-# step 4: rsync from the system into the latest snapshot (notice that
-# rsync behaves like cp --remove-destination by default, so the destination
-# is unlinked first.  If it were not so, this would copy over the other
-# snapshot(s) too!
-#echo "$RSYNC \"$1\" \"$DEST\""
-OLDDU=`$DU -b -sh $DEST$TYPE.1 |$AWK '{print $1}'`
-echo $OLDDU
-$TIME$RSYNC -a --exclude .gvfs --delete --delete-excluded "$SOURCE" "$DEST$TYPE.0"
-
-# step 5: update the mtime of hourly.0 to reflect the snapshot time
-$TOUCH "$DEST$TYPE.0"
-NEWDU=`$DU -b -sh $DEST$TYPE.0 |$AWK '{print $1}'`
-echo $NEWDU
+$MV "$DEST$TYPE.new" "$DEST$TYPE.0";
