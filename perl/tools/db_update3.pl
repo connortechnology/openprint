@@ -290,6 +290,9 @@ if ( ! sets::isin( 'events', \@tables ) ) {
 	if ( ! exists $$data{'url'} ) {
 		$dbh->do(q`ALTER TABLE events add url TEXT` );
 	} # end if
+	if ( ! exists $$data{published} ) {
+		$dbh->do(q`ALTER TABLE events add published BOOLEAN NOT NULL Default false` );
+	} # end if
 } # end if
 if ( ! sets::isin( 'event_attendance', \@tables ) ) {
     $dbh->do( misc::load_file( $log, '../openprint/sql/Event_Attendance.sql' ) );

@@ -795,14 +795,14 @@ sub transform {
 		$openprint::log->debug("Transforms for $_[1] before $_[2]: @transforms") if $debug;
 
 		foreach my $transform ( @transforms ) {
-			if ( $transform =~ /^s\// ) {
+			if ( $transform =~ /^s\// or $transform =~ /^tr\// ) {
 				eval '$_[2] =~ ' . $transform;
 			} elsif ( $transform =~ /^<(\d+)/ ) {
 				if ( $_[2] > $1 ) {
 					$_[2] = undef;
 				} # end if
 			} else {
-$openprint::log->debug('evalling $_[2] '.$transform . " Now value is $_[2]" );
+$openprint::log->debug("evalling $_[2] ".$transform . " Now value is $_[2]" );
 				eval '$_[2] '.$transform;
 $openprint::log->error("Eval error $@") if $@;
 			};
