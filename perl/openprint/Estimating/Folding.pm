@@ -22,7 +22,7 @@ require openprint::service;
 
 use vars qw( @folds %fold_types );
 
-use constant DEBUG => 1;
+use constant DEBUG => 0;
 
 my @equipment;
 my @stitchers;
