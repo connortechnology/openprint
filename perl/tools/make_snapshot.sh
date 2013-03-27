@@ -24,9 +24,9 @@ DU=/usr/bin/du;
 AWK=/usr/bin/awk;
 BACKUPS=3;
 
-USAGE="Usage: `/usr/bin/basename $0` [-hv] [-n int] [-c arg] [-t type] args"
+USAGE="Usage: `/usr/bin/basename $0` [-hv] [-n int] [-c arg] [-t type] [-T] args"
 
-while getopts hvn:c:t: OPT; do
+while getopts hvn:c:t:T OPT; do
 	case "$OPT" in
 		h)
 			echo $USAGE
@@ -44,6 +44,9 @@ while getopts hvn:c:t: OPT; do
 			;;
 		t)
 			TYPE=$OPTARG
+			;;
+		T)
+			TIME="time "
 			;;
 		\?)
 			# getopts issues an error message
@@ -111,7 +114,7 @@ fi;
 #echo "$RSYNC \"$1\" \"$DEST\""
 OLDDU=`$DU -b -sh $DEST$TYPE.1 |$AWK '{print $1}'`
 echo $OLDDU
-$RSYNC -a --exclude .gvfs --delete --delete-excluded "$SOURCE" "$DEST$TYPE.0"
+$TIME$RSYNC -a --exclude .gvfs --delete --delete-excluded "$SOURCE" "$DEST$TYPE.0"
 
 # step 5: update the mtime of hourly.0 to reflect the snapshot time
 $TOUCH "$DEST$TYPE.0"
