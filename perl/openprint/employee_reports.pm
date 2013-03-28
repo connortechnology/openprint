@@ -147,7 +147,7 @@ sub _project_performance {
 			ssi::date_filter( $page.'?created_on_end', 'created_on <=' ),
 			( $session{$page.'?estimator_exclude'} ? ( 'user_id not in'	=> [ split(',', $session{$page.'?estimator_exclude'} ) ] ) : () ),
 			company_id => ( ( $session{$page.'?company_id'} and ( exists $companies{$session{$page.'?company_id'}} ) ) ? $session{$page.'?company_id'} : \@company_ids ),
-			order	=> 'index',
+			order	=> 'id',
 	);
 
 	if ( $session{$page.'?estimator'} ) {
@@ -264,10 +264,9 @@ sub _order_history_results {
 	} elsif ( $param{'CSR'} ) {
 		$parameters{'SalesPerson'} = $param{'CSR'};
 	} # end if
-	my @Companies = openprint::Company->find( %parameters );
+	my @Companies = openprint::Company->find( %parameters ) if %parameters;
 	my %companies = map { int($_->id()), $_->name() } @Companies;
 	@{$variable{'Orders'}} = ();
-	if ( %companies ) {
 		foreach my $Order ( openprint::Order->find(
 			'company_id' => ( ($param{'company_id'} and exists $companies{$param{'company_id'}} ) ? $param{'company_id'} : [ keys %companies ] ),
 			'created_on >=' => sprintf('%.4d-%.2d-%.2d 00:00:00', ssi::fix_date( @param{'DateStartYear','DateStartMonth','DateStartDay'} ) ),
@@ -312,10 +311,7 @@ sub _order_history_results {
 			} # end if
 			push @{$variable{'Orders'}}, $Order;
 		} # end foreach Order
-	} else {
-		$variable{'error'} .= 'There were no companies to filter on.<br/>';
-	} # end if
-	%{$variable{'Companies'}} = %companies;
+	$variable{'Companies'} = \%companies;
 }
 
 sub order_performance {

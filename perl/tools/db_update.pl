@@ -480,6 +480,19 @@ if ( ! sets::isin( 'orders', \@tables ) ) {
 	if ( ! exists $$data{status_id} ) {
 		$dbh->do('ALTER TABLE Orders ADD status_id INTEGER') or die $dbh->errstr();
 		$dbh->do('ALTER TABLE Orders ADD FOREIGN KEY (status_id) REFERENCES order_statuses (id)') or die $dbh->errstr();
+	} # end if
+		if ( exists $$data{strstatus} ) {
+			my %Statuses = map { $_->name(), $_ } openprint::Order_Status->find();
+			foreach my $status ( sql::execute( undef, undef, 'SELECT DISTINCT strstatus FROM Orders' ) ) {
+				if ( ! $Statuses{$status} ) {
+					$Statuses{$status} = new openprint::Order_Status();
+					$_ = $Statuses{$status}->save({name=>$status});
+					die $_ if $_;
+				} # end if
+				sql::update( undef, undef, 'orders', [ 'strstatus=?', $status ], 'status_id', $Statuses{$status}->id() );	
+			} # end foreach status
+			$dbh->do('ALTER TABLE orders DROP strstatus');
+		} # end if	
 		if ( exists $$data{status} ) {
 			my %Statuses = map { $_->name(), $_ } openprint::Order_Status->find();
 			foreach my $status ( sql::execute( undef, undef, 'SELECT DISTINCT status FROM Orders' ) ) {
@@ -492,7 +505,6 @@ if ( ! sets::isin( 'orders', \@tables ) ) {
 			} # end foreach status
 			$dbh->do('ALTER TABLE orders DROP status');
 		} # end if	
-	} # end if	
 	if ( ! exists $$data{downpayment} ) {
 		if ( exists $$data{curdownpayment} ) {
 			$dbh->do('ALTER TABLE orders rename curdownpayment to downpayment');
