@@ -442,6 +442,13 @@ if ( ! sets::isin( 'order_statuses', \@tables ) ) {
     $dbh->do( misc::load_file( $log, '../openprint/sql/Order_Statuses.sql' ) );
     die $dbh->errstr() if $dbh->errstr();
 }
+if ( ! sets::isin( 'order_statuses_id_seq', \@sequences ) ) {
+	if ( sets::isin( 'order_status_id_seq', \@sequences ) ) {
+		$dbh->do('ALTER SEQUENCE order_status_id_seq RENAME to order_statuses_id_seq');
+	} else {
+		$dbh->do('CREATE SEQUENCE order_statuses_id_seq');
+	} # end if
+} # en dif
 
 if ( ! sets::isin( 'orders', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/Orders.sql}) ) or die $dbh->errstr();
@@ -480,6 +487,20 @@ if ( ! sets::isin( 'orders', \@tables ) ) {
 	if ( ! exists $$data{status_id} ) {
 		$dbh->do('ALTER TABLE Orders ADD status_id INTEGER') or die $dbh->errstr();
 		$dbh->do('ALTER TABLE Orders ADD FOREIGN KEY (status_id) REFERENCES order_statuses (id)') or die $dbh->errstr();
+	} # end if
+		if ( exists $$data{strstatus} ) {
+			my %Statuses = map { $_->name(), $_ } openprint::Order_Status->find();
+			foreach my $status ( sql::execute( undef, undef, 'SELECT DISTINCT strstatus FROM Orders' ) ) {
+				next if ! $status;
+				if ( ! $Statuses{$status} ) {
+					$Statuses{$status} = new openprint::Order_Status();
+					$_ = $Statuses{$status}->save({name=>$status});
+					die $_ if $_;
+				} # end if
+				sql::update( undef, undef, 'orders', [ 'strstatus=?', $status ], 'status_id', $Statuses{$status}->id() );	
+			} # end foreach status
+			$dbh->do('ALTER TABLE orders DROP strstatus');
+		} # end if	
 		if ( exists $$data{status} ) {
 			my %Statuses = map { $_->name(), $_ } openprint::Order_Status->find();
 			foreach my $status ( sql::execute( undef, undef, 'SELECT DISTINCT status FROM Orders' ) ) {
@@ -492,7 +513,6 @@ if ( ! sets::isin( 'orders', \@tables ) ) {
 			} # end foreach status
 			$dbh->do('ALTER TABLE orders DROP status');
 		} # end if	
-	} # end if	
 	if ( ! exists $$data{downpayment} ) {
 		if ( exists $$data{curdownpayment} ) {
 			$dbh->do('ALTER TABLE orders rename curdownpayment to downpayment');

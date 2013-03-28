@@ -19,7 +19,7 @@ require openprint::Order_Status;
 require openprint::Payment;
 require openprint::Tax;
 
-$debug = 0;
+$debug = 1;
 
 $table = 'orders';
 $serial = 'orders_id_seq';
