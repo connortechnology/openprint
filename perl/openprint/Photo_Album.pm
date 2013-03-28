@@ -6,7 +6,7 @@ package openprint::Photo_Album;
 our @ISA = qw( openprint::Object );
 
 use vars qw( $debug $table $serial %fields %find_fields %transforms %defaults );
-$debug = 0;
+$debug = 1;
 $serial = 'photo_albums_id_seq';
 $table = 'photo_albums';
 
@@ -100,9 +100,10 @@ sub upload {
 	my $error = '';
 	my $Asset = openprint::Asset::upload( $_[1], $_[2] );
 	if ( ref $Asset eq 'openprint::Asset' ) {
-		my $Photo = new openprint::Photo_in_Album({'asset_id'=>$$Asset{'id'},'album_id'=>$_[0]{'id'}});
-		if ( ! $Photo->asset_id() ) {
-			$error .= $Photo->save({'asset_id'=>$$Asset{'id'}, 'album_id'=>$_[0]->id()});   
+		my $Photo = openprint::Photo_in_Album->find_one(asset_id=>$$Asset{id},album_id=>$_[0]{id});
+		if ( ! $Photo ) {
+			$Photo = new openprint::Photo_in_Album();
+			$error .= $Photo->save({ asset_id=>$$Asset{id}, album_id=>$_[0]->id() });   
 			$error .= new openprint::Log()->save({'action'=>'Upload Photo', 'Object'=>$Photo});
 		} else {
 			$error .= 'Photo already exists in album.';

@@ -1957,16 +1957,19 @@ qq.FineUploader = function(o){
 
     // overwrite the upload button text if any
     // same for the Cancel button and Fail message text
-    this._options.template     = this._options.template.replace(/\{dragZoneText\}/g, this._options.text.dragZone);
-    this._options.template     = this._options.template.replace(/\{uploadButtonText\}/g, this._options.text.uploadButton);
-    this._options.template     = this._options.template.replace(/\{dropProcessingText\}/g, this._options.text.dropProcessing);
+	if ( this._options.template ) {
+		this._options.template     = this._options.template.replace(/\{dragZoneText\}/g, this._options.text.dragZone);
+		this._options.template     = this._options.template.replace(/\{uploadButtonText\}/g, this._options.text.uploadButton);
+		this._options.template     = this._options.template.replace(/\{dropProcessingText\}/g, this._options.text.dropProcessing);
+	} // end if
     this._options.fileTemplate = this._options.fileTemplate.replace(/\{cancelButtonText\}/g, this._options.text.cancelButton);
     this._options.fileTemplate = this._options.fileTemplate.replace(/\{retryButtonText\}/g, this._options.text.retryButton);
     this._options.fileTemplate = this._options.fileTemplate.replace(/\{deleteButtonText\}/g, this._options.text.deleteButton);
     this._options.fileTemplate = this._options.fileTemplate.replace(/\{statusText\}/g, "");
 
     this._element = this._options.element;
-    this._element.innerHTML = this._options.template;
+	if ( this._options.template ) 
+		this._element.innerHTML = this._options.template;
     this._listElement = this._options.listElement || this._find(this._element, 'list');
 
     this._classes = this._options.classes;
