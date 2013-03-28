@@ -1,7 +1,7 @@
 use strict;
 require openprint;
 require openprint::Keyword;
-use Fcntl;
+use Fcntl qw(:flock);
 
 package openprint::Asset_Type;
 our @ISA = qw(openprint::Object);
@@ -539,7 +539,7 @@ sub generate_video {
 		$openprint::log->error("Unable to open semaphore at $dest.lck\n");
 		return;
 	} # end if
-	if ( ! Fcntl::flock($lock, Fcntl::LOCK_EX) ) {
+	if ( ! flock($lock, Fcntl::LOCK_EX) ) {
 		$openprint::log->error("Unable to lock semaphore\n");
 	} # end if
 	if ( ! -e $dest ) {
