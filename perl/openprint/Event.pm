@@ -33,6 +33,7 @@ $serial = 'events_id_seq';
 	# Photo album for the event, created on first photo upload
 	album_id	=>	'album_id', 
 	url			=>	'url',
+	published	=>	'published',
 );
 %find_fields = (
 	'attending'	=>	'(SELECT user_id FROM event_attendance WHERE event_id=events.id AND attending=true)',
@@ -55,6 +56,7 @@ $serial = 'events_id_seq';
 	time_associated	=> 0,
 	created_by		=> q`$openprint::session{user_id}`,
 	deleted			=> 0,
+	published		=>	0,
 );
 
 sub category {
