@@ -1,6 +1,6 @@
 <script type="text/javascript">
 function calc() {
-LoadContent( 'Log', '_inventory_log.html', LogForm.serialize() );
+LoadContent( 'Log', '_inventory_log.html', $('LogForm').serialize() );
 }
 </script>
 <form name="LogForm" id="LogForm" method="post">
@@ -9,7 +9,7 @@ LoadContent( 'Log', '_inventory_log.html', LogForm.serialize() );
 			<li>
 				<label>Date</label>
 				<span class="DateTimeSelectorT">
-		<? echo ( ssi::datetime_select_session( '/employee/inventory/skids.html', 'updated_on_start', { onclick=>q`calc();`, with_today=>1 } ); ) ?>
+		<? echo ( ssi::datetime_select_session( '/employee/inventory/inventory_log.html', 'updated_on_start', { onclick=>q`calc();`, with_today=>1 } ); ) ?>
 				</span>
 					to
 				<span class="DateTimeSelectorT">
@@ -23,20 +23,15 @@ LoadContent( 'Log', '_inventory_log.html', LogForm.serialize() );
 				<label class="radio" for="outs">Check Outs</label>
 			</li>
 		<li><label>Type</label>
-            <input type="checkbox" id="TypeSheet" name="Type" value="Sheet" <? echo ( 'checked="checked"' if ( ! $session{'/employee/inventory/inventory_log.html?Type'} ) or sets::isin( 'Sheet', split(',', $session{'/employee/inventory/inventory_log.html?Type'} ) ) ) ?> onclick="calc();"/>
-            <label class="radio" for="TypeSheet">Sheet</label>
-            <input type="checkbox" id="TypeRoll" name="Type" value="Roll" <? echo ( 'checked="checked"' if ( ! $session{'/employee/inventory/inventory_log.html?Type'} ) or sets::isin( 'Roll', split(',', $session{'/employee/inventory/inventory_log.html?Type'} ) ) ) ?> onclick="calc();"/>
-            <label class="radio" for="TypeRoll">Roll</label>
-            <input type="checkbox" id="TypeUnknown" name="Type" value="Unknown" <? echo ( 'checked="checked"' if ( ! $session{'/employee/inventory/inventory_log.html?Type'} ) or sets::isin( 'Unknown', split(',', $session{'/employee/inventory/inventory_log.html?Type'} ) ) ) ?> onclick="calc();"/>
-            <label class="radio" for="TypeUnknown">Unknown</label>
+			<? echo ( checkboxes( 'Type', [ 'Sheet', 'Sheet', 'Roll','Roll','Unknown','Unknown' ], [ split(',',$session{'/employee/inventory/inventory_log.html?Type'}) ],  {onclick=>'calc)();' } ); ) ?>
         </li>
        <li>
             <label>Location</label>
                 <? echo ( 
-                    my @options =  ('All','All','Unknown','Unknown', map { $_->id(), $_->name() } openprint::Location->find( parent_id=>undef, order=>'lower(name)') );
+                    my @options =  ('All','All','Unknown','Unknown', map { $_->id(), $_->name() } openprint::Location->find( parent_id=>undef, order=>'lower(name)', type=>'place') );
                     my @selected = split(',', $session{'/employee/inventory/inventory_log.html?location_id'} );
                     if ( ! @selected ) {
-                        foreach my $L ( openprint::Location->find( parent_id=>undef, order=>'lower(name)') ) {
+                        foreach my $L ( openprint::Location->find( parent_id=>undef, type=>'place', order=>'lower(name)') ) {
                             next if $L->name() eq 'Missing';
                             push @selected, $L->id();
                         } # end foreach $L

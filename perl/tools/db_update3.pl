@@ -1120,6 +1120,9 @@ if ( ! sets::isin('license_hosts', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/License_Hosts.sql}) );
 	die if $dbh->errstr();
 } # end if
+if ( sets::isin('operator_shifts', \@tables ) ) {
+$dbh->do('DROP TABLE operator_shifts');
+}
 print "done.\n";
 $dbh->disconnect();
 1;

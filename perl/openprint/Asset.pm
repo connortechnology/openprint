@@ -19,7 +19,7 @@ our @ISA = qw(openprint::Object);
 
 use vars qw( $debug %fields %transforms %defaults $table $serial );
 
-$debug = 0;
+$debug = 1;
 
 %fields = (
 	'id'			=>	'id',
@@ -389,8 +389,10 @@ sub upload {
 	my $md5 = Digest::MD5::md5_base64( $data );
 	if ( ! $md5 ) {
 		return "Unable to MD5?";
+	} else {
+		$openprint::log->debug("MD5 was $md5");
 	} # end if
-	my $Asset = openprint::Asset->find_one('md5'=>$md5);
+	my $Asset = openprint::Asset->find_one( md5 =>$md5);
 	if ( ! $Asset ) {
 		$Asset = new openprint::Asset();
 		$! .= $Asset->save({'filename'=>$upload->filename(),'md5'=>$md5});

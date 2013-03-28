@@ -20,8 +20,7 @@ require openprint::User;
 require openprint::User_Notification;
 require openprint::Email;
 
-use MIME::QuotedPrint;
-use MIME::Base64;
+require MIME::QuotedPrint;
 require Encode;
 
 use openprint ();
@@ -46,20 +45,26 @@ sub handler {
 	#$log->debug( "Beginning of UPLOAD Request: Time (seconds) : $starttime" );
 
 	$dbh = sql::open_sql( $log, 
-			'database'	=> $request->dir_config('db_name'),
-			'driver'	=> $request->dir_config('db_driver'),
-			'host'		=> $request->dir_config('db_host'),
-			'login'		=> $request->dir_config('db_user'),
-			'password'	=> $request->dir_config('db_password'),
+			database	=> $request->dir_config('db_name'),
+			driver		=> $request->dir_config('db_driver'),
+			host		=> $request->dir_config('db_host'),
+			login		=> $request->dir_config('db_user'),
+			password	=> $request->dir_config('db_password'),
 			);
 
 	my $serial;
+	my $rsize;
 
 	if ( $request->method eq 'POST' ) {
+	my $table = $request->headers_in;
+
+foreach my $key (keys %{$table}) {
+      $log->debug( "$key = $table->{$key}" );
+  }
 		$uploaded = 0;
 		($serial) = $request->args() =~ /serial=(\d*)/;
 		my ($company) = $request->args() =~ /txtCompanyName=([.^&]*)/;
-		my $rsize = $request->headers_in->{'Content-Length'};
+		( $rsize ) = $request->args() =~ /qqtotalfilesize=(\d+)/;
 		if ( $serial ) {
 			sql::execute( undef, undef, q{DELETE FROM Uploads WHERE id=?}, $serial );
 		} else {
@@ -111,8 +116,7 @@ sub handler {
 		configuration::init( $r->dir_config() );
 		openprint::session_init();
 		if ( $serial ) {
-			my $rsize=$request->headers_in->{'Content-Length'};
-			sql::update( undef, undef, 'uploads', ['id=?', $serial], [ 'finished', 'NOW()', 'user_id', $session{'user_id'}, 'company_id', $session{'company_id'}, 'size', $rsize ] );
+			sql::update( undef, undef, 'uploads', ['id=?', $serial], [ 'finished', 'NOW()', 'user_id', $session{'user_id'}, 'company_id', $session{'company_id'}, 'size', $uploaded ] );
 		#} else {
 			#$log->error("No serial in upload, dumping session");
 			#foreach my $k ( keys %session ) {
@@ -184,6 +188,7 @@ $log->debug("Doing standrad upload");
 
 			if ( $template ) {
 				$_ = ssi::variable_substitution( \$template, \%variable );
+$log->debug("content: $_");
 				$r->print( $_ );
 			} else {
 				$r->print( $variable{'PageContent'} );
@@ -343,7 +348,7 @@ $log->error("No destdir");
 					FROM    => $from,
 					TO      => \@to,
 					SUBJECT => $param{'docket'} ? "Files uploaded for docket: $param{'docket'}" : 'Files Uploaded',
-					ATTACHMENTS => [ '', encode_qp(Encode::encode('utf-8',$body)), 'text/html', 'quoted-printable' ],
+					ATTACHMENTS => [ '', MIME::QuotedPrint::encode_qp(Encode::encode('utf-8',$body)), 'text/html', 'quoted-printable' ],
 					);
 		} else {
 			$variable{'error'} .= 'No files were uploaded.';
