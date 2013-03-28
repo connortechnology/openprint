@@ -609,6 +609,7 @@ sub find {
 						push @values, $search{$k};
 					} # end if
 					delete $search{$k};
+						push @used_fields, $k;
 				} else {
 					#my @w = 
 #ref $search{$k} eq 'ARRAY' ? 
