@@ -442,6 +442,13 @@ if ( ! sets::isin( 'order_statuses', \@tables ) ) {
     $dbh->do( misc::load_file( $log, '../openprint/sql/Order_Statuses.sql' ) );
     die $dbh->errstr() if $dbh->errstr();
 }
+if ( ! sets::isin( 'order_statuses_id_seq', \@sequences ) ) {
+	if ( sets::isin( 'order_status_id_seq', \@sequences ) ) {
+		$dbh->do('ALTER SEQUENCE order_status_id_seq RENAME to order_statuses_id_seq');
+	} else {
+		$dbh->do('CREATE SEQUENCE order_statuses_id_seq');
+	} # end if
+} # en dif
 
 if ( ! sets::isin( 'orders', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/Orders.sql}) ) or die $dbh->errstr();
@@ -484,6 +491,7 @@ if ( ! sets::isin( 'orders', \@tables ) ) {
 		if ( exists $$data{strstatus} ) {
 			my %Statuses = map { $_->name(), $_ } openprint::Order_Status->find();
 			foreach my $status ( sql::execute( undef, undef, 'SELECT DISTINCT strstatus FROM Orders' ) ) {
+				next if ! $status;
 				if ( ! $Statuses{$status} ) {
 					$Statuses{$status} = new openprint::Order_Status();
 					$_ = $Statuses{$status}->save({name=>$status});
