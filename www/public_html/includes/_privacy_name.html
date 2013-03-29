@@ -2,7 +2,10 @@
 <? echo ( 
 	my $html;
 	s/^\s+//, s/\s+$// for $param{'privacy_name'};
-	my @Users = openprint::User->find('name ilike'=>$param{'privacy_name'}.'%','limit'=>10, 
+	my @Companies = openprint::Company->find('name ilike'=>$param{'privacy_name'}.'%','limit'=>10, 
+		);
+	my @Users = map { openprint::User->find(company_id=>$_->id()) } @Companies;
+ push @Users, openprint::User->find('name ilike'=>$param{'privacy_name'}.'%','limit'=>10, 
 		( $param{user_id} ? ( 'id not in'=>$param{'user_id'} ) : () ),
 		);
 	foreach my $User (@Users) {

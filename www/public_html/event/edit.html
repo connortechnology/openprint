@@ -134,6 +134,10 @@ $company_id = $session{company_id} if (!$company_id);
 	return ssi::include( $ENV{'DOCUMENT_ROOT'} . '/location/_location_fields.html' );
 ) ?>
 			</fieldset>
+<? if ( $$variable{Event}->id() ) ?>
+	<? eval ( $$variable{Object} = $$variable{Album} = $$variable{Event};) ?>
+	<? echo ( include('/photo_albums/_album_upload.html'); ) ?>
+<? endif ( $$variable{Event}->id() ) ?>
 		</fieldset>
 		<input type="hidden" name="function" />
 	</form>
