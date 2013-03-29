@@ -2,7 +2,9 @@
 <? echo ( 
 	my $html;
 	s/^\s+//, s/\s+$// for $param{'privacy_name'};
-	my @Users = openprint::User->find('name ilike'=>$param{'privacy_name'}.'%','limit'=>10, 'id not in'=>$param{'user_id'});
+	my @Users = openprint::User->find('name ilike'=>$param{'privacy_name'}.'%','limit'=>10, 
+		( $param{user_id} ? ( 'id not in'=>$param{'user_id'} ) : () ),
+		);
 	foreach my $User (@Users) {
 	my $Asset = $User->Asset();
 	my $thumbnail_url = $Asset->thumbnail_url();
