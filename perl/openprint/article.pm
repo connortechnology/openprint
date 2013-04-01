@@ -214,7 +214,7 @@ sub _history {
 
 sub search {
 	if ( $param{action} eq 'Reset' ) {
-		ssi::reset_session('/article/search.htm');
+		ssi::reset_session('/article/search.html');
 		return;
 	} # end if
 	_search();

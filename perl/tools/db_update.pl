@@ -441,6 +441,13 @@ if ( ! sets::isin( 'invoices_id_seq', \@sequences ) ) {
 if ( ! sets::isin( 'order_statuses', \@tables ) ) {
     $dbh->do( misc::load_file( $log, '../openprint/sql/Order_Statuses.sql' ) );
     die $dbh->errstr() if $dbh->errstr();
+} else {
+	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='order_statuses'", 'column_name');
+	if ( ! exists $$data{id} ) {
+		$dbh->do('DROP TABLE order_statuses');
+		$dbh->do( misc::load_file( $log, '../openprint/sql/Order_Statuses.sql' ) );
+		die $dbh->errstr() if $dbh->errstr();
+	} # end if
 }
 if ( ! sets::isin( 'order_statuses_id_seq', \@sequences ) ) {
 	if ( sets::isin( 'order_status_id_seq', \@sequences ) ) {
@@ -448,6 +455,7 @@ if ( ! sets::isin( 'order_statuses_id_seq', \@sequences ) ) {
 	} else {
 		$dbh->do('CREATE SEQUENCE order_statuses_id_seq');
 	} # end if
+
 } # en dif
 
 if ( ! sets::isin( 'orders', \@tables ) ) {
