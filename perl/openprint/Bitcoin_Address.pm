@@ -8,7 +8,7 @@ use vars qw( $debug $table $serial %fields %find_fields %defaults %transforms );
 use Finance::Bitcoin::API;
 use Finance::Bitcoin::Wallet;
 
-$debug = 1;
+$debug = 0;
 $table = 'bitcoin_addresses';
 $serial = 'bitcoin_addresses_id_seq';
 %fields = (

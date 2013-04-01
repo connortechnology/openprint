@@ -11,7 +11,7 @@ require sql;
 require openprint::Object;
 require openprint::User;
 
-$debug = 1;
+$debug = 0;
 $table = 'companies';
 $serial = 'companies_id_seq';
 

@@ -218,9 +218,9 @@ sub view {
 	$variable{'Invoice'} = new openprint::Invoice( $param{'invoice_id'} );
 	if ( $param{'btnFunction'} eq 'Calculate Interest' ) {
 		if ( ! $variable{'Invoice'}->monthly_interest() ) {
-			$variable{'error'} .= 'Invoice has no monthly interest rate!';
-		} elsif ( ! $variable{'Invoice'}->due_on() ) {
-			$variable{'error'} .= 'Invoice has no due date!';
+			$variable{error} .= 'Invoice has no monthly interest rate!';
+		} elsif ( ! $variable{Invoice}->due_on() ) {
+			$variable{error} .= 'Invoice has no due date!';
 		} # end if
 
 		my $changed = 0;
@@ -228,7 +228,7 @@ sub view {
 		my ( $year, $month, $day ) = $variable{'Invoice'}->due_on() =~ /(\d\d\d\d)-(\d\d)-(\d\d)/;
 		my $last_period;
 		my $paid = 0;
-		( $year, $month, $day ) = Date::Calc::Add_Delta_Days( $year, $month, $day, Date::Calc::Days_in_Month( $year, $month ) );
+		#( $year, $month, $day ) = Date::Calc::Add_Delta_Days( $year, $month, $day, Date::Calc::Days_in_Month( $year, $month ) );
 		while ( Date::Calc::Date_to_Time( $year, $month, $day,0, 0, 0 ) <= time ) {
 
 			my $date_string = sprintf('%4d-%.2d-%.2d', $year, $month, $day);
