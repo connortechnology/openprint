@@ -195,7 +195,7 @@ sub edit {
 	if ( $param{'btnFunction'} eq 'Save' ) {
 		$param{'currency_id'} = openprint::Currency::get_current()->id() if ! $param{'currency_id'};
 		$param{due_on} = sprintf('%.4d-%.2d-%.2d', @param{'due_on_year','due_on_month','due_on_day'} ) if ! $param{due_on};
-		$param{early_payment_date} = sprintf('%.4d-%.2d-%.2d', @param{'early_payment_date_year','early_payment_date_month','early_payment_date_day'} ) if ! $param{early_payment_date};
+		$param{early_payment_date} = sprintf('%.4d-%.2d-%.2d', @param{'early_payment_date_year','early_payment_date_month','early_payment_date_day'} ) if ( ! $param{early_payment_date} ) and Date::Calc::check_date( @param{'early_payment_date_year','early_payment_date_month','early_payment_date_day'} );
 		$param{'invoicer_id'} = $session{'company_id'} if ! $param{'invoicer_id'};
 		if ( $param{invoicee} ) {
 			my $Invoicee = openprint::Company->find_one(name=>openprint::Company->transform('name', $param{invoicee}) );

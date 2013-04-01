@@ -115,6 +115,6 @@
 <? if ( $$variable{Invoice}->interest() ) ?>
 <div class="HasInterest">Late payment interest charges have been added to this invoice and are reflected in the amount owing.</div>
 <? endif ( $$variable{Invoice}->interest() ) ?>
-<?include(_payment_options.html)?>
+<?include(/invoice/_payment_options.html)?>
 <? echo ( include('/invoice/_payments_view.html', $variable); ) ?>
 </div>
