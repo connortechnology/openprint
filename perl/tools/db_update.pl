@@ -301,6 +301,9 @@ if ( ! sets::isin( 'users', \@tables ) ) {
 		if ( ! exists $$data{ftp_root} ) {
 			$dbh->do(q`alter table users add ftp_root text not null default ''`);
 		} # end if
+		if ( ! exists $$data{email_valid} ) {
+			$dbh->do(q`alter table users add email_valid BOOLEAN`);
+		} # end if
 	} # end if
 	if ( sets::isin( 'users_index_seq', \@sequences ) ) {
 		if ( ! sets::isin( 'users_id_seq', \@sequences ) ) {

@@ -22,6 +22,7 @@ $debug = 1;
 	'firstname'			=>	'firstname',
 	'lastname'			=>	'lastname',
 	'email'				=>	'email',
+	email_valid			=>	'email_valid',
 	'phone'				=>	'phone',
 	'extension'			=>	'extension',
 	'mobile'			=>	'mobile',
@@ -94,6 +95,7 @@ $debug = 1;
 	company_id				=>	undef,
 	password_changed_on		=>	undef,
 	password				=>	'',
+	email_valid				=>	undef,
 );
 
 # if we have previously loaded info for this customer, and it hasn't changed, that field will not be saved.
