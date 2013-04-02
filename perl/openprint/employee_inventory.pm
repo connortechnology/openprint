@@ -1212,9 +1212,7 @@ sub rfidtag_details {
 		} # end if
 	} # end if
 
-	@param{'end_year','end_month','end_day'} = Date::Calc::Today() if ! $param{'end_year'};
-	$param{'limit'} = 10 if ! $param{'limit'};
-	_rfidtag_log();
+	_rfidtag_log_entries();
 
 	$variable{'RFIDTag'} = $RFIDTag;
 } # end sub rfidtag_details
@@ -1250,7 +1248,7 @@ sub rfidscanner_details {
 	} else {
 		@param{'StartYear','StartMonth','StartDay'} = Date::Calc::Today();
 		@param{'EndYear','EndMonth','EndDay'} = Date::Calc::Today();
-		_rfidscanner_log();
+		_rfidscanner_log_entries();
 	} # end if
 
 	$variable{'RFIDScanner'} = $RFIDScanner;
@@ -1729,19 +1727,26 @@ sub _manifest_purchase_orders {
 } # end sub _manifest_purchase_orders
 
 sub _rfidtag_log {
+} # end sub _rfidtag_log
+
+sub _rfidtag_log_entries {
+	@param{'end_year','end_month','end_day'} = Date::Calc::Today() if ! $param{'end_year'};
+	@param{'start_year','start_month','start_day'} =(0,0,0) if ! $param{'start_year'};
+	$param{'limit'} = 10 if ! $param{'limit'};
 	@{$variable{'Entries'}} = openprint::RFIDTagHistory->find( 
 		'rfidtag_id'	=>	$param{'rfidtag_id'},
-		'updated_on_start'	=>	Date::Calc::check_date( @param{'start_year','start_month','start_day'} ) ? sprintf('%.4d-%.2d-%.2d 00:00:00', @param{'start_year','start_month','start_day'} ) : undef,
-		'updated_on_end'	=>	Date::Calc::check_date( @param{'end_year','end_month','end_day'} ) ?	sprintf('%.4d-%.2d-%.2d 23:59:59', @param{'end_year','end_month','end_day'} ) : undef,
+ssi::date_filter( 'start', 'updated_on_start', \%param ),
+ssi::date_filter( 'end', 'updated_on_end', \%param ),
 		'order'	 =>	'updated_on DESC',
 		'limit'	 =>	$param{'limit'},
 		);
 
+	# This is to auto-load the start year
 	if ( ! @{$variable{'Entries'}} ) {
 		@{$variable{'Entries'}} = openprint::RFIDTagHistory->find( 
 				'rfidtag_id'	=>	$param{'rfidtag_id'},
-				'updated_on_start'	=>	Date::Calc::check_date( @param{'start_year','start_month','start_day'} ) ? sprintf('%.4d-%.2d-%.2d 00:00:00', @param{'start_year','start_month','start_day'} ) : undef,
-				'updated_on_end'	=>	Date::Calc::check_date( @param{'end_year','end_month','end_day'} ) ?	sprintf('%.4d-%.2d-%.2d 23:59:59', @param{'end_year','end_month','end_day'} ) : undef,
+ssi::date_filter( 'start', 'updated_on_start', \%param ),
+ssi::date_filter( 'end', 'updated_on_end', \%param ),
 				'limit'	 =>	$param{'limit'},
 				'order'	 =>	'updated_on DESC',
 				);
@@ -1751,7 +1756,7 @@ sub _rfidtag_log {
 	} elsif ( ! $param{'start_year'} ) {
 		@param{'start_year','start_month','start_day'} = $variable{'Entries'}[@{$variable{'Entries'}}-1]->updated_on() =~ /^(\d+)-(\d+)-(\d+)/;
 	} # end if
-} # end sub _rfidtag_log
+} # end sub _rfidtag_log_entries
 
 sub _manifest_type {
 	$variable{'Manifest'} = new openprint::Manifest( $param{'manifest_id'} );

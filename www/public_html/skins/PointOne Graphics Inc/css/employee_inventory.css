@@ -88,3 +88,6 @@ table .ManufacturersID {
 #manifests_within_days, #manifests_within_lbs {
 	width: 40px;
 }
+#location_log_form select {
+	width: auto;
+}

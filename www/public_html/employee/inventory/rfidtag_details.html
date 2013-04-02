@@ -151,23 +151,6 @@
 	</fieldset>
 </form>
 <? if ( $$variable{'RFIDTag'}->id() ) ?>
-<form name="f2" id="f2">
-	<input type="hidden" name="rfidtag_id" value="<? echo ( $$variable{'RFIDTag'}->id() ) ?>" />
-	<fieldset><legend>Location Log</legend>
-		<p>
-			<label>Date Filter:</label>
-			<span class="DateSelector">
-<? echo ( ssi::date_select( 'start', sprintf('%.4d-%.2d-%.2d', @param{'start_year','start_month','start_day'} ),  q`AjaxLoadContent('Log','_rfidtag_log.html', $('f2').serialize() );` ); ) ?>
-			to 
-			</span>
-			<span class="DateSelector">
-<? echo ( ssi::date_select( 'end', sprintf('%.4d-%.2d-%.2d', @param{'end_year','end_month','end_day'} ),  q`AjaxLoadContent('Log','_rfidtag_log.html', $('f2').serialize() );` ); ) ?>
-			</span>
-			<select name="limit" style="width:auto;"><option value="10">10</option><option value="25">25</option><option value="100">100</option></select>
-			<? echo ( ssi::writeButton( $log, $dbh, 'LoadLog', 'load.gif', q`AjaxLoadContent('Log','_rfidtag_log.html', $('f2').serialize() );`, '', 'Load' ); ) ?>
-		</p>
-		<div id="Log"><!--#include virtual="_rfidtag_log.html"--></div>
-	</fieldset>
-</form>
+<?include(_rfidtag_log.html)?>
 <? endif ( $$variable{'RFIDTag'}->id() ) ?>
 <script type="text/javascript">document.jump.rfidtag_id.focus();</script>

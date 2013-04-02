@@ -190,14 +190,22 @@
 	</fieldset>
 </form>
 <? if ( $$variable{Skid}{id} ) ?>
-<fieldset><legend onclick="AjaxToggleContent( 'Allocations', '/employee/inventory/_skid_allocations.html', new Array('skid_id',<? echo ( $$variable{'Skid'}->id() ) ?>) );">Allocations - click to hide/show</legend>
-<div id="Allocations"><!--#include virtual="_skid_allocations.html"--></div>
-</fieldset>
-<fieldset><legend onclick="AjaxToggleContent( 'Log', '/employee/inventory/_skid_log.html', new Array('skid_id',<? echo ( $$variable{'Skid'}->id() ) ?>) );">Inventory Log - click to hide/show</legend>
-<div id="Log"><!--#include virtual="_skid_log.html"--></div>
-</fieldset>
-<fieldset><legend onclick="AjaxToggleContent( 'VerificationLog', '/employee/inventory/_verification_log.html', new Array('skid_id',<? echo ( $$variable{'Skid'}->id() ) ?>) );">Verification Log - click to hide/show</legend>
-<div id="VerificationLog"><!--#include virtual="_verification_log.html"--></div>
-</fieldset>
+	<fieldset><legend onclick="AjaxToggleContent( 'Allocations', '/employee/inventory/_skid_allocations.html', new Array('skid_id',<? echo ( $$variable{'Skid'}->id() ) ?>) );">Allocations - click to hide/show</legend>
+	<div id="Allocations"><!--#include virtual="_skid_allocations.html"--></div>
+	</fieldset>
+	<fieldset><legend onclick="AjaxToggleContent( 'Log', '/employee/inventory/_skid_log.html', new Array('skid_id',<? echo ( $$variable{'Skid'}->id() ) ?>) );">Inventory Log - click to hide/show</legend>
+	<div id="Log"><!--#include virtual="_skid_log.html"--></div>
+	</fieldset>
+	<? echo ( 
+		if ( $$variable{Skid}{rfidtag_id} ) {
+			@param{'end_year','end_month','end_day'} = Date::Calc::Today();
+			$$variable{RFIDTag} = $$variable{Skid}->RFIDTag();
+			return include('_rfidtag_log.html');
+		} # end if
+		return;
+	) ?>
+	<fieldset><legend onclick="AjaxToggleContent( 'VerificationLog', '/employee/inventory/_verification_log.html', new Array('skid_id',<? echo ( $$variable{'Skid'}->id() ) ?>) );">Verification Log - click to hide/show</legend>
+	<div id="VerificationLog"><!--#include virtual="_verification_log.html"--></div>
+	</fieldset>
 <? endif ( $$variable{Skid}{id} ) ?>
 <script type="text/javascript">document.jump.skid_id.focus();</script>
