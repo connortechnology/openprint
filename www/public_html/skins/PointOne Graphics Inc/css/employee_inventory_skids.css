@@ -1,6 +1,9 @@
 table .DateTime {
 	width: 110px;
 }
+table .Date {
+	padding-right: 8px;
+}
 
 
 /*

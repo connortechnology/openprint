@@ -7,6 +7,7 @@
 				<th class="Skid">Skid</th>
 				<th class="RFID">RFID</th>
 				<th class="ManufacturersID">Manufacturers ID</th>
+				<th class="po_id">PO ID</th>
 				<th class="Location">Location</th>
 				<th class="last_seen">Last Seen</th>
 				<th class="Quantity">Quantity</th>
@@ -28,6 +29,7 @@
 					$html .= sprintf('<tr%1$s><td class="Skid"><a href="skid_details.html?skid_id=%2$d">%2$d</a></td>
 						<td class="RFID"><a href="skid_details.html?skid_id=%2$d">%4$s</a></td>
 						<td class="ManufacturersID"><a href="skid_details.html?skid_id=%2$d">%9$s</a></td>
+						<td class="po_id">%10$s</td>
 						<td class="Location"><a href="skid_details.html?skid_id=%2$d">%3$s</a></td>
 						<td class="last_seen"><a href="skid_details.html?skid_id=%2$d">%7$s</a></td>
 						<td class="Quantity"><a href="skid_details.html?skid_id=%2$d">%5$s%6$s</a></td>
@@ -38,6 +40,9 @@
 						( $last_seen_days ? $last_seen_days . ' days' : 'Today' ),
 						$C->Condition()->name(),
 						$Skid->manufacturers_id(),
+						join("\n", 
+							map { sprintf('<a href="/employee/purchase_order/view.html?po_id=%1$d">%1$d</a>', $_->id() ) } $Skid->PurchaseOrders() 
+						),
 						);
 					if ( ( $session{'user_type'} eq 'A' ) or openprint::usergroup::is_user_in( ['Accounting','SalesAdmin','Sales'], $session{'user_id'} ) ) {
 					$html .= '<td class="Price">'.openprint::Currency::format( defined $C->cost() ? $C->cost() : 0 ) . '/100lb</td>';
@@ -54,7 +59,7 @@
 				return $html;
 			) ?>
 			<tr class="totals">
-				<td colspan="4">Totals</td>
+				<td colspan="5">Totals</td>
 				<td class="last_seen"><? echo ( $$variable{'skid_count'}. ' ' . $$variable{'Paper'}->type() . ( $$variable{'skid_count'} == 1 ? '' : 's' ); ) ?></td>
 				<td class="Quantity"><? echo ( Number::Format::format_number($$variable{'InventoryTotal'}).$$variable{'Paper'}->units(); ) ?></td>
 				<td>&nbsp;</td>
@@ -66,10 +71,11 @@
 			</tr>
 			<tr class="totals unprintable">
 				<td colspan="3">Enter new inventory:</td>
+				<td class="po_id"></td>
 				<td colspan="2">
 					<select id="Location" name="Location">
 						<? echo (
-							my @data = ( '', 'select', map { $_->id(), $_->name() } openprint::Location::find('order'=>'lower(name)') );
+							my @data = ( '', 'select', map { $_->id(), $_->name() } openprint::Location::find('order'=>'parent_id NULLS FIRST,lower(name)') );
 							return ssi::make_drop_down( \@data );
 						) ?>
 					</select>

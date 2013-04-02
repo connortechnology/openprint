@@ -36,6 +36,7 @@ $serial = 'skid_id_seq';
 	type			=>	'type',
 	deleted			=>	'deleted',
 	manufacturers_id	=>	'manufacturers_id',
+	received_on		=>	'received_on',
 );
 
 %transforms = (
@@ -46,6 +47,7 @@ $serial = 'skid_id_seq';
 	rfidtag_id	=>	undef,
 	updated_on	=>	'NOW()',
 	created_on	=>	'NOW()',
+	received_on	=>	undef,
 	deleted		=>	0,
 	type		=>	undef,
 	manufacturers_id	=>	undef,
@@ -136,6 +138,16 @@ sub find {
 	} elsif ( $params{'updated_on_end'} ) {
 		$sql .= ' AND updated_on <= ?';
 		push @values, $params{'updated_on_end'};
+	} # end if
+	if ( $params{received_on_start} and $params{received_on_end} ) {
+		$sql .= ' AND ( received_on BETWEEN ? AND ? )';
+		push @values, @params{'received_on_start','received_on_end'};
+	} elsif ( $params{'received_on_start'} ) {
+		$sql .= ' AND received_on >= ?';
+		push @values, $params{'received_on_start'};
+	} elsif ( $params{'received_on_end'} ) {
+		$sql .= ' AND received_on <= ?';
+		push @values, $params{'received_on_end'};
 	} # end if
 	if ( $params{'last_seen_start'} and $params{'last_seen_end'} ) {
 		$sql .= ' AND ( (SELECT updated_on FROM Rfidtags where rfidtags.id=skids.rfidtag_id) BETWEEN ? AND ? )';
@@ -613,6 +625,21 @@ sub cost {
 	} # end if
 	return $_[0]{'cost'};
 } # end sub cost
+
+sub PurchaseOrders {
+	if ( @_ > 1 ) {
+		$_[0]{PurchaseOrders} = $_[1];
+	} # end if
+	if ( ! $_[0]{PurchaseOrders} ) {
+		require openprint::Manifest_Content_Type;
+		my @POs;
+		foreach my $MCT ( openprint::Manifest_Content_Type->find( 'skid_id any'=>$_[0]->id() ) ) {
+			push @POs, $MCT->po_id() if $MCT->po_id();
+		} # end foreach MCT
+		$_[0]{PurchaseOrders} = \@POs;
+	} # end if
+	return @{$_[0]{PurchaseOrders}};
+} # end sub PurchaseOrders
 
 1;
 __END__

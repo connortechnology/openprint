@@ -5,7 +5,7 @@ use MIME::QuotedPrint;
 
 use strict;
 use openprint ();
-use vars qw($log $dbh $table $serial %variable %fields %transforms %defaults );
+use vars qw($log $dbh $debug $table $serial %variable %fields %transforms %defaults );
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
 *variable = \%openprint::variable;
@@ -20,7 +20,7 @@ require openprint::PaperPrice;
 require openprint::logs;
 require openprint::Manufacturer;
 
-my $debug = 1;
+$debug = 0;
 $table = 'paper_inventory';
 $serial = 'paperinventory_id_seq';
 
@@ -171,9 +171,7 @@ sub instock {
 		$$self{'instock'} = shift;
 	} # end if
 	if ( ! defined $$self{'instock'} ) {
-$log->warn("Loading instock");
 		@$self{'instock'} = sql::execute( undef, undef, 'SELECT SUM(delta) FROM Paper_Inventory WHERE paper_id=? AND id <= ?', @$self{'paper_id', 'id'} );
-$log->warn("Loading instock $$self{instock}");
 	} # end if
 	return $$self{'instock'};
 } # end sub instock

@@ -7,7 +7,7 @@ use vars qw( %variable $log $dbh $debug );
 *variable = \%openprint::variable;
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
-$debug = 1;
+$debug = 0;
 
 require sql;
 

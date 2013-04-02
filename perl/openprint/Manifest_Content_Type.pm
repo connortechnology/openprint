@@ -27,10 +27,11 @@ $serial = 'manifest_content_types_id_seq';
 	'po_content_id'	=>	'po_content_id',
 	'manifest_id'	=>	'manifest_id',
 	'paper_id'		=>	'paper_id',
-	'supplier_invoice'	=>	'supplier_invoice',
+	supplier_invoice	=>	'supplier_invoice',
 );
 %find_fields = (
-	'total_quantity'	=>	'(SELECT SUM(quantity) FROM manifestcontents WHERE manifestcontents.manifest_id=manifest_content_types.manifest_id and type_id=manifest_content_types.id)',
+	total_quantity	=>	'(SELECT SUM(quantity) FROM manifestcontents WHERE manifestcontents.manifest_id=manifest_content_types.manifest_id and type_id=manifest_content_types.id)',
+	skid_id			=>	'(SELECT skid_id FROM manifestcontents WHERE manifestcontents.manifest_id=manifest_content_types.manifest_id and type_id=manifest_content_types.id)',
 );
 
 %transforms = (

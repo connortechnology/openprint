@@ -566,8 +566,6 @@ $log->debug("$year-$month-$day");
 	if ( $$options{'fields'} ) {
 		@fields = split(',', $$options{'fields'} );
 	} 
-	
-	
 
 	my $html = '';
 	$html .= sprintf('<span id="%1$s_date">', $prefix );

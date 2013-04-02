@@ -37,15 +37,6 @@ table .on_order, table .allocated, table .in_stock, table .Quantity, table .qty_
 table .Location {
 	text-align: left;
 }
-table .Condition {
-	text-align: left;
-}
-
-#SkidResults table .RFID,
-#Allocations table .RFID,
-#CurrentInventory table .RFID {
-	width: 95px;
-}
 
 input#quantity {
 	width: 100%;
