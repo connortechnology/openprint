@@ -1530,13 +1530,19 @@ sub _manifest_content {
 		if ( $param{'manifest_id'} and ! $Manifest->id() ) {
 			$variable{'error'} .= $Manifest->save({'id'=>$param{'manifest_id'}});
 		} # end if
-		if ( $param{'rfidtag_id'} or $param{'skid_id'} ) {
-			@param{'rfidtag_id','skid_id'} = misc::trim(@param{'rfidtag_id','skid_id'});
+		if ( $param{'rfidtag_id'} or $param{'skid_id'} or $param{manufacturers_id} ) {
+			@param{'rfidtag_id','skid_id','manufacturers_id'} = misc::trim(@param{'rfidtag_id','skid_id','manufacturers_id'});
 			my $Tag = new openprint::RFIDTag( $param{'rfidtag_id'} );
 			$variable{'error'} .= $Tag->save({'id'=>$param{'rfidtag_id'}}) if $param{'rfidtag_id'} and ! $Tag->id();
 
 			my $Skid = new openprint::Skid( $param{'skid_id'} );
 			$Skid = $Tag->Skid() if $Tag->id() and ! $Skid->id();
+
+			if ( $Skid->id() and $Tag->id() and $Skid->rfidtag_id() and ( $Skid->rfidtag_id() != $Tag->id() ) ) {
+				$variable{error}  .= 'Skid already has RFID Tag ' . $Skid->rfidtag_id(). '. Not changing it.<br/>';
+				$Tag = new openprint::RFIDTag();
+			} # end if
+				
 			if ( $param{manufacturers_id} and ! $Skid->manufacturers_id() ) {
 				if ( my $S = openprint::Skid->find_one(manufacturers_id=>$param{manufacturers_id} ) ) {
 					if ( $Skid->id() and ( $Skid->id() != $S->id() ) ) {
@@ -1545,7 +1551,7 @@ sub _manifest_content {
 					} # end if
 				} # end if
 			} # end if
-			$variable{error} .= $Skid->save({rfidtag_id=>$param{rfidtag_id},manufacturers_id=>$param{manufacturers_id}}) if ! $Skid->id();
+			$variable{error} .= $Skid->save({rfidtag_id=>$Tag->id(),manufacturers_id=>$param{manufacturers_id}}) if ! $Skid->id();
 			$variable{error} .= $Skid->save({manufacturers_id=>$param{manufacturers_id}} ) if $param{manufacturers_id} and ! $Skid->manufacturers_id();
 			return if $variable{'error'};
 
