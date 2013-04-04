@@ -634,11 +634,12 @@ sub PurchaseOrders {
 		require openprint::Manifest_Content_Type;
 		my @POs;
 		foreach my $MCT ( openprint::Manifest_Content_Type->find( 'skid_id any'=>$_[0]->id() ) ) {
-			push @POs, $MCT->po_id() if $MCT->po_id();
+			push @POs, $MCT->PurchaseOrder() if $MCT->po_id();
 		} # end foreach MCT
 		$_[0]{PurchaseOrders} = \@POs;
 	} # end if
-	return @{$_[0]{PurchaseOrders}};
+	return @{$_[0]{PurchaseOrders}} if ref $_[0]{PurchaseOrders} eq 'ARRAY';
+	return ();
 } # end sub PurchaseOrders
 
 1;

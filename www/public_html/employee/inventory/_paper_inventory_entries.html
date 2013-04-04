@@ -25,6 +25,10 @@
 				$$variable{'value_total'} = 0;
 				foreach my $C ( openprint::SkidContent::find(paper_id=>$variable{Paper}{id}, 'quantity_>'=>0,'order'=>'skid_id') ) {
 					my $Skid = $C->Skid();
+					my $RFIDTag = $Skid->RFIDTag();
+					my @PurchaseOrders = $Skid->PurchaseOrders();
+$log->debug("POs: @PurchaseOrders");
+
 					my $last_seen_days = $Skid->last_seen_days();
 					$html .= sprintf('<tr%1$s><td class="Skid"><a href="skid_details.html?skid_id=%2$d">%2$d</a></td>
 						<td class="RFID"><a href="skid_details.html?skid_id=%2$d">%4$s</a></td>
@@ -35,13 +39,13 @@
 						<td class="Quantity"><a href="skid_details.html?skid_id=%2$d">%5$s%6$s</a></td>
 						<td class="Condition"><a href="skid_details.html?skid_id=%2$d">%8$s</a></td>',
 						$rowclass, $C->skid_id(), $Skid->Location()->name(), 
-						( $Skid->rfidtag_id() ? sprintf('%d (%2$x)', $Skid->RFIDTag()->id_short(),substr($Skid->RFIDTag()->id(),1,15)) : '' ), 
-( defined $C->quantity() ? Number::Format::format_number( $C->quantity() ) : 0 ), $C->Paper()->units(), 
+						( $RFIDTag->id() ? sprintf('%d (%2$x)', $RFIDTag->id_short(),substr($RFIDTag->id(),1,15)) : '' ), 
+						( defined $C->quantity() ? Number::Format::format_number( $C->quantity() ) : 0 ), $C->Paper()->units(), 
 						( $last_seen_days ? $last_seen_days . ' days' : 'Today' ),
 						$C->Condition()->name(),
 						$Skid->manufacturers_id(),
 						join("\n", 
-							map { sprintf('<a href="/employee/purchase_order/view.html?po_id=%1$d">%1$d</a>', $_->id() ) } $Skid->PurchaseOrders() 
+							map { sprintf('<a href="/employee/purchase_order/view.html?po_id=%1$d">%1$d</a>', $_->id() ) } @PurchaseOrders 
 						),
 						);
 					if ( ( $session{'user_type'} eq 'A' ) or openprint::usergroup::is_user_in( ['Accounting','SalesAdmin','Sales'], $session{'user_id'} ) ) {
