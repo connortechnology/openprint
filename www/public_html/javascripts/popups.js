@@ -104,11 +104,15 @@ function AjaxLoadContent( divID, page, parameters, message ) {
 		} // end if
 	} // end if
 	var method = 'get';
-	//alert( typeof parameters );
+	//alert( parameters );
 	if ( ! parameters ) { 
 		parameters = '';
-	} else if ( typeof parameters == 'object' ) {
+	} else if ( parameters == 'object HTMLFormElement]' ) {
 		parameters = parameters.serialize();
+	} else if ( typeof parameters == 'object' && parameters.serialize ) {
+		parameters = parameters.serialize();
+	//} else {
+		//alert( 'Unknown parameters: ' + typeof parameters );
 	} 
 	if ( parameters.length > 8190 ) 
 		method = 'post';

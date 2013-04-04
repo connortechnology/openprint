@@ -467,7 +467,7 @@ function dearchive(file_id) {
 </div>
 <? endif ( $$variable{'Project'}->docket() ) ?>
 <br class="spacer"/>
-<fieldset><legend onclick="AjaxLoadContent('StockAllocations','_stock_allocations.html', { project_id: <? echo ( $$variable{'Project'}->id() ) ?> } );">Allocated</legend>
+<fieldset><legend onclick="AjaxToggleContent('StockAllocations','_stock_allocations.html?project_id=<? echo ( $$variable{'Project'}->id() ) ?>', null, null );">Allocated</legend>
 <div id="StockAllocations">
 <!--#include virtual="_stock_allocations.html"-->
 </div>

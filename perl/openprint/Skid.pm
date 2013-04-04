@@ -19,7 +19,7 @@ require openprint::Manifest;
 require openprint::ManifestContent;
 require openprint::InventoryCondition;
 
-$debug = 1;
+$debug = 0;
 
 $table = 'Skids';
 $serial = 'skid_id_seq';
@@ -349,34 +349,32 @@ sub location {
 	my $self = shift;
 	if ( @_ ) {
 		my $name = shift;
-		@$self{'location_id'} = sql::execute( undef, undef, q{SELECT id FROM Locations WHERE name=?}, $name );
-		if ( ! $$self{'location'} ) {
-			sql::insert( undef,undef, 'Locations', 'name', $name );
-			@$self{'location_id'} = sql::execute( undef, undef, q{SELECT id FROM Locations WHERE name=?}, $name );
+		my $Location = openprint::Location->find_one( 'name lc'=>lc openprint::Location->transform('name', $name) );
+		if ( ! $Location ) {
+			$Location = new openprint::Location();
+			$Location->save({name=>$name});
 		} # end if
+		$self->location_id( $Location->id() );
 	} # end if
-	return new openprint::Location( $$self{'location_id'} )->name();
+	return new openprint::Location( $$self{location_id} )->name();
 } # end if
 
 sub location_id {
-	my ( $self, $new ) = @_;
 
-	if ( $new ) {
-		$$self{'location_id'} = $new;
-	} # end if
-
-	if ( $$self{'rfidtag_id'} ) {
-		my $Tag = new openprint::RFIDTag( $$self{'rfidtag_id'} );
-		if ( $new ) {
-			if ( $new != $Tag->location_id() ) {
-				$Tag->save({'location_id'=>$new});
+	my $Tag = $_[0]->RFIDTag();
+	if ( @_ > 1 ) {
+		$_[0]{location_id} = $_[1];
+		if ( $_[0]{rfidtag_id} ) {
+			if ( $_[1] != $Tag->location_id() ) {
+				$Tag->save({location_id=>$_[1]});
 			} # end if
-			$$self{'location_id'} = $new;
-		} elsif ( $Tag->location_id() != $$self{'location_id'} ) {
-			$$self{'location_id'} = $Tag->location_id();
 		} # end if
 	} # end if
-	return $$self{'location_id'};
+
+	if ( $_[0]{rfidtag_id} and ( $Tag->location_id() != $_[0]{location_id} ) ) {
+		$_[0]{location_id} = $Tag->location_id();
+	} # end if
+	return $_[0]{location_id};
 } # end sub location_id
 
 sub Location {

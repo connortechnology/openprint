@@ -85,14 +85,14 @@
 			</li>
 		<? else ( $$variable{'Skid'}->id() ) ?>
 			<li><label># of skids to add</label>
-				<input type="number" name="skid_quantity" value="<? echo ( $param{skid_quantity} ) ?>" />
+				<? echo ( input( type=>'cardinal', name=>'skid_quantity', value=>$param{skid_quantity} ); ) ?>
 			</li>
 		<? endif ( $$variable{'Skid'}->id() ) ?>
 			<li><label>RFID Tag</label>
 				<input type="text" id="rfidtag_id" name="rfidtag_id" value="<? echo ( $$variable{'Skid'}->rfidtag_id() ) ?>" />
 				<? if ( $$variable{'Skid'}->rfidtag_id() ) ?>
 					<? echo ( button( 'ViewTag', { href=>'rfidtag_details.html?rfidtag_id='.$$variable{Skid}->rfidtag_id(), text=>'View Tag' } ); ) ?><br/>
-					Last seen: <? echo ( Date::Format::time2str($config{'DateTimeFormat'}, Date::Parse::str2time($$variable{'Skid'}->RFIDTag()->updated_on()) ); ) ?>
+					Last seen: <? echo ( format_date( $$variable{'Skid'}->RFIDTag()->updated_on() ); ) ?>
 				<? endif ( $$variable{'Skid'}->rfidtag_id() ) ?>
 			</li>
 			<li>
