@@ -249,10 +249,12 @@ sub save {
 
 sub destroy {
 	my $self = shift;
+	my $error;
 
 	my $ac = sql::start_transaction( $dbh );
 	foreach my $V ( openprint::Skid_Verification->find('skid_id'=>$$self{'id'}) ) {
-	$V->delete();
+		$error .= $V->delete();
+		last if $error;
 	} # end foreach V	
 	sql::execute( undef, undef, q{DELETE FROM manifestcontents WHERE skid_id=?}, $$self{'id'} );
 	sql::execute( undef, undef, q{DELETE FROM paper_allocations WHERE skid_id=?}, $$self{'id'} );
@@ -260,6 +262,7 @@ sub destroy {
 	sql::execute( undef, undef, q{DELETE FROM skid_contents WHERE skid_id=?}, $$self{'id'} );
 	sql::execute( undef, undef, q{DELETE FROM skids WHERE id=?}, $$self{'id'} );
 	sql::end_transaction( $dbh, $ac );
+	return $error;
 } # end sub delete
 
 sub to_string {

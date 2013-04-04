@@ -1583,6 +1583,8 @@ sub _manifest_content {
 				$variable{'type_id'} = $param{'type_id'};
 				$variable{'Type'} = new openprint::Manifest_Content_Type( $param{'type_id'} );
 			} # end if
+		} else {
+			$variable{information} .= 'No RFID, Skid ID or manufacturers id given.  No changes made.<br/>';
 		} # end if
 	} # end if
 } # end sub _manifest_content
@@ -1598,12 +1600,16 @@ sub manifests {
 	_manifests();
 	ssi::setup_date_select( '/employee/inventory/manifests.html', 'received_on_start', -7 );
 	ssi::setup_date_select( '/employee/inventory/manifests.html', 'received_on_end', '' );
+	ssi::setup_date_select( '/employee/inventory/manifests.html', 'created_on_start', -7 );
+	ssi::setup_date_select( '/employee/inventory/manifests.html', 'created_on_end', '' );
 } # end sub manifests
 
 sub _manifests {
 	ssi::save_params( '/employee/inventory/manifests.html', ( 
-				'received_on_start_year','received_on_start_month','received_on_start_day',
-				'received_on_end_year','received_on_end_month','received_on_end_day',
+				( map { 'received_on_start_'.$_ } ( 'year','month','day' ) ),
+				( map { 'received_on_end_'.$_ } ( 'year','month','day' ) ),
+				( map { 'created_on_start_'.$_ } ( 'year','month','day' ) ),
+				( map { 'created_on_end_'.$_ } ( 'year','month','day' ) ),
 				'supplier_id', 'delivery',
 				) );
 } # end sub _manifests

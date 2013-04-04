@@ -22,6 +22,8 @@
 			'name_like'	=> $param{'manifest_like'},
 			ssi::date_filter( '/employee/inventory/manifests.html?received_on_start', 'received_on_start' ),
 			ssi::date_filter( '/employee/inventory/manifests.html?received_on_end', 'received_on_end' ),
+			ssi::date_filter( '/employee/inventory/manifests.html?created_on_start', 'created_on_start' ),
+			ssi::date_filter( '/employee/inventory/manifests.html?created_on_end', 'created_on_end' ),
 			order		=>	'received_on DESC',
 		);
 		$search{'supplier_id'} = $session{'/employee/inventory/manifests.html?supplier_id'} if $session{'/employee/inventory/manifests.html?supplier_id'};
@@ -120,7 +122,7 @@
 					my $Paper = new openprint::Paper( $paper_id );
 					$html .= sprintf('%s : %dlbs : %d skids', $Paper->to_string(), $manifest_weight{$paper_id}, $manifest_skids{$paper_id}  );
 					if ( openprint::usergroup::is_user_in( ['Accounting','InventoryManager'], $session{'user_id'} ) ) {
-						my $Type = openprint::Manifest_Content_Type->find_one('manifest_id'=>$Manifest->id(), 'paper_id'=>$paper_id);
+						my $Type = openprint::Manifest_Content_Type->find_one('manifest_id'=>$Manifest->id(), 'paper_id'=>($paper_id?$paper_id:undef));
 						if ( $Type ) {
 							my $POC = $Type->PurchaseOrder_Content();
 
