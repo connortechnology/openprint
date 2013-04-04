@@ -62,6 +62,7 @@
 		} else {
 			$html .= '<td colspan="2">&nbsp;</a>';
 		} # end if
+		$html .= '<td class="Location">'.ssi::select( openprint::Location->dropdown(order=>'parent_id NULLS FIRST, lower(name)'), $Skid->location_id(), { name=>'location_id-'.$id, prepend=>['','select'] } ).'</td>';
 		$html .= '<td>'.$error.'</td>';
 		$html .= '<td class="buttons">' . ssi::button( 'X'.$$C{'id'}, { onclick=>qq`delete_content('$$C{id}');`, text=>'X', title=>'Remove' } ) . '</td>';
 		$html .= '</tr>';

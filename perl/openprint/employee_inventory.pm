@@ -1467,6 +1467,9 @@ sub manifest {
 							$SkidContents[0]->save({skid_id=>$$C{skid_id}, paper_id=>$Type->paper_id(), quantity=>$$C{quantity}, manifestcontent_id=>$$C{id}});
 						} # end if
 					} # end if
+					if ( $param{"location_id-$$Type{id}-$$C{id}"} and ( $param{"location_id-$$Type{id}-$$C{id}"} != $Skid->location_id() ) ) {
+						$Skid->save({location_id=>$param{"location_id-$$Type{id}-$$C{id}"}});
+					} # end if
 					$total_qty += $C->quantity();
 					#if ( $Project and ( $param{"allocate-$$Type{id}"} eq 'Specific' ) ) {
 					if ( $Project and ! $checked_out ) {
@@ -1571,6 +1574,7 @@ sub _manifest_content {
 			} # end if
 			$variable{error} .= $Skid->save({rfidtag_id=>$Tag->id(),manufacturers_id=>$param{manufacturers_id}}) if ! $Skid->id();
 			$variable{error} .= $Skid->save({manufacturers_id=>$param{manufacturers_id}} ) if $param{manufacturers_id} and ! $Skid->manufacturers_id();
+			$variable{error} .= $Skid->save({location_id=>$param{location_id}} ) if $param{location_id};
 			return if $variable{'error'};
 
 			if ( $Tag->id() and sets::isin( $Tag->id(), map { $_->Skid()->rfidtag_id() } $Manifest->Contents() ) ) {
