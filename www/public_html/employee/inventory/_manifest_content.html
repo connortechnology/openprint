@@ -9,6 +9,7 @@
 		my $Paper = $C->Type()->Paper();
 		my $Skid = $C->Skid();
 		my $tag_id = $Skid->rfidtag_id();
+		my $RFIDTag = $Skid->RFIDTag();
 		my $error;
 		my @SkidContents = $Skid->Contents();
 		if ( @SkidContents > 1 ) {
@@ -19,7 +20,7 @@
 
 		my $id = $$variable{'type_id'}.'-'.$$C{id};
 			
-		$html .= sprintf('<tr id="tr-%1$d"><td class="RFID"><a href="/employee/inventory/rfidtag_details.html?rfidtag_id=%2$s">%2$s</a></td>', $C->id(), $tag_id );
+		$html .= sprintf('<tr id="tr-%1$d"><td class="RFID"><a href="/employee/inventory/rfidtag_details.html?rfidtag_id=%2$s">%2$s</a></td>', $C->id(), $RFIDTag->id_short() );
 		$html .= sprintf('<td class="Skid"><a href="/employee/inventory/skid_details.html?skid_id=%1$d">%1$d</a></td>', $C->skid_id() );
 	
 		$html .= '<td class="ManufacturersID">';

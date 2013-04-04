@@ -626,6 +626,7 @@ sub save_skid {
 			$Skid->received_on( join('-', @param{'received_on_year','received_on_month','received_on_day'}) );
 		} # end if
 	} # end if
+	$Skid->received_on( join('-', Date::Calc::Today() ) ) if ! $Skid->received_on();
 	if ( my $error = $Skid->save() ) {
 		$variable{'error'} .= $error;
 		return;

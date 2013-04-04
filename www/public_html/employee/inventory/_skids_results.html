@@ -157,13 +157,12 @@ $Skid->manufacturers_id(),
 				$html .= '</td><td rowspan="2" class="Condition">'. join('<br/>', map { $_->condition() } $Skid->Contents() ) . '</td>';
 				if ( openprint::usergroup::is_user_in( ['InventoryManager'], $session{'user_id'} ) ) {
 					$html .= '<td rowspan="2" class="Price">'.openprint::Currency::format($Skid->value()).'</td>';
-					#$html .= '<td rowspan="2" class="Price">@'.$Skid->cost().'='.openprint::Currency::format($Skid->value()).'</td>';
 					$total_value += $Skid->value();
 				} # end if
 				$html .= '</tr>';
 				$html .= "<tr$rowclass>";
 				
-				$html .= '<td class="checkbox unprintable">&nbsp;</td><td colspan="8">';
+				$html .= '<td class="checkbox">&nbsp;</td><td colspan="8">';
 			
 				foreach my $C ( $Skid->Contents() ) {
 					my $Paper = $C->Paper();
@@ -186,10 +185,10 @@ $Skid->manufacturers_id(),
 				$html .= '</tr>';
 				$rowclass = $rowclass ? '' : ' class="colRow"';
 			} # end foreach Skid
-			$html .= '<tr class="totals"><td class="unprintable"></td><td colspan="4">Totals:</td><td>';
+			$html .= '<tr class="totals"><td class="checkbox"></td><td colspan="5">Totals:</td><td>';
 			$html .= Number::Format::format_number($total_skids) . 'skids ' . Number::Format::format_number($total_sheets) . 'sheets<br/>' if $total_skids;
 			$html .= Number::Format::format_number($total_rolls) . 'rolls ' . Number::Format::format_number($total_weight) . 'lbs<br/>' if $total_rolls;
-			$html .= '</td><td colspan="3">&nbsp;</td>';
+			$html .= '</td><td colspan="4">&nbsp;</td>';
 			if ( openprint::usergroup::is_user_in( ['InventoryManager'], $session{'user_id'} ) ) {
 				$html .= '<td class="Price">'.openprint::Currency::format($total_value).'</td>';
 			} # end if
