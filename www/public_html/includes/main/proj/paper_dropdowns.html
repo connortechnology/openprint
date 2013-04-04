@@ -36,9 +36,7 @@
 			</p>
 <? eval (
 	@{$$variable{'PaperTypes'}} = ('Sheet');
-	if ( openprint::usergroup::is_user_in( ['Web Estimating'], $openprint::session{'user_id'} ) ) {
 	push @{$$variable{'PaperTypes'}}, 'Roll';
-	} # end if
 ) ?>
 <? if ( @{$$variable{'PaperTypes'}} > 1 ) ?>
 			<p><label>Format:</label>
