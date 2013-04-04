@@ -1437,8 +1437,14 @@ sub manifest {
 								'manifest_id'	=>	$Manifest->id(),
 								'quantity'		=>	Math::Round::nearest( 1, $param{"qty_lbs-$$Type{id}-"} ),
 								} );
-						foreach my $SkidContent ( openprint::SkidContent->find('skid_id'=>$Skid->id(),'paper_id'=>$Type->paper_id()) ) {
-							$SkidContent->save({'manifestcontent_id'=>$MC->id()});
+
+						my @SkidContents = openprint::SkidContent->find(skid_id=>$Skid->id(),paper_id=>$Type->paper_id());
+						if ( ! @SkidContents ) {
+							@SkidContents = ( new openprint::SkidContent() );
+							$SkidContents[0]->set({skid_id=>$$MC{skid_id}, paper_id=>$Type->paper_id(), quantity=>$$MC{quantity}});
+						} # end if
+						foreach my $SkidContent ( @SkidContents ) {
+							$SkidContent->save({'manifestcontent_id'=>$MC->id()}) if $SkidContent->manifestcontent_id() != $MC->id();
 						} # end foreach SkidContent
 					} # end if
 				} # end if New Quantity
@@ -1453,6 +1459,12 @@ sub manifest {
 						$variable{'error'} .= $C->save({ 'quantity'	=> sprintf('%d', $param{"qty_lbs-$$Type{id}-$$C{id}"}) });
 						if ( ! $checked_out ) {
 							save_inventory( $Skid, $Paper, $C->quantity(), sprintf('Inventory adjusted from manifest %1$s.', $Manifest->name() ) );
+						} # end if
+					} else {
+						my @SkidContents = openprint::SkidContent->find(skid_id=>$Skid->id(),paper_id=>$Type->paper_id());
+						if ( ! @SkidContents ) {
+							@SkidContents = ( new openprint::SkidContent() );
+							$SkidContents[0]->save({skid_id=>$$C{skid_id}, paper_id=>$Type->paper_id(), quantity=>$$C{quantity}, manifestcontent_id=>$$C{id}});
 						} # end if
 					} # end if
 					$total_qty += $C->quantity();
@@ -1526,10 +1538,16 @@ sub _manifest_content {
 			$variable{'error'} .= 'No manifest id.	Please enter the manifest id before adding items to it.<br/>';
 			return;
 		} # end if
+		my $Type = new openprint::Manifest_Content_Type( $param{type_id} );
+		if ( ! $Type->id() ) {
+			$variable{error} .= 'No type.  This should not happen.<br/>';
+			return;
+		} # end if
 		my $Manifest = $variable{'Manifest'} = new openprint::Manifest( $param{'manifest_id'} );
 		if ( $param{'manifest_id'} and ! $Manifest->id() ) {
 			$variable{'error'} .= $Manifest->save({'id'=>$param{'manifest_id'}});
 		} # end if
+
 		if ( $param{'rfidtag_id'} or $param{'skid_id'} or $param{manufacturers_id} ) {
 			@param{'rfidtag_id','skid_id','manufacturers_id'} = misc::trim(@param{'rfidtag_id','skid_id','manufacturers_id'});
 			my $Tag = new openprint::RFIDTag( $param{'rfidtag_id'} );
@@ -1564,7 +1582,11 @@ sub _manifest_content {
 			} else {
 				my $MC = new openprint::ManifestContent();
 				my @SC = $Skid->Contents();
-				if ( ! $param{'qty_lbs'} ) {
+				if ( ! @SC ) {
+					# If skid didn't exist, then it won't have contents.
+					@SC = ( new openprint::SkidContent() );
+					$SC[0]->set({ skid_id=>$Skid->id(), paper_id=>$Type->paper_id(), quantity=>$param{'qty_lbs'} });
+				} elsif ( ! $param{'qty_lbs'} ) {
 					if ( @SC == 1 ) {
 						$param{'qty_lbs'} = $SC[0]->quantity();
 					} # end if
@@ -1577,7 +1599,7 @@ sub _manifest_content {
 						'quantity'		=>	sprintf('%d', $param{'qty_lbs'}),
 						} );
 				foreach my $SkidContent ( @SC ) {
-					$SkidContent->save({'manifestcontent_id'=>$MC->id()});
+					$SkidContent->save({'manifestcontent_id'=>$MC->id()}) if $SkidContent->manifestcontent_id() != $MC->id();
 				} # end foreach SkidContent
 				$variable{'C'} = $MC;
 				$variable{'type_id'} = $param{'type_id'};
