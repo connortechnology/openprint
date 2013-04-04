@@ -75,6 +75,15 @@
 			PerlResponseHandler	 openprint::www
 		</Files>
 	</Directory>
+    <Directory "/var/www/point-one/skins/PointOne Graphics Inc">
+        RewriteEngine on
+        RewriteRule ^(.*);SSL$  http://%{SERVER_NAME}/$1 [NC,R,L]
+        RewriteRule ^(.*);NOSSL$ http://%{SERVER_NAME}/$1 [NC,R,L]
+		<Files ~ "\.html$">
+			SetHandler		perl-script
+			PerlResponseHandler	 openprint::www
+		</Files>
+    </Directory>
 
    <Directory "/var/www/point-one/skins/PointOne Graphics Inc/cache">
         RewriteEngine On
