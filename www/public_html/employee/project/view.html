@@ -162,7 +162,8 @@ function dearchive(file_id) {
 			$totals{$Paper->to_string()} += sprintf('%.0f', $sheets * $Paper->start_area() * $Paper->wpsi() );
 			$sheets{$Paper->to_string()} += $sheets;
 		} else {
-			$log->error("Unknown type of Stock " . $Paper->to_string() );
+			$log->warn("Unknown type of Stock " . $Paper->to_string() );
+			next;
 		} # end if
 		$Stocks{$Paper->to_string()} = $Paper;
 		if ( ! $Paper->supplied() ) {
@@ -181,7 +182,12 @@ function dearchive(file_id) {
 		} # end if
 		$html .= '<td class="service"><b>Stock:</b><br/>';
 		foreach my $string ( sort keys %Stocks ) {
-			$html .= $string . '<br/>';
+			my $Stock = $Stocks{$string};
+			if ( $Stock->id() ) {
+				$html .= sprintf('<a href="/employee/inventory/paper_details.html?paper_id=%1$d">%2$s</a><br/>', $Stock->id(), $string );
+			} else {
+				$html .= $string;
+			} # end if	
 		} # end foreach string
 	
 		$html .= '</td><td colspan="2"><br/>';
@@ -461,7 +467,7 @@ function dearchive(file_id) {
 </div>
 <? endif ( $$variable{'Project'}->docket() ) ?>
 <br class="spacer"/>
-<fieldset><legend onclick="AjaxLoadContent('StockAllocations','_stock_allocations.html', { project_id: <? echo ( $$variable{'Project'}->id() ) ?> } );">Allocated</legend>
+<fieldset><legend onclick="AjaxToggleContent('StockAllocations','_stock_allocations.html?project_id=<? echo ( $$variable{'Project'}->id() ) ?>', null, null );">Allocated</legend>
 <div id="StockAllocations">
 <!--#include virtual="_stock_allocations.html"-->
 </div>

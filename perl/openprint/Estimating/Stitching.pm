@@ -23,7 +23,6 @@ require openprint::project;
 require openprint::Equipment;
 require openprint::service;
 
-require sql;
 require openprint::Equipment;
 use Time::HiRes qw{ time gettimeofday tv_interval }; 
 
@@ -352,7 +351,7 @@ $openprint::log->debug("Overriding imposiion");
 				} # end if
 				if ( ! $$sig_specs{'txtSignatureSpreadQuantity'.$qty_index} ) {
 					$$specs{'hdnBreakdown'.$qty_index} .= "Signature $$sig_specs{SignatureIndex} has no spreads.<br/>";
-					next;
+					$$sig_specs{'txtSignatureSpreadQuantity'.$qty_index} = 1;
 				} # end if
 
 				my %pages;

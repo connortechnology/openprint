@@ -1,0 +1,14 @@
+table .DateTime {
+	width: 110px;
+}
+table .Date {
+	padding-right: 8px;
+}
+
+
+/*
+#f1, #f2 {
+	float: left;
+	width: 50%;
+}
+*/

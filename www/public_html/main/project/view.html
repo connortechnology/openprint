@@ -124,7 +124,7 @@ There is no current project.
 			my $summary = openprint::service::summary( $$variable{'ProjectIndex'}, $service_ids[0], $qty_index );
 			if ( $$variable{'name'} =~ /(\d+) Signatures/ ) {
 				my $sig_qty = $1;
-				if ( $summary =~ /(.*)\n(.*Stock Qty: )(\d+) (lbs|sheets)(.*)$/m ) {
+				if ( $summary =~ /(.*)\n?(.*Stock Qty: )(\d+) (lbs|sheets)(.*)$/m ) {
 					$summary = $1."\n".$2.$$variable{'SignatureStockQty'.$qty_index.$service_ids[0]}.' '.$4.$5;
 				} # end if
 			} # end if

@@ -1,31 +1,46 @@
 <? echo (
-	my $html;
-	my @pageflips;
-	
+	if ( ! sets::isin( $session{user_type}, ['E','A'] ) ) {
+		#return include('/error/error_login.html');
+	} 
+
+
+sub find_index {
 	my @files;
-	if ( opendir( DIRHANDLE, $config{'PageFlipDir'} ) ) {
+	if ( opendir( DIRHANDLE, $config{PageFlipDir}.$_[0] ) ) {
 		@files = readdir DIRHANDLE;
 		closedir DIRHANDLE;
 	} else {
-		return '<div class="error">Unable to read directory: ' . $config{PageFileDir}.'</div>';
+		return '<div class="error">Unable to read directory: ' . $config{PageFileDir}.$_[0].'</div>';
 	} # end if
+	my @subdirs;
 
 	foreach my $file ( @files ) {
 		next if $file =~ /^\./;
-		my $path = $config{PageFlipDir}.'/'.$file;
+		push @subdirs, $_[0] if 'index.html' eq $file;
+		my $path = $_[0].'/'.$file;
 
-		if ( ! -e $path ) {
-			$log->warn('files doesnt exist? ' . $path );
-		} 
-		next if ! -d $path;
-		push @pageflips, $file;
+		next if ! -d $config{PageFlipDir}.$path;
+		push @subdirs, find_index( $path );
 	} # end foreach file
+	return @subdirs;
+}
 
+	my $html;
+	if ( ! -e $config{PageFlipDir} ) {
+		return '<div class="error">Book storage directory not found!</div>';
+	} # end if
+	if ( ! -d $config{PageFlipDir} ) {
+		return '<div class="error">Book storage directory is not a directory!</div>';
+	} # end if
+
+	my @pageflips = find_index( '' );
+	
 	if ( ! @pageflips ) {
-		return '<div class="error">No pageflips found!</div>';
+		return '<div class="error">No publications found!</div>';
 	}
 
 	foreach my $file ( @pageflips ) {
+		next if ! $file;
 		$html .= sprintf('<a href="/PageFlip/%1$s">%1$s</a><br/>', $file );
 	} # end foreah file
 	return $html;

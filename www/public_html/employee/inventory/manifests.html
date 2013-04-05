@@ -36,13 +36,23 @@
 				</select>
 			</li>
 			<li>
-				<label>Received On</label>
-				<span class="DateSelectorT">
-	<? echo ( ssi::date_select_session( '/employee/inventory/manifests.html','received_on_start', { 'with_today'=>1 } ); ) ?>
+				<label>Entered On</label>
+				<span class="DateSelectorCT">
+	<? echo ( ssi::date_select_session( '/employee/inventory/manifests.html','created_on_start', { with_today=>1, with_clear=>1 } ); ) ?>
 				</span>
 				to 
-				<span class="DateSelectorT">
-	<? echo ( ssi::date_select_session( '/employee/inventory/manifests.html','received_on_end', { 'with_today'=>1 } ); ) ?>
+				<span class="DateSelectorCT">
+	<? echo ( ssi::date_select_session( '/employee/inventory/manifests.html','created_on_end', { with_today=>1, with_clear=>1 } ); ) ?>
+				</span>
+			</li>
+			<li>
+				<label>Received On</label>
+				<span class="DateSelectorCT">
+	<? echo ( ssi::date_select_session( '/employee/inventory/manifests.html','received_on_start', { with_today=>1, with_clear=>1 } ); ) ?>
+				</span>
+				to 
+				<span class="DateSelectorCT">
+	<? echo ( ssi::date_select_session( '/employee/inventory/manifests.html','received_on_end', { with_today=>1, with_clear=>1 } ); ) ?>
 				</span>
 			</li>
 			<li>

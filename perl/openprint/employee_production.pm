@@ -1054,6 +1054,7 @@ sub _ul_div {
 		$variable{'Shift'} = openprint::Shift::get_from_ul_id( $param{'ul_id'} );
 		if ( ! $variable{'Shift'} ) {
 			$variable{'error'} .= "Unable to find shift for $param{'ul_id'}";
+			$variable{Shift} = new openprint::Shift();
 		} # end if
 	} else {
 		$variable{'error'} .= "No id given for shift";

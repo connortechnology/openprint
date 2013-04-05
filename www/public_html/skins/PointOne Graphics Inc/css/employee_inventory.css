@@ -18,7 +18,7 @@ table .inventory {
 	text-align: left;
 	width: 200px;
 }
-table .condition {
+table .Condition {
 	text-align: left;
 	width: 100px;
 }
@@ -36,15 +36,6 @@ table .on_order, table .allocated, table .in_stock, table .Quantity, table .qty_
 }
 table .Location {
 	text-align: left;
-}
-table .Condition {
-	text-align: left;
-}
-
-#SkidResults table .RFID,
-#Allocations table .RFID,
-#CurrentInventory table .RFID {
-	width: 95px;
 }
 
 input#quantity {
@@ -88,4 +79,15 @@ padding-left: 100px;
 
 fieldset p.size input[type="number"] {
 	width: 75px;
+}
+table .ManufacturersID {
+	width: 140px;
+	text-align: left;
+}
+
+#manifests_within_days, #manifests_within_lbs {
+	width: 40px;
+}
+#location_log_form select {
+	width: auto;
 }

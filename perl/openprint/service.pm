@@ -528,10 +528,11 @@ sub summary {
 				$$specs{'txtSignatureSpreadQuantity'.$qty_index} = $$specs{'txtSignatureSpreadQuantity'};
 			} # end if
 			return '' if ! $$specs{'txtImposition'.$qty_index};
-			my $html = sprintf(qq{%s %dout %s\n },
+			my $html = sprintf(qq{%s %dout },
 					($$specs{'txtSignatureSpreadQuantity'.$qty_index} and $$specs{'txtSpreadSize'} ) ? ($$specs{'txtSignatureSpreadQuantity'.$qty_index} * $$specs{'txtSpreadSize'}) . 'pp' : '',
 					$$specs{'txtImposition'.$qty_index} );
 			$html .= $$specs{'ddmRunStyle'.$qty_index} eq 'Web' ? $$specs{'StockWidth'.$qty_index} . '" ' . $$specs{'ddmRunStyle'.$qty_index} : $$specs{'ddmRunStyle'.$qty_index};
+			$html .= ' ' . $$specs{'PrintingType'.$qty_index};
 			$html .= sprintf(' with %d plate changes ', $$specs{'txtPlateChangeQuantity'.$qty_index} ) if $$specs{'txtPlateChangeQuantity'.$qty_index};
 
 			$html .= ' Stock Qty: ' . $$specs{'txtPressSheetQty'.$qty_index};

@@ -4,7 +4,7 @@ our @ISA = qw(openprint::Object);
 require openprint::Object;
 
 use openprint ();
-use vars qw(%variable $log $dbh %config $debug $table $serial %fields %transforms %defaults );
+use vars qw(%variable $log $dbh %config $debug $table $serial %find_fields %fields %transforms %defaults );
 *variable = \%openprint::variable;
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
@@ -14,7 +14,7 @@ require openprint::Manifest;
 require openprint::Paper;
 require openprint::PurchaseOrder_Content;
 
-$debug = 1;
+$debug = 0;
 
 $table = 'manifest_content_types';
 $serial = 'manifest_content_types_id_seq';
@@ -27,7 +27,11 @@ $serial = 'manifest_content_types_id_seq';
 	'po_content_id'	=>	'po_content_id',
 	'manifest_id'	=>	'manifest_id',
 	'paper_id'		=>	'paper_id',
-	'supplier_invoice'	=>	'supplier_invoice',
+	supplier_invoice	=>	'supplier_invoice',
+);
+%find_fields = (
+	total_quantity	=>	'(SELECT SUM(quantity) FROM manifestcontents WHERE manifestcontents.manifest_id=manifest_content_types.manifest_id and type_id=manifest_content_types.id)',
+	skid_id			=>	'(SELECT skid_id FROM manifestcontents WHERE manifestcontents.manifest_id=manifest_content_types.manifest_id and type_id=manifest_content_types.id)',
 );
 
 %transforms = (

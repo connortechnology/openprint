@@ -76,7 +76,9 @@ function add_content(form, type_id) {
 				rfidtag_id: $('rfidtag_id-'+type_id+'-').value,
 				skid_id:    $('skid_id-'+type_id+'-').value,
 				docket:     $('docket-'+type_id+'-').value,
-				qty_lbs:    $('qty_lbs-'+type_id+'-').value
+				qty_lbs:    $('qty_lbs-'+type_id+'-').value,
+				manufacturers_id:	$('manufacturers_id-'+type_id+'-').value,
+				location_id: $('location_id-'+type_id+'-').value
 			},
 			onSuccess: function (transport) { 
 var tr = $('totals-'+type_id);

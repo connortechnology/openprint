@@ -213,10 +213,13 @@ sub logout {
 	my ( $log, $dbh, $variable, $cookie, $site ) = @_;
 
 	openprint::logs::insertLogRecord('3',);
+	my @keep = ( 'Currency_id', '_session_id','Country','Pricelist_id' );
 	foreach my $k ( keys %openprint::session ) {
-		next if sets::isin( $k, [ 'Currency_id', '_session_id','Country','Pricelist_id' ] );
+		next if sets::isin( $k, \@keep );
+$openprint::log->debug("deleting $k");
 		delete $openprint::session{$k};
 	} # end foreach
+	sql::update( undef, undef, 'orders', [ 'strsessionid=?', $session{_session_id} ], 'strsessionid', undef );
 	
 } # sub logout
 

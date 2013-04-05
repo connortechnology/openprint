@@ -1295,6 +1295,11 @@ $log->debug("getting impositions for " . $Paper->to_string() );
 							$P->cut();
 						} # end while
 					} # end if
+next if (
+                            ( $P->width() > $Press->specification('Maximum Sheet Width') or $P->height() > $Press->specification('Maximum Sheet Length') )
+                            and
+                            ( $P->width() > $Press->specification('Maximum Sheet Length') or $P->height() > $Press->specification('Maximum Sheet Width') )
+                       );
 
 # Keep cutting while the sheet still fits on the press.  I originally thought that we shouldn't do this, because why would you want to run a half sheet if a full sheet fits?  The answer: small jobs, that due to overs requires the same sheets whether you run full or half.  So by running half, you need half the # of real sheets.
 					while (
@@ -1323,7 +1328,7 @@ $log->debug("getting impositions for " . $Paper->to_string() );
 					} # end while cutting it
 				} # end if Web or Sheet
 
-if ( $debug ) {
+if ( $debug or 1 ) {
 $openprint::log->debug("Sorting from paper " . $Paper->to_string() . ' on ' . $Press->strid() );	
 foreach my $i ( @imps ) {
 $i->display();
@@ -3245,6 +3250,9 @@ sub press_setup_cost {
 	if ( $Price{'units'} eq 'Stock Calliper - Per Plate' ) {
 		%Price = openprint::service::get_price_object( $log, $dbh, $variable, 'PressUnitMakeReady', $calliper, $Press);
 		$Price{'Total'} = $Price{'Price'} * $setup_count;
+	} elsif ( $Price{'units'} eq 'Per Job' ) {
+		my @signatures = $Project->signatures($$specs{'txtSignatureType'});
+		$Price{'Total'} = $Price{'Price'} if $signatures[0] == $service_index;
 	} elsif ( $Price{'units'} eq 'Per Form' ) {
 
 		my $previous_forms = 0;
