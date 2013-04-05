@@ -46,7 +46,7 @@ sub _history {
 		( map { 'received_on_end_'.$_ } ( 'year','month','day' ) ),
 		( map { 'entered_on_start_'.$_ } ( 'year','month','day' ) ),
 		( map { 'entered_on_end_'.$_ } ( 'year','month','day' ) ),
-		'payor_id', 'recipient_id' );
+		'payor_id', 'recipient_id', 'transaction_id' );
 } # end sub _history
 
 sub edit {

@@ -12,7 +12,7 @@ use vars qw( $log $dbh %config %variable %param $debug %fields %find_fields %tra
 $table = 'users';
 $serial = 'users_id_seq';
 
-$debug = 0;
+$debug = 1;
 
 %fields = (
 	'id'				=>	'id',
@@ -22,6 +22,7 @@ $debug = 0;
 	'firstname'			=>	'firstname',
 	'lastname'			=>	'lastname',
 	'email'				=>	'email',
+	email_valid			=>	'email_valid',
 	'phone'				=>	'phone',
 	'extension'			=>	'extension',
 	'mobile'			=>	'mobile',
@@ -94,6 +95,7 @@ $debug = 0;
 	company_id				=>	undef,
 	password_changed_on		=>	undef,
 	password				=>	'',
+	email_valid				=>	undef,
 );
 
 # if we have previously loaded info for this customer, and it hasn't changed, that field will not be saved.

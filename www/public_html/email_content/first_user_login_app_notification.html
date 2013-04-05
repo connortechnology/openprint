@@ -17,7 +17,7 @@ Email:			<a href="mailto:<? echo ( $$variable{'User'}->email() ) ?>"><? echo ( $
 <? if ( $$variable{'Company'}->url() ) ?>
 WebSite:		<a href="<? echo ( $$variable{'Company'}->url() ) ?>"><? echo ( $$variable{'Company'}->url() ) ?></a><br/>
 <? endif ( $$variable{'Company'}->url() ) ?>
-Business Type:			 <? echo ( $$variable{'Company'}->businesstype() ) ?><br/>
+Business Type:			 <? echo ( $$variable{'Company'}->business_type() ) ?><br/>
 Date of registration:	 <? echo ( $$variable{'Company'}->created_on() ) ?><br/>
 How did they hear about us:	<? echo ( $$variable{'User'}->howdidyouhearaboutus() ) ?>
 <? if ( sets::isin( $$variable{'User'}->howdidyouhearaboutus(), ['Other','CSR'] ) ) ?>

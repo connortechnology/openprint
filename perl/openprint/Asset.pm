@@ -1,7 +1,7 @@
 use strict;
 require openprint;
 require openprint::Keyword;
-use Fcntl;
+use Fcntl qw(:flock);
 
 package openprint::Asset_Type;
 our @ISA = qw(openprint::Object);
@@ -389,8 +389,10 @@ sub upload {
 	my $md5 = Digest::MD5::md5_base64( $data );
 	if ( ! $md5 ) {
 		return "Unable to MD5?";
+	} else {
+		$openprint::log->debug("MD5 was $md5");
 	} # end if
-	my $Asset = openprint::Asset->find_one('md5'=>$md5);
+	my $Asset = openprint::Asset->find_one( md5 =>$md5);
 	if ( ! $Asset ) {
 		$Asset = new openprint::Asset();
 		$! .= $Asset->save({'filename'=>$upload->filename(),'md5'=>$md5});
@@ -539,7 +541,7 @@ sub generate_video {
 		$openprint::log->error("Unable to open semaphore at $dest.lck\n");
 		return;
 	} # end if
-	if ( ! Fcntl::flock($lock, Fcntl::LOCK_EX) ) {
+	if ( ! flock($lock, Fcntl::LOCK_EX) ) {
 		$openprint::log->error("Unable to lock semaphore\n");
 	} # end if
 	if ( ! -e $dest ) {

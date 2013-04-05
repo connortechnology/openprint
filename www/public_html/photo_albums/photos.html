@@ -1,12 +1,12 @@
 <div class="PhotoAlbums">
 	<div class="Assets">
-		<? echo ( include('/includes/error_reporting.html'); ) ?>
+		<?include(/includes/error_reporting.html)?>
 		<form name="f1" id="f1" method="post">
 			<fieldset class="filters"><legend>Photos</legend>
 				<div class="content">
 					<ul>
 					<? if ( sets::isin( $session{'user_type'}, [ 'E', 'A' ] ) ) ?>
-					<li><label>Company</label>
+					<li><label><? echo ( translate('Company') ) ?></label>
 						<select name="company_id" id="company_id" onchange="new Ajax.Updater('user_id','/includes/_users.html', { parameters: { company_id: this.value }, onSuccess: function(){new Ajax.Updater('Results','_photos.html', { parameters: $('f1').serialize() } );} } );">
 							<option value=""> all </option>
 							<? echo ( 
@@ -26,7 +26,7 @@
 					</ul>
 				</div>
 			</fieldset>
-			<div id="Results"><? echo ( include('_photos.html'); ) ?></div>
+			<div id="Results"><?include(_photos.html)?></div>
 		</form>
 	</div>
 </div>
