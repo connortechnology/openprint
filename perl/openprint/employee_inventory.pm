@@ -1537,8 +1537,8 @@ sub _manifest_content {
 		$variable{'Manifest'} = $C->Manifest();
 		$variable{'error'} .= $C->delete();
 	} elsif ( $param{'action'} eq 'Add' ) {
-		if ( ! $param{'manifest_id'} ) {
-			$variable{'error'} .= 'No manifest id.	Please enter the manifest id before adding items to it.<br/>';
+		if ( ! $param{manifest_id} ) {
+			$variable{error} .= 'No manifest id. Please enter the manifest id before adding items to it.<br/>';
 			return;
 		} # end if
 		my $Type = new openprint::Manifest_Content_Type( $param{type_id} );
@@ -1546,9 +1546,9 @@ sub _manifest_content {
 			$variable{error} .= 'No type.  This should not happen.<br/>';
 			return;
 		} # end if
-		my $Manifest = $variable{'Manifest'} = new openprint::Manifest( $param{'manifest_id'} );
-		if ( $param{'manifest_id'} and ! $Manifest->id() ) {
-			$variable{'error'} .= $Manifest->save({'id'=>$param{'manifest_id'}});
+		my $Manifest = $variable{Manifest} = new openprint::Manifest( $param{manifest_id} );
+		if ( $param{manifest_id} and ! $Manifest->id() ) {
+			$variable{error} .= $Manifest->save({'id'=>$param{'manifest_id'}});
 		} # end if
 
 		if ( $param{'rfidtag_id'} or $param{'skid_id'} or $param{manufacturers_id} ) {
@@ -1610,7 +1610,7 @@ sub _manifest_content {
 				$variable{'Type'} = new openprint::Manifest_Content_Type( $param{'type_id'} );
 			} # end if
 		} else {
-			$variable{information} .= 'No RFID, Skid ID or manufacturers id given.  No changes made.<br/>';
+			$variable{error} .= 'No RFID, Skid ID or manufacturers id given.  No changes made.<br/>';
 		} # end if
 	} # end if
 } # end sub _manifest_content

@@ -1,6 +1,8 @@
 <? echo (
+	
 	my $html = '';
 	if ( $variable{'error'} ) {
+		$variable{error} =~ s/<br\/>//g;
 		$html .= qq`<script type="text/javascript">alert('$$variable{error}');</script>`;
 		delete $variable{error};
 	} 
