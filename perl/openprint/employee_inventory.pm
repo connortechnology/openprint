@@ -632,28 +632,32 @@ sub save_Skid {
 		$info .= sprintf( 'Changed location from %s to %s<br/>', $Skid->Location()->name(), $param{txtLocation} );
 		$Skid->location( $param{'txtLocation'} );
 	} # end if
-	if ( $param{skid_id} and ! $Skid->id() ) {
-		$info .= 'Assigning id ' . $param{skid_id} . '<br/>';	
-		$Skid->id( $param{skid_id} );
-	} # end if
 	if ( ( exists $param{manufacturers_id} ) and $param{manufacturers_id} and ( $param{manufacturers_id} != $Skid->manufacturers_id() ) ) {
 		$info .= sprintf( 'Changed manufacturers id from %s to %s<br/>', $Skid->manufacturers_id(), $param{manufacturers_id} );
 		$Skid->manufacturers_id( $param{manufacturers_id} );
 	} # end if
 	if ( exists $param{received_on_year} ) {
-		if ( ! Date::Calc::check_date( @param{'received_on_year','received_on_month','received_on_day'} ) ) {
-			$variable{error} .= 'Invalid Received On Date.';
-		} else {
-			my $date = join('-', @param{'received_on_year','received_on_month','received_on_day'});
-			if ( $Skid->received_on() ne $date ) {
-				$info .= sprintf( 'Changed received on date from %s to %s<br/>', $Skid->received_on(), $date );
-				$Skid->received_on( $date );
+		if ( openprint::usergroup::is_user_in( ['InventoryManager'], $session{'user_id'} ) or ! $Skid->id() ) {
+			if ( ! Date::Calc::check_date( @param{'received_on_year','received_on_month','received_on_day'} ) ) {
+				$variable{error} .= 'Invalid Received On Date.';
+			} else {
+				my $date = join('-', @param{'received_on_year','received_on_month','received_on_day'});
+				if ( $Skid->received_on() ne $date ) {
+					$info .= sprintf( 'Changed received on date from %s to %s<br/>', $Skid->received_on(), $date );
+					$Skid->received_on( $date );
+				} # end if
 			} # end if
+		} else {
+			$variable{error} .= 'You are not authorized to change the received on date.<br/>';
 		} # end if
 	} # end if
 	if ( ! $Skid->received_on() ) {
 		$info .= 'Set received on date to today<br/>';
 		$Skid->received_on( join('-', Date::Calc::Today() ) );
+	} # end if
+	if ( $param{skid_id} and ! $Skid->id() ) {
+		$info .= 'Assigning id ' . $param{skid_id} . '<br/>';	
+		$Skid->id( $param{skid_id} );
 	} # end if
 	if ( $info and ( my $error = $Skid->save() ) ) {
 		$variable{error} .= $error;

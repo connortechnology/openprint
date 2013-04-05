@@ -56,10 +56,12 @@
 
 		<div class="column">
 			<ul>
-		<? if ( $$variable{'Skid'}->id() ) ?>
-			<li>
-				<label>Received On</label>
+			<li class="received_on"><label>Received On</label>
+<? if ( openprint::usergroup::is_user_in( ['InventoryManager'], $session{'user_id'} ) or ! $$variable{'Skid'}->id() ) ?>
+				<? echo ( date_select( 'received_on', $$variable{Skid}->received_on() ? $$variable{Skid}->received_on() : [ Date::Calc::Today() ] ); ) ?>
+<? else ( openprint::usergroup::is_user_in( ['InventoryManager'], $session{'user_id'} ) or ! $$variable{'Skid'}->id() ) ?>
 				<? echo ( format_date( $$variable{'Skid'}->received_on() ); ) ?>
+<? endif ( openprint::usergroup::is_user_in( ['InventoryManager'], $session{'user_id'} ) or ! $$variable{'Skid'}->id() ) ?>
 			</li>
 			<li>
 				<label>Created On</label>
@@ -117,11 +119,6 @@
 				ssi::button( 'Map', { 'onclick'=>"open_window('/maps/index.html?parent&amp;location_id='+get_ddm_value(f1.ddmLocation)+'&amp;selected_id='+get_ddm_value(f1.ddmLocation)+'&amp;skid_id=$$variable{Skid}{id}','Location','width=400,height=400,scrollbars=yes');" } ),
 				); ) ?>
 			</li>
-<? if ( ! $$variable{'Skid'}->id() ) ?>
-			<li class="received_on"><label>Received On</label>
-				<? echo ( date_select( 'received_on', [ Date::Calc::Today() ] ); ) ?>
-			</li>
-<? endif ( ! $$variable{'Skid'}->id() ) ?>
 <? if ( $$variable{'Skid'}->id() ) ?>
 			<li>
 				<label>Manifest</label>
