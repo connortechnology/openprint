@@ -1593,10 +1593,11 @@ sub _manifest_content {
 				if ( ! @SC ) {
 					# If skid didn't exist, then it won't have contents.
 					@SC = ( new openprint::SkidContent() );
-					$SC[0]->set({ skid_id=>$Skid->id(), paper_id=>$Type->paper_id(), quantity=>$param{'qty_lbs'} });
-				} elsif ( ! $param{'qty_lbs'} ) {
+					$SC[0]->set({ skid_id=>$Skid->id(), paper_id=>$Type->paper_id(), 
+							( $param{qty_lbs} ? ( quantity=>$param{qty_lbs} ) : () )  });
+				} elsif ( ! $param{qty_lbs} ) {
 					if ( @SC == 1 ) {
-						$param{'qty_lbs'} = $SC[0]->quantity();
+						$param{qty_lbs} = $SC[0]->quantity();
 					} # end if
 				} # end if
 				$variable{'error'} .= $MC->save( {
@@ -1604,7 +1605,7 @@ sub _manifest_content {
 						'skid_id'		=>	$Skid->id(),
 						'manifest_id'	=>	$Manifest->id(),
 						'docket'		=>	$param{'docket'},
-						'quantity'		=>	sprintf('%d', $param{'qty_lbs'}),
+						'quantity'		=>	Math::Round::nearest( 1, $param{qty_lbs}),
 						} );
 				foreach my $SkidContent ( @SC ) {
 					$SkidContent->save({'manifestcontent_id'=>$MC->id()}) if $SkidContent->manifestcontent_id() != $MC->id();
