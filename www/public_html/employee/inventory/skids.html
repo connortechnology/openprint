@@ -64,23 +64,33 @@ Please select a Skid to view/edit.<br/>
 	<fieldset>
 	<ul>
 		<li>
-			<label>Date Added</label>
-			<span class="DateSelectorT">
-<? echo ( ssi::date_select_session( '/employee/inventory/skids.html', 'created_on_start', { with_today=>1 } ); ) ?>
+			<label>Received On</label>
+			<span class="DateSelectorCT">
+<? echo ( ssi::date_select_session( '/employee/inventory/skids.html', 'received_on_start', { with_today=>1, with_clear=>1 } ); ) ?>
 			</span>
 			to 
-			<span class="DateSelectorT">
-<? echo ( ssi::date_select_session( '/employee/inventory/skids.html', 'created_on_end', { with_today=>1 } ); ) ?>
+			<span class="DateSelectorCT">
+<? echo ( ssi::date_select_session( '/employee/inventory/skids.html', 'received_on_end', { with_today=>1, with_clear=>1 } ); ) ?>
+			</span>
+		</li>
+		<li>
+			<label>Date Entered</label>
+			<span class="DateSelectorCT">
+<? echo ( ssi::date_select_session( '/employee/inventory/skids.html', 'created_on_start', { with_today=>1, with_clear=>1 } ); ) ?>
+			</span>
+			to 
+			<span class="DateSelectorCT">
+<? echo ( ssi::date_select_session( '/employee/inventory/skids.html', 'created_on_end', { with_today=>1, with_clear=>1 } ); ) ?>
 			</span>
 		</li>
 		<li>
 			<label>Last Updated</label>
-			<span class="DateSelectorT">
-<? echo ( ssi::date_select_session( '/employee/inventory/skids.html', 'updated_on_start', { with_today=>1 } ); ) ?>
+			<span class="DateSelectorCT">
+<? echo ( ssi::date_select_session( '/employee/inventory/skids.html', 'updated_on_start', { with_today=>1, with_clear=>1 } ); ) ?>
 			</span>
 			to 
-			<span class="DateSelectorT">
-<? echo ( ssi::date_select_session( '/employee/inventory/skids.html', 'updated_on_end', { with_today=>1 } ); ) ?>
+			<span class="DateSelectorCT">
+<? echo ( ssi::date_select_session( '/employee/inventory/skids.html', 'updated_on_end', { with_today=>1, with_clear=>1 } ); ) ?>
 			</span>
 		</li>
 		<li>
@@ -130,7 +140,7 @@ Please select a Skid to view/edit.<br/>
             <label class="radio" for="notempty">Without RFID</label>
 		</li>
 		<li><label>Type</label>
-			<? echo ( radio( 'Type', ['Sheet','Sheet', 'Roll', 'Roll', 'All', 'Both'], $session{'/employee/inventory/skids.html?Type'}, { onclick=>'calc();' } ); ) ?>
+			<? echo ( radio( 'Type', ['Sheet','Sheet', 'Roll', 'Roll', '', 'Both'], $session{'/employee/inventory/skids.html?Type'}, { onclick=>'calc();' } ); ) ?>
         </li>
 		<li><label>Location</label>
 			<select name="location_id" onchange="calc();">

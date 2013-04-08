@@ -1,4 +1,4 @@
-<script type="text/javascript" src="/javascripts/barcode.js"></script>
+<script type="text/javascript" src="<?hash_link(/javascripts/barcode.js)?>"></script>
 <script type="text/javascript">
 	var timer;
 	function loadImage( ImageID, file ) {
@@ -28,16 +28,16 @@
 		width: 70%;
 	}
 </style>
-<? echo ( include('/includes/error_reporting.html'); ) ?>
+<? include('/includes/error_reporting.html') ?>
 <form name="jump" method="get" action="rfidtag_details.html">
 	<fieldset class="filters"><legend>Choose RFIDTag</legend>
 		<p>
 			<label for="rfidtag_id">Tag ID #</label>
-			<input type="text" id="rfidtag_id" name="rfidtag_id" size="30" value="<?rfidtag_id?>" onkeyup="this.value=this.value.replace(/\s/,'');" onchange="change_handler(this);" onkeypress="return input_handler( this, event);"  onkeydown="if(event.keyCode == 13){jump.btnFunction.value='Go';jump.submit();}" />
+			<input type="text" id="rfidtag_id" name="rfidtag_id" size="30" value="<?rfidtag_id?>" onkeyup="this.value=this.value.replace(/\s/,'');" onchange="change_handler(this);" onkeypress="return input_handler(this, event);" onkeydown="if(event.keyCode==13){jump.btnFunction.value='Go';jump.submit();}" />
 			<? echo ( join('',
-				ssi::button( 'Go', { onclick=>"if(!jump.rfidtag_id.value){jump.rfidtag_id.focus();} else {jump.btnFunction.value='Go';jump.submit();}", href=>'', text=>'Go' } ),
-				ssi::writeButton( $log, $dbh, 'Previous', 'previous.gif', q`if(!jump.rfidtag_id.value){jump.rfidtag_id.focus();} else {jump.btnFunction.value='Previous';jump.submit();}`,'','&lt;&lt;' ),
-				ssi::writeButton( $log, $dbh, 'Next', 'next.gif', q`if(!jump.rfidtag_id.value){jump.rfidtag_id.focus();} else {jump.btnFunction.value='Next';jump.submit();}`,'','&gt;&gt;' ),
+				ssi::button( 'Go', { onclick=>"if(!jump.rfidtag_id.value){jump.rfidtag_id.focus();} else {jump.btnFunction.value='Go';jump.submit();}", text=>'Go' } ),
+				ssi::button( 'Previous', { onclick=>q`if(!jump.rfidtag_id.value){jump.rfidtag_id.focus();} else {jump.btnFunction.value='Previous';jump.submit();}`, text=>'&lt;&lt;' } ),
+				ssi::button( 'Next', { onclick=>q`if(!jump.rfidtag_id.value){jump.rfidtag_id.focus();} else {jump.btnFunction.value='Next';jump.submit();}`,text=>'&gt;&gt;' } ),
 			); ) ?>
 		</p>
 		<? echo (
@@ -57,6 +57,7 @@
 	<input type="hidden" name="btnFunction" />
 	<fieldset><legend>
 		<? if ( $$variable{'RFIDTag'}->id() ) ?>
+			<input type="hidden" name="rfidtag_id" value="<? echo ( $$variable{'RFIDTag'}->id() ) ?>" />
 		RFIDTag ID: <? echo ( $$variable{'RFIDTag'}->id() ) ?>
 		<? else ( $$variable{'RFIDTag'}->id() ) ?>
 		New RFIDTag
@@ -64,10 +65,9 @@
 		</legend>
 
 		<div class="leftColumn">
+			<ul>
 		<? if ( $$variable{'RFIDTag'}->id() ) ?>
-			<input type="hidden" name="rfidtag_id" value="<? echo ( $$variable{'RFIDTag'}->id() ) ?>" />
-			<p>
-				<label>Created</label>
+			<li><label>Created</label>
 				<? echo ( 
 					my $html;
 					if ( $$variable{'RFIDTag'}->created_on() ) {
@@ -75,8 +75,8 @@
 					} # end if
 					return $html;
 				) ?>
-			</p>
-			<p>
+			</li>
+			<li>
 				<label>Last Updated</label>
 				<? echo (
 					my $html;
@@ -85,32 +85,32 @@
 					} # end if
 					return $html;
 				) ?>
-			</p>
+			</li>
 		<? else ( $$variable{'RFIDTag'}->id() ) ?>
-			<p>
+			<li>
 				<label>ID</label>
 				<input type="text" name="rfidtag_id" />
-			</p>
+			</li>
 		<? endif ( $$variable{'RFIDTag'}->id() ) ?>
-			<p><label onclick="$('type').toggle();$('type_id').toggle();">Type</label>
+			<li><label onclick="$('type').toggle();$('type_id').toggle();">Type</label>
 				<select id="type_id" name="type_id" onchange="$('type').value='';">
 					<option value="">select</option>
-					<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::RFIDTagType->find('order'=>'lower(name)' ) ], $$variable{'RFIDTag'}->type_id() ); ) ?>
+					<? echo ( ssi::make_drop_down( openprint::RFIDTagType->dropdodwn('order'=>'lower(name)' ), $$variable{'RFIDTag'}->type_id() ); ) ?>
 				</select>
 				<input type="text" name="type" id="type" style="display:none;" onkeyup="$('type_id').selectedIndex=0;" />
-			</p>
+			</li>
 			<? if ( $$variable{'RFIDTag'}->type() eq 'Skid' ) ?>
-			<p>
+			<li>
 				<label for="skid_id">Skid #</label>
 				<input type="text" id="skid_id" name="skid_id" value="<? echo ( $$variable{'RFIDTag'}->skid_id() ) ?>" onkeypress="return input_handler(this, event);" onchange="change_handler(this);" />
 				<? echo ( 
 					my @Skids = openprint::Skid->find('rfidtag_id'=>$$variable{'RFIDTag'}->id(),'deleted'=>[0,1]);
 					if ( ! @Skids ) {
-						return ssi::writeButton( $log, $dbh, 'SkidAllocate', 'allocate.gif', '', 'rfidtag_details.html?rfidtag_id='.$$variable{'RFIDTag'}->id().q{&btnFunction=AllocateSkid}, 'Allocate' );
+						return ssi::button( 'SkidAllocate', href=>'rfidtag_details.html?rfidtag_id='.$$variable{'RFIDTag'}->id().q{&btnFunction=AllocateSkid}, text=>'Allocate' } );
 					} elsif ( 1 == @Skids ) {
 						$$variable{'Skid'} = $Skids[0];
 						$$variable{'skid_id'} = $$variable{'Skid'}->id();
-						return ssi::writeButton( $log, $dbh, 'SkidGo', 'go.gif', '', 'skid_details.html?skid_id='.$$variable{'skid_id'}, 'Go' );
+						return ssi::button( 'SkidGo', href=>'skid_details.html?skid_id='.$$variable{'skid_id'}, text=>'Go' } );
 					} else {
                         my $html = '<br/><span class="error">There are multiple skids with this RFIDTag.  Please correct.</span><br/>';
                         foreach my $Skid ( @Skids ) {
@@ -119,55 +119,39 @@
                         return $html;
 					} # end if
 				) ?>
-			</p>
+			</li>
 			<? endif ( $$variable{'RFIDTag'}->type() eq 'Skid' ) ?>
-			<p>
+			<li>
 				<label>Location</label>
 				<select id="location_id" name="location_id">
 					<option value="">select</option>
 					<? echo ( 
-						return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Location->find('order'=>'lower(name)')], $$variable{'RFIDTag'} ? $$variable{'RFIDTag'}->location_id() : $openprint::param{'location_id'} );
+						return ssi::make_drop_down( openprint::Location->dropdown( order=>'lower(name)'), $$variable{'RFIDTag'} ? $$variable{RFIDTag}->location_id() : $param{location_id} );
 						) ?>
 				</select>
-			</p>
+			</li>
+			</ul>
 			<p class="buttons">
 				<? echo ( 
 						my $html;
-						$html .= ssi::button( 'save', { onclick=>"if( check_inputs( f1 ) ){f1.btnFunction.value='Save';f1.submit();}", href=>'', text=>'Save' } );
+						$html .= ssi::button( 'save', { onclick=>"if( check_inputs( f1 ) ){f1.btnFunction.value='Save';f1.submit();}", text=>'Save' } );
 						if ( $$variable{'RFIDTag'}->id() ) {
-						$html .= ssi::button( 'delete', { onclick=>"if(confirm('Are you sure?')){f1.btnFunction.value='Delete';f1.submit();}", href=>'', text=>'Delete' } ) if $$variable{'RFIDTag'}->id();
+						$html .= ssi::button( 'delete', { onclick=>"if(confirm('Are you sure?')){f1.btnFunction.value='Delete';f1.submit();}", text=>'Delete' } ) if $$variable{'RFIDTag'}->id();
 						$html .= ssi::button( 'addnew', { onclick=>'', href=>'rfidtag_details.html', text=>'Add New RFIDTag' } );
 						} # end if
-						$html .= ssi::button( 'reset', { onclick=>'f1.reset();', href=>'', text=>'Reset' } );
-						#$html .= ssi::button( 'clear', { onclick=>'clearForm(f1);', href=>'', text=>'Clear' } );
+						$html .= ssi::button( 'reset', { onclick=>'f1.reset();', text=>'Reset' } );
+						#$html .= ssi::button( 'clear', { onclick=>'clearForm(f1);', text=>'Clear' } );
 						return $html;
 				) ?>
 			</p>
 		</div><!-- column -->
 		<div class="rightColumn" id="Map">
-			<? echo ( include('_map.html'); ) ?>
+			<? include('_map.html') ?>
 		</div>
 		<br class="spacer"/>
 	</fieldset>
 </form>
 <? if ( $$variable{'RFIDTag'}->id() ) ?>
-<form name="f2" id="f2">
-	<input type="hidden" name="rfidtag_id" value="<? echo ( $$variable{'RFIDTag'}->id() ) ?>" />
-	<fieldset><legend>Location Log</legend>
-		<p>
-			<label>Date Filter</label>
-			<span class="DateSelector">
-<? echo ( ssi::date_select( 'start', sprintf('%.4d-%.2d-%.2d', @param{'start_year','start_month','start_day'} ),  q`LoadContent('Log','_rfidtag_log.html', $('f2').serialize() );` ); ) ?>
-			to 
-			</span>
-			<span class="DateSelector">
-<? echo ( ssi::date_select( 'end', sprintf('%.4d-%.2d-%.2d', @param{'end_year','end_month','end_day'} ),  q`LoadContent('Log','_rfidtag_log.html', $('f2').serialize() );` ); ) ?>
-			</span>
-			<select name="limit" style="width:auto;"><option value="10">10</option><option value="25">25</option><option value="100">100</option></select>
-			<? echo ( ssi::writeButton( $log, $dbh, 'LoadLog', 'load.gif', q`LoadContent('Log','_rfidtag_log.html', $('f2').serialize() );`, '', 'Load' ); ) ?>
-		</p>
-		<div id="Log"><? echo ( include('_rfidtag_log.html'); ) ?></div>
-	</fieldset>
-</form>
+<?include(_rfidtag_log.html)?>
 <? endif ( $$variable{'RFIDTag'}->id() ) ?>
 <script type="text/javascript">document.jump.rfidtag_id.focus();</script>
