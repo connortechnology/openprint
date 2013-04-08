@@ -25,6 +25,7 @@ $debug = 0;
 	'manifestcontent_id'	=>	'manifestcontent_id',
 );
 %defaults = (
+	quantity		=>	undef,
 	'purpose_id'	=>	undef,
 	'condition_id'	=>	undef,
 	'manifestcontent_id'	=>	undef,

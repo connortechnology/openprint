@@ -1576,9 +1576,23 @@ sub _manifest_content {
 					} # end if
 				} # end if
 			} # end if
-			$variable{error} .= $Skid->save({rfidtag_id=>$Tag->id(),manufacturers_id=>$param{manufacturers_id}}) if ! $Skid->id();
-			$variable{error} .= $Skid->save({manufacturers_id=>$param{manufacturers_id}} ) if $param{manufacturers_id} and ! $Skid->manufacturers_id();
-			$variable{error} .= $Skid->save({location_id=>$param{location_id}} ) if $param{location_id};
+			my $changed=0;
+			if ( ! $Skid->id() ) {
+				$Skid->set({ rfidtag_id=>$Tag->id(),manufacturers_id=>$param{manufacturers_id}});
+			} # end if
+			if ( $param{manufacturers_id} and ! $Skid->manufacturers_id() ) {
+				$changed = 1;
+				$Skid->set({manufacturers_id=>$param{manufacturers_id}} );
+			} # end if
+			if ( $param{location_id} ) {
+				$changed = 1;
+				$Skid->set({location_id=>$param{location_id}} );
+			} # end if
+			if ( $Skid->received_on() ne $Manifest->received_on() ) {
+				$Skid->received_on( $Manifest->received_on() );	
+				$changed = 1;
+			} # end if
+			$variable{error} .= $Skid->save() if $changed or ! $Skid->id();
 			return if $variable{'error'};
 
 			if ( $Tag->id() and sets::isin( $Tag->id(), map { $_->Skid()->rfidtag_id() } $Manifest->Contents() ) ) {
