@@ -50,6 +50,7 @@ sub delete {
 sub html {
 	my ( $Question, $Response ) = @_;
 	if ( ! $Response ) {
+		#Load the user's response, if there is one
 		if ( $openprint::session{user_id} ) {
 			$Response = openprint::Survey_Response->find_one(question_id=>$$Question{id},user_id=>$openprint::session{user_id});
 		} # end if
@@ -58,7 +59,7 @@ sub html {
 
 	my $html;
 	$html .= '<li class="Question">';
-	$html .= $Question->text();
+	$html .= sprintf('<a href="/survey/view.html?survey_id=%1$d">%2$s</a>', $Question->survey_id(), $Question->text() );
 	$html .= '<div class="answers">';
 	if ( $Question->type() eq 'radio' ) {
 		$html .= ssi::radio( 'answer_id-'.$Question->id(),
