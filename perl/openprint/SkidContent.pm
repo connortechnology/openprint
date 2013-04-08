@@ -26,6 +26,7 @@ $debug = 0;
 	'allocated'	=>	'(SELECT SUM(quantity) FROM Paper_Allocations WHERE Paper_Allocations.skid_id=Skid_Contents.skid_id AND paper_allocations.paper_id=Skid_Contents.paper_id)',
 );
 %defaults = (
+	quantity		=>	undef,
 	'purpose_id'	=>	undef,
 	'condition_id'	=>	undef,
 	'manifestcontent_id'	=>	undef,
@@ -36,14 +37,11 @@ $table = 'Skid_Contents';
 $serial = 'skid_contents_id_seq';
 
 sub purpose {
-	my $self = shift;
-	return $self->Purpose()->name();
+	return $_[0]->Purpose()->name();
 } # end sub purpose
 
 sub Purpose {
-	my $self = shift;
-	my $Purpose = new openprint::StockPurpose( $$self{'purpose_id'} );
-	return $Purpose;
+	return new openprint::StockPurpose( $_[0]{purpose_id} );
 } # end sub Purpose
 
 sub Paper {

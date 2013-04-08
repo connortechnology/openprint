@@ -61,7 +61,7 @@ sub skids {
 					if ( my $e = $Skid->save({'location_id'=>$param{'location_id'}}) ) {
 						$variable{'error'} .= "Skid $$Skid{'id'} has not been moved. Error: $e<br/>";
 					} else {
-						$variable{'information'} .= "Skid $$Skid{'id'} has been moved to $$Location{name}.<br/>";
+						$variable{'information'} .= sprintf('<a href="/employee/inventory/skid_details.html?skid_id=%1$d">Skid %1$d</a> has been moved to %2$s.<br/>', $$Skid{id}, $$Location{name} );
 					} # end if
 				} # end foreach
 			} # end if
@@ -80,13 +80,13 @@ sub skids {
 			foreach my $skid_id ( @skid_ids ) {
 				my $Skid = new openprint::Skid( $skid_id );
 				$Skid->delete();
-				$variable{'information'} .= "Skid $$Skid{'id'} has been deleted.<br/>";
+				$variable{'information'} .= sprintf('<a href="/employee/inventory/skid_details.html?skid_id=%1$d">Skid %1$d</a> has been deleted.<br/>', $$Skid{id} );
 			} # end foreach
 		} elsif ( $param{'skids'} ) {
 			foreach my $skid_id ( ref $param{'skids'} eq 'ARRAY' ? @{$param{'skids'}} : $param{'skids'} ) {
 				my $Skid = new openprint::Skid( $skid_id );
 				$Skid->delete();
-				$variable{'information'} .= "Skid $$Skid{'id'} has been deleted.<br/>";
+				$variable{'information'} .= sprintf('<a href="/employee/inventory/skid_details.html?skid_id=%1$d">Skid %1$d</a> has been deleted.<br/>', $$Skid{id} );
 			} # end foreach
 		} # end if
 	} elsif ( $param{'btnFunction'} eq 'Destroy' )	{
@@ -105,14 +105,22 @@ sub skids {
 				if ( $_ = $Skid->destroy() ) {
 					$variable{'error'} .= $_;
 				} else {
-					$variable{'information'} .= "Skid $$Skid{'id'} has been destoryed.<br/>";
+					$variable{'information'} .= "Skid $$Skid{'id'} has been destroyed.<br/>";
 				} # end if
 			} # end foreach
-		} elsif ( $param{'skids'} ) {
-			foreach my $skid_id ( ref $param{'skids'} eq 'ARRAY' ? @{$param{'skids'}} : $param{'skids'} ) {
+		} elsif ( $param{skids} ) {
+			foreach my $skid_id ( ref $param{skids} eq 'ARRAY' ? @{$param{skids}} : $param{skids} ) {
 				my $Skid = new openprint::Skid( $skid_id );
-				$Skid->delete();
-				$variable{'information'} .= "Skid $$Skid{'id'} has been deleted.<br/>";
+				if ( $Skid->deleted() ) {
+					$variable{information} .= sprintf('<a href="/employee/inventory/skid_details.html?skid_id=%1$d">Skid %1$d</a> is already deleted.<br/>', $$Skid{id} );
+				} else {
+					$_ = $Skid->delete();
+					if ( $_ ) {
+						$variable{error} .= $_;
+					} else {
+						$variable{information} .= sprintf('<a href="/employee/inventory/skid_details.html?skid_id=%1$d">Skid %1$d</a> has been deleted.<br/>', $$Skid{id} );
+					} # end if
+				} # end if
 			} # end foreach
 		} # end if
 	} elsif ( $param{'btnFunction'} eq 'Allocate' ) {
@@ -596,8 +604,8 @@ sub save_Paper {
 } # end sub save_Paper
 
 sub save_inventory {
-	my ( $Skid, $Paper, $qty, $comment, $Condition ) = @_;
-	my $delta = $Skid->add( $Paper, $qty, $Condition );
+	my ( $Skid, $Paper, $qty, $comment, $Condition, $Purpose ) = @_;
+	my $delta = $Skid->add( $Paper, $qty, $Condition, $Purpose );
 	$Paper->add_inventory( $Skid, $delta, $param{'Units'}, $comment ) if ( $delta or $comment );
 #FIXME
 	if ( $delta > 0 ) {
@@ -644,7 +652,7 @@ sub save_Skid {
 			if ( ! Date::Calc::check_date( @param{'received_on_year','received_on_month','received_on_day'} ) ) {
 				$variable{error} .= 'Invalid Received On Date.';
 			} else {
-				my $date = join('-', @param{'received_on_year','received_on_month','received_on_day'});
+				my $date = sprintf('%.4d-%.2d-%.2d', @param{'received_on_year','received_on_month','received_on_day'});
 				if ( $Skid->received_on() ne $date ) {
 					$info .= sprintf( 'Changed received on date from %s to %s<br/>', $Skid->received_on(), $date );
 					$Skid->received_on( $date );
@@ -668,20 +676,32 @@ sub save_Skid {
 	} # end if
 
 	my $Condition;
-	if ( $param{'txtCondition'} ) {
-		if ( ! ( $Condition = openprint::InventoryCondition->find_one('name lc'=>lc openprint::InventoryCondition->transform('name',$param{'txtCondition'})) ) ) {
+	if ( $param{txtCondition} ) {
+		if ( ! ( $Condition = openprint::InventoryCondition->find_one('name lc'=>lc openprint::InventoryCondition->transform('name',$param{txtCondition})) ) ) {
 			$Condition = new openprint::InventoryCondition();
-			$Condition->save({'name'=>$param{'txtCondition'}});
+			$variable{error} .= $Condition->save({name=>$param{txtCondition}});
 		} # end if
+		$param{Condition} = $Condition->id();
 	} else {
-		$Condition = new openprint::InventoryCondition( $param{'Condition'} );
+		$Condition = new openprint::InventoryCondition( $param{Condition} );
+	} # end if
+
+	my $Purpose;
+	if ( $param{txtPurpose} ) {
+		if ( ! ( $Purpose = openprint::StockPurpose->find_one('name lc'=>lc openprint::StockPurpose->transform('name',$param{txtPurpose})) ) ) {
+			$Purpose = new openprint::StockPurpose();
+			$variable{error} .= $Purpose->save({name=>$param{txtPurpose}});
+		} # end if
+		$param{Purpose} = $Purpose->id();
+	} else {
+		$Purpose = new openprint::StockPurpose( $param{Purpose} );
 	} # end if
 	
 	if ( $param{'Brand'} or $param{'txtBrand'} ) {
 		my $Paper = save_Paper();
 
 		if ( $Paper and $Paper->id() ) {
-			save_inventory( $Skid, $Paper, $qty, $info, $Condition );
+			save_inventory( $Skid, $Paper, $qty, $info, $Condition, $Purpose );
 
 			if ( $param{'Docket'} ) {
 				my @Projects = openprint::Project->find('docket'=>$param{'Docket'} );
@@ -810,6 +830,7 @@ sub skid_details {
 			} # end foreach rfidtag_id
 		} # end if param{rfidtag_id}
 		return if $variable{'error'};
+$log->debug('sacing');
 
 		# Skid_quantity only exists if adding new stock
 		if ( $param{skid_quantity} ) {
@@ -843,10 +864,11 @@ $log->debug("Entering skid $skid_count");
 					});
 				} # end if verification_code
 			} # end foreach
-			$variable{'information'} .= "Added $param{'skid_quantity'} skids.<br/>";
+			$variable{'information'} .= "Added $param{'skid_quantity'} skids/rolls.<br/>";
 		} elsif ( @skid_ids ) {
+$log->debug('sacing');
 			foreach my $skid_id ( @skid_ids ) {
-				if ( $param{Quantity} ) {
+				if ( exists $param{Quantity} ) {
 					$param{Quantity} = @quantities > 1 ? shift @quantities : $quantities[0] if @quantities;
 					my $Skid = new openprint::Skid( $skid_id );
 					$Skid->id( $skid_id );
@@ -1575,9 +1597,23 @@ sub _manifest_content {
 					} # end if
 				} # end if
 			} # end if
-			$variable{error} .= $Skid->save({rfidtag_id=>$Tag->id(),manufacturers_id=>$param{manufacturers_id}}) if ! $Skid->id();
-			$variable{error} .= $Skid->save({manufacturers_id=>$param{manufacturers_id}} ) if $param{manufacturers_id} and ! $Skid->manufacturers_id();
-			$variable{error} .= $Skid->save({location_id=>$param{location_id}} ) if $param{location_id};
+			my $changed=0;
+			if ( ! $Skid->id() ) {
+				$Skid->set({ rfidtag_id=>$Tag->id(),manufacturers_id=>$param{manufacturers_id}});
+			} # end if
+			if ( $param{manufacturers_id} and ! $Skid->manufacturers_id() ) {
+				$changed = 1;
+				$Skid->set({manufacturers_id=>$param{manufacturers_id}} );
+			} # end if
+			if ( $param{location_id} ) {
+				$changed = 1;
+				$Skid->set({location_id=>$param{location_id}} );
+			} # end if
+			if ( $Skid->received_on() ne $Manifest->received_on() ) {
+				$Skid->received_on( $Manifest->received_on() );	
+				$changed = 1;
+			} # end if
+			$variable{error} .= $Skid->save() if $changed or ! $Skid->id();
 			return if $variable{'error'};
 
 			if ( $Tag->id() and sets::isin( $Tag->id(), map { $_->Skid()->rfidtag_id() } $Manifest->Contents() ) ) {
@@ -1935,6 +1971,7 @@ sub _map {
 
 sub _docket_label {
 } # end sub _docket_label
+
 sub _paper_inventory_entries {
 	$variable{'Paper'} = new openprint::Paper( $param{'paper_id'} );
 

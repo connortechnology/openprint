@@ -10,7 +10,8 @@
 	$$variable{'C'} = $$variable{'Skid'}->Content($$variable{'Paper'});
 	$$variable{'C'} = new openprint::SkidContent() if ! $$variable{'C'};
  ) ?>
-<p>
+<ul>
+<li>
 	<label for="txtManufacturer" onclick="f1.txtManufacturer.value='';f1.Manufacturer.selectedIndex=0;f1.Manufacturer.toggle();f1.txtManufacturer.toggle();">Manufacturer</label>
 	<select id="Manufacturer" name="Manufacturer" size="1" onchange="Manufacturer_onChange(this,'');">
 		<option value="">select</option>
@@ -25,8 +26,8 @@
 			) ?>
 	</select>
 	<input style="display: none;" type="text" id="txtManufacturer" name="txtManufacturer" />
-</p>
-<p>
+</li>
+<li>
 	<label for="Brand" onclick="f1.Brand.value='';f1.Brand.selectedIndex=0;f1.Brand.toggle();f1.Brand.toggle();">Brand</label>
 	<select id="Brand" name="Brand" size="1" onchange="Brand_onChange(this,'');">
 		<option value="">select</option>
@@ -35,7 +36,7 @@
 			) ?>
 	</select>
 	<input style="display: none;" type="text" id="txtBrand" name="txtBrand" />
-</p><p>
+</li><li>
 	<label for="txtFinish" onclick="f1.txtFinish.value='';f1.Finish.selectedIndex=0;f1.Finish.toggle();f1.txtFinish.toggle();">Finish</label>
 	<select id="Finish" name="Finish" size="1" onchange="Finish_onChange(this,'');">
 		<option value="">select</option>
@@ -44,7 +45,7 @@
 			) ?>
 	</select>
 	<input style="display: none;" type="text" id="txtFinish" name="txtFinish" />
-</p><p>
+</li><li>
 	<label for="txtColour" onclick="f1.txtColour.value='';f1.Colour.selectedIndex=0;f1.Colour.toggle();f1.txtColour.toggle();">Colour</label>
 	<select id="Colour" name="Colour" size="1" onchange="Colour_onChange(this,'');">
 		<option value="">select</option>
@@ -64,8 +65,8 @@
 		) ?>
 	</select>
 	<input style="display: none;" type="text" id="txtColour" name="txtColour" />
-</p>
-<p>
+</li>
+<li>
 	<label for="weight">Weight</label>
 	<? echo ( 
 my $weight = $param{'weight'} ? $param{'weight'} : $$variable{'Paper'}->weight();
@@ -75,29 +76,29 @@ if ( $weight =~ /PT/i ) {
 $weight =~ s/lb//;
 return input( type=>'float', id=>'weight', name=>'weight', value=> $weight );
 ) ?>lb
-</p>
-<p>
+</li>
+<li>
 	<label for="txtQuality" onclick="$('txtQuality').toggle();$('Quality').toggle();">Quality</label>
 	<select id="Quality" name="Quality" size="1">
 		<option value="">select</option>
-	<? echo (
-		if ( ! ( $$variable{'Paper'}->quality_id() or $param{'Quality'} ) ) {
-			my $Quality = openprint::StockQuality->find_one('name'=>'new');
-			if ( $Quality ) {
-				$$variable{'Paper'}->quality_id( $Quality->id() );
+		<? echo (
+			if ( ! ( $$variable{'Paper'}->quality_id() or $param{'Quality'} ) ) {
+				my $Quality = openprint::StockQuality->find_one('name'=>'new');
+				if ( $Quality ) {
+					$$variable{'Paper'}->quality_id( $Quality->id() );
+				} # end if
 			} # end if
-		} # end if
-		my @Qualities = openprint::StockQuality->find('order'=>'lower(name)');
-		if ( @Qualities == 1 ) {
-			return ssi::make_drop_down( [ map { $_->id(), $_->name() } @Qualities ], $Qualities[0]->id() );
-		} else {
-			return ssi::make_drop_down( [ map { $_->id(), $_->name() } @Qualities ], $param{'Quality'} ? $param{'Quality'} : $$variable{'Paper'}->quality_id() );
-		} # end if
-	) ?>
-	</select>
-	<input style="display: none;" type="text" id="txtQuality" name="txtQuality" />
-	</p>
-	<p>
+			my @Qualities = openprint::StockQuality->find('order'=>'lower(name)');
+			if ( @Qualities == 1 ) {
+				return ssi::make_drop_down( [ map { $_->id(), $_->name() } @Qualities ], $Qualities[0]->id() );
+			} else {
+				return ssi::make_drop_down( [ map { $_->id(), $_->name() } @Qualities ], $param{'Quality'} ? $param{'Quality'} : $$variable{'Paper'}->quality_id() );
+			} # end if
+		) ?>
+		</select>
+		<input style="display: none;" type="text" id="txtQuality" name="txtQuality" />
+	</li>
+	<li>
 		<label for="txtCondition" onclick="$('txtCondition').toggle();$('Condition').toggle();">Condition</label>
 		<select id="Condition" name="Condition" size="1">
 			<option value="">select</option>
@@ -117,56 +118,71 @@ return input( type=>'float', id=>'weight', name=>'weight', value=> $weight );
 		) ?>
 		</select>
 		<input style="display: none;" type="text" id="txtCondition" name="txtCondition" />
-		</p>
-	<p><label>Type</label>
+	</li>
+	<li><label>Type</label>
         <input type="radio" id="typeSheet" name="type" value="Sheet" onclick="$('PaperHeight').show();$('MWeight').show();$('Units').innerHTML='sheets';$('KgDIV').hide();" <? echo ( 'checked="checked"' if $param{'type'} eq 'Sheet' or $$variable{'Paper'}->type() eq 'Sheet'; ) ?> />
         <label class="radio" for="typeSheet">Sheet</label>
         <input type="radio" id="typeRoll" name="type" value="Roll" onclick="$('PaperHeight').hide();$('MWeight').hide();$('Units').innerHTML='lbs';$('KgDIV').show();" <? echo ( 'checked="checked"' if $param{type} eq 'Roll' or $$variable{'Paper'}->type() eq 'Roll'; ) ?> />
         <label class="radio" for="typeRoll">Roll</label>
-    </p>
-	<p>
+    </li>
+	<li>
         <label for="width">Size</label>
-        <input type="number" id="width" name="width" value="<? echo ( $param{'width'} ? $param{'width'} : $$variable{'Paper'}->width(); ) ?>" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'' );gsm_to_mweight(this.form);"/>
+        <? echo ( input( type=>'float', id=>'width', name=>'width', value=>( $param{width} ? $param{width} : $$variable{Paper}->width() ), onkeyup=>'gsm_to_mweight(this.form);' ); ) ?>
         <span id="PaperHeight"<? echo ( ' style="display: none;"' if $param{type} eq 'Roll' or $$variable{'Paper'}->type() eq 'Roll' ) ?>>
         &nbsp;x&nbsp;
-        <input type="number" id="height" name="height" value="<? echo ( $param{'height'} ? $param{'height'} : $$variable{'Paper'}->height(); ) ?>" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'' );gsm_to_mweight(this.form);"/>
+        <? echo ( input( type=>'float', id=>'height', name=>'height', value=>( $param{height} ? $param{height} : $$variable{Paper}->height() ), onkeyup=>'gsm_to_mweight(this.form);' ); ) ?>
         </span>
-    </p>
-    <p>
+    </li>
+    <li>
         <label>Calliper</label>
-        <input type="number" id="calliper" name="calliper" value="<? echo ( $param{calliper} ? $param{calliper} : $$variable{'Paper'}->calliper(); ) ?>" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'' );" />PT
-    </p>
-    <p>
+        <? echo ( input( type=>'float', id=>'calliper', name=>'calliper', value=>( $param{calliper} ? $param{calliper} : $$variable{Paper}->calliper()) ); ) ?>PT
+    </li>
+    <li>
         <label>GSM</label>
-        <input type="number" id="gsm" name="gsm" value="<? echo ( $param{gsm} ? $param{gsm} : $$variable{'Paper'}->gsm(); ) ?>" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'' );gsm_to_mweight(this.form);" />
-    </p>
-    <p id="MWeight" <? echo ( 'style="display:none;"' if $param{type} eq 'Roll' or $$variable{'Paper'}->type() eq 'Roll' ) ?> >
+        <? echo ( input( type=>'float', id=>'gsm', name=>'gsm', value=>( $param{gsm} ? $param{gsm} : $$variable{Paper}->gsm()), onkeyup=>'gsm_to_mweight(this.form);' ); ) ?>
+    </li>
+    <li id="MWeight" <? echo ( 'style="display:none;"' if $param{type} eq 'Roll' or $$variable{'Paper'}->type() eq 'Roll' ) ?> >
         <label>MWeight</label>
-        <input type="number" id="mweight" name="mweight" value="<? echo ( $$variable{'Paper'}->mweight(); ) ?>" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'' );mweight_to_gsm(this.form);" />M
-    </p>
-	<p>
-		<label for="Purpose">Purpose</label>
-		<select id="Purpose" name="purpose_id">
-			<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::StockPurpose->find('order'=>'lower(name)')], $openprint::param{'purpose_id'} ) ) ?>
-		</select>
-	</p>
-	<p>
+        <? echo ( input( type=>'float', id=>'mweight', name=>'mweight', value=>$$variable{Paper}->mweight(), onkeyup=>'mweight_to_gsm(this.form);' ); ) ?>M
+    </li>
+    <li>
+        <label for="txtPurpose" onclick="toggleInput('Purpose');">Purpose</label>
+        <select id="Purpose" name="Purpose" size="1">
+            <option value="">select</option>
+        <? echo (
+            if ( ! ( $$variable{'C'}->purpose_id() or $param{Purpose} ) ) {
+                my $Purpose = openprint::StockPurpose->find_one('name'=>'new');
+                if ( $Purpose ) {
+                    $$variable{C}->purpose_id( $Purpose->id() );
+                } # end if
+            } # end if
+            my @Purposes = openprint::StockPurpose->find(order=>'lower(name)');
+            if ( @Purposes == 1 ) {
+                return ssi::make_drop_down( [ map { $_->id(), $_->name() } @Purposes ], $Purposes[0]->id() );
+            } else {
+                return ssi::make_drop_down( [ map { $_->id(), $_->name() } @Purposes ], $param{Purpose} ? $param{Purpose} : $$variable{C}->purpose_id() );
+            } # end if
+        ) ?>
+        </select>
+        <input style="display: none;" type="text" id="txtPurpose" name="txtPurpose" />
+	</li>
+	<li>
 		<label for="Owner">Owner</label>
 		<select id="Owner" name="Owner"><? echo ( 
 			my @owner_ids = sql::execute( undef, undef, 'SELECT DISTINCT owner_id FROM papers' );
 			openprint::Company::get_dropdown( ( $$variable{'Paper'}->owner_id() ? $$variable{'Paper'}->owner_id() : $session{'company_id'} ), { 'id'=>\@owner_ids } ); ) ?></select>
-	</p>
-	<p>
+	</li>
+	<li>
 		<label for="Quantity">Quantity</label>
-		<input type="number" id="Quantity" name="Quantity" value="<? echo ( $param{'Quantity'} ? $param{'Quantity'} : $$variable{'Skid'}->contents( $$variable{'Paper'} ); ) ?>" onkeyup="if(get_rdb_value(this.form.type) == 'Roll' ) { $('Units').innerHTML='lbs';$('KgDIV').show();convert_lbs_to_kg( this, $('Kg') ); } else { $('Units').innerHTML='sheets';$('KgDIV').hide();}" />
+		<? echo ( input( type=>'float', id=>'Quantity', name=>'Quantity', value=>($param{Quantity} ? $param{Quantity} : $$variable{Skid}->contents( $$variable{Paper} )), onkeyup=>q`if(get_rdb_value(this.form.type) == 'Roll' ) { $('Units').innerHTML='lbs';$('KgDIV').show();convert_lbs_to_kg( this, $('Kg') ); } else { $('Units').innerHTML='sheets';$('KgDIV').hide();}` ); ) ?>
 		<span id="Units"><? echo ( ($param{type} eq 'Roll' or $$variable{'Paper'}->type() eq 'Roll') ? 'lbs' : 'sheets' ) ?></span>
 		<span id="KgDIV" <? echo ( ($param{type} eq 'Sheet' or $$variable{'Paper'}->type() eq 'Sheet') ? 'style="display:none;"' : '' ) ?>>
-			<input type="number" id="Kg" name="Kg" value="<? echo ( $param{'Kg'} ? $param{'Kg'} : int($$variable{'Skid'}->contents( $$variable{'Paper'} )/2.2); ) ?>" onkeyup="this.value=this.value.replace(/[^\d\.]/, '');convert_kg_to_lbs( this, $('Quantity') );" />kg
+			<? echo ( input( type=>'float', id=>'Kg', name=>'Kg', value=>( $param{Kg}?$param{Kg}:int($$variable{Skid}->contents( $$variable{Paper} )/2.2)), onkeyup=>q`convert_kg_to_lbs( this, $('Quantity') );` ); ) ?>kg
 		</span>
-	</p>
-    <p>
+	</li>
+    <li>
         <label>FSC Code</label>
         <input type="text" id="fsc_code" name="fsc_code" value="<? echo ( $param{'fsc_code'} ? $param{'fsc_code'} : $$variable{'Paper'}->fsc_code(); ) ?>" />
-    </p>
-<br/>
+    </li>
+</ul>
 <? eval ( $session{'/employee/inventory/skid_details.html?ShowAddPaper'} = 1; ) ?>

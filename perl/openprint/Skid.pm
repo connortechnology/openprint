@@ -20,7 +20,7 @@ require openprint::Manifest;
 require openprint::ManifestContent;
 require openprint::InventoryCondition;
 
-$debug = 0;
+$debug = 1;
 
 $table = 'Skids';
 $serial = 'skid_id_seq';
@@ -308,7 +308,7 @@ sub to_string {
 } # end sub
 
 sub add {
-	my ( $self, $Paper, $quantity, $condition ) = @_;
+	my ( $self, $Paper, $quantity, $condition, $Purpose ) = @_;
 	my $Condition;
 	if ( ref $condition eq 'openprint::InventoryCondition' ) {
 		$Condition = $condition;
@@ -346,10 +346,11 @@ sub add {
 # Set
 	} # end if
 	$C->save({
-			'skid_id' => $$self{'id'},
-			'paper_id'	=>	$Paper->id(),
-			'condition_id'	=>	$Condition->id(),
-			'quantity'=>$quantity,
+			skid_id		=> $$self{'id'},
+			paper_id	=>	$Paper->id(),
+			condition_id	=>	$Condition->id(),
+			quantity	=>$quantity,
+			( ( $Purpose and $Purpose->id() ) ? ( purpose_id => $Purpose->id() ) : () ),
 			});
 	return $quantity - $old_quantity;
 } # end sub add
