@@ -572,7 +572,11 @@ sub date_select {
 	my ( $start_year, $start_month, $start_day ) = split( '-', $$options{'start'} ) if $$options{'start'};
 	my ( $end_year, $end_month, $end_day ) = split( '-', $$options{'end'} ) if $$options{'end'};
 
-	my $html = '';
+	my $class = 'DateSelector';
+	$class .= 'C' if $$options{with_clear};
+	$class .= 'T' if $$options{with_today};
+
+	my $html = '<span class="'.$class.'">';
 	$html .= sprintf('<span id="%1$s_date">', $prefix );
 	foreach my $o ( split(',', $$options{'order'} ) ) {
 		if ( ( $o eq 'y' ) and ( (!@fields) or sets::isin( 'year', \@fields ) ) ) {
@@ -599,7 +603,7 @@ sub date_select {
 		$html .= ssi::button( $prefix.'_today', { 'onclick'=>q`set_today( $('`.$prefix.q`_year'), $('`.$prefix.q`_month'), $('`.$prefix.q`_day') );`.$$options{'onchange'}, text=>'T', title=>'Today', class=>'Today'} );
 	} # end if
 	$html .= '<span id="'.$prefix.'_alert"></span>';
-	$html .= '</span>';
+	$html .= '</span></span>';
 	return $html;
 } # end sub date_select
 

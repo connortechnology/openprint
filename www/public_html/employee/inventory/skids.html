@@ -65,43 +65,27 @@ Please select a Skid to view/edit.<br/>
 	<ul>
 		<li>
 			<label>Received On</label>
-			<span class="DateSelectorCT">
 <? echo ( ssi::date_select_session( '/employee/inventory/skids.html', 'received_on_start', { with_today=>1, with_clear=>1 } ); ) ?>
-			</span>
 			to 
-			<span class="DateSelectorCT">
 <? echo ( ssi::date_select_session( '/employee/inventory/skids.html', 'received_on_end', { with_today=>1, with_clear=>1 } ); ) ?>
-			</span>
 		</li>
 		<li>
 			<label>Date Entered</label>
-			<span class="DateSelectorCT">
 <? echo ( ssi::date_select_session( '/employee/inventory/skids.html', 'created_on_start', { with_today=>1, with_clear=>1 } ); ) ?>
-			</span>
 			to 
-			<span class="DateSelectorCT">
 <? echo ( ssi::date_select_session( '/employee/inventory/skids.html', 'created_on_end', { with_today=>1, with_clear=>1 } ); ) ?>
-			</span>
 		</li>
 		<li>
 			<label>Last Updated</label>
-			<span class="DateSelectorCT">
 <? echo ( ssi::date_select_session( '/employee/inventory/skids.html', 'updated_on_start', { with_today=>1, with_clear=>1 } ); ) ?>
-			</span>
 			to 
-			<span class="DateSelectorCT">
 <? echo ( ssi::date_select_session( '/employee/inventory/skids.html', 'updated_on_end', { with_today=>1, with_clear=>1 } ); ) ?>
-			</span>
 		</li>
 		<li>
 			<label>Last Seen (RFID)</label>
-			<span class="DateSelectorT">
-<? echo ( ssi::date_select_session( '/employee/inventory/skids.html', 'last_seen_start', { with_today=>1 } ); ) ?>
-			</span>
+<? echo ( ssi::date_select_session( '/employee/inventory/skids.html', 'last_seen_start', { with_today=>1, with_clear=>1 } ); ) ?>
 			to 
-			<span class="DateSelectorT">
-<? echo ( ssi::date_select_session( '/employee/inventory/skids.html', 'last_seen_end', { with_today=>1 } ); ) ?>
-			</span>
+<? echo ( ssi::date_select_session( '/employee/inventory/skids.html', 'last_seen_end', { with_today=>1, with_clear=>1 } ); ) ?>
 		</li>
 		<li>
 			<label>Purpose</label>

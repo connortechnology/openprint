@@ -59,7 +59,7 @@
 		<? endif ( $session{'user_type'} eq 'A' or openprint::usergroup::is_user_in( ['Sales Admin','Reporting','Accounting'], $session{user_id} ) ) ?>
 		 <p class="buttons">
 			 <? echo ( join('',
-					 ssi::button( 'Go', { onclick=>"AjaxLoadContent('Results','/employee/reports/_order_performance.html', f1.serialize() );", text=>'Show Results' } ),
+					 ssi::button( 'Go', { onclick=>q`LoadContent('Results','/employee/reports/_order_performance.html', $('f1').serialize() );`, text=>'Show Results' } ),
 ); ) ?>
 		 </p>
 	</fieldset>
