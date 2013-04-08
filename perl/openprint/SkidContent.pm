@@ -103,14 +103,11 @@ sub find {
 } # end sub find
 
 sub purpose {
-	my $self = shift;
-	return $self->Purpose()->name();
+	return $_[0]->Purpose()->name();
 } # end sub purpose
 
 sub Purpose {
-	my $self = shift;
-	my $Purpose = new openprint::StockPurpose( $$self{'purpose_id'} );
-	return $Purpose;
+	return new openprint::StockPurpose( $_[0]{purpose_id} );
 } # end sub Purpose
 
 sub Paper {

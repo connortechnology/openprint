@@ -63,6 +63,7 @@
 				<? echo ( format_date( $$variable{'Skid'}->received_on() ); ) ?>
 <? endif ( openprint::usergroup::is_user_in( ['InventoryManager'], $session{'user_id'} ) or ! $$variable{'Skid'}->id() ) ?>
 			</li>
+		<? if ( $$variable{'Skid'}->id() ) ?>
 			<li>
 				<label>Created On</label>
 				<? echo ( 
