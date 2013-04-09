@@ -27,9 +27,7 @@
 						@param{'received_on_year','received_on_month','received_on_day'} = Date::Calc::Today(); 
 					} # end if
 				) ?>
-				<span class="DateSelector">
 <? echo ( ssi::date_select( 'received_on', sprintf('%.4d-%.2d-%.2d', @param{'received_on_year','received_on_month','received_on_day'}) ); ) ?>
-				</span>
 				</p>
 			</div>
 		</fieldset>

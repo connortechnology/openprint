@@ -84,13 +84,9 @@
 			</li>
 			<li>
 				<label>Date</label>
-				<span class="DateSelectorT">
 	<? echo ( ssi::date_select_session( '/employee/purchase_order/history.html', 'starting_start',  { 'onchange'=> "page_load('Results',\$('f1'));",'with_today'=>1 } ); ) ?>
-				</span>
 				to
-				<span class="DateSelectorT">
 	<? echo ( ssi::date_select_session( '/employee/purchase_order/history.html', 'starting_end', { 'onchange'=>"page_load('Results',\$('f1'));",'with_today'=>1 } ); ) ?>
-				</span>
 			</li>
 			<li>
 				<label>Authorization</label>

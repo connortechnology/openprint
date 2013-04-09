@@ -54,21 +54,21 @@
 	<fieldset><legend>Logs</legend>
 		<ul>
 			<li><label>Date:</label>
-				<span class="DateSelectorCT"><? echo (
+				<? echo (
 						ssi::datetime_select_session( '/employee/it/license.html','log_created_on_start', {
 							'onchange'	=>q`new Ajax.Updater( 'Logs', '/employee/it/_license_logs.html', { parameters: $('f1').serialize() } );`,
 							'with_today'=>1,
 							'with_clear'=>1,
-							} ); ) ?></span> to
-				<span class="DateSelectorCT"><? echo (
+							} ); ) ?> to
+				<? echo (
 						ssi::datetime_select_session( '/employee/it/license.html','log_created_on_end', {
 							'onchange'	=>q`new Ajax.Updater( 'Logs', '/employee/it/_license_logs.html', { parameters: $('f1').serialize() } );`,
 							'with_today'=>1,
 							'with_clear'=>1,
-							} ); ) ?></span>
+							} ); ) ?>
 			</li>
 		</ul>
-		<div id="Logs"><!--#include virtual="/employee/it/_license_logs.html"--></div>
+		<div id="Logs"><?include(/employee/it/_license_logs.html)?></div>
 	</fieldset>
 </form>
 </div></div>

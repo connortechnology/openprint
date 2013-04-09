@@ -122,13 +122,9 @@
 	<fieldset><legend>Location Log</legend>
 		<p>
 			<label>Date Filter</label>
-			<span class="DateSelector">
 			<? echo ( date_select( 'location_log_start', $session{'/employee/inventory/rfid_scanner_details.html?location_log_start'} ); ) ?>
 			to 
-			</span>
-			<span class="DateSelector">
 			<? echo ( date_select( 'location_log_end', $session{'/employee/inventory/rfid_scanner_details.html?location_log_end'} ); ) ?>
-			</span>
 			<select name="limit" style="width:auto;"><option value="10">10</option><option value="25">25</option><option value="100">100</option></select>
 			<? echo ( button( 'LoadLog', { onclick=>q`LoadContent( 'Log','_rfidscanner_log.html', $('f2') );`, text=>'Load' } ); ) ?>
 		</p>
