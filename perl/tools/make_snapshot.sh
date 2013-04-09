@@ -95,18 +95,18 @@ fi;
 # is unlinked first.  If it were not so, this would copy over the other
 # snapshot(s) too!
 #echo "$RSYNC \"$1\" \"$DEST\""
-OLDDU=`$DU -b -sh $DEST$TYPE.new |$AWK '{print $1}'`
+OLDDU=`$DU -b -sh "$DEST$TYPE.new" |$AWK '{print $1}'`
 echo $OLDDU
 $TIME$RSYNC -a --delete-delay --delete-excluded $@ "$SOURCE" "$DEST$TYPE.new"
-if [ $? != 0 ]; then
-    echo "rsync return non-zero code.  Storing this backup as bad."
+if [ $? != 0 -a $? != 24 ]; then
+    echo "rsync return non-zero code. ($?)  Storing this backup as bad."
 $MV "$DEST$TYPE.new" "$DEST$TYPE.bad";
 	exit $?
 fi;
 
 # step 5: update the mtime of hourly.0 to reflect the snapshot time
 $TOUCH "$DEST$TYPE.new"
-NEWDU=`$DU -b -sh $DEST$TYPE.new |$AWK '{print $1}'`
+NEWDU=`$DU -b -sh "$DEST$TYPE.new" |$AWK '{print $1}'`
 echo $NEWDU
 
 # rotating snapshots of /home (fixme: this should be more general)
