@@ -6,10 +6,10 @@ function load_host( form, options ) {
 	if ( options && options.order )
 		p.order = options.order;
 	
-	new Ajax.Updater( 'Results','/employee/it/_licenses.html', { method: 'get', parameters: p } );
+	new Ajax.Updater( 'Results','/employee/it/_licenses.html', { parameters: p } );
 } // end function load
 </script>
-<!--#include virtual="/includes/error_reporting.html"-->
+<?include(/includes/error_reporting.html)?>
 Please select a host to view/edit.<br>
 <form id="f1" name="f1" method="post" action="licenses.html">
 	<input type="hidden" name="action"/>
@@ -25,43 +25,27 @@ Please select a host to view/edit.<br>
 		</li>
 		<li>
 			<label>Date Added</label>
-			<span class="DateSelectorCT">
 <? echo ( ssi::date_select_session( '/employee/it/licenses.html', 'created_on_start', { 'with_today' => 1, 'with_clear'=>1 } ); ) ?>
-			</span>
 			to 
-			<span class="DateSelectorCT">
 <? echo ( ssi::date_select_session( '/employee/it/licenses.html', 'created_on_end', { 'with_today' => 1, 'with_clear'=>1 } ); ) ?>
-			</span>
 		</li>
 		<li>
 			<label>Last Updated</label>
-			<span class="DateSelectorCT">
 <? echo ( ssi::date_select_session( '/employee/it/licenses.html', 'updated_on_start', { 'with_today' => 1, 'with_clear'=>1 } ); ) ?>
-			</span>
 			to 
-			<span class="DateSelectorCT">
 <? echo ( ssi::date_select_session( '/employee/it/licenses.html', 'updated_on_end', { 'with_today' => 1, 'with_clear'=>1 } ); ) ?>
-			</span>
 		</li>
 		<li>
 			<label>Purchased On</label>
-			<span class="DateSelectorCT">
 <? echo ( ssi::date_select_session( '/employee/it/licenses.html', 'purchased_on_start', { 'with_today' => 1, 'with_clear'=>1 } ); ) ?>
-			</span>
 			to 
-			<span class="DateSelectorCT">
 <? echo ( ssi::date_select_session( '/employee/it/licenses.html', 'purchased_on_end', { 'with_today' => 1, 'with_clear'=>1 } ); ) ?>
-			</span>
 		</li>
 		<li>
 			<label>Expires On</label>
-			<span class="DateSelectorCT">
 <? echo ( ssi::date_select_session( '/employee/it/licenses.html', 'expires_on_start', { 'with_today' => 1, 'with_clear'=>1 } ); ) ?>
-			</span>
 			to 
-			<span class="DateSelectorCT">
 <? echo ( ssi::date_select_session( '/employee/it/licenses.html', 'expires_on_end', { 'with_today' => 1, 'with_clear'=>1 } ); ) ?>
-			</span>
 		</li>
 		<li>
 			<label>Software</label>

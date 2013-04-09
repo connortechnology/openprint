@@ -45,13 +45,9 @@ Please select a CAR to view/edit.<br>
 	<fieldset class="filters"><legend>Search Criteria</legend>
 		<p>
 			<label>Date Issued</label>
-			<span class="DateSelectorCT">
 			<? echo ( ssi::date_select_session( '/employee/iso/cars.html', 'issued_on_start',  { 'onchange'=> "load_cars(\$('f2'));",'with_today'=>1,'with_clear'=>1 } ); ) ?>
-			</span>
 			to 
-			<span class="DateSelectorCT">
 			<? echo ( ssi::date_select_session( '/employee/iso/cars.html', 'issued_on_end',  { 'onchange'=> "load_cars(\$('f2'));",'with_today'=>1,'with_clear'=>1 } ); ) ?>
-			</span>
 		</p>
 		<p>
 			<label>Status</label>

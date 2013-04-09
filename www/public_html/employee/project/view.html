@@ -35,7 +35,7 @@ function dearchive(file_id) {
 } // end function dearchive
 
 </script>
-<? echo ( include('/includes/error_reporting.html'); ) ?>
+<? include('/includes/error_reporting.html' ) ?>
 <? if ( $$variable{'Project'}->id() ) ?>
 <div class="Project"><div class="View">
 <div class="buttons">
@@ -218,6 +218,7 @@ function dearchive(file_id) {
 				$totals{$string} += sprintf('%.0f', $sheets * $Paper->start_area() * $Paper->wpsi() );
 				$sheets{$string} += $sheets;
 			} # end if
+<<<<<<< HEAD
 			if ( ! $Paper->supplied() ) {
 				if ( ( $session{'user_type'} eq 'A' ) or openprint::usergroup::is_user_in( ['Accounting'], $session{'user_id'} ) ) {
 					my $price = $Paper->get_price( 'weight'=>$totals{$string}, 'service'=>'Material' );
@@ -239,6 +240,42 @@ function dearchive(file_id) {
 			$html .= '</td><td colspan="2" align="right"><br/>';
 			foreach my $string ( sort keys %totals ) {
 				my $Stock = $Stocks{$string};
+=======
+			$totals{$Paper->to_string()} += sprintf('%.0f', $sheets * $Paper->start_area() * $Paper->wpsi() );
+			$sheets{$Paper->to_string()} += $sheets;
+		} else {
+			$log->warn("Unknown type of Stock " . $Paper->to_string() );
+			next;
+		} # end if
+		$Stocks{$Paper->to_string()} = $Paper;
+		if ( ! $Paper->supplied() ) {
+			if ( ( $session{'user_type'} eq 'A' ) or openprint::usergroup::is_user_in( ['Accounting','InventoryManager'], $session{'user_id'} ) ) {
+				my %price = $Paper->get_price( $totals{$Paper->to_string()} );
+				$price{'Total'} = $price{'100lb Price'} * $totals{$Paper->to_string()} / 100;
+				$prices{$Paper->to_string()} = sprintf('* $%.2f/100lb = $%.2f', @price{'100lb Price','Total'} );
+			} # end if in Accounting
+		} # endif Supplied
+	} # end foreach signature
+
+	if ( keys %totals ) {
+		my $html = '<tr>';
+		if ( openprint::usergroup::is_user_in( ['Sales Admin','Scheduling','PrepressManager'], $session{'user_id'} ) ) {
+			$html .= '<td class="checkbox unprintable">&nbsp;</td>';
+		} # end if
+		$html .= '<td class="service"><b>Stock:</b><br/>';
+		foreach my $string ( sort keys %Stocks ) {
+			my $Stock = $Stocks{$string};
+			if ( $Stock->id() ) {
+				$html .= sprintf('<a href="/employee/inventory/paper_details.html?paper_id=%1$d">%2$s</a><br/>', $Stock->id(), $string );
+			} else {
+				$html .= $string;
+			} # end if	
+		} # end foreach string
+	
+		$html .= '</td><td colspan="2"><br/>';
+		foreach my $string ( sort keys %Stocks ) {
+			my $Stock = $Stocks{$string};
+>>>>>>> da3227439fdea2e27d994cd0cfbc019fc41ff9a1
 
 				if ( $totals{$string} ) {
 					if ( $sheets{$string} ) {
@@ -516,7 +553,11 @@ function dearchive(file_id) {
 </div>
 <? endif ( $$variable{'Project'}->docket() ) ?>
 <br class="spacer"/>
+<<<<<<< HEAD
 <fieldset><legend onclick="LoadContent('StockAllocations','_stock_allocations.html', { project_id: <? echo ( $$variable{'Project'}->id() ) ?> } );">Allocated</legend>
+=======
+<fieldset><legend onclick="AjaxToggleContent('StockAllocations','_stock_allocations.html?project_id=<? echo ( $$variable{'Project'}->id() ) ?>', null, null );">Allocated</legend>
+>>>>>>> da3227439fdea2e27d994cd0cfbc019fc41ff9a1
 <div id="StockAllocations">
 <? echo ( include('_stock_allocations.html'); ) ?>
 </div>

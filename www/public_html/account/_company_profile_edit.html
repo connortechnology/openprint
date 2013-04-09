@@ -15,7 +15,7 @@
 			$html .= ssi::checkboxes( 'field-'.$Field->id(), $Field->values(), [ split(',', $value ? $value : $Field->default() ) ] );
 		} elsif ( $Field->type() eq 'date' ) {
 			my ( $start, $end ) = @{$Field->values()} if $Field->values();
-			$html .= '<span class="DateSelector">'.ssi::date_select( 'field-'.$Field->id(), ( $value ? $value : $Field->default() ), { 'start'=>$start, 'end'=>$end } ) . '</span>';
+			$html .= ssi::date_select( 'field-'.$Field->id(), ( $value ? $value : $Field->default() ), { 'start'=>$start, 'end'=>$end } );
 		} elsif ( $Field->type() eq 'country' ) {
 			my $StateField = openprint::Company_Profile_Field->find_one('type'=>'state');
 			if ( $StateField ) {

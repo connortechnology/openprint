@@ -25,8 +25,8 @@
 		</li>
 		 <li>
 			 <label>Created</label>
-			<span class="DateSelectorCT"><? echo ( ssi::date_select_session('/employee/reports/order_performance.html', 'created_on_start', { 'with_today'=>1,'with_clear'=>1 } ); ) ?></span> to
-			<span class="DateSelectorCT"><? echo ( ssi::date_select_session('/employee/reports/order_performance.html', 'created_on_end', { 'with_today'=>1,'with_clear'=>1 } ); ) ?></span>
+			<? echo ( ssi::date_select_session('/employee/reports/order_performance.html', 'created_on_start', { 'with_today'=>1,'with_clear'=>1 } ); ) ?> to
+			<? echo ( ssi::date_select_session('/employee/reports/order_performance.html', 'created_on_end', { 'with_today'=>1,'with_clear'=>1 } ); ) ?>
 		</li>
 		<li>
 			<label>Press</label>
@@ -59,7 +59,7 @@
 		<? endif ( $session{'user_type'} eq 'A' or openprint::usergroup::is_user_in( ['Sales Admin','Reporting','Accounting'], $session{user_id} ) ) ?>
 		 <p class="buttons">
 			 <? echo ( join('',
-					 ssi::button( 'Go', { onclick=>"AjaxLoadContent('Results','/employee/reports/_order_performance.html', f1.serialize() );", text=>'Show Results' } ),
+					 ssi::button( 'Go', { onclick=>q`LoadContent('Results','/employee/reports/_order_performance.html', $('f1').serialize() );`, text=>'Show Results' } ),
 ); ) ?>
 		 </p>
 	</fieldset>

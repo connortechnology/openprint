@@ -41,13 +41,9 @@
 			</p>
 			<p>
 				<label>Dates</label>
-				<span class="DateSelectorC">
 <? echo ( ssi::date_select_session( '/bug/history.html', 'starting_start', {onchange=>q`load_bugs($('f1'));`,'with_clear'=>1,'with_today'=>1} ); ) ?>
-				</span>
 					to 
-				<span class="DateSelectorC">
 <? echo ( ssi::date_select_session( '/bug/history.html', 'starting_end', {onchange=>q`load_bugs($('f1'));`, 'with_clear'=>1,'with_today'=>1} ); ) ?>
-				</span>
 			</p>
 			</div>
 			<div class="rightColumn">

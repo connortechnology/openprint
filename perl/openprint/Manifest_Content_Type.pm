@@ -4,8 +4,7 @@ our @ISA = qw(openprint::Object);
 require openprint::Object;
 
 use openprint ();
-use vars qw( $log $debug $table $serial %fields %transforms %defaults );
-*log = \$openprint::log;
+use vars qw( $debug $table $serial %fields %find_fields %transforms %defaults );
 
 require openprint::Manifest;
 require openprint::Paper;
@@ -25,7 +24,11 @@ $serial = 'manifest_content_types_id_seq';
 	'po_content_id'	=>	'po_content_id',
 	'manifest_id'	=>	'manifest_id',
 	'paper_id'		=>	'paper_id',
-	'supplier_invoice'	=>	'supplier_invoice',
+	supplier_invoice	=>	'supplier_invoice',
+);
+%find_fields = (
+	total_quantity	=>	'(SELECT SUM(quantity) FROM manifestcontents WHERE manifestcontents.manifest_id=manifest_content_types.manifest_id and type_id=manifest_content_types.id)',
+	skid_id			=>	'(SELECT skid_id FROM manifestcontents WHERE manifestcontents.manifest_id=manifest_content_types.manifest_id and type_id=manifest_content_types.id)',
 );
 
 %transforms = (
@@ -62,33 +65,33 @@ sub PurchaseOrder_Content {
 			my $PO = new openprint::PurchaseOrder( $_[0]{'po_id'} );
 			my $Paper = $_[0]->Paper();
 			foreach my $POC ( $PO->Contents() ) {
-				$log->debug('POC desc: ' . $POC->item());
+				$openprint::log->debug('POC desc: ' . $POC->item()) if $debug;
 				next if $POC->type() ne $Paper->type().' Stock';
 				my ( $weight ) = $POC->item() =~ /(\d+)lb/i;
 				if ( $weight and $Paper->basis_mweight() ) {
 					$weight = Math::Round::nearest(1,$weight*2);
 					my $basis_weight = Math::Round::nearest(1,$Paper->basis_mweight());
 					if ( $weight != $basis_weight ) {
-						$log->debug("Wrong weight: 2*$weight != " . $basis_weight );
+						$openprint::log->debug("Wrong weight: 2*$weight != " . $basis_weight ) if $debug;
 						next;
 					} else {
-						$log->debug("Right weight: $weight == " . $basis_weight );
+						$openprint::log->debug("Right weight: $weight == " . $basis_weight ) if $debug;
 					} 
 				} else {
-					$log->debug("Indeterminate weight: $weight == " . $Paper->basis_mweight() );
+					$openprint::log->debug("Indeterminate weight: $weight == " . $Paper->basis_mweight() ) if $debug;
 				} # end if
 				my ( $width ) = $POC->item() =~ /([\.\d]+)in/i;
 				if ( $width and $Paper->width() and ( $Paper->width() != $width ) ) {
-					$log->debug("Wrong width: $width != " . $Paper->width() );
+					$openprint::log->debug("Wrong width: $width != " . $Paper->width() ) if $debug;
 					next;
 				} else {
-					$log->debug("Right width: $width == " . $Paper->width() );
+					$openprint::log->debug("Right width: $width == " . $Paper->width() ) if $debug;
 				} # end if
 				if ( $Paper->fsc_code() and ( $POC->item() !~ /^FSC/ ) ) {
-					$log->debug("FSC Mismatch");
+					$openprint::log->debug("FSC Mismatch") if $debug;
 					next;
 				} elsif ( (!$Paper->fsc_code()) and $POC->item() =~ /^FSC/ ) {
-					$log->debug("FSC Mismatch");
+					$openprint::log->debug("FSC Mismatch") if $debug;
 					next;
 				} # end if
 				$_[0]{'PurchaseOrder_Content'} = $POC;

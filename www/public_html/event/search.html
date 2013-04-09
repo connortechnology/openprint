@@ -45,13 +45,9 @@
 		<? endif ( @{$$variable{'Categories'}} = openprint::Event_Category->find('order'=>'lower(name)') ) ?>
 					<li>
 						<label>When</label>
-						<span class="DateSelector">
 						<? echo ( ssi::date_select_session( '/event/search.html', 'starting_on_start', {onchange=>'load_events(this.form);'} ); ) ?>
-						</span>
 							to 
-						<span class="DateSelector">
 						<? echo ( ssi::date_select_session( '/event/search.html', 'starting_on_end', {onchange=>'load_events(this.form);'} ); ) ?>
-						</span>
 					</li>
 					<li><label>Text</label>
 						<input type="text" name="search" value="<? echo ( $param{search} ) ?>"/>

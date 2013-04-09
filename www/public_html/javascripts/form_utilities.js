@@ -1246,7 +1246,9 @@ function LoadContent( divID, page, parameters, message ) {
 	//alert( typeof parameters );
 	if ( ! parameters ) { 
 		parameters = '';
-	} else if ( typeof parameters == 'object' ) {
+	} else if ( parameters == 'object HTMLFormElement]' ) {
+		parameters = parameters.serialize();
+	} else if ( typeof parameters == 'object' && parameters.serialize ) {
 		parameters = parameters.serialize();
 	} 
 	if ( parameters.length > 8190 ) 

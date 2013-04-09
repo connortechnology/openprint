@@ -333,10 +333,11 @@ sub _order_performance {
 	} elsif ( $session{'/employee/reports/order_performance.html?CSR'} ) {
 		$parameters{salesrep_id} = $session{'/employee/reports/order_performance.html?CSR'};
 	} # end if
-	my @Companies = openprint::Company->find( %parameters );
+	$parameters{id} = $session{'/employee/reports/order_performance.html?company_id'} if $session{'/employee/reports/order_performance.html?company_id'};
+	my @Companies = openprint::Company->find( %parameters ) if %parameters;
 	my %companies = map { int($_->id()), $_->name() } @Companies;
 	@{$variable{Orders}} = ();
-	if ( %companies ) {
+	if (%companies or ( ! %parameters ) ) {
 		foreach my $Order ( openprint::Order->find(
 			'company_id' => ( ($session{'/employee/reports/order_performance.html?company_id'} and exists $companies{$session{'/employee/reports/order_performance.html?company_id'}} ) ? $session{'/employee/reports/order_performance.html?company_id'} : [ keys %companies ] ),
 			ssi::date_filter( '/employee/reports/order_performance.html?created_on_start', 'created_on >=' ),
@@ -345,7 +346,8 @@ sub _order_performance {
 				status => [ split(',', $session{'/employee/reports/order_performance.html?status'} ) ],
 				) : () ),
 			order => ($param{order} ? $param{order} : 'id'),
-			user_id => ($param{'Estimator'} eq 'Non Employee' ? q{NOT IN (SELECT id FROM Users WHERE type IN ('E','A') AND id IN (SELECT user_id FROM users_in_usergroups WHERE usergroup_id = (SELECT id FROM usergroups WHERE name='Sales')))} : $param{'Estimator'}),
+			( $param{Estimator} ? ( 
+								   user_id => ($param{'Estimator'} eq 'Non Employee' ? q{NOT IN (SELECT id FROM Users WHERE type IN ('E','A') AND id IN (SELECT user_id FROM users_in_usergroups WHERE usergroup_id = (SELECT id FROM usergroups WHERE name='Sales')))} : $param{'Estimator'}) ) : () ),
 		) ) {
 			if ( $session{'/employee/reports/order_performance.html?reprint'} ) {
 				my $reprint = 0;
@@ -416,13 +418,13 @@ sub prepress_overview {
 sub _prepress_project_list {
 } # end sub _prepress_project_list
 
-sub delivery {
-} # end sub delivery
+sub _delivery_results {
+} # end sub _delivery_results
 
 sub turnaround {
 	ssi::setup_date_select( '/employee/reports/turnaround.html', 'due_date_start', -31 );
 	ssi::setup_date_select( '/employee/reports/turnaround.html', 'due_date_end', '' );
-	_turnaround_results();
+	_turnaround();
 }# end sub turnaround
 
 sub _turnaround {

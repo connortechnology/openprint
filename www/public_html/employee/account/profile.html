@@ -1,4 +1,4 @@
-<? echo ( include('/includes/error_reporting.html'); ) ?>
+<? include('/includes/error_reporting.html') ?>
 <script type="text/javascript" src="<? hash_link(/javascripts/passwordmeter.js) ?>"></script>
 <div class="UserProfile">
 	<form id="f1" name="f1" method="post" action="profile.html">
@@ -7,7 +7,7 @@
 			<ul>
 			<li>
 				<label>Company</label>
-				<input type="text" onkeyup="filterDDM(this, f1.company_id);" onkeydown="if(event.keyCode == 13){this.form.submit();}" class="filter" />
+				<input type="text" onkeyup="filterDDM(this, f1.company_id);" onkeydown="if(event.keyCode==13){this.form.submit();}" class="filter" />
 				<select name="company_id" id="company_id" onchange="if(this.options[this.selectedIndex].value != '') f1.submit();">
 					<option value="">select</option>
 					<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Company->find('order'=>'lower(name)' ) ], $param{'company_id'} ); ) ?>
@@ -51,14 +51,10 @@
 		<fieldset><legend>User Information for user #<? echo ( $$variable{User}->id() ) ?></legend>
 		<ul>
 			<? if ( $$variable{'User'}->Company()->notes() ) ?>
-			<li><label>Company Notes</label>
-			<b><? echo ( $$variable{'User'}->Company()->notes() ) ?></b>
-			</li>
+			<li class="company_notes"><label>Company Notes</label><? echo ( $$variable{'User'}->Company()->notes() ) ?></li>
 			<? endif ( $$variable{'User'}->Company()->notes() ) ?>
 			<? if ( $$variable{'User'}->notes() ) ?>
-			<li><label>User Notes</label>
-			<b><? echo ( $$variable{'User'}->notes() ) ?></b>
-			</li>
+			<li class="user_notes"><label>User Notes</label><? echo ( $$variable{'User'}->notes() ) ?></li>
 			<? endif ( $$variable{'User'}->notes() ) ?>
 			<li> 
 				<label for="title">Title</label>
@@ -74,14 +70,7 @@
 			</li>
 			<li>
 				<label>Salutation</label>
-				<input type="radio" id="SalutationMr." name="salutation" value="Mr." <? echo ( ssi::checked( $$variable{'User'}->salutation() eq 'Mr.' ) ) ?> />
-				<label class="radio" for="SalutationMr.">Mr.</label>
-				<input type="radio" id="SalutationMrs." name="salutation" value="Mrs." <? echo ( 'checked="checked"' if $$variable{'User'}->salutation() eq 'Mrs.' ) ?> />
-				<label class="radio" for="SalutationMrs.">Mrs.</label>
-				<input type="radio" id="SalutationMs." name="salutation" value="Ms." <? echo ( 'checked="checked"' if $$variable{'User'}->salutation() eq 'Ms.' ) ?> />
-				<label class="radio" for="SalutationMs.">Ms.</label>
-				<input type="radio" id="SalutationMiss" name="salutation" value="Miss" <? echo ( 'checked="checked"' if $$variable{'User'}->salutation() eq 'Miss' ) ?> />
-				<label class="radio" for="SalutationMiss">Miss</label>
+				<? echo ( radio( 'salutation', [ map { $_, $_ } ( 'Mr.', 'Mrs.', 'Ms.', 'Miss' ) ], $$variable{User}->salutation() ); ) ?>
 			</li>
 			<li class="required"> 
 				<label for="phone">Phone</label>
@@ -94,7 +83,7 @@
 			</li>
 			<li> 
 				<label for="sms">SMS (email)</label>
-				<input type="text" id="sms" name="sms" value="<? hecho ( $$variable{'User'}->sms() ) ?>" />
+				<input type="email" id="sms" name="sms" value="<? hecho ( $$variable{'User'}->sms() ) ?>" />
 			</li>
 			<li> 
 				<label for="fax">Fax</label>
@@ -102,32 +91,20 @@
 			</li>
 			<li> 
 				<label for="">Mailing List</label>
-				<input type="radio" id="MailingListY" name="mailinglist" <? echo ( 'checked="checked"' if $$variable{'User'}->mailinglist() eq 'Y' ) ?> value="Y" />
-				<label class="radio" for="MailingListY">Yes</label>
-				<input type="radio" id="MailingListN" name="mailinglist" <? echo ( 'checked="checked"' if $$variable{'User'}->mailinglist() ne 'Y' ) ?> value="N" />
-				<label class="radio" for="MailingListN">No</label>
+				<? echo ( radio( 'mailinglist', [ 'Y', 'Yes', 'N', 'No' ], $$variable{User}->mailinglist() ); ) ?>
 			</li>
 		<? if ( ($session{'user_type'} eq 'A' ) or ( openprint::usergroup::is_user_in( ['UserManagement'], $session{'user_id'} ) ) ) ?>
 				<li>
 					<label>Company administrator?</label>
-					<input type="radio" id="administratorY" name="administrator" <? echo ( 'checked="checked"' if $$variable{'User'}->administrator() eq 'Y' ) ?> value="Y" />
-					<label class="radio" for="administratorY">Yes</label>
-					<input type="radio" id="administratorN" name="administrator" <? echo ( 'checked="checked"' if $$variable{'User'}->administrator() ne 'Y' ) ?> value="N" />
-					<label class="radio" for="administratorN">No</label>
+					<? echo ( radio( 'administrator', [ 'Y', 'Yes', 'N', 'No' ], $$variable{User}->administrator() ); ) ?>
 				</li>
 				<li>
 					<label>Web site login?</label>
-					<input type="radio" id="web_activeY" name="web_active" <? echo ( 'checked="checked"' if $$variable{'User'}->web_active() eq 'Y' ) ?> value="Y" />
-					<label class="radio" for="web_activeY">Yes</label>
-					<input type="radio" id="web_activeN" name="web_active" <? echo ( 'checked="checked"' if $$variable{'User'}->web_active() ne 'Y' ) ?> value="N" />
-					<label class="radio" for="web_activeN">No</label>
+					<? echo ( radio( 'web_active', [ 'Y', 'Yes', 'N', 'No' ], $$variable{User}->web_active() ); ) ?>
 				</li>
 				<li>
 					<label>FTP site login?</label>
-					<input type="radio" id="ftp_active1" name="ftp_active" <? echo ( 'checked="checked"' if $$variable{'User'}->ftp_active() ) ?> value="1" />
-					<label class="radio" for="ftp_active1">Yes</label>
-					<input type="radio" id="ftp_active0" name="ftp_active" <?echo ( 'checked="checked"' if ! $$variable{'User'}->ftp_active() ) ?> value="0" />
-					<label class="radio" for="ftp_active0">No</label>
+					<? echo ( radio( 'ftp_active', [ '1', 'Yes', '0', 'No' ], $$variable{User}->ftp_active() ); ) ?>
 				</li>
 				<li>
 					<label>Custom Greeting</label>
@@ -139,6 +116,7 @@
 						<? echo ( ssi::make_drop_down( [ 'C', 'Customer', 'E', 'Employee','A', 'Administrator' ], $$variable{'User'}->type() ); ) ?>
 					</select>
 				</li>
+		<? endif ( ($session{'user_type'} eq 'A' ) or ( openprint::usergroup::is_user_in( ['UserManagement'], $session{'user_id'} ) ) ) ?>
 			</ul>
 		</fieldset>
 	</div>
@@ -150,7 +128,7 @@
 					<input type="email" id="email" name="email" value="<?  hecho ( $$variable{'User'}->email() ) ?>" />
 				</li>
 				<li>
-					<? echo ( include('/includes/password_requirements.html'); ) ?>
+					<? include('/includes/password_requirements.html') ?>
 				</li>
 				<li class="required"> 
 					<label for="password">Password</label>
@@ -168,8 +146,9 @@
 			</ul>
 		</fieldset>
 		<? if ($variable{DoEmail}) ?> 
-		<? echo ( include('/account/_email_settings.html'); ) ?>
+		<? include('/account/_email_settings.html' ) ?>
 		<? endif ($variable{DoEmail}) ?> 
+
 <? if ( $config{'RADIUS Support'} and ( ($session{'user_type'} eq 'A') or openprint::usergroup::is_user_in( ['IT'], $session{'user_id'} ) ) ) ?>
     <fieldset><legend>RADIUS Auth</legend>
         <ul>
@@ -198,16 +177,11 @@
     </fieldset>
 <? endif ( $config{'RADIUS Support'} and ( ($session{'user_type'} eq 'A') or openprint::usergroup::is_user_in( ['IT'], $session{'user_id'} ) ) ) ?>
 
-		</div>
+	</div><!--column-->
 	<br class="spacer"/>
-	<div class="AdminOptions">
-		<fieldset>
+	<div class="PurchaseOrderLimits">
+		<fieldset><legend>Purchasing Limits</legend>
 			<ul>
-			<? if ( sets::isin( $$variable{'User'}->type(), ['E','A'] ) ) ?>
-			<li> 
-				<label>Commission Rate</label>
-				<? echo ( ssi::input( type=>'float', name=>'commission', value=>$$variable{User}->commission() ); ) ?>%
-			</li>
 			<li> 
 				<label>Purchasing Limit (per PO)</label>
 				<? echo ( ssi::input( type=>'float', name=>'purchasing_limit', value=>$$variable{User}->purchasing_limit() ); ) ?>
@@ -216,18 +190,46 @@
 				<label>Purchasing Limit (Total)</label>
 				<? echo ( ssi::input( type=>'float', name=>'purchasing_total_limit', value=>$$variable{User}->purchasing_total_limit() ); ) ?>
 			</li>
-		<? echo (
+			<? echo (
+				my $html;
+				foreach my $PO_Type ( openprint::PurchaseOrder_ContentType->find('order'=>'lower(name)') ) {
+					$html .= '<li><label>Limit for '.$PO_Type->name().'</label>'.input(type=>'cardinal', name=>'po_limit-'.$PO_Type->id(), value=>$$variable{'User'}->po_limit( $PO_Type->id() ) ).'</li>';
+				} # end foreach PO_Type
+				return $html;
+			) ?>
+			</ul>
+		</fieldset>
+	</div>
+	<div class="Notifications">
+	   <fieldset><legend>Notifications</legend>
+		<? echo ( 
 			my $html;
-			foreach my $PO_Type ( openprint::PurchaseOrder_ContentType->find('order'=>'lower(name)') ) {
-				$html .= '<li><label>Limit for '.$PO_Type->name().'</label>'.input(type=>'cardinal', name=>'po_limit-'.$PO_Type->id(), value=>$$variable{'User'}->po_limit( $PO_Type->id() ) ).'</li>';
-			} # end foreach PO_Type
+			my $n = $$variable{User}->notifications();
+			foreach my $Type ( openprint::User_Notification_Type->find( order=>'sort,lower(name)' ) ) {
+				$html .= '<p><label>'.$Type->name().'</label>';
+				$html .= ssi::radio( 'notification_'.$Type->id(), [ 'Yes', 'On', '', 'Off' ], $$n{$Type->name()} );
+				$html .= '</p>';
+			} # end foreach Type
 			return $html;
 		) ?>
+		</fieldset>
+	</div>
+	<br class="spacer"/>
+	<div class="AdminOptions">
+		<fieldset>
+			<ul>
+			<? if ( ($session{'user_type'} eq 'A' ) or ( openprint::usergroup::is_user_in( ['UserManagement'], $session{'user_id'} ) ) ) ?>
+			<? if ( sets::isin( $$variable{'User'}->type(), ['E','A'] ) ) ?>
+			<li> 
+				<label>Commission Rate</label>
+				<? echo ( ssi::input( type=>'float', name=>'commission', value=>$$variable{User}->commission() ); ) ?>%
+			</li>
 			<li class="assistant_to">
 				<label>Assistant to</label>
-					<? echo ( ssi::checkboxes( 'csr_ids', [ map { $_->id(), $_->name() } openprint::User->find(type=>['E','A'], 'usergroup any'=>'Sales', order=>'lower(firstname),lower(lastname)' ) ], [$$variable{'User'}->csr_ids()] ); ) ?>
+				<? echo ( ssi::checkboxes( 'csr_ids', [ map { $_->id(), $_->name() } openprint::User->find(type=>['E','A'], 'usergroup any'=>'Sales', order=>'lower(firstname),lower(lastname)' ) ], [$$variable{'User'}->csr_ids()] ); ) ?>
 			</li>
 			<? endif ( sets::isin( $$variable{'User'}->type(), ['E','A'] ) ) ?>
+			<? endif ( ($session{'user_type'} eq 'A' ) or ( openprint::usergroup::is_user_in( ['UserManagement'], $session{'user_id'} ) ) ) ?>
 			<li class="marketing_categories"> 
 				<label>User Category</label>
 				<? echo (
@@ -238,7 +240,6 @@
 					ssi::checkboxes( 'marketing_categories', [ map { $_->id(), $_->name() } openprint::MarketingCategory->find('order'=>'lower(name)') ], \@users_categories );
 				) ?>
 			</li>
-		<? endif ( ($session{'user_type'} eq 'A' ) or ( openprint::usergroup::is_user_in( ['UserManagement'], $session{'user_id'} ) ) ) ?>
 			<li>
 				<label>Groups</label>
 				<? echo (
@@ -254,20 +255,6 @@
 			</ul>
 		</fieldset>
 	</div>
-		<div class="Notifications">
-			   <fieldset><legend>Notifications</legend>
-				<? echo ( 
-					my $html;
-					my $n = $$variable{User}->notifications();
-					foreach my $Type ( openprint::User_Notification_Type->find( order=>'sort,lower(name)' ) ) {
-						$html .= '<p><label>'.$Type->name().'</label>';
-						$html .= ssi::radio( 'notification_'.$Type->id(), [ 'Yes', 'On', '', 'Off' ], $$n{$Type->name()} );
-						$html .= '</p>';
-					} # end foreach Type
-					return $html;
-				) ?>
-			</fieldset>
-		</div>
 		<input type="hidden" name="btnFunction"/>
 	</form>
 </div>

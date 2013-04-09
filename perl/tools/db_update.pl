@@ -1100,6 +1100,9 @@ if ( ! sets::isin( 'skids', \@tables ) ) {
 		if ( ! exists $$data{'manufacturers_id'} ) {
 			$dbh->do('alter table skids add manufacturers_id TEXT');
 		} # end if
+		if ( ! exists $$data{'received_on'} ) {
+			$dbh->do(q{alter table skids add received_on date});
+		} # endif
 	} # end if
 } # end if 1456
 

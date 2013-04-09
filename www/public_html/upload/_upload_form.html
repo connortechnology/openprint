@@ -106,9 +106,7 @@ $log->debug("SEssion: $session{'project_id'} ");
 			</p>
 			<p>
 				<label>Due Date</label>
-				<span class="DateSelector">
-					<? echo ( ssi::date_select( 'duedate', [@$variable{'duedate_year','duedate_month','duedate_day'}], { 'onchange'=>"filter_days(document.forms['upload'], 'duedate', { futureonly: true, businessonly: true } );" } ); ) ?>
-				</span>
+				<? echo ( ssi::date_select( 'duedate', [@$variable{'duedate_year','duedate_month','duedate_day'}], { 'onchange'=>"filter_days(document.forms['upload'], 'duedate', { futureonly: true, businessonly: true } );" } ); ) ?>
 			</p>
 			<p>
 				<label>Size</label>
