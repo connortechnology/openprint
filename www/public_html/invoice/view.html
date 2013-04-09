@@ -108,29 +108,16 @@ $$variable{Timetracks} = [ openprint::Timetrack->find(invoice_id=>$$variable{Inv
         </table>
     </fieldset>
 </div>
-<? echo ( include('_totals.html'); ) ?>
+<?include(_totals.html)?>
 <? if ( $$variable{Invoice}->owing() ) ?>
-<div class="PaymentOptions">
-<? echo (
-	my %Types = map { $_->name(), $_ } openprint::PaymentType->find();
-	my @options;
-	my $html;
-	push @options, 'Cash' if $Types{Cash};
-	push @options, 'Cheque' if $Types{Cheque};
-	if ( $Types{Bitcoin} ) {
-		my $Address = openprint::Bitcoin_Address->generate( $$variable{Invoice} );
-		#$Address->save({object_type=>'openprint::Invoice',object_id=>$$variable{Invoice}{id}});
-		if ( $Address ) {
-			push @options, ( 'Bitcoin at ' . $Address->address() );
-		} # end if
-	} # end if
-	return if ! @options;
-	
-	my $last = pop @options;
-	return 'Payment can be made by ' . join(',', @options) . ' or ' . $last;
-) ?>
-</div>
+<?include(_payment_options.html)?>
+<? if ( $$variable{Invoice}->due_on() and ( Date::Parse::str2time($$variable{Invoice}->due_on() ) < time ) ) ?>
+<div class="Overdue">NOTICE:  This invoice is now overdue.  Please make payment or contact us to make an arrangement.</div>
+<? endif ( $$variable{Invoice}->due_on() and ( Date::Parse::str2time($$variable{Invoice}->due_on() ) < time ) ) ?>
+<? if ( $$variable{Invoice}->interest() ) ?>
+<div class="HasInterest">Late payment interest charges have been added to this invoice and are reflected in the amount owing.</div>
+<? endif ( $$variable{Invoice}->interest() ) ?>
 <? endif ( $$variable{Invoice}->owing() ) ?>
-<? echo ( include('/invoice/_payments_view.html'); ) ?>
-<? echo ( include('_logs.html'); ) ?>
+<? include('/invoice/_payments_view.html') ?>
+<? include('_logs.html') ?>
 </div></div>

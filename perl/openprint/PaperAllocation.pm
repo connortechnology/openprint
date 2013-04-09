@@ -22,7 +22,7 @@ require openprint::Manufacturer;
 require openprint::Email;
 require openprint::InventoryCondition;
 
-$debug = 0;
+$debug = 1;
 
 $table = 'paper_allocations';
 $serial = 'paper_allocation_id_seq';
@@ -158,18 +158,16 @@ sub send_notification {
 		@recipients = map { new openprint::User( $_ ) } sets::exclude( [ $session{'user_id'} ], [ sets::union( (map { $_->Project()->Company()->salesrep_id() } @PAs), (map{$_->id()}@recipients) ) ] );
 	} # endif
 
-	my $email_template = misc::load_file( $log, $openprint::config{'SkinPath'} . '/email_template.html' );
-
-	$info{'ReplacementText'} = "<!--#include virtual=\"/email_content/stock_allocation_notification.html\"-->";
-	$_ = MIME::QuotedPrint::encode_qp( ssi::variable_substitution( \$email_template, \%info ) );
+	$info{'ReplacementText'} = ssi::include( '/email_content/stock_allocation_notification.html', \%info );
+	$_ = MIME::QuotedPrint::encode_qp( Encode::encode('utf-8', ssi::include( '/email_template.html', \%info ) ) );
 	my @body = ('', $_, 'text/html', 'quoted-printable');
 	my $Email = new openprint::Email();
 	$Email->send( 
-			'TO'		=>	\@recipients, 
+			TO		=>	\@recipients, 
 			#'TO'		=>	'iconnor@point-one.com',
-			'SUBJECT' 	=> 'Stock allocated for docket ' . $Project->docket(),
-			'FROM'		=>	$Me,
-			'ATTACHMENTS'	=>	\@body,
+			SUBJECT 	=> 'Stock allocated for docket ' . $Project->docket(),
+			FROM		=>	$Me,
+			ATTACHMENTS	=>	\@body,
 			);
 
 } # end sub stock_allocation_notification

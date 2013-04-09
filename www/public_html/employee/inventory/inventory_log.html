@@ -9,11 +9,11 @@ LoadContent( 'Log', '_inventory_log.html', $('LogForm').serialize() );
 			<li>
 				<label>Date</label>
 				<span class="DateTimeSelectorT">
-		<? echo ( ssi::datetime_select_session( '/employee/inventory/inventory_log.html', 'updated_on_start', { onclick=>q`calc();`, with_today=>1 } ); ) ?>
+		<? echo ( ssi::datetime_select_session( '/employee/inventory/inventory_log.html', 'updated_on_start', { onchange=>q`calc();`, with_today=>1 } ); ) ?>
 				</span>
 					to
 				<span class="DateTimeSelectorT">
-		<? echo ( ssi::datetime_select_session( '/employee/inventory/inventory_log.html', 'updated_on_end', { onclick=>q`calc();`, with_today=>1 } ); ) ?>
+		<? echo ( ssi::datetime_select_session( '/employee/inventory/inventory_log.html', 'updated_on_end', { onchange=>q`calc();`, with_today=>1 } ); ) ?>
 				</span>
 			</li>
 			<li><label>Ins/Outs</label>
@@ -41,10 +41,15 @@ LoadContent( 'Log', '_inventory_log.html', $('LogForm').serialize() );
                 ) ?>
         </li>
 		<li><label>Show Manifests</label>
-			<? echo ( radio( 'show_manifests', [ 1, 'Yes', 0, 'No' ], $session{'/employee/inventory/inventory_log.html?show_manifests'}, { onclick=>'calc();' } ) ) ?>
+			<? echo ( radio( 'show_manifests', [ 1, 'Yes', 0, 'No' ], $session{'/employee/inventory/inventory_log.html?show_manifests'}, { onclick=>q`calc();if(this.value==1 && this.checked) { $('manifest_options').show(); } else { $('manifest_options').hide();};` } ) ) ?>
+			<div id="manifest_options"<? echo ( $session{'/employee/inventory/inventory_log.html?show_manifests'} ? '' : ' style="display:none;"' ) ?>>
 within 
-			<? echo ( input( type=>'cardinal', name=>'manifests_within_days', value=>$session{'/employee/inventory/inventory_log.html?manifests_within_days'}, onkeyup=>'calc();' ); ) ?>
-days
+			<? echo ( input( type=>'cardinal', id=>'manifests_within_days', name=>'manifests_within_days', value=>$session{'/employee/inventory/inventory_log.html?manifests_within_days'}, onkeydown=>q`if(event.keyCode == 13){calc();}` ); ) ?> days and 
+			<? echo ( input( type=>'cardinal', id=>'manifests_within_lbs', name=>'manifests_within_lbs', value=>$session{'/employee/inventory/inventory_log.html?manifests_within_lbs'}, onkeydown=>q`if(event.keyCode == 13){calc();}` ); ) ?>
+	
+			lbs<br/>
+			<? echo ( checkboxes( 'show_stock_on_manifests', [ 1, 'Show stock on manifests' ], $session{'/employee/inventory/inventory_log.html?show_stock_on_manifests'}, { onclick=>'calc();' } ); ) ?>
+			</div>
 		</li>
 		<li><label>Docket</label>
 			<? echo ( input( type=>'cardinal', name=>'docket', id=>'docket', onkeydown=>q`if(event.keyCode == 13){calc();}` ); ) ?>

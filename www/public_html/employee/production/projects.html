@@ -1,13 +1,14 @@
 <script type="text/javascript">
 	function load_projects( form ) {
 		$('ProjectList').innerHTML = 'Loading... please wait.';
-		new Ajax.Updater('ProjectList','/employee/production/_project_list.html', { method: 'get', parameters: form.serialize() } );
+		new Ajax.Updater('ProjectList','/employee/production/_project_list.html', { parameters: form.serialize() } );
 	} // end function
 </script>
 
 <form id="f1" name="f1" method="post" action="projects.html">
 <fieldset class="filters"><legend>Enter Docket #</legend>
-	<p>
+	<ul>
+	<li>
 		<label>Docket #</label>
 		<? echo ( join(' ',
 					ssi::input(type=>'cardinal',id=>'StartDocket',name=>'StartDocket',value=>$$variable{StartDocket}, autofocus=>1, onkeydown=>'if(event.keyCode == 13){load_projects(f1);}' ),
@@ -15,10 +16,12 @@
 					ssi::input(type=>'cardinal',id=>'EndDocket',name=>'EndDocket',value=>$$variable{EndDocket}, onkeydown=>'if(event.keyCode == 13){load_projects(f1);}'),
 					ssi::button( 'Go', { onclick=>q`load_projects(f1);` } ),
 		); ) ?>
-	</p>
+	</li>
+	</ul>
 </fieldset>
 <fieldset class="filters"><legend>Search Information</legend>
-	<p>
+	<ul>
+	<li>
 		<label>Company</label>
 		<input type="text" onkeyup="filterDDM(this, f1.ddmCustomer);" class="filter" onkeydown="if(event.keyCode == 13){load_projects(f1);}" />
 		<select name="ddmCustomer" onchange="load_projects(this.form);">
@@ -26,8 +29,8 @@
 			<? echo ( openprint::Company::get_dropdown( $session{'/employee/production/projects.html?ddmCustomer'} ); ) ?>
 		</select>
 		<? echo ( ssi::button( 'CompanyGo', { onclick=>q`load_projects(f1);`, text=>'Go' } ); ) ?>
-	</p>
-	<p>
+	</li>
+	<li>
 		<label>Operator</label>
 		<select name="ddmEmployee" size="1" onchange="load_projects(this.form);">
 			<option value="">All Employees</option>
@@ -36,8 +39,8 @@
 	$session{'/employee/production/projects.html?dmEmployee'} );
 )?>
 			</select>
-	</p>
-	<p>
+	</li>
+	<li>
 		<label>Sales Rep</label>
 		<select name="ddmSalesRep" size="1" onchange="load_projects(this.form);">
 			<option value="">All Employees</option>
@@ -50,8 +53,8 @@
 	ssi::make_drop_down( [ map { $_->id(), $_->name() } @Users ], $session{'/employee/production/projects.html?ddmSalesRep'} );
 ) ?>
 		</select>
-	</p>
-	<p>
+	</li>
+	<li>
 	<label>Project Status</label>
 	<select name="ProjectStatus" multiple="multiple" size="6" onchange="load_projects(this.form);">
 <? echo (
@@ -86,8 +89,8 @@
 		return ssi::make_drop_down( [ map { $_, $_ } @statuses ], \@status_filter );
 ) ?>
 			</select>
-	</p>
-	<p>
+	</li>
+	<li>
 		<label>Press</label>
 		<select name="ddmPress" onchange="load_projects(this.form);">
 			<option value="">All Presses</option>
@@ -95,7 +98,7 @@
 		ssi::make_drop_down( [ map { $_->strid(), $_->name() } openprint::Equipment->find('category any'=>'Printing', 'order'=>'lower(strname)' ) ], $session{'/employee/production/projects.html?ddmPress'} );
 ) ?>
 		</select>
-	</p>
+	</li>
 <? eval (
 	if ( ! $session{'/employee/production/projects.html?DueDateStartYear'} )  {
 		@session{
@@ -124,7 +127,7 @@
 			'/employee/production/projects.html?DueDateEndDay'}
 			);
 ) ?>
-	<p>
+	<li>
 		<label>Due Date</label>
 		<span class="DateSelector">
 			<select name="DueDateStartYear" onchange="load_projects(this.form);"><?DueDateStartYears?></select>
@@ -137,7 +140,8 @@
 			<select name="DueDateEndMonth" onchange="load_projects(this.form);"><?DueDateEndMonths?></select>
 			<select name="DueDateEndDay" onchange="load_projects(this.form);"><?DueDateEndDays?></select>
 		</span>
-	</p>
+	</li>
+	</ul>
 	<p class="buttons">
 		<? echo ( ssi::button( 'ShowResults', { 'onclick'=> q`load_projects($('f1'));`, 'text'=>'Show Results' } ); ) ?>
 	</p>

@@ -3,6 +3,7 @@ CREATE TABLE Users (
 	id		SERIAL,
 	company_id	INTEGER,
 	email		TEXT NOT NULL, UNIQUE(email), 
+	email_valid	BOOLEAN,
 	password		TEXT,
 	title		TEXT,
 	firstName	TEXT,

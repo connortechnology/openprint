@@ -57,20 +57,59 @@
 						created_on_start=>Date::Format::time2str( '%Y-%m-%d %H:%M:%S%z', Date::Parse::str2time( $PI->updated_on() ) - $days*(60*60*24 ) ),
 						created_on_end	=>Date::Format::time2str( '%Y-%m-%d %H:%M:%S%z', Date::Parse::str2time( $PI->updated_on() ) + $days*(60*60*24 ) ),
 						);
+
+				my $within_lbs = $session{$url.'?manifests_within_lbs'};
+				$within_lbs =~ s/\D//g;
+
+				my $manifest_total = $PI->delta() < 0 ? -1*$PI->delta() : $PI->delta();
+
+			# Always looks for exact match first.
 				my @Types = openprint::Manifest_Content_Type->find(
 						manifest_id=>[ map { $_->id() } @Manifests ],
 						paper_id=>$PI->paper_id(),
+						total_quantity	=>	$manifest_total,
+						order	=>	'manifest_id',
 						);
-				if ( @Types ) {
-				foreach my $Type ( @Types ) {
-				my @Contents = openprint::ManifestContent->find(
+				@Types = openprint::Manifest_Content_Type->find(
 						manifest_id=>[ map { $_->id() } @Manifests ],
-						type_id => $$Type{id},
-						);
+						paper_id=>$PI->paper_id(),
+						( $within_lbs ? (
+										 'total_quantity_<=' =>	$manifest_total+$within_lbs,
+										 'total_quantity_>=' =>	$manifest_total-$within_lbs,
+										) : ( ) ),
+						order	=>	'manifest_id',
+						) if ! @Types;
+				@Types = openprint::Manifest_Content_Type->find(
+						manifest_id=>[ map { $_->id() } @Manifests ],
+						( $within_lbs ? (
+										 'total_quantity_<=' =>	$manifest_total+$within_lbs,
+										 'total_quantity_>=' =>	$manifest_total-$within_lbs,
+										) : ( ) ),
+						order	=>	'manifest_id',
+						) if ! @Types;
 
-					$html .= sprintf('<tr%1$s><td>Manifest:</td><td colspan="3"><a href="/employee/inventory/manifest.html?manifest_id=%2$d">%3$s</a></td><td class="Quantity">%4$d</td><td colspan="5">&nbsp;</td></tr>',
-							$rowclass, $Type->manifest_id(), $Type->Manifest()->name(), misc::sum( map { $_->quantity() } @Contents ) );
-				} # end foreach Type
+				if ( @Types ) {
+					# Foudn a match
+					my $matched;
+					foreach my $Type ( @Types ) {
+						my @Contents = openprint::ManifestContent->find(
+								manifest_id=>[ map { $_->id() } @Manifests ],
+								type_id => $$Type{id},
+								);
+						my $manifest_total = misc::sum( map { $_->quantity() } @Contents );
+						if ( $manifest_total==$total ) {
+							$matched = $Type;
+						} # end if
+						my $class = ' class="'.($manifest_total==$total?'matched':''). ( $rowclass ? ' colRow' : '' ).'"';
+						
+
+						$html .= sprintf('<tr%1$s><td>%5$s</td><td>Manifest:</td><td><a href="/employee/inventory/manifest.html?manifest_id=%2$d">%3$s</a></td><td class="Paper"><a href="/employee/inventory/paper.html?paper_id=%6$d">%7$s</a></td><td class="Quantity">%4$d</td><td colspan="5">&nbsp;</td></tr>',
+								$class, $Type->manifest_id(), $Type->Manifest()->name(), $manifest_total,
+								format_datetime( $Type->Manifest()->created_on() ),
+								$Type->paper_id(), 
+( $session{$url.'?show_stock_on_manifests'} ? $Type->Paper()->to_string() : '' ),
+								);
+					} # end foreach Type
 				} # end if
 
 			} # end if show manifests

@@ -109,5 +109,12 @@
     </fieldset>
 </div>
 <? echo ( include('/invoice/_totals.html', $variable); ) ?>
+<? if ( $$variable{Invoice}->due_on() and ( Date::Parse::str2time($$variable{Invoice}->due_on() ) < time ) ) ?>
+<div class="Overdue">NOTICE:  This invoice is now overdue.  Please make payment or contact us to make an arrangement.</div>
+<? endif ( $$variable{Invoice}->due_on() and ( Date::Parse::str2time($$variable{Invoice}->due_on() ) < time ) ) ?>
+<? if ( $$variable{Invoice}->interest() ) ?>
+<div class="HasInterest">Late payment interest charges have been added to this invoice and are reflected in the amount owing.</div>
+<? endif ( $$variable{Invoice}->interest() ) ?>
+<?include(/invoice/_payment_options.html)?>
 <? echo ( include('/invoice/_payments_view.html', $variable); ) ?>
 </div>

@@ -2,7 +2,8 @@
 <fieldset><legend>Products</legend>
 	<table class="List">
 		<tr>
-			<th class="product">Product</th>
+			<th class="name">Product</th>
+			<th class="description">Description</th>
 			<th class="po">PO Num</th>
 			<th class="Quantity">Qty</th>
 			<th class="Price">Price</th>
@@ -12,25 +13,27 @@
 			my $html = '';
 			my $rowclass;
 			$$variable{product_total} = 0;
-			foreach my $Product ( $$variable{Invoice}->Products() ) {
+			foreach my $Invoiced_Product ( $$variable{Invoice}->Products() ) {
+				my $Product = $Invoiced_Product->Product();
 				$html .= sprintf('<tr%1$s>
-						<td class="product">%2$s</td>
-						<td class="po">%3$s</td>
-						<td class="Quantity">%5$s</td>
-						<td class="Price">%4$s</td>
-						<td class="Price">%6$s</td>
-					</tr>', $rowclass, $Product->description(), $Product->po(), 
-					openprint::Currency::format($Product->price()), 
-					$Product->quantity(), 
-					openprint::Currency::format($Product->total()),
+						<td class="name"><a href="/product/view.html?product_id=%2$d">%3$s</a></td>
+						<td class="description"><a href="/product/view.html?product_id=%2$d">%4$s</a></td>
+						<td class="po">%5$s</td>
+						<td class="Quantity">%6$s</td>
+						<td class="Price">%7$s</td>
+						<td class="Price">%8$s</td>
+					</tr>', $rowclass, $Product->id(), $Product->name(), $Product->description(), $Invoiced_Product->po(), 
+					$Invoiced_Product->quantity(), 
+					openprint::Currency::format($Invoiced_Product->price()), 
+					openprint::Currency::format($Invoiced_Product->total()),
 					);
 				$rowclass = $rowclass ? '' : ' class="colRow"';
-				$$variable{product_total} += $Product->total();
+				$$variable{product_total} += $Invoiced_Product->total();
 			} # end foreach Product
 			return $html;
 		) ?>
 		<tr class="totals">
-			<td colspan="4">Totals</td>
+			<td colspan="5">Totals</td>
 			<td class="Price"><? echo ( openprint::Currency::format( $$variable{product_total} ); ) ?></td>
 		</tr>
 	</table>

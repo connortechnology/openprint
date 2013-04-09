@@ -1,20 +1,18 @@
-<? if ( @{$$variable{'Entries'}} ) ?>
-<table class="List">
-	<tr>
-		<th class="DateTime">When</th>
-		<th class="RFIDScanner">Scanner</th>
-		<th class="Location">Location</th>
-		<th class="Comment">Comment</th>
-	</tr>
-	<? while ( $$variable{'Entry'} = shift @{$$variable{'Entries'}} ) ?>	
-		<tr>
-			<td class="DateTime"><? echo ( Date::Format::time2str($config{'DateTimeFormat'}, Date::Parse::str2time($$variable{'Entry'}->updated_on() ) ); ) ?></td>
-			<td class="RFIDScanner"><? echo ( $$variable{'Entry'}->Scanner()->name() ) ?></td>
-			<td class="Location"><? echo ( $$variable{'Entry'}->Location()->name() ) ?></td>
-			<td class="Comment"><? echo ( $$variable{'Entry'}->comment() ) ?></td>
-		</tr>
-	<? endwhile ( $$variable{'Entry'} = shift @{$$variable{'Entries'}} ) ?>	
-</table>
-<? else ( @{$$variable{'Entries'}} ) ?>
-No results
-<? endif ( @{$$variable{'Entries'}} ) ?>
+<form name="location_log_form" id="location_log_form">
+	<input type="hidden" name="rfidtag_id" value="<? echo ( $$variable{RFIDTag}->id() ) ?>" />
+	<fieldset><legend>Location Log</legend>
+		<p>
+			<label>Date Filter</label>
+			<span class="DateSelector">
+<? echo ( ssi::date_select( 'start', sprintf('%.4d-%.2d-%.2d', @param{'start_year','start_month','start_day'} ),  q`AjaxLoadContent('LocationLog','_rfidtag_log_entries.html', $('location_log_form').serialize() );` ); ) ?>
+			</span>
+			to 
+			<span class="DateSelector">
+<? echo ( ssi::date_select( 'end', sprintf('%.4d-%.2d-%.2d', @param{'end_year','end_month','end_day'} ),  q`AjaxLoadContent('LocationLog','_rfidtag_log_entries.html', $('location_log_form').serialize() );` ); ) ?>
+			</span>
+			<select name="limit" onchange="AjaxLoadContent('LocationLog','_rfidtag_log_entries.html', $('location_log_form').serialize() );"><option value="10">10</option><option value="25">25</option><option value="100">100</option></select>
+			<? echo ( button( 'LoadLocationLog', { onclick=>q`AjaxLoadContent('LocationLog','_rfidtag_log_entries.html', $('location_log_form').serialize() );`, text=> 'Load' } ); ) ?>
+		</p>
+		<div id="LocationLocationLog"><?input(_rfidtag_log_entries.html)?></div>
+	</fieldset>
+</form>

@@ -207,14 +207,15 @@ sub _history {
 				$variable{'error'} .= 'You do not have rights to destroy this article.';
 				next;
 			} # end if
-			$variable{'error'} .= $Article->destroy();
+			$variable{error} .= $Article->destroy();
 		} # end foreach id
+		$variable{ExternalRedirect} = '/article/history.html';
 	} # end if
 } # end sub _history
 
 sub search {
 	if ( $param{action} eq 'Reset' ) {
-		ssi::reset_session('/article/search.htm');
+		ssi::reset_session('/article/search.html');
 		return;
 	} # end if
 	_search();

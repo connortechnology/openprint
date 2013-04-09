@@ -1,6 +1,8 @@
 <? echo (
+	
 	my $html = '';
 	if ( $variable{'error'} ) {
+		$variable{error} =~ s/<br\/>//g;
 		$html .= qq`<script type="text/javascript">alert('$$variable{error}');</script>`;
 		delete $variable{error};
 	} 
@@ -9,6 +11,7 @@
 		my $Paper = $C->Type()->Paper();
 		my $Skid = $C->Skid();
 		my $tag_id = $Skid->rfidtag_id();
+		my $RFIDTag = $Skid->RFIDTag();
 		my $error;
 		my @SkidContents = $Skid->Contents();
 		if ( @SkidContents > 1 ) {
@@ -19,7 +22,7 @@
 
 		my $id = $$variable{'type_id'}.'-'.$$C{id};
 			
-		$html .= sprintf('<tr id="tr-%1$d"><td class="RFID"><a href="/employee/inventory/rfidtag_details.html?rfidtag_id=%2$s">%2$s</a></td>', $C->id(), $tag_id );
+		$html .= sprintf('<tr id="tr-%1$d"><td class="RFID"><a href="/employee/inventory/rfidtag_details.html?rfidtag_id=%2$s">%3$s</a></td>', $C->id(), $RFIDTag->id(), $RFIDTag->id_short() );
 		$html .= sprintf('<td class="Skid"><a href="/employee/inventory/skid_details.html?skid_id=%1$d">%1$d</a></td>', $C->skid_id() );
 	
 		$html .= '<td class="ManufacturersID">';
@@ -61,6 +64,7 @@
 		} else {
 			$html .= '<td colspan="2">&nbsp;</a>';
 		} # end if
+		$html .= '<td class="Location">'.ssi::select( openprint::Location->dropdown(order=>'parent_id NULLS FIRST, lower(name)'), $Skid->location_id(), { name=>'location_id-'.$id, prepend=>['','select'] } ).'</td>';
 		$html .= '<td>'.$error.'</td>';
 		$html .= '<td class="buttons">' . ssi::button( 'X'.$$C{'id'}, { onclick=>qq`delete_content('$$C{id}');`, text=>'X', title=>'Remove' } ) . '</td>';
 		$html .= '</tr>';

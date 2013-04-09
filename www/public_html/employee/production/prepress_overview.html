@@ -66,6 +66,8 @@
 	</tr></thead><tbody><tr>
 	<? echo (
 		my $html;
+		my $ac = sql::start_transaction( $dbh );
+
 		foreach my $status ( @{$$variable{'Statuses'}} ) {
 			$html .= '<td class="PressColumn">';
 			$html .= '<ul>';
@@ -131,7 +133,8 @@
 			} # end foreach Project
 			$html .= '</ul>';
 			$html .= '</td>';
-		} # end foreach press
+		} # end foreach Status
+		sql::end_transaction( $dbh, $ac );
 		return $html;
 	) ?>
 	</tr></tbody></table>
