@@ -25,14 +25,35 @@
 		} # end if
 		my $rowclass;
 		my $total = 0;
-		foreach my $PI ( openprint::PaperInventory->find(%params) ) {
+		my @PI = openprint::PaperInventory->find(%params);
+		# Do this to cache the skids
+		my @skid_ids = sort map { $_->skid_id() } @PI;
+
+		my @Skids =		openprint::Skid->find( 
+			id	=>	\@skid_ids,
+			);
+		my %Skids = map { $_->id(), $_ } @Skids;
+
+		my @types = split(',', $session{$url.'?Type'} );
+		my @location_ids = split(',', $session{$url.'?location_id'} );
+		if ( sets::isin('All', \@location_ids ) ) {
+			@location_ids = ();
+		} else {
+			@location_ids = map { $_ =~ /^(\d+)$/ ? ( $_, map { $_->id() } new openprint::Location( $_ )->get_all_children() ) : ( $_ ) } @location_ids;
+		} # end if
+
+		foreach my $PI ( @PI ) {
 			next if $PI->delta <= 0 and ! $session{$url.'?outs'};
 			next if $PI->delta > 0 and ! $session{$url.'?ins'};
 			my $Paper = $PI->Paper();
-			next if $Paper->type() and ! sets::isin( $Paper->type(), split(',', $session{$url.'?Type'} ) );
-			next if ( ! $Paper->type() ) and ! sets::isin( 'Unknown', split(',',  $session{$url.'?Type'} ) );
+			if ( @types ) {
+				next if $Paper->type() and ! sets::isin( $Paper->type(), \@types );
+				next if ( ! $Paper->type() ) and ! sets::isin( 'Unknown', \@types );
+			} # end if
 			my $Skid = $PI->Skid();
-			next if $session{$url.'?location_id'} and ! sets::isin( $Skid->location_id(), [ split(',', $session{$url.'?location_id'} ) ] );
+			$log->debug("Skid not in skids $$Skid{id}") if ! $Skids{$$Skid{id}};
+
+			next if @location_ids and ! sets::isin( $Skid->location_id(), \@location_ids );
 			
 			$html .= sprintf( '<tr%1$s><td class="DateTime">%2$s</td><td class="Skid"><a href="skid_details.html?skid_id=%3$d">%3$d</a></td><td class="RFID">%4$s</td><td class="paper_name"><a href="paper_details.html?paper_id=%5$d">%6$s</a></td><td class="Quantity">%7$d</td><td class="Quantity">%8$s</td><td class="Quantity">%9$d</td><td class="Location">%10$s</td><td class="Docket">%11$s</td><td class="Comment">%12$s</td></tr>',
 				$rowclass,

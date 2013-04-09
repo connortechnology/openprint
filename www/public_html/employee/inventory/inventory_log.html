@@ -8,13 +8,9 @@ LoadContent( 'Log', '_inventory_log.html', $('LogForm').serialize() );
 		<ul>
 			<li>
 				<label>Date</label>
-				<span class="DateTimeSelectorT">
 		<? echo ( ssi::datetime_select_session( '/employee/inventory/inventory_log.html', 'updated_on_start', { onchange=>q`calc();`, with_today=>1 } ); ) ?>
-				</span>
 					to
-				<span class="DateTimeSelectorT">
 		<? echo ( ssi::datetime_select_session( '/employee/inventory/inventory_log.html', 'updated_on_end', { onchange=>q`calc();`, with_today=>1 } ); ) ?>
-				</span>
 			</li>
 			<li><label>Ins/Outs</label>
 				<input type="checkbox" name="ins" id="ins" <? echo ( $session{'/employee/inventory/inventory_log.html?ins'} ? 'checked="checked"' : '' ) ?> onclick="calc();"/>
@@ -52,12 +48,12 @@ within
 			</div>
 		</li>
 		<li><label>Docket</label>
-			<? echo ( input( type=>'cardinal', name=>'docket', id=>'docket', onkeydown=>q`if(event.keyCode == 13){calc();}` ); ) ?>
+			<? echo ( input( type=>'cardinal', name=>'docket', id=>'docket', onkeydown=>q`if(event.keyCode==13){calc();}` ); ) ?>
 		</li>
 		</ul>
 		<p class="buttons">
 			<? echo ( join("\n",
-						ssi::button( 'Load', { onclick=>"calc();" } ),
+						ssi::button( 'Load', { onclick=>'calc();' } ),
 						ssi::button( 'Download', { onclick=>q`$('LogForm').btnFunction.value='Download';$('LogForm').submit();` } ),
 ); ) ?>
 		</p>
