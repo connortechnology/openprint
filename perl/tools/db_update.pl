@@ -888,6 +888,9 @@ if ( ! sets::isin( 'locations', \@tables ) ) {
 	if ( ! exists $$data{'created_on'} ) {
 	$dbh->do('ALTER TABLE Locations add created_on TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()');
 	} # end if
+	if ( ! exists $$data{'updated_on'} ) {
+	$dbh->do('ALTER TABLE Locations add updated_on TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()');
+	} # end if
 	if ( ! exists $$data{'created_by'} ) {
 	$dbh->do('ALTER TABLE Locations add created_by INTEGER');
 	$dbh->do('ALTER TABLE Locations add FOREIGN KEY (created_by) REFERENCES Users (id)');
