@@ -32,6 +32,8 @@
 			date_filter( '/employee/inventory/skids.html?updated_on_end', 'updated_on_end' ),
 			date_filter( '/employee/inventory/skids.html?received_on_start', 'received_on_start' ),
 			date_filter( '/employee/inventory/skids.html?received_on_end', 'received_on_end' ),
+			date_filter( '/employee/inventory/skids.html?last_seen_start', 'last_seen_start' ),
+			date_filter( '/employee/inventory/skids.html?last_seen_end', 'last_seen_end' ),
 			( defined $session{'/employee/inventory/skids.html?Owner'} ? ( owner_id=>$session{'/employee/inventory/skids.html?Owner'} ) : () ),
 			( $session{'/employee/inventory/skids.html?fsc_code'} ? ( fsc_code => $session{'/employee/inventory/skids.html?fsc_code'} ) : () ),
 			( $session{'/employee/inventory/skids.html?purpose_id'} ? ( purpose_id => $session{'/employee/inventory/skids.html?purpose_id'} ) : () ),
@@ -39,14 +41,6 @@
 		);
 		$sql{'has_manifest_id'} = 1 if $session{'/employee/inventory/skids.html?hasmanifest'} eq 'Y';
 		$sql{'has_manifest_id'} = 0 if $session{'/employee/inventory/skids.html?hasmanifest'} eq 'N';
-		if ( $session{'/employee/inventory/skids.html?last_seen_start_year'} and $session{'/employee/inventory/skids.html?last_seen_start_month'} and $session{'/employee/inventory/skids.html?last_seen_start_day'} ) {
-			$sql{'last_seen >='} = sprintf('%.4d-%.2d-%.2d 00:00:00', 
-					@session{'/employee/inventory/skids.html?last_seen_start_year','/employee/inventory/skids.html?last_seen_start_month','/employee/inventory/skids.html?last_seen_start_day'} );
-		} # end if
-		if ( $session{'/employee/inventory/skids.html?last_seen_end_year'} and $session{'/employee/inventory/skids.html?last_seen_end_month'} and $session{'/employee/inventory/skids.html?last_seen_end_day'} ) {
-			$sql{'last_seen <='} = sprintf('%.4d-%.2d-%.2d 23:59:59', 
- @session{'/employee/inventory/skids.html?last_seen_end_year','/employee/inventory/skids.html?last_seen_end_month','/employee/inventory/skids.html?last_seen_end_day'} );
-		} # end if
 		if ( $session{'/employee/inventory/skids.html?Type'} ) {
 			$sql{'type'}		= $session{'/employee/inventory/skids.html?Type'};
 		}
@@ -57,10 +51,9 @@
 				$sql{'location_id'} = [];
 			} else {
 				my $Location = new openprint::Location( $session{'/employee/inventory/skids.html?location_id'} );
-				$sql{'location_id'} = [ map { $_->id() } ( $Location, $Location->get_all_children()) ];
+				$sql{'location_id'} = [ map { $_->id() } ( $Location, $Location->get_all_children() ) ];
 			} # end if
 		} # end if
-	} # end if
 		@{$$variable{'Skids'}} = openprint::Skid->find( %sql );
 	} # end if
 	if ( @{$$variable{'Skids'}} > 100 ) {

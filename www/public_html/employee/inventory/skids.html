@@ -2,7 +2,7 @@
 <?include(/includes/error_reporting.html)?>
 <script type="text/javascript">
 	function calc() {
-		AjaxLoadContent( 'Results', '/employee/inventory/_skids_results.html', $('f1').serialize() );
+		LoadContent( 'Results', '/employee/inventory/_skids_results.html', $('f1') );
 	}
 </script>
 Please select a Skid to view/edit.<br/>
@@ -92,7 +92,7 @@ Please select a Skid to view/edit.<br/>
 			<select name="purpose_id">
 				<option value=""> all </option>
 				<? echo (
-					return ssi::make_drop_down( [ sql::execute( undef, undef, q{SELECT id,name FROM StockPurposes ORDER BY lower(name)} ) ], $session{'/employee/inventory/skids.html?purpose_id'} );
+					return ssi::make_drop_down( openprint::StockPurpose->dropdown(order=>'lower(name)'), $session{'/employee/inventory/skids.html?purpose_id'} );
 				) ?>
 			</select>
 		</li>
@@ -129,7 +129,7 @@ Please select a Skid to view/edit.<br/>
 		<li><label>Location</label>
 			<select name="location_id" onchange="calc();">
 				<? echo ( 
-					my @options = ('','All', 'None', 'None',  map { $_->id(), $_->name() } openprint::Location->find('order'=>'lower(name)') );
+					my @options = ('','All', 'None', 'None',  map { $_->id(), $_->name() } openprint::Location->find( order=>'lower(name)') );
 					ssi::make_drop_down( \@options, $session{'/employee/inventory/skids.html?location_id'} );
 				) ?>
 			</select>
@@ -137,7 +137,7 @@ Please select a Skid to view/edit.<br/>
 		<li><label>Condition</label>
 			<select name="condition_id" onchange="calc();">
 				<? echo ( 
-					my @options = ('','All', map { $_->id(), $_->name() } openprint::InventoryCondition->find('order'=>'lower(name)') );
+					my @options = ('','All', map { $_->id(), $_->name() } openprint::InventoryCondition->find( order=>'lower(name)') );
 					ssi::make_drop_down( \@options, $session{'/employee/inventory/skids.html?condition_id'} );
 				) ?>
 			</select>

@@ -1,9 +1,9 @@
 <? eval (
-	@{$$variable{'RFIDTags'}} = ();
+	$$variable{RFIDTags} = [];
 	if ( $param{'rfidtag_id'} ) {
-		@{$$variable{'RFIDTags'}} = openprint::RFIDTag->find( 'id like'	=> '%'.$param{'rfidtag_id'}.'%', 'order' =>	'id');
-	} elsif ( $param{'rfidtag_hex'} ) {
-		@{$$variable{'RFIDTags'}} = openprint::RFIDTag->find( 'id like'	=> '%'.hex($param{'rfidtag_hex'}).'%', 'order' => 'id');
+		$$variable{RFIDTags} = [ openprint::RFIDTag->find( 'id like'=>'%'.$param{rfidtag_id}.'%', order=>'id') ];
+	} elsif ( $param{rfidtag_hex} ) {
+		$$variable{RFIDTags} = [ openprint::RFIDTag->find( 'id like'=>'%'.hex($param{rfidtag_hex}).'%', order=>'id') ];
 	} else {
 		foreach my $RFIDTag ( openprint::RFIDTag->find( 
 			( $session{'/employee/inventory/rfidtags.html?owner_id'} ? ( owner_id => $session{'/employee/inventory/rfidtags.html?Owner'} ) : () ),
@@ -13,8 +13,8 @@
 			ssi::date_filter( '/employee/inventory/rfidtags.html?updated_on_start', 'updated_on >=' ),
 			( $session{'/employee/inventory/rfidtags.html?Type'} ? ( type_id => $session{'/employee/inventory/rfidtags.html?Type'} ) : () ),
 			( $session{'/employee/inventory/rfidtags.html?valid'} ? ( valid	=> $session{'/employee/inventory/rfidtags.html?valid'} ) : () ),
-			( $session{'/employee/inventory/rfidtags.html?location_id'} ? ( 'location_id'=>$session{'/employee/inventory/rfidtags.html?location_id'} ) : () ),
-			'order'		=>	'id',
+			( $session{'/employee/inventory/rfidtags.html?location_id'} ? ( location_id=>$session{'/employee/inventory/rfidtags.html?location_id'} ) : () ),
+			order		=>	'id',
 			) ) {
 			if ( ! $session{'/employee/inventory/rfidtags.html?assigned'} ) {
 				if ( $RFIDTag->type() eq 'Skid' ) {
@@ -39,28 +39,34 @@
 	<table class="List">
 		<tr>
 			<th class="checkbox"><input type="checkbox" onclick="select_all( this.form, 'rfidtags', this.checked );"/></th>
-			<th align="left" width="200">RFIDTag ID</th>
-			<th align="left" width="10" title="Verified">V</th>
-			<th align="left" width="115">Date Added</th>
-			<th align="left" width="115">Updated On</th>
-			<th align="left" width="100">Location</th>
-			<th align="left" width="100">Type</th>
+			<th class="RFID">RFIDTag ID</th>
+			<th class="Verified">V</th>
+			<th class="DateTime">Date Added</th>
+			<th class="DateTime">Updated On</th>
+			<th class="Location">Location</th>
+			<th class="Type">Type</th>
 		</tr>
 		<? echo (
 			my $html;
 			my $rowclass;
 			foreach my $RFIDTag ( @{$$variable{'RFIDTags'}} ) {
 
-				$html .= "<tr$rowclass>";
-				$html .= qq`<td class="checkbox"><input type="checkbox" name="rfidtags" value="$$RFIDTag{'id'}"/></td>`;
-				$html .= sprintf( '<td><a href="rfidtag_details.html?rfidtag_id=%1$s">%1$s (%2$x)</a></td>', $$RFIDTag{'id'}, substr($$RFIDTag{'id'},1,15) );
-				$html .= sprintf( '<td><a href="rfidtag_details.html?rfidtag_id=%1$s">%2$s</a></td>', $$RFIDTag{'id'}, $$RFIDTag{'valid'} ? 'Y' : 'N' );
-				$html .= sprintf( '<td><a href="rfidtag_details.html?rfidtag_id=%s">%s</a></td>', $$RFIDTag{'id'}, Date::Format::time2str('%Y-%m-%d %H:%M', Date::Parse::str2time($RFIDTag->created_on()) ) );
-				$html .= sprintf( '<td><a href="rfidtag_details.html?rfidtag_id=%s">%s</a></td>', $$RFIDTag{'id'}, Date::Format::time2str('%Y-%m-%d %H:%M', Date::Parse::str2time($RFIDTag->updated_on()) ) );
-				$html .= sprintf( '<td><a href="rfidtag_details.html?rfidtag_id=%s">%s</a></td>', $$RFIDTag{'id'}, $RFIDTag->Location()->name() );
+				$html .= sprintf('
+<tr%1$s>
+	<td class="checkbox"><input type="checkbox" name="rfidtags" value="%2$s"/></td>
+	<td class="RFID"><a href="rfidtag_details.html?rfidtag_id=%2$s">%2$s (%3$x)</a></td>
+	<td class="Verified"><a href="rfidtag_details.html?rfidtag_id=%2$s">%4$s</a></td>
+	<td class="DateTime"><a href="rfidtag_details.html?rfidtag_id=%2$s">%5$s</a></td>
+	<td class="DateTime"><a href="rfidtag_details.html?rfidtag_id=%2$s">%6$s</a></td>
+	<td class="Location"><a href="rfidtag_details.html?rfidtag_id=%2$s">%7$s</a></td>
+	<td class="Type">%8$s</td>
+</tr>', $rowclass, $$RFIDTag{id}, substr($$RFIDTag{id},1,15),
+( $$RFIDTag{valid} ? 'Y' : 'N' ), 
+format_datetime( $RFIDTag->created_on() ), format_datetime( $RFIDTag->updated_on() ),
+$RFIDTag->Location()->name(),
+				$RFIDTag->Type()->name(),
 
-				$html .= '<td>'.$RFIDTag->Type()->name().'</td>';	
-				$html .= '</tr>';
+ );
 				$rowclass = $rowclass ? '' : ' class="colRow"';
 			} # end foreach RFIDTag
 			return $html;
@@ -68,7 +74,7 @@
 	</table>
 	<input type="hidden" name="btnFunction"/>
 	<p class="buttons">
-		<? echo ( join('',
+		<? echo ( join("\n",
 					ssi::button( 'Validate', { 'onclick'=>"RFIDTagResults.btnFunction.value='Validate';RFIDTagResults.submit();", 'text'=>'Validate' } ),
 					ssi::button( 'Delete', { 'onclick'=>"RFIDTagResults.btnFunction.value='Delete';RFIDTagResults.submit();", 'text'=>'Delete Checked' } ),
 			); ) ?>

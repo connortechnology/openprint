@@ -1247,13 +1247,17 @@ sub rfidtag_details {
 		if ( $param{'rfidtag_id'} =~ /^\s*\((.*)\)\s*$/ ) {
 			$param{'rfidtag_id'} = hex( $1 );
 		} # end if
-		my @Tags = openprint::RFIDTag->find('id_like'=>'%'.$param{'rfidtag_id'} );
-		if ( ! @Tags ) {
-			$variable{'error'} .= 'Tag ID not found.';
-		} elsif ( @Tags > 1 ) {
-			@{$variable{'Tags'}} = @Tags;
+		if ( $param{rfidtag_id} ) {
+			my @Tags = openprint::RFIDTag->find('id like'=>( $param{rfidtag_id} =~ /%/ ? $param{rfidtag_id} : '%'.$param{rfidtag_id} ) );
+			if ( ! @Tags ) {
+				$variable{'error'} .= 'Tag ID not found.';
+			} elsif ( @Tags > 1 ) {
+				@{$variable{'Tags'}} = @Tags;
+			} else {
+				$param{'rfidtag_id'} = $Tags[0]->id();
+			} # end if
 		} else {
-			$param{'rfidtag_id'} = $Tags[0]->id();
+			$variable{error} .= 'Please specify an id (or part).<br/>';
 		} # end if
 	} # end if
 		
@@ -1857,9 +1861,9 @@ sub _rfidtag_log_entries {
 	@param{'start_year','start_month','start_day'} =(0,0,0) if ! $param{'start_year'};
 	$param{'limit'} = 10 if ! $param{'limit'};
 	$variable{'Entries'} = [ openprint::RFIDTagHistory->find( 
-		'rfidtag_id'	=>	$param{'rfidtag_id'},
-		ssi::date_filter( 'start', 'updated_on_start', \%param ),
-		ssi::date_filter( 'end', 'updated_on_end', \%param ),
+		rfidtag_id	=>	$param{rfidtag_id},
+		ssi::date_filter( 'start', 'updated_on >=', \%param ),
+		ssi::date_filter( 'end', 'updated_on <=', \%param ),
 		order	 =>	'updated_on DESC',
 		limit	 =>	$param{limit},
 		) ];
@@ -1867,11 +1871,11 @@ sub _rfidtag_log_entries {
 	# This is to auto-load the start year
 	if ( ! @{$variable{'Entries'}} ) {
 		$variable{'Entries'} = [ openprint::RFIDTagHistory->find( 
-				'rfidtag_id'	=>	$param{'rfidtag_id'},
-				ssi::date_filter( 'start', 'updated_on_start', \%param ),
-				ssi::date_filter( 'end', 'updated_on_end', \%param ),
-				'limit'	 =>	$param{'limit'},
-				'order'	 =>	'updated_on DESC',
+				rfidtag_id	=>	$param{rfidtag_id},
+				ssi::date_filter( 'start', 'updated_on >=', \%param ),
+				ssi::date_filter( 'end', 'updated_on <=', \%param ),
+				limit	 =>	$param{limit},
+				order	 =>	'updated_on DESC',
 				) ];
 		if ( @{$variable{'Entries'}} ) {
 			@param{'start_year','start_month','start_day'} = $variable{'Entries'}[@{$variable{'Entries'}}-1]->updated_on() =~ /^(\d+)-(\d+)-(\d+)/;
