@@ -258,7 +258,7 @@ $log->debug("Presentation folder sizes $$specs{'chkPocketLeft'} $$specs{'chkPock
 		} # end foreach
 
 # Sets up the book service
-		openprint::service::internal_calc( $log, $dbh, $variable, $$Project{'id'}, $$services{''}[0], 'MultiPage' );
+		openprint::service::internal_calc( $log, $dbh, $variable, $$Project{'id'}, $$services{''}[0], $ProjectType->type() );
 
 # Setup the colours
 		if ( $$specs{'Colours'} eq '4/4' ) {
@@ -604,14 +604,12 @@ $log->debug("Presentation folder sizes $$specs{'chkPocketLeft'} $$specs{'chkPock
 	} # end if
 
 	if ( openprint::Estimating::Folding::neccessary( $Project ) ) {
-$openprint::log->debug('Adding Folding');
 		push @{$$services{'Folding'}}, $Project->add_service( 'Folding' ) if ! $$services{'Folding'};
 		if ( (exists $$specs{'FoldType'}) and ((! $$specs{'FoldType'} ) or ( $$specs{'FoldType'} eq 'NoFold' )) ) {
 			$$specs{'alert'} .= 'It appears that your project needs folding, but you have not selected the fold type.<br/>';
 			$$specs{'Status'} = 'uncalculated';
 		} # end if
 	} elsif ( $$services{'Folding'} ) {
-$openprint::log->debug('Deleting Folding');
 		foreach ( @{$$services{'Folding'}} ) {
 			openprint::print_project::delete_service( $$Project{'id'}, $_ );
 		} # end foreach
@@ -770,8 +768,16 @@ $openprint::log->debug('Deleting Folding');
 		} # end if
 	}  # end foreach service_name
 	sql::end_transaction( $dbh, $ac );
+
+	my @s = $Project->signatures();
+	$log->debug("Sigs: @s");
 	$openprint::log->warn("Before auto");
-	openprint::Estimating::MultiPage::calculate_signatures( $Project );
+	require "openprint/Estimating/$$ProjectType{type}.pm";
+    my $module = 'openprint::Estimating::'.$$ProjectType{type};
+    if ( my $function = $module->can( 'calculate_signatures' ) ) {
+        $function->( $Project );
+    } # end if
+
 	$$specs{'alert'} .= openprint::service::auto_calculate( $Project );
 	$openprint::log->warn("Aftere auto");
 	# Need to reload this because the auto calculation can add services, and we wouldn't otherwise pick them up
@@ -840,8 +846,7 @@ $log->warn("Have uncalculated service: ");
 		my $sig_specs = openprint::service::get_specs_ref( $Project, $ss_id );
 		$printing_types{$$sig_specs{'PrintingType1'}} = 1;
 	} # end foreach
-	my @printing_types = keys %printing_types;
-	if ( ! @printing_types ) {
+	if ( %printing_types ) {
 		$$specs{'alert'} .= 'This quote is for printing on ' . join(',', keys %printing_types ) . ' presses.<br/>';
 	} # end if
 
@@ -884,8 +889,7 @@ sub create_calc {
 		} # end if
 	} # end foreach qty_index
 
-	my @project_types = openprint::ProjectType->find( 'name' => $$specs{'rdbProjectType'} );
-	my $ProjectType = shift @project_types;
+	my $ProjectType = openprint::ProjectType->find_one( name => $$specs{'rdbProjectType'} );
 	if ( $Project->Type()->name() ne $ProjectType->name() ) {
 		my @oldRequiredServiceTypes = $Project->Type()->required_ServiceTypes();
 		my @newRequiredServiceTypes = $ProjectType->required_ServiceTypes();

@@ -43,6 +43,7 @@
 		} else {
 			@options = map { $_, $_ } ( sort ( sets::union( map { $_->get( lc $name ); } @Papers ) ) );
 		} # end if
+$log->debug("# of Options for $name:".@options );
 		$$variable{'ddmStock'.$name.$$variable{'Signature'}} = $options[0] if @options == 2;
 
 		$find{lc $name} = $$variable{'ddmStock'.$name.$$variable{'Signature'}} if $$variable{'ddmStock'.$name.$$variable{'Signature'}};
