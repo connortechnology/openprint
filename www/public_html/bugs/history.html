@@ -23,7 +23,7 @@
 	}
 	function load_bugs( form ) {
 		$('BugList').innerHTML = 'Please wait...';
-		new Ajax.Updater('BugList','_history.html', {method:'get',parameters:Form.serialize(form)});
+		new Ajax.Updater('BugList','_history.html', {parameters:Form.serialize(form)});
 	} // end function
 </script>	 
 <? echo ( include('/includes/error_reporting.html'); ) ?>
@@ -40,42 +40,26 @@
 				</select>
 			</p>
 			<p>
-				<label>Dates</label>
-<? echo ( ssi::date_select_session( '/bug/history.html', 'starting_start', {onchange=>q`load_bugs($('f1'));`,'with_clear'=>1,'with_today'=>1} ); ) ?>
+				<label>Created</label>
+<? echo ( ssi::date_select_session( '/bug/history.html', 'created_on_start', {onchange=>q`load_bugs($('f1'));`,'with_clear'=>1,'with_today'=>1} ); ) ?>
 					to 
-<? echo ( ssi::date_select_session( '/bug/history.html', 'starting_end', {onchange=>q`load_bugs($('f1'));`, 'with_clear'=>1,'with_today'=>1} ); ) ?>
+<? echo ( ssi::date_select_session( '/bug/history.html', 'created_on_end', {onchange=>q`load_bugs($('f1'));`, 'with_clear'=>1,'with_today'=>1} ); ) ?>
 			</p>
 			</div>
 			<div class="rightColumn">
-			<p><label>Invoiced?</label>
-				<input type="radio" id="invoiced_1" name="invoiced" value="1" <? echo ( ssi::checked( $session{'/bug/history.html?invoiced'} eq '1' ); ) ?> onclick="load_bugs(this.form);" />
-				<label class="radio" for="invoiced_1">Yes</label>
-				<input type="radio" id="invoiced_0" name="invoiced" value="0" <? echo ( ssi::checked( $session{'/bug/history.html?invoiced'} eq '0' ); ) ?> onclick="load_bugs(this.form);" />
-				<label class="radio" for="invoiced_0">No</label>
-				<input type="radio" id="invoiced_01" name="invoiced" value="0,1" <? echo ( ssi::checked( $session{'/bug/history.html?invoiced'} eq '0,1' ) ) ?> onclick="load_bugs(this.form);" />
-				<label class="radio" for="invoiced_01">Both</label>
-			</p>
-			<p><label>Paid?</label>
-				<input type="radio" id="paid_1" name="paid" value="1" <? echo ( ssi::checked( $session{'/bug/history.html?paid'} eq '1' ); ) ?> onclick="load_bugs(this.form);" />
-				<label class="radio" for="paid_1">Yes</label>
-				<input type="radio" id="paid_0" name="paid" value="0" <? echo ( ssi::checked( $session{'/bug/history.html?paid'} eq '0' ); ) ?> onclick="load_bugs(this.form);" />
-				<label class="radio" for="paid_0">No</label>
-				<input type="radio" id="paid_01" name="paid" value="0,1" <? echo ( ssi::checked( $session{'/bug/history.html?paid'} eq '0,1' ); ) ?> onclick="load_bugs(this.form);" />
-				<label class="radio" for="paid_01">Both</label>
-			</p>
-			<p>
+			<ul><li>
 				<label>Employee</label>
 				<select name="user_id" id="user_id" onchange="load_bugs(this.form);">
 					<option value="">All</option>
-					<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User->find('company_id'=>$session{'company_id'}, 'order'=>'lower(firstname),lower(lastname)') ], $session{'/bug/history.html?user_id'} ); ) ?>
+					<? echo ( ssi::make_drop_down( openprint::User->dropdown( company_id=>$session{company_id}, order=>'lower(firstname),lower(lastname)'), $session{'/bug/history.html?user_id'} ); ) ?>
 				</select>
-			</p>
+			</li></ul>
 			</div>
 			<br class="spacer"/>
 			<p class="buttons">
 				<? echo ( join('',
-					ssi::button( 'ShowResults', { onclick=>"load_bugs(f1);", href=>'', text=>'Show Results' } ),
-					ssi::button( 'Reset', { onclick=>'f1.reset();', href=>'', text=>'Reset' } ),
+					ssi::button( 'ShowResults', { onclick=>"load_bugs(f1);",text=>'Show Results' } ),
+					ssi::button( 'Reset', { onclick=>'f1.reset();',text=>'Reset' } ),
 					ssi::button( 'New', { onclick=>'', href=>'/bug/edit.html', text=>'New Bug' } ),
 					); ) ?>
 			</p>

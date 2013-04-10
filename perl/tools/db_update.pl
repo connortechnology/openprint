@@ -1017,6 +1017,7 @@ if ( ! sets::isin( 'papers', \@tables ) ) {
 	$dbh->do('alter table papers add basis_height float') if ! exists $$data{basis_height};
 	$dbh->do('alter table papers add basis_mweight float') if ! exists $$data{basis_mweight};
 	$dbh->do('alter table papers add grade integer') if ! exists $$data{'grade'};
+	$dbh->do('alter table papers add die_score_required  BOOLEAN NOT NULL default false') if ! exists $$data{'die_score_required'};
 	if ( ! exists $$data{'user_type'} ) {
 		$dbh->do(q`ALTER TABLE papers add user_type char(1) NOT NULL default ''`);
 	} # end nif
@@ -3375,6 +3376,25 @@ if ( sets::isin( 'upgrade', \@tables ) ) {
 		die $_ if $_;
 	} # end while
 	$dbh->do('DROP TABLE upgrade');
+} # end if
+if ( ! sets::isin( 'stockqualities', \@tables ) ) {
+	$dbh->do( misc::load_file( $log, q{../openprint/sql/StockQualities.sql}) );
+	die $dbh->errstr() if $dbh->errstr();
+} else {
+	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='stockqualities'", 'column_name');
+	if ( ! exists $$data{message} ) {
+		$dbh->do('ALTER TABLE stockqualities ADD message text');
+	} # end
+
+}
+if ( ! sets::isin( 'stockqualities_id_seq', \@sequences ) ) {
+	if ( sets::isin( 'paperqualities_id_seq', \@sequences ) ) {
+		$dbh->do('ALTER SEQUENCE paperqualities_id_seq RENAME to stockqualities_id_seq');
+	} else {
+		$dbh->do('CREATE SEQUENCE stockqualities_id_seq');
+	} # end if
+	$dbh->do(q`ALTER TABLE stockqualities ALTER id SET default nextval('stockqualities_id_seq')`);
+	$dbh->do(q`SELECT setval('stockqualities_id_seq', (SELECT max(id) FROM stockqualities))`);
 } # end if
 print "Finished\n";
 1;

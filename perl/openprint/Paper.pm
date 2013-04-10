@@ -56,6 +56,7 @@ $serial	= 'paper_id_seq';
 		'doublesided'	=>	'doublesided', 
 		'perfecting'	=>	'perfecting', 
 		'score_required'	=>	'score_required',
+		'die_score_required'	=>	'die_score_required',
 		'width'				=>	'width',
 		'height'			=>	'height',
 		'mweight'			=>	'mweight',
@@ -103,7 +104,10 @@ $serial	= 'paper_id_seq';
 %defaults = (
 	'allocated'	=>	q`'0'`,
 	'in_stock'	=>	q`'0'`,
-	'user_type'	=>	q`''`,
+	user_type	=>	q`''`,
+	score_required	=>	'0',
+	die_score_required	=>	'0',
+	supplied		=>	undef,
 );
 
 sub load {
@@ -125,10 +129,11 @@ sub copy {
 } # end sub copy
 
 sub Prices {
-	if ( ! $_[0]{'Prices'} ) {
-		@{$_[0]{'Prices'}} = openprint::PaperPrice->find( 'paper_id' => $_[0]{'id'} );
+	if ( ! $_[0]{Prices} ) {
+		$_[0]{Prices} = [ openprint::PaperPrice->find( paper_id => $_[0]{id} ) ] if $_[0]{id};
 	} # end if
-	return @{$_[0]{'Prices'}};
+	return @{$_[0]{Prices}} if $_[0]{Prices};
+	return ();
 } # end sub Prices
 
 sub save {

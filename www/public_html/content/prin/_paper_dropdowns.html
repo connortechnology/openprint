@@ -7,9 +7,9 @@
 	} # end if
 
 	my @user_types = ('');
-	push @user_types, 'C' if $openprint::session{'user_id'};
-	push @user_types, 'E' if $openprint::session{'user_type'} eq 'E';
-	push @user_types, ('A','E') if $openprint::session{'user_type'} eq 'A';
+	push @user_types, 'C' if $session{'user_id'};
+	push @user_types, 'E' if $session{'user_type'} eq 'E';
+	push @user_types, ('A','E') if $session{'user_type'} eq 'A';
 
 	my %find = (
 			'project_type_id any'	=>	$$variable{'ProjectType'}->id(),

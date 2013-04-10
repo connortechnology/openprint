@@ -1,5 +1,5 @@
 use strict;
-package openprint::bug;
+package openprint::bugs;
 
 use openprint ();
 use vars qw( $r %variable %session %param %config $log $dbh );

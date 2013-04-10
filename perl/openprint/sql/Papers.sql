@@ -70,6 +70,7 @@ CREATE TABLE Papers (
 	taxexempt2	boolean NOT NULL default false,
 	multipart	boolean NOT NULL default false,
 	score_required	boolean NOT NULL default false,
+	die_score_required	BOOLEAN NOT NULL default false,
 	calliper	NUMERIC(10,4),
 	width		float,
 	height		float,
@@ -85,5 +86,6 @@ CREATE TABLE Papers (
 	parts			integer,
 	in_stock		INTEGER,
 	allocated		INTEGER,
+	user_type		char(1),
 	PRIMARY KEY (id)
 );

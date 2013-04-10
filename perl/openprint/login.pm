@@ -211,6 +211,8 @@ sub verify_login {
 			#}
 		#} # end foreach
 		#delete $session{'Destination'};
+	} elsif ( (!$variable{error}) and ( $r->uri() =~ /\/account\/login.html/ ) ) {
+		$$variable{'ExternalRedirect'} = $r->uri();
 	} # end if
 
 } # sub verify_login
