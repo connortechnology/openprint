@@ -195,7 +195,7 @@ sub save {
 		my $Weight = openprint::StockWeight->find_one('name lc'=>lc openprint::StockWeight->transform( 'name', $$self{'weight'} ) );
 		if ( ! $Weight ) {
 			$Weight = new openprint::StockWeight();
-			if ( $_ = $Weight->save({'name'=>$$self{'weight'}}) ) {
+			if ( $_ = $Weight->save({ name=>$$self{weight}}) ) {
 				return $_;
 			} # end if
 		} # end if
@@ -567,23 +567,24 @@ sub Weight {
 	return new openprint::StockWeight( $_[0]{'weight_id'} );
 }
 sub weight {
-
+	my ( $self, $weight ) = @_;
 	if ( @_ > 1 ) {
-		$_[1] = openprint::StockWeight->transform( 'name', $_[1] );
+		$weight = openprint::StockWeight->transform( 'name', $weight );
 		if ( ! $_[0]{'custom'} ) {
-			my $Weight = openprint::StockWeight->find_one('name lc'=>lc $_[1]);
+			my $Weight = openprint::StockWeight->find_one('name lc'=>lc $weight);
 			if ( $Weight ) {
 				@{$_[0]}{'weight_id','weight'} = @$Weight{'id','name'};
 			} else {
-				$_[0]{'weight'} = $_[1];
+				$_[0]{weight} = $weight;
+				$_[0]{weight_id} = '';
 			} # end if
 		} else {
-			$_[0]{'weight'} = $_[1];
+			$_[0]{weight} = $weight;
 		} # end if
-	} elsif ( $_[0]{'weight_id'} and ! $_[0]{'weight'} ) {
-		$_[0]{'weight'} = new openprint::StockWeight( $_[0]{'weight_id'} )->name();
+	} elsif ( $_[0]{weight_id} and ! $_[0]{weight} ) {
+		$_[0]{weight} = new openprint::StockWeight( $_[0]{weight_id} )->name();
 	} # end if
-	return $_[0]{'weight'};
+	return $_[0]{weight};
 } # end sub weight
 
 sub width {

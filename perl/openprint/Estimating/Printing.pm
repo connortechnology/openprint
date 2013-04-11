@@ -18,7 +18,7 @@ use strict;
 package openprint::Estimating::Printing;
 my $threading = 0;
 #use threads;
-use constant DEBUG => 1;
+use constant DEBUG => 0;
 my $master_time;
 my %special_colours;
 
