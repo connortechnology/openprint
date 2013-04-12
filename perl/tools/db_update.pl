@@ -3109,6 +3109,9 @@ if ( ! sets::isin( 'rma', \@tables ) ) {
 		$dbh->do('CREATE SEQUENCE rma_id_seq');
 	} # end if
 	$dbh->do(q`select setval('rma_id_seq',(SELECT Max(id) FROM RMA));`);
+	if ( !exists $$data{rmanumber} ) {
+		$dbh->do('ALTER TABLE rma ADD rmanumber TEXT');
+	} # end if
 	
 } # end if
 if ( ! sets::isin( 'rma_logs', \@tables ) ) {
