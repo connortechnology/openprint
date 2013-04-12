@@ -34,6 +34,7 @@
 							) ?></span></label>
 						<input type="text" id="ToPostalCode" name="ToPostalCode" value="<?ToPostalCode?>" onkeyup="calc(this.form.name);"/>
 					</li>
+<? if ( openprint::ServiceType->find_one(name=>'UPS') ) ?>
 					<li class="ServiceTypes">
 						<label>Service Type</label>
 						<span id="ServiceTypeDiv">
@@ -49,6 +50,7 @@
 						</span>
 					</li>
 					<li>UPS, the UPS brandmark, and the Colour Brown are trademarks of United Parcel Service of America, Inc. All Rights Reserved</li>
+<? endif ( openprint::ServiceType->find_one(name=>'UPS') ) ?>
 				</ul>
 			</div>
 			</div>

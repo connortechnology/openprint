@@ -17,9 +17,9 @@
 					<select name="ddmProjectType" onchange="this.form.btnFunction.value='';f1.submit();">
 						<option value="">select one</option>
 						<? echo ( 
-								ssi::make_drop_down( [ map { $_->id(), $_->description() } openprint::ProjectType->find('order'=>'lower(name)',
+								ssi::make_drop_down( [ map { $_->id(), $_->description() } openprint::ProjectType->find('order'=>'lower(description)',
 								( $param{'search_category_id'} ? ( 'category_id' => $param{'search_category_id'} ) : () ),
-								) ], $param{'ddmProjectType'} );
+								) ], $$variable{ProjectType}->id() );
 								) ?>
 					</select>
 				</li>
@@ -89,14 +89,15 @@
 	</fieldset><!-- Column -->
 	<fieldset class="rightColumn RequiredServices"> 
 		<legend>Required Services</legend>
-		<p> 
+		<ul> 
 <? echo (
 		return ssi::checkboxes('required_services', 
-			[ map { $_->id(), $_->name().'<br/>' } openprint::ServiceType->find('order'=>'lower(name)') ],
-			[ $$variable{'ProjectType'}->required_services() ]
+			[ map { $_->id(), $_->description() } openprint::ServiceType->find('order'=>'lower(name)') ],
+			[ $$variable{'ProjectType'}->required_services() ],
+			{ container=>['<li>','</li>'] }
 			);
 ) ?>
-		</p>
+		</ul>
 	</fieldset><!-- Column -->
 	<br class="spacer"/>
 <? if ( $$variable{'ProjectType'}->id() ) ?>

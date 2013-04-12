@@ -3,13 +3,9 @@
 		<ul>
 			<li>
 				<label>Date</label>
-				<span class="DateSelector">
 				<? echo ( ssi::date_select_session( '/administrator/managerial/upload_log.html', 'uploaded_on_start',  { 'onchange'=> '','with_today'=>1 } ); ) ?>
-				</span>
 				to
-				<span class="DateSelector">
 				<? echo ( ssi::date_select_session( '/administrator/managerial/upload_log.html', 'uploaded_on_end',  { 'onchange'=> '','with_today'=>1 } ); ) ?>
-				</span>
 			</li>
 			<li>
 				<label>Company</label>

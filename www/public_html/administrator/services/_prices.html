@@ -1,18 +1,23 @@
 <? echo (
 	my $html;
 	my @Equipment = openprint::Equipment->find('order'=>'lower(strid)');
-	$$variable{'company_ids'} = [ map { $_->id(), $_->name() } openprint::Company->find( 'supplier'=>'Y', 'order'=>'lower(name)' ) ];
-	foreach my $Pricelist ( openprint::Pricelist->find('order'=>'lower(name)') ) {
-		$html .= '<fieldset><legend>Pricing for Price List: '.$Pricelist->name() . "</legend>\n";
-		if ( my @Prices = openprint::ServicePrice->find('service_id'=>$$variable{'Service'}->id(), 'pricelist_id'=>$Pricelist->id() ) ) {
+	my @equipment_dropdown = map { $_->id(), $_->name() } @Equipment;
 
-		my @equipment_ids = sets::union( map{ $_->equipment_id() } @{$$variable{'Prices'}} );
-		foreach my $Equipment ( map{new openprint::Equipment($_); } sets::union( map{ $_->equipment_id() } @Prices ) ) {
+	$$variable{'company_ids'} = [ map { $_->id(), $_->name() } openprint::Company->find( 'supplier'=>'Y', 'order'=>'lower(name)' ) ];
+
+	foreach my $Pricelist ( openprint::Pricelist->find( order=>'lower(name)') ) {
+		$html .= '<fieldset><legend>Pricing for Price List: '.$Pricelist->name() . "</legend>\n";
+		my @Prices = openprint::ServicePrice->find( service_id=>$$variable{Service}->id(), pricelist_id=>$Pricelist->id() );
+$log->debug("Got " . @Prices . ' rprices');
+
+		my @equipment_ids = sets::union( map{ $_->equipment_id() } @Prices );
+		push @equipment_ids, undef if ! @equipment_ids;
+		foreach my $Equipment ( map{new openprint::Equipment($_)} @equipment_ids ) {
 			$html .= '<fieldset class="Equipment">';
 			if ( @Equipment ) {
 				$html .= '<p><label>Equipment</label>';
 				$html .= qq`<select name="ddmEquipment-$$Pricelist{id}-$$Equipment{id}"><option value="">All Equipment</option>`;
-				$html .= ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Equipment->find('order'=>'lower(strID)') ], $Equipment->id() );
+				$html .= ssi::make_drop_down( \@equipment_dropdown, $Equipment->id() );
 				$html .= '</select></p>';
 			} # end if has equipment
 			$html .= qq'
@@ -34,8 +39,7 @@
 			$html .= ssi::include( '/administrator/services/_prices_table_body.html', $variable );
 			$html .= '</tbody></table></fieldset><!--Equipment-->';
 		} # end foreach Equipment
-	} # end if prices
-	$html .= '</fieldset><!--Pricelist-->';
-} # end foreach Pricelist
-return $html;
+		$html .= '</fieldset><!--Pricelist-->';
+	} # end foreach Pricelist
+	return $html;
 ) ?>

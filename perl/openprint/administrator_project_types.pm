@@ -27,8 +27,8 @@ sub edit {
 	} elsif ( $param{'btnFunction'} eq 'Next' ) {
 		$ProjectType = $ProjectType->next();
 	} elsif ( $param{'btnFunction'} eq 'Delete' ) {
-		$ProjectType->delete();
-		$ProjectType = $ProjectType->next();
+		$variable{error} .= $ProjectType->delete();
+		$ProjectType = $ProjectType->next() if ! $variable{error};
 	} elsif ( $param{'btnFunction'} eq 'Copy' ) {
 		my @required_services = $ProjectType->required_services();
 		my @recommendations = sql::execute(undef,undef,'SELECT lngPaperIndex FROM Paper_Recommendations WHERE lngProjectTypeIndex=?', $ProjectType->id() );

@@ -77,23 +77,15 @@
 			<ul>
 			<li>
 				<label>Creation Date</label>
-				<span class="DateSelector">
 <? echo ( ssi::date_select_session( '/main/project/history.html', 'created_on_start', { 'onchange'=>'load_projects(this.form);' } ); ) ?>
-				</span>
 					to 
-				<span class="DateSelector">
 <? echo ( ssi::date_select_session( '/main/project/history.html', 'created_on_end', { 'onchange'=>'load_projects(this.form);' } ); ) ?>
-				</span>
 			</li>
 			<li>
 				<label>Last Updated</label>
-				<span class="DateSelector">
 <? echo ( ssi::date_select_session( '/main/project/history.html', 'updated_on_start', { 'onchange'=>'load_projects(this.form);' } ); ) ?>
-				</span>
 					to 
-				<span class="DateSelector">
 <? echo ( ssi::date_select_session( '/main/project/history.html', 'updated_on_end', { 'onchange'=>'load_projects(this.form);' } ); ) ?>
-				</span>
 			</li>
 <? if ( sets::isin( $session{user_type},[ 'E', 'A' ] ) ) ?>
 			<li><label>Company</label>

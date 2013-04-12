@@ -29,7 +29,8 @@ $serial = 'service_types_id_seq';
 %transforms = (
 );
 %defaults = (
-	'sorting'	=>	undef,
+	category_id		=>	undef,
+	sorting			=>	undef,
 );
 
 sub cache_field {
