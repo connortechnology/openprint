@@ -38,10 +38,10 @@ $log->debug("Params: $k => $params{$k}");
 }
 
 	my $results;
-	if ( $params{'FROM'} ) {
+	if ( $params{FROM} ) {
 #$log->debug(" getting from $params{'FROM'} ng an email");
-		if ( ref $params{'FROM'} eq 'openprint::User' ) {
-			$$self{'from'} = sprintf('"%s" <%s>', $params{'FROM'}->get('name','email') );
+		if ( ref $params{FROM} eq 'openprint::User' ) {
+			$$self{'from'} = sprintf('"%s %s" <%s>', $params{FROM}->get('firstname','lastname','email') );
 		} else {
 			$$self{'from'} = $params{'FROM'};
 		} # end if
