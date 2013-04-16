@@ -4,7 +4,7 @@ use strict;
 require openprint::service;
 use POSIX           qw(ceil);
 
-my $debug = 1;
+use constant DEBUG => 1;
 
 my %variables = (
 	'Quantity' => ['save'],
@@ -49,6 +49,19 @@ sub calc {
 	my $Project = new openprint::Project( $pid );
 	my $services = $Project->services();
 	my $project_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] ) if $$services{''};
+	my @signatures = $Project->signatures();
+	my $sig_specs = openprint::service::get_specs_ref( $Project, $signatures[0] );
+	my $folding_specs;
+
+	my @capable = ('Y');
+	if ( $$services{SaddleStitching} or $$services{LoopStitching} ) {
+		push @capable, 'When Stitching';
+	} elsif ( $$services{PerfectBind} ) {
+		push @capable, 'When PerfectBound';
+	} elsif ( $$services{Folding} ) {
+		push @capable, 'When Folding';
+		$folding_specs = openprint::service::get_specs_ref( $Project, $$services{Folding}[0] );
+	} # end if
 
 	if ( ! $$specs{'Quantity'} ) {
 		$$specs{'Quantity'} = $$project_specs{'TippingQuantity'};
@@ -59,9 +72,7 @@ sub calc {
 		return $$specs{'Status'} = 'uncalculated';
 	} # end if
 
-	my @Equipment = openprint::Equipment::find('Specifications'=>{'Tipping Capable'=>'Y'},'use_in_estimating'=>1);
-	push @Equipment, openprint::Equipment::find('Specifications'=>{'Tipping Capable'=>'When PerfectBound'},'use_in_estimating'=>1) if $$services{'PerfectBind'};
-	push @Equipment, openprint::Equipment::find('Specifications'=>{'Tipping Capable'=>'When Stitching'},'use_in_estimating'=>1) if $$services{'SaddleStitching'} or $$services{'LoopStitching'};
+	my @Equipment = openprint::Equipment::find('Specifications'=>{'Tipping Capable'=>\@capable},'use_in_estimating'=>1);
 	if ( ! @Equipment ) {
 		$$specs{'alert'} = 'We have no equipment for tip-ins.';
 		return $$specs{'Status'} = 'uncalculated';
@@ -87,6 +98,12 @@ sub calc {
 
 		foreach my $Equipment ( @my_equipment ) {
 			$$specs{'hdnBreakdown'.$qty_index} .= '<fieldset><legend>'.$Equipment->name().'</legend>';
+			if ( $Equipment->specification('Tipping Capable') eq 'When Folding' ) {
+				if ( $Equipment->id() != $$folding_specs{"ddmEquipment-$$sig_specs{SignatureIndex}-$qty_index"} ) {
+					$$specs{'hdnBreakdown'.$qty_index} .= 'Not folding on ' . $Equipment->name() . '. Folding on '.new openprint::Equipment($$folding_specs{"ddmEquipment-$$sig_specs{SignatureIndex}-$qty_index"})->name().'<br/>';
+					next;
+				} # end if
+			} # end if
 			my $max_tip_ins = $Equipment->specification('Maximum Tip-ins');
 			if ( $max_tip_ins and ( $max_tip_ins < $$specs{'Quantity'} ) ) {
 				$$specs{'hdnBreakdown'.$qty_index} .= 'Maximum tip-ins: ' . $max_tip_ins.'<br/>';
@@ -176,10 +193,16 @@ sub display {
 
 	my $Project = new openprint::Project( $project_index );
 	my $services = $Project->services();
-	my @possible_equipment = openprint::Equipment::find( 'Specifications' => {'Tipping Capable'=>'Y'}, 'use_in_estimating'=>1,'order'=>'lower(strName)');
-	push @possible_equipment, openprint::Equipment::find( 'Specifications' => {'Tipping Capable'=>'When Stitching'}, 'use_in_estimating'=>1,'order'=>'lower(strName)') if $$services{'SaddleStitching'} or $$services{'LoopStitching'};
-	push @possible_equipment, openprint::Equipment::find( 'Specifications' => {'Tipping Capable'=>'When PerfectBound'}, 'use_in_estimating'=>1,'order'=>'lower(strName)') if $$services{'PerfectBound'};
-	@{$$variable{'Equipment'}} = @possible_equipment;
+	my @capable = ('Y');
+	if ( $$services{SaddleStitching} or $$services{LoopStitching} ) {
+		push @capable, 'When Stitching';
+	} elsif ( $$services{PerfectBind} ) {
+		push @capable, 'When PerfectBound';
+	} elsif ( $$services{Folding} ) {
+		push @capable, 'When Folding';
+	} # end if
+	my @possible_equipment = openprint::Equipment::find( 'Specifications' => {'Tipping Capable'=>\@capable}, 'use_in_estimating'=>1,'order'=>'lower(strName)');
+	$$variable{'Equipment'} = \@possible_equipment;
 } # end sub display
 
 1;
