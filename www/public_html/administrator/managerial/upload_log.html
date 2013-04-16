@@ -9,7 +9,7 @@
 			</li>
 			<li>
 				<label>Company</label>
-				<input type="text" onkeyup="filterDDM(this, this.form.company_id);" onkeydown="if(event.keyCode == 13){searchLog.btnFunction.value='Go';searchLog.submit();}" size="4" />
+				<input type="text" onkeyup="filterDDM(this,this.form.company_id);" onkeydown="if(event.keyCode==13){searchLog.btnFunction.value='Go';searchLog.submit();}" class="filter" />
 				<select name="company_id" id="company_id" onchange="searchLog.submit();" >
 					<option value="">All</option>
 					<? echo (
@@ -46,8 +46,8 @@
 				ssi::date_filter( '/administrator/managerial/upload_log.html?uploaded_on_end', 'start <=' ),
 				( $session{'/administrator/managerial/upload_log.html?type'} ? ( 'type'=>$session{'/administrator/managerial/upload_log.html?type'} ) : () ),
 				( $session{'/administrator/managerial/upload_log.html?company_id'} ? ( 'company_id'=>$session{'/administrator/managerial/upload_log.html?company_id'} ) : () ),
-				'limit'	=>	1000,
-				'order'=>'start DESC',
+				limit	=>	1000,
+				order	=>	'start DESC',
 			);
 			my $total = 0;
 
