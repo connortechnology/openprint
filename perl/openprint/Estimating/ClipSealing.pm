@@ -78,7 +78,8 @@ sub calc {
 				$$specs{'hdnBreakdown'.$qty_index} .= 'No MakeReady Price.<br/>';
 			} # end if
 
-			my %ServicePrice = openprint::service::get_price_object('ClipSealing', $runs, $Equipment );
+			my %ServicePrice = openprint::service::get_price_object('ClipSealing'.$$specs{'SealQuantity'}.'Clips', $$specs{'txtQuantity'.$qty_index}, $Equipment );
+			%ServicePrice = openprint::service::get_price_object('ClipSealing', $$specs{'txtQuantity'.$qty_index}, $Equipment ) if ! %ServicePrice;
 			if ( ! %ServicePrice ) {
 				$$specs{'hdnBreakdown'.$qty_index} .= 'No Service Price.<br/>';
 			} elsif ( $ServicePrice{'units'} eq 'Per M' ) {
@@ -164,5 +165,7 @@ sub display {
 	@{$$variable{'Equipment'}} = @possible_equipment;
 } # end sub display
 
+sub save {
+} # end sub save
 1;
 __END__
