@@ -6,7 +6,7 @@ package openprint::Photo_Album;
 our @ISA = qw( openprint::Object );
 
 use vars qw( $debug $table $serial %fields %find_fields %transforms %defaults );
-$debug = 1;
+$debug = 0;
 $serial = 'photo_albums_id_seq';
 $table = 'photo_albums';
 
