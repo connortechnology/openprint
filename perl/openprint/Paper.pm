@@ -1143,6 +1143,7 @@ sub load_from_signature {
 		#if ( $$specs{'StockType'} ne 'Roll' ) {
 			$Paper->mweight( $$specs{'txtCustomMWeight'} );
 		#} # end if
+		$Paper->minimum_order( $$specs{'minimum_order'} );
 	} else {
 		if ( ! ( $$specs{'ddmStockBrand'} and $$specs{'ddmStockFinish'} and $$specs{'ddmStockColour'} and $$specs{'ddmStockWeight'} ) ) {
 			return new openprint::Paper();
