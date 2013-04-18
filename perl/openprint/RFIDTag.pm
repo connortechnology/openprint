@@ -77,6 +77,10 @@ sub find {
 		$sql .= ' AND id LIKE ?';
 		push @values, $params{id_like};
 	} # end if
+	if ( $params{'id like'} ) {
+		$sql .= ' AND id LIKE ?';
+		push @values, $params{'id like'};
+	} # end if
 	if ( $params{'short_id'} ) {
 		$sql .= ' AND id = ?';
 		push @values, sprintf('%.15d', $params{'short_id'} );
