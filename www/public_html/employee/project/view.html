@@ -136,22 +136,34 @@ function dearchive(file_id) {
 
 		my $impressions = $$sig_specs{'hdnImpressionQuantity'.$qty_index};
 		if ( sets::isin( $$sig_specs{'ddmRunStyle'.$qty_index}, ['Work & Turn','Work & Tumble'] ) ) {
-			$impressions /= 2
+			$impressions /= 2;
 		} elsif ( $$sig_specs{'ddmRunStyle'.$qty_index} eq 'Sheet Work' ) {
 			my @side_one_colours = openprint::Estimating::Printing::get_colours( $sig_specs, 'SideOne' );
 			my @side_two_colours = openprint::Estimating::Printing::get_colours( $sig_specs, 'SideTwo' );
 			if ( @side_one_colours and @side_two_colours ) {
-				$impressions /= 2
+				$impressions /= 2;
 			} # end if
 		} # end if
 
 		my $Paper = openprint::Paper::load_from_signature( $Project, $sig_specs, $qty_index );
 
+		my ( $sheets, $lbs );
+		if ( $$sig_specs{"txtPressSheetQty$qty_index"} =~ /(\d+) lbs/ ) {
+			$lbs = $1;
+			$sheets = $lbs / ( $Paper->area() * $Paper->wpsi() );
+		} elsif ( $$sig_specs{"txtPressSheetQty$qty_index"} =~ /(\d+)sheets/ ) {
+			$sheets = $1;
+			$lbs = $sheets * $Paper->area() * $Paper->wpsi();
+		} else {
+			$sheets = $impressions;
+			$lbs = $sheets * $Paper->area() * $Paper->wpsi();
+		} # end if
+
 		if ( $Paper->type() eq 'Roll' ) {
-			$totals{$Paper->to_string()} += ceil($impressions * $Paper->area() * $Paper->wpsi());
-			$sheets{$Paper->to_string()} += $impressions;
+			$totals{$Paper->to_string()} += $lbs;
+			$sheets{$Paper->to_string()} += $sheets;
 		} elsif ( $Paper->type() eq 'Sheet' ) {
-			my $sheets = $impressions;
+			my $sheets = $sheets;
 			if ( $Paper->start_area() and $Paper->area() ) {
 				$sheets /= ( $Paper->start_area() / $Paper->area() );
 				$sheets = ceil( $sheets );
@@ -159,7 +171,7 @@ function dearchive(file_id) {
 			} else {
 				$log->debug("No area in project view: " . $Paper->to_string() );
 			} # end if
-			$totals{$Paper->to_string()} += sprintf('%.0f', $sheets * $Paper->start_area() * $Paper->wpsi() );
+			$totals{$Paper->to_string()} += ceil( $sheets * $Paper->start_area() * $Paper->wpsi() );
 			$sheets{$Paper->to_string()} += $sheets;
 		} else {
 			$log->warn("Unknown type of Stock " . $Paper->to_string() );
@@ -183,10 +195,11 @@ function dearchive(file_id) {
 		$html .= '<td class="service"><b>Stock:</b><br/>';
 		foreach my $string ( sort keys %Stocks ) {
 			my $Stock = $Stocks{$string};
+			my $minimum = $Stock->minimum_order() ? ' ' . $Stock->minimum_order() . $Stock->units(). ' minimum' : '';
 			if ( $Stock->id() ) {
-				$html .= sprintf('<a href="/employee/inventory/paper_details.html?paper_id=%1$d">%2$s</a><br/>', $Stock->id(), $string );
+				$html .= sprintf('<a href="/employee/inventory/paper_details.html?paper_id=%1$d">%2$s</a><br/>', $Stock->id(), $string . $minimum );
 			} else {
-				$html .= $string;
+				$html .= $string.$minimum;
 			} # end if	
 		} # end foreach string
 	
