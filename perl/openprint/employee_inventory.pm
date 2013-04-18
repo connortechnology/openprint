@@ -165,15 +165,11 @@ sub skids {
 	if ( ! exists $session{'/employee/inventory/skids.html?withoutrfid'} ) {
 		$param{'withoutrfid'} = $session{'/employee/inventory/skids.html?withoutrfid'} = 0;
 	} # end if
-	if ( ! exists $session{'/employee/inventory/skids.html?empty'} ) {
-		$session{'/employee/inventory/skids.html?empty'} = 'N';
-	} # end if
-	if ( ! exists $session{'/employee/inventory/skids.html?contents'} ) {
-		$session{'/employee/inventory/skids.html?contents'} = 'Y';
-	} # end if
-	if ( ! exists $session{'/employee/inventory/skids.html?hasmanifest'} ) {
-		$session{'/employee/inventory/skids.html?hasmanifest'} = '';
-	} # end if
+	$session{'/employee/inventory/skids.html?empty'} = 'N' if ! exists $session{'/employee/inventory/skids.html?empty'};
+	$session{'/employee/inventory/skids.html?contents'} = 'Y' if ! exists $session{'/employee/inventory/skids.html?contents'};
+	$session{'/employee/inventory/skids.html?hasmanifest'} = '' if ! exists $session{'/employee/inventory/skids.html?hasmanifest'};
+	$session{'/employee/inventory/skids.html?hasmanufacturers'} = '' if ! exists $session{'/employee/inventory/skids.html?hasmanufacturers'};
+
 	ssi::setup_date_select( '/employee/inventory/skids.html', 'received_on_start', 0 );
 	ssi::setup_date_select( '/employee/inventory/skids.html', 'received_on_end', 0 );
 	ssi::setup_date_select( '/employee/inventory/skids.html', 'created_on_start', '' );
@@ -773,10 +769,10 @@ sub skid_details {
 	} # end if
 
 	my $Skid = $variable{'Skid'} = new openprint::Skid( @skid_ids ? $skid_ids[0] : undef );
-	@{$variable{'skid_ids'}} = @skid_ids;
+	$variable{skid_ids} = \@skid_ids;
 
-	if ( $param{'skid_id'} and ! openprint::Skid::find( 'id'=>\@skid_ids, 'deleted'=>[0,1] ) and $param{'btnFunction'} ne 'Save' ) {
-		$variable{'error'} .= "Skid $param{'skid_id'} not found!<br/>";
+	if ( $param{skid_id} and ! openprint::Skid->find( id=>\@skid_ids, deleted=>[0,1] ) and $param{'btnFunction'} ne 'Save' ) {
+		$variable{error} .= "Skid $param{skid_id} not found!<br/>";
 		return;
 	} # end if
 
@@ -802,13 +798,13 @@ sub skid_details {
 		my @quantities = misc::trim( split ',', $param{'Quantity'} );
 
 		if ( @skid_ids and (@quantities>1) and ( @quantities != @skid_ids ) ) {
-			$variable{'error'} .= 'When saving to multiple skids, the # of quantities must match the # of skids.';
+			$variable{'error'} .= 'When saving to multiple skids, the # of quantities must match the # of skids.<br/>';
 			return;
 		} # end if
 		if ( $param{'rfidtag_id'} ) {
 			my @rfidtags = misc::trim( split ',', $param{'rfidtag_id'} );
 			if ( @skid_ids and ( @rfidtags != @skid_ids ) ) {
-				$variable{'error'} .= 'When saving to multiple skids, the # of rfidtags must match the # of skids.';
+				$variable{'error'} .= 'When saving to multiple skids, the # of rfidtags must match the # of skids.<br/>';
 				return;
 			} # end if
 
@@ -828,6 +824,24 @@ sub skid_details {
 				} # end if
 			} # end foreach rfidtag_id
 		} # end if param{rfidtag_id}
+		if ( $param{manufacturers_id} ) {
+			my @manufacturers_ids = split(',', $param{manufacturers_id} );
+		
+			if ( @skid_ids ) {
+				if ( @skid_ids != @manufacturers_ids ) {
+					$variable{error} .= 'When saving to multiple skids, the # of manufacturer_ids must match the # of skids<br/>';
+					return;
+				} # en dif
+				if ( my @mismatched = openprint::Skid->find( manufacturers_id => \@manufacturers_ids, 'id not in' => \@skid_ids ) ) {
+					$variable{error} .= join("\n", map { sprintf('Manufacturer id %1$s is already assigned to skid <a href="/employee/inventory/skid_details.html?skid_id=%2$d">%2$d</a>.<br/>', $_->manufacturers_id(), $_->id() ) } @mismatched );
+				} # end if		
+			} else {
+				
+				if ( my @mismatched = openprint::Skid->find( manufacturers_id => \@manufacturers_ids ) ) {
+					$variable{error} .= join("\n", map { sprintf('Manufacturer id %1$s is already assigned to skid <a href="/employee/inventory/skid_details.html?skid_id=%2$d">%2$d</a>.<br/>', $_->manufacturers_id(), $_->id() ) } @mismatched );
+				} # end if		
+			} # end if
+		} # end if
 		return if $variable{'error'};
 $log->debug('sacing');
 
@@ -841,7 +855,7 @@ $log->debug('sacing');
 				$variable{'error'} .= 'Cannot enter more than 100 skids/rolls at a time.';
 				return;
 			} # end if
-			@{$variable{'Skids'}} = ();
+			$variable{'Skids'} = [];
 			foreach my $skid_count ( 1 .. $param{'skid_quantity'} ) {
 $log->debug("Entering skid $skid_count");
 				my $S = new openprint::Skid();
@@ -1918,7 +1932,7 @@ sub _skids_results {
 				( map { 'last_seen_start_' . $_ } ( 'year','month','day' ) ),
 				( map { 'last_seen_end_' . $_ } ( 'year','month','day' ) ),
 				'Docket','fsc_code','empty', 'withrfid','withoutrfid','location_id','verification_code', 'allocated','contents','hasmanifest',
-				'condition_id', 'skid_id', 'rfid_id', 'manufacturers_id',
+				'condition_id', 'skid_id', 'rfid_id', 'manufacturers_id', 'hasmanufacturers',
 				) );
 }
 
@@ -1982,6 +1996,12 @@ sub _paper_inventory_entries {
 		$Paper->add_inventory( $Skid->id(), $param{'quantity'} );
 	} # end if
 } # end sub _paper_inventory_entries
+
+sub _rfid_change {
+} # end sub _rfid_change
+
+sub _skid_change {
+} # end sub _skid_change
 
 1;
 __END__
