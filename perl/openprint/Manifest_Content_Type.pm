@@ -4,7 +4,7 @@ our @ISA = qw(openprint::Object);
 require openprint::Object;
 
 use openprint ();
-use vars qw(%variable $log $dbh %config $debug $table $serial %find_fields %fields %transforms %defaults );
+use vars qw(%variable $log $dbh %config $table $serial %find_fields %fields %transforms %defaults );
 *variable = \%openprint::variable;
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
@@ -14,7 +14,7 @@ require openprint::Manifest;
 require openprint::Paper;
 require openprint::PurchaseOrder_Content;
 
-$debug = 0;
+use constant DEBUG => 0;
 
 $table = 'manifest_content_types';
 $serial = 'manifest_content_types_id_seq';
@@ -68,27 +68,27 @@ sub PurchaseOrder_Content {
 			my $PO = new openprint::PurchaseOrder( $_[0]{'po_id'} );
 			my $Paper = $_[0]->Paper();
 			foreach my $POC ( $PO->Contents() ) {
-				$log->debug('POC desc: ' . $POC->item());
+				$log->debug('POC desc: ' . $POC->item()) if DEBUG;
 				next if $POC->type() ne $Paper->type().' Stock';
 				my ( $weight ) = $POC->item() =~ /(\d+)lb/i;
 				if ( $weight and $Paper->basis_mweight() and ( $Paper->basis_mweight() != $weight*2 ) ) {
-					$log->debug("Wrong weight: $weight != " . $Paper->basis_mweight() );
+					$log->debug("Wrong weight: $weight != " . $Paper->basis_mweight() ) if DEBUG;
 					next;
 				} else {
-					$log->debug("Right weight: $weight == " . $Paper->basis_mweight() );
+					$log->debug("Right weight: $weight == " . $Paper->basis_mweight() ) if DEBUG;
 				} # end if
 				my ( $width ) = $POC->item() =~ /([\.\d]+)in/i;
 				if ( $width and $Paper->width() and ( $Paper->width() != $width ) ) {
-					$log->debug("Wrong width: $width != " . $Paper->width() );
+					$log->debug("Wrong width: $width != " . $Paper->width() ) if DEBUG;
 					next;
 				} else {
-					$log->debug("Right width: $width == " . $Paper->width() );
+					$log->debug("Right width: $width == " . $Paper->width() ) if DEBUG;
 				} # end if
 				if ( $Paper->fsc_code() and ( $POC->item() !~ /^FSC/ ) ) {
-					$log->debug("FSC Mismatch");
+					$log->debug("FSC Mismatch") if DEBUG;
 					next;
 				} elsif ( (!$Paper->fsc_code()) and $POC->item() =~ /^FSC/ ) {
-					$log->debug("FSC Mismatch");
+					$log->debug("FSC Mismatch") if DEBUG;
 					next;
 				} # end if
 				$_[0]{'PurchaseOrder_Content'} = $POC;
