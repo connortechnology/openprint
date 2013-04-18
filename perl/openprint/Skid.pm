@@ -69,7 +69,11 @@ sub find {
             $sql .= ' and id=?';
             push @values, $params{id};
         } # end if
-    } # end if
+	} # end if
+	if ( ref $params{'id not in'} eq 'ARRAY' ) {
+		$sql .= ' AND id NOT IN (' . join(',', map { '?' } @{$params{'id not in'}} ) . ')';
+		push @values, @{$params{'id not in'}};
+	} # end if
 
 	if ( $params{'verification_code'} ) {
 		$sql .= ' AND id IN (SELECT skid_id FROM skid_verifications WHERE code=?)';
@@ -112,12 +116,24 @@ sub find {
 		push @values, $params{'rfidtag_id ilike'};
 	} # end if
 	if ( $params{'manufacturers_id'} ) {
-		$sql .= ' AND manufacturers_id=?';
-		push @values, $params{'manufacturers_id'};
+        if ( ref $params{'manufacturers_id'} eq 'ARRAY' ) {
+            $sql .= ' AND manufacturers_id IN (' . join(',', map { '?' } @{$params{'manufacturers_id'}} ) . ')';
+            push @values, @{$params{'manufacturers_id'}};
+        } else {
+            $sql .= ' and manufacturers_id=?';
+            push @values, $params{manufacturers_id};
+        } # end if
 	} # end if
 	if ( $params{'manufacturers_id ilike'} ) {
 		$sql .= ' AND manufacturers_id ilike ?';
 		push @values, $params{'manufacturers_id ilike'};
+	} # end if
+	if ( exists $params{'has manufacturers_id'} ) {
+		if ( $params{'has manufacturers_id'} ) {
+			$sql .= q` AND NOT (manufacturers_id IS NULL OR manufacturers_id='')`;
+		} else {
+			$sql .= q` AND (manufacturers_id IS NULL OR manufacturers_id='')`;
+		} # end if
 	} # end if
 	if ( $params{'created_on_start'} and $params{'created_on_end'} ) {
 		$sql .= ' AND ( created_on BETWEEN ? AND ? )';
