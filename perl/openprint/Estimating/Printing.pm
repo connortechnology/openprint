@@ -2289,6 +2289,11 @@ sub calc_price {
 	#Initially we calculate based on colours, but really we need to calculate based on plates, which we will do once we figure out how many plates we need.
 	my $min_overs = $Press->specification( 'Press Run Overs Minimum', scalar @colours );
 	my $setup_rate = $Press->specification( 'Press Run Overs Rate', scalar @colours );
+	if ( $Paper->type() eq 'Roll' and sets::isin('Sheet', split(',', $Press->specification('Feed') ) ) ) {
+		if ( my $roll2sheet_overs_rate = $Press->specification( 'Roll2Sheet Additional Setup Overs' ) ) {
+			$setup_rate *= ( 1 + ( $roll2sheet_overs_rate / 100 ) );
+		} # end if
+	} # end if
 	my $setup_overs = ceil( $setup_rate * scalar @colours );
 	my $fm_overs = $Press->specification( 'FM Screening Additional Overs', undef ) if $$specs{'ScreenType'} eq 'FM';
 	$setup_overs += $fm_overs;
@@ -2297,6 +2302,11 @@ sub calc_price {
 	my $over_rate = $Press->specification( 'Press Run Overs', $base_impressions );
 	if ( $Press->specification( 'Double Overs For Covers' ) eq 'Yes' ) {
 		$over_rate *= 2;
+	} # end if
+	if ( $Paper->type() eq 'Roll' and sets::isin('Sheet', split(',', $Press->specification('Feed') ) ) ) {
+		if ( my $roll2sheet_overs_rate = $Press->specification( 'Roll2Sheet Additional Run Overs' ) ) {
+			$over_rate *= ( 1 + ( $roll2sheet_overs_rate / 100 ) );
+		} # end if
 	} # end if
 	my $run_overs = $base_impressions * $over_rate;
 	my $impressions = ceil( $base_impressions + ( $setup_overs > $run_overs ? $setup_overs : $run_overs ) );
@@ -2482,6 +2492,11 @@ $$specs{'Runspeed'} = $run_speed;
 	#Initially we calculate based on colours, but really we need to calculate based on plates, which we will do once we figure out how many plates we need.
 	$min_overs = $Press->specification( 'Press Run Overs Minimum', $plate_setup{'Plate Count'} );
 	$setup_rate = $Press->specification( 'Press Run Overs Rate', $plate_setup{'Plate Count'} );
+	if ( $Paper->type() eq 'Roll' and sets::isin('Sheet', split(',', $Press->specification('Feed') ) ) ) {
+		if ( my $roll2sheet_overs_rate = $Press->specification( 'Roll2Sheet Additional Setup Overs' ) ) {
+			$setup_rate *= ( 1 + ( $roll2sheet_overs_rate / 100 ) );
+		} # end if
+	} # end if
 	$setup_overs = ceil($setup_rate * ( $plate_setup{'Plate Count'} ));
 	$setup_overs += $fm_overs;
 	$setup_overs += $price{'SpinePaste MakeReady Overs'};
