@@ -502,76 +502,79 @@ sub company_profiles {
 			sql::end_transaction( $dbh, $ac );
 		} # end if
 	} elsif ( $param{'btnFunction'} eq 'Save' ) {
+		if ( ! $param{txtCompanyName} ) {
+			$variable{error} .= 'Empty company name. You must supply a Company Name.<br/>';
+		} else {
+			$index = $param{'company_id'};
+			$Company = new openprint::Company( $param{'company_id'} );
+			$param{'start_year'} =~ s/\D//g;
+			if ( $param{'start_year'} ) {
+				$param{'start_month'} = '01' if ! $param{'start_month'};
+				$param{'established'} = $param{'start_year'} . '-' . $param{'start_month'} . '-01';
+			} # end if
+			$variable{'error'} .= $Company->save( \%param );
+			$index = $Company->id();
 
-		$index = $param{'company_id'};
-		$Company = new openprint::Company( $param{'company_id'} );
-		$param{'start_year'} =~ s/\D//g;
-		if ( $param{'start_year'} ) {
-			$param{'start_month'} = '01' if ! $param{'start_month'};
-			$param{'established'} = $param{'start_year'} . '-' . $param{'start_month'} . '-01';
-		} # end if
-		$variable{'error'} .= $Company->save( \%param );
-		$index = $Company->id();
-
-		if ( $index > 0 ) {
-			my $ac = sql::start_transaction( $dbh );
-			$Company->Profile()->save( \%param );
+			if ( $index > 0 ) {
+				my $ac = sql::start_transaction( $dbh );
+				$Company->Profile()->save( \%param );
 # Otherwise Error!
 # Customer Categories
 # I was trying to do this the hard way.	Then it occurred to me: Just delete them all from the table, and add back in the ones we want.	
-			my @customercategories = sql::execute( $log, $dbh, 'SELECT id FROM Marketing_Categories' );
+				my @customercategories = sql::execute( $log, $dbh, 'SELECT id FROM Marketing_Categories' );
 
-			sql::execute( $log, $dbh, q{DELETE FROM Companies_in_Marketing_Categories WHERE company_Id =?}, $index );
+				sql::execute( $log, $dbh, q{DELETE FROM Companies_in_Marketing_Categories WHERE company_Id =?}, $index );
 # add them back in 
-			my $sth = $dbh->prepare( q{INSERT INTO Companies_in_Marketing_Categories (Category_Id,Company_Id) VALUES ( ?, ? )} );
-			foreach my $cat ( $param{'selectCustomerCategories'} ) {
-				if ( sets::isin( $cat, \@customercategories ) ) {
-					$sth->execute( $cat, $index ) or $log->error( DBI->errstr );
-				} # end if
-			} # end foreach
+				my $sth = $dbh->prepare( q{INSERT INTO Companies_in_Marketing_Categories (Category_Id,Company_Id) VALUES ( ?, ? )} );
+				foreach my $cat ( $param{'selectCustomerCategories'} ) {
+					if ( sets::isin( $cat, \@customercategories ) ) {
+						$sth->execute( $cat, $index ) or $log->error( DBI->errstr );
+					} # end if
+				} # end foreach
 
-			my %params;
-			foreach my $field ( keys %shipping_fields ) {
-				$params{$shipping_fields{$field}} = $param{$field} if defined $param{$field};
-			} # end foreach
-			$Company->save_shipping( \%params );
+				my %params;
+				foreach my $field ( keys %shipping_fields ) {
+					$params{$shipping_fields{$field}} = $param{$field} if defined $param{$field};
+				} # end foreach
+				$Company->save_shipping( \%params );
 
-			$Company->save_tradereferences( \%params );
+				$Company->save_tradereferences( \%params );
 
-			$dbh->do( 'LOCK TABLE Company_Credit IN ACCESS EXCLUSIVE MODE' ) or $log->error( DBI->errstr );
+				$dbh->do( 'LOCK TABLE Company_Credit IN ACCESS EXCLUSIVE MODE' ) or $log->error( DBI->errstr );
 
-			foreach my $Supplier ( openprint::Company->find('offers_credit'=>1) ) {
-				my $Credit = new openprint::Company_Credit( {'company_id'=>$index, 'supplier_id'=>$Supplier->id() } );
+				foreach my $Supplier ( openprint::Company->find('offers_credit'=>1) ) {
+					my $Credit = new openprint::Company_Credit( {'company_id'=>$index, 'supplier_id'=>$Supplier->id() } );
 
-                if (
-                        ( $Credit->denydays() != openprint::Company_Credit->transform('denydays', $param{'denydays-'.$$Supplier{id}} ) ) or
-                        ( $Credit->warndays() != openprint::Company_Credit->transform('warndays', $param{'warndays-'.$$Supplier{id}} ) ) or
-                        ( $Credit->limit() != openprint::Company_Credit->transform('limit', $param{'limit-'.$$Supplier{id}} ) ) or
-                        ( $Credit->hold() ne openprint::Company_Credit->transform('hold', $param{'hold-'.$$Supplier{id}} ) ) or
-                        ( $Credit->downpayment() != openprint::Company_Credit->transform('downpayment', $param{'downpayment-'.$$Supplier{id}} ) ) or
-                        ( $Credit->cod() != openprint::Company_Credit->transform('cod', $param{'cod-'.$$Supplier{id}} ) ) or
-                        ( $Credit->late_payment_amount() != openprint::Company_Credit->transform('late_payment_amount', $param{'late_payment_amount-'.$$Supplier{id}} ) ) or
-                        ( $Credit->late_payment_units() ne openprint::Company_Credit->transform('late_payment_units', $param{'late_payment_units-'.$$Supplier{id}} ) ) or
-                        ( $Credit->early_payment_amount() != openprint::Company_Credit->transform('early_payment_discount', $param{'early_payment_discount-'.$$Supplier{id}} ) ) or
-                        ( $Credit->early_payment_units() ne openprint::Company_Credit->transform('early_payment_units', $param{'early_payment_units-'.$$Supplier{id}} ) ) or
-                        ( $Credit->early_payment_days() != openprint::Company_Credit->transform('early_payment_days', $param{'early_payment_days-'.$$Supplier{id}} ) )
-                        ) {
-                    my $note = 'Old credit: ' . $Credit->to_string() if $Credit->supplier_id();
-					$variable{'error'} .= $Credit->save( { 'company_id'=>$index, 'supplier_id'=>$Supplier->id(), 
-							map { $_ => $param{$_.'-'.$Supplier->id()} } ( 'denydays','warndays', 'limit', 'hold', 'downpayment', 'cod', 'late_payment_amount','late_payment_units','early_payment_amount','early_payment_units', 'early_payment_days' ) } );
-                    $note .= '<br/>new credit: ' . $Credit->to_string();
-                    $variable{'error'} .= (new openprint::Log())->save( {
-                            action		=> 	'Credit Information Changed', 
-                            object_id   =>  $index,
-							object_type	=>	'openprint::Company',
-                            note        =>  $note,
-							});
-                } else {
-                    $variable{'information'} .= 'Credit unchanged for ' . $Supplier->name() . '<br/>';
-                } # end if
-			} # end foreach Supplier
-			sql::end_transaction( $dbh, $ac );
-		} # end if $index
+					if (
+							( $Credit->denydays() != openprint::Company_Credit->transform('denydays', $param{'denydays-'.$$Supplier{id}} ) ) or
+							( $Credit->warndays() != openprint::Company_Credit->transform('warndays', $param{'warndays-'.$$Supplier{id}} ) ) or
+							( $Credit->limit() != openprint::Company_Credit->transform('limit', $param{'limit-'.$$Supplier{id}} ) ) or
+							( $Credit->hold() ne openprint::Company_Credit->transform('hold', $param{'hold-'.$$Supplier{id}} ) ) or
+							( $Credit->downpayment() != openprint::Company_Credit->transform('downpayment', $param{'downpayment-'.$$Supplier{id}} ) ) or
+							( $Credit->cod() != openprint::Company_Credit->transform('cod', $param{'cod-'.$$Supplier{id}} ) ) or
+							( $Credit->late_payment_amount() != openprint::Company_Credit->transform('late_payment_amount', $param{'late_payment_amount-'.$$Supplier{id}} ) ) or
+							( $Credit->late_payment_units() ne openprint::Company_Credit->transform('late_payment_units', $param{'late_payment_units-'.$$Supplier{id}} ) ) or
+							( $Credit->early_payment_amount() != openprint::Company_Credit->transform('early_payment_discount', $param{'early_payment_discount-'.$$Supplier{id}} ) ) or
+							( $Credit->early_payment_units() ne openprint::Company_Credit->transform('early_payment_units', $param{'early_payment_units-'.$$Supplier{id}} ) ) or
+							( $Credit->early_payment_days() != openprint::Company_Credit->transform('early_payment_days', $param{'early_payment_days-'.$$Supplier{id}} ) )
+					   ) {
+						my $note = 'Old credit: ' . $Credit->to_string() if $Credit->supplier_id();
+						$variable{'error'} .= $Credit->save( { 'company_id'=>$index, 'supplier_id'=>$Supplier->id(), 
+								map { $_ => $param{$_.'-'.$Supplier->id()} } ( 'denydays','warndays', 'limit', 'hold', 'downpayment', 'cod', 'late_payment_amount','late_payment_units','early_payment_amount','early_payment_units', 'early_payment_days' ) } );
+						$note .= '<br/>new credit: ' . $Credit->to_string();
+						$variable{'error'} .= (new openprint::Log())->save( {
+								action		=> 	'Credit Information Changed', 
+								object_id   =>  $index,
+								object_type	=>	'openprint::Company',
+								note        =>  $note,
+								});
+					} else {
+						$variable{'information'} .= 'Credit unchanged for ' . $Supplier->name() . '<br/>';
+					} # end if
+				} # end foreach Supplier
+				sql::end_transaction( $dbh, $ac );
+			} # end if $index
+		} # end if input checks
 	} elsif ( $param{'btnFunction'} eq 'Delete' ) {
 		$Company = new openprint::Company( $param{'company_id'} );
 		$index = $Company->next();

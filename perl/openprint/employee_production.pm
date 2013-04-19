@@ -1932,6 +1932,10 @@ sub _split_popup {
 sub _li {
 
 	my $Job = $variable{'Job'} = new openprint::ScheduledJob( $param{'schedule_id'} );
+	if ( ! $$Job{id} ) {
+		$variable{error} .= 'Job does not exist.';
+		return;
+	} # end if
 	if ( $param{'action'} eq 'House Stock' ) {
 		my $stock = $Job->stock();
 		if ( ! ( $stock =~ /House Stock/ ) ) {

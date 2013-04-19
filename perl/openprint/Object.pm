@@ -278,8 +278,7 @@ $log->debug("No serial") if $debug;
 } # end sub save
 
 sub get {
-	my $self = shift;
-	return map { $self->$_() } @_;
+	return map { $_[0]->$_() } @_;
 } # end sub get
 
 sub set {
