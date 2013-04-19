@@ -1440,9 +1440,9 @@ foreach my $E ( openprint::Equipment->find('category any'=>'Printing') ) {
 		$Spec->save();
 	} 
 	foreach my $Spec ( $E->Specifications('name'=>'Default Bleed Size') ) {
-		if ( $Spec->max() == 1 ) {
+		if ( $Spec->max() and ( $Spec->max() == 1 ) ) {
 			$Spec->max('');
-		} elsif ( $Spec->min() == 2 ) {
+		} elsif ( $Spec->min() and ( $Spec->min() == 2)  ) {
 			$Spec->name('Default Bleed SizeMultiPage');
 			$Spec->min('');
 		} # end if
@@ -2729,7 +2729,7 @@ if ( $version < $new_version ) {
 	my $ac = sql::start_transaction( $dbh );
 	sql::insert( undef, undef, 'database_info', 'version', $new_version, 'backup', $backup );
 	foreach my $E ( openprint::Equipment->find() ) {
-		if ( $E->specification('Double Overs For Covers') eq 'Y' ) {
+		if ( ( $_ = $E->specification('Double Overs For Covers') ) and ( $_ eq 'Y' ) ) {
 			sql::insert( undef, undef, 'tbl_Equipment_Specifications',[
 					'lngEquipmentIndex',    $E->id(),
 					'dblMin',               undef,
