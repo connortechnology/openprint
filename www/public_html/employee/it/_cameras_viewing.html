@@ -11,7 +11,7 @@ Click on the image to stop streaming.
 				);
 			return 'Unable to connect to ZM database<br/>' if ! $zm_dbh;
 			require openprint::ZM_Monitor;
-			@{$$variable{'Monitors'}} = openprint::ZM_Monitor->find('dbh'=>$zm_dbh, 'order'=>'Sequence', 'function !=' => 'None' );
+			@{$$variable{'Monitors'}} = openprint::ZM_Monitor->find('dbh'=>$zm_dbh, 'order'=>'Sequence', 'function !=' => 'None', enabled=>1 );
 			$zm_dbh->disconnect();
 		} # end if
 		my $html;
