@@ -22,24 +22,16 @@
 <!--
 						<li>
 							<label>Registered</label>
-							<span class="DateSelectorCT">
 							<? echo ( ssi::date_select_session( '/account/search.html', 'created_on_start', {onchange=>q`load_results();`,'with_clear'=>1,'with_today'=>1} ); ) ?>
-							</span>
 								to 
-							<span class="DateSelectorCT">
 							<? echo ( ssi::date_select_session( '/account/search.html', 'created_on_end', {onchange=>q`load_results();`,'with_clear'=>1,'with_today'=>1} ); ) ?>
-							</span>
 						</li>
 -->
 						<li>
 							<label>Last Online</label>
-							<span class="DateSelectorCT">
 							<? echo ( ssi::date_select_session( '/account/search.html', 'last_online_start', {onchange=>q`load_results();`,'with_clear'=>1,'with_today'=>1} ); ) ?>
-							</span>
 								to 
-							<span class="DateSelectorCT">
 							<? echo ( ssi::date_select_session( '/account/search.html', 'last_online_end', {onchange=>q`load_results();`,'with_clear'=>1,'with_today'=>1} ); ) ?>
-							</span>
 						</li>
 						<li><label>Photos</label>
 							<? echo ( ssi::radio( 'photos', [ 1, 'with', '0', 'without', '', 'both' ], $session{'/account/search.html?photos'} ); ) ?>
@@ -68,9 +60,9 @@
 			$html .= ssi::radio( 'field-'.$$Field{id}, $Field->values(), $value, {onclick=>'load_results()'} );
 		} elsif ( $Field->type() eq 'date' ) {
 			my ( $start, $end ) = @{$Field->values()} if $Field->values();
-			$html .= '<span class="DateSelector">'.ssi::date_select_session( '/account/search.html', 'field-'.$Field->id().'_start', { 'start'=>$start, 'end'=>$end, onclick=>'load_results()' } ) . '</span>';
+			$html .= ssi::date_select_session( '/account/search.html', 'field-'.$Field->id().'_start', { 'start'=>$start, 'end'=>$end, onclick=>'load_results()' } );
 			$html .= ' to ';
-			$html .= '<span class="DateSelector">'.ssi::date_select_session( '/account/search.html', 'field-'.$Field->id().'_end', { 'start'=>$start, 'end'=>$end, onclick=>'load_results()' } ) . '</span>';
+			$html .= ssi::date_select_session( '/account/search.html', 'field-'.$Field->id().'_end', { 'start'=>$start, 'end'=>$end, onclick=>'load_results()' } );
 		} elsif ( $$Field{type} eq 'location' ) {
 			$html .= openprint::Location::filters( 'field-'.$$Field{id}.'-', new openprint::Location($value), { onSuccess=>'load_results();'} );
 		} elsif ( sets::isin( $Field->type(), [ 'country', 'state', 'city' ] ) ) {

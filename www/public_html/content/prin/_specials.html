@@ -1,6 +1,6 @@
 <? echo (
 	return if ! $$variable{'ProjectType'};
-    @{$$variable{'Categories'}} = openprint::ProductCategory->find( 'order' => 'lower(name)','projecttype_id'=>$$variable{'ProjectType'}->id() );
+    @{$$variable{'Categories'}} = openprint::Product_Category->find( order=>'lower(name)', projecttype_id=>$$variable{'ProjectType'}->id() );
 	return if ! @{$$variable{'Categories'}};
 
     my $list_id = openprint::pricing::get_pricelist_id( $log, $dbh, $variable );

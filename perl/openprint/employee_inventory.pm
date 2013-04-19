@@ -1247,13 +1247,17 @@ sub rfidtag_details {
 		if ( $param{'rfidtag_id'} =~ /^\s*\((.*)\)\s*$/ ) {
 			$param{'rfidtag_id'} = hex( $1 );
 		} # end if
-		my @Tags = openprint::RFIDTag->find('id_like'=>'%'.$param{'rfidtag_id'} );
-		if ( ! @Tags ) {
-			$variable{'error'} .= 'Tag ID not found.';
-		} elsif ( @Tags > 1 ) {
-			@{$variable{'Tags'}} = @Tags;
+		if ( $param{rfidtag_id} ) {
+			my @Tags = openprint::RFIDTag->find('id like'=>( $param{rfidtag_id} =~ /%/ ? $param{rfidtag_id} : '%'.$param{rfidtag_id} ) );
+			if ( ! @Tags ) {
+				$variable{'error'} .= 'Tag ID not found.';
+			} elsif ( @Tags > 1 ) {
+				@{$variable{'Tags'}} = @Tags;
+			} else {
+				$param{'rfidtag_id'} = $Tags[0]->id();
+			} # end if
 		} else {
-			$param{'rfidtag_id'} = $Tags[0]->id();
+			$variable{error} .= 'Please specify an id (or part).<br/>';
 		} # end if
 	} # end if
 		
@@ -1315,7 +1319,7 @@ sub rfidscanner_details {
 	} else {
 		@param{'StartYear','StartMonth','StartDay'} = Date::Calc::Today();
 		@param{'EndYear','EndMonth','EndDay'} = Date::Calc::Today();
-		_rfidscanner_log_entries();
+		_rfidscanner_log();
 	} # end if
 
 	$variable{'RFIDScanner'} = $RFIDScanner;
@@ -1723,14 +1727,15 @@ sub inventory_log {
 	ssi::setup_date_select( '/employee/inventory/inventory_log.html', 'updated_on_start', 0 );
 	ssi::setup_date_select( '/employee/inventory/inventory_log.html', 'updated_on_end', 0 );
 	
+	ssi::save_params( '/employee/inventory/inventory_log.html', ( 
+				( map { 'updated_on_start_'.$_ } ( 'year','month','day', 'hour', 'minute' ) ),
+				( map { 'updated_on_end_'.$_ } ( 'year','month','day', 'hour', 'minute' ) ),
+				( 'ins', 'outs', 'Type', 'location_id', 'manifests_within_days', 'show_manifests' ) ) );
 	$session{'/employee/inventory/inventory_log.html?manifests_within_days'} = 7 if ! defined $session{'/employee/inventory/inventory_log.html?manifests_within_days'};
 	$session{'/employee/inventory/inventory_log.html?manifests_within_lbs'} = 100 if ! defined $session{'/employee/inventory/inventory_log.html?manifests_within_lbs'};
 	$session{'/employee/inventory/inventory_log.html?show_manifests'} = 0 if ! defined $session{'/employee/inventory/inventory_log.html?show_manifests'};
 	$session{'/employee/inventory/inventory_log.html?show_stock_on_manifests'} = 0 if ! defined $session{'/employee/inventory/inventory_log.html?show_stock_on_manifests'};
-	ssi::save_params( '/employee/inventory/inventory_log.html', ( 
-( map { 'updated_on_start_'.$_ } ( 'year','month','day', 'hour', 'minute' ) ),
-( map { 'updated_on_end_'.$_ } ( 'year','month','day', 'hour', 'minute' ) ),
-( 'ins', 'outs', 'Type', 'location_id', 'manifests_within_days', 'show_manifests' ) ) );
+	$session{'/employee/inventory/inventory_log.html?Type'} = [ 'Sheet','Roll','Unknown'] if ! defined $session{'/employee/inventory/inventory_log.html?Type'};
 } # end sub inventory_log
 
 sub _inventory_log {
@@ -1857,9 +1862,9 @@ sub _rfidtag_log_entries {
 	@param{'start_year','start_month','start_day'} =(0,0,0) if ! $param{'start_year'};
 	$param{'limit'} = 10 if ! $param{'limit'};
 	$variable{'Entries'} = [ openprint::RFIDTagHistory->find( 
-		'rfidtag_id'	=>	$param{'rfidtag_id'},
-		ssi::date_filter( 'start', 'updated_on_start', \%param ),
-		ssi::date_filter( 'end', 'updated_on_end', \%param ),
+		rfidtag_id	=>	$param{rfidtag_id},
+		ssi::date_filter( 'start', 'updated_on >=', \%param ),
+		ssi::date_filter( 'end', 'updated_on <=', \%param ),
 		order	 =>	'updated_on DESC',
 		limit	 =>	$param{limit},
 		) ];
@@ -1867,11 +1872,11 @@ sub _rfidtag_log_entries {
 	# This is to auto-load the start year
 	if ( ! @{$variable{'Entries'}} ) {
 		$variable{'Entries'} = [ openprint::RFIDTagHistory->find( 
-				'rfidtag_id'	=>	$param{'rfidtag_id'},
-				ssi::date_filter( 'start', 'updated_on_start', \%param ),
-				ssi::date_filter( 'end', 'updated_on_end', \%param ),
-				'limit'	 =>	$param{'limit'},
-				'order'	 =>	'updated_on DESC',
+				rfidtag_id	=>	$param{rfidtag_id},
+				ssi::date_filter( 'start', 'updated_on >=', \%param ),
+				ssi::date_filter( 'end', 'updated_on <=', \%param ),
+				limit	 =>	$param{limit},
+				order	 =>	'updated_on DESC',
 				) ];
 		if ( @{$variable{'Entries'}} ) {
 			@param{'start_year','start_month','start_day'} = $variable{'Entries'}[@{$variable{'Entries'}}-1]->updated_on() =~ /^(\d+)-(\d+)-(\d+)/;

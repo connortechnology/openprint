@@ -29,23 +29,15 @@
 			</li>
 			<li>
 				<label>Received On:</label>
-				<span class="DateSelectorCT">
 <? echo ( ssi::date_select_session( '/payment/history.html', 'received_on_start', { onchange=>q`load_payments($('f1'));`, with_today=>1, with_clear=>1} ); ) ?>
-				</span>
 					to 
-				<span class="DateSelectorCT">
 <? echo ( ssi::date_select_session( '/payment/history.html', 'received_on_end', {'onchange'=>q`load_payments($('f1'));`, with_today=>1, with_clear=>1} ); ) ?>
-				</span>
 			</li>
 			<li>
 				<label>Entered On:</label>
-				<span class="DateSelectorCT">
 <? echo ( ssi::date_select_session( '/payment/history.html', 'entered_on_start', {'onchange'=>q`load_payments($('f1'));`, with_today=>1, with_clear=>1} ); ) ?>
-				</span>
 					to 
-				<span class="DateSelectorCT">
 <? echo ( ssi::date_select_session( '/payment/history.html', 'entered_on_end', {'onchange'=>q`load_payments($('f1'));`, with_today=>1, with_clear=>1} ); ) ?>
-				</span>
 			</li>
 			<li><label>Transaction</label>
 				<? echo ( input(type=>'text', name=>'transaction_id', value=>$session{'/payment/history.html?transaction_id'},onkeydown=>q`if(event.keyCode == 13){load_payments($('f1'));` ); ) ?>

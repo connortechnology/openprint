@@ -38,22 +38,14 @@
 			<? echo ( ssi::select( openprint::RMA_Status->dropdown(order=>'sort,lower(name)'), [ split(',',$session{'/employee/support/returns.html?status'}) ], { multiple=>1, name=>'status' } ); ) ?>
 		</li><li>
 			<label>Created On</label>
-			<span class="DateSelector">
 <? echo ( ssi::date_select_session( '/employee/support/returns.html', 'created_on_start', { onchange=>'load_results();' } ); ) ?>
-			</span>
 				to 
-			<span class="DateSelector">
 <? echo ( ssi::date_select_session( '/employee/support/returns.html', 'created_on_end', { onchange=>'load_results();' } ); ) ?>
-			</span>
 		</li><li>
 			<label>Updated On</label>
-			<span class="DateSelector">
 <? echo ( ssi::date_select_session( '/employee/support/returns.html', 'updated_on_start', { onchange=>'load_results();' } ); ) ?>
-			</span>
 				to 
-			<span class="DateSelector">
 <? echo ( ssi::date_select_session( '/employee/support/returns.html', 'updated_on_end', { onchange=>'load_results();' } ); ) ?>
-			</span>
 		</li>
 		</ul>
 		<p class="buttons">

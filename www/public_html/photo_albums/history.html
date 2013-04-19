@@ -57,13 +57,9 @@
 		<? endif ( sets::isin($session{'user_type'}, ['E','A'] ) ) ?>
 					<li>
 						<label>Created</label>
-						<span class="DateSelectorCT">
 						<? echo ( ssi::date_select_session( '/photo_albums/history.html', 'created_on_start', {onchange=>q`load_albums($('f1'));`,'with_clear'=>1,'with_today'=>1} ); ) ?>
-						</span>
 							to 
-						<span class="DateSelectorCT">
 						<? echo ( ssi::date_select_session( '/photo_albums/history.html', 'created_on_end', {onchange=>q`load_albums($('f1'));`,'with_clear'=>1,'with_today'=>1} ); ) ?>
-						</span>
 					</li>
 				</ul>
 			<br class="spacer"/>

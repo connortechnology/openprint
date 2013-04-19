@@ -888,6 +888,9 @@ if ( ! sets::isin( 'locations', \@tables ) ) {
 	if ( ! exists $$data{'created_on'} ) {
 	$dbh->do('ALTER TABLE Locations add created_on TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()');
 	} # end if
+	if ( ! exists $$data{'updated_on'} ) {
+	$dbh->do('ALTER TABLE Locations add updated_on TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()');
+	} # end if
 	if ( ! exists $$data{'created_by'} ) {
 	$dbh->do('ALTER TABLE Locations add created_by INTEGER');
 	$dbh->do('ALTER TABLE Locations add FOREIGN KEY (created_by) REFERENCES Users (id)');
@@ -1014,6 +1017,7 @@ if ( ! sets::isin( 'papers', \@tables ) ) {
 	$dbh->do('alter table papers add basis_height float') if ! exists $$data{basis_height};
 	$dbh->do('alter table papers add basis_mweight float') if ! exists $$data{basis_mweight};
 	$dbh->do('alter table papers add grade integer') if ! exists $$data{'grade'};
+	$dbh->do('alter table papers add die_score_required  BOOLEAN NOT NULL default false') if ! exists $$data{'die_score_required'};
 	if ( ! exists $$data{'user_type'} ) {
 		$dbh->do(q`ALTER TABLE papers add user_type char(1) NOT NULL default ''`);
 	} # end nif
@@ -1436,9 +1440,9 @@ foreach my $E ( openprint::Equipment->find('category any'=>'Printing') ) {
 		$Spec->save();
 	} 
 	foreach my $Spec ( $E->Specifications('name'=>'Default Bleed Size') ) {
-		if ( $Spec->max() == 1 ) {
+		if ( $Spec->max() and ( $Spec->max() == 1 ) ) {
 			$Spec->max('');
-		} elsif ( $Spec->min() == 2 ) {
+		} elsif ( $Spec->min() and ( $Spec->min() == 2)  ) {
 			$Spec->name('Default Bleed SizeMultiPage');
 			$Spec->min('');
 		} # end if
@@ -2725,7 +2729,7 @@ if ( $version < $new_version ) {
 	my $ac = sql::start_transaction( $dbh );
 	sql::insert( undef, undef, 'database_info', 'version', $new_version, 'backup', $backup );
 	foreach my $E ( openprint::Equipment->find() ) {
-		if ( $E->specification('Double Overs For Covers') eq 'Y' ) {
+		if ( ( $_ = $E->specification('Double Overs For Covers') ) and ( $_ eq 'Y' ) ) {
 			sql::insert( undef, undef, 'tbl_Equipment_Specifications',[
 					'lngEquipmentIndex',    $E->id(),
 					'dblMin',               undef,
@@ -3109,6 +3113,9 @@ if ( ! sets::isin( 'rma', \@tables ) ) {
 		$dbh->do('CREATE SEQUENCE rma_id_seq');
 	} # end if
 	$dbh->do(q`select setval('rma_id_seq',(SELECT Max(id) FROM RMA));`);
+	if ( !exists $$data{rmanumber} ) {
+		$dbh->do('ALTER TABLE rma ADD rmanumber TEXT');
+	} # end if
 	
 } # end if
 if ( ! sets::isin( 'rma_logs', \@tables ) ) {
@@ -3372,6 +3379,25 @@ if ( sets::isin( 'upgrade', \@tables ) ) {
 		die $_ if $_;
 	} # end while
 	$dbh->do('DROP TABLE upgrade');
+} # end if
+if ( ! sets::isin( 'stockqualities', \@tables ) ) {
+	$dbh->do( misc::load_file( $log, q{../openprint/sql/StockQualities.sql}) );
+	die $dbh->errstr() if $dbh->errstr();
+} else {
+	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='stockqualities'", 'column_name');
+	if ( ! exists $$data{message} ) {
+		$dbh->do('ALTER TABLE stockqualities ADD message text');
+	} # end
+
+}
+if ( ! sets::isin( 'stockqualities_id_seq', \@sequences ) ) {
+	if ( sets::isin( 'paperqualities_id_seq', \@sequences ) ) {
+		$dbh->do('ALTER SEQUENCE paperqualities_id_seq RENAME to stockqualities_id_seq');
+	} else {
+		$dbh->do('CREATE SEQUENCE stockqualities_id_seq');
+	} # end if
+	$dbh->do(q`ALTER TABLE stockqualities ALTER id SET default nextval('stockqualities_id_seq')`);
+	$dbh->do(q`SELECT setval('stockqualities_id_seq', (SELECT max(id) FROM stockqualities))`);
 } # end if
 print "Finished\n";
 1;

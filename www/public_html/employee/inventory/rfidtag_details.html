@@ -20,20 +20,12 @@
 		return true;
 	}
 </script>
-<style type="text/css">
-	input.text {
-		width: 70%;
-	}
-	select#Manufacturer, select#Owner, select#Name, select#Finish, select#Colour, select#Weight {
-		width: 70%;
-	}
-</style>
-<? include('/includes/error_reporting.html') ?>
+<?include(/includes/error_reporting.html)?>
 <form name="jump" method="get" action="rfidtag_details.html">
 	<fieldset class="filters"><legend>Choose RFIDTag</legend>
 		<p>
 			<label for="rfidtag_id">Tag ID #</label>
-			<input type="text" id="rfidtag_id" name="rfidtag_id" size="30" value="<?rfidtag_id?>" onkeyup="this.value=this.value.replace(/\s/,'');" onchange="change_handler(this);" onkeypress="return input_handler(this, event);" onkeydown="if(event.keyCode==13){jump.btnFunction.value='Go';jump.submit();}" />
+			<input type="text" id="rfidtag_id" name="rfidtag_id" value="<?rfidtag_id?>" onkeyup="this.value=this.value.replace(/\s/,'');" onchange="change_handler(this);" onkeypress="return input_handler(this, event);" onkeydown="if(event.keyCode==13){jump.btnFunction.value='Go';jump.submit();}" />
 			<? echo ( join('',
 				ssi::button( 'Go', { onclick=>"if(!jump.rfidtag_id.value){jump.rfidtag_id.focus();} else {jump.btnFunction.value='Go';jump.submit();}", text=>'Go' } ),
 				ssi::button( 'Previous', { onclick=>q`if(!jump.rfidtag_id.value){jump.rfidtag_id.focus();} else {jump.btnFunction.value='Previous';jump.submit();}`, text=>'&lt;&lt;' } ),
@@ -68,23 +60,11 @@
 			<ul>
 		<? if ( $$variable{'RFIDTag'}->id() ) ?>
 			<li><label>Created</label>
-				<? echo ( 
-					my $html;
-					if ( $$variable{'RFIDTag'}->created_on() ) {
-						$html .= Date::Format::time2str($config{'DateTimeFormat'}, Date::Parse::str2time($$variable{'RFIDTag'}->created_on()) );
-					} # end if
-					return $html;
-				) ?>
+				<? echo ( format_datetime( $$variable{'RFIDTag'}->created_on() ); ) ?>
 			</li>
 			<li>
 				<label>Last Updated</label>
-				<? echo (
-					my $html;
-					if ( $$variable{'RFIDTag'}->updated_on() ) {
-						$html .= Date::Format::time2str($config{'DateTimeFormat'}, Date::Parse::str2time($$variable{'RFIDTag'}->updated_on()) );
-					} # end if
-					return $html;
-				) ?>
+				<? echo ( format_datetime( $$variable{'RFIDTag'}->updated_on() ); ) ?>
 			</li>
 		<? else ( $$variable{'RFIDTag'}->id() ) ?>
 			<li>
@@ -95,7 +75,7 @@
 			<li><label onclick="$('type').toggle();$('type_id').toggle();">Type</label>
 				<select id="type_id" name="type_id" onchange="$('type').value='';">
 					<option value="">select</option>
-					<? echo ( ssi::make_drop_down( openprint::RFIDTagType->dropdodwn('order'=>'lower(name)' ), $$variable{'RFIDTag'}->type_id() ); ) ?>
+					<? echo ( ssi::make_drop_down( openprint::RFIDTagType->dropdown( order=>'lower(name)' ), $$variable{RFIDTag}->type_id() ); ) ?>
 				</select>
 				<input type="text" name="type" id="type" style="display:none;" onkeyup="$('type_id').selectedIndex=0;" />
 			</li>
@@ -104,7 +84,7 @@
 				<label for="skid_id">Skid #</label>
 				<input type="text" id="skid_id" name="skid_id" value="<? echo ( $$variable{'RFIDTag'}->skid_id() ) ?>" onkeypress="return input_handler(this, event);" onchange="change_handler(this);" />
 				<? echo ( 
-					my @Skids = openprint::Skid->find('rfidtag_id'=>$$variable{'RFIDTag'}->id(),'deleted'=>[0,1]);
+					my @Skids = openprint::Skid->find( rfidtag_id=>$$variable{RFIDTag}->id(), deleted=>[0,1] );
 					if ( ! @Skids ) {
 						return ssi::button( 'SkidAllocate', href=>'rfidtag_details.html?rfidtag_id='.$$variable{'RFIDTag'}->id().q{&btnFunction=AllocateSkid}, text=>'Allocate' } );
 					} elsif ( 1 == @Skids ) {

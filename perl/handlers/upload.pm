@@ -65,6 +65,7 @@ foreach my $key (keys %{$table}) {
 		($serial) = $request->args() =~ /serial=(\d*)/;
 		my ($company) = $request->args() =~ /txtCompanyName=([.^&]*)/;
 		( $rsize ) = $request->args() =~ /qqtotalfilesize=(\d+)/;
+		$rsize=$request->headers_in->{'Content-Length'} if ! $rsize;
 		if ( $serial ) {
 			sql::execute( undef, undef, q{DELETE FROM Uploads WHERE id=?}, $serial );
 		} else {

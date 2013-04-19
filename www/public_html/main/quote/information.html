@@ -111,12 +111,12 @@
 					</li>
 					<li> 
 						<label>Phone</label>
-						<input type="text" id="ByPhone" name="ByPhone" value="<?ByPhone?>" /> x
-						<? echo ( ssi::input( 'type'=>'number', 'id'=>'ByExtension', 'name'=>'ByExtension', 'value'=>$$variable{'ByExtension'} ); ) ?> 
+						<input type="tel" id="ByPhone" name="ByPhone" value="<?ByPhone?>" /> x
+						<? echo ( ssi::input( 'type'=>'tel', 'id'=>'ByExtension', 'name'=>'ByExtension', 'value'=>$$variable{'ByExtension'} ); ) ?> 
 					</li>
 					<li> 
 						<label>Fax</label>
-						<input type="text" id="ByFax" name="ByFax" value="<?ByFax?>" />
+						<input type="tel" id="ByFax" name="ByFax" value="<?ByFax?>" />
 					</li>
 				</ul>
 			</div>
@@ -225,12 +225,12 @@ if ( $$variable{'ForCountry'} eq 'US' ) {
 			</li>
 			<li> 
 				<label>Phone</label>
-				<input type="text" id="ForPhone" name="ForPhone" value="<?ForPhone?>" /> x
-				<? echo ( ssi::input( 'type'=>'number', 'id'=>'ForExtension', 'name'=>'ForExtension', 'value'=>$$variable{'ForExtension'} ); ) ?> 
+				<input type="tel" id="ForPhone" name="ForPhone" value="<?ForPhone?>" /> x
+				<? echo ( ssi::input( 'type'=>'tel', 'id'=>'ForExtension', 'name'=>'ForExtension', 'value'=>$$variable{'ForExtension'} ); ) ?> 
 			</li>
 			<li> 
 				<label>Fax</label>
-				<input type="text" id="ForFax" name="ForFax" value="<?ForFax?>" />
+				<input type="tel" id="ForFax" name="ForFax" value="<?ForFax?>" />
 			</li>
 			</ul></div>
 		</fieldset>
@@ -384,8 +384,8 @@ if ( $$variable{'ForCountry'} eq 'US' ) {
 		<p class="buttons">
 				<? echo ( 
 					my $html;
-					$html .= ssi::button( 'AddFromHistory', { onclick=>'', href=>'/main/project/history.html', text=>'Add Project From History' } ) if $session{'user_id'};
-					$html .= ssi::button( 'CreateNewProject', { onclick=>'', href=>'/main/project/create_edit.html', text=>'Add New Project' } );
+					$html .= ssi::button( 'AddFromHistory', { href=>'/main/project/history.html', text=>'Add Project From History' } ) if $session{'user_id'};
+					$html .= ssi::button( 'CreateNewProject', { href=>'/main/project/create_edit.html', text=>'Add New Project' } );
 					$html .= ssi::button( 'Continue', { onclick=>"f1.btnFunction.value='Continue';f1.submit();", href=>'', text=>'Continue' } );
 					) ?>
 		</p>

@@ -73,6 +73,14 @@ sub find {
             push @values, $params{id};
         } # end if
     } # end if
+	if ( $params{'id >='} ) {
+		$sql .= ' AND id >= ?';
+		push @values, $params{'id >='};
+	} 
+	if ( $params{'id <='} ) {
+		$sql .= ' AND id <= ?';
+		push @values, $params{'id <='};
+	} # end if
 
 	if ( $params{'verification_code'} ) {
 		$sql .= ' AND id IN (SELECT skid_id FROM skid_verifications WHERE code=?)';

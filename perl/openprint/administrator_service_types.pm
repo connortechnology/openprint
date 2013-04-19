@@ -27,24 +27,30 @@ sub edit {
 	} elsif ( $param{'btnFunction'} eq 'Save' ) {
 		$variable{'error'} = $ServiceType->save( \%param );
 		my $ac = sql::start_transaction( $dbh );
-		foreach my $key ( keys %param ) {
-			if ( $key =~ /^name\-(.*)$/ ) {
-				my $SD = new openprint::ServiceType_Default( $1 );
-				if ( $param{"name\-$1"} ne '' ) {
-					$SD->save({
-						'projecttype_id'	=>	$param{'projecttype_id-'.$$SD{'id'}},
-						'name'				=>	$param{'name-'.$$SD{'id'}},
-						'value'				=>	$param{'value-'.$$SD{'id'}},
-						}) if (
-							( $SD->projecttype_id() != $param{'projecttype_id-'.$$SD{'id'}} ) and
-							( $SD->name() != $param{'name-'.$$SD{'id'}} ) and
-							( $SD->value() != $param{'value-'.$$SD{'id'}} )
-							);
-				} else {
-					$variable{'error'} .= $SD->delete();
-				} # end if
+		foreach my $SD ( $ServiceType->Defaults() ) {
+			if ( ! $param{'name-'.$$SD{id}} ) {
+				$SD->delete();
+			} else {
+				$SD->save({
+					projecttype_id	=>	$param{'projecttype_id-'.$$SD{id}},
+					name			=>	$param{'name-'.$$SD{id}},
+					value			=>	$param{'value-'.$$SD{id}},
+					}) if (
+						( $SD->projecttype_id() != $param{'projecttype_id-'.$$SD{'id'}} ) or
+						( $SD->name() ne $param{'name-'.$$SD{'id'}} ) or
+						( $SD->value() ne $param{'value-'.$$SD{'id'}} )
+						);
 			} # end if
 		} # end foreach
+		if ( $param{'name-'} ne '' ) {
+			my $SD = new openprint::ServiceType_Default( );
+			$SD->save({
+					servicetype_id	=>	$$ServiceType{id},
+					projecttype_id	=>	$param{'projecttype_id-'},
+					name				=>	$param{'name-'},
+					value				=>	$param{'value-'},
+					});
+		} # end if
 		sql::end_transaction( $dbh, $ac );
 	} elsif ( $param{'btnFunction'} eq 'Copy' ) {
 		my $New = $ServiceType->copy();

@@ -54,25 +54,17 @@
 		</li>
 		<li>
 			<label>Created</label>
-			<span class="DateSelectorT">
 			<? echo ( 
 				ssi::date_select_session( '/employee/claim/history.html', 'created_on_start', {'onchange'=>"load('Results',\$('f1'));",'with_today'=>1} );
 			 ) ?>
-            </span>
            to
-            <span class="DateSelectorT">
 			<? echo ( ssi::date_select_session( '/employee/claim/history.html', 'created_on_end', {'onchange'=>"load('Results',\$('f1'));",'with_today'=>1} ); ) ?>
-            </span>
 		</li>
 		<li>
 			<label>Updated</label>
-			<span class="DateSelectorT">
 			<? echo ( ssi::date_select_session( '/employee/claim/history.html', 'updated_on_start', {'onchange'=>"load('Results',\$('f1'));",'with_today'=>1} ); ) ?>
-            </span>
             to
-            <span class="DateSelectorT">
 			<? echo ( ssi::date_select_session( '/employee/claim/history.html', 'updated_on_end', {'onchange'=>"load('Results',\$('f1'));",'with_today'=>1} ); ) ?>
-            </span>
 		</li>
 		<li>
 			<label>Status</label>
