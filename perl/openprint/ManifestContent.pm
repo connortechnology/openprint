@@ -12,7 +12,7 @@ require openprint::Manifest;
 require openprint::Skid;
 require openprint::SkidContent;
 
-$debug = 0;
+$debug = 1;
 
 $table = 'manifestcontents';
 $serial = 'manifestcontents_id_seq';

@@ -48,8 +48,6 @@ sub handler {
 
 	my $request = shift;
 	$r = Apache2::Request->new( $request );
-	$r->content_type(q{text/html; charset=utf-8});
-
 
 	# Don't do any caching.  This makes the back button not work.
 	$r->no_cache(1);

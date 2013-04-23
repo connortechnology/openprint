@@ -15,20 +15,21 @@ use vars qw( $log $dbh $debug %fields %transforms %defaults $table $serial );
 $debug = 0;
 
 %fields = (
-	'id'			=>	'id',
-	'skid_id'		=>	'skid_id',
-	'paper_id'		=>	'paper_id',
-	'quantity'		=>	'quantity',
-	'purpose_id'	=>	'purpose_id',
-	'units'			=>	'units',
-	'condition_id'	=>	'condition_id',
-	'manifestcontent_id'	=>	'manifestcontent_id',
+	id				=>	'id',
+	skid_id			=>	'skid_id',
+	paper_id		=>	'paper_id',
+	quantity		=>	'quantity',
+	purpose_id		=>	'purpose_id',
+	units			=>	'units',
+	condition_id	=>	'condition_id',
+	manifestcontent_id	=>	'manifestcontent_id',
 );
 %defaults = (
+	paper_id		=>	undef,
 	quantity		=>	undef,
-	'purpose_id'	=>	undef,
-	'condition_id'	=>	undef,
-	'manifestcontent_id'	=>	undef,
+	purpose_id		=>	undef,
+	condition_id	=>	undef,
+	manifestcontent_id	=>	undef,
 );
 %transforms = (
 );

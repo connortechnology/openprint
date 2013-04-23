@@ -118,3 +118,9 @@ function manifest_onsubmit(form) {
 
 	return true;
 } // end function manifest_onsubmit
+function rfid_change(e, type_id) {
+	new Ajax.Request('_rfid_change.json', { parameters: { rfidtag_id: e.value, type_id: type_id } } );
+} // end function rfid_change(e)
+function skid_change(e) {
+	new Ajax.Request('_skid_change.json', { parameters: { skid_id: e.value, type_id: type_id } } );
+} // end function rfid_change(e)
