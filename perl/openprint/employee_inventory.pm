@@ -798,7 +798,7 @@ sub skid_details {
 		my @quantities = misc::trim( split ',', $param{'Quantity'} );
 
 		if ( @skid_ids and (@quantities>1) and ( @quantities != @skid_ids ) ) {
-			$variable{'error'} .= 'When saving to multiple skids, the # of quantities must match the # of skids.<br/>';
+			$variable{'error'} .= 'When saving to multiple skids, the # of quantities must match the # of skids.You entered '.@quantities . ' but specified ' . @skid_ids . ' skids<br/>';
 			return;
 		} # end if
 		if ( $param{'rfidtag_id'} ) {
@@ -847,7 +847,7 @@ $log->debug('sacing');
 
 		# Skid_quantity only exists if adding new stock
 		if ( $param{skid_quantity} ) {
-			if ( (@quantities>1) and ( @quantities != $param{'skid_quantity'} ) ) {
+			if ( @quantities != $param{'skid_quantity'} ) {
 				$variable{'error'} .= 'When saving to multiple skids, the # of quantities must match the # of skids.';
 				return;
 			} # end if
