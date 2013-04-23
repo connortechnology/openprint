@@ -28,6 +28,7 @@ $serial = 'rfidtags_id_seq';
 );
 
 %transforms = (
+	id	=>	[ 's/\D//g' ],
 );
 
 %defaults = (

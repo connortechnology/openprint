@@ -1,5 +1,7 @@
 <? echo (
 	my $error;
+	$param{rfidtag_id} = openprint::RFIDTag->transform('id', $param{rfidtag_id} );
+$log->debug("after trnasform $param{rfidtag_id}" );
 	my $length = length $param{rfidtag_id};
 	my $RFID;
 
@@ -8,7 +10,7 @@
 	} elsif ( $length > 15 ) {
 		$error .= 'invalid RFIDTag, too long.<br/>';
 	} else {
-		if ( substr( $param{rfidtag_id}, 0, 1 ) != 1 ) {
+		if ( substr( $param{rfidtag_id}, 0, 1 ) != 2 ) {
 			$error .= 'Invalid RFIDTag, first digit should be a 2 for a skid/roll.<br/>';
 		} else {
 			$RFID = openprint::RFIDTag->find_one( id=>$param{rfidtag_id} );
@@ -37,6 +39,7 @@
 		$('skid_id%1$s').value = '%2$d';
 	}
 ddm_select_by_value( $('location_id%1$s'), '%3$d' );
+add_content( $('f1'), '-%1$s-' );
 `, $param{type_id},
 	$$Skid{id},
 	$RFID->location_id(),
