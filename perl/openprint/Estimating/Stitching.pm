@@ -656,6 +656,10 @@ sub get_equipment {
 	my @all_equipment = openprint::Equipment::find( 'Specifications' => {'Stitching Capable'=>['Y','When Printing','When Digital']}, 'UseInEstimating'=>'Y','order'=>'strName');
 
 	foreach my $Equipment ( @all_equipment ) {
+		if ( $_ = $Equipment->fits( $$specs{Width}, $$specs{Height} ) ) {
+			$$error .= 'For ' . $Equipment->name() . $_;
+			next;
+		} # end if
 		if ( $Equipment->specification('Maximum Spread Width') and ( $$specs{'Width'} > $Equipment->specification('Maximum Spread Width') ) ) {
 			$$error .= "For " . $Equipment->name() . ": Too big.<br/>";
 			next;

@@ -6,8 +6,8 @@
 		$html .= '<fieldset><legend>Pricing for Price List: '.$Pricelist->name() . "</legend>\n";
 		if ( my @Prices = openprint::ServicePrice::find('Service'=>$$variable{'Service'}, 'Pricelist'=>$Pricelist ) ) {
 
-		my @equipment_ids = sets::union( map{ $_->equipment_id() } @{$$variable{'Prices'}} );
-		foreach my $Equipment ( map{new openprint::Equipment($_); } sets::union( map{ $_->equipment_id() } @Prices ) ) {
+		my @equipment_ids = sort ( sets::union( map{ $_->equipment_id() } @Prices ) );
+		foreach my $Equipment ( map{new openprint::Equipment($_);} @equipment_ids ) {
 			$html .= '<fieldset class="Equipment">';
 			if ( @Equipment ) {
 				$html .= '<p><label>Equipment:</label>';
