@@ -135,7 +135,7 @@ sub signature_calc {
 
 		last if $imposition <= 1;
 #$openprint::log->debug("Impositions: $$sig_specs{SignatureIndex} $$sig_specs{txtSignatureType} " . $I->imposition() . " != $$specs{'Imposition'.$qty_index} Pockets: ".$$specs{"txtPockets$qty_index"}) if $debug;
-		if ( ( $$I{'FoldingImposition'} ) and ( $$I{'FoldingImposition'} % 2 ) and ( $$I{'Folder'}->id() == $$I{'Press'}->id() ) ) {
+		if ( ( $$I{'FoldingImposition'} ) and ( $$I{'FoldingImposition'} % 2 ) and $$I{Folder} and ( $$I{'Folder'}->id() == $$I{'Press'}->id() ) ) {
 			$imposition = 1;
 			$results{'alert'} .= 'Setting imposition to 1 cuz Folding imposition is odd<br/>';
 		} elsif ( ( $$I{'imposition'} % 2 ) or (sets::isin( $$I{'runstyle'}, ['Work & Turn','Work & Tumble'] ) and $$I{'imposition'} % 4 ) ) {
