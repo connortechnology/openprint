@@ -818,7 +818,7 @@ sub skid_details {
 				if ( $RFIDTag->id() ) {
 					my $skid_id = $RFIDTag->skid_id();
 					if ( $skid_id and ( $skid_id != $param{'skid_id'} ) ) {
-						$variable{'error'} .= "RFIDTAG $rfidtag_id is already assigned to skid $skid_id.<br/>";
+						$variable{'error'} .= "RFIDTAG $rfidtag_id is already assigned to skid <a href=\"/employee/inventory/skid_details.html?skid_id=$skid_id\">$skid_id</a>.<br/>";
 						next;
 					} # end if
 				} # end if
@@ -1604,13 +1604,18 @@ sub _manifest_content {
 				$Tag = new openprint::RFIDTag();
 			} # end if
 				
-			if ( $param{manufacturers_id} and ! $Skid->manufacturers_id() ) {
-				if ( my $S = openprint::Skid->find_one(manufacturers_id=>$param{manufacturers_id} ) ) {
-					if ( $Skid->id() and ( $Skid->id() != $S->id() ) ) {
+			if ( $param{manufacturers_id} ) {
+				my $S = openprint::Skid->find_one(manufacturers_id=>$param{manufacturers_id} );
+
+				if ( ! $Skid->id() ) {
+					$Skid = $S if $S;
+				} elsif ( ! $Skid->manufacturers_id() ) {
+					if ( $Skid->id() != $S->id() ) {
 						$variable{error} .= 'Manufacturers id '.$param{manufacturers_id}. ' has already been assigned to <a href="/employee/inventory/skid_details.html?skid_id='.$S->id().'">'.$S->id().'</a>.<br/>';
 						delete $param{manufacturers_id};
 					} # end if
 				} # end if
+				# FIXME: Should look at paper type as well.
 			} # end if
 			my $changed=0;
 			if ( ! $Skid->id() ) {
@@ -1619,6 +1624,10 @@ sub _manifest_content {
 			if ( $param{manufacturers_id} and ! $Skid->manufacturers_id() ) {
 				$changed = 1;
 				$Skid->set({manufacturers_id=>$param{manufacturers_id}} );
+			} # end if
+			if ( $param{rfidtag_id} and ! $Skid->rfidtag_id() ) {
+				$changed = 1;
+				$Skid->set({rfidtag_id=>$param{rfidtag_id}} );
 			} # end if
 			if ( $param{location_id} ) {
 				$changed = 1;
@@ -1635,9 +1644,10 @@ sub _manifest_content {
 				$variable{'error'} .= 'RFID Tag ' . $Tag->id() . ' has already been entered.';
 			} elsif ( $Skid->id() and sets::isin( $Skid->id(), map { $_->skid_id() } $Manifest->Contents() ) ) {
 				$variable{'error'} .= 'Skid ' . $Skid->id(). ' has already been entered.';
-			} elsif ( my $otherMC = openprint::ManifestContent->find_one('skid_id'=>$$Skid{id}) ) {
-				$variable{'error'} .= 'Skid ' . $Skid->id(). ' is already on manifest '.$otherMC->Manifest()->name().'.';
 			} else {
+				if ( my $otherMC = openprint::ManifestContent->find_one('skid_id'=>$$Skid{id}) ) {
+					$variable{'warning'} .= 'Warning: Skid ' . $Skid->id(). ' is also on manifest '.$otherMC->Manifest()->name().'.';
+				} # end if
 				my $MC = new openprint::ManifestContent();
 				my @SC = $Skid->Contents();
 				#if ( ! @SC ) {
