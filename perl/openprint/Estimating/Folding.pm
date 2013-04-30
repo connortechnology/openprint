@@ -363,10 +363,6 @@ sub signature_calc {
 				);
 		return %results;
 	} # end if
-	if ( $Imposition->pages() < 4 ) {
-		$$specs{'hdnBreakdown'.$qty_index} .= "Less than 4 pages. Not needed.<br/>";
-		return;
-	} # endif
 
 	my $Paper = $SignatureImposition->Paper();
 	my $Press = $SignatureImposition->Press();

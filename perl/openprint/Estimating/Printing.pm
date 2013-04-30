@@ -3501,7 +3501,6 @@ sub calc_price {
 		} # end if
 	} # end if 
 
-<<<<<<< HEAD
 	my $net_sheets;
 	if ( $$specs{'OverrideBase'.$qty_index} eq 'Y' ) {
 		$net_sheets = $$specs{'OverBase'.$qty_index};
@@ -3541,7 +3540,7 @@ sub calc_price {
  	} # end if
 	if ( $Paper->type() eq 'Roll' and sets::isin('Sheet', split(',', $Press->specification('Feed') ) ) ) {
 		if ( my $roll2sheet_overs_rate = $Press->specification( 'Roll2Sheet Additional Run Overs' ) ) {
-			$over_rate *= ( 1 + ( $roll2sheet_overs_rate / 100 ) );
+			$setup_overs *= ( 1 + ( $roll2sheet_overs_rate / 100 ) );
 		} # end if
 	} # end if
 

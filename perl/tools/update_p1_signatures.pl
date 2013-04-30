@@ -127,14 +127,15 @@ foreach my $Project ( openprint::Project->find( 'order'=>'id desc',
 		foreach $index ( 1 .. 8 ) {
 			last if ! $$sig_specs{'ColourCoatingColour'.$index.$side};
 		} # end foreach
+txtSpecialSideTwoColour2
 		$index += 1;
 		$index = 1 if $index >= 8;
 		foreach my $colour_index ( 1 .. 8 ) {
-			if ( $$sig_specs{"chkSpecialSideOneColour$colour_index"} eq 'Y' ) {
+			if ( $$sig_specs{"chkSpecial${side}Colour$colour_index"} eq 'Y' ) {
 				openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'chkColourCoating'.$index.$side, 'Y' );
 				openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'ColourCoatingType'.$index.$side, 'PMS' );
-				openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'ColourCoatingColour'.$index.$side,  $$sig_specs{"txtSpecialSideOneColour$colour_index"} );
-				openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'ColourCoatingCoverage'.$index.$side,  $$sig_specs{"txtSpecialSideOneColourInkPercent$colour_index"} );
+				openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'ColourCoatingColour'.$index.$side,  $$sig_specs{"txtSpecial${side}Colour$colour_index"} );
+				openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'ColourCoatingCoverage'.$index.$side,  $$sig_specs{"txtSpecial${side}ColourInkPercent$colour_index"} );
 				$index += 1;
 			} # end if
 		} # end foreach index
