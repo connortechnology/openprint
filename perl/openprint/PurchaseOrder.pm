@@ -177,6 +177,10 @@ sub send_approval_required_notification {
 			$openprint::log->debug( $U->email() . ' is not a valid address.' );
 			next;
 		} # end if
+		if ( ! $self->can_view( $U ) ) {
+			$openprint::log->debug( $U->name() . ' cannot view this PO.' );
+			next;
+		} # end if
 		if ( ! $self->can_authorize( $U ) ) {
 			$openprint::log->debug( $U->name() . ' cannot authorize this PO.' );
 			next;
@@ -486,12 +490,14 @@ sub can_edit {
 
 sub can_view {
 	return 1 if ! $_[0]{'id'};
+	my $User = $_[1] ? $_[1] : new openprint::User( $openprint::session{user_id} );
+
 	if ( 
-			( $openprint::session{'user_type'} eq 'A' ) or
-			( sets::isin( $_[0]{'created_by'}, [ $openprint::session{'user_id'}, new openprint::User($openprint::session{'user_id'})->assistant_ids(), new openprint::User($openprint::session{'user_id'})->csr_ids() ] ) )
-			or ( openprint::usergroup::is_user_in( ['Accounting','Shipping','Inventory'], $openprint::session{'user_id'} ) ) 
+			( $$User{type} eq 'A' ) or
+			( sets::isin( $_[0]{'created_by'}, [ $$User{id}, $User->assistant_ids(), $User->csr_ids() ] ) )
+			or ( openprint::usergroup::is_user_in( ['Accounting','Shipping','Inventory'], $$User{id} ) ) 
 			
-			or ( sets::isin( $openprint::session{'user_id'}, [ map { $_->Order()->salesrep_id() } $_[0]->Contents() ] ) )
+			or ( sets::isin( $$User{id}, [ map { $_->Order()->salesrep_id() } $_[0]->Contents() ] ) )
 		) {
 		return 1;
 	} # end if
