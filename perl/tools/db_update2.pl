@@ -246,7 +246,7 @@ if ( ! openprint::Order_Tax->find_one() ) {
 					'period_start null_or_<='	=>	$Order->created_on(),
 					'period_end null_or_>='		=>	$Order->created_on(),
 			) ) {
-			my $new_amount;
+			my $new_amount = 0;
 
 			if ( ( $Tax->name() eq 'GST' ) and ( $new_amount != $$data{'curfedtax'} ) ) {
 				$new_amount = $$data{'curfedtax'};
