@@ -41,6 +41,13 @@
 		);
 		$sql{'has_manifest_id'} = 1 if $session{'/employee/inventory/skids.html?hasmanifest'} eq 'Y';
 		$sql{'has_manifest_id'} = 0 if $session{'/employee/inventory/skids.html?hasmanifest'} eq 'N';
+		if ( $session{'/employee/inventory/skids.html?hasmanufacturers'} eq 'N' ) {
+			$sql{'has manufacturers_id'} = 0;
+		}
+		if ( $session{'/employee/inventory/skids.html?hasmanufacturers'} eq 'Y' ) {
+			$sql{'has manufacturers_id'} = 1;
+		}
+		
 		if ( $session{'/employee/inventory/skids.html?Type'} ) {
 			$sql{'type'}		= $session{'/employee/inventory/skids.html?Type'};
 		}
@@ -95,7 +102,7 @@
 			my %Allocations;
 			foreach my $Allocation ( openprint::PaperAllocation->find() ) {
 				foreach my $Skid ( $Allocation->Skids() ) {
-					push @{$Allocations{$Skid->id()}}, $Allocation;
+					push @{$Allocations{$$Skid{id}}}, $Allocation;
 				} # end 
 			} # end foreach
 

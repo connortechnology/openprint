@@ -3501,6 +3501,7 @@ sub calc_price {
 		} # end if
 	} # end if 
 
+<<<<<<< HEAD
 	my $net_sheets;
 	if ( $$specs{'OverrideBase'.$qty_index} eq 'Y' ) {
 		$net_sheets = $$specs{'OverBase'.$qty_index};
@@ -3523,6 +3524,12 @@ sub calc_price {
 	$setup_rate = $Press->specification( 'MakeReady Overs Rate ' . $Paper->material(), scalar @colours ) if ! $setup_rate;
 	$setup_rate = $Press->specification( 'MakeReady Overs Rate', scalar @colours ) if ! $setup_rate;
 
+	if ( $Paper->type() eq 'Roll' and sets::isin('Sheet', split(',', $Press->specification('Feed') ) ) ) {
+		if ( my $roll2sheet_overs_rate = $Press->specification( 'Roll2Sheet Additional Setup Overs' ) ) {
+			$setup_rate *= ( 1 + ( $roll2sheet_overs_rate / 100 ) );
+		} # end if
+	} # end if
+
 	my $setup_overs;
  	if ( $$specs{'OverrideSetup'.$qty_index} eq 'Y' ) {
 		$setup_overs = $$specs{'OverSetup'.$qty_index};
@@ -3532,6 +3539,11 @@ sub calc_price {
 		$setup_overs = $Press->specification( 'MakeReady Overs ' . $$Imposition{'runstyle'}, scalar @colours );
 		$setup_overs = $Press->specification( 'MakeReady Overs', scalar @colours ) if ! $setup_overs;
  	} # end if
+	if ( $Paper->type() eq 'Roll' and sets::isin('Sheet', split(',', $Press->specification('Feed') ) ) ) {
+		if ( my $roll2sheet_overs_rate = $Press->specification( 'Roll2Sheet Additional Run Overs' ) ) {
+			$over_rate *= ( 1 + ( $roll2sheet_overs_rate / 100 ) );
+		} # end if
+	} # end if
 
 	my $run_overs;
 	my $over_rate = 0;
