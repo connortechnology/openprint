@@ -1,5 +1,4 @@
 <script type="text/javascript">
-<!--
 	function load( e ) {
 		new Ajax.Request( '_filters_load.json', { method: 'post', parameters: { type: e.name, id: e.value }, evalScripts: true } );
 	} // end function load(e)
@@ -26,7 +25,6 @@
 				action: 'Delete',
 			}, evalScripts: true } );
 	} // end function delete(e)
--->
 </script>
 <? echo ( 
 	my $html = '';
@@ -38,13 +36,13 @@
 					<option value=""> select </option>
 					%2$s
 				</select><br/>
-				<label>Name</label><input type="text" name="%1$s_name" id="%1$s_name" style="width:75%;"/><br/>
+				<label>Name</label><input type="text" name="%1$s_name" id="%1$s_name"/><br/>
 				%3$s
 				%4$s
 			</p>`, $type,
-			ssi::make_drop_down( ('openprint::'.$type)->dropdodwn('order'=>'lower(name)') ] ),
-			ssi::button( $type.'Save', { onclick=>"save('$type');", text=>'Save' } ),
-			ssi::button( $type.'Delete', { onclick=>"destroy('$type');", text=>'Delete' } ),
+			make_drop_down( ('openprint::'.$type)->dropdown( order=>'lower(name)') ),
+			button( $type.'Save', { onclick=>"save('$type');", text=>'Save' } ),
+			button( $type.'Delete', { onclick=>"destroy('$type');", text=>'Delete' } ),
 			);
 	} # end foreach type
 	foreach my $type ( 'StockQuality', 'InventoryCondition' ) {
@@ -59,8 +57,8 @@
 				<label>Message</label><textarea name="%1$s_message" id="%1$s_message" /></textarea><br/>
 				%3$s
 			</p>`, $type,
-			ssi::make_drop_down( ('openprint::'.$type)->dropdown('order'=>'lower(name)') ),
-			ssi::button( $type.'Save', {'onclick'=>"save('$type');", 'text'=>'Save' } ),
+			ssi::make_drop_down( ('openprint::'.$type)->dropdown( order=>'lower(name)') ),
+			ssi::button( $type.'Save', { onclick=>"save('$type');", 'text'=>'Save' } ),
 			ssi::button( $type.'Delete', { onclick=>"destroy('$type');", text=>'Delete' } ),
 			);
 	} # end foreach type

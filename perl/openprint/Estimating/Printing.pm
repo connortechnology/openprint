@@ -473,6 +473,12 @@ $log->debug("Coatings: " . join( ',', keys %coatings ) );
 		} # end if
 	} # end foreach
 	$project{special_colours} = \%special_colours;
+	$project{'Sheet WorkColours'} = [ @{$project{side_one_colours}}, @{$project{side_one_coatings}}, (
+( $$specs{'sides_the_same'} eq 'Y' ) ? () :  @{$project{side_two_colours}},@{$project{side_two_coatings}} ) ];
+	$project{'WebColours'} = [ @{$project{side_one_colours}}, @{$project{side_one_coatings}}, @{$project{side_two_colours}},@{$project{side_two_coatings}} ];
+	$project{'PerfectingColours'} = [ @{$project{side_one_colours}}, @{$project{side_one_coatings}}, @{$project{side_two_colours}},@{$project{side_two_coatings}} ];
+	$project{'Work & TurnColours'} = [ @{$project{'filtered_colours'}},@{$project{filtered_coatings}} ];
+	$project{'Work & TumbleColours'} = [ @{$project{'filtered_colours'}},@{$project{filtered_coatings}} ];
 
 	foreach my $service ( 'Folding','Scoring','Perforating','DieCutting','Cutting','Numbering','Proofs' ) {
 		if ( $$services{$service} and @{$$services{$service}} ) {
@@ -1348,6 +1354,7 @@ $openprint::log->debug("Non-process colours in get_impositions: @non_process_col
 		$max_imposition = int( $max_imposition / 3 );
 	
 		foreach my $imp ( @impositions ) {
+			$$imp{sides} = $$project{print_sides};
 			if ( $$imp{'imposition'} > $qty ) {
 				$openprint::log->debug("Next because $$imp{imposition} > $qty");
 				#next;
@@ -1506,7 +1513,7 @@ $openprint::log->debug("Doing nothing, keeping all $add") if DEBUG;
 			} # end if
 		} # end if ! impositions
 
-		$impositions{$Press->id()} = [@impositions] if @impositions;
+		$impositions{$Press->id()} = \@impositions if @impositions;
 	} # end foreach Press
 
 	return %impositions;
