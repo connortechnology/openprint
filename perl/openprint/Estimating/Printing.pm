@@ -2397,7 +2397,7 @@ $openprint::log->debug("Have runspeed $$RunSpeed{'value'}, area: $area, $run_spe
 $openprint::log->warn("Unknown Per setting $unit");
 			} # end if
 		} else {
-			$openprint::log->debug("No RunSpeed setting");
+			$openprint::log->debug("No RunSpeed setting GSM(".$Paper->gsm());
 		} # end if
 	} # end if
 	my $speed_mod = $Press->specification('Press Additional Run Speed',$Imposition->paper()->calliper());
@@ -2407,7 +2407,7 @@ $openprint::log->warn("Unknown Per setting $unit");
 	my %folding_results;
 
 	# Has to be NEED because they always leave folding out, and it chooses dumb impositions
-	if ( $$project{'NeedFolding'} ) {
+	if ( $$project{'NeedFolding'} and ( $Imposition->pages() >= 4 ) ) {
 #my $time = gettimeofday();
 		%folding_results = openprint::Estimating::Folding::signature_calc( $Project, $service_index, $specs, $$project{'FoldingSpecs'}, $qty_index, $Paper, $Imposition );
 		delete $$Imposition{'Folder'};
@@ -2439,10 +2439,12 @@ $openprint::log->warn("Unknown Per setting $unit");
 		if ( $folding_results{'Equipment'} ) {
 			$price{'Folding Breakdown'} .= sprintf('Folding %s (%d out) Price: $%.2f on %s', $fold_type, @folding_results{'Imposition','Price'}, $folding_results{'Equipment'}->name() ) .'<br/>' if $folding_results{'Equipment'};
 		} else {
-			$price{'Folding Breakdown'} .= sprintf('Unable to fold<br/>');
+			$price{'Folding Breakdown'} .= 'Unable to fold<br/>';
 		} # end if
 		$price{'Comparison Cost'} += $folding_results{'Price'};
 		return \%price if check_price( $price_to_beat, \%price, $specs, $qty_index, $Imposition, 'Folding' );
+	} else {
+		$price{'Folding Breakdown'} .= 'Folding not needed<br/>';
 	} # end if
 	if ( ! $run_speed ) {
 		$openprint::log->warn("Got no runspeed.");
@@ -3127,14 +3129,12 @@ sub get_aqueous_price {
 				$openprint::log->debug("Unknown units in Aqueous");
 				$aqueous_price{"Side$side Total"} = $Price{'Price'};
 			} # end if
-			if ( 
-					( $$specs{'rdbAqueousSideOne'} ne 'None' ) 
-					and 
-					( $$specs{'rdbAqueousSideTwo'} ne 'None' ) 
-					and 
-					( $$specs{'rdbAqueousSideOne'} ne $$specs{'rdbAqueousSideTwo'} ) 
-					and ( sets::isin( $runstyle, ['Work & Turn', 'Work & Tumble'] ) ) ) {
-				$aqueous_price{"Side$side Total"} += 1000000;
+			if ( ( $$specs{'rdbAqueousSideOne'} ne 'None' ) and ( $$specs{'rdbAqueousSideTwo'} ne 'None' )  ) {
+				if ( ( $$specs{'rdbAqueousSideOne'} ne $$specs{'rdbAqueousSideTwo'} ) and ( sets::isin( $runstyle, ['Work & Turn', 'Work & Tumble'] ) ) ) {
+					$aqueous_price{"Side$side Total"} += 1000000;
+				} elsif ( $runstyle eq 'Perfecting' ) {
+					$aqueous_price{"Side$side Total"} += 1000000;
+				} # end if
 			} # end if
 		} # end if
 	} # end if

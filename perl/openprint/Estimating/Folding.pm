@@ -293,6 +293,10 @@ sub signature_calc {
 	if ( ! $$sig_specs{'txtSpreadSize'} ) {
 		$$sig_specs{'txtSpreadSize'} = 2;
 	} # end if
+	if ( $Imposition->pages() < 4 ) {
+		$$specs{'hdnBreakdown'.$qty_index} .= "Less than 4 pages. Not needed.<br/>";
+		return;
+	} # endif
 
 	my $bestPrice;
 	my $bestRunPrice = 0;
@@ -634,6 +638,7 @@ sub calc {
                 my $Imposition = new openprint::Imposition;
                 $Imposition->load( $sig_specs, $qty_index );
 				next if ! $Imposition->imposition();
+				next if $Imposition->pages() < 4;
 
 				my %results = signature_calc( $Project, $signature_service_index, $sig_specs, $specs, $qty_index, $Imposition->Paper(), $Imposition );
 				$price += $results{'Price'};
