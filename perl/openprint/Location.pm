@@ -196,9 +196,10 @@ sub longitude {
 
 sub get_latitude_and_longitude {
 	my $coder = Geo::Coder::Googlev3->new();
-my $string = join(',',$_[0]->name(),$_[0]->address(), $_[0]->postalcode(), map{$_->name()}$_[0]->Parents());
+my $string = join(',',$_[0]->name(),$_[0]->address(), $_[0]->postalcode(), map{$_->name()}$_[0]->Parents()) if $_[0]->name();
 $string =~ s/ /+/g;
 $openprint::log->debug('Get: ' . $string );
+	return 0 if ! $string;
 	my $location = $coder->geocode( location => $string );
 	if ( ! $location ) {
 		$openprint::log->error("No location for $string");

@@ -86,9 +86,10 @@
 			} # end if
 			my $Location = $$variable{Event}->Location();
 			if ( $Location ) {
-				if ( ! ( $Location->latitude() and $Location->longitude() ) ) {
-					$Location->get_latitude_and_longitude();
-				} # end if
+				# Should only do the lookup when Location changes... when it gets saved maybe, because Google only gives us so many lookups
+				#if ( ! ( $Location->latitude() and $Location->longitude() ) ) {
+					#$Location->get_latitude_and_longitude();
+				#} # end if
 				if ( $Location->latitude() and $Location->longitude() ) {
 					$html .= $Location->googlemap_html();
 				} 
