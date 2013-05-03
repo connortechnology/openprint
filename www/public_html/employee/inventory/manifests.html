@@ -8,24 +8,24 @@
 				<li>
 					<label for="manifest_name">Manifest ID</label>
 					<input type="text" id="manifest_name" name="manifest_name" onkeyup="this.value=this.value.replace(/\s/g,'');" onkeydown="if(event.keyCode == 13){f1.submit();}" value="<? echo ( $param{'manifest_name'} ) ?>" />
-					<? echo ( ssi::button( 'Go1', { 'onclick'=>"AjaxLoadContent( 'Results', '_manifests.html', \$('f1').serialize() );",'text'=>'Go' } ); ) ?>
+					<? echo ( button( 'Go1', { 'onclick'=>"AjaxLoadContent( 'Results', '_manifests.html', \$('f1').serialize() );",'text'=>'Go' } ); ) ?>
 					<input type="text" id="manifest_like" name="manifest_like" onkeyup="this.value=this.value.replace(/\s/g,'');" onkeydown="if(event.keyCode == 13){AjaxLoadContent( 'Results', '/employee/inventory/_manifests.html', document.forms.f1.serialize() );}" />
-					<? echo ( ssi::button( 'Show', { 'onclick'=>"AjaxLoadContent( 'Results', '_manifests.html', \$('f1').serialize() );",'text'=>'Show' } ); ) ?>
+					<? echo ( button( 'Show', { 'onclick'=>"AjaxLoadContent( 'Results', '_manifests.html', \$('f1').serialize() );",'text'=>'Show' } ); ) ?>
 				</li>
 				<li>
 					<label for="po_id">Purchase Order</label>
 					<input type="number" id="po_id" name="po_id" onkeypress="return input_handler( this, event);" onkeydown="if(event.keyCode == 13){AjaxLoadContent('Results','_manifests.html', $('f1').serialize() );}" onkeyup="this.value=this.value.replace(/\D/g,'');" />
-					<? echo ( ssi::button( 'Go2', { 'onclick'=>q`if(f1.po_id.value){AjaxLoadContent('Results','_manifests.html', $('f1').serialize() );};`,'text'=>'Go' } ); ) ?>
+					<? echo ( button( 'Go2', { 'onclick'=>q`if(f1.po_id.value){AjaxLoadContent('Results','_manifests.html', $('f1').serialize() );};`,'text'=>'Go' } ); ) ?>
 				</li>
 				<li>
 					<label for="docket">Docket</label>
 					<input type="number" id="docket" name="docket" onkeypress="return input_handler( this, event);" onkeydown="if(event.keyCode == 13){AjaxLoadContent('Results','_manifests.html', $('f1').serialize() );}" onkeyup="this.value=this.value.replace(/\D/g,'');" />
-					<? echo ( ssi::button( 'Go3', { 'onclick'=>q`if(f1.docket.value){AjaxLoadContent('Results','_manifests.html', $('f1').serialize() );}`,'text'=>'Go' } ); ) ?>
+					<? echo ( button( 'Go3', { 'onclick'=>q`if(f1.docket.value){AjaxLoadContent('Results','_manifests.html', $('f1').serialize() );}`,'text'=>'Go' } ); ) ?>
 				</li>
 			</ul>
 		</fieldset>
 	</form>
-	<form id="f2" name="f2" method="post" action="manifests.html">
+	<form id="f2" name="f2" method="post" action="manifests.html" enctype="multipart/form-data">
 		<fieldset class="filters"><legend>Search Criteria</legend>
 			<ul>
 			<li><label>Vendor</label>
@@ -62,9 +62,10 @@
 			</ul>
 			<p class="buttons">
 				<? echo ( join('',
-					ssi::button( 'ShowResults', { 'onclick'=>"AjaxLoadContent( 'Results', '/employee/inventory/_manifests.html', \$('f2').serialize() );", 'text'=>'Show Results' } ),
-					ssi::button( 'Add', { 'href'=>'manifest.html', 'text'=>'Add New Manifest' } ),
+					button( 'ShowResults', { onclick=>"AjaxLoadContent( 'Results', '/employee/inventory/_manifests.html', \$('f2').serialize() );", text=>'Show Results' } ),
+					button( 'Add', { href=>'manifest.html', 'text'=>'Add New Manifest' } ),
 					); ) ?>
+				<input type="file" name="import"/><? echo ( button( 'Import', { onclick=>q`f2.action='manifest_import.html';f2.submit();` } ); ) ?>
 			</p>
 		</fieldset>
 	</form>
