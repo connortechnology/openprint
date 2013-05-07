@@ -799,7 +799,7 @@ sub skid_details {
 		my @quantities = misc::trim( split ',', $param{'Quantity'} );
 
 		if ( @skid_ids and (@quantities>1) and ( @quantities != @skid_ids ) ) {
-			$variable{'error'} .= 'When saving to multiple skids, the # of quantities must match the # of skids.<br/>';
+			$variable{'error'} .= 'When saving to multiple skids, the # of quantities must match the # of skids.You entered '.@quantities . ' but specified ' . @skid_ids . ' skids<br/>';
 			return;
 		} # end if
 		if ( $param{'rfidtag_id'} ) {
@@ -819,7 +819,7 @@ sub skid_details {
 				if ( $RFIDTag->id() ) {
 					my $skid_id = $RFIDTag->skid_id();
 					if ( $skid_id and ( $skid_id != $param{'skid_id'} ) ) {
-						$variable{'error'} .= "RFIDTAG $rfidtag_id is already assigned to skid $skid_id.<br/>";
+						$variable{'error'} .= "RFIDTAG $rfidtag_id is already assigned to skid <a href=\"/employee/inventory/skid_details.html?skid_id=$skid_id\">$skid_id</a>.<br/>";
 						next;
 					} # end if
 				} # end if
@@ -848,7 +848,7 @@ $log->debug('sacing');
 
 		# Skid_quantity only exists if adding new stock
 		if ( $param{skid_quantity} ) {
-			if ( (@quantities>1) and ( @quantities != $param{'skid_quantity'} ) ) {
+			if ( @quantities != $param{'skid_quantity'} ) {
 				$variable{'error'} .= 'When saving to multiple skids, the # of quantities must match the # of skids.';
 				return;
 			} # end if
@@ -1607,13 +1607,18 @@ sub _manifest_content {
 				$Tag = new openprint::RFIDTag();
 			} # end if
 				
-			if ( $param{manufacturers_id} and ! $Skid->manufacturers_id() ) {
-				if ( my $S = openprint::Skid->find_one(manufacturers_id=>$param{manufacturers_id} ) ) {
-					if ( $Skid->id() and ( $Skid->id() != $S->id() ) ) {
+			if ( $param{manufacturers_id} ) {
+				my $S = openprint::Skid->find_one(manufacturers_id=>$param{manufacturers_id} );
+
+				if ( ! $Skid->id() ) {
+					$Skid = $S if $S;
+				} elsif ( ! $Skid->manufacturers_id() ) {
+					if ( $Skid->id() != $S->id() ) {
 						$variable{error} .= 'Manufacturers id '.$param{manufacturers_id}. ' has already been assigned to <a href="/employee/inventory/skid_details.html?skid_id='.$S->id().'">'.$S->id().'</a>.<br/>';
 						delete $param{manufacturers_id};
 					} # end if
 				} # end if
+				# FIXME: Should look at paper type as well.
 			} # end if
 			my $changed=0;
 			if ( ! $Skid->id() ) {
@@ -1622,6 +1627,10 @@ sub _manifest_content {
 			if ( $param{manufacturers_id} and ! $Skid->manufacturers_id() ) {
 				$changed = 1;
 				$Skid->set({manufacturers_id=>$param{manufacturers_id}} );
+			} # end if
+			if ( $param{rfidtag_id} and ! $Skid->rfidtag_id() ) {
+				$changed = 1;
+				$Skid->set({rfidtag_id=>$param{rfidtag_id}} );
 			} # end if
 			if ( $param{location_id} ) {
 				$changed = 1;
@@ -1638,27 +1647,28 @@ sub _manifest_content {
 				$variable{'error'} .= 'RFID Tag ' . $Tag->id() . ' has already been entered.';
 			} elsif ( $Skid->id() and sets::isin( $Skid->id(), map { $_->skid_id() } $Manifest->Contents() ) ) {
 				$variable{'error'} .= 'Skid ' . $Skid->id(). ' has already been entered.';
-			} elsif ( my $otherMC = openprint::ManifestContent->find_one('skid_id'=>$$Skid{id}) ) {
-				$variable{'error'} .= 'Skid ' . $Skid->id(). ' is already on manifest '.$otherMC->Manifest()->name().'.';
 			} else {
+				if ( my $otherMC = openprint::ManifestContent->find_one('skid_id'=>$$Skid{id}) ) {
+					$variable{'warning'} .= 'Warning: Skid ' . $Skid->id(). ' is also on manifest '.$otherMC->Manifest()->name().'.';
+				} # end if
 				my $MC = new openprint::ManifestContent();
 				my @SC = $Skid->Contents();
-				if ( ! @SC ) {
+				#if ( ! @SC ) {
 					# If skid didn't exist, then it won't have contents.
-					@SC = ( new openprint::SkidContent() );
-					$SC[0]->set({ skid_id=>$Skid->id(), paper_id=>$Type->paper_id(), 
-							( $param{qty_lbs} ? ( quantity=>$param{qty_lbs} ) : () )  });
-				} elsif ( ! $param{qty_lbs} ) {
+					#@SC = ( new openprint::SkidContent() );
+					#$SC[0]->set({ skid_id=>$Skid->id(), paper_id=>$Type->paper_id(), 
+							#( $param{qty_lbs} ? ( quantity=>$param{qty_lbs} ) : () )  });
+				if ( ! $param{qty_lbs} ) {
 					if ( @SC == 1 ) {
 						$param{qty_lbs} = $SC[0]->quantity();
 					} # end if
 				} # end if
 				$variable{'error'} .= $MC->save( {
-						'type_id'		=>	$param{'type_id'},
-						'skid_id'		=>	$Skid->id(),
-						'manifest_id'	=>	$Manifest->id(),
-						'docket'		=>	$param{'docket'},
-						'quantity'		=>	Math::Round::nearest( 1, $param{qty_lbs}),
+						type_id		=>	$param{'type_id'},
+						skid_id		=>	$Skid->id(),
+						manifest_id	=>	$Manifest->id(),
+						docket		=>	$param{'docket'},
+						quantity	=>	Math::Round::nearest( 1, $param{qty_lbs}),
 						} );
 				foreach my $SkidContent ( @SC ) {
 					$SkidContent->save({'manifestcontent_id'=>$MC->id()}) if $SkidContent->manifestcontent_id() != $MC->id();

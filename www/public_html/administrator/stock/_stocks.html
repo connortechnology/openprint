@@ -79,12 +79,12 @@
 		<td class="spp_min"><a href="stock.html?stock_id=<? echo ( $$variable{Stock}{'id'} ) ?>"><? echo ( $$variable{Stock}->sheets_per_package().'/'.$$variable{Stock}->minimum_order() ) ?></a></td>
 		<td class="pricing"><a href="stock.html?stock_id=<? echo ( $$variable{Stock}{'id'} ) ?>">
 <? echo ( 
-join('<br/>', map { sprintf('%s %s %s $%.0f*%.0f%=$%.0f', $_->Pricelist()->name(), $_->service(), 
+join('<br/>', map { sprintf('%s %s %s $%s*%s%=$%s', $_->Pricelist()->name(), $_->service(), 
 join(' ', 
 ( $_->min() ? '>'.$_->min() : '' ),
 ( $_->max() ? '<'.$_->max() : '' ),
 ),
-$_->cost(), $_->markup(), $_->price() ) } 
+1*$_->cost(), 1*$_->markup(), 1*$_->price() ) } 
 openprint::PaperPrice->find(paper_id=>$$variable{Stock}->id(), 'order'=>$openprint::PaperPrice::fields{'pricelist_id'}.',service' ) );
 ) ?></a></td>
 	</tr>

@@ -76,7 +76,7 @@ sub find {
 	if ( $params{'id >='} ) {
 		$sql .= ' AND id >= ?';
 		push @values, $params{'id >='};
-	} 
+	}  # end if
 	if ( $params{'id <='} ) {
 		$sql .= ' AND id <= ?';
 		push @values, $params{'id <='};

@@ -113,7 +113,7 @@ sub variable_substitution {
 				$log->error( "Eval error ($@) of ($1), Reason: " . $@ ) if $@;
 			} elsif ( $command =~ /^translate\s*\(\s*([\S]+)\s*\)/ms ) {
 				$result .= translate($1);
-			} elsif ( $command =~ /^hash_link\s*\(\s*([\S]+)\s*\)/ms ) {
+			} elsif ( $command =~ /^hash_link\s*\(\s*'?([\S]+)'?\s*\)/ms ) {
 				$result .= hash_link($1);
 			} elsif ( $command =~ /^hecho\s*\(\s*(.*)\s*\)/ms ) {
 				$_ = eval $1;

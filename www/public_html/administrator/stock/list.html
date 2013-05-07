@@ -7,8 +7,8 @@
 	} # end if
 	$session{'/administrator/stock/list.html?Owner'} = $session{'company_id'} if ! exists $session{'/administrator/stock/list.html?Owner'};
 ) ?>
-<script type="text/javascript" src="/javascripts/paper.js"></script>
-<script type="text/javascript" src="/administrator/stock/stock.js"></script>
+<script type="text/javascript" src="<?hash_link(/javascripts/paper.js)?>"></script>
+<script type="text/javascript" src="<?hash_link(/administrator/stock/stock.js)?>"></script>
 <script type="text/javascript">
 	var popupWin;
 	function popup_window( form ) {
@@ -51,8 +51,11 @@
 <form id="f1" name="f1" method="post" action="list.html">
 	<fieldset class="filters"><legend>Go to</legend>
 		<ul>
-			<li><label>Paper #</label><input type="number" name="stock_id" id="stock_id"/>
-				<? echo ( ssi::button( 'Go', { onclick=>q`window.location='/administrator/stock/stock.html?stock_id='+$('stock_id').value;` } ); ) ?>
+			<li><label>Paper #</label>
+				<? echo ( join("\n",
+					input( type=>'cardinal', name=>'stock_id', id=>'stock_id' ),
+					button( 'Go', { onclick=>q`window.location='/administrator/stock/stock.html?stock_id='+$('stock_id').value;` } ),
+				); ) ?>
 			</li>
 		</ul>
 	</fieldset>
@@ -65,7 +68,7 @@
 				<option value=""> All </option>
 				<? echo (
 					my @company_ids = sql::execute(undef, undef, q{SELECT DISTINCT owner_id FROM papers} );
-					my @Companies = openprint::Company->find('id'=>\@company_ids, 'order'=>'lower(name)' );
+					my @Companies = openprint::Company->find( id=>\@company_ids, order=>'lower(name)' );
 					if ( ! sets::isin( $session{'/administrator/stock/list.html?owner_id'}, \@company_ids ) ) {
 						$session{'/administrator/stock/list.html?owner_id'} = '';
 					} # end if
@@ -99,13 +102,20 @@
 			<select id="brand_id" name="brand_id" onchange="filter_onChange(this,'');">
 				<option value="">select</option>
 				<? echo (
-					return ssi::make_drop_down( openprint::StockBrand->dropdown('order'=>'lower(name)'), $session{'/administrator/stock/list.html?brand_id'} );
+					return ssi::make_drop_down( openprint::StockBrand->dropdown( order=>'lower(name)'), $session{'/administrator/stock/list.html?brand_id'} );
 					) ?>
 			</select>
 		</li>
 <? echo (
 	my $html;
-	my @options = ('Finish','Colour','Weight','Quality','Material');
+	my @options = ( 'Finish', 'Colour', 'Weight', 'Quality', 'Material' );
+	my %options = map { $_, lc $_ } @options;
+
+	openprint::StockFinish->find();
+	openprint::StockColour->find();
+	openprint::StockWeight->find();
+	openprint::StockQuality->find();
+	
 	my %find = (
 		($session{'/administrator/stock/list.html?brand_id'}?('brand_id'=>$session{'/administrator/stock/list.html?brand_id'}) : ()),
 		($session{'/administrator/stock/list.html?manufacturer_id'}?('manufacturer_id'=>$session{'/administrator/stock/list.html?manufacturer_id'}):()),
@@ -116,20 +126,19 @@
 
 	foreach my $Stock ( @Stocks ) {
 		foreach my $option ( @options ) {
-			my $lc_option = lc $option;
-			$results{$option}{$$Stock{$lc_option.'_id'}} = $Stock->$option();
+			$results{$option}{$$Stock{$options{$option}.'_id'}} = $Stock->$option();
 		} # end foreach Stock
 	}# end foreach option
 
 	foreach my $option ( @options ) {
-		my $lc_option = lc $option;
 		my @sorted = ('openprint::Stock'.$option)->sort( map { $results{$option}{$_} } keys %{$results{$option}} );
+		my $lc_option = $options{$option};
 
 		$html .= sprintf(q`	
 		<li> 
-			<label>%1$s</label>
+			<label>%3$s</label>
 			<select id="%1$s_id" name="%1$s_id" size="1" onchange="filter_onChange(this,'');"><option value=""> select one </option>%2$s</select>
-		</li>`, $lc_option, ssi::make_drop_down( [map { $_->id(), $_->name() } @sorted ], $session{'/administrator/stock/list.html?'.$lc_option.'_id'} ) );
+		</li>`, $lc_option, ssi::make_drop_down( [map { $_->id(), $_->name() } @sorted ], $session{'/administrator/stock/list.html?'.$lc_option.'_id'} ), $option );
 		$find{$lc_option.'_id'} = $session{'/administrator/stock/list.html?'.$lc_option.'_id'} if $session{'/administrator/stock/list.html?'.$lc_option.'_id'};
 	}# end foreach option
 	return $html;

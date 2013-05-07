@@ -502,7 +502,7 @@ sub company_profiles {
 			sql::end_transaction( $dbh, $ac );
 		} # end if
 	} elsif ( $param{'btnFunction'} eq 'Save' ) {
-		if ( ! $param{txtCompanyName} ) {
+		if ( ! $param{name} ) {
 			$variable{error} .= 'Empty company name. You must supply a Company Name.<br/>';
 		} else {
 			$index = $param{'company_id'};
