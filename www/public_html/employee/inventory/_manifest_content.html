@@ -6,7 +6,7 @@
 		$html .= qq`<script type="text/javascript">alert('$$variable{error}');</script>`;
 		delete $variable{error};
 	} elsif ( $variable{warning} ) {
-		$variable{error} =~ s/<br\/>//g;
+		$variable{warning} =~ s/<br\/>//g;
 		$html .= qq`<script type="text/javascript">alert('$$variable{warning}');</script>`;
 		delete $variable{warning};
 	} 

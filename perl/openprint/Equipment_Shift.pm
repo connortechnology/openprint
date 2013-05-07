@@ -212,6 +212,10 @@ sub Next {
 			'order'			=>	'starttime_seconds',
 			);
 	} # end if
+	if ( ! $_[0]{'Next'} ) {
+		$_[0]{'Next'} = new openprint::Equipment_Shift();
+		$_[0]{'Next'}->set( { equipment_id => $_[0]{'equipment_id'} } );
+	} # end if
 	return $_[0]{'Next'};
 } # end sub Next
 
