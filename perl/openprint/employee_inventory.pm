@@ -2007,12 +2007,6 @@ sub _paper_inventory_entries {
 	} # end if
 } # end sub _paper_inventory_entries
 
-sub _rfid_change {
-} # end sub _rfid_change
-
-sub _skid_change {
-} # end sub _skid_change
-
 sub manifest_import {
 	if ( my $upload = $r->upload('import') ) {
 		my $io = $upload->io();
