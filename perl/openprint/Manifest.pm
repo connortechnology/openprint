@@ -79,6 +79,10 @@ sub find {
 	if ( $params{'name_like'} ) {
 		$sql .= " AND name LIKE '%$params{name_like}%'";
 	} # end if
+	if ( $params{'name like'} ) {
+		$sql .= ' AND name LIKE ?';
+		push @values, $params{'name like'};
+	} # end if
 	if ( exists $params{'po_id'} ) {
 		$sql .= ' AND ? IN (SELECT po_id FROM Manifest_Content_Types WHERE manifest_id=manifests.id)';
 		push @values, $params{'po_id'};
