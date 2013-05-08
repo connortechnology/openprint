@@ -1425,7 +1425,7 @@ $log->debug("No paper found matching minimum_order ($$specs{'StockQuantity'.$qty
 					return new openprint::Paper();
 				} # end if
 			
-				$Paper->mweight($Paper->mweight()/( ($Paper->start_width()/$Paper->width())*($Paper->start_height()/$Paper->height()))) if $Paper->width() and $Paper->height(); # force recalc
+				$Paper->mweight($Paper->mweight()/( ($Paper->start_width()/$Paper->width())*($Paper->start_height()/$Paper->height()))) if $Paper->width() and $Paper->height() and $Paper->start_width() and $Paper->start_height(); # force recalc
 			} # end if
 		} # end if
 	} # end if

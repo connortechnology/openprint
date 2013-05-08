@@ -584,7 +584,7 @@ $openprint::log->debug(sprintf('%d %s %s %d %dx%d %s', $imposition, @$sig_specs{
 					$Imposition->load( $sig_specs, $qty_index );
 
 					my %folding_results = openprint::Estimating::Folding::signature_calc( $Project, $service_index, $sig_specs, $folding_specs, $qty_index, $Imposition, {}, {}, $specs, \@Signature_Impositions );
-$$specs{'hdnBreakdown'.$qty_index} .= $folding_results{'Breakdown'};
+#$$specs{'hdnBreakdown'.$qty_index} .= $folding_results{'Breakdown'};
 					$folding_cost += $folding_results{'Price'};
 					push @Signature_Impositions, $Imposition;
 				} # end foreach sig
