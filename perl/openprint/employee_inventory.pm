@@ -2015,11 +2015,22 @@ sub _paper_inventory_entries {
 	} # end if
 } # end sub _paper_inventory_entries
 
-sub _rfid_change {
-} # end sub _rfid_change
+sub manifest_import {
+	if ( my $upload = $r->upload('import') ) {
+		my $io = $upload->io();
 
-sub _skid_change {
-} # end sub _skid_change
+		while ( my $line = <$io> ) {
+			s/^\s+//, s/\s+$// for $line;
+
+			if ( $line =~ /(.+)Page\s+(\d+) of (\d+)$/ ) {
+				# Start a new page
+				$log->debug("Starting new page for $1 page $2 of $3");
+			} elsif ( my ( $d, $m, $y, $H, $M ) = $line =~ /.+\s+(\d\d)\.(\d\d)\.(\d\d)\s*(\d\d:\d\d)$/ ) {
+				$log->debug("Date: $y-$m-$d $H:$M");
+			} # end if
+		} # end while io
+	} # end if
+} # end sub manifest_import
 
 1;
 __END__

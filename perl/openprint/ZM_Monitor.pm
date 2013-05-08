@@ -38,7 +38,7 @@ sub source_snapshot_url {
 
 sub can_view {
 return 1 if $_[0]{public};
-return 1 if $session{user_type} eq 'A';
+return 1 if $openprint::session{user_type} eq 'A';
 return 0;
 } # end sub can_view
 

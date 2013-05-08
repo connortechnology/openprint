@@ -502,7 +502,6 @@ sub company_profiles {
 			sql::end_transaction( $dbh, $ac );
 		} # end if
 	} elsif ( $param{'btnFunction'} eq 'Save' ) {
-
 		if ( ! $param{name} ) {
 			$variable{error} .= 'Empty company name. You must supply a Company Name.<br/>';
 		} else {
@@ -575,7 +574,7 @@ sub company_profiles {
 				} # end foreach Supplier
 				sql::end_transaction( $dbh, $ac );
 			} # end if $index
-		} # end if $index
+		} # end if input checks
 	} elsif ( $param{'btnFunction'} eq 'Delete' ) {
 		$Company = new openprint::Company( $param{'company_id'} );
 		$index = $Company->next();
