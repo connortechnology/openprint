@@ -86,7 +86,7 @@ my @re = (
 		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ dovecot: pop3-login: Disconnected \(auth failed, 1 attempts\): user=<[a-zA-Z@\.0-9]*>, method=PLAIN, rip=([\.0-9]+), lip=[\.0-9]+?$',
 		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ dovecot: pop3-login: Disconnected \(auth failed, [0-9]+ attempts in [0-9]+ secs\): user=<[a-zA-Z@\.0-9]*>, method=PLAIN, rip=([\.0-9]+), lip=[\.0-9]+, session=<[^>]+$',
 		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ dovecot: pop3-login: Aborted Login \(auth failed, [0-9]+ attempts in [0-9]+ secs\): user=<[a-zA-Z@\.0-9]*>, method=PLAIN, rip=([\.0-9]+), lip=[\.0-9]+, session=<[^>]+$',
-		q`^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ named\[[0-9]+\]: client ([0-9.]+)#[0-9]+: query \(cache\) '\./NS/IN' denied$`,
+		q`^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ named\[[0-9]+\]: client ([0-9.]+)#[0-9]+: (view [A-Za-z0-9]+: )?query \(cache\) '\./NS/IN' denied$`,
 );
 
 
