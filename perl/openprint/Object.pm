@@ -278,8 +278,7 @@ $log->debug("No serial") if $debug;
 } # end sub save
 
 sub get {
-	my $self = shift;
-	return map { $self->$_() } @_;
+	return map { $_[0]->$_() } @_;
 } # end sub get
 
 sub set {
@@ -571,7 +570,7 @@ sub find {
 	@search{@param_keys} = @$params{@param_keys};
 	
 	foreach my $k ( @param_keys ) {
-		my ( $field, $type, $function ) = $k =~ /^([\w\-]+)(::\w+)?[\s_]*(.*)?$/;
+		my ( $field, $type, $function ) = $k =~ /^([\+\w\-]+)(::\w+)?[\s_]*(.*)?$/;
 		$type = '' if ! defined $type;
 #$log->debug("$object_type param $field($type) $function " . ( ref $search{$k} eq 'ARRAY' ? join(',',@{$search{$k}}) : $search{$k} ) );
 
@@ -609,6 +608,7 @@ sub find {
 						push @values, $search{$k};
 					} # end if
 					delete $search{$k};
+						push @used_fields, $k;
 				} else {
 					#my @w = 
 #ref $search{$k} eq 'ARRAY' ? 
@@ -784,6 +784,7 @@ sub sort {
 	return sort { $$a{'name'} cmp $$b{'name'} } @_;
 } # end sub sort
 
+# Warning, this is destructive to objects
 sub transform {
 	my $type = ref $_[0];
 	$type = $_[0] if ! $type;
@@ -791,10 +792,20 @@ sub transform {
 
 	if ( defined $$fields{$_[1]} ) {
 		my @transforms = eval('@{$'.$type.'::transforms{$_[1]}}');
-		$openprint::log->debug("Transforms: @transforms") if $debug;
+		$openprint::log->debug("Transforms for $_[1] before $_[2]: @transforms") if $debug;
 
 		foreach my $transform ( @transforms ) {
-			eval '$_[2] =~ ' . $transform;
+			if ( $transform =~ /^s\// or $transform =~ /^tr\// ) {
+				eval '$_[2] =~ ' . $transform;
+			} elsif ( $transform =~ /^<(\d+)/ ) {
+				if ( $_[2] > $1 ) {
+					$_[2] = undef;
+				} # end if
+			} else {
+$openprint::log->debug("evalling $_[2] ".$transform . " Now value is $_[2]" );
+				eval '$_[2] '.$transform;
+$openprint::log->error("Eval error $@") if $@;
+			};
 $openprint::log->debug("After $transform: $_[2]") if $debug;
 		} # end foreach
 	} else {

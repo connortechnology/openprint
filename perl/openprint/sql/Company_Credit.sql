@@ -8,5 +8,10 @@ CREATE	TABLE Company_Credit (
 	downpayment	NUMERIC(10,2),
 	hold		CHAR(1) DEFAULT 'N',
 	cod			float,
+	late_payment_amount	float,
+	late_payment_units	text,
+	early_payment_amount	float,
+	early_payment_units	text,
+	early_payment_days	smallint,
 	PRIMARY KEY (company_id,supplier_id)
 );

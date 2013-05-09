@@ -18,7 +18,7 @@ require openprint::Payment;
 	'payment_id'		=>	'payment_id',
 );
 %find_fields = (
-		'received_on'	=>	'(SELECT date FROM Payments WHERE Payments.id=payment_id)',
+		'received_on'	=>	'(SELECT received_on FROM Payments WHERE Payments.id=payment_id)',
 );
 
 %transforms = (

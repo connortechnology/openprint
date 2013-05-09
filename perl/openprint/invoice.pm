@@ -23,15 +23,16 @@ sub history {
 		my $Invoice = new openprint::Invoice( $param{'invoice_id'} );
 
 		foreach my $Product ( $Invoice->Products() ) {
-			$variable{'error'} .= $Product->save({
-				'description'	=>	$param{'product-description-'.$Product->id()},
-				'price'			=>	$param{'product-price-'.$Product->id()},
-				'quantity'		=>	$param{'product-quantity-'.$Product->id()},
-				'po'			=>	$param{'product-po-'.$Product->id()},
+			$variable{error} .= $Product->save({
+				description	=>	$param{'product-description-'.$Product->id()},
+				price			=>	$param{'product-price-'.$Product->id()},
+				quantity		=>	$param{'product-quantity-'.$Product->id()},
+				po			=>	$param{'product-po-'.$Product->id()},
 				});
 		} # end foreach
 		$param{'currency_id'} = openprint::Currency::get_current()->id() if ! $param{'currency_id'};
 		$param{'due_on'} = sprintf('%.4d-%.2d-%.2d', @param{'due_on_year','due_on_month','due_on_day'} ) if ! $param{'due_on'};
+		$param{early_payment_date} = sprintf('%.4d-%.2d-%.2d', @param{'early_payment_date_year','early_payment_date_month','early_payment_date_day'} ) if ! $param{early_payment_date};
 		$param{'invoicer_id'} = $session{'company_id'} if ! $param{'invoicer_id'};
 		if ( ! ( $variable{'error'} .= $Invoice->save(\%param) ) ) {
 			$variable{'information'} .= 'Invoice saved.<br/>';
@@ -193,7 +194,8 @@ sub edit {
 	$variable{'Invoice'} = new openprint::Invoice( $param{'invoice_id'} );
 	if ( $param{'btnFunction'} eq 'Save' ) {
 		$param{'currency_id'} = openprint::Currency::get_current()->id() if ! $param{'currency_id'};
-		$param{'due_on'} = sprintf('%.4d-%.2d-%.2d', @param{'due_on_year','due_on_month','due_on_day'} ) if ! $param{'due_on'};
+		$param{due_on} = sprintf('%.4d-%.2d-%.2d', @param{'due_on_year','due_on_month','due_on_day'} ) if ! $param{due_on};
+		$param{early_payment_date} = sprintf('%.4d-%.2d-%.2d', @param{'early_payment_date_year','early_payment_date_month','early_payment_date_day'} ) if ( ! $param{early_payment_date} ) and Date::Calc::check_date( @param{'early_payment_date_year','early_payment_date_month','early_payment_date_day'} );
 		$param{'invoicer_id'} = $session{'company_id'} if ! $param{'invoicer_id'};
 		if ( $param{invoicee} ) {
 			my $Invoicee = openprint::Company->find_one(name=>openprint::Company->transform('name', $param{invoicee}) );
@@ -205,7 +207,7 @@ sub edit {
 		} else {
 			delete $param{invoicee};
 		} # end if
-		$variable{'error'} .= $variable{'Invoice'}->save(\%param);
+		$variable{error} .= $variable{Invoice}->save(\%param);
 	} # end if
 	if ( ! $variable{'Invoice'}->id() ) {
 		$variable{'Invoice'}->due_on( join('-', Date::Calc::Add_Delta_Days( Date::Calc::Today(), 15 ) ) );
@@ -216,9 +218,9 @@ sub view {
 	$variable{'Invoice'} = new openprint::Invoice( $param{'invoice_id'} );
 	if ( $param{'btnFunction'} eq 'Calculate Interest' ) {
 		if ( ! $variable{'Invoice'}->monthly_interest() ) {
-			$variable{'error'} .= 'Invoice has no monthly interest rate!';
-		} elsif ( ! $variable{'Invoice'}->due_on() ) {
-			$variable{'error'} .= 'Invoice has no due date!';
+			$variable{error} .= 'Invoice has no monthly interest rate!';
+		} elsif ( ! $variable{Invoice}->due_on() ) {
+			$variable{error} .= 'Invoice has no due date!';
 		} # end if
 
 		my $changed = 0;
@@ -226,7 +228,7 @@ sub view {
 		my ( $year, $month, $day ) = $variable{'Invoice'}->due_on() =~ /(\d\d\d\d)-(\d\d)-(\d\d)/;
 		my $last_period;
 		my $paid = 0;
-		( $year, $month, $day ) = Date::Calc::Add_Delta_Days( $year, $month, $day, Date::Calc::Days_in_Month( $year, $month ) );
+		#( $year, $month, $day ) = Date::Calc::Add_Delta_Days( $year, $month, $day, Date::Calc::Days_in_Month( $year, $month ) );
 		while ( Date::Calc::Date_to_Time( $year, $month, $day,0, 0, 0 ) <= time ) {
 
 			my $date_string = sprintf('%4d-%.2d-%.2d', $year, $month, $day);

@@ -132,7 +132,7 @@ sub summary {
 } # end sub summary
 
 sub can_view {
-	return 1 if ! $_[0]{'id'};
+	return 1 if ! $_[0]{id};
 	my $User;
 	if ( @_ > 1 ) {
 		$User = ref $_[1] eq 'openprint::User' ? $_[1] : new openprint::User( $_[1] );
@@ -142,9 +142,9 @@ sub can_view {
 
 	return 1 if $$User{type} eq 'A';
 	return 1 if ( $$User{id} == $_[0]{created_by} );
-	if ( $_[0]{'published'} ) {
+	if ( $_[0]{published} ) {
 #$openprint::log->debug("Is published");
-		if ( ! $_[0]{'user_type'} ) {
+		if ( ! $_[0]{user_type} ) {
 #$openprint::log->debug("no usertype");
 			# Anyone can see it
 			return 1;
@@ -154,8 +154,9 @@ sub can_view {
 			return 1 if $_[0]{'user_type'} eq 'C' and sets::isin( $$User{type}, ['E','C'] );
 			return 1 if $_[0]{'user_type'} eq 'E' and sets::isin( $$User{type}, ['E'] );
 		} # end if
-	#} else {
-#$openprint::log->debug("not published");
+	} else {
+		$openprint::log->debug("not published");
+		return 0;
 	} # end if
 	my $Privacy = $_[0]->Privacy();
 	return 1 if ! $$Privacy{id};
@@ -204,12 +205,13 @@ sub html {
 } # end  sub html
 
 sub summary_html {
-	my $Article = $_[0];
+	my ( $Article, $options ) = @_;
+	$options = {} if ! $options;
 	my @Comments = $Article->Comments();
 	my @Assets = $Article->Assets();
 	my $html = sprintf(q`
 			<div class="Article">
-			<div class="Assets">%7$s</div>
+			<div class="Assets">%6$s</div>
 			<h1><a href="/article/view.html?article_id=%1$d">%2$s</a></h1>
 			<div class="source_content">%3$s</div>
 			<div class="summary">%4$s</div>
@@ -226,7 +228,10 @@ sub summary_html {
 	if ( $Article->summary() and $Article->summary() ne $Article->body() ) {
 		$html .= sprintf('<a class="readmore" href="/article/view.html?article_id=%1$d">Read more...</a><br/>', $Article->id() );
 	} # end if
-	$html .= sprintf(q`<div class="comments">This article has %s.</div>`, ( @Comments == 1 ? '1 comment' : @Comments . ' comments' ) );
+	if ( (!$$options{'show_no_comments'}) and (@Comments == 0) ) {
+	} else {
+		$html .= sprintf(q`<div class="comments">This article has %s.</div>`, ( @Comments == 1 ? '1 comment' : @Comments . ' comments' ) );
+	} # end if
 	$html .= '</div>';
 	return $html;
 } # end sub summary_html
@@ -288,5 +293,11 @@ sub Album {
     #return new openprint::Photo_Album( $_[0]{'album_id'} );
 } # end sub Album
 
+sub body_escaped {
+	my $body = $_[0]{body};
+	$body =~ s/<\?\s*(.+?)\s*\?>/&lt;\?\1\?&gt;/g;
+$openprint::log->debug("body: $body");
+	return $body;
+} # end
 1;
 __END__

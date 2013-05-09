@@ -1,4 +1,4 @@
-<script type="text/javascript" src="<? echo ( hash_link('/javascripts/service.js') ) ?>"></script>
+<script type="text/javascript" src="<?hash_link(/javascripts/service.js)?>"></script>
 <script type="text/javascript">
     function calc( formName, force ) {
         var form = getFormObj( formName );
@@ -94,11 +94,8 @@ function Fold_onchange( element, signature, qty_index, index ) {
 				my $sig_specs = openprint::service::get_specs_ref( $$variable{'Project'}, $ss_id );
 				$html .= "<fieldset><legend>For Signature $$sig_specs{'SignatureIndex'}:";
 				$html .= openprint::service::summary( $$variable{'Project'}, $ss_id );
-				$html .= '</legend><ul>';
-				$html .= '<li><label>Printed</label>';
-				foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
-					$html .= openprint::service::summary( $$variable{'Project'}, $ss_id, $qty_index );
-				} # end foreach
+				$html .= '</legend><ul><li><label>Printed</label>';
+				$html .= join("\n", map { openprint::service::summary( $$variable{'Project'}, $ss_id, $_ ); } $$variable{'Project'}->quantity_indexes() );
 				$html .= '</li>';
 				$html .= '<li><label>Equipment</label>';
 				foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {

@@ -57,7 +57,7 @@
 				</select>
 			</li>
 			<li><label>Received On</label>
-			<span class="DateSelector"><? echo ( ssi::date_select( 'received_on', $$variable{'Payment'}->received_on(), {'with_today'=>1} ); ) ?></span>
+			<? echo ( ssi::date_select( 'received_on', $$variable{'Payment'}->received_on(), {'with_today'=>1} ); ) ?>
 			</li>
 			<li><label for="amount">Amount</label>
 				<input type="number" name="amount" id="amount" value="<? echo ( $$variable{'Payment'}->amount() ) ?>" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');" size="8" />

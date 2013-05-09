@@ -1,4 +1,4 @@
-#!/usr/bin/perl -w
+#!/usr/bin/perl 
 use lib '/var/www/testing/perl';
 use strict;
 
@@ -298,6 +298,12 @@ if ( ! sets::isin( 'users', \@tables ) ) {
 		if ( ! exists $$data{asset_id} ) {
 			$dbh->do('ALTER TABLE users ADD asset_id INTEGER');
 		} # end if
+		if ( ! exists $$data{ftp_root} ) {
+			$dbh->do(q`alter table users add ftp_root text not null default ''`);
+		} # end if
+		if ( ! exists $$data{email_valid} ) {
+			$dbh->do(q`alter table users add email_valid BOOLEAN`);
+		} # end if
 	} # end if
 	if ( sets::isin( 'users_index_seq', \@sequences ) ) {
 		if ( ! sets::isin( 'users_id_seq', \@sequences ) ) {
@@ -418,14 +424,42 @@ if ( ! sets::isin( 'invoices', \@tables ) ) {
 	if ( ! exists $$data{num} ) {
 		$dbh->do('ALTER TABLE Invoices ADD num TEXT');
 	} # end if
+	if ( ! exists $$data{late_payment_units} ) {
+		$dbh->do('ALTER TABLE Invoices ADD late_payment_units TEXT');
+	} # end if
+	if ( ! exists $$data{early_payment_units} ) {
+		$dbh->do('ALTER TABLE Invoices ADD early_payment_units TEXT');
+	} # end if
+	if ( ! exists $$data{early_payment_discount} ) {
+		$dbh->do('ALTER TABLE Invoices ADD early_payment_discount TEXT');
+	} # end if
+	if ( ! exists $$data{early_payment_date} ) {
+		$dbh->do('ALTER TABLE Invoices ADD early_payment_date DATE');
+	} # end if
 } # end if
+
 if ( ! sets::isin( 'invoices_id_seq', \@sequences ) ) {
 	$dbh->do('CREATE SEQUENCE invoices_id_seq');
 } # en dif
 if ( ! sets::isin( 'order_statuses', \@tables ) ) {
     $dbh->do( misc::load_file( $log, '../openprint/sql/Order_Statuses.sql' ) );
     die $dbh->errstr() if $dbh->errstr();
+} else {
+	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='order_statuses'", 'column_name');
+	if ( ! exists $$data{id} ) {
+		$dbh->do('DROP TABLE order_statuses');
+		$dbh->do( misc::load_file( $log, '../openprint/sql/Order_Statuses.sql' ) );
+		die $dbh->errstr() if $dbh->errstr();
+	} # end if
 }
+if ( ! sets::isin( 'order_statuses_id_seq', \@sequences ) ) {
+	if ( sets::isin( 'order_status_id_seq', \@sequences ) ) {
+		$dbh->do('ALTER SEQUENCE order_status_id_seq RENAME to order_statuses_id_seq');
+	} else {
+		$dbh->do('CREATE SEQUENCE order_statuses_id_seq');
+	} # end if
+
+} # en dif
 
 if ( ! sets::isin( 'orders', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/Orders.sql}) ) or die $dbh->errstr();
@@ -464,6 +498,20 @@ if ( ! sets::isin( 'orders', \@tables ) ) {
 	if ( ! exists $$data{status_id} ) {
 		$dbh->do('ALTER TABLE Orders ADD status_id INTEGER') or die $dbh->errstr();
 		$dbh->do('ALTER TABLE Orders ADD FOREIGN KEY (status_id) REFERENCES order_statuses (id)') or die $dbh->errstr();
+	} # end if
+		if ( exists $$data{strstatus} ) {
+			my %Statuses = map { $_->name(), $_ } openprint::Order_Status->find();
+			foreach my $status ( sql::execute( undef, undef, 'SELECT DISTINCT strstatus FROM Orders' ) ) {
+				next if ! $status;
+				if ( ! $Statuses{$status} ) {
+					$Statuses{$status} = new openprint::Order_Status();
+					$_ = $Statuses{$status}->save({name=>$status});
+					die $_ if $_;
+				} # end if
+				sql::update( undef, undef, 'orders', [ 'strstatus=?', $status ], 'status_id', $Statuses{$status}->id() );	
+			} # end foreach status
+			$dbh->do('ALTER TABLE orders DROP strstatus');
+		} # end if	
 		if ( exists $$data{status} ) {
 			my %Statuses = map { $_->name(), $_ } openprint::Order_Status->find();
 			foreach my $status ( sql::execute( undef, undef, 'SELECT DISTINCT status FROM Orders' ) ) {
@@ -476,7 +524,6 @@ if ( ! sets::isin( 'orders', \@tables ) ) {
 			} # end foreach status
 			$dbh->do('ALTER TABLE orders DROP status');
 		} # end if	
-	} # end if	
 	if ( ! exists $$data{downpayment} ) {
 		if ( exists $$data{curdownpayment} ) {
 			$dbh->do('ALTER TABLE orders rename curdownpayment to downpayment');
@@ -841,6 +888,9 @@ if ( ! sets::isin( 'locations', \@tables ) ) {
 	if ( ! exists $$data{'created_on'} ) {
 	$dbh->do('ALTER TABLE Locations add created_on TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()');
 	} # end if
+	if ( ! exists $$data{'updated_on'} ) {
+	$dbh->do('ALTER TABLE Locations add updated_on TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()');
+	} # end if
 	if ( ! exists $$data{'created_by'} ) {
 	$dbh->do('ALTER TABLE Locations add created_by INTEGER');
 	$dbh->do('ALTER TABLE Locations add FOREIGN KEY (created_by) REFERENCES Users (id)');
@@ -873,6 +923,14 @@ if ( ! sets::isin( 'locations', \@tables ) ) {
 	$dbh->do('CREATE INDEX locations_name_idx on locations (name)');
 	if ( ! exists $$data{'deleted'} ) {
 	$dbh->do('ALTER TABLE Locations add deleted BOOLEAN NOT NULL DEFAULT false');
+	} # end if
+	if ( sets::isin( 'location_id_seq', \@sequences ) ) {
+		if ( ! sets::isin( 'locations_id_seq', \@sequences ) ) {
+			$dbh->do('CREATE SEQUENCE locations_id_seq');
+			$dbh->do(q`ALTER TABLE locations ALTER id set default nextval('locations_id_seq')`);
+			$dbh->do(q`SELECT setval('locations_id_seq', (SELECT MAX(id) FROM Locations ) )`);
+		} # end if
+		$dbh->do('DROP SEQUENCE location_id_seq');
 	} # end if
 } # end if
 if ( ! sets::isin( 'addresses', \@tables ) ) {
@@ -959,6 +1017,7 @@ if ( ! sets::isin( 'papers', \@tables ) ) {
 	$dbh->do('alter table papers add basis_height float') if ! exists $$data{basis_height};
 	$dbh->do('alter table papers add basis_mweight float') if ! exists $$data{basis_mweight};
 	$dbh->do('alter table papers add grade integer') if ! exists $$data{'grade'};
+	$dbh->do('alter table papers add die_score_required  BOOLEAN NOT NULL default false') if ! exists $$data{'die_score_required'};
 	if ( ! exists $$data{'user_type'} ) {
 		$dbh->do(q`ALTER TABLE papers add user_type char(1) NOT NULL default ''`);
 	} # end nif
@@ -1042,6 +1101,12 @@ if ( ! sets::isin( 'skids', \@tables ) ) {
 		if ( ! exists $$data{'deleted'} ) {
 			$dbh->do('alter table skids add deleted BOOLEAN NOT NULL default false');
 		} # end if
+		if ( ! exists $$data{'manufacturers_id'} ) {
+			$dbh->do('alter table skids add manufacturers_id TEXT');
+		} # end if
+		if ( ! exists $$data{'received_on'} ) {
+			$dbh->do(q{alter table skids add received_on date});
+		} # endif
 	} # end if
 } # end if 1456
 
@@ -1375,9 +1440,9 @@ foreach my $E ( openprint::Equipment->find('category any'=>'Printing') ) {
 		$Spec->save();
 	} 
 	foreach my $Spec ( $E->Specifications('name'=>'Default Bleed Size') ) {
-		if ( $Spec->max() == 1 ) {
+		if ( $Spec->max() and ( $Spec->max() == 1 ) ) {
 			$Spec->max('');
-		} elsif ( $Spec->min() == 2 ) {
+		} elsif ( $Spec->min() and ( $Spec->min() == 2)  ) {
 			$Spec->name('Default Bleed SizeMultiPage');
 			$Spec->min('');
 		} # end if
@@ -1385,281 +1450,25 @@ foreach my $E ( openprint::Equipment->find('category any'=>'Printing') ) {
 		die $_ if $_;
 	} # end foreach
 } # end foreach
-my $FoldingService = openprint::Service->find_one('name'=>'Folding');
-if ( $FoldingService ) {
-
-	foreach my $E ( openprint::Equipment->find('Specifications'=>{'Folding Capable'=>['For Pocket Folders','Y','When Printing','When Stitching']}) ) {
-		foreach my $Spec ( $E->Specifications() ) {
-			if ( $Spec->name() =~ /^(\d+)PageSignatureFoldRunSpeed$/ ) {
-				my $pages = $1;
-				my $Fold = openprint::Fold->find_one('equipment_id'=>$E->id(),'name'=>$pages.'PageFold',type=>$pages.'PageFold',pages=>$pages);
-				if ( ! $Fold ) {
-					$Fold = new openprint::Fold();
-					$Fold->equipment_id( $E->id() );
-					$Fold->name( $pages.'PageFold' );
-					$Fold->type( $pages . 'PageFold' );
-					$Fold->pages( $pages );
-					$Fold->max_imposition( 2 );
-					$Fold->stitching( 1 );
-					$Fold->perfectbind( 1 );
-					if ( $_ = $E->Specification($pages.'PageSignatureFoldPrintingType') ) {
-						$Fold->printing_type( $_->value() );
-						$_->delete();
-					} # end if
-					if ( $_ = $E->Specification($pages.'PageSignatureFoldOvers') ) {
-						$Fold->makeready_overs( $_->value() );
-						$Fold->makeready_overs_units( $_->units() );
-						$_->delete();
-					} # end if
-					$_ = $Fold->save();
-					die $_ if $_;
-				} # end if
-				my $FS = new openprint::FoldSpecification();
-				$FS->fold_id( $Fold->id() );
-				$FS->runspeed( $Spec->value() );
-				$FS->interpolate( $Spec->interpolate() );
-				$_ =  $FS->save();
-				die $_ if $_;
-				$Spec->delete();
-			} elsif ( $Spec->name() =~ /^(\w*)FoldRunSpeed/ ) {
-				my $type = $1;
-				my $Fold = openprint::Fold->find_one('equipment_id'=>$E->id(),'name'=>$type.'Fold',type=>$type.'Fold');
-				if ( ! $Fold ) {
-					$Fold = new openprint::Fold();
-					$Fold->equipment_id( $E->id() );
-					$Fold->name( $type.'Fold' );
-					$Fold->type( $type.'Fold' );
-					$Fold->max_imposition( 2 );
-					$Fold->stitching( 1 );
-					$Fold->perfectbind( 1 );
-					if ( $_ = $E->Specification($type.'FoldPrintingType') ) {
-						$Fold->printing_type( $_->value() );
-						$_->delete();
-					} # end if
-					if ( $_ = $E->Specification($type.'FoldOvers') ) {
-						$Fold->makeready_overs( $_->value() );
-						$Fold->makeready_overs_units( $_->units() );
-						$_->delete();
-					} # end if
-					$_ = $Fold->save();
-					die $_ if $_;
-				} # end if
-				my $FS = new openprint::FoldSpecification();
-				$FS->fold_id( $Fold->id() );
-				$FS->runspeed( $Spec->value() );
-				$FS->interpolate( $Spec->interpolate() );
-				$_ =  $FS->save();
-				die $_ if $_;
-				$Spec->delete();
-			} elsif ( $Spec->name() =~ /^(\d+)Panel(\d+)Pocket(\w*)RunSpeed/ ) {
-				my ($panel, $pocket, $gusset ) = ( $1, $2, $3 );
-				my $Fold = new openprint::Fold();
-				$Fold->equipment_id( $E->id() );
-				$Fold->name( $panel.'Panel'.$pocket.'Pocket'.$gusset );
-				$Fold->type( $panel.'Panel'.$pocket.'Pocket'.$gusset );
-				$Fold->max_imposition( 1 );
-				$_ = $Fold->save();
-				die $_ if $_;
-				my $FS = new openprint::FoldSpecification();
-				$FS->fold_id( $Fold->id() );
-				$FS->runspeed( $Spec->value() );
-				$FS->interpolate( $Spec->interpolate() );
-				$_ =  $FS->save();
-				die $_ if $_;
-				$Spec->delete();
-				if ( ! openprint::Service->find('name'=>$panel.'Panel'.$pocket.'Pocket'.$gusset) ) {
-					my $Service = new openprint::Service();
-					$Service->save({
-						'name'=>$panel.'Panel'.$pocket.'Pocket'.$gusset,
-						'description'=>$panel.'Panel'.$pocket.'Pocket'.$gusset,
-						'category'=>'Bindery',
-					});
-				}
-			}
-		}  # end foreach Spec
-		foreach my $Spec ( $E->Specifications() ) {
-			my $found = 0;
-			if ( $Spec->name() =~ /^Runspeed Adjustment$/ ) {
-				$found = 1;
-				foreach my $Fold ( openprint::Fold->find('equipment_id'=>$E->id()) ) {
-					foreach my $FoldSpec ( $Fold->Specifications() ) {
-						if ( ! ( $FoldSpec->min_weight() or $FoldSpec->max_weight() ) ) {
-							my $FoldSpec2 = $FoldSpec->copy();
-							$FoldSpec2->save({
-								'runspeed'=>$FoldSpec->runspeed() - ( $FoldSpec->runspeed()*($Spec->value()/100) ),
-								'min_weight'=>$Spec->min(), 
-								'max_weight'=>$Spec->max(),
-								'interpolate'	=>	$Spec->interpolate(),
-							});
-						} # end if
-					} # end foreach FoldSpec
-				} # end foreach
-				$Spec->delete();
-			} # end if Spec->name
-			if ($found) {
-				foreach my $Fold ( openprint::Fold->find('equipment_id'=>$E->id()) ) {
-					foreach my $FoldSpec ( $Fold->Specifications() ) {
-						if ( ! ( $FoldSpec->min_weight() or $FoldSpec->max_weight() ) ) {
-							$FoldSpec->delete();
-						} # endif
-				} # end foreachd
-				} # end foreachd
-			} # end if found
-		}  # end foreach Spec
-	}
-
-
-	
-foreach my $E ( openprint::Equipment->find('Specifications'=>{'Folding Capable'=>['When Printing','When Stitching']}) ) {
-	foreach my $Spec ( $E->Specifications() ) {
-		if ( $Spec->name() =~ /^(\d)x(\d)-(\d*)Page-(\w*)SignatureFoldDescription$/ ) {
-			my ( $columns, $rows, $pages, $spine_direction ) = ( $1, $2, $3, $4 );
-			my $spread_size = $pages/($columns*$rows);
-			my $fold = sprintf('%dx%d-%dPage-%sSignatureFold', $columns, $rows, $pages, $spine_direction );
-			my $Fold = openprint::Fold->find_one('equipment_id'=>$E->id(),'name'=>$Spec->value(),type=>$pages.'PageFold',pages=>$pages,spine_direction=>$spine_direction);
-			if ( ! $Fold ) {
-				$Fold = new openprint::Fold();
-				$Fold->equipment_id( $E->id() );
-				$Fold->name( $Spec->value() );
-				$Fold->type( $pages . 'PageFold' );
-				$Fold->pages( $pages );
-				if ( $spread_size == 4 ) {
-					$Fold->stitching(1);
-					$Fold->perfectbind(0);
-					$Fold->spinepaste(0);
-					if ( $spine_direction eq 'Vertical' ) {
-						$columns *= 2;
-					} else {
-						$rows *= 2;
-					} # end if
-				} else {
-					$Fold->stitching(0);
-					$Fold->perfectbind(1);
-					$Fold->spinepaste(1);
-				} # end if
-				$Fold->cutting(0);
-				$Fold->page_columns( $columns );
-				$Fold->page_rows( $rows );
-				$Fold->spine_direction( $spine_direction );
-				if ( $_ = $E->Specification( $fold.'MinimumWidth' ) ) {
-					if ( $spine_direction eq 'Vertical' ) {
-						$Fold->min_width( Math::Round::nearest( 0.001, ($_->value()/$columns)) );
-					} else {
-						$Fold->min_height( Math::Round::nearest( 0.001, ($_->value()/$columns)) );
-					} # end if
-					$_->delete();
-				} #end if
-				if ( $_ = $E->Specification( $fold.'MaximumWidth' ) ) {
-					if ( $spine_direction eq 'Vertical' ) {
-						$Fold->max_width( Math::Round::nearest(0.001, ($_->value()/$columns)) );
-					} else {
-						$Fold->max_height( Math::Round::nearest(0.001, ($_->value()/$columns)) );
-					} # end if
-					$_->delete();
-				} # en dif
-				if ( $_ = $E->Specification( $fold.'MinimumHeight' ) ) {
-					if ( $spine_direction eq 'Vertical' ) {
-					$Fold->min_height( Math::Round::nearest(0.001, ($_->value()/$rows)) );
-					} else {
-					$Fold->min_width( Math::Round::nearest(0.001, ($_->value()/$columns)) );
-					} # end if
-					$_->delete();
-				} # end if
-				if ( $_ = $E->Specification( $fold.'MaximumHeight' ) ) {
-					if ( $spine_direction eq 'Vertical' ) {
-					$Fold->max_height( Math::Round::nearest( 0.001, ($_->value()/$rows)) );
-					} else {
-					$Fold->max_width( Math::Round::nearest( 0.001, ($_->value()/$columns)) );
-					} # end if
-					$_->delete();
-				} # end if
-				if ( $_ = $E->Specification( $fold.'MaximumImposition' ) ) {
-					$Fold->max_imposition( $_->value() );
-					$_->delete();
-				} # end if
-				if ( $_ = $E->Specification( $fold.'MinimumImposition' ) ) {
-					$Fold->min_imposition( $_->value() );
-					$_->delete();
-				} # end if
-				$_ = $Fold->save();
-				die $_ if $_;
-			} # end if
-			while ( my $S = $E->Specification( $fold.'RunSpeed' ) ) {
-				my $FS = new openprint::FoldSpecification();
-				$FS->fold_id( $Fold->id() );
-				$FS->min_weight( $S->min() );
-				$FS->max_weight( $S->max() );
-				$FS->weight_units( $S->units() );
-				$FS->runspeed( $S->value() );
-				$FS->interpolate( $S->interpolate() );
-				$_ =  $FS->save();
-				die $_ if $_;
-				$S->delete();
-				delete $$E{'Specifications'};
-			} # end while
-			$Spec->delete();
-		} # end if
-	} # end foreach Spec
-	if ( ! openprint::ServicePrice->find('service_id'=>$FoldingService->id(), 'equipment_id'=>$E->id() ) ) {
-		foreach my $Pricelist ( openprint::Pricelist->find() ) {
-			if ( ! $Pricelist->id() ) {
-				print "ERror pricelits: " . $Pricelist->name() . "\n";
-			} else {
-				my $ServicePrice = new openprint::ServicePrice();
-				$_ = $ServicePrice->save({
-						'service_id'	=>	$FoldingService->id(),
-						'pricelist_id'	=>	$Pricelist->id(),
-						'equipment_id'	=>	$E->id(),
-						'units'			=>	'Per M',
-						'cost'			=>	0,
-						'price'			=>	0,
-						});
-				die $_ if $_;
-			}
-		} # end foreach Pricelist
-	} # end if
-} # end foreach Web Press
-} # end if FoldingService
-
-
 
 if ( sets::isin( 'skid_verifications', \@tables ) ) {
-my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM skid_verifications LIMIT 1', {} );
-if ( ! $data ) {
-	my $ac = sql::start_transaction( $dbh );
-	$dbh->do('DROP TABLE IF EXISTS skid_verifications');
-	$dbh->do('
-			CREATE TABLE skid_verifications (
-				id SERIAL NOT NULL,
-				skid_id INTEGER NOT NULL, FOREIGN KEY (skid_id) REFERENCES skids (id),
-				code    TEXT,
-				created_on  TIMESTAMP WITH TIME ZONE NOT NULL default NOW(),
-				PRIMARY KEY (id)
-				);' );
-	$dbh->do('CREATE INDEX skid_verifications_skid_id_idx ON skid_verifications (skid_id);');
-	$dbh->do('CREATE INDEX skid_verifications_code_idx ON skid_verifications (code);');
-	sql::end_transaction( $dbh, $ac );
+	my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM skid_verifications LIMIT 1', {} );
+	if ( ! $data ) {
+		my $ac = sql::start_transaction( $dbh );
+		$dbh->do('DROP TABLE IF EXISTS skid_verifications');
+		$dbh->do('
+				CREATE TABLE skid_verifications (
+					id SERIAL NOT NULL,
+					skid_id INTEGER NOT NULL, FOREIGN KEY (skid_id) REFERENCES skids (id),
+					code    TEXT,
+					created_on  TIMESTAMP WITH TIME ZONE NOT NULL default NOW(),
+					PRIMARY KEY (id)
+					);' );
+		$dbh->do('CREATE INDEX skid_verifications_skid_id_idx ON skid_verifications (skid_id);');
+		$dbh->do('CREATE INDEX skid_verifications_code_idx ON skid_verifications (code);');
+		sql::end_transaction( $dbh, $ac );
+	} # end if
 } # end if
-} # end if
-
-foreach my $E ( openprint::Equipment->find() ) {
-	foreach my $Fold ( openprint::Fold->find('equipment_id'=>$E->id()) ) {
-		if ( $Fold->type() =~ /(\d*)PageSignatureFold/ ) {
-			$Fold->type( "$1PageFold" );
-			$Fold->save();
-		} # end if
-	} # end foreach
-} # end foreach
-
-foreach my $E ( openprint::Equipment->find() ) {
-	foreach my $Fold ( openprint::Fold->find('equipment_id'=>$E->id()) ) {
-		if ( $Fold->type() =~ /(\d*)PageFold/ ) {
-			sql::update( undef, undef, 'Services', ['name=?', "$1PageSignatureFold"], 'name', "$1PageFold" );
-			sql::update( undef, undef, 'Services', ['name=?', "$1PageSignatureFoldMakeReady"], 'name', "$1PageFoldMakeReady" );
-		} # end if
-	} # end foreach
-} # end foreach
-
 
 if ( ! sets::isin( 'purchaseorders', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/PurchaseOrders.sql}) );
@@ -2920,7 +2729,7 @@ if ( $version < $new_version ) {
 	my $ac = sql::start_transaction( $dbh );
 	sql::insert( undef, undef, 'database_info', 'version', $new_version, 'backup', $backup );
 	foreach my $E ( openprint::Equipment->find() ) {
-		if ( $E->specification('Double Overs For Covers') eq 'Y' ) {
+		if ( ( $_ = $E->specification('Double Overs For Covers') ) and ( $_ eq 'Y' ) ) {
 			sql::insert( undef, undef, 'tbl_Equipment_Specifications',[
 					'lngEquipmentIndex',    $E->id(),
 					'dblMin',               undef,
@@ -3011,6 +2820,15 @@ foreach my $PT ( openprint::ProjectType->find() ) {
 		$PT->save();
 	} # end if
 } # end foreach
+if ( ! sets::isin( 'projecttemplate', \@tables ) ) {
+	$dbh->do( misc::load_file( $log, q{../openprint/sql/ProjectType_Templates.sql}) );
+	die if $dbh->errstr();
+} else {
+	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='projecttemplate'", 'column_name');
+	if ( ! exists $$data{message} ) {
+		$dbh->do('ALTER TABLE projecttemplate ADD message TEXT');
+	}
+} # end if
 if ( ! sets::isin( 'hosts', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/Hosts.sql}) );
 } else {
@@ -3295,6 +3113,9 @@ if ( ! sets::isin( 'rma', \@tables ) ) {
 		$dbh->do('CREATE SEQUENCE rma_id_seq');
 	} # end if
 	$dbh->do(q`select setval('rma_id_seq',(SELECT Max(id) FROM RMA));`);
+	if ( !exists $$data{rmanumber} ) {
+		$dbh->do('ALTER TABLE rma ADD rmanumber TEXT');
+	} # end if
 	
 } # end if
 if ( ! sets::isin( 'rma_logs', \@tables ) ) {
@@ -3558,6 +3379,25 @@ if ( sets::isin( 'upgrade', \@tables ) ) {
 		die $_ if $_;
 	} # end while
 	$dbh->do('DROP TABLE upgrade');
+} # end if
+if ( ! sets::isin( 'stockqualities', \@tables ) ) {
+	$dbh->do( misc::load_file( $log, q{../openprint/sql/StockQualities.sql}) );
+	die $dbh->errstr() if $dbh->errstr();
+} else {
+	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='stockqualities'", 'column_name');
+	if ( ! exists $$data{message} ) {
+		$dbh->do('ALTER TABLE stockqualities ADD message text');
+	} # end
+
+}
+if ( ! sets::isin( 'stockqualities_id_seq', \@sequences ) ) {
+	if ( sets::isin( 'paperqualities_id_seq', \@sequences ) ) {
+		$dbh->do('ALTER SEQUENCE paperqualities_id_seq RENAME to stockqualities_id_seq');
+	} else {
+		$dbh->do('CREATE SEQUENCE stockqualities_id_seq');
+	} # end if
+	$dbh->do(q`ALTER TABLE stockqualities ALTER id SET default nextval('stockqualities_id_seq')`);
+	$dbh->do(q`SELECT setval('stockqualities_id_seq', (SELECT max(id) FROM stockqualities))`);
 } # end if
 print "Finished\n";
 1;

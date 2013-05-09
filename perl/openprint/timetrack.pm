@@ -22,7 +22,13 @@ sub history {
 		$param{'starting'} = sprintf('%.4d-%.2d-%.2d %.2d:%.2d:00', @param{'starting_year','starting_month','starting_day','starting_hour','starting_minute'} );
 		$param{'ending'} = sprintf('%.4d-%.2d-%.2d %.2d:%.2d:00', @param{'ending_year','ending_month','ending_day','ending_hour','ending_minute'} );
 		if ( ! $param{'timetrack_id'} ) {
-			if ( openprint::Timetrack->find_one('owner_id'=>$param{'owner_id'},'company_id'=>$param{'company_id'},'starting'=>$param{'starting'},'ending'=>$param{'ending'},'service_id'=>$param{'service_id'}) ) {
+			if ( openprint::Timetrack->find_one(
+						owner_id=>$param{owner_id},
+						company_id=>$param{company_id},
+						starting=>$param{starting},
+						ending=>$param{ending},
+						service_id=>( $param{service_id} ? $param{service_id} : undef ),
+						) ) {
 				$variable{'error'} = 'Not creating duplicate.<br/>';
 				return;
 			} # end if
@@ -98,7 +104,7 @@ $log->debug("Exported");
 
 sub _history {
 	if ( ! $param{'func'} ) {
-		ssi::save_params( '/timetrack/history.html', ( 'starting_start_year','starting_start_month','starting_start_day','starting_end_year','starting_end_month','starting_end_day','invoiced','paid','user_id','company_id', 'service_id', 'billable','travel_associated' ) );
+		ssi::save_params( '/timetrack/history.html', ( 'starting_start_year','starting_start_month','starting_start_day','starting_end_year','starting_end_month','starting_end_day','invoiced','paid','user_id','company_id', 'service_id', 'billable','travel_associated','contains' ) );
 	} # end if
 } # end sub _history
 

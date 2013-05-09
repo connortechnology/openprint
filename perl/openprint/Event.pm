@@ -5,6 +5,7 @@ require openprint::Event_Category;
 require openprint::Comment;
 require openprint::Event_Attendance;
 require openprint::Event_Invitation;
+require openprint::Blocklist;
 
 package openprint::Event;
 our @ISA = qw( openprint::Object );
@@ -32,6 +33,7 @@ $serial = 'events_id_seq';
 	# Photo album for the event, created on first photo upload
 	album_id	=>	'album_id', 
 	url			=>	'url',
+	published	=>	'published',
 );
 %find_fields = (
 	'attending'	=>	'(SELECT user_id FROM event_attendance WHERE event_id=events.id AND attending=true)',
@@ -39,7 +41,7 @@ $serial = 'events_id_seq';
 	'name+info'	=>	q`name || info`,
 );
 %transforms = (
-	id		=>	[ 's/\D//g' ],
+	id		=>	[ 's/\D//g', '<2147483647' ],
     name	=>	[ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
     info	=>	[ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
     url		=>	[ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
@@ -54,6 +56,7 @@ $serial = 'events_id_seq';
 	time_associated	=> 0,
 	created_by		=> q`$openprint::session{user_id}`,
 	deleted			=> 0,
+	published		=>	0,
 );
 
 sub category {
@@ -147,6 +150,7 @@ sub can_edit {
 } # end sub can_edit
 
 sub can_view {
+#$openprint::log->debug("Event::can_view $_[1]" . ( ref $_[1] eq 'openprint::User' ? $_[1]->to_string() : $_[1] ) );
 	return 1 if ! $_[0]{id};
 	my $User;
 	if ( @_ > 1 ) {
@@ -155,9 +159,13 @@ sub can_view {
 		$User = new openprint::User($openprint::session{user_id});
 	} # end if
 	return 1 if $$User{type} eq 'A';
+$openprint::log->debug("Event::can_view not an admin");
 	return 1 if $_[0]{created_by} == $$User{id};
-	return 0 if openprint::Blocklist::is_blocked( $openprint::session{user_id},$_[0]{created_by});
+$openprint::log->debug("Event::can_view not creator");
 	return 0 if $_[0]{deleted};
+$openprint::log->debug("Event::can_view not deleated");
+	return 0 if openprint::Blocklist::is_blocked( $openprint::session{user_id},$_[0]{created_by});
+$openprint::log->debug("Event::can_view not blocked");
 	my $Privacy = $_[0]->Privacy();
 	return 1 if ! $$Privacy{id};
 	return $Privacy->can_view($$User{id});
@@ -179,7 +187,8 @@ sub Created_By {
 }
 
 sub html {
-	my $Event = $_[0];
+	my ( $Event, $options ) = @_;
+	$options = {} if ! $options;
 	my $html = sprintf(q`
 			<div class="Event">
 			<div class="Assets"><a class="medium %6$s" href="/event/view.html?event_id=%1$d"><img alt="" src="%7$s"/></a></div>
@@ -187,16 +196,22 @@ sub html {
 			<div class="Category"><a href="/event/view.html?event_id=%1$d">%3$s</a></div>
 			<div class="When">%4$s</div>
 			<div class="Where">%5$s</div>
-			<div class="Attending">%8$s</div>
 			`, $Event->id(), ssi::html_escape($Event->name()), $Event->Category()->name(),
                     $Event->time_string(),
                     $Event->where(),
 			$Event->Asset()->layout(),
 			$Event->Asset()->medium_url(),
-			$Event->attendance( new openprint::User($openprint::session{user_id}) ),
 			);
+	if ( (!$$options{show_no_attendees}) and ( $Event->Attendance() == 0 ) ) {
+	} else {
+		$html .= sprintf('<div class="Attending">%s</div>', $Event->attendance( new openprint::User($openprint::session{user_id}) ) );
+	} # end if
+	
 	my @Comments = $Event->Comments();
-	$html .= sprintf(q`<div class="comments">This event has %s.</div>`, ( @Comments == 1 ? '1 comment' : @Comments . ' comments' ) );
+	if ( (!$$options{show_no_comments}) and ( @Comments == 0 ) ) {
+	} else {
+		$html .= sprintf(q`<div class="comments">This event has %s.</div>`, ( @Comments == 1 ? '1 comment' : @Comments . ' comments' ) );
+	} # en dif
 	$html .= '</div>';
 	return $html;
 } # end  sub html

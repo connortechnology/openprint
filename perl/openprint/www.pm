@@ -1,6 +1,8 @@
 use strict;
 package openprint::www;
 
+use constant DEBUG => 0;
+
 #use Benchmark;
 #use diagnostics;
 
@@ -104,7 +106,8 @@ sub handler {
 	configuration::init( $r->dir_config() );
 	openprint::session_init();
 	if ( $dbh ) {
-		if ( ! $page_settings{$config{db_name}} ) {
+		if ( ! $page_settings{$config{db_name}} or ! $page_settings{$config{db_name}}{$page} ) {
+$log->debug("loading Page settings for $config{db_name} for $page") if DEBUG;
 			$page_settings{$config{db_name}} = { map { $_->url(), $_ } openprint::Page_Setting->find() };
 		} # end if
 		if ( ! $page_settings{$config{db_name}}{$page} ) {
@@ -118,7 +121,7 @@ sub handler {
 				my $chunk = join('/', @chunks);
 				$chunk = '/' if ! $chunk; # neccessary to deal with the empty string
 
-					$log->debug("Looking for page setting for $chunk");
+				$log->debug("Looking for page setting for $chunk") if DEBUG;
 				if ( $page_settings{$config{db_name}}{$chunk} ) {
 # Why stuff up the db with entries, just fill the hash with copies.
 					$page_settings{$config{db_name}}{$page} = $page_settings{$config{db_name}}{$chunk};
@@ -530,7 +533,6 @@ $openprint::log->warn('bind');
 					} # end if
 				} # end if main:proj:$third
 			} # end if defined third
-$log->debug("after third");
 
 			openprint::print_project::create_edit_display( $r, $log, $dbh, \%variable )		if $filename eq 'create_edit.html';
 			openprint::main_project::history()			if $filename eq 'history.html';
@@ -564,6 +566,8 @@ $log->debug("after third");
 				};
 				$log->warn( "Eval error of ($module $proc), Reason: " . $@ ) if $@;
 			} # end if
+		} else {
+			$log->debug("No firstSo or non-existant $uri");
 		} # end if
 	} # end if $first
 

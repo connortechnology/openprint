@@ -303,10 +303,7 @@
 				</p>
 				<p class="diescoring">
 					<label>Does this stock require die scoring before folding?</label>
-					<input type="radio" id="diescoringY" name="diescoring" value="1" <? echo ( ssi::checked( $$variable{'Stock'}->req_die_scoring() ); ) ?> />
-					<label class="radio" for="diescoringY">Yes</label>
-					<input type="radio" id="diescoringN" name="diescoring" value="0" <? echo ( ssi::checked( ! $$variable{'Stock'}->req_die_scoring() ); ) ?> />
-					<label class="radio" for="diescoringN">No</label>
+					<? echo ( radio( 'die_score_required', [ 1, 'Yes', 0, 'No' ], $$variable{'Stock'}->die_score_required() ); ) ?>
 				</p>
 				<p class="digital">
 					<label>Is this stock suitable for digital printing?</label>
@@ -377,7 +374,7 @@
 	<? if ( $$variable{'stock_id'} ) ?>
 	<div class="Pricing">
 		<fieldset><legend>Pricing</legend>
-			<div id="Prices"><? echo ( include('_prices.html'); ) ?></div>
+			<div id="Prices"><?include(_prices.html)?></div>
 		</fieldset>
 	</div>
 	<? endif ( $$variable{'stock_id'} ) ?>

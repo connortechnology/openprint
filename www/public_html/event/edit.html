@@ -5,7 +5,8 @@
 	tinyMCE.init({
 		mode : "specific_textareas",
 		editor_selector : "mce",
-		theme : "advanced"
+		theme : "advanced",
+		theme_advanced_buttons3_add : "forecolor,backcolor"
 	});
 </script>
 <div class="Event"><div class="Edit">
@@ -123,17 +124,26 @@ $company_id = $session{company_id} if (!$company_id);
 							<input type="url" id="url" name="url" value="<? echo ( $$variable{Event}->url() ) ?>" />
 						</li>
 						
-						<? eval ( $$variable{'Privacy'} = $$variable{Event}->Privacy(); ) ?>
-						<? echo ( include('/includes/_privacy_widget.html'); ) ?>
+						<? echo ( 
+							$$variable{'Privacy'} = $$variable{Event}->Privacy();
+							include('/includes/_privacy_widget.html');
+						 ) ?>
 					</ul>
 				</div>
 			</fieldset>
 			<fieldset><legend>Where</legend>
 <? echo ( 
 	$$variable{'Location'} = $$variable{Event}->Location();
-	return ssi::include( $ENV{'DOCUMENT_ROOT'} . '/location/_location_fields.html' );
+	return ssi::include( '/location/_location_fields.html' );
 ) ?>
 			</fieldset>
+			<? echo ( 
+				if ( $$variable{Event}->id() ) {
+					$$variable{Object} = $$variable{Album} = $$variable{Event};
+					return include('/photo_albums/_album_upload.html'); 
+				} # end if
+				return;	
+			) ?>
 		</fieldset>
 		<input type="hidden" name="function" />
 	</form>

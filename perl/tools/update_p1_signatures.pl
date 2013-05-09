@@ -127,14 +127,15 @@ foreach my $Project ( openprint::Project->find( 'order'=>'id desc',
 		foreach $index ( 1 .. 8 ) {
 			last if ! $$sig_specs{'ColourCoatingColour'.$index.$side};
 		} # end foreach
+txtSpecialSideTwoColour2
 		$index += 1;
 		$index = 1 if $index >= 8;
 		foreach my $colour_index ( 1 .. 8 ) {
-			if ( $$sig_specs{"chkSpecialSideOneColour$colour_index"} eq 'Y' ) {
+			if ( $$sig_specs{"chkSpecial${side}Colour$colour_index"} eq 'Y' ) {
 				openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'chkColourCoating'.$index.$side, 'Y' );
 				openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'ColourCoatingType'.$index.$side, 'PMS' );
-				openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'ColourCoatingColour'.$index.$side,  $$sig_specs{"txtSpecialSideOneColour$colour_index"} );
-				openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'ColourCoatingCoverage'.$index.$side,  $$sig_specs{"txtSpecialSideOneColourInkPercent$colour_index"} );
+				openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'ColourCoatingColour'.$index.$side,  $$sig_specs{"txtSpecial${side}Colour$colour_index"} );
+				openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'ColourCoatingCoverage'.$index.$side,  $$sig_specs{"txtSpecial${side}ColourInkPercent$colour_index"} );
 				$index += 1;
 			} # end if
 		} # end foreach index
@@ -353,14 +354,17 @@ foreach my $Service ( openprint::Service->find('name'=>'Imposition') ) {
 		} # end if
 	} # end foreach
 } # end foreach
+
 	sql::update( undef, undef, 'tbl_equipment_specifications', [ 'strname=?', 'Press Standard Run Speed'], 'strname','Standard Run Speed' );
-	sql::execute( undef, undef, "delete from tbl_equipment_specifications WHERE lngequipmentindex=28 and strname='Press Additional Run Speed'" );
+	sql::update( undef, undef, 'tbl_equipment_specifications', [ 'strname=? and lngequipmentindex=?', 'Standard Run Speed', 28], 'strname','Run Speed' );
 	sql::update( undef, undef, 'tbl_equipment_specifications', [ 'strname=?', 'Press Additional Run Speed' ], 'strname','Run Speed' );
-	sql::insert( undef, undef, 'tbl_equipment_specifications', 'lngequipmentindex', 1, 'strname','Run Speed', 'dblmin', 0.0031, 'dblmax', 0.0120, 'strvalue', 9000, 'interpolate', 0, 'strunits', 'Calliper' );
-	sql::insert( undef, undef, 'tbl_equipment_specifications', 'lngequipmentindex', 4, 'strname','Run Speed', 'dblmin', 0.0029, 'dblmax', 0.0099, 'strvalue', 9000, 'interpolate', 0, 'strunits', 'Calliper' );
-	sql::insert( undef, undef, 'tbl_equipment_specifications', 'lngequipmentindex', 27, 'strname','Run Speed', 'dblmin', 0.0029, 'dblmax', 0.0099, 'strvalue', 9000, 'interpolate', 0, 'strunits', 'Calliper' );
-	sql::insert( undef, undef, 'tbl_equipment_specifications', 'lngequipmentindex', 25, 'strname','Run Speed', 'dblmin', 0.0029, 'dblmax', 0.0099, 'strvalue', 9000, 'interpolate', 0, 'strunits', 'Calliper' );
-	sql::insert( undef, undef, 'tbl_equipment_specifications', 'lngequipmentindex', 30, 'strname','Run Speed', 'dblmin', 0.0029, 'dblmax', 0.0099, 'strvalue', 9000, 'interpolate', 0, 'strunits', 'Calliper' );
+
+
+	#sql::insert( undef, undef, 'tbl_equipment_specifications', 'lngequipmentindex', 1, 'strname','Run Speed', 'dblmin', 0.0031, 'dblmax', 0.0120, 'strvalue', 9000, 'interpolate', 0, 'strunits', 'Calliper' );
+	#sql::insert( undef, undef, 'tbl_equipment_specifications', 'lngequipmentindex', 4, 'strname','Run Speed', 'dblmin', 0.0029, 'dblmax', 0.0099, 'strvalue', 9000, 'interpolate', 0, 'strunits', 'Calliper' );
+	#sql::insert( undef, undef, 'tbl_equipment_specifications', 'lngequipmentindex', 27, 'strname','Run Speed', 'dblmin', 0.0029, 'dblmax', 0.0099, 'strvalue', 9000, 'interpolate', 0, 'strunits', 'Calliper' );
+	#sql::insert( undef, undef, 'tbl_equipment_specifications', 'lngequipmentindex', 25, 'strname','Run Speed', 'dblmin', 0.0029, 'dblmax', 0.0099, 'strvalue', 9000, 'interpolate', 0, 'strunits', 'Calliper' );
+	#sql::insert( undef, undef, 'tbl_equipment_specifications', 'lngequipmentindex', 30, 'strname','Run Speed', 'dblmin', 0.0029, 'dblmax', 0.0099, 'strvalue', 9000, 'interpolate', 0, 'strunits', 'Calliper' );
 
 	new openprint::ServiceType_Category()->save({'name'=>'Printing','sorting'=>1}) if ! openprint::ServiceType_Category->find('name'=>'Printing');
 	new openprint::ServiceType_Category()->save({'name'=>'Coatings','sorting'=>2}) if ! openprint::ServiceType_Category->find('name'=>'Coatings');

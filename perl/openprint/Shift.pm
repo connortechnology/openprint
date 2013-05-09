@@ -300,7 +300,7 @@ sub TZ {
 sub get_Shifts {
 	my ( $Equipment, $start_dt, $end_dt, @Equipment_Shifts ) = @_;
 
-	@Equipment_Shifts = $Equipment->Operator_Shifts() if ! @Equipment_Shifts;
+	@Equipment_Shifts = $Equipment->Equipment_Shifts() if ! @Equipment_Shifts;
 	return () if ! @Equipment_Shifts;
 	my @Shifts;
 	my $parser = 'DateTime::Format::Pg';

@@ -1,10 +1,7 @@
 use strict;
 require openprint;
-require Digest::MD5;
 require openprint::Keyword;
-require IPC::Run3;
-use Fcntl qw( :flock );
-
+use Fcntl qw(:flock);
 
 package openprint::Asset_Type;
 our @ISA = qw(openprint::Object);
@@ -134,9 +131,9 @@ sub sized_url {
 			if ( ! -e $dest ) {
 				my $width;
 				if ( $size eq 'medium' ) {
-					$width = $openprint::config{'Medium Asset Width'};
+					$width = $openprint::config{'Medium_Asset_Width'};
 				} elsif ( $size eq 'large' ) {
-					$width = $openprint::config{'Large Asset Width'};
+					$width = $openprint::config{'Large_Asset_Width'};
 				} # end if
 				if ( ! $width ) {
 					$openprint::log->error("No asset size in config for $size");
@@ -144,6 +141,7 @@ sub sized_url {
 				} # end if	
 				$openprint::log->debug("Creating $size at ${width} x $src $dest");
 				my ( $stderr, $stdout );
+				require IPC::Run3;
 				IPC::Run3::run3(qq`convert -adaptive-resize ${width}x "$src" "$dest"`, undef, $stdout, $stderr );
 				if ( $? ) {
 					$openprint::log->error("ERror creating sized image. Reason: ($?) stdout($stdout) stderr($stderr)");
@@ -167,9 +165,9 @@ sub sized_url {
 			if ( ! -e $dest ) {
 				my $width;
 				if ( $size eq 'medium' ) {
-					$width = $openprint::config{'Medium Asset Width'};
+					$width = $openprint::config{'Medium_Asset_Width'};
 				} elsif ( $size eq 'large' ) {
-					$width = $openprint::config{'Large Asset Width'};
+					$width = $openprint::config{'Large_Asset_Width'};
 				} elsif ( ! $size ) {
 					$size = 'full';
 				} # end if
@@ -338,6 +336,7 @@ sub md5 {
 		$_[0]{'md5'} = $_[1];
 	} # end if
 	if ( ( ! $_[0]{'md5'} ) and $_[0]{'data'} ) {
+		require Digest::MD5;
 		$_[0]{'md5'} = Digest::MD5::md5_base64( $_[0]{'data'} );
 	} # end if
 	return $_[0]{'md5'};	
@@ -384,13 +383,16 @@ sub upload {
 	if ( ! $upload ) {
 		return "There was no upload for $_[0]<br/>";
 	} # end if
+	require Digest::MD5;
 	my $data;
 	$upload->slurp( $data );
 	my $md5 = Digest::MD5::md5_base64( $data );
 	if ( ! $md5 ) {
 		return "Unable to MD5?";
+	} else {
+		$openprint::log->debug("MD5 was $md5");
 	} # end if
-	my $Asset = openprint::Asset->find_one('md5'=>$md5);
+	my $Asset = openprint::Asset->find_one( md5 =>$md5);
 	if ( ! $Asset ) {
 		$Asset = new openprint::Asset();
 		$! .= $Asset->save({'filename'=>$upload->filename(),'md5'=>$md5});
@@ -537,6 +539,7 @@ sub generate_video {
 	my $lock;
 	if ( ! open($lock, "> $dest.lck") ) {
 		$openprint::log->error("Unable to open semaphore at $dest.lck\n");
+		return;
 	} # end if
 	if ( ! flock($lock, Fcntl::LOCK_EX) ) {
 		$openprint::log->error("Unable to lock semaphore\n");

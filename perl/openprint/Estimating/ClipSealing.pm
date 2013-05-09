@@ -22,17 +22,29 @@ sub calc {
     my ($log, $dbh, $variable, $pid, $sid, $specs) = @_;
 
 	my $Project = new openprint::Project( $pid );
+	my $services = $Project->services();
+	my @signatures = $Project->signatures();
+	my $sig_specs = openprint::service::get_specs_ref( $Project, $signatures[0] );
+	my $folding_specs;
 
-	if ( ! $$specs{'SealQuantity'} ) {
-		$$specs{'alert'} = 'Please enter the # of clips.<br/>';
-		return 'uncalculated';
+	my @capable = ('Y');
+	if ( $$services{SaddleStitching} ) {
+		push @capable, 'When Stitching';
+	} elsif ( $$services{Folding} ) {
+		push @capable, 'When Folding';
+		$folding_specs = openprint::service::get_specs_ref( $Project, $$services{Folding}[0] );
+	} # end if
+
+	if ( ! $$specs{SealQuantity} ) {
+		$$specs{alert} = 'Please enter the # of clips.<br/>';
+		return $$specs{Status} = 'uncalculated';
 	} # end if
 
 	my $status = 'calculated';
-	my @equipment = openprint::Equipment->find( 'Specifications'=>{'ClipSealing Capable'=>'Y'},'useinestimating'=>1);
+	my @equipment = openprint::Equipment->find( Specifications=>{ 'ClipSealing Capable'=>\@capable },'use_in_estimating'=>1);
 	if ( ! @equipment ) {
 		$$specs{'alert'} = 'We have no clip sealing equipment.<br/>';
-		return 'uncalculated';
+		return $$specs{Status} = 'uncalculated';
 	} # end if
 
     foreach my $qty_index ( $Project->quantity_indexes() ) {
@@ -45,7 +57,16 @@ sub calc {
 		foreach my $Equipment ( @equipment ) {
 			$$specs{'hdnBreakdown'.$qty_index} .= '<fieldset><legend>'.$Equipment->name().'</legend>';
 			my $clips_per_run = $Equipment->specification('Clips Per Run');
-			next if ! $clips_per_run;
+			if ( ! int($clips_per_run) ) {
+				$$specs{'hdnBreakdown'.$qty_index} .= 'No Clips Per Run setting.<br/>';
+				next;
+			} # end if
+			if ( $Equipment->specification('ClipSealing Capable') eq 'When Folding' ) {
+				if ( $Equipment->id() != $$folding_specs{"ddmEquipment-$$sig_specs{SignatureIndex}-$qty_index"} ) {
+					$$specs{'hdnBreakdown'.$qty_index} .= 'Not folding on ' . $Equipment->name() . '. Folding on '.new openprint::Equipment($$folding_specs{"ddmEquipment-$$sig_specs{SignatureIndex}-$qty_index"})->name().'<br/>';
+					next;
+				} # end if
+			} # end if
 			my $runs = ceil( $$specs{'SealQuantity'} / $clips_per_run );
 
 			my $totalPrice = 0;
@@ -57,7 +78,8 @@ sub calc {
 				$$specs{'hdnBreakdown'.$qty_index} .= 'No MakeReady Price.<br/>';
 			} # end if
 
-			my %ServicePrice = openprint::service::get_price_object('ClipSealing', $runs, $Equipment );
+			my %ServicePrice = openprint::service::get_price_object('ClipSealing'.$$specs{'SealQuantity'}.'Clips', $$specs{'txtQuantity'.$qty_index}, $Equipment );
+			%ServicePrice = openprint::service::get_price_object('ClipSealing', $$specs{'txtQuantity'.$qty_index}, $Equipment ) if ! %ServicePrice;
 			if ( ! %ServicePrice ) {
 				$$specs{'hdnBreakdown'.$qty_index} .= 'No Service Price.<br/>';
 			} elsif ( $ServicePrice{'units'} eq 'per m' ) {
@@ -134,10 +156,16 @@ sub summary {
 sub display {
 	my ( $log, $dbh, $variable, $project_index, $service_index ) = @_;
 
-	my @possible_equipment = openprint::Equipment->find( 'Specifications' => {'ClipSealing Capable'=>'Y'}, 'useinestimating'=>1,'order'=>'lower(strName)');
-	#my @possible_equipment = openprint::Equipment->find( 'Specifications' => {'ClipSealing Capable'=>'Y'}, 'useinestimating'=>1,'order'=>'lower(strName)');
+	my $Project = new openprint::Project( $project_index );
+	my $services = $Project->services();
+	my @possible_equipment = openprint::Equipment->find( Specifications => {'ClipSealing Capable'=>['Y',
+			( $$services{Folding} ? 'When Folding' : () )
+]}, 'use_in_estimating'=>1,'order'=>'lower(strName)');
+	#my @possible_equipment = openprint::Equipment::find( 'Specifications' => {'ClipSealing Capable'=>'Y'}, 'use_in_estimating'=>1,'order'=>'lower(strName)');
 	@{$$variable{'Equipment'}} = @possible_equipment;
 } # end sub display
 
+sub save {
+} # end sub save
 1;
 __END__

@@ -8,15 +8,15 @@ $debug = 0;
 $table =  'projecttype_categories';
 $serial = 'projecttype_categories_id_seq';
 %fields = (
-	'id'	=>	'id',
-	'name'	=>	'name',
-	'sort'	=>	'sort',
+	id	=>	'id',
+	name	=>	'name',
+	sort	=>	'sort',
 );
 %transforms = (
-    'name' => [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
+    name => [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
 );
 %defaults = (
-	'sort'	=>	undef,
+	sort	=>	undef,
 );
 
 sub ProjectTypes {
@@ -32,6 +32,10 @@ sub ProjectTypes {
 	} # end if
 	return @{$$self{'ProjectTypes'}};
 } # end sub ProjectTypes
+
+sub description {
+	return $_[0]->name();
+} # end sub description
 
 1;
 __END__

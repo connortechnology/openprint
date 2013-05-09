@@ -54,6 +54,24 @@ function set_value( obj, value ) {
 	} // end if
 }
 
+function get_checkbox_values( checkboxes ) {
+	if ( checkboxes.length ) {
+		var Values = new Array();
+		for ( var index = 0, len = checkboxes.length; index < len; index += 1 ) {
+			if ( checkboxes[index].checked ) {
+				Values[Values.length] = checkboxes[index].value;
+			} 
+		} 
+		if ( Values.length == 1 ) {
+			return Values[0];
+		}
+		return Values;
+	} else if ( checkboxes.checked ) {
+		return checkboxes.value;
+	} 
+	return;
+} // end function
+
 function get_select_value ( ddm ) {
 	var selected = new Array();
 	if ( ddm ) {
@@ -383,14 +401,16 @@ function isLeapYear(year) {
  *	It will alter the day drop down object to have the proper amount of days.
  *	if specified it will set the default selection to the passed selected day.
  */
-function setDaysDropDown(year, month, dayDropDown, selectedDay) {
+function setDaysDropDown(year, month, dayDropDown, selectedDay, previousMonth ) {
 	selectedDay = parseInt(selectedDay);
 
 	var numberOfDays = returnNumberOfDays(month,year);
 	if ( numberOfDays < selectedDay ) {
 		selectedDay = numberOfDays;
-	} else if ( selectedDay >= 28 && selectedDay <= 30 && numberOfDays >= 30 ) {
+	} else if ( selectedDay == returnNumberOfDays(previousMonth,year) ) {
 		selectedDay = numberOfDays;
+	//} else if ( selectedDay >= 28 && selectedDay <= 30 && numberOfDays >= 30 ) {
+		//selectedDay = numberOfDays;
 	} // end if
 
 	if ( dayDropDown.options[dayDropDown.options.length-1].value > numberOfDays ) {
@@ -473,7 +493,7 @@ function clearForm(form) {
 			continue;
 		if ( e.type == 'checkbox' || e.type == 'radio' ) {
 			e.checked = '';
-		} else if (e.type == 'hidden' || e.type == 'password' || e.type == 'text' || e.type == 'textarea' || e.type == 'number' || e.type == 'email' || e.type == 'url' ) {
+		} else if (e.type == 'hidden' || e.type == 'password' || e.type == 'text' || e.type == 'textarea' || e.type == 'number' || e.type == 'email' || e.type == 'url' || e.type == 'tel' ) {
 			e.value = '';
 		} else if ( e.type == 'select-one' ) {
 			while ( e.selectedIndex > 0 ) {
@@ -695,17 +715,17 @@ function Country_onchange( country_ddm, state ) {
 	if ( country == 'US' ) {
 		$(state.name+'_container').innerHTML = '<select name="' + state.name + '" id="' + state.id + '" />';
 		new Ajax.Updater( state.name, '/includes/_states.html' );
-		if ( state_label ) state_label.innerHTML='State:';
-		if ( postal_label ) postal_label.innerHTML='ZIP Code:';
+		if ( state_label ) state_label.innerHTML='State';
+		if ( postal_label ) postal_label.innerHTML='ZIP Code';
 	} else if ( country == 'CA' ) {
 		$(state.name+'_container').innerHTML = '<select name="' + state.name + '" id="' + state.id + '" />';
 		new Ajax.Updater( state.name, '/includes/_provinces.html' );
-		if ( state_label ) state_label.innerHTML='Province:';
-		if ( postal_label ) postal_label.innerHTML='Postal Code:';
+		if ( state_label ) state_label.innerHTML='Province';
+		if ( postal_label ) postal_label.innerHTML='Postal Code';
 	} else {
 		$(state.name+'_container').innerHTML = '<input type="text" name="' + state.name + '" id="' + state.id + '" />';
-		if ( state_label ) state_label.innerHTML='State/Province:';
-		if ( postal_label ) postal_label.innerHTML='Postal Code:';
+		if ( state_label ) state_label.innerHTML='State/Province';
+		if ( postal_label ) postal_label.innerHTML='Postal Code';
 	} // end if
 } // end function
 
@@ -731,14 +751,14 @@ function Location_onchange( parent_element, type, options ) {
 		var postal_label = $(parent_element.name + '_postal');
 		var country = get_ddm_text( parent_element );
 		if ( country == 'United States' ) {
-			if ( state_label ) state_label.innerHTML='State:';
-			if ( postal_label ) postal_label.innerHTML='ZIP Code:';
+			if ( state_label ) state_label.innerHTML='State';
+			if ( postal_label ) postal_label.innerHTML='ZIP Code';
 		} else if ( country == 'Canada' ) {
-			if ( state_label ) state_label.innerHTML='Province:';
-			if ( postal_label ) postal_label.innerHTML='Postal Code:';
+			if ( state_label ) state_label.innerHTML='Province';
+			if ( postal_label ) postal_label.innerHTML='Postal Code';
 		} else {
-			if ( state_label ) state_label.innerHTML='State/Province:';
-			if ( postal_label ) postal_label.innerHTML='Postal/ZIP Code:';
+			if ( state_label ) state_label.innerHTML='State/Province';
+			if ( postal_label ) postal_label.innerHTML='Postal/ZIP Code';
 		}  // end if
 	} // end if
 }
@@ -1226,7 +1246,9 @@ function LoadContent( divID, page, parameters, message ) {
 	//alert( typeof parameters );
 	if ( ! parameters ) { 
 		parameters = '';
-	} else if ( typeof parameters == 'object' ) {
+	} else if ( parameters == 'object HTMLFormElement]' ) {
+		parameters = parameters.serialize();
+	} else if ( typeof parameters == 'object' && parameters.serialize ) {
 		parameters = parameters.serialize();
 	} 
 	if ( parameters.length > 8190 ) 
@@ -1382,18 +1404,18 @@ function input_filter(e,regexp) {
 	return e.value;
 }
 function cardinalize(e) {
-	if ( e.value.match(/[^\d]/g) )
-		e.value = e.value.replace(/[^\d]/g,'');
+	if ( e.value.match(/[^\d%]/g) )
+		e.value = e.value.replace(/[^\d%]/g,'');
 	return e.value;
 }
 function integerize(e) {
-	if ( e.value.match(/[^\d\-]/g) )
-		e.value = e.value.replace(/[^\d\-]/g,'');
+	if ( e.value.match(/[^\d\-%]/g) )
+		e.value = e.value.replace(/[^\d\-%]/g,'');
 	return e.value;
 }
 function floatize(e) {
-	if ( e.value.match(/[^\d\-\.]/g) )
-		e.value = parseFloat(e.value.replace(/[^\d\-\.]/g,''));
+	if ( e.value.match(/[^\d\-\.%]/g) )
+		e.value = parseFloat(e.value.replace(/[^\d\-\.%]/g,''));
 	return e.value;
 }
 function floatize_calculator(e) {
@@ -1402,8 +1424,8 @@ function floatize_calculator(e) {
 	return e.value;
 }
 function hexize(e) {
-	e.value = e.value.replace(/[^\da-fA-F]/g,'');
-	return e.value;
+    e.value = e.value.replace(/[^\da-fA-F%]/g,'');
+    return e.value;
 }
 function createThrobber( img, preview ) {
     var x = img.x;

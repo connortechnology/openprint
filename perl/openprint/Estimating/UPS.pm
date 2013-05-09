@@ -145,6 +145,11 @@ $openprint::log->debug("PostalCode: $$specs{'ToPostalCode'}");
 				);
 
 		@ups{ keys %shipping_fields } = $Supplier->load_shipping( @shipping_fields{ keys %shipping_fields } );
+		$ups{ShipperCity} = $Supplier->city() if ! $ups{ShipperCity};
+		$ups{ShipperStateProvince} = $Supplier->state() if ! $ups{ShipperStateProvince};
+		$ups{ShipperCountry} = $Supplier->country() if ! $ups{ShipperCountry};
+		$ups{ShipperPostalCode} = $Supplier->postalcode() if ! $ups{ShipperPostalCode};
+
 	} # end if
 	@ups{'ShipToPostalCode', 'ShipToCity', 'ShipToStateProvince', 'ShipToCountry'} = 
 		@$specs{'ToPostalCode','ToCity','ToStateProvince','ToCountry'};
@@ -292,25 +297,25 @@ $log->debug("Pickup: $$specs{'ddmPickupType'} Service: $$specs{'ddmServiceType'}
 			my $cost = $1;
 			my $currency = $2;
 			$log->debug("Currency returned: $currency") if $debug;
-			my @currencies = openprint::Currency->find( 'short' => $currency );
-			my $UPS_Currency = shift @currencies;
-			my $Project = new openprint::Project( $project_index );
+			my $UPS_Currency = openprint::Currency->find_one( short => $currency );
 			my $MY_Currency = $Project->Currency();
 			$log->debug("MY Currency: " . $MY_Currency->id() . ' ' . $MY_Currency->name() ) if $debug;
 			# Now... we need to do currency conversions
-			if ( $UPS_Currency->{'id'} != $MY_Currency->{'id'} ) {
+			if ( ! $UPS_Currency ) {
+				$$specs{alert} .= 'UPS Currency not found.  Price may be incorrect.<br/>';
+			} elsif ( $UPS_Currency->{'id'} != $MY_Currency->{'id'} ) {
 				my $rate = $UPS_Currency->conversions( $MY_Currency->{'id'} );
 				$cost *= $rate;
 				$$specs{'hdnBreakdown'.$qty_index} .= 'Converting to ' . $MY_Currency->name() . ' using ' .$rate."\%\n";
 			} # end if
-			my %ServicePrice = openprint::service::get_price_object( $log, $dbh, $variable, 'UPS Shipping', $cost, undef );
+			my %ServicePrice = openprint::service::get_price_object( 'UPS Shipping', $cost, undef );
 			if ( $ServicePrice{'Price'} > 0 ) {
 				$ServicePrice{'Total'} = $ServicePrice{'Price'} * (1+$Project->markup()/100);
 			} else {
 				$ServicePrice{'Total'} = $cost * (1 + $ServicePrice{'Markup'}/100) * (1+$Project->markup()/100);
 			} # end if
 
-			$$specs{"txtPrice$qty_index"} = sprintf( '%.2f', $ServicePrice{'Total'} );
+			$$specs{"txtPrice$qty_index"} = Math::Round::nearest( 0.01, $ServicePrice{'Total'} );
 		} # end if pickuptype and servicetype
 
 	} # end foreach qty_index

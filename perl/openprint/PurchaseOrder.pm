@@ -103,6 +103,9 @@ sub save {
 	my ( $self, $param, $force_insert ) = @_;
 
 	$self->set( $param );
+
+	my $ac = sql::start_transaction( $openprint::dbh );
+	$dbh->do( "LOCK TABLE $openprint::PurchaseOrder_Tax::table IN EXCLUSIVE MODE" ) or $log->error( DBI->errstr );
 	# force recalculation
 	$self->subtotal(undef);
 	foreach my $Tax ( $self->Taxes(1) ) {
@@ -120,6 +123,7 @@ sub save {
 	foreach my $T ( $self->Taxes() ) {
 		$error .= $T->save({'purchaseorder_id'=>$$self{'id'}, 'PurchaseOrder'=>$self});
 	} # end foreach
+	sql::end_transaction( $openprint::dbh, $ac );
 
 	return $error;
 } # end sub save
@@ -175,6 +179,10 @@ sub send_approval_required_notification {
 			$openprint::log->debug( $U->email() . ' is not a valid address.' );
 			next;
 		} # end if
+		if ( ! $self->can_view( $U ) ) {
+			$openprint::log->debug( $U->name() . ' cannot view this PO.' );
+			next;
+		} # end if
 		if ( ! $self->can_authorize( $U ) ) {
 			$openprint::log->debug( $U->name() . ' cannot authorize this PO.' );
 			next;
@@ -194,7 +202,7 @@ $log->debug("Results: $results");
 sub send_to_vendor {
 	my ( $self ) = @_;
 
-	my $From = new openprint::User( $session{user_id} );
+	my $From = $self->Creator();
 	
 	my %info = (
 			'PurchaseOrder'	=>	$self,
@@ -213,7 +221,7 @@ sub send_to_vendor {
 	my $Email = new openprint::Email();
 	$Email->set({
 			from    => $From,
-			subject => 'Purchase Order ' . $self->id() . ' from ' . $self->vendor_name(),
+			subject => 'Purchase Order ' . $self->id() . ' from ' . $From->Company()->name(),
 			ATTACHMENTS => \@attachments,
 			});
 
@@ -227,6 +235,7 @@ sub send_to_vendor {
 	if ( $self->shipto_email() and ( $self->vendor_email() ne $self->shipto_email() ) ) {
 		$results .= $Email->send( 
 				TO	=>	[ split(',', $self->shipto_email() ) ],
+				SUBJECT	=>	'Purchase Order '. $self->id() . ' for ' . $self->vendor_name(),
 				);
 	} # end if
 	if ( $self->notifications() ) {
@@ -402,8 +411,8 @@ sub Taxes {
 		foreach my $Tax ( openprint::Tax->find(
 					'period_start null_or_<='	=>	$created_on,
 					'period_end null_or_>='	 =>	$created_on,
-					'country'	=>	$country,
-					'state'	 =>	$state,
+					country	=>	$country,
+					state	=>	$state,
 				) ) {
 			my $T = new openprint::PurchaseOrder_Tax();
 			$T->set({
@@ -422,7 +431,7 @@ sub Taxes {
 				'period_start null_or_<='	=>	$created_on,
 				'period_end null_or_>='	 	=>	$created_on,
 				country	=>	$country,
-				state	 =>	$state,
+				state	=>	$state,
 			);
 
 		# Clear out any no longer valid taxes
@@ -474,12 +483,14 @@ sub can_edit {
 
 sub can_view {
 	return 1 if ! $_[0]{'id'};
+	my $User = $_[1] ? $_[1] : new openprint::User( $openprint::session{user_id} );
+
 	if ( 
-			( $openprint::session{'user_type'} eq 'A' ) or
-			( sets::isin( $_[0]{'created_by'}, [ $openprint::session{'user_id'}, new openprint::User($openprint::session{'user_id'})->assistant_ids(), new openprint::User($openprint::session{'user_id'})->csr_ids() ] ) )
-			or ( openprint::usergroup::is_user_in( ['Accounting','Shipping','Inventory'], $openprint::session{'user_id'} ) ) 
+			( $$User{type} eq 'A' ) or
+			( sets::isin( $_[0]{'created_by'}, [ $$User{id}, $User->assistant_ids(), $User->csr_ids() ] ) )
+			or ( openprint::usergroup::is_user_in( ['Accounting','Shipping','Inventory'], $$User{id} ) ) 
 			
-			or ( sets::isin( $openprint::session{'user_id'}, [ map { $_->Order()->salesrep_id() } $_[0]->Contents() ] ) )
+			or ( sets::isin( $$User{id}, [ map { $_->Order()->salesrep_id() } $_[0]->Contents() ] ) )
 		) {
 		return 1;
 	} # end if
@@ -496,6 +507,7 @@ sub num {
 sub can_authorize {
 	my $User = @_ > 1 ? $_[1] : new openprint::User( $openprint::session{user_id} );
 
+	return 1 if ! $_[0]->total();
 	return 1 if $User->purchasing_limit() and ( $_[0]->total() < $User->purchasing_limit() );
 	my %Totals;
 	my %Types;
@@ -513,6 +525,34 @@ sub can_authorize {
 	} # end if
 	return $authorized;
 } # end sub can_authorize
+
+# ( $PO, $Content )
+sub can_see_pricing {
+if ( ! $_[0]{id} ) {
+$log->debug("Ccan see because new PO");
+	return 1;
+} # end if
+	
+	if ( ( $session{user_id} == $_[0]->created_by() ) or ( $session{user_type} eq 'A' ) or openprint::usergroup::is_user_in( ['Accounting','SalesAdmin'], $session{user_id} ) ) {
+$log->debug('can see');
+		return 1;
+	} # end if
+
+	if ( $_[1] ) {
+			if ( sets::isin( $_[1]->Order()->salesrep_id(), [ $openprint::session{'user_id'}, new openprint::User($openprint::session{'user_id'})->assistant_ids(), new openprint::User($openprint::session{'user_id'})->csr_ids() ] ) ) {
+			$log->debug('can see');
+			return 1;
+		} # end if
+	} else {
+		foreach my $C ( $_[0]->Contents() ) {
+			if ( sets::isin( $C->Order()->salesrep_id(), [ $openprint::session{'user_id'}, new openprint::User($openprint::session{'user_id'})->assistant_ids(), new openprint::User($openprint::session{'user_id'})->csr_ids() ] ) ) {
+				$log->debug('can see');
+				return 1;
+			} # end if
+		} # end foreach C
+	} # end if
+	return 0;	
+} # end sub can_see_pricing
 
 1;
 __END__

@@ -11,21 +11,21 @@ $table = 'conversations';
 $serial = 'conversations_id_seq';
 
 %fields = (
-	'id'    		=>  'id',
-	'subject'		=>	'subject',
-	'created_on'	=>	'created_on',
-	'created_by'	=>	'created_by',
-	deleted			=>	'deleted',
+	id			=>	'id',
+	subject		=>	'subject',
+	created_on	=>	'created_on',
+	created_by	=>	'created_by',
+	deleted		=>	'deleted',
 );
 %find_fields = (
 );
 %transforms = (
-    'subject' => [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
+	subject => [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
 );
 %defaults = (
-	deleted			=>	0,
-	'created_on'	=>	q`'NOW()'`,
-	'created_by'	=>	q`$session{'user_id'}`,
+	deleted		=>	0,
+	created_on	=>	q`'NOW()'`,
+	created_by	=>	q`$session{'user_id'}`,
 );
 
 # returns an array of objects

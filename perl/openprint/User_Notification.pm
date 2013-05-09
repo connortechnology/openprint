@@ -9,7 +9,7 @@ $serial = 'user_notification_types_id_seq';
 %fields = (
 	id		=>	'id',
 	name	=>	'name',
-	sort	=>	sort,
+	sort	=>	'sort',
 );
 
 package openprint::User_Notification;

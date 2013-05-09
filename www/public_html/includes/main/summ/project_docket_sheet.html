@@ -298,6 +298,17 @@ $inkCoverage{$colour} = 100;
 				$net_impressions *= 2 ;
 				$gross_sheets /= 2 ;
 			} # end if
+			my ( $sheets, $lbs );
+			if ( $$sig_specs{"txtPressSheetQty$qty_index"} =~ /(\d+) lbs/ ) {
+				$lbs = $1;
+				$sheets = $lbs / ( $Paper->area() * $Paper->wpsi() );
+			} elsif ( $$sig_specs{"txtPressSheetQty$qty_index"} =~ /(\d+)sheets/ ) {
+				$sheets = $1;
+				$lbs = $sheets * $Paper->area() * $Paper->wpsi();
+			} else {
+				$sheets = $gross_sheets;
+				$lbs = $sheets * $Paper->area() * $Paper->wpsi();
+			} # end if
 
 			$html .= '</td><td class="docketText">';
 			foreach my $f ( $form .. ($form+$signatures-1) ) {
@@ -306,9 +317,9 @@ $inkCoverage{$colour} = 100;
 			$html .= '</td><td class="docketText">';
 			foreach my $f ( $form .. ($form+$signatures-1) ) {
 				if ( $Paper->type() eq 'Roll' ) {
-				$html .= sprintf('%d imps<br/>%d sheets<br/>%.0f lbs %dfeet F%d<br/><br/>', $gross_impressions, $gross_sheets, $gross_sheets * $Paper->area() * $Paper->wpsi(), $gross_impressions * $Paper->height(), $f );
+				$html .= sprintf('%d imps<br/>%d sheets<br/>%.0f lbs %dfeet F%d<br/><br/>', $gross_impressions, $sheets, $lbs, ($sheets * $Paper->height())/12, $f );
 				} else {
-				$html .= sprintf('%d imps<br/>%d sheets<br/>%.0f lbs F%d<br/><br/>', $gross_impressions, $gross_sheets, $gross_sheets * $Paper->area() * $Paper->wpsi(), $f );
+				$html .= sprintf('%d imps<br/>%d sheets<br/>%.0f lbs F%d<br/><br/>', $gross_impressions, $sheets, $lbs, $f );
 				} # end if
 			} # end foreach
 			$html .= '</td>';

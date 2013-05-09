@@ -129,18 +129,19 @@ No RADIUS Support
 	<fieldset><legend>Logs</legend>
 		<ul>
 			<li><label>Date</label>
-				<span class="DateSelectorCT"><? echo (
+				<? echo (
 						ssi::datetime_select_session( '/employee/it/host.html','log_created_on_start', {
 							'onchange'	=>q`new Ajax.Updater( 'Logs', '/employee/it/_host_logs.html', { parameters: $('f1').serialize() } );`,
 							'with_today'=>1,
 							'with_clear'=>1,
-							} ); ) ?></span> to
-				<span class="DateSelectorCT"><? echo (
+							} ); ) ?> to
+				<? echo (
 						ssi::datetime_select_session( '/employee/it/host.html','log_created_on_end', {
 							'onchange'	=>q`new Ajax.Updater( 'Logs', '/employee/it/_host_logs.html', { parameters: $('f1').serialize() } );`,
 							'with_today'=>1,
 							'with_clear'=>1,
-							} ); ) ?></span>
+							} ); ) ?>
+				<? echo ( button( 'LoadLog', { onclick=>q`new Ajax.Updater( 'Logs', '/employee/it/_host_logs.html', { parameters: $('f1').serialize() } );`, text=>'Load' } ); ) ?>
 			</li>
 		</ul>
 		<div id="Logs"><? echo ( include('/employee/it/_host_logs.html'); ) ?></div>

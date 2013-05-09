@@ -33,17 +33,13 @@
 				<ul>
 					<li>
 						<label>Created</label>
-						<span class="DateSelectorCT">
 		<? echo ( ssi::date_select_session( '/survey/history.html', 'created_on_start', {
 onchange=>q`load_surveys($('f1'));`,
 'with_today'=>1,'with_clear'=>1} ); ) ?>
-						</span>
 							to 
-						<span class="DateSelectorCT">
 		<? echo ( ssi::date_select_session( '/survey/history.html', 'created_on_end', {
 onchange=>q`load_surveys($('f1'));`,
 'with_today'=>1,'with_clear'=>1} ); ) ?>
-						</span>
 					</li>
 				</ul>
 			</div>

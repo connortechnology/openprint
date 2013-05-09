@@ -12,7 +12,7 @@
 				</p>
 				<p><label>Vendor</label>
 					<input id="supplier_id_filter" type="text" onkeyup="filterDDM(this, this.form.supplier_id);" class="filter" />
-					<select id="supplier_id" name="supplier_id" onchange="new Ajax.Updater('PurchaseOrders','_manifest_purchase_orders.html', { method: 'get', parameters: { supplier_id: $('supplier_id').value} } );">
+					<select id="supplier_id" name="supplier_id" onchange="new Ajax.Updater('PurchaseOrders','_manifest_purchase_orders.html', { parameters: { supplier_id: $('supplier_id').value} } );">
 						<option value="">All</option>
 						<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Company->find( 'order'=>'lower(name)', 'supplier'=>'Y') ], $$variable{'Manifest'}->supplier_id() ); ) ?>
 					</select>
@@ -27,9 +27,7 @@
 						@param{'received_on_year','received_on_month','received_on_day'} = Date::Calc::Today(); 
 					} # end if
 				) ?>
-				<span class="DateSelector">
 <? echo ( ssi::date_select( 'received_on', sprintf('%.4d-%.2d-%.2d', @param{'received_on_year','received_on_month','received_on_day'}) ); ) ?>
-				</span>
 				</p>
 			</div>
 		</fieldset>
@@ -49,10 +47,10 @@
 		<p class="buttons">
 			<? echo ( join('',
 				( $$variable{'Manifest'}->id() ? (
-					ssi::button( 'add', { 'onclick'=>"new Ajax.Updater('Types', '_manifest_type.html', { method: 'get', parameters: { manifest_id: '".$$variable{'Manifest'}->id()."', action: 'Add'}, insertion: 'bottom' } );", 'text'=>'Add Another Stock' } ) ) : () 
+					ssi::button( 'add', { onclick=>"new Ajax.Updater('Types', '_manifest_type.html', { parameters: { manifest_id: '".$$variable{'Manifest'}->id()."', action: 'Add'}, insertion: 'bottom' } );", 'text'=>'Add Another Stock' } ) ) : () 
 				),
-				ssi::button( 'Save', { 'onclick'=>"f1.btnFunction.value='Submit';if(f1.onsubmit())f1.submit();" } ),
-				ssi::button( 'Delete', { 'onclick'=>"if( confirm('Are you sure?') ) {f1.btnFunction.value='Delete';f1.submit();}" } ),
+				ssi::button( 'Save', { onclick=>"f1.btnFunction.value='Submit';if(f1.onsubmit())f1.submit();" } ),
+				ssi::button( 'Delete', { onclick=>"if( confirm('Are you sure?') ) {f1.btnFunction.value='Delete';f1.submit();}" } ),
 			); ) ?>
 		</p>
 		<input type="hidden" name="btnFunction" />

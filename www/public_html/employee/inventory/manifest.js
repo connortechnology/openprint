@@ -1,3 +1,44 @@
+function from_lbs( e, type_id, c_id ) {
+	var form = e.form;
+	var lbs = parseFloat(1*form.elements['qty_lbs-'+type_id+'-'+c_id].value);
+	form.elements['qty_kgs-'+type_id+'-'+c_id].value = do_decimals( lbs / 2.2046, 1 );
+
+	if ( get_value( form.elements['type-'+type_id] ) == 'Roll' ) {
+		var wpsi = parseFloat(1*form.elements['gsm-'+type_id].value) / 703064.5;
+		var width = parseFloat(1*form.elements['width-'+type_id].value);
+		if ( wpsi && width ) {
+			form.elements['qty_feet-'+type_id+'-'+c_id].value = do_decimals(((lbs/wpsi)/width)/12,0);
+		} // end if
+	} // end if
+
+} // end function from_lbs
+function from_kg( e, type_id, c_id ) {
+	var form = e.form;
+	var kgs = parseFloat(1*form.elements['qty_kgs-'+type_id+'-'+c_id].value);
+	var lbs = kgs * 2.2046;
+
+	form.elements['qty_lbs-'+type_id+'-'+c_id].value = do_decimals( lbs, 0 );
+
+	if ( get_value( form.elements['type-'+type_id] ) == 'Roll' ) {
+		var wpsi = parseFloat(1*form.elements['gsm-'+type_id].value)/ 703064.5;
+		var width = parseFloat(1*form.elements['width-'+type_id].value);
+		if ( wpsi && width ) {
+			form.elements['qty_feet-'+type_id+'-'+c_id].value = do_decimals(((lbs/wpsi)/width)/12,0);
+		} 
+	} // end if
+} // end function from_kg
+function from_feet( e, type_id, c_id ) {
+	return;
+	var form = e.form;
+	var feet = parseFloat(1*form.elements['qty_feet-'+type_id+'-'+c_id].value);
+	var wpsi = parseFloat(1*form.elements['gsm-'+type_id].value)/ 703064.5;
+	var width = parseFloat(1*form.elements['width-'+type_id].value);
+	
+	var lbs = feet*12*width*wpsi;
+	form.elements['qty_lbs-'+type_id+'-'+c_id].value = do_decimals( lbs, 0 );
+	form.elements['qty_kgs-'+type_id+'-'+c_id].value = do_decimals( lbs / 2.2046, 1 );
+} // end function from_kg
+
 function mweight_to_gsm( form, type_id ) {
 	var mweight = parseFloat(1*form.elements['mweight-'+type_id].value);
 	var width = parseFloat(1*form.elements['width-'+type_id].value);
@@ -35,12 +76,17 @@ function add_content(form, type_id) {
 				rfidtag_id: $('rfidtag_id-'+type_id+'-').value,
 				skid_id:    $('skid_id-'+type_id+'-').value,
 				docket:     $('docket-'+type_id+'-').value,
-				qty_lbs:    $('qty_lbs-'+type_id+'-').value
+				qty_lbs:    $('qty_lbs-'+type_id+'-').value,
+				manufacturers_id:	$('manufacturers_id-'+type_id+'-').value,
+				location_id: $('location_id-'+type_id+'-').value
 			},
 			onSuccess: function (transport) { 
-var tr = $('totals-'+type_id);
+var tr = $('new-'+type_id);
 if ( ! tr ) { alert('totals not found'); } else {
-new Insertion.Before('totals-'+type_id, transport.responseText);return true;
+new Insertion.After('new-'+type_id, transport.responseText);
+$('rfidtag_id-'+type_id+'-').value = '';
+$('rfidtag_id-'+type_id+'-').focus();
+return true;
 }
  }, 
 			evalScripts: true
@@ -51,7 +97,7 @@ function manifest_onsubmit(form) {
 
 	var re = /^txtName-(\d+)$/;
 	var fields_to_check = ['Manufacturer','Owner','Name','Finish','Colour'];
-	for ( var i = 0; i < form.elements.length; i += 1 ) {
+	for ( var i = 0, len = form.elements.length; i < len; i += 1 ) {
 		var matches = re.exec( form.elements[i].name );
 		
 		if ( matches ) {

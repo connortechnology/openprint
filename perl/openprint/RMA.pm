@@ -8,7 +8,7 @@ require openprint::RMA_Priority;
 
 use vars qw( $debug $table $serial %fields %find_fields %transforms %defaults );
 
-$debug = 0;
+$debug = 1;
 $table = 'rma';
 $serial = 'rma_id_seq';
 %fields = (

@@ -1,4 +1,4 @@
-<? echo ( include('/includes/error_reporting.html'); ) ?>
+<?include(/includes/error_reporting.html)?>
 <? echo (
 	my $html .= $$variable{Event}->attendance( $variable{User} );
 	return $html if ! $$variable{User}->id();

@@ -1,13 +1,23 @@
 <? echo (
+	
 	my $html = '';
 	if ( $variable{'error'} ) {
-		return qq`<script type="text/javascript">alert('$$variable{error}');</script>`;
+		$variable{error} =~ s/<br\/>//g;
+		$html .= qq`<script type="text/javascript">alert('$$variable{error}');</script>`;
+		delete $variable{error};
+	} elsif ( $variable{warning} ) {
+		$variable{warning} =~ s/<br\/>//g;
+		$html .= qq`<script type="text/javascript">alert('$$variable{warning}');</script>`;
+		delete $variable{warning};
 	} 
 	if ( $$variable{'C'} ) {
 		my $C = $$variable{'C'};
-		my $tag_id = $C->Skid()->rfidtag_id();
+		my $Paper = $C->Type()->Paper();
+		my $Skid = $C->Skid();
+		my $tag_id = $Skid->rfidtag_id();
+		my $RFIDTag = $Skid->RFIDTag();
 		my $error;
-		my @SkidContents = $C->Skid()->Contents();
+		my @SkidContents = $Skid->Contents();
 		if ( @SkidContents > 1 ) {
 			$error = 'More than 1 stock on skid.';
 		} elsif ( @SkidContents and ( $SkidContents[0]->paper_id() != $$variable{'Type'}->paper_id() ) ) {
@@ -16,8 +26,19 @@
 
 		my $id = $$variable{'type_id'}.'-'.$$C{id};
 			
-		$html .= sprintf('<tr id="tr-%1$d"><td class="RFID"><a href="/employee/inventory/rfidtag_details.html?rfidtag_id=%2$s">%2$s</a></td>', $C->id(), $tag_id );
-		$html .= sprintf('<td class="Skid"><a href="/employee/inventory/skid_details.html?skid_id=%2$d">%2$d</a></td>', $C->id(), $C->skid_id() );
+		$html .= sprintf('<tr id="tr-%1$d"><td class="RFID"><a href="/employee/inventory/rfidtag_details.html?rfidtag_id=%2$s">%3$s</a></td>', $C->id(), $RFIDTag->id(), $RFIDTag->id_short() );
+		$html .= sprintf('<td class="Skid"><a href="/employee/inventory/skid_details.html?skid_id=%1$d">%1$d</a></td>', $C->skid_id() );
+	
+		$html .= '<td class="ManufacturersID">';
+		if ( $Skid->manufacturers_id() ) {
+			$html .= sprintf('<a href="/employee/inventory/skid_details.html?skid_id=%1$d">%2$s</a></td>', $C->skid_id(), $Skid->manufacturers_id() );
+		} else {
+			$html .= ssi::input( type=>'text', 
+				id		=>	'manufacturers_id-'.$id,
+				name	=>	'manufacturers_id-'.$id,
+				value	=>	$param{'manufacturers_id-'.$id},
+				).'</td>';
+		} # end if
 		$html .= '<td class="Docket">'.ssi::input( type=>'cardinal', 
 			id		=>	'docket-'.$id,
 			name	=>	'docket-'.$id,
@@ -27,13 +48,19 @@
 			id		=>	'qty_lbs-'.$id,
 			name	=>	'qty_lbs-'.$id,
 			value	=>	$C->quantity(),
-			onkeyup	=>	q`convert_lbs_to_kg( this, $('qty_kgs-`.$id.q`') );`,
+			onkeyup	=>	"from_lbs(this,'$$variable{type_id}','$$C{id}');",
 			) . '</td>';
 		$html .= '<td class="qty_kgs">'.ssi::input( type=>'float', 
 			id		=>	'qty_kgs-'.$id,
 			name	=>	'qty_kgs-'.$id,
 			value	=>	Math::Round::nearest( .1, $C->quantity()/2.2046 ),
-			onkeyup	=>	q`convert_kg_to_lbs( this, $('qty_lbs-`.$id.q`') );`,
+			onkeyup	=>	"from_kg(this,'$$variable{type_id}','$$C{id}');",
+			) . '</td>';
+		$html .= '<td class="qty_feet">'.ssi::input( type=>'float', 
+			id		=>	'qty_feet-'.$id,
+			name	=>	'qty_feet-'.$id,
+			( ( $Paper->width() and $Paper->wpsi() ) ? ( value	=>	Math::Round::nearest( 1, (($C->quantity()/$Paper->wpsi())/$Paper->width())/12 ) ) : () ),
+			onkeyup	=>	"from_feet(this,'$$variable{type_id}','$$C{id}');",
 			) . '</td>';
 		if ( @SkidContents ) {
 			$html .= sprintf( '<td class="in_stock">%d lbs</td>', $SkidContents[0]->quantity() );
@@ -41,6 +68,7 @@
 		} else {
 			$html .= '<td colspan="2">&nbsp;</a>';
 		} # end if
+		$html .= '<td class="Location">'.ssi::select( openprint::Location->dropdown(order=>'parent_id NULLS FIRST, lower(name)'), $Skid->location_id(), { name=>'location_id-'.$id, prepend=>['','select'] } ).'</td>';
 		$html .= '<td>'.$error.'</td>';
 		$html .= '<td class="buttons">' . ssi::button( 'X'.$$C{'id'}, { onclick=>qq`delete_content('$$C{id}');`, text=>'X', title=>'Remove' } ) . '</td>';
 		$html .= '</tr>';
@@ -49,8 +77,8 @@
 ) ?>
 <? if ( $param{'action'} and $$variable{'type_id'} ) ?>
 <script type="text/javascript">
-	$('totallbs-<?type_id?>').innerHTML = '<? echo ( sprintf('%.0f', misc::sum( map { $_->quantity() } $$variable{'Manifest'}->Contents('type_id'=>$$variable{'type_id'}) ) ); ) ?>lbs';
-	$('totalkgs-<?type_id?>').innerHTML = '<? echo ( sprintf('%.4f', misc::sum( map { $_->quantity() } $$variable{'Manifest'}->Contents('type_id'=>$$variable{'type_id'}) )/2.2046); ) ?>kg';
-	$('skidcount-<?type_id?>').innerHTML = '<? echo ( $$variable{'Manifest'}->Contents('type_id'=>$$variable{'type_id'}) ) ?> skids/rolls';
+	$('totallbs-<?type_id?>').innerHTML = '<? echo ( Math::Round::nearest( 1, misc::sum( map { $_->quantity() } $$variable{Manifest}->Contents('type_id'=>$$variable{'type_id'}) ) ); ) ?>lbs';
+	$('totalkgs-<?type_id?>').innerHTML = '<? echo ( Math::Round::nearest( 0.01, misc::sum( map { $_->quantity() } $$variable{Manifest}->Contents('type_id'=>$$variable{'type_id'}) )/2.2046); ) ?>kg';
+	$('skidcount-<?type_id?>').innerHTML = '<? echo ( $$variable{Manifest}->Contents('type_id'=>$$variable{'type_id'}) ) ?> skids/rolls';
 </script>
 <? endif ( $param{'action'} and $$variable{'type_id'} ) ?>

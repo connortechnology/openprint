@@ -54,24 +54,16 @@
 <? if ( 0 ) ?>
 			<li>
 				<label>Created</label>
-				<span class="DateSelectorCT">
 <? echo ( ssi::date_select_session( '/article/search.html', 'created_on_start', {onchange=>'load_articles();','with_today'=>1,'with_clear'=>1} ); ) ?>
-				</span>
 					to 
-				<span class="DateSelectorCT">
 <? echo ( ssi::date_select_session( '/article/search.html', 'created_on_end', {onchange=>'load_articles();','with_today'=>1,'with_clear'=>1} ); ) ?>
-				</span>
 			</li>
 <? endif ( 0 ) ?>
 			<li>
 				<label>Published</label>
-				<span class="DateSelectorCT">
 <? echo ( ssi::date_select_session( '/article/search.html', 'published_on_start', {onchange=>'load_articles();','with_today'=>1,'with_clear'=>1} ); ) ?>
-				</span>
 					to 
-				<span class="DateSelectorCT">
 <? echo ( ssi::date_select_session( '/article/search.html', 'published_on_end', {onchange=>'load_articles();','with_today'=>1,'with_clear'=>1} ); ) ?>
-				</span>
 			</li>
 			</ul>
 			</div>

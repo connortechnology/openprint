@@ -136,8 +136,8 @@ sub stock {
 		$Paper->manufacturer_id( $param{'ddmManufacturer'} ) if $param{'ddmManufacturer'};
 		$Paper->group( $param{'txtGroup'} ) if $param{'txtGroup'};
 		$Paper->group_id( $param{'Group'} ) if $param{'Group'};
-		$Paper->name( $param{'txtBrand'} ) if $param{'txtBrand'};
-		$Paper->name_id( $param{'ddmBrand'} ) if $param{'ddmBrand'};
+		$Paper->brand( $param{'txtBrand'} ) if $param{'txtBrand'};
+		$Paper->brand_id( $param{'ddmBrand'} ) if $param{'ddmBrand'};
 		$Paper->finish( $param{'txtFinish'} ) if $param{'txtFinish'};
 		$Paper->finish_id( $param{'ddmFinish'} ) if $param{'ddmFinish'};
 		$Paper->colour( $param{'txtColour'} ) if $param{'txtColour'};
@@ -172,7 +172,7 @@ sub stock {
 		$Paper->multipart( $param{'multipart'} );
 		$Paper->perfecting( $param{'perfecting'} );
 		$Paper->score_required( $param{'scoring'} );
-		$Paper->req_die_scoring( $param{'diescoring'} );
+		$Paper->die_score_required( $param{'die_score_required'} );
 		$Paper->digital( $param{'digital'} );
 		$Paper->bladecleaning( $param{'bladecleaning'} );
 		$Paper->grade( $param{'grade'} );

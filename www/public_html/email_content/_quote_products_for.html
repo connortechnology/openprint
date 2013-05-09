@@ -19,7 +19,7 @@
 									<td class="description">%3$s</td>
 									<td class="quantity">%4$s</td>
 									<td class="newprice">%5$s</td>
-									</tr>', $rowclass, $Product->id(), $Product->description(), 
+									</tr>', $rowclass, $Product->id(), $Product->name() . ' ' . $Product->description() . ( $Product->description() ? '<br/>'.$Product->comments() : $Product->comments() ),
 									Number::Format::format_number($Product->quantity()), 
 									openprint::Currency::format( $Product->price() ),
 									$Product->Product()->thumbnail_html(),

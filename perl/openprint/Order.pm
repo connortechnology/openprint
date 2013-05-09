@@ -19,7 +19,7 @@ require openprint::Order_Status;
 require openprint::Payment;
 require openprint::Tax;
 
-$debug = 0;
+$debug = 1;
 
 $table = 'orders';
 $serial = 'orders_id_seq';
@@ -72,6 +72,7 @@ $serial = 'orders_id_seq';
 
 %find_fields = (
 	project_id	=>	'(SELECT lngprojectindex FROM Order_Contents WHERE OrderIndex=Orders.id)',
+	status		=>	'(SELECT name FROM Order_Statuses WHERE order_statuses.id=status_id)',
 );
 
 sub save {

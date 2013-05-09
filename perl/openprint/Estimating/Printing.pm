@@ -473,6 +473,12 @@ $log->debug("Coatings: " . join( ',', keys %coatings ) );
 		} # end if
 	} # end foreach
 	$project{special_colours} = \%special_colours;
+	$project{'Sheet WorkColours'} = [ @{$project{side_one_colours}}, @{$project{side_one_coatings}}, (
+( $$specs{'sides_the_same'} eq 'Y' ) ? () :  @{$project{side_two_colours}},@{$project{side_two_coatings}} ) ];
+	$project{'WebColours'} = [ @{$project{side_one_colours}}, @{$project{side_one_coatings}}, @{$project{side_two_colours}},@{$project{side_two_coatings}} ];
+	$project{'PerfectingColours'} = [ @{$project{side_one_colours}}, @{$project{side_one_coatings}}, @{$project{side_two_colours}},@{$project{side_two_coatings}} ];
+	$project{'Work & TurnColours'} = [ @{$project{'filtered_colours'}},@{$project{filtered_coatings}} ];
+	$project{'Work & TumbleColours'} = [ @{$project{'filtered_colours'}},@{$project{filtered_coatings}} ];
 
 	foreach my $service ( 'Folding','Scoring','Perforating','DieCutting','Cutting','Numbering','Proofs' ) {
 		if ( $$services{$service} and @{$$services{$service}} ) {
@@ -537,7 +543,8 @@ $log->debug("Coatings: " . join( ',', keys %coatings ) );
 # Now it will return an array of hash refs, which may someday become Objects
 sub get_colours {
 	my ( $specs, $side, $v, $signature ) = @_;
-$openprint::log->debug("Called get_colours");
+	my ( $caller, undef, $line ) = caller;
+$openprint::log->debug("Called get_colours from $caller : $line");
 	my @colours;
 	if ( ( defined $$specs{'sides_the_same'} ) and ( $$specs{'sides_the_same'} eq 'Y' ) and ( $side eq 'SideTwo' ) ) {
 		$side = 'SideOne';
@@ -1347,6 +1354,7 @@ $openprint::log->debug("Non-process colours in get_impositions: @non_process_col
 		$max_imposition = int( $max_imposition / 3 );
 	
 		foreach my $imp ( @impositions ) {
+			$$imp{sides} = $$project{print_sides};
 			if ( $$imp{'imposition'} > $qty ) {
 				$openprint::log->debug("Next because $$imp{imposition} > $qty");
 				#next;
@@ -1505,7 +1513,7 @@ $openprint::log->debug("Doing nothing, keeping all $add") if DEBUG;
 			} # end if
 		} # end if ! impositions
 
-		$impositions{$Press->id()} = [@impositions] if @impositions;
+		$impositions{$Press->id()} = \@impositions if @impositions;
 	} # end foreach Press
 
 	return %impositions;
@@ -1871,6 +1879,9 @@ $PaperServiceType = openprint::ServiceType->find_one(name=>'Paper');
 
 	my @side_one_colours = get_colours( $specs, 'SideOne' );
 	my @side_two_colours = get_colours( $specs, 'SideTwo' );
+	$$specs{SideOneColours} = \@side_one_colours;
+	$$specs{SideTwoColours} = \@side_two_colours;
+
 $openprint::log->debug("Side one @side_one_colours twp: @side_two_colours");
 	my %inkCoverage = get_inkcoverage( $Project, $specs );
 	if ( ! ( $$services{'NoPrinting'} or @side_one_colours or @side_two_colours ) ) {
@@ -3512,6 +3523,12 @@ sub calc_price {
 	$setup_rate = $Press->specification( 'MakeReady Overs Rate ' . $Paper->material(), scalar @colours ) if ! $setup_rate;
 	$setup_rate = $Press->specification( 'MakeReady Overs Rate', scalar @colours ) if ! $setup_rate;
 
+	if ( $Paper->type() eq 'Roll' and sets::isin('Sheet', split(',', $Press->specification('Feed') ) ) ) {
+		if ( my $roll2sheet_overs_rate = $Press->specification( 'Roll2Sheet Additional Setup Overs' ) ) {
+			$setup_rate *= ( 1 + ( $roll2sheet_overs_rate / 100 ) );
+		} # end if
+	} # end if
+
 	my $setup_overs;
  	if ( $$specs{'OverrideSetup'.$qty_index} eq 'Y' ) {
 		$setup_overs = $$specs{'OverSetup'.$qty_index};
@@ -3521,6 +3538,11 @@ sub calc_price {
 		$setup_overs = $Press->specification( 'MakeReady Overs ' . $$Imposition{'runstyle'}, scalar @colours );
 		$setup_overs = $Press->specification( 'MakeReady Overs', scalar @colours ) if ! $setup_overs;
  	} # end if
+	if ( $Paper->type() eq 'Roll' and sets::isin('Sheet', split(',', $Press->specification('Feed') ) ) ) {
+		if ( my $roll2sheet_overs_rate = $Press->specification( 'Roll2Sheet Additional Run Overs' ) ) {
+			$setup_overs *= ( 1 + ( $roll2sheet_overs_rate / 100 ) );
+		} # end if
+	} # end if
 
 	my $run_overs;
 	my $over_rate = 0;
@@ -4303,6 +4325,8 @@ sub select_presses {
 # we do not have to check Image Size here because the the imposition code will take care of that later on.
 # it may be a little faster to eliminate the press now but i'm not sure.
 
+
+
 # we do not need to do any Perfecting checks because imposition code will create or no create perfecting.
 
 # Inline Perfing & Scoring is done as a sperate run, so it dosn't affect our printing press choice.
@@ -4327,16 +4351,25 @@ sub select_presses {
 	#my @Coatings = map { $_->name() } $CoatingsCategory->Services() if $CoatingsCategory;
 	#my @side_one_colours = sets::exclude( \@Coatings, $side_one_colours );
 	#my @side_two_colours = sets::exclude( \@Coatings, $side_one_colours );
+	my $ProjectType = $Project->Type();
 
 	foreach my $Press ( openprint::Equipment->find( 'category any'=>'Printing', 'useinestimating'=>1 ) ) {
 		my $press_id = $Press->id();
+
+		my ( $max_width, $max_length ) = ( $Press->specification( 'Maximum Sheet Width'), $Press->specification('Maximum Sheet Length') );
+
+		if ( $max_width and $max_length ) {
+			if ( ( $max_width < $$specs{txtWidth} or $max_length < $$specs{txtHeight} ) and ( $max_length < $$specs{txtWidth} or $max_width < $$specs{txtHeight} ) ) {
+				$results{$press_id} = 'Project does not fit on press';
+				next;
+			} # end if
+		} # end if
 
 		if ( $$specs{'ScreenType'} eq 'FM' and $Press->specification('FM Screening Capable') ne 'Y' ) {
 			$results{$press_id} = "Can't do FM Screening";
 			next;
 		} # end if
 
-		my $ProjectType = $Project->Type();
 		if ( $_ = $Press->specification('ProjectTypes') ) {
 			my ( @allowed, @disallowed );
 
@@ -4542,8 +4575,9 @@ sub get_run_price {
 
 # now work out the press run speed
 
+	# THere should be either a Standard Run Speed
+
 	my $std_speed = $Press->Specification('Standard Run Speed' );
-	$std_speed = $Press->Specification('Run Speed' ) if ! $std_speed;
 	
 	my $speed_mod;
 	if ( $std_speed ) {
@@ -4552,13 +4586,16 @@ sub get_run_price {
 # Only load this if not already specified by some inline bindery service
 		$run_speed = $Press->specification('Run Speed', (lc $$std_speed{'units'} eq 'calliper' ? $$Paper{'calliper'} : $Paper->gsm()) ) if ! $run_speed;
 		if ( ! $run_speed ) {
-			$openprint::log->error("No run sped on $$Press{strid} for $$std_speed{'units'} " . ($$std_speed{'units'} eq 'Calliper' ? $$Paper{'calliper'} : $Paper->gsm() ) );
+			$openprint::log->debug("No run sped on $$Press{strid} for $$std_speed{'units'} " . ($$std_speed{'units'} eq 'Calliper' ? $$Paper{'calliper'} : $Paper->gsm() ) ) if DEBUG;
+			$run_speed = $$std_speed{value};
+		
 		} elsif ( $run_speed != $$std_speed{value} ) {
 			$speed_mod = Math::Round::nearest( .001, $$std_speed{'value'} / $run_speed );
 			#$openprint::log->warn("1Press ".$$Press{'strid'}." Calliper: $$Paper{calliper} gsm: $$Paper{gsm} ($running_price) ($run_price{'units'}) STD: ($$std_speed{'value'}) RUN ($run_speed), mod: $speed_mod,  std/run: " . ( $speed_mod ? $run_speed/$speed_mod : $std_speed/$run_speed ) ) if DEBUG or 1;
 		} # end if
 	} else {
-		$openprint::log->error("No standard speed on $$Press{strid}");
+		$run_speed = $Press->Specification('Run Speed') if ! $run_speed;
+		$openprint::log->debug("No standard speed on $$Press{strid}") if DEBUG;
 	} # end if
 
 	if ( sets::isin( $run_price{'units'}, ['per m','per 1000 impressions', 'per 1000'] ) ) {
@@ -4611,6 +4648,9 @@ sub press_setup_cost {
 	if ( $Price{'units'} eq 'stock calliper - per plate' ) {
 		%Price = openprint::service::get_price_object( 'PressUnitMakeReady', $calliper, $Press );
 		$Price{'Total'} = $Price{'Price'} * $setup_count;
+	} elsif ( $Price{'units'} eq 'per job' ) {
+		#my @signatures = $Project->signatures(type=>$$specs{'txtSignatureType'});
+		#$Price{'Total'} = $Price{'Price'} if $signatures[0] == $service_index;
 	} elsif ( $Price{'units'} eq 'per form' ) {
 		my $specs = $$Imposition{specs};
 		%Price = openprint::service::get_price_object( 'PressUnitMakeReady', $$specs{'PreviousForms'.$qty_index} + 1, $Press);
