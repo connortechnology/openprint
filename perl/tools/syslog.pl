@@ -252,7 +252,7 @@ while(1) {
 			} # end if line matches re
 		} # end foreach re
 
-		if ( $change ) {
+		if ( $changed ) {
 			foreach my $ip ( sort keys %host_counts ) {
 				next if ! $host_counts{$ip}{update};
 				next if $host_counts{$ip}{whitelist};
@@ -266,6 +266,7 @@ while(1) {
 				$log->debug( "$ip $host_counts{$ip}{ip} $host_counts{$ip}{count}" ) if $config{debug};
 				`shorewall drop $ip` if $host_counts{$ip}{blacklist};
 			} # end foreach ip
+			$changed = 0;
 		} # end if
 	} # end while recv
 
