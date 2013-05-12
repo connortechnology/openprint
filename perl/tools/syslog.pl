@@ -260,7 +260,7 @@ while(1) {
 			if ( $_ ) {
 				$log->error( $_ );
 			} # end if
-			$log->debug( "$ip $host_counts{$ip}{ip} $host_counts{$ip}{count}" ) if $config{debug};
+			$log->debug( "Host count: $ip $host_counts{$ip}{count}" ) if $config{debug};
 			`shorewall drop $ip` if $host_counts{$ip}{blacklist};
 		} # end foreach ip
 	} # end while recv
