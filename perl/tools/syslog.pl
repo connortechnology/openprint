@@ -195,6 +195,7 @@ while(1) {
 			next;
 		} 
 	#$log->debug("Thing1: $1, thing3: $line ");
+		my $changed = 0;
 		foreach my $re ( @re ) {
 
 			#$log->debug("Checking Line: $re") if $config{debug};
@@ -242,6 +243,7 @@ while(1) {
 				if ( (!$last_seen) or ($last_seen < $occurrence) ) {
 					$host_counts{$ip}{count} += 1;
 					$host_counts{$ip}{update} = 1;
+					$changed = 1;
 				} else {
 					$log->debug( "Not counting because too old " . $host_counts{$ip}{updated_on} . " >= $when" ) if $config{debug};
 				} # end if
@@ -249,19 +251,21 @@ while(1) {
 			} # end if line matches re
 		} # end foreach re
 
-		foreach my $ip ( sort keys %host_counts ) {
-			next if ! $host_counts{$ip}{update};
-			next if $host_counts{$ip}{whitelist};
-			if ( $host_counts{$ip}{count} > 20 ) {
-				$host_counts{$ip}{blacklist} = 1;
-			} # end if
-			$_ = $host_counts{$ip}->save();
-			if ( $_ ) {
-				$log->error( $_ );
-			} # end if
-			$log->debug( "$ip $host_counts{$ip}{ip} $host_counts{$ip}{count}" ) if $config{debug};
-			`shorewall drop $ip` if $host_counts{$ip}{blacklist};
-		} # end foreach ip
+		if ( $change ) {
+			foreach my $ip ( sort keys %host_counts ) {
+				next if ! $host_counts{$ip}{update};
+				next if $host_counts{$ip}{whitelist};
+				if ( $host_counts{$ip}{count} > 20 ) {
+					$host_counts{$ip}{blacklist} = 1;
+				} # end if
+				$_ = $host_counts{$ip}->save();
+				if ( $_ ) {
+					$log->error( $_ );
+				} # end if
+				$log->debug( "$ip $host_counts{$ip}{ip} $host_counts{$ip}{count}" ) if $config{debug};
+				`shorewall drop $ip` if $host_counts{$ip}{blacklist};
+			} # end foreach ip
+		} # end if
 	} # end while recv
 
 } # end while
