@@ -150,7 +150,7 @@ while(1) {
 		# If a blacklist is specified, update it on start
 		if ( $opts->{blacklist} ) {
 			if ( ! open( FH, '>'.$opts->{blacklist} ) ) {
-				die 'Unable to open blacklist: ' . $opts->{blacklist} . "\n";
+				$log->error( 'Unable to open blacklist: ' . $opts->{blacklist} );
 			} else {
 				foreach my $Host ( openprint::Host->find( blacklist => 1,'order'=>'ip') ) {
 					my $macs = $Host->mac();
@@ -164,8 +164,9 @@ while(1) {
 					} # end if
 				} # end foreach Host
 				close(FH);
+				$log->warn("Having blackslist, restarting shorewall");
+				`/etc/init.d/shorewall restart`;
 			} # end if
-			`/etc/init.d/shorewall restart`;
 		} elsif ( 0 ) {
 			foreach my $Host ( openprint::Host->find( blacklist=>1, order=>'ip', whitelist=>0 ) ) {
 				my $macs = $Host->mac();
