@@ -17,5 +17,6 @@ CREATE TABLE Events (
 	album_id	INTEGER, FOREIGN KEY (album_id) REFERENCES Photo_Albums (id),
 	published	BOOLEAN NOT NULL default false,
 	template	BOOLEAN	NOT NULL default false,
+	template_id	INTEGER, FOREIGN KEY (template_id) REFERENCES Events (id),
 	PRIMARY KEY (id)
 );

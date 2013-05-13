@@ -3421,6 +3421,10 @@ if ( ! sets::isin( 'events', \@tables ) ) {
 	if ( ! exists $$data{template} ) {
 		$dbh->do(q`ALTER TABLE events add template BOOLEAN NOT NULL Default false` );
 	} # end if
+	if ( ! exists $$data{template_id} ) {
+		$dbh->do(q`ALTER TABLE events add template_id INTEGER` );
+		$dbh->do(q`ALTER TABLE events add FOREIGN KEY (template_id) REFERENCES Events (id)` );
+	} # end if
 } # end if
 if ( ! sets::isin( 'event_attendance', \@tables ) ) {
     $dbh->do( misc::load_file( $log, '../openprint/sql/Event_Attendance.sql' ) );

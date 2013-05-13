@@ -35,6 +35,7 @@ $serial = 'events_id_seq';
 	url			=>	'url',
 	published	=>	'published',
 	template	=>	'template',
+	template_id	=>	'template_id',
 );
 %find_fields = (
 	'attending'	=>	'(SELECT user_id FROM event_attendance WHERE event_id=events.id AND attending=true)',
@@ -386,6 +387,13 @@ sub copy {
 	$New->save({created_on=>undef,updated_on=>undef,created_by=>$openprint::session{user_id},deleted=>0,album_id=>$$Album{id}});
 	return $New;
 } # end sub copy
+
+sub Template {
+	if ( ! $_[0]{Template} ) {
+		$_[0]{Template} = new openprint::Event( $_[0]{template_id} );
+	} # end if
+	return $_[0]{Template};
+} # end sub Template
 
 1;
 __END__

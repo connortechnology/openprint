@@ -180,7 +180,19 @@ $log->debug("Title: $title, When: $when desc: $desc");
 	my $starting_on = sprintf('%.4d-%.2d-%.2d %.2d:%.2d:00', $year, $month, $day, $hour, $minute );
 	my $ending_on = sprintf( '%.4d-%.2d-%.2d %.2d:%.2d:00', $ending_year, $ending_month, $ending_day, $ending_hour, $ending_minute );
 
-	my $Event = openprint::Event->find_one( name=>$title, starting_on => sprintf('%.4d-%.2d-%.2d %.2d:%.2d:00', $year, $month, $day, $hour, $minute ) );
+	my $Template = openprint::Event->find_one( created_by=>$$User{id}, name=>$title, template=>1 );
+	if ( ! $Template ) {
+	$Template->save({
+		name =>  $title,
+		starting_on	=>	$starting_on,
+		ending_on	=>	$ending_on,
+		info		=>	$desc,
+		location_id	=>	$Location->id(),
+		created_by	=>	$User->id(),
+		});
+	} # end if
+
+	my $Event = openprint::Event->find_one( created_by=>$$User{id}, name=>$title, starting_on => $starting_on, template => 0 );
 
 	if ( $Event ) {
 		next if (
