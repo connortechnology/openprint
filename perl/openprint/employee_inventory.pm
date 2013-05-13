@@ -394,7 +394,10 @@ sub paper_details {
 		$Paper->basis_mweight( $param{'basis_weight'} ) if exists $param{'basis_weight'};
 		$Paper->basis_width( $param{'basis_width'} ) if exists $param{'basis_width'};
 		$Paper->basis_height( $param{'basis_height'} ) if exists $param{'basis_height'};
-		$Paper->manufacturers_name( $param{manufacturers_name} ) if exists $param{manufacturers_name};
+		if ( exists $param{manufacturers_name} ) {
+			s/^\s+//, s/\s+$//, s/\s+/ /g for $param{manufacturers_name};
+			$Paper->manufacturers_name( $param{manufacturers_name} );
+		} # end if
 		$Paper->gsm( $param{'gsm'} );
 		$Paper->calliper( $param{'txtCalliper'} );
 		$Paper->fsc_code( $param{'fsc_code'} );
@@ -1686,8 +1689,8 @@ sub manifests {
 		foreach my $manifest_id ( ref $param{'manifests'} eq 'ARRAY' ? @{$param{'manifests'}} : split(',',$param{'manifests'}) ) {
 			my $Manifest = new openprint::Manifest( $manifest_id );
 			$variable{'error'} .= $Manifest->delete();
-
 		} # end foreach manifest_id
+		return;
 	} # end if
 	_manifests();
 	ssi::setup_date_select( '/employee/inventory/manifests.html', 'received_on_start', -7 );
@@ -2010,27 +2013,38 @@ sub _paper_inventory_entries {
 
 sub manifest_import {
 	if ( my $upload = $r->upload('import') ) {
+		require openprint::Manifest_Import_Rule;
+		my %Rules = map { $_->match(), $_ } openprint::Manifest_Import_Rule->find();
+
 		my $io =$upload->io();
 
 		@{$variable{Types}} = ();
 
-		my ( $width, $basis_weight, $product );
+		my ( $width, $basis_weight, $product, $manufacturer );
+		my $line_count = 1;
 		my $roll_count = 0;
+		my $Type;
+		my $Manifest = $variable{Manifest} = new openprint::Manifest();
+		$variable{error} .= $Manifest->save({name=>$param{import}});
 
 		while ( my $line = <$io> ) {
-			s/^\s+//, s/\s+$// for $line;
+			s/^\s+//, s/\s+$//, s/\s+/ /g, s/\.\s+/\./g for $line;
+			
 
 			if ( $line =~ /(.+)Page\s+(\d+) of (\d+)$/ ) {
 				# Start a new page
-				$log->debug("Starting new page for $1 page $2 of $3");
+				$log->debug("Line $line_count: Starting new page for $1 page $2 of $3");
 			} elsif ( my ( $d, $m, $y, $H, $M ) = $line =~ /.+\s+(\d\d)\.(\d\d)\.(\d\d)\s*(\d\d:\d\d)$/ ) {
-				$log->debug("Date: $y-$m-$d $H:$M");
+				$log->debug("Line $line_count: Date: $y-$m-$d $H:$M");
 			} elsif ( ( $product ) = $line =~ /^PRODUCT NUMBER\s+(.+)$/ ) {
-				$log->debug("Product ($product)");
+				$log->debug("Line $line_count: Product ($product)");
+			} elsif ( ( $manufacturer ) = $line =~ /^Customer[^A-Z]+([A-Z]+)\s+.+$/ ) {
+				$manufacturer = $Rules{$manufacturer}->replacement() if $Rules{$manufacturer};
+				$log->debug("Line $line_count: Manufacturer ($manufacturer)");
 		
 			} elsif ( 
 				( $width, $basis_weight, my $manufacturers_id, my $location, my $received_on, my $available_quantity, my $available_lbs, my $hold_quantity, my $hold_lbs ) = 
-				$line =~ /^([\d\s\/\.]+)X ([\d\/\.]+)\s+(\S+)\s+(\S+)\s+([\d\.]+)\s+(\d)RO\S+\s+([\d\.]+)\s+(\d)RO\S+s+([\d\.]+)$/ ) {
+				$line =~ /^([\d\s\/\.]+)X *([\d\/\.]+)\s+(\S+)\s+(\S+)\s+(\S+)\s+(\S)RO\S+\s+(\S+)\s+(\S)RO\S+\s+([\d\.]+)$/ ) {
 				if ( my ($n,$m) = $width =~ /(\d+)\/(\d+)/ ) {
 					my $r = $n/$m;
 					$r =~ s/\d+(\.\d+)/$1/;
@@ -2039,25 +2053,47 @@ sub manifest_import {
 				$width =~ s/\s//g;
 
 				$available_quantity =~ s/l/1/;
-				$available_quantity =~ s/O/0/;
+				$available_quantity =~ s/[OD]/0/;
+				$available_lbs =~ s/[^\d\.]//g;
+				$hold_lbs =~ s/[^\d\.]//g;
 
 				$manufacturers_id =~ s/[^A-Z0-9]//g;
 
-				$log->debug("width: $width, weight: $basis_weight, id: $manufacturers_id, qty: $available_quantity, lbs: $available_lbs");
+				$log->debug("Line $line_count: width: $width, weight: $basis_weight, id: $manufacturers_id, qty: $available_quantity, lbs: $available_lbs");
 				$roll_count += 1;
+				my @Papers = openprint::Paper->find_one( manufacturers_name=>$product, width=>$width, basis_weight=>$basis_weight, manufacturer=>$manufacturer );
+				$Type->save() if $Type;
+				$Type = new openprint::Manifest_Content_Type();
+				$Type->set({ manifest_id=> $$Manifest{id} } );
+				if ( @Papers == 1 ) {
+					$Type->paper_id( $Papers[0]->id() );
+				} # end if
+				$variable{error} .= $Type->save();
+				push @{$variable{Types}}, $Type;
+
+				my $Content = new openprint::ManifestContent();
+				$variable{error} .= $Content->save({manifest_id=>$$Manifest{id}, type_id=>$$Type{id}, quantity=>$available_quantity });
+				
 			} elsif ( 
 				( my $manufacturers_id, my $location, my $received_on, my $available_quantity, my $available_lbs, my $hold_quantity, my $hold_lbs ) = 
-					$line =~ /^(\S+)\s+(\S+)\s+([\d\.]+)\s+(\S)RO\S+\s+([\d\.]+)\s+(\S)RO\S+\s+([\d\.]+)$/ ) {
-				$log->debug("width: $width, weight: $basis_weight, id: $manufacturers_id, qty: $available_quantity, lbs: $available_lbs");
+					$line =~ /^(\S+)\s+(\S+)\s+([\d\.]+)\s+(\S)RO\S+\s+(\S+)\s+(\S)RO\S+\s+([\d\.]+)$/ ) {
+				$log->debug("Line $line_count: width: $width, weight: $basis_weight, id: $manufacturers_id, qty: $available_quantity, lbs: $available_lbs");
 				$roll_count += 1;
 			} elsif ( my ( $total_rolls, $total_weight ) = $line =~ /^TOTALS:\s+Available Quantity\s+(\d+)\s+EA\s+Available\s+.+eight\s+([\d\,\.]+)$/ ) {
+				if ( ! $Type ) {
+					$variable{error} .= "Line $line_count: No Type yet for $product<br/>";
+					$Type = new openprint::Manifest_Content_Type();
+					$Type->set({ manifest_id=> $$Manifest{id} } );
+				} # end if
+				$Type->item_count( $total_rolls );
 				if ( $roll_count != $total_rolls ) {
-					$log->warn("Roll count($roll_count) != total rolls: $total_rolls");
+					$log->warn("Line $line_count: Roll count($roll_count) != total rolls: $total_rolls");
 				} # end if
 				$roll_count = 0;
 			} else {
-				$log->debug("unparsed line: $line");
+				$log->debug("Line $line_count: unparsed line: $line");
 			} # end if
+			$line_count += 1;
 		} # end while io
 	} # end if
 } # end sub manifest_import

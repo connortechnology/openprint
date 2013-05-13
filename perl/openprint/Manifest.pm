@@ -152,8 +152,9 @@ sub find {
 
 sub delete {
     my $self = shift;
+	return if ! $$self{id};
     my $ac = sql::start_transaction( );
-	foreach my $PO ( openprint::PurchaseOrder->find('manifest_id'=>$$self{'name'}) ) {
+	foreach my $PO ( openprint::PurchaseOrder->find('manifest_id'=>$$self{id}) ) {
 		$PO->save({'manifest_id'=>undef});
 	} # end foreach $PO
 	foreach my $C ( $self->Contents() ) {

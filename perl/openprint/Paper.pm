@@ -67,7 +67,7 @@ sub find {
 		$sql .= ' AND owner_id != ?';
 		push @values, $params{'owner_id !='};
 	} # end if
-	if ( $params{'manufacturers_name'} ) {
+	if ( exists $params{'manufacturers_name'} ) {
 		$sql .= ' AND manufacturers_name=?';
 		push @values, $params{'manufacturers_name'};
 	} # end if
