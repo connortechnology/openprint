@@ -21,8 +21,8 @@ use vars qw( $log $dbh $AUTOLOAD %cache %name_cache %fields %defaults %transform
 *session = \%openprint::session;
 *config = \%openprint::config;
 
-my $debug = 0;
-my $debug_all = 0;
+my $debug = 1;
+my $debug_all = 1;
 $no_cache = 0;
 
 sub init_cache {
@@ -278,7 +278,8 @@ $log->debug("No serial") if $debug;
 } # end sub save
 
 sub get {
-	return map { $_[0]->$_() } @_;
+	my $self = shift;
+	return map { $self->$_() } @_;
 } # end sub get
 
 sub set {

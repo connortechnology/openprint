@@ -246,8 +246,11 @@ sub Prev {
 } # end sub Nex
 
 sub Company {
-	require openprint::Company;
-	return new openprint::Company( $_[0]{'company_id'} );
+	if ( ! $_[0]{Company} ) {
+		require openprint::Company;
+		$_[0]{Company} = new openprint::Company( $_[0]{company_id} );
+	} # end if
+	return $_[0]{Company};
 } # end sub Company
 
 sub alias {
