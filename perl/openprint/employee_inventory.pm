@@ -394,6 +394,7 @@ sub paper_details {
 		$Paper->basis_mweight( $param{'basis_weight'} ) if exists $param{'basis_weight'};
 		$Paper->basis_width( $param{'basis_width'} ) if exists $param{'basis_width'};
 		$Paper->basis_height( $param{'basis_height'} ) if exists $param{'basis_height'};
+		$Paper->manufacturers_name( $param{manufacturers_name} ) if exists $param{manufacturers_name};
 		$Paper->gsm( $param{'gsm'} );
 		$Paper->calliper( $param{'txtCalliper'} );
 		$Paper->fsc_code( $param{'fsc_code'} );
@@ -2009,7 +2010,12 @@ sub _paper_inventory_entries {
 
 sub manifest_import {
 	if ( my $upload = $r->upload('import') ) {
-		my $io = $upload->io();
+		my $io =$upload->io();
+
+		@{$variable{Types}} = ();
+
+		my ( $width, $basis_weight, $product );
+		my $roll_count = 0;
 
 		while ( my $line = <$io> ) {
 			s/^\s+//, s/\s+$// for $line;
@@ -2019,6 +2025,38 @@ sub manifest_import {
 				$log->debug("Starting new page for $1 page $2 of $3");
 			} elsif ( my ( $d, $m, $y, $H, $M ) = $line =~ /.+\s+(\d\d)\.(\d\d)\.(\d\d)\s*(\d\d:\d\d)$/ ) {
 				$log->debug("Date: $y-$m-$d $H:$M");
+			} elsif ( ( $product ) = $line =~ /^PRODUCT NUMBER\s+(.+)$/ ) {
+				$log->debug("Product ($product)");
+		
+			} elsif ( 
+				( $width, $basis_weight, my $manufacturers_id, my $location, my $received_on, my $available_quantity, my $available_lbs, my $hold_quantity, my $hold_lbs ) = 
+				$line =~ /^([\d\s\/\.]+)X ([\d\/\.]+)\s+(\S+)\s+(\S+)\s+([\d\.]+)\s+(\d)RO\S+\s+([\d\.]+)\s+(\d)RO\S+s+([\d\.]+)$/ ) {
+				if ( my ($n,$m) = $width =~ /(\d+)\/(\d+)/ ) {
+					my $r = $n/$m;
+					$r =~ s/\d+(\.\d+)/$1/;
+					$width =~ s/$n\/$m/$r/;
+				} # end if
+				$width =~ s/\s//g;
+
+				$available_quantity =~ s/l/1/;
+				$available_quantity =~ s/O/0/;
+
+				$manufacturers_id =~ s/[^A-Z0-9]//g;
+
+				$log->debug("width: $width, weight: $basis_weight, id: $manufacturers_id, qty: $available_quantity, lbs: $available_lbs");
+				$roll_count += 1;
+			} elsif ( 
+				( my $manufacturers_id, my $location, my $received_on, my $available_quantity, my $available_lbs, my $hold_quantity, my $hold_lbs ) = 
+					$line =~ /^(\S+)\s+(\S+)\s+([\d\.]+)\s+(\S)RO\S+\s+([\d\.]+)\s+(\S)RO\S+\s+([\d\.]+)$/ ) {
+				$log->debug("width: $width, weight: $basis_weight, id: $manufacturers_id, qty: $available_quantity, lbs: $available_lbs");
+				$roll_count += 1;
+			} elsif ( my ( $total_rolls, $total_weight ) = $line =~ /^TOTALS:\s+Available Quantity\s+(\d+)\s+EA\s+Available\s+.+eight\s+([\d\,\.]+)$/ ) {
+				if ( $roll_count != $total_rolls ) {
+					$log->warn("Roll count($roll_count) != total rolls: $total_rolls");
+				} # end if
+				$roll_count = 0;
+			} else {
+				$log->debug("unparsed line: $line");
 			} # end if
 		} # end while io
 	} # end if

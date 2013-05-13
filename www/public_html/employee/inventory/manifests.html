@@ -71,7 +71,7 @@ function load_results( ) {
 					button( 'ShowResults', { onclick=>q`load_results();`, text=>'Show Results' } ),
 					button( 'Add', { href=>'manifest.html', text=>'Add New Manifest' } ),
 					); ) ?>
-				<input type="file" name="import"/><? echo ( button( 'Import', { onclick=>q`f2.action='manifest_import.html';f2.submit();` } ); ) ?>
+				<input type="file" name="import"/><? echo ( button( 'Import', { onclick=>q`f1.action='manifest_import.html';f1.submit();` } ); ) ?>
 			</p>
 		</fieldset>
 	</form>

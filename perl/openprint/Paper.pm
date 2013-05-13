@@ -36,7 +36,7 @@ my @fields = (
 		'cuttable', 'multipart', 'doublesided', 'perfecting', 'score_required',
 		'width','height','mweight','sheets_per_package','gsm','wpsi','digital','type','basis_width','basis_height','basis_mweight',
 		'bladecleaning','grade','grain_direction','fsc_code','supplied',
-		'minimum_order','full_packages','in_stock','parts','message','allocated',
+		'minimum_order','full_packages','in_stock','parts','message','allocated','manufacturers_name',
 		);
 
 # This is a whole new style of Paper.  A paper refers to all sheet sizes
@@ -48,7 +48,7 @@ sub find {
 	@params{lc keys %params} = @params{keys %params};
 	my @values;
 	# Can't auto-load in_stock because we have to not count Missing paper
-	my $sql = 'SELECT papers.*, manufacturers.shortname AS manufacturer, papernames.shortname AS name, paperfinishes.shortname AS finish, papercolours.shortName AS colour, paperweights.shortname AS weight FROM Papers, manufacturers, papernames,paperfinishes,papercolours,paperweights WHERE papers.manufacturer_id=manufacturers.id AND papers.name_id=papernames.id AND papers.finish_id=paperfinishes.id AND papers.colour_id=papercolours.id AND papers.weight_id=paperweights.id';
+	my $sql = 'SELECT papers.*, manufacturers.shortname AS manufacturer, papernames.shortname AS name, paperfinishes.shortname AS finish, papercolours.shortName AS colour, paperweights.shortname AS weight FROM Papers, manufacturers, papernames,paperfinishes,papercolours,paperweights,manufacturers_name WHERE papers.manufacturer_id=manufacturers.id AND papers.name_id=papernames.id AND papers.finish_id=paperfinishes.id AND papers.colour_id=papercolours.id AND papers.weight_id=paperweights.id';
 
 	if ( exists $params{'id'} ) {
 		if ( ref $params{'id'} eq 'ARRAY' ) {
@@ -66,6 +66,10 @@ sub find {
 	if ( $params{'owner_id !='} ) {
 		$sql .= ' AND owner_id != ?';
 		push @values, $params{'owner_id !='};
+	} # end if
+	if ( $params{'manufacturers_name'} ) {
+		$sql .= ' AND manufacturers_name=?';
+		push @values, $params{'manufacturers_name'};
 	} # end if
 	if ( $params{'manufacturer_id'} ) {
 		$sql .= ' AND manufacturer_id=?';
