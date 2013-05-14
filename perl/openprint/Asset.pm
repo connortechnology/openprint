@@ -379,6 +379,7 @@ sub destroy {
 
 sub fetch {
 	my ( $url ) = @_;
+$openprint::log->debug("Fetching from $url") if $debug;
 
 	require LWP::UserAgent;
 	require HTTP::Request;
@@ -405,6 +406,8 @@ sub fetch {
 $openprint::log->debug("fetch: filename: $filename path: $path from url $url");
 	if ( ! $filename ) {
 		return "Unable to determine filename from $url";
+	} elsif ( $debug ) {
+		$openprint::log->debug("saving to filename $filename");
 	} # endi f
 		
 	require Digest::MD5;
