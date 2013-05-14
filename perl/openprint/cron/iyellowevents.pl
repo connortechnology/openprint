@@ -5,9 +5,6 @@ use utf8;
 
 # INCLUDES
 use strict;
-use HTML::TreeBuilder;
-use LWP::UserAgent ();
-use HTTP::Request ();
 use URI::Escape;
 
 use Data::Dumper;
@@ -26,6 +23,7 @@ require openprint::Event;
 require openprint::Location;
 require openprint::Asset;
 require Date::Calc;
+
 
 use vars qw( $log $dbh %config );
 *log = \$openprint::log;
@@ -53,9 +51,10 @@ if ($opts->{help}) {
 	exit 0;
 }
 
-$log = new logger( {'level'=>'debug'});
+$$opts{config} = '/etc/openprint/pleasurablethings.conf';
+$log = new logger( { level=>'debug'});
 # Get our configuration information
-configuration::from_file('/etc/openprint/pleasurablethings.conf');
+configuration::from_file($$opts{config});
 configuration::merge( $opts );
 $log->level($config{'log_level'}) if $config{'log_level'};
 
@@ -67,22 +66,30 @@ foreach my $param ( 'db_name','db_user','db_pass' ) {
 } # end foreach required-param
 if ( 1 ) {
 $openprint::dbh = sql::open_sql( $log, 
-	'host'		=> $config{'db_host'},
-	'database'	=> $config{'db_name'},
-	'driver'	=> 'Pg',
-	'login'		=> $config{'db_user'},
-	'password'	=> $config{'db_pass'},
+	host		=> $config{'db_host'},
+	database	=> $config{'db_name'},
+	driver		=> 'Pg',
+	login		=> $config{'db_user'},
+	password	=> $config{'db_pass'},
 );
 die 'Error opening db' if ! $dbh;
 }
+configuration::init();
+configuration::from_file($$opts{config});
+configuration::merge($opts);
 
-# Login inputs are member and password, also need VIEWSTATE AND EVENTVALIDATION
+require DateTime::Format::Pg;
+require DateTime;
+require DateTime::TimeZone;
+my $TZ = DateTime::TimeZone->new( name => $config{Timezone} );
 
+use LWP::UserAgent ();
+use HTTP::Request ();
 my $ua = LWP::UserAgent->new;
 $ua->agent("IQ/0.1 ");
 # Create a request
-my $base_url = 'http://oasisaqualounge.com/';
-my $req = HTTP::Request->new(GET => $base_url.'index.php/products?view=list' );
+my $base_url = 'http://iyellowwineclub.com/';
+my $req = HTTP::Request->new(GET => $base_url.'/events' );
 # Pass request to the user agent and get a response back
 my $res = $ua->request($req);
 # Check the outcome of the response
@@ -91,17 +98,19 @@ if (! $res->is_success) {
 	exit(0);
 } # end f
 
-my $Location = openprint::Location->find_one(name=>'Oasis Aqualounge');
-my $User = openprint::User->find_one(firstname=>'TONIATOASIS');
+my $user_name = 'iYellow Wine Club';
+my $company_name = 'iYellow Wine Club';
+
+my $User = openprint::User->find_one(firstname=>$user_name);
 if ( ! $User ) {
-	my $Company = openprint::Company->find_one(name=>'Oasis Aqualounge');
+	my $Company = openprint::Company->find_one(name=>$company_name);
 	if ( ! $Company ) {
 		$Company = new openprint::Company();
-		$Company->save({name=>'Oasis Aqualounge'});
+		$Company->save({name=>$company_name});
 	} # end if
 
 	$User = new openprint::User();
-	$User->save({company_id=>$Company->id(), firstname=>'TONIATOASIS'});
+	$User->save({company_id=>$Company->id(), firstname=>$user_name});
 } # end if
 #indexed by url
 my %Assets;
@@ -110,41 +119,56 @@ my %Templates;
 #$log->debug( "Content: " . $res->content );
 my $content = Encode::decode('utf-8',$res->content);
 
+use HTML::TreeBuilder;
 my $tree = HTML::TreeBuilder->new;
 $tree->parse_content($content);
 $tree->elementify();
-foreach my $post ( $tree->look_down('class','ic_listitem') ) {
-	my $h4 = $post->look_down(_tag => 'h4');
-	if ( ! $h4 ) {
-		$log->warn("No h4");
+my $content_div = $tree->look_down( id => 'content' );
+if ( ! $content_div ) {
+	$tree->dump();
+	die "No content";
+} # end if
+
+my $posts = $content_div->look_down( class=>'post');
+if ( ! $posts ) {
+	$content_div->dump();
+	die "No posts";
+} # end if
+
+foreach my $post ( $posts->look_down(_tag=>'tr') ) {
+	my $Title = $post->look_down(_tag => 'span');
+	if ( ! $Title ) {
+		$log->warn("No Title");
 		next;
 	} # end if
-	my $title = openprint::Event->transform( 'name', $h4->as_text() );
+	my $title = openprint::Event->transform( 'name', $Title->as_text() );
 	if ( ! $title ) {
 		$log->warn("No title");
 		$post->dump();
 		next;
 	} # end if
-	my $when = $post->look_down(_tag => 'h3')->as_text();
-	if ( ! $when ) {
-		$log->warn("No when");
-		$post->dump();
+
+	my $content = $post->look_down(_tag=>'td');
+	$content = $content->as_text();
+
+	my ( $caption, $description, $location, $when ) = $content =~ /$title\s+(.+)Description:\s+(.+)Location:\s+(.+)Date & Time:\s+(.+)/;
+	$log->debug("desc: $description, loc: $location, when: $when");
+	if ( ! $description ) {
+		$log->debug( "No description from $content" );
 		next;
 	} # end if
-	my $desc_div = $post->look_down( class=>'ic_listitem_description');
-	my $desc = $desc_div->as_text() if $desc_div;
+	$description = $caption . '<br/>'.$description;
+
+	my $address = $location =~ /\(([^\)]+)\)/;
+	my $city = $location =~ /, (.+)/;
+
+
+
+$log->debug("$title $description $location $when");
 
 	my $Asset;
 	foreach my $img ( $post->look_down(_tag=>'img') ) {
 		my $posterurl = $img->attr('src');
-		if ( $posterurl =~ /^http:\/\/www\.oasisaqualounge\.com\/components\/com_imagecalendar\/helpers\/thumbnail.php\?h=\d+&w=\d+&img=(.+)$/ ) {
-			$posterurl = 'http://www.oasisaqualounge.com/'.$1;
-		} elsif ( $posterurl =~ /^http:\/\/oasisaqualounge\.com\/components\/com_imagecalendar\/helpers\/thumbnail.php\?h=\d+&w=\d+&img=(.+)$/ ) {
-			$posterurl = 'http://www.oasisaqualounge.com/'.$1;
-		} else {
-			$log->debug("NOt using $posterurl");
-			next;
-		} # end if
 $log->debug("GOt $posterurl");
 		$posterurl = URI::Escape::uri_unescape( $posterurl );
 $log->debug("GOt2 $posterurl");
@@ -163,46 +187,49 @@ $log->debug("GOt2 $posterurl");
 			} # end if
 		} # end if cached
 	} # end foreach img
-$log->debug("Title: $title, When: $when desc: $desc");
-	my ( $month, $day, $year, $hour, $minute, $ampm, $ending_year, $ending_month, $ending_day, $ending_hour, $ending_minute, $ending_ampm );
 
-	if ( ( $month, $day, $year, $hour, $minute, $ampm, $ending_hour, $ending_minute, $ending_ampm ) = $when =~ /^\s*(\d+)\.(\d+)\.(\d+)\s+(\d+):(\d+) (\w+)\s*-\s*(\d+):(\d+)\ (\w+)\s*$/m ) {
-		if ( $ampm eq 'pm' ) {
-			$hour += 12;
-		} # end if
-	} elsif ( ( $month, $day, $year, $hour, $minute, $ampm ) = $when =~ /^\s*(\d+)\.(\d+)\.(\d+)\s+(\d+):(\d+) (\w+)\s*$/m ) {
-		# if no ending is given, assume 3am the next morning
-		if ( $ampm eq 'pm' ) {
-			$hour += 12;
-		} # end if
-		( $ending_year, $ending_month, $ending_day ) = Date::Calc::Add_Delta_Days( $year, $month, $day, 1 );
-		( $ending_hour, $ending_minute) = ( 3, 0 );
+	$when =~ s/ at//;
+	my $starting_time = Date::Parse::str2time( $when );
+	if ( ! $starting_time ) {
+		$log->debug("No starttime_time from $when");
+		next;
 	} # end if
-	$log->debug(" Got event $title, $year-$month-$day $hour:$minute $ampm until $ending_year-$ending_month-$ending_day $ending_hour:$ending_minute");
 
-
-	my $starting_on = sprintf('%.4d-%.2d-%.2d %.2d:%.2d:00', $year, $month, $day, $hour, $minute );
-	my $ending_on = sprintf( '%.4d-%.2d-%.2d %.2d:%.2d:00', $ending_year, $ending_month, $ending_day, $ending_hour, $ending_minute );
+	my $parser = 'DateTime::Format::Pg';
+	my $st = DateTime->from_epoch( epoch=>$starting_time, time_zone=>$TZ );
+	
+	my $starting_on = $parser->format_datetime( $st );
+	#my $ending_on = sprintf( '%.4d-%.2d-%.2d %.2d:%.2d:00', $ending_year, $ending_month, $ending_day, $ending_hour, $ending_minute );
 
 	my $Event = openprint::Event->find_one( created_by=>$$User{id}, name=>$title, starting_on => $starting_on, template => 0 );
 
 	if ( $Event ) {
 		next if (
-				( $Event->info() eq $desc ) 
+				( $Event->info() eq $description ) 
 				and $$Event{album_id}
 #and ( $event->starting_on() eq $starting_onI#
 				);
 	} else {
 		$Event = new openprint::Event();
 	} # end if
+	my $Location;
+	my @Location = openprint::Location->find(name=>$location);
+	if ( @Location == 1 ) {
+		$Location = $Location[0];
+	} else {
+		$Location = openprint::Location::google( $location . ' Toronto Canada' );
+	} # end if
+	$log->debug( $Location->to_string() ) if $Location;
 	$Event->save({
 		name =>  $title,
 		starting_on	=>	$starting_on,
-		ending_on	=>	$ending_on,
-		info		=>	$desc,
+		#ending_on	=>	$ending_on,
+		info		=>	$description,
 		location_id	=>	$Location->id(),
 		created_by	=>	$User->id(),
 		template	=>	0,
+		category	=>	'Wine Tasting',
+		time_associated	=> 1,
 		});
 	if ( $Asset ) {
 		my $Album = $Event->Album();

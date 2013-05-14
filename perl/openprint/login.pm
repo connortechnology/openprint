@@ -132,10 +132,10 @@ sub verify_login {
 		return;
 	} # end if
 
-	if ( $site eq 'E' and ! sets::isin( $User->type, ['E','A'] ) ) {
-		$$variable{'error'} = "Not authorised.";
-		$$variable{'information'} = "You are not an employee.	You do not have access to the employee site.";
-		(new openprint::Log())->save({'action'=>'Login Failed', 'note'=>'User not an employee', 'user_id'=>$User->id(), 'company_id'=>$User->company_id() } );
+	if ( $site eq 'E' and ! sets::isin( $User->type(), ['E','A'] ) ) {
+		$$variable{'error'} = 'Not authorised.';
+		$$variable{'information'} = 'You are not an employee.	You do not have access to the employee site.';
+		(new openprint::Log())->save({action=>'Login Failed', note=>'User not an employee', user_id=>$User->id(), company_id=>$User->company_id() } );
 		return;
 	} elsif ( $site eq 'A' and $User->type() ne 'A' ) {
 		$$variable{'error'} = "Not authorised.";

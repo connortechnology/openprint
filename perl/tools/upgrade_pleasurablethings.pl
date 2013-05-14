@@ -54,6 +54,8 @@ if ( $year ) {
 } # end if
 
 print "upgrading db ...";
+`/var/www/testing/perl/tools/db_update.pl $dst_db pleasurablethings pleasurablethings` or $log->error($!);
+`/var/www/testing/perl/tools/db_update2.pl $dst_db pleasurablethings pleasurablethings` or $log->error($!);
 `/var/www/testing/perl/tools/db_update3.pl $dst_db pleasurablethings pleasurablethings` or $log->error($!);
 print 'Turning off backups...';
 $dbh = sql::open_sql( $log, ('database'=>$dst_db, 'driver'=>'Pg','login'=>'pleasurablethings', 'password'=>'pleasurablethings') );

@@ -351,12 +351,12 @@ sub list {
 
 	my $Category = $variable{'Category'} = new openprint::Article_Category( $param{'category_id'} );
 	_list();
-	$session{'/article/list.html?paging_per_page'} = 5;
-	$session{'/article/list.html?paging_page'} = 0;
+	$session{'/article/list.html?paging_per_page'} = 5 if ! exists $session{'/article/list.html?paging_per_page'};
+	$session{'/article/list.html?paging_page'} = 0 if ! exists $session{'/article/list.html?paging_page'};
 } # end sub list
 
 sub _list {
-	ssi::save_params('/article/list.html', 'paging_page','category_id' );
+	ssi::save_params('/article/list.html', 'paging_page','category_id', 'paging_per_page' );
 } # end sub _list
 
 sub category {

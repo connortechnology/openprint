@@ -67,7 +67,7 @@
                     ).'<br/>';
 			} # end if
 
-			$shipping_html .= qq`<tr$rowclass><td>`.$ServiceType->description().qq`</td><td colspan="2">$summary</td><td colspan="2">$$specs{'alert'}</td><td align="left">&nbsp;</td><td align="right">`.openprint::Currency::format($price).'</td></tr>';
+			$shipping_html .= qq`<tr$rowclass><td></td><td colspan="2">`.$ServiceType->description().($summary? ': ' . $summary : '' ) . qq`</td><td colspan="2">$$specs{'alert'}</td><td align="left">&nbsp;</td><td align="right">`.openprint::Currency::format($price).'</td></tr>';
 		} # end foreach
 	} # end foreach
 	$rowclass = $rowclass ? '' : ' class="colRow"';
