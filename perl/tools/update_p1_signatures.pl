@@ -94,6 +94,13 @@ foreach my $Project ( openprint::Project->find( 'order'=>'id desc',
 			} # end foreach
 #if ( ! exists $$sig_specs{'Group'} ) {
 	if ( $$sig_specs{'txtSignatureType'} ) {
+		if ( ! $$sig_specs{txtFinalWidth} ) {
+			openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'txtFinalWidth', $$sig_specs{txtWidth} );
+		} # end if
+		if ( ! $$sig_specs{txtFinalHeight} ) {
+			openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'txtFinalHeight', $$sig_specs{txtHeight} );
+		} # end if
+
 		if ( $$sig_specs{'txtSignatureType'} eq 'Cover Spreads' or $$sig_specs{'txtSignatureType'} eq 'Cover Pages' ) {
 			openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'txtSignatureType', 'Cover Pages' );
 			openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'Group', '1' );
@@ -127,7 +134,6 @@ foreach my $Project ( openprint::Project->find( 'order'=>'id desc',
 		foreach $index ( 1 .. 8 ) {
 			last if ! $$sig_specs{'ColourCoatingColour'.$index.$side};
 		} # end foreach
-txtSpecialSideTwoColour2
 		$index += 1;
 		$index = 1 if $index >= 8;
 		foreach my $colour_index ( 1 .. 8 ) {
@@ -169,15 +175,19 @@ txtSpecialSideTwoColour2
 	if ( $$services{'Scoring'} ) {
 		foreach my $scoring_service_id ( @{$$services{'Scoring'}} ) {
 			my $scoring_specs = openprint::service::get_specs_ref( $Project, $scoring_service_id );
-			foreach my $qty_index ( $Project->quantity_indexes() ) {
-				next if ! $$scoring_specs{"ddmEquipment-$$sig_specs{SignatureIndex}-$qty_index"};
-				my $Equipment = openprint::Equipment->find_one( 'strid'=>$$scoring_specs{"ddmEquipment-$$sig_specs{SignatureIndex}-$qty_index"} );
-				if ( ! $Equipment ) {
-					$log->error( 'No equipment found for ' . $$scoring_specs{"ddmEquipment-$$sig_specs{SignatureIndex}-$qty_index"} );
-					next;
-				} 
-				openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $scoring_service_id, "ddmEquipment-$$sig_specs{SignatureIndex}-$qty_index", $Equipment->id() );
-			} # end foreach
+			foreach my $sig_id ( $Project->signatures() ? $Project->signatures() : $$services{''}[0] ) {
+				my $sig_specs = openprint::service::get_specs_ref( $Project, $sig_id );
+				foreach my $qty_index ( $Project->quantity_indexes() ) {
+					next if ! $$scoring_specs{"ddmEquipment-$$sig_specs{SignatureIndex}-$qty_index"};
+					next if ! ( $$scoring_specs{"ddmEquipment-$$sig_specs{SignatureIndex}-$qty_index"} =~ /\D/ );
+					my $Equipment = openprint::Equipment->find_one( 'strid'=>$$scoring_specs{"ddmEquipment-$$sig_specs{SignatureIndex}-$qty_index"} );
+					if ( ! $Equipment ) {
+						$log->error( 'No equipment found for ' . $$scoring_specs{"ddmEquipment-$$sig_specs{SignatureIndex}-$qty_index"} );
+						next;
+					} 
+					openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $scoring_service_id, "ddmEquipment-$$sig_specs{SignatureIndex}-$qty_index", $Equipment->id() );
+				} # end foreach
+			} # end foreach sig
 
 		} # end foreach service_id in Scoring
 	} # end if Scoring
@@ -375,6 +385,11 @@ foreach my $Service ( openprint::Service->find('name'=>'Imposition') ) {
 	new openprint::ServiceType_Category()->save({'name'=>'Shipping','sorting'=>7}) if ! openprint::ServiceType_Category->find('name'=>'Shipping');
 	new openprint::ServiceType_Category()->save({'name'=>'Materials','sorting'=>8}) if ! openprint::ServiceType_Category->find('name'=>'Materials');
 	new openprint::ServiceType_Category()->save({'name'=>'Custom Services','sorting'=>10}) if ! openprint::ServiceType_Category->find('name'=>'Custom Services');
+
+foreach my $E ( openprint::Equipment->find( 'category any'=>'Printing' ) ) {
+	next if ! my $Spec = $E->Specification('Aqueous Capable');
+	$Spec->save({value=>'When Printing'});
+} # end foreach
 $dbh->disconnect();
 	
 1;
