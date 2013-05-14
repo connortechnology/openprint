@@ -113,11 +113,11 @@
 					<? if ( $$variable{Event}->url() ) ?>
 					<li class="url"><label>Website</label><? echo ( sprintf('<a href="%1$s" target="_blank">%1$s</a>',$$variable{Event}->url() ); ) ?></li>
 					<? endif ( $$variable{Event}->url() ) ?>
-					<? if ( $$variable{Event}->can_edit() ) ?>
+					<? if ( $$variable{Event}->template() and $$variable{Event}->can_edit() ) ?>
 					<li><label>Template</label>
 						<a href="/event/view.html?event_id=<? echo ( $$variable{Event}->template_id() ) ?>"><? echo ( $$variable{Event}->Template()->name() ) ?></a>
 					</li>
-					<? endif ( $$variable{Event}->can_edit() ) ?>
+					<? endif ( $$variable{Event}->template() and $$variable{Event}->can_edit() ) ?>
 				</ul>
 			</div>
 		</fieldset>

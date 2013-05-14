@@ -229,6 +229,7 @@ $log->debug("GOt2 $posterurl");
 		created_by	=>	$User->id(),
 		template	=>	0,
 		category	=>	'Wine Tasting',
+		time_associated	=> 1,
 		});
 	if ( $Asset ) {
 		my $Album = $Event->Album();
