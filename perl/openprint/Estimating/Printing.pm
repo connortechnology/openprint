@@ -1328,7 +1328,7 @@ next if (
 					} # end while cutting it
 				} # end if Web or Sheet
 
-if ( $debug or 1 ) {
+if ( $debug or 0 ) {
 $openprint::log->debug("Sorting from paper " . $Paper->to_string() . ' on ' . $Press->strid() );	
 foreach my $i ( @imps ) {
 $i->display();

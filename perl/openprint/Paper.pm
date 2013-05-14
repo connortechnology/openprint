@@ -44,6 +44,7 @@ my @fields = (
 # Returns a paper object specified by the parameters
 sub find {
 	shift @_ if $_[0] eq 'openprint::Paper';
+	shift @_ if ref $_[0] eq 'openprint::Paper';
 	my %params = @_;
 	@params{lc keys %params} = @params{keys %params};
 	my @values;

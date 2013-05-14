@@ -189,6 +189,10 @@ sub view_services {
 				my $PS = $Project->Service( $s_id );
 				next if ! $PS->service_id();
 				my $ServiceType = $PS->ServiceType();
+				if ( sets::isin( $ServiceType->name(), ['Proofs'] ) ) {
+					$$variable{error} .= 'Proofs cannot be removed from the project.<br/>';
+					next;
+				} # end if
 				my $specs = $PS->specs();
 				$Project->add_to_log( @openprint::session{'company_id','user_id'}, $ServiceType->name().' ' . $$specs{'ServiceName'}.' service deleted.' );
 				openprint::print_project::delete_service( $log, $dbh, $project_index, $s_id );
