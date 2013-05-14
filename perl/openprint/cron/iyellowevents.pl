@@ -162,14 +162,6 @@ foreach my $post ( $posts->look_down(_tag=>'tr') ) {
 	my $address = $location =~ /\(([^\)]+)\)/;
 	my $city = $location =~ /, (.+)/;
 
-	my $Location;
-	my @Location = openprint::Location->find(name=>$location);
-	if ( @Location == 1 ) {
-		$Location = $Location[0];
-	} else {
-		$Location = openprint::Location::google( $location . ' Toronto Canada' );
-	} # end if
-	$log->debug( $Location->to_string() ) if $Location;
 
 
 $log->debug("$title $description $location $when");
@@ -220,6 +212,14 @@ $log->debug("GOt2 $posterurl");
 	} else {
 		$Event = new openprint::Event();
 	} # end if
+	my $Location;
+	my @Location = openprint::Location->find(name=>$location);
+	if ( @Location == 1 ) {
+		$Location = $Location[0];
+	} else {
+		$Location = openprint::Location::google( $location . ' Toronto Canada' );
+	} # end if
+	$log->debug( $Location->to_string() ) if $Location;
 	$Event->save({
 		name =>  $title,
 		starting_on	=>	$starting_on,
