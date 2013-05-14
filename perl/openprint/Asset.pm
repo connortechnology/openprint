@@ -407,7 +407,6 @@ $openprint::log->debug("fetch: filename: $filename path: $path from url $url");
 		return "Unable to determine filename from $url";
 	} # endi f
 		
-
 	require Digest::MD5;
 	my $data;
 	my $md5 = Digest::MD5::md5_base64( $res->content );

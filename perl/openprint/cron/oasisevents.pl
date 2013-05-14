@@ -8,6 +8,7 @@ use strict;
 use HTML::TreeBuilder;
 use LWP::UserAgent ();
 use HTTP::Request ();
+use URI::Escape;
 
 use Data::Dumper;
 require configuration;
@@ -104,6 +105,7 @@ if ( ! $User ) {
 } # end if
 #indexed by url
 my %Assets;
+my %Templates;
 	
 #$log->debug( "Content: " . $res->content );
 my $content = Encode::decode('utf-8',$res->content);
@@ -117,7 +119,7 @@ foreach my $post ( $tree->look_down('class','ic_listitem') ) {
 		$log->warn("No h4");
 		next;
 	} # end if
-	my $title = $h4->as_text();
+	my $title = openprint::Event->transform( 'name', $h4->as_text() );
 	if ( ! $title ) {
 		$log->warn("No title");
 		$post->dump();
@@ -131,26 +133,28 @@ foreach my $post ( $tree->look_down('class','ic_listitem') ) {
 	} # end if
 	my $desc_div = $post->look_down( class=>'ic_listitem_description');
 	my $desc = $desc_div->as_text() if $desc_div;
-	my $posterlink;
-	foreach my $a ( $desc_div->look_down(_tag=>'a') ) {
-		if ( $a->as_text() =~ /Poster/i ) {
-			$posterlink = $a;
-			last;
-		} # end if
-	} # end foreach
+
 	my $Asset;
-	if ( $posterlink ) {
-		my $posterurl = $posterlink->attr('href');
-		if ( ! $posterurl ) {
-			$log->error("poster a no href?");
-			$posterlink->dump();
+	foreach my $img ( $post->look_down(_tag=>'img') ) {
+		my $posterurl = $img->attr('src');
+		if ( $posterurl =~ /^http:\/\/www\.oasisaqualounge\.com\/components\/com_imagecalendar\/helpers\/thumbnail.php\?h=\d+&w=\d+&img=(.+)$/ ) {
+			$posterurl = 'http://www.oasisaqualounge.com/'.$1;
+		} elsif ( $posterurl =~ /^http:\/\/oasisaqualounge\.com\/components\/com_imagecalendar\/helpers\/thumbnail.php\?h=\d+&w=\d+&img=(.+)$/ ) {
+			$posterurl = 'http://www.oasisaqualounge.com/'.$1;
+		} else {
+			$log->debug("NOt using $posterurl");
 			next;
-		}
+		} # end if
+$log->debug("GOt $posterurl");
+		$posterurl = URI::Escape::uri_unescape( $posterurl );
+$log->debug("GOt2 $posterurl");
 		if ( $Assets{$posterurl} ) {
 			$Asset = $Assets{$posterurl};
 		} else {
-			$Asset = openprint::Asset::fetch($base_url.$posterurl);
+			$Asset = openprint::Asset::fetch($posterurl);
 			if ( ref $Asset ne 'openprint::Asset' ) {
+				
+				die("Unable to get asset: $Asset from $posterurl " . $img->attr('src') );
 				$log->error("Unable to get asset: $Asset");
 				$post->dump();
 				$Asset = undef;
@@ -158,7 +162,7 @@ foreach my $post ( $tree->look_down('class','ic_listitem') ) {
 				$Assets{$posterurl} = $Asset;
 			} # end if
 		} # end if cached
-	} # end if posterlink
+	} # end foreach img
 $log->debug("Title: $title, When: $when desc: $desc");
 	my ( $month, $day, $year, $hour, $minute, $ampm, $ending_year, $ending_month, $ending_day, $ending_hour, $ending_minute, $ending_ampm );
 
@@ -180,18 +184,6 @@ $log->debug("Title: $title, When: $when desc: $desc");
 	my $starting_on = sprintf('%.4d-%.2d-%.2d %.2d:%.2d:00', $year, $month, $day, $hour, $minute );
 	my $ending_on = sprintf( '%.4d-%.2d-%.2d %.2d:%.2d:00', $ending_year, $ending_month, $ending_day, $ending_hour, $ending_minute );
 
-	my $Template = openprint::Event->find_one( created_by=>$$User{id}, name=>$title, template=>1 );
-	if ( ! $Template ) {
-	$Template->save({
-		name =>  $title,
-		starting_on	=>	$starting_on,
-		ending_on	=>	$ending_on,
-		info		=>	$desc,
-		location_id	=>	$Location->id(),
-		created_by	=>	$User->id(),
-		});
-	} # end if
-
 	my $Event = openprint::Event->find_one( created_by=>$$User{id}, name=>$title, starting_on => $starting_on, template => 0 );
 
 	if ( $Event ) {
@@ -210,6 +202,7 @@ $log->debug("Title: $title, When: $when desc: $desc");
 		info		=>	$desc,
 		location_id	=>	$Location->id(),
 		created_by	=>	$User->id(),
+		template	=>	0,
 		});
 	if ( $Asset ) {
 		my $Album = $Event->Album();
