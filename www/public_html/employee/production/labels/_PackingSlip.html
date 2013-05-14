@@ -166,7 +166,7 @@ new Ajax.InPlaceRichEditor( 'to', '_label.html?id=<? echo ( $$variable{Label}->i
 				FROM:<br/>
 				<div id="from" style="height: 1.5in;"><? echo ( $$variable{'Label'}->get_data('from');) ?></div>
 <script type="text/javascript">
-new Ajax.InPlaceRichEditor( 'from', '_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&amp;action=update&amp;field=from',{okButton:true,cancelControl:'button',submitOnBlur:true,rows:10}, tinymce_options );
+new Ajax.InPlaceRichEditor( 'from', '_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=update&field=from',{okButton:true,cancelControl:'button',submitOnBlur:true,rows:10}, tinymce_options );
 </script>
 			</td>
 		</tr>
@@ -177,14 +177,14 @@ new Ajax.InPlaceRichEditor( 'from', '_label.html?id=<? echo ( $$variable{Label}-
 				DESCRIPTION:<br/>
 				<div id="description" style="height:3.75in;"><? echo ( $$variable{'Label'}->get_data('description'); ) ?></div>
 <script type="text/javascript">
-new Ajax.InPlaceRichEditor( 'description', '_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&amp;action=update&amp;field=description',{okButton:true,cancelControl:'button',submitOnBlur:true,rows:10}, tinymce_options );
+new Ajax.InPlaceRichEditor( 'description', '_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=update&field=description',{okButton:true,cancelControl:'button',submitOnBlur:true,rows:10}, tinymce_options );
 </script>
 			</td>
 			<td style="border: 1px solid black;">
 				QUANTITY:<br/>
 				<div id="quantity" style="height: 3.75in;"><? echo ($$variable{'Label'}->get_data('quantity'); ) ?></div>
 <script type="text/javascript">
-new Ajax.InPlaceRichEditor( 'quantity', '_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&amp;action=update&amp;field=quantity',{okButton:true,cancelControl:'button',submitOnBlur:true,rows:10}, tinymce_options );
+new Ajax.InPlaceRichEditor( 'quantity', '_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=update&field=quantity',{okButton:true,cancelControl:'button',submitOnBlur:true,rows:10}, tinymce_options );
 </script>
 			</td>
 		</tr>

@@ -174,7 +174,7 @@ return input( type=>'float', id=>'weight', name=>'weight', value=> $weight );
 	</li>
 	<li>
 		<label for="Quantity">Quantity</label>
-		<? echo ( input( type=>'float', id=>'Quantity', name=>'Quantity', value=>($param{Quantity} ? $param{Quantity} : $$variable{Skid}->contents( $$variable{Paper} )), onkeyup=>q`if(get_rdb_value(this.form.type) == 'Roll' ) { $('Units').innerHTML='lbs';$('KgDIV').show();convert_lbs_to_kg( this, $('Kg') ); } else { $('Units').innerHTML='sheets';$('KgDIV').hide();}` ); ) ?>
+		<? echo ( input( type=>'number', id=>'Quantity', name=>'Quantity', value=>($param{Quantity} ? $param{Quantity} : $$variable{Skid}->contents( $$variable{Paper} )), onkeyup=>q`if(get_rdb_value(this.form.type) == 'Roll' ) { $('Units').innerHTML='lbs';$('KgDIV').show();convert_lbs_to_kg( this, $('Kg') ); } else { $('Units').innerHTML='sheets';$('KgDIV').hide();}` ); ) ?>
 		<span id="Units"><? echo ( ($param{type} eq 'Roll' or $$variable{'Paper'}->type() eq 'Roll') ? 'lbs' : 'sheets' ) ?></span>
 		<span id="KgDIV" <? echo ( ($param{type} eq 'Sheet' or $$variable{'Paper'}->type() eq 'Sheet') ? 'style="display:none;"' : '' ) ?>>
 			<? echo ( input( type=>'float', id=>'Kg', name=>'Kg', value=>( $param{Kg}?$param{Kg}:int($$variable{Skid}->contents( $$variable{Paper} )/2.2)), onkeyup=>q`convert_kg_to_lbs( this, $('Quantity') );` ); ) ?>kg

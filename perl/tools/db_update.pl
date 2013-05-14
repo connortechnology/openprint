@@ -1,4 +1,4 @@
-#!/usr/bin/perl -w
+#!/usr/bin/perl 
 use lib '/var/www/testing/perl';
 use strict;
 
@@ -1440,9 +1440,9 @@ foreach my $E ( openprint::Equipment->find('category any'=>'Printing') ) {
 		$Spec->save();
 	} 
 	foreach my $Spec ( $E->Specifications('name'=>'Default Bleed Size') ) {
-		if ( $Spec->max() == 1 ) {
+		if ( $Spec->max() and ( $Spec->max() == 1 ) ) {
 			$Spec->max('');
-		} elsif ( $Spec->min() == 2 ) {
+		} elsif ( $Spec->min() and ( $Spec->min() == 2)  ) {
 			$Spec->name('Default Bleed SizeMultiPage');
 			$Spec->min('');
 		} # end if
@@ -2732,7 +2732,7 @@ if ( $version < $new_version ) {
 	my $ac = sql::start_transaction( $dbh );
 	sql::insert( undef, undef, 'database_info', 'version', $new_version, 'backup', $backup );
 	foreach my $E ( openprint::Equipment->find() ) {
-		if ( $E->specification('Double Overs For Covers') eq 'Y' ) {
+		if ( ( $_ = $E->specification('Double Overs For Covers') ) and ( $_ eq 'Y' ) ) {
 			sql::insert( undef, undef, 'tbl_Equipment_Specifications',[
 					'lngEquipmentIndex',    $E->id(),
 					'dblMin',               undef,
@@ -3116,6 +3116,9 @@ if ( ! sets::isin( 'rma', \@tables ) ) {
 		$dbh->do('CREATE SEQUENCE rma_id_seq');
 	} # end if
 	$dbh->do(q`select setval('rma_id_seq',(SELECT Max(id) FROM RMA));`);
+	if ( !exists $$data{rmanumber} ) {
+		$dbh->do('ALTER TABLE rma ADD rmanumber TEXT');
+	} # end if
 	
 } # end if
 if ( ! sets::isin( 'rma_logs', \@tables ) ) {
@@ -3398,6 +3401,46 @@ if ( ! sets::isin( 'stockqualities_id_seq', \@sequences ) ) {
 	} # end if
 	$dbh->do(q`ALTER TABLE stockqualities ALTER id SET default nextval('stockqualities_id_seq')`);
 	$dbh->do(q`SELECT setval('stockqualities_id_seq', (SELECT max(id) FROM stockqualities))`);
+} # end if
+if ( ! sets::isin( 'events', \@tables ) ) {
+    $dbh->do( misc::load_file( $log, '../openprint/sql/Events.sql' ) );
+    die $dbh->errstr() if $dbh->errstr();
+} else {
+	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='events'", 'column_name');
+	if ( ! exists $$data{'album_id'} ) {
+		$dbh->do(q`ALTER TABLE events add album_id INTEGER` );
+		$dbh->do(q`ALTER TABLE events add FOREIGN KEY (album_id) REFERENCES photo_albums (id)` );
+	} # end if
+	if ( ! exists $$data{'asset_id'} ) {
+		$dbh->do(q`ALTER TABLE events add asset_id INTEGER` );
+		$dbh->do(q`ALTER TABLE events add FOREIGN KEY (asset_id) REFERENCES assets (id)` );
+	} # end if
+	if ( ! exists $$data{'url'} ) {
+		$dbh->do(q`ALTER TABLE events add url TEXT` );
+	} # end if
+	if ( ! exists $$data{published} ) {
+		$dbh->do(q`ALTER TABLE events add published BOOLEAN NOT NULL Default false` );
+	} # end if
+	if ( ! exists $$data{template} ) {
+		$dbh->do(q`ALTER TABLE events add template BOOLEAN NOT NULL Default false` );
+	} # end if
+	if ( ! exists $$data{template_id} ) {
+		$dbh->do(q`ALTER TABLE events add template_id INTEGER` );
+		$dbh->do(q`ALTER TABLE events add FOREIGN KEY (template_id) REFERENCES Events (id)` );
+	} # end if
+} # end if
+if ( ! sets::isin( 'event_attendance', \@tables ) ) {
+    $dbh->do( misc::load_file( $log, '../openprint/sql/Event_Attendance.sql' ) );
+    die $dbh->errstr() if $dbh->errstr();
+} # end if
+if ( ! sets::isin( 'event_invitations', \@tables ) ) {
+    $dbh->do( misc::load_file( $log, '../openprint/sql/Event_Invitations.sql' ) );
+    die $dbh->errstr() if $dbh->errstr();
+} else {
+	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='event_invitations'", 'column_name');
+	if ( ! exists $$data{'sent_on'} ) {
+		$dbh->do('ALTER TABLE event_invitations ADD sent_on timestamp with time zone');
+	} # end if
 } # end if
 print "Finished\n";
 1;

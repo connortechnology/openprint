@@ -493,7 +493,7 @@ function clearForm(form) {
 			continue;
 		if ( e.type == 'checkbox' || e.type == 'radio' ) {
 			e.checked = '';
-		} else if (e.type == 'hidden' || e.type == 'password' || e.type == 'text' || e.type == 'textarea' || e.type == 'number' || e.type == 'email' || e.type == 'url' ) {
+		} else if (e.type == 'hidden' || e.type == 'password' || e.type == 'text' || e.type == 'textarea' || e.type == 'number' || e.type == 'email' || e.type == 'url' || e.type == 'tel' ) {
 			e.value = '';
 		} else if ( e.type == 'select-one' ) {
 			while ( e.selectedIndex > 0 ) {

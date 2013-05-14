@@ -21,6 +21,7 @@
 			return 'Unable to connect to ZM database<br/>' if ! $zm_dbh;
 			require openprint::ZM_Monitor;
 			foreach my $Monitor ( openprint::ZM_Monitor->find('dbh'=>$zm_dbh, 'order'=>'Sequence') ) {
+				next if ! $Monitor->can_view();
 				next if $Monitor->function() eq 'None';
 				$html .= sprintf(q`
 <tr>

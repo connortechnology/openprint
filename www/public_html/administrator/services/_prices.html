@@ -1,16 +1,15 @@
 <? echo (
 	my $html;
-	my @Equipment = openprint::Equipment->find('order'=>'lower(strid)');
+	my @Equipment = openprint::Equipment->find( order=>'lower(strid)');
 	my @equipment_dropdown = map { $_->id(), $_->name() } @Equipment;
 
-	$$variable{'company_ids'} = [ map { $_->id(), $_->name() } openprint::Company->find( 'supplier'=>'Y', 'order'=>'lower(name)' ) ];
+	$$variable{'company_ids'} = [ map { $_->id(), $_->name() } openprint::Company->find( supplier=>'Y', order=>'lower(name)' ) ];
 
 	foreach my $Pricelist ( openprint::Pricelist->find( order=>'lower(name)') ) {
 		$html .= '<fieldset><legend>Pricing for Price List: '.$Pricelist->name() . "</legend>\n";
 		my @Prices = openprint::ServicePrice->find( service_id=>$$variable{Service}->id(), pricelist_id=>$Pricelist->id() );
-$log->debug("Got " . @Prices . ' rprices');
 
-		my @equipment_ids = sets::union( map{ $_->equipment_id() } @Prices );
+		my @equipment_ids = sort( sets::union( map{ $_->equipment_id() } @Prices ) );
 		push @equipment_ids, undef if ! @equipment_ids;
 		foreach my $Equipment ( map{new openprint::Equipment($_)} @equipment_ids ) {
 			$html .= '<fieldset class="Equipment">';

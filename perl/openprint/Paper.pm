@@ -309,6 +309,8 @@ sub merge {
 	sql::update( undef, undef, 'Paper_allocations', [ 'paper_id=?', $Duplicate->id() ], 'paper_id', $self->id() );
 	sql::update( undef, undef, 'Paper_Inventory', [ 'paper_id=?', $Duplicate->id() ], 'paper_id', $self->id() );
 	sql::update( undef, undef, 'skid_contents', [ 'paper_id=?', $Duplicate->id() ], 'paper_id', $self->id() );
+	sql::update( undef, undef, 'paper_prices', [ 'lngpaperindex=?', $Duplicate->id() ], 'lngpaperindex', $self->id() );
+	sql::update( undef, undef, 'paper_recommendations', [ 'lngpaperindex=?', $Duplicate->id() ], 'lngpaperindex', $self->id() );
 	sql::update( undef, undef, 'manifest_content_types', [ 'paper_id=?', $Duplicate->id() ], 'paper_id', $self->id() );
 	$Duplicate->delete();
 	sql::end_transaction( $openprint::dbh, $ac );

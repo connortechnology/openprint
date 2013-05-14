@@ -122,9 +122,9 @@ sub send_notification {
 	return if $Me->email() =~ /iconnor/;
 
 	my %info;
-	$info{'Allocation'} = $self;
-	my $Project = $info{'Project'} = $self->Project();
-	my $Paper = $info{'Paper'} = $self->Paper();
+	$info{Allocation} = $self;
+	my $Project = $info{Project} = $self->Project();
+	my $Paper = $info{Paper} = $self->Paper();
 	my @old_skids = @{$info{'OldSkids'}} = $self->old_Skids();
 
 	my @recipients = openprint::User->find( 'usergroup'=>'InventoryManager' );
@@ -154,7 +154,7 @@ sub send_notification {
 
 	push @recipients, $Project->Company()->CSR() if $offsite or $nolocation or @old_skids;
 	if ( $Paper->available() < 0 ) {
-		my @PAs = openprint::PaperAllocation->find('paper_id'=>$Paper->id());
+		my @PAs = openprint::PaperAllocation->find( paper_id=>$Paper->id());
 		@recipients = map { new openprint::User( $_ ) } sets::exclude( [ $session{'user_id'} ], [ sets::union( (map { $_->Project()->Company()->salesrep_id() } @PAs), (map{$_->id()}@recipients) ) ] );
 	} # endif
 
@@ -163,8 +163,7 @@ sub send_notification {
 	my @body = ('', $_, 'text/html', 'quoted-printable');
 	my $Email = new openprint::Email();
 	$Email->send( 
-			TO		=>	\@recipients, 
-			#'TO'		=>	'iconnor@point-one.com',
+			TO			=>	\@recipients, 
 			SUBJECT 	=> 'Stock allocated for docket ' . $Project->docket(),
 			FROM		=>	$Me,
 			ATTACHMENTS	=>	\@body,

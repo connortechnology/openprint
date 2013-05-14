@@ -8,9 +8,9 @@
 				<li>
 					<label for="manifest_name">Manifest ID</label>
 					<input type="text" id="manifest_name" name="manifest_name" onkeyup="this.value=this.value.replace(/\s/g,'');" onkeydown="if(event.keyCode == 13){f1.submit();}" value="<? echo ( $param{'manifest_name'} ) ?>" />
-					<? echo ( ssi::button( 'Go1', { onclick=>"LoadContent( 'Results', '_manifests.html', \$('f1') );", text=>'Go' } ); ) ?>
+					<? echo ( button( 'Go1', { onclick=>"LoadContent( 'Results', '_manifests.html', \$('f1') );", text=>'Go' } ); ) ?>
 					<input type="text" id="manifest_like" name="manifest_like" onkeyup="this.value=this.value.replace(/\s/g,'');" onkeydown="if(event.keyCode == 13){LoadContent( 'Results', '/employee/inventory/_manifests.html', document.forms.f1.serialize() );}" />
-					<? echo ( ssi::button( 'Show', { onclick=>"LoadContent( 'Results', '_manifests.html', \$('f1') );", text=>'Show' } ); ) ?>
+					<? echo ( button( 'Show', { onclick=>"LoadContent( 'Results', '_manifests.html', \$('f1') );", text=>'Show' } ); ) ?>
 				</li>
 				<li>
 					<label for="po_id">Purchase Order</label>
@@ -30,7 +30,7 @@
 			</ul>
 		</fieldset>
 	</form>
-	<form id="f2" name="f2" method="post" action="manifests.html">
+	<form id="f2" name="f2" method="post" action="manifests.html" enctype="multipart/form-data">
 		<fieldset class="filters"><legend>Search Criteria</legend>
 			<ul>
 			<li><label>Vendor</label>
@@ -42,26 +42,27 @@
 			</li>
 			<li>
 				<label>Entered On</label>
-	<? echo ( ssi::date_select_session( '/employee/inventory/manifests.html','created_on_start', { with_today=>1, with_clear=>1 } ); ) ?>
+	<? echo ( date_select_session( '/employee/inventory/manifests.html','created_on_start', { with_today=>1, with_clear=>1 } ); ) ?>
 				to 
-	<? echo ( ssi::date_select_session( '/employee/inventory/manifests.html','created_on_end', { with_today=>1, with_clear=>1 } ); ) ?>
+	<? echo ( date_select_session( '/employee/inventory/manifests.html','created_on_end', { with_today=>1, with_clear=>1 } ); ) ?>
 			</li>
 			<li>
 				<label>Received On</label>
-	<? echo ( ssi::date_select_session( '/employee/inventory/manifests.html','received_on_start', { with_today=>1, with_clear=>1 } ); ) ?>
+	<? echo ( date_select_session( '/employee/inventory/manifests.html','received_on_start', { with_today=>1, with_clear=>1 } ); ) ?>
 				to 
-	<? echo ( ssi::date_select_session( '/employee/inventory/manifests.html','received_on_end', { with_today=>1, with_clear=>1 } ); ) ?>
+	<? echo ( date_select_session( '/employee/inventory/manifests.html','received_on_end', { with_today=>1, with_clear=>1 } ); ) ?>
 			</li>
 			<li>
 				<label>Delivery</label>
-				<? echo ( ssi::radio( 'delivery', ['under','Under','over','Over','exact','Exact','','All'], $session{'/employee/inventory/manifests.html?delivery'} ); ) ?>
+				<? echo ( radio( 'delivery', ['under','Under','over','Over','exact','Exact','','All'], $session{'/employee/inventory/manifests.html?delivery'} ); ) ?>
 			</li>
 			</ul>
 			<p class="buttons">
 				<? echo ( join('',
-					ssi::button( 'ShowResults', { 'onclick'=>"LoadContent( 'Results', '/employee/inventory/_manifests.html', \$('f2').serialize() );", 'text'=>'Show Results' } ),
-					ssi::button( 'Add', { 'href'=>'manifest.html', 'text'=>'Add New Manifest' } ),
+					button( 'ShowResults', { 'onclick'=>"LoadContent( 'Results', '/employee/inventory/_manifests.html', \$('f2').serialize() );", text=>'Show Results' } ),
+					button( 'Add', { href=>'manifest.html', text=>'Add New Manifest' } ),
 					); ) ?>
+				<input type="file" name="import"/><? echo ( button( 'Import', { onclick=>q`f2.action='manifest_import.html';f2.submit();` } ); ) ?>
 			</p>
 		</fieldset>
 	</form>

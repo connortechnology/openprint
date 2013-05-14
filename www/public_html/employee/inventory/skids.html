@@ -117,6 +117,10 @@ Please select a Skid to view/edit.<br/>
 			<? echo ( radio( 'allocated', ['Y', 'Yes', 'N', 'No', '', 'All' ], $session{'/employee/inventory/skids.html?allocated'}, { onclick=>'calc();' } ); ) ?>
 		</li>
 		<li>
+            <label>Has Manufacturers ID</label>
+			<? echo ( radio( 'hasmanufacturers', ['Y', 'Yes', 'N', 'No', '', 'All' ], $session{'/employee/inventory/skids.html?hasmanufacturers'}, { onclick=>'calc();' } ); ) ?>
+		</li>
+		<li>
             <label>With/Without RFID?</label>
             <input type="checkbox" id="withrfid" name="withrfid" <? echo ( $session{'/employee/inventory/skids.html?withrfid'} ? 'checked="checked"' : '' ) ?> />
             <label class="radio" for="withrfid">With RFID</label>

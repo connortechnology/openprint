@@ -11,7 +11,7 @@ package openprint::Event;
 our @ISA = qw( openprint::Object );
 
 use vars qw( $debug $table $serial %fields %find_fields %transforms %defaults );
-$debug = 0;
+$debug = 1;
 $table = 'events';
 $serial = 'events_id_seq';
 
@@ -34,6 +34,8 @@ $serial = 'events_id_seq';
 	album_id	=>	'album_id', 
 	url			=>	'url',
 	published	=>	'published',
+	template	=>	'template',
+	template_id	=>	'template_id',
 );
 %find_fields = (
 	'attending'	=>	'(SELECT user_id FROM event_attendance WHERE event_id=events.id AND attending=true)',
@@ -57,6 +59,7 @@ $serial = 'events_id_seq';
 	created_by		=> q`$openprint::session{user_id}`,
 	deleted			=> 0,
 	published		=>	0,
+	template		=>	0,
 );
 
 sub category {
@@ -66,7 +69,7 @@ sub category {
 			my $Category = openprint::Event_Category->find_one('name lc'=>lc $new );
 			if ( ! $Category ) {
 				$Category = new openprint::Event_Category();
-				$Category->save({name=>$_[1]})
+				$Category->save({name=>$_[1]});
 			} # end if	
 			$_[0]{category_id} = $Category->id();
 			return $Category->name();
@@ -76,6 +79,7 @@ sub category {
 	} # end if
 	return new openprint::Event_Category( $_[0]{'category_id'} )->name();
 } # end sub category
+
 sub Category {
 	return new openprint::Event_Category( $_[0]{'category_id'} );
 } # end sub Category
@@ -384,6 +388,13 @@ sub copy {
 	$New->save({created_on=>undef,updated_on=>undef,created_by=>$openprint::session{user_id},deleted=>0,album_id=>$$Album{id}});
 	return $New;
 } # end sub copy
+
+sub Template {
+	if ( ! $_[0]{Template} ) {
+		$_[0]{Template} = new openprint::Event( $_[0]{template_id} );
+	} # end if
+	return $_[0]{Template};
+} # end sub Template
 
 1;
 __END__

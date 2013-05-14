@@ -52,6 +52,14 @@
 					<li><label>Text</label>
 						<input type="text" name="search" value="<? echo ( $param{search} ) ?>"/>
 					</li>
+<? if ( $session{user_type} eq 'A' ) ?>
+	<li><label>Template?</label>
+		<? echo ( radio( 'template', [ 1, 'Yes', 0, 'No', '', 'Both' ], $session{'/event/search.html?template'}, { onclick=>'load_events(this.form);' } ); ) ?>
+	</li>
+	<li><label>Template</label>
+		<? echo ( ssi::select( openprint::Event->dropdown(order=>'lower(name)',template=>1), $session{'/event/search.html?template_id'}, { name=>'template_id', prepend=>['', 'All'], onchange=>'load_events(this.form);' } ); ) ?>
+	</li> 
+<? endif ( $session{user_type} eq 'A' ) ?>
 				</ul>
 			</div>
 			<div class="rightColumn">

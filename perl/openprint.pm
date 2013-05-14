@@ -126,6 +126,7 @@ sub switch_company {
 		$session{'Currency_id'} = $_->id() if $_;
 	} # end if
 	my @keys = sets::exclude( [ 'Currency_id', '_session_id','user_id','company_id','user_type','Country' ], [ keys %session ] );
+	sql::update( undef, undef, 'orders', [ 'strsessionid=?', $session{_session_id} ], 'strsessionid', undef );
 	delete @session{@keys};
 } # end sub switch_company
 
