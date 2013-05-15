@@ -1590,7 +1590,7 @@ sub breakdown {
 	$breakdown .= sprintf("Press Wash Charge:\t\$%.2f * \%d washes = \$%.2f<br/>", @$price{'Press Wash Price','Press Washes','Press Wash Total'});
 	$breakdown .= sprintf('Plate Make Ready: $%.2f<br/>', $$price{'Plate Total'} );
 	$breakdown .= sprintf("Setup Total:\t\t\$%.2f<br/><b>Run Charges:</b><br/>", $$price{'Setup Total'} );
-	$breakdown .= sprintf('Roll2Sheet Charge: $%1$.2f%2$s%3$.2f<br/>', @$price{'Roll2SheetRunCost','Roll2SheetUnits','Roll2SheetRunCharge'} ) if $$price{'Roll2SheetRunCharge'};
+	$breakdown .= sprintf('Roll2Sheet Charge: $%1$.2f%2$s = $%3$.2f<br/>', @$price{'Roll2SheetRunCost','Roll2SheetUnits','Roll2SheetRunCharge'} ) if $$price{'Roll2SheetRunCharge'};
 	$breakdown .= sprintf('Impression Charge: %d Impressions/%d Per Hour * $%.2f%s = $%.2f<br/>', @$price{'Impressions','Run Speed','Impression Cost','Impression Units','Impression Price'} );
 	$breakdown .= sprintf("Inline Varnish Charge: \$%.4f\%s = %.2f<br/>", @$Varnish{'run_price','Run Units','Run Total'} ) if %$Varnish;;
 # if $$Varnish{'run_price'};
@@ -1606,7 +1606,7 @@ sub breakdown {
 
 	$breakdown .= sprintf( 'Blank Plates: %d plates * $%.2f per plate = $%.2f<br/>', @$plate_costs{'Blank Plates','Blank Price'}, $$plate_costs{'Blank Price'} * $$plate_costs{'Blank Plates'}) if defined $$plate_costs{'Blank Plates'};
 	my $stock_qty = $$price{'Stock Quantity'};
-	$breakdown .= sprintf( 'Overs: Base:%s Setup: %s Run:%s FM:%s Additional Plate:%s Bindery: %d Total:%s<br/>', @$stock_qty{'Net Sheet Count','Setup Overs','Run Overs','FM Overs','Additional Plate Overs', 'Bindery Overs','Total Overs'} );
+	$breakdown .= sprintf( 'Overs: Base:%s Initial Setups: %d*%d=%d, Additional Setups: %d*%d=%d Run:%s FM:%s Additional Plate:%s Bindery: %d Total:%s<br/>', @$stock_qty{'Net Sheet Count','Initial Setup Rate','Initial Setup Count','Initial Setup Overs','Additional Setup Rate','Additional Setup Count','Additional Setup Overs','Run Overs','FM Overs','Additional Plate Overs', 'Bindery Overs','Total Overs'} );
 	if ( $Paper->type() ne 'Roll' ) {
 		$breakdown .= sprintf( '%sx%s starting %sx%s<br/>', $Paper->width(), $Paper->height(), $Paper->start_width(), $Paper->start_height() );
 		$breakdown .= "\tPaper: $$price{'Gross Sheet Count'} sheets @".$Paper->mweight() . 'M = ' . $$price{'Gross Sheet Count'} * $Paper->mweight()/1000 . 'lbs * ';
@@ -2474,8 +2474,7 @@ $openprint::log->warn("Unknown Per setting $unit");
 		return \%price if check_price( $price_to_beat, \%price, $specs, $qty_index, $Imposition, 'SpinePaste' );
 	} # end if
 	if ( $$project{'HasPerforating'} ) {
-$openprint::log->debug("Perforating");
-$$specs{'Runspeed'} = $run_speed;
+		$$specs{'Runspeed'} = $run_speed;
 		my %perforating_results = openprint::Estimating::Perforating::signature_calc( $Project, @$project{'HasPerforating','PerforatingSpecs'}, $service_index, $specs, $qty_index, $Imposition );
 #$openprint::log->debug("Perforating");
 		if ( $perforating_results{'Status'} eq 'uncalculated' ) {
@@ -2494,12 +2493,19 @@ $$specs{'Runspeed'} = $run_speed;
 	#Initially we calculate based on colours, but really we need to calculate based on plates, which we will do once we figure out how many plates we need.
 	$min_overs = $Press->specification( 'Press Run Overs Minimum', $plate_setup{'Plate Count'} );
 	$setup_rate = $Press->specification( 'Press Run Overs Rate', $plate_setup{'Plate Count'} );
+
+	my $initial_setup_rate = $setup_rate;
+
 	if ( $Paper->type() eq 'Roll' and sets::isin('Sheet', split(',', $Press->specification('Feed') ) ) ) {
 		if ( my $roll2sheet_overs_rate = $Press->specification( 'Roll2Sheet Additional Setup Overs' ) ) {
-			$setup_rate *= ( 1 + ( $roll2sheet_overs_rate / 100 ) );
+			$initial_setup_rate *= ( 1 + ( $roll2sheet_overs_rate / 100 ) );
 		} # end if
 	} # end if
-	$setup_overs = ceil($setup_rate * ( $plate_setup{'Plate Count'} ));
+	my $initial_setup_overs = ceil($initial_setup_rate*$plate_setup{'Setup Plate Count'});
+
+	my $additional_setup_count = $plate_setup{'Plate Count'}-$plate_setup{'Setup Plate Count'};
+	my $additional_setup_overs = ceil($setup_rate * $additional_setup_count);
+	$setup_overs = $initial_setup_overs + $additional_setup_overs;
 	$setup_overs += $fm_overs;
 	$setup_overs += $price{'SpinePaste MakeReady Overs'};
 	$setup_overs = $min_overs if $setup_overs < $min_overs;
@@ -2557,7 +2563,12 @@ $$specs{'Runspeed'} = $run_speed;
 			'Impressions'				=> $impressions, 
 			'Gross Sheet Count'			=> $gross_qty, 
 			'Net Sheet Count'			=> $base_impressions,
-			'Setup Overs'				=> $setup_rate * $plate_setup{'Plate Count'},
+			'Initial Setup Count'		=> $plate_setup{'Setup Plate Count'},
+			'Initial Setup Rate'		=> $initial_setup_rate,
+			'Initial Setup Overs'		=> $initial_setup_overs,
+			'Additional Setup Count'	=> $additional_setup_count,
+			'Additional Setup Rate'		=> $setup_rate,
+			'Additional Setup Overs'	=> $additional_setup_overs,
 			'Bindery Overs'				=> $price{'SpinePaste MakeReady Overs'},
 			'Run Overs'					=> $run_overs,
 			'Additional Plate Overs'	=> $additional_overs,
@@ -3355,6 +3366,7 @@ sub plate_setup_cost {
 	my $plate_id = $plate_size . '-' . $plate_type . 'Plate';
 
 	my %setup_cost = (
+			'Setup Plate Count', scalar @$colours,
 			'Plate Count', $plate_count, 
 			'Plate Type', $plate_type,
 			'Plate ID', $plate_id,
