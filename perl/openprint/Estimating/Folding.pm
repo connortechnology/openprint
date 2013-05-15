@@ -632,13 +632,17 @@ sub calc {
 			my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
 			$$sig_specs{'txtSpreadSize'} = $$printing_specs{'txtSpreadSize'} if ! $$sig_specs{'txtSpreadSize'};
 			$$sig_specs{'txtSpreadSize'} = 2 if ! $$sig_specs{'txtSpreadSize'};
+$openprint::log->debug("Doing sig $signature_service_index spread size: $$sig_specs{txtSpreadSize}") if $debug;
 
 			$$sig_specs{'PreviousImposition'} = $previous_imposition;
 			if ( ( ! exists $$sig_specs{'txtSignatureSpreadQuantity'.$qty_index} ) or $$sig_specs{'txtSignatureSpreadQuantity'.$qty_index} ) {
                 my $Imposition = new openprint::Imposition;
                 $Imposition->load( $sig_specs, $qty_index );
 				next if ! $Imposition->imposition();
-				next if $Imposition->pages() < 4;
+				if ( $Imposition->pages() < 4 ) {
+					$$specs{'hdnBreakdown'.$qty_index} .= "Signature $$sig_specs{SignatureIndex} has fewer than 4 pages.<br/>";
+					next;
+				} # end if
 
 				my %results = signature_calc( $Project, $signature_service_index, $sig_specs, $specs, $qty_index, $Imposition->Paper(), $Imposition );
 				$price += $results{'Price'};
@@ -660,6 +664,8 @@ $openprint::log->debug("Unable to fold $qty_index $$sig_specs{SignatureIndex}");
 				if ( (!$previous_imposition) and ( new openprint::Equipment( $$specs{"ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} )->strid() eq $$sig_specs{'ddmPress'.$qty_index} ) ) {
 					$previous_imposition = $$sig_specs{'txtImposition'.$qty_index};
 				} # end if
+			} else {
+$openprint::log->debug("SignatureSpreadQuanutity exists but is empty");
 			}# # end if
 		} # end foreach signature
 		if ( $status eq 'uncalculated' and ! $$specs{'alert'} ) {
@@ -668,7 +674,7 @@ $openprint::log->debug("Unable to fold $qty_index $$sig_specs{SignatureIndex}");
 
 		$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $price );
 		$$specs{"MPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $mprice );
-$log->debug($$specs{'hdnBreakdown'.$qty_index});
+$log->debug('Breakdown: ' . $$specs{'hdnBreakdown'.$qty_index});
 	} # end foreach qty
 	$log->debug(" END FOLDING!!!!!!!!!!!!!!!!!! $status");
 	return $$specs{'Status'} = $status;
