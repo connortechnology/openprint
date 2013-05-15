@@ -1,4 +1,5 @@
 package openprint::Imposition;
+require Math::Round;
 use vars qw( $AUTOLOAD );
 
 my @fields = (
