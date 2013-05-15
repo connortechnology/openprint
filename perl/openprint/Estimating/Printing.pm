@@ -1037,7 +1037,7 @@ $openprint::log->debug("No well cut Stock found");
 
 	foreach my $P ( @Papers ) {
 		#$P->Prices();
-		$openprint::log->debug("Base Paper: " . $P->to_string() . ' Minimum: ' . $P->minimum_order() ) if ( DEBUG );
+		$openprint::log->debug("Base Paper: " . $P->to_string() . ' Minimum: ' . $P->minimum_order() ) if DEBUG;
 		$Papers{$P->id_string()} = $P->clone();
 	} # end foreach
 
