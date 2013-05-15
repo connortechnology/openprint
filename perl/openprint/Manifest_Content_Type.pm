@@ -24,6 +24,7 @@ $serial = 'manifest_content_types_id_seq';
 	'manifest_id'	=>	'manifest_id',
 	'paper_id'		=>	'paper_id',
 	supplier_invoice	=>	'supplier_invoice',
+	item_count			=>	'item_count',
 );
 %find_fields = (
 	total_quantity	=>	'(SELECT SUM(quantity) FROM manifestcontents WHERE manifestcontents.manifest_id=manifest_content_types.manifest_id and type_id=manifest_content_types.id)',
@@ -34,6 +35,7 @@ $serial = 'manifest_content_types_id_seq';
 	'paper_id'		=> [ 's/\D//g' ],
 	'po_id'			=> [ 's/\D//g' ],
 	'po_content_id'	=> [ 's/\D//g' ],
+	'item_count'	=> [ 's/\D//g' ],
 	'docket'	=> [ 's/\D//g' ],
 	'cost'		=> [ 's/[^\d\.]//g' ],
 );
