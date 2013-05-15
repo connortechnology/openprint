@@ -96,8 +96,8 @@ if ( $ENV{'CALLING_STATION_ID'} ) {
 				$log->debug("IP unchanged");
 			} # end if
 		} else {
-			$log->debug("IP not changed because dhcp not setf or mac $ENV{'CALLING_STATION_ID'} $$Host{hostname}");
-		} # end if
+			$log->debug("IP not changed because dhcp not set for mac $ENV{'CALLING_STATION_ID'} $$Host{hostname} $ENV{'FRAMED_IP_ADDRESS'}");
+		} # end if Host->dhcp
 	} else {
 		$log->debug("Host not found for mac $ENV{'CALLING_STATION_ID'}");
 

@@ -6,7 +6,7 @@ package openprint::Photo_Album;
 our @ISA = qw( openprint::Object );
 
 use vars qw( $debug $table $serial %fields %find_fields %transforms %defaults );
-$debug = 1;
+$debug = 0;
 $serial = 'photo_albums_id_seq';
 $table = 'photo_albums';
 
@@ -70,6 +70,7 @@ sub thumbnail_html {
 #$openprint::log->debug("Photo no asset"  );
 	return sprintf('<a class="thumbnail" href="/photo_albums/view.html?album_id=%d" title="%s">Empty</a>', $_[0]{id}, $_[0]{'name'} );
 } # end sub thumbnail_html
+
 sub asset_html {
 	my $Photo = $_[0]->Thumbnail();
 	if ( $Photo->asset_id() ) {
