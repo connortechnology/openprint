@@ -10,12 +10,12 @@
 -->
 </script>
 <div class="Project"><div class="View">
-	<? if ( $$variable{'Project'}->company_id() != $session{'company_id'} ) ?>
-	<div class="warning unprintable">Warning: You are logged in as <? echo ( new openprint::Company( $session{'company_id'} )->name() ) ?> but this project belongs to <? echo ( $$variable{'Project'}->Company()->name() ) ?>!</div>
-	<? endif ( $$variable{'Project'}->company_id() != $session{'company_id'} ) ?>
 	<? if ( $$variable{'ProjectIndex'} eq '' ) ?>
 	There is no current project. 
 	<? else ( $$variable{'ProjectIndex'} eq '' ) ?>
+	<? if ( $$variable{'Project'}->company_id() != $session{'company_id'} ) ?>
+	<div class="warning unprintable">Warning: You are logged in as <? echo ( new openprint::Company( $session{'company_id'} )->name() ) ?> but this project belongs to <? echo ( $$variable{'Project'}->Company()->name() ) ?>!</div>
+	<? endif ( $$variable{'Project'}->company_id() != $session{'company_id'} ) ?>
 	<form name="f1" method="post" action="">
 		<input type="hidden" name="btnFunction" value=""/>
 		<input type="hidden" name="ProjectIndex" value="<?ProjectIndex?>"/>

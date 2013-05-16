@@ -1632,5 +1632,9 @@ $openprint::log->debug("Project::recalculate calc auto");
 	return $self->save();
 } # end sub recalculate
 
+sub calliper {
+	return openprint::print::get_finished_calliper($_[0]{id});
+} # end sub calliper
+
 1;
 __END__

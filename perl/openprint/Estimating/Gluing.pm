@@ -110,6 +110,7 @@ $log->debug("GLUING!!!!!!!!!!!!!!!!!!");
 
 	my $makeReadyPrice = openprint::service::get_price( 'GluingMakeReady', undef, undef );
 	my $minimumCharge = openprint::service::get_price( 'GluingMinimumCharge', undef, undef );
+	my $calliper = $Project->calliper();
 
 	foreach my $ss_id ( $Project->signatures() ) {
 		my $sig_specs = openprint::service::get_specs_ref( $Project, $ss_id );
@@ -124,6 +125,8 @@ $log->debug("GLUING!!!!!!!!!!!!!!!!!!");
 				if ( $$sig_specs{'chkPocketRight'} eq 'Right' ) {
 					$$specs{"txtArea-$$sig_specs{SignatureIndex}"} += .5 * $$sig_specs{'PocketSize'};
 				} # end if
+			} elsif ( $Project->Type()->name() eq 'ScratchPads' ) {
+				$$specs{"txtArea-$$sig_specs{SignatureIndex}"} = $$sig_specs{txtWidth} * $calliper;
 			} # end if
 		} # end if
 
@@ -141,6 +144,7 @@ $log->debug("GLUING!!!!!!!!!!!!!!!!!!");
 			my $price = 0;
 			my $unitPrice = 0;
 			$$specs{'hdnBreakdown'.$qty_index} = '';
+			$$specs{'hdnBreakdown'.$qty_index} = 'Project Calliper: '.$calliper.'<br/>';
 			$$specs{'hdnBreakdown'.$qty_index}  .= 'MakeReady: $' . sprintf( '%.2f', $makeReadyPrice ) . '<br/>';
 			$$specs{'hdnBreakdown'.$qty_index}  .= 'MinimumCharge: $' . sprintf( '%.2f', $minimumCharge ) . '<br/>';
 
