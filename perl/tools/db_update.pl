@@ -1013,6 +1013,9 @@ if ( ! sets::isin( 'papers', \@tables ) ) {
 	if ( ! exists $$data{'allocated'} ) {
 		$dbh->do('alter table papers add allocated integer');
 	} # end if
+	if ( ! exists $$data{manufacturers_name} ) {
+		$dbh->do('ALTER TABLE papers add manufacturers_name TEXT');
+	} # end if
 	$dbh->do('alter table papers add basis_width float') if ! exists $$data{basis_width};
 	$dbh->do('alter table papers add basis_height float') if ! exists $$data{basis_height};
 	$dbh->do('alter table papers add basis_mweight float') if ! exists $$data{basis_mweight};
@@ -2481,9 +2484,12 @@ if ( ! sets::isin( 'manifest_content_types', \@tables ) ) {
 		} # end if
 	} # end if
 } else {
-	my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM manifest_content_types LIMIT 1', {} );
+	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='manifest_content_types'", 'column_name');
 	if ( $data and ! exists $$data{'supplier_invoice'} ) {
 		$dbh->do('alter table manifest_content_types add supplier_invoice text');
+	} # end if
+	if ( ! exists $$data{item_count} ) {
+		$dbh->do('ALTER TABLE manifest_content_types ADD item_count INTEGER');
 	} # end if
 } 
 
