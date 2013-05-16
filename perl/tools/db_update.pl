@@ -2491,6 +2491,9 @@ if ( ! sets::isin( 'manifest_content_types', \@tables ) ) {
 	if ( ! exists $$data{item_count} ) {
 		$dbh->do('ALTER TABLE manifest_content_types ADD item_count INTEGER');
 	} # end if
+	if ( ! exists $$data{type} ) {
+		$dbh->do('ALTER TABLE manifest_content_types ADD type TEXT');
+	} # end if
 } 
 
 foreach my $Currency ( openprint::Currency->find('short'=>'CDN') ) {
