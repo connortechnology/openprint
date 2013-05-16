@@ -44,11 +44,11 @@
 		$html .= '</tr><tr>';
 		$html .= '<td colspan="5">';
 		} # end if
-		$html .= ssi::writeButton( $log, $dbh, "CheckIn$$C{id}", 'checkin.gif', "checkin_window( $paper_id, '$$variable{skid_id}' );", '', 'Check In' );
-		$html .= ssi::writeButton( $log, $dbh, "CheckOut$$C{id}", 'checkout.gif', "checkout_window( $paper_id, '$$variable{skid_id}' );", '', 'Check Out' );
-		$html .= ssi::writeButton( $log, $dbh, "Allocate$$C{id}", 'allocate.gif', "allocate_window( $paper_id, '$$variable{skid_id}', $available );", '', 'Allocate' );
-		$html .= ssi::writeButton( $log, $dbh, "Delete$$C{id}", 'delete.gif', '', sprintf('/employee/inventory/skid_details.html?skid_id=%d&amp;content_id=%d&amp;btnFunction=DeletePaper', $$variable{Skid}->id(), $C->id() ), 'Delete' );
-		$html .= ssi::writeButton( $log, $dbh, "Select$$C{id}", 'select.gif', "\$('AddPaper').show();new Ajax.Updater({success: 'AddPaper'},'/employee/inventory/_add_paper_show.html?paper_id=$paper_id&amp;skid_id=$$variable{Skid}{id}',{method:'get'} );", '', 'Select' );
+		$html .= ssi::button( "CheckIn$$C{id}", { onclick=>"checkin_window( $paper_id, '$$variable{skid_id}' );", href=>'', text=>'Check In' } );
+		$html .= ssi::button( "CheckOut$$C{id}", { onclick=>"checkout_window( $paper_id, '$$variable{skid_id}' );", href=>'', text=>'Check Out' } );
+		$html .= ssi::button( "Allocate$$C{id}", { onclick=>"allocate_window( $paper_id, '$$variable{skid_id}', $available );", href=>'', text=>'Allocate' } );
+		$html .= ssi::button( "Delete$$C{id}", { href=>sprintf('/employee/inventory/skid_details.html?skid_id=%d&amp;content_id=%d&amp;btnFunction=DeletePaper', $$variable{Skid}->id(), $C->id() ), text=>'Delete' } );
+		$html .= ssi::button( "Select$$C{id}", { onclick=>"\$('AddPaper').show();new Ajax.Updater({success: 'AddPaper'},'/employee/inventory/_add_paper_show.html?paper_id=$paper_id&amp;skid_id=$$variable{Skid}{id}',{method:'get'} );", href=>'', text=>'Select' } );
 		$html .= '</td>';
 		$html .= '</tr>';
 	} # end foreach C

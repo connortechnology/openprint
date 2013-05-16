@@ -1060,11 +1060,19 @@ function check_decimal( element, e ) {
 
 function getValues( form, element_names ) {
 	var results = new Hash();
-	for ( var index = element_names.length; index; index -- ) {
-		var form_element = form.elements[element_names[index-1]];
-		if ( form_element ) 
-			results.set(element_names[index-1], form_element.getValue());
-	} // end for
+	if ( element_names.constructor == Array ) {
+		for ( var index = element_names.length; index; index -- ) {
+			var form_element = form.elements[element_names[index-1]];
+			if ( form_element ) 
+				results.set(element_names[index-1], form_element.getValue());
+		} // end for
+	} else if ( element_names.constructor == RegExp ) {
+		for ( var index = 0, len = form.elements.length; index < len; index += 1 ) {
+			if ( element_names.exec( form.elements[index].name ) ) {
+				results.set(form.elements[index].name, form.elements[index].getValue());
+			} // end if	
+		} // end foreach element
+	} // end if ARRAY or Regexp
 	return results;
 } // end function getValues
 function trim (str) {

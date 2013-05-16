@@ -4,6 +4,14 @@
 			allocated_to_docket	=>	$session{'/employee/inventory/skids.html?Docket'},
 			order		=>	'id',
 			) ];
+	} elsif ( $session{'/employee/inventory/skids.html?skid_id'} ) {
+		$$variable{Skids} = [ openprint::Skid::find( 
+			( $session{'/employee/inventory/skids.html?skid_id'} =~ /%/ ? 
+			( 'id ilike'	=>	$session{'/employee/inventory/skids.html?skid_id'} ) :
+			( id	=>	$session{'/employee/inventory/skids.html?skid_id'} ) ),
+			order	=>	'id',
+			deleted =>	[0,1,undef],
+			) ];
 	} elsif ( $session{'/employee/inventory/skids.html?rfid_id'} ) {
 		$$variable{Skids} = [ openprint::Skid::find( 
 			( $session{'/employee/inventory/skids.html?rfid_id'} =~ /%/ ? 

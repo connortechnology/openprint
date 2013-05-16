@@ -29,7 +29,7 @@ table .mweight, table .gsm {
 	text-align: right;
 	width: 50px;
 }
-table .on_order, table .allocated, table .in_stock, table .Quantity, table .qty_lbs, table .qty_kgs, table .qty_feet {
+table .on_order, table .allocated, table .in_stock, table .Quantity, table .qty_lbs, table .qty_kgs, table .qty_feet, table .qty_sheets {
 	text-align: right;
 	width: 90px;
 	padding-right: 5px;
@@ -73,7 +73,7 @@ padding-left: 100px;
 	vertical-align: middle;
 }
 
-.qty_feet input, .qty_lbs input, .qty_kgs input, .Docket input, .Skid input {
+.qty_feet input, .qty_lbs input, .qty_kgs input, .Docket input, .Skid input, .qty_sheets input {
 	width: 100%;
 }
 

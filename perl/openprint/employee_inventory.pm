@@ -1387,7 +1387,7 @@ sub manifest {
 		my @Types = openprint::Manifest_Content_Type->find('manifest_id'=>$Manifest->id());
 		if ( ! @Types ) {
 			my $Type = new openprint::Manifest_Content_Type();
-			$variable{'error'} .= $Type->save({'manifest_id'=>$Manifest->id()});
+			$variable{error} .= $Type->save({ manifest_id=>$Manifest->id()});
 		} else {
 			foreach my $Type ( openprint::Manifest_Content_Type->find('manifest_id'=>$Manifest->id()) ) {
 				my $Paper = save_Paper('-'.$Type->id());
@@ -1445,7 +1445,7 @@ sub manifest {
 				} # end if
 
 				# Save any new entries that might have been entered but not added.
-				if ( $param{"qty_lbs-$$Type{id}-"} ) {
+				if ( $param{"qty_lbs-$$Type{id}-"} or $param{"qty_sheets-$$Type{id}-"} ) {
 					@param{"rfidtag_id-$$Type{id}-","skid_id-$$Type{id}-"} = misc::trim(@param{"rfidtag_id-$$Type{id}-","skid_id-$$Type{id}-"});
 
 					my $Skid;
@@ -1479,7 +1479,7 @@ sub manifest {
 								'type_id'		=>	$Type->id(),
 								'skid_id'		=>	$Skid->id(),
 								'manifest_id'	=>	$Manifest->id(),
-								'quantity'		=>	Math::Round::nearest( 1, $param{"qty_lbs-$$Type{id}-"} ),
+								'quantity'		=>	( $Type->type() eq 'Sheet' ? $param{"qty_sheets-$$Type{id}-"} : Math::Round::nearest( 1, $param{"qty_lbs-$$Type{id}-"} ) ),
 								} );
 
 						my @SkidContents = openprint::SkidContent->find(skid_id=>$Skid->id(),paper_id=>$Type->paper_id());
@@ -1495,50 +1495,52 @@ sub manifest {
 
 				my $total_qty = 0;
 				# Save data for the rest of the contents
-				foreach my $C ( $Manifest->Contents( 'type_id' => $Type->id() ) ) {
-					my $Skid = $C->Skid();
+				foreach my $MC ( $Manifest->Contents( type_id => $$Type{id} ) ) {
+					my $Skid = $MC->Skid();
 
 					my $checked_out = openprint::PaperInventory::find('skid_id'=>$Skid->id(), 'paper_id'=>undef, 'comment_like'=>'Checked out%' ) ? 1 : 0; 
-					if ( exists $param{"qty_lbs-$$Type{id}-$$C{id}"} and ( $C->quantity() != $param{"qty_lbs-$$Type{id}-$$C{id}"} ) ) {
-						$variable{'error'} .= $C->save({ 'quantity'	=> sprintf('%d', $param{"qty_lbs-$$Type{id}-$$C{id}"}) });
+					my $qty_param = $Type->type() eq 'Sheet' ? "qty_sheets-$$Type{id}-$$MC{id}" : "qty_lbs-$$Type{id}-$$MC{id}";
+
+					if ( exists $param{$qty_param} and ( $MC->quantity() != $param{$qty_param} ) ) {
+						$variable{'error'} .= $MC->save({ quantity	=> Math::Round::nearest(1, $param{$qty_param}) });
 						if ( ! $checked_out ) {
-							save_inventory( $Skid, $Paper, $C->quantity(), sprintf('Inventory adjusted from manifest %1$s.', $Manifest->name() ) );
+							save_inventory( $Skid, $Paper, $MC->quantity(), sprintf('Inventory adjusted from manifest %1$s.', $Manifest->name() ) );
 						} # end if
 					} else {
 						my @SkidContents = openprint::SkidContent->find(skid_id=>$Skid->id(),paper_id=>$Type->paper_id());
 						if ( ! @SkidContents ) {
 							@SkidContents = ( new openprint::SkidContent() );
-							$SkidContents[0]->save({skid_id=>$$C{skid_id}, paper_id=>$Type->paper_id(), quantity=>$$C{quantity}, manifestcontent_id=>$$C{id}});
+							$SkidContents[0]->save({skid_id=>$$MC{skid_id}, paper_id=>$Type->paper_id(), quantity=>$$MC{quantity}, manifestcontent_id=>$$MC{id}});
 						} # end if
 					} # end if
-					if ( $param{"location_id-$$Type{id}-$$C{id}"} and ( $param{"location_id-$$Type{id}-$$C{id}"} != $Skid->location_id() ) ) {
-						$Skid->save({location_id=>$param{"location_id-$$Type{id}-$$C{id}"}});
+					if ( $param{"location_id-$$Type{id}-$$MC{id}"} and ( $param{"location_id-$$Type{id}-$$MC{id}"} != $Skid->location_id() ) ) {
+						$Skid->save({location_id=>$param{"location_id-$$Type{id}-$$MC{id}"}});
 					} # end if
-					$total_qty += $C->quantity();
+					$total_qty += $MC->quantity();
 					#if ( $Project and ( $param{"allocate-$$Type{id}"} eq 'Specific' ) ) {
 					if ( $Project and ! $checked_out ) {
-						my $PA = openprint::PaperAllocation->find_one('skid_id'=>$C->skid_id());
+						my $PA = openprint::PaperAllocation->find_one('skid_id'=>$MC->skid_id());
 						if ( ! $PA ) {
-							$Paper->allocate( $Skid, $Project->id(), $C->quantity(), $Paper->type() eq 'Roll' ? 'lbs' : 'sheets' );
-							$variable{'information'} .= sprintf('Allocated %1$d%2$s to docket <a href="/employee/project/view.html?ProjectIndex=%3$d">%4$d</a>.<br/>', $C->quantity(), ($Paper->type() eq 'Roll' ? 'lbs' : 'sheets'), $Project->id(), $Project->docket() );
+							$Paper->allocate( $Skid, $Project->id(), $MC->quantity(), $Paper->units() );
+							$variable{'information'} .= sprintf('Allocated %1$d%2$s to docket <a href="/employee/project/view.html?ProjectIndex=%3$d">%4$d</a>.<br/>', $MC->quantity(), $Paper->units(), $Project->id(), $Project->docket() );
 						} elsif ( ! $PA->project_id() ) {
 							$variable{'error'} .= $PA->save({'project_id'=>$Project->id()});
-							$variable{'information'} .= sprintf('Updated allocation %1$d%2$s to docket <a href="/employee/project/view.html?ProjectIndex=%3$d">%4$d</a>.<br/>', $C->quantity(), ($Paper->type() eq 'Roll' ? 'lbs' : 'sheets'), $Project->id(), $Project->docket() );
+							$variable{'information'} .= sprintf('Updated allocation %1$d%2$s to docket <a href="/employee/project/view.html?ProjectIndex=%3$d">%4$d</a>.<br/>', $MC->quantity(), $Paper->units(), $Project->id(), $Project->docket() );
 						} elsif ( $PA->project_id() != $Project->id() ) {
-							$variable{'information'} .= sprintf('Skid <a href="/employee/inventory/skid_details.html?skid_id=%1$d">%1$d</a> already allocated to docket <a href="/employee/project/view.html?ProjectIndex=%2$d">%3$d</a>.<br/>', $C->skid_id(), $PA->project_id(), $PA->docket() );
+							$variable{'information'} .= sprintf('Skid <a href="/employee/inventory/skid_details.html?skid_id=%1$d">%1$d</a> already allocated to docket <a href="/employee/project/view.html?ProjectIndex=%2$d">%3$d</a>.<br/>', $MC->skid_id(), $PA->project_id(), $PA->docket() );
 						} # end if
 					} # end if
 
-					if ( $param{"manufacturers_id-$$Type{id}-$$C{id}"} ) {
-						if ( my $S = openprint::Skid->find_one(manufacturers_id=>$param{"manufacturers_id-$$Type{id}-$$C{id}"}) ) {
+					if ( $param{"manufacturers_id-$$Type{id}-$$MC{id}"} ) {
+						if ( my $S = openprint::Skid->find_one(manufacturers_id=>$param{"manufacturers_id-$$Type{id}-$$MC{id}"}) ) {
 							if ( $S->id() != $Skid->id() ) {
 								$variable{error} .= "Manufacturers ID is already assigned to <a href=\"/employee/inventory/skid_details.html?skid_id=$$S{id}\">$$S{id}</a>.<br/>";
-								delete $param{"manufacturers_id-$$Type{id}-$$C{id}"};
+								delete $param{"manufacturers_id-$$Type{id}-$$MC{id}"};
 							} # end if
 						} # end if
 					} # end if
 
-					$variable{error} .= $Skid->save({manufacturers_id=>$param{"manufacturers_id-$$Type{id}-$$C{id}"}}) if $param{"manufacturers_id-$$Type{id}-$$C{id}"} and ! $Skid->manufacturers_id();
+					$variable{error} .= $Skid->save({manufacturers_id=>$param{"manufacturers_id-$$Type{id}-$$MC{id}"}}) if $param{"manufacturers_id-$$Type{id}-$$MC{id}"} and ! $Skid->manufacturers_id();
 				} # end foreach Manifest_Content for this type
 
 if ( 0 ) {
@@ -1573,6 +1575,39 @@ if ( 0 ) {
 	} # end if btnfunction
 	$variable{'Manifest'} = $Manifest;
 } # end sub manifest
+
+sub _manifest_contents {
+	if ( ! $param{type_id} ) {
+		$log->error( 'Loading _manifest_contents without type_id' );
+	} # end if
+	my $Type = $variable{Type} = new openprint::Manifest_Content_Type( $param{type_id} );
+	if ( ( $Type->type() ne $param{"type-$$Type{id}"} ) and $param{"type-$$Type{id}"} ) {
+		$Type->save({type => $param{"type-$$Type{id}"} });
+	} # end if
+
+	if ( ! $$Type{id} ) {
+		$log->error( 'Loading _manifest_contents with invalid type_id' );
+	} # end if
+	$variable{Manifest} = $Type->Manifest();
+	$variable{type_id} = $$Type{id};
+
+	foreach my $Content ( openprint::ManifestContent->find( type_id=>$param{type_id} ) ) {
+		my $quantity = $Type->type() eq 'Roll' ? $param{"qty_lbs-$$Type{id}-$$Content{id}"} : $param{"qty_sheets-$$Type{id}-$$Content{id}"};
+
+		if ( ( $Content->skid_id != $param{"skid_id-$$Type{id}-$$Content{id}"} ) and ( $Content->quantity() != $quantity ) ) {
+if ( 0 ) {
+			$variable{error} .= $Content->save({
+				skid_id		=>	$param{"skid_id-$$Type{id}-$$Content{id}-$$Content{id}"},
+				quantity	=>	$quantity,
+			});
+} else {
+$log->debug("WOuld update");
+}
+		} else {
+			$log->debug("No save needed for " . $Content->to_string() );
+		} # end if
+	} # end foreach Content
+} # end sub _manifest_contents
 
 sub _manifest_content {
 	if ( $param{'action'} eq 'Remove' ) {

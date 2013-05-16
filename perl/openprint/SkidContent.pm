@@ -122,6 +122,7 @@ sub delete {
 	my $self = $_[0];
 	my $error = $self->SUPER::delete();
 	if ( !$error ) {
+		$self->Skid()->Contents(undef);
 		$self->Paper()->save();
 	} # end if
 } # end sub delete

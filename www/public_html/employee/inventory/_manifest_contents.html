@@ -1,4 +1,4 @@
-<!--#include virtual="/includes/error_reporting.html"-->
+<?include(/includes/error_reporting.html)?>
 <table id="Contents-<?type_id?>" class="List sortable">
 	<tr>
 		<th class="RFID">RFID</th>
@@ -7,7 +7,16 @@
 		<th class="Docket">Docket</th>
 		<th class="qty_lbs">Quantity (lbs)</th>
 		<th class="qty_kgs">Quantity (kgs)</th>
-		<th class="qty_feet">Quantity (feet)</th>
+<? echo (
+	if ( $$variable{Type}->type() ne 'Roll' ) {
+		return '<th class="qty_sheets">Quantity (sheets)</th>';
+	} # end if
+) ?>
+<? echo (
+	if ( $$variable{Type}->type() ne 'Sheet' ) {
+		return '<th class="qty_feet">Quantity (feet)</th>';
+	} # end if
+) ?>
 		<th class="in_stock">In Stock</th>
 		<th class="last_seen">Last Seen</th>
 		<th class="Location">Location</th>
@@ -25,9 +34,18 @@
 		<td class="qty_kgs">
 <? echo ( ssi::input( type=>'float', id=>'qty_kgs-'.$$variable{type_id}.'-', name=>'qty_kgs-'.$$variable{type_id}.'-', onkeyup=>"from_kg(this,'$$variable{type_id}','');" ); ) ?>
 </td>
-		<td class="qty_feet">
-<? echo ( ssi::input( type=>'cardinal', id=>'qty_feet-'.$$variable{type_id}.'-', name=>'qty_feet-'.$$variable{type_id}.'-', onkeyup=>"from_feet(this,'$$variable{type_id}','');" ); ) ?>
-</td>
+<? echo (
+	if ( $$variable{Type}->type() ne 'Sheet' ) {
+		return '<td class="qty_feet">'.
+input( type=>'cardinal', id=>'qty_feet-'.$$variable{type_id}.'-', name=>'qty_feet-'.$$variable{type_id}.'-', onkeyup=>"from_feet(this,'$$variable{type_id}','');" ).'</td>';
+	} # end if
+) ?>
+<? echo (
+	if ( $$variable{Type}->type() ne 'Roll' ) {
+		return '<td class="qty_sheets">'.
+input( type=>'cardinal', id=>'qty_sheets-'.$$variable{type_id}.'-', name=>'qty_sheets-'.$$variable{type_id}.'-', onkeyup=>"from_sheets(this,'$$variable{type_id}','');" ).'</td>';
+	} # end if
+) ?>
 		<td class="in_stock">&nbsp;</td>
 		<td class="last_seen">&nbsp;</td>
 		<td class="Location"><? echo ( ssi::select( openprint::Location->dropdown(order=>'parent_id NULLS FIRST, lower(name)'), $param{'location_id-'.$$variable{type_id}.'-'}, { name=>'location_id-'.$$variable{type_id}.'-', id=>'location_id-'.$$variable{type_id}.'-', prepend=>['','select'] } ))?></td>
@@ -46,7 +64,17 @@
 		} # end foreach tag_id
 		my $Paper = $$variable{Type}->Paper();
 
-		$html .= sprintf('<tr id="totals-%4$d" class="totals"><td>Totals:</td><td colspan="3" id="skidcount-%4$d">%5$d skids/rolls</td><td id="totallbs-%4$d">%1$dlbs</td><td id="totalkgs-%4$d">%2$.4fkg</td><td id="totalfeet-%4$d">%3$dfeet</td><td colspan="5">&nbsp;</td></tr>', $total, $total/2.2046, ( ( $Paper->wpsi() and $Paper->width() ) ? (($total/$Paper->wpsi())/$Paper->width())/12 : 0 ), $$variable{'type_id'}, scalar @Contents );
+		$html .= sprintf('<tr id="totals-%1$d" class="totals"><td>Totals:</td><td colspan="3" id="skidcount-%1$d">%2$d skids/rolls</td>', $$variable{type_id}, scalar @Contents );
+		if ( $$variable{Type}->type() eq 'Sheet' ) {
+			my $lbs = $total*$Paper->wpsi()*$Paper->width()*$Paper->height();
+
+			$html .= sprintf('<td id="totallbs-%1$d">%2$dlbs</td><td id="totalkgs-%1$d">%3$.4fkg</td><td id="totalsheets-%1$d" class="qty_sheets">%4$s</td>',
+$$variable{type_id}, $lbs, $lbs/2.2046, Number::Format::format_number($total) );
+		} else { # A Roll
+			$html .= sprintf('<td id="totallbs-%1$d">%2$dlbs</td><td id="totalkgs-%1$d">%3$.4fkg</td><td id="totalfeet-%1$d" class="qty_feet">%4$dfeet</td>',
+				$$variable{type_id}, $total, $total/2.2046, ( ( $Paper->wpsi() and $Paper->width() ) ? (($total/$Paper->wpsi())/$Paper->width())/12 : 0 ) );
+		} #end if
+		$html .= '<td colspan="5">&nbsp;</td></tr>';
 		return $html;
 	) ?>
 </table>

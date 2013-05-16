@@ -3,30 +3,48 @@ function from_lbs( e, type_id, c_id ) {
 	var lbs = parseFloat(1*form.elements['qty_lbs-'+type_id+'-'+c_id].value);
 	form.elements['qty_kgs-'+type_id+'-'+c_id].value = do_decimals( lbs / 2.2046, 1 );
 
-	if ( get_value( form.elements['type-'+type_id] ) == 'Roll' ) {
+	var type = get_value( form.elements['type-'+type_id] ) == 'Roll';
+
+	if ( type == 'Roll' ) {
 		var wpsi = parseFloat(1*form.elements['gsm-'+type_id].value) / 703064.5;
 		var width = parseFloat(1*form.elements['width-'+type_id].value);
 		if ( wpsi && width ) {
 			form.elements['qty_feet-'+type_id+'-'+c_id].value = do_decimals(((lbs/wpsi)/width)/12,0);
 		} // end if
+	} else if ( type == 'Sheet' ) {
+		var wpsi = parseFloat(1*form.elements['gsm-'+type_id].value) / 703064.5;
+		var width = parseFloat(1*form.elements['width-'+type_id].value);
+		var height = parseFloat(1*form.elements['height-'+type_id].value);
+		if ( wpsi && width && height ) {
+			form.elements['qty_sheets-'+type_id+'-'+c_id].value = do_decimals(((lbs/wpsi)/(width*height))/12,0);
+		} // end if
 	} // end if
-
 } // end function from_lbs
+
 function from_kg( e, type_id, c_id ) {
 	var form = e.form;
 	var kgs = parseFloat(1*form.elements['qty_kgs-'+type_id+'-'+c_id].value);
 	var lbs = kgs * 2.2046;
 
 	form.elements['qty_lbs-'+type_id+'-'+c_id].value = do_decimals( lbs, 0 );
+	var type = get_value( form.elements['type-'+type_id] ) == 'Roll';
 
-	if ( get_value( form.elements['type-'+type_id] ) == 'Roll' ) {
+	if ( type == 'Roll' ) {
 		var wpsi = parseFloat(1*form.elements['gsm-'+type_id].value)/ 703064.5;
 		var width = parseFloat(1*form.elements['width-'+type_id].value);
 		if ( wpsi && width ) {
 			form.elements['qty_feet-'+type_id+'-'+c_id].value = do_decimals(((lbs/wpsi)/width)/12,0);
 		} 
+	} else if ( type == 'Sheet' ) {
+		var wpsi = parseFloat(1*form.elements['gsm-'+type_id].value) / 703064.5;
+		var width = parseFloat(1*form.elements['width-'+type_id].value);
+		var height = parseFloat(1*form.elements['height-'+type_id].value);
+		if ( wpsi && width && height ) {
+			form.elements['qty_sheets-'+type_id+'-'+c_id].value = do_decimals(((lbs/wpsi)/(width*height))/12,0);
+		} // end if
 	} // end if
 } // end function from_kg
+
 function from_feet( e, type_id, c_id ) {
 	return;
 	var form = e.form;
@@ -38,6 +56,23 @@ function from_feet( e, type_id, c_id ) {
 	form.elements['qty_lbs-'+type_id+'-'+c_id].value = do_decimals( lbs, 0 );
 	form.elements['qty_kgs-'+type_id+'-'+c_id].value = do_decimals( lbs / 2.2046, 1 );
 } // end function from_kg
+
+function from_sheets( e, type_id, c_id ) {
+	var form = e.form;
+
+	var sheets = parseFloat(1*form.elements['qty_sheets-'+type_id+'-'+c_id].value);
+	var wpsi = parseFloat(1*form.elements['gsm-'+type_id].value)/ 703064.5;
+	if ( ! wpsi ) return;
+	var width = parseFloat(1*form.elements['width-'+type_id].value);
+	if ( ! width ) return;
+	var height = parseFloat(1*form.elements['height-'+type_id].value);
+	if ( ! height ) return;
+	var lbs = sheets * wpsi * width * height;
+
+	form.elements['qty_lbs-'+type_id+'-'+c_id].value = do_decimals( lbs, 0 );
+	form.elements['qty_kgs-'+type_id+'-'+c_id].value = do_decimals( lbs / 2.2046, 1 );
+
+} // end function from_sheets
 
 function mweight_to_gsm( form, type_id ) {
 	var mweight = parseFloat(1*form.elements['mweight-'+type_id].value);
@@ -121,3 +156,22 @@ function manifest_onsubmit(form) {
 
 	return true;
 } // end function manifest_onsubmit
+
+function type_onclick( e ) {
+	var re = /^type-(\d+)$/;
+	var matches = re.exec( e.name );
+	var type_id = matches[1];
+
+	if ( e.value == 'Roll' ) {
+		$('PaperHeight-'+type_id).hide();$('MWeight-'+type_id).hide();
+	} else if ( e.value == 'Sheet' ) {
+		$('PaperHeight-'+type_id).show();$('MWeight-'+type_id).show();
+	} else {
+		alert('unsupported type ' + e.value );
+	} // end if
+	var values = getValues( e.form, new RegExp('\-'+type_id+'\-') );
+	values.set('type_id', type_id );
+	values.set('type-'+type_id, e.value );
+
+	new Ajax.Updater( 'ManifestContents'+type_id, '_manifest_contents.html', { parameters: values } );
+} // end func

@@ -74,6 +74,10 @@ sub find {
 		$sql .= ' AND id NOT IN (' . join(',', map { '?' } @{$params{'id not in'}} ) . ')';
 		push @values, @{$params{'id not in'}};
 	} # end if
+	if ( $params{'id ilike'} ) {
+		$sql .= ' AND id ilike ?';
+		push @values, $params{'id ilike'};
+	} # end if
 
 	if ( $params{'verification_code'} ) {
 		$sql .= ' AND id IN (SELECT skid_id FROM skid_verifications WHERE code=?)';

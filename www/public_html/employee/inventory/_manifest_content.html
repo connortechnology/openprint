@@ -12,7 +12,8 @@
 	} 
 	if ( $$variable{'C'} ) {
 		my $C = $$variable{'C'};
-		my $Paper = $C->Type()->Paper();
+		my $Type = $C->Type();
+		my $Paper = $Type->Paper();
 		my $Skid = $C->Skid();
 		my $tag_id = $Skid->rfidtag_id();
 		my $RFIDTag = $Skid->RFIDTag();
@@ -44,24 +45,47 @@
 			name	=>	'docket-'.$id,
 			value	=>	$C->docket(),
 			).'</td>';
-		$html .= '<td class="qty_lbs">'.ssi::input( type=>'cardinal', 
-			id		=>	'qty_lbs-'.$id,
-			name	=>	'qty_lbs-'.$id,
-			value	=>	$C->quantity(),
-			onkeyup	=>	"from_lbs(this,'$$variable{type_id}','$$C{id}');",
-			) . '</td>';
-		$html .= '<td class="qty_kgs">'.ssi::input( type=>'float', 
-			id		=>	'qty_kgs-'.$id,
-			name	=>	'qty_kgs-'.$id,
-			value	=>	Math::Round::nearest( .1, $C->quantity()/2.2046 ),
-			onkeyup	=>	"from_kg(this,'$$variable{type_id}','$$C{id}');",
-			) . '</td>';
-		$html .= '<td class="qty_feet">'.ssi::input( type=>'float', 
-			id		=>	'qty_feet-'.$id,
-			name	=>	'qty_feet-'.$id,
-			( ( $Paper->width() and $Paper->wpsi() ) ? ( value	=>	Math::Round::nearest( 1, (($C->quantity()/$Paper->wpsi())/$Paper->width())/12 ) ) : () ),
-			onkeyup	=>	"from_feet(this,'$$variable{type_id}','$$C{id}');",
-			) . '</td>';
+		if ( $Type->type() eq 'Sheet' ) {
+			my $lbs = $C->quantity() * $Paper->width() * $Paper->height() * $Paper->wpsi();
+
+			$html .= '<td class="qty_lbs">'.ssi::input( type=>'cardinal', 
+					id		=>	'qty_lbs-'.$id,
+					name	=>	'qty_lbs-'.$id,
+					value	=>	$lbs,
+					onkeyup	=>	"from_lbs(this,'$$variable{type_id}','$$C{id}');",
+					) . '</td>';
+			$html .= '<td class="qty_kgs">'.ssi::input( type=>'float', 
+					id		=>	'qty_kgs-'.$id,
+					name	=>	'qty_kgs-'.$id,
+					value	=>	Math::Round::nearest( .1, $lbs/2.2046 ),
+					onkeyup	=>	"from_kg(this,'$$variable{type_id}','$$C{id}');",
+					) . '</td>';
+			$html .= '<td class="qty_sheets">'.ssi::input( type=>'float', 
+				id		=>	'qty_sheets-'.$id,
+				name	=>	'qty_sheets-'.$id,
+				value	=>	$$C{quantity},
+				onkeyup	=>	"from_sheets(this,'$$variable{type_id}','$$C{id}');",
+				) . '</td>';
+		} else {
+			$html .= '<td class="qty_lbs">'.ssi::input( type=>'cardinal', 
+				id		=>	'qty_lbs-'.$id,
+				name	=>	'qty_lbs-'.$id,
+				value	=>	$C->quantity(),
+				onkeyup	=>	"from_lbs(this,'$$variable{type_id}','$$C{id}');",
+				) . '</td>';
+			$html .= '<td class="qty_kgs">'.ssi::input( type=>'float', 
+				id		=>	'qty_kgs-'.$id,
+				name	=>	'qty_kgs-'.$id,
+				value	=>	Math::Round::nearest( .1, $C->quantity()/2.2046 ),
+				onkeyup	=>	"from_kg(this,'$$variable{type_id}','$$C{id}');",
+				) . '</td>';
+			$html .= '<td class="qty_feet">'.ssi::input( type=>'float', 
+					id		=>	'qty_feet-'.$id,
+					name	=>	'qty_feet-'.$id,
+					( ( $Paper->width() and $Paper->wpsi() ) ? ( value	=>	Math::Round::nearest( 1, (($C->quantity()/$Paper->wpsi())/$Paper->width())/12 ) ) : () ),
+					onkeyup	=>	"from_feet(this,'$$variable{type_id}','$$C{id}');",
+					) . '</td>';
+		} # end if
 		if ( @SkidContents ) {
 			$html .= sprintf( '<td class="in_stock">%d lbs</td>', $SkidContents[0]->quantity() );
 			$html .= sprintf( '<td class="last_seen">%s days</td>', $SkidContents[0]->Skid()->last_seen_days() );
