@@ -1013,6 +1013,9 @@ if ( ! sets::isin( 'papers', \@tables ) ) {
 	if ( ! exists $$data{'allocated'} ) {
 		$dbh->do('alter table papers add allocated integer');
 	} # end if
+	if ( ! exists $$data{manufacturers_name} ) {
+		$dbh->do('ALTER TABLE papers add manufacturers_name TEXT');
+	} # end if
 	$dbh->do('alter table papers add basis_width float') if ! exists $$data{basis_width};
 	$dbh->do('alter table papers add basis_height float') if ! exists $$data{basis_height};
 	$dbh->do('alter table papers add basis_mweight float') if ! exists $$data{basis_mweight};
@@ -2281,6 +2284,9 @@ if ( ! sets::isin( 'order_contents', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, '../openprint/sql/Order_Contents.sql' ) ) or die;
 } else {
 	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='order_contents'", 'column_name');
+	if ( ! $$data{id} ) {
+		$dbh->do('ALTER TABLE order_contents add id SERIAL');
+	} # end if
 }
 
 if ( ! sets::isin( 'payments', \@tables ) ) {
@@ -2478,9 +2484,15 @@ if ( ! sets::isin( 'manifest_content_types', \@tables ) ) {
 		} # end if
 	} # end if
 } else {
-	my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM manifest_content_types LIMIT 1', {} );
+	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='manifest_content_types'", 'column_name');
 	if ( $data and ! exists $$data{'supplier_invoice'} ) {
 		$dbh->do('alter table manifest_content_types add supplier_invoice text');
+	} # end if
+	if ( ! exists $$data{item_count} ) {
+		$dbh->do('ALTER TABLE manifest_content_types ADD item_count INTEGER');
+	} # end if
+	if ( ! exists $$data{type} ) {
+		$dbh->do('ALTER TABLE manifest_content_types ADD type TEXT');
 	} # end if
 } 
 
@@ -3398,6 +3410,46 @@ if ( ! sets::isin( 'stockqualities_id_seq', \@sequences ) ) {
 	} # end if
 	$dbh->do(q`ALTER TABLE stockqualities ALTER id SET default nextval('stockqualities_id_seq')`);
 	$dbh->do(q`SELECT setval('stockqualities_id_seq', (SELECT max(id) FROM stockqualities))`);
+} # end if
+if ( ! sets::isin( 'events', \@tables ) ) {
+    $dbh->do( misc::load_file( $log, '../openprint/sql/Events.sql' ) );
+    die $dbh->errstr() if $dbh->errstr();
+} else {
+	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='events'", 'column_name');
+	if ( ! exists $$data{'album_id'} ) {
+		$dbh->do(q`ALTER TABLE events add album_id INTEGER` );
+		$dbh->do(q`ALTER TABLE events add FOREIGN KEY (album_id) REFERENCES photo_albums (id)` );
+	} # end if
+	if ( ! exists $$data{'asset_id'} ) {
+		$dbh->do(q`ALTER TABLE events add asset_id INTEGER` );
+		$dbh->do(q`ALTER TABLE events add FOREIGN KEY (asset_id) REFERENCES assets (id)` );
+	} # end if
+	if ( ! exists $$data{'url'} ) {
+		$dbh->do(q`ALTER TABLE events add url TEXT` );
+	} # end if
+	if ( ! exists $$data{published} ) {
+		$dbh->do(q`ALTER TABLE events add published BOOLEAN NOT NULL Default false` );
+	} # end if
+	if ( ! exists $$data{template} ) {
+		$dbh->do(q`ALTER TABLE events add template BOOLEAN NOT NULL Default false` );
+	} # end if
+	if ( ! exists $$data{template_id} ) {
+		$dbh->do(q`ALTER TABLE events add template_id INTEGER` );
+		$dbh->do(q`ALTER TABLE events add FOREIGN KEY (template_id) REFERENCES Events (id)` );
+	} # end if
+} # end if
+if ( ! sets::isin( 'event_attendance', \@tables ) ) {
+    $dbh->do( misc::load_file( $log, '../openprint/sql/Event_Attendance.sql' ) );
+    die $dbh->errstr() if $dbh->errstr();
+} # end if
+if ( ! sets::isin( 'event_invitations', \@tables ) ) {
+    $dbh->do( misc::load_file( $log, '../openprint/sql/Event_Invitations.sql' ) );
+    die $dbh->errstr() if $dbh->errstr();
+} else {
+	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='event_invitations'", 'column_name');
+	if ( ! exists $$data{'sent_on'} ) {
+		$dbh->do('ALTER TABLE event_invitations ADD sent_on timestamp with time zone');
+	} # end if
 } # end if
 print "Finished\n";
 1;

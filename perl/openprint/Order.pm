@@ -409,7 +409,7 @@ sub send_cancellation_notice {
 	# Send to inventory and scheduling people.
 	foreach my $Recipient ( openprint::User->find('usergroup in'=>['Inventory','Scheduling'],'type'=>['E','A']) ) {
 		next if $Recipient->id() == $session{'user_id'};
-		next if $Recipient->notification('Docket Cancellations') eq 'No';
+		next if $Recipient->notification('Docket Cancellations') ne 'Yes';
 		push @Recipients, $Recipient;
 	} # end foreach Recipient
 

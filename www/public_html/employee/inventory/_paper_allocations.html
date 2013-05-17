@@ -7,7 +7,7 @@
 	$search{'skid_id'} = $param{'skid_id'} if $param{'skid_id'};
 	$search{paper_id} = $variable{Paper}{id} if $variable{Paper};
 	$search{'order'} = 'created_on';
-	@{$$variable{'Allocations'}} = openprint::PaperAllocation->find(%search);
+	$$variable{Allocations} = [ openprint::PaperAllocation->find(%search) ];
 ) ?>
 <? if ( $$variable{'Allocations'} and @{$$variable{'Allocations'}} ) ?>
 

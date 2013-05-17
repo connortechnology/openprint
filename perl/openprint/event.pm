@@ -52,7 +52,7 @@ sub _history {
 				'created_on_end_year','created_on_end_month','created_on_end_day',
 				'starting_on_start_year','starting_on_start_month','starting_on_start_day',
 				'starting_on_end_year','starting_on_end_month','starting_on_end_day',
-				'employee_id','company_id', 'category_id' ) );
+				'employee_id','company_id', 'category_id', 'template' ) );
 	} # end if
 } # end sub _history
 
@@ -80,7 +80,7 @@ sub _search {
 		ssi::save_params( '/event/search.html', ( 
 					'starting_on_start_year','starting_on_start_month','starting_on_start_day',
 					'starting_on_end_year','starting_on_end_month','starting_on_end_day',
-					'user_id', 'category_id', 'country_id', 'state_id', 'city_id' ) );
+					'user_id', 'category_id', 'country_id', 'state_id', 'city_id', 'template' ) );
 	} # end if
 } # end sub _history
 

@@ -1,41 +1,42 @@
 <script type="text/javascript" src="<?hash_link(/javascripts/barcode.js)?>"></script>
-<? include('/includes/error_reporting.html' ) ?>
+<script type="text/javascript">
+function load_results( ) {
+	AjaxLoadContent( 'Results', '_manifests.html', $('f1').serialize() );
+	return false;
+} // end function load_results
+</script>
+<?include(/includes/error_reporting.html)?>
 <div class="Manifests">
 	Please select a Manifest to view/edit.<br>
-	<form id="f1" name="f1" method="post" action="manifest.html">
+	<form id="f1" name="f1" method="post" action="manifests.html" enctype="multipart/form-data" onsubmit="load_results();">
 		<fieldset class="filters"><legend>Choose Manifest</legend>
 			<ul>
 				<li>
 					<label for="manifest_name">Manifest ID</label>
-					<input type="text" id="manifest_name" name="manifest_name" onkeyup="this.value=this.value.replace(/\s/g,'');" onkeydown="if(event.keyCode == 13){f1.submit();}" value="<? echo ( $param{'manifest_name'} ) ?>" />
-					<? echo ( button( 'Go1', { onclick=>"LoadContent( 'Results', '_manifests.html', \$('f1') );", text=>'Go' } ); ) ?>
-					<input type="text" id="manifest_like" name="manifest_like" onkeyup="this.value=this.value.replace(/\s/g,'');" onkeydown="if(event.keyCode == 13){LoadContent( 'Results', '/employee/inventory/_manifests.html', document.forms.f1.serialize() );}" />
-					<? echo ( button( 'Show', { onclick=>"LoadContent( 'Results', '_manifests.html', \$('f1') );", text=>'Show' } ); ) ?>
+					<input type="text" id="manifest_name" name="manifest_name" onkeyup="this.value=this.value.replace(/\s/g,'');" onkeydown="if(event.keyCode == 13){load_results();}" value="<? echo ( $param{'manifest_name'} ) ?>" />
+					<? echo ( button( 'Go1', { onclick=>'load_results();', text=>'Load' } ); ) ?>
 				</li>
 				<li>
 					<label for="po_id">Purchase Order</label>
-					<? echo ( join("\n",
-								input( type=>'cardinal', id=>'po_id', name=>'po_id', onkeypress=>'return input_handler(this,event);', onkeydown=>q`if(event.keyCode==13){LoadContent('Results','_manifests.html', $('f1'));};` ),
-
-								button( 'Go2', { onclick=>q`if(f1.po_id.value){LoadContent('Results','_manifests.html', $('f1'));};`, text=>'Go' } ),
-								); ) ?>
+				<? echo ( join( "\n",
+					input( type=>'cardinal', id=>'po_id', name=>'po_id', onkeypress=>'return input_handler(this,event);', onkeydown=>'if(event.keyCode==13){load_results();};' ),
+					button( 'Go2', { onclick=>q`if(f1.po_id.value){load_results();};`, text=>'Load' } ),
+					); ) ?>
 				</li>
 				<li>
 					<label for="docket">Docket</label>
-					<? echo ( join("\n",
-								input( type=>'cardinal', id=>'docket', name=>'docket', onkeypress=>'return input_handler(this,event);', onkeydown=>q`if(event.keyCode==13){LoadContent('Results','_manifests.html', $('f1'));};` ),
-								button( 'Go3', { onclick=>q`if(f1.docket.value){LoadContent('Results','_manifests.html', $('f1'));}`,text=>'Go' } ),
+				<? echo ( join( "\n",
+					input( type=>'cardinal', id=>'docket', name=>'docket', onkeypress=>'return input_handler(this,event);', onkeydown=>'if(event.keyCode==13){load_results();};' ),
+					button( 'Go3', { onclick=>q`if(f1.po_id.value){load_results();};`, text=>'Load' } ),
 					); ) ?>
 				</li>
 			</ul>
 		</fieldset>
-	</form>
-	<form id="f2" name="f2" method="post" action="manifests.html" enctype="multipart/form-data">
 		<fieldset class="filters"><legend>Search Criteria</legend>
 			<ul>
 			<li><label>Vendor</label>
 				<input type="text" onkeyup="filterDDM(this, this.form.supplier_id);" class="filter" />
-				<select name="supplier_id" onchange="LoadContent('Results','_manifests.html', $('f2').serialize() );">
+				<select name="supplier_id" onchange="load_results();">
 					<option value="">All</option>
 					<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Company->find( 'order'=>'lower(name)', 'supplier'=>'Y') ], $session{'/employee/inventory/manifests.html?supplier_id'} ); ) ?>
 				</select>
@@ -59,10 +60,10 @@
 			</ul>
 			<p class="buttons">
 				<? echo ( join('',
-					button( 'ShowResults', { 'onclick'=>"LoadContent( 'Results', '/employee/inventory/_manifests.html', \$('f2').serialize() );", text=>'Show Results' } ),
+					button( 'ShowResults', { onclick=>q`load_results();`, text=>'Show Results' } ),
 					button( 'Add', { href=>'manifest.html', text=>'Add New Manifest' } ),
 					); ) ?>
-				<input type="file" name="import"/><? echo ( button( 'Import', { onclick=>q`f2.action='manifest_import.html';f2.submit();` } ); ) ?>
+				<input type="file" name="import"/><? echo ( button( 'Import', { onclick=>q`f1.action='manifest_import.html';f1.submit();` } ); ) ?>
 			</p>
 		</fieldset>
 	</form>

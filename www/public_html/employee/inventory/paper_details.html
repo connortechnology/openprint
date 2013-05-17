@@ -1,6 +1,5 @@
-<script type="text/javascript" src="/javascripts/barcode.js"></script>
+<script type="text/javascript" src="<?hash_link(/javascripts/barcode.js)?>"></script>
 <script type="text/javascript">
-<!--
 	function check_inputs(form ) {
 		if ( form.btnFunction && form.btnFunction.value=='Allocate' ) {
 			if ( form.available_quantity && parseInt(form.Quantity.value) > parseInt(form.available_quantity.value) ) {
@@ -80,7 +79,6 @@ function calc_from_gsm( form ) {
 	form.elements['mweight'].value = parseInt((gsm/703064.5)*(width*height)*10000)/10;
 	form.elements['basis_weight'].value = parseInt((gsm/703064.5)*(basis_width*basis_height)*10000)/10;
 }
--->
 </script>
 
 <? echo ( include('/includes/error_reporting.html'); ) ?>
@@ -191,6 +189,10 @@ function calc_from_gsm( form ) {
 			<p>
 				<label>FSC Code</label>
 				<input type="text" id="fsc_code" name="fsc_code" value="<? echo ( $$variable{'Paper'}->fsc_code(); ) ?>" />
+			</p>
+			<p>
+				<label>Manufacturers Name</label>
+				<input type="text" id="manufacturers_name" name="manufacturers_name" value="<? echo ( $$variable{'Paper'}->manufacturers_name(); ) ?>" />
 			</p>
 			<p>
 				<label for="Owner">Owner</label>
