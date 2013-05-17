@@ -36,6 +36,7 @@ if ($opts->{help}) {
 my %defaults = (
 	config	=>	'/etc/openprint/syslog.conf',
 	port	=>	10514,
+	protocol	=>	'udp',
 );
 foreach my $default ( keys %defaults ) {
 	$$opts{$default} = $defaults{$default} if ! $$opts{$default};
@@ -90,7 +91,7 @@ my @re = (
 		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ dovecot: pop3-login: Disconnected \(auth failed, 1 attempts\): user=<[a-zA-Z@\.0-9]*>, method=PLAIN, rip=([\.0-9]+), lip=[\.0-9]+?$',
 		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ dovecot: pop3-login: Disconnected \(auth failed, [0-9]+ attempts in [0-9]+ secs\): user=<[a-zA-Z@\.0-9]*>, method=PLAIN, rip=([\.0-9]+), lip=[\.0-9]+, session=<[^>]+$',
 		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ dovecot: pop3-login: Aborted Login \(auth failed, [0-9]+ attempts in [0-9]+ secs\): user=<[a-zA-Z@\.0-9]*>, method=PLAIN, rip=([\.0-9]+), lip=[\.0-9]+, session=<[^>]+$',
-		q`^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ named\[[0-9]+\]: client ([0-9.]+)#[0-9]+: (view [A-Za-z0-9]+: )?query \(cache\) '\./NS/IN' denied$`,
+		q`^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ named\[[0-9]+\]: client ([0-9.]+)#[0-9]+: (view [A-Za-z0-9]+: )?query \(cache\) '[./[:alnum:]]+' denied$`,
 );
 
 
@@ -102,8 +103,8 @@ my $hup;
 my $MAXLEN = 1524;
 
 # Start Listening on UDP port 514
-$log->debug('Opening socket') if $config{debug};
-my $sock = IO::Socket::INET->new( LocalPort=>$config{port}, Proto=>'udp', Reuse=>1 )||die("Socket: $@");
+$log->debug("Opening $config{protocol} socket on port $config{port}") if $config{debug};
+my $sock = IO::Socket::INET->new( LocalPort=>$config{port}, Proto=>$config{protocol} )||die("Socket: $@");
 
 if ( $config{'pid_file'} ) {
 	my $pidh;
@@ -130,6 +131,9 @@ while(1) {
 			sleep(10);
 			next;
 		} # end if
+		configuration::init( );
+		configuration::from_file($$opts{config});
+		configuration::merge($opts);
 	} elsif ( $hup ) {
 		configuration::init( );
 		configuration::from_file($$opts{config});
@@ -145,7 +149,7 @@ while(1) {
 		$last_update = time;
 
 		%whitelist = map{ $_->ip(), $_ } openprint::Host->find( whitelist => 1, 'ip is null' => 0 );
-		$openprint::log->debug(join("\n", map { 'whitelist: ' . $_->ip() } openprint::Host->find( whitelist => 1, 'ip is null' => 0 ) ) ) if $$opts{debug};
+		$openprint::log->debug(join("\n", map { 'whitelist: ' . $_->ip() } openprint::Host->find( whitelist => 1, 'ip is null' => 0 ) ) ) if $config{debug};
 
 		# If a blacklist is specified, update it on start
 		if ( $opts->{blacklist} ) {
@@ -186,13 +190,14 @@ while(1) {
 	} # end if do update
 
 	while( $sock->recv($buf, $MAXLEN) ) {
+		next if ! $buf;
 		my ($port, $ipaddr) = IO::Socket::sockaddr_in($sock->peername);
-		my $hn = gethostbyaddr($ipaddr, Socket::AF_INET);
+		#my $hn = gethostbyaddr($ipaddr, Socket::AF_INET);
 		#$log->debug($buf) if $config{debug};
 		# Without the multiline flag, will do one line at a time, nice.
 		my ( $thing1, $line ) = $buf =~ /<(\d+)>(.*)/;
 		if ( ! $line ) {
-			$log->debug("no Thing for $buf");
+			$log->debug("no line for buf($buf)");
 			next;
 		} 
 	#$log->debug("Thing1: $1, thing3: $line ");
@@ -267,6 +272,8 @@ while(1) {
 				`shorewall drop $ip` if $host_counts{$ip}{blacklist};
 			} # end foreach ip
 			$changed = 0;
+		} elsif ( $config{debug} ) {
+			$log->debug("No changes for $line");
 		} # end if
 	} # end while recv
 
