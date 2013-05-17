@@ -50,7 +50,7 @@
 				<td class="Quantity"><? echo ( input( type=>'float', id=>'product-quantity-', name=>'product-quantity-' ); ) ?></td>
 				<td class="Price"></td>
 				<td class="buttons">
-<? echo ( ssi::button( 'AddNewProduct', { onclick=>qq`new Ajax.Updater('InvoicedProducts','_invoiced_products.html?action=add', { method: 'post', parameters: \$('f1').serialize()} );`, text=>'+' } ); ) ?>
+<? echo ( button( 'AddNewProduct', { onclick=>qq`new Ajax.Updater('InvoicedProducts','_invoiced_products.html?action=add', { method: 'post', parameters: \$('f1').serialize()} );`, text=>'+' } ); ) ?>
 				</td>
 			</tr>
 		</table>

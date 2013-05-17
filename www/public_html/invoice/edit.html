@@ -1,9 +1,18 @@
 <? if ( $$variable{'Invoice'}->id() ) ?>
 <script type="text/javascript">
 	function update_totals( ) {
-		var timetrack_total = parseFloat($('timetrack_total').innerHTML);
-		var product_total = parseFloat($('product_total').innerHTML);
-		$('subtotal').innerHTML = timetrack_total + product_total;
+		var total;
+		var timetrack_total = $('timetrack_total');
+		if ( timetrack_total ) {
+			timetrack_total = parseFloat(timetrack_total.innerHTML.replace(/[^\d\.]/g,'') );
+			total += timetrack_total;
+		} // end if
+		var product_total = $('product_total');
+		if ( product_total ) {
+			product_total = parseFloat(product_total.innerHTML.replace(/[^\d\.]/g,'') );
+			total += produt_total;
+		} // end if
+		$('subtotal').innerHTML = do_decimals( timetrack_total + product_total, 2 );
 	} // end function
 	function update_product( product_id ) {
 		$('product-total-'+product_id).innerHTML = do_decimals( parseFloat($('product-price-'+product_id).value) * parseFloat($('product-quantity-'+product_id).value), 2 );
@@ -16,9 +25,8 @@
 					action: 'add'
                 },
                 onComplete: function(transport) {
-					alert('Hi');
-					TableKit.reload();
 					update_totals();
+					TableKit.reload();
                 },
                 onFailure: function(transport) {
                     alert('failure to include');
@@ -33,8 +41,8 @@
 					action: 'remove'
                 },
                 onComplete: function(transport) {
-					TableKit.reload();
 					update_totals();
+					TableKit.reload();
                 },
                 onFailure: function(transport) {
                     alert('failure to remove timetrack');
