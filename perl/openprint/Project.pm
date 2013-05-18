@@ -1445,5 +1445,9 @@ sub Project {
 	return $_[0];
 } # end sub Proejct;
 
+sub calliper {
+	return openprint::print::get_finished_calliper($_[0]{id});
+} # end sub calliper
+
 1;
 __END__

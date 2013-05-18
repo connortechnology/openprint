@@ -387,7 +387,7 @@ foreach my $Service ( openprint::Service->find('name'=>'Imposition') ) {
 	new openprint::ServiceType_Category()->save({'name'=>'Custom Services','sorting'=>10}) if ! openprint::ServiceType_Category->find('name'=>'Custom Services');
 
 foreach my $E ( openprint::Equipment->find( 'category any'=>'Printing' ) ) {
-	next if ! my $Spec = $E->Specification('Aqueous Capable');
+	next if ! ( my $Spec = $E->Specification('Aqueous Capable') );
 	$Spec->save({value=>'When Printing'});
 } # end foreach
 $dbh->disconnect();

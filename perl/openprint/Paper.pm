@@ -107,8 +107,8 @@ $serial	= 'paper_id_seq';
 );
 
 %defaults = (
-	'allocated'	=>	q`'0'`,
-	'in_stock'	=>	q`'0'`,
+	allocated	=>	q`'0'`,
+	in_stock	=>	q`'0'`,
 	user_type	=>	q`''`,
 	score_required	=>	'0',
 	die_score_required	=>	'0',
