@@ -1,4 +1,3 @@
-
 <? if ( openprint::Product->find_one() ) ?>
 	<fieldset><legend>Products</legend>
 		<table class="List">
@@ -32,7 +31,7 @@
 			) ?>
 			<tr class="totals">
 				<td colspan="4">Totals</td>
-				<td><? echo ( openprint::Currency::format($$variable{product_total}); ) ?></td>
+				<td id="product_total"><? echo ( openprint::Currency::format($$variable{product_total}); ) ?></td>
 				<td class="buttons">&nbsp;</td>
 			</tr>
 <? endif ( $$variable{'Invoice'}->Products() > 0 ) ?>
@@ -51,7 +50,7 @@
 				<td class="Quantity"><? echo ( input( type=>'float', id=>'product-quantity-', name=>'product-quantity-' ); ) ?></td>
 				<td class="Price"></td>
 				<td class="buttons">
-<? echo ( ssi::button( 'AddNewProduct', { onclick=>qq`new Ajax.Updater('InvoicedProducts','_invoiced_products.html?action=add', { method: 'post', parameters: \$('f1').serialize()} );`, text=>'+' } ); ) ?>
+<? echo ( button( 'AddNewProduct', { onclick=>qq`new Ajax.Updater('InvoicedProducts','_invoiced_products.html?action=add', { method: 'post', parameters: \$('f1').serialize()} );`, text=>'+' } ); ) ?>
 				</td>
 			</tr>
 		</table>

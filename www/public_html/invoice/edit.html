@@ -1,5 +1,19 @@
 <? if ( $$variable{'Invoice'}->id() ) ?>
 <script type="text/javascript">
+	function update_totals( ) {
+		var total;
+		var timetrack_total = $('timetrack_total');
+		if ( timetrack_total ) {
+			timetrack_total = parseFloat(timetrack_total.innerHTML.replace(/[^\d\.]/g,'') );
+			total += timetrack_total;
+		} // end if
+		var product_total = $('product_total');
+		if ( product_total ) {
+			product_total = parseFloat(product_total.innerHTML.replace(/[^\d\.]/g,'') );
+			total += produt_total;
+		} // end if
+		$('subtotal').innerHTML = do_decimals( timetrack_total + product_total, 2 );
+	} // end function
 	function update_product( product_id ) {
 		$('product-total-'+product_id).innerHTML = do_decimals( parseFloat($('product-price-'+product_id).value) * parseFloat($('product-quantity-'+product_id).value), 2 );
 	} // end function update_product
@@ -11,6 +25,7 @@
 					action: 'add'
                 },
                 onComplete: function(transport) {
+					update_totals();
 					TableKit.reload();
                 },
                 onFailure: function(transport) {
@@ -26,6 +41,7 @@
 					action: 'remove'
                 },
                 onComplete: function(transport) {
+					update_totals();
 					TableKit.reload();
                 },
                 onFailure: function(transport) {
@@ -94,18 +110,18 @@
 		<p class="buttons">
 			<? echo (
 				my $html = '';
-				$html = ssi::writeButton( $log, $dbh, 'back', 'back.gif', '', 'history.html', 'Back' );
-				$html .= ssi::writeButton( $log, $dbh, 'save', 'save.gif', "f1.btnFunction.value='Save';f1.submit();", '', 'Save' );
+				$html .= button( 'back', { href=>'history.html', text=>'Back' } );
+				$html .= button( 'save', { onclick=>"f1.btnFunction.value='Save';f1.submit();",text=>'Save' } );
 				if ( $$variable{'Invoice'}->id() ) {
 					if ( $$variable{'Invoice'}->deleted() ) {
-						$html .= ssi::writeButton( $log, $dbh, 'delete', 'delete.gif', "if(confirm('Are you sure?')){f1.btnFunction.value='Destroy';f1.submit();}", '', 'Destroy' );
+						$html .= button( 'delete', { onclick=>"if(confirm('Are you sure?')){f1.btnFunction.value='Destroy';f1.submit();}",text=>'Destroy' } );
 					} else {
-						$html .= ssi::writeButton( $log, $dbh, 'delete', 'delete.gif', "f1.btnFunction.value='Delete';f1.submit();", '', 'Delete' );
+						$html .= button( 'delete', { onclick=>"f1.btnFunction.value='Delete';f1.submit();",text=>'Delete' } );
 					} # end if
 					if ( $$variable{'Invoice'}->posted() ) {
-						$html .= ssi::writeButton( $log, $dbh, 'unpost', 'unpost.gif', "f1.btnFunction.value='UnPost';f1.submit();", '', 'UnPost' );
+						$html .= button( 'unpost', { onclick=>"f1.btnFunction.value='UnPost';f1.submit();",text=>'UnPost' } );
 					} else {
-						$html .= ssi::writeButton( $log, $dbh, 'post', 'post.gif', "f1.btnFunction.value='Post';f1.submit();", '', 'Post' );
+						$html .= button( 'post', { onclick=>"f1.btnFunction.value='Post';f1.submit();",text=>'Post' } );
 					} # end if
 				} # end if
 				return $html;
