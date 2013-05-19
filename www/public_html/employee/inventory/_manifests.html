@@ -1,7 +1,7 @@
 <? eval (
 	require openprint::Manifest;
 
-	if ( $param{'manifest_name'} ) {
+	if ( $param{manifest_name} ) {
 		if ( length $param{manifest_name} <= 2 ) {
 			$variable{error} .= 'You must specify at least 2 digits of the manifest #<br/>';
 			return;
