@@ -63,7 +63,7 @@
 		<div class="leftColumn">
 			<ul>
 			<li class="invoicee"><label for="invoicee_id" onclick="$('invoicee_id').toggle();$('invoicee').toggle();">Company</label>
-				<select id="invoicee_id" name="invoicee_id" onchange="$('invoicee').value='';">
+				<select id="invoicee_id" name="invoicee_id" onchange="$('invoicee').value='';invoicee_change(this);">
 					<option value=""> select </option>
 					<? echo ( openprint::Company::get_dropdown( $$variable{'Invoice'}->invoicee_id() ? $$variable{'Invoice'}->invoicee_id() : $session{'company_id'} ); ) ?>
 				</select>
@@ -80,7 +80,7 @@
 				<li class="monthly_interest"><label for="monthly_interest">Interest Rate</label>
 					<? echo ( input( type=>'float', name=>'monthly_interest', id=>'monthly_interest', value=>($$variable{Invoice}->id() ? $$variable{Invoice}->monthly_interest() : $config{'Default Interest'}) ); ) ?>%
 				</li>
-				<li class="early_payment_discount"><label for="early_payment_discount">Early Payment Discount</label>
+				<li class="early_payment_amount"><label for="early_payment_amount">Early Payment Discount</label>
 					<? echo ( join("\n",
 								input(type=>'float', id=>'early_payment_discount', name=>'early_payment_discount', value=>$$variable{Invoice}->early_payment_discount() ), 
 								ssi::select( [ 'percent', 'Percent', 'amount', 'Amount' ], $$variable{Invoice}->early_payment_units(), { name=>'early_payment_units' } ),

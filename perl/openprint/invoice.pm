@@ -339,3 +339,9 @@ sub _interests {
 		$variable{'error'} = $variable{'Invoice'}->save();
 	} # end if
 } # end sub _interests
+
+sub _invoicee_onchange {
+} # end sub _invoicee_onchange
+
+1;
+__END__
