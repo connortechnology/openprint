@@ -1,6 +1,7 @@
-<? if ( $$variable{'Invoice'}->id() ) ?>
 <script type="text/javascript">
+<? if ( $$variable{'Invoice'}->id() ) ?>
 	function update_totals( ) {
+alert('hi');
 		var total;
 		var timetrack_total = $('timetrack_total');
 		if ( timetrack_total ) {
@@ -12,7 +13,12 @@
 			product_total = parseFloat(product_total.innerHTML.replace(/[^\d\.]/g,'') );
 			total += produt_total;
 		} // end if
-		$('subtotal').innerHTML = do_decimals( timetrack_total + product_total, 2 );
+		alert(total);
+		if ( $('subtotal') ) {
+			$('subtotal').innerHTML = do_decimals( timetrack_total + product_total, 2 );
+		} else {
+			alert('no subtotal');
+		} // end if
 	} // end function
 	function update_product( product_id ) {
 		$('product-total-'+product_id).innerHTML = do_decimals( parseFloat($('product-price-'+product_id).value) * parseFloat($('product-quantity-'+product_id).value), 2 );
@@ -50,10 +56,10 @@
             } );
     } // end function del_timetrack(invoice_id)
 	function invoicee_change(ddm) {
-		new Ajax.Request( '_invoicee_onchange.json', { parameters: { invoicee_id: ddm.getValue() } } );
+		new Ajax.Request( '_invoicee_onchange.json', { parameters: { invoice_id: '<? echo ( $$variable{Invoice}->id() ) ?>', invoicee_id: ddm.getValue() } } );
 	} // end function invoicee_change(ddm)
-</script>
 <? endif ( $$variable{'Invoice'}->id() ) ?>
+</script>
 <?include(/includes/error_reporting.html)?>
 <div class="Invoice"><div class="Edit">
 <form name="f1" id="f1" action="<? echo ( $$variable{'Invoice'}->id() ? 'history.html' : 'edit.html' ) ?>" method="post">
