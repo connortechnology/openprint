@@ -1,4 +1,4 @@
-<? echo ( include('/includes/error_reporting.html'); ) ?>
+<?include(/includes/error_reporting.html)?>
 <? if ( $$variable{Event} ) ?>
 <? if ( $$variable{Event}->id() ) ?>
 <script type="text/javascript">
@@ -58,8 +58,10 @@
 						} # end if
 						$html .= ssi::button( 'Copy', { href=>'view.html?function=Copy&amp;event_id='.$$variable{Event}->id() } );
 						$html .= ssi::button( 'Edit', { href=>'edit.html?event_id='.$$variable{Event}->id() } );
-						#$html .= ssi::button( 'Invite', { onclick=>qq`popup_window('_invitation_popup.html?event_id=$$variable{Event}{id}');` } );
-						$html .= ssi::button( 'Send', { onclick=>qq`popup_window('_email_popup.html?event_id=$$variable{Event}{id}');` } );
+						if ( ! $$variable{template} ) {
+							#$html .= ssi::button( 'Invite', { onclick=>qq`popup_window('_invitation_popup.html?event_id=$$variable{Event}{id}');` } );
+							$html .= ssi::button( 'Send', { onclick=>qq`popup_window('_email_popup.html?event_id=$$variable{Event}{id}');` } );
+						} # end if
 					} # end if
 					$html .= '<span class="GooglePlusOne"><g:plusone></g:plusone></span>';
 				} # end if
@@ -86,9 +88,10 @@
 			} # end if
 			my $Location = $$variable{Event}->Location();
 			if ( $Location ) {
-				if ( ! ( $Location->latitude() and $Location->longitude() ) ) {
-					$Location->get_latitude_and_longitude();
-				} # end if
+				# Should only do the lookup when Location changes... when it gets saved maybe, because Google only gives us so many lookups
+				#if ( ! ( $Location->latitude() and $Location->longitude() ) ) {
+					#$Location->get_latitude_and_longitude();
+				#} # end if
 				if ( $Location->latitude() and $Location->longitude() ) {
 					$html .= $Location->googlemap_html();
 				} 
@@ -110,6 +113,11 @@
 					<? if ( $$variable{Event}->url() ) ?>
 					<li class="url"><label>Website</label><? echo ( sprintf('<a href="%1$s" target="_blank">%1$s</a>',$$variable{Event}->url() ); ) ?></li>
 					<? endif ( $$variable{Event}->url() ) ?>
+					<? if ( $$variable{Event}->template() and $$variable{Event}->can_edit() ) ?>
+					<li><label>Template</label>
+						<a href="/event/view.html?event_id=<? echo ( $$variable{Event}->template_id() ) ?>"><? echo ( $$variable{Event}->Template()->name() ) ?></a>
+					</li>
+					<? endif ( $$variable{Event}->template() and $$variable{Event}->can_edit() ) ?>
 				</ul>
 			</div>
 		</fieldset>
@@ -136,43 +144,45 @@ $log->debug("My location is " . $MyLocation->to_string() );
 								} # end if user_id
 								return $html;
 						) ?>
-					</li>
+					</li> 
 				</ul>
 			</div>
 		</fieldset>
 	</div>
 	<br class="spacer"/>
-	<? if ( $variable{User}->id() ) ?>
+<? if ( ! $$variable{Event}->template() ) ?>
+<? if ( $variable{User}->id() ) ?>
 	<div id="Opinions"><? echo ( $$variable{Event}->opinions('Opinions') ) ?></div>
-<div id="Invitations">
-<fieldset><legend>Invitations</legend>
-	<ul>
-		<li><label>By Name</label>
-			<input type="text" name="user_name" id="user_name"/><br/>
-			<div id="user_name_autocomplete" class="autocomplete" style="display:none;"></div>
-			<script type="text/javascript">
-			new Ajax.Autocompleter('user_name','user_name_autocomplete', '/includes/_user_autocomplete.html', { minChars: 2,afterUpdateElement : invitation_set_users, tokens: [',',';',' ','\n'], callback: invitation_add_user_ids } );
-			</script>
-		</li>
-		<li><label>By Relationship</label>
-			<select name="relationship_ip" onchange="invite_by_relationship(this);"><option value="">none</option>
-				<? echo ( ssi::make_drop_down( openprint::User_Relationship_Type->dropdown('order'=>'lower(name)') ) ) ?>
-			</select>
-		</li>
-<? if ( sets::isin( $session{user_type}, ['E','A'] ) ) ?>
-		<li><label>By Email</label>
-			<input type="email" id="email" name="email" onkeydown="if(event.keyCode == 13){invite_by_email(this);}" />
-		</li>
-<? endif ( sets::isin( $session{user_type}, ['E','A'] ) ) ?>
-	</ul>
-	<p class="buttons">
-		<? echo ( ssi::button('AddByEmail', { onclick=>q`if($('email').value){invite_by_email($('email'));}`,text=>'Add' } ); ) ?>
-	</p>
-</fieldset>
-	<div class="Invited"><fieldset><legend>Invited</legend><div id="Invited"><? echo ( include('_invitation_users.html'); ) ?></div></fieldset></div>
-</div>
-	<? endif ( $variable{User}->id() ) ?>
+	<div id="Invitations">
+		<fieldset><legend>Invitations</legend>
+			<ul>
+				<li><label>By Name</label>
+					<input type="text" name="user_name" id="user_name"/><br/>
+					<div id="user_name_autocomplete" class="autocomplete" style="display:none;"></div>
+					<script type="text/javascript">
+					new Ajax.Autocompleter('user_name','user_name_autocomplete', '/includes/_user_autocomplete.html', { minChars: 2,afterUpdateElement : invitation_set_users, tokens: [',',';',' ','\n'], callback: invitation_add_user_ids } );
+					</script>
+				</li>
+				<li><label>By Relationship</label>
+					<select name="relationship_ip" onchange="invite_by_relationship(this);"><option value="">none</option>
+						<? echo ( ssi::make_drop_down( openprint::User_Relationship_Type->dropdown('order'=>'lower(name)') ) ) ?>
+					</select>
+				</li>
+		<? if ( sets::isin( $session{user_type}, ['E','A'] ) ) ?>
+				<li><label>By Email</label>
+					<input type="email" id="email" name="email" onkeydown="if(event.keyCode == 13){invite_by_email(this);}" />
+				</li>
+		<? endif ( sets::isin( $session{user_type}, ['E','A'] ) ) ?>
+			</ul>
+			<p class="buttons">
+				<? echo ( ssi::button('AddByEmail', { onclick=>q`if($('email').value){invite_by_email($('email'));}`,text=>'Add' } ); ) ?>
+			</p>
+		</fieldset>
+		<div class="Invited"><fieldset><legend>Invited</legend><div id="Invited"><?include(_invitation_users.html)?></div></fieldset></div>
+	</div>
+<? endif ( $variable{User}->id() ) ?>
 	<div id="Attendance"><? echo ( include('_attendance.html'); ) ?></div>
+<? endif ( ! $$variable{Event}->template() ) ?>
 
 <? if ( $$variable{Event}->id() ) ?>
 	<? eval ( $$variable{Object} = $$variable{Album} = $$variable{Event};) ?>

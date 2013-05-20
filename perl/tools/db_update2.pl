@@ -1,4 +1,4 @@
-#!/usr/bin/perl -w
+#!/usr/bin/perl 
 use lib '/var/www/testing/perl';
 use strict;
 
@@ -49,10 +49,15 @@ if ( ! sets::isin( 'quote_log', \@tables ) ) {
 } # end if
 if ( ! sets::isin( 'quoted_products', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/Quoted_Products.sql}) );
+} else {
+	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='quoted_products'", 'column_name');
+	if ( ! exists $$data{comments} ) {
+		$dbh->do('ALTER TABLE quoted_products ADD comments TEXT');
+	} # end if
 } # end if
 
 if ( sets::isin( 'quotes', \@tables ) ) {
-	my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM quotes LIMIT 1', {} );
+	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='quotes'", 'column_name');
 	if ( $data ) {
 		$dbh->do('ALTER TABLE quotes add reference text') if ! exists $$data{'reference'};
 		$dbh->do('ALTER TABLE quotes add comments text') if ! exists $$data{'comments'};
@@ -241,7 +246,7 @@ if ( ! openprint::Order_Tax->find_one() ) {
 					'period_start null_or_<='	=>	$Order->created_on(),
 					'period_end null_or_>='		=>	$Order->created_on(),
 			) ) {
-			my $new_amount;
+			my $new_amount = 0;
 
 			if ( ( $Tax->name() eq 'GST' ) and ( $new_amount != $$data{'curfedtax'} ) ) {
 				$new_amount = $$data{'curfedtax'};

@@ -1,7 +1,7 @@
 use strict;
 require openprint;
 require openprint::Keyword;
-use Fcntl;
+use Fcntl qw(:flock);
 
 package openprint::Asset_Type;
 our @ISA = qw(openprint::Object);
@@ -19,7 +19,7 @@ our @ISA = qw(openprint::Object);
 
 use vars qw( $debug %fields %transforms %defaults $table $serial );
 
-$debug = 0;
+$debug = 1;
 
 %fields = (
 	'id'			=>	'id',
@@ -131,9 +131,9 @@ sub sized_url {
 			if ( ! -e $dest ) {
 				my $width;
 				if ( $size eq 'medium' ) {
-					$width = $openprint::config{'Medium Asset Width'};
+					$width = $openprint::config{'Medium_Asset_Width'};
 				} elsif ( $size eq 'large' ) {
-					$width = $openprint::config{'Large Asset Width'};
+					$width = $openprint::config{'Large_Asset_Width'};
 				} # end if
 				if ( ! $width ) {
 					$openprint::log->error("No asset size in config for $size");
@@ -165,9 +165,9 @@ sub sized_url {
 			if ( ! -e $dest ) {
 				my $width;
 				if ( $size eq 'medium' ) {
-					$width = $openprint::config{'Medium Asset Width'};
+					$width = $openprint::config{'Medium_Asset_Width'};
 				} elsif ( $size eq 'large' ) {
-					$width = $openprint::config{'Large Asset Width'};
+					$width = $openprint::config{'Large_Asset_Width'};
 				} elsif ( ! $size ) {
 					$size = 'full';
 				} # end if
@@ -377,6 +377,74 @@ sub destroy {
 	sql::execute( undef, undef, 'DELETE FROM Assets WHERE id=?', $_[0]{'id'} );
 } # end sub destroy
 
+sub fetch {
+	my ( $url ) = @_;
+$openprint::log->debug("Fetching from $url") if $debug;
+
+	require LWP::UserAgent;
+	require HTTP::Request;
+
+	my $ua = LWP::UserAgent->new;
+	$ua->agent("IQ/0.1 ");
+# Create a request
+	my $req = HTTP::Request->new( GET => $url );
+# Pass request to the user agent and get a response back
+	my $res = $ua->request($req);
+# Check the outcome of the response
+	if (! $res->is_success) {
+		$openprint::log->debug("No success.");
+		return "Failed to get file. URL($url)<br/>";
+	} # end if
+
+	require URI;
+	require File::Basename;
+	require File::Slurp;
+
+	my $URI = URI->new($url);
+	my $path = $URI->path();
+	my $filename = File::Basename::basename( $path );
+$openprint::log->debug("fetch: filename: $filename path: $path from url $url");
+	if ( ! $filename ) {
+		return "Unable to determine filename from $url";
+	} elsif ( $debug ) {
+		$openprint::log->debug("saving to filename $filename");
+	} # endi f
+	require URI::Escape;
+	$filename = URI::Escape::uri_unescape( $filename );
+
+		
+	require Digest::MD5;
+	my $data;
+	my $md5 = Digest::MD5::md5_base64( $res->content );
+	if ( ! $md5 ) {
+		return "Unable to MD5?";
+	#} else {
+		#$openprint::log->debug("MD5 was $md5");
+	} # end if
+	my $Asset = openprint::Asset->find_one( md5 => $md5 );
+	if ( ! $Asset ) {
+		$Asset = new openprint::Asset();
+		$! .= $Asset->save({ filename=>$filename, md5=>$md5 });
+
+		if ( ! File::Slurp::write_file($Asset->on_disk_path(), { atomic => 1, err_mode=>'carp' }, $res->content ) ) {
+			return 'There was an error saving file ' . $filename.' to ' . $Asset->on_disk_path() . ": $!<br/>";
+		} # end if
+
+		$_ = $Asset->save();
+		return $_ if $_;
+	} else {
+		if ( $Asset->filename() ne URI::Escape::uri_unescape( $Asset->filename() ) ) {
+			$Asset->save({filename=>URI::Escape::uri_unescape( $Asset->filename() )});
+		} # end if
+		if ( ! -e $Asset->on_disk_path() ) {
+			if ( ! File::Slurp::write_file($Asset->on_disk_path(), { atomic => 1, err_mode=>'carp' }, $res->content ) ) {
+				return 'There was an error saving file ' . $filename.' to ' . $Asset->on_disk_path() . ": $!<br/>";
+			} # end if
+		} # end if
+	} # end if
+	return $Asset;
+} # end sub fetch
+
 # What gets passed in the form element name
 sub upload {
 	my $upload = $openprint::r->upload($_[0]);
@@ -389,8 +457,10 @@ sub upload {
 	my $md5 = Digest::MD5::md5_base64( $data );
 	if ( ! $md5 ) {
 		return "Unable to MD5?";
+	} else {
+		$openprint::log->debug("MD5 was $md5");
 	} # end if
-	my $Asset = openprint::Asset->find_one('md5'=>$md5);
+	my $Asset = openprint::Asset->find_one( md5 =>$md5);
 	if ( ! $Asset ) {
 		$Asset = new openprint::Asset();
 		$! .= $Asset->save({'filename'=>$upload->filename(),'md5'=>$md5});
@@ -539,7 +609,7 @@ sub generate_video {
 		$openprint::log->error("Unable to open semaphore at $dest.lck\n");
 		return;
 	} # end if
-	if ( ! Fcntl::flock($lock, Fcntl::LOCK_EX) ) {
+	if ( ! flock($lock, Fcntl::LOCK_EX) ) {
 		$openprint::log->error("Unable to lock semaphore\n");
 	} # end if
 	if ( ! -e $dest ) {

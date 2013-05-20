@@ -51,18 +51,24 @@ sub save {
 
 sub next {
 	my $self = shift;
-	($_) = sql::execute( undef, undef, q{SELECT Id FROM Project_Types WHERE Id = (SELECT MIN(name) FROM Project_Types WHERE name>?)}, $$self{'name'} );
-	if ( ! $_ ) {
-		( $_ ) = sql::execute( undef, undef, q{SELECT id FROM Project_Types WHERE id = (SELECT MAX(name) FROM Project_Types WHERE name<?)}, $$self{'name'} );
+	if ( $$self{name} ) {
+		($_) = sql::execute( undef, undef, q{SELECT id FROM Project_Types WHERE name = (SELECT MIN(name) FROM Project_Types WHERE name>?)}, $$self{name} );
+		if ( ! $_ ) {
+			( $_ ) = sql::execute( undef, undef, q{SELECT id FROM Project_Types WHERE name = (SELECT MAX(name) FROM Project_Types WHERE name<?)}, $$self{'name'} );
+		} # end if
 	} # end if
+	( $_ ) = sql::execute( undef, undef, q{SELECT MIN(id) FROM Project_Types} ) if ! $_;
 	return new openprint::ProjectType( $_ );
 } # end sub next
 sub prev {
 	my $self = shift;
-	($_) = sql::execute( undef, undef, q{SELECT Id FROM Project_Types WHERE Id = (SELECT MAX(name) FROM Project_Types WHERE name<?)}, $$self{'name'} );
-	if ( ! $_ ) {
-		( $_ ) = sql::execute( undef, undef, q{SELECT Id FROM Project_Types WHERE Id = (SELECT MIN(name) FROM Project_Types WHERE name>?)}, $$self{'name'} );
-	} # end if
+	if ( $$self{name} ) {
+		($_) = sql::execute( undef, undef, q{SELECT Id FROM Project_Types WHERE name = (SELECT MAX(name) FROM Project_Types WHERE name<?)}, $$self{'name'} );
+		if ( ! $_ ) {
+			( $_ ) = sql::execute( undef, undef, q{SELECT Id FROM Project_Types WHERE name = (SELECT MIN(name) FROM Project_Types WHERE name>?)}, $$self{'name'} );
+		} # end if
+	} # end if name
+	( $_ ) = sql::execute( undef, undef, q{SELECT MIN(id) FROM Project_Types} ) if ! $_;
 	return new openprint::ProjectType( $_ );
 } # end sub prev
 
@@ -103,8 +109,8 @@ sub delete {
 	sql::execute( undef, undef, q{DELETE FROM Project_Types WHERE Id=?}, $$self{'id'} );
 	sql::end_transaction( $openprint::dbh, $ac );
 	
-	# Add record to audit log - action "Delete Project Type".
-	new openprint::Log()->save({'action'=>'Delete Project Type', 'note' => "Project Type ID: $$self{id} Project Type: $$self{name}"});
+	(new openprint::Log())->save({ action=>'Delete Project Type', note=>"Project Type ID: $$self{id} Project Type: $$self{name}"});
+	return;
 } # end sub delete
 
 sub Templates {

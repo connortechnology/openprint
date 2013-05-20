@@ -9,6 +9,9 @@ function calc_from_quantity( element, precision ) {
 		var markup = parseFloat(1* floatize( element.form.elements['markup-'+index] ) ) /100;
 		var cost = parseFloat(1* floatize( element.form.elements['cost-'+index] ) );
 		element.form.elements['price-'+index].value = do_decimals( cost * quantity * ( 1 + markup ), precision ); 
+		if ( element.form.elements['chk-'+index] ) {
+			element.form.elements['chk-'+index].checked=true;
+		} // end if
 	} // end if
 } // end function calc_from_quantity
 
@@ -25,6 +28,9 @@ function calc_from_cost( element, precision ) {
 			quantity =  parseFloat(1* floatize( element.form.elements['quantity-'+index]));
 		} // end if
 		element.form.elements['price-'+index].value = do_decimals( cost * quantity * ( 1 + markup ), precision ); 
+		if ( element.form.elements['chk-'+index] ) {
+			element.form.elements['chk-'+index].checked=true;
+		} // end if
 	} // end if
 } // end function calc_from_cost
 function calc_from_markup( element, precision ) {
@@ -43,6 +49,9 @@ function calc_from_markup( element, precision ) {
 			} // end if
 			var newvalue = cost * quantity * ( markup/100 + 1 );
 			element.form.elements['price-'+index].value = do_decimals( newvalue, precision );
+		} // end if
+		if ( element.form.elements['chk-'+index] ) {
+			element.form.elements['chk-'+index].checked=true;
 		} // end if
 	} // end if
 } // end function
@@ -65,6 +74,9 @@ function calc_from_price( element, precision ) {
 				quantity = parseFloat(1*floatize(element.form.elements['quantity-'+index]));
 			} // end if
 			element.form.elements['markup-'+index].value = do_decimals( ((price / (cost*quantity))-1)*100, precision );
+		} // end if
+		if ( element.form.elements['chk-'+index] ) {
+			element.form.elements['chk-'+index].checked=true;
 		} // end if
 	} // end if
 } // end function

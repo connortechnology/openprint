@@ -13,12 +13,12 @@ Please review the quote below to ensure accuracy.  When ready, click "Submit Quo
 					); ) ?>
 	</p>
 		<div class="Header">
-			<? echo ( include('/includes/quote_header.html'); ) ?>
+			<?include(/includes/quote_header.html)?>
 			<br class="spacer"/>
-			<? echo ( include('/includes/quote_information.html'); ) ?>
+			<?include(/includes/quote_information.html)?>
 		</div>
-		<? echo ( include('_projects.html'); ) ?>
-		<? echo ( include('_products_view.html'); ) ?>
+		<?include(_projects.html)?>
+		<?include(_products_view.html)?>
 		<? if ( sets::isin( $session{'user_type'}, ['A', 'E'] ) ) ?>
 			<br/>
 			<fieldset id="SalesRepComments">
@@ -47,7 +47,7 @@ Please review the quote below to ensure accuracy.  When ready, click "Submit Quo
 			} );
 			$html .= sprintf( '<div id="QuotedProject_%1$d">', $Project->id() );
 			$$variable{'QuotedProject'} = $Project;
-			my $template = ssi::include( $ENV{'DOCUMENT_ROOT'} . '/main/quote/_project_template.html', $variable );
+			my $template = ssi::include( '/main/quote/_project_template.html', $variable );
 			$html .= $template;
 			$html .= '</div>';
 		} # end foreach Project

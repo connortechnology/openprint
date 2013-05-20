@@ -202,18 +202,18 @@ function set_description(index) {
 				<p><label>Filed to vendor:
 					<input type="checkbox" name="filed" id="filed" onclick="if(this.checked){$('filed_on_span').show();} else {$('filed_on_span').hide();}" <? echo ( ssi::checked( $$variable{'Claim'}->filed_on() ); ) ?> />
 					</label>
-					<span id="filed_on_span" class="DateSelector" <? echo ( $$variable{'Claim'}->filed_on() ? '' : 'style="display:none;"' ) ?>><? echo ( ssi::date_select( 'filed_on', $$variable{'Claim'}->filed_on() ); ) ?></span>
+					<span id="filed_on_span" <? echo ( $$variable{'Claim'}->filed_on() ? '' : 'style="display:none;"' ) ?>><? echo ( ssi::date_select( 'filed_on', $$variable{'Claim'}->filed_on() ); ) ?></span>
 				</p>
 				<p><label>Sent to accounts:
 					<input type="checkbox" name="sent_to_accounts" id="sent_to_accounts" onclick="if(this.checked){$('sent_to_accounts_on_span').show();} else {$('sent_to_accounts_on_span').hide();}" <? echo ( ssi::checked( $$variable{'Claim'}->sent_to_accounts_on() ); ) ?> />
 </label>
-					<span id="sent_to_accounts_on_span" class="DateSelector" <? echo ( $$variable{'Claim'}->sent_to_accounts_on() ? '' : 'style="display:none;"' ) ?>><? echo ( ssi::date_select( 'sent_to_accounts_on', $$variable{'Claim'}->sent_to_accounts_on() ); ) ?></span>
+					<span id="sent_to_accounts_on_span" <? echo ( $$variable{'Claim'}->sent_to_accounts_on() ? '' : 'style="display:none;"' ) ?>><? echo ( ssi::date_select( 'sent_to_accounts_on', $$variable{'Claim'}->sent_to_accounts_on() ); ) ?></span>
 				</p>
 				<p><label>Invoiced On:
 					<input type="checkbox" name="invoiced" id="invoiced" onclick="if(this.checked){$('invoiced_on_span').show();$('invoice_id_span').show();} else {$('invoiced_on_span').hide();$('invoice_id_span').hide();}" <? echo ( ssi::checked( $$variable{'Claim'}->invoiced_on() ); ) ?> />
 </label>
 					<span id="invoiced_on_span" <? echo ( $$variable{'Claim'}->invoiced_on() ? '' : 'style="display:none;"' ) ?>>
-					<span class="DateSelector"><? echo ( ssi::date_select( 'invoiced_on', $$variable{'Claim'}->invoiced_on() ); ) ?></span>
+					<? echo ( ssi::date_select( 'invoiced_on', $$variable{'Claim'}->invoiced_on() ); ) ?>
 					</span>
 				</p>
 				<p id="invoice_id_span" <? echo ( $$variable{'Claim'}->invoiced_on() ? '' : 'style="display:none;"' ) ?>><label>Invoice #</label>
@@ -222,7 +222,7 @@ function set_description(index) {
 				<p><label>Cancelled On:
 					<input type="checkbox" name="cancelled" id="cancelled" onclick="if(this.checked){$('cancelled_on_span').show();} else {$('cancelled_on_span').hide();}" <? echo ( ssi::checked( $$variable{'Claim'}->cancelled_on() ); ) ?> />
 </label>
-					<span id="cancelled_on_span" class="DateSelector" <? echo ( $$variable{'Claim'}->cancelled_on() ? '' : 'style="display:none;"' ) ?>><? echo ( ssi::date_select( 'cancelled_on', $$variable{'Claim'}->cancelled_on() ); ) ?></span>
+					<span id="cancelled_on_span" <? echo ( $$variable{'Claim'}->cancelled_on() ? '' : 'style="display:none;"' ) ?>><? echo ( ssi::date_select( 'cancelled_on', $$variable{'Claim'}->cancelled_on() ); ) ?></span>
 				</p>
 				<p><label>Docket</label><input type="text" name="docket" id="docket" value="<? echo ( join(',',$$variable{'Claim'}->docket() ? @{$$variable{'Claim'}->docket()} : ()) ) ?>" onkeyup="this.value=this.value.replace(/[^,\d]/g,'');" /></p>
 				<p><label>Editors</label><span id="editors"><? echo ( include('_editors.html'); ) ?></span></p>

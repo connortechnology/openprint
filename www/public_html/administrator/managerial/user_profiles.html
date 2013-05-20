@@ -172,6 +172,10 @@ Please select a company or user to obtain login information.<br/>
 						<label>Can this account login to the ftp site?</label>
 						<? echo ( ssi::radio( 'ftp_active', [ '1', 'Yes', '0', 'No' ], $$variable{User}->ftp_active() ); ) ?>
 					</li>
+					<li class="ftp_root">
+						<label>Limit FTP access to this folder:</label>
+						<? echo ( input( type=>'text', name=>'ftp_root', id=>'ftp_root', value=>$$variable{User}->ftp_root() ); ) ?>
+					</li>
 					<li> 
 						<label>Custom Greeting</label>
 						<textarea id="greeting" name="greeting" rows="<? echo ( ssi::count_lines( $$variable{User}->greeting() ); ) ?>" onkeyup="textarea_resize(this);"><? echo ( $$variable{User}->greeting() ) ?></textarea>
@@ -317,6 +321,7 @@ Please select a company or user to obtain login information.<br/>
 					<li> 
 						<label>E-mail Address</label>
 						<input type="email" name="email" value="<? hecho ( $$variable{User}->email() ) ?>" />
+						<? echo ( radio( 'email_valid', [ 1, 'Yes', 0, 'No', '', 'Unknown' ], $$variable{User}->email_valid() ); ) ?>
 					</li>
 					<li> 
 						<label>Password</label>

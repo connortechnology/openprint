@@ -447,7 +447,8 @@ $openprint::log->debug("No printing runspeed");
 				$totalPrice += $vertical_price{'Total'};
 			} # end if
 
-			$Results{'Breakdown'} .= sprintf('Total: $%.2f<br/>', int($totalPrice) );
+			$totalPrice = int($totalPrice);
+			$Results{'Breakdown'} .= sprintf('Total: $%.2f<br/>', $totalPrice );
 
 			if ( $totalPrice < $Results{'Price'} or ! exists $Results{'Price'} ) {
 				$Results{'Price'} = $totalPrice;

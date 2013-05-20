@@ -9,7 +9,7 @@
 	<?QUANTITIES?>
 	var projectType = "<?ProjectTypeID?>";
 </script>
-<? echo ( include('/main/project/prin/_templates.html'); ) ?>
+<?include(/main/project/prin/_templates.html)?>
 
 <script type="text/javascript">
 	function calc( formName, force ) {
@@ -18,14 +18,14 @@
 </script>
 <div class="Service">
 	<form id="f1" name="f1" method="post" action="/main/project/view.html">
-		<? echo ( include('/includes/main/proj/hdn_fields_printing.html'); ) ?>
+		<?include(/includes/main/proj/hdn_fields_printing.html)?>
         <input type="hidden" name="txtSignatureType" value="<?txtSignatureType?>" />
         <input type="hidden" name="txtSpreadSize" value="<?txtSpreadSize?>" />
 		<input type="hidden" name="hdnFolding" value="<?hdnFolding?>"/>
 		<input type="hidden" name="hdnCutting" value="<?hdnCutting?>"/>
         <? if ( $$variable{'txtSignatureType'} eq 'Cover Pages' or $$variable{'txtSignatureType'} eq 'GateFolded Spreads' ) ?>
-            <? echo ( include('/includes/main/proj/templates/signature_template_select.html'); ) ?>
-            <? echo ( include('/includes/main/proj/templates/signatures.html'); ) ?>
+            <?include(/includes/main/proj/templates/signature_template_select.html)?>
+            <?include(/includes/main/proj/templates/signatures.html)?>
         <? endif ( $$variable{'txtSignatureType'} eq 'Cover Pages' or $$variable{'txtSignatureType'} eq 'GateFolded Spreads' ) ?>
 		<fieldset><legend><? echo ( $$variable{'Project'}->Type()->name() ) ?> <?txtSignatureType?></legend>
 <? if ( $$variable{'txtSignatureType'} ) ?>
@@ -58,135 +58,135 @@
 <? endif ( $$variable{'txtSignatureType'} ) ?>
 
 <? if ( $$variable{'ProjectType'}->name() eq 'Envelopes' ) ?>
-                <? echo ( include('/includes/main/proj/templates/project_template_select.html'); ) ?>
-                <? echo ( include('/includes/main/proj/templates/envelopes.html'); ) ?>
+                <?include(/includes/main/proj/templates/project_template_select.html)?>
+                <?include(/includes/main/proj/templates/envelopes.html)?>
 <? endif ( $$variable{'ProjectType'}->name() eq 'Envelopes' ) ?>
 
 <? if ( sets::isin( $$variable{'ProjectType'}->name(),['GreetingCards','Postcards','Posters','Signs','Banners','RackCards','Labels','NCR'] ) ) ?>
-		<? echo ( include('/includes/main/proj/templates/generic.html'); ) ?>
-		<? echo ( include('/includes/main/proj/dimensions.html'); ) ?>
+		<?include(/includes/main/proj/templates/generic.html)?>
+		<?include(/includes/main/proj/dimensions.html)?>
 <? endif ( sets::isin( $$variable{'ProjectType'}->name(),['GreetingCards','Postcards','Posters','Signs','Banners','RackCards','Labels','NCR'] ) ) ?>
 <? if ( sets::isin( $$variable{'ProjectType'}->name(),['Banners'] ) ) ?>
-		<? echo ( include('/includes/main/proj/banner_printing.html'); ) ?>
+		<?include(/includes/main/proj/banner_printing.html)?>
 <? endif ( sets::isin( $$variable{'ProjectType'}->name(),['Banners'] ) ) ?>
 
 <? if ( $$variable{'ProjectType'}->name() eq 'DoorHangers' ) ?>
-		<? echo ( include('/includes/main/proj/templates/generic.html'); ) ?>
-		<? echo ( include('/includes/main/proj/dimensions.html'); ) ?>
+		<?include(/includes/main/proj/templates/generic.html)?>
+		<?include(/includes/main/proj/dimensions.html)?>
 <? endif ( $$variable{'ProjectType'}->name() eq 'DoorHangers' ) ?>
 <? if ( $$variable{'ProjectType'}->name() eq 'Brochures' ) ?>
-		<? echo ( include('/includes/main/proj/templates/brochures.html'); ) ?>
-		<? echo ( include('/includes/main/proj/dimensions.html'); ) ?>
+		<?include(/includes/main/proj/templates/brochures.html)?>
+		<?include(/includes/main/proj/dimensions.html)?>
 <? endif ( $$variable{'ProjectType'}->name() eq 'Brochures' ) ?>
 <? if ( $$variable{'ProjectType'}->name() eq 'Custom' ) ?>
-		<? echo ( include('/includes/main/proj/dimensions_boxes_only.html'); ) ?>
+		<?include(/includes/main/proj/dimensions_boxes_only.html)?>
 <? endif ( $$variable{'ProjectType'}->name() eq 'Custom' ) ?>
 <? if ( $$variable{'ProjectType'}->name() eq 'Flyers' ) ?>
-		<? echo ( include('/includes/main/proj/templates/brochures.html'); ) ?>
-		<? echo ( include('/includes/main/proj/dimensions.html'); ) ?>
+		<?include(/includes/main/proj/templates/brochures.html)?>
+		<?include(/includes/main/proj/dimensions.html)?>
 <? endif ( $$variable{'ProjectType'}->name() eq 'Flyers' ) ?>
 <? if ( $$variable{'ProjectType'}->name() eq 'Cards' ) ?>
-		<? echo ( include('/includes/main/proj/templates/project_template_select.html'); ) ?>
-		<? echo ( include('/includes/main/proj/templates/cards.html'); ) ?>
-		<? echo ( include('/includes/main/proj/dimensions.html'); ) ?>
+		<?include(/includes/main/proj/templates/project_template_select.html)?>
+		<?include(/includes/main/proj/templates/cards.html)?>
+		<?include(/includes/main/proj/dimensions.html)?>
 <? endif ( $$variable{'ProjectType'}->name() eq 'Cards' ) ?>
 <? if ( $$variable{'ProjectType'}->name() eq 'Pamphlets/Leaflets' ) ?>
-		<? echo ( include('/includes/main/proj/templates/project_template_select.html'); ) ?>
-		<? echo ( include('/includes/main/proj/templates/brochures.html'); ) ?>
-		<? echo ( include('/includes/main/proj/dimensions.html'); ) ?>
+		<?include(/includes/main/proj/templates/project_template_select.html)?>
+		<?include(/includes/main/proj/templates/brochures.html)?>
+		<?include(/includes/main/proj/dimensions.html)?>
 <? endif ( $$variable{'ProjectType'}->name() eq 'Pamphlets/Leaflets' ) ?>
 <? if ( $$variable{'ProjectType'}->name() eq 'NewsLetters' ) ?>
-		<? echo ( include('/includes/main/proj/templates/project_template_select.html'); ) ?>
-		<? echo ( include('/includes/main/proj/templates/newsletters.html'); ) ?>
-		<? echo ( include('/includes/main/proj/dimensions.html'); ) ?>
+		<?include(/includes/main/proj/templates/project_template_select.html)?>
+		<?include(/includes/main/proj/templates/newsletters.html)?>
+		<?include(/includes/main/proj/dimensions.html)?>
 <? endif ( $$variable{'ProjectType'}->name() eq 'NewsLetters' ) ?>
 <? if ( $$variable{'ProjectType'}->name() eq 'BusinessCards' ) ?>
-		<? echo ( include('/includes/main/proj/templates/generic.html'); ) ?>
-		<? echo ( include('/includes/main/proj/business_card_names.html'); ) ?>
-		<? echo ( include('/includes/main/proj/dimensions.html'); ) ?>
+		<?include(/includes/main/proj/templates/generic.html)?>
+		<?include(/includes/main/proj/business_card_names.html)?>
+		<?include(/includes/main/proj/dimensions.html)?>
 <? endif ( $$variable{'ProjectType'}->name() eq 'BusinessCards' ) ?>
 <? if ( $$variable{'ProjectType'}->name() eq 'Packaging' ) ?>
-		<? echo ( include('/includes/main/proj/templates/project_template_select.html'); ) ?>
-		<? echo ( include('/includes/main/proj/templates/packaging.html'); ) ?>
-		<? echo ( include('/includes/main/proj/dimensions.html'); ) ?>
+		<?include(/includes/main/proj/templates/project_template_select.html)?>
+		<?include(/includes/main/proj/templates/packaging.html)?>
+		<?include(/includes/main/proj/dimensions.html)?>
 <? endif ( $$variable{'ProjectType'}->name() eq 'Packaging' ) ?>
 <? if ( $$variable{'ProjectType'}->name() eq 'PressSheetCombination' ) ?>
-		<? echo ( include('/includes/main/proj/press_sheet_combo.html'); ) ?>
+		<?include(/includes/main/proj/press_sheet_combo.html)?>
 <? endif ( $$variable{'ProjectType'}->name() eq 'PressSheetCombination' ) ?>
 <? if ( $$variable{'ProjectType'}->name() eq 'PresentationFolders' ) ?>
-		<? echo ( include('/includes/main/proj/templates/presentation_folders.html'); ) ?>
-		<? echo ( include('/includes/main/proj/dimensions.html'); ) ?>
-		<? echo ( include('/includes/main/proj/presentation_folder_printing.html'); ) ?>
+		<?include(/includes/main/proj/templates/presentation_folders.html)?>
+		<?include(/includes/main/proj/dimensions.html)?>
+		<?include(/includes/main/proj/presentation_folder_printing.html)?>
 <? endif ( $$variable{'ProjectType'}->name() eq 'PresentationFolders' ) ?>
 <? if ( $$variable{'ProjectType'}->name() eq 'Letterhead' ) ?>
-		<? echo ( include('/includes/main/proj/templates/generic.html'); ) ?>
-		<? echo ( include('/includes/main/proj/dimensions.html'); ) ?>
+		<?include(/includes/main/proj/templates/generic.html)?>
+		<?include(/includes/main/proj/dimensions.html)?>
 <? endif ( $$variable{'ProjectType'}->name() eq 'Letterhead' ) ?>
 <? if ( $$variable{'ProjectType'}->name() eq 'ScratchPads' ) ?>
-		<? echo ( include('/includes/main/proj/templates/generic.html'); ) ?>
+		<?include(/includes/main/proj/templates/generic.html)?>
 		<p id="NotepadPages">
 			<label># of pages per pad</label>
 			<input type="text" name="PageQuantity" value="<?PageQuantity?>" onkeyup="calc(this.form.name);" />
 		</p>
-		<? echo ( include('/includes/main/proj/dimensions.html'); ) ?>
+		<?include(/includes/main/proj/dimensions.html)?>
 <? endif ( $$variable{'ProjectType'}->name() eq 'ScratchPads' ) ?>
 
 <? if ( $$variable{'ProjectType'}->name() eq 'Tags/Tickets' ) ?>
-		<? echo ( include('/includes/main/proj/templates/project_template_select.html'); ) ?>
-		<? echo ( include('/includes/main/proj/templates/tags_tickets.html'); ) ?>
-		<? echo ( include('/includes/main/proj/dimensions.html'); ) ?>
+		<?include(/includes/main/proj/templates/project_template_select.html)?>
+		<?include(/includes/main/proj/templates/tags_tickets.html)?>
+		<?include(/includes/main/proj/dimensions.html)?>
 <? endif ( $$variable{'ProjectType'}->name() eq 'Tags/Tickets' ) ?>
 <? if ( $$variable{'ProjectType'}->name() eq 'Maps' ) ?>
-		<? echo ( include('/includes/main/proj/templates/project_template_select.html'); ) ?>
-		<? echo ( include('/includes/main/proj/templates/maps.html'); ) ?>
-		<? echo ( include('/includes/main/proj/dimensions.html'); ) ?>
+		<?include(/includes/main/proj/templates/project_template_select.html)?>
+		<?include(/includes/main/proj/templates/maps.html)?>
+		<?include(/includes/main/proj/dimensions.html)?>
 <? endif ( $$variable{'ProjectType'}->name() eq 'Maps' ) ?>
 <? if ( $$variable{'ProjectType'}->name() eq 'Inserts' ) ?>
-		<? echo ( include('/includes/main/proj/templates/project_template_select.html'); ) ?>
-		<? echo ( include('/includes/main/proj/templates/inserts.html'); ) ?>
-		<? echo ( include('/includes/main/proj/dimensions.html'); ) ?>
+		<?include(/includes/main/proj/templates/project_template_select.html)?>
+		<?include(/includes/main/proj/templates/inserts.html)?>
+		<?include(/includes/main/proj/dimensions.html)?>
 <? endif ( $$variable{'ProjectType'}->name() eq 'Inserts' ) ?>
 <? if ( $$variable{'ProjectType'}->name() eq 'Forms' ) ?>
-		<? echo ( include('/includes/main/proj/templates/project_template_select.html'); ) ?>
-		<? echo ( include('/includes/main/proj/templates/forms.html'); ) ?>
-		<? echo ( include('/includes/main/proj/dimensions.html'); ) ?>
+		<?include(/includes/main/proj/templates/project_template_select.html)?>
+		<?include(/includes/main/proj/templates/forms.html)?>
+		<?include(/includes/main/proj/dimensions.html)?>
 <? endif ( $$variable{'ProjectType'}->name() eq 'Forms' ) ?>
 <? if ( $$variable{'ProjectType'}->name() eq 'Covers' ) ?>
-		<? echo ( include('/includes/main/proj/templates/project_template_select.html'); ) ?>
-		<? echo ( include('/includes/main/proj/templates/covers.html'); ) ?>
-		<? echo ( include('/includes/main/proj/dimensions.html'); ) ?>
+		<?include(/includes/main/proj/templates/project_template_select.html)?>
+		<?include(/includes/main/proj/templates/covers.html)?>
+		<?include(/includes/main/proj/dimensions.html)?>
 <? endif ( $$variable{'ProjectType'}->name() eq 'Covers' ) ?>
 <? if ( ! $$variable{'NoPrinting'} ) ?>
 	<div id="OtherSpecifications">
 		<fieldset><legend>Other Specifications</legend>
 			<ul>
-			<? echo ( include('/includes/main/proj/printing_type.html'); ) ?>
-			<? echo ( include('/includes/main/proj/screen_type.html'); ) ?>
+			<?include(/includes/main/proj/printing_type.html)?>
+			<?include(/includes/main/proj/screen_type.html)?>
 			</ul>
 		</fieldset>
 	</div>
 <br class="spacer"/>
-	<? echo ( include('_versions.html'); ) ?>
-	<? echo ( include('/includes/main/proj/colours_coatings.html'); ) ?>
+	<?include(_versions.html)?>
+	<?include(/includes/main/proj/colours_coatings.html)?>
 <? if ( $$variable{'ProjectType'}->name() ne 'Envelopes' ) ?>
-	<? echo ( include('/includes/main/proj/bleeds_colourbars.html'); ) ?>	
+	<?include(/includes/main/proj/bleeds_colourbars.html)?>	
 <? endif ( $$variable{'ProjectType'}->name() ne 'Envelopes' ) ?>
 <? endif ( ! $$variable{'NoPrinting'} ) ?>
-	<? echo ( include('/includes/main/proj/paper_dropdowns.html'); ) ?>
+	<?include(/includes/main/proj/paper_dropdowns.html)?>
 	<br class="spacer"/>
 </fieldset>
 <? if ( ! $$variable{'NoPrinting'} ) ?>
 <!-- End of Input - Start of Results -->
 		<fieldset><legend>Results</legend>
-			<? echo ( include('/includes/main/proj/printing_results.html'); ) ?>
+			<?include(/includes/main/proj/printing_results.html)?>
 		</fieldset>
 		<!-- End of Results -->
 		<hr/>
-		<? echo ( include('/includes/main/proj/press_approval.html'); ) ?>
+		<?include(/includes/main/proj/press_approval.html)?>
 <? else ( ! $$variable{'NoPrinting'} ) ?>
-		<? echo ( include('/includes/main/proj/printing_results_no_printing.html'); ) ?>
+		<?include(/includes/main/proj/printing_results_no_printing.html)?>
 		<hr/>
 <? endif ( ! $$variable{'NoPrinting'} ) ?>
-		<? echo ( include('/includes/main/proj/add_to_project.html'); ) ?>
+		<?include(/includes/main/proj/add_to_project.html)?>
 	</form>
 </div><!-- Service -->

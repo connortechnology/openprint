@@ -183,17 +183,13 @@
 		<ul>
 			<li>
 				<label>Date Range:</label>
-				<span class="DateSelectorT">
 					<? echo ( 
 						date_select_session( '/employee/production/jobs_by_csr.html', 'schedule_start', { with_today=>1, onchange=>'calc();' } );
 					) ?>
-				</span>
 				&nbsp;to&nbsp;
-				<span class="DateSelectorT">
 					<? echo ( 
 						date_select_session( '/employee/production/jobs_by_csr.html', 'schedule_end', { with_today=>1, onchange=>'calc();' } );
 					) ?>
-				</span>
 			</li>
 			</ul>
 		</div>

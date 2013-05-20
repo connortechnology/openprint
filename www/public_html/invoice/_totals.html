@@ -4,7 +4,7 @@
 			<ul>
 				<li class="subtotal">
 					<label>Sub Total</label>
-					<? echo ( openprint::Currency::format( $$variable{'Invoice'}->subtotal() ); ) ?>
+					<span id="subtotal"><? echo ( openprint::Currency::format( $$variable{'Invoice'}->subtotal() ); ) ?></span>
 				</li>
 				<? echo ( 
 					my $html;
@@ -29,16 +29,16 @@
 					<label>Amount Paid</label>
 					<? echo ( openprint::Currency::format( $$variable{'Invoice'}->paid() ); ) ?>
 				</li>
-				<? if ( Date::Parse::str2time( $$variable{Invoice}->early_payment_date() ) > time ) ?>
-				<li class="early_payment_owing">
-					<label>Amount Owing if paid by <? echo ( format_date( $$variable{Invoice}->early_payment_date() ); ) ?></label>
-					<span id="EarlyOwing"><? echo ( openprint::Currency::format( $$variable{Invoice}->early_owing() ); ) ?></span>
-				</li>
-				<? endif ( Date::Parse::str2time( $$variable{Invoice}->early_payment_date() ) > time ) ?>
 				<li class="owing">
 					<label>Amount Owing</label>
 					<span id="Owing"><? echo ( openprint::Currency::format( $$variable{Invoice}->owing() ); ) ?></span>
 				</li>
+				<? if ( Date::Parse::str2time( $$variable{Invoice}->early_payment_date() ) > time ) ?>
+				<li class="early_payment_owing">
+					<label>Amount Owing if paid by <? echo ( format_date( $$variable{Invoice}->early_payment_date() ); ) ?></label>
+					<span id="EarlyOwing"><? echo ( openprint::Currency::format( $$variable{Invoice}->owing_early() ); ) ?></span>
+				</li>
+				<? endif ( Date::Parse::str2time( $$variable{Invoice}->early_payment_date() ) > time ) ?>
 			</ul>
 		</div>
 		<span style="float:right;">All amounts in <? echo ( $$variable{Invoice}->Currency()->name(); ) ?>.</span>

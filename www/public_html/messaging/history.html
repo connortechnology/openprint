@@ -44,23 +44,15 @@
 <? endif ( sets::isin($session{'user_type'}, ['E','A'] ) ) ?>
 			<li>
 				<label>Created On</label>
-				<span class="DateSelector">
 <? echo ( ssi::date_select_session( '/messaging/history.html', 'created_on_start', {onchange=>'load_messages(this.form);'} ); ) ?>
-				</span>
 					to 
-				<span class="DateSelector">
 <? echo ( ssi::date_select_session( '/messaging/history.html', 'created_on_end', {onchange=>'load_messages(this.form);'} ); ) ?>
-				</span>
 			</li>
 			<li>
 				<label>Sent On</label>
-				<span class="DateSelector">
 <? echo ( ssi::date_select_session( '/messaging/history.html', 'sent_on_start', {onchange=>'load_messages(this.form);'} ); ) ?>
-				</span>
 					to 
-				<span class="DateSelector">
 <? echo ( ssi::date_select_session( '/messaging/history.html', 'sent_on_end', {onchange=>'load_messages(this.form);'} ); ) ?>
-				</span>
 			</li>
 				</ul>
 			</div>

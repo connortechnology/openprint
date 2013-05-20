@@ -142,9 +142,9 @@ function howdidyouhearaboutus_onchange(e) {
 		<fieldset>
 			<legend>Miscellaneous Information</legend>
 			<div class="content"><ul>
-			<li class="businesstype<? echo ( $$variable{'RequiredFields'}{'businesstype'} ? ' required' : '' ) ?>">
-				<label for="businesstype">Business Type</label>
-				<input type="text" name="businesstype" id="businesstype" value="<? echo ( ssi::htmlize($param{'businesstype'}); ) ?>" />
+			<li class="business_type<? echo ( $$variable{'RequiredFields'}{'business_type'} ? ' required' : '' ) ?>">
+				<label for="business_type">Business Type</label>
+				<input type="text" name="business_type" id="business_type" value="<? echo ( ssi::htmlize($param{'business_type'}); ) ?>" />
 			</li>
 			<li class="reasonforpurchase<? echo ( $$variable{'RequiredFields'}{'reasonforpurchase'} ? ' required' : '' ) ?>"> 
 				<label>Reason For Purchase</label>

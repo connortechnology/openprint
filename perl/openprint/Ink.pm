@@ -6,7 +6,8 @@ our @ISA = qw( openprint::Object );
 
 use openprint ();
 
-use vars qw( $table $serial %fields %transforms %defaults );
+use vars qw( $table $debug $serial %fields %transforms %defaults );
+$debug = 1;
 
 $table = 'inks';
 $serial = 'inks_id_seq';

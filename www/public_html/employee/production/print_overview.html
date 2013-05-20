@@ -186,17 +186,13 @@ function textarea_init() {
 		<ul>
 			<li>
 				<label>Date Range</label>
-				<span class="DateSelectorT">
 					<? echo ( 
 						ssi::date_select_session( '/employee/production/print_overview.html', 'schedule_start', { 'with_today'=>1, 'onclick'=>'f1.submit();' } );
 					) ?>
-				</span>
 				to
-				<span class="DateSelectorT">
 					<? echo ( 
 						ssi::date_select_session( '/employee/production/print_overview.html', 'schedule_end', { 'with_today'=>1, 'onclick'=>'f1.submit();' } );
 					) ?>
-				</span>
 			</li>
 			<li>
 				<label>Scale</label>

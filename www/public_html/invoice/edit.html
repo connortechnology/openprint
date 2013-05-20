@@ -1,5 +1,19 @@
 <? if ( $$variable{'Invoice'}->id() ) ?>
 <script type="text/javascript">
+	function update_totals( ) {
+		var total;
+		var timetrack_total = $('timetrack_total');
+		if ( timetrack_total ) {
+			timetrack_total = parseFloat(timetrack_total.innerHTML.replace(/[^\d\.]/g,'') );
+			total += timetrack_total;
+		} // end if
+		var product_total = $('product_total');
+		if ( product_total ) {
+			product_total = parseFloat(product_total.innerHTML.replace(/[^\d\.]/g,'') );
+			total += produt_total;
+		} // end if
+		$('subtotal').innerHTML = do_decimals( timetrack_total + product_total, 2 );
+	} // end function
 	function update_product( product_id ) {
 		$('product-total-'+product_id).innerHTML = do_decimals( parseFloat($('product-price-'+product_id).value) * parseFloat($('product-quantity-'+product_id).value), 2 );
 	} // end function update_product
@@ -11,6 +25,7 @@
 					action: 'add'
                 },
                 onComplete: function(transport) {
+					update_totals();
 					TableKit.reload();
                 },
                 onFailure: function(transport) {
@@ -26,6 +41,7 @@
 					action: 'remove'
                 },
                 onComplete: function(transport) {
+					update_totals();
 					TableKit.reload();
                 },
                 onFailure: function(transport) {
@@ -43,7 +59,7 @@
 	<fieldset><legend><? echo ( $$variable{'Invoice'}->id() ? 'Editing Invoice ' . $$variable{'Invoice'}->id() : 'New Invoice' ) ?></legend>
 		<div class="leftColumn">
 			<ul>
-			<li><label for="invoicee_id" onclick="$('invoicee_id').toggle();$('invoicee').toggle();">Company</label>
+			<li class="invoicee"><label for="invoicee_id" onclick="$('invoicee_id').toggle();$('invoicee').toggle();">Company</label>
 				<select id="invoicee_id" name="invoicee_id" onchange="$('invoicee').value='';">
 					<option value=""> select </option>
 					<? echo ( openprint::Company::get_dropdown( $$variable{'Invoice'}->invoicee_id() ? $$variable{'Invoice'}->invoicee_id() : $session{'company_id'} ); ) ?>
@@ -52,20 +68,23 @@
 			</li>
 <!--
 			<p><label>Created On</label>
-			<span class="DateSelector"><? echo ( ssi::date_select( 'posted_on', $$variable{'Invoice'}->posted_on() ); ) ?></span>
+			<? echo ( ssi::date_select( 'posted_on', $$variable{'Invoice'}->posted_on() ); ) ?>
 			</p>
 -->
-			<li><label>Due On</label>
-			<span class="DateSelector"><? echo ( ssi::date_select( 'due_on', $$variable{'Invoice'}->due_on() ); ) ?></span>
-			</li>
-			<li><label for="monthly_interest">Interest Rate</label>
-				<? echo ( input( type=>'float', name=>'monthly_interest', id=>'monthly_interest', value=>($$variable{Invoice}->id() ? $$variable{Invoice}->monthly_interest() : $config{'Default Interest'}) ); ) ?>%
-			</li>
-			<li><label for="early_payment_discount">Early Payment Discount</label>
-				<? echo ( join("\n",
-							input(type=>'float', name=>'early_payment_discount', value=>$$variable{Invoice}->early_payment_discount() ), 
-							ssi::select( [ 'percent', 'Percent', 'amount', 'Amount' ], $$variable{Invoice}->early_payment_units(), { name=>'early_payment_unitss' } ),
-				); ) ?>
+				<li class="due_on"><label>Due On</label>
+				<? echo ( ssi::date_select( 'due_on', $$variable{'Invoice'}->due_on() ); ) ?>
+				</li>
+				<li class="monthly_interest"><label for="monthly_interest">Interest Rate</label>
+					<? echo ( input( type=>'float', name=>'monthly_interest', id=>'monthly_interest', value=>($$variable{Invoice}->id() ? $$variable{Invoice}->monthly_interest() : $config{'Default Interest'}) ); ) ?>%
+				</li>
+				<li class="early_payment_discount"><label for="early_payment_discount">Early Payment Discount</label>
+					<? echo ( join("\n",
+								input(type=>'float', id=>'early_payment_discount', name=>'early_payment_discount', value=>$$variable{Invoice}->early_payment_discount() ), 
+								ssi::select( [ 'percent', 'Percent', 'amount', 'Amount' ], $$variable{Invoice}->early_payment_units(), { name=>'early_payment_units' } ),
+					); ) ?>
+				<li class="early_payment_date"><label>Early Payment Date</label>
+				<? echo ( ssi::date_select( 'early_payment_date', $$variable{'Invoice'}->early_payment_date() ); ) ?>
+				</li>
 			</ul>
 		</div>
 		<div class="rightColumn">
@@ -91,18 +110,18 @@
 		<p class="buttons">
 			<? echo (
 				my $html = '';
-				$html = ssi::writeButton( $log, $dbh, 'back', 'back.gif', '', 'history.html', 'Back' );
-				$html .= ssi::writeButton( $log, $dbh, 'save', 'save.gif', "f1.btnFunction.value='Save';f1.submit();", '', 'Save' );
+				$html .= button( 'back', { href=>'history.html', text=>'Back' } );
+				$html .= button( 'save', { onclick=>"f1.btnFunction.value='Save';f1.submit();",text=>'Save' } );
 				if ( $$variable{'Invoice'}->id() ) {
 					if ( $$variable{'Invoice'}->deleted() ) {
-						$html .= ssi::writeButton( $log, $dbh, 'delete', 'delete.gif', "if(confirm('Are you sure?')){f1.btnFunction.value='Destroy';f1.submit();}", '', 'Destroy' );
+						$html .= button( 'delete', { onclick=>"if(confirm('Are you sure?')){f1.btnFunction.value='Destroy';f1.submit();}",text=>'Destroy' } );
 					} else {
-						$html .= ssi::writeButton( $log, $dbh, 'delete', 'delete.gif', "f1.btnFunction.value='Delete';f1.submit();", '', 'Delete' );
+						$html .= button( 'delete', { onclick=>"f1.btnFunction.value='Delete';f1.submit();",text=>'Delete' } );
 					} # end if
 					if ( $$variable{'Invoice'}->posted() ) {
-						$html .= ssi::writeButton( $log, $dbh, 'unpost', 'unpost.gif', "f1.btnFunction.value='UnPost';f1.submit();", '', 'UnPost' );
+						$html .= button( 'unpost', { onclick=>"f1.btnFunction.value='UnPost';f1.submit();",text=>'UnPost' } );
 					} else {
-						$html .= ssi::writeButton( $log, $dbh, 'post', 'post.gif', "f1.btnFunction.value='Post';f1.submit();", '', 'Post' );
+						$html .= button( 'post', { onclick=>"f1.btnFunction.value='Post';f1.submit();",text=>'Post' } );
 					} # end if
 				} # end if
 				return $html;

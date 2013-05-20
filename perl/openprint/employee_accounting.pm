@@ -374,11 +374,11 @@ sub expenditure {
 sub expenses {
 	if ( $param{'btnFunction'} eq 'Delete' ) {
 		my $Expenditure = new openprint::Expense( $param{'expense_id'} );
-		if ( $variable{'error'} .= $Expenditure->delete() ) {
-			$variable{'Redirect'} = '/employee/accounting/expense.html';
+		if ( $variable{error} .= $Expenditure->delete() ) {
+			$variable{ExternalRedirect} = '/employee/accounting/expense.html';
 			return;	
 		} # end if
-		delete $param{'expense_id'};
+		delete $param{expense_id};
 	} else {
 		_expenses();
 		ssi::setup_date_select( '/employee/accounting/expenses.html', 'invoiced_on_start', -31 );
@@ -411,6 +411,12 @@ sub expense {
 	if ( $param{'btnFunction'} eq 'Copy' ) {
 		$variable{'information'} .= $Expense->id() . ' has been copied';
 		$variable{'Expense'} = $Expense = $Expense->copy();
+	} elsif ( $param{'btnFunction'} eq 'Delete' ) {
+		if ( ! ( $variable{error} .= $Expense->delete() ) ) {
+			$variable{information} .= 'Expense ' . $Expense->id() . ' deleted successfully.';
+			$variable{ExternalRedirect} = '/employee/accounting/expenses.html';
+			return;	
+		} # end if
 	} elsif ( $param{'btnFunction'} eq 'Save' ) {
 		if ( $param{amount} =~ /[=\+\-\*\/]/ ) {
 			$param{amount} = eval $param{amount};
@@ -439,7 +445,7 @@ sub expense {
 			delete $param{'account_id'};
 		} # end if
 		my $Expense = new openprint::Expense( $param{'expense_id'} );
-		if ( $variable{'error'} .= $Expense->save( \%param ) ) {
+		if ( $variable{error} .= $Expense->save( \%param ) ) {
 			return;	
 		} # end if
 
@@ -459,6 +465,14 @@ sub expense {
 
 		$variable{'information'} .= 'Expense saved successfully.<br/>';
 		$variable{'ExternalRedirect'} = '/employee/accounting/expenses.html';
+
+		# Now update the session for expenses so that we always show the entry we just saved.
+		foreach my $key ( 'company_id', 'recipient_id', 'account_id' ) {
+			if ( $session{'/employee/accounting/expenses.html?'.$key} and ( $session{'/employee/accounting/expenses.html?'.$key} != $$Expense{$key} ) ) {
+				$session{'/employee/accounting/expenses.html?'.$key} = $$Expense{$key};
+			} # end if
+		} # end foreach
+
 		%param = ();
 		return;
 	} # end if

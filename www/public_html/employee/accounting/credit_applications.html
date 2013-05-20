@@ -22,16 +22,12 @@
 	</p>
 	<p>
 		<label>Application Date</label>
-		<span class="DateSelector">
             <? echo ( 
                 ssi::date_select_session('/employee/accounting/credit_applications.html', 'created_on_start', {'with_today'=>1} );
                 ) ?> to
-		</span>
-		<span class="DateSelector">
             <? echo ( 
                 ssi::date_select_session('/employee/accounting/credit_applications.html', 'created_on_end', {'with_today'=>1} );
                 ) ?>
-		</span>
 	</p>
 	<p class="buttons">
 		<? echo ( join('',

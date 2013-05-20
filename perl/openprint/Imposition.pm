@@ -2,6 +2,7 @@ use strict;
 use Carp qw( cluck );
 
 package openprint::Imposition;
+require Math::Round;
 use vars qw( $AUTOLOAD );
 
 my @fields = (
@@ -282,8 +283,8 @@ sub load {
 		#$$self{'image_height'} = $$self{'spread_rows'} * $$self{'image_height'};
 
 	} else {
-		$$self{'spread_rows'} = sprintf('%.0f', $$specs{'txtWidth'} / $$specs{'txtFinalWidth'}) if $$specs{'txtFinalWidth'};
-		$$self{'spread_columns'} = sprintf('%.0f',$$specs{'txtHeight'} / $$specs{'txtFinalHeight'}) if $$specs{'txtFinalHeight'};
+		$$self{'spread_rows'} = Math::Round::nearest(1,$$specs{'txtWidth'} / $$specs{'txtFinalWidth'}) if $$specs{'txtFinalWidth'};
+		$$self{'spread_columns'} = Math::Round::nearest(1,$$specs{'txtHeight'} / $$specs{'txtFinalHeight'}) if $$specs{'txtFinalHeight'};
 
 		if ( 0 ) {
 			$$self{'spreads'} = $$self{'spread_rows'} * $$self{'spread_columns'};

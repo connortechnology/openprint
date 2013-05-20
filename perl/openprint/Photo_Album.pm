@@ -70,6 +70,7 @@ sub thumbnail_html {
 #$openprint::log->debug("Photo no asset"  );
 	return sprintf('<a class="thumbnail" href="/photo_albums/view.html?album_id=%d" title="%s">Empty</a>', $_[0]{id}, $_[0]{'name'} );
 } # end sub thumbnail_html
+
 sub asset_html {
 	my $Photo = $_[0]->Thumbnail();
 	if ( $Photo->asset_id() ) {
@@ -100,9 +101,10 @@ sub upload {
 	my $error = '';
 	my $Asset = openprint::Asset::upload( $_[1], $_[2] );
 	if ( ref $Asset eq 'openprint::Asset' ) {
-		my $Photo = new openprint::Photo_in_Album({'asset_id'=>$$Asset{'id'},'album_id'=>$_[0]{'id'}});
-		if ( ! $Photo->asset_id() ) {
-			$error .= $Photo->save({'asset_id'=>$$Asset{'id'}, 'album_id'=>$_[0]->id()});   
+		my $Photo = openprint::Photo_in_Album->find_one(asset_id=>$$Asset{id},album_id=>$_[0]{id});
+		if ( ! $Photo ) {
+			$Photo = new openprint::Photo_in_Album();
+			$error .= $Photo->save({ asset_id=>$$Asset{id}, album_id=>$_[0]->id() });   
 			$error .= new openprint::Log()->save({'action'=>'Upload Photo', 'Object'=>$Photo});
 		} else {
 			$error .= 'Photo already exists in album.';

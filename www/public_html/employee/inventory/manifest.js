@@ -76,12 +76,17 @@ function add_content(form, type_id) {
 				rfidtag_id: $('rfidtag_id-'+type_id+'-').value,
 				skid_id:    $('skid_id-'+type_id+'-').value,
 				docket:     $('docket-'+type_id+'-').value,
-				qty_lbs:    $('qty_lbs-'+type_id+'-').value
+				qty_lbs:    $('qty_lbs-'+type_id+'-').value,
+				manufacturers_id:	$('manufacturers_id-'+type_id+'-').value,
+				location_id: $('location_id-'+type_id+'-').value
 			},
 			onSuccess: function (transport) { 
-var tr = $('totals-'+type_id);
+var tr = $('new-'+type_id);
 if ( ! tr ) { alert('totals not found'); } else {
-new Insertion.Before('totals-'+type_id, transport.responseText);return true;
+new Insertion.After('new-'+type_id, transport.responseText);
+$('rfidtag_id-'+type_id+'-').value = '';
+$('rfidtag_id-'+type_id+'-').focus();
+return true;
 }
  }, 
 			evalScripts: true
@@ -92,7 +97,7 @@ function manifest_onsubmit(form) {
 
 	var re = /^txtName-(\d+)$/;
 	var fields_to_check = ['Manufacturer','Owner','Name','Finish','Colour'];
-	for ( var i = 0; i < form.elements.length; i += 1 ) {
+	for ( var i = 0, len = form.elements.length; i < len; i += 1 ) {
 		var matches = re.exec( form.elements[i].name );
 		
 		if ( matches ) {

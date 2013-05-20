@@ -23,13 +23,9 @@ function load() {
             </li>
             <li>
                 <label>Ordered Date</label>
-                <span class="DateSelector">
 <? echo ( ssi::date_select_session( '/employee/reports/stock_usage.html', 'ordered_on_start' ); ) ?>
-                </span>
                     to
-                <span class="DateSelector">
 <? echo ( ssi::date_select_session( '/employee/reports/stock_usage.html', 'ordered_on_end' ); ) ?>
-                </span>
             </li>
 			</ul>
         </div>
