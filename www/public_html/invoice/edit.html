@@ -49,6 +49,9 @@
                 }
             } );
     } // end function del_timetrack(invoice_id)
+	function invoicee_change(ddm) {
+		new Ajax.Request( '_invoicee_onchange.json', { parameters: { invoicee_id: ddm.getValue() } } );
+	} // end function invoicee_change(ddm)
 </script>
 <? endif ( $$variable{'Invoice'}->id() ) ?>
 <?include(/includes/error_reporting.html)?>

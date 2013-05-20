@@ -209,7 +209,9 @@ sub edit {
 		$variable{error} .= $variable{Invoice}->save(\%param);
 	} # end if
 	if ( ! $variable{'Invoice'}->id() ) {
+		# Defaults, don't know who the company is yet
 		$variable{'Invoice'}->due_on( join('-', Date::Calc::Add_Delta_Days( Date::Calc::Today(), 15 ) ) );
+		$variable{'Invoice'}->early_payment_date( join('-', Date::Calc::Add_Delta_Days( Date::Calc::Today(), 7 ) ) );
 	} # end if
 } # end sub edit
 
