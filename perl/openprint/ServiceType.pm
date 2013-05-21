@@ -54,6 +54,16 @@ sub find {
 	my @values;
 	my $sql = q{SELECT * FROM Service_Types WHERE 1>0};
 
+	if ( exists $params{id} ) {
+		if ( ref $params{id} eq 'ARRAY' ) {
+            $sql .= q{ AND id IN (}.join(',', map {'?'} @{$params{id}} ).')';
+            push @values, @{$params{id}};
+		} else {
+            $sql .= ' AND id=?';
+            push @values, $params{id};
+		} # end if
+	} # end if
+
 	if ( exists $params{'name'} ) {
 		if ( ref $params{'name'} eq 'ARRAY' ) {
             $sql .= q{ AND name IN (}.join(',', map {'?'} @{$params{'name'}} ).')';

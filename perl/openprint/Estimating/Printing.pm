@@ -2808,7 +2808,7 @@ $openprint::log->debug("Paper debug: " . $Paper->sheet_weight() );
 				$$price{'Comparison Cost'} += $$paper_price{'Total'};
 				$$price{'Stock Total'} += $$paper_price{'Total'};
 				$$price{'Paper Breakdown'} .= sprintf('Stock: %s %s %s %s, %slbs * %.2f/100lbs = $%.2f<br/>', 
-						( $Paper->type() eq 'Sheet' ? $PaperCounts{$paper_string} .'sheets' : $PaperCounts{$paper_string}.'lbs'), 
+						( $Paper->type() eq 'Sheet' ? $PaperCounts{$paper_string} .'sheets' : ( $PaperCounts{$paper_string}.'lbs '. Math::Round::nearest(0.01, ($PaperCounts{$paper_string} / $Paper->wpsi() ) / $Paper->width() ) . ' linear feet' ) ), 
 						$Paper->to_string(),
 						( $Paper->sheets_per_package() ? 'SPP:'.$Paper->sheets_per_package() : '' ),
 						( $Paper->minimum_order() ? 'Minimum: ' . $Paper->minimum_order() : '' ), 

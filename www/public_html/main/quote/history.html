@@ -1,5 +1,4 @@
 <script type="text/javascript">
-<!--
 	function delete_confirm(form) {
 		var number_of_deleted_quotes = 0;
 		for ( var index = 0; index < form.elements.length; index += 1 ) {
@@ -24,7 +23,6 @@
 		$('QuoteList').innerHTML = 'Please wait...';
 		new Ajax.Updater('QuoteList','/main/quote/_history.html', {method:'get',parameters:form.serialize(true)});
 	} // end function load_quotes
--->
 </script>	 
 <? if ( $session{'user_id'} == 0 ) ?>
 Only logged in customers have a quote history. 
