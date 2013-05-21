@@ -161,9 +161,9 @@ sub history {
 		my @Recipients = new openprint::Company($param{'company_id'})->AccountingContacts();
 		(new openprint::Email())->send(
 					FROM    => $config{'AccountingEmail'},
-					#TO      =>  \@Recipients,
-					TO      => new openprint::User( $session{'user_id'} ),
-					#BCC     => new openprint::User( $session{'user_id'} ),
+					TO      =>  \@Recipients,
+					#TO      => new openprint::User( $session{'user_id'} ),
+					BCC     => new openprint::User( $session{'user_id'} ),
 					SUBJECT => 'Account Statement from ' . ( new openprint::User( $session{'user_id'} )->Company()->name() ),
 					ATTACHMENTS	=>	\@attachments,
 					);
