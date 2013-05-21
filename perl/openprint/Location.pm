@@ -243,7 +243,7 @@ $openprint::log->debug('Get: ' . $string );
 		} # end foreach component
 	} # end if
 
-	my $address = $number . ' ' . $street if $number and $street;
+	$address = $number . ' ' . $street if $number and $street;
 
 	if ( $$location{'AddressDetails'} ) {
 		my $Address = $$location{'AddressDetails'};

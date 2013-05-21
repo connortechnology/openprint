@@ -19,7 +19,7 @@ our @ISA = qw(openprint::Object);
 
 use vars qw( $debug %fields %transforms %defaults $table $serial );
 
-$debug = 0;
+$debug = 1;
 
 %fields = (
 	'id'			=>	'id',
@@ -409,6 +409,9 @@ $openprint::log->debug("fetch: filename: $filename path: $path from url $url");
 	} elsif ( $debug ) {
 		$openprint::log->debug("saving to filename $filename");
 	} # endi f
+	require URI::Escape;
+	$filename = URI::Escape::uri_unescape( $filename );
+
 		
 	require Digest::MD5;
 	my $data;
@@ -430,6 +433,9 @@ $openprint::log->debug("fetch: filename: $filename path: $path from url $url");
 		$_ = $Asset->save();
 		return $_ if $_;
 	} else {
+		if ( $Asset->filename() ne URI::Escape::uri_unescape( $Asset->filename() ) ) {
+			$Asset->save({filename=>URI::Escape::uri_unescape( $Asset->filename() )});
+		} # end if
 		if ( ! -e $Asset->on_disk_path() ) {
 			if ( ! File::Slurp::write_file($Asset->on_disk_path(), { atomic => 1, err_mode=>'carp' }, $res->content ) ) {
 				return 'There was an error saving file ' . $filename.' to ' . $Asset->on_disk_path() . ": $!<br/>";
