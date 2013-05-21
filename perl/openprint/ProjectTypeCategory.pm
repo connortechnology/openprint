@@ -7,6 +7,7 @@ use vars qw( $debug %fields %transforms %defaults $table $serial );
 $debug = 0;
 $table =  'projecttype_categories';
 $serial = 'projecttype_categories_id_seq';
+
 %fields = (
 	id	=>	'id',
 	name	=>	'name',
