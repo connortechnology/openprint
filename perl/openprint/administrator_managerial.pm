@@ -546,6 +546,7 @@ sub company_profiles {
 					my $Credit = new openprint::Company_Credit( {'company_id'=>$index, 'supplier_id'=>$Supplier->id() } );
 
 					if (
+							( $Credit->terms() != openprint::Company_Credit->transform('terms', $param{'terms-'.$$Supplier{id}} ) ) or
 							( $Credit->denydays() != openprint::Company_Credit->transform('denydays', $param{'denydays-'.$$Supplier{id}} ) ) or
 							( $Credit->warndays() != openprint::Company_Credit->transform('warndays', $param{'warndays-'.$$Supplier{id}} ) ) or
 							( $Credit->limit() != openprint::Company_Credit->transform('limit', $param{'limit-'.$$Supplier{id}} ) ) or
@@ -560,7 +561,7 @@ sub company_profiles {
 					   ) {
 						my $note = 'Old credit: ' . $Credit->to_string() if $Credit->supplier_id();
 						$variable{'error'} .= $Credit->save( { 'company_id'=>$index, 'supplier_id'=>$Supplier->id(), 
-								map { $_ => $param{$_.'-'.$Supplier->id()} } ( 'denydays','warndays', 'limit', 'hold', 'downpayment', 'cod', 'late_payment_amount','late_payment_units','early_payment_amount','early_payment_units', 'early_payment_days' ) } );
+								map { $_ => $param{$_.'-'.$Supplier->id()} } ( 'terms', 'denydays', 'warndays', 'limit', 'hold', 'downpayment', 'cod', 'late_payment_amount','late_payment_units','early_payment_amount','early_payment_units', 'early_payment_days' ) } );
 						$note .= '<br/>new credit: ' . $Credit->to_string();
 						$variable{'error'} .= (new openprint::Log())->save( {
 								action		=> 	'Credit Information Changed', 

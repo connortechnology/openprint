@@ -1,6 +1,7 @@
-<? if ( $$variable{'Invoice'}->id() ) ?>
 <script type="text/javascript">
+<? if ( $$variable{'Invoice'}->id() ) ?>
 	function update_totals( ) {
+alert('hi');
 		var total;
 		var timetrack_total = $('timetrack_total');
 		if ( timetrack_total ) {
@@ -12,7 +13,12 @@
 			product_total = parseFloat(product_total.innerHTML.replace(/[^\d\.]/g,'') );
 			total += produt_total;
 		} // end if
-		$('subtotal').innerHTML = do_decimals( timetrack_total + product_total, 2 );
+		alert(total);
+		if ( $('subtotal') ) {
+			$('subtotal').innerHTML = do_decimals( timetrack_total + product_total, 2 );
+		} else {
+			alert('no subtotal');
+		} // end if
 	} // end function
 	function update_product( product_id ) {
 		$('product-total-'+product_id).innerHTML = do_decimals( parseFloat($('product-price-'+product_id).value) * parseFloat($('product-quantity-'+product_id).value), 2 );
@@ -49,8 +55,11 @@
                 }
             } );
     } // end function del_timetrack(invoice_id)
-</script>
+	function invoicee_change(ddm) {
+		new Ajax.Request( '_invoicee_onchange.json', { parameters: { invoice_id: '<? echo ( $$variable{Invoice}->id() ) ?>', invoicee_id: ddm.getValue() } } );
+	} // end function invoicee_change(ddm)
 <? endif ( $$variable{'Invoice'}->id() ) ?>
+</script>
 <?include(/includes/error_reporting.html)?>
 <div class="Invoice"><div class="Edit">
 <form name="f1" id="f1" action="<? echo ( $$variable{'Invoice'}->id() ? 'history.html' : 'edit.html' ) ?>" method="post">
@@ -60,7 +69,7 @@
 		<div class="leftColumn">
 			<ul>
 			<li class="invoicee"><label for="invoicee_id" onclick="$('invoicee_id').toggle();$('invoicee').toggle();">Company</label>
-				<select id="invoicee_id" name="invoicee_id" onchange="$('invoicee').value='';">
+				<select id="invoicee_id" name="invoicee_id" onchange="$('invoicee').value='';invoicee_change(this);">
 					<option value=""> select </option>
 					<? echo ( openprint::Company::get_dropdown( $$variable{'Invoice'}->invoicee_id() ? $$variable{'Invoice'}->invoicee_id() : $session{'company_id'} ); ) ?>
 				</select>
@@ -77,7 +86,7 @@
 				<li class="monthly_interest"><label for="monthly_interest">Interest Rate</label>
 					<? echo ( input( type=>'float', name=>'monthly_interest', id=>'monthly_interest', value=>($$variable{Invoice}->id() ? $$variable{Invoice}->monthly_interest() : $config{'Default Interest'}) ); ) ?>%
 				</li>
-				<li class="early_payment_discount"><label for="early_payment_discount">Early Payment Discount</label>
+				<li class="early_payment_amount"><label for="early_payment_amount">Early Payment Discount</label>
 					<? echo ( join("\n",
 								input(type=>'float', id=>'early_payment_discount', name=>'early_payment_discount', value=>$$variable{Invoice}->early_payment_discount() ), 
 								ssi::select( [ 'percent', 'Percent', 'amount', 'Amount' ], $$variable{Invoice}->early_payment_units(), { name=>'early_payment_units' } ),
