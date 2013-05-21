@@ -102,6 +102,10 @@ $serial	= 'paper_id_seq';
 		'stock_settings_equipment_id'	=>	'(SELECT equipment_id FROM equipment_stock_settings WHERE stock_id=papers.id)',
 		);
 
+%transforms = (
+	manufacturers_name => [ 's/^\s+//', 's/\s+$//', 's/\s\s+$/ /g' ],
+);
+
 %defaults = (
 	allocated	=>	q`'0'`,
 	in_stock	=>	q`'0'`,

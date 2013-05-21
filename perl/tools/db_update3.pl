@@ -897,21 +897,27 @@ if ( ! sets::isin( 'company_credit', \@tables ) ) {
 	if ( ! exists $$data{'cod'} ) {
 		$dbh->do('ALTER TABLE company_credit add cod float');
 	} # end if
+	if ( ! exists $$data{terms} ) {
+		$dbh->do('ALTER TABLE company_credit add terms integer');
+	} # end if
 	if ( ! exists $$data{supplier_id} ) {
 		$dbh->do('ALTER TABLE company_credit add supplier_id INTEGER');
 		$dbh->do('ALTER TABLE company_credit ADD FOREIGN KEY (supplier_id) REFERENCES Companies (id)');
 	} # end if
-	if ( ! exists $$data{late_penalty} ) {
-		$dbh->do('ALTER TABLE company_credit add late_penalty float');
+	if ( ! exists $$data{late_payment_amount} ) {
+		$dbh->do('ALTER TABLE company_credit add late_payment_amount float');
 	} # end if
-	if ( ! exists $$data{late_units} ) {
-		$dbh->do('ALTER TABLE company_credit add late_units TEXT');
+	if ( ! exists $$data{late_payment_units} ) {
+		$dbh->do('ALTER TABLE company_credit add late_payment_units TEXT');
 	} # end if
-	if ( ! exists $$data{early_payment_discount} ) {
-		$dbh->do('ALTER TABLE company_credit add early_payment_discount float');
+	if ( ! exists $$data{early_payment_amount} ) {
+		$dbh->do('ALTER TABLE company_credit add early_payment_amount float');
 	} # end if
 	if ( ! exists $$data{early_payment_units} ) {
 		$dbh->do('ALTER TABLE company_credit add early_payment_units TEXT');
+	} # end if
+	if ( ! exists $$data{early_payment_days} ) {
+		$dbh->do('ALTER TABLE company_credit add early_payment_days INTEGER');
 	} # end if
 } # end if
 if ( ! sets::isin( 'affiliates', \@tables ) ) {
