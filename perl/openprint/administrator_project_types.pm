@@ -30,12 +30,15 @@ sub edit {
 		$ProjectType->delete();
 		$ProjectType = $ProjectType->next();
 	} elsif ( $param{'btnFunction'} eq 'Copy' ) {
-		my @required_services = $ProjectType->required_services();
 		my @recommendations = sql::execute(undef,undef,'SELECT lngPaperIndex FROM Paper_Recommendations WHERE lngProjectTypeIndex=?', $ProjectType->id() );
 
 		$ProjectType = $ProjectType->copy();
 		$ProjectType->name('Copy of ' . $ProjectType->name() );
-		$variable{error} .= $ProjectType->save({required_services=>\@required_services});
+
+		my @required_services = $ProjectType->required_services();
+		my @blocked_services = $ProjectType->blocked_services();
+
+		$variable{error} .= $ProjectType->save({required_services=>\@required_services, blocked_services=>\@blocked_services });
 
 		foreach my $paper_id ( @recommendations ) {
 			sql::insert( undef, undef, 'Paper_recommendations','lngPaperIndex',$paper_id,'lngProjectTypeIndex', $ProjectType->id() );

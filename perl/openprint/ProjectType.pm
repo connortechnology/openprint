@@ -131,9 +131,33 @@ sub required_services {
 } # end sub required_services
 
 sub required_ServiceTypes {
+	return openprint::ServiceType->find( id=> [ $_[0]->required_services() ] );
+} # end sub require_ServiceTypes
+
+sub blocked_services {
 	my $self = shift;
-	return map { new openprint::ServiceType( $_ ); } $self->required_services();
-}
+	if ( @_ > 1 ) {
+		@{$$self{'blocked_services'}} = @_;
+	} elsif ( @_ ) {
+		if ( ref $_[0] eq 'ARRAY' ) {
+			$$self{'blocked_services'} = $_[0];
+		} elsif ( $_[0] ) {
+			$$self{'blocked_services'} = [$_[0]];
+		} # end if
+	} # end if
+	if ( ! $$self{'blocked_services'} ) {
+		if ( $$self{'id'} ) {
+			@{$$self{'blocked_services'}} = sql::execute( undef, undef, q{SELECT ServiceType_id FROM ProjectType_BlockedServices WHERE ProjectType_id=?}, $$self{'id'} );
+		} else {
+			@{$$self{'blocked_services'}} = ();
+		} # end if
+	} # end if
+	return @{$$self{'blocked_services'}};
+} # end sub blocked_services
+
+sub blocked_ServiceTypes {
+	return openprint::ServiceType->find( id=>[ $_[0]->blocked_services() ] );
+} # end sub blocked_ServiceTypes
 
 sub delete {
 	my $self = shift;

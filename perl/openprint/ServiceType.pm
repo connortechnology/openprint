@@ -38,6 +38,8 @@ sub init_cache {
 } # end sub init_cache
 
 sub find_one {
+	shift @_ if $_[0] eq 'openprint::ServiceType';
+	shift @_ if ref $_[0] eq 'openprint::ServiceType';
     my %params = @_;
     $params{'limit'} = 1;
     my @Results = find(%params);
@@ -45,6 +47,9 @@ sub find_one {
 } # end sub find_one
 
 sub find {
+	shift @_ if $_[0] eq 'openprint::ServiceType';
+	shift @_ if ref $_[0] eq 'openprint::ServiceType';
+
 	my %params = @_;
 	my @values;
 	my $sql = q{SELECT * FROM Service_Types WHERE 1>0};

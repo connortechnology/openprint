@@ -7,7 +7,7 @@
 	</tr>
 
 <? eval (
-	@{$$variable{'Categories'}} = openprint::ProjectTypeCategory::find( 'order' => 'sort,lower(name)' );
+	@{$$variable{'Categories'}} = openprint::ProjectTypeCategory->find( 'order' => 'sort,lower(name)' );
 ) ?>
 <? while ( $$variable{'Category'} = shift @{$$variable{'Categories'}} ) ?>
 <tr<?rowclass?>>
