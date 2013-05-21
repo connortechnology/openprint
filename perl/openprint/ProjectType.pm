@@ -88,6 +88,13 @@ sub save {
 		foreach my $servicetype_id ( sets::union( @{$$self{'required_services'}} ) ) {
 			sql::insert( undef, undef, 'ProjectType_RequiredServices', ['ProjectType_id', $$self{'id'}, 'ServiceType_id', $servicetype_id ] );
 		} # end foreach
+		# self->equired_services is guaranteed to populate $$self{'erquired_services'}
+		$self->blocked_services( $$params{blocked_services} );
+		sql::execute( undef, undef, q{DELETE FROM ProjectType_BlockedServices WHERE projecttype_id=?}, $$self{'id'} );
+		# The union gets rid of duplicates
+		foreach my $servicetype_id ( sets::union( @{$$self{'blocked_services'}} ) ) {
+			sql::insert( undef, undef, 'ProjectType_BlockedServices', ['projecttype_id', $$self{'id'}, 'servicetype_id', $servicetype_id ] );
+		} # end foreach
 	} # end if
 	return;	
 } # end sub save

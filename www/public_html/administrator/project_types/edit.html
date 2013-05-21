@@ -98,14 +98,6 @@
 		</div>	
 	</fieldset>
 <? endif ( $$variable{'ProjectType'}->id() ) ?>
-	<input type="hidden" name="btnFunction"/>
 	<br class="spacer"/>
-<? if ( $$variable{'ProjectType'}->id() ) ?>
-	<fieldset><legend>Paper Recommendations</legend>
-		<div id="PaperRecommendations">
-			<!--#include virtual="_paper_recommendations.html"-->
-		</div>	
-	</fieldset>
-<? endif ( $$variable{'ProjectType'}->id() ) ?>
 	<input type="hidden" name="btnFunction"/>
 </form>
