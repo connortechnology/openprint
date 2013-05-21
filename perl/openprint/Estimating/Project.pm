@@ -427,22 +427,27 @@ $log->debug("Presentation folder sizes $$specs{'chkPocketLeft'} $$specs{'chkPock
 			$$specs{'ddmStockColour'} = $Papers[0]->colour() if ! $$specs{'ddmStockColour'};
 		} else {
 			if ( ! $$specs{'ddmStockBrand'} ) {
+				sql::end_transaction( $dbh, $ac );
 				$$specs{'alert'} .= 'Please select Stock Brand<br/>';
 				return $$specs{'Status'} = 'uncalculated';
 			} # end if
 			if ( ! $$specs{'ddmStockFinish'} ) {
+				sql::end_transaction( $dbh, $ac );
 				$$specs{'alert'} .= 'Please select Stock Finish<br/>';
 				return $$specs{'Status'} = 'uncalculated';
 			} # end if
 			if ( ! $$specs{'ddmStockColour'} ) {
+				sql::end_transaction( $dbh, $ac );
 				$$specs{'alert'} .= 'Please select Stock Colour<br/>';
 				return $$specs{'Status'} = 'uncalculated';
 			} # end if
 			if ( ! $$specs{'ddmStockWeight'} ) {
+				sql::end_transaction( $dbh, $ac );
 				$$specs{'alert'} .= 'Please select Stock Weight<br/>';
 				return $$specs{'Status'} = 'uncalculated';
 			} # end if
 		} # end if
+		
 
 		my $colourindex = 1;
 

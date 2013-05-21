@@ -5,7 +5,11 @@
 		<select id="Dimensions" name="Dimensions" onchange="Dimensions_onchange( this );">
 			<option value=""> select </option>
 			<? echo ( 
-				$$variable{'FoldType'} = 'NoFold' if ( ! $$variable{'FoldType'} ) and ! sets::isin( $$variable{'ProjectType'}->name(), ['BusinessCards', 'DoorHangers', 'ScratchPads', 'Covers','Posters','RackCards','Magazines','Inserts','Labels','Letterhead','Manuals','Custom','Newsletters','Reports','PresentationFolders','Calendars','NCR','InkjetOutputs','Banners'] );
+				$$variable{'FoldType'} = 'NoFold' if (
+					( ! $$variable{'FoldType'} ) and 
+					( ! sets::isin( $$variable{ProjectType}->category(), ['Large Format'] ) ) and 
+					( ! sets::isin( $$variable{ProjectType}->name(), ['BusinessCards', 'DoorHangers', 'ScratchPads', 'Covers','Posters','RackCards','Magazines','Inserts','Labels','Letterhead','Manuals','Custom','Newsletters','Reports','PresentationFolders','Calendars','NCR'] ) )
+					);
 
 				my $html;
 				if ( $$variable{'ProjectType'}->name() eq 'Envelopes' ) {
@@ -36,7 +40,7 @@
 <? endif ( ! sets::isin( $$variable{'ProjectType'}->name(),[ 'Envelopes','NCR','PresentationFolders' ] ); ) ?>
 		</select>
 	</li>
-				<? if ( ! sets::isin( $$variable{'ProjectType'}->name(), ['Banners','InkjetOutputs','BusinessCards', 'DoorHangers', 'ScratchPads', 'Covers','Posters','RackCards','GreetingCards','PresentationFolders','NCR','Letterhead','Labels'] ) ) ?>
+				<? if ( ! ( sets::isin( $$variable{ProjectType}->category(), ['Large Format'] ) or sets::isin( $$variable{ProjectType}->name(), ['BusinessCards', 'DoorHangers', 'ScratchPads', 'Covers','Posters','RackCards','GreetingCards','PresentationFolders','NCR','Letterhead','Labels'] ) ) ) ?>
 				<li>
 					<label>Fold Type:</label>
 					<select name="FoldType" id="FoldType" size="1" onchange="FoldType_onchange( this );">
@@ -61,7 +65,7 @@
 						 ) ?>
 					</select>
 				</li>
-				<? endif ( ! sets::isin( $$variable{'ProjectType'}->name(), ['Banners','InkjetOutputs','BusinessCards', 'DoorHangers', 'ScratchPads', 'Covers','Posters','RackCards','GreetingCards','PresentationFolders','NCR','Letterhead','Labels'] ) ) ?>
+				<? endif ( ! ( sets::isin( $$variable{ProjectType}->category(), ['Large Format'] ) or sets::isin( $$variable{ProjectType}->name(), ['BusinessCards', 'DoorHangers', 'ScratchPads', 'Covers','Posters','RackCards','GreetingCards','PresentationFolders','NCR','Letterhead','Labels'] ) ) ) ?>
 				<? if ( $$variable{'ProjectType'}->name() eq 'GreetingCards' ) ?>
 					<input type="hidden" id="FoldType" name="FoldType" value="2PanelFold"/>
 				<? endif ( $$variable{'ProjectType'}->name() eq 'GreetingCards' ) ?>

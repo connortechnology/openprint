@@ -4,6 +4,7 @@ use strict;
 require openprint::Object;
 require openprint::logs;
 require openprint::ProjectType_Template;
+require openprint::ProjectTypeCategory;
 use openprint ();
 
 use vars qw( $log $dbh $table $serial %fields %transforms %defaults );
@@ -155,6 +156,10 @@ sub Templates {
 	$params{'projecttype_id'} = $$self{'id'};
 	return openprint::ProjectType_Template::find(%params);
 } # end sub Templates
+
+sub category {
+	return new openprint::ProjectTypeCategory( $_[0]{category_id} )->name();
+} # end sub category
 
 1;
 __END__
