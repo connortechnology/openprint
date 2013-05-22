@@ -180,7 +180,7 @@ foreach my $Project ( openprint::Project->find( 'order'=>'id desc',
 				foreach my $qty_index ( $Project->quantity_indexes() ) {
 					next if ! $$scoring_specs{"ddmEquipment-$$sig_specs{SignatureIndex}-$qty_index"};
 					next if ! ( $$scoring_specs{"ddmEquipment-$$sig_specs{SignatureIndex}-$qty_index"} =~ /\D/ );
-					my $Equipment = openprint::Equipment->find_one( 'strid'=>$$scoring_specs{"ddmEquipment-$$sig_specs{SignatureIndex}-$qty_index"} );
+					my $Equipment = openprint::Equipment->find_one( 'strid'=>$$scoring_specs{"ddmEquipment-$$sig_specs{SignatureIndex}-$qty_index"}, deleted=>[0,1,undef] );
 					if ( ! $Equipment ) {
 						$log->error( 'No equipment found for ' . $$scoring_specs{"ddmEquipment-$$sig_specs{SignatureIndex}-$qty_index"} );
 						next;
