@@ -31,7 +31,7 @@ $table = 'user_notifications';
 );
 
 sub User {
-	return new openprint::User( $_[0]{'user_id'} );
+	return new openprint::User( $_[0]{user_id} );
 }
 sub type {
 	if ( @_ > 1 ) {

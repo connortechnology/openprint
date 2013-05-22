@@ -23,7 +23,7 @@ require openprint::PurchaseOrder_Tax;
 require openprint::Email;
 require openprint::Manifest;
 
-$debug = 1;
+$debug = 0;
 
 $table = 'purchaseorders';
 $serial = 'purchaseorders_id_seq';
@@ -492,15 +492,24 @@ sub can_view {
 	return 1 if ! $_[0]{'id'};
 	my $User = $_[1] ? $_[1] : new openprint::User( $openprint::session{user_id} );
 
-	if ( 
-			( $$User{type} eq 'A' ) or
-			( sets::isin( $_[0]{'created_by'}, [ $$User{id}, $User->assistant_ids(), $User->csr_ids() ] ) )
-			or ( openprint::usergroup::is_user_in( ['Accounting','Shipping','Inventory'], $$User{id} ) ) 
-			
-			or ( sets::isin( $$User{id}, [ map { $_->Order()->salesrep_id() } $_[0]->Contents() ] ) )
-		) {
+	if ( $$User{type} eq 'A' ) {
+		$log->debug("$$User{firstname} Is administrator") if $debug;
 		return 1;
 	} # end if
+	if ( sets::isin( $_[0]{'created_by'}, [ $$User{id}, $User->assistant_ids(), $User->csr_ids() ] ) ) {
+		$log->debug("$$User{firstname} Either created it or is an assistant") if $debug;
+		return 1;
+	} # end if
+	if ( openprint::usergroup::is_user_in( ['Accounting','Shipping','Inventory'], $$User{id} ) )  {
+		$log->debug("$$User{firstname} Is in Accounting','Shipping','Inventory'") if $debug;
+		return 1;
+	} # end if
+			
+	if ( sets::isin( $$User{id}, [ map { $_->Order()->salesrep_id() } $_[0]->Contents() ] ) ) {
+		$log->debug("$$User{firstname} Is salesrep for an order in it") if $debug;
+		return 1;
+	} # end if
+	$log->debug("$$User{firstname} cannot view this PO") if $debug;
 	return 0;
 } # end sub can_view
 
