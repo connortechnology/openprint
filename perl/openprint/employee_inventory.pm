@@ -825,7 +825,7 @@ sub skid_details {
 						$variable{'error'} .= "RFIDTAG $rfidtag_id is already assigned to skid <a href=\"/employee/inventory/skid_details.html?skid_id=$skid_id\">$skid_id</a>.<br/>";
 						next;
 					} # end if
-				} # end if
+				} # end if RFIDTag->id()
 			} # end foreach rfidtag_id
 		} # end if param{rfidtag_id}
 		if ( $param{manufacturers_id} ) {
@@ -847,7 +847,6 @@ sub skid_details {
 			} # end if
 		} # end if
 		return if $variable{'error'};
-$log->debug('sacing');
 
 		# Skid_quantity only exists if adding new stock
 		if ( $param{skid_quantity} ) {
@@ -886,11 +885,16 @@ $log->debug("Entering skid $skid_count");
 		} elsif ( @skid_ids ) {
 $log->debug('sacing');
 			foreach my $skid_id ( @skid_ids ) {
+				my $Skid = new openprint::Skid( $skid_id );
 				if ( exists $param{Quantity} ) {
 					$param{Quantity} = @quantities > 1 ? shift @quantities : $quantities[0] if @quantities;
-					my $Skid = new openprint::Skid( $skid_id );
 					$Skid->id( $skid_id );
 					save_Skid( $Skid );
+				} else {
+					if ( $param{rfidtag_id} and  ( $Skid->rfidtag_id() ne $param{rfidtag_id} ) ) {
+						$Skid->rfidtag_id( $param{rfidtag_id} );
+						$variable{error} .= $Skid->save();
+					} # end if
 				} # end if
 				if ( $param{'verification_code'} ) {
 					$param{'verification_code'} =~ s/^[Vv](.*)$/$1/;
@@ -1616,6 +1620,7 @@ sub _manifest_content {
 		$variable{'Manifest'} = $C->Manifest();
 		$variable{'error'} .= $C->delete();
 	} elsif ( $param{'action'} eq 'Add' ) {
+		# The goal is to store as much info as possible in the manifest, but not commit to the other objects until we Submit the manifest.
 		if ( ! $param{manifest_id} ) {
 			$variable{error} .= 'No manifest id. Please enter the manifest id before adding items to it.<br/>';
 			return;
@@ -1633,7 +1638,7 @@ sub _manifest_content {
 		if ( $param{'rfidtag_id'} or $param{'skid_id'} or $param{manufacturers_id} ) {
 			@param{'rfidtag_id','skid_id','manufacturers_id'} = misc::trim(@param{'rfidtag_id','skid_id','manufacturers_id'});
 			my $Tag = new openprint::RFIDTag( $param{'rfidtag_id'} );
-			$variable{'error'} .= $Tag->save({'id'=>$param{'rfidtag_id'}}) if $param{'rfidtag_id'} and ! $Tag->id();
+			$variable{error} .= $Tag->save({id=>$param{rfidtag_id}}) if $param{rfidtag_id} and ! $Tag->id();
 
 			my $Skid = new openprint::Skid( $param{'skid_id'} );
 			$Skid = $Tag->Skid() if $Tag->id() and ! $Skid->id();
@@ -1656,63 +1661,70 @@ sub _manifest_content {
 				} # end if
 				# FIXME: Should look at paper type as well.
 			} # end if
-			my $changed=0;
 			if ( ! $Skid->id() ) {
-				$Skid->set({ rfidtag_id=>$Tag->id(),manufacturers_id=>$param{manufacturers_id}});
-			} # end if
-			if ( $param{manufacturers_id} and ! $Skid->manufacturers_id() ) {
-				$changed = 1;
-				$Skid->set({manufacturers_id=>$param{manufacturers_id}} );
-			} # end if
-			if ( $param{rfidtag_id} and ! $Skid->rfidtag_id() ) {
-				$changed = 1;
-				$Skid->set({rfidtag_id=>$param{rfidtag_id}} );
-			} # end if
-			if ( $param{location_id} ) {
-				$changed = 1;
-				$Skid->set({location_id=>$param{location_id}} );
-			} # end if
-			if ( $Skid->received_on() ne $Manifest->received_on() ) {
-				$Skid->received_on( $Manifest->received_on() );	
-				$changed = 1;
-			} # end if
-			$variable{error} .= $Skid->save() if $changed or ! $Skid->id();
+				$Skid->set({ rfidtag_id=>$Tag->id(),manufacturers_id=>$param{manufacturers_id},
+					location_id=>$param{location_id},
+						});
+			} else {
+				my $changed=0;
+				if ( $param{manufacturers_id} and ! $Skid->manufacturers_id() ) {
+					$changed = 1;
+					$Skid->set({manufacturers_id=>$param{manufacturers_id}} );
+				} # end if
+				if ( $param{rfidtag_id} and ! $Skid->rfidtag_id() ) {
+					$changed = 1;
+					$Skid->set({rfidtag_id=>$param{rfidtag_id}} );
+				} # end if
+				if ( $param{location_id} ) {
+					$changed = 1;
+					$Skid->set({location_id=>$param{location_id}} );
+				} # end if
+				if ( $Skid->received_on() ne $Manifest->received_on() ) {
+					$Skid->received_on( $Manifest->received_on() );	
+					$changed = 1;
+				} # end if
+				$variable{error} .= $Skid->save() if $changed;
+			} # end if SKid->id()
 			return if $variable{'error'};
 
-			if ( $Tag->id() and sets::isin( $Tag->id(), map { $_->Skid()->rfidtag_id() } $Manifest->Contents() ) ) {
+			if ( $Tag->id() and sets::isin( $Tag->id(), [ map { $_->rfidtag_id() } $Manifest->Contents() ] ) ) {
 				$variable{'error'} .= 'RFID Tag ' . $Tag->id() . ' has already been entered.';
-			} elsif ( $Skid->id() and sets::isin( $Skid->id(), map { $_->skid_id() } $Manifest->Contents() ) ) {
+			} elsif ( $Skid->id() and sets::isin( $Skid->id(), [ map { $_->skid_id() } $Manifest->Contents() ] ) ) {
 				$variable{'error'} .= 'Skid ' . $Skid->id(). ' has already been entered.';
-			} else {
+			} elsif ( $param{manufacturers_id} and sets::isin( $param{manufacturers_id}, [ map { $_->manufacturers_id() } $Manifest->Contents() ] ) ) {
+				$variable{'error'} .= 'Manufacturers id ' . $param{manufacturers_id} . ' has already been entered.';
+			} # end if
+
+			# Hard errors
+			return if $variable{'error'};
+
+			my $MC = new openprint::ManifestContent();
+			if ( $$Skid{id} ) {
+# Now check for warnings
 				if ( my $otherMC = openprint::ManifestContent->find_one('skid_id'=>$$Skid{id}) ) {
 					$variable{'warning'} .= 'Warning: Skid ' . $Skid->id(). ' is also on manifest '.$otherMC->Manifest()->name().'.';
 				} # end if
-				my $MC = new openprint::ManifestContent();
+
+				# Auto load data
 				my @SC = $Skid->Contents();
-				#if ( ! @SC ) {
-					# If skid didn't exist, then it won't have contents.
-					#@SC = ( new openprint::SkidContent() );
-					#$SC[0]->set({ skid_id=>$Skid->id(), paper_id=>$Type->paper_id(), 
-							#( $param{qty_lbs} ? ( quantity=>$param{qty_lbs} ) : () )  });
 				if ( ! $param{qty_lbs} ) {
 					if ( @SC == 1 ) {
 						$param{qty_lbs} = $SC[0]->quantity();
 					} # end if
 				} # end if
-				$variable{'error'} .= $MC->save( {
-						type_id		=>	$param{'type_id'},
-						skid_id		=>	$Skid->id(),
-						manifest_id	=>	$Manifest->id(),
-						docket		=>	$param{'docket'},
-						quantity	=>	Math::Round::nearest( 1, $param{qty_lbs}),
-						} );
-				foreach my $SkidContent ( @SC ) {
-					$SkidContent->save({'manifestcontent_id'=>$MC->id()}) if $SkidContent->manifestcontent_id() != $MC->id();
-				} # end foreach SkidContent
-				$variable{'C'} = $MC;
-				$variable{'type_id'} = $param{'type_id'};
-				$variable{'Type'} = new openprint::Manifest_Content_Type( $param{'type_id'} );
 			} # end if
+			$variable{error} .= $MC->save( {
+					type_id		=>	$param{type_id},
+					Skid		=>	$Skid,
+					rfidtag_id	=>	$Tag->id(),
+					manifest_id	=>	$Manifest->id(),
+					manufacturers_id	=>	$param{manufacturers_id},
+					docket		=>	$param{'docket'},
+					quantity	=>	Math::Round::nearest( 1, $param{quantity} ),
+					} );
+			$variable{'C'} = $MC;
+			$variable{'type_id'} = $param{'type_id'};
+			$variable{'Type'} = $Type;
 		} else {
 			$variable{error} .= 'No RFID, Skid ID or manufacturers id given.  No changes made.<br/>';
 		} # end if

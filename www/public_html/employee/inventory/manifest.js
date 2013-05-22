@@ -3,17 +3,15 @@ function from_lbs( e, type_id, c_id ) {
 	var lbs = parseFloat(1*form.elements['qty_lbs-'+type_id+'-'+c_id].value);
 	form.elements['qty_kgs-'+type_id+'-'+c_id].value = do_decimals( lbs / 2.2046, 1 );
 
-	var type = get_value( form.elements['type-'+type_id] ) == 'Roll';
+	var type = get_value( form.elements['type-'+type_id] );
 
+	var wpsi = parseFloat(1*form.elements['gsm-'+type_id].value) / 703064.5;
+	var width = parseFloat(1*form.elements['width-'+type_id].value);
 	if ( type == 'Roll' ) {
-		var wpsi = parseFloat(1*form.elements['gsm-'+type_id].value) / 703064.5;
-		var width = parseFloat(1*form.elements['width-'+type_id].value);
 		if ( wpsi && width ) {
 			form.elements['qty_feet-'+type_id+'-'+c_id].value = do_decimals(((lbs/wpsi)/width)/12,0);
 		} // end if
 	} else if ( type == 'Sheet' ) {
-		var wpsi = parseFloat(1*form.elements['gsm-'+type_id].value) / 703064.5;
-		var width = parseFloat(1*form.elements['width-'+type_id].value);
 		var height = parseFloat(1*form.elements['height-'+type_id].value);
 		if ( wpsi && width && height ) {
 			form.elements['qty_sheets-'+type_id+'-'+c_id].value = do_decimals(((lbs/wpsi)/(width*height))/12,0);
@@ -27,17 +25,15 @@ function from_kg( e, type_id, c_id ) {
 	var lbs = kgs * 2.2046;
 
 	form.elements['qty_lbs-'+type_id+'-'+c_id].value = do_decimals( lbs, 0 );
-	var type = get_value( form.elements['type-'+type_id] ) == 'Roll';
+	var type = get_value( form.elements['type-'+type_id] );
 
+	var wpsi = parseFloat(1*form.elements['gsm-'+type_id].value)/ 703064.5;
+	var width = parseFloat(1*form.elements['width-'+type_id].value);
 	if ( type == 'Roll' ) {
-		var wpsi = parseFloat(1*form.elements['gsm-'+type_id].value)/ 703064.5;
-		var width = parseFloat(1*form.elements['width-'+type_id].value);
 		if ( wpsi && width ) {
 			form.elements['qty_feet-'+type_id+'-'+c_id].value = do_decimals(((lbs/wpsi)/width)/12,0);
 		} 
 	} else if ( type == 'Sheet' ) {
-		var wpsi = parseFloat(1*form.elements['gsm-'+type_id].value) / 703064.5;
-		var width = parseFloat(1*form.elements['width-'+type_id].value);
 		var height = parseFloat(1*form.elements['height-'+type_id].value);
 		if ( wpsi && width && height ) {
 			form.elements['qty_sheets-'+type_id+'-'+c_id].value = do_decimals(((lbs/wpsi)/(width*height))/12,0);
@@ -103,6 +99,8 @@ function delete_content( c_id ) {
 } // end function delete_conetnt( c_id )
 
 function add_content(form, type_id) {
+	var type =	$('type-'+type_id);
+
 	new Ajax.Request( '_manifest_content.html', {
 			parameters: {
 				action:		'Add',
@@ -111,7 +109,7 @@ function add_content(form, type_id) {
 				rfidtag_id: $('rfidtag_id-'+type_id+'-').value,
 				skid_id:    $('skid_id-'+type_id+'-').value,
 				docket:     $('docket-'+type_id+'-').value,
-				qty_lbs:    $('qty_lbs-'+type_id+'-').value,
+				quantity:	(type == 'Sheet' ? $('qty_sheets-'+type_id+'-').value : $('qty_lbs-'+type_id+'-').value ),
 				manufacturers_id:	$('manufacturers_id-'+type_id+'-').value,
 				location_id: $('location_id-'+type_id+'-').value
 			},

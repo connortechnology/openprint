@@ -18,11 +18,14 @@ $table = 'manifestcontents';
 $serial = 'manifestcontents_id_seq';
 
 %fields = (
-	'id'				=>	'id',
-	'manifest_id'		=>	'manifest_id',
-	'skid_id'			=>	'skid_id',
-	'quantity'			=>	'quantity',
-	'type_id'			=>	'type_id',
+	id				=>	'id',
+	manifest_id		=>	'manifest_id',
+	skid_id			=>	'skid_id',
+	Skid			=>	undef,
+	quantity			=>	'quantity',
+	type_id			=>	'type_id',
+	rfidtag_id			=>	'rfidtag_id',
+	manufacturers_id	=>	'manufacturers_id',
 );
 %find_fields = (
 	'paper_id'	=>	'(SELECT paper_id FROM Manifest_Content_Types WHERE manifest_content_types.manifest_id = manifestcontents.manifest_id)',
@@ -34,11 +37,21 @@ $serial = 'manifestcontents_id_seq';
 );
 
 %defaults = (
-	'quantity'	=> 0,
+	quantity			=> 0,
+	manufacturers_id	=>	undef,
+	skid_id				=>	undef,
+	rfidtag_id			=>	undef,
 );
 
 sub Skid {
-	return new openprint::Skid( $_[0]{skid_id} );
+	if ( @_ > 1 ) {
+		$_[0]{Skid} = $_[1];
+		$_[0]{skid_id} = ref $_[0]{Skid} eq 'openprint::Skid' ? $_[0]{Skid}{id} : undef;
+	} # end if
+	if ( ! $_[0]{Skid} ) {
+		$_[0]{Skid} = new openprint::Skid( $_[0]{skid_id} );
+	} # end if
+	return $_[0]{Skid};
 } # end sub Skid
 
 sub Manifest {
@@ -93,5 +106,17 @@ sub delete {
 	} # end foreach
 	$_[0]->SUPER::delete();
 } # end sub delete
+
+sub manufacturers_id {
+	if ( @_ > 1 ) {
+		$_[0]{manufacturers_id} = $_[1];
+	} # end if
+	if ( ( ! $_[0]{manufacturers_id} ) and $_[0]{skid_id} ) {
+		my $Skid = new openprint::Skid( $_[0]{skid_id} );
+		$_[0]{manufacturers_id} = $Skid->manufacturers_id();
+	} # end if
+	return $_[0]{manufacturers_id};
+} # end sub manufacturers_id
+
 1;
 __END__
