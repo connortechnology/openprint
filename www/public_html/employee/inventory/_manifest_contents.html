@@ -20,7 +20,6 @@
 		<th class="in_stock">In Stock</th>
 		<th class="last_seen">Last Seen</th>
 		<th class="Location">Location</th>
-		<th>&nbsp;</th>
 		<th class="buttons">&nbsp;</th>
 	</tr>
 	<tr id="new-<?type_id?>">
@@ -49,7 +48,6 @@ input( type=>'cardinal', id=>'qty_sheets-'.$$variable{type_id}.'-', name=>'qty_s
 		<td class="in_stock">&nbsp;</td>
 		<td class="last_seen">&nbsp;</td>
 		<td class="Location"><? echo ( ssi::select( openprint::Location->dropdown(order=>'parent_id NULLS FIRST, lower(name)'), $param{'location_id-'.$$variable{type_id}.'-'}, { name=>'location_id-'.$$variable{type_id}.'-', id=>'location_id-'.$$variable{type_id}.'-', prepend=>['','select'] } ))?></td>
-		<td>&nbsp;</td>
 		<td class="buttons"><? echo ( ssi::button( 'Add'.$$variable{type_id}, { onclick=>"add_content( \$('f1'), $$variable{type_id} );", text=>'Add' } ); ) ?></td>
 	</tr>
 	<? echo (
@@ -74,7 +72,7 @@ $$variable{type_id}, $lbs, $lbs/2.2046, Number::Format::format_number($total) );
 			$html .= sprintf('<td id="totallbs-%1$d">%2$dlbs</td><td id="totalkgs-%1$d">%3$.4fkg</td><td id="totalfeet-%1$d" class="qty_feet">%4$dfeet</td>',
 				$$variable{type_id}, $total, $total/2.2046, ( ( $Paper->wpsi() and $Paper->width() ) ? (($total/$Paper->wpsi())/$Paper->width())/12 : 0 ) );
 		} #end if
-		$html .= '<td colspan="5">&nbsp;</td></tr>';
+		$html .= '<td colspan="4">&nbsp;</td></tr>';
 		return $html;
 	) ?>
 </table>

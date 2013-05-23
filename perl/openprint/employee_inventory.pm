@@ -1653,13 +1653,16 @@ sub _manifest_content {
 		} # end if
 
 		@param{'rfidtag_id','skid_id','manufacturers_id'} = misc::trim(@param{'rfidtag_id','skid_id','manufacturers_id'});
-		my $Tag = new openprint::RFIDTag( $param{rfidtag_id} );
 		my $Skid = new openprint::Skid( $param{skid_id} );
-		if ( ! $Tag->id() ) {
-			$Tag->id($param{'rfidtag_id'});
-			$_ = $Tag->is_invalid_id();
-			$variable{error} .= $_ if $_;
-		} else {
+
+		my $Tag = new openprint::RFIDTag( $param{rfidtag_id} );
+		if ( $param{rfidtag_id} and ! $Tag->id() ) {
+			if ( ! openprint::RFIDTag::is_invalid_id($param{rfidtag_id}) ) {
+				$Tag->save({id=>$param{'rfidtag_id'}});
+			} else {
+				$Tag->id($param{rfidtag_id});
+			} # end if
+		} elsif ( $Tag->id() ) {
 			$Skid = $Tag->Skid() if $Tag->id() and ! $Skid->id();
 		} # end if
 
@@ -1678,6 +1681,10 @@ sub _manifest_content {
 				} # end if
 			} # end if
 # FIXME: Should look at paper type as well.
+		} # end if
+
+		if ( ( ! $Tag->id() ) and $Skid and $Skid->rfidtag_id() ) {
+			$Tag = $Skid->RFIDTag();
 		} # end if
 
 		if ( $Tag->id() and sets::isin( $Tag->id(), [ map { $_->rfidtag_id() } $Manifest->Contents() ] ) ) {
