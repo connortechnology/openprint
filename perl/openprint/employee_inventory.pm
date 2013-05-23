@@ -1403,7 +1403,7 @@ sub manifest {
 				# If there is a change of paper in the type, then go through each skid and update them, nicluding allocations, and add a log entry so we know that it happened.
 				if ( $Type->paper_id() and ( $Type->paper_id() != $Paper->id() ) ) {
 					$variable{'information'} .= 'Skid contents have been changed from ' . $Type->Paper()->to_string() . ' to ' . $Paper->to_string().'<br/>';
-					foreach my $C ( $Manifest->Contents( 'type_id' => $Type->id() ) ) {
+					foreach my $C ( $Manifest->Contents( type_id => $Type->id() ) ) {
 						foreach my $SkidContent ( $C->Skid()->Contents() ) {
 							# If it has the old type,
 							if ( $SkidContent->paper_id() == $Type->paper_id() ) {
@@ -1462,9 +1462,13 @@ sub manifest {
 
 					if ( $param{"manufacturers_id-$$Type{id}-"} ) {
 						if ( my $S = openprint::Skid->find_one(manufacturers_id=>$param{"manufacturers_id-$$Type{id}-"}) ) {
-							if ( $S->id() != $Skid->id() ) {
-								$variable{error} .= 'Manufacturers ID '.$param{"manufacturers_id-$$Type{id}-"}." is already assigned to <a href=\"/employee/inventory/skid_details.html?skid_id=$$S{id}\">$$S{id}</a>.<br/>";
-								delete $param{"manufacturers_id-$$Type{id}-"};
+							if ( $Skid ) {
+								if ( $S->id() != $Skid->id() ) {
+									$variable{error} .= 'Manufacturers ID '.$param{"manufacturers_id-$$Type{id}-"}." is already assigned to <a href=\"/employee/inventory/skid_details.html?skid_id=$$S{id}\">$$S{id}</a>.<br/>";
+									delete $param{"manufacturers_id-$$Type{id}-"};
+								} # end if
+							} else {
+								$Skid = $S;
 							} # end if
 						} # end if
 					} # end if
@@ -1501,6 +1505,21 @@ sub manifest {
 				# Save data for the rest of the contents
 				foreach my $MC ( $Manifest->Contents( type_id => $$Type{id} ) ) {
 					my $Skid = $MC->Skid();
+					if ( $param{"manufacturers_id-$$Type{id}-$$MC{id}"} ) {
+						if ( my $S = openprint::Skid->find_one(manufacturers_id=>$param{"manufacturers_id-$$Type{id}-$$MC{id}"}) ) {
+							if ( $Skid->id() ) {
+								if ( $S->id() != $Skid->id() ) {
+									$variable{error} .= "Manufacturers ID is already assigned to <a href=\"/employee/inventory/skid_details.html?skid_id=$$S{id}\">$$S{id}</a>.<br/>";
+									delete $param{"manufacturers_id-$$Type{id}-$$MC{id}"};
+								} # end if
+							} else {
+								$Skid = $S;
+							} # end if
+						} # end if
+						$variable{error} .= $Skid->save({manufacturers_id=>$param{"manufacturers_id-$$Type{id}-$$MC{id}"}}) if $param{"manufacturers_id-$$Type{id}-$$MC{id}"} and ! $Skid->manufacturers_id();
+					} # end if
+					$variable{error} .= $Skid->save() if ! $Skid->id();
+					$variable{error} .= $MC->save({skid_id=>$$Skid{id}}) if $MC->skid_id() != $$Skid{id};
 
 					my $checked_out = openprint::PaperInventory::find('skid_id'=>$Skid->id(), 'paper_id'=>$Type->paper_id(), 'comment_like'=>'Checked out%' ) ? 1 : 0; 
 					my $qty_param = $Type->type() eq 'Sheet' ? "qty_sheets-$$Type{id}-$$MC{id}" : "qty_lbs-$$Type{id}-$$MC{id}";
@@ -1535,16 +1554,6 @@ sub manifest {
 						} # end if
 					} # end if
 
-					if ( $param{"manufacturers_id-$$Type{id}-$$MC{id}"} ) {
-						if ( my $S = openprint::Skid->find_one(manufacturers_id=>$param{"manufacturers_id-$$Type{id}-$$MC{id}"}) ) {
-							if ( $S->id() != $Skid->id() ) {
-								$variable{error} .= "Manufacturers ID is already assigned to <a href=\"/employee/inventory/skid_details.html?skid_id=$$S{id}\">$$S{id}</a>.<br/>";
-								delete $param{"manufacturers_id-$$Type{id}-$$MC{id}"};
-							} # end if
-						} # end if
-					} # end if
-
-					$variable{error} .= $Skid->save({manufacturers_id=>$param{"manufacturers_id-$$Type{id}-$$MC{id}"}}) if $param{"manufacturers_id-$$Type{id}-$$MC{id}"} and ! $Skid->manufacturers_id();
 				} # end foreach Manifest_Content for this type
 
 if ( 0 ) {

@@ -85,7 +85,7 @@ sub find {
 		$sql .= ' AND (SELECT SUM(quantity) FROM Paper_Allocations WHERE Paper_Allocations.skid_id=Skid_Contents.skid_id AND paper_allocations.paper_id=Skid_Contents.paper_id) IS NOT NULL';
 	} # end if
 	if ( $params{'manifestcontent_id'} ) {
-		$sql .= ' AND manifestcontent_id=?';
+		$sql .= ' AND ? IN (SELECT id FROM ManifestContents WHERE manifestcontents.skid_id=skid_contents.skid_id)';
 		push @values, $params{'manifestcontent_id'};
 	} # end if
 
