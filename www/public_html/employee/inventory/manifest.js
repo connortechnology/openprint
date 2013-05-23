@@ -98,7 +98,8 @@ function delete_content( c_id ) {
 } // end function delete_conetnt( c_id )
 
 function add_content(form, type_id) {
-	var type =	$('type-'+type_id);
+	var type =	form.elements['type-'+type_id];
+	type = get_value( type );
 
 	new Ajax.Request( '_manifest_content.html', {
 			parameters: {
