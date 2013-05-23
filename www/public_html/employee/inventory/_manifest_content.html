@@ -28,6 +28,9 @@ tr.remove();
 		} elsif ( @SkidContents and ( $SkidContents[0]->paper_id() != $$variable{'Type'}->paper_id() ) ) {
 			$error = 'Skid contents do not match manifest.';
 		} # end if
+		if ( $_ = $RFIDTag->is_invalid_id() ) {
+			$error .= $_;
+		} # end if
 
 		my $id = $$variable{'type_id'}.'-'.$$C{id};
 			
