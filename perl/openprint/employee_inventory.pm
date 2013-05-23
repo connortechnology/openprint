@@ -1927,14 +1927,14 @@ sub _rfidtag_log {
 sub _rfidtag_log_entries {
 	@param{'end_year','end_month','end_day'} = Date::Calc::Today() if ! $param{'end_year'};
 	@param{'start_year','start_month','start_day'} =(0,0,0) if ! $param{'start_year'};
-	$param{'limit'} = 10 if ! $param{'limit'};
-	@{$variable{'Entries'}} = openprint::RFIDTagHistory->find( 
+	$param{'limit'} = 10 if ! exists $param{'limit'};
+	$variable{'Entries'} = [ openprint::RFIDTagHistory->find( 
 		'rfidtag_id'	=>	$param{'rfidtag_id'},
 ssi::date_filter( 'start', 'updated_on_start', \%param ),
 ssi::date_filter( 'end', 'updated_on_end', \%param ),
 		'order'	 =>	'updated_on DESC',
 		'limit'	 =>	$param{'limit'},
-		);
+		) ];
 
 	# This is to auto-load the start year
 	if ( ! @{$variable{'Entries'}} ) {
