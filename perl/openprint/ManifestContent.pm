@@ -10,6 +10,7 @@ use vars qw( $debug $table $serial %fields %find_fields %transforms %defaults );
 require openprint::Manifest_Content_Type;
 require openprint::Manifest;
 require openprint::Skid;
+require openprint::RFIDTag;
 require openprint::SkidContent;
 
 $debug = 1;
@@ -32,8 +33,9 @@ $serial = 'manifestcontents_id_seq';
 );
 
 %transforms = (
-	'quantity'	=> [ 's/\D//g' ],
-	'type_id'	=> [ 's/\D//g' ],
+	quantity	=> [ 's/\D//g' ],
+	type_id		=> [ 's/\D//g' ],
+	manufacturers_id	=>	[ 'tr/[a-z]/[A-Z]/' ],
 );
 
 %defaults = (
@@ -53,6 +55,17 @@ sub Skid {
 	} # end if
 	return $_[0]{Skid};
 } # end sub Skid
+
+sub RFIDTag {
+	if ( @_ > 1 ) {
+		$_[0]{RFIDTag} = $_[1];
+		$_[0]{rfidtag_id} = ref $_[0]{RFIDTag} eq 'openprint::RFIDTag' ? $_[0]{RFIDTag}{id} : undef;
+	} # end if
+	if ( ! $_[0]{RFIDTag} ) {
+		$_[0]{RFIDTag} = new openprint::RFIDTag( $_[0]{rfidtag_id} );
+	} # end if
+	return $_[0]{RFIDTag};
+} # end sub RFIDTag
 
 sub Manifest {
 	return new openprint::Manifest( $_[0]{manifest_id} );

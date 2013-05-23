@@ -232,12 +232,7 @@ $openprint::log->debug("Running $field with $$params{$field}") if $debug;
 		} # end if
 
 		if ( defined $fields{$field} ) {
-			my @transforms = eval('@{$'.$type.'::transforms{$field}}');
-			$openprint::log->debug("Transforms: @transforms") if $debug;
-
-			foreach my $transform ( @transforms ) {
-				eval '$$self{$field} =~ ' . $transform;
-			} # end foreach
+			$$self{$field} = transform( $type, $field, $$self{$field} );
 
 			if ( ( ( ! defined $$self{$field} ) or ( $$self{$field} eq '' ) ) and exists $defaults{$field} ) {
 				$openprint::log->debug("Setting default ($field) ($$self{$field}) ($defaults{$field}) ") if $debug;
@@ -593,13 +588,24 @@ sub transform {
 
 	if ( defined $$fields{$_[1]} ) {
 		my @transforms = eval('@{$'.$type.'::transforms{$_[1]}}');
-		$openprint::log->debug("Transforms: @transforms") if $debug;
+		$openprint::log->debug("Transforms for $_[1] before $_[2]: @transforms") if $debug;
 
 		foreach my $transform ( @transforms ) {
-			eval '$_[2] =~ ' . $transform;
+			if ( $transform =~ /^s\// or $transform =~ /^tr\// ) {
+				eval '$_[2] =~ ' . $transform;
+			} elsif ( $transform =~ /^<(\d+)/ ) {
+				if ( $_[2] > $1 ) {
+					$_[2] = undef;
+				} # end if
+			} else {
+				$openprint::log->debug("evalling $_[2] ".$transform . " Now value is $_[2]" );
+				eval '$_[2] '.$transform;
+				$openprint::log->error("Eval error $@") if $@;
+			} # end if
+			$openprint::log->debug("After $transform: $_[2]") if $debug;
 		} # end foreach
 	} else {
-		$openprint::log->error("$_[1] not in fields for $type");
+		$openprint::log->error("Object::transform $_[1] not in fields for $type");
 	} # end if
 	return $_[2];
 

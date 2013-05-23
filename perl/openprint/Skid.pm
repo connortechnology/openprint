@@ -41,6 +41,7 @@ $serial = 'skid_id_seq';
 
 %transforms = (
 	deleted	=>	[ 's/[^01]//g' ],
+	manufacturers_id	=>	[ 'tr/[a-z]/[A-Z]/' ],
 );
 %defaults = (
 	location_id	=>	undef,

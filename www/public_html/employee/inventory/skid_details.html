@@ -173,11 +173,11 @@
 					} # end if
 					$html .= ssi::button( 'save', { onclick=>"if( check_inputs( f1 ) ){f1.btnFunction.value='Save';f1.submit();}", href=>'', text=>'Save' } );
 					if ( $$variable{'Skid'}->id() ) {
-						if ( $$variable{'Skid'}->deleted() ) {
+						#if ( $$variable{'Skid'}->deleted() ) {
 							$html .= ssi::button( 'destroy', { onclick=>"f1.action='skids.html?skid_id=$$variable{Skid}{id}';f1.btnFunction.value='Destroy';f1.submit();", href=>'', text=>'Destroy' } );
-						} else {
-							$html .= ssi::button( 'delete', { onclick=>"if(confirm('You should never do this. You should just check out the contents of the skid.  Are you sure?')){f1.action='skids.html?skid_id=$$variable{Skid}{id}';f1.btnFunction.value='Delete';f1.submit();}", href=>'', text=>'Delete' } );
-						} # end if
+						#} else {
+							#$html .= ssi::button( 'delete', { onclick=>"if(confirm('You should never do this. You should just check out the contents of the skid.  Are you sure?')){f1.action='skids.html?skid_id=$$variable{Skid}{id}';f1.btnFunction.value='Delete';f1.submit();}", href=>'', text=>'Delete' } );
+						#} # end if
 					} # end if
 					$html .= ssi::button( 'reset', { onclick=>'f1.reset();', href=>'', text=>'Reset' } );
 					#$html .= ssi::button( 'clear', { onclick=>'clearForm(f1);', href=>'', text=>'Clear' } );

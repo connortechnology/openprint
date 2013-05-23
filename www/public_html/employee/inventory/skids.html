@@ -1,5 +1,8 @@
 <script type="text/javascript" src="<?hash_link(/javascripts/barcode.js)?>"></script>
 <script type="text/javascript">
+	function submit_handler() {
+		calc();
+	}
 	function calc() {
 		AjaxLoadContent( 'Results', '/employee/inventory/_skids_results.html', $('f1').serialize() );
 	}
@@ -30,7 +33,7 @@ Please select a Skid to view/edit.<br/>
 		<li class="manufacturers_id">
 			<label for="manufacturers_id">Manufacturers ID</label>
 			<? echo ( join("\n",
-						input( type=>'text', id=>'manufacturers_id', name=>'manufacturers_id', onchange=>'change_handler(this);', 
+						input( type=>'text', id=>'manufacturers_id', name=>'manufacturers_id', 
 							onkeypress=>'return input_handler(this,event);', onkeydown=>'if(event.keyCode==13){submit_handler(f1);}' ),
 						ssi::button( 'GoManufacturers', { onclick=>'calc();',text=>'Go' } ),
 						); ) ?>

@@ -1502,7 +1502,7 @@ sub manifest {
 				foreach my $MC ( $Manifest->Contents( type_id => $$Type{id} ) ) {
 					my $Skid = $MC->Skid();
 
-					my $checked_out = openprint::PaperInventory::find('skid_id'=>$Skid->id(), 'paper_id'=>undef, 'comment_like'=>'Checked out%' ) ? 1 : 0; 
+					my $checked_out = openprint::PaperInventory::find('skid_id'=>$Skid->id(), 'paper_id'=>$Type->paper_id(), 'comment_like'=>'Checked out%' ) ? 1 : 0; 
 					my $qty_param = $Type->type() eq 'Sheet' ? "qty_sheets-$$Type{id}-$$MC{id}" : "qty_lbs-$$Type{id}-$$MC{id}";
 
 					if ( exists $param{$qty_param} and ( $MC->quantity() != $param{$qty_param} ) ) {

@@ -90,9 +90,8 @@ function delete_content( c_id ) {
 		parameters: { content_id: c_id, action: 'Remove' },
 		onSuccess: function(transport){
 			var tr = $('tr-'+c_id);
+			if(!tr){alert('tr not found');}
 			new Insertion.After(tr, transport.responseText);
-			//new Insertion.After('tr-'+c_id, transport.responseText);
-			if(!tr){alert('tr not found');}else{tr.remove();}
 		},
 		evalScripts: true
 	 } );

@@ -3,20 +3,25 @@
 	my $html = '';
 	if ( $variable{'error'} ) {
 		$variable{error} =~ s/<br\/>//g;
+		$variable{error} =~ s/\n/ /g;
 		$html .= qq`<script type="text/javascript">alert('$$variable{error}');</script>`;
-		delete $variable{error};
 	} elsif ( $variable{warning} ) {
 		$variable{warning} =~ s/<br\/>//g;
 		$html .= qq`<script type="text/javascript">alert('$$variable{warning}');</script>`;
-		delete $variable{warning};
 	} 
-	if ( $$variable{'C'} ) {
+	if ( ( $param{action} eq 'Remove' ) and ! $variable{error} ) {
+$html .= qq`<script type="text/javascript">
+var tr = \$('tr-$param{content_id}');
+tr.remove();
+</script>
+`;
+	} elsif ( $$variable{'C'} ) {
 		my $C = $$variable{'C'};
 		my $Type = $C->Type();
 		my $Paper = $Type->Paper();
 		my $Skid = $C->Skid();
 		my $tag_id = $Skid->rfidtag_id();
-		my $RFIDTag = $Skid->RFIDTag();
+		my $RFIDTag = $C->RFIDTag();
 		my $error;
 		my @SkidContents = $Skid->Contents();
 		if ( @SkidContents > 1 ) {
@@ -28,7 +33,11 @@
 		my $id = $$variable{'type_id'}.'-'.$$C{id};
 			
 		$html .= sprintf('<tr id="tr-%1$d" title="%1$d"><td class="RFID"><a href="/employee/inventory/rfidtag_details.html?rfidtag_id=%2$s">%3$s</a></td>', $C->id(), $RFIDTag->id(), $RFIDTag->id_short() );
-		$html .= sprintf('<td class="Skid"><a href="/employee/inventory/skid_details.html?skid_id=%1$d">%1$d</a></td>', $C->skid_id() );
+		if ( $C->skid_id() ) {
+			$html .= sprintf('<td class="Skid"><a href="/employee/inventory/skid_details.html?skid_id=%1$d">%1$d</a></td>', $C->skid_id() );
+		} else {
+			$html .= '<td class="Skid">'.input(type=>'cardinal',name=>'skid_id-'.$id, id=>'skid_id-'.$id ).'</td>';
+		} # end if
 	
 		$html .= '<td class="ManufacturersID">';
 		if ( $C->manufacturers_id() ) {
@@ -53,6 +62,7 @@
 					name	=>	'qty_lbs-'.$id,
 					value	=>	$lbs,
 					onkeyup	=>	"from_lbs(this,'$$variable{type_id}','$$C{id}');",
+					onchange=>	'this.onkeyup();',
 					) . '</td>';
 			$html .= '<td class="qty_kgs">'.ssi::input( type=>'float', 
 					id		=>	'qty_kgs-'.$id,
