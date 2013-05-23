@@ -53,6 +53,7 @@ $serial = 'manifest_content_types_id_seq';
 	po_content_id	=>	undef,
 	paper_id		=>	undef,
 	type			=>	undef,
+	item_count		=>	undef,
 );
 
 sub Paper {
