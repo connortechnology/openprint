@@ -1393,7 +1393,7 @@ sub manifest {
 			my $Type = new openprint::Manifest_Content_Type();
 			$variable{error} .= $Type->save({ manifest_id=>$Manifest->id()});
 		} else {
-			foreach my $Type ( openprint::Manifest_Content_Type->find('manifest_id'=>$Manifest->id()) ) {
+			foreach my $Type ( openprint::Manifest_Content_Type->find( manifest_id=>$Manifest->id()) ) {
 				my $Paper = save_Paper('-'.$Type->id());
 				if ( ! $Paper ) {
 					$variable{'error'} .= 'Unable to get Stock.<br/>';
@@ -1430,34 +1430,37 @@ sub manifest {
 				} # end if different Paper Type
 
 				my %data = (
-					'docket'	=>	$param{'docket-'.$Type->id()},
-					'paper_id'	=>	$Paper->id(),
-					'po_id'		=>	$param{'po_id-'.$Type->id()},
+					docket		=>	$param{'docket-'.$Type->id()},
+					paper_id	=>	$Paper->id(),
+					po_id		=>	$param{'po_id-'.$Type->id()},
+					manufacturers_name	=>	$param{'manufacturers_name-'.$$Type{id}},
+					item_count	=>	$param{'item_count-'.$$Type{id}},
 				);
 				$data{'cost'} = $param{'cost-'.$Type->id()} if exists $param{'cost-'.$Type->id()};
 				$data{'supplier_invoice'} = $param{'supplier_invoice-'.$Type->id()} if exists $param{'supplier_invoice-'.$Type->id()};
-				$variable{'error'} .= $Type->save(\%data);
+				$variable{error} .= $Type->save(\%data);
 
 				my $Project;
 				if ( $param{'docket-'.$Type->id()} ) {
-					my @Projects = openprint::Project::find('docket'=>$param{'docket-'.$Type->id()});
-					if ( ! @Projects ) {
+					if ( ! ( $Project = openprint::Project->find_one( docket=>$param{'docket-'.$Type->id()}) ) ) {
 						$variable{'error'} .= 'Docket ' . $param{'docket-'.$Type->id()} . ' not found.	No allocations made.<br/>';
-					} else {
-						$Project = $Projects[0];
 					} # end if
 				} # end if
 
+				my $quantity = $Type->type() eq 'Sheet' ? $param{"qty_sheets-$$Type{id}-"} : $param{"qty_lbs-$$Type{id}-"};
 				# Save any new entries that might have been entered but not added.
-				if ( $param{"qty_lbs-$$Type{id}-"} or $param{"qty_sheets-$$Type{id}-"} ) {
+				if ( $quantity ) {
 					@param{"rfidtag_id-$$Type{id}-","skid_id-$$Type{id}-"} = misc::trim(@param{"rfidtag_id-$$Type{id}-","skid_id-$$Type{id}-"});
 
 					my $Skid;
 					my $Tag;
 					if ( $param{"rfidtag_id-$$Type{id}-"} ) {
 						$Tag = new openprint::RFIDTag( $param{"rfidtag_id-$$Type{id}-"} );
-						$variable{'error'} .= $Tag->save({'id'=>$param{"rfidtag_id-$$Type{id}-"}}) if $param{"rfidtag_id-$$Type{id}-"} and ! $Tag->id();
-						$Skid = $Tag->Skid() if $Tag->skid_id();
+						if ( $param{"rfidtag_id-$$Type{id}-"} and ! $Tag->id() ) {
+							$variable{error} .= $Tag->save({ id=>$param{"rfidtag_id-$$Type{id}-"}});
+						} elsif ( $Tag->skid_id() ) {
+							$Skid = $Tag->Skid();
+						} # end if
 					} # end if
 
 					if ( $param{"manufacturers_id-$$Type{id}-"} ) {
@@ -1652,11 +1655,16 @@ sub _manifest_content {
 		@param{'rfidtag_id','skid_id','manufacturers_id'} = misc::trim(@param{'rfidtag_id','skid_id','manufacturers_id'});
 		my $Tag = new openprint::RFIDTag( $param{rfidtag_id} );
 		my $Skid = new openprint::Skid( $param{skid_id} );
-		$Skid = $Tag->Skid() if $Tag->id() and ! $Skid->id();
+		if ( ! $Tag->id() ) {
+			$Tag->id($param{'rfidtag_id'});
+			$_ = $Tag->is_invalid_id();
+			$variable{error} .= $_ if $_;
+		} else {
+			$Skid = $Tag->Skid() if $Tag->id() and ! $Skid->id();
+		} # end if
 
 		if ( $Skid->id() and $Tag->id() and $Skid->rfidtag_id() and ( $Skid->rfidtag_id() != $Tag->id() ) ) {
-			$variable{error}  .= 'Skid already has RFID Tag ' . $Skid->rfidtag_id(). '. Not changing it.<br/>';
-			$Tag = new openprint::RFIDTag();
+			$variable{error}  .= "Skid $$Skid{id} already has RFID Tag " . $Skid->rfidtag_id(). '.<br/>';
 		} # end if
 
 		if ( $param{manufacturers_id} ) {
@@ -1701,7 +1709,7 @@ sub _manifest_content {
 		$variable{error} .= $MC->save( {
 				type_id		=>	$param{type_id},
 				Skid		=>	$Skid,
-				rfidtag_id	=>	$Tag->id(),
+				RFIDTag		=>	$Tag,
 				manifest_id	=>	$Manifest->id(),
 				manufacturers_id	=>	$param{manufacturers_id},
 				docket		=>	$param{docket},

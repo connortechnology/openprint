@@ -26,6 +26,7 @@ $serial = 'manifestcontents_id_seq';
 	quantity			=>	'quantity',
 	type_id			=>	'type_id',
 	rfidtag_id			=>	'rfidtag_id',
+	RFIDTag				=>	undef,
 	manufacturers_id	=>	'manufacturers_id',
 );
 %find_fields = (
@@ -63,6 +64,10 @@ sub RFIDTag {
 	} # end if
 	if ( ! $_[0]{RFIDTag} ) {
 		$_[0]{RFIDTag} = new openprint::RFIDTag( $_[0]{rfidtag_id} );
+		if ( ! $_[0]{RFIDTag}->id() ) {
+			$_[0]{RFIDTag} = new openprint::RFIDTag();
+			$_[0]{RFIDTag}->id( $_[0]{rfidtag_id} );
+		} # end if
 	} # end if
 	return $_[0]{RFIDTag};
 } # end sub RFIDTag
