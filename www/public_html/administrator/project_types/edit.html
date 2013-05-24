@@ -87,6 +87,7 @@
 		</li>
 		</ul>
 	</fieldset><!-- Column -->
+<<<<<<< HEAD
 	<fieldset class="rightColumn RequiredServices"> 
 		<legend>Required Services</legend>
 		<ul> 
@@ -95,9 +96,33 @@
 			[ map { $_->id(), $_->description() } openprint::ServiceType->find('order'=>'lower(name)') ],
 			[ $$variable{'ProjectType'}->required_services() ],
 			{ container=>['<li>','</li>'] }
+=======
+	<br class="spacer"/>
+	<fieldset class="leftColumn"> 
+		<legend>Required Services</legend>
+		<p> 
+			<select multiple="multiple" id="required_services" name="required_services" size="4">
+<? echo (
+		return ssi::make_drop_down(
+			[ map { $_->id(), $_->name() } openprint::ServiceType->find( order=>'lower(name)') ],
+			[ $$variable{'ProjectType'}->required_services() ]
+>>>>>>> 98c6757b5f552c5f07bb54662a49f7ca6c24d903
 			);
 ) ?>
 		</ul>
+	</fieldset><!-- Column -->
+	<fieldset class="rightColumn"> 
+		<legend>Blocked Services</legend>
+		<p> 
+			<select multiple="multiple" id="blocked_services" name="blocked_services" size="4">
+<? echo (
+		return ssi::make_drop_down(
+			[ map { $_->id(), $_->name() } openprint::ServiceType->find( order=>'lower(name)') ],
+			[ $$variable{ProjectType}->blocked_services() ]
+			);
+) ?>
+			</select>
+		</p>
 	</fieldset><!-- Column -->
 	<br class="spacer"/>
 <? if ( $$variable{'ProjectType'}->id() ) ?>
@@ -107,5 +132,6 @@
 		</div>	
 	</fieldset>
 <? endif ( $$variable{'ProjectType'}->id() ) ?>
+	<br class="spacer"/>
 	<input type="hidden" name="btnFunction"/>
 </form>

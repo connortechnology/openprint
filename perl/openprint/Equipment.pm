@@ -261,24 +261,23 @@ sub specification {
 sub Specification {
 	my ( $self, $name, $range, $debug ) = @_;
 
-
-	if ( ! $$self{'Specifications'} ) {
-		return if ! $$self{'id'};
-		foreach ( openprint::EquipmentSpecification->find( 'equipment_id'=>$$self{'id'}, 'order'=>'dblmin NULLS FIRST,dblmax NULLS FIRST' ) ) {
-			push @{$$self{'Specifications'}{$_->name()}}, $_;
+	if ( ! $$self{Specifications} ) {
+		return if ! $$self{id};
+		foreach ( openprint::EquipmentSpecification->find( equipment_id=>$$self{id}, order=>'dblmin NULLS FIRST,dblmax NULLS FIRST' ) ) {
+			push @{$$self{Specifications}{$_->name()}}, $_;
 		} # end foreach
 	} # end if
 
-	if ( ! $$self{'Specifications'} ) {
-		$openprint::log->warn("No specfications for " . $self->name() );
+	if ( ! $$self{Specifications} ) {
+		$openprint::log->debug("Equipment::Specification No specfications for " . $self->to_string() ) if $debug;
 		return;
 	} # end if
-	if ( ! $$self{'Specifications'}{$name} ) {
+	if ( ! $$self{Specifications}{$name} ) {
 		$openprint::log->warn("No specfications for ($name) " . $self->name() ) if $debug;
 		return;
 	} # end if
 
-	return misc::find_entry( $range, $$self{'Specifications'}{$name}, $debug );
+	return misc::find_entry( $range, $$self{Specifications}{$name}, $debug );
 } # end sub specification
 
 sub copy {

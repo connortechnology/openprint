@@ -422,10 +422,12 @@ $log->debug("Presentation folder sizes $$specs{'chkPocketLeft'} $$specs{'chkPock
 			foreach my $option ( @StockOptions ) {
 				if ( ! $$specs{'ddmStock'.$option} ) {
 					$$specs{'alert'} .= 'Please select stock ' . lc $option .'.';
+					sql::end_transaction( $dbh, $ac );
 					return $$specs{'Status'} = 'uncalculated';
 				} # end if
 			} # end foreach option
 		} # end if
+		
 
 		my $colourindex = 1;
 

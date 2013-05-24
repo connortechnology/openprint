@@ -919,7 +919,7 @@ if ( ! sets::isin( 'locations', \@tables ) ) {
 		$dbh->do('ALTER TABLE Locations ADD FOREIGN KEY (album_id) REFERENCES Photo_Albums (id)');
 		die $dbh->errstr() if $dbh->errstr();
 	} # end if
-	$dbh->do('ALTER TABLE Locations DROP CONSTRAINT locations_name_key');
+	$dbh->do('ALTER TABLE Locations DROP CONSTRAINT IF EXISTS locations_name_key');
 	$dbh->do('CREATE INDEX locations_name_idx on locations (name)');
 	if ( ! exists $$data{'deleted'} ) {
 	$dbh->do('ALTER TABLE Locations add deleted BOOLEAN NOT NULL DEFAULT false');
@@ -969,6 +969,7 @@ if ( sets::isin( 'tbl_equipment', \@tables ) ) {
 	
 	if ( exists $$data{strcategory} ) {
 		foreach my $category ( sql::execute( undef,undef, 'SELECT DISTINCT strcategory FROM tbl_equipment' ) ) {
+			next if ! $category;
 			next if sql::execute( undef, undef, 'SELECT name from equipment_categories where name=?', $category );
 			sql::insert( undef, undef, 'equipment_categories', 'name', $category );
 		} # end foreach category
@@ -2740,7 +2741,7 @@ if ( $version < $new_version ) {
 	print "Updating to version $new_version\n";
 	my $ac = sql::start_transaction( $dbh );
 	sql::insert( undef, undef, 'database_info', 'version', $new_version, 'backup', $backup );
-	foreach my $E ( openprint::Equipment->find() ) {
+	foreach my $E ( openprint::Equipment->find(Specifications=>{Type=>'Press'}) ) {
 		if ( ( $_ = $E->specification('Double Overs For Covers') ) and ( $_ eq 'Y' ) ) {
 			sql::insert( undef, undef, 'tbl_Equipment_Specifications',[
 					'lngEquipmentIndex',    $E->id(),
@@ -3224,6 +3225,7 @@ if ( ! sets::isin( 'faults_found', \@tables ) ) {
 		sql::end_transaction( $dbh, $ac );
 	} # end if 
 }
+@sequences = sql::execute( undef, undef, q`SELECT sequence_name FROM information_schema.sequences where sequence_schema='public'`);
 if ( ! sets::isin( 'faults_found_id_seq', \@sequences ) ) {
 	if ( sets::isin( 'fault_found_id_seq', \@sequences ) ) {
 		$dbh->do('ALTER SEQUENCE fault_found_id_seq RENAME TO faults_found_id_seq');
@@ -3411,6 +3413,11 @@ if ( ! sets::isin( 'stockqualities_id_seq', \@sequences ) ) {
 	$dbh->do(q`ALTER TABLE stockqualities ALTER id SET default nextval('stockqualities_id_seq')`);
 	$dbh->do(q`SELECT setval('stockqualities_id_seq', (SELECT max(id) FROM stockqualities))`);
 } # end if
+if ( ! sets::isin( 'event_categories', \@tables ) ) {
+    $dbh->do( misc::load_file( $log, '../openprint/sql/Event_Categories.sql' ) );
+    die $dbh->errstr() if $dbh->errstr();
+} 
+
 if ( ! sets::isin( 'events', \@tables ) ) {
     $dbh->do( misc::load_file( $log, '../openprint/sql/Events.sql' ) );
     die $dbh->errstr() if $dbh->errstr();
