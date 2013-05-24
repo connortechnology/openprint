@@ -118,5 +118,9 @@ sub stream {
 	} # end if
 } # end sub stream
 
+sub _assets {
+    $variable{Object} = $param{object_type}->new( $param{object_id} );
+} # end sub _assets
+
 1;
 __END__

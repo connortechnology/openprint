@@ -49,7 +49,7 @@ $serial = 'articles_id_seq';
 
 %transforms = (
 	user_type	=>	[ 's/\s//g' ],
-	id			=>	[ 's/\D//g' ],
+	id			=>	[ 's/\D//g', '<2147483647' ],
 );
 %defaults = (
 	created_on		=> q`'NOW()'`,

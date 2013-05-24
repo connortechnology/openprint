@@ -1,7 +1,6 @@
 <script type="text/javascript">
 <? if ( $$variable{'Invoice'}->id() ) ?>
 	function update_totals( ) {
-alert('hi');
 		var total;
 		var timetrack_total = $('timetrack_total');
 		if ( timetrack_total ) {
@@ -13,7 +12,6 @@ alert('hi');
 			product_total = parseFloat(product_total.innerHTML.replace(/[^\d\.]/g,'') );
 			total += produt_total;
 		} // end if
-		alert(total);
 		if ( $('subtotal') ) {
 			$('subtotal').innerHTML = do_decimals( timetrack_total + product_total, 2 );
 		} else {
@@ -88,7 +86,7 @@ alert('hi');
 				</li>
 				<li class="early_payment_amount"><label for="early_payment_amount">Early Payment Discount</label>
 					<? echo ( join("\n",
-								input(type=>'float', id=>'early_payment_discount', name=>'early_payment_discount', value=>$$variable{Invoice}->early_payment_discount() ), 
+								input(type=>'float', id=>'early_payment_amount', name=>'early_payment_amount', value=>$$variable{Invoice}->early_payment_amount() ), 
 								ssi::select( [ 'percent', 'Percent', 'amount', 'Amount' ], $$variable{Invoice}->early_payment_units(), { name=>'early_payment_units' } ),
 					); ) ?>
 				<li class="early_payment_date"><label>Early Payment Date</label>
@@ -104,7 +102,7 @@ alert('hi');
 			</li>
 			<li>
 				<label for="internal_notes">Internal Notes</label>
-				<textarea cols="" id="internal_notes" name="internal_notes" rows="<? echo ( ssi::count_lines( $$variable{'Invoice'}->internal_notes() ); ) ?>" onkeyup="textarea_resize(this);"><? echo ( $$variable{'Invoice'}->internal_notes() ) ?></textarea>
+				<textarea id="internal_notes" name="internal_notes" rows="<? echo ( ssi::count_lines( $$variable{'Invoice'}->internal_notes() ); ) ?>" onkeyup="textarea_resize(this);"><? echo ( $$variable{'Invoice'}->internal_notes() ) ?></textarea>
 			</li>
 			<li>
 				<label>Bad Debt?</label>
@@ -173,7 +171,9 @@ alert('hi');
 		</table>
 	</fieldset>
 </div>
-<? echo ( include('_logs.html'); ) ?>
+<?eval( $$variable{Object} = $$variable{Invoice} ) ?>
+<?include(/employee/assets/_asset_upload.html)?>
+<?include('_logs.html')?>
 <? endif ( $$variable{'Invoice'}->id() ) ?>
 </form>
 </div></div>

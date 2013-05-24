@@ -10,7 +10,7 @@ require openprint::Service;
 require openprint::Paycheque_Timetrack;
 
 use vars qw( $debug $table $serial %fields %find_fields %defaults %transforms );
-$debug = 0;
+$debug = 1;
 
 $table = 'timetracks';
 $serial = 'timetracks_id_seq';
@@ -34,6 +34,7 @@ $serial = 'timetracks_id_seq';
 	'travel_associated'	=>	'travel_associated',
 	'distance'			=>	'distance',
 	'billable'			=>	'billable',
+	po					=>	'po',
 );
 %find_fields = (
 	'paycheque_id'		=>	'(SELECT paycheque_id FROM Paycheques_Timetracks WHERE timetrack_id=timetracks.id)',

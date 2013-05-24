@@ -414,8 +414,11 @@ if ( ! sets::isin( 'timetracks', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/Timetracks.sql}) );
 } else {
 	$data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='timetracks'", 'column_name');
-	if ( ! $$data{'billable'} ) {
+	if ( ! exists $$data{'billable'} ) {
 		$dbh->do('ALTER TABLE timetracks ADD billable BOOLEAN NOT NULL default true');
+	} # end if
+	if ( ! exists $$data{po} ) {
+		$dbh->do('ALTER TABLE timetracks ADD po TEXT');
 	} # end if
 } # end if
 $dbh->disconnect();

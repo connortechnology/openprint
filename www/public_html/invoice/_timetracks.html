@@ -3,6 +3,7 @@
 		<tr>
 			<th class="Employee">Employee</th>
 			<th class="Service">Service</th>
+			<th class="PO">PO #</th>
 			<th class="DateTime">Start</th>
 			<th class="DateTime">End</th>
 			<th class="Interval">Interval</th>
@@ -22,15 +23,17 @@
 <tr title="%12$s">
     <td class="Employee"><a href="/timetrack/edit.html?timetrack_id=%1$d&amp;invoice_id=%2$d">%3$s</a></td>
     <td class="Service"><a href="/timetrack/edit.html?timetrack_id=%1$d&amp;invoice_id=%2$d">%4$s</a></td>
-    <td class="DateTime">%5$s</td>
+	<td class="PO">%5$s</td>
     <td class="DateTime">%6$s</td>
-    <td class="Interval">%7$s</td>
-    <td class="Rate">%8$s%9$s</td>
-    <td class="Price">%10$s</td>
-    <td class="buttons">%11$s</td>
+    <td class="DateTime">%7$s</td>
+    <td class="Interval">%8$s</td>
+    <td class="Rate">%9$s%10$s</td>
+    <td class="Price">%11$s</td>
+    <td class="buttons">%12$s</td>
 </tr>
 `, $Timetrack->id(), $$variable{Invoice}->id(), ssi::htmlize( $Timetrack->Employee()->name() ),
 ssi::htmlize( $Timetrack->Service()->name() ),
+$Timetrack->po(),
 Date::Format::time2str( $Timetrack->time_associated() ? $config{DateTimeFormat} : '%Y-%m-%d', Date::Parse::str2time( $Timetrack->starting() ) ),
 Date::Format::time2str( $Timetrack->time_associated() ? $config{DateTimeFormat} : '%Y-%m-%d', Date::Parse::str2time( $Timetrack->ending() ) ),
 misc::seconds_to_pretty_interval( $Timetrack->elapsed() ),
@@ -43,7 +46,7 @@ $desc );
 		return $html;
 	) ?>
 		<tr class="totals">
-			<td colspan="6">Totals</td>
+			<td colspan="7">Totals</td>
 			<td class="Price" id="timetrack_total"><? echo ( openprint::Currency::format( $$variable{'service_total'} ); ) ?></td>
 			<td>&nbsp;</td>
 		</tr>
@@ -63,7 +66,6 @@ $desc );
 		</tr>
 		<? echo (
 			my $html = '';
-			$$variable{'Currency'} = openprint::Currency::get_current() if ! $$variable{'Currency'};
 			my @Timetracks;
 			foreach my $T ( openprint::Timetrack->find(
 				'billable'		=>	1,

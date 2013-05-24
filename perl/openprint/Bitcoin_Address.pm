@@ -47,11 +47,11 @@ sub generate {
 		my $api     = Finance::Bitcoin::API->new( endpoint => $uri );
 
 		my $label = (ref $_[1]) . ' ' . $_[1]->id();
-		$openprint::log->debug( "URI: $uri label: $label");
+		#$openprint::log->debug( "URI: $uri label: $label");
 
 		my $wallet = Finance::Bitcoin::Wallet->new($api);
 		$_ = Data::Dumper::Dumper($wallet);
-		$openprint::log->debug($_);
+		#$openprint::log->debug($_);
 
 		my $address = $wallet->create_address( $label );
 		if ( $address and $address->address ) {

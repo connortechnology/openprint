@@ -430,8 +430,12 @@ if ( ! sets::isin( 'invoices', \@tables ) ) {
 	if ( ! exists $$data{early_payment_units} ) {
 		$dbh->do('ALTER TABLE Invoices ADD early_payment_units TEXT');
 	} # end if
-	if ( ! exists $$data{early_payment_discount} ) {
-		$dbh->do('ALTER TABLE Invoices ADD early_payment_discount TEXT');
+	if ( ! exists $$data{early_payment_amount} ) {
+		if ( exists $$data{early_payment_discount} ) {
+			$dbh->do('ALTER TABLE invoices RENAME COLUMN early_payment_discount to early_payment_amount');
+		} else {
+			$dbh->do('ALTER TABLE Invoices ADD early_payment_amount float');
+		} # end if
 	} # end if
 	if ( ! exists $$data{early_payment_date} ) {
 		$dbh->do('ALTER TABLE Invoices ADD early_payment_date DATE');

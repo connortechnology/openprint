@@ -30,5 +30,24 @@ $openprint::log->debug( "Returning object of type " . ref $_ );
     return $_;
 } # end sub Object
 
+sub upload {
+    my $error = '';
+    my $Asset = openprint::Asset::upload( $_[1], $_[2] );
+    if ( ref $Asset eq 'openprint::Asset' ) {
+        my $Photo = openprint::Object_Asset->find_one(asset_id=>$$Asset{id},object_id=>$_[0]{id},object_type=>ref $_[0]);
+        if ( ! $Photo ) {
+            $Photo = new openprint::Object_Asset();
+            $error .= $Photo->save({ asset_id=>$$Asset{id}, object_id=>$_[0]{id},object_type=>ref $_[0]});
+            #$error .= new openprint::Log()->save({'action'=>'Upload Photo', 'Object'=>$Photo});
+        } else {
+            $error .= 'Asset already exists for this object.';
+        } # end if
+    } else {
+        $error .= "Failed to upload asset: $Asset";
+    } # end if
+    return $error;
+} # end sub upload
+
+
 1;
 __END__
