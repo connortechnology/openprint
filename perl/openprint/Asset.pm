@@ -255,7 +255,7 @@ sub thumbnail_html {
 } # end sub thumbnail_html
 
 sub thumbnail_path {
-	my $url = $_[0]->thumbnail_url();
+	my $url = $_[0]->sized_url('thumbnails');
 	if ( $url =~ /^\/thumbnails/ ) {
 		return $openprint::config{'AssetPath'}.$url;
 	} else {

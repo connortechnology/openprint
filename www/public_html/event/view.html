@@ -52,9 +52,9 @@
 				if ( $$variable{Event}->id() ) {
 					if ( $$variable{Event}->can_edit() ) {
 						if ( $$variable{Event}->deleted() ) {
-						$html .= ssi::button( 'Undelete', { 'onclick'=>"if(confirm('Are you sure?')){f1.elements['function'].value='Undelete';f1.submit();}" } );
+						$html .= ssi::button( 'Undelete', { onclick=>"if(confirm('Are you sure?')){f1.elements['function'].value='Undelete';f1.submit();}" } );
 						} else {
-						$html .= ssi::button( 'Delete', { 'onclick'=>"if(confirm('Are you sure?')){f1.elements['function'].value='Delete';f1.submit();}" } );
+						$html .= ssi::button( 'Delete', { onclick=>"if(confirm('Are you sure?')){f1.elements['function'].value='Delete';f1.submit();}" } );
 						} # end if
 						$html .= ssi::button( 'Copy', { href=>'view.html?function=Copy&amp;event_id='.$$variable{Event}->id() } );
 						$html .= ssi::button( 'Edit', { href=>'edit.html?event_id='.$$variable{Event}->id() } );
@@ -107,7 +107,7 @@
 					<li class="when"><label>When</label><? echo ( $$variable{Event}->time_string(); ) ?></li>
 					<li class="category"><label>Category</label><? echo ( $$variable{Event}->Category()->name() ) ?></li>
 					<li class="info">
-						<label for="info">More info</label>
+						<label>More info</label>
 						<? echo ( $$variable{Event}->info() ) ?>
 					</li>
 					<? if ( $$variable{Event}->url() ) ?>

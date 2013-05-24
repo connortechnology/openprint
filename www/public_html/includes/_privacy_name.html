@@ -10,7 +10,7 @@
 		);
 	foreach my $User (@Users) {
 	my $Asset = $User->Asset();
-	my $thumbnail_url = $Asset->thumbnail_url();
+	my $thumbnail_url = $Asset->sized_url('thumbnails');
 
 	return sprintf(q`
 				<li id="%1$d" class="User"><span class="thumbnail informal"><img src="%3$s" alt="%4$s" /></span>%2$s</li>`,

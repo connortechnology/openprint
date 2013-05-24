@@ -402,20 +402,21 @@ sub head_html {
 	my $Event = $_[0];
 
 	my $description;
-	if ( $Event->description() ) {
+	if ( $Event->info() ) {
 		my $hs = HTML::Strip->new();
-		$Description = $hs->parse($$variable{Event}->info());
+		$description = $hs->parse($Event->info());
 		$hs->eof();
 	} # end if
-    my $Asset = $$variable{Event}->Asset();
+    my $Asset = $Event->Asset();
 
-	my $html =  '<head itemscope itemtype="http://schema.org/Event">';
-	$html .= '<meta name="RATING" content="RTA-5042-1996-1400-1577-RTA" />';
-	$html .= '<meta itemprop="name" content="'. ssi::html_escape( $Event->name() ).'"/>';
-	$html .= '<meta itemprop="description" content="'.$description.'"/>' if $description;
-	$html .= '<meta name="startDate" content="'. $$variable{Event}->starting_on().'" />' if $Event->starting_on();
-	$html .= '<meta name="endDate" content="'. $Event->ending_on().'" />' if $Event->ending_on();
-	$html .= '<meta name="image" content="'.$Asset->sized_url('medium').'"/>' if $Asset;
+	my $html =  '<head itemscope itemtype="http://schema.org/Event">'."\n";
+	$html .= '<link rel="image_src" href="'.$openprint::config{siteURL}.$Asset->sized_url('medium').'"/>' if $Asset;
+	$html .= '<meta name="RATING" content="RTA-5042-1996-1400-1577-RTA" />'."\n";
+	$html .= '<meta itemprop="name" content="'. ssi::html_escape( $Event->name() ).'"/>'."\n";
+	$html .= '<meta itemprop="description" content="'.$description.'"/>'."\n" if $description;
+	$html .= '<meta name="startDate" content="'. $Event->starting_on().'" />'."\n" if $Event->starting_on();
+	$html .= '<meta name="endDate" content="'. $Event->ending_on().'" />'."\n" if $Event->ending_on();
+	$html .= '<meta name="image" content="'.$Asset->sized_url('medium').'"/>'."\n" if $Asset;
     
 	return $html;
 } # end sub html_head
