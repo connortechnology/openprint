@@ -2745,7 +2745,7 @@ if ( $version < $new_version ) {
 	print "Updating to version $new_version\n";
 	my $ac = sql::start_transaction( $dbh );
 	sql::insert( undef, undef, 'database_info', 'version', $new_version, 'backup', $backup );
-	foreach my $E ( openprint::Equipment->find() ) {
+	foreach my $E ( openprint::Equipment->find(Specifications=>{Type=>'Press'}) ) {
 		if ( ( $_ = $E->specification('Double Overs For Covers') ) and ( $_ eq 'Y' ) ) {
 			sql::insert( undef, undef, 'tbl_Equipment_Specifications',[
 					'lngEquipmentIndex',    $E->id(),
