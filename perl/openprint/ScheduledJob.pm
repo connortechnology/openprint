@@ -446,6 +446,11 @@ sub get_li {
 			if ( $month ) { $html .= '&nbsp;'.substr( Date::Calc::Month_to_Text( $month ),0, 3); } # end if
 				$html .= qq` $day</span>`;
 		} # end if
+		if ( sets::isin( $$self{'servicetype_id'}, \@printing_service_type_ids ) ) {
+			my @presses = sort( sets::union( map { $_->equipment_id() ? $_->Equipment()->strid() : () } find( project_id=>$$self{project_id}, servicetype_id=>\@printing_service_type_ids ) ) );
+			$html .= '<span class="Presses">'.join(' + ', @presses ).'</span>' if @presses > 1;
+		} # end if
+
 	} # end if
 
 	if ( openprint::usergroup::is_user_in( ['Scheduling'], $session{'user_id'} ) ) {

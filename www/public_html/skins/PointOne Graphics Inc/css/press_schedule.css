@@ -136,6 +136,14 @@ table .docket {
 	margin-left: 5px;
 	display: inline;
 }
+.Presses {
+	font-size: 14px;
+	font-weight: bold;
+	display: block;
+	padding: 3px 0;
+	text-align: right;
+	clear: both;
+}
 .Impressions {
 	min-width: 70px;
 	padding:0 4px 0 4px;
@@ -168,7 +176,7 @@ table .docket {
 }
 @media print {
 	.StartTime img {
-	height: 10px;
+		height: 10px;
 	}
 	.Feedback {
 		display: none;
