@@ -158,7 +158,7 @@
 					<div class="LastOn"><label>Last On</label>%8$s</div>
 				</div>`,
 				$User->id(),
-				$User->Asset()->thumbnail_url(), '',
+				$User->Asset()->sized_url('thumbnails'), '',
 				$Profile->Tagline(),
 				$age ? $age.'yr old': '',
 				$Profile->Gender() ? $Profile->Gender() : 'indeterminate gender',
@@ -168,7 +168,7 @@
 		$html .= '</div>';
 	} # end foreach User
 	if ( $count > ( $session{'/account/search.html?paging_per_page'} * ( $param{'paging_page'} + 1 ) ) ) {
-		$html .= ssi::button( 'More', { 'onclick'=>q`$('ButtonMore').remove();new Ajax.Updater( 'Results','_search.html', { parameters: { paging_page: `.($param{'paging_page'}+1).' }, insertion: Insertion.Bottom } );' } );
+		$html .= button( 'More', { onclick=>q`$('ButtonMore').remove();new Ajax.Updater( 'Results','_search.html', { parameters: { paging_page: `.($param{'paging_page'}+1).' }, insertion: Insertion.Bottom } );' } );
 	} # end if
 	return $html;
 ) ?>
