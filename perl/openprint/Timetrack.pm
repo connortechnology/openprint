@@ -10,7 +10,7 @@ require openprint::Service;
 require openprint::Paycheque_Timetrack;
 
 use vars qw( $debug $table $serial %fields %find_fields %defaults %transforms );
-$debug = 1;
+$debug = 0;
 
 $table = 'timetracks';
 $serial = 'timetracks_id_seq';
