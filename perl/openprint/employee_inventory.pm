@@ -1553,7 +1553,7 @@ sub manifest {
 					if ( exists $param{$qty_param} and ( $MC->quantity() != $param{$qty_param} ) ) {
 						$variable{error} .= $MC->save({ quantity	=> Math::Round::nearest(1, $param{$qty_param}) });
 						if ( ! $checked_out ) {
-							save_inventory( $Skid, $Paper, $MC->quantity(), sprintf('Inventory adjusted from manifest %1$s.', $Manifest->name() ) );
+							save_inventory( $Skid, $Paper, $MC->quantity(), sprintf('Inventory adjusted by manifest <a href="/employee/inventory/manifest.html?manifest_id=%1$d">%2$s</a>.', $Manifest->id(), $Manifest->name() ) );
 						} # end if
 					} else {
 						my @SkidContents = openprint::SkidContent->find(skid_id=>$Skid->id(),paper_id=>$Type->paper_id());
