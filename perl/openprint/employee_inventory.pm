@@ -1369,6 +1369,18 @@ sub manifest {
 			$variable{'Redirect'} = '/employee/inventory/manifests.html';
 			%param = ();
 		} # end if
+	} elsif ( $param{'btnFunction'} eq 'undelete' ) {
+		$variable{error} .= $Manifest->undelete();
+		if ( ! $variable{error} ) {
+			$variable{Redirect} = '/employee/inventory/manifests.html';
+			%param = ();
+		} # end if
+	} elsif ( $param{'btnFunction'} eq 'destroy' ) {
+		$variable{error} .= $Manifest->destroy();
+		if ( ! $variable{error} ) {
+			$variable{Redirect} = '/employee/inventory/manifests.html';
+			%param = ();
+		} # end if
 	} elsif ( $param{'btnFunction'} eq 'Submit' ) {
 		$Manifest->received_on( join('-', @param{'received_on_year','received_on_month','received_on_day'} ) );
 
@@ -1392,38 +1404,35 @@ sub manifest {
 
 		$variable{'error'} .= $Manifest->save( \%param );
 
-		my @Types = openprint::Manifest_Content_Type->find('manifest_id'=>$Manifest->id());
+		my @Types = openprint::Manifest_Content_Type->find( manifest_id=>$Manifest->id());
 		if ( ! @Types ) {
+			# It's an empty, brand new manifest
 			my $Type = new openprint::Manifest_Content_Type();
-			$variable{error} .= $Type->save({ manifest_id=>$Manifest->id()});
+			$variable{error} .= $Type->save({ manifest_id=>$Manifest->id() });
 		} else {
 			foreach my $Type ( openprint::Manifest_Content_Type->find( manifest_id=>$Manifest->id()) ) {
 				my $Paper = save_Paper('-'.$Type->id());
-				if ( ! $Paper ) {
-					$variable{'error'} .= 'Unable to get Stock.<br/>';
-					next;
-				} # end if
-
+				
 				# If there is a change of paper in the type, then go through each skid and update them, nicluding allocations, and add a log entry so we know that it happened.
 				if ( $Type->paper_id() and ( $Type->paper_id() != $Paper->id() ) ) {
-					$variable{'information'} .= 'Skid contents have been changed from ' . $Type->Paper()->to_string() . ' to ' . $Paper->to_string().'<br/>';
+					$variable{information} .= 'Skid contents have been changed from ' . $Type->Paper()->to_string() . ' to ' . $Paper->to_string().'<br/>';
 					foreach my $C ( $Manifest->Contents( type_id => $Type->id() ) ) {
 						foreach my $SkidContent ( $C->Skid()->Contents() ) {
 							# If it has the old type,
 							if ( $SkidContent->paper_id() == $Type->paper_id() ) {
 								my $PI = new openprint::PaperInventory();
 								$PI->save({'user_id'=>$session{'user_id'},'skid_id'=>$C->Skid()->id(), 'paper_id'=>$Type->paper_id(),
-										'quantity'=>-1*$SkidContent->quantity(),
-										'comment'=>'Changed stock from ' . $Type->Paper()->to_string() . ' to ' . $Paper->to_string()});
+										quantity=>-1*$SkidContent->quantity(),
+										comment=>'Changed stock from ' . $Type->Paper()->to_string() . ' to ' . $Paper->to_string()});
 								# Change the type to the new type
-								$SkidContent->save({'paper_id'=>$Paper->id()});
+								$SkidContent->save({paper_id=>$Paper->id()});
 								foreach my $PA ( openprint::PaperAllocation->find('skid_id'=>$C->skid_id(), 'paper_id'=>$Type->paper_id() ) ) {
-									$PA->save({'paper_id'=>$Paper->id()});
+									$PA->save({paper_id=>$Paper->id()});
 								} # end foreach PA
 								my $PI = new openprint::PaperInventory();
-								$PI->save({'user_id'=>$session{'user_id'},'skid_id'=>$C->Skid()->id(), 'paper_id'=>$Paper->id(),
-										'quantity'=>$SkidContent->quantity(),
-										'comment'=>'Changed stock from ' . $Type->Paper()->to_string() . ' to ' . $Paper->to_string()});
+								$PI->save({user_id=>$session{user_id},skid_id=>$C->Skid()->id(), paper_id=>$Paper->id(),
+										quantity =>$SkidContent->quantity(),
+										comment=>'Changed stock from ' . $Type->Paper()->to_string() . ' to ' . $Paper->to_string()});
 								
 							} # end if
 
@@ -1440,8 +1449,8 @@ sub manifest {
 					manufacturers_name	=>	$param{'manufacturers_name-'.$$Type{id}},
 					item_count	=>	$param{'item_count-'.$$Type{id}},
 				);
-				$data{'cost'} = $param{'cost-'.$Type->id()} if exists $param{'cost-'.$Type->id()};
-				$data{'supplier_invoice'} = $param{'supplier_invoice-'.$Type->id()} if exists $param{'supplier_invoice-'.$Type->id()};
+				$data{cost} = $param{'cost-'.$Type->id()} if exists $param{'cost-'.$Type->id()};
+				$data{supplier_invoice} = $param{'supplier_invoice-'.$Type->id()} if exists $param{'supplier_invoice-'.$Type->id()};
 				$variable{error} .= $Type->save(\%data);
 
 				my $Project;
@@ -1511,6 +1520,10 @@ sub manifest {
 				my $total_qty = 0;
 				# Save data for the rest of the contents
 				foreach my $MC ( $Manifest->Contents( type_id => $$Type{id} ) ) {
+					$MC->rfidtag_id( $param{"rfidtag_id-$$Type{id}-$$MC{id}"} ) if exists $param{"rfidtag_id-$$Type{id}-$$MC{id}"};
+					my $Tag = $MC->RFIDTag();
+					$variable{error} .= $Tag->save() if $MC->rfidtag_id() and ! $Tag->created_on();
+
 					my $Skid = $MC->Skid();
 					if ( $param{"manufacturers_id-$$Type{id}-$$MC{id}"} ) {
 						if ( my $S = openprint::Skid->find_one(manufacturers_id=>$param{"manufacturers_id-$$Type{id}-$$MC{id}"}) ) {
@@ -1525,14 +1538,15 @@ sub manifest {
 						} # end if
 						$variable{error} .= $Skid->save({manufacturers_id=>$param{"manufacturers_id-$$Type{id}-$$MC{id}"}}) if $param{"manufacturers_id-$$Type{id}-$$MC{id}"} and ! $Skid->manufacturers_id();
 					} # end if
+					$Skid->rfidtag_id( $MC->rfidtag_id() ) if ! $Skid->rfidtag_id() and $MC->rfidtag_id();
 					$variable{error} .= $Skid->save() if ! $Skid->id();
 					$variable{error} .= $MC->save({skid_id=>$$Skid{id}}) if $MC->skid_id() != $$Skid{id};
 
-					my $checked_out = openprint::PaperInventory::find('skid_id'=>$Skid->id(), 'paper_id'=>$Type->paper_id(), 'comment_like'=>'Checked out%' ) ? 1 : 0; 
+					my $checked_out = openprint::PaperInventory::find( skid_id=>$Skid->id(), paper_id=>$Type->paper_id(), 'comment_like'=>'Checked out%' ) ? 1 : 0; 
 					my $qty_param = $Type->type() eq 'Sheet' ? "qty_sheets-$$Type{id}-$$MC{id}" : "qty_lbs-$$Type{id}-$$MC{id}";
 
 					if ( exists $param{$qty_param} and ( $MC->quantity() != $param{$qty_param} ) ) {
-						$variable{'error'} .= $MC->save({ quantity	=> Math::Round::nearest(1, $param{$qty_param}) });
+						$variable{error} .= $MC->save({ quantity	=> Math::Round::nearest(1, $param{$qty_param}) });
 						if ( ! $checked_out ) {
 							save_inventory( $Skid, $Paper, $MC->quantity(), sprintf('Inventory adjusted from manifest %1$s.', $Manifest->name() ) );
 						} # end if

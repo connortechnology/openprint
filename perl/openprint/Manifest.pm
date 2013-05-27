@@ -31,6 +31,7 @@ $debug = 1;
 	'updated_on'	=>	'updated_on',
 	'received_on'	=>	'received_on',
 	'supplier_id'	=>	'supplier_id',
+	deleted			=>	'deleted',
 );
 
 %transforms = (
@@ -43,6 +44,7 @@ $debug = 1;
 	'updated_on'	=>	'NOW()',
 	'received_on'	=>	'NOW()',
 	'supplier_id'	=>	undef,
+	deleted	=>	0,
 );
 
 # Returns a paper object specified by the parameters
@@ -158,7 +160,7 @@ sub find {
 	return map { new openprint::Manifest( $_->{id}, $_ ) } @$data;
 } # end sub find
 
-sub delete {
+sub destroy {
     my $self = shift;
 	return if ! $$self{id};
     my $ac = sql::start_transaction( );
@@ -177,7 +179,7 @@ sub delete {
 	return $dbh->errstr() if $dbh->errstr();
 	delete $openprint::Object::cache{'openprint::Manifest'}{$$self{'id'}};
 	return '';
-} # end sub delete
+} # end sub destroy
 
 sub Types {
 	my ( $self, %params ) = @_;

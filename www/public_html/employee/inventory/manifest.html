@@ -49,10 +49,15 @@
 		<p class="buttons">
 			<? echo ( join('',
 				( $$variable{'Manifest'}->id() ? (
-					ssi::button( 'add', { 'onclick'=>"new Ajax.Updater('Types', '_manifest_type.html', { parameters: { manifest_id: '".$$variable{'Manifest'}->id()."', action: 'Add'}, insertion: 'bottom' } );", 'text'=>'Add Another Stock' } ) ) : () 
+					ssi::button( 'add', { onclick=>"new Ajax.Updater('Types', '_manifest_type.html', { parameters: { manifest_id: '".$$variable{'Manifest'}->id()."', action: 'Add'}, insertion: 'bottom' } );", text=>'Add Another Stock' } ) ) : () 
 				),
-				ssi::button( 'Save', { 'onclick'=>"f1.btnFunction.value='Submit';if(f1.onsubmit())f1.submit();" } ),
-				ssi::button( 'Delete', { 'onclick'=>"if( confirm('Are you sure?') ) {f1.btnFunction.value='Delete';f1.submit();}" } ),
+				ssi::button( 'Save', { onclick=>"f1.btnFunction.value='Submit';if(f1.onsubmit())f1.submit();" } ),
+				( $$variable{Manifest}->deleted() ? (
+					ssi::button( 'UnDelete', { onclick=>"f1.btnFunction.value='undelete';f1.submit();}" } ),
+					ssi::button( 'Destroy', { onclick=>"if( confirm('Are you sure?') ) {f1.btnFunction.value='destroy';f1.submit();}" } ),
+				) : ( 
+					ssi::button( 'Delete', { onclick=>"f1.btnFunction.value='Delete';f1.submit();" } ),
+				) ),
 			); ) ?>
 		</p>
 		<input type="hidden" name="btnFunction" />

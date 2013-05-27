@@ -109,19 +109,6 @@ sub delete {
 		$openprint::log->error("Called delete on ManifestContent with no id.");
 		return;
 	} # end if
-	my @SkidContents = openprint::SkidContent->find('manifestcontent_id'=>$_[0]{'id'});
-	if ( @SkidContents > 1 ) {
-		$openprint::log->error("Too many skidContents found for manifestcontent $_[0]{'id'}");
-	} # end if
-	foreach my $S (@SkidContents) {
-		if ( $S->manifestcontent_id() != $_[0]->id() ) {
-			next;
-		} elsif ( $S->skid_id() != $_[0]->skid_id() ) {
-			$openprint::log->error("BLAH! wrong skid id in skidcontent");
-			next;
-		} # end if
-		$S->save({'manifestcontent_id'=>undef});
-	} # end foreach
 	$_[0]->SUPER::delete();
 } # end sub delete
 
