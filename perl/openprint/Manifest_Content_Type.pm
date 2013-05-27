@@ -30,6 +30,7 @@ $serial = 'manifest_content_types_id_seq';
 	supplier_invoice	=>	'supplier_invoice',
 	item_count			=>	'item_count',
 	type			=>	'type',
+	manufacturers_name	=>	'manufacturers_name',
 );
 %find_fields = (
 	total_quantity	=>	'(SELECT SUM(quantity) FROM manifestcontents WHERE manifestcontents.manifest_id=manifest_content_types.manifest_id and type_id=manifest_content_types.id)',
@@ -54,6 +55,7 @@ $serial = 'manifest_content_types_id_seq';
 	paper_id		=>	undef,
 	type			=>	undef,
 	item_count		=>	undef,
+	manufacturers_name	=>	undef,
 );
 
 sub Paper {
@@ -119,6 +121,22 @@ sub type {
 	} # end if
 	return $_[0]{type};
 } # end sub type
+
+sub Contents {
+	my ( $self, %params ) = @_;
+	if ( %params ) {
+		if ( $$self{id} ) {
+			return openprint::ManifestContent->find( manifest_id=>$$self{manifest_id}, type_id=>$$self{id}, %params );
+		} # end if
+	} # end if
+	if ( ! $$self{Contents} ) {
+		if ( $$self{id} ) {
+			@{$$self{Contents}} = openprint::ManifestContent->find( manifest_id=>$$self{manifest_id}, type_id=>$$self{id} );
+		} # end if
+	} # end if
+	return @{$$self{Contents}} if $$self{Contents};
+	return;
+} # end sub Contents
 
 1;
 __END__

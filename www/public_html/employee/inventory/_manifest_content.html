@@ -36,7 +36,7 @@ if ( tr ) tr.remove();
 		my $id = $$variable{'type_id'}.'-'.$$C{id};
 			
 		$html .= '<tr id="tr-'.$$C{id}.'">';
-		if ( $RFIDTag->id() and ( $_ = $RFIDTag->is_invalid_id() ) ) {
+		if ( (!$RFIDTag->id()) or ( $_ = $RFIDTag->is_invalid_id() ) ) {
 			$error .= $_;
 			$html .= '<td class="RFID">'.input(type=>'text', name=>'rfidtag_id-'.$id, value=>$RFIDTag->id() ).'</td>';
 		} else {
@@ -111,7 +111,7 @@ if ( tr ) tr.remove();
 		} else {
 			$html .= '<td colspan="2">&nbsp;</a>';
 		} # end if
-		$html .= '<td class="Location">'.ssi::select( openprint::Location->dropdown(order=>'parent_id NULLS FIRST, lower(name)'), $Skid->location_id(), { name=>'location_id-'.$id, prepend=>['','select'] } ).'</td>';
+		$html .= '<td class="Location">'.ssi::select( $variable{'location_dropdown'}, $Skid->location_id(), { name=>'location_id-'.$id, prepend=>['','select'] } ).'</td>';
 		$html .= '<td class="buttons">' . ssi::button( 'X'.$$C{'id'}, { onclick=>qq`delete_content('$$C{id}');`, text=>'X', title=>'Remove' } ) . '</td>';
 		$html .= '</tr>';
 		if ( $error ) {

@@ -182,6 +182,7 @@ sub skids {
 	_skids_results();
 	$session{'/employee/inventory/skids.html?hasmanifest'} = '' if ! defined $session{'/employee/inventory/skids.html?hasmanifest'};
 	$session{'/employee/inventory/skids.html?Type'} = '' if ! defined $session{'/employee/inventory/skids.html?Type'};
+	$session{'/employee/inventory/skids.html?deleted'} = '0' if ! exists $session{'/employee/inventory/skids.html?deleted'};
  
 } # end sub skids
 
@@ -1458,6 +1459,10 @@ sub manifest {
 				$data{supplier_invoice} = $param{'supplier_invoice-'.$Type->id()} if exists $param{'supplier_invoice-'.$Type->id()};
 				$variable{error} .= $Type->save(\%data);
 
+				if ( $Type->manufacturers_name() and $Type->paper_id() and ! $Type->Paper()->manufacturers_name() ) {
+					$variable{error} .= $Paper->save({manufacturers_name=>$Type->manufacturers_name()});
+				} # end if
+
 				my $Project;
 				if ( $param{'docket-'.$Type->id()} ) {
 					if ( ! ( $Project = openprint::Project->find_one( docket=>$param{'docket-'.$Type->id()}) ) ) {
@@ -1764,6 +1769,7 @@ sub manifests {
 	ssi::setup_date_select( '/employee/inventory/manifests.html', 'received_on_end', '' );
 	ssi::setup_date_select( '/employee/inventory/manifests.html', 'created_on_start', -7 );
 	ssi::setup_date_select( '/employee/inventory/manifests.html', 'created_on_end', '' );
+	$session{'/employee/inventory/manifests.html?deleted'} = '0' if ! exists $session{'/employee/inventory/manifests.html?deleted'};
 } # end sub manifests
 
 sub _manifests {
@@ -1772,7 +1778,7 @@ sub _manifests {
 				( map { 'received_on_end_'.$_ } ( 'year','month','day' ) ),
 				( map { 'created_on_start_'.$_ } ( 'year','month','day' ) ),
 				( map { 'created_on_end_'.$_ } ( 'year','month','day' ) ),
-				'supplier_id', 'delivery',
+				'supplier_id', 'delivery','deleted',
 				) );
 } # end sub _manifests
 
@@ -2013,7 +2019,7 @@ sub _skids_results {
 				( map { 'last_seen_start_' . $_ } ( 'year','month','day' ) ),
 				( map { 'last_seen_end_' . $_ } ( 'year','month','day' ) ),
 				'Docket','fsc_code','empty', 'withrfid','withoutrfid','location_id','verification_code', 'allocated','contents','hasmanifest',
-				'condition_id', 'skid_id', 'rfid_id', 'manufacturers_id', 'hasmanufacturers',
+				'condition_id', 'skid_id', 'rfid_id', 'manufacturers_id', 'hasmanufacturers','deleted',
 				) );
 }
 
@@ -2176,11 +2182,13 @@ sub manifest_import {
 			my $product;
 			my $item_count = 0;
 
+			my %Skids_by_mfg;
+
 			while ( my $line = <$io> ) {
 				my $status = $csv->parse($line);        # parse a CSV string into fields
 				my @data = misc::trim($csv->fields());
 				#Cust Code,Invt Lev1,Invt Lev2,Invt Lev3,On Hand Qty,On Hand Wgt,On Ord Qty,On Rcpt Qty,Hold Non Ship Qty
-				my ( $cust_code, $desc1, $desc2, $mfg_name, $on_hand_qty, $weight ) = @data;
+				my ( $cust_code, $desc1, $desc2, $mfg_name, $on_hand_qty, $weight_qty ) = @data;
 				if ( ! $cust_code ) {
 					$variable{warning} .= "Invalid line ($line)<br/>";
 					next;
@@ -2194,21 +2202,45 @@ sub manifest_import {
 					$item_count = 0;
 
 					push @{$variable{Types}}, $Type if $Type;
+
+					my $Paper;
+					my @Papers = openprint::Paper->find( manufacturers_name=>($desc1.' '.$desc2) );
+					if ( @Papers == 1 ) {
+						$Paper = $Papers[0];
+					} else {
+					} # end if
+
 					$Type = new openprint::Manifest_Content_Type();
 					$variable{error} .= $Type->save({
 						manifest_id => $$Manifest{id},
-						manufacturers_name	=>	$desc1.' '.$desc2,
+						manufacturers_name	=>	($desc1.' '.$desc2),
 						type	=>	'Roll',
+						( $Paper ? ( paper_id=>$Paper->id() ) : () ),
 					});
 					$product = $desc1.' '.$desc2;
 				} # end if
 				$item_count += 1;
-				my $Skid = openprint::Skid->find_one( manufacturers_id=>$mfg_name );
+				$Skids_by_mfg{$mfg_name} = openprint::Skid->find_one( manufacturers_id=>$mfg_name ) if ! exists $Skids_by_mfg{$mfg_name};
+				my $Skid = $Skids_by_mfg{$mfg_name};
+				if ( $Skid ) {
+					my @SC = $Skid->Contents();
+					if ( ! $$Type{paper_id} ) {
+						foreach my $SC ( @SC ) {
+							if ( $$SC{paper_id} ) {
+								$Type->save({paper_id=>$$SC{paper_id}});
+							} # end if
+						} # end foreach SC
+					} else {
+						# Don't need to do anything, because the inequality will be shown when displaying the manifest
+					} # end if
+				} # end if
+
+
 				my $MC = new openprint::ManifestContent();
 				$variable{error} .= $MC->save({
 					type_id		=>	$$Type{id},
 					manifest_id	=>	$$Manifest{id},
-					quantity	=>	$weight,
+					quantity	=>	$weight_qty,
 					manufacturers_id	=>	$mfg_name,
 					( $Skid ? ( skid_id=>$$Skid{id} ) : () ),
 				});

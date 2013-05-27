@@ -1,11 +1,12 @@
 <fieldset>
 	<? eval (
+		$variable{'location_dropdown'} = openprint::Location->dropdown(order=>'parent_id NULLS FIRST, lower(name)') if ! exists $variable{'location_dropdown'};
 		if ( ! $param{'Name-'.$$variable{'type_id'}} ) {
 			my $Paper;
 			if ( $$variable{'Type'}->paper_id() ) {
 				$Paper = $$variable{'Type'}->Paper();
 			} else {
-				foreach my $C ( $$variable{'Manifest'}->Contents('type_id'=>$$variable{'type_id'}) ) {
+				foreach my $C ( $$variable{Type}->Contents() ) {
 					my $Skid = $C->Skid();
 
 					foreach my $SkidContent ( $Skid->Contents() ) {

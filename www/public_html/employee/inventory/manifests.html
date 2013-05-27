@@ -42,6 +42,11 @@ function load_results( ) {
 					input( type=>'cardinal', id=>'rfidtag_id', name=>'rfidtag_id', onkeypress=>'return input_handler(this,event);', onkeydown=>'if(event.keyCode==13){load_results();};' );
 					) ?>
 				</li>
+					<li><label>Manufacturers ID</label>
+				<? echo (
+					input( type=>'text', id=>'manufacturers_id', name=>'manufacturers_id', onkeypress=>'return input_handler(this,event);', onkeydown=>'if(event.keyCode==13){load_results();};' );
+					) ?>
+				</li>
 					
 				</ul>
 			</div>
@@ -78,6 +83,10 @@ function load_results( ) {
 			<li>
 				<label>Delivery</label>
 				<? echo ( ssi::radio( 'delivery', ['under','Under','over','Over','exact','Exact','','All'], $session{'/employee/inventory/manifests.html?delivery'} ); ) ?>
+			</li>
+			<li>
+				<label>Deleted</label>
+				<? echo ( ssi::radio( 'deleted', ['1','Yes','0','No','1,0','All'], $session{'/employee/inventory/manifests.html?deleted'} ); ) ?>
 			</li>
 			</ul>
 			<p class="buttons">

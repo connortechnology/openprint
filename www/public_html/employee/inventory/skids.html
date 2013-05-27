@@ -157,6 +157,10 @@ Please select a Skid to view/edit.<br/>
 				) ?>
 			</select>
 		</li>
+			<li>
+				<label>Deleted</label>
+				<? echo ( ssi::radio( 'deleted', ['1','Yes','0','No','1,0','All'], $session{'/employee/inventory/skids.html?deleted'} ); ) ?>
+			</li>
 		</ul>
 		<p class="buttons">
 			<? echo ( join('',

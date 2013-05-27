@@ -1,4 +1,7 @@
 <?include(/includes/error_reporting.html)?>
+<?eval(
+	$variable{'location_dropdown'} = openprint::Location->dropdown(order=>'parent_id NULLS FIRST, lower(name)') if ! exists $variable{'location_dropdown'};
+)?>
 <table id="Contents-<?type_id?>" class="List sortable">
 	<tr>
 		<th class="RFID">RFID</th>
@@ -47,15 +50,15 @@ input( type=>'cardinal', id=>'qty_sheets-'.$$variable{type_id}.'-', name=>'qty_s
 ) ?>
 		<td class="in_stock">&nbsp;</td>
 		<td class="last_seen">&nbsp;</td>
-		<td class="Location"><? echo ( ssi::select( openprint::Location->dropdown(order=>'parent_id NULLS FIRST, lower(name)'), $param{'location_id-'.$$variable{type_id}.'-'}, { name=>'location_id-'.$$variable{type_id}.'-', id=>'location_id-'.$$variable{type_id}.'-', prepend=>['','select'] } ))?></td>
+		<td class="Location"><? echo ( ssi::select( $variable{'location_dropdown'}, $param{'location_id-'.$$variable{type_id}.'-'}, { name=>'location_id-'.$$variable{type_id}.'-', id=>'location_id-'.$$variable{type_id}.'-', prepend=>['','select'] } ))?></td>
 		<td class="buttons"><? echo ( ssi::button( 'Add'.$$variable{type_id}, { onclick=>"add_content( \$('f1'), $$variable{type_id} );", text=>'Add' } ); ) ?></td>
 	</tr>
 	<? echo (
 		my $html = '';
 		my $total = 0;
 		my $content = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/employee/inventory/_manifest_content.html' );
-		my @Contents = $$variable{Manifest}->Contents(type_id=>$$variable{type_id},order=>'id');
-		foreach my $C ( @Contents ) {
+		my @Contents = $$variable{Type}->Contents();
+		foreach my $C ( sort { $$a{id} <=> $$b{id} } @Contents ) {
 			$$variable{'C'} = $C;
 			$html .= ssi::variable_substitution( $r, $log, $dbh, \$content, $variable );
 			$total += $C->quantity();

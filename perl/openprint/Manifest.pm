@@ -114,6 +114,10 @@ sub find {
 		$sql  .= ' AND ? IN (SELECT rfidtag_id FROM manifestcontents WHERE manifest_id=manifests.id)';
 		push @values, $params{rfidtag_id};
 	} # end if
+	if ( exists $params{manufacturers_id} ) {
+		$sql  .= ' AND ? IN (SELECT manufacturers_id FROM manifestcontents WHERE manifest_id=manifests.id)';
+		push @values, $params{manufacturers_id};
+	} # end if
 
 	if ( $params{'received_on_start'} and $params{'received_on_end'} ) {
 		$sql .= ' AND ( received_on BETWEEN ? AND ? )';
@@ -146,6 +150,19 @@ sub find {
 		$sql .= ' AND updated_on <= ?';
 		push @values, $params{'updated_on_end'};
 	} # end if
+   if ( exists $params{'deleted'} ) {
+        if ( ref $params{'deleted'} eq 'ARRAY' ) {
+            $sql .= ' AND (deleted IS NULL OR deleted IN (' . join(',', map {'?'} @{$params{'deleted'}}) . '))';
+            push @values, @{$params{'deleted'}};
+        } else {
+            $sql .= ' AND deleted=?';
+            push @values, $params{'deleted'};
+        } # end if
+    } else {
+        $sql .= ' AND (deleted=? OR deleted IS NULL)';
+        push @values, 0;
+    } # end if
+
 	$sql .= " ORDER BY $params{'order'}" if $params{'order'};
 	$sql .= " ORDER BY $params{'order_by'}" if $params{'order_by'};
 
@@ -191,7 +208,7 @@ sub Types {
 	} # end if
 	if ( ! $$self{'Types'} ) {
 		if ( $$self{'id'} ) {
-			$params{'manifest_id'} = $$self{'id'};
+			$params{manifest_id} = $$self{'id'};
 			@{$$self{'Types'}} = openprint::Manifest_Content_Type->find(%params);
 		} # end if
 	} # end if
