@@ -104,6 +104,14 @@ sub find {
 			$sql .= ' AND ? IN (SELECT docket FROM Manifest_Content_Types WHERE manifest_id=manifests.id)';
 			push @values, $params{'docket'};
 	} # end if
+	if ( exists $params{skid_id} ) {
+		$sql  .= ' AND ? IN (SELECT skid_id FROM manifestcontents WHERE manifest_id=manifests.id)';
+		push @values, $params{skid_id};
+	} # end if
+	if ( exists $params{rfidtag_id} ) {
+		$sql  .= ' AND ? IN (SELECT rfidtag_id FROM manifestcontents WHERE manifest_id=manifests.id)';
+		push @values, $params{rfidtag_id};
+	} # end if
 
 	if ( $params{'received_on_start'} and $params{'received_on_end'} ) {
 		$sql .= ' AND ( received_on BETWEEN ? AND ? )';
