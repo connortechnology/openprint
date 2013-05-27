@@ -959,10 +959,15 @@ $log->debug('sacing');
 		} # end foreach
 	} elsif ( $param{'btnFunction'} eq 'DeletePaper' ) {
 		my $C = new openprint::SkidContent($param{'content_id'});
-		my $PI = new openprint::PaperInventory();
-		$PI->save({'user_id'=>$session{'user_id'},'skid_id'=>$C->Skid()->id(), 'paper_id'=>$C->paper_id(), 'comment'=>'Deleted from skid.'});
-		$variable{'error'} .= $C->delete();
-		delete $$Skid{'Contents'};
+		if ( ! $C->id() ) {
+			$variable{error} .= 'Paper not found on skid. No changes made.<br/>';
+			$log->error("Paper not found on skid. WHy?!");
+		} else {
+			my $PI = new openprint::PaperInventory();
+			$PI->save({'user_id'=>$session{'user_id'},'skid_id'=>$C->Skid()->id(), 'paper_id'=>$C->paper_id(), 'comment'=>'Deleted from skid.'});
+			$variable{'error'} .= $C->delete();
+			delete $$Skid{'Contents'};
+		} # end if
 	} # end if
 
 	$variable{'Skid'} = new openprint::Skid( @skid_ids ? $skid_ids[0] : undef );
