@@ -118,6 +118,10 @@ foreach my $Project ( openprint::Project->find( 'order'=>'id desc',
 	} # end if
 
 	foreach my $qty_index ( $Project->quantity_indexes() ) {
+		if ( $$sig_specs{'chkOverridePrintingType'.$qty_index} eq 'Y' ) {
+			openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'OverridePrintingType'.$qty_index, 'Y' );
+			openprint::service::delete_service_spec( $Project->id(), $sig_id,'chkOverridePrintingType'.$qty_index);
+		} # end if
 		if ( $$sig_specs{'chkOverrideSignatureSpreadQuantity'.$qty_index} eq 'Y' and $$sig_specs{'chkOverridePageQuantity'.$qty_index} ne 'Y' ) {
 			openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'chkOverridePageQuantity'.$qty_index, 'Y' );
 			if ( ! $$sig_specs{'PageQuantity'.$qty_index} ) {
