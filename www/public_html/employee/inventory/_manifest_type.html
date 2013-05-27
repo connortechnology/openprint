@@ -136,6 +136,10 @@
 			<? echo ( input( type=>'float', id=>'height-'.$$variable{type_id}, name=>'height-'.$$variable{type_id}, value=>$param{'height-'.$$variable{type_id}}, onkeyup=>"gsm_to_mweight(this.form,'$$variable{type_id}');" ); ) ?>
 			</span>
 		</p>
+		<? if ( $$variable{Type}->paper_id() ) ?>
+		<p><label>Link to stock</label><a href="/employee/inventory/paper_details.html?paper_id=<? echo ( $$variable{Type}->paper_id() ) ?>"><? echo ( $$variable{Type}->Paper()->to_string() ) ?></a>
+		</p>
+		<? endif ( $$variable{Type}->paper_id() ) ?>
 	</div>
 	<div class="rightColumn">
 		<p>
