@@ -312,12 +312,7 @@ $openprint::log->debug("Running $field with $$params{$field}") if $debug;
 
 		if ( defined $$fields{$field} ) {
 			if ( $$self{$field} ) {
-				my @transforms = eval('@{$'.$type.'::transforms{$field}}');
-				$log->debug("Transforms: @transforms") if $debug;
-
-				foreach my $transform ( @transforms ) {
-					eval '$$self{$field} =~ ' . $transform;
-				} # end foreach
+				$$self{$field} = transform( $type, $$self{field} );
 			} # end if $$self{field}
 
 			if ( ( ( ! exists $$self{$field} ) or (!defined $$self{$field}) or ( $$self{$field} eq '' ) ) and exists $defaults{$field} ) {
@@ -806,7 +801,7 @@ sub transform {
 $openprint::log->debug("evalling $_[2] ".$transform . " Now value is $_[2]" );
 				eval '$_[2] '.$transform;
 $openprint::log->error("Eval error $@") if $@;
-			};
+			}
 $openprint::log->debug("After $transform: $_[2]") if $debug;
 		} # end foreach
 	} else {

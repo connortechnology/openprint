@@ -24,7 +24,7 @@ $serial = 'service_types_id_seq';
 	'category'			=>	undef,
 );
 %find_fields = (
-	'category'	=>	'(SELECT name FROM ServiceType_Categories WHERE id=category_id)',
+	category	=>	'(SELECT name FROM ServiceType_Categories WHERE id=category_id)',
 );
 %transforms = (
 );

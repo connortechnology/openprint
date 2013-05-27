@@ -182,6 +182,7 @@ sub skids {
 	_skids_results();
 	$session{'/employee/inventory/skids.html?hasmanifest'} = '' if ! defined $session{'/employee/inventory/skids.html?hasmanifest'};
 	$session{'/employee/inventory/skids.html?Type'} = '' if ! defined $session{'/employee/inventory/skids.html?Type'};
+	$session{'/employee/inventory/skids.html?deleted'} = '0' if ! exists $session{'/employee/inventory/skids.html?deleted'};
  
 } # end sub skids
 
@@ -826,7 +827,7 @@ sub skid_details {
 						$variable{'error'} .= "RFIDTAG $rfidtag_id is already assigned to skid <a href=\"/employee/inventory/skid_details.html?skid_id=$skid_id\">$skid_id</a>.<br/>";
 						next;
 					} # end if
-				} # end if
+				} # end if RFIDTag->id()
 			} # end foreach rfidtag_id
 		} # end if param{rfidtag_id}
 		if ( $param{manufacturers_id} ) {
@@ -848,7 +849,6 @@ sub skid_details {
 			} # end if
 		} # end if
 		return if $variable{'error'};
-$log->debug('sacing');
 
 		# Skid_quantity only exists if adding new stock
 		if ( $param{skid_quantity} ) {
@@ -886,11 +886,16 @@ $log->debug("Entering skid $skid_count");
 		} elsif ( @skid_ids ) {
 $log->debug('sacing');
 			foreach my $skid_id ( @skid_ids ) {
+				my $Skid = new openprint::Skid( $skid_id );
 				if ( exists $param{Quantity} ) {
 					$param{Quantity} = @quantities > 1 ? shift @quantities : $quantities[0] if @quantities;
-					my $Skid = new openprint::Skid( $skid_id );
 					$Skid->id( $skid_id );
 					save_Skid( $Skid );
+				} else {
+					if ( $param{rfidtag_id} and  ( $Skid->rfidtag_id() ne $param{rfidtag_id} ) ) {
+						$Skid->rfidtag_id( $param{rfidtag_id} );
+						$variable{error} .= $Skid->save();
+					} # end if
 				} # end if
 				if ( $param{'verification_code'} ) {
 					my $SV = new openprint::Skid_Verification();
@@ -954,10 +959,15 @@ $log->debug('sacing');
 		} # end foreach
 	} elsif ( $param{'btnFunction'} eq 'DeletePaper' ) {
 		my $C = new openprint::SkidContent($param{'content_id'});
-		my $PI = new openprint::PaperInventory();
-		$PI->save({'user_id'=>$session{'user_id'},'skid_id'=>$C->Skid()->id(), 'paper_id'=>$C->paper_id(), 'comment'=>'Deleted from skid.'});
-		$variable{'error'} .= $C->delete();
-		delete $$Skid{'Contents'};
+		if ( ! $C->id() ) {
+			$variable{error} .= 'Paper not found on skid. No changes made.<br/>';
+			$log->error("Paper not found on skid. WHy?!");
+		} else {
+			my $PI = new openprint::PaperInventory();
+			$PI->save({'user_id'=>$session{'user_id'},'skid_id'=>$C->Skid()->id(), 'paper_id'=>$C->paper_id(), 'comment'=>'Deleted from skid.'});
+			$variable{'error'} .= $C->delete();
+			delete $$Skid{'Contents'};
+		} # end if
 	} # end if
 
 	$variable{'Skid'} = new openprint::Skid( @skid_ids ? $skid_ids[0] : undef );
@@ -1358,10 +1368,26 @@ sub _rfidscanner_log {
 sub manifest {
 	$param{'manifest_id'} =~ s/\s//g;
 	my $Manifest = new openprint::Manifest( $param{'manifest_id'} );
-	if ( $param{'btnFunction'} eq 'Delete' ) {
+	if ( $param{action} eq 'import' ) {
+		manifest_import();
+		return;
+	
+	} elsif ( $param{'btnFunction'} eq 'Delete' ) {
 		$variable{'error'} .= $Manifest->delete();
 		if ( ! $variable{'error'} ) {
 			$variable{'Redirect'} = '/employee/inventory/manifests.html';
+			%param = ();
+		} # end if
+	} elsif ( $param{'btnFunction'} eq 'undelete' ) {
+		$variable{error} .= $Manifest->undelete();
+		if ( ! $variable{error} ) {
+			$variable{Redirect} = '/employee/inventory/manifests.html';
+			%param = ();
+		} # end if
+	} elsif ( $param{'btnFunction'} eq 'destroy' ) {
+		$variable{error} .= $Manifest->destroy();
+		if ( ! $variable{error} ) {
+			$variable{Redirect} = '/employee/inventory/manifests.html';
 			%param = ();
 		} # end if
 	} elsif ( $param{'btnFunction'} eq 'Submit' ) {
@@ -1387,38 +1413,35 @@ sub manifest {
 
 		$variable{'error'} .= $Manifest->save( \%param );
 
-		my @Types = openprint::Manifest_Content_Type->find('manifest_id'=>$Manifest->id());
+		my @Types = openprint::Manifest_Content_Type->find( manifest_id=>$Manifest->id());
 		if ( ! @Types ) {
+			# It's an empty, brand new manifest
 			my $Type = new openprint::Manifest_Content_Type();
-			$variable{'error'} .= $Type->save({'manifest_id'=>$Manifest->id()});
+			$variable{error} .= $Type->save({ manifest_id=>$Manifest->id() });
 		} else {
-			foreach my $Type ( openprint::Manifest_Content_Type->find('manifest_id'=>$Manifest->id()) ) {
+			foreach my $Type ( openprint::Manifest_Content_Type->find( manifest_id=>$Manifest->id()) ) {
 				my $Paper = save_Paper('-'.$Type->id());
-				if ( ! $Paper ) {
-					$variable{'error'} .= 'Unable to get Stock.<br/>';
-					next;
-				} # end if
-
+				
 				# If there is a change of paper in the type, then go through each skid and update them, nicluding allocations, and add a log entry so we know that it happened.
 				if ( $Type->paper_id() and ( $Type->paper_id() != $Paper->id() ) ) {
-					$variable{'information'} .= 'Skid contents have been changed from ' . $Type->Paper()->to_string() . ' to ' . $Paper->to_string().'<br/>';
-					foreach my $C ( $Manifest->Contents( 'type_id' => $Type->id() ) ) {
+					$variable{information} .= 'Skid contents have been changed from ' . $Type->Paper()->to_string() . ' to ' . $Paper->to_string().'<br/>';
+					foreach my $C ( $Manifest->Contents( type_id => $Type->id() ) ) {
 						foreach my $SkidContent ( $C->Skid()->Contents() ) {
 							# If it has the old type,
 							if ( $SkidContent->paper_id() == $Type->paper_id() ) {
 								my $PI = new openprint::PaperInventory();
 								$PI->save({'user_id'=>$session{'user_id'},'skid_id'=>$C->Skid()->id(), 'paper_id'=>$Type->paper_id(),
-										'quantity'=>-1*$SkidContent->quantity(),
-										'comment'=>'Changed stock from ' . $Type->Paper()->to_string() . ' to ' . $Paper->to_string()});
+										quantity=>-1*$SkidContent->quantity(),
+										comment=>'Changed stock from ' . $Type->Paper()->to_string() . ' to ' . $Paper->to_string()});
 								# Change the type to the new type
-								$SkidContent->save({'paper_id'=>$Paper->id()});
+								$SkidContent->save({paper_id=>$Paper->id()});
 								foreach my $PA ( openprint::PaperAllocation->find('skid_id'=>$C->skid_id(), 'paper_id'=>$Type->paper_id() ) ) {
-									$PA->save({'paper_id'=>$Paper->id()});
+									$PA->save({paper_id=>$Paper->id()});
 								} # end foreach PA
 								my $PI = new openprint::PaperInventory();
-								$PI->save({'user_id'=>$session{'user_id'},'skid_id'=>$C->Skid()->id(), 'paper_id'=>$Paper->id(),
-										'quantity'=>$SkidContent->quantity(),
-										'comment'=>'Changed stock from ' . $Type->Paper()->to_string() . ' to ' . $Paper->to_string()});
+								$PI->save({user_id=>$session{user_id},skid_id=>$C->Skid()->id(), paper_id=>$Paper->id(),
+										quantity =>$SkidContent->quantity(),
+										comment=>'Changed stock from ' . $Type->Paper()->to_string() . ' to ' . $Paper->to_string()});
 								
 							} # end if
 
@@ -1429,41 +1452,52 @@ sub manifest {
 				} # end if different Paper Type
 
 				my %data = (
-					'docket'	=>	$param{'docket-'.$Type->id()},
-					'paper_id'	=>	$Paper->id(),
-					'po_id'		=>	$param{'po_id-'.$Type->id()},
+					docket		=>	$param{'docket-'.$Type->id()},
+					paper_id	=>	$Paper->id(),
+					po_id		=>	$param{'po_id-'.$Type->id()},
+					manufacturers_name	=>	$param{'manufacturers_name-'.$$Type{id}},
+					item_count	=>	$param{'item_count-'.$$Type{id}},
 				);
-				$data{'cost'} = $param{'cost-'.$Type->id()} if exists $param{'cost-'.$Type->id()};
-				$data{'supplier_invoice'} = $param{'supplier_invoice-'.$Type->id()} if exists $param{'supplier_invoice-'.$Type->id()};
-				$variable{'error'} .= $Type->save(\%data);
+				$data{cost} = $param{'cost-'.$Type->id()} if exists $param{'cost-'.$Type->id()};
+				$data{supplier_invoice} = $param{'supplier_invoice-'.$Type->id()} if exists $param{'supplier_invoice-'.$Type->id()};
+				$variable{error} .= $Type->save(\%data);
+
+				if ( $Type->manufacturers_name() and $Type->paper_id() and ! $Type->Paper()->manufacturers_name() ) {
+					$variable{error} .= $Paper->save({manufacturers_name=>$Type->manufacturers_name()});
+				} # end if
 
 				my $Project;
 				if ( $param{'docket-'.$Type->id()} ) {
-					my @Projects = openprint::Project->find('docket'=>$param{'docket-'.$Type->id()});
-					if ( ! @Projects ) {
+					if ( ! ( $Project = openprint::Project->find_one( docket=>$param{'docket-'.$Type->id()}) ) ) {
 						$variable{'error'} .= 'Docket ' . $param{'docket-'.$Type->id()} . ' not found.	No allocations made.<br/>';
-					} else {
-						$Project = $Projects[0];
 					} # end if
 				} # end if
 
+				my $quantity = $Type->type() eq 'Sheet' ? $param{"qty_sheets-$$Type{id}-"} : $param{"qty_lbs-$$Type{id}-"};
 				# Save any new entries that might have been entered but not added.
-				if ( $param{"qty_lbs-$$Type{id}-"} ) {
+				if ( $quantity ) {
 					@param{"rfidtag_id-$$Type{id}-","skid_id-$$Type{id}-"} = misc::trim(@param{"rfidtag_id-$$Type{id}-","skid_id-$$Type{id}-"});
 
 					my $Skid;
 					my $Tag;
 					if ( $param{"rfidtag_id-$$Type{id}-"} ) {
 						$Tag = new openprint::RFIDTag( $param{"rfidtag_id-$$Type{id}-"} );
-						$variable{'error'} .= $Tag->save({'id'=>$param{"rfidtag_id-$$Type{id}-"}}) if $param{"rfidtag_id-$$Type{id}-"} and ! $Tag->id();
-						$Skid = $Tag->Skid() if $Tag->skid_id();
+						if ( $param{"rfidtag_id-$$Type{id}-"} and ! $Tag->id() ) {
+							$variable{error} .= $Tag->save({ id=>$param{"rfidtag_id-$$Type{id}-"}});
+						} elsif ( $Tag->skid_id() ) {
+							$Skid = $Tag->Skid();
+						} # end if
 					} # end if
 
 					if ( $param{"manufacturers_id-$$Type{id}-"} ) {
 						if ( my $S = openprint::Skid->find_one(manufacturers_id=>$param{"manufacturers_id-$$Type{id}-"}) ) {
-							if ( $S->id() != $Skid->id() ) {
-								$variable{error} .= 'Manufacturers ID '.$param{"manufacturers_id-$$Type{id}-"}." is already assigned to <a href=\"/employee/inventory/skid_details.html?skid_id=$$S{id}\">$$S{id}</a>.<br/>";
-								delete $param{"manufacturers_id-$$Type{id}-"};
+							if ( $Skid ) {
+								if ( $S->id() != $Skid->id() ) {
+									$variable{error} .= 'Manufacturers ID '.$param{"manufacturers_id-$$Type{id}-"}." is already assigned to <a href=\"/employee/inventory/skid_details.html?skid_id=$$S{id}\">$$S{id}</a>.<br/>";
+									delete $param{"manufacturers_id-$$Type{id}-"};
+								} # end if
+							} else {
+								$Skid = $S;
 							} # end if
 						} # end if
 					} # end if
@@ -1482,7 +1516,7 @@ sub manifest {
 								'type_id'		=>	$Type->id(),
 								'skid_id'		=>	$Skid->id(),
 								'manifest_id'	=>	$Manifest->id(),
-								'quantity'		=>	Math::Round::nearest( 1, $param{"qty_lbs-$$Type{id}-"} ),
+								'quantity'		=>	( $Type->type() eq 'Sheet' ? $param{"qty_sheets-$$Type{id}-"} : Math::Round::nearest( 1, $param{"qty_lbs-$$Type{id}-"} ) ),
 								} );
 
 						my @SkidContents = openprint::SkidContent->find(skid_id=>$Skid->id(),paper_id=>$Type->paper_id());
@@ -1498,50 +1532,61 @@ sub manifest {
 
 				my $total_qty = 0;
 				# Save data for the rest of the contents
-				foreach my $C ( $Manifest->Contents( 'type_id' => $Type->id() ) ) {
-					my $Skid = $C->Skid();
+				foreach my $MC ( $Manifest->Contents( type_id => $$Type{id} ) ) {
+					$MC->rfidtag_id( $param{"rfidtag_id-$$Type{id}-$$MC{id}"} ) if exists $param{"rfidtag_id-$$Type{id}-$$MC{id}"};
+					my $Tag = $MC->RFIDTag();
+					$variable{error} .= $Tag->save() if $MC->rfidtag_id() and ! $Tag->created_on();
 
-					my $checked_out = openprint::PaperInventory->find('skid_id'=>$Skid->id(), 'paper_id'=>undef, 'comment_like'=>'Checked out%' ) ? 1 : 0; 
-					if ( exists $param{"qty_lbs-$$Type{id}-$$C{id}"} and ( $C->quantity() != $param{"qty_lbs-$$Type{id}-$$C{id}"} ) ) {
-						$variable{'error'} .= $C->save({ 'quantity'	=> sprintf('%d', $param{"qty_lbs-$$Type{id}-$$C{id}"}) });
+					my $Skid = $MC->Skid();
+					if ( $param{"manufacturers_id-$$Type{id}-$$MC{id}"} ) {
+						if ( my $S = openprint::Skid->find_one(manufacturers_id=>$param{"manufacturers_id-$$Type{id}-$$MC{id}"}) ) {
+							if ( $Skid->id() ) {
+								if ( $S->id() != $Skid->id() ) {
+									$variable{error} .= "Manufacturers ID is already assigned to <a href=\"/employee/inventory/skid_details.html?skid_id=$$S{id}\">$$S{id}</a>.<br/>";
+									delete $param{"manufacturers_id-$$Type{id}-$$MC{id}"};
+								} # end if
+							} else {
+								$Skid = $S;
+							} # end if
+						} # end if
+						$variable{error} .= $Skid->save({manufacturers_id=>$param{"manufacturers_id-$$Type{id}-$$MC{id}"}}) if $param{"manufacturers_id-$$Type{id}-$$MC{id}"} and ! $Skid->manufacturers_id();
+					} # end if
+					$Skid->rfidtag_id( $MC->rfidtag_id() ) if ! $Skid->rfidtag_id() and $MC->rfidtag_id();
+					$variable{error} .= $Skid->save() if ! $Skid->id();
+					$variable{error} .= $MC->save({skid_id=>$$Skid{id}}) if $MC->skid_id() != $$Skid{id};
+
+					my $checked_out = openprint::PaperInventory->find( skid_id=>$Skid->id(), paper_id=>$Type->paper_id(), 'comment_like'=>'Checked out%' ) ? 1 : 0; 
+					my $qty_param = $Type->type() eq 'Sheet' ? "qty_sheets-$$Type{id}-$$MC{id}" : "qty_lbs-$$Type{id}-$$MC{id}";
+					if ( exists $param{$qty_param} and ( $MC->quantity() != $param{$qty_param} ) ) {
+						$variable{error} .= $MC->save({ quantity	=> Math::Round::nearest(1, $param{$qty_param}) });
 						if ( ! $checked_out ) {
-							save_inventory( $Skid, $Paper, $C->quantity(), sprintf('Inventory adjusted from manifest %1$s.', $Manifest->name() ) );
+							save_inventory( $Skid, $Paper, $MC->quantity(), sprintf('Inventory adjusted by manifest <a href="/employee/inventory/manifest.html?manifest_id=%1$d">%2$s</a>.', $Manifest->id(), $Manifest->name() ) );
 						} # end if
 					} else {
 						my @SkidContents = openprint::SkidContent->find(skid_id=>$Skid->id(),paper_id=>$Type->paper_id());
 						if ( ! @SkidContents ) {
 							@SkidContents = ( new openprint::SkidContent() );
-							$SkidContents[0]->save({skid_id=>$$C{skid_id}, paper_id=>$Type->paper_id(), quantity=>$$C{quantity}, manifestcontent_id=>$$C{id}});
+							$SkidContents[0]->save({skid_id=>$$MC{skid_id}, paper_id=>$Type->paper_id(), quantity=>$$MC{quantity}, manifestcontent_id=>$$MC{id}});
 						} # end if
 					} # end if
-					if ( $param{"location_id-$$Type{id}-$$C{id}"} and ( $param{"location_id-$$Type{id}-$$C{id}"} != $Skid->location_id() ) ) {
-						$Skid->save({location_id=>$param{"location_id-$$Type{id}-$$C{id}"}});
+					if ( $param{"location_id-$$Type{id}-$$MC{id}"} and ( $param{"location_id-$$Type{id}-$$MC{id}"} != $Skid->location_id() ) ) {
+						$Skid->save({location_id=>$param{"location_id-$$Type{id}-$$MC{id}"}});
 					} # end if
-					$total_qty += $C->quantity();
+					$total_qty += $MC->quantity();
 					#if ( $Project and ( $param{"allocate-$$Type{id}"} eq 'Specific' ) ) {
 					if ( $Project and ! $checked_out ) {
-						my $PA = openprint::PaperAllocation->find_one('skid_id'=>$C->skid_id());
+						my $PA = openprint::PaperAllocation->find_one('skid_id'=>$MC->skid_id());
 						if ( ! $PA ) {
-							$Paper->allocate( $Skid, $Project->id(), $C->quantity(), $Paper->type() eq 'Roll' ? 'lbs' : 'sheets' );
-							$variable{'information'} .= sprintf('Allocated %1$d%2$s to docket <a href="/employee/project/view.html?ProjectIndex=%3$d">%4$d</a>.<br/>', $C->quantity(), ($Paper->type() eq 'Roll' ? 'lbs' : 'sheets'), $Project->id(), $Project->docket() );
+							$Paper->allocate( $Skid, $Project->id(), $MC->quantity(), $Paper->units() );
+							$variable{'information'} .= sprintf('Allocated %1$d%2$s to docket <a href="/employee/project/view.html?ProjectIndex=%3$d">%4$d</a>.<br/>', $MC->quantity(), $Paper->units(), $Project->id(), $Project->docket() );
 						} elsif ( ! $PA->project_id() ) {
 							$variable{'error'} .= $PA->save({'project_id'=>$Project->id()});
-							$variable{'information'} .= sprintf('Updated allocation %1$d%2$s to docket <a href="/employee/project/view.html?ProjectIndex=%3$d">%4$d</a>.<br/>', $C->quantity(), ($Paper->type() eq 'Roll' ? 'lbs' : 'sheets'), $Project->id(), $Project->docket() );
+							$variable{'information'} .= sprintf('Updated allocation %1$d%2$s to docket <a href="/employee/project/view.html?ProjectIndex=%3$d">%4$d</a>.<br/>', $MC->quantity(), $Paper->units(), $Project->id(), $Project->docket() );
 						} elsif ( $PA->project_id() != $Project->id() ) {
-							$variable{'information'} .= sprintf('Skid <a href="/employee/inventory/skid_details.html?skid_id=%1$d">%1$d</a> already allocated to docket <a href="/employee/project/view.html?ProjectIndex=%2$d">%3$d</a>.<br/>', $C->skid_id(), $PA->project_id(), $PA->docket() );
+							$variable{'information'} .= sprintf('Skid <a href="/employee/inventory/skid_details.html?skid_id=%1$d">%1$d</a> already allocated to docket <a href="/employee/project/view.html?ProjectIndex=%2$d">%3$d</a>.<br/>', $MC->skid_id(), $PA->project_id(), $PA->docket() );
 						} # end if
 					} # end if
 
-					if ( $param{"manufacturers_id-$$Type{id}-$$C{id}"} ) {
-						if ( my $S = openprint::Skid->find_one(manufacturers_id=>$param{"manufacturers_id-$$Type{id}-$$C{id}"}) ) {
-							if ( $S->id() != $Skid->id() ) {
-								$variable{error} .= "Manufacturers ID is already assigned to <a href=\"/employee/inventory/skid_details.html?skid_id=$$S{id}\">$$S{id}</a>.<br/>";
-								delete $param{"manufacturers_id-$$Type{id}-$$C{id}"};
-							} # end if
-						} # end if
-					} # end if
-
-					$variable{error} .= $Skid->save({manufacturers_id=>$param{"manufacturers_id-$$Type{id}-$$C{id}"}}) if $param{"manufacturers_id-$$Type{id}-$$C{id}"} and ! $Skid->manufacturers_id();
 				} # end foreach Manifest_Content for this type
 
 if ( 0 ) {
@@ -1577,6 +1622,39 @@ if ( 0 ) {
 	$variable{'Manifest'} = $Manifest;
 } # end sub manifest
 
+sub _manifest_contents {
+	if ( ! $param{type_id} ) {
+		$log->error( 'Loading _manifest_contents without type_id' );
+	} # end if
+	my $Type = $variable{Type} = new openprint::Manifest_Content_Type( $param{type_id} );
+	if ( ( $Type->type() ne $param{"type-$$Type{id}"} ) and $param{"type-$$Type{id}"} ) {
+		$Type->save({type => $param{"type-$$Type{id}"} });
+	} # end if
+
+	if ( ! $$Type{id} ) {
+		$log->error( 'Loading _manifest_contents with invalid type_id' );
+	} # end if
+	$variable{Manifest} = $Type->Manifest();
+	$variable{type_id} = $$Type{id};
+
+	foreach my $Content ( openprint::ManifestContent->find( type_id=>$param{type_id} ) ) {
+		my $quantity = $Type->type() eq 'Roll' ? $param{"qty_lbs-$$Type{id}-$$Content{id}"} : $param{"qty_sheets-$$Type{id}-$$Content{id}"};
+
+		if ( ( $Content->skid_id != $param{"skid_id-$$Type{id}-$$Content{id}"} ) and ( $Content->quantity() != $quantity ) ) {
+if ( 0 ) {
+			$variable{error} .= $Content->save({
+				skid_id		=>	$param{"skid_id-$$Type{id}-$$Content{id}-$$Content{id}"},
+				quantity	=>	$quantity,
+			});
+} else {
+$log->debug("WOuld update");
+}
+		} else {
+			$log->debug("No save needed for " . $Content->to_string() );
+		} # end if
+	} # end foreach Content
+} # end sub _manifest_contents
+
 sub _manifest_content {
 	if ( $param{'action'} eq 'Remove' ) {
 		my $C = new openprint::ManifestContent( $param{'content_id'} );
@@ -1584,6 +1662,7 @@ sub _manifest_content {
 		$variable{'Manifest'} = $C->Manifest();
 		$variable{'error'} .= $C->delete();
 	} elsif ( $param{'action'} eq 'Add' ) {
+		# The goal is to store as much info as possible in the manifest, but not commit to the other objects until we Submit the manifest.
 		if ( ! $param{manifest_id} ) {
 			$variable{error} .= 'No manifest id. Please enter the manifest id before adding items to it.<br/>';
 			return;
@@ -1598,92 +1677,84 @@ sub _manifest_content {
 			$variable{error} .= $Manifest->save({'id'=>$param{'manifest_id'}});
 		} # end if
 
-		if ( $param{'rfidtag_id'} or $param{'skid_id'} or $param{manufacturers_id} ) {
-			@param{'rfidtag_id','skid_id','manufacturers_id'} = misc::trim(@param{'rfidtag_id','skid_id','manufacturers_id'});
-			my $Tag = new openprint::RFIDTag( $param{'rfidtag_id'} );
-			$variable{'error'} .= $Tag->save({'id'=>$param{'rfidtag_id'}}) if $param{'rfidtag_id'} and ! $Tag->id();
-
-			my $Skid = new openprint::Skid( $param{'skid_id'} );
-			$Skid = $Tag->Skid() if $Tag->id() and ! $Skid->id();
-
-			if ( $Skid->id() and $Tag->id() and $Skid->rfidtag_id() and ( $Skid->rfidtag_id() != $Tag->id() ) ) {
-				$variable{error}  .= 'Skid already has RFID Tag ' . $Skid->rfidtag_id(). '. Not changing it.<br/>';
-				$Tag = new openprint::RFIDTag();
-			} # end if
-				
-			if ( $param{manufacturers_id} ) {
-				my $S = openprint::Skid->find_one(manufacturers_id=>$param{manufacturers_id} );
-
-				if ( ! $Skid->id() ) {
-					$Skid = $S if $S;
-				} elsif ( ! $Skid->manufacturers_id() ) {
-					if ( $Skid->id() != $S->id() ) {
-						$variable{error} .= 'Manufacturers id '.$param{manufacturers_id}. ' has already been assigned to <a href="/employee/inventory/skid_details.html?skid_id='.$S->id().'">'.$S->id().'</a>.<br/>';
-						delete $param{manufacturers_id};
-					} # end if
-				} # end if
-				# FIXME: Should look at paper type as well.
-			} # end if
-			my $changed=0;
-			if ( ! $Skid->id() ) {
-				$Skid->set({ rfidtag_id=>$Tag->id(),manufacturers_id=>$param{manufacturers_id}});
-			} # end if
-			if ( $param{manufacturers_id} and ! $Skid->manufacturers_id() ) {
-				$changed = 1;
-				$Skid->set({manufacturers_id=>$param{manufacturers_id}} );
-			} # end if
-			if ( $param{rfidtag_id} and ! $Skid->rfidtag_id() ) {
-				$changed = 1;
-				$Skid->set({rfidtag_id=>$param{rfidtag_id}} );
-			} # end if
-			if ( $param{location_id} ) {
-				$changed = 1;
-				$Skid->set({location_id=>$param{location_id}} );
-			} # end if
-			if ( $Skid->received_on() ne $Manifest->received_on() ) {
-				$Skid->received_on( $Manifest->received_on() );	
-				$changed = 1;
-			} # end if
-			$variable{error} .= $Skid->save() if $changed or ! $Skid->id();
-			return if $variable{'error'};
-
-			if ( $Tag->id() and sets::isin( $Tag->id(), map { $_->Skid()->rfidtag_id() } $Manifest->Contents() ) ) {
-				$variable{'error'} .= 'RFID Tag ' . $Tag->id() . ' has already been entered.';
-			} elsif ( $Skid->id() and sets::isin( $Skid->id(), map { $_->skid_id() } $Manifest->Contents() ) ) {
-				$variable{'error'} .= 'Skid ' . $Skid->id(). ' has already been entered.';
-			} else {
-				if ( my $otherMC = openprint::ManifestContent->find_one('skid_id'=>$$Skid{id}) ) {
-					$variable{'warning'} .= 'Warning: Skid ' . $Skid->id(). ' is also on manifest '.$otherMC->Manifest()->name().'.';
-				} # end if
-				my $MC = new openprint::ManifestContent();
-				my @SC = $Skid->Contents();
-				#if ( ! @SC ) {
-					# If skid didn't exist, then it won't have contents.
-					#@SC = ( new openprint::SkidContent() );
-					#$SC[0]->set({ skid_id=>$Skid->id(), paper_id=>$Type->paper_id(), 
-							#( $param{qty_lbs} ? ( quantity=>$param{qty_lbs} ) : () )  });
-				if ( ! $param{qty_lbs} ) {
-					if ( @SC == 1 ) {
-						$param{qty_lbs} = $SC[0]->quantity();
-					} # end if
-				} # end if
-				$variable{'error'} .= $MC->save( {
-						type_id		=>	$param{'type_id'},
-						skid_id		=>	$Skid->id(),
-						manifest_id	=>	$Manifest->id(),
-						docket		=>	$param{'docket'},
-						quantity	=>	Math::Round::nearest( 1, $param{qty_lbs}),
-						} );
-				foreach my $SkidContent ( @SC ) {
-					$SkidContent->save({'manifestcontent_id'=>$MC->id()}) if $SkidContent->manifestcontent_id() != $MC->id();
-				} # end foreach SkidContent
-				$variable{'C'} = $MC;
-				$variable{'type_id'} = $param{'type_id'};
-				$variable{'Type'} = new openprint::Manifest_Content_Type( $param{'type_id'} );
-			} # end if
-		} else {
-			$variable{error} .= 'No RFID, Skid ID or manufacturers id given.  No changes made.<br/>';
+		if ( ! ( $param{'rfidtag_id'} or $param{'skid_id'} or $param{manufacturers_id} or $param{quantity} ) ) {
+			$variable{error} .= 'No RFID, Skid ID or manufacturers ID or quantity given.  No changes made.<br/>';
+			return;
 		} # end if
+
+		@param{'rfidtag_id','skid_id','manufacturers_id'} = misc::trim(@param{'rfidtag_id','skid_id','manufacturers_id'});
+		my $Skid = new openprint::Skid( $param{skid_id} );
+
+		my $Tag = new openprint::RFIDTag( $param{rfidtag_id} );
+		if ( $param{rfidtag_id} and ! $Tag->id() ) {
+			if ( ! openprint::RFIDTag::is_invalid_id($param{rfidtag_id}) ) {
+				$Tag->save({id=>$param{'rfidtag_id'}});
+			} else {
+				$Tag->id($param{rfidtag_id});
+			} # end if
+		} elsif ( $Tag->id() ) {
+			$Skid = $Tag->Skid() if $Tag->id() and ! $Skid->id();
+		} # end if
+
+		if ( $Skid->id() and $Tag->id() and $Skid->rfidtag_id() and ( $Skid->rfidtag_id() != $Tag->id() ) ) {
+			$variable{error}  .= "Skid $$Skid{id} already has RFID Tag " . $Skid->rfidtag_id(). '.<br/>';
+		} # end if
+
+		if ( $param{manufacturers_id} ) {
+			my $S = openprint::Skid->find_one(manufacturers_id=>$param{manufacturers_id} );
+
+			if ( ! $Skid->id() ) {
+				$Skid = $S if $S;
+			} elsif ( ! $Skid->manufacturers_id() ) {
+				if ( $Skid->id() != $S->id() ) {
+					$variable{error} .= 'Manufacturers id '.$param{manufacturers_id}. ' has already been assigned to <a href="/employee/inventory/skid_details.html?skid_id='.$S->id().'">'.$S->id().'</a>.<br/>';
+				} # end if
+			} # end if
+# FIXME: Should look at paper type as well.
+		} # end if
+
+		if ( ( ! $Tag->id() ) and $Skid and $Skid->rfidtag_id() ) {
+			$Tag = $Skid->RFIDTag();
+		} # end if
+
+		if ( $Tag->id() and sets::isin( $Tag->id(), [ map { $_->rfidtag_id() } $Manifest->Contents() ] ) ) {
+			$variable{'error'} .= 'RFID Tag ' . $Tag->id() . ' has already been entered.';
+		} elsif ( $Skid->id() and sets::isin( $Skid->id(), [ map { $_->skid_id() } $Manifest->Contents() ] ) ) {
+			$variable{'error'} .= 'Skid ' . $Skid->id(). ' has already been entered.';
+		} elsif ( $param{manufacturers_id} and sets::isin( $param{manufacturers_id}, [ map { $_->manufacturers_id() } $Manifest->Contents() ] ) ) {
+			$variable{'error'} .= 'Manufacturers id ' . $param{manufacturers_id} . ' has already been entered.';
+		} # end if
+
+		my $MC = new openprint::ManifestContent();
+		if ( $$Skid{id} ) {
+# Now check for warnings
+			if ( my $otherMC = openprint::ManifestContent->find_one( skid_id=>$$Skid{id}) ) {
+				$variable{'warning'} .= 'Warning: Skid ' . $Skid->id(). ' is also on manifest '.$otherMC->Manifest()->name().'.';
+			} # end if
+
+# Auto load data
+			my @SC = $Skid->Contents();
+			if ( ! $param{qty_lbs} ) {
+				if ( @SC == 1 ) {
+					$param{qty_lbs} = $SC[0]->quantity();
+				} # end if
+			} # end if
+			if ( ! $param{location_id} ) {
+				$param{location_id} = $Skid->location_id();
+			} # end if
+		} # end if
+		$variable{error} .= $MC->save( {
+				type_id		=>	$param{type_id},
+				Skid		=>	$Skid,
+				RFIDTag		=>	$Tag,
+				manifest_id	=>	$Manifest->id(),
+				manufacturers_id	=>	$param{manufacturers_id},
+				docket		=>	$param{docket},
+				quantity	=>	Math::Round::nearest( 1, $param{quantity} ),
+				} );
+		$variable{'C'} = $MC;
+		$variable{'type_id'} = $param{'type_id'};
+		$variable{'Type'} = $Type;
 	} # end if
 } # end sub _manifest_content
 
@@ -1700,6 +1771,7 @@ sub manifests {
 	ssi::setup_date_select( '/employee/inventory/manifests.html', 'received_on_end', '' );
 	ssi::setup_date_select( '/employee/inventory/manifests.html', 'created_on_start', -7 );
 	ssi::setup_date_select( '/employee/inventory/manifests.html', 'created_on_end', '' );
+	$session{'/employee/inventory/manifests.html?deleted'} = '0' if ! exists $session{'/employee/inventory/manifests.html?deleted'};
 } # end sub manifests
 
 sub _manifests {
@@ -1708,7 +1780,7 @@ sub _manifests {
 				( map { 'received_on_end_'.$_ } ( 'year','month','day' ) ),
 				( map { 'created_on_start_'.$_ } ( 'year','month','day' ) ),
 				( map { 'created_on_end_'.$_ } ( 'year','month','day' ) ),
-				'supplier_id', 'delivery',
+				'supplier_id', 'delivery','deleted',
 				) );
 } # end sub _manifests
 
@@ -1888,7 +1960,7 @@ sub _rfidtag_log {
 sub _rfidtag_log_entries {
 	@param{'end_year','end_month','end_day'} = Date::Calc::Today() if ! $param{'end_year'};
 	@param{'start_year','start_month','start_day'} =(0,0,0) if ! $param{'start_year'};
-	$param{'limit'} = 10 if ! $param{'limit'};
+	$param{'limit'} = 10 if ! exists $param{'limit'};
 	$variable{'Entries'} = [ openprint::RFIDTagHistory->find( 
 		rfidtag_id	=>	$param{rfidtag_id},
 		ssi::date_filter( 'start', 'updated_on >=', \%param ),
@@ -1954,7 +2026,7 @@ sub _skids_results {
 				( map { 'last_seen_start_' . $_ } ( 'year','month','day' ) ),
 				( map { 'last_seen_end_' . $_ } ( 'year','month','day' ) ),
 				'Docket','fsc_code','empty', 'withrfid','withoutrfid','location_id','verification_code', 'allocated','contents','hasmanifest',
-				'condition_id', 'skid_id', 'rfid_id', 'manufacturers_id', 'hasmanufacturers',
+				'condition_id', 'skid_id', 'rfid_id', 'manufacturers_id', 'hasmanufacturers','deleted',
 				) );
 }
 
@@ -2025,84 +2097,166 @@ sub manifest_import {
 		my %Rules = map { $_->match(), $_ } openprint::Manifest_Import_Rule->find();
 
 		my $io =$upload->io();
+		if ( $upload->filename() =~ /txt$/i ) {
 
-		@{$variable{Types}} = ();
+			@{$variable{Types}} = ();
 
-		my ( $width, $basis_weight, $product, $manufacturer );
-		my $line_count = 1;
-		my $roll_count = 0;
-		my $Type;
-		my $Manifest = $variable{Manifest} = new openprint::Manifest();
-		$variable{error} .= $Manifest->save({name=>$param{import}});
+			my ( $width, $basis_weight, $product, $manufacturer );
+			my $line_count = 1;
+			my $roll_count = 0;
+			my $Type;
+			my $Manifest = $variable{Manifest} = new openprint::Manifest();
+			$variable{error} .= $Manifest->save({name=>$param{import}});
 
-		while ( my $line = <$io> ) {
-			s/^\s+//, s/\s+$//, s/\s+/ /g, s/\.\s+/\./g for $line;
-			
-
-			if ( $line =~ /(.+)Page\s+(\d+) of (\d+)$/ ) {
-				# Start a new page
-				$log->debug("Line $line_count: Starting new page for $1 page $2 of $3");
-			} elsif ( my ( $d, $m, $y, $H, $M ) = $line =~ /.+\s+(\d\d)\.(\d\d)\.(\d\d)\s*(\d\d:\d\d)$/ ) {
-				$log->debug("Line $line_count: Date: $y-$m-$d $H:$M");
-			} elsif ( ( $product ) = $line =~ /^PRODUCT NUMBER\s+(.+)$/ ) {
-				$log->debug("Line $line_count: Product ($product)");
-			} elsif ( ( $manufacturer ) = $line =~ /^Customer[^A-Z]+([A-Z]+)\s+.+$/ ) {
-				$manufacturer = $Rules{$manufacturer}->replacement() if $Rules{$manufacturer};
-				$log->debug("Line $line_count: Manufacturer ($manufacturer)");
-		
-			} elsif ( 
-				( $width, $basis_weight, my $manufacturers_id, my $location, my $received_on, my $available_quantity, my $available_lbs, my $hold_quantity, my $hold_lbs ) = 
-				$line =~ /^([\d\s\/\.]+)X *([\d\/\.]+)\s+(\S+)\s+(\S+)\s+(\S+)\s+(\S)RO\S+\s+(\S+)\s+(\S)RO\S+\s+([\d\.]+)$/ ) {
-				if ( my ($n,$m) = $width =~ /(\d+)\/(\d+)/ ) {
-					my $r = $n/$m;
-					$r =~ s/\d+(\.\d+)/$1/;
-					$width =~ s/$n\/$m/$r/;
-				} # end if
-				$width =~ s/\s//g;
-
-				$available_quantity =~ s/l/1/;
-				$available_quantity =~ s/[OD]/0/;
-				$available_lbs =~ s/[^\d\.]//g;
-				$hold_lbs =~ s/[^\d\.]//g;
-
-				$manufacturers_id =~ s/[^A-Z0-9]//g;
-
-				$log->debug("Line $line_count: width: $width, weight: $basis_weight, id: $manufacturers_id, qty: $available_quantity, lbs: $available_lbs");
-				$roll_count += 1;
-				my @Papers = openprint::Paper->find_one( manufacturers_name=>$product, width=>$width, basis_weight=>$basis_weight, manufacturer=>$manufacturer );
-				$Type->save() if $Type;
-				$Type = new openprint::Manifest_Content_Type();
-				$Type->set({ manifest_id=> $$Manifest{id} } );
-				if ( @Papers == 1 ) {
-					$Type->paper_id( $Papers[0]->id() );
-				} # end if
-				$variable{error} .= $Type->save();
-				push @{$variable{Types}}, $Type;
-
-				my $Content = new openprint::ManifestContent();
-				$variable{error} .= $Content->save({manifest_id=>$$Manifest{id}, type_id=>$$Type{id}, quantity=>$available_quantity });
+			while ( my $line = <$io> ) {
+				s/^\s+//, s/\s+$//, s/\s+/ /g, s/\.\s+/\./g for $line;
 				
-			} elsif ( 
-				( my $manufacturers_id, my $location, my $received_on, my $available_quantity, my $available_lbs, my $hold_quantity, my $hold_lbs ) = 
-					$line =~ /^(\S+)\s+(\S+)\s+([\d\.]+)\s+(\S)RO\S+\s+(\S+)\s+(\S)RO\S+\s+([\d\.]+)$/ ) {
-				$log->debug("Line $line_count: width: $width, weight: $basis_weight, id: $manufacturers_id, qty: $available_quantity, lbs: $available_lbs");
-				$roll_count += 1;
-			} elsif ( my ( $total_rolls, $total_weight ) = $line =~ /^TOTALS:\s+Available Quantity\s+(\d+)\s+EA\s+Available\s+.+eight\s+([\d\,\.]+)$/ ) {
-				if ( ! $Type ) {
-					$variable{error} .= "Line $line_count: No Type yet for $product<br/>";
+
+				if ( $line =~ /(.+)Page\s+(\d+) of (\d+)$/ ) {
+					# Start a new page
+					$log->debug("Line $line_count: Starting new page for $1 page $2 of $3");
+				} elsif ( my ( $d, $m, $y, $H, $M ) = $line =~ /.+\s+(\d\d)\.(\d\d)\.(\d\d)\s*(\d\d:\d\d)$/ ) {
+					$log->debug("Line $line_count: Date: $y-$m-$d $H:$M");
+				} elsif ( ( $product ) = $line =~ /^PRODUCT NUMBER\s+(.+)$/ ) {
+					$log->debug("Line $line_count: Product ($product)");
+				} elsif ( ( $manufacturer ) = $line =~ /^Customer[^A-Z]+([A-Z]+)\s+.+$/ ) {
+					$manufacturer = $Rules{$manufacturer}->replacement() if $Rules{$manufacturer};
+					$log->debug("Line $line_count: Manufacturer ($manufacturer)");
+			
+				} elsif ( 
+					( $width, $basis_weight, my $manufacturers_id, my $location, my $received_on, my $available_quantity, my $available_lbs, my $hold_quantity, my $hold_lbs ) = 
+					$line =~ /^([\d\s\/\.]+)X *([\d\/\.]+)\s+(\S+)\s+(\S+)\s+(\S+)\s+(\S)RO\S+\s+(\S+)\s+(\S)RO\S+\s+([\d\.]+)$/ ) {
+					if ( my ($n,$m) = $width =~ /(\d+)\/(\d+)/ ) {
+						my $r = $n/$m;
+						$r =~ s/\d+(\.\d+)/$1/;
+						$width =~ s/$n\/$m/$r/;
+					} # end if
+					$width =~ s/\s//g;
+
+					$available_quantity =~ s/l/1/;
+					$available_quantity =~ s/[OD]/0/;
+					$available_lbs =~ s/[^\d\.]//g;
+					$hold_lbs =~ s/[^\d\.]//g;
+
+					$manufacturers_id =~ s/[^A-Z0-9]//g;
+
+					$log->debug("Line $line_count: width: $width, weight: $basis_weight, id: $manufacturers_id, qty: $available_quantity, lbs: $available_lbs");
+					$roll_count += 1;
+					my @Papers = openprint::Paper->find_one( manufacturers_name=>$product, width=>$width, basis_weight=>$basis_weight, manufacturer=>$manufacturer );
+					$Type->save() if $Type;
 					$Type = new openprint::Manifest_Content_Type();
 					$Type->set({ manifest_id=> $$Manifest{id} } );
+					if ( @Papers == 1 ) {
+						$Type->paper_id( $Papers[0]->id() );
+					} # end if
+					$variable{error} .= $Type->save();
+					push @{$variable{Types}}, $Type;
+
+					my $Content = new openprint::ManifestContent();
+					$variable{error} .= $Content->save({manifest_id=>$$Manifest{id}, type_id=>$$Type{id}, quantity=>$available_quantity });
+					
+				} elsif ( 
+					( my $manufacturers_id, my $location, my $received_on, my $available_quantity, my $available_lbs, my $hold_quantity, my $hold_lbs ) = 
+						$line =~ /^(\S+)\s+(\S+)\s+([\d\.]+)\s+(\S)RO\S+\s+(\S+)\s+(\S)RO\S+\s+([\d\.]+)$/ ) {
+					$log->debug("Line $line_count: width: $width, weight: $basis_weight, id: $manufacturers_id, qty: $available_quantity, lbs: $available_lbs");
+					$roll_count += 1;
+				} elsif ( my ( $total_rolls, $total_weight ) = $line =~ /^TOTALS:\s+Available Quantity\s+(\d+)\s+EA\s+Available\s+.+eight\s+([\d\,\.]+)$/ ) {
+					if ( ! $Type ) {
+						$variable{error} .= "Line $line_count: No Type yet for $product<br/>";
+						$Type = new openprint::Manifest_Content_Type();
+						$Type->set({ manifest_id=> $$Manifest{id} } );
+					} # end if
+					$Type->item_count( $total_rolls );
+					if ( $roll_count != $total_rolls ) {
+						$log->warn("Line $line_count: Roll count($roll_count) != total rolls: $total_rolls");
+					} # end if
+					$roll_count = 0;
+				} else {
+					$log->debug("Line $line_count: unparsed line: $line");
 				} # end if
-				$Type->item_count( $total_rolls );
-				if ( $roll_count != $total_rolls ) {
-					$log->warn("Line $line_count: Roll count($roll_count) != total rolls: $total_rolls");
+				$line_count += 1;
+			} # end while io
+		} elsif ( $upload->filename() =~ /csv$/i ) {
+			require Text::CSV_XS;
+			my $csv = Text::CSV_XS->new();
+			$_ = <$io>; # drop the title row
+			my $ac = sql::start_transaction( $dbh );
+			my $Manifest = $variable{Manifest} = new openprint::Manifest();
+			$variable{error} .= $Manifest->save({name=>$param{import}});
+
+			@{$variable{Types}} = ();
+			my $Type;
+			my $product;
+			my $item_count = 0;
+
+			my %Skids_by_mfg;
+
+			while ( my $line = <$io> ) {
+				my $status = $csv->parse($line);        # parse a CSV string into fields
+				my @data = misc::trim($csv->fields());
+				#Cust Code,Invt Lev1,Invt Lev2,Invt Lev3,On Hand Qty,On Hand Wgt,On Ord Qty,On Rcpt Qty,Hold Non Ship Qty
+				my ( $cust_code, $desc1, $desc2, $mfg_name, $on_hand_qty, $weight_qty ) = @data;
+				if ( ! $cust_code ) {
+					$variable{warning} .= "Invalid line ($line)<br/>";
+					next;
 				} # end if
-				$roll_count = 0;
-			} else {
-				$log->debug("Line $line_count: unparsed line: $line");
-			} # end if
-			$line_count += 1;
-		} # end while io
+				my ( $width, $weight ) = ( $1, $2 );
+				if ( $desc2 =~ /^([\.\d]+)\s?X\s?([\.\d]+)$/ ) {
+					( $width, $weight ) = ( $1, $2 );
+				} # end if
+				if ( $product ne $desc1.' '.$desc2 ) {
+					$variable{error} .= $Type->save({item_count=>$item_count}) if $Type;
+					$item_count = 0;
+
+					push @{$variable{Types}}, $Type if $Type;
+
+					my $Paper;
+					my @Papers = openprint::Paper->find( manufacturers_name=>($desc1.' '.$desc2) );
+					if ( @Papers == 1 ) {
+						$Paper = $Papers[0];
+					} else {
+					} # end if
+
+					$Type = new openprint::Manifest_Content_Type();
+					$variable{error} .= $Type->save({
+						manifest_id => $$Manifest{id},
+						manufacturers_name	=>	($desc1.' '.$desc2),
+						type	=>	'Roll',
+						( $Paper ? ( paper_id=>$Paper->id() ) : () ),
+					});
+					$product = $desc1.' '.$desc2;
+				} # end if
+				$item_count += 1;
+				$Skids_by_mfg{$mfg_name} = openprint::Skid->find_one( manufacturers_id=>$mfg_name ) if ! exists $Skids_by_mfg{$mfg_name};
+				my $Skid = $Skids_by_mfg{$mfg_name};
+				if ( $Skid ) {
+					my @SC = $Skid->Contents();
+					if ( ! $$Type{paper_id} ) {
+						foreach my $SC ( @SC ) {
+							if ( $$SC{paper_id} ) {
+								$Type->save({paper_id=>$$SC{paper_id}});
+							} # end if
+						} # end foreach SC
+					} else {
+						# Don't need to do anything, because the inequality will be shown when displaying the manifest
+					} # end if
+				} # end if
+
+
+				my $MC = new openprint::ManifestContent();
+				$variable{error} .= $MC->save({
+					type_id		=>	$$Type{id},
+					manifest_id	=>	$$Manifest{id},
+					quantity	=>	$weight_qty,
+					manufacturers_id	=>	$mfg_name,
+					( $Skid ? ( skid_id=>$$Skid{id} ) : () ),
+				});
+			} # end while  io
+			$variable{error} .= $Type->save({item_count=>$item_count}) if $Type;
+			sql::end_transaction( $dbh, $ac );
+		} else {
+			$log->error("unknown import format: " . $upload->filename() );
+		} # end if
 	} # end if
 } # end sub manifest_import
 

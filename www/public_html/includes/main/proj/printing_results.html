@@ -241,7 +241,6 @@
 <? endif ( 1 < sql::execute( undef, undef, q{SELECT DISTINCT strValue FROM tbl_Equipment_Specifications WHERE strName='Printing Type' } ) ) ?>
 <? endif ( $$variable{'Mode'} eq 'Easy' ) ?>
 
-
 </ul>
 <? if ( $$variable{'Mode'} eq 'Easy' ) ?>
 	<? eval ( $$variable{'QTYIndex'} = 1 ) ?>

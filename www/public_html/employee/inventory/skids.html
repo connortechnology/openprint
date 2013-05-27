@@ -1,6 +1,9 @@
 <script type="text/javascript" src="<?hash_link(/javascripts/barcode.js)?>"></script>
 <?include(/includes/error_reporting.html)?>
 <script type="text/javascript">
+	function submit_handler() {
+		calc();
+	}
 	function calc() {
 		LoadContent( 'Results', '/employee/inventory/_skids_results.html', $('f1') );
 	}
@@ -29,7 +32,7 @@ Please select a Skid to view/edit.<br/>
 		<li class="manufacturers_id">
 			<label for="manufacturers_id">Manufacturers ID</label>
 			<? echo ( join("\n",
-						input( type=>'text', id=>'manufacturers_id', name=>'manufacturers_id', onchange=>'change_handler(this);', 
+						input( type=>'text', id=>'manufacturers_id', name=>'manufacturers_id', 
 							onkeypress=>'return input_handler(this,event);', onkeydown=>'if(event.keyCode==13){submit_handler(f1);}' ),
 						ssi::button( 'GoManufacturers', { onclick=>'calc();',text=>'Go' } ),
 						); ) ?>
@@ -146,6 +149,10 @@ Please select a Skid to view/edit.<br/>
 				) ?>
 			</select>
 		</li>
+			<li>
+				<label>Deleted</label>
+				<? echo ( ssi::radio( 'deleted', ['1','Yes','0','No','1,0','All'], $session{'/employee/inventory/skids.html?deleted'} ); ) ?>
+			</li>
 		</ul>
 		<p class="buttons">
 			<? echo ( join('',
