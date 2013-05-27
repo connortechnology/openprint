@@ -10,27 +10,46 @@ function load_results( ) {
 	Please select a Manifest to view/edit.<br>
 	<form id="f1" name="f1" method="post" action="manifests.html" enctype="multipart/form-data" onsubmit="load_results();">
 		<fieldset class="filters"><legend>Choose Manifest</legend>
+			<div class="leftColumn">
 			<ul>
 				<li>
 					<label for="manifest_name">Manifest ID</label>
 					<input type="text" id="manifest_name" name="manifest_name" onkeyup="this.value=this.value.replace(/\s/g,'');" onkeydown="if(event.keyCode == 13){load_results();}" value="<? echo ( $param{'manifest_name'} ) ?>" />
-					<? echo ( button( 'Go1', { onclick=>'load_results();', text=>'Load' } ); ) ?>
 				</li>
 				<li>
 					<label for="po_id">Purchase Order</label>
-				<? echo ( join( "\n",
-					input( type=>'cardinal', id=>'po_id', name=>'po_id', onkeypress=>'return input_handler(this,event);', onkeydown=>'if(event.keyCode==13){load_results();};' ),
-					button( 'Go2', { onclick=>q`if(f1.po_id.value){load_results();};`, text=>'Load' } ),
-					); ) ?>
+				<? echo ( 
+					input( type=>'cardinal', id=>'po_id', name=>'po_id', onkeypress=>'return input_handler(this,event);', onkeydown=>'if(event.keyCode==13){load_results();};' );
+					) ?>
 				</li>
 				<li>
 					<label for="docket">Docket</label>
-				<? echo ( join( "\n",
-					input( type=>'cardinal', id=>'docket', name=>'docket', onkeypress=>'return input_handler(this,event);', onkeydown=>'if(event.keyCode==13){load_results();};' ),
-					button( 'Go3', { onclick=>q`if(f1.po_id.value){load_results();};`, text=>'Load' } ),
-					); ) ?>
+				<? echo (
+					input( type=>'cardinal', id=>'docket', name=>'docket', onkeypress=>'return input_handler(this,event);', onkeydown=>'if(event.keyCode==13){load_results();};' );
+					) ?>
 				</li>
 			</ul>
+			</div>
+			<div class="righColumn">
+				<ul>
+					<li><label>Skid ID</label>
+				<? echo (
+					input( type=>'cardinal', id=>'skid_id', name=>'skid_id', onkeypress=>'return input_handler(this,event);', onkeydown=>'if(event.keyCode==13){load_results();};' );
+					) ?>
+				</li>
+					<li><label>RFID ID</label>
+				<? echo (
+					input( type=>'cardinal', id=>'rfidtag_id', name=>'rfidtag_id', onkeypress=>'return input_handler(this,event);', onkeydown=>'if(event.keyCode==13){load_results();};' );
+					) ?>
+				</li>
+					<li><label>Manufacturers ID</label>
+				<? echo (
+					input( type=>'text', id=>'manufacturers_id', name=>'manufacturers_id', onkeypress=>'return input_handler(this,event);', onkeydown=>'if(event.keyCode==13){load_results();};' );
+					) ?>
+				</li>
+					
+				</ul>
+			</div>
 		</fieldset>
 		<fieldset class="filters"><legend>Search Criteria</legend>
 			<ul>
@@ -57,13 +76,17 @@ function load_results( ) {
 				<label>Delivery</label>
 				<? echo ( radio( 'delivery', ['under','Under','over','Over','exact','Exact','','All'], $session{'/employee/inventory/manifests.html?delivery'} ); ) ?>
 			</li>
+			<li>
+				<label>Deleted</label>
+				<? echo ( ssi::radio( 'deleted', ['1','Yes','0','No','1,0','All'], $session{'/employee/inventory/manifests.html?deleted'} ); ) ?>
+			</li>
 			</ul>
 			<p class="buttons">
 				<? echo ( join('',
 					button( 'ShowResults', { onclick=>q`load_results();`, text=>'Show Results' } ),
 					button( 'Add', { href=>'manifest.html', text=>'Add New Manifest' } ),
 					); ) ?>
-				<input type="file" name="import"/><? echo ( button( 'Import', { onclick=>q`f1.action='manifest_import.html';f1.submit();` } ); ) ?>
+				<input type="file" name="import"/><? echo ( button( 'Import', { onclick=>q`f1.action='manifest.html?action=import';f1.submit();` } ); ) ?>
 			</p>
 		</fieldset>
 	</form>

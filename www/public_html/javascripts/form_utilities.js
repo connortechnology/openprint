@@ -1135,7 +1135,6 @@ function check_decimal( element, e ) {
 	return true;
 }
 
-
 function click(e) {
 	if (document.all) {
 		if (event.button==2||event.button==3) {
@@ -1322,16 +1321,22 @@ function toggle_input( ddm, txt ) {
 function getValues( form, element_names, more_values ) {
 	form = $(form);
 	var results = new Hash( more_values );
-	for ( var index = 0, len = element_names.length; index < len ; index ++ ) {
-		var form_element = form.elements[element_names[index]];
-		if ( form_element ) {
-			results.set(element_names[index], get_value( form_element ) );
-		} else {
-			alert("Element " + element_names[index] + ' not found.' );
-		} 
-	} // end for
+	if ( element_names.constructor == Array ) {
+		for ( var index = element_names.length; index; index -- ) {
+			var form_element = form.elements[element_names[index-1]];
+			if ( form_element ) 
+				results.set(element_names[index-1], form_element.getValue());
+		} // end for
+	} else if ( element_names.constructor == RegExp ) {
+		for ( var index = 0, len = form.elements.length; index < len; index += 1 ) {
+			if ( element_names.exec( form.elements[index].name ) ) {
+				results.set(form.elements[index].name, form.elements[index].getValue());
+			} // end if	
+		} // end foreach element
+	} // end if ARRAY or Regexp
 	return results;
 } // end function getValues
+
 function trim (str) {
 	str = str.replace(/^\s+/, '');
 	for (var i = str.length - 1; i >= 0; i--) {

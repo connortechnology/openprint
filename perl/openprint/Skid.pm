@@ -44,6 +44,7 @@ $serial = 'skid_id_seq';
 
 %transforms = (
 	deleted	=>	[ 's/[^01]//g' ],
+	manufacturers_id	=>	[ 'tr/[a-z]/[A-Z]/' ],
 );
 %defaults = (
 	location_id	=>	undef,
@@ -84,6 +85,10 @@ sub find {
 	if ( ref $params{'id not in'} eq 'ARRAY' ) {
 		$sql .= ' AND id NOT IN (' . join(',', map { '?' } @{$params{'id not in'}} ) . ')';
 		push @values, @{$params{'id not in'}};
+	} # end if
+	if ( $params{'id ilike'} ) {
+		$sql .= ' AND id ilike ?';
+		push @values, $params{'id ilike'};
 	} # end if
 
 	if ( $params{'verification_code'} ) {

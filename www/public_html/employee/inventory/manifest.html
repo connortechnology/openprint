@@ -35,6 +35,7 @@
 		<? echo (
 			my $html = '';
 			my $content = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/employee/inventory/_manifest_type.html' );
+			$variable{'location_dropdown'} = openprint::Location->dropdown(order=>'parent_id NULLS FIRST, lower(name)');
 			
 			foreach my $Type ( $$variable{'Manifest'}->Types() ) {
 				$$variable{'Type'} = $Type;
@@ -47,10 +48,15 @@
 		<p class="buttons">
 			<? echo ( join('',
 				( $$variable{'Manifest'}->id() ? (
-					ssi::button( 'add', { onclick=>"new Ajax.Updater('Types', '_manifest_type.html', { parameters: { manifest_id: '".$$variable{'Manifest'}->id()."', action: 'Add'}, insertion: 'bottom' } );", 'text'=>'Add Another Stock' } ) ) : () 
+					button( 'add', { onclick=>"new Ajax.Updater('Types', '_manifest_type.html', { parameters: { manifest_id: '".$$variable{'Manifest'}->id()."', action: 'Add'}, insertion: 'bottom' } );", text=>'Add Another Stock' } ) ) : () 
 				),
-				ssi::button( 'Save', { onclick=>"f1.btnFunction.value='Submit';if(f1.onsubmit())f1.submit();" } ),
-				ssi::button( 'Delete', { onclick=>"if( confirm('Are you sure?') ) {f1.btnFunction.value='Delete';f1.submit();}" } ),
+				button( 'Save', { onclick=>"f1.btnFunction.value='Submit';if(f1.onsubmit())f1.submit();" } ),
+				( $$variable{Manifest}->deleted() ? (
+					button( 'UnDelete', { onclick=>"f1.btnFunction.value='undelete';f1.submit();}" } ),
+					button( 'Destroy', { onclick=>"if( confirm('Are you sure?') ) {f1.btnFunction.value='destroy';f1.submit();}" } ),
+				) : ( 
+					button( 'Delete', { onclick=>"f1.btnFunction.value='Delete';f1.submit();" } ),
+				) ),
 			); ) ?>
 		</p>
 		<input type="hidden" name="btnFunction" />

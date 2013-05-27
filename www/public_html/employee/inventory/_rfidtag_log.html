@@ -4,9 +4,9 @@
 		<ul>
 		<li>
 			<label>Date Filter</label>
-<? echo ( date_select( 'start', [ @param{'start_year','start_month','start_day'} ], q`LoadContent('LocationLog','_rfidtag_log_entries.html', $('location_log_form'));` ); ) ?>
+<? echo ( date_select( 'start', [ @param{'start_year','start_month','start_day'} ], { onchange=>q`LoadContent('LocationLog','_rfidtag_log_entries.html', $('location_log_form').serialize() );`, with_clear=>1, with_today=>1 } ); ) ?>
 			to 
-<? echo ( date_select( 'end', [ @param{'end_year','end_month','end_day'} ], q`LoadContent('LocationLog','_rfidtag_log_entries.html', $('location_log_form') );` ); ) ?>
+<? echo ( date_select( 'end', [@param{'end_year','end_month','end_day'}], { onchange=> q`LoadContent('LocationLog','_rfidtag_log_entries.html', $('location_log_form').serialize() );`, with_clear=>1, with_today=>1 } ); ) ?>
 			<select name="limit" onchange="LoadContent('LocationLog','_rfidtag_log_entries.html', $('location_log_form') );"><option value="10">10</option><option value="25">25</option><option value="100">100</option></select>
 			<? echo ( button( 'LoadLocationLog', { onclick=>q`LoadContent('LocationLog','_rfidtag_log_entries.html', $('location_log_form') );`, text=>'Load' } ); ) ?>
 		</li>
