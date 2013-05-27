@@ -138,7 +138,9 @@ sub required_services {
 } # end sub required_services
 
 sub required_ServiceTypes {
-	return openprint::ServiceType->find( id=> [ $_[0]->required_services() ] );
+	my @servicetype_ids = $_[0]->required_services();
+	return openprint::ServiceType->find( id=> \@servicetype_ids ) if @servicetype_ids;
+	return ();
 } # end sub require_ServiceTypes
 
 sub blocked_services {
