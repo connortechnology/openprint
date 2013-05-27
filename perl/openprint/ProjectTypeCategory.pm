@@ -25,7 +25,12 @@ sub ProjectTypes {
 	my $self = shift;
 	
 	if ( @_ ) {
-		my %params = @_;	
+		my %params;
+		if ( ref $_[0] eq 'HASH' ) {
+			%params = %{$_[0]};
+		} else {
+			%params = @_;
+		} # end if
 		$params{'category_id'} = $$self{'id'};
 		return openprint::ProjectType->find( %params );
 	} elsif ( ! $$self{'ProjectTypes'} ) {

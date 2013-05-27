@@ -2,9 +2,8 @@
 <h1>PROJECTS</h1>
 <h2>History</h2>
 </div>
-<? echo ( include('/includes/error_reporting.html'); ) ?>
+<?include('/includes/error_reporting.html')?>
 <script type="text/javascript">
-<!--
 	function delete_confirm(form) {
 		var number_of_deleted_projects = 0;
 		if ( form.elements['project_id'] ) {
@@ -35,7 +34,6 @@
 		$('ProjectList').innerHTML = 'Please wait...';
 		new Ajax.Updater('ProjectList','/main/project/_history.html', {method:'get',parameters:Form.serialize(form)});
 	} // end function
--->
 </script>	 
 <? if ( $session{'user_id'} ) ?>
 <form id="f1" name="f1" method="post" action="/main/project/history.html">
@@ -112,8 +110,9 @@
 			</div>
 			<p class="buttons">
 				<? echo ( join( '',
-					ssi::button( 'ShowResults', { onclick=>'f1.submit();', text=>'Show Results' } ),
-					ssi::button( 'Reset', { onclick=>q`f1.btnFunction.value='Reset';f1.submit();`, text=>'Reset' } ),
+					button( 'ShowResults', { onclick=>'f1.submit();', text=>'Show Results' } ),
+					button( 'Create', { href=>'create_edit.html', text=>'Create New' } ),
+					button( 'Reset', { onclick=>q`f1.btnFunction.value='Reset';f1.submit();`, text=>'Reset' } ),
 				); ) ?>
 			</p>
 		</fieldset>
