@@ -764,11 +764,11 @@ sub get_Stocks {
 			@$specs{'ddmStockSheetSizeWidth','ddmStockSheetSizeHeight'} = $$specs{'ddmStockSheetSize'} =~ /^([\d\.]+)x([\d\.]+)$/;
 		}
 		@Papers = openprint::Paper::find( 
-			( exists $$specs{'ddmStockBrand'} ? ( 'name'=> $$specs{'ddmStockBrand'} ) : () ),
- ( exists $$specs{'ddmStockFinish'} ? ( 'finish'=>$$specs{'ddmStockFinish'} ) : () ), 
-( exists $$specs{'ddmStockColour'} ? ( 'colour'=>$$specs{'ddmStockColour'} ) : () ), 
-( exists $$specs{'ddmStockWeight'} ? ( 'weight'=>$$specs{'ddmStockWeight'} ) : () ),
-( exists $$specs{'ddmStockSheetSize'} ? ( 'width'=>$$specs{'ddmStockSheetSizeWidth'}, 'height'=>$$specs{'ddmStockSheetSizeHeight'} ) : () ),
+				( exists $$specs{'ddmStockBrand'} ? ( 'name'=> $$specs{'ddmStockBrand'} ) : () ),
+				( exists $$specs{'ddmStockFinish'} ? ( 'finish'=>$$specs{'ddmStockFinish'} ) : () ), 
+				( exists $$specs{'ddmStockColour'} ? ( 'colour'=>$$specs{'ddmStockColour'} ) : () ), 
+				( exists $$specs{'ddmStockWeight'} ? ( 'weight'=>$$specs{'ddmStockWeight'} ) : () ),
+				( exists $$specs{'ddmStockSheetSize'} ? ( 'width'=>$$specs{'ddmStockSheetSizeWidth'}, 'height'=>$$specs{'ddmStockSheetSizeHeight'} ) : () ),
 				'project_type_id'=>$Project->Type()->id(),
 				);
 # Load this here, so that later cloning will copy the prices as well.
@@ -1041,6 +1041,7 @@ sub get_impositions {
 		my @impositions;
 		my %imps;
 
+		my $use_cut_stocks = $Press->specification('Use Cut Stocks') ne 'N' ? 1 : 0;
 		my $co = $Press->specification('Cut Off');
 		my @feeds = split(',',$Press->specification('Feed') );
 		my $maximum_sheet_width = $Press->specification('Maximum Sheet Width');
@@ -1150,6 +1151,7 @@ sub get_impositions {
 				next if ! sets::isin( 'Sheet', \@feeds );
 
 				next if ! ( $Paper->width() and $Paper->height() );
+				next if $use_cut_stocks and $Paper->is_cut();
 				next if $printing_type eq 'Digital' and ! $Paper->digital();
 
 				my $P = $Paper->clone();
@@ -1161,6 +1163,7 @@ sub get_impositions {
 						( $P->width() > $maximum_sheet_length or $P->height() > $maximum_sheet_width )
 				   ) {
 					next if ! $P->cuttable();
+					next if ! $use_cut_stocks;
 					while (
 							( $P->width() > $maximum_sheet_width or $P->height() > $maximum_sheet_length )
 							and
@@ -1192,6 +1195,7 @@ sub get_impositions {
 							$Press );
 					last if ! @i;
 					push @imps, @i;
+					last if ! $use_cut_stocks;
 
 					$Papers{$P->to_string()} = $P if ! $Papers{$P->to_string()};
 					last if ( ! $P->cuttable() );
