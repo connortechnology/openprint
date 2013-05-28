@@ -1037,6 +1037,13 @@ sub get_impositions {
 		$$project{'Maximum Image Area Width'} = $Press->specification('Maximum Image Area Width');
 		$$project{'Runstyles'} = $Press->specification('Runstyles');
 		$$project{'txtSpreadSize'} = $$specs{'txtSpreadSize'};
+		if ( $$specs{"dutch$qty_index"} eq 'N' ) {
+			$$project{dutch} = 'N';
+		} elsif ( $Press->specification('Dutch') eq 'N' ) {
+			$$project{dutch} = 'N';
+		} else {
+			delete $$project{dutch};
+		} # end if
 
 		my @impositions;
 		my %imps;
@@ -1736,7 +1743,6 @@ $log->warn("There are no quantities!");
 #I$log->debug("QTY: $qty");
 		} # end if
 
-		$$project{'dutch'} = $$specs{'dutch'.$qty_index};
 		$qty *= $$specs{'PageQuantity'} if $$specs{'PageQuantity'};
 		$qty *= $$specs{'txtNameQuantity'} if $$specs{'txtNameQuantity'};
 		#if ( $$specs{'Versions'} ) {
