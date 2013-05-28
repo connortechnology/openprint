@@ -83,6 +83,7 @@ $serial	= 'paper_id_seq';
 		'parts'					=>	'parts',
 		'material_id'			=>	'material_id',
 		'user_type'				=>	'user_type',
+		manufacturers_name		=>	'manufacturers_name',
 		);
 %find_fields = (
 		'manufacturer'	=>	'(SELECT name FROM manufacturers WHERE manufacturers.id=papers.manufacturer_id)',
@@ -101,9 +102,13 @@ $serial	= 'paper_id_seq';
 		'stock_settings_equipment_id'	=>	'(SELECT equipment_id FROM equipment_stock_settings WHERE stock_id=papers.id)',
 		);
 
+%transforms = (
+	manufacturers_name => [ 's/^\s+//', 's/\s+$//', 's/\s\s+$/ /g' ],
+);
+
 %defaults = (
-	'allocated'	=>	q`'0'`,
-	'in_stock'	=>	q`'0'`,
+	allocated	=>	q`'0'`,
+	in_stock	=>	q`'0'`,
 	user_type	=>	q`''`,
 	score_required	=>	'0',
 	die_score_required	=>	'0',

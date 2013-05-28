@@ -146,9 +146,11 @@ $log->debug("Checking user level, need : " . $page_settings{$config{db_name}}{$p
 			   ) {
 $log->debug("No good, need login");
 				if ( $page =~ /^.*\/_/ ) {
-					$variable{'PageContent'} = q`<script type="text/javascript">window.location='/error/error_login.html';</script>`;
+					$r->content_type(q{text/javascript; charset=utf-8});
+					$r->print( q`window.location='/error/error_login.html';` );
+					return Apache2::Const::OK;
 				} else {
-				$page = '/error/error_login.html';
+					$page = '/error/error_login.html';
 				} # end if
 				$variable{'Destination'} = misc::get_destination( $r, $r->uri() );
 				#$r->headers_out->set(Location=>'/error/error_login.html');

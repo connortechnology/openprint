@@ -303,9 +303,14 @@ if ( 1 ) {
 
 	foreach my $Equipment ( @equipment ) {
 		$$specs{'hdnBreakdown'.$qty_index} .= 'Equipment: '.$Equipment->strid().' ' . $Equipment->specification('Aqueous Capable') . ' ' . $$sig_specs{'ddmPress'.$qty_index} . ',<br/>';
-		if ( ( $Equipment->specification('Aqueous Capable') eq 'When Printing' ) and ( $$sig_specs{'ddmPress'.$qty_index} ne $Equipment->strid() ) ) {
-			$$specs{'hdnBreakdown'.$qty_index} .= 'Not printing on this press.<br/>';
-			next;
+		if ( $Equipment->specification('Aqueous Capable') eq 'When Printing' ) {
+			if ( $$sig_specs{'ddmPress'.$qty_index} ne $Equipment->strid() ) {
+				$$specs{'hdnBreakdown'.$qty_index} .= 'Not printing on this press.<br/>';
+				next;
+			} elsif ( @front_aq and @back_aq and ( $imposition->runstyle() eq 'Perfecting' ) ) {
+				$$specs{'hdnBreakdown'.$qty_index} .= 'Cant perfect with double sided AQ.<br/>';
+				next;
+			} # end if
 		} # end if
 		my %minimum = openprint::service::get_price_object( 'AqueousMinimumCharge', undef, $Equipment );
 

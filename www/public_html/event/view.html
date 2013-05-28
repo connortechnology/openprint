@@ -52,14 +52,16 @@
 				if ( $$variable{Event}->id() ) {
 					if ( $$variable{Event}->can_edit() ) {
 						if ( $$variable{Event}->deleted() ) {
-						$html .= ssi::button( 'Undelete', { 'onclick'=>"if(confirm('Are you sure?')){f1.elements['function'].value='Undelete';f1.submit();}" } );
+						$html .= ssi::button( 'Undelete', { onclick=>"if(confirm('Are you sure?')){f1.elements['function'].value='Undelete';f1.submit();}" } );
 						} else {
-						$html .= ssi::button( 'Delete', { 'onclick'=>"if(confirm('Are you sure?')){f1.elements['function'].value='Delete';f1.submit();}" } );
+						$html .= ssi::button( 'Delete', { onclick=>"if(confirm('Are you sure?')){f1.elements['function'].value='Delete';f1.submit();}" } );
 						} # end if
 						$html .= ssi::button( 'Copy', { href=>'view.html?function=Copy&amp;event_id='.$$variable{Event}->id() } );
 						$html .= ssi::button( 'Edit', { href=>'edit.html?event_id='.$$variable{Event}->id() } );
-						#$html .= ssi::button( 'Invite', { onclick=>qq`popup_window('_invitation_popup.html?event_id=$$variable{Event}{id}');` } );
-						$html .= ssi::button( 'Send', { onclick=>qq`popup_window('_email_popup.html?event_id=$$variable{Event}{id}');` } );
+						if ( ! $$variable{template} ) {
+							#$html .= ssi::button( 'Invite', { onclick=>qq`popup_window('_invitation_popup.html?event_id=$$variable{Event}{id}');` } );
+							$html .= ssi::button( 'Send', { onclick=>qq`popup_window('_email_popup.html?event_id=$$variable{Event}{id}');` } );
+						} # end if
 					} # end if
 					$html .= '<span class="GooglePlusOne"><g:plusone></g:plusone></span>';
 				} # end if
@@ -86,9 +88,10 @@
 			} # end if
 			my $Location = $$variable{Event}->Location();
 			if ( $Location ) {
-				if ( ! ( $Location->latitude() and $Location->longitude() ) ) {
-					$Location->get_latitude_and_longitude();
-				} # end if
+				# Should only do the lookup when Location changes... when it gets saved maybe, because Google only gives us so many lookups
+				#if ( ! ( $Location->latitude() and $Location->longitude() ) ) {
+					#$Location->get_latitude_and_longitude();
+				#} # end if
 				if ( $Location->latitude() and $Location->longitude() ) {
 					$html .= $Location->googlemap_html();
 				} 
@@ -104,12 +107,17 @@
 					<li class="when"><label>When</label><? echo ( $$variable{Event}->time_string(); ) ?></li>
 					<li class="category"><label>Category</label><? echo ( $$variable{Event}->Category()->name() ) ?></li>
 					<li class="info">
-						<label for="info">More info</label>
+						<label>More info</label>
 						<? echo ( $$variable{Event}->info() ) ?>
 					</li>
 					<? if ( $$variable{Event}->url() ) ?>
 					<li class="url"><label>Website</label><? echo ( sprintf('<a href="%1$s" target="_blank">%1$s</a>',$$variable{Event}->url() ); ) ?></li>
 					<? endif ( $$variable{Event}->url() ) ?>
+					<? if ( $$variable{Event}->template() and $$variable{Event}->can_edit() ) ?>
+					<li><label>Template</label>
+						<a href="/event/view.html?event_id=<? echo ( $$variable{Event}->template_id() ) ?>"><? echo ( $$variable{Event}->Template()->name() ) ?></a>
+					</li>
+					<? endif ( $$variable{Event}->template() and $$variable{Event}->can_edit() ) ?>
 				</ul>
 			</div>
 		</fieldset>
@@ -136,12 +144,13 @@ $log->debug("My location is " . $MyLocation->to_string() );
 								} # end if user_id
 								return $html;
 						) ?>
-					</li>
+					</li> 
 				</ul>
 			</div>
 		</fieldset>
 	</div>
 	<br class="spacer"/>
+<? if ( ! $$variable{Event}->template() ) ?>
 <? if ( $variable{User}->id() ) ?>
 	<div id="Opinions"><? echo ( $$variable{Event}->opinions('Opinions') ) ?></div>
 	<div id="Invitations">
@@ -173,6 +182,7 @@ $log->debug("My location is " . $MyLocation->to_string() );
 	</div>
 <? endif ( $variable{User}->id() ) ?>
 	<div id="Attendance"><? echo ( include('_attendance.html'); ) ?></div>
+<? endif ( ! $$variable{Event}->template() ) ?>
 
 <? if ( $$variable{Event}->id() ) ?>
 	<? eval ( $$variable{Object} = $$variable{Album} = $$variable{Event};) ?>

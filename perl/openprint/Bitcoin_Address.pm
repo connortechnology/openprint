@@ -5,8 +5,6 @@ require openprint::Object_Type;
 package openprint::Bitcoin_Address;
 our @ISA = qw(openprint::Object);
 use vars qw( $debug $table $serial %fields %find_fields %defaults %transforms );
-use Finance::Bitcoin::API;
-use Finance::Bitcoin::Wallet;
 
 $debug = 0;
 $table = 'bitcoin_addresses';
@@ -42,16 +40,18 @@ sub generate {
 	} # end if
 	my $New = openprint::Bitcoin_Address->find_one('object_id is null'=>1);
 	if ( ! $New ) {
+		require Finance::Bitcoin::API;
+		require Finance::Bitcoin::Wallet;
 		my $uri     = "http://$openprint::config{bitcoin_user}:$openprint::config{bitcoin_password}\@$openprint::config{bitcoin_server}:$openprint::config{bitcoin_port}/";
 
 		my $api     = Finance::Bitcoin::API->new( endpoint => $uri );
 
 		my $label = (ref $_[1]) . ' ' . $_[1]->id();
-		$openprint::log->debug( "URI: $uri label: $label");
+		#$openprint::log->debug( "URI: $uri label: $label");
 
 		my $wallet = Finance::Bitcoin::Wallet->new($api);
 		$_ = Data::Dumper::Dumper($wallet);
-		$openprint::log->debug($_);
+		#$openprint::log->debug($_);
 
 		my $address = $wallet->create_address( $label );
 		if ( $address and $address->address ) {

@@ -85,6 +85,9 @@
 					<label for="description">Description</label>
 					<textarea id="description" name="description" rows="<? echo ( ssi::count_lines( $$variable{'Timetrack'}->description() ); ) ?>" onkeyup="textarea_resize(this);"><? echo ( $$variable{'Timetrack'}->description() ) ?></textarea>
 				</li>
+				<li><label for="po">Purchase Order #</label>
+					<? echo ( input(type=>'text',name=>'po', value=>$$variable{Timetrack}->po() ); ) ?>
+				</li>
 				<? if ( $$variable{'Timetrack'}->invoice_id() ) ?>
 				<li>
 					<label>Invoice</label>

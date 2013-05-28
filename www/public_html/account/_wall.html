@@ -1,8 +1,10 @@
-<? echo ( include('/includes/error_reporting.html'); ) ?>
+<?include('/includes/error_reporting.html')?>
 <fieldset><legend>Wall</legend>
+<?if($session{user_id})?>
 	<textarea id="message" name="message" rows="1" onkeyup="textarea_resize(this);"></textarea>
 	<p class="buttons"><? echo ( ssi::button( 'WriteOnWall', { 'onclick'=>qq`new Ajax.Updater( 'Wall', '/account/_wall.html', { parameters: { user_id: '$$variable{User}{id}', message: \$('message').value } } );`, 'text'=>'Write on wall' } ); ) ?></p>
 	<hr/>
+<?endif($session{user_id})?>
 	<ul>
 <? echo (
 	my $html = '';
@@ -15,7 +17,7 @@
 <span class="message">%5$s</span><span class="when">%6$s</span>`,
 			$Wall->id(),
 			$Author->id(), $Author->name(), 
-			$Author->Asset()->thumbnail_url(),
+			$Author->Asset()->sized_url('thumbnails'),
 			$Wall->message(),
 			misc::smart_time( Date::Parse::str2time( $Wall->created_on() ) ),
 			join('',
@@ -38,7 +40,7 @@
 						<span class="message">%5$s</span><span class="when">%6$s</span>`,
 						$Reply->id(),
 						$Author->id(), $Author->name(),
-						$Author->Asset()->thumbnail_url(),
+						$Author->Asset()->sized_url('thumbnails'),
 						misc::smart_time( Date::Parse::str2time( $Reply->created_on() ) ),
 						$Reply->datetime_format( 'created_on' ),
 						join('',

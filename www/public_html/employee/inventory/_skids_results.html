@@ -5,12 +5,21 @@
 			allocated_to_docket	=>	$session{'/employee/inventory/skids.html?Docket'},
 			order		=>	'id',
 			) ];
+	} elsif ( $session{'/employee/inventory/skids.html?skid_id'} ) {
+		$$variable{Skids} = [ openprint::Skid::find( 
+			( $session{'/employee/inventory/skids.html?skid_id'} =~ /%/ ? 
+			( 'id ilike'	=>	$session{'/employee/inventory/skids.html?skid_id'} ) :
+			( id	=>	$session{'/employee/inventory/skids.html?skid_id'} ) ),
+			order	=>	'id',
+			deleted =>	[0,1,undef],
+			) ];
 	} elsif ( $session{'/employee/inventory/skids.html?rfid_id'} ) {
 		$$variable{Skids} = [ openprint::Skid->find( 
 			( $session{'/employee/inventory/skids.html?rfid_id'} =~ /%/ ? 
 			( 'rfidtag_id ilike'	=>	$session{'/employee/inventory/skids.html?rfid_id'} ) :
 			( rfidtag_id	=>	$session{'/employee/inventory/skids.html?rfid_id'} ) ),
 			order	=>	'id',
+			( $session{'/employee/inventory/skids.html?deleted'} ? ( deleted => [ split(',', $session{'/employee/inventory/skids.html?deleted'} ) ] ) : () ),
 			) ];
 	} elsif ( $session{'/employee/inventory/skids.html?manufacturers_id'} ) {
 		$$variable{Skids} = [ openprint::Skid->find( 
@@ -18,6 +27,7 @@
 			( 'manufacturers_id ilike'	=>	$session{'/employee/inventory/skids.html?manufacturers_id'} ) :
 			( manufacturers_id	=>	$session{'/employee/inventory/skids.html?manufacturers_id'} ) ),
 			order	=>	'id',
+			( $session{'/employee/inventory/skids.html?deleted'} ? ( deleted => [ split(',', $session{'/employee/inventory/skids.html?deleted'} ) ] ) : () ),
 			) ];
 	} elsif ( $session{'/employee/inventory/skids.html?verification_code'} ) {
 		$$variable{Skids} = [ openprint::Skid->find( 
@@ -38,6 +48,7 @@
 			( $session{'/employee/inventory/skids.html?fsc_code'} ? ( fsc_code => $session{'/employee/inventory/skids.html?fsc_code'} ) : () ),
 			( $session{'/employee/inventory/skids.html?purpose_id'} ? ( purpose_id => $session{'/employee/inventory/skids.html?purpose_id'} ) : () ),
 			order		=>	'id',
+			( $session{'/employee/inventory/skids.html?deleted'} ? ( deleted => [ split(',', $session{'/employee/inventory/skids.html?deleted'} ) ] ) : () ),
 		);
 		$sql{'has_manifest_id'} = 1 if $session{'/employee/inventory/skids.html?hasmanifest'} eq 'Y';
 		$sql{'has_manifest_id'} = 0 if $session{'/employee/inventory/skids.html?hasmanifest'} eq 'N';

@@ -18,10 +18,11 @@ require openprint::Invoice_Interest;
 require openprint::Invoice_Payment;
 require openprint::Invoice_Tax;
 require openprint::Timetrack;
+require openprint::Object_Asset;
 
 use vars qw( $debug $table $serial %fields %find_fields %defaults %transforms );
 
-$debug = 1;
+$debug = 0;
 
 $table = 'invoices';
 $serial = 'invoices_id_seq';
@@ -48,7 +49,7 @@ $serial = 'invoices_id_seq';
 	monthly_interest	=>	'monthly_interest',
 	late_payment_units	=>	'late_payment_units',
 	early_payment_date	=>	'early_payment_date',
-	early_payment_discount	=>	'early_payment_discount',
+	early_payment_amount	=>	'early_payment_amount',
 	early_payment_units		=>	'early_payment_units',
 );
 
@@ -69,7 +70,7 @@ $serial = 'invoices_id_seq';
 	paid			=> undef,
 	bad_debt		=> 0,
 	late_payment_units		=>	undef,
-	early_payment_discount	=>	undef,
+	early_payment_amount	=>	undef,
 	early_payment_units		=>	undef,
 	early_payment_date		=>	undef,
 );
@@ -106,10 +107,10 @@ sub owing_early {
 #$log->debug("Owing total: " . $_[0]->total() . ' int: ' . $_[0]->interest() . ' paid: ' . $_[0]->paid() );
 	my $owing = $_[0]->total() + $_[0]->interest() - $_[0]->paid();
 	if ( $_[0]{early_payment_units} eq 'amount' ) {
-		return Math::Round::nearest( .01, $owing + $_[0]{early_payment_discount} );
+		return Math::Round::nearest( .01, $owing + $_[0]{early_payment_amount} );
 	} elsif ( $_[0]{early_payment_units} eq 'percent' ) {
-$openprint::log->debug("doing early payment percent: $_[0]{early_payment_discount}");
-		return Math::Round::nearest( .01, $owing * ( 1 - $_[0]{early_payment_discount}/100 ) );
+$openprint::log->debug("doing early payment percent: $_[0]{early_payment_amount}");
+		return Math::Round::nearest( .01, $owing * ( 1 - $_[0]{early_payment_amount}/100 ) );
 	} else {
 $openprint::log->debug('Unknown units for early_payment '. $_[0]{early_payment_units} );
 		return Math::Round::nearest( .01, $owing );
@@ -330,6 +331,18 @@ sub num {
 	} # end if
 	return $_[0]{num};
 } # end sub num
+
+sub can_edit {
+	return 1;
+} # end sub can_edit
+
+sub can_view {
+	return 1;
+} # end sub can_view
+
+sub upload {
+	openprint::Object_Asset::upload( @_ );
+} # end sub upload
 
 1;
 __END__

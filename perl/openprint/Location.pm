@@ -194,11 +194,116 @@ sub longitude {
 	return $_[0]{'longitude'};
 }
 
+# Does a google lookup on some string and returns a Location object based on what it returns
+sub google {
+	my $string = $_[0];
+	$string .= ' ' . $_[1] if @_ > 1;
+	$string =~ s/ /+/g;
+	my $coder = Geo::Coder::Googlev3->new();
+$openprint::log->debug('Get: ' . $string );
+	my $location = $coder->geocode( location => $string );
+	if ( ! $location ) {
+		$openprint::log->debug("No location for $string");
+		return;
+	} # endif 
+	$openprint::log->warn("No placemrk" . Data::Dumper::Dumper( $location ) );
+
+	my ( $latitude, $longitude, $country, $postalcode, $address, $state, $city, $number, $street );
+
+	if ( $$location{Point} ) {
+		my $Point = $$location{Point};
+		my $coordinates = $$Point{'coordinates'};
+		$latitude = openprint::Location->transform('latitude', @{$coordinates}[0] );
+		$longitude = openprint::Location->transform('longitude', @{$coordinates}[1] );
+	} elsif ( $$location{'geometry'} ) {
+		if ( $$location{'geometry'}{'location'} ) {
+			$latitude = openprint::Location->transform('latitude',  $$location{'geometry'}{'location'}{'lat'} );
+			$longitude = openprint::Location->transform('longitude',  $$location{'geometry'}{'location'}{'lng'} );
+		} # end if
+	} # end if
+	if ( ! ( $latitude and $longitude ) ) {
+		return;
+	} # end if
+
+	if ( $$location{address_components} ) {
+		foreach my $component ( @{$$location{address_components}} ) {
+			if ( sets::isin( 'locality', $$component{types} ) ) {
+				$city = $$component{longname};
+			} elsif ( sets::isin( 'administrative_area_level_1', $$component{types} ) ) {
+				$state = $$component{longname};
+			} elsif ( sets::isin( 'country', $$component{types} ) ) {
+				$country = $$component{longname};
+			} elsif ( sets::isin( 'postal_code', $$component{types} ) ) {
+				$postalcode = $$component{longname};
+			} elsif ( sets::isin( 'street_number', $$component{types} ) ) {
+				$number = $$component{longname};
+			} elsif ( sets::isin( 'route', $$component{types} ) ) {
+				$street = $$component{longname};
+			} # end if
+		} # end foreach component
+	} # end if
+
+	$address = $number . ' ' . $street if $number and $street;
+
+	if ( $$location{'AddressDetails'} ) {
+		my $Address = $$location{'AddressDetails'};
+		if ( $$Address{'Country'} ) {
+			my $Country = $$Address{'Country'};
+			if ( $$Country{'AdministrativeArea'} ) {
+				my $AdministrativeArea = $$Country{'AdministrativeArea'};
+				if ( $$AdministrativeArea{'SubAdministrativeArea'} ) {
+					$openprint::log->debug('Have Sub AdministrativeArea');
+					$AdministrativeArea = $$AdministrativeArea{'SubAdministrativeArea'};
+					$openprint::log->debug(Data::Dumper::Dumper($AdministrativeArea));
+				} # end if
+
+				if ( $$AdministrativeArea{'Locality'} ) {
+					my $Locality = $$AdministrativeArea{'Locality'};
+					if ( $$Locality{'PostalCode'} ) {
+						$openprint::log->debug("Have Postal code" . $$Locality{'PostalCode'}{'PostalCodeNumber'});
+						$postalcode = $$Locality{'PostalCode'}{'PostalCodeNumber'};
+					} else {
+						$openprint::log->debug("No PostalCode");
+					} # en dif
+				} else {
+					$openprint::log->debug("No Locality");
+				} # end if
+			} else {
+				$openprint::log->debug("No Administrative Area");
+			} # end if
+		} else {
+			$openprint::log->debug("No Coutry");
+		} # end if
+	} # end if has AddressDetails
+
+	my $parent;
+	if ( $city ) {
+		$parent = $city;
+	} elsif ( $state ) {
+		$parent = $state;
+	} elsif ( $country ) {
+		$parent = $country;
+	} # end if
+	
+	my $Location = new openprint::Location();
+	$Location->save({
+		name=>$_[0],
+		parent	=>	$parent,
+		latitude	=>	$latitude,
+		longitude	=>	$longitude,
+		postalcode	=>	$postalcode,
+		address		=>	$address,
+		});
+
+	return $Location;
+} # end sub google
+
 sub get_latitude_and_longitude {
 	my $coder = Geo::Coder::Googlev3->new();
-my $string = join(',',$_[0]->name(),$_[0]->address(), $_[0]->postalcode(), map{$_->name()}$_[0]->Parents());
+my $string = join(',',$_[0]->name(),$_[0]->address(), $_[0]->postalcode(), map{$_->name()}$_[0]->Parents()) if $_[0]->name();
 $string =~ s/ /+/g;
 $openprint::log->debug('Get: ' . $string );
+	return 0 if ! $string;
 	my $location = $coder->geocode( location => $string );
 	if ( ! $location ) {
 		$openprint::log->error("No location for $string");
@@ -476,8 +581,10 @@ $openprint::log->debug("Change:");
 
 sub googlemap_html {
 	if ( ! exists $_[0]{'googlemap_html'} ) {
-		$_[0]{'googlemap_html'} = sprintf('<iframe src="http://maps.google.com/maps?f=q&hl=en&ll=%1$s,%2$s&q=%3$s&z=13&output=embed" style="width: 100%; height:400px;"></iframe>', 
+		my $url = sprintf('http://maps.google.com/maps?f=q&amp;hl=en&amp;ll=%1$s,%2$s&amp;q=%3$s&amp;z=13&amp;output=embed', 
 				$_[0]->latitude(), $_[0]->longitude(), join('+',$_[0]->name(), $_[0]->address(), ( $_[0]->postalcode() ? $_[0]->postalcode() : () ), map{$_->name()} ( $_[0]->Parents() ) ) );
+		$url =~ s/ /%20/g;
+		$_[0]{'googlemap_html'} = '<iframe src="'.$url.'" style="width: 100%; height:400px;"></iframe>';
 	} # end if
 	return $_[0]{'googlemap_html'};
 } # end sub googlemap_html

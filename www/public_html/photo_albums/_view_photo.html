@@ -1,4 +1,4 @@
-<? echo ( include('/includes/error_reporting.html'); ) ?>
+<?include('/includes/error_reporting.html')?>
 <div class="Photo">
 	<div class="View">
 <? if ( $variable{'Photo'} and $variable{'Photo'}->asset_id() ) ?>
@@ -12,11 +12,12 @@
 				my $Album = $Photo->Album();
 
 				if ( $Photo->can_edit() ) {
-					if ( $Photo->deleted() ) {
-						$html .= ssi::button( 'Undelete', { 'onclick' => q`f1.elements['action'].value='Undelete';f1.submit();` } );
-					} else {
+					# Photos are nto deleted, the album inclusion is
+					#if ( $Photo->deleted() ) {
+						#$html .= ssi::button( 'Undelete', { 'onclick' => q`f1.elements['action'].value='Undelete';f1.submit();` } );
+					#} else {
 						$html .= ssi::button( 'Delete', { 'onclick' =>  q`if(confirm('Are you sure?')){f1.elements['action'].value='Delete';f1.submit();}` } );
-					} # end if
+					#} # end if
 					if ( $Photo->asset_id() != $Album->thumbnail_id() ) {
 						$html .= ssi::button( 'SAT', { 'onclick' => q`f1.elements['action'].value='set as thumbnail';f1.submit();`, 'text'=>'Set as album thumbnail' } );
 					} # end if isn't thumbnail

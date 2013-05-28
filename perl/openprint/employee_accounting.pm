@@ -411,6 +411,12 @@ sub expense {
 	if ( $param{'btnFunction'} eq 'Copy' ) {
 		$variable{'information'} .= $Expense->id() . ' has been copied';
 		$variable{'Expense'} = $Expense = $Expense->copy();
+	} elsif ( $param{'btnFunction'} eq 'Delete' ) {
+		if ( ! ( $variable{error} .= $Expense->delete() ) ) {
+			$variable{information} .= 'Expense ' . $Expense->id() . ' deleted successfully.';
+			$variable{ExternalRedirect} = '/employee/accounting/expenses.html';
+			return;	
+		} # end if
 	} elsif ( $param{'btnFunction'} eq 'Save' ) {
 		if ( $param{amount} =~ /[=\+\-\*\/]/ ) {
 			$param{amount} = eval $param{amount};
