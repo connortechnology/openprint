@@ -858,8 +858,10 @@ $openprint::log->debug( 'Found stock to cut: ' . $P->to_string() . ' for ' . $$s
 		} # end if found
 
 		if ( ! $found ) {
-$openprint::log->debug("No well cut Stock found");
+$openprint::log->debug("No well cut Stock found how many papers to consider: " . scalar @Papers );
+			my @cut_Papers;
 			foreach my $P ( @Papers ) {
+$log->debug("Considering: " . $P->to_string() );
 # Don't cut rolls into sheets
 				next if ! $P->cuttable();
 				if ( $P->type() eq 'Roll' ) {
@@ -868,7 +870,14 @@ $openprint::log->debug("No well cut Stock found");
 # Don't cut sheets into rolls
 					next if ! $$specs{'OverrideStockHeight'.$qty_index};
 # Must be big enough to cut
-					next if ( $P->start_width() < $$specs{'OverrideStockWidth'.$qty_index} or $P->start_height() < $$specs{'OverrideStockHeight'.$qty_index} ) and ( $P->start_width() < $$specs{'OverrideStockHeight'.$qty_index} or $P->start_height() < $$specs{'OverrideStockWidth'.$qty_index} );
+					next if ( ! ( 
+								( $P->start_width() >= $$specs{'OverrideStockWidth'.$qty_index} and $P->start_height() >= $$specs{'OverrideStockHeight'.$qty_index} ) or 
+								( $P->start_width() >= $$specs{'OverrideStockHeight'.$qty_index} and $P->start_height() >= $$specs{'OverrideStockWidth'.$qty_index} )
+								) );
+
+				} else {
+					$log->error('WTF Type of Stock? '.$$P{type});
+					next;
 				} # end if
 				my $P2 = $P->clone();
 
@@ -881,9 +890,17 @@ $openprint::log->debug("No well cut Stock found");
 				} else {
 					$P2->start_width( $$specs{'OverrideStockWidth'.$qty_index} );
 				} # end if
-				push @Papers, $P2;
+				push @cut_Papers, $P2;
+				$found = 1;
 			} # end foreach paper
+			if ( ! $found ) {
+				$log->error("Never found a stock");
+			} else {
+				$log->debug("Have a stock");
+			} # end if
+			push @Papers, @cut_Papers;
 		} # end if found
+
 	} # end foreach qty_index
 
 	foreach my $P ( @Papers ) {
