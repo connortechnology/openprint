@@ -119,7 +119,6 @@ sub send_notification {
 	my ( $self ) = @_;
 
 	my $Me = new openprint::User( $session{user_id} );
-	return if $Me->email() =~ /iconnor/;
 
 	my %info;
 	$info{Allocation} = $self;
