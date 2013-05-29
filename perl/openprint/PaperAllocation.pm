@@ -128,7 +128,7 @@ sub send_notification {
 	my $Paper = $info{Paper} = $self->Paper();
 	my @old_skids = @{$info{'OldSkids'}} = $self->old_Skids();
 
-	my @recipients = openprint::User->find( 'usergroup'=>'InventoryManager' );
+	my @recipients = map { $_->notification('Stock Allocations') eq 'Yes' } openprint::User->find( usergroup=>'InventoryManager' );
 
     my $offsite = 0;
 	my $nolocation = 0;
