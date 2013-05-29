@@ -1007,8 +1007,10 @@ $openprint::log->debug( 'Found stock to cut: ' . $P->to_string() . ' for ' . $$s
 		} # end if found
 
 		if ( ! $found ) {
-$openprint::log->debug("No well cut Stock found");
+$openprint::log->debug("No well cut Stock found how many papers to consider: " . scalar @Papers );
+			my @cut_Papers;
 			foreach my $P ( @Papers ) {
+$log->debug("Considering: " . $P->to_string() );
 # Don't cut rolls into sheets
 				next if ! $P->cuttable();
 				if ( $$P{'type'} eq 'Roll' ) {
@@ -1017,7 +1019,14 @@ $openprint::log->debug("No well cut Stock found");
 # Don't cut sheets into rolls
 					next if ! $$specs{'OverrideStockHeight'.$qty_index};
 # Must be big enough to cut
-					next if ( $$P{'start_width'} < $$specs{'OverrideStockWidth'.$qty_index} or $$P{'start_height'} < $$specs{'OverrideStockHeight'.$qty_index} ) and ( $$P{'start_width'} < $$specs{'OverrideStockHeight'.$qty_index} or $$P{'start_height'} < $$specs{'OverrideStockWidth'.$qty_index} );
+					next if ( ! ( 
+								( $P->start_width() >= $$specs{'OverrideStockWidth'.$qty_index} and $P->start_height() >= $$specs{'OverrideStockHeight'.$qty_index} ) or 
+								( $P->start_width() >= $$specs{'OverrideStockHeight'.$qty_index} and $P->start_height() >= $$specs{'OverrideStockWidth'.$qty_index} )
+								) );
+
+				} else {
+					$log->error('WTF Type of Stock? '.$$P{type});
+					next;
 				} # end if
 				my $P2 = $P->clone();
 
@@ -1030,9 +1039,17 @@ $openprint::log->debug("No well cut Stock found");
 				} else {
 					$$P2{'start_width'} = $$specs{'OverrideStockWidth'.$qty_index};
 				} # end if
-				push @Papers, $P2;
+				push @cut_Papers, $P2;
+				$found = 1;
 			} # end foreach paper
+			if ( ! $found ) {
+				$log->error("Never found a stock");
+			} else {
+				$log->debug("Have a stock");
+			} # end if
+			push @Papers, @cut_Papers;
 		} # end if found
+
 	} # end foreach qty_index
 
 	foreach my $P ( @Papers ) {
@@ -1180,9 +1197,19 @@ $openprint::log->debug("Non-process colours in get_impositions: @non_process_col
 		$$project{'Orientation'} = $Press->specification('Orientation');
 		$$project{'Maximum Image Area Length'} = $Press->specification('Maximum Image Area Length');
 		$$project{'Maximum Image Area Width'} = $Press->specification('Maximum Image Area Width');
+		if ( $$specs{"dutch$qty_index"} eq 'N' ) {
+			$$project{dutch} = 'N';
+		} elsif ( $Press->specification('Dutch') eq 'N' ) {
+			$$project{dutch} = 'N';
+		} elsif ($$specs{'txtSignatureType'} or $$project{'HasDieCutting'} or $$project{'HasPerforating'} or $$project{'HasScoring'}) {
+			$$project{dutch} = 'N';
+		} else {
+			delete $$project{dutch};
+		} # end if
 
 		my @impositions;
 
+		my $use_cut_stocks = $Press->specification('Use Cut Stocks') ne 'N' ? 1 : 0;
 		my $co = $Press->specification('Cut Off');
 		my @cut_offs;
 		if ( $co ) {
@@ -1297,7 +1324,8 @@ $openprint::log->debug("Non-process colours in get_impositions: @non_process_col
 				} # end if start_width or cut for all sizes
 			} else { # Sheet Fed
 				next if ! sets::isin( 'Sheet', \@feeds );
-				next if ! ( $$Paper{'width'} and $$Paper{'height'} );
+				next if ! ( $$Paper{width} and $$Paper{height} );
+				next if $use_cut_stocks and $Paper->is_cut();
 				next if $printing_type eq 'Digital' and ! $Paper->digital();
 				$$project{'Runstyles'} = $runstyles_sheet;
 
@@ -1310,6 +1338,7 @@ $openprint::log->debug("Non-process colours in get_impositions: @non_process_col
 						( $P->width() > $maximum_sheet_length or $P->height() > $maximum_sheet_width )
 				   ) {
 					next if ! $P->cuttable();
+					next if ! $use_cut_stocks;
 					while (
 							( $P->width() > $maximum_sheet_width or $P->height() > $maximum_sheet_length )
 							and
@@ -1337,6 +1366,7 @@ $openprint::log->debug("Non-process colours in get_impositions: @non_process_col
 					my @i = openprint::imposition::get_imposition( $project, $do_work_turn, $do_perfecting, $$specs{'Versions'}, $P, $Press );
 					last if ! @i;
 					push @impositions, @i;
+					last if ! $use_cut_stocks;
 
 					$Papers{$P->id_string()} = $P if ! $Papers{$P->id_string()};
 					last if ( ! $P->cuttable() );
@@ -1966,7 +1996,6 @@ $log->warn("There are no quantities!");
 #I$log->debug("QTY: $qty");
 		} # end if
 
-		$$project{'dutch'} = ($$specs{'txtSignatureType'} or $$project{'HasDieCutting'} or $$project{'HasPerforating'} or $$project{'HasScoring'}) ? 'N' : $$specs{'dutch'.$qty_index};
 		if ( $$specs{'PageQuantity'} ) {
 			$qty *= $$specs{'PageQuantity'};
 			$$specs{'hdnBreakdown'.$qty_index} .= " * $$specs{'PageQuantity'} pages = $qty: ";
@@ -4537,6 +4566,25 @@ sub select_presses {
 				next;
 			} # end if
 			if ( @disallowed and sets::isin( $Paper->brand(), \@disallowed ) ) {
+                $results{$press_id} = 'Not suitable for this stock.';
+                next;
+            } # end if
+		} # end if
+		if ( my $stockmaterials = $Press->specification('StockMaterials') ) {
+			my ( @allowed, @disallowed );
+			foreach ( split(',',$stockmaterials) ) {
+				if ( $_ =~ /^\!(.+)$/ ) {
+					push @disallowed, $1;
+				} else {
+					push @allowed, $_;
+				} # end if
+			} # end foreach
+	
+			if ( @allowed and ! sets::isin( $Paper->material(), \@allowed ) ) {
+				$results{$press_id} = 'Not suitable for this stock.';
+				next;
+			} # end if
+			if ( @disallowed and sets::isin( $Paper->material(), \@disallowed ) ) {
                 $results{$press_id} = 'Not suitable for this stock.';
                 next;
             } # end if
