@@ -147,7 +147,7 @@ sub can_view {
 			( $openprint::session{'user_type'} eq 'A' )
 			or ( sets::isin( $_[0]->PurchaseOrder->created_by(), [ $openprint::session{'user_id'}, new openprint::User($openprint::session{'user_id'})->assistant_ids(), new openprint::User($openprint::session{'user_id'})->csr_ids() ] ) )
 			or ( openprint::usergroup::is_user_in( ['Accounting','Shipping','Inventory'], $openprint::session{'user_id'} ) ) 
-			or ( sets::isin( $openprint::session{user_id}, [ map { $_->salesrep_id() } $_[0]->Orders() ) )
+			or ( sets::isin( $openprint::session{user_id}, [ map { $_->salesrep_id() } $_[0]->Orders() ] ) )
 	   ) {
 		return 1;
 	} # end if
