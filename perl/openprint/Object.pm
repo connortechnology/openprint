@@ -312,7 +312,7 @@ $openprint::log->debug("Running $field with $$params{$field}") if $debug;
 
 		if ( defined $$fields{$field} ) {
 			if ( $$self{$field} ) {
-				$$self{$field} = transform( $type, $$self{field} );
+				$$self{$field} = transform( $type, $field, $$self{$field} );
 			} # end if $$self{field}
 
 			if ( ( ( ! exists $$self{$field} ) or (!defined $$self{$field}) or ( $$self{$field} eq '' ) ) and exists $defaults{$field} ) {
@@ -805,7 +805,7 @@ $openprint::log->error("Eval error $@") if $@;
 $openprint::log->debug("After $transform: $_[2]") if $debug;
 		} # end foreach
 	} else {
-		$openprint::log->error("Object::transform $_[1] not in fields for $type");
+		$openprint::log->error("Object::transform ($_[1]) not in fields for $type");
 	} # end if
 	return $_[2];
 

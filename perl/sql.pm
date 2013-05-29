@@ -237,7 +237,7 @@ sub end_transaction {
 	my ( $d, $ac ) = @_;
 	$d = $dbh if ! $d;
 	if ( $ac ) {
-		$log->debug("Committing $dbh");
+		#$log->debug("Committing $dbh");
 		$dbh->commit();
 	} # end if
 	$dbh->{AutoCommit} = $ac;
