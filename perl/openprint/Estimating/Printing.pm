@@ -3243,7 +3243,7 @@ sub get_run_price {
 		$run_price{'Cost'} = $running_price;
 		$run_price{'Price'} = $running_price * $run_price{'RunHours'};
 	} else {
-		$openprint::log->debug("Unknown Units: $run_price{'units'} for Impression price on $$Press{strid} $side_one_colour $side_two_colours");
+		$openprint::log->debug("Unknown Units: $run_price{'units'} for Impression price on $$Press{strid} $side_one_colours $side_two_colours");
 	} # end if
 #$openprint::log->debug("Impresion price: $run_price{'Cost'} $run_price{'units'} = $run_price{'Price'}");
 	return %run_price;
