@@ -62,19 +62,6 @@ sub session_init {
 
 	return if ! $dbh;
 
-	if ( $r->param('Currency') ) {
-		my $short = $r->param('Currency');
-		$short = substr( $short, 0, 3 );
-		$_ = openprint::Currency->find_one( short => $short );
-		$session{'Currency_id'} = $_->id() if $_;
-	} elsif ( $param{'select_currency_id'} ) {
-		my $Currency = new openprint::Currency( $param{'select_currency_id'} );
-		$session{'Currency_id'} = $Currency->id();
-	} elsif ( ! $session{'Currency_id'} ) {
-		$_ = openprint::Currency->find_one( 'short' => $r->dir_config('Currency') );
-		$session{'Currency_id'} = $_->id() if $_;
-	} # end if
-
 	if ( sets::isin( $session{'user_type'}, ['E','A'] ) ) {
 		if ( $r->param('btnFunction') eq 'SelectCompany' ) {
 			if ( $r->param('ddmCompany') != $session{'company_id'} ) {
@@ -94,12 +81,26 @@ sub session_init {
 		} # end if
 	} # end if
 
+	if ( $r->param('Currency') ) {
+		my $short = $r->param('Currency');
+		$short = substr( $short, 0, 3 );
+		$_ = openprint::Currency->find_one( short => $short );
+		$session{'Currency_id'} = $_->id() if $_;
+	} elsif ( $param{'select_currency_id'} ) {
+		my $Currency = new openprint::Currency( $param{'select_currency_id'} );
+		$session{'Currency_id'} = $Currency->id();
+	} elsif ( ! $session{'Currency_id'} ) {
+		$_ = openprint::Currency->find_one( 'short' => $r->dir_config('Currency') );
+		$session{'Currency_id'} = $_->id() if $_;
+	} # end if
+
 	if ( $config{Pricelist} ) {
 		if ( ! $session{Pricelist_id} ) {
 			$_ = openprint::Pricelist->find_one( name => $config{Pricelist} );
 			$session{Pricelist_id} = $_->id() if $_;
 		} # end if
 	} # end if
+
 	if ( ! $session{Pricelist_id} ) {
 		my $Pricelist = new openprint::Pricelist( openprint::pricing::get_pricelist_id( ) );
 		$session{Pricelist_id} = $Pricelist->id() if $Pricelist->id();
