@@ -80,8 +80,8 @@
 					</fieldset>
 				</div>
 				';
-				$html .= ssi::include( $ENV{'DOCUMENT_ROOT'}.'/account/_statistics.html' );
-				$html .= ssi::include( $ENV{'DOCUMENT_ROOT'}.'/account/_user_profile_view.html' );
+				$html .= include( '/account/_statistics.html' );
+				$html .= include( '/account/_user_profile_view.html' );
 				$html .= '</div></div><!--UserProfile-->';
 			} # end foreach User
 			$html .= '
@@ -89,7 +89,7 @@
 			<div class="Relationships">
 				<fieldset><legend>Relationships</legend>
 					<div id="Relationships">';
-			$html .= ssi::include($ENV{'DOCUMENT_ROOT'}.'/account/_relationships.html');
+			$html .= include('/account/_relationships.html');
 			$html .= '</div>
 				</fieldset>
 			</div>
@@ -106,7 +106,7 @@
 					$html .= sprintf(q`<li><a class="thumbnail" href="/event/view.html?event_id=%1$d"><img src="%4$s" alt="%5$s"/></a><a href="/event/view.html?event_id=%1$d">%2$s on %3$s</a></li>`,
 						$Event->id(), $Event->name(), 
 						Date::Format::time2str( $config{'DateTimeFormat'}, Date::Parse::str2time( $Event->starting_on() ) ),
-						$Event->Asset()->thumbnail_url(),
+						$Event->Asset()->sized_url('thumbnails'),
 						( $Event->Asset()->caption() ? $Event->Asset()->caption() : $Event->name() ),
 					);
 				} # end foreach Event

@@ -22,7 +22,7 @@ div.ProjectSummary p span.value {
     width: 30%;
 <? endif ( $$variable{'QTYS'} == 2 ) ?>
 <? if ( $$variable{'QTYS'} == 3 ) ?>
-    width: 20%;
+    width: 21%;
 <? endif ( $$variable{'QTYS'} == 3 ) ?>
 }
 </style>
@@ -51,8 +51,7 @@ There is no current project.
 		
 		<fieldset><legend><?ServiceTypeName?> <?txtServiceDescription?></legend>
 			<? if ( $$variable{'prod_url'} ) ?>
-			<? echo ( include('/main/summ/<?prod_url?>'); ) ?>
-			<? else ( $$variable{'prod_url'} ) ?>
+			<? echo ( include('/main/summ/'.$$variable{prod_url}); ) ?>
 			<? endif ( $$variable{'prod_url'} ) ?>
 		</fieldset>
 	<? endwhile ( @$variable{'ServiceIndex','ServiceTypeName','prod_url'} = splice @{$$variable{'SERVICES'}},0,3; ) ?>

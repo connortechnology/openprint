@@ -53,15 +53,15 @@ sub edit {
 		$variable{'error'} .= $Service->save( \%openprint::param );
 		if ( ! $variable{'error'} ) {
 
-		my $ac = sql::start_transaction( $dbh );
-		foreach my $List ( openprint::Pricelist->find() ) {
-			my $list = $List->id();
-			my $price_set = new openprint::service_priceset( $log, $dbh, $list, $Service->id() );
-			foreach my $key ( %param ) {
-				if ( $key =~ /chk-$list-(.*)-(.*)/ ) {
-					my $equipment = $1;
-					my $index = $2;
-					if ( ! $param{"ddmEquipment-$list-$equipment"} ) {
+			my $ac = sql::start_transaction( $dbh );
+			foreach my $List ( openprint::Pricelist->find() ) {
+				my $list = $List->id();
+				my $price_set = new openprint::service_priceset( $log, $dbh, $list, $Service->id() );
+				foreach my $key ( %param ) {
+					if ( $key =~ /chk-$list-(.*)-(.*)/ ) {
+						my $equipment = $1;
+						my $index = $2;
+						if ( ! $param{"ddmEquipment-$list-$equipment"} ) {
 							my $price = new openprint::service_price( $log, $dbh, $price_set );
 							$price->set(
 									undef,
@@ -75,30 +75,33 @@ sub edit {
 									$param{"supplier_id-$list-$equipment-$index"},
 									);
 							$price_set->addPrice( $price );
-					} else {
-			
-						foreach my $equipment_index ( ref $param{"ddmEquipment-$list-$equipment"} eq 'ARRAY' ? @{$param{"ddmEquipment-$list-$equipment"}} : $param{"ddmEquipment-$list-$equipment"} ) {
-							my $price = new openprint::service_price( $log, $dbh, $price_set );
-							$price->set(
-									$equipment_index,
-									$param{"min-$list-$equipment-$index"},
-									$param{"max-$list-$equipment-$index"},
-									$param{"units-$list-$equipment-$index"},
-									$param{"cost-$list-$equipment-$index"},
-									$param{"markup-$list-$equipment-$index"},
-									$param{"price-$list-$equipment-$index"},
-									$param{"discount-$list-$equipment-$index"},
-									$param{"supplier_id-$list-$equipment-$index"},
-									);
-							$price_set->addPrice( $price );
-						} # end foreach
-					} # end if equipment
-				} # end if chk 
-			} # end foreach
-			$price_set->save();
-		} # end foreach 
-		sql::end_transaction( $dbh, $ac );
+						} else {
+
+							foreach my $equipment_index ( ref $param{"ddmEquipment-$list-$equipment"} eq 'ARRAY' ? @{$param{"ddmEquipment-$list-$equipment"}} : $param{"ddmEquipment-$list-$equipment"} ) {
+								my $price = new openprint::service_price( $log, $dbh, $price_set );
+								$price->set(
+										$equipment_index,
+										$param{"min-$list-$equipment-$index"},
+										$param{"max-$list-$equipment-$index"},
+										$param{"units-$list-$equipment-$index"},
+										$param{"cost-$list-$equipment-$index"},
+										$param{"markup-$list-$equipment-$index"},
+										$param{"price-$list-$equipment-$index"},
+										$param{"discount-$list-$equipment-$index"},
+										$param{"supplier_id-$list-$equipment-$index"},
+										);
+								$price_set->addPrice( $price );
+							} # end foreach
+						} # end if equipment
+					} # end if chk 
+				} # end foreach
+				$price_set->save();
+			} # end foreach 
+			sql::end_transaction( $dbh, $ac );
 		} # end if not error
+		if ( ! $variable{error} ) {
+			$variable{ExternalRedirect} = '/administrator/services/edit.html?ddmService='.$Service->id();
+		} # end if
     } elsif ( $param{'btnFunction'} eq 'Copy' ) {
         my @prices = $Service->prices();
         

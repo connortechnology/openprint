@@ -12,28 +12,31 @@ $table = 'Quoted_Products';
 $serial = 'Quoted_Products_id_seq';
 
 %fields = (
-			'id'			=>	'id',
-			'quantity'		=>	'quantity',
-			'markup'		=>	'markup',
-			'cost'			=>	'cost',
-			'price'			=>	'price',
-			'product_id'	=>	'product_id',
-			'quote_id'		=>	'quote_id',
-);
+		id			=>	'id',
+		quantity	=>	'quantity',
+		markup		=>	'markup',
+		cost		=>	'cost',
+		price		=>	'price',
+		product_id	=>	'product_id',
+		quote_id	=>	'quote_id',
+		comments		=>	'comments',
+		);
 
 %transforms = (
-	'quantity'	=> [ 's/[^\d\.\-]//g' ],
-	'markup'	=> [ 's/[^\d\.\-]//g' ],
-	'price'		=> [ 's/[^\d\.\-]//g' ],
-	'cost'		=> [ 's/[^\d\.\-]//g' ],
+	quantity	=> [ 's/[^\d\.\-]//g' ],
+	markup		=> [ 's/[^\d\.\-]//g' ],
+	price		=> [ 's/[^\d\.\-]//g' ],
+	cost		=> [ 's/[^\d\.\-]//g' ],
+    comments		=> [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
 );
 
 %defaults = (
-	'id'		=> undef,
-	'markup'	=> undef,
-	'price'		=> undef,
-	'cost'		=> undef,
-	'quantity'	=>	1,
+	id			=> undef,
+	product_id	=>	undef,
+	markup		=> undef,
+	price		=> undef,
+	cost		=> undef,
+	quantity	=> 1,
 );
 
 sub Quote {

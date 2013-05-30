@@ -84,10 +84,10 @@
 	</fieldset>
 	</div>
 	<br class="spacer"/>
-	<? if ( $$variable{'Service'}->id() ) ?>
+	<? if ( $$variable{Service}->id() ) ?>
 	<div id="Prices">
-		<? echo ( include('_prices.html'); ) ?>
+		<?include(_prices.html)?>
 	</div>
-	<? endif ( $$variable{'Service'}->id() ) ?>
+	<? endif ( $$variable{Service}->id() ) ?>
 	<input type="hidden" name="btnFunction"/>
 </form>

@@ -1,12 +1,11 @@
 <? echo (
 	my @Articles = ();
-	if ( $param{'search'} ) {
-		my @keywords = split(/\s/, lc $param{'search'});
-		#$log->debug("Keywords: @keywords");
+	if ( $param{search} ) {
+		my @keywords = split(/\s/, lc $param{search});
 		my %counts;
 		foreach my $Article ( openprint::Article->find( 
-			'published'			=>	1,
-			'category_id'		=>	$session{'/article/list.html?category_id'},
+			published			=>	1,
+			category_id		=>	$session{'/article/list.html?category_id'},
 			) ) {
 			my @name_keywords = split(/\s/, lc $Article->name() );
 			my @body_keywords = split(/\s/, lc $Article->body() );

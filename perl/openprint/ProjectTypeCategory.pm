@@ -7,16 +7,17 @@ use vars qw( $debug %fields %transforms %defaults $table $serial );
 $debug = 0;
 $table =  'projecttype_categories';
 $serial = 'projecttype_categories_id_seq';
+
 %fields = (
-	'id'	=>	'id',
-	'name'	=>	'name',
-	'sort'	=>	'sort',
+	id	=>	'id',
+	name	=>	'name',
+	sort	=>	'sort',
 );
 %transforms = (
-    'name' => [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
+    name => [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
 );
 %defaults = (
-	'sort'	=>	undef,
+	sort	=>	undef,
 );
 
 sub ProjectTypes {
@@ -24,7 +25,12 @@ sub ProjectTypes {
 	my $self = shift;
 	
 	if ( @_ ) {
-		my %params = @_;	
+		my %params;
+		if ( ref $_[0] eq 'HASH' ) {
+			%params = %{$_[0]};
+		} else {
+			%params = @_;
+		} # end if
 		$params{'category_id'} = $$self{'id'};
 		return openprint::ProjectType->find( %params );
 	} elsif ( ! $$self{'ProjectTypes'} ) {
@@ -32,6 +38,10 @@ sub ProjectTypes {
 	} # end if
 	return @{$$self{'ProjectTypes'}};
 } # end sub ProjectTypes
+
+sub description {
+	return $_[0]->name();
+} # end sub description
 
 1;
 __END__

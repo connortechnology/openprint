@@ -1,4 +1,4 @@
-<script type="text/javascript" src="<?hash_link(/javascripts/tiny_mce/tiny_mce.js)?>"></script>
+<script type="text/javascript" src="/javascripts/tiny_mce/tiny_mce.js"></script>
 <script type="text/javascript">
 	tinyMCE.init({
 		mode : "specific_textareas",
@@ -48,7 +48,7 @@
 		new Ajax.Request( '_view.json', { parameters: params } );
 	} // end function reply_to
 </script>
-<? echo ( include('/includes/error_reporting.html'); ) ?>
+<?include(/includes/error_reporting.html)?>
 <div class="Conversation"><div class="View">
 	<form id="f1" name="f1" action="/messaging/view.html?conversation_id=<? echo ( $$variable{'Conversation'}->id() ) ?>" method="post">
 		<input type="hidden" id="last_message_id" value="" />

@@ -7,16 +7,16 @@ require openprint::Project;
 require openprint::User;
 require openprint::ServiceType;
 
-use vars qw( $log $debug %fields %find_fields %transforms %defaults $table $serial @identified_by );
-*log = \$openprint::log;
+use vars qw( $debug %fields %find_fields %transforms %defaults $table $serial @identified_by );
 
-$debug = 0;
+$debug = 1;
 %fields = (
 	'service_id'	=>	'lngserviceindex',
 	'project_id'	=>	'lngprojectindex',
 	'operator_id'	=>	'operator_id',
 	'status'		=>	'strstatus',
 	'servicetype_id'	=>	'servicetype_id',
+	service_type	=>	undef,
 	'created_on'	=>	'dtmlastmodified',
 );
 %find_fields = (
@@ -51,6 +51,16 @@ sub ServiceType {
 	return new openprint::ServiceType( $_[0]{'servicetype_id'} );
 } # end sub ServiceType
 
+sub service_type {
+	if ( @_ > 1 ) {
+		$_[0]{service_type} = $_[1];
+	} # end if
+	if ( ! $_[0]{service_type} ) {
+		$_[0]{service_type} = $_[0]->ServiceType()->type();
+	} # end if
+	return $_[0]{service_type};
+} # end sub service_type
+
 sub Equipment {
 	my ( $self, $qty_index ) = @_;
 
@@ -64,12 +74,12 @@ sub Equipment {
 		my $ServiceType = $self->ServiceType();
 
 		if ( $ServiceType->name() eq 'Cutting' ) {
-			$$self{Equipment} = openprint::Equipment::find_one(
+			$$self{Equipment} = openprint::Equipment->find_one(
 					'use_in_scheduling'=>1,
 					'Specifications'=>{'Cutting Capable'=>'Y'},
 					);
 		} elsif ( $ServiceType->name() eq 'Folding' ) {
-			$$self{Equipment} = openprint::Equipment::find_one(
+			$$self{Equipment} = openprint::Equipment->find_one(
 					'use_in_scheduling'=>1,
 					'Specifications'=>{'Folding Capable'=>'Y'},
 					);
@@ -77,13 +87,13 @@ sub Equipment {
 			if ( $$specs{'ddmEquipment'.$qty_index} ) {
 				$$self{Equipment} =  new openprint::Equipment( $$specs{'ddmEquipment'.$qty_index} );
 			} else {
-			$$self{Equipment} = openprint::Equipment::find_one(
+			$$self{Equipment} = openprint::Equipment->find_one(
 					'use_in_scheduling'=>1,
 					'Specifications'=>{'Stitching Capable'=>'Y'},
 					);
 			} # end if
 		} elsif ( ( $ServiceType->name() eq '' ) or $ServiceType->name() eq 'Signature' ) {
-			$$self{Equipment} = openprint::Equipment::find_one( strid=>$$specs{'UsePress'} );
+			$$self{Equipment} = openprint::Equipment->find_one( strid=>$$specs{'UsePress'} );
 		} # end if
 	} # end if $$self{Equipment}
 	return new openprint::Equipment() if ! $$self{Equipment};

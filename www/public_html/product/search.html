@@ -51,13 +51,9 @@
 		<? if ( $session{'user_type'} eq 'A' ) ?>
 					<li>
 						<label>Created On</label>
-						<span class="DateSelector">
 						<? echo ( ssi::date_select_session( '/product/search.html', 'created_on_start', {onchange=>'load_products(this.form);'} ); ) ?>
-						</span>
 							to 
-						<span class="DateSelector">
 						<? echo ( ssi::date_select_session( '/product/search.html', 'created_on_end', {onchange=>'load_products(this.form);'} ); ) ?>
-						</span>
 					</li>
 		<? endif ( $session{'user_type'} eq 'A' ) ?>
 				</ul>

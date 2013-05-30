@@ -16,13 +16,7 @@ require openprint::Invoice;
 require openprint::Invoice_Payment;
 
 sub history {
-	if ( $param{'btnFunction'} eq 'Save' ) {
-		$param{'recipient_id'} = $session{'company_id'} if ! $param{'recipient_id'};
-		$param{'received_on'} = sprintf('%.4d-%.2d-%.2d', @param{'received_on_year','received_on_month','received_on_day'} );
-		my $Payment = new openprint::Payment( $param{'payment_id'} );
-		$Payment->remaining( undef ); # force update
-		$variable{'error'} .= $Payment->save(\%param);
-	} elsif ( $param{'btnFunction'} eq 'Delete' ) {
+	if ( $param{'btnFunction'} eq 'Delete' ) {
 		my $Payment = new openprint::Payment( $param{'payment_id'} );
 		$variable{'error'} .= $Payment->delete();
 	} elsif ( $param{'btnFunction'} eq 'Destroy' ) {
@@ -46,14 +40,14 @@ sub _history {
 		( map { 'received_on_end_'.$_ } ( 'year','month','day' ) ),
 		( map { 'entered_on_start_'.$_ } ( 'year','month','day' ) ),
 		( map { 'entered_on_end_'.$_ } ( 'year','month','day' ) ),
-		'payor_id', 'recipient_id' );
+		'payor_id', 'recipient_id', 'transaction_id' );
 } # end sub _history
 
 sub edit {
 	$variable{'Payment'} = new openprint::Payment( $param{'payment_id'} );
 	if ( $param{'btnFunction'} eq 'Save' ) {
 		$param{'recipient_id'} = $session{'company_id'} if ! $param{'recipient_id'};
-		$param{'received_on'} = sprintf('%.4d-%.2d-%.2d', @param{'received_on_year','received_on_month','received_on_day'} );
+		$param{'received_on'} = sprintf('%.4d-%.2d-%.2d', @param{'received_on_year','received_on_month','received_on_day'} ) if Date::Calc::check_date( @param{'received_on_year','received_on_month','received_on_day'} );
 		my $Payment = new openprint::Payment( $param{'payment_id'} );
 		$variable{'error'} .= $variable{'Payment'}->save(\%param);
 	} # end if

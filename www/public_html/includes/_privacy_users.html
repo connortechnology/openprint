@@ -1,4 +1,4 @@
-<? echo ( include('/includes/error_reporting.html'); ) ?>
+<?include(/includes/error_reporting.html)?>
 <ul>
 <? echo ( 
 	my $html;
@@ -7,7 +7,7 @@
 		$html .= sprintf(q`
 			<li class="User">
 			<input type="hidden" name="privacy_user_id" value="%1$d"/>
-			<span class="buttons">%4$s</span><a href="/account/view.html?user_id=%1$d" class="thumbnail"><img src="%2$s" alt="%3$s" title="%3$s"/></a>%3$s</li>`, $User->id(), $User->Asset()->thumbnail_url(), $User->name(),
+			<span class="buttons">%4$s</span><a href="/account/view.html?user_id=%1$d" class="thumbnail"><img src="%2$s" alt="%3$s" title="%3$s"/></a>%3$s</li>`, $User->id(), $User->Asset()->sized_url('thumbnails'), $User->name(),
 			( ssi::button( 'Delete'.$User->id(), { 
 						   'onclick'=>qq`privacy_remove_user( $$User{id} );`,
 						   'text'=>'X', 'title'=>'Remove'} ) ),

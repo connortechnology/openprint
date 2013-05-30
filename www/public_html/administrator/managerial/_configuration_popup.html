@@ -1,24 +1,25 @@
+<?include(/includes/error_reporting.html)?>
 <form id="config_form" name="config_form" action="/administrator/managerial/configuration.html" method="post">
 	<input type="hidden" name="btnFunction" value="New"/>
 	<fieldset><legend>New Configuration Entry</legend>
 		<div class="content">
 			<ul>
 				<li><label>Name</label>
-					<input type="text" id="name" name="name" value="<? echo ( $$variable{'Entry'}{name} ) ?>"/>
+					<input type="text" id="name" name="name" value="<? echo ( $$variable{Entry}{name} ) ?>"/>
 				</li>
 				<li><label>Description</label>
-					<textarea id="description" name="description" cols="" rows="" onkeyup="textarea_resize(this);"><? echo ( $$variable{'Entry'}{description} ) ?></textarea>
+					<textarea id="description" name="description" onkeyup="textarea_resize(this);"><? echo ( $$variable{Entry}{description} ) ?></textarea>
 				</li>
 				<li><label>Type</label>
 					<select id="type" name="type">
-					<? echo ( ssi::make_drop_down( [ map { $_, $_ } ( 'Supplier', 'pricelist', 'currency', 'yes/no', 'textarea', 'text','list' ) ], $$variable{'Entry'}{'type'} ); ) ?>
+					<? echo ( make_drop_down( [ map { $_, $_ } ( 'Supplier', 'pricelist', 'currency', 'yes/no', 'textarea', 'text','list' ) ], $$variable{Entry}{type} ); ) ?>
 					</select>
 				</li>
 				<li><label>Category</label>
 					<input type="text" id="new_category" name="new_category" onkeyup="ddm_select_by_index( $('category'), 0 );"/>
 					<select name="category" id="category" onchange="$('new_category').value='';">
 						<option value="">create new</option>
-						<? echo ( ssi::make_drop_down( [ map { $_, $_ } sql::execute( $log, $dbh, 'SELECT DISTINCT category FROM configuration ORDER BY category' ) ], $$variable{'Entry'}{'category'} ); ) ?>
+						<? echo ( make_drop_down( [ map { $_, $_ } sql::execute( $log, $dbh, 'SELECT DISTINCT category FROM configuration ORDER BY category' ) ], $$variable{Entry}{category} ); ) ?>
 					</select>
 				</li>
 			</ul>
@@ -26,8 +27,8 @@
 		<p class="buttons">
 			<? echo (
 				return join('',
-					ssi::button( 'SaveNew', { 'onclick'=>q`$('config_form').submit();`, 'text'=>'Save' } ),
-					ssi::button( 'CancelNew', { 'onclick'=>q`popupWin.destroy();`, 'text'=>'Cancel' } ),
+					ssi::button( 'SaveNew', { onclick=>q`$('config_form').submit();`, text=>'Save' } ),
+					ssi::button( 'CancelNew', { onclick=>q`popupWin.destroy();`, text=>'Cancel' } ),
 				);
 			) ?>
 		</p>

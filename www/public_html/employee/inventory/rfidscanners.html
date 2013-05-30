@@ -1,11 +1,11 @@
-<script type="text/javascript" src="/javascripts/barcode.js"></script>
-<? echo ( include('/includes/error_reporting.html'); ) ?>
+<script type="text/javascript" src="<?hash_link(/javascripts/barcode.js)?>"></script>
+<? include('/includes/error_reporting.html' ) ?>
 Please select an RFID Scanner to view/edit.<br/>
 <form id="f1" name="f1" method="post" action="rfidscanner_details.html">
 	<fieldset class="filters"><legend>Choose RFID Scanner</legend>
 		<p>
 			<label for="rfidscanner_id">RFID Scanner ID #</label>
-			<input type="text" id="rfidscanner_id" name="rfidscanner_id" size="10" onkeypress="return input_handler( this, event);" onkeyup="this.value=this.value.replace(/\D/g,'');" />
+			<input type="text" id="rfidscanner_id" name="rfidscanner_id" onkeypress="return input_handler( this, event);" onkeyup="this.value=this.value.replace(/\D/g,'');" />
 			<? echo ( ssi::button( 'Go', { onclick=>'f1.submit();', href=>'', text=>'Go' } ); ) ?>
 		</p>
 	</fieldset>
@@ -14,27 +14,19 @@ Please select an RFID Scanner to view/edit.<br/>
 	<fieldset class="filters"><legend>Search Criteria</legend>
 		<p>
 			<label>Date Added</label>
-			<span class="DateSelectorCT">
 <? echo ( ssi::date_select_session( '/employee/inventory/rfidscanners.html', 'created_on_start', { 'with_today'=>1, 'with_clear'=>1 } ); ) ?>
-			</span>
 			to 
-			<span class="DateSelectorCT">
 <? echo ( ssi::date_select_session( '/employee/inventory/rfidscanners.html', 'created_on_end', { 'with_today'=>1, 'with_clear'=>1 } ); ) ?>
-			</span>
 		</p>
 		<p>
 			<label>Last Updated</label>
-			<span class="DateSelectorCT">
 <? echo ( ssi::date_select_session( '/employee/inventory/rfidscanners.html', 'updated_on_start', { 'with_today'=>1, 'with_clear'=>1 } ); ) ?>
-			</span>
 			to 
-			<span class="DateSelectorCT">
 <? echo ( ssi::date_select_session( '/employee/inventory/rfidscanners.html', 'updated_on_end', { 'with_today'=>1, 'with_clear'=>1 } ); ) ?>
-			</span>
 		</p>
 		<p class="buttons">
 			<? echo ( join('',
-				ssi::button( 'ShowResults', { 'onclick'=>"LoadContent( 'Results', '/employee/inventory/_rfidscanners.html', \$('f2').serialize() );", 'text'=>'Show Results' } ),
+				ssi::button( 'ShowResults', { onclick=>q`LoadContent( 'Results', '/employee/inventory/_rfidscanners.html', $('f2'));`, text=>'Show Results' } ),
 				ssi::button( 'Reset', { 'onclick'=>'f2.reset();' } ),
 				ssi::button( 'Add', { 'href'=>'rfidscanner_details.html', 'text'=>'Add New RFID Scanner' } ),
 				); ) ?>

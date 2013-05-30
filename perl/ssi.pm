@@ -23,10 +23,10 @@ use vars qw( $r %variable %session %param %config $log $dbh );
 my %hash_cache;
 
 #Used for writeTip
-my %Glossary;
+my $Glossary;
 
 # Used for translations
-my %Lexicon;
+my $Lexicon;
 
 sub include {
 	my ( $file, $variable ) = @_;
@@ -39,11 +39,11 @@ sub include {
 		$file = $path . $file;
 	} # end if
 	my $content = '';
-	if ( -f $config{SkinPath}.$file ) {
+	if ( -e $config{SkinPath}.$file ) {
 		$content = misc::load_file( $log, $config{SkinPath}.$file );
-	} elsif ( $ENV{DOCUMENT_ROOT} and -f $ENV{DOCUMENT_ROOT}.$file ) {
+	} elsif ( $ENV{DOCUMENT_ROOT} and ( -e ($ENV{DOCUMENT_ROOT}.$file) ) ) {
 		$content = misc::load_file( $log, $ENV{DOCUMENT_ROOT}.$file );
-	} elsif ( $config{DOCUMENT_ROOT} and -f $config{DOCUMENT_ROOT}.$file ) {
+	} elsif ( $config{DOCUMENT_ROOT} and ( -e $config{DOCUMENT_ROOT}.$file ) ) {
 		$content = misc::load_file( $log, $config{DOCUMENT_ROOT}.$file );
 	} else {
 		$content = misc::load_file( $log, $file );
@@ -113,7 +113,7 @@ sub variable_substitution {
 				$log->error( "Eval error ($@) of ($1), Reason: " . $@ ) if $@;
 			} elsif ( $command =~ /^translate\s*\(\s*([\S]+)\s*\)/ms ) {
 				$result .= translate($1);
-			} elsif ( $command =~ /^hash_link\s*\(\s*([\S]+)\s*\)/ms ) {
+			} elsif ( $command =~ /^hash_link\s*\(\s*'?([\S]+)'?\s*\)/ms ) {
 				$result .= hash_link($1);
 			} elsif ( $command =~ /^hecho\s*\(\s*(.*)\s*\)/ms ) {
 				$_ = eval $1;
@@ -121,7 +121,7 @@ sub variable_substitution {
 				$log->error( "Eval error of ($1), Reason: " . $@ ) if $@;
 			} elsif ( $command =~ /^checked\s*\(\s*(.*)\s*\)/ms ) {
 				$result .= checked( eval $1 );
-			} elsif ( $command =~ /^include\s*\(\s*'?(.*)'?\s*\)/ms ) {
+			} elsif ( $command =~ /^include\s*\(\s*'?([^'\)]*)'?\s*\)/ms ) {
 				$result .= include( $1, $variable );
 			} else {
 				$result .= $$variable{$command};
@@ -524,10 +524,10 @@ sub checked {
 
 sub writeTip {
 	my $word = shift;
-	if ( ! %Glossary ) {
-		%Glossary = sql::execute( undef, undef, 'SELECT word, definition FROM Glossary' );
+	if ( ! defined $Glossary ) {
+		%$Glossary = sql::execute( undef, undef, 'SELECT word, definition FROM Glossary' );
 	} # end if
-	if ( $Glossary{$word} ) {
+	if ( $$Glossary{$word} ) {
 		return sprintf(q`<span class="TipLink" onmouseover="tipOn('%1$s',3,event);" onmouseout="tipOff('%1$s');">%1$s</span>`, $word );
 	} else {
 		return $word;
@@ -572,7 +572,11 @@ sub date_select {
 	my ( $start_year, $start_month, $start_day ) = split( '-', $$options{'start'} ) if $$options{'start'};
 	my ( $end_year, $end_month, $end_day ) = split( '-', $$options{'end'} ) if $$options{'end'};
 
-	my $html = '';
+	my $class = 'DateSelector';
+	$class .= 'C' if $$options{with_clear};
+	$class .= 'T' if $$options{with_today};
+
+	my $html = '<span class="'.$class.'">';
 	$html .= sprintf('<span id="%1$s_date">', $prefix );
 	foreach my $o ( split(',', $$options{'order'} ) ) {
 		if ( ( $o eq 'y' ) and ( (!@fields) or sets::isin( 'year', \@fields ) ) ) {
@@ -581,7 +585,7 @@ sub date_select {
 			$html .= '</select>';
 #$log->debug($html);
 		} elsif ( ( $o eq 'm' ) and ( (!@fields) or sets::isin( 'month', \@fields ) ) ) {
-			$html .= sprintf(q`<select id="%1$s_month" name="%1$s_month" onchange="setDaysDropDown(this.form.elements['%1$s_year'].value,this.value,this.form.elements['%1$s_day'],this.form.elements['%1$s_day'].value);%2$s"><option value=""></option>`, $prefix, $$options{'onchange'} );
+			$html .= sprintf(q`<select id="%1$s_month" name="%1$s_month" onfocus="this.previousValue=this.value" onchange="setDaysDropDown(this.form.elements['%1$s_year'].value,this.value,this.form.elements['%1$s_day'],this.form.elements['%1$s_day'].value, this.previousValue);%2$s;this.previousValue=this.value;"><option value=""></option>`, $prefix, $$options{'onchange'} );
 			$html .= getmonths( $month );
 			$html .= '</select>';
 #$log->debug($html);
@@ -599,7 +603,7 @@ sub date_select {
 		$html .= ssi::button( $prefix.'_today', { 'onclick'=>q`set_today( $('`.$prefix.q`_year'), $('`.$prefix.q`_month'), $('`.$prefix.q`_day') );`.$$options{'onchange'}, text=>'T', title=>'Today', class=>'Today'} );
 	} # end if
 	$html .= '<span id="'.$prefix.'_alert"></span>';
-	$html .= '</span>';
+	$html .= '</span></span>';
 	return $html;
 } # end sub date_select
 
@@ -653,7 +657,7 @@ $openprint::log->error("No date from $value");
 	$html .= return_years( undef, undef, $year );
 	$html .= '</select>
 ';
-	$html .= sprintf(q`<select id="%1$s_month" name="%1$s_month" onchange="setDaysDropDown(this.form.elements['%1$s_year'].value,this.value,this.form.elements['%1$s_day'],this.form.elements['%1$s_day'].value);%2$s">`, $prefix, $$options{'onchange'} );
+	$html .= sprintf(q`<select id="%1$s_month" name="%1$s_month" onfocus="this.previousValue=this.value;" onchange="setDaysDropDown(this.form.elements['%1$s_year'].value,this.value,this.form.elements['%1$s_day'],this.form.elements['%1$s_day'].value,this.previousValue);this.previousValue=this.value;%2$s">`, $prefix, $$options{'onchange'} );
 	$html .= '<option value=""> </option>';
 	$html .= getmonths( $month );
 	$html .= '</select>
@@ -751,12 +755,15 @@ sub checkboxes {
 
 	my $onclick = $$options{'onclick'} if $options;
 	my $html;
+	my @container = @{$$options{container}} if $$options{container};
 
 	while ( my ( $value, $label ) = splice @{$values}, 0, 2 ) {
+		$html .= $container[0] if @container;
 		$html .= sprintf(q`
 				<input type="checkbox" name="%1$s" value="%2$s" id="%1$s%2$s" %4$s%5$s />
 				<label class="radio" for="%1$s%2$s">%3$s</label>
 				`, $name, $value, $label, checked( sets::isin( $value, $selected ) ), $onclick ? ' onclick="'.$onclick.'"' : '' );
+		$html .= $container[1] if @container;
 	} # end foreach value
 	return $html;
 } # end sub checkboxes
@@ -861,10 +868,10 @@ sub select( $$$ ) {
 } # end sub select($$$)
 
 sub translate($) {
-	if ( ! %Lexicon ) {
-		%Lexicon = sql::execute( undef, undef, 'SELECT word, translation FROM Lexicon '  );
+	if ( ! defined $Lexicon ) {
+		%$Lexicon = sql::execute( undef, undef, 'SELECT word, translation FROM Lexicon '  );
 	} # end if
-	return $Lexicon{$_[0]} if $Lexicon{$_[0]};
+	return $$Lexicon{$_[0]} if $$Lexicon{$_[0]};
 	return $_[0];
 } # end sub translate
 

@@ -33,6 +33,9 @@ $serial = 'events_id_seq';
 	# Photo album for the event, created on first photo upload
 	album_id	=>	'album_id', 
 	url			=>	'url',
+	published	=>	'published',
+	template	=>	'template',
+	template_id	=>	'template_id',
 );
 %find_fields = (
 	'attending'	=>	'(SELECT user_id FROM event_attendance WHERE event_id=events.id AND attending=true)',
@@ -55,6 +58,8 @@ $serial = 'events_id_seq';
 	time_associated	=> 0,
 	created_by		=> q`$openprint::session{user_id}`,
 	deleted			=> 0,
+	published		=>	0,
+	template		=>	0,
 );
 
 sub category {
@@ -64,7 +69,7 @@ sub category {
 			my $Category = openprint::Event_Category->find_one('name lc'=>lc $new );
 			if ( ! $Category ) {
 				$Category = new openprint::Event_Category();
-				$Category->save({name=>$_[1]})
+				$Category->save({name=>$_[1]});
 			} # end if	
 			$_[0]{category_id} = $Category->id();
 			return $Category->name();
@@ -74,6 +79,7 @@ sub category {
 	} # end if
 	return new openprint::Event_Category( $_[0]{'category_id'} )->name();
 } # end sub category
+
 sub Category {
 	return new openprint::Event_Category( $_[0]{'category_id'} );
 } # end sub Category
@@ -148,7 +154,7 @@ sub can_edit {
 } # end sub can_edit
 
 sub can_view {
-$openprint::log->debug("Event::can_view $_[1]" . ref $_[1] eq 'openprint::User' ? $_[1]->to_string() : $_[1] );
+#$openprint::log->debug("Event::can_view $_[1]" . ( ref $_[1] eq 'openprint::User' ? $_[1]->to_string() : $_[1] ) );
 	return 1 if ! $_[0]{id};
 	my $User;
 	if ( @_ > 1 ) {
@@ -185,7 +191,8 @@ sub Created_By {
 }
 
 sub html {
-	my $Event = $_[0];
+	my ( $Event, $options ) = @_;
+	$options = {} if ! $options;
 	my $html = sprintf(q`
 			<div class="Event">
 			<div class="Assets"><a class="medium %6$s" href="/event/view.html?event_id=%1$d"><img alt="" src="%7$s"/></a></div>
@@ -193,16 +200,22 @@ sub html {
 			<div class="Category"><a href="/event/view.html?event_id=%1$d">%3$s</a></div>
 			<div class="When">%4$s</div>
 			<div class="Where">%5$s</div>
-			<div class="Attending">%8$s</div>
 			`, $Event->id(), ssi::html_escape($Event->name()), $Event->Category()->name(),
                     $Event->time_string(),
                     $Event->where(),
 			$Event->Asset()->layout(),
 			$Event->Asset()->medium_url(),
-			$Event->attendance( new openprint::User($openprint::session{user_id}) ),
 			);
+	if ( (!$$options{show_no_attendees}) and ( $Event->Attendance() == 0 ) ) {
+	} else {
+		$html .= sprintf('<div class="Attending">%s</div>', $Event->attendance( new openprint::User($openprint::session{user_id}) ) );
+	} # end if
+	
 	my @Comments = $Event->Comments();
-	$html .= sprintf(q`<div class="comments">This event has %s.</div>`, ( @Comments == 1 ? '1 comment' : @Comments . ' comments' ) );
+	if ( (!$$options{show_no_comments}) and ( @Comments == 0 ) ) {
+	} else {
+		$html .= sprintf(q`<div class="comments">This event has %s.</div>`, ( @Comments == 1 ? '1 comment' : @Comments . ' comments' ) );
+	} # en dif
 	$html .= '</div>';
 	return $html;
 } # end  sub html
@@ -221,10 +234,8 @@ sub time_string {
 	if ( ! $_[0]{'time_string'} ) {
 		my $time_string;
 		my $starting_on_seconds = Date::Parse::str2time($_[0]{'starting_on'});
-		my $ending_on_seconds = Date::Parse::str2time($_[0]{'ending_on'});
 		my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime(time);
 		my ($ssec,$smin,$shour,$smday,$smon,$syear,$swday,$syday,$sisdst) = localtime($starting_on_seconds);
-		my ($esec,$emin,$ehour,$emday,$emon,$eyear,$ewday,$eyday,$eisdst) = localtime($ending_on_seconds);
 		if ( $syear == $year and $smon == $mon and $smday == $mday ) {
 			# starts today
 			$time_string .= 'today';
@@ -236,17 +247,21 @@ sub time_string {
 		} else {
 			$time_string .= Date::Format::time2str( '%a, %h %d %Y', $starting_on_seconds );
 		} # end if
-		$time_string .= ' until ';
-		if ( $eyear == $syear and (($eyday == $syday ) or ( $eyday == $syday+1 and $ehour < 7) ) ) {
-			$time_string .= Date::Format::time2str( '%l:%M%P', $ending_on_seconds );
-		} elsif ( $_[0]{'time_associated'} ) {
-			$time_string .= Date::Format::time2str( '%a, %h %d %Y at %l:%M%P', $ending_on_seconds );
-		} else {
-			$time_string .= Date::Format::time2str( '%a, %h %d %Y', $ending_on_seconds );
-		} # end if
-		$_[0]{'time_string'} = $time_string;
+		if ( $_[0]{ending_on} ) {
+			my $ending_on_seconds = Date::Parse::str2time($_[0]{'ending_on'});
+			my ($esec,$emin,$ehour,$emday,$emon,$eyear,$ewday,$eyday,$eisdst) = localtime($ending_on_seconds);
+			$time_string .= ' until ';
+			if ( $eyear == $syear and (($eyday == $syday ) or ( $eyday == $syday+1 and $ehour < 7) ) ) {
+				$time_string .= Date::Format::time2str( '%l:%M%P', $ending_on_seconds );
+			} elsif ( $_[0]{'time_associated'} ) {
+				$time_string .= Date::Format::time2str( '%a, %h %d %Y at %l:%M%P', $ending_on_seconds );
+			} else {
+				$time_string .= Date::Format::time2str( '%a, %h %d %Y', $ending_on_seconds );
+			} # end if
+		} # end if ending_on
+		$_[0]{time_string} = $time_string;
 	} # end if
-	return $_[0]{'time_string'};
+	return $_[0]{time_string};
 } # end sub time_string
 
 sub thumbnail_id {
@@ -258,7 +273,7 @@ sub thumbnail_html {
 		my $Asset = $_[0]->Asset();
 		if ( $Asset and $$Asset{'id'} ) {
 			$_[0]{'thumbnail_html'} = sprintf('<a href="/event/view.html?event_id=%1$d" class="thumbnail"><img src="%2$s" alt="%3$s" title="%3$s" /></a>',
-					$_[0]{'id'}, $Asset->thumbnail_url(), $_[0]->name() );
+					$_[0]{'id'}, $Asset->sized_url('thumbnails'), $_[0]->name() );
 		} # end if
 	} # end if
 	return $_[0]{'thumbnail_html'};
@@ -375,6 +390,36 @@ sub copy {
 	$New->save({created_on=>undef,updated_on=>undef,created_by=>$openprint::session{user_id},deleted=>0,album_id=>$$Album{id}});
 	return $New;
 } # end sub copy
+
+sub Template {
+	if ( ! $_[0]{Template} ) {
+		$_[0]{Template} = new openprint::Event( $_[0]{template_id} );
+	} # end if
+	return $_[0]{Template};
+} # end sub Template
+
+sub head_html { 
+	my $Event = $_[0];
+
+	my $description;
+	if ( $Event->info() ) {
+		my $hs = HTML::Strip->new();
+		$description = $hs->parse($Event->info());
+		$hs->eof();
+	} # end if
+    my $Asset = $Event->Asset();
+
+	my $html =  '<head itemscope itemtype="http://schema.org/Event">'."\n";
+	$html .= '<link rel="image_src" href="'.$openprint::config{siteURL}.$Asset->sized_url('medium').'"/>' if $Asset;
+	$html .= '<meta name="RATING" content="RTA-5042-1996-1400-1577-RTA" />'."\n";
+	$html .= '<meta itemprop="name" content="'. ssi::html_escape( $Event->name() ).'"/>'."\n";
+	$html .= '<meta itemprop="description" content="'.$description.'"/>'."\n" if $description;
+	$html .= '<meta name="startDate" content="'. $Event->starting_on().'" />'."\n" if $Event->starting_on();
+	$html .= '<meta name="endDate" content="'. $Event->ending_on().'" />'."\n" if $Event->ending_on();
+	$html .= '<meta name="image" content="'.$Asset->sized_url('medium').'"/>'."\n" if $Asset;
+    
+	return $html;
+} # end sub html_head
 
 1;
 __END__

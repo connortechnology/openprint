@@ -1,18 +1,22 @@
 <? echo (
 	my $html;
-	my @Equipment = openprint::Equipment->find('order'=>'lower(strid)');
-	$$variable{'company_ids'} = [ map { $_->id(), $_->name() } openprint::Company->find( 'supplier'=>'Y', 'order'=>'lower(name)' ) ];
-	foreach my $Pricelist ( openprint::Pricelist->find('order'=>'lower(name)') ) {
-		$html .= '<fieldset><legend>Pricing for Price List: '.$Pricelist->name() . "</legend>\n";
-		if ( my @Prices = openprint::ServicePrice->find('service_id'=>$$variable{'Service'}->id(), 'pricelist_id'=>$Pricelist->id() ) ) {
+	my @Equipment = openprint::Equipment->find( order=>'lower(strid)');
+	my @equipment_dropdown = map { $_->id(), $_->name() } @Equipment;
 
-		my @equipment_ids = sets::union( map{ $_->equipment_id() } @{$$variable{'Prices'}} );
-		foreach my $Equipment ( map{new openprint::Equipment($_); } sets::union( map{ $_->equipment_id() } @Prices ) ) {
+	$$variable{'company_ids'} = [ map { $_->id(), $_->name() } openprint::Company->find( supplier=>'Y', order=>'lower(name)' ) ];
+
+	foreach my $Pricelist ( openprint::Pricelist->find( order=>'lower(name)') ) {
+		$html .= '<fieldset><legend>Pricing for Price List: '.$Pricelist->name() . "</legend>\n";
+		my @Prices = openprint::ServicePrice->find( service_id=>$$variable{Service}->id(), pricelist_id=>$Pricelist->id() );
+
+		my @equipment_ids = sort( sets::union( map{ $_->equipment_id() } @Prices ) );
+		push @equipment_ids, undef if ! @equipment_ids;
+		foreach my $Equipment ( map{new openprint::Equipment($_)} @equipment_ids ) {
 			$html .= '<fieldset class="Equipment">';
 			if ( @Equipment ) {
 				$html .= '<p><label>Equipment</label>';
 				$html .= qq`<select name="ddmEquipment-$$Pricelist{id}-$$Equipment{id}"><option value="">All Equipment</option>`;
-				$html .= ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Equipment->find('order'=>'lower(strID)') ], $Equipment->id() );
+				$html .= ssi::make_drop_down( \@equipment_dropdown, $Equipment->id() );
 				$html .= '</select></p>';
 			} # end if has equipment
 			$html .= qq'
@@ -31,56 +35,10 @@
 					';
 			$$variable{'Equipment'} = $Equipment;
 			$$variable{'Pricelist'} = $Pricelist;
-			$html .= ssi::include( $ENV{'DOCUMENT_ROOT'}.'/administrator/services/_prices_table_body.html', $variable );
+			$html .= ssi::include( '/administrator/services/_prices_table_body.html', $variable );
 			$html .= '</tbody></table></fieldset><!--Equipment-->';
 		} # end foreach Equipment
-	} # end if prices
-	$html .= '<fieldset class="Equipment"><legend>Add New</legend>';
-	if ( @Equipment ) {
-		$html .= '<p><label>Equipment</label>';
-		$html .= qq`
-				<select multiple="multiple" size="4" name="ddmEquipment-$$Pricelist{id}-New">
-					<option value="" selected="selected">All Equipment</option>`;
-		$html .= ssi::make_drop_down( [ map { $_->id(), $_->name() } @Equipment ] );
-		$html .= '</select></p>';
-	} # end if has_equipment
-	$html .= qq`
-			<table class="List">
-				<thead><tr> 
-					<th class="Add">&nbsp;</th>
-					<th class="Supplier">Supplier</th>
-					<th class="Range">Quantity Range</th>
-					<th class="Units">Units</th>
-					<th class="Cost">Cost</th>
-					<th class="Markup">Mark up</th>
-					<th class="Price">Price</th>
-					<th class="Discount">Discount?</th>
-				</tr></thead><tbody>
-				<tr>
-					<td><input type="checkbox" name="chk-$$Pricelist{id}-New-0" /></td>
-					<td class="Supplier"><select name="supplier_id-$$Pricelist{id}-New-0"><option value=""> all </option>`;
-$html .= ssi::make_drop_down( $$variable{'company_ids'} );
-$html .= qq`</select></td>
-					<td class="Range">
-						<input type="number" name="min-$$Pricelist{id}-New-0" onkeyup="this.form.elements['chk-$$Pricelist{id}-New-0'].checked = true;">
-						-
-						<input type="number" name="max-$$Pricelist{id}-New-0" onkeyup="this.form.elements['chk-$$Pricelist{id}-New-0'].checked = true;">
-					</td>
-					<td class="Units"><input type="text" name="units-$$Pricelist{id}-New-0" onkeyup="this.form.elements['chk-$$Pricelist{id}-New-0'].checked = true;"></td>
-					<td class="Cost"><input type="number" name="cost-$$Pricelist{id}-New-0" onkeyup="calc_from_cost(this);this.form.elements['chk-$$Pricelist{id}-New-0'].checked = true;"></td>
-					<td class="Markup"><input type="number" name="markup-$$Pricelist{id}-New-0" onkeyup="calc_from_markup(this);this.form.elements['chk-$$Pricelist{id}-New-0'].checked = true;"></td>
-					<td class="Price"><input type="number" name="price-$$Pricelist{id}-New-0" onkeyup="calc_from_price(this);this.form.elements['chk-$$Pricelist{id}-New-0'].checked = true;"></td>
-					<td class="Discount">
-						<input type="radio" name="discount-$$Pricelist{id}-New-0" id="discount-$$Pricelist{id}-New-0Y" value='Y' checked="checked" onchange="this.form.elements['chk-$$Pricelist{id}-New-0'].checked = true;" />
-						<label class="radio" for="discount-$$Pricelist{id}-New-0Y">Yes</label>
-						<input type="radio" name="discount-$$Pricelist{id}-New-0" id="discount-$$Pricelist{id}-New-0N" value='N'  onchange="this.form.elements['chk-$$Pricelist{id}-New-0'].checked = true;" />
-						<label class="radio" for="discount-$$Pricelist{id}-New-0N">No</label>
-					</td>
-				</tr>
-			</table>
-		</fieldset><!--Equipment-->
-	</fieldset><!--Pricelist-->
-`;
-} # end foreach Pricelist
-return $html;
+		$html .= '</fieldset><!--Pricelist-->';
+	} # end foreach Pricelist
+	return $html;
 ) ?>

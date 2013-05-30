@@ -16,6 +16,7 @@ require openprint::Fault;
 require openprint::Test;
 require openprint::Test_Result;
 require openprint::Upgrade;
+require openprint::Helpdesk;
 
 use vars qw( $r $log $dbh %variable %param %session %config );
 *r = \$openprint::r;
@@ -330,27 +331,10 @@ sub helpdesk_search {
 				);
 	} # end if
 
-	my $sql = q{SELECT id, strFirstName || ' ' || strLastName, date(dtmRequestDate), strCompanyName, ysnReviewed FROM HelpDesk};
-	my @values;
-	push @values, sprintf('%.4d-%.2d-%.2d 00:00:00', @param{'created_on_start_year','created_on_start_month','created_on_start_day'});
-	push @values, sprintf('%.4d-%.2d-%.2d 00:00:00', @param{'created_on_end_year','created_on_end_month','created_on_end_day'});
-	$sql .= ' WHERE ( dtmREquestDate BETWEEN ? AND ? )';
-	if ( $param{'ddmReviewed'} ) {
-		$sql .= ' AND ysnReviewed = ?';
-		push @values, $param{'ddmReviewed'};
-	} # end if
-	if ( $param{'ddmCustomers'} ) {
-		$sql .= 'AND company_id = ?';
-		push @values, $param{'ddmCustomers'};
-	} # end if
-	$sql .= ' ORDER BY Id';
-	@{$variable{'HELPDESKENTRIES'}} = sql::execute( $log, $dbh, $sql, @values );
-
-	$variable{'ddmReviewed'.$param{'ddmReviewed'}} = 'SELECTED';
-
 	ssi::save_params( '/employee/support/helpdesk_search.html', (
 			( map { 'created_on_start_'.$_ } ( 'year','month','day' ) ),
 			( map { 'created_on_end_'.$_ } ( 'year','month','day' ) ),
+			( 'company_id', 'status' ),
 		) );
 
 } # end sub helpdesk_search

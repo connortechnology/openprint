@@ -8,7 +8,7 @@
 <? echo (
 	my $html = '';
 	my $rowclass;
-	foreach my $Category ( openprint::ProjectTypeCategory->find( 'order' => 'sort,lower(name)' ) ) {
+	foreach my $Category ( openprint::ProjectTypeCategory->find( order => 'sort,lower(name)' ) ) {
 		$html .= sprintf(q`
 <tr%1$s>
 	<td class="name"><a href="edit.html?category_id=%2$d">%3$s</a></td>

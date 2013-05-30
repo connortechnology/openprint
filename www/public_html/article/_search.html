@@ -5,7 +5,7 @@
 		ssi::date_filter( '/article/search.html?created_on_end','created_on <=' ),
 		ssi::date_filter( '/article/search.html?published_on_end','published_on <=' ),
 		ssi::date_filter( '/article/search.html?published_on_start','published_on >=' ),
-		( $session{'/article/search.html?published'} ne '' ? ( 'published' => $session{'/article/search.html?published'} ) : (published=>1) ),
+		( $session{'/article/search.html?published'} ne '' ? ( published => $session{'/article/search.html?published'} ) : ( $session{user_id} ? () : ( published=>1 ) ) ),
 		( $session{'/article/search.html?company_id'} ? ( 'company_id'	=> $session{'/article/search.html?company_id'} ) : () ),
 		( $session{'/article/search.html?author_id'} ? ( 'created_by' => $session{'/article/search.html?author_id'} ) : () ), 
 		( $session{'/article/search.html?category_id'} ? ( 'category_id' => $session{'/article/search.html?category_id'} ) : () ),
@@ -36,6 +36,7 @@
 			my $rowclass;
 			foreach my $Article ( @{$$variable{'Articles'}} ) {
 				next if $Article->anonymous() and $session{'/article/search.html?author_id'};
+				next if ! $Article->can_view();
 				my $Author = $Article->Author();
 
 				$html .= sprintf(q`<tr title="%s" %s>`,  ssi::html_escape($Article->summary()), $rowclass );

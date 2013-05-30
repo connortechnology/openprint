@@ -307,7 +307,10 @@ sub summary {
 	$log->debug("************************* START OF PROJECT SUMMARY **********************************");
 
 	$project_index = $param{'ProjectIndex'} if ! $project_index;
-	return if ! $project_index;
+	if ( ! $project_index ) {
+		$$variable{Project} = new openprint::Project();
+		return;
+	} # end if
 
 	my $order_id = $param{'Order_Id'};
 	
@@ -709,6 +712,7 @@ sub del_service {
 
 sub delete_service {
 	my ( $project_index, $service_index ) = @_;
+#$log->debug("DELETING service: " . new openprint::Project_Service({ project_id=>$project_index, service_id=>$service_index})->service_type() );
 	my $ac = sql::start_transaction( $openprint::dbh );
 	sql::execute( undef,undef, q{DELETE FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND lngServiceIndex=?}, $project_index, $service_index );
 	sql::execute( undef,undef, q{DELETE FROM tbl_Project_Contents WHERE lngProjectIndex=? AND lngServiceIndex=?}, $project_index, $service_index );

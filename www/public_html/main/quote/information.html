@@ -1,5 +1,12 @@
-<script type="text/javascript" src="/javascripts/pricing.js"></script>
+<script type="text/javascript" src="<?hash_link(/javascripts/pricing.js)?>"></script>
+<script type="text/javascript" src="/javascripts/tiny_mce/tiny_mce.js"></script>
+
 <script type="text/javascript">
+    tinyMCE.init({
+		mode : "specific_textareas",
+		editor_selector : "mce",
+        theme : "simple"
+    });
 	function company_onchange( e ) {
 		new Ajax.Request( '_company_information.json', { parameters: { company_id: e.value } } );
 	} // end function
@@ -104,12 +111,12 @@
 					</li>
 					<li> 
 						<label>Phone</label>
-						<input type="text" id="ByPhone" name="ByPhone" value="<?ByPhone?>" /> x
-						<? echo ( ssi::input( 'type'=>'number', 'id'=>'ByExtension', 'name'=>'ByExtension', 'value'=>$$variable{'ByExtension'} ); ) ?> 
+						<input type="tel" id="ByPhone" name="ByPhone" value="<?ByPhone?>" /> x
+						<? echo ( ssi::input( 'type'=>'tel', 'id'=>'ByExtension', 'name'=>'ByExtension', 'value'=>$$variable{'ByExtension'} ); ) ?> 
 					</li>
 					<li> 
 						<label>Fax</label>
-						<input type="text" id="ByFax" name="ByFax" value="<?ByFax?>" />
+						<input type="tel" id="ByFax" name="ByFax" value="<?ByFax?>" />
 					</li>
 				</ul>
 			</div>
@@ -218,12 +225,12 @@ if ( $$variable{'ForCountry'} eq 'US' ) {
 			</li>
 			<li> 
 				<label>Phone</label>
-				<input type="text" id="ForPhone" name="ForPhone" value="<?ForPhone?>" /> x
-				<? echo ( ssi::input( 'type'=>'number', 'id'=>'ForExtension', 'name'=>'ForExtension', 'value'=>$$variable{'ForExtension'} ); ) ?> 
+				<input type="tel" id="ForPhone" name="ForPhone" value="<?ForPhone?>" /> x
+				<? echo ( ssi::input( 'type'=>'tel', 'id'=>'ForExtension', 'name'=>'ForExtension', 'value'=>$$variable{'ForExtension'} ); ) ?> 
 			</li>
 			<li> 
 				<label>Fax</label>
-				<input type="text" id="ForFax" name="ForFax" value="<?ForFax?>" />
+				<input type="tel" id="ForFax" name="ForFax" value="<?ForFax?>" />
 			</li>
 			</ul></div>
 		</fieldset>
@@ -370,15 +377,15 @@ if ( $$variable{'ForCountry'} eq 'US' ) {
 		<? if ( openprint::Product->find_one() ) ?>
 		<div class="Products">
 		<fieldset><legend>Products</legend>
-			<div id="Products"><? echo ( include('_products.html'); ) ?></div>
+			<div id="Products"><?include(_products.html)?></div>
 		</fieldset>
 		</div>
 		<? endif ( openprint::Product->find_one() ) ?>
 		<p class="buttons">
 				<? echo ( 
 					my $html;
-					$html .= ssi::button( 'AddFromHistory', { onclick=>'', href=>'/main/project/history.html', text=>'Add Project From History' } ) if $session{'user_id'};
-					$html .= ssi::button( 'CreateNewProject', { onclick=>'', href=>'/main/project/create_edit.html', text=>'Add New Project' } );
+					$html .= ssi::button( 'AddFromHistory', { href=>'/main/project/history.html', text=>'Add Project From History' } ) if $session{'user_id'};
+					$html .= ssi::button( 'CreateNewProject', { href=>'/main/project/create_edit.html', text=>'Add New Project' } );
 					$html .= ssi::button( 'Continue', { onclick=>"f1.btnFunction.value='Continue';f1.submit();", href=>'', text=>'Continue' } );
 					) ?>
 		</p>

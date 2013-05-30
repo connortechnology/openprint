@@ -18,6 +18,13 @@ sub find {
 	return sql::execute( undef, undef, q{SELECT id, name FROM UserGroups ORDER BY lower(name)} );
 } # end if
 
+sub exists {
+	if ( ! %groups_cache ) {
+		%groups_cache = sql::execute( undef, undef, q{SELECT name, id FROM usergroups} );
+	} # end if
+	return $groups_cache{$_[0]};
+} # end sub exists
+
 sub names {
 	my( $log, $dbh, @ids ) = @_;
 

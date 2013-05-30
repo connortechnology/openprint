@@ -21,23 +21,15 @@ Please select a session to view/edit.<br>
 		</li>
 		<li>
 			<label>Date Added</label>
-			<span class="DateSelectorCT">
 <? echo ( ssi::date_select_session( '/employee/it/sessions.html', 'created_on_start', { 'with_today' => 1, 'with_clear'=>1 } ); ) ?>
-			</span>
 			to 
-			<span class="DateSelectorCT">
 <? echo ( ssi::date_select_session( '/employee/it/sessions.html', 'created_on_end', { 'with_today' => 1, 'with_clear'=>1 } ); ) ?>
-			</span>
 		</li>
 		<li>
 			<label>Last Updated</label>
-			<span class="DateSelectorCT">
 <? echo ( ssi::date_select_session( '/employee/it/sessions.html', 'updated_on_start', { 'with_today' => 1, 'with_clear'=>1 } ); ) ?>
-			</span>
 			to 
-			<span class="DateSelectorCT">
 <? echo ( ssi::date_select_session( '/employee/it/sessions.html', 'updated_on_end', { 'with_today' => 1, 'with_clear'=>1 } ); ) ?>
-			</span>
 		</li>
 		<li><label>Company</label>
 			<select name="company_id" id="company_id"><option value="">All</option>

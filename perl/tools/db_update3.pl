@@ -1,4 +1,4 @@
-#!/usr/bin/perl -w
+#!/usr/bin/perl 
 use lib '/var/www/testing/perl';
 use strict;
 
@@ -274,36 +274,6 @@ if ( ! sets::isin( 'video_albums', \@tables ) ) {
     $dbh->do( misc::load_file( $log, '../openprint/sql/Video_Albums.sql' ) );
     die $dbh->errstr() if $dbh->errstr();
 } # end if
-if ( ! sets::isin( 'events', \@tables ) ) {
-    $dbh->do( misc::load_file( $log, '../openprint/sql/Events.sql' ) );
-    die $dbh->errstr() if $dbh->errstr();
-} else {
-	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='events'", 'column_name');
-	if ( ! exists $$data{'album_id'} ) {
-		$dbh->do(q`ALTER TABLE events add album_id INTEGER` );
-		$dbh->do(q`ALTER TABLE events add FOREIGN KEY (album_id) REFERENCES photo_albums (id)` );
-	} # end if
-	if ( ! exists $$data{'asset_id'} ) {
-		$dbh->do(q`ALTER TABLE events add asset_id INTEGER` );
-		$dbh->do(q`ALTER TABLE events add FOREIGN KEY (asset_id) REFERENCES assets (id)` );
-	} # end if
-	if ( ! exists $$data{'url'} ) {
-		$dbh->do(q`ALTER TABLE events add url TEXT` );
-	} # end if
-} # end if
-if ( ! sets::isin( 'event_attendance', \@tables ) ) {
-    $dbh->do( misc::load_file( $log, '../openprint/sql/Event_Attendance.sql' ) );
-    die $dbh->errstr() if $dbh->errstr();
-} # end if
-if ( ! sets::isin( 'event_invitations', \@tables ) ) {
-    $dbh->do( misc::load_file( $log, '../openprint/sql/Event_Invitations.sql' ) );
-    die $dbh->errstr() if $dbh->errstr();
-} else {
-	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='event_invitations'", 'column_name');
-	if ( ! exists $$data{'sent_on'} ) {
-		$dbh->do('ALTER TABLE event_invitations ADD sent_on timestamp with time zone');
-	} # end if
-} # end if
 if ( ! sets::isin( 'user_relationships', \@tables ) ) {
     $dbh->do( misc::load_file( $log, '../openprint/sql/User_Relationships.sql' ) );
     die $dbh->errstr() if $dbh->errstr();
@@ -354,7 +324,7 @@ my %config_actions = (
 	'Login'		=>	2,
 	'Logout'	=>	3,
 	'Service Copy'	=>	27,
-	'Intrusion'		=>	99,
+	'Host blacklisted'	=>	99,
 	'Host online'	=>	100,
 	'Host offline'	=>	101,
 	'Host rebooted'	=>	102,
@@ -368,6 +338,7 @@ my %config_actions = (
 	'Export ProjectType Templates'	=>	54,
 	'License Assigned'	=>	200,
 	'License Unassigned'	=>	201,
+	'Intrusion'		=>	202,
 );
 foreach my $config_action ( keys %config_actions ) {
 	my $Action = openprint::Log_Action->find_one('name'=>$config_action);
@@ -927,21 +898,27 @@ if ( ! sets::isin( 'company_credit', \@tables ) ) {
 	if ( ! exists $$data{'cod'} ) {
 		$dbh->do('ALTER TABLE company_credit add cod float');
 	} # end if
+	if ( ! exists $$data{terms} ) {
+		$dbh->do('ALTER TABLE company_credit add terms integer');
+	} # end if
 	if ( ! exists $$data{supplier_id} ) {
 		$dbh->do('ALTER TABLE company_credit add supplier_id INTEGER');
 		$dbh->do('ALTER TABLE company_credit ADD FOREIGN KEY (supplier_id) REFERENCES Companies (id)');
 	} # end if
-	if ( ! exists $$data{late_penalty} ) {
-		$dbh->do('ALTER TABLE company_credit add late_penalty float');
+	if ( ! exists $$data{late_payment_amount} ) {
+		$dbh->do('ALTER TABLE company_credit add late_payment_amount float');
 	} # end if
-	if ( ! exists $$data{late_units} ) {
-		$dbh->do('ALTER TABLE company_credit add late_units TEXT');
+	if ( ! exists $$data{late_payment_units} ) {
+		$dbh->do('ALTER TABLE company_credit add late_payment_units TEXT');
 	} # end if
-	if ( ! exists $$data{early_payment_discount} ) {
-		$dbh->do('ALTER TABLE company_credit add early_payment_discount float');
+	if ( ! exists $$data{early_payment_amount} ) {
+		$dbh->do('ALTER TABLE company_credit add early_payment_amount float');
 	} # end if
 	if ( ! exists $$data{early_payment_units} ) {
 		$dbh->do('ALTER TABLE company_credit add early_payment_units TEXT');
+	} # end if
+	if ( ! exists $$data{early_payment_days} ) {
+		$dbh->do('ALTER TABLE company_credit add early_payment_days INTEGER');
 	} # end if
 } # end if
 if ( ! sets::isin( 'affiliates', \@tables ) ) {
@@ -1094,7 +1071,7 @@ foreach my $Company ( openprint::Company->find() ) {
 			if ( ! $Address ) {
 				$Address = new openprint::Location();
 				$_ = $Address->save({
-					address		=>	($Company->address1() ? $Company->address1() : '' ) . ( $Company->address2() ? (  ' ' . $Company->address2() ) : () ),
+					address		=>	($Company->address1() ? $Company->address1() : '' ) . ( $Company->address2() ? (  ' ' . $Company->address2() ) : '' ),
 					postalcode	=>	$Company->postalcode(),
 					type		=>	'place',
 					parent_id	=>	$City->id(),
@@ -1117,6 +1094,9 @@ if ( ! sets::isin('license_hosts', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/License_Hosts.sql}) );
 	die if $dbh->errstr();
 } # end if
+if ( sets::isin('operator_shifts', \@tables ) ) {
+$dbh->do('DROP TABLE operator_shifts');
+}
 print "done.\n";
 $dbh->disconnect();
 1;

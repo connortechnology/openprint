@@ -66,7 +66,8 @@ $serial = 'companies_id_seq';
 		'offers_credit'				=>	'offers_credit',
 		);
 %find_fields = (
-	'last_online'	=>	'(SELECT MAX(date_time) FROM Logs WHERE company_id=companies.id)',
+	last_online	=>	'(SELECT MAX(date_time) FROM Logs WHERE company_id=companies.id)',
+	marketing_category_id	=>	'(SELECT category_id FROM companies_in_marketing_categories WHERE company_id=companies.id)',
 );
 %transforms = (
 	'established'	=> [ 's/[^\d\-]//g' ],

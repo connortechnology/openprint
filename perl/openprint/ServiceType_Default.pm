@@ -24,12 +24,15 @@ $serial = 'tbl_Service_Defaults_lngID_seq';
 );
 
 %transforms = (
-	'id'				=>	[ 's/\D//g' ],
-	'servicetype_id'	=>	[ 's/\D//g' ],
-	'projecttype_id'	=>	[ 's/\D//g' ],
+	id				=>	[ 's/\D//g' ],
+	servicetype_id	=>	[ 's/\D//g' ],
+	projecttype_id	=>	[ 's/\D//g' ],
+    name => [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
+    value => [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
 );
 
 %defaults = (
+	projecttype_id		=>	undef,
 );
 
 sub projecttype {
