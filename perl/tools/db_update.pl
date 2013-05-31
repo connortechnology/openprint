@@ -2856,6 +2856,8 @@ if ( ! sets::isin( 'hosts', \@tables ) ) {
 	if ( ! exists $$data{'dhcp'} ) {
 		$dbh->do('ALTER TABLE hosts add dhcp boolean default false');
 	} # end if
+	$dbh->do('ALTER TABLE hosts alter count SET default 0') or die $openprint::dbh->errstr();
+	$dbh->do('ALTER TABLE hosts alter count SET NOT NULL') or die $openprint::dbh->errstr();
 } 
 if ( sets::isin('log',\@tables ) ) {
 	if ( ! sets::isin('logs',\@tables ) ) {
