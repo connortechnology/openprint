@@ -2,16 +2,17 @@ use strict;
 package openprint::Project_Log;
 our @ISA = qw(openprint::Object);
 
-use vars qw( $table $serial %fields %transforms %defaults );
+use vars qw( $debug $table $serial %fields %transforms %defaults );
 
+$debug = 1;
 $table = 'project_log';
 $serial= 'project_log_id_seq';
 %fields = (
-	'project_id'		=>	'project_id',
-	'company_id'		=>	'company_id',
-	'user_id'			=>	'user_id',
-	'created_on'		=>	'dtmtimestamp',
-	'description'		=>	'description',
+	project_id		=>	'project_id',
+	company_id		=>	'company_id',
+	user_id			=>	'user_id',
+	created_on		=>	'dtmtimestamp',
+	description		=>	'description',
 );
 %transforms = (
 );

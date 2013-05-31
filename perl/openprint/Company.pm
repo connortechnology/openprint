@@ -420,6 +420,12 @@ sub load_shipping {
     return $address->get( @params );
 } # end sub save_shipping
 
+sub can_view_all {
+	return 1 if $openprint::session{user_type} eq 'A';
+	return 1 if openprint::usergroup::is_user_in( ['Estimating','Prepress','Accounting','Shipping','Inventory'], $openprint::session{'user_id'} );
+	return 0;
+} # end sub can_view_all
+
 sub find_filtered {
     return if ! $openprint::session{user_id};
     return openprint::Company->find(order=>'lower(strname)') if $openprint::session{user_type} eq 'A';
