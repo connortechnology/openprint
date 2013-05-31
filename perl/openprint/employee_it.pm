@@ -92,6 +92,10 @@ sub host {
 				'mac'		=> $Host->get_mac(),
 				});
 		} # end if
+	} elsif ( $param{action} eq 'Wake' ) {
+		foreach my $mac ( @{ $Host->mac() } ) {
+			`wakeonlan $mac`;
+		} # end foraech
 	} elsif ( $param{action} eq 'Save' ) {
 		$param{'mac'} = [ map { split( ',', $_ ) } split("\n", $param{'mac'}) ];
 		if ( $param{'type_id'} ) {
