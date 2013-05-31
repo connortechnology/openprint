@@ -31,6 +31,7 @@ if ( tr ) tr.remove();
 			$error = 'Skid contents do not match manifest.';
 		} # end if
 		
+	$variable{'location_dropdown'} = openprint::Location->dropdown(order=>'parent_id NULLS FIRST, lower(name)') if ! exists $variable{'location_dropdown'};
 		#my @ManifestContents = map { $_->id() != $$C{id} ? $_ : () } $$variable{Manifest}->Contents();
 
 		my $id = $$variable{'type_id'}.'-'.$$C{id};

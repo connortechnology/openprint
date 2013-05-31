@@ -218,6 +218,7 @@ while(1) {
 						$log->debug( "Got $ip for $source" ) if $config{debug};
 					} # end if
 				} # end if
+				next if $ip eq '172.0.0.1';
 
 				if ( $ip and $whitelist{$ip} ) {
 					$log->debug( "$ip is whitelisted" ) if $config{debug};
