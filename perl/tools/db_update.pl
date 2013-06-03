@@ -977,7 +977,7 @@ if ( sets::isin( 'tbl_equipment', \@tables ) ) {
 			next if sql::execute( undef, undef, 'SELECT name from equipment_categories where name=?', $category );
 			sql::insert( undef, undef, 'equipment_categories', 'name', $category );
 		} # end foreach category
-		$dbh->do('UPDATE tbl_equipment set category_id=(SELECT id FROM equipment_categories where name=strcategory)' );
+		$dbh->do('UPDATE tbl_equipment set category_id=array_append( category_id, (SELECT id FROM equipment_categories where name=strcategory) )' ) or die $dbh->errstr();
 		$dbh->do('ALTER TABLE tbl_equipment DROP strcategory');
 	} # end if
 	if ( ! exists $$data{deleted} ) {
