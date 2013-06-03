@@ -4,6 +4,7 @@ use Date::Calc;
 use strict;
 require sql;
 require logger;
+require configuration;
 require openprint::Object;
 require openprint::Paper;
 
@@ -48,7 +49,7 @@ if ( $year ) {
 	`su postgres -c "createdb $dst_db"`;
 	print "done\n";
 	print "Loading db...";
-	`su postgres -c "ssh $src_host pg_dump -h server1 $src_db | psql $dst_db"`;
+	`su postgres -c "ssh $src_host pg_dump $src_db | psql $dst_db"`;
 	print "done\n";
 
 } # end if
@@ -57,7 +58,7 @@ print "upgrading db ...";
 `/etc/apache2/lib/perl/tools/db_update3.pl $dst_db penultima penultima` or $log->error($!);
 print 'Turning off backups...';
 $dbh = sql::open_sql( $log, ('database'=>$dst_db, 'driver'=>'Pg','login'=>'penultima', 'password'=>'penultima') );
-configuration::init( $log, $dbh );
+configuration::init( );
 my ( $version, $updated_on, $backup ) = sql::execute( undef, undef, q{SELECT version,updated_on, backup FROM database_info ORDER BY updated_on DESC LIMIT 1} );
 sql::insert(undef, undef, 'database_info', 'version', $version, 'updated_on', 'NOW()', 'backup', 0 );
 print "done\n";

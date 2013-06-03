@@ -725,8 +725,6 @@ sub add_imposition {
 #$log->debug("Nixing imposition because W&T needds 2* versions > imposition");
 					next;
 				} # end if
-			} elsif ( $versions > $i->imposition() ) {
-				next;
 			} # end if
 
 # This is checked for in check_setup

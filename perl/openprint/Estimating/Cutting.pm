@@ -30,7 +30,7 @@ require openprint::Service;
 
 require sql;
 
-my $debug = 1;
+my $debug = 0;
 
 my @equipment;
 
@@ -714,7 +714,6 @@ sub signature_calc {
 		} else {
 			%ServicePrice = openprint::service::get_price_object( 'Cutting', $sheets, $Equipment );
 		} # end if
-
 
 		my $runs = $liftDepth ? ceil( $sheets*$calliper/$liftDepth ) : $sheets;
 		$results{'Breakdown'} .= '# of cuts: ' . $cuts . ' => ' .($cuts * $sheets) . '<br/>';

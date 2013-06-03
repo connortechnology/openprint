@@ -1366,9 +1366,8 @@ $openprint::log->debug("Non-process colours in get_impositions: @non_process_col
 					my @i = openprint::imposition::get_imposition( $project, $do_work_turn, $do_perfecting, $$specs{'Versions'}, $P, $Press );
 					last if ! @i;
 					push @impositions, @i;
-					last if ! $use_cut_stocks;
-
 					$Papers{$P->id_string()} = $P if ! $Papers{$P->id_string()};
+					last if ! $use_cut_stocks;
 					last if ( ! $P->cuttable() );
 					$P = $P->clone();
 					$P->cut();
