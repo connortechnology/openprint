@@ -2858,7 +2858,12 @@ if ( ! sets::isin( 'hosts', \@tables ) ) {
 	} # end if
 	$dbh->do('ALTER TABLE hosts alter count SET default 0') or die $openprint::dbh->errstr();
 	$dbh->do('ALTER TABLE hosts alter count SET NOT NULL') or die $openprint::dbh->errstr();
-} 
+}
+
+if ( ! sets::isin( 'host_info', \@tables ) ) {
+	$dbh->do( misc::load_file( $log, q{../openprint/sql/Host_Info.sql}) );
+}
+
 if ( sets::isin('log',\@tables ) ) {
 	if ( ! sets::isin('logs',\@tables ) ) {
 		$dbh->do('ALTER TABLE log RENAME TO logs');
