@@ -610,7 +610,7 @@ $openprint::log->debug("Using Cut Off : $$specs{'Cut Off'}") if $debug;
 			calc_setup( $setup2, $setup2->image_height(), $setup2->image_width(), $adjusted_paper_width, $adjusted_paper_height ? $adjusted_paper_height : $setup2->image_width() );
 			$openprint::log->debug(" CHECK 2 $run_style Using Paper $paper_width x $paper_height -> $adjusted_paper_width x $adjusted_paper_height Gutter: $gutters, Image: $$setup2{image_width} x $$setup2{image_height} Imposition: " . $setup2->imposition(). ":".$setup2->columns() . 'x' . $setup2->rows(). " $run_style") if $debug;
 			if ( check_setup( $setup2, $specs ) ) {
-			$openprint::log->debug(" CHECK 2 $run_style Using Paper $paper_width x $paper_height -> $adjusted_paper_width x $adjusted_paper_height Gutter: $gutters, Image: $$setup2{image_width} x $$setup2{image_height} Imposition: " . $setup2->imposition(). ":".$setup2->columns() . 'x' . $setup2->rows(). " $run_style") if $debug;
+				$openprint::log->debug("CHECK 2 $run_style Using Paper $paper_width x $paper_height -> $adjusted_paper_width x $adjusted_paper_height Gutter: $gutters, Image: $$setup2{image_width} x $$setup2{image_height} Imposition: " . $setup2->imposition(). ":".$setup2->columns() . 'x' . $setup2->rows(). " $run_style valid") if $debug;
 
 #	Rotating sheet reverses the grain direction, so grain width + rotated sheet is the same as grain height + non rotated sheet.
 #	if no grain direction is specified, then use the larger imposition
@@ -724,8 +724,6 @@ sub add_imposition {
 #$log->debug("Nixing imposition because W&T needds 2* versions > imposition");
 					next;
 				} # end if
-			} elsif ( $versions > $i->imposition() ) {
-				next;
 			} # end if
 
 # This is checked for in check_setup

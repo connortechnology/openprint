@@ -1200,11 +1200,16 @@ sub get_impositions {
 							undef, 
 							#$$specs{'rdbGrainDirection'.$qty_index},
 							$Press );
+#$openprint::log->debug("Back from Getting impos for $$Press{strid} " . $P->to_string() );
+#foreach my $i ( @i ) {
+	#$i->display();
+#}
+
 					last if ! @i;
 					push @imps, @i;
+					$Papers{$P->to_string()} = $P if ! $Papers{$P->to_string()};
 					last if ! $use_cut_stocks;
 
-					$Papers{$P->to_string()} = $P if ! $Papers{$P->to_string()};
 					last if ( ! $P->cuttable() );
 					$P = $P->clone();
 					$P->cut();
