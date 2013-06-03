@@ -131,6 +131,8 @@ sub calc {
         } # end if
 		$$specs{'hdnBreakdown'.$qty_index} = '';
         my $qty = $$specs{"txtQuantity$qty_index"};
+		$qty *= $$printing_specs{Versions} if $$printing_specs{Versions};
+		$$specs{'hdnBreakdown'.$qty_index} .= "Packaging $qty items<br/>";
 
 		my $material_charge = 0;
 		my $best_price = 0;

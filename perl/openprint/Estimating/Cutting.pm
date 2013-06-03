@@ -31,7 +31,7 @@ require openprint::Service;
 
 require sql;
 
-my $debug = 1;
+my $debug = 0;
 
 my @equipment;
 
@@ -691,6 +691,7 @@ sub signature_calc {
 		my $price;
 		my $sheets = ceil( $$sig_specs{'txtQuantity'.$qty_index} / $$I{'imposition'} );
 		$sheets *= $$sig_specs{'PageQuantity'} if $$sig_specs{'PageQuantity'};
+		$sheets *= $$sig_specs{'Versions'} if $$sig_specs{'Versions'};
 		if ( my $Spec = $Equipment->Specification('Cutting Overs') ) {
 			if ( $$Spec{'units'} eq 'Sheets' ) {
 				$sheets += $$Spec{'value'};
