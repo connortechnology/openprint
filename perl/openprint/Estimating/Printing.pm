@@ -1055,7 +1055,7 @@ $log->debug("Considering: " . $P->to_string() );
 	foreach my $P ( @Papers ) {
 		#$P->Prices();
 		$openprint::log->debug("Base Paper: " . $P->to_string() . ' Minimum: ' . $P->minimum_order() ) if DEBUG;
-		$Papers{$P->id_string()} = $P->clone();
+		$Papers{$P->id_string()} = $P->clone() if $P->width();
 	} # end foreach
 
 	return map { $_->clone() } @Papers;
@@ -3173,12 +3173,19 @@ $openprint::log->debug($Paper->id_string());
 				$$paper_price{'Total'} = Math::Round::nearest( 0.01, $$paper_price{'100lb Price'} * $weight / 100 );
 				$$price{'Comparison Cost'} += $$paper_price{'Total'};
 				$$price{'Stock Total'} += $$paper_price{'Total'};
+$openprint::log->error('No factor') if ! $Paper->factor();
+$openprint::log->error('No width' . $Paper->to_string() ) if ! $Paper->width();
+
+				if ( $Paper->wpsi() ) {
 				$$price{'Paper Breakdown'} .= sprintf('Stock: %s %s %s %s, %slbs * %.2f/100lbs = $%.2f<br/>', 
 						( $$Paper{'type'} eq 'Sheet' ? ceil($PaperCounts{$paper_string}/$Paper->factor()) .'sheets' : ( $PaperCounts{$paper_string}.'lbs '. Math::Round::nearest(0.01, ($PaperCounts{$paper_string} / $Paper->wpsi() ) / $Paper->width() ) . ' linear feet' ) ), 
 						$Paper->to_string(),
 						( $Paper->sheets_per_package() ? 'SPP:'.$Paper->sheets_per_package() : '' ),
 						( $Paper->minimum_order() ? 'minimum:'.$Paper->minimum_order() : '' ),
 						$weight, @$paper_price{'100lb Price','Total'} );
+				} else {
+					$$price{'Paper Breakdown'} .= 'No wpsi for stock ' . $Paper->to_string() . '</br>';
+				} # end if
 			} # end foreach Paper in PaperCounts
 #$openprint::log->debug($$price{'Paper Breakdown'}) if DEBUG;
 #$openprint::log->debug("Comparison: $$price{'Comparison Cost'}");

@@ -22,7 +22,7 @@ require openprint::service;
 
 use vars qw( @folds %fold_types );
 
-use constant DEBUG => 0;
+use constant DEBUG => 1;
 
 my @equipment;
 my @stitchers;
@@ -1125,16 +1125,17 @@ $openprint::log->debug("Runspeed: $fold_type(".$Fold->name().") : " . $Equipment
 					$fold_specs{"Price-$$sig_specs{SignatureIndex}-$qty_index"} = $totalPrice;
 					my $results = openprint::Estimating::Stitching::signature_calc( $Project, $stitching_service_index, $stitching_specs, $qty_index, \%fold_specs, $sig_specs, [ @$Signature_Impositions, $SignatureImposition ], $calc_hash );
 					if ( ! $$results{'Equipment'} ) {
-						$Breakdown .= "unable to determine stitching equipment $$results{alert} $fold_specs{'hdnBreakdown'.$qty_index}<br/>";
-						next;
+						$Breakdown .= "unable to determine stitching equipment: $$results{alert} $fold_specs{'hdnBreakdown'.$qty_index}<br/>";
+						$stitching_part = 1000000;
 					} elsif ( $$results{'Equipment'}->id() != $Equipment->id() and $Equipment->specification('Folding Capable') eq 'When Stitching' ) {
 						$Breakdown .= 'Not stitching on ' . $Equipment->strid().' stitching on '.$$results{'Equipment'}->strid() .'.<br/>';
 						$Breakdown .= $$stitching_specs{"hdnBreakdown$qty_index"};
-						next;
+						$stitching_part = 1000000;
+					} else {
+						$stitching_part = $$results{'Price'};
+						$Breakdown .= "Stitching cost: $stitching_part on " . $$results{'Equipment'}->strid() . '<br/>';
 					} # end if
-					$stitching_part = $$results{'Price'};
 # / $Project->signatures();
-					$Breakdown .= "Stitching cost: $stitching_part on " . $$results{'Equipment'}->strid() . '<br/>';
 $Breakdown .= $$results{'Breakdown'};
 				} elsif ( $$specs{'StitchingEquipment'}->id() != $Equipment->id() and $Equipment->specification('Folding Capable') eq 'When Stitching' ) {
 					$Breakdown .= 'Not stitching on ' . $Equipment->strid().' stitching on '.$$specs{'StitchingEquipment'}->strid() .'.<br/>';
