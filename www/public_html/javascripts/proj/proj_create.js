@@ -70,10 +70,10 @@ function validate_data (form) {
 
 function project_type_alert( form, rdb ) {
 	if ( rdb.value == "BusinessCards" ) {
-		alert ("Please input the business card quantities in the fields below." + "\n" + "\n" + "(Example: Each name would require 500, 1000, 2000 business cards.)" + "\n" + "\n" + "Name quantities can be input on the next page.");
+		alert ("Please input the total # of business cards in the fields below. Name quantities will be asked for later. ");
 	} // end if
 	if ( rdb.value == "MultiVersion" ) {
-		alert ("Please input the quantities for each version in the fields below." + "\n" + "\n" + "(Example: Each version would require 1000, 2000, 3000.)" + "\n" + "\n" + "Version quantities can be input on the next page.");
+		alert ("Please input the total quantity in the fields below." + "\n" + "\n" + "Version quantities can be input on the next page.");
 	} // end if
 // Project types not yet working	
 /*	if (( rdb.value == 'Calendars' ) || ( rdb.value == 'Forms' ) || ( rdb.value == 'Cheques' ) || ( rdb.value == 'PresentationFolders' )) {

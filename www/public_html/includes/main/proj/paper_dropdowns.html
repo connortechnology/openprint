@@ -139,7 +139,7 @@
 			'project_type_id any'	=>	$$variable{'ProjectType'}->id(),
 			'supplied is null or ='	=>	$$variable{'rdbSuppliedStock'.$$variable{'Signature'}} eq 'Y' ? 1 : 0,
 			'type'					=>	\@types,
-			'user_type'				=>	\@user_types,
+			'user_type is null or ='=>	\@user_types,
 	);
 
 	my @StockOptions = split( ',', $config{$$variable{'ProjectType'}->name().'StockOptions'} );

@@ -16,7 +16,7 @@
 	push @user_types, ('A','E') if $openprint::session{'user_type'} eq 'A';
 
 	my %find = (
-		'user_type'	=>	\@user_types,
+		'user_type is null or ='	=>	\@user_types,
 		( $$ProjectType{'id'}?(
 							   'project_type_id any'	=>	$ProjectType->id(),
 							  ):(
