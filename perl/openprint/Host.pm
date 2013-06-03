@@ -207,8 +207,18 @@ sub Notifications {
 sub info {
 	if ( ! $_[0]{Info} ) {
 		%{$_[0]{Info}} = map { $_->name(), $_ } openprint::Host_Info->find(host_id=>$_[0]{id});
+		foreach my $k ( keys %{$_[0]{Info}} ) {
+			$openprint::log->debug(" $k => " . $_[0]{Info}{$k}->value() );
+		} # end foreach
 	} # end if
-	return $_[0]{Info}{$_[1]};
+	if ( $_[0]{Info}{$_[1]} ) {
+		return $_[0]{Info}{$_[1]}->value();
+	} # end if
+$openprint::log->debug("No value for $_[1] " . $_[0]->to_string() );
+		foreach my $k ( keys %{$_[0]{Info}} ) {
+			$openprint::log->debug(" $k => " . $_[0]{Info}{$k}->value() );
+		} # end foreach
+	return '';
 } # end sub info
 
 1;

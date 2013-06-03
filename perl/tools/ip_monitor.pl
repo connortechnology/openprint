@@ -1,8 +1,7 @@
 #!/usr/bin/perl
 use utf8;
-use lib '/var/www/point-one/perl';
+use lib '/var/www/testing/perl';
 use strict;
-use LWP;
 
 require configuration;
 require sql;
@@ -34,8 +33,15 @@ if ($opts->{help}) {
     exit 0;
 }
 
+my %defaults = (
+	config	=>	'/etc/openprint/ip_monitor.conf',
+);
+foreach my $default ( keys %defaults ) {
+	$$opts{$default} = $defaults{$default} if ! $$opts{$default};
+} # end foreach
+
 configuration::init( );
-configuration::from_file( $$opts{'config'} ? $$opts{'config'} : '/etc/iq_monitor.conf' );
+configuration::from_file( $$opts{'config'} );
 configuration::merge( $opts );
 
 foreach my $param ( 'db_name','db_user','db_pass','from','recipient','smtp-server' ) {
@@ -89,7 +95,7 @@ while(1) {
 			next;
 		} # end if ! dbh
 		configuration::init( );
-		configuration::from_file( $$opts{'config'} ? $$opts{'config'} : '/etc/iq_monitor.conf' );
+		configuration::from_file( $$opts{'config'} );
 		configuration::merge( $opts );
 	} # end if ! dbh
 
@@ -165,17 +171,20 @@ Please investigate.",
 
 		if ( $Host->online() ) {
 			if ( sets::isin( $Host->type(), [ 'AIC500', 'AIC500W', 'AIC777W', 'AIC747W' ] ) ) {
+				require LWP;
 				my $browser = LWP::UserAgent->new();
-				$browser->credentials( $Host->hostname().':80', 'Netcam', 'admin'=>'p1GraPHic' );
+				$browser->credentials( $Host->hostname().':80', 'Netcam', $Host->info('username') => $Host->info('password') );
 
 				$log->debug("URL: " . $Host->hostname().'/cgi/jpg/image.cgi' );
 				my $response = $browser->get('http://'.$Host->hostname().'/cgi/jpg/image.cgi');
 				if ( ! $response->is_success ) {
 					if ( $response->status_line() eq '401 Unauthorized' ) {
+$log->debug("Unauthorized with " . $Host->info('username') . ' password: ' . $Host->info('password') );
 						my $header = $response->header('WWW-Authenticate');
 						my ( $realm ) = $header =~ /realm="(.*)"/;
-						if ( $realm and $realm ne 'Netcam' ) {
-							$browser->credentials( $Host->hostname().':80', $realm, 'admin'=>'p1GraPHic' );
+						if ( $realm and ( $realm ne 'Netcam' ) ) {
+$log->debug("Different REALM $realm");
+							$browser->credentials( $Host->hostname().':80', $realm, $Host->info('username') => $Host->info('password') );
 							$response = $browser->get('http://'.$Host->hostname().'/cgi/jpg/image.cgi');
 						} # end if
 					} # end if
@@ -191,7 +200,7 @@ Please investigate.",
 						}  # end foreach
 						$response = $browser->get('http://'.$Host->hostname().'/admin/reboot.cgi?type=0');
 						$log->debug($response->is_success);
-						(new openprint::Log())->save({'action_id'=>102, 'ip_address'=>$Host->ip(), 'note'=>sprintf('<a href="/employee/it/host.html?host_id=%d">%s</a> has been rebooted.', @$Host{'id','hostname'})});
+						(new openprint::Log())->save({ action_id=>102, ip_address=>$Host->ip(), note=>sprintf('<a href="/employee/it/host.html?host_id=%d">%s</a> has been rebooted.', @$Host{'id','hostname'})});
 						my @To = map { $_->User() } $Host->Notifications();
 						if ( @To and ( @To < 10 ) ) {
 							$log->debug("Emailing: " . join(',', map { $_->email() } @To ) );
