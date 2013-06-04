@@ -2807,6 +2807,10 @@ if ( my $PaddingServiceType = openprint::ServiceType->find_one('name'=>'Padding'
 			$PaddingServiceType->id(), 'rdbCardboardBacking','N'], [ 'strfieldname', 'Backing', 'strdefaultvalue', 'None']  );
 } # end if
 
+if ( ! sets::isin( 'projecttype_blockedservices', \@tables ) ) {
+	$dbh->do( misc::load_file( $log, q{../openprint/sql/ProjectType_BlockedServices.sql}) );
+} # end if
+
 if ( sets::isin( 'tbl_projecttype_defaults', \@tables ) ) {
 	$dbh->do('alter table tbl_projecttype_defaults rename to projecttype_defaults');
 	@tables = sql::execute( undef, undef, q`SELECT table_name FROM information_schema.tables where table_schema='public'`);
