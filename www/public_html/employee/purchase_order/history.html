@@ -1,7 +1,5 @@
 <script type="text/javascript">
-<!--
 	function page_load( div_id, form ) {
-		
 		var div = $(div_id);
 		if ( div )
 			div.innerHTML = 'Please wait. Loading...';
@@ -28,27 +26,20 @@
 			parameters: { vendor_category_id: get_ddm_value(ddm), supplier_id: get_ddm_value(ddm.form.supplier_id) }
 			} );
 	} // end function filter_vendors
--->
 </script>
 <div class="PurchaseOrder">
-	<? echo ( include('/includes/error_reporting.html'); ) ?>
+	<?include(/includes/error_reporting.html)?>
 <form id="f1" name="f1" action="/employee/purchase_order/history.html" method="post">
 	<fieldset class="filters"><legend>Select Search Criteria</legend>
 		<ul>
 			<li><label>PO #</label>
 				<? echo ( join("\n",
 							ssi::input(type=>'cardinal',id=>'po_id', name=>'po_id', onchange=>'change_handler(this);', onkeypress=>'return input_handler(this,event);', onkeydown=>q`if(event.keyCode==13){page_load('Results', $('f1') );}` ),
-							ssi::button( 'Go3', { onclick=>q`page_load('Results', $('f1'));`,text=>'Go' } ),
+							button( 'Go3', { onclick=>q`page_load('Results', $('f1'));`,text=>'Go' } ),
 							); ) ?>
 			</li>
-			<li><label>Docket</label>
-				<? echo ( join("\n",
-							ssi::input( type=>'cardinal', id=>'docket', name=>'docket', onchange=>'change_handler(this);', onkeypress=>'return input_handler(this,event);', onkeydown=>q`if(event.keyCode == 13){page_load('Results', $('f1') );}` ),
-				ssi::button( 'Go', { onclick=>q`page_load('Results', $('f1'));`, text=>'Go' } ),
-); ) ?>
-			</li>
 			<li><label>Manifest</label>
-				<input type="text" id="manifest_id" name="manifest_id" onkeydown="if(event.keyCode == 13){LoadContent('Results', '_purchase_orders.html', $('f1') );}" />
+				<input type="text" id="manifest_id" name="manifest_id" onkeydown="if(event.keyCode == 13){page_load('Results', $('f1') );}" />
 				<? echo ( ssi::button( 'Go2', { onclick=>q`page_load('Results', $('f1'));`, text=>'Go' } ); ) ?>
 			</li>
 		</ul>
@@ -137,16 +128,19 @@
 				<label>Contains</label>
 				<input type="text" id="contains" name="contains" onkeydown="if(event.keyCode == 13){page_load('Results', $('f1') );}" />
 			</li>
+			<li><label>Docket:</label>
+				<? echo ( input( type=>'text', id=>'docket', name=>'docket', onchange=>'change_handler(this);', onkeypress=>'return input_handler(this,event);', onkeydown=>q`if(event.keyCode == 13){page_load('Results', $('f1') );}`, value=>$session{'/employee/purchase_order/history.html?docket'} ); ) ?>
+			</li>
 		</ul>
 		<p class="buttons">
 				<? echo ( join( '',
-				ssi::button( 'ShowResults', { 'onclick'=>'f1.submit();', 'text'=>'Show Results' } ),
-				ssi::button( 'Add', { 'href'=>'/employee/purchase_order/edit.html', 'text'=>'Add New' } ),
-				ssi::button( 'Reset', { 'onclick'=>'f1.reset();' } ),
+				button( 'ShowResults', { onclick=>'f1.submit();', text=>'Show Results' } ),
+				button( 'Add', { href=>'/employee/purchase_order/edit.html', 'text'=>'Add New' } ),
+				button( 'Reset', { onclick=>'f1.reset();' } ),
 				); ) ?>
 		</p>
 	</fieldset>
 	<input type="hidden" name="btnFunction"/>
-	<div id="Results"><? echo ( include('/employee/purchase_order/_history.html'); ) ?></div>
+	<div id="Results"><?include(/employee/purchase_order/_history.html)?></div>
 </form>
 </div>
