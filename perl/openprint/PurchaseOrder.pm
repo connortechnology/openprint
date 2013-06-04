@@ -548,13 +548,13 @@ $log->debug('can see');
 	} # end if
 
 	if ( $_[1] ) {
-			if ( sets::isin( $_[1]->Order()->salesrep_id(), [ $openprint::session{'user_id'}, new openprint::User($openprint::session{'user_id'})->assistant_ids(), new openprint::User($openprint::session{'user_id'})->csr_ids() ] ) ) {
+			if ( sets::contains( [ $openprint::session{'user_id'}, new openprint::User($openprint::session{'user_id'})->assistant_ids(), new openprint::User($openprint::session{'user_id'})->csr_ids() ], [ map { $_->salesrep_id() } $_[1]->Orders() ] ) ) {
 			$log->debug('can see');
 			return 1;
 		} # end if
 	} else {
 		foreach my $C ( $_[0]->Contents() ) {
-			if ( sets::isin( $C->Order()->salesrep_id(), [ $openprint::session{'user_id'}, new openprint::User($openprint::session{'user_id'})->assistant_ids(), new openprint::User($openprint::session{'user_id'})->csr_ids() ] ) ) {
+			if ( sets::contains( [ $openprint::session{'user_id'}, new openprint::User($openprint::session{'user_id'})->assistant_ids(), new openprint::User($openprint::session{'user_id'})->csr_ids() ], [ map { $_->salesrep_id() } $C->Orders() ] ) ) {
 				$log->debug('can see');
 				return 1;
 			} # end if

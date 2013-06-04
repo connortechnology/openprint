@@ -977,6 +977,7 @@ if ( sets::isin( 'tbl_equipment', \@tables ) ) {
 			next if sql::execute( undef, undef, 'SELECT name from equipment_categories where name=?', $category );
 			sql::insert( undef, undef, 'equipment_categories', 'name', $category );
 		} # end foreach category
+		$dbh->do('UPDATE tbl_equipment set category_id=array_append( category_id, (SELECT id FROM equipment_categories where name=strcategory) )' ) or die $dbh->errstr();
 		$dbh->do('ALTER TABLE tbl_equipment DROP strcategory');
 	} # end if
 	if ( ! exists $$data{deleted} ) {
@@ -2860,7 +2861,18 @@ if ( ! sets::isin( 'hosts', \@tables ) ) {
 	if ( ! exists $$data{'dhcp'} ) {
 		$dbh->do('ALTER TABLE hosts add dhcp boolean default false');
 	} # end if
-} 
+	if ( ! exists $$data{count} ) {
+		$dbh->do('ALTER TABLE hosts add count integer');
+	} # end if
+	$dbh->do('ALTER TABLE hosts ALTER count SET default 0') or die $openprint::dbh->errstr();
+	$dbh->do('UPDATE hosts SET count=0 WHERE count IS NULL') or die $openprint::dbh->errstr();
+	$dbh->do('ALTER TABLE hosts ALTER count SET NOT NULL') or die $openprint::dbh->errstr();
+}
+
+if ( ! sets::isin( 'host_info', \@tables ) ) {
+	$dbh->do( misc::load_file( $log, q{../openprint/sql/Host_Info.sql}) );
+}
+
 if ( sets::isin('log',\@tables ) ) {
 	if ( ! sets::isin('logs',\@tables ) ) {
 		$dbh->do('ALTER TABLE log RENAME TO logs');

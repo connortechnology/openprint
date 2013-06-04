@@ -25,7 +25,25 @@ $serial = 'host_types_id_seq';
 );
 %transforms = (
 	id		=>	[ 's/\D//g' ],
-    name	=>  [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
+	name	=>	[ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
+);
+
+package openprint::Host_Info;
+our @ISA = qw( openprint::Object );
+use vars qw( $debug $table $serial %fields %transforms %defaults %types );
+$debug = 0;
+$table = 'host_info';
+$serial = 'host_info_id_seq';
+%fields = (
+	id			=>	'id',
+	host_id		=>	'host_id',
+	name		=>	'name',
+	value		=>	'value',
+);
+%transforms = (
+	id		=>	[ 's/\D//g' ],
+	name	=>	[ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
+	value	=>	[ 's/^\s+//', 's/\s+$//' ],
 );
 
 package openprint::Host;
@@ -36,33 +54,33 @@ $debug = 0;
 $table = 'hosts';
 $serial = 'hosts_id_seq';
 %fields = (
-	'id'			=>	'id',
-	'ip'			=>	'ip',
-	'hostname'		=>	'hostname',
-	'mac'			=>	'mac',	
-	'blacklist'		=>	'blacklist',
-	'whitelist'		=>	'whitelist',
-	'monitored'		=>	'monitored',
-	'description'	=>	'description',
-	'dhcp'			=>	'dhcp',
-	'created_on'	=>	'created_on',
-	'updated_on'	=>	'updated_on',
-	'count'			=>	'count',
-	'deleted'		=>	'deleted',
-	'online'		=>	'online',
-	'type_id'		=>	'type_id',
-	'type'			=>	undef,
-	'offline_seconds'	=>	'offline_seconds',
-	'state_changed_on'	=>	'state_changed_on',
-	'notified'			=>	'notified',
+	id			=>	'id',
+	ip			=>	'ip',
+	hostname	=>	'hostname',
+	mac			=>	'mac',	
+	blacklist	=>	'blacklist',
+	whitelist	=>	'whitelist',
+	monitored	=>	'monitored',
+	description	=>	'description',
+	dhcp		=>	'dhcp',
+	created_on	=>	'created_on',
+	updated_on	=>	'updated_on',
+	count		=>	'count',
+	deleted		=>	'deleted',
+	online		=>	'online',
+	type_id		=>	'type_id',
+	type			=>	undef,
+	offline_seconds	=>	'offline_seconds',
+	state_changed_on	=>	'state_changed_on',
+	notified			=>	'notified',
 );
 %find_fields = (
-	'type'	=>	'(SELECT name FROM Host_types WHERE host_types.id=type_id)',
+	type	=>	'(SELECT name FROM Host_types WHERE host_types.id=type_id)',
 );
 %transforms = (
 	id			=>	[ 's/\D//g' ],
-    hostname	=>  [ 's/\s//g' ],
-    description	=>  [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
+	hostname	=>	[ 's/\s//g' ],
+	description	=>	[ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
 );
 %defaults = (
 	'blacklist'	=>	0,
@@ -74,7 +92,7 @@ $serial = 'hosts_id_seq';
 	'dhcp'		=>	0,
 	'created_on'	=>	q`'NOW()'`,
 	'updated_on'	=>	q`'NOW()'`,
-	'count'		=>	undef,
+	'count'		=>	0,
 	'deleted'	=>	0,
 	'online'	=>	undef,
 	'type_id'	=>	undef,
@@ -158,22 +176,22 @@ sub type {
 
 sub Assets {
 	require openprint::Object_Asset;
-    if ( $_[1] ) {
-        $_[1]{'object_id'} = $_[0]{'id'};
-        $_[1]{'object_type'} = 'openprint::Host';
-        $_[1]{'order'} = 'created_on' if ! $_[1]{'order'};
+	if ( $_[1] ) {
+		$_[1]{'object_id'} = $_[0]{'id'};
+		$_[1]{'object_type'} = 'openprint::Host';
+		$_[1]{'order'} = 'created_on' if ! $_[1]{'order'};
 
-        return openprint::Object_Asset->find(%{$_[1]});
-    } # end if
+		return openprint::Object_Asset->find(%{$_[1]});
+	} # end if
 
-    if ( ! defined $_[0]{'Assets'} ) {
-        @{$_[0]{'Assets'}} = openprint::Object_Asset->find(
+	if ( ! defined $_[0]{'Assets'} ) {
+		@{$_[0]{'Assets'}} = openprint::Object_Asset->find(
 				'object_type'	=>	'openprint::Host',
 				'object_id'		=>	$_[0]{'id'}, 
 				'order'			=>	'created_on'
 				);
-    } # end if
-    return @{$_[0]{'Assets'}};
+	} # end if
+	return @{$_[0]{'Assets'}};
 } # end sub Assets
 
 sub Notifications {
@@ -185,6 +203,23 @@ sub Notifications {
 	} # end if
 	return @{$_[0]{'Notifications'}};
 } # end sub Notifications
+
+sub info {
+	if ( ! $_[0]{Info} ) {
+		%{$_[0]{Info}} = map { $_->name(), $_ } openprint::Host_Info->find(host_id=>$_[0]{id});
+		foreach my $k ( keys %{$_[0]{Info}} ) {
+			$openprint::log->debug(" $k => " . $_[0]{Info}{$k}->value() );
+		} # end foreach
+	} # end if
+	if ( $_[0]{Info}{$_[1]} ) {
+		return $_[0]{Info}{$_[1]}->value();
+	} # end if
+$openprint::log->debug("No value for $_[1] " . $_[0]->to_string() );
+		foreach my $k ( keys %{$_[0]{Info}} ) {
+			$openprint::log->debug(" $k => " . $_[0]{Info}{$k}->value() );
+		} # end foreach
+	return '';
+} # end sub info
 
 1;
 __END__

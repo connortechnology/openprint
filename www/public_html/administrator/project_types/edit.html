@@ -17,8 +17,8 @@
 					<select name="ddmProjectType" onchange="this.form.btnFunction.value='';f1.submit();">
 						<option value="">select one</option>
 						<? echo ( 
-								ssi::make_drop_down( [ map { $_->id(), $_->description() } openprint::ProjectType->find('order'=>'lower(description)',
-								( $param{'search_category_id'} ? ( 'category_id' => $param{'search_category_id'} ) : () ),
+								ssi::make_drop_down( [ map { $_->id(), $_->description() } openprint::ProjectType->find( order=>'lower(description)',
+								( $param{'search_category_id'} ? ( category_id => $param{'search_category_id'} ) : () ),
 								) ], $$variable{ProjectType}->id() );
 								) ?>
 					</select>
@@ -87,8 +87,8 @@
 		</li>
 		</ul>
 	</fieldset><!-- Column -->
-<<<<<<< HEAD
-	<fieldset class="rightColumn RequiredServices"> 
+	<br class="spacer"/>
+	<fieldset class="RequiredServices"> 
 		<legend>Required Services</legend>
 		<ul> 
 <? echo (
@@ -96,17 +96,6 @@
 			[ map { $_->id(), $_->description() } openprint::ServiceType->find('order'=>'lower(name)') ],
 			[ $$variable{'ProjectType'}->required_services() ],
 			{ container=>['<li>','</li>'] }
-=======
-	<br class="spacer"/>
-	<fieldset class="leftColumn"> 
-		<legend>Required Services</legend>
-		<p> 
-			<select multiple="multiple" id="required_services" name="required_services" size="4">
-<? echo (
-		return ssi::make_drop_down(
-			[ map { $_->id(), $_->name() } openprint::ServiceType->find( order=>'lower(name)') ],
-			[ $$variable{'ProjectType'}->required_services() ]
->>>>>>> 98c6757b5f552c5f07bb54662a49f7ca6c24d903
 			);
 ) ?>
 		</ul>

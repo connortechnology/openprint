@@ -92,16 +92,18 @@ sub host {
 				'mac'		=> $Host->get_mac(),
 				});
 		} # end if
+	} elsif ( $param{action} eq 'Wake' ) {
+		foreach my $mac ( @{ $Host->mac() } ) {
+			`wakeonlan $mac`;
+		} # end foraech
 	} elsif ( $param{action} eq 'Save' ) {
-		$param{'mac'} = [ map { split( ',', $_ ) } split("\n", $param{'mac'}) ];
-		if ( $param{'type_id'} ) {
-			delete $param{'type'};
+		$param{mac} = [ map { split( ',', $_ ) } split("\n", $param{mac}) ];
+		if ( $param{type_id} ) {
+			delete $param{type};
 		} else {
-			delete $param{'type_id'};
+			delete $param{type_id};
 		} # end if
-$log->debug('Saving' . $Host->to_string());
 		$variable{error} .= $Host->save(\%param);
-$log->debug('Saving' . $Host->to_string());
 		if ( ! $variable{error} ) {
 			$variable{ExternalRedirect} = '/employee/it/hosts.html';
 			return;
@@ -428,5 +430,27 @@ sub _license_allocations {
 		$variable{error} .= $LH->save({license_id=>$param{license_id}, host_id=>$param{host_id}});
 	} # end if	
 } # end sub _license_alliations
+
+sub _information {
+	my $Host = $variable{Host} = new openprint::Host( $param{host_id} );
+	if ( ! $Host->id() ) {
+		$variable{error} .= "Host not found: id=>$param{host_id}<br/>";
+		return;
+	} # end if
+
+	if ( $param{action} eq 'add' ) {
+		my $Info = new openprint::Host_Info();
+		$variable{error} .= $Info->save({
+				host_id	=>	$param{host_id},
+				name	=>	$param{name},
+				value	=>	$param{value}, 
+			});
+	} elsif ( $param{action} eq 'delete' ) {
+		my $Info = new openprint::Host_Info( $param{info_id} );
+		$variable{error} .= $Info->delete();
+	} # end if
+		
+} # end sub _information
+
 1;
 __END__
