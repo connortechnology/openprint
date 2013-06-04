@@ -469,7 +469,7 @@ sub expense {
 		# Now update the session for expenses so that we always show the entry we just saved.
 		foreach my $key ( 'company_id', 'recipient_id', 'account_id' ) {
 			if ( $session{'/employee/accounting/expenses.html?'.$key} and ( $session{'/employee/accounting/expenses.html?'.$key} != $$Expense{$key} ) ) {
-				$session{'/employee/accounting/expenses.html?'.$key} = $$Expense{$key};
+				delete $session{'/employee/accounting/expenses.html?'.$key};
 			} # end if
 		} # end foreach
 
