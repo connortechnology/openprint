@@ -182,10 +182,10 @@ sub history {
 
 sub _history {
 	ssi::save_params( '/invoice/history.html', ( 
-		( map { 'created_on_start_' } ( 'year','month','day' ) ),
-		( map { 'created_on_end_' } ( 'year','month','day' ) ),
-		( map { 'due_on_start_' } ( 'year','month','day' ) ),
-		( map { 'due_on_end_' } ( 'year','month','day' ) ),
+		( map { 'created_on_start_'.$_ } ( 'year','month','day' ) ),
+		( map { 'created_on_end_'.$_ } ( 'year','month','day' ) ),
+		( map { 'due_on_start_'.$_ } ( 'year','month','day' ) ),
+		( map { 'due_on_end_'.$_ } ( 'year','month','day' ) ),
 		'paid','company_id','bad_debt') );
 } # end sub _history
 

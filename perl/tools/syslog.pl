@@ -117,7 +117,7 @@ if ( $config{'pid_file'} ) {
 
 my $buf;
 while(1) {
-	if ( ! $dbh->ping() ) {
+	if ( ! ($dbh and $dbh->ping() ) ) {
 		$dbh = sql::open_sql( $log,
 				host		=> $config{db_host},
 				database	=> $config{db_name},
