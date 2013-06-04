@@ -34,34 +34,35 @@
 	<form id="f1" name="f1" method="post" action="/timetrack/history.html">
 		<fieldset class="filters unprintable"><legend>Select Search Criteria</legend>
 			<div class="leftColumn">
+				<ul>
 <? if ( sets::isin( $session{'user_type'}, ['E','A'] ) ) ?>
-			<p>
+			<li>
 				<label>Company</label>
 				<select name="company_id" id="company_id" onchange="load_timetracks(this.form);">
 					<option value="">All</option>
 					<? echo ( openprint::Company::get_dropdown( $session{'/timetrack/history.html?company_id'} ); ) ?>
 				</select>
-			</p>
+			</li>
 <? else ( sets::isin( $session{'user_type'}, ['E','A'] ) ) ?>
 <input type="hidden" name="company_id" value="<? echo ( $session{'company_id'} ) ?>" />
 <? endif ( sets::isin( $session{'user_type'}, ['E','A'] ) ) ?>
-			<p>
+			<li>
 				<label>Dates</label>
-				<span class="DateSelectorC">
 <? echo ( ssi::date_select_session( '/timetrack/history.html', 'starting_start', {onchange=>q`load_timetracks($('f1'));`,'with_clear'=>1,'with_today'=>1} ); ) ?>
-				</span>
 					to 
-				<span class="DateSelectorC">
 <? echo ( ssi::date_select_session( '/timetrack/history.html', 'starting_end', {onchange=>q`load_timetracks($('f1'));`, 'with_clear'=>1,'with_today'=>1} ); ) ?>
-				</span>
-			</p>
-			<p>
+			</li>
+			<li>
 				<label>Service</label>
 				<select name="service_id" id="service_id" onchange="load_timetracks(this.form);">
 					<option value="">All</option>
 					<? echo ( ssi::make_drop_down( openprint::Service->dropdown(), $session{'/timetrack/history.html?service_id'} ); ) ?>
 				</select>
-			</p>
+			</li>
+			<li><label>Contains</label>
+				<input type="text" name="contains" value="<? echo ( $session{'/timetrack/history.html?contains'} ) ?>" onkeyup="load_timetracks(this.form);"/>
+			</li>
+				</ul>
 			</div>
 			<div class="rightColumn">
 				<ul>

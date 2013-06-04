@@ -66,7 +66,8 @@ $serial = 'companies_id_seq';
 		'offers_credit'				=>	'offers_credit',
 		);
 %find_fields = (
-	'last_online'	=>	'(SELECT MAX(date_time) FROM Logs WHERE company_id=companies.id)',
+	last_online	=>	'(SELECT MAX(date_time) FROM Logs WHERE company_id=companies.id)',
+	marketing_category_id	=>	'(SELECT category_id FROM companies_in_marketing_categories WHERE company_id=companies.id)',
 );
 %transforms = (
 	'established'	=> [ 's/[^\d\-]//g' ],
@@ -381,6 +382,12 @@ sub taxexempt2 {
 sub address {
 return join(', ', map { $_ ? $_ : () } @{$_[0]}{'address1','address2','city','state','postalcode','country'} );
 } # end sub address
+
+sub can_view_all {
+	return 1 if $openprint::session{user_type} eq 'A';
+	return 1 if openprint::usergroup::is_user_in( ['Estimating','Prepress','Accounting','Shipping','Inventory'], $openprint::session{'user_id'} );
+	return 0;
+} # end sub can_view_all
 
 sub find_filtered {
     return if ! $openprint::session{user_id};

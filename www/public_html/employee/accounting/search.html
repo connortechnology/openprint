@@ -66,17 +66,15 @@ Choose criteria and click show results. You may the download the results in CSV 
 		</p>
 		<p> 
 			<label>Order Date</label>
-			<span class="DateSelectorCT">
 			<? echo ( ssi::date_select_session( '/employee/accounting/search.html', 'ordered_on_start', { 'onchange' =>
 						q`LoadContent('Results','/employee/accounting/_search.html', $('f1').serialize() );`,
 						'with_today'=>1, 'with_clear'=>1,
 						} ); ) ?>
-			</span>to<span class="DateSelectorCT">
+			to
 			<? echo ( ssi::date_select_session( '/employee/accounting/search.html', 'ordered_on_end', { 'onchange' =>
 						q`LoadContent('Results','/employee/accounting/_search.html', $('f1').serialize() );`,
 						'with_today'=>1, 'with_clear'=>1,
 						} ); ) ?>
-			</span>
 		</p>
 		<p> 
 			<label>Total Range</label>

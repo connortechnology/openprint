@@ -18,6 +18,7 @@ require openprint::Invoice_Interest;
 require openprint::Invoice_Payment;
 require openprint::Invoice_Tax;
 require openprint::Timetrack;
+require openprint::Object_Asset;
 
 use vars qw( $debug $table $serial %fields %find_fields %defaults %transforms );
 
@@ -27,28 +28,28 @@ $table = 'invoices';
 $serial = 'invoices_id_seq';
 
 %fields = (
-	'id'				=>	'id',
-	'invoicer_id'		=>	'invoicer_id',
-	'invoicee_id'		=>	'invoicee_id',
-	'external_notes'	=>	'external_notes',
-	'internal_notes'	=>	'internal_notes',
-	'posted'			=>	'posted',
-	'subtotal'			=>	'subtotal',
-	'total'				=>	'total',
-	'due_on'			=>	'due_on',
-	'posted_on'			=>	'posted_on',
-	'created_on'		=>	'created_on',
-	'updated_on'		=>	'updated_on',
-	'deleted'			=>	'deleted',
-	'currency_id'		=>	'currency_id',
-	'paid'				=>	'paid',
-	'interest'			=>	'interest',
-	'bad_debt'			=>	'bad_debt',
+	id				=>	'id',
+	invoicer_id		=>	'invoicer_id',
+	invoicee_id		=>	'invoicee_id',
+	external_notes	=>	'external_notes',
+	internal_notes	=>	'internal_notes',
+	posted			=>	'posted',
+	subtotal		=>	'subtotal',
+	total			=>	'total',
+	due_on			=>	'due_on',
+	posted_on		=>	'posted_on',
+	created_on		=>	'created_on',
+	updated_on		=>	'updated_on',
+	deleted			=>	'deleted',
+	currency_id		=>	'currency_id',
+	paid				=>	'paid',
+	interest			=>	'interest',
+	bad_debt			=>	'bad_debt',
 	num					=>	'num',
-	'monthly_interest'	=>	'monthly_interest',
+	monthly_interest	=>	'monthly_interest',
 	late_payment_units	=>	'late_payment_units',
 	early_payment_date	=>	'early_payment_date',
-	early_payment_discount	=>	'early_payment_discount',
+	early_payment_amount	=>	'early_payment_amount',
 	early_payment_units		=>	'early_payment_units',
 );
 
@@ -69,7 +70,7 @@ $serial = 'invoices_id_seq';
 	paid			=> undef,
 	bad_debt		=> 0,
 	late_payment_units		=>	undef,
-	early_payment_discount	=>	undef,
+	early_payment_amount	=>	undef,
 	early_payment_units		=>	undef,
 	early_payment_date		=>	undef,
 );
@@ -108,8 +109,10 @@ sub owing_early {
 	if ( $_[0]{early_payment_units} eq 'amount' ) {
 		return Math::Round::nearest( .01, $owing + $_[0]{early_payment_amount} );
 	} elsif ( $_[0]{early_payment_units} eq 'percent' ) {
+$openprint::log->debug("doing early payment percent: $_[0]{early_payment_amount}");
 		return Math::Round::nearest( .01, $owing * ( 1 - $_[0]{early_payment_amount}/100 ) );
 	} else {
+$openprint::log->debug('Unknown units for early_payment '. $_[0]{early_payment_units} );
 		return Math::Round::nearest( .01, $owing );
 	} # end if
 } # end sub owing
@@ -328,6 +331,18 @@ sub num {
 	} # end if
 	return $_[0]{num};
 } # end sub num
+
+sub can_edit {
+	return 1;
+} # end sub can_edit
+
+sub can_view {
+	return 1;
+} # end sub can_view
+
+sub upload {
+	openprint::Object_Asset::upload( @_ );
+} # end sub upload
 
 1;
 __END__

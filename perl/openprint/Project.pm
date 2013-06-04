@@ -71,7 +71,7 @@ $serial = 'lngProjectIndex_seq';
 	quantity1	=>	[ 's/\D//g' ],
 	quantity2	=>	[ 's/\D//g' ],
 	quantity3	=>	[ 's/\D//g' ],
-    reference	=>	[ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
+    reference	=>	[ 's/\r\n/<br\/>/mg', 's/\n\r/<br\/>/mg', 's/\n/<br\/>/mg', 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
     comments	=>	[ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
 );
 %defaults = (
@@ -1444,6 +1444,10 @@ $openprint::log->debug("Calculate_Sigs: status: $status");
 sub Project {
 	return $_[0];
 } # end sub Proejct;
+
+sub calliper {
+	return openprint::print::get_finished_calliper($_[0]{id});
+} # end sub calliper
 
 1;
 __END__

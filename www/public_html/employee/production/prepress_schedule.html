@@ -116,17 +116,13 @@
 		<div class="dates">
 			<ul><li>
 				<label>Proofs Out</label>
-				<span class="DateSelectorT">
 					<? echo ( 
 						ssi::date_select_session( '/employee/production/prepress_schedule.html', 'takenover_on_start', { 'with_today'=>1 } );
 					) ?>
-				</span>
 				to
-				<span class="DateSelectorT">
 					<? echo ( 
 						ssi::date_select_session( '/employee/production/prepress_schedule.html', 'takenover_on_end', { 'with_today'=>1 } );
 					) ?>
-				</span>
 			</li></ul>
 		</div>
 		<p class="buttons">

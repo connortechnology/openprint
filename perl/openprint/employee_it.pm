@@ -34,16 +34,6 @@ sub hosts {
 			$variable{'error'} .= $Host->delete();
 		} # end foreach host_id
 		%param = ();
-	} elsif ( $param{'action'} eq 'Save' ) {
-		my $Host = new openprint::Host( $param{'host_id'} );
-		$param{'mac'} = [ map { split( ',', $_ ) } split("\n", $param{'mac'}) ];
-		if ( $param{'type_id'} ) {
-			delete $param{'type'};
-		} else {
-			delete $param{'type_id'};
-		} # end if
-		$variable{'error'} .= $Host->save(\%param);
-		%param = ();
 	} # end if
 	_hosts();
 	ssi::setup_date_select( '/employee/it/hosts.html', 'created_on_start', '' );
@@ -74,7 +64,7 @@ sub _hosts {
 			'updated_on_start_year', 'updated_on_start_month', 'updated_on_start_day', 
 			'updated_on_end_year', 'updated_on_end_month', 'updated_on_end_day', 
 			'has_hostname', 'monitored','whitelisted','blacklisted','online',
-			'ip','hostname','mac',
+			'ip','hostname','mac','type_id',
 			'radius_auth', 'order',
 			);
 	if ( $config{'RADIUS Support'} eq 'Y' ) {
@@ -92,7 +82,7 @@ sub _hosts {
 } # end sub _hosts
 
 sub host {
-	my $Host = $variable{'Host'} = new openprint::Host( $param{'host_id'} );
+	my $Host = $variable{Host} = new openprint::Host( $param{host_id} );
 	if ( $param{'action'} eq 'Resolve' ) {
 		if ( ! $Host->ip() ) {
 			$variable{'error'} .= 'No ip.  Cant resolve without an ip.';
@@ -102,6 +92,23 @@ sub host {
 				'mac'		=> $Host->get_mac(),
 				});
 		} # end if
+	} elsif ( $param{action} eq 'Wake' ) {
+		foreach my $mac ( @{ $Host->mac() } ) {
+			`wakeonlan $mac`;
+		} # end foraech
+	} elsif ( $param{action} eq 'Save' ) {
+		$param{mac} = [ map { split( ',', $_ ) } split("\n", $param{mac}) ];
+		if ( $param{type_id} ) {
+			delete $param{type};
+		} else {
+			delete $param{type_id};
+		} # end if
+		$variable{error} .= $Host->save(\%param);
+		if ( ! $variable{error} ) {
+			$variable{ExternalRedirect} = '/employee/it/hosts.html';
+			return;
+		} # end if
+		%param = ();
 	} elsif ( $param{'action'} eq 'ping' ) {
 		if ( $Host->ping() ) {
 			$variable{'information'} .= 'Host is alive.';
@@ -423,5 +430,27 @@ sub _license_allocations {
 		$variable{error} .= $LH->save({license_id=>$param{license_id}, host_id=>$param{host_id}});
 	} # end if	
 } # end sub _license_alliations
+
+sub _information {
+	my $Host = $variable{Host} = new openprint::Host( $param{host_id} );
+	if ( ! $Host->id() ) {
+		$variable{error} .= "Host not found: id=>$param{host_id}<br/>";
+		return;
+	} # end if
+
+	if ( $param{action} eq 'add' ) {
+		my $Info = new openprint::Host_Info();
+		$variable{error} .= $Info->save({
+				host_id	=>	$param{host_id},
+				name	=>	$param{name},
+				value	=>	$param{value}, 
+			});
+	} elsif ( $param{action} eq 'delete' ) {
+		my $Info = new openprint::Host_Info( $param{info_id} );
+		$variable{error} .= $Info->delete();
+	} # end if
+		
+} # end sub _information
+
 1;
 __END__

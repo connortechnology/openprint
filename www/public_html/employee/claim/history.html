@@ -23,52 +23,50 @@
 <div class="Claims"><div class="History">
 <form id="f1" name="f1" action="history.html" method="post">
 	<fieldset class="filters"><legend>Select Search Criteria</legend>
-		<p><label>CLAIM #</label>
-			<input type="text" id="claim_id" name="claim_id" size="10" onchange="change_handler(this);" onkeypress="return input_handler( this, event );" onkeydown="if(event.keyCode == 13){load('Results', $('f1') );}" onkeyup="this.value=this.value.replace(/\D/g,'');" />
-			<? echo ( ssi::button( 'Go3', { onclick=>"load('Results', \$('f1'));", text=>'Go' } ); ) ?>
-		</p>
-		<p><label>Manifest</label>
-			<input type="text" id="manifest_id" name="manifest_id" size="10" onkeydown="if(event.keyCode == 13){load('Results', $('f1') );}" onkeyup="this.value=this.value.replace(/\s/g,'');" />
+		<ul>
+		<li><label>CLAIM #</label>
+		<? echo ( join("\n",
+					input( type=>'cardinal', id=>'claim_id', name=>'claim_id', onchange=>'change_handler(this);', 
+						onkeypress=>'return input_handler(this,event);', onkeydown=>q`if(event.keyCode==13){load('Results',$('f1'));}`),
+					button( 'Go3', { onclick=>q`load('Results', $('f1'));`, text=>'Go' } ),
+			); ) ?>
+		</li>
+		<li><label>Manifest</label>
+			<input type="text" id="manifest_id" name="manifest_id" onkeydown="if(event.keyCode == 13){load('Results', $('f1') );}" onkeyup="this.value=this.value.replace(/\s/g,'');" />
 			<? echo ( ssi::button( 'Go2', { onclick=>"load('Results', \$('f1'));", text=>'Go' } ); ) ?>
-		</p>
+		</li>
+		</ul>
 		<hr/>
-		<p><label>Created By</label>
+		<ul>
+		<li><label>Created By</label>
 			<select name="created_by" onchange="load('Results',$('f1'));">
 				<option value="">All</option>
 				<? echo ( 
 					ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User->find( 'order'=>'lower(firstname),lower(lastname)','type'=>['A','E'] ) ], $session{'/employee/claim/history.html?created_by'} ); ) ?>
 			</select>
-		</p>
-		<p><label>Vendor</label>
+		</li>
+		<li><label>Vendor</label>
 			<input type="text" onkeyup="filterDDM(this, this.form.supplier_id);" class="filter" />
 			<select name="supplier_id" onchange="load('Results',$('f1'));">
 				<option value="">All</option>
 				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Company->find( 'order'=>'lower(name)', 'supplier'=>'Y') ], $session{'/employee/claim/history.html?supplier_id'} ); ) ?>
 			</select>
-		</p>
-		<p>
+		</li>
+		<li>
 			<label>Created</label>
-			<span class="DateSelectorT">
 			<? echo ( 
 				ssi::date_select_session( '/employee/claim/history.html', 'created_on_start', {'onchange'=>"load('Results',\$('f1'));",'with_today'=>1} );
 			 ) ?>
-            to
-            </span>
-            <span class="DateSelectorT">
+           to
 			<? echo ( ssi::date_select_session( '/employee/claim/history.html', 'created_on_end', {'onchange'=>"load('Results',\$('f1'));",'with_today'=>1} ); ) ?>
-            </span>
-		</p>
-		<p>
+		</li>
+		<li>
 			<label>Updated</label>
-			<span class="DateSelectorT">
 			<? echo ( ssi::date_select_session( '/employee/claim/history.html', 'updated_on_start', {'onchange'=>"load('Results',\$('f1'));",'with_today'=>1} ); ) ?>
             to
-            </span>
-            <span class="DateSelectorT">
 			<? echo ( ssi::date_select_session( '/employee/claim/history.html', 'updated_on_end', {'onchange'=>"load('Results',\$('f1'));",'with_today'=>1} ); ) ?>
-            </span>
-		</p>
-		<p>
+		</li>
+		<li>
 			<label>Status</label>
 			<input type="radio" name="status" id="statusAll" value="" <? echo ( ssi::checked( $session{'/employee/claim/history.html?status'} eq '' ) ) ?> onclick="load('Results',$('f1'));" />
 			<label class="radio" for="statusAll">All</label>
@@ -80,11 +78,12 @@
 			<label class="radio" for="statusInvoiced">Invoiced</label>
 			<input type="radio" name="status" id="statusCancelled" value="Cancelled" <? echo ( ssi::checked( $session{'/employee/claim/history.html?status'} eq 'Cancelled' ) ) ?> onclick="load('Results',$('f1'));" />
 			<label class="radio" for="statusCancelled">Cancelled</label>
-		</p>
-		<p>
+		</li>
+		<li>
 			<label>Contains</label>
 			<input type="text" id="contains" name="contains" onkeyup="load('Results',$('f1'));" />
-		</p>
+		</li>
+		</ul>
 		<p class="buttons">
 				<? echo ( join( '',
 				ssi::button( 'ShowResults', { onclick=>'f1.submit();', text=> 'Show Results' } ),
@@ -96,7 +95,7 @@
 </form>
 <form id="f2" name="f2" action="history.html" method="post">
 	<input type="hidden" name="btnFunction"/>
-	<div id="Results"><? echo ( include('_history.html'); ) ?></div>
+	<div id="Results"><? include('_history.html' ) ?></div>
 </form>
 </div>
 </div>

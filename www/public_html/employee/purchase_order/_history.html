@@ -103,6 +103,7 @@
 		my $report_total = 0;
 		my $Currency = openprint::Currency::get_current();
 		while ( my $PO = shift @{$$variable{'PurchaseOrders'}} ) {
+			next if ! $PO->can_view();
 			$html .= sprintf(q`<tr id="tr-%1$d" class="%2$s">`, $PO->id(), ( ( ! $PO->authorized ) and $PO->can_authorize() ) ? 'unauthorized' : 'authorized' );
 			if ( $session{'user_type'} eq 'A' ) {
 				$html .= '<td class="checkbox"><input type="checkbox" name="po_id" value="'.$PO->id().'"/></td>';

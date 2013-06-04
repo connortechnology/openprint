@@ -24,11 +24,15 @@ $debug = 0;
 	updated_on	=>	'updated_on',
 	received_on	=>	'received_on',
 	supplier_id	=>	'supplier_id',
+	deleted		=>	'deleted',
 );
 
 %find_fields = (
 	docket	=>	'(SELECT docket FROM Manifest_Content_Types WHERE manifest_id=manifests.id)',
 	po_id	=>	'(SELECT po_id FROM Manifest_Content_Types WHERE manifest_id=manifests.id)',
+	skid_id	=>	'(SELECT skid_id FROM ManifestContents WHERE manifest_id=manifests.id)',
+	rfidtag_id	=>	'(SELECT rfidtag_id FROM ManifestContents WHERE manifest_id=manifests.id)',
+	manufacturers_id	=>	'(SELECT manufacturers_id FROM ManifestContents WHERE manifest_id=manifests.id)',
 );
 
 %transforms = (
@@ -42,9 +46,10 @@ $debug = 0;
 	'updated_on'	=>	'NOW()',
 	'received_on'	=>	'NOW()',
 	'supplier_id'	=>	undef,
+	deleted	=>	0,
 );
 
-sub delete {
+sub destroy {
     my $self = shift;
     my $ac = sql::start_transaction( $openprint::dbh );
 	foreach my $PO ( openprint::PurchaseOrder->find('manifest_id'=>$$self{'name'}) ) {
@@ -62,7 +67,7 @@ sub delete {
 	return $openprint::dbh->errstr() if $openprint::dbh->errstr();
 	delete $openprint::Object::cache{'openprint::Manifest'}{$$self{'id'}};
 	return '';
-} # end sub delete
+} # end sub destroy
 
 sub Types {
 	my ( $self, %params ) = @_;
@@ -74,7 +79,7 @@ sub Types {
 	} # end if
 	if ( ! $$self{'Types'} ) {
 		if ( $$self{'id'} ) {
-			$params{'manifest_id'} = $$self{'id'};
+			$params{manifest_id} = $$self{'id'};
 			@{$$self{'Types'}} = openprint::Manifest_Content_Type->find(%params);
 		} # end if
 	} # end if

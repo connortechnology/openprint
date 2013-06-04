@@ -1,11 +1,12 @@
 <fieldset>
 	<? eval (
+		$variable{'location_dropdown'} = openprint::Location->dropdown(order=>'parent_id NULLS FIRST, lower(name)') if ! exists $variable{'location_dropdown'};
 		if ( ! $param{'Brand-'.$$variable{'type_id'}} ) {
 			my $Paper;
 			if ( $$variable{'Type'}->paper_id() ) {
 				$Paper = $$variable{'Type'}->Paper();
 			} else {
-				foreach my $C ( $$variable{'Manifest'}->Contents('type_id'=>$$variable{'type_id'}) ) {
+				foreach my $C ( $$variable{Type}->Contents() ) {
 					my $Skid = $C->Skid();
 
 					foreach my $SkidContent ( $Skid->Contents() ) {
@@ -31,6 +32,7 @@
 				$param{'height-'.$$variable{'type_id'}} = $Paper->height();
 				$param{'gsm-'.$$variable{'type_id'}} = $Paper->gsm();
 				$param{'fsc_code-'.$$variable{'type_id'}} = $Paper->fsc_code();
+				$param{'manufacturers_name='.$$variable{type_id}} = $Paper->manufacturers_name() if ! $$variable{Type}->manufacturers_name();
 			} # end if
 		} # end if
 		$$variable{'PO_Content'} = $$variable{'Type'}->PurchaseOrder_Content();
@@ -124,10 +126,7 @@
 			<input style="display: none;" type="text" id="txtQuality-<?type_id?>" name="txtQuality-<?type_id?>" />
 		</p>
 		<p><label>Type</label>
-			<input type="radio" id="type-<?type_id?>Sheet" name="type-<?type_id?>" value="Sheet" onclick="$('PaperHeight-<?type_id?>').show();$('MWeight-<?type_id?>').show();" <? echo ( 'checked="checked"' if $param{'type-'.$$variable{'type_id'}} eq 'Sheet'; ) ?> />
-			<label class="radio" for="type-<?type_id?>Sheet">Sheet</label>
-			<input type="radio" id="type-<?type_id?>Roll" name="type-<?type_id?>" value="Roll" onclick="$('PaperHeight-<?type_id?>').hide();$('MWeight-<?type_id?>').hide();" <? echo ( 'checked="checked"' if $param{'type-'.$$variable{'type_id'}} eq 'Roll'; ) ?> />
-			<label class="radio" for="type-<?type_id?>Roll">Roll</label>
+			<? echo ( radio( 'type-'.$$variable{type_id}, [ map { $_, $_ } ( 'Sheet','Roll' ) ], $param{'type-'.$$variable{'type_id'}}, { onclick=>qq`type_onclick(this);` } ); ) ?>
 		</p>
 		<p class="size">
 			<label for="width-<?type_id?>">Size</label>
@@ -137,6 +136,10 @@
 			<? echo ( input( type=>'float', id=>'height-'.$$variable{type_id}, name=>'height-'.$$variable{type_id}, value=>$param{'height-'.$$variable{type_id}}, onkeyup=>"gsm_to_mweight(this.form,'$$variable{type_id}');" ); ) ?>
 			</span>
 		</p>
+		<? if ( $$variable{Type}->paper_id() ) ?>
+		<p><label>Link to stock</label><a href="/employee/inventory/paper_details.html?paper_id=<? echo ( $$variable{Type}->paper_id() ) ?>"><? echo ( $$variable{Type}->Paper()->to_string() ) ?></a>
+		</p>
+		<? endif ( $$variable{Type}->paper_id() ) ?>
 	</div>
 	<div class="rightColumn">
 		<p>
@@ -212,9 +215,15 @@
 		<? if ( openprint::usergroup::is_user_in( ['Accounting','InventoryManager'], $session{'user_id'} ) ) ?>
 		<p>
 			<label>Cost (/CWT)</label>
-			<input type="text" id="cost-<?type_id?>" name="cost-<?type_id?>" value="<? echo ( $$variable{'Type'}->cost() ) ?>" onkeyup="floatize();" />
+			<? echo ( input( type=>'float', id=>'cost-'.$$variable{type_id}, name=>'cost-'.$$variable{type_id}, value=>$$variable{Type}->cost() ); ) ?>
 		</p>
 		<? endif ( openprint::usergroup::is_user_in( ['Accounting','InventoryManager'], $session{'user_id'} ) ) ?>
+		<p><label>Manufacturers Name</label>
+			<? echo ( input( type=>'text', name=>'manufacturers_name-'.$$variable{type_id}, id=>'manufacturers_name-'.$$variable{type_id}, value=>$$variable{Type}->manufacturers_name() ); ) ?>
+		</p>
+		<p><label>Item Count</label>
+			<? echo ( input( type=>'cardinal', name=>'item_count-'.$$variable{type_id}, id=>'item_count-'.$$variable{type_id}, value=>$$variable{Type}->item_count() ); ) ?>
+		</p>
 	</div>
 	<br class="spacer"/>
 	<br class="spacer"/>

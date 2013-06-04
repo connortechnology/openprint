@@ -35,8 +35,8 @@ $serial = 'products_id_seq';
 );
 
 %transforms = (
-    'name' => [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
-    'description' => [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
+    name		=> [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
+    description => [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
 );
 %defaults = (
 	'weight'		=>	undef,
@@ -221,7 +221,7 @@ sub thumbnail_html {
 		} # end if
 		if ( $Asset and $$Asset{'id'} ) {
 			$$self{'thumbnail_html'} = sprintf('<a href="/product/view.html?product_id=%1$d" class="thumbnail"><img src="%2$s" alt="%3$s" title="%3$s" /></a>',
-					$$self{'id'}, $Asset->thumbnail_url(), $$self{'name'} );
+					$$self{'id'}, $Asset->sized_url('thumbnails'), $$self{'name'} );
 		} else {
 			$openprint::log->debug("No Asset for Product $$self{id} $$self{name}");
 		} # end if

@@ -22,7 +22,7 @@ sub cache_field {
     return $cache_field;
 }
 
-$debug = 0;
+$debug = 1;
 %fields = (
 	'id'	=>	'id',
 	'strid'	=>	'strid',
@@ -261,24 +261,23 @@ sub specification {
 sub Specification {
 	my ( $self, $name, $range, $debug ) = @_;
 
-
-	if ( ! $$self{'Specifications'} ) {
-		return if ! $$self{'id'};
-		foreach ( openprint::EquipmentSpecification->find( 'equipment_id'=>$$self{'id'}, 'order'=>'dblmin NULLS FIRST,dblmax NULLS FIRST' ) ) {
-			push @{$$self{'Specifications'}{$_->name()}}, $_;
+	if ( ! $$self{Specifications} ) {
+		return if ! $$self{id};
+		foreach ( openprint::EquipmentSpecification->find( equipment_id=>$$self{id}, order=>'dblmin NULLS FIRST,dblmax NULLS FIRST' ) ) {
+			push @{$$self{Specifications}{$_->name()}}, $_;
 		} # end foreach
 	} # end if
 
-	if ( ! $$self{'Specifications'} ) {
-		$openprint::log->warn("No specfications for " . $self->name() );
+	if ( ! $$self{Specifications} ) {
+		$openprint::log->debug("Equipment::Specification No specfications for " . $self->to_string() ) if $debug;
 		return;
 	} # end if
-	if ( ! $$self{'Specifications'}{$name} ) {
+	if ( ! $$self{Specifications}{$name} ) {
 		$openprint::log->warn("No specfications for ($name) " . $self->name() ) if $debug;
 		return;
 	} # end if
 
-	return misc::find_entry( $range, $$self{'Specifications'}{$name}, $debug );
+	return misc::find_entry( $range, $$self{Specifications}{$name}, $debug );
 } # end sub specification
 
 sub copy {
@@ -446,7 +445,7 @@ sub ServiceTypes {
 	return map { new openprint::ServiceType( $_ ); } @{$_[0]{'servicetype_id'}};
 } # end sub ServiceTypes
 
-sub Operator_Shifts {
+sub Equipment_Shifts {
 
 	my @Equipment_Shifts = openprint::Equipment_Shift->find(equipment_id=>$_[0]{id},order=>'starttime_seconds');
 	if ( ! @Equipment_Shifts ) {
@@ -463,7 +462,7 @@ sub Operator_Shifts {
 	} # end foreach Equipment Shift
 	$Last_ES->Next( $Equipment_Shifts[0] );
 	return @Equipment_Shifts;
-} # end sub Operator_Shifts
+} # end sub Equipment_Shifts
 
 sub categories {
 	return map { new openprint::Equipment_Category($_)->name() } ( $_[0]->category_id() ? @{$_[0]->category_id()} : () );

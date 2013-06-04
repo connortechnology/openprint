@@ -17,9 +17,9 @@
 					<select name="ddmProjectType" onchange="this.form.btnFunction.value='';f1.submit();">
 						<option value="">select one</option>
 						<? echo ( 
-								ssi::make_drop_down( [ map { $_->id(), $_->description() } openprint::ProjectType->find('order'=>'lower(name)',
-								( $param{'search_category_id'} ? ( 'category_id' => $param{'search_category_id'} ) : () ),
-								) ], $param{'ddmProjectType'} );
+								ssi::make_drop_down( [ map { $_->id(), $_->description() } openprint::ProjectType->find( order=>'lower(description)',
+								( $param{'search_category_id'} ? ( category_id => $param{'search_category_id'} ) : () ),
+								) ], $$variable{ProjectType}->id() );
 								) ?>
 					</select>
 				</li>
@@ -87,15 +87,30 @@
 		</li>
 		</ul>
 	</fieldset><!-- Column -->
-	<fieldset class="rightColumn RequiredServices"> 
+	<br class="spacer"/>
+	<fieldset class="RequiredServices"> 
 		<legend>Required Services</legend>
-		<p> 
+		<ul> 
 <? echo (
 		return ssi::checkboxes('required_services', 
-			[ map { $_->id(), $_->name().'<br/>' } openprint::ServiceType->find('order'=>'lower(name)') ],
-			[ $$variable{'ProjectType'}->required_services() ]
+			[ map { $_->id(), $_->description() } openprint::ServiceType->find('order'=>'lower(name)') ],
+			[ $$variable{'ProjectType'}->required_services() ],
+			{ container=>['<li>','</li>'] }
 			);
 ) ?>
+		</ul>
+	</fieldset><!-- Column -->
+	<fieldset class="rightColumn"> 
+		<legend>Blocked Services</legend>
+		<p> 
+			<select multiple="multiple" id="blocked_services" name="blocked_services" size="4">
+<? echo (
+		return ssi::make_drop_down(
+			[ map { $_->id(), $_->name() } openprint::ServiceType->find( order=>'lower(name)') ],
+			[ $$variable{ProjectType}->blocked_services() ]
+			);
+) ?>
+			</select>
 		</p>
 	</fieldset><!-- Column -->
 	<br class="spacer"/>
@@ -106,5 +121,6 @@
 		</div>	
 	</fieldset>
 <? endif ( $$variable{'ProjectType'}->id() ) ?>
+	<br class="spacer"/>
 	<input type="hidden" name="btnFunction"/>
 </form>

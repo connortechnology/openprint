@@ -9,7 +9,7 @@
 		$Parent = openprint::Location->find_one( id=>$param{parent_id} ) if $param{parent_id};
 	} # end if
 	my $type = $param{type} ? $param{type} : $$Parent{type};
-$log->debug("Looking for $type parent name is $param{parent_element}");
+#$log->debug("Looking for $type parent name is $param{parent_element}");
 
 	my $json = JSON->new;
 	my $js = 'var ddm; var selected;';
@@ -31,15 +31,12 @@ if ( ddm ) {
 
 } else {
 	my ($ddm_name_start, $ddm_name_end) = $param{'parent_element'} =~ /^(.*)$type(.*)$/;
+	my @parent_ids = ( $$Parent{id} ) if $Parent;
 	# Goes through each child type, populating the dropdowns.
 	while ( $type = openprint::Location->child_type($type) ) {
-		my $options;
-		if ( $Parent ) {
-			$options = openprint::Location->dropdown( 'type' => $type, 'order'=>'lower(name)', 'parent_id'=>$$Parent{'id'} );
-			$Parent = openprint::Location->find_one('parent_id'=>$$Parent{'id'}, type=>$type);
-		} else {
-			$options = openprint::Location->dropdown( 'type' => $type, 'order'=>'lower(name)' );
-		} # end if
+		my @Options = openprint::Location->find( parent_id=>\@parent_ids, type=>$type, order=>'lower(name)' );
+		my $options = [ map { $_->id(), $_->name() } @Options ];
+		@parent_ids = map { $_->parent_id() } @Options;
 
 		my $ddm_name = $param{$type.'_element'} ? $param{$type.'_element'} : $ddm_name_start.$type.$ddm_name_end;
 	
@@ -55,6 +52,6 @@ if ( ddm ) {
 ";
 	} # end while children type
 }
-$log->debug($js);
+#$log->debug($js);
 	return $js;
 ) ?>

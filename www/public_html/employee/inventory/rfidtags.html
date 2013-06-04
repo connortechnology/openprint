@@ -20,27 +20,20 @@ Please select a RFID Tag to view/edit.<br>
 </form>
 <form id="f2" name="f2" method="post" action="rfidtags.html">
 	<fieldset class="filters"><legend>Search Criteria</legend>
-		<p>
+		<ul>
+		<li>
 			<label>Date Added</label>
-			<span class="DateSelectorCT">
 <? echo ( ssi::date_select_session( '/employee/inventory/rfidtags.html', 'created_on_start', { 'with_today'=>1, 'with_clear'=>1 } ); ) ?>
 			to 
-			</span>
-			<span class="DateSelectorCT">
 <? echo ( ssi::date_select_session( '/employee/inventory/rfidtags.html', 'created_on_end', { 'with_today'=>1, 'with_clear'=>1 } ); ) ?>
-			</span>
-		</p>
-		<p>
+		</li>
+		<li>
 			<label>Last Updated</label>
-			<span class="DateSelectorCT">
 <? echo ( ssi::date_select_session( '/employee/inventory/rfidtags.html', 'updated_on_start', { 'with_today'=>1, 'with_clear'=>1 } ); ) ?>
 			to 
-			</span>
-			<span class="DateSelectorCT">
 <? echo ( ssi::date_select_session( '/employee/inventory/rfidtags.html', 'updated_on_end', { 'with_today'=>1, 'with_clear'=>1 } ); ) ?>
-			</span>
-		</p>
-		<p>
+		</li>
+		<li>
             <label>Valid?</label>
             <input type="radio" id="valid1" name="valid" value="1" <? echo ( ssi::checked( $session{'/employee/inventory/rfidtags.html?valid'} eq '0' ); ) ?> />
             <label class="radio" for="valid1">Yes</label>
@@ -48,32 +41,32 @@ Please select a RFID Tag to view/edit.<br>
             <label class="radio" for="valid0">No</label>
             <input type="radio" id="valid" name="valid" value="" <? echo ( ssi::checked( $session{'/employee/inventory/rfidtags.html?valid'} eq '' ); ) ?> />
             <label class="radio" for="valid">Both</label>
-		</p>
-		<p>
+		</li>
+		<li>
             <label>Assigned/Unassigned?</label>
             <input type="checkbox" id="assigned" name="assigned" value="1" <? echo ( ssi::checked( $session{'/employee/inventory/rfidtags.html?assigned'} ); ) ?> />
             <label class="radio" for="assigned">Assigned</label>
             <input type="checkbox" id="notassigned" name="notassigned" value="1" <? echo ( ssi::checked( $session{'/employee/inventory/rfidtags.html?notassigned'} ); ) ?> />
             <label class="radio" for="notassigned">Unassigned</label>
-		</p>
-		<p><label>Type</label>
+		</li>
+		<li><label>Type</label>
 			<select name="Type">
 				<option value="">All</option>
 				<? echo ( ssi::make_drop_down( openprint::RFIDTagType->dropdown(order=>'lower(name)'), $session{'/employee/inventory/rfidtags.html?Type'} ); ) ?>
 			</select>
-        </p>
-		<p><label>Location</label>
+        </li>
+		<li><label>Location</label>
 			<select name="location_id" id="location_id">
 				<option value="">All</option>
 				<? echo ( ssi::make_drop_down( openprint::Location->dropdown(order=>'lower(name)'), $session{'/employee/inventory/rfidtags.html?location_id'} ); ) ?>
 			</select>
-        </p>
-
+        </li>
+	</ul>
 		<p class="buttons">
-			<? echo ( join('',
-				ssi::button( 'ShowResults', { onclick=>"LoadContent( 'Results', '/employee/inventory/_rfidtags_results.html', \$('f2') );", href=>'', text=>'Show Results' } ),
-				ssi::writeButton( $log, $dbh, 'Reset', 'reset.gif', 'f2.reset();', '', 'Reset' ),
-				ssi::writeButton( $log, $dbh, 'Add', 'add.gif', '', 'rfidtag_details.html', 'Add New RFID Tag' ),
+			<? echo ( join("\n",
+				button( 'ShowResults', { onclick=>"LoadContent( 'Results', '/employee/inventory/_rfidtags_results.html', \$('f2') );", text=>'Show Results' } ),
+				button( 'Reset', { onclick=>'f2.reset();' } ),
+				button( 'Add', { href=>'rfidtag_details.html', text=>'Add New RFID Tag' } ),
 				); ) ?>
 		</p>
 	</fieldset>

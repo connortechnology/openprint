@@ -5,7 +5,8 @@
 	tinyMCE.init({
 		mode : "specific_textareas",
 		editor_selector : "mce",
-		theme : "advanced"
+		theme : "advanced",
+		theme_advanced_buttons3_add : "forecolor,backcolor"
 	});
 </script>
 <div class="Event"><div class="Edit">
@@ -19,19 +20,18 @@
 			<p class="buttons">
 				<? echo (
 					my $html = '';
-					#$html = ssi::writeButton( $log, $dbh, 'back', 'back.gif', '', 'history.html', 'Back' );
 					
 					if ( $$variable{Event}->id() ) {
-						$html = ssi::button( 'Reset', { onclick=>'f1.reset();check_time_published_on(f1);' } );
+						$html = button( 'Reset', { onclick=>'f1.reset();check_time_published_on(f1);' } );
 						if ( $$variable{Event}->deleted() ) {
-							$html .= ssi::button( 'Undelete', { onclick => "if(confirm('Are you sure?')){f1.function.value='Undelete';f1.submit();}" } );
-							$html .= ssi::button( 'Destroy', { onclick=>"if(confirm('Are you sure?')){f1.function.value='Destroy';f1.submit();}" } );
+							$html .= button( 'Undelete', { onclick => "if(confirm('Are you sure?')){f1.function.value='Undelete';f1.submit();}" } );
+							$html .= button( 'Destroy', { onclick=>"if(confirm('Are you sure?')){f1.function.value='Destroy';f1.submit();}" } );
 						} else {
-							$html .= ssi::button( 'Delete', { onclick => "if(confirm('Are you sure?')){f1.function.value='Delete';f1.submit();}" } );
+							$html .= button( 'Delete', { onclick => "if(confirm('Are you sure?')){f1.function.value='Delete';f1.submit();}" } );
 						} # end if
-						#$html .= ssi::button( 'Copy', { onclick=>"f1.action='edit.html';f1.function.value='Copy';f1.submit();" } );
+						#$html .= button( 'Copy', { onclick=>"f1.action='edit.html';f1.function.value='Copy';f1.submit();" } );
 					} # end if
-					$html .= ssi::button( 'Save', { onclick=>"f1.function.value='Save';f1.submit();" } );
+					$html .= button( 'Save', { onclick=>"f1.function.value='Save';f1.submit();" } );
 					return $html;
 				) ?>
 			</p>
@@ -98,7 +98,7 @@ $company_id = $session{company_id} if (!$company_id);
 							<select name="category_id" id="category_id" onchange="$('category').value='';">
 								<option value="">select</option>
 								<? echo (
-									return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Event_Category->find('order'=>'lower(name)') ], $$variable{Event}->category_id() );
+									return ssi::make_drop_down( openprint::Event_Category->dropdown( order=>'lower(name)'), $$variable{Event}->category_id() );
 								) ?>
 							</select>
 						</li>
@@ -107,7 +107,7 @@ $company_id = $session{company_id} if (!$company_id);
 							<select name="category_id" id="category_id">
 								<option value="">select</option>
 								<? echo (
-									return ssi::make_drop_down( openprint::Event_Category->dropdown('order'=>'lower(name)'), $$variable{Event}->category_id() );
+									return ssi::make_drop_down( openprint::Event_Category->dropdown(order=>'lower(name)'), $$variable{Event}->category_id() );
 								) ?>
 							</select>
 						</li>
@@ -123,17 +123,29 @@ $company_id = $session{company_id} if (!$company_id);
 							<input type="url" id="url" name="url" value="<? echo ( $$variable{Event}->url() ) ?>" />
 						</li>
 						
-						<? eval ( $$variable{'Privacy'} = $$variable{Event}->Privacy(); ) ?>
-						<? echo ( include('/includes/_privacy_widget.html'); ) ?>
+						<? echo ( 
+							$$variable{'Privacy'} = $$variable{Event}->Privacy();
+							include('/includes/_privacy_widget.html');
+						 ) ?>
+						<li class="template"><label>Make Template?</label>
+							<? echo ( radio( 'template', [1,'Yes','0','No'], $$variable{Event}->template() ); ) ?>
+						</li>
 					</ul>
 				</div>
 			</fieldset>
 			<fieldset><legend>Where</legend>
 <? echo ( 
 	$$variable{'Location'} = $$variable{Event}->Location();
-	return ssi::include( $ENV{'DOCUMENT_ROOT'} . '/location/_location_fields.html' );
+	return ssi::include( '/location/_location_fields.html' );
 ) ?>
 			</fieldset>
+			<? echo ( 
+				if ( $$variable{Event}->id() ) {
+					$$variable{Object} = $$variable{Album} = $$variable{Event};
+					return include('/photo_albums/_album_upload.html'); 
+				} # end if
+				return;	
+			) ?>
 		</fieldset>
 		<input type="hidden" name="function" />
 	</form>

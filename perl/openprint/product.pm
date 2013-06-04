@@ -16,8 +16,13 @@ require openprint::logs;
 require sql;
 
 sub view {
-	my $Product = $variable{'Product'} = new openprint::Product( $param{'product_id'} );
+	$param{product_id} = openprint::Product->transform( 'id', $param{product_id} );
+	my $Product = $variable{Product} = new openprint::Product( $param{product_id} );
+	if ( $param{product_id} and ! $Product->id() ) {
+		$variable{error} .= "Product $param{product_id} not found.<br/>";
+	} # end if
 } # end sub view
+
 sub edit {
 	my $Product = new openprint::Product( $param{'product_id'} );
 

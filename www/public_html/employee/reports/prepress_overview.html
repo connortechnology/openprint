@@ -21,7 +21,7 @@
 	</fieldset><fieldset class="filters"><legend>Or Select From the Following</legend>
 		<ul>
 			<li><label>Company</label>
-				<input type="text" onKeyUp="filterDDM(this, f1.ddmCustomer);" size="4" />
+				<input type="text" onkeyup="filterDDM(this, f1.ddmCustomer);" class="filter" />
 				<select name="ddmCustomer" onchange="load_projects(this.form);">
 					<option value="">All</option>
 					<? echo ( openprint::Company::get_dropdown( $param{'company_id'} ); ) ?>

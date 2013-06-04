@@ -112,7 +112,7 @@ $session{'/employee/inventory/available_paper.html?'.$option}, [ map { $$_{$opti
     return $html;
 ) ?>
 			<li>
-				<label>Condition:</label>
+				<label>Condition</label>
 				<select name="condition_id"><option value="">select</option>
 				<? echo (
 						return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::InventoryCondition->find('order'=>'lower(name)') ], $session{'/employee/inventory/paper.html?condition_id'} );
@@ -167,7 +167,7 @@ $session{'/employee/inventory/available_paper.html?'.$option}, [ map { $$_{$opti
 					<label>Location</label>
 					<select id="location_id" name="location_id" multiple="multiple" onchange="calc(this.form.name);">
 						<? echo ( 
-							my @options =  ('All','All','Unknown','Unknown', map { $_->id(), $_->name() } openprint::Location->find('parent_id'=>undef, 'order'=>'lower(name)') );
+							my @options =  ('All','All','Unknown','Unknown', map { $_->id(), $_->name() } openprint::Location->find(parent_id=>undef, type=>'place', order=>'lower(name)') );
 							$session{'/employee/inventory/available_paper.html?location_id'} = undef if ! sets::isin( $session{'/employee/inventory/available_paper.html?location_id'}, \@options );
 							my @selected = split(',', $session{'/employee/inventory/available_paper.html?location_id'} );
 							if ( ! @selected ) {

@@ -4,10 +4,10 @@
 <? else ( ! $$variable{'Skid'}->Contents() ) ?>
 <table class="List">
 	<tr>
-		<th class="Owner">Owner</th><th class="Quantity">Quantity</th><th class="Condition">Condition</th><th class="inches">Inches</th>
+		<th class="Owner">Owner</th><th class="Quantity">Quantity</th><th class="Condition">Condition</th><th class="Purpose">Purpose</th><th class="inches">Inches</th>
 		<? if ( openprint::usergroup::is_user_in( ['Accounting','InventoryManager'], $session{'user_id'} ) ) ?>
-		<th class="Price">Cost</th>
-		<th class="Price">Value</th>
+		<th class="Cost">Cost</th>
+		<th class="Value">Value</th>
 		<? endif ( openprint::usergroup::is_user_in( ['Accounting','InventoryManager'], $session{'user_id'} ) ) ?>
 	</tr>
 <? echo ( 
@@ -24,29 +24,31 @@
 
 		$html .= '<tr>';
 		if ( openprint::usergroup::is_user_in( ['Accounting','InventoryManager'], $session{'user_id'} ) ) {
-		$html .= sprintf('<td colspan="6"><a href="paper_details.html?paper_id=%1$d">%2$s</a></td>', $Paper->id(), $Paper->to_string() );
+		$html .= sprintf('<td colspan="7"><a href="paper_details.html?paper_id=%1$d">%2$s</a></td>', $Paper->id(), $Paper->to_string() );
 		} else {
-		$html .= sprintf('<td colspan="4"><a href="paper_details.html?paper_id=%1$d">%2$s</a></td>', $Paper->id(), $Paper->to_string() );
+		$html .= sprintf('<td colspan="5"><a href="paper_details.html?paper_id=%1$d">%2$s</a></td>', $Paper->id(), $Paper->to_string() );
 		} # end if
 		$html .= '</tr><tr>';
 		$html .= '<td class="Owner">'.$Paper->Owner()->name().'</td>';
-		$html .= sprintf('<td class="Quantity"><a href="paper_details.html?paper_id=%1$d">%2$s</a></td>', $Paper->id(), Number::Format::format_number($C->quantity()).$Paper->units() );
+		$html .= sprintf('<td class="Quantity"><a href="paper_details.html?paper_id=%1$d">%2$s</a></td>', $Paper->id(), (
+			$C->quantity() ? Number::Format::format_number($C->quantity()).$Paper->units() : 'none' ) );
 		$html .= sprintf('<td class="Condition">%s</td>', $C->condition() );
+		$html .= sprintf('<td class="Purpose">%s</td>', $C->purpose() );
 		$html .= sprintf('<td class="inches"><a href="paper_details.html?paper_id=%1$d">%2$s</a></td>', $Paper->id(), (($Paper->type() eq 'Sheet') and $Paper->calliper()) ? sprintf('%.1f', Number::Format::format_number($C->quantity()*$Paper->calliper())) : 'unknown' );
 		if ( openprint::usergroup::is_user_in( ['Accounting','InventoryManager'], $session{'user_id'} ) ) {
-			$html .= '<td class="Price">' . openprint::Currency::format( 1*$C->cost() ) . '/100lb</td>';
-			$html .= '<td class="Price">' . openprint::Currency::format( 1*$C->value() ).'</td>';
+			$html .= '<td class="Cost">' . openprint::Currency::format( 1*$C->cost() ) . '/100lb</td>';
+			$html .= '<td class="Value">' . openprint::Currency::format( 1*$C->value() ).'</td>';
 			$html .= '</tr><tr>';
-			$html .= '<td colspan="6">';
+			$html .= '<td colspan="7">';
 		} else {
 		$html .= '</tr><tr>';
-		$html .= '<td colspan="4">';
+		$html .= '<td colspan="5">';
 		} # end if
-		$html .= ssi::writeButton( $log, $dbh, "CheckIn$$C{id}", 'checkin.gif', "checkin_window( $paper_id, '$$variable{skid_id}' );", '', 'Check In' );
-		$html .= ssi::writeButton( $log, $dbh, "CheckOut$$C{id}", 'checkout.gif', "checkout_window( $paper_id, '$$variable{skid_id}' );", '', 'Check Out' );
-		$html .= ssi::writeButton( $log, $dbh, "Allocate$$C{id}", 'allocate.gif', "allocate_window( $paper_id, '$$variable{skid_id}', $available );", '', 'Allocate' );
-		$html .= ssi::writeButton( $log, $dbh, "Delete$$C{id}", 'delete.gif', '', sprintf('/employee/inventory/skid_details.html?skid_id=%d&amp;content_id=%d&amp;btnFunction=DeletePaper', $$variable{Skid}->id(), $C->id() ), 'Delete' );
-		$html .= ssi::writeButton( $log, $dbh, "Select$$C{id}", 'select.gif', "\$('AddPaper').show();new Ajax.Updater({success: 'AddPaper'},'/employee/inventory/_add_paper_show.html?paper_id=$paper_id&amp;skid_id=$$variable{Skid}{id}',{method:'get'} );", '', 'Select' );
+		$html .= ssi::button( "CheckIn$$C{id}", { onclick=>"checkin_window( $paper_id, '$$variable{skid_id}' );", href=>'', text=>'Check In' } );
+		$html .= ssi::button( "CheckOut$$C{id}", { onclick=>"checkout_window( $paper_id, '$$variable{skid_id}' );", href=>'', text=>'Check Out' } );
+		$html .= ssi::button( "Allocate$$C{id}", { onclick=>"allocate_window( $paper_id, '$$variable{skid_id}', $available );", href=>'', text=>'Allocate' } );
+		$html .= ssi::button( "Delete$$C{id}", { href=>sprintf('/employee/inventory/skid_details.html?skid_id=%d&amp;content_id=%d&amp;btnFunction=DeletePaper', $$variable{Skid}->id(), $C->id() ), text=>'Delete' } );
+		$html .= ssi::button( "Select$$C{id}", { onclick=>"\$('AddPaper').show();new Ajax.Updater({success: 'AddPaper'},'/employee/inventory/_add_paper_show.html?paper_id=$paper_id&amp;skid_id=$$variable{Skid}{id}',{method:'get'} );", href=>'', text=>'Select' } );
 		$html .= '</td>';
 		$html .= '</tr>';
 	} # end foreach C

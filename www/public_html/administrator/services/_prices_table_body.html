@@ -1,31 +1,43 @@
 <? echo (
-my $html = '';
-my @Prices = openprint::ServicePrice->find('service_id'=>$$variable{'Service'}->id(), 'pricelist_id'=>$$variable{'Pricelist'}->id(), 'equipment_id'=>$$variable{'Equipment'}->id(), 'order'=>'min NULLS FIRST,max NULLS FIRST' );
-foreach my $Price ( @Prices ) {
-	$html .= sprintf('<tr>
-			<td><input type="checkbox" name="chk-%1$d-%2$s-%3$d" checked="checked" /></td>
-			<td class="Supplier"><select name="supplier_id-%1$d-%2$s-%3$d"><option value=""> all </option>%4$s</select></td>
-			<td class="Range"><input type="number" name="min-%1$d-%2$s-%3$d" value="%5$s"/> - <input type="number" name="max-%1$d-%2$s-%3$d" value="%6$s"/></td>
-			<td class="Units"><input type="text" name="units-%1$d-%2$s-%3$d" value="%7$s"/></td>
-			<td class="Cost"><input type="number" name="cost-%1$d-%2$s-%3$d" value="%8$s" onkeyup="calc_from_cost(this);" /></td>
-			<td class="Markup"><input type="number" name="markup-%1$d-%2$s-%3$d" value="%9$s" onkeyup="calc_from_markup(this);"/></td>
-			<td class="Price"><input type="number" name="price-%1$d-%2$s-%3$d" value="%10$s" onkeyup="calc_from_price(this);"/></td>
-			<td class="Discount"> 
-				<input type="radio" id="discount-%1$d-%2$s-%3$dY" name="discount-%1$d-%2$s-%3$d" value="Y" %11$s /><label class="radio" for="discount-%1$d-%2$s-%3$d">Yes</label>
-				<input type="radio" id="discount-%1$d-%2$s-%3$dN" name="discount-%1$d-%2$s-%3$d" value="N" %12$s /><label class="radio" for="discount-%1$d-%2$s-%3$d">No </label>
-			</td>
-			<td class="buttons">%13$s</td>
-		</tr>',
-		$Price->pricelist_id(), $Price->equipment_id(), $Price->id(), 
-		ssi::make_drop_down( $$variable{'company_ids'}, $Price->supplier_id() ),
-		$Price->min(), $Price->max(), $Price->units(),
-		$Price->cost(), $Price->markup(), $Price->price(),
-		( $Price->discountable() eq 'Y' ? ( 'checked="checked"', '' ) : ( '', 'checked="checked"' ) ),
-		join('', 
-			ssi::button( 'x'.$Price->id(), { 'onclick'=>qq`del_price( \$('f1'), '$$variable{Pricelist}{id}', '$$variable{Equipment}{id}', $$Price{id} );`, 'text'=>'X' } ),
-			ssi::button( 'c'.$Price->id(), { 'onclick'=>qq`copy_price( \$('f1'), '$$variable{Pricelist}{id}', '$$variable{Equipment}{id}', $$Price{id} );`, 'text'=>'C' } ),
-			),
-	);
-} # end foreach Price
-return $html;
+	my $html = '';
+	my @Prices = openprint::ServicePrice->find(
+		service_id=>$$variable{Service}->id(),
+		pricelist_id=>$$variable{Pricelist}->id(),
+		( $$variable{Equipment}->id() ? ( equipment_id=>$$variable{Equipment}->id() ) : () ),
+		order=>'min NULLS FIRST,max NULLS FIRST' );
+
+	my $NewPrice = new openprint::ServicePrice( undef, { service_id=>$$variable{Service}->id(), pricelist_id=>$$variable{Pricelist}->id() } );
+
+	foreach my $Price ( @Prices, $NewPrice ) {
+		$$Price{equipment_id} = 1*$$Price{equipment_id};
+		$html .= sprintf('<tr>
+				<td class="checkbox"><input type="checkbox" name="chk-%1$d-%2$s-%3$s" %4$s /></td>
+				<td class="Supplier"><select name="supplier_id-%1$d-%2$s-%3$s"><option value=""> all </option>%5$s</select></td>
+				<td class="Range">%6$s - %7$s</td>
+				<td class="Units">%8$s</td>
+				<td class="Cost">%9$s</td>
+				<td class="Markup">%10$s</td>
+				<td class="Price">%11$s</td>
+				<td class="Discount">%12$s</td>
+				<td class="buttons">%13$s</td>
+			</tr>',
+			@$Price{'pricelist_id', 'equipment_id', 'id'}, 
+			checked( $Price->id() ),
+			ssi::make_drop_down( $$variable{'company_ids'}, $Price->supplier_id() ),
+			ssi::input( type=>'float', name=>join('-', 'min', @$Price{'pricelist_id','equipment_id','id'} ), value=>$Price->min() ),
+			ssi::input( type=>'float', name=>join('-', 'max', @$Price{'pricelist_id','equipment_id','id'} ), value=>$Price->max() ),
+			ssi::input( type=>'text', name=>join('-', 'units', @$Price{'pricelist_id','equipment_id','id'} ), value=>$Price->units() ),
+			ssi::input( type=>'float', name=>join('-', 'cost', @$Price{'pricelist_id','equipment_id','id'} ), value=>$Price->cost(), onkeyup=>'calc_from_cost(this);' ),
+			ssi::input( type=>'float', name=>join('-', 'markup', @$Price{'pricelist_id','equipment_id','id'} ), value=>$Price->markup(), onkeyup=>'calc_from_markup(this);' ),
+			ssi::input( type=>'float', name=>join('-', 'price', @$Price{'pricelist_id','equipment_id','id'} ), value=>$Price->price(), onkeyup=>'calc_from_price(this);' ),
+			ssi::radio( join('-', 'discount',@$Price{'pricelist_id','equipment_id','id'} ), [ 'Y', 'Yes', 'N', 'No' ], $Price->discountable() ),
+
+			($Price->id() ? 
+			join('', 
+				ssi::button( 'x'.$Price->id(), { onclick=>qq`del_price( \$('f1'), '$$variable{Pricelist}{id}', '$$variable{Equipment}{id}', $$Price{id} );`, text=>'X' } ),
+				ssi::button( 'c'.$Price->id(), { onclick=>qq`copy_price( \$('f1'), '$$variable{Pricelist}{id}', '$$variable{Equipment}{id}', $$Price{id} );`, text=>'C' } ),
+				) : ''),
+		);
+	} # end foreach Price
+	return $html;
 ) ?>

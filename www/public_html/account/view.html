@@ -13,27 +13,29 @@
 <h1>ACCOUNT</h1>
 <h2>User Profile</h2>
 </div>
-<? echo ( include('/includes/error_reporting.html'); ) ?>
+<?include('/includes/error_reporting.html')?>
 <? if ( $$variable{User}->id() ) ?>
 	<div class="disclaimer"><? echo ( variable_substitution( \$config{UserProfileDisclaimer}, $variable ); ) ?></div>
 	<div class="UserProfile">
 		<p class="buttons">
 			<? echo ( 
 				my $html;
-				if ( $$variable{User}->can_edit() ) {
-					$html .= ssi::button( 'Delete', { href=>'/account/search.html?action=Delete&amp;user_id='.$$variable{User}{id}, text=>'Delete Profile' } );
-					$html .= ssi::button( 'Edit', { href=>'/account/user_profile.html?ddmUser='.$$variable{User}{id} } );
-				} # end if
-				# Can assume if we are viewing this that we are not blocked.
-				if ( $$variable{User}->id() == $session{user_id} ) {
-					$html .= ssi::button( 'Blocklist', { href=>'/account/blocklist.html' } );
-				} else {
-					$html .= ssi::button( 'Block', { onclick=>qq`popup_window('_block_popup.html?user_id=$$variable{User}{id}' );`, text=>'Block' } );
-				} # end if
+				if ( $session{user_id} ) {
+					if ( $$variable{User}->can_edit() ) {
+						$html .= button( 'Delete', { href=>'/account/search.html?action=Delete&amp;user_id='.$$variable{User}{id}, text=>'Delete Profile' } );
+						$html .= button( 'Edit', { href=>'/account/user_profile.html?ddmUser='.$$variable{User}{id} } );
+					} # end if
+					# Can assume if we are viewing this that we are not blocked.
+					if ( $$variable{User}->id() == $session{user_id} ) {
+						$html .= button( 'Blocklist', { href=>'/account/blocklist.html' } );
+					} else {
+						$html .= button( 'Block', { onclick=>qq`popup_window('_block_popup.html?user_id=$$variable{User}{id}' );`, text=>'Block' } );
+					} # end if
 
-				if ( $$variable{User}->id() and ( $session{user_id} != $$variable{User}->id() ) ) {
-					$html .= ssi::button( 'Message', { href=>'/messaging/view.html?to_id='.$$variable{User}->id() } );
-				} # end if
+					if ( $$variable{User}->id() and ( $session{user_id} != $$variable{User}->id() ) ) {
+						$html .= button( 'Message', { href=>'/messaging/view.html?to_id='.$$variable{User}->id() } );
+					} # end if
+				} # end if session{user_id}
 				return $html;
 			) ?>
 		</p>
@@ -71,13 +73,13 @@
 				return $html;
 			) ?>
 			<? if ( $session{user_type} eq 'A' ) ?>
-			<span class="buttons"><? echo ( ssi::button( 'UploadPhoto', { href=>'/photo_albums/upload.html', text=>'Upload Photo' } ); ) ?></span>
+			<span class="buttons"><? echo ( button( 'UploadPhoto', { href=>'/photo_albums/upload.html', text=>'Upload Photo' } ); ) ?></span>
 			<? endif ( $session{user_type} eq 'A' ) ?>
 		</div><!--ProfilePicture-->
 		<div id="PhotoAlbums">
 			<fieldset><legend>Photos/Videos</legend>
 				<? if ( $$variable{User}->can_edit() ) ?>
-				<span class="buttons"><? echo ( ssi::button( 'AddPhotoAlbum', { href=>'/photo_albums/edit.html', 'text'=>'Add' } ); ) ?></span>
+				<span class="buttons"><? echo ( button( 'AddPhotoAlbum', { href=>'/photo_albums/edit.html', 'text'=>'Add' } ); ) ?></span>
 				<? endif ( $$variable{User}->can_edit() ) ?>
 				<? echo (
 					my $html = '';
@@ -101,8 +103,8 @@
 				</div>
 			</fieldset>
 		</div>
-		<? echo ( include('_statistics.html'); ) ?>
-		<? echo ( include('_user_profile_view.html'); ) ?>
+		<?include('_statistics.html')?>
+		<?include('_user_profile_view.html')?>
 		</div>
 				
 		<div class="rightColumn">
@@ -115,14 +117,14 @@
 			</div>
 			<div class="Relationships">
 				<fieldset><legend>Relationships</legend>
-					<div id="Relationships"><? echo ( include('/account/_relationships.html'); ) ?></div>
+					<div id="Relationships"><?include('/account/_relationships.html')?></div>
 				</fieldset>
 			</div>
 			<div id="Events">
 				<fieldset><legend>Events</legend>
 					<? if ( $session{user_id} == $$variable{User}->id() ) ?>
 					<span class="buttons">
-						<? echo ( ssi::button( 'NewEvent', {href=>'/event/edit.html', 'text'=>'New' } ); ) ?>
+						<? echo ( button( 'NewEvent', {href=>'/event/edit.html', 'text'=>'New' } ); ) ?>
 					</span>
 					<? endif ( $session{user_id} == $$variable{User}->id() ) ?>
 					<div class="content">
@@ -149,6 +151,6 @@
 				</fieldset>
 			</div>
 		</div>
-		<div id="Wall"><? echo ( include('/account/_wall.html'); ) ?></div>
+		<div id="Wall"><?include('/account/_wall.html')?></div>
 	</div><!--UserProfile-->
 <? endif ( $$variable{User}->id() ) ?>

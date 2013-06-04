@@ -404,20 +404,19 @@ sub company_profile {
 } # end sub company_profile
 
 sub user_profile {
-	my $Me = $variable{'Me'} = new openprint::User( $session{'user_id'} );
+	my $Me = $variable{Me} = new openprint::User( $session{user_id} );
 	my $User;
 # IF it's empty, then we are adding a new user! Otherwise editing one
-	if ( exists $param{'ddmUser'} ) {
-		$User = openprint::User->find_one('id'=>$param{'ddmUser'} );
-	} else {
-		$User = new openprint::User();
+	if ( exists $param{ddmUser} ) {
+		$User = openprint::User->find_one( id=>$param{ddmUser} );
 	} # end if
+	$User = new openprint::User() if ! $User;;
 
 	if ( $User->can_edit() ) {
 		if ( $param{'btnFunction'} eq '<<' ) {
 			$User = $User->Prev( 'company_id'=>$session{'company_id'} );
 		} elsif ( $param{'btnFunction'} eq '>>' ) {
-			$User = $User->Next( 'company_id'=>$session{'company_id'} );
+			$User = $User->Next( company_id=>$session{company_id} );
 		} elsif ( $param{'btnFunction'} eq 'Delete' ) {
 			$User->delete();
 			$User = $User->Next( 'company_id'=>$session{'company_id'} );

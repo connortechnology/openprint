@@ -179,6 +179,10 @@ sub send_approval_required_notification {
 			$openprint::log->debug( $U->email() . ' is not a valid address.' );
 			next;
 		} # end if
+		if ( ! $self->can_view( $U ) ) {
+			$openprint::log->debug( $U->name() . ' cannot view this PO.' );
+			next;
+		} # end if
 		if ( ! $self->can_authorize( $U ) ) {
 			$openprint::log->debug( $U->name() . ' cannot authorize this PO.' );
 			next;
@@ -479,15 +483,26 @@ sub can_edit {
 
 sub can_view {
 	return 1 if ! $_[0]{'id'};
-	if ( 
-			( $openprint::session{'user_type'} eq 'A' ) or
-			( sets::isin( $_[0]{'created_by'}, [ $openprint::session{'user_id'}, new openprint::User($openprint::session{'user_id'})->assistant_ids(), new openprint::User($openprint::session{'user_id'})->csr_ids() ] ) )
-			or ( openprint::usergroup::is_user_in( ['Accounting','Shipping','Inventory'], $openprint::session{'user_id'} ) ) 
-			
-			or ( sets::isin( $openprint::session{'user_id'}, [ map { $_->Order()->salesrep_id() } $_[0]->Contents() ] ) )
-		) {
+	my $User = $_[1] ? $_[1] : new openprint::User( $openprint::session{user_id} );
+
+	if ( $$User{type} eq 'A' ) {
+		$log->debug("$$User{firstname} Is administrator") if $debug;
 		return 1;
 	} # end if
+	if ( sets::isin( $_[0]{'created_by'}, [ $$User{id}, $User->assistant_ids(), $User->csr_ids() ] ) ) {
+		$log->debug("$$User{firstname} Either created it or is an assistant") if $debug;
+		return 1;
+	} # end if
+	if ( openprint::usergroup::is_user_in( ['Accounting','Shipping','Inventory'], $$User{id} ) )  {
+		$log->debug("$$User{firstname} Is in Accounting','Shipping','Inventory'") if $debug;
+		return 1;
+	} # end if
+			
+	if ( sets::isin( $$User{id}, [ map { $_->Order()->salesrep_id() } $_[0]->Contents() ] ) ) {
+		$log->debug("$$User{firstname} Is salesrep for an order in it") if $debug;
+		return 1;
+	} # end if
+	$log->debug("$$User{firstname} cannot view this PO") if $debug;
 	return 0;
 } # end sub can_view
 
@@ -519,6 +534,34 @@ sub can_authorize {
 	} # end if
 	return $authorized;
 } # end sub can_authorize
+
+# ( $PO, $Content )
+sub can_see_pricing {
+if ( ! $_[0]{id} ) {
+$log->debug("Ccan see because new PO");
+	return 1;
+} # end if
+	
+	if ( ( $session{user_id} == $_[0]->created_by() ) or ( $session{user_type} eq 'A' ) or openprint::usergroup::is_user_in( ['Accounting','SalesAdmin'], $session{user_id} ) ) {
+$log->debug('can see');
+		return 1;
+	} # end if
+
+	if ( $_[1] ) {
+			if ( sets::isin( $_[1]->Order()->salesrep_id(), [ $openprint::session{'user_id'}, new openprint::User($openprint::session{'user_id'})->assistant_ids(), new openprint::User($openprint::session{'user_id'})->csr_ids() ] ) ) {
+			$log->debug('can see');
+			return 1;
+		} # end if
+	} else {
+		foreach my $C ( $_[0]->Contents() ) {
+			if ( sets::isin( $C->Order()->salesrep_id(), [ $openprint::session{'user_id'}, new openprint::User($openprint::session{'user_id'})->assistant_ids(), new openprint::User($openprint::session{'user_id'})->csr_ids() ] ) ) {
+				$log->debug('can see');
+				return 1;
+			} # end if
+		} # end foreach C
+	} # end if
+	return 0;	
+} # end sub can_see_pricing
 
 1;
 __END__

@@ -36,7 +36,7 @@
             <label>Amount Owing</label>
             <? echo ( openprint::Currency::format( $$variable{Order}->owing() ); ) ?>
         </li>
-        <? endif ( $$variable{Order}i->owing() ) ?>
+        <? endif ( $$variable{Order}->owing() ) ?>
 		<? endif ( $config{'ShowAccountingOnOrder'} ne 'N' ) ?>
 	</ul>
 	</div>

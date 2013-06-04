@@ -25,24 +25,16 @@
 <!--
 						<li>
 							<label>Registered</label>
-							<span class="DateSelectorCT">
 							<? echo ( ssi::date_select_session( '/account/search.html', 'created_on_start', {onchange=>q`load_results();`,'with_clear'=>1,'with_today'=>1} ); ) ?>
-							</span>
 								to 
-							<span class="DateSelectorCT">
 							<? echo ( ssi::date_select_session( '/account/search.html', 'created_on_end', {onchange=>q`load_results();`,'with_clear'=>1,'with_today'=>1} ); ) ?>
-							</span>
 						</li>
 -->
 						<li>
 							<label>Last Online</label>
-							<span class="DateSelectorCT">
 							<? echo ( ssi::date_select_session( '/account/couple_search.html', 'last_online_start', {onchange=>q`load_results();`,'with_clear'=>1,'with_today'=>1} ); ) ?>
-							</span>
 								to 
-							<span class="DateSelectorCT">
 							<? echo ( ssi::date_select_session( '/account/couple_search.html', 'last_online_end', {onchange=>q`load_results();`,'with_clear'=>1,'with_today'=>1} ); ) ?>
-							</span>
 						</li>
 					</ul>
 				</div>
@@ -65,9 +57,9 @@ $log->debug( "Value: $v, text: $t");
 			} # end foreach value
 		} elsif ( $Field->type() eq 'date' ) {
 			my ( $start, $end ) = @{$Field->values()} if $Field->values();
-			$html .= '<span class="DateSelector">'.ssi::date_select_session( '/account/couple_search.html', 'field-'.$Field->id().'_start', { 'start'=>$start, 'end'=>$end } ) . '</span>';
+			$html .= ssi::date_select_session( '/account/couple_search.html', 'field-'.$Field->id().'_start', { 'start'=>$start, 'end'=>$end } );
 			$html .= ' to ';
-			$html .= '<span class="DateSelector">'.ssi::date_select_session( '/account/couple_search.html', 'field-'.$Field->id().'_end', { 'start'=>$start, 'end'=>$end } ) . '</span>';
+			$html .= ssi::date_select_session( '/account/couple_search.html', 'field-'.$Field->id().'_end', { 'start'=>$start, 'end'=>$end } );
 		} elsif ( sets::isin( $Field->type(), [ 'country', 'state', 'city' ] ) ) {
 			my $ChildField = openprint::User_Profile_Field->find_one('type'=>openprint::Location->child_type( $Field->type() ) );
 			if ( $ChildField ) {

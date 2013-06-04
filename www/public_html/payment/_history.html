@@ -1,20 +1,33 @@
 <? eval (
 	@{$$variable{'Payments'}} = ();
 	$$variable{'total'} = $$variable{'remaining_total'} = 0;
+	if ( $session{'/payment/history.html?transaction_id'} ) {
+		my $tr_id = $session{'/payment/history.html?transaction_id'};
 
-	foreach my $Payment ( openprint::Payment->find( 
-		ssi::date_filter( '/payment/history.html?received_on_end', 'received_on <=' ),
-		ssi::date_filter( '/payment/history.html?received_on_start', 'received_on >=' ),
-		ssi::date_filter( '/payment/history.html?entered_on_end', 'created_on <=' ),
-		ssi::date_filter( '/payment/history.html?entered_on_start', 'created_on >=' ),
-		( $session{'/payment/history.html?payor_id'} ? ( 'payor_id'		=> $session{'/payment/history.html?payor_id'} ) : () ),
-		( $session{'/payment/history.html?recipient_id'} ? ( 'recipient_id'		=> $session{'/payment/history.html?recipient_id'} ) : () ),
-		'order'				=> 'id',
-		) ) {
-		push @{$$variable{'Payments'}}, $Payment;
-		$$variable{'total'} += $Payment->amount();
-		$$variable{'remaining_total'} += $Payment->remaining();
-	} # end foreach Payment
+		$tr_id = '%'.$tr_id.'%' if ! $tr_id =~ /%/;
+		foreach my $Payment ( openprint::Payment->find( 
+				'transaction_id like' => $tr_id,
+				order				=> 'received_on',
+			) ) {
+			push @{$$variable{'Payments'}}, $Payment;
+			$$variable{'total'} += $Payment->amount();
+			$$variable{'remaining_total'} += $Payment->remaining();
+		} # end foreach Payment
+	} else {
+		foreach my $Payment ( openprint::Payment->find( 
+			ssi::date_filter( '/payment/history.html?received_on_end', 'received_on <=' ),
+			ssi::date_filter( '/payment/history.html?received_on_start', 'received_on >=' ),
+			ssi::date_filter( '/payment/history.html?entered_on_end', 'created_on <=' ),
+			ssi::date_filter( '/payment/history.html?entered_on_start', 'created_on >=' ),
+			( $session{'/payment/history.html?payor_id'} ? ( 'payor_id'		=> $session{'/payment/history.html?payor_id'} ) : () ),
+			( $session{'/payment/history.html?recipient_id'} ? ( 'recipient_id'		=> $session{'/payment/history.html?recipient_id'} ) : () ),
+			order				=> 'received_on',
+			) ) {
+			push @{$$variable{'Payments'}}, $Payment;
+			$$variable{'total'} += $Payment->amount();
+			$$variable{'remaining_total'} += $Payment->remaining();
+		} # end foreach Payment
+	} # end if
 
 	$$variable{'Currency'} = openprint::Currency::get_current() if ! $$variable{'Currency'};
 ) ?>

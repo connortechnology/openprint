@@ -1,46 +1,80 @@
 package logger;
 require Encode;
+require Date::Format;
 use strict;
+
+my %levels = (
+	debug	=>	0,
+	info	=>	1,
+	warn	=>	2,
+	error	=>	3,
+);
+
+use constant DEBUG	=>	0;
+use constant INFO	=>	1;
+use constant WARN	=>	2;
+use constant ERROR	=>	3;
 
 sub new {
 	my $self = {};
     bless( $self, shift );
 	my $opts = shift;
 	if ( ref $opts eq 'HASH' ) {
-		$$self{'level'} = $$opts{'level'};
-		$self->file( $$opts{'file'} );
+		$$self{level} = $levels{$$opts{level}};
+		$self->file( $$opts{file} );
 	} else {
-		$self->{level} = $opts;
-		$self->file();	
+		$self->{level} = $levels{$opts};
+		$self->file();
 	} # end if
 	return $self;
 } # end sub new
 
 sub level {
-	$_[0]{level} = $_[1] if @_ > 1;
-	return $_[0]{'level'};
+	$_[0]{level} = $levels{$_[1]} if @_ > 1;
+	return $levels{$_[0]{level}};
 } # end sub level
 
 sub file {
 	my ( $self, $file ) = @_;
-	$$self{'file'} = $file;
+	$$self{file} = $file;
 	return;
 } # end sub file
 
 sub print {
 	my ( $self, $message ) = @_;
+	$message = Encode::encode('utf-8',$message );
+	
 	if ( $$self{file} ) {
-		my $fh;
-		if ( ! open( $fh, ">>$$self{file}" ) ) {
-			print STDERR "Unable to open $$self{file}. : $!";
-			return $!;
-		} # end if
-		print $fh $message;
-		close($fh);
+		my $fh = $$self{fh};
+		#if ( ! $fh ) {
+			if ( ! open( $fh, ">>$$self{file}" ) ) {
+				print STDERR "Unable to open $$self{file}. : $!";
+				print STDERR $message;
+				return;
+			} else {
+				$| = 1;
+				$$self{fh} = $fh;
+			} # end if
+		#} # end if
+
+		print $fh Date::Format::time2str( '[%C] ', time ) . $message;
+		close ( $fh );
 	} else {
 		print STDERR $message;
 	} # end if
 } # end sub print
+
+sub hup {
+	my ( $self ) = @_;
+	if ( $$self{file} ) {
+		close($$self{fh}) if $$self{fh};
+		if ( ! open( $$self{fh}, ">>$$self{file}" ) ) {
+			print STDERR "Unable to open $$self{file}. : $!";
+		} else {
+			$| = 1;
+		} # end if
+	} # end if
+} # end sub hup
 
 sub emerg {
 	my $self = shift;
@@ -55,15 +89,13 @@ sub crit {
 	$self->print( "[crit] $message\n" );
 }
 sub error {
-	if ( $_[0]{level} eq 'error' or $_[0]->{level} eq 'warn' or $_[0]->{level} eq 'debug' ) {
+	if ( $_[0]{level} <= ERROR ) {
 		$_[0]->print( "[error] $_[1]\n" );
 	} # end if
 }
 sub warn {
-    my $self = shift;
-	my $message = shift;
-	if ( $self->{level} eq 'warn' or $self->{level} eq 'debug' ) {
-		$self->print( "[warn] $message\n" );
+	if ( $_[0]{level} <= WARN ) {
+		$_[0]->print( "[warn] $_[1]\n" );
 	} # end if
 }
 sub notice {
@@ -72,17 +104,13 @@ sub notice {
 	$self->print( "[notice] $message\n" );
 }
 sub info {
-    my $self = shift;
-	my $message = shift;
-	if ( $self->{level} eq 'info' or $self->{level} eq 'debug' ) {
-		$self->print( "[info] $message\n" );
+	if ( $_[0]{level} <= INFO ) {
+		$_[0]->print( "[info] $_[1]\n" );
 	} # end if
 }
 sub debug {
-    my $self = shift;
-	my $message = shift;
-	if ( $self->{level} eq 'debug' ) {
-		$self->print( Encode::encode('utf-8',"[debug] $message\n") );
+	if ( $_[0]{level} <= DEBUG ) {
+		$_[0]->print( "[debug] $_[1]\n" );
 	} # end if
 }
 

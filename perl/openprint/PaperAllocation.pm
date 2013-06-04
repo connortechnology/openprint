@@ -71,7 +71,19 @@ sub delete {
 } # end sub delete
 
 sub Condition {
-	return new openprint::InventoryCondition( $_[0]{condition_id} );
+	if ( $_[0]{condition_id} ) {
+		return new openprint::InventoryCondition( $_[0]{condition_id} );
+	} elsif ( $_[0]{skid_ids} and ( @{$_[0]{skid_ids}} == 1 ) ) {
+		my @Skids = $_[0]->Skids();
+		my $Skid = $Skids[0];
+		if ( $Skid and $Skid->id() ) {
+		my $C = $Skid->Content( $_[0]->Paper() );
+			if ( $C ) {
+				return $C->Condition();
+			} # end if
+		} # end if
+	} # end if
+	return new openprint::InventoryCondition();
 } # end sub Condition
 
 sub Paper {
@@ -107,15 +119,14 @@ sub send_notification {
 	my ( $self ) = @_;
 
 	my $Me = new openprint::User( $session{user_id} );
-	return if $Me->email() =~ /iconnor/;
 
 	my %info;
-	$info{'Allocation'} = $self;
-	my $Project = $info{'Project'} = $self->Project();
-	my $Paper = $info{'Paper'} = $self->Paper();
+	$info{Allocation} = $self;
+	my $Project = $info{Project} = $self->Project();
+	my $Paper = $info{Paper} = $self->Paper();
 	my @old_skids = @{$info{'OldSkids'}} = $self->old_Skids();
 
-	my @recipients = openprint::User->find( 'usergroup'=>'InventoryManager' );
+	my @recipients = map { $_->notification('Stock Allocations') eq 'Yes' } openprint::User->find( usergroup=>'InventoryManager' );
 
     my $offsite = 0;
 	my $nolocation = 0;
@@ -142,22 +153,19 @@ sub send_notification {
 
 	push @recipients, $Project->Company()->CSR() if $offsite or $nolocation or @old_skids;
 	if ( $Paper->available() < 0 ) {
-		my @PAs = openprint::PaperAllocation->find('paper_id'=>$Paper->id());
+		my @PAs = openprint::PaperAllocation->find( paper_id=>$Paper->id());
 		@recipients = map { new openprint::User( $_ ) } sets::exclude( [ $session{'user_id'} ], [ sets::union( (map { $_->Project()->Company()->salesrep_id() } @PAs), (map{$_->id()}@recipients) ) ] );
 	} # endif
 
-	my $email_template = misc::load_file( $log, $openprint::config{'SkinPath'} . '/email_template.html' );
-
-	$info{'ReplacementText'} = "<!--#include virtual=\"/email_content/stock_allocation_notification.html\"-->";
-	$_ = MIME::QuotedPrint::encode_qp( ssi::variable_substitution( \$email_template, \%info ) );
+	$info{'ReplacementText'} = ssi::include( '/email_content/stock_allocation_notification.html', \%info );
+	$_ = MIME::QuotedPrint::encode_qp( Encode::encode('utf-8', ssi::include( '/email_template.html', \%info ) ) );
 	my @body = ('', $_, 'text/html', 'quoted-printable');
 	my $Email = new openprint::Email();
 	$Email->send( 
-			'TO'		=>	\@recipients, 
-			#'TO'		=>	'iconnor@point-one.com',
-			'SUBJECT' 	=> 'Stock allocated for docket ' . $Project->docket(),
-			'FROM'		=>	$Me,
-			'ATTACHMENTS'	=>	\@body,
+			TO			=>	\@recipients, 
+			SUBJECT 	=> 'Stock allocated for docket ' . $Project->docket(),
+			FROM		=>	$Me,
+			ATTACHMENTS	=>	\@body,
 			);
 
 } # end sub stock_allocation_notification

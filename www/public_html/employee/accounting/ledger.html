@@ -39,13 +39,9 @@
 ) ?>
 			<p>
 				<label>Date</label>
-				<span class="DateSelector">
 <? echo ( ssi::date_select( 'occurred_on_start', join('-', @session{'/employee/accounting/ledger.html?occurred_on_start_year','/employee/accounting/ledger.html?occurred_on_start_month','/employee/accounting/ledger.html?occurred_on_start_day'} ), 'load_ledgers(this.form);' ); ) ?>
 					to 
-				</span>
-				<span class="DateSelector">
 <? echo ( ssi::date_select( 'occurred_on_end', join('-', @session{'/employee/accounting/ledger.html?occurred_on_end_year','/employee/accounting/ledger.html?occurred_on_end_month','/employee/accounting/ledger.html?occurred_on_end_day'} ), 'load_ledgers(this.form);' ); ) ?>
-				</span>
 			</p>
 		</div>
 		<div class="rightColumn">
