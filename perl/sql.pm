@@ -215,8 +215,8 @@ sub update {
 sub start_transaction {
 	my $d = shift;
 	$d = $dbh if ! $d;
-	my $ac = $dbh->{AutoCommit};
-	$dbh->{AutoCommit} = 0;
+	my $ac = $d->{AutoCommit};
+	$d->{AutoCommit} = 0;
 	return $ac;
 } # end sub start_transaction
 
@@ -225,9 +225,9 @@ sub end_transaction {
 	$d = $dbh if ! $d;
 	if ( $ac ) {
 		#$log->debug("Committing");
-		$dbh->commit();
+		$d->commit();
 	} # end if
-	$dbh->{AutoCommit} = $ac;
+	$d->{AutoCommit} = $ac;
 } # end sub end_transaction
 
 

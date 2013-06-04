@@ -56,7 +56,7 @@ sub contains {
 	my ( $setA, $setB ) = @_;
 
 	foreach ( @{$setB} ) {
-		if ( ! isin( $_, @{$setA} ) ) {
+		if ( ! isin( $_, $setA ) ) {
 			return 0;
 		} # end if
 	} # end foreach
