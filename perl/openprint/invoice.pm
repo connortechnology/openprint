@@ -44,6 +44,9 @@ sub history {
 			$Invoice->add_to_log( 'Invoice posted.' );
 			$variable{'information'} .= 'Invoice posted.<br/>';
 			delete $param{'invoice_id'};
+			if ( $session{'/invoice/history.html?company_id'} and ( $session{'/invoice/history.html?company_id'} != $Invoice->invoicee_id() ) ) {
+				delete $session{'/invoice/history.html?company_id'};
+			} # end if
 		} # end if
 	} elsif ( $param{'btnFunction'} eq 'UnPost' ) {
 		my $Invoice = new openprint::Invoice( $param{'invoice_id'} );
