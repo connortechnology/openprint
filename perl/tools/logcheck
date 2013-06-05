@@ -71,6 +71,7 @@ my @re = (
 '^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: Invalid user attack from ([0-9.]+)$',
 '^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ proftpd\[[0-9]+\]: [\.\-A-Za-z0-9]+ \([\.\-A-Za-z0-9]+\[([.:a-zA-Z0-9]+)\]\) \- Maximum login attempts \(100\) exceeded, connection refused$',
 '^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: Received disconnect from ([\.0-9]+): 11: Bye Bye \[preauth\]$',
+'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: Received disconnect from ([\.0-9]+): 3: com.jcraft.jsch.JSchException: reject HostKey: [\.0-9]+ \[preauth\]$',
 '^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: Connection closed by ([\.0-9]+): \[preauth\]$',
 '^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ dovecot: pop3-login: Disconnected \(auth failed, 1 attempts\): user=<[a-zA-Z@\.0-9]+>, method=PLAIN, rip=([\.0-9]+), lip=[\.0-9]+$',
 );
