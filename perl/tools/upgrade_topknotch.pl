@@ -27,7 +27,7 @@ if ( $year ) {
 
 	if ( ! -e "/tmp/$src_db-$month-$day-$year.sql.bz2" ) {
 		print "Getting db backup $month-$day-$year\n";
-		`su postgres -c "scp $src_host:/media/Storage/Backups/Database/$src_db/$year-$month-$day.sql.bz2 /tmp/$src_db-$month-$day-$year.sql.bz2 "`;
+		`su postgres -c "scp $src_host:/media/Backups/Database/$src_db/$year-$month-$day.sql.bz2 /tmp/$src_db-$month-$day-$year.sql.bz2 "`;
 	} # end if
 	if ( ! -e "/tmp/$src_db-$month-$day-$year.sql.bz2" ) {
 		die "No db dum[";
@@ -55,9 +55,6 @@ if ( $year ) {
 
 } # end if
 
-print "upgrading db ...";
-`./db_update.pl $dst_db topknotch topknotch` or $log->error($!);
-print "done\n";
 $dbh = sql::open_sql( $log, ('database'=>$dst_db, 'driver'=>'Pg','login'=>$dst_db, 'password'=>$dst_db, 'host'=>$ARGV[3]) );
 configuration::init_cache( $log, $dbh );
 require openprint::PaymentType;
