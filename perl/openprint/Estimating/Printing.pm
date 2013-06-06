@@ -1234,7 +1234,7 @@ sub get_impositions {
 				} # end if
 				my $add = 1;
 				my $P = $imp->Paper();
-				my $str = sprintf('%dx%d+%dx%d-%s-%s-%s', @$imp{'columns','rows','dutch_columns','dutch_rows','runstyle','image_orientation'},$$P{digital} );
+				my $str = sprintf('%dx%d+%dx%d-%s-%s-%s-%s', @$imp{'columns','rows','dutch_columns','dutch_rows','runstyle','image_orientation','bleed_size'},$$P{digital} );
 				
 				if ( ($$specs{'chkOverrideSheetSize'.$qty_index} eq 'Y') and ( $P->type() eq 'Sheet' )
 						and ( $P->width() == $$specs{"OverrideStockWidth$qty_index"} ) 
@@ -2365,7 +2365,7 @@ $log->debug("Stock qty: ($qty/$$imp{imposition})=$stock_qty lbs paper_counts: " 
 			} # end if
 
 			if ( $SpreadLayout > 0 ) {
-				my $str = sprintf('%d=%dx%d %dx%d-%s-%s', @$imp{'pages','spread_columns','spread_rows','columns','rows','runstyle','image_orientation'} );
+				my $str = sprintf('%d=%dx%d %dx%d-%s-%s-%s', @$imp{'pages','spread_columns','spread_rows','columns','rows','runstyle','image_orientation','bleed_size'} );
 				if ( $imps{$str} ) {
 					for ( my $j = 0; $j < @{$imps{$str}}; $j += 1 ) {
 						my $I = $imps{$str}[$j];
@@ -2422,7 +2422,7 @@ $imp->display("Comparing mino:" . $Paper->minimum_order_weight() . 'Price: ' . $
 				} # end if $imps{$str}
 				push @{$imps{$str}}, $imp if $add;
 			} else { # No SpreadLayout
-				my $str = sprintf('%d=%dx%d %s %s', @$imp{'imposition','columns','rows','runstyle','image_orientation'} );
+				my $str = sprintf('%d=%dx%d %s %s %s', @$imp{'imposition','columns','rows','runstyle','image_orientation','bleed_size'} );
 				if ( $imps{$str} ) {
 					for ( my $j = 0; $j < @{$imps{$str}}; $j += 1 ) {
 						my $I = $imps{$str}[$j];
@@ -2990,7 +2990,7 @@ $openprint::log->debug("Calculating Additional Signatures for other group");
 							$$price{'Comparison Cost'} += 1000000;
 						} # end if
 					} else {
-						$openprint::log->error("Unable to find stocks for group ");
+						$openprint::log->error("Unable to find stocks for group 2 alert( $$specs{alert} )");
 						foreach my $k ( keys %$specs ) {
 							$openprint::log->error("$k => $$specs{$k}");
 						} # end if
