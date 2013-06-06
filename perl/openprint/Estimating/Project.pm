@@ -209,7 +209,7 @@ $log->debug("Presentation folder sizes $$specs{'chkPocketLeft'} $$specs{'chkPock
 	$log->debug("LOCKING tbl_Projects for project $$Project{id}");
 	$dbh->do( "SELECT * FROM Projects WHERE id=".$$Project{'id'}. ' FOR UPDATE' );
 	if ( $dbh->errstr() ) {
-		$log->error( DBI->errstr );
+		$log->error( $dbh->errstr() );
 		sql::end_transaction( $dbh, $ac );
 		$$specs{'alert'} .= 'Database error<br/>';
 		return $$specs{'Status'} = 'uncalculated';
@@ -540,17 +540,19 @@ $log->debug("Presentation folder sizes $$specs{'chkPocketLeft'} $$specs{'chkPock
 		@$specs{'txtWidth','txtHeight','chkPocketCenter','alert','Status'} = @$sig_specs{'txtWidth','txtHeight','chkPocketCenter','alert','Status'};
 	} # end if printing (actually looks for txtTotalPageQut
 
-	$log->debug("DROPPING LOCK");
-	sql::end_transaction( $dbh, $ac );
 
 	if ( ! $$specs{'txtQuantity1'} ) {
 		$$specs{'alert'} .= 'Please enter the quantity.';
+	$log->debug("DROPPING LOCK");
+	sql::end_transaction( $dbh, $ac );
 		return $$specs{'Status'} = 'uncalculated';
 	} # end if
 
 	if ( $$specs{'Status'} eq 'uncalculated' ) {
 		delete $$specs{'txtPrice1'};
 		$$specs{'alert'} .= 'Problem calculating printing';
+	$log->debug("DROPPING LOCK");
+	sql::end_transaction( $dbh, $ac );
 		return $$specs{'Status'};
 	} # end if
 
@@ -780,7 +782,6 @@ $openprint::log->debug('Deleting Folding');
 		} # end foreach
 	} # end if LaminationType
 
-	my $ac = sql::start_transaction( $dbh );
 	foreach my $sid ( @{$$services{'Turnaround'}} ) {
 		foreach my $spec ( 'TurnaroundDays' ) {
 			openprint::service::insert_service_spec( $log, $dbh, $$Project{'id'}, $sid, $spec, $$specs{$spec} );
@@ -798,8 +799,6 @@ $openprint::log->debug('Deleting Folding');
 			} # end foreach
 		} # end if
 	}  # end foreach service_name
-	sql::end_transaction( $dbh, $ac );
-	$openprint::log->warn("Before auto");
 	openprint::Estimating::Multipage::calculate_signatures( $log, $dbh, $variable, $$Project{'id'} );
 	$$specs{'alert'} .= openprint::service::auto_calculate( $r, $log, $dbh, $variable, $$Project{'id'} );
 	$openprint::log->warn("Aftere auto");
@@ -881,6 +880,7 @@ $log->warn("Have uncalculated service: ");
 		$$specs{'txtUnitPrice1'} = '';
 	} # end if
 	delete $$variable{'Redirect'};
+	sql::end_transaction( $dbh, $ac );
 	return $$specs{'Status'};
 } # end sub calc
 
