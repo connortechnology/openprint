@@ -17,6 +17,8 @@
 package openprint::Estimating::Folding;
 use strict;
 
+require POSIX;
+require Math::Round;
 require openprint::Project;
 require openprint::service;
 require sql;
@@ -524,8 +526,8 @@ sub signature_calc {
 			my @Impositions = @Set_Of_Impositions;
 			@Set_Of_Impositions = ();
 			foreach my $I ( @Impositions ) {
-				my $width_folds = sprintf('%.0f', ($$sig_specs{'txtWidth'}/$$sig_specs{'txtFinalWidth'})-1 );
-				my $height_folds = sprintf('%.0f', ($$sig_specs{'txtHeight'}/$$sig_specs{'txtFinalHeight'}) -1 );
+				my $width_folds = Math::Round::nearest(1, ($$sig_specs{'txtWidth'}/$$sig_specs{'txtFinalWidth'})-1 );
+				my $height_folds = Math::Round::nearest(1, ($$sig_specs{'txtHeight'}/$$sig_specs{'txtFinalHeight'}) -1 );
 				if ( $width_folds and $height_folds ) {
 	# All impositions must be 1 out. This may not be true
 					my $Singleton = $I->copy();
@@ -576,7 +578,7 @@ sub signature_calc {
 			foreach my $Set ( @All_Impositions ) {
 				$openprint::log->debug("Impositions in set: " . @$Set);
 				foreach my $I ( @$Set ) {
-					$I->display();
+					$I->display('quantity '.$I->quantity() );
 				} # end foreach I
 			} # end foreach set
 		} # end if debug
@@ -684,7 +686,7 @@ sub signature_calc {
 						push @{$folds{$Imposition->pages().'PageFold-'.$Imposition->imposition().'out'}}, $Fold;
 						$openprint::log->debug(sprintf('Found: %dx%d,%dout', $Imposition->page_columns(), $Imposition->page_rows(), $Imposition->imposition() ) ) if $debug;
 					} else {
-						$Breakdown .= sprintf('Didnt find fold %dx%d %.3fx%.3f %s, %dout %dgsm<br/>', $Imposition->page_columns(), $Imposition->page_rows(), $Imposition->page_width(), $Imposition->page_height(), $Imposition->image_orientation(), $Imposition->imposition(), $Imposition->Paper()->gsm() );
+						$Breakdown .= sprintf('Didnt find fold %dx%d %.3fx%.3f %s, %dout %dgsm<br/>', $Imposition->page_columns(), $Imposition->page_rows(), $Imposition->page_width(), $Imposition->page_height(), $Imposition->image_orientation(), $Imposition->imposition(), $Paper->gsm() );
 						$openprint::log->debug(sprintf('Didnt find: %dx%d %s,%dout', $Imposition->page_columns(), $Imposition->page_rows(), $Imposition->image_orientation(), $Imposition->imposition() ) ) if $debug;
 						%folds = ();
 						last;
@@ -693,13 +695,14 @@ sub signature_calc {
 # FIgure out the fold.  Because this isn't the press, we have to figure out how it cuts...
 					if ( $$sig_specs{'rdbTemplateType'} and $fold_types{$$sig_specs{'rdbTemplateType'}} ) {
 #$openprint::log->debug("Templatetype: $$sig_specs{'rdbTemplateType'}") if $debug;
-						my $rc = $Equipment->fits( $Imposition->layout_width(), $Imposition->layout_height(), $Imposition->Paper()->calliper() );
+						my $rc = $Equipment->fits( $Imposition->layout_width(), $Imposition->layout_height(), $Paper->calliper() );
 						#$openprint::log->debug("Trying to fit " . $Imposition->layout_width() . 'x' . $Imposition->layout_height() . ' on ' . $Equipment->strid(). ' ' . $rc ) if $debug;
 						if ( $rc ) {
 							if ( @my_equipment == 1 ) {
 								$Breakdown .= "Doesn't fit: $rc<br/>";
 							} # end if
-							next;
+							%folds = ();
+							last;
 						} # end if
 							
 						my $Fold = $Equipment->Fold(
@@ -729,8 +732,8 @@ sub signature_calc {
 									} # end if
 								} else {
 									# decide whether it's running portrait or landscape basessd on which way the folds go
-									my $width_folds = sprintf('%.0f', ($$sig_specs{'txtWidth'}/$$sig_specs{'txtFinalWidth'})-1 );
-									my $height_folds = sprintf('%.0f', ($$sig_specs{'txtHeight'}/$$sig_specs{'txtFinalHeight'})-1 );
+									my $width_folds = Math::Round::nearest(1, ($$sig_specs{'txtWidth'}/$$sig_specs{'txtFinalWidth'})-1 );
+									my $height_folds = Math::Round::nearest(1, ($$sig_specs{'txtHeight'}/$$sig_specs{'txtFinalHeight'})-1 );
 									$openprint::log->debug("Has max feed width width: $width_folds height: $height_folds $$sig_specs{'txtWidth'} $$sig_specs{'txtHeight'} $max_feed_width") if $debug;
 									if ( ( $width_folds and ! $height_folds ) or ( $width_folds == $Fold->folds() and $height_folds == $Fold->angles() ) ) {
 # If folds are on width, we grip on height...
@@ -936,22 +939,25 @@ $openprint::log->debug("Folds: $set_index : $key " . $impo_qty );
 				$fold_specs{"FoldRunspeed-$$sig_specs{'SignatureIndex'}-$qty_index-$fold_index"} = $Fold->runspeed($Paper->gsm());
 				$fold_index += 1;
 
-				my $run_qty = ( $impo_qty * $$specs{"txtQuantity$qty_index"} )/$SignatureImposition->imposition();
+				my $run_qty = $$specs{"txtQuantity$qty_index"};
+				$run_qty = POSIX::ceil( $run_qty * $impo_qty/$SignatureImposition->imposition()) if $impo_qty != $$SignatureImposition{imposition};
 
+				$openprint::log->debug("Pricing runqty: $run_qty impo qty: $impo_qty mipo: $imposition out qty: ".$$specs{"txtQuantity$qty_index"}." Sig imp: $$SignatureImposition{imposition}out  of fold $fold_type on " . $Equipment->name()) if $debug;
 				$run_qty += $Fold->makeready_overs_units() eq 'Percent' ? $run_qty * ( $Fold->makeready_overs() /100 ) : $Fold->makeready_overs();
+				$openprint::log->debug("Pricing runqty: $run_qty impo qty: $impo_qty mipo: $imposition out qty: ".$$specs{"txtQuantity$qty_index"}." Sig imp: $$SignatureImposition{imposition}out  of fold $fold_type on " . $Equipment->name()) if $debug;
 				$run_qty += $Fold->run_overs_units() eq 'Percent' ? $run_qty * ($Fold->run_overs()/100): $Fold->run_overs();
 #$openprint::log->debug("Overs: " . $Fold->makeready_overs() );
 
-				#$openprint::log->debug("Pricing $impo_qty $imposition out of fold $fold_type on " . $Equipment->name()) if $debug;
+				$openprint::log->debug("Pricing runqty: $run_qty impo qty: $impo_qty mipo: $imposition out qty: ".$$specs{"txtQuantity$qty_index"}." Sig imp: $$SignatureImposition{imposition}out  of fold $fold_type on " . $Equipment->name()) if $debug;
 
 				my $width_folds;
 				my $height_folds;
 				if ( $$sig_specs{'txtFinalWidth'} ) {
-					$width_folds = sprintf('%.0f', ($$sig_specs{'txtWidth'}/$$sig_specs{'txtFinalWidth'})-1 );
-					$height_folds = sprintf('%.0f', ($$sig_specs{'txtHeight'}/$$sig_specs{'txtFinalHeight'}) -1 );
+					$width_folds = Math::Round::nearest(1, ($$sig_specs{'txtWidth'}/$$sig_specs{'txtFinalWidth'})-1 );
+					$height_folds = Math::Round::nearest(1, ($$sig_specs{'txtHeight'}/$$sig_specs{'txtFinalHeight'}) -1 );
 				} else {
-					$width_folds = sprintf('%.0f', ($Imposition->image_width()/$Imposition->object_width())-1 );
-					$height_folds = sprintf('%.0f', ($Imposition->image_height()/$Imposition->object_height())-1 );
+					$width_folds = Math::Round::nearest(1, ($Imposition->image_width()/$Imposition->object_width())-1 );
+					$height_folds = Math::Round::nearest(1, ($Imposition->image_height()/$Imposition->object_height())-1 );
 				} # end if
 				if ( $Fold->folds() or $Fold->angles() ) {
 					if ( $width_folds == $Fold->folds() and $height_folds == $Fold->angles() ) {
@@ -983,7 +989,7 @@ $openprint::log->debug("Folds: $set_index : $key " . $impo_qty );
 					} # end if
 				} # end if
 
-				$Breakdown .= sprintf( '%s: %dx%dout layout: %sx%s qty: %d StockWeight %.2fgsm<br/>', $Fold->name(), $impo_qty, $imposition, $Imposition->get('layout_width', 'layout_height'), $run_qty, $Imposition->Paper()->gsm() );
+				$Breakdown .= sprintf( '%s: %dx%dout layout: %sx%s qty: %d StockWeight %.2fgsm<br/>', $Fold->name(), $impo_qty, $imposition, $Imposition->get('layout_width', 'layout_height'), $run_qty, $Paper->gsm() );
 
 				my %setupPrice = openprint::service::get_price_object( $Fold->type().'MakeReady', $imposition, $Equipment );
 				if ( ! %setupPrice ) {
