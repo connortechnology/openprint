@@ -647,10 +647,10 @@ sub signature_calc {
 						$Breakdown .= 'Requires ' . $required_bleed . ' bleed for ' . $$Imposition{imposition} . 'out<br/>';
 						next;
 					} else {
-					$openprint::log->error("Bleed Good $$Imposition{bleed_size} < $required_bleed " . $$Imposition{imposition}.'out Required Bleed on ' . $Equipment->strid() );
+					$openprint::log->error("Bleed Good $$Imposition{bleed_size} < $required_bleed " . $$Imposition{imposition}.'out Required Bleed on ' . $Equipment->strid() ) if $debug;
 					} # end if
 				} else {
-					$openprint::log->error("No spec for " . $$Imposition{imposition}.'out Required Bleed on ' . $Equipment->strid() );
+					$openprint::log->error("No spec for " . $$Imposition{imposition}.'out Required Bleed on ' . $Equipment->strid() ) if $debug;
 				} # end if
 
 				#if ( $debug and 0 ) {
