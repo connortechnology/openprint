@@ -820,7 +820,7 @@ $openprint::log->debug("Got Paper " . $P->width() . 'x'.$P->height() . ' from ' 
 	} # end if
 
 # Do this once now, so we don't do it many times in calc_print_price
-	my @filtered_colours = filter_colours( @side_one_colours, @side_two_colours );
+	my @filtered_colours = filter_colours( \@side_one_colours, \@side_two_colours );
 
 	my @possible_presses = sort { $a->strid() cmp $b->strid() } select_presses( $project_index, $Papers[0], $specs, \@side_one_colours, \@side_two_colours );
 	if ( ! @possible_presses ) {
@@ -3405,11 +3405,13 @@ sub plate_setup_cost {
 
 # This is only called for work and turn
 sub filter_colours {
-	my @filtered_colours = ();
+	my ( $front, $back ) = @_;
+	my @filtered_colours = @{$front};
 
 #$log->debug("*************** START OF FILTER COLOURS colours: @colours **************************");
 
-	foreach my $colour ( @_ ) {
+
+	foreach my $colour ( @{$back} ) {
 		if ( ! sets::isin( $colour, \@filtered_colours ) ) {
 # We only need one black
 			if ( $colour eq 'Black' ) {
@@ -3526,7 +3528,7 @@ sub runtime {
 	my @side_two_colours = openprint::Estimating::Printing::get_colours( $specs, 'SideTwo' );
 	my @colours;
 	if ( sets::isin( $$specs{'ddmRunStyle'.$qty_index}, ['Work & Turn', 'Work & Tumble'] ) ) {
-		@colours = openprint::Estimating::Printing::filter_colours( @side_one_colours, @side_two_colours );
+		@colours = openprint::Estimating::Printing::filter_colours( \@side_one_colours, \@side_two_colours );
 	} else {
 		@colours = ( @side_one_colours, @side_two_colours );
 	} # end if
