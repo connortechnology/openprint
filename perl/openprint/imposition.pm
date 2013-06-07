@@ -123,7 +123,7 @@ sub check_setup {
 		#$openprint::log->debug("*** Runstyle is: Perfecting Items: $$specs{'ComboItems'} Imposition is : $$setup{'Imposition'} ***" . $setup->Paper()->perfecting() );
 
 		if ( (! $setup->Paper()->perfecting() ) and ( $$specs{'Perfecting Double Gutter Size'} or $$specs{'Perfecting Single Gutter Size'} ) ) {
-$openprint::log->debug("Checking for roller space");
+#$openprint::log->debug("Checking for roller space");
 			# check to make sure that the gutter space is actually where it needs to be.
 			if ( $setup->columns() == 1 ) {
 				$setup->rows(0);
@@ -315,7 +315,7 @@ sub calc_setup_object {
 	} # end if
 	$bleed_width = 0 if $bleed_width < 0;
 	$bleed_height = 0 if $bleed_height < 0;
-#$openprint::log->debug("BleedSize: $$specs{'BleedSize'} bindery: $bindery_bleed, width: image: $image_width + extra: $bleed_width");
+#$openprint::log->debug("BleedSize: $bleed_size bindery: $bindery_bleed, width: image: $image_width + extra: $bleed_width");
 
 	#$openprint::log->debug("Using perfectbind cover gutter: $bindery_head Bindery bleed: $bindery_bleed");
 	if ( $bindery_head < 0 ) {
@@ -450,7 +450,7 @@ sub calc_setup_object {
 		$adjusted_paper_width -= $setup1->cropmark_right();
 
 		$adjusted_paper_width = 0 if $adjusted_paper_width < 0;
-$openprint::log->debug("P Width gutters: $adjusted_paper_width") if $debug;
+#$openprint::log->debug("P Width gutters: $adjusted_paper_width") if $debug;
 
 		if ( sets::isin( $run_style, ['Perfecting','Sheet Work','Web'] ) ) {
 			calc_setup( $setup1, $setup1->image_width(), $setup1->image_height(), $adjusted_paper_width, $adjusted_paper_height ? $adjusted_paper_height : $setup1->image_height()  );
@@ -509,7 +509,11 @@ $openprint::log->debug("P Width gutters: $adjusted_paper_width") if $debug;
 				$setup1->Paper()->height( $setup1->used_height() ) if ! $setup1->Paper()->height();
 				push @results, $setup1 if $setup1->imposition();
 			} # end if imposition
+		} else {
+			$openprint::log->error('Error with runstyle in imposition');
 		} # end if run_style
+	} else {
+		$openprint::log->error('Error with grain direction in importion.');
 	} # end if grain_direction
 
 # Only consider the rotated view if teh grain direction is unspecified or is correct for this.
@@ -707,10 +711,11 @@ sub add_imposition {
 				next;
 			} # end if
 			# this is usually evelopes or forms
-			$openprint::log->debug(" ** Creating No Cut Imposition ** ");
+			$openprint::log->debug(" ** Creating No Cut Imposition ** $$project{BleedSize}");
 			#push @impositions, {'Imposition' => 1, 'Rows' => 1, 'Cols' => 1 };
-			foreach my $bleed_size ( split(',', $$project{'BleedSize'} ) ) {
+			foreach my $bleed_size ( $$project{'BleedSize'} ? split(',', $$project{'BleedSize'} ) : 0 ) {
 				foreach my $i ( calc_setup_object( $project, @$project{'image_width','image_height'}, $Paper, $run_style, $override_grain_direction, $Press, $bleed_size ) ) {
+$i->display('No Cut');
 					next if $i->imposition() != 1;
 					push @impositions, $i;
 				} # end foreach
@@ -720,7 +725,7 @@ sub add_imposition {
 			next;
 		} # end if
 
-		foreach my $bleed_size ( split(',', $$project{'BleedSize'} ) ) {
+		foreach my $bleed_size ( $$project{'BleedSize'} ? split(',', $$project{'BleedSize'} ) : 0 ) {
 			foreach my $i ( calc_setup_object( $project, @$project{'image_width','image_height'}, $Paper, $run_style, $override_grain_direction, $Press, $bleed_size ) ) {
 				if ( sets::isin( $run_style, ['Work & Turn','Work & Tumble']) ) {
 					if ( ($versions * 2) > $i->imposition() ) {
