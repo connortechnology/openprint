@@ -73,6 +73,9 @@ if ( ! exists $$data{'account_id'} ) {
 	$dbh->do('ALTER TABLE expenses add account_id INTEGER');
 	$dbh->do('ALTER TABLE expenses add FOREIGN KEY (account_id) REFERENCES Expense_Accounts (id)');
 }
+if ( ! exists $$data{deleted} ) {
+	$dbh->do('ALTER TABLE expenses ADD deleted BOOLEAN NOT NULL default false');
+}
 }
 
 if ( ! sets::isin( 'host_types', \@tables ) ) {
