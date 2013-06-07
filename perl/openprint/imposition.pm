@@ -577,7 +577,6 @@ sub calc_setup_object {
 		$adjusted_paper_height -= $$specs{'colour_bar_size'};
 	} # end if
 
-<<<<<<< HEAD
 	$cropmarkspace = $$specs{'CropMarkSpace'};
 	$cropmarkspace -= $bleed_size if sets::isin( 'Left', \@bleed_locations );
 	$cropmarkspace = 0 if $cropmarkspace < 0;
