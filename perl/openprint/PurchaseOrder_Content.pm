@@ -138,7 +138,7 @@ sub Order {
 
 sub Orders {
 	my @dockets = split( /\D/, $_[0]{docket} );
-	return openprint::Order->find(docket=>\@dockets) if @dockets
+	return openprint::Order->find(docket=>\@dockets) if @dockets;
 	return ();
 } # end sub Orders
 
