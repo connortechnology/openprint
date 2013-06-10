@@ -16,15 +16,15 @@ $debug = 1;
 $table = 'rfidtags';
 $serial = 'rfidtags_id_seq';
 %fields = (
-	'id'			=>	'id',
-	'location_id'	=>	'location_id',
-	'type_id'		=>	'type_id',
-	'created_on'	=>	'created_on',
-	'updated_on'	=>	'updated_on',
-	'valid'			=>	'valid',
+	id			=>	'id',
+	location_id	=>	'location_id',
+	type_id		=>	'type_id',
+	created_on	=>	'created_on',
+	updated_on	=>	'updated_on',
+	valid		=>	'valid',
 );
 %find_fields = (
-	'skid_id'	=>	'(SELECT skid_id FROM skids WHERE skids.rfidtag_id=rfidtags.id)',
+	skid_id	=>	'(SELECT skid_id FROM skids WHERE skids.rfidtag_id=rfidtags.id)',
 );
 
 %transforms = (
@@ -32,11 +32,11 @@ $serial = 'rfidtags_id_seq';
 );
 
 %defaults = (
-	'created_on'	=>	'NOW()',
-	'updated_on'	=>	'NOW()',
-	'location_id'	=>	undef,
-	'type_id'		=>	undef,
-	'valid'			=>	0,
+	created_on	=>	'NOW()',
+	updated_on	=>	'NOW()',
+	location_id	=>	undef,
+	type_id		=>	undef,
+	valid		=>	0,
 );
 
 # Returns a paper object specified by the parameters
@@ -166,6 +166,7 @@ sub save {
 	} # end if
 
 	$$self{'updated_on'} = 'NOW()';
+	$self->valid( ! $self->is_invalid_id() );
 	
 	my $ac = sql::start_transaction( $dbh );
 
