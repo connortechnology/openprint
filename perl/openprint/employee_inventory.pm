@@ -159,12 +159,6 @@ sub skids {
 		} # end if
 	} # end if
 
-	if ( ! exists $session{'/employee/inventory/skids.html?withrfid'} ) {
-		$param{'withrfid'} = $session{'/employee/inventory/skids.html?withrfid'} = 1;
-	} # end if
-	if ( ! exists $session{'/employee/inventory/skids.html?withoutrfid'} ) {
-		$param{'withoutrfid'} = $session{'/employee/inventory/skids.html?withoutrfid'} = 0;
-	} # end if
 	$session{'/employee/inventory/skids.html?empty'} = 'N' if ! exists $session{'/employee/inventory/skids.html?empty'};
 	$session{'/employee/inventory/skids.html?contents'} = 'Y' if ! exists $session{'/employee/inventory/skids.html?contents'};
 	$session{'/employee/inventory/skids.html?hasmanifest'} = '' if ! exists $session{'/employee/inventory/skids.html?hasmanifest'};
@@ -180,6 +174,8 @@ sub skids {
 	ssi::setup_date_select( '/employee/inventory/skids.html', 'last_seen_end', '' );
 
 	_skids_results();
+	$session{'/employee/inventory/skids.html?rfid'} = '' if ! defined $session{'/employee/inventory/skids.html?rfid'};
+	$session{'/employee/inventory/skids.html?rfid_valid'} = '' if ! defined $session{'/employee/inventory/skids.html?rfid_valid'};
 	$session{'/employee/inventory/skids.html?hasmanifest'} = '' if ! defined $session{'/employee/inventory/skids.html?hasmanifest'};
 	$session{'/employee/inventory/skids.html?Type'} = '' if ! defined $session{'/employee/inventory/skids.html?Type'};
 	$session{'/employee/inventory/skids.html?deleted'} = '0' if ! exists $session{'/employee/inventory/skids.html?deleted'};
@@ -1483,6 +1479,7 @@ sub manifest {
 						$Tag = new openprint::RFIDTag( $param{"rfidtag_id-$$Type{id}-"} );
 						if ( $param{"rfidtag_id-$$Type{id}-"} and ! $Tag->id() ) {
 							$variable{error} .= $Tag->save({ id=>$param{"rfidtag_id-$$Type{id}-"}});
+							(new openprint::RFIDTagHistory())->save({ rfidtag_id=>$Tag->id(),comment=>"Tag entered from <a href=\"/employee/inventory/manifest.html?manifest_id=$$Manifest{id}\">manifest $$Manifest{name}</a>" });
 						} elsif ( $Tag->skid_id() ) {
 							$Skid = $Tag->Skid();
 						} # end if
@@ -2020,7 +2017,7 @@ sub _skids_results {
 				( map { 'updated_on_end_' . $_ } ( 'year','month','day' ) ),
 				( map { 'last_seen_start_' . $_ } ( 'year','month','day' ) ),
 				( map { 'last_seen_end_' . $_ } ( 'year','month','day' ) ),
-				'Docket','fsc_code','empty', 'withrfid','withoutrfid','location_id','verification_code', 'allocated','contents','hasmanifest',
+				'Docket','fsc_code','empty', 'rfid','rfid_valid','location_id','verification_code', 'allocated','contents','hasmanifest',
 				'condition_id', 'skid_id', 'rfid_id', 'manufacturers_id', 'hasmanufacturers','deleted',
 				) );
 }
