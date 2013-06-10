@@ -4807,40 +4807,17 @@ sub press_setup_cost {
 
 # This is only called for work and turn
 sub filter_colours {
-	my ( @colours ) = @_;
-	my %filtered_colours = ();
+	my ( $front, $back ) = @_;
+	my @filtered_colours = @{$front};
+	my %filtered_colours = map { $_{name} } @{$front};
 
-#$log->debug("*************** START OF FILTER COLOURS colours: @colours **************************");
-
-	foreach my $Colour ( @colours ) {
-		#if ( ! $filtered_colours{$$Colour{'name'}} ) {
-# We only need one black
-			#if ( $$Colour{'name'} eq 'Black' ) {
-				#if ( ! ( $filtered_colours{'Black Spot Colour'} and $filtered_colours{'Black'} ) ) {
-					#$filtered_colours{$$Colour{'name'}} = $Colour;
-				#} # end if
-			#} elsif ( $$colour eq 'Black Spot Colour' ) {
-				#if ( ! ( $filtered_colours{'Black'} and $filtered_colours{'Black Spot Colour'} ) ) {
-					#$filtered_colours{$$Colour{'name'}} = $Colour;
-				#} # end if
-			#} elsif ( $colour eq 'Overall Gloss Varnish' ) {
-## Overall Varnishes become Spots when Work & Turn and not Overall on Both Sides
-				##if ( ! sets::isin('Spot Gloss Varnish', \@colours ) ) {
-					#$filtered_colours{$$Colour{'name'}} = $Colour;
-				#} # end if
-			#} elsif ( $colour eq 'Overall Matte Varnish' ) {
-# Overall Varnishes become Spots when Work & Turn and not Overall on Both Sides
-				#if ( ! sets::isin('Spot Matte Varnish', \@colours ) ) {
-					#$filtered_colours{$$Colour{'name'}} = $Colour;
-				#} # end if
-			#} else {
-#$log->debug("****** ADDING COLOUR: $colour ***********");
-				$filtered_colours{$$Colour{'name'}} = $Colour;
-			#} # end if
-		#} # end if
+	foreach my $Colour ( @{$back} ) {
+		if ( ! $filtered_colours{$$Colour{'name'}} ) {
+			push @filtered_colours, $Colour;
+			$filtered_colours{$$Colour{'name'}} = $Colour;
+		} # end if
 	} # end foreach
-#$log->debug("*************** END OF FILTER COLOURS colours: @filtered_colours **************************");
-	return values %filtered_colours;
+	return values @filtered_colours;
 } # end sub
 
 sub compare_signatures_runstyle {
@@ -4933,7 +4910,7 @@ sub runtime {
 	my @side_two_colours = get_colours( $specs, 'SideTwo' );
 	my @colours;
 	if ( sets::isin( $$specs{'ddmRunStyle'.$qty_index}, ['Work & Turn', 'Work & Tumble'] ) ) {
-		@colours = filter_colours( @side_one_colours, @side_two_colours );
+		@colours = filter_colours( \@side_one_colours, \@side_two_colours );
 	} else {
 		@colours = ( @side_one_colours, @side_two_colours );
 	} # end if
