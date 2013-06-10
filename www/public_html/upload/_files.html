@@ -83,7 +83,7 @@ if ( 0 ) {
 				<th class="Filename">Filename</th>
 				<th class="size">Size</th>
 				<th class="mtime">When</th>
-				<th class="delete"><input type="checkbox" name="checkall" onclick="select_all($('f1'),'chkFiles',this.checked);" /></th>
+				<th class="checkbox"><input type="checkbox" name="checkall" onclick="select_all($('f1'),'chkFiles',this.checked);" /></th>
 			</tr>
 		</thead>
 		<? if ( @{$$variable{'PROJECT_FILES'}} == 0 ) ?>
@@ -106,7 +106,7 @@ if ( 0 ) {
 						<td><a href="/getfile.html?path=%1$s&amp;filename=%2$s" title="%3$s" target="SendFileFrame">%2$s</a><br/>%3$s</td>
 						<td class="size">%4$s</td>
 						<td class="mtime">%5$s</td>
-						<td class="delete"><input type="checkbox" id="chkFiles%3$s" name="chkFiles" value="%2$s"/></td>`,
+						<td class="checkbox"><input type="checkbox" id="chkFiles%3$s" name="chkFiles" value="%2$s"/></td>`,
 							@$variable{'path','filename','description'},
 							Number::Format::format_bytes( $$variable{'size'} ),
 							Date::Format::time2str( $config{'DateTimeFormat'}, $$variable{'mtime'} )

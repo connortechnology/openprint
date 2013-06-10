@@ -22,7 +22,7 @@ require openprint::Object_Asset;
 
 use vars qw( $debug $table $serial %fields %find_fields %defaults %transforms );
 
-$debug = 0;
+$debug = 1;
 
 $table = 'invoices';
 $serial = 'invoices_id_seq';

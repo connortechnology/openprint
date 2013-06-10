@@ -44,6 +44,9 @@ sub history {
 			$Invoice->add_to_log( 'Invoice posted.' );
 			$variable{'information'} .= 'Invoice posted.<br/>';
 			delete $param{'invoice_id'};
+			if ( $session{'/invoice/history.html?company_id'} and ( $session{'/invoice/history.html?company_id'} != $Invoice->invoicee_id() ) ) {
+				delete $session{'/invoice/history.html?company_id'};
+			} # end if
 		} # end if
 	} elsif ( $param{'btnFunction'} eq 'UnPost' ) {
 		my $Invoice = new openprint::Invoice( $param{'invoice_id'} );
@@ -182,10 +185,10 @@ sub history {
 
 sub _history {
 	ssi::save_params( '/invoice/history.html', ( 
-		( map { 'created_on_start_' } ( 'year','month','day' ) ),
-		( map { 'created_on_end_' } ( 'year','month','day' ) ),
-		( map { 'due_on_start_' } ( 'year','month','day' ) ),
-		( map { 'due_on_end_' } ( 'year','month','day' ) ),
+		( map { 'created_on_start_'.$_ } ( 'year','month','day' ) ),
+		( map { 'created_on_end_'.$_ } ( 'year','month','day' ) ),
+		( map { 'due_on_start_'.$_ } ( 'year','month','day' ) ),
+		( map { 'due_on_end_'.$_ } ( 'year','month','day' ) ),
 		'paid','company_id','bad_debt') );
 } # end sub _history
 

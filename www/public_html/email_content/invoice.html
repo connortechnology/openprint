@@ -58,7 +58,7 @@
 					$html .= sprintf('<td class="Rate">%s%s</td>', openprint::Currency::format( $$Price{Price} ), $$Price{units} );
 					$html .= sprintf('<td class="Price">%s</td>', openprint::Currency::format( $$Price{Total} ) );
 					$html .= sprintf('</tr><tr %2$s>', $Timetrack->id(), $rowclass );
-					$html .= '<td>&nbsp;</td><td colspan="3">'.$Timetrack->description().'</td><td>&nbsp;</td>';
+					$html .= '<td>&nbsp;</td><td colspan="4">'.$Timetrack->description().'</td><td>&nbsp;</td>';
 					$html .= '</tr>';
 					$$variable{'service_total'} += $$Price{'Total'};
 					$rowclass = $rowclass ? '' : 'class="colRow"';
@@ -86,7 +86,7 @@
 						$html .= sprintf('<td class="Rate">%s%s</td>', openprint::Currency::format( $$Price{'Price'} ), $$Price{'units'} );
 						$html .= sprintf('<td class="Price">%s</td>', openprint::Currency::format( $$Price{'Total'} ) );
 						$html .= sprintf(q`</tr><tr %2$s>`, $Timetrack->id(), $rowclass );
-						$html .= '<td>&nbsp;</td><td>'.$Timetrack->description().'</td><td colspan="3">&nbsp;</td>';
+						$html .= '<td>&nbsp;</td><td colspan="4">'.$Timetrack->description().'</td><td>&nbsp;</td>';
 						$html .= '</tr>';
 						$$variable{'service_total'} += $$Price{'Total'};
 						$rowclass = $rowclass ? '' : 'class="colRow"';
