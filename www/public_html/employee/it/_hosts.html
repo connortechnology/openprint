@@ -22,7 +22,6 @@
 			ssi::date_filter( '/employee/it/hosts.html?created_on_start', 'created_on >=' ),
 			ssi::date_filter( '/employee/it/hosts.html?updated_on_end', 'updated_on <=' ),
 			ssi::date_filter( '/employee/it/hosts.html?updated_on_start', 'updated_on >=' ),
-			limit	=>	1000,
 			);
 	} # end if
 
@@ -30,7 +29,8 @@
 	if ( $session{'/employee/it/hosts.html?mac'} and $session{'/employee/it/hosts.html?mac'} =~ /%/ ) {
 		$mac_search = lc $session{'/employee/it/hosts.html?mac'};
 		$mac_search =~ s/%/\.\*/g;
-#$log->debug("Enable mac search for $mac_search");
+		$mac_search =~ s/://g;
+$log->debug("Enable mac search for $mac_search");
 	} # end $mac_search
 
 	@{$$variable{'Hosts'}} = ();
@@ -137,5 +137,5 @@
 	</tbody>
 </table>
 <p class="buttons">
-<? echo ( ssi::button( 'delete', { 'onclick'=> "new Ajax.Updater( 'Results','/employee/it/_hosts.html?action=Delete', { parameters: { host_id: \$F('host_id') } } );", 'text'=>'Delete Checked' } ); ) ?>
+<? echo ( button( 'delete', { onclick=>"new Ajax.Updater( 'Results','/employee/it/_hosts.html?action=Delete', { parameters: { host_id: \$F('host_id') } } );", text=>'Delete Checked' } ); ) ?>
 </p>
