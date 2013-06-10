@@ -145,7 +145,14 @@ sub sized_url {
 				IPC::Run3::run3(qq`convert -adaptive-resize ${width}x "$src" "$dest"`, undef, $stdout, $stderr );
 				if ( $? ) {
 					$openprint::log->error("ERror creating sized image. Reason: ($?) stdout($stdout) stderr($stderr)");
+					return '/assets/'.$filename;
 				} # end if convert
+				if ( $extension =~ /jpe?g/i ) {
+					IPC::Run3::run3(qq`jpegtran -optimize -copy none -outfile "$dest" "$dest"`, undef, $stdout, $stderr );
+					if ( $? ) {
+						$openprint::log->error("ERror optimising sized image. Reason: ($?) stdout($stdout) stderr($stderr)");
+					} # end if convert
+				} # end if
 			} # end if
 		} # end if
 #$openprint::log->debug("Return /thumbnails/$filename");
@@ -206,6 +213,11 @@ sub sized_url {
 					} # end if
 					unlink "/tmp/$filename/00000001.jpg";
 					rmdir "/tmp/$filename";
+					my ( $stdout, $stderr );
+					IPC::Run3::run3(qq`jpegtran -optimize -copy none -outfile "$dest" "$dest"`, undef, $stdout, $stderr );
+					if ( $? ) {
+						$openprint::log->error("ERror optimising sized image. Reason: ($?) stdout($stdout) stderr($stderr)");
+					} # end if convert
 				} else {
 					$openprint::log->error("Unable to create medium thumbnail at /tmp/$filename/: Wasn't there! $!" );
 					$openprint::log->debug("command was mplayer -frames 1 -nosound -quiet -zoom -vf scale=$width:-3 -vo jpeg:outdir=/tmp -ss 60 $src : $_ ");
