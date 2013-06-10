@@ -13,20 +13,20 @@
 		'<link href="/css/alphacube.css" rel="stylesheet" type="text/css" media="screen"/>',
 	);
 
-	if ( $r->uri() =~ /\/main\/project/ ) {
+	if ( $$variable{uri} =~ /\/main\/project/ ) {
 		$html .= '<link href="'.hash_link('/css/project.css').'" rel="stylesheet" type="text/css"/>';
-	} elsif ( $r->uri() =~ /\/main\/order/ ) {
+	} elsif ( $$variable{uri} =~ /\/main\/order/ ) {
 		$html .= '<link href="'.hash_link('/css/order.css').'" rel="stylesheet" type="text/css"/>';
-	} elsif ( $r->uri() =~ /\/main\/quote/ ) {
+	} elsif ( $$variable{uri} =~ /\/main\/quote/ ) {
 		$html .= '<link href="'.hash_link('/css/quote.css').'" rel="stylesheet" type="text/css"/>';
-	} elsif ( $r->uri() =~ /\/pageflip\/view/ ) {
+	} elsif ( $$variable{uri} =~ /\/pageflip\/view/ ) {
 		$html .= join("\n",
 			'<script type="text/javascript" src="'.hash_link('/javascripts/pageflip/liquid.js').'"></script>',
 			'<script type="text/javascript" src="'.hash_link('/javascripts/pageflip/swfobject.js').'"></script>',
 			'<script type="text/javascript" src="'.hash_link('/javascripts/pageflip/flippingbook.js').'"></script>',
 			'<link href="'.hash_link('/css/pageflip.css').'" rel="stylesheet" type="text/css" />',
 		);
-	} elsif ( $r->uri() =~ /\/pageflip\/edit/ ) {
+	} elsif ( $$variable{uri} =~ /\/pageflip\/edit/ ) {
 		$html .= '<link href="'.hash_link('/css/pageflip.css').'" rel="stylesheet" type="text/css" />';
 	} # end if
 
@@ -81,7 +81,7 @@
 						<? if ( sets::isin( $session{'user_type'}, ['A','E'] ) ) ?>
 						<li id="MenuEmployee" class="off"><a href="/employee/index.html">EMPLOYEE SIDE</a></li>
 						<? endif ( sets::isin( $session{'user_type'}, ['A','E'] ) ) ?>
-						<li id="MenuAbout" class="<? echo ( ($r->uri() =~ /newsletters/ or $r->uri() =~ /main\/company/ or $r->uri() eq '/index.html' or $r->uri() eq '') ? 'on' : 'off' ) ?>"><a href="#" onclick="toggleMenu($('MenuAbout'), 'off', 'on');return false;">ABOUT POINTONE</a>
+						<li id="MenuAbout" class="<? echo ( ($$variable{uri} =~ /newsletters/ or $$variable{uri} =~ /main\/company/ or $$variable{uri} eq '/index.html' or $$variable{uri} eq '') ? 'on' : 'off' ) ?>"><a href="#" onclick="toggleMenu($('MenuAbout'), 'off', 'on');return false;">ABOUT POINTONE</a>
 							<ul>
 								<li><a href="/main/company/about.html">&raquo; Corporate Video</a></li>
 								<li><a href="/main/company/the_pointone_difference.html">&raquo; PointOne Difference</a></li>
@@ -92,7 +92,7 @@
 								<li><a href="/newsletters/1/index.html">&raquo; Newsletter</a></li>
 							</ul>
 						</li>
-						<li id="MenuServices" class="<? echo ( $r->uri() =~ /main\/services/ ? 'on' : 'off' ) ?>" ><a href="#" onclick="toggleMenu($('MenuServices'), 'off', 'on');return false;">SERVICES</a>
+						<li id="MenuServices" class="<? echo ( $$variable{uri} =~ /main\/services/ ? 'on' : 'off' ) ?>" ><a href="#" onclick="toggleMenu($('MenuServices'), 'off', 'on');return false;">SERVICES</a>
 							<ul>
 								<li><a href="/main/services/prepress.html;NOSSL">&raquo; Prepress</a></li>
 								<li><a href="/main/services/production.html;NOSSL">&raquo; Production</a></li>
@@ -101,7 +101,7 @@
 							</ul>
 						</li>
 <? if ( $dbh ) ?>
-						<li id="MenuAccount" class="<? echo ( $r->uri() =~ /main\/account/ ? 'on' : 'off' ) ?>" ><a href="#" onclick="toggleMenu($('MenuAccount'), 'off', 'on');return false;">ACCOUNT</a>
+						<li id="MenuAccount" class="<? echo ( $$variable{uri} =~ /main\/account/ ? 'on' : 'off' ) ?>" ><a href="#" onclick="toggleMenu($('MenuAccount'), 'off', 'on');return false;">ACCOUNT</a>
 							<ul>
 	<? if ( $session{'user_id'} ) ?>
 								<li><a href="/main/account/company_profile.html">&raquo; Company Profile</a></li>
@@ -119,27 +119,27 @@
 								<li><a href="/main/account/reseller_application.html">&raquo; Reseller Application</a></li>
 							</ul>
 						</li>
-						<li id="MenuProjects" class="<? echo ( $r->uri() =~ /main\/project/ ? 'on' : 'off' ) ?>"><a href="#" onclick="toggleMenu($('MenuProjects'), 'off', 'on');return false;">PROJECTS</a>
+						<li id="MenuProjects" class="<? echo ( $$variable{uri} =~ /main\/project/ ? 'on' : 'off' ) ?>"><a href="#" onclick="toggleMenu($('MenuProjects'), 'off', 'on');return false;">PROJECTS</a>
 							<ul>
 								<li><a href="/main/project/create_edit.html;NOSSL">&raquo; Create Project</a></li>
 								<li><a href="/main/project/view.html;NOSSL">&raquo; Current Project</a></li>
 								<li><a href="/main/project/history.html;NOSSL">&raquo; History</a></li>
 							</ul>
 						</li>
-						<li id="MenuQuotes" class="<? echo ( $r->uri() =~ /main\/quote/ ? 'on' : 'off' ) ?>"><a href="#" onclick="toggleMenu($('MenuQuotes'), 'off', 'on');return false;">QUOTES</a>
+						<li id="MenuQuotes" class="<? echo ( $$variable{uri} =~ /main\/quote/ ? 'on' : 'off' ) ?>"><a href="#" onclick="toggleMenu($('MenuQuotes'), 'off', 'on');return false;">QUOTES</a>
 							<ul>
 								<li><a href="/main/quote/details.html;NOSSL">&raquo; Current Quote</a></li>
 								<li><a href="/main/quote/history.html;NOSSL">&raquo; History</a></li>
 							</ul>
 						</li>
-						<li id="MenuOrders" class="<? echo ( $r->uri() =~ /main\/order/ ? 'on' : 'off' ) ?>"><a href="#"  onclick="toggleMenu($('MenuOrders'), 'off', 'on');return false;">ORDERS</a>
+						<li id="MenuOrders" class="<? echo ( $$variable{uri} =~ /main\/order/ ? 'on' : 'off' ) ?>"><a href="#"  onclick="toggleMenu($('MenuOrders'), 'off', 'on');return false;">ORDERS</a>
 							<ul>
 								<li><a href="/main/order/information.html;NOSSL">&raquo; Current Order</a></li>
 								<li><a href="/main/order/history.html;NOSSL">&raquo; History</a></li>
 							</ul>
 						</li>
 <? endif ( $dbh ) ?>
-						<li id="MenuSupport" class="<? echo ( ( $r->uri() =~ /site_map/  or  $r->uri() =~ /support/ ) ? 'on' : 'off' ) ?>"><a href="#" onclick="toggleMenu($('MenuSupport'), 'off', 'on');return false;">SUPPORT</a>
+						<li id="MenuSupport" class="<? echo ( ( $$variable{uri} =~ /site_map/  or  $$variable{uri} =~ /support/ ) ? 'on' : 'off' ) ?>"><a href="#" onclick="toggleMenu($('MenuSupport'), 'off', 'on');return false;">SUPPORT</a>
 							<ul>
 								<li><a href="/support/colour_profiles.html;NOSSL">&raquo; Colour Profiles</a></li>
 								<li><a href="/site_map.html;NOSSL">&raquo; Site Map</a></li>
@@ -179,7 +179,7 @@
 	<? endif ( ! $session{'user_id'} ) ?>
 				<div id="CurrencySelection">
 					Currently selected currency:
-					<form name="SelectCurrency" action="<? echo ( misc::get_url( $r->uri(), \%openprint::param, { 'exclude'=>'select_currency_id'} ); ) ?>" method="post">
+					<form name="SelectCurrency" action="<? echo ( misc::get_url( $$variable{uri}, \%openprint::param, { 'exclude'=>'select_currency_id'} ); ) ?>" method="post">
 						<select name="select_currency_id" onchange="this.form.submit();">
 							<? echo (
 								ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Currency::find( 'order'=>'lower(name)' ) ], $session{'Currency_id'} );
