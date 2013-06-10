@@ -141,13 +141,22 @@
 					} # end if	
 				} # end if
 
-				next if $Skid->rfidtag_id() and ! $session{'/employee/inventory/skids.html?withrfid'};
-				next if ( ! $Skid->rfidtag_id() ) and ! $session{'/employee/inventory/skids.html?withoutrfid'};
+				next if $Skid->rfidtag_id() and $session{'/employee/inventory/skids.html?rfid'} eq 'N';
+				next if ( ! $Skid->rfidtag_id() ) and $session{'/employee/inventory/skids.html?rfid'} eq 'Y';
+				my $RFIDTag = $Skid->RFIDTag();
+				if ( $RFIDTag->id() ) {
+					if ( ! $RFIDTag->is_invalid_id() ) {
+						next if ! $session{'/employee/inventory/skids.html?rfid_valid'} eq 'N';
+					} else {
+						next if ! $session{'/employee/inventory/skids.html?rfid_valid'} eq 'Y';
+					} # end if
+				} # end if
+				
 
 				$html .= sprintf('<tr%1$s>
 					<td class="checkbox unprintable"><input type="checkbox" name="skids" value="%2$d"/></td>
 				<td class="Skid"><a href="/employee/inventory/skid_details.html?skid_id=%2$d">%2$d</a></td>
-				<td class="RFID"><a href="/employee/inventory/skid_details.html?skid_id=%2$d">%7$s</a></td>
+				<td class="RFID"><a href="/employee/inventory/skid_details.html?skid_id=%2$d" title="%10$s">%7$s</a></td>
 				<td class="ManufacturersID"><a href="/employee/inventory/skid_details.html?skid_id=%2$d">%9$s</a></td>
 				<td class="Date"><a href="/employee/inventory/skid_details.html?skid_id=%2$d">%3$s</a></td>
 				<td class="DateTime"><a href="/employee/inventory/skid_details.html?skid_id=%2$d">%5$s</a></td>
@@ -162,6 +171,7 @@ $Skid->rfidtag_id()? format_datetime( $Skid->RFIDTag()->updated_on() ) : 'no rfi
 $Skid->RFIDTag()->id_short(),
 $Skid->Location()->name(),
 $Skid->manufacturers_id(),
+$Skid->RFIDTag()->id(),
  );
 
 				$html .= '<td rowspan="2">';

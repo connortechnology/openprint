@@ -78,6 +78,10 @@ sub find {
 		$sql .= ' AND id LIKE ?';
 		push @values, $params{id_like};
 	} # end if
+	if ( $params{'id_ilike'} ) {
+		$sql .= ' AND id ILIKE ?';
+		push @values, $params{id_ilike};
+	} # end if
 	if ( $params{'id like'} ) {
 		$sql .= ' AND id LIKE ?';
 		push @values, $params{'id like'};
