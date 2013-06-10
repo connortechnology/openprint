@@ -705,10 +705,10 @@ sub save_params {
 		next if ! exists $param{$_};
 		if ( ref $param{$_} eq 'ARRAY' ) {
 			$session{"$url?$_"} = join(',', @{$param{$_}} );
-#$openprint::log->debug("Storing ($_) (".$session{"$url?$_"}.")");
-		} else {
 #$openprint::log->debug("Storing ARRAY ($_) (".$session{"$url?$_"}.")");
+		} else {
 			$session{"$url?$_"} = $param{$_};
+#$openprint::log->debug("Storing ($_) (".$session{"$url?$_"}.")");
 		} # end if
 		$session{$url.'?lastupdated'} = time;
 	} # end foreach

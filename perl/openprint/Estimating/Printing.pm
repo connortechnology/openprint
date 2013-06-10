@@ -18,7 +18,7 @@ use strict;
 package openprint::Estimating::Printing;
 my $threading = 0;
 #use threads;
-use constant DEBUG => 0;
+use constant DEBUG => 1;
 my $master_time;
 my %special_colours;
 
@@ -1055,7 +1055,7 @@ $log->debug("Considering: " . $P->to_string() );
 	foreach my $P ( @Papers ) {
 		#$P->Prices();
 		$openprint::log->debug("Base Paper: " . $P->to_string() . ' Minimum: ' . $P->minimum_order() ) if DEBUG;
-		$Papers{$P->id_string()} = $P->clone();
+		$Papers{$P->id_string()} = $P->clone() if $P->width();
 	} # end foreach
 
 	return map { $_->clone() } @Papers;
@@ -1157,11 +1157,11 @@ $openprint::log->debug("Non-process colours in get_impositions: @non_process_col
 			$$project{'Grip'} = $Press->specification('Grip');
 			$$project{'Gutter'} = $Press->specification('Gutter');
 			if ( $$specs{'chkOverrideBleedSize'.$qty_index} eq 'Y' ) {
-				$$project{'BleedSize'} = 1*$$specs{'ddmBleedSize'.$qty_index};
+				$$project{'BleedSize'} = $$specs{'ddmBleedSize'.$qty_index};
 				$variables{'ddmBleedSize'.$qty_index} = [ sets::exclude( ['output'], $variables{'ddmBleedSize'.$qty_index} ) ];
 			} else {
-				$$project{'BleedSize'} = 1*$Press->specification('Default Bleed Size'.$ProjectTypeName );
-				$$project{'BleedSize'} = 1*$Press->specification('Default Bleed Size' ) if ! $$project{'BleedSize'};
+				$$project{'BleedSize'} = $Press->specification('Default Bleed Size'.$ProjectTypeName );
+				$$project{'BleedSize'} = $Press->specification('Default Bleed Size' ) if ! $$project{'BleedSize'};
 				$variables{'ddmBleedSize'.$qty_index} = [ sets::union( 'output', @{$variables{'ddmBleedSize'.$qty_index}} ) ];
 			} # end if
 
@@ -1366,9 +1366,8 @@ $openprint::log->debug("Non-process colours in get_impositions: @non_process_col
 					my @i = openprint::imposition::get_imposition( $project, $do_work_turn, $do_perfecting, $$specs{'Versions'}, $P, $Press );
 					last if ! @i;
 					push @impositions, @i;
-					last if ! $use_cut_stocks;
-
 					$Papers{$P->id_string()} = $P if ! $Papers{$P->id_string()};
+					last if ! $use_cut_stocks;
 					last if ( ! $P->cuttable() );
 					$P = $P->clone();
 					$P->cut();
@@ -1429,7 +1428,7 @@ $imp->display("Foudn non-dutch");
 					my $dutch_imp = $dutches{$$imp{'imposition'}}[$dutch_index];
 					if ( $dutch_imp->Paper()->area() >= $A->area() ) {
 						#$dutch_imp->display('kicking out dutch');
-						my $str = sprintf('%dx%d+%dx%d-%s-%s', @$dutch_imp{'columns','rows','dutch_columns','dutch_rows','runstyle','image_orientation'} );
+						my $str = sprintf('%dx%d+%dx%d-%s-%s-%s', @$dutch_imp{'columns','rows','dutch_columns','dutch_rows','runstyle','image_orientation','bleed_size'} );
 						if ( $imps{$str} ) {
 							for ( my $index = 0; $index < @{$imps{$str}}; $index += 1 ) {
 								splice @{$imps{$str}}, $index, 1;
@@ -1443,7 +1442,7 @@ $imp->display("Foudn non-dutch");
 			} # end if
 			next if ! $add;
 			
-			my $str = sprintf('%dx%d+%dx%d-%s-%s-%s', @$imp{'columns','rows','dutch_columns','dutch_rows','runstyle','image_orientation'}, $$A{digital} );
+			my $str = sprintf('%dx%d+%dx%d-%s-%s-%s-%s', @$imp{'columns','rows','dutch_columns','dutch_rows','runstyle','image_orientation','bleed_size'}, $$A{digital} );
 
 			if ( ($$specs{'chkOverrideSheetSize'.$qty_index} eq 'Y') and ( $$A{width} == $$specs{"OverrideStockWidth$qty_index"} ) 
 					and ( ( $$A{type} eq 'Roll' ) or  ( $$A{height} == $$specs{"OverrideStockHeight$qty_index"} ) ) 
@@ -2651,7 +2650,7 @@ $imp->dispay('Ma imposition!') if DEBUG;
 			} # end if
 
 			if ( $SpreadLayout > 0 ) {
-				my $str = sprintf('%d=%dx%d %dx%d-%s-%s', @$imp{'pages','spread_columns','spread_rows','columns','rows','runstyle','image_orientation'} );
+				my $str = sprintf('%d=%dx%d %dx%d-%s-%s-%s', @$imp{'pages','spread_columns','spread_rows','columns','rows','runstyle','image_orientation','bleed_size'} );
 				if ( $imps{$str} ) {
 					for ( my $j = 0; $j < @{$imps{$str}}; $j += 1 ) {
 						my $I = $imps{$str}[$j];
@@ -2722,7 +2721,7 @@ $imp->display("Comparing mino:" . $Paper->minimum_order_weight() . 'Price: ' . $
 				} # end if $imps{$str}
 				push @{$imps{$str}}, $imp if $add;
 			} else { # No SpreadLayout
-				my $str = sprintf('%d=%dx%d %s %s', @$imp{'imposition','columns','rows','runstyle','image_orientation'} );
+				my $str = sprintf('%d=%dx%d %s %s %s', @$imp{'imposition','columns','rows','runstyle','image_orientation','bleed_size'} );
 				if ( $imps{$str} ) {
 					for ( my $j = 0; $j < @{$imps{$str}}; $j += 1 ) {
 						my $I = $imps{$str}[$j];
@@ -3173,12 +3172,19 @@ $openprint::log->debug($Paper->id_string());
 				$$paper_price{'Total'} = Math::Round::nearest( 0.01, $$paper_price{'100lb Price'} * $weight / 100 );
 				$$price{'Comparison Cost'} += $$paper_price{'Total'};
 				$$price{'Stock Total'} += $$paper_price{'Total'};
+$openprint::log->error('No factor') if ! $Paper->factor();
+$openprint::log->error('No width' . $Paper->to_string() ) if ! $Paper->width();
+
+				if ( $Paper->wpsi() ) {
 				$$price{'Paper Breakdown'} .= sprintf('Stock: %s %s %s %s, %slbs * %.2f/100lbs = $%.2f<br/>', 
 						( $$Paper{'type'} eq 'Sheet' ? ceil($PaperCounts{$paper_string}/$Paper->factor()) .'sheets' : ( $PaperCounts{$paper_string}.'lbs '. Math::Round::nearest(0.01, ($PaperCounts{$paper_string} / $Paper->wpsi() ) / $Paper->width() ) . ' linear feet' ) ), 
 						$Paper->to_string(),
 						( $Paper->sheets_per_package() ? 'SPP:'.$Paper->sheets_per_package() : '' ),
 						( $Paper->minimum_order() ? 'minimum:'.$Paper->minimum_order() : '' ),
 						$weight, @$paper_price{'100lb Price','Total'} );
+				} else {
+					$$price{'Paper Breakdown'} .= 'No wpsi for stock ' . $Paper->to_string() . '</br>';
+				} # end if
 			} # end foreach Paper in PaperCounts
 #$openprint::log->debug($$price{'Paper Breakdown'}) if DEBUG;
 #$openprint::log->debug("Comparison: $$price{'Comparison Cost'}");
@@ -3343,7 +3349,7 @@ $openprint::log->debug("Calculating Additional Signatures for other group");
 							$$price{'Comparison Cost'} += 1000000;
 						} # end if
 					} else {
-						$openprint::log->error("Unable to find stocks for group ");
+						$openprint::log->error("Unable to find stocks for group 2 alert( $$specs{alert} )");
 						foreach my $k ( keys %$specs ) {
 							$openprint::log->error("$k => $$specs{$k}");
 						} # end if

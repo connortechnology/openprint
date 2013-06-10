@@ -73,6 +73,9 @@ if ( ! exists $$data{'account_id'} ) {
 	$dbh->do('ALTER TABLE expenses add account_id INTEGER');
 	$dbh->do('ALTER TABLE expenses add FOREIGN KEY (account_id) REFERENCES Expense_Accounts (id)');
 }
+if ( ! exists $$data{deleted} ) {
+	$dbh->do('ALTER TABLE expenses ADD deleted BOOLEAN NOT NULL default false');
+}
 }
 
 if ( ! sets::isin( 'host_types', \@tables ) ) {
@@ -784,7 +787,7 @@ if ( ! sets::isin( 'inventoryconditions', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/InventoryConditions.sql}) );
 	die if $dbh->errstr();
 	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='skid_contents'", 'column_name');
-	$dbh->do('insert into inventoryconditions select * from stockqualities');
+	$dbh->do('insert into inventoryconditions select id, name from stockqualities');
 	$dbh->do('alter table skid_contents ADD condition_id INTEGER');
 	if ( exists $$data{'quality_id'} ) {
 		$dbh->do('UPDATE skid_contents set condition_id=quality_id');

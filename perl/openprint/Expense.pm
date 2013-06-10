@@ -66,6 +66,7 @@ $serial = 'expenses_id_seq';
 	'business_use'		=>	'business_use',
 	'business_use_amount'		=>	'business_use_amount',
 	'attention'			=>	'attention',
+	deleted				=>	'deleted',
 );
 
 %transforms = (
@@ -91,6 +92,7 @@ $serial = 'expenses_id_seq';
 	'account_id'	=>	undef,
 	'category_id'	=>	undef,
 	'attention'		=>	0,
+	deleted			=>	0,
 );
 
 

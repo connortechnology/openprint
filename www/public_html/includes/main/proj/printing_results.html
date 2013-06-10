@@ -30,7 +30,7 @@
 <? echo (
 	my @options = misc::trim( split(',', $config{$$variable{Project}->Type()->name().'StockOptions'} ));
     @options = misc::trim( split(',', $config{'StockOptions'} )) if ! @options;
-    @options = ( 'Name','Finish','Colour','Weight' ) if ! @options;
+    @options = ( 'Brand','Finish','Colour','Weight' ) if ! @options;
 
     my %find = (
         'width is null'			=>	0,
@@ -206,8 +206,7 @@
 		my $html;
 		my @options = map { $_->strid(), $_->name() } openprint::Equipment->find('category any'=>'Printing',useinestimating=>1, order=>'lower(strname)');
 		foreach my $qty_index ( $$variable{Project}->quantity_indexes() ) {
-			$html .= sprintf( q`
-	<span class="%sColumns"><select name="ddmPress%d" size="1" onchange="calc(this.form.name);"><option value="">Press Options</option>%s</select>%s</span>`,
+			$html .= sprintf( q`<span class="%sColumns"><select name="ddmPress%d" size="1" onchange="calc(this.form.name);"><option value="">Press Options</option>%s</select>%s</span>`,
 				$$variable{'Columns'}, $qty_index, ssi::make_drop_down( \@options, $$variable{"ddmPress$qty_index"} ),
 				ssi::write_override( 'chkOverridePress'.$qty_index, $$variable{'chkOverridePress'.$qty_index},'',"calc('f1');" ),
 			);
@@ -220,7 +219,7 @@
 	<label>Printing type</label>
 	<? echo (
 		my %printingtypes;
-		foreach my $Press ( openprint::Equipment->find( 'category any'=>'Printing', 'useinestimating'=>1 ) ) {
+		foreach my $Press ( openprint::Equipment->find( 'category any'=>'Printing', useinestimating=>1 ) ) {
 			my $printing_type = $Press->specification('Printing Type');
 			next if ! $printing_type;
 			my $printing_type_name = $Press->specification('Printing Type Name');

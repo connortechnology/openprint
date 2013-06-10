@@ -11,7 +11,7 @@ package openprint::Event;
 our @ISA = qw( openprint::Object );
 
 use vars qw( $debug $table $serial %fields %find_fields %transforms %defaults );
-$debug = 0;
+$debug = 1;
 $table = 'events';
 $serial = 'events_id_seq';
 
@@ -163,13 +163,13 @@ sub can_view {
 		$User = new openprint::User($openprint::session{user_id});
 	} # end if
 	return 1 if $$User{type} eq 'A';
-$openprint::log->debug("Event::can_view not an admin");
+#$openprint::log->debug("Event::can_view not an admin");
 	return 1 if $_[0]{created_by} == $$User{id};
-$openprint::log->debug("Event::can_view not creator");
+#$openprint::log->debug("Event::can_view not creator");
 	return 0 if $_[0]{deleted};
-$openprint::log->debug("Event::can_view not deleated");
+#$openprint::log->debug("Event::can_view not deleated");
 	return 0 if openprint::Blocklist::is_blocked( $openprint::session{user_id},$_[0]{created_by});
-$openprint::log->debug("Event::can_view not blocked");
+#$openprint::log->debug("Event::can_view not blocked");
 	my $Privacy = $_[0]->Privacy();
 	return 1 if ! $$Privacy{id};
 	return $Privacy->can_view($$User{id});

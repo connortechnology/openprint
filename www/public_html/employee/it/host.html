@@ -67,7 +67,7 @@
 							$html .= button( 'Delete', { onclick=>"if(confirm('Are you sure?')){f1.elements['action'].value='Delete';f1.submit();}" } ) if $$variable{'Host'}->id();
 						} # end if
 						$html .= button( 'Resolve', { onclick=>"f1.elements['action'].value='Resolve';f1.action='/employee/it/host.html';f1.submit();" } );
-						$html .= button( 'Ping', { onclick=>"f1.elements['action'].value='Resolve';f1.action='/employee/it/host.html';f1.submit();" } );
+						$html .= button( 'Ping', { onclick=>"f1.elements['action'].value='ping';f1.action='/employee/it/host.html';f1.submit();" } );
 						$html .= button( 'Wake', { onclick=>"f1.elements['action'].value='Wake';f1.action='/employee/it/host.html';f1.submit();" } );
 						#$html .= ssi::writeButton( $log, $dbh, 'clear', 'clear.gif', 'clearForm(f1);', '', 'Clear' );
 						return $html;
