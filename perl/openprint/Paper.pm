@@ -993,22 +993,24 @@ sub minimum_order {
 #$openprint::log->debug("SPP: $$self{'start_width'} / $$self{'width'} ) * int( $$self{'start_height'} / $$self{'height'} * spp $$self{'sheets_per_package'} * $factor;");
 	return $$self{'minimum_order'} * $self->factor();
 } # end minimum_order 
-sub factor {
-	my $factor = int($_[0]{'start_width'} / $_[0]{'width'} ) * int( $_[0]{'start_height'} / $_[0]{'height'} ) if $_[0]{'width'} and $_[0]{'height'};
-	return 1 if ! $factor;
-	return $factor;
-} # end sub factor
+
 sub minimum_order_weight {
 	my $self = $_[0];
 	if ( ! exists $$self{'minimum_order_weight'} ) {
 		if ( $$self{'type'} eq 'Sheet' ) {
-			$$self{'minimum_order_weight'} = $self->minimum_order() * $self->sheet_weight();
+			$$self{'minimum_order_weight'} = Math::Round::nearest( 0.1, $self->minimum_order() * $self->sheet_weight() );
 		} else {
 			$$self{'minimum_order_weight'} = $self->minimum_order();
 		} # end if
 	} # end if
 	return $$self{'minimum_order_weight'};
 } # end sub minimum_order_weight
+
+sub factor {
+	my $factor = int($_[0]{'start_width'} / $_[0]{'width'} ) * int( $_[0]{'start_height'} / $_[0]{'height'} ) if $_[0]{'width'} and $_[0]{'height'};
+	return 1 if ! $factor;
+	return $factor;
+} # end sub factor
 
 sub sheets_per_package {
 	my $self = shift;
