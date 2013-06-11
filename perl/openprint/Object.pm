@@ -1005,10 +1005,11 @@ $openprint::log->debug("# of Assets: " . scalar @Assets );
 
 sub View {
 	return if ! $session{user_id};
-	my $View = openprint::Object_View->find_one('object_id'=>$_[0]{'id'}, 'object_type'=>ref $_[0], 'user_id'=>$session{'user_id'} );
+	return if ! $_[0]{id};
+	my $View = openprint::Object_View->find_one( object_id=>$_[0]{id}, object_type=>ref $_[0], user_id=>$session{user_id} );
 	if ( ! $View ) {
 		$View = new openprint::Object_View();
-		$View->save({'object_id'=>$_[0]{'id'}, 'object_type'=>ref $_[0], 'user_id'=>$session{'user_id'}});
+		$View->save({object_id=>$_[0]{id}, object_type=>ref $_[0], 'user_id'=>$session{user_id}});
 	} # end if
 	return $View;
 } # end sub View

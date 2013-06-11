@@ -13,7 +13,7 @@ require openprint::Skid;
 require openprint::RFIDTag;
 require openprint::SkidContent;
 
-$debug = 1;
+$debug = 0;
 
 $table = 'manifestcontents';
 $serial = 'manifestcontents_id_seq';
@@ -30,7 +30,7 @@ $serial = 'manifestcontents_id_seq';
 	manufacturers_id	=>	'manufacturers_id',
 );
 %find_fields = (
-	'paper_id'	=>	'(SELECT paper_id FROM Manifest_Content_Types WHERE manifest_content_types.manifest_id = manifestcontents.manifest_id)',
+	paper_id	=>	'(SELECT paper_id FROM Manifest_Content_Types WHERE manifest_content_types.manifest_id = manifestcontents.manifest_id)',
 );
 
 %transforms = (
@@ -50,6 +50,7 @@ sub Skid {
 	if ( @_ > 1 ) {
 		$_[0]{Skid} = $_[1];
 		$_[0]{skid_id} = ref $_[0]{Skid} eq 'openprint::Skid' ? $_[0]{Skid}{id} : undef;
+		$_[0]{skid_id} = undef if ! $_[0]{skid_id};
 	} # end if
 	if ( ! $_[0]{Skid} ) {
 		$_[0]{Skid} = new openprint::Skid( $_[0]{skid_id} );

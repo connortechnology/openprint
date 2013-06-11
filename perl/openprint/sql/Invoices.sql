@@ -20,15 +20,13 @@ CREATE TABLE Invoices (
     deleted boolean DEFAULT false,
     paid double precision,
     interest double precision,
-    bad_debt boolean DEFAULT false
+    bad_debt boolean DEFAULT false,
 	late_payment_units	TEXT,
 	early_payment_discount	float,
 	early_paymenet_units	TEXT,
 	early_payment_date		DATE,
+	PRIMARY KEY (id)
 );
-
-ALTER TABLE ONLY invoices
-    ADD CONSTRAINT invoices_pkey PRIMARY KEY (id);
 
 ALTER TABLE ONLY invoices
     ADD CONSTRAINT "$1" FOREIGN KEY (invoicer_id) REFERENCES companies(id);

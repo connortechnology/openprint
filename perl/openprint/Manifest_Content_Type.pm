@@ -18,6 +18,7 @@ $serial = 'manifest_content_types_id_seq';
 %fields = (
 	'id'			=>	'id',
 	'cost'			=>	'cost',
+	'cost_units'	=>	'cost_units',
 	'docket'		=>	'docket',
 	'po_id'			=>	'po_id',
 	'po_content_id'	=>	'po_content_id',
