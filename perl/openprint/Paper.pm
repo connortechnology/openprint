@@ -2,7 +2,6 @@ use strict;
 package openprint::Paper;
 our @ISA = qw(openprint::Object);
 require openprint::Object;
-require MIME::QuotedPrint;
 use Carp qw( cluck );
 require Math::Round;
 
@@ -34,7 +33,7 @@ use Time::HiRes qw{ time gettimeofday tv_interval };
 
 use vars qw( $debug $table $serial %fields %find_fields %defaults %transforms );
 
-$debug = 0;
+$debug = 1;
 $table = 'papers';
 $serial	= 'paper_id_seq';
 %fields = (

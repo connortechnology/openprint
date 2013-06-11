@@ -6,7 +6,7 @@
 			order		=>	'id',
 			) ];
 	} elsif ( $session{'/employee/inventory/skids.html?skid_id'} ) {
-		$$variable{Skids} = [ openprint::Skid::find( 
+		$$variable{Skids} = [ openprint::Skid->find( 
 			( $session{'/employee/inventory/skids.html?skid_id'} =~ /%/ ? 
 			( 'id ilike'	=>	$session{'/employee/inventory/skids.html?skid_id'} ) :
 			( id	=>	$session{'/employee/inventory/skids.html?skid_id'} ) ),
@@ -111,6 +111,8 @@
 			my $total_sheets;
 			my $total_value;
 			my %Allocations;
+			
+			# I think this is ok, because there are never that many allocations at any given time
 			foreach my $Allocation ( openprint::PaperAllocation->find() ) {
 				foreach my $Skid ( $Allocation->Skids() ) {
 					push @{$Allocations{$$Skid{id}}}, $Allocation;
