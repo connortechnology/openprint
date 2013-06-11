@@ -2349,13 +2349,13 @@ $imp->display("Grain override next");
 		foreach my $imp ( @results ) {
 			my $add = 1;
 			my $Paper = $imp->Paper();
-$imp->display('Filtering:');
+#$imp->display('Filtering:');
 
 			my $stock_qty = int( $qty/$imp->imposition() );
 			#if ( $Paper->type() eq 'Roll' ) {
 # Convert to weight
 				$stock_qty = int( $stock_qty * $Paper->area() * $Paper->wpsi() );
-$log->debug("Stock qty: ($qty/$$imp{imposition})=$stock_qty lbs paper_counts: " . $$PaperCounts{$Paper->to_string()});
+#$log->debug("Stock qty: ($qty/$$imp{imposition})=$stock_qty lbs paper_counts: " . $$PaperCounts{$Paper->to_string()});
 			#} else {
 				#$stock_qty
 			#} # end if
@@ -2373,7 +2373,7 @@ $log->debug("Stock qty: ($qty/$$imp{imposition})=$stock_qty lbs paper_counts: " 
 				if ( $imps{$str} ) {
 					for ( my $j = 0; $j < @{$imps{$str}}; $j += 1 ) {
 						my $I = $imps{$str}[$j];
-$I->display('Considering');
+#$I->display('Considering');
 						my $P = $I->Paper();
 
 						if ( ($$sig_specs{'chkOverrideSheetSize'.$qty_index} eq 'Y') and ( $P->width() == $$sig_specs{"OverrideStockWidth$qty_index"}) and ( $P->height() == $$sig_specs{"OverrideStockHeight$qty_index"} )) {
@@ -2390,8 +2390,8 @@ $I->display('Considering');
 									'service'=>'Material'
 									);
 						} # end if
-$I->display("Comparing mino weight:". $P->minimum_order_weight() . ' Price: ' . $$BiggerPrice{'100lb Price'} . ' total: ' . $$BiggerPrice{'100lb Total'} .' cut ' . $P->is_cut());
-$imp->display("Comparing mino weight:" . $Paper->minimum_order_weight() . 'Price: ' . $$SmallerPrice{'100lb Price'} . ' total: ' . $$SmallerPrice{'100lb Total'} . ' cut' . $Paper->is_cut() );
+#$I->display("Comparing mino weight:". $P->minimum_order_weight() . ' Price: ' . $$BiggerPrice{'100lb Price'} . ' total: ' . $$BiggerPrice{'100lb Total'} .' cut ' . $P->is_cut());
+#$imp->display("Comparing mino weight:" . $Paper->minimum_order_weight() . 'Price: ' . $$SmallerPrice{'100lb Price'} . ' total: ' . $$SmallerPrice{'100lb Total'} . ' cut' . $Paper->is_cut() );
 						if ( ( $P->area() >= $Paper->area() )
 								and ( $P->minimum_order_weight() >= $Paper->minimum_order_weight() )
 								and ( (1*$$BiggerPrice{'100lb Total'}) >= (1*$$SmallerPrice{'100lb Total'}) )
@@ -2399,7 +2399,7 @@ $imp->display("Comparing mino weight:" . $Paper->minimum_order_weight() . 'Price
 						   ) {
 							splice @{$imps{$str}}, $j, 1;
 							$j -= 1;
-							if ( 1 ) {
+							if ( $debug ) {
 								$openprint::log->debug( "Dropping $$BiggerPrice{'100lb Total'} " . $I->Paper()->minimum_order_weight() . " $$SmallerPrice{'100lb Total'}" . $Paper->minimum_order_weight() );
 								$I->display();
 								$imp->display();
@@ -2411,13 +2411,13 @@ $imp->display("Comparing mino weight:" . $Paper->minimum_order_weight() . 'Price
 								and ( ( ! $P->is_cut() ) or ( $Paper->is_cut() ) )
 								) {
 							$add = 0;
-							if ( 1 ) {
+							if ( $debug ) {
 								$openprint::log->debug( "Not adding $$BiggerPrice{'100lb Total'} " . $I->Paper()->minimum_order_weight() . " $$SmallerPrice{'100lb Total'}" . $Paper->minimum_order_weight() );
 								$I->display();
 								$imp->display();
 							}
 
-						} elsif ( 1 ) {
+						} elsif ( $debug ) {
 							$openprint::log->debug( "Not Dropping $$BiggerPrice{'100lb'} $$SmallerPrice{'100lb'}");
 							$I->display();
 							$imp->display();
@@ -2450,7 +2450,7 @@ $imp->display("Comparing mino weight:" . $Paper->minimum_order_weight() . 'Price
 								and ( ( ! $I->Paper()->is_cut() ) or ( $Paper->is_cut() ) )
 								) {
 							$add = 0;
-						} elsif ( 0 ) {
+						} elsif ( $debug ) {
 							$openprint::log->debug( "Not Dropping $$BiggerPrice{'100lb'} $$SmallerPrice{'100lb'}");
 							$I->display();
 							$imp->display();
@@ -2774,16 +2774,16 @@ if ( 0 ) {
 				} # end if
 				next;
 			} # end if
-if ( 1 ) {
+if ( 0 ) {
 			if ( (scalar %best_price) and $best_price{'Comparison Cost'} <= $$price{'Comparison Cost'} ) {
 				if ( $debug or 0 ) {
 $openprint::log->debug("BLAH: $best_price{'Comparison Cost'} <= $$price{'Comparison Cost'} " . \%best_price . ' ' . $price);
 					if ( $$price{'Impositions'} ) {
-					foreach my $I ( reverse @{ $$price{'Impositions'} } ) {
-					$I->display( join('', map { ' ' } ( 1 .. $recursion_depth ) ) . "THIS" );
-					} # end while
+						foreach my $I ( reverse @{ $$price{'Impositions'} } ) {
+							$I->display( join('', map { ' ' } ( 1 .. $recursion_depth ) ) . "THIS" );
+						} # end while
 					} 
-								$openprint::log->debug( breakdown( $price, $sig_specs ) );
+					$openprint::log->debug( breakdown( $price, $sig_specs ) );
 					if ( $best_price{'Impositions'} ) {
 					foreach my $I ( reverse @{ $best_price{'Impositions'} } ) {
 					$I->display( join('', map { ' ' } ( 1 .. $recursion_depth ) ) . "BEST" );
@@ -3007,12 +3007,27 @@ $openprint::log->debug("Calculating Additional Signatures for other group");
 
 			if ( $$price{'Comparison Cost'} < 0 ) {
 				$openprint::log->error("Negative price! $best_price{'Comparison Cost'} <= $$price{'Comparison Cost'}");
-			} elsif ( %best_price and $best_price{'Comparison Cost'} <= $$price{'Comparison Cost'} ) {
+			} elsif ( %best_price and $best_price{'Comparison Cost'} < $$price{'Comparison Cost'} ) {
 				#$openprint::log->error("Resulting price worst than best: $best_price{'Comparison Cost'} <= $$price{'Comparison Cost'}");
 				#$imp->display('Worst than best');
+if ( $debug ) {
+				$imp->display("Worst than best: $best_price{'Comparison Cost'} >= worst $$price{'Comparison Cost'}");
+				$openprint::log->debug( breakdown( \%best_price, $sig_specs ) ) if $best_price{'Imposition'};
+				if ( $best_price{'Impositions'} ) {
+					foreach my $I ( reverse @{ $best_price{'Impositions'} } ) {
+						$I->display();
+					} # end while
+				} 
+				$openprint::log->debug( breakdown( $price, $sig_specs ) );
+					if ( $$price{'Impositions'} ) {
+					foreach my $I ( reverse @{ $$price{'Impositions'} } ) {
+					$I->display( );
+					} # end while
+					} 
+}
 				
 			} else {
-if ( 0 and ! $recursion_depth ) {
+if ( $debug ) {
 				$imp->display("New best price chosen: $best_price{'Comparison Cost'} >= $$price{'Comparison Cost'}");
 				$openprint::log->debug( breakdown( \%best_price, $sig_specs ) ) if $best_price{'Imposition'};
 				if ( $best_price{'Impositions'} ) {
@@ -3028,7 +3043,7 @@ if ( 0 and ! $recursion_depth ) {
 				$best_price{'Imposition'} = $imp;
 				$$imp{'Price'} = $$price{'Comparison Cost'};
 				$best_price{'Press'} = $Press;
-if ( 0 and ! $recursion_depth ) {
+if ( $debug and ! $recursion_depth ) {
 								$openprint::log->debug( breakdown( \%best_price, $sig_specs ) );
 					if ( $best_price{'Impositions'} ) {
 					foreach my $I ( reverse @{ $best_price{'Impositions'} } ) {
