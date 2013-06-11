@@ -1099,11 +1099,12 @@ sub minimum_order {
 	return $$self{'minimum_order'} * $factor if $factor;
 	return $$self{'minimum_order'};
 } # end minimum_order 
+
 sub minimum_order_weight {
 	my $self = $_[0];
 	if ( ! exists $$self{'minimum_order_weight'} ) {
 		if ( $$self{'type'} eq 'Sheet' ) {
-			$$self{'minimum_order_weight'} = $self->minimum_order() * $self->sheet_weight();
+			$$self{'minimum_order_weight'} = Math::Round::nearest( 0.1, $self->minimum_order() * $self->sheet_weight() );
 		} else {
 			$$self{'minimum_order_weight'} = $self->minimum_order();
 		} # end if

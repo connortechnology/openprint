@@ -283,16 +283,20 @@ sub no_outputs {
 
 sub get_unspecified_pages {
 	my ( $Project, $service_index, $printing_specs, $specs, $qty_index ) = @_;
-$openprint::log->debug("Un get_unspecified_pages $Project, $service_index, $printing_specs, $specs, $qty_index");
+$openprint::log->debug("Un get_unspecified_pages Project: $Project, service_id: $service_index, $printing_specs, $specs, qty_index: $qty_index") if $debug;
 
 	my $specified_pages = 0;
-	foreach my $ssid ( $Project->signatures( {'Group'=>$$specs{'Group'}} ) ) {
-		next if $service_index and ( $ssid >= $service_index );
+	foreach my $ssid ( $Project->signatures( { Group=>$$specs{Group} } ) ) {
+		if ( $service_index and ( $ssid >= $service_index ) ) {
+			#$openprint::log->debug(" $service_index ( $ssid >= $service_index ) next");
+			next;
+		} # end if
 		my $sig_specs = openprint::service::get_specs_ref( $Project, $ssid );
 		$specified_pages += $$sig_specs{"PageQuantity$qty_index"};
+		#$openprint::log->debug(" $service_index ( $ssid >= $service_index ) Not next pages: ". $$sig_specs{"PageQuantity$qty_index"});
 	} # end foreach
 
-	$openprint::log->debug("Unspec: Qty$qty_index G$$specs{'Group'} GPQ:$$specs{'GroupPageQuantity'} - S$specified_pages = U" . ($$specs{'GroupPageQuantity'} - $specified_pages) );
+	$openprint::log->debug("Unspec: Qty$qty_index Group: $$specs{'Group'} GPQ:$$specs{'GroupPageQuantity'} - S$specified_pages = U" . ($$specs{'GroupPageQuantity'} - $specified_pages) ) if $debug;
 	return $$specs{'GroupPageQuantity'} - $specified_pages;
 } # end sub get_unspecified_pages
 
@@ -2386,8 +2390,8 @@ $I->display('Considering');
 									'service'=>'Material'
 									);
 						} # end if
-$I->display("Comparing mino:". $P->minimum_order_weight() . ' Price: ' . $$BiggerPrice{'100lb Price'} . ' total: ' . $$BiggerPrice{'100lb Total'} .' cut ' . $P->is_cut());
-$imp->display("Comparing mino:" . $Paper->minimum_order_weight() . 'Price: ' . $$SmallerPrice{'100lb Price'} . ' total: ' . $$SmallerPrice{'100lb Total'} . ' cut' . $Paper->is_cut() );
+$I->display("Comparing mino weight:". $P->minimum_order_weight() . ' Price: ' . $$BiggerPrice{'100lb Price'} . ' total: ' . $$BiggerPrice{'100lb Total'} .' cut ' . $P->is_cut());
+$imp->display("Comparing mino weight:" . $Paper->minimum_order_weight() . 'Price: ' . $$SmallerPrice{'100lb Price'} . ' total: ' . $$SmallerPrice{'100lb Total'} . ' cut' . $Paper->is_cut() );
 						if ( ( $P->area() >= $Paper->area() )
 								and ( $P->minimum_order_weight() >= $Paper->minimum_order_weight() )
 								and ( (1*$$BiggerPrice{'100lb Total'}) >= (1*$$SmallerPrice{'100lb Total'}) )
