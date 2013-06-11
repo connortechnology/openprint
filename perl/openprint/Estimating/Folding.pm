@@ -969,9 +969,9 @@ $openprint::log->debug("Folds: $set_index : $key " . $impo_qty );
 				my $run_qty = $$specs{"txtQuantity$qty_index"};
 				$run_qty = POSIX::ceil( $run_qty * $impo_qty/$SignatureImposition->imposition()) if $impo_qty != $$SignatureImposition{imposition};
 
-				$openprint::log->debug("Pricing runqty: $run_qty impo qty: $impo_qty mipo: $imposition out qty: ".$$specs{"txtQuantity$qty_index"}." Sig imp: $$SignatureImposition{imposition}out  of fold $fold_type on " . $Equipment->name()) if $debug;
+				$openprint::log->debug("Pricing runqty: $run_qty impo qty: $impo_qty mipo: $imposition out qty: ".$$specs{"txtQuantity$qty_index"}." Sig imp: $$SignatureImposition{imposition}out  of fold $fold_type on " . $Equipment->name()) if DEBUG;
 				$run_qty += $Fold->makeready_overs_units() eq 'Percent' ? $run_qty * ( $Fold->makeready_overs() /100 ) : $Fold->makeready_overs();
-				$openprint::log->debug("Pricing runqty: $run_qty impo qty: $impo_qty mipo: $imposition out qty: ".$$specs{"txtQuantity$qty_index"}." Sig imp: $$SignatureImposition{imposition}out  of fold $fold_type on " . $Equipment->name()) if $debug;
+				$openprint::log->debug("Pricing runqty: $run_qty impo qty: $impo_qty mipo: $imposition out qty: ".$$specs{"txtQuantity$qty_index"}." Sig imp: $$SignatureImposition{imposition}out  of fold $fold_type on " . $Equipment->name()) if DEBUG;
 				$run_qty += $Fold->run_overs_units() eq 'Percent' ? $run_qty * ($Fold->run_overs()/100): $Fold->run_overs();
 #$openprint::log->debug("Overs: " . $Fold->makeready_overs() );
 
