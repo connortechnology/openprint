@@ -51,8 +51,12 @@ while ( my $line = <STDIN> ) {
 		$_ = $Colour->save({id=>$id, shortname=>$name, longname=>$name}, 1);
 		die $_ if $_;
 	} elsif ( $line =~ /SELECT nextval\('paper_id_seq'\)\) Results:(\d+)/ ) {
+$log->debug("Checking for paper $1");
 		my $Paper = new openprint::Paper( $1 );
-		next if $Paper->id();
+		if ( $Paper->id() ) {
+			$log->debug("Paper exists".$Paper->to_string());
+			next;
+		} 
 		$line = <STDIN>;
 		my ( $fields, $values ) = $line =~ /INSERT INTO Papers \(([^\)]+)\) VALUES \(([^\)]+)\)/;
 		die 'No fields in ' . $line if ! $fields;
