@@ -5,7 +5,8 @@
 <? eval (
 	$$variable{'User'} = new openprint::User( $session{'user_id'} );
 ) ?>
-<form method="post" name="f1" action="confirmation_help_desk.html">
+<!--#include virtual="/includes/error_reporting.html"-->
+<form method="post" name="f1" action="help_desk.html">
 <fieldset>
 	<p> 
 		<label>Company Name: <span class="requiredFieldIndicator">&nbsp;</span></label>
