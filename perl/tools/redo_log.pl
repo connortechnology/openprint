@@ -79,15 +79,22 @@ while ( my $line = <STDIN> ) {
 		} elsif ( $PI->paper_id() != $paper_id ) {
 			$log->debug( "SC has different paper_id $$PI{paper_id} != $paper_id" );
 		} # end if
-	} elsif ( $line =~ /UPDATE manifest_content_types SET po_id = \d+,id = (\d+),po_content_id = ,cost = ,manifest_id = \d+,docket = \d+,type = [^,]+,paper_id = (\d+),manufacturers_name = ,item_count = ,supplier_invoice =  WHERE id=\d+/ ) {
-		my ( $id, $paper_id ) = ($1, $2);
+	} elsif ( $line =~ /UPDATE manifest_content_types SET (.+?) WHERE id=(\d+)/ ) {
+		my ( $changes, $id ) = ($1, $2);
+		$log->debug("Got manifest update $changes");
+		my %changes = map { split ( ' = ', $_ ) } split(',',$changes);
+		if ( ! $changes{paper_id} ) {
+			$log->debug("No paper id for $changes");
+			die;
+		}
+		
 		my $PI = new openprint::Manifest_Content_Type( $id );
 		if ( ! $PI->id() ) {
 			die 'MCT not foudn for id ' . $id;
 		} elsif ( ! $PI->paper_id() ) {
-			sql::update( undef, undef, 'manifest_Content_types', [ 'id=?', $id ], 'paper_id', $paper_id );
-		} elsif ( $PI->paper_id() != $paper_id ) {
-			$log->debug( "MCT has different paper_id $$PI{paper_id} != $paper_id" );
+			sql::update( undef, undef, 'manifest_Content_types', [ 'id=?', $id ], 'paper_id', $changes{paper_id} );
+		} elsif ( $PI->paper_id() != $changes{paper_id} ) {
+			$log->debug( "MCT has different paper_id $$PI{paper_id} != $changes{paper_id}" );
 		} # end if
 	
 	} # end if
