@@ -68,9 +68,21 @@ sub find {
 			push @values, $params{'id'};
 		} # end if
 	} # end if
+	if ( exists $params{instock} ) {
+		$sql .= ' AND instock=?';
+		push @values, $params{instock};
+	} # end if
+	if ( exists $params{delta} ) {
+		$sql .= ' AND delta=?';
+		push @values, $params{delta};
+	} # end if
 	if ( exists $params{'skid_id'} ) {
 		$sql .= ' AND skid_id=?';
 		push @values, $params{'skid_id'};
+	} # end if
+	if ( exists $params{'user_id'} ) {
+		$sql .= ' AND user_id=?';
+		push @values, $params{'user_id'};
 	} # end if
 	if ( exists $params{'paper_id'} ) {
 		if ( ref $params{'paper_id'} eq 'ARRAY' ) {
@@ -83,6 +95,13 @@ sub find {
 			$sql .= ' AND paper_id IS NULL';
 		} # end if
 	} # end if
+if ( exists $params{'paper_id is null'} ) {
+	if ( $params{'paper_id is null'} ) {
+		$sql .= ' AND paper_id IS NULL';
+	} else {
+		$sql .= ' AND paper_id IS NOT NULL';
+	} # end if
+} # end if
 	if ( exists $params{'docket'} ) {
 		if ( defined $params{'docket'} ) {
 			$sql .= ' AND docket=?';
@@ -90,6 +109,10 @@ sub find {
 		} else {
 			$sql .= ' AND docket IS NULL';
 		} # end if
+	} # end if
+	if ( exists $params{comment} ) {
+		$sql .= ' AND comment = ?';
+		push @values, $params{comment};
 	} # end if
 	if ( exists $params{'comment_like'} ) {
 		$sql .= ' AND comment LIKE ?';
@@ -104,6 +127,10 @@ sub find {
 	} elsif ( $params{'updated_on_end'} ) {
 		$sql .= ' AND ( updated_on <= ?)';
 		push @values, $params{'updated_on_end'};
+	} # end if
+	if ( $params{'updated_on'} ) {
+		$sql .= ' AND ( updated_on = ?)';
+		push @values, $params{'updated_on'};
 	} # end if
 	$sql .= " ORDER BY $params{'order'}" if $params{'order'};
 	$sql .= " ORDER BY $params{'order_by'}" if $params{'order_by'};
