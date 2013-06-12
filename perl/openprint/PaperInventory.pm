@@ -20,7 +20,7 @@ require openprint::PaperPrice;
 require openprint::logs;
 require openprint::Manufacturer;
 
-$debug = 0;
+$debug = 1;
 $table = 'paper_inventory';
 $serial = 'paperinventory_id_seq';
 

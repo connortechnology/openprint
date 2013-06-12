@@ -451,6 +451,10 @@ sub paper_details {
 	} elsif ( $param{'btnFunction'} eq 'CheckOut' ) {
 		check_out( undef, @param{'paper_id','Quantity','Project','Docket','reason'} );
 	} elsif ( $param{'btnFunction'} eq 'Merge' ) {
+		if ( ! $Paper->id() ) {
+			$variable{error} .= 'Cant merge.  No given stock.';
+			return;
+		} # end if
 		my @Duplicates = openprint::Paper::find(
 				'manufacturer_id'	=> $Paper->manufacturer_id(),
 				'name_id'			=> $Paper->name_id(),
@@ -466,6 +470,7 @@ sub paper_details {
 			next if $Duplicate->id() == $Paper->id();
 			$Paper->merge( $Duplicate );
 		} # end foreach
+		$variable{'ExternalRedirect'} = '/employee/inventory/paper_details.html?paper_id='.$Paper->id();
 	} # end if
 	$variable{'Paper'} = $Paper;
 	$variable{'paper_id'} = $$Paper{'id'};

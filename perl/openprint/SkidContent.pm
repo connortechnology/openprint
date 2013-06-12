@@ -12,7 +12,7 @@ use vars qw( $log $dbh $debug %fields %transforms %defaults $table $serial );
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
 
-$debug = 0;
+$debug = 1;
 
 %fields = (
 	id				=>	'id',
@@ -55,6 +55,10 @@ sub find {
 		$sql .= ' AND skid_id=?';
 		push @values, $params{'skid_id'};
 	} # end if
+	if ( ( exists $params{paper_id} ) and ! defined $params{paper_id} ) {
+		$sql .= ' AND paper_id IS NULL';
+	} # end if
+
 	if ( $params{'paper_id'} ) {
 		$sql .= ' AND paper_id=?';
 		push @values, $params{'paper_id'};
