@@ -18,7 +18,7 @@ use strict;
 package openprint::Estimating::Printing;
 my $threading = 0;
 #use threads;
-use constant DEBUG => 1;
+use constant DEBUG => 0;
 my $master_time;
 my %special_colours;
 
@@ -30,7 +30,7 @@ my $max_recursion_depth = 3;
 my %converted_imposition_cache;
 my $use_converted_imposition_cache = 1;
 my %filtered_imposition_cache;
-my $use_filtered_imposition_cache = 1;
+my $use_filtered_imposition_cache = 0;
 
 my %stitching_cache;
 my %price_cache;
@@ -360,16 +360,20 @@ sub outputs {
 
 sub get_unspecified_pages {
 	my ( $Project, $service_index, $printing_specs, $specs, $qty_index ) = @_;
-$openprint::log->debug("Un get_unspecified_pages $Project, $service_index, $printing_specs, $specs, $qty_index");
+$openprint::log->debug("Un get_unspecified_pages Project: $Project, service_id: $service_index, $printing_specs, $specs, qty_index: $qty_index") if DEBUG;
 
 	my $specified_pages = 0;
-	foreach my $ssid ( $Project->signatures( {'Group'=>$$specs{'Group'}} ) ) {
-		next if $service_index and ( $ssid >= $service_index );
+	foreach my $ssid ( $Project->signatures( { Group=>$$specs{Group} } ) ) {
+		if ( $service_index and ( $ssid >= $service_index ) ) {
+			#$openprint::log->debug(" $service_index ( $ssid >= $service_index ) next");
+			next;
+		} # end if
 		my $sig_specs = openprint::service::get_specs_ref( $Project, $ssid );
 		$specified_pages += $$sig_specs{"PageQuantity$qty_index"};
+		#$openprint::log->debug(" $service_index ( $ssid >= $service_index ) Not next pages: ". $$sig_specs{"PageQuantity$qty_index"});
 	} # end foreach
 
-	$openprint::log->debug("Unspec: Qty$qty_index G$$specs{'Group'} GPQ:$$specs{'GroupPageQuantity'} - S$specified_pages = U" . ($$specs{'GroupPageQuantity'} - $specified_pages) );
+	$openprint::log->debug("Unspec: Qty$qty_index Group: $$specs{'Group'} GPQ:$$specs{'GroupPageQuantity'} - S$specified_pages = U" . ($$specs{'GroupPageQuantity'} - $specified_pages) ) if DEBUG;
 	return $$specs{'GroupPageQuantity'} - $specified_pages;
 } # end sub get_unspecified_pages
 
@@ -420,7 +424,7 @@ $log->debug("Coatings: " . join( ',', keys %coatings ) );
 	$project{'combined_colours'} = [ @{$project{'side_one_colours'}}, @{$project{'side_two_colours'}} ];
 
 	$project{'inkCoverage'} = $inkCoverage;
-	my @filtered_colours = filter_colours( @{$project{'side_one_colours'}}, @{$project{'side_two_colours'}} );
+	my @filtered_colours = filter_colours( $project{'side_one_colours'}, $project{'side_two_colours'} );
 
 	my %mixed_colours;
 	my %washed_colours;
@@ -441,7 +445,7 @@ $log->debug("Coatings: " . join( ',', keys %coatings ) );
 	$project{'mixed_colours'} = \%mixed_colours;
 	$project{'washed_colours'} = \%washed_colours;
 	$project{'filtered_colours'} = \@filtered_colours;
-	$project{'filtered_coatings'} = [ filter_colours( @{$project{'side_one_coatings'}}, @{$project{'side_two_coatings'}} ) ];
+	$project{'filtered_coatings'} = [ filter_colours( $project{'side_one_coatings'}, $project{'side_two_coatings'} ) ];
 
 	foreach my $C ( openprint::Ink->find() ) {
 		push @{$special_colours{$$C{pmsid}}}, $C;
@@ -2591,6 +2595,7 @@ $imp->dispay('Ma imposition!') if DEBUG;
 
 # Now filter by imposition
 		if ( ( defined $$sig_specs{'chkOverrideImposition'.$qty_index} ) and ( $$sig_specs{'chkOverrideImposition'.$qty_index} eq 'Y' ) ) {
+$openprint::log->debug("Override Imposition: $qty_index, " . $$sig_specs{'txtImposition'.$qty_index});
 			my @results2;
 			foreach my $I ( @results ) {
 				if ( $I->imposition() == $$sig_specs{'txtImposition'.$qty_index} ) {
@@ -2606,6 +2611,7 @@ $imp->dispay('Ma imposition!') if DEBUG;
 			} # end if
 			@results = @results2;
 		} else {
+$openprint::log->debug("NOT Override Imposition: $qty_index, " . $$sig_specs{'txtImposition'.$qty_index} . ' ' . $$sig_specs{'chkOverrideImposition'.$qty_index} );
 			my $needs_smaller = 1;
 			foreach my $I ( @results ) {
 				if ( $I->imposition() <= $$sig_specs{'txtQuantity'.$qty_index} ) {
@@ -2672,8 +2678,8 @@ $I->display('Considering') if DEBUG;
 									);
 						} # end if
 if ( DEBUG ) {
-$I->display("Comparing mino:". $P->minimum_order_weight() . ' Price: ' . $$BiggerPrice{'100lb Price'} . ' total: ' . $$BiggerPrice{'100lb Total'} .' cut ' . $P->is_cut());
-$imp->display("Comparing mino:" . $Paper->minimum_order_weight() . 'Price: ' . $$SmallerPrice{'100lb Price'} . ' total: ' . $$SmallerPrice{'100lb Total'} . ' cut' . $Paper->is_cut() );
+$I->display("Comparing mino weight:". $P->minimum_order_weight() . ' Price: ' . $$BiggerPrice{'100lb Price'} . ' total: ' . $$BiggerPrice{'100lb Total'} .' cut ' . $P->is_cut());
+$imp->display("Comparing mino weight:" . $Paper->minimum_order_weight() . 'Price: ' . $$SmallerPrice{'100lb Price'} . ' total: ' . $$SmallerPrice{'100lb Total'} . ' cut' . $Paper->is_cut() );
 } 
 						if ( ($$I{pages} == $$sig_specs{'txtUnspecifiedPageQuantity'.$qty_index} ) 
 							and ( (1*$$BiggerPrice{'100lb Total'}) >= (1*$$SmallerPrice{'100lb Total'}) )
@@ -2745,7 +2751,7 @@ $imp->display("Comparing mino:" . $Paper->minimum_order_weight() . 'Price: ' . $
 								and ( ( ! $I->Paper()->is_cut() ) or ( $Paper->is_cut() ) )
 								) {
 							$add = 0;
-						} elsif ( 0 ) {
+						} elsif ( DEBUG ) {
 							$openprint::log->debug( "Not Dropping $$BiggerPrice{'100lb'} $$SmallerPrice{'100lb'}");
 							$I->display();
 							$imp->display();
@@ -2772,7 +2778,7 @@ $imp->display("Comparing mino:" . $Paper->minimum_order_weight() . 'Price: ' . $
 	} # end if Folding
 
 	if ( DEBUG or 0 ) {
-		$openprint::log->debug('UPQ:'.$$sig_specs{'txtUnspecifiedPageQuantity'.$qty_index} . " Press: " .$$Press{'strid'} . ' # ' . @impositions );
+		$openprint::log->debug($qty_index.'UPQ:'.$$sig_specs{'txtUnspecifiedPageQuantity'.$qty_index} . " Press: " .$$Press{'strid'} . ' # ' . @impositions );
 		foreach my $imp ( @impositions ) {
 			$imp->display();
 		} # end foreach
@@ -3105,33 +3111,12 @@ $openprint::log->debug("Using price cache");
 				} # end if
 				next;
 			} # end if
-if ( 1 ) {
-# I'm not sure we can do this.  Our prices at this point don''t include paper, but best_price has paper, doesn't it?
-			if ( (scalar %best_price) and $best_price{'Comparison Cost'} <= $$price{'Comparison Cost'} ) {
-				if ( DEBUG ) {
-#$openprint::log->debug("BLAH: $best_price{'Comparison Cost'} <= $$price{'Comparison Cost'} " . \%best_price . ' ' . $price);
-					if ( $$price{'Impositions'} ) {
-					foreach my $I ( reverse @{ $$price{'Impositions'} } ) {
-					$I->display( join('', map { ' ' } ( 1 .. $recursion_depth ) ) . "NO GOOD THIS" );
-					} # end while
-					} 
-					#$openprint::log->debug( breakdown( $price, $sig_specs ) );
-					if ( $best_price{'Impositions'} ) {
-						foreach my $I ( reverse @{ $best_price{'Impositions'} } ) {
-							$I->display( join('', map { ' ' } ( 1 .. $recursion_depth ) ) . "NO GOOD BEST" );
-						} # end while
-					} 
-					#$openprint::log->debug( breakdown( \%best_price, $sig_specs ) );
-				} # end if
-				next; # next Impo
-			} # end if
-} # end if
 
 	if ( ! $recursion_depth ) {
 			my @paper_strings = keys %PaperCounts;
 			if ( ( 1 == @paper_strings ) and ( $Paper->id_string() ne $paper_strings[0] ) ) {
 $openprint::log->error("Different paper in count versus imposition: $paper_strings[0] ne " . $imp->Paper()->id_string() );
-			} elsif ( DEBUG ) {
+			} elsif ( DEBUG and 0 ) {
 $log->warn("Paper Counts");
 				foreach my $k ( @paper_strings ) {
 					$openprint::log->debug( "$k => $PaperCounts{$k}" );
@@ -3362,7 +3347,7 @@ $openprint::log->debug("No sigs for group 2?");
 
 			if ( $$price{'Comparison Cost'} < 0 ) {
 				$openprint::log->error("Negative price! $best_price{'Comparison Cost'} <= $$price{'Comparison Cost'}");
-			} elsif ( %best_price and $best_price{'Comparison Cost'} <= $$price{'Comparison Cost'} ) {
+			} elsif ( %best_price and $best_price{'Comparison Cost'} < $$price{'Comparison Cost'} ) {
 if ( DEBUG ) {
 				$openprint::log->error("Resulting price worst than best: $best_price{'Comparison Cost'} <= $$price{'Comparison Cost'}");
 				$imp->display('Worst than best');
@@ -3372,7 +3357,7 @@ if ( DEBUG ) {
 				
 			} else {
 
-if ( DEBUG and ! $recursion_depth ) {
+if ( DEBUG  ) {
 				$imp->display("New best price chosen: $best_price{'Comparison Cost'} >= $$price{'Comparison Cost'}");
 				foreach my $I ( @{ $best_price{'Impositions'} } ) {
 					$I->display( join('', map { ' ' } ( 1 .. $recursion_depth ) ) . "OLD BEST:" );
@@ -4000,7 +3985,7 @@ if ( 1 ) {
 		} # end if
 
 #$openprint::log->debug("$real_colour needs mixing");
-$openprint::log->debug( $Ink->to_string() );
+#$openprint::log->debug( $Ink->to_string() );
 		if ( $$Ink{service_id} ) {
 			if ( ! $mixed_colours{$real_colour} ) {
 				my %mix_price = $Ink->Service()->get_price(undef,$Press);
@@ -4809,12 +4794,12 @@ sub press_setup_cost {
 sub filter_colours {
 	my ( $front, $back ) = @_;
 	my @filtered_colours = @{$front};
-	my %filtered_colours = map { $_{name} } @{$front};
+	my %filtered_colours = map { $$_{name}, $_ } @{$front};
 
 	foreach my $Colour ( @{$back} ) {
 		if ( ! $filtered_colours{$$Colour{'name'}} ) {
 			push @filtered_colours, $Colour;
-			$filtered_colours{$$Colour{'name'}} = $Colour;
+			$filtered_colours{$$Colour{name}} = $Colour;
 		} # end if
 	} # end foreach
 	return values @filtered_colours;
