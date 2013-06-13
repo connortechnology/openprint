@@ -505,9 +505,15 @@ sub can_view {
 		return 1;
 	} # end if
 			
-	if ( sets::isin( $$User{id}, [ map { $_->Order()->salesrep_id() } $_[0]->Contents() ] ) ) {
-		$log->debug("$$User{firstname} Is salesrep for an order in it") if $debug;
-		return 1;
+	foreach my $C ( $_[0]->Contents() ) {
+		if ( sets::contains( [ $$User{id}, $User->assistant_ids(), $User->csr_ids() ], [ map { $_->salesrep_id() } $C->Orders() ] ) ) {
+			$log->debug('can see because in order salesreps');
+			return 1;
+		} # end if
+	} # end foreach C
+
+	if ( $_[0]->notifications() ) {
+		return 1 if sets::isin( $$User{id}, $_[0]->notifications() );
 	} # end if
 	$log->debug("$$User{firstname} cannot view this PO") if $debug;
 	return 0;
@@ -536,25 +542,28 @@ sub can_authorize {
 } # end sub can_authorize
 
 # ( $PO, $Content )
+# Can we assume that we can view it?
 sub can_see_pricing {
-if ( ! $_[0]{id} ) {
-$log->debug("Ccan see because new PO");
-	return 1;
-} # end if
+	if ( ! $_[0]{id} ) {
+		$log->debug("Ccan see because new PO");
+		return 1;
+	} # end if
+
+	my $User = new openprint::User( $openprint::session{user_id} );
 	
-	if ( ( $session{user_id} == $_[0]->created_by() ) or ( $session{user_type} eq 'A' ) or openprint::usergroup::is_user_in( ['Accounting','SalesAdmin'], $session{user_id} ) ) {
+	if ( ( $$User{id} == $_[0]->created_by() ) or ( $$User{type} eq 'A' ) or openprint::usergroup::is_user_in( ['Accounting','SalesAdmin'], $$User{id} ) ) {
 $log->debug('can see');
 		return 1;
 	} # end if
 
 	if ( $_[1] ) {
-			if ( sets::contains( [ $openprint::session{'user_id'}, new openprint::User($openprint::session{'user_id'})->assistant_ids(), new openprint::User($openprint::session{'user_id'})->csr_ids() ], [ map { $_->salesrep_id() } $_[1]->Orders() ] ) ) {
+		if ( sets::contains( [ $$User{id}, $User->assistant_ids(), $User->csr_ids() ], [ map { $_->salesrep_id() } $_[1]->Orders() ] ) ) {
 			$log->debug('can see');
 			return 1;
 		} # end if
 	} else {
 		foreach my $C ( $_[0]->Contents() ) {
-			if ( sets::contains( [ $openprint::session{'user_id'}, new openprint::User($openprint::session{'user_id'})->assistant_ids(), new openprint::User($openprint::session{'user_id'})->csr_ids() ], [ map { $_->salesrep_id() } $C->Orders() ] ) ) {
+			if ( sets::contains( [ $$User{id}, $User->assistant_ids(), $User->csr_ids() ], [ map { $_->salesrep_id() } $C->Orders() ] ) ) {
 				$log->debug('can see');
 				return 1;
 			} # end if

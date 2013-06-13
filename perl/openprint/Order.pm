@@ -76,8 +76,13 @@ sub find {
 		push @values, $params{'id'};
 	} # end if
 	if ( $params{'docket'} ) {
-		$sql .= ' AND lngdocketnumber=?';
-		push @values, $params{'docket'};
+		if ( ref $params{docket} eq 'ARRAY' ) {
+			$sql .= ' AND lngdocketnumber IN ('.join(',', map {'?'} @{$params{docket}}) . ')';
+			push @values, @{$params{docket}};
+		} else {
+			$sql .= ' AND lngdocketnumber=?';
+			push @values, $params{'docket'};
+		} # end if
 	} # end if
 	if ( $params{'invoice_id'} ) {
 		$sql .= ' AND invoice_id=?';
