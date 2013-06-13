@@ -272,13 +272,11 @@ sub view {
 						'authorized_by'	=> $session{user_id},
 						});
 			} else {
-				$variable{information} .= $PO->send_approval_required_notification();
-				if ( ! $variable{information} ) {
-					$variable{warning} .= 'This PO needs approval but no one could be found to do it.';
-				} else {
-					$variable{information} =~ s/Sent/send/g;
-					$variable{information} = 'Approval request ' . $variable{information};
-				} # end if
+				$variable{error} .= $PO->save({
+						'authorized'	=> 0,
+						'authorized_on'	=> undef,
+						'authorized_by'	=> undef,
+						});
 			} # end if 
 		} # end if
 	} elsif ( $param{'btnFunction'} eq 'Attach' ) {
@@ -417,6 +415,12 @@ $log->debug("Creating PO $$PO{id} from label $variable{error}");
 				} else {
 					$variable{information} =~ s/Sent/send/g;
 					$variable{information} = 'Approval request ' . $variable{information};
+					my $L = new openprint::PurchaseOrder_Log();
+					$L->save({
+							'user_id'	=>	$session{user_id},
+							'po_id'		=>	$PO->id(),
+							'reason'	=>	$variable{information}
+							});
 				} # end if
 			} # end if wasn't already authorized
 		} # end if

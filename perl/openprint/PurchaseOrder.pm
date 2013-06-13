@@ -160,7 +160,7 @@ sub send_approval_required_notification {
 	my %info;
 	$info{'From'} = $Me;
 	$info{'PurchaseOrder'} = $self;
-	$info{'ReplacementText'} = ssi::include( $ENV{DOCUMENT_ROOT}.'/email_content/purchase_order_notification.html', \%info );
+	$info{'ReplacementText'} = ssi::include( '/email_content/purchase_order_notification.html', \%info );
 
 	my @notification_types = map { 'PO ' . (new openprint::PurchaseOrder_ContentType( $_ )->name()) . ' Approvals' } sets::union( map { $_->type_id() } $self->Contents() );
 	$_ = MIME::QuotedPrint::encode_qp( Encode::encode('utf-8', ssi::variable_substitution( undef, $log, $dbh, \$email_template, \%info ) ) );
