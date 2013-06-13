@@ -33,7 +33,7 @@ Please select a company or user to obtain login information.<br/>
 							<option value="">All Companies</option>
 							<? echo ( openprint::Company::get_dropdown( $param{'ddmCustomer'} ); ) ?>
 						</select>
-						<? echo ( ssi::button( 'Go1', { onclick=>"f1.ddmUser.selectedIndex=-1;f1.btnFunction.value='Go';f1.submit();", 'text'=>'Go' } ); ) ?>
+						<? echo ( button( 'Go1', { onclick=>"f1.ddmUser.selectedIndex=-1;f1.btnFunction.value='Go';f1.submit();", 'text'=>'Go' } ); ) ?>
 					</li>
 					<li>
 						<label>User Type</label>
@@ -58,9 +58,9 @@ Please select a company or user to obtain login information.<br/>
 				<label>
 					<? echo (
 						if ( $$variable{User}->company_id() ) {
-							return ssi::button( 'CompanyInfo1', { href=>'company_profiles.html?ddmCustomer='.$$variable{User}->company_id(), text=>'Company Information' } );
+							return button( 'CompanyInfo1', { href=>'company_profiles.html?ddmCustomer='.$$variable{User}->company_id(), text=>'Company Information' } );
 						} elsif ( $param{ddmCustomer} ) {
-							return ssi::button( 'CompanyInfo1', { href=>'company_profiles.html?ddmCustomer='.$param{ddmCustomer}, text=>'Company Information' } );
+							return button( 'CompanyInfo1', { href=>'company_profiles.html?ddmCustomer='.$param{ddmCustomer}, text=>'Company Information' } );
 						}
 						return;
 					) ?>
@@ -70,17 +70,17 @@ Please select a company or user to obtain login information.<br/>
 				<span style="float:right;"><?EDIT_USER_NUM?> of <?NUM_USERS?></span>
 				<? endif ( $$variable{'EDIT_USER_NUM'} ) ?>
 				<? echo ( my $html = '';
-					$html .= ssi::button( 'Prev1', { onclick=>"f1.btnFunction.value='&lt;&lt;';fmCheck(f1);", text=>'&lt;&lt;' } );
-					$html .= ssi::button( 'Next1', { onclick=>"f1.btnFunction.value='&gt;&gt;';fmCheck(f1);", text=>'&gt;&gt;' } );
-					$html .= ssi::button( 'New1', { onclick=>"\$('Log').hide();keepCompany(f1);", text=>'New' } );
+					$html .= button( 'Prev1', { onclick=>"f1.btnFunction.value='&lt;&lt;';fmCheck(f1);", text=>'&lt;&lt;' } );
+					$html .= button( 'Next1', { onclick=>"f1.btnFunction.value='&gt;&gt;';fmCheck(f1);", text=>'&gt;&gt;' } );
+					$html .= button( 'New1', { onclick=>"\$('Log').hide();keepCompany(f1);", text=>'New' } );
 					if ( $$variable{User}->deleted() ) {
-					$html .= ssi::button( 'UnDelete1', { onclick=>"f1.btnFunction.value='Undelete';f1.submit();", text=>'Undelete' } );
-					$html .= ssi::button( 'Destroy1', { onclick=>"f1.btnFunction.value='Destroy';f1.submit();", text=>'Destroy' } );
+					$html .= button( 'UnDelete1', { onclick=>"f1.btnFunction.value='Undelete';f1.submit();", text=>'Undelete' } );
+					$html .= button( 'Destroy1', { onclick=>"f1.btnFunction.value='Destroy';f1.submit();", text=>'Destroy' } );
 					} else {
-					$html .= ssi::button( 'Delete1', { onclick=>"f1.btnFunction.value='Delete';fmChange=2;fmCheck(f1);", text=>'Delete' } );
+					$html .= button( 'Delete1', { onclick=>"f1.btnFunction.value='Delete';fmChange=2;fmCheck(f1);", text=>'Delete' } );
 					} # end if
-					$html .= ssi::button( 'Save1', { onclick=>"f1.btnFunction.value='Save';fmChange=3;fmCheck(f1);", text=>'Save' } );
-					$html .= ssi::button( 'Reset1', { onclick=>'f1.reset();', text=>'Reset' } );
+					$html .= button( 'Save1', { onclick=>"f1.btnFunction.value='Save';fmChange=3;fmCheck(f1);", text=>'Save' } );
+					$html .= button( 'Reset1', { onclick=>'f1.reset();', text=>'Reset' } );
 				return $html; ) ?>
 			</p>
 		</fieldset>
@@ -371,13 +371,13 @@ Please select a company or user to obtain login information.<br/>
 		<? endif ( openprint::ServiceType->find_one() ) ?>
 		<br class="spacer"/>
 		<fieldset>
-		<p id="ButtonsBottom" class="buttons">
+			<p id="ButtonsBottom" class="buttons">
 			<label>
 			<? echo (
 					if ( $$variable{User}->company_id() ) {
-						return ssi::button( 'CompanyInfo2', { href=>'company_profiles.html?ddmCustomer='.$$variable{User}->company_id(), text=>'Company Information' } );
+						return button( 'CompanyInfo2', { href=>'company_profiles.html?ddmCustomer='.$$variable{User}->company_id(), text=>'Company Information' } );
 					} elsif ( $param{'ddmCustomer'} ) {
-						return ssi::button( 'CompanyInfo2', { href=>'company_profiles.html?ddmCustomer='.$param{'ddmCustomer'}, text=>'Company Information' } );
+						return button( 'CompanyInfo2', { href=>'company_profiles.html?ddmCustomer='.$param{'ddmCustomer'}, text=>'Company Information' } );
 					}
 					return;
 			) ?>
@@ -386,45 +386,21 @@ Please select a company or user to obtain login information.<br/>
 			<span style="float:right;"><?EDIT_USER_NUM?> of <?NUM_USERS?></span>
 			<? endif ( $$variable{'EDIT_USER_NUM'} ) ?>
 			<? echo ( my $html = '';
-				$html .= ssi::button( 'Prev2', { onclick=>"f1.btnFunction.value='&lt;&lt;';fmCheck(f1);", text=>'&lt;&lt;' } );
-				$html .= ssi::button( 'Next2', { onclick=>"f1.btnFunction.value='&gt;&gt;';fmCheck(f1);", text=>'&gt;&gt;' } );
-				$html .= ssi::button( 'New2', { onclick=>"\$('Log').hide();keepCompany(f1);", text=>'New' } );
+				$html .= button( 'Prev2', { onclick=>"f1.btnFunction.value='&lt;&lt;';fmCheck(f1);", text=>'&lt;&lt;' } );
+				$html .= button( 'Next2', { onclick=>"f1.btnFunction.value='&gt;&gt;';fmCheck(f1);", text=>'&gt;&gt;' } );
+				$html .= button( 'New2', { onclick=>"\$('Log').hide();keepCompany(f1);", text=>'New' } );
 				if ( $$variable{User}->deleted() ) {
-					$html .= ssi::button( 'Undelete2', { onclick=>"f1.btnFunction.value='Undelete';f1.submit();", text=>'Undelete' } );
-					$html .= ssi::button( 'Destroy2', { onclick=>"f1.btnFunction.value='Destroy';f1.submit();", text=>'Destroy' } );
+					$html .= button( 'Undelete2', { onclick=>"f1.btnFunction.value='Undelete';f1.submit();", text=>'Undelete' } );
+					$html .= button( 'Destroy2', { onclick=>"f1.btnFunction.value='Destroy';f1.submit();", text=>'Destroy' } );
 				} else {
-					$html .= ssi::button( 'Delete2', { onclick=>"f1.btnFunction.value='Delete';fmChange=2;fmCheck(f1);", text=>'Delete' } );
+					$html .= button( 'Delete2', { onclick=>"f1.btnFunction.value='Delete';fmChange=2;fmCheck(f1);", text=>'Delete' } );
 				} # end if
-				$html .= ssi::button( 'Save2', { onclick=>"f1.btnFunction.value='Save';fmChange=3;fmCheck(f1);", text=>'Save' } );
-				$html .= ssi::button( 'Reset2', { onclick=>'f1.reset();', text=>'Reset' } );
+				$html .= button( 'Save2', { onclick=>"f1.btnFunction.value='Save';fmChange=3;fmCheck(f1);", text=>'Save' } );
+				$html .= button( 'Reset2', { onclick=>'f1.reset();', text=>'Reset' } );
 				return $html; ) ?>
 		</p>
 		</fieldset>
 		<input type="hidden" name="btnFunction"/>
-<fieldset id="Log"><legend>Last 10 Login Attempts</legend>
-    <table class="List">
-        <tr>
-            <th class="DateTime">When</th>
-            <th class="IP">From</th>
-            <th class="Company">Company</th>
-            <th class="Result">Result</th>
-        </tr>
-<? echo (
-    require openprint::Log;
-    my $html = '';
-
-    foreach my $Log ( openprint::Log->find(user_id=>$$variable{User}->id(),order=>'date_time DESC', limit=>10, 'action_id'=>[2,3,78,79] ) ) {
-		my $Host = $Log->Host();
-
-        $html .= sprintf('<tr><td class="DateTime">%s</td><td class="IP" title="%s">%s</td><td class="Company">%s</td><td class="Result">%s</td></tr>',
-            Date::Format::time2str( $config{'DateTimeFormat'}, Date::Parse::str2time( $Log->date_time() ) ),
-            $Host->ip(), 
-			sprintf('<a href="/employee/it/host.html?host_id=%d">%s</a>', $$Host{id}, ( $Host->hostname() ? $Host->hostname() : $Host->ip() ) ),
-			ssi::htmlize( $Log->Company()->name() ),$Log->note() );
-    } # end foreach
-    return $html;
-) ?>
-    </table>
-</fieldset>
+		<?include(/account/_user_login_log.html)?>
 	</form>
 </div>
