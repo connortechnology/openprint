@@ -23,7 +23,7 @@ require openprint::PurchaseOrder_Tax;
 require openprint::Email;
 require openprint::Manifest;
 
-$debug = 0;
+$debug = 1;
 
 $table = 'purchaseorders';
 $serial = 'purchaseorders_id_seq';
@@ -506,14 +506,18 @@ sub can_view {
 	} # end if
 			
 	foreach my $C ( $_[0]->Contents() ) {
-		if ( sets::contains( [ $$User{id}, $User->assistant_ids(), $User->csr_ids() ], [ map { $_->salesrep_id() } $C->Orders() ] ) ) {
-			$log->debug('can see because in order salesreps');
+		my @contains = sets::contains( [ $$User{id}, $User->assistant_ids(), $User->csr_ids() ], [ map { $_->salesrep_id() } $C->Orders() ] );
+		if ( @contains ) {
+			$log->debug("can see because @contains in order salesreps");
 			return 1;
 		} # end if
 	} # end foreach C
 
 	if ( $_[0]->notifications() ) {
-		return 1 if sets::isin( $$User{id}, $_[0]->notifications() );
+		if ( sets::isin( $$User{id}, $_[0]->notifications() ) ) {
+			$log->debug($$User{firstname} . ' can see because in notifications.' );
+			return 1;
+		} # end if
 	} # end if
 	$log->debug("$$User{firstname} cannot view this PO") if $debug;
 	return 0;
@@ -557,14 +561,17 @@ $log->debug('can see');
 	} # end if
 
 	if ( $_[1] ) {
-		if ( sets::contains( [ $$User{id}, $User->assistant_ids(), $User->csr_ids() ], [ map { $_->salesrep_id() } $_[1]->Orders() ] ) ) {
-			$log->debug('can see');
+		my @contains = sets::contains( [ $$User{id}, $User->assistant_ids(), $User->csr_ids() ], [ map { $_->salesrep_id() } $_[1]->Orders() ] );
+		if ( @contains ) {
+			$log->debug("can see pricing because @contains in orders");
 			return 1;
 		} # end if
 	} else {
 		foreach my $C ( $_[0]->Contents() ) {
-			if ( sets::contains( [ $$User{id}, $User->assistant_ids(), $User->csr_ids() ], [ map { $_->salesrep_id() } $C->Orders() ] ) ) {
-				$log->debug('can see');
+
+			my @contains = sets::contains( [ $$User{id}, $User->assistant_ids(), $User->csr_ids() ], [ map { $_->salesrep_id() } $C->Orders() ] );
+			if ( @contains ) {
+				$log->debug("can see pricing because @contains in orders");
 				return 1;
 			} # end if
 		} # end foreach C
