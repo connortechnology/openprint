@@ -50,6 +50,9 @@ sub edit {
 		$param{'received_on'} = sprintf('%.4d-%.2d-%.2d', @param{'received_on_year','received_on_month','received_on_day'} ) if Date::Calc::check_date( @param{'received_on_year','received_on_month','received_on_day'} );
 		my $Payment = new openprint::Payment( $param{'payment_id'} );
 		$variable{'error'} .= $variable{'Payment'}->save(\%param);
+		if ( $param{payment_id} ) {
+			$variable{ExternalRedirect} = '/payment/history.html';
+		} # end if
 	} # end if
 } # end sub edit
 
