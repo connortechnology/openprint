@@ -600,6 +600,8 @@ sub from_ip {
 		$openprint::log->error('No record from Geo::IP' . $gi->database_info);
 		
 		return;
+	} else {
+		$openprint::log->error('Got record from Geo::IP' . $gi->database_info);
 	} # end if
 
 	my $ac = sql::start_transaction( $openprint::dbh );
