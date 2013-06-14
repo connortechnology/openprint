@@ -11,7 +11,7 @@ package openprint::Event;
 our @ISA = qw( openprint::Object );
 
 use vars qw( $debug $table $serial %fields %find_fields %transforms %defaults );
-$debug = 1;
+$debug = 0;
 $table = 'events';
 $serial = 'events_id_seq';
 
@@ -38,8 +38,7 @@ $serial = 'events_id_seq';
 	template_id	=>	'template_id',
 );
 %find_fields = (
-	'attending'	=>	'(SELECT user_id FROM event_attendance WHERE event_id=events.id AND attending=true)',
-	#'attending'=>	'(SELECT attending FROM event_attendance WHERE event_id=events.id)',
+	attending	=>	'(SELECT user_id FROM event_attendance WHERE event_id=events.id AND attending=true)',
 	'name+info'	=>	q`name || info`,
 );
 %transforms = (
