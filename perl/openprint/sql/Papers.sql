@@ -3,37 +3,37 @@
 
 CREATE TABLE StockBrands (
 	id 	SERIAL,
-	name	TEXT NOT NULL,
+	name	TEXT NOT NULL UNIQUE,
 	PRIMARY KEY (id)
 );
 
 CREATE TABLE StockFinishes (
 		id SERIAL,
-		name   TEXT NOT NULL,
+		name   TEXT NOT NULL UNIQUE,
 		PRIMARY KEY (id)
 		);
 
 CREATE TABLE StockColours (
 		id  SERIAL,
-		name   TEXT NOT NULL,
+		name   TEXT NOT NULL UNIQUE,
 		PRIMARY KEY (id)
 		);
 
 CREATE TABLE StockWeights (
 		id SERIAL,
-		name   TEXT NOT NULL,
+		name   TEXT NOT NULL UNIQUE,
 		PRIMARY KEY (id)
 		);
 
 CREATE TABLE StockQualities (
 		id SERIAL,
-		name    TEXT NOT NULL,
+		name    TEXT NOT NULL UNIQUE,
 		PRIMARY KEY (id)
 );
 
 CREATE TABLE StockPurposes (
 	id  SERIAL,
-	name   TEXT NOT NULL,
+	name   TEXT NOT NULL UNIQUE,
 	PRIMARY KEY (id)
 );
 

@@ -11,7 +11,7 @@ package openprint::Event;
 our @ISA = qw( openprint::Object );
 
 use vars qw( $debug $table $serial %fields %find_fields %transforms %defaults );
-$debug = 1;
+$debug = 0;
 $table = 'events';
 $serial = 'events_id_seq';
 
@@ -38,8 +38,7 @@ $serial = 'events_id_seq';
 	template_id	=>	'template_id',
 );
 %find_fields = (
-	'attending'	=>	'(SELECT user_id FROM event_attendance WHERE event_id=events.id AND attending=true)',
-	#'attending'=>	'(SELECT attending FROM event_attendance WHERE event_id=events.id)',
+	attending	=>	'(SELECT user_id FROM event_attendance WHERE event_id=events.id AND attending=true)',
 	'name+info'	=>	q`name || info`,
 );
 %transforms = (
@@ -273,7 +272,7 @@ sub thumbnail_html {
 		my $Asset = $_[0]->Asset();
 		if ( $Asset and $$Asset{'id'} ) {
 			$_[0]{'thumbnail_html'} = sprintf('<a href="/event/view.html?event_id=%1$d" class="thumbnail"><img src="%2$s" alt="%3$s" title="%3$s" /></a>',
-					$_[0]{'id'}, $Asset->sized_url('thumbnails'), $_[0]->name() );
+					$_[0]{'id'}, $Asset->sized_url('thumbnail'), $_[0]->name() );
 		} # end if
 	} # end if
 	return $_[0]{'thumbnail_html'};

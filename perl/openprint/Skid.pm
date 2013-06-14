@@ -199,6 +199,16 @@ sub find {
 		$sql .= ' AND received_on <= ?';
 		push @values, $params{'received_on_end'};
 	} # end if
+
+	if ( $params{'received_on >='} ) {
+		$sql .= ' AND received_on >= ?';
+		push @values, $params{'received_on >='};
+	} # end if
+	if ( $params{'received_on <='} ) {
+		$sql .= ' AND received_on <= ?';
+		push @values, $params{'received_on <='};
+	} # end if
+
 	if ( $params{'last_seen_start'} and $params{'last_seen_end'} ) {
 		$sql .= ' AND ( (SELECT updated_on FROM Rfidtags where rfidtags.id=skids.rfidtag_id) BETWEEN ? AND ? )';
 		push @values, @params{'last_seen_start','last_seen_end'};

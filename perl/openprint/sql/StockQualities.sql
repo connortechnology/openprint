@@ -1,6 +1,6 @@
 CREATE TABLE StockQualities (
-    id  SERIAL NOT NULL,
-    name    TEXT NOT NULL,
+    id  SERIAL,
+    name    TEXT NOT NULL UNIQUE,
 	message	TEXT,
     PRIMARY KEY (id)
 );
