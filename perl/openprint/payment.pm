@@ -16,15 +16,15 @@ require openprint::Invoice;
 require openprint::Invoice_Payment;
 
 sub history {
-	if ( $param{'btnFunction'} eq 'Delete' ) {
-		my $Payment = new openprint::Payment( $param{'payment_id'} );
-		$variable{'error'} .= $Payment->delete();
-	} elsif ( $param{'btnFunction'} eq 'Destroy' ) {
-		my $Payment = new openprint::Payment( $param{'payment_id'} );
-		$variable{'error'} .= $Payment->destroy();
+	if ( $param{btnFunction} eq 'Delete' ) {
+		my $Payment = new openprint::Payment( $param{payment_id} );
+		$variable{error} .= $Payment->delete();
+	} elsif ( $param{btnFunction} eq 'Destroy' ) {
+		my $Payment = new openprint::Payment( $param{payment_id} );
+		$variable{error} .= $Payment->destroy();
 	} elsif ( $param{'btnFunction'} eq 'Send Receipt' ) {
-		my $Payment = new openprint::Payment( $param{'payment_id'} );
-		$variable{'error'} .= $Payment->send_receipt();
+		my $Payment = new openprint::Payment( $param{payment_id} );
+		$variable{error} .= $Payment->send_receipt();
 	} else {
 		_history();
 		ssi::setup_date_select( '/payment/history.html', 'received_on_start', -31 );
@@ -94,7 +94,7 @@ sub make {
 		# Express CheckOut takes an Order
 		my $Order = new openprint::Order( $param{'order_id'} );
 		require PayPal;
-		my $PayPal=PayPal->new('api_USER'=>$config{'PayPal API Username'},'api_PWD'=>$config{'PayPal API Password'},'api_SIGNATURE'=>$config{'PayPal API Signature'} );
+		my $PayPal = PayPal->new('api_USER'=>$config{'PayPal API Username'},'api_PWD'=>$config{'PayPal API Password'},'api_SIGNATURE'=>$config{'PayPal API Signature'} );
 		my $result = $PayPal->Call_Service({
 					METHOD			=>	'SetExpressCheckout',
 					PAYMENTACTION	=>	'Sale',
@@ -109,9 +109,9 @@ sub make {
 				$variable{'error'} .= "$$error{errorcode} $$error{longmessage}<br/>";
 			} # end foreach error
 		} else {
-foreach my $k ( keys %$result ) {
-$log->debug("Results: $k => $$result{$k}");
-}
+			foreach my $k ( keys %$result ) {
+				$log->debug("Results: $k => $$result{$k}");
+			}
 			$session{'PayPal_token'} = $$result{'token'};	
 			$session{'PayPal_correlationid'} = $$result{'correlationid'};
 			$variable{'ExternalRedirect'} = $PayPal::url.$$result{'token'};

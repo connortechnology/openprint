@@ -273,7 +273,7 @@ sub thumbnail_html {
 		my $Asset = $_[0]->Asset();
 		if ( $Asset and $$Asset{'id'} ) {
 			$_[0]{'thumbnail_html'} = sprintf('<a href="/event/view.html?event_id=%1$d" class="thumbnail"><img src="%2$s" alt="%3$s" title="%3$s" /></a>',
-					$_[0]{'id'}, $Asset->sized_url('thumbnails'), $_[0]->name() );
+					$_[0]{'id'}, $Asset->sized_url('thumbnail'), $_[0]->name() );
 		} # end if
 	} # end if
 	return $_[0]{'thumbnail_html'};
