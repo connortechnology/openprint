@@ -31,7 +31,7 @@
 
 			var matches = re.exec( key );
 			if ( matches ) {
-				if ( value > 0 ) {
+				if ( matches[3] == 1 || value > 0 ) {
 					$('Fold-'+matches[1]+'-'+matches[2]+'-'+matches[3]).show();
 				} else {
 					$('Fold-'+matches[1]+'-'+matches[2]+'-'+matches[3]).hide();
@@ -95,7 +95,12 @@ function Fold_onchange( element, signature, qty_index, index ) {
 				$html .= "<fieldset><legend>For Signature $$sig_specs{'SignatureIndex'}:";
 				$html .= openprint::service::summary( $$variable{'Project'}, $ss_id );
 				$html .= '</legend><ul><li><label>Printed</label>';
-				$html .= join("\n", map { openprint::service::summary( $$variable{'Project'}, $ss_id, $_ ); } $$variable{'Project'}->quantity_indexes() );
+
+				foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
+					$html .= '<span class="'.$$variable{Columns}.'Columns">';
+					$html .= openprint::service::summary( $$variable{Project}, $ss_id, $qty_index );
+					$html .= '</span>';
+				} # end foreach qty_index
 				$html .= '</li>';
 				$html .= '<li><label>Equipment</label>';
 				foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {

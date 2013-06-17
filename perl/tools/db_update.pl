@@ -418,7 +418,7 @@ if ( ! sets::isin( 'photo_albums', \@tables ) ) {
 } # end if
 
 if ( ! sets::isin( 'invoices', \@tables ) ) {
-	$dbh->do( misc::load_file( $log, q{../openprint/sql/Invoices.sql}) );
+	$dbh->do( misc::load_file( $log, q{../openprint/sql/Invoices.sql}) ) or die $dbh->errstr();
 } else {
 	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='invoices'", 'column_name');
 	if ( ! exists $$data{num} ) {
@@ -2513,6 +2513,9 @@ if ( ! sets::isin( 'manifest_content_types', \@tables ) ) {
 	if ( ! exists $$data{manufacturers_name} ) {
 		$dbh->do('ALTER TABLE manifest_content_types ADD manufacturers_name TEXT');
 	} # end if
+	if ( ! exists $$data{cost_units} ) {
+		$dbh->do('ALTER TABLE manifest_content_types ADD cost_units TEXT');
+	} # end if
 } 
 
 foreach my $Currency ( openprint::Currency->find('short'=>'CDN') ) {
@@ -2873,6 +2876,11 @@ if ( ! sets::isin( 'hosts', \@tables ) ) {
 	$dbh->do('ALTER TABLE hosts ALTER count SET default 0') or die $openprint::dbh->errstr();
 	$dbh->do('UPDATE hosts SET count=0 WHERE count IS NULL') or die $openprint::dbh->errstr();
 	$dbh->do('ALTER TABLE hosts ALTER count SET NOT NULL') or die $openprint::dbh->errstr();
+
+	if ( ! exists $$data{location_id} ) {
+		$dbh->do('ALTER TABLE hosts add location_id INTEGER');
+		$dbh->do('ALTER TABLE hosts add FOREIGN KEY (location_id) REFERENCES Locations (id)');
+	} # end if
 }
 
 if ( ! sets::isin( 'host_info', \@tables ) ) {

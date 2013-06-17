@@ -245,7 +245,8 @@ sub link_to {
 } # end sub link_to
 
 sub Assets {
-	return openprint::Article_Asset->find( 'article_id' => $_[0]{'id'} );
+	return () if ! $_[0]{id};
+	return openprint::Article_Asset->find( article_id => $_[0]{id} );
 } # end sub Assets
 
 sub published_on_string {

@@ -556,7 +556,7 @@ sub save_location {
 			$error .= $Location->save({
 					'name'			=>	$$param{'location'}, 
 					'parent_id'		=>	$parent_id, 
-					($$param{'type_id'}?('type_id'=>$$param{'type_id'}):('type'			=>	'place')), 
+					($$param{location_type_id}?(type_id=>$$param{location_type_id}):('type'			=>	'place')), 
 					'address'		=>	$$param{'address'},
 					'postalcode'	=>	$$param{'postalcode'},
 					});
@@ -591,9 +591,18 @@ sub googlemap_html {
 
 sub from_ip {
 	my $gi = Geo::IP->open("/usr/share/GeoIP/GeoIP.dat");
-	return if ! $gi;
-	my $record = $gi->record_by_name(@_ ? $_[0] : $ENV{'REMOTE_ADDR'});
-	return if ! $record;
+	if ( ! $gi ) {
+		$openprint::log->error('No Geo::IP');
+		return;
+	} # end if
+	my $record = $gi->record_by_addr(@_ ? $_[0] : $ENV{'REMOTE_ADDR'});
+	if ( ! $record ) {
+		$openprint::log->error('No record from Geo::IP' . $gi->database_info);
+		
+		return;
+	} else {
+		$openprint::log->error('Got record from Geo::IP' . $gi->database_info);
+	} # end if
 
 	my $ac = sql::start_transaction( $openprint::dbh );
 	$openprint::dbh->do( 'LOCK TABLE Orders IN SHARE ROW EXCLUSIVE MODE' ) or $openprint::log->error( $openprint::dbi->errstr() );

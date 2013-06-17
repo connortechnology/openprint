@@ -45,7 +45,7 @@
 			<li>
 				<label>Project #</label>
 				<? echo ( join("\n",
-					ssi::input( type=>'cardinal', name=>'ProjectID', onkeydown=>'if(event.keyCode == 13){load_projects( this.form );}' ),
+					ssi::input( type=>'cardinal', id=>'ProjectID', name=>'ProjectID', onkeydown=>'if(event.keyCode == 13){load_projects( this.form );}' ),
 					ssi::button( 'Go1', { onclick=>q`load_projects( $('f1') );`, text=>'Go' } ), 
 				); ) ?>
 			</li>

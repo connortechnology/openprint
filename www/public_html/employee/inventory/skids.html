@@ -125,10 +125,11 @@ Please select a Skid to view/edit.<br/>
 		</li>
 		<li>
             <label>With/Without RFID?</label>
-            <input type="checkbox" id="withrfid" name="withrfid" <? echo ( $session{'/employee/inventory/skids.html?withrfid'} ? 'checked="checked"' : '' ) ?> />
-            <label class="radio" for="withrfid">With RFID</label>
-            <input type="checkbox" id="withoutrfid" name="withoutrfid" <? echo ( $session{'/employee/inventory/skids.html?withoutrfid'} ? 'checked="checked"' : '' ) ?> />
-            <label class="radio" for="notempty">Without RFID</label>
+			<? echo ( radio( 'rfid', ['Y', 'Yes', 'N', 'No', '', 'All' ], $session{'/employee/inventory/skids.html?rfid'}, { onclick=>'calc();' } ); ) ?>
+		</li>
+		<li>
+            <label>Valid/Invalid RFID?</label>
+			<? echo ( radio( 'rfid_valid', ['Y', 'Yes', 'N', 'No', '', 'All' ], $session{'/employee/inventory/skids.html?rfid_valid'}, { onclick=>'calc();' } ); ) ?>
 		</li>
 		<li><label>Type</label>
 			<? echo ( radio( 'Type', ['Sheet','Sheet', 'Roll', 'Roll', '', 'Both'], $session{'/employee/inventory/skids.html?Type'}, { onclick=>'calc();' } ); ) ?>

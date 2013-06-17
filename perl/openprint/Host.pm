@@ -73,6 +73,7 @@ $serial = 'hosts_id_seq';
 	offline_seconds	=>	'offline_seconds',
 	state_changed_on	=>	'state_changed_on',
 	notified			=>	'notified',
+	location_id			=>	'location_id',
 );
 %find_fields = (
 	type	=>	'(SELECT name FROM Host_types WHERE host_types.id=type_id)',
@@ -99,6 +100,7 @@ $serial = 'hosts_id_seq';
 	'state_changed_on'	=>	undef,
 	'offline_seconds'	=>	undef,
 	'notified'=>	0,
+	location_id		=>	undef,
 );
 sub resolve {
 	my ( $self ) = @_;
@@ -220,6 +222,11 @@ $openprint::log->debug("No value for $_[1] " . $_[0]->to_string() );
 		} # end foreach
 	return '';
 } # end sub info
+
+sub Location {
+	require openprint::Location;
+	return new openprint::Location( $_[0]{location_id} );
+} # end sub Location
 
 1;
 __END__

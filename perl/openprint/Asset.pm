@@ -134,6 +134,8 @@ sub sized_url {
 					$width = $openprint::config{'Medium_Asset_Width'};
 				} elsif ( $size eq 'large' ) {
 					$width = $openprint::config{'Large_Asset_Width'};
+				} elsif ( $size eq 'thumbnail' ) {
+					$width = $openprint::config{'Small_Asset_Width'};
 				} # end if
 				if ( ! $width ) {
 					$openprint::log->error("No asset size in config for $size");
@@ -145,7 +147,14 @@ sub sized_url {
 				IPC::Run3::run3(qq`convert -adaptive-resize ${width}x "$src" "$dest"`, undef, $stdout, $stderr );
 				if ( $? ) {
 					$openprint::log->error("ERror creating sized image. Reason: ($?) stdout($stdout) stderr($stderr)");
+					return '/assets/'.$filename;
 				} # end if convert
+				if ( $extension =~ /jpe?g/i ) {
+					IPC::Run3::run3(qq`jpegtran -optimize -copy none -outfile "$dest" "$dest"`, undef, $stdout, $stderr );
+					if ( $? ) {
+						$openprint::log->error("ERror optimising sized image. Reason: ($?) stdout($stdout) stderr($stderr)");
+					} # end if convert
+				} # end if
 			} # end if
 		} # end if
 #$openprint::log->debug("Return /thumbnails/$filename");
@@ -168,6 +177,8 @@ sub sized_url {
 					$width = $openprint::config{'Medium_Asset_Width'};
 				} elsif ( $size eq 'large' ) {
 					$width = $openprint::config{'Large_Asset_Width'};
+				} elsif ( $size eq 'thumbnail' ) {
+					$width = $openprint::config{'Small_Asset_Width'};
 				} elsif ( ! $size ) {
 					$size = 'full';
 				} # end if
@@ -206,6 +217,11 @@ sub sized_url {
 					} # end if
 					unlink "/tmp/$filename/00000001.jpg";
 					rmdir "/tmp/$filename";
+					my ( $stdout, $stderr );
+					IPC::Run3::run3(qq`jpegtran -optimize -copy none -outfile "$dest" "$dest"`, undef, $stdout, $stderr );
+					if ( $? ) {
+						$openprint::log->error("ERror optimising sized image. Reason: ($?) stdout($stdout) stderr($stderr)");
+					} # end if convert
 				} else {
 					$openprint::log->error("Unable to create medium thumbnail at /tmp/$filename/: Wasn't there! $!" );
 					$openprint::log->debug("command was mplayer -frames 1 -nosound -quiet -zoom -vf scale=$width:-3 -vo jpeg:outdir=/tmp -ss 60 $src : $_ ");
@@ -251,12 +267,14 @@ sub thumbnail_html {
 		$openprint::log->warn('Called thumbnail_html on asset with no id');
 		return '';
 	} # end if
-	return sprintf('<img src="%1$s" alt="%2$s" title="%2$s" />', $_[0]->sized_url('thumbnails'), $_[0]->name() );
+	return sprintf('<img src="%1$s" alt="%2$s" title="%2$s" />', $_[0]->sized_url('thumbnail'), $_[0]->name() );
 } # end sub thumbnail_html
 
 sub thumbnail_path {
-	my $url = $_[0]->sized_url('thumbnails');
+	my $url = $_[0]->sized_url('thumbnail');
 	if ( $url =~ /^\/thumbnails/ ) {
+		return $openprint::config{'AssetPath'}.$url;
+	} elsif ( $url =~ /^\/small/ ) {
 		return $openprint::config{'AssetPath'}.$url;
 	} else {
 		return $openprint::config{'SkinPath'}.$url;

@@ -2,7 +2,6 @@ use strict;
 package openprint::invoice;
 
 use openprint ();
-use Math::Round ();
 use vars qw( $r %variable %session %param %config $log $dbh );
 *variable = \%openprint::variable;
 *session = \%openprint::session;
@@ -11,6 +10,8 @@ use vars qw( $r %variable %session %param %config $log $dbh );
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
 *r = \$openprint::r;
+
+require Math::Round;
 
 require openprint::Invoice;
 require openprint::Invoice_Interest;
@@ -25,15 +26,15 @@ sub history {
 		foreach my $Product ( $Invoice->Products() ) {
 			$variable{error} .= $Product->save({
 				description	=>	$param{'product-description-'.$Product->id()},
-				price			=>	$param{'product-price-'.$Product->id()},
-				quantity		=>	$param{'product-quantity-'.$Product->id()},
+				price		=>	$param{'product-price-'.$Product->id()},
+				quantity	=>	$param{'product-quantity-'.$Product->id()},
 				po			=>	$param{'product-po-'.$Product->id()},
 				});
-		} # end foreach
-		$param{'currency_id'} = openprint::Currency::get_current()->id() if ! $param{'currency_id'};
-		$param{'due_on'} = sprintf('%.4d-%.2d-%.2d', @param{'due_on_year','due_on_month','due_on_day'} ) if ! $param{'due_on'};
+		} # end foreach Product
+		$param{currency_id} = openprint::Currency::get_current()->id() if ! $param{'currency_id'};
+		$param{due_on} = sprintf('%.4d-%.2d-%.2d', @param{'due_on_year','due_on_month','due_on_day'} ) if ! $param{'due_on'};
 		$param{early_payment_date} = sprintf('%.4d-%.2d-%.2d', @param{'early_payment_date_year','early_payment_date_month','early_payment_date_day'} ) if ! $param{early_payment_date};
-		$param{'invoicer_id'} = $session{'company_id'} if ! $param{'invoicer_id'};
+		$param{invoicer_id} = $session{'company_id'} if ! $param{'invoicer_id'};
 		if ( ! ( $variable{'error'} .= $Invoice->save(\%param) ) ) {
 			$variable{'information'} .= 'Invoice saved.<br/>';
 			%param = ();
@@ -44,6 +45,9 @@ sub history {
 			$Invoice->add_to_log( 'Invoice posted.' );
 			$variable{'information'} .= 'Invoice posted.<br/>';
 			delete $param{'invoice_id'};
+			if ( $session{'/invoice/history.html?company_id'} and ( $session{'/invoice/history.html?company_id'} != $Invoice->invoicee_id() ) ) {
+				delete $session{'/invoice/history.html?company_id'};
+			} # end if
 		} # end if
 	} elsif ( $param{'btnFunction'} eq 'UnPost' ) {
 		my $Invoice = new openprint::Invoice( $param{'invoice_id'} );
@@ -182,10 +186,10 @@ sub history {
 
 sub _history {
 	ssi::save_params( '/invoice/history.html', ( 
-		( map { 'created_on_start_' } ( 'year','month','day' ) ),
-		( map { 'created_on_end_' } ( 'year','month','day' ) ),
-		( map { 'due_on_start_' } ( 'year','month','day' ) ),
-		( map { 'due_on_end_' } ( 'year','month','day' ) ),
+		( map { 'created_on_start_'.$_ } ( 'year','month','day' ) ),
+		( map { 'created_on_end_'.$_ } ( 'year','month','day' ) ),
+		( map { 'due_on_start_'.$_ } ( 'year','month','day' ) ),
+		( map { 'due_on_end_'.$_ } ( 'year','month','day' ) ),
 		'paid','company_id','bad_debt') );
 } # end sub _history
 

@@ -426,7 +426,7 @@ if ( 0 ) {
 	if ( ! $_[0]{'icon'} ) {
 		$_[0]{'icon'} = sprintf('<a href="/account/view.html?user_id=%1$d" class="thumbnail"><img src="%2$s" alt="%3$s" title="%3$s"/></a>',
 		#$_[0]{'icon'} = sprintf('<a href="/account/view.html?user_id=%1$d" class="thumbnail"><img src="%2$s?user_id=%1$d" alt="%3$s" title="%3$s" /></a>',
-			$_[0]{'id'}, $_[0]->Asset()->sized_url('thumbnails'), $_[0]->alias() );
+			$_[0]{'id'}, $_[0]->Asset()->sized_url('thumbnail'), $_[0]->alias() );
 	} # end if
 	return $_[0]{'icon'};
 }
@@ -451,7 +451,7 @@ sub html {
 	} # end if
 
 	my $Asset = $User->Asset();
-	my $thumbnail_url = $Asset->sized_url('thumbnails');
+	my $thumbnail_url = $Asset->sized_url('thumbnail');
 
 	return sprintf(q`
 				<div class="User">
