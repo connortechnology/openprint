@@ -650,7 +650,11 @@ $openprint::log->error("No date from $value");
 #$openprint::log->debug(" date_select: $value : ($year,$month,$day), order: $$options{order}");
 	$$options{'order'} = 'y,m,d' if ! $$options{'order'};
 
-	my $html = '';
+	my $class = 'DateSelector';
+	$class .= 'C' if $$options{with_clear};
+	$class .= 'T' if $$options{with_today};
+
+	my $html = '<span class="'.$class.'">';
 	$html .= sprintf(q`<span id="%1$s_date"><select id="%1$s_year" name="%1$s_year" onchange="setDaysDropDown(this.value,this.form.elements['%1$s_month'].value,this.form.elements['%1$s_day'],this.form.elements['%1$s_day'].value);%2$s">
 `, $prefix, $$options{'onchange'} );
 	$html .= '<option value=""> </option>';
@@ -682,7 +686,7 @@ $openprint::log->error("No date from $value");
 	if ( $$options{'with_today'} ) {
 		$html .= button( $prefix.'_today', { 'onclick'=>sprintf(q`set_today( $('%1$s_year'), $('%1$s_month'), $('%1$s_day'), $('%1$s_hour'), $('%1$s_minute') );`, $prefix ).$$options{'onchange'}, 'text'=>'T' } );
 	} # end if
-	$html .= '<span id="'.$prefix.'_alert"></span>';
+	$html .= '<span id="'.$prefix.'_alert"></span></span>';
 	return $html;
 } # end sub datetime_select
 

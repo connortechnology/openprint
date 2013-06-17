@@ -17,6 +17,7 @@ require openprint::User_Type;
 require openprint::Session;
 require openprint::License;
 require openprint::Software;
+require openprint::Location;
 
 sub logs {
 	ssi::setup_date_select( '/employee/it/logs.html', 'date_time_start', -31 );
@@ -96,6 +97,18 @@ sub host {
 		foreach my $mac ( @{ $Host->mac() } ) {
 			`wakeonlan $mac`;
 		} # end foraech
+	} elsif ( $param{action} eq 'GEOLookup' ) {
+		if ( ! $Host->ip() ) {
+			$variable{error} .= 'Host does not have an ip.<br/>';
+		} else {
+			my $Location = openprint::Location::from_ip( $Host->ip() );
+			if ( ! $Location ) {
+				$variable{error} .= 'No Location found from ip.';
+			} else {
+				$$Host{location_id} = $Location->id();
+			} # end if
+		} # end if
+		
 	} elsif ( $param{action} eq 'Save' ) {
 		$param{mac} = [ map { split( ',', $_ ) } split("\n", $param{mac}) ];
 		if ( $param{type_id} ) {

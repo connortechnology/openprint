@@ -2,7 +2,7 @@
 <form id="f2" name="f2" action="/employee/purchase_order/history.html" method="post" enctype="multipart/form-data">
 	<input type="hidden" name="btnFunction" />
 	<input type="hidden" name="po_id" value="<? echo ( $$variable{PurchaseOrder}->id() ) ?>" />
-	<? echo ( include('/includes/error_reporting.html'); ) ?>
+	<?include('/includes/error_reporting.html')?>
 	<p class="buttons">
 <? echo ( 
 	my $html = '';

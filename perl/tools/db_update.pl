@@ -1572,6 +1572,16 @@ if ( ! sets::isin( 'manifests', \@tables ) ) {
 		die "Blah" if $dbh->errstr();
 	} # end if
 } # end if
+if ( ! sets::isin( 'manifestcontents', \@tables ) ) {
+	$dbh->do( misc::load_file( $log, q{../openprint/sql/ManifestContents.sql}) );
+} else {
+	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='manifestcontents'", 'column_name');
+	if ( ! exists $$data{location_id} ) {
+		$dbh->do('ALTER TABLE manifestcontents ADD location_id INTEGER');
+		$dbh->do('ALTER TABLE manifestcontents ADD FOREIGN KEY (location_id) REFERENCES Locations (id)');
+	} # end if
+}
+
 if ( ! sets::isin( 'purchaseorder_contenttypes', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/PurchaseOrder_ContentTypes.sql}) ) or die $dbh->errstr();
 }
@@ -2866,6 +2876,11 @@ if ( ! sets::isin( 'hosts', \@tables ) ) {
 	$dbh->do('ALTER TABLE hosts ALTER count SET default 0') or die $openprint::dbh->errstr();
 	$dbh->do('UPDATE hosts SET count=0 WHERE count IS NULL') or die $openprint::dbh->errstr();
 	$dbh->do('ALTER TABLE hosts ALTER count SET NOT NULL') or die $openprint::dbh->errstr();
+
+	if ( ! exists $$data{location_id} ) {
+		$dbh->do('ALTER TABLE hosts add location_id INTEGER');
+		$dbh->do('ALTER TABLE hosts add FOREIGN KEY (location_id) REFERENCES Locations (id)');
+	} # end if
 }
 
 if ( ! sets::isin( 'host_info', \@tables ) ) {

@@ -173,9 +173,10 @@
    			</fieldset>
 			</div>
 			<? if ($variable{DoEmail}) ?> 
-			<br class="spacer"/>
-				<? echo ( include('_email_settings.html'); ) ?>
+				<br class="spacer"/>
+				<?include(_email_settings.html)?>
 			<? endif ($variable{DoEmail}) ?> 
+			<?include(_user_login_log.html)?>
 <? else ( $$variable{User}->can_edit() ) ?>
 You cannot edit this user.
 <? endif ( $$variable{User}->can_edit() ) ?>

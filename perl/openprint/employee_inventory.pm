@@ -454,6 +454,10 @@ sub paper_details {
 	} elsif ( $param{'btnFunction'} eq 'CheckOut' ) {
 		check_out( undef, @param{'paper_id','Quantity','Project','Docket','reason'} );
 	} elsif ( $param{'btnFunction'} eq 'Merge' ) {
+		if ( ! $Paper->id() ) {
+			$variable{error} .= 'Cant merge.  No given stock.';
+			return;
+		} # end if
 		my @Duplicates = openprint::Paper->find(
 				'manufacturer_id'	=> $Paper->manufacturer_id(),
 				'brand_id'			=> $Paper->brand_id(),
@@ -463,12 +467,14 @@ sub paper_details {
 				'quality_id'		=> $Paper->quality_id(),
 				'width'				=> $Paper->width(),
 				'height'			=> $Paper->height(),
+				fsc_code			=>	$Paper->fsc_code(),
 				);
 
 		foreach my $Duplicate ( @Duplicates ) {
 			next if $Duplicate->id() == $Paper->id();
 			$Paper->merge( $Duplicate );
 		} # end foreach
+		$variable{'ExternalRedirect'} = '/employee/inventory/paper_details.html?paper_id='.$Paper->id();
 	} # end if
 	$variable{'Paper'} = $Paper;
 	$variable{'paper_id'} = $$Paper{'id'};
@@ -1396,20 +1402,20 @@ sub manifest {
 			if ( ! @Companies ) {
 				my $C = new openprint::Company();
 				$C->save({
-						'supplier'		=> 'Y',
-						'name'			=> $param{'supplier'},
-						'business_name' => $param{'supplier'},
+						supplier		=> 'Y',
+						name			=> $param{supplier},
+						business_name	=> $param{supplier},
 						} );
-				$param{'supplier_id'} = $C->id();
+				$param{supplier_id} = $C->id();
 			} elsif ( @Companies == 1 ) {
 				if ( $Companies[0]->supplier() ne 'Y' ) {
-					$Companies[0]->save( {'supplier'=>'Y'} );
+					$Companies[0]->save( { supplier=>'Y'} );
 				} # end if
-				$param{'supplier_id'} = $Companies[0]->id();
+				$param{supplier_id} = $Companies[0]->id();
 			} # end if
 		} # end if
 
-		$variable{'error'} .= $Manifest->save( \%param );
+		$variable{error} .= $Manifest->save( \%param );
 
 		my @Types = openprint::Manifest_Content_Type->find( manifest_id=>$Manifest->id());
 		if ( ! @Types ) {
@@ -1548,10 +1554,13 @@ sub manifest {
 								$Skid = $S;
 							} # end if
 						} # end if
-						$variable{error} .= $Skid->save({manufacturers_id=>$param{"manufacturers_id-$$Type{id}-$$MC{id}"}}) if $param{"manufacturers_id-$$Type{id}-$$MC{id}"} and ! $Skid->manufacturers_id();
+						$variable{error} .= $Skid->set({manufacturers_id=>$param{"manufacturers_id-$$Type{id}-$$MC{id}"}}) if $param{"manufacturers_id-$$Type{id}-$$MC{id}"} and ! $Skid->manufacturers_id();
 					} # end if
 					$Skid->rfidtag_id( $MC->rfidtag_id() ) if ! $Skid->rfidtag_id() and $MC->rfidtag_id();
-					$variable{error} .= $Skid->save() if ! $Skid->id();
+					if ( $param{"location_id-$$Type{id}-$$MC{id}"} and ( $param{"location_id-$$Type{id}-$$MC{id}"} != $Skid->location_id() ) ) {
+						$Skid->location_id( $param{"location_id-$$Type{id}-$$MC{id}"} );
+					} # end if
+					$variable{error} .= $Skid->save();
 					$variable{error} .= $MC->save({skid_id=>$$Skid{id}}) if $MC->skid_id() != $$Skid{id};
 
 					my $checked_out = openprint::PaperInventory->find( skid_id=>$Skid->id(), paper_id=>$Type->paper_id(), 'comment_like'=>'Checked out%' ) ? 1 : 0; 
@@ -1567,9 +1576,6 @@ sub manifest {
 							@SkidContents = ( new openprint::SkidContent() );
 							$SkidContents[0]->save({skid_id=>$$MC{skid_id}, paper_id=>$Type->paper_id(), quantity=>$$MC{quantity}, manifestcontent_id=>$$MC{id}});
 						} # end if
-					} # end if
-					if ( $param{"location_id-$$Type{id}-$$MC{id}"} and ( $param{"location_id-$$Type{id}-$$MC{id}"} != $Skid->location_id() ) ) {
-						$Skid->save({location_id=>$param{"location_id-$$Type{id}-$$MC{id}"}});
 					} # end if
 					$total_qty += $MC->quantity();
 					#if ( $Project and ( $param{"allocate-$$Type{id}"} eq 'Specific' ) ) {
@@ -1779,6 +1785,8 @@ sub _manifests {
 				( map { 'received_on_end_'.$_ } ( 'year','month','day' ) ),
 				( map { 'created_on_start_'.$_ } ( 'year','month','day' ) ),
 				( map { 'created_on_end_'.$_ } ( 'year','month','day' ) ),
+				( map { 'updated_on_start_'.$_ } ( 'year','month','day' ) ),
+				( map { 'updated_on_end_'.$_ } ( 'year','month','day' ) ),
 				'supplier_id', 'delivery','deleted',
 				) );
 } # end sub _manifests

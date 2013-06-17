@@ -1,4 +1,4 @@
-<? echo ( include('/includes/error_reporting.html'); ) ?>
+<?include(/includes/error_reporting.html)?>
 <script type="text/javascript" src="<?hash_link(/javascripts/barcode.js)?>"></script>
 <script type="text/javascript" src="<?hash_link(/javascripts/paper.js)?>"></script>
 <script type="text/javascript" src="<?hash_link(/employee/inventory/manifest.js)?>"></script>
@@ -29,6 +29,10 @@
 				) ?>
 <? echo ( ssi::date_select( 'received_on', sprintf('%.4d-%.2d-%.2d', @param{'received_on_year','received_on_month','received_on_day'}) ); ) ?>
 				</p>
+<? if ( $$variable{Manifest}->id() ) ?>
+				<p><label>Created On</label><? echo ( format_datetime( $$variable{Manifest}->created_on() ); ) ?></p>
+				<p><label>Updated On</label><? echo ( format_datetime( $$variable{Manifest}->updated_on() ); ) ?></p>
+<? endif ( $$variable{Manifest}->id() ) ?>
 			</div>
 		</fieldset>
 		<div id="Types">
