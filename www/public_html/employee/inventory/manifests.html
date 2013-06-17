@@ -71,6 +71,16 @@ function load_results( ) {
 				</span>
 			</li>
 			<li>
+				<label>Updated On</label>
+				<span class="DateSelectorCT">
+	<? echo ( ssi::date_select_session( '/employee/inventory/manifests.html','updated_on_start', { with_today=>1, with_clear=>1 } ); ) ?>
+				</span>
+				to 
+				<span class="DateSelectorCT">
+	<? echo ( ssi::date_select_session( '/employee/inventory/manifests.html','updated_on_end', { with_today=>1, with_clear=>1 } ); ) ?>
+				</span>
+			</li>
+			<li>
 				<label>Received On</label>
 				<span class="DateSelectorCT">
 	<? echo ( ssi::date_select_session( '/employee/inventory/manifests.html','received_on_start', { with_today=>1, with_clear=>1 } ); ) ?>
@@ -93,8 +103,8 @@ function load_results( ) {
 				<? echo ( join('',
 					button( 'ShowResults', { onclick=>q`load_results();`, text=>'Show Results' } ),
 					button( 'Add', { href=>'manifest.html', text=>'Add New Manifest' } ),
+					button( 'Import', { onclick=>q`popup_window( '/employee/inventory/_manifest_import_popup.html', '', {width:475} );` } ),
 					); ) ?>
-				<input type="file" name="import"/><? echo ( button( 'Import', { onclick=>q`f1.action='manifest.html?action=import';f1.submit();` } ); ) ?>
 			</p>
 		</fieldset>
 	</form>

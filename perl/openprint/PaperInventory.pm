@@ -59,6 +59,11 @@ sub find {
 	my @values;
 	my $sql = 'SELECT * FROM Paper_Inventory WHERE 1>0';
 
+	if ( exists $params{'id !='} ) {
+			$sql .= ' AND id != ?';
+			push @values, $params{'id !='};
+	} # end if
+
 	if ( exists $params{'id'} ) {
 		if ( ref $params{'id'} eq 'ARRAY' ) {
 			$sql .= ' AND id IN ('. join(',', map {'?'} @{$params{'id'}} ) . ')';

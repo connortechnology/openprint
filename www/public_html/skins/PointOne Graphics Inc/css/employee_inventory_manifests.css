@@ -11,3 +11,6 @@ li label:after {
 li label.radio:after {
 	content: "";
 }
+.dialog p.buttons {
+	padding-left: 0;
+}

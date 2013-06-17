@@ -76,6 +76,9 @@ $$variable{type_id}, $lbs, $lbs/2.2046, Number::Format::format_number($total) );
 				$$variable{type_id}, $total, $total/2.2046, ( ( $Paper->wpsi() and $Paper->width() ) ? (($total/$Paper->wpsi())/$Paper->width())/12 : 0 ) );
 		} #end if
 		$html .= '<td colspan="4">&nbsp;</td></tr>';
+		if ( scalar @Contents != $$variable{Type}{item_count} ) {
+			$html .= '<tr><td colspan="11" class="warning">Contents and expected content count do not match!</td></tr>';
+		} # end if
 		return $html;
 	) ?>
 </table>
