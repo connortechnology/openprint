@@ -236,7 +236,7 @@ $Skid->RFIDTag()->id(),
 		<? echo ( join('',
 					button( 'move', { onclick=>"popup_window('/employee/inventory/_move_skids_window.html?skid_id='+\$A(SkidResults.skids).filter(function(e){return e.checked}).map(function(e){return e.value}).join(',') ) ;", text=>'Move To' } ),
 					button( 'manifest', { onclick=>"open_window('/employee/inventory/paper_label_window.html?skid_id='+\$A(SkidResults.skids).filter(function(e){return e.checked}).map(function(e){return e.value}).join(','), 'label', 'toolbar=no,width=400,height=400,location=no,resizeable=no,scrollbars=yes,status=no');", text=>'Print Labels' } ),
-					#button( 'Delete', { onclick=>"SkidResults.btnFunction.value='Delete';SkidResults.submit();", text=>'Delete Checked' } ),
+					button( 'Delete', { onclick=>"SkidResults.btnFunction.value='Delete';SkidResults.submit();", text=>'Delete Checked' } ),
 					button( 'Select', { onclick=>"SkidResults.btnFunction.value='Go';SkidResults.action='skid_details.html';SkidResults.submit();", text=>'Select Checked' } ),
 
 			); ) ?>
