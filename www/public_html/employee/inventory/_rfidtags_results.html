@@ -30,6 +30,12 @@
 					next if ! $RFIDTag->location_id();
 				} # end if
 			} # end if
+			if ( ( ! $RFIDTag->valid() ) and ( ! $RFIDTag->is_invalid_id() ) ) {
+$log->debug("Updating valid");
+				$RFIDTag->save();
+			} else {
+$log->debug($RFIDTag->valid() . ' ' . $RFIDTag->is_invalid_id() );
+			}
 			push @{$$variable{'RFIDTags'}}, $RFIDTag;
 		} # end foreach Tag
 	} # end if
