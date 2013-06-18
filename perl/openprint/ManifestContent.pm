@@ -66,10 +66,14 @@ sub RFIDTag {
 		$_[0]{rfidtag_id} = ref $_[0]{RFIDTag} eq 'openprint::RFIDTag' ? $_[0]{RFIDTag}{id} : undef;
 	} # end if
 	if ( ! $_[0]{RFIDTag} ) {
-		$_[0]{RFIDTag} = new openprint::RFIDTag( $_[0]{rfidtag_id} );
-		if ( ! $_[0]{RFIDTag}->id() ) {
-			$_[0]{RFIDTag} = new openprint::RFIDTag();
-			$_[0]{RFIDTag}->id( $_[0]{rfidtag_id} );
+		if ( $_[0]{rfidtag_id} ) {
+			$_[0]{RFIDTag} = new openprint::RFIDTag( $_[0]{rfidtag_id} );
+			if ( ! $_[0]{RFIDTag}->id() ) {
+				$_[0]{RFIDTag} = new openprint::RFIDTag();
+				$_[0]{RFIDTag}->id( $_[0]{rfidtag_id} );
+			} # end if
+		} else {
+			$_[0]{RFIDTag} = $_[0]->Skid()->RFIDTag();
 		} # end if
 	} # end if
 	return $_[0]{RFIDTag};

@@ -153,6 +153,12 @@ sub can_view {
 	   ) {
 		return 1;
 	} # end if
+	if ( my @notifications = $_[0]->PurchaseOrder()->notifications() ) {
+		if ( sets::isin( $$User{id}, \@notifications ) ) {
+			$openprint::log->debug($$User{firstname} . ' can see because in notifications.' );
+			return 1;
+		} # end if
+	} # end if
 	return 0;
 } # end sub can_view
 1;

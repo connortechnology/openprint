@@ -120,7 +120,7 @@ sub find {
 		$sql .= ' AND rfidtag_id ilike ?';
 		push @values, $params{'rfidtag_id ilike'};
 	} # end if
-	if ( $params{'manufacturers_id'} ) {
+	if ( exists $params{'manufacturers_id'} ) {
         if ( ref $params{'manufacturers_id'} eq 'ARRAY' ) {
             $sql .= ' AND manufacturers_id IN (' . join(',', map { '?' } @{$params{'manufacturers_id'}} ) . ')';
             push @values, @{$params{'manufacturers_id'}};
@@ -427,14 +427,18 @@ sub Contents {
 	return () if ! $$self{'id'};
 
 	if ( @_ ) {
-		my %params = @_;
-		$params{'skid_id'} = $$self{'id'};
-		return openprint::SkidContent::find( %params );
+		if ( ! defined $_[0] ) {
+			@{$$self{'Contents'}} = openprint::SkidContent::find( 'skid_id'=>$$self{'id'} );
+		} else {
+			my %params = @_;
+			$params{'skid_id'} = $$self{'id'};
+			return openprint::SkidContent::find( %params );
+		} # end if
 	} elsif ( ! $$self{'Contents'} ) {
 		@{$$self{'Contents'}} = openprint::SkidContent::find( 'skid_id'=>$$self{'id'} );
 	} # end if
 	return @{$$self{'Contents'}};
-} # end sub contents
+} # end sub Contents
 
 sub allocation {
 	my ( $self, %options ) = @_;
