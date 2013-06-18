@@ -97,8 +97,12 @@ sub Price {
 		$Price{'Cost'} = $Price{'Price'} = $$self{'rate'};
 	} # end if
 
-	if ( lc $Price{'units'} eq '/month' ) {
-		$elapsed = sprintf('%.0f',$elapsed/(60*60*24*30));
+	if ( lc $Price{'units'} eq '/year' ) {
+		$elapsed = Math::Round::nearest(1,$elapsed/(60*60*24*365));
+		#$openprint::log->debug('Month pricing ' . $elapsed );
+		$Price{'Total'} = $Price{'Price'} * $elapsed;
+	} elsif ( lc $Price{'units'} eq '/month' ) {
+		$elapsed = Math::Round::nearest(1,$elapsed/(60*60*24*30));
 		#$openprint::log->debug('Month pricing ' . $elapsed );
 		$Price{'Total'} = $Price{'Price'} * $elapsed;
 	} elsif ( lc $Price{'units'} eq '/hr.' ) {
