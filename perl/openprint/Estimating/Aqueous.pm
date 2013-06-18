@@ -138,7 +138,7 @@ sub calc {
 			my $Imposition = new openprint::Imposition();
 			$Imposition->load( $sig_specs, $qty_index );
 			my %results = signature_calc( $Project, $service_index, $specs, $signature_service_index, $sig_specs, $qty_index, $Imposition, \%MakeReadies );
-			$MakeReadies{$results{'Equipment'}->id()} = $$sig_specs{'StockWidth'.$qty_index} * $$sig_specs{'StockHeight'.$qty_index} if $results{'Equipment'};
+			$MakeReadies{$results{'Equipment'}->id()} = $Imposition->layout_area() if $results{'Equipment'};
 			@outputs = sets::union( @outputs, 
 					"ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index",
 					"txtImposition-$$sig_specs{'SignatureIndex'}-$qty_index",
@@ -204,6 +204,11 @@ sub calc {
 
 sub signature_calc {
     my ( $Project, $service_index, $specs, $signature_service_index, $sig_specs, $qty_index, $imposition, $MakeReadies ) = @_;
+
+$openprint::log->debug("MakeReadies");
+foreach my $equipment_id ( keys %{$MakeReadies} ) {
+$openprint::log->debug("Makereadies $equipment_id $$MakeReadies{$equipment_id}");
+}
 
 	my %bestPrice;
 	$bestPrice{'Status'} = 'uncalculated';
@@ -272,8 +277,6 @@ if ( 1 ) {
 		} # end if
 	} # end if
 
-	$imposition = $imposition->copy();
-
 	my @impositions = ();
 	my $services = $Project->services();
 	if ( $$services{'Cutting'} ) {
@@ -297,7 +300,7 @@ if ( 1 ) {
 			} # end for
 		} # end for
 	} else {
-		@impositions = ( $imposition );
+		@impositions = ( $imposition->copy() );
 	} # end if
 	#$openprint::log->debug('DOne Cutting :' . @impositions);
 
@@ -347,16 +350,17 @@ if ( 1 ) {
 			} else {
 				@types = (@front_aq, @back_aq);
 			} # end if
-			my $area = $imp->Paper()->area();
+			my $area = $imp->layout_area();
 
 			foreach my $type ( @types ) {
 
 				my %setupPrice;
-
+$openprint::log->debug("Makereadies: $$Equipment{id} $area");
 				if ( $MakeReadies{$Equipment->id()} and (
 							(($area * 1.10 ) > $MakeReadies{$Equipment->id()} ) and
 							(($area * .90 ) < $MakeReadies{$Equipment->id()} )
 							) ) {
+$openprint::log->debug("In Makereadies: $$Equipment{id} $area");
 				} else {
 					my $MRService = openprint::Service->find_one('name'=>$type.' MakeReady');
 					$MRService = openprint::Service->find_one('name'=>'AqueousMakeReady') if ! $MRService;
