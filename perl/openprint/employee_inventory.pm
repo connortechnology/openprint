@@ -1607,7 +1607,7 @@ sub manifest {
 					$$MC{location_id} = undef;
 					$skid_changes .= 'Changed location to ' . $Skid->Location()->name() . '<br/>';
 				} # end if
-				if ( ! $$Skid->id() ) {
+				if ( ! $Skid->id() ) {
 					$skid_changes .= 'Skid Created.<br/>';
 				} # end if
 
