@@ -58,11 +58,20 @@ input( type=>'cardinal', id=>'qty_sheets-'.$$variable{type_id}.'-', name=>'qty_s
 		my $total = 0;
 		my $content = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/employee/inventory/_manifest_content.html' );
 		my @Contents = $$variable{Type}->Contents();
+		my @skid_ids = map { $$_{skid_id} ? $$_{skid_id} : () } @Contents;
+		%{$$variable{SkidContents}} = ();
+		if ( @skid_ids ) {
+			foreach my $SC ( openprint::SkidContent->find(skid_id=>\@skid_ids) ) {
+				push @{$$variable{SkidContents}{$$SC{skid_id}}}, $SC;
+			} # end foreach
+		} # end if
+
 		foreach my $C ( sort { $$a{id} <=> $$b{id} } @Contents ) {
 			$$variable{'C'} = $C;
 			$html .= ssi::variable_substitution( $r, $log, $dbh, \$content, $variable );
 			$total += $C->quantity();
 		} # end foreach tag_id
+
 		my $Paper = $$variable{Type}->Paper();
 
 		$html .= sprintf('<tr id="totals-%1$d" class="totals"><td>Totals:</td><td colspan="3" id="skidcount-%1$d">%2$d skids/rolls</td>', $$variable{type_id}, scalar @Contents );

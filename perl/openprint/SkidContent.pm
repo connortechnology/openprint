@@ -52,8 +52,13 @@ sub find {
 	my $sql = 'SELECT * FROM Skid_Contents WHERE 1>0';
 	my @values;
 	if ( $params{'skid_id'} ) {
-		$sql .= ' AND skid_id=?';
-		push @values, $params{'skid_id'};
+		if ( ref $params{skid_id} eq 'ARRAY' ) {
+            $sql .= ' AND skid_id IN (' . join(',', map { '?' } @{$params{skid_id}} ) . ')';
+            push @values, @{$params{skid_id}};
+		} else {
+			$sql .= ' AND skid_id=?';
+			push @values, $params{'skid_id'};
+		} # end if
 	} # end if
 	if ( ( exists $params{paper_id} ) and ! defined $params{paper_id} ) {
 		$sql .= ' AND paper_id IS NULL';

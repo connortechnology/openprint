@@ -24,7 +24,7 @@ if ( tr ) tr.remove();
 		my $Skid = $C->Skid();
 		my $RFIDTag = $C->RFIDTag();
 		my $error;
-		my @SkidContents = $Skid->Contents();
+		my @SkidContents = @{$$variable{SkidContents}{$$Skid{id}}} if $$variable{SkidContents}{$$Skid{id}};;
 		if ( @SkidContents > 1 ) {
 			$error = 'More than 1 stock on skid.';
 		} elsif ( @SkidContents and ( $SkidContents[0]->paper_id() != $$variable{'Type'}->paper_id() ) ) {

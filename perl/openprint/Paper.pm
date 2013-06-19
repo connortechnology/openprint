@@ -699,18 +699,18 @@ sub add_inventory {
 	$Skid = new openprint::Skid( $Skid ) if ref $Skid ne 'openprint::Skid';
 
 	$units = $self->units() if ! $units;
-    sql::insert( undef, undef, 'Paper_Inventory',
-        'paper_id', $$self{'id'},
-        'user_id',  $openprint::session{'user_id'},
-        'POIndex',  undef,
-        'InStock',  $self->in_stock() + $quantity,
-        'updated_on',   'NOW()',
-        'delta',    $quantity,
-        'Comment',  $description,
-        'skid_id',  $Skid->id(),
-		'units',	$units,
-		'docket',	$docket,
-        );
+	my $PI = new openprint::PaperInventory();
+	$PI->save({
+        paper_id	=>	$$self{id},
+        user_id		=>	$openprint::session{user_id},
+        poindex		=>	undef,
+        instock		=>	$self->in_stock() + $quantity,
+        delta		=>	$quantity,
+        comment		=>	$description,
+        skid_id		=>	$Skid->id(),
+		units		=>	$units,
+		docket		=>	$docket,
+        });
 	# Updates in_stock and allocated
 	$self->save();
 } # end sub add_inventory

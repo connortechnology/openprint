@@ -1576,6 +1576,8 @@ sub manifest {
 				my $Tag = $MC->RFIDTag();
 				$variable{error} .= $Tag->save() if $MC->rfidtag_id() and ! $Tag->created_on();
 
+				my $skid_changes = '';
+
 				my $Skid = $MC->Skid();
 				if ( $$MC{manufacturers_id} ) {
 					my $found_other_skid = 0;
@@ -1590,14 +1592,37 @@ sub manifest {
 							$Skid = $S;
 						} # end if
 					} # end if
-					$Skid->set({manufacturers_id=>$$MC{manufacturers_id}}) if ( ! $found_other_skid ) and ( ! $Skid->manufacturers_id() );
+					if ( ( ! $found_other_skid ) and ( ! $Skid->manufacturers_id() ) ) {
+						$Skid->set({manufacturers_id=>$$MC{manufacturers_id}});
+						$skid_changes .= 'Assigned manufacturers id to ' . $$MC{manufacturers_id}.'<br/>';
+					} # end if
 				} # end if manufacturers_id
-				$Skid->rfidtag_id( $MC->rfidtag_id() ) if ! $Skid->rfidtag_id() and $MC->rfidtag_id();
+				if ( ! $Skid->rfidtag_id() and $MC->rfidtag_id() ) {
+					$Skid->rfidtag_id( $MC->rfidtag_id() );
+					$skid_changes .= 'Assigned rfidtag to ' . $$MC{rfidtag_id}.'<br/>';
+				} # end if
+
 				if ( $$MC{location_id} ) {
 					$Skid->location_id( $$MC{location_id} );
 					$$MC{location_id} = undef;
+					$skid_changes .= 'Changed location to ' . $Skid->Location()->name() . '<br/>';
 				} # end if
-				$variable{error} .= $Skid->save();
+				if ( ! $$Skid->id() ) {
+					$skid_changes .= 'Skid Created.<br/>';
+				} # end if
+
+				$variable{error} .= $Skid->save() if $skid_changes;
+				if ( $skid_changes ) {
+					my $PI = new openprint::PaperInventory();
+					$variable{error} .= $PI->save({
+							paper_id	=>	$$Paper{id},
+							user_id		=>	$openprint::session{user_id},
+							instock		=>	$Paper->in_stock(),
+							delta		=>	0,
+							comment		=>	'Changes from manifest <a href="/employee/inventory/manifest.html?manifest_id=' . $Manifest->id() . '">'. $Manifest->name().'</a>:<br/>'.$skid_changes,
+							skid_id		=>	$$Skid{id},
+							});
+				} # end if
 
 				$variable{error} .= $MC->save();
 
