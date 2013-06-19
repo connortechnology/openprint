@@ -2112,7 +2112,7 @@ $imp->display();
 			if ( my @materials = openprint::Material::find( 'name'=>$$price{'Plate Costs'}{'Plate ID'} ) ) {
 				%plate_price = $materials[0]->get_price( $PlateCounts{$$price{'Plate Costs'}{'Plate ID'}}, undef );
 			} # end if
-#$openprint::log->debug("Plates : " . $$price{'Plate Costs'}{'Plate ID'} . ':'. $PlateCounts{$$price{'Plate Costs'}{'Plate ID'}}.':'.$plate_price{'Price'} );
+$openprint::log->error("Plates : " . $$price{'Plate Costs'}{'Plate ID'} . ':'. $PlateCounts{$$price{'Plate Costs'}{'Plate ID'}}.':'.$plate_price{'Price'} );
 			$$price{'PlateID'} = $$price{'Plate Costs'}{'Plate ID'};
 			$$price{'txtPlateQuantity'} = $$price{'Plate Costs'}{'Plate Count'};
 			$$price{'Plate Cost'} = $plate_price{'Price'};
@@ -2581,6 +2581,8 @@ $openprint::log->warn("Unknown Per setting $unit");
 	$price{'Net Sheet Count'} = $sheet_qty{'Net Sheet Count'};
 	$price{'Stock Weight'} = $sheet_qty{'Weight'};
 
+	$impressions *= $$project{print_sides} if (sets::isin($$Imposition{runstyle},['Sheet Work','Work & Turn','Work & Tumble'] ));
+
 	my %paper_price = openprint::Estimating::Paper::sheet_calc( $openprint::log, $openprint::dbh, $openprint::variable, $Paper, $$Paper{type} eq 'Roll' ? $sheet_qty{'Weight'} : $sheet_qty{'Gross Sheet Count'} );
 	@price{'Paper Cost', 'Paper Price', 'Sheet Cost', 'Sheet Price', '100lb'} = @paper_price{'Paper Cost', 'Paper Price', 'Sheet Cost', 'Sheet Price','100lb'};
 
@@ -2614,7 +2616,6 @@ $openprint::log->warn("Unknown Per setting $unit");
 	$price{'Comparison Cost'} += $price{'Paper Price'};
 	#return \%price if check_price( $price_to_beat, \%price, $specs, $qty_index, $Imposition, 'Paper' );
 
-	$impressions *= $$project{print_sides} if (sets::isin($$Imposition{runstyle},['Sheet Work','Work & Turn','Work & Tumble'] ));
 	
 	my %run_price;
 	my %aqueous = get_aqueous_price( $openprint::log, $openprint::dbh, $openprint::variable, $impressions, $Press, $$Imposition{runstyle}, $qty_index, $Project, $service_index, $specs, scalar @$side_one_colours, scalar @$side_two_colours ); 

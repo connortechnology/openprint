@@ -79,6 +79,14 @@ require openprint::Company_Credit;
 
 $debug = 1;
 
+sub find_one {
+	shift @_ if $_[0] eq 'openprint::Company';
+	shift @_ if ref $_[0] eq 'openprint::Company';
+	my %params = @_;
+	$params{limit} = 1;
+	return find(%params);
+} # end sub find_one
+
 # Returns a paper object specified by the parameters
 sub find {
 	shift @_ if $_[0] eq 'openprint::Company';

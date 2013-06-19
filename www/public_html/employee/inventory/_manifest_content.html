@@ -50,15 +50,15 @@ if ( tr ) tr.remove();
 		} # end if
 	
 		$html .= '<td class="ManufacturersID">';
-		if ( $C->manufacturers_id() ) {
-			$html .= sprintf('<a href="/employee/inventory/skid_details.html?skid_id=%1$d">%2$s</a></td>', $C->skid_id(), $C->manufacturers_id() );
-		} else {
+		#if ( $C->manufacturers_id() ) {
+			#$html .= sprintf('<a href="/employee/inventory/skid_details.html?skid_id=%1$d">%2$s</a></td>', $C->skid_id(), $C->manufacturers_id() );
+		#} else {
 			$html .= ssi::input( type=>'text', 
 				id		=>	'manufacturers_id-'.$id,
 				name	=>	'manufacturers_id-'.$id,
-				value	=>	$param{'manufacturers_id-'.$id},
+				value	=>	$C->manufacturers_id(),
 				).'</td>';
-		} # end if
+		#} # end if
 		$html .= '<td class="Docket">'.ssi::input( type=>'cardinal', 
 			id		=>	'docket-'.$id,
 			name	=>	'docket-'.$id,

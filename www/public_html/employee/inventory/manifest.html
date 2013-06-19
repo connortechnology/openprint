@@ -56,7 +56,8 @@
 				( $$variable{'Manifest'}->id() ? (
 					button( 'add', { onclick=>"new Ajax.Updater('Types', '_manifest_type.html', { parameters: { manifest_id: '".$$variable{'Manifest'}->id()."', action: 'Add'}, insertion: 'bottom' } );", text=>'Add Another Stock' } ) ) : () 
 				),
-				button( 'Save', { onclick=>"f1.btnFunction.value='Submit';if(f1.onsubmit())f1.submit();" } ),
+				button( 'Save', { onclick=>q`f1.btnFunction.value='Save';if(f1.onsubmit())f1.submit();`, title=>'Only save Manifest contents' } ),
+				button( 'Apply', { onclick=>q`f1.btnFunction.value='Submit';if(f1.onsubmit())f1.submit();`, title=>'Apply Manifest to inventory' } ),
 				( $$variable{Manifest}->deleted() ? (
 					button( 'UnDelete', { onclick=>"f1.btnFunction.value='undelete';f1.submit();}" } ),
 					button( 'Destroy', { onclick=>"if( confirm('Are you sure?') ) {f1.btnFunction.value='destroy';f1.submit();}" } ),
