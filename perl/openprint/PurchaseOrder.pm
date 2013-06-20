@@ -571,7 +571,7 @@ sub can_see_pricing {
 
 	my $User = new openprint::User( $openprint::session{user_id} );
 	
-	if ( ( $$User{id} == $_[0]->created_by() ) or ( $$User{type} eq 'A' ) or openprint::usergroup::is_user_in( ['Accounting','SalesAdmin','Inventory'], $$User{id} ) ) {
+	if ( ( $$User{id} == $_[0]->created_by() ) or ( $$User{type} eq 'A' ) or openprint::usergroup::is_user_in( ['Accounting','SalesAdmin','InventoryManager'], $$User{id} ) ) {
 $log->debug('can see');
 		return 1;
 	} # end if
