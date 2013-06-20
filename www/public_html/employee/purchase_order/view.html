@@ -7,32 +7,32 @@
 <? echo ( 
 	my $html = '';
 	if ( ( ! $$variable{PurchaseOrder}->authorized() ) and $$variable{PurchaseOrder}->can_authorize() ) {
-		$html .= ssi::button( 'Authorize', { onclick=>q`f2.btnFunction.value='Authorize';f2.submit();` } );
-		$html .= ssi::button( 'AuthorizeSend', { onclick=>q`f2.btnFunction.value='AuthorizeAndSend';f2.submit();`, text=>'Authorize and Send' } );
+		$html .= button( 'Authorize', { onclick=>q`f2.btnFunction.value='Authorize';f2.submit();` } );
+		$html .= button( 'AuthorizeSend', { onclick=>q`f2.btnFunction.value='AuthorizeAndSend';f2.submit();`, text=>'Authorize and Send' } );
 	} # end if
-	$html .= ssi::button( 'Print', { onclick=>'window.print();' } );
+	$html .= button( 'Print', { onclick=>'window.print();' } );
 	if ( $session{user_type} eq 'A' ) {
-		$html .= ssi::button( 'EmailToMe', { onclick=>q`f2.btnFunction.value='Email Me';f2.submit();`, text=>'Send Email to Me' } );
+		$html .= button( 'EmailToMe', { onclick=>q`f2.btnFunction.value='Email Me';f2.submit();`, text=>'Send Email to Me' } );
 	} # end if
 	if ( $$variable{PurchaseOrder}->authorized() ) {
-		$html .= ssi::button( 'Email', { onclick=>q`f2.btnFunction.value='Email Vendor';f2.submit();`, text=>'Send Email' } );
+		$html .= button( 'Email', { onclick=>q`f2.btnFunction.value='Email Vendor';f2.submit();`, text=>'Send Email' } );
 	} else {
 		$html .= 'This PO has not yet been approved.';
 	} # end if
 	if ( $$variable{PurchaseOrder}->can_edit() ) {
-		$html .= ssi::button( 'Edit', { href=>'/employee/purchase_order/edit.html?po_id='.$$variable{PurchaseOrder}->id() } );
+		$html .= button( 'Edit', { href=>'/employee/purchase_order/edit.html?po_id='.$$variable{PurchaseOrder}->id() } );
 		if ( $$variable{PurchaseOrder}->deleted() ) {
-			$html .= ssi::button( 'UnDelete', { onclick=>q`f2.btnFunction.value='Undelete';f2.submit();` } );
+			$html .= button( 'UnDelete', { onclick=>q`f2.btnFunction.value='Undelete';f2.submit();` } );
 		} else {
-			$html .= ssi::button( 'Delete', { onclick=>q`if(confirm('Are you sure?')){f2.btnFunction.value='Delete';f2.submit();};` } );
+			$html .= button( 'Delete', { onclick=>q`if(confirm('Are you sure?')){f2.btnFunction.value='Delete';f2.submit();};` } );
 		} # end if
 		if ( $$variable{PurchaseOrder}->cancelled() eq '1' ) {
-			$html .= ssi::button( 'UnCancel', { onclick=>q`$('buttons').innerHTML='Please wait. Uncancelling...';f2.btnFunction.value='UnCancel';f2.submit();` } );
+			$html .= button( 'UnCancel', { onclick=>q`$('buttons').innerHTML='Please wait. Uncancelling...';f2.btnFunction.value='UnCancel';f2.submit();` } );
 		} elsif ( $$variable{PurchaseOrder}->cancelled() eq '0' ) {
-			$html .= ssi::button( 'Cancel', { onclick=>q`$('buttons').innerHTML='Please wait. Cancelling...';f2.btnFunction.value='Cancel';f2.submit();` } );
+			$html .= button( 'Cancel', { onclick=>q`$('buttons').innerHTML='Please wait. Cancelling...';f2.btnFunction.value='Cancel';f2.submit();` } );
 		} # end if
 	} # end if can edit
-	$html .= ssi::button( 'Copy', { onclick=>q`f2.action='view.html';f2.btnFunction.value='Copy';f2.submit();` } );
+	$html .= button( 'Copy', { onclick=>q`f2.action='view.html';f2.btnFunction.value='Copy';f2.submit();` } );
 	return $html;
 ) ?>
 	</p>

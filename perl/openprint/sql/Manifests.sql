@@ -10,7 +10,7 @@ CREATE TABLE Manifests (
 CREATE TABLE ManifestContents (
 	id	SERIAL NOT NULL,
 	manifest_id	INTEGER NOT NULL, FOREIGN KEY (manifest_id) REFERENCES Manifests (id),
-	skid_id		INTEGER NOT NULL, FOREIGN KEY (skid_id) REFERENCES Skids (id),
+	skid_id		INTEGER NOT NULL,
 	quantity	INTEGER NOT NULL,
 	cost		FLOAT,	
 	docket		INTEGER,

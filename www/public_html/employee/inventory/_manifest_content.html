@@ -30,6 +30,16 @@ if ( tr ) tr.remove();
 		} elsif ( @SkidContents and ( $SkidContents[0]->paper_id() != $$variable{'Type'}->paper_id() ) ) {
 			$error = 'Skid contents do not match manifest.';
 		} # end if
+
+		if ( $$C{skid_id} and $$C{rfidtag_id} ) {
+			my $RFIDSkid = $C->RFIDTag()->Skid();
+			if ( $RFIDSkid->id() and ( $RFIDSkid->id() != $$C{skid_id} ) ) {
+				$error .= qq`RFID is assigned to <a href="/employee/inventory/skid_details.html?skid_id=$$RFIDSkid{id}">$$RFIDSkid{id}</a><br/>`;
+			} # end if
+			if ( $Skid->rfidtag_id() and $$RFIDTag{id} and ( $Skid->rfidtag_id() != $$RFIDTag{id} ) ) {
+				$error .= qq`RFID does not match Tag assigned to skid <a href="/employee/inventory/skid_details.html?skid_id=$$Skid{id}">$$Skid{id}</a><br/>`;
+			} # end if
+		} # end if
 		
 		$variable{'location_dropdown'} = openprint::Location->dropdown(order=>'parent_id NULLS FIRST, lower(name)') if ! exists $variable{'location_dropdown'};
 		#my @ManifestContents = map { $_->id() != $$C{id} ? $_ : () } $$variable{Manifest}->Contents();

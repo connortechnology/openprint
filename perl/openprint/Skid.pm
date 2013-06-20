@@ -40,6 +40,7 @@ $serial = 'skid_id_seq';
 );
 
 %transforms = (
+	id			=>	[ 's/\D//g' ],
 	deleted	=>	[ 's/[^01]//g' ],
 	manufacturers_id	=>	[ 'tr/[a-z]/[A-Z]/' ],
 );
@@ -557,7 +558,7 @@ sub rfidtag_id {
 		my $rfidtag_id = $_[1];
 		if ( $rfidtag_id ) {
 			my $RFIDTag = new openprint::RFIDTag( $rfidtag_id );
-			my $error = $RFIDTag->save({'id'=>$rfidtag_id}) if ! $RFIDTag->id();
+			my $error = $RFIDTag->set({id=>$rfidtag_id}) if ! $RFIDTag->id();
 			$log->error( $error ) if $error;
 		} # end if
 		$_[0]{'rfidtag_id'} = $rfidtag_id;

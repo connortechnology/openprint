@@ -478,13 +478,29 @@ sub Tax {
 
 sub can_edit {
 	return 1 if ! $_[0]{'id'};
-	if ( 
-			( $openprint::session{'user_type'} eq 'A' )
-			or ( $openprint::session{'user_id'} eq $_[0]{'created_by'} )
-			or ( openprint::usergroup::is_user_in( ['Accounting'], $openprint::session{'user_id'} ) ) 
-		) {
+	my $User = $_[1] ? $_[1] : new openprint::User( $openprint::session{user_id} );
+
+	if ( $$User{type} eq 'A' ) {
+		$log->debug("$$User{firstname} Is administrator") if $debug;
 		return 1;
 	} # end if
+	if ( sets::isin( $_[0]{'created_by'}, [ $$User{id}, $User->assistant_ids(), $User->csr_ids() ] ) ) {
+		$log->debug("$$User{firstname} Either created it or is an assistant") if $debug;
+		return 1;
+	} # end if
+
+	if ( openprint::usergroup::is_user_in( ['Accounting','Inventory'], $$User{id} ) )  {
+		$log->debug("$$User{firstname} Is in Accounting','Inventory'") if $debug;
+		return 1;
+	} # end if
+
+	foreach my $C ( $_[0]->Contents() ) {
+		my @contains = sets::contains( [ $$User{id}, $User->assistant_ids(), $User->csr_ids() ], [ map { $_->salesrep_id() } $C->Orders() ] );
+		if ( @contains ) {
+			$log->debug("can see because @contains in order salesreps");
+			return 1;
+		} # end if
+	} # end foreach C
 	return 0;
 } # end sub can_edit
 
@@ -555,7 +571,7 @@ sub can_see_pricing {
 
 	my $User = new openprint::User( $openprint::session{user_id} );
 	
-	if ( ( $$User{id} == $_[0]->created_by() ) or ( $$User{type} eq 'A' ) or openprint::usergroup::is_user_in( ['Accounting','SalesAdmin'], $$User{id} ) ) {
+	if ( ( $$User{id} == $_[0]->created_by() ) or ( $$User{type} eq 'A' ) or openprint::usergroup::is_user_in( ['Accounting','SalesAdmin','Inventory'], $$User{id} ) ) {
 $log->debug('can see');
 		return 1;
 	} # end if

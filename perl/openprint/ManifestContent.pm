@@ -48,6 +48,19 @@ $serial = 'manifestcontents_id_seq';
 	location_id			=>	undef,
 );
 
+sub skid_id {
+	if ( @_ > 1 ) {
+		$_[0]{skid_id} = $_[1];
+		$_[0]{skid_id} = undef if ! $_[0]{skid_id};
+		delete $_[0]{Skid};
+	} # end if
+	if ( ( ! $_[0]{skid_id} ) and $_[0]{rfidtag_id} ) {
+		my $Tag = $_[0]->RFIDTag();
+		$_[0]{skid_id} = $Tag->skid_id() if $Tag->skid_id();
+	} # end if
+	return $_[0]{skid_id};
+} # end sub skid_id
+
 sub Skid {
 	if ( @_ > 1 ) {
 		$_[0]{Skid} = $_[1];
@@ -55,7 +68,7 @@ sub Skid {
 		$_[0]{skid_id} = undef if ! $_[0]{skid_id};
 	} # end if
 	if ( ! $_[0]{Skid} ) {
-		$_[0]{Skid} = new openprint::Skid( $_[0]{skid_id} );
+		$_[0]{Skid} = new openprint::Skid( $_[0]->skid_id() );
 	} # end if
 	return $_[0]{Skid};
 } # end sub Skid
