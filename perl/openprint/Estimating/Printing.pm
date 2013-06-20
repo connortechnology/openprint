@@ -2112,7 +2112,7 @@ $imp->display();
 			if ( my @materials = openprint::Material::find( 'name'=>$$price{'Plate Costs'}{'Plate ID'} ) ) {
 				%plate_price = $materials[0]->get_price( $PlateCounts{$$price{'Plate Costs'}{'Plate ID'}}, undef );
 			} # end if
-$openprint::log->error("Plates : " . $$price{'Plate Costs'}{'Plate ID'} . ':'. $PlateCounts{$$price{'Plate Costs'}{'Plate ID'}}.':'.$plate_price{'Price'} );
+#$openprint::log->error("Plates : " . $$price{'Plate Costs'}{'Plate ID'} . ':'. $PlateCounts{$$price{'Plate Costs'}{'Plate ID'}}.':'.$plate_price{'Price'} );
 			$$price{'PlateID'} = $$price{'Plate Costs'}{'Plate ID'};
 			$$price{'txtPlateQuantity'} = $$price{'Plate Costs'}{'Plate Count'};
 			$$price{'Plate Cost'} = $plate_price{'Price'};
