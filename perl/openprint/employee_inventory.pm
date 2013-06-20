@@ -2338,5 +2338,9 @@ sub manifest_import {
 	} # end if
 } # end sub manifest_import
 
+sub manifest_view {
+	my $Manifest = $variable{Manifest} = new openprint::Manifest( $param{manifest_id} );
+} # end sub manifest_view
+
 1;
 __END__
