@@ -1440,9 +1440,12 @@ sub save_Manifest {
 			$data{supplier_invoice} = $param{'supplier_invoice-'.$Type->id()} if exists $param{'supplier_invoice-'.$Type->id()};
 			$variable{error} .= $Type->save(\%data);
 
+			my $NewMC = new openprint::ManifestContent();
+			$NewMC->set({manifest_id=>$$Manifest{id}, type_id=>$$Type{id}});
+
 			my $total_qty = 0;
 			# Save data for the rest of the contents
-			foreach my $MC ( $Manifest->Contents( type_id => $$Type{id} ) ) {
+			foreach my $MC ( $NewMC, $Manifest->Contents( type_id => $$Type{id} ) ) {
 				my $changed = 0;
 
 				if ( $param{"skid_id-$$Type{id}-$$MC{id}"} != $$MC{skid_id} ) {
@@ -1604,7 +1607,7 @@ sub manifest {
 				} # end if manufacturers_id
 				if ( ! $Skid->rfidtag_id() and $MC->rfidtag_id() ) {
 					$Skid->rfidtag_id( $MC->rfidtag_id() );
-					$skid_changes .= 'Assigned rfidtag to ' . $$MC{rfidtag_id}.'<br/>';
+					$skid_changes .= 'Assigned rfidtag to ' . $$MC{skid_id}.'<br/>';
 				} # end if
 
 				if ( $$MC{location_id} ) {
