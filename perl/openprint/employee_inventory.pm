@@ -1445,6 +1445,11 @@ sub save_Manifest {
 			foreach my $MC ( $Manifest->Contents( type_id => $$Type{id} ) ) {
 				my $changed = 0;
 
+				if ( $param{"skid_id-$$Type{id}-$$MC{id}"} != $$MC{skid_id} ) {
+					$MC->skid_id( $param{"skid_id-$$Type{id}-$$MC{id}"} );
+					$changed = 1;
+				} # end if
+
 				if ( exists $param{"rfidtag_id-$$Type{id}-$$MC{id}"} ) {
 					$MC->rfidtag_id( $param{"rfidtag_id-$$Type{id}-$$MC{id}"} );
 					$changed = 1;
@@ -1624,6 +1629,7 @@ sub manifest {
 							});
 				} # end if
 
+				$MC->skid_id( $$Skid{id} ) if ! $MC->skid_id();
 				$variable{error} .= $MC->save();
 
 				my $checked_out = openprint::PaperInventory::find( skid_id=>$Skid->id(), paper_id=>$Type->paper_id(), 'comment_like'=>'Checked out%' ) ? 1 : 0; 

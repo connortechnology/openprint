@@ -2746,6 +2746,7 @@ $openprint::log->warn("Unknown Per setting $unit");
 
 		next if ! %ink_price;
 		my $area = $Imposition->object_area() * $impressions * ($$inkCoverage{$real_colour}/100);
+$openprint::log->debug("Area: $area Impressions: $impressions " . $Imposition->object_area() );
 
 		if ( lc $ink_price{'units'} eq 'per kg' ) {
 			

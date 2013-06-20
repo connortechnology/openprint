@@ -2,9 +2,6 @@ use strict;
 package openprint::SkidContent;
 our @ISA = qw(openprint::Object);
 
-use Carp qw( cluck );
-
-require sql;
 require openprint::StockPurpose;
 require openprint::InventoryCondition;
 require openprint::ManifestContent;
