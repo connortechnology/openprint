@@ -29,16 +29,16 @@ $table = 'paper_allocations';
 $serial = 'paper_allocation_id_seq';
 
 %fields = (
-	'id'			=>	'id',
-	'paper_id'		=>	'paper_id',
-	'skid_id'		=>	'skid_id',
-	'operator_id'	=>	'operator_id',
-	'created_on'	=>	'created_on',
-	'project_id'	=>	'project_id',
-	'units'			=>	'units',
-	'quantity'		=>	'quantity',
-	'skid_ids'		=>	'skid_ids',
-	'condition_id'	=>	'condition_id',
+	id				=>	'id',
+	paper_id		=>	'paper_id',
+	skid_id			=>	'skid_id',
+	operator_id		=>	'operator_id',
+	created_on		=>	'created_on',
+	project_id		=>	'project_id',
+	units			=>	'units',
+	quantity		=>	'quantity',
+	skid_ids		=>	'skid_ids',
+	condition_id	=>	'condition_id',
 );
 %find_fields = (
 	docket	=>	'(SELECT lngdocketnumber FROM tbl_Projects WHERE index=project_id)',
