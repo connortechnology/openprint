@@ -55,11 +55,11 @@ if ( tr ) tr.remove();
 		} else {
 			$html .= sprintf('<td class="RFID"><a href="/employee/inventory/rfidtag_details.html?rfidtag_id=%1$s">%2$s</a></td>', $RFIDTag->id(), $RFIDTag->id_short() );
 		} # end if
-		#if ( $C->skid_id() ) {
-			#$html .= sprintf('<td class="Skid"><a href="/employee/inventory/skid_details.html?skid_id=%1$d">%1$d</a></td>', $C->skid_id() );
-		#} else {
-			$html .= '<td class="Skid">'.input(type=>'cardinal',name=>'skid_id-'.$id, id=>'skid_id-'.$id, value=>$C->skid_id() ).'</td>';
-		#} # end if
+
+		$html .= '<td class="Skid">';
+		$html .= sprintf('<a href="/employee/inventory/skid_details.html?skid_id=%1$d">S</a>', $C->skid_id() ) if $$C{skid_id};
+		$html .= input(type=>'cardinal',name=>'skid_id-'.$id, id=>'skid_id-'.$id, value=>$C->skid_id() );
+		$html .= '</td>';
 	
 		$html .= '<td class="ManufacturersID">';
 		#if ( $C->manufacturers_id() ) {
@@ -122,7 +122,7 @@ if ( tr ) tr.remove();
 			$html .= sprintf( '<td class="in_stock">%d lbs%s</td>', $SkidContents[0]->quantity(), $Skid->used() ? '<br/>Checked Out' : ''  );
 			$html .= sprintf( '<td class="last_seen">%s days</td>', $SkidContents[0]->Skid()->last_seen_days() );
 		} else {
-			$html .= '<td colspan="2">&nbsp;</a>';
+			$html .= '<td colspan="2">&nbsp;</td>';
 		} # end if
 		$html .= '<td class="Location">'.ssi::select( $variable{'location_dropdown'}, $C->location_id(), { name=>'location_id-'.$id, prepend=>['','select'] } ).'</td>';
 		$html .= '<td class="buttons">' . join("\n",
@@ -130,7 +130,11 @@ if ( tr ) tr.remove();
 				( $$C{FixStockOnSkid} ? button( 'Fix'.$$C{id}, { onclick=>qq`fix_content('$$C{id}');`, text=>'Fix' } ) : () ),
 				) . '</td>';
 		if ( $error ) {
-			$html .= '<div id="tr-'.$$C{id}.'-error" class="error">'.$error.'</div>';
+			$html .= '</tr><tr id="tr-'.$$C{id}.'-error" class="error"><td colspan="11">'.$error . ' Contains <br/>';
+			foreach my $SK ( @SkidContents ) {
+				$html .= $SK->Paper()->to_string() . '<br/>';
+			} # end foreach
+			$html .= '</td></tr>';
 		} # end if
 	} # end if
 	return $html;

@@ -56,15 +56,15 @@
 <form id="f1" name="f1" action="rfidtag_details.html" method="post">
 	<input type="hidden" name="btnFunction" />
 	<fieldset><legend>
-		<? if ( $$variable{'RFIDTag'}->id() ) ?>
+		<? if ( $$variable{'RFIDTag'}->created_on() ) ?>
 		RFIDTag ID: <? echo ( $$variable{'RFIDTag'}->id() ) ?>
-		<? else ( $$variable{'RFIDTag'}->id() ) ?>
+		<? else ( $$variable{'RFIDTag'}->created_on() ) ?>
 		New RFIDTag
-		<? endif ( $$variable{'RFIDTag'}->id() ) ?>
+		<? endif ( $$variable{'RFIDTag'}->created_on() ) ?>
 		</legend>
 
 		<div class="leftColumn">
-		<? if ( $$variable{'RFIDTag'}->id() ) ?>
+		<? if ( $$variable{'RFIDTag'}->created_on() ) ?>
 			<input type="hidden" name="rfidtag_id" value="<? echo ( $$variable{'RFIDTag'}->id() ) ?>" />
 			<p>
 				<label>Created:</label>
@@ -86,12 +86,12 @@
 					return $html;
 				) ?>
 			</p>
-		<? else ( $$variable{'RFIDTag'}->id() ) ?>
+		<? else ( $$variable{'RFIDTag'}->created_on() ) ?>
 			<p>
 				<label>ID:</label>
-				<input type="text" name="rfidtag_id" />
+				<input type="text" name="rfidtag_id" value="<? echo ( $$variable{'RFIDTag'}->id() ) ?>" />
 			</p>
-		<? endif ( $$variable{'RFIDTag'}->id() ) ?>
+		<? endif ( $$variable{'RFIDTag'}->created_on() ) ?>
 			<p><label onclick="$('type').toggle();$('type_id').toggle();">Type:</label>
 				<select id="type_id" name="type_id" onchange="$('type').value='';">
 					<option value="">select</option>
@@ -150,7 +150,7 @@
 		<br class="spacer"/>
 	</fieldset>
 </form>
-<? if ( $$variable{'RFIDTag'}->id() ) ?>
+<? if ( $$variable{'RFIDTag'}->created_on() ) ?>
 <?include(_rfidtag_log.html)?>
-<? endif ( $$variable{'RFIDTag'}->id() ) ?>
+<? endif ( $$variable{'RFIDTag'}->created_on() ) ?>
 <script type="text/javascript">document.jump.rfidtag_id.focus();</script>
