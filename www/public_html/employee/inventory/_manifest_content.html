@@ -24,11 +24,15 @@ if ( tr ) tr.remove();
 		my $Skid = $C->Skid();
 		my $RFIDTag = $C->RFIDTag();
 		my $error;
-		my @SkidContents = @{$$variable{SkidContents}{$$Skid{id}}} if $$variable{SkidContents}{$$Skid{id}};;
+		my @SkidContents = $$variable{SkidContents}{$$Skid{id}} ? @{$$variable{SkidContents}{$$Skid{id}}} : openprint::SkidContent->find(skid_id=>$$Skid{id});
 		if ( @SkidContents > 1 ) {
-			$error = 'More than 1 stock on skid.';
+			$error = 'More than 1 stock on skid.<br/>';
 		} elsif ( @SkidContents and ( $SkidContents[0]->paper_id() != $$variable{'Type'}->paper_id() ) ) {
-			$error = 'Skid contents do not match manifest.';
+			$error = 'Skid contents do not match manifest.<br/>';
+		} # end if
+		if ( $error ) {
+			$variable{FixStockOnSkids} = 1;
+			$$C{FixStockOnSkid} = 1;
 		} # end if
 
 		if ( $$C{skid_id} and $$C{rfidtag_id} ) {
@@ -117,13 +121,16 @@ if ( tr ) tr.remove();
 					) . '</td>';
 		} # end if
 		if ( @SkidContents ) {
-			$html .= sprintf( '<td class="in_stock">%d lbs</td>', $SkidContents[0]->quantity() );
+			$html .= sprintf( '<td class="in_stock">%d lbs%s</td>', $SkidContents[0]->quantity(), $Skid->used() ? '<br/>Checked Out' : ''  );
 			$html .= sprintf( '<td class="last_seen">%s days</td>', $SkidContents[0]->Skid()->last_seen_days() );
 		} else {
 			$html .= '<td colspan="2">&nbsp;</a>';
 		} # end if
 		$html .= '<td class="Location">'.ssi::select( $variable{'location_dropdown'}, $C->location_id(), { name=>'location_id-'.$id, prepend=>['','select'] } ).'</td>';
-		$html .= '<td class="buttons">' . ssi::button( 'X'.$$C{'id'}, { onclick=>qq`delete_content('$$C{id}');`, text=>'X', title=>'Remove' } ) . '</td>';
+		$html .= '<td class="buttons">' . join("\n",
+				button( 'X'.$$C{id}, { onclick=>qq`delete_content('$$C{id}');`, text=>'X', title=>'Remove' } ),
+				( $$C{FixStockOnSkid} ? button( 'Fix'.$$C{id}, { onclick=>qq`fix_content('$$C{id}');`, text=>'Fix' } ) : () ),
+				) . '</td>';
 		$html .= '</tr>';
 		if ( $error ) {
 			$html .= '<tr id="tr-'.$$C{id}.'-error" class="error"><td colspan="11">'.$error.'</td></tr>';

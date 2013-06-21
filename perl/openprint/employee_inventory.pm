@@ -1402,34 +1402,6 @@ sub save_Manifest {
 	foreach my $Type ( openprint::Manifest_Content_Type->find( manifest_id=>$Manifest->id()) ) {
 		my $Paper = save_Paper('-'.$Type->id());
 		
-		# If there is a change of paper in the type, then go through each skid and update them, nicluding allocations, and add a log entry so we know that it happened.
-		if ( 0 and $Type->paper_id() and ( $Type->paper_id() != $Paper->id() ) ) {
-			$variable{information} .= 'Skid contents have been changed from ' . $Type->Paper()->to_string() . ' to ' . $Paper->to_string().'<br/>';
-			foreach my $C ( $Manifest->Contents( type_id => $Type->id() ) ) {
-				foreach my $SkidContent ( $C->Skid()->Contents() ) {
-					# If it has the old type,
-					if ( $SkidContent->paper_id() == $Type->paper_id() ) {
-						my $PI = new openprint::PaperInventory();
-						$PI->save({ user_id=>$session{user_id}, skid_id=>$C->Skid()->id(), paper_id=>$Type->paper_id(),
-								quantity=>-1*$SkidContent->quantity(),
-								comment=>'Changed stock from ' . $Type->Paper()->to_string() . ' to ' . $Paper->to_string()});
-						# Change the type to the new type
-						$SkidContent->save({paper_id=>$Paper->id()});
-						foreach my $PA ( openprint::PaperAllocation->find( skid_id=>$C->skid_id(), paper_id=>$Type->paper_id() ) ) {
-							$PA->save({paper_id=>$Paper->id()});
-						} # end foreach PA
-						my $PI = new openprint::PaperInventory();
-						$PI->save({user_id=>$session{user_id},skid_id=>$C->Skid()->id(), paper_id=>$Paper->id(),
-								quantity =>$SkidContent->quantity(),
-								comment=>'Changed stock from ' . $Type->Paper()->to_string() . ' to ' . $Paper->to_string()});
-						
-					} # end if
-
-				} # end foreach SkidContent
-			} # end foreach C
-			$Paper->save();
-			$Type->Paper()->save();
-		} # end if different Paper Type
 
 		my %data = (
 			docket		=>	$param{'docket-'.$Type->id()},
@@ -1496,7 +1468,9 @@ $log->debug("manufact Skid: " . $S->to_string() );
 			} # end if
 
 			my $qty_param = $Type->type() eq 'Sheet' ? "qty_sheets-$$Type{id}-$$MC{id}" : "qty_lbs-$$Type{id}-$$MC{id}";
+$log->debug("param: $qty_param $param{$qty_param}");
 			if ( exists $param{$qty_param} and ( $MC->quantity() != $param{$qty_param} ) ) {
+$log->debug("param: $qty_param $param{$qty_param} $$MC{quantity}");
 				$MC->quantity( Math::Round::nearest(1, $param{$qty_param}) );
 				$changed = 1;
 			} # end if
@@ -1581,6 +1555,12 @@ sub manifest {
 		if ( ! $variable{error} ) {
 			$variable{ExternalRedirect} = '/employee/inventory/manifest.html?manifest_id='.$Manifest->id();
 		} # end if
+	} elsif ( $param{btnFunction} eq 'ChangePaper' ) {
+		foreach my $Type ( openprint::Manifest_Content_Type->find( manifest_id=>$Manifest->id()) ) {
+			foreach my $MC ( $Manifest->Contents( type_id => $$Type{id} ) ) {
+				$variable{error} .= $MC->fix();
+			} # end foreach MC
+		} # end foreach Type
 	} elsif ( $param{'btnFunction'} eq 'Submit' ) {
 		$variable{error} = save_Manifest( $Manifest );
 
@@ -1659,7 +1639,7 @@ sub manifest {
 				$variable{error} .= $MC->save();
 
 				my $checked_out = openprint::PaperInventory::find( skid_id=>$Skid->id(), paper_id=>$Type->paper_id(), 'comment_like'=>'Checked out%' ) ? 1 : 0; 
-				my $SkidContent = openprint::SkidContent->find_one(skid_id=>$Skid->id(),paper_id=>$Type->paper_id());
+				my $SkidContent = openprint::SkidContent->find_one( skid_id=>$Skid->id(), paper_id=>$Type->paper_id() );
 				$SkidContent = new openprint::SkidContent() if ! $SkidContent;
 
 				if ( $$SkidContent{quantity} != $MC->quantity() ) {
@@ -1744,11 +1724,16 @@ $log->debug("WOuld update");
 } # end sub _manifest_contents
 
 sub _manifest_content {
-	if ( $param{'action'} eq 'Remove' ) {
-		my $C = new openprint::ManifestContent( $param{'content_id'} );
-		$variable{'type_id'} = $C->type_id();
-		$variable{'Manifest'} = $C->Manifest();
-		$variable{'error'} .= $C->delete();
+	if ( $param{action} eq 'Remove' ) {
+		my $C = new openprint::ManifestContent( $param{content_id} );
+		$variable{type_id} = $C->type_id();
+		$variable{Manifest} = $C->Manifest();
+		$variable{error} .= $C->delete();
+	} elsif ( $param{action} eq 'Fix' ) {
+		my $MC = new openprint::ManifestContent( $param{content_id} );
+		$variable{error} .= $MC->fix();
+		$variable{type_id} = $MC->type_id();
+		$variable{Manifest} = $MC->Manifest();
 	} elsif ( $param{'action'} eq 'Add' ) {
 		# The goal is to store as much info as possible in the manifest, but not commit to the other objects until we Submit the manifest.
 		if ( ! $param{manifest_id} ) {

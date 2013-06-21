@@ -52,8 +52,8 @@
 		) ?>
 		</div>
 		<p class="buttons">
-			<? echo ( join('',
-				( $$variable{'Manifest'}->id() ? (
+			<? echo ( join("\n",
+				( $$variable{Manifest}->id() ? (
 					button( 'add', { onclick=>"new Ajax.Updater('Types', '_manifest_type.html', { parameters: { manifest_id: '".$$variable{'Manifest'}->id()."', action: 'Add'}, insertion: 'bottom' } );", text=>'Add Another Stock' } ) ) : () 
 				),
 ( $session{user_type} eq 'A' ? (
@@ -66,6 +66,7 @@
 				) : ( 
 					button( 'Delete', { onclick=>"f1.btnFunction.value='Delete';f1.submit();" } ),
 				) ),
+				( $$variable{FixStockOnSkids} ? button( 'FixStockOnSkids', { onclick=>q`f1.btnFunction.value='ChangePaper';f1.submit();`, text=>'Fix Stock On Skids' } ) : () ),
 			); ) ?>
 		</p>
 		<input type="hidden" name="btnFunction" />

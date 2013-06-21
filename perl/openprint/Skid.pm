@@ -263,6 +263,7 @@ sub save {
 	my ( $self, $data ) = @_;
 	$$self{'created_by_id'} = $session{'user_id'} if ! $$self{'created_by_id'};
 	$self->type() if ! $$self{'type'};
+	$self->used(undef);
 
 	# Why?
 	#$self->location_id();
@@ -669,6 +670,16 @@ sub PurchaseOrders {
 	return @{$_[0]{PurchaseOrders}} if ref $_[0]{PurchaseOrders} eq 'ARRAY';
 	return ();
 } # end sub PurchaseOrders
+
+sub used {
+	if ( @_ > 1 ) {
+		$_[0]{used} = $_[1];
+	} # end if
+	if ( ! defined $_[0]{used} ) {
+		$_[0]{used} = openprint::PaperInventory::find( skid_id=>$_[0]->id(), 'comment_like'=>'Checked out%' );
+	} # end if
+	return $_[0]{used};
+} # end sub used
 
 1;
 __END__
