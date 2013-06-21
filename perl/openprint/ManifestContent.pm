@@ -147,8 +147,12 @@ sub location_id {
 	if ( @_ > 1 ) {
 		$_[0]{location_id} = $_[1];
 	} # end if
-	if ( ( ! $_[0]{location_id} ) and $_[0]{skid_id} ) {
-		return $_[0]->Skid()->location_id();
+	if ( ( ! $_[0]{location_id} ) ) {
+		if ( $_[0]{skid_id} ) {
+			return $_[0]->Skid()->location_id();
+		} elsif ( $_[0]{rfidtag_id} ) {
+			return $_[0]->RFIDTag()->location_id();
+		} # endif
 	} # end if
 	return $_[0]{location_id};
 } # end sub location_id

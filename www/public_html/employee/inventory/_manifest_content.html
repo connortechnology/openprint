@@ -75,7 +75,7 @@ if ( tr ) tr.remove();
 			value	=>	$C->docket(),
 			).'</td>';
 		if ( $Type->type() eq 'Sheet' ) {
-			my $lbs = $C->quantity() * $Paper->width() * $Paper->height() * $Paper->wpsi();
+			my $lbs = Math::Round::nearest( 0.01, $C->quantity() * $Paper->width() * $Paper->height() * $Paper->wpsi() );
 
 			$html .= '<td class="qty_lbs">'.ssi::input( type=>'cardinal', 
 					id		=>	'qty_lbs-'.$id,

@@ -1471,6 +1471,7 @@ $log->debug("Setting skid_id to " . $param{"skid_id-$$Type{id}-$$MC{id}"} );
 				$changed = 1;
 			} # end if
 
+
 			my $Skid = $MC->Skid();
 $log->debug("Skid: " . $Skid->to_string() );
 			if ( $$MC{manufacturers_id} ) {
@@ -1503,7 +1504,13 @@ $log->debug("manufact Skid: " . $S->to_string() );
 			if ( ! ( $$MC{id} or $$MC{skid_id} or $$MC{rfidtag_id} or $$MC{quantity} ) ) {
 				next;
 			} # end if
-			$error .= $MC->save({ location_id=>undef }) if $changed;
+$log->debug( " location: " . $param{"location_id-$$Type{id}-$$MC{id}"} . ' != ' . $MC->location_id() );
+			if ( $param{"location_id-$$Type{id}-$$MC{id}"} != $MC->location_id() ) {
+$log->debug( "Updaating location: " . $param{"location_id-$$Type{id}-$$MC{id}"} . ' != ' . $MC->location_id() );
+				$$MC{location_id} = $param{"location_id-$$Type{id}-$$MC{id}"};
+				$changed = 1;
+			} # end if changed location_id
+			$error .= $MC->save() if $changed;
 			$total_qty += $MC->quantity();
 		} # end foreach Manifest_Content for this type
 
