@@ -222,6 +222,11 @@ sub check {
 			$error = 'Skid contents do not match manifest.<br/>';
 		} # end if
 	} # end if
+	my $Tag = $MC->RFIDTag();
+	if ( $Tag->id() ) {
+		$_ = $Tag->is_invalid_id();
+		$error .= $_ if $_;
+	} # end if
 	return $error;
 } # end sub check
 
