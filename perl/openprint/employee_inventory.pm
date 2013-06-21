@@ -1730,7 +1730,7 @@ sub _manifest_content {
 		$variable{Manifest} = $C->Manifest();
 		$variable{error} .= $C->delete();
 	} elsif ( $param{action} eq 'Fix' ) {
-		my $MC = new openprint::ManifestContent( $param{content_id} );
+		my $MC = $variable{C} = new openprint::ManifestContent( $param{content_id} );
 		$variable{error} .= $MC->fix();
 		$variable{type_id} = $MC->type_id();
 		$variable{Manifest} = $MC->Manifest();

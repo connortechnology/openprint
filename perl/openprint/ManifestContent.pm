@@ -208,5 +208,22 @@ $openprint::log->debug("desired paper does not exists");
 	$error .= $Type->Paper()->save();
 	return $error;
 } # end sub fix
+
+sub check {
+	my ( $MC, $variable ) = @_;
+
+	my $Type = $$variable{Type} ? $$variable{Type} : $MC->Type();
+	my $error;
+	if ( $MC->skid_id() ) {
+		my @SkidContents = $$variable{SkidContents}{$$MC{skid_id}} ? @{$$variable{SkidContents}{$$MC{skid_id}}} : openprint::SkidContent->find(skid_id=>$MC->skid_id());
+		if ( @SkidContents > 1 ) {
+			$error = 'More than 1 stock on skid.<br/>';
+		} elsif ( @SkidContents and ( $SkidContents[0]->paper_id() != $Type->paper_id() ) ) {
+			$error = 'Skid contents do not match manifest.<br/>';
+		} # end if
+	} # end if
+	return $error;
+} # end sub check
+
 1;
 __END__
