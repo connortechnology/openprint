@@ -246,5 +246,37 @@ sub link_to {
 	return '<a href="/employee/inventory/manifest.html?manifest_id='.$_[0]{'id'}.'">'.$_[0]{'name'}.'</a>';
 } # end sub link_to
 
+sub check {
+	my ( $Manifest ) = @_;
+	my @Contents = $Manifest->Contents();
+	my %skid_ids;
+	foreach ( @Contents ) {
+		push @{$skid_ids{$$_{skid_id}}}, $_;
+	} # end foreach
+	my %manufacturer_ids;
+	foreach ( @Contents ) {
+		push @{$manufacturer_ids{$$_{skid_id}}}, $_;
+	} # end foreach
+	my $error;
+	if ( keys %skid_ids != @Contents ) {
+		foreach my $id ( keys %skid_ids ) {
+			if ( @{$skid_ids{$id}} > 1 ) {
+				$error .= "Skid $id is listed " . @{$skid_ids{$id}} . ' times<br/>';
+			} # end if
+		} # end foreach skid
+	} # end if skid_ids duplicated
+	if ( keys %manufacturer_ids != @Contents ) {
+		foreach my $id ( keys %manufacturer_ids ) {
+			if ( @{$manufacturer_ids{$id}} > 1 ) {
+				$error .= "Manufacturers $id is listed " . @{$skid_ids{$id}} . ' times<br/>';
+			} # end if
+		} # end foreach manufacturer
+	} # end if skid_ids duplicated
+	foreach my $C ( @Contents ) {
+		$error .= $C->check();
+	} # end foreach C
+	return $error;
+} # end sub check
+
 1;
 __END__
