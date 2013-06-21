@@ -31,7 +31,7 @@ table .mweight, table .gsm {
 }
 table .on_order, table .allocated, table .in_stock, table .Quantity, table .qty_lbs, table .qty_kgs, table .qty_feet, table .qty_sheets {
 	text-align: right;
-	width: 90px;
+	width: 75px;
 	padding-right: 5px;
 }
 table .Location {

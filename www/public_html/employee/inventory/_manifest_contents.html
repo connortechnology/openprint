@@ -8,16 +8,16 @@
 		<th class="Skid">Skid</th>
 		<th class="ManufacturersID">Manufacturers ID</th>
 		<th class="Docket">Docket</th>
-		<th class="qty_lbs">Quantity (lbs)</th>
-		<th class="qty_kgs">Quantity (kgs)</th>
+		<th class="qty_lbs">Qty (lbs)</th>
+		<th class="qty_kgs">Qty (kgs)</th>
 <? echo (
 	if ( $$variable{Type}->type() ne 'Roll' ) {
-		return '<th class="qty_sheets">Quantity (sheets)</th>';
+		return '<th class="qty_sheets">Qty (sheets)</th>';
 	} # end if
 ) ?>
 <? echo (
 	if ( $$variable{Type}->type() ne 'Sheet' ) {
-		return '<th class="qty_feet">Quantity (feet)</th>';
+		return '<th class="qty_feet">Qty (feet)</th>';
 	} # end if
 ) ?>
 		<th class="in_stock">In Stock</th>
