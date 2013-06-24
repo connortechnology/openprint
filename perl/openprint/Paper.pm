@@ -2,6 +2,8 @@ use strict;
 package openprint::Paper;
 our @ISA = qw(openprint::Object);
 require openprint::Object;
+require Math::Round;
+
 use MIME::QuotedPrint;
 use Data::Dumper;
 
@@ -992,7 +994,7 @@ sub gsm {
 		} # end if ! wpsi
 
 		if ( $$self{'wpsi'} ) {
-			$$self{'gsm'} = sprintf('%.2f', $$self{'wpsi'} * 703064.5 );
+			$$self{'gsm'} = Math::Round::nearest( 0.01, $$self{'wpsi'} * 703064.5 );
 		} else { 
 			$$self{'gsm'} = 0;
 			$openprint::log->warn("Can't calculate gsm " . $self->to_string());

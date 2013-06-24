@@ -16,7 +16,7 @@
 			ssi::date_filter( '/employee/inventory/paper.html?added_on_end', 'created_on_end' ),
 			'order_by'	=>	'name_id,finish_id,colour_id,weight_id',
 			'type'      => [ split(',', $session{'/employee/inventory/paper.html?Type'} ) ],
-			'fsc_code'	=>	$session{'/employee/inventory/paper.html?fsc_code'},
+			( $session{'/employee/inventory/paper.html?fsc_code'} ? ( 'fsc_code'	=>	$session{'/employee/inventory/paper.html?fsc_code'} ) : () ),
 			($param{'OrLarger'} ? 'width_start' : 'width') => $param{'width'},
 			($param{'OrLarger'} ? 'height_start' : 'height') => $param{'height'},
 
