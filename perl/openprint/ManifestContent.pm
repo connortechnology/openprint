@@ -173,7 +173,7 @@ $openprint::log->debug( "$k => " . $SkidContents{$k}->to_string() );
 # Have the right paper., remove the ones that don't match.
 $openprint::log->debug("desired paper exists");
 		foreach my $paper_id ( keys %SkidContents ) {
-			next if $$MC{paper_id} == $paper_id;
+			next if $$Type{paper_id} == $paper_id;
 			my $SC = $SkidContents{$paper_id};
 			my $Paper = $SC->Paper();
 
@@ -201,7 +201,7 @@ $openprint::log->debug("desired paper does not exists");
 			my $PI = new openprint::PaperInventory();
 			$error .= $PI->save({user_id=>$openprint::session{user_id},skid_id=>$$SC{skid_id}, paper_id=>$Type->paper_id(), quantity =>$SC->quantity(),
 					comment=>'Changed stock from ' . $Paper->to_string() . ' to ' . $Type->Paper()->to_string()});
-			$error .= $SC->save({paper_id=>$Type->Paper()->id()});
+			$error .= $SC->save({ paper_id => $$Type{paper_id} });
 			$error .= $Paper->save();
 		} # end foreach paper_id
 	} # end if
