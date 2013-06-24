@@ -170,7 +170,7 @@ function calc_from_gsm( form ) {
 			</p>
 			<p>
 				<label>Basis Weight:</label>
-				<input type="text" id="basis_weight" name="basis_weight" value="<? echo ( $$variable{'Paper'}->basis_weight(); ) ?>" size="6" onkeyup="calc_from_basis_weight(this.form);" style="width: auto;" />
+				<input type="text" id="basis_weight" name="basis_weight" value="<? echo ( $$variable{'Paper'}->basis_mweight(); ) ?>" size="6" onkeyup="calc_from_basis_weight(this.form);" style="width: auto;" />
 			</p>
 			<p>
 				<label>Basis Size:</label>

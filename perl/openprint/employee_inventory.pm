@@ -387,15 +387,16 @@ sub paper_details {
 			$Paper->width( $param{'width'} );
 			$Paper->height( $param{'height'} );
 		} # end if
-		$Paper->mweight( $param{'mweight'} );
+		$Paper->mweight( $param{'mweight'} ) if $param{'mweight'};
 		$Paper->basis_mweight( $param{'basis_weight'} ) if exists $param{'basis_weight'};
+$openprint::log->debug("Basis:: " . $Paper->basis_mweight() );
 		$Paper->basis_width( $param{'basis_width'} ) if exists $param{'basis_width'};
 		$Paper->basis_height( $param{'basis_height'} ) if exists $param{'basis_height'};
 		if ( exists $param{manufacturers_name} ) {
 			s/^\s+//, s/\s+$//, s/\s+/ /g for $param{manufacturers_name};
 			$Paper->manufacturers_name( $param{manufacturers_name} );
 		} # end if
-		$Paper->gsm( $param{'gsm'} );
+		$Paper->gsm( $param{'gsm'} ) if $param{gsm};
 		$Paper->calliper( $param{'txtCalliper'} );
 		$Paper->fsc_code( $param{'fsc_code'} );
 		if ( ! $param{'paper_id'} ) {
@@ -552,6 +553,7 @@ sub save_Paper {
 		} # end if
 		$Paper->calliper( $param{'calliper'.$id} );
 		$Paper->mweight( $param{'mweight'.$id} );
+		$Paper->basis_weight( $param{'basis_weight'.$id} ) if exists $param{'basis_weight'.$id};
 		$Paper->gsm( $param{'gsm'.$id} );
 		if ( my $error = $Paper->save() ) {
 			$variable{'error'} .= $error;
