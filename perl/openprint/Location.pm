@@ -4,7 +4,7 @@ require openprint::Location_Type;
 require openprint::Asset;
 require openprint::Photo_Album;
 require Geo::Coder::Googlev3;
-require Geo::IP;
+use Geo::IP;
 
 package openprint::Location;
 our @ISA = qw( openprint::Object );
@@ -590,14 +590,17 @@ sub googlemap_html {
 } # end sub googlemap_html
 
 sub from_ip {
-	my $gi = Geo::IP->open("/usr/share/GeoIP/GeoIP.dat");
+	my $gi = Geo::IP->open('/usr/share/GeoIP/GeoIPCity.dat' );
+#GeoIPASNum.dat   GeoIPCity.dat    GeoIP.dat        GeoIPv6.dat      GeoLiteCity.dat 
 	if ( ! $gi ) {
 		$openprint::log->error('No Geo::IP');
 		return;
 	} # end if
-	my $record = $gi->record_by_addr(@_ ? $_[0] : $ENV{'REMOTE_ADDR'});
+	my $ip = @_ ? $_[0] : $ENV{'REMOTE_ADDR'};
+
+	my $record = $gi->record_by_addr($ip);
 	if ( ! $record ) {
-		$openprint::log->error('No record from Geo::IP' . $gi->database_info);
+		$openprint::log->error("No record for $ip from Geo::IP " . $gi->database_info);
 		
 		return;
 	} else {
