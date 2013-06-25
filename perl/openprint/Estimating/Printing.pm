@@ -15,7 +15,7 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 
 package openprint::Estimating::Printing;
-my $debug = 1;
+my $debug = 0;
 my $master_time;
 my %special_colours;
 
@@ -2112,7 +2112,7 @@ $imp->display();
 			if ( my @materials = openprint::Material::find( 'name'=>$$price{'Plate Costs'}{'Plate ID'} ) ) {
 				%plate_price = $materials[0]->get_price( $PlateCounts{$$price{'Plate Costs'}{'Plate ID'}}, undef );
 			} # end if
-$openprint::log->error("Plates : " . $$price{'Plate Costs'}{'Plate ID'} . ':'. $PlateCounts{$$price{'Plate Costs'}{'Plate ID'}}.':'.$plate_price{'Price'} );
+#$openprint::log->error("Plates : " . $$price{'Plate Costs'}{'Plate ID'} . ':'. $PlateCounts{$$price{'Plate Costs'}{'Plate ID'}}.':'.$plate_price{'Price'} );
 			$$price{'PlateID'} = $$price{'Plate Costs'}{'Plate ID'};
 			$$price{'txtPlateQuantity'} = $$price{'Plate Costs'}{'Plate Count'};
 			$$price{'Plate Cost'} = $plate_price{'Price'};
@@ -2158,7 +2158,7 @@ $openprint::log->error("Plates : " . $$price{'Plate Costs'}{'Plate ID'} . ':'. $
 
 			if ( $$price{'Comparison Cost'} < 0 ) {
 	
-				$openprint::log->debug("Negative price! $best_price{'Comparison Cost'} <= $$price{'Comparison Cost'}") if 1 or $debug;
+				#$openprint::log->debug("Negative price! $best_price{'Comparison Cost'} <= $$price{'Comparison Cost'}") if 1 or $debug;
 				#$imp->display();
 			} elsif ( %best_price and $best_price{'Comparison Cost'} <= $$price{'Comparison Cost'} ) {
 				#$imp->display();
@@ -2416,6 +2416,7 @@ $openprint::log->warn("Unknown Per setting $unit");
 # do not want an invalid fold style to win out unless there are no other valid signatures.
 			$price{'Comparison Cost'} += 1000000; 
 			$openprint::log->debug("Unable to fold spreads:" . $Imposition->spreads() . ' alert:'. $$project{'FoldingSpecs'}{'alert'} ) if $debug;
+#$Imposition->display('unable to fold');
 		} else {
 			$$Imposition{'Folder'} = $folding_results{'Equipment'};
 			$$Imposition{'FoldingImposition'} = $folding_results{'Imposition'};
