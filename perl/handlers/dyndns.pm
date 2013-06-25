@@ -58,7 +58,7 @@ $openprint::log->debug("Host: " . $r->param('host') );
 
     my ( $host, $domain ) = $hostname =~ /^([^\.])+\.(.+)$/;
     #my ( $domain_id, $allow_dyndns ) = sql::execute(undef,undef,'SELECT id, dyndns FROM domains WHERE name=?', $domain );
-    my ( $domain_id ) = sql::execute(undef,undef,'SELECT id FROM domains WHERE name=?', $domain );
+    my ( $domain_id ) = sql::execute(undef,undef,'SELECT id FROM domains WHERE name=?', $domain ) if $domain;
 
 	if ( ! $domain_id ) {
 		die "No domain_id found for $hostname\n";
@@ -123,7 +123,7 @@ $openprint::log->debug("Host: " . $r->param('host') );
 			$sn = $date_string .'01';
 		} # end if
 		sql::update( undef, undef, 'records', [ 'name=? AND type=?', $domain, 'SOA' ], content=>"$ns $email $sn $refresh $retry $expiry $min" );
-		`pdnssec rectify-zone $domain`;
+		`/usr/bin/pdnssec rectify-zone $domain`;
 	} # end if update_soa
 
 	#$log->debug( "Elapsed seconds after: " . sprintf('%.4f', tv_interval([$starttime])*1000).' usecs' ) if DEBUG;
