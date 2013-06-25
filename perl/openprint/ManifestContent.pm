@@ -48,6 +48,19 @@ $serial = 'manifestcontents_id_seq';
 	location_id			=>	undef,
 );
 
+sub skid_id {
+	if ( @_ > 1 ) {
+		$_[0]{skid_id} = $_[1];
+		$_[0]{skid_id} = undef if ! $_[0]{skid_id};
+		delete $_[0]{Skid};
+	} # end if
+	if ( ( ! $_[0]{skid_id} ) and $_[0]{rfidtag_id} ) {
+		my $Tag = $_[0]->RFIDTag();
+		$_[0]{skid_id} = $Tag->skid_id() if $Tag->skid_id();
+	} # end if
+	return $_[0]{skid_id};
+} # end sub skid_id
+
 sub Skid {
 	if ( @_ > 1 ) {
 		$_[0]{Skid} = $_[1];
@@ -55,7 +68,7 @@ sub Skid {
 		$_[0]{skid_id} = undef if ! $_[0]{skid_id};
 	} # end if
 	if ( ! $_[0]{Skid} ) {
-		$_[0]{Skid} = new openprint::Skid( $_[0]{skid_id} );
+		$_[0]{Skid} = new openprint::Skid( $_[0]->skid_id() );
 	} # end if
 	return $_[0]{Skid};
 } # end sub Skid
@@ -134,11 +147,88 @@ sub location_id {
 	if ( @_ > 1 ) {
 		$_[0]{location_id} = $_[1];
 	} # end if
-	if ( ( ! $_[0]{location_id} ) and $_[0]{skid_id} ) {
-		return $_[0]->Skid()->location_id();
+	if ( ( ! $_[0]{location_id} ) ) {
+		if ( $_[0]{skid_id} ) {
+			return $_[0]->Skid()->location_id();
+		} elsif ( $_[0]{rfidtag_id} ) {
+			return $_[0]->RFIDTag()->location_id();
+		} # endif
 	} # end if
 	return $_[0]{location_id};
 } # end sub location_id
+
+sub fix {
+	my ( $MC ) = @_;
+	my $Type = $_[0]->Type();
+	my $Manifest = $_[0]->Manifest();
+
+	my $error;
+	my @SkidContents = openprint::SkidContent->find( skid_id=>$$MC{skid_id} );
+	my %SkidContents = map { $$_{paper_id}, $_ } @SkidContents;
+
+foreach my $k ( keys %SkidContents ) {
+$openprint::log->debug( "$k => " . $SkidContents{$k}->to_string() );
+}
+	if ( $SkidContents{$$Type{paper_id}} ) {
+# Have the right paper., remove the ones that don't match.
+$openprint::log->debug("desired paper exists");
+		foreach my $paper_id ( keys %SkidContents ) {
+			next if $$Type{paper_id} == $paper_id;
+			my $SC = $SkidContents{$paper_id};
+			my $Paper = $SC->Paper();
+
+			my $PI = new openprint::PaperInventory();
+			$error .= $PI->save({ user_id=>$openprint::session{user_id}, skid_id=>$$SC{skid_id}, paper_id=>$paper_id, quantity=>-1*$SC->quantity(),
+					comment=>qq`Removed stock by manifest <a href="/employee/inventory/manifest.html?manifest_id=$$Manifest{id}">$$Manifest{name}</a>.`
+					});
+			$error .= $SC->delete();
+			$error .= $Paper->save();
+		} # end foreach paper_id
+	} else {
+$openprint::log->debug("desired paper does not exists");
+# Change the stock
+		foreach my $paper_id ( keys %SkidContents ) {
+			my $SC = $SkidContents{$paper_id};
+			my $Paper = $SC->Paper();
+
+			my $PI = new openprint::PaperInventory();
+			$error .= $PI->save({ user_id=>$openprint::session{user_id}, skid_id=>$$SC{skid_id}, paper_id=>$SC->paper_id(), quantity=>-1*$SC->quantity(),
+					comment=>'Changed stock from ' . $Paper->to_string() . ' to ' . $Type->Paper()->to_string()});
+# Change the type to the new type
+			foreach my $PA ( openprint::PaperAllocation->find( skid_id=>$SC->skid_id(), paper_id=>$SC->paper_id() ) ) {
+				$error .= $PA->save({paper_id=>$Type->Paper()->id()});
+			} # end foreach PA
+			my $PI = new openprint::PaperInventory();
+			$error .= $PI->save({user_id=>$openprint::session{user_id},skid_id=>$$SC{skid_id}, paper_id=>$Type->paper_id(), quantity =>$SC->quantity(),
+					comment=>'Changed stock from ' . $Paper->to_string() . ' to ' . $Type->Paper()->to_string()});
+			$error .= $SC->save({ paper_id => $$Type{paper_id} });
+			$error .= $Paper->save();
+		} # end foreach paper_id
+	} # end if
+	$error .= $Type->Paper()->save();
+	return $error;
+} # end sub fix
+
+sub check {
+	my ( $MC, $variable ) = @_;
+
+	my $Type = $$variable{Type} ? $$variable{Type} : $MC->Type();
+	my $error;
+	if ( $MC->skid_id() ) {
+		my @SkidContents = $$variable{SkidContents}{$$MC{skid_id}} ? @{$$variable{SkidContents}{$$MC{skid_id}}} : openprint::SkidContent->find(skid_id=>$MC->skid_id());
+		if ( @SkidContents > 1 ) {
+			$error = 'More than 1 stock on skid.<br/>';
+		} elsif ( @SkidContents and ( $SkidContents[0]->paper_id() != $Type->paper_id() ) ) {
+			$error = 'Skid contents do not match manifest.<br/>';
+		} # end if
+	} # end if
+	my $Tag = $MC->RFIDTag();
+	if ( $Tag->id() ) {
+		$_ = $Tag->is_invalid_id();
+		$error .= $_ if $_;
+	} # end if
+	return $error;
+} # end sub check
 
 1;
 __END__

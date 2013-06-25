@@ -22,7 +22,6 @@ require openprint::Currency;
 require openprint::Claim_Tax;
 require openprint::Claim_Asset;
 
-
 $debug = 0;
 
 $table = 'claims';
@@ -39,6 +38,8 @@ $serial = 'claims_id_seq';
 	'invoiced_on'	=>	'invoiced_on',
 	'cancelled_on'	=>	'cancelled_on',
 	'invoice_id'	=>	'invoice_id',
+	cancelled_on	=>	'cancelled_on',
+	paid_on			=>	'paid_on',
 	'po_id'			=>	'po_id',
 	'docket'		=>	'docket',
 	'supplier_id'	=>	'supplier_id',
@@ -64,6 +65,9 @@ $serial = 'claims_id_seq';
 	'also_notify'		=>	'also_notify',
 );
 
+%find_fields = (
+);
+
 %transforms = (
 	'updated_on'	=> [ 's/.*//g' ],
 	'po_id'			=>	[ 's/\D//g' ],
@@ -78,7 +82,8 @@ $serial = 'claims_id_seq';
 	'filed_on'	=>	undef,
 	'sent_to_accounts_on'	=>	undef,
 	'invoiced_on'	=>	undef,
-	'cancelled_on'	=>	undef,
+	cancelled_on	=>	undef,
+	paid_on			=>	undef,
 	'po_id'			=>	undef,
 	'docket'		=>	undef,
 	'supplier_id'	=>	undef,
@@ -136,7 +141,7 @@ sub Contents {
 	} # end if
 	if ( ! $$self{'Contents'} ) {
 		if ( $$self{'id'} ) {
-			@{$$self{'Contents'}} = openprint::Claim_Content->find('claim_id'=>$$self{id} );
+			$$self{'Contents'} = [ openprint::Claim_Content->find( claim_id=>$$self{id} ) ];
 		} # end if
 	} # end if
 	return @{$$self{'Contents'}} if $$self{'Contents'};
