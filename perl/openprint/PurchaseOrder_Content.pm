@@ -131,19 +131,33 @@ sub item {
 sub Order {
 	my $docket = $_[0]{'docket'};
 	$docket =~ s/\D//g;
-	return openprint::Order->find_one('docket'=>$docket) if $docket;
+	$_ = openprint::Order->find_one('docket'=>$docket) if $docket;
+	return $_ if $_;
 	return new openprint::Order();
 } # end sub Order
 
+sub Orders {
+	my @dockets = split( /\D/, $_[0]{docket} );
+	return openprint::Order->find(docket=>\@dockets) if @dockets;
+	return ();
+} # end sub Orders
+
 sub can_view {
 	return 1 if ! $_[0]{'id'};
+	my $User = $_[1] ? $_[1] : new openprint::User( $openprint::session{user_id} );
 	if ( 
-			( $openprint::session{'user_type'} eq 'A' )
-			or ( sets::isin( $_[0]->PurchaseOrder->created_by(), [ $openprint::session{'user_id'}, new openprint::User($openprint::session{'user_id'})->assistant_ids(), new openprint::User($openprint::session{'user_id'})->csr_ids() ] ) )
-			or ( openprint::usergroup::is_user_in( ['Accounting','Shipping','Inventory'], $openprint::session{'user_id'} ) ) 
-			or ( $openprint::session{'user_id'} == $_[0]->Order()->salesrep_id() )
+			( $$User{type} eq 'A' )
+			or ( sets::isin( $_[0]->PurchaseOrder->created_by(), [ $$User{id}, $User->assistant_ids(), $User->csr_ids() ] ) )
+			or ( openprint::usergroup::is_user_in( ['Accounting','Shipping','Inventory'], $$User{id} ) ) 
+			or ( sets::isin( $$User{id}, [ map { $_->salesrep_id() } $_[0]->Orders() ] ) )
 	   ) {
 		return 1;
+	} # end if
+	if ( my @notifications = $_[0]->PurchaseOrder()->notifications() ) {
+		if ( sets::isin( $$User{id}, \@notifications ) ) {
+			$openprint::log->debug($$User{firstname} . ' can see because in notifications.' );
+			return 1;
+		} # end if
 	} # end if
 	return 0;
 } # end sub can_view

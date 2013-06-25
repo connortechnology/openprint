@@ -241,7 +241,7 @@ $openprint::log->error("2No stock index for $paper_id");
 				$$specs{"cost-$ss_id-$stock_index-$qty_index"} = $$price{'100lb Price'};
 #$openprint::log->warn("Getting prices for $stock_index $paper_id (".$totals{$paper_id}{"qty_$qty_index"}.'sheets) => $' . $price{'100lb Price'}.'/100lb');
 			} # end if
-			$$specs{"price-$ss_id-$stock_index-$qty_index"} = sprintf($openprint::config{'UnitPriceFormat'},$$specs{"cost-$ss_id-$stock_index-$qty_index"} * $$specs{"qty-$ss_id-$stock_index-$qty_index"} / 100 );
+			$$specs{"price-$ss_id-$stock_index-$qty_index"} = Math::Round::nearest( 0.01, $$specs{"cost-$ss_id-$stock_index-$qty_index"} * $$specs{"qty-$ss_id-$stock_index-$qty_index"} / 100 );
 			$totals{$paper_id}{'Cost'}[$qty_index] = $$specs{"cost-$ss_id-$stock_index-$qty_index"};
 			$$specs{"MPrice$qty_index"} += $$specs{"cost-$ss_id-$stock_index-$qty_index"} * ceil( (1000/$$sig_specs{'txtImposition'.$qty_index}) * $RunPaper->sheet_weight() )/ 100;
 		} # end foreach qty_index

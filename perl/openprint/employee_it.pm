@@ -15,6 +15,9 @@ require openprint::Host;
 require openprint::RADIUS_Check;
 require openprint::User_Type;
 require openprint::Session;
+require openprint::License;
+require openprint::Software;
+require openprint::Location;
 
 sub logs {
 	ssi::setup_date_select( '/employee/it/logs.html', 'date_time_start', -31 );
@@ -31,16 +34,6 @@ sub hosts {
 			my $Host = new openprint::Host( $host_id );
 			$variable{'error'} .= $Host->delete();
 		} # end foreach host_id
-		%param = ();
-	} elsif ( $param{'action'} eq 'Save' ) {
-		my $Host = new openprint::Host( $param{'host_id'} );
-		$param{'mac'} = [ map { split( ',', $_ ) } split("\n", $param{'mac'}) ];
-		if ( $param{'type_id'} ) {
-			delete $param{'type'};
-		} else {
-			delete $param{'type_id'};
-		} # end if
-		$variable{'error'} .= $Host->save(\%param);
 		%param = ();
 	} # end if
 	_hosts();
@@ -72,7 +65,7 @@ sub _hosts {
 			'updated_on_start_year', 'updated_on_start_month', 'updated_on_start_day', 
 			'updated_on_end_year', 'updated_on_end_month', 'updated_on_end_day', 
 			'has_hostname', 'monitored','whitelisted','blacklisted','online',
-			'ip','hostname','mac',
+			'ip','hostname','mac','type_id',
 			'radius_auth', 'order',
 			);
 	if ( $config{'RADIUS Support'} eq 'Y' ) {
@@ -90,7 +83,7 @@ sub _hosts {
 } # end sub _hosts
 
 sub host {
-	my $Host = $variable{'Host'} = new openprint::Host( $param{'host_id'} );
+	my $Host = $variable{Host} = new openprint::Host( $param{host_id} );
 	if ( $param{'action'} eq 'Resolve' ) {
 		if ( ! $Host->ip() ) {
 			$variable{'error'} .= 'No ip.  Cant resolve without an ip.';
@@ -100,6 +93,35 @@ sub host {
 				'mac'		=> $Host->get_mac(),
 				});
 		} # end if
+	} elsif ( $param{action} eq 'Wake' ) {
+		foreach my $mac ( @{ $Host->mac() } ) {
+			`wakeonlan $mac`;
+		} # end foraech
+	} elsif ( $param{action} eq 'GEOLookup' ) {
+		if ( ! $Host->ip() ) {
+			$variable{error} .= 'Host does not have an ip.<br/>';
+		} else {
+			my $Location = openprint::Location::from_ip( $Host->ip() );
+			if ( ! $Location ) {
+				$variable{error} .= 'No Location found from ip.';
+			} else {
+				$$Host{location_id} = $Location->id();
+			} # end if
+		} # end if
+		
+	} elsif ( $param{action} eq 'Save' ) {
+		$param{mac} = [ map { split( ',', $_ ) } split("\n", $param{mac}) ];
+		if ( $param{type_id} ) {
+			delete $param{type};
+		} else {
+			delete $param{type_id};
+		} # end if
+		$variable{error} .= $Host->save(\%param);
+		if ( ! $variable{error} ) {
+			$variable{ExternalRedirect} = '/employee/it/hosts.html';
+			return;
+		} # end if
+		%param = ();
 	} elsif ( $param{'action'} eq 'ping' ) {
 		if ( $Host->ping() ) {
 			$variable{'information'} .= 'Host is alive.';
@@ -314,6 +336,134 @@ sub _assets {
 		$variable{'error'} .= $Object_Asset->delete();
 	} # end if
 } # end sub _assets
+
+sub licenses {
+	if ( $param{'action'} eq 'Delete' ) {
+		foreach my $license_id ( ref $param{license_id} eq 'ARRAY' ? @{$param{license_id}} : $param{license_id} ) {
+			my $License = new openprint::License( $license_id );
+			$variable{error} .= $License->delete();
+		} # end foreach license_id
+		%param = ();
+	} elsif ( $param{action} eq 'Save' ) {
+		my $License = new openprint::License( $param{license_id} );
+		if ( $param{software_id} ) {
+			delete $param{software};
+		} else {
+			delete $param{software_id};
+		} # end if
+		$variable{error} .= $License->save(\%param);
+		%param = ();
+	} # end if
+	_licenses();
+	ssi::setup_date_select( '/employee/it/licenses.html', 'created_on_start', '' );
+	ssi::setup_date_select( '/employee/it/licensess.html', 'created_on_end', '' );
+	ssi::setup_date_select( '/employee/it/licenses.html', 'updated_on_start', '' );
+	ssi::setup_date_select( '/employee/it/licenses.html', 'updated_on_end', '' );
+} # end sub licenses
+
+sub _licenses {
+	if ( $param{action} eq 'Delete' ) {
+		foreach my $license_id ( ref $param{license_id} eq 'ARRAY' ? @{$param{license_id}} : $param{license_id} ) {
+			my $License = new openprint::License( $license_id );
+			$variable{error} .= $License->delete();
+		} # end foreach license_id
+		%param = ();
+	} # end if
+	ssi::save_params( '/employee/it/licenses.html', 
+	( map { 'created_on_start_' . $_ } ( 'year', 'month', 'day' ) ),
+	( map { 'created_on_end_' . $_ } ( 'year', 'month', 'day' ) ),
+	( map { 'updated_on_start_' . $_ } ( 'year', 'month', 'day' ) ),
+	( map { 'updated_on_end_' . $_ } ( 'year', 'month', 'day' ) ),
+	( map { 'purchased_on_start_' . $_ } ( 'year', 'month', 'day' ) ),
+	( map { 'purchased_on_end_' . $_ } ( 'year', 'month', 'day' ) ),
+	( map { 'expires_on_start_' . $_ } ( 'year', 'month', 'day' ) ),
+	( map { 'expires_on_end_' . $_ } ( 'year', 'month', 'day' ) ),
+			'ip','hostname','mac',
+			'order',
+			);
+} # end sub _licenses
+
+sub license {
+	my $License = $variable{License} = new openprint::License( openprint::License->transform('id',$param{license_id}) );
+	if ( $param{action} eq 'Delete' ) {
+		$variable{error} .= $License->delete();
+		if ( ! $variable{error} ) {
+			$variable{ExternalRedirect} = '/employee/it/licenses.html';
+			%param = ();
+		} # end if
+	} elsif ( $param{action} eq 'Save' ) {
+		my $License = new openprint::License( $param{license_id} );
+		if ( $_ = openprint::License->find_one(serialkey=>$param{serialkey}, ( $param{license_id} ? ('id !=' => $param{license_id}) : () ) ) ) {
+			$variable{error} .= 'License has already been entered.  Click <a href="license.html?license_id='.$_->id().'">here</a> to view it.<br/>';
+			return;
+		} # end if
+		if ( $param{software_id} ) {
+			delete $param{software};
+		} else {
+			delete $param{software_id};
+		} # end if
+		$variable{error} .= $License->save(\%param);
+		if ( ! $variable{error} ) {
+			%param = ();
+			$variable{ExternalRedirect} = '/employee/it/licenses.html';
+		} # end if
+	} # end if
+} # end sub license
+
+sub _license_host_popup {
+	my $License = $variable{License} = new openprint::License($param{license_id});
+	if ( ! $License->id() ) {
+		$variable{error} .= 'License not found.';
+		return;
+	} # end if
+} # end sub _license_host_popup
+
+sub _license_host_results {
+	my $License = $variable{License} = new openprint::License($param{license_id});
+	if ( ! $License->id() ) {
+		$variable{error} .= 'License not found.';
+		return;
+	} # end if
+} # end sub _license_host_results
+
+sub _license_allocations {
+	my $License = $variable{License} = new openprint::License($param{license_id});
+	if ( ! $License->id() ) {
+		$variable{error} .= 'License not found.';
+		return;
+	} # end if
+	if ( $param{action} eq 'allocate' ) {
+		my $Host = new openprint::Host($param{host_id});
+		if ( ! $Host->id() ) {
+			$variable{error} .= 'Host not found.';
+			return;
+		} # end if
+		
+		my $LH = new openprint::License_Host();
+		$variable{error} .= $LH->save({license_id=>$param{license_id}, host_id=>$param{host_id}});
+	} # end if	
+} # end sub _license_alliations
+
+sub _information {
+	my $Host = $variable{Host} = new openprint::Host( $param{host_id} );
+	if ( ! $Host->id() ) {
+		$variable{error} .= "Host not found: id=>$param{host_id}<br/>";
+		return;
+	} # end if
+
+	if ( $param{action} eq 'add' ) {
+		my $Info = new openprint::Host_Info();
+		$variable{error} .= $Info->save({
+				host_id	=>	$param{host_id},
+				name	=>	$param{name},
+				value	=>	$param{value}, 
+			});
+	} elsif ( $param{action} eq 'delete' ) {
+		my $Info = new openprint::Host_Info( $param{info_id} );
+		$variable{error} .= $Info->delete();
+	} # end if
+		
+} # end sub _information
 
 1;
 __END__

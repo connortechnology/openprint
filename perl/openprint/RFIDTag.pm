@@ -15,12 +15,12 @@ $debug = 0;
 $table = 'rfidtags';
 $serial = 'rfidtags_id_seq';
 %fields = (
-	'id'			=>	'id',
-	'location_id'	=>	'location_id',
-	'type_id'		=>	'type_id',
-	'created_on'	=>	'created_on',
-	'updated_on'	=>	'updated_on',
-	'valid'			=>	'valid',
+	id			=>	'id',
+	location_id	=>	'location_id',
+	type_id		=>	'type_id',
+	created_on	=>	'created_on',
+	updated_on	=>	'updated_on',
+	valid		=>	'valid',
 );
 %find_fields = (
 	skid_id	=>	'(SELECT skid_id FROM skids WHERE skids.rfidtag_id=rfidtags.id)',
@@ -28,6 +28,7 @@ $serial = 'rfidtags_id_seq';
 );
 
 %transforms = (
+	id	=>	[ 's/\D//g' ],
 );
 
 %defaults = (
@@ -77,7 +78,7 @@ sub save {
 		} # end if
 	} # end if
 
-	$$self{'updated_on'} = 'NOW()';
+	$self->valid( ! $self->is_invalid_id() );
 	
 	my $ac = sql::start_transaction( $dbh );
 

@@ -30,6 +30,12 @@ $serial = 'project_files_id_seq';
 	size		=>	undef,
 );
 
+sub directory {
+	my @path = split('/', $_[0]{filename} );
+	pop @path;
+	return join('/', @path );
+}
+
 sub size_text {
 	return misc::format_bytes( $_[0]{size} );
 } #end sub size_text

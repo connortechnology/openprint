@@ -8,7 +8,7 @@ require openprint::RMA_Priority;
 
 use vars qw( $debug $table $serial %fields %find_fields %transforms %defaults );
 
-$debug = 0;
+$debug = 1;
 $table = 'rma';
 $serial = 'rma_id_seq';
 %fields = (
@@ -27,7 +27,8 @@ $serial = 'rma_id_seq';
 	approved	=>	'approved',
 	status_id	=>	'status_id',
 	status		=>	undef,
-	priority	=>	'priority',
+	priority_id	=>	'priority_id',
+	priority	=>	undef,
 	po_id		=>	'po_id',
 	received_on	=>	'received_on',
 	warranty			=>	'warranty',
@@ -63,7 +64,7 @@ $serial = 'rma_id_seq';
 	received_on	=>	q`'NOW()'`,
 	approved	=>	0,
 	status		=>	undef,
-	priority	=>	undef,
+	priority_id	=>	undef,
 	po_id		=>	undef,
 	estimate_required	=>	undef,
 	warranty	=>	undef,

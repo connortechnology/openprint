@@ -8,6 +8,7 @@ require logger;
 require openprint::Object;
 require configuration;
 require openprint::Service;
+require openprint::Location;
 require openprint::Equipment;
 require openprint::ServiceType_Category;
 
@@ -63,6 +64,8 @@ if ( ! $path ) {
 `chmod +x $lib_path/tools/db_update.pl`;
 print "upgrading structures 1...\n";
 `$lib_path/tools/db_update.pl $dst_db point-one point-one ` or $log->error($!);
+print "upgrading folding...\n";
+`$lib_path/tools/fold_update.pl $dst_db point-one point-one ` or $log->error($!);
 print "upgrading structures 2...\n";
 `$lib_path/tools/db_update2.pl $dst_db point-one point-one ` or $log->error($!);
 print "upgrading structures 3...\n";
@@ -77,7 +80,7 @@ configuration::init( $log, $dbh );
 my ( $version, $updated_on, $backup ) = sql::execute( undef, undef, q{SELECT version,updated_on, backup FROM database_info ORDER BY updated_on DESC LIMIT 1} );
 sql::insert( undef, undef, 'database_info', 'version', $version+1, 'backup', 'false' );
 print "done\n";
-
+map { $_->save({type=>'place'}) } openprint::Location->find(name=>['POGI','Metro','Missing','Trigistrix', 'On Order']);
 
 foreach my $Project ( openprint::Project->find('created_on >'=>sprintf('%.4d-%.2d-%.2d 00:00:00', Date::Calc::Add_Delta_Days( Date::Calc::Today(), '7 days') ) ) ) {
 	my @qtys = $Project->quantities();

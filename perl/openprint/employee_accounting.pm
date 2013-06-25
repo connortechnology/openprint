@@ -189,11 +189,17 @@ sub credit {
                         ( $Credit->limit() != openprint::Company_Credit->transform('limit', $param{'limit-'.$$Supplier{id}} ) ) or
                         ( $Credit->hold() ne openprint::Company_Credit->transform('hold', $param{'hold-'.$$Supplier{id}} ) ) or
                         ( $Credit->downpayment() != openprint::Company_Credit->transform('downpayment', $param{'downpayment-'.$$Supplier{id}} ) ) or
-                        ( $Credit->cod() != openprint::Company_Credit->transform('cod', $param{'cod-'.$$Supplier{id}} ) )
+                        ( $Credit->cod() != openprint::Company_Credit->transform('cod', $param{'cod-'.$$Supplier{id}} ) ),
+                        ( $Credit->late_payment_amount() != openprint::Company_Credit->transform('late_payment_amount', $param{'late_payment_amount-'.$$Supplier{id}} ) ),
+                        ( $Credit->late_payment_units() ne openprint::Company_Credit->transform('late_payment_units', $param{'late_payment_units-'.$$Supplier{id}} ) ),
+                        ( $Credit->early_payment_amount() != openprint::Company_Credit->transform('early_payment_amount', $param{'early_payment_amount-'.$$Supplier{id}} ) ),
+                        ( $Credit->early_payment_units() ne openprint::Company_Credit->transform('early_payment_units', $param{'early_payment_units-'.$$Supplier{id}} ) ),
+                        ( $Credit->early_payment_days() != openprint::Company_Credit->transform('early_payment_days', $param{'early_payment_days-'.$$Supplier{id}} ) ),
                         ) {
                     my $note = 'Old credit: ' . $Credit->to_string() if $Credit->supplier_id();
 					$variable{'error'} .= $Credit->save( { 'company_id'=>$company_id, 'supplier_id'=>$Supplier->id(), 
-							map { $_ => $param{$_.'-'.$Supplier->id()} } ( 'denydays','warndays','limit','hold','downpayment','cod' ) } );
+							map { $_ => $param{$_.'-'.$Supplier->id()} } ( 'denydays','warndays','limit','hold','downpayment','cod',
+'late_payment_amount','late_payment_units','early_payment_amount','early_payment_units','early_payment_days' ) } );
                     $note .= '<br/>new credit: ' . $Credit->to_string();
                     $variable{'error'} .= (new openprint::Log())->save( {
 							action		=>	'Credit Information Changed',
@@ -368,11 +374,11 @@ sub expenditure {
 sub expenses {
 	if ( $param{'btnFunction'} eq 'Delete' ) {
 		my $Expenditure = new openprint::Expense( $param{'expense_id'} );
-		if ( $variable{'error'} .= $Expenditure->delete() ) {
-			$variable{'Redirect'} = '/employee/accounting/expense.html';
+		if ( $variable{error} .= $Expenditure->delete() ) {
+			$variable{ExternalRedirect} = '/employee/accounting/expense.html';
 			return;	
 		} # end if
-		delete $param{'expense_id'};
+		delete $param{expense_id};
 	} else {
 		_expenses();
 		ssi::setup_date_select( '/employee/accounting/expenses.html', 'invoiced_on_start', -31 );
@@ -405,6 +411,12 @@ sub expense {
 	if ( $param{'btnFunction'} eq 'Copy' ) {
 		$variable{'information'} .= $Expense->id() . ' has been copied';
 		$variable{'Expense'} = $Expense = $Expense->copy();
+	} elsif ( $param{'btnFunction'} eq 'Delete' ) {
+		if ( ! ( $variable{error} .= $Expense->delete() ) ) {
+			$variable{information} .= 'Expense ' . $Expense->id() . ' deleted successfully.';
+			$variable{ExternalRedirect} = '/employee/accounting/expenses.html';
+			return;	
+		} # end if
 	} elsif ( $param{'btnFunction'} eq 'Save' ) {
 		if ( $param{amount} =~ /[=\+\-\*\/]/ ) {
 			$param{amount} = eval $param{amount};
@@ -433,7 +445,7 @@ sub expense {
 			delete $param{'account_id'};
 		} # end if
 		my $Expense = new openprint::Expense( $param{'expense_id'} );
-		if ( $variable{'error'} .= $Expense->save( \%param ) ) {
+		if ( $variable{error} .= $Expense->save( \%param ) ) {
 			return;	
 		} # end if
 
@@ -453,6 +465,14 @@ sub expense {
 
 		$variable{'information'} .= 'Expense saved successfully.<br/>';
 		$variable{'ExternalRedirect'} = '/employee/accounting/expenses.html';
+
+		# Now update the session for expenses so that we always show the entry we just saved.
+		foreach my $key ( 'company_id', 'recipient_id', 'account_id' ) {
+			if ( $session{'/employee/accounting/expenses.html?'.$key} and ( $session{'/employee/accounting/expenses.html?'.$key} != $$Expense{$key} ) ) {
+				delete $session{'/employee/accounting/expenses.html?'.$key};
+			} # end if
+		} # end foreach
+
 		%param = ();
 		return;
 	} # end if

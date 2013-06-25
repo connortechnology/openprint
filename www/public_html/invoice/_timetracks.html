@@ -1,8 +1,9 @@
 <fieldset><legend>Services in this invoice</legend>
 	<table class="List sortable" id="invoicedtimetracks_table">
 		<tr>
-			<th>Employee</th>
-			<th>Service</th>
+			<th class="Employee">Employee</th>
+			<th class="Service">Service</th>
+			<th class="PO">PO #</th>
 			<th class="DateTime">Start</th>
 			<th class="DateTime">End</th>
 			<th class="Interval">Interval</th>
@@ -12,29 +13,41 @@
 		</tr>
 	<? echo (
 		my $html = '';
-		$$variable{'Currency'} = openprint::Currency::get_current() if ! $$variable{'Currency'};
-		$$variable{'service_total'} = 0;
-		foreach my $Timetrack ( openprint::Timetrack->find('invoice_id'=>$$variable{'Invoice'}->id(), 'order'=>'starting') ) {
+		$$variable{Currency} = openprint::Currency::get_current() if ! $$variable{Currency};
+		$$variable{service_total} = 0;
+		foreach my $Timetrack ( openprint::Timetrack->find( invoice_id=>$$variable{Invoice}->id(), order=>'starting') ) {
 			my $desc = $Timetrack->description();
 			$desc =~ s/"/&quot;/gm;
-			$html .= sprintf( q`<tr title="%s">`, $desc );
-			$html .= sprintf('<td class="Employee"><a href="/timetrack/edit.html?timetrack_id=%1$d&amp;invoice_id=%2$d">%3$s</a></td>', $Timetrack->id(), $$variable{'Invoice'}->id(), ssi::htmlize( $Timetrack->Employee()->name() ) );
-			$html .= sprintf('<td class="Service"><a href="/timetrack/edit.html?timetrack_id=%1$d&amp;invoice_id=%2$d">%3$s</a></td>', $Timetrack->id(), $$variable{'Invoice'}->id(), ssi::htmlize( $Timetrack->Service()->name() ) );
-			$html .= sprintf('<td class="DateTime">%s</td>', Date::Format::time2str( $Timetrack->time_associated() ? $config{'DateTimeFormat'} : '%Y-%m-%d', Date::Parse::str2time( $Timetrack->starting() ) ) );
-			$html .= sprintf('<td class="DateTime">%s</td>', Date::Format::time2str( $Timetrack->time_associated() ? $config{'DateTimeFormat'} : '%Y-%m-%d', Date::Parse::str2time( $Timetrack->ending() ) ) );
-			$html .= sprintf('<td class="Interval">%s</td>', misc::seconds_to_pretty_interval( $Timetrack->elapsed() ) ); 
-			my $Price = $Timetrack->Price();
-			$html .= sprintf('<td class="Rate">%s%s</td>', openprint::Currency::format( $$Price{'Price'} ), $$Price{'units'} );
-			$html .= sprintf('<td class="Price">%s</td>', openprint::Currency::format( $$Price{'Total'} ) );
-			$html .= sprintf('<td class="buttons">%s</td>', ssi::button( 'del'.$Timetrack->id(), { 'onclick'=>qq`del_timetrack($$Timetrack{id});`, 'text'=>'-' } ) );
-			$html .= "</tr>\n";
-			$$variable{'service_total'} += $$Price{'Total'};
+            my $Price = $Timetrack->Price();
+            $html .= sprintf( q`
+<tr title="%13$s">
+    <td class="Employee"><a href="/timetrack/edit.html?timetrack_id=%1$d&amp;invoice_id=%2$d">%3$s</a></td>
+    <td class="Service"><a href="/timetrack/edit.html?timetrack_id=%1$d&amp;invoice_id=%2$d">%4$s</a></td>
+	<td class="PO">%5$s</td>
+    <td class="DateTime">%6$s</td>
+    <td class="DateTime">%7$s</td>
+    <td class="Interval">%8$s</td>
+    <td class="Rate">%9$s%10$s</td>
+    <td class="Price">%11$s</td>
+    <td class="buttons">%12$s</td>
+</tr>
+`, $Timetrack->id(), $$variable{Invoice}->id(), ssi::htmlize( $Timetrack->Employee()->name() ),
+ssi::htmlize( $Timetrack->Service()->name() ),
+$Timetrack->po(),
+Date::Format::time2str( $Timetrack->time_associated() ? $config{DateTimeFormat} : '%Y-%m-%d', Date::Parse::str2time( $Timetrack->starting() ) ),
+Date::Format::time2str( $Timetrack->time_associated() ? $config{DateTimeFormat} : '%Y-%m-%d', Date::Parse::str2time( $Timetrack->ending() ) ),
+misc::seconds_to_pretty_interval( $Timetrack->elapsed() ),
+openprint::Currency::format( $$Price{'Price'} ), $$Price{'units'},
+openprint::Currency::format( $$Price{'Total'} ),
+ssi::button( 'del'.$Timetrack->id(), { onclick=>qq`del_timetrack($$Timetrack{id});`, text=>'-' } ),
+$desc );
+			$$variable{service_total} += $$Price{Total};
 		} # end foreach Timetrack
 		return $html;
 	) ?>
 		<tr class="totals">
-			<td colspan="6"><b>Totals</b></td>
-			<td class="Price"><b><? echo ( openprint::Currency::format( $$variable{'service_total'} ); ) ?></b></td>
+			<td colspan="7">Totals</td>
+			<td class="Price" id="timetrack_total"><? echo ( openprint::Currency::format( $$variable{'service_total'} ); ) ?></td>
 			<td>&nbsp;</td>
 		</tr>
 	</table>
@@ -42,8 +55,8 @@
 <fieldset><legend>Available Timetracks</legend>
 	<table class="List sortable" id="availabletimetracks_table">
 		<tr>
-			<th>Employee</th>
-			<th>Service</th>
+			<th class="Employee">Employee</th>
+			<th class="Service">Service</th>
 			<th class="DateTime">Start</th>
 			<th class="DateTime">End</th>
 			<th class="Interval">Interval</th>
@@ -53,7 +66,6 @@
 		</tr>
 		<? echo (
 			my $html = '';
-			$$variable{'Currency'} = openprint::Currency::get_current() if ! $$variable{'Currency'};
 			my @Timetracks;
 			foreach my $T ( openprint::Timetrack->find(
 				'billable'		=>	1,
@@ -68,15 +80,15 @@
 				my $desc = $T->description();
 				$desc =~ s/"/&quot;/mg;
 				$html .= sprintf( q`<tr title="%s">`, $desc );
-				$html .= sprintf('<td><a href="/timetrack/edit.html?timetrack_id=%1$d">%2$s</a></td>', $T->id(), ssi::htmlize($T->Employee()->name()) );
-				$html .= sprintf('<td><a href="/timetrack/edit.html?timetrack_id=%1$d">%2$s</a></td>', $T->id(), ssi::htmlize($T->Service()->name()) );
+				$html .= sprintf('<td class="Employee"><a href="/timetrack/edit.html?timetrack_id=%1$d">%2$s</a></td>', $T->id(), ssi::htmlize($T->Employee()->name()) );
+				$html .= sprintf('<td class="Service"><a href="/timetrack/edit.html?timetrack_id=%1$d">%2$s</a></td>', $T->id(), ssi::htmlize($T->Service()->name()) );
 				$html .= sprintf('<td class="DateTime">%s</td>', Date::Format::time2str( $config{'DateTimeFormat'}, Date::Parse::str2time( $T->starting() ) ) );
 				$html .= sprintf('<td class="DateTime">%s</td>', Date::Format::time2str( $config{'DateTimeFormat'}, Date::Parse::str2time( $T->ending() ) ) );
 				$html .= sprintf('<td class="Interval">%s</td>', misc::seconds_to_pretty_interval( $T->elapsed() ) );
 				my $Price = $T->Price();
 				$html .= sprintf('<td class="Rate">%s%s</td>', openprint::Currency::format( $$Price{'Price'} ), $$Price{'units'} );
 				$html .= sprintf('<td class="Price">%s</td>', openprint::Currency::format( $$Price{'Total'} ) );
-				$html .= sprintf('<td class="buttons">%s</td>', ssi::writeButton( $log, $dbh, 'add'.$T->id(), '', 'add_timetrack('.$T->id().');', '', '+' ) );
+				$html .= sprintf('<td class="buttons">%s</td>', button( 'add'.$T->id(), { onclick=>qq`add_timetrack($$T{id});`, text=> '+' } ) );
 				$html .= "</tr>\n";
 			} # end foreach $T
 			return $html;

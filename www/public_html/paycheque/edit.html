@@ -54,7 +54,7 @@
 				</select>
 			</li>
 			<li><label>Paid On</label>
-			<span class="DateSelectorT"><? echo ( ssi::date_select( 'paid_on', $$variable{'Paycheque'}->paid_on(), { 'with_today'=>1 } ); ) ?></span>
+			<? echo ( ssi::date_select( 'paid_on', $$variable{'Paycheque'}->paid_on(), { 'with_today'=>1 } ); ) ?>
 			</li>
 			<li><label for="total">Total</label>
 				<input type="number" name="total" id="total" value="<? echo ( $$variable{'Paycheque'}->total() ) ?>" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');" />

@@ -9,7 +9,7 @@
 		<div id="FileList"> <? echo ( include('_files.html'); ) ?> </div>
 	</fieldset>
 <? endif ( $session{'user_id'} ) ?>
-	<? eval ( @$variable{'serial'} = sql::execute( $log, $dbh, q{SELECT nextval(uploads_id_seq)} ); ) ?>
+	<? eval ( @$variable{'serial'} = sql::execute( $log, $dbh, q{SELECT nextval('uploads_id_seq')} ); ) ?>
 	<form name="upload" method="post" action="upload.htm?serial=<?serial?>" enctype="multipart/form-data" target="UploadFrame">
 <? if ( ! $session{'user_id'} ) ?>
 		<fieldset><legend>Your Information</legend>
@@ -98,17 +98,15 @@ $log->debug("SEssion: $session{'project_id'} ");
 ) ?>
 			<p>
 				<label for="txtQuoteNumber">Quote #</label>
-				<input type="text" id="txtQuoteNumber" name="txtQuoteNumber" value="<?txtQuoteNumber?>" onkeyup="this.value=this.value.replace(/\D/,'');" />
+				<? echo ( input( type=>'cardinal', id=>'txtQuoteNumber', name=>'txtQuoteNumber', value=>$$variable{txtQuoteNumber} ); ) ?>
 			</p>
 			<p>
 				<label for="txtQuotedPrice">Quoted Price</label>
-				<input type="text" id="txtQuotedPrice" name="txtQuotedPrice" value="<?txtQuotedPrice?>" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');" />
+				<? echo ( input( type=>'float', id=>'txtQuotedPrice', name=>'txtQuotedPrice', value=>$$variable{txtQuotedPrice} ); ) ?>
 			</p>
 			<p>
 				<label>Due Date</label>
-				<span class="DateSelector">
-					<? echo ( ssi::date_select( 'duedate', [@$variable{'duedate_year','duedate_month','duedate_day'}], { 'onchange'=>"filter_days(document.forms['upload'], 'duedate', { futureonly: true, businessonly: true } );" } ); ) ?>
-				</span>
+				<? echo ( ssi::date_select( 'duedate', [@$variable{'duedate_year','duedate_month','duedate_day'}], { 'onchange'=>"filter_days(document.forms['upload'], 'duedate', { futureonly: true, businessonly: true } );" } ); ) ?>
 			</p>
 			<p>
 				<label>Size</label>
@@ -116,7 +114,7 @@ $log->debug("SEssion: $session{'project_id'} ");
 			</p>
 			<p>
 				<label>Qty</label>
-				<input type="text" id="Quantity" name="Quantity" value="<?Quantity?>" onkeyup="this.value=this.value.replace(/\D/,'');" />
+				<? echo ( input( type=>'cardinal', id=>'Quantity', name=>'Quantity', value=>$$variable{Quantity} ); ) ?>
 			</p>
 			<p>
 				<label>Stock</label>
@@ -131,7 +129,13 @@ $log->debug("SEssion: $session{'project_id'} ");
 			<? endif ( $$variable{'txtQuoteNumber'} ) ?>
 			<p>
 				<label for="txtJobDescription">Description</label>
-				<textarea name="txtJobDescription" rows="1" cols="" onkeyup="textarea_resize(this);"></textarea>
+				<textarea name="txtJobDescription" rows="1" onkeyup="textarea_resize(this);">
+			<? if ( $$variable{'txtQuoteNumber'} ) ?>
+				<? echo (
+					new openprint::Project( $$variable{'txtQuoteNumber'} )->reference();
+				) ?>
+			<? endif ( $$variable{'txtQuoteNumber'} ) ?>
+				</textarea>
 			</p>
 			<p class="proof_type">
 				<label>Proof Required</label>
@@ -161,37 +165,37 @@ $log->debug("SEssion: $session{'project_id'} ");
 				<tr>
 					<th width="20">&nbsp;</th>
 					<th width="200" nowrap="nowrap" align="left">Select file(s) to upload</th>
-					<th>Description (optional)</th>
+					<th class="description" nowrap="nowrap">Description (optional)</th>
 				</tr>
 				<tr>
 					<td>1.</td>
 					<td><input type="file" name="fileUpload1" id="fileUpload1" /></td>
-					<td><input type="text" name="txtDescription1" style="width: 98%;" /></td>
+					<td class="description"><input type="text" name="txtDescription1" /></td>
 				</tr>
 				<tr>
 					<td>2.</td>
 					<td><input type="file" name="fileUpload2" id="fileUpload2" /></td>
-					<td><input type="text" name="txtDescription2" style="width: 98%;" /></td>
+					<td class="description"><input type="text" name="txtDescription2" /></td>
 				</tr>
 				<tr>
 					<td>3.</td>
 					<td><input type="file" name="fileUpload3" id="fileUpload3" /></td>
-					<td><input type="text" name="txtDescription3" style="width: 98%;" /></td>
+					<td class="description"><input type="text" name="txtDescription3" /></td>
 				</tr>
 				<tr>
 					<td>4.</td>
 					<td><input type="file" name="fileUpload4" id="fileUpload4" /></td>
-					<td><input type="text" name="txtDescription4" style="width: 98%;" /></td>
+					<td class="description"><input type="text" name="txtDescription4" /></td>
 				</tr>
 				<tr>
 					<td>5.</td>
 					<td><input type="file" name="fileUpload5" id="fileUpload5" /></td>
-					<td><input type="text" name="txtDescription5" style="width: 98%;" /></td>
+					<td class="description"><input type="text" name="txtDescription5" /></td>
 				</tr>
 			</table>
 			<span style="float: right;">
 				<? echo ( 
-					ssi::writeButton( $log, $dbh, 'Upload', 'uploadFiles.gif', "if ( check_input( upload ) ) { upload.btnFunction.value='Upload Files';startprogress($$variable{serial});upload.submit();}", '', 'Upload Files' );
+					ssi::button( 'Upload', { onclick=>"if ( check_input( upload ) ) { upload.btnFunction.value='Upload Files';startprogress($$variable{serial});document.forms['upload'].submit();}", text=>'Upload Files' } );
 				) ?>					
 			</span>
 			<br class="spacer"/>

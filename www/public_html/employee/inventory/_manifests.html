@@ -1,33 +1,85 @@
 <? eval (
 	require openprint::Manifest;
 
+	if ( $param{manifest_name} ) {
+		if ( length $param{manifest_name} <= 2 ) {
+			$$variable{Manifests} = [];
+			$variable{error} .= 'You must specify at least 2 digits of the manifest #<br/>';
+			return;
+		} # end if
+		if ( ! ( $param{manifest_name} =~ /%/ ) ) {
+			$param{manifest_name} = '%'.$param{manifest_name}.'%';
+		} # end if
 
-	if ( $param{'manifest_name'} ) {
 		$$variable{Manifests} = [ openprint::Manifest->find( 
-			name	=>	$param{manifest_name},
-			order	=>	'received_on',
+			'name like'	=>	$param{manifest_name},
+			order	=>	'received_on DESC',
+			limit	=>	100,
+			( $session{'/employee/inventory/manifests.html?deleted'} ? ( deleted => [ split(',', $session{'/employee/inventory/manifests.html?deleted'} ) ] ) : () ),
 			) ];
-	} elsif ( $param{'po_id'} ) {
-		$$variable{'Manifests'} = [ openprint::Manifest->find( 
+	} elsif ( $param{po_id} ) {
+		$$variable{Manifests} = [ openprint::Manifest->find( 
 			po_id	=>	$param{po_id},
-			order	=>	'received_on',
+			order	=>	'received_on DESC',
+			limit	=>	100,
+			( $session{'/employee/inventory/manifests.html?deleted'} ? ( deleted => [ split(',', $session{'/employee/inventory/manifests.html?deleted'} ) ] ) : () ),
 			) ];
-	} elsif ( $param{'docket'} ) {
-		$$variable{'Manifests'} = [ openprint::Manifest->find( 
+	} elsif ( $param{skid_id} ) {
+		$$variable{Manifests} = [ openprint::Manifest->find( 
+			skid_id	=>	$param{skid_id},
+			order	=>	'received_on DESC',
+			limit	=>	100,
+			( $session{'/employee/inventory/manifests.html?deleted'} ? ( deleted => [ split(',', $session{'/employee/inventory/manifests.html?deleted'} ) ] ) : () ),
+			) ];
+	} elsif ( $param{rfidtag_id} ) {
+		$$variable{Manifests} = [ openprint::Manifest->find( 
+			rfidtag_id	=>	$param{rfidtag_id},
+			order	=>	'received_on DESC',
+			limit	=>	100,
+			( $session{'/employee/inventory/manifests.html?deleted'} ? ( deleted => [ split(',', $session{'/employee/inventory/manifests.html?deleted'} ) ] ) : () ),
+			) ];
+	} elsif ( $param{manufacturers_id} ) {
+		$$variable{Manifests} = [ openprint::Manifest->find( 
+			manufacturers_id	=>	$param{manufacturers_id},
+			order	=>	'received_on DESC',
+			limit	=>	100,
+			( $session{'/employee/inventory/manifests.html?deleted'} ? ( deleted => [ split(',', $session{'/employee/inventory/manifests.html?deleted'} ) ] ) : () ),
+			) ];
+	} elsif ( $param{docket} ) {
+		$$variable{Manifests} = [ openprint::Manifest->find( 
 			docket	=>	$param{docket},
-			order	=>	'received_on',
+			order	=>	'received_on DESC',
+			limit	=>	100,
+			( $session{'/employee/inventory/manifests.html?deleted'} ? ( deleted => [ split(',', $session{'/employee/inventory/manifests.html?deleted'} ) ] ) : () ),
 			) ];
 	} else {
 		my %search = (
 			( $param{'manifest like'} ? ( 'name ilike'	=> $param{'manifest like'} ) : () ),
 			ssi::date_filter( '/employee/inventory/manifests.html?received_on_end', 'received_on <=' ),
 			ssi::date_filter( '/employee/inventory/manifests.html?received_on_start', 'received_on >=' ),
+			ssi::date_filter( '/employee/inventory/manifests.html?created_on_end', 'created_on <=' ),
+			ssi::date_filter( '/employee/inventory/manifests.html?created_on_start', 'created_on >=' ),
+			ssi::date_filter( '/employee/inventory/manifests.html?updated_on_end', 'updated_on <=' ),
+			ssi::date_filter( '/employee/inventory/manifests.html?updated_on_start', 'updated_on >=' ),
 			order		=>	'received_on DESC',
+			limit	=>	100,
+			( $session{'/employee/inventory/manifests.html?deleted'} ? ( deleted => [ split(',', $session{'/employee/inventory/manifests.html?deleted'} ) ] ) : () ),
 		);
+# speed up by caching these skids
+		openprint::Skid->find(
+			ssi::date_filter( '/employee/inventory/manifests.html?received_on_end', 'received_on <=' ),
+			ssi::date_filter( '/employee/inventory/manifests.html?received_on_start', 'received_on >=' ),
+			ssi::date_filter( '/employee/inventory/manifests.html?created_on_end', 'created_on <=' ),
+			ssi::date_filter( '/employee/inventory/manifests.html?created_on_start', 'created_on >=' ),
+			ssi::date_filter( '/employee/inventory/manifests.html?updated_on_end', 'updated_on <=' ),
+			ssi::date_filter( '/employee/inventory/manifests.html?updated_on_start', 'updated_on >=' ),
+		);
+
 		$search{'supplier_id'} = $session{'/employee/inventory/manifests.html?supplier_id'} if $session{'/employee/inventory/manifests.html?supplier_id'};
-		$$variable{'Manifests'} = [ openprint::Manifest->find( %search ) ];
+		$$variable{Manifests} = [ openprint::Manifest->find( %search ) ];
 	} # end if
 ) ?>
+<?include(/includes/error_reporting.html)?>
 <? if ( @{$$variable{'Manifests'}} ) ?>
 <form id="ManifestResults" name="ManifestResults" action="manifests.html" method="post">
 	<table class="List sortable">
@@ -108,10 +160,12 @@
 				<td class="po_id"><a href="manifest.html?manifest_id=%1$s">%3$s</a></td>
 				<td class="Docket"><a href="manifest.html?manifest_id=%1$s">%4$s</a></td>
 				<td class="Company"><a href="manifest.html?manifest_id=%1$s">%5$s</a></td>
-				<td class="Date"><a href="manifest.html?manifest_id=%1$s">%6$s</a></td>`, 
+				<td class="Date"><a href="manifest.html?manifest_id=%1$s">%6$s<br/><span title="Updated:%8$s">%7$s</span></a></td>`, 
 					$$Manifest{'id'}, $$Manifest{'name'},join('<br/>', $Manifest->po_ids() ), 
 					join('<br/>', $Manifest->dockets() ), $Manifest->Vendor()->name(),
 					Date::Format::time2str($config{'DateFormat'}, Date::Parse::str2time($Manifest->received_on()) ),
+					Date::Format::time2str($config{'DateFormat'}, Date::Parse::str2time($Manifest->updated_on()) ),
+					Date::Format::time2str($config{'DateTimeFormat'}, Date::Parse::str2time($Manifest->updated_on()) ),
 					);
 
 				$html .= '<td class="contents">';
@@ -120,7 +174,7 @@
 					my $Paper = new openprint::Paper( $paper_id );
 					$html .= sprintf('%s : %dlbs : %d skids', $Paper->to_string(), $manifest_weight{$paper_id}, $manifest_skids{$paper_id}  );
 					if ( openprint::usergroup::is_user_in( ['Accounting','InventoryManager'], $session{'user_id'} ) ) {
-						my $Type = openprint::Manifest_Content_Type->find_one('manifest_id'=>$Manifest->id(), 'paper_id'=>$paper_id);
+						my $Type = openprint::Manifest_Content_Type->find_one('manifest_id'=>$Manifest->id(), 'paper_id'=>($paper_id?$paper_id:undef));
 						if ( $Type ) {
 							my $POC = $Type->PurchaseOrder_Content();
 
@@ -155,11 +209,11 @@
 		) ?>
 	</table>
 	<input type="hidden" name="btnFunction"/>
-	<span style="float: right;">
+	<p class="buttons">
 		<? echo ( join('',
-					ssi::button( 'Delete', { onclick=>"ManifestResults.btnFunction.value='Delete';ManifestResults.submit();", href=>'', text=>'Delete Checked' } ),
+					button( 'Delete', { onclick=>q`ManifestResults.btnFunction.value='Delete';ManifestResults.submit();`, text=>'Delete Checked' } ),
 			); ) ?>
-	</span>
+	</p>
 </form>
 <? else ( @{$$variable{'Manifests'}} ) ?>
 There were no manifests matching your search criteria.

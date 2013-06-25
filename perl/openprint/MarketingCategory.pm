@@ -43,7 +43,7 @@ sub previous {
 
 sub Companies {
 	my ( $self, %params ) = @_;
-	$params{'marketing_category_id'} = $$self{'id'};
+	$params{'marketing_category_id any'} = $$self{'id'};
 	return openprint::Company->find( %params );
 } # end sub Companies
 

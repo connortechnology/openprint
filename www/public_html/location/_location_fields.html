@@ -13,7 +13,7 @@
 `, $$variable{'Location'}->name() );
 	$html .= '</li>';
 	if ( $session{'user_type'} eq 'A' ) {
-	$html .= '<li><label>Type</label><select name="type_id" id="type_id"><option value=""></option>'.ssi::make_drop_down( openprint::Location_Type->dropdown(), $$variable{'Location'}->type_id() ).'</select></li>';
+	$html .= '<li><label>Type</label><select name="location_type_id" id="location_type_id"><option value=""></option>'.ssi::make_drop_down( openprint::Location_Type->dropdown(), $$variable{'Location'}->type_id() ).'</select></li>';
 	} else {
 	} # end if
 	$html .= sprintf('

@@ -54,9 +54,8 @@ sub handler {
 	configuration::init( $r->dir_config() );
 	if ( $dbh ) {
 		# Need session, have to know who we are!
-$log->debug("Session is: $session{_session_id}");
 		openprint::session_init();
-$log->debug("Session is: $session{_session_id} $session{user_id} $session{company_id}");
+#$log->debug("Session is: $session{_session_id} $session{user_id} $session{company_id}");
 		# If the session was created, then we want to tell it when, otherwise
 		# don't update it so that we don't incur another db update
 		# Do it up here cuz if the browser kills the connection, we will die during sending and won't do this line
@@ -85,7 +84,7 @@ $log->debug("Session is: $session{_session_id} $session{user_id} $session{compan
 					return Apache2::Const::OK;
 				} # end if
 			} else {
-$log->error("NOT FOUND");
+$log->error("Asset NOT FOUND.  id was $id");
 				$return_code = Apache2::Const::HTTP_NOT_FOUND;
 			} # end if Asset not found
 		} else {

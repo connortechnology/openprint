@@ -30,7 +30,7 @@ require openprint::Service;
 
 require sql;
 
-my $debug = 1;
+my $debug = 0;
 
 my @equipment;
 
@@ -196,7 +196,6 @@ sub signature_calc_stock_cutting {
 		if ( sets::isin( $Project->Type()->name(), ['Banners','InkjetOutputs'] ) ) {
 			push @capabilities, 'Large Format';
 		} # end if
-$openprint::log->warn("No clac_hash? $calc_hash");
 		@my_equipment = openprint::Equipment->find( 'Specifications' => {'Cutting Capable'=>\@capabilities}, 'useinestimating'=>1,'order'=>'lower(strName)');
 		$$calc_hash{'Cutting::signature_calc_stock_cutting::equipment'} = \@my_equipment;
 	} # end if
@@ -716,7 +715,6 @@ sub signature_calc {
 			%ServicePrice = openprint::service::get_price_object( 'Cutting', $sheets, $Equipment );
 		} # end if
 
-
 		my $runs = $liftDepth ? ceil( $sheets*$calliper/$liftDepth ) : $sheets;
 		$results{'Breakdown'} .= '# of cuts: ' . $cuts . ' => ' .($cuts * $sheets) . '<br/>';
 
@@ -954,7 +952,7 @@ sub calc {
 			my $minCharge = openprint::service::get_price( 'CuttingChargeMinimum', undef, $results{'Equipment'} );
 			$results{'Price'} = $minCharge if $results{'Price'} and ($results{'Price'} < $minCharge);
 
-			$$specs{"txtRegularCutPrice-$signature_index-$qty_index"} = sprintf('%.2f', $results{'Price'} );
+			$$specs{"txtRegularCutPrice-$signature_index-$qty_index"} = Math::Round::nearest( 0.01, $results{'Price'} );
 			$price += $results{'Price'};
 			$mprice += $results{'MPrice'};
 			$$specs{"ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} = $results{'Equipment'} ? $results{'Equipment'}->id() : '';

@@ -1,6 +1,8 @@
 use strict;
 package openprint::www;
 
+use constant DEBUG => 0;
+
 #use Benchmark;
 #use diagnostics;
 
@@ -104,7 +106,8 @@ sub handler {
 	configuration::init( $r->dir_config() );
 	openprint::session_init();
 	if ( $dbh ) {
-		if ( ! $page_settings{$config{db_name}} ) {
+		if ( ! $page_settings{$config{db_name}} or ! $page_settings{$config{db_name}}{$page} ) {
+$log->debug("loading Page settings for $config{db_name} for $page") if DEBUG;
 			$page_settings{$config{db_name}} = { map { $_->url(), $_ } openprint::Page_Setting->find() };
 		} # end if
 		if ( ! $page_settings{$config{db_name}}{$page} ) {
@@ -118,7 +121,7 @@ sub handler {
 				my $chunk = join('/', @chunks);
 				$chunk = '/' if ! $chunk; # neccessary to deal with the empty string
 
-					$log->debug("Looking for page setting for $chunk");
+				$log->debug("Looking for page setting for $chunk") if DEBUG;
 				if ( $page_settings{$config{db_name}}{$chunk} ) {
 # Why stuff up the db with entries, just fill the hash with copies.
 					$page_settings{$config{db_name}}{$page} = $page_settings{$config{db_name}}{$chunk};
@@ -143,9 +146,11 @@ $log->debug("Checking user level, need : " . $page_settings{$config{db_name}}{$p
 			   ) {
 $log->debug("No good, need login");
 				if ( $page =~ /^.*\/_/ ) {
-					$variable{'PageContent'} = q`<script type="text/javascript">window.location='/error/error_login.html';</script>`;
+					$r->content_type(q{text/javascript; charset=utf-8});
+					$r->print( q`window.location='/error/error_login.html';` );
+					return Apache2::Const::OK;
 				} else {
-				$page = '/error/error_login.html';
+					$page = '/error/error_login.html';
 				} # end if
 				$variable{'Destination'} = misc::get_destination( $r, $r->uri() );
 				#$r->headers_out->set(Location=>'/error/error_login.html');
@@ -217,16 +222,16 @@ $log->debug("No good, need login");
 	$log->debug( "Before loading content: ($page) Elapsed time: " . sprintf('%.4f', tv_interval([$starttime])*1000).' usecs' );
 		if ( ! exists $variable{'PageContent'} ) {
 			my $content;
-			if ( -e ($_ = join('/', $config{'SkinPath'}, 'html', $page )) ) {
-				$content = misc::load_file( $log, $_ );
+			if ( -e ( my $path = join('/', $config{'SkinPath'}, 'html', $page )) ) {
+				$content = misc::load_file( $log, $path );
 				if ( ! $content ) {
-					$log->error("Found no content at $_");
+					$log->error("Found no content at $path");
 				} # end if
-			} elsif ( -e ($_ = join('/', $config{'SkinPath'}, $page )) ) {
+			} elsif ( -e ( my $path = join('/', $config{'SkinPath'}, $page )) ) {
 $log->error("Deprecated SkinPath layout! $config{SkinPath}");
-				$content = misc::load_file( $log, $_ );
+				$content = misc::load_file( $log, $path );
 				if ( ! $content ) {
-					$log->error("Found no content at $_");
+					$log->error("Found no content at $path");
 				} # end if
 			} else {
 				$content = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . $page );
@@ -530,7 +535,6 @@ $openprint::log->warn('bind');
 					} # end if
 				} # end if main:proj:$third
 			} # end if defined third
-$log->debug("after third");
 
 			openprint::print_project::create_edit_display( $r, $log, $dbh, \%variable )		if $filename eq 'create_edit.html';
 			openprint::main_project::history()			if $filename eq 'history.html';
@@ -564,6 +568,8 @@ $log->debug("after third");
 				};
 				$log->warn( "Eval error of ($module $proc), Reason: " . $@ ) if $@;
 			} # end if
+		} else {
+			$log->debug("No firstSo or non-existant $uri");
 		} # end if
 	} # end if $first
 

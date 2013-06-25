@@ -7,5 +7,6 @@ CREATE TABLE Quoted_Products (
 	cost		float,
 	price		float,
 	markup		float,
+	comments	TEXT,
 	PRIMARY KEY (id)
 );

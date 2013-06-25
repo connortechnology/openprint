@@ -20,6 +20,9 @@ require openprint::User;
 require openprint::User_Notification;
 require openprint::Email;
 
+require MIME::QuotedPrint;
+require Encode;
+
 use openprint ();
 use vars qw( $r %variable %session %param %config $log $dbh );
 *variable = \%openprint::variable;
@@ -42,20 +45,27 @@ sub handler {
 	#$log->debug( "Beginning of UPLOAD Request: Time (seconds) : $starttime" );
 
 	$dbh = sql::open_sql( $log, 
-			'database'	=> $request->dir_config('db_name'),
-			'driver'	=> $request->dir_config('db_driver'),
-			'host'		=> $request->dir_config('db_host'),
-			'login'		=> $request->dir_config('db_user'),
-			'password'	=> $request->dir_config('db_password'),
+			database	=> $request->dir_config('db_name'),
+			driver		=> $request->dir_config('db_driver'),
+			host		=> $request->dir_config('db_host'),
+			login		=> $request->dir_config('db_user'),
+			password	=> $request->dir_config('db_password'),
 			);
 
 	my $serial;
+	my $rsize;
 
 	if ( $request->method eq 'POST' ) {
+	my $table = $request->headers_in;
+
+foreach my $key (keys %{$table}) {
+      $log->debug( "$key = $table->{$key}" );
+  }
 		$uploaded = 0;
 		($serial) = $request->args() =~ /serial=(\d*)/;
 		my ($company) = $request->args() =~ /txtCompanyName=([.^&]*)/;
-		my $rsize = $request->headers_in->{'Content-Length'};
+		( $rsize ) = $request->args() =~ /qqtotalfilesize=(\d+)/;
+		$rsize=$request->headers_in->{'Content-Length'} if ! $rsize;
 		if ( $serial ) {
 			sql::execute( undef, undef, q{DELETE FROM Uploads WHERE id=?}, $serial );
 		} else {
@@ -107,8 +117,7 @@ sub handler {
 		configuration::init( $r->dir_config() );
 		openprint::session_init();
 		if ( $serial ) {
-			my $rsize=$request->headers_in->{'Content-Length'};
-			sql::update( undef, undef, 'uploads', ['id=?', $serial], [ 'finished', 'NOW()', 'user_id', $session{'user_id'}, 'company_id', $session{'company_id'}, 'size', $rsize ] );
+			sql::update( undef, undef, 'uploads', ['id=?', $serial], [ 'finished', 'NOW()', 'user_id', $session{'user_id'}, 'company_id', $session{'company_id'}, 'size', $uploaded ] );
 		#} else {
 			#$log->error("No serial in upload, dumping session");
 			#foreach my $k ( keys %session ) {
@@ -180,6 +189,7 @@ $log->debug("Doing standrad upload");
 
 			if ( $template ) {
 				$_ = ssi::variable_substitution( \$template, \%variable );
+$log->debug("content: $_");
 				$r->print( $_ );
 			} else {
 				$r->print( $variable{'PageContent'} );
@@ -285,20 +295,13 @@ $log->error("No destdir");
 		if ( $files ) {
 # Notify CSR, and Customer of upload
 			my $email_template = misc::load_file( $log, $config{'SkinPath'}. '/email_template.html' );
-			$variable{'SiteTitle'} = $config{'SiteTitle'};
-			if (-e $config{'SkinPath'} . '/email_content/uploadfiles_csr_notification.html') {
-				$variable{'ReplacementText'} = misc::load_file( $log, $config{'SkinPath'} . '/email_content/uploadfiles_csr_notification.html' );
-			} else {
-				$variable{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/uploadfiles_csr_notification.html' );
-			} # end if
-			$variable{'ReplacementText'} = ssi::variable_substitution( \$variable{'ReplacementText'}, \%variable );
+			$variable{'ReplacementText'} = ssi::include( '/email_content/uploadfiles_csr_notification.html', \%variable );
 			my $body = ssi::variable_substitution( \$email_template, \%variable );
 			my $Mail = new openprint::Email();
 			my @to;
 			my $from;
 			if ( $session{'user_id'} ) {
-				my $User = new openprint::User( $session{'user_id'} );
-				$from = sprintf('"%s %s" <%s>', $User->get('firstname','lastname','email') ),
+				$from = new openprint::User( $session{'user_id'} );
 			} else {
 				$from = $param{'txtEmailAddress'};
 				if ( ! Email::Valid->address( $param{'txtEmailAddress'} ) ) {
@@ -322,16 +325,11 @@ $log->error("No destdir");
 						TO		=> \@to,
 #BCC		=>	'iconnor@penultima.org',
 						SUBJECT => $param{'docket'} ? "Files uploaded for docket: $param{'docket'}" : 'Files Uploaded',
-						ATTACHMENTS	=>	[ '', MIME::QuotedPrint::encode_qp($body), 'text/html', 'quoted-printable' ],
+						ATTACHMENTS	=>	[ '', MIME::QuotedPrint::encode_qp(Encode::encode('utf-8',$body)), 'text/html', 'quoted-printable' ],
 						);
 
-# Send transcript to uploader
-				if (-e $config{'SkinPath'} . '/email_content/uploadfiles_client_notification.html') {
-					$variable{'ReplacementText'} = misc::load_file( $log, $config{'SkinPath'} . '/email_content/uploadfiles_client_notification.html' );
-				} else {
-					$variable{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/uploadfiles_client_notification.html' );
-				} # end if
-				$variable{'ReplacementText'} = ssi::variable_substitution( \$variable{'ReplacementText'}, \%variable );
+				# Send transcript to uploader
+				$variable{'ReplacementText'} = ssi::include( '/email_content/uploadfiles_client_notification.html', \%variable );
 			} # end if
 
 			if ( @to == 1 ) {
@@ -351,7 +349,7 @@ $log->error("No destdir");
 					FROM    => $from,
 					TO      => \@to,
 					SUBJECT => $param{'docket'} ? "Files uploaded for docket: $param{'docket'}" : 'Files Uploaded',
-					ATTACHMENT => [ '', encode_qp($body), 'text/html', 'quoted-printable' ],
+					ATTACHMENTS => [ '', MIME::QuotedPrint::encode_qp(Encode::encode('utf-8',$body)), 'text/html', 'quoted-printable' ],
 					);
 		} else {
 			$variable{'error'} .= 'No files were uploaded.';

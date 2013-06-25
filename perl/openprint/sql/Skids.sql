@@ -8,6 +8,7 @@ CREATE TABLE Skids (
 	owner_id		INTEGER NOT NULL, FOREIGN KEY (owner_id) REFERENCES companies (id),
 	type			TEXT,
 	deleted			BOOLEAN NOT NULL DEFAULT false,
+	manufacturers_id	TEXT,
 	PRIMARY KEY (id)
 );
 

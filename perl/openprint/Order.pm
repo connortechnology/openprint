@@ -19,7 +19,7 @@ require openprint::Order_Status;
 require openprint::Payment;
 require openprint::Tax;
 
-$debug = 0;
+$debug = 1;
 
 $table = 'orders';
 $serial = 'orders_id_seq';
@@ -72,6 +72,7 @@ $serial = 'orders_id_seq';
 
 %find_fields = (
 	project_id	=>	'(SELECT lngprojectindex FROM Order_Contents WHERE OrderIndex=Orders.id)',
+	status		=>	'(SELECT name FROM Order_Statuses WHERE order_statuses.id=status_id)',
 );
 
 sub save {
@@ -408,7 +409,7 @@ sub send_cancellation_notice {
 	# Send to inventory and scheduling people.
 	foreach my $Recipient ( openprint::User->find('usergroup in'=>['Inventory','Scheduling'],'type'=>['E','A']) ) {
 		next if $Recipient->id() == $session{'user_id'};
-		next if $Recipient->notification('Docket Cancellations') eq 'No';
+		next if $Recipient->notification('Docket Cancellations') ne 'Yes';
 		push @Recipients, $Recipient;
 	} # end foreach Recipient
 

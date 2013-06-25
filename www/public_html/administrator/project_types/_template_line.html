@@ -5,11 +5,18 @@
  		my $html .= sprintf(q`
 <td class="type"><input type="text" name="type%1$d" value="%2$s" /></td>
 <td class="description"><input type="text" name="description%1$d" value="%3$s" /></td>
-<td class="finished_width"><input type="number" name="finishedwidth%1$d" value="%4$s" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');"/></td>
-<td class="finished_height"><input type="number" name="finishedheight%1$d" value="%5$s" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');"/></td>
-<td class="flat_width"><input type="number" name="flatwidth%1$d" value="%6$s" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');"/></td>
-<td class="flat_height"><input type="number" name="flatheight%1$d" value="%7$s" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');"/></td>
-`, $Template->id(), ssi::htmlize( $Template->get('type','description','finished_width','finished_height','flat_width','flat_height') ) );
+<td class="finished_width">%4$s</td>
+<td class="finished_height">%5$s</td>
+<td class="flat_width">%6$s</td>
+<td class="flat_height">%7$s</td>
+<td class="message"><textarea name="message%1$d">%8$s</textarea></td>
+`, $Template->id(), ssi::htmlize( $Template->get('type','description') ),
+input( type=>'float', name=>'finishedwidth'.$$Template{id}, value=> $$Template{finished_width} ),
+input( type=>'float', name=>'finishedheight'.$$Template{id}, value=> $$Template{finished_height} ),
+input( type=>'float', name=>'flatwidth'.$$Template{id}, value=> $$Template{flat_width} ),
+input( type=>'float', name=>'flatheight'.$$Template{id}, value=> $$Template{flat_height} ),
+$$Template{message},
+ );
 
             $html .= '<td class="buttons">';
             $html .= ssi::button( 'C'.$Template->id(), { 'onclick'=>qq`new Ajax.Updater( 'T$$Template{id}', '_template_line.html', {

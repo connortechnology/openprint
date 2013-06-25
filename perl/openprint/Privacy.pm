@@ -86,13 +86,19 @@ sub relationship_type_id {
 }
 
 sub can_view {
-	return 1 if $openprint::session{'user_type'} eq 'A';
+$openprint::log->debug("Privacy: Object: " . $_[0]->to_string() ) if $debug;
 	my $user_id = $_[1] ? $_[1] : $openprint::session{user_id};
+	my $User = new openprint::User( $user_id );
+	return 1 if $$User{type} eq 'A';
+$openprint::log->debug("Prinvacu::can_view; not admin") if $debug;
 	if ( $_[0]{'mode'} eq 'public' ) {
+$openprint::log->debug("Prinvacu::can_view; public") if $debug;
 		return 1;
 	} elsif ( $_[0]{'mode'} eq 'logged_in' ) {
+$openprint::log->debug("Prinvacu::can_view; logged in") if $debug;
 		return 1 if $user_id;
 	} elsif ( $_[0]{'mode'} eq 'specific' ) {
+$openprint::log->debug("Prinvacu::can_view; specfic") if $debug;
 		if ( @{$_[0]->usergroup_id()} ) {
 			my @Groups = openprint::UserGroup->find('user_id any'=>$user_id );
 			return 1 if sets::intersection( ( map { $_->id() } @Groups ), @{$_[0]->usergroup_id()} );

@@ -1,9 +1,13 @@
 <? eval (
 	@{$$variable{'Timetracks'}} = ();
 	$$variable{'elapsed_total'} = $$variable{'value_total'} = $$variable{'wage_total'} = $$variable{'distance_total'} = 0;
+	if ( $session{'/timetrack/history.html?contains'} and ( $session{'/timetrack/history.html?contains'} !~ /%/ ) ) {
+		$session{'/timetrack/history.html?contains'} = '%'.$session{'/timetrack/history.html?contains'}.'%';
+	} # end if
 	foreach my $Timetrack ( openprint::Timetrack->find( 
 		ssi::date_filter( '/timetrack/history.html?starting_end', 'starting <=' ),
 		ssi::date_filter( '/timetrack/history.html?starting_start', 'starting >=' ),
+		( $session{'/timetrack/history.html?contains'} ? ( 'description ilike' => $session{'/timetrack/history.html?contains'} ) : () ),
 
 		( sets::isin( $session{'user_type'}, ['E', 'A'] ) ?
 			( $session{'/timetrack/history.html?company_id'} ? ( 'company_id'	=> $session{'/timetrack/history.html?company_id'} ) : () ) :

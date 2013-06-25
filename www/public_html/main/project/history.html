@@ -2,9 +2,8 @@
 <h1>PROJECTS</h1>
 <h2>History</h2>
 </div>
-<? echo ( include('/includes/error_reporting.html'); ) ?>
+<?include('/includes/error_reporting.html')?>
 <script type="text/javascript">
-<!--
 	function delete_confirm(form) {
 		var number_of_deleted_projects = 0;
 		if ( form.elements['project_id'] ) {
@@ -35,7 +34,6 @@
 		$('ProjectList').innerHTML = 'Please wait...';
 		new Ajax.Updater('ProjectList','/main/project/_history.html', {method:'get',parameters:Form.serialize(form)});
 	} // end function
--->
 </script>	 
 <? if ( $session{'user_id'} ) ?>
 <form id="f1" name="f1" method="post" action="/main/project/history.html">
@@ -47,7 +45,7 @@
 			<li>
 				<label>Project #</label>
 				<? echo ( join("\n",
-					ssi::input( type=>'cardinal', name=>'ProjectID', onkeydown=>'if(event.keyCode == 13){load_projects( this.form );}' ),
+					ssi::input( type=>'cardinal', id=>'ProjectID', name=>'ProjectID', onkeydown=>'if(event.keyCode == 13){load_projects( this.form );}' ),
 					ssi::button( 'Go1', { onclick=>q`load_projects( $('f1') );`, text=>'Go' } ), 
 				); ) ?>
 			</li>
@@ -77,23 +75,15 @@
 			<ul>
 			<li>
 				<label>Creation Date</label>
-				<span class="DateSelector">
 <? echo ( ssi::date_select_session( '/main/project/history.html', 'created_on_start', { 'onchange'=>'load_projects(this.form);' } ); ) ?>
-				</span>
 					to 
-				<span class="DateSelector">
 <? echo ( ssi::date_select_session( '/main/project/history.html', 'created_on_end', { 'onchange'=>'load_projects(this.form);' } ); ) ?>
-				</span>
 			</li>
 			<li>
 				<label>Last Updated</label>
-				<span class="DateSelector">
 <? echo ( ssi::date_select_session( '/main/project/history.html', 'updated_on_start', { 'onchange'=>'load_projects(this.form);' } ); ) ?>
-				</span>
 					to 
-				<span class="DateSelector">
 <? echo ( ssi::date_select_session( '/main/project/history.html', 'updated_on_end', { 'onchange'=>'load_projects(this.form);' } ); ) ?>
-				</span>
 			</li>
 <? if ( sets::isin( $session{user_type},[ 'E', 'A' ] ) ) ?>
 			<li><label>Company</label>
@@ -115,13 +105,28 @@
 			</li>
 	<? endif ( openprint::Product->find_one() ) ?>
 <? endif ( sets::isin( $session{user_type},[ 'E', 'A' ] ) ) ?>
+<? eval ( 
+	$$variable{Users} = [ openprint::User->find(
+		company_id => ( $session{'/main/project/history.html?company_id'} ? $session{'/main/project/history.html?company_id'} : $session{user_id} ),
+		order=>'lower(firstname),lower(lastname)' ) ] ) ?>
+<? if ( @{$$variable{Users}} > 1 ) ?>
+			<li><label>Created By</label>
+				<select name="user_id" onchange="load_projects(this.form);">
+					<option value="">All</option>
+					<? echo (
+						make_drop_down( [ map { $_->id(), $_->name() } @{$$variable{Users}} ], $session{'/main/project/history.html?user_id'} );
+					) ?>
+				</select>
+			</li>
+<? endif ( @{$$variable{Users}} > 1 ) ?>
 			</ul>
 			</div>
 			</div>
 			<p class="buttons">
 				<? echo ( join( '',
-					ssi::button( 'ShowResults', { onclick=>'f1.submit();', text=>'Show Results' } ),
-					ssi::button( 'Reset', { onclick=>q`f1.btnFunction.value='Reset';f1.submit();`, text=>'Reset' } ),
+					button( 'ShowResults', { onclick=>'f1.submit();', text=>'Show Results' } ),
+					button( 'Create', { href=>'create_edit.html', text=>'Create New' } ),
+					button( 'Reset', { onclick=>q`f1.btnFunction.value='Reset';f1.submit();`, text=>'Reset' } ),
 				); ) ?>
 			</p>
 		</fieldset>

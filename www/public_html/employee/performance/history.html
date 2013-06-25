@@ -1,9 +1,7 @@
 <script type="text/javascript">
-<!--
 	function load( div, form ) {
 		new Ajax.Updater( div, '_history.html', { parameters: form.serialize() } );
 	} // end function load
--->
 </script>
 	<? echo ( include('/includes/error_reporting.html'); ) ?>
 <div class="Performance"><div class="History">
@@ -59,16 +57,11 @@
 			</li>
 			<li>
 				<label>Shift Start</label>
-				<span class="DateSelectorCT">
 				<? echo ( 
 					ssi::date_select_session( '/employee/performance/history.html', 'starttime_start', {'onchange'=>"load('Results',\$('f1'));",'with_today'=>1,'with_clear'=>1} );
 				 ) ?>
-				</span>
 				to
-				</span>
-				<span class="DateSelectorCT">
 				<? echo ( ssi::date_select_session( '/employee/performance/history.html', 'starttime_end', {'onchange'=>"load('Results',\$('f1'));",'with_today'=>1,'with_clear'=>1} ); ) ?>
-				</span>
 			</li>
 			<li>
 			<label>Unreported Shifts</label>

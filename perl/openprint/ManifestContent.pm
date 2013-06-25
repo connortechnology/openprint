@@ -5,15 +5,12 @@ require openprint::Object;
 
 use Math::Round qw( nearest );
 use openprint ();
-use vars qw(%variable $log $dbh %config $debug $table $serial %fields %find_fields %transforms %defaults );
-*variable = \%openprint::variable;
-*log = \$openprint::log;
-*dbh = \$openprint::dbh;
-*config = \%openprint::config;
+use vars qw( $debug $table $serial %fields %find_fields %transforms %defaults );
 
 require openprint::Manifest_Content_Type;
 require openprint::Manifest;
 require openprint::Skid;
+require openprint::RFIDTag;
 require openprint::SkidContent;
 
 $debug = 0;
@@ -22,28 +19,65 @@ $table = 'manifestcontents';
 $serial = 'manifestcontents_id_seq';
 
 %fields = (
-	'id'				=>	'id',
-	'manifest_id'		=>	'manifest_id',
-	'skid_id'			=>	'skid_id',
-	'quantity'			=>	'quantity',
-	'type_id'			=>	'type_id',
+	id				=>	'id',
+	manifest_id		=>	'manifest_id',
+	skid_id			=>	'skid_id',
+	Skid			=>	undef,
+	quantity		=>	'quantity',
+	type_id			=>	'type_id',
+	rfidtag_id			=>	'rfidtag_id',
+	RFIDTag				=>	undef,
+	manufacturers_id	=>	'manufacturers_id',
+	location_id			=>	'location_id',
 );
 %find_fields = (
-	'paper_id'	=>	'(SELECT paper_id FROM Manifest_Content_Types WHERE manifest_content_types.manifest_id = manifestcontents.manifest_id)',
+	paper_id	=>	'(SELECT paper_id FROM Manifest_Content_Types WHERE manifest_content_types.manifest_id = manifestcontents.manifest_id)',
 );
 
 %transforms = (
-	'quantity'	=> [ 's/\D//g' ],
-	'type_id'	=> [ 's/\D//g' ],
+	quantity	=> [ 's/\D//g' ],
+	type_id		=> [ 's/\D//g' ],
+	manufacturers_id	=>	[ 'tr/[a-z]/[A-Z]/' ],
 );
 
 %defaults = (
-	'quantity'	=> 0,
+	quantity			=> 0,
+	manufacturers_id	=>	undef,
+	skid_id				=>	undef,
+	rfidtag_id			=>	undef,
+	location_id			=>	undef,
 );
 
 sub Skid {
-	return new openprint::Skid( $_[0]{skid_id} );
+	if ( @_ > 1 ) {
+		$_[0]{Skid} = $_[1];
+		$_[0]{skid_id} = ref $_[0]{Skid} eq 'openprint::Skid' ? $_[0]{Skid}{id} : undef;
+		$_[0]{skid_id} = undef if ! $_[0]{skid_id};
+	} # end if
+	if ( ! $_[0]{Skid} ) {
+		$_[0]{Skid} = new openprint::Skid( $_[0]{skid_id} );
+	} # end if
+	return $_[0]{Skid};
 } # end sub Skid
+
+sub RFIDTag {
+	if ( @_ > 1 ) {
+		$_[0]{RFIDTag} = $_[1];
+		$_[0]{rfidtag_id} = ref $_[0]{RFIDTag} eq 'openprint::RFIDTag' ? $_[0]{RFIDTag}{id} : undef;
+	} # end if
+	if ( ! $_[0]{RFIDTag} ) {
+		if ( $_[0]{rfidtag_id} ) {
+			$_[0]{RFIDTag} = new openprint::RFIDTag( $_[0]{rfidtag_id} );
+			if ( ! $_[0]{RFIDTag}->id() ) {
+				$_[0]{RFIDTag} = new openprint::RFIDTag();
+				$_[0]{RFIDTag}->id( $_[0]{rfidtag_id} );
+			} # end if
+		} else {
+			$_[0]{RFIDTag} = $_[0]->Skid()->RFIDTag();
+		} # end if
+	} # end if
+	return $_[0]{RFIDTag};
+} # end sub RFIDTag
 
 sub Manifest {
 	return new openprint::Manifest( $_[0]{manifest_id} );
@@ -79,25 +113,32 @@ sub value {
 
 sub delete {
 	if ( ! $_[0]{'id'} ) {
-		$log->error("Called delete on ManifestContent with no id.");
+		$openprint::log->error("Called delete on ManifestContent with no id.");
 		return;
 	} # end if
-	my @SkidContents = openprint::SkidContent->find('manifestcontent_id'=>$_[0]{'id'});
-	if ( @SkidContents > 1 ) {
-		$log->error("Too many skidContents found for manifestcontent $_[0]{'id'}");
-	} # end if
-	foreach my $S (@SkidContents) {
-		if ( $S->manifestcontent_id() != $_[0]->id() ) {
-			$log->error("BLAH!");
-			next;
-		} elsif ( $S->skid_id() != $_[0]->skid_id() ) {
-			$log->error("BLAH! wrong skid id in skidcontent");
-			next;
-		} # end if
-		$S->save({'manifestcontent_id'=>undef});
-	} # end foreach
 	$_[0]->SUPER::delete();
 } # end sub delete
+
+sub manufacturers_id {
+	if ( @_ > 1 ) {
+		$_[0]{manufacturers_id} = $_[1];
+	} # end if
+	if ( ( ! $_[0]{manufacturers_id} ) and $_[0]{skid_id} ) {
+		my $Skid = new openprint::Skid( $_[0]{skid_id} );
+		$_[0]{manufacturers_id} = $Skid->manufacturers_id();
+	} # end if
+	return $_[0]{manufacturers_id};
+} # end sub manufacturers_id
+
+sub location_id {
+	if ( @_ > 1 ) {
+		$_[0]{location_id} = $_[1];
+	} # end if
+	if ( ( ! $_[0]{location_id} ) and $_[0]{skid_id} ) {
+		return $_[0]->Skid()->location_id();
+	} # end if
+	return $_[0]{location_id};
+} # end sub location_id
 
 1;
 __END__

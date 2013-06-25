@@ -2,7 +2,6 @@ use strict;
 package openprint::Currency;
 our @ISA = qw(openprint::Object);
 
-require Number::Format;
 require openprint;
 require openprint::Currency_Conversion;
 require openprint::Pricelist;
@@ -17,12 +16,14 @@ $debug = 0;
 $table = 'Currencies';
 $serial = 'currencies_id_seq';
 %fields = (
-	'id'		=>	'id',
-	'short'		=>	'short',
-	'name'		=>	'name',
-	'symbol'	=>	'symbol',
+	id		=>	'id',
+	short	=>	'short',
+	name	=>	'name',
+	symbol	=>	'symbol',
 );
 %transforms = (
+    name => [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
+    short => [ 's/\s+//' ],
 );
 %defaults = (
 );
@@ -83,6 +84,23 @@ sub convert_from {
 	return $value;
 } # end sub convert_from
 sub convert_to {
+	my ( $From, $To, $value ) = @_;
+	if ( ! ref $To ) {
+		$To = openprint::Currency->find_one('short'=>$To);
+	} 
+	if ( $From eq 'openprint::Currency' ) {
+		$From = get_current();
+	} # end if
+	if ( ! $To ) {
+		$log->error('No Currency for ' . $_[1] );
+		return undef;
+	} # end if
+	if ( $To and ( $$To{id} != $$From{id} ) ) {
+		my $rate = $From->conversions( $To->id() );
+		$log->debug("Converting $value in $$From{name} to $$To{name}") if $debug;
+		$value *= $rate;
+	} # end if
+	return $value;
 } # end sub
 
 # Takes a ref to a price
@@ -147,6 +165,7 @@ sub format {
 	$price = 0 if ! $price;
 	$precision = 2 if ! defined $precision;
 
+	require Number::Format;
     my $Formatter = new Number::Format(
             -decimal_digits     =>  $precision,
             -int_curr_symbol    =>  $Currency->symbol(),

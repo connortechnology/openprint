@@ -47,7 +47,7 @@ sub upload {
 
 sub thumbnail_url {
 	my $Asset = $_[0]->Asset();
-	return $Asset->thumbnail_filename();
+	return $Asset->sized_url('thumbnail');
 } # end sub thumbnail_url 
 
 sub url {

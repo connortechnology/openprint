@@ -22,6 +22,7 @@ $debug = 0;
 	'firstname'			=>	'firstname',
 	'lastname'			=>	'lastname',
 	'email'				=>	'email',
+	email_valid			=>	'email_valid',
 	'phone'				=>	'phone',
 	'extension'			=>	'extension',
 	'mobile'			=>	'mobile',
@@ -39,6 +40,7 @@ $debug = 0;
 	'administrator'		=>	'ysnadministrator',
 	'password',			=>	'password',
 	'ftp_active'		=>	'ftp_active',
+	ftp_root			=>	'ftp_root',
 	'web_active'		=>	'web_active',
 	'howdidyouhearaboutus'	=>	'howdidyouhearaboutus',
 	'howdidyouhearaboutusother'	=>	'howdidyouhearaboutusother',
@@ -76,6 +78,7 @@ $debug = 0;
 %defaults = (
 	web_active				=>	q`'N'`,
 	ftp_active				=>	0,
+	ftp_root				=>	q`''`,
 	created_on				=>	q`'NOW()'`,
 	updated_on				=>	q`'NOW()'`,
 	type					=>	q`'C'`,
@@ -92,6 +95,7 @@ $debug = 0;
 	company_id				=>	undef,
 	password_changed_on		=>	undef,
 	password				=>	'',
+	email_valid				=>	undef,
 );
 
 # if we have previously loaded info for this customer, and it hasn't changed, that field will not be saved.
@@ -242,8 +246,11 @@ sub Prev {
 } # end sub Nex
 
 sub Company {
-	require openprint::Company;
-	return new openprint::Company( $_[0]{'company_id'} );
+	if ( ! $_[0]{Company} ) {
+		require openprint::Company;
+		$_[0]{Company} = new openprint::Company( $_[0]{company_id} );
+	} # end if
+	return $_[0]{Company};
 } # end sub Company
 
 sub alias {
@@ -419,7 +426,7 @@ if ( 0 ) {
 	if ( ! $_[0]{'icon'} ) {
 		$_[0]{'icon'} = sprintf('<a href="/account/view.html?user_id=%1$d" class="thumbnail"><img src="%2$s" alt="%3$s" title="%3$s"/></a>',
 		#$_[0]{'icon'} = sprintf('<a href="/account/view.html?user_id=%1$d" class="thumbnail"><img src="%2$s?user_id=%1$d" alt="%3$s" title="%3$s" /></a>',
-			$_[0]{'id'}, $_[0]->Asset()->thumbnail_url(), $_[0]->alias() );
+			$_[0]{'id'}, $_[0]->Asset()->sized_url('thumbnail'), $_[0]->alias() );
 	} # end if
 	return $_[0]{'icon'};
 }
@@ -444,7 +451,7 @@ sub html {
 	} # end if
 
 	my $Asset = $User->Asset();
-	my $thumbnail_url = $Asset->thumbnail_url();
+	my $thumbnail_url = $Asset->sized_url('thumbnail');
 
 	return sprintf(q`
 				<div class="User">
@@ -520,8 +527,8 @@ sub can_edit {
 	my $Me = new openprint::User( $openprint::session{user_id} );
 	return 1 if ( $Me->administrator() eq 'Y' ) and ( $_[0]{company_id} == $openprint::session{company_id} );
 	my $Company = new openprint::Company( $_[0]{company_id} );
-	return 1 if sets::isin( $Company->salesrep_id(), [ $openprint::session{user_id}, $Me->csr_ids(), $Me->assistant_ids() ] );
-	return 1 if openprint::usergroup::is_user_in( ['UserManagement'], $openprint::session{user_id} );
+	return 1 if $Company->salesrep_id() and sets::isin( $Company->salesrep_id(), [ $openprint::session{user_id}, $Me->csr_ids(), $Me->assistant_ids() ] );
+	return 1 if openprint::usergroup::exists('UserManagement') and openprint::usergroup::is_user_in( ['UserManagement'], $openprint::session{user_id} );
 	return 0;
 } # end sub can_edit
 
@@ -531,7 +538,7 @@ sub can_view {
 	my $Me = new openprint::User( $openprint::session{'user_id'} );
 	return 1 if ( $Me->administrator() eq 'Y' ) and ( $_[0]{'company_id'} == $openprint::session{'company_id'} );
 	my $Company = new openprint::Company( $_[0]{'company_id'} );
-	return 1 if sets::isin( $Company->salesrep_id(), [ $openprint::session{'user_id'}, $Me->csr_ids(), $Me->assistant_ids() ] );
+	return 1 if $Company->salesrep_id() and sets::isin( $Company->salesrep_id(), [ $openprint::session{'user_id'}, $Me->csr_ids(), $Me->assistant_ids() ] );
 	require openprint::Blocklist;
 	return 0 if openprint::Blocklist::is_blocked( $openprint::session{user_id},$_[0]{id});
 	return 1;

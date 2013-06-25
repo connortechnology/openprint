@@ -1,0 +1,20 @@
+<div class="PaymentOptions">
+<? echo (
+    my %Types = map { $_->name(), $_ } openprint::PaymentType->find();
+    my @options;
+    my $html;
+    push @options, 'Cash' if $Types{Cash};
+    push @options, 'Cheque' if $Types{Cheque};
+    if ( $Types{Bitcoin} ) {
+        my $Address = openprint::Bitcoin_Address->generate( $$variable{Invoice} );
+        #$Address->save({object_type=>'openprint::Invoice',object_id=>$$variable{Invoice}{id}});
+        if ( $Address ) {
+            push @options, ( 'Bitcoin (' . $$variable{Currency}->convert_to('BTC',$$variable{Invoice}->owing()) . 'BTC) at ' . $Address->address() );
+        } # end if
+    } # end if
+    return if ! @options;
+
+    my $last = pop @options;
+    return 'Payment can be made by ' . join(',', @options) . ' or ' . $last;
+) ?>
+</div>

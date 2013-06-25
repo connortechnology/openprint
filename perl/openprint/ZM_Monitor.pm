@@ -21,6 +21,7 @@ $table = 'Monitors';
 	'mjpeg_path'	=>	'MJPGPath',
 	'host'			=>	'Host',
 	'server_host'	=>	'ServerHost',
+	public			=>	'public',
 );
 
 sub source_stream_url {
@@ -34,5 +35,12 @@ sub source_snapshot_url {
                           sprintf('http://%2$s.internal.point-one.com/cgi-bin/zms?mode=single&amp;monitor=%1$d&amp;maxfps=%3$d',
                               $_[0]{'id'}, $_[0]{'server_host'}, $_[0]{'max_fps'} );
 } # end sub source_snapshot_url
+
+sub can_view {
+return 1 if $_[0]{public};
+return 1 if $openprint::session{user_type} eq 'A';
+return 0;
+} # end sub can_view
+
 1;
 __END__

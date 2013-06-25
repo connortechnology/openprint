@@ -9,7 +9,7 @@ $serial = 'user_notification_types_id_seq';
 %fields = (
 	id		=>	'id',
 	name	=>	'name',
-	sort	=>	sort,
+	sort	=>	'sort',
 );
 
 package openprint::User_Notification;
@@ -31,7 +31,7 @@ $table = 'user_notifications';
 
 sub User {
 	require openprint::User;
-	return new openprint::User( $_[0]{'user_id'} );
+	return new openprint::User( $_[0]{user_id} );
 }
 sub type {
 	if ( @_ > 1 ) {

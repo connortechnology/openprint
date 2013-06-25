@@ -1,9 +1,14 @@
+<form name="f2" method="post" action="templates.html">
+	<input type="hidden" name="btnFunction" />
+	<input type="hidden" name="ddmProjectType" value="<?echo($param{ddmProjectType})?>" />
 <? if ( $param{'ddmProjectType'} ) ?>
-			<? echo ( ssi::writeButton( $log, $dbh, 'Save','save.gif', "f1.action='templates.html';f1.btnFunction.value='Save';f1.submit();", '', 'Save' ); ) ?>
-			<? echo ( ssi::writeButton( $log, $dbh, 'Reset','reset.gif', "f1.reset();", '', 'Reset' ); ) ?>
+			<? echo ( join( "\n", 
+						button( 'Save',{ onclick=>"f2.btnFunction.value='Save';f2.submit();" } ),
+						button( 'Reset', { onclick=>'f2.reset();' } ),
+			); ) ?>
 <? endif ( $param{'ddmProjectType'} ) ?>
 <? eval (
-	@{$$variable{'Templates'}} = openprint::ProjectType_Template->find('order'=>'lower(type),lower(description)','projecttype_id'=>$param{'ddmProjectType'} );
+	$$variable{Templates} = [ openprint::ProjectType_Template->find( order=>'lower(type),lower(description)', projecttype_id=>$param{ddmProjectType} ) ];
 ) ?>
 <table class="List">
 	<tr>
@@ -13,21 +18,24 @@
 		<th class="finished_height">Finished Height</th>
 		<th class="flat_width">Flat Width</th>
 		<th class="flat_height">Flat Height</th>
+		<th class="message">Message</th>
 		<th class="buttons">&nbsp;</th>
 	</tr>
 	<? echo (
 		my $html;
-		while ( $$variable{'Template'} = shift @{$$variable{'Templates'}} ) {
-			$html .= ssi::include( $ENV{'DOCUMENT_ROOT'}.'/administrator/project_types/_template_line.html' );
+		while ( $$variable{Template} = shift @{$$variable{Templates}} ) {
+			$html .= ssi::include( '/administrator/project_types/_template_line.html' );
 		} # end while
 		return $html;
 	) ?>
 	<tr>
-		<td><input type="text" name="typeNew"/></td>
-		<td><input type="text" name="descriptionNew"/></td>
-		<td><input type="number" name="finishedwidthNew"/></td>
-		<td><input type="number" name="finishedheightNew"/></td>
-		<td><input type="number" name="flatwidthNew"/></td>
-		<td><input type="number" name="flatheightNew"/></td>
+		<td class="type"><input type="text" name="typeNew"/></td>
+		<td class="description"><input type="text" name="descriptionNew"/></td>
+		<td class="finished_width"><input type="number" name="finishedwidthNew"/></td>
+		<td class="finished_height"><input type="number" name="finishedheightNew"/></td>
+		<td class="flat_width"><input type="number" name="flatwidthNew"/></td>
+		<td class="flat_height"><input type="number" name="flatheightNew"/></td>
+		<td class="message"><textarea name="messageNew"></textarea></td>
 	</tr>
 </table>
+</form>

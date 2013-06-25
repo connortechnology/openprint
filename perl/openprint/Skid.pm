@@ -20,41 +20,47 @@ require openprint::Manifest;
 require openprint::ManifestContent;
 require openprint::InventoryCondition;
 
-$debug = 0;
+$debug = 1;
 
 $table = 'Skids';
 $serial = 'skid_id_seq';
 %fields = (
-	'id'			=>	'id',
-	'location_id'	=>	'location_id',
-	'created_on'	=>	'created_on',
-	'created_by_id'	=>	'created_by_id',
-	'owner_id'		=>	'owner_id',
-	'updated_on'	=>	'updated_on',
-	'updated_by'	=>	'updated_by',
-	'used'			=>	'used',
-	'rfidtag_id'	=>	'rfidtag_id',
-	'type'			=>	'type',
-	'deleted'		=>	'deleted',
+	id				=>	'id',
+	location_id		=>	'location_id',
+	created_on		=>	'created_on',
+	created_by_id	=>	'created_by_id',
+	owner_id		=>	'owner_id',
+	updated_on		=>	'updated_on',
+	updated_by		=>	'updated_by',
+	used			=>	'used',
+	rfidtag_id		=>	'rfidtag_id',
+	type			=>	'type',
+	deleted			=>	'deleted',
+	manufacturers_id	=>	'manufacturers_id',
+	received_on		=>	'received_on',
 );
 %find_fields = (
 );
 
 %transforms = (
-	'deleted'	=>	[ 's/[^01]//g' ],
+	deleted	=>	[ 's/[^01]//g' ],
+	manufacturers_id	=>	[ 'tr/[a-z]/[A-Z]/' ],
 );
 %defaults = (
-	'location_id'	=>	undef,
-	'rfidtag_id'	=>	undef,
-	'updated_on'	=>	q`'NOW()'`,
-	'created_on'	=>	q`'NOW()'`,
-	'deleted'		=>	0,
-	'type'		=>	undef,
+	location_id	=>	undef,
+	rfidtag_id	=>	undef,
+	updated_on	=>	q`'NOW()'`,
+	created_on	=>	q`'NOW()'`,
+	received_on	=>	undef,
+	deleted		=>	0,
+	type		=>	undef,
+	manufacturers_id	=>	undef,
 );
 
 sub find {
 	shift @_ if $_[0] eq 'openprint::Skid';
 	shift @_ if ref $_[0] eq 'openprint::Skid';
+
 	my %params = @_;
 	my @values;
 
@@ -68,6 +74,22 @@ sub find {
             push @values, $params{id};
         } # end if
     } # end if
+	if ( $params{'id >='} ) {
+		$sql .= ' AND id >= ?';
+		push @values, $params{'id >='};
+	}  # end if
+	if ( $params{'id <='} ) {
+		$sql .= ' AND id <= ?';
+		push @values, $params{'id <='};
+	} # end if
+	if ( ref $params{'id not in'} eq 'ARRAY' ) {
+		$sql .= ' AND id NOT IN (' . join(',', map { '?' } @{$params{'id not in'}} ) . ')';
+		push @values, @{$params{'id not in'}};
+	} # end if
+	if ( $params{'id ilike'} ) {
+		$sql .= ' AND id ilike ?';
+		push @values, $params{'id ilike'};
+	} # end if
 
 	if ( $params{'verification_code'} ) {
 		$sql .= ' AND id IN (SELECT skid_id FROM skid_verifications WHERE code=?)';
@@ -104,6 +126,30 @@ sub find {
 	if ( $params{'rfidtag_id'} ) {
 		$sql .= ' AND rfidtag_id=?';
 		push @values, $params{'rfidtag_id'};
+	} # end if
+	if ( $params{'rfidtag_id ilike'} ) {
+		$sql .= ' AND rfidtag_id ilike ?';
+		push @values, $params{'rfidtag_id ilike'};
+	} # end if
+	if ( exists $params{'manufacturers_id'} ) {
+        if ( ref $params{'manufacturers_id'} eq 'ARRAY' ) {
+            $sql .= ' AND manufacturers_id IN (' . join(',', map { '?' } @{$params{'manufacturers_id'}} ) . ')';
+            push @values, @{$params{'manufacturers_id'}};
+        } else {
+            $sql .= ' and manufacturers_id=?';
+            push @values, $params{manufacturers_id};
+        } # end if
+	} # end if
+	if ( $params{'manufacturers_id ilike'} ) {
+		$sql .= ' AND manufacturers_id ilike ?';
+		push @values, $params{'manufacturers_id ilike'};
+	} # end if
+	if ( exists $params{'has manufacturers_id'} ) {
+		if ( $params{'has manufacturers_id'} ) {
+			$sql .= q` AND NOT (manufacturers_id IS NULL OR manufacturers_id='')`;
+		} else {
+			$sql .= q` AND (manufacturers_id IS NULL OR manufacturers_id='')`;
+		} # end if
 	} # end if
 	if ( $params{'created_on_start'} and $params{'created_on_end'} ) {
 		$sql .= ' AND ( created_on BETWEEN ? AND ? )';
@@ -143,6 +189,26 @@ sub find {
 		$sql .= ' AND updated_on <= ?';
 		push @values, $params{'updated_on <='};
 	} # end if
+	if ( $params{received_on_start} and $params{received_on_end} ) {
+		$sql .= ' AND ( received_on BETWEEN ? AND ? )';
+		push @values, @params{'received_on_start','received_on_end'};
+	} elsif ( $params{'received_on_start'} ) {
+		$sql .= ' AND received_on >= ?';
+		push @values, $params{'received_on_start'};
+	} elsif ( $params{'received_on_end'} ) {
+		$sql .= ' AND received_on <= ?';
+		push @values, $params{'received_on_end'};
+	} # end if
+
+	if ( $params{'received_on >='} ) {
+		$sql .= ' AND received_on >= ?';
+		push @values, $params{'received_on >='};
+	} # end if
+	if ( $params{'received_on <='} ) {
+		$sql .= ' AND received_on <= ?';
+		push @values, $params{'received_on <='};
+	} # end if
+
 	if ( $params{'last_seen_start'} and $params{'last_seen_end'} ) {
 		$sql .= ' AND ( (SELECT updated_on FROM Rfidtags where rfidtags.id=skids.rfidtag_id) BETWEEN ? AND ? )';
 		push @values, @params{'last_seen_start','last_seen_end'};
@@ -258,11 +324,13 @@ sub save {
 
 sub destroy {
 	my $self = $_[0];
+	my $error;
 
 	my $ac = sql::start_transaction( $openprint::dbh );
 	sql::execute( undef, undef, q{UPDATE manifestcontents SET skid_id=NULL WHERE skid_id=?}, $$self{'id'} );
 	foreach my $V ( openprint::Skid_Verification->find('skid_id'=>$$self{'id'}) ) {
-	$V->delete();
+		$error .= $V->delete();
+		last if $error;
 	} # end foreach V	
 	sql::execute( undef, undef, q{DELETE FROM paper_allocations WHERE skid_id=?}, $$self{'id'} );
 	sql::execute( undef, undef, q{DELETE FROM paper_inventory WHERE skid_id=?}, $$self{'id'} );
@@ -270,6 +338,7 @@ sub destroy {
 	sql::execute( undef, undef, q{DELETE FROM skid_verifications WHERE skid_id=?}, $$self{'id'} );
 	$self->SUPER::destroy();
 	sql::end_transaction( $openprint::dbh, $ac );
+	return $error;
 } # end sub delete
 
 sub to_string {
@@ -278,7 +347,7 @@ sub to_string {
 } # end sub
 
 sub add {
-	my ( $self, $Paper, $quantity, $condition ) = @_;
+	my ( $self, $Paper, $quantity, $condition, $Purpose ) = @_;
 	my $Condition;
 	if ( ref $condition eq 'openprint::InventoryCondition' ) {
 		$Condition = $condition;
@@ -316,10 +385,11 @@ sub add {
 # Set
 	} # end if
 	$C->save({
-			'skid_id' => $$self{'id'},
-			'paper_id'	=>	$Paper->id(),
-			'condition_id'	=>	$Condition->id(),
-			'quantity'=>$quantity,
+			skid_id		=> $$self{'id'},
+			paper_id	=>	$Paper->id(),
+			condition_id	=>	$Condition->id(),
+			quantity	=>$quantity,
+			( ( $Purpose and $Purpose->id() ) ? ( purpose_id => $Purpose->id() ) : () ),
 			});
 	return $quantity - $old_quantity;
 } # end sub add
@@ -361,34 +431,32 @@ sub location {
 	my $self = shift;
 	if ( @_ ) {
 		my $name = shift;
-		@$self{'location_id'} = sql::execute( undef, undef, q{SELECT id FROM Locations WHERE name=?}, $name );
-		if ( ! $$self{'location'} ) {
-			sql::insert( undef,undef, 'Locations', 'name', $name );
-			@$self{'location_id'} = sql::execute( undef, undef, q{SELECT id FROM Locations WHERE name=?}, $name );
+		my $Location = openprint::Location->find_one( 'name lc'=>lc openprint::Location->transform('name', $name) );
+		if ( ! $Location ) {
+			$Location = new openprint::Location();
+			$Location->save({name=>$name});
 		} # end if
+		$self->location_id( $Location->id() );
 	} # end if
-	return new openprint::Location( $$self{'location_id'} )->name();
+	return new openprint::Location( $$self{location_id} )->name();
 } # end if
 
 sub location_id {
-	my ( $self, $new ) = @_;
 
-	if ( $new ) {
-		$$self{'location_id'} = $new;
-	} # end if
-
-	if ( $$self{'rfidtag_id'} ) {
-		my $Tag = new openprint::RFIDTag( $$self{'rfidtag_id'} );
-		if ( $new ) {
-			if ( $new != $Tag->location_id() ) {
-				$Tag->save({'location_id'=>$new});
+	my $Tag = $_[0]->RFIDTag();
+	if ( @_ > 1 ) {
+		$_[0]{location_id} = $_[1];
+		if ( $_[0]{rfidtag_id} ) {
+			if ( $_[1] != $Tag->location_id() ) {
+				$Tag->save({location_id=>$_[1]});
 			} # end if
-			$$self{'location_id'} = $new;
-		} elsif ( $Tag->location_id() != $$self{'location_id'} ) {
-			$$self{'location_id'} = $Tag->location_id();
 		} # end if
 	} # end if
-	return $$self{'location_id'};
+
+	if ( $_[0]{rfidtag_id} and ( $Tag->location_id() != $_[0]{location_id} ) ) {
+		$_[0]{location_id} = $Tag->location_id();
+	} # end if
+	return $_[0]{location_id};
 } # end sub location_id
 
 sub Location {
@@ -416,14 +484,18 @@ sub Contents {
 	return () if ! $$self{'id'};
 
 	if ( @_ ) {
-		my %params = @_;
-		$params{'skid_id'} = $$self{'id'};
-		return openprint::SkidContent->find( %params );
+		if ( ! defined $_[0] ) {
+			@{$$self{'Contents'}} = openprint::SkidContent->find( skid_id=>$$self{'id'} );
+		} else {
+			my %params = @_;
+			$params{'skid_id'} = $$self{'id'};
+			return openprint::SkidContent->find( %params );
+		} # end if
 	} elsif ( ! $$self{'Contents'} ) {
 		@{$$self{'Contents'}} = openprint::SkidContent->find( 'skid_id'=>$$self{'id'} );
 	} # end if
 	return @{$$self{'Contents'}};
-} # end sub contents
+} # end sub Contents
 
 sub allocation {
 	my ( $self, %options ) = @_;
@@ -637,6 +709,22 @@ sub cost {
 	} # end if
 	return $_[0]{'cost'};
 } # end sub cost
+
+sub PurchaseOrders {
+	if ( @_ > 1 ) {
+		$_[0]{PurchaseOrders} = $_[1];
+	} # end if
+	if ( ! $_[0]{PurchaseOrders} ) {
+		require openprint::Manifest_Content_Type;
+		my @POs;
+		foreach my $MCT ( openprint::Manifest_Content_Type->find( 'skid_id any'=>$_[0]->id() ) ) {
+			push @POs, $MCT->PurchaseOrder() if $MCT->po_id();
+		} # end foreach MCT
+		$_[0]{PurchaseOrders} = \@POs;
+	} # end if
+	return @{$_[0]{PurchaseOrders}} if ref $_[0]{PurchaseOrders} eq 'ARRAY';
+	return ();
+} # end sub PurchaseOrders
 
 1;
 __END__

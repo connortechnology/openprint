@@ -5,6 +5,7 @@ use strict;
 require openprint::ProjectType;
 require openprint::ProjectTypeCategory;
 require openprint::ProjectType_Default;
+require openprint::ProjectType_Template;
 require sql;
 require misc;
 require openprint::logs;
@@ -26,15 +27,18 @@ sub edit {
 	} elsif ( $param{'btnFunction'} eq 'Next' ) {
 		$ProjectType = $ProjectType->next();
 	} elsif ( $param{'btnFunction'} eq 'Delete' ) {
-		$ProjectType->delete();
-		$ProjectType = $ProjectType->next();
+		$variable{error} .= $ProjectType->delete();
+		$ProjectType = $ProjectType->next() if ! $variable{error};
 	} elsif ( $param{'btnFunction'} eq 'Copy' ) {
-		my @required_services = $ProjectType->required_services();
 		my @recommendations = sql::execute(undef,undef,'SELECT lngPaperIndex FROM Paper_Recommendations WHERE lngProjectTypeIndex=?', $ProjectType->id() );
 
 		$ProjectType = $ProjectType->copy();
 		$ProjectType->name('Copy of ' . $ProjectType->name() );
-		$variable{error} .= $ProjectType->save({required_services=>\@required_services});
+
+		my @required_services = $ProjectType->required_services();
+		my @blocked_services = $ProjectType->blocked_services();
+
+		$variable{error} .= $ProjectType->save({required_services=>\@required_services, blocked_services=>\@blocked_services });
 
 		foreach my $paper_id ( @recommendations ) {
 			sql::insert( undef, undef, 'Paper_recommendations','lngPaperIndex',$paper_id,'lngProjectTypeIndex', $ProjectType->id() );
@@ -164,36 +168,42 @@ sub templates {
 
 	my $status = 'Error: ';
 
-    if ( $param{'btnFunction'} eq 'Save' ) {
+	if ( $param{'btnFunction'} eq 'Save' ) {
 		my $ac = sql::start_transaction( $dbh );
 		foreach my $Template ( openprint::ProjectType_Template->find('projecttype_id'=>$param{'ddmProjectType'}) ) {
 			$variable{'error'} .= $Template->save({
-					'type'					=>	$param{"type$$Template{id}"},
-					'description'			=>	$param{"description$$Template{id}"},
-					'finished_width' 		=>	$param{"finishedwidth$$Template{id}"},
-					'finished_height'		=>	$param{"finishedheight$$Template{id}"},
-					'flat_width'			=>	$param{"flatwidth$$Template{id}"},
-					'flat_height'			=>	$param{"flatheight$$Template{id}"},
-				} );
-      		# Add record to audit log - action "Update Project Template".
-         	openprint::logs::insertLogRecord('52', "Project Type ID: $$Template{type} - $$Template{description}" );
-		} # end foreach	Template
-		if ( $param{'typeNew'} ) {
+					type				=>	$param{"type$$Template{id}"},
+					description			=>	$param{"description$$Template{id}"},
+					finished_width		=>	$param{"finishedwidth$$Template{id}"},
+					finished_height		=>	$param{"finishedheight$$Template{id}"},
+					flat_width			=>	$param{"flatwidth$$Template{id}"},
+					flat_height			=>	$param{"flatheight$$Template{id}"},
+					message				=>	$param{"message$$Template{id}"},
+					} );
+			if ( $variable{error} ) {
+				$dbh->rollback();
+				last;
+			} # end if
+			# Add record to audit log - action "Update Project Template".
+			(new openprint::Log())->save({action=>'Update ProjectType Template', note=>"$$Template{type} - $$Template{description}" });
+		} # end foreach Template
+		if ( (!$variable{error}) and $param{'typeNew'} ) {
 			$variable{'error'} .= new openprint::ProjectType_Template()->save({
-					'projecttype_id'		=>	$param{'ddmProjectType'},
-					'type'					=>	$param{"typeNew"},
-					'description'			=>	$param{"descriptionNew"},
-					'finished_width' 		=>	$param{"finishedwidthNew"},
-					'finished_height'		=>	$param{"finishedheightNew"},
-					'flat_width'			=>	$param{"flatwidthNew"},
-					'flat_height'			=>	$param{"flatheightNew"},
+					projecttype_id	=>	$param{ddmProjectType},
+					type			=>	$param{typeNew},
+					description		=>	$param{descriptionNew},
+					finished_width	=>	$param{finishedwidthNew},
+					finished_height	=>	$param{finishedheightNew},
+					flat_width		=>	$param{flatwidthNew},
+					flat_height		=>	$param{flatheightNew},
+					message			=>	$param{messageNew},
 				} );
 			# Add record to audit log - action "New Project Template".
-			openprint::logs::insertLogRecord('55', "Project Type ID: $param{typeNew} - $param{descriptionNew}",);
+			(new openprint::Log())->save({action=>'New ProjectType Template', note=>"$param{typeNew} - $param{descriptionNew}" });
 		} # end if
 		sql::end_transaction( $dbh, $ac );
-    } elsif ( $param{'btnFunction'} eq 'Import Templates' ) {
-        if ( $param{'fileImport'} ) {
+	} elsif ( $param{'btnFunction'} eq 'Import Templates' ) {
+		if ( $param{'fileImport'} ) {
 			my $ac = sql::start_transaction( $dbh );
 			my %project_types = map { $_->strid(), $_->id() } openprint::ProjectType->find();
 
@@ -208,9 +218,9 @@ sub templates {
 			my $csv = Text::CSV_XS->new();
 
 			while ( <$io> ) {
-                my $status = $csv->parse($_);
-                my ( $projecttype_id, $id, $name, $desc, $fwidth, $fheight, $width, $height );
-                my @data = misc::trim( $csv->fields() );
+				my $status = $csv->parse($_);
+				my ( $projecttype_id, $id, $name, $desc, $fwidth, $fheight, $width, $height );
+				my @data = misc::trim( $csv->fields() );
 				if ( @data == 7 ) {
 					( $id, $name, $desc, $fwidth, $fheight, $width, $height ) = @data;
 				} elsif ( @data == 6 ) {
@@ -239,14 +249,14 @@ sub templates {
 						'dblFlatWidth',			$width * 1,
 						'dblFlatHeight',		$height * 1,
 						);
-                if ( ($_) = sql::insert( $log, $dbh, 'ProjectTemplate', @params ) ) {
+				if ( ($_) = sql::insert( $log, $dbh, 'ProjectTemplate', @params ) ) {
 					$variable{'error'} .= "Line Entry: $_<br/><br/>";
 				} # end if
-            } # for each
+			} # for each
 			sql::end_transaction( $dbh, $ac );
 			
-        } else {
-            $log->warn( "No file given to upload." );
+		} else {
+			$log->warn( "No file given to upload." );
 		} # end if
 	} elsif ( $param{'btnFunction'} eq 'Export Templates' ) {
 		if ( $param{'ddmProjectType'} ) {
@@ -263,7 +273,7 @@ sub templates {
 		} # end if
 
 		# Add record to audit log - action "Export Project Templates".
-		openprint::logs::insertLogRecord('54',);
+		(new openprint::Log())->save({action=>'Export ProjectType Templates'});
 	} # end if
 } # end sub templates
 

@@ -1,143 +1,165 @@
 <script type="text/javascript" src="<?hash_link(/javascripts/barcode.js)?>"></script>
-<? echo ( include('/includes/error_reporting.html'); ) ?>
-Please select a Skid to view/edit.<br>
+<?include(/includes/error_reporting.html)?>
+<script type="text/javascript">
+	function submit_handler() {
+		calc();
+	}
+	function calc() {
+		LoadContent( 'Results', '/employee/inventory/_skids_results.html', $('f1') );
+	}
+</script>
+Please select a Skid to view/edit.<br/>
 <form id="f1" name="f1" method="post" action="skid_details.html">
+	<div class="leftColumn">
 	<fieldset class="filters"><legend>Choose Skid</legend>
-		<p>
-			<label for="skid_id">Skid ID #</label>
-			<input type="number" id="skid_id" name="skid_id" onchange="change_handler(this);" onkeypress="return input_handler( this, event );" onkeydown="if(event.keyCode == 13){submit_handler(f1);}" onkeyup="this.value=this.value.replace(/\D/g, '');" />
-			<? echo ( ssi::button( 'Go', { onclick=>'f1.submit();', href=>'', text=>'Go' } ); ) ?>
-		</p>
+		<ul>
+		<li class="skid_id">
+			<label for="skid_id">Skid ID</label>
+			<? echo ( join("\n",
+						input( type=>'cardinal', id=>'skid_id', name=>'skid_id', onchange=>'change_handler(this);', 
+							onkeypress=>'return input_handler(this,event);', onkeydown=>'if(event.keyCode==13){submit_handler(f1);}' ),
+						button( 'GoSkid', { onclick=>'calc();',text=>'Go' } ),
+						); ) ?>
+		</li>
+		<li class="rfid_id">
+			<label for="rfid_id">RFID ID</label>
+			<? echo ( join("\n",
+						input( type=>'cardinal', id=>'rfid_id', name=>'rfid_id', onchange=>'change_handler(this);', 
+							onkeypress=>'return input_handler(this,event);', onkeydown=>'if(event.keyCode==13){submit_handler(f1);}' ),
+						button( 'GoRFID', { onclick=>'calc();',text=>'Go' } ),
+						); ) ?>
+		</li>
+		<li class="manufacturers_id">
+			<label for="manufacturers_id">Manufacturers ID</label>
+			<? echo ( join("\n",
+						input( type=>'text', id=>'manufacturers_id', name=>'manufacturers_id', 
+							onkeypress=>'return input_handler(this,event);', onkeydown=>'if(event.keyCode==13){submit_handler(f1);}' ),
+						button( 'GoManufacturers', { onclick=>'calc();',text=>'Go' } ),
+						); ) ?>
+		</li>
+		</ul>
 	</fieldset>
-</form>
-<form id="f2" name="f2" method="post" action="skids.html">
+	</div>
+	<div class="rightColumn">
 	<fieldset class="filters"><legend>Search Criteria</legend>
-		<p>
+		<ul>
+		<li>
 			<label>Docket</label>
-			<input id="Docket" name="Docket" value="<? echo ( $session{'/employee/inventory/skids.html?Docket'} ) ?>" onkeyup="this.value=this.value.replace(/\D/g,'');" onchange="change_handler(this);" onkeypress="return input_handler( this, event );" onkeydown="if(event.keyCode == 13){LoadContent( 'Results', '/employee/inventory/_skids_results.html', $('f2') );}" />
-			<? echo ( ssi::button( 'Go2', { onclick=>"LoadContent( 'Results', '/employee/inventory/_skids_results.html', \$('f2') );", href=>'', text=>'Go' } ); ) ?>
-		</p>
-		<p>
+			<? echo ( join("\n",
+						input( type=>'cardinal', name=>'Docket', value=>$session{'/employee/inventory/skids.html?Docket'}, onchange=>'change_handler(this);', 
+							onkeypress=>'return input_handler(this,event);', 
+							onkeydown=>q`if(event.keyCode==13){calc();}` ),
+						button( 'GoDocket', { onclick=>q`calc();`,text=>'Go' } ),
+						); ) ?>
+		</li>
+		<li>
 			<label>Verification</label>
-			<input type="text" name="verification_code" size="9" value="<? echo ( $session{'/employee/inventory/skids.html?verification_code'} ) ?>" onkeyup="" onchange="change_handler(this);" onkeypress="return input_handler( this, event );" onkeydown="if(event.keyCode == 13){LoadContent( 'Results', '/employee/inventory/_skids_results.html', $('f2') );}" />
-			<? echo ( ssi::button( 'Go3', { onclick=>"LoadContent( 'Results', '/employee/inventory/_skids_results.html', \$('f2') );", href=>'', text=>'Go' } ); ) ?>
-		</p>
-		<hr/>
-		<p>
-			<label>Date Added</label>
-			<span class="DateSelectorT">
-<? echo ( ssi::date_select_session( '/employee/inventory/skids.html', 'created_on_start', { 'with_today'=>1 } ); ) ?>
-			</span>
+			<? echo ( join("\n",
+						input( type=>'text', name=>'verification_code', value=>$session{'/employee/inventory/skids.html?verification_code'}, 
+							onchange=>'change_handler(this);', onkeypress=>'return input_handler(this,event);', onkeydown=>q`if(event.keyCode==13){calc();}` ),
+						button( 'Go3', { onclick=>q`calc();`, text=>'Go' } ),
+			); ) ?>
+		</li>
+		</ul>
+	</fieldset>
+	</div>
+	<br class="spacer"/>
+	<fieldset>
+	<ul>
+		<li>
+			<label>Received On</label>
+<? echo ( ssi::date_select_session( '/employee/inventory/skids.html', 'received_on_start', { with_today=>1, with_clear=>1 } ); ) ?>
 			to 
-			<span class="DateSelectorT">
-<? echo ( ssi::date_select_session( '/employee/inventory/skids.html', 'created_on_end', { 'with_today'=>1 } ); ) ?>
-			</span>
-		</p>
-		<p>
+<? echo ( ssi::date_select_session( '/employee/inventory/skids.html', 'received_on_end', { with_today=>1, with_clear=>1 } ); ) ?>
+		</li>
+		<li>
+			<label>Date Entered</label>
+<? echo ( ssi::date_select_session( '/employee/inventory/skids.html', 'created_on_start', { with_today=>1, with_clear=>1 } ); ) ?>
+			to 
+<? echo ( ssi::date_select_session( '/employee/inventory/skids.html', 'created_on_end', { with_today=>1, with_clear=>1 } ); ) ?>
+		</li>
+		<li>
 			<label>Last Updated</label>
-			<span class="DateSelectorT">
-<? echo ( ssi::date_select_session( '/employee/inventory/skids.html', 'updated_on_start', { 'with_today'=>1 } ); ) ?>
-			</span>
+<? echo ( ssi::date_select_session( '/employee/inventory/skids.html', 'updated_on_start', { with_today=>1, with_clear=>1 } ); ) ?>
 			to 
-			<span class="DateSelectorT">
-<? echo ( ssi::date_select_session( '/employee/inventory/skids.html', 'updated_on_end', { 'with_today'=>1 } ); ) ?>
-			</span>
-		</p>
-		<p>
+<? echo ( ssi::date_select_session( '/employee/inventory/skids.html', 'updated_on_end', { with_today=>1, with_clear=>1 } ); ) ?>
+		</li>
+		<li>
 			<label>Last Seen (RFID)</label>
-			<span class="DateSelectorT">
-<? echo ( ssi::date_select_session( '/employee/inventory/skids.html', 'last_seen_start', { 'with_today'=>1 } ); ) ?>
-			</span>
+<? echo ( ssi::date_select_session( '/employee/inventory/skids.html', 'last_seen_start', { with_today=>1, with_clear=>1 } ); ) ?>
 			to 
-			<span class="DateSelectorT">
-<? echo ( ssi::date_select_session( '/employee/inventory/skids.html', 'last_seen_end', { 'with_today'=>1 } ); ) ?>
-			</span>
-		</p>
-		<p>
+<? echo ( ssi::date_select_session( '/employee/inventory/skids.html', 'last_seen_end', { with_today=>1, with_clear=>1 } ); ) ?>
+		</li>
+		<li>
 			<label>Purpose</label>
 			<select name="purpose_id">
 				<option value=""> all </option>
 				<? echo (
-					return ssi::make_drop_down( [ sql::execute( undef, undef, q{SELECT id,name FROM StockPurposes ORDER BY lower(name)} ) ], $openprint::session{'/employee/inventory/skids.html?purpose_id'} );
+					return ssi::make_drop_down( openprint::StockPurpose->dropdown(order=>'lower(name)'), $session{'/employee/inventory/skids.html?purpose_id'} );
 				) ?>
 			</select>
-		</p>
-		<p>
+		</li>
+		<li>
 			<label>FSC Code</label>
-			<input type="text" name="fsc_code" value="<? echo ( $session{'/employee/inventory/skids.html?fsc_code'} ) ?>"  />
-		</p>
-		<p>
+			<input type="text" name="fsc_code" value="<? echo ( $session{'/employee/inventory/skids.html?fsc_code'} ) ?>" />
+		</li>
+		<li>
             <label>Empty?</label>
-            <input type="radio" id="emptyY" name="empty" value="Y" <? echo ( ssi::checked( $session{'/employee/inventory/skids.html?empty'} eq 'Y' ); ) ?> />
-            <label class="radio" for="emptyY">Yes</label>
-            <input type="radio" id="emptyN" name="empty" value="N" <? echo ( ssi::checked( $session{'/employee/inventory/skids.html?empty'} eq 'N' ); ) ?> />
-            <label class="radio" for="notempty">No</label>
-            <input type="radio" id="emptyB" name="empty" value="B" <? echo ( ssi::checked( $session{'/employee/inventory/skids.html?empty'} eq 'B' ); ) ?> />
-            <label class="radio" for="emptyB">Both</label>
-		</p>
-		<p>
+			<? echo ( radio( 'empty', ['Y', 'Yes', 'N', 'No', '', 'All' ], $session{'/employee/inventory/skids.html?empty'}, { onclick=>'calc();' } ); ) ?>
+		</li>
+		<li>
             <label>Has Contents?</label>
-            <input type="radio" id="contentsY" name="contents" value="Y" <? echo ( ssi::checked( $session{'/employee/inventory/skids.html?contents'} eq 'Y' ); ) ?> />
-            <label class="radio" for="contentsY">Yes</label>
-            <input type="radio" id="contentsN" name="contents" value="N" <? echo ( ssi::checked( $session{'/employee/inventory/skids.html?contents'} eq 'N' ); ) ?> />
-            <label class="radio" for="contentsN">No</label>
-            <input type="radio" id="contentsB" name="contents" value="B" <? echo ( ssi::checked( $session{'/employee/inventory/skids.html?contents'} eq 'B' ); ) ?> />
-            <label class="radio" for="contentsB">Both</label>
-		</p>
-		<p>
+			<? echo ( radio( 'contents', ['Y', 'Yes', 'N', 'No', '', 'All' ], $session{'/employee/inventory/skids.html?contents'}, { onclick=>'calc();' } ); ) ?>
+		</li>
+		<li>
             <label>Has Manifest?</label>
-            <input type="radio" id="hasmanifestY" name="hasmanifest" value="Y" <? echo ( ssi::checked( $session{'/employee/inventory/skids.html?hasmanifest'} eq 'Y' ); ) ?> />
-            <label class="radio" for="hasmanifestY">Yes</label>
-            <input type="radio" id="hasmanifestN" name="hasmanifest" value="N" <? echo ( ssi::checked( $session{'/employee/inventory/skids.html?hasmanifest'} eq 'N' ); ) ?> />
-            <label class="radio" for="hasmanifestN">No</label>
-            <input type="radio" id="hasmanifestB" name="hasmanifest" value="B" <? echo ( ssi::checked( $session{'/employee/inventory/skids.html?hasmanifest'} eq 'B' ); ) ?> />
-            <label class="radio" for="hasmanifestB">Both</label>
-		</p>
-		<p>
+			<? echo ( radio( 'hasmanifest', ['Y', 'Yes', 'N', 'No', '', 'All' ], $session{'/employee/inventory/skids.html?hasmanifest'}, { onclick=>'calc();' } ); ) ?>
+		</li>
+		<li>
             <label>Allocated?</label>
-            <input type="radio" id="allocatedY" name="allocated" value="Y" <? echo ( ssi::checked( $session{'/employee/inventory/skids.html?allocated'} eq 'Y' ) ) ?> />
-            <label class="radio" for="allocatedY">Yes</label>
-            <input type="radio" id="allocatedN" name="allocated" value="N" <? echo ( ssi::checked( $session{'/employee/inventory/skids.html?allocated'} eq 'N' ) ) ?> />
-            <label class="radio" for="allocatedN">No</label>
-            <input type="radio" id="allocated" name="allocated" value="" <? echo ( ssi::checked( $session{'/employee/inventory/skids.html?allocated'} eq '' ) ) ?> />
-            <label class="radio" for="allocated">All</label>
-		</p>
-		<p>
+			<? echo ( radio( 'allocated', ['Y', 'Yes', 'N', 'No', '', 'All' ], $session{'/employee/inventory/skids.html?allocated'}, { onclick=>'calc();' } ); ) ?>
+		</li>
+		<li>
+            <label>Has Manufacturers ID</label>
+			<? echo ( radio( 'hasmanufacturers', ['Y', 'Yes', 'N', 'No', '', 'All' ], $session{'/employee/inventory/skids.html?hasmanufacturers'}, { onclick=>'calc();' } ); ) ?>
+		</li>
+		<li>
             <label>With/Without RFID?</label>
-            <input type="checkbox" id="withrfid" name="withrfid" <? echo ( $session{'/employee/inventory/skids.html?withrfid'} ? 'checked="checked"' : '' ) ?> />
-            <label class="radio" for="withrfid">With RFID</label>
-            <input type="checkbox" id="withoutrfid" name="withoutrfid" <? echo ( $session{'/employee/inventory/skids.html?withoutrfid'} ? 'checked="checked"' : '' ) ?> />
-            <label class="radio" for="notempty">Without RFID</label>
-		</p>
-		<p><label>Type</label>
-            <input type="radio" id="TypeSheet" name="Type" value="Sheet" <? echo ( ssi::checked( $session{'/employee/inventory/skids.html?Type'} eq 'Sheet'); ) ?> />
-            <label class="radio" for="TypeSheet">Sheet</label>
-            <input type="radio" id="TypeRoll" name="Type" value="Roll" <? echo ( ssi::checked( $session{'/employee/inventory/skids.html?Type'} eq 'Roll' ); ) ?> />
-            <label class="radio" for="TypeRoll">Roll</label>
-            <input type="radio" id="TypeBoth" name="Type" value="All" <? echo ( ssi::checked ( $session{'/employee/inventory/skids.html?Type'} eq 'All' or !$session{'/employee/inventory/skids.html?Type'} ); ) ?> />
-            <label class="radio" for="TypeBoth">Both</label>
-        </p>
-		<p><label>Location</label>
-			<select name="location_id">
+			<? echo ( radio( 'rfid', ['Y', 'Yes', 'N', 'No', '', 'All' ], $session{'/employee/inventory/skids.html?rfid'}, { onclick=>'calc();' } ); ) ?>
+		</li>
+		<li>
+            <label>Valid/Invalid RFID?</label>
+			<? echo ( radio( 'rfid_valid', ['Y', 'Yes', 'N', 'No', '', 'All' ], $session{'/employee/inventory/skids.html?rfid_valid'}, { onclick=>'calc();' } ); ) ?>
+		</li>
+		<li><label>Type</label>
+			<? echo ( radio( 'Type', ['Sheet','Sheet', 'Roll', 'Roll', '', 'Both'], $session{'/employee/inventory/skids.html?Type'}, { onclick=>'calc();' } ); ) ?>
+        </li>
+		<li><label>Location</label>
+			<select name="location_id" onchange="calc();">
 				<? echo ( 
-					my @options = ('','All', 'None', 'None',  map { $_->id(), $_->name() } openprint::Location->find('order'=>'lower(name)') );
+					my @options = ('','All', 'None', 'None',  map { $_->id(), $_->name() } openprint::Location->find('order'=>'parent_id NULLS FIRST,lower(name)') );
 					ssi::make_drop_down( \@options, $session{'/employee/inventory/skids.html?location_id'} );
 				) ?>
 			</select>
-		</p>
-		<p><label>Condition</label>
-			<select name="condition_id">
+		</li>
+		<li><label>Condition</label>
+			<select name="condition_id" onchange="calc();">
 				<? echo ( 
-					my @options = ('','All', map { $_->id(), $_->name() } openprint::InventoryCondition->find('order'=>'lower(name)') );
+					my @options = ('','All', map { $_->id(), $_->name() } openprint::InventoryCondition->find( order=>'lower(name)') );
 					ssi::make_drop_down( \@options, $session{'/employee/inventory/skids.html?condition_id'} );
 				) ?>
 			</select>
-		</p>
+		</li>
+			<li>
+				<label>Deleted</label>
+				<? echo ( ssi::radio( 'deleted', ['1','Yes','0','No','1,0','All'], $session{'/employee/inventory/skids.html?deleted'} ); ) ?>
+			</li>
+		</ul>
 		<p class="buttons">
 			<? echo ( join('',
-				ssi::button( 'ShowResults', { onclick=>"LoadContent( 'Results', '/employee/inventory/_skids_results.html', \$('f2') );", href=>'', text=>'Show Results' } ),
-				ssi::button( 'Reset', { onclick=>'f2.reset();', href=>'', text=>'Reset' } ),
-				ssi::button( 'Add', { onclick=>'', href=>'skid_details.html', text=>'Add New Skid' } ),
+				button( 'ShowResults', { onclick=>'calc();', text=>'Show Results' } ),
+				button( 'Reset', { onclick=>'f2.reset();' } ),
+				button( 'Add', { href=>'skid_details.html', text=>'Add New Skid' } ),
 				); ) ?>
 		</p>
 	</fieldset>

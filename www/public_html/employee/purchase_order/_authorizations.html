@@ -6,7 +6,7 @@
 	} # end
 	$html .= '</tr>';
 
-	foreach my $User ( openprint::User->find( order=>'lower(strfirstname),lower(strlastname)',
+	foreach my $User ( openprint::User->find( order=>'lower(firstname),lower(lastname)',
 		( $session{'/employee/purchase_order/authorizations.html?company_id'} ? (
 			company_id => $session{'/employee/purchase_order/authorizations.html?company_id'}
 ) : ( ) ),

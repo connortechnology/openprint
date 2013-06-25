@@ -87,13 +87,15 @@ sub neccessary {
 	return 0;
 } # end sub neccessary
 sub signature_needs {
-	my ( $Project, $specs ) = @_;
+	my ( $Project, $sig_specs ) = @_;
 
-	foreach ( openprint::Estimating::Printing::get_colours( $specs, 'SideOne' ) ) {
+    $$sig_specs{SideOneColours} = [openprint::Estimating::Printing::get_colours( $sig_specs, 'SideOne' )] if ! $$sig_specs{SideOneColours};
+	foreach ( @{$$sig_specs{SideOneColours}} ) {
 		return 1 if $$_{'name'} =~ /Aqueous/;
 	} # end foreach colour
 
-	foreach ( openprint::Estimating::Printing::get_colours( $specs, 'SideTwo' ) ) {
+    $$sig_specs{SideTwoColours} = [openprint::Estimating::Printing::get_colours( $sig_specs, 'SideTwo' )] if ! $$sig_specs{SideTwoColours};
+	foreach ( @{$$sig_specs{SideTwoColours}} ) {
 		return 1 if $$_{'name'} =~ /Aqueous/;
 	} # end foreach colour
 } # end sub signature_needs
@@ -136,7 +138,7 @@ sub calc {
 			my $Imposition = new openprint::Imposition();
 			$Imposition->load( $sig_specs, $qty_index );
 			my %results = signature_calc( $Project, $service_index, $specs, $signature_service_index, $sig_specs, $qty_index, $Imposition, \%MakeReadies );
-			$MakeReadies{$results{'Equipment'}->id()} = $$sig_specs{'StockWidth'.$qty_index} * $$sig_specs{'StockHeight'.$qty_index} if $results{'Equipment'};
+			$MakeReadies{$results{'Equipment'}->id()} = $Imposition->layout_area() if $results{'Equipment'};
 			@outputs = sets::union( @outputs, 
 					"ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index",
 					"txtImposition-$$sig_specs{'SignatureIndex'}-$qty_index",
@@ -203,11 +205,17 @@ sub calc {
 sub signature_calc {
     my ( $Project, $service_index, $specs, $signature_service_index, $sig_specs, $qty_index, $imposition, $MakeReadies ) = @_;
 
+$openprint::log->debug("MakeReadies");
+foreach my $equipment_id ( keys %{$MakeReadies} ) {
+$openprint::log->debug("Makereadies $equipment_id $$MakeReadies{$equipment_id}");
+}
+
 	my %bestPrice;
 	$bestPrice{'Status'} = 'uncalculated';
 
 	my @front_aq;
-	foreach ( openprint::Estimating::Printing::get_colours( $sig_specs, 'SideOne' ) ) {
+    $$sig_specs{SideOneColours} = [openprint::Estimating::Printing::get_colours( $sig_specs, 'SideOne' )] if ! $$sig_specs{SideOneColours};
+	foreach ( @{$$sig_specs{SideOneColours}} ) {
 		if ( $$_{'name'} =~ /Aqueous/ ) {
 			push @front_aq, $$_{'name'};
 			#$openprint::log->debug("Side one Aqueous: $_");
@@ -215,15 +223,13 @@ sub signature_calc {
 	} # end foreach colour
 
 	my @back_aq;
-	foreach ( openprint::Estimating::Printing::get_colours( $sig_specs, 'SideTwo' ) ) {
+    $$sig_specs{SideTwoColours} = [openprint::Estimating::Printing::get_colours( $sig_specs, 'SideTwo' )] if ! $$sig_specs{SideTwoColours};
+	foreach ( @{$$sig_specs{SideTwoColours}} ) {
 		if ( $$_{'name'} =~ /Aqueous/ ) {
 			push @back_aq, $$_{'name'};
 			#$openprint::log->debug("Side two Aqueous: $_");
 		} # end if
 	} # end foreach colour
-	my %inkCoverage = openprint::Estimating::Printing::get_inkcoverage( $Project, $sig_specs );
-
-	my @different_types = sets::union( @front_aq, @back_aq );
 
 	#$openprint::log->debug("Signature : $signature_service_index");
 	if ( ! ( @front_aq or @back_aq ) ) {
@@ -231,6 +237,9 @@ $openprint::log->warn("Doing AQ when not needed");
 		$bestPrice{'Status'} = 'calculated';	
 		return %bestPrice;
 	} # end if
+	my %inkCoverage = openprint::Estimating::Printing::get_inkcoverage( $Project, $sig_specs );
+
+	my @different_types = sets::union( @front_aq, @back_aq );
 
 	# Should include overs
 	my $impressions = $$sig_specs{"hdnImpressionQuantity$qty_index"} ? $$sig_specs{"hdnImpressionQuantity$qty_index"} : $$specs{"txtQuantity$qty_index"};
@@ -268,8 +277,6 @@ if ( 1 ) {
 		} # end if
 	} # end if
 
-	$imposition = $imposition->copy();
-
 	my @impositions = ();
 	my $services = $Project->services();
 	if ( $$services{'Cutting'} ) {
@@ -293,15 +300,20 @@ if ( 1 ) {
 			} # end for
 		} # end for
 	} else {
-		@impositions = ( $imposition );
+		@impositions = ( $imposition->copy() );
 	} # end if
 	#$openprint::log->debug('DOne Cutting :' . @impositions);
 
 	foreach my $Equipment ( @equipment ) {
 		$$specs{'hdnBreakdown'.$qty_index} .= 'Equipment: '.$Equipment->strid().' ' . $Equipment->specification('Aqueous Capable') . ' ' . $$sig_specs{'ddmPress'.$qty_index} . ',<br/>';
-		if ( ( $Equipment->specification('Aqueous Capable') eq 'When Printing' ) and ( $$sig_specs{'ddmPress'.$qty_index} ne $Equipment->strid() ) ) {
-			$$specs{'hdnBreakdown'.$qty_index} .= 'Not printing on this press.<br/>';
-			next;
+		if ( $Equipment->specification('Aqueous Capable') eq 'When Printing' ) {
+			if ( $$sig_specs{'ddmPress'.$qty_index} ne $Equipment->strid() ) {
+				$$specs{'hdnBreakdown'.$qty_index} .= 'Not printing on this press.<br/>';
+				next;
+			} elsif ( @front_aq and @back_aq and ( $imposition->runstyle() eq 'Perfecting' ) ) {
+				$$specs{'hdnBreakdown'.$qty_index} .= 'Cant perfect with double sided AQ.<br/>';
+				next;
+			} # end if
 		} # end if
 		my %minimum = openprint::service::get_price_object( 'AqueousMinimumCharge', undef, $Equipment );
 
@@ -338,16 +350,17 @@ if ( 1 ) {
 			} else {
 				@types = (@front_aq, @back_aq);
 			} # end if
-			my $area = $imp->Paper()->area();
+			my $area = $imp->layout_area();
 
 			foreach my $type ( @types ) {
 
 				my %setupPrice;
-
+$openprint::log->debug("Makereadies: $$Equipment{id} $area");
 				if ( $MakeReadies{$Equipment->id()} and (
 							(($area * 1.10 ) > $MakeReadies{$Equipment->id()} ) and
 							(($area * .90 ) < $MakeReadies{$Equipment->id()} )
 							) ) {
+$openprint::log->debug("In Makereadies: $$Equipment{id} $area");
 				} else {
 					my $MRService = openprint::Service->find_one('name'=>$type.' MakeReady');
 					$MRService = openprint::Service->find_one('name'=>'AqueousMakeReady') if ! $MRService;

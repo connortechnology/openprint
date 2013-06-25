@@ -7,7 +7,7 @@
 
 <? if ( $$variable{'ProjectType'}->id() ) ?>
 
-<? echo ( include('/includes/error_reporting.html'); ) ?>
+<?include(/includes/error_reporting.html)?>
 <div class="InstantPricing">
 	<form id="f1" name="f1" method="post" action="/content/prin/Signature.html">
 		<input type="hidden" id="projecttype_id" name="projecttype_id" value="<? echo ( $$variable{'ProjectType'}->id() ) ?>" />
@@ -21,12 +21,12 @@
 	<div class="error">Our estimating system is under maintenance.  Please call for pricing.</div>
 <? endif ( ( ! $dbh ) or $$variable{'ProjectType'}->please_call() ) ?>
 <? if ( $dbh and ( ( ! $$variable{'ProjectType'}->please_call() ) or ( sets::isin( $session{'user_type'}, ['E','A'] ) ) ) ) ?>
-			<? echo ( include('_project_name.html'); ) ?>
+			<?include(_project_name.html)?>
 			<div class="ProjectSpecifications">
-				<h1>Project Specifications</h1>
-				<? echo ( include('_sizes.html'); ) ?>
+				<h1><? echo ( $$variable{ProjectType}->name() ) ?> Specifications</h1>
+				<?include(_sizes.html)?>
 				<? if ( $$variable{'ProjectType'}->name() eq 'Banners' ) ?>
-				<? echo ( include('/includes/main/proj/banner_printing.html'); ) ?>
+				<?include(/includes/main/proj/banner_printing.html)?>
 				<? endif ( $$variable{'ProjectType'}->name() eq 'Banners' ) ?>
 				<? if ( ! sets::isin( $$variable{'ProjectType'}->name(), [ 'Banners' ] ) ) ?>
 				<div class="Colours">
@@ -52,9 +52,9 @@
 								</li>
 								<? endif ( sets::isin( $$variable{'ProjectType'}->name(), ['NCR'] ) ) ?>
 								<? if ( ! sets::isin( $$variable{'ProjectType'}->name(), ['Banners', 'InkjetOutputs','NCR','Letterhead'] ) ) ?>
-									<? echo ( include('_aqueous.html'); ) ?>
+									<?include(_aqueous.html)?>
 									<? if ( ! sets::isin( $$variable{'ProjectType'}->name(), ['ScratchPads'] ) ) ?>
-									<? echo ( include('_uvcoating.html'); ) ?>
+									<?include(_uvcoating.html)?>
 									<? endif ( ! sets::isin( $$variable{'ProjectType'}->name(), ['ScratchPads'] ) ) ?>
 								<? endif ( ! sets::isin( $$variable{'ProjectType'}->name(), ['Banners', 'InkjetOutputs','NCR','Letterhead'] ) ) ?>
 							</ul>
@@ -67,7 +67,7 @@
 				<div class="Stock"><fieldset><legend>Stock</legend>
 					<div class="content">
 						<ul>
-						<? echo ( include('_paper_dropdowns.html'); ) ?>
+						<?include(_paper_dropdowns.html)?>
 						</ul>
 					</div>
 					</fieldset>
@@ -80,23 +80,23 @@
 					<? if ( ! sets::isin( $$variable{'ProjectType'}->name(), ['InkjetOutputs'] ) ) ?>
 					<? if ( ! sets::isin( $$variable{'ProjectType'}->name(), ['NCR','ScratchPads','RackCards'] ) ) ?>
 					<? if ( ! sets::isin( $$variable{'ProjectType'}->name(), ['GreetingCards'] ) ) ?>
-							<? echo ( include('_drilling.html'); ) ?>
+							<?include(_drilling.html)?>
 					<? endif ( ! sets::isin( $$variable{'ProjectType'}->name(), ['GreetingCards'] ) ) ?>
-							<? echo ( include('_scoring.html'); ) ?>
+							<?include(_scoring.html)?>
 					<? endif ( ! sets::isin( $$variable{'ProjectType'}->name(), ['NCR','ScratchPads','RackCards'] ) ) ?>
 					<? if ( sets::isin( $$variable{'ProjectType'}->name(), ['NCR'] ) ) ?>
-							<? echo ( include('_numbering.html'); ) ?>
+							<?include(_numbering.html)?>
 					<? endif ( sets::isin( $$variable{'ProjectType'}->name(), ['NCR'] ) ) ?>
 					<? if ( sets::isin( $$variable{'ProjectType'}->name(), ['ScratchPads'] ) ) ?>
-							<? echo ( include('_padding.html'); ) ?>
+							<?include(_padding.html)?>
 					<? endif ( sets::isin( $$variable{'ProjectType'}->name(), ['ScratchPads'] ) ) ?>
-							<? echo ( include('_perfing.html'); ) ?>
+							<?include(_perfing.html)?>
 					<? else ( ! sets::isin( $$variable{'ProjectType'}->name(), ['InkjetOutputs'] ) ) ?>
-							<? echo ( include('_lamination.html'); ) ?>
+							<?include(_lamination.html)?>
 					<? endif ( ! sets::isin( $$variable{'ProjectType'}->name(), ['InkjetOutputs'] ) ) ?>
 							<? if ( sets::isin( $$variable{'ProjectType'}->name(), ['Brochures','Postcards','Menus','GreetingCards','RackCards','DoorHangers'] ); ) ?>
-							<? echo ( include('_shrinkwrapping.html'); ) ?>
-							<? echo ( include('_bundling.html'); ) ?>
+							<?include(_shrinkwrapping.html)?>
+							<?include(_bundling.html)?>
 							<? endif ( sets::isin( $$variable{'ProjectType'}->name(), ['Brochures','Postcards','Menus','GreetingCards','RackCards','DoorHangers'] ); ) ?>
 						</ul>
 					</div>
@@ -107,31 +107,31 @@
 					<fieldset><legend>Production</legend>
 						<div class="content">
 							<ul>
-								<? echo ( include('_design.html'); ) ?>
-								<? echo ( include('_proofs.html'); ) ?>
-								<? echo ( include('_turnaround.html'); ) ?>
-								<? echo ( include('_quantity.html'); ) ?>
-								<? echo ( include('_press_type.html'); ) ?>
+								<? echo ( openprint::ServiceType->find_one(name=>'Design') ? include('_design.html') : ''; ) ?>
+								<?include(_proofs.html)?>
+								<?include(_turnaround.html)?>
+								<?include(_quantity.html)?>
+								<?include(_press_type.html)?>
 							</ul>
 						</div>
 					</fieldset>
 				</div>
-				<? echo ( include('_ups.html'); ) ?>
+				<?include(_ups.html)?>
 				<div id="AlertDiv" style="display:none;"></div>
 				<br class="spacer"/>
 		  </div><!--ProjectSpecifications-->
-				<? echo ( include('_prices.html'); ) ?>
+				<?include(_prices.html)?>
 <? endif ( $dbh and ( ( ! $$variable{'ProjectType'}->please_call() ) or ( sets::isin( $session{'user_type'}, ['E','A'] ) ) ) ) ?>
 				</div></div><!--Questions-->
 		  </div></div><div class="bottom_shadow"><div class="shadow_bl"></div><div class="shadow_br"></div></div>
 	   </div><!--instant_price_section-->
 <? echo ( 
 	if ( -e $config{'SkinPath'}.'/content/'.$$variable{'ProjectType'}->name().'.html' ) {
-		return ssi::include( $config{'SkinPath'}.'/content/'.$$variable{'ProjectType'}->name().'.html' );
+		return ssi::include('/content/'.$$variable{'ProjectType'}->name().'.html' );
 	} # end if
 	return '';
 ) ?>
 <? endif ( $$variable{'ProjectType'}->id() ) ?>
 </form>
-		<? echo ( include('_specials.html'); ) ?>
+		<?include(_specials.html)?>
 	</div><!--InstantPricing-->
