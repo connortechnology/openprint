@@ -1204,10 +1204,15 @@ sub signatures {
 		my $services = $self->services();
 		#if ( $self->Type()->name() ne 'MultiPagePublication' ) {
 		#} # end if
-		if ( $$services{'AdditionalSignature'} ) {
-			push @{$$self{'signatures'}}, @{$$services{'AdditionalSignature'}};
+		if ( $self->Type() eq 'MultiPagePublication' ) {
+			if ( $$services{'AdditionalSignature'} ) {
+				push @{$$self{'signatures'}}, @{$$services{'AdditionalSignature'}};
+			} #ned if
 		} else {
 			@{$$self{'signatures'}} = @{$$services{''}} if $$services{''};
+			if ( $$services{'AdditionalSignature'} ) {
+				push @{$$self{'signatures'}}, @{$$services{'AdditionalSignature'}};
+			} #ned if
 		} # end if
 	} # end if
 	if ( @_ ) {
