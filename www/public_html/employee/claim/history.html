@@ -26,8 +26,8 @@
 	<fieldset class="filters"><legend>Select Search Criteria</legend>
 		<ul>
 		<li><label>CLAIM #</label>
-			<? echo ( join("\n".
-				input(type=>'integer', id=>'claim_id', name=>'claim_id', onchange=>'change_handler(this);', onkeypress=>'return input_handler(this,event );', onkeydown=q`if(event.keyCode==13){load('Results', 'f1');}` ),
+			<? echo ( join("\n",
+				input(type=>'integer', id=>'claim_id', name=>'claim_id', onchange=>'change_handler(this);', onkeypress=>'return input_handler(this,event );', onkeydown=q>`if(event.keyCode==13){load('Results', 'f1');}` ),
 				button( 'Go3', { onclick=>"load('Results', \$('f1'));", text=>'Go' } ),
 			); ) ?>
 		</li>
@@ -76,13 +76,14 @@
 		</li>
 		<li>
 			<label>Status</label>
-			<? echo ( radio( 'status', [ '', 'All', 'Filed', 'Filex', 'Accounting', 'Sent to Accounts', 'Invoiced', 'Invoiced', 'Cancelled', 'Cancelled' ], $session{'/employee/claim/history.html?status'} ); ) ?>
+			<? echo ( radio( 'status', [ '', 'All', 'Filed', 'Filed', 'Accounting', 'Sent to Accounts', 'Invoiced', 'Invoiced', 'Cancelled', 'Cancelled', 'Paid', 'Paid' ], $session{'/employee/claim/history.html?status'} ); ) ?>
 
 		</li>
 		<li>
 			<label>Contains</label>
 			<input type="text" id="contains" name="contains" onkeyup="load('Results','f1');" />
 		</li>
+		<li><label>Deleted</label><? echo ( radio( 'deleted', [ '1', 'Yes', '0', 'No', '', 'All' ], $session{'/employee/claim/history.html?deleted'}, { onclick=>q`load('Results','f1');` } ); ) ?></li>
 		</ul>
 		<p class="buttons">
 				<? echo ( join( "\n",
