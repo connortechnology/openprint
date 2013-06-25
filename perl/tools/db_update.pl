@@ -2698,6 +2698,9 @@ my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, c
 	if ( ! exists $$data{cancelled_on} ) {
 		$dbh->do('ALTER TABLE claims add cancelled_on TIMESTAMP WITH TIME ZONE');
 	} # end if
+	if ( ! exists $$data{paid_on} ) {
+		$dbh->do('ALTER TABLE claims ADD paid_on DATE');
+	} # end if
 } # end if
 if ( ! sets::isin( 'claim_contenttypes', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/Claim_ContentTypes.sql}) );
