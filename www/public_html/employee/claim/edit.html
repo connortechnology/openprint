@@ -1,5 +1,4 @@
 <script type="text/javascript">
-<!--
 function calc_price( element ) {
 	var re = /(.*)-(.*)/
 	var matches = re.exec( element.name );
@@ -147,7 +146,6 @@ function add_content(form) {
 	tinyMCE.triggerSave();
 
 	new Ajax.Updater( 'Contents','_contents.html?action=Add&claim_id=<? echo ( $$variable{Claim}->id() ) ?>', {
-			method: 'get', 
 			parameters: form.serialize(),
 			onComplete: textarea_init,
 			evalScripts: true
@@ -157,7 +155,6 @@ function add_content(form) {
 function del_content(form, content_id ) {
 	tinyMCE.triggerSave();
 	new Ajax.Updater( 'Contents','_contents.html?action=Delete&claim_id=<? echo ( $$variable{Claim}->id() ) ?>&amp;content_id='+content_id, {
-			method: 'get', 
 			parameters: form.serialize(),
 			onComplete: textarea_init,
 			evalScripts: true
@@ -176,18 +173,16 @@ function set_description(index) {
     } // end if
     desc.value += $('name-'+index).value;
 }
-
--->
 </script>
 <form id="f1" name="f1" action="<? echo ( $$variable{'Claim'}->id() ? 'view' : 'edit' ) ?>.html?claim_id=<? echo ( $$variable{'Claim'}->id() ) ?>" method="post">
-	<!--#include virtual="/includes/error_reporting.html"-->
+	<?include(/includes/error_reporting.html)?>
 	<p class="buttons" id="buttons">
 <? echo ( 
 	my $html = '';
 	$html .= ssi::writeButton( $log, $dbh, 'Save', 'save.gif', "\$('buttons').innerHTML='Please wait. Saving...';f1.btnFunction.value='Save';f1.submit();", '', 
 		$$variable{'Claim'}->id() ? 'Save' : 'Create Claim' );
 	if ( $$variable{'Claim'}->id() ) {
-		$html .= ssi::writeButton( $log, $dbh, 'Delete', 'delete.gif', "\$('buttons').innerHTML='Please wait. Deleting...';f1.btnFunction.value='Delete';f1.submit();", '', 'Delete' );
+		$html .= button( 'Delete', { onclick=>"\$('buttons').innerHTML='Please wait. Deleting...';f1.btnFunction.value='Delete';f1.submit();", text=>'Delete' } );
 	}  # end if
 	return $html;
 ) ?>
@@ -196,7 +191,7 @@ function set_description(index) {
 		<div class="PageTitle">
 		<h1>CLAIM (<? echo ( $$variable{'Claim'}->id() ) ?>)</h1>
 		</div>
-		<!--#include virtual="_vendor.html"-->
+		<?include(_vendor.html)?>
 		<div class="rightColumn">
 			<fieldset>
 				<p><label>Filed to vendor:
@@ -222,7 +217,12 @@ function set_description(index) {
 				<p><label>Cancelled On:
 					<input type="checkbox" name="cancelled" id="cancelled" onclick="if(this.checked){$('cancelled_on_span').show();} else {$('cancelled_on_span').hide();}" <? echo ( ssi::checked( $$variable{'Claim'}->cancelled_on() ); ) ?> />
 </label>
-					<span id="cancelled_on_span" class="DateSelector" <? echo ( $$variable{'Claim'}->cancelled_on() ? '' : 'style="display:none;"' ) ?>><? echo ( ssi::date_select( 'cancelled_on', $$variable{'Claim'}->cancelled_on() ); ) ?></span>
+					<span id="cancelled_on_span" class="DateSelector" <? echo ( $$variable{'Claim'}->cancelled_on() ? '' : 'style="display:none;"' ) ?>><? echo ( date_select( 'cancelled_on', $$variable{'Claim'}->cancelled_on() ); ) ?></span>
+				</p>
+				<p><label>Paid On:
+					<input type="checkbox" name="paid" id="paid" onclick="if(this.checked){$('paid_on_span').show();} else {$('paid_on_span').hide();}" <? echo ( checked( $$variable{Claim}->paid_on() ); ) ?> />
+</label>
+					<span id="paid_on_span" class="DateSelector" <? echo ( $$variable{Claim}->paid_on() ? '' : 'style="display:none;"' ) ?>><? echo ( date_select( 'paid_on', $$variable{Claim}->paid_on() ); ) ?></span>
 				</p>
 				<p><label>Docket:</label><input type="text" name="docket" id="docket" value="<? echo ( join(',',$$variable{'Claim'}->docket() ? @{$$variable{'Claim'}->docket()} : ()) ) ?>" onkeyup="this.value=this.value.replace(/[^,\d]/g,'');" /></p>
 				<p><label>Editors:</label><span id="editors"><!--#include virtual="_editors.html"--></span></p>
@@ -230,24 +230,22 @@ function set_description(index) {
 			</fieldset>
 		</div>
 		<br class="spacer"/>
-		<? if ( $$variable{'Claim'}->id() ) ?>
-		<div id="Contents">
-		<!--#include virtual="_contents.html"-->
-		</div>
+		<? if ( $$variable{Claim}->id() ) ?>
+		<div id="Contents"><?include(_contents.html)?></div>
 <table class="List">
     <tr class="subtotal">
 		<td class="RemarksTitle" rowspan="<? echo ( $$variable{'Claim'}->Taxes() + 2 ) ?>">
 Remarks:<br/>
-<textarea class="mce" id="reason" name="reason" rows="2" cols=""><? echo ( $$variable{'Claim'}->reason() ) ?></textarea>
+<textarea class="mce" id="reason" name="reason" rows="2"><? echo ( $$variable{'Claim'}->reason() ) ?></textarea>
 		</td>
         <td class="totals">SUBTOTAL</td>
         <td class="Price"><? echo ( sprintf('%s<span id="subtotal">%.2f</span>', $$variable{'Claim'}->Currency()->symbol(), $$variable{'Claim'}->subtotal(0) ); ) ?></td>
     </tr>
 	   <? echo ( 
 			my $html;
-			foreach my $Tax ( $$variable{'Claim'}->Taxes() ) {
+			foreach my $Tax ( $$variable{Claim}->Taxes() ) {
 				$html .= sprintf('<tr class="tax"><td class="totals">%2$s (<span id="tax_rate-%1$d">%3$d</span>%)
-					<input type="checkbox" id="tax_charge-%1$d" name="tax_charge-%1$d" value="1" %6$s onclick="update_totals(this.form);" />:</td><td class="Price">%4$s<span id="tax-%1$d">%5$.2f</span></td></tr>', $Tax->id(),
+					<input type="checkbox" id="tax_charge-%1$d" name="tax_charge-%1$d" value="1" %6$s onclick="update_totals(this.form);" /></td><td class="Price">%4$s<span id="tax-%1$d">%5$.2f</span></td></tr>', $Tax->id(),
 					$Tax->name(), $Tax->rate(), $$variable{'Claim'}->Currency()->symbol(), $Tax->amount(),
 					ssi::checked( $Tax->charge() ),
 					);
