@@ -268,8 +268,9 @@ $results{'Breakdown'} .= 'Imposition: ' . $imposition . 'out<br/>';
 
 	my $bestPrice;
 	my $bestEquipment;
-$$specs{'hdnBreakdown'.$qty_index} = 'Imposition: ' . $$specs{'Imposition'.$qty_index} .'<br/>';
+#$results{'Breakdown'} = 'Imposition: ' . $$specs{'Imposition'.$qty_index} .'<br/>';
 	my $I = $$Impositions[0];
+	my $Press = $I->Press();
 	foreach my $Equipment ( @equipment ) {
 		if ( $$services{'NoOfflineBindery'} ) {
 			if ( $I->Press()->id() != $Equipment->id() ) {
@@ -285,7 +286,7 @@ $$specs{'hdnBreakdown'.$qty_index} = 'Imposition: ' . $$specs{'Imposition'.$qty_
 			$results{'Breakdown'} .= sprintf('Spine Too small. Spine: %s, Minimum: %s<br/>', $$specs{'Height'}, $Equipment->specification('Minimum Spine Length') );
 			next;
 		} # end if
-		if ( $Equipment->specification('Stitching Capable') eq 'When Digital' and $I->Press()->specification('Printing Type') ne 'Digital' ) {
+		if ( $Equipment->specification('Stitching Capable') eq 'When Digital' and $Press->specification('Printing Type') ne 'Digital' ) {
 			$results{'Breakdown'} .= sprintf('Not printed digital.<br/>' );
 			next;
 		} # end if
@@ -295,23 +296,23 @@ $$specs{'hdnBreakdown'.$qty_index} = 'Imposition: ' . $$specs{'Imposition'.$qty_
 				#$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Too many pockets: %d<br/>', $$specs{'txtPockets'.$qty_index} );
 				#next;
 			#} # end if
-			if ( $I->Press()->id() != $Equipment->id() ) {
-				#$openprint::log->debug("Press not the same: " . $I->Press()->id() . ' != ' . $Equipment->id() );
+			if ( $Press->id() != $Equipment->id() ) {
+				$results{Breakdown} .= "Press not the same: " . $I->Press()->id() . ' != ' . $Equipment->id() if DEBUG;
 				next;
 			} # end if
 			
 			if ( $$I{'Folder'}->id() != $Equipment->id() ) {
-				#$openprint::log->debug("Folder not the same: " . $$folding_specs{"ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"}. ' != ' . $Equipment->id() );
+				$results{Breakdown} .= "Folder not the same: " . $$folding_specs{"ddmEquipment-$$sig_specs{SignatureIndex}-$qty_index"}. ' != ' . $Equipment->id() if DEBUG;
 				next;
 			} # end if
 		} # end if
-		if ( $Folding_Equipment->specification('Folding Capable') eq 'When Stitching' and $Folding_Equipment->id() != $Equipment->id() ) {
-			$results{'Breakdown'} .= $Equipment->strid() . ' is not the folding equipment<br/>';
+		if ( ( $Folding_Equipment->specification('Folding Capable') eq 'When Stitching' ) and ( $Folding_Equipment->id() != $Equipment->id() ) ) {
+			$results{Breakdown} .= $Equipment->strid() . ' is not the folding equipment<br/>';
 			next;
 		} # end if
 		my $price = get_price( $Project, $ServiceType, $Equipment, $specs, $plusCover, $qty_index );
 		$$price{'ComparisonPrice'} = $$price{'txtPrice'} + $$folding_specs{"Price-$$sig_specs{SignatureIndex}-$qty_index"};
-#$$specs{'hdnBreakdown'.$qty_index} .= $Equipment->strid() . ' ' . $$price{'txtPrice'} . ' ' . $$folding_specs{"Price-$$sig_specs{SignatureIndex}-$qty_index"};
+		$results{Breakdown} .= $Equipment->strid() . ' ' . $$price{'txtPrice'} . ' ' . $$folding_specs{"Price-$$sig_specs{SignatureIndex}-$qty_index"};
 		if ( ( ! $bestPrice ) or $$price{'ComparisonPrice'} < $$bestPrice{'ComparisonPrice'} ) {
 			$bestEquipment = $Equipment;
 			$bestPrice = $price;
@@ -322,7 +323,7 @@ $$specs{'hdnBreakdown'.$qty_index} = 'Imposition: ' . $$specs{'Imposition'.$qty_
 	$results{'alert'} .= sprintf('%dout on %s %dpockets', $$bestPrice{'Imposition'},($bestEquipment ? $bestEquipment->strid() . ' ' . $bestEquipment->name() : '' ),$$specs{'txtPockets'.$qty_index} );
 	$results{'Imposition'} = $$bestPrice{'Imposition'};
 	$results{'Equipment'} = $bestEquipment;
-#$openprint::log->debug( "Stitching Impo REsults: " . $results{'Imposition'} ) if DEBUG;
+$openprint::log->debug( "Stitching Impo REsults: " . $results{'Imposition'} ) if DEBUG;
 	if ( $$bestPrice{'Imposition'} ) {
 		$results{'Status'} = 'calculated';
 		$results{'Price'} = $$bestPrice{'txtPrice'};

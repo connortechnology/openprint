@@ -22,7 +22,7 @@ sub cache_field {
     return $cache_field;
 }
 
-$debug = 1;
+$debug = 0;
 %fields = (
 	'id'	=>	'id',
 	'strid'	=>	'strid',

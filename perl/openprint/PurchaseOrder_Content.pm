@@ -144,13 +144,20 @@ sub Orders {
 
 sub can_view {
 	return 1 if ! $_[0]{'id'};
+	my $User = $_[1] ? $_[1] : new openprint::User( $openprint::session{user_id} );
 	if ( 
-			( $openprint::session{'user_type'} eq 'A' )
-			or ( sets::isin( $_[0]->PurchaseOrder->created_by(), [ $openprint::session{'user_id'}, new openprint::User($openprint::session{'user_id'})->assistant_ids(), new openprint::User($openprint::session{'user_id'})->csr_ids() ] ) )
-			or ( openprint::usergroup::is_user_in( ['Accounting','Shipping','Inventory'], $openprint::session{'user_id'} ) ) 
-			or ( sets::isin( $openprint::session{user_id}, [ map { $_->salesrep_id() } $_[0]->Orders() ] ) )
+			( $$User{type} eq 'A' )
+			or ( sets::isin( $_[0]->PurchaseOrder->created_by(), [ $$User{id}, $User->assistant_ids(), $User->csr_ids() ] ) )
+			or ( openprint::usergroup::is_user_in( ['Accounting','Shipping','Inventory'], $$User{id} ) ) 
+			or ( sets::isin( $$User{id}, [ map { $_->salesrep_id() } $_[0]->Orders() ] ) )
 	   ) {
 		return 1;
+	} # end if
+	if ( my @notifications = $_[0]->PurchaseOrder()->notifications() ) {
+		if ( sets::isin( $$User{id}, \@notifications ) ) {
+			$openprint::log->debug($$User{firstname} . ' can see because in notifications.' );
+			return 1;
+		} # end if
 	} # end if
 	return 0;
 } # end sub can_view

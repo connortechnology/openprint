@@ -2054,13 +2054,16 @@ $openprint::log->debug("aftger get printing_types: " . ( sprintf('%.4f', tv_inte
 			next if ($index >= $service_index);
 			my $sig_specs = openprint::service::get_specs_ref( $Project, $index );
 			next if $$sig_specs{'pages_supplied'} eq 'Y';
-			$PlateCounts{$$specs{'PlateID'.$qty_index}} += $$sig_specs{'txtPlateQuantity'.$qty_index};
-			$PlateCounts{'Blank'.$$specs{'PlateID'.$qty_index}} += $$sig_specs{'BlankPlateQuantity'.$qty_index};
+			$PlateCounts{$$sig_specs{'PlateID'.$qty_index}} += $$sig_specs{'txtPlateQuantity'.$qty_index};
+			$PlateCounts{'Blank'.$$sig_specs{'PlateID'.$qty_index}} += $$sig_specs{'BlankPlateQuantity'.$qty_index};
 			$$project{'roll2sheetcharged'} = 1 if $$sig_specs{'Roll2SheetCharge'.$qty_index};
 			$$project{'stocksetupcharged'} = 1 if $$sig_specs{'StockSetupCharge'.$qty_index};
 			my $hash_key = join(',', @$sig_specs{'ddmPress'.$qty_index,'ddmRunStyle'.$qty_index,'PageQuantity'.$qty_index,'txtImposition'.$qty_index} );
 			$previous_forms_cache{$hash_key} += 1;
 		} # end foreach $index
+foreach my $plate_id ( keys %PlateCounts ) {
+	$log->debug("Plate Counts: $plate_id : $PlateCounts{$plate_id}");
+}
 		if ( ! $$project{'stocksetupcharged'} ) {
 			# Check to see if there even are any stock setup prices.  If not, don't both estimating them later
 			if ( ! openprint::PaperPrice->find('service'=>'Setup') ) {
@@ -2275,6 +2278,7 @@ if ( 0 ) {
 		if ( my $plate_setup = $$best_price{'Plate Costs'} ) {
 			$$specs{'txtPlateQuantity'.$qty_index} = $$plate_setup{'Plate Count'};
 			$$specs{'BlankPlateQuantity'.$qty_index} = $$plate_setup{'Blank Plates'};
+			$$specs{'PlateID'.$qty_index} = $$plate_setup{'Plate ID'};
 		} # end if
 		$$specs{'rdbPlateType'.$qty_index} = $Press->specification('Plate Type');
 #
@@ -2999,9 +3003,12 @@ $openprint::log->debug("Best price: $recursion_depth starting get_project_price:
 					$$price{'Proofs Breakdown'} .= $Results{'Breakdown'};
 				} # end if
 
+if ( 0 ) {
+# Gets done later on, why do it here?  Maybe to fuill in plate costs... or to use them in best_price calcs...
 				my $results = plate_cost( $price, \%PlateCounts );
 				$$price{'Total Cost'} += $$results{'Price'};
 				$$price{'Comparison Cost'} += $$price{'sig_count'} * $$results{'Price'};
+}
 #$imp->display("Actually calculating this imp count $$price{'sig_count'} \$$$price{'Comparison Cost'} Proofs: $$results{'Price'}") if ! $recursion_depth;
 				#$openprint::log->debug( breakdown( $price, $sig_specs ) ) if ! $recursion_depth;
 			
@@ -3030,25 +3037,25 @@ $openprint::log->debug("Best price: $recursion_depth starting get_project_price:
 					} else {
 						# Check to see if we actually should bother recursing
 						if ( %best_price and ( $best_price{'Comparison Cost'} < $$price{'Comparison Cost'} ) ) {
-if ( DEBUG or 0 ) {
-	if ( $best_price{'Imposition'} ) {
-		$best_price{'Imposition'}->display("No point in recursing: $best_price{'Comparison Cost'} <= $$price{'Comparison Cost'}");
-	} else {
-		$openprint::log->debug( "No point in recursing: $best_price{'Comparison Cost'} <= $$price{'Comparison Cost'}");
-	} # end if
-}
+							if ( DEBUG or 0 ) {
+								if ( $best_price{'Imposition'} ) {
+									$best_price{'Imposition'}->display("No point in recursing: $best_price{'Comparison Cost'} <= $$price{'Comparison Cost'}");
+								} else {
+									$openprint::log->debug( "No point in recursing: $best_price{'Comparison Cost'} <= $$price{'Comparison Cost'}");
+								} # end if
+							}
 							$$price{'complete'} = 0;
 							$upq = 0;
 							next;
 						} # end if
 
-# Detect dead connection
+						# Detect dead connection
 						#$openprint::r->print(" ");
 						#$openprint::r->rflush;
 						#return {} if $openprint::r->connection->aborted;
 						my $key = join(',',$qty_index,$$Press{id},$upq,($$sig_specs{'MatchGrain'.$qty_index} eq 'Y'?$imp->grain_direction():()));
 						if ( 1 and $price_cache{$key} ) {
-$openprint::log->debug("Using price cache");
+							$openprint::log->debug("Using price cache");
 							$sig_price = $price_cache{$key};
 						} else {
 
@@ -3098,12 +3105,12 @@ $openprint::log->debug("Using price cache");
 					$$price{'Comparison Cost'} += $$price{'sig_count'} * $Results{'Total'};
 					$$price{'Proofs Breakdown'} .= $Results{'Breakdown'};
 				} # end if
-				my $results = plate_cost( $price, \%PlateCounts );
-				$$price{'Total Cost'} += $$results{'Price'};
-				$$price{'Comparison Cost'} += $$price{'sig_count'} * $$results{'Price'};
 #$imp->display("Actually calculating this imp $$price{'Comparison Cost'} Proofs: $$results{'Price'}") if ! $recursion_depth;
 				#$openprint::log->debug( breakdown( $price, $sig_specs ) ) if ! $recursion_depth;
 			} # end if UnspecifiedPageQuanitty
+				my $results = plate_cost( $price, \%PlateCounts );
+				$$price{'Total Cost'} += $$results{'Price'};
+				$$price{'Comparison Cost'} += $$price{'sig_count'} * $$results{'Price'};
 #$openprint::log->debug( 'calc_price: ' . sprintf('%.4f', tv_interval( [$starttime])*1000) . ' Complete: ' . $price{complete} );
 			if ( ! $$price{complete} ) {
 				if ( DEBUG or 0 ) {
@@ -3112,12 +3119,12 @@ $openprint::log->debug("Using price cache");
 				next;
 			} # end if
 
-	if ( ! $recursion_depth ) {
+			if ( ! $recursion_depth ) {
 			my @paper_strings = keys %PaperCounts;
 			if ( ( 1 == @paper_strings ) and ( $Paper->id_string() ne $paper_strings[0] ) ) {
-$openprint::log->error("Different paper in count versus imposition: $paper_strings[0] ne " . $imp->Paper()->id_string() );
-			} elsif ( DEBUG and 0 ) {
-$log->warn("Paper Counts");
+				$openprint::log->error("Different paper in count versus imposition: $paper_strings[0] ne " . $imp->Paper()->id_string() );
+			} elsif ( DEBUG ) {
+				$log->warn("Paper Counts");
 				foreach my $k ( @paper_strings ) {
 					$openprint::log->debug( "$k => $PaperCounts{$k}" );
 				} # end 
@@ -3417,8 +3424,9 @@ sub plate_cost {
 	$results{'Price'} = 0;
 
 	my %plate_price;
-	my $Material = openprint::Material->find_one( 'name'=>$$plate_costs{'Plate ID'} );
+	my $Material = openprint::Material->find_one( name=>$$plate_costs{'Plate ID'} );
 	if ( $Material ) {
+$openprint::log->error("Plate price: $$plate_costs{'Plate ID'} count: " . $$PlateCounts{$$plate_costs{'Plate ID'}} );
 		%plate_price = $Material->get_price( $$PlateCounts{$$plate_costs{'Plate ID'}}, undef );
 		$$price{'Plate Cost'} = $plate_price{'Price'};
 		$$price{'Plate Price'} = $plate_price{'Price'} * $$plate_costs{'Plate Count'};
@@ -4355,7 +4363,7 @@ $openprint::log->warn("Something wrong in AQ");
 
 	$price{'Comparison Cost'} += $setup_cost;
 	$price{'Setup Total'} += $setup_cost;
-$openprint::log->debug("$setup_cost = $press_setup + $price{'WorkTurn Dry Charge'} + $price{'Plate Total'} + $price{'Ink Mix Charge'} + $price{'Press Wash Total'} + $price{'Version Charge'} + $price{'Imposition Total'}");
+#$openprint::log->debug("Setup Cost $setup_cost = $press_setup + $price{'WorkTurn Dry Charge'} + $price{'Plate Total'} + $price{'Ink Mix Charge'} + $price{'Press Wash Total'} + $price{'Version Charge'} + $price{'Imposition Total'}");
 
 	$price{'Press Setup'} = $press_setup;
 

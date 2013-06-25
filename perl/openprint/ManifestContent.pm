@@ -28,6 +28,7 @@ $serial = 'manifestcontents_id_seq';
 	rfidtag_id			=>	'rfidtag_id',
 	RFIDTag				=>	undef,
 	manufacturers_id	=>	'manufacturers_id',
+	location_id			=>	'location_id',
 );
 %find_fields = (
 	paper_id	=>	'(SELECT paper_id FROM Manifest_Content_Types WHERE manifest_content_types.manifest_id = manifestcontents.manifest_id)',
@@ -44,6 +45,7 @@ $serial = 'manifestcontents_id_seq';
 	manufacturers_id	=>	undef,
 	skid_id				=>	undef,
 	rfidtag_id			=>	undef,
+	location_id			=>	undef,
 );
 
 sub Skid {
@@ -64,10 +66,14 @@ sub RFIDTag {
 		$_[0]{rfidtag_id} = ref $_[0]{RFIDTag} eq 'openprint::RFIDTag' ? $_[0]{RFIDTag}{id} : undef;
 	} # end if
 	if ( ! $_[0]{RFIDTag} ) {
-		$_[0]{RFIDTag} = new openprint::RFIDTag( $_[0]{rfidtag_id} );
-		if ( ! $_[0]{RFIDTag}->id() ) {
-			$_[0]{RFIDTag} = new openprint::RFIDTag();
-			$_[0]{RFIDTag}->id( $_[0]{rfidtag_id} );
+		if ( $_[0]{rfidtag_id} ) {
+			$_[0]{RFIDTag} = new openprint::RFIDTag( $_[0]{rfidtag_id} );
+			if ( ! $_[0]{RFIDTag}->id() ) {
+				$_[0]{RFIDTag} = new openprint::RFIDTag();
+				$_[0]{RFIDTag}->id( $_[0]{rfidtag_id} );
+			} # end if
+		} else {
+			$_[0]{RFIDTag} = $_[0]->Skid()->RFIDTag();
 		} # end if
 	} # end if
 	return $_[0]{RFIDTag};
@@ -123,6 +129,16 @@ sub manufacturers_id {
 	} # end if
 	return $_[0]{manufacturers_id};
 } # end sub manufacturers_id
+
+sub location_id {
+	if ( @_ > 1 ) {
+		$_[0]{location_id} = $_[1];
+	} # end if
+	if ( ( ! $_[0]{location_id} ) and $_[0]{skid_id} ) {
+		return $_[0]->Skid()->location_id();
+	} # end if
+	return $_[0]{location_id};
+} # end sub location_id
 
 1;
 __END__

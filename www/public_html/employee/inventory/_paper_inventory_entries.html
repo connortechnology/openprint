@@ -1,5 +1,5 @@
 <? if ( $$variable{uri} =~ /_paper_inventory_entries/ ) ?>
-<? include('/includes/error_reporting.html') ?>
+<?include(/includes/error_reporting.html)?>
 <? endif ( $$variable{uri} =~ /_paper_inventory_entries/ ) ?>
 <form id="f2" name="f2" action="_paper_inventory_entries.html">
 		<table class="List">
@@ -25,9 +25,9 @@
 				$$variable{'value_total'} = 0;
 				foreach my $C ( openprint::SkidContent->find(paper_id=>$variable{Paper}{id}, 'quantity >'=>0, order =>'skid_id') ) {
 					my $Skid = $C->Skid();
+					next if $Skid->deleted();
 					my $RFIDTag = $Skid->RFIDTag();
 					my @PurchaseOrders = $Skid->PurchaseOrders();
-$log->debug("POs: @PurchaseOrders");
 
 					my $last_seen_days = $Skid->last_seen_days();
 					$html .= sprintf('<tr%1$s><td class="Skid"><a href="skid_details.html?skid_id=%2$d">%2$d</a></td>
@@ -49,9 +49,9 @@ $log->debug("POs: @PurchaseOrders");
 						),
 						);
 					if ( ( $session{'user_type'} eq 'A' ) or openprint::usergroup::is_user_in( ['Accounting','SalesAdmin','Sales'], $session{'user_id'} ) ) {
-					$html .= '<td class="Price">'.openprint::Currency::format( defined $C->cost() ? $C->cost() : 0 ) . '/100lb</td>';
-					$html .= '<td class="Price">'.openprint::Currency::format( defined $C->value() ? $C->Value() : 0 ).'</td>';
-					$$variable{'value_total'} += $C->value();
+						$html .= '<td class="Price">'.openprint::Currency::format( defined $C->cost() ? $C->cost() : 0 ) . '/100lb</td>';
+						$html .= '<td class="Price">'.openprint::Currency::format( defined $C->value() ? $C->Value() : 0 ).'</td>';
+						$$variable{'value_total'} += $C->value();
 					} # end if
 					$html .= '<td class="buttons">';
 					$html .= ssi::button( "label$$C{skid_id}", { onclick=>"open_window('/employee/inventory/paper_label_window.html?skid_id=$$C{skid_id}', 'label', 'toolbar=no,width=400,height=400,location=no,resizeable=no,scrollbars=no,status=no');", text=>'Label' } );
