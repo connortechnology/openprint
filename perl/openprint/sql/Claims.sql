@@ -11,6 +11,7 @@ CREATE TABLE CLAIMS (
 	sent_to_accounts_on	TIMESTAMP WITH TIME ZONE,
 	invoiced_on			TIMESTAMP WITH TIME ZONE,
 	cancelled_on		TIMESTAMP WITH TIME ZONE,
+	paid_on				DATE,
 	invoice_id			TEXT,
 	po_id				INTEGER, FOREIGN KEY (po_id) REFERENCES PurchaseOrders (id),
 	docket				INTEGER[],
