@@ -188,11 +188,11 @@ sub signature_calc {
 	foreach my $Equipment ( @equipment ) {
 #$$specs{'hdnBreakdown'.$qty_index} = 'Imposition: ' . $$specs{'Imposition'.$qty_index} .'<br/>';
 		if ( $Equipment->specification('Maximum Spine Length') and ( $$specs{'Height'} > $Equipment->specification('Maximum Spine Length', $$specs{'Imposition'.$qty_index} ) ) ) {
-			#$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Spine Too big. Spine: %s, Maximum: %s<br/>', $$specs{'Height'}, $Equipment->specification('Maximum Spine Length') );
+			#$openprint::log->debug( sprintf('Spine Too big. Spine: %s, Maximum: %s<br/>', $$specs{'Height'}, $Equipment->specification('Maximum Spine Length', $$specs{'Imposition'.$qty_index}) ) );
 			next;
 		} # end if
 		if ( $Equipment->specification('Minimum Spine Length') and ( $$specs{'Height'} < $Equipment->specification('Minimum Spine Length', $$specs{'Imposition'.$qty_index} ) ) ) {
-			#$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Spine Too small. Spine: %s, Minimum: %s<br/>', $$specs{'Height'}, $Equipment->specification('Minimum Spine Length') );
+			#$openprint::log->debug( sprintf('Spine Too small. Spine: %s, Minimum: %s<br/>', $$specs{'Height'}, $Equipment->specification('Minimum Spine Length', $$specs{'Imposition'.$qty_index}) ) );
 			next;
 		} # end if
        if ( $Equipment->specification('Type') eq 'Press' ) {
@@ -302,7 +302,7 @@ $openprint::log->debug( sprintf('QTY %d imp:%d, %dx%d, %s', $qty_index, $imposit
 		} # end foreach signature
 
 		if ( $$specs{'OverrideImposition'.$qty_index} eq 'Y' ) {
-$openprint::log->debug("Overriding imposiion");
+#$openprint::log->debug("Overriding imposiion");
 			if ( $imposition < $$specs{'Imposition'.$qty_index} ) {
 				$$specs{'alert'} .= "Can't stitch $$specs{'Imposition'.$qty_index} out";
 				$$specs{'Status'} = 'uncalculated';
@@ -479,12 +479,13 @@ $openprint::log->debug("Overriding imposiion");
 		} # end foreach Equipment
 		if ( ! $bestEquipment ) {
 			$$specs{'Status'} = 'uncalculated';
-			$$specs{"ddmEquipment$qty_index"} = '';
+			$$specs{"ddmEquipment$qty_index"} = '' if $$specs{'chkOverrideEquipment'.$qty_index} ne 'Y';
 			if ( $$specs{'OverrideImposition'.$qty_index} ne 'Y' ) {
 				$$specs{'Imposition'.$qty_index} = '';
 			} # end if
 		} else {
 			$$specs{"ddmEquipment$qty_index"} = $bestEquipment->id();
+			$$specs{'Imposition'.$qty_index} = $$bestPrice{'Imposition'};
 		} # end if
 
 		##if ( $$bestPrice{'Imposition'} and ( $$specs{'Imposition'.$qty_index} != $$bestPrice{'Imposition'} ) ) {
@@ -492,7 +493,6 @@ $openprint::log->debug("Overriding imposiion");
 				#$$specs{'txtSignatureQty'.$pages.'Page-'.$qty_index} *= $$specs{'Imposition'.$qty_index} / $$bestPrice{'Imposition'};
 			#} # end foreach
 		#} # end if
-		$$specs{'Imposition'.$qty_index} = $$bestPrice{'Imposition'};
 		$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $$bestPrice{'txtPrice'} );
 		$$specs{"txtUnitPrice$qty_index"} = sprintf( '%.2f', $$bestPrice{'txtPrice'}/$$specs{"txtQuantity$qty_index"} );
 		$$specs{"txtRunTime$qty_index"} = $$bestPrice{'RunTime'};

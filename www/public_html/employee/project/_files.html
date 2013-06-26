@@ -12,10 +12,9 @@
 					$File->delete();
 				} # end if
 			} elsif ( -f $File->archive().$File->filename() ) {
-				$log->warn("FIle does not exist " . $File->archive().$File->filename() );
-			$html .= sprintf('<tr><td class="filename">%2$s</td><td class="buttons">%3$s</td></tr><tr><td colspan="2" id="action-%1$d"></td></tr>',
+				$html .= sprintf('<tr><td class="filename">%2$s</td><td class="buttons">%3$s</td></tr><tr><td colspan="2" id="action-%1$d"></td></tr>',
 				$$File{id}, $File->filename(), 
-				ssi::button( 'Dearchive'.$$File{id}, { onclick=>qq`dearchive('$$File{id}');`, text=>'Dearchive' } ),
+				button( 'Dearchive'.$$File{id}, { onclick=>qq`dearchive('$$File{id}');`, text=>'Dearchive' } ),
 				);
 			} # end if
 		} # end foreach File
