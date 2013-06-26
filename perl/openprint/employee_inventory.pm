@@ -1563,6 +1563,9 @@ sub manifest {
 				$variable{error} .= $MC->fix();
 			} # end foreach MC
 		} # end foreach Type
+		if ( ! $variable{error} ) {
+			$variable{ExternalRedirect} = '/employee/inventory/manifest.html?manifest_id='.$Manifest->id();
+		} # end if
 	} elsif ( $param{'btnFunction'} eq 'Submit' ) {
 		$variable{error} = save_Manifest( $Manifest );
 
