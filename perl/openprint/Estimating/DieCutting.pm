@@ -365,7 +365,7 @@ sub signature_needs {
 		if ( sets::isin( $$sig_specs{'rdbTemplateType'}, ['2Panel1Pocket','2Panel2Pocket','TriFoldDoublePocket'] ) ) {
 			return 1;
 		} # end if
-		my $ServiceType = openprint::ServiceType::find_one('type'=>'DieCutting');
+		my $ServiceType = openprint::ServiceType->find_one('type'=>'DieCutting');
 		if ( $ServiceType ) {
 			if ( sets::isin( $ServiceType->id(), [ $Project->Type()->required_services() ] ) ) {
 				return 1;

@@ -293,7 +293,7 @@ sub get_services_in_category {
 
 	if ( $category eq 'Printing' ) {
 #The entire point of this is to sort the signature groups
-		if ( my @ServiceTypes = openprint::ServiceType::find('name'=>'AdditionalSignature') ) {
+		if ( my @ServiceTypes = openprint::ServiceType->find('name'=>'AdditionalSignature') ) {
 			$_ = "SELECT lngServiceIndex FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strName = 'txtSignatureType' AND strValue IN ('Interior Pages','Gate Folded Pages','Cover Pages') ORDER BY lngServiceIndex";
 			my @signatures = sql::execute( $log, $dbh, $_, $project_index );
 			
@@ -684,7 +684,7 @@ sub create_edit_process {
 
 	my %statuses = sql::execute( $log, $dbh, 'SELECT lngserviceindex, strstatus FROM tbl_Project_Contents WHERE lngprojectindex=?', $project_index );
 
-	foreach my $ServiceType ( openprint::ServiceType::find( 'create_visible'=>'Y') ) {
+	foreach my $ServiceType ( openprint::ServiceType->find( 'create_visible'=>'Y') ) {
 		if ( $openprint::param{'chkServices'.$ServiceType->name()} eq $ServiceType->name() ) {
 			if ( ! $services{$ServiceType->name()} ) {	
 				push @{$services{$ServiceType->name()}}, insert_service( $log, $dbh, $Project->id(), $ServiceType->name() );

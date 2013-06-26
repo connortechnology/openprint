@@ -278,7 +278,7 @@ sub move_up {
 
 	my @results;
 	my %sorting;
-	my %service_types = map { $_->id(), $_->name() } openprint::ServiceType::find();
+	my %service_types = map { $_->id(), $_->name() } openprint::ServiceType->find();
 	foreach my $row ( find( 'project_id'=> $p_id, 'statuses'=>['calculated','uncalculated','Ordered'] ) ) {
 		my $column = get_column($service_types{$$row{'servicetype_id'}} );
 		if ( ! $column ) {

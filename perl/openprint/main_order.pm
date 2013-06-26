@@ -222,7 +222,7 @@ sub submit {
 $openprint::log->debug("Initial price for " . $Product->quantity() . ' is : ' . $Price{'Price'} );
 			my $Project = $Product->Project();
 			my $services = $Project->services();
-			foreach my $ShippingType ( openprint::ServiceType::find('category'=>'Shipping') ) {
+			foreach my $ShippingType ( openprint::ServiceType->find('category'=>'Shipping') ) {
 				next if ! $$services{$ShippingType->name()};
 				foreach my $service_id ( @{$$services{$ShippingType->name()}} ) {
 					my $specs =  openprint::service::get_specs_ref( $Project, $service_id );
@@ -256,7 +256,7 @@ $openprint::log->debug("Initial price for " . $Product->quantity() . ' is : ' . 
 			push @errors, "Please give project $$Project{id} a reference";
 		} # end if
 		my $services = $Project->services();
-		my @ServiceTypes = openprint::ServiceType::find('category'=>'Shipping');
+		my @ServiceTypes = openprint::ServiceType->find('category'=>'Shipping');
 		foreach my $ServiceType ( @ServiceTypes ) {
 			next if ! $$services{$ServiceType->name()};
 			next if sets::isin( $ServiceType->name(), [ 'CustomerPickUp','Turnaround'] );

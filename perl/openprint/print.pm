@@ -126,7 +126,7 @@ sub view_services {
 				my $ProjectCurrency = $Project->Currency();
 				my $conversion_rate = $CurrentCurrency->conversions( $ProjectCurrency->id() );
 
-				if ( my @ServiceTypes = openprint::ServiceType::find('name'=>'CustomService') ) {
+				if ( my @ServiceTypes = openprint::ServiceType->find('name'=>'CustomService') ) {
 					my $ac = sql::start_transaction( $dbh );
 
 					sql::insert( $log, $dbh, 'tbl_Project_Contents',

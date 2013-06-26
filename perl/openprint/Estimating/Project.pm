@@ -630,7 +630,7 @@ $log->debug("Presentation folder sizes $$specs{'chkPocketLeft'} $$specs{'chkPock
 
 	} # end if
 
-	if ( my $S = openprint::ServiceType::find_one('name'=>'Paper') ) {
+	if ( my $S = openprint::ServiceType->find_one('name'=>'Paper') ) {
 		push @{$$services{'Paper'}}, $Project->add_service( $S ) if ! ( $$services{'Paper'} and @{$$services{'Paper'}} );
 	} # end if
 
@@ -948,7 +948,7 @@ sub create_calc {
 		$Project->save();
 	} # end if ProjectType changed
 
-	foreach my $ServiceType ( openprint::ServiceType::find( 'create_visible' => 'Y' ) ) {
+	foreach my $ServiceType ( openprint::ServiceType->find( 'create_visible' => 'Y' ) ) {
 		if ( $services{$ServiceType->name()} ) {
 			$$specs{'chkServices'.$ServiceType->name()} = $ServiceType->name();
 		} else {

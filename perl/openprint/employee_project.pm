@@ -168,7 +168,7 @@ sub view {
 			if ( $service_type eq 'FilmStripping' ) {
 				if ( $param{'rdbComplete'} eq 'Yes' ) {
 					if ( ! Date::Calc::check_date( @param{'duedate_year','duedate_month','duedate_day'} ) ) {
-						my @ServiceTypes = openprint::ServiceType::find('name'=>$service_type);
+						my @ServiceTypes = openprint::ServiceType->find('name'=>$service_type);
 						if ( @ServiceTypes ) {
 							$variable{'Redirect'} = '/employee/proj/'.$ServiceTypes[0]->url();
 							$variable{'ErrorMessage'} = 'There was an error saving the DueDate.  Please check that a real date was selected.';
@@ -177,7 +177,7 @@ sub view {
 						} # end if
 						$param{'rdbComplete'} = 'No';
 					} elsif ( 0 < Date::Calc::Delta_Days( @param{'ddmDueDateYear','ddmDueDateMonth','ddmDueDateDay'}, Date::Calc::Today() ) ) {
-						my @ServiceTypes = openprint::ServiceType::find('name'=>$service_type);
+						my @ServiceTypes = openprint::ServiceType->find('name'=>$service_type);
 						if ( @ServiceTypes ) {
 							$variable{'Redirect'} = '/employee/proj/'.$ServiceTypes[0]->url();
 							$variable{'ErrorMessage'} = 'You cannot select a date in the past. Please try again.';
@@ -217,7 +217,7 @@ sub view {
 				} elsif ( $param{'rdbApproved'} eq 'Y' ) {
 					if ( $param{'duedate_year'} ) {
 						if ( ! Date::Calc::check_date( @param{'duedate_year','duedate_month','duedate_day'} ) ) {
-							my @ServiceTypes = openprint::ServiceType::find('name'=>$service_type);
+							my @ServiceTypes = openprint::ServiceType->find('name'=>$service_type);
 							if ( @ServiceTypes ) {
 								$variable{'Redirect'} = '/employee/proj/'.$ServiceTypes[0]->url();
 								$variable{'ErrorMessage'} = 'There was an error saving the DueDate.  Please check that a real date was selected.';
@@ -275,7 +275,7 @@ sub view {
 			if ( $param{'rdbComplete'} eq 'Yes' ) {
 				sql::update( $log, $dbh, 'tbl_Project_Contents', ['lngProjectIndex=? AND lngServiceIndex=?', $project_index, $service_index], 'strStatus', 'Complete' );
 
-				my @ServiceTypes = openprint::ServiceType::find('name'=>$service_type);
+				my @ServiceTypes = openprint::ServiceType->find('name'=>$service_type);
 				my $category = @ServiceTypes? @ServiceTypes[0]->category():'';
 				if ( $category eq 'Bindery' ) {
 					$_ = q{ SELECT lngServiceIndex FROM tbl_Service_Specifications WHERE lngProjectIndex=?
@@ -395,7 +395,7 @@ sub view {
 			$Project->add_to_log( @session{'company_id','user_id'}, sprintf( 'Added Service: %s', $ServiceType->name() ) );
 		} elsif ( $param{'txtServiceName'} ) {
 			
-			my @ServiceTypes = openprint::ServiceType::find('name'=>'CustomService');
+			my @ServiceTypes = openprint::ServiceType->find('name'=>'CustomService');
 			if ( @ServiceTypes ) {
 
 			my $ac = sql::start_transaction( $dbh );

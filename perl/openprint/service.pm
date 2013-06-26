@@ -414,7 +414,7 @@ sub auto_calculate {
 			$alert .= $$specs{'alert'};
 		} # end foreach service_index
 	} # end while service_type
-	foreach my $ServiceType ( openprint::ServiceType::find('category'=>'Shipping') ) {
+	foreach my $ServiceType ( openprint::ServiceType->find('category'=>'Shipping') ) {
 		if ( $$services{$ServiceType->name()} ) {
 			foreach my $service_index ( @{$$services{$ServiceType->name()}} ) {
 				$specs = internal_calc( $log, $dbh, $variable, $project_index, $service_index, $ServiceType->type() );
