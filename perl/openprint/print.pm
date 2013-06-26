@@ -203,6 +203,7 @@ sub view_services {
 			$Project->summary(undef);
 			$Project->save();
 		} elsif ( ( defined $openprint::param{'calc'} ) and $openprint::param{'calc'} ) {
+			$log->debug("Recalculating $openprint::param{calc}");
 			openprint::service::internal_calc( $log, $dbh, $variable, $project_index, $r->param('calc') );
 		} # end if
 

@@ -110,10 +110,10 @@ sub calc {
 			next if ! $$sig_specs{'txtImposition'.$qty_index};
             my $Paper = openprint::Paper::load_from_signature( $Project, $sig_specs, $qty_index );
 			next if ! ( $Paper->id() or $$Paper{custom} );
-$openprint::log->debug("Got Press Sheet for sig $$sig_specs{'SignatureIndex'} qty $qty_index " . $Paper->to_string() );
+$openprint::log->debug("Got Press Sheet for sig $$sig_specs{'SignatureIndex'} qty $qty_index " . $Paper->id_string() );
 			my $Supplied = $Paper->Supplied();
-$openprint::log->debug("Got Stock Sheet for sig $$sig_specs{'SignatureIndex'} qty $qty_index " . $Supplied->to_string() );
-            $papers{$Supplied->to_string()} = $Supplied;
+$openprint::log->debug("Got Stock Sheet for sig $$sig_specs{'SignatureIndex'} qty $qty_index " . $Supplied->id_string() );
+            $papers{$Supplied->id_string()} = $Supplied;
         } # end foreach
 	} # end foreach signature
 	if ( ! %papers ) {
@@ -138,13 +138,13 @@ $openprint::log->debug("Indexes: $paper_string => $stock_index") if $debug;
 			# This paper is in the printing format, not the supplied
 			# Convert to supplied Stock
 			my $SuppliedStock = $PressSheet->Supplied();
-			my $paper_string = $SuppliedStock->to_string();
+			my $paper_string = $SuppliedStock->id_string();
 
 			my $stock_index = $indexes{$paper_string};
 			if ( ! $stock_index ) {
 $openprint::log->error("Estimating::Paper No stock index for $paper_string");
-$openprint::log->debug("Press sheet: " . $PressSheet->to_string() );
-$openprint::log->debug("Supplied: " . $SuppliedStock->to_string() );
+$openprint::log->debug("Press sheet: " . $PressSheet->id_string() );
+$openprint::log->debug("Supplied: " . $SuppliedStock->id_string() );
 			} # end if
 
 			if ( $$specs{"overrideqty-$ss_id-$stock_index-$qty_index"} ne 'Y' ) {
@@ -220,7 +220,7 @@ if ( 0 ) {
 			# We are doing this because we calculate on the parent sheet, but if the parent sheet is a generic... then it all goes for shit.
 			my $RunPaper = openprint::Paper::load_from_signature( $Project, $sig_specs, $qty_index );
 			my $Paper = $RunPaper->Supplied();
-			my $paper_id = $Paper->to_string();
+			my $paper_id = $Paper->id_string();
 			my $stock_index = $indexes{$paper_id};
 			if ( ! $stock_index ) {
 $openprint::log->error("2No stock index for $paper_id");
@@ -342,7 +342,7 @@ sub summary {
 			next if ! $$sig_specs{'txtImposition'.$q_index};
 			my $Paper = openprint::Paper::load_from_signature( $Project, $sig_specs, $q_index )->Supplied();
 			next if ! ( $Paper->id() or $$Paper{custom} );
-			$Papers{$Paper->to_string()} = $Paper;
+			$Papers{$Paper->id_string()} = $Paper;
         } # end foreach qty_index
     } # end foreach
 

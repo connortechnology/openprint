@@ -516,6 +516,33 @@ sub delete {
 	
 } # end sub delete
 
+sub id_string {
+    my $self = shift;
+    if ( @_ ) {
+        $$self{'id_string'} = $_[0];
+    } # end if
+    if ( ! $$self{'id_string'} ) {
+        my $string = join(' ', ( $self->manufacturer(), $self->name(), $self->finish(), $self->colour(), $self->weight() ) );
+        if ( $self->type() eq 'Roll' ) {
+            $string .= ' ' . $self->width.'"' if $self->width();
+            $string .= ' Roll ';
+        } else {
+            if ( $self->start_width() and ( ( $self->width() != $self->start_width() ) or ( $self->height() != $self->start_height() ) ) ) {
+                $string .= ' ' . $self->start_width().'x'.$self->start_height() . ' => '. $self->width().'x'.$self->height() . ' ';
+            } else {
+                $string .= ' ' . $self->width().'x'.$self->height() . ' ';
+            } # end if
+            #$string .= $self->mweight().'M ' if $self->mweight();
+        } # end if
+        $string .= sprintf('%.1fPT ', 1000*$self->calliper()) if $self->calliper();
+        $string .= $self->gsm().'gsm ' if $self->gsm();
+        $string .= 'FSC:' . $$self{'fsc_code'} if $$self{'fsc_code'};
+        $string .= 'Minimum: ' . $$self{'minimum_order'} if $$self{'minimum_order'};
+        $$self{'id_string'} = $string;
+    } # end if
+    return $$self{'id_string'};
+} # end sub id_string
+
 sub to_string {
 	my $self = shift;
 	if ( @_ ) {

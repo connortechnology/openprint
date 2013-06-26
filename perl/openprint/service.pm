@@ -32,7 +32,7 @@ require openprint::Estimating::UPS;
 require openprint::Estimating::Multipage;
 require openprint::logs;
 
-my $debug = 0;
+my $debug = 1;
 
 use vars qw( %specs_cache );
 my %cache_index_by_id;
@@ -379,7 +379,7 @@ sub auto_calculate {
 		} # end if
 	} # end if
 
-	foreach my $service_name ( 'Counting', 'Grommeting', 'Sewing' ) {
+	foreach my $service_name ( 'Counting', 'Grommeting', 'Sewing', 'Imposition' ) {
 		eval 'require openprint::Estimating::'.$service_name.';';
 		$log->error("Error requiring opepnrint::Estimating::$service_name: $@") if $@;
 		my $neccessary = eval 'openprint::Estimating::'.$service_name.'::neccessary( $Project )';
@@ -503,23 +503,32 @@ sub internal_calc {
 
 	my $status;
 	my $starttime = time;
-	eval 'require openprint::Estimating::'.$service_type;
-	$log->error("Error in requiring openprint::Estiamting::$service_type ::calc: $@") if $@;
-	if ( ! eval '$status = openprint::Estimating::'.$service_type.'::calc( $log, $dbh, $variable, $project_index, $service_index, \%specs );' ) {
-		$log->error("Error in openprint::Estiamting::$service_type ::calc: $@") if $@;
-	} # end if
-	$specs{'Status'} = $status;
-	my $elapsed = time - $starttime;
-	$log->debug( "\033" . sprintf( '[41;37m %s calc: (%s) Elapsed seconds: %d (%s)', $service_type, $status, $elapsed, $specs{'alert'} ) );
 
+	# We are doing this in an eval because we don't actually want to die.
+    my $package = 'openprint::Estimating::'.$service_type;
+    eval 'require openprint::Estimating::'.$service_type;
+    $log->error("Error in requiring $package $@") if $@;
+    if ( my $function = $package->can('calc') ) {
+        my $status = $function->( $log, $dbh, $variable, $project_index, $service_index, \%specs );
+		if ( ! $specs{Status} ) {
+			$log->error("Status not in specs in $package");
+			$specs{'Status'} = $status;
+		} # end if
+        my $elapsed = time - $starttime;
+        $log->debug( sprintf( '[41;37m %s calc: (%s) Elapsed seconds: %d (%s)', $service_type, $status, $elapsed, $specs{'alert'} ) );
 
-	status( $project_index, $service_index, $status );
+		status( $project_index, $service_index, $status );
 
-	foreach my $key ( eval( 'openprint::Estimating::'.$service_type.'::variables( $project_index, $service_index, \%specs )') ) {
-$log->debug("Internal Calc:: looking at $key $specs{$key} :". $specs_cache{$service_index}{$key}) if $debug;
+		my @variables = eval( $package.'::variables( $project_index, $service_index, \%specs )');
+$log->debug("Variables: @variables");
+        foreach my $key ( @variables ) {
+            $log->debug("Internal Calc:: looking at $key $specs{$key} :". $specs_cache{$service_index}{$key}) if $debug;
+            openprint::service::insert_service_spec( $log, $dbh, $project_index, $service_index, $key, $specs{$key} );
+        } # end foreach
+    } else {
+        $log->error($package . ' cant calc');
+    } # end if
 
-		openprint::service::insert_service_spec( $log, $dbh, $project_index, $service_index, $key, $specs{$key} );
-	} # end foreach
 	sql::end_transaction( $dbh, $ac );
 	return \%specs;
 } # end sub internal_calc
