@@ -191,21 +191,32 @@ $openprint::log->debug("desired paper does not exists");
 			my $SC = $SkidContents{$paper_id};
 			my $Paper = $SC->Paper();
 
+			{
 			my $PI = new openprint::PaperInventory();
 			$error .= $PI->save({ user_id=>$openprint::session{user_id}, skid_id=>$$SC{skid_id}, paper_id=>$SC->paper_id(), quantity=>-1*$SC->quantity(),
 					comment=>'Changed stock from ' . $Paper->to_string() . ' to ' . $Type->Paper()->to_string()});
+			}
 # Change the type to the new type
 			foreach my $PA ( openprint::PaperAllocation->find( skid_id=>$SC->skid_id(), paper_id=>$SC->paper_id() ) ) {
 				$error .= $PA->save({paper_id=>$Type->Paper()->id()});
 			} # end foreach PA
-			my $PI = new openprint::PaperInventory();
-			$error .= $PI->save({user_id=>$openprint::session{user_id},skid_id=>$$SC{skid_id}, paper_id=>$Type->paper_id(), quantity =>$SC->quantity(),
-					comment=>'Changed stock from ' . $Paper->to_string() . ' to ' . $Type->Paper()->to_string()});
+			{
+				my $PI = new openprint::PaperInventory();
+				$error .= $PI->save({user_id=>$openprint::session{user_id},skid_id=>$$SC{skid_id}, paper_id=>$Type->paper_id(), quantity =>$SC->quantity(),
+						comment=>'Changed stock from ' . $Paper->to_string() . ' to ' . $Type->Paper()->to_string()});
+			}
 			$error .= $SC->save({ paper_id => $$Type{paper_id} });
 			$error .= $Paper->save();
 		} # end foreach paper_id
 	} # end if
 	$error .= $Type->Paper()->save();
+	my $Skid = $MC->Skid();
+	if ( $$MC{manufacturers_id} ne $$Skid{manufacturers_id} ) {
+		if ( $$MC{manufacturers_id} ) {
+			$Skid->save({manufacturers_id=>$$MC{manufacturers_id}});
+		} # end if
+	} # end if
+	
 	return $error;
 } # end sub fix
 
@@ -221,6 +232,10 @@ sub check {
 		} elsif ( @SkidContents and ( $SkidContents[0]->paper_id() != $Type->paper_id() ) ) {
 			$error = 'Skid contents do not match manifest.<br/>';
 		} # end if
+	} # end if
+	my $Skid = $MC->Skid();
+	if ( $$MC{manufacturers_id} ne $$Skid{manufacturers_id} ) {
+		$error .= 'Manufacturers ID does not match skid.';
 	} # end if
 	my $Tag = $MC->RFIDTag();
 	if ( $Tag->id() ) {

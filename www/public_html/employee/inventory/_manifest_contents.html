@@ -82,11 +82,18 @@ input( type=>'cardinal', id=>'qty_sheets-'.$$variable{type_id}.'-', name=>'qty_s
 		if ( $$variable{Type}->type() eq 'Sheet' ) {
 			my $lbs = $total*$Paper->wpsi()*$Paper->width()*$Paper->height();
 
-			$html .= sprintf('<td id="totallbs-%1$d">%2$dlbs</td><td id="totalkgs-%1$d">%3$.4fkg</td><td id="totalsheets-%1$d" class="qty_sheets">%4$s</td>',
-$$variable{type_id}, $lbs, $lbs/2.2046, Number::Format::format_number($total) );
+			$html .= sprintf('<td id="totallbs-%1$d">%2$slbs</td><td id="totalkgs-%1$d">%3$skg</td><td id="totalsheets-%1$d" class="qty_sheets">%4$s</td>',
+					$$variable{type_id}, Number::Format::format_number($lbs), 
+					Number::Format::format_number($lbs/2.2046),
+					Number::Format::format_number($total)
+			);
 		} else { # A Roll
-			$html .= sprintf('<td id="totallbs-%1$d">%2$dlbs</td><td id="totalkgs-%1$d">%3$.4fkg</td><td id="totalfeet-%1$d" class="qty_feet">%4$dfeet</td>',
-				$$variable{type_id}, $total, $total/2.2046, ( ( $Paper->wpsi() and $Paper->width() ) ? (($total/$Paper->wpsi())/$Paper->width())/12 : 0 ) );
+			$html .= sprintf('<td id="totallbs-%1$d">%2$slbs</td><td id="totalkgs-%1$d">%3$skg</td><td id="totalfeet-%1$d" class="qty_feet">%4$sfeet</td>',
+				$$variable{type_id}, 
+				Number::Format::format_number($total), 
+				Number::Format::format_number($total/2.2046), 
+				Number::Format::format_number( ( ( $Paper->wpsi() and $Paper->width() ) ? (($total/$Paper->wpsi())/$Paper->width())/12 : 0 ) ),
+					);
 		} #end if
 		$html .= '<td colspan="'.(($$variable{Type}->type(), [ 'Roll', 'Sheet' ] ) ? '4' : '5' ). '">&nbsp;</td></tr>';
 		if ( scalar @Contents != $$variable{Type}{item_count} ) {
