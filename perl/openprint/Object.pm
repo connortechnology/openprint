@@ -614,5 +614,36 @@ sub to_string {
     return join(' ' , map { $_ . ' => '.$_[0]{$_} } keys %$fields );
 }
 
+# Warning, this is destructive to objects
+sub transform {
+	my $type = ref $_[0];
+	$type = $_[0] if ! $type;
+	my $fields = eval '\%'.$type.'::fields';
+
+	if ( defined $$fields{$_[1]} ) {
+		my @transforms = eval('@{$'.$type.'::transforms{$_[1]}}');
+		$openprint::log->debug("Transforms for $_[1] before $_[2]: @transforms") if $debug;
+
+		foreach my $transform ( @transforms ) {
+			if ( $transform =~ /^s\// or $transform =~ /^tr\// ) {
+				eval '$_[2] =~ ' . $transform;
+			} elsif ( $transform =~ /^<(\d+)/ ) {
+				if ( $_[2] > $1 ) {
+					$_[2] = undef;
+				} # end if
+			} else {
+$openprint::log->debug("evalling $_[2] ".$transform . " Now value is $_[2]" );
+				eval '$_[2] '.$transform;
+$openprint::log->error("Eval error $@") if $@;
+			}
+$openprint::log->debug("After $transform: $_[2]") if $debug;
+		} # end foreach
+	} else {
+		$openprint::log->error("Object::transform ($_[1]) not in fields for $type");
+	} # end if
+	return $_[2];
+
+} # end sub transform
+
 1;
 __END__

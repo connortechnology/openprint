@@ -32,7 +32,7 @@ sub load_simple {
 			} # end foreach
 		} # end if
 	} else {
-		$param{'projecttype_id'} =~ s/\D//g;
+		$param{'projecttype_id'} = openprint::ProjectType->transform( 'id', $param{projecttype_id} );
 		$param{'ProjectType'} =~ s/\s//g;
 		if ( $param{'projecttype_id'} ) {
 			$variable{'ProjectType'} = new openprint::ProjectType( $param{'projecttype_id'} );

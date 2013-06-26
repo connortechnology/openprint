@@ -198,9 +198,7 @@ sub get_price {
 
 	my %price = openprint::pricing::get_best_price_object( $log, $dbh, $openprint::session{'company_id'}, $$self{'id'}, $list_id, 'openprint::product_priceset', $qty, undef );
 	if ( ! %price ) {
-$log->debug("Looking for a price $qty");
 		foreach my $Price ( openprint::ProductPrice::find('product_id'=>$$self{'id'},'pricelist_id'=>$list_id,'order'=>'min desc') ) {
-$log->debug("Looking at $$Price{min}");
 			next if $$Price{'min'} > $qty;
 			next if ! $$Price{'min'};
 			if ( ! ( $qty % $$Price{'min'} ) ) {

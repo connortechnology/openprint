@@ -23,6 +23,7 @@ $serial = 'project_types_id_seq';
 	'please_call'	=>	'please_call',
 );
 %transforms = (
+	id			=>	[ 's/\D//g', '<2147483647' ],
 	'name'	=>	[ 's/\s//g' ],
 );
 %defaults = (
