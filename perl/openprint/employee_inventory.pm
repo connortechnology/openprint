@@ -1348,7 +1348,7 @@ sub rfidscanner_details {
 	} else {
 		@param{'StartYear','StartMonth','StartDay'} = Date::Calc::Today();
 		@param{'EndYear','EndMonth','EndDay'} = Date::Calc::Today();
-		_rfidscanner_log_entries();
+		_rfidscanner_log();
 	} # end if
 
 	$variable{'RFIDScanner'} = $RFIDScanner;
