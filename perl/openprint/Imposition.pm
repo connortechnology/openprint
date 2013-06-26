@@ -287,6 +287,7 @@ sub load {
 			$$self{'spread_columns'} = 1;
 			$$self{'spreads'} = 1;
 		} # end if
+		$$self{pages} = $$self{'spreads'} * $$self{'spread_size'};
 	} # end if
 	return $self;
 } # end sub load

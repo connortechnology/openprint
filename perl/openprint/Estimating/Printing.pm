@@ -17,7 +17,7 @@
 use strict;
 package openprint::Estimating::Printing;
 my $threading = 0;
-my $debug = 0;
+my $debug = 1;
 my $master_time;
 
 my %folding_cache;
@@ -1810,8 +1810,8 @@ $openprint::log->debug("aftger get printing_types: " . ( sprintf('%.4f', tv_inte
 			next if ($index >= $service_index);
 			my $sig_specs = openprint::service::get_specs_ref( $Project, $index );
 			next if $$sig_specs{'pages_supplied'} eq 'Y';
-			$PlateCounts{$$specs{'PlateID'.$qty_index}} += $$sig_specs{'txtPlateQuantity'.$qty_index};
-			$PlateCounts{'Blank'.$$specs{'PlateID'.$qty_index}} += $$sig_specs{'BlankPlateQuantity'.$qty_index};
+			$PlateCounts{$$sig_specs{'PlateID'.$qty_index}} += $$sig_specs{'txtPlateQuantity'.$qty_index};
+			$PlateCounts{'Blank'.$$sig_specs{'PlateID'.$qty_index}} += $$sig_specs{'BlankPlateQuantity'.$qty_index};
 			$$project{'roll2sheetcharged'} = 1 if $$sig_specs{'Roll2SheetCharge'.$qty_index};
 			$$project{'stocksetupcharged'} = 1 if $$sig_specs{'StockSetupCharge'.$qty_index};
 			my $hash_key = join(',', @$sig_specs{'ddmPress'.$qty_index,'ddmRunStyle'.$qty_index,'PageQuantity'.$qty_index,'txtImposition'.$qty_index} );
@@ -2785,8 +2785,8 @@ $openprint::log->debug("BLAH: $best_price{'Comparison Cost'} <= $$price{'Compari
 			} # end if
 } # end if
 
-	if ( ! $recursion_depth ) {
 			my @paper_strings = keys %PaperCounts;
+$openprint::log->warn("Paper strings @paper_strings");
 			if ( 1 == @paper_strings and $imp->Paper()->id_string() ne $paper_strings[0] ) {
 $openprint::log->error("Different paper in count versus imposition: $paper_strings[0] ne " . $imp->Paper()->id_string() );
 			} elsif ( $debug ) {
@@ -2815,10 +2815,10 @@ $openprint::log->error("Different paper in count versus imposition: $paper_strin
 					} # end if
 				} # end if
 
-#$openprint::log->debug("Pricing Paper: Minimum Order: " . $Paper->minimum_order() );
+$openprint::log->debug("Pricing Paper: Minimum Order: " . $Paper->minimum_order() );
 				if ( $Paper->minimum_order() ) {
 					# Assume sheets for sheets, lbs for Rolls
-					if ( $Paper->minimum_order() > $PaperCounts{$paper_string} ) { # Must be a roll
+					if ( $Paper->minimum_order() > $PaperCounts{$paper_string} ) {
 						$PaperCounts{$paper_string} = $Paper->minimum_order();
 					} # end if
 				} # end if
@@ -2877,6 +2877,7 @@ $openprint::log->debug("Paper debug: " . $Paper->sheet_weight() );
 				$$price{'Setup Total'} += $$price{'Roll2SheetCharge'};
 			} # end if
 
+	if ( ! $recursion_depth ) {
 			# The idea is to only calc these on the last sig
 			if ( ($$services{'LoopStitching'} or $$services{'SaddleStitching'}) and ($$sig_specs{'txtSignatureType'} ne 'Cover Spreads') ) {
 				my @all_impositions;
@@ -2992,8 +2993,6 @@ $openprint::log->debug("Calculating Additional Signatures for other group");
 				} # end if has other sigs
 			} # end if Group == 1
 } # end if ! recursion_depth
-
-
 
 			if ( $$price{'Comparison Cost'} < 0 ) {
 				$openprint::log->error("Negative price! $best_price{'Comparison Cost'} <= $$price{'Comparison Cost'}");

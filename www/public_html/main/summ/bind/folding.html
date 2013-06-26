@@ -10,7 +10,8 @@
 	<? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
 	<br class="spacer"/>
 </div>
-<? eval ( @{$$variable{'tempSignatures'}} = @{$$variable{'Signatures'}} ) ?>
+<? eval ( 
+	@{$$variable{'tempSignatures'}} = map { my $specs = openprint::service::get_specs_ref( $$variable{Project}, $_ ); @$specs{'SignatureIndex','txtServiceDescription'} } $$variable{Project}->signatures() ) ?>
 <? while ( @$variable{'SignatureIndex','Reference'} = splice @{$$variable{'tempSignatures'}},0,2; ) ?>
 	<div class="row">
 		<? if ( $$variable{'Reference'} ) ?>For <b><?Reference?></b>:<? endif ( $$variable{'Reference'} ) ?>
