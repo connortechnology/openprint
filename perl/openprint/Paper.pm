@@ -33,7 +33,7 @@ use Time::HiRes qw{ time gettimeofday tv_interval };
 
 use vars qw( $debug $table $serial %fields %find_fields %defaults %transforms );
 
-$debug = 1;
+$debug = 0;
 $table = 'papers';
 $serial	= 'paper_id_seq';
 %fields = (
@@ -729,18 +729,19 @@ sub add_inventory {
 	} # end if
 
 	$units = $self->units() if ! $units;
-	new openprint::PaperInventory()->save({
-			'paper_id'		=> $$self{'id'},
-			'user_id'		=> $openprint::session{'user_id'},
-			'poindex'		=> undef,
-			'instock'		=> $self->in_stock() + $quantity,
-			'delta'			=> $quantity,
-			'comment'		=> $description,
-			'skid_id'		=> $Skid->id(),
-			'units'			=> $units,
-			'docket'		=> $docket,
-			} );
-
+	my $PI = new openprint::PaperInventory();
+	$PI->save({
+        paper_id	=>	$$self{id},
+        user_id		=>	$openprint::session{user_id},
+        poindex		=>	undef,
+        instock		=>	$self->in_stock() + $quantity,
+        delta		=>	$quantity,
+        comment		=>	$description,
+        skid_id		=>	$Skid->id(),
+		units		=>	$units,
+		docket		=>	$docket,
+        });
+	# Updates in_stock and allocated
 	$self->save();
 } # end sub add_inventory
 

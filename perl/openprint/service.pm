@@ -77,12 +77,13 @@ sub save_service {
 	eval ( 'require openprint::Estimating::'.$service_type.';' );
 	my @variables = eval( 'openprint::Estimating::'.$service_type.'::variables( $project_index, $service_index, $specs, \%openprint::param )');
 	$log->error($@) if $@;
+$log->debug("variables: @variables");
 	# make this fast by doing it in one transaction
 	my $ac = sql::start_transaction( $dbh );
 	foreach my $key (@variables) {
-#$log->debug("Key: $key ($openprint::param{$key}) ( $$specs{$key})");
+$log->debug("Key: $key ($openprint::param{$key}) ( $$specs{$key})");
 		if ( ref $openprint::param{$key} eq 'ARRAY' ) {
-#$log->error("Key: $key ($openprint::param{$key}) ( $$specs{$key})");
+$log->error("Key: $key ($openprint::param{$key}) ( $$specs{$key})");
 		} elsif ( ! exists $openprint::param{$key} ) {
 			delete_service_spec( $project_index, $service_index, $key );
 		} else {

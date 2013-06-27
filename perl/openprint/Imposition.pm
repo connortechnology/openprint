@@ -207,6 +207,7 @@ sub load {
 		} # end if
 		$$self{'Press'} = new openprint::Equipment() if ! $$self{'Press'};
 	} # end if
+	$$self{SignatureIndex} = $$specs{SignatureIndex};
 
 	$$self{'object_width'} = $$specs{'txtWidth'};
 	$$self{'object_height'} = $$specs{'txtHeight'};

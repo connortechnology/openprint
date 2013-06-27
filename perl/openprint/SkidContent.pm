@@ -3,14 +3,12 @@ package openprint::SkidContent;
 our @ISA = qw(openprint::Object);
 
 use vars qw( $debug %fields %find_fields %transforms %defaults $table $serial );
-use Carp qw( cluck );
 
-require sql;
 require openprint::StockPurpose;
 require openprint::InventoryCondition;
 require openprint::ManifestContent;
 
-$debug = 0;
+$debug = 1;
 
 %fields = (
 	id				=>	'id',
@@ -22,7 +20,7 @@ $debug = 0;
 	condition_id	=>	'condition_id',
 );
 %find_fields = (
-	'allocated'	=>	'(SELECT SUM(quantity) FROM Paper_Allocations WHERE Paper_Allocations.skid_id=Skid_Contents.skid_id AND paper_allocations.paper_id=Skid_Contents.paper_id)',
+	allocated	=>	'(SELECT SUM(quantity) FROM Paper_Allocations WHERE Paper_Allocations.skid_id=Skid_Contents.skid_id AND paper_allocations.paper_id=Skid_Contents.paper_id)',
 );
 %defaults = (
 	paper_id		=>	undef,

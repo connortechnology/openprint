@@ -20,7 +20,7 @@ require openprint::Manifest;
 require openprint::ManifestContent;
 require openprint::InventoryCondition;
 
-$debug = 1;
+$debug = 0;
 
 $table = 'Skids';
 $serial = 'skid_id_seq';
@@ -43,6 +43,7 @@ $serial = 'skid_id_seq';
 );
 
 %transforms = (
+	id			=>	[ 's/\D//g' ],
 	deleted	=>	[ 's/[^01]//g' ],
 	manufacturers_id	=>	[ 'tr/[a-z]/[A-Z]/' ],
 );
@@ -131,7 +132,7 @@ sub find {
 		$sql .= ' AND rfidtag_id ilike ?';
 		push @values, $params{'rfidtag_id ilike'};
 	} # end if
-	if ( $params{'manufacturers_id'} ) {
+	if ( exists $params{'manufacturers_id'} ) {
         if ( ref $params{'manufacturers_id'} eq 'ARRAY' ) {
             $sql .= ' AND manufacturers_id IN (' . join(',', map { '?' } @{$params{'manufacturers_id'}} ) . ')';
             push @values, @{$params{'manufacturers_id'}};
@@ -316,6 +317,7 @@ sub save {
 	my ( $self, $data ) = @_;
 	$$self{'created_by_id'} = $session{'user_id'} if ! $$self{'created_by_id'};
 	$self->type() if ! $$self{'type'};
+	$self->used(undef);
 
 	# Why?
 	#$self->location_id();
@@ -484,14 +486,18 @@ sub Contents {
 	return () if ! $$self{'id'};
 
 	if ( @_ ) {
-		my %params = @_;
-		$params{'skid_id'} = $$self{'id'};
-		return openprint::SkidContent->find( %params );
+		if ( ! defined $_[0] ) {
+			@{$$self{'Contents'}} = openprint::SkidContent->find( skid_id=>$$self{'id'} );
+		} else {
+			my %params = @_;
+			$params{'skid_id'} = $$self{'id'};
+			return openprint::SkidContent->find( %params );
+		} # end if
 	} elsif ( ! $$self{'Contents'} ) {
 		@{$$self{'Contents'}} = openprint::SkidContent->find( 'skid_id'=>$$self{'id'} );
 	} # end if
 	return @{$$self{'Contents'}};
-} # end sub contents
+} # end sub Contents
 
 sub allocation {
 	my ( $self, %options ) = @_;
@@ -610,7 +616,7 @@ sub rfidtag_id {
 		my $rfidtag_id = $_[1];
 		if ( $rfidtag_id ) {
 			my $RFIDTag = new openprint::RFIDTag( $rfidtag_id );
-			my $error = $RFIDTag->save({'id'=>$rfidtag_id}) if ! $RFIDTag->id();
+			my $error = $RFIDTag->set({id=>$rfidtag_id}) if ! $RFIDTag->id();
 			$log->error( $error ) if $error;
 		} # end if
 		$_[0]{'rfidtag_id'} = $rfidtag_id;
@@ -721,6 +727,16 @@ sub PurchaseOrders {
 	return @{$_[0]{PurchaseOrders}} if ref $_[0]{PurchaseOrders} eq 'ARRAY';
 	return ();
 } # end sub PurchaseOrders
+
+sub used {
+	if ( @_ > 1 ) {
+		$_[0]{used} = $_[1];
+	} # end if
+	if ( ! defined $_[0]{used} ) {
+		$_[0]{used} = openprint::PaperInventory::find( skid_id=>$_[0]->id(), 'comment_like'=>'Checked out%' );
+	} # end if
+	return $_[0]{used};
+} # end sub used
 
 1;
 __END__

@@ -5,12 +5,13 @@ require openprint::Object;
 
 use openprint ();
 use vars qw( $debug $table $serial %fields %find_fields %transforms %defaults );
-$debug = 0;
 
 require openprint::Manifest;
 require openprint::Paper;
 require openprint::PurchaseOrder_Content;
 require Math::Round;
+
+$debug = 0;
 
 $table = 'manifest_content_types';
 $serial = 'manifest_content_types_id_seq';
