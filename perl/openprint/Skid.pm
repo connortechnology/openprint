@@ -343,10 +343,10 @@ sub destroy {
 	return $error;
 } # end sub delete
 
-sub to_string {
-	my $self = shift;
-	return join('-', sql::execute( undef, undef, q{SELECT (SELECT shortname FROM PaperNames WHERE id=name_id),(SELECT shortname FROM PaperFinishes WHERE id=finish_id),(SELECT shortname FROM PaperColours WHERE id=colour_id),(SELECT shortname FROM PaperWeights WHERE id=weight_id),width,height FROM Papers WHERE Id=?}, $$self{'id'} ) );
-} # end sub
+#sub to_string {
+	#my $self = shift;
+	#return 
+#} # end sub
 
 sub add {
 	my ( $self, $Paper, $quantity, $condition, $Purpose ) = @_;
@@ -487,7 +487,9 @@ sub Contents {
 
 	if ( @_ ) {
 		if ( ! defined $_[0] ) {
-			@{$$self{'Contents'}} = openprint::SkidContent->find( skid_id=>$$self{'id'} );
+			$$self{Contents} = [ openprint::SkidContent->find( skid_id=>$$self{id} ) ];
+		} elsif ( ref $_[0] eq 'ARRAY' ) {
+			$$self{Contents} = $_[0];
 		} else {
 			my %params = @_;
 			$params{'skid_id'} = $$self{'id'};
@@ -733,7 +735,7 @@ sub used {
 		$_[0]{used} = $_[1];
 	} # end if
 	if ( ! defined $_[0]{used} ) {
-		$_[0]{used} = openprint::PaperInventory::find( skid_id=>$_[0]->id(), 'comment_like'=>'Checked out%' );
+		$_[0]{used} = openprint::PaperInventory->find( skid_id=>$_[0]->id(), 'comment_like'=>'Checked out%' ) ? 1 : 0;
 	} # end if
 	return $_[0]{used};
 } # end sub used

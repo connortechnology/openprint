@@ -1,4 +1,5 @@
 <? echo (
+	return if ! $$variable{'Project'}->id();	
 	my $html;
 	my @Files = openprint::File->find(project_id=>$$variable{'Project'}->id());
 	if ( @Files ) {

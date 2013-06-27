@@ -89,7 +89,9 @@ sub Types {
 
 sub Contents {
 	my ( $self, %params ) = @_;
-	if ( %params ) {
+	if ( ( @_ == 2 ) and ( ref $_[1] eq 'ARRAY' ) ) {
+		$$self{Contents} = $_[1];
+	} elsif ( %params ) {
 		if ( $$self{'id'} ) {
 			return openprint::ManifestContent->find('manifest_id'=>$$self{id}, %params );
 		} # end if
@@ -122,11 +124,11 @@ sub check {
 	my @Contents = $Manifest->Contents();
 	my %skid_ids;
 	foreach ( @Contents ) {
-		push @{$skid_ids{$$_{skid_id}}}, $_;
+		push @{$skid_ids{$$_{skid_id}}}, $_ if $$_{skid_id};
 	} # end foreach
 	my %manufacturer_ids;
 	foreach ( @Contents ) {
-		push @{$manufacturer_ids{$$_{skid_id}}}, $_;
+		push @{$manufacturer_ids{$$_{manufacturers_id}}}, $_ if $$_{manufacturers_id};
 	} # end foreach
 	my $error;
 	if ( keys %skid_ids != @Contents ) {
@@ -136,10 +138,12 @@ sub check {
 			} # end if
 		} # end foreach skid
 	} # end if skid_ids duplicated
-	if ( keys %manufacturer_ids != @Contents ) {
-		foreach my $id ( keys %manufacturer_ids ) {
+	my @mfg_ids = keys %manufacturer_ids;
+
+	if ( @mfg_ids != @Contents ) {
+		foreach my $id ( @mfg_ids ) {
 			if ( @{$manufacturer_ids{$id}} > 1 ) {
-				$error .= "Manufacturers $id is listed " . @{$skid_ids{$id}} . ' times<br/>';
+				$error .= "Manufacturers $id is listed " . @{$manufacturer_ids{$id}} . ' times<br/>';
 			} # end if
 		} # end foreach manufacturer
 	} # end if skid_ids duplicated
