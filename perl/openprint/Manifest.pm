@@ -218,7 +218,9 @@ sub Types {
 
 sub Contents {
 	my ( $self, %params ) = @_;
-	if ( %params ) {
+	if ( ( @_ == 2 ) and ( ref $_[1] eq 'ARRAY' ) ) {
+		$$self{Contents} = $_[1];
+	} elsif ( %params ) {
 		if ( $$self{'id'} ) {
 			return openprint::ManifestContent->find('manifest_id'=>$$self{id}, %params );
 		} # end if
@@ -265,10 +267,12 @@ sub check {
 			} # end if
 		} # end foreach skid
 	} # end if skid_ids duplicated
-	if ( keys %manufacturer_ids != @Contents ) {
-		foreach my $id ( keys %manufacturer_ids ) {
+	my @mfg_ids = keys %manufacturer_ids;
+
+	if ( @mfg_ids != @Contents ) {
+		foreach my $id ( @mfg_ids ) {
 			if ( @{$manufacturer_ids{$id}} > 1 ) {
-				$error .= "Manufacturers $id is listed " . @{$skid_ids{$id}} . ' times<br/>';
+				$error .= "Manufacturers $id is listed " . @{$manufacturer_ids{$id}} . ' times<br/>';
 			} # end if
 		} # end foreach manufacturer
 	} # end if skid_ids duplicated
