@@ -751,7 +751,7 @@ sub date_filter {
 		#foreach my $k ( keys %$hash ) {
 			#$log->debug("ssi::date_filter hash{$k} => $$hash{$k}");
 		#} # end foreach
-	if ( ! ( $$hash{$field.'_year'} or $$hash{$field.'_month'} or $$hash{$field.'_day'} ) ) {
+	if ( ! ( $$hash{$field.'_year'} and $$hash{$field.'_month'} and $$hash{$field.'_day'} ) ) {
 #$log->debug("ssi::date_filter: No date specified for $field");
 		return ();
 	} # end if
