@@ -771,6 +771,9 @@ if ( ! sets::isin( 'service_types', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/Service_Types.sql}) ) or die;
 } else {
 	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='service_types'", 'column_name');
+	if ( ! exists $$data{deleted} ) {
+		$dbh->do('ALTER TABLE service_types ADD deleted BOOLEAN NOT NULL DEFAULT FALSE');
+	}
 	if ( ! exists $$data{'type'} ) {
 		$dbh->do(q`ALTER TABLE service_types ADD type TEXT`);
 	} # end if
