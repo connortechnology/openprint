@@ -39,6 +39,7 @@ function submit( form, action ) {
 <?include(/includes/error_reporting.html)?>
 <div class="Docket">
 	<? echo ( 
+		$$variable{checkboxes} = ($session{user_type} eq 'A') or openprint::usergroup::is_user_in( ['Sales Admin','Scheduling','PrepressManager'], $session{user_id} );
 		my $html;
 		my @Projects = $$variable{Order}->Projects();
 		if ( @Projects ) {
@@ -92,7 +93,7 @@ function submit( form, action ) {
 	</div>
 	<? endif ( $$variable{Order}->docket() ) ?>
 	<br class="spacer"/>
-	<fieldset><legend onclick="AjaxToggleContent( 'OrderLog', '/main/order/_view_log.html?order_id=<? echo ( $$variable{Order}->id() ) ?>', null, null );">Order Log (click to hide/show)</legend>
+	<fieldset><legend onclick="toggleContent( 'OrderLog', '/main/order/_view_log.html?order_id=<? echo ( $$variable{Order}->id() ) ?>', null, null );">Order Log (click to hide/show)</legend>
 	<div id="OrderLog" style="display: none;"></div>
 	</fieldset>
 </div>
