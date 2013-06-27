@@ -1612,8 +1612,12 @@ sub manifest {
 					} # end if
 				} # end if manufacturers_id
 				if ( ! $Skid->rfidtag_id() and $MC->rfidtag_id() ) {
-					$Skid->rfidtag_id( $MC->rfidtag_id() );
-					$skid_changes .= 'Assigned rfidtag to ' . $$MC{skid_id}.'<br/>';
+					if ( my $S = openprint::Skid->find_one(rfidtag_id=>MC->rfidtag_id()) ) {
+						$variable{error} .= qq`RFIDTag is already on skid <a href="/employee/inventory/skid_details.html?skid_id=$$S{id}">$$S{s}</a><br/>`;
+					} else {
+						$Skid->rfidtag_id( $MC->rfidtag_id() );
+						$skid_changes .= 'Assigned rfidtag to ' . $$MC{skid_id}.'<br/>';
+					} # end if
 				} # end if
 
 				if ( $$MC{location_id} ) {

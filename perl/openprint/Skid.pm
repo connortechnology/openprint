@@ -676,7 +676,7 @@ sub used {
 		$_[0]{used} = $_[1];
 	} # end if
 	if ( ! defined $_[0]{used} ) {
-		$_[0]{used} = openprint::PaperInventory::find( skid_id=>$_[0]->id(), 'comment_like'=>'Checked out%' );
+		$_[0]{used} = openprint::PaperInventory::find( skid_id=>$_[0]->id(), 'comment_like'=>'Checked out%' ) ? 1 : 0;
 	} # end if
 	return $_[0]{used};
 } # end sub used
