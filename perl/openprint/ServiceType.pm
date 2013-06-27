@@ -66,7 +66,7 @@ sub Prev {
 sub destroy {
 	my $ac = sql::start_transaction( $openprint::dbh );
 	sql::execute( undef, undef, q{DELETE FROM tbl_service_defaults WHERE lngServiceTypeIndex=?}, $_[0]{'id'} );
-	sql::update( undef, undef, $openprint::Project_Service::table, [ $openprint::Project_Service::fields{servicetype_id} . ' =?', $$self{id}, $openprint::Project_Service::fields{servicetype_id}, undef );
+	sql::update( undef, undef, $openprint::Project_Service::table, [ $openprint::Project_Service::fields{servicetype_id} . ' =?', $_[0]{id} ], $openprint::Project_Service::fields{servicetype_id}, undef );
 	sql::execute( undef, undef, q{DELETE FROM Service_Types WHERE id=?}, $_[0]{'id'} );
 	sql::end_transaction( $openprint::dbh, $ac );
 } # end sub destroy

@@ -14,6 +14,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 use strict;
+use Carp qw( cluck );
 
 package openprint::Estimating::Printing;
 my $threading = 0;
@@ -402,6 +403,7 @@ sub setup_project {
 $log->debug("Coatings: " . join( ',', keys %coatings ) );
 
 	$project{'side_one_colours'} = [];
+	$project{'side_one_coatings'} = [];
 	foreach my $c ( @$side_one_colours ) {
 		if ( $coatings{$$c{'name'}} ) {
 			push @{$project{'side_one_coatings'}}, $c;
@@ -480,6 +482,7 @@ $openprint::log->debug("Adding special colour for $colour");
 				$$Ink{service_id} = $PMSInkMixService->id() if $PMSInkMixService;
 				$$Ink{washups} = 1;
 				my $Material = openprint::Material->find_one(name=>$colour.'Ink');
+				$Material = openprint::Material->find_one(name=>'PMSInk') if ! $Material and $$real_colour{type} eq 'PMS';
 				$$Ink{material_id} = $Material->id() if $Material;
 			} # end if
 			$special_colours{$colour} = [ $Ink ];
@@ -2293,7 +2296,7 @@ if ( 0 ) {
 	
 		if ( my $stock_qt = $$best_price{'Stock Quantity'} ) {
 			$$specs{'OverBase'.$qty_index} = $$stock_qt{'Net Sheet Count'};
-			$$specs{'OverSetup'.$qty_index} = $$stock_qt{'Setup Overs'};
+			$$specs{'OverSetup'.$qty_index} = $$stock_qt{'Initial Setup Overs'};
 			$$specs{'OverRun'.$qty_index} = $$stock_qt{'Run Overs'};
 			$$specs{'OverTotal'.$qty_index} = $$stock_qt{'Total Overs'};
 		} # end if
@@ -3868,7 +3871,7 @@ $openprint::log->debug("Using cached folding");
 	my $colourstarttime = gettimeofday() if DEBUG;
 #$openprint::log->debug("Colours: @colours");
 	foreach my $Colour ( filter_coatings_from_colours(\@colours) ) {
-		my $real_colour = $$Colour{'name'};
+		my $real_colour = $$Colour{name};
 #$openprint::log->debug("Colour: $real_colour");
 		my $colour;
 
@@ -3906,7 +3909,7 @@ $openprint::log->debug("Using cached folding");
 			$colour = $1;
 		} elsif ( $real_colour =~ /PMS/i ) {
 			$colour = $real_colour;
-			$colour =~ s/\D//g;
+			$colour =~ s/\D//g; # Just the PMS #
 		#} elsif ( $real_colour =~ /Metallic/i ) {
 			#$colour = 'MetallicInk';
 		} else { 
@@ -3939,7 +3942,7 @@ if ( 0 ) {
 			$price{'Ink breakdown'} .= sprintf(' Run: $%1$.2f%2$s * %4$d/1000 = $%3$.2f', @InkService{'Price','units','Total'}, $impressions );
 			$price{'Ink Price'} += $InkService{'Total'};
 		} # end if
-	} # end if
+} # end if
 
 		my %ink_price;
 		my $InkMaterial;
@@ -3968,6 +3971,8 @@ if ( 1 ) {
 				my $Material = openprint::Material->find_one(name=>$colour.'Ink');
 				$$Ink{material_id} = $Material->id() if $Material;
 			} # end if
+		} else {
+			$openprint::log->debug("Got INK: " . $Ink->to_string() );
 		} # end if
 } # end if
 
@@ -3983,7 +3988,7 @@ if ( 1 ) {
 		   ) {
 			$price{'Press Washes'} += $$Ink{washups};
 			$$washed_colours{$key} += $$Ink{washups};
-#$openprint::log->debug("Press Washes: $price{'Press Washes'} colour: $real_colour Washups: " . $$Ink{washups} );
+$openprint::log->debug("Press Washes: $price{'Press Washes'} colour: $real_colour Washups: " . $$Ink{washups} );
 		} # end if
 #
 #$openprint::log->debug("Special Colour: $real_colour $$inkCoverage{$real_colour}");
@@ -3992,13 +3997,13 @@ if ( 1 ) {
 			%ink_price = $InkMaterial->get_price( undef, $Press );
 		} # end if
 
-#$openprint::log->debug("$real_colour needs mixing");
 #$openprint::log->debug( $Ink->to_string() );
 		if ( $$Ink{service_id} ) {
 			if ( ! $mixed_colours{$real_colour} ) {
+$openprint::log->debug("$real_colour needs mixing");
 				my %mix_price = $Ink->Service()->get_price(undef,$Press);
-$openprint::log->debug("Mix Price for $real_colour $mix_price{'Price'}");
-				$price{'Ink Mix Charge'} += $mix_price{'Price'};
+$openprint::log->debug("Mix Price for $real_colour $mix_price{Price}");
+				$price{'Ink Mix Charge'} += $mix_price{Price};
 				$mixed_colours{$real_colour} = 1;
 			} else {
 $openprint::log->debug("Was mixed");
@@ -4010,6 +4015,7 @@ $openprint::log->debug("Was mixed");
 			next;
 		}	
 		my $area = $Imposition->object_area() * $impressions * ($$project{'inkCoverage'}{$real_colour}/100);
+$openprint::log->debug("Area: $area Impressions: $impressions " . $Imposition->object_area() );
 
 		if ( $ink_price{'units'} eq 'per cartridge' ) {
 			if ( sets::isin( $real_colour, $$project{'side_one_colour_names'} ) and sets::isin( $real_colour, $$project{'side_two_colour_names'} ) ) {
@@ -4801,7 +4807,11 @@ sub press_setup_cost {
 # This is only called for work and turn
 sub filter_colours {
 	my ( $front, $back ) = @_;
-	my @filtered_colours = @{$front};
+	if ( ! $front ) {
+
+Carp::cluck("No front in filter colours");
+}
+	my @filtered_colours = @{$front} if $front;
 	my %filtered_colours = map { $$_{name}, $_ } @{$front};
 
 	foreach my $Colour ( @{$back} ) {
