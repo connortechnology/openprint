@@ -21,9 +21,17 @@ sub edit {
 	} elsif ( $param{'btnFunction'} eq '>>' ) {
 		$ServiceType = $ServiceType->Next();
 	} elsif ( $param{'btnFunction'} eq 'Delete' ) {
-		$ServiceType->delete();
-		$ServiceType = $ServiceType->Next();
-		openprint::logs::insertLogRecord('23',sprintf('Service Type: %d - %s', $ServiceType->id(), $ServiceType->name() ) );
+		$variable{error} .= $ServiceType->delete();
+		if ( ! $variable{error} ) {
+			$ServiceType = $ServiceType->Next() if ! $variable{error};
+			openprint::logs::insertLogRecord('23',sprintf('Service Type: %d - %s', $ServiceType->id(), $ServiceType->name() ) );
+		} # end if
+	} elsif ( $param{'btnFunction'} eq 'Destroy' ) {
+		$variable{error} .= $ServiceType->destroy();
+		if ( ! $variable{error} ) {
+			$ServiceType = $ServiceType->Next();
+			openprint::logs::insertLogRecord('23',sprintf('Service Type: %d - %s', $ServiceType->id(), $ServiceType->name() ) );
+		} # end if
 	} elsif ( $param{'btnFunction'} eq 'Save' ) {
 		$variable{'error'} = $ServiceType->save( \%param );
 		my $ac = sql::start_transaction( $dbh );
