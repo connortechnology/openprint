@@ -1,7 +1,7 @@
 <script type="text/javascript">
 	function load_projects( form ) {
 		$('ProjectList').innerHTML = 'Loading... please wait.';
-		new Ajax.Updater('ProjectList','/employee/production/_project_list.html', { method: 'get', parameters: form.serialize() } );
+		new Ajax.Updater('ProjectList','/employee/production/_project_list.html', { parameters: form.serialize() } );
 	} // end function
 </script>
 
@@ -10,10 +10,12 @@
 	<p>
 		<label>Docket #:</label>
 		<? echo ( join(' ',
-					ssi::input(type=>'cardinal',id=>'StartDocket',name=>'StartDocket',value=>$$variable{StartDocket}, autofocus=>1, onkeydown=>'if(event.keyCode == 13){load_projects(f1);}' ),
+					input(type=>'cardinal',id=>'StartDocket',name=>'StartDocket',
+						value=>( $$variable{StartDocket} ? $$variable{StartDocket} : $param{StartDocket} ), 
+						autofocus=>1, onkeydown=>'if(event.keyCode == 13){load_projects(f1);}' ),
 					'to',
-					ssi::input(type=>'cardinal',id=>'EndDocket',name=>'EndDocket',value=>$$variable{EndDocket}, onkeydown=>'if(event.keyCode == 13){load_projects(f1);}'),
-					ssi::button( 'Go', { onclick=>q`load_projects(f1);` } ),
+					input(type=>'cardinal',id=>'EndDocket',name=>'EndDocket',value=>$$variable{EndDocket}, onkeydown=>'if(event.keyCode == 13){load_projects(f1);}'),
+					button( 'Go', { onclick=>q`load_projects(f1);` } ),
 		); ) ?>
 	</p>
 </fieldset>

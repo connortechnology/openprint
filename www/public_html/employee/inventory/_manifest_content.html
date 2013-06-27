@@ -27,23 +27,14 @@ if ( tr ) tr.remove();
 		if ( $$Skid{id} ) {
 			@SkidContents = $$variable{SkidContents}{$$Skid{id}} ? @{$$variable{SkidContents}{$$Skid{id}}} : openprint::SkidContent->find(skid_id=>$$Skid{id});
 		} # end if
-		my $error = $C->check( $variable );
+		$Skid->Contents( \@SkidContents );
+		my $error = $C->check( );
 		
 		if ( $error ) {
 			$variable{FixStockOnSkids} = 1;
 			$$C{FixStockOnSkid} = 1;
 		} # end if
 
-		if ( $$C{skid_id} and $$C{rfidtag_id} ) {
-			my $RFIDSkid = $C->RFIDTag()->Skid();
-			if ( $RFIDSkid->id() and ( $RFIDSkid->id() != $$C{skid_id} ) ) {
-				$error .= qq`RFID is assigned to <a href="/employee/inventory/skid_details.html?skid_id=$$RFIDSkid{id}">$$RFIDSkid{id}</a><br/>`;
-			} # end if
-			if ( $Skid->rfidtag_id() and $$RFIDTag{id} and ( $Skid->rfidtag_id() != $$RFIDTag{id} ) ) {
-				$error .= qq`RFID does not match Tag assigned to skid <a href="/employee/inventory/skid_details.html?skid_id=$$Skid{id}">$$Skid{id}</a><br/>`;
-			} # end if
-		} # end if
-		
 		$variable{'location_dropdown'} = openprint::Location->dropdown(order=>'parent_id NULLS FIRST, lower(name)') if ! exists $variable{'location_dropdown'};
 		#my @ManifestContents = map { $_->id() != $$C{id} ? $_ : () } $$variable{Manifest}->Contents();
 
@@ -130,11 +121,7 @@ if ( tr ) tr.remove();
 				( $$C{FixStockOnSkid} ? button( 'Fix'.$$C{id}, { onclick=>qq`fix_content('$$C{id}');`, text=>'Fix' } ) : () ),
 				) . '</td>';
 		if ( $error ) {
-			$html .= '</tr><tr id="tr-'.$$C{id}.'-error" class="error"><td colspan="11">'.$error . ' Contains <br/>';
-			foreach my $SK ( @SkidContents ) {
-				$html .= $SK->Paper()->to_string() . '<br/>';
-			} # end foreach
-			$html .= '</td></tr>';
+			$html .= '</tr><tr id="tr-'.$$C{id}.'-error" class="error"><td colspan="11">'.$error . '</td></tr>';
 		} # end if
 	} # end if
 	return $html;

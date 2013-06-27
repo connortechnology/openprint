@@ -91,28 +91,16 @@
 		<? endif ( $$variable{'Project'}->reprint() ) ?>
 	</fieldset>
 	<fieldset id="ContactInformation"><legend>Contact Information</legend>
-		<p>
-			<label>Company:</label>
-			<?CompanyName?>
-		</p>
-		<p>
-			<label>Name:</label>
-			<?CreatedByName?>
-		</p>
-		<p>
-			<label>Phone:</label>
-			<?CreatedByPhone?>
-		</p>
-		<p>
-			<label>Email:</label>
-			<a href="mailto:<?CreatedByEmail?>"><?CreatedByEmail?></a>
-		</p>
-		<? if ( $$variable{'CSRName'} ) ?>
+		<p><label>Company:</label><? echo ( $$variable{'Project'}->Company()->name() ) ?></p>
+		<p><label>Name:</label><? echo ( $$variable{'Project'}->User()->name() ) ?></p>
+		<p><label>Phone:</label><? echo ( $$variable{'Project'}->User()->phone() ) ?></p>
+		<p><label>Email:</label><a href="mailto:<? echo ( $$variable{'Project'}->User()->email() ) ?>"><? echo ( $$variable{'Project'}->User()->email() ) ?></a></p>
+		<? if ( $$variable{'Project'}->Company()->salesrep_id() ) ?>
 		<p>
 			<label>Customer Service Rep:</label>
-			<a href="mailto:<?CSREmail?>"><?CSRName?></a>
+			<a href="mailto:<? echo ( $$variable{'Project'}->Company()->CSR()->email() ) ?>"><? echo ( $$variable{'Project'}->Company()->CSR()->name() ) ?></a>
 		</p>
-		<? endif ( $$variable{'CSRName'} ) ?>
+		<? endif ( $$variable{'Project'}->Company()->salesrep_id() ) ?>
 	</fieldset>
 	<br class="spacer"/>
 	<fieldset id="Reference">

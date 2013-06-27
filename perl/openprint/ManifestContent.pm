@@ -13,7 +13,7 @@ require openprint::Skid;
 require openprint::RFIDTag;
 require openprint::SkidContent;
 
-$debug = 0;
+$debug = 1;
 
 $table = 'manifestcontents';
 $serial = 'manifestcontents_id_seq';
@@ -211,7 +211,7 @@ $openprint::log->debug("desired paper does not exists");
 	} # end if
 	$error .= $Type->Paper()->save();
 	my $Skid = $MC->Skid();
-	if ( $$MC{manufacturers_id} ne $$Skid{manufacturers_id} ) {
+	if ( $$Skid{id} and ( $$MC{manufacturers_id} ne $$Skid{manufacturers_id} ) ) {
 		if ( $$MC{manufacturers_id} ) {
 			$Skid->save({manufacturers_id=>$$MC{manufacturers_id}});
 		} # end if
@@ -221,30 +221,49 @@ $openprint::log->debug("desired paper does not exists");
 } # end sub fix
 
 sub check {
-	my ( $MC, $variable ) = @_;
+	my ( $MC ) = @_;
 
-	my $Type = $$variable{Type} ? $$variable{Type} : $MC->Type();
+	my $Type = $MC->Type();
 	my $error;
+	my $Skid = $MC->Skid();
 	if ( $MC->skid_id() ) {
-		my @SkidContents = $$variable{SkidContents}{$$MC{skid_id}} ? @{$$variable{SkidContents}{$$MC{skid_id}}} : openprint::SkidContent->find(skid_id=>$MC->skid_id());
+		my @SkidContents = $Skid->Contents();
 		if ( @SkidContents > 1 ) {
 			$error = 'More than 1 stock on skid.<br/>';
+			$error .= 'Skid Contains <br/>';
+            foreach my $SK ( @SkidContents ) {
+                $error .= $SK->Paper()->to_string() . '<br/>';
+            } # end foreach
 		} elsif ( @SkidContents and ( $SkidContents[0]->paper_id() != $Type->paper_id() ) ) {
 			$error = 'Skid contents do not match manifest.<br/>';
+			$error .= 'Skid Contains <br/>';
+            foreach my $SK ( @SkidContents ) {
+                $error .= $SK->Paper()->to_string() . '<br/>';
+            } # end foreach
 		} elsif ( ! @SkidContents ) {
 			$error = 'Skid is empty.<br/>';
 		} # end if
-	
 	} # end if
-	my $Skid = $MC->Skid();
-	if ( $$Skid{id} and ( $$MC{manufacturers_id} ne $$Skid{manufacturers_id} ) ) {
-		$error .= 'Manufacturers ID does not match skid.';
+
+	if ( $$Skid{id} and $$MC{manufacturers_id} and ( $$MC{manufacturers_id} ne $$Skid{manufacturers_id} ) ) {
+		$error .= qq`Manufacturers ID ($$MC{manufacturers_id}) does not match skid. Skid has $$Skid{manufacturers_id}`;
 	} # end if
 	my $Tag = $MC->RFIDTag();
 	if ( $Tag->id() ) {
 		$_ = $Tag->is_invalid_id();
 		$error .= $_ if $_;
 	} # end if
+
+	if ( $$MC{skid_id} and $$MC{rfidtag_id} ) {
+		my $RFIDSkid = $Tag->Skid();
+		if ( $RFIDSkid->id() and ( $RFIDSkid->id() != $$MC{skid_id} ) ) {
+			$error .= qq`RFID is assigned to <a href="/employee/inventory/skid_details.html?skid_id=$$RFIDSkid{id}">$$RFIDSkid{id}</a><br/>`;
+		} # end if
+		if ( $Skid->rfidtag_id() and $$Tag{id} and ( $Skid->rfidtag_id() != $$Tag{id} ) ) {
+			$error .= qq`RFID does not match Tag assigned to skid <a href="/employee/inventory/skid_details.html?skid_id=$$Skid{id}">$$Skid{id} $$Skid{rfidtag_id}</a><br/>`;
+		} # end if
+	} # end if
+
 	return $error;
 } # end sub check
 

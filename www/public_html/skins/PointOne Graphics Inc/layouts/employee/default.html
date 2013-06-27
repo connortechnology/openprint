@@ -42,6 +42,8 @@
 		push @html, '<link href="'.hash_link('/css/press_schedule.css').'" rel="stylesheet" type="text/css"/>';
 	} elsif ( $$variable{'uri'} =~ /jobs_by_csr/ ) {
 		push @html, '<link href="'.hash_link('/css/press_schedule.css').'" rel="stylesheet" type="text/css"/>';
+	} elsif ( $$variable{'uri'} =~ /project\/view/ ) {
+		push @html, '<link href="'.hash_link('/css/order.css').'" rel="stylesheet" type="text/css"/>';
 	} # end if
 
 	return join("\n", @html );

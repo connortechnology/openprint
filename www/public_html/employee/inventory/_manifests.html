@@ -68,6 +68,7 @@
 		$search{'supplier_id'} = $session{'/employee/inventory/manifests.html?supplier_id'} if $session{'/employee/inventory/manifests.html?supplier_id'};
 		$$variable{Manifests} = [ openprint::Manifest->find( %search ) ];
 	} # end if
+	$$variable{canseepricing} = openprint::usergroup::is_user_in( ['Accounting','InventoryManager'], $session{user_id} );
 ) ?>
 <?include(/includes/error_reporting.html)?>
 <? if ( @{$$variable{'Manifests'}} ) ?>
@@ -81,15 +82,32 @@
 			<th class="Company">Vendor</th>
 			<th class="Date">Received On</th>
 			<th class="contents">Contents</th>
-			<? if ( openprint::usergroup::is_user_in( ['Accounting','InventoryManager'], $session{'user_id'} ) ) ?>
+			<? if ( $$variable{canseepricing} ) ?>
 			<th class="Price">Value</th>
-			<? endif ( openprint::usergroup::is_user_in( ['Accounting','InventoryManager'], $session{'user_id'} ) ) ?>
+			<? endif ( $$variable{canseepricing} ) ?>
 		</tr>
 		<? echo (
 			my $html;
 			my $rowclass;
 			my $value_total;
+			my $ac = sql::start_transaction( $dbh );
+
+			my @MContents = openprint::ManifestContent->find( manifest_id=>[ map { $$_{id} } @{$$variable{Manifests}} ] );
+			my %MContents;
+			foreach my $MC ( @MContents ) {
+				push @{$MContents{$$MC{manifest_id}}}, $MC;
+			} # end foreach MC
+
+			my %SkidContents = ();
+			my @skid_ids = map { $$_{skid_id} ? $$_{skid_id} : () } @MContents;
+			if ( @skid_ids ) {
+				foreach my $SC ( openprint::SkidContent->find(skid_id=>\@skid_ids) ) {
+					push @{$SkidContents{$$SC{skid_id}}}, $SC;
+				} # end foreach
+			} # end if
+
 			foreach my $Manifest ( @{$$variable{'Manifests'}} ) {
+				$Manifest->Contents( $MContents{$$Manifest{id}} ? $MContents{$$Manifest{id}} : [] );
 
 				if ( $session{'/employee/inventory/manifests.html?delivery'} ) {
 					my $under = 0;
@@ -130,6 +148,7 @@
 
 				my $value = 0;
 
+
 				# Why? We are counting the # of skids and weight on the manifest
 				# Supposedly to compare to the actual skid contents
 				foreach my $MC ( $Manifest->Contents() ) {
@@ -137,7 +156,10 @@
 					$manifest_weight{$MC->Type()->paper_id()} += $MC->quantity();
 
 					my $Skid = $MC->Skid();
-					foreach my $C ( $Skid->Contents() ) {
+					my @SkidContents = $SkidContents{$$MC{skid_id}} ? @{$SkidContents{$$MC{skid_id}}} : ();
+					$Skid->Contents( \@SkidContents );
+					
+					foreach my $C ( @SkidContents ) {
 						$real_skids{$C->paper_id} += 1;
 						$real_weight{$C->paper_id} += $MC->quantity();
 					} # end foreach paper on skid
@@ -153,9 +175,9 @@
 				<td class="Date"><a href="manifest.html?manifest_id=%1$s">%6$s<br/><span title="Updated:%8$s">%7$s</span></a></td>`, 
 					$$Manifest{'id'}, $$Manifest{'name'},join('<br/>', $Manifest->po_ids() ), 
 					join('<br/>', $Manifest->dockets() ), $Manifest->Vendor()->name(),
-					Date::Format::time2str($config{'DateFormat'}, Date::Parse::str2time($Manifest->received_on()) ),
-					Date::Format::time2str($config{'DateFormat'}, Date::Parse::str2time($Manifest->updated_on()) ),
-					Date::Format::time2str($config{'DateTimeFormat'}, Date::Parse::str2time($Manifest->updated_on()) ),
+					format_date( $Manifest->received_on() ),
+					format_date( $Manifest->updated_on() ),
+					format_datetime( $Manifest->updated_on() ),
 					);
 
 				$html .= '<td class="contents">';
@@ -189,14 +211,15 @@
 				} # end if
 				
 				$html .= '</td>';	
-				if ( openprint::usergroup::is_user_in( ['Accounting','InventoryManager'], $session{'user_id'} ) ) {
+				if ( $$variable{canseepricing} ) {
 					$html .= '<td class="Price">'.openprint::Currency::format( $value ).'</td>';
 					$value_total += $value;
 				} # end if
 				$html .= '</tr>';
 				$rowclass = $rowclass ? '' : ' class="colRow"';
 			} # end foreach Manifest
-			if ( openprint::usergroup::is_user_in( ['Accounting','InventoryManager'], $session{'user_id'} ) ) {
+			sql::end_transaction( $dbh, $ac );
+			if ( $$variable{canseepricing} ) {
 				$html .= '<tr class="totals"><td colspan="7">Total:</td><td class="Price">'.openprint::Currency::format( $value_total ).'</td></tr>';
 			} # end if
 			

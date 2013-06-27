@@ -48,7 +48,7 @@ sub find {
 
 	my $sql = 'SELECT * FROM Skid_Contents WHERE 1>0';
 	my @values;
-	if ( $params{'skid_id'} ) {
+	if ( exists $params{'skid_id'} ) {
 		if ( ref $params{skid_id} eq 'ARRAY' ) {
             $sql .= ' AND skid_id IN (' . join(',', map { '?' } @{$params{skid_id}} ) . ')';
             push @values, @{$params{skid_id}};
@@ -90,7 +90,7 @@ sub find {
 	if ( exists $params{'allocated is not null'} ) {
 		$sql .= ' AND (SELECT SUM(quantity) FROM Paper_Allocations WHERE Paper_Allocations.skid_id=Skid_Contents.skid_id AND paper_allocations.paper_id=Skid_Contents.paper_id) IS NOT NULL';
 	} # end if
-	if ( $params{'manifestcontent_id'} ) {
+	if ( exists $params{'manifestcontent_id'} ) {
 		$sql .= ' AND ? IN (SELECT id FROM ManifestContents WHERE manifestcontents.skid_id=skid_contents.skid_id)';
 		push @values, $params{'manifestcontent_id'};
 	} # end if

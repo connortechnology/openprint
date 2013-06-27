@@ -1404,7 +1404,6 @@ sub save_Manifest {
 	foreach my $Type ( openprint::Manifest_Content_Type->find( manifest_id=>$Manifest->id()) ) {
 		my $Paper = save_Paper('-'.$Type->id());
 		
-
 		my %data = (
 			docket		=>	$param{'docket-'.$Type->id()},
 			paper_id	=>	$Paper->id(),
@@ -1424,13 +1423,10 @@ sub save_Manifest {
 		foreach my $MC ( $NewMC, $Manifest->Contents( type_id => $$Type{id} ) ) {
 			my $changed = 0;
 
-$log->debug("MC $$MC{skid_id} !=? " . $param{"skid_id-$$Type{id}-$$MC{id}"} );
 			$param{"skid_id-$$Type{id}-$$MC{id}"} = openprint::Skid->transform( 'id', $param{"skid_id-$$Type{id}-$$MC{id}"} );
-$log->debug("MC $$MC{skid_id} !=? " . $param{"skid_id-$$Type{id}-$$MC{id}"} );
 
 			if ( $param{"skid_id-$$Type{id}-$$MC{id}"} != $$MC{skid_id} ) {
 				$MC->skid_id( $param{"skid_id-$$Type{id}-$$MC{id}"} );
-$log->debug("Setting skid_id to " . $param{"skid_id-$$Type{id}-$$MC{id}"} );
 				$changed = 1;
 			} # end if
 
@@ -1444,7 +1440,6 @@ $log->debug("Setting skid_id to " . $param{"skid_id-$$Type{id}-$$MC{id}"} );
 				$$MC{manufacturers_id} = $param{"manufacturers_id-$$Type{id}-$$MC{id}"};
 				$changed = 1;
 			} # end if
-
 
 			my $Skid = $MC->Skid();
 $log->debug("Skid: " . $Skid->to_string() );
