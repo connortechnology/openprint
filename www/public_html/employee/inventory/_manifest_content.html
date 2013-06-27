@@ -33,9 +33,6 @@ if ( tr ) tr.remove();
 			$variable{FixStockOnSkids} = 1;
 			$$C{FixStockOnSkid} = 1;
 		} # end if
-		if ( ! @SkidContents ) {
-			$error .= 'Skid is empty.<br/>';
-		} # end if
 
 		if ( $$C{skid_id} and $$C{rfidtag_id} ) {
 			my $RFIDSkid = $C->RFIDTag()->Skid();

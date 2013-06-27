@@ -179,7 +179,7 @@
 					$html .= '<span class="warning">' . $error . '</span>';
 				} # end if
 
-				if ( misc::sum( map { $manifest_skids{$_} } keys %manifest_skids ) != misc::sum( map { $real_skids{$_} } keys %real_skids ) ) {
+				if ( %real_skids and ( misc::sum( map { $manifest_skids{$_} } keys %manifest_skids ) != misc::sum( map { $real_skids{$_} } keys %real_skids ) ) ) {
 					$html .= '<span class="warning"><br/>Actual skid contents:<br/>';
 					foreach my $paper_id ( keys %real_weight ) {
 						my $Paper = new openprint::Paper( $paper_id );
