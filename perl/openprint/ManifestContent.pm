@@ -231,10 +231,13 @@ sub check {
 			$error = 'More than 1 stock on skid.<br/>';
 		} elsif ( @SkidContents and ( $SkidContents[0]->paper_id() != $Type->paper_id() ) ) {
 			$error = 'Skid contents do not match manifest.<br/>';
+		} elsif ( ! @SkidContents ) {
+			$error = 'Skid is empty.<br/>';
 		} # end if
+	
 	} # end if
 	my $Skid = $MC->Skid();
-	if ( $$MC{manufacturers_id} ne $$Skid{manufacturers_id} ) {
+	if ( $$Skid{id} and ( $$MC{manufacturers_id} ne $$Skid{manufacturers_id} ) ) {
 		$error .= 'Manufacturers ID does not match skid.';
 	} # end if
 	my $Tag = $MC->RFIDTag();

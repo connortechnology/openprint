@@ -251,11 +251,11 @@ sub check {
 	my @Contents = $Manifest->Contents();
 	my %skid_ids;
 	foreach ( @Contents ) {
-		push @{$skid_ids{$$_{skid_id}}}, $_;
+		push @{$skid_ids{$$_{skid_id}}}, $_ if $$_{skid_id};
 	} # end foreach
 	my %manufacturer_ids;
 	foreach ( @Contents ) {
-		push @{$manufacturer_ids{$$_{skid_id}}}, $_;
+		push @{$manufacturer_ids{$$_{manufacturers_id}}}, $_ if $$_{manufacturers_id};
 	} # end foreach
 	my $error;
 	if ( keys %skid_ids != @Contents ) {
