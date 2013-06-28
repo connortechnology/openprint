@@ -153,5 +153,19 @@ sub check {
 	return $error;
 } # end sub check
 
+sub can_edit {
+	return 1 if ! $_[0]{id};
+	return 1 if $openprint::session{user_type} eq 'A';
+	return 1 if $openprint::session{user_id} == $_[0]{created_by};
+	return 1 if openprint::usergroup::is_user_in( ['Inventory','InventoryManager'], $openprint::session{user_id} );
+	return 0;
+} # end sub can_edit
+
+sub can_see_pricing {
+	return 1 if $openprint::session{user_type} eq 'A';
+	return 1 if openprint::usergroup::is_user_in( ['Accounting','InventoryManager'], $openprint::session{user_id} );
+	return 0;
+} # end sub can_see_pricing
+
 1;
 __END__
