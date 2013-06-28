@@ -1865,36 +1865,56 @@ sub _manifests {
 
 sub inventory_log {
 	if ( $param{'btnFunction'} eq 'Download' ) {
-		my @Header = ('When','Skid','RFIDTag','Paper','Amount','Allocated','In Stock','Location','Comment' );
+		my @Header = ('When','Who', 'Skid','RFIDTag','Paper','Amount','Allocated','In Stock','Location','Comment' );
 		my @Data;
 
-		my @data = sql::execute( $log, $dbh, q{SELECT updated_on, user_id, delta, instock, units, comment, poindex, skid_id, paper_id FROM Paper_Inventory WHERE (updated_on BETWEEN ? AND ? ) ORDER BY updated_on},
-		sprintf('%.4d-%.2d-%.2d %.2d:%.2d:00', @param{map { 'updated_on_start_' } ( 'year','month','day','hour','minute')}),
-		sprintf('%.4d-%.2d-%.2d %.2d:%.2d:59', @param{map { 'updated_on_end_' } ( 'year','month','day','hour','minute')}),
+		my @PIs = openprint::PaperInventory->find(
+			ssi::date_filter( 'updated_on_start', 'updated_on_start', \%param ),
+			ssi::date_filter( 'updated_on_end', 'updated_on_end', \%param ),
+			($param{employee_id} ? ( user_id		=>	$param{employee_id} ) : () ),
 		);
 		my $total = 0;
-		while ( my ( $time, $user_id, $delta, $instock, $units, $comment, $po_id, $skid_id, $paper_id ) = splice @data, 0, 9 ) {
-			next if $delta <= 0 and ! $param{'outs'};
-			next if $delta > 0 and ! $param{'ins'};
-			my $Paper = new openprint::Paper( $paper_id );
-			my $Skid = new openprint::Skid( $skid_id );
-			next if $Paper->type() and ! sets::isin( $Paper->type(), $param{'Type'} );
-			next if ( ! $Paper->type() ) and ! sets::isin( 'Unknown', $param{'Type'} );
+		my %locations = map { $_, $_ } ( ref $param{location_id} eq 'ARRAY' ? @{$param{location_id}} : ($param{location_id}) );
+		my %types = map { $_, $_ } ( ref $param{Type} eq 'ARRAY' ? @{$param{Type}} : ($param{Type}) );
+		foreach my $PI ( @PIs ) {
+			if ( $PI->delta < 0 and ! $param{'outs'} ) {
+				$log->debug("Not wanting outs");
+				next;
+			}
+			if ( $PI->delta > 0 and ! $param{'ins'} ) {
+				$log->debug("Not wanting ins");
+				next;
+			}
+			my $Paper = $PI->Paper();
+			if ( $Paper->type() and ! $types{$Paper->type()} ) {
+				$log->debug("Not in types " . join(',', keys %types ) );
+				next;
+			} # end if
+			if ( ( ! $Paper->type() ) and ! $types{Unknown} ) {
+				$log->debug("Unknnown type");
+				next;
+			} # end if
+			my $Skid = $PI->Skid();
+			if ( ( ! $locations{All} ) and ! $locations{$Skid->Location()->Root()->id()} ) {
+				$log->debug("Not in locations: " . $Skid->Location()->Root()->name() . ' in ' . join(',', keys %locations ) );
+				next;
+			} # end if
 			
 			push @Data, (
-				Date::Format::time2str('%Y-%m-%d %H:%M', Date::Parse::str2time($time) ),
-				$skid_id,
+				Date::Format::time2str('%Y-%m-%d %H:%M', Date::Parse::str2time($PI->updated_on) ),
+				$PI->User()->name(),
+				$PI->skid_id,
 				$Skid->RFIDTag()->id_short(),
 				$Paper->to_string(),
-				$delta,
-				join(',', map { sprintf('%d%s to %d', $_->quantity(),$_->units(),new openprint::Project( $_->project_id() )->docket() ) } openprint::PaperAllocation->find('skid_id'=>$skid_id,'paper_id'=>$paper_id)),
-				$instock,
+				$PI->delta,
+				join(',', map { sprintf('%d%s to %d', $_->quantity(),$_->units(),new openprint::Project( $_->project_id() )->docket() ) } openprint::PaperAllocation->find( skid_id=>$PI->skid_id, paper_id=>$PI->paper_id)),
+				$PI->instock,
 				$Skid->Location()->name(),
-				$comment,
+				$PI->comment,
 				);
-			$total += $delta;
+			$total += $PI->delta;
 		} # end while
-		push @Data, '','','','Totals:',$total,'','','','';
+		push @Data, '','','','','Totals:',$total,'','','','';
 		misc::export_csv( $r, $log, \%variable, 'InventoryLog.csv', \@Header, \@Data );
 	} # end if
 	if ( ! exists $session{'/employee/inventory/inventory_log.html?ins'} ) {
