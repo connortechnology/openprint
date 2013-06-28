@@ -1,18 +1,18 @@
 <?include(/includes/error_reporting.html)?>
 <script type="text/javascript" src="<?hash_link(/javascripts/barcode.js)?>"></script>
 <div class="Manifest">
-	<form name="f1" id="f1" method="post" action="manifest.html?manifest_id=<? echo ( $$variable{'Manifest'}->id() ) ?>">
+	<form name="f1" id="f1" method="post" action="manifest_view.html?manifest_id=<? echo ( $$variable{Manifest}->id() ) ?>">
 		<input type="hidden" name="btnFunction" />
 		<p class="buttons">
 			<? echo ( join('',
 				button( 'Back', { href=>'/employee/inventory/manifests.html' } ),
 				$$variable{Manifest}->can_edit() ? (
 					button( 'Edit', { href=>'/employee/inventory/manifest.html?manifest_id='.$$variable{Manifest}->id() } ),
+					button( 'Apply', { href=>'/employee/inventory/manifest_view.html?action=Apply&amp;manifest_id='.$$variable{Manifest}->id() } ),
 					( $$variable{Manifest}->deleted() ? (
-							button( 'UnDelete', { onclick=>"f1.btnFunction.value='undelete';f1.submit();}" } ),
-							button( 'Destroy', { onclick=>"if( confirm('Are you sure?') ) {f1.btnFunction.value='destroy';f1.submit();}" } ),
+							button( 'UnDelete', { href=>'/employee/inventory/manifest_view.html?action=Undelete' } ),
 						) : ( 
-							button( 'Delete', { onclick=>"f1.btnFunction.value='Delete';f1.submit();" } ),
+							button( 'Delete', { href=>'/employee/inventory/manifest_view.html?action=Delete' } ),
 						) ),
 				) : () 
 			); ) ?>
@@ -92,10 +92,10 @@
 
 				foreach my $C ( sort { $$a{id} <=> $$b{id} } @Contents ) {
 					my $Skid = $C->Skid();
-					my $RFIDTag = $C->RFIDTag();
-					my $error = $C->check();
 					$Skid->Contents( $SkidContents{$$Skid{id}} ? $SkidContents{$$Skid{id}} : [] );
 					my @SkidContents = @{$SkidContents{$$Skid{id}}} if $SkidContents{$$Skid{id}};
+					my $RFIDTag = $C->RFIDTag();
+					my $error = $C->check();
 
 					$html .= '<tr id="tr-'.$$C{id}.'">';
 					$html .= sprintf('<td class="RFID"><a href="/employee/inventory/rfidtag_details.html?rfidtag_id=%s">%s</a></td>', $RFIDTag->id(), $RFIDTag->id_short() );
@@ -112,7 +112,7 @@
 						my $lbs = $C->quantity() * $Paper->width() * $Paper->height() * $Paper->wpsi();
 						$html .= '<td class="qty_lbs">'. $lbs . '</td>';
 						$html .= '<td class="qty_kgs">'.  Math::Round::nearest( .1, $lbs/2.2046 ) . '</td>';
-						$html .= '<td class="qty_sheets">'.  $$C{quantity} . '</td>';
+						$html .= '<td class="qty_sheets">'.  Number::Format::format_number($$C{quantity}) . '</td>';
 					} else {
 						$html .= '<td class="qty_lbs">'. $C->quantity() . '</td>';
 						$html .= '<td class="qty_kgs">'. Math::Round::nearest( .1, $C->quantity()/2.2046 ) . '</td>';
@@ -137,11 +137,11 @@
 				$html .= '<tr class="totals"><td>Totals:</td><td colspan="3">'.scalar @Contents . ' skids/rolls</td>';
 				if ( $Type->type() eq 'Sheet' ) {
 					my $lbs = $total*$Paper->wpsi()*$Paper->width()*$Paper->height();
-					$html .= sprintf('<td class="qty_lbs">%2$dlbs</td><td class="qty_kgs">%3$.4fkg</td><td class="qty_sheets">%4$s</td>',
-							$lbs, $lbs/2.2046, Number::Format::format_number($total) );
+					$html .= sprintf('<td class="qty_lbs">%1$dlbs</td><td class="qty_kgs">%2$.1fkg</td><td class="qty_sheets">%3$s</td>',
+							Number::Format::format_number($lbs), $lbs/2.2046, Number::Format::format_number($total) );
 				} else { # A Roll
-					$html .= sprintf('<td class="qty_lbs">%2$dlbs</td><td class="qty_kgs">%3$.4fkg</td><td class="qty_feet">%4$dfeet</td>',
-						$total, $total/2.2046, ( ( $Paper->wpsi() and $Paper->width() ) ? (($total/$Paper->wpsi())/$Paper->width())/12 : 0 ) );
+					$html .= sprintf('<td class="qty_lbs">%1$dlbs</td><td class="qty_kgs">%2$.1fkg</td><td class="qty_feet">%3$dfeet</td>',
+						Number::Format::format_number($total), $total/2.2046, ( ( $Paper->wpsi() and $Paper->width() ) ? (($total/$Paper->wpsi())/$Paper->width())/12 : 0 ) );
 				} #end if
 				$html .= '<td colspan="'.(($Type->type(), [ 'Roll', 'Sheet' ] ) ? '3' : '4' ). '">&nbsp;</td></tr>';
 				if ( scalar @Contents != $$Type{item_count} ) {
