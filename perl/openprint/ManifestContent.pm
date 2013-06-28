@@ -12,6 +12,7 @@ require openprint::Manifest;
 require openprint::Skid;
 require openprint::RFIDTag;
 require openprint::SkidContent;
+require openprint::Location;
 
 $debug = 1;
 
@@ -156,6 +157,10 @@ sub location_id {
 	} # end if
 	return $_[0]{location_id};
 } # end sub location_id
+
+sub Location {
+	return new openprint::Location($_[0]->location_id());
+} # end sub Location
 
 sub fix {
 	my ( $MC ) = @_;
