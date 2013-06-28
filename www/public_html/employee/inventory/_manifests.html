@@ -168,11 +168,11 @@
 
 				$html .= sprintf(q`<tr>
 				<td class="checkbox"><input type="checkbox" name="manifests" value="%1$s"/></td>
-				<td class="manifest_num"><a href="manifest.html?manifest_id=%1$s">%2$s</a></td>
-				<td class="po_id"><a href="manifest.html?manifest_id=%1$s">%3$s</a></td>
-				<td class="Docket"><a href="manifest.html?manifest_id=%1$s">%4$s</a></td>
-				<td class="Company"><a href="manifest.html?manifest_id=%1$s">%5$s</a></td>
-				<td class="Date"><a href="manifest.html?manifest_id=%1$s">%6$s<br/><span title="Updated:%8$s">%7$s</span></a></td>`, 
+				<td class="manifest_num"><a href="manifest_view.html?manifest_id=%1$s">%2$s</a></td>
+				<td class="po_id"><a href="manifest_view.html?manifest_id=%1$s">%3$s</a></td>
+				<td class="Docket"><a href="manifest_view.html?manifest_id=%1$s">%4$s</a></td>
+				<td class="Company"><a href="manifest_view.html?manifest_id=%1$s">%5$s</a></td>
+				<td class="Date"><a href="manifest_view.html?manifest_id=%1$s">%6$s<br/><span title="Updated:%8$s">%7$s</span></a></td>`, 
 					$$Manifest{'id'}, $$Manifest{'name'},join('<br/>', $Manifest->po_ids() ), 
 					join('<br/>', $Manifest->dockets() ), $Manifest->Vendor()->name(),
 					format_date( $Manifest->received_on() ),
