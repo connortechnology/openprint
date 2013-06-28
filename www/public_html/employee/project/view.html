@@ -4,13 +4,13 @@
 			<ul>
 				<li class="docket"><label>Docket #</label>
 				<? echo ( join('',
-							ssi::input( type=>'cardinal', name=>'Docket', id=>'Docket', onchange=>'change_handler(this);', onkeypress=>'return input_handler(this,event);', onkeydown=>'if(event.keyCode==13){f2.submit(f1);}', value=>$param{Docket}),
+							input( type=>'cardinal', name=>'Docket', id=>'Docket', onchange=>'change_handler(this);', onkeypress=>'return input_handler(this,event);', onkeydown=>'if(event.keyCode==13){f2.submit(f1);}', value=>$param{Docket}),
 							button( 'Go1', { onclick=>'f2.submit();', text=>'Go' } ),
 				); ) ?>
 				</li>
 				<li class="project_id"><label>Project #</label>
 				<? echo ( join('',
-							ssi::input( type=>'cardinal', name=>'project_id', id=>'project_id', onchange=>'change_handler(this);', onkeypress=>'return input_handler(this,event);', onkeydown=>'if(event.keyCode==13){f2.submit(f1);}', value=>$param{project_id} ),
+							input( type=>'cardinal', name=>'project_id', id=>'project_id', onchange=>'change_handler(this);', onkeypress=>'return input_handler(this,event);', onkeydown=>'if(event.keyCode==13){f2.submit(f1);}', value=>$param{project_id} ),
 							button( 'Go2', { onclick=>'f2.submit();', text=>'Go' } ),
 				); ) ?>
 				</li>

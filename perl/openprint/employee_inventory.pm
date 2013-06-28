@@ -1920,7 +1920,7 @@ sub _inventory_log {
 	ssi::save_params( '/employee/inventory/inventory_log.html', ( 
 ( map { 'updated_on_start_'.$_ } ( 'year','month','day', 'hour', 'minute' ) ),
 ( map { 'updated_on_end_'.$_ } ( 'year','month','day', 'hour', 'minute' ) ),
-( 'ins', 'outs', 'Type', 'location_id', 'manifests_within_days', 'manifests_within_lbs','show_manifests' ) ) );
+( 'ins', 'outs', 'Type', 'location_id', 'manifests_within_days', 'manifests_within_lbs','show_manifests', 'employee_id' ) ) );
 	$session{'/employee/inventory/inventory_log.html?ins'} = $param{ins};
 	$session{'/employee/inventory/inventory_log.html?outs'} = $param{outs};
 	$session{'/employee/inventory/inventory_log.html?show_stock_on_manifests'} = $param{show_stock_on_manifests};

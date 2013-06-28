@@ -64,9 +64,13 @@ sub find {
 	if ( exists $params{deleted} ) {
 		$sql .= ' AND ? = (SELECT deleted FROM SKids WHERE skids.id=skid_id)';
 		push @values, $params{deleted};
-	} else {
+	} elsif ( ! exists $params{'deleted in'} ) {
 		$sql .= ' AND false = (SELECT deleted FROM SKids WHERE skids.id=skid_id)';
 	} # end if
+	if ( exists $params{'deleted in'} ) {
+		$sql .= ' AND (SELECT deleted FROM SKids WHERE skids.id=skid_id) in ('.join(',', map { '?' } @{$params{'deleted in'}} ) . ')';
+		push @values, @{$params{'deleted in'}};
+	}
 
 	if ( $params{'paper_id'} ) {
 		$sql .= ' AND paper_id=?';

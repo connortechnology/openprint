@@ -23,28 +23,38 @@ function calc() {
 				<label class="radio" for="outs">Check Outs</label>
 			</li>
 		<li><label>Type</label>
-            <input type="checkbox" id="TypeSheet" name="Type" value="Sheet" <? echo ( 'checked="checked"' if ( ! $session{'/employee/inventory/inventory_log.html?Type'} ) or sets::isin( 'Sheet', split(',', $session{'/employee/inventory/inventory_log.html?Type'} ) ) ) ?> onclick="calc();"/>
-            <label class="radio" for="TypeSheet">Sheet</label>
-            <input type="checkbox" id="TypeRoll" name="Type" value="Roll" <? echo ( 'checked="checked"' if ( ! $session{'/employee/inventory/inventory_log.html?Type'} ) or sets::isin( 'Roll', split(',', $session{'/employee/inventory/inventory_log.html?Type'} ) ) ) ?> onclick="calc();"/>
-            <label class="radio" for="TypeRoll">Roll</label>
-            <input type="checkbox" id="TypeUnknown" name="Type" value="Unknown" <? echo ( 'checked="checked"' if ( ! $session{'/employee/inventory/inventory_log.html?Type'} ) or sets::isin( 'Unknown', split(',', $session{'/employee/inventory/inventory_log.html?Type'} ) ) ) ?> onclick="calc();"/>
-            <label class="radio" for="TypeUnknown">Unknown</label>
-        </li>
-       <li>
-            <label>Location</label>
-                <? echo ( 
-                    my @options =  ('All','All','Unknown','Unknown', map { $_->id(), $_->name() } openprint::Location->find( parent_id=>undef, order=>'lower(name)') );
-                    my @selected = split(',', $session{'/employee/inventory/inventory_log.html?location_id'} );
-                    if ( ! @selected ) {
-                        foreach my $L ( openprint::Location::find('parent_id'=>undef, 'order'=>'lower(name)') ) {
-                            next if $L->name() eq 'Missing';
-                            push @selected, $L->id();
-                        } # end foreach $L
-                    } # end if
-                    $session{'/employee/inventory/inventory_log.html?location_id'} = join(',',sets::intersection( @selected, @options ));
-                    return ssi::select( \@options, \@selected, { id=>'location_id',name=>'location_id', multiple=>1, onchange=>'calc();', size=>(scalar @options/2) } );
-                ) ?>
-        </li>
+			<input type="checkbox" id="TypeSheet" name="Type" value="Sheet" <? echo ( 'checked="checked"' if ( ! $session{'/employee/inventory/inventory_log.html?Type'} ) or sets::isin( 'Sheet', split(',', $session{'/employee/inventory/inventory_log.html?Type'} ) ) ) ?> onclick="calc();"/>
+			<label class="radio" for="TypeSheet">Sheet</label>
+			<input type="checkbox" id="TypeRoll" name="Type" value="Roll" <? echo ( 'checked="checked"' if ( ! $session{'/employee/inventory/inventory_log.html?Type'} ) or sets::isin( 'Roll', split(',', $session{'/employee/inventory/inventory_log.html?Type'} ) ) ) ?> onclick="calc();"/>
+			<label class="radio" for="TypeRoll">Roll</label>
+			<input type="checkbox" id="TypeUnknown" name="Type" value="Unknown" <? echo ( 'checked="checked"' if ( ! $session{'/employee/inventory/inventory_log.html?Type'} ) or sets::isin( 'Unknown', split(',', $session{'/employee/inventory/inventory_log.html?Type'} ) ) ) ?> onclick="calc();"/>
+			<label class="radio" for="TypeUnknown">Unknown</label>
+		</li>
+		<li>
+		<label>User</label>
+		<select name="employee_id" onchange="calc();">
+			<option value="">All Employees</option>
+<? echo (
+	make_drop_down( [ map { $_->id(), $_->name() } openprint::User->find( order=>'lower(strfirstname),lower(strlastname)', type=>['E','A'] ) ],
+	$session{'/employee/inventory/inventory_log.html?employee_id'} );
+)?>
+			</select>
+		</li>
+		<li>
+			<label>Location</label>
+				<? echo ( 
+					my @options =	('All','All','Unknown','Unknown', map { $_->id(), $_->name() } openprint::Location->find( parent_id=>undef, order=>'lower(name)') );
+					my @selected = split(',', $session{'/employee/inventory/inventory_log.html?location_id'} );
+					if ( ! @selected ) {
+						foreach my $L ( openprint::Location::find('parent_id'=>undef, 'order'=>'lower(name)') ) {
+							next if $L->name() eq 'Missing';
+							push @selected, $L->id();
+						} # end foreach $L
+					} # end if
+					$session{'/employee/inventory/inventory_log.html?location_id'} = join(',',sets::intersection( @selected, @options ));
+					return ssi::select( \@options, \@selected, { id=>'location_id',name=>'location_id', multiple=>1, onchange=>'calc();', size=>(scalar @options/2) } );
+				) ?>
+		</li>
 		<li><label>Show Manifests</label>
 			<? echo ( radio( 'show_manifests', [ 1, 'Yes', 0, 'No' ], $session{'/employee/inventory/inventory_log.html?show_manifests'}, { onclick=>q`calc();if(this.value==1 && this.checked) { $('manifest_options').show(); } else { $('manifest_options').hide();};` } ) ) ?>
 			<div id="manifest_options"<? echo ( $session{'/employee/inventory/inventory_log.html?show_manifests'} ? '' : ' style="display:none;"' ) ?>>
