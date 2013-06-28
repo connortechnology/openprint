@@ -110,7 +110,7 @@ sub find {
 	$sql .= " LIMIT $params{'limit'}" if $params{'limit'};
 	my $data = $dbh->selectall_arrayref( $sql, {Slice=>{}}, @values );
 	if ( ! $data ) {
-		$log->debug("openprint::SkidContent::find( $sql)" . $dbh->errstr);
+		$log->debug("openprint::SkidContent::find( $sql) (@values) :" . $dbh->errstr);
 		return;
 	} elsif ( $debug ) {
 		$log->debug("Loading openprint::SkidContent::find($sql) : @values # of results: " . @$data );
