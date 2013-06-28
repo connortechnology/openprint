@@ -72,8 +72,9 @@
 						$html .= button( 'FixStockOnSkids', { onclick=>q`f1.btnFunction.value='ChangePaper';f1.submit();`, text=>'Fix Problems' } );
 					} # end if
 					$html .= button( 'Apply', { onclick=>q`f1.btnFunction.value='Submit';if(f1.onsubmit())f1.submit();`, title=>'Apply Manifest to inventory' } );
-				} # end if
-			); ) ?>
+				} # end if Manifest->id();
+				return $html;
+			) ?>
 		</p>
 		<input type="hidden" name="btnFunction" />
 	</form>
