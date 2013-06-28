@@ -4,12 +4,8 @@ our @ISA = qw(openprint::Object);
 require openprint::Object;
 
 use openprint ();
-use vars qw(%variable $log $dbh %config %session $debug %fields %transforms %defaults $table $serial );
-*variable = \%openprint::variable;
+use vars qw( $log $debug %fields %find_fields %transforms %defaults $table $serial );
 *log = \$openprint::log;
-*dbh = \$openprint::dbh;
-*config = \%openprint::config;
-*session = \%openprint::session;
 
 require sql;
 require ssi;
@@ -107,8 +103,8 @@ sub save {
 		my $Currency = openprint::Currency::get_current();
 		$$hash{'currency_id'} = $Currency->id();
 	} # end if
-	$$self{'created_by'} = $session{'user_id'} if ! $$self{'created_by'};
-	$$self{'company_id'} = $session{'company_id'} if ! $$self{'company_id'};
+	$$self{'created_by'} = $openprint::session{'user_id'} if ! $$self{'created_by'};
+	$$self{'company_id'} = $openprint::session{'company_id'} if ! $$self{'company_id'};
 	my $error = $self->SUPER::save( $hash );
 	if ( ! $error ) {
 		# Taxes
@@ -124,10 +120,10 @@ sub destroy {
     my $ac = sql::start_transaction( );
     sql::execute( undef, undef, q{DELETE FROM Claim_Taxes WHERE claim_id=?}, $$self{'id'} );
     sql::execute( undef, undef, q{DELETE FROM Claim_Contents WHERE claim_id=?}, $$self{'id'} );
-	return $dbh->errstr() if $dbh->errstr();
+	return $openprint::dbh->errstr() if $openprint::dbh->errstr();
     sql::execute( undef, undef, q{DELETE FROM Claims WHERE id=?}, $$self{'id'} );
     sql::end_transaction( undef, $ac );
-	return $dbh->errstr() if $dbh->errstr();
+	return $openprint::dbh->errstr() if $openprint::dbh->errstr();
 	delete $openprint::Object::cache{'openprint::Claim'}{$$self{'id'}};
 	return '';
 } # end sub delete
@@ -196,7 +192,7 @@ require MIME::Base64;
 require MIME::QuotedPrint;
 	my ( $self, @To ) = @_;
 
-	my $From = new openprint::User( $session{'user_id'} );
+	my $From = new openprint::User( $openprint::session{'user_id'} );
 	
 	my %info = (
 			'Claim'	=>	$self,
@@ -204,7 +200,7 @@ require MIME::QuotedPrint;
 			);
 	my @attachments = ();
 
-	my $email_template = misc::load_file( $log, $config{'SkinPath'} . '/email_template.html' );
+	my $email_template = misc::load_file( $log, $openprint::config{'SkinPath'} . '/email_template.html' );
 	$info{'ReplacementText'} = "<!--#include virtual=\"/email_content/claim_body.html\"-->";
 	$_ = MIME::QuotedPrint::encode_qp( Encode::encode('utf-8', ssi::variable_substitution( \$email_template, \%info ) ) );
 	push @attachments, ('', $_, 'text/html', 'quoted-printable');

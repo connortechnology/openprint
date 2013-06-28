@@ -443,7 +443,7 @@ $openprint::log->debug("Basis:: " . $Paper->basis_mweight() );
 				return;
 			} # end if
 		} # end if
-		foreach my $condition_id ( sets::union( map { $_->condition_id() } openprint::SkidContent->find(paper_id=>$param{paper_id},
+		foreach my $condition_id ( sets::union( map { $_->condition_id() } openprint::SkidContent->find(paper_id=>$param{paper_id},deleted=>0,
 						( $param{skid_id} ? ( skid_id=>$param{skid_id} ) : () ),'quantity >' =>0 ) ) ) {
 			next if ! $param{'quantity-'.$condition_id};
 			allocate( @param{'skid_id','paper_id','quantity-'.$condition_id,'Project','Docket','specific','reason'}, $condition_id );
@@ -1153,7 +1153,7 @@ sub allocate {
 		if ( $quantity < 0 ) {
 			@skid_ids = map { $_->skid_id() } openprint::PaperAllocation->find(paper_id=>$paper_id, project_id=>$Projects[0]->id(), ( $condition_id ? ( condition_id=>$condition_id ) : () ) );
 		} else {
-			@skid_ids = map { $_->skid_id() } openprint::SkidContent->find(paper_id=>$paper_id, project_id=>$Projects[0]->id(), ( $condition_id ? ( condition_id=>$condition_id ) : () ) );
+			@skid_ids = map { $_->skid_id() } openprint::SkidContent->find(deleted=>0,paper_id=>$paper_id, project_id=>$Projects[0]->id(), ( $condition_id ? ( condition_id=>$condition_id ) : () ) );
 		} # end if
 	} # end if
 
@@ -1196,6 +1196,7 @@ sub allocate {
 				condition_id	=>	$condition_id,
 				paper_id		=>	$paper_id,
 				'quantity >'	=>	1,
+				deleted			=>	0,
 				);
 		next if ! @SkidContents;
 		my @Allocations = openprint::PaperAllocation->find(
@@ -1994,7 +1995,7 @@ sub available_paper {
 				return;
 			} # end if
 		} # end if
-		foreach my $condition_id ( sets::union( map { $_->condition_id() } openprint::SkidContent->find(paper_id=>$param{paper_id},skid_id=>$param{skid_id},'quantity >' =>0 ) ) ) {
+		foreach my $condition_id ( sets::union( map { $_->condition_id() } openprint::SkidContent->find(deleted=>0,paper_id=>$param{paper_id},skid_id=>$param{skid_id},'quantity >' =>0 ) ) ) {
 			next if ! $param{'quantity-'.$condition_id};
 			allocate( @param{'skid_id','paper_id','quantity-'.$condition_id,'Project','Docket','specific','reason'}, $condition_id );
 		} # end foreach condition

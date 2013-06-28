@@ -21,6 +21,7 @@ $debug = 1;
 );
 %find_fields = (
 	allocated	=>	'(SELECT SUM(quantity) FROM Paper_Allocations WHERE Paper_Allocations.skid_id=Skid_Contents.skid_id AND paper_allocations.paper_id=Skid_Contents.paper_id)',
+	deleted		=>	'(SELECT deleted FROM skids where skids.id=skid_id)',
 );
 %defaults = (
 	paper_id		=>	undef,

@@ -807,7 +807,7 @@ sub in_stock {
 	if ( @_ > 1 ) {
 		if ( ref $_[1] eq 'openprint::StockQuality' ) {
 			my $in_stock = 0;
-			foreach my $C ( openprint::SkidContent->find('paper_id'=>$_[0]{'id'}, 'quality_id'=>$_[0]->id() ) ) {
+			foreach my $C ( openprint::SkidContent->find(deleted=>0,paper_id=>$_[0]{id}, quality_id=>$_[0]->id() ) ) {
 				$in_stock += $C->quantity();
 			} # end foreach C
 			return $in_stock;
@@ -817,7 +817,7 @@ sub in_stock {
 	} # end if
 
 	if ( ! defined $_[0]{'in_stock'} ) {
-		foreach my $SkidContent ( openprint::SkidContent->find('paper_id'=>$_[0]{'id'},'quantity >'=>0) ) {
+		foreach my $SkidContent ( openprint::SkidContent->find(deleted=>0,paper_id=>$_[0]{id},'quantity >'=>0) ) {
 			if ( ! $SkidContent->Skid()->location_id() or ( $SkidContent->Skid()->Location()->name() ne 'Missing' ) ) {;
 				$_[0]{'in_stock'} += $SkidContent->quantity();
 			} # end nif
@@ -839,7 +839,7 @@ sub available {
 
 	if ( ! exists $$self{available} ) {
 		$$self{available} = 0;
-		foreach my $SkidContent ( openprint::SkidContent->find('paper_id'=>$$self{'id'},'quantity >'=>0) ) {
+		foreach my $SkidContent ( openprint::SkidContent->find(deleted=>0,paper_id=>$$self{id},'quantity >'=>0) ) {
 			next if $SkidContent->Skid()->Location()->name() eq 'Missing';
 			next if sets::isin( $SkidContent->condition(), ['Damaged', 'Used' ] );
 			@$self{available} += int $SkidContent->quantity();
@@ -852,7 +852,7 @@ sub available {
 sub skids {
 	my $self = shift;
 	return 0 if ! $$self{'id'};
-	return openprint::Skid->find('paper_id'=>$$self{'id'}, 'quantity >='=>1);
+	return openprint::Skid->find( paper_id=>$$self{id}, 'quantity >='=>1);
 	#return map { new openprint::Skid( $_ ) } sql::execute( undef, undef, q{SELECT skid_id FROM skid_contents WHERE paper_id=? and quantity > 0}, $$self{'id'} );
 } # end sub skids
 
