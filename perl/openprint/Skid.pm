@@ -740,5 +740,65 @@ sub used {
 	return $_[0]{used};
 } # end sub used
 
+sub merge {
+	my ( $Keep, $Merge ) = @_;
+	
+	my $ac = sql::start_transaction( $openprint::dbh );
+	foreach my $MC ( openprint::ManifestContent->find( skid_id=>$$Merge{id} ) ) {
+		if ( $MC->rfidtag_id() and $Keep->rfidtag_id() and ( $MC->rfidtag_id() ne $Keep->rfidtag_id() ) ) {
+			$openprint::dbh->rollback();
+			return 'Cant merge skids due to rfidtag mismatch in manifests. Please do it manually.';
+		}
+		$MC->save({skid_id=>$$Keep{id},
+			( ( ( ! $MC->rfidtag_id() ) and $Keep->rfidtag_id() ) ? ( rfidtag_id => $Keep->rfidtag_id() ) : () )
+		});
+	} # end foreach
+	my @MergeContents = $Merge->Contents();
+	if ( @MergeContents > 1 ) {
+		$openprint::dbh->rollback();
+		return qq`Cant merge skids because skid <a href="/employee/inventory/skid_details.html?skid_id=$$Merge{id}">$$Merge{id}</a> has more than 1 Stock on it. Please fix it manually.`;
+	} # end if
+	my @KeepContents = $Keep->Contents();
+	if ( @KeepContents > 1 ) {
+		$openprint::dbh->rollback();
+		return qq`Cant merge skids because skid <a href="/employee/inventory/skid_details.html?skid_id=$$Keep{id}">$$Keep{id}</a> has more than 1 Stock on it. Please fix it manually.`;
+	} # end if
+		
+	if ( ! @KeepContents ) {
+		
+	} elsif ( @MergeContents ) {
+		if ( $MergeContents[0]{paper_id} != $KeepContents[0]{paper_id} ) {
+			$openprint::dbh->rollback();
+			return qq`Cant merge skids because stocks do not match. Please fix it manually.`;
+		} # end if
+	} # end if
+	foreach my $PI ( openprint::PaperInventory->find(skid_id=>$$Merge{id}) ) {
+		$PI = $PI->copy();
+		$PI->save({skid_id => $$Keep{id} });
+	} # end foreach PI	
+
+	my $PI = new openprint::PaperInventory();
+	my $e = $PI->save({
+			'paper_id'  =>  undef,
+			'user_id'   =>  $openprint::session{user_id},
+			'instock'   =>  0,
+			'delta'     =>  0,
+			'comment'   =>  qq`Merged skid <a href="/employee/inventory/skid_details.html?skid_id=$$Merge{id}">$$Merge{id}</a>`,
+			'skid_id'   =>  $$Keep{id},
+			});
+	$PI = new openprint::PaperInventory();
+	my $e = $PI->save({
+			'paper_id'  =>  undef,
+			'user_id'   =>  $openprint::session{user_id},
+			'instock'   =>  0,
+			'delta'     =>  0,
+			'comment'   =>  qq`Merged to skid <a href="/employee/inventory/skid_details.html?skid_id=$$Keep{id}">$$Keep{id}</a>`,
+			'skid_id'   =>  $$Merge{id},
+			});
+
+	$Merge->delete();
+	sql::end_transaction( $openprint::dbh, $ac );
+} # end sub merge
+
 1;
 __END__

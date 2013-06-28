@@ -12,6 +12,7 @@ require openprint::Manifest;
 require openprint::Skid;
 require openprint::RFIDTag;
 require openprint::SkidContent;
+require openprint::Location;
 
 $debug = 1;
 
@@ -157,6 +158,10 @@ sub location_id {
 	return $_[0]{location_id};
 } # end sub location_id
 
+sub Location {
+	return new openprint::Location($_[0]->location_id());
+} # end sub Location
+
 sub fix {
 	my ( $MC ) = @_;
 	my $Type = $_[0]->Type();
@@ -166,9 +171,9 @@ sub fix {
 	my @SkidContents = openprint::SkidContent->find( skid_id=>$$MC{skid_id} );
 	my %SkidContents = map { $$_{paper_id}, $_ } @SkidContents;
 
-foreach my $k ( keys %SkidContents ) {
-$openprint::log->debug( "$k => " . $SkidContents{$k}->to_string() );
-}
+#foreach my $k ( keys %SkidContents ) {
+#$openprint::log->debug( "$k => " . $SkidContents{$k}->to_string() );
+#}
 	if ( $SkidContents{$$Type{paper_id}} ) {
 # Have the right paper., remove the ones that don't match.
 $openprint::log->debug("desired paper exists");
@@ -211,9 +216,21 @@ $openprint::log->debug("desired paper does not exists");
 	} # end if
 	$error .= $Type->Paper()->save();
 	my $Skid = $MC->Skid();
-	if ( $$Skid{id} and ( $$MC{manufacturers_id} ne $$Skid{manufacturers_id} ) ) {
-		if ( $$MC{manufacturers_id} ) {
-			$Skid->save({manufacturers_id=>$$MC{manufacturers_id}});
+	if ( $$Skid{id} and $$MC{manufacturers_id} and ( $$MC{manufacturers_id} ne $$Skid{manufacturers_id} ) ) {
+		if ( ! $$Skid{manufacturers_id} ) {
+			my $S = openprint::Skid->find_one(manufacturers_id=>$$MC{manufacturers_id});
+			if ( $S ) {
+# Only do it if the skid doesn't have one assigned.
+				if ( $Skid->rfidtag_id() and ( $Skid->rfidtag_id() eq $MC->rfidtag_id() ) ) {
+# Keep the manifest skid.
+					$error .= $Skid->merge( $S );
+				} elsif ( $S->rfidtag_id() and ( $S->rfidtag_id() eq $MC->rfidtag_id() ) ) {
+					$error .= $S->merge( $Skid );
+					$error .= $MC->save({skid_id=>$$S{id}});
+				}  #end if
+			} else { # $S
+				$Skid->save({manufacturers_id=>$$MC{manufacturers_id}});
+			} # end if
 		} # end if
 	} # end if
 	
@@ -246,7 +263,17 @@ sub check {
 	} # end if
 
 	if ( $$Skid{id} and $$MC{manufacturers_id} and ( $$MC{manufacturers_id} ne $$Skid{manufacturers_id} ) ) {
-		$error .= qq`Manufacturers ID ($$MC{manufacturers_id}) does not match skid. Skid has $$Skid{manufacturers_id}`;
+		$error .= qq`Manufacturers ID ($$MC{manufacturers_id}) does not match skid.<br/>`;
+		my $S = openprint::Skid->find_one(manufacturers_id=>$$MC{manufacturers_id});
+
+		if ( ! $$Skid{manufacturers_id} ) {
+		} else {
+			$error .= qq`Skid has $$Skid{manufacturers_id}<br/>`;
+		} # end if
+
+		if ( $S ) {
+			$error .= qq`Skid <a href="/employee/inventory/skid_details.html?skid_id=$$S{id}">$$S{id}</a> has this manufacturers id.<br/>`;
+		} # end if
 	} # end if
 	my $Tag = $MC->RFIDTag();
 	if ( $Tag->id() ) {

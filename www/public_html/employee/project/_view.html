@@ -1,3 +1,8 @@
+<?include(/includes/project_header.html)?>
+<?eval(
+	$$variable{formname}='f'.$$variable{Project}->id();
+	openprint::project::view($log,$dbh,$variable, $$variable{Project}->id() );
+) ?>
 <div class="buttons">
 <? echo (
 	my $html;
@@ -11,11 +16,6 @@
 	return $html;
 ) ?>
 </div>
-<?include(/includes/project_header.html)?>
-<?eval(
-	$$variable{formname}='f'.$$variable{Project}->id();
-) ?>
-
 <br/>
 <form id="<?formname?>" name="<?formname?>" method="post" action="/employee/project/view.html?ProjectIndex=<?ProjectIndex?>">
 	<table class="List">
