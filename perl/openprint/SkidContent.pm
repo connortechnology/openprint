@@ -61,6 +61,13 @@ sub find {
 		$sql .= ' AND paper_id IS NULL';
 	} # end if
 
+	if ( exists $params{deleted} ) {
+		$sql .= ' AND ? = (SELECT deleted FROM SKids WHERE skids.id=skid_id)';
+		push @values, $params{deleted};
+	} else {
+		$sql .= ' AND false = (SELECT deleted FROM SKids WHERE skids.id=skid_id)';
+	} # end if
+
 	if ( $params{'paper_id'} ) {
 		$sql .= ' AND paper_id=?';
 		push @values, $params{'paper_id'};
