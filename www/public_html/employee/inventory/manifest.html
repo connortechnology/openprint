@@ -11,10 +11,10 @@
 		<input type="hidden" id="manifest_id" name="manifest_id" value="<? echo ( $$variable{'Manifest'}->id() ) ?>" />
 		<fieldset>
 			<div class="leftColumn">
-				<p><label for="name">Manifest #:</label>
+				<p><label for="name">Manifest #</label>
 					<input type="text" id="name" name="name" value="<? hecho ( $$variable{'Manifest'}->name() ) ?>" />
 				</p>
-				<p><label>Vendor:</label>
+				<p><label>Vendor</label>
 					<input id="supplier_id_filter" type="text" onkeyup="filterDDM(this, this.form.supplier_id);" class="filter" />
 					<select id="supplier_id" name="supplier_id" onchange="new Ajax.Updater('PurchaseOrders','_manifest_purchase_orders.html', { parameters: { supplier_id: $('supplier_id').value} } );">
 						<option value="">None</option>
@@ -23,7 +23,7 @@
 				</p>
 			</div>
 			<div class="rightColumn">
-				<p><label>Received On:</label>
+				<p><label>Received On</label>
 				<? eval ( 
 					if ( $$variable{'Manifest'}->received_on() ) {
 						@param{'received_on_year','received_on_month','received_on_day'} = split('-', $$variable{'Manifest'}->received_on() );
