@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<title><?PageTitle?> - Employee</title>
+		<meta charset="utf-8" />
+		<link href="<? echo ( hash_link('/css/common.css') ) ?>" rel="stylesheet" type="text/css" />
+		<link href="<? echo ( hash_link('/css/common-print.css') ) ?>" rel="stylesheet" type="text/css" media="print"/>
+		<link href="<? echo ( hash_link('/css/menu.css') ) ?>" rel="stylesheet" type="text/css" />
+		<link href="<? echo ( hash_link('/css/button.css') ) ?>" rel="stylesheet" type="text/css" />
+		<link href="<? echo ( hash_link('/css/pwc.css') ) ?>" rel="stylesheet" type="text/css" media="screen"/>
+		<link href="/css/alphacube.css" rel="stylesheet" type="text/css" media="screen"/>
+		<link href="/css/alert.css" rel="stylesheet" type="text/css" media="screen"/>
+		<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<? if ( ($$variable{'uri'} =~ /datacollection/) and $ENV{HTTP_USER_AGENT} =~ /ip(hone|ad|od)/i ) ?>
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black" />
+<? endif ( ($$variable{'uri'} =~ /datacollection/) and $ENV{HTTP_USER_AGENT} =~ /ip(hone|ad|od)/i ) ?>
+<? echo (
+	$session{menuoff} = $param{menuoff} if exists $param{menuoff};
+	my @html;
+	my $css = $$variable{'uri'};
+	$css =~ s/^\///;
+	$css =~ s/\..+$//;
+	my @parts = split '/', $css;
+	while ( @parts ) {
+		$css = join('_', @parts ) . '.css';
+		if ( -e $config{'SkinPath'}.'/css/'.$css ) {
+			push @html, '<link type="text/css" rel="stylesheet" href="'.hash_link('/css/'.$css).'"/>';
+		}
+		pop @parts;
+	} # end while
+	@html = reverse @html;
+	if ( $$variable{'uri'} =~ /claim/ ) {
+		push @html, '<link href="'.hash_link('/css/claim.css').'" rel="stylesheet" type="text/css"/>';
+	} # end if
+	if ( $$variable{'uri'} =~ /credit_application/ ) {
+		push @html, '<link href="'.hash_link('/css/credit_application.css').'" rel="stylesheet" type="text/css"/>';
+	} # end if
+	if ( $$variable{'uri'} =~ /print_overview/ ) {
+		push @html, '<link href="'.hash_link('/css/press_schedule.css').'" rel="stylesheet" type="text/css"/>';
+	} elsif ( $$variable{'uri'} =~ /operator_schedule/ ) {
+		push @html, '<link href="'.hash_link('/css/press_schedule.css').'" rel="stylesheet" type="text/css"/>';
+	} elsif ( $$variable{'uri'} =~ /jobs_by_csr/ ) {
+		push @html, '<link href="'.hash_link('/css/press_schedule.css').'" rel="stylesheet" type="text/css"/>';
+	} elsif ( $$variable{'uri'} =~ /project\/view/ ) {
+		push @html, '<link href="'.hash_link('/css/order.css').'" rel="stylesheet" type="text/css"/>';
+	} # end if
+
+	return join("\n", @html );
+) ?>
+		<? if ( $$variable{'uri'} =~ /prepress_overview/ ) ?>
+		<link href="/css/press_schedule.css" rel="stylesheet" type="text/css"/>
+		<meta http-equiv="refresh" content="300">
+		<? endif ( $$variable{'uri'} =~ /prepress_overview/ ) ?>
+		<? if ( $$variable{'uri'} =~ /prepress_schedule/ ) ?>
+		<link href="/css/press_schedule.css" rel="stylesheet" type="text/css"/>
+		<meta http-equiv="refresh" content="300">
+		<? endif ( $$variable{'uri'} =~ /prepress_schedule/ ) ?>
+		<? if ( $$variable{'uri'} =~ /purchase_order/ ) ?>
+		<link href="/css/purchase_order.css" rel="stylesheet" type="text/css"/>
+		<? endif ( $$variable{'uri'} =~ /purchase_order/ ) ?>
+		<!-- calendar stylesheet -->
+		<link rel="stylesheet" type="text/css" media="all" href="/javascripts/jscalendar/calendar-win2k-cold-1.css" title="win2k-cold-1" />
+		<script src="//ajax.googleapis.com/ajax/libs/prototype/1.7.0/prototype.js"></script>
+		<script src="//ajax.googleapis.com/ajax/libs/scriptaculous/1.9.0/scriptaculous.js"></script>
+		<script type="text/javascript" src="/javascripts/tinymce/jscripts/tiny_mce/tiny_mce.js"></script>
+<? echo (
+    return join("\n", (
+
+    '<script type="text/javascript" src="'.hash_link("/javascripts/fastinit.js").'"></script>',
+    '<script type="text/javascript" src="'.hash_link("/javascripts/form_utilities.js").'"></script>',
+    '<script type="text/javascript" src="/javascripts/window.js"></script>',
+    '<script type="text/javascript" src="'.hash_link("/javascripts/buttons.js").'"></script>',
+    '<script type="text/javascript" src="'.hash_link("/javascripts/proj/misc_prin.js").'"></script>',
+    '<script type="text/javascript" src="'.hash_link("/javascripts/popups.js").'"></script>',
+    '<script type="text/javascript" src="'.hash_link("/javascripts/jsrsClient.js").'"></script>',
+    '<script type="text/javascript" src="'.hash_link("/javascripts/tablekit.js").'"></script>',
+    '<script type="text/javascript" src="'.hash_link("/javascripts/barcode.js").'"></script>',
+    '<script type="text/javascript" src="'.hash_link("/javascripts/jscalendar/calendar.js").'"></script>',
+    '<script type="text/javascript" src="'.hash_link("/javascripts/jscalendar/lang/calendar-en.js").'"></script>',
+    '<script type="text/javascript" src="'.hash_link("/javascripts/jscalendar/calendar-setup.js").'"></script>',
+    '<script type="text/javascript" src="'.hash_link("/javascripts/ipre/src/inplacericheditor.js").'"></script>',
+	) );
+) ?>
+		<link rel="shortcut icon" href="/images/favicon.ico" />
+		<link rel="apple-touch-icon" href="/images/apple-touch-icon.png"/>
+	</head>
+	<body onload="if ( typeof(body_onLoad) == 'function' ) body_onLoad();" id="body">
+		<div id="Header"<? if ( $session{'menuoff'} ) ?> style="display:none;"<? endif ( $session{'menuoff'} ) ?>>
+			<div id="Logo">
+				<table><tr>
+				<td><a href="/index.html"><img src="/images/header/logo.png" alt="PointOne Graphics Inc"/></a></td>
+				<td><a href="/index.html"><span id="PointOne">PointOne</span><br/><span id="GraphicsInc">GRAPHICS INC</span></a></td>
+				</tr></table>
+			</div>
+			<div id="CurrencySelection">
+				Currency:
+				<form name="SelectCurrency" action="<? echo ( misc::get_url( $$variable{'uri'}, \%param, { } ); ) ?>" method="post">
+					<select name="select_currency_id" onchange="this.form.submit();">
+					<? echo (
+							ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Currency::find( 'order'=>'lower(name)' ) ], $session{'Currency_id'} );
+							) ?>
+					</select>
+				</form>
+			</div>
+			<div class="Menu">
+					<ul id="menubar">
+						<li class="off"><a href="/employee/index.html">HOME</a></li>
+                        <? if ( $session{'user_type'} eq 'A' ) ?>
+                        <li id="MenuAdministrator" class="off"><a href="/administrator/index.html">ADMIN SIDE</a></li>
+                        <? endif ( $session{'user_type'} eq 'A' ) ?>
+
+						<li id="AccountMenu" class="<? echo ( $$variable{'uri'} =~ /employee\/account/ ? 'on' : 'off' ) ?>"><a href="#" onclick="toggleMenu($('AccountMenu'), 'off', 'on');return false;">ACCOUNT</a>
+							<ul>
+<? if ( $session{'user_id'} ) ?>
+								<li><a href="/employee/account/logout.html">&raquo; Logout</a></li>
+<? if ( ($session{'user_type'} eq 'A' ) or ( openprint::usergroup::is_user_in( ['UserManagement'], $session{'user_id'} ) ) ) ?>
+								<li><a href="/employee/account/profile.html">&raquo; User Profiles</a></li>
+<? else ( ($session{'user_type'} eq 'A' ) or ( openprint::usergroup::is_user_in( ['UserManagement'], $session{'user_id'} ) ) ) ?>
+								<li><a href="/employee/account/profile.html">&raquo; Profile</a></li>
+<? endif ( ($session{'user_type'} eq 'A' ) or ( openprint::usergroup::is_user_in( ['UserManagement'], $session{'user_id'} ) ) ) ?>
+<? else ( $session{'user_id'} ) ?>
+								<li><a href="/employee/account/login.html">&raquo; Login</a></li>
+<? endif ( $session{'user_id'} ) ?>
+							</ul>
+						</li>
+<? if ( $session{'user_id'} ) ?>
+						<li id="ProductionMenu" class="<? echo ( ( $$variable{'uri'} =~ /employee\/pro/ or $$variable{'uri'} =~ /employee\/per/ ) ? 'on' : 'off' ) ?>"><a href="#" onclick="toggleMenu($('ProductionMenu'), 'off', 'on');return false;">PRODUCTION</a>
+							<ul>
+								<li><a href="/employee/production/projects.html;NOSSL">&raquo; Projects</a></li>
+								<li><a href="/employee/production/barcode.html;NOSSL">&raquo; Barcode</a></li>
+								<li><a href="/employee/production/prepress_overview.html;NOSSL">&raquo; PrePress Overview</a></li>
+								<li><a href="/employee/production/prepress_schedule.html;NOSSL">&raquo; PrePress Schedule</a></li>
+								<li><a href="/employee/production/print_overview.html;NOSSL">&raquo; Production Schedule</a></li>
+								<li><a href="/employee/production/jobs_by_csr.html;NOSSL">&raquo; Jobs By CSR</a></li>
+								<li><a href="/employee/production/monthly_schedule.html;NOSSL">&raquo; Schedule Overview</a></li>
+								<li><a href="/employee/production/operator_schedule.html;NOSSL">&raquo; Operator Schedule</a></li>
+<!--
+								<li><a href="/employee/production/press_schedule.html;NOSSL">&raquo; New Press Schedule</a></li>
+-->
+								<? if ( openprint::usergroup::is_user_in( ['Scheduling'], $session{'user_id'} ) ) ?>
+								<li><a href="/employee/production/duc_interface.html;NOSSL">&raquo; Set Schedule</a></li>
+								<? endif ( openprint::usergroup::is_user_in( ['Scheduling'], $session{'user_id'} ) ) ?>
+								<li><a href="/employee/production/bindery_overview.html;NOSSL">&raquo; Bindery Overview</a></li>
+								<li><a href="/employee/production/bindery_schedule.html;NOSSL">&raquo; Bindery Schedule</a></li>
+								<? if ( openprint::usergroup::is_user_in( ['Scheduling'], $session{'user_id'} ) ) ?>
+								<li><a href="/employee/performance/setup.html;NOSSL">&raquo; Performance Setup</a></li>
+								<li><a href="/employee/performance/history.html;NOSSL">&raquo; Performance History</a></li>
+								<? endif ( openprint::usergroup::is_user_in( ['Scheduling'], $session{'user_id'} ) ) ?>
+								<li><a href="/employee/production/datacollection.html;NOSSL">&raquo; Data Collection</a></li>
+							</ul>
+						</li>
+						<? if ( ( $session{'user_type'} eq 'A' ) or openprint::usergroup::is_user_in( ['Marketing'], $session{'user_id'} ) ) ?>
+						<li id="MarketingMenu" class="<? echo ( $$variable{'uri'} =~ /employee\/marketing/ ? 'on' : 'off' ) ?>"><a href="#" onclick="toggleMenu($('MarketingMenu'), 'off', 'on');return false;">MARKETING</a>
+							<ul>
+								<li><a href="/employee/marketing/categories.html;NOSSL">&raquo; Marketing Categories</a></li>
+								<li><a href="/employee/marketing/email_templates.html;NOSSL">&raquo; Email Templates</a></li>
+								<li><a href="/employee/marketing/email_campaigns.html;NOSSL">&raquo; Email Campaigns</a></li>
+								<li><a href="/employee/marketing/surveys.html;NOSSL">&raquo; Surveys</a></li>
+							</ul>
+						</li>
+						<? endif ( ( $session{'user_type'} eq 'A' ) or openprint::usergroup::is_user_in( ['Marketing'], $session{'user_id'} ) ) ?>
+						<? if ( ( $session{'user_type'} eq 'A' ) or openprint::usergroup::is_user_in( ['Sales','Reporting','Accounting'], $session{'user_id'} ) ) ?>
+						<li id="ReportsMenu" class="<? echo ( $$variable{'uri'} =~ /employee\/reports/ ? 'on' : 'off' ) ?>"><a href="#" onclick="toggleMenu($('ReportsMenu'), 'off', 'on');return false;">REPORTS</a>
+							<ul>
+								<li><a href="/employee/reports/project_history.html;NOSSL">&raquo; Project History</a></li>
+								<li><a href="/employee/reports/project_performance.html;NOSSL">&raquo; Project Performance</a></li>
+								<li><a href="/employee/reports/project_log.html;NOSSL">&raquo; Project Log</a></li>
+								<li><a href="/employee/reports/order_history.html;NOSSL">&raquo; Order History</a></li>
+								<li><a href="/employee/reports/order_performance.html;NOSSL">&raquo; Order Performance</a></li>
+								<? if ( openprint::usergroup::is_user_in( ['Reporting'], $session{'user_id'} ) ) ?>
+								<li><a href="/employee/reports/delivery.html;NOSSL">&raquo; Delivery</a></li>
+								<li><a href="/employee/reports/turnaround.html;NOSSL">&raquo; Turnaround</a></li>
+								<li><a href="/employee/reports/stock.html;NOSSL">&raquo; Stock</a></li>
+								<li><a href="/employee/reports/prepress_productivity.html;NOSSL">&raquo; Prepress Productivity</a></li>
+								<li><a href="/employee/reports/job_size.html;NOSSL">&raquo; Job Size</a></li>
+								<? endif ( openprint::usergroup::is_user_in( ['Reporting'], $session{'user_id'} ) ) ?>
+								<li><a href="/employee/reports/stock_usage.html;NOSSL">&raquo; Stock Usage</a></li>
+								<li><a href="/employee/reports/prepress_overview.html;NOSSL">&raquo; Prepress Overview</a></li>
+								<li><a href="/employee/reports/customer_performance.html;NOSSL">&raquo; Customer Performance</a></li>
+							</ul>
+						</li>
+						<? endif ( ( $session{'user_type'} eq 'A' ) or openprint::usergroup::is_user_in( ['Sales','Reporting','Accounting'], $session{'user_id'} ) ) ?>
+						<? if ( ( $session{'user_type'} eq 'A' ) or openprint::usergroup::is_user_in( ['Accounting'], $session{'user_id'} ) ) ?>
+						<li id="AccountingMenu" class="<? echo ( $$variable{'uri'} =~ /employee\/accounting/ ? 'on' : 'off' ) ?>"><a href="#" onclick="toggleMenu($('AccountingMenu'), 'off', 'on');return false;">ACCOUNTING</a>
+							<ul>
+								<li><a href="/employee/accounting/search.html;NOSSL">&raquo; Outstanding</a></li>
+								<li><a href="/employee/accounting/credit.html;NOSSL">&raquo; Customer Credit</a></li>
+								<li><a href="/employee/accounting/stock.html;NOSSL">&raquo; Stock</a></li>
+								<li><a href="/employee/accounting/credit_applications.html;NOSSL">&raquo; Credit Applications</a></li>
+								<li><a href="/payment/history.html;NOSSL">&raquo; Payment History</a></li>
+							</ul>
+						</li>
+						<? endif ( ( $session{'user_type'} eq 'A' ) or openprint::usergroup::is_user_in( ['Accounting'], $session{'user_id'} ) ) ?>
+						<li id="InventoryMenu" class="<? echo ( ($$variable{'uri'} =~ /employee\/inventory/ or $$variable{'uri'} =~ /employee\/claim/ or $$variable{'uri'} =~ /employee\/purchase_order/ ) ? 'on' : 'off' ) ?>"><a href="#" onclick="toggleMenu($('InventoryMenu'), 'off', 'on');return false;">INVENTORY</a>
+							<ul>
+								<li><a href="/employee/purchase_order/history.html;NOSSL">&raquo; Purchase Orders</a></li>
+<? if ( sets::isin( new openprint::User( $session{'user_id'} )->email(), [ 'iconnor@point-one.com','rick@point-one.com' ] ); ) ?>
+								<li><a href="/employee/purchase_order/items.html;NOSSL">&raquo; Purchase Order Items</a></li>
+<? endif ( sets::isin( new openprint::User( $session{'user_id'} )->email(), [ 'iconnor@point-one.com','rick@point-one.com' ] ); ) ?>
+<? if ( ($session{'user_type'} eq 'A' ) or ( openprint::usergroup::is_user_in( ['UserManagement'], $session{'user_id'} ) ) ) ?>
+								<li><a href="/employee/purchase_order/authorizations.html;NOSSL">&raquo; Purchase Order Limits</a></li>
+<? endif ( ($session{'user_type'} eq 'A' ) or ( openprint::usergroup::is_user_in( ['UserManagement'], $session{'user_id'} ) ) ) ?>
+								<li><a href="/employee/claim/history.html;NOSSL">&raquo; Claims</a></li>
+								<li><a href="/employee/inventory/available_paper.html;NOSSL">&raquo; Available Paper</a></li>
+								<li><a href="/employee/inventory/docket_labels.html;NOSSL">&raquo; Docket Labels</a></li>
+								<li><a href="/employee/inventory/paper.html;NOSSL">&raquo; Paper</a></li>
+								<li><a href="/employee/inventory/skids.html;NOSSL">&raquo; Skids/Rolls</a></li>
+								<li><a href="/employee/inventory/allocations.html;NOSSL">&raquo; Allocations</a></li>
+								<li><a href="/employee/inventory/rfidtags.html;NOSSL">&raquo; RFID Tags</a></li>
+								<li><a href="/employee/inventory/rfidscanners.html;NOSSL">&raquo; RFID Scanners</a></li>
+								<li><a href="/employee/inventory/manifest.html;NOSSL">&raquo; Update Inventory</a></li>
+								<li><a href="/employee/inventory/manifests.html;NOSSL">&raquo; Manifests</a></li>
+								<li><a href="/employee/inventory/inventory_log.html;NOSSL">&raquo; Inventory Log</a></li>
+								<li><a href="/employee/inventory/packingslips.html;NOSSL">&raquo; Packing Slips</a></li>
+						<? if ( ( $session{'user_type'} eq 'A' ) or openprint::usergroup::is_user_in( ['InventoryManager'], $session{'user_id'} ) ) ?>
+								<li><a href="/employee/accounting/stock.html;NOSSL">&raquo; Stock Value</a></li>
+						<? endif ( ( $session{'user_type'} eq 'A' ) or openprint::usergroup::is_user_in( ['InventoryManager'], $session{'user_id'} ) ) ?>
+							</ul>
+						</li>
+						<li id="ISOMenu" class="<? echo ( $$variable{'uri'} =~ /employee\/iso/ ? 'on' : 'off' ) ?>"><a href="#" onclick="toggleMenu($('ISOMenu'), 'off', 'on');return false;">ISO</a>
+							<ul>
+								<li><a href="/employee/iso/pars.html;NOSSL">&raquo; Preventive Action Requests</a></li>
+								<li><a href="/employee/iso/cars.html;NOSSL">&raquo; Corrective Action Requests</a></li>
+							</ul>
+						</li>
+						<li id="ITMenu" class="<? echo ( ( $$variable{'uri'} =~ /employee\/it/ or $$variable{'uri'} =~ /employee\/assets/ ) ? 'on' : 'off' ) ?>"><a href="#" onclick="toggleMenu($('ITMenu'), 'off', 'on');return false;">IT</a>
+							<ul>
+								<li><a href="/employee/it/hosts.html;NOSSL">&raquo; Hosts</a></li>
+								<li><a href="/employee/it/licenses.html;NOSSL">&raquo; Licenses</a></li>
+								<li><a href="/employee/it/radius.html;NOSSL">&raquo; RADIUS</a></li>
+								<li><a href="/mrtg/index.html;NOSSL">&raquo; MRTG Graphs</a></li>
+								<li><a href="/employee/assets/history.html;NOSSL">&raquo; Assets</a></li>
+								<li><a href="/employee/it/cameras.html;NOSSL">&raquo; Camera Admin</a></li>
+								<li><a href="/employee/it/camera_viewer.html;NOSSL">&raquo; Camera Viewer</a></li>
+								<li><a href="/employee/it/logs.html;NOSSL">&raquo; Login Log</a></li>
+								<li><a href="/location/list.html;NOSSL">&raquo; Locations</a></li>
+								<li><a href="/employee/it/sessions.html;NOSSL">&raquo; Sessions</a></li>
+								<li><a href="/employee/it/uploads.html;NOSSL">&raquo; Uploads</a></li>
+							</ul>
+						</li>
+						<li id="SREDMenu" class="<? echo ( $$variable{'uri'} =~ /employee\/sred/ ? 'on' : 'off' ) ?>"><a href="#" onclick="toggleMenu($('SREDMenu'), 'off', 'on');return false;">SRED</a>
+							<ul>
+								<li><a href="/employee/sred/projects.html;NOSSL">&raquo; Projects</a></li>
+							</ul>
+						</li>
+						<li id="SupportMenu" class="<? echo ( $$variable{'uri'} =~ /employee\/support/ ? 'on' : 'off' ) ?>"><a href="#" onclick="toggleMenu($('SupportMenu'), 'off', 'on');return false;">SUPPORT</a>
+							<ul>
+								<li><a href="/employee/support/helpdesk_search.html;NOSSL">&raquo; Help Desk</a></li>
+								<li><a href="/employee/support/returns.html;NOSSL">&raquo; Returns</a></li>
+							</ul>
+						</li>
+					<li class="off"><a href="#" onclick="bug_report_window();return false;">SEND BUG REPORT</a></li>
+<? if ( new openprint::User( $session{user_id} )->email() =~ /^iconnor/ ) ?>
+					<li class="off"><a href="/session.html">SESSION</a></li>
+<? endif ( new openprint::User( $session{user_id} )->email() =~ /^iconnor/ ) ?>
+<? endif ( $session{'user_id'} ) ?>
+<li class="off"><a href="#" onclick="$('Header').hide();$('ShowMenu').show();$('Content').setStyle('margin-left: 0;');new Ajax.Request('/menu.json?menuoff=1' );">HIDE MENU</a></li>
+					</ul>
+				</div><!-- Menu -->
+			</div><!-- Header -->
+		<div id="Content"<? if ( $session{'menuoff'} ) ?> style="margin-left: 0;"<? endif ( $session{'menuoff'} ) ?>> 
+			<div id="ContentInner"> 
+				<?PageContent?>
+			</div>
+			<div id="ShowMenu" <? if ( ! $session{'menuoff'} ) ?>style="display:none;"<? endif ( ! $session{'menuoff'} ) ?>>
+        <? echo ( ssi::writeButton( $log, $dbh, 'ShowMenuButton', 'menu.gif', q`$('Header').show();$('ShowMenu').hide();$('Content').setStyle('margin-left: 190px;');new Ajax.Request('/menu.json?menuoff=0' );`, '', 'Show Menu' ); ) ?>
+</div>
+		</div>
+	</body>
+</html>

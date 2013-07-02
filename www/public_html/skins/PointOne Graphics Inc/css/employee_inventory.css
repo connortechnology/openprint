@@ -1,0 +1,93 @@
+table .paper_name {
+	text-align: left;
+}
+table .available {
+	text-align: right;
+	width: 72px;
+	padding-right: 3px;
+}
+table .age {
+	text-align: left;
+	width: 125px;
+}
+table .last_seen {
+	text-align: left;
+	width: 125px;
+}
+table .inventory {
+	text-align: left;
+	width: 200px;
+}
+table .Condition {
+	text-align: left;
+	width: 100px;
+}
+table .buttons {
+	width: 60px;
+}
+table .mweight, table .gsm {
+	text-align: right;
+	width: 50px;
+}
+table .on_order, table .allocated, table .in_stock, table .Quantity, table .qty_lbs, table .qty_kgs, table .qty_feet, table .qty_sheets {
+	text-align: right;
+	width: 75px;
+	padding-right: 5px;
+}
+table .Location {
+	text-align: left;
+}
+
+input#quantity {
+	width: 100%;
+}
+table .Employee, table .Comment {
+	text-align: left;
+}
+table .RFIDScanner {
+	width: 140px;
+	text-align: left;
+}
+#Allocate fieldset p {
+	padding: 0;
+}
+#Allocate fieldset li {
+padding-left: 100px;
+}
+#Allocate fieldset li label {
+	margin-left: -100px;
+	width: 100px;
+}
+#Allocate fieldset li label.radio {
+	margin-left: 0;
+	width: auto;
+}
+#Allocate input {
+	width: 60px;
+}
+.captcha input {
+	width: 40px;
+}
+.captcha img {
+	height: 24px;
+	vertical-align: middle;
+}
+
+.qty_feet input, .qty_lbs input, .qty_kgs input, .Docket input, .Skid input, .qty_sheets input {
+	width: 100%;
+}
+
+fieldset p.size input[type="number"] {
+	width: 75px;
+}
+table .ManufacturersID {
+	width: 140px;
+	text-align: left;
+}
+
+#manifests_within_days, #manifests_within_lbs {
+	width: 40px;
+}
+#location_log_form select {
+	width: auto;
+}

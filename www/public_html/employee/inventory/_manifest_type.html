@@ -193,7 +193,7 @@
 				} # end if
 			} elsif ( my $POC = $$variable{'Type'}->PurchaseOrder_Content() ) {
 				$html .= 'Guessed: ' . ( $POC->item() ? $POC->item() : $POC->description() );
-				$html .= ' ' . Number::Format::format_number($POC->qty()).$POC->units();
+				$html .= ' ' . ( $POC->qty() ? Number::Format::format_number($POC->qty()) : 0 ).$POC->units();
 				if ( openprint::usergroup::is_user_in( ['Accounting','InventoryManager'], $session{'user_id'} ) ) {
 					$html .= ' @ ' . openprint::Currency::format( $POC->price() );
 				} # end if

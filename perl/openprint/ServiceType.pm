@@ -12,16 +12,17 @@ $table = 'service_types';
 $serial = 'service_types_id_seq';
 
 %fields = (
-	'id'				=>	'id',
-	'name'				=> 'name',
-	'description'		=> 'description',
-	'url'				=> 'strdetailedurl',
-	'type'				=> 'type',
-	'category_id'		=> 'category_id',
-	'sorting'			=> 'sorting',
-	'create_visible'	=> 'create_visible',
-	'view_visible'		=> 'view_visible',
-	'category'			=>	undef,
+	id				=>	'id',
+	name				=> 'name',
+	description		=> 'description',
+	url				=> 'strdetailedurl',
+	type				=> 'type',
+	category_id		=> 'category_id',
+	sorting			=> 'sorting',
+	create_visible	=> 'create_visible',
+	view_visible		=> 'view_visible',
+	category			=>	undef,
+	deleted			=>	'deleted',
 );
 %find_fields = (
 	category	=>	'(SELECT name FROM ServiceType_Categories WHERE id=category_id)',
@@ -62,12 +63,13 @@ sub Prev {
 	return new openprint::ServiceType( $_[0]->prev() );
 }
 
-sub delete {
+sub destroy {
 	my $ac = sql::start_transaction( $openprint::dbh );
 	sql::execute( undef, undef, q{DELETE FROM tbl_service_defaults WHERE lngServiceTypeIndex=?}, $_[0]{'id'} );
+	sql::update( undef, undef, $openprint::Project_Service::table, [ $openprint::Project_Service::fields{servicetype_id} . ' =?', $_[0]{id} ], $openprint::Project_Service::fields{servicetype_id}, undef );
 	sql::execute( undef, undef, q{DELETE FROM Service_Types WHERE id=?}, $_[0]{'id'} );
 	sql::end_transaction( $openprint::dbh, $ac );
-} # end sub delete
+} # end sub destroy
 
 sub category {
 	if ( @_ == 2 ) {

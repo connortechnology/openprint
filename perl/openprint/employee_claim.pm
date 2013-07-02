@@ -29,12 +29,7 @@ sub history {
 		} # end foreach claim_id
 		%param = ();
 	} # end if
-	ssi::save_params( '/employee/claim/history.html', ( 
-				'created_on_start_year','created_on_start_month','created_on_start_day',
-				'created_on_end_year','created_on_end_month','created_on_end_day',
-				'updated_on_start_year','updated_on_start_month','updated_on_start_day',
-				'updated_on_end_year','updated_on_end_month','updated_on_end_day',
-				'supplier_id', 'created_by', 'status' ) );
+	_history();
 	ssi::setup_date_select( '/employee/claim/history.html', 'created_on_start', -31 );
 	ssi::setup_date_select( '/employee/claim/history.html', 'created_on_end', '' );
 	ssi::setup_date_select( '/employee/claim/history.html', 'updated_on_start', '' );
@@ -52,7 +47,7 @@ sub _history {
 } # end sub _claims
 
 sub view {
-	$param{'claim_id'} =~ s/\s//g;
+	$param{'claim_id'} =~ s/\D//g;
 	my $Claim = new openprint::Claim( $param{'claim_id'} );
 	if ( $param{'btnFunction'} eq 'Delete' ) {
 		$variable{'error'} .= $Claim->delete();
@@ -104,6 +99,7 @@ sub view {
 		$Claim->sent_to_accounts_on( $param{'sent_to_accounts'} ? join('-', @param{'sent_to_accounts_on_year','sent_to_accounts_on_month','sent_to_accounts_on_day'} ) : undef );
 		$Claim->invoiced_on( $param{'invoiced'} ? join('-', @param{'invoiced_on_year','invoiced_on_month','invoiced_on_day'} ) : undef );
 		$Claim->cancelled_on( $param{'cancelled'} ? join('-', @param{'cancelled_on_year','cancelled_on_month','cancelled_on_day'} ) : undef );
+		$Claim->paid_on( $param{'paid'} ? join('-', @param{'paid_on_year','paid_on_month','paid_on_day'} ) : undef );
 		$param{'docket'} =~ s/[^,\d]//g;
 		$param{'docket'} = [ split(',',$param{'docket'}) ];
 
@@ -152,6 +148,7 @@ sub edit {
 		$Claim->sent_to_accounts_on( $param{'sent_to_accounts'} ? join('-', @param{'sent_to_accounts_on_year','sent_to_accounts_on_month','sent_to_accounts_on_day'} ) : undef );
 		$Claim->invoiced_on( $param{'invoiced'} ? join('-', @param{'invoiced_on_year','invoiced_on_month','invoiced_on_day'} ) : undef );
 		$Claim->cancelled_on( $param{'cancelled'} ? join('-', @param{'cancelled_on_year','cancelled_on_month','cancelled_on_day'} ) : undef );
+		$Claim->paid_on( $param{'paid'} ? join('-', @param{'paid_on_year','paid_on_month','paid_on_day'} ) : undef );
 		$param{'docket'} =~ s/[^,\d]//g;
 		$param{'docket'} = [ split(',',$param{'docket'}) ];
 
@@ -240,14 +237,14 @@ sub _payments {
 	if ( $param{'action'} eq 'addpayment' ) {
 		my $Payment = new openprint::Payment();
 		$variable{'error'} .= $Payment->save({
-				'amount'		=>	$param{'amount'},
-				'memo'			=>	$param{'notes'},
-				'recipient_id'	=>	$Claim->company_id(),
-				'payor_id'		=>	$Claim->supplier_id(),
-				'received_on'	=>	sprintf('%.4d-%.2d-%.2d', @param{'payment_when_year','payment_when_month','payment_when_day'}),
-				'transaction_id'	=>	$param{'transaction_id'},
-				'currency_id'	=>	$Claim->currency_id(),
-				'completed'		=>1,
+				amount		=>	$param{'amount'},
+				memo			=>	$param{'notes'},
+				recipient_id	=>	$Claim->company_id(),
+				payor_id		=>	$Claim->supplier_id(),
+				received_on		=>	sprintf('%.4d-%.2d-%.2d', @param{'payment_when_year','payment_when_month','payment_when_day'}),
+				transaction_id	=>	$param{'transaction_id'},
+				currency_id		=>	$Claim->currency_id(),
+				completed		=>	1,
 				});
 		if ( ! $variable{'error'} ) {
 			my $CP = new openprint::Claim_Payment();
