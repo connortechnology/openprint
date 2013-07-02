@@ -200,7 +200,6 @@ sub google {
 	$string .= ' ' . $_[1] if @_ > 1;
 	$string =~ s/ /+/g;
 	my $coder = Geo::Coder::Googlev3->new();
-$openprint::log->debug('Get: ' . $string );
 	my $location = $coder->geocode( location => $string );
 	if ( ! $location ) {
 		$openprint::log->debug("No location for $string");
@@ -603,7 +602,7 @@ sub from_ip {
 		$openprint::log->error("No record for $ip from Geo::IP " . $gi->database_info);
 		
 		return;
-	} else {
+	} elsif ( $debug ) {
 		$openprint::log->error('Got record from Geo::IP' . $gi->database_info);
 	} # end if
 
