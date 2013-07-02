@@ -11,12 +11,14 @@
 				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::ServiceCategory->find('order'=>'lower(name)') ], $param{'ddmSearchCategory'} ); ) ?>
 			</select>
 		</li>
+<? if ( @{$$variable{Equipment}} = openprint::Equipment->find('order'=>'lower(strid)') ) ?>
 		<li><label>Equipment</label>
 			<select name="equipment_id" onchange="form.btnFunction.value='';f1.submit();">
 				<option value="">All</option>
-				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Equipment->find('order'=>'lower(strid)') ], $param{'equipment_id'} ); ) ?>
+				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } @{$$variable{Equipment}} ], $param{'equipment_id'} ); ) ?>
 			</select>
-		</li>	
+		</li>
+<? endif ( @{$$variable{Equipment}} = openprint::Equipment->find('order'=>'lower(strid)') ) ?>
 		<li> 
 			<label>Service</label>
 			<select name="ddmService" onchange="if(this.options[this.selectedIndex].value != ''){this.form.btnFunction.value='';this.form.submit();}">
@@ -32,15 +34,15 @@
 		<p class="buttons">
 			<? echo ( 
 				my $html = '';
-				$html .= ssi::button( 'Prev1', { onclick=>"f1.btnFunction.value='&lt;&lt;';fmCheck(f1);", href=>'', text=>'&lt;&lt;' } );
-				$html .= ssi::button( 'Next1', { onclick=>"f1.btnFunction.value='&gt;&gt;';fmCheck(f1);", href=>'', text=>'&gt;&gt;' } );
-				$html .= ssi::button( 'New1', { onclick=>"addCheck(f1);", href=>'', text=>'New' } );
-				$html .= ssi::button( 'Save1', { onclick=>"f1.btnFunction.value='Save';fmChange=3;fmCheck(f1);", href=>'', text=>'Save' } );
+				$html .= button( 'Prev1', { onclick=>"f1.btnFunction.value='&lt;&lt;';fmCheck(f1);", href=>'', text=>'&lt;&lt;' } );
+				$html .= button( 'Next1', { onclick=>"f1.btnFunction.value='&gt;&gt;';fmCheck(f1);", href=>'', text=>'&gt;&gt;' } );
+				$html .= button( 'New1', { onclick=>"addCheck(f1);", href=>'', text=>'New' } );
+				$html .= button( 'Save1', { onclick=>"f1.btnFunction.value='Save';fmChange=3;fmCheck(f1);", href=>'', text=>'Save' } );
 				if ( $$variable{'Service'}->id() ) {
-					$html .= ssi::button( 'Copy1', { onclick=>"f1.btnFunction.value='Copy';fmCheck(f1);", href=>'', text=>'Copy' } );
-					$html .= ssi::button( 'Delete1', { onclick=>"f1.btnFunction.value='Delete';fmChange=2;fmCheck(f1);", href=>'', text=>'Delete' } );
+					$html .= button( 'Copy1', { onclick=>"f1.btnFunction.value='Copy';fmCheck(f1);", href=>'', text=>'Copy' } );
+					$html .= button( 'Delete1', { onclick=>"f1.btnFunction.value='Delete';fmChange=2;fmCheck(f1);", href=>'', text=>'Delete' } );
 				} # end if
-				$html .= ssi::button( 'Reset1', { onclick=>'f1.reset();', href=>'', text=>'Reset' } );
+				$html .= button( 'Reset1', { onclick=>'f1.reset();', href=>'', text=>'Reset' } );
 				return $html;
 			) ?>
 		</p>

@@ -15,49 +15,50 @@ $debug = 0;
 $table = 'timetracks';
 $serial = 'timetracks_id_seq';
 %fields = (
-	'id'				=> 'id',
-	'starting'			=>	'starting',
-	'ending'			=>	'ending',
-	'company_id'		=>	'company_id',
-	'project_id'		=>	'project_id',
-	'description'		=>	'description',
-	'invoice_id'		=>	'invoice_id',
-	'service_id'		=>	'service_id',
-	'owner_id'			=>	'owner_id',
-	'time_associated'	=>	'time_associated',
-	'user_id'			=>	'user_id',
-	'rate'				=>	'rate',
-	'created_on'		=> 'created_on',
-	'updated_on'		=> 'updated_on',
-	'deleted'			=> 'deleted',
-	'currency_id'		=>	'currency_id',
-	'travel_associated'	=>	'travel_associated',
-	'distance'			=>	'distance',
-	'billable'			=>	'billable',
+	id				=> 'id',
+	starting		=>	'starting',
+	ending			=>	'ending',
+	company_id		=>	'company_id',
+	project_id		=>	'project_id',
+	description		=>	'description',
+	invoice_id		=>	'invoice_id',
+	service_id		=>	'service_id',
+	owner_id		=>	'owner_id',
+	time_associated	=>	'time_associated',
+	user_id			=>	'user_id',
+	rate			=>	'rate',
+	created_on		=> 'created_on',
+	updated_on		=> 'updated_on',
+	deleted			=> 'deleted',
+	currency_id		=>	'currency_id',
+	travel_associated	=>	'travel_associated',
+	distance			=>	'distance',
+	billable			=>	'billable',
 	po					=>	'po',
 );
 %find_fields = (
-	'paycheque_id'		=>	'(SELECT paycheque_id FROM Paycheques_Timetracks WHERE timetrack_id=timetracks.id)',
+	paycheque_id		=>	'(SELECT paycheque_id FROM Paycheques_Timetracks WHERE timetrack_id=timetracks.id)',
 );
 
 %transforms = (
-	'rate'	=>	[ 's/[^\d\.]//g' ],
-	'distance'	=>	[ 's/[^\d\.]//g' ],
+	rate		=>	[ 's/[^\d\.]//g' ],
+	distance	=>	[ 's/[^\d\.]//g' ],
+    po			=>	[ 's/^\s+//', 's/\s+$//' ],
 );
 %defaults = (
-	'created_on'	=> q`'NOW()'`,
-	'updated_on'	=> q`'NOW()'`,
-	'deleted'		=> 0,
-	'rate'			=>	undef,
-	'currency_id'	=>	undef,
-	'owner_id'		=>	undef,
-	'invoice_id'	=>	undef,
-	'service_id'	=>	undef,
-	'project_id'	=>	undef,
-	'user_id'		=>	undef,
-	'travel_associated'	=>	0,
-	'distance'		=>	undef,
-	'billable'		=>	q`1`,
+	created_on			=>	q`'NOW()'`,
+	updated_on			=>	q`'NOW()'`,
+	deleted				=>	0,
+	rate				=>	undef,
+	currency_id			=>	undef,
+	owner_id			=>	undef,
+	invoice_id			=>	undef,
+	service_id			=>	undef,
+	project_id			=>	undef,
+	user_id				=>	undef,
+	travel_associated	=>	0,
+	distance			=>	undef,
+	billable			=>	q`1`,
 );
 
 sub elapsed {
@@ -97,8 +98,12 @@ sub Price {
 		$Price{'Cost'} = $Price{'Price'} = $$self{'rate'};
 	} # end if
 
-	if ( lc $Price{'units'} eq '/month' ) {
-		$elapsed = sprintf('%.0f',$elapsed/(60*60*24*30));
+	if ( lc $Price{'units'} eq '/year' ) {
+		$elapsed = Math::Round::nearest(1,$elapsed/(60*60*24*365));
+		#$openprint::log->debug('Month pricing ' . $elapsed );
+		$Price{'Total'} = $Price{'Price'} * $elapsed;
+	} elsif ( lc $Price{'units'} eq '/month' ) {
+		$elapsed = Math::Round::nearest(1,$elapsed/(60*60*24*30));
 		#$openprint::log->debug('Month pricing ' . $elapsed );
 		$Price{'Total'} = $Price{'Price'} * $elapsed;
 	} elsif ( lc $Price{'units'} eq '/hr.' ) {
