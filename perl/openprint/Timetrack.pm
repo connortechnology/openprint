@@ -43,6 +43,7 @@ $serial = 'timetracks_id_seq';
 %transforms = (
 	rate		=>	[ 's/[^\d\.]//g' ],
 	distance	=>	[ 's/[^\d\.]//g' ],
+    po			=>	[ 's/^\s+//', 's/\s+$//' ],
 );
 %defaults = (
 	created_on			=>	q`'NOW()'`,
