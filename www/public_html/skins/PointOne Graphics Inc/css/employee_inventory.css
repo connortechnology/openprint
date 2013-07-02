@@ -50,6 +50,7 @@ table .RFIDScanner {
 }
 #Allocate fieldset p {
 	padding: 0;
+	width: auto;
 }
 #Allocate fieldset li {
 padding-left: 100px;

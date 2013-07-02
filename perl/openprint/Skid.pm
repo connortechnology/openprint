@@ -300,7 +300,9 @@ sub add {
 		$Condition = $condition;
 	} elsif ( ! $condition ) {
 		# Default to new
-		$Condition = openprint::InventoryCondition->find_one('name'=>'new');
+		$Condition = openprint::InventoryCondition->find_one( name=>'new' );
+	} else {
+		$log->debug("COndition is $condition");
 	} # end if
 	if ( ! $Condition ) {
 		$log->error("Must specify condition");
@@ -741,6 +743,7 @@ sub merge {
 
 	$Merge->delete();
 	sql::end_transaction( $openprint::dbh, $ac );
+	return '';
 } # end sub merge
 
 1;

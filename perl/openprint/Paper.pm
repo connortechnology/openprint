@@ -27,6 +27,7 @@ require openprint::StockFinish;
 require openprint::StockColour;
 require openprint::StockWeight;
 require openprint::StockQuality;
+require openprint::PaperAllocation;
 
 use Time::HiRes qw{ time gettimeofday tv_interval }; 
 
@@ -449,9 +450,30 @@ sub delete {
 
 sub to_string {
 	my $self = shift;
-	my $string = join(' ', ( $self->manufacturer(), $self->name(), $self->finish(), $self->colour(), $self->weight(), $self->type() eq 'Roll' ? $self->width().'" Roll' : $self->width().'x'.$self->height(), ( $self->mweight() ? $self->mweight().'M' : () ) ) );
-	$string .= ' FSC:' . $$self{'fsc_code'} if $$self{'fsc_code'};
-	return $string;
+    if ( @_ ) {
+        $$self{'to_string'} = $_[0];
+    } # end if
+    if ( ! $$self{'to_string'} ) {
+        my $string = join(' ', ( $self->manufacturer(), $self->brand(), $self->finish(), $self->colour(), $self->weight() ) );
+        if ( $self->type() eq 'Roll' ) {
+            $string .= ' ' . $self->width.'"' if $self->width();
+            $string .= ' Roll ';
+            #$string .= $self->basis_mweight().'M ' if $self->basis_mweight();
+        } else {
+            if ( $self->start_width() and ( ( $self->width() != $self->start_width() ) or ( $self->height() != $self->start_height() ) ) ) {
+                $string .= ' ' . $self->start_width().'x'.$self->start_height() . ' => '. $self->width().'x'.$self->height() . ' ';
+            } else {
+                $string .= ' ' . $self->width().'x'.$self->height() . ' ';
+            } # end if
+            #$string .= $self->mweight().'M ' if $self->mweight();
+        } # end if
+		$string .= sprintf('%.1fPT ', 1000*$self->calliper()) if $self->calliper();
+		$string .= $self->gsm().'gsm ' if $self->gsm();
+        $string .= 'FSC:' . $$self{'fsc_code'} if $$self{'fsc_code'};
+        #$string .= 'Minimum: ' . $$self{'minimum_order'} if $$self{'minimum_order'};
+        $$self{'to_string'} = $string;
+    } # end if
+	return $$self{'to_string'};
 }
 
 sub Name {
@@ -758,17 +780,17 @@ sub back_ordered {
 } # end sub back_ordered
 
 sub allocated {
+	return 0 if ! $_[0]{id};
     my ( $self, $project_id, $new ) = @_;
-	return 0 if ! $$self{'id'};
 	if ( @_ == 3 ) {
 		$$self{allocated} = $new;
 	} # end if
 	if ( $project_id ) {
-		( $_ ) = sql::execute( undef, undef, q{SELECT SUM(Quantity) FROM Paper_Allocations WHERE paper_id=? and project_id=?}, $$self{'id'}, $project_id );
-		return $_;
+		my $qty = misc::sum( map { $_->quantity() } openprint::PaperAllocation->find(paper_id=>$$self{id}, project_id=>$project_id) );
+		return $qty;
 	} # end if
 	if ( ! defined $$self{allocated} ) {
-		($$self{allocated}) = sql::execute( undef, undef, q{SELECT SUM(Quantity) FROM Paper_Allocations WHERE paper_id=?}, $$self{'id'} );
+		$$self{allocated} = misc::sum( map { $_->quantity() } openprint::PaperAllocation->find(paper_id=>$$self{id}) );
 	} # end if
     return $$self{allocated};
 } # end sub allocated

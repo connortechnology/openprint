@@ -64,7 +64,7 @@
 					$PA->units(),
 					$PA->Condition()->name(),
 					);
-				$html .= ssi::button( 'Delete'.$$PA{id}, { onclick=>qq`ajax_window('_deallocate_popup.html?allocation_id=`.$$PA{id}.q`', 400 );`, text=>'Delete' } );
+				$html .= button( 'Delete'.$$PA{id}, { onclick=>qq`ajax_window('_deallocate_popup.html?allocation_id=`.$$PA{id}.q`', 400 );`, text=>'Delete' } );
 				$html .= '</td></tr>',
 
 				$rowclass = $rowclass ? '' : ' class="colRow"';
@@ -77,7 +77,7 @@
 			<? if ( $config{'RFID'} eq 'Y' ) ?>
 			<td>&nbsp;</td>
 			<? endif ( $config{'RFID'} eq 'Y' ) ?>
-			<td colspan="4"><b>Totals:</b></td>
+			<td colspan="4">Totals:</td>
 			<td class="Quantity"><? echo ( Number::Format::format_number($$variable{'TotalAllocated'}).$$variable{'Paper'}->units(); ) ?></td>
 			<td class="Quantity">&nbsp;</td>
 			<td class="Condition">&nbsp;</td>

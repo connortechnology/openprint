@@ -12,7 +12,7 @@
 		my %Allocations;
 		my $rowclass;
 
-		foreach my $Allocation ( openprint::PaperAllocation->find('project_id'=>$$variable{'Project'}->id(), 'order'=>'created_on' ) ) {
+		foreach my $Allocation ( openprint::PaperAllocation->find( project_id=>$$variable{Project}->id(), order=>'created_on' ) ) {
 			push @{$Allocations{$Allocation->paper_id()}}, $Allocation;
 		} # end foreach Allocation
 
@@ -38,7 +38,7 @@
 				$html .= sprintf('<tr%1$s><td rowspan="%2$d"><a href="/employee/inventory/paper_details.html?paper_id=%3$d">%4$s</a></td>', $rowclass, 
 					1+($param{'allocation_details_'.$paper_id} ? scalar  @{$Allocations{$paper_id}} : 0 ), 
 					$Paper->id(), $Paper->to_string() );
-				$html .= sprintf('<td class="Skid">%1$s</td>', $skid_count > 0 ? $skid_count . ( $Paper->type() eq 'Roll' ? ' rolls' : ' skids' ) : '' );
+				$html .= sprintf('<td class="Skid">%1$s</td>', $skid_count . $Paper->type() . ( $skid_count == 1 ? '' : 's' ) );
 				$html .= '<td colspan="2">';
 				if ( $param{'allocation_details_'.$paper_id} ) {
 					$html .= ssi::button( 'allocation_details'.$paper_id, { onclick=>
