@@ -282,6 +282,9 @@ sub check {
 	} # end if
 
 	if ( $$MC{skid_id} and $$MC{rfidtag_id} ) {
+		if ( ! $$Skid{rfidtag_id} ) {
+			$error .= 'RFID # has not been applied to skid.<br/>';
+		} # end if
 		my $RFIDSkid = $Tag->Skid();
 		if ( $RFIDSkid->id() and ( $RFIDSkid->id() != $$MC{skid_id} ) ) {
 			$error .= qq`RFID is assigned to <a href="/employee/inventory/skid_details.html?skid_id=$$RFIDSkid{id}">$$RFIDSkid{id}</a><br/>`;

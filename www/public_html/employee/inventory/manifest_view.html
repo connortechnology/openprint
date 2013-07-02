@@ -137,11 +137,13 @@
 				$html .= '<tr class="totals"><td>Totals:</td><td colspan="3">'.scalar @Contents . ' skids/rolls</td>';
 				if ( $Type->type() eq 'Sheet' ) {
 					my $lbs = $total*$Paper->wpsi()*$Paper->width()*$Paper->height();
-					$html .= sprintf('<td class="qty_lbs">%1$dlbs</td><td class="qty_kgs">%2$.1fkg</td><td class="qty_sheets">%3$s</td>',
-							Number::Format::format_number($lbs), $lbs/2.2046, Number::Format::format_number($total) );
+					$html .= sprintf('<td class="qty_lbs">%1$slbs</td><td class="qty_kgs">%2$skg</td><td class="qty_sheets">%3$s</td>',
+							Number::Format::format_number($lbs), Number::Format::format_number($lbs/2.2046), Number::Format::format_number($total) );
 				} else { # A Roll
-					$html .= sprintf('<td class="qty_lbs">%1$dlbs</td><td class="qty_kgs">%2$.1fkg</td><td class="qty_feet">%3$dfeet</td>',
-						Number::Format::format_number($total), $total/2.2046, ( ( $Paper->wpsi() and $Paper->width() ) ? (($total/$Paper->wpsi())/$Paper->width())/12 : 0 ) );
+					$html .= sprintf('<td class="qty_lbs">%1$slbs</td><td class="qty_kgs">%2$skg</td><td class="qty_feet">%3$dfeet</td>',
+						Number::Format::format_number($total), 
+						Number::Format::format_number($total/2.2046), 
+						( ( $Paper->wpsi() and $Paper->width() ) ? Number::Format::format_number( (($total/$Paper->wpsi())/$Paper->width())/12 ) : 0 ) );
 				} #end if
 				$html .= '<td colspan="'.(($Type->type(), [ 'Roll', 'Sheet' ] ) ? '3' : '4' ). '">&nbsp;</td></tr>';
 				if ( scalar @Contents != $$Type{item_count} ) {
