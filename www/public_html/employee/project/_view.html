@@ -1,7 +1,6 @@
 <?include(/includes/project_header.html)?>
 <?eval(
 	$$variable{formname}='f'.$$variable{Project}->id();
-	openprint::project::view($log,$dbh,$variable, $$variable{Project}->id() );
 	$$variable{canseepricing} = openprint::usergroup::is_user_in( ['Accounting'], $session{'user_id'} );
 ) ?>
 <div class="buttons">
@@ -260,17 +259,18 @@
 			<td class="status"></td>
 		</tr>
 		<? if ( openprint::usergroup::is_user_in( ['Sales Admin','Scheduling','PrepressManager'], $session{'user_id'} ) ) ?>
-<? if ( $$variable{'Project'}->Order()->harmonized_tax() ) ?>
-		<tr class="tax">
-			<? if ( $$variable{checkboxes} ) ?>
-			<td class="checkbox">&nbsp;</td>
-			<? endif ( $$variable{checkboxes} ) ?>
-			<td class="Service">HST</td>
-			<td class="Price"><? echo ( openprint::Currency::format( $$variable{'Project'}->Order()->harmonized_tax() ); ) ?></td>
-			<td class="status"></td>
-		</tr>
-<? endif ( $$variable{'Project'}->Order()->harmonized_tax() ) ?>
-			<? endif ( openprint::usergroup::is_user_in( ['Sales Admin','Scheduling','PrepressManager'], $session{'user_id'} ) ) ?>
+
+<? echo ( 
+                    my $html;
+                    foreach my $Tax ( $$variable{Order}->Taxes() ) {
+                        $html .= sprintf('<tr class="tax">%s<td class="Service">%s (%d%)</td><td class="Price">%s</td><td class="status"></td></tr>',
+							( $$variable{checkboxes} ? '<td class="checkbox">&nbsp;</td>' : '' ),
+                            $Tax->name(), $Tax->rate(), openprint::Currency::format( $$variable{'Order'}->Currency()->convert_from( $Tax->amount() ) ),
+                            );
+                    } # end foreach Tax
+                    return $html;
+                ) ?>
+		<? endif ( openprint::usergroup::is_user_in( ['Sales Admin','Scheduling','PrepressManager'], $session{'user_id'} ) ) ?>
 		<tr class="total">
 			<? if ( $$variable{checkboxes} ) ?>
 			<td class="checkbox">&nbsp;</td>
@@ -350,7 +350,7 @@
 	<? if ( $$variable{'Project'}->currency_id() != $session{'Currency_id'} ) ?>
 	<span class="Currency">Project originally quoted in <? echo ( $$variable{'Project'}->Currency()->name() ) ?>.</span>
 	<? endif ( $$variable{'Project'}->currency_id() != $session{'Currency_id'} ) ?>
-	<span class="Currency">All prices in <?CurrencyName?>.&nbsp;</span>
+	<span class="Currency">All prices in <? echo ( new openprint::Currency( $session{Currency_id} )->name() ) ?>.&nbsp;</span>
 <? endif ( openprint::usergroup::is_user_in( ['Accounting'], $session{'user_id'} ) ) ?>
 	<br/>
 	<span style="float: left;">

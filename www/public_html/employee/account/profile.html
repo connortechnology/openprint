@@ -65,7 +65,7 @@
 				<input type="text" id="firstname" name="firstname" value="<? hecho ( $$variable{'User'}->firstname() ) ?>" />
 			</li>
 			<li class="required"> 
-				<label for="LastName">Last Name</label>
+				<label for="lastname">Last Name</label>
 				<input type="text" id="lastname" name="lastname" value="<? hecho ( $$variable{'User'}->lastname() ) ?>" />
 			</li>
 			<li>
@@ -75,7 +75,7 @@
 			<li class="required"> 
 				<label for="phone">Phone</label>
 				<input type="tel" id="phone" name="phone" value="<? hecho ( $$variable{'User'}->phone() ) ?>" > x
-				<input type="text" id="extension" name="extension" value="<? hecho ( $$variable{'User'}->extension() ) ?>" />
+				<input type="tel" id="extension" name="extension" value="<? hecho ( $$variable{'User'}->extension() ) ?>" />
 			</li>
 			<li> 
 				<label for="mobile">Mobile</label>
@@ -90,7 +90,7 @@
 				<input type="tel" id="fax" name="fax" value="<? hecho ( $$variable{'User'}->fax() ) ?>" />
 			</li>
 			<li> 
-				<label for="">Mailing List</label>
+				<label>Mailing List</label>
 				<? echo ( radio( 'mailinglist', [ 'Y', 'Yes', 'N', 'No' ], $$variable{User}->mailinglist() ); ) ?>
 			</li>
 		<? if ( ($session{'user_type'} eq 'A' ) or ( openprint::usergroup::is_user_in( ['UserManagement'], $session{'user_id'} ) ) ) ?>

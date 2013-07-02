@@ -412,6 +412,10 @@ sub sheet_height {
 	} # end if
 } # end sub sheet_height
 
+sub sheet_area {
+	return $_[0]->sheet_width() * $_[0]->sheet_height();
+} # end sub sheet_area
+
 sub pages {
 	return $_[0]{'pages'};
 	#return $_[0]{'pages'} ? $_[0]{'pages'} : $_[0]{'spreads'} * $_[0]{'spread_size'};
