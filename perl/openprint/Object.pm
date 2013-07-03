@@ -1,5 +1,6 @@
 use strict;
 require openprint::Object_Asset;
+require openprint::Object_Type;
 package openprint::Object;
 
 use openprint ();
@@ -622,5 +623,45 @@ $openprint::log->debug("# of Assets: " . scalar @Assets );
 	return @Assets;
 } # end sub Assets
 
+sub Object_Type {
+    if ( $_[0]{'object_type_id'} ) {
+        $_[0]{'Object_Type'} = new openprint::Object_Type( $_[0]{'object_type_id'} );
+    } else {
+        $_[0]{'Object_Type'} = openprint::Object_Type->find_one('name'=>ref $_[0] );
+        $_[0]{'Object_Type'} = new openprint::Object_Type() if ! $_[0]{'Object_Type'};
+    } # end if
+    return $_[0]{'Object_Type'};
+} # end sub Object_Type
+
+sub object_type {
+    if ( @_ > 1 ) {
+        my $Type = openprint::Object_Type->find_one('name'=> $_[1] );
+        if ( ! $Type ) {
+            $Type = new openprint::Object_Type();
+            $Type->save({'name'=>$_[1], 'human'=>$_[1]});
+        } # end if
+        $_[0]{'object_type'} = $Type->name();
+        $_[0]{'object_type_id'} = $Type->id();
+    } # end if
+    if ( ! $_[0]{'object_type'} ) {
+        $_[0]{'object_type'} = new openprint::Object_Type( $_[0]{'object_type_id'} )->name();
+    } # end if
+    return $_[0]{'object_type'};
+} # end sub object_type
+
+sub Object {
+    if ( @_ > 1 ) {
+        $_[0]->object_type( ref $_[1] );
+        $_[0]{'object_id'} = $_[1]{'id'};
+    } # end if
+    my $type =  $_[0]->object_type();
+    if ( ! $type ) {
+        $log->error("No type in Object::Object". $_[0]->to_string());
+        return undef;
+    } # end if
+    $_ = $type->new( $_[0]{'object_id'} );
+    $openprint::log->debug( "Returning object of type " . ref $_ );
+    return $_;
+} # end sub Object
 1;
 __END__

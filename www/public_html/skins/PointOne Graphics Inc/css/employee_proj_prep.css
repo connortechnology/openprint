@@ -1,0 +1,30 @@
+table .Size {
+	width: 200px;
+	text-align: center;
+}
+table .Size input {
+	width: 40%;
+}
+table .Quantity {
+	text-align: left;
+	width: 100px;
+}
+table .Quantity input {
+	width: 100%;
+}
+table .Type {
+	text-align: left;
+}
+#Signatures p {
+	padding-left: 60px;
+}
+#Signatures p label {
+	margin-left: -60px;
+	width: 55px;
+	text-align: left;
+}
+#Signatures p label.radio {
+	padding: 0;
+	margin: 0;
+	width: auto;
+}
