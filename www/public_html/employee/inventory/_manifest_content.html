@@ -4,10 +4,10 @@
 	if ( $variable{'error'} ) {
 		$variable{error} =~ s/<br\/>//g;
 		$variable{error} =~ s/\n/ /g;
-		$html .= qq`<script type="text/javascript">alert('$$variable{error}');</script>`;
+		$html .= qq`<script type="text/javascript">alert('Error: $$variable{error}');</script>`;
 	} elsif ( $variable{warning} ) {
 		$variable{warning} =~ s/<br\/>//g;
-		$html .= qq`<script type="text/javascript">alert('$$variable{warning}');</script>`;
+		$html .= qq`<script type="text/javascript">alert('Warning: $$variable{warning}');</script>`;
 	} 
 	if ( ( $param{action} eq 'Remove' ) and ! $variable{error} ) {
 $html .= qq`<script type="text/javascript">
