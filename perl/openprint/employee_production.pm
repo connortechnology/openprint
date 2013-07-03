@@ -1003,6 +1003,7 @@ sub _labels {
 		$Label->save();
 	} # end if
 	$variable{'Project'} = new openprint::Project( $param{'project_id'} );
+	$variable{Order} = $variable{Project}->Order();
 } # end sub _labels
 
 sub _stock_popup {

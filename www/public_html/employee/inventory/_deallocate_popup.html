@@ -7,14 +7,14 @@
 		<input type="hidden" name="action" id="action" value="Delete Allocation" />
 		<fieldset><legend>Delete Allocation</legend>
 			<ul>
-			<li><label>Reason:</label><textarea id="reason" name="reason" onkeyup="textarea_resize(this);" rows="1"></textarea></li>
+			<li><label>Reason</label><textarea id="reason" name="reason" onkeyup="textarea_resize(this);" rows="1"></textarea></li>
 			</ul>
 			<hr/>
 			<p class="buttons">
 			<? echo ( 
 				my $html = '';
-				$html .= ssi::button( 'DeAllocate',{ onclick=> qq`new Ajax.Updater('Allocations','_paper_allocations.html', { parameters: { allocation_id: '$param{allocation_id}', reason: \$('reason').value, paper_id: '`. $$variable{'Allocation'}->Paper()->id() . q`', action: 'Delete Allocation' }, onSuccess: function(transport){contentWin.destroy();}, evalScripts: true } );`, text=>'Delete' } );
-				$html .= ssi::button( 'CancelAllocate', { onclick=>'contentWin.destroy();', text=>'Cancel' } ); 
+				$html .= button( 'DeAllocate',{ onclick=> qq`new Ajax.Updater('Allocations','_paper_allocations.html', { parameters: { allocation_id: '$param{allocation_id}', reason: \$('reason').value, paper_id: '`. $$variable{'Allocation'}->Paper()->id() . q`', action: 'Delete Allocation' }, onSuccess: function(transport){contentWin.destroy();}, evalScripts: true } );`, text=>'Delete' } );
+				$html .= button( 'CancelAllocate', { onclick=>'contentWin.destroy();', text=>'Cancel' } ); 
 				return $html;
 			) ?>
 			</p>

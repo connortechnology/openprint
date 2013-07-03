@@ -29,6 +29,8 @@ require openprint::StockQuality;
 require openprint::StockGroup;
 require openprint::StockMaterial;
 require openprint::Equipment_Stock_Setting;
+require openprint::PaperAllocation;
+
 use Time::HiRes qw{ time gettimeofday tv_interval }; 
 
 use vars qw( $debug $table $serial %fields %find_fields %defaults %transforms );
@@ -786,17 +788,17 @@ sub back_ordered {
 } # end sub back_ordered
 
 sub allocated {
-	my ( $self, $project_id, $new ) = @_;
-	return 0 if ! $$self{'id'};
+	return 0 if ! $_[0]{id};
+    my ( $self, $project_id, $new ) = @_;
 	if ( @_ == 3 ) {
 		$$self{allocated} = $new;
 	} # end if
 	if ( $project_id ) {
-		( $_ ) = sql::execute( undef, undef, q{SELECT SUM(Quantity) FROM Paper_Allocations WHERE paper_id=? and project_id=?}, $$self{'id'}, $project_id );
-		return $_;
+		my $qty = misc::sum( map { $_->quantity() } openprint::PaperAllocation->find(paper_id=>$$self{id}, project_id=>$project_id) );
+		return $qty;
 	} # end if
 	if ( ! defined $$self{allocated} ) {
-		($$self{allocated}) = sql::execute( undef, undef, q{SELECT SUM(Quantity) FROM Paper_Allocations WHERE paper_id=?}, $$self{'id'} );
+		$$self{allocated} = misc::sum( map { $_->quantity() } openprint::PaperAllocation->find(paper_id=>$$self{id}) );
 	} # end if
 	return $$self{allocated};
 } # end sub allocated
