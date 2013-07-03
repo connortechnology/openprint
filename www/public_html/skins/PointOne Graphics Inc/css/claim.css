@@ -10,7 +10,7 @@
 	.unprintable {
 		display: none;
 	}
-	div.Claim div.Dates {
+	.Claim .Dates {
 		display: none;
 	}
 	body div#Header {
@@ -96,7 +96,7 @@
 }
 
 
-div.Claim div.Header {
+.Claim .Header {
 	display: block;
 	position: relative;
 	width: 100%;
@@ -106,7 +106,7 @@ div.Claim div.Header {
 	border-top: 1px solid #3b5e91;
 	padding-top: 5px;
 }
-div.Claim .Header:after {
+.Claim .Header:after {
     content: ".";
     display: block;
     height: 0;
@@ -115,7 +115,7 @@ div.Claim .Header:after {
     visibility: hidden;
 }
 
-div.Claim div.Header .Logo {
+.Claim .Header .Logo {
 	margin: 7px;
 	padding: 0px;
 	color: black;
@@ -123,7 +123,7 @@ div.Claim div.Header .Logo {
 	background: none;
 	float: left;
 }
-div.Claim .Header .Logo:after {
+.Claim .Header .Logo:after {
     content: ".";
     display: block;
     height: 0;
@@ -132,7 +132,7 @@ div.Claim .Header .Logo:after {
     visibility: hidden;
 }
 
-.Claim div.Header .Logo table {
+.Claim .Header .Logo table {
 	text-align: center;
 	margin-left: auto;
 	border: none;
@@ -149,41 +149,41 @@ div.Claim .Header .Logo:after {
 	font-size: 12px;
 }
 
-div.Claim .Header .Logo a {
+.Claim .Header .Logo a {
 	color: black;
 	border: none;
 }
-div.Claim .Header .Logo a img {
-	width: 100%;
+.Claim .Header .Logo a img {
+	width: 70px;
 }
-div.Claim .Header .Logo .PointOne {
+.Claim .Header .Logo .PointOne {
 	border-bottom: none;
 	font-family: Georgia, Times, serif;
 	padding: 0px;
 	margin: 0px; 
 	font-size: 42px;
 }
-div.Claim .Header .Logo .GraphicsInc {
+.Claim .Header .Logo .GraphicsInc {
 	padding: 0px;
 	margin: 0px; 
 	font-size:24px;
 }
-div.Claim .Header .PageTitle {
+.Claim .Header .PageTitle {
 	margin: 0px;
 	float: right;
 	width: 230px;
 }
-div.Claim .Header .PageTitle h1 {
+.Claim .Header .PageTitle h1 {
 	font-size:24px;
 	color: #3b5e91;
 } 
-div.Claim #Contents {
+.Claim #Contents {
 	margin-top: 20px;
 }
-div.Claim .Information {
+.Claim .Information {
 	padding: 5px;
 }
-div.Claim .Information:after {
+.Claim .Information:after {
     content: ".";
     display: block;
     height: 0;
@@ -191,32 +191,32 @@ div.Claim .Information:after {
     clear: both;
     visibility: hidden;
 }
-div.Claim .Vendor {
+.Claim .Vendor {
 	width: 50%;
 	float: left;
 }
-div.Claim .Sender {
+.Claim .Sender {
 	width: 50%;
 	float: right;
 	margin-bottom: 5px;
 }
-div.Claim .Dates {
+.Claim .Dates {
 	width: 50%;
 	float: right;
 }
-div.Claim .Dockets {
+.Claim .Dockets {
 	width: 50%;
 	float: right;
 	margin-top: 5px;
 }
-div.Claim .Dates p, div.Claim .Sender p {
+.Claim .Dates p, .Claim .Sender p {
 }
-div.Claim p {
-    padding: 0px 0px 0px 175px;;
+.Claim p {
+    padding: 0 0 0 175px;
     margin: 0px;
     overflow: hidden;
 }
-div.Claim p:after {
+.Claim p:after {
     content: ".";
     display: block;
     height: 0;
@@ -224,13 +224,13 @@ div.Claim p:after {
     clear: both;
     visibility: hidden;
 }
-div.Claim p label {
+.Claim p label {
 	margin: 0px 0px 0px -175px;
 	width: 170px;
 	float: left;
 
 }
-div.Claim p label.radio {
+.Claim p label.radio {
 	margin: 0px;
 	width: auto;
 	float: none;
@@ -244,19 +244,6 @@ fieldset p {
     padding-left: 210px;
     overflow: hidden;
 }
-
-fieldset p:after {
-    content: ".";
-    display: block;
-    height: 0;
-    font-size: 0;
-    clear: both;
-    visibility: hidden;
-}
-/* Hides from IE-mac \*/
-* html fieldset p {height: 1%;}
-fieldset p {display: block;}
-/* End hide from IE-mac */
 
 label {
 	text-transform: uppercase;
@@ -280,21 +267,21 @@ td p label {
     margin-left: 0px;
 }
 
-div.autocomplete {
+.autocomplete {
   position:absolute;
   width:250px;
   background-color:white;
   border:1px solid #888;
-  margin:0px;
-  padding:0px;
+  margin:0;
+  padding:0;
 }
-div.autocomplete ul {
+.autocomplete ul {
   list-style-type:none;
-  margin:0px;
-  padding:0px;
+  margin:0;
+  padding:0;
 }
-div.autocomplete ul li.selected { background-color: #ffb;}
-div.autocomplete ul li {
+.autocomplete ul li.selected { background-color: #ffb;}
+.autocomplete ul li {
   list-style-type:none;
   display:block;
   margin:0;
@@ -304,27 +291,18 @@ div.autocomplete ul li {
 }
 
 p.buttons {
-text-align: right;
-margin: 0px;
-padding: 0px;
-float: none;
+	text-align: right;
+	margin: 0;
+	padding: 0;
+	float: none;
 }
-p.buttons:after {
-    content: ".";
-    display: block;
-    height: 0;
-    font-size: 0;
-    clear: both;
-    visibility: hidden;
+.Claims .buttons {
+	margin-left: 140px;
 }
-/* Hides from IE-mac \*/
-* html p.buttons {height: 1%;}
-p.buttons {display: block;}
-/* End hide from IE-mac */
 fieldset.filters p.buttons {
 	text-align: left;
 }
-div.Claim .Disclaimer {
+.Claim .Disclaimer {
 	font-weight: bold;
 	font-size: small;
 	padding: 5px;

@@ -68,16 +68,16 @@
 		my $report_total = 0;
 		my $rowclass;
 		my $Currency = openprint::Currency::get_current();
-		while ( my $Claim = shift @{$$variable{'Claims'}} ) {
+		foreach my $Claim ( @{$$variable{Claims}} ) {
 			$html .= sprintf(q`<tr%2$s id="tr-%1$d-1">`, $Claim->id(), $rowclass );
-			if ( $session{'user_type'} eq 'A' ) {
+			if ( $session{user_type} eq 'A' ) {
 				$html .= '<td class="checkbox"><input type="checkbox" id="claim_id" name="claim_id" value="'.$Claim->id().'"/></td>';
 			} # end if
 			my $total = $Claim->Currency()->convert_from( $Claim->total() );
 
 			$html .= sprintf( q`
-				<td class="claim_id"><a href="view.html?claim_id=%1$d">%1$d<br/>%2$s</a></td>
-				<td class="DateTime"><a href="view.html?claim_id=%1$d">%3$s</a></td>
+				<td class="claim_id"><a href="view.html?claim_id=%1$d">%1$d</a></td>
+				<td class="DateTime"><a href="view.html?claim_id=%1$d">%2$s<br/>%3$s</a></td>
 				<td class="Company"><a href="view.html?claim_id=%1$d">%4$s</a></td>
 				<td class="User"><a href="view.html?claim_id=%1$d">%5$s</a></td>
 				<td class="Date"><a href="view.html?claim_id=%1$d">%6$s</a></td>
@@ -88,7 +88,7 @@
 				format_datetime( $Claim->updated_on() ), 
 				$Claim->Vendor()->name(), $Claim->Creator()->name(), 
 				join('<br/>',
-					($Claim->filed_on() ? ( 'Filed on:' . ssi::format_date( $Claim->filed_on() ) ) : () ),
+					($Claim->filed_on() ? ( 'Filed on:' . format_date( $Claim->filed_on() ) ) : () ),
 					($Claim->sent_to_accounts_on() ? ( 'Sent to accounts on: ' . format_date( $Claim->sent_to_accounts_on() ) ) : () ),
 					($Claim->invoiced_on() ? ( 'Invoiced on: '. format_date( $Claim->invoiced_on() ) ) : () ),
 					($Claim->cancelled_on() ? ( 'Cancelled On: ' . format_date( $Claim->cancelled_on() ) ) : () ),
@@ -100,7 +100,7 @@
 			$report_total += $total;
 			$rowclass = $rowclass ? '' : ' class="colRow"';
 		} # end while
-		$html .= '<tr class="totals"><td colspan="'.($session{'user_type'} eq 'A' ? '8' : '7' ).'">Total (' . $Currency->name().') :</td><td class="Price">';
+		$html .= '<tr class="totals"><td colspan="'.($session{'user_type'} eq 'A' ? '7' : '6' ).'">Total (' . $Currency->name().') :</td><td class="Price">';
 		$html .= openprint::Currency::format( $report_total );
 		$html .= '</td></tr>';
 		return $html;
