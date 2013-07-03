@@ -114,7 +114,6 @@ $variable{'uri'} = $page;
     if ( $variable{'ExternalRedirect'} ) {
 		foreach my $key ( 'error', 'warning', 'information' ) {
 			if ( $variable{$key} ) {
-				$log->debug("Sacing session $key $variable{$key}");
 				$session{$key} = $variable{$key};
 			} # end if
 		} # end foreach
