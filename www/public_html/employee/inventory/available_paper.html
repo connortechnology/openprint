@@ -44,7 +44,7 @@
 	} // end function calc
 
 </script>
-<? echo ( include('/includes/error_reporting.html'); ) ?>
+<?include('/includes/error_reporting.html')?>
 Please select a Paper to view/edit.<br>
 <form id="f1" name="f1" method="post" action="available_paper.html">
 	<fieldset class="filters"><legend>Search Criteria</legend>
@@ -78,37 +78,38 @@ Please select a Paper to view/edit.<br>
 
     my @StockOptions = ( 'Manufacturer','Brand','Finish','Colour','Weight','Quality','Material','Group' );
 
-    my @Papers = @{$$variable{'Paper'}} = openprint::Paper->find( %find );
+    my @Papers = @{$$variable{Paper}} = openprint::Paper->find( %find );
 
 	my %filters;
     foreach my $option ( @StockOptions ) {
 		my ( $lower_option, $option_id ) = ( lc $option, lc $option.'_id' );
 		# Validate the filter
-		$session{'/employee/inventory/available_paper.html?'.$option} = undef if ! sets::isin( 
-$session{'/employee/inventory/available_paper.html?'.$option}, [ map { $$_{$option_id} } @Papers ] );
+		$session{'/employee/inventory/available_paper.html?'.$option_id} = undef if ! sets::isin( 
+				$session{'/employee/inventory/available_paper.html?'.$option_id}, [ map { $$_{$option_id} } @Papers ] );
 
 		foreach my $Stock ( @Papers ) {
 			# Load up the filter
 			$filters{$option}{$Stock->$lower_option()} = $$Stock{$option_id} if $$Stock{$option_id};
 		} # end foreach $Stock
-		if ( $session{'/employee/inventory/available_paper.html?'.$option} ) {
-			@Papers = map { $$_{$option_id} eq $session{'/employee/inventory/available_paper.html?'.$option} ? $_ : () } @Papers;
+		if ( $session{'/employee/inventory/available_paper.html?'.$option_id} ) {
+			@Papers = map { $$_{$option_id} eq $session{'/employee/inventory/available_paper.html?'.$option_id} ? $_ : () } @Papers;
 		} # end if
 	} # end foreach option
 
     foreach my $option ( @StockOptions ) {
 		next if ! $filters{$option};
+		my ( $lower_option, $option_id ) = ( lc $option, lc $option.'_id' );
         my @options = map { $filters{$option}{$_}, $_ } ( sort keys %{$filters{$option}} );
-		$session{'/employee/inventory/available_paper.html?'.$option} = $options[0] if ( @options == 2 );
+		$session{'/employee/inventory/available_paper.html?'.$option_id} = $options[0] if ( @options == 2 );
 
         $html .= sprintf(q`<li><label>%1$s</label>
                 <select name="%2$s_id%3$s" id="%2$s_id%3$s" size="1" onchange="filter_onChange(this,'');">
                 <option value=""> All </option> %4$s </select>
-            </li>`, $option, lc $option, $$variable{'Signature'},
-            ssi::make_drop_down( \@options, $session{'/employee/inventory/available_paper.html?'.$option} ),
+            </li>`, $option, $lower_option, $$variable{'Signature'},
+            ssi::make_drop_down( \@options, $session{'/employee/inventory/available_paper.html?'.$option_id} ),
         );
     } # end foreach option
-	@{$$variable{'Paper'}} = @Papers;
+	$$variable{Paper} = \@Papers;
     return $html;
 ) ?>
 			<li>
@@ -205,13 +206,13 @@ $session{'/employee/inventory/available_paper.html?'.$option}, [ map { $$_{$opti
 		</div>
 		<p class="buttons">
 			<? echo ( join('',
-				ssi::button( 'ShowResults', { onclick=>"calc('f1');", href=>'', text=>'Show Results' } ),
-				ssi::button( 'Reset', { onclick=>'f1.reset();', href=>'', text=>'Reset' } ),
+				button( 'ShowResults', { onclick=>"calc('f1');", text=>'Show Results' } ),
+				button( 'Reset', { onclick=>'f1.reset();', text=>'Reset' } ),
 				); ) ?>
 		</p>
 	</fieldset>
 	<input type="hidden" name="btnFunction"/>
 </form>
 <div id="Results">
-<? echo ( include('_available_paper.html'); ) ?>
+<?include('_available_paper.html') ?>
 </div>

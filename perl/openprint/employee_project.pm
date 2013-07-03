@@ -71,16 +71,17 @@ sub view {
 	} # end if
 
 	my $Project = $variable{Project} = new openprint::Project( $project_index );
-	if ( ! $$Project{id} ) {
+	if ( $project_index and ! $$Project{id} ) {
 		$variable{error} .= "Project $project_index not found.<br/>";
 		return;
 	} # end if
-	my $order_id = $param{'OrderID'};
+	my $order_id = $param{OrderID};
 	$order_id = $Project->order_id() if ! $order_id;
 	if ( $project_index and ( ! $order_id ) and $param{'Docket'} ) {
 		( $order_id ) = sql::execute( $log, $dbh, q{SELECT Index FROM Orders WHERE Index IN ( SELECT DISTINCT OrderIndex FROM Order_Contents WHERE lngProjectIndex=? ) AND lngDocketNumber=?}, $project_index, $param{'Docket'} );
 	} # end if
-	$variable{'OrderID'} = $order_id;
+	$variable{OrderID} = $order_id;
+	$variable{Order} = new openprint::Order( $order_id );
 
 	if ( $param{'action'} eq 'Change Status' ) {
 		foreach my $service_id ( split(',', $param{service_id} ) ) {
@@ -491,9 +492,6 @@ sub view {
 		$Order->update_status();
 	} # end if
 
-	if ( $project_index ) {
-		openprint::main_project::view( $project_index );
-	} # end if
 } # end sub view
 
 sub send_additional_charges_notifications {

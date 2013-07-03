@@ -132,38 +132,38 @@
 		</p>
 		<p>
 			<label>Proofs</label>
-			<table class="List" style="table-layout: auto;">
+			<table class="List">
 				<tr>
-					<th width="70" align="left">Quantity</th>
-					<th width="200" align="center">Size</th>
-					<th align="left">Type</th>
-					<th width="20">&nbsp;</th>
+					<th class="Quantity">Quantity</th>
+					<th class="Size">Size</th>
+					<th class="Type">Type</th>
+					<th class="checkbox">&nbsp;</th>
 				</tr>
 				<? while ( @$variable{'ProofIndex','ProofQuantity','ProofWidth','ProofHeight','ProofType','ddmProofType'} = splice @{$$variable{'Proofs-'.$$variable{'SignatureSpecs'}{'SignatureIndex'}.'-'.$$variable{'Project'}->ordered_quantity_index()}},0,6; ) ?>
 				<tr>
-					<td><?ProofQuantity?></td>
-					<td align="center"><?ProofWidth?> x <?ProofHeight?></td>
-					<td align="left"><?ProofType?></td>
-					<td><input type="checkbox" id="chkDelete-<? echo ( $$variable{'SignatureSpecs'}{'SignatureIndex'} ) ?>-<?ProofIndex?>" name="chkDelete-<? echo ( $$variable{'SignatureSpecs'}{'SignatureIndex'} ) ?>-<?ProofIndex?>"/></td>
+					<td class="Quantity"><?ProofQuantity?></td>
+					<td class="Size"><?ProofWidth?> x <?ProofHeight?></td>
+					<td class="Type"><?ProofType?></td>
+					<td class="checkbox"><input type="checkbox" id="chkDelete-<? echo ( $$variable{'SignatureSpecs'}{'SignatureIndex'} ) ?>-<?ProofIndex?>" name="chkDelete-<? echo ( $$variable{'SignatureSpecs'}{'SignatureIndex'} ) ?>-<?ProofIndex?>"/></td>
 				</tr>
 				<? endwhile ( @$variable{'ProofIndex','ProofQuantity','ProofWidth','ProofHeight','ProofType','ddmProofType'} = splice @{$$variable{'Proofs-'.$$variable{'SignatureSpecs'}{'SignatureIndex'}.'-'.$$variable{'Project'}->ordered_quantity_index()}},0,6; ) ?>
 				<? if ( $session{'user_type'} eq 'A' or openprint::usergroup::is_user_in( ['Prepress'], $session{'user_id'} ) ) ?>
 				<tr>
-					<td>
-						<input type="text" name="txtProofQuantity-<? echo ( $$variable{'SignatureSpecs'}{'SignatureIndex'} ) ?>" size="6"  />
+					<td class="Quantity">
+						<? echo ( input( type=>'cardinal', name=>'txtProofQuantity-'.$$variable{SignatureSpecs}{SignatureIndex} ); ) ?>
 					</td>
-					<td align="center">
-						<input type="text" name="txtProofWidth-<? echo ( $$variable{'SignatureSpecs'}{'SignatureIndex'} ) ?>" size="6"  style="width: auto;" />
+					<td class="Size">
+						<? echo ( input( type=>'float', name=>'txtProofWidth-'.$$variable{SignatureSpecs}{SignatureIndex} ); ) ?>
 						x
-						<input type="text" name="txtProofHeight-<? echo ( $$variable{'SignatureSpecs'}{'SignatureIndex'} ) ?>" size="6"  style="width: auto;" />
+						<? echo ( input( type=>'float', name=>'txtProofHeight-'.$$variable{SignatureSpecs}{SignatureIndex} ); ) ?>
 					</td>
-					<td>
+					<td class="Type">
 						<select name="ddmProofType-<? echo ( $$variable{'SignatureSpecs'}{'SignatureIndex'} ) ?>">
 						<option value="">Select Type</option>
-						<? echo ( ssi::make_drop_down( [map { $_->name(), $_->description() } openprint::Service->find( 'category'=>'Proofs', 'order'=>'lower(description)' )] ); ) ?>
+						<? echo ( make_drop_down( [map { $_->name(), $_->description() } openprint::Service->find( category=>'Proofs', order=>'lower(description)' )] ); ) ?>
 						</select>
 					</td>
-					<td>&nbsp;</td>
+					<td class="checkbox">&nbsp;</td>
 				</tr>
 				<? endif ( $session{'user_type'} eq 'A' or openprint::usergroup::is_user_in( ['Prepress'], $session{'user_id'} ) ) ?>
 			</table>
@@ -172,8 +172,8 @@
 		<? echo ( 
 			if ( $session{'user_type'} eq 'A' or openprint::usergroup::is_user_in( ['Prepress'], $session{'user_id'} ) ) {
 				return join('',
-					ssi::writeButton( $log, $dbh, 'Save','save.gif', "if(check_input(f2,'$$variable{SignatureSpecs}{SignatureIndex}')){f2.btnFunction.value='Add Proof';LoadContent('Signatures','/employee/proj/prep/_proofs_signatures.html',Serialize(f2) );}", '', 'Save' ),
-					ssi::writeButton( $log, $dbh, 'Delete','delete.gif', "f2.btnFunction.value='Delete Proofs';LoadContent('Signatures','/employee/proj/prep/_proofs_signatures.html',Serialize(f2) );", '', 'Delete Checked' ),
+					button( 'Save', { onclick=>"if(check_input(f2,'$$variable{SignatureSpecs}{SignatureIndex}')){f2.btnFunction.value='Add Proof';LoadContent('Signatures','/employee/proj/prep/_proofs_signatures.html',Serialize(f2) );}", text=>'Save' } ),
+					button( 'Delete', { onclick=>"f2.btnFunction.value='Delete Proofs';LoadContent('Signatures','/employee/proj/prep/_proofs_signatures.html',Serialize(f2) );", text=>'Delete Checked' } ),
 				);
 			} # end if
 			return '';

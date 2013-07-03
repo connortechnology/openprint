@@ -475,6 +475,13 @@ sub projects {
 			@projects = openprint::Project->find( 'docket >='=>$startdocket, 'docket <=' => $enddocket );
 		} elsif ( $startdocket ) {
 			@projects = openprint::Project->find( 'docket'=>$startdocket );
+			if ( ! @projects ) {
+				my $Order = openprint::Order->find_one( docket=>$startdocket );
+				if ( $Order ) {
+					$variable{'ExternalRedirect'} = '/employee/project/view.html?OrderID='.$$Order{id};
+					return;
+				} # end if
+			} # end if
 		} elsif ( $enddocket ) {
 			@projects = openprint::Project->find( 'docket'=>$enddocket );
 		} # end if
@@ -996,6 +1003,7 @@ sub _labels {
 		$Label->save();
 	} # end if
 	$variable{'Project'} = new openprint::Project( $param{'project_id'} );
+	$variable{Order} = $variable{Project}->Order();
 } # end sub _labels
 
 sub _stock_popup {
