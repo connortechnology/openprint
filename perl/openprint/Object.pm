@@ -429,8 +429,14 @@ my @sql_functions = (
 sub find_operators {
 	my ( $field, $type, $operator, $value ) = @_;
 
-	if ( sets::isin( $operator, [ '=', '!=', '<', '>', '<=', '>=', '<<=', '&&', '<@', '@>' ] ) ) {
+	if ( sets::isin( $operator, [ '=', '!=', '<', '>', '<=', '>=', '<<=' ] ) ) {
 		return ( $field.$type.' ' . $operator . ' ?', $value );
+	} elsif ( sets::isin( $operator, [ '&&', '<@', '@>' ] ) ) {
+		if ( ref $value eq 'ARRAY' ) {
+		return ( $field.$type.' ' . $operator . ' ?', $value );
+		} else {
+		return ( $field.$type.' ' . $operator . ' ?', [ $value ] );
+		} # end if
 	} elsif ( sets::isin( $operator, [ 'in', 'not in' ] ) ) {
 		if ( ref $value eq 'ARRAY' ) {
 			return ( $field.$type.' ' . $operator . ' ('. join(',', map { '?' } @{$value} ) . ')', @{$value} );
