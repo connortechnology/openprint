@@ -4,10 +4,10 @@
 		$params{'allocated_to_docket'} = $session{'/employee/inventory/paper.html?Docket'};
 	} else {
 		%params = (
-			ssi::date_filter( '/employee/inventory/paper.html?added_on_start', 'created_on >=' ),
-			ssi::date_filter( '/employee/inventory/paper.html?added_on_end', 'created_on <=' ),
-			'type'      => [ split(',', $session{'/employee/inventory/paper.html?Type'} ) ],
-			( $session{'/employee/inventory/paper.html?fsc_code'} ? ( 'fsc_code'	=>	$session{'/employee/inventory/paper.html?fsc_code'} ) : () ),
+			date_filter( '/employee/inventory/paper.html?added_on_start', 'created_on >=' ),
+			date_filter( '/employee/inventory/paper.html?added_on_end', 'created_on <=' ),
+			type      => [ split(',', $session{'/employee/inventory/paper.html?Type'} ) ],
+			( $session{'/employee/inventory/paper.html?fsc_code'} ? ( fsc_code	=>	$session{'/employee/inventory/paper.html?fsc_code'} ) : () ),
 			( $param{'width'} ? ( ($param{'OrLarger'} ? 'width >=' : 'width') => $param{'width'} ) : () ),
 			( $param{'height'} ? ( ($param{'OrLarger'} ? 'height >=' : 'height') => $param{'height'} ) : () ),
 			);
@@ -95,9 +95,9 @@
 						<td class="on_order">%6$d</td>
 						<td class="allocated">%7$s</td>
 						<td class="in_stock">%8$s</td>
-						<td class="available">%9$s</td></tr>',
+						<td class="available">%9$s</td>',
 					$rowclass,
-					$$Paper{'id'},
+					$$Paper{id},
 					$Paper->to_string(),
 					$Paper->mweight(),
 					$Paper->gsm(),
@@ -110,7 +110,7 @@
 				if ( openprint::usergroup::is_user_in( ['InventoryManager'], $session{'user_id'} ) ) {
 					my $value = 0;
 					foreach my $SkidContent ( openprint::SkidContent->find(
-								'quantity >'=>1, 'paper_id'=>$$Paper{id},
+								'quantity >'=>1, paper_id=>$$Paper{id},
 								) ) {
 						$value += $SkidContent->value();
 					} # end foreach SkidContent

@@ -3429,7 +3429,6 @@ sub plate_cost {
 	my %plate_price;
 	my $Material = openprint::Material->find_one( name=>$$plate_costs{'Plate ID'} );
 	if ( $Material ) {
-$openprint::log->error("Plate price: $$plate_costs{'Plate ID'} count: " . $$PlateCounts{$$plate_costs{'Plate ID'}} );
 		%plate_price = $Material->get_price( $$PlateCounts{$$plate_costs{'Plate ID'}}, undef );
 		$$price{'Plate Cost'} = $plate_price{'Price'};
 		$$price{'Plate Price'} = $plate_price{'Price'} * $$plate_costs{'Plate Count'};

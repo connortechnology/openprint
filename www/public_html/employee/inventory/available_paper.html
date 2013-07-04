@@ -78,7 +78,7 @@ Please select a Paper to view/edit.<br>
 
     my @StockOptions = ( 'Manufacturer','Brand','Finish','Colour','Weight','Quality','Material','Group' );
 
-    my @Papers = @{$$variable{Paper}} = openprint::Paper->find( %find );
+    my @Papers = openprint::Paper->find( %find );
 
 	my %filters;
     foreach my $option ( @StockOptions ) {
@@ -90,6 +90,7 @@ Please select a Paper to view/edit.<br>
 		foreach my $Stock ( @Papers ) {
 			# Load up the filter
 			$filters{$option}{$Stock->$lower_option()} = $$Stock{$option_id} if $$Stock{$option_id};
+$log->debug("$option $lower_option = $option_id $$Stock{$option_id});
 		} # end foreach $Stock
 		if ( $session{'/employee/inventory/available_paper.html?'.$option_id} ) {
 			@Papers = map { $$_{$option_id} eq $session{'/employee/inventory/available_paper.html?'.$option_id} ? $_ : () } @Papers;
