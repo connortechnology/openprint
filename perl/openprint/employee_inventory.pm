@@ -948,7 +948,10 @@ $log->debug('sacing');
 			} # end if
 		} # end if
 		foreach my $skid_id ( @skid_ids ) {
-			allocate( $skid_id, @param{'paper_id', 'Quantity','Project','Docket'} );
+			foreach my $condition_id ( sets::union( map { $_->condition_id() } openprint::SkidContent->find(skid_id=>$skid_id, paper_id=>$param{paper_id},'quantity >' =>0 ) ) ) {
+				next if ! $param{'quantity-'.$condition_id};
+				allocate( $skid_id, @param{'paper_id','quantity-'.$condition_id,'Project','Docket','specific','reason'}, $condition_id );
+			} # end foreach condition
 		} # end foreach
 	} elsif ( $param{'btnFunction'} eq 'Delete Allocation' ) {
 		if ( $param{'allocation_id'} ) {
