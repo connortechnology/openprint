@@ -2391,8 +2391,12 @@ $openprint::log->debug("Have runspeed");
 			if ( $unit =~ /([\d\.]+)x([\d\.]+)/ ) {
 $openprint::log->debug("Have unit $1 $2");
 				my $area = $1*$2;
-				$run_speed = int( $$RunSpeed{'value'} * $area/($$specs{'txtWidth'} * $$specs{'txtHeight'}) );
-$openprint::log->debug("Have runspeed $$RunSpeed{'value'}, area: $area, $run_speed");
+				if ( ! $$specs{'txtWidth'} * $$specs{'txtHeight'} ) {
+					$openprint::log->debug("Runspeed for $$specs{'txtWidth'} * $$specs{'txtHeight'} on $$Press{id}");
+				} else {
+					$run_speed = int( $$RunSpeed{'value'} * $area/($$specs{'txtWidth'} * $$specs{'txtHeight'}) );
+				} # end if
+				$openprint::log->debug("Have runspeed $$RunSpeed{'value'}, area: $area, $run_speed");
 			} else {
 $openprint::log->warn("Unknown Per setting $unit");
 			} # end if
