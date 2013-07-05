@@ -2,7 +2,6 @@ use strict;
 package openprint::Paper;
 our @ISA = qw(openprint::Object);
 require openprint::Object;
-require MIME::QuotedPrint;
 use Carp qw( cluck );
 require Math::Round;
 
@@ -30,6 +29,8 @@ require openprint::StockQuality;
 require openprint::StockGroup;
 require openprint::StockMaterial;
 require openprint::Equipment_Stock_Setting;
+require openprint::PaperAllocation;
+
 use Time::HiRes qw{ time gettimeofday tv_interval }; 
 
 use vars qw( $debug $table $serial %fields %find_fields %defaults %transforms );
@@ -730,18 +731,19 @@ sub add_inventory {
 	} # end if
 
 	$units = $self->units() if ! $units;
-	new openprint::PaperInventory()->save({
-			'paper_id'		=> $$self{'id'},
-			'user_id'		=> $openprint::session{'user_id'},
-			'poindex'		=> undef,
-			'instock'		=> $self->in_stock() + $quantity,
-			'delta'			=> $quantity,
-			'comment'		=> $description,
-			'skid_id'		=> $Skid->id(),
-			'units'			=> $units,
-			'docket'		=> $docket,
-			} );
-
+	my $PI = new openprint::PaperInventory();
+	$PI->save({
+        paper_id	=>	$$self{id},
+        user_id		=>	$openprint::session{user_id},
+        poindex		=>	undef,
+        instock		=>	$self->in_stock() + $quantity,
+        delta		=>	$quantity,
+        comment		=>	$description,
+        skid_id		=>	$Skid->id(),
+		units		=>	$units,
+		docket		=>	$docket,
+        });
+	# Updates in_stock and allocated
 	$self->save();
 } # end sub add_inventory
 
@@ -786,17 +788,17 @@ sub back_ordered {
 } # end sub back_ordered
 
 sub allocated {
-	my ( $self, $project_id, $new ) = @_;
-	return 0 if ! $$self{'id'};
+	return 0 if ! $_[0]{id};
+    my ( $self, $project_id, $new ) = @_;
 	if ( @_ == 3 ) {
 		$$self{allocated} = $new;
 	} # end if
 	if ( $project_id ) {
-		( $_ ) = sql::execute( undef, undef, q{SELECT SUM(Quantity) FROM Paper_Allocations WHERE paper_id=? and project_id=?}, $$self{'id'}, $project_id );
-		return $_;
+		my $qty = misc::sum( map { $_->quantity() } openprint::PaperAllocation->find(paper_id=>$$self{id}, project_id=>$project_id) );
+		return $qty;
 	} # end if
 	if ( ! defined $$self{allocated} ) {
-		($$self{allocated}) = sql::execute( undef, undef, q{SELECT SUM(Quantity) FROM Paper_Allocations WHERE paper_id=?}, $$self{'id'} );
+		$$self{allocated} = misc::sum( map { $_->quantity() } openprint::PaperAllocation->find(paper_id=>$$self{id}) );
 	} # end if
 	return $$self{allocated};
 } # end sub allocated
@@ -807,7 +809,7 @@ sub in_stock {
 	if ( @_ > 1 ) {
 		if ( ref $_[1] eq 'openprint::StockQuality' ) {
 			my $in_stock = 0;
-			foreach my $C ( openprint::SkidContent->find('paper_id'=>$_[0]{'id'}, 'quality_id'=>$_[0]->id() ) ) {
+			foreach my $C ( openprint::SkidContent->find(deleted=>0,paper_id=>$_[0]{id}, quality_id=>$_[0]->id() ) ) {
 				$in_stock += $C->quantity();
 			} # end foreach C
 			return $in_stock;
@@ -817,7 +819,7 @@ sub in_stock {
 	} # end if
 
 	if ( ! defined $_[0]{'in_stock'} ) {
-		foreach my $SkidContent ( openprint::SkidContent->find('paper_id'=>$_[0]{'id'},'quantity >'=>0) ) {
+		foreach my $SkidContent ( openprint::SkidContent->find(deleted=>0,paper_id=>$_[0]{id},'quantity >'=>0) ) {
 			if ( ! $SkidContent->Skid()->location_id() or ( $SkidContent->Skid()->Location()->name() ne 'Missing' ) ) {;
 				$_[0]{'in_stock'} += $SkidContent->quantity();
 			} # end nif
@@ -839,7 +841,7 @@ sub available {
 
 	if ( ! exists $$self{available} ) {
 		$$self{available} = 0;
-		foreach my $SkidContent ( openprint::SkidContent->find('paper_id'=>$$self{'id'},'quantity >'=>0) ) {
+		foreach my $SkidContent ( openprint::SkidContent->find(deleted=>0,paper_id=>$$self{id},'quantity >'=>0) ) {
 			next if $SkidContent->Skid()->Location()->name() eq 'Missing';
 			next if sets::isin( $SkidContent->condition(), ['Damaged', 'Used' ] );
 			@$self{available} += int $SkidContent->quantity();
@@ -852,7 +854,7 @@ sub available {
 sub skids {
 	my $self = shift;
 	return 0 if ! $$self{'id'};
-	return openprint::Skid->find('paper_id'=>$$self{'id'}, 'quantity >='=>1);
+	return openprint::Skid->find( paper_id=>$$self{id}, 'quantity >='=>1);
 	#return map { new openprint::Skid( $_ ) } sql::execute( undef, undef, q{SELECT skid_id FROM skid_contents WHERE paper_id=? and quantity > 0}, $$self{'id'} );
 } # end sub skids
 
@@ -993,22 +995,24 @@ sub minimum_order {
 #$openprint::log->debug("SPP: $$self{'start_width'} / $$self{'width'} ) * int( $$self{'start_height'} / $$self{'height'} * spp $$self{'sheets_per_package'} * $factor;");
 	return $$self{'minimum_order'} * $self->factor();
 } # end minimum_order 
-sub factor {
-	my $factor = int($_[0]{'start_width'} / $_[0]{'width'} ) * int( $_[0]{'start_height'} / $_[0]{'height'} ) if $_[0]{'width'} and $_[0]{'height'};
-	return 1 if ! $factor;
-	return $factor;
-} # end sub factor
+
 sub minimum_order_weight {
 	my $self = $_[0];
 	if ( ! exists $$self{'minimum_order_weight'} ) {
 		if ( $$self{'type'} eq 'Sheet' ) {
-			$$self{'minimum_order_weight'} = $self->minimum_order() * $self->sheet_weight();
+			$$self{'minimum_order_weight'} = Math::Round::nearest( 0.1, $self->minimum_order() * $self->sheet_weight() );
 		} else {
 			$$self{'minimum_order_weight'} = $self->minimum_order();
 		} # end if
 	} # end if
 	return $$self{'minimum_order_weight'};
 } # end sub minimum_order_weight
+
+sub factor {
+	my $factor = int($_[0]{'start_width'} / $_[0]{'width'} ) * int( $_[0]{'start_height'} / $_[0]{'height'} ) if $_[0]{'width'} and $_[0]{'height'};
+	return 1 if ! $factor;
+	return $factor;
+} # end sub factor
 
 sub sheets_per_package {
 	my $self = shift;

@@ -161,7 +161,6 @@ sub display {
 	my @possible_equipment = openprint::Equipment->find( Specifications => {'ClipSealing Capable'=>['Y',
 			( $$services{Folding} ? 'When Folding' : () )
 ]}, 'use_in_estimating'=>1,'order'=>'lower(strName)');
-	#my @possible_equipment = openprint::Equipment::find( 'Specifications' => {'ClipSealing Capable'=>'Y'}, 'use_in_estimating'=>1,'order'=>'lower(strName)');
 	@{$$variable{'Equipment'}} = @possible_equipment;
 } # end sub display
 

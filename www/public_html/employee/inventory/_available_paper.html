@@ -68,6 +68,12 @@
 			my $available_weight;
 			my $available_sheets;
 
+			my @SkidContents = openprint::SkidContent->find(paper_id=>[ map { $$_{id} } @{$$variable{Papers}} ], deleted=>0 );
+			my %SkidContents;
+			foreach my $SC ( @SkidContents ) {
+				push @{$SkidContents{$$SC{skid_id}}}, $SC;
+			} # end foreach SC
+
 			foreach my $Paper ( @{$$variable{'Papers'}} ) {
 				if ( $Paper->available() <= 0 ) {
 					$log->debug("Paper is not available.");
@@ -81,13 +87,16 @@
 				my %conditions;
 				my $skids = 0;
 				my @Skids = $Paper->skids();
+	
 
 				foreach my $Skid ( @Skids ) {
+					$Skid->Contents( $SkidContents{$$Skid{id}} ? $SkidContents{$$Skid{id}} : [] );
 					if ( $session{'/employee/inventory/available_paper.html?last_seen'} ) {
 						next if $Skid->last_seen_days() > $session{'/employee/inventory/available_paper.html?last_seen'};
 					} # end if
 					if ( $session{'/employee/inventory/available_paper.html?condition_id'} ) {
 						my $keep = 0;
+
 						foreach my $C ( $Skid->Contents() ) {
 							if ( $$C{'condition_id'} == $session{'/employee/inventory/available_paper.html?condition_id'} ) {
 								$keep = 1;

@@ -7,7 +7,17 @@
 			);
 
 	} elsif ( $param{'StartDocket'} ) {
-		@{$$variable{'Projects'}} = openprint::Project->find( 'docket' => $param{'StartDocket'} );
+		$$variable{Projects} = [ openprint::Project->find( docket=>$param{StartDocket} ) ];
+		if ( ! @{$$variable{Projects}} ) {
+			my $Order = openprint::Order->find_one(docket=>$param{StartDocket});
+			if ( $Order ) {
+				my $Project = new openprint::Project();
+				$Project->docket($Order->docket());
+				$Project->status( $Order->status() );
+				$Project->order_id( $$Order{id} );
+				push @{$$variable{Projects}}, $Project;
+			} # end if
+		} # end if
 	} else {
 		$$variable{'DueDateStart'} = sprintf('%.4d-%.2d-%.2d', 
 			@session{

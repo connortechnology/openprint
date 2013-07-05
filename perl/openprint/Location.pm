@@ -4,7 +4,7 @@ require openprint::Location_Type;
 require openprint::Asset;
 require openprint::Photo_Album;
 require Geo::Coder::Googlev3;
-require Geo::IP;
+use Geo::IP;
 
 package openprint::Location;
 our @ISA = qw( openprint::Object );
@@ -200,7 +200,6 @@ sub google {
 	$string .= ' ' . $_[1] if @_ > 1;
 	$string =~ s/ /+/g;
 	my $coder = Geo::Coder::Googlev3->new();
-$openprint::log->debug('Get: ' . $string );
 	my $location = $coder->geocode( location => $string );
 	if ( ! $location ) {
 		$openprint::log->debug("No location for $string");
@@ -556,7 +555,7 @@ sub save_location {
 			$error .= $Location->save({
 					'name'			=>	$$param{'location'}, 
 					'parent_id'		=>	$parent_id, 
-					($$param{'type_id'}?('type_id'=>$$param{'type_id'}):('type'			=>	'place')), 
+					($$param{location_type_id}?(type_id=>$$param{location_type_id}):('type'			=>	'place')), 
 					'address'		=>	$$param{'address'},
 					'postalcode'	=>	$$param{'postalcode'},
 					});
@@ -590,10 +589,22 @@ sub googlemap_html {
 } # end sub googlemap_html
 
 sub from_ip {
-	my $gi = Geo::IP->open("/usr/share/GeoIP/GeoIP.dat");
-	return if ! $gi;
-	my $record = $gi->record_by_name(@_ ? $_[0] : $ENV{'REMOTE_ADDR'});
-	return if ! $record;
+	my $gi = Geo::IP->open('/usr/share/GeoIP/GeoIPCity.dat' );
+#GeoIPASNum.dat   GeoIPCity.dat    GeoIP.dat        GeoIPv6.dat      GeoLiteCity.dat 
+	if ( ! $gi ) {
+		$openprint::log->error('No Geo::IP');
+		return;
+	} # end if
+	my $ip = @_ ? $_[0] : $ENV{'REMOTE_ADDR'};
+
+	my $record = $gi->record_by_addr($ip);
+	if ( ! $record ) {
+		$openprint::log->error("No record for $ip from Geo::IP " . $gi->database_info);
+		
+		return;
+	} elsif ( $debug ) {
+		$openprint::log->error('Got record from Geo::IP' . $gi->database_info);
+	} # end if
 
 	my $ac = sql::start_transaction( $openprint::dbh );
 	$openprint::dbh->do( 'LOCK TABLE Orders IN SHARE ROW EXCLUSIVE MODE' ) or $openprint::log->error( $openprint::dbi->errstr() );

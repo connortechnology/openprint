@@ -9,7 +9,7 @@
 			simply drag and drop them here. Or </span>
 			<span id="formuploadmessage"> click on the Upload button. There is a 1GB file size limit.</span>
 		</div>
-		<? echo ( ssi::button( 'Upload', { class=>'qq-upload-button' } ); ) ?>
+		<? echo ( button( 'Upload', { class=>'qq-upload-button' } ); ) ?>
 		<span class="qq-drop-processing"><span></span><span class="qq-drop-processing-spinner"></span></span>
 		<ul id="upload_list" class="qq-upload-list"></ul>
 	</div>
@@ -18,7 +18,7 @@
 		<ul id="asset_search">
 			<li><label>Name</label><input type="text" name="asset_name_search" onkeydown="if(event.keyCode == 13){new Ajax.Updater( 'asset_search_results', '/employee/assets/_search_results.html', { parameters: { asset_name: this.value } } ); return false;};return true;"/></li>
 		</ul>
-		<ul id="asset_search_results"><? include('/employee/assets/_search_results.html') ?></ul>
+		<ul id="asset_search_results"></ul>
 	</fieldset>
 <? else ( $$variable{Object}->can_edit() ) ?>
 	<div id="assets"><?include('/employee/assets/_assets.html') ?></div>
