@@ -20,12 +20,12 @@ $table = 'manifestcontents';
 $serial = 'manifestcontents_id_seq';
 
 %fields = (
-	id				=>	'id',
-	manifest_id		=>	'manifest_id',
-	skid_id			=>	'skid_id',
-	Skid			=>	undef,
-	quantity		=>	'quantity',
-	type_id			=>	'type_id',
+	id					=>	'id',
+	manifest_id			=>	'manifest_id',
+	skid_id				=>	'skid_id',
+	Skid				=>	undef,
+	quantity			=>	'quantity',
+	type_id				=>	'type_id',
 	rfidtag_id			=>	'rfidtag_id',
 	RFIDTag				=>	undef,
 	manufacturers_id	=>	'manufacturers_id',
@@ -166,8 +166,11 @@ sub fix {
 	my ( $MC ) = @_;
 	my $Type = $_[0]->Type();
 	my $Manifest = $_[0]->Manifest();
+	my $Skid = $MC->Skid();
 
 	my $error;
+	my $ac = sql::start_transaction( $openprint::dbh );
+
 	my @SkidContents = openprint::SkidContent->find( skid_id=>$$MC{skid_id} );
 	my %SkidContents = map { $$_{paper_id}, $_ } @SkidContents;
 
@@ -192,14 +195,16 @@ $openprint::log->debug("desired paper exists");
 	} else {
 $openprint::log->debug("desired paper does not exists");
 # Change the stock
+		my $checked_out = 0;
 		foreach my $paper_id ( keys %SkidContents ) {
 			my $SC = $SkidContents{$paper_id};
 			my $Paper = $SC->Paper();
+			$checked_out = 1 if $SC->checked_out();
 
 			{
-			my $PI = new openprint::PaperInventory();
-			$error .= $PI->save({ user_id=>$openprint::session{user_id}, skid_id=>$$SC{skid_id}, paper_id=>$SC->paper_id(), quantity=>-1*$SC->quantity(),
-					comment=>'Changed stock from ' . $Paper->to_string() . ' to ' . $Type->Paper()->to_string()});
+				my $PI = new openprint::PaperInventory();
+				$error .= $PI->save({ user_id=>$openprint::session{user_id}, skid_id=>$$SC{skid_id}, paper_id=>$SC->paper_id(), quantity=>-1*$SC->quantity(),
+						comment=>'Changed stock from ' . $Paper->to_string() . ' to ' . $Type->Paper()->to_string()});
 			}
 # Change the type to the new type
 			foreach my $PA ( openprint::PaperAllocation->find( skid_id=>$SC->skid_id(), paper_id=>$SC->paper_id() ) ) {
@@ -213,12 +218,23 @@ $openprint::log->debug("desired paper does not exists");
 			$error .= $SC->save({ paper_id => $$Type{paper_id} });
 			$error .= $Paper->save();
 		} # end foreach paper_id
+		if ( $checked_out ) {
+			my $SC = $SkidContents{$$Type{paper_id}};
+			if ( $$SC{quantity} ) {
+				my $PI = new openprint::PaperInventory();
+                $error .= $PI->save({ user_id=>$openprint::session{user_id}, skid_id=>$$SC{skid_id}, paper_id=>$$SC{paper_id}, quantity=>-1*$SC->quantity(),
+                        comment=>'Checked out because other stock was checked out'} );
+			} # end if 
+		} # end if used
 	} # end if
 	$error .= $Type->Paper()->save();
-	my $Skid = $MC->Skid();
 	if ( $$Skid{id} and $$MC{manufacturers_id} and ( $$MC{manufacturers_id} ne $$Skid{manufacturers_id} ) ) {
 		if ( ! $$Skid{manufacturers_id} ) {
-			my $S = openprint::Skid->find_one(manufacturers_id=>$$MC{manufacturers_id});
+			my $S = openprint::Skid->find_one(manufacturers_id=>$$MC{manufacturers_id}, deleted=>[1,0] );
+			if ( $S->deleted() ) {
+				$S->destroy();
+				$S = undef;
+			} # end if
 			if ( $S ) {
 # Only do it if the skid doesn't have one assigned.
 				if ( $Skid->rfidtag_id() and ( $Skid->rfidtag_id() eq $MC->rfidtag_id() ) ) {
@@ -229,10 +245,24 @@ $openprint::log->debug("desired paper does not exists");
 					$error .= $MC->save({skid_id=>$$S{id}});
 				}  #end if
 			} else { # $S
-				$Skid->save({manufacturers_id=>$$MC{manufacturers_id}});
+				$error .= $Skid->save({manufacturers_id=>$$MC{manufacturers_id}});
+			} # end if
+		} else {
+$openprint::log->debug("Merging skid due to manufacturers id");
+			if ( ! $MC->rfidtag_id() ) {
+				my $S = openprint::Skid->find_one(manufacturers_id=>$$MC{manufacturers_id}, deleted=>[1,0] );
+				if ( $S->deleted() ) {
+					$error .= $S->undelete();
+				}
+				$error .= $MC->save({skid_id=>$$S{id}});
+			
 			} # end if
 		} # end if
 	} # end if
+	if ( $error ) {
+		$openprint::dbh->rollback();
+	} # end if
+	sql::end_transaction( $openprint::dbh, $ac );
 	
 	return $error;
 } # end sub fix
@@ -249,13 +279,13 @@ sub check {
 			$error = 'More than 1 stock on skid.<br/>';
 			$error .= 'Skid Contains <br/>';
             foreach my $SK ( @SkidContents ) {
-                $error .= $SK->Paper()->to_string() . '<br/>';
+                $error .= '<a href="/employee/inventory/paper_details.html?paper_id='.$$SK{paper_id}.'">'.$SK->Paper()->to_string() . '</a><br/>';
             } # end foreach
 		} elsif ( @SkidContents and ( $SkidContents[0]->paper_id() != $Type->paper_id() ) ) {
 			$error = 'Skid contents do not match manifest.<br/>';
 			$error .= 'Skid Contains <br/>';
             foreach my $SK ( @SkidContents ) {
-                $error .= $SK->Paper()->to_string() . '<br/>';
+                $error .= '<a href="/employee/inventory/paper_details.html?paper_id='.$$SK{paper_id}.'">'.$SK->Paper()->to_string() . '</a><br/>';
             } # end foreach
 		} elsif ( ! @SkidContents ) {
 			$error = 'Skid is empty.<br/>';
@@ -264,7 +294,7 @@ sub check {
 
 	if ( $$Skid{id} and $$MC{manufacturers_id} and ( $$MC{manufacturers_id} ne $$Skid{manufacturers_id} ) ) {
 		$error .= qq`Manufacturers ID ($$MC{manufacturers_id}) does not match skid.<br/>`;
-		my $S = openprint::Skid->find_one(manufacturers_id=>$$MC{manufacturers_id});
+		my $S = openprint::Skid->find_one(manufacturers_id=>$$MC{manufacturers_id},deleted=>[0,1]);
 
 		if ( ! $$Skid{manufacturers_id} ) {
 		} else {
@@ -272,7 +302,11 @@ sub check {
 		} # end if
 
 		if ( $S ) {
-			$error .= qq`Skid <a href="/employee/inventory/skid_details.html?skid_id=$$S{id}">$$S{id}</a> has this manufacturers id.<br/>`;
+			$error .= qq`Skid <a href="/employee/inventory/skid_details.html?skid_id=$$S{id}">$$S{id}</a> has this manufacturers id`;
+			if ( $S->delete() ) {
+				$error .= ', but has been deleted';
+			}
+			$error .= '.<br/>';
 		} # end if
 	} # end if
 	my $Tag = $MC->RFIDTag();
@@ -282,6 +316,9 @@ sub check {
 	} # end if
 
 	if ( $$MC{skid_id} and $$MC{rfidtag_id} ) {
+		if ( ! $$Skid{rfidtag_id} ) {
+			$error .= 'RFID # has not been applied to skid.<br/>';
+		} # end if
 		my $RFIDSkid = $Tag->Skid();
 		if ( $RFIDSkid->id() and ( $RFIDSkid->id() != $$MC{skid_id} ) ) {
 			$error .= qq`RFID is assigned to <a href="/employee/inventory/skid_details.html?skid_id=$$RFIDSkid{id}">$$RFIDSkid{id}</a><br/>`;

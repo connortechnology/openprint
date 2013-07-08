@@ -24,6 +24,7 @@ require configuration;
 
 require openprint::Object;
 require openprint::Currency;
+require openprint::Authorization;
 
 use openprint ();
 use vars qw( $r %variable %session %param %config $log $dbh %page_settings $starttime );

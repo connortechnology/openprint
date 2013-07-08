@@ -25,7 +25,7 @@ my $program = basename($0);
 
 my $opts = {};
 GetOptions($opts, 'help', 
-    'db_name=s', 'db_host=s', 'db_user=s', 'db_pass=s','blacklist=s', 'debug=s', 'config=s',
+    'db_name=s', 'db_host=s', 'db_user=s', 'db_pass=s','blacklist=s', 'debug=s', 'config=s', 'ping_type=s',
  );
 
 if ($opts->{help}) {
@@ -35,6 +35,7 @@ if ($opts->{help}) {
 
 my %defaults = (
 	config	=>	'/etc/openprint/ip_monitor.conf',
+	ping_type	=>	'icmp',
 );
 foreach my $default ( keys %defaults ) {
 	$$opts{$default} = $defaults{$default} if ! $$opts{$default};
@@ -73,21 +74,22 @@ if ( $config{'pid_file'} ) {
 	} # end if
 } # end if
 
-$config{'ping_wait'} = 1 if ! $config{'ping_wait'};
+$config{ping_wait} = 2 if ! $config{ping_wait};
 # udp has less network traffic overhead
-my $p = Net::Ping->new('icmp',$config{'ping_wait'});
-
+my $p = Net::Ping->new($config{ping_type},$config{ping_wait});
+my $hup;
 my %times;
+@SIG{qw(HUP)} = \&sig_handler;
 
 while(1) {
 	if ( ! ( $dbh and $dbh->ping ) ) {
 		$log->debug("Connecting to db");	
 		$dbh = sql::open_sql( $log,
-				'host'		=> $config{'db_host'},
-				'database'	=> $config{'db_name'},
-				'driver'	=> 'Pg',
-				'login'		=> $config{'db_user'},
-				'password'	=> $config{'db_pass'},
+				host		=> $config{db_host},
+				database	=> $config{db_name},
+				driver		=> 'Pg',
+				login		=> $config{db_user},
+				password	=> $config{db_pass},
 				);
 		if ( ! $dbh ) {
 			$log->error( 'Error opening db. Sleeping for 5.' );
@@ -97,10 +99,16 @@ while(1) {
 		configuration::init( );
 		configuration::from_file( $$opts{'config'} );
 		configuration::merge( $opts );
+	} elsif ( $hup ) {
+		configuration::init( );
+		configuration::from_file($$opts{config});
+		configuration::merge($opts);
+		$log->hup();
+		$hup = 0;
 	} # end if ! dbh
 
 	$log->debug( "Getting hosts" );
-	my @Hosts = openprint::Host->find('monitored'=>1);
+	my @Hosts = openprint::Host->find( monitored=>1 );
 	$log->debug( 'Monitoring ' . @Hosts . ' hosts.' );
 	foreach my $Host ( @Hosts ) {
 		if ( ! $Host->ip() ) {
@@ -228,6 +236,15 @@ $log->debug("Different REALM $realm");
 $p->close();
 $dbh->disconnect() if $dbh;
 exit 0;
+
+sub sig_handler {
+	my $signame = shift;
+	if ( $signame eq 'HUP' ) {
+		$log->info('Got HUP, re-opening log, re-reading config');
+		$hup = 1;
+	} # end if
+	#die "Somebody sent me a SIG$signame";
+} # end sub sig_handler
 
 sub usage {
 	print <<EOH;

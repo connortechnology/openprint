@@ -650,7 +650,7 @@ $openprint::log->error("No date from $value");
 #$openprint::log->debug(" date_select: $value : ($year,$month,$day), order: $$options{order}");
 	$$options{'order'} = 'y,m,d' if ! $$options{'order'};
 
-	my $class = 'DateSelector';
+	my $class = 'DateTimeSelector';
 	$class .= 'C' if $$options{with_clear};
 	$class .= 'T' if $$options{with_today};
 
