@@ -36,7 +36,7 @@
             return $_ if $_;
 
         } openprint::Paper->find( %params );
-	if ( @{$$variable{'Papers'}} > 1000 ) {
+	if ( @{$$variable{'Papers'}} > 100 ) {
 		openprint::StockName->find();
 		openprint::StockFinish->find();
 		openprint::StockColour->find();

@@ -118,9 +118,19 @@
 					push @{$Allocations{$$Skid{id}}}, $Allocation;
 				} # end 
 			} # end foreach
+			my @skid_ids = map { $$_{id} } @{$$variable{'Skids'}};
+			my %SkidContents;
+			foreach my $SC ( openprint::SkidContent->find( skid_id => \@skid_ids ) ) {
+				push @{$SkidContents{$$SC{skid_id}}}, $SC;
+			} # end foreach SC
+			my %empty;
+			foreach my $SC ( openprint::SkidContent->find( skid_id => \@skid_ids, 'quantity >=' => 1 ) ) {
+				$empty{$$SC{skid_id}} += $$SC{quantity};
+			} # end foreach SC
 
 			foreach my $Skid ( @{$$variable{'Skids'}} ) {
-				my $empty = $Skid->empty();
+				$Skid->Contents( $SkidContents{$$Skid{id}} ? $SkidContents{$$Skid{id}} : [] );
+				my $empty = $empty{$$Skid{id}};
 				if ( $session{'/employee/inventory/skids.html?empty'} eq 'Y' ) {
                     next if ! $empty;
                 } # end if
@@ -173,10 +183,10 @@ format_date( $Skid->received_on() ),
 format_datetime( $Skid->created_on() ),
 format_datetime( $Skid->updated_on() ),
 $Skid->rfidtag_id()? format_datetime( $Skid->RFIDTag()->updated_on() ) : 'no rfid',
-$Skid->RFIDTag()->id_short(),
+$RFIDTag->id_short(),
 $Skid->Location()->name(),
 $Skid->manufacturers_id(),
-$Skid->RFIDTag()->id(),
+$RFIDTag->id(),
  );
 
 				$html .= '<td class="Dockets" rowspan="2">';
@@ -203,7 +213,7 @@ $Skid->RFIDTag()->id(),
 					$html .= sprintf( '<a href="/employee/inventory/skid_details.html?skid_id=%d">%s - %d%s %s</a><br/>',
 						$$Skid{'id'},
 						$Paper->to_string(),
-						new openprint::StockPurpose( $C->purpose_id() )->name(),
+						( $$C{purpose_id} ? new openprint::StockPurpose( $C->purpose_id() )->name() : '' ),
 						$C->quantity(),
 						$Paper->units(),
 						$C->condition(),

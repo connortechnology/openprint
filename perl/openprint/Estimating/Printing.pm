@@ -2531,12 +2531,12 @@ $imp->display('Not overriden cutoff! ' ) if DEBUG;
 #$log->debug("Grain Direction override: " . $imp->grain_direction() . " ne " . $$sig_specs{'rdbGrainDirection'.$qty_index} ) if $imp->grain_direction() ne $$sig_specs{'rdbGrainDirection'.$qty_index};
 				if ( $$sig_specs{'rdbGrainDirection'.$qty_index} eq 'Long' ) {
 
-$imp->display("Grain override") if $debug;
+$imp->display("Grain override") if DEBUG;
 					if ( ( $imp->grain_direction() eq 'width' ) and ( $imp->object_width() < $imp->object_height() ) ) {
-$imp->display("Grain override next") if $debug;
+$imp->display("Grain override next") if DEBUG;
 						next;
 					} elsif ( ( $imp->grain_direction() eq 'height' ) and ( $imp->object_width() > $imp->object_height() ) ) {
-$imp->display("Grain override next") if $debug;
+$imp->display("Grain override next") if DEBUG;
 						next;
 					}  # end if
 				} elsif ( $$sig_specs{'rdbGrainDirection'.$qty_index} eq 'Short' ) {
@@ -3339,7 +3339,6 @@ $openprint::log->debug("Calculating Additional Signatures for other group");
 $openprint::log->debug("No sigs for group 2?");
 				} # end if has other sigs
 			} # end if Group == 1
-} # end if ! recursion_depth
 
 			if ( $$price{'Comparison Cost'} < 0 ) {
 				$openprint::log->error("Negative price! $best_price{'Comparison Cost'} <= $$price{'Comparison Cost'}");

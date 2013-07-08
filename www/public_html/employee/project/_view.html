@@ -49,7 +49,7 @@
                 ( $$services{Signature} ? '' : openprint::Estimating::Printing::summary($Project, $$services{''}[0], $printing_specs ) ),
                 );
             } else {
-                $html .= '<td class="Service"><b>Printing</b></a></td>';
+                $html .= '<td class="Service"><b>Printing</b></td>';
             } # end if
 
             $rowclass = $rowclass ? '' : ' class="colRow"';
@@ -443,13 +443,11 @@
 </form>
 <br class="spacer"/>
 <fieldset><legend onclick="toggleContent('StockAllocations<?echo($$variable{Project}{id})?>','_stock_allocations.html?project_id=<? echo ( $$variable{Project}->id() ) ?>', null, null );">Allocated</legend>
-<div id="StockAllocations<?echo($$variable{Project}{id})?>"><?include(_stock_allocations.html)?></div>
+<div id="StockAllocations<?echo($$variable{Project}{id})?>" class="StockAllocated"><?include(/employee/project/_stock_allocations.html)?></div>
 </fieldset>
 <br/>
 <? if ( $$variable{'Project'}->docket() ) ?>
-<div id="StockCheckout<?echo($$variable{Project}{id})?>">
-<?include(/employee/project/_stock_checkout.html)?>
-</div>
+<div id="StockCheckout<?echo($$variable{Project}{id})?>" class="StockCheckout"><?include(/employee/project/_stock_checkout.html)?></div>
 <? endif ( $$variable{'Project'}->docket() ) ?>
 <br class="spacer"/>
 <fieldset><legend onclick="toggleContent( 'ProductionLog<?echo($$variable{Project}{id})?>', '/employee/project/_production_log.html?project_id=<? echo ( $$variable{Project}->id() ) ?>', null, null );">Production Log (click to hide/show)</legend>

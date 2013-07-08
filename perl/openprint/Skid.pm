@@ -484,8 +484,8 @@ sub Content {
 } # end sub Content
 
 sub Contents {
+	return () if ! $_[0]{id};
     my $self = shift;
-	return () if ! $$self{'id'};
 
 	if ( @_ ) {
 		if ( ! defined $_[0] ) {

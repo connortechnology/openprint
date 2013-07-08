@@ -87,7 +87,7 @@ sub signature_calc {
 	$price{Price} = \%ImpositionCharge;
 
 	my %SteppingCharge;
-	if ( ! (%SteppingCharge = openprint::service::get_price_object( 'Stepping Charge'.$Project->Type()->strid(), undef, $Press) ) ) {
+	if ( ! (%SteppingCharge = openprint::service::get_price_object( 'Stepping Charge'.$Project->Type()->name(), undef, $Press) ) ) {
 		%SteppingCharge = openprint::service::get_price_object( 'Stepping Charge', undef, $Press);
 	} # end if
 	if ( %SteppingCharge ) {
@@ -98,7 +98,7 @@ sub signature_calc {
 
    if ( $Imposition->pages() ) {
 		my %PageCharge;
-		if ( ! ( %PageCharge = openprint::service::get_price_object( 'Page Charge'.$Project->Type()->strid(), $Imposition->pages(), $Press) ) ) {
+		if ( ! ( %PageCharge = openprint::service::get_price_object( 'Page Charge'.$Project->Type()->name(), $Imposition->pages(), $Press) ) ) {
 			%PageCharge = openprint::service::get_price_object( 'Page Charge', $Imposition->pages(), $Press );
 		} # end if
 		if ( %PageCharge ) {
