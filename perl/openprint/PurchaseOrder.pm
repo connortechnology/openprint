@@ -592,6 +592,12 @@ $log->debug('can see');
 			} # end if
 		} # end foreach C
 	} # end if
+	if ( $_[0]->notifications() ) {
+		if ( sets::isin( $$User{id}, $_[0]->notifications() ) ) {
+			$log->debug($$User{firstname} . ' can see because in notifications.' );
+			return 1;
+		} # end if
+	} # end if
 	return 0;	
 } # end sub can_see_pricing
 

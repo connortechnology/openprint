@@ -31,9 +31,8 @@ $$variable{"FoldType-$$sig_specs{SignatureIndex}-$qty_index-$fold_index"} . '<br
 		} # end foreach
 		$html .= '</p><p><label>Equipment</label>';
 		foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
-			$html .= '<span class="value">';
 			my $E = new openprint::Equipment( $$variable{"ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} );
-			$html .= $E->name() . '</span>';
+			$html .= '<span class="value">' . $E->name() . '</span>';
 		} # end foreach
 	} # end foreach s_id
 	return $html;

@@ -20,7 +20,7 @@ require openprint::Manifest;
 require openprint::ManifestContent;
 require openprint::InventoryCondition;
 
-$debug = 0;
+$debug = 1;
 
 $table = 'Skids';
 $serial = 'skid_id_seq';
@@ -447,30 +447,30 @@ sub location {
 
 sub location_id {
 
-	my $Tag = $_[0]->RFIDTag();
 	if ( @_ > 1 ) {
 		$_[0]{location_id} = $_[1];
 		if ( $_[0]{rfidtag_id} ) {
+			my $Tag = $_[0]->RFIDTag();
 			if ( $_[1] != $Tag->location_id() ) {
 				$Tag->save({location_id=>$_[1]});
 			} # end if
 		} # end if
 	} # end if
 
-	if ( $_[0]{rfidtag_id} and ( $Tag->location_id() != $_[0]{location_id} ) ) {
-		$_[0]{location_id} = $Tag->location_id();
+
+	if ( ! $_[0]{location_id} ) {
+		if ( $_[0]{rfidtag_id} ) {
+			my $Tag = $_[0]->RFIDTag();
+			if ( $Tag->location_id() != $_[0]{location_id} ) {
+				$_[0]{location_id} = $Tag->location_id();
+			} # end if
+		} 
 	} # end if
 	return $_[0]{location_id};
 } # end sub location_id
 
 sub Location {
-	my ( $self ) = @_;
-
-	if ( $$self{'rfidtag_id'} ) {
-		return new openprint::RFIDTag( $$self{'rfidtag_id'} )->Location();
-	} # end if
-
-	return new openprint::Location( $$self{'location_id'} );
+	return new openprint::Location( $_[0]->location_id() );
 } # end sub Location
 
 sub Content {
@@ -484,8 +484,8 @@ sub Content {
 } # end sub Content
 
 sub Contents {
+	return () if ! $_[0]{id};
     my $self = shift;
-	return () if ! $$self{'id'};
 
 	if ( @_ ) {
 		if ( ! defined $_[0] ) {

@@ -297,6 +297,7 @@ sub load {
 			$$self{'spread_columns'} = 1;
 			$$self{'spreads'} = 1;
 		} # end if
+		$$self{pages} = $$self{'spreads'} * $$self{'spread_size'};
 	} # end if
 	return $self;
 } # end sub load
@@ -411,6 +412,10 @@ sub sheet_height {
 		} # end if
 	} # end if
 } # end sub sheet_height
+
+sub sheet_area {
+	return $_[0]->sheet_width() * $_[0]->sheet_height();
+} # end sub sheet_area
 
 sub pages {
 	return $_[0]{'pages'};
