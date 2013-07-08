@@ -157,7 +157,7 @@ sub value {
 
 sub checked_out {
 	if ( ! exists $_[0]{checked_out} ) {
-		$_[0]{checked_out} = openprint::PaperInventory::find( skid_id=>$_[0]{skid_id}, paper_id=>$_[0]{paper_id}, 'comment_like'=>'Checked out%' ) ? 1 : 0; 
+		$_[0]{checked_out} = openprint::PaperInventory->find( skid_id=>$_[0]{skid_id}, paper_id=>$_[0]{paper_id}, 'comment like'=>'Checked out%' ) ? 1 : 0; 
 	} 
 	return $_[0]{checked_out};
 } # end sub checked_out

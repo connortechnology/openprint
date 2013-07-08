@@ -524,9 +524,9 @@ sub allocateable {
 # Checkout all paper on the skid
 sub checkout {
 	my ( $self, $c ) = @_;
-	my @contents = openprint::SkidContent->find('skid_id'=>$$self{id});
+	my @contents = openprint::SkidContent->find( skid_id=>$$self{id});
 	if ( ! @contents ) {
-		if ( ! openprint::PaperInventory->find( 'skid_id'=>$$self{'id'}, 'comment_like'=>'Checked out%' ) ) {
+		if ( ! openprint::PaperInventory->find( skid_id=>$$self{id}, 'comment like'=>'Checked out%' ) ) {
 			my $PI = new openprint::PaperInventory();
 			my $e = $PI->save({
 					'paper_id'	=>	undef,
@@ -543,8 +543,8 @@ sub checkout {
 	} # end if
 
 	foreach my $C ( @contents ) {
-		if ( ! openprint::PaperInventory->find( 'skid_id'=>$$self{'id'}, 'comment_like'=>'Checked out%' ) ) {
-			my $PA = openprint::PaperAllocation->find_one('skid_id'=>$$self{'id'}, 'paper_id'=>$C->paper_id());
+		if ( ! openprint::PaperInventory->find( skid_id=>$$self{id}, 'comment like'=>'Checked out%' ) ) {
+			my $PA = openprint::PaperAllocation->find_one( skid_id=>$$self{id}, paper_id=>$C->paper_id());
 			my $desc = 'Checked out' . ($PA->project_id() ? ' for docket ' . $PA->Project()->docket() : '');
 			my $PI = new openprint::PaperInventory();
 			my $e = $PI->save({
@@ -737,7 +737,7 @@ sub used {
 		$_[0]{used} = $_[1];
 	} # end if
 	if ( ! defined $_[0]{used} ) {
-		$_[0]{used} = openprint::PaperInventory->find( skid_id=>$_[0]->id(), 'comment_like'=>'Checked out%' ) ? 1 : 0;
+		$_[0]{used} = openprint::PaperInventory->find( skid_id=>$_[0]->id(), 'comment like'=>'Checked out%' ) ? 1 : 0;
 	} # end if
 	return $_[0]{used};
 } # end sub used

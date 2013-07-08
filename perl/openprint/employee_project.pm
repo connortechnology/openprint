@@ -812,7 +812,7 @@ sub _stock_checkout {
 		my $add_entry = 1;
 
 		if ( $Skid->is_empty() ) {
-			my @PI = openprint::PaperInventory->find( skid_id=>$Skid->id(), 'comment_like'=>'Checked out%', order=>'updated_on desc');
+			my @PI = openprint::PaperInventory->find( skid_id=>$Skid->id(), 'comment like'=>'Checked out%', order=>'updated_on desc');
 			if ( @PI ) {
 				$variable{'error'} .= sprintf( '%1$s %2$d has already been checked out', ($PI[0]->Paper()->type() eq 'Roll' ? 'Roll' : 'Skid'), $Skid->id() );
 				if ( $PI[0]->docket() ) {
