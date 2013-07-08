@@ -103,7 +103,6 @@ sub groups {
 	return @Groups;
 } # end sub groups
 
-
 sub calc {
 	my ( $log, $dbh, $variable, $project_index, $service_index, $specs ) = @_;
 

@@ -85,9 +85,7 @@
 			} # end if Printing or not
 		} # end foreach ServiceCategory
 		$html .= '<tr class="totals"><td colspan="2">Project Cost</td>';
-		foreach my $qty_index ( @quantity_indexes ) {
-			$html .= '<td class="price">'.openprint::Currency::format($totals[$qty_index]).'</td>';
-		} # end foreach qty_index
+		$html .= join("\n", map { '<td class="price">'.openprint::Currency::format($totals[$_]).'</td>' } @quantity_indexes );
 		$html .= '</tr>';
 		return $html;
 	) ?>

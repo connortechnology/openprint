@@ -95,21 +95,21 @@
 										<option value="4/4">4 Colour Both Sides</option>
 									</select>
 								</li>
-						<? echo ( 
+							<? echo ( 
 								# Load Defaults
-								if ( my $ServiceType = openprint::ServiceType->find_one('name'=>'Signature') ) {
-									foreach my $Default ( openprint::ServiceType_Default->find('servicetype_id'=>$ServiceType->id(), 'projecttype_id'=>$$variable{'Project'}->type_id() ) ) {
+								if ( my $ServiceType = openprint::ServiceType->find_one( name=>'Signature') ) {
+									foreach my $Default ( openprint::ServiceType_Default->find( servicetype_id=>$ServiceType->id(), projecttype_id=>$$variable{Project}->type_id() ) ) {
 										$$variable{$Default->name().'1'} = $Default->value();
 										$$variable{$Default->name().'2'} = $Default->value();
 									} # end while
 								} # end if
 
-							$$variable{'Signature'} = '1';
-							my $html;
-							$html .= misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/content/prin/_aqueous.html' );
-							$html .= misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/content/prin/_uvcoating.html' );
-							$html .= misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/content/prin/_paper_dropdowns.html' );
-							return variable_substitution( \$html, $variable );
+								$$variable{'Signature'} = '1';
+								my $html;
+								$html .= include( '/content/prin/_aqueous.html' );
+								$html .= include( '/content/prin/_uvcoating.html' );
+								$html .= include( '/content/prin/_paper_dropdowns.html' );
+								return $html;
 							) ?>
 							</ul>
 						</div>
@@ -134,10 +134,10 @@
 									</li>
 									<? echo ( 
 										$$variable{'Signature'} = '2';
-										my $html .= misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/content/prin/_aqueous.html' );
-										$html .= misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/content/prin/_paper_dropdowns.html' );
-										return variable_substitution( \$html, $variable );
-										) ?>
+										my $html .= include( '/content/prin/_aqueous.html' );
+										$html .= include( '/content/prin/_paper_dropdowns.html' );
+										return $html;
+									) ?>
 								</ul>
 							</div>
 						</fieldset>

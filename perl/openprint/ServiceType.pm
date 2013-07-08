@@ -13,15 +13,15 @@ $serial = 'service_types_id_seq';
 
 %fields = (
 	id				=>	'id',
-	name				=> 'name',
+	name			=> 'name',
 	description		=> 'description',
 	url				=> 'strdetailedurl',
-	type				=> 'type',
+	type			=> 'type',
 	category_id		=> 'category_id',
 	sorting			=> 'sorting',
 	create_visible	=> 'create_visible',
-	view_visible		=> 'view_visible',
-	category			=>	undef,
+	view_visible	=> 'view_visible',
+	category		=>	undef,
 	deleted			=>	'deleted',
 );
 %find_fields = (

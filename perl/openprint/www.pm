@@ -198,7 +198,6 @@ $log->debug("No good, need login");
     if ( $variable{'ExternalRedirect'} ) {
 		foreach my $key ( 'error', 'warning', 'information' ) {
 			if ( $variable{$key} ) {
-				$log->debug("Sacing session $key $variable{$key}");
 				$session{$key} = $variable{$key};
 			} # end if
 		} # end foreach

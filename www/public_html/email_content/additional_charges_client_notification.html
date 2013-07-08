@@ -1,10 +1,10 @@
 <style type="text/css">
-<? echo ( misc::load_file( $log, $config{'SkinPath'} . '/css/project.css' ); ) ?>
+<? include( '/css/project.css' ) ?>
 </style>
 <a href="mailto:<? echo ( $$variable{'Operator'}->email() ) ?>"><? hecho ( $$variable{'Operator'}->name() ) ?></a> has added additional charges to the following project. You will need to approve these charges before production will continue.<br/>
 <br/>
 <? eval ( openprint::project::get_header( $log, $dbh, $variable, $$variable{'Project'}->id() ); ) ?>
-<? echo ( include('/includes/project_header.html'); ) ?>
+<?include('/includes/project_header.html')?>
 <table class="List">
 	<tr> 
 		<th align="left">Services</th>
@@ -15,8 +15,8 @@
 		my $html = '';
 		my $rowclass;
 		my $services = $$variable{'Project'}->services();
-		foreach my $ServiceCategory ( openprint::ServiceType_Category->find('order'=>'sorting,name') ) {
-           foreach my $ServiceType ( openprint::ServiceType->find('category_id'=>$ServiceCategory->id(),'order'=>'sorting', 'view_visible'=>1) ) {
+		foreach my $ServiceCategory ( openprint::ServiceType_Category->find( order=>'sorting,name') ) {
+           foreach my $ServiceType ( openprint::ServiceType->find( category_id=>$ServiceCategory->id(), order=>'sorting', view_visible=>1 ) ) {
                 next if ! $$services{$ServiceType->name()};
 				next if $ServiceType->name() eq 'Proofs';
 
@@ -45,7 +45,7 @@
 <span style="float: right;">
 	<? echo ( 
 		if ( sets::isin( $$variable{'Project'}->status(), [ 'Proofs Out', 'Waiting for Client Approval' ] ) ) {
-			return ssi::writeButton( $log, $dbh, 'SignOff', 'signoff.gif', '', qq`sign-off.html?ProjectIndex=$$variable{'ProjectIndex'}`, 'Sign Off' );
+			return button( 'SignOff', href=> qq`sign-off.html?ProjectIndex=$$variable{'ProjectIndex'}`, text=>'Sign Off' } );
 		} # end if
 		return;
 	) ?>
