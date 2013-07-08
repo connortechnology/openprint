@@ -58,7 +58,6 @@ sub no_outputs {
     return @v;
 }
 
-
 sub calc {
 	my ( $log, $dbh, $variable, $project_index, $service_index, $specs ) = @_;
 

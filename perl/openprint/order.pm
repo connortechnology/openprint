@@ -188,7 +188,7 @@ sub add_project_to_order {
 		} # end if
 		$sql{'dateRequired'} = join('-', $year, $month, $day );
 	} # end if
-	my @ShippingServices = openprint::ServiceType::find('category'=>'Shipping');
+	my @ShippingServices = openprint::ServiceType->find('category'=>'Shipping');
 	if ( @ShippingServices ) {
 		foreach my $ShippingType ( @ShippingServices ) {
 			next if sets::isin( $ShippingType->name(), ['Turnaround'] );
@@ -365,7 +365,7 @@ $openprint::log->error("Quantity index for $project_index " . $param{"rdbQuantit
 	# If we are specifying the Shipping Type
 	if ( $param{'ShippingType'.$project_index} ) {
 		my $services = $Project->services();
-		my @ServiceTypes = openprint::ServiceType::find('category'=>'Shipping');
+		my @ServiceTypes = openprint::ServiceType->find('category'=>'Shipping');
 		$log->debug("ServiceTypes: " . join(',',map { $_->name() } @ServiceTypes )) if $debug;
 		foreach my $ShippingType ( @ServiceTypes ) {
 

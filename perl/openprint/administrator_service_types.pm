@@ -12,6 +12,7 @@ require openprint::Equipment;
 require openprint::pricelist;
 require openprint::service_price;
 require openprint::service_priceset;
+require openprint::ServiceType;
 require openprint::logs;
 
 sub edit {
