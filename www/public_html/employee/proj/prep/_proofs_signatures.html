@@ -80,7 +80,7 @@
 			openprint::Estimating::Proofs::calc( $log, $dbh, $variable, @param{'ProjectIndex','ServiceIndex'}, \%proof_specs );
 
 			# Now do the abominable thing and add a custom line item for it too...
-			if ( my @ServiceTypes = openprint::ServiceType::find('name'=>'CustomService') ) {
+			if ( my @ServiceTypes = openprint::ServiceType->find('name'=>'CustomService') ) {
 				my $ac = sql::start_transaction( $dbh );
 				sql::insert( $log, $dbh, 'tbl_Project_Contents', 'lngProjectIndex', $param{'ProjectIndex'}, 'strStatus', 'Waiting For Customer Approval', 'servicetype_id', $ServiceTypes[0]->id() );
 				$_ = q{SELECT MAX(lngServiceIndex) FROM tbl_Project_Contents WHERE lngProjectIndex=?};

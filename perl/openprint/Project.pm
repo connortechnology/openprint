@@ -1080,7 +1080,7 @@ sub summary {
 
 		foreach my $Category ( openprint::ServiceType_Category::find('order'=>'sorting') ) {
 			next if sets::isin( $Category->name(), [ 'Printing','Coatings' ] );
-			foreach my $ServiceType ( openprint::ServiceType::find('category_id'=>$Category->id()) ) {
+			foreach my $ServiceType ( openprint::ServiceType->find('category_id'=>$Category->id()) ) {
 				next if ! $$services{$ServiceType->name()};
 				foreach my $service_id ( @{$$services{$ServiceType->name()}} ) {
 					my $service_specs = openprint::service::get_specs_ref( $self, $service_id );
@@ -1389,7 +1389,7 @@ sub add_service {
 
     my $ServiceType;
     if ( ref $type ne 'openprint::ServiceType' ) {
-        if ( my @ServiceTypes = openprint::ServiceType::find('name'=>$type) ) {
+        if ( my @ServiceTypes = openprint::ServiceType->find('name'=>$type) ) {
             $ServiceType = $ServiceTypes[0];
         } else {
             $log->warn("Service $type IS NOT in the system.");
@@ -1572,7 +1572,7 @@ sub delivery_cost {
 
 	if ( ! exists $$self{'delivery_cost'} ) {
 		my $services = $self->services();
-		foreach my $ServiceType ( openprint::ServiceType::find('category'=>'Shipping') ) {
+		foreach my $ServiceType ( openprint::ServiceType->find('category'=>'Shipping') ) {
 			next if ! $$services{$ServiceType->name()};
 			foreach ( @{$$services{$ServiceType->name()}} ) {
 				my $specs = openprint::service::get_specs_ref( $self, $_ );
@@ -1588,7 +1588,7 @@ sub production_cost {
 
 
 	if ( ! exists $$self{'production_cost'} ) {
-		my @Shipping_Services = map { $_->name() } openprint::ServiceType::find('category'=>'Shipping');
+		my @Shipping_Services = map { $_->name() } openprint::ServiceType->find('category'=>'Shipping');
 		my $services = $self->services();
 		foreach my $ServiceType ( keys %$services ) {
 			next if sets::isin( $ServiceType, \@Shipping_Services );

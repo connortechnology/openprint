@@ -126,7 +126,7 @@ sub view_services {
 				my $ProjectCurrency = $Project->Currency();
 				my $conversion_rate = $CurrentCurrency->conversions( $ProjectCurrency->id() );
 
-				if ( my @ServiceTypes = openprint::ServiceType::find('name'=>'CustomService') ) {
+				if ( my @ServiceTypes = openprint::ServiceType->find('name'=>'CustomService') ) {
 					my $ac = sql::start_transaction( $dbh );
 
 					sql::insert( $log, $dbh, 'tbl_Project_Contents',
@@ -333,7 +333,7 @@ $openprint::log->debug("$k => $specified_pages{$k}" );
 # First, see if we have one.
 		if ( ! $Project->signatures({'type'=>'Cover Pages'}) ) {
 			my $ac = sql::start_transaction( $dbh );
-			$dbh->do( "LOCK TABLE tbl_Service_Specifications IN SHARE ROW EXCLUSIVE MODE" ) or $log->error( DBI->errstr );
+			$dbh->do( "LOCK TABLE tbl_Service_Specifications IN ACCESS EXCLUSIVE MODE" ) or $log->error( DBI->errstr );
 			my $cover_index = $Project->add_service( 'AdditionalSignature' );
 			push @{$$services{'AdditionalSignature'}}, $cover_index;
 			openprint::service::insert_service_spec( $log, $dbh, $project_index, $cover_index, 'txtSignatureType', 'Cover Pages');
