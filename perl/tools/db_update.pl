@@ -2436,6 +2436,10 @@ if ( ! sets::isin( 'paper_inventory', \@tables ) ) {
 		if ( ! exists $$data{'docket'} ) {
 			$dbh->do('alter table paper_inventory add docket integer');
 		} # end if
+		if ( ! exists $$data{project_id} ) {
+			$dbh->do('alter table paper_inventory add project_id integer');
+			$dbh->do('alter table paper_inventory add FOREIGN KEY (project_id) REFERENCES Projects (id)');
+		} # end if
 		if ( exists $$data{'poindex'} ) {
 			$dbh->do('alter table paper_inventory DROP poindex');
 		} # end if
@@ -3505,6 +3509,10 @@ if ( ! sets::isin( 'event_invitations', \@tables ) ) {
 		$dbh->do('ALTER TABLE event_invitations ADD sent_on timestamp with time zone');
 	} # end if
 } # end if
+if ( ! sets::isin( 'authorizations', \@tables ) ) {
+    $dbh->do( misc::load_file( $log, '../openprint/sql/Authorizations.sql' ) );
+    die $dbh->errstr() if $dbh->errstr();
+}
 print "Finished\n";
 1;
 __END__
