@@ -55,18 +55,18 @@
 								<li>
 									<label>Binding Type</label>
 									<select id="rdbTemplateType" name="rdbTemplateType" onchange="remove_div('OrderButton');">
-<? if ( openprint::ServiceType::find('name'=>'SaddleStitching'); ) ?>
+<? if ( openprint::ServiceType->find('name'=>'SaddleStitching'); ) ?>
 										<option value="SaddleStitching">Saddle Stitching</option>
-<? endif ( openprint::ServiceType::find('name'=>'SaddleStitching'); ) ?>
-<? if ( openprint::ServiceType::find('name'=>'PerfectBound'); ) ?>
+<? endif ( openprint::ServiceType->find('name'=>'SaddleStitching'); ) ?>
+<? if ( openprint::ServiceType->find('name'=>'PerfectBound'); ) ?>
 										<option value="PerfectBound">Perfect Bound</option>
-<? endif ( openprint::ServiceType::find('name'=>'PerfectBound'); ) ?>
-<? if ( openprint::ServiceType::find('name'=>'PlasticCoil'); ) ?>
+<? endif ( openprint::ServiceType->find('name'=>'PerfectBound'); ) ?>
+<? if ( openprint::ServiceType->find('name'=>'PlasticCoil'); ) ?>
 										<option value="PlasticCoil">Koil Bound</option>
-<? endif ( openprint::ServiceType::find('name'=>'PlasticCoil'); ) ?>
-<? if ( openprint::ServiceType::find('name'=>'DoubleLoopWire'); ) ?>
+<? endif ( openprint::ServiceType->find('name'=>'PlasticCoil'); ) ?>
+<? if ( openprint::ServiceType->find('name'=>'DoubleLoopWire'); ) ?>
 										<option value="DoubleLoopWire">Wire-O Bound</option>
-<? endif ( openprint::ServiceType::find('name'=>'DoubleLoopWire'); ) ?>
+<? endif ( openprint::ServiceType->find('name'=>'DoubleLoopWire'); ) ?>
 									</select>
 								</li>
 							</ul>
@@ -87,7 +87,7 @@
 								</li>
 						<? echo ( 
 								# Load Defaults
-								if ( my @ServiceTypes = openprint::ServiceType::find('name'=>'AdditionalSignature') ) {
+								if ( my @ServiceTypes = openprint::ServiceType->find('name'=>'AdditionalSignature') ) {
 									$_ = q{SELECT strFieldName, strDefaultValue FROM tbl_Service_Defaults WHERE lngServiceTypeIndex=? OR lngServiceTypeIndex IS NULL ORDER BY lngServiceTypeIndex};
 									my @defaults = sql::execute( $log, $dbh, $_, $ServiceTypes[0]->id() );
 									while ( my ( $name, $value ) = splice @defaults,0,2 ) {

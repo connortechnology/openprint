@@ -4,7 +4,7 @@ require openprint::Object;
 require openprint::ServiceType_Category;
 
 use strict;
-use vars qw( $log $dbh $table $serial %fields %transforms %defaults );
+use vars qw( $log $dbh $table $serial %fields %find_fields %transforms %defaults );
 
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;

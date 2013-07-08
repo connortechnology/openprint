@@ -32,7 +32,7 @@ require openprint::Estimating::UPS;
 require openprint::Estimating::Multipage;
 require openprint::logs;
 
-my $debug = 1;
+my $debug = 0;
 
 use vars qw( %specs_cache );
 my %cache_index_by_id;

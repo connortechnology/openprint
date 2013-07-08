@@ -149,7 +149,7 @@ $log->debug("Category $$ServiceCategory{'name'} $html");
             } # end if $$services{'AdditionalSignature'}
 
         } else {
-            foreach my $ServiceType ( openprint::ServiceType::find('category_id'=>$ServiceCategory->id(),'order'=>'sorting', 'view_visible'=>1) ) {
+            foreach my $ServiceType ( openprint::ServiceType->find('category_id'=>$ServiceCategory->id(),'order'=>'sorting', 'view_visible'=>1) ) {
                 next if ! $$services{$ServiceType->name()};
                 foreach my $service_id ( @{$$services{$ServiceType->name()}} ) {
 					$rowclass = ' class="colRowRed"' if $statuses{$service_id} eq 'Waiting For Customer Approval';
@@ -267,7 +267,7 @@ $log->debug("Category $$ServiceCategory{'name'} $html");
 			<? if ( openprint::usergroup::is_user_in( ['Sales Admin'], $session{'user_id'} ) ) ?>
 			<td>&nbsp;</td>
 			<? endif ( openprint::usergroup::is_user_in( ['Sales Admin'], $session{'user_id'} ) ) ?>
-			<td colspan="2">Add Service:<select name="NewServiceType" onchange="if(this.options[this.selectedIndex].text == 'Outside Service'){$('CustomService').show();}else{$('CustomService').hide();}"><option value=""> select </option><? echo ( ssi::make_drop_down( [ map { $_->id(), $_->description() } openprint::ServiceType::find('order'=>'lower(name)') ] ); ) ?></select>
+			<td colspan="2">Add Service:<select name="NewServiceType" onchange="if(this.options[this.selectedIndex].text == 'Outside Service'){$('CustomService').show();}else{$('CustomService').hide();}"><option value=""> select </option><? echo ( ssi::make_drop_down( [ map { $_->id(), $_->description() } openprint::ServiceType->find('order'=>'lower(name)') ] ); ) ?></select>
 			</td>
 			<td 
 			<? echo ( ssi::writeButton( $log, $dbh, 'AddServiceType', 'add.gif', "f1.btnFunction.value='Add Service';f1.submit();", '', 'Add Service' ); ) ?></td>

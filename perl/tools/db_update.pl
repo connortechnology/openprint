@@ -1264,31 +1264,31 @@ if ( ! sets::isin( 'purchaseorder_contents', \@tables ) ) {
 } # en dif
 
 
-foreach my $Type ( openprint::ServiceType::find('name'=>'BulkSkids') ) {
+foreach my $Type ( openprint::ServiceType->find('name'=>'BulkSkids') ) {
     $Type->type( 'Skids' );
     $Type->save();
 }
-foreach my $Type ( openprint::ServiceType::find('name'=>'PlainCartons') ) {
+foreach my $Type ( openprint::ServiceType->find('name'=>'PlainCartons') ) {
     $Type->type( 'Skids' );
     $Type->save();
 }
-foreach my $Type ( openprint::ServiceType::find('name'=>'Bundling') ) {
+foreach my $Type ( openprint::ServiceType->find('name'=>'Bundling') ) {
     $Type->type( 'Packaging' );
     $Type->save();
 }
-foreach my $Type ( openprint::ServiceType::find('name'=>'ShrinkWrap') ) {
+foreach my $Type ( openprint::ServiceType->find('name'=>'ShrinkWrap') ) {
     $Type->type( 'Packaging' );
     $Type->save();
 }
-foreach my $Type ( openprint::ServiceType::find('name'=>'KraftWrap') ) {
+foreach my $Type ( openprint::ServiceType->find('name'=>'KraftWrap') ) {
     $Type->type( 'Packaging' );
     $Type->save();
 }
-foreach my $Type ( openprint::ServiceType::find('name'=>'ColourCorrection') ) {
+foreach my $Type ( openprint::ServiceType->find('name'=>'ColourCorrection') ) {
     $Type->type( 'Prepress' );
     $Type->save();
 }
-foreach my $Type ( openprint::ServiceType::find('name'=>'CDBurning') ) {
+foreach my $Type ( openprint::ServiceType->find('name'=>'CDBurning') ) {
     $Type->type( 'Prepress' );
     $Type->save();
 }
@@ -1470,7 +1470,7 @@ if ( $data ) {
 } # end if
 $log->debug("Materials");
 new openprint::ServiceType_Category()->save({'name'=>'Materials','sorting'=>8}) if ! openprint::ServiceType_Category::find('name'=>'Materials');
-if ( my $ServiceType = openprint::ServiceType::find_one('name'=>'Paper') ) {
+if ( my $ServiceType = openprint::ServiceType->find_one('name'=>'Paper') ) {
 	$ServiceType->save({'category'=>'Materials'}) if $ServiceType->category() ne 'Materials';
 } else {
 	my $PaperService = new openprint::ServiceType();
@@ -1585,7 +1585,7 @@ foreach my $M ( openprint::Material::find('name'=>'BulkSkid') ) {
 	$M->save();
 } # end foreach $M
 
-foreach my $S ( openprint::ServiceType::find('name'=>['SaddleStitching','LoopStitching']) ) {
+foreach my $S ( openprint::ServiceType->find('name'=>['SaddleStitching','LoopStitching']) ) {
 	if ( $S->type() ne 'Stitching' ) {
 		$S->type('Stitching');
 		$S->save();
@@ -1593,7 +1593,7 @@ foreach my $S ( openprint::ServiceType::find('name'=>['SaddleStitching','LoopSti
 } # end foreach
 
 new openprint::ServiceType_Category()->save({'name'=>'Coatings','sorting'=>2}) if ! openprint::ServiceType_Category::find('name'=>'Coatings');
-if ( my $S = openprint::ServiceType::find_one('name'=>'Aqueous') ) {
+if ( my $S = openprint::ServiceType->find_one('name'=>'Aqueous') ) {
 	$S->save({'category'=>'Coatings'}) if $S->category() ne 'Coatings';
 } else {
 	print "Adding Aqueous ServiceType\n";
@@ -1609,7 +1609,7 @@ if ( my $S = openprint::ServiceType::find_one('name'=>'Aqueous') ) {
 });
 } # end if
 
-foreach my $ST ( openprint::ServiceType::find('name'=>'DieCutting') ) {
+foreach my $ST ( openprint::ServiceType->find('name'=>'DieCutting') ) {
 	$_ = $ST->save({'url'=>'bind/DieCutting.html'}) if $ST->url() ne 'bind/DieCutting.html';
 	die $_ if $_;
 }
@@ -1721,7 +1721,7 @@ foreach my $S ( openprint::Service::find('name'=>'AqueousMakeReady') ) {
 		} # end foreach
 	} # en dif
 } # end if
-if ( ! openprint::ServiceType::find('name'=>'Varnish') ) {
+if ( ! openprint::ServiceType->find('name'=>'Varnish') ) {
 	my $S = new openprint::ServiceType();
 	$S->save({
 		'name'	=>	'Varnish',
@@ -1964,7 +1964,7 @@ if ( $data ) {
 		$dbh->do('create index skid_contents_skid_id_idx on skid_contents (skid_id)');
 	} # end if
 } # end if
-foreach my $ServiceType ( openprint::ServiceType::find() ) {
+foreach my $ServiceType ( openprint::ServiceType->find() ) {
 	if ( $ServiceType->name() eq 'PerfectBound' ) {
 		$ServiceType->type('PerfectBound') if ( $ServiceType->type() ne 'PerfectBound' );
 		if ( $ServiceType->url() ne 'bind/PerfectBound.html' ) {
@@ -2445,7 +2445,7 @@ $dbh->do(q`select setval('order_id_seq', (select max(index) from orders) )`);
 $dbh->do(q`alter table orders alter column index set default nextval('order_id_seq');`);
 }
 
-if ( my $PaddingServiceType = openprint::ServiceType::find_one('name'=>'Padding') ) {
+if ( my $PaddingServiceType = openprint::ServiceType->find_one('name'=>'Padding') ) {
 sql::update( undef, undef, 'tbl_service_defaults', ['lngservicetypeindex=? AND strfieldname=? AND strdefaultvalue=?',
 		$PaddingServiceType->id(), 'rdbCardboardBacking','Y'], [ 'strfieldname', 'Backing', 'strdefaultvalue', 'Cardboard' ] );
 sql::update( undef, undef, 'tbl_service_defaults', ['lngservicetypeindex=? AND strfieldname=? AND strdefaultvalue=?',

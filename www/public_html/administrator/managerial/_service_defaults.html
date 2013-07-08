@@ -5,7 +5,7 @@
 		<th align="left">Field Value</th>
 	</tr>
 	<? eval ( 
-		@{$$variable{'ServiceTypes'}} = map { $_->id(), $_->name() } openprint::ServiceType::find('order'=>'lower(name)');
+		@{$$variable{'ServiceTypes'}} = map { $_->id(), $_->name() } openprint::ServiceType->find('order'=>'lower(name)');
 		@{$$variable{'Defaults'}} = sql::execute( undef, undef, q{SELECT id, servicetype_id, name, value FROM User_Service_Defaults WHERE user_id=? ORDER BY servicetype_id, name, value}, $$variable{'User'}->id() );
 	 ) ?>
 

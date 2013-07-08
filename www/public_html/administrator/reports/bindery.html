@@ -42,7 +42,7 @@
 	@{$$variable{'Projects'}} = openprint::Project::find( 'ordered_on_start'=>"$$variable{'Start'} 00:00:00", 'ordered_on_end'=>"$$variable{'End'} 23:59:59" );
 	if ( @{$$variable{'Projects'}} ) {
 		
-		%{$$variable{'BinderyServices'}} = map { $_->name(), $_->description() } openprint::ServiceType::find('view_visible'=>1,'category'=>'Bindery');
+		%{$$variable{'BinderyServices'}} = map { $_->name(), $_->description() } openprint::ServiceType->find('view_visible'=>1,'category'=>'Bindery');
 		foreach my $Project ( @{$$variable{'Projects'}} ) {
 			next if sets::isin( $Project->status(), [ 'Incomplete', 'Deleted','Cancelled' ] );
 			my $services = $Project->services();
