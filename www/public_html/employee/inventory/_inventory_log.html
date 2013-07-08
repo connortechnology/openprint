@@ -23,6 +23,9 @@
 		if ( $param{docket} ) {
 			$sql{docket} = $param{docket};
 		} # end if
+		if ( $param{project_id} ) {
+			$sql{project_id} = $param{project_id};
+		} # end if
 
 		my %locations = map { $_, $_ } split(',', $session{$url.'?location_id'} );
 		my %types = map { $_, $_ } split(',', $session{$url.'?Type'} );

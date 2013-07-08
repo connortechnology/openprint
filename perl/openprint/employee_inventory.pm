@@ -245,7 +245,7 @@ sub paper {
 		my @inventory = openprint::PaperInventory->find(
 				ssi::date_filter( 'added_on_start', 'updated_on >=', \%param ),
 				ssi::date_filter( 'added_on_end', 'updated_on <=', \%param ),
-				'order'=>'updated_on',
+				order=>'updated_on',
 		);
 		foreach my $I ( @inventory ) {
 			my $Paper = $I->Paper();
@@ -947,7 +947,10 @@ $log->debug('sacing');
 			} # end if
 		} # end if
 		foreach my $skid_id ( @skid_ids ) {
-			allocate( $skid_id, @param{'paper_id', 'Quantity','Project','Docket'} );
+			foreach my $condition_id ( sets::union( map { $_->condition_id() } openprint::SkidContent->find(skid_id=>$skid_id, paper_id=>$param{paper_id},'quantity >' =>0 ) ) ) {
+				next if ! $param{'quantity-'.$condition_id};
+				allocate( $skid_id, @param{'paper_id','quantity-'.$condition_id,'Project','Docket','specific','reason'}, $condition_id );
+			} # end foreach condition
 		} # end foreach
 	} elsif ( $param{'btnFunction'} eq 'Delete Allocation' ) {
 		if ( $param{'allocation_id'} ) {
@@ -1042,12 +1045,12 @@ sub check_out {
 			$qty -= $amount;
 			$amount *= -1;
 			$C->save({'quantity'=>0});
-			$Paper->add_inventory( $Skid, $amount, $units, $description );
+			$Paper->add_inventory( $Skid, $amount, $units, $description, @Projects ? $Projects[0] : () );
 			$Paper->allocate( $Skid->id(), $Projects[0]->id(), $amount ) if @Projects and $Paper->allocated( $Projects[0]->id() );
 		} else {
 			$C->save({ quantity=>($C->quantity() - $qty)});
 			if ( @Projects ) {
-				$Paper->add_inventory( $Skid, -1*$qty, $units, $description );
+				$Paper->add_inventory( $Skid, -1*$qty, $units, $description, $Projects[0] );
 				$Paper->allocate( $Skid->id(), $Projects[0]->id(), -1*$qty ) if $Paper->allocated( $Projects[0]->id() );
 			} else {
 				$Paper->add_inventory( $Skid, -1*$qty, $units, $description );
@@ -1122,7 +1125,7 @@ $log->debug("Checking in $quantity");
 		$variable{'information'} .= "Checked in $quantity$units from unknown docket.<br/>";
 	} else {
 		my $Project = shift @Projects;
-		$Paper->add_inventory( $Skid, $delta, $units, $description );
+		$Paper->add_inventory( $Skid, $delta, $units, $description, $Project );
 		$variable{'information'} .= sprintf('Checked in %1$d%2$s from docket <a href="/employee/project/view.html?ProjectIndex=%3$d">%4$d</a><br/>', $quantity, $units, $Project->id(), $Project->docket() );
 	} # end if
 	$Skid->save();

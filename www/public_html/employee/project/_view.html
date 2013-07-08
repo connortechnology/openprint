@@ -231,7 +231,7 @@
 			<td colspan="2">Add Service<select name="NewServiceType" onchange="if(this.options[this.selectedIndex].text == 'Outside Service'){$('CustomService').show();}else{$('CustomService').hide();}"><option value=""> select </option><? echo ( make_drop_down( [ map { $_->id(), $_->description() } openprint::ServiceType->find( order=>'lower(name)') ] ); ) ?></select>
 			</td>
 			<td>
-			<? echo ( button( 'AddServiceType', { onclick=>qq`submit('$$variable{formname}','Add Service';`, text=>'Add Service' } ); ) ?></td>
+			<? echo ( button( 'AddServiceType'.$$variable{Project}{id}, { onclick=>qq`submit('$$variable{formname}','Add Service';`, text=>'Add Service' } ); ) ?></td>
 		</tr>
 		<? endif ( openprint::usergroup::is_user_in( ['Prepress','Sales Admin','PrepressManager'], $session{'user_id'} ) ) ?>
 		<tr class="unprintable">
@@ -241,7 +241,7 @@
 			<td class="Service"><input type="text" name="txtServiceName" /></td>
 			<td class="Price"><input type="number" name="txtPrice" /></td>
 			<td>
-			<? echo ( button( 'AddToProject', { onclick=>qq`submit('$$variable{formname}','Add Service');`, text=>'Add Custom Service' } ); ) ?>
+			<? echo ( button( 'AddToProject'.$$variable{Project}{id}, { onclick=>qq`submit('$$variable{formname}','Add Service');`, text=>'Add Custom Service' } ); ) ?>
 			</td>
 		</tr>
 		<? endif ( $session{'user_type'} eq 'A' or openprint::usergroup::is_user_in( ['Prepress'], $session{'user_id'} ) ) ?>
@@ -349,10 +349,10 @@
 <? endif ( openprint::usergroup::is_user_in( ['Accounting'], $session{'user_id'} ) ) ?>
 	<br/>
 	<span style="float: left;">
-		<? echo ( join('',
-		button( 'DocketButton', { onclick=>"open_window('/main/project/docket_sheet.html?ProjectIndex=$$variable{'ProjectIndex'}');", text=>'Docket' } ),
-		button( 'Summary', { href=> "summary.html?ProjectIndex=$$variable{'ProjectIndex'}" } ),
-		 button( 'UploadPDFs', { onclick=>"open_window('/employee/production/upload_pdfs.html?ProjectIndex=$$variable{'ProjectIndex'}','upload','resizable=yes,scrollbars=yes,width=800,height=600,screenX=10,screenY=10,top=0,left=0');", text=>'Upload PDFs' } ),
+		<? echo ( join("\n",
+		button( 'DocketButton'.$$variable{Project}{id}, { onclick=>"open_window('/main/project/docket_sheet.html?ProjectIndex=$$variable{'ProjectIndex'}');", text=>'Docket' } ),
+		button( 'Summary'.$$variable{Project}{id}, { href=> "summary.html?ProjectIndex=$$variable{'ProjectIndex'}" } ),
+		 button( 'UploadPDFs'.$$variable{Project}{id}, { onclick=>"open_window('/employee/production/upload_pdfs.html?ProjectIndex=$$variable{'ProjectIndex'}','upload','resizable=yes,scrollbars=yes,width=800,height=600,screenX=10,screenY=10,top=0,left=0');", text=>'Upload PDFs' } ),
 		 #button( 'ExportJDF', { onclick=>qq`submit('$$variable{formname}','Export JDF');`, text=>'JDF' } ),
 		 #button( 'ExportMXML', { onclick=>qq`submit('$$variable{formname}','Export MXML');`, text=>'MXML' } ),
 		 ); ) ?>
@@ -362,9 +362,9 @@
 		<? echo ( 
 			my $html;
 			if ( ! $$variable{'Project'}->rush() ) {
-				$html .= button( 'Rush', { onclick=>qq`if(confirm('Are you sure you want to rush this job?')) {submit('$$variable{formname}','Rush');}`, text=>'Rush' } );
+				$html .= button( 'Rush'.$$variable{Project}{id}, { onclick=>qq`if(confirm('Are you sure you want to rush this job?')) {submit('$$variable{formname}','Rush');}`, text=>'Rush' } );
 			} else {
-				$html .= button( 'NoRush', { onclick=>qq`submit('$$variable{formname}','No Rush');`, text=>'No Rush' } );
+				$html .= button( 'NoRush'.$$variable{Project}{id}, { onclick=>qq`submit('$$variable{formname}','No Rush');`, text=>'No Rush' } );
 			} # end if
 			
 			if ( openprint::usergroup::is_user_in( ['Scheduling'], $session{'user_id'} ) ) {
@@ -380,36 +380,36 @@
 				} # end foreach sig_id
 
 				if ( $need_add ) {
-					$html .= button( 'AddToPressSchedule', { onclick=>qq`submit('$$variable{formname}','AddToPressSchedule');`, text=>'Add To Press Schedule' } );
+					$html .= button( 'AddToPressSchedule'.$$variable{Project}{id}, { onclick=>qq`submit('$$variable{formname}','AddToPressSchedule');`, text=>'Add To Press Schedule' } );
 				} else {
-					$html .= button( 'RemoveFromPressSchedule', { onclick=>qq`submit('$$variable{formname}','RemoveFromPressSchedule');`, text=>'Remove from Press Schedule' } );
+					$html .= button( 'RemoveFromPressSchedule'.$$variable{Project}{id}, { onclick=>qq`submit('$$variable{formname}','RemoveFromPressSchedule');`, text=>'Remove from Press Schedule' } );
 				} # end if
 				if ( $pending ) {
-					$html .= button( 'ScheduleJob', { onclick=>qq`submit('$$variable{formname}','BumpSchedule');`, text=>'Schedule' } );
+					$html .= button( 'ScheduleJob'.$$variable{Project}{id}, { onclick=>qq`submit('$$variable{formname}','BumpSchedule');`, text=>'Schedule' } );
 				} # end if
-				$html .= button( 'CompletePrinting', { onclick=>qq`submit('$$variable{formname}','Complete Printing');`, text=>'Complete Printing' } ) if $$variable{'Project'}->status() eq 'Approved';
+				$html .= button( 'CompletePrinting'.$$variable{Project}{id}, { onclick=>qq`submit('$$variable{formname}','Complete Printing');`, text=>'Complete Printing' } ) if $$variable{'Project'}->status() eq 'Approved';
 			} # end if
 
 			my @bindery_services = openprint::print_project::get_services_in_category( $log, $dbh, $$variable{'ProjectIndex'}, 'Bindery' );
 
 			if ( $$variable{'ProjectStatus'} eq 'Printed' and @bindery_services and ! ( sql::execute( undef, undef, q{SELECT serviceindex FROM Bindery_Schedule WHERE projectindex=?}, $$variable{'ProjectIndex'} ) ) ) {
-				$html .= button( 'AddToBinderySchedule', { onclick=>qq`submit('$$variable{formname}','AddToBinderySchedule');`, text=>'Add To Bindery Schedule' } );
+				$html .= button( 'AddToBinderySchedule'.$$variable{Project}{id}, { onclick=>qq`submit('$$variable{formname}','AddToBinderySchedule');`, text=>'Add To Bindery Schedule' } );
 			} # end if
 			#if ( openprint::usergroup::is_user_in( ['Scheduling','Accounting'], $session{'user_id'} ) ) {
-			#$html .= button( 'Complete', { onclick=>qq`submit('$$variable{formname}','Complete');`, text=>'Complete' } );
+			#$html .= button( 'Complete'.$$variable{Project}{id}, { onclick=>qq`submit('$$variable{formname}','Complete');`, text=>'Complete' } );
 			#} # end if
 			if ( @bindery_services ) {
-				$html .= button( 'CompleteBindery', { onclick=>qq`submit('$$variable{formname}','BinderyComplete');`, text=>'Complete Bindery' } );
+				$html .= button( 'CompleteBindery'.$$variable{Project}{id}, { onclick=>qq`submit('$$variable{formname}','BinderyComplete');`, text=>'Complete Bindery' } );
 			} # end if
 			if ( sets::isin( $$variable{'ShippingType'}, [ 'Delivery', 'Shipping' ] ) and $$variable{'Project'}->status() ne 'Shipped' ) {
 
-				$html .= button( 'Shipped', { onclick=>qq`submit('$$variable{formname}','Shipped');`, text=>'Shipped' } );
+				$html .= button( 'Shipped'.$$variable{Project}{id}, { onclick=>qq`submit('$$variable{formname}','Shipped');`, text=>'Shipped' } );
 			} # end if
 			if ( $$variable{'ShippingType'} eq 'CustomerPickUp' and $$variable{'Project'}->status() ne 'Picked Up' ) {
-				$html .= button( 'PickedUp', { onclick=>qq`submit('$$variable{formname}','Picked Up');`, text=>'Picked Up' } );
+				$html .= button( 'PickedUp'.$$variable{Project}{id}, { onclick=>qq`submit('$$variable{formname}','Picked Up');`, text=>'Picked Up' } );
 			} # end if
 			if ( $session{'user_type'} eq 'A' or openprint::usergroup::is_user_in( ['Sales Admin','Scheduling','PrepressManager'], $session{'user_id'} ) ) {
-				$html .= button( 'Delete', { onclick=>qq`submit( '$$variable{formname}', 'DeleteServices');`, text=>'Delete Checked Services' } );
+				$html .= button( 'Delete'.$$variable{Project}{id}, { onclick=>qq`submit( '$$variable{formname}', 'DeleteServices');`, text=>'Delete Checked Services' } );
 			} # end if
 
 			return $html;
@@ -419,13 +419,13 @@
 	<? if ( $$variable{'ProjectStatus'} eq 'Waiting For Customer Approval' ) ?>
 	<fieldset><legend>Additional Charges Actions</legend>
 		<span style="float: right;">
-		<? echo ( button( 'Approve', { onclick=>qq`submit('$$variable{formname}','Approve');`, text=>'Approve New Charges' } ); )?>
+		<? echo ( button( 'Approve'.$$variable{Project}{id}, { onclick=>qq`submit('$$variable{formname}','Approve');`, text=>'Approve New Charges' } ); )?>
 		</span>
 		To approve the additional charges, click Approve:<br class="spacer"/>
 		Notifications will be sent to: <? echo ( sprintf('&quot;%s %s&quot; &lt;%s&gt;', $$variable{Order}->get('first_name','last_name','email') ); ) ?><br/>
 
 		<span style="float: right;">
-	 	<? echo ( button( 'AdditionalChargeNotify', { onclick=>qq`submit('$$variable{formname}','AdditionalChargeNotify';);`, text=>'Send' } );) ?>
+	 	<? echo ( button( 'AdditionalChargeNotify'.$$variable{Project}{id}, { onclick=>qq`submit('$$variable{formname}','AdditionalChargeNotify';);`, text=>'Send' } );) ?>
 		</span>
 		Additional recipients (separate with a comma):<input type="email" style="width: 66%;" name="AdditionalEmailRecipients"  />
 
@@ -437,27 +437,27 @@
 	<input type="hidden" name="OrderID" value="<?OrderID?>"/>
 </form>
 <br class="spacer"/>
-<fieldset><legend onclick="toggleContent('StockAllocations','_stock_allocations.html?project_id=<? echo ( $$variable{Project}->id() ) ?>', null, null );">Allocated</legend>
-<div id="StockAllocations"><?include(_stock_allocations.html)?></div>
+<fieldset><legend onclick="toggleContent('StockAllocations<?echo($$variable{Project}{id})?>','_stock_allocations.html?project_id=<? echo ( $$variable{Project}->id() ) ?>', null, null );">Allocated</legend>
+<div id="StockAllocations<?echo($$variable{Project}{id})?>"><?include(_stock_allocations.html)?></div>
 </fieldset>
 <br/>
 <? if ( $$variable{'Project'}->docket() ) ?>
-<div id="StockCheckout">
+<div id="StockCheckout<?echo($$variable{Project}{id})?>">
 <?include(/employee/project/_stock_checkout.html)?>
 </div>
 <? endif ( $$variable{'Project'}->docket() ) ?>
 <br class="spacer"/>
-<fieldset><legend onclick="toggleContent( 'ProductionLog', '/employee/project/_production_log.html?project_id=<? echo ( $$variable{Project}->id() ) ?>', null, null );">Production Log (click to hide/show)</legend>
+<fieldset><legend onclick="toggleContent( 'ProductionLog<?echo($$variable{Project}{id})?>', '/employee/project/_production_log.html?project_id=<? echo ( $$variable{Project}->id() ) ?>', null, null );">Production Log (click to hide/show)</legend>
 <? if ( $session{'/employee/project/view.html?production_log'} ) ?>
-<div id="ProductionLog">
+<div id="ProductionLog<?echo($$variable{Project}{id})?>">
 <?include(_production_log.html)?>
 <? else ( $session{'/employee/project/view.html?production_log'} ) ?>
-<div id="ProductionLog" style="display: none;">
+<div id="ProductionLog<?echo($$variable{Project}{id})?>" style="display: none;">
 <? endif ( $session{'/employee/project/view.html?production_log'} ) ?>
 </div>
 </fieldset>
 <br class="spacer"/>
-<fieldset><legend onclick="toggleContent( 'ModificationHistory', '/employee/project/_modification_history.html?project_id=<? echo ( $$variable{Project}->id() ) ?>', null, null );">Modification History (click to hide/show)</legend>
-<div id="ModificationHistory" style="display: none;"></div>
+<fieldset><legend onclick="toggleContent( 'ModificationHistory<?echo($$variable{Project}{id})?>', '/employee/project/_modification_history.html?project_id=<? echo ( $$variable{Project}->id() ) ?>', null, null );">Modification History (click to hide/show)</legend>
+<div id="ModificationHistory<?echo($$variable{Project}{id})?>" style="display: none;"></div>
 </fieldset>
 <? endif ( $$variable{'Project'}->id() ) ?>
