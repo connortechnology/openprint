@@ -2,7 +2,7 @@
 	$$variable{'Skid'} = new openprint::Skid( $param{'skid_id'} ) if ! $$variable{'Skid'};
 	my $html;
 	my %PIs;
-	foreach my $PI ( openprint::PaperInventory::find( skid_id=>$$variable{Skid}->id(), order=>'updated_on' ) ) {
+	foreach my $PI ( openprint::PaperInventory->find( skid_id=>$$variable{Skid}->id(), order=>'updated_on' ) ) {
 		push @{$PIs{$$PI{paper_id}}}, $PI;
 	} # end foreach PI
 

@@ -60,3 +60,12 @@ text-align: right;
 #project_id {
 	width: 60px;
 }
+.StockAllocated .Stock,
+.StockCheckout .Stock {
+	text-align: left;
+	float: none;
+	width: auto;
+}
+table .Price input {
+	width: 100%;
+}

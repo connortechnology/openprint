@@ -82,6 +82,10 @@ sub find {
 		$sql .= ' AND id ILIKE ?';
 		push @values, $params{id_ilike};
 	} # end if
+	if ( $params{'id ilike'} ) {
+		$sql .= ' AND id ILIKE ?';
+		push @values, $params{'id ilike'};
+	} # end if
 	if ( $params{'id like'} ) {
 		$sql .= ' AND id LIKE ?';
 		push @values, $params{'id like'};
@@ -294,6 +298,29 @@ sub is_invalid_id {
 
 	return 0;
 } # end sub is_valid_id
+
+# Does a better of figuring out what has been entered as an id
+sub from_id {
+	my ( $tag_id ) = @_;
+
+	if ( my ( $type, $id ) = $tag_id =~ /^R?(\d)0+(\d+)$/ ) {
+		my @RFID = openprint::RFIDTag->find( id=>sprintf('%d%.15d', $type, $id ) );
+		if ( @RFID == 1 ) {
+			return $RFID[0];
+		} else {
+			$openprint::log->debug("Got too many rfids for $type $id");
+		} # end if
+	} elsif ( my ( $id ) = $tag_id =~ /^(\d+)$/ ) {
+		my @RFID = openprint::RFIDTag->find( 'id ilike'=>'%'.$id );
+		if ( @RFID == 1 ) {
+			return $RFID[0];
+		} else {
+			$openprint::log->debug("Got too many rfids for $type $id : " . @RFID);
+		} # end if
+	
+	} # end if
+	return;
+} # end sub from_id
 
 1;
 __END__

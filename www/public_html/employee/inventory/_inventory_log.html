@@ -23,13 +23,16 @@
 		if ( $param{docket} ) {
 			$sql{docket} = $param{docket};
 		} # end if
+		if ( $param{project_id} ) {
+			$sql{project_id} = $param{project_id};
+		} # end if
 
 		my %locations = map { $_, $_ } split(',', $session{$url.'?location_id'} );
 		my %types = map { $_, $_ } split(',', $session{$url.'?Type'} );
 		
 		my $rowclass;
 		my $total = 0;
-		foreach my $PI ( openprint::PaperInventory::find(%sql) ) {
+		foreach my $PI ( openprint::PaperInventory->find(%sql) ) {
 			if ( $PI->delta < 0 and ! $session{$url.'?outs'} ) {
 				$log->debug("Next cut it's an out." . $PI->to_string() );
 				next;

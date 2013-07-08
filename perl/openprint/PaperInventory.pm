@@ -36,8 +36,10 @@ $serial = 'paperinventory_id_seq';
 	'skid_id'		=>	'skid_id',
 	'units'			=>	'units',
 	'docket'		=>	'docket',
+	project_id		=>	'project_id',
 );
 %transforms = (
+	project_id	=>	 [ 's/\D//g' ],
 	'paper_id'	=>	[ 's/\D//g' ],
 	'skid_id'	=>	[ 's/\D//g' ],
 	'user_id'	=>	[ 's/\D//g' ],
@@ -46,8 +48,9 @@ $serial = 'paperinventory_id_seq';
 	'delta'		=>	[ 's/[^\d\-]//g' ],
 );
 %defaults = (
-	'updated_on'	=>	'NOW()',
-	'docket'		=>	undef,
+	updated_on	=>	'NOW()',
+	docket		=>	undef,
+	project_id	=>	undef,
 );
 
 # Returns a paper object specified by the parameters
@@ -84,6 +87,10 @@ sub find {
 	if ( exists $params{'skid_id'} ) {
 		$sql .= ' AND skid_id=?';
 		push @values, $params{'skid_id'};
+	} # end if
+	if ( exists $params{project_id} ) {
+		$sql .= ' AND project_id=?';
+		push @values, $params{project_id};
 	} # end if
 	if ( exists $params{'user_id'} ) {
 		$sql .= ' AND user_id=?';

@@ -2,7 +2,7 @@
 	$$variable{'Project'} = new openprint::Project( $$variable{'ProjectIndex'} ) if ! $$variable{'Project'};
 ) ?>
 <div class="ProjectHeader">
-	<fieldset id="ProjectInformation"><legend>Project Information</legend>
+	<fieldset class="ProjectInformation"><legend>Project Information</legend>
 		<p>
 			<label>Project #:</label>
 	  		<?ProjectIndex?>
@@ -90,7 +90,7 @@
 		<p><label>Reprint Reason:</label><? echo ( $$variable{'Project'}->reprint_reason() ) ?></p>
 		<? endif ( $$variable{'Project'}->reprint() ) ?>
 	</fieldset>
-	<fieldset id="ContactInformation"><legend>Contact Information</legend>
+	<fieldset class="ContactInformation"><legend>Contact Information</legend>
 		<p><label>Company:</label><? echo ( $$variable{'Project'}->Company()->name() ) ?></p>
 		<p><label>Name:</label><? echo ( $$variable{'Project'}->User()->name() ) ?></p>
 		<p><label>Phone:</label><? echo ( $$variable{'Project'}->User()->phone() ) ?></p>
@@ -103,7 +103,7 @@
 		<? endif ( $$variable{'Project'}->Company()->salesrep_id() ) ?>
 	</fieldset>
 	<br class="spacer"/>
-	<fieldset id="Reference">
+	<fieldset class="Reference">
 	   <legend>Reference:</legend>
 		<? hecho ( $$variable{'Project'}->reference(); ) ?>
 		<? if ( $$variable{'Project'}->comments() ) ?>
@@ -113,7 +113,7 @@
 		</p>
 		<? endif ( $$variable{'Project'}->comments() ) ?>
 	</fieldset>
-	<fieldset id="Description">
+	<fieldset class="Description">
 	   <legend>Description:</legend>
 		<? echo ( 
 			return $$variable{'Project'}->summary();

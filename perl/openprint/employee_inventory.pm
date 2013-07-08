@@ -242,7 +242,7 @@ sub paper {
 	if ( $param{'btnFunction'} eq 'Consumption Report' ) {
 		my @header = ('Date','Operator','Owner','Name','Finish','Colour','Weight','Width','Height','Quality', 'MWeight','GSM','Skid#','Amount','Comment');
 		my @data;
-		my @inventory = openprint::PaperInventory::find(
+		my @inventory = openprint::PaperInventory->find(
 				'updated_on_start'	=> sprintf('%.4d-%.2d-%.2d 00:00:00', @param{'StartYear','StartMonth','StartDay'} ),
 				'updated_on_end'	=> sprintf('%.4d-%.2d-%.2d 23:59:59', @param{'EndYear','EndMonth','EndDay'} ),
 				'order'=>'updated_on',
@@ -1046,12 +1046,12 @@ sub check_out {
 			$qty -= $amount;
 			$amount *= -1;
 			$C->save({'quantity'=>0});
-			$Paper->add_inventory( $Skid, $amount, $units, $description );
+			$Paper->add_inventory( $Skid, $amount, $units, $description, @Projects ? $Projects[0] : () );
 			$Paper->allocate( $Skid->id(), $Projects[0]->id(), $amount ) if @Projects and $Paper->allocated( $Projects[0]->id() );
 		} else {
 			$C->save({ quantity=>($C->quantity() - $qty)});
 			if ( @Projects ) {
-				$Paper->add_inventory( $Skid, -1*$qty, $units, $description );
+				$Paper->add_inventory( $Skid, -1*$qty, $units, $description, $Projects[0] );
 				$Paper->allocate( $Skid->id(), $Projects[0]->id(), -1*$qty ) if $Paper->allocated( $Projects[0]->id() );
 			} else {
 				$Paper->add_inventory( $Skid, -1*$qty, $units, $description );
@@ -1123,7 +1123,7 @@ $log->debug("Checking in $quantity");
 		$variable{'information'} .= "Checked in $quantity$units from unknown docket.<br/>";
 	} else {
 		my $Project = shift @Projects;
-		$Paper->add_inventory( $Skid, $delta, $units, $description );
+		$Paper->add_inventory( $Skid, $delta, $units, $description, $Project );
 		$variable{'information'} .= sprintf('Checked in %1$d%2$s from docket <a href="/employee/project/view.html?ProjectIndex=%3$d">%4$d</a><br/>', $quantity, $units, $Project->id(), $Project->docket() );
 	} # end if
 	$Skid->save();

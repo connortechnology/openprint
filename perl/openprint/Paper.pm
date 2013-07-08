@@ -711,13 +711,21 @@ sub owner_id {
 
 # This function assumes that the skid contents have already been updated
 sub add_inventory {
-    my ( $self, $Skid, $quantity, $units, $description ) = @_;
+    my ( $self, $Skid, $quantity, $units, $description, $Project ) = @_;
     $quantity =~ s/[^\-\d]//g;
     $quantity = int $quantity;
 
-	my $docket;
-	if ( $description =~ /docket (\d+)/ ) {
-		$docket = $1;
+	if ( ! $Project ) {
+		my $docket;
+		if ( $description =~ /docket (\d+)/ ) {
+			$docket = $1;
+		} # end if
+		if ( $docket ) {
+			my @Projects = openprint::Project->find(docket=>$docket);
+			$Project = $Projects[0] if @Projects;
+		} else {
+			$Project = new openprint::Project();
+		} # end if
 	} # end if
 
 	$Skid = new openprint::Skid( $Skid ) if ref $Skid ne 'openprint::Skid';
@@ -733,7 +741,8 @@ sub add_inventory {
         comment		=>	$description,
         skid_id		=>	$Skid->id(),
 		units		=>	$units,
-		docket		=>	$docket,
+		docket		=>	$$Project{docket},
+		project_id	=>	$$Project{id},
         });
 	# Updates in_stock and allocated
 	$self->save();
