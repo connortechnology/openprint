@@ -24,6 +24,9 @@ $serial = 'ServiceTypeIndex';
 	'category'			=>	undef,
 	deleted				=>	'deleted',
 );
+%find_fields = (
+	category	=>	'(SELECT name FROM ServiceType_Categories WHERE id=category_id)',
+);
 %transforms = (
 );
 %defaults = (
