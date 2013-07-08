@@ -248,15 +248,20 @@ $openprint::log->debug("desired paper does not exists");
 				$error .= $Skid->save({manufacturers_id=>$$MC{manufacturers_id}});
 			} # end if
 		} else {
-$openprint::log->debug("Merging skid due to manufacturers id");
-			if ( ! $MC->rfidtag_id() ) {
-				my $S = openprint::Skid->find_one(manufacturers_id=>$$MC{manufacturers_id}, deleted=>[1,0] );
-				if ( $S->deleted() ) {
-					$error .= $S->undelete();
-				}
-				$error .= $MC->save({skid_id=>$$S{id}});
-			
-			} # end if
+			if ( ! openprint::ManifestContent->find(manufacturers_id=>$$Skid{manufacturers_id},skid_id=>$$Skid{id} ) ) {
+				$Skid->save({manufacturers_id=>$$MC{manufacturers_id}});
+			} else {
+# No longer assigned
+				$openprint::log->debug("Merging skid due to manufacturers id");
+				if ( ! $MC->rfidtag_id() ) {
+					my $S = openprint::Skid->find_one(manufacturers_id=>$$MC{manufacturers_id}, deleted=>[1,0] );
+					if ( $S->deleted() ) {
+						$error .= $S->undelete();
+					}
+					$error .= $MC->save({skid_id=>$$S{id}});
+
+				} # end if
+					} # end if
 		} # end if
 	} # end if
 	if ( $error ) {
