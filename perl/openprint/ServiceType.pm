@@ -36,7 +36,7 @@ my $debug = 0;
 my %cache;
 
 sub init_cache {
-	%cache = map { $_->name(), $_->id() } find();
+	%cache = map { $_->name(), $_->id() } openprint::ServiceType->find();
 } # end sub init_cache
 
 sub next {
@@ -70,6 +70,7 @@ sub delete {
 
 	my $ac = sql::start_transaction( $dbh );
 	sql::execute( $log, $dbh, q{DELETE FROM tbl_service_defaults WHERE lngServiceTypeIndex=?}, $$self{'id'} );
+	sql::update( undef, undef, 'tbl_project_contents', ['servicetype_id=?', $$self{id}], 'servicetype_id', undef );
 	sql::execute( $log, $dbh, q{DELETE FROM Service_Types WHERE id=?}, $$self{'id'} );
 	sql::end_transaction( $dbh, $ac );
 } # end sub delete
