@@ -1582,6 +1582,7 @@ sub apply_Manifest {
 			} # end if
 			if ( ! $Skid->id() ) {
 				$skid_changes .= 'Skid Created.<br/>';
+				$$Skid{id} = $$MC{skid_id} if $$MC{skid_id};
 			} # end if
 
 			$error .= $Skid->save() if $skid_changes;

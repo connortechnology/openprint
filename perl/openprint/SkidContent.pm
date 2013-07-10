@@ -9,7 +9,7 @@ use vars qw( $log $dbh $debug %fields %transforms %defaults $table $serial );
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
 
-$debug = 1;
+$debug = 0;
 
 %fields = (
 	id				=>	'id',
@@ -73,8 +73,13 @@ sub find {
 	}
 
 	if ( $params{'paper_id'} ) {
-		$sql .= ' AND paper_id=?';
-		push @values, $params{'paper_id'};
+		if ( ref $params{paper_id} eq 'ARRAY' ) {
+            $sql .= ' AND paper_id IN (' . join(',', map { '?' } @{$params{paper_id}} ) . ')';
+            push @values, @{$params{paper_id}};
+		} else {
+			$sql .= ' AND paper_id=?';
+			push @values, $params{'paper_id'};
+		} # end if
 	} # end if
 	if ( $params{'condition_id'} ) {
 		$sql .= ' AND condition_id=?';

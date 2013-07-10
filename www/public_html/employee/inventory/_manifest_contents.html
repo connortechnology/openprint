@@ -68,7 +68,7 @@ input( type=>'cardinal', id=>'qty_sheets-'.$$variable{type_id}.'-', name=>'qty_s
 
 		foreach my $C ( sort { $$a{id} <=> $$b{id} } @Contents ) {
 			$$variable{'C'} = $C;
-			$html .= '<tr id="tr-'.$$C{id}.'">';
+			$html .= '<tr id="tr-'.$$C{id}.'" title="'.$$C{id}.'">';
 			$html .= ssi::variable_substitution( $r, $log, $dbh, \$content, $variable );
 			$html .= '</tr>';
 			$total += $C->quantity();

@@ -297,7 +297,7 @@ sub check {
 		} # end if
 	} # end if
 
-	if ( $$Skid{id} and $$MC{manufacturers_id} and ( $$MC{manufacturers_id} ne $$Skid{manufacturers_id} ) ) {
+	if ( $$MC{skid_id} and $$MC{manufacturers_id} and ( $$MC{manufacturers_id} ne $$Skid{manufacturers_id} ) ) {
 		$error .= qq`Manufacturers ID ($$MC{manufacturers_id}) does not match skid.<br/>`;
 		my $S = openprint::Skid->find_one(manufacturers_id=>$$MC{manufacturers_id},deleted=>[0,1]);
 
@@ -331,6 +331,13 @@ sub check {
 		if ( $Skid->rfidtag_id() and $$Tag{id} and ( $Skid->rfidtag_id() != $$Tag{id} ) ) {
 			$error .= qq`RFID does not match Tag assigned to skid <a href="/employee/inventory/skid_details.html?skid_id=$$Skid{id}">$$Skid{id} $$Skid{rfidtag_id}</a><br/>`;
 		} # end if
+	} # end if
+	
+	if ( $$MC{skid_id} and openprint::ManifestContent->find_one( 'id !=' => $$MC{id}, skid_id=>$$MC{skid_id}, manifest_id=>$$MC{manifest_id} ) ) {
+		$error .= 'Skid id has been entered more than once on this Manifest.<br/>';
+	} # end if
+	if ( $$MC{rfidtag_id} and openprint::ManifestContent->find_one( 'id !=' => $$MC{id}, rfidtag_id=>$$MC{rfidtag_id}, manifest_id=>$$MC{manifest_id} ) ) {
+		$error .= 'RFID id has been entered more than once on this Manifest.<br/>';
 	} # end if
 
 	return $error;
