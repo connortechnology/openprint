@@ -231,7 +231,7 @@ $openprint::log->debug("desired paper does not exists");
 	if ( $$Skid{id} and $$MC{manufacturers_id} and ( $$MC{manufacturers_id} ne $$Skid{manufacturers_id} ) ) {
 		if ( ! $$Skid{manufacturers_id} ) {
 			my $S = openprint::Skid->find_one(manufacturers_id=>$$MC{manufacturers_id}, deleted=>[1,0] );
-			if ( $S->deleted() ) {
+			if ( $S and $S->deleted() ) {
 				$S->destroy();
 				$S = undef;
 			} # end if
