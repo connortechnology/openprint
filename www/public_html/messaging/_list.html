@@ -1,17 +1,21 @@
-<? eval (
-	@{$$variable{'Conversations'}} = ();
+<? echo (
+	$$variable{Conversations} = [];
 
-	my @Who = $param{'who'} ? map { ( $_ ? openprint::User->find('name ilike'=>'%'.$_.'%') : () ) } misc::trim( split(',', $param{'who'} ) ) : ();
-	my @who_id = map { $$_{'id'} } @Who;
+	my @Who = $param{who} ? map { ( $_ ? openprint::User->find('name ilike'=>'%'.$_.'%') : () ) } misc::trim( split(',', $param{'who'} ) ) : ();
+	my @who_id = map { $$_{id} } @Who;
+	if ( $param{who} and ! @Who ) {
+		return 'There are no users matching ' . $param{who} . '<br/>';
+	} # end if
 
 	my @Messages = openprint::Message->find(
-		'me_id any'=>$session{'user_id'},
+		'me_id any'=>$session{user_id},
 		(
 			$param{'who'} ? ( 'to_id any'	=>	\@who_id ) : () ),
 				 #map { ( 'to_id any' => $$_{'id'} ) } @Who ) : 
 		);
 	my @Conversations = openprint::Conversation->find(order=>'id DESC', id=>[ sets::union( map { $$_{conversation_id} ? $$_{conversation_id} : () } @Messages ) ] ) if @Messages;
-	@{$$variable{'Conversations'}} = @Conversations;
+	$$variable{Conversations} = \@Conversations;
+	return '';
 ) ?>
 
 <? if ( @{$$variable{'Conversations'}} == 0 ) ?>

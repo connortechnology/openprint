@@ -10,7 +10,7 @@
 				<div class="content">
 					<ul>
 						<li><label>To</label>
-							<div id="To"><? echo ( include('_to.html'); ) ?></div>
+							<div id="To"><?include(_to.html)?></div>
 						</li>
 						<li><label>Subject</label>
 							<input type="text" id="subject" name="subject" />
@@ -25,13 +25,13 @@
 			<p class="buttons">
 				<? echo (
 					my $html = '';
-					$html = ssi::button( 'Cancel', { 'href'=>'inbox.html' } );
+					$html = button( 'Cancel', { href=>'inbox.html' } );
 					
 					if ( $$variable{'Conversation'}->id() ) {
-						$html .= ssi::button( 'Delete', { 'onclick'=>"if(confirm('Are you sure?')){f1.elements['action'].value='Delete';f1.submit();}" } );
+						$html .= button( 'Delete', { onclick=>"if(confirm('Are you sure?')){f1.elements['action'].value='Delete';f1.submit();}" } );
 					} # end if
-					$html .= ssi::button( 'Save', { 'onclick'=>"f1.elements['action'].value='Save';f1.submit();", 'text'=>'Save (Draft)' } );
-					$html .= ssi::button( 'Send', { 'onclick'=>"f1.elements['action'].value='Send';f1.submit();" } );
+					$html .= button( 'Save', { onclick=>"f1.elements['action'].value='Save';f1.submit();", text=>'Save (Draft)' } );
+					$html .= button( 'Send', { onclick=>"f1.elements['action'].value='Send';f1.submit();" } );
 					return $html;
 				) ?>
 			</p>
