@@ -98,7 +98,7 @@
 		
 	} # end if
 ) ?>
-<? echo ( include('/includes/error_reporting.html'); ) ?>
+<?include('/includes/error_reporting.html')?>
 
 <form id="f2" name="f2">
 	<input type="hidden" name="ProjectIndex" value="<?ProjectIndex?>"/>
@@ -106,7 +106,7 @@
 	<input type="hidden" name="order_id" value="<?OrderID?>"/>
 	<input type="hidden" name="btnFunction" value=""/>
 	<? eval ( 
-		@{$$variable{'Presses'}} = map { $_->strid(), $_->name() } openprint::Equipment->find('category'=>'Printing','useinscheduling'=>1,'order'=>'lower(strname)');
+		@{$$variable{'Presses'}} = map { $_->strid(), $_->name() } openprint::Equipment->find('category any'=>'Printing', useinscheduling=>1, order=>'lower(strname)');
 		openprint::Estimating::Proofs::get_proof_specs( $log, $dbh, $variable, @$variable{'ProjectIndex','ServiceIndex'} ); 
 
 		@{$$variable{'SignatureIndices'}} = $$variable{'Project'}->signatures();

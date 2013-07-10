@@ -4,8 +4,7 @@
 	<input type="hidden" name="command" />
 	<p class="buttons">
 		<? echo ( 
-			my $html = ssi::button( 'Save', { onclick=>"f1.command.value='Save';f1.submit();" } );
-			return $html;
+			button( 'Save', { onclick=>"f1.command.value='Save';f1.submit();" } );
 		) ?>
 	</p>
 	<fieldset><legend>Edit</legend>
@@ -44,7 +43,7 @@
 		<tbody>
 		<? echo (
 		my $html;
-		foreach my $User ( $$variable{'UserGroup'}->Users('order'=>'lower(firstname),lower(lastname)') ) {
+		foreach my $User ( $$variable{'UserGroup'}->Users( order=>'lower(firstname),lower(lastname)') ) {
 			$html .= sprintf(q`<tr><td><a href="/administrator/managerial/user_profiles.html?ddmUser=%1$d">%2$s</a></td><td><a href="/administrator/managerial/company_profiles.html?ddmCustomer=%4$d">%3$s</a></td></tr>`, 
 				$User->id(), $User->name(), $User->Company()->name(), $User->company_id(),
 				);

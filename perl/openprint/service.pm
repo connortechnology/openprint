@@ -342,7 +342,7 @@ sub auto_calculate {
 		} # end if
 	} # end if
 
-	foreach my $service_name ( 'Counting', 'Grommeting', 'Sewing' ) {
+	foreach my $service_name ( 'Counting', 'Grommeting', 'Sewing', 'Imposition' ) {
 		eval 'require openprint::Estimating::'.$service_name.';';
 		$openprint::log->error("Error requiring opepnrint::Estimating::$service_name: $@") if $@;
 		my $neccessary = eval 'openprint::Estimating::'.$service_name.'::neccessary( $Project )';
@@ -477,13 +477,14 @@ sub internal_calc {
 
 	my $package = 'openprint::Estimating::'.$service_type;
 	#require $package;
+	# We are doing this in an eval because we don't actually want to die.
 	eval 'require openprint::Estimating::'.$service_type;
 	$log->error("Error in requiring $package $@") if $@;
 	if ( my $function = $package->can('calc') ) {
 		my $status = $function->( $log, $dbh, $variable, $project_index, $service_index, \%specs, $qty_index );
 		$specs{'Status'} = $status;
 		my $elapsed = time - $starttime;
-		$log->debug( "\033" . sprintf( '[41;37m %s calc: (%s) Elapsed seconds: %d (%s)', $service_type, $status, $elapsed, $specs{'alert'} ) );
+		$log->debug( sprintf( '%s calc: (%s) Elapsed seconds: %d (%s)', $service_type, $status, $elapsed, $specs{'alert'} ) );
 
 		$Service->save({status=>$status}) if $status ne $Service->status();
 

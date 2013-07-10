@@ -87,14 +87,13 @@ function check_input( form, signature_index ) {
 			<p class="buttons">
 			<? echo (
 					my $html;
-					$html .= ssi::button( 'Save', { onclick=>"f1.submit();", href=>'', text=>'Save' } );
-					$html .= ssi::button( 'Reset', { onclick=>"f1.reset();", href=>'', text=>'Reset' } );
-					my $body = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/email_content/sign-off.html' );
-					$body = ssi::variable_substitution( \$body, $variable );
+					$html .= button( 'Save', { onclick=>"f1.submit();", href=>'', text=>'Save' } );
+					$html .= button( 'Reset', { onclick=>"f1.reset();", href=>'', text=>'Reset' } );
+					my $body = include( '/email_content/sign-off.html' );
 					$body =~ s/([^A-Za-z0-9])/sprintf("%%%02X", ord($1))/seg;
 					$$variable{'body'} = $body;
-					$html .= ssi::writeButton( $log, $dbh, 'Email', 'email.gif', '', qq`mailto:`.$$variable{'Project'}->Order()->email().q`?subject=Docket%20$$variable{'Docket'}&body=$$variable{'body'}`, 'Email' );
-					$html .= ssi::button( 'UploadPDFs', { onclick=>"open_window('/employee/production/upload_pdfs.html?ProjectIndex=$$variable{'ProjectIndex'}','upload','resizable=yes,scrollbars=yes,width=800,height=600,screenX=10,screenY=10,top=0,left=0');", href=>'', text=>'Upload PDFs' } );
+					$html .= button( 'Email', { href=>qq`mailto:`.$$variable{Project}->Order()->email().q`?subject=Docket%20$$variable{Docket}&body=$$variable{body}`, text=>'Email' } );
+					$html .= button( 'UploadPDFs', { onclick=>"open_window('/employee/production/upload_pdfs.html?ProjectIndex=$$variable{'ProjectIndex'}','upload','resizable=yes,scrollbars=yes,width=800,height=600,screenX=10,screenY=10,top=0,left=0');", href=>'', text=>'Upload PDFs' } );
 					return $html;
 			) ?>
 			</p>

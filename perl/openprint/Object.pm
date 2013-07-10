@@ -22,7 +22,7 @@ use vars qw( $log $dbh $AUTOLOAD %cache %name_cache %fields %defaults %transform
 *config = \%openprint::config;
 
 my $debug = 0;
-my $debug_all = 0;
+my $debug_all = 1;
 $no_cache = 0;
 
 sub init_cache {
@@ -133,7 +133,7 @@ sub load {
 			#$log->debug("Got $type: " . join(',', map { $_ . '=>' . $$data{$_} } keys %$data ) . ' in ' . sprintf('%.4f', tv_interval($starttime)*1000) .' useconds' );
 		} # end if
 	} # end if
-	my @keys = map { defined $$fields{$_} ? $_ : () } keys %$fields;
+	my @keys = map { (defined $$fields{$_} or exists $$data{$_} ) ? $_ : () } keys %$fields;
 	@$self{@keys} = @$data{@$fields{@keys}};
 } # end sub load
 
@@ -429,8 +429,14 @@ my @sql_functions = (
 sub find_operators {
 	my ( $field, $type, $operator, $value ) = @_;
 
-	if ( sets::isin( $operator, [ '=', '!=', '<', '>', '<=', '>=', '<<=', '&&', '<@', '@>' ] ) ) {
+	if ( sets::isin( $operator, [ '=', '!=', '<', '>', '<=', '>=', '<<=' ] ) ) {
 		return ( $field.$type.' ' . $operator . ' ?', $value );
+	} elsif ( sets::isin( $operator, [ '&&', '<@', '@>' ] ) ) {
+		if ( ref $value eq 'ARRAY' ) {
+		return ( $field.$type.' ' . $operator . ' ?', $value );
+		} else {
+		return ( $field.$type.' ' . $operator . ' ?', [ $value ] );
+		} # end if
 	} elsif ( sets::isin( $operator, [ 'in', 'not in' ] ) ) {
 		if ( ref $value eq 'ARRAY' ) {
 			return ( $field.$type.' ' . $operator . ' ('. join(',', map { '?' } @{$value} ) . ')', @{$value} );

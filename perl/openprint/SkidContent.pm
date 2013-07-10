@@ -8,7 +8,7 @@ require openprint::StockPurpose;
 require openprint::InventoryCondition;
 require openprint::ManifestContent;
 
-$debug = 0;
+$debug = 1;
 
 %fields = (
 	id				=>	'id',
@@ -22,6 +22,8 @@ $debug = 0;
 %find_fields = (
 	allocated	=>	'(SELECT SUM(quantity) FROM Paper_Allocations WHERE Paper_Allocations.skid_id=Skid_Contents.skid_id AND paper_allocations.paper_id=Skid_Contents.paper_id)',
 	deleted		=>	'(SELECT deleted FROM skids where skids.id=skid_id)',
+	condition	=>	'(SELECT name FROM InventoryConditions WHERE id=skid_contents.condition_id)',
+	location	=>	'(SELECT name from Locations WHERE id=(SELECT location_id FROM skids where skids.id=skid_id))',
 );
 %defaults = (
 	paper_id		=>	undef,
@@ -152,6 +154,13 @@ sub value {
 	} # end if ! exists value
     return $$self{'value'};
 } # end sub value
+
+sub checked_out {
+	if ( ! exists $_[0]{checked_out} ) {
+		$_[0]{checked_out} = openprint::PaperInventory->find( skid_id=>$_[0]{skid_id}, paper_id=>$_[0]{paper_id}, 'comment like'=>'Checked out%' ) ? 1 : 0; 
+	} 
+	return $_[0]{checked_out};
+} # end sub checked_out
 
 1;
 __END__

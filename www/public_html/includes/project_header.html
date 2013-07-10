@@ -2,7 +2,7 @@
 	$$variable{Project} = new openprint::Project( $$variable{'ProjectIndex'} ) if ! $$variable{Project};
 ) ?>
 <div class="Header">
-	<div id="ProjectInformation">
+	<div class="ProjectInformation">
 		<fieldset><legend>Project Information</legend>
 			<div class="content">
 				<ul>
@@ -60,7 +60,7 @@
 					<? if ( $$variable{Project}->shippingtype() ) ?>
 					<li> 
 						<label>Shipping Type</label>
-						<span name="shippingTypeValue"><? echo ( $$variable{Project}->shippingtype() ) ?></span>
+						<span class="shippingTypeValue"><? echo ( $$variable{Project}->shippingtype() ) ?></span>
 					</li>
 					<? endif ( $$variable{Project}->shippingtype() ) ?>
 					<? if ( $$variable{Project}->due_date() ) ?>
@@ -102,7 +102,7 @@
 			</div>
 		</fieldset>
 	</div>
-	<div id="ContactInformation">
+	<div class="ContactInformation">
 		<fieldset><legend>Contact Information</legend>
 			<div class="content">
 				<ul>
@@ -120,14 +120,14 @@
 			</div>
 		</fieldset>
 	</div>
-	<div id="Description">
+	<div class="Description">
 		<fieldset><legend>Description</legend>
 			<div class="content">
 			<? echo ( $$variable{Project}->summary() ) ?>
 			</div>
 		</fieldset>
 	</div>
-	<div id="Reference">
+	<div class="Reference">
 		<fieldset><legend>Reference</legend>
 			<div class="content">
 			<? echo ( $$variable{Project}->reference(); ) ?>
@@ -135,7 +135,7 @@
 		</fieldset>
 	</div>
 	<? if ( $$variable{Project}->comments() ) ?>
-	<div id="Comments">
+	<div class="Comments">
 		<fieldset><legend>Comments</legend>
 			<div class="content">
 			<? hecho ( $$variable{Project}->comments(); ) ?>

@@ -70,8 +70,11 @@
 						$html .= button( 'FixStockOnSkids', { onclick=>q`f1.btnFunction.value='ChangePaper';f1.submit();`, text=>'Fix Problems' } );
 					} # end if
 					$html .= button( 'Apply', { onclick=>q`f1.btnFunction.value='Submit';if(f1.onsubmit())f1.submit();`, title=>'Apply Manifest to inventory' } );
-				} # end if
-			); ) ?>
+				} else {
+					$html .= button( 'Save', { onclick=>q`f1.btnFunction.value='Save';if(f1.onsubmit())f1.submit();`, title=>'Only save Manifest contents' } );
+				} # end if Manifest->id();
+				return $html;
+			) ?>
 		</p>
 		<input type="hidden" name="btnFunction" />
 	</form>

@@ -20,7 +20,7 @@ require openprint::Manifest;
 require openprint::ManifestContent;
 require openprint::InventoryCondition;
 
-$debug = 0;
+$debug = 1;
 
 $table = 'Skids';
 $serial = 'skid_id_seq';
@@ -355,7 +355,9 @@ sub add {
 		$Condition = $condition;
 	} elsif ( ! $condition ) {
 		# Default to new
-		$Condition = openprint::InventoryCondition->find_one('name'=>'new');
+		$Condition = openprint::InventoryCondition->find_one( name=>'new' );
+	} else {
+		$log->debug("COndition is $condition");
 	} # end if
 	if ( ! $Condition ) {
 		$log->error("Must specify condition");
@@ -445,30 +447,30 @@ sub location {
 
 sub location_id {
 
-	my $Tag = $_[0]->RFIDTag();
 	if ( @_ > 1 ) {
 		$_[0]{location_id} = $_[1];
 		if ( $_[0]{rfidtag_id} ) {
+			my $Tag = $_[0]->RFIDTag();
 			if ( $_[1] != $Tag->location_id() ) {
 				$Tag->save({location_id=>$_[1]});
 			} # end if
 		} # end if
 	} # end if
 
-	if ( $_[0]{rfidtag_id} and ( $Tag->location_id() != $_[0]{location_id} ) ) {
-		$_[0]{location_id} = $Tag->location_id();
+
+	if ( ! $_[0]{location_id} ) {
+		if ( $_[0]{rfidtag_id} ) {
+			my $Tag = $_[0]->RFIDTag();
+			if ( $Tag->location_id() != $_[0]{location_id} ) {
+				$_[0]{location_id} = $Tag->location_id();
+			} # end if
+		} 
 	} # end if
 	return $_[0]{location_id};
 } # end sub location_id
 
 sub Location {
-	my ( $self ) = @_;
-
-	if ( $$self{'rfidtag_id'} ) {
-		return new openprint::RFIDTag( $$self{'rfidtag_id'} )->Location();
-	} # end if
-
-	return new openprint::Location( $$self{'location_id'} );
+	return new openprint::Location( $_[0]->location_id() );
 } # end sub Location
 
 sub Content {
@@ -482,8 +484,8 @@ sub Content {
 } # end sub Content
 
 sub Contents {
+	return () if ! $_[0]{id};
     my $self = shift;
-	return () if ! $$self{'id'};
 
 	if ( @_ ) {
 		if ( ! defined $_[0] ) {
@@ -522,9 +524,9 @@ sub allocateable {
 # Checkout all paper on the skid
 sub checkout {
 	my ( $self, $c ) = @_;
-	my @contents = openprint::SkidContent->find('skid_id'=>$$self{id});
+	my @contents = openprint::SkidContent->find( skid_id=>$$self{id});
 	if ( ! @contents ) {
-		if ( ! openprint::PaperInventory->find( 'skid_id'=>$$self{'id'}, 'comment_like'=>'Checked out%' ) ) {
+		if ( ! openprint::PaperInventory->find( skid_id=>$$self{id}, 'comment like'=>'Checked out%' ) ) {
 			my $PI = new openprint::PaperInventory();
 			my $e = $PI->save({
 					'paper_id'	=>	undef,
@@ -541,8 +543,8 @@ sub checkout {
 	} # end if
 
 	foreach my $C ( @contents ) {
-		if ( ! openprint::PaperInventory->find( 'skid_id'=>$$self{'id'}, 'comment_like'=>'Checked out%' ) ) {
-			my $PA = openprint::PaperAllocation->find_one('skid_id'=>$$self{'id'}, 'paper_id'=>$C->paper_id());
+		if ( ! openprint::PaperInventory->find( skid_id=>$$self{id}, 'comment like'=>'Checked out%' ) ) {
+			my $PA = openprint::PaperAllocation->find_one( skid_id=>$$self{id}, paper_id=>$C->paper_id());
 			my $desc = 'Checked out' . ($PA->project_id() ? ' for docket ' . $PA->Project()->docket() : '');
 			my $PI = new openprint::PaperInventory();
 			my $e = $PI->save({
@@ -735,7 +737,7 @@ sub used {
 		$_[0]{used} = $_[1];
 	} # end if
 	if ( ! defined $_[0]{used} ) {
-		$_[0]{used} = openprint::PaperInventory->find( skid_id=>$_[0]->id(), 'comment_like'=>'Checked out%' ) ? 1 : 0;
+		$_[0]{used} = openprint::PaperInventory->find( skid_id=>$_[0]->id(), 'comment like'=>'Checked out%' ) ? 1 : 0;
 	} # end if
 	return $_[0]{used};
 } # end sub used
@@ -798,6 +800,7 @@ sub merge {
 
 	$Merge->delete();
 	sql::end_transaction( $openprint::dbh, $ac );
+	return '';
 } # end sub merge
 
 1;

@@ -28,15 +28,15 @@
 				<? echo ( my $html;
 
 				if ( sets::isin( $session{'user_type'}, ['E','A'] ) ) {
-					$html .= ssi::button( 'Summary', { href=>'/main/project/summary.html?ProjectIndex='.$$variable{ProjectIndex} } );
+					$html .= button( 'Summary', { href=>'/main/project/summary.html?ProjectIndex='.$$variable{ProjectIndex} } );
 				} # end if
 				if ( ( ! $$variable{Project}->order_id() ) or ( sets::isin( $$variable{Project}->Order->status(), ['Re-Opened','Incomplete'] ) ) ) {
 					$html .= join("\n",
-						ssi::button( 'Edit', { href=>'/main/project/create_edit.html?ProjectIndex='.$$variable{ProjectIndex} } ),
-						ssi::button( 'Delete', { onclick=>"f1.action='/main/project/history.html';f1.btnFunction.value='Delete Project';f1.submit();",  text=>'Delete' } ),
+						button( 'Edit', { href=>'/main/project/create_edit.html?ProjectIndex='.$$variable{ProjectIndex} } ),
+						button( 'Delete', { onclick=>"f1.action='/main/project/history.html';f1.btnFunction.value='Delete Project';f1.submit();",  text=>'Delete' } ),
 					);
 				} # end if
-				$html .= ssi::button( 'Copy', { href=>'/main/project/reuse.html?ProjectIndex='.$$variable{ProjectIndex} } );
+				$html .= button( 'Copy', { href=>'/main/project/reuse.html?ProjectIndex='.$$variable{ProjectIndex} } );
 				return $html;
 			) ?>
 			</div>
@@ -44,49 +44,45 @@
 				<? echo (
 					my $html = '';
 					if ( sets::isin( $$variable{Project}->status(), ['Unordered','uncalculated'] ) ) {
-						$html .= ssi::button( 'RecalculateProject', { onclick=>"f1.action='/main/project/view.html';f1.btnFunction.value='Recalculate Project';f1.submit();", text=>'Recalculate' } );
+						$html .= button( 'RecalculateProject', { onclick=>"f1.action='/main/project/view.html';f1.btnFunction.value='Recalculate Project';f1.submit();", text=>'Recalculate' } );
 					} # end if
 					if ( ( $$variable{Project}->status() ne 'uncalculated' ) and ! $$variable{Project}->order_id() ) {
-						$html .= ssi::button( 'AddToQuote', { onclick=>"f1.action='/main/quote/information.html';f1.btnFunction.value='Process Quote';f1.submit();", href=>'', text=>'Add To Quote' } );
-						$html .= ssi::button( 'AddToOrder', { onclick=>"f1.action='/main/order/information.html';f1.btnFunction.value='Process Order';f1.submit();", href=>'', text=>'Add To Order' } );
+						$html .= button( 'AddToQuote', { onclick=>"f1.action='/main/quote/information.html';f1.btnFunction.value='Process Quote';f1.submit();", href=>'', text=>'Add To Quote' } );
+						$html .= button( 'AddToOrder', { onclick=>"f1.action='/main/order/information.html';f1.btnFunction.value='Process Order';f1.submit();", href=>'', text=>'Add To Order' } );
 						if ( ( $session{'user_type'} eq 'A' ) and ! $$variable{Project}->predefined() ) {
-							$html .= ssi::button( 'Predefined', { onclick=>"f1.action='view.html';f1.btnFunction.value='Make Predefined';f1.submit();", text=>'Make into a Product' } );
+							$html .= button( 'Predefined', { onclick=>"f1.action='view.html';f1.btnFunction.value='Make Predefined';f1.submit();", text=>'Make into a Product' } );
 						} # end if
 					} # end if
 					if ( $$variable{Project}->order_id() and sets::isin( $$variable{Project}->Order()->status(), ['Incomplete', 'Re-Opened'] ) ) {
-						$html .= ssi::button( 'ContinueOrder', { href=>'/main/order/information.html?OrderID='.$$variable{Project}->order_id(), text=>'Continue Order' } );
+						$html .= button( 'ContinueOrder', { href=>'/main/order/information.html?OrderID='.$$variable{Project}->order_id(), text=>'Continue Order' } );
 					} # end if
 					if ( sets::isin( $session{'user_type'}, ['A', 'E'] ) and $$variable{Project}->Order()->status() ) {
-						$html .= ssi::button( 'Docket', { onclick=>'open_project_docket();' } );
+						$html .= button( 'Docket', { onclick=>'open_project_docket();' } );
 					} # end if
 					if ( sets::isin( $$variable{Project}->status(), [ 'Proofs Out','Approved','Printed','Complete' ] ) ) {
-					$html .= ssi::button( 'ViewPDFs', { onclick=>"f1.action='/main/project/view_pdf.html';f1.btnFunction.value='View PDF';f1.submit();", text=>'View PDFs' } );
+					$html .= button( 'ViewPDFs', { onclick=>"f1.action='/main/project/view_pdf.html';f1.btnFunction.value='View PDF';f1.submit();", text=>'View PDFs' } );
 				} # end if
-				$html .= ssi::button( 'Print', { onclick=>'window.print();' } );
+				$html .= button( 'Print', { onclick=>'window.print();' } );
 				if ( sets::isin( $session{user_type}, ['A','E'] ) ) {
-					$html .= ssi::button( 'JDF', { href=>'/main/project/view.html?btnFunction=Export%20JDF&amp;ProjectIndex='.$$variable{ProjectIndex} } ) if $$variable{Project}->docket();
-					$html .= ssi::button( 'Log', { onclick=>qq`popup_window('_view_log.html?project_id=$$variable{ProjectIndex}', '', { width:800, height:600 } );`, text=>'View Log' } );
+					$html .= button( 'JDF', { href=>'/main/project/view.html?btnFunction=Export%20JDF&amp;ProjectIndex='.$$variable{ProjectIndex} } ) if $$variable{Project}->docket();
+					$html .= button( 'Log', { onclick=>qq`popup_window('_view_log.html?project_id=$$variable{ProjectIndex}', '', { width:800, height:600 } );`, text=>'View Log' } );
 				} # end if
 				return $html;
 			) ?>
 		</div>
 	</div>
 	<br class="spacer"/>
-	<? echo ( include('_view.html'); ) ?>
+	<?include('_view.html')?>
 	<? if ( sets::isin( $session{'user_type'},'A','E') and ( ( ! $$variable{Project}->docket() ) or ( $$variable{Project}->Order()->status() eq 'Re-Opened' ) ) ) ?>
 	<table>
 		<tr class="totals unprintable">
 			<td><input type="text" name="txtServiceName" placeholder="enter custom service line description here"/></td>
 			<? echo (
-				my $html = '';
-				foreach my $qty_index ( $$variable{Project}->quantity_indexes() ) {
-					$html .= sprintf('<td class="price"><input type="number" name="txtPrice%1$d"/></td>', $qty_index );
-				} # end foreach qty_index
-				return $html;
+				return join("\n", map { '<td class="price">'.input( type=>'float', name=>'txtPrice'.$_ ).'</td>' } $$variable{Project}->quantity_indexes() );
 			) ?>
 			<td class="status">&nbsp;</td>
 			<? if ( ( ! $$variable{Project}->docket() ) or ( $$variable{Project}->Order()->status() eq 'Re-Opened' ) ) ?>
-			<td class="unprintable actions"><? echo ( ssi::button( 'AddToProject', { 'onclick'=>"f1.action='/main/project/view.html';f1.btnFunction.value='Modify Project';f1.submit();", 'text'=>'Add' } ); ) ?></td>
+			<td class="unprintable actions"><? echo ( button( 'AddToProject', { onclick=>q`f1.action='/main/project/view.html';f1.btnFunction.value='Modify Project';f1.submit();`, text=>'Add' } ); ) ?></td>
 			<? endif ( ( ! $$variable{Project}->docket() ) or ( $$variable{Project}->Order()->status() eq 'Re-Opened' ) ) ?>
 		</tr>
 	</table>

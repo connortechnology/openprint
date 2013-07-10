@@ -24,6 +24,7 @@ require configuration;
 
 require openprint::Object;
 require openprint::Currency;
+require openprint::Authorization;
 
 use openprint ();
 use vars qw( $r %variable %session %param %config $log $dbh %page_settings $starttime );
@@ -197,7 +198,6 @@ $log->debug("No good, need login");
     if ( $variable{'ExternalRedirect'} ) {
 		foreach my $key ( 'error', 'warning', 'information' ) {
 			if ( $variable{$key} ) {
-				$log->debug("Sacing session $key $variable{$key}");
 				$session{$key} = $variable{$key};
 			} # end if
 		} # end foreach

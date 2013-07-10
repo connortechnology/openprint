@@ -2436,6 +2436,10 @@ if ( ! sets::isin( 'paper_inventory', \@tables ) ) {
 		if ( ! exists $$data{'docket'} ) {
 			$dbh->do('alter table paper_inventory add docket integer');
 		} # end if
+		if ( ! exists $$data{project_id} ) {
+			$dbh->do('alter table paper_inventory add project_id integer');
+			$dbh->do('alter table paper_inventory add FOREIGN KEY (project_id) REFERENCES Projects (id)');
+		} # end if
 		if ( exists $$data{'poindex'} ) {
 			$dbh->do('alter table paper_inventory DROP poindex');
 		} # end if
@@ -2825,6 +2829,10 @@ if ( my $PaddingServiceType = openprint::ServiceType->find_one('name'=>'Padding'
 			$PaddingServiceType->id(), 'rdbCardboardBacking','Y'], [ 'strfieldname', 'Backing', 'strdefaultvalue', 'Cardboard' ] );
 	sql::update( undef, undef, 'tbl_service_defaults', ['lngservicetypeindex=? AND strfieldname=? AND strdefaultvalue=?',
 			$PaddingServiceType->id(), 'rdbCardboardBacking','N'], [ 'strfieldname', 'Backing', 'strdefaultvalue', 'None']  );
+} # end if
+
+if ( ! sets::isin( 'projecttype_blockedservices', \@tables ) ) {
+	$dbh->do( misc::load_file( $log, q{../openprint/sql/ProjectType_BlockedServices.sql}) );
 } # end if
 
 if ( sets::isin( 'tbl_projecttype_defaults', \@tables ) ) {
@@ -3501,6 +3509,10 @@ if ( ! sets::isin( 'event_invitations', \@tables ) ) {
 		$dbh->do('ALTER TABLE event_invitations ADD sent_on timestamp with time zone');
 	} # end if
 } # end if
+if ( ! sets::isin( 'authorizations', \@tables ) ) {
+    $dbh->do( misc::load_file( $log, '../openprint/sql/Authorizations.sql' ) );
+    die $dbh->errstr() if $dbh->errstr();
+}
 print "Finished\n";
 1;
 __END__

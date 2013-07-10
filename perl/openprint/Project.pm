@@ -71,23 +71,23 @@ $serial = 'lngProjectIndex_seq';
 	quantity1	=>	[ 's/\D//g' ],
 	quantity2	=>	[ 's/\D//g' ],
 	quantity3	=>	[ 's/\D//g' ],
-    reference	=>	[ 's/\r\n/<br\/>/mg', 's/\n\r/<br\/>/mg', 's/\n/<br\/>/mg', 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
-    comments	=>	[ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
+	reference	=>	[ 's/\r\n/<br\/>/mg', 's/\n\r/<br\/>/mg', 's/\n/<br\/>/mg', 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
+	comments	=>	[ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
 );
 %defaults = (
-	'created_on'	=>	q`'NOW()'`,
-	'updated_on'	=>	q`'NOW()'`,
-	'docket'		=>	undef,
-	'quantity1'		=>	undef,
-	'quantity2'		=>	undef,
-	'quantity3'		=>	undef,
-	'price1'		=>	undef,
-	'price2'		=>	undef,
-	'price3'		=>	undef,
-	'order_id'		=>	undef,
-	'due_date'		=>	undef,
-	'markup'		=>	undef,
-	priority		=>	undef,
+	created_on	=>	q`'NOW()'`,
+	updated_on	=>	q`'NOW()'`,
+	docket		=>	undef,
+	quantity1	=>	undef,
+	quantity2	=>	undef,
+	quantity3	=>	undef,
+	price1		=>	undef,
+	price2		=>	undef,
+	price3		=>	undef,
+	order_id	=>	undef,
+	due_date	=>	undef,
+	markup		=>	undef,
+	priority	=>	undef,
 );
 
 %find_fields = (
@@ -442,15 +442,15 @@ sub update_status {
 				$self->add_to_log( @openprint::session{'company_id','user_id'}, "Marked Waiting For Customer Approval from $$self{'status'}" );
 				$$self{'status'} = 'Waiting For Customer Approval';
 				$self->save();
-            } # end if
-            return $$self{status};
+			} # end if
+			return $$self{status};
 		} elsif ( sets::isin( 'Waiting For QA Approval', \@statuses ) ) {
-            if ( $$self{status} ne 'Waiting For QA Approval' ) {
+			if ( $$self{status} ne 'Waiting For QA Approval' ) {
 				$self->add_to_log( @openprint::session{'company_id','user_id'}, "Marked Waiting For QA Approval from $$self{'status'}" );
 				$$self{'status'} = 'Waiting For QA Approval';
 				$self->save();
-            } # end if
-            return $$self{status};
+			} # end if
+			return $$self{status};
 		} elsif ( sets::isin( 'Proofs Out', \@statuses ) and ( $$self{'status'} ne 'Proofs Out' ) ) {
 			$self->add_to_log( @openprint::session{'company_id','user_id'}, "Marked Proofs Out from $$self{'status'}" );
 			$$self{'status'} = 'Proofs Out';
@@ -685,17 +685,17 @@ sub copy {
 	while ( @contents ) {
 		my ( $service_index, $servicetype_id, $status ) = splice @contents, 0, 3;
 
-# uncalc->uncalc,   *->calc
+# uncalc->uncalc,	*->calc
 		if ( $status ne '' and sets::isin( $status, [ 'Pending Deposit', 'Ordered', 'Proofs Out', 'Approved', 'Complete' ] ) ) {
 			$status = 'calculated';
 		} # end if
 
 		my ( $new_service_index ) = sql::execute( undef, undef, q{SELECT nextval('ContentsServiceIndex_seq')} );
 		sql::insert( undef, undef, 'tbl_Project_Contents',[
-				'lngProjectIndex',  $$new{id},
+				'lngProjectIndex',	$$new{id},
 				'lngServiceIndex', $new_service_index,
-				'servicetype_id',   $servicetype_id,
-				'strStatus',    $status
+				'servicetype_id',	$servicetype_id,
+				'strStatus',	$status
 				] );
 		openprint::service::insert_service_spec( $openprint::log, $openprint::dbh, $new->id(), $new_service_index, 'ProjectIndex', $new->id(), 1 );
 		openprint::service::insert_service_spec( $openprint::log, $openprint::dbh, $new->id(), $new_service_index, 'ServiceIndex', $new_service_index, 1 );
@@ -811,8 +811,8 @@ sub summary {
 			} # end if
 			my @groups = sql::execute( undef, undef, 'SELECT DISTINCT strvalue FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strName=?', $$self{'id'}, 'Group' );
 
-# I believe the point of this is to stick the Printed Web or Sheetfred into the summary.  Nastily executed.
-# The logic is, each group has to be either all sheetfed, or all web (or digital, etc).  
+# I believe the point of this is to stick the Printed Web or Sheetfred into the summary.	Nastily executed.
+# The logic is, each group has to be either all sheetfed, or all web (or digital, etc).	
 			foreach my $group_id ( sort @groups ) {
 				my @sigs = $self->signatures({'Group'=>$group_id});
 
@@ -1083,25 +1083,25 @@ sub add_signature {
 } # end sub add_signature
 
 sub copy_signature {
-    my ( $self, $sig_specs, $data, $status ) = @_;
-    my $new_service_index = $self->add_signature( undef, $status );
+	my ( $self, $sig_specs, $data, $status ) = @_;
+	my $new_service_index = $self->add_signature( undef, $status );
 	if ( ! $new_service_index ) {
 		$log->error('Error copying signature.');
 		return;
 	} # end if
-    my $new_specs = openprint::service::get_specs_ref( $self, $new_service_index );
+	my $new_specs = openprint::service::get_specs_ref( $self, $new_service_index );
 
 	my $ac = sql::start_transaction( $dbh );
-    foreach my $key ( openprint::Estimating::Printing::variables( $$self{'id'} ) ) {
+	foreach my $key ( openprint::Estimating::Printing::variables( $$self{'id'} ) ) {
 		next if $key eq 'SignatureIndex';
 		if ( exists $$data{$key} ) {
 			openprint::service::insert_service_spec( $log, $dbh, $self->id(), $new_service_index, $key, $$data{$key}, ! exists $$new_specs{$key} );
 		} else {
 			openprint::service::insert_service_spec( $log, $dbh, $self->id(), $new_service_index, $key, $$sig_specs{$key}, ! exists $$new_specs{$key} );
 		} # end if
-    } # end foreach
-    sql::end_transaction( $dbh, $ac );
-    return $new_service_index;
+	} # end foreach
+	sql::end_transaction( $dbh, $ac );
+	return $new_service_index;
 } # end sub copy_signature
 
 sub Template {
@@ -1164,53 +1164,53 @@ sub Ordered_Project {
 
 sub add_service {
 	my ( $self, $type, $data ) = @_;
-    my $service_index = 0;
+	my $service_index = 0;
 
-    my $ServiceType;
-    if ( ref $type ne 'openprint::ServiceType' ) {
-        if ( ! ( $ServiceType = openprint::ServiceType->find_one('name'=>$type) ) ) {
-            $log->error("Service $type IS NOT in the system.");
-            return;
-        } # end if
-    } else {
-        $ServiceType = $type;
-    } # end if
+	my $ServiceType;
+	if ( ref $type ne 'openprint::ServiceType' ) {
+		if ( ! ( $ServiceType = openprint::ServiceType->find_one('name'=>$type) ) ) {
+			$log->error("Service $type IS NOT in the system.");
+			return;
+		} # end if
+	} else {
+		$ServiceType = $type;
+	} # end if
 
-    # Make this all one transaction...
-    my $ac = sql::start_transaction( $dbh );
+	# Make this all one transaction...
+	my $ac = sql::start_transaction( $dbh );
 
-    sql::insert( $log, $dbh, 'tbl_Project_Contents', 'lngProjectIndex', $$self{'id'}, 'strStatus', 'uncalculated', 'servicetype_id', $ServiceType->id() );
-    ( $service_index ) = sql::execute( $log, $dbh, q{SELECT MAX(lngServiceIndex) FROM tbl_Project_Contents WHERE lngProjectIndex=?}, $$self{'id'} );
+	sql::insert( $log, $dbh, 'tbl_Project_Contents', 'lngProjectIndex', $$self{'id'}, 'strStatus', 'uncalculated', 'servicetype_id', $ServiceType->id() );
+	( $service_index ) = sql::execute( $log, $dbh, q{SELECT MAX(lngServiceIndex) FROM tbl_Project_Contents WHERE lngProjectIndex=?}, $$self{'id'} );
 	# Do this so that it doesn't try to load the specs, saving 1 db call.
 	$openprint::service::specs_cache{$service_index} = {};
-    openprint::service::insert_service_spec( $log, $dbh, $$self{'id'}, $service_index, 'ServiceType', $ServiceType->name(), 1 );
-    $_ = q{SELECT strFieldName, strDefaultValue FROM tbl_Service_Defaults WHERE lngServiceTypeIndex=? OR lngServiceTypeIndex IS NULL ORDER BY lngServiceTypeIndex};
-    my @defaults = sql::execute( $log, $dbh, $_, $ServiceType->id() );
-    $_ = q{SELECT name, value FROM User_Service_Defaults WHERE servicetype_id=? AND user_id=?};
-    push @defaults, sql::execute( $log, $dbh, $_, $ServiceType->id(), $openprint::session{'user_id'} );
-    while ( my ( $n, $v ) = splice @defaults, 0, 2 ) {
+	openprint::service::insert_service_spec( $log, $dbh, $$self{'id'}, $service_index, 'ServiceType', $ServiceType->name(), 1 );
+	$_ = q{SELECT strFieldName, strDefaultValue FROM tbl_Service_Defaults WHERE lngServiceTypeIndex=? OR lngServiceTypeIndex IS NULL ORDER BY lngServiceTypeIndex};
+	my @defaults = sql::execute( $log, $dbh, $_, $ServiceType->id() );
+	$_ = q{SELECT name, value FROM User_Service_Defaults WHERE servicetype_id=? AND user_id=?};
+	push @defaults, sql::execute( $log, $dbh, $_, $ServiceType->id(), $openprint::session{'user_id'} );
+	while ( my ( $n, $v ) = splice @defaults, 0, 2 ) {
 		if ( $data and exists $$data{$n} ) {
 			openprint::service::insert_service_spec( $log, $dbh, $$self{'id'}, $service_index, $n, $$data{$n}, 1 );
 			delete $$data{$n};
 		} else {
 			openprint::service::insert_service_spec( $log, $dbh, $$self{'id'}, $service_index, $n, $v, 1 );
 		} # end if
-    } # end while
-    foreach my $qty_index ( $self->quantity_indexes() ) {
-        openprint::service::insert_service_spec( $log, $dbh, $$self{'id'}, $service_index, "txtQuantity$qty_index", 
+	} # end while
+	foreach my $qty_index ( $self->quantity_indexes() ) {
+		openprint::service::insert_service_spec( $log, $dbh, $$self{'id'}, $service_index, "txtQuantity$qty_index", 
 		( ( $data and exists $$data{"txtQuantity$qty_index"} ) ? $$data{"txtQuantity$qty_index"} : $self->quantity($qty_index) ), 1 );
-    } # end foreach
+	} # end foreach
 if ( $data ) {
 	foreach my $n ( keys %$data ) {
 			openprint::service::insert_service_spec( $log, $dbh, $$self{'id'}, $service_index, $n, $$data{$n}, 1 );
 	} # end foreach 
 }
 
-    sql::end_transaction( $dbh, $ac );
-    delete $$self{'Services'};
-    delete $$self{'service_types'};
-    delete $$self{'signatures'};
-    return $service_index;
+	sql::end_transaction( $dbh, $ac );
+	delete $$self{'Services'};
+	delete $$self{'service_types'};
+	delete $$self{'signatures'};
+	return $service_index;
 } # end sub add_service
 
 sub started_on {
@@ -1339,22 +1339,22 @@ sub last_scheduled_seconds {
 } # end sub last_scheduled_seconds
 
 sub operator_id {
-    my ( $self ) = @_;
+	my ( $self ) = @_;
 
 	if ( ! $$self{'operator_id'} ) {
 		my $services = $self->services();
 		@$self{'operator_id'} = sql::execute( $log, $dbh, q{SELECT operator_id FROM tbl_Project_Contents WHERE lngProjectIndex=? AND lngServiceIndex=?}, $$self{id}, ( $$services{'Proofs'} ? $$services{'Proofs'}[0] : $$services{'FilmStripping'}[0] ) );
 	} # end if
-    return $$self{'operator_id'};
+	return $$self{'operator_id'};
 } # end sub Operator
 
 sub Operator {
-    my ( $self ) = @_;
+	my ( $self ) = @_;
 
 	if ( ! $$self{'Operator'} ) {
 		$$self{'Operator'} = new openprint::User( $self->operator_id() );
 	} # end if
-    return $$self{'Operator'};
+	return $$self{'Operator'};
 } # end sub Operator
 
 sub delivery_cost {

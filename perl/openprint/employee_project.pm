@@ -781,49 +781,38 @@ sub summary {
 
 sub _stock_checkout {
 	my $Project;
-	if ( $param{'project_id'} ) {
-		$Project = new openprint::Project( $param{'project_id'} );
-	} elsif ( $param{'docket'} ) {
-		my @Projects = openprint::Project->find('docket'=>$param{'docket'});
-		if ( ! @Projects ) {
-			$variable{'error'} .= 'Invalid docket.<br/>';
-			return;
-		} # end if
-		$Project = $Projects[0];
+	if ( $param{project_id} ) {
+		$Project = new openprint::Project( $param{project_id} );
+	} else {
+		$log->error("NO Project in _stock_checkout");
 	} # end if
-	$variable{'Project'} = $Project;
+	$variable{Project} = $Project;
 
-	if ( $param{'action'} eq 'Add' ) {
-		$param{'skid_id'} =~ s/\D//g;
-		$param{'rfidtag_id'} =~ s/[^a-zA-Z0-9]//g;
+	if ( $param{action} eq 'Add' ) {
+		$param{skid_id} =~ s/\D//g;
+		$param{rfidtag_id} = openprint::RFIDTag->transform( 'id', $param{rfidtag_id} );
 		my $Skid;
 		if ( $param{'skid_id'} ) {
-			$Skid = new openprint::Skid( $param{'skid_id'} );
-		} elsif ( $param{'rfidtag_id'} ) {
-			my $RFIDTag = new openprint::RFIDTag( $param{'rfidtag_id'} );
-			if ( ! $RFIDTag->id() ) {
-				my @Tags = openprint::RFIDTag->find( 'id_like'=>'%'.$param{'rfidtag_id'} );
-				if ( @Tags == 1 ) {
-					$RFIDTag = $Tags[0];
-				} # end if
-			} # end if
-			if ( ! $RFIDTag->id() ) {
+			$Skid = new openprint::Skid( $param{skid_id} );
+		} elsif ( $param{rfidtag_id} ) {
+			my $RFIDTag = openprint::RFIDTag::from_id( $param{rfidtag_id} );
+			if ( ! $RFIDTag ) {
 				$variable{'error'} .= 'RFID Tag ' .  $param{'rfidtag_id'} . ' is not in the system.<br/>';
 			} else {
 				$Skid = $RFIDTag->Skid();
 			} # end if
 		} else {
-			$variable{'error'} .='Please scan the barcode on the skid label or rfid tag.<br/>';
+			$variable{error} .='Please scan the barcode on the skid label or rfid tag.<br/>';
 		} # end if
 		if ( ! ( $Skid and $Skid->id() ) ) {
-			$variable{'error'} .= 'Unknown skid scanned.<br/>';
+			$variable{error} .= 'Unknown skid scanned.<br/>';
 			return;
 		} # end if
 
 		my $add_entry = 1;
 
 		if ( $Skid->is_empty() ) {
-			my @PI = openprint::PaperInventory->find('skid_id'=>$Skid->id(), 'comment_like'=>'Checked out%','order'=>'updated_on desc');
+			my @PI = openprint::PaperInventory->find( skid_id=>$Skid->id(), 'comment like'=>'Checked out%', order=>'updated_on desc');
 			if ( @PI ) {
 				$variable{'error'} .= sprintf( '%1$s %2$d has already been checked out', ($PI[0]->Paper()->type() eq 'Roll' ? 'Roll' : 'Skid'), $Skid->id() );
 				if ( $PI[0]->docket() ) {
@@ -852,13 +841,14 @@ sub _stock_checkout {
 				foreach my $C ( $Skid->Contents() ) {
 					my $PI = new openprint::PaperInventory();
 					$PI->save({
-							'docket'	=>	$param{'docket'},
-							'paper_id'	=>	$C->paper_id(),
-							'user_id'	=>	$session{'user_id'},
-							'delta'		=>	-1*$C->quantity(),
-							'comment'	=>	sprintf('Checked out for docket <a href="/employee/project/view.html?ProjectIndex=%1$d">%2$d</a> by %3$s', $Project->id(), $Project->docket(), new openprint::User( $session{'user_id'} )->name() ),
-							'skid_id'	=>	$Skid->id(),
-							'units'		=>	$C->units(),
+							project_id	=>	$$Project{id},
+							docket		=>	$Project->docket(),
+							paper_id	=>	$C->paper_id(),
+							user_id		=>	$session{'user_id'},
+							delta		=>	-1*$C->quantity(),
+							comment		=>	sprintf('Checked out for docket <a href="/employee/project/view.html?ProjectIndex=%1$d">%2$d</a> by %3$s', $Project->id(), $Project->docket(), new openprint::User( $session{'user_id'} )->name() ),
+							skid_id		=>	$Skid->id(),
+							units		=>	$C->units(),
 							});
 					$C->quantity( 0 );
 					$C->save();
@@ -873,13 +863,14 @@ sub _stock_checkout {
 			} else {
 				my $PI = new openprint::PaperInventory();
 				$PI->save({
-						'docket'	=>	$Project->docket(),
-						'paper_id'	=>	undef,,
-						'user_id'	=>	$session{'user_id'},
-						'delta'		=>	0,
-						'comment'	=>	sprintf('Checked out for docket <a href="/employee/project/view.html?ProjectIndex=%1$d">%2$d</a> by %3$s', $Project->id(), $Project->docket(), new openprint::User( $session{'user_id'} )->name() ),
-						'skid_id'	=>	$Skid->id(),
-						'units'		=>	undef,
+						project_id	=>	$$Project{id},
+						docket		=>	$Project->docket(),
+						paper_id	=>	undef,,
+						user_id		=>	$session{'user_id'},
+						delta		=>	0,
+						comment		=>	sprintf('Checked out for docket <a href="/employee/project/view.html?ProjectIndex=%1$d">%2$d</a> by %3$s', $Project->id(), $Project->docket(), new openprint::User( $session{'user_id'} )->name() ),
+						skid_id		=>	$Skid->id(),
+						units		=>	undef,
 						});
 			} # end if skid has contents
 		} # end if add_entry

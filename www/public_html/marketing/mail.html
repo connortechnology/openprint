@@ -62,7 +62,7 @@
 			
 			<select multiple name="selectSalesRep" size="5" onChange="fill_users(f1);" />
 			<? echo ( 
-				ssi::fill_select( $log, $dbh, q{SELECT Index, strFirstName || ' ' || strLastName FROM Users WHERE chrType='E' ORDER BY lower(strFirstName)} );
+				ssi::make_drop_down( openprint::User->dropdown(type=>'E', order=>'lower(firstname)') );
 			) ?>
 			</select>
 		</p>

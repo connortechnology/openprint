@@ -895,6 +895,29 @@ sub _logs {
 
 sub bitcoin {
 } # end sub bitcoin
+sub authorizations {
+	require openprint::Authorization;
+	require openprint::Object_Type;
+	_authorizations();
+	if ( $param{action} eq 'Save' ) {
+		foreach my $Auth ( (new openprint::Authorization()), openprint::Authorization->find() ) {
+			next if ! $param{"object_type_id-$$Auth{id}"};
+
+			$variable{error} .= $Auth->save({
+				mode			=>	$param{"mode-$$Auth{id}"},
+				object_type_id	=>	$param{"object_type_id-$$Auth{id}"},
+				object_id		=>	$param{"object_id-$$Auth{id}"},
+				usertype_id		=>	$param{"usertype_id-$$Auth{id}"},
+				usergroup_id	=>	$param{"usergroup_id-$$Auth{id}"},
+				setting			=>	$param{"setting-$$Auth{id}"},
+			});
+		} # end foreach Auth
+		$variable{ExternalRedirect} = '/administrator/managerial/authorizations.html';
+	} # end if
+} # end sub authorizations
+sub _authorizations {
+	ssi::save_params( '/administrator/managerial/authorizations.html', ( 'object_type_id' ) );
+} # end sub _authorizations
 
 1;
 __END__

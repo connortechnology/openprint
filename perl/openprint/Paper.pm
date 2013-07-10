@@ -29,11 +29,13 @@ require openprint::StockQuality;
 require openprint::StockGroup;
 require openprint::StockMaterial;
 require openprint::Equipment_Stock_Setting;
+require openprint::PaperAllocation;
+
 use Time::HiRes qw{ time gettimeofday tv_interval }; 
 
 use vars qw( $debug $table $serial %fields %find_fields %defaults %transforms );
 
-$debug = 0;
+$debug = 1;
 $table = 'papers';
 $serial	= 'paper_id_seq';
 %fields = (
@@ -120,15 +122,18 @@ sub load {
 		$data = $openprint::dbh->selectrow_hashref( q{SELECT * FROM Papers WHERE id=?}, {}, $$self{'id'} );
 	} # end if
 	@$self{keys %fields} = @$data{@fields{keys %fields}};
+	if ( exists $$data{allocated} ) {
+		$$self{allocated} = $$data{allocated}
+	}
 	@$self{'start_width','start_height'} = @$self{'width','height'};
 } # end sub load
 
 # Returns a copy of the paper object.
 sub copy {
 	my $New = $_[0]->clone();
-	$$New{'id'} = '';
-	@{$$New{'Prices'}} = $_[0]->Prices();
-	@{$$New{'recommendations'}} = $_[0]->recommendations();
+	$$New{id} = '';
+	$$New{Prices} = [ $_[0]->Prices() ];
+	$$New{recommendations} = [ $_[0]->recommendations() ];
 	return $New;
 } # end sub copy
 
@@ -710,22 +715,21 @@ sub owner_id {
 
 # This function assumes that the skid contents have already been updated
 sub add_inventory {
-	my ( $self, $Skid, $quantity, $units, $description ) = @_;
-	$quantity =~ s/[^\-\d]//g;
-	$quantity = int $quantity;
+    my ( $self, $Skid, $quantity, $units, $description, $Project ) = @_;
+    $quantity =~ s/[^\-\d]//g;
+    $quantity = int $quantity;
 
-	if ( ref $Skid ne 'openprint::Skid' ) {
-		$Skid = new openprint::Skid( $Skid );
-		$openprint::log->debug('Please update call to add_inventory to pass a Skid instead of skid_id');
-	} # end if
-	my $C = $Skid->Content( $self );
-
-# force recalc;
-	delete $$self{'in_stock'};
-
-	my $docket;
-	if ( $description =~ /docket (\d+)/ ) {
-		$docket = $1;
+	if ( ! $Project ) {
+		my $docket;
+		if ( $description =~ /docket (\d+)/ ) {
+			$docket = $1;
+		} # end if
+		if ( $docket ) {
+			my @Projects = openprint::Project->find(docket=>$docket);
+			$Project = $Projects[0] if @Projects;
+		} else {
+			$Project = new openprint::Project();
+		} # end if
 	} # end if
 
 	$units = $self->units() if ! $units;
@@ -739,7 +743,8 @@ sub add_inventory {
         comment		=>	$description,
         skid_id		=>	$Skid->id(),
 		units		=>	$units,
-		docket		=>	$docket,
+		docket		=>	$$Project{docket},
+		project_id	=>	$$Project{id},
         });
 	# Updates in_stock and allocated
 	$self->save();
@@ -786,17 +791,17 @@ sub back_ordered {
 } # end sub back_ordered
 
 sub allocated {
-	my ( $self, $project_id, $new ) = @_;
-	return 0 if ! $$self{'id'};
+	return 0 if ! $_[0]{id};
+    my ( $self, $project_id, $new ) = @_;
 	if ( @_ == 3 ) {
 		$$self{allocated} = $new;
 	} # end if
 	if ( $project_id ) {
-		( $_ ) = sql::execute( undef, undef, q{SELECT SUM(Quantity) FROM Paper_Allocations WHERE paper_id=? and project_id=?}, $$self{'id'}, $project_id );
-		return $_;
+		my $qty = misc::sum( map { $_->quantity() } openprint::PaperAllocation->find(paper_id=>$$self{id}, project_id=>$project_id) );
+		return $qty;
 	} # end if
 	if ( ! defined $$self{allocated} ) {
-		($$self{allocated}) = sql::execute( undef, undef, q{SELECT SUM(Quantity) FROM Paper_Allocations WHERE paper_id=?}, $$self{'id'} );
+		$$self{allocated} = misc::sum( map { $_->quantity() } openprint::PaperAllocation->find(paper_id=>$$self{id}) );
 	} # end if
 	return $$self{allocated};
 } # end sub allocated
@@ -817,10 +822,8 @@ sub in_stock {
 	} # end if
 
 	if ( ! defined $_[0]{'in_stock'} ) {
-		foreach my $SkidContent ( openprint::SkidContent->find(deleted=>0,paper_id=>$_[0]{id},'quantity >'=>0) ) {
-			if ( ! $SkidContent->Skid()->location_id() or ( $SkidContent->Skid()->Location()->name() ne 'Missing' ) ) {;
-				$_[0]{'in_stock'} += $SkidContent->quantity();
-			} # end nif
+		foreach my $SkidContent ( openprint::SkidContent->find(deleted=>0,paper_id=>$_[0]{id},'quantity >'=>0,'location not in'=>['Missing']) ) {
+			$_[0]{in_stock} += $SkidContent->quantity();
 		} # end foreach SkidContent
 	} # end if
     return $_[0]{'in_stock'};
@@ -830,7 +833,7 @@ sub available {
 	my $self = shift;
 	if ( @_ ) {
 		if ( defined $_[0] ) {
-			$$self{'available'} = $_[0];
+			$$self{available} = $_[0];
 		} else {
 			delete $$self{'available'};
 		} # end if
@@ -839,12 +842,10 @@ sub available {
 
 	if ( ! exists $$self{available} ) {
 		$$self{available} = 0;
-		foreach my $SkidContent ( openprint::SkidContent->find(deleted=>0,paper_id=>$$self{id},'quantity >'=>0) ) {
-			next if $SkidContent->Skid()->Location()->name() eq 'Missing';
-			next if sets::isin( $SkidContent->condition(), ['Damaged', 'Used' ] );
-			@$self{available} += int $SkidContent->quantity();
+		foreach my $SkidContent ( openprint::SkidContent->find('condition not in'=>['Damaged','Used'], deleted=>0,paper_id=>$$self{id},'quantity >'=>0,'location not in'=>['Missing'] ) ) {
+			$$self{available} += int $SkidContent->quantity();
 		} # end foreach SkidContent
-		$$self{'available'} -= $self->allocated();
+		$$self{available} -= $self->allocated();
 	} # end if
 	return $$self{available};
 } # end sub available
