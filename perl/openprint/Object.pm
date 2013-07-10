@@ -652,7 +652,7 @@ sub find {
 	} # end if
 
 	if ( $$fields{'deleted'} and ! sets::isin( 'deleted', \@used_fields ) ) {
-		push @where, '(deleted=? OR deleted IS NULL)';
+		push @where, 'deleted=?';
 		push @values, 0;
 	} # end if
 
