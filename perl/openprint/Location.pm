@@ -4,6 +4,7 @@ require openprint::Location_Type;
 require openprint::Asset;
 require openprint::Photo_Album;
 require Geo::Coder::Googlev3;
+require Math::Round;
 use Geo::IP;
 
 package openprint::Location;
@@ -390,7 +391,7 @@ $openprint::log->debug("Calcing distance from $lat1,$lon1 to $lat2,$lon2 units: 
 	} elsif ($unit eq "N") {
 		$dist = $dist * 0.8684;
 	}
-	return ($dist);
+	return Math::Round::nearest(0.1,$dist);
 }
 
 #::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
