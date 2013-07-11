@@ -938,6 +938,7 @@ $log->debug('sacing');
 			my $PI = new openprint::PaperInventory();
 			$PI->save({skid_id=>$skid_id, user_id=>$session{user_id}, comment=>'Skid Deleted.'});
 		} # end foreach
+		$variable{ExternalRedirect} = '/employee/inventory/skid_details.html?skid_id='.join(',',@skid_ids);
 	} elsif ( $param{'btnFunction'} eq 'Undelete' ) {
 		foreach my $skid_id ( @skid_ids ) {
 			my $Skid = new openprint::Skid( $skid_id );
@@ -945,6 +946,7 @@ $log->debug('sacing');
 			my $PI = new openprint::PaperInventory();
 			$PI->save({skid_id=>$skid_id, user_id=>$session{user_id}, comment=>'Skid Undeleted.'});
 		} # end foreach
+		$variable{ExternalRedirect} = '/employee/inventory/skid_details.html?skid_id='.join(',',@skid_ids);
 	} elsif ( $param{'btnFunction'} eq 'Print Label' ) {
 		foreach my $skid_id ( @skid_ids ) {
 			my $Skid = new openprint::Skid( $skid_id );
