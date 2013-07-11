@@ -61,7 +61,7 @@
 			<th class="buttons">&nbsp;</th>
 		</tr>
 		<? echo (
-			openprint::Location->find();
+			openprint::Location->find(type=>'place');
 			my $html;
 			my $rowclass;
 			my $selected;
