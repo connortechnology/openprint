@@ -33,6 +33,21 @@
 		return $_ if $_;
 
 	} openprint::Paper->find( %sql ) ];
+		my @paper_ids = map { $$_{id} } @{$$variable{Papers}};
+		my %Allocations;
+		foreach my $PA ( openprint::PaperAllocation->find(paper_id=>\@paper_ids) ) {
+			$Allocations{$$PA{paper_id}} += $$PA{quantity};
+		} # end foreach PA
+		foreach my $Paper ( @{$$variable{Papers}}  ) {
+			$Paper->allocated( undef, exists $Allocations{$$Paper{id}} ? $Allocations{$$Paper{id}} : 0 );
+		} # end foreach Paper
+		my %SkidContents;
+		foreach my $SC ( openprint::SkidContent->find( paper_id=>\@paper_ids, 'quantity >' => 0 ) ) {
+			push @{$SkidContents{$$SC{paper_id}}}, $SC;
+		} # end foreach
+		foreach my $Paper ( @{$$variable{Papers}}  ) {
+			$Paper->SkidContents( $SkidContents{$$Paper{id}} );
+		} # end foreach Paper
 ) ?>
 <? if ( @{$$variable{'Papers'}} ) ?>
 	<table class="List">
@@ -59,6 +74,7 @@
 				next if (! $location_id) or ( $location_id eq '' );
 				push @location_ids, $location_id;
 			} # end foreach
+			my %location_ids = map { $_, $_ } @location_ids;
 
 			my $total_weight;
 			my $total_rolls;
@@ -121,11 +137,11 @@ $log->debug("Done preloading");
 					my $root_id = $Skid->Location()->Root()->id();
 					if ( @location_ids ) {
 						if ( $root_id ) {
-							if ( ! sets::isin( $root_id, \@location_ids ) ) {
+							if ( ! $location_ids{$root_id} ) {
 	$log->debug("Next because $root_id is not in location_ids (@location_ids)");
 								next;
 							} # end if
-						} elsif( ! sets::isin( 'Unknown', \@location_ids ) ) {
+						} elsif( ! $location_ids{'Unknown'} ) {
 							next;
 						} # end if 
 					} # end if 
@@ -159,12 +175,12 @@ $log->debug("Done preloading");
 					$$Paper{'id'},
 					$$Paper{'id'},
 					$Paper->to_string(),
-					Number::Format::format_number($Paper->available()) . ($Paper->type() eq 'Roll' ? 'lbs' : 'sheets'),
-					join('<br/>', map { $_.'days - ' . $skid_age{$_} . ($Paper->type() eq 'Roll' ? ' roll' : ' skid').($skid_age{$_}>1?'s':'&nbsp;') } keys %skid_age),
-					join('<br/>', map { $_.'days - ' . $last_seen{$_} . ($Paper->type() eq 'Roll' ? ' roll' : ' skid').($last_seen{$_}>1?'s':'&nbsp;') } keys %last_seen),
-					join('<br/>', map { new openprint::InventoryCondition($_)->name().' - ' . $conditions{$_} . ($Paper->type() eq 'Roll' ? ' roll' : ' skid').($conditions{$_}>1?'s':'&nbsp;') } keys %conditions),
-					join('<br/>', map { ($_ ? new openprint::Location($_)->name() : 'unknown' ).' - ' . $skid_location{$_} . ($Paper->type() eq 'Roll' ? ' roll' : ' skid').($skid_location{$_}>1?'s':''). ' - ' . Number::Format::format_number($inventory{$_}).'lbs' } keys %skid_location),
-					button( 'Allocate'.$$Paper{id}, { onclick=>'allocate_window('.$$Paper{id}.');', text=>'A' } ),
+					Number::Format::format_number($Paper->available()) . $Paper->units( $Paper->available() ),
+					join('<br/>', map { $_.'days - ' . $skid_age{$_} . $Paper->types($skid_age{$_}) } keys %skid_age),
+					join('<br/>', map { $_.'days - ' . $last_seen{$_} . $Paper->types($last_seen{$_}) } keys %last_seen),
+					join('<br/>', map { new openprint::InventoryCondition($_)->name().' - ' . $conditions{$_} . $Paper->types($conditions{$_}) } keys %conditions),
+					join('<br/>', map { ($_ ? new openprint::Location($_)->name() : 'unknown' ).' - ' . $skid_location{$_} . $Paper->types($skid_location{$_}). ' - ' . Number::Format::format_number($inventory{$_}).'lbs' } keys %skid_location),
+					button( 'Allocate'.$$Paper{id}, { onclick=>'allocate_window('.$$Paper{id}.');', 'text'=>'A' } ),
 					);
 				$rowclass = $rowclass ? '' : ' class="colRow"';
 			} # end foreach Paper

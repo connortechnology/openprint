@@ -3617,12 +3617,12 @@ sub calc_price {
 	my $run_speed;
 	if ( lc $$std_speed{'units'} eq 'calliper' ) {
 		$run_speed = $Press->specification('Run Speed', $$Paper{calliper} );
-#$openprint::log->debug("Runspeed by calliper($$Paper{calliper}): $run_speed on $$Press{strid}");
+$openprint::log->debug("Runspeed by calliper($$Paper{calliper}): $run_speed on $$Press{strid}");
 	} else {
 		$run_speed = $Press->specification('Run Speed', $Paper->gsm() );
 	} # end if
 	#$run_speed = $$std_speed{value} if ! $run_speed;
-#$openprint::log->debug("Initial Runspeed: $run_speed, standard: $$std_speed{value}$$std_speed{units}");
+$openprint::log->debug("Initial Runspeed: $run_speed, standard: $$std_speed{value}$$std_speed{units}");
 
 	my %folding_results;
 
@@ -3939,7 +3939,7 @@ if ( 0 ) {
 			} # end if
 		} # end foreach
 
-if ( 1 ) {
+if ( 0 ) {
 		if ( ! $Ink ) {
 			$openprint::log->error("Didnt find ink real ($real_colour) ($colour) ($grade) in colours hash, must be a grade problem");
 			foreach my $C ( @{$special_colours{$colour}} ) {
@@ -3972,7 +3972,7 @@ if ( 1 ) {
 		   ) {
 			$price{'Press Washes'} += $$Ink{washups};
 			$$washed_colours{$key} += $$Ink{washups};
-$openprint::log->debug("Press Washes: $price{'Press Washes'} colour: $real_colour Washups: " . $$Ink{washups} );
+#$openprint::log->debug("Press Washes: $price{'Press Washes'} colour: $real_colour Washups: " . $$Ink{washups} );
 		} # end if
 #
 #$openprint::log->debug("Special Colour: $real_colour $$inkCoverage{$real_colour}");
