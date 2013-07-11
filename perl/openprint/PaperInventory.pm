@@ -51,6 +51,7 @@ $serial = 'paperinventory_id_seq';
 	updated_on	=>	'NOW()',
 	docket		=>	undef,
 	project_id	=>	undef,
+	instock		=>	undef,
 );
 
 # Returns a paper object specified by the parameters

@@ -333,13 +333,17 @@ sub add {
 		$quantity =~ s/[^\d]//g;
 # Set
 	} # end if
-	$C->save({
-			skid_id		=> $$self{'id'},
-			paper_id	=>	$Paper->id(),
+	$_ = $C->save({
+			skid_id			=>	$$self{'id'},
+			paper_id		=>	$Paper->id(),
 			condition_id	=>	$Condition->id(),
-			quantity	=>$quantity,
+			quantity		=>	$quantity,
 			( ( $Purpose and $Purpose->id() ) ? ( purpose_id => $Purpose->id() ) : () ),
 			});
+	if ( $_ ) {
+		$log->debug("Bufer");
+		$openprint::log->error("Error adding skidcontent: $_");
+	} # end if
 	return $quantity - $old_quantity;
 } # end sub add
 
@@ -427,8 +431,8 @@ sub Content {
 } # end sub Content
 
 sub Contents {
+	return () if ! $_[0]{id};
     my $self = shift;
-	return () if ! $$self{'id'};
 
 	if ( @_ ) {
 		if ( ! defined $_[0] ) {
@@ -440,8 +444,8 @@ sub Contents {
 			$params{'skid_id'} = $$self{'id'};
 			return openprint::SkidContent::find( %params );
 		} # end if
-	} elsif ( ! $$self{'Contents'} ) {
-		@{$$self{'Contents'}} = openprint::SkidContent::find( 'skid_id'=>$$self{'id'} );
+	} elsif ( ! $$self{Contents} ) {
+		$$self{Contents} = [ openprint::SkidContent::find( 'skid_id'=>$$self{'id'} ) ];
 	} # end if
 	return @{$$self{'Contents'}};
 } # end sub Contents

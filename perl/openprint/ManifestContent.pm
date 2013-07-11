@@ -13,6 +13,7 @@ require openprint::Skid;
 require openprint::RFIDTag;
 require openprint::SkidContent;
 require openprint::Location;
+require openprint::PaperAllocation;
 
 $debug = 1;
 
@@ -332,7 +333,7 @@ sub check {
 			$error .= qq`RFID does not match Tag assigned to skid <a href="/employee/inventory/skid_details.html?skid_id=$$Skid{id}">$$Skid{id} $$Skid{rfidtag_id}</a><br/>`;
 		} # end if
 	} # end if
-	
+
 	if ( $$MC{skid_id} and openprint::ManifestContent->find_one( 'id !=' => $$MC{id}, skid_id=>$$MC{skid_id}, manifest_id=>$$MC{manifest_id} ) ) {
 		$error .= 'Skid id has been entered more than once on this Manifest.<br/>';
 	} # end if
@@ -342,6 +343,102 @@ sub check {
 
 	return $error;
 } # end sub check
+
+sub apply {
+	my ( $MC, $Project ) = @_;
+
+	my $error;
+	my $Tag = $MC->RFIDTag();
+	$error .= $Tag->save() if $MC->rfidtag_id() and ! $Tag->created_on();
+
+	my $skid_changes = '';
+
+	my $Skid = $MC->Skid();
+	if ( $$MC{manufacturers_id} ) {
+		my $found_other_skid = 0;
+		if ( my $S = openprint::Skid->find_one(manufacturers_id=>$$MC{manufacturers_id}) ) {
+			if ( $Skid->id() ) {
+				if ( $S->id() != $Skid->id() ) {
+					$error .= "Manufacturers ID $$MC{manufacturers_id} for skid <a href=\"/employee/inventory/skid_details.html?skid_id=$$MC{skid_id}\">$$MC{skid_id}</a> is already assigned to <a href=\"/employee/inventory/skid_details.html?skid_id=$$S{id}\">$$S{id}</a>.";
+					$error .= ssi::button( 'Replace'.$$MC{id}, { href=>'/employee/inventory/manifest.html?manifest_content_id='.$$MC{id}.'&action=replace&skid_id='.$$S{id}, text=>'Replace' } ) . '<br/>';
+					$found_other_skid = 1;
+				} # end if
+			} else {
+				$Skid = $S;
+			} # end if
+		} # end if
+		if ( ( ! $found_other_skid ) and ( ! $Skid->manufacturers_id() ) ) {
+			$Skid->set({manufacturers_id=>$$MC{manufacturers_id}});
+			$skid_changes .= 'Assigned manufacturers id to ' . $$MC{manufacturers_id}.'<br/>';
+		} # end if
+	} # end if manufacturers_id
+	if ( ( ! $Skid->rfidtag_id() ) and $MC->rfidtag_id() ) {
+		if ( my $S = openprint::Skid->find_one(rfidtag_id=>$MC->rfidtag_id()) ) {
+			$error .= qq`RFIDTag is already on skid <a href="/employee/inventory/skid_details.html?skid_id=$$S{id}">$$S{s}</a><br/>`;
+		} else {
+			$Skid->rfidtag_id( $MC->rfidtag_id() );
+			$skid_changes .= 'Assigned rfidtag to ' . $$MC{skid_id}.'<br/>';
+		} # end if
+	} # end if
+
+	if ( $$MC{location_id} ) {
+		$Skid->location_id( $$MC{location_id} );
+		$$MC{location_id} = undef;
+		$skid_changes .= 'Changed location to ' . $Skid->Location()->name() . '<br/>';
+	} # end if
+	if ( ! $Skid->id() ) {
+		$skid_changes .= 'Skid Created.<br/>';
+		$$Skid{id} = $$MC{skid_id} if $$MC{skid_id};
+	} # end if
+	$error .= $Skid->save() if $skid_changes;
+	return $error if ! $Skid->id();
+
+	my $Paper = $MC->Type()->Paper();
+	my $Manifest = $MC->Manifest();
+
+	if ( $skid_changes ) {
+		my $PI = new openprint::PaperInventory();
+		$error .= $PI->save({
+				paper_id    =>  $$Paper{id},
+				user_id     =>  $openprint::session{user_id},
+				instock     =>  $Paper->in_stock(),
+				delta       =>  0,
+				comment     =>  'Changes from manifest <a href="/employee/inventory/manifest.html?manifest_id=' . $Manifest->id() . '">'. $Manifest->name().'</a>:<br/>'.$skid_changes,
+				skid_id     =>  $$Skid{id},
+				});
+	} # end if
+
+	$MC->skid_id( $$Skid{id} ) if ! $MC->skid_id();
+	$error .= $MC->save();
+
+	my $SkidContent = openprint::SkidContent->find_one( skid_id=>$Skid->id(), paper_id=>$$Paper{id} );
+	my $checked_out = $SkidContent->checked_out() if $SkidContent;
+	$SkidContent = {} if ! $SkidContent;
+
+	$openprint::log->debug("Skid qty: $$SkidContent{quantity} != $$MC{quantity} checked_out($checked_out)");
+	if ( ( $$SkidContent{quantity} != $$MC{quantity} ) and ! $checked_out ) {
+		openprint::employee_inventory::save_inventory( $Skid, $Paper, $$MC{quantity}, sprintf('Inventory adjusted by manifest <a href="/employee/inventory/manifest.html?manifest_id=%1$d">%2$s</a>.', $Manifest->id(), $Manifest->name() ) );
+		if ( $SkidContent = openprint::SkidContent->find_one( skid_id=>$Skid->id(), paper_id=>$$Paper{id} ) ) {
+	
+		$openprint::log->debug("New skidcontent: " . $SkidContent->to_string() );
+		} else {
+		$openprint::log->debug("No New skidcontent: " );
+		} 
+	} # end if
+	if ( $Project and ! $checked_out ) {
+		my $PA = openprint::PaperAllocation->find_one( skid_id=>$MC->skid_id() );
+		if ( ! $PA ) {
+			$Paper->allocate( $Skid, $Project->id(), $MC->quantity(), $Paper->units() );
+			$error .= sprintf('Allocated %1$d%2$s to docket <a href="/employee/project/view.html?ProjectIndex=%3$d">%4$d</a>.<br/>', $MC->quantity(), $Paper->units(), $Project->id(), $Project->docket() );
+		} elsif ( ! $PA->project_id() ) {
+			$error .= $PA->save({ project_id=>$Project->id()});
+			$error .= sprintf('Updated allocation %1$d%2$s to docket <a href="/employee/project/view.html?ProjectIndex=%3$d">%4$d</a>.<br/>', $MC->quantity(), $Paper->units(), $Project->id(), $Project->docket() );
+		} elsif ( $PA->project_id() != $Project->id() ) {
+			$error .= sprintf('Skid <a href="/employee/inventory/skid_details.html?skid_id=%1$d">%1$d</a> already allocated to docket <a href="/employee/project/view.html?ProjectIndex=%2$d">%3$d</a>.<br/>', $MC->skid_id(), $PA->project_id(), $PA->docket() );
+		} # end if
+	} # end if
+	return $error;
+} # end sub apply
 
 1;
 __END__

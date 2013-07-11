@@ -117,6 +117,7 @@ if ( tr ) tr.remove();
 		} # end if
 		$html .= '<td class="Location">'.ssi::select( $variable{'location_dropdown'}, $C->location_id(), { name=>'location_id-'.$id, prepend=>['','select'] } ).'</td>';
 		$html .= '<td class="buttons">' . join("\n",
+				button( 'A'.$$C{id}, { onclick=>qq`apply_content('$$C{id}');`, text=>'A', title=>'Apply' } ),
 				button( 'X'.$$C{id}, { onclick=>qq`delete_content('$$C{id}');`, text=>'X', title=>'Remove' } ),
 				( $$C{FixStockOnSkid} ? button( 'Fix'.$$C{id}, { onclick=>qq`fix_content('$$C{id}');`, text=>'Fix' } ) : () ),
 				) . '</td>';

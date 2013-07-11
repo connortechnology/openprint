@@ -138,6 +138,17 @@ function fix_content( c_id ) {
 	 } );
 } // end function fix_content( c_id )
 
+function apply_content( c_id ) {
+	new Ajax.Updater( 'tr-'+c_id, '_manifest_content.html', {
+		parameters: { content_id: c_id, action: 'Apply' },
+		onSuccess: function(transport){
+			var tr = $('tr-'+c_id+'-error');
+			if ( tr ) tr.remove();
+		},
+		evalScripts: true
+	 } );
+} // end function apply_content( c_id )
+
 function manifest_onsubmit(form) {
 
 	var re = /^txtName-(\d+)$/;

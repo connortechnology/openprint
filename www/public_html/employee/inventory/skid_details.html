@@ -22,7 +22,7 @@
 			<input type="number" id="rfidtag_id" name="rfidtag_id" onkeyup="this.value=this.value.replace(/\s/,'');" onkeypress="return input_handler( this, event);" onkeydown="this.form.skid_id.value='';this.form.rfidtag_hex.value='';if(event.keyCode == 13){$('jump').submit();}" value="<?rfidtag_id?>" />
 			Hex:
 			<input type="text" id="rfidtag_hex" name="rfidtag_hex" onkeyup="this.value=this.value.replace(/\s/,'');" onkeydown="this.form.skid_id.value='';this.form.rfidtag_id.value='';if(event.keyCode == 13){$('jump').submit( );}" />
-			<? echo ( button( 'Load', { onclick=>"\$('jump').submit();", href=>'', text=>'Load' } ); ) ?><br/>
+			<? echo ( button( 'Load', { onclick=>"\$('jump').submit();", text=>'Load' } ); ) ?><br/>
 			<? if ( ! $$variable{'Skid'}->id() and $param{'rfidtag_id'} ) ?>
 				<? echo ( return join('<br/>', map { sprintf('<a href="/employee/inventory/rfidtag_details.html?rfidtag_id=%2$s">%2$s</a> <a href="/employee/inventory/skid_details.html?skid_id=%1$d">%1$d</a>', $_->skid_id(), $_->id() ); }  openprint::RFIDTag::find('id_like'=>'%'.$param{'rfidtag_id'}.'%','type'=>'Skid') ); ) ?>
 			<? endif ( ! $$variable{'Skid'}->id() and $param{'rfidtag_id'} ) ?>
@@ -115,8 +115,8 @@
 						) ?>
 				</select>
 				<? echo ( join('',
-				#button( 'updateLocation', { onclick=>"jsrsExecute( '/jsrs.htm',  cbFillResults, 'openprint::Ekahau::jsrs_find', serialize(f1) );", href=>'', text=>'Update Location' } ),
-				#button( 'showLocation', { onclick=>"open_window('/ekahau.png?skid_id=$$variable{Skid}{id}','Location','width=640,height=640');", href=>'', text=>'Show Location' } ),
+				#button( 'updateLocation', { onclick=>"jsrsExecute( '/jsrs.htm',  cbFillResults, 'openprint::Ekahau::jsrs_find', serialize(f1) );", text=>'Update Location' } ),
+				#button( 'showLocation', { onclick=>"open_window('/ekahau.png?skid_id=$$variable{Skid}{id}','Location','width=640,height=640');", text=>'Show Location' } ),
 				button( 'Map', { 'onclick'=>"open_window('/maps/index.html?parent&amp;location_id='+get_ddm_value(f1.ddmLocation)+'&amp;selected_id='+get_ddm_value(f1.ddmLocation)+'&amp;skid_id=$$variable{Skid}{id}','Location','width=400,height=400,scrollbars=yes');" } ),
 				); ) ?>
 			</li>
@@ -149,7 +149,7 @@
 			</ul>
 			<? if ( ! $$variable{'Skid'}->id() ) ?>
 			<p class="buttons">
-			<? echo ( button( 'saveLeft', { onclick=>"if( check_inputs( f1 ) ){f1.btnFunction.value='Save';f1.submit();};", href=>'', text=>'Save' } ); ) ?>
+			<? echo ( button( 'saveLeft', { onclick=>"if( check_inputs( f1 ) ){f1.btnFunction.value='Save';f1.submit();};", text=>'Save' } ); ) ?>
 			</p>
 			<? endif ( ! $$variable{'Skid'}->id() ) ?>
 
@@ -168,20 +168,20 @@
 			<? echo ( 
 					my $html;
 					if ( $$variable{'Skid'}->id() ) {
-						$html .= button( 'label', { onclick=>"open_window('/employee/inventory/paper_label_window.html?skid_id=$$variable{Skid}{id}', 'label', 'toolbar=no,width=400,height=400,location=no,resizeable=no,scrollbars=no,status=no');", href=>'', text=>'Print Label' } );
-						$html .= button( 'Copy', { onclick=>"f1.btnFunction.value='Copy';f1.submit();", href=>'', text=>'Copy' } );
+						$html .= button( 'label', { onclick=>"open_window('/employee/inventory/paper_label_window.html?skid_id=$$variable{Skid}{id}', 'label', 'toolbar=no,width=400,height=400,location=no,resizeable=no,scrollbars=no,status=no');", text=>'Print Label' } );
+						$html .= button( 'Copy', { onclick=>"f1.btnFunction.value='Copy';f1.submit();", text=>'Copy' } );
 					} # end if
-					$html .= button( 'save', { onclick=>"if( check_inputs( f1 ) ){f1.btnFunction.value='Save';f1.submit();}", href=>'', text=>'Save' } );
+					$html .= button( 'save', { onclick=>"if( check_inputs( f1 ) ){f1.btnFunction.value='Save';f1.submit();}", text=>'Save' } );
 					if ( $$variable{'Skid'}->id() ) {
 						if ( $$variable{Skid}->deleted() ) {
-							$html .= button( 'destroy', { onclick=>"f1.action='skids.html?skid_id=$$variable{Skid}{id}';f1.btnFunction.value='Destroy';f1.submit();", href=>'', text=>'Destroy' } );
-							$html .= button( 'undelete', { onclick=>"f1.action='skids.html?skid_id=$$variable{Skid}{id}';f1.btnFunction.value='Undelete';f1.submit();}", href=>'', text=>'Undelete' } );
+							$html .= button( 'destroy', { onclick=>"f1.action='skids.html?skid_id=$$variable{Skid}{id}';f1.btnFunction.value='Destroy';f1.submit();", text=>'Destroy' } );
+							$html .= button( 'undelete', { onclick=>"f1.btnFunction.value='Undelete';f1.submit();", text=>'Undelete' } );
 						} else {
-							$html .= button( 'delete', { onclick=>"if(confirm('You should never do this. You should just check out the contents of the skid.  Are you sure?')){f1.action='skids.html?skid_id=$$variable{Skid}{id}';f1.btnFunction.value='Delete';f1.submit();}", href=>'', text=>'Delete' } );
+							$html .= button( 'delete', { onclick=>"if(confirm('You should never do this. You should just check out the contents of the skid.  Are you sure?')){f1.action='skids.html?skid_id=$$variable{Skid}{id}';f1.btnFunction.value='Delete';f1.submit();}", text=>'Delete' } );
 						} # end if
 					} # end if
-					$html .= button( 'reset', { onclick=>'f1.reset();', href=>'', text=>'Reset' } );
-					#$html .= button( 'clear', { onclick=>'clearForm(f1);', href=>'', text=>'Clear' } );
+					$html .= button( 'reset', { onclick=>'f1.reset();', text=>'Reset' } );
+					#$html .= button( 'clear', { onclick=>'clearForm(f1);', text=>'Clear' } );
 					$html .= button( 'addnew', { onclick=>'', href=>'skid_details.html', text=>'Add New Skid' } ) if $$variable{'Skid'}->id();
 					return $html;
 			) ?>
