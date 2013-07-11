@@ -15,7 +15,7 @@ require openprint::SkidContent;
 require openprint::Location;
 require openprint::PaperAllocation;
 
-$debug = 1;
+$debug = 0;
 
 $table = 'manifestcontents';
 $serial = 'manifestcontents_id_seq';
