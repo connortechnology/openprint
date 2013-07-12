@@ -272,6 +272,7 @@ sub ink {
 			name	=>	$param{name},
 			pmsid	=>	$param{pmsid},
 			washups	=>	$param{washups},
+			mix		=>	$param{mix},
 			service_id	=>	$param{service_id},
 			material_id	=>	$param{material_id},
 			grades		=>	$grades,
