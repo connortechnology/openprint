@@ -1317,6 +1317,14 @@ onDestroy: function(eventName, win) {
 function toggle_input( ddm, txt ) {
 	ddm.toggle();
 	txt.toggle();
+	if ( ddm.visible() ) {
+		ddm.focus();
+		txt.value = '';
+	} 
+	if ( txt.visible() ) {
+		txt.focus();
+		ddm.selectedIndex = -1;
+	}
 }
 function getValues( form, element_names, more_values ) {
 	form = $(form);

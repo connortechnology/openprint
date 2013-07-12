@@ -140,11 +140,13 @@ sub Paycheques {
 sub paycheque_id {
 	my $PT = openprint::Paycheque_Timetrack->find_one('timetrack_id'=>$_[0]{'id'});
 	return $$PT{'paycheque_id'} if $PT;
-	return undef;
+	return;
 } # end sub paycheque_id
+
 sub paid {
 	return $_[0]->Paycheques() ? 1 : 0;
 } # end sub paid
+
 sub invoiced {
 	return $_[0]->invoice_id() ? 1 : 0;
 } # end sub invoiced

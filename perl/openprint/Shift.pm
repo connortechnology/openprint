@@ -1,8 +1,8 @@
+use strict;
 package openprint::Shift;
-@ISA = qw(openprint::Object);
+our @ISA = qw(openprint::Object);
 require openprint::Object;
 
-use strict;
 use openprint ();
 use vars qw(%variable $log $dbh %config %session $debug $table $serial %fields %find_fields %transforms %defaults );
 *variable = \%openprint::variable;

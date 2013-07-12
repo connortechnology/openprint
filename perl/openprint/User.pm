@@ -556,6 +556,9 @@ sub Location {
 			$Location = openprint::Location->find_one( 'type'=>'city', 'name'=>$City->name() );
 		} # end if
 		if ( ! $Location ) {
+			$Location = openprint::Location::google( join('+', $Profile->postalcode(), $Profile->city() ) );
+		} # end if
+		if ( ! $Location ) {
 			$log->error("Still no location");
 			return new openprint::Location();
 		} # endif

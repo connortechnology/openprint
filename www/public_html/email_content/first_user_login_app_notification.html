@@ -24,3 +24,4 @@ How did they hear about us:	<? echo ( $$variable{'User'}->howdidyouhearaboutus()
 : <? echo ( $$variable{'User'}->howdidyouhearaboutusother() ) ?>
 <? endif ( sets::isin( $$variable{'User'}->howdidyouhearaboutus(), ['Other','CSR'] ) ) ?>
 <br/>
+<?include(/account/_user_profile_view.html)?>

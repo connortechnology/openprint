@@ -39,6 +39,7 @@ $serial = 'paperinventory_id_seq';
 	updated_on	=>	'NOW()',
 	docket		=>	undef,
 	project_id	=>	undef,
+	instock		=>	undef,
 );
 
 sub Paper {

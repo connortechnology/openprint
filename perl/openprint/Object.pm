@@ -22,7 +22,7 @@ use vars qw( $log $dbh $AUTOLOAD %cache %name_cache %fields %defaults %transform
 *config = \%openprint::config;
 
 my $debug = 0;
-my $debug_all = 1;
+use constant DEBUG_ALL => 0;
 $no_cache = 0;
 
 sub init_cache {
@@ -65,7 +65,7 @@ sub new {
 		bless $self, $parent;
 
 		if ( ( $$self{'id'} = $id ) or $data ) {
-#$log->debug("loading $parent $id") if $debug or $debug_all;
+#$log->debug("loading $parent $id") if $debug or DEBUG_ALL;
 			$self->load( $data );
 		} # end if
 		if ( ! $no_cache ) {
@@ -103,7 +103,7 @@ sub load {
 	no strict 'refs';
 	my $fields = \%{$type.'::fields'};
 	my $debug = ${$type.'::debug'};
-	$debug = $debug_all if ! $debug;
+	$debug = DEBUG_ALL if ! $debug;
 	my $starttime = [gettimeofday] if $debug;
 	if ( ! $data ) {
 #$log->debug("Object::load Loading from db $type");
@@ -158,7 +158,7 @@ if ( $debug ) {
 	my $table = eval '$'.$type.'::table';
 	my $fields = eval '\%'.$type.'::fields';
 	my $debug = eval '$'.$type.'::debug';
-	$debug = $debug_all if ! $debug;
+	$debug = DEBUG_ALL if ! $debug;
 
 	my %sql;
 	foreach my $k ( keys %$fields ) {
@@ -191,7 +191,7 @@ $log->debug("No serial") if $debug;
 			foreach my $id ( @identified_by ) {
 				next if ! $serial{$id};
 				($$self{$id}) = ($sql{$$fields{$id}}) = $local_dbh->selectrow_array( q{SELECT nextval('} . $serial{$id} . q{')} );
-				$log->debug("SQL statement execution SELECT nextval('$serial{$id}') returned $$self{$id}") if $debug or $debug_all;
+				$log->debug("SQL statement execution SELECT nextval('$serial{$id}') returned $$self{$id}") if $debug or DEBUG_ALL;
 				$insert = 1;
 			} # end foreach
 		} # end if
@@ -206,7 +206,7 @@ $log->debug("No serial") if $debug;
 				sql::end_transaction( $local_dbh, $ac );
 				return $error;
 			} # end if
-			if ( $debug or $debug_all ) {
+			if ( $debug or DEBUG_ALL ) {
 				$command =~ s/\?/\%s/g;
 				$log->debug('SQL statement execution: ('.sprintf($command, , map { defined $_ ? $_ : 'undef' } ( @sql{@keys} ) ).'):' );
 			} # end if
@@ -221,7 +221,7 @@ $log->debug("No serial") if $debug;
 				sql::end_transaction( $local_dbh, $ac );
 				return $error;
 			} # end if
-			if ( $debug or $debug_all ) {
+			if ( $debug or DEBUG_ALL ) {
 				$command =~ s/\?/\%s/g;
 				$log->debug('SQL DEBUG: ('.sprintf($command, map { defined $_ ? $_ : 'undef' } ( @sql{@keys,@identified_by} ) ).'):' );
 			} # end if
@@ -232,7 +232,7 @@ $log->debug("No serial") if $debug;
 				my $serial = eval '$'.$type.'::serial';
 				if ( $serial ) {
 					($$self{id}) = ($sql{$$fields{id}}) = $local_dbh->selectrow_array( q{SELECT nextval('} . $serial . q{')} );
-					$log->debug("SQL statement execution SELECT nextval('$serial') returned $$self{id}") if $debug or $debug_all;
+					$log->debug("SQL statement execution SELECT nextval('$serial') returned $$self{id}") if $debug or DEBUG_ALL;
 				} # end if
 			} # end if
 			my @keys = keys %sql;
@@ -245,7 +245,7 @@ $log->debug("No serial") if $debug;
 				sql::end_transaction( $local_dbh, $ac );
 				return $error;
 			} # end if
-			if ( $debug or $debug_all ) {
+			if ( $debug or DEBUG_ALL ) {
 				$command =~ s/\?/\%s/g;
 				$log->debug('SQL DEBUG: ('.sprintf($command, map { defined $_ ? $_ : 'undef' } ( @sql{@keys} ) ).'):' );
 			} # end if
@@ -261,7 +261,7 @@ $log->debug("No serial") if $debug;
 				sql::end_transaction( $local_dbh, $ac );
 				return $error;
 			} # end if
-			if ( $debug or $debug_all ) {
+			if ( $debug or DEBUG_ALL ) {
 				$command =~ s/\?/\%s/g;
 				$log->debug('SQL DEBUG: ('.sprintf($command, map { defined $_ ? ( ref $_ eq 'ARRAY' ? join(',',@{$_}) : $_ ) : 'undef' } ( @sql{@keys}, $$self{'id'} ) ).'):' );
 			} # end if
@@ -497,7 +497,7 @@ sub find {
 	my $object_type = shift;
 
 	my $debug = ${$object_type.'::debug'};
-	$debug = $debug_all if ! $debug;
+	$debug = DEBUG_ALL if ! $debug;
 	my $starttime = [gettimeofday] if $debug;
 
 	my $params;
@@ -652,7 +652,7 @@ sub find {
 	} # end if
 
 	if ( $$fields{'deleted'} and ! sets::isin( 'deleted', \@used_fields ) ) {
-		push @where, '(deleted=? OR deleted IS NULL)';
+		push @where, 'deleted=?';
 		push @values, 0;
 	} # end if
 
@@ -755,7 +755,7 @@ sub AUTOLOAD {
 					}; # end eval
 					if ( $@ ){
 						$log->error( "Eval error of Object::AUTOLOAD $type -> $name, Reason: " . $@ );
-						return undef;
+						return;
 					} # end if
 					return $O;
 				} # end if
@@ -783,7 +783,8 @@ sub sort_value {
 
 sub sort {
 	my $type = shift;
-	return sort { $$a{'name'} cmp $$b{'name'} } @_;
+	my @results = sort { $$a{'name'} cmp $$b{'name'} } @_;
+	return @results;
 } # end sub sort
 
 # Warning, this is destructive to objects

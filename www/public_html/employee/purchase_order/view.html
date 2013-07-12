@@ -1,5 +1,5 @@
 <? if ( $$variable{PurchaseOrder}->can_view() ) ?>
-<form id="f2" name="f2" action="/employee/purchase_order/history.html" method="post" enctype="multipart/form-data">
+<form id="f2" name="f2" action="/employee/purchase_order/view.html" method="post">
 	<input type="hidden" name="btnFunction" />
 	<input type="hidden" name="po_id" value="<? echo ( $$variable{PurchaseOrder}->id() ) ?>" />
 	<?include('/includes/error_reporting.html')?>
@@ -27,9 +27,9 @@
 			$html .= button( 'Delete', { onclick=>q`if(confirm('Are you sure?')){f2.btnFunction.value='Delete';f2.submit();};` } );
 		} # end if
 		if ( $$variable{PurchaseOrder}->cancelled() eq '1' ) {
-			$html .= button( 'UnCancel', { onclick=>q`$('buttons').innerHTML='Please wait. Uncancelling...';f2.btnFunction.value='UnCancel';f2.submit();` } );
+			$html .= button( 'UnCancel', { onclick=>q`f2.btnFunction.value='UnCancel';f2.submit();` } );
 		} elsif ( $$variable{PurchaseOrder}->cancelled() eq '0' ) {
-			$html .= button( 'Cancel', { onclick=>q`$('buttons').innerHTML='Please wait. Cancelling...';f2.btnFunction.value='Cancel';f2.submit();` } );
+			$html .= button( 'Cancel', { onclick=>q`f2.btnFunction.value='Cancel';f2.submit();` } );
 		} # end if
 	} # end if can edit
 	$html .= button( 'Copy', { onclick=>q`f2.action='view.html';f2.btnFunction.value='Copy';f2.submit();` } );

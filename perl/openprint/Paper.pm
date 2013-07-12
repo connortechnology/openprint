@@ -822,12 +822,22 @@ sub in_stock {
 	} # end if
 
 	if ( ! defined $_[0]{'in_stock'} ) {
-		foreach my $SkidContent ( openprint::SkidContent->find(deleted=>0,paper_id=>$_[0]{id},'quantity >'=>0,'location not in'=>['Missing']) ) {
-			$_[0]{in_stock} += $SkidContent->quantity();
+		foreach my $SkidContent ( $_[0]->SkidContents() ) {
+			$_[0]{'in_stock'} += $SkidContent->quantity();
 		} # end foreach SkidContent
 	} # end if
     return $_[0]{'in_stock'};
 } # end sub in_stock
+
+sub SkidContents {
+	if ( @_ > 1 ) {
+		$_[0]{SkidContents} = $_[1];
+	} # end if
+	if ( ! $_[0]{SkidContents} ) {
+		$_[0]{SkidContents} = [ openprint::SkidContent->find(deleted=>0,paper_id=>$_[0]{id},'quantity >'=>0,'location not in'=>['Missing']) ];
+	} # end if
+	return @{$_[0]{SkidContents}};
+} # end sub SkidContents
 
 sub available {
 	my $self = shift;
@@ -842,8 +852,9 @@ sub available {
 
 	if ( ! exists $$self{available} ) {
 		$$self{available} = 0;
-		foreach my $SkidContent ( openprint::SkidContent->find('condition not in'=>['Damaged','Used'], deleted=>0,paper_id=>$$self{id},'quantity >'=>0,'location not in'=>['Missing'] ) ) {
-			$$self{available} += int $SkidContent->quantity();
+		foreach my $SkidContent ( $self->SkidContents() ) {
+			next if sets::isin( $SkidContent->condition(), ['Damaged', 'Used' ] );
+			@$self{available} += int $SkidContent->quantity();
 		} # end foreach SkidContent
 		$$self{available} -= $self->allocated();
 	} # end if
@@ -851,10 +862,13 @@ sub available {
 } # end sub available
 
 sub skids {
-	my $self = shift;
-	return 0 if ! $$self{'id'};
-	return openprint::Skid->find( paper_id=>$$self{id}, 'quantity >='=>1);
-	#return map { new openprint::Skid( $_ ) } sql::execute( undef, undef, q{SELECT skid_id FROM skid_contents WHERE paper_id=? and quantity > 0}, $$self{'id'} );
+	return 0 if ! $_[0]{id};
+	if ( $_[0]{SkidContents} ) {
+		return map { $_->Skid() } @{$_[0]{SkidContents}};
+	} else {
+		return openprint::Skid->find( paper_id=>$_[0]{id}, 'quantity >='=>1);
+	} # end if
+    #return map { new openprint::Skid( $_ ) } sql::execute( undef, undef, q{SELECT skid_id FROM skid_contents WHERE paper_id=? and quantity > 0}, $$self{'id'} );
 } # end sub skids
 
 sub previous {
@@ -1458,7 +1472,10 @@ sub start_sheet_weight {
 } # end sub start_sheet_weight
 
 sub units {
-	return $_[0]{'type'} eq 'Roll' ? 'lbs' : 'sheets';
+	return ($_[0]{'type'} eq 'Roll' ? 'lb' : 'sheet') . ( $_[1] == 1 ? '' : 's' );
+} # end sub units
+sub types {
+	return ($_[0]{'type'} eq 'Roll' ? ' roll' : 'sheet') . ( $_[1] == 1 ? '' : 's' );
 } # end sub units
 
 sub Supplied {

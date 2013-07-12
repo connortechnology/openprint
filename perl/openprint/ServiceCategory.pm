@@ -1,17 +1,17 @@
+use strict;
 package openprint::ServiceCategory;
-@ISA = qw( openprint::Object );
-use openprint ();
+our @ISA = qw( openprint::Object );
 require openprint::Service;
 
-use vars qw($log $dbh $table $serial %fields %transforms %defaults );
-*log = \$openprint::log;
-*dbh = \$openprint::dbh;
+use vars qw( $debug $table $serial %fields %transforms %defaults );
+
+$debug = 0;
 $table = 'Service_Categories';
 $serial = 'Service_Categories_id_seq';
 
 %fields = (
-	'id','id',
-	'name','name',
+	id		=>	'id',
+	name	=>	'name',
 );
 %transforms = (
 );
@@ -19,13 +19,11 @@ $serial = 'Service_Categories_id_seq';
 );
 
 sub Services {
-	my $self = shift;
-	if ( ! $$self{'Services'} ) {
-		@{$$self{'Services'}} = openprint::Service->find( 'category_id'=>$$self{'id'} );
+	if ( ! $_[0]{Services} ) {
+		$_[0]{Services} = [ openprint::Service->find( category_id=>$_[0]{id} ) ];
 	} # end if 
-	return @{$$self{'Services'}};
+	return @{$_[0]{Services}};
 } # end sub Services
-
 
 1;
 __END__

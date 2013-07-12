@@ -4,6 +4,7 @@ require openprint::Location_Type;
 require openprint::Asset;
 require openprint::Photo_Album;
 require Geo::Coder::Googlev3;
+require Math::Round;
 use Geo::IP;
 
 package openprint::Location;
@@ -153,7 +154,7 @@ sub parent_type {
 		$type = $_[0]->type();
 	} # end if
 	if ( $type eq 'country' ) {
-		return undef;
+		return;
 	} elsif ( $type eq 'state' ) {
 		return 'country';
 	} elsif ( $type eq 'city' ) {
@@ -177,7 +178,7 @@ sub child_type {
 	} elsif ( $type eq 'city' ) {
 		return 'place';
 	} elsif ( $type eq 'place' ) {
-		return undef;
+		return;
 	} # end if
 } # end sub child_type
 
@@ -390,7 +391,7 @@ $openprint::log->debug("Calcing distance from $lat1,$lon1 to $lat2,$lon2 units: 
 	} elsif ($unit eq "N") {
 		$dist = $dist * 0.8684;
 	}
-	return ($dist);
+	return Math::Round::nearest(0.1,$dist);
 }
 
 #::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::

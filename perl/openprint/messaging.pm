@@ -54,7 +54,7 @@ sub list {
 	my $Conversation = $variable{'Conversation'} = new openprint::Conversation( $param{'conversation_id'} );
 	if ( sets::isin( $param{'action'}, [ 'Save', 'Send' ] ) ) {
 		if ( ! $Conversation->id() ) {
-			$Conversation->save({'subject'=>$param{'subject'}});
+			$variable{error} .= $Conversation->save({ subject=>$param{subject}});
 		} # end if
 		my $Message = new openprint::Message();
 		if ( $param{'action'} eq 'Send' and ! $variable{'error'} ) {
@@ -118,7 +118,7 @@ sub view {
 		} # end if
 
 		if ( ! $Conversation->id() ) {
-			$variable{'error'} .= $Conversation->save({'subject'=>$param{'subject'}});
+			$variable{error} .= $Conversation->save({ subject=>$param{subject}});
 		} # end if
 		my $Message = new openprint::Message();
 		if ( $param{'action'} eq 'Send' and ! $variable{'error'} ) {
@@ -126,21 +126,22 @@ sub view {
 		} # end if send
 		$variable{'error'} .= $Message->save({
 			'conversation_id'	=>	$Conversation->id(),
-			'from'				=>	$session{'user_id'},
-			'body'				=>	$param{'body'},
+			'from'				=>	$session{user_id},
+			'body'				=>	$param{body},
 			});
 		foreach my $user_id ( ref $param{'to_id'} eq 'ARRAY' ? @{$param{'to_id'}} : ( $param{'to_id'} ) ) {
 			next if $user_id == $session{'user_id'};
 			my $Message_To = new openprint::Message_To();
 			$variable{'error'} .= $Message_To->save({
-				'message_id'	=>	$Message->id(),
-				'user_id'		=>	$user_id,
+				message_id	=>	$Message->id(),
+				user_id		=>	$user_id,
 			});
 		} # end foreach user_id in to
 		my $Message_To = new openprint::Message_To();
-		$variable{'error'} .= $Message_To->save({
-			'message_id'	=>	$Message->id(),
-			'user_id'		=>	$session{'user_id'},
+		$variable{error} .= $Message_To->save({
+			message_id	=>	$Message->id(),
+			user_id		=>	$session{'user_id'},
+			viewed		=>	1,
 		});
 		if ( (! $variable{'error'}) and (!$param{'conversation_id'}) ) {
 			$variable{'ExternalRedirect'} = '/messaging/list.html';

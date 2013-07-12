@@ -24,6 +24,20 @@ require openprint::Location;
 require openprint::Asset;
 require Date::Calc;
 
+my %months = (
+	jan	=>	'01',
+	feb	=>	'02',
+	mar	=>	'03',
+	apr	=>	'04',
+	may	=>	'05',
+	jun	=>	'06',
+	jul	=>	'07',
+	aug	=>	'08',
+	sep	=>	'09',
+	oct	=>	'10',
+	nov	=>	'11',
+	dec	=>	'12',
+);
 
 use vars qw( $log $dbh %config );
 *log = \$openprint::log;
@@ -189,7 +203,18 @@ $log->debug("GOt2 $posterurl");
 	} # end foreach img
 
 	$when =~ s/ at//;
+	$when =~ s/ Times very//i;
 	my $starting_time = Date::Parse::str2time( $when );
+	my $time_associated = 1;
+	if ( ! $starting_time ) {
+		$log->debug("No starttime_time from $when");
+	} # end if
+	if ( my ( $mon, $day, $year ) = $when =~ /(\w+) (\d+), (\d\d\d\d)/ ) {
+		$when = join('-', $year, $months{lc $mon}, $day);
+		$starting_time = Date::Parse::str2time( $when );
+		$time_associated = 0;
+	} # end if
+		
 	if ( ! $starting_time ) {
 		$log->debug("No starttime_time from $when");
 		next;
@@ -229,7 +254,7 @@ $log->debug("GOt2 $posterurl");
 		created_by	=>	$User->id(),
 		template	=>	0,
 		category	=>	'Wine Tasting',
-		time_associated	=> 1,
+		time_associated	=> $time_associated,
 		});
 	if ( $Asset ) {
 		my $Album = $Event->Album();
@@ -252,6 +277,36 @@ $log->debug("GOt2 $posterurl");
 
 } # end foreach post
 
+sub usage {
+	print <<EOH;
+
+usage: $program [--help] [--db_name \$db_name] [--db_host \$db_host] [--db_user \$db_user] [--db_pass \$db_pass] [ --output filename ]
+
+The purpose of this script is to monitor the hotfolders configured for each
+press for PPF files and perform conversions for Heidelberg JDF, Merge front 
+and backs for presses that require it, and to import the PPF previews and 
+other data into the IntelligentQuote system.
+
+Command-line options:
+
+	--help		Displays this message.
+
+	--db_host	The hostname of the machine on which the database resides.
+
+	--db_name	The name of the database.
+	
+	--db_user	The name of the user to use when connecting to the database.
+
+	--db_pass	The password to use when connecting to the database.
+
+    --output    File to store the session count in.
+
+    --log_file	File to output logs to.
+
+    --log_level	valid options debug, info, warn, error
+
+EOH
+}
 
 1;
 __END__

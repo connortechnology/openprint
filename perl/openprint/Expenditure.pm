@@ -1,22 +1,12 @@
-package openprint::Expenditure;
-@ISA = qw(openprint::Object);
-require openprint::Object;
-use MIME::QuotedPrint;
-
 use strict;
-use openprint ();
-use vars qw(%variable $log $dbh %config %session $table $serial %fields %transforms %defaults );
-*variable = \%openprint::variable;
-*log = \$openprint::log;
-*dbh = \$openprint::dbh;
-*config = \%openprint::config;
-*session = \%openprint::session;
+package openprint::Expenditure;
+our @ISA = qw(openprint::Object);
+require openprint::Object;
+require Math::Round::nearest;
 
-require sql;
-require ssi;
-require misc;
+use vars qw( $debug $table $serial %fields %transforms %defaults );
 
-my $debug = 0;
+$debug = 0;
 
 $table = 'expenditures';
 $serial = 'expenditures_id_seq';
@@ -53,8 +43,7 @@ sub Currency {
 } # end sub Currency
 
 sub federaltax {
-	my $self = shift;
-	return sprintf('%.2f', $$self{'amount'} * $$self{'federaltax_rate'}/100 );
+	return Math::Round::nearest( 0.01, $_[0]{amount} * $_[0]{federaltax_rate}/100 );
 } # end sub federaltax
 
 1;

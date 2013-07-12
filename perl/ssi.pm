@@ -317,6 +317,7 @@ sub getmonths {
 sub getdays {
 	my ( $selected, $year, $month ) = @_;
 	my $maxdays = 31;
+$log->debug("Year: $year, month: $month");
 	if ( $year and $month and ( $maxdays > Days_in_Month( $year, $month ) ) ) {
 		$maxdays = Days_in_Month( $year, $month );
 	} # en dif
@@ -591,16 +592,16 @@ sub date_select {
 #$log->debug($html);
 		} elsif ( ( $o eq 'd' ) and ( (!@fields) or sets::isin( 'day', \@fields ) ) ) {
 			$html .= sprintf('<select id="%1$s_day" name="%1$s_day" onchange="%2$s"><option value=""></option>', $prefix, $$options{'onchange'} );
-			$html .= getdays( $day, $year, $month );
+			$html .= getdays( $day, int($year), int($month) );
 			$html .= '</select>';
 #$log->debug($html);
 		} # endif
 	} # end foreach o
 	if ( $$options{'with_clear'} ) {
-		$html .= ssi::button( $prefix.'_clear', { 'onclick'=>q`date_clear( $('`.$prefix.q`_year'), $('`.$prefix.q`_month'), $('`.$prefix.q`_day') );`.$$options{'onchange'}, text=>'C', title=>'Clear', class=>'Clear'} );
+		$html .= button( $prefix.'_clear', { 'onclick'=>q`date_clear( $('`.$prefix.q`_year'), $('`.$prefix.q`_month'), $('`.$prefix.q`_day') );`.$$options{'onchange'}, text=>'C', title=>'Clear', class=>'Clear'} );
 	} # end if
 	if ( $$options{'with_today'} ) {
-		$html .= ssi::button( $prefix.'_today', { 'onclick'=>q`set_today( $('`.$prefix.q`_year'), $('`.$prefix.q`_month'), $('`.$prefix.q`_day') );`.$$options{'onchange'}, text=>'T', title=>'Today', class=>'Today'} );
+		$html .= button( $prefix.'_today', { 'onclick'=>q`set_today( $('`.$prefix.q`_year'), $('`.$prefix.q`_month'), $('`.$prefix.q`_day') );`.$$options{'onchange'}, text=>'T', title=>'Today', class=>'Today'} );
 	} # end if
 	$html .= '<span id="'.$prefix.'_alert"></span>';
 	$html .= '</span></span>';

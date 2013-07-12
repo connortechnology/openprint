@@ -118,7 +118,13 @@ sub edit {
 			$param{company_id} = $session{company_id} if ! $param{company_id};
 			$param{created_by} = $session{user_id} if ! $param{created_by};
 			$param{starting_on} = sprintf('%.4d-%.2d-%.2d %.2d:%.2d:00', @param{'starting_on_year','starting_on_month','starting_on_day','starting_on_hour','starting_on_minute'} );
-			$param{ending_on} = sprintf('%.4d-%.2d-%.2d %.2d:%.2d:00', @param{'ending_on_year','ending_on_month','ending_on_day','ending_on_hour','ending_on_minute'} );
+			if ( Date::Calc::check_date( @param{'ending_on_year','ending_on_month','ending_on_day'} ) ) {
+				$param{ending_on} = sprintf('%.4d-%.2d-%.2d %.2d:%.2d:00', @param{'ending_on_year','ending_on_month','ending_on_day','ending_on_hour','ending_on_minute'} );
+			} elsif ( ! ( $param{'ending_on_year'} or $param{ending_on_month} or $param{ending_on_day} ) ) {
+				$param{ending_on} = undef;
+			} else {	
+				$variable{error} .= 'Invalid ending date.<br/>';
+			} # end if
 			if ( $param{category_id} ) {
 				delete $param{category};
 			} elsif ( $param{category} ) {
