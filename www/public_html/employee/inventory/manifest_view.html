@@ -59,7 +59,7 @@
 				<br class="spacer"/>
 			</fieldset>
 			`, $Type->manufacturers_name(), $Type->item_count() );
-			$html .= '<fieldset>
+			my $table_header = '
 		<table class="List sortable">
 			<tr>
 				<th class="RFID">RFID</th>
@@ -70,12 +70,12 @@
 				<th class="qty_kgs">Quantity (kgs)</th>
 		';
 			if ( $Type->type() ne 'Roll' ) {
-				$html .= '<th class="qty_sheets">Quantity (sheets)</th>';
+				$table_header .= '<th class="qty_sheets">Quantity (sheets)</th>';
 			} # end if
 			if ( $Type->type() ne 'Sheet' ) {
-				$html .= '<th class="qty_feet">Quantity (feet)</th>';
+				$table_header .= '<th class="qty_feet">Quantity (feet)</th>';
 			} # end if
-			$html .= '
+			$table_header .= '
 				<th class="in_stock">In Stock</th>
 				<th class="last_seen">Last Seen</th>
 				<th class="Location">Location</th>
@@ -90,7 +90,23 @@
 					} # end foreach
 				} # end if
 
+				my $split_at = 45;
+				my $line_count = 0;
+
 				foreach my $C ( sort { $$a{id} <=> $$b{id} } @Contents ) {
+
+					if ( ! $line_count ) {
+						$html .= $table_header;
+					} elsif ( ! ( $line_count % $split_at ) ) {
+						$html .= '</table><br class="page_break"/>';
+						if ( $split_at == 45 ) {
+							$line_count = 0;
+							$split_at = 60;
+						} # end if
+						$html .= $table_header;
+					} # end if
+					$line_count += 1;
+					
 					my $Skid = $C->Skid();
 					$Skid->Contents( $SkidContents{$$Skid{id}} ? $SkidContents{$$Skid{id}} : [] );
 					my @SkidContents = @{$SkidContents{$$Skid{id}}} if $SkidContents{$$Skid{id}};
