@@ -1,22 +1,12 @@
-package openprint::Ledger;
-@ISA = qw(openprint::Object);
-require openprint::Object;
-use MIME::QuotedPrint;
-
 use strict;
-use openprint ();
-use vars qw(%variable $log $dbh %config %session $table $serial %fields %transforms %defaults );
-*variable = \%openprint::variable;
-*log = \$openprint::log;
-*dbh = \$openprint::dbh;
-*config = \%openprint::config;
-*session = \%openprint::session;
+package openprint::Ledger;
+our @ISA = qw(openprint::Object);
+require openprint::Object;
+require Math::Round::nearest;
 
-require sql;
-require ssi;
-require misc;
+use vars qw( $debug $table $serial %fields %transforms %defaults );
 
-my $debug = 0;
+$debug = 0;
 
 $table = 'Ledgers';
 $serial = 'ledgers_id_seq';
@@ -56,19 +46,17 @@ sub Payor {
 } # end sub Payor
 
 sub credit {
-	my $self = shift;
-	if ( @_ ) {
-		$$self{'credit'} = int($_[0] * 100);
+	if ( @_ > 1 ) {
+		$_[0]{credit} = int($_[1] * 100);
 	} # end if
-	return sprintf('%.2f', $$self{'credit'} / 100 );
+	return Math::Round::nearest( 0.01, $_[0]{credit} / 100 );
 } # end sub credit
 
 sub debit {
-	my $self = shift;
-	if ( @_ ) {
-		$$self{'debit'} = int($_[0] * 100);
+	if ( @_ > 1 ) {
+		$_[0]{debit} = int($_[1] * 100);
 	} # end if
-	return sprintf('%.2f', $$self{'debit'} / 100 );
+	return Math::Round::nearest( 0.01, $_[0]{debit} / 100 );
 } # end sub debit
 
 sub Currency {

@@ -154,7 +154,7 @@ sub parent_type {
 		$type = $_[0]->type();
 	} # end if
 	if ( $type eq 'country' ) {
-		return undef;
+		return;
 	} elsif ( $type eq 'state' ) {
 		return 'country';
 	} elsif ( $type eq 'city' ) {
@@ -178,7 +178,7 @@ sub child_type {
 	} elsif ( $type eq 'city' ) {
 		return 'place';
 	} elsif ( $type eq 'place' ) {
-		return undef;
+		return;
 	} # end if
 } # end sub child_type
 

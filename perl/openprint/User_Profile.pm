@@ -40,7 +40,7 @@ sub AUTOLOAD {
 		return $_[0]{'fields'}{$name}->value( );
 	} # end if
 	#return new openprint::User_Profile_Entry();
-	return undef;
+	return;
 } # end sub AUTOLOAD
 
 sub value {
@@ -82,7 +82,7 @@ sub value {
 		return $$Entry{'value'};
 	}
 	#$openprint::log->debug("Returning No Entry");
-	return undef;
+	return;
 } # end sub value
 
 sub Field {

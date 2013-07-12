@@ -1,6 +1,6 @@
-package openprint::product_price;
-@ISA = qw(openprint::price);
 use strict;
+package openprint::product_price;
+our @ISA = qw(openprint::price);
 
 sub save {
 	my $self = shift;
@@ -23,6 +23,4 @@ sub save {
 } # end sub save
 
 1;
-
 __END__
-~		

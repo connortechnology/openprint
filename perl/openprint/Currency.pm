@@ -93,7 +93,7 @@ sub convert_to {
 	} # end if
 	if ( ! $To ) {
 		$log->error('No Currency for ' . $_[1] );
-		return undef;
+		return;
 	} # end if
 	if ( $To and ( $$To{id} != $$From{id} ) ) {
 		my $rate = $From->conversions( $To->id() );

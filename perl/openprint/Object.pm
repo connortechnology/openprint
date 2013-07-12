@@ -755,7 +755,7 @@ sub AUTOLOAD {
 					}; # end eval
 					if ( $@ ){
 						$log->error( "Eval error of Object::AUTOLOAD $type -> $name, Reason: " . $@ );
-						return undef;
+						return;
 					} # end if
 					return $O;
 				} # end if
@@ -783,7 +783,8 @@ sub sort_value {
 
 sub sort {
 	my $type = shift;
-	return sort { $$a{'name'} cmp $$b{'name'} } @_;
+	my @results = sort { $$a{'name'} cmp $$b{'name'} } @_;
+	return @results;
 } # end sub sort
 
 # Warning, this is destructive to objects

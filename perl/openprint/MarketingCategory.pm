@@ -1,14 +1,12 @@
-package openprint::MarketingCategory;
-@ISA = qw( openprint::Object );
 use strict;
+package openprint::MarketingCategory;
+our @ISA = qw( openprint::Object );
 
 require sql;
 
 use openprint ();
 
-use vars qw( $debug $log $dbh %fields %find_fields %transforms %defaults $table $serial );
-*log = \$openprint::log;
-*dbh = \$openprint::dbh;
+use vars qw( $debug %fields %find_fields %transforms %defaults $table $serial );
 $debug = 0;
 %fields = (
 	'id'			=>	'id',
@@ -20,8 +18,8 @@ $debug = 0;
 	'user_id'		=>	'(SELECT user_id FROM users_in_marketing_categories WHERE category_id=marketing_categories.id)',
 	'company_id'	=>	'(SELECT company_id FROM companies_in_marketing_categories WHERE category_id=marketing_categories.id)',
 );
-$table = 'Marketing_Categories';
-$serial = 'Marketing_Category_id_seq';
+$table = 'marketing_categories';
+$serial = 'marketing_category_id_seq';
 
 sub delete {
 	my $self = shift;
@@ -48,8 +46,8 @@ sub Companies {
 } # end sub Companies
 
 sub companies {
-$openprint::log->warn("Deprecated use of MarketingCategory::companies");
-return Companies(@_);
+	$openprint::log->warn("Deprecated use of MarketingCategory::companies");
+	return Companies(@_);
 } # end sub companies
 
 sub add_company {
