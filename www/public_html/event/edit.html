@@ -10,8 +10,9 @@
 	});
 </script>
 <div class="Event"><div class="Edit">
+<?include(/includes/error_reporting.html)?>
 	<form name="f1" id="f1" action="/event/edit.html" method="post" enctype="multipart/form-data">
-		<fieldset><legend>Editing Event<? echo ( $$variable{Event}->id() ? '('.$$variable{Event}->id().')' : '' ) ?></legend>
+		<fieldset><legend>Editing Event<? echo ( $$variable{Event}->id() ? ' #'.$$variable{Event}->id() : '' ) ?></legend>
 			<? if ( $$variable{Event}->deleted() ) ?>
 			<span class="warning">This event has been deleted</span>
 			<? endif ( $$variable{Event}->deleted() ) ?>
@@ -70,22 +71,20 @@ $company_id = $session{company_id} if (!$company_id);
 							<label class="radio" for="time_associated1">No</label>
 						</li>
 						<li><label>Start</label>
-							<span class="DateTimeSelector"><? echo ( ssi::datetime_select( 'starting_on', $$variable{Event}->starting_on(),
+							<? echo ( datetime_select( 'starting_on', $$variable{Event}->starting_on(),
 										{
-										'onchange'	=>	q`check_time_starting(this.form,'starting_on','ending_on'); update_duration(this.form,'starting_on','ending_on');`,
-										'with_time'	=>	sets::isin( $$variable{Event}->time_associated(), [ '', 1 ] ),
-										'with_today'	=>	1,
+										onchange	=>	q`check_time_starting(this.form,'starting_on','ending_on'); update_duration(this.form,'starting_on','ending_on');`,
+										with_time	=>	sets::isin( $$variable{Event}->time_associated(), [ '', 1 ] ),
+										with_today	=>	1,
 										} ); ) ?>
-							</span>
 						</li>
 						<li><label>End</label>
-							<span class="DateTimeSelector"><? echo ( ssi::datetime_select( 'ending_on', $$variable{Event}->ending_on(), 
+							<? echo ( datetime_select( 'ending_on', ( $$variable{Event}->id() ? $$variable{Event}->ending_on() || '' : undef ), 
 										{
-											'onchange'	=>	q`update_duration(this.form,'starting_on','ending_on');`,
-											'with_time'	=>	sets::isin( $$variable{Event}->time_associated(), [ '', 1 ] ),
-											'with_today'	=>	1,
+											onchange	=>	q`update_duration(this.form,'starting_on','ending_on');`,
+											with_time	=>	sets::isin( $$variable{Event}->time_associated(), [ '', 1 ] ),
+											with_today	=>	1,
 							} ); ) ?>
-							</span>
 						</li>
 						<li><label>Duration</label>
 							<span id="duration">
