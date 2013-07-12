@@ -30,6 +30,7 @@ $serial = 'service_types_id_seq';
 %transforms = (
 );
 %defaults = (
+	deleted			=>	0,
 	category_id		=>	undef,
 	sorting			=>	undef,
 );
