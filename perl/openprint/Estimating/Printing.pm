@@ -3935,18 +3935,6 @@ if ( 0 ) {
 			foreach my $C ( @{$special_colours{$colour}} ) {
 				$openprint::log->error($C->to_string() );
 			} # end foreach C
-if ( 0 ) {
-			# Some PMS or other ink that we don't have in the system, since CMYK are in teh system (we assume), washes can be 1
-			$Ink = new openprint::Ink();
-			$$Ink{pmsid} = $real_colour;
-			if ( ! sets::isin( $real_colour, \@process_colours ) ) {
-				my $Service = openprint::Service->find_one(name=>'PMSInkMix');
-				$$Ink{service_id} = $Service->id() if $Service;
-				$$Ink{washups} = 1;
-				my $Material = openprint::Material->find_one(name=>$colour.'Ink');
-				$$Ink{material_id} = $Material->id() if $Material;
-			} # end if
-} # end if
 		} else {
 			$openprint::log->debug("Got INK: " . $Ink->to_string() );
 		} # end if
@@ -3974,11 +3962,11 @@ if ( 0 ) {
 
 $openprint::log->debug( $Ink->to_string() );
 		if ( $$Ink{service_id} ) {
-			if ( ! $mixed_colours{$real_colour} ) {
+			if ( $$Ink{mix} and ! $mixed_colours{$real_colour} ) {
 $openprint::log->debug("$real_colour needs mixing");
 				my %mix_price = $Ink->Service()->get_price(undef,$Press);
 $openprint::log->debug("Mix Price for $real_colour $mix_price{Price}");
-				$price{'Ink Mix Charge'} += $mix_price{Price};
+				$price{'Ink breakdown'} .= 'Mix: ' . $mix_price{Price};
 				$mixed_colours{$real_colour} = 1;
 			} else {
 $openprint::log->debug("Was mixed");
@@ -4123,7 +4111,7 @@ $openprint::log->debug("No Coverage for grade $grade Press: $$Press{strid}");
 		$price{'Plate Total'} += $$press_setup_cost{'Plate Total'};
 		@price{'Plate Setup Price','Plate Setup Count','Plate Setup Units'} = @$press_setup_cost{'Plate Price','Plate Count','Plate Units'};
 	} # end if
-	my $setup_cost = $press_setup + $price{'WorkTurn Dry Charge'} + $price{'Plate Total'} + $price{'Ink Mix Charge'} + $price{'Press Wash Total'} + $price{'Version Charge'};
+	my $setup_cost = $press_setup + $price{'WorkTurn Dry Charge'} + $price{'Plate Total'} + $price{'Press Wash Total'} + $price{'Version Charge'};
 
 	# Recalculate Overs, etc using Plate Count now
 	if ( $$project{'print_sides'} == 1 ) {
@@ -4280,7 +4268,7 @@ $openprint::log->warn("Something wrong in AQ");
 
 	$price{'Comparison Cost'} += $setup_cost;
 	$price{'Setup Total'} += $setup_cost;
-#$openprint::log->debug("Setup Cost $setup_cost = $press_setup + $price{'WorkTurn Dry Charge'} + $price{'Plate Total'} + $price{'Ink Mix Charge'} + $price{'Press Wash Total'} + $price{'Version Charge'} + $price{'Imposition Total'}");
+#$openprint::log->debug("Setup Cost $setup_cost = $press_setup + $price{'WorkTurn Dry Charge'} + $price{'Plate Total'} + $price{'Press Wash Total'} + $price{'Version Charge'} + $price{'Imposition Total'}");
 
 	$price{'Press Setup'} = $press_setup;
 
