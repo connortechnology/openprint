@@ -1960,7 +1960,7 @@ $openprint::log->debug("No printing");
 
 	my $project = setup_project( $Project, $service_index, $services, $specs, \@side_one_colours, \@side_two_colours, \%inkCoverage, $Papers[0] );
 $openprint::log->debug("Before select presses: " . ( sprintf('%.4f', tv_interval( [$master_time])*1000) ) .' usecs' );
-	my %presses = select_presses( $Project, $Papers[0], $specs, $project );
+	my %presses = select_presses( $Project, \@Papers, $specs, $project );
 	my @possible_presses;
 	foreach my $press_id ( keys %presses ) {
 		if ( ! $presses{$press_id} ) {
@@ -3141,7 +3141,7 @@ $openprint::log->error("Different paper in count versus imposition: $paper_strin
 					} # end if
 				} # end if
 
-$openprint::log->debug("Pricing Paper: Minimum Order: " . $Paper->minimum_order() );
+#$openprint::log->debug("Pricing Paper: Minimum Order: " . $Paper->minimum_order() );
 				if ( $Paper->minimum_order() ) {
 					# Assume sheets for sheets, lbs for Rolls
 					if ( $Paper->minimum_order() > $PaperCounts{$paper_string} ) {
@@ -3291,7 +3291,7 @@ $openprint::log->debug("Calculating Additional Signatures for other group");
 					my @Papers = get_Stocks( $Project, $specs );
 					if ( @Papers ) {
 						my $new_project = setup_project( $Project, $sigs[0], $Project->services(), $specs, \@side_one_colours, \@side_two_colours, \%inkCoverage, $Papers[0] );
-						my %presses = select_presses( $Project, $Papers[0], $specs, $project );
+						my %presses = select_presses( $Project, \@Papers, $specs, $project );
 						my @possible_presses;
 						foreach my $press_id ( keys %presses ) {
 							if ( ! $presses{$press_id} ) {
@@ -4322,7 +4322,7 @@ $openprint::log->warn("Something wrong in AQ");
 sub select_presses {
 # this function returns a hash of the presses with their reasons for not being used.
 
-	my ( $Project, $Paper, $specs, $project ) = @_;
+	my ( $Project, $Papers, $specs, $project ) = @_;
 #$log->debug("**** Start of select_press. Inputs: Project $project_index ****");
 
 # we do not have to check Image Size here because the the imposition code will take care of that later on.
@@ -4398,24 +4398,34 @@ sub select_presses {
 			next;
 		} # end if
 
-		my $max_calliper = $Press->specification('Maximum Calliper', $$Paper{'grade'} );
-		if ( $max_calliper and ( $$Paper{'calliper'} > $max_calliper ) ) {
-			$results{$press_id} = "Press $press_id Failed Calliper Check.  Maximum calliper is $max_calliper";
-			next;
-		} # end if
-		my $max_gsm = $Press->specification('Maximum GSM', $Paper->gsm() );
-		if ( $max_gsm and ( $$Paper{'gsm'} > $max_gsm ) ) {
-			$results{$press_id} = "Press $press_id Failed gsm Check.  Maximum gsm is $max_gsm";
-			next;
-		} # end if
-		my $min_gsm = $Press->specification('Minimum GSM', $Paper->gsm() );
-		if ( $min_gsm and ( $$Paper{'gsm'} > $min_gsm ) ) {
-			$results{$press_id} = "Press $press_id Failed gsm Check.  Maximum gsm is $min_gsm";
-			next;
-		} # end if
-		if ( ( $$Paper{'type'} eq 'Roll' ) and $Press->specification('Minimum Basis Weight') and $Paper->basis_mweight() < $Press->specification('Minimum Basis Weight') ) {
+		my $paper_ok = 0;
+		my $Paper;
 
-			$results{$press_id} = "Failed Minimum Basis Weight Check **" . $Paper->basis_mweight() . ' < ' . $Press->specification('Minimum Basis Weight');
+		foreach $Paper ( @$Papers ) {
+			my $max_calliper = $Press->specification('Maximum Calliper', $$Paper{'grade'} );
+			if ( $max_calliper and ( $$Paper{'calliper'} > $max_calliper ) ) {
+				$results{$press_id} = "Press $press_id Failed Calliper Check.  Maximum calliper is $max_calliper";
+				next;
+			} # end if
+			my $max_gsm = $Press->specification('Maximum GSM', $Paper->gsm() );
+			if ( $max_gsm and ( $$Paper{'gsm'} > $max_gsm ) ) {
+				$results{$press_id} = "Press $press_id Failed gsm Check.  Maximum gsm is $max_gsm";
+				next;
+			} # end if
+			my $min_gsm = $Press->specification('Minimum GSM', $Paper->gsm() );
+			if ( $min_gsm and ( $$Paper{'gsm'} > $min_gsm ) ) {
+				$results{$press_id} = "Press $press_id Failed gsm Check.  Maximum gsm is $min_gsm";
+				next;
+			} # end if
+			if ( ( $$Paper{type} eq 'Roll' ) and $Press->specification('Minimum Basis Weight') and $Paper->basis_mweight() < $Press->specification('Minimum Basis Weight') ) {
+				$results{$press_id} = "Failed Minimum Basis Weight Check **" . $Paper->basis_mweight() . ' < ' . $Press->specification('Minimum Basis Weight');
+				next;
+			} # end if
+			$paper_ok = 1;
+			last;
+		} # end foreach Paper
+		$Paper = $$Papers[0] if ! $Paper;
+		if ( ! $paper_ok ) {
 			next;
 		} # end if
 
