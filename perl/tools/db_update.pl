@@ -1188,6 +1188,11 @@ if ( ! sets::isin( 'inks', \@tables ) ) {
 	} else {
 		$dbh->do( misc::load_file( $log, q{../openprint/sql/Inks.sql}) );
 	} # end if
+} else {
+	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='inks'", 'column_name');
+	if ( ! $$data{mix} ) {
+		$dbh->do('ALTER TABLE inks add mix BOOLEAN NOT NULL default 0');
+	} # end if
 } # end if
 
 if ( sets::isin( 'tbl_service_categories', \@tables ) ) {
@@ -2138,6 +2143,10 @@ foreach my $S ( openprint::Service->find('name'=>'VarnishInLine') ) {
 		$S->description('Varnish Gloss Overall');
 		$S->category('Coating');
 		$S->save();
+		if ( ! openprint::Ink->find( name=>'Varnish Gloss Overall' ) ) {
+			my $Ink = new openprint::Ink();
+			$Ink->save({ name=>'Varnish Gloss Overall', service_id=>$S->id(), washups=>1 });
+		} # end if
 	} # end if
 
 	if ( ! openprint::Service->find('name'=>'Varnish Gloss Spot') ) {
@@ -2150,6 +2159,10 @@ foreach my $S ( openprint::Service->find('name'=>'VarnishInLine') ) {
 			$P->service_id( $S2->id() );
 			$P->save();
 		} # end foreach
+		if ( ! openprint::Ink->find( name=>'Varnish Gloss Spot' ) ) {
+			my $Ink = new openprint::Ink();
+			$Ink->save({ name=>'Varnish Gloss Spot', service_id=>$S2->id(), washups=>1 });
+		} # end if
 	} # end if
 	if ( ! openprint::Service->find('name'=>'Varnish Matte Overall') ) {
 		my $S2 = $S->copy();
@@ -2161,6 +2174,10 @@ foreach my $S ( openprint::Service->find('name'=>'VarnishInLine') ) {
 			$P->service_id( $S2->id() );
 			$P->save();
 		} # end foreach
+		if ( ! openprint::Ink->find( name=>'Varnish Matte Overall' ) ) {
+			my $Ink = new openprint::Ink();
+			$Ink->save({ name=>'Varnish Matte Overall', service_id=>$S2->id(), washups=>1 });
+		} # end if
 	} # en dif
 	if ( ! openprint::Service->find('name'=>'Varnish Matte Spot') ) {
 		my $S2 = $S->copy();
@@ -2172,6 +2189,10 @@ foreach my $S ( openprint::Service->find('name'=>'VarnishInLine') ) {
 			$P->service_id( $S2->id() );
 			$P->save();
 		} # end foreach
+		if ( ! openprint::Ink->find( name=>'Varnish Matte Spot' ) ) {
+			my $Ink = new openprint::Ink();
+			$Ink->save({ name=>'Varnish Matte Spot', service_id=>$S2->id(), washups=>1 });
+		} # end if
 	} # end if
 } # end if
 foreach my $S ( openprint::Service->find('name'=>'VarnishMakeReady') ) {
