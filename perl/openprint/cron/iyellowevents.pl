@@ -252,6 +252,36 @@ $log->debug("GOt2 $posterurl");
 
 } # end foreach post
 
+sub usage {
+	print <<EOH;
+
+usage: $program [--help] [--db_name \$db_name] [--db_host \$db_host] [--db_user \$db_user] [--db_pass \$db_pass] [ --output filename ]
+
+The purpose of this script is to monitor the hotfolders configured for each
+press for PPF files and perform conversions for Heidelberg JDF, Merge front 
+and backs for presses that require it, and to import the PPF previews and 
+other data into the IntelligentQuote system.
+
+Command-line options:
+
+	--help		Displays this message.
+
+	--db_host	The hostname of the machine on which the database resides.
+
+	--db_name	The name of the database.
+	
+	--db_user	The name of the user to use when connecting to the database.
+
+	--db_pass	The password to use when connecting to the database.
+
+    --output    File to store the session count in.
+
+    --log_file	File to output logs to.
+
+    --log_level	valid options debug, info, warn, error
+
+EOH
+}
 
 1;
 __END__
