@@ -4,10 +4,17 @@
     $openprint::service::specs_cache{$param{ServiceIndex}} = \%param;
     my %specs = %param;
 	$param{'method'} = 'calc' if ! $param{'method'};
-    eval 'require openprint::Estimating::'.$param{'ServiceType'};
-        $log->error("Error requiring openprint::Estimating::$param{'ServiceType'}: $@") if $@;
-    eval q/$specs{'Status'} = openprint::Estimating::/.$param{'ServiceType'}.'::'.$param{method}.'( $log, $dbh, $variable, @param{\'ProjectIndex\', \'ServiceIndex\'}, \%specs );';
-        $log->error("Error requiring openprint::Estimating::$param{'ServiceType'}: in eval: $@") if $@;
+
+   my $module = 'openprint::Estimating::'.$param{'ServiceType'};
+
+    eval "require $module";
+    $log->error("Error requiring $module: $@") if $@;
+    if ( my $function = $module->can( $param{method} ) ) {
+        $specs{'Status'} = $function->( $log, $dbh, $variable, @param{'ProjectIndex','ServiceIndex'}, \%specs );
+	} else {
+		$log->error("Cant do $param{method} for $module");
+    } # end if
+
     my @results = ();
     my @vars = eval( 'openprint::Estimating::'.$param{'ServiceType'}.'::outputs( @param{\'ProjectIndex\', \'ServiceIndex\'}, \%specs )' );
 $log->debug("vars @vars") if $debug;

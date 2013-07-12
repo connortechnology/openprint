@@ -1712,7 +1712,8 @@ sub calc {
 
 	my $project = setup_project( $Project, $service_index, $services, $specs, \@side_one_colours, \@side_two_colours, \%inkCoverage, $Papers[0] );
 $openprint::log->debug("Before select presses: " . ( sprintf('%.4f', tv_interval( [$master_time])*1000) ) .' usecs' );
-	my %presses = select_presses( $Project, $Papers[0], $specs, \@side_one_colours, \@side_two_colours );
+	my %presses = select_presses( $Project, \@Papers, $specs, \@side_one_colours, \@side_two_colours );
+$openprint::log->debug("Aftore select presses: " . ( sprintf('%.4f', tv_interval( [$master_time])*1000) ) .' usecs' );
 	my @possible_presses;
 	foreach my $press_id ( keys %presses ) {
 		if ( ! $presses{$press_id} ) {
@@ -2815,7 +2816,7 @@ $openprint::log->error("Different paper in count versus imposition: $paper_strin
 					} # end if
 				} # end if
 
-$openprint::log->debug("Pricing Paper: Minimum Order: " . $Paper->minimum_order() );
+#$openprint::log->debug("Pricing Paper: Minimum Order: " . $Paper->minimum_order() );
 				if ( $Paper->minimum_order() ) {
 					# Assume sheets for sheets, lbs for Rolls
 					if ( $Paper->minimum_order() > $PaperCounts{$paper_string} ) {
@@ -2950,7 +2951,7 @@ $openprint::log->debug("Calculating Additional Signatures for other group");
 					my @Papers = get_Stocks( $Project, $specs );
 					if ( @Papers ) {
 						my $new_project = setup_project( $Project, $sigs[0], $Project->services(), $specs, \@side_one_colours, \@side_two_colours, \%inkCoverage, $Papers[0] );
-						my %presses = select_presses( $Project, $Papers[0], $specs, \@side_one_colours, \@side_two_colours );
+						my %presses = select_presses( $Project, \@Papers, $specs, \@side_one_colours, \@side_two_colours );
 						my @possible_presses;
 						foreach my $press_id ( keys %presses ) {
 							if ( ! $presses{$press_id} ) {
@@ -3907,7 +3908,7 @@ $openprint::log->debug("Using cached folding");
 sub select_presses {
 # this function returns a hash of the presses with their reasons for not being used.
 
-	my ( $Project, $Paper, $specs, $side_one_colours, $side_two_colours ) = @_;
+	my ( $Project, $Papers, $specs, $side_one_colours, $side_two_colours ) = @_;
 #$log->debug("**** Start of select_press. Inputs: Project $project_index ****");
 
 # we do not have to check Image Size here because the the imposition code will take care of that later on.
@@ -3965,12 +3966,39 @@ sub select_presses {
 			next;
 		} # end if
 
-		if ( $Paper->calliper() > $Press->specification('Maximum Calliper', $Paper->grade() ) ) {
+		my $paper_ok = 0;
+		my $Paper;
+
+$openprint::log->debug("Before filter press");
+		foreach $Paper ( @$Papers ) {
+$openprint::log->debug("during filter press" . $Paper->to_string() );
+			if ( $Paper->calliper() > $Press->specification('Maximum Calliper', $Paper->grade() ) ) {
+				next;
+			} else {
+				$paper_ok = 1;
+				last;
+			} # end if
+		} # end foreach Paper
+		$Paper = $$Papers[0] if ! $Paper;
+		if ( ! $paper_ok ) {
+$openprint::log->debug("press not ok by calliper" . $Paper->to_string() );
 			$results{$press_id} = "Press $press_id Failed Calliper Check";
 			next;
 		} # end if
-		if ( ( $Paper->type() eq 'Roll' ) and $Press->specification('Minimum Basis Weight') and $Paper->basis_mweight() < $Press->specification('Minimum Basis Weight') ) {
+		$paper_ok = 0;
 
+		foreach $Paper ( @$Papers ) {
+$openprint::log->debug("during filter press basis " . $Paper->to_string() );
+			if ( ( $Paper->type() eq 'Roll' ) and $Press->specification('Minimum Basis Weight') and $Paper->basis_mweight() < $Press->specification('Minimum Basis Weight') ) {
+			} else {
+				$paper_ok = 1;
+				last;
+			} # end if
+		} # end foreach Paper
+		$Paper = $$Papers[0] if ! $Paper;
+
+		if ( ! $paper_ok ) {
+$openprint::log->debug("press not ok by basis" . $Paper->to_string() );
 			$results{$press_id} = "Failed Minimum Basis Weight Check **" . $Paper->basis_mweight() . ' < ' . $Press->specification('Minimum Basis Weight');
 			next;
 		} # end if
