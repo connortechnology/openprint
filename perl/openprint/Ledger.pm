@@ -2,7 +2,7 @@ use strict;
 package openprint::Ledger;
 our @ISA = qw(openprint::Object);
 require openprint::Object;
-require Math::Round::nearest;
+require Math::Round;
 
 use vars qw( $debug $table $serial %fields %transforms %defaults );
 
