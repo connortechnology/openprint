@@ -194,7 +194,7 @@ sub view {
 					});
 			delete $param{'po_id'};
 			delete $param{'btnFunction'};
-			$variable{'Redirect'} = '/employee/purchase_order/history.html';
+			$variable{'ExternalRedirect'} = '/employee/purchase_order/history.html';
 		} # end if
 	} elsif ( $param{'btnFunction'} eq 'Cancel' ) {
 		$variable{'error'} .= $PO->save({'cancelled'=>1});
@@ -207,7 +207,7 @@ sub view {
 					});
 			delete $param{'po_id'};
 			delete $param{'btnFunction'};
-			$variable{'Redirect'} = '/employee/purchase_order/history.html';
+			$variable{'ExternalRedirect'} = '/employee/purchase_order/history.html';
 		} # end if
 	} elsif ( $param{'btnFunction'} eq 'UnCancel' ) {
 		$variable{'error'} .= $PO->save({'cancelled'=>0});
@@ -220,7 +220,7 @@ sub view {
 					});
 			delete $param{'po_id'};
 			delete $param{'btnFunction'};
-			$variable{'Redirect'} = '/employee/purchase_order/history.html';
+			$variable{'ExternalRedirect'} = '/employee/purchase_order/history.html';
 		} # end if
 	} elsif ( $param{'btnFunction'} eq 'Undelete' ) {
 		$variable{'error'} .= $PO->undelete();
@@ -233,11 +233,38 @@ sub view {
 					});
 			delete $param{'po_id'};
 			delete $param{'btnFunction'};
-			$variable{'Redirect'} = '/employee/purchase_order/history.html';
+			$variable{'ExternalRedirect'} = '/employee/purchase_order/history.html';
 		} # end if
+	} elsif ( $param{'btnFunction'} eq 'Authorize' ) {
+		if ( $PO->can_authorize() ) {
+			if ( $_ = $PO->authorize() ) {
+				$variable{error} .= $_ . '<br/>';
+			} else {
+				$variable{information} .= 'PO ' . $$PO{id} . ' has been authorized.<br/>';
+			} # end if
+		} else {
+			$variable{error} .= 'You are not authorized to approve PO ' . $PO->id() . '<br/>';
+		} # end if
+		$variable{'ExternalRedirect'} = '/employee/purchase_order/history.html' if ! $variable{error};
+    } elsif ( $param{'btnFunction'} eq 'AuthorizeAndSend' ) {
+		if ( $PO->can_authorize() ) {
+			if ( $_ = $PO->authorize() ) {
+				$variable{error} .= $_ . '<br/>';
+			} else {
+				$variable{information} .= 'PO ' . $$PO{id} . ' has been authorized.<br/>';
+				$variable{error} .= $PO->send_to_vendor();
+			} # end if
+		} else {
+			$variable{error} .= 'You are not authorized to approve PO ' . $PO->id() . '<br/>';
+		} # end if
+		$variable{'ExternalRedirect'} = '/employee/purchase_order/history.html' if ! $variable{error};
 	} elsif ( $param{'btnFunction'} eq 'Send' ) {
 	} elsif ( $param{'btnFunction'} eq 'Email Vendor' ) {
 		$variable{'error'} = $PO->send_to_vendor();
+		$variable{'ExternalRedirect'} = '/employee/purchase_order/history.html' if ! $variable{error};
+	} elsif ( $param{'btnFunction'} eq 'Email Me' ) {
+		$variable{'error'} = $PO->send_to_me();
+		$variable{'ExternalRedirect'} = '/employee/purchase_order/history.html' if ! $variable{error};
 	} elsif ( $param{'btnFunction'} eq 'Received' ) {
 	} elsif ( $param{'btnFunction'} eq 'Copy' ) {
 		my $New = $PO->copy();
@@ -590,14 +617,6 @@ sub history {
 				$variable{'information'} .= 'PO ' . $po_id . ' has been declined.<br/>';
 			} # end if
 		} # end foreach po_id
-		delete $param{'po_id'};
-	} elsif ( $param{'btnFunction'} eq 'Email Vendor' ) {
-		my $PO = new openprint::PurchaseOrder( $param{'po_id'} );
-		$variable{'error'} .= $PO->send_to_vendor();
-		delete $param{'po_id'};
-	} elsif ( $param{'btnFunction'} eq 'Email Me' ) {
-		my $PO = new openprint::PurchaseOrder( $param{'po_id'} );
-		$variable{'error'} = $PO->send_to_me();
 		delete $param{'po_id'};
 	} # end if
 	_history();

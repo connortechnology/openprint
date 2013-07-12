@@ -19,15 +19,15 @@ Choose report criteria and click submit. <br/>
 		</li>
 		<li>
 			<label>Date Submitted</label>
-			<? echo ( ssi::date_select_session( '/employee/support/helpdesk_search.html', 'created_on_start' ); ) ?></span>
+			<? echo ( date_select_session( '/employee/support/helpdesk_search.html', 'created_on_start' ); ) ?></span>
 			to
-			<? echo ( ssi::date_select_session( '/employee/support/helpdesk_search.html', 'created_on_end' ); ) ?></span>
+			<? echo ( date_select_session( '/employee/support/helpdesk_search.html', 'created_on_end' ); ) ?></span>
 		</li>
 		</ul>
 		<p class="buttons">
 			<? echo ( join('',
-                ssi::button( 'Submit', { onclick=>'f1.submit();' } ),
-                ssi::button( 'Reset', { onclick=>'f1.reset();' } ),
+                button( 'Submit', { onclick=>'f1.submit();' } ),
+                button( 'Reset', { onclick=>'f1.reset();' } ),
 				); ) ?>
 		</p>
 	</fieldset>
