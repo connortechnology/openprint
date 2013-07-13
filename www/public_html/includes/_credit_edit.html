@@ -15,7 +15,7 @@
             <li><label>On Hold</label>%8$s</li>
             <li><label>Downpayment</label>%9$s %</li>
             <li><label>COD</label>%10$s %</li>
-            <li><label>Late Payment Amount</label>%11$s %12$s</li>
+            <li><label>Late Payment Amount</label>%11$s%12$s</li>
             <li><label>Early Payment Amount</label>%13$s%14$s</li>
             <li><label>Early Payment Days</label>%13$s%14$s</li>
         </ul>
@@ -31,7 +31,7 @@
         ssi::input(type=>'cardinal', name=>'cod-'.$$Supplier{id}, value=>$Credit->cod(), max=>100 ),
         input(type=>'float', name=>'late_payment_amount-'.$Supplier->id(), value=>$Credit->late_payment_amount() ),
         ssi::select( [ 'percent', 'Percent', 'amount', 'Amount' ], $Credit->late_payment_units(), { name=>'late_payment_units-'.$Supplier->id() } ),
-        input(type=>'float', name=>'early_payment_discount-'.$Supplier->id(), value=>$Credit->early_payment_discount() ),
+        input(type=>'float', name=>'early_payment_amount-'.$Supplier->id(), value=>$Credit->early_payment_amount() ),
         ssi::select( [ 'percent', 'Percent', 'amount', 'Amount' ], $Credit->early_payment_units(), { name=>'early_payment_units-'.$Supplier->id() } ),
         input(type=>'cardinal', name=>'early_payment_days-'.$Supplier->id(), value=>$Credit->early_payment_days() ),
 
@@ -39,9 +39,9 @@
     } # end foreach Company
     if ( @Suppliers == 2 ) {
         $html .= '<p class="buttons">';
-        $html .= ssi::button('Left', { onclick=>"set_credit($Suppliers[1]{id},$Suppliers[0]{id});", text=>'&lt;=' } );
-        $html .= ssi::button('Swap', { onclick=>"swap_credit($Suppliers[0]{id},$Suppliers[1]{id});", text=>'&lt;=&gt;' } );
-        $html .= ssi::button('Right', { onclick=>"set_credit($Suppliers[0]{id},$Suppliers[1]{id});", text=>'=&gt;' } );
+        $html .= button('Left', { onclick=>"set_credit($Suppliers[1]{id},$Suppliers[0]{id});", text=>'&lt;=' } );
+        $html .= button('Swap', { onclick=>"swap_credit($Suppliers[0]{id},$Suppliers[1]{id});", text=>'&lt;=&gt;' } );
+        $html .= button('Right', { onclick=>"set_credit($Suppliers[0]{id},$Suppliers[1]{id});", text=>'=&gt;' } );
         $html .= '</p>';
     } # end if
     return $html;

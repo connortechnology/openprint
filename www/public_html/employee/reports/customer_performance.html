@@ -7,15 +7,15 @@
 	<fieldset class="filters"><legend>Report Criteria</legend>
 		 <p>
 			 <label>Ordered On</label>
-			<? echo ( ssi::date_select_session( '/employee/reports/customer_performance.html', 'ordered_on_start', { 'with_today'=>1,'with_clear'=>1 } ); ) ?>
+			<? echo ( date_select_session( '/employee/reports/customer_performance.html', 'ordered_on_start', { 'with_today'=>1,'with_clear'=>1 } ); ) ?>
 			to 
-			<? echo ( ssi::date_select_session( '/employee/reports/customer_performance.html', 'ordered_on_end', { 'with_today'=>1,'with_clear'=>1 } ); ) ?>
+			<? echo ( date_select_session( '/employee/reports/customer_performance.html', 'ordered_on_end', { 'with_today'=>1,'with_clear'=>1 } ); ) ?>
 		</p>
 		 <p>
 			 <label>Not Ordered Since</label>
-			<? echo ( ssi::date_select_session( '/employee/reports/customer_performance.html', 'not_ordered_on_start', { 'with_today'=>1,'with_clear'=>1 } ); ) ?>
+			<? echo ( date_select_session( '/employee/reports/customer_performance.html', 'not_ordered_on_start', { 'with_today'=>1,'with_clear'=>1 } ); ) ?>
 			to 
-			<? echo ( ssi::date_select_session( '/employee/reports/customer_performance.html', 'not_ordered_on_end', { 'with_today'=>1,'with_clear'=>1 } ); ) ?>
+			<? echo ( date_select_session( '/employee/reports/customer_performance.html', 'not_ordered_on_end', { 'with_today'=>1,'with_clear'=>1 } ); ) ?>
 		</p>
 		<p>
 			<label>Payment Cycle</label>
@@ -42,8 +42,8 @@
 		 <p class="buttons">
 			<? echo ( 
 				my $html;
-				$html .= ssi::button( 'Go', { onclick=>"LoadContent('Results','_customer_performance.html', f1.serialize() );", href=>'', text=>'Show Results' };
-				$html .= ssi::button( 'DownloadCSV', { onclick=>"f1.action='customer_performance.html?Download';f1.btnFunction.value='Download in CSV format';f1.submit();", href=>'', text=>'Download in CSV Format' };
+				$html .= button( 'Go', { onclick=>"LoadContent('Results','_customer_performance.html', f1.serialize() );", text=>'Show Results' } );
+				$html .= button( 'DownloadCSV', { onclick=>"f1.action='customer_performance.html?Download';f1.btnFunction.value='Download in CSV format';f1.submit();", text=>'Download in CSV Format' } );
 				return $html;
 			) ?>
 		 </p>
