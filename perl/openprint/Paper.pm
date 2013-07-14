@@ -1025,7 +1025,7 @@ sub get_price {
 	my ( $self, %params ) = @_;
 	
     my $price;
-	my $qty = $params{'weight'};
+	my $qty = $params{weight} ? $params{weight} : $params{sheets};
 
     if ( $$self{'Price'} and ($params{'service'} eq 'Material') ) {
 		# If custom paper
