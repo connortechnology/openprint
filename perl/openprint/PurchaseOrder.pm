@@ -401,8 +401,9 @@ sub copy {
 	$$New{'created_by'} = $session{'user_id'};
 	return $New;
 } # end sub copy
+
 sub Manifest {
-	return new openprint::Manifest( $_[0]{'manifest_id'} );
+	return new openprint::Manifest( $_[0]{manifest_id} );
 } # end sub Manifest
 
 # We don't make any db changes here.  That only happens on PO saving
