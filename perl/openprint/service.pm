@@ -509,7 +509,9 @@ sub internal_calc {
     eval 'require openprint::Estimating::'.$service_type;
     $log->error("Error in requiring $package $@") if $@;
     if ( my $function = $package->can('calc') ) {
+$log->debug("Calling $function");
         my $status = $function->( $log, $dbh, $variable, $project_index, $service_index, \%specs );
+$log->debug("Back from Calling $function");
 		if ( ! $specs{Status} ) {
 			$log->error("Status not in specs in $package");
 			$specs{'Status'} = $status;

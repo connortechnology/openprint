@@ -158,6 +158,7 @@ sub fits {
 
 	$service = ' '.$service if $service;
 
+	if ( $width and $height ) {
 	if ( $self->specification("Maximum$service Sheet Width") and $self->specification("Maximum$service Sheet Length") ) {
 		my $imp = openprint::imposition::fit( $width, $height, $self->specification("Maximum$service Sheet Width"),$self->specification("Maximum$service Sheet Length") );
 #$log->debug("Impo: $$imp{'imposition'} $$imp{'rows'}x$$imp{'columns'} on $$self{'strid'}");
@@ -180,7 +181,6 @@ sub fits {
 		} # end if
 	} # end if
 
-	if ( $width and $height ) {
 		if ( $self->specification("Minimum$service Sheet Width") and $self->specification("Minimum$service Sheet Length") ) {
 			my $imp = openprint::imposition::fit( $self->specification("Minimum$service Sheet Width"),$self->specification("Minimum$service Sheet Length"), $width, $height );
 			if ( ! $imp->imposition() ) {

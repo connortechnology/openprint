@@ -45,6 +45,24 @@ use vars qw( $r %variable %session %param %config $log $dbh );
 *dbh = \$openprint::dbh;
 *r = \$openprint::r;
 
+sub cleanup {
+    if ( $r->connection->aborted( ) ) {
+$log->debug("Was aborted");
+    } # end if
+    %variable = ();
+    %param = ();
+    if ( $dbh ) {
+        openprint::pricing::clear_cache();
+        openprint::service::init_cache();
+        openprint::Object::init_cache();
+        $session{lastupdated} = time;
+        untie %session;
+        $dbh->disconnect();
+    } else {
+$log->debug("No dbh at cleanup");
+    } # end if
+} # end sub cleanup
+
 sub handler {
 	%variable = ();
 	%param = ();
@@ -60,6 +78,7 @@ sub handler {
 	$r->log->debug( "Beginning of Request: $ENV{HTTP_USER_AGENT} Page: " . $r->uri() );
 
 	$log	= $r->log;
+	$request->push_handlers(PerlCleanupHandler => \&cleanup);
 
 	# Here we copy the param data into a hash that is sligthly more useful to use.  Wish we didn't have to do this.
 	foreach my $key ( sort sets::union( $r->param ) ) {
