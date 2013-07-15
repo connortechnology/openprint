@@ -72,8 +72,14 @@ sub fits {
 	my $max_length = $self->specification("Maximum$service Sheet Length");
 	my $max_height = $self->specification("Maximum$service Sheet Height");
 
+<<<<<<< HEAD
 	if ( $max_width and $max_length ) {
 		my $imp = openprint::imposition::fit( $width, $height, $max_width, $max_length );
+=======
+	if ( $width and $height ) {
+	if ( $self->specification("Maximum$service Sheet Width") and $self->specification("Maximum$service Sheet Length") ) {
+		my $imp = openprint::imposition::fit( $width, $height, $self->specification("Maximum$service Sheet Width"),$self->specification("Maximum$service Sheet Length") );
+>>>>>>> deb815cf558ebf0410a1174444602f1b59ab6591
 #$log->debug("Impo: $$imp{'imposition'} $$imp{'rows'}x$$imp{'columns'} on $$self{'strid'}");
 		if ( ! $imp->imposition() ) {
 			return sprintf('Too big %s x %s on %s x %s', $width, $height, $max_width, $max_length );
@@ -88,12 +94,17 @@ sub fits {
 		} # end if
 	} # end if
 
+<<<<<<< HEAD
 	my $min_width = $self->specification("Minimum$service Sheet Width");
 	my $min_length = $self->specification("Minimum$service Sheet Length");
 
 	if ( $width and $height ) {
 		if ( $min_width and $min_length ) {
 			my $imp = openprint::imposition::fit( $min_width, $min_length, $width, $height );
+=======
+		if ( $self->specification("Minimum$service Sheet Width") and $self->specification("Minimum$service Sheet Length") ) {
+			my $imp = openprint::imposition::fit( $self->specification("Minimum$service Sheet Width"),$self->specification("Minimum$service Sheet Length"), $width, $height );
+>>>>>>> deb815cf558ebf0410a1174444602f1b59ab6591
 			if ( ! $imp->imposition() ) {
 				return sprintf('Too small %s x %s on %s x %s', $width, $height, $min_width, $min_length);
 			} # end if
