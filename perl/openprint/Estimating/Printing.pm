@@ -208,8 +208,6 @@ my %variables = (
 	'PlateMakeReady1' =>  ['save','output'], 'PlateMakeReady2' => ['save','output'], 'PlateMakeReady3' => ['save','output'],
 	'PerPlateMkRd1' =>  ['save','output'], 'PerPlateMkRd2' => ['save','output'], 'PerPlateMkRd3' => ['save','output'],
 	'RunChargeTotal1' =>  ['save','output'], 'RunChargeTotal2' => ['save','output'], 'RunChargeTotal3' => ['save','output'],
-	'OverBase1' =>  ['save','output'], 'OverBase2' => ['save','output'], 'OverBase3' => ['save','output'],
-	'OverrideBase1' =>  ['save'], 'OverrideBase2' => ['save'], 'OverrideBase3' => ['save'],
 	'OverSetup1' =>  ['save','output'], 'OverSetup2' => ['save','output'], 'OverSetup3' => ['save','output'],
 	'OverrideSetup1' =>  ['save'], 'OverrideSetup2' => ['save'], 'OverrideSetup3' => ['save'],
 	'OverRun1' =>  ['save','output'], 'OverRun2' => ['save','output'], 'OverRun3' => ['save','output'],
@@ -1865,12 +1863,6 @@ sub calc {
 			} # end if
 		} # end foreach
 
-		if ( $$specs{'OverrideBase'.$qty_index} eq 'Y' ) {
-			$variables{"OverBase$qty_index"} = [sets::exclude( ['output'], $variables{"OverBase$qty_index"} ) ];
-		} else {
-			$variables{'OverBase'.$qty_index} = [ sets::union( 'output', @{$variables{'OverBase'.$qty_index}} ) ];
-		} # end if
-
 		if ( $$specs{'OverrideSetup'.$qty_index} eq 'Y' ) {
 			$variables{"OverSetup$qty_index"} = [sets::exclude( ['output'], $variables{"OverSetup$qty_index"} ) ];
 		} else {
@@ -1883,10 +1875,6 @@ sub calc {
 			$variables{'OverRun'.$qty_index} = [ sets::union( 'output', @{$variables{'OverRun'.$qty_index}} ) ];
 		} # end if
 
-		# if quantity overriden then the total is total of entered quantity
-		if ( ( $$specs{'OverrideBase'.$qty_index} eq 'Y' ) or ( $$specs{'OverrideSetup'.$qty_index} eq 'Y' ) or ( $$specs{'OverrideRun'.$qty_index} eq 'Y' ) ) {
-	 		$$specs{'OverTotal'.$qty_index} = $$specs{'OverBase'.$qty_index} + $$specs{'OverSetup'.$qty_index} + $$specs{'OverRun'.$qty_index};
-		}
 	} # end foreach qty_index
 
 	if ( ($Project->Type()->name() eq 'PresentationFolders') or (($$specs{'Group'} == 1 ) and sets::isin($$specs{'rdbTemplateType'}, ['2Panel1Pocket','2Panel2Pocket','TriFoldDoublePocket'] ) )) {
@@ -2301,7 +2289,6 @@ if ( 0 ) {
 		$$specs{'PressWashes'.$qty_index} = $$best_price{'Press Washes'};
 	
 		if ( my $stock_qt = $$best_price{'Stock Quantity'} ) {
-			$$specs{'OverBase'.$qty_index} = $$stock_qt{'Net Sheet Count'};
 			$$specs{'OverSetup'.$qty_index} = $$stock_qt{'Initial Setup Overs'};
 			$$specs{'OverRun'.$qty_index} = $$stock_qt{'Run Overs'};
 			$$specs{'OverTotal'.$qty_index} = $$stock_qt{'Total Overs'};
@@ -3526,13 +3513,9 @@ sub calc_price {
 	} # end if 
 
 	my $net_sheets;
-	if ( $$specs{'OverrideBase'.$qty_index} eq 'Y' ) {
-		$net_sheets = $$specs{'OverBase'.$qty_index};
-	} else {
-		$net_sheets = ceil($qty / $imposition);
-		$net_sheets *= $$specs{'Versions'} if $$specs{'Versions'}; # qty is already adjusted
-		$net_sheets *= $Paper->parts() if $Paper->parts();
-	} # end if
+	$net_sheets = ceil($qty / $imposition);
+	$net_sheets *= $$specs{'Versions'} if $$specs{'Versions'}; # qty is already adjusted
+	$net_sheets *= $Paper->parts() if $Paper->parts();
 #Initially we calculate based on colours, but really we need to calculate based on plates, which we will do once we figure out how many plates we need.
 	my $min_overs = $Press->specification( 'Overs Minimum ' . $Paper->material(), scalar @colours );
 	$min_overs = $Press->specification( 'Overs Minimum', scalar @colours ) if ! $min_overs;
@@ -4162,7 +4145,7 @@ $openprint::log->debug("No Coverage for grade $grade Press: $$Press{strid}");
 	} else {
 		$total_overs = ceil( $run_overs + $setup_overs );
 	} # end if
-	$total_overs += $bindery_overs - $total_overs if $bindery_overs > $total_overs;
+	$total_overs += ( $bindery_overs - $total_overs ) if $bindery_overs > $total_overs;
 
 	$min_overs = $Press->specification( 'Overs Minimum ' . $Paper->material(), $plate_setup{'Plate Count'} );
 #$log->debug("Overs min " . $Paper->material() . " $min_overs");

@@ -140,13 +140,17 @@
 			$html .= '<fieldset><legend>'.$status.'</legend>';
 			
 			my %sql = (
-				'status'	=>	$status, 
-				'order'		=>	'lngdocketnumber',
-				ssi::date_filter( '/employee/production/prepress_schedule.html?takenover_on_start', 'takenover_on >=' ),
-				ssi::date_filter( '/employee/production/prepress_schedule.html?takenover_on_end', 'takenover_on <=' ),
+				status		=>	$status, 
+				order		=>	'lngdocketnumber',
+				date_filter( '/employee/production/prepress_schedule.html?takenover_on_start', 'takenover_on >=' ),
+				date_filter( '/employee/production/prepress_schedule.html?takenover_on_end', 'takenover_on <=' ),
 				);
 
 			my @Projects = openprint::Project->find( %sql );
+			my %Schedule;
+			foreach my $S ( openprint::ScheduledJob->find(project_id=>[ map { $_->id() } @Projects ], 'starttime_null'=>0 ) ) {
+				push @{$Schedule{$$S{project_id}}}, $S;
+			} # end foreach
 
 			$html .= '<table><thead><tr>';
 			foreach my $E ( @{$$variable{'Presses'}} ) {
@@ -183,7 +187,7 @@
 					next if ! $onpress;
 
 					my $colour = 'unscheduled';
-					if ( openprint::ScheduledJob->find('project_id'=>$Project->id(), 'starttime is null'=>0 ) ) {
+					if ( $Schedule{$$Project{id}} ) {
 						$colour = 'scheduled';
 					} # end if
 					if ( $Project->rush() ) {
