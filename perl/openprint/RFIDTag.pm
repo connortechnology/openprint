@@ -303,8 +303,8 @@ sub is_invalid_id {
 sub from_id {
 	my ( $tag_id ) = @_;
 
-	if ( my ( $type, $id ) = $tag_id =~ /^R?(\d)0+(\d+)$/ ) {
-		my @RFID = openprint::RFIDTag->find( id=>sprintf('%d%.15d', $type, $id ) );
+	if ( my ( $type, $id ) = $tag_id =~ /^R?(\d)(\d{14})$/ ) {
+		my @RFID = openprint::RFIDTag->find( id=>sprintf('%d%.14d', $type, $id ) );
 		if ( @RFID == 1 ) {
 			return $RFID[0];
 		} else {

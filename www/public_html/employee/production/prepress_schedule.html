@@ -163,6 +163,10 @@ $openprint::log->debug("$session{'/employee/production/prepress_schedule.html?ta
 			and $session{'/employee/production/prepress_schedule.html?takenover_on_end_month'}
 			and $session{'/employee/production/prepress_schedule.html?takenover_on_end_day'};
 			my @Projects = openprint::Project::find( %sql );
+			my %Schedule;
+			foreach my $S ( openprint::ScheduledJob->find(project_id=>[ map { $_->id() } @Projects ], 'starttime_null'=>0 ) ) {
+				push @{$Schedule{$$S{project_id}}}, $S;
+			} # end foreach
 
 			$html .= '<table><thead><tr>';
 			foreach my $E ( @{$$variable{'Presses'}} ) {
@@ -199,7 +203,7 @@ $openprint::log->debug("$session{'/employee/production/prepress_schedule.html?ta
 					next if ! $onpress;
 
 					my $colour = 'unscheduled';
-					if ( openprint::ScheduledJob::find('project_id'=>$Project->id(), 'starttime_null'=>0 ) ) {
+					if ( $Schedule{$$Project{id}} ) {
 						$colour = 'scheduled';
 					} # end if
 					if ( $Project->rush() ) {

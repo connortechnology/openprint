@@ -120,7 +120,11 @@ sub find {
 		push @values, $params{'servicetype'};
 	} # end if
 	if ( $params{'project_id'} ) {
-		if ( substr($params{'project_id'},0,1) == '!' ) {
+		if ( ref $params{project_id} eq 'ARRAY' ) {
+			$sql .= ' AND projectindex IN ('. join(',', map {'?'} @{$params{project_id}} ) . ')';
+			push @values, @{$params{project_id}};
+		
+		} elsif ( substr($params{'project_id'},0,1) == '!' ) {
 			$sql .= ' AND projectindex != ?';
 			push @values, substr $params{'project_id'}, 1, length $params{'project_id'};
 		} else {
