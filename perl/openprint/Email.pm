@@ -45,11 +45,23 @@ sub send {
 		$$self{from} = $params{FROM};
 	} # end if
 
+	my @bcc;
+	if ( $params{BCC} ) {
+		foreach my $bcc ( ref $params{BCC} eq 'ARRAY' ? @{$params{BCC}} : $params{BCC} ) {
+			if ( ref $bcc eq 'openprint::User' ) {
+				push @bcc, sprintf('"%s" <%s>', $bcc->name(), $bcc->email() );
+			} else {
+				push @bcc, $bcc;
+			} # end if
+
+		} # end foreach bcc
+	} # end if
+
     my %mail = (
 			'content-type'	=>	$$self{'content-type'},
 			BOUNDARY =>	$$self{boundary},
 			CC		=>	$params{'CC'},
-			BCC		=>	$params{'BCC'},
+			( @bcc ? ( BCC		=>	join(',', @bcc ) ) : () ),
             SMTP    => $params{'SMTP'} ? $params{'SMTP'} : $openprint::config{'Mail Server'},
 			( $params{'Return-receipt-to'} ? ( 'Return-receipt-to' => $params{'Return-receipt-to'} ) : () ),
 			( $params{'Disposition-Notification-To'} ? ( 'Disposition-Notification-To' => $params{'Disposition-Notification-To'} ) : () ),
