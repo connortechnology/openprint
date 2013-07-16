@@ -436,16 +436,17 @@ sub Contents {
 
 	if ( @_ ) {
 		if ( ! defined $_[0] ) {
-			@{$$self{'Contents'}} = openprint::SkidContent::find( 'skid_id'=>$$self{'id'} );
+			$$self{'Contents'} = [ openprint::SkidContent::find( 'skid_id'=>$$self{'id'}, 'deleted in'=>[0,1] ) ];
 		} elsif ( ref $_[0] eq 'ARRAY' ) {
 			$$self{'Contents'} = $_[0];
 		} else {
 			my %params = @_;
 			$params{'skid_id'} = $$self{'id'};
+			$params{'deleted_in'} = [0,1] if ! exists $params{'deleted in'};
 			return openprint::SkidContent::find( %params );
 		} # end if
 	} elsif ( ! $$self{Contents} ) {
-		$$self{Contents} = [ openprint::SkidContent::find( 'skid_id'=>$$self{'id'} ) ];
+		$$self{Contents} = [ openprint::SkidContent::find( skid_id=>$$self{id}, 'deleted in'=>[0,1] ) ];
 	} # end if
 	return @{$$self{'Contents'}};
 } # end sub Contents
