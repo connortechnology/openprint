@@ -268,20 +268,19 @@ $openprint::log->debug("Scoring signature_calc");
 		@equipment = openprint::Equipment->find( 'Specifications' => {'Scoring Capable'=>\@capabilities}, 'useinestimating'=>1,'order'=>'strName');
 	} # endif
 	foreach my $E ( @equipment ) {
-		$openprint::log->debug( "Equipment: " . $E->strid() );
+		#$openprint::log->debug( "Equipment: " . $E->strid() );
 	}
 
 # Get the impositions to consider
 	if ( ! $imposition ) {
-$openprint::log->warn("No imposition in scoring");
 		$imposition = new openprint::Imposition();
 		$imposition->load( $sig_specs, $qty_index );
 	} else {
 		$imposition = $imposition->copy();
 	} # end if
 	if ( ! $imposition->imposition() ) {
-		$$specs{'alert'} .= "Unable to load the imposition.  This likely is because printing has not finished calculating.<br/>";
-		return $$specs{'Status'} = 'uncalculated';
+		$Results{alert} .= "Unable to load the imposition.  This likely is because printing has not finished calculating.<br/>";
+		return $Results{Status} = 'uncalculated';
 	} # end if
 
 	if ( 1 ) {
@@ -305,7 +304,7 @@ $openprint::log->warn("No imposition in scoring");
 		#$imposition->display();
 		my @imps = openprint::imposition::get_all_impositions( $imposition );
 		for ( my $i = 0; $i < @imps; $i += 1 ) {
-			#$imps[$i]->display();
+			$imps[$i]->display() if $debug;
 			if ( ( $$specs{"chkOverrideImposition-$$sig_specs{'SignatureIndex'}-$qty_index"} ne 'Y' )
 					or ( $$specs{"txtImposition-$$sig_specs{'SignatureIndex'}-$qty_index"} == $imps[$i]->imposition() )
 				) {
@@ -356,6 +355,7 @@ $openprint::log->warn("No imposition in scoring");
 		} # end if
 		my $max_feed_width = $Equipment->specification('Maximum Feed Width');
 		$Results{'Breakdown'} .= "Maximum Feed Width: $max_feed_width<br/>" if $max_feed_width;
+		my $orientation = $Equipment->specification('Orientation');
 
 		foreach my $I ( @impositions ) {
 			next if ! $I->imposition();
@@ -373,9 +373,8 @@ $openprint::log->warn("No imposition in scoring");
 				next;
 			} # end if
 			if ( $max_feed_width ) {
-				my $orientation = $Equipment->specification('Orientation');
 				if ( $orientation ) {
-$Results{'Breakdown'} .= "Has orientation setting.<br/>";
+					$Results{'Breakdown'} .= "Has orientation setting.<br/>";
 					if (
 							( $orientation eq 'Portrait' and $I->layout_width() <= $I->layout_height() ) or
 							( $orientation eq 'Landscape' and $I->layout_width() >= $I->layout_height() )
@@ -417,8 +416,8 @@ $Results{'Breakdown'} .= "Has orientation setting.<br/>";
 					} else {
 						$Results{'Breakdown'} .= 'Running ' . $I->layout_height() . ' on feed of ' . $max_feed_width . '<br/>';
 					} # end if
-				} # end if
-			} # end if
+				} # end if orientation or not
+			} # end if max_feed)wudetg
 			if ( ( $_ = $Equipment->specification('Maximum Imposition') ) and ( $_ < $I->imposition() ) ) {
 				$Results{'Breakdown'} .= "Imposition $$I{imposition}out too high. Maximum: $_<br/>";
 				next;
@@ -437,7 +436,7 @@ $Results{'Breakdown'} .= "Has orientation setting.<br/>";
 			} # end if
 			$Results{'Breakdown'} .= '<br/>';
 			my $setupPrice = openprint::service::get_price( 'ScoringMakeReady', $score_qty, $Equipment );
-			$Results{'Breakdown'} .= sprintf( 'MakeReady: for %d scores = $%.2f<br/>', $score_qty, $setupPrice);
+			$Results{'Breakdown'} .= sprintf( 'MakeReady: for %d scores = $%.2f<br/>', $score_qty, $setupPrice );
 			$Results{'Breakdown'} .= "Imposition: $$I{columns}x$$I{rows}=$$I{'imposition'}: ";
 
 			my $use_qty = ($qty /$imposition->imposition()) * ( $imposition->imposition() / $I->imposition() );

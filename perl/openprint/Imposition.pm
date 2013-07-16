@@ -389,10 +389,19 @@ sub sheet_width {
 	$$self{'start_rows'} = $$self{'rows'} if ! $$self{'start_rows'};
 	if ( $$self{'rotate_sheet'} ) {
 		$$self{'paper'}->height( @_ ) if @_;
+		if ( $$self{'start_columns'} and $$self{'columns'} and $$self{'start_columns'} != $$self{'columns'} ) {
 		return $self->Paper()->height() / ( $$self{'start_columns'} / $$self{'columns'} );
+		} else {
+			return $self->Paper()->height();
+		} # end if
 	} else {
 		$$self{'paper'}->width( @_ ) if @_;
+		if ( $$self{'start_columns'} and $$self{'columns'} and $$self{'start_columns'} != $$self{'columns'} ) {
 		return $self->Paper()->width() / ( $$self{'start_columns'} / $$self{'columns'} );
+		} else {
+			return $self->Paper()->width();
+		} # end if
+
 	} # end if
 } # end sub sheet_width
 
@@ -402,13 +411,25 @@ sub sheet_height {
 	$$self{'start_rows'} = $$self{'rows'} if ! $$self{'start_rows'};
 	if ( $$self{'rotate_sheet'} ) {
 		$$self{'paper'}->width( @_ ) if @_;
+			if ( $$self{'start_rows'} and $$self{'rows'} and $$self{'start_rows'} != $$self{'rows'} ) {
 		return $self->Paper()->width() / ( $$self{'start_rows'} / $$self{'rows'} );
+		} else {
+			return $self->Paper()->width();
+		} # end if
 	} else {
 		$$self{'paper'}->height( @_ ) if @_;
 		if ( ! $self->Paper()->height() ) {
+			if ( $$self{'start_rows'} and $$self{'rows'} and $$self{'start_rows'} != $$self{'rows'} ) {
 			return $$self{'cut_off'} / ( $$self{'start_rows'} / $$self{'rows'} );
+			} else {
+				return $$self{'cut_off'};
+			} # end if
 		} else {
+			if ( $$self{'start_rows'} and $$self{'rows'} and $$self{'start_rows'} != $$self{'rows'} ) {
 			return $self->Paper()->height() / ( $$self{'start_rows'} / $$self{'rows'} );
+			} else {
+			return $self->Paper()->height();
+			} 
 		} # end if
 	} # end if
 } # end sub sheet_height
@@ -460,7 +481,7 @@ sub equals {
 
 sub to_string {
 	if ( ! $_[0]{'to_string'} ) {
-		$_[0]{'to_string'} = sprintf('%s %dx%d+%dx%d=%dout %dx%d=%dp %sx%s %s', $_[0]->Press()->id(), $_[0]->get('columns','rows','dutch_columns','dutch_rows','imposition','page_columns','page_rows','pages', 'sheet_width','sheet_height', 'image_orientation') );
+		$_[0]{'to_string'} = sprintf('%s %dx%d+%dx%d=%dout %dx%d=%dp %sx%s %s', ( $_[0]{Press} ? $_[0]->Press()->strid() : 'unknown equipment' ), $_[0]->get('columns','rows','dutch_columns','dutch_rows','imposition','page_columns','page_rows','pages', 'sheet_width','sheet_height', 'image_orientation') );
 	}
 	return $_[0]{'to_string'};
 } # end sub to_string

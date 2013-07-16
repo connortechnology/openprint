@@ -110,7 +110,7 @@
 							);
 					} # end if
 					foreach my $qty_index ( $Project->quantity_indexes() ) {
-						$html .= sprintf('<td class="price"><b>%s</b><br/>%s', openprint::Currency::format( $ProjectCurrency->convert_from( $sig_specs{'txtPrice'.$qty_index} )),openprint::Estimating::Printing::summary($Project, $ss_id, \%sig_specs, $qty_index ) );
+						$html .= sprintf('<td class="price"><a href="/main/project/%s?ProjectIndex=%d&amp;ServiceIndex=%d">%s</a><br/>%s', $$Project{id}, join(',',@sigs), openprint::Currency::format( $ProjectCurrency->convert_from( $sig_specs{'txtPrice'.$qty_index} )),openprint::Estimating::Printing::summary($Project, $ss_id, \%sig_specs, $qty_index ) );
 						$html .= '</td>';
 						$totals[$qty_index] += $ProjectCurrency->convert_from( $sig_specs{'txtPrice'.$qty_index} );
 					} # end foreach qty_index

@@ -20,9 +20,11 @@ $serial = 'inks_id_seq';
 	material_id	=>	'material_id',
 	washups		=>	'washups',
 	grades		=>	'grades',
+	mix			=>	'mix',
 );
 
 %defaults = (
+	mix			=>	0,
 	washups		=>	undef,
 	service_id	=>	undef,
 	material_id	=>	undef,
@@ -34,10 +36,16 @@ $serial = 'inks_id_seq';
 );
 
 sub Material {
-	return new openprint::Material( $_[0]{material_id} );
+	if ( ! $_[0]{Material} ) {
+		$_[0]{Material} = new openprint::Material( $_[0]{material_id} );
+	}
+	return $_[0]{Material};
 } # end sub Material
 sub Service {
-	return new openprint::Service( $_[0]{service_id} );
+	if ( ! $_[0]{Service} ) {
+		$_[0]{Service} = new openprint::Service( $_[0]{service_id} );
+	} # end if
+	return $_[0]{Service};	
 } # end sub Service
 1;
 __END__

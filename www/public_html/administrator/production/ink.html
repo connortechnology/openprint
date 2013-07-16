@@ -5,21 +5,21 @@
 			<label>Ink</label>
 			<select name="ink_id" onchange="if(this.options[this.selectedIndex].value != ''){this.form.btnFunction.value='';this.form.submit();}">
 				<option value="">Select an Ink</option>
-				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->pmsid() . ' : ' . $_->name() } openprint::Ink->find('order'=>'pmsid') ], $$variable{Ink}->id() ); ) ?>
+				<? echo ( make_drop_down( [ map { $_->id(), $_->pmsid() . ' : ' . $_->name() } openprint::Ink->find('order'=>'pmsid') ], $$variable{Ink}->id() ); ) ?>
 			</select>
 		</p>
 		<p class="buttons">
 			<? echo ( 
 				my $html = '';
-				$html .= ssi::button( 'Prev1', { onclick=>"f1.btnFunction.value='&lt;&lt;';fmCheck(f1);", text=>'<<' } );
-				$html .= ssi::button( 'Next1', { onclick=>"f1.btnFunction.value='&gt;&gt;';fmCheck(f1);", text=>'>>' } );
-				$html .= ssi::button( 'New1', { onclick=>"addCheck(f1);", text=>'New' } );
-				$html .= ssi::button( 'Save1', { onclick=>"f1.btnFunction.value='Save';fmChange=3;fmCheck(f1);", text=>'Save' } );
+				$html .= button( 'Prev1', { onclick=>"f1.btnFunction.value='&lt;&lt;';fmCheck(f1);", text=>'<<' } );
+				$html .= button( 'Next1', { onclick=>"f1.btnFunction.value='&gt;&gt;';fmCheck(f1);", text=>'>>' } );
+				$html .= button( 'New1', { onclick=>"addCheck(f1);", text=>'New' } );
+				$html .= button( 'Save1', { onclick=>"f1.btnFunction.value='Save';fmChange=3;fmCheck(f1);", text=>'Save' } );
 				if ( $$variable{Ink}->id() ) {
-					$html .= ssi::button( 'Copy1', { onclick=>"f1.btnFunction.value='Copy';fmCheck(f1);", text=>'Copy' } );
-					$html .= ssi::button( 'Delete1', { onclick=>"f1.btnFunction.value='Delete';fmChange=2;fmCheck(f1);", text=>'Delete' } );
+					$html .= button( 'Copy1', { onclick=>"f1.btnFunction.value='Copy';fmCheck(f1);", text=>'Copy' } );
+					$html .= button( 'Delete1', { onclick=>"f1.btnFunction.value='Delete';fmChange=2;fmCheck(f1);", text=>'Delete' } );
 				} # end if
-				$html .= ssi::button( 'Reset1', { onclick=>'f1.reset();', text=>'Reset' } );
+				$html .= button( 'Reset1', { onclick=>'f1.reset();', text=>'Reset' } );
 				return $html;
 			) ?>
 		</p>
@@ -38,25 +38,29 @@
 				<label>Material</label>
 				<select name="material_id">
 					<option value="">none</option>
-					<? echo ( ssi::make_drop_down( openprint::Material->dropdown('order'=>'lower(name)'), $$variable{Ink}->material_id() ); ) ?>
+					<? echo ( make_drop_down( openprint::Material->dropdown('order'=>'lower(name)'), $$variable{Ink}->material_id() ); ) ?>
 				</select>
 			</li>
 			<li>
 				<label>Service</label>
 				<select name="service_id">
 					<option value="">none</option>
-					<? echo ( ssi::make_drop_down( openprint::Service->dropdown('order'=>'lower(name)'), $$variable{Ink}->service_id() ); ) ?>
+					<? echo ( make_drop_down( openprint::Service->dropdown('order'=>'lower(name)'), $$variable{Ink}->service_id() ); ) ?>
 				</select>
 			</li>
 			<li>
 				<label>Washups</label>
-				<? echo ( ssi::input( type=>'cardinal', name=>'washups', value=>$$variable{Ink}->washups() ); ) ?>
+				<? echo ( input( type=>'cardinal', name=>'washups', value=>$$variable{Ink}->washups() ); ) ?>
+			</li>
+			<li>
+				<label>Needs Mixing</label>
+				<? echo ( radio( 'mix', [ '1', 'Yes', '0', 'No' ], $$variable{Ink}->mix() ); ) ?>
 			</li>
 			<li><label>Stock Grades</label>
 				<select id="grades" name="grades" multiple="multiple">
 				<? echo (
 						my @options = ( 1,'Gloss-coated paper',2,'Matte-coated paper',3,'Gloss-coated, web paper', 4, 'Uncoated, white paper', 5, 'Uncoated, yellow paper' );
-						return ssi::make_drop_down( \@options, $$variable{Ink}->grades() );
+						return make_drop_down( \@options, $$variable{Ink}->grades() );
 						) ?>
 				</select>
 			</li>

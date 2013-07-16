@@ -35,7 +35,7 @@ use Time::HiRes qw{ time gettimeofday tv_interval };
 
 use vars qw( $debug $table $serial %fields %find_fields %defaults %transforms );
 
-$debug = 1;
+$debug = 0;
 $table = 'papers';
 $serial	= 'paper_id_seq';
 %fields = (
@@ -907,7 +907,7 @@ sub get_price {
 	my ( $self, %params ) = @_;
 	
 	my $price;
-	my $qty = $params{'weight'};
+	my $qty = $params{weight} ? $params{weight} : $params{sheets};
 	my $lookup_qty = $params{'lookup_weight'} ? $params{'lookup_weight'} : $params{'weight'};
 
 	if ( $$self{'Price'} and ($params{'service'} eq 'Material') ) {

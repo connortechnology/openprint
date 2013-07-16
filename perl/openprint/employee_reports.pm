@@ -17,9 +17,18 @@ use vars qw( $r $log $dbh %variable %session %param );
 *variable = \%openprint::variable;
 
 sub project_history {
-	ssi::setup_date_select( '/employee/reports/project_history.html', 'created_on_start', -31 );
-	ssi::setup_date_select( '/employee/reports/project_history.html', 'created_on_end', '' );
-	_project_history_results();
+	my $page = '/employee/reports/project_history.html';
+	ssi::save_params($page,
+		( map { 'created_on_start_'.$_ } ( 'year','month','day' ) ),
+		( map { 'created_on_end_'.$_ } ( 'year','month','day' ) ),
+		( map { 'created_on_time_start_'.$_ } ( 'hour','minute' ) ),
+		( map { 'created_on_time_end_'.$_ } ( 'hour','minute' ) ),
+		( map { 'status_on_start_'.$_ } ( 'year','month','day','hour','minute' ) ),
+		( map { 'status_on_end_'.$_ } ( 'year','month','day','hour','minute' ) ),
+		'status', 'previous_status', 'company_id', 'Estimator', 'CSR', 'reprint', 
+	);
+	ssi::setup_date_select( $page, 'created_on_start', -31 );
+	ssi::setup_date_select( $page, 'created_on_end', '' );
 }
 sub _project_history_results {
 	my $page = '/employee/reports/project_history.html';

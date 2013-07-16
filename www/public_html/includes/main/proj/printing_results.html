@@ -6,16 +6,16 @@
 	} # end if
 ) ?>
 <ul>
-<? echo ( include('/includes/main/proj/_quantities.html'); ) ?>
+<? include(/includes/main/proj/_quantities.html)?>
 <? if ( $$variable{Project}->Type()->name() ne 'Envelopes' ) ?>
 <li class="stockformat">
 	<label>Stock Format</label>
 	<? echo ( my $html = '';
 		foreach my $qty_index ( $$variable{Project}->quantity_indexes() ) {
 			$html .= sprintf('<span class="%sColumns">', $$variable{'Columns'} );
-			$html .= ssi::radio( 'StockType'.$qty_index, ['Sheet','Sheet', 'Roll','Roll'], $$variable{'StockType'.$qty_index}, { onclick=>'calc(this.form.name);' } );
+			$html .= radio( 'StockType'.$qty_index, ['Sheet','Sheet', 'Roll','Roll'], $$variable{'StockType'.$qty_index}, { onclick=>'calc(this.form.name);' } );
 			if ( sets::isin( $session{'user_type'}, ['A','E'] ) ) {
-				$html .= ssi::write_override( 'OverrideStockType'.$qty_index, $$variable{'OverrideStockType'.$qty_index}, '', "calc('f1');" );
+				$html .= write_override( 'OverrideStockType'.$qty_index, $$variable{'OverrideStockType'.$qty_index}, '', "calc('f1');" );
 			} else {
 				$html .= sprintf('<input type="hidden" name="OverrideStockType%1$d" value="%2$s" />', $qty_index, $$variable{'OverrideStockType'.$qty_index} );
 			} # end if
@@ -65,14 +65,14 @@
 					map { $_, join(' x ', map { $_.'"' } split('x', $_) ) } @sizes ], $$variable{'ddmStockSheetSize'.$qty_index} ),
 			);
 		if ( sets::isin( $session{user_type}, ['A','E'] ) ) {
-			$html .= ssi::write_override( 'chkOverrideSheetSize'.$qty_index, 
+			$html .= write_override( 'chkOverrideSheetSize'.$qty_index, 
 					$$variable{'chkOverrideSheetSize'.$qty_index},
 					"\$('OverrideStockSize$qty_index').show();", 
 					"f1.OverrideStockWidth$qty_index.value='';f1.OverrideStockHeight$qty_index.value='';\$('OverrideStockSize$qty_index').hide();calc('f1');" );
 			$html .= sprintf(q`<br/><span id="OverrideStockSize%1$d"%2$s>`, $qty_index, ( $$variable{'chkOverrideSheetSize'.$qty_index} ne 'Y' ? '' : ' style="display:none;"' ) );
-			$html .= ssi::input( type=>'number', name=>"OverrideStockWidth$qty_index", value=>$$variable{'OverrideStockWidth'.$qty_index}, onkeyup=>"this.form.ddmStockSheetSize$qty_index.selectedIndex=0;calc(this.form.name);" );
+			$html .= input( type=>'number', name=>"OverrideStockWidth$qty_index", value=>$$variable{'OverrideStockWidth'.$qty_index}, onkeyup=>"this.form.ddmStockSheetSize$qty_index.selectedIndex=0;calc(this.form.name);" );
 			$html .= ' x ';
-			$html .= ssi::input( type=>"number", name=>"OverrideStockHeight$qty_index", value=>$$variable{'OverrideStockHeight'.$qty_index}, onkeyup=>"this.form.ddmStockSheetSize$qty_index.selectedIndex=0;calc(this.form.name);" );
+			$html .= input( type=>"number", name=>"OverrideStockHeight$qty_index", value=>$$variable{'OverrideStockHeight'.$qty_index}, onkeyup=>"this.form.ddmStockSheetSize$qty_index.selectedIndex=0;calc(this.form.name);" );
 			$html .= '</span>';
 		} else {
 			$html .= sprintf(q`
@@ -112,8 +112,8 @@
 		my $html;
 		foreach my $qty_index ( $$variable{Project}->quantity_indexes() ) {
 			$html .= '<span class="'.$$variable{'Columns'}.'Columns">';
-			$html .= ssi::input( type=>'float', id=>"CutOff$qty_index", name=>"CutOff$qty_index", value=>$$variable{'CutOff'.$qty_index}, onkeyup=>'calc(this.form.name);' );
-			$html .= ssi::write_override( 'OverrideCutOff'.$qty_index, $$variable{'OverrideCutOff'.$qty_index},'', "calc('f1');" );
+			$html .= input( type=>'float', id=>"CutOff$qty_index", name=>"CutOff$qty_index", value=>$$variable{'CutOff'.$qty_index}, onkeyup=>'calc(this.form.name);' );
+			$html .= write_override( 'OverrideCutOff'.$qty_index, $$variable{'OverrideCutOff'.$qty_index},'', "calc('f1');" );
 			$html .= '</span>';
 		} # end foreah qty_index
 		return $html;
@@ -156,7 +156,7 @@
 	return ssi::make_drop_down( \@options, $$variable{'ddmBleedSize'.$$variable{'QTYIndex'}} );
 ) ?>
 		</select>
-		<? echo ( ssi::write_override( 'chkOverrideBleedSize'.$$variable{'QTYIndex'}, $$variable{'chkOverrideBleedSize'.$$variable{'QTYIndex'}},'',"calc('f1');" ); ) ?>
+		<? echo ( write_override( 'chkOverrideBleedSize'.$$variable{'QTYIndex'}, $$variable{'chkOverrideBleedSize'.$$variable{'QTYIndex'}},'',"calc('f1');" ); ) ?>
 	</span>
 <? endif ( $$variable{Project}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
 		<? eval ( $$variable{'QTYIndex'} += 1 ) ?>
@@ -183,7 +183,7 @@
 			<option value="">No runstyle selected</option>
 			<? echo ( ssi::make_drop_down( $$variable{'RunStyleOptions'}, $$variable{'ddmRunStyle'.$$variable{'QTYIndex'}} ); ) ?>
 		</select>
-		<? echo ( return ssi::write_override( 'chkOverrideRunStyle'.$$variable{'QTYIndex'}, $$variable{'chkOverrideRunStyle'.$$variable{'QTYIndex'}}, '', q`calc('f1');` ); ) ?>
+		<? echo ( return write_override( 'chkOverrideRunStyle'.$$variable{'QTYIndex'}, $$variable{'chkOverrideRunStyle'.$$variable{'QTYIndex'}}, '', q`calc('f1');` ); ) ?>
 	</span>
 <? endif ( $$variable{Project}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
 <? eval ( $$variable{'QTYIndex'} += 1 ) ?>
@@ -208,7 +208,7 @@
 		foreach my $qty_index ( $$variable{Project}->quantity_indexes() ) {
 			$html .= sprintf( q`<span class="%sColumns"><select name="ddmPress%d" size="1" onchange="calc(this.form.name);"><option value="">Press Options</option>%s</select>%s</span>`,
 				$$variable{'Columns'}, $qty_index, ssi::make_drop_down( \@options, $$variable{"ddmPress$qty_index"} ),
-				ssi::write_override( 'chkOverridePress'.$qty_index, $$variable{'chkOverridePress'.$qty_index},'',"calc('f1');" ),
+				write_override( 'chkOverridePress'.$qty_index, $$variable{'chkOverridePress'.$qty_index},'',"calc('f1');" ),
 			);
 		} # end foreach qty_index
 		return $html;
@@ -231,7 +231,7 @@
 			$html .= sprintf('<span class="%1$sColumns"><select name="PrintingType%2$d" size="1" onchange="calc(this.form.name);">', $$variable{'Columns'}, $qty_index );
 			$html .= ssi::make_drop_down( [ map { $_, $printingtypes{$_} } sort keys %printingtypes ], $$variable{'PrintingType'.$qty_index} );
 			$html .= '</select>';
-			$html .= ssi::write_override( 'OverridePrintingType'.$qty_index, $$variable{'OverridePrintingType'.$qty_index},"calc('f1');","calc('f1');" );
+			$html .= write_override( 'OverridePrintingType'.$qty_index, $$variable{'OverridePrintingType'.$qty_index},"calc('f1');","calc('f1');" );
 			$html .= '</span>';
 		} # end foreach qty_index
 		return $html;
@@ -283,8 +283,8 @@
 			my $html;
 			foreach my $qty_index ( $$variable{Project}->quantity_indexes() ) {
 				$html .= '<span class="'.$$variable{'Columns'}.'Columns">';
-				$html .= ssi::input( name=>"txtPlateQuantity$qty_index", value=>$$variable{'txtPlateQuantity'.$qty_index}, type=>'integer', onkeyup=>'calc(this.form.name);', readonly=>1 );
-				$html .= ssi::input( name=>"BlankPlateQuantity$qty_index", value=>$$variable{'BlankPlateQuantity'.$qty_index}, type=>'hidden' );
+				$html .= input( name=>"txtPlateQuantity$qty_index", value=>$$variable{'txtPlateQuantity'.$qty_index}, type=>'integer', onkeyup=>'calc(this.form.name);', readonly=>1 );
+				$html .= input( name=>"BlankPlateQuantity$qty_index", value=>$$variable{'BlankPlateQuantity'.$qty_index}, type=>'hidden' );
 				$html .= '</span>';
 			} # end foreach qty_index
 			return $html;
@@ -296,7 +296,7 @@
 			my $html;
 			foreach my $qty_index ( $$variable{Project}->quantity_indexes() ) {
 				$html .= '<span class="'.$$variable{'Columns'}.'Columns">';
-				$html .= ssi::input( name=>"txtPlateChangeQuantity$qty_index", value=>$$variable{'txtPlateChangeQuantity'.$qty_index}, type=>'integer', onkeyup=>'calc(this.form.name);' );
+				$html .= input( name=>"txtPlateChangeQuantity$qty_index", value=>$$variable{'txtPlateChangeQuantity'.$qty_index}, type=>'integer', onkeyup=>'calc(this.form.name);' );
 				$html .= '</span>';
 			} # end foreach qty_index
 			return $html;
@@ -306,26 +306,13 @@
 <ul>
 <? if ( sets::isin( $session{'user_type'}, [ 'E','A' ] ) ) ?>
 <li>
-	<label>Base</label>
-	<? echo ( 
-		my $html;
-		foreach my $qty_index ( $$variable{Project}->quantity_indexes() ) {
-			$html .= '<span class="'.$$variable{'Columns'}.'Columns">';
-			$html .= ssi::input( id=>"OverBase$qty_index", name=>"OverBase$qty_index", value=>$$variable{'OverBase'.$qty_index}, type=>'cardinal', onkeyup=>'calc(this.form.name);' );
-			$html .= ssi::write_override( 'OverrideBase'.$qty_index, $$variable{'OverrideBase'.$qty_index},'',"calc('f1');" );
-			$html .= '</span>';
-		} # end foreach qty_index
-		return $html;
-	) ?>
-</li>
-<li>
 	<label>Setup</label>
 	<? echo ( 
 		my $html;
 		foreach my $qty_index ( $$variable{Project}->quantity_indexes() ) {
 			$html .= '<span class="'.$$variable{'Columns'}.'Columns">';
-			$html .= ssi::input( id=>"OverSetup$qty_index", name=>"OverSetup$qty_index", value=>$$variable{'OverSetup'.$qty_index}, type=>'cardinal', onkeyup=>"calc(this.form.name);" );
-			$html .= ssi::write_override( 'OverrideSetup'.$qty_index, $$variable{'OverrideSetup'.$qty_index},'',"calc('f1');" );
+			$html .= input( id=>"OverSetup$qty_index", name=>"OverSetup$qty_index", value=>$$variable{'OverSetup'.$qty_index}, type=>'cardinal', onkeyup=>"calc(this.form.name);" );
+			$html .= write_override( 'OverrideSetup'.$qty_index, $$variable{'OverrideSetup'.$qty_index},'',"calc('f1');" );
 			$html .= '</span>';
 		} # end foreach qty_index
 		return $html;
@@ -337,8 +324,8 @@
 		my $html;
 		foreach my $qty_index ( $$variable{Project}->quantity_indexes() ) {
 			$html .= '<span class="'.$$variable{'Columns'}.'Columns">';
-			$html .= ssi::input( id=>"OverRun$qty_index", name=>"OverRun$qty_index", value=>$$variable{'OverRun'.$qty_index}, type=>'cardinal', onkeyup=>'calc(this.form.name);' );
-			$html .= ssi::write_override( 'OverrideRun'.$qty_index, $$variable{'OverrideRun'.$qty_index},'',"calc('f1');" );
+			$html .= input( id=>"OverRun$qty_index", name=>"OverRun$qty_index", value=>$$variable{'OverRun'.$qty_index}, type=>'cardinal', onkeyup=>'calc(this.form.name);' );
+			$html .= write_override( 'OverrideRun'.$qty_index, $$variable{'OverrideRun'.$qty_index},'',"calc('f1');" );
 			$html .= '</span>';
 		} # end foreach qty_index
 		return $html;
@@ -350,7 +337,7 @@
 		my $html;
 		foreach my $qty_index ( $$variable{Project}->quantity_indexes() ) {
 			$html .= '<span class="'.$$variable{'Columns'}.'Columns">';
-			$html .= ssi::input( id=>"OverTotal$qty_index", name=>"OverTotal$qty_index", value=>$$variable{'OverTotal'.$qty_index}, type=>'cardinal', onkeyup=>'calc(this.form.name);' );
+			$html .= input( id=>"OverTotal$qty_index", name=>"OverTotal$qty_index", value=>$$variable{'OverTotal'.$qty_index}, type=>'cardinal', onkeyup=>'calc(this.form.name);' );
 			$html .= '</span>';
 		} # end foreach qty_index
 		return $html;
@@ -422,7 +409,7 @@
 <? echo ( ssi::checked( $$variable{'rdbGrainDirection'.$$variable{'QTYIndex'}} eq 'Short' ); ) ?>
  />
 		<label class="radio" for="rdbGrainDirection<?QTYIndex?>Short">Short</label>
-		<? echo ( ssi::write_override( 'chkOverrideGrainDirection'.$$variable{'QTYIndex'}, $$variable{'chkOverrideGrainDirection'.$$variable{'QTYIndex'}},'',"calc('f1');" ); ) ?>
+		<? echo ( write_override( 'chkOverrideGrainDirection'.$$variable{'QTYIndex'}, $$variable{'chkOverrideGrainDirection'.$$variable{'QTYIndex'}},'',"calc('f1');" ); ) ?>
 	</span>
 <? endif ( $$variable{Project}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
 <? eval ( $$variable{'QTYIndex'} += 1 ) ?>
@@ -440,12 +427,12 @@
 		foreach my $qty_index ( $$variable{Project}->quantity_indexes() ) {
 			$html .= sprintf('<span class="%sColumns">%s Pages %s x %s %s%s%s</span>',
 				$$variable{'Columns'},
-				ssi::input( type=>"number", id=>"PageQuantity$qty_index", name=>"PageQuantity$qty_index", value=>$$variable{'PageQuantity'.$qty_index}, onkeyup=>'calc(this.form.name);' ),
-				ssi::input( type=>"number", name=>"page_columns$qty_index", readonly=>"readonly" ),
-				ssi::input( type=>"number", name=>"page_rows$qty_index", readonly=>"readonly" ),
-				ssi::input( type=>"hidden", name=>"SpreadRows$qty_index", value=>"SpreadRows$qty_index" ),
-				ssi::input( type=>"hidden", name=>"SpreadCols$qty_index", value=>"SpreadCols$qty_index" ),
-				ssi::write_override( 'chkOverridePageQuantity'.$qty_index, $$variable{'chkOverridePageQuantity'.$qty_index},'',"calc('f1');" ),
+				input( type=>"number", id=>"PageQuantity$qty_index", name=>"PageQuantity$qty_index", value=>$$variable{'PageQuantity'.$qty_index}, onkeyup=>'calc(this.form.name);' ),
+				input( type=>"number", name=>"page_columns$qty_index", readonly=>"readonly" ),
+				input( type=>"number", name=>"page_rows$qty_index", readonly=>"readonly" ),
+				input( type=>"hidden", name=>"SpreadRows$qty_index", value=>"SpreadRows$qty_index" ),
+				input( type=>"hidden", name=>"SpreadCols$qty_index", value=>"SpreadCols$qty_index" ),
+				write_override( 'chkOverridePageQuantity'.$qty_index, $$variable{'chkOverridePageQuantity'.$qty_index},'',"calc('f1');" ),
 				);
 		} # end foreach
 		return $html;
@@ -478,17 +465,17 @@
 
 		$html .= sprintf( '<span class="%sColumns">%s Out %s Dutch?: %s <br/> %s x %s + %s x %s<br/>%s x %s (W x H)</span>%s%s',
 			$$variable{'Columns'},
-			ssi::input( type=>"number", name=>"txtImposition$qty_index", value=>$$variable{'txtImposition'.$qty_index}, onkeyup=>"calc(this.form.name);" ),
-			ssi::write_override( 'chkOverrideImposition'.$qty_index, $$variable{'chkOverrideImposition'.$qty_index},'',"calc('f1');" ),
-			ssi::radio( 'dutch'.$qty_index, [ 'Y', 'Yes', 'N', 'No' ], $$variable{'dutch'.$qty_index} ),
-			ssi::input( type=>"number", readonly=>"readonly", name=>"hdnImpositionColumns$qty_index" ),
-			ssi::input( type=>"number", readonly=>"readonly", name=>"hdnImpositionRows$qty_index" ),
-			ssi::input( type=>"number", readonly=>"readonly", name=>"hdnImpositionDutchColumns$qty_index" ),
-			ssi::input( type=>"number", readonly=>"readonly", name=>"hdnImpositionDutchRows$qty_index" ),
-			ssi::input( type=>"number", readonly=>"readonly", name=>"txtLayoutWidth$qty_index" ),
-			ssi::input( type=>"number", readonly=>"readonly", name=>"txtLayoutHeight$qty_index" ),
-			ssi::input( type=>"hidden", name=>"txtImageWidth$qty_index" ),
-			ssi::input( type=>"hidden", name=>"txtImageHeight$qty_index" ),
+			input( type=>'cardinal', name=>"txtImposition$qty_index", value=>$$variable{'txtImposition'.$qty_index}, onkeyup=>'calc(this.form.name);' ),
+			write_override( 'chkOverrideImposition'.$qty_index, $$variable{'chkOverrideImposition'.$qty_index},'',"calc('f1');" ),
+			radio( 'dutch'.$qty_index, [ 'Y', 'Yes', 'N', 'No' ], $$variable{'dutch'.$qty_index} ),
+			input( type=>"number", readonly=>"readonly", name=>"hdnImpositionColumns$qty_index" ),
+			input( type=>"number", readonly=>"readonly", name=>"hdnImpositionRows$qty_index" ),
+			input( type=>"number", readonly=>"readonly", name=>"hdnImpositionDutchColumns$qty_index" ),
+			input( type=>"number", readonly=>"readonly", name=>"hdnImpositionDutchRows$qty_index" ),
+			input( type=>"number", readonly=>"readonly", name=>"txtLayoutWidth$qty_index" ),
+			input( type=>"number", readonly=>"readonly", name=>"txtLayoutHeight$qty_index" ),
+			input( type=>"hidden", name=>"txtImageWidth$qty_index" ),
+			input( type=>"hidden", name=>"txtImageHeight$qty_index" ),
 			);
 		} # end foreach
 		return $html;
@@ -496,7 +483,7 @@
 </li>
 <? endif ( sets::isin( $$variable{'ProjectType'}->name(), [ 'Envelopes' ] ) ) ?>
 
-<? echo ( include('/includes/main/proj/_unit_price.html'); ) ?>
-<? echo ( include('/includes/main/proj/_service_price.html'); ) ?>
-<? echo ( include('/includes/main/proj/_breakdown.html'); ) ?>
+<? include(/includes/main/proj/_unit_price.html)?>
+<? include(/includes/main/proj/_service_price.html)?>
+<? include(/includes/main/proj/_breakdown.html)?>
 </ul>

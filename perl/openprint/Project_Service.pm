@@ -132,7 +132,7 @@ sub delete {
 	delete $$Project{'Services'};
 	delete $$Project{'signatures'};
 	delete $$Project{'service_types'};
-	my $Job = openprint::ScheduledJob->find_one('project_id'=>$$self{'project_id'}, 'service_id'=>$$self{'service_id'} );
+	my $Job = openprint::ScheduledJob->find_one('project_id'=>$$self{'project_id'}, 'service_id @>'=>$$self{'service_id'} );
 	$Job->save( { 'service_id' => [ sets::exclude( [ $$self{'service_id'} ], $Job->service_id() ) ] } ) if $Job;
 	my $specs = $self->specs();
 	$self->Project()->add_to_log( @openprint::session{'company_id','user_id'}, "Deleted service $$specs{'ServiceType'} $$specs{'ServiceName'}." );

@@ -17,18 +17,19 @@
 		} # end foreach service_name
 	} # end if
 
-    # Not sure this is a good idea, but it's neccessary for printing... why is it neccessary?
-	#my %specs_cache = %param;
-    $openprint::service::specs_cache{$param{ServiceIndex}} = \%param;
-    my %specs = %param;
-	$param{'method'} = 'calc' if ! $param{'method'};
 
 	my $module = 'openprint::Estimating::'.$param{'ServiceType'};
-
 	eval "require $module";
 	$log->error("Error requiring $module: $@") if $@;
+
+	$param{'method'} = 'calc' if ! $param{'method'};
+    # Not sure this is a good idea, but it's neccessary for printing... why is it neccessary?
+    $openprint::service::specs_cache{$param{ServiceIndex}} = \%param;
+    my %specs = %param;
 	if ( my $function = $module->can( $param{method} ) ) {
 		$specs{'Status'} = $function->( $log, $dbh, $variable, @param{'ProjectIndex','ServiceIndex'}, \%specs );
+	} else {
+		$log->error("Cant do $param{method} for $module");
 	} # end if
 
     my @results = ();

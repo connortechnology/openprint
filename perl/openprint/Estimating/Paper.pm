@@ -234,7 +234,7 @@ $openprint::log->error("2No stock index for $paper_id");
 			if ( $$specs{"overridecost-$ss_id-$stock_index-$qty_index"} ne 'Y' ) {
 				my $price;
 				if ( $Paper->type() eq 'Sheet' ) {
-					$price = $Paper->get_price( 'weight'=>$totals{$paper_id}{"qty_$qty_index"} * $Paper->sheet_weight(),'service'=>'Material' );
+					$price = $Paper->get_price( sheets=>$totals{$paper_id}{"qty_$qty_index"},'service'=>'Material' );
 				} else {
 					$price = $Paper->get_price( 'weight'=>$totals{$paper_id}{"qty_$qty_index"},'service'=>'Material' );
 				} # end if
