@@ -440,7 +440,7 @@ sub signature_calc {
 			push @capabilities, 'Large Format';
 		} # end if
 		@my_equipment = openprint::Equipment->find( 'Specifications' => {'Cutting Capable'=>\@capabilities}, 'useinestimating'=>1,'order'=>'lower(strName)');
-		@{$$calc_hash{'Cutting::signature_calc::equipment'}} = @my_equipment;
+		$$calc_hash{'Cutting::signature_calc::equipment'} = \@my_equipment;
 	} # end if
 
 	if ( ! @my_equipment ) {
@@ -892,11 +892,10 @@ sub calc {
 				$$specs{'hdnBreakdown'.$qty_index} .= 'no imposition.';
 				next;
 			} # end if
-			my $Paper = openprint::Paper::load_from_signature( $Project, $sig_specs, $qty_index );
 			my $Imposition = new openprint::Imposition();
-			$Imposition->paper( $Paper );
 			$Imposition->load( $sig_specs, $qty_index );
 			next if ! $Imposition->imposition();
+			my $Paper = $Imposition->Paper();
 
 			@variables = sets::union( @variables, ( "txtStockCalliper-$signature_index",
 						"txtCalculatedCuts-$signature_index-$qty_index", "chkOverrideCalculatedCuts-$signature_index-$qty_index",
