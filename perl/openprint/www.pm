@@ -57,6 +57,9 @@ $log->debug("Was aborted");
         openprint::Object::init_cache();
         $session{lastupdated} = time;
         untie %session;
+if ( ! $dbh->{AutoCommit} ) {
+$log->error("Uncommited transaction");
+} # end if
         $dbh->disconnect();
     } else {
 $log->debug("No dbh at cleanup");

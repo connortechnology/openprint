@@ -276,7 +276,7 @@ sub multipage_signatures {
 			$$param{'txtSpreadSize'} = 2;
 		} elsif ( sets::isin( $$param{'rdbTemplateType'}, ['SaddleStitching', 'LoopStitching'] ) ) {
 			$$param{'txtSpreadSize'} = 4;
-		} elsif ( sets::isin( $$param{'rdbTemplateType'}, ['CornerStitching', 'Cerlox', 'PlasticCoil','MetalCoil'] ) ) {
+		} elsif ( sets::isin( $$param{'rdbTemplateType'}, ['CornerStitching', 'Cerlox', 'PlasticCoil','MetalCoil', 'Unbound'] ) ) {
 			$$param{'txtSpreadSize'} = 2;
 		} else {
 			$openprint::log->warn("Unknown Bindery Type: $$param{'rdbTemplateType'}" );
