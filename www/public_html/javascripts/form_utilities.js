@@ -1102,17 +1102,18 @@ function input_filter(e,regexp) {
 	return e.value;
 }
 function cardinalize(e) {
-	if ( e.value.match(/[^\d%\*]/g) )
+	if ( e.value && e.value.match(/[^\d\%\*]/) ) {
 		e.value = e.value.replace(/[^\d%\*]/g,'');
+	}
 	return e.value;
 }
 function integerize(e) {
-	if ( e.value.match(/[^\d\-%\*]/g) )
+	if ( e.value.match(/[^\d\-%\*]/) )
 		e.value = e.value.replace(/[^\d\-%\*]/g,'');
 	return e.value;
 }
 function floatize(e) {
-	if ( e.value.match(/[^\d\-\.%\*]/g) )
+	if ( e.value.match(/[^\d\-\.%\*]/) )
 		e.value = parseFloat(e.value.replace(/[^\d\-\.%\*]/g,''));
 	return e.value;
 }
