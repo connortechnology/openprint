@@ -239,3 +239,6 @@ span.SpotColour label, span.Coverages label {
 .Project select {
 	max-width: 100%;
 }
+.WaitingForCustomerApproval {
+	color: red;
+}

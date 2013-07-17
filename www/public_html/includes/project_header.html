@@ -5,7 +5,7 @@
 	<fieldset class="ProjectInformation"><legend>Project Information</legend>
 		<p>
 			<label>Project #:</label>
-	  		<?ProjectIndex?>
+	  		<? echo ( $$variable{Project}->id() ) ?>
 		</p>
 	  	<? if ( $$variable{'Project'}->docket() ) ?>
 		<p>
@@ -34,19 +34,15 @@
 	  	<? endif ( $$variable{'Project'}->docket() ) ?>
    		<p>
 			<label>Status:</label>
-			<? if ( $$variable{'ProjectStatus'} eq 'Waiting For Customer Approval' ) ?>
-			<span style="color: red;"><?ProjectStatus?></span>
-			<? else ( $$variable{'ProjectStatus'} eq 'Waiting For Customer Approval' ) ?>
-			<?ProjectStatus?>
-			<? endif ( $$variable{'ProjectStatus'} eq 'Waiting For Customer Approval' ) ?>
+			<span class="<? echo ( $_ = $$variable{Project}->status(); $_  =~ s/ //g; return $_; ) ?>"><? echo ( $$variable{Project}->status() ) ?></span>
 		</p>
 	  	<p> 
 			<label>Creation Date:</label>
-	  		<?CreationDate?>
+	  		<? echo ( format_datetime( $variable{'Project'}->created_on() ); ) ?>
 		</p>
 	  	<p> 
 			<label>Last Updated:</label>
-	  		<? echo ( Date::Format::time2str( $config{'DateTimeFormat'}, Date::Parse::str2time( $$variable{'Project'}->updated_on() ) ); ) ?>
+	  		<? echo ( format_datetime( $variable{'Project'}->updated_on() ); ) ?>
 		</p>
 		<? if ( $$variable{'DocketNumber'} ) ?>
 		<? if ( $$variable{'Project'}->shippingtype() ) ?>
