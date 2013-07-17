@@ -211,11 +211,11 @@ $openprint::log->debug("Fold for $$params{pages} " . $F->to_string() );
 			$openprint::log->debug("Wanted Calliper: $$params{calliper}, have min:$$Fold{min_calliper} max:$$Fold{max_calliper}") if $debug;
 			next;
 		} # end if
-		if ( $$Fold{'min_imposition'} and $$params{'imposition'} and ($$Fold{'min_imposition'} > $$params{'imposition'}) ) {
+		if ( defined $$Fold{'min_imposition'} and $$params{'imposition'} and ($$Fold{'min_imposition'} > $$params{'imposition'}) ) {
 			$openprint::log->debug("Wanted imposition: $$params{'imposition'}, have $$Fold{'min_imposition'} x $$Fold{'max_imposition'}") if $debug;
 			next;
 		} # end if
-		if ( $$Fold{'max_imposition'} and $$params{'imposition'} and ($$Fold{'max_imposition'} < $$params{'imposition'}) ) {
+		if ( defined $$Fold{'max_imposition'} and $$params{'imposition'} and ($$Fold{'max_imposition'} < $$params{'imposition'}) ) {
 			$openprint::log->debug("Wanted imposition: $$params{'imposition'}, have $$Fold{'min_imposition'} x $$Fold{'max_imposition'}") if $debug;
 			next;
 		} # end if
