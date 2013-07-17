@@ -806,6 +806,9 @@ sub summary {
 					$summary .= sprintf('%dpg ', $$printing_specs{'txtTotalPageQuantity'} );
 					$summary .= $$printing_specs{'rdbCover'}.' Cover';
 				} # end if
+				if ( $$printing_specs{rdbTemplateType} eq 'Unbound' ) {
+					$summary .= ' Unbound';
+				} # end if
 
 				$summary .= '<br/>';
 			} # end if
