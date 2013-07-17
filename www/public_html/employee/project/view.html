@@ -4,13 +4,13 @@
 			<ul>
 				<li class="docket"><label>Docket #</label>
 				<? echo ( join('',
-							input( type=>'cardinal', name=>'Docket', id=>'Docket', onchange=>'change_handler(this);', onkeypress=>'return input_handler(this,event);', onkeydown=>'if(event.keyCode==13){f2.submit(f1);}', value=>$param{Docket}),
+							input( type=>'cardinal', name=>'Docket', id=>'Docket', onchange=>'change_handler(this);', onkeypress=>'return input_handler(this,event);', onkeydown=>'if(event.keyCode==13){f2.submit(f1);}', onkeyup=>q`$('project_id').value='';`, value=>$param{Docket}),
 							button( 'Go1', { onclick=>'f2.submit();', text=>'Go' } ),
 				); ) ?>
 				</li>
 				<li class="project_id"><label>Project #</label>
 				<? echo ( join('',
-							input( type=>'cardinal', name=>'project_id', id=>'project_id', onchange=>'change_handler(this);', onkeypress=>'return input_handler(this,event);', onkeydown=>'if(event.keyCode==13){f2.submit(f1);}', value=>$param{project_id} ),
+							input( type=>'cardinal', name=>'project_id', id=>'project_id', onchange=>'change_handler(this);', onkeypress=>'return input_handler(this,event);', onkeydown=>'if(event.keyCode==13){f2.submit(f1);}', onkeyup=>q`$('Docket').value='';`, value=>$param{project_id} ),
 							button( 'Go2', { onclick=>'f2.submit();', text=>'Go' } ),
 				); ) ?>
 				</li>
@@ -30,9 +30,9 @@ function dearchive(file_id) {
 	action.innerHTML = 'Dearchiving...please wait.';
 	new Ajax.Updater( action, '_dearchive.html', { parameters: { file_id: file_id}} );
 } // end function dearchive
-function submit( form, action ) {
+function form_submit( form, act ) {
 	form = $(form);
-	form.btnFunction.value = action;
+	form.btnFunction.value = act;
 	form.submit();
 }
 </script>
@@ -51,7 +51,11 @@ function submit( form, action ) {
 				$html .= '</div>';
 			} # end foreach Project
 		} elsif ( $$variable{Project}->id() ) {
+			if ( $$variable{Order}->id() ) {
 			$html .= include('/includes/order_header.html');
+			} else {
+				$html .= '<div class="warning">This Project has not been ordered.</div>';
+			}
 			$html .= '<div class="Project">'.include('_view.html').'</div>';
 		} # end if
 		return $html;
@@ -91,11 +95,11 @@ function submit( form, action ) {
 			</fieldset>
 		</form>
 	</div>
-	<? endif ( $$variable{Order}->docket() ) ?>
 	<br class="spacer"/>
 	<fieldset><legend onclick="toggleContent( 'OrderLog', '/main/order/_view_log.html?order_id=<? echo ( $$variable{Order}->id() ) ?>', null, null );">Order Log (click to hide/show)</legend>
 	<div id="OrderLog" style="display: none;"></div>
 	</fieldset>
+	<? endif ( $$variable{Order}->docket() ) ?>
 </div>
 <script type="text/javascript">
 <? echo (

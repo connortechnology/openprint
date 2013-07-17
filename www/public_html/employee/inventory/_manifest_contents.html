@@ -63,7 +63,7 @@ input( type=>'cardinal', id=>'qty_sheets-'.$$variable{type_id}.'-', name=>'qty_s
 		my @skid_ids = map { $$_{skid_id} ? $$_{skid_id} : () } @Contents;
 		%{$$variable{SkidContents}} = ();
 		if ( @skid_ids ) {
-			foreach my $SC ( openprint::SkidContent->find(skid_id=>\@skid_ids) ) {
+			foreach my $SC ( openprint::SkidContent->find(skid_id=>\@skid_ids, 'deleted in'=>[0,1]) ) {
 				push @{$$variable{SkidContents}{$$SC{skid_id}}}, $SC;
 			} # end foreach
 		} # end if

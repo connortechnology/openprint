@@ -11,18 +11,18 @@ $serial = 'product_categories_id_seq';
 $table = 'Product_Categories';
 
 %fields = (
-		'id'				=>	'id',
-		'name'				=>	'name',
-		'description'		=>	'description',
-		'projecttype_id'	=>	'projecttype_id',
+	id				=>	'id',
+	name			=>	'name',
+	description		=>	'description',
+	projecttype_id	=>	'projecttype_id',
 );
 
 %transforms = (
-    'name' => [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
-    'description' => [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
+    name => [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
+    description => [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
 );
 %defaults = (
-		'projecttype_id'	=>	undef,
+	projecttype_id	=>	undef,
 );
 
 
@@ -34,7 +34,7 @@ sub delete {
 	foreach my $Product ( openprint::Product->find( 'category_id' => $$self{'id'},'deleted'=>[0,1] ) ) {
 		$error .= $Product->save({'category_id'=>undef});
 	} # end foreach
-	$error .= $self->SUPER::destroy() ;
+	$error .= $self->SUPER::delete();
 	sql::end_transaction( $openprint::dbh, $ac );
 	
 	# Add record to audit log - action "Delete Product Category".
@@ -50,7 +50,7 @@ sub destroy {
 	foreach my $Product ( openprint::Product->find( 'category_id' => $$self{'id'},'deleted'=>[0,1] ) ) {
 		$error .= $Product->save({'category_id'=>undef});
 	} # end foreach
-	$error .= $self->SUPER::destroy() ;
+	$error .= $self->SUPER::destroy();
 	sql::end_transaction( $openprint::dbh, $ac );
 	
 	# Add record to audit log - action "Delete Product Category".

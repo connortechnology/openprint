@@ -279,6 +279,9 @@ sub check {
 	my $Type = $MC->Type();
 	my $error;
 	my $Skid = $MC->Skid();
+	if ( !$Skid->deleted() ) {
+		$error = 'Skid is deleted.';
+	} # end if
 	if ( $MC->skid_id() ) {
 		my @SkidContents = $Skid->Contents();
 		if ( @SkidContents > 1 ) {
