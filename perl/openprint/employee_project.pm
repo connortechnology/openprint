@@ -462,6 +462,11 @@ sub view {
 		} # end if NewServiceType or txtServiceName
 #openprint::service::auto_calculate( $r, $log, $dbh, \%variable, $project_index );
 ## needs approval
+		if ( $Project->docket() ) {
+		$variable{ExternalRedirect} = '/employee/project/view.html?docket='.$Project->docket();
+		} else {
+		$variable{ExternalRedirect} = '/employee/project/view.html?ProjectIndex='.$Project->id();
+		} # end if
 #        # email CSR
 	} elsif ( $param{'btnFunction'} eq 'AdditionalChargeNotify' ) {
 		send_additional_charges_notifications( @param{'OrderID','ProjectIndex'} );

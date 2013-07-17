@@ -31,9 +31,9 @@ function dearchive(file_id) {
 	action.innerHTML = 'Dearchiving...please wait.';
 	new Ajax.Updater( action, '_dearchive.html', { parameters: { file_id: file_id}} );
 } // end function dearchive
-function submit( form, action ) {
+function form_submit( form, act ) {
 	form = $(form);
-	form.btnFunction.value = action;
+	form.btnFunction.value = act;
 	form.submit();
 }
 </script>
