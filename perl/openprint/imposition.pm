@@ -198,6 +198,17 @@ sub calc_setup_object {
 		$openprint::log->debug("No grain discretion. $press_grain");
 	} # end if press_grain
 
+	if ( my $amount = $Press->specification($run_style.' Pre-trim stock') ) {
+$openprint::log->debug("Pretrimming by $amount") if $debug;
+		$Paper = $Paper->clone();
+		$Paper->width( $Paper->width() - $amount );
+		$Paper->width( 0 ) if $Paper->width() < 0;
+		$Paper->height( $Paper->height() - $amount );
+		$Paper->height( 0 ) if $Paper->height() < 0;
+	} else {
+$openprint::log->debug("Not Pretrimming on $$Press{strid}") if $debug;
+	} # end if
+
 	my $setup1 = new openprint::Imposition();
 	my $setup2 = new openprint::Imposition();
 	my @results;
@@ -211,8 +222,8 @@ sub calc_setup_object {
 	$setup1->spread_size( $$specs{'txtSpreadSize'} );
 	$setup1->bleed_size( $bleed_size );
 	if ( 1 ) {
-	$setup1->spread_rows(1);
-	$setup1->spread_columns(1);
+		$setup1->spread_rows(1);
+		$setup1->spread_columns(1);
 	} else {
 	$setup1->spread_rows( Math::Round::nearest( 1, $$specs{'image_height'}/$$specs{'final_height'}));
 	$setup1->spread_columns(Math::Round::nearest( 1, $$specs{'image_width'}/$$specs{'final_width'}));
@@ -222,6 +233,7 @@ sub calc_setup_object {
 	$setup1->Press( $Press );
 	$setup1->colour_bar_size( $$specs{'colour_bar_size'} );
 	$setup1->colour_bar_orientation( $$specs{'Colour Bar Orientation'} );
+
 
 	$setup2->paper( $Paper->clone() );
 	$setup2->runstyle( $run_style );
