@@ -457,6 +457,8 @@ sub view {
 
 			sql::end_transaction( $dbh, $ac );
 			} # end if
+		} else {
+			$variable{error} .= 'Additional Charge must have either a type or description.<br/>';
 		} # end if NewServiceType or txtServiceName
 #openprint::service::auto_calculate( $r, $log, $dbh, \%variable, $project_index );
 ## needs approval
