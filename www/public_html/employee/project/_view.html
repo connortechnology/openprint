@@ -322,11 +322,11 @@ $log->debug("Paper: " . $Paper->to_string() );
 	<span style="float: left;">
 		<? echo ( join("\n",
 		button( 'DocketButton'.$$variable{Project}{id}, { onclick=>"open_window('/main/project/docket_sheet.html?ProjectIndex=$$variable{'ProjectIndex'}');", text=>'Docket' } ),
-		button( 'Summary'.$$variable{Project}{id}, { href=> "summary.html?ProjectIndex=$$variable{'ProjectIndex'}", 'Summary' } ),
-		 button( 'UploadPDFs'.$$variable{Project}{id}, { onclick=>"open_window('/employee/production/upload_pdfs.html?ProjectIndex=$$variable{'ProjectIndex'}','upload','resizable=yes,scrollbars=yes,width=800,height=600,screenX=10,screenY=10,top=0,left=0');", text=>'Upload PDFs' } ),
-		 #button( 'ExportJDF', { onclick=>qq`form_submit('$$variable{formname}','Export JDF');`, text=>'JDF' } ),
-		 #button( 'ExportMXML', { onclick=>qq`form_submit('$$variable{formname}','Export MXML');`, text=>'MXML' } ),
-		 ); ) ?>
+		button( 'Summary'.$$variable{Project}{id}, { href=> "summary.html?ProjectIndex=$$variable{'ProjectIndex'}", text=>'Summary' } ),
+		button( 'UploadPDFs'.$$variable{Project}{id}, { onclick=>"open_window('/employee/production/upload_pdfs.html?ProjectIndex=$$variable{'ProjectIndex'}','upload','resizable=yes,scrollbars=yes,width=800,height=600,screenX=10,screenY=10,top=0,left=0');", text=>'Upload PDFs' } ),
+		#button( 'ExportJDF', { onclick=>qq`form_submit('$$variable{formname}','Export JDF');`, text=>'JDF' } ),
+		#button( 'ExportMXML', { onclick=>qq`form_submit('$$variable{formname}','Export MXML');`, text=>'MXML' } ),
+		); ) ?>
 	</span>
 	
 	<span style="float: right;">
@@ -387,7 +387,7 @@ $log->debug("Paper: " . $Paper->to_string() );
 		) ?>
 	</span>
 	<br class="spacer"/>
-	<? if ( $$variable{'ProjectStatus'} eq 'Waiting For Customer Approval' ) ?>
+	<? if ( $$variable{Project}->status() eq 'Waiting For Customer Approval' ) ?>
 	<fieldset><legend>Additional Charges Actions</legend>
 		<span style="float: right;">
 		<? echo ( button( 'Approve'.$$variable{Project}{id}, { onclick=>qq`form_submit('$$variable{formname}','Approve');`, text=>'Approve New Charges' } ); )?>
@@ -401,7 +401,7 @@ $log->debug("Paper: " . $Paper->to_string() );
 		Additional recipients (separate with a comma):<input type="email" style="width: 66%;" name="AdditionalEmailRecipients"  />
 
 	</fieldset>
-	<? endif ( $$variable{'ProjectStatus'} eq 'Waiting For Customer Approval' ) ?>
+	<? endif ( $$variable{Project}->status() eq 'Waiting For Customer Approval' ) ?>
 	<br/>
 	<br/>
 	<input type="hidden" name="btnFunction"/>
