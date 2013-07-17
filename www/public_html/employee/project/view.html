@@ -51,7 +51,11 @@ function submit( form, action ) {
 				$html .= '</div>';
 			} # end foreach Project
 		} elsif ( $$variable{Project}->id() ) {
+			if ( $$variable{Order}->id() ) {
 			$html .= include('/includes/order_header.html');
+			} else {
+				$html .= '<div class="warning">This Project has not been ordered.</div>';
+			}
 			$html .= '<div class="Project">'.include('_view.html').'</div>';
 		} # end if
 		return $html;
@@ -91,11 +95,11 @@ function submit( form, action ) {
 			</fieldset>
 		</form>
 	</div>
-	<? endif ( $$variable{Order}->docket() ) ?>
 	<br class="spacer"/>
 	<fieldset><legend onclick="AjaxToggleContent( 'OrderLog', '/main/order/_view_log.html?order_id=<? echo ( $$variable{Order}->id() ) ?>', null, null );">Order Log (click to hide/show)</legend>
 	<div id="OrderLog" style="display: none;"></div>
 	</fieldset>
+	<? endif ( $$variable{Order}->docket() ) ?>
 </div>
 <script type="text/javascript">
 <? echo (
