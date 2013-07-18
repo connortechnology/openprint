@@ -36,7 +36,6 @@ $log->debug("Enable mac search for $mac_search");
 	@{$$variable{'Hosts'}} = ();
 	foreach my $Host ( @Hosts ) {
 		
-		
 		if ( $mac_search ) {
 			next if ! $Host->mac();
 			my $next = 1;
