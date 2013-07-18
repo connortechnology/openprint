@@ -279,8 +279,8 @@ sub check {
 	my $Type = $MC->Type();
 	my $error;
 	my $Skid = $MC->Skid();
-	if ( !$Skid->deleted() ) {
-		$error = 'Skid is deleted.';
+	if ( $Skid->deleted() ) {
+		$error = qq`Skid <a href="/employee/inventory/skid_details.html?skid_id=$$Skid{id}">$$Skid{id}</a> is deleted.<br/>`;
 	} # end if
 	if ( $MC->skid_id() ) {
 		my @SkidContents = $Skid->Contents();
@@ -359,7 +359,7 @@ sub apply {
 	my $Skid = $MC->Skid();
 	if ( $$MC{manufacturers_id} ) {
 		my $found_other_skid = 0;
-		if ( my $S = openprint::Skid->find_one(manufacturers_id=>$$MC{manufacturers_id}) ) {
+		if ( my $S = openprint::Skid->find_one(manufacturers_id=>$$MC{manufacturers_id}, deleted=>[0,1] ) ) {
 			if ( $Skid->id() ) {
 				if ( $S->id() != $Skid->id() ) {
 					$error .= "Manufacturers ID $$MC{manufacturers_id} for skid <a href=\"/employee/inventory/skid_details.html?skid_id=$$MC{skid_id}\">$$MC{skid_id}</a> is already assigned to <a href=\"/employee/inventory/skid_details.html?skid_id=$$S{id}\">$$S{id}</a>.";
