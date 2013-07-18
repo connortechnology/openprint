@@ -38,11 +38,11 @@
 		</p>
 	  	<p> 
 			<label>Creation Date:</label>
-	  		<? echo ( format_datetime( $variable{'Project'}->created_on() ); ) ?>
+	  		<? echo ( format_datetime( $$variable{'Project'}->created_on() ); ) ?>
 		</p>
 	  	<p> 
 			<label>Last Updated:</label>
-	  		<? echo ( format_datetime( $variable{'Project'}->updated_on() ); ) ?>
+	  		<? echo ( format_datetime( $$variable{'Project'}->updated_on() ); ) ?>
 		</p>
 		<? if ( $$variable{'DocketNumber'} ) ?>
 		<? if ( $$variable{'Project'}->shippingtype() ) ?>
