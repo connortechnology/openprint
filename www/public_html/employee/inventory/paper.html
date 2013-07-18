@@ -1,5 +1,5 @@
-<script type="text/javascript" src="/javascripts/barcode.js"></script>
-<script type="text/javascript" src="/javascripts/paper.js"></script>
+<script type="text/javascript" src="<?hash_link(/javascripts/barcode.js)?>"></script>
+<script type="text/javascript" src="<?hash_link(/javascripts/paper.js)?>"></script>
 <!--#include virtual="/includes/error_reporting.html"-->
 Please select a Paper to view/edit.<br>
 <form id="f1" name="f1" method="post" action="paper.html">
@@ -52,7 +52,7 @@ Please select a Paper to view/edit.<br>
 			<select name="Weight" size="1" onchange="Weight_onChange(this,'');">
 				<option value="">select</option>
 			<? echo (
-					return ssi::make_drop_down( [ map { $_->id(), $_->longname() } openprint::StockWeight::find('order'=>'lower(shortname)') ], $session{'/employee/inventory/paper.html?Weight'} );
+					return ssi::make_drop_down( [ map { $_->id(), $_->shortname() } openprint::StockWeight::find('order'=>'lower(shortname)') ], $session{'/employee/inventory/paper.html?Weight'} );
 				) ?>
 			</select>
 		</li>

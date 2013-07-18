@@ -273,15 +273,16 @@ function calc_from_gsm( form ) {
 	</fieldset>
  <? if ( $$variable{Paper}->id() ) ?>
  <? eval ( @{$$variable{Duplicates}} = openprint::Paper::find(
-		'owner_id'				=>$$variable{Paper}->owner_id(),
-		'manufacturer_id'		=>$$variable{Paper}->manufacturer_id(),
-		'name_id'				=>$$variable{Paper}->name_id(),
-		'finish_id'				=>$$variable{Paper}->finish_id(),
-		'colour_id'				=>$$variable{Paper}->colour_id(),
-		'weight_id'				=>$$variable{Paper}->weight_id(),
-		'width'					=>$$variable{Paper}->width(),
-		'height'				=>$$variable{Paper}->height(),
-		'fsc_code'				=>$$variable{Paper}->fsc_code(),
+		'owner_id'				=>	$$variable{Paper}->owner_id(),
+		'manufacturer_id'		=>	$$variable{Paper}->manufacturer_id(),
+		'name_id'				=>	$$variable{Paper}->name_id(),
+		'finish_id'				=>	$$variable{Paper}->finish_id(),
+		'colour_id'				=>	$$variable{Paper}->colour_id(),
+		'weight_id'				=>	$$variable{Paper}->weight_id(),
+		'width'					=>	$$variable{Paper}->width(),
+		'height'				=>	$$variable{Paper}->height(),
+		'fsc_code'				=>	$$variable{Paper}->fsc_code(),
+			type				=>	$$variable{Paper}->type(),
 		);
 		) ?>
 		<? if ( @{$$variable{Duplicates}} > 1 ) ?>
