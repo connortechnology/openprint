@@ -128,11 +128,17 @@ return true;
 }
 
 function fix_content( c_id ) {
-	new Ajax.Updater( 'tr-'+c_id, '_manifest_content.html', {
+	new Ajax.Request( '_manifest_content.html', {
 		parameters: { content_id: c_id, action: 'Fix' },
 		onSuccess: function(transport){
 			var tr = $('tr-'+c_id+'-error');
 			if ( tr ) tr.remove();
+			tr = $('tr-'+c_id);
+			if ( tr ) {
+				new Insertion.After( tr, transport.responseText);
+				tr.remove();
+				return true;
+			} // end if
 		},
 		evalScripts: true
 	 } );
@@ -144,6 +150,12 @@ function apply_content( c_id ) {
 		onSuccess: function(transport){
 			var tr = $('tr-'+c_id+'-error');
 			if ( tr ) tr.remove();
+			tr = $('tr-'+c_id);
+			if ( tr ) {
+				new Insertion.After( tr, transport.responseText);
+				tr.remove();
+				return true;
+			} // end if
 		},
 		evalScripts: true
 	 } );
