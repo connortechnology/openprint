@@ -1,5 +1,4 @@
 <? echo (
-	
 	my $html = '';
 	if ( $variable{'error'} ) {
 		$variable{error} =~ s/<br\/>//g;
@@ -62,11 +61,6 @@ if ( tr ) tr.remove();
 				value	=>	$C->manufacturers_id(),
 				).'</td>';
 		#} # end if
-		$html .= '<td class="Docket">'.input( type=>'cardinal', 
-			id		=>	'docket-'.$id,
-			name	=>	'docket-'.$id,
-			value	=>	$C->docket(),
-			).'</td>';
 		if ( $Type->type() eq 'Sheet' ) {
 			my $lbs = Math::Round::nearest( 0.01, $C->quantity() * $Paper->width() * $Paper->height() * $Paper->wpsi() );
 
