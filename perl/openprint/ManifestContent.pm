@@ -172,12 +172,9 @@ sub fix {
 	my $error;
 	my $ac = sql::start_transaction( $openprint::dbh );
 
-	my @SkidContents = openprint::SkidContent->find( skid_id=>$$MC{skid_id} );
+	my @SkidContents = $Skid->Contents();
 	my %SkidContents = map { $$_{paper_id}, $_ } @SkidContents;
 
-#foreach my $k ( keys %SkidContents ) {
-#$openprint::log->debug( "$k => " . $SkidContents{$k}->to_string() );
-#}
 	if ( $SkidContents{$$Type{paper_id}} ) {
 # Have the right paper., remove the ones that don't match.
 $openprint::log->debug("desired paper exists");
@@ -296,7 +293,7 @@ sub check {
             foreach my $SK ( @SkidContents ) {
                 $error .= '<a href="/employee/inventory/paper_details.html?paper_id='.$$SK{paper_id}.'">'.$SK->Paper()->to_string() . '</a><br/>';
             } # end foreach
-		} elsif ( ! @SkidContents ) {
+		} elsif ( $$Skid{id} and ! @SkidContents ) {
 			$error = 'Skid is empty.<br/>';
 		} # end if
 	} # end if
@@ -393,7 +390,7 @@ sub apply {
 		$skid_changes .= 'Skid Created.<br/>';
 		$$Skid{id} = $$MC{skid_id} if $$MC{skid_id};
 	} # end if
-	$error .= $Skid->save() if $skid_changes;
+	$error .= $Skid->save( {}, 1 ) if $skid_changes;
 	return $error if ! $Skid->id();
 
 	my $Paper = $MC->Type()->Paper();

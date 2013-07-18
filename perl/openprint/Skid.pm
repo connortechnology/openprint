@@ -260,14 +260,14 @@ sub copy {
 } # end sub copy
 
 sub save {
-	my ( $self, $data ) = @_;
+	my ( $self, $data, $force_insert ) = @_;
 	$$self{'created_by_id'} = $session{'user_id'} if ! $$self{'created_by_id'};
 	$self->type() if ! $$self{'type'};
 	$self->used(undef);
 
 	# Why?
 	#$self->location_id();
-	return $self->SUPER::save( $data );
+	return $self->SUPER::save( $data, $force_insert );
 } # end sub save
 
 sub destroy {
