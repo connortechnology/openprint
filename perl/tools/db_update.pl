@@ -1588,6 +1588,9 @@ if ( ! sets::isin( 'manifestcontents', \@tables ) ) {
 		$dbh->do('ALTER TABLE manifestcontents ADD location_id INTEGER');
 		$dbh->do('ALTER TABLE manifestcontents ADD FOREIGN KEY (location_id) REFERENCES Locations (id)');
 	} # end if
+	if ( ! exists $$data{docket} ) {
+		$dbh->do('ALTER TABLE manifestcontents ADD docket INTEGER');
+	} # end if
 }
 
 if ( ! sets::isin( 'purchaseorder_contenttypes', \@tables ) ) {

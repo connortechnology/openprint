@@ -31,6 +31,7 @@ $serial = 'manifestcontents_id_seq';
 	RFIDTag				=>	undef,
 	manufacturers_id	=>	'manufacturers_id',
 	location_id			=>	'location_id',
+	docket				=>	'docket',
 );
 %find_fields = (
 	paper_id	=>	'(SELECT paper_id FROM Manifest_Content_Types WHERE manifest_content_types.manifest_id = manifestcontents.manifest_id)',
@@ -48,6 +49,7 @@ $serial = 'manifestcontents_id_seq';
 	skid_id				=>	undef,
 	rfidtag_id			=>	undef,
 	location_id			=>	undef,
+	docket				=>	undef,
 );
 
 sub skid_id {
