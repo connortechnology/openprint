@@ -169,13 +169,16 @@
 			'onclick'=>"new Ajax.Updater('PurchaseOrders$$variable{Type}{id}','_manifest_purchase_orders.html', { parameters: { supplier_id: \$('supplier_id').value, Docket: \$('docket-$$variable{Type}{id}').value} } );", 'text'=>'Load POs' } ); ) ?>
 		</p>
 		<div id="PurchaseOrders<? echo ( $$variable{'Type'}->id() ) ?>">
-		<? if ( ! $$variable{'Manifest'}->po_id() ) ?>
-			<!--#include virtual="_manifest_purchase_orders.html"-->
-		<? endif ( ! $$variable{'Manifest'}->po_id() ) ?>
+		<? if ( ! $$variable{Type}->po_id() ) ?>
+			<?include(_manifest_purchase_orders.html)?>
+		<? endif ( ! $$variable{Type}->po_id() ) ?>
 		</div>
 		<p>
 			<label>Purchase Order:</label>
-			<input type="number" id="po_id-<?type_id?>" name="po_id-<?type_id?>" value="<? echo ( $$variable{'Type'}->po_id() ) ?>" onkeyup="integerize(this);" /><? echo ( $$variable{'Type'}->po_id() ? ssi::button( 'GoPO'.$$variable{'Type'}->id(), { 'href'=>'/employee/purchase_order/view.html?po_id='.$$variable{'Type'}->po_id(), 'text'=>'Go' } ) : '' ) ?>
+			<? echo ( join("\n", 
+				input( type=>'cardinal', id=>"po_id-$$variable{type_id}", name=>"po_id-$$variable{type_id}", value=>$$variable{Type}->po_id() ),
+				( $$variable{Type}->po_id() ? button( 'GoPO'.$$variable{Type}->id(), { href=>'/employee/purchase_order/view.html?po_id='.$$variable{Type}->po_id(), 'text'=>'Go' } ) : '' ),
+			); ) ?>
 		</p>
 <div id="PO_<? echo ( $$variable{'Type'}->id() ) ?>">
 		<? echo ( 
