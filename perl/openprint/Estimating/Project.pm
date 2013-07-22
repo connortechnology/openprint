@@ -219,48 +219,59 @@ $log->debug("Presentation folder sizes $$specs{'chkPocketLeft'} $$specs{'chkPock
 # It's a multi-page publication
 		if ( ! $$specs{'txtTotalPageQuantity'} ) {
 			$$specs{'alert'} .= 'Please enter the number of pages.<br/>';
+		sql::end_transaction( $dbh, $ac );
 			return $$specs{'Status'} = 'uncalculated';
 		} # end if
 		if ( $$specs{'rdbCover'} eq 'Different' ) {
 			if ( ! $$specs{'ddmStockBrand1'} ) {
 				$$specs{'alert'} .= 'Please select Cover Stock Type<br/>';
+		sql::end_transaction( $dbh, $ac );
 				return $$specs{'Status'} = 'uncalculated';
 			} # end if
 			if ( ! $$specs{'ddmStockFinish1'} ) {
 				$$specs{'alert'} .= 'Please select Cover Stock Finish<br/>';
+		sql::end_transaction( $dbh, $ac );
 				return $$specs{'Status'} = 'uncalculated';
 			} # end if
 			if ( ! $$specs{'ddmStockColour1'} ) {
 				$$specs{'alert'} .= 'Please select Cover Stock Colour<br/>';
+		sql::end_transaction( $dbh, $ac );
 				return $$specs{'Status'} = 'uncalculated';
 			} # end if
 			if ( ! $$specs{'ddmStockWeight1'} ) {
 				$$specs{'alert'} .= 'Please select Cover Stock Weight<br/>';
+		sql::end_transaction( $dbh, $ac );
 				return $$specs{'Status'} = 'uncalculated';
 			} # end if
 		} # end if
 		if ( ! $$specs{'ddmStockBrand2'} ) {
 			$$specs{'alert'} .= 'Please select Interior Stock Brand<br/>';
+		sql::end_transaction( $dbh, $ac );
 			return $$specs{'Status'} = 'uncalculated';
 		} # end if
 		if ( ! $$specs{'ddmStockFinish2'} ) {
 			$$specs{'alert'} .= 'Please select Interior Stock Finish<br/>';
+		sql::end_transaction( $dbh, $ac );
 			return $$specs{'Status'} = 'uncalculated';
 		} # end if
 		if ( ! $$specs{'ddmStockColour2'} ) {
 			$$specs{'alert'} .= 'Please select Interior Stock Colour<br/>';
+		sql::end_transaction( $dbh, $ac );
 			return $$specs{'Status'} = 'uncalculated';
 		} # end if
 		if ( ! $$specs{'ddmStockWeight2'} ) {
 			$$specs{'alert'} .= 'Please select Interior Stock Weight<br/>';
+		sql::end_transaction( $dbh, $ac );
 			return $$specs{'Status'} = 'uncalculated';
 		} # end if
 
 		if ( $$specs{'rdbTemplateType'} eq 'SaddleStitching' and $$specs{'txtTotalPageQuantity'} % 4 ) {
 			$$specs{'alert'} .= '# of pages should be a multiple of 4<br/>';
+		sql::end_transaction( $dbh, $ac );
 			return $$specs{'Status'} = 'uncalculated';
 		} elsif ( $$specs{'rdbTemplateType'} eq 'PerfectBound' and $$specs{'txtTotalPageQuantity'} % 2 ) {
 			$$specs{'alert'} .= '# of pages should be a multiple of 2<br/>';
+		sql::end_transaction( $dbh, $ac );
 			return $$specs{'Status'} = 'uncalculated';
 		} # end if
 
