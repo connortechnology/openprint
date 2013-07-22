@@ -23,11 +23,11 @@ if ( tr ) tr.remove();
 		my $Paper = $Type->Paper();
 		my $Skid = $C->Skid();
 		my $RFIDTag = $C->RFIDTag();
-		my @SkidContents;
+		my $SkidContents;
 		if ( $$Skid{id} ) {
-			@SkidContents = $$variable{SkidContents}{$$Skid{id}} ? @{$$variable{SkidContents}{$$Skid{id}}} : openprint::SkidContent->find(skid_id=>$$Skid{id});
+			$SkidContents = $$variable{SkidContents}{$$Skid{id}} ? $$variable{SkidContents}{$$Skid{id}} : openprint::SkidContent->find(skid_id=>$$Skid{id});
 		} # end if
-		$Skid->Contents( \@SkidContents );
+		$Skid->Contents( $SkidContents );
 		my $error = $C->check( );
 		
 		if ( $error ) {
@@ -36,7 +36,6 @@ if ( tr ) tr.remove();
 		} # end if
 
 		$variable{'location_dropdown'} = openprint::Location->dropdown(order=>'parent_id NULLS FIRST, lower(name)') if ! exists $variable{'location_dropdown'};
-		#my @ManifestContents = map { $_->id() != $$C{id} ? $_ : () } $$variable{Manifest}->Contents();
 
 		my $id = $$variable{'type_id'}.'-'.$$C{id};
 			
@@ -104,9 +103,9 @@ if ( tr ) tr.remove();
 					onkeyup	=>	"from_feet(this,'$$variable{type_id}','$$C{id}');",
 					) . '</td>';
 		} # end if
-		if ( @SkidContents ) {
-			$html .= sprintf( '<td class="in_stock">%d lbs%s</td>', $SkidContents[0]->quantity(), $Skid->used() ? '<br/>Checked Out' : ''  );
-			$html .= sprintf( '<td class="last_seen">%s days</td>', $SkidContents[0]->Skid()->last_seen_days() );
+		if ( $SkidContents ) {
+			$html .= '<td class="in_stock">'. Number::Format::format_number( $$SkidContents[0]->quantity()). ' lbs' . ( $Skid->used() ? '<br/>Checked Out' : ''  ).'</td>';
+			$html .= sprintf( '<td class="last_seen">%s days</td>', $$SkidContents[0]->Skid()->last_seen_days() );
 		} else {
 			$html .= '<td colspan="2">&nbsp;</td>';
 		} # end if
@@ -117,15 +116,20 @@ if ( tr ) tr.remove();
 				( $$C{FixStockOnSkid} ? button( 'Fix'.$$C{id}, { onclick=>qq`fix_content('$$C{id}');`, text=>'Fix' } ) : () ),
 				) . '</td>';
 		if ( $error ) {
-			$html .= '</tr><tr id="tr-'.$$C{id}.'-error" class="error"><td colspan="11">'.$error . '</td></tr>';
+			$html .= '</tr><tr id="tr-'.$$C{id}.'-error" class="error"><td colspan="'.( sets::isin( $Paper->type(), ['Roll','Sheet'] ) ? '10' : '11' ) . '">'.$error . '</td></tr>';
 		} # end if
 	} # end if
+
+	my @Contents = $$variable{Manifest}->Contents( type_id=>$$variable{type_id} );
+	$$variable{total_lbs} = misc::sum( map { $_->quantity() } @Contents );
+	$$variable{total_kgs} = $$variable{'total_lbs'} /2.2046;
+	$$variable{count} = scalar @Contents;
 	return $html;
 ) ?>
 <? if ( $param{'action'} and $$variable{'type_id'} ) ?>
 <script type="text/javascript">
-	$('totallbs-<?type_id?>').innerHTML = '<? echo ( Math::Round::nearest( 1, misc::sum( map { $_->quantity() } $$variable{Manifest}->Contents('type_id'=>$$variable{'type_id'}) ) ); ) ?>lbs';
-	$('totalkgs-<?type_id?>').innerHTML = '<? echo ( Math::Round::nearest( 0.01, misc::sum( map { $_->quantity() } $$variable{Manifest}->Contents('type_id'=>$$variable{'type_id'}) )/2.2046); ) ?>kg';
-	$('skidcount-<?type_id?>').innerHTML = '<? echo ( $$variable{Manifest}->Contents('type_id'=>$$variable{'type_id'}) ) ?> skids/rolls';
+	$('totallbs-<?type_id?>').innerHTML = '<? echo ( Math::Round::nearest( 1, $$variable{total_lbs} ); ) ?>lbs';
+	$('totalkgs-<?type_id?>').innerHTML = '<? echo ( Math::Round::nearest( 0.01, $$variable{total_kgs} ); ) ?>kg';
+	$('skidcount-<?type_id?>').innerHTML = '<?count?> skids/rolls';
 </script>
 <? endif ( $param{'action'} and $$variable{'type_id'} ) ?>
