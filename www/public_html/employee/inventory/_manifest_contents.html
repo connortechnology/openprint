@@ -91,9 +91,10 @@ input( type=>'cardinal', id=>'qty_sheets-'.$$variable{type_id}.'-', name=>'qty_s
 				Number::Format::format_number( ( ( $Paper->wpsi() and $Paper->width() ) ? (($total/$Paper->wpsi())/$Paper->width())/12 : 0 ) ),
 					);
 		} #end if
-		$html .= '<td colspan="'.(($$variable{Type}->type(), [ 'Roll', 'Sheet' ] ) ? '4' : '5' ). '">&nbsp;</td></tr>';
+$log->debug($$variable{Type}->type());
+		$html .= '<td colspan="'.(sets::isin($$variable{Type}->type(), [ 'Roll', 'Sheet' ] ) ? '4' : '5' ). '">&nbsp;</td></tr>';
 		if ( scalar @Contents != $$variable{Type}{item_count} ) {
-			$html .= '<tr><td colspan="'.(($$variable{Type}->type(), [ 'Roll', 'Sheet' ] ) ? '10' : '11' ). '" class="warning">Contents and expected content count do not match!';
+			$html .= '<tr><td colspan="'.(sets::isin($$variable{Type}->type(), [ 'Roll', 'Sheet' ] ) ? '10' : '11' ). '" class="warning">Contents and expected content count do not match!';
 			$html .= ' Please enter the expected # of items for this stock type.' if ! $$variable{Type}{item_count};
 			$html .= '</td></tr>';
 		} # end if

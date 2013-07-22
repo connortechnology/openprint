@@ -22,8 +22,6 @@ if ( tr ) tr.remove();
 		my $Paper = $Type->Paper();
 		my $Skid = $C->Skid();
 		my $RFIDTag = $C->RFIDTag();
-$log->debug("Skid" . $Skid->to_string() );
-$log->debug("RFID" . $RFIDTag->to_string() );
 		my $SkidContents;
 		if ( $$Skid{id} ) {
 			$SkidContents = $$variable{SkidContents}{$$Skid{id}} ? $$variable{SkidContents}{$$Skid{id}} : [ openprint::SkidContent->find(skid_id=>$$Skid{id}) ];
