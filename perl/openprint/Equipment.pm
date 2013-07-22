@@ -57,6 +57,9 @@ sub find_one {
 	if ( $_[0] eq 'openprint::Equipment' ) {
 		shift;
 	} # end if
+	if ( ref $_[0] eq 'openprint::Equipment' ) {
+		shift;
+	} # end if
 	my %params = @_;
 	$params{'limit'}=1;
 	my @Results = find(%params);

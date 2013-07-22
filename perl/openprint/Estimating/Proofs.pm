@@ -91,6 +91,8 @@ sub calc {
 		foreach my $signature_service_index ( @signature_service_indices ) {
 			my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
 			my $signature_index = $$sig_specs{'SignatureIndex'};
+			my $Equipment = openprint::Equipment->find_one( strid=>$$sig_specs{'ddmPress'.$qty_index} );
+
 			$$specs{'hdnBreakdown'.$qty_index} .= "Signature $signature_index<br/>";
 			if ( ! $$sig_specs{'txtImposition'.$qty_index} ) {
 				$$specs{'hdnBreakdown'.$qty_index} .= 'No proofs needed because there is no imposition';
@@ -103,7 +105,7 @@ sub calc {
 			if ( ( ! sets::isin( 2, $proof_indexes{$signature_index} ) ) and $openprint::config{'Add Default Colour Proof'} eq 'Y' ) {
 				push @{$proof_indexes{$signature_index}}, 2;
 			} # end if
-			if ( ( ! sets::isin( 3, $proof_indexes{$signature_index} ) ) and $openprint::config{'Add Default Press Proof'} eq 'Y' ) {
+			if ( ( ! sets::isin( 3, $proof_indexes{$signature_index} ) ) and ( ( $openprint::config{'Add Default Press Proof'} eq 'Y' ) or ( $Equipment and $Equipment->specification('Require Press Proof') eq 'Y' ) ) ) {
 				push @{$proof_indexes{$signature_index}}, 3;
 			} # end if
 				
@@ -169,8 +171,6 @@ sub calc {
 			if ( ! $$sig_specs{'txtImposition'.$qty_index} ) {
 				next;
 			} # end if
-			my @Equipment = openprint::Equipment::find('strid'=>$$sig_specs{'ddmPress'.$qty_index} );
-			next if ! @Equipment;
 
 			foreach my $proof_index ( @{$proof_indexes{$signature_index}} ) {
 
@@ -182,7 +182,8 @@ sub calc {
 
 				my %price;
 				if ( $type eq 'PressProof' ) {
-					%price = openprint::service::get_price_object( $log, $dbh, $variable, $type, $proof_totals{$type}{Quantity}, $Equipment[0] );
+					my $Equipment = openprint::Equipment->find_one('strid'=>$$sig_specs{'ddmPress'.$qty_index} ) if $$sig_specs{'ddmPress'.$qty_index};
+					%price = openprint::service::get_price_object( $log, $dbh, $variable, $type, $proof_totals{$type}{Quantity}, $Equipment ) if $Equipment;
 				} else {
 					%price = openprint::service::get_price_object( $log, $dbh, $variable, $type, $proof_totals{$type}{Quantity}, undef );
 				} # end if
@@ -196,7 +197,7 @@ sub calc {
 				} else {
 					$price{'Total'} = $price{'Price'};
                 } # end if
-				$$specs{"txtProofUnitPrice-$signature_index-$proof_index-$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $price{'Total'} );
+				$$specs{"txtProofUnitPrice-$signature_index-$proof_index-$qty_index"} = Math::Round::nearest( 0.01, $price{'Total'} );
 				$totalPrice += $price{'Total'} * $quantity;
 			} # end foreach my $proof_index
 		} # end foreach my $signature_service_index
@@ -413,6 +414,7 @@ sub get_proof_specs {
 		foreach my $signature_service_index ( $Project->signatures() ) {
 			my $sig_specs = openprint::service::get_specs_ref( $project_index, $signature_service_index );
 			my $signature_index = $$sig_specs{'SignatureIndex'};
+			my $Equipment = openprint::Equipment->find_one( strid=>$$sig_specs{'ddmPress'.$qty_index} ) if $$sig_specs{'ddmPress'.$qty_index};
 
 			if ( $$sig_specs{'txtImposition'.$qty_index} ) {
 				if ( ( ! sets::isin( 1, $proof_indexes{$signature_index} ) ) and $openprint::config{'Add Default Layout Proof'} eq 'Y') {
@@ -425,7 +427,7 @@ sub get_proof_specs {
 					$openprint::log->debug("ADDING Colour Proof to $signature_index") if $debug;
 					insert_colour_proof( $log, $dbh, $project_index, $service_index, $signature_service_index, 2, $qty_index, $variable );
 				} # end if
-				if ( ( ! sets::isin( 3, $proof_indexes{$signature_index} ) ) and $openprint::config{'Add Default Press Proof'} eq 'Y') {
+				if ( ( ! sets::isin( 3, $proof_indexes{$signature_index} ) ) and ( ( $openprint::config{'Add Default Press Proof'} eq 'Y' ) or ( $Equipment and $Equipment->specification('Require Press Proof') eq 'Y' ) ) ) {
 					push @{$proof_indexes{$signature_index}}, 3;
 					insert_press_proof( $log, $dbh, $project_index, $service_index, $signature_service_index, 3, $qty_index, $variable );
 				} # end if
