@@ -18,7 +18,7 @@
 					<input id="supplier_id_filter" type="text" onkeyup="filterDDM(this, this.form.supplier_id);" class="filter" />
 					<select id="supplier_id" name="supplier_id" onchange="new Ajax.Updater('PurchaseOrders','_manifest_purchase_orders.html', { parameters: { supplier_id: $('supplier_id').value} } );">
 						<option value="">None</option>
-						<? echo ( make_drop_down( [ map { $_->id(), $_->name() } openprint::Company::find( 'order'=>'lower(strname)', 'supplier'=>'Y') ], $$variable{'Manifest'}->supplier_id() ); ) ?>
+						<? echo ( make_drop_down( [ map { $_->id(), $_->name() } openprint::Company::find( order=>'lower(strname)', supplier=>'Y') ], $$variable{Manifest}->supplier_id() ); ) ?>
 					</select>
 				</p>
 			</div>
@@ -32,7 +32,7 @@
 					} # end if
 				) ?>
 				<span class="DateSelector">
-<? echo ( ssi::date_select( 'received_on', sprintf('%.4d-%.2d-%.2d', @param{'received_on_year','received_on_month','received_on_day'}) ); ) ?>
+<? echo ( date_select( 'received_on', sprintf('%.4d-%.2d-%.2d', @param{'received_on_year','received_on_month','received_on_day'}) ); ) ?>
 				</span>
 				</p>
 <? if ( $$variable{Manifest}->id() ) ?>
@@ -48,8 +48,8 @@
 			$variable{'location_dropdown'} = openprint::Location->dropdown(order=>'parent_id NULLS FIRST, lower(name)');
 			
 			foreach my $Type ( $$variable{'Manifest'}->Types() ) {
-				$$variable{'Type'} = $Type;
-				$$variable{'type_id'} = $Type->id();
+				$$variable{Type} = $Type;
+				$$variable{type_id} = $Type->id();
 				$html .= ssi::variable_substitution( $r, $log, $dbh, \$content, $variable );
 			} # end foreach
 			return $html;
