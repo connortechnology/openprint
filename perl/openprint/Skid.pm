@@ -19,7 +19,7 @@ require openprint::Manifest;
 require openprint::ManifestContent;
 require openprint::InventoryCondition;
 
-$debug = 0;
+$debug = 1;
 
 $table = 'Skids';
 $serial = 'skid_id_seq';
@@ -571,9 +571,9 @@ sub rfidtag_id {
 			my $error = $RFIDTag->set({id=>$rfidtag_id}) if ! $RFIDTag->id();
 			$log->error( $error ) if $error;
 		} # end if
-		$_[0]{'rfidtag_id'} = $rfidtag_id;
+		$_[0]{rfidtag_id} = $rfidtag_id;
 	} # end if
-	return $_[0]{'rfidtag_id'};
+	return $_[0]{rfidtag_id};
 } # end sub rfidtag_id
 
 sub RFIDTag {

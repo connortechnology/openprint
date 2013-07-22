@@ -1,5 +1,4 @@
 <? echo (
-	
 	my $html = '';
 	if ( $variable{'error'} ) {
 		$variable{error} =~ s/<br\/>//g;
@@ -23,11 +22,13 @@ if ( tr ) tr.remove();
 		my $Paper = $Type->Paper();
 		my $Skid = $C->Skid();
 		my $RFIDTag = $C->RFIDTag();
+$log->debug("Skid" . $Skid->to_string() );
+$log->debug("RFID" . $RFIDTag->to_string() );
 		my $SkidContents;
 		if ( $$Skid{id} ) {
-			$SkidContents = $$variable{SkidContents}{$$Skid{id}} ? $$variable{SkidContents}{$$Skid{id}} : openprint::SkidContent->find(skid_id=>$$Skid{id});
+			$SkidContents = $$variable{SkidContents}{$$Skid{id}} ? $$variable{SkidContents}{$$Skid{id}} : [ openprint::SkidContent->find(skid_id=>$$Skid{id}) ];
 		} # end if
-		$Skid->Contents( $SkidContents );
+		$Skid->Contents( $SkidContents ) if $SkidContents;
 		my $error = $C->check( );
 		
 		if ( $error ) {
@@ -103,7 +104,7 @@ if ( tr ) tr.remove();
 					onkeyup	=>	"from_feet(this,'$$variable{type_id}','$$C{id}');",
 					) . '</td>';
 		} # end if
-		if ( $SkidContents ) {
+		if ( $SkidContents and @{$SkidContents} ) {
 			$html .= '<td class="in_stock">'. Number::Format::format_number( $$SkidContents[0]->quantity()). ' lbs' . ( $Skid->used() ? '<br/>Checked Out' : ''  ).'</td>';
 			$html .= sprintf( '<td class="last_seen">%s days</td>', $$SkidContents[0]->Skid()->last_seen_days() );
 		} else {

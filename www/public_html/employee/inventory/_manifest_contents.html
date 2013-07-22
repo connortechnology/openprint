@@ -65,9 +65,9 @@ input( type=>'cardinal', id=>'qty_sheets-'.$$variable{type_id}.'-', name=>'qty_s
 		} # end if
 
 		foreach my $C ( sort { $$a{id} <=> $$b{id} } @Contents ) {
-			$$variable{'C'} = $C;
+			$$variable{C} = $C;
 			$html .= '<tr id="tr-'.$$C{id}.'" title="'.$$C{id}.'">';
-			$html .= ssi::variable_substitution( $r, $log, $dbh, \$content, $variable );
+			$html .= variable_substitution( $r, $log, $dbh, \$content, $variable );
 			$html .= '</tr>';
 			$total += $C->quantity();
 		} # end foreach tag_id
@@ -93,7 +93,9 @@ input( type=>'cardinal', id=>'qty_sheets-'.$$variable{type_id}.'-', name=>'qty_s
 		} #end if
 		$html .= '<td colspan="'.(($$variable{Type}->type(), [ 'Roll', 'Sheet' ] ) ? '4' : '5' ). '">&nbsp;</td></tr>';
 		if ( scalar @Contents != $$variable{Type}{item_count} ) {
-			$html .= '<tr><td colspan="'.(($$variable{Type}->type(), [ 'Roll', 'Sheet' ] ) ? '10' : '11' ). '" class="warning">Contents and expected content count do not match!</td></tr>';
+			$html .= '<tr><td colspan="'.(($$variable{Type}->type(), [ 'Roll', 'Sheet' ] ) ? '10' : '11' ). '" class="warning">Contents and expected content count do not match!';
+			$html .= ' Please enter the expected # of items for this stock type.' if ! $$variable{Type}{item_count};
+			$html .= '</td></tr>';
 		} # end if
 		return $html;
 	) ?>
