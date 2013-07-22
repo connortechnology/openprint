@@ -1421,7 +1421,7 @@ sub save_Manifest {
 	} # end if supplier and ! supplier_id
 	sql::end_transaction( $dbh, $ac );
 
-	my $ac = sql::start_transaction( $dbh );
+	$ac = sql::start_transaction( $dbh );
 	$dbh->do( 'LOCK TABLE Manifests IN EXCLUSIVE MODE' ) or $log->error( DBI->errstr );
 
 	$error .= $Manifest->save( \%param );
@@ -1431,6 +1431,7 @@ sub save_Manifest {
 		# It's an empty, brand new manifest
 		my $Type = new openprint::Manifest_Content_Type();
 		$error .= $Type->save({ manifest_id=>$Manifest->id() });
+		sql::end_transaction( $dbh, $ac );
 		return $error;
 	} # end if
 
