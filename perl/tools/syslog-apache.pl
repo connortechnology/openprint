@@ -161,8 +161,8 @@ print ( $buf);
 	if ( ! $source ) {
 		$log->error("No match: " . $buf );
 		next;
-	} else {
-		$log->error("match: " . $buf );
+	#} else {
+		#$log->error("match: " . $buf );
 	} 
 #[error] No match: 192.168.101.10 - - [07/Feb/2013:11:22:59 -0500] "GET /css/alphacube.css HTTP/1.0" 304 282 "http://www.intelligentquote.ca/" "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:19.0) Gecko/20100101 Firefox/19.0"
 #[debug] 127.0.0.1 - - [07/Feb/2013:11:03:00 -0500] "OPTIONS * HTTP/1.0" 200 126 "-" "Apache/2.2.22 (Ubuntu) (internal dummy connection)"

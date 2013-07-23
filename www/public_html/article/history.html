@@ -27,7 +27,7 @@
 		new Ajax.Updater('ArticleList','_history.html', {method:'get',parameters:Form.serialize(form)});
 	} // end function
 </script>	 
-<? echo ( include('/includes/error_reporting.html'); ) ?>
+<? include(/includes/error_reporting.html) ?>
 <div class="Article"><div class="History">
 	<form id="f1" name="f1" method="post" action="/article/history.html">
 		<fieldset class="filters unprintable"><legend>Select Search Criteria</legend>
@@ -85,16 +85,16 @@
 			</div>
 			<p class="buttons">
 				<? echo ( join('',
-					ssi::button( 'ShowResults', { onclick=>'load_articles();', text =>'Show Results'} ),
-					ssi::button( 'Reset', { onclick=>'f1.reset();', text =>'Reset'} ),
-					ssi::button( 'New', {href=>'/article/edit.html', text =>'New Article'} ),
+					button( 'ShowResults', { onclick=>'load_articles();', text =>'Show Results'} ),
+					button( 'Reset', { onclick=>'f1.reset();', text =>'Reset'} ),
+					button( 'New', {href=>'/article/edit.html', text =>'New Article'} ),
 					); ) ?>
 			</p>
 		</fieldset>
-		<div id="ArticleList"><? echo ( include('_history.html'); ) ?></div>
+		<div id="ArticleList"><? include(_history.html) ?></div>
 	<p class="buttons">
-		<? echo ( ssi::button('Delete', { onclick=>q`new Ajax.Updater( 'ArticleList', '_history.html', { parameters: { action: 'Delete', article_id: $A($('f1').article_id).map(function(x){if(x.checked) return x.value;}) } } );` } ); ) ?>
-		<? echo ( ssi::button('Destroy', { onclick=>q`new Ajax.Updater( 'ArticleList', '_history.html', { parameters: { action: 'Destroy', article_id: $A($('f1').article_id).map(function(x){if(x.checked) return x.value;}) } } );` } ); ) ?>
+		<? echo ( button('Delete', { onclick=>q`new Ajax.Updater( 'ArticleList', '_history.html', { parameters: { func: 'Delete', article_id: $A($('f1').article_id).map(function(x){if(x.checked) return x.value;}) } } );` } ); ) ?>
+		<? echo ( button('Destroy', { onclick=>q`new Ajax.Updater( 'ArticleList', '_history.html', { parameters: { func: 'Destroy', article_id: $A($('f1').article_id).map(function(x){if(x.checked) return x.value;}) } } );` } ); ) ?>
 	</p>
 	</form>
 	</div>
