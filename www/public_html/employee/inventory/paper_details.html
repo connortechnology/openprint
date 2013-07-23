@@ -96,7 +96,7 @@ function calc_from_gsm( form ) {
 				<select id="Manufacturer" name="Manufacturer" size="1">
 					<option value="">select</option>
 				<? echo (
-						return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Manufacturer->find('order'=>'lower(name)') ], $$variable{'Paper'}->manufacturer_id() );
+						make_drop_down( openprint::Manufacturer->dropdown( order=>'lower(name)'), $$variable{'Paper'}->manufacturer_id() );
 						) ?>
 				</select>
 				<input style="display: none;" type="text" id="txtManufacturer" name="txtManufacturer" />
@@ -106,7 +106,7 @@ function calc_from_gsm( form ) {
 				<select id="Brand" name="Brand" size="1" onchange="f1.txtBrand.value='';">
 					<option value="">select</option>
 					<? echo (
-						return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::StockBrand->find('order'=>'lower(name)') ], $$variable{'Paper'}->brand_id() );
+						make_drop_down( openprint::StockBrand->dropdown( order=>'lower(name)'), $$variable{'Paper'}->brand_id() );
 					) ?>
 				</select>
 				<input style="display: none;" type="text" id="txtBrand" name="txtBrand" onfocus="ddm_select_by_index( f1.Brand, 0 );" />
@@ -116,7 +116,7 @@ function calc_from_gsm( form ) {
 				<select id="Finish" name="Finish" size="1" onchange="f1.txtFinish.value='';">
 					<option value="">select</option>
 				<? echo (
-					return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::StockFinish->find('order'=>'lower(name)') ], $$variable{'Paper'}->finish_id() );
+					make_drop_down( openprint::StockFinish->dropdown( order=>'lower(name)'), $$variable{'Paper'}->finish_id() );
 				) ?>
 				</select>
 				<input style="display: none;" type="text" id="txtFinish" name="txtFinish" onfocus="ddm_select_by_index( f1.Finish, 0 );" />
@@ -126,7 +126,7 @@ function calc_from_gsm( form ) {
 				<select id="Colour" name="Colour" size="1" onchange="f1.txtColour.value='';">
 					<option value="">select</option>
 				<? echo (
-					return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::StockColour->find('order'=>'lower(name)') ], $$variable{'Paper'}->colour_id() );
+					make_drop_down( openprint::StockColour->dropdown( order=>'lower(name)'), $$variable{'Paper'}->colour_id() );
 					) ?>
 				</select>
 				<input style="display: none;" type="text" id="txtColour" name="txtColour" onfocus="ddm_select_by_index( f1.Colour, 0 );" />
@@ -136,7 +136,7 @@ function calc_from_gsm( form ) {
 				<select id="Weight" name="Weight" size="1" onchange="f1.txtWeight.value='';">
 					<option value="">select</option>
 				<? echo (
-					return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::StockWeight->find('order'=>'lower(name)') ], $$variable{'Paper'}->weight_id() );
+					make_drop_down( openprint::StockWeight->dropdown( order=>'lower(name)'), $$variable{'Paper'}->weight_id() );
 						) ?>
 				</select>
 				<input style="display: none;" type="text" id="txtWeight" name="txtWeight" onfocus="ddm_select_by_index( f1.Weight, 0 );" />
@@ -146,7 +146,7 @@ function calc_from_gsm( form ) {
 				<select id="Quality" name="Quality" size="1">
 					<option value="">select</option>
 				<? echo (
-					return ssi::make_drop_down( openprint::StockQuality->dropdown('order'=>'lower(name)'), $$variable{'Paper'}->quality_id() );
+					make_drop_down( openprint::StockQuality->dropdown( order=>'lower(name)'), $$variable{'Paper'}->quality_id() );
 				) ?>
 				</select>
 				<input style="display: none;" type="text" id="txtQuality" name="txtQuality" onfocus="ddm_select_by_index( f1.Weight, 0 );" />
@@ -159,10 +159,10 @@ function calc_from_gsm( form ) {
 			</p>
 			<p>
 				<label for="width">Size</label>
-				<input type="number" id="width" name="width" value="<? echo ( $$variable{'Paper'}->width(); ) ?>" onkeyup="gsm_to_mweight(this.form);"/>
+				<? echo ( input( type=>'float', id=>'width', name=>'width', value=>$$variable{Paper}->width(), onkeyup=>'gsm_to_mweight(this.form);' ); ) ?>
 				<span id="PaperHeight"<? echo ( $$variable{'Paper'}->type() eq 'Roll' ? ' style="display:none;"' : '' ) ?>>
 				&nbsp;x&nbsp;
-				<input type="number" id="height" name="height" value="<? echo ( $$variable{'Paper'}->height(); ) ?>" onkeyup="gsm_to_mweight(this.form);"/>
+				<? echo ( input( type=>'float', id=>'height', name=>'height', value=>$$variable{Paper}->height(), onkeyup=>'gsm_to_mweight(this.form);' ); ) ?>
 				</span>
 			</p>
 			<p id="MWeight" <? echo ( 'style="display:none;"' if $$variable{'Paper'}->type() eq 'Roll' ) ?>>
@@ -236,7 +236,7 @@ x
 		<div class="rightColumn">
 			<p>
 				<label>Entered</label>
-				<? echo ( Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $$variable{'Paper'}->created_on() ) ); ) ?>
+				<? echo ( format_date( $$variable{'Paper'}->created_on() ); ) ?>
 			</p>
 			<p>
 				<label>In Stock</label>
@@ -261,49 +261,50 @@ x
 			<? echo (
 					my $html = '';
 					if ( ( $session{'user_type'} eq 'A' ) or openprint::usergroup::is_user_in( ['Inventory'], $session{'user_id'} ) ) {
-							$html .= ssi::writeButton( $log, $dbh, 'CheckOutButton', 'checkout.gif', sprintf('checkout_window(%d);',$$variable{'Paper'}->id()), '', 'Check Out' );
-							$html .= ssi::writeButton( $log, $dbh, 'AllocateButton', 'allocate.gif', sprintf('allocate_window(%d);',$$variable{'Paper'}->id()), '', 'Allocate' );
-							$html .= ssi::writeButton( $log, $dbh, 'save', 'save.gif', "f1.btnFunction.value='Save';f1.submit();", '', 'Save' );
-							$html .= ssi::writeButton( $log, $dbh, 'delete', 'delete.gif', "f1.btnFunction.value='Delete';f1.submit();", '', 'Delete' ) if ! $$variable{'Paper'}->in_stock();
-							$html .= ssi::writeButton( $log, $dbh, 'reset', 'reset.gif', 'f1.reset();', '', 'Reset' );
+							$html .= button( 'CheckOutButton', { onclick=>sprintf('checkout_window(%d);',$$variable{'Paper'}->id()), text=>'Check Out' } );
+							$html .= button( 'AllocateButton', { onclick=>sprintf('allocate_window(%d);',$$variable{'Paper'}->id()), text=>'Allocate' } );
+							$html .= button( 'save', { onclick=>"f1.btnFunction.value='Save';f1.submit();", text=>'Save' } );
+							$html .= button( 'delete', { onclick=>"f1.btnFunction.value='Delete';f1.submit();", text=>'Delete' } ) if ! $$variable{'Paper'}->in_stock();
+							$html .= button( 'reset', { onclick=>'f1.reset();', href=>'', text=>'Reset' } );
 					} # end if
 					return $html;
 			) ?>
 		</div>
 	</fieldset>
  <? if ( $$variable{Paper}->id() ) ?>
- <? eval ( @{$$variable{Duplicates}} = openprint::Paper->find(
-		'owner_id'				=>$$variable{Paper}->owner_id(),
-		'manufacturer_id'		=>$$variable{Paper}->manufacturer_id(),
-		'brand_id'				=>$$variable{Paper}->brand_id(),
-		'finish_id'				=>$$variable{Paper}->finish_id(),
-		'colour_id'				=>$$variable{Paper}->colour_id(),
-		'weight_id'				=>$$variable{Paper}->weight_id(),
-		'quality_id'			=>$$variable{Paper}->quality_id(),
-		'width'					=>$$variable{Paper}->width(),
-		'height'				=>$$variable{Paper}->height(),
-		'fsc_code'				=>$$variable{Paper}->fsc_code(),
-		);
+ <? eval ( $$variable{Duplicates} = [ openprint::Paper->find(
+		owner_id			=>	$$variable{Paper}->owner_id(),
+		manufacturer_id		=>	$$variable{Paper}->manufacturer_id(),
+		brand_id			=>	$$variable{Paper}->brand_id(),
+		finish_id			=>	$$variable{Paper}->finish_id(),
+		colour_id			=>	$$variable{Paper}->colour_id(),
+		weight_id			=>	$$variable{Paper}->weight_id(),
+		quality_id			=>	$$variable{Paper}->quality_id(),
+		width				=>	$$variable{Paper}->width(),
+		height				=>	$$variable{Paper}->height(),
+		fsc_code			=>	$$variable{Paper}->fsc_code(),
+		type				=>	$$variable{Paper}->type(),
+		) ];
 		) ?>
 		<? if ( @{$$variable{Duplicates}} > 1 ) ?>
  <fieldset><legend>Similar Papers</legend>
  <table class="List">
-		<tr><th width="50">ID</th><th>Description</th></tr>
-		<? echo (
-				my $html = '';
-				my $rowclass;
-				while ( my $Duplicate = shift @{$$variable{'Duplicates'}} ) {
-						next if $Duplicate->id() == $$variable{Paper}->id();
-						$html .= sprintf('<tr%1$s><td><a href="/employee/inventory/paper_details.html?paper_id=%2$d">%2$d</a></td><td><a href="/employee/inventory/paper_details.html?paper_id=%2$d">%3$s</a></td></tr>', $rowclass, $Duplicate->id(), $Duplicate->to_string() );
-						$rowclass = $rowclass ? '' : ' class="colRow"';
-				} # end while
-				return $html;
-		) ?>
+	<tr><th width="50">ID</th><th>Description</th></tr>
+	<? echo (
+		my $html = '';
+		my $rowclass;
+		while ( my $Duplicate = shift @{$$variable{'Duplicates'}} ) {
+			next if $Duplicate->id() == $$variable{Paper}->id();
+			$html .= sprintf('<tr%1$s><td><a href="/employee/inventory/paper_details.html?paper_id=%2$d">%2$d</a></td><td><a href="/employee/inventory/paper_details.html?paper_id=%2$d">%3$s</a></td></tr>', $rowclass, $Duplicate->id(), $Duplicate->to_string() );
+			$rowclass = $rowclass ? '' : ' class="colRow"';
+		} # end while
+		return $html;
+	) ?>
  </table>
- <? echo ( ssi::writeButton( $log, $dbh, 'Merge', 'merge.gif', "f1.btnFunction.value='Merge';f1.submit();", '', 'Merge' ); ) ?>
+ <? echo ( button( 'Merge', { onclick=>"f1.btnFunction.value='Merge';f1.submit();", text=>'Merge' } ); ) ?>
  </fieldset>
-		<? endif ( @{$$variable{Duplicates}} > 1 ) ?>
-		<? endif ( $$variable{Paper}->id() ) ?>
+<? endif ( @{$$variable{Duplicates}} > 1 ) ?>
+<? endif ( $$variable{Paper}->id() ) ?>
 </form>
 <? if ( $$variable{'paper_id'} ) ?>
 	<fieldset><legend onclick="AjaxToggleContent( 'CurrentInventory', '/employee/inventory/_paper_inventory_entries.html', new Array('paper_id',<?paper_id?>) );">Current Inventory<span class="unprintable"> - click to hide/show</span></legend>

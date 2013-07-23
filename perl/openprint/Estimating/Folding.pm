@@ -202,12 +202,18 @@ sub signature_needs {
 		return 0;
 	} # end if
 
+	if ( $$services{''} ) {
+		my $printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
+		return 0 if $$printing_specs{rdbTemplateType} eq 'Unbound';
+	} # end if
+
 	if ( $fold_types{$$specs{'rdbTemplateType'}} ) {
 		$openprint::log->warn("FOLDING NEEDED got templatetype!") if DEBUG;
 		return 1;
 	} else {
 		$openprint::log->warn("FOLDING NEEDED $$specs{'rdbTemplateType'} $fold_types{$$specs{'rdbTemplateType'}}!") if DEBUG;
 	} # end if
+
 
 	if ( $$specs{'txtSignatureType'} ) {
 		if ( $$specs{'txtSpreadSize'} == 1 ) {
@@ -249,6 +255,10 @@ sub neccessary {
 	if ( $$services{'NoBindery'} ) {
 		$openprint::log->debug(" ** Project is marked as No bindery, Folding not needed ! ** ");
 		return 0;
+	} # end if
+	if ( $$services{''} ) {
+		my $printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
+		return 0 if $$printing_specs{rdbTemplateType} eq 'Unbound';
 	} # end if
 
 	foreach my $signature_service_index ( $Project->signatures() ) {

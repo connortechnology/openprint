@@ -314,14 +314,14 @@ sub copy {
 } # end sub copy
 
 sub save {
-	my ( $self, $data ) = @_;
+	my ( $self, $data, $force_insert ) = @_;
 	$$self{'created_by_id'} = $session{'user_id'} if ! $$self{'created_by_id'};
 	$self->type() if ! $$self{'type'};
 	$self->used(undef);
 
 	# Why?
 	#$self->location_id();
-	return $self->SUPER::save( $data );
+	return $self->SUPER::save( $data, $force_insert );
 } # end sub save
 
 sub destroy {
@@ -493,16 +493,17 @@ sub Contents {
 
 	if ( @_ ) {
 		if ( ! defined $_[0] ) {
-			$$self{Contents} = [ openprint::SkidContent->find( skid_id=>$$self{id} ) ];
+			$$self{Contents} = [ openprint::SkidContent->find( 'skid_id'=>$$self{'id'}, 'deleted in'=>[0,1] ) ];
 		} elsif ( ref $_[0] eq 'ARRAY' ) {
 			$$self{Contents} = $_[0];
 		} else {
 			my %params = @_;
 			$params{'skid_id'} = $$self{'id'};
+			$params{'deleted_in'} = [0,1] if ! exists $params{'deleted in'};
 			return openprint::SkidContent->find( %params );
 		} # end if
 	} elsif ( ! $$self{Contents} ) {
-		$$self{Contents} = [ openprint::SkidContent->find( skid_id=>$$self{id} ) ];
+		$$self{Contents} = [ openprint::SkidContent->find( skid_id=>$$self{id}, 'deleted in'=>[0,1] ) ];
 	} # end if
 	return @{$$self{'Contents'}};
 } # end sub Contents

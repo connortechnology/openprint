@@ -1,5 +1,4 @@
 <? echo (
-	
 	my $html = '';
 	if ( $variable{'error'} ) {
 		$variable{error} =~ s/<br\/>//g;
@@ -56,53 +55,48 @@ if ( tr ) tr.remove();
 		#if ( $C->manufacturers_id() ) {
 			#$html .= sprintf('<a href="/employee/inventory/skid_details.html?skid_id=%1$d">%2$s</a></td>', $C->skid_id(), $C->manufacturers_id() );
 		#} else {
-			$html .= ssi::input( type=>'text', 
+			$html .= input( type=>'text', 
 				id		=>	'manufacturers_id-'.$id,
 				name	=>	'manufacturers_id-'.$id,
 				value	=>	$C->manufacturers_id(),
 				).'</td>';
 		#} # end if
-		$html .= '<td class="Docket">'.ssi::input( type=>'cardinal', 
-			id		=>	'docket-'.$id,
-			name	=>	'docket-'.$id,
-			value	=>	$C->docket(),
-			).'</td>';
 		if ( $Type->type() eq 'Sheet' ) {
 			my $lbs = Math::Round::nearest( 0.01, $C->quantity() * $Paper->width() * $Paper->height() * $Paper->wpsi() );
 
-			$html .= '<td class="qty_lbs">'.ssi::input( type=>'cardinal', 
+			$html .= '<td class="qty_lbs">'.input( type=>'cardinal', 
 					id		=>	'qty_lbs-'.$id,
 					name	=>	'qty_lbs-'.$id,
 					value	=>	$lbs,
 					onkeyup	=>	"from_lbs(this,'$$variable{type_id}','$$C{id}');",
 					onchange=>	'this.onkeyup();',
 					) . '</td>';
-			$html .= '<td class="qty_kgs">'.ssi::input( type=>'float', 
+			$html .= '<td class="qty_kgs">'.input( type=>'float', 
 					id		=>	'qty_kgs-'.$id,
 					name	=>	'qty_kgs-'.$id,
 					value	=>	Math::Round::nearest( .1, $lbs/2.2046 ),
 					onkeyup	=>	"from_kg(this,'$$variable{type_id}','$$C{id}');",
 					) . '</td>';
-			$html .= '<td class="qty_sheets">'.ssi::input( type=>'float', 
+			$html .= '<td class="qty_sheets">'.input( type=>'float', 
 				id		=>	'qty_sheets-'.$id,
 				name	=>	'qty_sheets-'.$id,
 				value	=>	$$C{quantity},
 				onkeyup	=>	"from_sheets(this,'$$variable{type_id}','$$C{id}');",
 				) . '</td>';
 		} else {
-			$html .= '<td class="qty_lbs">'.ssi::input( type=>'cardinal', 
+			$html .= '<td class="qty_lbs">'.input( type=>'cardinal', 
 				id		=>	'qty_lbs-'.$id,
 				name	=>	'qty_lbs-'.$id,
 				value	=>	$C->quantity(),
 				onkeyup	=>	"from_lbs(this,'$$variable{type_id}','$$C{id}');",
 				) . '</td>';
-			$html .= '<td class="qty_kgs">'.ssi::input( type=>'float', 
+			$html .= '<td class="qty_kgs">'.input( type=>'float', 
 				id		=>	'qty_kgs-'.$id,
 				name	=>	'qty_kgs-'.$id,
 				value	=>	Math::Round::nearest( .1, $C->quantity()/2.2046 ),
 				onkeyup	=>	"from_kg(this,'$$variable{type_id}','$$C{id}');",
 				) . '</td>';
-			$html .= '<td class="qty_feet">'.ssi::input( type=>'float', 
+			$html .= '<td class="qty_feet">'.input( type=>'float', 
 					id		=>	'qty_feet-'.$id,
 					name	=>	'qty_feet-'.$id,
 					( ( $Paper->width() and $Paper->wpsi() ) ? ( value	=>	Math::Round::nearest( 1, (($C->quantity()/$Paper->wpsi())/$Paper->width())/12 ) ) : () ),
