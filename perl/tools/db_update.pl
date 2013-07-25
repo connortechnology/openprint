@@ -1191,7 +1191,7 @@ if ( ! sets::isin( 'inks', \@tables ) ) {
 } else {
 	my $data = $dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='inks'", 'column_name');
 	if ( ! $$data{mix} ) {
-		$dbh->do('ALTER TABLE inks add mix BOOLEAN NOT NULL default 0') or die $dbh->errstr();
+		$dbh->do('ALTER TABLE inks add mix BOOLEAN NOT NULL default false') or die $dbh->errstr();
 	} # end if
 } # end if
 
