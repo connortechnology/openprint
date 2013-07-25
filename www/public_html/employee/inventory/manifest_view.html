@@ -134,7 +134,7 @@
 								( ( $Paper->width() and $Paper->wpsi() ) ? ( Number::Format::format_number( Math::Round::nearest( 1, (($C->quantity()/$Paper->wpsi())/$Paper->width())/12 ) ) ) : () )
 								. '</td>';
 					} # end if
-					if ( @{$SkidContents} ) {
+					if ( $SkidContents and @{$SkidContents} ) {
 						$html .= '<td class="in_stock">'. Number::Format::format_number($$SkidContents[0]->quantity() ) . ' lbs</td>';
 						$html .= '<td class="last_seen">'. $$SkidContents[0]->Skid()->last_seen_days().' days</td>';
 					} else {
