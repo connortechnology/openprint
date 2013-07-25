@@ -49,7 +49,7 @@
 				@{$$variable{options}} = sql::execute( undef, undef, q{SELECT name, name FROM Project_statuses ORDER BY sort, lower(name)} );
 				my @selected = split(',', $session{'/employee/reports/project_history.html?status'} );
 				@selected = @{$$variable{options}} if ! @selected;
-				return ssi::make_drop_down( $$variable{options}, \@selected );
+				return make_drop_down( $$variable{options}, \@selected );
 			) ?>
 			</select>
 		</li>
@@ -59,18 +59,18 @@
 			<? echo (
 				my @selected = split(',', $session{'/employee/reports/project_history.html?previous_status'} );
 				@selected = @{$$variable{options}} if ! @selected;
-				return ssi::make_drop_down( $$variable{options}, \@selected );
+				return make_drop_down( $$variable{options}, \@selected );
 			) ?>
 			</select>
 		</li>
 		<li><label>Status Change On</label>
-			<? echo ( ssi::date_select_session('/employee/reports/project_history.html', 'status_on_start', { 'with_today'=>1,'with_clear'=>1 } ); ) ?> to
-			<? echo ( ssi::date_select_session('/employee/reports/project_history.html', 'status_on_end', { 'with_today'=>1,'with_clear'=>1 } ); ) ?>
+			<? echo ( date_select_session('/employee/reports/project_history.html', 'status_on_start', { 'with_today'=>1,'with_clear'=>1 } ); ) ?> to
+			<? echo ( date_select_session('/employee/reports/project_history.html', 'status_on_end', { 'with_today'=>1,'with_clear'=>1 } ); ) ?>
 		</li>
 		<li>
 			<label>Created On</label>
-			<? echo ( ssi::date_select_session('/employee/reports/project_history.html', 'created_on_start', { 'with_today'=>1,'with_clear'=>1 } ); ) ?> to
-			<? echo ( ssi::date_select_session('/employee/reports/project_history.html', 'created_on_end', { 'with_today'=>1,'with_clear'=>1 } ); ) ?>
+			<? echo ( date_select_session('/employee/reports/project_history.html', 'created_on_start', { 'with_today'=>1,'with_clear'=>1 } ); ) ?> to
+			<? echo ( date_select_session('/employee/reports/project_history.html', 'created_on_end', { 'with_today'=>1,'with_clear'=>1 } ); ) ?>
 		</li>
 		<li>
 			<label>Created On Time</label>
@@ -97,10 +97,9 @@
 		</li>
 		</ul>
 		 <p class="buttons">
-			 <? echo ( ssi::button( 'Go', { onclick=>'load_contents(f1);', text=>'Show Results' } ); ) ?>
+			 <? echo ( button( 'Go', { onclick=>'load_contents(f1);', text=>'Show Results' } ); ) ?>
 		 </p>
 	</fieldset>
 </form>
 <div id="Results">
-<? echo ( include('/employee/reports/_project_history_results.html'); ) ?>
 </div>

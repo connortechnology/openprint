@@ -230,9 +230,9 @@ sub add_to_log {
 	my ( $self, $desc, $user_id ) = @_;
 	my $Log = new openprint::InvoiceLog();
 	$Log->save({
-		'invoice_id'	=> $$self{'id'},
-		'user_id'		=> $user_id ? $user_id : $session{'user_id'},
-		'description'	=> $desc,
+		invoice_id	=> $$self{id},
+		user_id		=> $user_id ? $user_id : $session{user_id},
+		description	=> $desc,
 	} );
 	
 } # end sub add_to_log
@@ -245,11 +245,9 @@ sub send {
 	$data{'uri'} = 'invoice';
 	my $email_template = misc::load_file( $log, $config{'SkinPath'}.'/email_template.html' );
 	my @attachments;
-	$data{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/email_content/invoice_body.html' );
-	$data{'ReplacementText'} = ssi::variable_substitution( \$data{'ReplacementText'}, \%data );
+	$data{'ReplacementText'} = ssi::include( '/email_content/invoice_body.html', \%data );
 	push @attachments, '', MIME::QuotedPrint::encode_qp( Encode::encode('utf-8', ssi::variable_substitution( \$email_template, \%data ) ) ), 'text/html', 'quoted-printable';
-	$data{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/email_content/invoice.html' );
-	$data{'ReplacementText'} = ssi::variable_substitution( \$data{'ReplacementText'}, \%data );
+	$data{'ReplacementText'} = ssi::include( '/email_content/invoice.html', \%data );
 	push @attachments, 'Invoice '.$$self{'id'}.'.html', MIME::QuotedPrint::encode_qp( Encode::encode('utf-8',ssi::variable_substitution( \$email_template, \%data ) ) ), 'text/html', 'quoted-printable';
 
 	my $Email = new openprint::Email();

@@ -62,11 +62,10 @@ sub verify_login {
 
 	my $password = $openprint::param{'password'};
 
-
 	# doing it this way allows for multiple accounts with the same email address, identified by their password.
 	# however, on user registration, we enforce the uniqueness of email addresses.	Also, the db should have a UNIQUE
 	# attribute on the strEmail field.
-	my @Users = openprint::User->find('email'=>$email);
+	my @Users = openprint::User->find( email=>$email );
 
 	if ( ! @Users ) {
 		# user not found.	Let's see if we got the password wrong, or the email wrong.

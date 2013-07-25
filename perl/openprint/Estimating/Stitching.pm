@@ -449,12 +449,10 @@ sub calc {
 				if ( ! $$sig_specs{'txtImposition'.$qty_index} ) {
 					$$specs{'hdnBreakdown'.$qty_index} .= "Signature $$sig_specs{SignatureIndex} has no imposition.<br/>";
 					next;
-				} # end if
-				if ( ! $$sig_specs{'txtSpreadSize'} ) {
+				} elsif ( ! $$sig_specs{'txtSpreadSize'} ) {
 					$$specs{'hdnBreakdown'.$qty_index} .= "Signature $$sig_specs{SignatureIndex} has no spread size.<br/>";
 					next;
-				} # end if
-				if ( ! $$sig_specs{'PageQuantity'.$qty_index} ) {
+				} elsif ( ! $$sig_specs{'PageQuantity'.$qty_index} ) {
 					$$specs{'hdnBreakdown'.$qty_index} .= "Signature $$sig_specs{SignatureIndex} has no pages.<br/>";
 					next;
 				} # end if
@@ -467,18 +465,14 @@ sub calc {
 						my $type = $$folding_specs{"FoldType-$$sig_specs{SignatureIndex}-$qty_index-$index"};
 						next if ! $type;
 						my ( $pages ) = $type =~ /(\d+)PageFold/;
-$openprint::log->debug("Folding pages: $type $sig_pages / $pages");
-						if ( $$folding_specs{"FoldQty-$$sig_specs{SignatureIndex}-$qty_index-$index"} * $pages > $sig_pages ) {
-$openprint::log->debug('1 ' . $$folding_specs{"FoldQty-$$sig_specs{SignatureIndex}-$qty_index-$index"} . ' > ' . $sig_pages);
-							$pages{$pages} += $$sig_specs{'PageQuantity'.$qty_index} / $pages;
+#$openprint::log->debug("Folding pages: $type $sig_pages / $pages");
+						if ( $$folding_specs{"FoldQty-$$sig_specs{SignatureIndex}-$qty_index-$index"} * $pages != $sig_pages ) {
+$openprint::log->error('1 ' . $$folding_specs{"FoldQty-$$sig_specs{SignatureIndex}-$qty_index-$index"} . ' > ' . $sig_pages);
+							$pages{$pages} += Math::Round::nearest( 1, $$sig_specs{'PageQuantity'.$qty_index} / $pages );
 						} elsif ( $$folding_specs{"FoldQty-$$sig_specs{SignatureIndex}-$qty_index-$index"} * $pages == $sig_pages ) {
-$openprint::log->debug('2 ' . $$folding_specs{"FoldQty-$$sig_specs{SignatureIndex}-$qty_index-$index"});
+$openprint::log->debug('2 ' . $$folding_specs{"FoldQty-$$sig_specs{SignatureIndex}-$qty_index-$index"}) if DEBUG;
 							$pages{$pages} += $$folding_specs{"FoldQty-$$sig_specs{SignatureIndex}-$qty_index-$index"};
-						} else {
-$openprint::log->debug('3');
-							$pages{$pages} += 1;
 						} # end if
-#$$folding_specs{"FoldQty-$$sig_specs{SignatureIndex}-$qty_index-$index"};
 					} # end foreach index
 				} # end if
 

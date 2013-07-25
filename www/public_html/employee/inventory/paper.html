@@ -26,17 +26,17 @@ Please select a Paper to view/edit.<br>
 				<select id="owner_id" name="owner_id" size="1" onchange="filter_onChange(this,'');">
 				<option value=""> All </option>
 				<? echo ( 
-					make_drop_down( [ map { $_->id(), $_->name() } openprint::Company->find('id'=>[sql::execute(undef, undef, q{SELECT DISTINCT owner_id FROM papers} )], 'order'=>'lower(name)' ) ], $session{'/employee/inventory/paper.html?Owner'} ? $session{'/employee/inventory/available_paper.html?owner_id'} : $session{'company_id'} );
+					make_drop_down( [ map { $_->id(), $_->name() } openprint::Company->find( id=>[sql::execute(undef, undef, q{SELECT DISTINCT owner_id FROM papers} )], order=>'lower(name)' ) ], $session{'/employee/inventory/paper.html?Owner'} ? $session{'/employee/inventory/available_paper.html?owner_id'} : $session{company_id} );
 				) ?>
 				</select>
-				<input type="checkbox" name="owner_id_exclude" id="owner_id_exclude" value="1" onclick="filter_onChange(this,'');" <? echo ( ssi::checked( $session{'/employee/inventory/paper.html?owner_id_exclude'} ); ) ?> />
+				<input type="checkbox" name="owner_id_exclude" id="owner_id_exclude" value="1" onclick="filter_onChange(this,'');" <? echo ( checked( $session{'/employee/inventory/paper.html?owner_id_exclude'} ); ) ?> />
 				<label class="radio" for="owner_id_exclude">Exclude</label>
 			</li>
 <? echo (
 	my $html;
 
 	my %find = (
-			( $session{'/employee/inventory/paper.html?type'} ? ( 'type' => [ split( ',', $session{'/employee/inventory/available_paper.html?type'} ) ] ) : () ),
+			( $session{'/employee/inventory/paper.html?type'} ? ( type => [ split( ',', $session{'/employee/inventory/available_paper.html?type'} ) ] ) : () ),
 	);
 	if ( $session{'/employee/inventory/paper.html?owner_id'} ) {
 		if ( $session{'/employee/inventory/paper.html?owner_id_exclude'} ) {
@@ -124,7 +124,7 @@ Please select a Paper to view/edit.<br>
 					return make_drop_down( [map { $_, $_ } sort keys %data ], $session{'/employee/inventory/paper.html?height'} );
 				) ?>
 			</select>
-			<input type="checkbox" id="OrLarger" name="OrLarger" value="Y" <? echo ( 'checked="checked"' if $session{'/employee/inventory/paper.html?OrLarger'} ) ?> /><label class="radio" for="OrLarger">or larger</label>
+			<input type="checkbox" id="OrLarger" name="OrLarger" value="Y" <? echo ( checked( $session{'/employee/inventory/paper.html?OrLarger'} ); ) ?> /><label class="radio" for="OrLarger">or larger</label>
 		</li>
 		<li>
 			<label>Type</label>
@@ -152,12 +152,12 @@ Please select a Paper to view/edit.<br>
 		<p class="buttons">
 			<? echo (
 				my $html = '';
-				$html .= button( 'ShowResults', { onclick=>"LoadContent('Results','/employee/inventory/_paper_results.html', f1.serialize() );", href=>'', text=>'Show Results' } );
+				$html .= button( 'ShowResults', { onclick=>"LoadContent('Results','/employee/inventory/_paper_results.html', f1.serialize() );", text=>'Show Results' } );
 				$html .= button( 'Add', { onclick=>'', href=>'paper_details.html', text=>'Add New Paper' } );
 				if ( openprint::usergroup::is_user_in( ['Scheduling','Accounting'], $session{'user_id'} ) ) {
-					$html .= button( 'DownloadInventory', { onclick=>"f1.btnFunction.value='Download Inventory';f1.action='paper.html?Download';f1.submit();", href=>'', text=>'Download Inventory' } );
-					$html .= button( 'DownloadLog', { onclick=>"f1.btnFunction.value='Download Log';f1.action='paper.html?Download';f1.submit();", href=>'', text=>'Download Log' } );
-					$html .= button( 'Consumption', { onclick=>"f1.btnFunction.value='Consumption Report';f1.action='paper.html?Download';f1.submit();", href=>'', text=>'Consumption Report' } ) if $session{'email'} =~ /iconnor/;
+					$html .= button( 'DownloadInventory', { onclick=>"f1.btnFunction.value='Download Inventory';f1.action='paper.html?Download';f1.submit();", text=>'Download Inventory' } );
+					$html .= button( 'DownloadLog', { onclick=>"f1.btnFunction.value='Download Log';f1.action='paper.html?Download';f1.submit();", text=>'Download Log' } );
+					$html .= button( 'Consumption', { onclick=>"f1.btnFunction.value='Consumption Report';f1.action='paper.html?Download';f1.submit();", text=>'Consumption Report' } ) if $session{'email'} =~ /iconnor/;
 				} # end if
 				return $html;
 			) ?>

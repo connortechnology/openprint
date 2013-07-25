@@ -58,10 +58,10 @@ sub history {
 	} elsif ( $param{'btnFunction'} eq 'Send' ) {
 		my $Invoice = openprint::Invoice->find_one( 'id'=>$param{'invoice_id'} );
 		if ( ! $Invoice ) {
-			$variable{'error'} .= "Invoice $param{'invoice_id'} not found";
+			$variable{error} .= "Invoice $param{invoice_id} not found";
 		} else {
-			$variable{'error'} .= $Invoice->send();
-			$variable{'information'} .= 'Invoice ' . $Invoice->id() . ' sent.<br/>';
+			$variable{error} .= $Invoice->send();
+			$variable{information} .= 'Invoice ' . $Invoice->id() . ' sent.<br/>';
 		} # end if
 	} elsif ( $param{'btnFunction'} eq 'Send To Me' ) {
 		my $Invoice = openprint::Invoice->find_one( id=>$param{invoice_id} );

@@ -316,8 +316,10 @@ sub start_year {
 
 sub AccountingContacts {
 	my ( $self ) = @_;
+	my @user_ids = sql::execute(undef,undef,'SELECT user_id FROM companies_accountingcontacts WHERE company_id=?',$$self{id} );
 
-	return openprint::User->find('id'=>[sql::execute(undef,undef,'SELECT user_id FROM companies_accountingcontacts WHERE company_id=?',$$self{'id'} )] );
+	return openprint::User->find(id=>\@user_ids) if @user_ids;
+	return;
 } # end sub AccountingContacts
 
 sub get_shipping_address {

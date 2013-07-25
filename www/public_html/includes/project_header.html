@@ -36,22 +36,24 @@
 				<? endif ( $$variable{Project}->docket() ) ?>
 					<li> 
 						<label>Creation Date</label>
-						<span title="<? echo ( Date::Format::time2str( $config{'DateTimeFormat'}, Date::Parse::str2time( $$variable{Project}->created_on() ) ); ) ?>"><? echo ( Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $$variable{Project}->created_on() ) ); ) ?></span>
+						<span title="<? echo ( format_datetime( $$variable{Project}->created_on() ); ) ?>">
+						<? echo ( format_date( $$variable{Project}->created_on() ); ) ?></span>
 					</li>
 					<li><label>Last Updated</label>
-						<? echo ( Date::Format::time2str( $config{'DateTimeFormat'}, Date::Parse::str2time( $$variable{Project}->updated_on() ) ); ) ?>
+					<span title="<? echo ( format_datetime( $$variable{Project}->updated_on() ); ) ?>">
+					<? echo ( format_date( $$variable{Project}->updated_on() ); ) ?></span>
 					</li>
 					<? if ( sets::isin( $session{'user_type'}, ['A','E'] ) ) ?>
 <? if ( 0 and openprint::usergroup::is_user_in( ['Price Overrides'], $session{'user_id'} ) ) ?>
 					<li><label>Pricing Markup</label>
 					<span id="markup_view">
 					<? echo ( 1*$$variable{Project}->markup() ) ?>%
-					<? echo ( ssi::button( 'EditMarkup', { onclick=>"\$('markup_edit').show();\$('markup_view').hide();", text=> 'Edit' } ); ) ?>
+					<? echo ( button( 'EditMarkup', { onclick=>q`$('markup_edit').show();$('markup_view').hide();`, text=> 'Edit' } ); ) ?>
 					</span>
 					<span id="markup_edit" style="display:none;">
 					<input type="number" name="markup" value="<? echo ( $$variable{Project}->markup() ) ?>" />%
-					<? echo ( ssi::writeButton( $log, $dbh, 'SaveMarkup', 'markup.gif', "f1.action='/main/project/view.html';f1.btnFunction.value='Recalculate Project';f1.submit();", '', 'Save' ); ) ?>
-					<? echo ( ssi::writeButton( $log, $dbh, 'CancelMarkup', 'cancelmarkup.gif', "f1.markup.value='$$variable{Project}{markup}';\$('markup_edit').hide();\$('markup_view').show();", '', 'Cancel' ); ) ?>
+					<? echo ( button( 'SaveMarkup', { onclick=>"f1.action='/main/project/view.html';f1.btnFunction.value='Recalculate Project';f1.submit();", text=>'Save' } ); ) ?>
+					<? echo ( button( 'CancelMarkup', { onclick=>"f1.markup.value='$$variable{Project}{markup}';\$('markup_edit').hide();\$('markup_view').show();", text=>'Cancel' } ); ) ?>
 					</span>
 					</li>
 <? endif ( 0 and openprint::usergroup::is_user_in( ['Price Overrides'], $session{'user_id'} ) ) ?>
@@ -66,13 +68,13 @@
 					<? if ( $$variable{Project}->due_date() ) ?>
 					<li>
 							<label>Due Date</label>
-							<? echo ( Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $$variable{Project}->due_date() ) ); ) ?>
+							<? echo ( format_date( $$variable{Project}->due_date() ); ) ?>
 					</li>
 					<? else ( $$variable{Project}->due_date() ) ?>
 						<? if ( $$variable{Project}->requested_date() ) ?>
 						<li class="RequiredDate">
 							<label>Requested Date</label>
-							<? echo ( Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $$variable{Project}->requested_date() ) ); ) ?>
+							<? echo ( format_date( $$variable{Project}->requested_date() ); ) ?>
 						</li>
 						<? endif ( $$variable{Project}->requested_date() ) ?>
 					<? endif ( $$variable{Project}->due_date() ) ?>

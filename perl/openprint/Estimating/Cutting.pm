@@ -30,7 +30,7 @@ require openprint::Service;
 
 require sql;
 
-my $debug = 0;
+use constant DEBUG => 0;
 
 my @equipment;
 
@@ -101,13 +101,13 @@ sub signature_needs {
 	my ( $Project, $sig_specs ) = @_;
 
 	if ( $Project->Type()->name() eq 'Envelopes' ) {
-        $openprint::log->debug(" ** Project Type is Envelopes, Cutting Service is NOT needed ** ");
+        $openprint::log->debug(" ** Project Type is Envelopes, Cutting Service is NOT needed ** ") if DEBUG;
 		return 0;
 	} # end if 
 
 	my $services = $Project->services();
     if ( $$services{'NoBindery'} ) {
-        $openprint::log->debug(" ** Project is marked as No bindery, Cutting not needed ! ** ");
+        $openprint::log->debug(" ** Project is marked as No bindery, Cutting not needed ! ** ") if DEBUG;
         return 0;
     } # end if
 
@@ -147,7 +147,7 @@ sub neccessary {
 	my $services = $Project->services();
 
 	if ( $$services{'NoBindery'} ) {
-        $openprint::log->debug(" ** Project is marked as No bindery, Cutting not needed ! ** ");
+        $openprint::log->debug(" ** Project is marked as No bindery, Cutting not needed ! ** ") if DEBUG;
 		return 0;
 	} # end if
 
@@ -163,7 +163,7 @@ sub neccessary {
 			return 1;
 		} # end if
 	} # end foreach
-	$openprint::log->debug("CUTTING NOT NEEDED!");
+	$openprint::log->debug("CUTTING NOT NEEDED!") if DEBUG;
 	return 0;
 } # end sub neccessary
 
@@ -187,7 +187,7 @@ sub signature_calc_stock_cutting {
 
 	my @my_equipment;
 	if ( $$specs{"chkOverrideStockCutEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} eq 'Y' ) {
-		$openprint::log->debug("Overriding Equipment! " . $$specs{"ddmStockCutEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"});
+		$openprint::log->debug("Overriding Equipment! " . $$specs{"ddmStockCutEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"}) if DEBUG;
 		@my_equipment = ( new openprint::Equipment( @$specs{"ddmStockCutEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} ) );
     } elsif ( $$calc_hash{'Cutting::signature_calc_stock_cutting::equipment'} ) {
         @my_equipment = @{$$calc_hash{'Cutting::signature_calc_stock_cutting::equipment'}};
@@ -321,7 +321,7 @@ sub signature_calc_folding_cutting {
 			);
 
 	my $services = $Project->services();
-	return %results if (! $$services{'Folding'}) or ! @{$$services{'Folding'}};
+	return %results if ! ( $$services{Folding} and @{$$services{Folding}} );
 
 #$openprint::log->debug("Loading Paper from signature in signature_calc_folding_cutting");
 	$results{'Status'} = 'uncalculated';
@@ -352,7 +352,7 @@ sub signature_calc_folding_cutting {
 	my @my_equipment;
 
 	if ( $$specs{"chkOverrideFoldCutEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} eq 'Y' ) {
-		$log->debug("Overriding Equipment! " . $$specs{"ddmFoldCutEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"});
+		$log->debug("Overriding Equipment! " . $$specs{"ddmFoldCutEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"}) if DEBUG;
 		@my_equipment = ( new openprint::Equipment( @$specs{"ddmFoldCutEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} ) );
     } elsif ( $$calc_hash{'Cutting::signature_calc_folding_cutting::equipment'} ) {
         @my_equipment = @{$$calc_hash{'Cutting::signature_calc_folding_cutting::equipment'}};
@@ -440,7 +440,7 @@ sub signature_calc {
 			push @capabilities, 'Large Format';
 		} # end if
 		@my_equipment = openprint::Equipment->find( 'Specifications' => {'Cutting Capable'=>\@capabilities}, 'useinestimating'=>1,'order'=>'lower(strName)');
-		@{$$calc_hash{'Cutting::signature_calc::equipment'}} = @my_equipment;
+		$$calc_hash{'Cutting::signature_calc::equipment'} = \@my_equipment;
 	} # end if
 
 	if ( ! @my_equipment ) {
@@ -464,7 +464,7 @@ sub signature_calc {
 
 	my $calliper = $$specs{"txtStockCalliper-$signature_index"};
 	if ( ! $calliper ) {
-		$openprint::log->debug("**** NO Calliper ****");
+		$openprint::log->debug("**** NO Calliper ****") if DEBUG;
 		$results{'alert'} .= "Calliper is unknown for signature $signature_index.<br/>";
 		$results{'Status'} = 'uncalculated';
 		return %results;
@@ -518,12 +518,11 @@ sub signature_calc {
 			next;
 		} # end if
 		if ( $Equipment->specification('Cutting Capable') eq 'When Folding' ) {
-			if ( ! ( $$services{'Folding'} and @{$$services{'Folding'}} ) ) {
+			if ( ! $folding_specs ) {
 				$results{'Breakdown'} .= 'Not folding<br/>';
 				next;
 			} # end if
 
-			my $folding_specs = openprint::service::get_specs_ref( $Project, $$services{'Folding'}[0] );
 			if( $$folding_specs{"ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} ne $Equipment->id() ) {
 				my $Folder = new openprint::Equipment( $$folding_specs{"ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} );
 				$results{'Breakdown'} .= 'Not folding on ' . $Equipment->strid(). ' Folder is ' . $Folder->strid() . '<br/>';
@@ -576,7 +575,7 @@ sub signature_calc {
 # Regular book signatures will be trimmed by the stitcher, so we only need 1 cut per imposition
 # but if we are cutting into smaller signatures, then we need more cutting
 #$openprint::log->debug("Sitching $stitching_imposition to $$sig_specs{'txtImposition'.$qty_index}");
-			if ( $I->pages() and ! $$services{'Folding'} ) {
+			if ( $I->pages() and ! $folding_specs ) {
 # Have to cut the pages out
 				$vertical_cuts += int ( ($I->page_columns()-1)*$I->columns()*2 ) + 2;
 			} elsif ( $stitching_imposition and ( $$I{'image_orientation'} eq 'Horizontal' ) ) {
@@ -612,7 +611,7 @@ sub signature_calc {
 # interior horizontal cuts = $sig_specs{'hdnImpositionRows'}-1 with bleeds
 		my $horizontal_cuts = 0;
 		if ( exists $$sig_specs{'txtSignatureType'} ) {
-			if ( $I->pages() and ! $$services{'Folding'} ) {
+			if ( $I->pages() and ! $folding_specs ) {
 # Have to cut the pages out
 				$horizontal_cuts += int( ($I->page_rows()-1)*$I->rows() * 2 ) + 2;
 			} elsif ( $stitching_imposition and ( $I->image_orientation() eq 'Vertical' ) ) {
@@ -772,7 +771,7 @@ sub signature_calc {
 			if ( $dutch_vertical_cuts > $dutch_horizontal_cuts ) {
 				if ( $ServicePrice{'units'} eq 'per inch' ) {
 					$price = ( $runs * $dutch_vertical_cuts *$ServicePrice{'Price'} * $I->image_width() );
-					$results{'Breakdown'} .= sprintf("\t\t%d Vertical cuts on %d sheets in %d runs * %.2f inches: %.2f%s=%.2f<br/>", $dutch_vertical_cuts, $sheets, $runs, $I->image_width(), @ServicePrice{'Price','units'}, $price );
+					$results{'Breakdown'} .= sprintf('%d Vertical cuts on %d sheets in %d runs * %.2f inches: %.2f%s=%.2f<br/>', $dutch_vertical_cuts, $sheets, $runs, $I->image_width(), @ServicePrice{'Price','units'}, $price );
 				} else {
 					$price = ( $runs * $dutch_vertical_cuts * $ServicePrice{'Price'} );
 					$results{'Breakdown'} .= sprintf('%d Vertical cuts on %d sheets in %d runs: %.2f%s=%.2f<br/>', $dutch_vertical_cuts, $sheets, $runs, @ServicePrice{'Price','units'}, $price );
@@ -784,7 +783,7 @@ sub signature_calc {
 				} # end if
 				if ( $ServicePrice{'units'} eq 'per inch' ) {
 					$price = ( $runs * $dutch_horizontal_cuts *$ServicePrice{'Price'} * $I->image_height() );
-					$results{'Breakdown'} .= sprintf("\t\t%d Horizontal cuts on %d sheets in %d runs * %.2f inches: %.2f%s=%.2f<br/>", $dutch_horizontal_cuts, $sheets, $runs, $I->image_height(), @ServicePrice{'Price','units'}, $price );
+					$results{'Breakdown'} .= sprintf('%d Horizontal cuts on %d sheets in %d runs * %.2f inches: %.2f%s=%.2f<br/>', $dutch_horizontal_cuts, $sheets, $runs, $I->image_height(), @ServicePrice{'Price','units'}, $price );
 				} else {
 					$price = ( $runs * $dutch_horizontal_cuts * $ServicePrice{'Price'} );
 					$results{'Breakdown'} .= sprintf('%d Horizontal cuts on %d sheets in %d runs: %.2f%s=%.2f<br/>', $dutch_horizontal_cuts, $sheets, $runs, @ServicePrice{'Price','units'}, $price );
@@ -793,7 +792,7 @@ sub signature_calc {
 			} else {
 				if ( $ServicePrice{'units'} eq 'per inch' ) {
 					$price = ( $runs * $dutch_horizontal_cuts *$ServicePrice{'Price'} * $I->image_height() );
-					$results{'Breakdown'} .= sprintf("\t\t%d Horizontal cuts on %d sheets in %d runs * %.2f inches: %.2f%s=%.2f<br/>", $dutch_horizontal_cuts, $sheets, $runs, $I->image_height(), @ServicePrice{'Price','units'}, $price );
+					$results{'Breakdown'} .= sprintf('%d Horizontal cuts on %d sheets in %d runs * %.2f inches: %.2f%s=%.2f<br/>', $dutch_horizontal_cuts, $sheets, $runs, $I->image_height(), @ServicePrice{'Price','units'}, $price );
 				} else {
 					$price = ( $runs * $dutch_horizontal_cuts * $ServicePrice{'Price'} );
 					$results{'Breakdown'} .= sprintf('%d Horizontal cuts on %d sheets in %d runs: %.2f<br/>', $dutch_horizontal_cuts, $sheets, $runs, $price );
@@ -892,11 +891,10 @@ sub calc {
 				$$specs{'hdnBreakdown'.$qty_index} .= 'no imposition.';
 				next;
 			} # end if
-			my $Paper = openprint::Paper::load_from_signature( $Project, $sig_specs, $qty_index );
 			my $Imposition = new openprint::Imposition();
-			$Imposition->paper( $Paper );
 			$Imposition->load( $sig_specs, $qty_index );
 			next if ! $Imposition->imposition();
+			my $Paper = $Imposition->Paper();
 
 			@variables = sets::union( @variables, ( "txtStockCalliper-$signature_index",
 						"txtCalculatedCuts-$signature_index-$qty_index", "chkOverrideCalculatedCuts-$signature_index-$qty_index",

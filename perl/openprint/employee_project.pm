@@ -466,8 +466,15 @@ sub view {
 
 			sql::end_transaction( $dbh, $ac );
 			} # end if
+		} else {
+			$variable{error} .= 'Additional Charge must have either a type or description.<br/>';
 		} # end if NewServiceType or txtServiceName
 ## needs approval
+		if ( $Project->docket() ) {
+		$variable{ExternalRedirect} = '/employee/project/view.html?docket='.$Project->docket();
+		} else {
+		$variable{ExternalRedirect} = '/employee/project/view.html?ProjectIndex='.$Project->id();
+		} # end if
 #        # email CSR
 	} elsif ( $param{'btnFunction'} eq 'AdditionalChargeNotify' ) {
 		send_additional_charges_notifications( @param{'OrderID','ProjectIndex'} );

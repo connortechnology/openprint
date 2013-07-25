@@ -260,6 +260,41 @@ if ( 1 ) {
 				openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $$services{''}[0], 'txtPrice'.$qty_index, 0 );
 			} # end foreach
 			if ( $$services{'Folding'} ) {
+my %fold_types = (
+    '2PanelFold', '2 Panel Fold',
+    '3PanelFold', '3 Panel Fold',
+    '3PanelZFold', '3 Panel Z Fold',
+    '4PanelFold', '4 Panel Fold',
+    '4PanelZFold', '4 Panel Z Fold',
+    '5PanelFold', '5 Panel Fold',
+    '5PanelZFold', '5 Panel Z Fold',
+    '6PanelFold', '6 Panel Fold',
+    '6PanelZFold', '6 Panel Z Fold',
+    'SingleGateFold', 'Single Gate Fold',
+    'DoubleGateFold', 'Double Gate Fold',
+    '4PageSignatureFold', '4PageSignatureFold',
+    '6PageSignatureFold', '6PageSignatureFold',
+    '8PageSignatureFold', '8PageSignatureFold',
+    '12PageSignatureFold', '12PageSignatureFold',
+    '16PageSignatureFold', '16PageSignatureFold',
+    '18PageSignatureFold', '18PageSignatureFold',
+    '20PageSignatureFold', '20PageSignatureFold',
+    '24PageSignatureFold', '24PageSignatureFold',
+    '28PageSignatureFold', '28PageSignatureFold',
+    '32PageSignatureFold', '32PageSignatureFold',
+    '36PageSignatureFold', '36PageSignatureFold',
+    '40PageSignatureFold', '40PageSignatureFold',
+    '44PageSignatureFold', '44PageSignatureFold',
+    '48PageSignatureFold', '48PageSignatureFold',
+    'PerpendicularSoftFold', 'PerpendicularSoftFold',
+    'ParallelSoftFold', 'ParallelSoftFold',
+    '2Panel1Pocket', 'Single Pocket Presentation Folder',
+    '2Panel2Pocket', 'Double Pocket Presentation Folder',
+    '2Panel2PocketGusset', 'Double Pocket Presentation Folder with Gussets',
+    '3Panel2Pocket', '3 Panel Double Pocket Presentation Folder',
+    '3Panel2PocketGusset', '3 Panel Double Pocket Presentation Folder with Gussets',
+    'MapFold','Map Fold',
+);
 				foreach my $service ( @{$$services{'Folding'}} ) {
 					my $specs = openprint::service::get_specs_ref( $Project, $service );
 					foreach my $qty_index ( $Project->quantity_indexes() ) {
@@ -267,6 +302,23 @@ if ( 1 ) {
 							openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $service, "ddmEquipment-1-$qty_index", $$specs{"ddmEquipment-0-$qty_index"} );
 							openprint::service::delete_service_spec( $Project->id(), $service, "ddmEquipment-0-$qty_index" );
 						} # end if
+						foreach my $sig ( $Project->signatures() ) {
+							my $sig_specs = openprint::service::get_specs_ref( $Project, $sig );
+							
+							if ( $$specs{"chkOverrideFoldType-$$sig_specs{'SignatureIndex'}-$qty_index"} ) {
+								openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $service, "chkOverrideFold-$$sig_specs{'SignatureIndex'}-$qty_index", $$specs{"chkOverrideFoldType-$$sig_specs{'SignatureIndex'}-$qty_index"} );
+								openprint::service::delete_service_spec( $Project->id(), $service, "chkOverrideFoldType-$$sig_specs{'SignatureIndex'}-$qty_index" );
+							} # end if
+							foreach my $fold_type ( keys %fold_types ) {
+								if ( $$specs{"$fold_type-Qty-$$sig_specs{'SignatureIndex'}-$qty_index"} ) {
+									openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $service, "FoldQty-$$sig_specs{'SignatureIndex'}-$qty_index-1", $$specs{"$fold_type-Qty-$$sig_specs{'SignatureIndex'}-$qty_index"} );
+									my $new_fold_type = $fold_type;
+									$new_fold_type =~ s/Signature//g;
+									openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $service, "FoldType-$$sig_specs{'SignatureIndex'}-$qty_index-1", $new_fold_type );
+									openprint::service::delete_service_spec( $Project->id(), $service, "$fold_type-Qty-$$sig_specs{'SignatureIndex'}-$qty_index" );
+								} # end if
+							} # end foreach
+						} # end foreach
 					}
 				} # end foraech service
 			} # end if
