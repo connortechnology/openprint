@@ -225,6 +225,7 @@ $log->debug("Presentation folder sizes $$specs{'chkPocketLeft'} $$specs{'chkPock
 # It's a multi-page publication
 		if ( ! $$specs{'txtTotalPageQuantity'} ) {
 			$$specs{'alert'} .= 'Please enter the number of pages.<br/>';
+		sql::end_transaction( $dbh, $ac );
 			return $$specs{'Status'} = 'uncalculated';
 		} # end if
 		if ( $$specs{'rdbCover'} eq 'Different' ) {
@@ -244,9 +245,11 @@ $log->debug("Presentation folder sizes $$specs{'chkPocketLeft'} $$specs{'chkPock
 
 		if ( $$specs{'rdbTemplateType'} eq 'SaddleStitching' and $$specs{'txtTotalPageQuantity'} % 4 ) {
 			$$specs{'alert'} .= '# of pages should be a multiple of 4<br/>';
+		sql::end_transaction( $dbh, $ac );
 			return $$specs{'Status'} = 'uncalculated';
 		} elsif ( $$specs{'rdbTemplateType'} eq 'PerfectBound' and $$specs{'txtTotalPageQuantity'} % 2 ) {
 			$$specs{'alert'} .= '# of pages should be a multiple of 2<br/>';
+		sql::end_transaction( $dbh, $ac );
 			return $$specs{'Status'} = 'uncalculated';
 		} # end if
 
