@@ -44,15 +44,17 @@ sub _history {
 } # end sub _history
 
 sub edit {
-	$variable{'Payment'} = new openprint::Payment( $param{'payment_id'} );
+	my $Payment = $variable{Payment} = new openprint::Payment( $param{'payment_id'} );
 	if ( $param{'btnFunction'} eq 'Save' ) {
 		$param{'recipient_id'} = $session{'company_id'} if ! $param{'recipient_id'};
 		$param{'received_on'} = sprintf('%.4d-%.2d-%.2d', @param{'received_on_year','received_on_month','received_on_day'} ) if Date::Calc::check_date( @param{'received_on_year','received_on_month','received_on_day'} );
-		my $Payment = new openprint::Payment( $param{'payment_id'} );
 		$variable{'error'} .= $variable{'Payment'}->save(\%param);
 		if ( $param{payment_id} ) {
 			$variable{ExternalRedirect} = '/payment/history.html';
 		} # end if
+	} elsif ( $param{btnFunction} eq 'Delete' ) {
+		$variable{error} .= $Payment->delete();
+		$variable{ExternalRedirect} = '/payment/history.html' if ! $variable{error};
 	} # end if
 } # end sub edit
 

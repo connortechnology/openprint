@@ -59,9 +59,12 @@ sub destroy {
 } # end sub destroy
 
 sub products {
+	return $_[0]->Products();
+} # end sub products
+sub Products {
 	my $self = shift;
 	my %params = @_;
-	$params{'category_id'} = $$self{'id'};
+	$params{category_id} = $$self{id};
 
 	return openprint::Product->find( %params );
 } # end sub products

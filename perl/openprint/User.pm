@@ -12,7 +12,7 @@ use vars qw( $log $dbh %config %variable %param $debug %fields %find_fields %tra
 $table = 'users';
 $serial = 'users_id_seq';
 
-$debug = 0;
+$debug = 1;
 
 %fields = (
 	'id'				=>	'id',

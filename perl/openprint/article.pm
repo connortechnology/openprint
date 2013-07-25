@@ -57,7 +57,7 @@ sub save_article {
 	} # end if
 	if ( $param{'source'} ) {
 
-		if ( $param{'source'} =~ /epicurious\.com/ ) {
+		if ( 0 and  ( $param{'source'} =~ /epicurious\.com/ ) ) {
 			my $ua = LWP::UserAgent->new;
 			$ua->agent("MyApp/0.1 ");
 # Create a request
@@ -75,7 +75,7 @@ sub save_article {
 				$content =~ s/src="\//src="http:\/\/www.epicurious.com\//g;
 				$content =~ s/href="\//href="http:\/\/www.epicurious.com\//g;
 				my ( $title ) = $content =~ /<h1 class="fn">(.+?)<\/h1>/;
-				my ( $summary ) = $content =~ /<span id="truncatedText" class="summary">(.+?)<\/span>/;
+				my ( $summary ) = $content =~ /<div id="recipe_detail_module" class="content_unit detail_page">(.*)<\/div>/;
 				my ( $thumb ) = $content =~ /<div id="recipe_thumb">(.+?)<\/div>/;
 				
 				$param{'source_content'} = qq`<div class="Epicurious"><h1>$title</h1><div class="thumb">$thumb</div><div class="summary">$summary</div></div>`;

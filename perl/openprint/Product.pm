@@ -82,7 +82,7 @@ sub copy {
 
 sub prices {
 	if ( ! exists $_[0]{'Prices'} ) {
-		@{$_[0]{'Prices'}} = openprint::ProductPrice->find( 'product_id'=>$_[0]{'id'} );
+		@{$_[0]{'Prices'}} = openprint::ProductPrice->find( product_id=>$_[0]{id}, order=>'min NULLS FIRST' );
 	} # end if
 	return @{$_[0]{'Prices'}};
 } # end sub prices
