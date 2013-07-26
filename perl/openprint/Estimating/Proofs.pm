@@ -134,6 +134,8 @@ sub calc {
 			my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
 
 			my $signature_index = $$sig_specs{'SignatureIndex'};
+			my $Equipment = openprint::Equipment->find_one( strid=>$$sig_specs{'ddmPress'.$qty_index} );
+
 			$$specs{'hdnBreakdown'.$qty_index} .= "Signature $signature_index<br/>";
 			if ( ! $$sig_specs{'txtImposition'.$qty_index} ) {
 				# Remove it so we don't have to test for it later
@@ -149,7 +151,7 @@ sub calc {
 			if ( ( ! sets::isin( 2, $proof_indexes{$signature_index} ) ) and $openprint::config{'Add Default Colour Proof'} eq 'Y' ) {
 				push @{$proof_indexes{$signature_index}}, 2;
 			} # end if
-			if ( ( ! sets::isin( 3, $proof_indexes{$signature_index} ) ) and $openprint::config{'Add Default Press Proof'} eq 'Y' ) {
+			if ( ( ! sets::isin( 3, $proof_indexes{$signature_index} ) ) and ( ( $openprint::config{'Add Default Press Proof'} eq 'Y' ) or ( $Equipment and $Equipment->specification('Require Press Proof') eq 'Y' ) ) ) {
 				push @{$proof_indexes{$signature_index}}, 3;
 			} # end if
 				
@@ -487,6 +489,7 @@ $log->error("No imposition in signature $signature_index");
 			} # end if
 			my $Imposition = new openprint::Imposition();
 			$Imposition->load( $sig_specs, $qty_index );
+			my $Equipment = openprint::Equipment->find_one( strid=>$$sig_specs{'ddmPress'.$qty_index} ) if $$sig_specs{'ddmPress'.$qty_index};
 
 			if ( ( ! sets::isin( 1, $proof_indexes{$signature_index} ) ) and $openprint::config{'Add Default Layout Proof'} eq 'Y') {
 				push @{$proof_indexes{$signature_index}}, 1;
@@ -498,7 +501,7 @@ $log->error("No imposition in signature $signature_index");
 				$openprint::log->debug("ADDING Colour Proof to $signature_index") if DEBUG;
 				insert_colour_proof( $Project, $sig_specs, 2, $qty_index, $variable );
 			} # end if
-			if ( ( ! sets::isin( 3, $proof_indexes{$signature_index} ) ) and $openprint::config{'Add Default Press Proof'} eq 'Y') {
+			if ( ( ! sets::isin( 3, $proof_indexes{$signature_index} ) ) and ( ( $openprint::config{'Add Default Press Proof'} eq 'Y' ) or ( $Equipment and $Equipment->specification('Require Press Proof') eq 'Y' ) ) ) {
 				push @{$proof_indexes{$signature_index}}, 3;
 				insert_press_proof( $Project, $sig_specs, 3, $qty_index, $variable );
 			} # end if

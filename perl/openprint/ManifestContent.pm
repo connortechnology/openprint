@@ -52,14 +52,15 @@ $serial = 'manifestcontents_id_seq';
 
 sub skid_id {
 	if ( @_ > 1 ) {
-		$_[0]{skid_id} = $_[1];
-		$_[0]{skid_id} = undef if ! $_[0]{skid_id};
+$openprint::log->debug("Setting skid_id to $_[1]");
+		$_[0]{skid_id} = $_[1] ? $_[1] : undef;
 		delete $_[0]{Skid};
 	} # end if
-	if ( ( ! $_[0]{skid_id} ) and $_[0]{rfidtag_id} ) {
+	if ( ( ! $_[0]{skid_id} ) and $_[0]{rfidtag_id} and ( ! $_[0]{Skid} ) ) {
 		my $Tag = $_[0]->RFIDTag();
-		$_[0]{skid_id} = $Tag->skid_id() if $Tag->skid_id();
+		$_[0]{Skid} = $Tag->Skid() if $Tag->skid_id();
 	} # end if
+	return $_[0]{Skid}->id() if ( ! $_[0]{skid_id} ) and $_[0]{Skid};
 	return $_[0]{skid_id};
 } # end sub skid_id
 
@@ -78,7 +79,7 @@ sub Skid {
 sub RFIDTag {
 	if ( @_ > 1 ) {
 		$_[0]{RFIDTag} = $_[1];
-		$_[0]{rfidtag_id} = ref $_[0]{RFIDTag} eq 'openprint::RFIDTag' ? $_[0]{RFIDTag}{id} : undef;
+		#$_[0]{rfidtag_id} = ref $_[0]{RFIDTag} eq 'openprint::RFIDTag' ? $_[0]{RFIDTag}{id} : undef;
 	} # end if
 	if ( ! $_[0]{RFIDTag} ) {
 		if ( $_[0]{rfidtag_id} ) {
@@ -262,6 +263,12 @@ $openprint::log->debug("desired paper does not exists");
 					} # end if
 		} # end if
 	} # end if
+	if ( $$MC{skid_id} and $$MC{rfidtag_id} ) {
+		if ( ! $$Skid{rfidtag_id} ) {
+			$error .= $Skid->save({ rfidtag_id=>$$MC{rfidtag_id} });
+		} # end if
+	} # end if
+
 	if ( $error ) {
 		$openprint::dbh->rollback();
 	} # end if
@@ -355,26 +362,29 @@ sub apply {
 
 	my $Skid = $MC->Skid();
 	if ( $$MC{manufacturers_id} ) {
-		my $found_other_skid = 0;
-		if ( my $S = openprint::Skid->find_one(manufacturers_id=>$$MC{manufacturers_id}, deleted=>[0,1] ) ) {
-			if ( $Skid->id() ) {
-				if ( $S->id() != $Skid->id() ) {
-					$error .= "Manufacturers ID $$MC{manufacturers_id} for skid <a href=\"/employee/inventory/skid_details.html?skid_id=$$MC{skid_id}\">$$MC{skid_id}</a> is already assigned to <a href=\"/employee/inventory/skid_details.html?skid_id=$$S{id}\">$$S{id}</a>.";
-					$error .= ssi::button( 'Replace'.$$MC{id}, { href=>'/employee/inventory/manifest.html?manifest_content_id='.$$MC{id}.'&action=replace&skid_id='.$$S{id}, text=>'Replace' } ) . '<br/>';
-					$found_other_skid = 1;
+		if ( $$Skid{manufacturers_id} ne $$MC{manufacturers_id} ) {
+			my $found_other_skid = 0;
+
+			if ( my $S = openprint::Skid->find_one(manufacturers_id=>$$MC{manufacturers_id}, deleted=>[0,1] ) ) {
+				if ( $Skid->id() ) {
+					if ( $S->id() != $Skid->id() ) {
+						$error .= "Manufacturers ID $$MC{manufacturers_id} for skid <a href=\"/employee/inventory/skid_details.html?skid_id=$$MC{skid_id}\">$$MC{skid_id}</a> is already assigned to <a href=\"/employee/inventory/skid_details.html?skid_id=$$S{id}\">$$S{id}</a>.";
+						$error .= ssi::button( 'Replace'.$$MC{id}, { href=>'/employee/inventory/manifest.html?manifest_content_id='.$$MC{id}.'&action=replace&skid_id='.$$S{id}, text=>'Replace' } ) . '<br/>';
+						$found_other_skid = 1;
+					} # end if
+				} else {
+					$Skid = $S;
 				} # end if
-			} else {
-				$Skid = $S;
 			} # end if
-		} # end if
-		if ( ( ! $found_other_skid ) and ( ! $Skid->manufacturers_id() ) ) {
-			$Skid->set({manufacturers_id=>$$MC{manufacturers_id}});
-			$skid_changes .= 'Assigned manufacturers id to ' . $$MC{manufacturers_id}.'<br/>';
+			if ( ( ! $found_other_skid ) and ( ! $Skid->manufacturers_id() ) ) {
+				$Skid->set({manufacturers_id=>$$MC{manufacturers_id}});
+				$skid_changes .= 'Assigned manufacturers id to ' . $$MC{manufacturers_id}.'<br/>';
+			} # end if
 		} # end if
 	} # end if manufacturers_id
 	if ( ( ! $Skid->rfidtag_id() ) and $MC->rfidtag_id() ) {
 		if ( my $S = openprint::Skid->find_one(rfidtag_id=>$MC->rfidtag_id()) ) {
-			$error .= qq`RFIDTag is already on skid <a href="/employee/inventory/skid_details.html?skid_id=$$S{id}">$$S{s}</a><br/>`;
+			$error .= qq`RFIDTag is already on skid <a href="/employee/inventory/skid_details.html?skid_id=$$S{id}">$$S{id}</a><br/>`;
 		} else {
 			$Skid->rfidtag_id( $MC->rfidtag_id() );
 			$skid_changes .= 'Assigned rfidtag to ' . $$MC{skid_id}.'<br/>';
@@ -389,8 +399,10 @@ sub apply {
 	if ( ! $Skid->id() ) {
 		$skid_changes .= 'Skid Created.<br/>';
 		$$Skid{id} = $$MC{skid_id} if $$MC{skid_id};
+		$error .= $Skid->save( {}, 1 );
+	} else {
+		$error .= $Skid->save() if $skid_changes;
 	} # end if
-	$error .= $Skid->save( {}, 1 ) if $skid_changes;
 	return $error if ! $Skid->id();
 
 	my $Paper = $MC->Type()->Paper();
@@ -408,7 +420,14 @@ sub apply {
 				});
 	} # end if
 
-	$MC->skid_id( $$Skid{id} ) if ! $MC->skid_id();
+	if ( ! $$MC{skid_id} ) {
+$openprint::log->debug("Setting skid_id to $$Skid{id}");
+		$MC->skid_id( $$Skid{id} );
+	} elsif ( $$MC{skid_id} != $$Skid{id} ) {
+		$openprint::log->error("MC skid_id doesn't match skid");
+	} else {
+		$openprint::log->debug("MC skid_id matches skid");
+	} # en dif
 	$error .= $MC->save();
 
 	my $SkidContent = openprint::SkidContent->find_one( skid_id=>$Skid->id(), paper_id=>$$Paper{id} );

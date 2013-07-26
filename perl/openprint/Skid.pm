@@ -245,14 +245,14 @@ sub find {
 	} # end if
 	if ( exists $params{'deleted'} ) {
 		if ( ref $params{'deleted'} eq 'ARRAY' ) {
-			$sql .= ' AND (deleted IS NULL OR deleted IN (' . join(',', map {'?'} @{$params{'deleted'}}) . '))';
+			$sql .= ' AND deleted IN (' . join(',', map {'?'} @{$params{'deleted'}}) . ')';
 			push @values, @{$params{'deleted'}};
 		} else {
 			$sql .= ' AND deleted=?';
 			push @values, $params{'deleted'};
 		} # end if
 	} else {
-		$sql .= ' AND (deleted=? OR deleted IS NULL)';
+		$sql .= ' AND deleted=?';
 		push @values, 0;
 	} # end if
 
@@ -604,10 +604,21 @@ sub allocate {
 } # end sub allocate
 
 sub empty {
-	my ( $self ) = @_;
-	my @Contents = $self->Contents('quantity >'=>0);
-	return ! @Contents;
+	return $_[0]->is_empty();
 } # end sub empty
+
+sub is_empty {
+	if ( ! exists $_[0]{empty} ) {
+		$_[0]{empty} = 1;
+		foreach my $C ( $_[0]->Contents() ) {
+			if ( $C->quantity() > 0 ) {
+				$_[0]{empty} = 0;
+				last;
+			} # end if
+		} # end foreach
+	} # end if
+	return $_[0]{empty};
+} # end sub is_empty
 
 sub contents {
 	my ( $self, $Paper ) = @_;
@@ -628,9 +639,9 @@ sub rfidtag_id {
 			my $error = $RFIDTag->set({id=>$rfidtag_id}) if ! $RFIDTag->id();
 			$log->error( $error ) if $error;
 		} # end if
-		$_[0]{'rfidtag_id'} = $rfidtag_id;
+		$_[0]{rfidtag_id} = $rfidtag_id;
 	} # end if
-	return $_[0]{'rfidtag_id'};
+	return $_[0]{rfidtag_id};
 } # end sub rfidtag_id
 
 sub RFIDTag {
@@ -657,13 +668,6 @@ sub type {
 	return $$self{'type'};
 } # end sub type
 
-sub is_empty {
-	my $self = $_[0];
-	foreach my $C ( $self->Contents() ) {
-		return 0 if $C->quantity() > 0;
-	} # end foreach
-	return 1;
-} # end sub is_empty
 
 sub last_seen_days {
 	if ( ! exists $_[0]{last_seen_days} ) {
