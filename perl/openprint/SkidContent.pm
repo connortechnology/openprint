@@ -67,7 +67,7 @@ sub find {
 	} elsif ( ! exists $params{'deleted in'} ) {
 		$sql .= ' AND false = (SELECT deleted FROM SKids WHERE skids.id=skid_id)';
 	} # end if
-	if ( exists $params{'deleted in'} ) {
+	if ( exists $params{'deleted in'} and @{$params{'deleted in'}} != 2 ) {
 		$sql .= ' AND (SELECT deleted FROM SKids WHERE skids.id=skid_id) in ('.join(',', map { '?' } @{$params{'deleted in'}} ) . ')';
 		push @values, @{$params{'deleted in'}};
 	}

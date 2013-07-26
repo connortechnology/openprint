@@ -191,14 +191,14 @@ sub find {
 	} # end if
 	if ( exists $params{'deleted'} ) {
 		if ( ref $params{'deleted'} eq 'ARRAY' ) {
-			$sql .= ' AND (deleted IS NULL OR deleted IN (' . join(',', map {'?'} @{$params{'deleted'}}) . '))';
+			$sql .= ' AND deleted IN (' . join(',', map {'?'} @{$params{'deleted'}}) . ')';
 			push @values, @{$params{'deleted'}};
 		} else {
 			$sql .= ' AND deleted=?';
 			push @values, $params{'deleted'};
 		} # end if
 	} else {
-		$sql .= ' AND (deleted=? OR deleted IS NULL)';
+		$sql .= ' AND deleted=?';
 		push @values, 0;
 	} # end if
 
@@ -560,6 +560,7 @@ sub is_empty {
 			} # end if
 		} # end foreach
 	} # end if
+$openprint::log->debug("SKid empty: $_[0]{empty}");
 	return $_[0]{empty};
 } # end sub is_empty
 
