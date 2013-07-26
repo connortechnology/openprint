@@ -52,10 +52,9 @@ $serial = 'manifestcontents_id_seq';
 
 sub skid_id {
 	if ( @_ > 1 ) {
-		$_[0]{skid_id} = $_[1];
-		$_[0]{skid_id} = undef if ! $_[0]{skid_id};
+$openprint::log->debug("Setting skid_id to $_[1]");
+		$_[0]{skid_id} = $_[1] ? $_[1] : undef;
 		delete $_[0]{Skid};
-		delete $_[0]{found_skid_id};
 	} # end if
 	if ( ( ! $_[0]{skid_id} ) and $_[0]{rfidtag_id} and ( ! $_[0]{Skid} ) ) {
 		my $Tag = $_[0]->RFIDTag();
@@ -421,7 +420,14 @@ sub apply {
 				});
 	} # end if
 
-	$MC->skid_id( $$Skid{id} ) if ! $MC->skid_id();
+	if ( ! $$MC{skid_id} ) {
+$openprint::log->debug("Setting skid_id to $$Skid{id}");
+		$MC->skid_id( $$Skid{id} );
+	} elsif ( $$MC{skid_id} != $$Skid{id} ) {
+		$openprint::log->error("MC skid_id doesn't match skid");
+	} else {
+		$openprint::log->debug("MC skid_id matches skid");
+	} # en dif
 	$error .= $MC->save();
 
 	my $SkidContent = openprint::SkidContent->find_one( skid_id=>$Skid->id(), paper_id=>$$Paper{id} );
