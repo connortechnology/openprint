@@ -8,7 +8,6 @@
 			} else {
 				foreach my $C ( $$variable{Type}->Contents() ) {
 					my $Skid = $C->Skid();
-
 					foreach my $SkidContent ( $Skid->Contents() ) {
 						$Paper = $SkidContent->Paper();
 						last;
@@ -43,7 +42,7 @@
 		<p id="Owner-<?type_id?>_div">
 			<label for="Owner-<?type_id?>">Owner</label>
 			<input type="text" onkeyup="filterDDM(this, this.form.Owner);" class="filter" />
-			<select id="Owner-<?type_id?>" name="Owner-<?type_id?>"><? echo ( ssi::make_drop_down( $$variable{'Owners'}, $param{'Owner-'.$$variable{'type_id'}} ? $param{'Owner-'.$$variable{'type_id'}} : $session{'company_id'} ); ) ?></select>
+			<select id="Owner-<?type_id?>" name="Owner-<?type_id?>"><? echo ( make_drop_down( $$variable{'Owners'}, $param{'Owner-'.$$variable{'type_id'}} ? $param{'Owner-'.$$variable{'type_id'}} : $session{'company_id'} ); ) ?></select>
 		</p>
 		<p id="Manufacturer-<?type_id?>_div">
 			<label for="txtManufacturer-<?type_id?>" onclick="$('Manufacturer-<?type_id?>').toggle();$('txtManufacturer-<?type_id?>').toggle();">Manufacturer</label>
@@ -56,7 +55,7 @@
 							$param{'Manufacturer-'.$$variable{'type_id'}} = $Manufacturers[0]->id();
 						} # end if
 					} # end if
-					return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Manufacturer->find('order'=>'lower(name)') ], $param{'Manufacturer-'.$$variable{'type_id'}} );
+					return make_drop_down( openprint::Manufacturer->dropdown( order=>'lower(name)'), $param{'Manufacturer-'.$$variable{'type_id'}} );
 				) ?>
 			</select>
 			<input style="display: none;" type="text" id="txtManufacturer-<?type_id?>" name="txtManufacturer-<?type_id?>" />
@@ -66,7 +65,7 @@
 			<select id="Brand-<?type_id?>" name="Brand-<?type_id?>" size="1" onchange="Brand_onChange(this,'-<?type_id?>');">
 				<option value="">select</option>
 			<? echo (
-					return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::StockBrand->find('order'=>'lower(name)') ], $param{'Brand-'.$$variable{'type_id'}} );
+					return make_drop_down( openprint::StockBrand->dropdown( order=>'lower(name)'), $param{'Brand-'.$$variable{'type_id'}} );
 					) ?>
 			</select>
 			<input style="display: none;" type="text" id="txtBrand-<?type_id?>" name="txtBrand-<?type_id?>" />
@@ -92,9 +91,9 @@
 				} # end if
 				my @Colours = openprint::StockColour->find('order'=>'lower(name)');
 				if ( @Colours == 1 ) {
-					return ssi::make_drop_down( [ map { $_->id(), $_->name() } @Colours ], $Colours[0]->id() );
+					return make_drop_down( [ map { $_->id(), $_->name() } @Colours ], $Colours[0]->id() );
 				} else {
-					return ssi::make_drop_down( [ map { $_->id(), $_->name() } @Colours ], $param{'Colour-'.$$variable{'type_id'}} );
+					return make_drop_down( [ map { $_->id(), $_->name() } @Colours ], $param{'Colour-'.$$variable{'type_id'}} );
 				} # end if
 				) ?>
 			</select>
@@ -117,9 +116,9 @@
 				} # end if
 				my @Qualities = openprint::StockQuality->find('order'=>'lower(name)');
 				if ( @Qualities == 1 ) {
-					return ssi::make_drop_down( [ map { $_->id(), $_->name() } @Qualities ], $Qualities[0]->id() );
+					return make_drop_down( [ map { $_->id(), $_->name() } @Qualities ], $Qualities[0]->id() );
 				} else {
-					return ssi::make_drop_down( [ map { $_->id(), $_->name() } @Qualities ], $param{'Quality-'.$$variable{'type_id'}} );
+					return make_drop_down( [ map { $_->id(), $_->name() } @Qualities ], $param{'Quality-'.$$variable{'type_id'}} );
 				} # end if
 			) ?>
 			</select>
@@ -166,7 +165,7 @@
 			<label>Docket</label>
 			<? echo ( input( type=>'cardinal', id=>'docket-'.$$variable{type_id}, name=>'docket-'.$$variable{type_id}, value=>$$variable{Type}->docket() ); ) ?>
 			<? echo ( button( 'LoadPos'.$$variable{'Type'}->id(), { 
-			onclick=>"new Ajax.Updater('PurchaseOrders$$variable{Type}{id}','_manifest_purchase_orders.html', { parameters: { supplier_id: \$('supplier_id').value, Docket: \$('docket-$$variable{Type}{id}').value} } );", 'text'=>'Load POs' } ); ) ?>
+			onclick=>"new Ajax.Updater('PurchaseOrders$$variable{Type}{id}','_manifest_purchase_orders.html', { parameters: { supplier_id: \$('supplier_id').value, Docket: \$('docket-$$variable{Type}{id}').value} } );", text=>'Load POs' } ); ) ?>
 		</p>
 		<div id="PurchaseOrders<? echo ( $$variable{'Type'}->id() ) ?>">
 		<? if ( ! $$variable{Type}->po_id() ) ?>
@@ -230,6 +229,6 @@
 	</div>
 	<br class="spacer"/>
 	<br class="spacer"/>
-	<div id="ManifestContents<? echo ( $$variable{'Type'}->id() ) ?>"><? echo ( include('_manifest_contents.html'); ) ?></div>
+	<div id="ManifestContents<? echo ( $$variable{'Type'}->id() ) ?>"><?include(_manifest_contents.html)?></div>
 	<br class="spacer"/>
 </fieldset>

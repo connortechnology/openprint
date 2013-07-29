@@ -108,7 +108,7 @@
 					
 					my $Skid = $C->Skid();
 					$Skid->Contents( $SkidContents{$$Skid{id}} ? $SkidContents{$$Skid{id}} : [] );
-					my @SkidContents = @{$SkidContents{$$Skid{id}}} if $SkidContents{$$Skid{id}};
+					my $SkidContents = $SkidContents{$$Skid{id}} if $SkidContents{$$Skid{id}};
 					my $RFIDTag = $C->RFIDTag();
 					my $error = $C->check();
 
@@ -128,15 +128,15 @@
 						$html .= '<td class="qty_kgs">'.  Number::Format::format_number(Math::Round::nearest( .1, $lbs/2.2046 )) . '</td>';
 						$html .= '<td class="qty_sheets">'.  Number::Format::format_number($$C{quantity}) . '</td>';
 					} else {
-						$html .= '<td class="qty_lbs">'. $C->quantity() . '</td>';
-						$html .= '<td class="qty_kgs">'. Math::Round::nearest( .1, $C->quantity()/2.2046 ) . '</td>';
+						$html .= '<td class="qty_lbs">'. Number::Format::format_number($$C{quantity}) . '</td>';
+						$html .= '<td class="qty_kgs">'. Number::Format::format_number(Math::Round::nearest( .1, $C->quantity()/2.2046 )). '</td>';
 						$html .= '<td class="qty_feet">'.
 								( ( $Paper->width() and $Paper->wpsi() ) ? ( Number::Format::format_number( Math::Round::nearest( 1, (($C->quantity()/$Paper->wpsi())/$Paper->width())/12 ) ) ) : () )
 								. '</td>';
 					} # end if
-					if ( @SkidContents ) {
-						$html .= sprintf( '<td class="in_stock">%d lbs</td>', $SkidContents[0]->quantity() );
-						$html .= sprintf( '<td class="last_seen">%s days</td>', $SkidContents[0]->Skid()->last_seen_days() );
+					if ( $SkidContents and @{$SkidContents} ) {
+						$html .= '<td class="in_stock">'. Number::Format::format_number($$SkidContents[0]->quantity() ) . ' lbs</td>';
+						$html .= '<td class="last_seen">'. $$SkidContents[0]->Skid()->last_seen_days().' days</td>';
 					} else {
 						$html .= '<td colspan="2">&nbsp;</a>';
 					} # end if
@@ -161,7 +161,7 @@
 				} #end if
 				$html .= '<td colspan="'.(($Type->type(), [ 'Roll', 'Sheet' ] ) ? '3' : '2' ). '">&nbsp;</td></tr>';
 				if ( scalar @Contents != $$Type{item_count} ) {
-					$html .= '<tr><td colspan="'.(($Type->type(), [ 'Roll', 'Sheet' ] ) ? '8' : '9' ). '" class="warning">Contents and expected content count do not match!</td></tr>';
+					$html .= '<tr><td colspan="'.(($Type->type(), [ 'Roll', 'Sheet' ] ) ? '9' : '10' ). '" class="warning">Contents and expected content count do not match!</td></tr>';
 				} # end if
 				$html .= '</table>';
 			} # end foreach

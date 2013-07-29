@@ -35,6 +35,30 @@ function form_submit( form, act ) {
 	form.btnFunction.value = act;
 	form.submit();
 }
+function add_to_notifications( form, project_id ) {
+	form = $(form);
+	var inputs = getValues( form, [ 'notify_user_id', 'AdditionalEmailRecipients','additionalchargecomments' ] );
+	inputs.set( 'project_id', project_id );
+	inputs.set( 'formname', form.name );
+	inputs.set( 'action', 'Add' );
+	var div = $('AdditionalChargeActions'+project_id);
+	if ( div ) {
+		div.innerHTML = 'Adding...';
+		new Ajax.Updater( div, '_additional_charge_notifications.html', { parameters: inputs } );
+	} 
+}
+function send_notifications( form, project_id ) {
+	form = $(form);
+	var inputs = getValues( form, [ 'notify_user_id', 'AdditionalEmailRecipients','additionalchargecomments' ] );
+	inputs.set( 'project_id', project_id );
+	inputs.set( 'formname', form.name );
+	inputs.set( 'action', 'Send' );
+	var div = $('AdditionalChargeActions'+project_id);
+	if ( div ) {
+		div.innerHTML = 'Sending...';
+		new Ajax.Updater( div, '_additional_charge_notifications.html', { parameters: inputs } );
+	} 
+}
 </script>
 <?include(/includes/error_reporting.html)?>
 <div class="Docket">

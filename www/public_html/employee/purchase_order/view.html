@@ -60,7 +60,7 @@
 				<br/>
 				Date <? echo ( ssi::format_date( $$variable{PurchaseOrder}->created_on() ); ) ?><br/>
 <? if ( $$variable{PurchaseOrder}->manifest_id() ) ?>
-Manifest: <a href="/employee/inventory/manifest.html?manifest_id=<? echo ( $$variable{PurchaseOrder}->manifest_id() ) ?>"><? echo ( $$variable{PurchaseOrder}->Manifest()->name() ) ?></a><br/>
+Manifest: <a href="/employee/inventory/manifest_view.html?manifest_id=<? echo ( $$variable{PurchaseOrder}->manifest_id() ) ?>"><? echo ( $$variable{PurchaseOrder}->Manifest()->name() ) ?></a><br/>
 <? endif ( $$variable{PurchaseOrder}->manifest_id() ) ?>
 			</div>
 		</div>

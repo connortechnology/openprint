@@ -502,13 +502,17 @@ sub view {
 } # end sub view
 
 sub send_additional_charges_notifications {
-	my ( $order_id, $project_index ) = @_;
+	my ( $order_id, $project_index, $message, @Notifications ) = @_;
 # Email CSR
 	my %info;
 	$info{'ProjectIndex'} = $project_index;
 	$info{'OrderID'} = $order_id;
+	$info{Message} = $message;
 
 	my $Order = new openprint::Order( $order_id );
+	@Notifications = $Order->AdditionalChargeNotifications() if ! @Notifications;
+	return 'No one to notify.' if ! @Notifications;
+
 	my $CSR = new openprint::User( $Order->salesrep_id() );
 	my $Operator = new openprint::User( $session{'user_id'} );
 
@@ -522,36 +526,22 @@ sub send_additional_charges_notifications {
 
 	my $email_template = misc::load_file( $log, $config{'SkinPath'} . '/email_template.html' );
 
-#$info{'ReplacementText'} = "<!--#include virtual=\"/email_content/additional_charges_csr_notification.html\"-->";
-#$_ = encode_qp( ssi::variable_substitution( \$email_template, \%info ) );
-#my @body = ('', $_, 'text/html', 'quoted-printable');
-#my %mail = (
-#SMTP    => $config{'Mail Server'},
-#FROM    => sprintf( '"%s %s" <%s>', @info{'EmployeeFirstName','EmployeeLastName','EmployeeEmail'}),
-#'Return-receipt-to'    => sprintf( '"%s %s" <%s>', @info{'EmployeeFirstName','EmployeeLastName','EmployeeEmail'}),
-#'Disposition-Notification-To' => sprintf( '"%s %s" <%s>', @info{'EmployeeFirstName','EmployeeLastName','EmployeeEmail'}),
-##TO      => 'iconnor@point-one.com, rick@point-one.com',
-#TO      => 'iconnor@point-one.com',
-#SUBJECT => "Additional Charges required for project $project_index",
-#);
-#misc::send_email_with_attachment( $log, \%mail, @body );
-
-	$info{'ReplacementText'} = "<!--#include virtual=\"/email_content/additional_charges_client_notification.html\"-->";
+	$info{'ReplacementText'} = ssi::include('/email_content/additional_charges_client_notification.html', \%info );
 	$_ = encode_qp( Encode::encode('utf-8', ssi::variable_substitution( \$email_template, \%info ) ) );
 	my @body = ('', $_, 'text/html', 'quoted-printable');
 	my $results = ( new openprint::Email() )->send(
 			FROM    => $Operator,
 			'Return-receipt-to' => sprintf( '"%s %s" <%s>', $Operator->get('firstname','lastname','email') ),
 			'Disposition-Notification-To' => sprintf( '"%s %s" <%s>', $Operator->get('firstname','lastname','email') ),
-			TO      => join(',', sprintf( "%s %s <%s>", @info{'CustomerFirstName','CustomerLastName','CustomerEmail'}), $param{'AdditionalEmailRecipients'}),
-			CC      => sprintf( '"%s %s" <%s>', @info{'CSRFirstName','CSRLastName','CSREmail'}),
-			TO      => join(',', sprintf( "%s %s <%s>", @info{'CustomerFirstName','CustomerLastName','CustomerEmail'}), $param{'AdditionalEmailRecipients'}),
+			#CC      => sprintf( '"%s %s" <%s>', @info{'CSRFirstName','CSRLastName','CSREmail'}),
+			TO      => [ map { $_->User() } @Notifications ],
 			#TO		=>	'"Isaac Connor" <iconnor@point-one.com>',
 			SUBJECT => 'Additional Charges required',
 			ATTACHMENTS	=>	\@body,
 			);
 	$Project->add_to_log( @session{'company_id','user_id'}, "Additional charges notification : $results." );
 
+	return $results;
 } # End sub send_additional_charges_notifications
 
 sub upload_pdfs {
@@ -999,6 +989,40 @@ sub _production_log {
 
 sub _dearchive {
 } # end sub _dearchive
+
+sub _additional_charge_notifications {
+	require openprint::Order_Notification;
+
+	$variable{formname} = $param{formname};
+	my $Project = $variable{Project} = new openprint::Project( $param{project_id} );
+	return if ( ! $Project->id() );
+	my $Order = $variable{Order} = $Project->Order();
+	return if ! $Order->id();
+
+	my %Notifications = map { $_->email(), $_ } $Order->AdditionalChargeNotifications();
+
+	if ( $param{AdditionalEmailRecipients} ) {
+		foreach my $email ( split(',',lc $param{AdditionalEmailRecipients}) ) {
+			if ( ! $Notifications{$email} ) {
+				my $U = openprint::User->find_one(email=>$email);
+				if ( ! $U ) {
+					$U = new openprint::User();
+					$U->save({ email=>$email, company_id=>$Project->company_id() } );	
+				} # end if
+				my $ON = new openprint::Order_Notification();
+				$ON->save({order_id=>$$Project{order_id}, user_id=>$$U{id}});
+				$Order->AdditionalChargeNotifications( undef );
+			} # end if
+		} # end foreach email
+	} # end if Additional
+
+	if ( $param{action} eq 'Send' ) {
+		my @Notifications = openprint::Order_Notification->find(order_id=>$$Project{order_id}, ( $param{notify_user_id} ? ( user_id => $param{notify_user_id} ) : () ) );
+		$_ = send_additional_charges_notifications( @$Project{'order_id','id'}, $param{additionalchargecomments}, @Notifications );
+$log->debug('back');
+		$variable{'information'} = 'Additional Charges Email sent.' . $_;
+	} # end if action 
+} # end sub _additional_charge_notifications 
 
 1;
 __END__

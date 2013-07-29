@@ -8,7 +8,7 @@ require openprint::StockPurpose;
 require openprint::InventoryCondition;
 require openprint::ManifestContent;
 
-$debug = 0;
+$debug = 1;
 
 %fields = (
 	id				=>	'id',
