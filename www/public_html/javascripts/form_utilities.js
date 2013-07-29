@@ -16,15 +16,24 @@ function get_value( obj ) {
 	} // end if
 	if ( obj.type == 'select-one' ) {
 		return get_ddm_value( obj );
-	} else if ( obj.type == 'radio' ) {
-		return get_rdb_value( obj.form, obj.name );
-	} else if ( obj.type == 'hidden' || obj.type == 'text' ) {
+	} else if ( obj.type == 'radio' || obj.type == 'checkbox' ) {
+	   if ( obj.checked ) {
+			return obj.value;
+		} else {
+			return;
+		}
+	} else if ( obj.type == 'hidden' || obj.type == 'text' || obj.type == 'number' || obj.type == 'email' || obj.type == 'textarea' ) {
 		return obj.value;
 	} else if ( obj.length ) {
-		for ( var x = 0; x < obj.length; x += 1 ) {
-			if ( obj[x].checked )
-				return obj[x].value;
+		var value = new Array();
+		for ( var x = 0, len=obj.length; x < len; x += 1 ) {
+			if ( obj[x].checked ) {
+				if ( obj[x].type == 'radio' ) return obj[x].value;
+				value.push( obj[x].value );
+			}
 		}
+		if ( value.length == 1 ) return value[0];
+		return value;
 	} else {
 		return obj.innerHTML;
 	} // end if
@@ -263,17 +272,17 @@ function ddm_select_by_text( ddm, value, defaultValue ) {
 } // end function ddm_select_by_text( ddm, value );
 function ddm_select_by_text_case_insensitive( ddm, value, defaultValue ) {
 	var lowervalue = value.toLowerCase();
-    if ( ddm ) {
-        for ( var index = 0, len = ddm.options.length; index < len; index += 1 ) {
-            if ( ddm.options[index].text.toLowerCase() == lowervalue ) {
-                ddm_select_by_index( ddm, index );
-                return;
-            } // end if
-        } // end for
-        ddm_select_by_index( ddm, defaultValue );
-    } else {
-        alert( "null ddm passed to ddm_select_by_text" );
-    } // end if
+	if ( ddm ) {
+		for ( var index = 0, len = ddm.options.length; index < len; index += 1 ) {
+			if ( ddm.options[index].text.toLowerCase() == lowervalue ) {
+				ddm_select_by_index( ddm, index );
+				return;
+			} // end if
+		} // end for
+		ddm_select_by_index( ddm, defaultValue );
+	} else {
+		alert( "null ddm passed to ddm_select_by_text" );
+	} // end if
 } // end function ddm_select_by_text( ddm, value );
 
 
@@ -830,11 +839,11 @@ function (value, className) {
 };
 function check_time_starting( form, starting_prefix, ending_prefix, suffix ) {
 	if ( ! suffix ) suffix = '';
-    var start;
-    var end;
+	var start;
+	var end;
 	var do_time = 0;
 
-    if ( form.elements['time_assocated'+suffix] ) {
+	if ( form.elements['time_assocated'+suffix] ) {
 		if ( get_value( form.elements['time_associated'+suffix] ) == 1 ) do_time = 1;
 	} else if ( form.elements['all_day_event'+suffix] ) {
 		if ( get_value( form.elements['all_day_event'+suffix] ) == 0 ) do_time = 1;
@@ -843,51 +852,51 @@ function check_time_starting( form, starting_prefix, ending_prefix, suffix ) {
 	} // end if
 
 	if ( do_time ){
-        start = new Date( form.elements[starting_prefix+suffix+'_year'].value, form.elements[starting_prefix+suffix+'_month'].value, form.elements[starting_prefix+suffix+'_day'].value, form.elements[starting_prefix+suffix+'_hour'].value, form.elements[starting_prefix+suffix+'_minute'].value );
-        end = new Date( form.elements[ending_prefix+suffix+'_year'].value, form.elements[ending_prefix+suffix+'_month'].value, form.elements[ending_prefix+suffix+'_day'].value, form.elements[ending_prefix+suffix+'_hour'].value, form.elements[ending_prefix+suffix+'_minute'].value );
-    } else {
-        start = new Date( form.elements[starting_prefix+suffix+'_year'].value, form.elements[starting_prefix+suffix+'_month'].value, form.elements[starting_prefix+suffix+'_day'].value );
-        end = new Date( form.elements[ending_prefix+suffix+'_year'].value, form.elements[ending_prefix+suffix+'_month'].value, form.elements[ending_prefix+suffix+'_day'].value );
-    } // end if
+		start = new Date( form.elements[starting_prefix+suffix+'_year'].value, form.elements[starting_prefix+suffix+'_month'].value, form.elements[starting_prefix+suffix+'_day'].value, form.elements[starting_prefix+suffix+'_hour'].value, form.elements[starting_prefix+suffix+'_minute'].value );
+		end = new Date( form.elements[ending_prefix+suffix+'_year'].value, form.elements[ending_prefix+suffix+'_month'].value, form.elements[ending_prefix+suffix+'_day'].value, form.elements[ending_prefix+suffix+'_hour'].value, form.elements[ending_prefix+suffix+'_minute'].value );
+	} else {
+		start = new Date( form.elements[starting_prefix+suffix+'_year'].value, form.elements[starting_prefix+suffix+'_month'].value, form.elements[starting_prefix+suffix+'_day'].value );
+		end = new Date( form.elements[ending_prefix+suffix+'_year'].value, form.elements[ending_prefix+suffix+'_month'].value, form.elements[ending_prefix+suffix+'_day'].value );
+	} // end if
 
-    if ( start > end ) {
-        ddm_select_by_value( form.elements[ending_prefix+suffix+'_year'], form.elements[starting_prefix+suffix+'_year'].value );
-        ddm_select_by_value( form.elements[ending_prefix+suffix+'_month'], form.elements[starting_prefix+suffix+'_month'].value );
-        ddm_select_by_value( form.elements[ending_prefix+suffix+'_day'], form.elements[starting_prefix+suffix+'_day'].value );
+	if ( start > end ) {
+		ddm_select_by_value( form.elements[ending_prefix+suffix+'_year'], form.elements[starting_prefix+suffix+'_year'].value );
+		ddm_select_by_value( form.elements[ending_prefix+suffix+'_month'], form.elements[starting_prefix+suffix+'_month'].value );
+		ddm_select_by_value( form.elements[ending_prefix+suffix+'_day'], form.elements[starting_prefix+suffix+'_day'].value );
 		if ( do_time ){
-            ddm_select_by_value( form.elements[ending_prefix+suffix+'_hour'], form.elements[starting_prefix+suffix+'_hour'].value );
-            ddm_select_by_value( form.elements[ending_prefix+suffix+'_minute'], form.elements[starting_prefix+suffix+'_minute'].value );
+			ddm_select_by_value( form.elements[ending_prefix+suffix+'_hour'], form.elements[starting_prefix+suffix+'_hour'].value );
+			ddm_select_by_value( form.elements[ending_prefix+suffix+'_minute'], form.elements[starting_prefix+suffix+'_minute'].value );
 		} else {
 			if ( form.elements[ending_prefix+suffix+'_hour'] ) ddm_select_by_value( form.elements[ending_prefix+suffix+'_hour'], 0 );
 			if ( form.elements[ending_prefix+suffix+'_minute'] ) ddm_select_by_value( form.elements[ending_prefix+suffix+'_minute'], 0 );
-        } // end if
-    } // end if
+		} // end if
+	} // end if
 } // end function check_time_starting
 
 function check_time_ending( form, starting_prefix, ending_prefix ) {
-    var start;
-    var end;
+	var start;
+	var end;
 	var do_time = 0;
 
-    if ( get_value( form.time_associated ) == 1 || ( (!form.time_associated) && (form.elements[starting_prefix+'_hour']) ) ) {
+	if ( get_value( form.time_associated ) == 1 || ( (!form.time_associated) && (form.elements[starting_prefix+'_hour']) ) ) {
 		do_time = 1;
 	} // end if
 	if ( do_time ){
-        start = new Date( form.elements[starting_prefix+'_year'].value, form.elements[starting_prefix+'_month'].value, form.elements[starting_prefix+'_day'].value, form.elements[starting_prefix+'_hour'].value, form.elements[starting_prefix+'_minute'].value );
-        end = new Date( form.elements[ending_prefix+'_year'].value, form.elements[ending_prefix+'_month'].value, form.elements[ending_prefix+'_day'].value, form.elements[ending_prefix+'_hour'].value, form.elements[ending_prefix+'_minute'].value );
-    } else {
-        start = new Date( form.elements[starting_prefix+'_year'].value, form.elements[starting_prefix+'_month'].value, form.elements[starting_prefix+'_day'].value );
-        end = new Date( form.elements[ending_prefix+'_year'].value, form.elements[ending_prefix+'_month'].value, form.elements[ending_prefix+'_day'].value );
-    } // end if
-    if ( start > end ) {
-        ddm_select_by_value( form.elements[starting_prefix+'_year'], form.elements[ending_prefix+'_year'].value );
-        ddm_select_by_value( form.elements[starting_prefix+'_month'], form.elements[ending_prefix+'_month'].value );
-        ddm_select_by_value( form.elements[starting_prefix+'_day'], form.elements[ending_prefix+'_day'].value );
+		start = new Date( form.elements[starting_prefix+'_year'].value, form.elements[starting_prefix+'_month'].value, form.elements[starting_prefix+'_day'].value, form.elements[starting_prefix+'_hour'].value, form.elements[starting_prefix+'_minute'].value );
+		end = new Date( form.elements[ending_prefix+'_year'].value, form.elements[ending_prefix+'_month'].value, form.elements[ending_prefix+'_day'].value, form.elements[ending_prefix+'_hour'].value, form.elements[ending_prefix+'_minute'].value );
+	} else {
+		start = new Date( form.elements[starting_prefix+'_year'].value, form.elements[starting_prefix+'_month'].value, form.elements[starting_prefix+'_day'].value );
+		end = new Date( form.elements[ending_prefix+'_year'].value, form.elements[ending_prefix+'_month'].value, form.elements[ending_prefix+'_day'].value );
+	} // end if
+	if ( start > end ) {
+		ddm_select_by_value( form.elements[starting_prefix+'_year'], form.elements[ending_prefix+'_year'].value );
+		ddm_select_by_value( form.elements[starting_prefix+'_month'], form.elements[ending_prefix+'_month'].value );
+		ddm_select_by_value( form.elements[starting_prefix+'_day'], form.elements[ending_prefix+'_day'].value );
 		if ( do_time ) {
-            ddm_select_by_value( form.elements[starting_prefix+'_hour'], form.elements[ending_prefix+'_hour'].value );
-            ddm_select_by_value( form.elements[starting_prefix+'_minute'], form.elements[ending_prefix+'_minute'].value );
-        } // end if
-    } // end if
+			ddm_select_by_value( form.elements[starting_prefix+'_hour'], form.elements[ending_prefix+'_hour'].value );
+			ddm_select_by_value( form.elements[starting_prefix+'_minute'], form.elements[ending_prefix+'_minute'].value );
+		} // end if
+	} // end if
 } // end function check_time_ending
 
 function update_duration(form, starting_prefix, ending_prefix, suffix ) {
@@ -898,7 +907,7 @@ function update_duration(form, starting_prefix, ending_prefix, suffix ) {
 		if ( get_value( form.elements['unknown_time'+suffix] ) == 1 ) unknown_time = 1;
 	} // end if
 
-    if ( form.elements['time_assocated'+suffix] ) {
+	if ( form.elements['time_assocated'+suffix] ) {
 		if ( get_value( form.elements['time_associated'+suffix] ) == 1 ) do_time = 1;
 	} else if ( form.elements['all_day_event'+suffix] ) {
 		if ( get_value( form.elements['all_day_event'+suffix] ) == 0 ) do_time = 1;
@@ -941,10 +950,10 @@ function update_duration(form, starting_prefix, ending_prefix, suffix ) {
 			if(ending_time_elem)ending_time_elem.show();
 		} // end if
 		if ( $('duration'+suffix+'_time') ) $('duration'+suffix+'_time').show();
-        difference -= days * ( 60*60*24 );
-        var hours = parseInt( difference/(60*60) );
-        difference -= hours * (60*60);
-        var minutes = parseInt( difference/60 );
+		difference -= days * ( 60*60*24 );
+		var hours = parseInt( difference/(60*60) );
+		difference -= hours * (60*60);
+		var minutes = parseInt( difference/60 );
 		if ( form.elements['duration'+suffix+'_days'] ) {
 			form.elements['duration'+suffix+'_days'].value=days;
 			if ( ! unknown_time ) {
@@ -962,7 +971,7 @@ function update_duration(form, starting_prefix, ending_prefix, suffix ) {
 				} // end if
 			} // end if
 		} // end if
-    } else {
+	} else {
 		if(starting_time_elem)starting_time_elem.hide();
 		if(ending_time_elem)ending_time_elem.hide();
 		if ( $('duration'+suffix+'_time') ) $('duration'+suffix+'_time').hide(); 
@@ -975,7 +984,7 @@ function update_duration(form, starting_prefix, ending_prefix, suffix ) {
 			if ( duration )
 				duration.innerHTML = days +'days';
 		} // end if
-    } // end if
+	} // end if
 } // end function update_duration
 
 function setup_ie_menu() {
@@ -1063,13 +1072,14 @@ function getValues( form, element_names ) {
 	if ( element_names.constructor == Array ) {
 		for ( var index = element_names.length; index; index -- ) {
 			var form_element = form.elements[element_names[index-1]];
-			if ( form_element ) 
-				results.set(element_names[index-1], form_element.getValue());
+			if ( form_element ) {
+				results.set(element_names[index-1], get_value( form_element ) );
+			} // end if
 		} // end for
 	} else if ( element_names.constructor == RegExp ) {
 		for ( var index = 0, len = form.elements.length; index < len; index += 1 ) {
 			if ( element_names.exec( form.elements[index].name ) ) {
-				results.set(form.elements[index].name, form.elements[index].getValue());
+				results.set(form.elements[index].name, get_value( form.elements[index] ) );
 			} // end if	
 		} // end foreach element
 	} // end if ARRAY or Regexp
@@ -1118,6 +1128,6 @@ function floatize(e) {
 	return e.value;
 }
 function hexize(e) {
-    e.value = e.value.replace(/[^\da-fA-F%]/g,'');
-    return e.value;
+	e.value = e.value.replace(/[^\da-fA-F%]/g,'');
+	return e.value;
 }

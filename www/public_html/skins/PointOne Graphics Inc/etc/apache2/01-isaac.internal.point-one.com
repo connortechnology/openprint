@@ -53,6 +53,7 @@
 	PerlSetVar		db_password	 point-one
 	PerlSetVar		db_driver		Pg
 
+	PerlSetVar		debug	true
 	<Directory "/media/Storage/Project Files/">
 		Options +Indexes
 		SetHandler      perl-script

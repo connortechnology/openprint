@@ -69,3 +69,8 @@ text-align: right;
 table .Price input {
 	width: 100%;
 }
+.AdditionalChargeActions {
+}
+.AdditionalChargeActions .buttons {
+float: right;
+}

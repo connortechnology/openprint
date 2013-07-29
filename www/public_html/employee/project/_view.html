@@ -388,21 +388,8 @@ $log->debug("Paper: " . $Paper->to_string() );
 	</span>
 	<br class="spacer"/>
 	<? if ( $$variable{Project}->status() eq 'Waiting For Customer Approval' ) ?>
-	<fieldset><legend>Additional Charges Actions</legend>
-		<span style="float: right;">
-		<? echo ( button( 'Approve'.$$variable{Project}{id}, { onclick=>qq`form_submit('$$variable{formname}','Approve');`, text=>'Approve New Charges' } ); )?>
-		</span>
-		To approve the additional charges, click Approve:<br class="spacer"/>
-		Notifications will be sent to: <? echo ( sprintf('&quot;%s %s&quot; &lt;%s&gt;', $$variable{Order}->get('first_name','last_name','email') ); ) ?><br/>
-
-		<span style="float: right;">
-	 	<? echo ( button( 'AdditionalChargeNotify'.$$variable{Project}{id}, { onclick=>qq`form_submit('$$variable{formname}','AdditionalChargeNotify';);`, text=>'Send' } );) ?>
-		</span>
-		Additional recipients (separate with a comma):<input type="email" style="width: 66%;" name="AdditionalEmailRecipients"  />
-
-	</fieldset>
+	<div id="AdditionalChargeActions<?echo($$variable{Project}{id})?>" class="AdditionalChargeActions"><?include(_additional_charge_notifications.html)?></div>
 	<? endif ( $$variable{Project}->status() eq 'Waiting For Customer Approval' ) ?>
-	<br/>
 	<br/>
 	<input type="hidden" name="btnFunction"/>
 	<input type="hidden" name="OrderID" value="<?OrderID?>"/>

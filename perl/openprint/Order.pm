@@ -14,6 +14,7 @@ require sql;
 require openprint::logs;
 require openprint::OrderedProduct;
 require openprint::Payment;
+require openprint::Order_Notification;
 
 $debug = 1;
 %fields = (
@@ -605,6 +606,53 @@ sub supplier_id {
 sub Supplier {
 	return new openprint::Company( $_[0]->supplier_id() );
 } # end sub Supplier
+
+sub AdditionalChargeNotifications {
+	if ( @_ > 1 ) {
+		delete $_[0]{Notifications};
+	} # end if
+	if ( ! $_[0]{Notifications} ) {
+		$_[0]{Notifications} = [ openprint::Order_Notification->find(order_id=>$_[0]{id}, order=>'user_id') ];
+	} # end if
+	if ( ! @{$_[0]{Notifications}} ) {
+		
+		my %users;
+		if ( $_[0]->email() ) {
+			foreach my $e ( split(',', lc $_[0]->email() ) ) {
+				next if ! $e;
+				next if $users{$e};
+				my $U = openprint::User->find_one(email=>$e);
+				if ( ! $U ) {
+					$U = new openprint::User();
+					$U->save({ email=>$e, company_id=>$_[0]{company_id} });
+				} # end if
+				my $ON = new openprint::Order_Notification();
+				$ON->save({order_id=>$_[0]{id}, user_id=>$$U{id}});
+				push @{$_[0]{Notifications}}, $ON;
+				$users{$$U{email}} = $U;
+			} # end foreach
+		} # end if 
+		my $CSR = $_[0]->CSR();
+		if ( $CSR->id() and ! $users{$CSR->email()} ) {
+			my $ON = new openprint::Order_Notification();
+			$ON->save({order_id=>$_[0]{id}, user_id=>$$CSR{id}});
+			push @{$_[0]{Notifications}}, $ON;
+			$users{$CSR->email()} = $CSR;
+		} # end if
+		$CSR = $_[0]->Company()->CSR();
+		if ( $CSR->id() and ! $users{$CSR->email()} ) {
+			my $ON = new openprint::Order_Notification();
+			$ON->save({order_id=>$_[0]{id}, user_id=>$$CSR{id}});
+			push @{$_[0]{Notifications}}, $ON;
+			$users{$CSR->email()} = $CSR;
+		} # end if
+	} # end if
+	return @{$_[0]{Notifications}};
+} # end sub AdditionalChargeNotifiactions
+
+sub CSR {
+	return new openprint::User( $_[0]{salesrep_id} );
+} # end sub CSR
 
 1;
 __END__

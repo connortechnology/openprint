@@ -869,12 +869,14 @@ sub hash_link {
         $ext =~ s/^\.//;
         my $blob = read_file($src);
 
-        if ( $ext eq 'js' ) {
-			require JavaScript::Minifier::XS;
-            $blob = &JavaScript::Minifier::XS::minify( $blob );
-        } elsif ( $ext eq 'css' ) {
-			require CSS::Minifier;
-            $blob = &CSS::Minifier::minify( input=>$blob );
+		if ( ! $config{debug} ) {
+			if ( $ext eq 'js' ) {
+				require JavaScript::Minifier::XS;
+				$blob = &JavaScript::Minifier::XS::minify( $blob );
+			} elsif ( $ext eq 'css' ) {
+				require CSS::Minifier;
+				$blob = &CSS::Minifier::minify( input=>$blob );
+			} # end if
         } # end if
 
         my $hash = md5_hex($blob);
