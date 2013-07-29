@@ -1404,6 +1404,9 @@ sub save_Manifest {
 	my ( $Manifest ) = @_;
 
 	my $error;
+	my $ac = sql::start_transaction( $dbh );
+	$dbh->do( 'LOCK TABLE company IN EXCLUSIVE MODE' ) or $log->error( DBI->errstr );
+
 	$Manifest->received_on( join('-', @param{'received_on_year','received_on_month','received_on_day'} ) );
 
 	if ( $param{supplier} and ! $param{supplier_id} ) {
@@ -1423,6 +1426,10 @@ sub save_Manifest {
 			$param{supplier_id} = $Companies[0]->id();
 		} # end if
 	} # end if supplier and ! supplier_id
+	sql::end_transaction( $dbh, $ac );
+
+	$ac = sql::start_transaction( $dbh );
+	$dbh->do( 'LOCK TABLE Manifests IN EXCLUSIVE MODE' ) or $log->error( DBI->errstr );
 
 	$error .= $Manifest->save( \%param );
 
@@ -1431,6 +1438,7 @@ sub save_Manifest {
 		# It's an empty, brand new manifest
 		my $Type = new openprint::Manifest_Content_Type();
 		$error .= $Type->save({ manifest_id=>$Manifest->id() });
+		sql::end_transaction( $dbh, $ac );
 		return $error;
 	} # end if
 
@@ -1538,6 +1546,7 @@ if ( 0 ) {
 } 
 
 	} # end foreach Type
+	sql::end_transaction( $dbh, $ac );
 	return $error;
 } # end sub save_Manifest
 
@@ -1546,6 +1555,9 @@ sub apply_Manifest {
 	my ( $Manifest ) = @_;
 
 	my $error;
+
+	my $ac = sql::start_transaction( $dbh );
+	$dbh->do( 'LOCK TABLE Manifests IN EXCLUSIVE MODE' ) or $log->error( DBI->errstr );
 
 	foreach my $Type ( openprint::Manifest_Content_Type->find( manifest_id=>$Manifest->id()) ) {
 		my $Paper = $Type->Paper();
@@ -1588,6 +1600,7 @@ sub apply_Manifest {
 		} # end if po_id
 
 	} # end foreach Type
+	sql::end_transaction( $dbh, $ac );
 	return $error;
 } # end sub apply_Manifest
 

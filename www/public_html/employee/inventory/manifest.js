@@ -108,7 +108,6 @@ function add_content(form, type_id) {
 				manifest_id: form.manifest_id.value,
 				rfidtag_id: $('rfidtag_id-'+type_id+'-').value,
 				skid_id:    $('skid_id-'+type_id+'-').value,
-				docket:     $('docket-'+type_id+'-').value,
 				quantity:	(type == 'Sheet' ? $('qty_sheets-'+type_id+'-').value : $('qty_lbs-'+type_id+'-').value ),
 				manufacturers_id:	$('manufacturers_id-'+type_id+'-').value,
 				location_id: $('location_id-'+type_id+'-').value
@@ -145,7 +144,7 @@ function fix_content( c_id ) {
 } // end function fix_content( c_id )
 
 function apply_content( c_id ) {
-	new Ajax.Updater( 'tr-'+c_id, '_manifest_content.html', {
+	new Ajax.Request( '_manifest_content.html', {
 		parameters: { content_id: c_id, action: 'Apply' },
 		onSuccess: function(transport){
 			var tr = $('tr-'+c_id+'-error');
