@@ -21,8 +21,8 @@ function get_value( obj ) {
 			return obj.value;
 		} else {
 			return;
-		} 
-	} else if ( obj.type == 'hidden' || obj.type == 'text' || obj.type == 'number' || obj.type == 'email' ) {
+		}
+	} else if ( obj.type == 'hidden' || obj.type == 'text' || obj.type == 'number' || obj.type == 'email' || obj.type == 'textarea' ) {
 		return obj.value;
 	} else if ( obj.length ) {
 		var value = new Array();
@@ -32,6 +32,7 @@ function get_value( obj ) {
 				value[value.length] = obj[x].value;
 			} // end if
 		}
+		if ( value.length == 1 ) return value[0];
 		return value;
 	} else {
 		return obj.innerHTML;
@@ -294,17 +295,17 @@ function ddm_select_by_text( ddm, value, defaultValue ) {
 } // end function ddm_select_by_text( ddm, value );
 function ddm_select_by_text_case_insensitive( ddm, value, defaultValue ) {
 	var lowervalue = value.toLowerCase();
-    if ( ddm ) {
-        for ( var index = 0, len = ddm.options.length; index < len; index += 1 ) {
-            if ( ddm.options[index].text.toLowerCase() == lowervalue ) {
-                ddm_select_by_index( ddm, index );
-                return;
-            } // end if
-        } // end for
-        ddm_select_by_index( ddm, defaultValue );
-    } else {
-        alert( "null ddm passed to ddm_select_by_text" );
-    } // end if
+	if ( ddm ) {
+		for ( var index = 0, len = ddm.options.length; index < len; index += 1 ) {
+			if ( ddm.options[index].text.toLowerCase() == lowervalue ) {
+				ddm_select_by_index( ddm, index );
+				return;
+			} // end if
+		} // end for
+		ddm_select_by_index( ddm, defaultValue );
+	} else {
+		alert( "null ddm passed to ddm_select_by_text" );
+	} // end if
 } // end function ddm_select_by_text( ddm, value );
 
 
@@ -318,7 +319,7 @@ function filterDDM( filter, ddm ) {
 		old_selected_index = 1;
 
 	var chunk1 = filter.value.toLowerCase();
-	var chunk2 =  ddm.options[old_selected_index].text.toLowerCase();
+	var chunk2 =	ddm.options[old_selected_index].text.toLowerCase();
 
 	if ( chunk1 < chunk2 ) {
 		// search down
@@ -468,7 +469,7 @@ function Serialize( form ) {
 function select_all( form, name, checked ) {
 	if ( ! form.elements[name] ) {
 		return;
-	}  // end if
+	}	// end if
 	if ( form.elements[name].length ) {
 		for ( var i = 0, len = form.elements[name].length; i < len; i += 1 ) {
 			form.elements[name][i].checked = checked;
@@ -759,7 +760,7 @@ function Location_onchange( parent_element, type, options ) {
 		} else {
 			if ( state_label ) state_label.innerHTML='State/Province';
 			if ( postal_label ) postal_label.innerHTML='Postal/ZIP Code';
-		}  // end if
+		}	// end if
 	} // end if
 }
 
@@ -893,11 +894,11 @@ function set_date( form, from, to ) {
 
 function check_time_starting( form, starting_prefix, ending_prefix, suffix ) {
 	if ( ! suffix ) suffix = '';
-    var start;
-    var end;
+	var start;
+	var end;
 	var do_time = 0;
 
-    if ( form.elements['time_associated'+suffix] ) {
+	if ( form.elements['time_associated'+suffix] ) {
 		if ( get_value( form.elements['time_associated'+suffix] ) == 1 ) do_time = 1;
 	} else if ( form.elements['all_day_event'+suffix] ) {
 		if ( get_value( form.elements['all_day_event'+suffix] ) == 0 ) do_time = 1;
@@ -906,14 +907,14 @@ function check_time_starting( form, starting_prefix, ending_prefix, suffix ) {
 	} // end if
 
 	if ( do_time ){
-        start = new Date( form.elements[starting_prefix+suffix+'_year'].value, form.elements[starting_prefix+suffix+'_month'].value-1, form.elements[starting_prefix+suffix+'_day'].value, form.elements[starting_prefix+suffix+'_hour'].value, form.elements[starting_prefix+suffix+'_minute'].value );
-        end = new Date( form.elements[ending_prefix+suffix+'_year'].value, form.elements[ending_prefix+suffix+'_month'].value-1, form.elements[ending_prefix+suffix+'_day'].value, form.elements[ending_prefix+suffix+'_hour'].value, form.elements[ending_prefix+suffix+'_minute'].value );
-    } else {
-        start = new Date( form.elements[starting_prefix+suffix+'_year'].value, form.elements[starting_prefix+suffix+'_month'].value-1, form.elements[starting_prefix+suffix+'_day'].value );
-        end = new Date( form.elements[ending_prefix+suffix+'_year'].value, form.elements[ending_prefix+suffix+'_month'].value-1, form.elements[ending_prefix+suffix+'_day'].value );
-    } // end if
+		start = new Date( form.elements[starting_prefix+suffix+'_year'].value, form.elements[starting_prefix+suffix+'_month'].value-1, form.elements[starting_prefix+suffix+'_day'].value, form.elements[starting_prefix+suffix+'_hour'].value, form.elements[starting_prefix+suffix+'_minute'].value );
+		end = new Date( form.elements[ending_prefix+suffix+'_year'].value, form.elements[ending_prefix+suffix+'_month'].value-1, form.elements[ending_prefix+suffix+'_day'].value, form.elements[ending_prefix+suffix+'_hour'].value, form.elements[ending_prefix+suffix+'_minute'].value );
+	} else {
+		start = new Date( form.elements[starting_prefix+suffix+'_year'].value, form.elements[starting_prefix+suffix+'_month'].value-1, form.elements[starting_prefix+suffix+'_day'].value );
+		end = new Date( form.elements[ending_prefix+suffix+'_year'].value, form.elements[ending_prefix+suffix+'_month'].value-1, form.elements[ending_prefix+suffix+'_day'].value );
+	} // end if
 
-    if ( start > end ) {
+	if ( start > end ) {
 		if ( form.elements[ending_prefix+suffix+'_year'] != form.elements[starting_prefix+suffix+'_year'].value ) 
 			ddm_select_by_value( form.elements[ending_prefix+suffix+'_year'], form.elements[starting_prefix+suffix+'_year'].value );
 		if ( form.elements[ending_prefix+suffix+'_month'] != form.elements[starting_prefix+suffix+'_month'].value ) {
@@ -924,39 +925,39 @@ function check_time_starting( form, starting_prefix, ending_prefix, suffix ) {
 			ddm_select_by_value( form.elements[ending_prefix+suffix+'_day'], form.elements[starting_prefix+suffix+'_day'].value );
 		} 
 		if ( do_time ){
-            ddm_select_by_value( form.elements[ending_prefix+suffix+'_hour'], form.elements[starting_prefix+suffix+'_hour'].value );
-            ddm_select_by_value( form.elements[ending_prefix+suffix+'_minute'], form.elements[starting_prefix+suffix+'_minute'].value );
+			ddm_select_by_value( form.elements[ending_prefix+suffix+'_hour'], form.elements[starting_prefix+suffix+'_hour'].value );
+			ddm_select_by_value( form.elements[ending_prefix+suffix+'_minute'], form.elements[starting_prefix+suffix+'_minute'].value );
 		} else {
 			if ( form.elements[ending_prefix+suffix+'_hour'] ) ddm_select_by_value( form.elements[ending_prefix+suffix+'_hour'], 0 );
 			if ( form.elements[ending_prefix+suffix+'_minute'] ) ddm_select_by_value( form.elements[ending_prefix+suffix+'_minute'], 0 );
-        } // end if
-    } // end if
+		} // end if
+	} // end if
 } // end function check_time_starting
 
 function check_time_ending( form, starting_prefix, ending_prefix ) {
-    var start;
-    var end;
+	var start;
+	var end;
 	var do_time = 0;
 
-    if ( get_value( form.time_associated ) == 1 || ( (!form.time_associated) && (form.elements[starting_prefix+'_hour']) ) ) {
+	if ( get_value( form.time_associated ) == 1 || ( (!form.time_associated) && (form.elements[starting_prefix+'_hour']) ) ) {
 		do_time = 1;
 	} // end if
 	if ( do_time ){
-        start = new Date( form.elements[starting_prefix+'_year'].value, form.elements[starting_prefix+'_month'].value, form.elements[starting_prefix+'_day'].value, form.elements[starting_prefix+'_hour'].value, form.elements[starting_prefix+'_minute'].value );
-        end = new Date( form.elements[ending_prefix+'_year'].value, form.elements[ending_prefix+'_month'].value, form.elements[ending_prefix+'_day'].value, form.elements[ending_prefix+'_hour'].value, form.elements[ending_prefix+'_minute'].value );
-    } else {
-        start = new Date( form.elements[starting_prefix+'_year'].value, form.elements[starting_prefix+'_month'].value, form.elements[starting_prefix+'_day'].value );
-        end = new Date( form.elements[ending_prefix+'_year'].value, form.elements[ending_prefix+'_month'].value, form.elements[ending_prefix+'_day'].value );
-    } // end if
-    if ( start > end ) {
-        ddm_select_by_value( form.elements[starting_prefix+'_year'], form.elements[ending_prefix+'_year'].value );
-        ddm_select_by_value( form.elements[starting_prefix+'_month'], form.elements[ending_prefix+'_month'].value );
-        ddm_select_by_value( form.elements[starting_prefix+'_day'], form.elements[ending_prefix+'_day'].value );
+		start = new Date( form.elements[starting_prefix+'_year'].value, form.elements[starting_prefix+'_month'].value, form.elements[starting_prefix+'_day'].value, form.elements[starting_prefix+'_hour'].value, form.elements[starting_prefix+'_minute'].value );
+		end = new Date( form.elements[ending_prefix+'_year'].value, form.elements[ending_prefix+'_month'].value, form.elements[ending_prefix+'_day'].value, form.elements[ending_prefix+'_hour'].value, form.elements[ending_prefix+'_minute'].value );
+	} else {
+		start = new Date( form.elements[starting_prefix+'_year'].value, form.elements[starting_prefix+'_month'].value, form.elements[starting_prefix+'_day'].value );
+		end = new Date( form.elements[ending_prefix+'_year'].value, form.elements[ending_prefix+'_month'].value, form.elements[ending_prefix+'_day'].value );
+	} // end if
+	if ( start > end ) {
+		ddm_select_by_value( form.elements[starting_prefix+'_year'], form.elements[ending_prefix+'_year'].value );
+		ddm_select_by_value( form.elements[starting_prefix+'_month'], form.elements[ending_prefix+'_month'].value );
+		ddm_select_by_value( form.elements[starting_prefix+'_day'], form.elements[ending_prefix+'_day'].value );
 		if ( do_time ) {
-            ddm_select_by_value( form.elements[starting_prefix+'_hour'], form.elements[ending_prefix+'_hour'].value );
-            ddm_select_by_value( form.elements[starting_prefix+'_minute'], form.elements[ending_prefix+'_minute'].value );
-        } // end if
-    } // end if
+			ddm_select_by_value( form.elements[starting_prefix+'_hour'], form.elements[ending_prefix+'_hour'].value );
+			ddm_select_by_value( form.elements[starting_prefix+'_minute'], form.elements[ending_prefix+'_minute'].value );
+		} // end if
+	} // end if
 } // end function check_time_ending
 
 function update_duration(form, starting_prefix, ending_prefix, suffix ) {
@@ -967,7 +968,7 @@ function update_duration(form, starting_prefix, ending_prefix, suffix ) {
 		if ( get_value( form.elements['unknown_time'+suffix] ) == 1 ) unknown_time = 1;
 	} // end if
 
-    if ( form.elements['time_associated'+suffix] ) {
+	if ( form.elements['time_associated'+suffix] ) {
 		if ( get_value( form.elements['time_associated'+suffix] ) == 1 ) do_time = 1;
 	} else if ( form.elements['all_day_event'+suffix] ) {
 		if ( get_value( form.elements['all_day_event'+suffix] ) == 0 ) do_time = 1;
@@ -1010,10 +1011,10 @@ function update_duration(form, starting_prefix, ending_prefix, suffix ) {
 			if(ending_time_elem)ending_time_elem.show();
 		} // end if
 		if ( $('duration'+suffix+'_time') ) $('duration'+suffix+'_time').show();
-        difference -= days * ( 60*60*24 );
-        var hours = parseInt( difference/(60*60) );
-        difference -= hours * (60*60);
-        var minutes = parseInt( difference/60 );
+		difference -= days * ( 60*60*24 );
+		var hours = parseInt( difference/(60*60) );
+		difference -= hours * (60*60);
+		var minutes = parseInt( difference/60 );
 		if ( form.elements['duration'+suffix+'_days'] ) {
 			form.elements['duration'+suffix+'_days'].value=days;
 			if ( ! unknown_time ) {
@@ -1031,7 +1032,7 @@ function update_duration(form, starting_prefix, ending_prefix, suffix ) {
 				} // end if
 			} // end if
 		} // end if
-    } else {
+	} else {
 		if(starting_time_elem){
 			starting_time_elem.hide();
 		}
@@ -1046,7 +1047,7 @@ function update_duration(form, starting_prefix, ending_prefix, suffix ) {
 			if ( duration )
 				duration.innerHTML = days +'days';
 		} // end if
-    } // end if
+	} // end if
 } // end function update_duration
 
 // Defaults to filter weekends out
@@ -1159,28 +1160,28 @@ function disable_rightclick() {
 } // end function disable_rightclick
 
 function remove_div( divname ) {
-    var div = $(divname);
-    if ( div ) {
-        div.hide();
-    } // end if
+	var div = $(divname);
+	if ( div ) {
+		div.hide();
+	} // end if
 	return div;
 }
 function add_div( divname ) {
-    var div = $(divname);
-    if ( div ) {
-        div.show();
-    } // end if
+	var div = $(divname);
+	if ( div ) {
+		div.show();
+	} // end if
 	return div;
 }
 
 // also positions it
 function show_div( divname, e ) {
-    var div = $(divname);
-    if ( div ) {
+	var div = $(divname);
+	if ( div ) {
 	
-        var posx = 0;
-        var posy = 0;
-        if (!e) e = window.event;
+		var posx = 0;
+		var posy = 0;
+		if (!e) e = window.event;
 		if ( e ) {
 			if (e.pageX || e.pageY) {
 				posx = parseInt(e.pageX);
@@ -1267,29 +1268,29 @@ function popup_window( url, parameters, options ) {
 	if ( (! options.height) && ! ( options.top && options.bottom ) ) options.height = 400;
 
 	if ( ! popupWin ) {
-       var defaults = {
-            maximizable: false,
-             resizable: true,
-             hideEffect:Element.hide,
-             showEffect:Element.show,
-             destroyOnClose: true,
-             className:"alphacube",
-             width:400,
-             height:400, 
+		var defaults = {
+			maximizable: false,
+			 resizable: true,
+			 hideEffect:Element.hide,
+			 showEffect:Element.show,
+			 destroyOnClose: true,
+			 className:"alphacube",
+			 width:400,
+			 height:400, 
 			 recenterAuto:false
-        }
+		}
 
-        Object.extend( defaults, options );
-        popupWin = new Window(defaults);
+		Object.extend( defaults, options );
+		popupWin = new Window(defaults);
 
 		// Set up a windows observer, check ou debug window to get messages
 		myObserver = {
 onDestroy: function(eventName, win) {
-			   if (win == popupWin) {
-				   popupWin = null;
-				   Windows.removeObserver(this);
-			   }
-		   }
+				if (win == popupWin) {
+					popupWin = null;
+					Windows.removeObserver(this);
+				}
+			}
 		}
 		Windows.addObserver(myObserver);
 	} // end if
@@ -1332,13 +1333,14 @@ function getValues( form, element_names, more_values ) {
 	if ( element_names.constructor == Array ) {
 		for ( var index = element_names.length; index; index -- ) {
 			var form_element = form.elements[element_names[index-1]];
-			if ( form_element ) 
-				results.set(element_names[index-1], form_element.getValue());
+			if ( form_element ) {
+				results.set(element_names[index-1], get_value( form_element ) );
+			} // end if
 		} // end for
 	} else if ( element_names.constructor == RegExp ) {
 		for ( var index = 0, len = form.elements.length; index < len; index += 1 ) {
 			if ( element_names.exec( form.elements[index].name ) ) {
-				results.set(form.elements[index].name, form.elements[index].getValue());
+				results.set(form.elements[index].name, get_value( form.elements[index] ) );
 			} // end if	
 		} // end foreach element
 	} // end if ARRAY or Regexp
@@ -1377,22 +1379,22 @@ function changed( e, div ) {
 
 if (!Array.prototype.map)
 {
-  Array.prototype.map = function(fun /*, thisp*/)
-  {
-    var len = this.length;
-    if (typeof fun != "function")
-      throw new TypeError();
+	Array.prototype.map = function(fun /*, thisp*/)
+	{
+	var len = this.length;
+	if (typeof fun != "function")
+		throw new TypeError();
 
-    var res = new Array(len);
-    var thisp = arguments[1];
-    for (var i = 0; i < len; i++)
-    {
-      if (i in this)
-        res[i] = fun.call(thisp, this[i], i, this);
-    }
+	var res = new Array(len);
+	var thisp = arguments[1];
+	for (var i = 0; i < len; i++)
+	{
+		if (i in this)
+		res[i] = fun.call(thisp, this[i], i, this);
+	}
 
-    return res;
-  };
+	return res;
+	};
 }
 
 function get_form_element_array( form, name ) {
@@ -1438,58 +1440,58 @@ function floatize_calculator(e) {
 	return e.value;
 }
 function hexize(e) {
-    e.value = e.value.replace(/[^\da-fA-F%]/g,'');
-    return e.value;
+	e.value = e.value.replace(/[^\da-fA-F%]/g,'');
+	return e.value;
 }
 function createThrobber( img, preview ) {
-    var x = img.x;
-    var y = img.y;
+	var x = img.x;
+	var y = img.y;
  
-    var canvas = document.createElement("canvas");
-    preview.appendChild(canvas);
-    canvas.width = preview.getStyle('width');
-    canvas.height = preview.getStyle('height');
+	var canvas = document.createElement("canvas");
+	preview.appendChild(canvas);
+	canvas.width = preview.getStyle('width');
+	canvas.height = preview.getStyle('height');
 alert(img.getStyle('width'));
-    var size = Math.min(canvas.height, canvas.width);
-    canvas.style.top = y + "px";
-    canvas.style.left = x + "px";
-    canvas.classList.add("throbber");
-    var ctx = canvas.getContext("2d");
-    ctx.textBaseline = "middle";
-    ctx.textAlign = "center";
-    ctx.font = "15px monospace";
-    ctx.shadowOffsetX = 0;
-    ctx.shadowOffsetY = 0;
-    ctx.shadowBlur = 14;
-    ctx.shadowColor = "white";
+	var size = Math.min(canvas.height, canvas.width);
+	canvas.style.top = y + "px";
+	canvas.style.left = x + "px";
+	canvas.classList.add("throbber");
+	var ctx = canvas.getContext("2d");
+	ctx.textBaseline = "middle";
+	ctx.textAlign = "center";
+	ctx.font = "15px monospace";
+	ctx.shadowOffsetX = 0;
+	ctx.shadowOffsetY = 0;
+	ctx.shadowBlur = 14;
+	ctx.shadowColor = "white";
  
-    var ctrl = {};
-    ctrl.ctx = ctx;
-    ctrl.update = function(percentage) {
-        var ctx = this.ctx;
-        ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-        ctx.fillStyle = "rgba(0, 0, 0, " + (0.8 - 0.8 * percentage / 100)+ ")";
-        ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-        ctx.beginPath();
-        ctx.arc(ctx.canvas.width / 2, ctx.canvas.height / 2,
-                size / 6, 0, Math.PI * 2, false);
-        ctx.strokeStyle = "rgba(255, 255, 255, 1)";
-        ctx.lineWidth = size / 10 + 4;
-        ctx.stroke();
-        ctx.beginPath();
-        ctx.arc(ctx.canvas.width / 2, ctx.canvas.height / 2,
-                size / 6, -Math.PI / 2, (Math.PI * 2) * (percentage / 100) + -Math.PI / 2, false);
-        ctx.strokeStyle = "rgba(0, 0, 0, 1)";
-        ctx.lineWidth = size / 10;
-        ctx.stroke();
-        ctx.fillStyle = "white";
-        ctx.baseLine = "middle";
-        ctx.textAlign = "center";
-        ctx.font = "10px monospace";
-        ctx.fillText(percentage + "%", ctx.canvas.width / 2, ctx.canvas.height / 2);
-    }
-    ctrl.update(0);
-    return ctrl;
+	var ctrl = {};
+	ctrl.ctx = ctx;
+	ctrl.update = function(percentage) {
+		var ctx = this.ctx;
+		ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+		ctx.fillStyle = "rgba(0, 0, 0, " + (0.8 - 0.8 * percentage / 100)+ ")";
+		ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+		ctx.beginPath();
+		ctx.arc(ctx.canvas.width / 2, ctx.canvas.height / 2,
+				size / 6, 0, Math.PI * 2, false);
+		ctx.strokeStyle = "rgba(255, 255, 255, 1)";
+		ctx.lineWidth = size / 10 + 4;
+		ctx.stroke();
+		ctx.beginPath();
+		ctx.arc(ctx.canvas.width / 2, ctx.canvas.height / 2,
+				size / 6, -Math.PI / 2, (Math.PI * 2) * (percentage / 100) + -Math.PI / 2, false);
+		ctx.strokeStyle = "rgba(0, 0, 0, 1)";
+		ctx.lineWidth = size / 10;
+		ctx.stroke();
+		ctx.fillStyle = "white";
+		ctx.baseLine = "middle";
+		ctx.textAlign = "center";
+		ctx.font = "10px monospace";
+		ctx.fillText(percentage + "%", ctx.canvas.width / 2, ctx.canvas.height / 2);
+	}
+	ctrl.update(0);
+	return ctrl;
 }
 var is_IOS = null;
 function isIOS() {
@@ -1504,10 +1506,10 @@ function isIOS() {
  * extend the prototype.js Ajax.Request object so that it supports an abort method
  */
 Ajax.Request.prototype.abort = function() {
-    // prevent and state change callbacks from being issued
-    this.transport.onreadystatechange = Prototype.emptyFunction;
-    // abort the XHR
-    this.transport.abort();
-    // update the request counter
-    Ajax.activeRequestCount--;
+	// prevent and state change callbacks from being issued
+	this.transport.onreadystatechange = Prototype.emptyFunction;
+	// abort the XHR
+	this.transport.abort();
+	// update the request counter
+	Ajax.activeRequestCount--;
 };
