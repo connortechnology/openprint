@@ -647,6 +647,10 @@ if ( ! sets::isin( 'orders', \@tables ) ) {
 	} # end if
 
 }
+if ( ! sets::isin( 'order_notifications', \@tables ) ) {
+    $dbh->do( misc::load_file( $log, '../openprint/sql/Order_Notifications.sql' ) );
+    die $dbh->errstr() if $dbh->errstr();
+}
 
 if ( sets::isin( 'projecttype_categories', \@tables ) ) {
 	my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM projecttype_categories LIMIT 1', {} );
