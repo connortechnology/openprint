@@ -8,6 +8,7 @@ use constant DEBUG => 0;
 
 use Apache2::Request ();
 use Apache2::RequestRec ();
+use Apache2::Connection ();
 use APR::URI ();
 use Apache2::Const -compile => qw(REDIRECT HTTP_INTERNAL_SERVER_ERROR OK DECLINED HTTP_NOT_FOUND HTTP_FORBIDDEN);# Offers OK, Error,etc for web server.
 use Apache2::Log ();
@@ -38,7 +39,7 @@ use vars qw( $r %variable %session %param %config $log $dbh %page_settings $star
 
 sub cleanup {
 	if ( $r->connection->aborted( ) ) {
-$log->debug("Was aborted");
+		$log->debug("Was aborted");
 	} # end if
 	%variable = ();
 	%param = ();
@@ -48,12 +49,12 @@ $log->debug("Was aborted");
 		openprint::Object::init_cache();
 		$session{lastupdated} = time;
 		untie %session;
-if ( ! $dbh->{AutoCommit} ) {
-$log->error("Uncommited transaction");
-} # end if
+		if ( ! $dbh->{AutoCommit} ) {
+			$log->error("Uncommited transaction");
+		} # end if
 		$dbh->disconnect();
 	} else {
-$log->debug("No dbh at cleanup");
+		$log->debug("No dbh at cleanup");
 	} # end if
 } # end sub cleanup
 
@@ -62,7 +63,7 @@ sub handler {
 	my $request = shift;
 	$r = Apache2::Request->new( $request );
 
-	# Don't do any caching.  This makes the back button not work.
+	# Don't do any caching.	This makes the back button not work.
 	$r->no_cache(1);
 
 	$starttime = gettimeofday();
@@ -74,7 +75,7 @@ sub handler {
 	$log->debug( "Beginning of Request: Page: " . $page );
 
 	%param = ();
-	# Here we copy the param data into a hash that is sligthly more useful to use.  Wish we didn't have to do this.
+	# Here we copy the param data into a hash that is sligthly more useful to use.	Wish we didn't have to do this.
 	foreach my $key ( $r->param ) {
 	#foreach my $key ( sets::union( $r->param ) ) {
 		my @values = $r->param($key);
@@ -93,7 +94,7 @@ sub handler {
 		} else {
 			$log->debug("Parameter $key is (" . $param{$key} . ")" );
 		} # end if
-	}  # end foreach
+	}	# end foreach
 
 	$dbh = sql::open_sql( $log, 
 			database	=> $r->dir_config('db_name'),
@@ -147,7 +148,7 @@ $log->debug("Checking user level, need : " . $page_settings{$config{db_name}}{$p
 					( $page_settings{$config{db_name}}{$page}->user_level() eq 'E' and ! sets::isin( $session{'user_type'}, ['E','A'] ) ) 
 					or
 					( $page_settings{$config{db_name}}{$page}->user_level() eq 'A' and ! sets::isin( $session{'user_type'}, ['A'] ) ) 
-			   ) {
+				) {
 $log->debug("No good, need login");
 				if ( $page =~ /^.*\/_/ ) {
 					$r->content_type(q{text/javascript; charset=utf-8});
@@ -188,25 +189,25 @@ $log->debug("No good, need login");
 		} # end while
 	} # end if
 
-    if ( $lastpage =~ /\.html/ ) {
-        $r->content_type(q{text/html; charset=utf-8});
-    } elsif ( $lastpage =~ /\.json/ ) {
-        $r->content_type(q{text/javascript; charset=utf-8});
-    } elsif ( $lastpage =~ /\.xml/ ) {
-        $r->content_type(q{text/xml; charset=utf-8});
-    } elsif ( $lastpage =~ /\.rss/ ) {
-        $r->content_type(q{application/rss+xml; charset=utf-8});
-    } # end if
+	if ( $lastpage =~ /\.html/ ) {
+		$r->content_type(q{text/html; charset=utf-8});
+	} elsif ( $lastpage =~ /\.json/ ) {
+		$r->content_type(q{text/javascript; charset=utf-8});
+	} elsif ( $lastpage =~ /\.xml/ ) {
+		$r->content_type(q{text/xml; charset=utf-8});
+	} elsif ( $lastpage =~ /\.rss/ ) {
+		$r->content_type(q{application/rss+xml; charset=utf-8});
+	} # end if
 
-    if ( $variable{'ExternalRedirect'} ) {
+	if ( $variable{'ExternalRedirect'} ) {
 		foreach my $key ( 'error', 'warning', 'information' ) {
 			if ( $variable{$key} ) {
 				$session{$key} = $variable{$key};
 			} # end if
 		} # end foreach
-        $r->headers_out->set(Location=>$variable{'ExternalRedirect'});
-        $r->status(Apache2::Const::REDIRECT);
-        #$r->send_http_header;
+		$r->headers_out->set(Location=>$variable{'ExternalRedirect'});
+		$r->status(Apache2::Const::REDIRECT);
+		#$r->send_http_header;
 		$log->debug("Redirecting to " . $variable{'ExternalRedirect'} );
 	} elsif ( exists $variable{'Download'} and $variable{'Download'} ) {
 		if ( $variable{'File_Data'} ) {
@@ -394,7 +395,7 @@ $log->debug("Found sig");
 							} 
 						} # end if
 						if ( ! $Equipment ) {
-$log->error("Unable to load equipment.  No PPF for you for signature $$PPF{'signature'}.");
+$log->error("Unable to load equipment.	No PPF for you for signature $$PPF{'signature'}.");
 						} else {
 						$PPF->send_ppf( $Equipment );
 						} # end if
@@ -555,7 +556,7 @@ $openprint::log->warn('bind');
 					require "openprint/$module.pm"; 
 					('openprint::'.$module)->$proc( $r, $log, $dbh, \%variable );
 				};
-				$log->error( "Eval error of ($module $proc), Reason: " . $@ )  if $@;
+				$log->error( "Eval error of ($module $proc), Reason: " . $@ )	if $@;
 			} # end if
 		} # end if main:$second
 

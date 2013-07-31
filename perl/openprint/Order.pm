@@ -339,7 +339,7 @@ sub Projects {
 	my $self = shift;
 	return @{$$self{'Projects'}} if $$self{'Projects'};
 	return () if ! $$self{'id'};
-	@{$$self{'Projects'}} = map { $_->Project() } openprint::OrderedProject->find( 'order_id'=>$$self{id} );
+	$$self{'Projects'} = [ map { $_->Project() } openprint::OrderedProject->find( 'order_id'=>$$self{id} ) ];
 	return @{$$self{'Projects'}};
 } # end sub Projects
 
