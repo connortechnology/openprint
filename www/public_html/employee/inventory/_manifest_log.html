@@ -1,0 +1,15 @@
+<fieldset><legend>Log</legend>
+	<table class="List">
+	<tr>
+		<th class="User">User</th>
+		<th class="When">When</th>
+		<th class="Note">Note</th>
+	</tr>
+	<? echo ( 
+		my $html;
+		foreach my $Log ( openprint::logRecord->find( object_type=>'openprint::Manifest', object_id=>$$variable{Manifest}->id(), order=>'date_time' ) ) {
+			$html .= sprintf('<tr><td class="User">%s</td><td class="When">%s</td><td class="action">%s</td></tr>', $Log->User()->name(), format_datetime( $Log->date_time() ), $Log->note() );
+		} # end foreach log
+	) ?>		
+	</table>
+</fieldset>

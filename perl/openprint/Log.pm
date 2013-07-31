@@ -1,5 +1,5 @@
 use strict;
-package openprint::logRecord;
+package openprint::Log;
 our @ISA = qw( openprint::Object );
 require openprint::Object;
 require openprint::User;
@@ -18,6 +18,7 @@ $serial = 'log_id_seq';
 	'company_id'	=>	'company_id',
 	'date_time'		=>	'date_time',	
 	'action_type'	=>	'action_type',
+	action			=>	undef,
 	'host_id'		=>	'host_id',
 	'note'			=>	'note',
 	'object_id'		=>	'object_id',
@@ -35,8 +36,8 @@ $serial = 'log_id_seq';
 
 
 sub find {
-	shift @_ if $_[0] eq 'openprint::logRecord';
-	shift @_ if ref $_[0] eq 'openprint::logRecord';
+	shift @_ if $_[0] eq 'openprint::Log';
+	shift @_ if ref $_[0] eq 'openprint::Log';
 	my %params = @_;
 	my @values;
 	my $sql = 'SELECT ';
@@ -144,6 +145,20 @@ sub Action {
 	my $self = shift;
 	return new openprint::logAction( $$self{action_type} );	
 } # end sub Action
+
+sub action {
+    if ( @_ > 1 ) {
+        my $Action = openprint::logAction->find_one( 'name'=>$_[1] );
+        if ( $_[1] and ! $Action ) {
+            $Action = new openprint::logAction();
+            $Action->save({'name'=>$_[1], 'description'=>$_[1]});
+        } # end if
+        $_[0]{'Action'} = $Action;
+        $_[0]{'action_type'} = $Action->id();
+        return $Action->name();
+    } # end if
+    return $_[0]->Action()->name();
+} # end sub action
 
 sub hostname {
 	my ( $self, $new ) = @_;

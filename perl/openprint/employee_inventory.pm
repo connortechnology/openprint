@@ -30,6 +30,7 @@ require openprint::Label;
 require openprint::Skid;
 require openprint::SkidContent;
 require openprint::Claim_Content;
+require openprint::Log;
 
 use vars qw( $r $log $dbh %variable %param %session %config );
 *r = \$openprint::r;
@@ -895,19 +896,14 @@ $log->debug("Entering skid $skid_count");
 			} # end foreach
 			$variable{'information'} .= "Added $param{'skid_quantity'} skids/rolls.<br/>";
 		} elsif ( @skid_ids ) {
-$log->debug('sacing');
+$log->debug("sacing @skid_ids,");
 			foreach my $skid_id ( @skid_ids ) {
 				my $Skid = new openprint::Skid( $skid_id );
 				if ( exists $param{Quantity} ) {
 					$param{Quantity} = @quantities > 1 ? shift @quantities : $quantities[0] if @quantities;
 					$Skid->id( $skid_id );
-					save_Skid( $Skid );
-				} else {
-					if ( $param{rfidtag_id} and  ( $Skid->rfidtag_id() ne $param{rfidtag_id} ) ) {
-						$Skid->rfidtag_id( $param{rfidtag_id} );
-						$variable{error} .= $Skid->save();
-					} # end if
 				} # end if
+				save_Skid( $Skid );
 				if ( $param{'verification_code'} ) {
 					$param{'verification_code'} =~ s/^[Vv](.*)$/$1/;
 					my $SV = new openprint::Skid_Verification();
@@ -1000,7 +996,7 @@ $log->debug('sacing');
 
 	$variable{'Skid'} = new openprint::Skid( @skid_ids ? $skid_ids[0] : undef );
 	$variable{'skid_id'} = $variable{'Skid'}->id() ? $variable{'Skid'}->id() : $param{'skid_id'};
-	@{$variable{'skid_ids'}} = @skid_ids;
+	$variable{'skid_ids'} = \@skid_ids;
 
 } # end sub skid_details
 
@@ -1425,6 +1421,8 @@ sub save_Manifest {
 	$dbh->do( 'LOCK TABLE Manifests IN EXCLUSIVE MODE' ) or $log->error( DBI->errstr );
 
 	$error .= $Manifest->save( \%param );
+	my $Log = new openprint::Log();
+	$Log->save({object_type => 'openprint::Manifest', object_id=>$$Manifest{id}, note=>'Save Manifest' });
 
 	my @Types = openprint::Manifest_Content_Type->find( manifest_id=>$Manifest->id());
 	if ( ! @Types ) {
