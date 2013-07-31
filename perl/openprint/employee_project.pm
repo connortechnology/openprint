@@ -72,6 +72,7 @@ sub view {
 
 	my $Project = $variable{Project} = new openprint::Project( $project_index );
 	if ( $project_index and ! $$Project{id} ) {
+		$variable{Order} = new openprint::Order();
 		$variable{error} .= "Project $project_index not found.<br/>";
 		return;
 	} # end if
