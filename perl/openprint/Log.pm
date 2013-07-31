@@ -148,10 +148,10 @@ sub Action {
 
 sub action {
     if ( @_ > 1 ) {
-        my $Action = openprint::logAction->find_one( 'name'=>$_[1] );
+        my $Action = openprint::logAction->find_one( name=>$_[1] );
         if ( $_[1] and ! $Action ) {
             $Action = new openprint::logAction();
-            $Action->save({'name'=>$_[1], 'description'=>$_[1]});
+            $Action->save({ name=>$_[1], description=>$_[1]});
         } # end if
         $_[0]{'Action'} = $Action;
         $_[0]{'action_type'} = $Action->id();

@@ -1422,7 +1422,7 @@ sub save_Manifest {
 
 	$error .= $Manifest->save( \%param );
 	my $Log = new openprint::Log();
-	$Log->save({object_type => 'openprint::Manifest', object_id=>$$Manifest{id}, note=>'Save Manifest' });
+	$Log->save({object_type => 'openprint::Manifest', object_id=>$$Manifest{id}, action=>'Save Manifest' });
 
 	my @Types = openprint::Manifest_Content_Type->find( manifest_id=>$Manifest->id());
 	if ( ! @Types ) {
@@ -1547,6 +1547,8 @@ sub apply_Manifest {
 
 	my $error;
 
+	my $Log = new openprint::Log();
+	$Log->save({object_type => 'openprint::Manifest', object_id=>$$Manifest{id}, action=>'Apply Manifest' });
 	my $ac = sql::start_transaction( $dbh );
 	$dbh->do( 'LOCK TABLE Manifests IN EXCLUSIVE MODE' ) or $log->error( DBI->errstr );
 

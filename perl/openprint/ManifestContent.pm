@@ -316,7 +316,7 @@ sub check {
 
 		if ( $S ) {
 			$error .= qq`Skid <a href="/employee/inventory/skid_details.html?skid_id=$$S{id}">$$S{id}</a> has this manufacturers id`;
-			if ( $S->delete() ) {
+			if ( $S->deleted() ) {
 				$error .= ', but has been deleted';
 			}
 			$error .= '.<br/>';

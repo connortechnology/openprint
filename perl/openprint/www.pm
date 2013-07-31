@@ -6,6 +6,7 @@ package openprint::www;
 
 use Apache2::Request ();	# instead of CGI, it's MUCH faster, and does nice things.
 use Apache2::RequestRec ();
+use Apache2::Connection ();
 use APR::URI ();
 use Apache2::Const -compile => qw(HTTP_INTERNAL_SERVER_ERROR OK DECLINED HTTP_NOT_FOUND HTTP_FORBIDDEN);# Offers OK, Error,etc for web server.
 use Apache2::Log ();
@@ -43,6 +44,27 @@ use vars qw( $r %variable %session %param %config $log $dbh );
 *dbh = \$openprint::dbh;
 *r = \$openprint::r;
 
+sub cleanup {
+    if ( $r->connection->aborted( ) ) {
+$log->debug("Was aborted");
+    } # end if
+    %variable = ();
+    %param = ();
+    if ( $dbh ) {
+        openprint::pricing::clear_cache();
+        openprint::service::init_cache();
+        openprint::Object::init_cache();
+        $session{lastupdated} = time;
+        untie %session;
+if ( ! $dbh->{AutoCommit} ) {
+$log->error("Uncommited transaction");
+} # end if
+        $dbh->disconnect();
+    } else {
+$log->debug("No dbh at cleanup");
+    } # end if
+} # end sub cleanup
+
 sub handler {
 	%variable = ();
 	%param = ();
@@ -55,6 +77,7 @@ sub handler {
 
 	my $starttime = time;
 	$log	= $r->log;
+	$request->push_handlers(PerlCleanupHandler => \&cleanup);
 	my $page = $r->uri();
 	$log->debug( "Beginning of Request: Time (seconds) : $starttime Page: " . $page );
 
