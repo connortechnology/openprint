@@ -185,6 +185,13 @@ $log->debug("Title: $title, When: $when desc: $desc");
 		} else {
 			( $ending_year, $ending_month, $ending_day ) = ( $year, $month, $day );
 		} # end if
+	} elsif ( ( $month, $day, $year, $ending_month, $ending_day, $ending_year, $hour, $minute, $ampm, $ending_hour, $ending_minute, $ending_ampm ) = $when =~ /^\s*(\d+)\.(\d+)\.(\d+)\s-\s(\d+)\.(\d+)\.(\d+)\s*+(\d+):(\d+) (\w+)\s*\-\s*(\d+):(\d+)\ (\w+)\s*$/m ) {
+		if ( $ampm eq 'pm' ) {
+			$hour += 12;
+		} # end if
+		if ( $ending_ampm eq 'pm' ) {
+			$ending_hour += 12;
+		} # end if
 				
 	} elsif ( ( $month, $day, $year, $hour, $minute, $ampm ) = $when =~ /^\s*(\d+)\.(\d+)\.(\d+)\s+(\d+):(\d+) (\w+)\s*$/m ) {
 		# if no ending is given, assume 3am the next morning
@@ -194,7 +201,12 @@ $log->debug("Title: $title, When: $when desc: $desc");
 		( $ending_year, $ending_month, $ending_day ) = Date::Calc::Add_Delta_Days( $year, $month, $day, 1 );
 		( $ending_hour, $ending_minute) = ( 3, 0 );
 	} # end if
-	$log->debug(" Got event $title, $year-$month-$day $hour:$minute $ampm until $ending_year-$ending_month-$ending_day $ending_hour:$ending_minute");
+	if ( ! Date::Calc::check_date( $year, $month, $day ) ) {
+		$log->error(" Got event $title, $year-$month-$day $hour:$minute $ampm until $ending_year-$ending_month-$ending_day $ending_hour:$ending_minute");
+		next;
+	} else {
+		$log->debug(" Got event $title, $year-$month-$day $hour:$minute $ampm until $ending_year-$ending_month-$ending_day $ending_hour:$ending_minute");
+	} # end if
 
 	my $starting_on = sprintf('%.4d-%.2d-%.2d %.2d:%.2d:00', $year, $month, $day, $hour, $minute );
 	my $ending_on = sprintf( '%.4d-%.2d-%.2d %.2d:%.2d:00', $ending_year, $ending_month, $ending_day, $ending_hour, $ending_minute );
@@ -230,6 +242,9 @@ $log->debug("Title: $title, When: $when desc: $desc");
 		category_id	=>	$$Category{id},
 		});
 	die $_ if $_;
+			if ( ! openprint::Log->find_one(action=>'Create Event', object_type=>'openprint::Event',object_id=>$Event->id() ) ) {
+				(new openprint::Log())->save({action=>'Create Event', object_type=>'openprint::Event',object_id=>$Event->id()});
+			}
 	if ( $Asset ) {
 		my $Album = $Event->Album();
 		if ( ! $Album->id() ) {

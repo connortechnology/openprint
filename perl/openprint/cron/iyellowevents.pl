@@ -256,6 +256,9 @@ $log->debug("GOt2 $posterurl");
 		category	=>	'Wine Tasting',
 		time_associated	=> $time_associated,
 		});
+			if ( ! openprint::Log->find_one(action=>'Create Event', object_type=>'openprint::Event',object_id=>$Event->id() ) ) {
+				(new openprint::Log())->save({action=>'Create Event', object_type=>'openprint::Event',object_id=>$Event->id()});
+			}
 	if ( $Asset ) {
 		my $Album = $Event->Album();
 		if ( ! $Album->id() ) {

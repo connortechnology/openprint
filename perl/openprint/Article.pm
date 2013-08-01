@@ -300,5 +300,9 @@ sub body_escaped {
 $openprint::log->debug("body: $body");
 	return $body;
 } # end
+
+sub Created_By {
+	return new openprint::User( $_[0]{created_by} );
+} 
 1;
 __END__

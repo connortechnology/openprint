@@ -390,7 +390,8 @@ $openprint::log->debug("fetch: filename: $filename path: $path from url $url");
 	my $Asset = openprint::Asset->find_one( md5 => $md5 );
 	if ( ! $Asset ) {
 		$Asset = new openprint::Asset();
-		$! .= $Asset->save({ filename=>$filename, md5=>$md5 });
+		$_ = $Asset->save({ filename=>$filename, md5=>$md5 });
+		return $_ if $_;
 
 		if ( ! File::Slurp::write_file($Asset->on_disk_path(), { atomic => 1, err_mode=>'carp' }, $res->content ) ) {
 			return 'There was an error saving file ' . $filename.' to ' . $Asset->on_disk_path() . ": $!<br/>";
