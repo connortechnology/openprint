@@ -5,6 +5,9 @@ use vars qw( $r %variable %session %param %config $log $dbh );
 sub session_init {
 	require Apache2::Cookie;
 	require Apache::Session::Postgres;
+	require openprint::Pricelist;
+	require openprint::Currency;
+
 	my $cookies = Apache2::Cookie->fetch( $r );
 	my $cookie;
 	if ( $$cookies{'_session_id'} ) {
@@ -75,7 +78,7 @@ sub session_init {
 		} elsif ( $r->param('btnFunction') eq 'SelectPricelist' ) {
 			my $Pricelist = new openprint::Pricelist( $r->param('pricelist_id') );
 			if ( ! $Pricelist->id() ) {
-				$Pricelist = new openprint::Pricelist( openprint::pricing::get_pricelist_id( ) );
+				$Pricelist = openprint::Pricelist::get_current();
 			} # end if
 			$session{'Pricelist_id'} = $Pricelist->id() if $Pricelist->id();
 		} # end if
@@ -102,12 +105,12 @@ sub session_init {
 	} # end if
 
 	if ( ! $session{Pricelist_id} ) {
-		my $Pricelist = new openprint::Pricelist( openprint::pricing::get_pricelist_id( ) );
+		my $Pricelist = openprint::Pricelist::get_current();
 		$session{Pricelist_id} = $Pricelist->id() if $Pricelist->id();
 	} else {
 		my $Pricelist = new openprint::Pricelist( $session{Pricelist_id} );
 		if ( ! $Pricelist->id() ) {
-			$Pricelist = new openprint::Pricelist( openprint::pricing::get_pricelist_id( ) );
+			$Pricelist = openprint::Pricelist::get_current();
 			$session{Pricelist_id} = $Pricelist->id() if $Pricelist->id();
 		} # end if
 	} # end if

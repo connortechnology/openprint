@@ -20,17 +20,17 @@ use strict;
 package openprint::Estimating::Printing;
 my $threading = 0;
 #use threads;
-use constant DEBUG => 0;
+use constant DEBUG => 1;
 my $master_time;
 my %special_colours;
 
 my %folding_cache;
 my %Papers;
 # indexed by press
-my %impositions;
+#my %impositions;
 my $max_recursion_depth = 3;
 my %converted_imposition_cache;
-my $use_converted_imposition_cache = 1;
+my $use_converted_imposition_cache = 0;
 my %filtered_imposition_cache;
 my $use_filtered_imposition_cache = 0;
 
@@ -453,7 +453,7 @@ $log->debug("Coatings: " . join( ',', keys %coatings ) );
 	$project{'filtered_colours'} = \@filtered_colours;
 	$project{'filtered_coatings'} = [ filter_colours( $project{'side_one_coatings'}, $project{'side_two_coatings'} ) ];
 
-	foreach my $C ( openprint::Ink->find() ) {
+	foreach my $C ( openprint::Ink->find( 'name in'=>[ ( map { $$_{name} } @{$project{filtered_colours}}) , ( map { $$_{name} } @{$project{filtered_coatings}} ) ] ) ) {
 		push @{$special_colours{$$C{name}}}, $C;
 	} # end foreach C
 	# Make sure all our colours are in the special colours hash
@@ -835,7 +835,8 @@ sub get_Stocks {
 		} # end if
 		if ( ! $$specs{'CustomStockPrice'} ) {
 			$$specs{'alert'} .= 'Please enter the stock cost in order to achieve an accurate imposition.';
-			return @Papers;
+			# Maybe don't need to return... since it can calculate... although the result will likely be bizarre
+			#return @Papers;
 		} # end if
 		if ( ( ! $$specs{'StockGrade'} ) and $$specs{'txtSpecificStockFinish'} ) {
 			if ( $$specs{'txtSpecificStockFinish'} =~ /gloss/i ) {
@@ -2018,6 +2019,7 @@ $log->warn("There are no quantities!");
 #$openprint::log->debug("Master time after get_unspecified_pages: " . ( sprintf('%.4f', tv_interval( [$master_time])*1000) ) .' usecs' );
 			$$specs{'txtUnspecifiedPageQuantity'.$qty_index} = 0 if $$specs{'txtUnspecifiedPageQuantity'.$qty_index} < 0;
 		} # end if
+$openprint::log->debug("Unspecified pages for $qty_index: $$specs{'txtUnspecifiedPageQuantity'.$qty_index}");
 
 #$openprint::log->debug("Master time before Previous Stock Type and Grain: " . ( sprintf('%.4f', tv_interval( [$master_time])*1000) ) .' usecs' );
 		# We have to match the stock type and grain direction of previous sigs
@@ -2340,7 +2342,7 @@ if ( 0 ) {
 			} # end if
 			$$specs{'txtUnspecifiedPageQuantity'.$qty_index} -= $$specs{'PageQuantity'.$qty_index};
 			if ( $$specs{'txtUnspecifiedPageQuantity'.$qty_index} < 0 ) {
-				$$specs{'alert'} .= "There are more pages specified than are required.  Please correct this situation.";
+				$$specs{'alert'} .= "QTY $qty_index: There are ".(-1*$$specs{'txtUnspecifiedPageQuantity'.$qty_index}). ' more pages specified than are required.  Please correct this situation.<br/>';
 			} # end if
 		} # end if
 		$$specs{'PaperMessage'.$qty_index} = $Paper->message();
@@ -2441,7 +2443,7 @@ sub calculate_impositions {
 		$SpreadLayout = ( $$sig_specs{'chkOverridePageQuantity'.$qty_index} eq 'Y' ? $$sig_specs{'PageQuantity'.$qty_index} : $$sig_specs{'txtUnspecifiedPageQuantity'.$qty_index} ) / $$project{'txtSpreadSize'};
 #$openprint::log->debug("SpreadSize: $$project{'txtSpreadSize'} SpreadLayout: $SpreadLayout override: " . $$sig_specs{'chkOverridePageQuantity'.$qty_index} . ' PageQ: ' . $$sig_specs{'PageQuantity'.$qty_index} . ' unspec:' . $$sig_specs{'txtUnspecifiedPageQuantity'.$qty_index});
 	} # end if
-	my $cache_string = join('-', $$Press{id}, $SpreadLayout, @$sig_specs{'PreviousStockType', 'PreviousGrainDirection'} );
+	my $cache_string = join('-', $qty_index, $$Press{id}, $SpreadLayout, @$sig_specs{'PreviousStockType', 'PreviousGrainDirection'} );
 	if ( ! $Press ) {
 		$openprint::log->error("No Press");
 		return;
@@ -3029,7 +3031,7 @@ if ( 0 ) {
 							next;
 						} # end if
 
-						my $key = join(',',$qty_index,$$Press{id},$upq,($$sig_specs{'MatchGrain'.$qty_index} eq 'Y'?$imp->grain_direction():()));
+						my $key = join(',',$qty_index,$$Press{id},$upq,($$sig_specs{'MatchGrain'.$qty_index} eq 'Y'?$imp->grain_direction():()),$$sig_specs{Group});
 						if ( 1 and $price_cache{$key} ) {
 							$openprint::log->debug("Using price cache");
 							$sig_price = $price_cache{$key};
@@ -3258,22 +3260,22 @@ $openprint::log->debug("Doing perfect bound") if DEBUG;
 #$openprint::log->debug( 'PerfectBound Calc: ' . sprintf('%.4f', tv_interval( [$starttime])*1000) );
 			} # end if PerfectBound
 
-			if ( $$service_specs{'Group'} == 1 ) {
+			if ( 0 and $$service_specs{'Group'} == 1 ) {
 # When doing the cover, need to calc additional sigs as well.
 				# Add calculations for other Groups
 $openprint::log->debug("Calculating Additional Signatures for other group");
 				my @sigs = sort $Project->signatures({'Group'=>2});
 				if ( @sigs ) {
 					my $Service = $Project->Service( $sigs[0] );
-					my $specs = $Service->specs();
+					my $subsig_specs = $Service->specs();
 
-					my @side_one_colours = get_colours( $specs, 'SideOne' );
-					my @side_two_colours = get_colours( $specs, 'SideTwo' );
-					my %inkCoverage = get_inkcoverage( $Project, $specs );
-					my @Papers = get_Stocks( $Project, $specs );
+					my @side_one_colours = get_colours( $subsig_specs, 'SideOne' );
+					my @side_two_colours = get_colours( $subsig_specs, 'SideTwo' );
+					my %inkCoverage = get_inkcoverage( $Project, $subsig_specs );
+					my @Papers = get_Stocks( $Project, $subsig_specs );
 					if ( @Papers ) {
-						my $new_project = setup_project( $Project, $sigs[0], $Project->services(), $specs, \@side_one_colours, \@side_two_colours, \%inkCoverage, $Papers[0] );
-						my %presses = select_presses( $Project, \@Papers, $specs, $project );
+						my $new_project = setup_project( $Project, $sigs[0], $Project->services(), $subsig_specs, \@side_one_colours, \@side_two_colours, \%inkCoverage, $Papers[0] );
+						my %presses = select_presses( $Project, \@Papers, $subsig_specs, $project );
 						my @possible_presses;
 						foreach my $press_id ( keys %presses ) {
 							if ( ! $presses{$press_id} ) {
@@ -3283,17 +3285,17 @@ $openprint::log->debug("Calculating Additional Signatures for other group");
 						if ( @possible_presses ) {
 							@possible_presses = sort { $a->strid() <=> $b->strid() } @possible_presses;
 							my @available_printingtypes = sets::union( map { $_->specification('Printing Type') } @possible_presses );
-							$$specs{'PrintingTypes'} = get_printing_types( $Project, $sigs[0], $printing_specs, $specs, $qty_index, \@available_printingtypes, $imp );
-							my %impositions = get_impositions( $Project, $specs, $project, $qty, $qty_index, \@possible_presses, \@Papers );
+							$$subsig_specs{'PrintingTypes'} = get_printing_types( $Project, $sigs[0], $printing_specs, $subsig_specs, $qty_index, \@available_printingtypes, $imp );
+							my %impositions = get_impositions( $Project, $subsig_specs, $project, $qty, $qty_index, \@possible_presses, \@Papers );
 							if ( ! %impositions ) {
 								$$price{'Breakdown'} .= 'Unable to calculate impositions for additional signatures.<br/>';
 								$$price{'Comparison Cost'} += 1000000;
 							} else {
-								$$specs{'totalSpreads'} = $$specs{'GroupPageQuantity'};
-								$$specs{'txtUnspecifiedPageQuantity'.$qty_index} = get_unspecified_pages( $Project, $service_index, $printing_specs, $specs, $qty_index );
-								$$specs{'txtUnspecifiedPageQuantity'.$qty_index} = 0 if $$specs{'txtUnspecifiedPageQuantity'.$qty_index} < 0;
+								$$subsig_specs{'totalSpreads'} = $$subsig_specs{'GroupPageQuantity'};
+								$$subsig_specs{'txtUnspecifiedPageQuantity'.$qty_index} = get_unspecified_pages( $Project, $service_index, $printing_specs, $subsig_specs, $qty_index );
+								$$subsig_specs{'txtUnspecifiedPageQuantity'.$qty_index} = 0 if $$subsig_specs{'txtUnspecifiedPageQuantity'.$qty_index} < 0;
 
-								my $sig_price = get_project_price( $Project, $sigs[0], $new_project, $specs, $specs, $qty, $qty_index, 
+								my $sig_price = get_project_price( $Project, $sigs[0], $new_project, $subsig_specs, $subsig_specs, $qty, $qty_index, 
 								\@possible_presses, $printing_specs, $versions, \%PlateCounts, \%PaperCounts, \%washed_colours, \%previous_forms_cache, \@sigs, \%impositions, $other_impositions, \%best_price, 0 );
 
 								if ( $$sig_price{'Imposition'} ) {
@@ -3310,9 +3312,9 @@ $openprint::log->debug("Calculating Additional Signatures for other group");
 							$$price{'Comparison Cost'} += 1000000;
 						} # end if
 					} else {
-						$openprint::log->error("Unable to find stocks for group 2 alert( $$specs{alert} )");
-						foreach my $k ( keys %$specs ) {
-							$openprint::log->error("$k => $$specs{$k}");
+						$openprint::log->error("Unable to find stocks for group 2 alert( $$subsig_specs{alert} )");
+						foreach my $k ( keys %$subsig_specs ) {
+							$openprint::log->error("$k => $$subsig_specs{$k}");
 						} # end if
 					} # end if Has Stocks
 				} else {

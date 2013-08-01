@@ -148,6 +148,7 @@ sub overrides {
 	my ( $self, $qty_index ) = @_;
 	my $module = 'openprint::Estimating::'.$_[0]->ServiceType()->name();
 	$module = 'openprint::Estimating::Printing' if $module eq 'openprint::Estimating::AdditionalSignature';
+	$module = 'openprint::Estimating::Printing' if $module eq 'openprint::Estimating::Signature';
 	$module = 'openprint::Estimating::Printing' if $module eq 'openprint::Estimating::';
 	if ( my $function = $module->can( 'has_overrides' ) ) {
 		my $specs = $_[0]->specs();

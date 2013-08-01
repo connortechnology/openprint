@@ -317,7 +317,6 @@ sub getmonths {
 sub getdays {
 	my ( $selected, $year, $month ) = @_;
 	my $maxdays = 31;
-$log->debug("Year: $year, month: $month");
 	if ( $year and $month and ( $maxdays > Days_in_Month( $year, $month ) ) ) {
 		$maxdays = Days_in_Month( $year, $month );
 	} # en dif

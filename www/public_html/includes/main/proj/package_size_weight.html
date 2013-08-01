@@ -1,27 +1,25 @@
 <li>
 	<label>Package Type</label>
 	<? echo ( my $html;
-		my @PackageTypes = openprint::Material->find('category'=>$$variable{'ServiceTypeID'} );
-		if ( @PackageTypes > 1 ) {
-			foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
-				$html .= '<span class="'.$$variable{'Columns'}.'Columns">';
+		my @PackageTypes = openprint::Material->find( category=>$$variable{ServiceTypeID}, order=>'lower(name)' );
+		foreach my $qty_index ( $$variable{Project}->quantity_indexes() ) {
+			$html .= '<span class="'.$$variable{'Columns'}.'Columns">';
+			if ( @PackageTypes > 1 ) {
 				$html .= ssi::select(
 					[ '', 'select', map { $_->id(), $_->name() } @PackageTypes ], $$variable{'ddmPackageType'.$qty_index},
 					{
 					name	=>	"ddmPackageType$qty_index",
 					size	=>	1,
 					onchange=>	'calc(this.form.name);',
-				} 
+					} 
 				);
-				$html .= ssi::write_override( "OverridePackageType$qty_index", $$variable{'OverridePackageType'.$$variable{'QTYIndex'}}, '', q`calc('f1');` );
-				$html .= '</span>';
-			} # end foreach $qty_index
-		} elsif ( @PackageTypes ) {
-			foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
-				$html .= ssi::input( type=>'hidden', name=>'ddmPackageType'.$qty_index, value=>$PackageTypes[0]->id() );
+				$html .= write_override( "OverridePackageType$qty_index", $$variable{'OverridePackageType'.$$variable{'QTYIndex'}}, '', q`calc('f1');` );
+			} elsif ( @PackageTypes ) {
+				$html .= input( type=>'hidden', name=>'ddmPackageType'.$qty_index, value=>$PackageTypes[0]->id() );
 				$html .= $PackageTypes[0]->name();
-			} # end foreach $qty_index
-		} # end if
+			} # end if
+			$html .= '</span>';
+		} # end foreach $qty_index
 		return $html;
 	) ?>
 </li>
