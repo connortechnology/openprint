@@ -3260,7 +3260,7 @@ $openprint::log->debug("Doing perfect bound") if DEBUG;
 #$openprint::log->debug( 'PerfectBound Calc: ' . sprintf('%.4f', tv_interval( [$starttime])*1000) );
 			} # end if PerfectBound
 
-			if ( 0 and $$service_specs{'Group'} == 1 ) {
+			if ( 1 and $$service_specs{'Group'} == 1 ) {
 # When doing the cover, need to calc additional sigs as well.
 				# Add calculations for other Groups
 $openprint::log->debug("Calculating Additional Signatures for other group");
@@ -3275,7 +3275,7 @@ $openprint::log->debug("Calculating Additional Signatures for other group");
 					my @Papers = get_Stocks( $Project, $subsig_specs );
 					if ( @Papers ) {
 						my $new_project = setup_project( $Project, $sigs[0], $Project->services(), $subsig_specs, \@side_one_colours, \@side_two_colours, \%inkCoverage, $Papers[0] );
-						my %presses = select_presses( $Project, \@Papers, $subsig_specs, $project );
+						my %presses = select_presses( $Project, \@Papers, $subsig_specs, $new_project );
 						my @possible_presses;
 						foreach my $press_id ( keys %presses ) {
 							if ( ! $presses{$press_id} ) {
@@ -3286,7 +3286,7 @@ $openprint::log->debug("Calculating Additional Signatures for other group");
 							@possible_presses = sort { $a->strid() <=> $b->strid() } @possible_presses;
 							my @available_printingtypes = sets::union( map { $_->specification('Printing Type') } @possible_presses );
 							$$subsig_specs{'PrintingTypes'} = get_printing_types( $Project, $sigs[0], $printing_specs, $subsig_specs, $qty_index, \@available_printingtypes, $imp );
-							my %impositions = get_impositions( $Project, $subsig_specs, $project, $qty, $qty_index, \@possible_presses, \@Papers );
+							my %impositions = get_impositions( $Project, $subsig_specs, $new_project, $qty, $qty_index, \@possible_presses, \@Papers );
 							if ( ! %impositions ) {
 								$$price{'Breakdown'} .= 'Unable to calculate impositions for additional signatures.<br/>';
 								$$price{'Comparison Cost'} += 1000000;
@@ -3299,11 +3299,11 @@ $openprint::log->debug("Calculating Additional Signatures for other group");
 								\@possible_presses, $printing_specs, $versions, \%PlateCounts, \%PaperCounts, \%washed_colours, \%previous_forms_cache, \@sigs, \%impositions, $other_impositions, \%best_price, 0 );
 
 								if ( $$sig_price{'Imposition'} ) {
-		$openprint::log->debug("Calculating Additional Signatures for other group success");
+									$openprint::log->debug("Calculating Additional Signatures for other group success");
 									$$price{'Comparison Cost'} += $$sig_price{'Comparison Cost'};
 									#$$price{'itionalSignature Breakdown'} .= breakdown( $sig_price, $sig_specs );
 								} else {
-		$openprint::log->debug("Calculating Additional Signatures for other group failure");
+									$openprint::log->debug("Calculating Additional Signatures for other group failure");
 									$$price{'Breakdown'} .= 'Unable to calculate additional signatures.<br/>';
 									$$price{'Comparison Cost'} += 1000000;
 								} # end if
