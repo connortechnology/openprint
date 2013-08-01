@@ -45,13 +45,19 @@
 		<? endif ( @{$$variable{'Categories'}} = openprint::Event_Category->find('order'=>'lower(name)') ) ?>
 					<li>
 						<label>When</label>
-						<? echo ( ssi::date_select_session( '/event/search.html', 'starting_on_start', {onchange=>'load_events(this.form);'} ); ) ?>
+						<? echo ( date_select_session( '/event/search.html', 'starting_on_start', {onchange=>'load_events(this.form);'} ); ) ?>
 							to 
-						<? echo ( ssi::date_select_session( '/event/search.html', 'starting_on_end', {onchange=>'load_events(this.form);'} ); ) ?>
+						<? echo ( date_select_session( '/event/search.html', 'starting_on_end', {onchange=>'load_events(this.form);'} ); ) ?>
 					</li>
 					<li><label>Text</label>
 						<input type="text" name="search" value="<? echo ( $param{search} ) ?>"/>
 					</li>
+<? if ( $session{user_id} ) ?>
+					<li><label>Created By</label>
+						<? echo ( ssi::select( openprint::Company->dropdown(), $session{'/event/search.html?company_id'}, { name=>'company_id', onclick=>'load_events(this.form);' } ); ) ?>
+		
+					</li>
+<? endif ( $session{user_id} ) ?>
 <? if ( $session{user_type} eq 'A' ) ?>
 	<li><label>Template?</label>
 		<? echo ( radio( 'template', [ 1, 'Yes', 0, 'No', '', 'Both' ], $session{'/event/search.html?template'}, { onclick=>'load_events(this.form);' } ); ) ?>

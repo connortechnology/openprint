@@ -40,6 +40,7 @@ $serial = 'events_id_seq';
 %find_fields = (
 	attending	=>	'(SELECT user_id FROM event_attendance WHERE event_id=events.id AND attending=true)',
 	'name+info'	=>	q`name || info`,
+	company_id	=>	'(SELECT company_id FROM Users WHERE users.id=events.created_by)',
 );
 %transforms = (
 	id		=>	[ 's/\D//g', '<2147483647' ],
@@ -419,6 +420,10 @@ sub head_html {
     
 	return $html;
 } # end sub html_head
+
+sub published_on {
+	return $_[0]{starting_on};
+}
 
 1;
 __END__
