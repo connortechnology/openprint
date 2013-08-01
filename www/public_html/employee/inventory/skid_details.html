@@ -133,8 +133,9 @@
 				<label>Purchase Order</label>
 				<? echo (
 					my $html = '';
-					foreach my $MCT ( openprint::Manifest_Content_Type->find( 'skid_id any'=>$$variable{Skid}->id() ) ) {
-						$html .= sprintf('<a href="/employee/purchase_order/view.html?po_id=%1$s">%2$s</a><br/>', $MCT->po_id(), $MCT->po_id() );
+					my @po_ids = sets::union( map { $_->po_id() } openprint::Manifest_Content_Type->find( 'skid_id any'=>$$variable{Skid}->id() ) );
+					foreach my $po_id ( @po_ids ) {
+						$html .= sprintf('<a href="/employee/purchase_order/view.html?po_id=%1$s">%1$s</a><br/>', $po_id );
 					} # end foreach MCT
 					return $html;
 				) ?>
