@@ -1112,7 +1112,10 @@ sub _drop {
 		my $services = $param{'services'};
 		$services =~ s/$param{ul_id}\[\]=//g;
 		my @order = split( '&', $services );
-		return if ! @order;
+		if ( ! @order ) {
+			sql::end_transaction( $dbh, $ac );
+			return;
+		} # end if
 
 		if ( $param{'action'} ne 'add_services' ) {
 			my @servicetypes_to_add;
