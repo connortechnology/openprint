@@ -134,15 +134,13 @@ sub Specifications {
 } # end sub Specifications
 
 sub get_price {
+	return if ! $_[0]{id};
 	my ( $self, $quantity, $Equipment ) = @_;
 
-	return if ! $$self{'id'};
-
-	my $list_id = openprint::pricing::get_pricelist_id();
-	my %price = openprint::pricing::get_best_price_object( $log, $dbh, $session{'company_id'}, $$self{id}, $list_id, 'openprint::material_priceset', $quantity, $$Equipment{'id'} );
+	my $Pricelist = openprint::Pricelist::get_current();
+	my %price = openprint::pricing::get_best_price_object( $log, $dbh, $session{'company_id'}, $$self{id}, $$Pricelist{id}, 'openprint::material_priceset', $quantity, $$Equipment{'id'} );
 	return if ! %price;
 
-	my $Pricelist = new openprint::Pricelist( $list_id );
 	$price{'currency_id'} = $Pricelist->currency_id();
 	openprint::Currency::convert( \%price );
 

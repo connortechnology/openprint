@@ -1,5 +1,5 @@
 <? echo (
-	my $debug = 0;
+	my $debug = 1;
 	my %specs;
 	$specs{'form'} = $param{'form'};
 	$specs{'signature_id'} = $param{'signature_id'};
@@ -9,14 +9,16 @@
 	@options = misc::trim( split(',', $config{'StockOptions'} )) if ! @options;
 	@options = ( 'Brand','Finish','Colour','Weight' ) if ! @options;
 	my @lc_options = map { lc $_ } @options;
+$log->debug("lc @lc_options");
 
-	my @user_types = ('');
-	push @user_types, 'C' if $openprint::session{'user_id'};
-	push @user_types, 'E' if $openprint::session{'user_type'} eq 'E';
-	push @user_types, ('A','E') if $openprint::session{'user_type'} eq 'A';
+	my @user_types = (undef,'');
+	push @user_types, 'C' if $session{'user_id'};
+	push @user_types, 'E' if $session{'user_type'} eq 'E';
+	push @user_types, ('A','E') if $session{'user_type'} eq 'A';
+$log->debug("user_types @user_types");
 
 	my %find = (
-		'user_type is null or ='	=>	\@user_types,
+		user_type	=>	\@user_types,
 		( $$ProjectType{'id'}?(
 							   'project_type_id any'	=>	$ProjectType->id(),
 							  ):(
@@ -39,6 +41,9 @@ if ( 0 ) {
 }
 
 	my @Stocks = openprint::Paper->find( %find );
+foreach my $S ( @Stocks ) {
+	$log->debug($S->to_string());
+}
 
 	# Find the index of the selected option
 	my $option_index = 0;

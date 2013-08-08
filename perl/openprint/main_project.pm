@@ -13,6 +13,7 @@ use vars qw( $r $log $dbh %variable %param %session %config );
 require openprint::Project;
 require openprint::print_project;
 require openprint::service;
+require JSON;
 
 sub sign_off {
 	require Authen::Captcha;

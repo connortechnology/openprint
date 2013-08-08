@@ -437,9 +437,11 @@ $log->error("Unable to load equipment.	No PPF for you for signature $$PPF{'signa
 				$variable{'ProjectIndex'} = $openprint::param{'ProjectIndex'} if ! $variable{'ProjectIndex'};
 				$variable{'ProjectIndex'} = $openprint::session{'project_id'} if ! $variable{'ProjectIndex'};
 				$variable{'Project'} = new openprint::Project( $variable{'ProjectIndex'} );
-				my $Service = $variable{'Project'}->Service( $variable{'ServiceIndex'} );
-				$variable{'ServiceType'} = $Service->ServiceType();
-				@variable{'ServiceTypeID','ServiceTypeName','ServiceTypeType'} = $variable{'ServiceType'}->get('name','description','type' ) if $variable{'ServiceType'};
+				if ( $variable{ServiceIndex} ) {
+					my $Service = $variable{'Project'}->Service( $variable{'ServiceIndex'} );
+					$variable{'ServiceType'} = $Service->ServiceType();
+					@variable{'ServiceTypeID','ServiceTypeName','ServiceTypeType'} = $variable{ServiceType}->get('name','description','type') if $variable{ServiceType};
+				} # end if
 				my $Currency = openprint::Currency::get_current();
 				@variable{'CurrencyName','CurrencySymbol'} = ( $Currency->name(), $Currency->symbol() );
 				my $project_index = $variable{'ProjectIndex'};
@@ -452,11 +454,9 @@ $log->error("Unable to load equipment.	No PPF for you for signature $$PPF{'signa
 					@variable{keys %$specs} = @$specs{keys %$specs};
 				} # end if
 				$variable{'ProjectType'} = $variable{'Project'}->Type();
-#$openprint::log->debug("Pid: $variable{'ProjectIndex'} sid: $variable{'ServiceIndex'}");
-if ( ! $variable{'ServiceIndex'} ) {
-#$openprint::log->warn("Pid: $variable{'ProjectIndex'} sid: $variable{'ServiceIndex'}");
-$variable{'ServiceIndex'} = $service_index;
-} # end if
+				if ( ! $variable{'ServiceIndex'} ) {
+					$variable{'ServiceIndex'} = $service_index;
+				} # end if
 
 				if ( $third eq 'prin' ) {
 					$log->debug("** START OF MAIN:PROJ:PRIN * ($project_index) ($service_index)");
