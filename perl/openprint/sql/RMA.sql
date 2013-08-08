@@ -22,7 +22,7 @@ CREATE TABLE RMA (
 	approved 		BOOLEAN NOT NULL DEFAULT False,
 	tester_id		INTEGER, FOREIGN KEY (tester_id) REFERENCES Users (id),
 	accessories		TEXT,
-	product_id		INTEGER, FOREIGN KEY Products (id),
+	product_id		INTEGER, FOREIGN KEY (product_id) REFERENCES Products (id),
 	PRIMARY KEY (id)
 );
 

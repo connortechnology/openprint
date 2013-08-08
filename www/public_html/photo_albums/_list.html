@@ -1,10 +1,10 @@
 <? echo (
 	my $html;
 	my @Albums = openprint::Photo_Album->find(
-		'order'=>'lower(name)',
-		( sets::isin( $session{'user_type'}, [ 'E','A' ] ) ? 
+		order=>'lower(name)',
+		( sets::isin( $session{user_type}, [ 'E','A' ] ) ? 
 			( $session{'/photo_albums/list.html?user_id'} ? ( 'user_id' => $session{'/photo_albums/list.html?user_id'} ) : () ) :
-			( 'user_id' => $session{'user_id'} )
+			( user_id => $session{'user_id'} )
 		),
 	);
 	my $num_albums = scalar @Albums;
@@ -13,7 +13,7 @@
 		my @Photos = $Album->Photos();
 		my $num_photos = scalar @Photos;
 		$html .= sprintf( q`<div class="PhotoAlbum"><a class="thumbnail" href="/photo_albums/view.html?album_id=%1$d"><img src="%2$s" alt="%3$s" /></a><a href="/photo_albums/view.html?album_id=%1$d"><span class="name">%3$s</span><span class="description">%4$s</span><span class="statistics">%5$s</a></div>`, 
-			$$Album{'id'}, $Album->thumbnail_url(), $Album->name(), $Album->description(),
+			$$Album{'id'}, $Album->sized_url( 'small' ), $Album->name(), $Album->description(),
 			( $num_photos . ' photo' . ($num_photos != 1 ? 's' : '') ),
 			);
 	} # end foreach Album

@@ -10,6 +10,8 @@ require sql;
 require logger;
 require openprint::Asset;
 use Getopt::Long;
+use File::Slurp;
+use Digest::MD5;
 
 use openprint ();
 use vars qw($log $dbh %config %session);
@@ -19,9 +21,9 @@ use vars qw($log $dbh %config %session);
 *session = \%openprint::session;
 
 my $program = 'video_assets.pl';
-$log = logger->new('warn');
+$log = logger->new('debug');
 my $opts = {};
-GetOptions($opts, 'help', 'db_name=s', 'db_host=s', 'db_user=s', 'db_pass=s','debug=s','daemon','AssetPath=s');
+GetOptions($opts, 'help', 'db_name=s', 'db_host=s', 'db_user=s', 'db_pass=s','debug=s','daemon', 'AssetPath=s', 'add=s');
 
 if ($opts->{help}) {
     usage();
@@ -50,6 +52,35 @@ die 'Error opening db' if ! $dbh;
 configuration::init();
 configuration::merge($opts);
 
+if ( $$opts{add} ) {
+	my $blob = File::Slurp::read_file($$opts{add});
+	my $md5 = Digest::MD5::md5_base64( $blob );
+    if ( ! $md5 ) {
+        return "Unable to MD5?";
+    #} else {
+        #$openprint::log->debug("MD5 was $md5");
+    } # end if
+    my $Asset = openprint::Asset->find_one( md5 => $md5 );
+	if ( ! $Asset ) {
+		$log->debug("Creating new asset");
+        $Asset = new openprint::Asset();
+        $_ = $Asset->save({ filename=>$$opts{add}, md5=>$md5 });
+        return $_ if $_;
+
+        if ( ! File::Slurp::write_file($Asset->on_disk_path(), { atomic => 1, err_mode=>'carp' }, $blob ) ) {
+            return 'There was an error saving file ' . $$opts{add}.' to ' . $Asset->on_disk_path() . ": $!<br/>";
+        } # end if
+
+        $_ = $Asset->save();
+        return $_ if $_;
+	} else {
+		if ( ! -e $Asset->on_disk_path() ) {
+        if ( ! File::Slurp::write_file($Asset->on_disk_path(), { atomic => 1, err_mode=>'carp' }, $blob ) ) {
+            return 'There was an error saving file ' . $$opts{add}.' to ' . $Asset->on_disk_path() . ": $!<br/>";
+        } # end if
+		} # end if
+	} # end if
+} # end if
 scan();
 
 if ( $$opts{daemon} ) {
@@ -105,7 +136,9 @@ Command-line options:
 
 	--db_pass	The password to use when connecting to the database.
 
-    --output    File to store the session count in.
+    --AssetPath    File to store the session count in.
+	
+	--add		File to import
 
 EOH
 }

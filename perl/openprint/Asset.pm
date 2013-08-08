@@ -112,13 +112,16 @@ sub sized_url {
 	my $size = $_[1];
 
 	my $src = $_[0]->on_disk_path();
-	my $path = $openprint::config{'AssetPath'}.'/'.$size.'/';
-	if ( $openprint::config{'AssetPath'} ) {
+	my $path = $openprint::config{AssetPath}.'/'.$size.'/';
+	if ( $openprint::config{AssetPath} ) {
 		if ( ! -e $path ) {
 			mkdir $path;
 			$openprint::log->error("Unable to create path $path: $!" );
 			return '/images/icons/file.png';
 		} # end if
+	} else {
+		$openprint::log->error("No Asssset Path");
+		return '/images/icons/file.png';
 	} # end if
 
 	my $filename = $_[0]->on_disk_filename();
@@ -178,6 +181,8 @@ sub sized_url {
 				} elsif ( $size eq 'large' ) {
 					$width = $openprint::config{'Large_Asset_Width'};
 				} elsif ( $size eq 'thumbnail' ) {
+					$width = $openprint::config{'Small_Asset_Width'};
+				} elsif ( $size eq 'small' ) {
 					$width = $openprint::config{'Small_Asset_Width'};
 				} elsif ( ! $size ) {
 					$size = 'full';
@@ -552,7 +557,6 @@ $openprint::log->debug("Calling video_url($type)");
 		$openprint::log->error("Called video_url on as asset that is not a video. " . $_[0]->to_string() );
 		return;
 	} # end if
-	my $dest = $path.$base.'.'.$type;
 	$self->generate_video( $type );
 	return '/assets/videos/'.$base.'.'.$type;
 } # end sub video_url
@@ -600,6 +604,8 @@ sub generate_video {
 		} else {
 			$openprint::log->error("Unknown type in video_url $type");
 		} # end if type
+	} else {
+		$openprint::log->debug("Asset::generate_video: Destination $dest already exists.");
 	} # end if ! -e $dest
 	close($lock);
 	unlink $dest.'.lck';

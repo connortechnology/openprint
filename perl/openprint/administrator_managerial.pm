@@ -42,7 +42,7 @@ sub configuration {
 
 	if ( $param{'btnFunction'} eq 'New' ) {
 		if ( sql::execute( $log, $dbh, 'SELECT * FROM Configuration WHERE name=? LIMIT 1', $param{'name'} ) ) {
-			sql::update( $log, $dbh, 'configuration', [ 'name', $param{'name'} ], {
+			sql::update( $log, $dbh, 'configuration', [ 'name=?', $param{'name'} ], {
 				'description'	=>	$param{'description'},
 				'type'			=>	$param{'type'},
 				'category'		=>	( $param{'new_category'} ? $param{'new_category'} : $param{'category'} ),
