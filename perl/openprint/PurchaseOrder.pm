@@ -23,7 +23,7 @@ require openprint::PurchaseOrder_Tax;
 require openprint::Email;
 require openprint::Manifest;
 
-$debug = 1;
+$debug = 0;
 
 $table = 'purchaseorders';
 $serial = 'purchaseorders_id_seq';
@@ -498,7 +498,7 @@ sub can_edit {
 	foreach my $C ( $_[0]->Contents() ) {
 		my @contains = sets::contains( [ $$User{id}, $User->assistant_ids(), $User->csr_ids() ], [ map { $_->salesrep_id() } $C->Orders() ] );
 		if ( @contains ) {
-			$log->debug("can see because @contains in order salesreps");
+			$log->debug("can see because @contains in order salesreps") if $debug;
 			return 1;
 		} # end if
 	} # end foreach C
@@ -525,14 +525,14 @@ sub can_view {
 	foreach my $C ( $_[0]->Contents() ) {
 		my @contains = sets::contains( [ $$User{id}, $User->assistant_ids(), $User->csr_ids() ], [ map { $_->salesrep_id() } $C->Orders() ] );
 		if ( @contains ) {
-			$log->debug("can see because @contains in order salesreps");
+			$log->debug("can see because @contains in order salesreps") if $debug;
 			return 1;
 		} # end if
 	} # end foreach C
 
 	if ( $_[0]->notifications() ) {
 		if ( sets::isin( $$User{id}, $_[0]->notifications() ) ) {
-			$log->debug($$User{firstname} . ' can see because in notifications.' );
+			$log->debug($$User{firstname} . ' can see because in notifications.' ) if $debug;
 			return 1;
 		} # end if
 	} # end if
@@ -566,21 +566,21 @@ sub can_authorize {
 # Can we assume that we can view it?
 sub can_see_pricing {
 	if ( ! $_[0]{id} ) {
-		$log->debug("Ccan see because new PO");
+		$log->debug("Ccan see because new PO") if $debug;
 		return 1;
 	} # end if
 
 	my $User = new openprint::User( $openprint::session{user_id} );
 	
 	if ( ( $$User{id} == $_[0]->created_by() ) or ( $$User{type} eq 'A' ) or openprint::usergroup::is_user_in( ['Accounting','SalesAdmin','InventoryManager'], $$User{id} ) ) {
-$log->debug('can see');
+$log->debug('can see') if $debug;
 		return 1;
 	} # end if
 
 	if ( $_[1] ) {
 		my @contains = sets::contains( [ $$User{id}, $User->assistant_ids(), $User->csr_ids() ], [ map { $_->salesrep_id() } $_[1]->Orders() ] );
 		if ( @contains ) {
-			$log->debug("can see pricing because @contains in orders");
+			$log->debug("can see pricing because @contains in orders") if $debug;
 			return 1;
 		} # end if
 	} else {
@@ -588,14 +588,14 @@ $log->debug('can see');
 
 			my @contains = sets::contains( [ $$User{id}, $User->assistant_ids(), $User->csr_ids() ], [ map { $_->salesrep_id() } $C->Orders() ] );
 			if ( @contains ) {
-				$log->debug("can see pricing because @contains in orders");
+				$log->debug("can see pricing because @contains in orders") if $debug;
 				return 1;
 			} # end if
 		} # end foreach C
 	} # end if
 	if ( $_[0]->notifications() ) {
 		if ( sets::isin( $$User{id}, $_[0]->notifications() ) ) {
-			$log->debug($$User{firstname} . ' can see because in notifications.' );
+			$log->debug($$User{firstname} . ' can see because in notifications.' ) if $debug;
 			return 1;
 		} # end if
 	} # end if

@@ -42,6 +42,7 @@
 			next if $session{'/employee/purchase_order/history.html?authorized'} eq 'N' and $PO->authorized() ne '0';
 			next if $session{'/employee/purchase_order/history.html?authorized'} eq 'U' and $PO->authorized() ne '';
 			next if $session{'/employee/purchase_order/history.html?vendor_category_id'} and $PO->Supplier()->category_id() != $session{'/employee/purchase_order/history.html?vendor_category_id'};
+			next if ! $PO->can_view();
 
 			if ( $session{'/employee/purchase_order/history.html?docket'} ) {
 				my $next = 1;
@@ -89,6 +90,9 @@
 <? if ( @{$$variable{'PurchaseOrders'}} == 0 ) ?>
 	There are no purchase orders matching your search criteria.
 <? else ( @{$$variable{'PurchaseOrders'}} == 0 ) ?>
+	<? if ( @{$$variable{'PurchaseOrders'}} > 1000 ) ?>
+	<div class="warning">There are a large # of results being returned.  It may take a moment to display them.  You may wish to adjust your filters to return fewer results.	</div>
+	<? endif ( @{$$variable{'PurchaseOrders'}} > 1000 ) ?>
 	<p>Please click on a <b>Purchase Order #</b> to view details.</p>
 <table class="List sortable">
 	<tr>
@@ -110,7 +114,6 @@
 		my $Currency = openprint::Currency::get_current();
 		my $ac = sql::start_transaction( $dbh );
 		foreach my $PO ( @{$$variable{'PurchaseOrders'}} ) {
-			next if ! $PO->can_view();
 			$html .= sprintf(q`<tr id="tr-%1$d" class="%2$s">`, $PO->id(), ( ( ! $PO->authorized ) and $PO->can_authorize() ) ? 'unauthorized' : 'authorized' );
 			if ( $session{'user_type'} eq 'A' ) {
 				$html .= '<td class="checkbox"><input type="checkbox" name="po_id" value="'.$PO->id().'"/></td>';
