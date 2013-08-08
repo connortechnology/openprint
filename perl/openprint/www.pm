@@ -204,15 +204,7 @@ $log->debug("Redirecting to " . $variable{'ExternalRedirect'} );
 		} # end if
 	} # end if
 
-	$session{'lastupdated'} = time;
-	untie %session;
-	$dbh->disconnect() if $dbh;
 	$log->debug( "Elapsed seconds: " . ( time - $starttime ) );
-	# Clear all the caches AFTER we send the data to client!  This is really smart.
-	openprint::service::init_cache();
-	openprint::pricing::clear_cache();
-	openprint::Object::init_cache();
-$log->debug("returningprint " . ( time - $starttime ) );
 	return Apache2::Const::OK;
 } # end sub handler
 
