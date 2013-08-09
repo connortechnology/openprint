@@ -53,33 +53,7 @@ configuration::init();
 configuration::merge($opts);
 
 if ( $$opts{add} ) {
-	my $blob = File::Slurp::read_file($$opts{add});
-	my $md5 = Digest::MD5::md5_base64( $blob );
-    if ( ! $md5 ) {
-        return "Unable to MD5?";
-    #} else {
-        #$openprint::log->debug("MD5 was $md5");
-    } # end if
-    my $Asset = openprint::Asset->find_one( md5 => $md5 );
-	if ( ! $Asset ) {
-		$log->debug("Creating new asset");
-        $Asset = new openprint::Asset();
-        $_ = $Asset->save({ filename=>$$opts{add}, md5=>$md5 });
-        return $_ if $_;
-
-        if ( ! File::Slurp::write_file($Asset->on_disk_path(), { atomic => 1, err_mode=>'carp' }, $blob ) ) {
-            return 'There was an error saving file ' . $$opts{add}.' to ' . $Asset->on_disk_path() . ": $!<br/>";
-        } # end if
-
-        $_ = $Asset->save();
-        return $_ if $_;
-	} else {
-		if ( ! -e $Asset->on_disk_path() ) {
-        if ( ! File::Slurp::write_file($Asset->on_disk_path(), { atomic => 1, err_mode=>'carp' }, $blob ) ) {
-            return 'There was an error saving file ' . $$opts{add}.' to ' . $Asset->on_disk_path() . ": $!<br/>";
-        } # end if
-		} # end if
-	} # end if
+	add( $$opts{add} );
 } # end if
 scan();
 
@@ -115,6 +89,37 @@ sub scan {
 		} # end foreach $type
 	} # end foreach Asset
 } # end sub scan
+sub add {
+	if ( -d $_[0] ) {
+		
+	} else {
+		my $blob = File::Slurp::read_file($_[0] );
+		my $md5 = Digest::MD5::md5_base64( $blob );
+		if ( ! $md5 ) {
+			return "Unable to MD5?";
+		} # end if
+		my $Asset = openprint::Asset->find_one( md5 => $md5 );
+		if ( ! $Asset ) {
+			$log->debug("Creating new asset");
+			$Asset = new openprint::Asset();
+			$_ = $Asset->save({ filename=>$_[0], md5=>$md5 });
+			return $_ if $_;
+
+			if ( ! File::Slurp::write_file($Asset->on_disk_path(), { atomic => 1, err_mode=>'carp' }, $blob ) ) {
+				return 'There was an error saving file ' . $_[0].' to ' . $Asset->on_disk_path() . ": $!<br/>";
+			} # end if
+
+			$_ = $Asset->save();
+			return $_ if $_;
+		} else {
+			if ( ! -e $Asset->on_disk_path() ) {
+				if ( ! File::Slurp::write_file($Asset->on_disk_path(), { atomic => 1, err_mode=>'carp' }, $blob ) ) {
+					return 'There was an error saving file ' . $_[0].' to ' . $Asset->on_disk_path() . ": $!<br/>";
+				} # end if
+			} # end if
+		} # end if
+	} # end if
+}
 
 sub usage {
 	print <<EOH;
