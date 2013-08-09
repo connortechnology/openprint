@@ -4137,9 +4137,9 @@ $openprint::log->debug("No Coverage for grade $grade Press: $$Press{strid}");
 	my $total_overs = $additional_overs;
 
 	if ( $Press->specification('Overs') ne 'All' ) {
-		$total_overs = ceil( ( $setup_overs > $run_overs ) ? $setup_overs : $run_overs );
+		$total_overs += ceil( ( $setup_overs > $run_overs ) ? $setup_overs : $run_overs );
 	} else {
-		$total_overs = ceil( $run_overs + $setup_overs );
+		$total_overs += ceil( $run_overs + $setup_overs );
 	} # end if
 	$total_overs += ( $bindery_overs - $total_overs ) if $bindery_overs > $total_overs;
 

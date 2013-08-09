@@ -1249,7 +1249,10 @@ $openprint::log->debug("Runspeed: $fold_type(".$Fold->name().") : " . $Equipment
 
 	foreach my $key ( @keys ) {
 		my ( $fold_type, $imposition ) = $key =~ /(.*)-(\d+)out$/;
-		#next if ! $imposition;
+		if ( ! $imposition ) {
+			$openprint::log->error( "No imposition for $key");
+			next;
+		} # end if
 #$openprint::log->debug("$fold_type-Qty-$$sig_specs{'SignatureIndex'}-$qty_index $imposition: " . scalar @{$$bestFolds{$key}} );
 		my $Fold = $$bestFolds{$key}[0];
 
