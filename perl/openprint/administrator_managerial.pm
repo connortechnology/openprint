@@ -479,7 +479,8 @@ sub company_profiles {
 			my $ac = sql::start_transaction( $dbh );
 			my $Company = new openprint::Company( $index );
 			foreach my $type ( 'User','Order','Quote','Project', 'Claim', 'Log','Timetrack' ) {
-				foreach ( "openprint::$type"->find('company_id'=>$param{'merge_company_id'}) ) {
+				require "openprint/$type.pm";
+				foreach ( "openprint::$type"->find( company_id=>$param{'merge_company_id'}) ) {
 					$_->save({'company_id'=>$Company->id()});
 				} # end foreach
 			} # end foreach type

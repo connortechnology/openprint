@@ -15,7 +15,7 @@
 			<select name="search_type" onchange="f1.btnFunction.value='Go';this.form.submit();">
 				<? echo ( 
 					my @options = ('All','Suppliers', 'Resellers', 'Customers');
-					return ssi::make_drop_down( [ map { $_, $_ } @options ], $param{'search_type'} );	
+					return make_drop_down( [ map { $_, $_ } @options ], $param{'search_type'} );	
 				) ?>
 			</select>
 		</li>
@@ -24,11 +24,11 @@
 			<label>Sales Rep</label>
 			<select name="search_salesrep_id" onchange="f1.btnFunction.value='Go';this.form.submit();">
 				<option value=""> All </option>
-				<? echo ( return ssi::make_drop_down( [ map { $_->id(),$_->name() } @{$$variable{'SalesReps'}} ], $param{'search_salesrep_id'} ); ) ?>
+				<? echo ( make_drop_down( [ map { $_->id(),$_->name() } @{$$variable{'SalesReps'}} ], $param{'search_salesrep_id'} ); ) ?>
 			</select>
 		</li>
 <? endif ( @{$$variable{'SalesReps'}} = openprint::User->find('id'=>[sql::execute( undef, undef, 'SELECT DISTINCT salesrep_id FROM companies')],'deleted'=>[0,1],'order'=>'lower(firstname),lower(lastname)') ) ?>
-		<li><label>Deleted?</label><? echo ( ssi::radio( 'deleted', [ '1','Yes', '0', 'No', '', 'Both' ], $param{'deleted'}, {onclick=>"f1.ddmCustomer.selectedIndex=-1;f1.btnFunction.value='Go';f1.submit();"} ); ) ?></li>
+		<li><label>Deleted?</label><? echo ( radio( 'deleted', [ '1','Yes', '0', 'No', '', 'Both' ], $param{'deleted'}, {onclick=>"f1.ddmCustomer.selectedIndex=-1;f1.btnFunction.value='Go';f1.submit();"} ); ) ?></li>
 		<li> 
 			<label>Company</label>
 			<input type="text" onkeyup="filterDDM(this, this.form.ddmCustomer);" onkeydown="if(event.keyCode == 13){f1.btnFunction.value='Go';this.form.submit();}" class="filter" />
@@ -53,7 +53,7 @@
 						unshift @Companies, new openprint::Company( $param{'ddmCustomer'} );
 					} # end if
 
-					return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Company->find( %params ) ], $$variable{'CustomerIndex'} );
+					return make_drop_down( [ map { $_->id(), $_->name() } openprint::Company->find( %params ) ], $$variable{'CustomerIndex'} );
 				) ?>
 			</select>
 			<? echo ( button( 'Go2', { onclick=>"f1.btnFunction.value='Go';fmCheck(f1);", text=>'Go' } ); ) ?>
@@ -82,7 +82,7 @@
 					$html .= '<br/>';
 					$html .= button( 'Merge', { onclick=>"f1.btnFunction.value='merge';f1.submit();" } );
 					$html .= '<select name="merge_company_id"><option value=""> none </option>';
-					$html .= ssi::make_drop_down( [ map { $_->id(), $_->name() } @{$$variable{'Companies'}} ], $$variable{'CustomerIndex'} );
+					$html .= make_drop_down( [ map { $_->id(), $_->name() } map { $_->id() == $$variable{CustomerIndex} ? () : $_ } @{$$variable{'Companies'}} ], $$variable{'CustomerIndex'} );
 					$html .= '</select>';
 				} # end if
 				return $html;

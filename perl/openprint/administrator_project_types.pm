@@ -257,6 +257,7 @@ sub templates {
 				} # end if
 			} # for each
 			sql::end_transaction( $dbh, $ac );
+			$variable{ExternalRedirect} = '/administrator/project_types/templates.html?ddmProjectType='.$param{'ddmProjectType'};
 			
 		} else {
 			$log->warn( "No file given to upload." );
