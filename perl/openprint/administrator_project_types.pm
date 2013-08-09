@@ -221,7 +221,7 @@ sub templates {
 
 			while ( <$io> ) {
 				my $status = $csv->parse($_);
-				my ( $projecttype_id, $id, $name, $desc, $fwidth, $fheight, $width, $height );
+				my ( $projecttype_id, $id, $type, $name, $desc, $fwidth, $fheight, $width, $height );
 				my @data = misc::trim( $csv->fields() );
 				if ( @data == 8 ) {
 					( $id, $type, $name, $desc, $fwidth, $fheight, $width, $height ) = @data;
