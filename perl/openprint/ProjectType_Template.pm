@@ -14,6 +14,7 @@ $serial = 'projecttemplate_id_seq';
 	id				=>	'id',
 	projecttype_id	=>	'projecttype_id',
 	type			=>	'type',
+	name			=>	'name',
 	description		=>	'description',
 	finished_width	=>	'dblfinishedwidth',
 	finished_height	=>	'dblfinishedheight',
@@ -35,6 +36,7 @@ $serial = 'projecttemplate_id_seq';
     type => [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
     description => [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
     message => [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
+    name => [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
 );
 
 %defaults = (

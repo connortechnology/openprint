@@ -20,9 +20,7 @@ use vars qw( $log $dbh %config );
 
 $log = new logger( 'debug' );
 
-my ( $src_db, $dst_db, $path ) = @ARGV;
-$src_db = 'point-one' if ! $src_db;
-$dst_db = 'point-one' if ! $dst_db;
+my $dst_db = 'point-one' if ! $dst_db;
 
 $dbh = sql::open_sql( $log, ('database'=>$dst_db, 'driver'=>'Pg','login'=>'point-one', 'password'=>'point-one') );
 configuration::init( $log, $dbh );
@@ -30,9 +28,32 @@ configuration::init( $log, $dbh );
 my $BrochureType = openprint::ProjectType->find_one('name'=>'Brochures');
 if ( $BrochureType ) {
 	foreach my $PT ( openprint::ProjectType_Template->find( 'projecttype_id'=>$BrochureType->id(), 'type'=>'8PageSignatureFold') ) {
-		$_ = $PT->save({'type'=>'8PageFold'});
+		$_ = $PT->save({'type'=>'8 Page Fold'});
 		$log->error($_) if $_;
 	}
+	sql::update( undef, undef, 'tbl_service_specifications', [ 'name=?', '8PageSignatureFold' ], 'value', '8 Page Fold' );
+
+	my %templates = (
+		'NoFold' => 'No Fold',
+		'2PanelFold' => '2 Panel Fold',
+		'3PanelFold' => '3 Panel Fold',
+		'3PanelZFold' => '3 Panel Z Fold',
+		'4PanelFold' => '4 Panel Fold',
+		'4PanelZFold' => '4 Panel Z Fold',
+		'5PanelFold' => '5 Panel Fold',
+		'5PanelZFold' => '5 Panel Z Fold',
+		'6PanelFold' => '6 Panel Fold',
+		'6PanelZFold' => '6 Panel Z Fold',
+		'8PageFold' => '8 Page Fold',
+		'12pg3PanelRollFold' => '12pg 3 Panel Roll',
+		'12pg3PanelZFold' => '12pg 3 Panel Z',
+		'DoubleGateFold' => 'Double Gate Fold',
+		'SingleGateFold' => 'Single Gate Fold',
+	);
+	foreach my $key ( keys %templates ) {
+		sql::update( $log, undef, 'projecttemplate', [ 'type=?', $key ], 'name', $templates{$key} );
+	}
+
 } else {
 	$log->error("No Brochures");
 	die;

@@ -2901,6 +2901,10 @@ if ( ! sets::isin( 'projecttemplate', \@tables ) ) {
 	if ( ! exists $$data{message} ) {
 		$dbh->do('ALTER TABLE projecttemplate ADD message TEXT');
 	}
+	if ( ! exists $$data{name} ) {
+		$dbh->do('ALTER TABLE projecttemplate ADD name TEXT');
+		$dbh->do('UPDATE projecttemplate set name=type');
+	}
 } # end if
 if ( ! sets::isin( 'hosts', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/Hosts.sql}) );

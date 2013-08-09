@@ -2,22 +2,23 @@
 	<fieldset class="filters"><legend>Search Information</legend>
 		<div class="content">
 			<ul>
+<? if ( $$variable{categories} = openprint::ProjectTypeCategory->dropdown(order=>'lower(name)') && @{$$variable{Categories}} ) ?>
 				<li>
 					<label>Category</label>
 					<select name="search_category_id" id="search_category_id" onchange="this.form.btnFunction.value='';this.form.submit();">
 						<option value=""> All </option>
 						<? echo ( 
-								ssi::make_drop_down( openprint::ProjectTypeCategory->dropdown(order=>'lower(name)'), $param{search_category_id} );
+								make_drop_down( $$variable{Categories}, $param{search_category_id} );
 								) ?>
 					</select>
-				
 				</li>
+<? endif ( $$variable{categories} = openprint::ProjectTypeCategory->dropdown(order=>'lower(name)') && @{$$variable{Categories}} ) ?>
 				<li>
 					<label>Project Type</label>
 					<select name="ddmProjectType" onchange="this.form.btnFunction.value='';f1.submit();">
 						<option value="">select one</option>
 						<? echo ( 
-								ssi::make_drop_down( [ map { $_->id(), $_->description() } openprint::ProjectType->find( order=>'lower(description)',
+								make_drop_down( [ map { $_->id(), $_->description() } openprint::ProjectType->find( order=>'lower(description)',
 								( $param{'search_category_id'} ? ( category_id => $param{'search_category_id'} ) : () ),
 								) ], $$variable{ProjectType}->id() );
 								) ?>
@@ -27,21 +28,21 @@
 		</div>
 		<p class="buttons">
 			<? echo ( join('',
-					ssi::button( 'Prev1', { onclick=>"f1.action='edit.html';f1.btnFunction.value='Previous';fmCheck(f1);", href=>'', text=>'&lt;&lt;' } ),
-					ssi::button( 'Next1', { onclick=>"f1.action='edit.html';f1.btnFunction.value='Next';fmCheck(f1);", href=>'', text=>'&gt;&gt;' } ),
-					ssi::button( 'New1', { onclick=>"f1.action='edit.html';addCheck(f1);", href=>'', text=>'New' } ),
-					ssi::button( 'Delete1', { onclick=>"f1.action='edit.html';f1.btnFunction.value='Delete';fmChange=2;fmCheck(f1);", href=>'', text=>'Delete' } ),
-					ssi::button( 'Save1', { onclick=>"f1.action='edit.html';f1.btnFunction.value='Save';fmChange=3;fmCheck(f1);", href=>'', text=>'Save' } ),
-					ssi::button( 'Copy1', { onclick=>"f1.action='edit.html';f1.btnFunction.value='Copy';fmChange=3;fmCheck(f1);", href=>'', text=>'Copy' } ),
-					ssi::button( 'Reset1', { onclick=>"f1.action='edit.html';f1.reset();", href=>'', text=>'Reset' } ),
+					button( 'Prev1', { onclick=>"f1.action='edit.html';f1.btnFunction.value='Previous';fmCheck(f1);", href=>'', text=>'&lt;&lt;' } ),
+					button( 'Next1', { onclick=>"f1.action='edit.html';f1.btnFunction.value='Next';fmCheck(f1);", href=>'', text=>'&gt;&gt;' } ),
+					button( 'New1', { onclick=>"f1.action='edit.html';addCheck(f1);", href=>'', text=>'New' } ),
+					button( 'Delete1', { onclick=>"f1.action='edit.html';f1.btnFunction.value='Delete';fmChange=2;fmCheck(f1);", href=>'', text=>'Delete' } ),
+					button( 'Save1', { onclick=>"f1.action='edit.html';f1.btnFunction.value='Save';fmChange=3;fmCheck(f1);", href=>'', text=>'Save' } ),
+					button( 'Copy1', { onclick=>"f1.action='edit.html';f1.btnFunction.value='Copy';fmChange=3;fmCheck(f1);", href=>'', text=>'Copy' } ),
+					button( 'Reset1', { onclick=>"f1.action='edit.html';f1.reset();", href=>'', text=>'Reset' } ),
 	); ) ?>
 		</p>
 		<p class="buttons">
 			<b>CSV File</b>
 			<input type="file" name="fileImport" />
 <? echo ( join('',
-			ssi::button( 'Import', { onclick=>"f1.btnFunction.value='Import';f1.action='edit.html';f1.submit();", href=>'', text=>'Import' } ),
-			ssi::button( 'Export', { onclick=>"f1.btnFunction.value='Export';f1.action='edit.html?Download';f1.submit();", href=>'', text=>'Export' } ),
+			button( 'Import', { onclick=>"f1.btnFunction.value='Import';f1.action='edit.html';f1.submit();", href=>'', text=>'Import' } ),
+			button( 'Export', { onclick=>"f1.btnFunction.value='Export';f1.action='edit.html?Download';f1.submit();", href=>'', text=>'Export' } ),
 ); ) ?>
 		</p>
 	</fieldset>
@@ -60,7 +61,7 @@
 			<select id="category_id" name="category_id">
 				<option value=""> none </option>
 				<? echo (
-					ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::ProjectTypeCategory->find('order'=>'lower(name)') ], $$variable{'ProjectType'}->category_id() );
+					make_drop_down( [ map { $_->id(), $_->name() } openprint::ProjectTypeCategory->find('order'=>'lower(name)') ], $$variable{'ProjectType'}->category_id() );
 			) ?>
 			</select>
 		</li>
@@ -80,9 +81,9 @@
 		</li>
 		<li> 
 			<label>Show please call</label>
-			<input type="radio" id="please_call1" name="please_call" value="1" <? echo ( ssi::checked( $$variable{'ProjectType'}->please_call() ); ) ?>" />
+			<input type="radio" id="please_call1" name="please_call" value="1" <? echo ( checked( $$variable{'ProjectType'}->please_call() ); ) ?>" />
 			<label for="please_call1" class="radio">Yes</label>
-			<input type="radio" id="please_call0" name="please_call" value="0" <? echo ( ssi::checked( ! $$variable{'ProjectType'}->please_call() ); ) ?>" />
+			<input type="radio" id="please_call0" name="please_call" value="0" <? echo ( checked( ! $$variable{'ProjectType'}->please_call() ); ) ?>" />
 			<label for="please_call0" class="radio">No</label>
 		</li>
 		</ul>
@@ -92,7 +93,7 @@
 		<legend>Required Services</legend>
 		<ul> 
 <? echo (
-		return ssi::checkboxes('required_services', 
+		return checkboxes('required_services', 
 			[ map { $_->id(), $_->description() } openprint::ServiceType->find('order'=>'lower(name)') ],
 			[ $$variable{'ProjectType'}->required_services() ],
 			{ container=>['<li>','</li>'] }
@@ -105,8 +106,8 @@
 		<p> 
 			<select multiple="multiple" id="blocked_services" name="blocked_services" size="4">
 <? echo (
-		return ssi::make_drop_down(
-			[ map { $_->id(), $_->name() } openprint::ServiceType->find( order=>'lower(name)') ],
+		return make_drop_down(
+			openprint::ServiceType->dropdown( order=>'lower(name)'),
 			[ $$variable{ProjectType}->blocked_services() ]
 			);
 ) ?>
@@ -117,7 +118,7 @@
 <? if ( $$variable{'ProjectType'}->id() ) ?>
 	<fieldset><legend>Paper Recommendations</legend>
 		<div id="PaperRecommendations">
-			<? echo ( include('_paper_recommendations.html'); ) ?>
+			<?include('_paper_recommendations.html')?>
 		</div>	
 	</fieldset>
 <? endif ( $$variable{'ProjectType'}->id() ) ?>
