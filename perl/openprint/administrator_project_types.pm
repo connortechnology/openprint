@@ -263,11 +263,12 @@ sub templates {
 		} # end if
 	} elsif ( $param{'btnFunction'} eq 'Export Templates' ) {
 		if ( $param{'ddmProjectType'} ) {
-			my ($name) = sql::execute( $log, $dbh, q{SELECT strid FROM project_types WHERE lngIndex=?}, $param{'ddmProjectType'} );
+			my $ProjectType = new openprint::ProjectType( $param{ddmProjectType} );
+
 			my @header = ( 'Template Type', 'Name', 'Description', 'Finished Width', 'Finished Height', 'Flat Width','Flat Height' );
 			$_ = q{SELECT Type, Name, Description, dblFinishedWidth, dblFinishedHeight, dblFlatWidth, dblFlatHeight FROM ProjectTemplate WHERE projecttype_id=? ORDER BY Type};
 			my @data = sql::execute( $log, $dbh, $_, $param{'ddmProjectType'} );
-			misc::export_csv( $r, $log, \%variable, "Project Templates - $name.csv", \@header, \@data );
+			misc::export_csv( $r, $log, \%variable, "Project Templates - $$ProjectType{name}.csv", \@header, \@data );
 		} else {
 			my @header = ( 'Project Type', 'Template Type', 'Name','Description', 'Finished Width', 'Finished Height', 'Flat Width','Flat Height' );
 			$_ = q{SELECT (SELECT name FROM Project_Types WHERE id=ProjectType_id) AS ProjectType, Type, Name, Description, dblFinishedWidth, dblFinishedHeight, dblFlatWidth, dblFlatHeight FROM ProjectTemplate ORDER BY ProjectType,Type};
