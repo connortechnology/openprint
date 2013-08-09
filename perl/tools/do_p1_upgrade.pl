@@ -20,7 +20,7 @@ use vars qw( $log $dbh %config );
 
 $log = new logger( 'debug' );
 
-my $dst_db = 'point-one' if ! $dst_db;
+my $dst_db = 'point-one';
 
 $dbh = sql::open_sql( $log, ('database'=>$dst_db, 'driver'=>'Pg','login'=>'point-one', 'password'=>'point-one') );
 configuration::init( $log, $dbh );
@@ -49,6 +49,7 @@ if ( $BrochureType ) {
 		'12pg3PanelZFold' => '12pg 3 Panel Z',
 		'DoubleGateFold' => 'Double Gate Fold',
 		'SingleGateFold' => 'Single Gate Fold',
+		'AdditionalFoldTypes'	=>	'Additional Fold Types',
 	);
 	foreach my $key ( keys %templates ) {
 		sql::update( $log, undef, 'projecttemplate', [ 'type=?', $key ], 'name', $templates{$key} );
