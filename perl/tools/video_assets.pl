@@ -91,6 +91,19 @@ sub scan {
 } # end sub scan
 sub add {
 	if ( -d $_[0] ) {
+		my @filenames;
+		if ( opendir DIRHANDLE, $_[0] ) {
+			@filenames = readdir DIRHANDLE;
+			closedir DIRHANDLE;
+		} else {
+			$log->error( "Cannot open $_[0]" );
+			return;
+		} # end if
+		foreach my $file ( @filenames ) {
+			next if $file =~ /^\./;
+			add( $_[0].'/'.$file );
+		} # end foreach
+
 		
 	} else {
 		my $blob = File::Slurp::read_file($_[0] );
@@ -102,7 +115,9 @@ sub add {
 		if ( ! $Asset ) {
 			$log->debug("Creating new asset");
 			$Asset = new openprint::Asset();
-			$_ = $Asset->save({ filename=>$_[0], md5=>$md5 });
+
+			my $filename = basename($_[0]);
+			$_ = $Asset->save({ filename=>$filename, md5=>$md5, name=>$filename });
 			return $_ if $_;
 
 			if ( ! File::Slurp::write_file($Asset->on_disk_path(), { atomic => 1, err_mode=>'carp' }, $blob ) ) {
@@ -119,7 +134,7 @@ sub add {
 			} # end if
 		} # end if
 	} # end if
-}
+} # end sub add
 
 sub usage {
 	print <<EOH;
