@@ -580,8 +580,7 @@ sub rfidtag_id {
 		my $rfidtag_id = $_[1];
 		if ( $rfidtag_id ) {
 			my $RFIDTag = new openprint::RFIDTag( $rfidtag_id );
-			my $error = $RFIDTag->set({id=>$rfidtag_id}) if ! $RFIDTag->id();
-			$log->error( $error ) if $error;
+			$RFIDTag->set({id=>$rfidtag_id}) if ! $RFIDTag->id();
 		} # end if
 		$_[0]{rfidtag_id} = $rfidtag_id;
 	} # end if
