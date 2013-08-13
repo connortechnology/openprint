@@ -44,7 +44,7 @@ sub do_new_substitution {
 			} # end while
 			return $replacement_text . variable_substitution( $r, $log, $dbh, \$end, $variable );
 		} else {
-			$log->debug("Unable to find terminating while ($$command)");
+			$log->error("Unable to find terminating while ($$command)");
 			return variable_substitution( $r, $log, $dbh, $text, $variable );
 		} # end if
 	} elsif ( $$command =~ /^if\s*\(\s*(.*)\s*\)/ ) {
@@ -69,7 +69,7 @@ sub do_new_substitution {
 			} # end if
 			return $replacement_text . variable_substitution( $r, $log, $dbh, \$end, $variable );
 		} else {
-			$log->debug("Unable to find terminating if ( $$command )");
+			$log->error("Unable to find terminating if ( $$command )");
 			return variable_substitution( $r, $log, $dbh, $text, $variable );
 		} # end if
 	} elsif ( $$command =~ /pop\s*\((.*)\)\s*=\s*([\%\w]*)/i ) {

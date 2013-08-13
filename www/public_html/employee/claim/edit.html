@@ -232,6 +232,7 @@ function set_description(index) {
 		<br class="spacer"/>
 		<? if ( $$variable{Claim}->id() ) ?>
 		<div id="Contents"><?include(_contents.html)?></div>
+		<? endif ( $$variable{Claim}->id() ) ?>
 <table class="List">
     <tr class="subtotal">
 		<td class="RemarksTitle" rowspan="<? echo ( $$variable{'Claim'}->Taxes() + 2 ) ?>">
