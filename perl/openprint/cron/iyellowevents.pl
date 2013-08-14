@@ -56,7 +56,7 @@ my $program = basename($0);
 my @args = @ARGV;
 
 my $opts = {};
-GetOptions($opts, 'help', 'log_file=s', 'log_level=s',
+GetOptions($opts, 'help', 'log_file=s', 'log_level=s', 'config=s',
 	'db_name=s', 'db_host=s', 'db_user=s', 'db_pass=s',
  );
 
@@ -65,8 +65,8 @@ if ($opts->{help}) {
 	exit 0;
 }
 
-$$opts{config} = '/etc/openprint/pleasurablethings.conf';
-$log = new logger( { level=>'debug'});
+$$opts{config} = '/etc/openprint/pleasurablethings.conf' if ! $$opts{config};
+$log = new logger( { level=>'debug'} );
 # Get our configuration information
 configuration::from_file($$opts{config});
 configuration::merge( $opts );
