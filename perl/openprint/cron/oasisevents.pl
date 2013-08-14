@@ -26,6 +26,7 @@ require openprint::Event;
 require openprint::Location;
 require openprint::Asset;
 require Date::Calc;
+require openprint::Log;
 
 use vars qw( $log $dbh %config );
 *log = \$openprint::log;

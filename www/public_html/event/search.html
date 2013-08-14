@@ -39,7 +39,7 @@
 					<li><label>Type</label>
 						<select name="category_id" id="category_id" onchange="load_events(this.form);">
 							<option value="">All</option>
-							<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } @{$$variable{'Categories'}} ], $session{'/event/search.html?category_id'} ); ) ?>
+							<? echo ( make_drop_down( [ map { $_->id(), $_->name() } @{$$variable{Categories}} ], $session{'/event/search.html?category_id'} ); ) ?>
 						</select>
 					</li>
 		<? endif ( @{$$variable{'Categories'}} = openprint::Event_Category->find('order'=>'lower(name)') ) ?>
@@ -54,7 +54,7 @@
 					</li>
 <? if ( $session{user_id} ) ?>
 					<li><label>Created By</label>
-						<? echo ( ssi::select( openprint::Company->dropdown(), $session{'/event/search.html?company_id'}, { name=>'company_id', onclick=>'load_events(this.form);' } ); ) ?>
+						<? echo ( ssi::select( openprint::Company->dropdown(), $session{'/event/search.html?company_id'}, { name=>'company_id', onclick=>'load_events(this.form);', prepend=>['','All'] } ); ) ?>
 		
 					</li>
 <? endif ( $session{user_id} ) ?>
