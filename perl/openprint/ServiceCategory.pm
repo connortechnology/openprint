@@ -19,6 +19,8 @@ $serial = 'Service_Categories_id_seq';
 );
 
 sub find_one {
+	shift @_ if $_[0] eq 'openprint::ServiceCategory';
+	shift @_ if ref $_[0] eq 'openprint::ServiceCategory';
     my @results = find( @_, 'limit', 1 );
     if ( @results > 1 ) {
         $openprint::log->error('ServiceCate::find_one more than 1 result!');

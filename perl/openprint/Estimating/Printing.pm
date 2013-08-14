@@ -322,12 +322,38 @@ sub setup_project {
 			'Calliper',			$$specs{'txtSpecificStockCalliper'},
 			'CropMarkSpace',	$$specs{'txtCropMarkSpace'},
 			);
+
+    my $CoatingsCategory = openprint::ServiceCategory->find_one( name => 'Coating' );
+    my %coatings = map { $_->name(), 1 } $CoatingsCategory->Services() if $CoatingsCategory;
+$log->debug("Coatings: " . join( ',', keys %coatings ) );
+
+    $project{'side_one_colours'} = [];
+    $project{'side_one_coatings'} = [];
+    foreach my $c ( @$side_one_colours ) {
+        if ( $coatings{$c} and ! ( $c =~ /Varnish/i ) ) {
+            push @{$project{'side_one_coatings'}}, $c;
+        } else {
+            push @{$project{'side_one_colours'}}, $c;
+        } # end if
+    } # end foreach
+    $project{'side_two_colours'} = [];
+    $project{'side_two_coatings'} = [];
+    foreach my $c ( @$side_two_colours ) {
+        if ( $coatings{$c} and ! ( $c =~ /Varnish/i ) ) {
+            push @{$project{'side_two_coatings'}}, $c;
+        } else {
+            push @{$project{'side_two_colours'}}, $c;
+        } # end if
+    } # end foreach
+
+    $project{'combined_colours'} = [ @{$project{'side_one_colours'}}, @{$project{'side_two_colours'}} ];
+    $project{'combined_coatings'} = [ @{$project{'side_one_coatings'}}, @{$project{'side_two_coatings'}} ];
+
 	$project{print_sides} = 1;
-	if ( ( @$side_two_colours > 0 ) and ( @$side_one_colours > 0 ) ) {
+	if ( ( @{$project{side_one_colours}} > 0 ) and ( @{$project{side_two_colours}} > 0 ) ) {
 		$project{print_sides} = 2;
 	} # end if
-	$project{'side_one_colours'} = $side_one_colours;	
-	$project{'side_two_colours'} = $side_two_colours;	
+
 	$project{'inkCoverage'} = $inkCoverage;
 	my @filtered_colours = filter_colours( @$side_one_colours, @$side_two_colours );
 	my %mixed_colours;
