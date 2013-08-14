@@ -7,6 +7,7 @@
 			<? echo ( join('',
 				button( 'Back', { href=>'/employee/inventory/manifests.html' } ),
 				$$variable{Manifest}->can_edit() ? (
+					button( 'Verify', { href=>'/employee/inventory/manifest_view.html?action=Verify&amp;manifest_id='.$$variable{Manifest}->id() } ),
 					button( 'Edit', { href=>'/employee/inventory/manifest.html?manifest_id='.$$variable{Manifest}->id() } ),
 					button( 'Apply', { href=>'/employee/inventory/manifest_view.html?action=Apply&amp;manifest_id='.$$variable{Manifest}->id() } ),
 					( $$variable{Manifest}->deleted() ? (

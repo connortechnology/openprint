@@ -1717,7 +1717,6 @@ sub _manifest_content {
 	} elsif ( $param{action} eq 'Apply' ) {
 		my $MC = $variable{C} = new openprint::ManifestContent( $param{content_id} );
 		$variable{error} .= $MC->apply();
-$log->debug( "MC apply " . $variable{error} );
 		$variable{type_id} = $MC->type_id();
 		$variable{Manifest} = $MC->Manifest();
 	} elsif ( $param{'action'} eq 'Add' ) {
