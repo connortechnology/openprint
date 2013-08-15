@@ -15,24 +15,11 @@
 			} # end if
 		} # end if
 	} else {
-		$$variable{'DueDateStart'} = sprintf('%.4d-%.2d-%.2d', 
-			@session{
-			'/employee/production/projects.html?DueDateStartYear',
-			'/employee/production/projects.html?DueDateStartMonth',
-			'/employee/production/projects.html?DueDateStartDay'}
-			);
-		$$variable{'DueDateEnd'} = sprintf('%.4d-%.2d-%.2d',
-			@session{
-			'/employee/production/projects.html?DueDateEndYear',
-			'/employee/production/projects.html?DueDateEndMonth',
-			'/employee/production/projects.html?DueDateEndDay'}
-			);
-
 		my %filters = (
 				'used_press_name'	=> [ split ',', $session{'/employee/production/projects.html?ddmPress'} ],
 				'status'			=> [ split ',', $session{'/employee/production/projects.html?ProjectStatus'} ],
-				'due_date_start'	=> $$variable{'DueDateStart'},
-				'due_date_end'		=> $$variable{'DueDateEnd'},
+				date_filter( '/employee/production/projects.html?due_date_end', 'due_date_end' ),
+				date_filter( '/employee/production/projects.html?due_date_start', 'due_date_start' ),
 				'due_date'			=> undef,
 				'misc'				=> ' AND order_id IS NOT NULL',
 				'order'				=> 'due_date, lngDocketNumber',
