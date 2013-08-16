@@ -285,8 +285,8 @@ $log->debug("Total: $total");
 	} # end if
 } # end sub view
 sub _timetracks {
-	$variable{'Invoice'} = new openprint::Invoice( $param{'invoice_id'} );
-	if ( $param{'timetrack_id'} ) {
+	my $Invoice = $variable{Invoice} = new openprint::Invoice( $param{invoice_id} );
+	if ( $param{timetrack_id} ) {
 		my $Timetrack = new openprint::Timetrack( $param{'timetrack_id'} );
 		if ( $param{'action'} eq 'add' ) {
 			$Timetrack->invoice_id( $variable{'Invoice'}->id() );
@@ -294,6 +294,9 @@ sub _timetracks {
 			$Timetrack->invoice_id( undef );
 		} # en dif
 		$variable{'error'} .= $Timetrack->save();
+	} # end if
+	if ( $param{invoicee_id} and $param{invoicee_id} != $Invoice->invoicee_id() ) {
+		$Invoice->invoicee_id( $param{invoicee_id} );
 	} # end if
 } # end sub _timetracks
 sub _invoiced_products {

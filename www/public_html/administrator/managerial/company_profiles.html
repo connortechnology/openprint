@@ -363,7 +363,7 @@ button( 'merge'.$C->id(), { href=>'/administrator/managerial/company_profiles.ht
 			<? endif ( $$variable{'selectCustomerCategories'} ) ?>
 			<li> 
 				<label>Greeting Message</label>
-				<textarea name="greeting" rows="<? echo ( coutn_lines( $$variable{Company}->greeting() ); ) ?>" onkeyup="textarea_resize(this);"><? echo ( $$variable{'Company'}->greeting() ) ?></textarea>
+				<textarea name="greeting" rows="<? echo ( count_lines( $$variable{Company}->greeting() ); ) ?>" onkeyup="textarea_resize(this);"><? echo ( $$variable{'Company'}->greeting() ) ?></textarea>
 			</li>
 		</ul>
 	</fieldset>

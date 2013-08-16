@@ -55,6 +55,19 @@
     } // end function del_timetrack(invoice_id)
 	function invoicee_change(ddm) {
 		new Ajax.Request( '_invoicee_onchange.json', { parameters: { invoice_id: '<? echo ( $$variable{Invoice}->id() ) ?>', invoicee_id: ddm.getValue() } } );
+		new Ajax.Updater( 'Timetracks', '_timetracks.html', {
+           parameters: {
+                    invoice_id: <? echo ( $$variable{Invoice}{id} ) ?>,
+					invoicee_id: ddm.getValue() 
+               },
+                onComplete: function(transport) {
+                    update_totals();
+                    TableKit.reload();
+                },
+                onFailure: function(transport) {
+                    alert('failure to include');
+                }
+        } );
 	} // end function invoicee_change(ddm)
 <? endif ( $$variable{'Invoice'}->id() ) ?>
 </script>
@@ -75,11 +88,11 @@
 			</li>
 <!--
 			<p><label>Created On</label>
-			<? echo ( ssi::date_select( 'posted_on', $$variable{'Invoice'}->posted_on() ); ) ?>
+			<? echo ( date_select( 'posted_on', $$variable{'Invoice'}->posted_on() ); ) ?>
 			</p>
 -->
 				<li class="due_on"><label>Due On</label>
-				<? echo ( ssi::date_select( 'due_on', $$variable{'Invoice'}->due_on() ); ) ?>
+				<? echo ( date_select( 'due_on', $$variable{'Invoice'}->due_on() ); ) ?>
 				</li>
 				<li class="monthly_interest"><label for="monthly_interest">Interest Rate</label>
 					<? echo ( input( type=>'float', name=>'monthly_interest', id=>'monthly_interest', value=>($$variable{Invoice}->id() ? $$variable{Invoice}->monthly_interest() : $config{'Default Interest'}) ); ) ?>%
@@ -90,7 +103,7 @@
 								ssi::select( [ 'percent', 'Percent', 'amount', 'Amount' ], $$variable{Invoice}->early_payment_units(), { name=>'early_payment_units' } ),
 					); ) ?>
 				<li class="early_payment_date"><label>Early Payment Date</label>
-				<? echo ( ssi::date_select( 'early_payment_date', $$variable{'Invoice'}->early_payment_date() ); ) ?>
+				<? echo ( date_select( 'early_payment_date', $$variable{'Invoice'}->early_payment_date() ); ) ?>
 				</li>
 			</ul>
 		</div>

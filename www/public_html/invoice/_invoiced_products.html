@@ -14,15 +14,15 @@
 				my $html = '';
 				$$variable{product_total} = 0;
 				foreach my $Product ( $$variable{Invoice}->Products() ) {
-					$html .= '<tr>';
+					$html .= qq`<tr id="Product$$Product{id}">`;
 					$html .= sprintf(q`<td class="product"><input type="text" id="product-description-%1$d" name="product-description-%1$d" value="%2$s" /></td>`, $Product->id(), $Product->description() );
 					$html .= sprintf(q`<td class="po"><input type="text" id="product-po-%1$d" name="product-po-%1$d" value="%2$s" /></td>`, $Product->id(), $Product->po() );
 
-					$html .= '<td class="Price">'.ssi::input( type=>'float', id=>'product-price-'.$$Product{id}, name=>'product-price-'.$$Product{id}, value=>$Product->price(), onkeyup=>"update_product( '$$Product{id}' );" ) . '</td>';
-					$html .= '<td class="Quantity">'.ssi::input( type=>'float', id=>'product-quantity-'.$$Product{id}, name=>'product-quantity-'.$$Product{id}, value=>$$Product{quantity}, onkeyup=>"update_product( '$$Product{quantity}' );" ) . '</td>';
-					$html .= sprintf('<td class="Price" id="product-total-%1$d">%2$.2f</td>', $Product->id(), $Product->total() );
+					$html .= '<td class="Price">'.input( type=>'float', id=>'product-price-'.$$Product{id}, name=>'product-price-'.$$Product{id}, value=>$Product->price(), onkeyup=>"update_product( '$$Product{id}' );" ) . '</td>';
+					$html .= '<td class="Quantity">'.input( type=>'float', id=>'product-quantity-'.$$Product{id}, name=>'product-quantity-'.$$Product{id}, value=>$$Product{quantity}, onkeyup=>"update_product( '$$Product{quantity}' );" ) . '</td>';
+					$html .= sprintf('<td class="Price" id="product-total-%1$d">%2$s</td>', $Product->id(), openprint::Currency::format( $Product->total() ) );
 					$html .= '<td class="buttons">';
-					$html .= ssi::button( 'Remove'.$Product->id(), { onclick=>qq`new Ajax.Updater('InvoicedProducts','_invoiced_products.html?action=remove&amp;product_id=$$Product{id}', { method: 'post', parameters: \$('f1').serialize()} );`, text=>'-', title=>'Remove' } );
+					$html .= button( 'Remove'.$Product->id(), { onclick=>qq`new Ajax.Updater('InvoicedProducts','_invoiced_products.html?action=remove&amp;product_id=$$Product{id}', { method: 'post', parameters: \$('f1').serialize()} );`, text=>'-', title=>'Remove' } );
 					$html .= '</td>';
 					$html .= "</tr>\n";
 					$$variable{product_total} += $Product->total();
