@@ -265,7 +265,14 @@ $openprint::log->debug("desired paper does not exists");
 	} # end if
 	if ( $$MC{skid_id} and $$MC{rfidtag_id} ) {
 		if ( ! $$Skid{rfidtag_id} ) {
-			$error .= $Skid->save({ rfidtag_id=>$$MC{rfidtag_id} });
+			my $S = openprint::Skid->find_one( rfidtag_id => $$MC{rfidtag_id} );
+			if ( $S ) {
+				if ( $$S{id} != $$Skid{id} ) {
+					$error .= qq`<a href="/employee/inventory/skid_details.html?skid_id=$$S{id}">Skid $$S{id}</a> has that rfidtag. Please fix it manually.<br/>`;
+				} # end if
+			} else {
+				$error .= $Skid->save({ rfidtag_id=>$$MC{rfidtag_id} });
+			} # end if
 		} # end if
 	} # end if
 

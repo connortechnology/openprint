@@ -23,16 +23,16 @@
 		} # end if
 		foreach my $C ( @Contents ) {
 			$$variable{'C'} = $C;
-			$html .= ssi::include( $ENV{'DOCUMENT_ROOT'}.'/employee/claim/_content_'.$C->Type()->name().'.html', $variable );
+			$html .= include( '/employee/claim/_content_'.$C->Type()->name().'.html', $variable );
 		} # end foreach tag_id
 		return $html;
 	) ?>
 	<tr>
 		<td>
-<? echo ( ssi::button( 'Add', { onclick=>"add_content( \$('f1') );", href=>'', text=>'Add' } ); ) ?>
+		<? echo ( button( 'Add', { onclick=>q`add_content( $('f1') );`, text=>'Add' } ); ) ?>
 		<td colspan="6">
 		<select name="type_id"><option value="">select</option>
-		<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Claim_ContentType->find('order'=>'lower(name)') ] ); ) ?>
+		<? echo ( make_drop_down( openprint::Claim_ContentType->dropdown( order=>'lower(name)') ); ) ?>
 		</select>
 		</td>	
 	</tr>

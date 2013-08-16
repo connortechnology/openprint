@@ -281,7 +281,6 @@ $log->debug("PageContent is $variable{PageContent}");
 	} # end if
 
 	$log->debug( 'Elapsed seconds: ' . sprintf('%.4f', tv_interval([$starttime])*1000).' usecs' );
-	# Clear all the caches AFTER we send the data to client! I'm hoping this allows browsers to render before we actually send the OK< the microsecond probably doesn't matter.
 	return Apache2::Const::OK;
 } # end sub handler
 

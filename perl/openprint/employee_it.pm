@@ -378,7 +378,7 @@ sub _licenses {
 	( map { 'purchased_on_end_' . $_ } ( 'year', 'month', 'day' ) ),
 	( map { 'expires_on_start_' . $_ } ( 'year', 'month', 'day' ) ),
 	( map { 'expires_on_end_' . $_ } ( 'year', 'month', 'day' ) ),
-			'ip','hostname','mac',
+			'ip','hostname','mac','software_id','serialkey',
 			'order',
 			);
 } # end sub _licenses
