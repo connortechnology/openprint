@@ -140,7 +140,7 @@ sub split_by_equipment {
 
 memoize('get_best_prices');
 sub get_best_prices {
-	my ( $log, $dbh, $cust_id, $prod_index, $list_id, $pricesetclass, $equipment, $qty ) = @_;
+	my ( $log, $dbh, $cust_id, $prod_index, $list_id, $pricesetclass, $equipment, $qty, $period ) = @_;
 
 	#my $hash_index = "$list_id-$pricesetclass-$cust_id-$prod_index-$equipment-$qty";
 
@@ -152,7 +152,7 @@ sub get_best_prices {
 		} # end if
 
 		my @pricing = ();
-		my $priceGroup = $pricesetclass->new( $log, $dbh, $list_id, $prod_index, $equipment, $qty );
+		my $priceGroup = $pricesetclass->new( $log, $dbh, $list_id, $prod_index, $equipment, $qty, $period );
 		$priceGroup->load();	
 		push @pricing, @{$priceGroup->{prices}};
 
@@ -204,15 +204,15 @@ sub get_best_prices {
 } # end sub get_best_prices
 
 sub get_best_price {
-	my ( $log, $dbh, $cust_id, $prod_index, $list_id, $pricesetclass, $qty, $equipment ) = @_;
+	my ( $log, $dbh, $cust_id, $prod_index, $list_id, $pricesetclass, $qty, $equipment, $period ) = @_;
 
-	my %price = get_best_price_object( $log, $dbh, $cust_id, $prod_index, $list_id, $pricesetclass, $qty, $equipment );
+	my %price = get_best_price_object( $log, $dbh, $cust_id, $prod_index, $list_id, $pricesetclass, $qty, $equipment, $period );
 	return $price{Price};
 } # end sub get_best_price 
 
 sub get_best_price_object {
-	my ( $log, $dbh, $cust_id, $prod_index, $list_id, $pricesetclass, $qty, $equipment ) = @_;
-	my $prices = get_best_prices( $log, $dbh, $cust_id, $prod_index, $list_id, $pricesetclass, $equipment, $qty );
+	my ( $log, $dbh, $cust_id, $prod_index, $list_id, $pricesetclass, $qty, $equipment, $period ) = @_;
+	my $prices = get_best_prices( $log, $dbh, $cust_id, $prod_index, $list_id, $pricesetclass, $equipment, $qty, $period );
 	foreach my $price ( @$prices ) {
 		if ( $price and ( 
 					( (!defined $qty) or $qty eq '' ) or

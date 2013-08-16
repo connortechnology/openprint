@@ -93,7 +93,7 @@ sub Price {
 	my ( $self ) = @_;
 	my $elapsed = $self->elapsed();
 	my $Service = $self->Service();
-	my %Price = $Service->get_price( undef, undef, $self->Company()->Pricelist() );
+	my %Price = $Service->get_price( undef, undef, $self->Company()->Pricelist(), $self->starting() );
 	if ( $$self{'rate'} ) {
 		$Price{'Cost'} = $Price{'Price'} = $$self{'rate'};
 	} # end if

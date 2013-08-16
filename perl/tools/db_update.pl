@@ -1349,6 +1349,12 @@ if ( ! sets::isin( 'service_prices',\@tables )  ) {
 	if ( ! exists $$data{'interpolate'} ) {
 		$dbh->do('ALTER TABLE Service_Prices ADD interpolate boolean default false');
 	} # end if
+	if ( ! exists $$data{period_start} ) {
+		$dbh->do('ALTER TABLE Service_Prices ADD period_start TIMESTAMP WITH TIME ZONE');
+	} # end if
+	if ( ! exists $$data{period_end} ) {
+		$dbh->do('ALTER TABLE Service_Prices ADD period_end TIMESTAMP WITH TIME ZONE');
+	} # end if
 } # end if
 @sequences = sql::execute( undef, undef, q`SELECT sequence_name FROM information_schema.sequences where sequence_schema='public'`);
 if ( ! sets::isin( 'service_prices_id_seq',\@sequences ) ) {

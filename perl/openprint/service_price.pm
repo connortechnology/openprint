@@ -1,8 +1,6 @@
-package openprint::service_price;
-@ISA = qw(openprint::price);
 use strict;
-
-require openprint::logs;
+package openprint::service_price;
+our @ISA = qw(openprint::price);
 
 sub save {
 	my $self = shift;
@@ -16,6 +14,8 @@ sub save {
 		'service_id',		$self->{group}->{product_index},
 		'equipment_id',		$self->{equipment_index},
 		'supplier_id',		$$self{'supplier_id'},
+		'period_start',		( $self->{period_start} eq '' ? undef : $self->{period_start} ),
+		'period_end',				( $self->{period_end} eq '' ? undef : $self->{period_end} ),
 		'min',				( $self->{min} eq '' ? undef : $self->{min} ),
 		'max',				( $self->{max} eq '' ? undef : $self->{max} ),
 		'units',			( $self->{units} eq '' ? undef : $self->{units} ),

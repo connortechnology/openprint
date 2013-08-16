@@ -8,14 +8,14 @@
 			<label>Category</label>
 			<select name="ddmSearchCategory" onchange="form.btnFunction.value='';f1.submit();">
 				<option value="">All Categories</option>
-				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::ServiceCategory->find('order'=>'lower(name)') ], $param{'ddmSearchCategory'} ); ) ?>
+				<? echo ( make_drop_down( [ map { $_->id(), $_->name() } openprint::ServiceCategory->find( order=>'lower(name)') ], $param{ddmSearchCategory} ); ) ?>
 			</select>
 		</li>
 <? if ( @{$$variable{Equipment}} = openprint::Equipment->find('order'=>'lower(strid)') ) ?>
 		<li><label>Equipment</label>
 			<select name="equipment_id" onchange="form.btnFunction.value='';f1.submit();">
 				<option value="">All</option>
-				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } @{$$variable{Equipment}} ], $param{'equipment_id'} ); ) ?>
+				<? echo ( make_drop_down( [ map { $_->id(), $_->name() } @{$$variable{Equipment}} ], $param{equipment_id} ); ) ?>
 			</select>
 		</li>
 <? endif ( @{$$variable{Equipment}} = openprint::Equipment->find('order'=>'lower(strid)') ) ?>
@@ -23,10 +23,10 @@
 			<label>Service</label>
 			<select name="ddmService" onchange="if(this.options[this.selectedIndex].value != ''){this.form.btnFunction.value='';this.form.submit();}">
 				<option value="">Select a Service</option>
-				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() . ' : '.$_->description() } openprint::Service->find(
-							( $param{'ddmSearchCategory'} ? ( 'category_id'=>$param{'ddmSearchCategory'} ) : () ),
-							( $param{'equipment_id'} ? ( 'equipment_id' => $param{'equipment_id'} ) : () ),
-							'order'=>'lower(name)') ], $$variable{'Service'}->id() ); ) ?>
+				<? echo ( make_drop_down( [ map { $_->id(), $_->name() . ' : '.$_->description() } openprint::Service->find(
+							( $param{ddmSearchCategory} ? ( category_id=>$param{ddmSearchCategory} ) : () ),
+							( $param{equipment_id} ? ( equipment_id => $param{equipment_id} ) : () ),
+							order=>'lower(name)') ], $$variable{Service}->id() ); ) ?>
 			</select>
 		</li>
 		</ul>
@@ -34,15 +34,15 @@
 		<p class="buttons">
 			<? echo ( 
 				my $html = '';
-				$html .= button( 'Prev1', { onclick=>"f1.btnFunction.value='&lt;&lt;';fmCheck(f1);", href=>'', text=>'&lt;&lt;' } );
-				$html .= button( 'Next1', { onclick=>"f1.btnFunction.value='&gt;&gt;';fmCheck(f1);", href=>'', text=>'&gt;&gt;' } );
-				$html .= button( 'New1', { onclick=>"addCheck(f1);", href=>'', text=>'New' } );
-				$html .= button( 'Save1', { onclick=>"f1.btnFunction.value='Save';fmChange=3;fmCheck(f1);", href=>'', text=>'Save' } );
+				$html .= button( 'Prev1', { onclick=>"f1.btnFunction.value='&lt;&lt;';fmCheck(f1);", text=>'&lt;&lt;' } );
+				$html .= button( 'Next1', { onclick=>"f1.btnFunction.value='&gt;&gt;';fmCheck(f1);", text=>'&gt;&gt;' } );
+				$html .= button( 'New1', { onclick=>'addCheck(f1);', text=>'New' } );
+				$html .= button( 'Save1', { onclick=>"f1.btnFunction.value='Save';fmChange=3;fmCheck(f1);", text=>'Save' } );
 				if ( $$variable{'Service'}->id() ) {
-					$html .= button( 'Copy1', { onclick=>"f1.btnFunction.value='Copy';fmCheck(f1);", href=>'', text=>'Copy' } );
-					$html .= button( 'Delete1', { onclick=>"f1.btnFunction.value='Delete';fmChange=2;fmCheck(f1);", href=>'', text=>'Delete' } );
+					$html .= button( 'Copy1', { onclick=>"f1.btnFunction.value='Copy';fmCheck(f1);", text=>'Copy' } );
+					$html .= button( 'Delete1', { onclick=>"f1.btnFunction.value='Delete';fmChange=2;fmCheck(f1);", text=>'Delete' } );
 				} # end if
-				$html .= button( 'Reset1', { onclick=>'f1.reset();', href=>'', text=>'Reset' } );
+				$html .= button( 'Reset1', { onclick=>'f1.reset();', text=>'Reset' } );
 				return $html;
 			) ?>
 		</p>
@@ -69,20 +69,22 @@
 	</div>
 	<div class="rightColumn">
 	<fieldset><legend>Purchasing Information</legend>
-		<p> 
+		<ul>
+		<li class="tax_exempt"> 
 			<label>Federal Tax Exempt?</label>
 			<input type="radio" id="taxexempt1Y" name="taxexempt1" value="Y" <? echo ( 'checked="checked"' if $$variable{'Service'}->taxexempt1() eq 'Y' ) ?> />
 			<label class="radio" for="taxexempt1Y">Yes</label>
 			<input type="radio" id="taxexempt1N" name="taxexempt1" value="N" <? echo ( 'checked="checked"' if $$variable{'Service'}->taxexempt1() eq 'N' ) ?> />
 			<label class="radio" for="taxexempt1N">No</label>
-		</p>
-		<p> 
+		</li>
+		<li class="tax_exempt"> 
 			<label>State/Province Exempt?</label>
 			<input type="radio" id="taxexempt2Y" name="taxexempt2" value="Y" <? echo ( 'checked="checked"' if $$variable{'Service'}->taxexempt2() eq 'Y' ) ?> />
 			<label class="radio" for="taxexempt2Y">Yes</label>
 			<input type="radio" id="taxexempt2N" name="taxexempt2" value="N" <? echo ( 'checked="checked"' if $$variable{'Service'}->taxexempt2() eq 'N' ) ?> />
 			<label class="radio" for="taxexempt2N">No</label>
-		</p>
+		</li>
+		</ul>
 	</fieldset>
 	</div>
 	<br class="spacer"/>
