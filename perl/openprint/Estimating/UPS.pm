@@ -67,7 +67,6 @@ sub no_outputs {
 sub get_ratings {
 	my ( $Project, $service_index, $specs ) = @_;
 
-
 $log->debug("UPS!!!!!!!!!!");
 
 	my $services = $Project->services();
