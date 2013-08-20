@@ -4,15 +4,15 @@
 		<p>
 			<label>Date Filter</label>
 			<span class="DateSelectorCT">
-<? echo ( ssi::date_select( 'start', [ @param{'start_year','start_month','start_day'} ], { onchange=>q`AjaxLoadContent('LocationLog','_rfidtag_log_entries.html', $('location_log_form').serialize() );`, with_clear=>1, with_today=>1 } ); ) ?>
+<? echo ( date_select( 'start', [ @param{'start_year','start_month','start_day'} ], { onchange=>q`AjaxLoadContent('LocationLog','_rfidtag_log_entries.html', $('location_log_form').serialize() );`, with_clear=>1, with_today=>1 } ); ) ?>
 			</span>
 			to 
 			<span class="DateSelectorCT">
-<? echo ( ssi::date_select( 'end', [@param{'end_year','end_month','end_day'}], { onchange=> q`AjaxLoadContent('LocationLog','_rfidtag_log_entries.html', $('location_log_form').serialize() );`, with_clear=>1, with_today=>1 } ); ) ?>
+<? echo ( date_select( 'end', [@param{'end_year','end_month','end_day'}], { onchange=> q`AjaxLoadContent('LocationLog','_rfidtag_log_entries.html', $('location_log_form').serialize() );`, with_clear=>1, with_today=>1 } ); ) ?>
 			</span>
 			<select name="limit" onchange="AjaxLoadContent('LocationLog','_rfidtag_log_entries.html', $('location_log_form').serialize() );"><option value="10">10</option><option value="25">25</option><option value="100">100</option></select>
 			<? echo ( button( 'LoadLocationLog', { onclick=>q`AjaxLoadContent('LocationLog','_rfidtag_log_entries.html', $('location_log_form').serialize() );`, text=> 'Load' } ); ) ?>
 		</p>
-		<div id="LocationLocationLog"><?input(_rfidtag_log_entries.html)?></div>
+		<div id="LocationLog"><?input(_rfidtag_log_entries.html)?></div>
 	</fieldset>
 </form>

@@ -194,7 +194,7 @@
 	<div id="Allocations"><!--#include virtual="_skid_allocations.html"--></div>
 	</fieldset>
 	<fieldset><legend onclick="AjaxToggleContent( 'Log', '/employee/inventory/_skid_log.html', new Array('skid_id',<? echo ( $$variable{'Skid'}->id() ) ?>) );">Inventory Log - click to hide/show</legend>
-	<div id="Log"><!--#include virtual="_skid_log.html"--></div>
+		<div id="Log"><?include(_skid_log.html)?></div>
 	</fieldset>
 	<? echo ( 
 		if ( $$variable{Skid}{rfidtag_id} ) {

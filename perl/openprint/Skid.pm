@@ -755,5 +755,18 @@ sub merge {
 	return '';
 } # end sub merge
 
+sub checked_out {
+	if ( ! exists $_[0]{checked_out} ) {
+		foreach my $SC ( $_[0]->Contents() ) {
+			if ( $SC->checked_out() ) {
+				$_[0]{checked_out} = 1;
+				last;
+			} # end if
+		} # end foreach SC
+	} # end if
+	return $_[0]{checked_out};
+} # end sub checked_out
+
+
 1;
 __END__

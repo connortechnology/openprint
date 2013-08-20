@@ -169,6 +169,7 @@ sub skids {
 	$session{'/employee/inventory/skids.html?contents'} = 'Y' if ! exists $session{'/employee/inventory/skids.html?contents'};
 	$session{'/employee/inventory/skids.html?hasmanifest'} = '' if ! exists $session{'/employee/inventory/skids.html?hasmanifest'};
 	$session{'/employee/inventory/skids.html?hasmanufacturers'} = '' if ! exists $session{'/employee/inventory/skids.html?hasmanufacturers'};
+	$session{'/employee/inventory/skids.html?checked_out'} = '' if ! exists $session{'/employee/inventory/skids.html?checked_out'};
 
 	ssi::setup_date_select( '/employee/inventory/skids.html', 'received_on_start', 0 );
 	ssi::setup_date_select( '/employee/inventory/skids.html', 'received_on_end', 0 );
@@ -2096,7 +2097,7 @@ sub _skids_results {
 				( map { 'last_seen_start_' . $_ } ( 'year','month','day' ) ),
 				( map { 'last_seen_end_' . $_ } ( 'year','month','day' ) ),
 				'Docket','fsc_code','empty', 'rfid','rfid_valid','location_id','verification_code', 'allocated','contents','hasmanifest',
-				'condition_id', 'skid_id', 'rfid_id', 'manufacturers_id', 'hasmanufacturers','deleted',
+				'condition_id', 'skid_id', 'rfid_id', 'manufacturers_id', 'hasmanufacturers','deleted','checked_out',
 				) );
 }
 
