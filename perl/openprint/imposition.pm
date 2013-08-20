@@ -920,16 +920,33 @@ sub decrease_imposition {
 	foreach my $imposition ( @_ ) {
 		next if ( ($imposition->columns() * $imposition->rows()) <= 1 );
 
-		my $imp1 = $imposition->copy();
-		$imp1->rows( int ( $imp1->rows()/2 ) );
-		if ( $imp1->imposition() ) {
-			push @results, $imp1;
-		} # end if
+		if ( $imposition->dutch_columns() ) {
+			my $imp1 = $imposition->copy();
+			$imp1->dutch_rows( 0 );
+			$imp1->dutch_columns( 0 );
+			if ( $imp1->imposition() ) {
+				push @results, $imp1;
+			} # end if
 
-		my $imp2 = $imposition->copy();
-		$imp2->columns( int ( $imp2->columns()/2 ) );
-		if ( $imp2->imposition() ) {
-			push @results, $imp2;
+			my $imp2 = $imp1->copy();
+			$imp2->columns( $imposition->dutch_columns() );
+			$imp2->rows( $imposition->dutch_rows() );
+			if ( $imp2->imposition() ) {
+				push @results, $imp2;
+			} # end if
+		} else {
+
+			my $imp1 = $imposition->copy();
+			$imp1->rows( int ( $imp1->rows()/2 ) );
+			if ( $imp1->imposition() ) {
+				push @results, $imp1;
+			} # end if
+
+			my $imp2 = $imposition->copy();
+			$imp2->columns( int ( $imp2->columns()/2 ) );
+			if ( $imp2->imposition() ) {
+				push @results, $imp2;
+			} # end if
 		} # end if
 	} # end foreach
 
