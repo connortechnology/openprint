@@ -70,7 +70,7 @@ sub outputs {
 	my $Project = new openprint::Project( $p_id );
 	my @v;
 	foreach my $qty_index ( $Project->quantity_indexes() ) {
-		push @v, 'txtPrice'.$qty_index;
+		push @v, 'txtPrice'.$qty_index, "hdnBreakdown$qty_index";
 	} # end foreach qty_index
 
 	foreach my $ss_id ( $Project->signatures() ) {

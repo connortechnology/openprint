@@ -91,8 +91,12 @@ sub get_price {
 	$period = sprintf('%.4d-%.2d-%.2d', Date::Calc::Today() ) if ! $period;
 
 	$Pricelist = openprint::Pricelist::get_current() if ! $Pricelist;
-    my %price = openprint::pricing::get_best_price_object( $log, $dbh, $openprint::session{'company_id'}, $$self{id}, $$Pricelist{'id'}, 'openprint::service_priceset', $quantity, $$Equipment{'id'}, $period );
-    return if ! %price;
+    my %price = openprint::pricing::get_best_price_object( $log, $dbh, $openprint::session{company_id}, $$self{id}, $$Pricelist{id}, 'openprint::service_priceset', $quantity, $$Equipment{id}, $period );
+
+	if ( ! %price ) {
+		$log->debug("No price returned for $$Equipment{strid} $quantity $period");
+		return ;
+	} # end if
 
 	$price{'currency_id'} = $Pricelist->currency_id();
 	$price{'ServiceName'} = $$self{'name'};

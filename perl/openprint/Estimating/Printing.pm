@@ -21,7 +21,7 @@ package openprint::Estimating::Printing;
 my $threading = 0;
 #use threads;
 use constant DEBUG => 0;
-use constant DEBUG_FILTERING => 0;
+use constant DEBUG_FILTERING => 1;
 use constant DEBUG_PRICE_DECISIONS => 0;
 
 my $master_time;
@@ -1291,6 +1291,8 @@ $openprint::log->debug("Non-process colours in get_impositions: @non_process_col
 								push @{$paper_impositions{$key}}, $i;
 							} else {
 								my $add = 1;
+								if ( ( $$specs{'OverrideCutOff'.$qty_index} ne 'Y' ) and ( $$P{height} != $$specs{"CutOff$qty_index"} ) ) {
+								
 								for ( my $imp_index = 0; $imp_index < @{$paper_impositions{$key}}; $imp_index += 1 ) {
 									my $j = $paper_impositions{$key}[$imp_index];
 									if ( $i->Paper()->area() < $j->Paper()->area() ) {
@@ -1306,6 +1308,7 @@ $openprint::log->debug("Non-process colours in get_impositions: @non_process_col
 									#} elsif ( $$j{'dutch_columns'} and ! $$i{'dutch_columns'} ) {
 									} # end if
 								} # end for
+								} # end if
 								if ( $add ) {
 									push @{$paper_impositions{$key}}, $i;
 								} # end if

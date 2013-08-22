@@ -6,7 +6,7 @@ require openprint::pricelist;
 require openprint::priceset;
 require openprint::price;
 
-my $debug = 0;
+my $debug = 1;
 
 my %price_cache;
 
