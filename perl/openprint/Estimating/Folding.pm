@@ -314,7 +314,7 @@ sub impositions {
 			'calliper'			=>	$$Paper{'calliper'},
 	);
 
-	my $Fold = $Imposition->Press()->Fold(\%find);
+	my $Fold = $Imposition->Equipment()->Fold(\%find);
 	return @imps if $Fold;
 	delete $find{page_width};
 
@@ -378,6 +378,7 @@ sub signature_calc {
 
 	my $Paper = $SignatureImposition->Paper();
 	my $Press = $SignatureImposition->Press();
+	my $ppt = $Press->specification('Printing Type');
 	my $services = $Project->services();
 
 	my $bestM;
@@ -440,7 +441,7 @@ sub signature_calc {
 		my $add = 1;
 		my $capable = $Press->specification('Folding Capable');	
 		if ( $capable and ( $capable ne 'N' ) ) {
-			if ( $$sig_specs{'PreviousImposition'} and $$sig_specs{'PreviousImposition'} != $$SignatureImposition{'imposition'} ) {
+			if ( $$sig_specs{'PreviousImposition'} and $$sig_specs{'PreviousImposition'} != $$SignatureImposition{imposition} ) {
 				$add = 0;
 			} # end if
 
@@ -511,14 +512,14 @@ foreach my $k ( keys %makereadies ) {
 	my @All_Impositions;
 
 	# IF it's a W&T, we have to cut in half first, so just do it.
-	if ( $$SignatureImposition{'runstyle'} eq 'Work & Turn' ) {
+	if ( $$SignatureImposition{runstyle} eq 'Work & Turn' ) {
 		my $i = $SignatureImposition->copy();
 		$i->runstyle('Sheet Work');
 		$i->start_columns( $i->columns() );
 		$i->columns( $i->columns()/2 );
 		$$i{'quantity'} = 2;
 		push @Set_Of_Impositions, $i;
-	} elsif ( $$SignatureImposition{'runstyle'} eq 'Work & Tumble' ) {
+	} elsif ( $$SignatureImposition{runstyle} eq 'Work & Tumble' ) {
 		my $i = $SignatureImposition->copy();
 		$i->runstyle('Sheet Work');
 		$i->start_rows( $i->rows() );
@@ -539,20 +540,23 @@ foreach my $k ( keys %makereadies ) {
 			my $modified = 0;
 			foreach my $I ( @Set_Of_Impositions ) {
 				if ( $I->dutch_columns() ) {
-					my $i = $I->copy();
-					$i->dutch_columns(0);
-					$i->dutch_rows(0);
-					$i->quantity(1);
-					push @Impositions, $i;
-
-					$i = $I->copy();
-					$i->columns( $i->dutch_columns() );
-					$i->rows( $i->dutch_rows() );
-					$i->dutch_columns(0);
-					$i->dutch_rows(0);
-					$i->quantity(1);
-					$i->image_orientation($I->image_orientation() eq 'Vertical' ? 'Horizontal' : 'Vertical');
-					push @Impositions, $i;
+					{
+						my $i = $I->copy();
+						$i->dutch_columns(0);
+						$i->dutch_rows(0);
+						$i->quantity(1);
+						push @Impositions, $i;
+					}
+					{
+						my $i = $I->copy();
+						$i->columns( $i->dutch_columns() );
+						$i->rows( $i->dutch_rows() );
+						$i->dutch_columns(0);
+						$i->dutch_rows(0);
+						$i->quantity(1);
+						$i->image_orientation($I->image_orientation() eq 'Vertical' ? 'Horizontal' : 'Vertical');
+						push @Impositions, $i;
+					}
 					$modified = 1;
 				} else {
 					push @Impositions, $I;
@@ -573,7 +577,7 @@ foreach my $k ( keys %makereadies ) {
 			my @Impositions = @Set_Of_Impositions;
 			@Set_Of_Impositions = ();
 			foreach my $I ( @Impositions ) {
-				# Used to be sprintf... question is, should it be int or round? I think int
+				# Used to be sprintf... question is, should it be int or round? I think int.  
 				my $width_folds = int(($$sig_specs{'txtWidth'}/$$sig_specs{'txtFinalWidth'})-1 );
 				my $height_folds = int(($$sig_specs{'txtHeight'}/$$sig_specs{'txtFinalHeight'}) -1 );
 				if ( $width_folds and $height_folds ) {
@@ -649,7 +653,7 @@ foreach my $k ( keys %makereadies ) {
 				next;
 			} # end if
 		} elsif ( $capable eq 'When Stitching' ) {
-			$Breakdown .= 'When Stitching.';
+			$Breakdown .= 'When Stitching:';
 # Means it's a Stitcher, or a Duplo, so can only do covers
 			if ( $Equipment->specification('Fold Covers Only') and $$sig_specs{'Group'} != 1 ) {
 				$Breakdown .= 'Stitcher can only fold 4pg cover:<br/>';
@@ -664,9 +668,8 @@ foreach my $k ( keys %makereadies ) {
 				next;
 			} # end if
 		} # end if
-		my $ppt = $Press->specification('Printing Type');
-		if ( my $pt = $Equipment->specification('PrintingTypes') ) {
-			if ( $ppt and ! sets::isin( $ppt, [ split(',',$pt ) ] ) ) {
+		if ( $ppt and ( my $pt = $Equipment->specification('PrintingTypes') ) ) {
+			if ( ! sets::isin( $ppt, [ split(',',$pt ) ] ) ) {
 				$Breakdown .= 'Wrong printing type.<br/>';
 				next;
 			} # end if
@@ -1100,9 +1103,10 @@ $openprint::log->debug("Got MakeReady for " . $Fold->type().'MakeReady' . ' imp:
 				if ( ! $runspeed ) {
 					$Breakdown .= "No runspeed for $fold_type(".$$Fold{'name'}.") on " . $$Equipment{'name'} .' Setting to 1/Hr.<br/>';
 					$runspeed = 1;
+				} else {
+					$runTime = Math::Round::nearest( 0.0001, $run_qty / $runspeed ); # in hours
+					$Breakdown .= sprintf('Runspeed: %d @ %d/HR = %d:%d:%d<br/>', $run_qty, $runspeed, misc::seconds_to_interval( int( 3600*$runTime ) ) );
 				} # end if
-				$runTime = Math::Round::nearest( 0.0001, $run_qty / $runspeed ); # in hours
-				$Breakdown .= sprintf('Runspeed: %d @ %d/HR = %d:%d:%d<br/>', $run_qty, $runspeed, misc::seconds_to_interval( int( 3600*$runTime ) ) );
 $openprint::log->debug("Runspeed: $fold_type(".$Fold->name().") : " . $Equipment->name() . ' ' . $Fold->runspeed() .' ' . $Paper->gsm() ) if DEBUG;
 #$Breakdown .= sprintf( '&nbsp;Folds: QTY: %d, %dout Runspeed: %d/Hr = %.2f hours<br/>', $qty, $imposition, $$RunSpeed{runspeed}, $runTime );
 # We are assumin at this point, that all these folds are posible on this equipment, so any errors are soft errors
@@ -1189,8 +1193,8 @@ $openprint::log->debug("Runspeed: $fold_type(".$Fold->name().") : " . $Equipment
 					} elsif ( $$results{'Equipment'}->id() != $Equipment->id() and $Equipment->specification('Folding Capable') eq 'When Stitching' ) {
 						$Breakdown .= 'Not stitching on ' . $Equipment->strid().' stitching on '.$$results{'Equipment'}->strid() .'.<br/>';
 						$Breakdown .= $$stitching_specs{"hdnBreakdown$qty_index"};
-						$totalPrice += 1000000;
 						$stitching_part = 1000000;
+						$totalPrice += 1000000;
 					} else {
 						$stitching_part = $$results{'Price'};
 						$Breakdown .= "Stitching cost: $stitching_part on " . $$results{'Equipment'}->strid() . '<br/>';
@@ -1286,10 +1290,10 @@ sub calc {
 	my $status = 'calculated';
 
 	my $Project = new openprint::Project( $project_index );
+	my $services = $Project->services();
 	if ( ! neccessary( $Project ) ) {
 		$$specs{'alert'} .= 'Folding is not needed.';
 	} # end if
-	my $services = $Project->services();
 	#my @signature_service_indices = openprint::print::get_signature_indices( $log, $dbh, $project_index );
 
 	my $printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
@@ -1663,6 +1667,6 @@ sub compact_impositions {
 
 sub save {
 } # end sub save
-1;
 
+1;
 __END__
