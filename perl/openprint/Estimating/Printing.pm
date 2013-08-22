@@ -399,14 +399,9 @@ sub setup_project {
 			'Calliper',			$$specs{'txtSpecificStockCalliper'},
 			'CropMarkSpace',	$$specs{'txtCropMarkSpace'},
 			);
-	$project{print_sides} = 1;
-	if ( ( @$side_two_colours > 0 ) and ( @$side_one_colours > 0 ) ) {
-		$project{print_sides} = 2;
-	} # end if
 
-    my $CoatingsCategory = openprint::ServiceCategory->find_one( 'name' => 'Coating' );
+    my $CoatingsCategory = openprint::ServiceCategory->find_one( name => 'Coating' );
     my %coatings = map { $_->name(), 1 } $CoatingsCategory->Services() if $CoatingsCategory;
-$log->debug("Coatings: " . join( ',', keys %coatings ) );
 
 	$project{'side_one_colours'} = [];
 	$project{'side_one_coatings'} = [];
@@ -426,6 +421,11 @@ $log->debug("Coatings: " . join( ',', keys %coatings ) );
 			push @{$project{'side_two_colours'}}, $c;
 		} # end if
 	} # end foreach
+
+	$project{print_sides} = 1;
+	if ( ( @{$project{side_one_colours}} > 0 ) and ( @{$project{side_two_colours}} > 0 ) ) {
+		$project{print_sides} = 2;
+	} # end if
 
 	$project{'side_one_colour_names'} = [ map { $$_{'name'} } @{$side_one_colours} ];
 	$project{'side_two_colour_names'} = [ map { $$_{'name'}} @{$side_two_colours} ];

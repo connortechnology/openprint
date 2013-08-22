@@ -689,6 +689,12 @@ sub filters {
     );
     $html .= ssi::select( [ '', 'All', map { $_->id(), $_->name() } @Cities ], $city_id, { name=>'city_id', id=>'city_id', onchange=>qq`Location_onchange( this, 'city'$option_string );` } );
 	$html .= '</li>';
+    #$html .= '<li><label>Place</label>';
+    #my @es = openprint::Location->find('order'=>'lower(name)','type'=>'place',
+        #( sets::isin( $state_id, [ map { $_->id() } @States ] ) ? ( parent_id=>$state_id ) : () ),
+    #);
+    #$html .= ssi::select( [ '', 'All', map { $_->id(), $_->name() } @Cities ], $city_id, { name=>'city_id', id=>'city_id', onchange=>qq`Location_onchange( this, 'city'$option_string );` } );
+	#$html .= '</li>';
 
     return $html;
 } # end sub filters
