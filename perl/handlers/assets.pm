@@ -121,6 +121,7 @@ $log->error("FORBIDDEN");
 						$r->sendfile( $Asset->medium_path() );
 					} else {
 # No album means has to be an article image, or a generic site image.
+$log->debug( $Asset->on_disk_path() );
 						$r->sendfile( $Asset->on_disk_path() );
 					} # end if
 				} # end if

@@ -139,6 +139,8 @@ sub sized_url {
 					$width = $openprint::config{'Large_Asset_Width'};
 				} elsif ( $size eq 'thumbnail' ) {
 					$width = $openprint::config{'Small_Asset_Width'};
+				} elsif ( $size eq 'small' ) {
+					$width = $openprint::config{'Small_Asset_Width'};
 				} # end if
 				if ( ! $width ) {
 					$openprint::log->error("No asset size in config for $size");
@@ -223,6 +225,7 @@ sub sized_url {
 					unlink "/tmp/$filename/00000001.jpg";
 					rmdir "/tmp/$filename";
 					my ( $stdout, $stderr );
+					require IPC::Run3;
 					IPC::Run3::run3(qq`jpegtran -optimize -copy none -outfile "$dest" "$dest"`, undef, $stdout, $stderr );
 					if ( $? ) {
 						$openprint::log->error("ERror optimising sized image. Reason: ($?) stdout($stdout) stderr($stderr)");
