@@ -1705,9 +1705,11 @@ sub calc {
 		$$specs{'alert'} .= 'Please enter Width and Height<br/>';
 		return $$specs{'Status'} = 'uncalculated';
 	} # end if
+	if ( ! $$specs{txtSignatureType} ) {
 	if ( ! ( $$specs{'txtFinalWidth'} and $$specs{'txtFinalHeight'} ) ) {
 		$$specs{'alert'} .= 'Please enter finished width and height<br/>';
 		return $$specs{'Status'} = 'uncalculated';
+	} # end if
 	} # end if
 
 	if ( $$specs{'txtFinalWidth'} and ( $$specs{'txtWidth'} < $$specs{'txtFinalWidth'} ) ) {
