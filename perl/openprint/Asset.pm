@@ -41,6 +41,7 @@ $debug = 0;
 	'layout'		=>	'layout',
 	'width'			=>	'width',
 	'height'		=>	'height',
+	source			=>	'source',
 );
 %defaults = (
 	'data'		=>	undef,
@@ -77,8 +78,11 @@ sub on_disk_path {
 } # end sub on_disk_path
 
 sub on_disk_filename {
-	return '' if ! $_[0]{'id'};
-	return $_[0]{'id'}.'_'.$_[0]{'filename'};
+	return '' if ! $_[0]{id};
+	$_ = $_[0]{id}.'_'.$_[0]{filename};
+	$_ =~ s/[\/:\*\?'"<>|]//g;
+	$_ =~ s/&/n/g;
+	return $_;
 } # end sub on_disk_filename
 
 sub url {

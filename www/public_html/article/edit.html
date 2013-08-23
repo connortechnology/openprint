@@ -16,7 +16,7 @@
 	});
 </script>
 <div class="Article"><div class="Edit">
-	<? echo ( include('/includes/error_reporting.html'); ) ?>
+	<?include('/includes/error_reporting.html')?>
 	<form name="f1" id="f1" action="/article/edit.html" method="post" enctype="multipart/form-data">
 		<fieldset><legend>Editing Article<? echo ( $$variable{Article}->id() ? '('.$$variable{Article}->id().')' : '' ) ?></legend>
 			<? if ( $$variable{Article}->deleted() ) ?>
@@ -27,23 +27,23 @@
 			<p class="buttons">
 				<? echo (
 					my $html = '';
-					#$html = ssi::button( 'Back', { 'href'=>'history.html'} );
+					#$html = button( 'Back', { 'href'=>'history.html'} );
 					
 					if ( $$variable{Article}->id() ) {
-						$html = ssi::button( 'Reset1', { onclick=>'f1.reset();check_time_published_on(f1);', text=>'Reset' } );
+						$html = button( 'Reset1', { onclick=>'f1.reset();check_time_published_on(f1);', text=>'Reset' } );
 						if ( $$variable{Article}->deleted() ) {
-							$html .= ssi::button( 'destroy1', { onclick => "if(confirm('Are you sure?')){f1.func.value='destroy';f1.submit();}", text=>'Destroy' } );
-							$html .= ssi::button( 'undelete1', { onclick => "f1.func.value='undelete';f1.submit();", text=>'Undelete' } );
+							$html .= button( 'destroy1', { onclick => "if(confirm('Are you sure?')){f1.func.value='destroy';f1.submit();}", text=>'Destroy' } );
+							$html .= button( 'undelete1', { onclick => "f1.func.value='undelete';f1.submit();", text=>'Undelete' } );
 						} else {
-							$html .= ssi::button( 'delete1', { onclick => "f1.func.value='delete';f1.submit();", text=>'Delete' } );
+							$html .= button( 'delete1', { onclick => "f1.func.value='delete';f1.submit();", text=>'Delete' } );
 						} # end if
-						$html .= ssi::button( 'Copy1', { onclick=> "f1.func.value='Copy';f1.submit();", text=>'Copy' } );
+						$html .= button( 'Copy1', { onclick=> "f1.func.value='Copy';f1.submit();", text=>'Copy' } );
 						if ( $$variable{Article}->source() ) {
-							$html .= ssi::button( 'Reload1', { onclick=> "f1.func.value='Reload';f1.submit();", text=>'Reload' } );
+							$html .= button( 'Reload1', { onclick=> "f1.func.value='Reload';f1.submit();", text=>'Reload' } );
 						} # end if
-						$html .= ssi::button( 'View1', { 'href'=>'/article/view.html?article_id='.$$variable{Article}->id(), 'target'=>'_blank', text=>'View' } );
+						$html .= button( 'View1', { 'href'=>'/article/view.html?article_id='.$$variable{Article}->id(), 'target'=>'_blank', text=>'View' } );
 					} # end if
-					$html .= ssi::button( 'Save1', { onclick=>"f1.func.value='Save';f1.submit();", text=>'Save' } );
+					$html .= button( 'Save1', { onclick=>"f1.func.value='Save';f1.submit();", text=>'Save' } );
 					return $html;
 				) ?>
 			</p>
@@ -64,7 +64,7 @@
 						<select name="category_id" id="category_id" onchange="$('category').value='';">
 							<option value="">select</option>
 							<? echo (
-								return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Article_Category->find('order'=>'lower(name)') ], $$variable{Article}->category_id() );
+								return make_drop_down( [ map { $_->id(), $_->name() } openprint::Article_Category->find('order'=>'lower(name)') ], $$variable{Article}->category_id() );
 							) ?>
 						</select>
 					</li>
@@ -72,7 +72,7 @@
 					<li><label for="created_by">Author</label>
 						<select id="created_by" name="created_by">
 							<option value=""> select </option>
-							<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User->find(
+							<? echo ( make_drop_down( [ map { $_->id(), $_->name() } openprint::User->find(
 								( 'company_id'=> $$variable{Article}->company_id() ? $$variable{Article}->company_id() : $session{'company_id'} ),
 								'order'=>'lower(firstname),lower(lastname)') ], $$variable{Article}->created_by() ? $$variable{Article}->created_by() : $session{'user_id'} ); ) ?>
 						</select>
@@ -85,10 +85,10 @@
 						<? echo ( ssi::radio( 'published', [1,'Yes',0,'No'], $$variable{Article}->published() ); ) ?>
 					</li>
 					<li><label>Published at</label>
-						<span class="DateTimeSelector"><? echo ( ssi::datetime_select( 'published_on', $$variable{Article}->published_on(), {'with_today'=>1} ); ) ?></span>
+						<span class="DateTimeSelector"><? echo ( datetime_select( 'published_on', $$variable{Article}->published_on(), {'with_today'=>1} ); ) ?></span>
 					</li>
 					<li><label>Anonymous</label>
-						<? echo ( ssi::radio( 'anonymous', ['1', 'Yes', '0', 'No' ], 1*$$variable{Article}->anonymous() ); ) ?>
+						<? echo ( radio( 'anonymous', ['1', 'Yes', '0', 'No' ], 1*$$variable{Article}->anonymous() ); ) ?>
 					</li>
 					<li><label>Source</label>
 						<input type="text" id="source" name="source" value="<? echo ( $$variable{Article}->source() ) ?>" onchange="new Ajax.Updater( 'View', '_view.html', { parameters: f1.serialize() } );" />
@@ -118,24 +118,24 @@
 			<p class="buttons">
 				<? echo (
 					my $html = '';
-					#$html = ssi::button( 'Back', { 'href'=>'history.html'} );
+					#$html = button( 'Back', { 'href'=>'history.html'} );
 					
 					if ( $$variable{Article}->id() ) {
-						$html = ssi::button( 'Reset', { onclick=>'f1.reset();check_time_published_on(f1);' } );
-						$html .= ssi::button( 'Destroy', { onclick => "if(confirm('Are you sure?')){f1.func.value='Destroy';f1.submit();}" } );
-						$html .= ssi::button( 'Copy', { onclick=> "f1.func.value='Copy';f1.submit();" } );
+						$html = button( 'Reset', { onclick=>'f1.reset();check_time_published_on(f1);' } );
+						$html .= button( 'Destroy', { onclick => "if(confirm('Are you sure?')){f1.func.value='Destroy';f1.submit();}" } );
+						$html .= button( 'Copy', { onclick=> "f1.func.value='Copy';f1.submit();" } );
 						if ( $$variable{Article}->source() ) {
-							$html .= ssi::button( 'Reload', { onclick=> "f1.func.value='Reload';f1.submit();" } );
+							$html .= button( 'Reload', { onclick=> "f1.func.value='Reload';f1.submit();" } );
 						} # end if
-						$html .= ssi::button( 'View', { 'href'=>'/article/view.html?article_id='.$$variable{Article}->id(), 'target'=>'_blank' } );
+						$html .= button( 'View', { 'href'=>'/article/view.html?article_id='.$$variable{Article}->id(), 'target'=>'_blank' } );
 					} # end if
-					$html .= ssi::button( 'Save', { onclick=>"f1.func.value='Save';f1.submit();" } );
+					$html .= button( 'Save', { onclick=>"f1.func.value='Save';f1.submit();" } );
 					return $html;
 				) ?>
 			</p>
 			</div>
 			<div class="rightColumn">
-				<? echo ( include('/article/_upload.html'); ) ?>
+				<?include('/article/_upload.html')?>
 			</div>
 		</fieldset>
 		<input type="hidden" name="func" />

@@ -106,6 +106,9 @@ sub add {
 
 		
 	} else {
+		if ( openprint::Asset->find_one(source=>$_[0]) ) {
+			return;
+		} # end if
 		my $blob = File::Slurp::read_file($_[0] );
 		my $md5 = Digest::MD5::md5_base64( $blob );
 		if ( ! $md5 ) {
@@ -117,7 +120,7 @@ sub add {
 			$Asset = new openprint::Asset();
 
 			my $filename = basename($_[0]);
-			$_ = $Asset->save({ filename=>$filename, md5=>$md5, name=>$filename });
+			$_ = $Asset->save({ filename=>$filename, md5=>$md5, name=>$filename, source=>$_[0] });
 			return $_ if $_;
 
 			if ( ! File::Slurp::write_file($Asset->on_disk_path(), { atomic => 1, err_mode=>'carp' }, $blob ) ) {
@@ -127,6 +130,9 @@ sub add {
 			$_ = $Asset->save();
 			return $_ if $_;
 		} else {
+			if ( ! $Asset->source() ) {
+				$Asset->save({source=>$_[0]});
+			} # end if
 			if ( ! -e $Asset->on_disk_path() ) {
 				if ( ! File::Slurp::write_file($Asset->on_disk_path(), { atomic => 1, err_mode=>'carp' }, $blob ) ) {
 					return 'There was an error saving file ' . $_[0].' to ' . $Asset->on_disk_path() . ": $!<br/>";
