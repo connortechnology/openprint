@@ -26,7 +26,9 @@ sub save {
 	);
 } # end sub save
 
-1;
+sub set {
+	@{$_[0]}{'self','equipment_index','period_start','period_end','min','max','units','Cost','Markup','Price','discountable'} = @_;
+} # end sub set
 
+1;
 __END__
-~       

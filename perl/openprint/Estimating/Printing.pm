@@ -21,7 +21,7 @@ package openprint::Estimating::Printing;
 my $threading = 0;
 #use threads;
 use constant DEBUG => 0;
-use constant DEBUG_FILTERING => 0;
+use constant DEBUG_FILTERING => 1;
 use constant DEBUG_PRICE_DECISIONS => 0;
 
 my $master_time;
@@ -1291,6 +1291,8 @@ $openprint::log->debug("Non-process colours in get_impositions: @non_process_col
 								push @{$paper_impositions{$key}}, $i;
 							} else {
 								my $add = 1;
+								if ( ( $$specs{'OverrideCutOff'.$qty_index} ne 'Y' ) and ( $$P{height} != $$specs{"CutOff$qty_index"} ) ) {
+								
 								for ( my $imp_index = 0; $imp_index < @{$paper_impositions{$key}}; $imp_index += 1 ) {
 									my $j = $paper_impositions{$key}[$imp_index];
 									if ( $i->Paper()->area() < $j->Paper()->area() ) {
@@ -1306,6 +1308,7 @@ $openprint::log->debug("Non-process colours in get_impositions: @non_process_col
 									#} elsif ( $$j{'dutch_columns'} and ! $$i{'dutch_columns'} ) {
 									} # end if
 								} # end for
+								} # end if
 								if ( $add ) {
 									push @{$paper_impositions{$key}}, $i;
 								} # end if
@@ -1720,10 +1723,10 @@ sub set_size {
 					my $finished_calliper = 0;
 					my @Groups = sql::execute( undef, undef, 'SELECT DISTINCT strvalue FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strName=?', $Project->id(), 'Group' );
 					foreach my $group_id ( @Groups ) {
-# Don't include the cover
+						# Don't include the cover
 						next if $group_id == 1;
-						foreach my $ss_id ( $Project->signatures({'Group'=>$group_id}) ) {
-# Each group has at least 1 sig in it.
+						foreach my $ss_id ( $Project->signatures({ Group=>$group_id}) ) {
+							# Each group has at least 1 sig in it
 							my $sig_specs = openprint::service::get_specs_ref( $Project, $ss_id );
 
 							$finished_calliper += $$sig_specs{'GroupPageQuantity'} * $$sig_specs{'txtSpecificStockCalliper'} /2;
@@ -1731,10 +1734,9 @@ sub set_size {
 						} # end foreach signature in the group
 					} # end foreach group
 
-					#$openprint::log->debug("Cover size calc: $finished_calliper");
-					$$specs{'txtWidth'} = sprintf('%.4f', ceil(($$specs{'txtWidth'} + $finished_calliper + 2*$config{'PerfectBindGlueSpace'})*10000)/10000);
+					$$specs{'txtWidth'} = Math::Round::nearest( 0.0001, ceil(($$specs{'txtWidth'} + $finished_calliper + 2*$config{'PerfectBindGlueSpace'})*10000)/10000);
 				} else {
-					$$specs{'txtWidth'} = sprintf('%.3f', ceil($$specs{'txtWidth'}*1000)/1000);
+					$$specs{'txtWidth'} = Math::Round::nearest( 0.001, ceil($$specs{'txtWidth'}*1000)/1000);
 				} # end if
 			} # end if
 			$$specs{'txtFinalWidth'} = $$printing_specs{'txtFinalWidth'};
@@ -1770,7 +1772,7 @@ sub set_size {
 # If no spreadsize, then we are likely not a book, and the spread size is 2
 		#$$specs{'txtSpreadSize'} = 2 if ! $$specs{'txtSpreadSize'};
 		if ( $$specs{'txtFinalWidth'} and $$specs{'txtFinalHeight'} ) {
-		$$specs{'txtSpreadSize'} = 2*sprintf('%.0f', $$specs{'txtWidth'}/$$specs{'txtFinalWidth'})*sprintf('%.0f', $$specs{'txtHeight'}/$$specs{'txtFinalHeight'} );
+			$$specs{'txtSpreadSize'} = 2*Math::Round::nearest( 1, $$specs{'txtWidth'}/$$specs{'txtFinalWidth'})*Math::Round::nearest( 1, $$specs{'txtHeight'}/$$specs{'txtFinalHeight'} );
 		} # end if
 #$variables{'txtWidth'} = [ sets::exclude( ['output'], $variables{'txtWidth'} ) ];
 #$variables{'txtHeight'} = [ sets::exclude( ['output'], $variables{'txtHeight'} ) ];
@@ -1896,13 +1898,35 @@ sub calc {
 		} # end if
 	} # end if
 
+	if ( $$specs{'txtFinalWidth'} and ! ( $$specs{'txtFinalWidth'} =~ /^(?=.+)(?:[1-9]\d*|0)?(?:\.\d+)?$/ ) ) {
+		$$specs{'alert'} .= 'The finished width is invalid. Please correct it.<br/>';
+		return $$specs{'Status'} = 'uncalculated';
+	} # end if
+	if ( $$specs{'txtFinalHeight'} and ! ( $$specs{'txtFinalHeight'} =~ /^(?=.+)(?:[1-9]\d*|0)?(?:\.\d+)?$/ ) ) {
+		$$specs{'alert'} .= 'The finished height is invalid. Please correct it.<br/>';
+		return $$specs{'Status'} = 'uncalculated';
+	} # end if
 	set_size( $Project, $specs, $printing_specs );
-
 	if ( ! ( $$specs{'txtWidth'} and $$specs{'txtHeight'} ) ) {
-		$$specs{'alert'} .= 'Please enter Width and Height<br/>';
+		$$specs{'alert'} .= 'Please enter width and height<br/>';
 		return $$specs{'Status'} = 'uncalculated';
 	} # end if
 
+	if ( ! $$specs{txtSignatureType} ) {
+		if ( ! ( $$specs{'txtFinalWidth'} and $$specs{'txtFinalHeight'} ) ) {
+			$$specs{'alert'} .= 'Please enter finished width and height<br/>';
+			return $$specs{'Status'} = 'uncalculated';
+		} # end if
+	} # end if
+
+	if ( ! ( $$specs{'txtWidth'} =~ /^(?=.+)(?:[1-9]\d*|0)?(?:\.\d+)?$/ ) ) {
+		$$specs{'alert'} .= 'The flat width is invalid. Please correct it.<br/>';
+		return $$specs{'Status'} = 'uncalculated';
+	} # end if
+	if ( ! ( $$specs{'txtHeight'} =~ /^(?=.+)(?:[1-9]\d*|0)?(?:\.\d+)?$/ ) ) {
+		$$specs{'alert'} .= 'The flat height is invalid. Please correct it.<br/>';
+		return $$specs{'Status'} = 'uncalculated';
+	} # end if
 	if ( $$specs{'txtFinalWidth'} and ( $$specs{'txtWidth'} < $$specs{'txtFinalWidth'} ) ) {
 		$$specs{'alert'} .= 'Flat Width must be greater than Final Width.<br/>';
 		return $$specs{'Status'} = 'uncalculated';

@@ -1,6 +1,6 @@
 <? echo (
 	return if ! $$variable{'ProjectType'};
-    @{$$variable{'Categories'}} = openprint::Product_Category->find( order=>'lower(name)', projecttype_id=>$$variable{'ProjectType'}->id() );
+    $$variable{Categories} = [ openprint::Product_Category->find( order=>'lower(name)', projecttype_id=>$$variable{'ProjectType'}->id() ) ];
 	return if ! @{$$variable{'Categories'}};
 
     my $list_id = openprint::pricing::get_pricelist_id( $log, $dbh, $variable );
@@ -43,7 +43,7 @@
 				$html .= sprintf('<td style="text-align:left;">%s</td>', $Product->specification( $spec ) );
 			} # end foreach specs
 			foreach my $qty ( @{$$variable{'QTYS'}} ) {
-				my %price = openprint::pricing::get_best_price_object( $log, $dbh, $session{'company_id'}, $Product->id(), $$variable{'Pricelist'}->id(), 'openprint::product_priceset', $qty );
+				my %price = openprint::pricing::get_best_price_object( $session{'company_id'}, $Product->id(), $$variable{'Pricelist'}->id(), 'openprint::product_priceset', $qty );
 				if ( $price{'Price'} ) {
 					openprint::Currency::convert( \%price );
 					$html .= sprintf('<td style="text-align:right;"><a href="/main/order/information.html?Product=%d&amp;Quantity=%d">%s%.2f</a></td>', $Product->id(), $qty, $$variable{'Currency'}->symbol(), $price{'Price'} );
