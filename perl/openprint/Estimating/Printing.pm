@@ -1691,8 +1691,15 @@ sub calc {
 		} # end if
 	} # end if
 
+	if ( ! ( $$specs{'txtFinalWidth'} =~ /^(?=.+)(?:[1-9]\d*|0)?(?:\.\d+)?$/ ) ) {
+		$$specs{'alert'} .= 'The final width is invalid. Please correct it.<br/>';
+		return $$specs{'Status'} = 'uncalculated';
+	} # end if
+	if ( ! ( $$specs{'txtFinalHeight'} =~ /^(?=.+)(?:[1-9]\d*|0)?(?:\.\d+)?$/ ) ) {
+		$$specs{'alert'} .= 'The final height is invalid. Please correct it.<br/>';
+		return $$specs{'Status'} = 'uncalculated';
+	} # end if
 	set_size( $Project, $specs, $printing_specs );
-
 
 	if ( ! ( $$specs{'txtWidth'} and $$specs{'txtHeight'} ) ) {
 		$$specs{'alert'} .= 'Please enter Width and Height<br/>';
