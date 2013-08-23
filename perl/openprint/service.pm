@@ -513,7 +513,6 @@ $log->debug("Calling $function");
         my $status = $function->( $log, $dbh, $variable, $project_index, $service_index, \%specs );
 $log->debug("Back from Calling $function");
 		if ( ! $specs{Status} ) {
-			$log->error("Status not in specs in $package");
 			$specs{'Status'} = $status;
 		} # end if
         my $elapsed = time - $starttime;
