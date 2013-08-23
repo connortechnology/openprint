@@ -6,7 +6,11 @@ require openprint::pricelist;
 require openprint::priceset;
 require openprint::price;
 
-my $debug = 1;
+use vars qw( $log $dbh );
+*log = \$openprint::log;
+*dbh = \$openprint::dbh;
+
+use constant DEBUG => 1;
 
 my %price_cache;
 
@@ -140,7 +144,7 @@ sub split_by_equipment {
 
 memoize('get_best_prices');
 sub get_best_prices {
-	my ( $log, $dbh, $cust_id, $prod_index, $list_id, $pricesetclass, $equipment, $qty, $period ) = @_;
+	my ( $cust_id, $prod_index, $list_id, $pricesetclass, $equipment, $qty, $period ) = @_;
 
 	#my $hash_index = "$list_id-$pricesetclass-$cust_id-$prod_index-$equipment-$qty";
 
@@ -204,15 +208,15 @@ sub get_best_prices {
 } # end sub get_best_prices
 
 sub get_best_price {
-	my ( $log, $dbh, $cust_id, $prod_index, $list_id, $pricesetclass, $qty, $equipment, $period ) = @_;
+	my ( $cust_id, $prod_index, $list_id, $pricesetclass, $qty, $equipment, $period ) = @_;
 
-	my %price = get_best_price_object( $log, $dbh, $cust_id, $prod_index, $list_id, $pricesetclass, $qty, $equipment, $period );
+	my %price = get_best_price_object( $cust_id, $prod_index, $list_id, $pricesetclass, $qty, $equipment, $period );
 	return $price{Price};
 } # end sub get_best_price 
 
 sub get_best_price_object {
-	my ( $log, $dbh, $cust_id, $prod_index, $list_id, $pricesetclass, $qty, $equipment, $period ) = @_;
-	my $prices = get_best_prices( $log, $dbh, $cust_id, $prod_index, $list_id, $pricesetclass, $equipment, $qty, $period );
+	my ( $cust_id, $prod_index, $list_id, $pricesetclass, $qty, $equipment, $period ) = @_;
+	my $prices = get_best_prices( $cust_id, $prod_index, $list_id, $pricesetclass, $equipment, $qty, $period );
 	foreach my $price ( @$prices ) {
 		if ( $price and ( 
 					( (!defined $qty) or $qty eq '' ) or

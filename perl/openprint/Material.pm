@@ -138,7 +138,7 @@ sub get_price {
 	my ( $self, $quantity, $Equipment ) = @_;
 
 	my $Pricelist = openprint::Pricelist::get_current();
-	my %price = openprint::pricing::get_best_price_object( $log, $dbh, $session{'company_id'}, $$self{id}, $$Pricelist{id}, 'openprint::material_priceset', $quantity, $$Equipment{'id'} );
+	my %price = openprint::pricing::get_best_price_object( $session{'company_id'}, $$self{id}, $$Pricelist{id}, 'openprint::material_priceset', $quantity, $$Equipment{'id'} );
 	return if ! %price;
 
 	$price{'currency_id'} = $Pricelist->currency_id();
