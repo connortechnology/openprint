@@ -189,6 +189,10 @@ sub find {
 		$sql .= ' AND id IN ( SELECT skid_id FROM skid_contents WHERE paper_id=(SELECT id FROM papers WHERE fsc_code=?))';
 		push @values, $params{'fsc_code'};
 	} # end if
+	if ( $params{condition_id} ) {
+		$sql .= ' AND exists ( SELECT skid_id FROM skid_contents WHERE condition_id=? and skid_contents.skid_id=skids.id )';
+		push @values, $params{condition_id};
+	} # end if
 	if ( exists $params{'deleted'} ) {
 		if ( ref $params{'deleted'} eq 'ARRAY' ) {
 			$sql .= ' AND deleted IN (' . join(',', map {'?'} @{$params{'deleted'}}) . ')';
@@ -560,7 +564,7 @@ sub is_empty {
 			} # end if
 		} # end foreach
 	} # end if
-$openprint::log->debug("SKid empty: $_[0]{empty}");
+#$openprint::log->debug("SKid empty: $_[0]{empty}");
 	return $_[0]{empty};
 } # end sub is_empty
 
