@@ -2,8 +2,8 @@ use strict;
 package Configuration;
 our @ISA = qw(openprint::Object);
 
-use vars qw( $debug $table @identified_by %fields %transforms %defaults );
-$debug = 1;
+use vars qw( $debug $table @identified_by %fields %transforms %defaults @types );
+$debug = 0;
 $table = 'configuration';
 @identified_by = ( 'name' );
 
@@ -22,5 +22,6 @@ $table = 'configuration';
 );
 %defaults = ();
 
+@types = ( 'Supplier', 'pricelist', 'currency', 'yes/no', 'textarea', 'text','number', 'list' );
 1;
 __END__

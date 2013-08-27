@@ -19,7 +19,7 @@ our @ISA = qw(openprint::Object);
 
 use vars qw( $debug %fields %transforms %defaults $table $serial );
 
-$debug = 0;
+$debug = 1;
 
 %fields = (
 	'id'			=>	'id',
@@ -60,7 +60,7 @@ $debug = 0;
 %transforms = (
 	width			=>	[ 's/\D//g' ],
 	height			=>	[ 's/\D//g' ],
-	filename		=>	[ 's/^\s+//', 's/\s+$//', 's/ /_/g' ],
+	filename		=>	[ 's/^\s+//', 's/\s+$//', 's/ /_/g', 's/[\/:\*\?\'"<>|]//g', 's/&/n/g' ],
 	name			=>	[ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
 	description	=>	[ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
 	attribution	=>	[ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
@@ -80,8 +80,6 @@ sub on_disk_path {
 sub on_disk_filename {
 	return '' if ! $_[0]{id};
 	$_ = $_[0]{id}.'_'.$_[0]{filename};
-	$_ =~ s/[\/:\*\?'"<>|]//g;
-	$_ =~ s/&/n/g;
 	return $_;
 } # end sub on_disk_filename
 
@@ -251,7 +249,7 @@ $openprint::log->error("Shuold have found an icon.  Install icons!! for ($extens
 	} # end if
 $openprint::log->error("unknown externsion or somerthitng.  Install icons!! for ($extension)") if $extension;
 	return '';
-}  # end sub
+}  # end sub sized_url
 
 sub medium_url {
 	return sized_url( $_[0], 'medium' );
@@ -356,56 +354,78 @@ sub destroy {
 } # end sub destroy
 
 sub fetch {
-	my ( $url ) = @_;
-$openprint::log->debug("Fetching from $url") if $debug;
-
-	require LWP::UserAgent;
-	require HTTP::Request;
-
-	my $ua = LWP::UserAgent->new;
-	$ua->agent("IQ/0.1 ");
-# Create a request
-	my $req = HTTP::Request->new( GET => $url );
-# Pass request to the user agent and get a response back
-	my $res = $ua->request($req);
-# Check the outcome of the response
-	if (! $res->is_success) {
-		$openprint::log->debug("No success.");
-		return "Failed to get file. URL($url)<br/>";
+	my ( $Asset, $url );
+	if ( @_ == 2 ) {
+		( $Asset, $url ) = @_;
+	} elsif ( ref $_[0] eq 'openprint::Asset' ) {
+		$Asset = $_[0];
+		$url = $Asset->source();
+	} else {
+		$url = $_[0];
 	} # end if
 
-	require URI;
-	require File::Basename;
-	require File::Slurp;
-
-	my $URI = URI->new($url);
-	my $path = $URI->path();
-	my $filename = File::Basename::basename( $path );
-$openprint::log->debug("fetch: filename: $filename path: $path from url $url");
-	if ( ! $filename ) {
-		return "Unable to determine filename from $url";
-	} elsif ( $debug ) {
-		$openprint::log->debug("saving to filename $filename");
-	} # endi f
-	require URI::Escape;
-	$filename = URI::Escape::uri_unescape( $filename );
-
-		
-	require Digest::MD5;
-	my $data;
-	my $md5 = Digest::MD5::md5_base64( $res->content );
-	if ( ! $md5 ) {
-		return "Unable to MD5?";
-	#} else {
-		#$openprint::log->debug("MD5 was $md5");
+	if ( ! $url ) {
+		$openprint::log->error("Asset::fetch No source for @_");
+		return;
 	} # end if
-	my $Asset = openprint::Asset->find_one( md5 => $md5 );
+
+	$openprint::log->debug("Fetching from $url") if $debug;
+
+	my ( $md5, $filename );
+		my $data;
+
+	if ( $url =~ /^http/i ) {
+
+		require LWP::UserAgent;
+		require HTTP::Request;
+
+		my $ua = LWP::UserAgent->new;
+		$ua->agent("IQ/0.1 ");
+	# Create a request
+		my $req = HTTP::Request->new( GET => $url );
+	# Pass request to the user agent and get a response back
+		my $res = $ua->request($req);
+	# Check the outcome of the response
+		if (! $res->is_success) {
+			$openprint::log->debug("No success.");
+			return "Failed to get file. URL($url)<br/>";
+		} # end if
+
+		require URI;
+		require File::Basename;
+		require File::Slurp;
+
+		my $URI = URI->new($url);
+		my $path = $URI->path();
+		$filename = File::Basename::basename( $path );
+	$openprint::log->debug("fetch: filename: $filename path: $path from url $url");
+		if ( ! $filename ) {
+			return "Unable to determine filename from $url";
+		} elsif ( $debug ) {
+			$openprint::log->debug("saving to filename $filename");
+		} # endi f
+		require URI::Escape;
+		$filename = URI::Escape::uri_unescape( $filename );
+
+		require Digest::MD5;
+		$md5 = Digest::MD5::md5_base64( $res->content );
+		if ( ! $md5 ) {
+			return "Unable to MD5?";
+		#} else {
+			#$openprint::log->debug("MD5 was $md5");
+		} # end if
+		*data = \$res->content;
+	} else {
+		$filename = File::Basename::basename( $url );
+		$data = File::Slurp::read_file( $filename );
+	} # end if
+	$Asset = openprint::Asset->find_one( md5 => $md5 ) if ! $Asset;
 	if ( ! $Asset ) {
 		$Asset = new openprint::Asset();
 		$_ = $Asset->save({ filename=>$filename, md5=>$md5 });
 		return $_ if $_;
 
-		if ( ! File::Slurp::write_file($Asset->on_disk_path(), { atomic => 1, err_mode=>'carp' }, $res->content ) ) {
+		if ( ! File::Slurp::write_file($Asset->on_disk_path(), { atomic => 1, err_mode=>'carp' }, $data ) ) {
 			return 'There was an error saving file ' . $filename.' to ' . $Asset->on_disk_path() . ": $!<br/>";
 		} # end if
 
@@ -416,7 +436,7 @@ $openprint::log->debug("fetch: filename: $filename path: $path from url $url");
 			$Asset->save({filename=>URI::Escape::uri_unescape( $Asset->filename() )});
 		} # end if
 		if ( ! -e $Asset->on_disk_path() ) {
-			if ( ! File::Slurp::write_file($Asset->on_disk_path(), { atomic => 1, err_mode=>'carp' }, $res->content ) ) {
+			if ( ! File::Slurp::write_file($Asset->on_disk_path(), { atomic => 1, err_mode=>'carp' }, $data ) ) {
 				return 'There was an error saving file ' . $filename.' to ' . $Asset->on_disk_path() . ": $!<br/>";
 			} # end if
 		} # end if
@@ -589,25 +609,36 @@ sub generate_video {
 	} # end if
 	if ( ! flock($lock, Fcntl::LOCK_EX) ) {
 		$openprint::log->error("Unable to lock semaphore\n");
+		return;
 	} # end if
 	if ( ! -e $dest ) {
 		# Create it
 		my $src  = $_[0]->on_disk_path();
 		my ( $base, $extension ) = $src =~ /\/([^\/]+)\.([^\.]+)$/;
 		if ( $type eq 'mp4' ) {
-			my $output = `avconv -i $src -threads 2 -vcodec libx264 -b 1500k -pre:v baseline -g 30 -f mp4 $dest.part`;
-			$openprint::log->debug("avconv -i $src -threads 2 -vcodec libx264 -b 1500k -pre:v baseline -g 30 -f mp4 $dest: $output");
+			$openprint::log->debug("avconv -i $src -threads 2 -vcodec libx264 -b 1500k -pre:v baseline -g 30 -f mp4 $dest.part:");
+			my $output = `avconv -i "$src" -threads 2 -vcodec libx264 -b 1500k -pre:v baseline -g 30 -f mp4 "$dest.part"`;
+			$openprint::log->debug("avconv -i $src -threads 2 -vcodec libx264 -b 1500k -pre:v baseline -g 30 -f mp4 $dest.part: $output");
 			if ( ! -e "$dest.part" ) {
-				$openprint::log->debug("avconv didn't do it's thing.");
+				$openprint::log->error("avconv didn't do it's thing.");
+			} else {
+				`qt-faststart "$dest.part" "$dest"`;
+				unlink "$dest.part";
 			} # end if
-			`qt-faststart $dest.part $dest`;
-			unlink "$dest.part";
 		} elsif ( $type eq 'ogg' ) {
-			`avconv -i $src -vcodec libtheora -b 1500k -acodec libvorbis -ab 160000 -g 30 -f ogg $dest.part`;
-			`mv $dest.part $dest`;
+			`avconv -i "$src" -vcodec libtheora -b 1500k -acodec libvorbis -ab 160000 -g 30 -f ogg "$dest.part"`;
+			if ( ! -e "$dest.part" ) {
+				$openprint::log->error("avconv didn't do it's thing.");
+			} else {
+				`mv $dest.part $dest`;
+			} # end if
 		} elsif ( $type eq 'webm' ) {
-		`avconv -i $src -vcodec libvpx -b 1500k -acodec libvorbis -ab 160000 -f webm $dest.part`;
-			`mv $dest.part $dest`;
+		`avconv -i "$src" -vcodec libvpx -b 1500k -acodec libvorbis -ab 160000 -f webm "$dest.part"`;
+			if ( ! -e "$dest.part" ) {
+				$openprint::log->error("avconv didn't do it's thing.");
+			} else {
+				`mv "$dest.part" "$dest"`;
+			} # end if
 		} else {
 			$openprint::log->error("Unknown type in video_url $type");
 		} # end if type

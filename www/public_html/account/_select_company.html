@@ -1,3 +1,5 @@
+<? eval ( $$variable{company_dropdown} = openprint::Company::get_dropdown( $session{company_id} ); )?>
+<? if ( @{$$variable{company_dropdown}} > 2 ) ?>
 <br/>
 You are currently representing <? echo ( new openprint::Company($session{company_id})->name(); ) ?>.<br/>
 To represent another <? echo ( translate('company') ) ?>, please select it from the dropdown and click submit. <br/>
@@ -11,7 +13,7 @@ Any actions you perform will be recorded in the selected <? echo ( translate('co
 			<select name="ddmCompany" onchange="if(this.options[this.selectedIndex].value != '') f1.submit();">
 				<? echo ( openprint::Company::get_dropdown( $session{company_id} );) ?>
 			</select>
-			<? echo ( ssi::button( 'Submit', { onclick=>'f1.submit();' } ); ) ?>
+			<? echo ( button( 'Submit', { onclick=>'f1.submit();' } ); ) ?>
 		</li>
 		<li><label>Last 10</label>
 	<? echo ( 
@@ -39,3 +41,4 @@ Any actions you perform will be recorded in the selected <? echo ( translate('co
 	<input type="hidden" name="btnFunction" value="SelectCompany"/>
 </form>
 <script type="text/javascript">document.f1.CompanyFilter.focus();</script>
+<? endif ( @{$$variable{company_dropdown}} > 2 ) ?>
