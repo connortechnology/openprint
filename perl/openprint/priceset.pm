@@ -60,7 +60,7 @@ sub load {
 		$sql .= ' AND (? >= period_start OR period_start IS NULL) AND (? <= period_end OR period_end IS NULL)';
 		push @values, @$self{'period','period'};
 	} # end if
-    my @records = sql::execute( undef, undef, $sql, @values );
+    my @records = sql::execute( $self->{log}, undef, $sql, @values );
     while ( @records ) {
 		my $price = openprint::price->new( $self->{log}, $self->{dbh}, $self );
 		$price->set( splice @records, 0, 7 );

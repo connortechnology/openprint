@@ -58,8 +58,14 @@ sub Thumbnail {
 sub thumbnail_url {
 	my $Thumbnail = $_[0]->Thumbnail();
 	$openprint::log->debug(ref$Thumbnail);
-	return $_[0]->Thumbnail()->thumbnail_url();
+	return $Thumbnail->thumbnail_url();
 } # end sub thumbnail_url
+
+sub sized_url {
+	my $Thumbnail = $_[0]->Thumbnail();
+	return $Thumbnail->sized_url( $_[1] );
+} # end sub thumbnail_url
+	
 
 sub thumbnail_html {
 	my $Photo = $_[0]->Thumbnail();

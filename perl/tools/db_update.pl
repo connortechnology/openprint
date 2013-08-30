@@ -346,6 +346,9 @@ if ( ! sets::isin( 'assets', \@tables ) ) {
 	if ( ! exists $$data{'layout'} ) {
 		$dbh->do('ALTER TABLE Assets ADD layout text');
 	} # end if
+	if ( ! exists $$data{source} ) {
+		$dbh->do('ALTER TABLE Assets ADD source text');
+	} # end if
 } # end if
 
 if ( ! sets::isin('articles',\@tables ) ) {

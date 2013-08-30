@@ -41,6 +41,7 @@ $debug = 0;
 	'layout'		=>	'layout',
 	'width'			=>	'width',
 	'height'		=>	'height',
+	source			=>	'source',
 );
 %defaults = (
 	'data'		=>	undef,
@@ -77,8 +78,11 @@ sub on_disk_path {
 } # end sub on_disk_path
 
 sub on_disk_filename {
-	return '' if ! $_[0]{'id'};
-	return $_[0]{'id'}.'_'.$_[0]{'filename'};
+	return '' if ! $_[0]{id};
+	$_ = $_[0]{id}.'_'.$_[0]{filename};
+	$_ =~ s/[\/:\*\?'"<>|]//g;
+	$_ =~ s/&/n/g;
+	return $_;
 } # end sub on_disk_filename
 
 sub url {
@@ -138,6 +142,8 @@ sub sized_url {
 				} elsif ( $size eq 'large' ) {
 					$width = $openprint::config{'Large_Asset_Width'};
 				} elsif ( $size eq 'thumbnail' ) {
+					$width = $openprint::config{'Small_Asset_Width'};
+				} elsif ( $size eq 'small' ) {
 					$width = $openprint::config{'Small_Asset_Width'};
 				} # end if
 				if ( ! $width ) {
@@ -223,6 +229,7 @@ sub sized_url {
 					unlink "/tmp/$filename/00000001.jpg";
 					rmdir "/tmp/$filename";
 					my ( $stdout, $stderr );
+					require IPC::Run3;
 					IPC::Run3::run3(qq`jpegtran -optimize -copy none -outfile "$dest" "$dest"`, undef, $stdout, $stderr );
 					if ( $? ) {
 						$openprint::log->error("ERror optimising sized image. Reason: ($?) stdout($stdout) stderr($stderr)");

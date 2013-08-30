@@ -20,7 +20,7 @@ sub save {
 sub load {
 	my $self = shift;
 
-	my @values = ( @$self{'product_index','list_index'} );
+	my @values = @$self{'product_index','list_index'};
     my $sql = 'SELECT equipment_id, period_start, period_end, Min, Max, Units, Cost, Markup, Price, Discountable FROM Service_Prices WHERE Service_id=? AND pricelist_id=?';
 	if ( $self->{equipment_index} ) {
 		$sql .= ' AND (equipment_id=? OR equipment_id IS NULL)';
@@ -34,7 +34,7 @@ sub load {
 		$sql .= ' AND (? >= period_start OR period_start IS NULL) AND (? <= period_end OR period_end IS NULL)';
 		push @values, @$self{'period','period'};
 	} # end if
-    my @records = sql::execute( 0, undef, $sql, @values );
+    my @records = sql::execute( $openprint::log, undef, $sql, @values );
     while ( @records ) {
 		my $price = openprint::service_price->new( $self->{log}, $self->{dbh}, $self );
 		$price->set( splice @records, 0, 10 );
@@ -43,6 +43,4 @@ sub load {
 }
 
 1;
-
 __END__
-~       

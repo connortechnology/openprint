@@ -47,7 +47,7 @@ sub get_price {
 
 sub get_price_object {
 	my ( $service, $range, $Equipment ) = @_;
-	my $Service = openprint::Service->find_one('name'=>$service);
+	my $Service = openprint::Service->find_one( name=>$service );
 	return if ! $Service;
 	return $Service->get_price( $range, $Equipment );
 } # end sub get_price_object

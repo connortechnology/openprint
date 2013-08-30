@@ -115,7 +115,7 @@ sub get_price {
 
 	my $list_id = openprint::pricing::get_pricelist_id();
 
-	my %price = openprint::pricing::get_best_price_object( $log, $dbh, $openprint::session{'company_id'}, $$self{'id'}, $list_id, 'openprint::product_priceset', $qty, undef );
+	my %price = openprint::pricing::get_best_price_object( $openprint::session{'company_id'}, $$self{'id'}, $list_id, 'openprint::product_priceset', $qty, undef );
 	if ( ! %price ) {
 $log->debug("Looking for a price $qty");
 		foreach my $Price ( openprint::ProductPrice->find('product_id'=>$$self{'id'},'pricelist_id'=>$list_id,'order'=>'min desc NULLS FIRST') ) {
