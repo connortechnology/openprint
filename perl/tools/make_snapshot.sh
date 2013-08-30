@@ -76,12 +76,19 @@ if [ "$TYPE" != "" ]; then
     TYPE=".$TYPE"
 fi;
 
+require File::stat;
 # ------------- the script itself --------------------------------------
 # step 3: make a hard-link-only (except for dirs) copy of the latest snapshot,
 # if that exists
 if [ -d "$DEST$TYPE.new" ] ; then \
-		echo "$DEST$TYPE.new already exists, is another backup already running?"
+	TODAY=date -I
+	CREATEDON=stat -c %y "$DEST$TYPE.new" | awk '{ printf $1 "\n"}'
+	if (( TODAY > CREATEDON )) ; then 
+		echo "$DEST$TYPE.new already exists, last modified on $CREATEDON. Is another backup already running?"
 		exit 1
+	else 
+		rm -r "$DEST$TYPE.new"
+	fi
 fi;
 
 if [ -d "$DEST$TYPE.0" ] ; then \
