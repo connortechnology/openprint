@@ -149,6 +149,10 @@ sub sized_url {
 					return '/assets/'.$filename;
 				} # end if	
 				$openprint::log->debug("Creating $size at ${width} x $src $dest");
+				if ( ! -e $src ) {
+					$openprint::log->error("Source file $src does not exist.");
+					return '/assets/'.$filename;
+				} # end if
 				my ( $stderr, $stdout );
 				require IPC::Run3;
 				IPC::Run3::run3(qq`convert -adaptive-resize ${width}x "$src" "$dest"`, undef, $stdout, $stderr );
@@ -372,7 +376,10 @@ sub fetch {
 	$openprint::log->debug("Fetching from $url") if $debug;
 
 	my ( $md5, $filename );
-		my $data;
+	my $data;
+
+	require URI::Escape;
+	require File::Slurp;
 
 	if ( $url =~ /^http/i ) {
 
@@ -387,34 +394,36 @@ sub fetch {
 		my $res = $ua->request($req);
 	# Check the outcome of the response
 		if (! $res->is_success) {
-			$openprint::log->debug("No success.");
+			$openprint::log->warn("No success.");
+			return "Failed to get file. URL($url)<br/>";
+		} # end if
+		if ( ! $res->content() ) {
+			$openprint::log->warn("Empty content.");
 			return "Failed to get file. URL($url)<br/>";
 		} # end if
 
 		require URI;
 		require File::Basename;
-		require File::Slurp;
 
 		my $URI = URI->new($url);
 		my $path = $URI->path();
 		$filename = File::Basename::basename( $path );
-	$openprint::log->debug("fetch: filename: $filename path: $path from url $url");
+		$openprint::log->debug("fetch: filename: $filename path: $path from url $url");
 		if ( ! $filename ) {
 			return "Unable to determine filename from $url";
 		} elsif ( $debug ) {
 			$openprint::log->debug("saving to filename $filename");
 		} # endi f
-		require URI::Escape;
 		$filename = URI::Escape::uri_unescape( $filename );
 
 		require Digest::MD5;
 		$md5 = Digest::MD5::md5_base64( $res->content );
 		if ( ! $md5 ) {
 			return "Unable to MD5?";
-		#} else {
-			#$openprint::log->debug("MD5 was $md5");
+		} elsif( $debug ) {
+			$openprint::log->debug("MD5 for $filename was $md5");
 		} # end if
-		*data = \$res->content;
+		$data = $res->content;
 	} else {
 		$filename = File::Basename::basename( $url );
 		$data = File::Slurp::read_file( $filename );
@@ -422,23 +431,38 @@ sub fetch {
 	$Asset = openprint::Asset->find_one( md5 => $md5 ) if ! $Asset;
 	if ( ! $Asset ) {
 		$Asset = new openprint::Asset();
-		$_ = $Asset->save({ filename=>$filename, md5=>$md5 });
+		$_ = $Asset->save({ filename=>$filename, md5=>$md5, source => $url });
 		return $_ if $_;
 
 		if ( ! File::Slurp::write_file($Asset->on_disk_path(), { atomic => 1, err_mode=>'carp' }, $data ) ) {
 			return 'There was an error saving file ' . $filename.' to ' . $Asset->on_disk_path() . ": $!<br/>";
 		} # end if
 
+		# Why are we saving again?
 		$_ = $Asset->save();
 		return $_ if $_;
 	} else {
+		$openprint::log->debug("Asset with this md5 already exists." . $Asset->to_string() ) if $debug;
 		if ( $Asset->filename() ne URI::Escape::uri_unescape( $Asset->filename() ) ) {
+			$openprint::log->warn("Fixing asset filename from " . $Asset->filename() . ' to ' . URI::Escape::uri_unescape( $Asset->filename() ) );
 			$Asset->save({filename=>URI::Escape::uri_unescape( $Asset->filename() )});
 		} # end if
+		if ( $url and ! $Asset->source() ) {
+			$openprint::log->warn("Setting source to $url");
+			$Asset->save({source=>$url});
+		} # end if
 		if ( ! -e $Asset->on_disk_path() ) {
+			$openprint::log->debug( "File does not exist on disk at " . $Asset->on_disk_path() ) if $debug;
 			if ( ! File::Slurp::write_file($Asset->on_disk_path(), { atomic => 1, err_mode=>'carp' }, $data ) ) {
 				return 'There was an error saving file ' . $filename.' to ' . $Asset->on_disk_path() . ": $!<br/>";
 			} # end if
+		} elsif ( ! -s $Asset->on_disk_path() ) {
+			$openprint::log->debug( "File has no size at " . $Asset->on_disk_path() ) if $debug;
+			if ( ! File::Slurp::write_file($Asset->on_disk_path(), { atomic => 1, err_mode=>'carp' }, $data ) ) {
+				return 'There was an error saving file ' . $filename.' to ' . $Asset->on_disk_path() . ": $!<br/>";
+			} # end if
+		} else {
+			$openprint::log->debug( "File exists and has size " . ( -s $Asset->on_disk_path() ) ) if $debug;
 		} # end if
 	} # end if
 	return $Asset;

@@ -71,7 +71,7 @@
 			<div class="rightColumn">
 				<ul>
 				<li><label>Place</label>
-					<? echo ( ssi::select( openprint::Location->dropdown(order=>'lower(name)', type=>'place' ), '', { name=>'location_id',prepend=>['All',''], onchange=>'load_events(this.form);' } ); ) ?>
+					<? echo ( ssi::select( openprint::Location->dropdown(order=>'lower(name)', type=>'place' ), '', { name=>'location_id',prepend=>['','All'], onchange=>'load_events(this.form);' } ); ) ?>
 				</li>
 <? echo (
     openprint::Location::filters('',[

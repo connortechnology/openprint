@@ -23,6 +23,7 @@ require openprint::Event;
 require openprint::Location;
 require openprint::Asset;
 require Date::Calc;
+require openprint::Log;
 
 my %months = (
 	jan	=>	'01',
@@ -149,45 +150,45 @@ if ( ! $posts ) {
 	die "No posts";
 } # end if
 
-foreach my $post ( $posts->look_down(_tag=>'tr') ) {
-	my $Title = $post->look_down(_tag => 'span');
+foreach my $post ( $posts->look_down( class=>'clearfloat') ) {
+	my $Title = $post->look_down( class => 'title');
 	if ( ! $Title ) {
-		$log->warn("No Title");
+		$log->warn("No Title for ");
+		$post->dump();
 		next;
 	} # end if
 	my $title = openprint::Event->transform( 'name', $Title->as_text() );
 	if ( ! $title ) {
-		$log->warn("No title");
+		$log->warn("No title after transform");
 		$post->dump();
 		next;
 	} # end if
 
-	my $content = $post->look_down(_tag=>'td');
-	$content = $content->as_text();
+	my $content = $post->look_down( class=>'spoiler');
+	$content = $content->as_HTML();
 
-	my ( $caption, $description, $location, $when ) = $content =~ /$title\s+(.+)Description:\s+(.+)Location:\s+(.+)Date & Time:\s+(.+)/;
-	$log->debug("desc: $description, loc: $location, when: $when");
+	#my ( $caption, $description, $location, $when ) = $content =~ /$title\s+(.+)Description:\s+(.+)Location:\s+(.+)Date & Time:\s+(.+)/;
+	my ( $description, $location, $start, $end ) = $content =~ /<div class="spoiler">(.+)<b>Location:<\/b>\s+(.+)<b>Begins:<\/b>\s+(.+)<b>Ends:<\/b>\s+(.+)<\/div>/;
+	$log->debug("desc: $description, loc: $location, start: $start, end: $end");
 	if ( ! $description ) {
 		$log->debug( "No description from $content" );
 		next;
 	} # end if
-	$description = $caption . '<br/>'.$description;
 
 	my $address = $location =~ /\(([^\)]+)\)/;
 	my $city = $location =~ /, (.+)/;
 
-
-
-$log->debug("$title $description $location $when");
+$log->debug("Location $location  address: $address city: $city");
 
 	my $Asset;
 	foreach my $img ( $post->look_down(_tag=>'img') ) {
 		my $posterurl = $img->attr('src');
-$log->debug("GOt $posterurl");
 		$posterurl = URI::Escape::uri_unescape( $posterurl );
-$log->debug("GOt2 $posterurl");
 		if ( $Assets{$posterurl} ) {
 			$Asset = $Assets{$posterurl};
+			if ( ! $Asset->source() ) {
+				$Asset->save({source=>$posterurl});
+			} # end if
 		} else {
 			$Asset = openprint::Asset::fetch($posterurl);
 			if ( ref $Asset ne 'openprint::Asset' ) {
@@ -202,30 +203,56 @@ $log->debug("GOt2 $posterurl");
 		} # end if cached
 	} # end foreach img
 
-	$when =~ s/ at//;
-	$when =~ s/ Times very//i;
-	my $starting_time = Date::Parse::str2time( $when );
+	$start =~ s/ at//;
+	$start =~ s/ Times very//i;
+	$start =~ s/<br\s*\/>//i;
+	my $starting_time = Date::Parse::str2time( $start );
 	my $time_associated = 1;
 	if ( ! $starting_time ) {
-		$log->debug("No starttime_time from $when");
+		$log->debug("No starttime_time from $start");
 	} # end if
-	if ( my ( $mon, $day, $year ) = $when =~ /(\w+) (\d+), (\d\d\d\d)/ ) {
-		$when = join('-', $year, $months{lc $mon}, $day);
-		$starting_time = Date::Parse::str2time( $when );
+	if ( my ( $mon, $day, $year, $hours, $minutes, $ampm ) = $start =~ /^(\w+) (\d+), (\d\d\d\d) (\d+):(\d+)(am|pm)$/ ) {
+		$hours += 12 if $ampm eq 'pm';
+		$start = sprintf('%.4d-%.2d-%.2d %.2d:%.2d:00', $year, $months{lc $mon}, $day, $hours, $minutes );
+		$starting_time = Date::Parse::str2time( $start );
 		$time_associated = 0;
 	} # end if
 		
 	if ( ! $starting_time ) {
-		$log->debug("No starttime_time from $when");
+		$log->debug("No starttime_time from $start");
 		next;
 	} # end if
 
+    $end =~ s/ at//;
+    $end =~ s/ Times very//i;
+	$end =~ s/<br\s*\/>//i;
+    my $ending_time = Date::Parse::str2time( $end );
+    if ( ! $ending_time ) {
+        $log->debug("No endtime_time from $end");
+    } # end if
+	if ( my ( $mon, $day, $year, $hours, $minutes, $ampm ) = $end =~ /^(\w+) (\d+), (\d\d\d\d) (\d+):(\d+)(am|pm)$/ ) {
+		$hours += 12 if $ampm eq 'pm';
+		$end = sprintf('%.4d-%.2d-%.2d %.2d:%.2d:00', $year, $months{lc $mon}, $day, $hours, $minutes );
+        $ending_time = Date::Parse::str2time( $end );
+    } # end if
+
+    if ( ! $ending_time ) {
+        $log->debug("No endtime_time from $end");
+        next;
+    } # end if
+
 	my $parser = 'DateTime::Format::Pg';
 	my $st = DateTime->from_epoch( epoch=>$starting_time, time_zone=>$TZ );
+	my $et = DateTime->from_epoch( epoch=>$ending_time, time_zone=>$TZ );
 	
 	my $starting_on = $parser->format_datetime( $st );
+	my $ending_on = $parser->format_datetime( $et );
 	#my $ending_on = sprintf( '%.4d-%.2d-%.2d %.2d:%.2d:00', $ending_year, $ending_month, $ending_day, $ending_hour, $ending_minute );
+	$log->debug("Starting $starting_on ending $ending_on");
 
+	my $Url = $post->look_down( rel=>'bookmark');
+	my $url = $Url->attr( 'href' );
+	
 	my $Event = openprint::Event->find_one( created_by=>$$User{id}, name=>$title, starting_on => $starting_on, template => 0 );
 
 	if ( $Event ) {
@@ -248,13 +275,14 @@ $log->debug("GOt2 $posterurl");
 	$Event->save({
 		name =>  $title,
 		starting_on	=>	$starting_on,
-		#ending_on	=>	$ending_on,
+		ending_on	=>	$ending_on,
 		info		=>	$description,
 		location_id	=>	$Location->id(),
 		created_by	=>	$User->id(),
 		template	=>	0,
 		category	=>	'Wine Tasting',
 		time_associated	=> $time_associated,
+		url			=>	$url,
 		});
 			if ( ! openprint::Log->find_one(action=>'Create Event', object_type=>'openprint::Event',object_id=>$Event->id() ) ) {
 				(new openprint::Log())->save({action=>'Create Event', object_type=>'openprint::Event',object_id=>$Event->id()});
