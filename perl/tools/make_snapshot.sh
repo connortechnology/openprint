@@ -76,7 +76,6 @@ if [ "$TYPE" != "" ]; then
     TYPE=".$TYPE"
 fi;
 
-require File::stat;
 # ------------- the script itself --------------------------------------
 # step 3: make a hard-link-only (except for dirs) copy of the latest snapshot,
 # if that exists
