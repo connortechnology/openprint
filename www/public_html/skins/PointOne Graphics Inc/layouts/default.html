@@ -75,8 +75,16 @@
 				</div>
 				<div id="Menu">
 					<ul id="menubar">
-						<? if ( $session{'user_type'} eq 'A' ) ?>
-						<li id="MenuAdministrator" class="off"><a href="/administrator/index.html">ADMIN SIDE</a></li>
+<? echo (
+	if ( $session{'user_type'} eq 'A' ) {
+		if ( $ENV{SERVER_NAME} eq 'www.point-one.com' ) {
+			return '<li id="MenuAdministrator" class="off"><a href="http://www.internal.point-one.com/administrator/index.html">ADMIN SIDE</a></li>';
+		} else {
+			return '<li id="MenuAdministrator" class="off"><a href="/administrator/index.html">ADMIN SIDE</a></li>';
+		} # end if
+	} # end if
+	return;
+) ?>
 						<? endif ( $session{'user_type'} eq 'A' ) ?>
 						<? if ( sets::isin( $session{'user_type'}, ['A','E'] ) ) ?>
 						<li id="MenuEmployee" class="off"><a href="/employee/index.html">EMPLOYEE SIDE</a></li>
