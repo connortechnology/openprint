@@ -1500,6 +1500,7 @@ sub set_size {
 					$$specs{'txtWidth'} = $$printing_specs{'txtFinalWidth'};
 					$$specs{'txtHeight'} = $$printing_specs{'txtFinalHeight'};
 				} # end if
+				$$specs{txtFinalHeight} = $$printing_specs{txtFinalHeight} if ! $$specs{txtFinalHeight};
 
 				if ( $$printing_specs{'rdbTemplateType'} eq 'PerfectBound' ) {
 # Perfect bound requires more width on th cover to conver the calliiper	
@@ -1695,7 +1696,7 @@ sub calc {
 		$$specs{'alert'} .= 'The finished width is invalid. Please correct it.<br/>';
 		return $$specs{'Status'} = 'uncalculated';
 	} # end if
-	if ( $$specs{'txtFinalWidth'} and ! ( $$specs{'txtFinalHeight'} =~ /^(?=.+)(?:[1-9]\d*|0)?(?:\.\d+)?$/ ) ) {
+	if ( $$specs{'txtFinalHeight'} and ! ( $$specs{'txtFinalHeight'} =~ /^(?=.+)(?:[1-9]\d*|0)?(?:\.\d+)?$/ ) ) {
 		$$specs{'alert'} .= 'The finished height is invalid. Please correct it.<br/>';
 		return $$specs{'Status'} = 'uncalculated';
 	} # end if
