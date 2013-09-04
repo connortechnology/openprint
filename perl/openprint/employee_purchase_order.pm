@@ -306,6 +306,20 @@ sub view {
 						});
 			} # end if 
 		} # end if
+	} elsif ( $param{'btnFunction'} eq 'AuthRequest' ) {
+		$variable{information} .= $PO->send_approval_required_notification();
+		if ( ! $variable{information} ) {
+			$variable{warning} .= 'This PO needs approval but no one could be found to do it.';
+		} else {
+			$variable{information} =~ s/Sent/send/g;
+			$variable{information} = 'Approval request ' . $variable{information};
+			my $L = new openprint::PurchaseOrder_Log();
+			$L->save({
+					'user_id'	=>	$session{user_id},
+					'po_id'		=>	$PO->id(),
+					'reason'	=>	$variable{information}
+					});
+		} # end if
 	} elsif ( $param{'btnFunction'} eq 'Attach' ) {
 		my $Asset = new openprint::Asset();
 		$variable{'error'} .= $Asset->save({ 'name'	=>	$param{asset_name}, 'filename' => $param{filename} } );
@@ -436,19 +450,6 @@ $log->debug("Creating PO $$PO{id} from label $variable{error}");
 					$param{authorized_by} = $session{user_id},
 				} # end if
 			} else {
-				$variable{information} .= $PO->send_approval_required_notification();
-				if ( ! $variable{information} ) {
-					$variable{warning} .= 'This PO needs approval but no one could be found to do it.';
-				} else {
-					$variable{information} =~ s/Sent/send/g;
-					$variable{information} = 'Approval request ' . $variable{information};
-					my $L = new openprint::PurchaseOrder_Log();
-					$L->save({
-							'user_id'	=>	$session{user_id},
-							'po_id'		=>	$PO->id(),
-							'reason'	=>	$variable{information}
-							});
-				} # end if
 			} # end if wasn't already authorized
 		} # end if
 
