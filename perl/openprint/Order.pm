@@ -13,6 +13,7 @@ use vars qw( %session %config %variable $log $dbh %fields);
 require sql;
 require openprint::logs;
 require openprint::OrderedProduct;
+require openprint::OrderedProject;
 require openprint::Payment;
 require openprint::Tax;
 
