@@ -193,7 +193,6 @@ sub send_approval_required_notification {
 				ATTACHMENTS	=>	\@body,
 				);
 	} # end foreach U
-$log->debug("Results: $results");
 	return $results;
 } # end sub send_approval_required_notification
 
