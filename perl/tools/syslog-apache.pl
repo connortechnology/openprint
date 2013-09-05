@@ -37,8 +37,16 @@ if ($opts->{help}) {
 } # end if
 
 $log = new logger('level'=>'debug');
+my %defaults = (
+	port	=>	10514,
+	config	=>	'/etc/openprint/syslog-apache.conf',
+);
+foreach my $default ( keys %defaults ) {
+	$$opts{$default} = $defaults{$default} if ! $$opts{$default};
+} # end foreach default
+
 # Get our configuration information
-if (my $err = configuration::from_file('/etc/openprint/syslog.conf')) {
+if (my $err = configuration::from_file($$opts{config})) {
 	die $err;
 } # end if
 configuration::merge($opts);
@@ -46,10 +54,6 @@ configuration::merge($opts);
 foreach my $param ( 'db_name','db_user','db_pass' ) {
 	die "$program: missing required --$param parameter" if ! $config{$param};
 } # end foreach required-param
-
-my %defaults = (
-	port	=>	10514,
-);
 
 $log = logger->new( {'file'=>$config{'log_file'}, 'level'=>$config{'log_level'}} );
 $log->info("Opening SQL connection");
@@ -62,9 +66,8 @@ $dbh = sql::open_sql( $log,
 );
 die "Couldn't connect to db: $$dbh{errstr}" if ! $dbh;
 configuration::init();
-configuration::from_file('/etc/openprint/syslog.conf');
+configuration::from_file($$opts{config});
 configuration::merge($opts);
-configuration::merge_defaults(\%defaults);
 
 my @re = (
 );
@@ -101,9 +104,8 @@ while (my $buf = <STDIN>) {
 			next;
 		} # end if
 		configuration::init( );
-		configuration::from_file('/etc/openprint/syslog.conf');
+		configuration::from_file($$opts{config});
 		configuration::merge($opts);
-		configuration::merge_defaults(\%defaults);
 	} # end if
 	
 	my %host_counts;

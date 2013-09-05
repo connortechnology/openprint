@@ -28,7 +28,7 @@
 		new Ajax.Updater('EventsList','_search.html', {parameters:Form.serialize(form)});
 	} // end function
 </script>	 
-<? echo ( include('/includes/error_reporting.html'); ) ?>
+<? include('/includes/error_reporting.html' ) ?>
 <div class="Event"><div class="Search">
 	<form id="f1" name="f1" method="post" action="/event/search.html">
 		<fieldset class="filters unprintable"><legend>Select Search Criteria</legend>
@@ -70,6 +70,9 @@
 			</div>
 			<div class="rightColumn">
 				<ul>
+				<li><label>Place</label>
+					<? echo ( ssi::select( openprint::Location->dropdown(order=>'lower(name)', type=>'place' ), '', { name=>'location_id',prepend=>['','All'], onchange=>'load_events(this.form);' } ); ) ?>
+				</li>
 <? echo (
     openprint::Location::filters('',[
 @session{'/event/search.html?country_id',
@@ -86,9 +89,8 @@
 			</div>
 			<p class="buttons">
 				<? echo ( join('',
-					ssi::button( 'ShowResults', { 'onclick'=> 'load_events(f1);', 'text'=>'Show Results' } ),
-					#ssi::writeButton( $log, $dbh, 'Reset', 'reset.gif', 'f1.reset();', '', 'Reset' ),
-					ssi::button( 'New', { href=>'/event/edit.html', text=>'New Event' } ),
+					button( 'ShowResults', { onclick=>'load_events(f1);', text=>'Show Results' } ),
+					button( 'New', { href=>'/event/edit.html', text=>'New Event' } ),
 					); ) ?>
 			</p>
 		</fieldset>

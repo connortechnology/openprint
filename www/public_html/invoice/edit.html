@@ -53,11 +53,13 @@
                 }
             } );
     } // end function del_timetrack(invoice_id)
+<? endif ( $$variable{'Invoice'}->id() ) ?>
 	function invoicee_change(ddm) {
 		new Ajax.Request( '_invoicee_onchange.json', { parameters: { invoice_id: '<? echo ( $$variable{Invoice}->id() ) ?>', invoicee_id: ddm.getValue() } } );
+		if ( '<? echo ( $$variable{Invoice}{id} ) ?>' ) {
 		new Ajax.Updater( 'Timetracks', '_timetracks.html', {
            parameters: {
-                    invoice_id: <? echo ( $$variable{Invoice}{id} ) ?>,
+                    invoice_id: '<? echo ( $$variable{Invoice}{id} ) ?>',
 					invoicee_id: ddm.getValue() 
                },
                 onComplete: function(transport) {
@@ -68,8 +70,8 @@
                     alert('failure to include');
                 }
         } );
+		} // end if invoice_id
 	} // end function invoicee_change(ddm)
-<? endif ( $$variable{'Invoice'}->id() ) ?>
 </script>
 <?include(/includes/error_reporting.html)?>
 <div class="Invoice"><div class="Edit">
@@ -100,7 +102,7 @@
 				<li class="early_payment_amount"><label for="early_payment_amount">Early Payment Discount</label>
 					<? echo ( join("\n",
 								input(type=>'float', id=>'early_payment_amount', name=>'early_payment_amount', value=>$$variable{Invoice}->early_payment_amount() ), 
-								ssi::select( [ 'percent', 'Percent', 'amount', 'Amount' ], $$variable{Invoice}->early_payment_units(), { name=>'early_payment_units' } ),
+								ssi::select( [ 'percent', 'Percent', 'amount', 'Amount' ], $$variable{Invoice}->early_payment_units(), { name=>'early_payment_units', id=>'early_payment_units' } ),
 					); ) ?>
 				<li class="early_payment_date"><label>Early Payment Date</label>
 				<? echo ( date_select( 'early_payment_date', $$variable{'Invoice'}->early_payment_date() ); ) ?>

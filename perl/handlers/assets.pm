@@ -92,7 +92,7 @@ $log->debug("Path: $path $id uri:" . $r->uri());
 						} elsif ( $path eq 'large' ) {
 							$r->sendfile( $Asset->large_path() );
 						} elsif ( $path eq 'small' ) {
-							$r->sendfile( $Asset->small_path() );
+							$r->sendfile( $Asset->sized_path( 'small' ) );
 						} elsif ( $path eq 'videos' ) {
 							if ( -e $config{AssetPath}.'videos/'.$id.'_'.$filename ) {
 								#$r->content_type( $Asset->content_type( $id.'_'.$filename ) );
@@ -121,6 +121,7 @@ $log->error("FORBIDDEN");
 						$r->sendfile( $Asset->medium_path() );
 					} else {
 # No album means has to be an article image, or a generic site image.
+$log->debug( $Asset->on_disk_path() );
 						$r->sendfile( $Asset->on_disk_path() );
 					} # end if
 				} # end if

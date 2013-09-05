@@ -58,7 +58,7 @@
 					<td class="thumbnail"><a href="view.html?asset_id=%1$d">%6$s</a></td>
 				</tr>`, $$Asset{id}, Date::Format::time2str($config{'DateTimeFormat'}, Date::Parse::str2time($Asset->created_on())), 
 				$Asset->Creator()->name(), $Asset->name(), $Asset->filename(),
-				sprintf('<img src="%s" alt=""/>', $Asset->thumbnail_url() ),
+				sprintf('<img src="%s" alt=""/>', $Asset->sized_url( 'small' ) ),
 				);
 		} # end while
 		return $html;

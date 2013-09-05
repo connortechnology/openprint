@@ -25,7 +25,8 @@ ddm_select_by_value( \$('due_on_year'), $due_year );
 ddm_select_by_value( \$('due_on_month'), $due_month );
 ddm_select_by_value( \$('due_on_day'), $due_day );
 \$('early_payment_amount').value = '$$Credit{early_payment_amount}';
-\$('early_payment_units').value = '$$Credit{early_payment_units}';
+ddm_select_by_value( \$('early_payment_units'), '$$Credit{early_payment_units}' );
+\$('monthly_interest').value = '$$Credit{late_payment_amount}';
 `;
 
 ) ?>

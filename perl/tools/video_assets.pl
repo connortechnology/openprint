@@ -76,6 +76,15 @@ sub scan {
 	foreach my $Asset ( openprint::Asset->find( ) ) {
 		next if ! $Asset->is_video();
 
+		if ( $Asset->source() ) {
+			if ( ! -e $Asset->on_disk_path() ) {
+				my $blob = File::Slurp::read_file( $Asset->source() );
+				if ( ! File::Slurp::write_file($Asset->on_disk_path(), { atomic => 1, err_mode=>'carp' }, $blob ) ) {
+					return 'There was an error saving file ' . $_[0].' to ' . $Asset->on_disk_path() . ": $!<br/>";
+				} # end if
+			} # end if
+		} # end if
+
 		foreach my $type ( 'mp4','ogg','webm' ) {
 			my $path = $Asset->video_path($type);
 
@@ -87,6 +96,19 @@ sub scan {
 				$log->error("Was unsuccessful in generating video at $path");
 			} # en dif
 		} # end foreach $type
+		my $new_filename = openprint::Asset->transform( 'filename', $Asset->filename() );
+
+		if ( $Asset->filename() ne $new_filename ) {
+			my $old_path = $Asset->on_disk_path();
+	
+			foreach my $type ( 'mp4','ogg','webm' ) {
+				my $path = $Asset->video_path($type);
+				my $new_path = openprint::Asset->transform( 'filename', $path );
+				rename( $path, $new_path );
+			} # end foreach
+			$Asset->save({filename=>$new_filename});
+			rename( $old_path, $Asset->on_disk_path() );
+		} # end if
 	} # end foreach Asset
 } # end sub scan
 sub add {
@@ -103,10 +125,23 @@ sub add {
 			next if $file =~ /^\./;
 			add( $_[0].'/'.$file );
 		} # end foreach
-
-		
 	} else {
-		my $blob = File::Slurp::read_file($_[0] );
+		if ( my $Asset = openprint::Asset->find_one(source=>$_[0]) ) {
+			if ( -e $Asset->on_disk_path() ) {
+				$log->debug("$_[0] already exists.\n");	
+				return;
+			} # end if
+			my $filename = basename($_[0]);
+			if ( $Asset->filename() ne $Asset->transform('filename', $Asset->filename() ) ) {
+				my $old = $Asset->on_disk_path();
+				$Asset->save({filename=>$Asset->filename()});
+				rename( $old,  $Asset->on_disk_path() );
+			} # end if
+				
+			$Asset->fetch();
+			return;
+		} # end if
+		my $blob = File::Slurp::read_file( $_[0] );
 		my $md5 = Digest::MD5::md5_base64( $blob );
 		if ( ! $md5 ) {
 			return "Unable to MD5?";
@@ -117,7 +152,7 @@ sub add {
 			$Asset = new openprint::Asset();
 
 			my $filename = basename($_[0]);
-			$_ = $Asset->save({ filename=>$filename, md5=>$md5, name=>$filename });
+			$_ = $Asset->save({ filename=>$filename, md5=>$md5, name=>$filename, source=>$_[0] });
 			return $_ if $_;
 
 			if ( ! File::Slurp::write_file($Asset->on_disk_path(), { atomic => 1, err_mode=>'carp' }, $blob ) ) {
@@ -127,6 +162,9 @@ sub add {
 			$_ = $Asset->save();
 			return $_ if $_;
 		} else {
+			if ( ! $Asset->source() ) {
+				$Asset->save({source=>$_[0]});
+			} # end if
 			if ( ! -e $Asset->on_disk_path() ) {
 				if ( ! File::Slurp::write_file($Asset->on_disk_path(), { atomic => 1, err_mode=>'carp' }, $blob ) ) {
 					return 'There was an error saving file ' . $_[0].' to ' . $Asset->on_disk_path() . ": $!<br/>";

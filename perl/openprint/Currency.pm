@@ -8,7 +8,7 @@ require openprint::Pricelist;
 require openprint::Company;
 require sql;
 
-use vars qw( $log $dbh $debug $table $serial %fields %transforms %defaults );
+use vars qw( $log $dbh $debug $table $serial %fields %transforms %defaults $cache_field );
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
 
@@ -28,8 +28,9 @@ $serial = 'currencies_id_seq';
 %defaults = (
 );
 
+$cache_field = 'short';
 sub cache_field {
-	return 'short';
+	return $cache_field;
 }
 sub conversions {
 	my ( $self, $to ) = @_;
