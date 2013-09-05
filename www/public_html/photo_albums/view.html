@@ -16,12 +16,12 @@
 				my $html = '';
 				if ( $$variable{'Album'}->can_edit() ) {
 					if ( $$variable{'Album'}->deleted() ) {
-						$html .= ssi::button( 'Undelete', { onclick => "if(confirm('Are you sure?')){f1.btnFunction.value='Undelete';f1.submit();};" } );
-						$html .= ssi::button( 'Destroy', { onclick => "if(confirm('Are you sure?')){f1.btnFunction.value='Destroy';f1.submit();};" } );
+						$html .= button( 'Undelete', { onclick => "if(confirm('Are you sure?')){f1.btnFunction.value='Undelete';f1.submit();};" } );
+						$html .= button( 'Destroy', { onclick => "if(confirm('Are you sure?')){f1.btnFunction.value='Destroy';f1.submit();};" } );
 					} else {
-						$html .= ssi::button( 'Delete', { onclick => "if(confirm('Are you sure?')){f1.btnFunction.value='Delete';f1.submit();};" } );
+						$html .= button( 'Delete', { onclick => "if(confirm('Are you sure?')){f1.btnFunction.value='Delete';f1.submit();};" } );
 					} # end if
-						$html .= ssi::button( 'Edit', { 'href' => '/photo_albums/edit.html?album_id='.$$variable{'Album'}->id() } );
+						$html .= button( 'Edit', { 'href' => '/photo_albums/edit.html?album_id='.$$variable{'Album'}->id() } );
 				} # end if
 				return $html;
 			) ?>

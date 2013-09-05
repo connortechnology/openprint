@@ -12,7 +12,7 @@
 				</li>
 				<li><label>Type</label>
 					<select id="type" name="type">
-					<? echo ( make_drop_down( [ map { $_, $_ } ( 'Supplier', 'pricelist', 'currency', 'yes/no', 'textarea', 'text','list' ) ], $$variable{Entry}{type} ); ) ?>
+					<? echo ( make_drop_down( [ map { $_, $_ } @Configuration::types ], $$variable{Entry}{type} ); ) ?>
 					</select>
 				</li>
 				<li><label>Category</label>
@@ -27,8 +27,8 @@
 		<p class="buttons">
 			<? echo (
 				return join('',
-					ssi::button( 'SaveNew', { onclick=>q`$('config_form').submit();`, text=>'Save' } ),
-					ssi::button( 'CancelNew', { onclick=>q`popupWin.destroy();`, text=>'Cancel' } ),
+					button( 'SaveNew', { onclick=>q`$('config_form').submit();`, text=>'Save' } ),
+					button( 'CancelNew', { onclick=>q`popupWin.destroy();`, text=>'Cancel' } ),
 				);
 			) ?>
 		</p>

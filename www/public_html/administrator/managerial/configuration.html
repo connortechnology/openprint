@@ -2,9 +2,9 @@
 <form id="f1" name="f1" method="post" action="/administrator/managerial/configuration.html">
 <p class="buttons">
 		<? echo ( join('',
-					ssi::button( 'SaveTop', { 'onclick'=>"f1.btnFunction.value='Save';f1.submit();",'text'=>'Save' } ),
-					ssi::button( 'ResetTop', { 'onclick'=>'f1.reset();','text' => 'Reset' } ),
-					ssi::button( 'New', { 'onclick'=>q`popup_window('_configuration_popup.html');`, '', 'New' } )
+					button( 'SaveTop', { 'onclick'=>"f1.btnFunction.value='Save';f1.submit();",'text'=>'Save' } ),
+					button( 'ResetTop', { 'onclick'=>'f1.reset();','text' => 'Reset' } ),
+					button( 'New', { 'onclick'=>q`popup_window('_configuration_popup.html');`, '', 'New' } )
 		); ) ?>
 </p>
 <? echo (
@@ -39,12 +39,14 @@
         } elsif ( $$C{type} eq 'textarea' ) {
 			my @rows = split "\n", $$C{value};
             $html .= sprintf('<textarea name="%s" cols="80" rows="%d" onkeyup="textarea_resize(this);" />%s</textarea>', ssi::htmlize($$C{name}), scalar @rows, ssi::htmlize($$C{value}) );
+		} elsif ( $$C{type} eq 'number' ) {
+			$html .= input( type=>'number', name=>$$C{name}, value=>$$C{value} );
         } else {
             $html .= sprintf('<input type="text" name="%s" value="%s" />', ssi::htmlize($$C{name}, $$C{value}) );
         } # end if
 		$html .= '<span class="buttons">';
-		$html .= ssi::button( 'Delete'.$$C{name}, { onclick =>qq`new Ajax.Request('_configuration.json', { parameters: { name: '$$C{name}', action: 'delete' }, evalScripts: true } );`, 'text'=>'Delete' } );
-		$html .= ssi::button( 'Edit'.$$C{name}, { onclick =>qq`popup_window('_configuration_popup.html','name=$$C{name}');`, 'text'=>'Edit' } );
+		$html .= button( 'Delete'.$$C{name}, { onclick =>qq`new Ajax.Request('_configuration.json', { parameters: { name: '$$C{name}', action: 'delete' }, evalScripts: true } );`, 'text'=>'Delete' } );
+		$html .= button( 'Edit'.$$C{name}, { onclick =>qq`popup_window('_configuration_popup.html','name=$$C{name}');`, 'text'=>'Edit' } );
 		$html .= '</span>';
         $html .= "</li>\n";
 		$cat = $$C{category};
@@ -54,8 +56,8 @@
 ) ?>
 	</ul></fieldset>
 	<p class="buttons"> <? echo ( join('',
-		ssi::button( 'SaveBottom', { 'onclick'=>"f1.btnFunction.value='Save';f1.submit();",'text'=>'Save' } ),
-		ssi::button( 'ResetBottom', { 'onclick'=>'f1.reset();','text'=>'Reset' } ),
+		button( 'SaveBottom', { 'onclick'=>"f1.btnFunction.value='Save';f1.submit();",'text'=>'Save' } ),
+		button( 'ResetBottom', { 'onclick'=>'f1.reset();','text'=>'Reset' } ),
 		); ) ?>
 	</p>
 	<input type="hidden" name="btnFunction"/>

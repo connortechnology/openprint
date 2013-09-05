@@ -1,7 +1,12 @@
-<? echo ( include( '/includes/error_reporting.html' ); ) ?>
+<?include( '/includes/error_reporting.html')?>
 <div class="Photo">
 	<div class="View">
 <? if ( $variable{'Photo'} and $variable{'Photo'}->asset_id() ) ?>
+	<? if ( $param{album_id} ) ?>
+	<div class="Album">
+		<?include('/photo_albums/_album_photos.html') ?>
+	</div>
+	<? endif ( $param{album_id} ) ?>
 		<form id="f1" name="f1" action="view_photo.html" method="post">
 			<input type="hidden" name="action" />
 			<input type="hidden" name="asset_id" value="<? echo ( $$variable{'Photo'}->asset_id() ) ?>" />
@@ -13,15 +18,15 @@
 
 				if ( $Photo->can_edit() ) {
 					if ( ( $openprint::Photo_in_Album::fields{deleted} ) and ( $Photo->deleted() ) ) {
-						$html .= ssi::button( 'Undelete', { onclick => q`f1.elements['action'].value='Undelete';f1.submit();` } );
+						$html .= button( 'Undelete', { onclick => q`f1.elements['action'].value='Undelete';f1.submit();` } );
 					} else {
-						$html .= ssi::button( 'Delete', { onclick =>  q`if(confirm('Are you sure?')){f1.elements['action'].value='Delete';f1.submit();}` } );
+						$html .= button( 'Delete', { onclick =>  q`if(confirm('Are you sure?')){f1.elements['action'].value='Delete';f1.submit();}` } );
 					} # end if
 					if ( $Photo->asset_id() != $Album->thumbnail_id() ) {
-						$html .= ssi::button( 'SAT', { onclick => q`f1.elements['action'].value='set as thumbnail';f1.submit();`, 'text'=>'Set as album thumbnail' } );
+						$html .= button( 'SAT', { onclick => q`f1.elements['action'].value='set as thumbnail';f1.submit();`, 'text'=>'Set as album thumbnail' } );
 					} # end if isn't thumbnail
 					if ( $Photo->Album()->user_id() == $session{'user_id'} and $Photo->asset_id() != new openprint::User($session{'user_id'})->asset_id() ) {
-						$html .= ssi::button( 'SAPP', { onclick => q`f1.elements['action'].value='set as profile pic';f1.submit();`,
+						$html .= button( 'SAPP', { onclick => q`f1.elements['action'].value='set as profile pic';f1.submit();`,
 						'text'=>'Set as profile picture' } );
 		
 					} # end if
@@ -29,10 +34,10 @@
 					if ( $DoDont ) {
 						my $DoDontPhoto = openprint::Photo_in_Album->find_one( 'asset_id'=>$$variable{'Photo'}->asset_id(), 'album_id'=>$DoDont->id() );
 						if ( $DoDontPhoto ) {
-							$html .= ssi::button( 'DoDont', { onclick => q`f1.elements['action'].value='UnDo/Dont';f1.submit();`,
+							$html .= button( 'DoDont', { onclick => q`f1.elements['action'].value='UnDo/Dont';f1.submit();`,
 								'text'=>"Remove from Do/Don't" } );
 						} else {
-							$html .= ssi::button( 'DoDont', { onclick => q`f1.elements['action'].value='Do/Dont';f1.submit();`,
+							$html .= button( 'DoDont', { onclick => q`f1.elements['action'].value='Do/Dont';f1.submit();`,
 								'text'=>"Include in Do/Don't" } );
 						} # end if
 					} # end if
@@ -41,16 +46,15 @@
 				my $index = 0;
 				for ( $index = 0; $index < @Photos and $Photos[$index]->id() != $Photo->id(); $index += 1 ) {};
 				if ( $index ) {
-					$html .= ssi::button( 'Previous', { href => "/photo_albums/view_photo.html?asset_id=$Photos[$index-1]{asset_id}&amp;album_id=$$Photo{album_id}" } );
+					$html .= button( 'Previous', { href => "/photo_albums/view_photo.html?asset_id=$Photos[$index-1]{asset_id}&amp;album_id=$$Photo{album_id}" } );
 					$html .= '<script type="text/javascript">var i=new Image();i.src="'.$Photos[$index-1]->sized_url('large').'";</script>';
 				} # end if
 				if ( ( $index + 1 ) < @Photos ) {
-					$html .= ssi::button( 'Next', { href => "/photo_albums/view_photo.html?asset_id=$Photos[$index+1]{asset_id}&amp;album_id=$$Photo{album_id}" } );
+					$html .= button( 'Next', { href => "/photo_albums/view_photo.html?asset_id=$Photos[$index+1]{asset_id}&amp;album_id=$$Photo{album_id}" } );
 					$html .= '<script type="text/javascript">var i=new Image();i.src="'.$Photos[$index+1]->sized_url('large').'";</script>';
 				} # end if
-				$html .= ssi::button( 'Back', { href=>"/photo_albums/view.html?album_id=$$Album{id}", text=>'Back to Album' } );
+				$html .= button( 'Back', { href=>"/photo_albums/view.html?album_id=$$Album{id}", text=>'Back to Album' } );
 				$html = '<p class="buttons">'.$html.'</p>' if $html;
-
 
 				my $Asset = $Photo->Asset();
 
@@ -58,22 +62,22 @@
 					$html .= sprintf('<img src="%s" id="asset-%d" />', $Photo->url(), $Photo->asset_id() );
 					if ( $Photo->can_edit() ) {
 						$html .= '<fieldset><legend>Edit Options</legend>';
-						$html .= ssi::button( 'CCW', { 
+						$html .= button( 'CCW', { 
 								text=>'Rotate CCW',
 								onclick=>qq`new Ajax.Request( '_photo_actions.json', { parameters: { function: 'rotate', degrees: 270, asset_id: $$Photo{asset_id} } } );`,
 								} );
-						$html .= ssi::button( 'CW', {
+						$html .= button( 'CW', {
 								text=>'Rotate CW', 
 								onclick=>qq`new Ajax.Request( '_photo_actions.json', { parameters: { function: 'rotate', degrees: 90, asset_id: $$Photo{asset_id} } } );`,
 								} );
 if ( 0 ) {
 						$html .= sprintf('<input type="text" name="keywords" value="%s"/>', $Photo->keywords() );
-						$html .= ssi::button( 'SaveKeywords', { onclick=>q`var form=$('f1');form.elements['action'].value='Save';form.submit();`, 'text'=>'Save Keywords' } );
+						$html .= button( 'SaveKeywords', { onclick=>q`var form=$('f1');form.elements['action'].value='Save';form.submit();`, 'text'=>'Save Keywords' } );
 }
 
 						$html .= '<fieldset><legend>Available Opinions</legend><div id="OpinionAvailability">';
 						$$variable{'Object'} = $Asset;
-						$html .= ssi::include( $ENV{'DOCUMENT_ROOT'} . '/includes/_opinion_availability.html' );
+						$html .= include( '/includes/_opinion_availability.html' );
 						$html .= '</div></fieldset>';
 
 
@@ -115,10 +119,12 @@ if ( 0 ) {
 				return $html;
 			) ?>
 		</form>
+		<div class="Name"><? echo ( $$variable{'Photo'}->Asset()->name() ) ?></div>
 		<div class="Caption"><? echo ( $$variable{'Photo'}->Asset()->description() ) ?></div>
+		<div class="published_on">Published on <? echo ( format_datetime( $$variable{'Photo'}->Asset()->created_on() ); ) ?></div>
 	<? if ( $session{'user_id'} ) ?>
 		<div id="Opinions"><? echo ( $$variable{'Photo'}->Asset()->opinions('Opinions') ) ?></div>
-		<div id="Comments"><fieldset><legend>Comments</legend><? echo ( include('_photo_comments.html'); ) ?></fieldset></div>
+		<div id="Comments"><fieldset><legend>Comments</legend><?include('_photo_comments.html')?></fieldset></div>
 	<? endif ( $session{'user_id'} ) ?>
 <? else ( $variable{'Photo'} and $variable{'Photo'}->asset_id() ) ?>
 No photo specified
