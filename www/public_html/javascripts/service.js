@@ -67,6 +67,7 @@ function cbFillResults( results ) {
     for ( var i = 0; i < pairs.length; i += 1 ){
         if ( pairs[i].indexOf('~') != -1 ) {
             var data = pairs[i].split('~');
+			//alert("filling: " + data[0] + ' = ' + data[1] );
             if ( data[0] == 'alert') {
 				if (data[1] != '') {
 					//var div = $("AlertDiv");
@@ -100,6 +101,9 @@ function cbFillResults( results ) {
 				} else if ( element.type == 'text' ) {
 					if ( ! element.gotFocus )
 						element.value = data[1];
+				} else if ( element.type == 'number' ) {
+					if ( ! element.gotFocus )
+						element.value = data[1];
 				} else if ( element.type == 'hidden' ) {
 					element.value = data[1];
 				} else {
@@ -112,7 +116,7 @@ function cbFillResults( results ) {
 						} // end if
 					} // end for
 				} // end if
-			} else if ( div = document.getElementById(data[0]) ) {
+			} else if ( div = $(data[0]) ) {
 				div.style.visible = 'hidden';
 				div.innerHTML = data[1];
 				div.style.visible = 'visible';
