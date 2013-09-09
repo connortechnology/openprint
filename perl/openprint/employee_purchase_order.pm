@@ -465,13 +465,14 @@ $log->debug("Creating PO $$PO{id} from label $variable{error}");
 				'reason'	=>	$param{reason},
 				});
 		} # end if
+		my @companies = ( $PO->company_id(), $PO->supplier_id() );
 		my @notifications = $PO->notifications(); # returns user_ids
 		my @new_notifications = @notifications;
 		if ( $PO->is_FSC() or $PO->is_PEFC() ) {
-			@new_notifications = sets::union( @new_notifications, map { $PO->can_view( $_->User() ) ? $_->user_id() : () } openprint::User_Notification->find( type=>'FSC/PEFC Notifications', value=>'Yes' ) );
+			@new_notifications = sets::union( @new_notifications, map { $PO->can_view( $_->User() ) ? $_->user_id() : () } openprint::User_Notification->find( type=>'FSC/PEFC Notifications', value=>'Yes', company_id=>\@companies ) );
 		} # end if
 		foreach my $type ( keys %types ) {
-			@new_notifications = sets::union( @new_notifications, map { $PO->can_view( $_->User() ) ? $_->user_id() : () } openprint::User_Notification->find( type=>'PO ' . $type . ' Notifications', value=>'Yes' ) );
+			@new_notifications = sets::union( @new_notifications, map { $PO->can_view( $_->User() ) ? $_->user_id() : () } openprint::User_Notification->find( type=>'PO ' . $type . ' Notifications', value=>'Yes', company_id=>\@companies ) );
 		} # end foreach
 		if ( scalar @notifications != scalar @new_notifications ) {
 			$PO->notifications(\@new_notifications);
