@@ -695,7 +695,8 @@ sub send_proofs_approved_email {
 	my $Email = new openprint::Email();
 
 	my $CSR = new openprint::User( $Order->salesrep_id() );
-	my @Users = map { $_->User() } openprint::User_Notification->find('type'=>'Proofs Approval Notifications','value'=>'Yes' );
+	my @Users = map { $_->User() } openprint::User_Notification->find( type=>'Proofs Approval Notifications', value=>'Yes',
+			company_id=>[$Project->company_id(), $User->company_id(), ( $CSR->id() ? $CSR->company_id() : () ) ] );
 	push @Users, $CSR if ! sets::isin( $CSR->id(), [ map { $_->id() } @Users ] );
 
 	foreach my $User ( @Users ) {
@@ -727,13 +728,13 @@ sub send_duedate_change_notification {
 	@info{'EmployeeFirstName','EmployeeLastName','EmployeeEmail','EmployeeExtension'} = ( $User->firstname(), $User->lastname(), $User->email(), $User->extension() );
 	my $CSR = new openprint::User( $Order->salesrep_id() );
 	if ( $CSR->email() ) {
-		my $email_template = misc::load_file( $log, $config{'SkinPath'} . '/email_template.html' );
-		$info{'ReplacementText'} = "<!--#include virtual=\"/email_content/proofs_duedate_change-sales_rep.html\"-->";
+		my $email_template = misc::load_file( $log, $config{SkinPath} . '/email_template.html' );
+		$info{'ReplacementText'} = ssi::include( '/email_content/proofs_duedate_change-sales_rep.html', \%info );
 		$_ = encode_qp( Encode::encode('utf-8', ssi::variable_substitution( $r, $log, $dbh, \$email_template, \%info ) ) );
 		my @body = ('', $_, 'text/html', 'quoted-printable');
 		my %mail = (
 				SMTP    => $config{'Mail Server'},
-				FROM    => sprintf( "%s %s <%s>", @info{'EmployeeFirstName','EmployeeLastName','EmployeeEmail'}),
+				FROM    => sprintf( '"%s %s" <%s>', @info{'EmployeeFirstName','EmployeeLastName','EmployeeEmail'}),
 #TO      => 'iconnor@point-one.com',
 				TO      => sprintf( '"%s %s" <%s>', $CSR->firstname(), $CSR->lastname(), $CSR->email() ),
 				SUBJECT => "Docket $info{'DocketNumber'} DueDate Changed",

@@ -367,7 +367,7 @@ $log->debug("Found user $$upload{user} with out company.  Company is $$Company{n
 					@to = ( $Company->CSR() );
 				} # end if
 			} # end if
-			push @to, map { $_->User() } openprint::User_Notification->find('type'=>'Client File Uploads','value'=>'Yes');
+			push @to, map { $_->User() } openprint::User_Notification->find('type'=>'Client File Uploads','value'=>'Yes', company_id=>[ $config{Owner}, $Company->id() ] );
 		} # end if
 		
 		if ( ! @to ) {
