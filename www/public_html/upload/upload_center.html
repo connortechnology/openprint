@@ -3,6 +3,31 @@
 </div>
 <script type="text/javascript" src="<?hash_link(/javascripts/upload.js)?>"></script>
 <script type="text/javascript">
+function delete_files() {
+	var form = $('f1');
+	var chk = form.elements['chkFiles'];
+	if ( ! chk) {
+		alert('No files to delete!');
+		return false;
+	}
+	var files = new Array();
+	if ( chk.length ) {
+	for ( var i=0, len=chk.length; i < len; i+=1 ) {
+		if ( chk[i].checked ) 
+			files.push( chk[i] ) 
+	} // end foreach 
+	} else if ( chk.checked ) {
+		files.push( chk );
+	} // end if
+	if ( ! files.length ) {
+		alert('Please select which files to delete by selecting them with the corresponding checkbox!');
+		return false;
+	}
+
+	form.btnFunction.value='Delete';
+	LoadContent('FileList', '/upload/_files.html', Serialize(f1));
+	return true;
+} // end function delete_files
 
 function displayUploadResults(body) {
 	$('PendingCompletion').innerHTML = '';

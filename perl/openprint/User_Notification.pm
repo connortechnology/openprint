@@ -28,6 +28,7 @@ $table = 'user_notifications';
 );
 %find_fields = (
 	type		=>	'(SELECT name from user_notification_types WHERE id=type_id)',
+	company_id	=>	'(SELECT companyindex FROM Users WHERE users.index=user_notifications.user_id)',
 );
 
 sub User {
