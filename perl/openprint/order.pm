@@ -1396,7 +1396,13 @@ sub make_order_from_order {
 		# get the contents
 		my @contents = sql::execute( $log, $dbh, q{SELECT lngProjectIndex, intQuantityIndex FROM Order_Contents WHERE OrderIndex=?}, $src_order_id );
 
-		my $order_id = make_order( $log, $dbh, $cookie, $variable, @contents );
+		my $order_id = make_order( $log, $dbh, $cookie, $variable );
+		while ( my ( $p_id, $qty ) = splice( @contents, 0, 2 ) ) {
+			my $Project = new openprint::Project( $p_id );
+			my $New = $Project->copy();
+			$New->save({reference=>'ReOrder of ' . $New->reference() });
+			add_to_order( $log, $dbh, $order_id, $variable, ( $New->id(), $qty ) );
+		} # end while
 		if ( $order_id ) {
 			foreach my $Product ( $SRC_Order->Products() ) {
 				my $NewProduct = $Product->copy();
