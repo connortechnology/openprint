@@ -316,7 +316,7 @@ $openprint::log->debug("Scores: $score_qty");
 
 	foreach my $Equipment ( @equipment ) {
 		$$specs{'hdnBreakdown'.$qty_index} .= '<br/>Equipment: '.$Equipment->name().', ';
-		next if ( $Equipment->specification('Type') eq 'Folder' ) and ! $$services{'Folding'};
+		#next if ( $Equipment->specification('Type') eq 'Folder' ) and ! $$services{'Folding'};
 		next if ( $Equipment->specification('Type') eq 'Stitcher' ) and ! $stitching_service_index;
 		my @impositions = ();
 		if ( $Equipment->specification('Type') eq 'Press' ) {
