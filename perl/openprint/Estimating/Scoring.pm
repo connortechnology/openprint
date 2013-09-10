@@ -26,7 +26,7 @@ require openprint::Paper;
 require openprint::Estimating::Folding;
 require openprint::Equipment;
 
-my $debug = 1;
+my $debug = 0;
 
 my @variables = (
 	'txtQuantity',
@@ -260,8 +260,10 @@ $openprint::log->debug("Scores: $score_qty");
 		#} # end if
 		@equipment = @all_equipment;
 	} # endif
+	if ( $debug ) {
 	foreach my $E ( @equipment ) {
 		$openprint::log->debug( "Equipment: " . $E->strid() );
+	}
 	}
 
 # Get the impositions to consider
@@ -333,6 +335,10 @@ $openprint::log->debug("Scores: $score_qty");
 		} # end if
 		foreach my $I ( @impositions ) {
 			next if ! $I->imposition();
+			if ( ! int($I->imposition()) ) {
+				$openprint::log->error("Bad imposition in Scoring: $$I{imposition}");
+				next;
+			} # end if
 			next if ( $imposition->imposition() % $I->imposition() );
 			if ( $Equipment->specification('Type') ne 'Press' ) {
 				$score_qty = ($$specs{"txtVerticalQty-$$sig_specs{'SignatureIndex'}"}*$I->columns()) + ($$specs{"txtHorizontalQty-$$sig_specs{'SignatureIndex'}"} * $I->rows() );
@@ -373,11 +379,11 @@ $openprint::log->debug("Scores: $score_qty");
 			my %servicePrice = openprint::service::get_price_object( $openprint::log, $openprint::dbh, $openprint::variable, 'Scoring', $use_qty, $Equipment );
 
 			if ( lc $servicePrice{'units'} eq 'per m' ) {
-				$servicePrice = $servicePrice{'Price'} * $use_qty / 1000;
+				$servicePrice = Math::Round::nearest( 0.01, $servicePrice{'Price'} * $use_qty / 1000 );
 				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Service: $%.2f%s * %d=%.2f<br/>', @servicePrice{'Price','units'}, $use_qty, $servicePrice );
 			} elsif ( lc $servicePrice{'units'} eq 'per hour' ) {
 				my $hours = $use_qty / $Equipment->specification('PerfScoreRunSpeed') if $Equipment->specification('PerfScoreRunSpeed');
-				$servicePrice = $servicePrice{'Price'} * $hours;
+				$servicePrice = Math::Round::nearest( 0.01, $servicePrice{'Price'} * $hours );
 				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Service: $%.2f%s @ %d%s =%.2f', @servicePrice{'Price','units'}, $Equipment->specification('PerfScoreRunSpeed'), 'Per Hour', $servicePrice );
 			} elsif ( $servicePrice{'Price'} ) {
 				$$specs{'hdnBreakdown'.$qty_index} .= "Unknown units set on service price ($score_qty) ($servicePrice{'units'}) <br/>";
