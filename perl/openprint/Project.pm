@@ -671,6 +671,10 @@ sub find {
 			push @values, $params{'status'};
 		} # end if
 	} # end if
+	if ( $params{'status !='} ) {
+			$sql .= q{ AND (strStatus!=?)};
+			push @values, $params{'status !='};
+	} # end if
 	if ( exists $params{'reprint'} ) {
 		if ( ref $params{'reprint'} eq 'ARRAY' ) {
 			if ( @{$params{'reprint'}} ) {
