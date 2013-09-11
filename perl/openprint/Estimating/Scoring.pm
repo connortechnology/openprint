@@ -307,7 +307,7 @@ sub signature_calc {
 	foreach my $Equipment ( @equipment ) {
 		$Results{'Breakdown'} .= "<br/>Equipment: ".$Equipment->name().', ';
 		my $type = $Equipment->specification('Type');
-		if ( ( $type eq 'Folder' ) and ! ( $$services{'Folding'} and @{$$services{'Folding'}} ) ) {
+		if ( ( $type eq 'Folder' ) and ( $Equipment->specification('Scoring Capable') eq 'When Folding' ) and ! ( $$services{'Folding'} and @{$$services{'Folding'}} ) ) {
 			$Results{'Breakdown'} .= 'Not being folded.<br/>';
 			if ( $$specs{"chkOverrideEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} eq 'Y' ) {
 				$Results{alert} .= 'Not being folded.<br/>';;
@@ -419,7 +419,14 @@ sub signature_calc {
 				} # end if
 			} # end if
 			$Results{'Breakdown'} .= '<br/>';
-			my $setupPrice = openprint::service::get_price( 'ScoringMakeReady', $score_qty, $Equipment );
+			my $setupPrice;
+			if ( ( $type eq 'Folder' ) and ! ( $$services{Folding} and @{$$services{Folding}} ) ) {
+				$setupPrice = openprint::service::get_price( 'ScoringMakeReadyWithoutFolding', $score_qty, $Equipment );
+				$setupPrice = openprint::service::get_price( 'ScoringMakeReady', $score_qty, $Equipment ) if ! $setupPrice;
+			} else {
+				$setupPrice = openprint::service::get_price( 'ScoringMakeReady', $score_qty, $Equipment );
+			} # end if
+		
 			$Results{'Breakdown'} .= sprintf( 'MakeReady: for %d scores = $%.2f<br/>', $score_qty, $setupPrice );
 			$Results{'Breakdown'} .= "Imposition: $$I{columns}x$$I{rows}=$$I{'imposition'}: ";
 
@@ -433,7 +440,13 @@ sub signature_calc {
 			} # end if
 
 			my $servicePrice;
-			my %servicePrice = openprint::service::get_price_object( 'Scoring', $use_qty, $Equipment );
+			my %servicePrice;
+			if ( ( $type eq 'Folder' ) and ! ( $$services{Folding} and @{$$services{Folding}} ) ) {
+				%servicePrice = openprint::service::get_price_object( 'ScoringWithoutFolding', $use_qty, $Equipment );
+				%servicePrice = openprint::service::get_price_object( 'Scoring', $use_qty, $Equipment ) if ! %servicePrice;
+			} else {
+				%servicePrice = openprint::service::get_price_object( 'Scoring', $use_qty, $Equipment );
+			} # end if
 
 			if ( lc $servicePrice{'units'} eq 'per m' ) {
 				$servicePrice = $servicePrice{'Price'} * $use_qty / 1000;
