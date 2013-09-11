@@ -556,19 +556,28 @@ sub AUTOLOAD {
 #$openprint::log->debug("Autoload $type $name");
 #}
 	$name =~ s/.*://;
+	return if $name eq 'DESTROY';
 	if ( @_ ) {
 #$openprint::log->debug("Autoload $type $name $_[0]");
 		return $self->{$name} = $_[0];
 	} else {
 		my $fields = eval '\%'.$type.'::fields';
-		if ( $fields and exists $$fields{lc $name . '_id'} ) {
-			if ( eval '\%openprint::'.$name.'::fields' ) {
-				return new("openprint::$name", $$self{lc $name . '_id'});
+		if ( %$fields ) {
+            # This looks to handle returning Objects
+            if ( exists $$fields{$name} ) {
+                return $self->{$name};
+			} elsif ( exists $$fields{lc $name . '_id'} ) {
+				if ( eval '\%openprint::'.$name.'::fields' ) {
+					return new("openprint::$name", $$self{lc $name . '_id'});
+				} # end if
+			} else {
+				Carp::cluck( "Bad autoload fields($fields) type($type) name($name) " );
 			} # end if
 		} # end if
 		return $self->{$name};
 	} # end if
 } # end sub AUTOLOAD
+
 sub to_string {
 	my $type = ref($_[0]);
 	my $fields = eval '\%'.$type.'::fields';

@@ -246,6 +246,7 @@ sub _par_view_part1 {
 		} # end if
 	} # end if
 } # end sub _par_view_part1
+
 sub _par_view_part2 {
 	$variable{'PAR'} = new openprint::PAR( $param{'par_id'} );
 	if ( $param{'btnFunction'} eq 'Save' ) {
