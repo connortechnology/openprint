@@ -79,7 +79,7 @@ fi;
 # ------------- the script itself --------------------------------------
 # step 3: make a hard-link-only (except for dirs) copy of the latest snapshot,
 # if that exists
-if [ -d "$DEST$TYPE.new" ] ; then \
+if [ -d "$DEST$TYPE.new" ] ; then
 	TODAY=date -I
 	CREATEDON=stat -c %y "$DEST$TYPE.new" | awk '{ printf $1 "\n"}'
 	if (( TODAY > CREATEDON )) ; then 
