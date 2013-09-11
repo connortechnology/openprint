@@ -128,12 +128,11 @@ sub find {
 	} elsif ( $debug ) {
 		$openprint::log->debug("Loading logRecord: ($sql) (@values) (".@$data.')');
 	} # end if
-	return map { new openprint::logRecord( $_->{id}, $_ ); } @$data;
+	return map { new openprint::Log( $_->{id}, $_ ); } @$data;
 } # end sub find
 
 sub User {
-	my $self = shift;
-return new openprint::User( $$self{user_id} );	
+return new openprint::User( $_[0]{user_id} );	
 } # end sub User
 
 sub Company {
@@ -142,8 +141,7 @@ sub Company {
 } # end sub Company
 
 sub Action {
-	my $self = shift;
-	return new openprint::logAction( $$self{action_type} );	
+	return new openprint::logAction( $_[0]{action_type} );	
 } # end sub Action
 
 sub action {

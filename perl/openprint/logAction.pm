@@ -6,7 +6,7 @@ require openprint::Object;
 use vars qw( $debug $table $serial %fields %transforms %defaults );
 
 $debug = 1;
-$table = 'log_Actions';
+$table = 'log_actions';
 $serial = 'log_actions_id_seq';
 
 %fields = (
@@ -19,5 +19,5 @@ $serial = 'log_actions_id_seq';
 %defaults = (
 );
 
-return 1;
+1;
 __END__

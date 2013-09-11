@@ -1423,7 +1423,7 @@ sub save_Manifest {
 
 	$error .= $Manifest->save( \%param );
 	my $Log = new openprint::Log();
-	$Log->save({object_type => 'openprint::Manifest', object_id=>$$Manifest{id}, action=>'Save Manifest' });
+	$Log->save({object_type => 'openprint::Manifest', object_id=>$$Manifest{id}, action=>'Save Manifest',user_id=>$session{user_id},company_id=>$session{company_id} });
 
 	my @Types = openprint::Manifest_Content_Type->find( manifest_id=>$Manifest->id());
 	if ( ! @Types ) {
@@ -1549,7 +1549,7 @@ sub apply_Manifest {
 	my $error;
 
 	my $Log = new openprint::Log();
-	$Log->save({object_type => 'openprint::Manifest', object_id=>$$Manifest{id}, action=>'Apply Manifest' });
+	$Log->save({object_type => 'openprint::Manifest', object_id=>$$Manifest{id}, action=>'Apply Manifest',user_id=>$session{user_id},company_id=>$session{company_id} });
 	my $ac = sql::start_transaction( $dbh );
 	$dbh->do( 'LOCK TABLE Manifests IN EXCLUSIVE MODE' ) or $log->error( DBI->errstr );
 
@@ -2335,13 +2335,23 @@ sub manifest_view {
 	my $Manifest = $variable{Manifest} = new openprint::Manifest( $param{manifest_id} );
 	if ( $param{action} eq 'Delete' ) {
 		$variable{error} .= $Manifest->delete();
-		$variable{ExternalRedirect} = '/employee/inventory/manifest_view.html?manifest_id='.$Manifest->id()
+		$variable{ExternalRedirect} = '/employee/inventory/manifests.html' if ! $variable{error};
 	} elsif ( $param{action} eq 'Undelete' ) {
 		$variable{error} .= $Manifest->undelete();
-		$variable{ExternalRedirect} = '/employee/inventory/manifest_view.html?manifest_id='.$Manifest->id()
+		$variable{ExternalRedirect} = '/employee/inventory/manifest_view.html?manifest_id='.$Manifest->id();
 	} elsif ( $param{action} eq 'Apply' ) {
 		$variable{error} .= apply_Manifest( $Manifest ) if ! $variable{error};
-		$variable{ExternalRedirect} = '/employee/inventory/manifest_view.html?manifest_id='.$Manifest->id()
+		$variable{ExternalRedirect} = '/employee/inventory/manifest_view.html?manifest_id='.$Manifest->id();
+	} elsif ( $param{action} eq 'Verify' ) {
+		my $Log = new openprint::Log();
+		$variable{error} .= $Log->save({
+			object_type => 'openprint::Manifest',
+			object_id	=> $$Manifest{id},
+			action		=> 'Verify Manifest',
+			user_id		=> $session{user_id},
+			company_id	=> $session{company_id},
+			});
+		$variable{ExternalRedirect} = '/employee/inventory/manifest_view.html?manifest_id='.$Manifest->id();
 	} # end if
 } # end sub manifest_view
 

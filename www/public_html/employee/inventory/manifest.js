@@ -124,6 +124,11 @@ return true;
 			evalScripts: true
 		}
 	);
+
+	$('qty_sheets-'+type_id+'-').value = '';
+	$('qty_lbs-'+type_id+'-').value = '';
+	$('qty_feet-'+type_id+'-').value = '';
+
 }
 
 function fix_content( c_id ) {
