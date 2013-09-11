@@ -32,41 +32,42 @@ sub send_email_with_attached_files {
 sub send_email_with_attachment {
     my ( $log, $mail, @attachments ) = @_; 
 
-    my $message = $$mail{BODY};
+	if ( @attachments ) {
+		my $message = $$mail{BODY};
 
-    my $boundary = "====" . time() . "====";
-	$$mail{'content-type'} = "multipart/mixed;\r\n  boundary=\"$boundary\"\r\n";
-	$boundary = '--'.$boundary;
+		my $boundary = $$mail{BOUNDARY} ? $$mail{BOUNDARY} : ( "====" . time() . "====" );
+		$$mail{'content-type'} = "multipart/mixed;\r\n  boundary=\"$boundary\"\r\n";
 
-	# start with the current body
-	$$mail{'BODY'} .= "This is a multi-part message in MIME format.\n\n";
-	if ( $message ) {
-		$$mail{'BODY'} .= "$boundary\n";
-		$$mail{'BODY'} .= "Content-Type: text/plain;\n\tcharset=\"iso-8859-1\"\n";
-		$$mail{'BODY'} .= "Content-Transfer-Encoding: 8-bit\n";
-		$$mail{'BODY'} .= "\n$message\n";
-	} else {
-		my ( $name, $text, $type, $encoding ) = splice @attachments,0,4;
-		$$mail{BODY} .= "$boundary\nContent-Type: $type;\n";
-		$$mail{BODY} .= "Content-Transfer-Encoding: $encoding\n";
-		$$mail{BODY} .= "\n$text\n";
-	} # end if
+		# start with the current body
+		$$mail{'BODY'} .= "This is a multi-part message in MIME format.\n\n";
+		if ( $message ) {
+			$$mail{BODY} .= "--$boundary\n";
+			$$mail{BODY} .= ($$mail{'content-type'} ? $$mail{'content-type'} : 'Content-Type: text/plain; charset="utf-8"')."\n";
+			$$mail{BODY} .= "Content-Transfer-Encoding: 8-bit\n";
+			$$mail{BODY} .= "\n$message\n";
+		} else {
+			my ( $name, $text, $type, $encoding ) = splice @attachments,0,4;
+			$$mail{BODY} .= "--$boundary\nContent-Type: $type;\n";
+			$$mail{BODY} .= "Content-Transfer-Encoding: $encoding\n";
+			$$mail{BODY} .= "\n$text\n";
+		} # end if
 
-	while ( @attachments ) {
-		my $name = shift @attachments;
-		my $text = shift @attachments;
-		my $type = shift @attachments;
-		my $encoding = shift @attachments;
-		$$mail{BODY} .= "$boundary\nContent-Type: $type;\n";
-		$$mail{BODY} .= "\tname=\"$name\"\n" if $name;
-		$$mail{BODY} .= "Content-Transfer-Encoding: $encoding\n";
-		$$mail{BODY} .= "Content-Disposition: attachment;\n";
-		$$mail{BODY} .= "\tfilename=\"$name\"\n" if $name;
-		$$mail{BODY} .= "\n$text\n";
-	} # end while
+		while ( @attachments ) {
+			my $name = shift @attachments;
+			my $text = shift @attachments;
+			my $type = shift @attachments;
+			my $encoding = shift @attachments;
+			$$mail{BODY} .= "--$boundary\nContent-Type: $type;\n";
+			$$mail{BODY} .= "\tname=\"$name\"\n" if $name;
+			$$mail{BODY} .= "Content-Transfer-Encoding: $encoding\n";
+			$$mail{BODY} .= "Content-Disposition: attachment;\n";
+			$$mail{BODY} .= "\tfilename=\"$name\"\n" if $name;
+			$$mail{BODY} .= "\n$text\n";
+		} # end while
 
-	# Signal end of attachments
-	$$mail{BODY} .= "$boundary--\n\n";
+		# Signal end of attachments
+		$$mail{BODY} .= "--$boundary--\n\n";
+	}
 	Mail::Sendmail::sendmail(%{$mail}) || $log->error( "Error: $Mail::Sendmail::error\n" );
 } # end sub send_email_with_attachment
 
