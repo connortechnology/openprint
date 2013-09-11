@@ -26,7 +26,7 @@ require openprint::Paper;
 require openprint::Estimating::Folding;
 require openprint::Equipment;
 
-my $debug = 0;
+use constant DEBUG => 0;
 
 my @variables = (
 	'txtQuantity',
@@ -188,6 +188,7 @@ sub calc {
 				} # end if
 			} # end if
 			$$specs{'hdnBreakdown'.$qty_index} .= $Price{'Breakdown'};
+			$$specs{'alert'} .= $Price{alert};
 
 			$qtyTotal += $$specs{"txtVerticalQty-$$sig_specs{'SignatureIndex'}"};
 			$qtyTotal += $$specs{"txtHorizontalQty-$$sig_specs{'SignatureIndex'}"};
@@ -262,7 +263,7 @@ $openprint::log->debug("Scoring signature_calc");
 		my @capabilities = ('Y','When Printing');
 		push @capabilities, 'For Pocket Folders' if $Project->Type()->name() eq 'PresentationFolders';
 		push @capabilities, 'When Folding' if $$services{'Folding'} and @{$$services{'Folding'}};
-		push @capabilities, 'When PerfectBinding' if $$services{'PerfectBound'};
+		push @capabilities, 'When PerfectBinding' if $$services{'PerfectBound'} and @{$$services{'PerfectBound'}};
 		push @capabilities, 'When Stitching' if $stitching_service_index;
 		
 		@equipment = openprint::Equipment->find( 'Specifications' => {'Scoring Capable'=>\@capabilities}, 'useinestimating'=>1,'order'=>'strName');
@@ -304,7 +305,7 @@ $openprint::log->debug("Scoring signature_calc");
 		#$imposition->display();
 		my @imps = openprint::imposition::get_all_impositions( $imposition );
 		for ( my $i = 0; $i < @imps; $i += 1 ) {
-			$imps[$i]->display() if $debug;
+			$imps[$i]->display() if DEBUG;
 			if ( ( $$specs{"chkOverrideImposition-$$sig_specs{'SignatureIndex'}-$qty_index"} ne 'Y' )
 					or ( $$specs{"txtImposition-$$sig_specs{'SignatureIndex'}-$qty_index"} == $imps[$i]->imposition() )
 				) {
@@ -326,8 +327,11 @@ $openprint::log->debug("Scoring signature_calc");
 	foreach my $Equipment ( @equipment ) {
 		$Results{'Breakdown'} .= "<br/>Equipment: ".$Equipment->name().', ';
 		my $type = $Equipment->specification('Type');
-		if ( ( $type eq 'Folder' ) and ! $$services{'Folding'} ) {
+		if ( ( $type eq 'Folder' ) and ( $Equipment->specification('Scoring Capable') eq 'When Folding' ) and ! ( $$services{'Folding'} and @{$$services{'Folding'}} ) ) {
 			$Results{'Breakdown'} .= 'Not being folded.<br/>';
+			if ( $$specs{"chkOverrideEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} eq 'Y' ) {
+				$Results{alert} .= 'Not being folded.<br/>';;
+			} # end if
 			next;
 		} # end if
 		if ( ( $type eq 'Stitcher' ) and ! $stitching_service_index ) {
@@ -435,7 +439,14 @@ $openprint::log->debug("Scoring signature_calc");
 				} # end if
 			} # end if
 			$Results{'Breakdown'} .= '<br/>';
-			my $setupPrice = openprint::service::get_price( 'ScoringMakeReady', $score_qty, $Equipment );
+			my $setupPrice;
+			if ( ( $type eq 'Folder' ) and ! ( $$services{Folding} and @{$$services{Folding}} ) ) {
+				$setupPrice = openprint::service::get_price( 'ScoringMakeReadyWithoutFolding', $score_qty, $Equipment );
+				$setupPrice = openprint::service::get_price( 'ScoringMakeReady', $score_qty, $Equipment ) if ! $setupPrice;
+			} else {
+				$setupPrice = openprint::service::get_price( 'ScoringMakeReady', $score_qty, $Equipment );
+			} # end if
+		
 			$Results{'Breakdown'} .= sprintf( 'MakeReady: for %d scores = $%.2f<br/>', $score_qty, $setupPrice );
 			$Results{'Breakdown'} .= "Imposition: $$I{columns}x$$I{rows}=$$I{'imposition'}: ";
 
@@ -449,7 +460,13 @@ $openprint::log->debug("Scoring signature_calc");
 			} # end if
 
 			my $servicePrice;
-			my %servicePrice = openprint::service::get_price_object( 'Scoring', $use_qty, $Equipment );
+			my %servicePrice;
+			if ( ( $type eq 'Folder' ) and ! ( $$services{Folding} and @{$$services{Folding}} ) ) {
+				%servicePrice = openprint::service::get_price_object( 'ScoringWithoutFolding', $use_qty, $Equipment );
+				%servicePrice = openprint::service::get_price_object( 'Scoring', $use_qty, $Equipment ) if ! %servicePrice;
+			} else {
+				%servicePrice = openprint::service::get_price_object( 'Scoring', $use_qty, $Equipment );
+			} # end if
 
 			if ( $servicePrice{'units'} eq 'per m' ) {
 				$servicePrice = $servicePrice{'Price'} * $use_qty / 1000;
@@ -560,7 +577,7 @@ sub get_scores {
 		# Default to 1 score, because we assume that if we have scoring, then we must want at least 1
 		$$specs{"txtVerticalQty-$$sig_specs{'SignatureIndex'}"} = 0;
 		$$specs{"txtHorizontalQty-$$sig_specs{'SignatureIndex'}"} = 0;
-		$openprint::log->debug("SIgnature $$sig_specs{'SignatureIndex'} doesn't need scoring in get_scores") if $debug;
+		$openprint::log->debug("SIgnature $$sig_specs{'SignatureIndex'} doesn't need scoring in get_scores") if DEBUG;
 		return;
 	} # end if
 	if ( $$sig_specs{'txtSignatureType'} eq 'Cover Pages' ) {

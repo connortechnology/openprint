@@ -1717,6 +1717,7 @@ sub set_size {
 					$$specs{'txtWidth'} = $$printing_specs{'txtFinalWidth'};
 					$$specs{'txtHeight'} = $$printing_specs{'txtFinalHeight'};
 				} # end if
+				$$specs{txtFinalHeight} = $$printing_specs{txtFinalHeight} if ! $$specs{txtFinalHeight};
 
 				if ( $$printing_specs{'rdbTemplateType'} eq 'PerfectBound' ) {
 # Perfect bound requires more width on th cover to conver the calliiper	
@@ -1907,9 +1908,16 @@ sub calc {
 		return $$specs{'Status'} = 'uncalculated';
 	} # end if
 	set_size( $Project, $specs, $printing_specs );
+
 	if ( ! ( $$specs{'txtWidth'} and $$specs{'txtHeight'} ) ) {
 		$$specs{'alert'} .= 'Please enter width and height<br/>';
 		return $$specs{'Status'} = 'uncalculated';
+	} # end if
+	if ( ! $$specs{txtSignatureType} ) {
+	if ( ! ( $$specs{'txtFinalWidth'} and $$specs{'txtFinalHeight'} ) ) {
+		$$specs{'alert'} .= 'Please enter finished width and height<br/>';
+		return $$specs{'Status'} = 'uncalculated';
+	} # end if
 	} # end if
 
 	if ( ! $$specs{txtSignatureType} ) {
