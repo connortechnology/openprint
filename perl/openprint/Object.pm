@@ -769,7 +769,7 @@ sub AUTOLOAD {
 sub to_string {
 	my $type = ref($_[0]);
 	my $fields = eval '\%'.$type.'::fields';
-    return $type . ': '. join(' ' , map { "$_ => $_[0]{$_}" } keys %$fields );
+    return $type . ': '. join(' ' , map { $_[0]{$_} ? "$_ => $_[0]{$_}" : () } keys %$fields );
 }
 
 sub dropdown {

@@ -180,10 +180,16 @@ foreach my $post ( $calendar->look_down( _tag => 'a' ) ) {
 			next;
 		} # end if
 		$month = $months{$month};
+		if ( Date::Calc::Delta_Days( Date::Calc::Today(), $year, $month, $day ) < 0 ) {
+			$log->debug("Event in the past $year-$month-$day");
+			next;
+		} # end if
+			
 
 		my $title_span = $content->look_down(_tag => 'b');
 		if ( ! $title_span ) {
-			$log->warn("No title");
+			$log->warn("No title span");
+			$content->dump();
 			next;
 		} # end if
 		my $title_html = $title_span->as_HTML();
@@ -192,6 +198,8 @@ $log->debug("title html $title_html");
 		$title_html =~ s/<\/?b>//g;
 $log->debug("title html $title_html");
 		$title_html =~ s/<\/?span[^>]*>//g;
+$log->debug("title html $title_html");
+		$title_html =~ s/^<br ?\/>(.*)$/$1/mi;
 $log->debug("title html $title_html");
 		$title_html =~ s/^(.*)<br ?\/>.*$/$1/mi;
 $log->debug("title html $title_html");
