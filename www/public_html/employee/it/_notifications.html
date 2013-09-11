@@ -7,7 +7,7 @@
 			foreach my $U ( @Notifications ) {
 				$html .= sprintf( q`<li id="notification_%d"><span class="name">%s</span><span class="buttons">%s</span></li>`, 
 					$U->user_id(), $U->User()->name(), 
-					ssi::button( 'd'.$U->id(), { 'onclick'=>qq`new Ajax.Updater('notifications','_notifications.html', { parameters: { action: 'delete', host_id: '$$variable{Host}{id}', user_id: $$U{user_id}} } );`, 'text', 'X' } ),
+					button( 'd'.$U->user_id(), { onclick=>qq`new Ajax.Updater('notifications','_notifications.html', { parameters: { action: 'delete', host_id: '$$variable{Host}{id}', user_id: $$U{user_id}} } );`, 'text', 'X' } ),
 					);
 			} # end foreach User in Notifications
 		} else {
@@ -19,16 +19,16 @@
 		<select name="new_notification_id" id="new_notification_id">
 			<option value=""> select one </option>
 		<? echo ( 
-			return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User::find(
-		'order' => 'lower(strfirstname),lower(strlastname)',
-				'id'=>[ sets::exclude(
+			return make_drop_down( [ map { $_->id(), $_->name() } openprint::User->find(
+				order => 'lower(strfirstname),lower(strlastname)',
+				id=>[ sets::exclude(
 						[ map { $_->user_id() } $$variable{'Host'}->Notifications()], 
-						[ map { $_->id() } openprint::User::find( 'company_id'=>new openprint::User($session{'user_id'})->company_id() ) ]
+						[ map { $_->id() } openprint::User->find( 'company_id'=>new openprint::User($session{'user_id'})->company_id() ) ]
 					) ],
 		 ) ] );
 		) ?>
 		</select>
-		<? echo ( ssi::button( 'AddNotification', { 
-					'onclick'=>qq`new Ajax.Updater('notifications', '_notifications.html', { parameters: { action: 'add', host_id: '$$variable{Host}{id}', user_id: \$('new_notification_id').value } } );`, 'text'=>'Add' } ); ) ?>
+		<? echo ( button( 'AddNotification', { 
+					onclick=>qq`new Ajax.Updater('notifications', '_notifications.html', { parameters: { action: 'add', host_id: '$$variable{Host}{id}', user_id: \$('new_notification_id').value } } );`, text=>'Add' } ); ) ?>
 	</li>
 </ul>
