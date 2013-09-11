@@ -3,9 +3,9 @@ use strict;
 package openprint::Email;
 our @ISA = qw( openprint::Object );
 
+require Mail::Sendmail;
 use openprint ();
 require email;
-require misc;
 require ssi;
 
 use vars qw( $dbh $table $serial %fields %transforms %defaults $log %session %config $debug );
@@ -30,12 +30,12 @@ $table = 'mailbox';
 
 sub send {
 	my ( $self, %params ) = @_;
-if ( $debug ) {
-$log->debug("Sending an email");
-foreach my $k ( keys %params ) {
-$log->debug("Params: $k => $params{$k}");
-} # end 
-}
+	if ( $debug ) {
+		$openprint::log->debug("Sending an email");
+		foreach my $k ( keys %params ) {
+			$openprint::log->debug("Params: $k => $params{$k}");
+		} # end 
+	}
 
 	my $results;
 	if ( $params{FROM} ) {
@@ -60,6 +60,39 @@ $log->debug("Params: $k => $params{$k}");
 #$log->debug("SMTP: $mail{SMTP}, from: $mail{'from'} subject: $mail{SUBJECT}");
 	my @attachments = $params{'ATTACHMENTS'} ? @{$params{'ATTACHMENTS'}} : ();
 	@attachments = ( $$self{'ATTACHMENTS'} ? @{$$self{'ATTACHMENTS'}} : () ) if ! @attachments;
+
+    if ( @attachments ) {
+        my $message = $mail{BODY};
+        $mail{BOUNDARY} = "====" . time() . "====" if ! $mail{BOUNDARY};
+        $mail{'content-type'} = "multipart/mixed;\r\n  boundary=\"$mail{BOUNDARY}\"\r\n";
+
+# start with the current body
+        $mail{'BODY'} .= "This is a multi-part message in MIME format.\n\n";
+        if ( $message ) {
+            $mail{BODY} .= "--$mail{BOUNDARY}\n";
+            $mail{BODY} .= ($mail{'content-type'} ? $mail{'content-type'} : 'Content-Type: text/plain; charset="utf-8"')."\n";
+            $mail{BODY} .= "Content-Transfer-Encoding: 8-bit\n";
+            $mail{BODY} .= "\n$message\n";
+        } else {
+            my ( $name, $text, $type, $encoding ) = splice @attachments,0,4;
+            $mail{BODY} .= "--$mail{BOUNDARY}\nContent-Type: $type;\n";
+            $mail{BODY} .= "Content-Transfer-Encoding: $encoding\n";
+            $mail{BODY} .= "\n$text\n";
+        } # end if
+
+        while ( @attachments ) {
+            my ( $name, $text, $type, $encoding ) = splice ( @attachments,0,4 );
+            $mail{BODY} .= "--$mail{BOUNDARY}\nContent-Type: $type;\n";
+            $mail{BODY} .= "\tname=\"$name\"\n" if $name;
+            $mail{BODY} .= "Content-Transfer-Encoding: $encoding\n";
+            $mail{BODY} .= "Content-Disposition: attachment;\n";
+            $mail{BODY} .= "\tfilename=\"$name\"\n" if $name;
+            $mail{BODY} .= "\n$text\n";
+        } # end while
+
+# Signal end of attachments
+        $mail{BODY} .= "--$mail{BOUNDARY}--\n\n";
+    } # end if
 
 #$log->debug("Email: Attachments @attachments");
 	my @recipients = $self->to();
@@ -113,7 +146,7 @@ foreach my $k ( keys %mail ) {
 $log->debug("Mail hash: $k => $mail{$k}");
 } # end 
 }
-		misc::send_email_with_attachment( $log, \%mail, @attachments );
+		Mail::Sendmail::sendmail(%mail) || $openprint::log->error( "Error: $Mail::Sendmail::error\n" );
 		$results .= 'Sent to: ' . ssi::htmlize( $mail{'TO'} ) . '<br/>';
 
 	} # end foreach recipient

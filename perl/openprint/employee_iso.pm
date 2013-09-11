@@ -239,7 +239,7 @@ sub _par_view_part1 {
 		$param{'issued_on'} = sprintf('%.4d-%.2d-%.2d', @param{'issued_on_year','issued_on_month','issued_on_day'} );
 		$param{'reply_by'} = sprintf('%.4d-%.2d-%.2d', @param{'reply_by_year','reply_by_month','reply_by_day'} );
 		$param{'part1_signed_on'} = sprintf('%.4d-%.2d-%.2d', @param{'part1_signed_on_year','part1_signed_on_month','part1_signed_on_day'} );
-		$variable{'error'} .= $variable{'PAR'}->save( \%param );
+		$variable{error} .= $variable{'PAR'}->save( \%param );
 		if ( $variable{'PAR'}->id() and ! $param{'par_id'} ) {
 			# Send out notifications
 			$variable{'PAR'}->send_notifications();
