@@ -102,17 +102,17 @@ sub save {
 
 sub next {
 	my $self = shift;
-	($_) = sql::execute( undef, undef, q{SELECT Id FROM Project_Types WHERE Id = (SELECT MIN(name) FROM Project_Types WHERE name>?)}, $$self{'name'} );
+	($_) = sql::execute( undef, undef, q{SELECT Id FROM Project_Types WHERE name = (SELECT MIN(name) FROM Project_Types WHERE name>?)}, $$self{'name'} );
 	if ( ! $_ ) {
-		( $_ ) = sql::execute( undef, undef, q{SELECT id FROM Project_Types WHERE id = (SELECT MAX(name) FROM Project_Types WHERE name<?)}, $$self{'name'} );
+		( $_ ) = sql::execute( undef, undef, q{SELECT id FROM Project_Types WHERE name = (SELECT MAX(name) FROM Project_Types WHERE name<?)}, $$self{'name'} );
 	} # end if
 	return new openprint::ProjectType( $_ );
 } # end sub next
 sub prev {
 	my $self = shift;
-	($_) = sql::execute( undef, undef, q{SELECT Id FROM Project_Types WHERE Id = (SELECT MAX(name) FROM Project_Types WHERE name<?)}, $$self{'name'} );
+	($_) = sql::execute( undef, undef, q{SELECT Id FROM Project_Types WHERE name = (SELECT MAX(name) FROM Project_Types WHERE name<?)}, $$self{'name'} );
 	if ( ! $_ ) {
-		( $_ ) = sql::execute( undef, undef, q{SELECT Id FROM Project_Types WHERE Id = (SELECT MIN(name) FROM Project_Types WHERE name>?)}, $$self{'name'} );
+		( $_ ) = sql::execute( undef, undef, q{SELECT Id FROM Project_Types WHERE name = (SELECT MIN(name) FROM Project_Types WHERE name>?)}, $$self{'name'} );
 	} # end if
 	return new openprint::ProjectType( $_ );
 } # end sub prev
