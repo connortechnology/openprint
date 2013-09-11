@@ -125,9 +125,9 @@ return true;
 		}
 	);
 
-	$('qty_sheets-'+type_id+'-').value = '';
-	$('qty_lbs-'+type_id+'-').value = '';
-	$('qty_feet-'+type_id+'-').value = '';
+	if ( $('qty_sheets-'+type_id+'-') ) $('qty_sheets-'+type_id+'-').value = '';
+	if ( $('qty_lbs-'+type_id+'-') ) $('qty_lbs-'+type_id+'-').value = '';
+	if ( $('qty_feet-'+type_id+'-') ) $('qty_feet-'+type_id+'-').value = '';
 
 }
 
