@@ -11,9 +11,9 @@
 					button( 'Edit', { href=>'/employee/inventory/manifest.html?manifest_id='.$$variable{Manifest}->id() } ),
 					button( 'Apply', { href=>'/employee/inventory/manifest_view.html?action=Apply&amp;manifest_id='.$$variable{Manifest}->id() } ),
 					( $$variable{Manifest}->deleted() ? (
-							button( 'UnDelete', { href=>'/employee/inventory/manifest_view.html?action=Undelete' } ),
+							button( 'UnDelete', { href=>'/employee/inventory/manifest_view.html?manifest_id='.$$variable{Manifest}->id().'&amp;action=Undelete' } ),
 						) : ( 
-							button( 'Delete', { href=>'/employee/inventory/manifest_view.html?action=Delete' } ),
+							button( 'Delete', { href=>'/employee/inventory/manifest_view.html?manifest_id='.$$variable{Manifest}->id().'&amp;action=Delete' } ),
 						) ),
 				) : () 
 			); ) ?>

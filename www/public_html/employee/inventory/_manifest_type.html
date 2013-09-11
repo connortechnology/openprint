@@ -125,7 +125,9 @@
 			<input style="display: none;" type="text" id="txtQuality-<?type_id?>" name="txtQuality-<?type_id?>" />
 		</p>
 		<p><label>Type:</label>
-			<? echo ( radio( 'type-'.$$variable{type_id}, [ map { $_, $_ } ( 'Sheet','Roll' ) ], $param{'type-'.$$variable{'type_id'}}, { onclick=>qq`type_onclick(this);` } ); ) ?>
+			<? echo ( radio( 'type-'.$$variable{type_id}, [ map { $_, $_ } ( 'Sheet','Roll' ) ], 
+						( $param{'type-'.$$variable{'type_id'}} ? $param{'type-'.$$variable{'type_id'}} : 'Sheet' ),
+						{ onclick=>qq`type_onclick(this);` } ); ) ?>
 		</p>
 		<p class="size">
 			<label for="width-<?type_id?>">Size:</label>
