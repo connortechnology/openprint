@@ -36,6 +36,7 @@ sub send_email_with_attachment {
 
 	if ( @attachments ) {
 		my $message = $$mail{BODY};
+
 		my $boundary = $$mail{BOUNDARY} ? $$mail{BOUNDARY} : ( "====" . time() . "====" );
 		$$mail{'content-type'} = "multipart/mixed;\r\n	boundary=\"$boundary\"\r\n";
 
