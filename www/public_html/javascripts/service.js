@@ -103,12 +103,9 @@ function cbFillResults( results ) {
 		$('InformationDiv').hide();
 	var keys = results.keys();
 
-	for ( var index = 0; index < keys.length; index += 1 ) {
+	for ( var index = 0, leni = keys.length; index < leni; index += 1 ) {
 		var key = keys[index];
 		var value = results.get(keys[index]);
-//if ( ! confirm( key + ' ' + value ) ) {
-//break;
-//}
 	
 		if ( key == 'alert') {
 			if (value != '') {
@@ -162,7 +159,7 @@ function cbFillResults( results ) {
 				element.value = value;
 			} else if ( element.length ) {
 				var elements = element;
-				for ( var j=0; j < elements.length; j += 1 ) {
+				for ( var j=0, lenj = elements.length; j < lenj; j += 1 ) {
 					if ( elements[j].value == value ) {
 						if ( ! elements[j].checked ) {
 							elements[j].checked = true;

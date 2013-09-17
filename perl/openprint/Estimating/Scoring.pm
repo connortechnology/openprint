@@ -268,8 +268,10 @@ $openprint::log->debug("Scoring signature_calc");
 		
 		@equipment = openprint::Equipment->find( 'Specifications' => {'Scoring Capable'=>\@capabilities}, 'useinestimating'=>1,'order'=>'strName');
 	} # endif
+	if ( $debug ) {
 	foreach my $E ( @equipment ) {
 		#$openprint::log->debug( "Equipment: " . $E->strid() );
+	}
 	}
 
 # Get the impositions to consider
@@ -363,6 +365,10 @@ $openprint::log->debug("Scoring signature_calc");
 
 		foreach my $I ( @impositions ) {
 			next if ! $I->imposition();
+			if ( ! int($I->imposition()) ) {
+				$openprint::log->error("Bad imposition in Scoring: $$I{imposition}");
+				next;
+			} # end if
 			next if ( $imposition->imposition() % $I->imposition() );
 			$Results{'Breakdown'} .= $I->to_string().'<br/>';
 			if ( $type ne 'Press' ) {
@@ -469,11 +475,11 @@ $openprint::log->debug("Scoring signature_calc");
 			} # end if
 
 			if ( $servicePrice{'units'} eq 'per m' ) {
-				$servicePrice = $servicePrice{'Price'} * $use_qty / 1000;
+				$servicePrice = Math::Round::nearest( 0.01, $servicePrice{'Price'} * $use_qty / 1000 );
 				$Results{'Breakdown'} .= sprintf('Service: $%.2f%s * %d * %d scores=$%.2f<br/>', @servicePrice{'Price','units'}, $use_qty, $score_qty, $servicePrice );
 			} elsif ( $servicePrice{'units'} eq 'per hour' ) {
 				my $hours = $use_qty / $Equipment->specification('PerfScoreRunSpeed') if $Equipment->specification('PerfScoreRunSpeed');
-				$servicePrice = $servicePrice{'Price'} * $hours;
+				$servicePrice = Math::Round::nearest( 0.01, $servicePrice{'Price'} * $hours );
 				$Results{'Breakdown'} .= sprintf('Service: $%.2f%s @ %d%s =%.2f', @servicePrice{'Price','units'}, $Equipment->specification('PerfScoreRunSpeed'), 'Per Hour', $servicePrice );
 			} elsif ( $servicePrice{'Price'} ) {
 				$Results{'Breakdown'} .= "Unknown units set on service price ($score_qty) ($servicePrice{'units'}) <br/>";

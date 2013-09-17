@@ -305,6 +305,20 @@ sub view {
 						});
 			} # end if 
 		} # end if
+	} elsif ( $param{'btnFunction'} eq 'AuthRequest' ) {
+		$variable{information} .= $PO->send_approval_required_notification();
+		if ( ! $variable{information} ) {
+			$variable{warning} .= 'This PO needs approval but no one could be found to do it.';
+		} else {
+			$variable{information} =~ s/Sent/send/g;
+			$variable{information} = 'Approval request ' . $variable{information};
+			my $L = new openprint::PurchaseOrder_Log();
+			$L->save({
+					'user_id'	=>	$session{user_id},
+					'po_id'		=>	$PO->id(),
+					'reason'	=>	$variable{information}
+					});
+		} # end if
 	} elsif ( $param{'btnFunction'} eq 'Attach' ) {
 		my $Asset = new openprint::Asset();
 		$variable{'error'} .= $Asset->save({ 'name'	=>	$param{asset_name}, 'filename' => $param{filename} } );
@@ -434,19 +448,6 @@ $log->debug("Creating PO $$PO{id} from label $variable{error}");
 					$param{authorized_by} = $session{user_id},
 				} # end if
 			} else {
-				$variable{information} .= $PO->send_approval_required_notification();
-				if ( ! $variable{information} ) {
-					$variable{warning} .= 'This PO needs approval but no one could be found to do it.';
-				} else {
-					$variable{information} =~ s/Sent/send/g;
-					$variable{information} = 'Approval request ' . $variable{information};
-					my $L = new openprint::PurchaseOrder_Log();
-					$L->save({
-							'user_id'	=>	$session{user_id},
-							'po_id'		=>	$PO->id(),
-							'reason'	=>	$variable{information}
-							});
-				} # end if
 			} # end if wasn't already authorized
 		} # end if
 
@@ -462,13 +463,14 @@ $log->debug("Creating PO $$PO{id} from label $variable{error}");
 				'reason'	=>	$param{reason},
 				});
 		} # end if
+		my @companies = ( $PO->company_id(), $PO->supplier_id() );
 		my @notifications = $PO->notifications(); # returns user_ids
 		my @new_notifications = @notifications;
 		if ( $PO->is_FSC() or $PO->is_PEFC() ) {
-			@new_notifications = sets::union( @new_notifications, map { $PO->can_view( $_->User() ) ? $_->user_id() : () } openprint::User_Notification->find( type=>'FSC/PEFC Notifications', value=>'Yes' ) );
+			@new_notifications = sets::union( @new_notifications, map { $PO->can_view( $_->User() ) ? $_->user_id() : () } openprint::User_Notification->find( type=>'FSC/PEFC Notifications', value=>'Yes', company_id=>\@companies ) );
 		} # end if
 		foreach my $type ( keys %types ) {
-			@new_notifications = sets::union( @new_notifications, map { $PO->can_view( $_->User() ) ? $_->user_id() : () } openprint::User_Notification->find( type=>'PO ' . $type . ' Notifications', value=>'Yes' ) );
+			@new_notifications = sets::union( @new_notifications, map { $PO->can_view( $_->User() ) ? $_->user_id() : () } openprint::User_Notification->find( type=>'PO ' . $type . ' Notifications', value=>'Yes', company_id=>\@companies ) );
 		} # end foreach
 		if ( scalar @notifications != scalar @new_notifications ) {
 			$PO->notifications(\@new_notifications);

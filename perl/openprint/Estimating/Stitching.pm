@@ -407,7 +407,7 @@ sub calc {
 		if ( $$specs{'OverrideImposition'.$qty_index} eq 'Y' ) {
 #$openprint::log->debug("Overriding imposiion");
 			if ( $imposition < $$specs{'Imposition'.$qty_index} ) {
-				$$specs{'alert'} .= "Can't stitch $$specs{'Imposition'.$qty_index} out";
+				$$specs{'alert'} .= "QTY $qty_index: Can't stitch $$specs{'Imposition'.$qty_index} out<br/>";
 				$$specs{'Status'} = 'uncalculated';
 			} # end if
 		} else {

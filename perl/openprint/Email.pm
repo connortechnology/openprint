@@ -3,9 +3,9 @@ use strict;
 package openprint::Email;
 our @ISA = qw( openprint::Object );
 
+require Mail::Sendmail;
 use openprint ();
 require email;
-require misc;
 require ssi;
 require MIME::QuotedPrint;
 require Mail::Sendmail;
@@ -107,7 +107,6 @@ sub send {
         $mail{BODY} .= "--$mail{BOUNDARY}--\n\n";
     } # end if
 
-#$openprint::log->debug("Email: Attachments @attachments");
 	my @recipients = $self->to();
 #$openprint::log->debug("Email: Recipients @recipients");
 	if ( $params{'TO'} ) {
@@ -167,6 +166,7 @@ sub send {
 				$mail{'TO'} = $recipient;
 			} # end if
 		} # end if
+
 		if ( $openprint::config{'EmailTo'} ) {
 			$mail{'TO'} = $openprint::config{EmailTo};
 		} # end if

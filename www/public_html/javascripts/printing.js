@@ -279,7 +279,7 @@ function cbFillPrintResults( results ) {
 				} // end if
 			} else if ( type == 'Roll' ) {
 				if ( ! ddm_select_by_value( ddm, width, false ) ) {
-					ddm.options[ddm.options.length] = new Option( width + '"', width, true );
+					ddm.options[ddm.options.length] = new Option( width + '" Roll', width, true );
 					ddm_select_by_value( ddm, width );
 				} // end if
 			} // end if

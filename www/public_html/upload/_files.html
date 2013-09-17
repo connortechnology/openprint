@@ -8,7 +8,6 @@
 	require handlers::upload;
 
 	my $destdir = handlers::upload::get_destdir();
-	@{$$variable{'PROJECT_FILES'}} = ();
 	my $path = $param{'path'};
 	if ( $path ) {
 		$path =~ s/\.\.+//g;
@@ -17,13 +16,14 @@
 if ( 0 ) {
 	if ( $param{'docket'} ) {
 		$param{'docket'} =~ s/\D//g;
-		$path = $param{'docket'};
+		my $Project = openprint::Project->find_one( docket=>$param{docket}, company_id=>$session{company_id} );
+		$path = $Project->docket();
 		if ( ! -e $config{'ProjectFilesPath'}.$destdir.$path ) {
 			mkdir $config{'ProjectFilesPath'}.$destdir.$path;
 		} # end if
 	} elsif ( $param{'project_id'} ) {
 		$param{'project_id'} =~ s/\D//g;
-		my $Project = new openprint::Project( $param{'project_id'} );
+		my $Project = openprint::Project->find_one( id=>$param{'project_id'}, 'company_id'=>$session{company_id} );
 		$path = $Project->docket();
 		if ( ! -e $config{'ProjectFilesPath'}.$destdir.$path ) {
 			mkdir $config{'ProjectFilesPath'}.$destdir.$path;
@@ -60,19 +60,45 @@ if ( 0 ) {
 
 	my %ProjectFiles = map { $_->filename(), $_ } openprint::File->find('company_id'=>$session{'company_id'}, 'filename like' => $path.'%' );
 
-	foreach my $file ( sort @filenames ) {
-		# Do not show hidden files 
-		next if $file eq '.';
-		next if ! $path and $file eq '..';
-		if ( -d "$config{'ProjectFilesPath'}$destdir$path/$file" ) {
-			push @{$$variable{'PROJECT_FILES'}}, $file, '', '', '';
+	my ( @files, @dirs );
+	foreach my $file ( @filenames ) {
+		next if substr($file,0,1) eq '.';
+		if ( -d "$config{'ProjectFilesPath'}$destdir/$file" ) {
+			push @dirs, $file;
 		} else {
-			my ($dev,$ino,$mode,$nlink,$uid,$gid,$rdev, $size, $atime,$mtime,$ctime,$blksize,$blocks) = stat("$config{'ProjectFilesPath'}/$destdir/$path/$file");
-			my $description;
-			
-			$description = $ProjectFiles{$destdir.$path.$file} ? $ProjectFiles{$destdir.$path.$file}->description() : '';
-			push @{$$variable{'PROJECT_FILES'}}, $file, $size, $description, $mtime;
-		} # end if directory or file
+			push @files, $file;
+		} # end if
+	} # end foreach file
+
+	@{$$variable{'PROJECT_FILES'}} = ();
+	foreach my $file ( sort { $b <=> $a } @dirs ) {
+		if ( $file =~ /\D/ ) {
+			# A dir, but not a docket
+			push @{$$variable{'PROJECT_FILES'}}, "/upload/upload_center.html?docket=$file", $file, '', "";
+		} else {
+			if ( openprint::Order->find_one(company_id=>$session{company_id}, docket=>$file ) ) {
+				push @{$$variable{'PROJECT_FILES'}}, "/upload/upload_center.html?docket=$file", $file, '', "Files for docket $file";
+			} else {
+				push @{$$variable{'PROJECT_FILES'}}, "/upload/upload_center.html?docket=$file", $file, '', "";
+			} # end if
+		} # end if
+
+	} # end foreach dir
+
+	foreach my $file ( sort { $b cmp $a } @files ) {
+		my ($dev,$ino,$mode,$nlink,$uid,$gid,$rdev, $size, $atime,$mtime,$ctime,$blksize,$blocks) = stat("$config{'ProjectFilesPath'}/$destdir/$file");
+		if ( $size > 1048576 ) {
+			$size = sprintf( '%.3f MB', $size / 1048576 );
+		} elsif ( $size > 1024 ) {
+			$size = sprintf( '%.3f KB', $size / 1024 );
+		} else {
+			$size .= ' B';
+		} # end if
+		my $description;
+		
+		$description = $ProjectFiles{$destdir.$path.$file} ? $ProjectFiles{$destdir.$path.$file}->description() : '';
+		$description = 'No description given' if ! $description;
+		push @{$$variable{'PROJECT_FILES'}}, "/project_files/$company_name/$param{'docket'}/$file", $file, $size, $description;
 	} # end foreach
 ) ?>
 <? echo ( include( '/includes/error_reporting.html' ); ) ?>
@@ -122,7 +148,10 @@ if ( 0 ) {
 			) ?>
 <? endif ( @{$$variable{'PROJECT_FILES'}} == 0 ) ?>
 	</table>
-<p class="buttons"><? echo ( ssi::button( 'Delete', { onclick=>"if ( confirm('Are you sure?') ) {\$('f1').btnFunction.value='Delete';new Ajax.Updater('FileList', '/upload/_files.html', { parameters: \$('f1').serialize() }); };", text=> 'Delete' } ); ) ?></p>
+<p class="buttons">
+		<? echo ( button( 'Delete', { onclick=>'delete_files();' } );) ?>
+<? echo ( ssi::button( 'Delete', { onclick=>"if ( confirm('Are you sure?') ) {\$('f1').btnFunction.value='Delete';new Ajax.Updater('FileList', '/upload/_files.html', { parameters: \$('f1').serialize() }); };", text=> 'Delete' } ); ) ?>
+</p>
 	<input type="hidden" name="btnFunction" />
 </form>
 <iframe scrolling="no" marginwidth="0" marginheight="0" frameborder="0" vspace="0" hspace="0" style="width: 0; height: 0; display:none;" id="SendFileFrame" name="SendFileFrame" src=""></iframe>

@@ -425,6 +425,7 @@ sub update_status {
 
 	# The Pending Deposit to In Prepress trnasition is a manual one.
 	return if $$self{'status'} eq 'Pending Deposit';
+	return if $$self{'status'} eq 'Deleted';
 
 	my $Order = new openprint::Order( $$self{'order_id'} );
 	if ( $$self{'order_id'} and $Order->status() ne 'Incomplete' ) {

@@ -7,6 +7,7 @@ require sql;
 require openprint::Object;
 require openprint::pricing;
 require openprint::logs;
+
 use openprint ();
 *session = \%openprint::session;
 *log = \$openprint::log;
@@ -32,6 +33,7 @@ $serial = 'services_id_seq';
 	category		=> '(SELECT name FROM Service_Categories WHERE service_categories.id=category_id)',
 	equipment_id	=> '(SELECT equipment_id FROM service_prices WHERE service_id=services.id)',
 );
+
 
 %transforms = (
 		);

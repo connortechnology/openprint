@@ -3,12 +3,10 @@ package openprint::PAR;
 our @ISA = qw(openprint::Object);
 
 use openprint ();
-use vars qw( $log $dbh );
-*log = \$openprint::log;
-*dbh = \$openprint::dbh;
 
 require openprint::PAR_Area;
 require openprint::PAR_Reason;
+require MIME::QuotedPrint;
 
 use vars qw( $debug $table $serial %fields %defaults %transforms );
 
@@ -62,24 +60,25 @@ $serial = 'par_id_seq';
 sub send_notifications {
 	my ( $self ) = @_;
 
-	my @Users = openprint::User->find('type'=>['E','A'], 'usergroup @>'=>'Quality Control Notifications');
+	my @Users = openprint::User->find( type=>['E','A'], 'usergroup @>'=>'Quality Control Notifications');
 
 	if ( @Users ) {
-		my $email_template = misc::load_file( $log, $openprint::config{'SkinPath'} . '/email_template.html' );
-		my $text = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/email_content/iso_par_notification.html' );
+		my $From = new openprint::User( $session{'user_id'} );
+		my $email_template = misc::load_file( $openprint::log, $openprint::config{'SkinPath'} . '/email_template.html' );
 
 		my %info = ( 'PAR'	=>	$self);
-		$info{'ReplacementText'} = ssi::variable_substitution( \$text, \%info );
+		$info{'ReplacementText'} = ssi::include( '/email_content/iso_par_notification.html', \%info );
 		my $body = ssi::variable_substitution( \$email_template, \%info );
-		new openprint::Email()->send(
-					FROM    => new openprint::User( $openprint::session{'user_id'} ),
-					TO      => \@Users,
-					SUBJECT => 'A new PAR has been generated.',
-					ATTACHMENTS	=> [ '', encode_qp($body), 'text/html', 'quoted-printable'],
-					);
+		my $Mail = new openprint::Email();
+		$Mail->send( 
+				FROM	=>	$From,
+				TO      => \@Users,
+				SUBJECT => 'A new PAR has been generated.',
+				ATTACHMENTS	=>	['', MIME::QuotedPrint::encode_qp($body), 'text/html', 'quoted-printable'],
+				);
 	} # end if to
-
 } # end sub send_notification
+
 sub Area {
 	return new openprint::PAR_Area( $_[0]{area_id} );
 } # end sub Area

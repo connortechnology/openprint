@@ -120,6 +120,10 @@ Please select a Skid to view/edit.<br/>
 			<? echo ( radio( 'allocated', ['Y', 'Yes', 'N', 'No', '', 'All' ], $session{'/employee/inventory/skids.html?allocated'}, { onclick=>'calc();' } ); ) ?>
 		</li>
 		<li>
+            <label>Checked Out?</label>
+			<? echo ( radio( 'checked_out', ['Y', 'Yes', 'N', 'No', '', 'All' ], $session{'/employee/inventory/skids.html?checked_out'}, { onclick=>'calc();' } ); ) ?>
+		</li>
+		<li>
             <label>Has Manufacturers ID</label>
 			<? echo ( radio( 'hasmanufacturers', ['Y', 'Yes', 'N', 'No', '', 'All' ], $session{'/employee/inventory/skids.html?hasmanufacturers'}, { onclick=>'calc();' } ); ) ?>
 		</li>
@@ -152,7 +156,7 @@ Please select a Skid to view/edit.<br/>
 		</li>
 			<li>
 				<label>Deleted</label>
-				<? echo ( ssi::radio( 'deleted', ['1','Yes','0','No','1,0','All'], $session{'/employee/inventory/skids.html?deleted'} ); ) ?>
+				<? echo ( radio( 'deleted', ['1','Yes','0','No','1,0','All'], $session{'/employee/inventory/skids.html?deleted'} ); ) ?>
 			</li>
 		</ul>
 		<p class="buttons">
