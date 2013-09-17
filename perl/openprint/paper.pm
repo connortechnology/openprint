@@ -384,6 +384,9 @@ sub get_sheetsizes {
 
 		if ( $min_width and $min_height ) {
 # while the paper fits on a press
+			if ( $width >= $min_width and $Paper->type() eq 'Roll' ) {
+				$results{$width} = 1;
+			} else {
 			while ( 
 					( $width >= $min_width ) and ( $height >= $min_height ) 
 					or ( $width >= $min_height ) and ( $height >= $min_width ) 
@@ -400,6 +403,7 @@ sub get_sheetsizes {
 					$width /= 2;
 				} # end if
 			} # end while
+			} # end if roll
 		} # end if
 	} # end foreach Paper
 
