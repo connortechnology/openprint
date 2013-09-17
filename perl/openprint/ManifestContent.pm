@@ -186,7 +186,7 @@ $openprint::log->debug("desired paper exists");
 
 			my $PI = new openprint::PaperInventory();
 			$error .= $PI->save({ user_id=>$openprint::session{user_id}, skid_id=>$$SC{skid_id}, paper_id=>$paper_id, quantity=>-1*$SC->quantity(),
-					comment=>qq`Removed stock by manifest <a href="/employee/inventory/manifest.html?manifest_id=$$Manifest{id}">$$Manifest{name}</a>.`
+					comment=>qq`Removed stock by manifest <a href="/employee/inventory/manifest_view.html?manifest_id=$$Manifest{id}">$$Manifest{name}</a>.`
 					});
 			$error .= $SC->delete();
 			$error .= $Paper->save();
@@ -422,7 +422,7 @@ sub apply {
 				user_id     =>  $openprint::session{user_id},
 				instock     =>  $Paper->in_stock(),
 				delta       =>  0,
-				comment     =>  'Changes from manifest <a href="/employee/inventory/manifest.html?manifest_id=' . $Manifest->id() . '">'. $Manifest->name().'</a>:<br/>'.$skid_changes,
+				comment     =>  'Changes from manifest <a href="/employee/inventory/manifest_view.html?manifest_id=' . $Manifest->id() . '">'. $Manifest->name().'</a>:<br/>'.$skid_changes,
 				skid_id     =>  $$Skid{id},
 				});
 	} # end if
@@ -443,7 +443,7 @@ $openprint::log->debug("Setting skid_id to $$Skid{id}");
 
 	$openprint::log->debug("Skid qty: $$SkidContent{quantity} != $$MC{quantity} checked_out($checked_out)");
 	if ( ( $$SkidContent{quantity} != $$MC{quantity} ) and ! $checked_out ) {
-		openprint::employee_inventory::save_inventory( $Skid, $Paper, $$MC{quantity}, sprintf('Inventory adjusted by manifest <a href="/employee/inventory/manifest.html?manifest_id=%1$d">%2$s</a>.', $Manifest->id(), $Manifest->name() ) );
+		openprint::employee_inventory::save_inventory( $Skid, $Paper, $$MC{quantity}, sprintf('Inventory adjusted by manifest <a href="/employee/inventory/manifest_view.html?manifest_id=%1$d">%2$s</a>.', $Manifest->id(), $Manifest->name() ) );
 		if ( $SkidContent = openprint::SkidContent->find_one( skid_id=>$Skid->id(), paper_id=>$$Paper{id} ) ) {
 	
 		$openprint::log->debug("New skidcontent: " . $SkidContent->to_string() );

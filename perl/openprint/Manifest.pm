@@ -245,7 +245,7 @@ sub dockets {
 	return sets::union( map { $_->docket() } $_[0]->Types() );
 } # end sub dockets
 sub link_to {
-	return '<a href="/employee/inventory/manifest.html?manifest_id='.$_[0]{'id'}.'">'.$_[0]{'name'}.'</a>';
+	return '<a href="/employee/inventory/manifest_view.html?manifest_id='.$_[0]{'id'}.'">'.$_[0]{'name'}.'</a>';
 } # end sub link_to
 
 sub check {

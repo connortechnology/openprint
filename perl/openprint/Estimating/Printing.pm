@@ -1692,7 +1692,7 @@ sub get_project_price {
 		} # end if
 		if ( $SpreadLayout > 0 ) {
 			$openprint::log->debug("Converting Impositions spread Layout: $SpreadLayout : imps:" . @impositions) if $debug;
-			if ( $debug or 0 ) {
+			if ( $debug or 1 ) {
 				$openprint::log->debug("Impositions for Press: " . $P->strid() . ' before convert:' . @impositions);
 				foreach my $imp ( @impositions ) {
 					$imp->display();
@@ -1701,7 +1701,7 @@ sub get_project_price {
 			@impositions = openprint::imposition::convert_impositions( $SpreadLayout, $$specs{'txtSpreadSize'}, \@impositions );
 			if ( $debug or 1 ) {
 				$openprint::log->debug("Impositions for Press: " . $Press->strid() . ' after convert:' . @impositions);
-				if ( $debug > 1) {
+				if ( $debug > 1 or 1) {
 					foreach my $imp ( @impositions ) {
 						$imp->display();
 					}
