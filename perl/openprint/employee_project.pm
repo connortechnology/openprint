@@ -704,7 +704,7 @@ sub send_proofs_approved_email {
 
 	my $CSR = new openprint::User( $Order->salesrep_id() );
 	my @Users = map { $_->User() } openprint::User_Notification->find( type =>'Proofs Approval Notifications', value =>'Yes',
-			company_id=>[$Project->company_id(), $User->company_id(), ( $CSR->id() ? $CSR->company_id() : () ) ] );
+			company_id=>[$Project->company_id(), $Me->company_id(), ( $CSR->id() ? $CSR->company_id() : () ) ] );
 	push @Users, $CSR if ! sets::isin( $CSR->id(), [ map { $_->id() } @Users ] );
 
 	foreach my $User ( @Users ) {

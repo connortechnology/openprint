@@ -1217,9 +1217,6 @@ $openprint::log->debug("Non-process colours in get_impositions: @non_process_col
 			$$project{dutch} = 'N';
 		} elsif ($$specs{'txtSignatureType'} or $$project{'HasDieCutting'} or $$project{'HasPerforating'} or $$project{'HasScoring'}) {
 			$$project{dutch} = 'N';
-		} elsif ( $run_style eq 'Perfecting' and ( $Paper->perfecting() ne 'Y' ) ) {
-			# Too hard to figure space for rollers
-			$$project{dutch} = 'N';
 		} else {
 			delete $$project{dutch};
 		} # end if

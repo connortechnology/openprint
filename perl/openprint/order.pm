@@ -587,7 +587,7 @@ sub make_order_from_order {
 			my $Project = new openprint::Project( $p_id );
 			my $New = $Project->copy();
 			$New->save({reference=>'ReOrder of ' . $New->reference() });
-			add_to_order( $log, $dbh, $order_id, $variable, ( $New->id(), $qty ) );
+			add_to_order( $log, $dbh, $order_id, \%variable, ( $New->id(), $qty ) );
 		} # end while
 		if ( $order_id ) {
 			foreach my $Product ( $SRC_Order->Products() ) {

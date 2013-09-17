@@ -308,7 +308,7 @@ function textarea_init() {
 			$dbh->do( 'LOCK TABLE Schedule IN ACCESS EXCLUSIVE MODE' ) or $log->error( DBI->errstr );
 
 			# When its time to add shifts, we add in sets, until we find an already-implemented shift.
-			my @Equipment_Shifts = $E->Operator_Shifts();
+			my @Equipment_Shifts = $E->Equipment_Shifts();
 
 			# Showing over 100 days makes the browser crawl forever. So limit it.
 			$end = 100 if $end > 100;

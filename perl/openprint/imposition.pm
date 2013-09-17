@@ -489,7 +489,8 @@ $openprint::log->debug("Not Pretrimming on $$Press{strid}") if DEBUG;
 		if ( check_setup( $setup1, $specs ) ) {
 			$openprint::log->debug(" CHECK 1 $run_style Using Paper $paper_width x $paper_height -> $adjusted_paper_width x $adjusted_paper_height Gutter: $gutters, Image: $$setup1{image_width} x $$setup1{image_height} Imposition: " . $setup1->imposition(). ":".$setup1->columns() . 'x' . $setup1->rows(). " $run_style " . $setup1->layout_width() . 'x' . $setup1->layout_height() ) if DEBUG;
 			push @results, $setup1;
-			if ( $$specs{'dutch'} ne 'N' ) {
+			if ( ( $$specs{'dutch'} ne 'N' ) and ( $run_style ne 'Perfecting' or ( $Paper->perfecting() ne 'Y' ) ) ) {
+				# Too hard to figure space for rollers
 				push @results, calc_dutch( $setup1, $adjusted_paper_width, $adjusted_paper_height, $specs );
 			} # end if
 			if ( ! $setup1->paper()->width() ) {
@@ -638,7 +639,7 @@ $openprint::log->debug("Not Pretrimming on $$Press{strid}") if DEBUG;
 
 #	Rotating sheet reverses the grain direction, so grain width + rotated sheet is the same as grain height + non rotated sheet.
 #	if no grain direction is specified, then use the larger imposition
-			if ( $$specs{'dutch'} ne 'N' ) {
+			if ( ( $$specs{'dutch'} ne 'N' ) and ( $run_style ne 'Perfecting' or ( $Paper->perfecting() ne 'Y' ) ) ) {
 				push @results, calc_dutch( $setup2, $adjusted_paper_width, $adjusted_paper_height, $specs );
 			} # end if
 			$setup2->Paper()->width( $setup2->used_width() ) if ! $setup2->Paper()->width();

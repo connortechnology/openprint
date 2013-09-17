@@ -268,7 +268,7 @@ $openprint::log->debug("Scoring signature_calc");
 		
 		@equipment = openprint::Equipment->find( 'Specifications' => {'Scoring Capable'=>\@capabilities}, 'useinestimating'=>1,'order'=>'strName');
 	} # endif
-	if ( $debug ) {
+	if ( DEBUG ) {
 	foreach my $E ( @equipment ) {
 		#$openprint::log->debug( "Equipment: " . $E->strid() );
 	}
