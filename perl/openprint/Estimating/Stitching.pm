@@ -195,6 +195,9 @@ sub signature_calc {
 			#$openprint::log->debug( sprintf('Spine Too small. Spine: %s, Minimum: %s<br/>', $$specs{'Height'}, $Equipment->specification('Minimum Spine Length', $$specs{'Imposition'.$qty_index}) ) );
 			next;
 		} # end if
+		if ( $Equipment->specification('Maximum Spread Width') and ( $$specs{Width} > $Equipment->specification('Maximum Spread Width') ) ) {
+			next;
+		} # end if
        if ( $Equipment->specification('Type') eq 'Press' ) {
             #if ( $$specs{'txtPockets'.$qty_index} > 1 ) {
                 #$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Too many pockets: %d<br/>', $$specs{'txtPockets'.$qty_index} );
