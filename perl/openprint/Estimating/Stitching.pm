@@ -289,6 +289,11 @@ $results{'Breakdown'} .= 'Imposition: ' . $imposition . 'out<br/>';
 			$results{'Breakdown'} .= sprintf('Spine Too small. Spine: %s, Minimum: %s<br/>', $$specs{'Height'}, $min_spine_length );
 			next;
 		} # end if
+		my $max_face_trim = $Equipment->specification('Maximum Spread Width');
+		if ( $max_face_trim and ( $$specs{Width} > $max_face_trim ) ) {
+			$results{'Breakdown'} .= sprintf('Face Trim too width. %s, Maximum: %s<br/>', $$specs{Width}, $max_face_trim );
+			next;
+		} # end if
 		if ( $Equipment->specification('Stitching Capable') eq 'When Digital' and $Press->specification('Printing Type') ne 'Digital' ) {
 			$results{'Breakdown'} .= sprintf('Not printed digital.<br/>' );
 			next;
