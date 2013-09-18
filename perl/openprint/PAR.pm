@@ -184,7 +184,7 @@ sub send_notifications {
 		my %info = (
 			'PAR'	=>	$self,
 		);
-		my $text = ssi::include( '/email_content/iso_par_notification.html', \%info );
+		$info{'ReplacementText'} = ssi::include( '/email_content/iso_par_notification.html', \%info );
 
 		my $body = ssi::variable_substitution( undef, $log, $dbh, \$email_template, \%info );
 		my $Mail = new openprint::Email();

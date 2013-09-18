@@ -62,6 +62,8 @@ sub no_outputs {
 sub calc {
 	my ( $log, $dbh, $variable, $project_index, $service_index, $specs ) = @_;
 
+	$$specs{Status} = 'calculated';
+
 	if ( sets::isin( $$specs{'rdbTemplateType'}, ['MetalCoil','PlasticCoil','PlasticComb','DoubleLoopWire'] ) ) {
 		$$specs{'txtSpreadSize'} = 4;
 	} elsif ( sets::isin( $$specs{'rdbTemplateType'}, ['CornerStitching','PerfectBound','SpinePaste'] ) ) {
@@ -91,8 +93,8 @@ sub calc {
 	} # end if
 
 	if ( ! ( $$specs{'txtFinalWidth'} or $$specs{'txtFinalHeight'} ) ) {
-		$$specs{'help'} .= 'Please select the dimensions.';
-		return 'uncalculated';
+		$$specs{alert} .= 'Please select the dimensions.';
+		return $$specs{Status} = 'uncalculated';
 	} # end if
 	$$specs{'txtHeight'} = $$specs{'txtFinalHeight'};
 	if ( $$specs{'txtSpreadSize'} == 2 ) {
@@ -102,18 +104,21 @@ sub calc {
 	} # end if
 
 	if ( ( $$specs{'txtWidth'} < $$specs{'txtFinalWidth'} ) or ( $$specs{'txtHeight'} < $$specs{'txtFinalHeight'} ) ) {
-		$$specs{'alert'} .= 'Flat size cannot be smaller than finished size!';
-		return 'uncalculated';
+		$$specs{alert} .= 'Flat size cannot be smaller than finished size!';
+		return $$specs{Status} = 'uncalculated';
 	} # end if
 
 	if ( ! $$specs{'txtTotalPageQuantity'} ) {
-		$$specs{'help'} .= 'Please enter the # of pages';
-		return 'uncalculated';
+		$$specs{alert} .= 'Please enter the # of pages';
+		return $$specs{Status} = 'uncalculated';
+	} elsif ( $$specs{'txtTotalPageQuantity'} > 500 ) {
+		$$specs{alert} .= 'The maximum # of pages is 500.<br/>';
+		$$specs{Status} = 'uncalculated';
 	} # end if
 
 	if ( ! $$specs{'rdbCover'} ) {
-		$$specs{'help'} .= 'Please select the cover type.';
-		return 'uncalculated';
+		$$specs{alert} .= 'Please select the cover type.';
+		return $$specs{Status} = 'uncalculated';
 	} # end if
 
 	$$specs{'txtTotalSpreadQuantity'} = ceil( $$specs{'txtTotalPageQuantity'} / $$specs{'txtSpreadSize'} );

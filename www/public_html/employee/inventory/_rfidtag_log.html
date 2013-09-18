@@ -13,6 +13,6 @@
 			<select name="limit" onchange="AjaxLoadContent('LocationLog','_rfidtag_log_entries.html', $('location_log_form').serialize() );"><option value="10">10</option><option value="25">25</option><option value="100">100</option></select>
 			<? echo ( button( 'LoadLocationLog', { onclick=>q`AjaxLoadContent('LocationLog','_rfidtag_log_entries.html', $('location_log_form').serialize() );`, text=> 'Load' } ); ) ?>
 		</p>
-		<div id="LocationLog"><?input(_rfidtag_log_entries.html)?></div>
+		<div id="LocationLog"><?include(_rfidtag_log_entries.html)?></div>
 	</fieldset>
 </form>

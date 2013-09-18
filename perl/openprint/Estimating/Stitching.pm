@@ -445,6 +445,10 @@ $openprint::log->debug( sprintf('QTY %d imp:%d, %dx%d, %s', $qty_index, $imposit
 				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Spine Too small. Spine: %s, Minimum: %s<br/>', $$specs{'Height'}, $Equipment->specification('Minimum Spine Length') );
 				next;
 			} # end if
+			if ( $Equipment->specification('Maximum Spread Width') and ( $$specs{Width} > $Equipment->specification('Maximum Spread Width' ) ) ) {
+				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Face Trim Too big.%s, Maximum: %s<br/>', $$specs{Width}, $Equipment->specification('Maximum Spread Width') );
+				next;
+			} # end if
 			if ( $Equipment->specification('Type') eq 'Press' ) {
 
 				# No long valid... should prbably be greater than some settnig
