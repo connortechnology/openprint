@@ -289,6 +289,11 @@ $results{'Breakdown'} .= 'Imposition: ' . $imposition . 'out<br/>';
 			$results{'Breakdown'} .= sprintf('Spine Too small. Spine: %s, Minimum: %s<br/>', $$specs{'Height'}, $min_spine_length );
 			next;
 		} # end if
+		my $max_face_trim = $Equipment->specification('Maximum Spread Width');
+		if ( $max_face_trim and ( $$specs{Width} > $max_face_trim ) ) {
+			$results{'Breakdown'} .= sprintf('Face Trim too width. %s, Maximum: %s<br/>', $$specs{Width}, $max_face_trim );
+			next;
+		} # end if
 		if ( $Equipment->specification('Stitching Capable') eq 'When Digital' and $Press->specification('Printing Type') ne 'Digital' ) {
 			$results{'Breakdown'} .= sprintf('Not printed digital.<br/>' );
 			next;
@@ -570,6 +575,10 @@ $openprint::log->debug('2 ' . $$folding_specs{"FoldQty-$$sig_specs{SignatureInde
 			} # end if
 			if ( ( $Equipment->specification('Stitching Capable') eq 'When Digital' ) and ( $$sig_specs{'PrintingType'.$qty_index} ne 'Digital' ) ) {
 				$$specs{'hdnBreakdown'.$qty_index} .= 'Not printed digital.<br/>';
+				next;
+			} # end if
+			if ( $Equipment->specification('Maximum Spread Width') and ( $$specs{Width} > $Equipment->specification('Maximum Spread Width' ) ) ) {
+				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Face Trim Too big.%s, Maximum: %s<br/>', $$specs{Width}, $Equipment->specification('Maximum Spread Width') );
 				next;
 			} # end if
 			if ( $Equipment->specification('Type') eq 'Press' ) {
