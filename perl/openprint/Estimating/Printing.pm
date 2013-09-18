@@ -931,7 +931,7 @@ $openprint::log->debug("Grabbing UV Specs");
 # We only specify GF spreads 1 at a time.
 				$$specs{'txtUnspecifiedSpreadQuantity'.$qty_index} = 1;
 			} # end if
-			if ( $$specs{'txtUnspecifiedSpreadQuantity'.$qty_index} > 125 ) {
+			if ( ( $$specs{txtSpreadSize} == 4 and $$specs{'txtUnspecifiedSpreadQuantity'.$qty_index} > 125 ) or ( $$specs{'txtUnspecifiedSpreadQuantity'.$qty_index} > 250 ) ) {
 				$$specs{'alert'} .= 'There are far too many pages required. We will not be able to calculate this.<br/>';
 				return $$specs{'Status'} = 'uncalculated';
 			} # end if
