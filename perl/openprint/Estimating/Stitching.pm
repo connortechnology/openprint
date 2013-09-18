@@ -572,6 +572,10 @@ $openprint::log->debug('2 ' . $$folding_specs{"FoldQty-$$sig_specs{SignatureInde
 				$$specs{'hdnBreakdown'.$qty_index} .= 'Not printed digital.<br/>';
 				next;
 			} # end if
+			if ( $Equipment->specification('Maximum Spread Width') and ( $$specs{Width} > $Equipment->specification('Maximum Spread Width' ) ) ) {
+				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Face Trim Too big.%s, Maximum: %s<br/>', $$specs{Width}, $Equipment->specification('Maximum Spread Width') );
+				next;
+			} # end if
 			if ( $Equipment->specification('Type') eq 'Press' ) {
 				#if ( $$specs{'txtPockets'.$qty_index} > 1 ) {
 					#$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Too many pockets: %d<br/>', $$specs{'txtPockets'.$qty_index} );

@@ -124,7 +124,7 @@
 				<? echo (
 					my $html = '';
 					foreach my $MC ( openprint::ManifestContent->find( skid_id=>$$variable{'Skid'}->id() ) ) {
-						$html .= sprintf('<a href="/employee/inventory/manifest.html?manifest_id=%1$s">%2$s</a><br/>', $MC->manifest_id(), $MC->Manifest()->name() );
+						$html .= sprintf('<a href="/employee/inventory/manifest_view.html?manifest_id=%1$s">%2$s</a><br/>', $MC->manifest_id(), $MC->Manifest()->name() );
 					} # end foreach MC
 					return $html;
 				) ?>

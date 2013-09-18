@@ -106,6 +106,8 @@ sub groups {
 sub calc {
 	my ( $log, $dbh, $variable, $project_index, $service_index, $specs ) = @_;
 
+	$$specs{Status} = 'calculated';
+
 	if ( sets::isin( $$specs{'rdbTemplateType'}, ['SaddleStitching', 'LoopStitching', 'MetalCoil','PlasticCoil','PlasticComb','DoubleLoopWire'] ) ) {
 		$$specs{'txtSpreadSize'} = 4;
 	} elsif ( sets::isin( $$specs{'rdbTemplateType'}, ['CornerStitching','PerfectBound','SpinePaste'] ) ) {
@@ -232,6 +234,9 @@ $openprint::log->debug("Group: $group_id, remaining: $remaining_pages, $override
 	if ( ! $$specs{'txtTotalPageQuantity'} ) {
 		$$specs{'alert'} = 'Please enter the # of pages';
 		return $$specs{'Status'} = 'uncalculated';
+	} elsif ( $$specs{'txtTotalPageQuantity'} > 500 ) {
+		$$specs{alert} .= 'The maximum # of pages is 500.<br/>';
+		$$specs{Status} = 'uncalculated';
 	} # end if
 
 	if ( ! $$specs{'rdbCover'} ) {
@@ -268,7 +273,7 @@ $openprint::log->debug("Group: $group_id, remaining: $remaining_pages, $override
 		} # end foreach k
 	} # end foreach
 
-	return $$specs{'Status'} = 'calculated';
+	return $$specs{Status};
 } # end sub calc
 
 sub calculate_signatures {
