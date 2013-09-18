@@ -1182,7 +1182,7 @@ $openprint::log->debug("Runspeed: $fold_type(".$Fold->name().") : " . $Equipment
 
 				$mprice += $servicePrice{'Total'};
 				$totalPrice += $servicePrice{'Total'};
-$openprint::log->debug("Fold $key : totalPrice: $totalPrice");
+#$openprint::log->debug("Fold $key : totalPrice: $totalPrice");
 				
 				$totalTime += $runTime * 3600;
 if ( 0 ) {
