@@ -204,28 +204,6 @@ if ( ! openprint::Invoice_Tax->find_one() ) {
 	sql::end_transaction( $dbh, $ac );
 } # end if
 
-my $data = 0;
-if ( sets::isin( 'orders', \@tables ) ) {
-	$data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='orders'", 'column_name');
-} # end if
-if ( $data ) {
-	if ( ! exists $$data{'id'} ) {
-		$dbh->do('ALTER TABLE orders rename column index to id');
-	} # end if
-	$dbh->do('ALTER TABLE Orders ADD paid NUMERIC(10,2)') if ( ! exists $$data{'paid'} );
-	$dbh->do('UPDATE Orders set paid=(SELECT SUM(amount) From Payments WHERE payments.order_id=orders.id)');
-	$dbh->do('ALTER TABLE Orders ADD owing NUMERIC(10,2)') if ( ! exists $$data{'owing'} );
-	$dbh->do('UPDATE orders SET owing=total-paid');
-	if ( ! exists $$data{terms_accepted} ) {
-		$dbh->do('ALTER TABLE ORDERS ADD terms_accepted boolean default false');
-	} # end if
-	if ( ! exists $$data{'cod_percent'} ) {
-		$dbh->do('ALTER TABLE orders add cod_percent float');
-	} # end if
-	if ( ! exists $$data{'downpayment_percent'} ) {
-		$dbh->do('ALTER TABLE orders add downpayment_percent float');
-	} # end if
-}
 if ( ! sets::isin('order_taxes', \@tables ) ) {
 	$_ = misc::load_file( $log, q{../openprint/sql/Order_Taxes.sql});
 	foreach my $st ( split(';', $_ ) ) {

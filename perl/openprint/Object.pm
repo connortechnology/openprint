@@ -168,15 +168,19 @@ if ( $debug ) {
 		$sql{$$fields{updated_by}} = $openprint::session{user_id} if exists $$fields{updated_by};
 		$sql{$$fields{updated_on}} = 'NOW()' if exists $$fields{updated_on};
 	} # end if
+	my $serial = eval '$'.$type.'::serial';
 	my @identified_by = eval '@'.$type.'::identified_by';
 	my $ac = sql::start_transaction( $local_dbh );
-	if ( @identified_by ) {
+	if ( ! $serial ) {
 		my $insert = $force_insert;
 		my %serial = eval '%'.$type.'::serial';
 		if ( ! %serial ) {
 $log->debug("No serial") if $debug;
 			# No serial columns defined, which means that we will do saving by delete/insert instead of insert/update
 			my $where = join(' AND ', map { $$fields{$_}.'=?' } @identified_by );
+			if ( $debug ) {
+				$log->debug("DELETE FROM $table WHERE $where");
+			} # end if
 			if ( ! ( ( $_ = $local_dbh->prepare("DELETE FROM $table WHERE $where") ) and $_->execute( @$self{@identified_by} ) ) ) {
 				$where =~ s/\?/\%s/g;
 				$log->error("Error deleting: DELETE FROM $table WHERE " .  sprintf($where, map { defined $_ ? $_ : 'undef' } ( @$self{@identified_by}) ).'):' . $local_dbh->errstr);
@@ -227,9 +231,12 @@ $log->debug("No serial") if $debug;
 			} # end if
 		} # end if
 	} else { # not identified_by
-		if ( ( ! $$self{'id'} ) or $force_insert ) {
-			if ( ! $$self{'id'} ) {
-				my $serial = eval '$'.$type.'::serial';
+		@identified_by = ('id') if ! @identified_by;
+		my $need_serial = ! ( @identified_by == map { $$self{$_} ? $_ : () } @identified_by );
+
+		if ( $force_insert or $need_serial ) {
+			
+			if ( $need_serial ) {
 				if ( $serial ) {
 					($$self{id}) = ($sql{$$fields{id}}) = $local_dbh->selectrow_array( q{SELECT nextval('} . $serial . q{')} );
 					$log->debug("SQL statement execution SELECT nextval('$serial') returned $$self{id}") if $debug or DEBUG_ALL;
@@ -252,18 +259,18 @@ $log->debug("No serial") if $debug;
 		} else {
 			delete $sql{'created_on'};
 			my @keys = keys %sql;
-			my $command = "UPDATE $table SET " . join(',', map { $_ . ' = ?' } @keys ) . " WHERE $$fields{id} = ?";
-			if ( ! ( $_ = $local_dbh->prepare($command) and $_->execute( @sql{@keys}, $sql{$$fields{'id'}} ) ) ) {
+			my $command = "UPDATE $table SET " . join(',', map { $_ . ' = ?' } @keys ) . ' WHERE ' . join(' AND ', map { $$fields{$_} .'= ?' } @identified_by );
+			if ( ! ( $_ = $local_dbh->prepare($command) and $_->execute( @sql{@keys}, @sql{@$fields{@identified_by}} ) ) ) {
 				my $error = $local_dbh->errstr;
 				$command =~ s/\?/\%s/g;
-				$log->error('SQL failed: ('.sprintf($command, map { defined $_ ? $_ : 'undef' } ( @sql{@keys}, $$fields{'id'} ) ).'):' . $error) if $log;
+				$log->error('SQL failed: ('.sprintf($command, map { defined $_ ? $_ : 'undef' } ( @sql{@keys}, @$fields{@identified_by} ) ).'):' . $error) if $log;
 				$local_dbh->rollback();
 				sql::end_transaction( $local_dbh, $ac );
 				return $error;
 			} # end if
 			if ( $debug or DEBUG_ALL ) {
 				$command =~ s/\?/\%s/g;
-				$log->debug('SQL DEBUG: ('.sprintf($command, map { defined $_ ? ( ref $_ eq 'ARRAY' ? join(',',@{$_}) : $_ ) : 'undef' } ( @sql{@keys}, $$self{'id'} ) ).'):' );
+				$log->debug('SQL DEBUG: ('.sprintf($command, map { defined $_ ? ( ref $_ eq 'ARRAY' ? join(',',@{$_}) : $_ ) : 'undef' } ( @sql{@keys}, @$self{@identified_by} ) ).'):' );
 			} # end if
 		} # end if
 	} # end if
