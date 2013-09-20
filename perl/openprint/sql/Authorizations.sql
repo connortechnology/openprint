@@ -7,6 +7,7 @@ CREATE TABLE Authorizations (
 	user_id	INTEGER[],
 	usertype_id	INTEGER[],
 	usergroup_id	INTEGER[],
+	setting	TEXT,
 	PRIMARY KEY (id)
 );
 

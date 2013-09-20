@@ -4,7 +4,7 @@
 </div>
 <script type="text/javascript" src="<? hash_link( /main/order/order.js ) ?>"></script>
 <div class="Order"><div class="Information">
-	<? echo ( include('/includes/error_reporting.html'); ) ?>
+	<?include('/includes/error_reporting.html') ?>
 <? if ( $$variable{Order}->id() ) ?>
 	<form method="post" id="f1" name="f1" action="/main/order/submit.html">
 		<div class="Header">
@@ -25,10 +25,10 @@
 								if ( @Suppliers > 1 ) {
 									if ( sets::isin($session{user_type}, ['A','E'] ) ) {
 										$html .= '<li class="supplier"><label>Supplier</label><select name="supplier_id">';
-										$html .= ssi::make_drop_down( [ map { $_->id(), $_->name() } @Suppliers ], $$variable{Order}->supplier_id() );
+										$html .= make_drop_down( [ map { $_->id(), $_->name() } @Suppliers ], $$variable{Order}->supplier_id() );
 										$html .= '</select></li>';
 									} else {
-										$html .= ssi::input( type=>'hidden', name=>'supplier_id', value=>$Suppliers[0]->id() );
+										$html .= input( type=>'hidden', name=>'supplier_id', value=>$Suppliers[0]->id() );
 									} # end if user_type
 								} # end if @Suppliers > 1 
 								return $html;
@@ -37,9 +37,9 @@
 							<li class="company_id">
 								<label>Company</label>
 								<span id="CompanyDropDown">
-								<? echo ( include('_company_dropdown.html'); ) ?>
+								<?include('_company_dropdown.html') ?>
 								</span>
-								<? echo ( ssi::button( 'AddFromBelow', { onclick=>'save_company();', text=>'Save Company' } ); ) ?>
+								<? echo ( button( 'AddFromBelow', { onclick=>'save_company();', text=>'Save Company' } ); ) ?>
 							</li>
 							<? endif ( (! $session{'company_id'}) and sets::isin($session{'user_type'}, ['A','E'] ) ) ?>
 						</ul>
@@ -53,8 +53,8 @@
 			</div>
 <? endif ( $config{'PaymentOnOrderInformation'} ) ?>
 			<? eval ( 
-				@{$$variable{'Projects'}} = $$variable{'Order'}->Projects();
-				@{$$variable{'Products'}} = $$variable{'Order'}->Products();
+				$$variable{Projects} = [ $$variable{'Order'}->Projects() ];
+				$$variable{Products} = [ $$variable{'Order'}->Products() ];
 				@{$$variable{'Contents'}} = ( @{$$variable{'Projects'}}, @{$$variable{'Products'}} );
 			) ?>
 <? if ( @{$$variable{'Contents'}} == 1 ) ?>

@@ -30,22 +30,22 @@
 				<select id="ddmOrderedBy" name="ddmOrderedBy" size="1" onchange="LoadContent('Results','/main/order/_history.html',this.form);">
 					<option value="">Ordered By</option>
 					<? echo ( 
-						ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User->find( 'company_id' => $session{'company_id'}, 'order'=>'lower(firstname),lower(lastname)' ) ], $session{'/main/order/history.html?ddmOrderedBy'} );
+						make_drop_down( openprint::User->dropdown( company_id => $session{company_id}, order=>'lower(firstname),lower(lastname)' ), $session{'/main/order/history.html?ddmOrderedBy'} );
 					) ?>
 				</select>
 			</li>
 			<li> 
 				<label>Created</label>
-<? echo ( ssi::date_select_session( '/main/order/history.html', 'created_on_start', { onchange=>q`LoadContent('Results','_history.html',this.form);` } ); ) ?>
+<? echo ( date_select_session( '/main/order/history.html', 'created_on_start', { onchange=>q`LoadContent('Results','_history.html',this.form);`,with_clear=>1,with_today=>1 } ); ) ?>
 				to
-<? echo ( ssi::date_select_session( '/main/order/history.html', 'created_on_end', { onchange=>q`LoadContent('Results','_history.html',this.form);` } ); ) ?>
+<? echo ( date_select_session( '/main/order/history.html', 'created_on_end', { onchange=>q`LoadContent('Results','_history.html',this.form);`,with_clear=>1,with_today=>1 } ); ) ?>
 			</li>
 			</ul>
 			<br class="spacer"/>
 			<p class="buttons">
 				<? echo ( join( '',
-					ssi::button( 'ShowResults', { onclick=>'f1.submit();', text=>'Show Results' } ),
-					ssi::button( 'Reset', { onclick=>'f1.reset();' } ),
+					button( 'ShowResults', { onclick=>'f1.submit();', text=>'Show Results' } ),
+					button( 'Reset', { onclick=>'f1.reset();' } ),
 				); ) ?>
 			</p>
 		</fieldset>
@@ -54,7 +54,7 @@
 	<hr class="spacer"/>
 	<input type="hidden" name="btnFunction"/>
 </form>
-<div id="Results"><? echo ( include('_history.html'); ) ?></div>
+<div id="Results"><?include('_history.html')?></div>
 <? else ( $session{'user_id'} ) ?>
 Only logged in customers have an order history. 
 <? endif ( $session{'user_id'} ) ?>

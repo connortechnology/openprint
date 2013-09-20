@@ -205,10 +205,9 @@ sub calc {
 sub signature_calc {
     my ( $Project, $service_index, $specs, $signature_service_index, $sig_specs, $qty_index, $imposition, $MakeReadies ) = @_;
 
-$openprint::log->debug("MakeReadies");
-foreach my $equipment_id ( keys %{$MakeReadies} ) {
-$openprint::log->debug("Makereadies $equipment_id $$MakeReadies{$equipment_id}");
-}
+#foreach my $equipment_id ( keys %{$MakeReadies} ) {
+#$openprint::log->debug("Makereadies $equipment_id $$MakeReadies{$equipment_id}");
+#}
 
 	my %bestPrice;
 	$bestPrice{'Status'} = 'uncalculated';
@@ -355,12 +354,12 @@ if ( 1 ) {
 			foreach my $type ( @types ) {
 
 				my %setupPrice;
-$openprint::log->debug("Makereadies: $$Equipment{id} $area");
+#$openprint::log->debug("Makereadies: $$Equipment{id} $area");
 				if ( $MakeReadies{$Equipment->id()} and (
 							(($area * 1.10 ) > $MakeReadies{$Equipment->id()} ) and
 							(($area * .90 ) < $MakeReadies{$Equipment->id()} )
 							) ) {
-$openprint::log->debug("In Makereadies: $$Equipment{id} $area");
+#$openprint::log->debug("In Makereadies: $$Equipment{id} $area");
 				} else {
 					my $MRService = openprint::Service->find_one('name'=>$type.' MakeReady');
 					$MRService = openprint::Service->find_one('name'=>'AqueousMakeReady') if ! $MRService;

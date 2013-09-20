@@ -1,11 +1,11 @@
 <? if ( @{$$variable{'Contents'}} > 1 ) ?>
-<? echo ( include('/main/order/_shipping_type_select.html'); ) ?>
+<? echo ( include('/main/order/_shipping_type_select.html', $variable ); ) ?>
 <? endif ( @{$$variable{'Contents'}} > 1 ) ?>
-	<? echo ( include('/main/order/_project_header.html'); ) ?>
+	<? echo ( include('/main/order/_project_header.html', $variable ); ) ?>
 <? echo (
     if ( $$variable{'Project'}->style_id() ) {
-        ssi::include( $config{'SkinPath'}.'/main/project/view_'.$$variable{'Project'}->Template()->name() . '.html' );
+        ssi::include( '/main/project/view_'.$$variable{'Project'}->Template()->name() . '.html', $variable );
     } else {
-        ssi::include( $ENV{'DOCUMENT_ROOT'}.'/main/order/_project_details.html' );
+        ssi::include( '/main/order/_project_details.html', $variable );
     } # end if
 ) ?>

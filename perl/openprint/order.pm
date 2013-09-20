@@ -450,7 +450,7 @@ sub save_project_information {
 			next if ! $$services{$ShippingType->name()};
 			foreach my $service_id ( @{$$services{$ShippingType->name()}} ) {
 
-				my $specs = openprint::service::internal_calc( $log, $dbh, \%variable, $project_index, $service_id, $ShippingType->name() );
+				my $specs = openprint::service::internal_calc( $log, $dbh, \%variable, $project_index, $service_id, $ShippingType->name(), $Project->ordered_quantity_index() );
 				$quantity_shipped -= $$specs{'txtQuantity'.$Project->ordered_quantity_index()};
 				$shipping_cost += $$specs{'txtPrice'.$OP->quantity_index()};
 				$log->warn($$specs{'alert'}) if $$specs{'alert'};
