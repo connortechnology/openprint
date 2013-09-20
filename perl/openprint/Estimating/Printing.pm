@@ -2980,8 +2980,8 @@ if ( 1 ) {
 			push @{$$price{'Impositions'}}, $imp;
 			push @total_impositions, $imp;
 
-			my $new_specs;
 			my $upq = $txtUnspecifiedPageQuantity - $$imp{'pages'};
+			my $new_specs;
 			# UPQ can be negative on single-page items
 			if ( ( $upq > 0 ) and $$imp{'pages'} ) {
 				my @signatures = @$signatures;
