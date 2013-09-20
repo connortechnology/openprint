@@ -7,7 +7,7 @@ use vars qw( $AUTOLOAD );
 
 my @fields = (
 	'start_imposition','start_columns','start_rows',
-	'imposition','rows','columns',
+	'versions','imposition','rows','columns',
 	'dutch_rows','dutch_columns', 'dutch_orientation',
 	'image_width','image_height', # dimensions + bleed
 	'object_width','object_height', # Flat dimensions
@@ -43,6 +43,8 @@ sub new {
 sub AUTOLOAD {
     my $name = $AUTOLOAD;
     $name =~ s/.*://;
+#$openprint::log->debug("Imposition::AUTOLOAD::$name");
+	return if $name eq 'DESTROY';
 
     if ( @_ > 1 ) {
 		$_[0]{$name} = $_[1];
@@ -92,8 +94,8 @@ sub display {
 	my $Paper = $$self{'paper'};
 	#$openprint::log->debug(sprintf('Imp %s: %dx%dout %dx%d+%dx%d:%dout spreads:%dx%d=%d pages:%dx%d=%d %s on: %sx%s %.3fx%.3f %s I: %.3fx%.3f L:%.3fx%.3f %s %s minimum: %s', $prefix,
 	#@$self{'quantity','start_imposition','columns','rows','dutch_columns','dutch_rows','imposition','spread_columns','spread_rows','spreads'},$self->page_columns(), $self->page_rows(), $self->pages(), $$self{'runstyle'}, $$self{paper}->{start_width},$$self{paper}->{start_height},$self->{paper}->{width},$self->{paper}->{height},$$self{Press}->{strid}, @$self{'image_width','image_height','layout_width','layout_height','image_orientation'},$self->grain_direction(), $$self{paper}->minimum_order() ) );
-	$openprint::log->debug(sprintf('Imp %s: %dx%d+%dx%d:%dout%s pages:%dx%d=%d %s on: %sx%s->%sx%s=%dsq min: %s %s %s', $prefix,
-	@$self{'columns','rows','dutch_columns','dutch_rows','imposition','image_orientation'},$self->page_columns(), $self->page_rows(), $self->pages(), $$self{'runstyle'}, @$Paper{'start_width','start_height','width','height'}, $Paper->area(),$$Paper{'minimum_order'}, $$self{Press}->{strid}, ( $$self{'Price'} ? $$self{'Price'} : '' ) ) );
+	$openprint::log->debug(sprintf('Imp %s: %dx%d+%dx%d:%dout%s pages:%dx%d=%d %s on: %sx%s->%sx%s=%dsq min: %s %s %s versions: %d', $prefix,
+	@$self{'columns','rows','dutch_columns','dutch_rows','imposition','image_orientation'},$self->page_columns(), $self->page_rows(), $self->pages(), $$self{'runstyle'}, @$Paper{'start_width','start_height','width','height'}, $Paper->area(),$$Paper{'minimum_order'}, $$self{Press}->{strid}, ( $$self{'Price'} ? $$self{'Price'} : '' ), $$self{versions} ) );
 } # end sub display
 
 sub get {
@@ -217,6 +219,7 @@ sub load {
 	$$self{'image_height'} = $$self{'object_height'} if ! $$self{'image_height'};
 
 	$$self{'imposition'} = $$specs{'txtImposition'.$qty_index};
+	$$self{versions} = $$specs{'Versions'.$qty_index};
 	$$self{'start_columns'} = $$self{'columns'} = $$specs{'hdnImpositionColumns'.$qty_index};
 	$$self{'start_rows'} = $$self{'rows'} = $$specs{'hdnImpositionRows'.$qty_index};
 	#$$self{'columns'} = $$self{'imposition'} / $$self{'rows'} if $$self{'rows'} and ! $$self{'columns'};
@@ -305,6 +308,7 @@ sub load {
 sub save {
 	my ( $self, $specs, $qty_index ) = @_;
 	$$specs{'txtImposition'.$qty_index} = $self->imposition();
+	$$specs{'Versions'.$qty_index} = $$self{versions};
 	$$specs{'hdnImpositionRows'.$qty_index} = $self->rows();
 	$$specs{'hdnImpositionColumns'.$qty_index} = $self->columns();
 	$$specs{'hdnImpositionDutchRows'.$qty_index} = $self->dutch_rows();
