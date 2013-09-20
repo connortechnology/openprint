@@ -198,6 +198,7 @@
 		if ( $$variable{Skid}{rfidtag_id} ) {
 			@param{'end_year','end_month','end_day'} = Date::Calc::Today();
 			$$variable{RFIDTag} = $$variable{Skid}->RFIDTag();
+			openprint::employee_inventory::_rfidtag_log_entries();
 			return include('_rfidtag_log.html');
 		} # end if
 		return;
