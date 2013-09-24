@@ -408,10 +408,10 @@ $openprint::log->debug("Not Pretrimming on $$Press{strid}") if DEBUG;
 		$gutters += $$specs{'Perfecting Single Gutter Size'};
 
 		if ( sets::isin( 'Right', \@bleed_locations ) ) {
-			$gutters -= $$specs{'BleedSize'};
+			$gutters -= $bleed_size;
 		} # end if
 		if ( sets::isin( 'Left', \@bleed_locations ) ) {
-			$gutters -= $$specs{'BleedSize'};
+			$gutters -= $bleed_size;
 		} # end if
 		$gutters = 0 if $gutters < 0;
 	} # end if
@@ -452,6 +452,7 @@ $openprint::log->debug("Not Pretrimming on $$Press{strid}") if DEBUG;
 	$adjusted_paper_height -= $setup1->cropmark_top();
 	$adjusted_paper_height -= $setup1->cropmark_bottom();
 	$adjusted_paper_height = 0 if $adjusted_paper_height < 0;
+$openprint::log->debug("Height: $paper_height - CB $$specs{'colour_bar_size'} - Grip $$specs{'Grip Size'} CropTOp: $$setup1{cropmark_top} - CropBottom: $$setup1{cropmark_bottom} = $adjusted_paper_height") if DEBUG;
 
 	my $adjusted_paper_width = $paper_width; 
 	$cropmarkspace = $$specs{'CropMarkSpace'};

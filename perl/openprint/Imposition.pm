@@ -31,6 +31,7 @@ my @fields = (
 	'specs',
 	'pages',
 	'stock_weight',
+	'sides',
 );
 
 sub new {
@@ -44,7 +45,6 @@ sub AUTOLOAD {
     my $name = $AUTOLOAD;
     $name =~ s/.*://;
 #$openprint::log->debug("Imposition::AUTOLOAD::$name");
-	return if $name eq 'DESTROY';
 
     if ( @_ > 1 ) {
 		$_[0]{$name} = $_[1];
@@ -506,6 +506,8 @@ sub sides {
 	$_[0]{'sides'} = $_[1] if @_ > 1;
 	return $_[0]{'sides'};
 } # end sub sides
+sub DESTROY {
+}
 
 1;
 __END__

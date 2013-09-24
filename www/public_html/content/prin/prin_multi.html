@@ -27,7 +27,7 @@
 										<? echo ( 
 											$_ = q{SELECT DISTINCT dblFinishedWidth::float || 'x' || dblFinishedHeight::float || 'Finished' AS size, dblFinishedWidth::float || '" x ' || dblFinishedHeight::float || '" Finished' FROM projecttemplate WHERE projecttype_id=?};
 
-											my $html .= ssi::make_drop_down( [ sql::execute( undef, undef, $_, $$variable{'ProjectType'}->id() ) ] );
+											my $html .= make_drop_down( [ sql::execute( undef, undef, $_, $$variable{'ProjectType'}->id() ) ] );
 											if ( ! $html ) {
 												$$variable{'Dimensions'} = 'Custom';
 											} # end if
@@ -37,12 +37,16 @@
 									</select>
 									</div>
 <div id="CustomDimensions" <? echo ( sets::isin( $$variable{'ProjectType'}->name(),[ 'Letterhead','ScratchPads','RackCards','DoorHangers','Posters','Labels' ] ) ? 'style="display:none;"' : ''; ) ?>>
+	<span class="Final">
 	<label>Final</label>
 	<? echo ( input( type=>'float', id=>'txtFinalWidth', name=>'txtFinalWidth', value=>$$variable{txtFinalWidth}, onkeyup=>q`remove_div('OrderButton');`); ) ?> x
 	<? echo ( input( type=>'float', id=>'txtFinalHeight', name=>'txtFinalHeight', value=>$$variable{txtFinalHeight}, onkeyup=>q`remove_div('OrderButton');`); ) ?>
+	</span>
+	<span class="Flat">
 	<label>Flat</label>
 	<? echo ( input( type=>'float', id=>'txtWidth', name=>'txtWidth', value=>$$variable{txtWidth}, onkeyup=>q`remove_div('OrderButton');`); ) ?> x
 	<? echo ( input( type=>'float', id=>'txtHeight', name=>'txtHeight', value=>$$variable{txtHeight}, onkeyup=>q`remove_div('OrderButton');`); ) ?>
+	</span>
 </div>
 								</li>
 								<li class="pages">

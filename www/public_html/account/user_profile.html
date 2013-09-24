@@ -8,7 +8,6 @@
 	<form id="f1" name="f1" method="post" action="user_profile.html" onsubmit='return fmCheck();'>
 		<div class="Account"><div class="UserProfile">
 			<fieldset class="filters">
-				<ul>
 			<? if ( $$variable{User}->Company()->can_edit() ) ?>
 			<? echo (
 				my @Users = openprint::User->find('company_id'=>$$variable{User}->company_id(), 'order'=>'lower(firstname),lower(lastname)' );
@@ -16,23 +15,23 @@
 					return sprintf('<input type="hidden" name="ddmUser" value="%d"/>', $Users[0]->id() );
 				} elsif ( @Users ) {
 					return q` 
+				<ul>
 				<li>
 					<label for="ddmUser">User Name</label>
 					<select id="ddmUser" name="ddmUser" onchange="if(this.options[this.selectedIndex].value != ''){f1.btnFunction.value='';f1.submit();}">
 						<option value="">Select a User</option>`.
 						make_drop_down( [ map { $_->id(), $_->name() } @Users ], $$variable{User}->id() ).'
 					</select>
-				</li>';
+				</li></ul>';
 				} 	
 			) ?>
 			<? else ( $$variable{User}->Company()->can_edit() ) ?>
 					<input type="hidden" name="ddmUser" value="<? echo ( $session{user_id} ) ?>"/>
 			<? endif ( $$variable{User}->Company()->can_edit() ) ?>
-				</ul>
 				<p class="buttons">
 			<? if ( $$variable{User}->Company()->can_edit() ) ?>
-					<? echo ( button( 'Previous', { onclick=>"f1.btnFunction.value='<<';fmCheck(f1);", text=>'<<' } ); ) ?>
-					<? echo ( button( 'Next', { onclick=>"f1.btnFunction.value='>>';fmCheck(f1);", text=>'>>' } ); ) ?>
+					<? echo ( button( 'Previous', { onclick=>"f1.btnFunction.value='<<';fmCheck(f1);", text=>'&lt;&lt;' } ); ) ?>
+					<? echo ( button( 'Next', { onclick=>"f1.btnFunction.value='>>';fmCheck(f1);", text=>'&gt;&gt;' } ); ) ?>
 					<? echo ( button( 'New', { onclick=>"addCheck(f1);", text=>'New' } ); ) ?>
 			<? endif ( $$variable{User}->Company()->can_edit() ) ?>
 					<? echo ( button( 'Delete', { onclick=>"f1.btnFunction.value='Delete';fmChange=2;fmCheck(f1);", text=>'Delete' } ); ) ?>
@@ -67,11 +66,11 @@
 					<input type="radio" id="SalutationMiss" name="salutation" value="Miss" <? echo ( checked( $$variable{User}->salutation() eq 'Miss' ); ) ?> />
 					<label class="radio" for="SalutationMiss">Miss</label>
    				</li>
-   				<li class="required" class="firstname">
+   				<li class="required firstname">
    					<label for="firstname">First Name</label>
    					<input type="text" id="firstname" name="firstname" value="<? echo ( $$variable{User}->firstname() ) ?>" />
    				</li>
-   				<li class="notrequired" class="lastname"> 
+   				<li class="notrequired lastname"> 
    					<label for="lastname">Last Name</label>
    					<input type="text" id="lastname" name="lastname" value="<? echo ( $$variable{User}->lastname() ) ?>" />
    				</li>
@@ -109,9 +108,9 @@
 				<li class="ftp_active notrequired">
 					<label>Can login to the FTP site?</label>
 					<input type="radio" id="ftp_active1" name="ftp_active" <? echo ( checked( $$variable{User}->ftp_active() ); ) ?> value="1" />
-					<label class="radio" for="ftp_active1"/>Yes</label>
+					<label class="radio" for="ftp_active1">Yes</label>
 					<input type="radio" id="ftp_active0" name="ftp_active" <? echo ( checked( ! $$variable{User}->ftp_active() ); ) ?> value="0" />
-					<label class="radio" for="ftp_active0"/>No</label>
+					<label class="radio" for="ftp_active0">No</label>
 				</li>
    				<li class="administrator notrequired">
    					<label>Company administrator?</label>

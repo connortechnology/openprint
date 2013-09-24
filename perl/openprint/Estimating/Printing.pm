@@ -2466,7 +2466,9 @@ sub breakdown {
 		$breakdown .= ' Scoring: ' . $$stock_qty{'ScoringOvers'} if $$stock_qty{'ScoringOvers'};
 		$breakdown .= ' DieCutting: ' . $$stock_qty{'DieCuttingOvers'} if $$stock_qty{'DieCuttingOvers'};
 		$breakdown .= ' UV Coating: ' . $$stock_qty{'UVOvers'} if $$stock_qty{'UVOvers'};
-		$breakdown .= ') Total: ' . $$stock_qty{'Total Overs'} . '<br/>';
+		$breakdown .= ') Total: ' . $$stock_qty{'Total Overs'};
+		$breakdown .= ' Used Minimum Overs ' if $$stock_qty{'Minimum Overs'} == $$stock_qty{'Total Overs'};
+		$breakdown .= '<br/>';
 	} # end if
 	$breakdown .= $$price{'Ink breakdown'};
 	$breakdown .= sprintf('Ink Total: $%.2f<br/>', $$price{'Ink Price'} );
@@ -2500,6 +2502,10 @@ sub calculate_impositions {
 		$SpreadLayout = 0;
 #$qty *= $$specs{'txtUnspecifiedPageQuantity'.$qty_index};
 	} elsif ( $$sig_specs{'txtSignatureType'} ) {
+		if ( ! $$project{txtSpreadSize} ) {
+			$log->error("No spread size in calculate_impositions.");
+			$$project{'txtSpreadSize'} = 4;
+		} # end if
 		$SpreadLayout = ( $$sig_specs{'chkOverridePageQuantity'.$qty_index} eq 'Y' ? $$sig_specs{'PageQuantity'.$qty_index} : $$sig_specs{'txtUnspecifiedPageQuantity'.$qty_index} ) / $$project{'txtSpreadSize'};
 	} # end if
 	my $cache_string = join('-', $qty_index, $$Press{id}, $SpreadLayout, @$sig_specs{'PreviousStockType', 'PreviousGrainDirection'} );
@@ -4307,6 +4313,7 @@ $openprint::log->debug("No Coverage for grade $grade Press: $$Press{strid}");
 			'UVOvers'					=>	$uv_results{'Overs'},
 			'BinderyOvers'				=>	$bindery_overs,
 			'CuttingOvers'				=>	$price{'Cutting Overs'},
+			'Minimum Overs'				=>	$min_overs,
 			);
 	$price{'Stock Quantity'} = \%sheet_qty;
 	$price{'Gross Sheet Count'} = $sheet_qty{'Gross Sheet Count'};
@@ -4363,7 +4370,11 @@ $openprint::log->warn("Something wrong in AQ");
 		$price{'Imposition MakeReady'} = $$ImpositionPrice{MakeReady}{Price};
 		$price{'Imposition Total'} = $$ImpositionPrice{Total};
 		$price{'Imposition Price'} = $ImpositionPrice;
-		$setup_cost += $price{'Imposition Total'} if ! $ImpositionServiceType;
+		 if ( ! $ImpositionServiceType ) {
+			$setup_cost += $price{'Imposition Total'};
+		} else {
+			$price{'Comparison Cost'} += $price{'Imposition Total'};
+		} # end if
 	} # end if Plate Type Conventional
 
 	if ( my %RunStylePrice = openprint::service::get_price_object( $$Imposition{runstyle}.'Setup',undef,$Press ) ) {

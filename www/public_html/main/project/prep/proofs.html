@@ -23,7 +23,7 @@
 
 				foreach my $s_id ( $$variable{'Project'}->signatures() ) {
 					my $sig_specs = openprint::service::get_specs_ref( $$variable{'Project'}, $s_id );
-					my $signature_index = $$sig_specs{'SignatureIndex'};
+					my $signature_index = $$sig_specs{SignatureIndex};
 					if ( $$sig_specs{'txtImposition'.$qty_index} ) {
 						$$variable{'Reference'} = openprint::service::summary( $$variable{'Project'}->id(), $s_id );
 						$$variable{'Reference'} .= '<br/>Running ' . openprint::service::summary( $$variable{'Project'}->id(), $s_id, $qty_index );
@@ -47,34 +47,34 @@
 					while ( my ( $proof_index,$proof_quantity,$proof_width,$proof_height,$proof_type, $ddmProofType ) = splice @{$$variable{'Proofs-'.$signature_index.'-'.$qty_index}},0,6 ) {
 						$html .= sprintf( q`
 							<tr>
-								<td class="quantity"><input type="number" name="txtProofQuantity-%1$d-%3$d-%2$d" value="%4$d" onkeyup="calc(this.form.name)" /></td>
-								<td class="dimensions">
-									<input type="number" name="txtProofWidth-%1$d-%3$d-%2$d" value="%5$s" onkeyup="calc(this.form.name)" />
-									x 
-									<input type="number" name="txtProofHeight-%1$d-%3$d-%2$d" value="%6$s" onkeyup="calc(this.form.name)" />
-								</td>
+								<td class="quantity">%4$s</td>
+								<td class="dimensions">%5$s x %6$s</td>
 								<td class="type"><select name="ddmProofType-%1$d-%3$d-%2$d" onchange="calc(this.form.name);"><option value="">select one</option>%7$s</select></td>
-								<td class="Price"><input type="text" name="MRPrice-%1$d-%3$d-%2$d" readonly="readonly" onfocus="this.blur();" /></td>
-								<td class="Price">
-									<input type="number" name="ServicePrice-%1$d-%3$d-%2$d" readonly="readonly" onfocus="this.blur();" />
-								</td>
+								<td class="Price">%8$s</td>
+								<td class="Price">%9$s</td>
 								<td class="Units">
 									<span id="ServiceUnits-%1$d-%3$d-%2$d"></span>
 								</td>
 								<td class="Price"><input type="number" name="txtProofUnitPrice-%1$d-%3$d-%2$s" readonly="readonly" onfocus="this.blur();" /></td>
-								<td class="Override"> %8$s <input type="hidden" name="txtProofIndex-%1$d-%3$d-%2$d" value="%3$d"/>
+								<td class="Override"> %10$s <input type="hidden" name="txtProofIndex-%1$d-%3$d-%2$d" value="%3$d"/>
 								</td>
 							</tr>
-							`, $signature_index, $qty_index, $proof_index, $proof_quantity, $proof_width, $proof_height, $ddmProofType,
-								ssi::write_override( 'chkOverride-'.$signature_index.'-'.$proof_index.'-'.$qty_index, 
+							`, $signature_index, $qty_index, $proof_index,
+								input( type=>'cardinal', name=>"txtProofQuantity-$signature_index-$proof_index-$qty_index", value=>$proof_quantity, onkeyup=>'calc(this.form.name);' ),
+								input( type=>'float', name=>"txtProofWidth-$signature_index-$proof_index-$qty_index", value=>$proof_width, onkeyup=>'calc(this.form.name);' ),
+								input( type=>'float', name=>"txtProofHeight-$signature_index-$proof_index-$qty_index", value=>$proof_height, onkeyup=>'calc(this.form.name);' ),
+ $ddmProofType,
+								input( type=>'float', name=>"MRPrice-$signature_index-$proof_index-$qty_index", readonly=>'readonly', onfocus=>'this.blur();' ),
+								input( type=>'float', name=>"ServicePrice-${signature_index}-$proof_index-$qty_index", readonly=>'readonly', onfocus=>'this.blur();' ),
+								write_override( 'chkOverride-'.$signature_index.'-'.$proof_index.'-'.$qty_index, 
 									$$variable{'chkOverride-'.$signature_index.'-'.$proof_index.'-'.$qty_index},
 									'', "calc('f1');" ),
 									);
 					} # end while proofs
 					$html .= sprintf(q`
 						<tr class="additional">
-							<td colspan="6">Additional proofs?</td>
-							<td class="Price">
+							<td colspan="4">Additional proofs?</td>
+							<td class="Price" colspan="3">
 								<input type="radio" id="rdbAdditional-%1$d-%2$dY" name="rdbAdditional-%1$d-%2$d" value="Yes" />
 								<label class="radio" for="rdbAdditional-%1$d-%2$dY">Yes</label>
 								<input type="radio" id="rdbAdditional-%1$d-%2$dN" name="rdbAdditional-%1$d-%2$d" value="No" checked="checked" />
@@ -89,7 +89,7 @@
 				$html .= sprintf( q`
 					<table>
 						<tr class="totals">
-							<td><b>Total Service Price (%2$s)</b></td>
+							<td>Total Service Price (%2$s)</td>
 							<td class="Price"><input type="number" name="txtPrice%1$d" readonly="readonly" onfocus="this.blur();" /></td>
 							<td class="Override">&nbsp;</td>
 						</tr>
@@ -102,14 +102,16 @@
 				</fieldset>
 					`, $qty_index, @$variable{'CurrencySymbol','txtQuantity'.$qty_index}, 
 					sets::isin($session{'user_type'}, ['A','E'] ) ? 
-					ssi::button( 'Breakdown'.$qty_index, { 'onclick'=>"show_breakdown('$qty_index');", 'text'=>'Breakdown' } ) : ''
+					button( 'Breakdown'.$qty_index, { onclick=>"show_breakdown('$qty_index');", text=>'Breakdown' } ) : ''
 					
 					);
+					$html .= qq{<div id="hdnBreakdown$qty_index" style="display: none;"></div>};
 				} # end foreach qty_index
+				$html .= include('/includes/main/proj/add_to_project.html');
+				$html .= include('/includes/main/proj/hdn_fields_prepress.html');
+			
 				return $html;
 			) ?>
 
-			<? echo ( include('/includes/main/proj/add_to_project.html'); ) ?>
-			<? echo ( include('/includes/main/proj/hdn_fields_prepress.html'); ) ?>
 	</form>
 </div></div><!--Service-->

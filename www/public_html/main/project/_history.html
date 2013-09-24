@@ -126,13 +126,12 @@
 	<td class="Price">%6$s</td>
 	<td class="status">%7$s</td>
 	<td class="Date">%8$s</td>
-	<td class="checkbox"></td>
+	<td class="checkbox"><input type="checkbox" name="project_id" value="%2$d" /></td>
 </tr>
 <tr%1$s> 
 	<td colspan="%9$d">&nbsp;</td>
 	<td colspan="7"><a href="/main/project/view.html?ProjectIndex=%2$d">%10$s</a></td>
 </tr>`,
-	#<td class="checkbox"><input type="checkbox" name="project_id" value="%2$d" /></td>
 					$rowclass, $Project->id(), ssi::html_escape( $Project->reference() ), 
 					( $Project->quantity(1) ? openprint::Currency::format( $Project->Currency()->convert_from( $Project->price(1) ) ) : '' ),
 					( $Project->quantity(2) ? openprint::Currency::format( $Project->Currency()->convert_from( $Project->price(2) ) ) : '' ),

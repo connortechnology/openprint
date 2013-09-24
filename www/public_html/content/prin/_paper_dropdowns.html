@@ -47,7 +47,7 @@ $log->debug("# of Options for $name:".@options );
 		$$variable{'ddmStock'.$name.$$variable{'Signature'}} = $options[0] if @options == 2;
 
 		$find{lc $name} = $$variable{'ddmStock'.$name.$$variable{'Signature'}} if $$variable{'ddmStock'.$name.$$variable{'Signature'}};
-		$html .= sprintf(q`<li><label>Stock %2$s</label>
+		$html .= sprintf(q`<li class="Stock%2$s"><label>Stock %2$s</label>
 				<select name="ddmStock%1$s%3$s" size="1" onchange="Stock_onchange( this, '%3$s' );">
 				<option value=""> Please select </option>
 				%4$s

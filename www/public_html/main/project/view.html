@@ -78,7 +78,7 @@
 		<tr class="totals unprintable">
 			<td><input type="text" name="txtServiceName" placeholder="enter custom service line description here"/></td>
 			<? echo (
-				return join("\n", map { '<td class="price">'.input( type=>'float', name=>'txtPrice'.$_ ).'</td>' } $$variable{Project}->quantity_indexes() );
+				return join("\n", map { '<td class="price">'.input( type=>'float', name=>'txtPrice'.$_, placeholder=>'custom price' ).'</td>' } $$variable{Project}->quantity_indexes() );
 			) ?>
 			<td class="status">&nbsp;</td>
 			<? if ( ( ! $$variable{Project}->docket() ) or ( $$variable{Project}->Order()->status() eq 'Re-Opened' ) ) ?>

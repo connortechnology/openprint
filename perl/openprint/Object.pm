@@ -22,7 +22,7 @@ use vars qw( $log $dbh $AUTOLOAD %cache %name_cache %fields %defaults %transform
 *config = \%openprint::config;
 
 my $debug = 0;
-use constant DEBUG_ALL => 1;
+use constant DEBUG_ALL => 0;
 $no_cache = 0;
 
 sub init_cache {
@@ -238,8 +238,8 @@ $log->debug("No serial") if $debug;
 			
 			if ( $need_serial ) {
 				if ( $serial ) {
-					($$self{id}) = ($sql{$$fields{id}}) = $local_dbh->selectrow_array( q{SELECT nextval('} . $serial . q{')} );
-					$log->debug("SQL statement execution SELECT nextval('$serial') returned $$self{id}") if $debug or DEBUG_ALL;
+					@$self{@identified_by} = @sql{@$fields{@identified_by}} = $local_dbh->selectrow_array( q{SELECT nextval('} . $serial . q{')} );
+					$log->debug("SQL statement execution SELECT nextval('$serial') returned ".join(',',@$self{@identified_by})) if $debug or DEBUG_ALL;
 				} # end if
 			} # end if
 			my @keys = keys %sql;
@@ -735,7 +735,6 @@ sub AUTOLOAD {
 	my $type = ref($_[0]);
 	my $name = $AUTOLOAD;
 	$name =~ s/.*://;
-	return if $name eq 'DESTROY';
 	my $fields = eval '\%'.$type.'::fields';
 	if ( @_ > 1 ) {
 		if ( $fields ) {
@@ -1033,6 +1032,8 @@ sub View {
 	} # end if
 	return $View;
 } # end sub View
+sub DESTROY {
+}
 
 1;
 __END__
