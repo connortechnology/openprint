@@ -135,6 +135,7 @@ if ( sets::isin( 'taxes', \@tables ) ) {
 		if ( exists $$data{'harmonizedtax'} ) {
 			$dbh->do('ALTER TABLE taxes DROP column harmonizedtax');
 		}
+		$dbh->do(q`UPDATE Taxes set name='HST' WHERE country='CA'`);
 	} # end if data
 } else {
 	$dbh->do( misc::load_file( $log, '../openprint/sql/Taxes.sql' ) ) or die $dbh->errstr();

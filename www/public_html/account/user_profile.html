@@ -10,7 +10,7 @@
 			<fieldset class="filters">
 			<? if ( $$variable{User}->Company()->can_edit() ) ?>
 			<? echo (
-				my @Users = openprint::User->find('company_id'=>$$variable{User}->company_id(), 'order'=>'lower(firstname),lower(lastname)' );
+				my @Users = @{$$variable{Users}} = openprint::User->find('company_id'=>$$variable{User}->company_id(), 'order'=>'lower(firstname),lower(lastname)' );
 				if ( @Users == 1 ) {
 					return sprintf('<input type="hidden" name="ddmUser" value="%d"/>', $Users[0]->id() );
 				} elsif ( @Users ) {
@@ -30,8 +30,11 @@
 			<? endif ( $$variable{User}->Company()->can_edit() ) ?>
 				<p class="buttons">
 			<? if ( $$variable{User}->Company()->can_edit() ) ?>
+
+			<? if ( @{$$variable{Users}} > 1 ) ?>
 					<? echo ( button( 'Previous', { onclick=>"f1.btnFunction.value='<<';fmCheck(f1);", text=>'&lt;&lt;' } ); ) ?>
 					<? echo ( button( 'Next', { onclick=>"f1.btnFunction.value='>>';fmCheck(f1);", text=>'&gt;&gt;' } ); ) ?>
+			<? endif ( @{$$variable{Users}} > 1 ) ?>
 					<? echo ( button( 'New', { onclick=>"addCheck(f1);", text=>'New' } ); ) ?>
 			<? endif ( $$variable{User}->Company()->can_edit() ) ?>
 					<? echo ( button( 'Delete', { onclick=>"f1.btnFunction.value='Delete';fmChange=2;fmCheck(f1);", text=>'Delete' } ); ) ?>
@@ -80,15 +83,15 @@
    				</li>
    				<li class="phone notrequired"> 
    					<label for="phone">Phone</label>
-   					<input type="text" id="phone" name="phone" value="<? echo ( $$variable{User}->phone() ) ?>" />
+   					<input type="tel" id="phone" name="phone" value="<? echo ( $$variable{User}->phone() ) ?>" />
    				</li>
    				<li class="mobile notrequired">
    					<label for="mobile">Mobile</label>
-   					<input type="text" id="mobile" name="mobile" value="<? echo ( $$variable{User}->mobile() ) ?>" />
+   					<input type="tel" id="mobile" name="mobile" value="<? echo ( $$variable{User}->mobile() ) ?>" />
    				</li>
    				<li class="fax notrequired">
    					<label for="fax">Fax</label>
-   					<input type="text" id="fax" name="fax" value="<? echo ( $$variable{User}->fax() ) ?>" />
+   					<input type="tel" id="fax" name="fax" value="<? echo ( $$variable{User}->fax() ) ?>" />
    				</li>
    				<li class="mailinglist notrequired">
    					<label>Add to our Mailing List</label>

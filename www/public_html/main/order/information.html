@@ -4,8 +4,8 @@
 </div>
 <script type="text/javascript" src="<? hash_link( /main/order/order.js ) ?>"></script>
 <div class="Order"><div class="Information">
-	<?include('/includes/error_reporting.html') ?>
-<? if ( $$variable{Order}->id() ) ?>
+<?include('/includes/error_reporting.html') ?>
+<? if ( $$variable{Order} and $$variable{Order}->id() ) ?>
 	<form method="post" id="f1" name="f1" action="/main/order/submit.html">
 		<div class="Header">
 			<div id="Information">
@@ -134,5 +134,5 @@
 		<input type="hidden" name="order_id" value="<?order_id?>"/>
 		<input type="hidden" name="btnFunction" value="Continue"/>
 	</form>
-<? endif ( $$variable{Order}->id() ) ?>
+<? endif ( $$variable{Order} and $$variable{Order}->id() ) ?>
 </div><!--Information--></div><!--class=Order-->

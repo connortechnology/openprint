@@ -70,7 +70,7 @@ sub information {
 			foreach my $OP ( $Order->Ordered_Projects() ) {
 				$variable{'error'} .= $OP->save({'price'=>undef});
 			} # end foreach
-			$Order->add_to_log( 'Re-Opened' );
+			$Order->add_log( 'Re-Opened' );
 		} else {
 			$error = 'No order_id given to Re-Open.';
 		} # end if order_id

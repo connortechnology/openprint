@@ -24,8 +24,8 @@
 				( $session{'/employee/production/projects.html?ddmEmployee'} ? (	'operator_id in'	=> $session{'/employee/production/projects.html?ddmEmployee'} ) : () ),
 				status			=> [ split ',', $session{'/employee/production/projects.html?ProjectStatus'} ],
 				'order_id is null'	=> 0,
-				date_filter( '/employee/production/projects.html?due_date_end', 'due_date_end' ),
-				date_filter( '/employee/production/projects.html?due_date_start', 'due_date_start' ),
+				date_filter( '/employee/production/projects.html?due_date_end', 'due_date <=' ),
+				date_filter( '/employee/production/projects.html?due_date_start', 'due_date >=' ),
 				due_date		=> undef,
 				'order'			=> 'due_date, lngDocketNumber',
 			);
