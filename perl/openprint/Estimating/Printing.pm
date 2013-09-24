@@ -507,6 +507,7 @@ $openprint::log->debug("Adding special colour for $colour");
 			$$Ink{name} = $colour;
 			if ( ! sets::isin( $colour, \@process_colours ) ) {
 				$$Ink{service_id} = $PMSInkMixService->id() if $PMSInkMixService;
+				$$Ink{mix} = 1;
 				$$Ink{washups} = 1;
 				my $Material = openprint::Material->find_one(name=>$colour.'Ink');
 				$Material = openprint::Material->find_one(name=>'PMSInk') if ! $Material and $$real_colour{type} eq 'PMS';
@@ -1258,7 +1259,7 @@ $openprint::log->debug("Non-process colours in get_impositions: @non_process_col
 			} # end while cutoff > min
 		} # end if
 #$openprint::log->debug("Cut Offs for Press $$Press{strid} @cut_offs");
-		my @feeds = split(',',$Press->specification('Feed') );
+		my %feeds = map { $_, 1 } split(',',$Press->specification('Feed') );
 		my $maximum_sheet_width = $Press->specification('Maximum Sheet Width');
 		my $maximum_sheet_length = $Press->specification('Maximum Sheet Length');
 		my $minimum_sheet_width = $Press->specification('Minimum Sheet Width');
@@ -1283,14 +1284,14 @@ $openprint::log->debug("Non-process colours in get_impositions: @non_process_col
 				next;
 			} # end if
 			my @imps;
+			next if ! $feeds{$$Paper{type}};
 			if ( $$Paper{'type'} eq 'Roll' ) {
-				next if ! sets::isin( 'Roll', \@feeds );
 				
 				$$project{'Runstyles'} = $runstyles_roll;
 				next if $$Paper{'width'} > $maximum_sheet_width;
 				next if $maximum_roll_width and ( $$Paper{'width'} > $maximum_roll_width );
 #$openprint::log->debug('blah'.$Paper->to_string());
-				if ( $roll2sheet_minimum_weight and sets::isin( 'Sheet', \@feeds ) ) {
+				if ( $roll2sheet_minimum_weight and $feeds{'Sheet'} ) {
 					if ( $$roll2sheet_minimum_weight{'units'} eq 'gsm' and $$roll2sheet_minimum_weight{'value'} > $Paper->gsm() ) {
 						next;
 					} # end if
@@ -1360,7 +1361,6 @@ $openprint::log->debug("Non-process colours in get_impositions: @non_process_col
 					} # end foreach
 				} # end if start_width or cut for all sizes
 			} else { # Sheet Fed
-				next if ! sets::isin( 'Sheet', \@feeds );
 				next if ! ( $$Paper{width} and $$Paper{height} );
 				next if $use_cut_stocks and $Paper->is_cut();
 				next if $printing_type eq 'Digital' and ! $Paper->digital();
@@ -1416,7 +1416,7 @@ $openprint::log->debug("Non-process colours in get_impositions: @non_process_col
 		# Used in filtering
 		my %imps;
 		my %dutches;
-		if ( DEBUG or 0 ) {
+		if ( DEBUG_FILTERING or 0 ) {
 			$openprint::log->debug('Impositions before filtering on ' . $$Press{'strid'} . ' ' . @impositions . ' impositions' . ( sprintf('%.4f', tv_interval( [$master_time])*1000) ) .' usecs');	
 			foreach my $i ( @impositions ) {
 				$i->display();
@@ -1490,7 +1490,7 @@ $imp->display("Foudn non-dutch");
 #$add = 1;
 			} elsif ( $imps{$str} ) {
 				my $APrice = $$imp{PaperPrice} = $A->get_price('service'=>'Material');
-$imp->display('Comparing A QTY ' . $$APrice{'100lb Price'} . 'lbs $' . $$imp{'PaperPrice'}{'100lb Price'}) if DEBUG;
+$imp->display('Comparing A QTY ' . $$APrice{'100lb Price'} . 'lbs $' . $$imp{'PaperPrice'}{'100lb Price'}) if DEBUG_FILTERING;
 
 				# Can't do any decisions based on absolute price or qty, because we just don't know how much paper we need
 				for ( my $j = 0; $j < @{$imps{$str}}; $j += 1 ) {
@@ -1503,8 +1503,16 @@ $imp->display('Comparing A QTY ' . $$APrice{'100lb Price'} . 'lbs $' . $$imp{'Pa
 						last;
 					} # end if
 
-					my $BPrice = $$B{PaperPrice} = $B->get_price('service'=>'Material') if ! $$B{PaperPrice};
-$I->display('Comparing B QTY ' . '$' . $$BPrice{'100lb Price'}) if DEBUG;
+					
+					$$I{PaperPrice} = $B->get_price( service=>'Material') if ! $$I{PaperPrice};
+					my $BPrice = $$I{PaperPrice};
+$I->display('Comparing B QTY ' . '$' . $$BPrice{'100lb Price'}) if DEBUG_FILTERING;
+if ( ! $$I{PaperPrice} ) {
+$log->error("No price for stock ".$B->to_string() );
+} elsif ( ! $$BPrice{'100lb Price'} ) {
+$log->error("No 100lb price for stock ".$B->to_string() );
+$log->error("No 100lb price for stock ".$B->get_price( service=>'Material')->to_string() );
+} 
 					
 					if (
 							( $B->area() >= $A->area() )
@@ -1515,7 +1523,7 @@ $I->display('Comparing B QTY ' . '$' . $$BPrice{'100lb Price'}) if DEBUG;
 							and
 							( $B->is_cut() or ! $A->is_cut() )
 					   ) {
-$openprint::log->debug('removing B larger') if DEBUG;
+$openprint::log->debug('removing B larger') if DEBUG_FILTERING;
 						splice @{$imps{$str}}, $j, 1;
 						$j -= 1;
 					} elsif (
@@ -1528,7 +1536,8 @@ $openprint::log->debug('removing B larger') if DEBUG;
 							( ( ! $B->is_cut() ) or $A->is_cut() )
 					   ) {
 						$add = 0;
-$openprint::log->debug('removing A larger') if DEBUG;
+$openprint::log->debug('removing A larger') if DEBUG_FILTERING;
+						last;
 					#} elsif (
 							#( $B->area() <= $A->area() )
 							#and
@@ -1555,7 +1564,7 @@ $openprint::log->debug('removing A larger') if DEBUG;
 						#splice @{$imps{$str}}, $j, 1;
 						#$j -= 1;
 					} else {
-$openprint::log->debug("Doing nothing, keeping all $add") if DEBUG;
+$openprint::log->debug("Doing nothing, keeping all $add") if DEBUG_FILTERING;
 						
 					} # end if
 				} # end for
@@ -1566,7 +1575,7 @@ $openprint::log->debug("Doing nothing, keeping all $add") if DEBUG;
 		@impositions = map {@{$_}} values %imps;
 
 #$openprint::log->debug("After filtering qty: $qty_index, Press: $$Press{strid} " . ( sprintf('%.4f', tv_interval( [$master_time])*1000) ) .' usecs' );
-		if ( DEBUG or 0 ) {
+		if ( DEBUG_FILTERING or 0 ) {
 			$openprint::log->warn('Impositions after initial filtering for '. $$Press{'strid'} . ': ' . @impositions . ' ' . ( sprintf('%.4f', tv_interval( [$master_time])*1000) ) .' usecs');
 			foreach my $I ( sort { $$a{'imposition'} <=> $$b{'imposition'} } @impositions ) {
 				$I->display("QTY " . $$I{'stock_weight'} . 'lbs $' . $$I{'PaperPrice'}{'100lb Price'} );
@@ -2944,7 +2953,7 @@ $openprint::log->debug("Best price: $recursion_depth starting get_project_price:
 #$openprint::log->debug("Main Calc Price time: " . ( sprintf('%.4f', tv_interval( [$time])*1000) ) .' usecs' );
 #$openprint::log->debug( breakdown( $price, $sig_specs ) );
 			if ( ! $$price{'complete'} ) {
-				if ( DEBUG or 1 ) {
+				if ( DEBUG ) {
 					$imp->display( 'Couldnt calculate initial price: ' . $$price{'alert'} );
 				} # end if
 				next;
@@ -2953,6 +2962,21 @@ $openprint::log->debug("Best price: $recursion_depth starting get_project_price:
 			# This makes a really nice circular reference, which we really shouldn't do.
 			$$imp{price} = $price;
 			$$price{Imposition} = $imp;
+			# Establish a local copy
+
+            $PlateCounts{$$price{'Plate Costs'}{'Plate ID'}} += $$price{'Plate Costs'}{'Plate Count'};
+            $PlateCounts{'Blank'.$$price{'Plate Costs'}{'Plate ID'}} += $$price{'Plate Costs'}{'Blank Plates'};
+			$PaperCounts{$Paper->id_string()} += $$price{'Stock Qty'};
+if ( 1 ) {
+# Gets done later on, why do it here?  Maybe to fuill in plate costs... or to use them in best_price calcs...
+# I put this back on Sept 17th because for a 16+8, it didn't have the plate costs. Technically it should be done later when all plates are accounted for
+# Why doesn't the same lines down below do the job?
+# Because the one dowre runs when Unspecified Pages % pages is 0.  with a 16+8 it's not.
+
+				my $results = plate_cost( $price, \%PlateCounts );
+				$$price{'Total Cost'} += $$results{'Price'};
+				$$price{'Comparison Cost'} += $$price{'sig_count'} * $$results{'Price'};
+}
 
 			if ( %best_price and ( $best_price{'Comparison Cost'} <= $$price{'Comparison Cost'} ) ) {
 				if ( DEBUG_PRICE_DECISIONS ) {
@@ -2973,11 +2997,6 @@ $openprint::log->debug("Best price: $recursion_depth starting get_project_price:
 
 			$$price{'sig_count'} = 1;
 
-			# Establish a local copy
-
-            $PlateCounts{$$price{'Plate Costs'}{'Plate ID'}} += $$price{'Plate Costs'}{'Plate Count'};
-            $PlateCounts{'Blank'.$$price{'Plate Costs'}{'Plate ID'}} += $$price{'Plate Costs'}{'Blank Plates'};
-			$PaperCounts{$Paper->id_string()} += $$price{'Stock Qty'};
 
 			# This price hash only contains the calculating imps.  Non-group imps are in other_impositions
 			@{$$price{'Impositions'}} = ();
@@ -3036,7 +3055,7 @@ $openprint::log->debug("Best price: $recursion_depth starting get_project_price:
 	) {
 
 							my $sig_price = calc_price( $Project, $$new_specs{'ServiceIndex'}, $imp, $project, $services, $new_specs, $qty, $qty_index, \%PlateCounts, \%washed_colours, \@total_impositions );
-					my $results = plate_cost( $sig_price, \%PlateCounts );
+							my $results = plate_cost( $sig_price, \%PlateCounts );
 							$$imp{price} = $sig_price;
 							$$sig_price{Imposition} = $imp;
 	#$imp->display("additional calc_price this imp $$sig_price{'Comparison Cost'}");
@@ -3085,67 +3104,37 @@ $openprint::log->debug("Best price: $recursion_depth starting get_project_price:
 						$$price{'Proofs Breakdown'} .= $Results{'Breakdown'};
 					} # end if
 
-	if ( 0 ) {
-	# Gets done later on, why do it here?  Maybe to fuill in plate costs... or to use them in best_price calcs...
-					my $results = plate_cost( $price, \%PlateCounts );
-					$$price{'Total Cost'} += $$results{'Price'};
-					$$price{'Comparison Cost'} += $$price{'sig_count'} * $$results{'Price'};
-	}
-	#$imp->display("Actually calculating this imp count $$price{'sig_count'} \$$$price{'Comparison Cost'} Proofs: $$results{'Price'}") if ! $recursion_depth;
-					#$openprint::log->debug( breakdown( $price, $sig_specs ) ) if ! $recursion_depth;
-				
-					if ( $upq ) {
-						$imp = $imp->copy();
-						$new_specs = get_new_specs( $Project, $service_index, $service_specs, \@signatures, $qty_index, $upq, \%previous_forms_cache, $hash_key ) if ! $new_specs;
-						$$imp{specs} = $new_specs;
+#$imp->display("Actually calculating this imp count $$price{'sig_count'} \$$$price{'Comparison Cost'} Proofs: $$results{'Price'}") if ! $recursion_depth;
+				#$openprint::log->debug( breakdown( $price, $sig_specs ) ) if ! $recursion_depth;
+			
+				if ( $upq ) {
+					$imp = $imp->copy();
+					$new_specs = get_new_specs( $Project, $service_index, $service_specs, \@signatures, $qty_index, $upq, \%previous_forms_cache, $hash_key ) if ! $new_specs;
+					$$imp{specs} = $new_specs;
 
-						# Not identical, so clear this so we get charged setups, etc
-						$$new_specs{'PreviousForms'.$qty_index} = 0;
-	#$openprint::log->debug("Doing full calc when UPQ:$upq >= Pages:" . $$imp{'pages'} . ' PageQuantity:' . $$new_specs{'PageQuantity'.$qty_index} ) if $upq >= $$imp{'pages'} or 0;
+					# Not identical, so clear this so we get charged setups, etc
+					$$new_specs{'PreviousForms'.$qty_index} = 0;
+#$openprint::log->debug("Doing full calc when UPQ:$upq >= Pages:" . $$imp{'pages'} . ' PageQuantity:' . $$new_specs{'PageQuantity'.$qty_index} ) if $upq >= $$imp{'pages'} or 0;
 
-						$$new_specs{'PrintingTypes'} = [ $Press->specification('Printing Type') ];
-						$$new_specs{'PreviousStockType'} = $$Paper{'type'};
-						$$new_specs{'PreviousGrainDirection'} = $imp->grain_direction();
-						if ( $$imp{'Folder'} and ( $$Press{'id'} == $$imp{'Folder'}->id() ) ) {
-							#This is used in Folding to tell it not to mix impositions when inline folded
-							$$new_specs{'PreviousImposition'} = $$price{'FoldingImposition'};
-						} # end if	
-						$$new_specs{'Impositions'} = $$price{'Impositions'};
+					$$new_specs{'PrintingTypes'} = [ $Press->specification('Printing Type') ];
+					$$new_specs{'PreviousStockType'} = $$Paper{'type'};
+					$$new_specs{'PreviousGrainDirection'} = $imp->grain_direction();
+					if ( $$imp{'Folder'} and ( $$Press{'id'} == $$imp{'Folder'}->id() ) ) {
+						#This is used in Folding to tell it not to mix impositions when inline folded
+						$$new_specs{'PreviousImposition'} = $$price{'FoldingImposition'};
+					} # end if	
+					$$new_specs{'Impositions'} = $$price{'Impositions'};
 
-						my $sig_price = {};
-						if ( $recursion_depth >= 3 ) {
-							$imp->display('Recursion Depth :' . $recursion_depth ) if DEBUG;
-							$$sig_price{'complete'} = 0;
-						} else {
-							# Check to see if we actually should bother recursing
-							if ( %best_price and ( $best_price{'Comparison Cost'} < $$price{'Comparison Cost'} ) ) {
-								if ( DEBUG_PRICE_DECISIONS or 1 ) {
-									if ( $best_price{'Imposition'} ) {
-										$best_price{'Imposition'}->display("No point in recursing: $best_price{'Comparison Cost'} <= $$price{'Comparison Cost'}");
-									} else {
-										$openprint::log->debug( "No point in recursing: $best_price{'Comparison Cost'} <= $$price{'Comparison Cost'}");
-									} # end if
-								}
-								$$price{'complete'} = 0;
-								$upq = 0;
-								next;
-							} # end if
-
-							my $key = join(',',$qty_index,$$Press{strid},$upq,($$sig_specs{'MatchGrain'.$qty_index} eq 'Y'?$imp->grain_direction():()),$$sig_specs{Group},$Paper->id_string()) if 0;
-	# price caching doesn't work because things like plate costs, etc are determined by all the signatures
-							if ( 0 and $price_cache{$key} ) {
-								$openprint::log->debug("Using price cache $key") if DEBUG_PRICE_DECISIONS;
-								$sig_price = $price_cache{$key};
-							} else {
-								$$imp{'Price'} = $$price{'Comparison Cost'};
-								if ( %best_price ) {
-									my %b;
-									$b{'Comparison Cost'} = $best_price{'Comparison Cost'} - $$price{'Comparison Cost'};
-									$b{'Impositions'} = $best_price{'Impositions'};
-									$b{'Imposition'} = $best_price{'Imposition'};
-	#$openprint::log->debug("recursing with reduce best price from $best_price{'Comparison Cost'} to $b{'Comparison Cost'}");	
-	#$openprint::log->debug( breakdown( $price, $sig_specs ) );
-									$sig_price = get_project_price( $Project, $$new_specs{'ServiceIndex'}, $project, $service_specs, $new_specs, $qty, $qty_index, $possible_presses, $printing_specs, $versions, \%PlateCounts, \%PaperCounts, \%washed_colours, \%previous_forms_cache, \@signatures, $impositions, $other_impositions, \%b, $recursion_depth + 1 );
+					my $sig_price = {};
+					if ( $recursion_depth >= 3 ) {
+						$imp->display('Recursion Depth :' . $recursion_depth ) if DEBUG;
+						$$sig_price{'complete'} = 0;
+					} else {
+						# Check to see if we actually should bother recursing
+						if ( %best_price and ( $best_price{'Comparison Cost'} < $$price{'Comparison Cost'} ) ) {
+							if ( DEBUG_PRICE_DECISIONS or 1 ) {
+								if ( $best_price{'Imposition'} ) {
+									$best_price{'Imposition'}->display("No point in recursing: $best_price{'Comparison Cost'} <= $$price{'Comparison Cost'}");
 								} else {
 	#$openprint::log->debug("recursing with no best price ");
 									$sig_price = get_project_price( $Project, $$new_specs{'ServiceIndex'}, $project, $service_specs, $new_specs, $qty, $qty_index, $possible_presses, $printing_specs, $versions, \%PlateCounts, \%PaperCounts, \%washed_colours, \%previous_forms_cache, \@signatures, $impositions, $other_impositions, undef, $recursion_depth + 1 );
@@ -3185,15 +3174,47 @@ $openprint::log->debug("Best price: $recursion_depth starting get_project_price:
 							push @{$$price{'Impositions'}}, @{$$sig_price{'Impositions'}} if $$sig_price{'Impositions'};
 							push @total_impositions, @{$$sig_price{'Impositions'}} if $$sig_price{'Impositions'};
 
-							# Don't add stock weight because we likely have a different stock anyways.
-							$PaperCounts{$$sig_price{'Imposition'}->Paper()->id_string()} += $$sig_price{'Stock Qty'};
-							$PlateCounts{$$sig_price{'Plate Costs'}{'Plate ID'}} += $$sig_price{'Plate Costs'}{'Plate Count'};
-							$PlateCounts{'Blank'.$$sig_price{'Plate Costs'}{'Plate ID'}} += $$sig_price{'Plate Costs'}{'Blank Plates'};
-							$$price{'Comparison Cost'} += $$sig_price{'Comparison Cost'};
-						} # end if sig_price complete
-						$upq = 0;
+							foreach my $I ( $$sig_price{Impositions} ) {
+								if ( $$I{pages} == $upq ) {
+							$price_cache{$key} = $$I{price};
+								} # end if
+							} # end foreach
+} # end i 0
+						} # end if cache
+					} # end if too deep
 
-					} # end if upq
+# get_project_price is recursive so we are done
+					if ( ( ! $$sig_price{'complete'} ) or ( ! $$sig_price{'Imposition'} ) ) {
+#$openprint::log->debug("Unable to calculate additional signatures Complete: $$sig_price{complete}, pages: " . $$imp{'pages'} . ' of ' . $upq );
+						$$price{'complete'} = $$sig_price{'complete'} = 0;
+						$$price{'Comparison Cost'} += 10000000;
+						$$price{'Breakdown'} .= 'Unable to calculate additional signatures.<br/>';
+					} else {
+						if ( $$sig_price{'Impositions'} ) {
+							push @{$$price{'Impositions'}}, @{$$sig_price{'Impositions'}};
+							push @total_impositions, @{$$sig_price{'Impositions'}};
+						} # end if
+
+						# Don't add stock weight because we likely have a different stock anyways.
+						$PaperCounts{$$sig_price{'Imposition'}->Paper()->id_string()} += $$sig_price{'Stock Qty'};
+						$PlateCounts{$$sig_price{'Plate Costs'}{'Plate ID'}} += $$sig_price{'Plate Costs'}{'Plate Count'};
+						$PlateCounts{'Blank'.$$sig_price{'Plate Costs'}{'Plate ID'}} += $$sig_price{'Plate Costs'}{'Blank Plates'};
+						$$price{'Comparison Cost'} += $$sig_price{'Comparison Cost'};
+					} # end if sig_price complete
+					$upq = 0;
+
+				} # end if upq
+
+			} else { # upq and pages
+
+				# either a brochure type or all pages are calculated.
+				if ( $$project{HasProofs} ) {
+					# Add proof costs.  Proofs only depends on colours, equipment so doesn't need to be part of the rest of calc
+					my %Results = openprint::Estimating::Proofs::signature_calc( $Project, $$project{ProofsSpecs}, $sig_specs, $qty_index, undef, undef, $Press, $imp );
+					$$price{'Comparison Cost'} += $$price{'sig_count'} * $Results{'Total'};
+					$$price{'Proofs Breakdown'} .= $Results{'Breakdown'};
+				} # end if
+			} # end if UnspecifiedPageQuanitty
 
 				} else { # upq and pages
 
@@ -3216,10 +3237,20 @@ $openprint::log->debug("Best price: $recursion_depth starting get_project_price:
 			} # end if
 
 #upq is always 0 here
-if ( ! ( $txtUnspecifiedPageQuantity % $$imp{pages} ) ) {
+#if ( ! $recursion_depth ) {
+	# I know we keep flip flopping.... so for the moment I am doing
+# Do we do thhis stuff at the tail of the recursion, or when we are back. I don't know.
+# Let's try at the tail.
+
+#if ( $txtUnspecifiedPageQuantity - $$imp{pages} ) ) {
+$log->debug("$recursion_depth : At tail? $txtUnspecifiedPageQuantity - ( $$price{'sig_count'} * $$imp{pages} ) " . ( $txtUnspecifiedPageQuantity - ( $$price{'sig_count'} * $$imp{pages} ) ) );
+if ( (!$txtUnspecifiedPageQuantity) or ( $txtUnspecifiedPageQuantity - ( $$price{'sig_count'} * $$imp{pages} ) == 0 ) ) {
+
+if ( $recursion_depth ) {
 			my $results = plate_cost( $price, \%PlateCounts );
 			$$price{'Total Cost'} += $$results{'Price'};
 			$$price{'Comparison Cost'} += $$results{'Price'};
+}
 			# I don't think this is appropriate anymore
 			#$$price{'Comparison Cost'} += $$price{'sig_count'} * $$results{'Price'};
 
@@ -4041,7 +4072,6 @@ if ( 0 ) {
 			} # end if
 		} # end foreach
 
-
 		if ( ! $Ink ) {
 			$openprint::log->error("Didnt find ink real ($real_colour) ($colour) ($grade) in colours hash, must be a grade problem");
 			foreach my $C ( @{$special_colours{$colour}} ) {
@@ -4072,12 +4102,14 @@ if ( 0 ) {
 			%ink_price = $InkMaterial->get_price( undef, $Press );
 		} # end if
 
+		my %mix_price;
 		if ( $$Ink{service_id} ) {
 			if ( $$Ink{mix} and ! $mixed_colours{$real_colour} ) {
 #$openprint::log->debug("$real_colour needs mixing");
-				my %mix_price = $Ink->Service()->get_price(undef,$Press);
+				%mix_price = $Ink->Service()->get_price(undef,$Press);
 #$openprint::log->debug("Mix Price for $real_colour $mix_price{Price}");
-				$price{'Ink breakdown'} .= 'Mix: ' . $mix_price{Price};
+				$price{'Ink breakdown'} .= ' Mix: $' . 1*$mix_price{Price};
+				$price{'Ink Price'} += $mix_price{Price};
 				$mixed_colours{$real_colour} = 1;
 			} else {
 #$openprint::log->debug("Was mixed");
@@ -4099,7 +4131,7 @@ if ( 0 ) {
 			my $Coverage = $InkMaterial->New_Specification('Coverage', { range=>$grade, equipment_id=>$$Press{id}} );
 			my $qty = Math::Round::nearest( 0.01, $area/$$Coverage{value} ) if $Coverage and $$Coverage{value};
 			my %ink_price = $InkMaterial->get_price( $qty, $Press );
-			$ink_price{'Total'} = Math::Round::nearest( 0.01, $ink_price{'Price'} * $qty );
+			$ink_price{'Total'} += Math::Round::nearest( 0.01, $ink_price{'Price'} * $qty );
 			$price{'Ink Price'} += $ink_price{'Total'};
 			$price{'Ink breakdown'} .= sprintf(' mileage: %d, %.2f * $%s%s=$%.2f', $$Coverage{value}, $qty, @ink_price{'Price','units','Total'});
 		} elsif ( $ink_price{units} eq 'per kg' ) {
@@ -4112,12 +4144,12 @@ $openprint::log->debug("No Coverage for grade $grade Press: $$Press{strid}");
 }
 			my $qty = Math::Round::nearest( 0.01, $area/$$Coverage{value} ) if $Coverage and $$Coverage{value};
 			my %ink_price = $InkMaterial->get_price( $qty, $Press );
-			$ink_price{'Total'} = Math::Round::nearest( 0.01, $ink_price{'Price'} * $qty );
+			$ink_price{'Total'} += Math::Round::nearest( 0.01, $ink_price{'Price'} * $qty );
 			$price{'Ink Price'} += $ink_price{'Total'};
 			$price{'Ink breakdown'} .= sprintf(' mileage: %d, %.2f * $%s%s=$%.2f', $$Coverage{value}, $qty, 1*$ink_price{Price}, @ink_price{'units','Total'});
 		} elsif ( $ink_price{'units'} eq 'per square foot' ) {
 			$area /= 144;
-			$ink_price{'Total'} = Math::Round::nearest( 0.01, $ink_price{'Price'} * $area );
+			$ink_price{'Total'} += Math::Round::nearest( 0.01, $ink_price{'Price'} * $area );
 			$price{'Ink Price'} += $ink_price{'Total'};
 			$price{'Ink breakdown'} .= sprintf(' Grade: %d, %.2f sq feet * $%s%s = $%.2f', $grade, $area, @ink_price{'Price','units','Total'} );
 		} elsif ( $ink_price{'units'} eq 'per unit' ) {
