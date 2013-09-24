@@ -69,7 +69,7 @@
 					$html .= '</td>';
 				} # end nif
 				$html .= "</tr>\n";
-				my @sigs = $Project->signatures();
+				my @sigs = sort $Project->signatures();
 				while (@sigs) {
 					my $ss_id = shift @sigs;
 					next if $ss_id == $$services{''}[0];

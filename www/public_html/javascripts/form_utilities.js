@@ -1246,16 +1246,20 @@ function LoadContent( divID, page, parameters, message ) {
 	//alert( typeof parameters );
 	if ( ! parameters ) { 
 		parameters = '';
-	} else if ( parameters == 'object HTMLFormElement]' ) {
-		parameters = parameters.serialize();
-	} else if ( typeof parameters == 'object' && parameters.serialize ) {
-		parameters = parameters.serialize();
+	} else if ( parameters == '[object HTMLFormElement]' ) {
+		var p = parameters.serialize(true);
+		if ( p )
+			parameters = $H(p).toQueryString();
+	} else if ( typeof parameters == 'object' ) {
+		var p = parameters.serialize(true);
+		if ( p )
+			parameters = $H(p).toQueryString();
 	} 
 	if ( parameters.length > 8190 ) 
 		method = 'post';
 	
 	new Ajax.Updater( divID, page, { method: method, parameters: parameters, evalScripts: true } );
-}
+} // end function LoadContent
 
 function photo_popup( asset_id, album_id ) {
 	popup_window('/photo_albums/_view_photo.html?asset_id='+asset_id+'&amp;album_id='+album_id, '', { width: window.innerWidth-100, height: window.innerHeight-100 } );
