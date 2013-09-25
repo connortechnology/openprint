@@ -67,8 +67,8 @@ print "done\n";
 $dbh = sql::open_sql( $log, ('database'=>$dst_db, 'driver'=>'Pg','login'=>$dst_db, 'password'=>$dst_db, 'host'=>$ARGV[3]) );
 configuration::init( $log, $dbh );
 require openprint::PaymentType;
-my $PayPal = new openprint::PaymentType();
-$PayPal->save({'name'=>'PayPal','description'=>'PayPal'});
+#my $PayPal = new openprint::PaymentType();
+#$PayPal->save({'name'=>'PayPal','description'=>'PayPal'});
 
 print "upgrading signatures...";
 `/etc/apache2/lib/perl/tools/update_topknotch_signatures.pl $dst_db >> /tmp/db_update.log` or $log->error($!);
@@ -77,6 +77,13 @@ sql::insert(undef, undef, 'database_info', 'version', $version, 'updated_on', 'N
 $dbh->do(q`update papers set user_type='' where user_type IS NULL`);
 $dbh->do(q`ALTER TABLE PAPers alter user_type set default ''`);
 $dbh->do(q`ALTER TABLE PAPers alter user_type set NOT NULL`);
+
+foreach my $PTD ( openprint::ProjectType_Default->find( 'BleedBottom','BleedTop','BleedLeft','BleedRight','rdbColourBar','dutch1','txtCropMarkSpace' ) ) {
+	next if openprint::ServiceType_Default->find_one( name=>$PTD->name(), projectype_id=>$PTD->projecttype_id() );
+	my $STD = new openprint::ServiceType_Default();
+	$STD->save({ servicetype=>'Signature', name=>$PTD->name(), projectype_id=>$PTD->projecttype_id(), value => $PTD->value() );
+}
+
 print "done\n";
 $dbh->disconnect();
 1;

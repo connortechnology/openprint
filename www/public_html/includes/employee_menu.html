@@ -1,6 +1,6 @@
 <ul class="menubar">
-	<li><a href="/employee/index.html">HOME</a></li>
-	<li id="AccountMenu"><a href="#" onclick="$('AccountMenu').toggleClassName('on');return false;">ACCOUNT</a>
+	<li id="HomeMenu"><a href="/employee/index.html">HOME</a></li>
+	<li id="AccountMenu"><a href="#" onclick="$('AccountMenu').toggleClassName('on');return false;">Account</a>
 		<ul>
 <? if ( $session{'user_id'} ) ?>
 			<li><a href="/employee/account/logout.html">Logout</a></li>
@@ -11,10 +11,10 @@
 		</ul>
 	</li>
 <? if ( $session{'user_id'} ) ?>
-	<li id="ProductionMenu"><a href="#" onclick="$('ProductionMenu').toggleClassName('on');return false;">PRODUCTION</a>
+	<li id="ProductionMenu"><a href="#" onclick="$('ProductionMenu').toggleClassName('on');return false;">Production</a>
 		<ul>
 			<li><a href="/employee/production/projects.html;NOSSL">Projects</a></li>
-			<li><a href="/employee/production/bindery_schedule2.html;NOSSL">Schedule</a></li>
+			<li><a href="/employee/production/print_overview.html;NOSSL">Schedule</a></li>
 			<li><a href="/employee/production/prepress_overview.html;NOSSL">PrePress Overview</a></li>
 			<li><a href="/employee/production/prepress_schedule.html;NOSSL">PrePress Schedule</a></li>
 			<li><a href="/employee/production/operator_schedule.html;NOSSL">Operator Schedule</a></li>
@@ -22,7 +22,7 @@
 		</ul>
 	</li>
 	<? if ( openprint::usergroup::is_user_in( ['Sales','Reporting'], $session{'user_id'} ) ) ?>
-	<li id="ReportsMenu"><a href="#" onclick="$('ReportsMenu').toggleClassName('on');return false;">REPORTS</a>
+	<li id="ReportsMenu"><a href="#" onclick="$('ReportsMenu').toggleClassName('on');return false;">Reports</a>
 		<ul>
 			<li><a href="/employee/reports/project_history.html;NOSSL">Project History</a></li>
 			<li><a href="/employee/reports/order_history.html;NOSSL">Order History</a></li>
@@ -39,19 +39,19 @@
 	</li>
 	<? endif ( openprint::usergroup::is_user_in( ['Sales','Reporting'], $session{'user_id'} ) ) ?>
 	<? if ( openprint::usergroup::is_user_in( ['Marketing'], $session{'user_id'} ) ) ?>
-	<li id="MarketingMenu" class="<? echo ( $$variable{'uri'} =~ /employee\/marketing/ ? 'on' : '' ) ?>"><a href="#" onclick="$('MarketingMenu').toggleClassName('on');return false;">MARKETING</a>
+	<li id="MarketingMenu" class="<? echo ( $$variable{'uri'} =~ /marketing/ ? 'on' : '' ) ?>"><a href="#" onclick="$('MarketingMenu').toggleClassName('on');return false;">Marketing</a>
 		<ul>
-			<li><a href="/employee/marketing/categories.html;NOSSL">Marketing Categories</a></li>
-			<li><a href="/employee/marketing/email_templates.html;NOSSL">Email Templates</a></li>
-			<li><a href="/employee/marketing/email_campaigns.html;NOSSL">Email Campaigns</a></li>
-			<li><a href="/employee/marketing/surveys.html;NOSSL">Surveys</a></li>
+			<li><a href="/marketing/categories.html;NOSSL">Marketing Categories</a></li>
+			<li><a href="/marketing/email_templates.html;NOSSL">Email Templates</a></li>
+			<li><a href="/marketing/email_campaigns.html;NOSSL">Email Campaigns</a></li>
+			<li><a href="/survey/history.html;NOSSL">Surveys</a></li>
 		</ul>
 	</li>
 	<? endif ( openprint::usergroup::is_user_in( ['Marketing'], $session{'user_id'} ) ) ?>
 	<? if ( openprint::usergroup::is_user_in( ['Inventory'], $session{'user_id'} ) ) ?>
-	<li id="InventoryMenu"><a href="#" onclick="$('InventoryMenu').toggleClassName('on');return false;">INVENTORY</a>
+	<li id="InventoryMenu"><a href="#" onclick="$('InventoryMenu').toggleClassName('on');return false;">Inventory</a>
 		<ul>
-			<li><a href="/employee/inventory/purchase_orders.html;NOSSL">Purchase Orders</a></li>
+			<li><a href="/employee/purchase_order/history.html;NOSSL">Purchase Orders</a></li>
 			<li><a href="/employee/inventory/manifests.html;NOSSL">Manifests</a></li>
 			<li><a href="/employee/claim/history.html;NOSSL">Claims</a></li>
 			<li><a href="/employee/inventory/available_paper.html;NOSSL">Available Paper</a></li>
@@ -64,7 +64,7 @@
 		</ul>
 	</li>
 	<? endif ( openprint::usergroup::is_user_in( ['Inventory'], $session{'user_id'} ) ) ?>
-	<li id="ISOMenu" class="<? echo ( $$variable{'uri'} =~ /employee\/iso/ ? 'on' : 'off' ) ?>"><a href="#" onclick="$('ISOMenu').toggleClassName('on');return false;">ISO</a>
+	<li id="ISOMenu" class="<? echo ( $$variable{'uri'} =~ /employee\/iso/ ? 'on' : 'off' ) ?>"><a href="#" onclick="$('ISOMenu').toggleClassName('on');return false;">Iso</a>
 		<ul>
 			<li><a href="/employee/iso/pars.html;NOSSL">Preventive Action Requests</a></li>
 			<li><a href="/employee/iso/cars.html;NOSSL">Corrective Action Requests</a></li>
@@ -78,7 +78,7 @@
 		</ul>
 	</li>
 	<? if ( openprint::usergroup::is_user_in( ['Accounting'], $session{'user_id'} ) ) ?>
-	<li id="AccountingMenu"><a href="#" onclick="$('AccountingMenu').toggleClassName('on');return false;">ACCOUNTING</a>
+	<li id="AccountingMenu"><a href="#" onclick="$('AccountingMenu').toggleClassName('on');return false;">Accounting</a>
 		<ul>
 			<li><a href="/employee/accounting/search.html;NOSSL">Outstanding</a></li>
 			<li><a href="/employee/accounting/credit.html;NOSSL">Customer Credit</a></li>
@@ -87,7 +87,7 @@
 		</ul>
 	</li>
 	<? endif ( openprint::usergroup::is_user_in( ['Accounting'], $session{'user_id'} ) ) ?>
-	<li id="SupportMenu"><a href="#" onclick="$('SupportMenu').toggleClassName('on');return false;">SUPPORT</a>
+	<li id="SupportMenu"><a href="#" onclick="$('SupportMenu').toggleClassName('on');return false;">Support</a>
 		<ul>
 			<li><a href="/employee/support/helpdesk_search.html;NOSSL">Help Desk</a></li>
 			<li><a href="/employee/support/returns.html;NOSSL">Returns</a></li>

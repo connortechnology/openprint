@@ -452,7 +452,10 @@ sub bindery_overview {
 
 sub projects {
 
-	ssi::save_params( '/employee/production/projects.html', 'DueDateStartYear','DueDateStartMonth','DueDateStartDay', 'DueDateEndYear','DueDateEndMonth','DueDateEndDay', 'ProjectStatus', 'ddmSalesRep', 'ddmEmployee', 'ddmCustomer', 'ddmPress' );
+	_project_list();
+	ssi::setup_date_select( '/employee/production/projects.html', 'due_date_start', -7 );
+	ssi::setup_date_select( '/employee/production/projects.html', 'due_date_end', '' );
+
 	my @projects;
 
 	my $startdocket = $param{'StartDocket'};
@@ -512,7 +515,11 @@ sub projects {
 } # end sub projects
 
 sub _project_list {
-	ssi::save_params( '/employee/production/projects.html', 'DueDateStartYear','DueDateStartMonth','DueDateStartDay', 'DueDateEndYear','DueDateEndMonth','DueDateEndDay', 'ProjectStatus', 'ddmSalesRep', 'ddmEmployee', 'ddmCustomer', 'ddmPress' );
+	ssi::save_params( '/employee/production/projects.html', (
+		( map { 'due_date_start_'.$_ } ( 'year','month','day' ) ),
+		( map { 'due_date_end_'.$_ } ( 'year','month','day' ) ),
+		'ProjectStatus', 'ddmSalesRep', 'ddmEmployee', 'ddmCustomer', 'ddmPress'
+		)  );
 }
 
 sub upload_pdfs {

@@ -16,7 +16,7 @@
 
 package openprint::Estimating::Imposition;
 use strict;
-use Data::Dumper;
+#use Data::Dumper;
 
 require openprint::service;
 
@@ -55,7 +55,7 @@ sub signature_calc {
 	if ( ! %ImpositionMakeReady ) {
 #$openprint::log->debug("$service no price found");
 	} # end if
-	if ( $ImpositionMakeReady{units} eq 'Per Form' ) {
+	if ( $ImpositionMakeReady{units} eq 'per form' ) {
 #$openprint::log->debug("Make Ready Per Form " . ($$specs{'PreviousForms'.$qty_index}+1) );
 		%ImpositionMakeReady = openprint::service::get_price_object( $service, scalar @{$previous_forms} + 1, $Press );
 	} # end if
@@ -71,13 +71,13 @@ sub signature_calc {
 		$service = 'Imposition';
 		%ImpositionCharge = openprint::service::get_price_object( $service, undef, $Press);
 	} # end if
-	if ( $ImpositionCharge{'units'} eq 'Per Page' ) {
+	if ( $ImpositionCharge{'units'} eq 'per page' ) {
 		%ImpositionCharge = openprint::service::get_price_object( $service,$Imposition->pages(),$Press);
 		$price{Total} += $ImpositionCharge{Price} * $Imposition->pages();
-	} elsif ( $ImpositionCharge{'units'} eq 'Per Square Inch of Object' ) {
+	} elsif ( $ImpositionCharge{'units'} eq 'per square inch of object' ) {
 		%ImpositionCharge = openprint::service::get_price_object( $service,$Imposition->layout_area(),$Press);
 		$price{Total} += $ImpositionCharge{Price} * $Imposition->object_width() * $Imposition->object_height();
-	} elsif ( $ImpositionCharge{'units'} eq 'Per Square Inch of Layout' ) {
+	} elsif ( $ImpositionCharge{'units'} eq 'per square inch of layout' ) {
 		%ImpositionCharge = openprint::service::get_price_object( $service,$Imposition->layout_area(),$Press);
 		$price{Total} += $ImpositionCharge{Price} * $Imposition->layout_area();
 	} else {
@@ -102,7 +102,7 @@ sub signature_calc {
 			%PageCharge = openprint::service::get_price_object( 'Page Charge', $Imposition->pages(), $Press );
 		} # end if
 		if ( %PageCharge ) {
-			if ( $PageCharge{units} eq 'Per Page' ) {
+			if ( $PageCharge{units} eq 'per page' ) {
 				$PageCharge{Total} = $PageCharge{Price} * $Imposition->pages();
 			} else {
 $openprint::log->error("Bad units for Page Page $PageCharge{units}");
@@ -177,20 +177,20 @@ sub signature_summary {
 	my $MakeReady = $$Price{MakeReady};
     my $Service = $$Price{Price};
 
-    if ( $$Service{units} eq 'Per Page' ) {
+    if ( $$Service{units} eq 'per page' ) {
         $breakdown .= sprintf('Imposition Charge: $%1$.2f + $%2$.2f*%4$d pages = $%3$.2f<br/>', $$MakeReady{Price}, $$Service{Price}, $$Price{'Total'}, $Imposition->pages() );
-    } elsif ( $$Service{units} eq 'Per Square Inch of Object' ) {
+    } elsif ( $$Service{units} eq 'per square inch of object' ) {
         $breakdown .= sprintf('Imposition Charge: $%1$.2f + $%2$.2f*%4$s x %5$s = $%3$.2f<br/>', $$MakeReady{Price}, $$Service{Price}, $$Price{'Total'}, $Imposition->object_width(), $Imposition->object_height() );
-    } elsif ( $$Service{units} eq 'Per Square Inch of Layout' ) {
+    } elsif ( $$Service{units} eq 'per square inch of layout' ) {
         $breakdown .= sprintf('Imposition Charge: $%1$.2f + $%2$.2f*%4$s x %5$s = $%3$.2f<br/>', $$MakeReady{Price}, $$Service{Price}, @$Price{'Total'}, $Imposition->layout_width(), $Imposition->layout_height() );
     } elsif ( $$Service{Price} ) {
         $breakdown .= sprintf('Imposition Charge: $%1$.2f + $%2$.2f*%4$d out = $%3$.2f<br/>', $$MakeReady{Price}, $$Service{Price}, @$Price{'Total'}, $Imposition->imposition() );
     } # end if
 
-    if ( my $PageCharge = $$Price{'Page Charge'} ) {
+    if ( my $PageCharge = $$Price{'page charge'} ) {
         $breakdown .= sprintf('Page Charge: $%1$.2f%2$s * %4$d pages = $%3$.2f<br/>', @$PageCharge{'Price','units','Total'}, $Imposition->pages() );
     } # end if
-    if ( my $SteppingCharge = $$Price{'Stepping Charge'} ) {
+    if ( my $SteppingCharge = $$Price{'stepping charge'} ) {
         $breakdown .= sprintf('Stepping Charge: $%1$.2f%2$s * %4$dout  = $%3$.2f<br/>', @$SteppingCharge{'Price','units','Total'}, $Imposition->imposition() );
     } # end if
 	return $breakdown;

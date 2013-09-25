@@ -19,15 +19,15 @@
 	<ul>
 		<li>
 			<label for="Quantity1">Quantity 1</label>
-			<input id="Quantity1" name="txtQuantity1" value="<?txtQuantity1?>" type="text" size="12" onkeyup="this.value=this.value.replace(/\D/,'');if(parseInt(this.value)>2147483647){this.value=2147483647;}" onchange="calc(this.form.name);" />
+			<? echo ( input( name=>'txtQuantity1', id=>'Quantity1', value=>$$variable{'txtQuantity1'}, type=>'cardinal' ); ) ?>
 		</li>
 		<li>
 			<label for="Quantity2">Quantity 2</label>
-			<input id="Quantity2" name="txtQuantity2" value="<?txtQuantity2?>" type="text" size="12" onkeyup="this.value=this.value.replace(/\D/,'');if(parseInt(this.value)>2147483647){this.value=2147483647;}" onchange="calc(this.form.name);" />
+			<? echo ( input( name=>'txtQuantity2', id=>'Quantity2', value=>$$variable{'txtQuantity2'}, type=>'cardinal' ); ) ?>
 		</li>
 		<li>
 			<label for="Quantity3">Quantity 3</label>
-			<input id="Quantity3" name="txtQuantity3" value="<?txtQuantity3?>" type="text" size="12" onkeyup="this.value=this.value.replace(/\D/,'');if(parseInt(this.value)>2147483647){this.value=2147483647;}" onchange="calc(this.form.name);" />
+			<? echo ( input( name=>'txtQuantity3', id=>'Quantity3', value=>$$variable{'txtQuantity3'}, type=>'cardinal' ); ) ?>
 		</li>
 	</ul>
 </fieldset>
@@ -46,9 +46,9 @@
 		foreach my $mode ( @{$$variable{'Modes'}} ) {
 			my $detailedSpecifications;
 			if($mode eq 'Detailed') {
-				$detailedSpecifications = qq{onclick="$('step2Questions').show();"};
+				$detailedSpecifications = q{onclick="$('step2Questions').show();"};
 			} else {
-				$detailedSpecifications = qq{onclick="$('step2Questions').hide();"};
+				$detailedSpecifications = q{onclick="$('step2Questions').hide();"};
 			} # end if
 			$html .= qq{<li><input type="radio" id="rdbMode$mode" name="rdbMode" value="$mode"} . ssi::checked($$variable{'rdbMode'} eq $mode) .' '. $detailedSpecifications . ' />';
 			$html .= qq{<label class="radio" for="rdbMode$mode">} . ssi::writeTip($mode.' Specifications') . '</label></li>';

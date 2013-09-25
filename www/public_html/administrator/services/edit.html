@@ -11,21 +11,21 @@
 				<? echo ( make_drop_down( [ map { $_->id(), $_->name() } openprint::ServiceCategory->find( order=>'lower(name)') ], $param{ddmSearchCategory} ); ) ?>
 			</select>
 		</li>
-<? if ( @{$$variable{Equipment}} = openprint::Equipment->find('order'=>'lower(strid)') ) ?>
+<? if ( @{$$variable{Equipment}} = openprint::Equipment->find( order=>'lower(strid)') ) ?>
 		<li><label>Equipment</label>
 			<select name="equipment_id" onchange="form.btnFunction.value='';f1.submit();">
 				<option value="">All</option>
 				<? echo ( make_drop_down( [ map { $_->id(), $_->name() } @{$$variable{Equipment}} ], $param{equipment_id} ); ) ?>
 			</select>
 		</li>
-<? endif ( @{$$variable{Equipment}} = openprint::Equipment->find('order'=>'lower(strid)') ) ?>
+<? endif ( @{$$variable{Equipment}} = openprint::Equipment->find( order=>'lower(strid)') ) ?>
 		<li> 
 			<label>Service</label>
 			<select name="ddmService" onchange="if(this.options[this.selectedIndex].value != ''){this.form.btnFunction.value='';this.form.submit();}">
 				<option value="">Select a Service</option>
 				<? echo ( make_drop_down( [ map { $_->id(), $_->name() . ' : '.$_->description() } openprint::Service->find(
 							( $param{ddmSearchCategory} ? ( category_id=>$param{ddmSearchCategory} ) : () ),
-							( $param{equipment_id} ? ( equipment_id => $param{equipment_id} ) : () ),
+							( $param{equipment_id} ? ( 'equipment_id any'=> $param{equipment_id} ) : () ),
 							order=>'lower(name)') ], $$variable{Service}->id() ); ) ?>
 			</select>
 		</li>

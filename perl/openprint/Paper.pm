@@ -1201,8 +1201,8 @@ sub load_from_signature {
 		$Paper->doublesided($$specs{'CustomSheetDoubleSided'});
 		$Paper->grade( $$specs{'StockGrade'});
 
-		$Paper->Price( $$specs{'CustomStockPrice'} );
-		$Paper->Units( $$specs{'CustomStockPriceUnits'} );
+		$$Paper{Price} = $$specs{'CustomStockPrice'};
+		$$Paper{Units} = $$specs{'CustomStockPriceUnits'};
 		$Paper->basis_width( $$specs{'basis_width'} );
 		$Paper->basis_height( $$specs{'basis_height'} );
 		$Paper->basis_mweight( $$specs{'basis_mweight'} );
@@ -1266,7 +1266,7 @@ $log->debug("Didn't find specific paper $params{'width'} x $params{'height'}");
 				$Paper->grade( $$specs{'StockGrade'});
 
 				$Paper->Price( $$specs{'CustomStockPrice'} );
-				$Paper->Units( $$specs{'CustomStockPriceUnits'} );
+				$Paper->units( $$specs{'CustomStockPriceUnits'} );
 				$Paper->basis_width( $$specs{'basis_width'} );
 				$Paper->basis_height( $$specs{'basis_height'} );
 				$Paper->basis_mweight( $$specs{'basis_mweight'} );

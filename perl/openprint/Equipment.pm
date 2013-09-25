@@ -455,7 +455,7 @@ sub Equipment_Shifts {
 	my $Last_ES;
 	for ( my $ES_index = 0; $ES_index < @Equipment_Shifts; $ES_index += 1 ) {
 		if ( $Last_ES ) {
-			$Equipment_Shifts[$ES_index]->Prevous( $Last_ES );
+			$Equipment_Shifts[$ES_index]->Previous( $Last_ES );
 			$Last_ES->Next( $Equipment_Shifts[$ES_index] );
 		} # end if
 		$Last_ES = $Equipment_Shifts[$ES_index];

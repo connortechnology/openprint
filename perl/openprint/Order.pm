@@ -516,13 +516,11 @@ sub send_sales_order {
 
 	my $email_template = misc::load_file( $log, $config{'SkinPath'}. '/email_template.html' );
 
-	$order{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/sales_order_body.html' );
-	$order{'ReplacementText'} = ssi::variable_substitution( \$order{'ReplacementText'}, \%order );
+	$order{'ReplacementText'} = ssi::include('/email_content/sales_order_body.html', \%order );
 	my @body = ('', MIME::QuotedPrint::encode_qp( Encode::encode( 'utf-8', ssi::variable_substitution( \$email_template, \%order ) ) ), 'text/html', 'quoted-printable');
 
 	my @sales_order;
-	my $sales_order = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/sales_order.html' );
-	$order{'ReplacementText'} = ssi::variable_substitution( \$sales_order, \%order );
+	$order{'ReplacementText'} = ssi::include( '/email_content/sales_order.html', \%order );
 	$_ = MIME::QuotedPrint::encode_qp( Encode::encode('utf-8', ssi::variable_substitution( \$email_template, \%order ) ) );
 	@sales_order = ( "Order$$self{id}.html", $_, 'text/html', 'quoted-printable' );
 

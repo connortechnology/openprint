@@ -8,13 +8,12 @@ Please review the quote below to ensure accuracy.  When ready, click "Submit Quo
 	<div class="Quote"><div class="Submit">
 	<p class="buttons">
 		<? echo ( join('',
-					ssi::button( 'Back', { href=>'/main/quote/information.html?quote_id='.$$variable{'Quote'}->id(), text=>'Back' } ),
-					ssi::button( 'SubmitQuote', { onclick=>"f1.btnFunction.value='Submit Quote';f1.submit();", href=>'', text=>'Submit Quote' } ),
+					button( 'Back', { href=>'/main/quote/information.html?quote_id='.$$variable{'Quote'}->id(), text=>'Back' } ),
+					button( 'SubmitQuote', { onclick=>"f1.btnFunction.value='Submit Quote';f1.submit();", href=>'', text=>'Submit Quote' } ),
 					); ) ?>
 	</p>
 		<div class="Header">
 			<?include(/includes/quote_header.html)?>
-			<br class="spacer"/>
 			<?include(/includes/quote_information.html)?>
 		</div>
 		<?include(_projects.html)?>

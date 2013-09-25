@@ -12,7 +12,7 @@
 				$ProjectType->id(), 
 				ssi::htmlize( $ProjectType->description() ),
 				URI::Escape::uri_escape($ProjectType->name()), 
-				$ProjectType->url()
+				( $ProjectType->url() ? $ProjectType->url() : 'prin/Signature.html' )
 				);
 		} # end foreach
 	} # end foreach

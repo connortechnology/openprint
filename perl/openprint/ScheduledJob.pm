@@ -289,7 +289,7 @@ sub get_li {
 				$html .= qq` $day</span>`;
 		} # end if
 		if ( sets::isin( $$self{'servicetype_id'}, \@printing_service_type_ids ) ) {
-			my @presses = sort( sets::union( map { $_->equipment_id() ? $_->Equipment()->strid() : () } find( project_id=>$$self{project_id}, servicetype_id=>\@printing_service_type_ids, 'starttime_null' => 0 ) ) );
+			my @presses = sort( sets::union( map { $_->equipment_id() ? $_->Equipment()->strid() : () } openprint::ScheduledJob->find( project_id=>$$self{project_id}, servicetype_id=>\@printing_service_type_ids, 'starttime is null' => 0 ) ) );
 			$html .= '<span class="Presses">'.join(' + ', @presses ).'</span>' if @presses > 1;
 		} # end if
 

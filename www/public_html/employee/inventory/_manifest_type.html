@@ -37,6 +37,9 @@
 		$$variable{'PO_Content'} = $$variable{'Type'}->PurchaseOrder_Content();
 
 		$$variable{'Owners'} = openprint::Company->dropdown() if ! $$variable{'Owners'};
+		if ( ! $$variable{Type}->type() ) {
+			$$variable{Type}->type('Sheet');
+		} # end if
 	) ?>
 	<div class="leftColumn">
 		<p id="Owner-<?type_id?>_div">
@@ -125,7 +128,9 @@
 			<input style="display: none;" type="text" id="txtQuality-<?type_id?>" name="txtQuality-<?type_id?>" />
 		</p>
 		<p><label>Type</label>
-			<? echo ( radio( 'type-'.$$variable{type_id}, [ map { $_, $_ } ( 'Sheet','Roll' ) ], $param{'type-'.$$variable{'type_id'}}, { onclick=>qq`type_onclick(this);` } ); ) ?>
+			<? echo ( radio( 'type-'.$$variable{type_id}, [ map { $_, $_ } ( 'Sheet','Roll' ) ],
+						( $param{'type-'.$$variable{'type_id'}} ? $param{'type-'.$$variable{type_id}} : $$variable{Type}->type() ),
+						{ onclick=>qq`type_onclick(this);` } ); ) ?>
 		</p>
 		<p class="size">
 			<label for="width-<?type_id?>">Size</label>

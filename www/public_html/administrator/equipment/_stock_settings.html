@@ -6,9 +6,9 @@
 	# openprint::Equipment_Stock_Setting->find('equipment_id'=>$$variable{'Equipment'}->id() );
 
 	foreach my $Stock ( openprint::Paper->find(
-			'columns'   =>  '*,(select name from stockbrands where id=brand_id) AS brand, (select name from stockfinishes where id=finish_id) AS finish, (select name from stockcolours where id=colour_id) AS colour, (select name from stockweights where id=weight_id) AS weight',
-			'stock_settings_equipment_id =' => $$variable{'Equipment'}->id(), 
-			'order'=>'brand,finish,colour,weight' ) ) {
+			columns   =>  '*,(select name from stockbrands where id=brand_id) AS brand, (select name from stockfinishes where id=finish_id) AS finish, (select name from stockcolours where id=colour_id) AS colour, (select name from stockweights where id=weight_id) AS weight',
+			'stock_settings_equipment_id any' => $$variable{'Equipment'}->id(), 
+			order=>'brand,finish,colour,weight' ) ) {
 		my $Setting = openprint::Equipment_Stock_Setting->find_one( 'stock_id'=>$Stock->id(), 'equipment_id'=>$$variable{'Equipment'}->id() );
 		if ( ! $Setting ) {
 			$log->error("No setting found");
@@ -18,8 +18,8 @@
 	<td class="description">%2$s</td>
 	<td class="grain"><select id="grain_%1$d" name="grain_%1$d"><option value="">select</option>%3$s</select></td><td>%4$s</td></tr>',
 			$Setting->id(), $Setting->Stock()->to_string(), 
-			ssi::make_drop_down( [ map { $_, $_ } ( 'Long','Short','Both','Dont Use' ) ], $Setting->grain() ),
-			ssi::writeButton($log,$dbh,'delete_setting_'.$Setting->id(), 'delete.gif', qq`new Ajax.Updater('StockSettings','_stock_settings.html', { parameters:{action:'delete', equipment_id: $$variable{Equipment}{id}, id: $$Setting{id} } } );`, '', 'Delete' ),
+			make_drop_down( [ map { $_, $_ } ( 'Long','Short','Both','Dont Use' ) ], $Setting->grain() ),
+			button('delete_setting_'.$Setting->id(), { onclick=>qq`new Ajax.Updater('StockSettings','_stock_settings.html', { parameters:{action:'delete', equipment_id: $$variable{Equipment}{id}, id: $$Setting{id} } } );`, text=>'Delete' } ),
 			);
 	} # end foreach
 	return $html;

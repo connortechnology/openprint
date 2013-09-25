@@ -507,7 +507,7 @@ sub AUTOLOAD {
 		} else {
 			return $_[0]{$name};
 		} # end if
-	} elsif ( ! sets::isin( $name, [ 'DESTROY' ] ) ) {
+	} else {
 		my $Profile = $_[0]->Profile();
 		if ( exists $$Profile{'fields'}{$name} ) {
 			if ( @_ > 1 ) {
@@ -519,6 +519,9 @@ sub AUTOLOAD {
 		} # end if
 	} # end if
 } # end sub AUTOLOAD
+
+sub DESTROY {
+}
 
 sub can_edit {
 	return 1 if ! $_[0]{id};

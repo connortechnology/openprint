@@ -243,6 +243,10 @@ sub find {
 	if ( $params{'created_on'} ) {
 		$log->debug("Find: Created: $params{'created_on'}");
 	} # end if
+	if ( $params{condition_id} ) {
+		$sql .= ' AND exists ( SELECT skid_id FROM skid_contents WHERE condition_id=? and skid_contents.skid_id=skids.id )';
+		push @values, $params{condition_id};
+	} # end if
 	if ( exists $params{'deleted'} ) {
 		if ( ref $params{'deleted'} eq 'ARRAY' ) {
 			$sql .= ' AND deleted IN (' . join(',', map {'?'} @{$params{'deleted'}}) . ')';
@@ -810,6 +814,19 @@ sub merge {
 	sql::end_transaction( $openprint::dbh, $ac );
 	return '';
 } # end sub merge
+
+sub checked_out {
+	if ( ! exists $_[0]{checked_out} ) {
+		foreach my $SC ( $_[0]->Contents() ) {
+			if ( $SC->checked_out() ) {
+				$_[0]{checked_out} = 1;
+				last;
+			} # end if
+		} # end foreach SC
+	} # end if
+	return $_[0]{checked_out};
+} # end sub checked_out
+
 
 1;
 __END__

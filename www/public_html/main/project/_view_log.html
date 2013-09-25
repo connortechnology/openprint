@@ -17,7 +17,7 @@
 			} elsif ( $$variable{'Description'} =~ /^Reused to project (\d+)$/ ) {
 				$$variable{'Description'} = "Reused to project <a href=\"/main/project/view.html?ProjectIndex=$1\">$1</a>";
 			} elsif ( $$variable{'Description'} =~ /^Add to Order (\d+)$/ ) {
-				$$variable{'Description'} = "Add to Order <a href=\"/main/order/history_details.html?OrderID=$1\">$1</a>";
+				$$variable{'Description'} = "Add to order <a href=\"/main/order/history_details.html?OrderID=$1\">$1</a>";
 			} # end if
 		) ?>
 	<tr<?rowclass?>>

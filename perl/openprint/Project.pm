@@ -425,6 +425,7 @@ sub update_status {
 
 	# The Pending Deposit to In Prepress trnasition is a manual one.
 	return if $$self{'status'} eq 'Pending Deposit';
+	return if $$self{'status'} eq 'Deleted';
 
 	my $Order = new openprint::Order( $$self{'order_id'} );
 	if ( $$self{'order_id'} and $Order->status() ne 'Incomplete' ) {
@@ -1182,15 +1183,17 @@ sub add_service {
 	# Make this all one transaction...
 	my $ac = sql::start_transaction( $dbh );
 
-	sql::insert( $log, $dbh, 'tbl_Project_Contents', 'lngProjectIndex', $$self{'id'}, 'strStatus', 'uncalculated', 'servicetype_id', $ServiceType->id() );
-	( $service_index ) = sql::execute( $log, $dbh, q{SELECT MAX(lngServiceIndex) FROM tbl_Project_Contents WHERE lngProjectIndex=?}, $$self{'id'} );
+	my $Service = new openprint::Project_Service();
+	$Service->save({ project_id=>$$self{id}, status=>'uncalculated', servicetype_id=>$ServiceType->id()});
+	$service_index = $$Service{service_id};
+
 	# Do this so that it doesn't try to load the specs, saving 1 db call.
 	$openprint::service::specs_cache{$service_index} = {};
 	openprint::service::insert_service_spec( $log, $dbh, $$self{'id'}, $service_index, 'ServiceType', $ServiceType->name(), 1 );
-	$_ = q{SELECT strFieldName, strDefaultValue FROM tbl_Service_Defaults WHERE lngServiceTypeIndex=? OR lngServiceTypeIndex IS NULL ORDER BY lngServiceTypeIndex};
-	my @defaults = sql::execute( $log, $dbh, $_, $ServiceType->id() );
-	$_ = q{SELECT name, value FROM User_Service_Defaults WHERE servicetype_id=? AND user_id=?};
-	push @defaults, sql::execute( $log, $dbh, $_, $ServiceType->id(), $openprint::session{'user_id'} );
+	#$_ = q{SELECT strFieldName, strDefaultValue FROM tbl_Service_Defaults WHERE lngServiceTypeIndex=? OR lngServiceTypeIndex IS NULL ORDER BY lngServiceTypeIndex NULLS FIRST};
+	my @defaults = map { $_->name(), $_->value() } openprint::ServiceType_Default->find( projecttype_id => [undef, $ServiceType->id()], order=>'projecttype_id NULLS FIRST' );
+	#$_ = q{SELECT name, value FROM User_Service_Defaults WHERE servicetype_id=? AND user_id=?};
+	#push @defaults, sql::execute( $log, $dbh, $_, $ServiceType->id(), $openprint::session{'user_id'} );
 	while ( my ( $n, $v ) = splice @defaults, 0, 2 ) {
 		if ( $data and exists $$data{$n} ) {
 			openprint::service::insert_service_spec( $log, $dbh, $$self{'id'}, $service_index, $n, $$data{$n}, 1 );
@@ -1451,6 +1454,10 @@ sub Project {
 sub calliper {
 	return openprint::print::get_finished_calliper($_[0]{id});
 } # end sub calliper
+
+sub Currency {
+	return new openprint::Currency( $_[0]{'currency_id'} );
+} # end sub Currency
 
 1;
 __END__

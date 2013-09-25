@@ -1,7 +1,7 @@
 <? echo ( include('/includes/error_reporting.html'); ) ?>
 <div class="PageSettings">
 	<form id="f1" name="f1" action="page_settings.html" method="post">
-		<table>
+		<table class="List">
 			<tr>
 				<th class="url">URL</th>
 				<th class="cacheable">Cacheable</th>
@@ -24,10 +24,10 @@
 					</tr>`,
 					$rowclass,
 					$PS->id(), $PS->url(), 
-					ssi::make_drop_down( [ '', 'no', 'for all', 'for all', 'per user', 'per user' ], $PS->cacheable() ),
-					ssi::make_drop_down( \@user_types, $PS->user_level() ),
-					ssi::html_escape( $PS->keywords() ),
-					ssi::html_escape( $PS->description() ),
+					make_drop_down( [ '', 'no', 'for all', 'for all', 'per user', 'per user' ], $PS->cacheable() ),
+					make_drop_down( \@user_types, $PS->user_level() ),
+					html_escape( $PS->keywords() ),
+					html_escape( $PS->description() ),
 				);
 				$rowclass = $rowclass ? '' : ' class="colRow"';
 			} # end foreach
@@ -36,8 +36,8 @@
 		</table>
 		<p class="buttons">
 			<? echo ( join('',
-						ssi::button( 'Save', {'onclick'=>q`var f1=$('f1');f1.elements['action'].value='save';f1.submit();` } ),
-						ssi::button( 'Reset', {'onclick'=>q`$('f1').reset();` } ),
+						button( 'Save', {'onclick'=>q`var f1=$('f1');f1.elements['action'].value='save';f1.submit();` } ),
+						button( 'Reset', {'onclick'=>q`$('f1').reset();` } ),
 				); ) ?>
 		</p>
 		<input type="hidden" name="action"/>

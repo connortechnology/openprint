@@ -232,6 +232,7 @@ $log->debug("Presentation folder sizes $$specs{'chkPocketLeft'} $$specs{'chkPock
 			foreach my $option ( @StockOptions ) {
 				if ( ! $$specs{'ddmStock'.$option.'1'} ) {
 					$$specs{'alert'} .= 'Please select a cover stock ' . lc $option .'.';
+		sql::end_transaction( $dbh, $ac );
 					return $$specs{'Status'} = 'uncalculated';
 				} # end if
 			} # end foreach option
@@ -239,6 +240,7 @@ $log->debug("Presentation folder sizes $$specs{'chkPocketLeft'} $$specs{'chkPock
 		foreach my $option ( @StockOptions ) {
 			if ( ! $$specs{'ddmStock'.$option.'2'} ) {
 				$$specs{'alert'} .= 'Please select an interior stock ' . lc $option .'.';
+		sql::end_transaction( $dbh, $ac );
 				return $$specs{'Status'} = 'uncalculated';
 			} # end if
 		} # end foreach option
@@ -378,7 +380,7 @@ $log->debug("Presentation folder sizes $$specs{'chkPocketLeft'} $$specs{'chkPock
 # Non-book
 		my @signatures = $Project->signatures();
 		if ( ! @signatures ) {
-			push @signatures, $Project->add_signature( 'Signature', undef, undef, { txtQuantity1 => $$specs{txtQuantity1} } );	
+			push @signatures, $Project->add_signature( 1, undef, undef, { txtQuantity1 => $$specs{txtQuantity1} } );	
 		} # end if
 		my $sig_id = $signatures[0];
 		my $sig_specs = openprint::service::get_specs_ref( $Project, $sig_id );
@@ -569,7 +571,7 @@ $log->debug("Presentation folder sizes $$specs{'chkPocketLeft'} $$specs{'chkPock
 			} # end if
 			if ( ( ! sets::isin( 2, $proof_indexes{$signature_index} ) ) and $openprint::config{'Add Default Colour Proof'} eq 'Y' ) {
 				push @{$proof_indexes{$signature_index}}, 2;
-				openprint::Estimating::Proofs::insert_colour_proof( $Project, $sig_specs, 2, 1, $proof_specs, $Imposition );
+				openprint::Estimating::Proofs::insert_colour_proof( $Project, $sig_specs, 2, 1, $proof_specs );
 			} # end if
 #$openprint::log->debug("Adding press proof $openprint::config{'Add Default Press Proof'}");
 			if ( ( ! sets::isin( 3, $proof_indexes{$signature_index} ) ) and $openprint::config{'Add Default Press Proof'} eq 'Y' ) {

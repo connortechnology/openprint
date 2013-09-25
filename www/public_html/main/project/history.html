@@ -30,9 +30,8 @@
 			} // end if
 		} // end if
 	}
-	function load_projects( form ) {
-		$('ProjectList').innerHTML = 'Please wait...';
-		new Ajax.Updater('ProjectList','/main/project/_history.html', {method:'get',parameters:Form.serialize(form)});
+	function load_projects() {
+		LoadContent( $('ProjectList'), '/main/project/_history.html', $('f1') );
 	} // end function
 </script>	 
 <? if ( $session{'user_id'} ) ?>
@@ -45,17 +44,17 @@
 			<li>
 				<label>Project #</label>
 				<? echo ( join("\n",
-					ssi::input( type=>'cardinal', id=>'ProjectID', name=>'ProjectID', onkeydown=>'if(event.keyCode == 13){load_projects( this.form );}' ),
-					ssi::button( 'Go1', { onclick=>q`load_projects( $('f1') );`, text=>'Go' } ), 
+					input( type=>'cardinal', id=>'ProjectID', name=>'ProjectID', onkeydown=>'if(event.keyCode==13){load_projects();}', value=>$param{ProjectID} ),
+					button( 'Go1', { onclick=>q`load_projects();`, text=>'Go' } ), 
 				); ) ?>
 			</li>
 			<li>
 				<label>Reference</label>
-				<input type="text" id="reference" name="reference" value="<? echo ( $param{'reference'} ) ?>" onkeyup="load_projects( this.form );" />
+				<input type="text" id="reference" name="reference" value="<? echo ( $param{'reference'} ) ?>" onkeyup="load_projects();" />
 			</li>
 			<li>
 				<label>Status</label>
-				<select id="ddmStatus" name="ddmStatus" multiple="multiple" size="4" onchange="load_projects( this.form );">
+				<select id="ddmStatus" name="ddmStatus" multiple="multiple" size="4" onchange="load_projects();">
 <? echo ( 
 		$_ = q{SELECT name, name FROM Project_Statuses ORDER BY sort,lower(name)};
 		make_drop_down( [ '', 'All', sql::execute( $log, $dbh, $_ )], [ split(',', $session{'/main/project/history.html?ddmStatus'} ) ] );
@@ -75,30 +74,30 @@
 			<ul>
 			<li>
 				<label>Creation Date</label>
-<? echo ( date_select_session( '/main/project/history.html', 'created_on_start', { onchange=>'load_projects(this.form);' } ); ) ?>
+<? echo ( date_select_session( '/main/project/history.html', 'created_on_start', { onchange=>'load_projects();' } ); ) ?>
 					to 
-<? echo ( date_select_session( '/main/project/history.html', 'created_on_end', { onchange=>'load_projects(this.form);' } ); ) ?>
+<? echo ( date_select_session( '/main/project/history.html', 'created_on_end', { onchange=>'load_projects();' } ); ) ?>
 			</li>
 			<li>
 				<label>Last Updated</label>
-<? echo ( date_select_session( '/main/project/history.html', 'updated_on_start', { onchange=>'load_projects(this.form);' } ); ) ?>
+<? echo ( date_select_session( '/main/project/history.html', 'updated_on_start', { onchange=>'load_projects();' } ); ) ?>
 					to 
-<? echo ( date_select_session( '/main/project/history.html', 'updated_on_end', { onchange=>'load_projects(this.form);' } ); ) ?>
+<? echo ( date_select_session( '/main/project/history.html', 'updated_on_end', { onchange=>'load_projects();' } ); ) ?>
 			</li>
 <? if ( sets::isin( $session{user_type},[ 'E', 'A' ] ) ) ?>
 			<li><label>Company</label>
-				<select name="company_id" onchange="load_projects(this.form);">
+				<select name="company_id" onchange="load_projects();">
 					<option value="">All</option>
 					<? echo ( openprint::Company::get_dropdown( $session{'/main/project/history.html?company_id'} );) ?>
 				</select>
 			</li>
 	<? if ( openprint::Product->find_one() ) ?>
 			<li><label>Predefined</label>
-				<input type="radio" name="predefined" id="predefined1" value="1" <? echo ( checked( $session{'/main/project/history.html?predefined'} eq '1' ) ) ?> onclick="load_projects(this.form);" />
+				<input type="radio" name="predefined" id="predefined1" value="1" <? echo ( checked( $session{'/main/project/history.html?predefined'} eq '1' ) ) ?> onclick="load_projects();" />
 				<label class="radio" for="predefined1">Yes</label>
-				<input type="radio" name="predefined" id="predefined0" value="0" <? echo ( checked( $session{'/main/project/history.html?predefined'} eq '0' ) ) ?> onclick="load_projects(this.form);" />
+				<input type="radio" name="predefined" id="predefined0" value="0" <? echo ( checked( $session{'/main/project/history.html?predefined'} eq '0' ) ) ?> onclick="load_projects();" />
 				<label class="radio" for="predefined0">No</label>
-				<input type="radio" name="predefined" id="predefined" value="" <? echo ( checked( $session{'/main/project/history.html?predefined'} eq '' ) ) ?> onclick="load_projects(this.form);" />
+				<input type="radio" name="predefined" id="predefined" value="" <? echo ( checked( $session{'/main/project/history.html?predefined'} eq '' ) ) ?> onclick="load_projects();" />
 				<label class="radio" for="predefined">Both</label>
 			</li>
 	<? endif ( openprint::Product->find_one() ) ?>
@@ -109,7 +108,7 @@
 		order=>'lower(firstname),lower(lastname)' ) ] ) ?>
 <? if ( @{$$variable{Users}} > 1 ) ?>
 			<li><label>Created By</label>
-				<select name="user_id" onchange="load_projects(this.form);">
+				<select name="user_id" onchange="load_projects();">
 					<option value="">All</option>
 					<? echo (
 						make_drop_down( [ map { $_->id(), $_->name() } @{$$variable{Users}} ], $session{'/main/project/history.html?user_id'} );

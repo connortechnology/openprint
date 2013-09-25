@@ -36,7 +36,11 @@ sub medium_html {
 
 sub thumbnail_html {
 	my $Asset = $_[0]->Asset();
-	return sprintf('<a class="thumbnail" href="/article/view.html?article_id=%d"><img src="%s" alt="%s"/></a>', $_[0]{article_id},$Asset->sized_url('thumbnail'), $Asset->caption() );
+	if ( $Asset->layout() eq 'Landscape' ) {
+	return sprintf('<a class="Landscape" href="/article/view.html?article_id=%d"><img src="%s" alt="%s"/></a>', $_[0]{article_id},$Asset->sized_url('thumbnail'), $Asset->caption() );
+	} else {
+	return sprintf('<a class="Portrait" href="/article/view.html?article_id=%d"><img src="%s" alt="%s"/></a>', $_[0]{article_id},$Asset->sized_url('thumbnail'), $Asset->caption() );
+	} # end if
 } # end sub thumbnail_html
 
 sub html {

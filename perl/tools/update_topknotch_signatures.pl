@@ -206,6 +206,7 @@ foreach my $Default ( openprint::ProjectType_Default->find('projecttype'=>undef)
 	die $_ if $_;
 	$Default->destroy();
 } # end foreach
+$dbh->do(q`UPDATE project_types set url=NULL where url='prin/prin_broc.html'`);
 
 $dbh->disconnect();
 	

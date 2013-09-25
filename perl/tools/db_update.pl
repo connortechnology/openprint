@@ -648,6 +648,22 @@ if ( ! sets::isin( 'orders', \@tables ) ) {
 		} # end foreach
 		$dbh->do('ALTER TABLE orders DROP preparedby');
 	} # end if
+	if ( ! exists $$data{'id'} ) {
+		$dbh->do('ALTER TABLE orders rename column index to id');
+	} # end if
+	$dbh->do('ALTER TABLE Orders ADD paid NUMERIC(10,2)') if ( ! exists $$data{'paid'} );
+	$dbh->do('UPDATE Orders set paid=(SELECT SUM(amount) From Payments WHERE payments.order_id=orders.id)');
+	$dbh->do('ALTER TABLE Orders ADD owing NUMERIC(10,2)') if ( ! exists $$data{'owing'} );
+	$dbh->do('UPDATE orders SET owing=total-paid');
+	if ( ! exists $$data{terms_accepted} ) {
+		$dbh->do('ALTER TABLE ORDERS ADD terms_accepted boolean default false');
+	} # end if
+	if ( ! exists $$data{'cod_percent'} ) {
+		$dbh->do('ALTER TABLE orders add cod_percent float');
+	} # end if
+	if ( ! exists $$data{'downpayment_percent'} ) {
+		$dbh->do('ALTER TABLE orders add downpayment_percent float');
+	} # end if
 
 }
 if ( ! sets::isin( 'order_notifications', \@tables ) ) {
@@ -1540,6 +1556,10 @@ if ( ! sets::isin( 'purchaseorders', \@tables ) ) {
 			$dbh->do('ALTER TABLE purchaseorders add contact_id INTEGER');
 			$dbh->do('ALTER TABLE purchaseorders add FOREIGN KEY (contact_id) REFERENCES Users (id)');
 		} # end if
+		if ( ! exists $$data{company_id} ) {
+			$dbh->do('ALTER TABLE purchaseorders add company_id INTEGER');
+			$dbh->do('ALTER TABLE purchaseorders add FOREIGN KEY (company_id) REFERENCES companies (id)');
+		} # end if
 		$dbh->do('ALTER TABLE PurchaseOrders ALTER delivered_on DROP NOT NULL');
 		sql::end_transaction( $dbh, $ac );
 } # end if
@@ -1588,6 +1608,9 @@ if ( ! sets::isin( 'manifests', \@tables ) ) {
 			$dbh->do('ALTER TABLE manifest_content_types add foreign key (manifest_id) REFERENCES Manifests (id)');
 			$dbh->do('ALTER TABLE manifestcontents add foreign key (manifest_id) REFERENCES Manifests (id)');
 			$dbh->do('CREATE INDEX Manifests_name_idx ON Manifests (name)');
+		} # end if
+		if ( ! exists $$data{deleted} ) {
+			$dbh->do('ALTER TABLE Manifests add deleted BOOLEAN NOT NULL default false');
 		} # end if
 		sql::end_transaction( $dbh, $ac );
 		die "Blah" if $dbh->errstr();
@@ -3550,6 +3573,11 @@ if ( ! sets::isin( 'event_invitations', \@tables ) ) {
 if ( ! sets::isin( 'authorizations', \@tables ) ) {
     $dbh->do( misc::load_file( $log, '../openprint/sql/Authorizations.sql' ) );
     die $dbh->errstr() if $dbh->errstr();
+} else {
+	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='authorizations'", 'column_name');
+	if ( ! exists $$data{setting} ) {
+		$dbh->do('ALTER TABLE authorizations ADD setting TEXT' );
+	} # end if
 }
 print "Finished\n";
 1;

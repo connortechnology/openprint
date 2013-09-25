@@ -134,19 +134,35 @@ sub sized_url {
 		if ( $openprint::config{'AssetPath'} ) {
 			my $dest = $path.$filename;
 			if ( ! -e $dest ) {
-				my $width;
-				if ( $size eq 'medium' ) {
-					$width = $openprint::config{'Medium_Asset_Width'};
-				} elsif ( $size eq 'large' ) {
-					$width = $openprint::config{'Large_Asset_Width'};
-				} elsif ( $size eq 'thumbnail' ) {
-					$width = $openprint::config{'Small_Asset_Width'};
-				} elsif ( $size eq 'small' ) {
-					$width = $openprint::config{'Small_Asset_Width'};
-				} # end if
-				if ( ! $width ) {
-					$openprint::log->error("No asset size in config for $size");
-					return '/assets/'.$filename;
+				my ( $width, $height );
+				if ( $_[0]->layout() eq 'Landscape' ) {
+					if ( $size eq 'medium' ) {
+						$height = $openprint::config{'Medium_Asset_Height'};
+					} elsif ( $size eq 'large' ) {
+						$height = $openprint::config{'Large_Asset_Height'};
+					} elsif ( $size eq 'thumbnail' ) {
+						$height = $openprint::config{'Small_Asset_Height'};
+					} elsif ( $size eq 'small' ) {
+						$height = $openprint::config{'Small_Asset_Height'};
+					} # end if
+					if ( ! $height ) {
+						$openprint::log->error("No asset size in config for $size");
+						return '/assets/'.$filename;
+					} # end if	
+				} else {
+					if ( $size eq 'medium' ) {
+						$width = $openprint::config{'Medium_Asset_Width'};
+					} elsif ( $size eq 'large' ) {
+						$width = $openprint::config{'Large_Asset_Width'};
+					} elsif ( $size eq 'thumbnail' ) {
+						$width = $openprint::config{'Small_Asset_Width'};
+					} elsif ( $size eq 'small' ) {
+						$width = $openprint::config{'Small_Asset_Width'};
+					} # end if
+					if ( ! $width ) {
+						$openprint::log->error("No asset size in config for $size");
+						return '/assets/'.$filename;
+					} # end if	
 				} # end if	
 				$openprint::log->debug("Creating $size at ${width} x $src $dest");
 				if ( ! -e $src ) {
@@ -155,7 +171,7 @@ sub sized_url {
 				} # end if
 				my ( $stderr, $stdout );
 				require IPC::Run3;
-				IPC::Run3::run3(qq`convert -adaptive-resize ${width}x "$src" "$dest"`, undef, $stdout, $stderr );
+				IPC::Run3::run3(qq`convert -adaptive-resize ${width}x${height} "$src" "$dest"`, undef, $stdout, $stderr );
 				if ( $? ) {
 					$openprint::log->error("ERror creating sized image. Reason: ($?) stdout($stdout) stderr($stderr)");
 					return '/assets/'.$filename;
@@ -276,12 +292,13 @@ sub html {
 	return '' if ! $_[0]{'id'};
 	return sprintf('<img src="%1$s" alt="%2$s" title="%2$s" />', $_[0]->url(), $_[0]->name() );
 } # end sub html
+
 sub thumbnail_html {
 	if ( ! $_[0]{'id'} ) {
 		$openprint::log->warn('Called thumbnail_html on asset with no id');
 		return '';
 	} # end if
-	return sprintf('<img src="%1$s" alt="%2$s" title="%2$s" />', $_[0]->sized_url('thumbnail'), $_[0]->name() );
+	return sprintf('<img src="%1$s" alt="%2$s" title="%2$s" />', $_[0]->sized_url('small'), $_[0]->name() );
 } # end sub thumbnail_html
 
 sub thumbnail_path {

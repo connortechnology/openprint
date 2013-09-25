@@ -124,7 +124,7 @@
 				<? echo (
 					my $html = '';
 					foreach my $MC ( openprint::ManifestContent->find( skid_id=>$$variable{'Skid'}->id() ) ) {
-						$html .= sprintf('<a href="/employee/inventory/manifest.html?manifest_id=%1$s">%2$s</a><br/>', $MC->manifest_id(), $MC->Manifest()->name() );
+						$html .= sprintf('<a href="/employee/inventory/manifest_view.html?manifest_id=%1$s">%2$s</a><br/>', $MC->manifest_id(), $MC->Manifest()->name() );
 					} # end foreach MC
 					return $html;
 				) ?>
@@ -192,12 +192,13 @@
 <div id="Allocations"><?include('_skid_allocations.html')?></div>
 </fieldset>
 <fieldset><legend onclick="toggleContent( 'Log', '/employee/inventory/_skid_log.html', {skid_id<? echo ( $$variable{'Skid'}->id() ) ?>} );">Inventory Log - click to hide/show</legend>
-<div id="Log"><?include('_skid_log.html')?></div>
+<div id="Log"><?include(_skid_log.html)?></div>
 </fieldset>
 	<? echo ( 
 		if ( $$variable{Skid}{rfidtag_id} ) {
 			@param{'end_year','end_month','end_day'} = Date::Calc::Today();
 			$$variable{RFIDTag} = $$variable{Skid}->RFIDTag();
+			openprint::employee_inventory::_rfidtag_log_entries();
 			return include('_rfidtag_log.html');
 		} # end if
 		return;

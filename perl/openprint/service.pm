@@ -156,7 +156,7 @@ sub get_specs_ref {
 			Carp::cluck("********* Called get_specs_ref without Project Index ****************");
 			return;
 		} # end if
-		%{$specs_cache{$s_id}} = sql::execute( undef, undef, 
+		%{$specs_cache{$s_id}} = sql::execute( $openprint::log, undef, 
 				'SELECT strName, strValue FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND lngServiceIndex=?', $p_id, $s_id );
 	} # end if
 	return $specs_cache{$s_id};

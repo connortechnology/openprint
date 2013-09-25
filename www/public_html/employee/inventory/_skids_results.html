@@ -143,6 +143,12 @@
                 if ( $session{'/employee/inventory/skids.html?contents'} eq 'N' ) {
                     next if $Skid->Contents();
                 } # end if
+				if ( $session{'/employee/inventory/skids.html?checked_out'} eq 'Y' ) {
+                    next if ! $Skid->checked_out();
+                } # end if
+                if ( $session{'/employee/inventory/skids.html?checked_out'} eq 'N' ) {
+                    next if $Skid->checked_out();
+                } # end if
 	
 				my @Allocations;
 				if ( $Allocations{$Skid->id()} ) {
