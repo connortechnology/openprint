@@ -87,21 +87,13 @@ if ( 0 ) {
 
 	foreach my $file ( sort { $b cmp $a } @files ) {
 		my ($dev,$ino,$mode,$nlink,$uid,$gid,$rdev, $size, $atime,$mtime,$ctime,$blksize,$blocks) = stat("$config{'ProjectFilesPath'}/$destdir/$file");
-		if ( $size > 1048576 ) {
-			$size = sprintf( '%.3f MB', $size / 1048576 );
-		} elsif ( $size > 1024 ) {
-			$size = sprintf( '%.3f KB', $size / 1024 );
-		} else {
-			$size .= ' B';
-		} # end if
 		my $description;
-		
 		$description = $ProjectFiles{$destdir.$path.$file} ? $ProjectFiles{$destdir.$path.$file}->description() : '';
 		$description = 'No description given' if ! $description;
-		push @{$$variable{'PROJECT_FILES'}}, "/project_files/$company_name/$param{'docket'}/$file", $file, $size, $description;
+		push @{$$variable{'PROJECT_FILES'}}, $file, $size, $description, $mtime;
 	} # end foreach
 ) ?>
-<? echo ( include( '/includes/error_reporting.html' ); ) ?>
+<?include( '/includes/error_reporting.html')?>
 <form id="f1" name="f1" action="upload.html" method="post">
 	<table class="List">
 		<thead>
@@ -121,20 +113,19 @@ if ( 0 ) {
 				my $html;
 				my $rowclass;
 
-
 				while ( @$variable{'filename','size', 'description','mtime'} = splice @{$$variable{'PROJECT_FILES'}},0,4 ) {
 					$html .= "<tr$rowclass>\n";
 					if ( $$variable{'filename'} eq '..' ) {
 						$html .= '<tr><td colspan="4"><a href="/upload/upload_center.html?path='.$variable{'path'}.'&amp;filename=.."><img src="/images/parent-folder.gif" alt="Parent Folder" />..</a></td></tr>';
 
-					} elsif ( $$variable{'size'} ne '' ) {
+					} elsif ( $$variable{size} ) {
 						$html .= sprintf(q`
 						<td><a href="/getfile.html?path=%1$s&amp;filename=%2$s" title="%3$s" target="SendFileFrame">%2$s</a><br/>%3$s</td>
 						<td class="size">%4$s</td>
 						<td class="mtime">%5$s</td>
 						<td class="checkbox"><input type="checkbox" id="chkFiles%3$s" name="chkFiles" value="%2$s"/></td>`,
 							@$variable{'path','filename','description'},
-							Number::Format::format_bytes( $$variable{'size'} ),
+							Number::Format::format_bytes( $$variable{size} ),
 							Date::Format::time2str( $config{'DateTimeFormat'}, $$variable{'mtime'} )
 							);
 					} else {
@@ -148,10 +139,7 @@ if ( 0 ) {
 			) ?>
 <? endif ( @{$$variable{'PROJECT_FILES'}} == 0 ) ?>
 	</table>
-<p class="buttons">
-		<? echo ( button( 'Delete', { onclick=>'delete_files();' } );) ?>
-<? echo ( ssi::button( 'Delete', { onclick=>"if ( confirm('Are you sure?') ) {\$('f1').btnFunction.value='Delete';new Ajax.Updater('FileList', '/upload/_files.html', { parameters: \$('f1').serialize() }); };", text=> 'Delete' } ); ) ?>
-</p>
+	<p class="buttons"><? echo ( button( 'Delete', { onclick=>'delete_files();' } );) ?></p>
 	<input type="hidden" name="btnFunction" />
 </form>
 <iframe scrolling="no" marginwidth="0" marginheight="0" frameborder="0" vspace="0" hspace="0" style="width: 0; height: 0; display:none;" id="SendFileFrame" name="SendFileFrame" src=""></iframe>

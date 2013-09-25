@@ -4,8 +4,8 @@
 	<? echo ( include('/main/order/_project_header.html', $variable ); ) ?>
 <? echo (
     if ( $$variable{'Project'}->style_id() ) {
-        ssi::include( '/main/project/view_'.$$variable{'Project'}->Template()->name() . '.html', $variable );
+        include( '/main/project/view_'.$$variable{'Project'}->Template()->name() . '.html', $variable );
     } else {
-        ssi::include( '/main/order/_project_details.html', $variable );
+        include( '/main/order/_project_details.html', $variable );
     } # end if
 ) ?>

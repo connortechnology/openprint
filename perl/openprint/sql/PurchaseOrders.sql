@@ -3,7 +3,7 @@ CREATE TABLE PurchaseOrders (
 	id	SERIAL NOT NULL,
 	num			TEXT,
 	currency_id	INTEGER, FOREIGN KEY (currency_id) REFERENCES Currencies (id),
-	company_id	INTEGER,
+	company_id	INTEGER, FOREIGN KEY (company_id) REFERENCES Companies (id),
 	supplier_id	INTEGER, FOREIGN KEY (supplier_id) REFERENCES Companies (id),
 	contact_id	INTEGER, FOREIGN KEY (contact_id) REFERENCES Users (id),
 	total		float,

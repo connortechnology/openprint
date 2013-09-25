@@ -16,7 +16,7 @@
 </script>
 <? if ( ! $$variable{'Quote'}->id() ) ?>
 	There is no current quote.
-	<? echo ( ssi::button( 'create', { href=>'/main/quote/information.html?btnFunction=New', text=>'Create New Quote' } ); ) ?>
+	<? echo ( button( 'create', { href=>'/main/quote/information.html?btnFunction=New', text=>'Create New Quote' } ); ) ?>
 <? else ( ! $$variable{'Quote'}->id() ) ?>
 
 	<? if ( sets::isin( $session{'user_type'}, ['A','E'] ) or new openprint::Company($session{'company_id'})->reseller() eq 'Y' ) ?>
@@ -38,7 +38,7 @@
 						<input type="email" id="ByEmail" name="ByEmail" value="<?ByEmail?>"<? echo ( sets::isin( 'ByEmail', split(',', $config{'QuoteRequiredFields'}) ) ? ' required' : '' ) ?>/>
 					</li>
 					<li>
-						<label>Company Name</label>
+						<label>Company</label>
 						<input type="text" id="ByCompanyName" name="ByCompanyName" value="<?ByCompanyName?>"<? echo ( sets::isin( 'ByCompanyName', split(',', $config{'QuoteRequiredFields'}) ) ? ' required' : '' ) ?>/>
 					</li>
 					<li>
@@ -111,8 +111,8 @@
 					</li>
 					<li> 
 						<label>Phone</label>
-						<input type="tel" id="ByPhone" name="ByPhone" value="<?ByPhone?>" /> x
-						<? echo ( ssi::input( 'type'=>'tel', 'id'=>'ByExtension', 'name'=>'ByExtension', 'value'=>$$variable{'ByExtension'} ); ) ?> 
+						<? echo ( input( type=>'tel', id=>'ByPhone', name=>'ByPhone', value=>$$variable{ByPhone} ); ) ?> x
+						<? echo ( input( type=>'tel', id=>'ByExtension', name=>'ByExtension', value=>$$variable{'ByExtension'} ); ) ?> 
 					</li>
 					<li> 
 						<label>Fax</label>
@@ -152,7 +152,7 @@
 			</li>
 <? endif ( sets::isin( $session{'user_type'}, ['A','E'] ) ) ?>
 			<li>
-				<label>Company Name</label>
+				<label>Company</label>
 				<input type="text" id="ForCompanyName" name="ForCompanyName" value="<?ForCompanyName?>"<? echo ( sets::isin( 'ForFirstName', split(',', $config{'QuoteRequiredFields'}) ) ? ' required' : '' ) ?>/>
 			</li>
 			<li> 
@@ -225,8 +225,8 @@ if ( $$variable{'ForCountry'} eq 'US' ) {
 			</li>
 			<li> 
 				<label>Phone</label>
-				<input type="tel" id="ForPhone" name="ForPhone" value="<?ForPhone?>" /> x
-				<? echo ( ssi::input( 'type'=>'tel', 'id'=>'ForExtension', 'name'=>'ForExtension', 'value'=>$$variable{'ForExtension'} ); ) ?> 
+				<? echo ( input( type=>'tel', id=>'ForPhone', name=>'ForPhone', value=>$$variable{ForPhone} ); ) ?> x
+				<? echo ( input( type=>'tel', id=>'ForExtension', name=>'ForExtension', value=>$$variable{'ForExtension'} ); ) ?> 
 			</li>
 			<li> 
 				<label>Fax</label>
@@ -279,7 +279,7 @@ if ( $$variable{'ForCountry'} eq 'US' ) {
 			<tr<?rowclass?>> 
 				<td class="projects" rowspan="<? echo ( scalar $$variable{'Project'}->quantity_indexes() ) ?>"><a href="/main/project/view.html?ProjectIndex=<?project_index?>"><span class="reference"><?reference?></span><? echo ( $$variable{'Project'}->summary(); ) ?></a></td>
 				<td class="markup"> 
-					<? echo ( ssi::input( 'type'=>'number', 'name'=>sprintf('markup-%d_%d', @$variable{'index','project_index'} ), 'value'=>$$variable{'markup'}, 'onkeyup'=>q`calc_from_markup(this,2);` ); ) ?> 
+					<? echo ( input( 'type'=>'number', 'name'=>sprintf('markup-%d_%d', @$variable{'index','project_index'} ), 'value'=>$$variable{'markup'}, 'onkeyup'=>q`calc_from_markup(this,2);` ); ) ?> 
 				</td>
 				<td class="quantity"><?qty?></td>
 				<td class="price"> 
@@ -287,7 +287,7 @@ if ( $$variable{'ForCountry'} eq 'US' ) {
 					<? echo ( $$variable{'Quote'}->Currency()->format( $$variable{'stdprice'} ); ) ?>
 				</td>
 				<td class="newprice"><? echo ( $$variable{'Quote'}->Currency()->symbol(); ) ?> 
-					<? echo ( ssi::input( 'type'=>'number', 'name'=>sprintf('price-%d_%d', @$variable{'index','project_index'} ), 'value'=>($$variable{'newprice'} ? $$variable{'newprice'} : $$variable{'stdprice'}), 'onkeyup'=>q`calc_from_price(this,2);` ); ) ?> 
+					<? echo ( input( 'type'=>'number', 'name'=>sprintf('price-%d_%d', @$variable{'index','project_index'} ), 'value'=>($$variable{'newprice'} ? $$variable{'newprice'} : $$variable{'stdprice'}), 'onkeyup'=>q`calc_from_price(this,2);` ); ) ?> 
 				</td>
 				<td class="changes"><a href="/main/project/view.html?ProjectIndex=<?project_index?>">Edit</a>/<a href="information.html?quote_id=<? echo ( $$variable{'Quote'}->id() ) ?>&amp;remove=<?project_index?>">Remove</a></td>
 			</tr>
@@ -295,7 +295,7 @@ if ( $$variable{'ForCountry'} eq 'US' ) {
 			<? if ( $$variable{'qty'} ) ?>
 			<tr<?rowclass?>> 
 				<td class="markup"> 
-					<? echo ( ssi::input( 'type'=>'number', 'name'=>sprintf('markup-%d_%d', @$variable{'index','project_index'} ), 'value'=>$$variable{'markup'}, 'onkeyup'=>q`calc_from_markup(this,2);` ); ) ?> 
+					<? echo ( input( 'type'=>'number', 'name'=>sprintf('markup-%d_%d', @$variable{'index','project_index'} ), 'value'=>$$variable{'markup'}, 'onkeyup'=>q`calc_from_markup(this,2);` ); ) ?> 
 				</td>
 				<td class="quantity"><?qty?></td>
 				<td class="price"> 
@@ -303,7 +303,7 @@ if ( $$variable{'ForCountry'} eq 'US' ) {
 					<? echo ( $$variable{'Quote'}->Currency()->symbol(); ) ?><?stdprice?>
 				</td>
 				<td class="newprice"><? echo ( $$variable{'Quote'}->Currency()->symbol(); ) ?> 
-					<? echo ( ssi::input( 'type'=>'number', 'name'=>sprintf('price-%d_%d', @$variable{'index','project_index'} ), 'value'=>$$variable{'newprice'}, 'onkeyup'=>q`calc_from_price(this,2);` ); ) ?> 
+					<? echo ( input( 'type'=>'number', 'name'=>sprintf('price-%d_%d', @$variable{'index','project_index'} ), 'value'=>$$variable{'newprice'}, 'onkeyup'=>q`calc_from_price(this,2);` ); ) ?> 
 				</td>
 				<td class="changes"></td>
 			</tr>
@@ -384,9 +384,9 @@ if ( $$variable{'ForCountry'} eq 'US' ) {
 		<p class="buttons">
 				<? echo ( 
 					my $html;
-					$html .= ssi::button( 'AddFromHistory', { href=>'/main/project/history.html', text=>'Add Project From History' } ) if $session{'user_id'};
-					$html .= ssi::button( 'CreateNewProject', { href=>'/main/project/create_edit.html', text=>'Add New Project' } );
-					$html .= ssi::button( 'Continue', { onclick=>"f1.btnFunction.value='Continue';f1.submit();", href=>'', text=>'Continue' } );
+					$html .= button( 'AddFromHistory', { href=>'/main/project/history.html', text=>'Add Project From History' } ) if $session{'user_id'};
+					$html .= button( 'CreateNewProject', { href=>'/main/project/create_edit.html', text=>'Add New Project' } );
+					$html .= button( 'Continue', { onclick=>"f1.btnFunction.value='Continue';f1.submit();", href=>'', text=>'Continue' } );
 					) ?>
 		</p>
 		<input type="hidden" name="btnFunction"/>

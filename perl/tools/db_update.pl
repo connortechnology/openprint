@@ -1556,6 +1556,10 @@ if ( ! sets::isin( 'purchaseorders', \@tables ) ) {
 			$dbh->do('ALTER TABLE purchaseorders add contact_id INTEGER');
 			$dbh->do('ALTER TABLE purchaseorders add FOREIGN KEY (contact_id) REFERENCES Users (id)');
 		} # end if
+		if ( ! exists $$data{company_id} ) {
+			$dbh->do('ALTER TABLE purchaseorders add company_id INTEGER');
+			$dbh->do('ALTER TABLE purchaseorders add FOREIGN KEY (company_id) REFERENCES companies (id)');
+		} # end if
 		$dbh->do('ALTER TABLE PurchaseOrders ALTER delivered_on DROP NOT NULL');
 		sql::end_transaction( $dbh, $ac );
 } # end if
@@ -1604,6 +1608,9 @@ if ( ! sets::isin( 'manifests', \@tables ) ) {
 			$dbh->do('ALTER TABLE manifest_content_types add foreign key (manifest_id) REFERENCES Manifests (id)');
 			$dbh->do('ALTER TABLE manifestcontents add foreign key (manifest_id) REFERENCES Manifests (id)');
 			$dbh->do('CREATE INDEX Manifests_name_idx ON Manifests (name)');
+		} # end if
+		if ( ! exists $$data{deleted} ) {
+			$dbh->do('ALTER TABLE Manifests add deleted BOOLEAN NOT NULL default false');
 		} # end if
 		sql::end_transaction( $dbh, $ac );
 		die "Blah" if $dbh->errstr();
