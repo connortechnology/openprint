@@ -67,8 +67,8 @@ $serial = 'orders_id_seq';
 	);
 
 %transforms = (
-	id		=>	[ 's/\D//g' ],
-	docket	=>	[ 's/\D//g' ],
+	id			=>	[ 's/\D//g', '<2147483647' ],
+	docket		=>	[ 's/\D//g', '<2147483647' ],
 );
 
 %find_fields = (

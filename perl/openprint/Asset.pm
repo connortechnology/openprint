@@ -58,10 +58,11 @@ $debug = 1;
 	'height'	=>	undef,
 );
 %transforms = (
-	width			=>	[ 's/\D//g' ],
-	height			=>	[ 's/\D//g' ],
-	filename		=>	[ 's/^\s+//', 's/\s+$//', 's/ /_/g', 's/[\/:\*\?\'"<>|]//g', 's/&/n/g' ],
-	name			=>	[ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
+	id			=>	[ 's/\D//g', '<2147483647' ],
+	width		=>	[ 's/\D//g' ],
+	height		=>	[ 's/\D//g' ],
+	filename	=>	[ 's/^\s+//', 's/\s+$//', 's/ /_/g', 's/[\/:\*\?\'"<>|]//g', 's/&/n/g' ],
+	name		=>	[ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
 	description	=>	[ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
 	attribution	=>	[ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
 	license		=>	[ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],

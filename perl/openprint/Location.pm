@@ -43,8 +43,8 @@ $serial = 'locations_id_seq';
 	'type'	=>	'(SELECT name FROM Location_Types WHERE location_types.id = locations.type_id)',
 );
 %transforms = (
-	id			=>	[ 's/\D//g' ],
-	parent_id	=>	[ 's/\D//g' ],
+	id			=>	[ 's/\D//g', '<2147483647' ],
+	parent_id	=>	[ 's/\D//g', '<2147483647' ],
 	postalcode	=>	[ 'tr/[a-z]/[A-Z]/' ],
     name		=>	[ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
     address		=>	[ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
