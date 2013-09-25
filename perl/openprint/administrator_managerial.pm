@@ -800,8 +800,8 @@ sub _search_by_email {
 sub page_settings {
 	require openprint::Page_Setting;
 	if ( $param{action} eq 'save' ) {
-		foreach my $PS ( openprint::Page_Setting->find() ) {
-			if ( ! $param{'url-'.$PS->id()} ) {
+		foreach my $PS ( openprint::Page_Setting->find(), new openprint::Page_Setting() ) {
+			if ( defined $PS->id() and ! $param{'url-'.$PS->id()} ) {
 				$PS->delete();
 			} elsif ( 
 					( $PS->url() ne openprint::Page_Setting->transform('url',$param{'url-'.$PS->id()}) ) or 
