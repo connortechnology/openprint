@@ -1,12 +1,14 @@
+use strict;
 #!/usr/bin/perl
 use lib '/var/www/testing/perl';
-use Date::Calc;
-use strict;
 require sql;
 require logger;
 require openprint::Object;
 require openprint::Project;
 require openprint::service;
+require openprint::ServiceType;
+require openprint::ServiceType_Default;
+require openprint::ProjectType_Default;
 
 use openprint ();
 use vars qw( $log $dbh );
