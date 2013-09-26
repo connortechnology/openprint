@@ -911,7 +911,10 @@ sub get_price {
 	
 	my $price;
 	my $qty = $params{weight} ? $params{weight} : $params{sheets};
-	my $lookup_qty = $params{'lookup_weight'} ? $params{'lookup_weight'} : $params{'weight'};
+	my $lookup_qty = $params{'lookup_weight'} ? $params{'lookup_weight'} : $qty;
+	if ( ($params{'service'} eq 'Material') and ! $lookup_qty ) {
+		Carp::cluck("Paper qty lookup with no qty");
+	} #end if
 
 	if ( $$self{'Price'} and ($params{'service'} eq 'Material') ) {
 		# If custom paper

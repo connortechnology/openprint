@@ -485,6 +485,7 @@ sub get_proof_specs {
 	foreach my $qty_index ( $Project->quantity_indexes() ) {
 		my %proof_indexes;
 		foreach my $key ( keys %$specs ) {
+$openprint::log->debug("key $key");
 			if ( $key =~ /^txtProofIndex-(\d*)-(\d*)-$qty_index$/ ) {
 				push @{$proof_indexes{$1}}, $$specs{$key};
 			} # end if
@@ -500,6 +501,7 @@ $log->error("No imposition in signature $signature_index");
 			my $Imposition = new openprint::Imposition();
 			$Imposition->load( $sig_specs, $qty_index );
 			my $Equipment = openprint::Equipment->find_one( strid=>$$sig_specs{'ddmPress'.$qty_index} ) if $$sig_specs{'ddmPress'.$qty_index};
+$Imposition->display( "For sig $signature_index");
 
 			if ( ( ! sets::isin( 1, $proof_indexes{$signature_index} ) ) and $openprint::config{'Add Default Layout Proof'} eq 'Y') {
 				push @{$proof_indexes{$signature_index}}, 1;
@@ -511,13 +513,29 @@ $log->error("No imposition in signature $signature_index");
 				$openprint::log->debug("ADDING Colour Proof to $signature_index") if DEBUG;
 				insert_colour_proof( $Project, $sig_specs, 2, $qty_index, $variable );
 			} # end if
-			if ( ( ! sets::isin( 3, $proof_indexes{$signature_index} ) ) and ( ( $openprint::config{'Add Default Press Proof'} eq 'Y' ) or ( $Equipment and $Equipment->specification('Require Press Proof') eq 'Y' ) ) ) {
-				push @{$proof_indexes{$signature_index}}, 3;
-				insert_press_proof( $Project, $sig_specs, 3, $qty_index, $variable, $Imposition );
+			if ( ! sets::isin( 3, $proof_indexes{$signature_index} ) ) {
+				if ( ( $openprint::config{'Add Default Press Proof'} eq 'Y' ) or ( $Equipment and $Equipment->specification('Require Press Proof') eq 'Y' ) ) {
+					push @{$proof_indexes{$signature_index}}, 3;
+					$log->debug("Adding Press Proof");
+					insert_press_proof( $Project, $sig_specs, 3, $qty_index, $variable, $Imposition );
+				} else {
+$log->debug("Press proof not needed");
+				} # end if
+			} elsif ( DEBUG ) {
+$log->debug("Already had press proof");
 			} # end if
 
-			my @proof_info = load_proof_info( $Project, $service_index, $signature_index, $qty_index, $variable );
-			@{$$variable{'Proofs-'.$signature_index.'-'.$qty_index}} = @proof_info;
+			foreach my $proof_index ( @{$proof_indexes{$signature_index}} ) {
+				my ( $quantity, $width, $height, $type ) = @$sig_specs{
+					"txtProofQuantity-$signature_index-$proof_index-$qty_index",
+						"txtProofWidth-$signature_index-$proof_index-$qty_index",
+						"txtProofHeight-$signature_index-$proof_index-$qty_index",
+						"ddmProofType-$signature_index-$proof_index-$qty_index"
+				};
+				push @{$$variable{'Proofs-'.$signature_index.'-'.$qty_index}},
+					 $proof_index, $quantity, 1*$width, 1*$height, $type, ssi::make_drop_down( [ map { $_->name(), $_->description() } openprint::Service->find('category'=>'Proofs') ], $type );
+			} # end foreach
+
 		} # end foreach signature
 	} # end foreach qty_index
     @{$$variable{'SignatureGroups'}} = ();
