@@ -1,5 +1,5 @@
-use strict;
 #!/usr/bin/perl
+use strict;
 use lib '/var/www/testing/perl';
 require sql;
 require logger;
