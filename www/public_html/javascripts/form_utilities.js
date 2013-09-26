@@ -311,7 +311,7 @@ function ddm_select_by_text_case_insensitive( ddm, value, defaultValue ) {
 
 function filterDDM( filter, ddm ) {
 	if ( ! filter.value.length ) {
-		ddm.selectedIndex = 0;
+		ddm.selectedIndex = ddm.defaultSelected;
 		return;
 	} // end if
 	var old_selected_index = ddm.selectedIndex;
