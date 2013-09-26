@@ -143,13 +143,14 @@
 			#user_type	=>	\@user_types,
 	);
 
-	my @StockOptions = split( ',', $config{$$variable{'ProjectType'}->name().'StockOptions'} );
+	my @StockOptions = split( ',', $config{$$variable{ProjectType}->name().'StockOptions'} );
+$log->warn("Stock Options @StockOptions");
 	@StockOptions = split( ',', $config{'StockOptions'} ) if ! @StockOptions;
 	@StockOptions = ( 'Brand','Finish','Colour','Weight' ) if ! @StockOptions;
 
 	foreach my $option ( @StockOptions ) {
 		my $lc_option = lc $option;
-		my %cache = map { $_->name(), $_ } ('openprint::Stock'.$option)->find();
+		my %cache = map { $_->name(), $_ } ('openprint::Stock'.$option)->find() if $option ne 'Size';
 
 		my @Papers = openprint::Paper->find( %find );
 		my @options = map { $_, $_ } ( sort ( sets::union( map { $_->$lc_option() } @Papers ) ) );
@@ -175,6 +176,7 @@
 ) ?>
 		</ul>
 <? if ( $$variable{'ProjectType'}->name() eq 'Envelopes' ) ?>
+<? if ( 0 ) ?>
 		<ul>
 			<li><label>Stock Size</label>
 				<select name="ddmStockSheetSize" size="1" onchange="ddmStockSheetSize_onchange();">
@@ -190,6 +192,7 @@
 				</select>
 			</li>
 		</ul>
+<? endif ( 0 ) ?>
 <? endif ( $$variable{'ProjectType'}->name() eq 'Envelopes' ) ?>
 		</div><!-- House -->
 	</fieldset>

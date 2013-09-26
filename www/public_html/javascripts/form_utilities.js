@@ -311,7 +311,7 @@ function ddm_select_by_text_case_insensitive( ddm, value, defaultValue ) {
 
 function filterDDM( filter, ddm ) {
 	if ( ! filter.value.length ) {
-		ddm.selectedIndex = ddm.defaultSelected;
+		ddm.selectedIndex = 0;
 		return;
 	} // end if
 	var old_selected_index = ddm.selectedIndex;
@@ -1436,6 +1436,8 @@ function integerize(e) {
 function floatize(e) {
 	if ( e.value.match(/[^\d\-\.%\*]/) )
 		e.value = parseFloat(e.value.replace(/[^\d\-\.%\*]/g,''));
+	if ( e.value == 'NaN' )
+		e.value = '';
 	return e.value;
 }
 function floatize_calculator(e) {

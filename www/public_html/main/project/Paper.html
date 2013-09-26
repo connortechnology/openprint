@@ -1,9 +1,12 @@
-<script type="text/javascript" src="/javascripts/service.js"></script>
+<script type="text/javascript" src="<?hash_link(/javascripts/service.js)?>"></script>
 <? eval (
-	if ( $$variable{'Project'}->quantity1() and $$variable{'Project'}->quantity2() and $$variable{'Project'}->quantity3() ) {
+	my @qtys = $$variable{'Project'}->quantity_indexes();
+	if ( @qtys == 3 ) {
 	$$variable{'Columns'} = 'Three';
-	} else {
+	} elsif ( @qtys == 2 ) {
 	$$variable{'Columns'} = 'Two';
+	} else {
+	$$variable{'Columns'} = 'One';
 	} # end if
 ) ?>
 <div class="Service <?ServiceTypeID?>">

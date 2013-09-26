@@ -227,6 +227,8 @@ sub signature_calc {
 		}
 	}
 
+	$$indexes{$signature_index} = [] if ! $$indexes{$signature_index};
+
 	if ( ( ! sets::isin( 1, $$indexes{$signature_index} ) ) and $openprint::config{'Add Default Layout Proof'} eq 'Y' ) {
 		push @{$$indexes{$signature_index}}, 1;
 	} # end if
