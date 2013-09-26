@@ -3561,7 +3561,7 @@ sub calc_price {
 
 #$log->debug("\n\n************ START OF CALC PRINT PRICE QTY: $qty 1: @$side_one_colours, @$side_two_colours CAL: $paper_calliper DT: $dry_trap  STYLE: $run_style ********* \n\n\n");
 	my ( $is_sheetwork, $is_perfecting );
-	if ( sets::isin( $$Imposition{'runstyle'}, ['Sheet Work','Web'] ) ) {
+	if ( $$Imposition{'runstyle'} eq 'Sheet Work' or $$Imposition{runstyle} eq 'Web' ) {
 		$is_sheetwork = 1;
 		$is_perfecting = 0;
 		@colours = ( @{$$project{'side_one_colours'}}, @{$$project{'side_one_coatings'}} );
@@ -3637,7 +3637,7 @@ sub calc_price {
 	my $net_sheets;
 	$net_sheets = ceil($qty / $imposition);
 	$net_sheets *= $$Imposition{versions} if $$Imposition{versions}; # qty is already adjusted
-	$net_sheets *= $Paper->parts() if $Paper->parts();
+	$net_sheets *= $$Paper{parts} if $$Paper{parts};
 #Initially we calculate based on colours, but really we need to calculate based on plates, which we will do once we figure out how many plates we need.
 	my $min_overs = $Press->specification( 'Overs Minimum ' . $Paper->material(), scalar @colours );
 	$min_overs = $Press->specification( 'Overs Minimum', scalar @colours ) if ! $min_overs;
