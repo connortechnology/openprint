@@ -1444,6 +1444,8 @@ function integerize(e) {
 function floatize(e) {
 	if ( e.value.match(/[^\d\-\.%\*]/) )
 		e.value = parseFloat(e.value.replace(/[^\d\-\.%\*]/g,''));
+	if ( e.value == 'NaN' )
+		e.value = '';
 	return e.value;
 }
 function floatize_calculator(e) {

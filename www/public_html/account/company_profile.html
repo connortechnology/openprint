@@ -39,18 +39,18 @@ Your company profile can be modified using the fields below. Use the <b>Save</b>
 					<li> 
 						<label for="state" id="country_state"><? echo (
 							if ( $$variable{'Company'}->country() eq 'US' ) {
-								return 'State:';
+								return 'State';
 							} elsif ( $$variable{'Company'}->country() eq 'CA' ) {
-								return 'Province:';
+								return 'Province';
 							} else {
-								return 'State/Province:';
+								return 'State/Province';
 							} # end if
 						) ?></label>
 						<select id="state" name="state">
 							<option value=""> Select </option>
 							<? echo (
-								ssi::make_drop_down( \@states::states, $$variable{'Company'}->state() ).
-								ssi::make_drop_down( \@provinces::provinces, $$variable{'Company'}->state() );
+								make_drop_down( \@states::states, $$variable{'Company'}->state() ).
+								make_drop_down( \@provinces::provinces, $$variable{'Company'}->state() );
 								) ?>
 						</select>
 					</li>
@@ -72,11 +72,11 @@ Your company profile can be modified using the fields below. Use the <b>Save</b>
 					</li>
 					<li> 
 						<label for="phone">Phone</label>
-						<input type="text" id="phone" name="phone" value="<? hecho ( $$variable{'Company'}->phone() ) ?>" />
+						<input type="tel" id="phone" name="phone" value="<? hecho ( $$variable{'Company'}->phone() ) ?>" />
 					</li>
 					<li> 
 						<label for="fax">Fax</label>
-						<input type="text" id="fax" name="fax" value="<? hecho ( $$variable{'Company'}->fax() ) ?>" />
+						<input type="tel" id="fax" name="fax" value="<? hecho ( $$variable{'Company'}->fax() ) ?>" />
 					</li>
 				</ul>
 			</fieldset>
@@ -109,8 +109,8 @@ Your company profile can be modified using the fields below. Use the <b>Save</b>
 		</div>
 			<p class="buttons">
 			<? echo ( join("\n",
-						ssi::button( 'SaveBottom', { onclick=>"f1.btnFunction.value='Save';fmChange=3;f1.submit();", text=>'Save' } ),
-						ssi::button( 'ResetBottom', { onclick=>"f1.reset();", text=>'Reset' } ),
+						button( 'SaveBottom', { onclick=>"f1.btnFunction.value='Save';fmChange=3;f1.submit();", text=>'Save' } ),
+						button( 'ResetBottom', { onclick=>"f1.reset();", text=>'Reset' } ),
 						); ) ?>
 			</p>
 	</div><!--CompanyProfile-->

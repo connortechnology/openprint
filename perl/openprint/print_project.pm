@@ -250,7 +250,7 @@ sub try_to_delete_project {
 		$error .= "Project $proj_reference does not belong to you.	Not deleted.<br/>";
 		$delete = 0;
 	} # end if
-	$_ = "SELECT Orders.Index FROM Orders,Order_Contents WHERE Orders.Index=Order_Contents.OrderIndex AND lngProjectIndex=? AND Orders.strStatus != 'Incomplete'";
+	$_ = "SELECT orders.id FROM Orders,Order_Contents WHERE orders.id=Order_Contents.OrderIndex AND lngProjectIndex=? AND Orders.status_id != (SELECT id FROM order_statuses WHERE name ='Incomplete')";
 	( $_ ) = sql::execute( $log, $dbh, $_, $project_index );
 	if ( $_ ) {
 		$error .= "Project $proj_reference is in order <a href=\"/main/order/history_details.html?order_id=$_\">$_</a>.	You must delete the order before you can delete the project.<br/>";

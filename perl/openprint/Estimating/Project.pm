@@ -36,7 +36,7 @@ my @no_outputs = (
 	'TemplateType','PrintingType','FoldType','Dimensions','Turnaround',
 	# Presentation Folders
 	'rdbPanels','rdbPocketSize','chkPocketLeft','chkPocketRight',
-	'txtQuantity1',
+	'txtQuantity1', 'txtPrice1',
 	'chkOverrideScoreQty',
 );
 sub outputs {
