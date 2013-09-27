@@ -311,6 +311,14 @@ function ddm_select_by_text_case_insensitive( ddm, value, defaultValue ) {
 
 function filterDDM( filter, ddm ) {
 	if ( ! filter.value.length ) {
+		if ( ! ddm.defaultSelected ) {
+			for ( var index = 0, len = ddm.options.length; index < len; index += 1 ) {
+				if ( ddm.options[index].defaultSelected ) {
+					ddm.defaultSelected = index;
+					break;
+				} // end if
+			} //e nd for 
+		} // end if 
 		ddm.selectedIndex = ddm.defaultSelected;
 		return;
 	} // end if
