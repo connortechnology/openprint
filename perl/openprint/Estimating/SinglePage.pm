@@ -209,6 +209,9 @@ sub status {
 	} # end if
 	return 'calculated';
 } # end sub status
+
+sub save {
+} # end sub save
         
 1;
 __END__
