@@ -149,6 +149,7 @@ $log->warn("Stock Options @StockOptions");
 	@StockOptions = ( 'Brand','Finish','Colour','Weight' ) if ! @StockOptions;
 
 	foreach my $option ( @StockOptions ) {
+		next if ! $option;
 		my $lc_option = lc $option;
 		my %cache = map { $_->name(), $_ } ('openprint::Stock'.$option)->find() if $option ne 'Size';
 
@@ -169,7 +170,7 @@ $log->warn("Stock Options @StockOptions");
 				</select>
 			</li>
 			`, $option, $$variable{Signature}, 
-			ssi::make_drop_down( \@options, $$variable{'ddmStock'.$option.$$variable{Signature}} ),
+			make_drop_down( \@options, $$variable{'ddmStock'.$option.$$variable{Signature}} ),
 		);
 	} # end foreach option
 	return $html;
