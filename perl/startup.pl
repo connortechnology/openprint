@@ -40,6 +40,10 @@ BEGIN {
 	use JSON::XS ();
 
 	use Carp ();
+	use JavaScript::Minifier::XS ();
+	use CSS::Minifier ();
+	use	Digest::MD5 ();
+	use File::Slurp ();
 
 	#use CGI ();
 	use sql ();
