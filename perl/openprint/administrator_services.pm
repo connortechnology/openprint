@@ -56,7 +56,7 @@ sub edit {
 			my $ac = sql::start_transaction( $dbh );
 			foreach my $Price ( openprint::ServicePrice->find( service_id=>$$Service{id} ) ) {
 				$variable{error} .= $Price->save( {
-						equipment_id	=>	$param{"equipment_id-$$Price{id}"},
+						#equipment_id	=>	$param{"equipment_id-$$Price{id}"},
 						period_start	=>	( Date::Calc::check_date( map { $param{"period_start-$$Price{id}_$_"} } ( 'year','month','day' ) ) ? sprintf('%.4d-%.2d-%.2d 00:00:00', map { $param{"period_start-$$Price{id}_$_"} } ( 'year','month','day' ) ) : undef ),
 						period_end		=>	( Date::Calc::check_date( map { $param{"period_end-$$Price{id}_$_"} } ( 'year','month','day' ) ) ? sprintf('%.4d-%.2d-%.2d 23:59:59', map { $param{"period_end-$$Price{id}_$_"} } ( 'year','month','day' ) ) : undef ),
 						min				=>	$param{"min-$$Price{id}"},
