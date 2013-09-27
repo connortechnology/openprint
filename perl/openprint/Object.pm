@@ -69,7 +69,9 @@ sub new {
 			$self->load( $data );
 		} # end if
 		if ( ! $no_cache ) {
-			if ( $$self{'id'} ) {
+			if ( $id ) {
+				# Using $id instead of $$self{od} means that we cache non existent entries
+			#if ( $$self{'id'} ) {
 				$openprint::Object::cache{$config{'db_name'}}{$parent}{$id} = $self;
 			} # end if
 		} # end if

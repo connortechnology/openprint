@@ -138,6 +138,9 @@ sub copy {
 } # end sub copy
 
 sub Prices {
+	if ( @_ > 1 ) {
+		$_[0]{Prices} = $_[1];
+	} # end if
 	if ( ! $_[0]{Prices} ) {
 		$_[0]{Prices} = [ openprint::PaperPrice->find( paper_id => $_[0]{id} ) ] if $_[0]{id};
 	} # end if
