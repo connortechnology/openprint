@@ -36,7 +36,7 @@ my @no_outputs = (
 	'TemplateType','PrintingType','FoldType','Dimensions','Turnaround',
 	# Presentation Folders
 	'rdbPanels','rdbPocketSize','chkPocketLeft','chkPocketRight',
-	'txtQuantity1', 'txtPrice1',
+	'txtQuantity1',
 	'chkOverrideScoreQty',
 );
 sub outputs {
@@ -44,6 +44,10 @@ sub outputs {
 sub no_outputs {
 	return @no_outputs;
 } # end sub
+
+sub outputs {
+	return ('txtPrice1' );
+}
 
 # creates a new project, first clearing out any previous projects
 sub calc {
@@ -524,20 +528,21 @@ $log->debug("Presentation folder sizes $$specs{'chkPocketLeft'} $$specs{'chkPock
 		$sig_specs = openprint::service::internal_calc( $log, $dbh, $variable, $$Project{'id'}, $sig_id, 'Printing' );
 		@$specs{'txtWidth','txtHeight','chkPocketCenter','alert','Status'} = @$sig_specs{'txtWidth','txtHeight','chkPocketCenter','alert','Status'};
 	} # end if printing (actually looks for txtTotalPageQut
+	openprint::service::internal_calc( $log, $dbh, $variable, $$Project{'id'}, $$services{''}[0], $ProjectType->type() );
 
 
 	if ( ! $$specs{'txtQuantity1'} ) {
 		$$specs{'alert'} .= 'Please enter the quantity.';
-	$log->debug("DROPPING LOCK");
-	sql::end_transaction( $dbh, $ac );
+		$log->debug("DROPPING LOCK");
+		sql::end_transaction( $dbh, $ac );
 		return $$specs{'Status'} = 'uncalculated';
 	} # end if
 
 	if ( $$specs{'Status'} eq 'uncalculated' ) {
 		delete $$specs{'txtPrice1'};
 		$$specs{'alert'} .= 'Problem calculating printing';
-	$log->debug("DROPPING LOCK");
-	sql::end_transaction( $dbh, $ac );
+		$log->debug("DROPPING LOCK");
+		sql::end_transaction( $dbh, $ac );
 		return $$specs{'Status'};
 	} # end if
 
@@ -818,23 +823,30 @@ $log->debug("Presentation folder sizes $$specs{'chkPocketLeft'} $$specs{'chkPock
 		$$specs{'txtHoleQty'} = $$drill_specs{'txtHoleQty'};
 	} # end if
 
-	$services = $Project->services();
 	$$specs{'txtPrice1'} = 0;
 	$$specs{'txtUnitPrice1'} = 0;
 # add up the prices
-	if ( $$specs{'Status'} ne 'uncalculated' ) {
-		foreach my $service_name ( keys %{$services} ) {
-			foreach my $service_index ( @{$$services{$service_name}} ) {
-				my $service_specs = openprint::service::get_specs_ref( $Project, $service_index );
-				$$specs{'txtPrice1'} += $$service_specs{'txtPrice1'};	
-				#$log->debug("Prices for $service_name : $$service_specs{'txtPrice1'}");
-			} # end foreach service_index
-		} # end foreach service_name
-	} else {
-$log->warn("Have uncalculated service: ");
-	} # end if
+	#if ( $$specs{'Status'} ne 'uncalculated' ) {
+	foreach my $service_name ( keys %{$services} ) {
+		foreach my $service_index ( @{$$services{$service_name}} ) {
+			my $service_specs = openprint::service::get_specs_ref( $Project, $service_index );
+			$$specs{'txtPrice1'} += $$service_specs{'txtPrice1'};	
+			if ( $$service_specs{'Status'} eq 'uncalculated' ) {
+				$log->warn("$service_name is uncalculated");
+				$$specs{Status} = 'uncalculated';
+			} else {
+				$log->warn("$service_name is calculated");
+			} # en dif
+			#$log->debug("Prices for $service_name : $$service_specs{'txtPrice1'}");
+		} # end foreach service_index
+	} # end foreach service_name
+	#} else {
+#$log->warn("Have uncalculated service: ");
+	#} # end if
+$log->warn("price: $$specs{'txtPrice1'}");
 	$$specs{'txtPrice1'} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $$specs{'txtPrice1'} );
-	$$specs{'txtUnitPrice1'} = sprintf( '%.2f', $$specs{'txtPrice1'}/$$specs{'txtQuantity1'} );	
+	$$specs{'txtUnitPrice1'} = Math::Round::nearest( 0.01, $$specs{'txtPrice1'}/$$specs{'txtQuantity1'} );	
+$log->warn("unitprice: $$specs{'txtUnitPrice1'}");
 	$Project->price1( $$specs{'txtPrice1'} );
 	$Project->summary(undef);
 	if ( $_ = $Project->save() ) {
@@ -857,20 +869,21 @@ $log->warn("Have uncalculated service: ");
 	$$specs{'ShippingPrice1'} = sprintf( '%.2f', $$specs{'ShippingPrice1'} );
 	$$specs{'ProductionPrice1'} = sprintf( '%.2f', $$specs{'ProductionPrice1'} );
 
-	my %printing_types;
-	foreach my $ss_id ( $Project->signatures() ) {
-		my $sig_specs = openprint::service::get_specs_ref( $Project, $ss_id );
-		$printing_types{$$sig_specs{'PrintingType1'}} = 1;
-	} # end foreach
-	if ( %printing_types ) {
-		$$specs{'alert'} .= 'This quote is for printing on ' . join(',', keys %printing_types ) . ' presses.<br/>';
-	} # end if
 
 	$$specs{'Status'} = $Project->update_status( $variable );
 	if ( $$specs{'Status'} ne 'Unordered' ) {
 		$$specs{'alert'} = 'There was an error in calculations.  Please contact us for help.' if ! $$specs{'alert'};
 		$$specs{'txtPrice1'} = '';
 		$$specs{'txtUnitPrice1'} = '';
+	} else {
+		my %printing_types;
+		foreach my $ss_id ( $Project->signatures() ) {
+			my $sig_specs = openprint::service::get_specs_ref( $Project, $ss_id );
+			$printing_types{$$sig_specs{'PrintingType1'}} = 1;
+		} # end foreach
+		if ( %printing_types ) {
+			$$specs{'alert'} .= 'This quote is for printing on ' . join(',', keys %printing_types ) . ' presses.<br/>';
+		} # end if
 	} # end if
 	delete $$variable{'Redirect'};
 	sql::end_transaction( $dbh, $ac );

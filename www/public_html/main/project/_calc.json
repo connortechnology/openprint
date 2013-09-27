@@ -1,5 +1,5 @@
 <? echo (
-	my $debug = 0;
+	my $debug = 1;
 	my $Project = new openprint::Project( $param{'ProjectIndex'} );
 
 	if ( $param{'action'} eq 'add_service' ) {
@@ -48,6 +48,7 @@
 		@vars = sets::exclude( \@no_outputs, \@vars );
 
 		foreach my $key ( @no_outputs ) {
+$log->debug("Deleting key $key in no_outputs ") if $debug;
 			delete $specs{$key};
 		} # end foreach
 	} # end if
