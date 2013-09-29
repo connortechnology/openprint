@@ -147,13 +147,13 @@ sub calc {
 			$Imposition->load( $sig_specs, $qty_index );
 			$$specs{'hdnBreakdown'.$qty_index} .= $Imposition->to_string().'</br>';
 
-			if ( ( ! sets::isin( 1, $proof_indexes{$signature_index} ) ) and $openprint::config{'Add Default Layout Proof'} eq 'Y' ) {
+			if ( ( ! sets::isin( 1, $proof_indexes{$signature_index} ) ) and $openprint::config{'Add_Default_Layout_Proof'} eq 'Y' ) {
 				push @{$proof_indexes{$signature_index}}, 1;
 			} # end if
-			if ( ( ! sets::isin( 2, $proof_indexes{$signature_index} ) ) and $openprint::config{'Add Default Colour Proof'} eq 'Y' ) {
+			if ( ( ! sets::isin( 2, $proof_indexes{$signature_index} ) ) and $openprint::config{'Add_Default_Colour_Proof'} eq 'Y' ) {
 				push @{$proof_indexes{$signature_index}}, 2;
 			} # end if
-			if ( ( ! sets::isin( 3, $proof_indexes{$signature_index} ) ) and ( ( $openprint::config{'Add Default Press Proof'} eq 'Y' ) or ( $Equipment and $Equipment->specification('Require Press Proof') eq 'Y' ) ) ) {
+			if ( ( ! sets::isin( 3, $proof_indexes{$signature_index} ) ) and ( ( $openprint::config{'Add_Default_Press_Proof'} eq 'Y' ) or ( $Equipment and $Equipment->specification('Require Press Proof') eq 'Y' ) ) ) {
 				push @{$proof_indexes{$signature_index}}, 3;
 			} # end if
 				
@@ -229,13 +229,13 @@ sub signature_calc {
 
 	$$indexes{$signature_index} = [] if ! $$indexes{$signature_index};
 
-	if ( ( ! sets::isin( 1, $$indexes{$signature_index} ) ) and $openprint::config{'Add Default Layout Proof'} eq 'Y' ) {
+	if ( ( ! sets::isin( 1, $$indexes{$signature_index} ) ) and $openprint::config{'Add_Default_Layout_Proof'} eq 'Y' ) {
 		push @{$$indexes{$signature_index}}, 1;
 	} # end if
-	if ( ( ! sets::isin( 2, $$indexes{$signature_index} ) ) and $openprint::config{'Add Default Colour Proof'} eq 'Y' ) {
+	if ( ( ! sets::isin( 2, $$indexes{$signature_index} ) ) and $openprint::config{'Add_Default_Colour_Proof'} eq 'Y' ) {
 		push @{$$indexes{$signature_index}}, 2;
 	} # end if
-	if ( ( ! sets::isin( 3, $$indexes{$signature_index} ) ) and $openprint::config{'Add Default Press Proof'} eq 'Y' ) {
+	if ( ( ! sets::isin( 3, $$indexes{$signature_index} ) ) and $openprint::config{'Add_Default_Press_Proof'} eq 'Y' ) {
 		push @{$$indexes{$signature_index}}, 3;
 	} # end if
 
@@ -503,18 +503,18 @@ $log->error("No imposition in signature $signature_index");
 			my $Equipment = openprint::Equipment->find_one( strid=>$$sig_specs{'ddmPress'.$qty_index} ) if $$sig_specs{'ddmPress'.$qty_index};
 $Imposition->display( "For sig $signature_index");
 
-			if ( ( ! sets::isin( 1, $proof_indexes{$signature_index} ) ) and $openprint::config{'Add Default Layout Proof'} eq 'Y') {
+			if ( ( ! sets::isin( 1, $proof_indexes{$signature_index} ) ) and $openprint::config{'Add_Default_Layout_Proof'} eq 'Y') {
 				push @{$proof_indexes{$signature_index}}, 1;
 				$openprint::log->debug("ADDING Layout Proof to $signature_index") if DEBUG;
 				insert_layout_proof( $sig_specs, 1, $qty_index, $variable, $Imposition );
 			} # end if
-			if ( ( ! sets::isin( 2, $proof_indexes{$signature_index} ) ) and $openprint::config{'Add Default Colour Proof'} eq 'Y') {
+			if ( ( ! sets::isin( 2, $proof_indexes{$signature_index} ) ) and $openprint::config{'Add_Default_Colour_Proof'} eq 'Y') {
 				push @{$proof_indexes{$signature_index}}, 2;
 				$openprint::log->debug("ADDING Colour Proof to $signature_index") if DEBUG;
 				insert_colour_proof( $Project, $sig_specs, 2, $qty_index, $variable );
 			} # end if
 			if ( ! sets::isin( 3, $proof_indexes{$signature_index} ) ) {
-				if ( ( $openprint::config{'Add Default Press Proof'} eq 'Y' ) or ( $Equipment and $Equipment->specification('Require Press Proof') eq 'Y' ) ) {
+				if ( ( $openprint::config{'Add_Default_Press_Proof'} eq 'Y' ) or ( $Equipment and $Equipment->specification('Require Press Proof') eq 'Y' ) ) {
 					push @{$proof_indexes{$signature_index}}, 3;
 					$log->debug("Adding Press Proof");
 					insert_press_proof( $Project, $sig_specs, 3, $qty_index, $variable, $Imposition );
@@ -734,13 +734,13 @@ sub get_next_proof_index {
 
 	my @proof_indexes;
 	my $signature_index = $$sig_specs{'SignatureIndex'};
-	if ( ( ! sets::isin( 1, \@proof_indexes ) ) and $openprint::config{'Add Default Layout Proof'} eq 'Y' ) {
+	if ( ( ! sets::isin( 1, \@proof_indexes ) ) and $openprint::config{'Add_Default_Layout_Proof'} eq 'Y' ) {
 		push @proof_indexes, 1;
 	} # end if
-	if ( ( ! sets::isin( 2, \@proof_indexes ) ) and $openprint::config{'Add Default Colour Proof'} eq 'Y' ) {
+	if ( ( ! sets::isin( 2, \@proof_indexes ) ) and $openprint::config{'Add_Default_Colour_Proof'} eq 'Y' ) {
 		push @proof_indexes, 2;
 	} # end if
-	if ( ( ! sets::isin( 3, \@proof_indexes ) ) and $openprint::config{'Add Default Press Proof'} eq 'Y' ) {
+	if ( ( ! sets::isin( 3, \@proof_indexes ) ) and $openprint::config{'Add_Default_Press_Proof'} eq 'Y' ) {
 		push @proof_indexes, 3;
 	} # end if
 	return sets::max( \@proof_indexes ) + 1;
