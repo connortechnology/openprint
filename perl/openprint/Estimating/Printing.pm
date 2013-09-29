@@ -2980,7 +2980,7 @@ if ( DEBUG ) {
 
 				my $results = plate_cost( $price, \%PlateCounts );
 				$$price{'Total Cost'} += $$results{'Price'};
-				$$price{'Comparison Cost'} += $$price{'sig_count'} * $$results{'Price'};
+				$$price{'Comparison Cost'} += $$results{'Price'};
 			}
 
 			if ( %best_price and ( $best_price{'Comparison Cost'} <= $$price{'Comparison Cost'} ) ) {
@@ -3566,6 +3566,7 @@ sub calc_price {
 
 	my %price;
 	$price{'Imposition'} = $Imposition;
+	$price{'Comparison Cost'} = 0;
 
 	my @colours = ();
 	$price{'WorkTurn Dry Charge'} = 0;
