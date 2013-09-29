@@ -1489,7 +1489,7 @@ $imp->display("Foudn non-dutch");
 			} elsif ( ( $$specs{'OverrideCutOff'.$qty_index} eq 'Y' ) and ( $$A{height} == $$specs{"CutOff$qty_index"} ) ) {
 #$add = 1;
 			} elsif ( $imps{$str} ) {
-				my $APrice = $$imp{PaperPrice} = $A->get_price('service'=>'Material');
+				my $APrice = $$imp{PaperPrice} = $A->get_price('service'=>'Material', weight=> 1);
 $imp->display('Comparing A QTY ' . $$APrice{'100lb Price'} . 'lbs $' . $$imp{'PaperPrice'}{'100lb Price'}) if DEBUG_FILTERING;
 
 				# Can't do any decisions based on absolute price or qty, because we just don't know how much paper we need
@@ -1504,7 +1504,7 @@ $imp->display('Comparing A QTY ' . $$APrice{'100lb Price'} . 'lbs $' . $$imp{'Pa
 					} # end if
 
 					
-					$$I{PaperPrice} = $B->get_price( service=>'Material') if ! $$I{PaperPrice};
+					$$I{PaperPrice} = $B->get_price( service=>'Material', weight=> 1) if ! $$I{PaperPrice};
 					my $BPrice = $$I{PaperPrice};
 $I->display('Comparing B QTY ' . '$' . $$BPrice{'100lb Price'}) if DEBUG_FILTERING;
 if ( ! $$I{PaperPrice} ) {
@@ -2189,9 +2189,9 @@ foreach my $plate_id ( keys %PlateCounts ) {
 			next;
 		} # end if
 
-$openprint::log->debug("before get_impositions: " . ( sprintf('%.4f', tv_interval( [$master_time])*1000) ) .' usecs' );
+#$openprint::log->debug("before get_impositions: " . ( sprintf('%.4f', tv_interval( [$master_time])*1000) ) .' usecs' );
 		my %impositions = get_impositions( $Project, $specs, $project, $qty, $qty_index, \@possible_presses, \@Papers );
-$openprint::log->debug("after get_impositions: " . ( sprintf('%.4f', tv_interval( [$master_time])*1000) ) .' usecs' );
+#$openprint::log->debug("after get_impositions: " . ( sprintf('%.4f', tv_interval( [$master_time])*1000) ) .' usecs' );
 
 		if ( ! values %impositions ) {
 			$$specs{'alert'} .= 'There were no possible impositions for your specifications.<br/>';
@@ -2283,13 +2283,18 @@ $openprint::log->debug("after get_impositions: " . ( sprintf('%.4f', tv_interval
 		my $Paper = $Imposition->Paper();
 		my $Press = $Imposition->Press();
 
-		#$$specs{'hdnBreakdown'.$qty_index} = breakdown( $b_price, $specs );
-		$$specs{'hdnBreakdown'.$qty_index} = $$best_price{'Breakdown'};
-#$log->debug($$specs{'hdnBreakdown'.$qty_index});
+		$$specs{'hdnBreakdown'.$qty_index} = breakdown( $best_price, $specs );
+		shift @{$$best_price{Impositions}};
+
+		$log->debug("Impositions in best price " . @{ $$best_price{'Impositions'} } );
+		foreach my $I ( @{ $$best_price{'Impositions'} } ) {
+			my $price = shift @{$$best_price{prices}};
+			$$specs{'hdnBreakdown'.$qty_index} .= breakdown( $price, $$I{specs} );
+		} # end foreach
 
 		$Imposition->save( $specs, $qty_index );
 		@{$$specs{'Additional Impositions'.$qty_index}} = @{$$best_price{'Impositions'}};
-if ( 0 ) {
+if ( 1 ) {
 					if ( $$best_price{'Impositions'} ) {
 					foreach my $I ( reverse @{ $$best_price{'Impositions'} } ) {
 					$I->display( "Results: $qty_index " );
@@ -2297,14 +2302,7 @@ if ( 0 ) {
 					} 
 }
 		# Pop off the first one, because it's ours
-		shift @{$$specs{'Additional Impositions'.$qty_index}};
-if ( 0 ) {
-					if ( $$best_price{'Impositions'} ) {
-					foreach my $I ( reverse @{ $$best_price{'Impositions'} } ) {
-					$I->display( "Results: $qty_index " );
-					} # end while
-					} 
-}
+		#shift @{$$specs{'Additional Impositions'.$qty_index}};
 
 		$$specs{'ddmBleedSize'.$qty_index} = $$Imposition{'bleed_size'};
 		$$specs{'ddmPress'.$qty_index} = $$Press{'strid'};
@@ -2426,6 +2424,10 @@ sub breakdown {
 
 	if ( ! $$price{'Imposition'} ) {
 		$openprint::log->debug("No imposition in breakdown Price:$price imposition:$$price{Imposition}");
+		foreach my $k ( keys %{$price} ) {
+			$openprint::log->debug("$k => $$price{$k}");
+		} # end foreach
+		return '';
 	} # end if
 
 	my $Imposition = $$price{'Imposition'};
@@ -2516,6 +2518,7 @@ sub calculate_impositions {
 			$$project{'txtSpreadSize'} = 4;
 		} # end if
 		$SpreadLayout = ( $$sig_specs{'chkOverridePageQuantity'.$qty_index} eq 'Y' ? $$sig_specs{'PageQuantity'.$qty_index} : $$sig_specs{'txtUnspecifiedPageQuantity'.$qty_index} ) / $$project{'txtSpreadSize'};
+$log->debug("Calcing SpreadLayout as $$sig_specs{'txtUnspecifiedPageQuantity'.$qty_index} ) / $$project{'txtSpreadSize'} = $SpreadLayout");
 	} # end if
 	my $cache_string = join('-', $qty_index, $$Press{id}, $SpreadLayout, @$sig_specs{'PreviousStockType', 'PreviousGrainDirection'} );
 	if ( ! $Press ) {
@@ -2834,7 +2837,7 @@ $imp->display("Comparing mino weight:" . $Paper->minimum_order_weight() . 'Price
 		$openprint::log->debug("Impositions for Press: " . $$Press{'strid'} . ' after folding:' . @impositions) if DEBUG;
 	} # end if Folding
 
-	if ( DEBUG or DEBUG_FILTERING or 1 ) {
+	if ( DEBUG or DEBUG_FILTERING ) {
 
 		$openprint::log->debug($qty_index.'UPQ:'.$$sig_specs{'txtUnspecifiedPageQuantity'.$qty_index} . " Press: " .$$Press{'strid'} . ' # ' . @impositions );
 		foreach my $imp ( @impositions ) {
@@ -2923,9 +2926,11 @@ sub get_project_price {
 		my $time = gettimeofday() if DEBUG;
 		$$sig_specs{'txtUnspecifiedPageQuantity'.$qty_index} = $txtUnspecifiedPageQuantity;
 		my @Is = sort { $$a{pages} <=> $$b{pages} } calculate_impositions( $Project, $Press, $sig_specs, $qty_index, $qty, $PaperCounts, $versions, $project, $impositions );
+if ( DEBUG ) {
 		foreach my $I ( @Is ) {
 			$I->display( "Before calculation:" . @Is );
 		} # end while
+}
 #$openprint::log->debug("calculated_impositions: $$Press{strid} " . ( sprintf('%.4f', tv_interval( [$time])*1000) ) .' usecs' );
 		foreach my $imp ( @Is ) {
 			$$sig_specs{'ddmRunStyle'.$qty_index} = $$imp{'runstyle'};
@@ -2960,7 +2965,7 @@ sub get_project_price {
 			} # end if
 
 # This makes a really nice circular reference, which we really shouldn't do.
-			$$imp{price} = $price;
+			#$$imp{price} = $price;
 			$$price{Imposition} = $imp;
 # Establish a local copy
 
@@ -2998,8 +3003,7 @@ sub get_project_price {
 			$$price{'sig_count'} = 1;
 
 # This price hash only contains the calculating imps.  Non-group imps are in other_impositions
-			@{$$price{'Impositions'}} = ();
-			push @{$$price{'Impositions'}}, $imp;
+			$$price{Impositions} = [ $imp ];
 			push @total_impositions, $imp;
 
 			if ( $$service_specs{"UnspecifiedVersions$qty_index"} > $$imp{versions} ) {
@@ -3024,7 +3028,7 @@ sub get_project_price {
 					my $results = plate_cost( $sig_price, \%PlateCounts );
 					$$sig_price{Imposition} = $newimp;
 					push @total_impositions, $newimp;
-					push @{$$price{'Impositions'}}, $newimp;
+					push @{$$price{Impositions}}, $newimp;
 					$versions -= $$newimp{versions};
 					push @{$$price{prices}}, $sig_price;
 					if ( ! $$imp{versions} ) {
@@ -3129,35 +3133,37 @@ sub get_project_price {
 						$imp->display('Recursion Depth :' . $recursion_depth ) if DEBUG;
 						$$sig_price{'complete'} = 0;
 					} else {
+						my $price_cache_key = join(',', $qty_index, $$Press{strid}, $upq, $$imp{runstyle} );
+
+						if ( ! $price_cache{$price_cache_key} ) {
+							$price_cache{$price_cache_key} = 
+									get_project_price( $Project, $$new_specs{'ServiceIndex'}, $project, $service_specs, $new_specs, $qty, $qty_index, $possible_presses, $printing_specs, $versions, \%PlateCounts, \%PaperCounts, \%washed_colours, \%previous_forms_cache, \@signatures, $impositions, $other_impositions, undef, $recursion_depth + 1 );
+						} # end if
+						$sig_price = $price_cache{$price_cache_key};
+							
 						# Check to see if we actually should bother recursing
-						if ( %best_price and ( $best_price{'Comparison Cost'} < $$price{'Comparison Cost'} ) ) {
-							if ( DEBUG_PRICE_DECISIONS or 1 ) {
-								if ( $best_price{'Imposition'} ) {
-									$best_price{'Imposition'}->display("No point in recursing: $best_price{'Comparison Cost'} <= $$price{'Comparison Cost'}");
-								} else {
+						#if ( %best_price and ( $best_price{'Comparison Cost'} < $$price{'Comparison Cost'} ) ) {
+							#if ( DEBUG_PRICE_DECISIONS or 1 ) {
+								#if ( $best_price{'Imposition'} ) {
+									#$best_price{'Imposition'}->display("No point in recursing: $best_price{'Comparison Cost'} <= $$price{'Comparison Cost'}");
+								#} else {
 	#$openprint::log->debug("recursing with no best price ");
-									$sig_price = get_project_price( $Project, $$new_specs{'ServiceIndex'}, $project, $service_specs, $new_specs, $qty, $qty_index, $possible_presses, $printing_specs, $versions, \%PlateCounts, \%PaperCounts, \%washed_colours, \%previous_forms_cache, \@signatures, $impositions, $other_impositions, undef, $recursion_depth + 1 );
-								} # end if
-							} # end if cache
-						} # end if too deep
+								#} # end if
+							#} # end if cache
+						#} # end if too deep
 
 	# get_project_price is recursive so we are done
-						if ( ( ! $$sig_price{'complete'} ) or ( ! $$sig_price{'Imposition'} ) ) {
+						if ( ( ! $$sig_price{'complete'} ) or ( ! $$sig_price{Imposition} ) ) {
 	#$openprint::log->debug("Unable to calculate additional signatures Complete: $$sig_price{complete}, pages: " . $$imp{'pages'} . ' of ' . $upq );
 							$$price{'complete'} = $$sig_price{'complete'} = 0;
 							$$price{'Comparison Cost'} += 10000000;
 							$$price{'Breakdown'} .= 'Unable to calculate additional signatures.<br/>';
-						} else {
-							push @{$$price{prices}}, $sig_price;
-							push @{$$price{prices}}, @{$$sig_price{prices}} if $$sig_price{prices};
-							push @{$$price{'Impositions'}}, @{$$sig_price{'Impositions'}} if $$sig_price{'Impositions'};
-							push @total_impositions, @{$$sig_price{'Impositions'}} if $$sig_price{'Impositions'};
 						} # end if cache
 					} # end if too deep
 
 # get_project_price is recursive so we are done
 					if ( ( ! $$sig_price{'complete'} ) or ( ! $$sig_price{'Imposition'} ) ) {
-#$openprint::log->debug("Unable to calculate additional signatures Complete: $$sig_price{complete}, pages: " . $$imp{'pages'} . ' of ' . $upq );
+$openprint::log->debug("Unable to calculate additional signatures Complete: $$sig_price{complete}, pages: " . $$imp{'pages'} . ' of ' . $upq . 'Spread size:' . $$service_specs{txtSpreadSize} ) if DEBUG;
 						$$price{'complete'} = $$sig_price{'complete'} = 0;
 						$$price{'Comparison Cost'} += 10000000;
 						$$price{'Breakdown'} .= 'Unable to calculate additional signatures.<br/>';
@@ -3166,6 +3172,11 @@ sub get_project_price {
 							push @{$$price{'Impositions'}}, @{$$sig_price{'Impositions'}};
 							push @total_impositions, @{$$sig_price{'Impositions'}};
 						} # end if
+							push @{$$price{prices}}, $sig_price;
+							if ( $$sig_price{prices} ) {
+$log->debug("Adding secondardy prices as well");
+								push @{$$price{prices}}, @{$$sig_price{prices}};
+							} # end if
 
 						# Don't add stock weight because we likely have a different stock anyways.
 						$PaperCounts{$$sig_price{'Imposition'}->Paper()->id_string()} += $$sig_price{'Stock Qty'};
@@ -3205,7 +3216,7 @@ sub get_project_price {
 # Let's try at the tail.
 
 #if ( $txtUnspecifiedPageQuantity - $$imp{pages} ) ) {
-	$log->debug("$recursion_depth : At tail? $txtUnspecifiedPageQuantity - ( $$price{'sig_count'} * $$imp{pages} ) " . ( $txtUnspecifiedPageQuantity - ( $$price{'sig_count'} * $$imp{pages} ) ) );
+	#$log->debug("$recursion_depth : At tail? $txtUnspecifiedPageQuantity - ( $$price{'sig_count'} * $$imp{pages} ) " . ( $txtUnspecifiedPageQuantity - ( $$price{'sig_count'} * $$imp{pages} ) ) );
 	if ( (!$txtUnspecifiedPageQuantity) or ( $txtUnspecifiedPageQuantity - ( $$price{'sig_count'} * $$imp{pages} ) == 0 ) ) {
 
 		if ( $recursion_depth ) {
@@ -3460,21 +3471,21 @@ if ( DEBUG_PRICE_DECISIONS  ) {
 				
 				#if ( ! $recursion_depth ) {
 				
-				$openprint::log->debug( breakdown( \%best_price, $sig_specs ) );
-				if ( $best_price{Impositions} ) {
-					$best_price{'AdditionalSignature Breakdown'} = '';
-					my @impositions = @{$best_price{Impositions} };
-					shift @impositions;
-					if ( @impositions ) {
-						my @prices = @{$best_price{prices}};
-						foreach my $I ( @impositions ) {
-							$best_price{'AdditionalSignature Breakdown'} .= sprintf( '<br/><b>Additional Signature %dpages %dout %s on %sx%s on %s</b><br/>', @$I{'pages', 'imposition', 'runstyle'}, $I->Paper()->width(), $I->Paper()->height(), $I->Press()->strid() );
-							my $price = shift @prices;
-							$best_price{'AdditionalSignature Breakdown'} .= breakdown( $price, $$I{specs} );
-						} # end foreach
-					} # end if @impositions
-				} # end if
-				$best_price{'Breakdown'} = breakdown( \%best_price, $sig_specs );
+				#$openprint::log->debug( breakdown( \%best_price, $sig_specs ) );
+				#if ( $best_price{Impositions} ) {
+					#$best_price{'AdditionalSignature Breakdown'} = '';
+					#my @impositions = @{$best_price{Impositions} };
+					#shift @impositions;
+					#if ( @impositions ) {
+						#my @prices = @{$best_price{prices}};
+						#foreach my $I ( @impositions ) {
+							#$best_price{'AdditionalSignature Breakdown'} .= sprintf( '<br/><b>Additional Signature %dpages %dout %s on %sx%s on %s</b><br/>', @$I{'pages', 'imposition', 'runstyle'}, $I->Paper()->width(), $I->Paper()->height(), $I->Press()->strid() );
+							#my $price = shift @prices;
+							##$best_price{'AdditionalSignature Breakdown'} .= breakdown( $price, $$I{specs} );
+						#} # end foreach
+					#} # end if @impositions
+				#} # end if
+				#$best_price{'Breakdown'} = breakdown( \%best_price, $sig_specs );
 				#} # end if
 				if ( DEBUG_PRICE_DECISIONS ) {
 					foreach my $I ( @{ $best_price{'Impositions'} } ) {
@@ -3591,6 +3602,9 @@ sub calc_price {
 	if ( $$specs{"UnspecifiedVersions$qty_index"} >= 1 ) {
 		if ( ( defined $$specs{"OverrideVersions$qty_index"} ) and ( $$specs{"OverrideVersions$qty_index"} eq 'Y' ) ) {
 			if ( $$specs{"Versions$qty_index"} > $imposition ) {
+if ( DEBUG ) {
+$log->debug("Incomplete due to required versions more than imposition when overriden.");
+}
 				$price{complete} = 0;
 				return;
 			} # end if
@@ -4040,7 +4054,7 @@ if ( 0 ) {
 				$openprint::log->error($C->to_string() );
 			} # end foreach C
 		} elsif ( DEBUG ) {
-			$openprint::log->debug("Got INK: " . $Ink->to_string() );
+			#$openprint::log->debug("Got INK: " . $Ink->to_string() );
 		} # end if
 
 # Washed_colours contains each colour used in the other signatures
