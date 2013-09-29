@@ -219,6 +219,7 @@ sub continue_project {
 			my $Project = new openprint::Project( $project_index );
 			foreach my $qty_index ( $Project->quantity_indexes() ) {
 				if ( $_ = openprint::Estimating::MultiPage::status( $project_index, undef, $qty_index ) ) {
+					$log->debug("Multipage status says we need another sig of type $_");
 					my @sigs = $Project->signatures({'Group'=>$_});
 					my $src_id = pop @sigs;
 					my $src_specs = openprint::service::get_specs_ref( $Project, $src_id );
