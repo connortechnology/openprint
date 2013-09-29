@@ -38,7 +38,7 @@ if ( $BrochureType ) {
         $_ = $PT->save({'type'=>'8 Page Fold'});
         $log->error($_) if $_;
     }
-    sql::update( undef, undef, 'tbl_service_specifications', [ 'name=?', '8PageSignatureFold' ], 'value', '8 Page Fold' );
+    sql::update( undef, undef, 'tbl_service_specifications', [ 'strname=?', '8PageSignatureFold' ], 'strvalue', '8 Page Fold' );
 
     my %templates = (
         'NoFold' => 'No Fold',
@@ -47,6 +47,7 @@ if ( $BrochureType ) {
         '3PanelZFold' => '3 Panel Z Fold',
         '4PanelFold' => '4 Panel Fold',
         '4PanelZFold' => '4 Panel Z Fold',
+		'4PanelRollFold' => '4 Panel Roll Fold',
         '5PanelFold' => '5 Panel Fold',
         '5PanelZFold' => '5 Panel Z Fold',
         '6PanelFold' => '6 Panel Fold',

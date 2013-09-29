@@ -2289,8 +2289,14 @@ foreach my $plate_id ( keys %PlateCounts ) {
 		$log->debug("Impositions in best price " . @{ $$best_price{'Impositions'} } );
 		foreach my $I ( @{ $$best_price{'Impositions'} } ) {
 			my $price = shift @{$$best_price{prices}};
+			$$specs{'hdnBreakdown'.$qty_index} .= sprintf( '<br/><b>Additional Signature %dpages %dout %s on %sx%s on %s</b><br/>', @$I{'pages', 'imposition', 'runstyle'}, $I->Paper()->width(), $I->Paper()->height(), $I->Press()->strid() );
 			$$specs{'hdnBreakdown'.$qty_index} .= breakdown( $price, $$I{specs} );
 		} # end foreach
+	$$specs{'hdnBreakdown'.$qty_index} .= $$best_price{'Stitching Breakdown'};
+	$$specs{'hdnBreakdown'.$qty_index} .= $$best_price{'SpinePaste Breakdown'};
+	$$specs{'hdnBreakdown'.$qty_index} .= $$best_price{'PerfectBound Breakdown'};
+	$$specs{'hdnBreakdown'.$qty_index} .= $$best_price{'Paper Breakdown'};
+	$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Comparison Cost: %.2f<br/>', $$best_price{'Comparison Cost'}) if $$best_price{'Comparison Cost'} ne '';
 
 		$Imposition->save( $specs, $qty_index );
 		@{$$specs{'Additional Impositions'.$qty_index}} = @{$$best_price{'Impositions'}};
@@ -2493,13 +2499,7 @@ sub breakdown {
 	$breakdown .= $$price{'DieCutting Breakdown'} if $$price{'DieCutting Breakdown'};
 	$breakdown .= $$price{'Folding Breakdown'};
 	$breakdown .= $$price{'Perforating Breakdown'} if $$price{'Perforating Breakdown'};
-	$breakdown .= $$price{'AdditionalSignature Breakdown'} if $$price{'AdditionalSignature Breakdown'};
 
-	$breakdown .= $$price{'Stitching Breakdown'};
-	$breakdown .= $$price{'SpinePaste Breakdown'};
-	$breakdown .= $$price{'PerfectBound Breakdown'};
-	$breakdown .= $$price{'Paper Breakdown'};
-	$breakdown .= sprintf('Comparison Cost: %.2f<br/>', $$price{'Comparison Cost'}) if $$price{'Comparison Cost'} ne '';
 	return $breakdown;
 } # end sub breakdown
 
@@ -3019,6 +3019,7 @@ if ( DEBUG ) {
 					$$newimp{specs} = $new_specs;
 
 					my $sig_price = calc_price( $Project, $$new_specs{ServiceIndex}, $newimp, $project, $services, $new_specs, $qty, $qty_index, \%PlateCounts, \%washed_colours, \@total_impositions );
+					#my $sig_price = get_project_price( $Project, $$new_specs{'ServiceIndex'}, $project, $service_specs, $new_specs, $qty, $qty_index, $possible_presses, $printing_specs, $versions, \%PlateCounts, \%PaperCounts, \%washed_colours, \%previous_forms_cache, \@signatures, $impositions, $other_impositions, undef, $recursion_depth + 1 );
 
 					$PaperCounts{$Paper->id_string()} += $$sig_price{'Stock Qty'};
 					$PlateCounts{$$sig_price{'Plate Costs'}{'Plate ID'}} += $$sig_price{'Plate Costs'}{'Plate Count'};
