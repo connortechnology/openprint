@@ -32,20 +32,39 @@ my $company_id = 1;
 
 $dbh = sql::open_sql( $log, %sql_server );
 
-my $ServiceType = openprint::ServiceType->find_one('name'=>'Signature');
+my $BrochureType = openprint::ProjectType->find_one('name'=>'Brochures');
+if ( $BrochureType ) {
+    foreach my $PT ( openprint::ProjectType_Template->find( 'projecttype_id'=>$BrochureType->id(), 'type'=>'8PageSignatureFold') ) {
+        $_ = $PT->save({'type'=>'8 Page Fold'});
+        $log->error($_) if $_;
+    }
+    sql::update( undef, undef, 'tbl_service_specifications', [ 'name=?', '8PageSignatureFold' ], 'value', '8 Page Fold' );
 
-foreach my $PTD ( openprint::ProjectType_Default->find( name=> ['BleedBottom','BleedTop','BleedLeft','BleedRight','rdbColourBar','dutch1','dutch2','dutch3','txtCropMarkSpace'] ) ) {
-    if ( openprint::ServiceType_Default->find_one( name=>$PTD->name(), projecttype_id=>$PTD->projecttype_id() ) ) {
-		$PTD->delete();
-		next;
-    } elsif ( openprint::ServiceType_Default->find_one( name=>$PTD->name(), projecttype_id=>undef ) ) {
-		$PTD->delete();
-		next;
-	} else {
-    my $STD = new openprint::ServiceType_Default();
-    $STD->save({ servicetype_id=>$ServiceType->id(), name=>$PTD->name(), projecttype_id=>$PTD->projecttype_id(), value => $PTD->value() });
-	$PTD->delete();
-	} # end if
+    my %templates = (
+        'NoFold' => 'No Fold',
+        '2PanelFold' => '2 Panel Fold',
+        '3PanelFold' => '3 Panel Fold',
+        '3PanelZFold' => '3 Panel Z Fold',
+        '4PanelFold' => '4 Panel Fold',
+        '4PanelZFold' => '4 Panel Z Fold',
+        '5PanelFold' => '5 Panel Fold',
+        '5PanelZFold' => '5 Panel Z Fold',
+        '6PanelFold' => '6 Panel Fold',
+        '6PanelZFold' => '6 Panel Z Fold',
+        '8PageFold' => '8 Page Fold',
+        '12pg3PanelRollFold' => '12pg 3 Panel Roll',
+        '12pg3PanelZFold' => '12pg 3 Panel Z',
+        'DoubleGateFold' => 'Double Gate Fold',
+        'SingleGateFold' => 'Single Gate Fold',
+        'AdditionalFoldTypes'   =>  'Additional Fold Types',
+    );
+    foreach my $key ( keys %templates ) {
+        sql::update( $log, undef, 'projecttemplate', [ 'type=?', $key ], 'name', $templates{$key} );
+    }
+
+} else {
+    $log->error("No Brochures");
+    die;
 }
 
 $dbh->disconnect();
