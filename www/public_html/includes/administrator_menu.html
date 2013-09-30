@@ -17,7 +17,12 @@
 			<li><a href="/administrator/stock/filters.html;SSL">Filters</a></li>
 		</ul>
 	</li>
-	<li id="ManagerialMenu"><a href="#" onclick="$('ManagerialMenu').toggleClassName('on');">Managerial</a>
+	<li id="ManagerialMenu"
+<? if ( $$variable{uri} =~ /managerial/ or $$variable{uri} =~ /article/ ) ?>
+class="on"
+<? endif ( $$variable{uri} =~ /managerial/ or $$variable{uri} =~ /article/ ) ?>
+><a href="#" 
+onclick="$('ManagerialMenu').toggleClassName('on');">Managerial</a>
 		<ul>
 			<li><a href="/administrator/managerial/company_profiles.html;SSL">Company Profiles</a></li>
 			<li><a href="/administrator/managerial/user_profiles.html;SSL">User Profiles</a></li>
