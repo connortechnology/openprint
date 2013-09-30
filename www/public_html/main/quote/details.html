@@ -180,16 +180,14 @@
 			</tr>
 		</table>
 		<? endif ( new openprint::Company($session{'company_id'})->reseller() eq 'Y' or sets::isin( $session{'user_type'}, [ 'A', 'E' ] ) ) ?>
-		<div class="row">
-			<span style="float: right;">
+		<p class="buttons">
 				<? echo ( 
 					my $html;
-					$html .= ssi::writeButton( $log, $dbh, 'AddFromHistory','add_project_from_history.gif','','/main/project/history.html','Add Project From History' ) if $session{'user_id'};
-					$html .= ssi::writeButton( $log, $dbh, 'CreateNewProject','add_new_project.gif','','/main/project/create_edit.html','Add New Project' );
-					$html .= ssi::writeButton( $log, $dbh, 'Continue','continue.gif','f1.submit();','','Continue' );
+					$html .= button( 'AddFromHistory', { href=>'/main/project/history.html', text=>'Add Project From History' } ) if $session{'user_id'};
+					$html .= button( 'CreateNewProject', { href=>'/main/project/create_edit.html',text=>'Add New Project' } );
+					$html .= button( 'Continue', { onclick=>'f1.submit();', text=>'Continue' } );
 					) ?>
-			</span>
-		</div>
+		</p>
 	</form>
 	<? endif ( @{$$variable{'PROJECTS'}} == 0 ) ?>
 <? endif ( ! $$variable{'Quote'}->id() ) ?>

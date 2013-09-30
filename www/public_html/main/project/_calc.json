@@ -44,10 +44,11 @@
 	} # end if
 	if ( my $function = $module->can( 'no_outputs' ) ) {
 		my @no_outputs = sort $function->( @param{'ProjectIndex','ServiceIndex'}, \%specs );
-		$log->error("$module ::no_outputs: @no_outputs)") if $debug;
+		$log->debug("$module ::no_outputs: @no_outputs)") if $debug;
 		@vars = sets::exclude( \@no_outputs, \@vars );
 
 		foreach my $key ( @no_outputs ) {
+$log->debug("Deleting key $key in no_outputs ") if $debug;
 			delete $specs{$key};
 		} # end foreach
 	} # end if

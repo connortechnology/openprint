@@ -7,7 +7,7 @@
 	# if project_id or docket are specified, then destdir will contain them as well.  
 	require handlers::upload;
 
-	my $destdir = handlers::upload::get_destdir();
+	my $destdir = $$variable{destdir} = handlers::upload::get_destdir();
 	my $path = $param{'path'};
 	if ( $path ) {
 		$path =~ s/\.\.+//g;
@@ -63,10 +63,12 @@ if ( 0 ) {
 	my ( @files, @dirs );
 	foreach my $file ( @filenames ) {
 		next if substr($file,0,1) eq '.';
-		if ( -d "$config{'ProjectFilesPath'}$destdir/$file" ) {
+		if ( -d "$config{'ProjectFilesPath'}$destdir/$path/$file" ) {
 			push @dirs, $file;
-		} else {
+		} elsif ( -f "$config{'ProjectFilesPath'}$destdir/$path/$file" ) {
 			push @files, $file;
+		} else {
+$log->error("Unknown file type $config{'ProjectFilesPath'}$destdir/$path/$file");
 		} # end if
 	} # end foreach file
 
@@ -74,23 +76,23 @@ if ( 0 ) {
 	foreach my $file ( sort { $b <=> $a } @dirs ) {
 		if ( $file =~ /\D/ ) {
 			# A dir, but not a docket
-			push @{$$variable{'PROJECT_FILES'}}, "/upload/upload_center.html?docket=$file", $file, '', "";
+			push @{$$variable{'PROJECT_FILES'}}, $path, $file, '', "", undef;
 		} else {
 			if ( openprint::Order->find_one(company_id=>$session{company_id}, docket=>$file ) ) {
-				push @{$$variable{'PROJECT_FILES'}}, "/upload/upload_center.html?docket=$file", $file, '', "Files for docket $file";
+				push @{$$variable{'PROJECT_FILES'}}, $path, $file, undef, "Files for docket $file", undef;
 			} else {
-				push @{$$variable{'PROJECT_FILES'}}, "/upload/upload_center.html?docket=$file", $file, '', "";
+				push @{$$variable{'PROJECT_FILES'}}, $path, $file, undef, undef, undef;
 			} # end if
 		} # end if
 
 	} # end foreach dir
 
 	foreach my $file ( sort { $b cmp $a } @files ) {
-		my ($dev,$ino,$mode,$nlink,$uid,$gid,$rdev, $size, $atime,$mtime,$ctime,$blksize,$blocks) = stat("$config{'ProjectFilesPath'}/$destdir/$file");
+		my ($dev,$ino,$mode,$nlink,$uid,$gid,$rdev, $size, $atime,$mtime,$ctime,$blksize,$blocks) = stat("$config{'ProjectFilesPath'}/$destdir/$path/$file");
 		my $description;
 		$description = $ProjectFiles{$destdir.$path.$file} ? $ProjectFiles{$destdir.$path.$file}->description() : '';
 		$description = 'No description given' if ! $description;
-		push @{$$variable{'PROJECT_FILES'}}, $file, $size, $description, $mtime;
+		push @{$$variable{'PROJECT_FILES'}}, $path, $file, $size, $description, $mtime;
 	} # end foreach
 ) ?>
 <?include( '/includes/error_reporting.html')?>
@@ -113,23 +115,25 @@ if ( 0 ) {
 				my $html;
 				my $rowclass;
 
-				while ( @$variable{'filename','size', 'description','mtime'} = splice @{$$variable{'PROJECT_FILES'}},0,4 ) {
+				while ( my ( $path, $filename,$size, $description,$mtime ) = splice @{$$variable{'PROJECT_FILES'}},0,5 ) {
 					$html .= "<tr$rowclass>\n";
-					if ( $$variable{'filename'} eq '..' ) {
-						$html .= '<tr><td colspan="4"><a href="/upload/upload_center.html?path='.$variable{'path'}.'&amp;filename=.."><img src="/images/parent-folder.gif" alt="Parent Folder" />..</a></td></tr>';
+					if ( $filename eq '..' ) {
+						$html .= '<tr><td colspan="4"><a href="/upload/upload_center.html?path='.$path.'&amp;filename=.."><img src="/images/parent-folder.gif" alt="Parent Folder" />..</a></td></tr>';
 
-					} elsif ( $$variable{size} ) {
+					} elsif ( $size ) {
 						$html .= sprintf(q`
-						<td><a href="/getfile.html?path=%1$s&amp;filename=%2$s" title="%3$s" target="SendFileFrame">%2$s</a><br/>%3$s</td>
+						<td><a href="/project_files/%6$s%1$s/%2$s" title="%3$s">%2$s</a><br/>%3$s</td>
 						<td class="size">%4$s</td>
 						<td class="mtime">%5$s</td>
 						<td class="checkbox"><input type="checkbox" id="chkFiles%3$s" name="chkFiles" value="%2$s"/></td>`,
-							@$variable{'path','filename','description'},
-							Number::Format::format_bytes( $$variable{size} ),
-							Date::Format::time2str( $config{'DateTimeFormat'}, $$variable{'mtime'} )
+							$path,$filename,$description,
+							Number::Format::format_bytes( $size ),
+							Date::Format::time2str( $config{DateTimeFormat}, $mtime ),
+							$$variable{destdir},	
 							);
 					} else {
-						$html .= sprintf(q`<td colspan="4"><a href="/upload/upload_center.html?path=%1$s&amp;filename=%2$s" title="%3$s"><img src="/images/folder.gif" alt="Folder" />%2$s</a><br/>%3$s</td>`, @$variable{'path','filename','description','size'} );
+						# A dir
+						$html .= sprintf(q`<td colspan="4"><a href="/upload/upload_center.html?path=%1$s/%2$s" title="%3$s"><img src="/images/folder.gif" alt="Folder" />%2$s</a><br/>%3$s</td>`, $path,$filename,$description,$size );
 					} # end if
 
 					$html .= '</tr>';

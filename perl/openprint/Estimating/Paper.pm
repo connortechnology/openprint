@@ -25,7 +25,7 @@ require openprint::service;
 require openprint::Currency;
 require openprint::Estimating::Printing;
 
-my $debug = 0;
+my $debug = 1;
 
 my @variables = (
         'txtPrice1', 'txtPrice2', 'txtPrice3',

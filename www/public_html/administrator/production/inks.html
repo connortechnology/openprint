@@ -22,22 +22,28 @@
 				<select id="grade" name="grade" size="1" onchange="load_results();">
 				<? echo (
 						my @options = ( '', 'select one',1,'Gloss-coated',2,'Matte-coated',3,'Gloss-coated, web', 4, 'Uncoated, white', 5, 'Uncoated, yellow' );
-						return ssi::make_drop_down( \@options, $session{'/administrator/production/inks.html'} );
+						return make_drop_down( \@options, $session{'/administrator/production/inks.html'} );
 						) ?>
 				</select>
 			</li>
 		</ul>
+		<p class="buttons">
+			<? echo ( join('',
+				button( 'DeleteBottom', { onclick=>"f1.btnFunction.value='Delete';f1.submit();", text=>'Delete Checked' } ),
+				button( 'NewBottom', { href=>'ink.html', text=>'Add New' } ),
+				); ) ?>
+		</p>
 		</div>
 	</fieldset>
 </form>
 <form id="f1" name="f1" method="post" action="inks.html" enctype="multipart/form-data">
 	<fieldset>
-		<div id="Results"><? echo ( include('_inks.html'); ) ?>
+		<div id="Results"><?include('_inks.html')?>
 		</div>
 		<p class="buttons">
 			<? echo ( join('',
-				ssi::button( 'Delete', { onclick=>"f1.btnFunction.value='Delete';f1.submit();", text=>'Delete Checked' } ),
-				ssi::button( 'New', { href=>'ink.html' } ),
+				button( 'DeleteBottom', { onclick=>"f1.btnFunction.value='Delete';f1.submit();", text=>'Delete Checked' } ),
+				button( 'NewBottom', { href=>'ink.html', text=>'Add New' } ),
 				); ) ?>
 		</p>
 	</fieldset>
@@ -63,10 +69,10 @@
 			<input type="file" name="fileColour"/>
 		</p>
 		<p class="buttons">
-			<script type="text/javascript">
-				writeButton('Import','import.gif',"f1.action='inks.html';f1.btnFunction.value='Import Colours';f1.submit();", '', 'Import' );
-				writeButton('Export','export.gif',"f1.action='inks.html?Download';f1.btnFunction.value='Export Colours';f1.submit();", '', 'Export' );
-			</script>
+			<? echo ( join('',
+				button('Import', { onclick=>"f1.action='inks.html';f1.btnFunction.value='Import Colours';f1.submit();", text=> 'Import' } ),
+				button('Export', { onclick=>"f1.action='inks.html?Download';f1.btnFunction.value='Export Colours';f1.submit();", text=> 'Export' } ),
+			); ) ?>
 		</p>
 	</fieldset>
 	<input type="hidden" name="btnFunction"/>

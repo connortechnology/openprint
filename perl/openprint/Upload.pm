@@ -11,22 +11,22 @@ $debug = 0;
 $table = 'uploads';
 $serial = 'uploads_id_seq';
 %fields = (
-	'id'			=>	'id',
-	'start'			=>	'start',
-	'size'			=>	'size',
-	'total'			=>	'total',
-	'finished'		=>	'finished',
-	'company_id'	=>	'company_id',
-	'user_id'		=>	'user_id',
-	'file_path'		=>	'file_path',
-	'company'		=>	'company',
-	'type'			=>	'type',
+	id			=>	'id',
+	start		=>	'start',
+	size		=>	'size',
+	total		=>	'total',
+	finishe		=>	'finished',
+	company_id	=>	'company_id',
+	user_id		=>	'user_id',
+	file_path	=>	'file_path',
+	company		=>	'company',
+	type		=>	'type',
 );
 %defaults = (
-	'start'	=>	q`'NOW()'`,
-	'size'	=>	undef,
-	'total'	=>	undef,
-	'finished'	=>	0,
+	start		=>	q`'NOW()'`,
+	size		=>	undef,
+	total		=>	undef,
+	finished	=>	0,
 );
 
 sub Company {

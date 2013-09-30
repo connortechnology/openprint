@@ -20,38 +20,36 @@ Please select a company or user to obtain login information.<br/>
 <div class="UserProfile">
 	<form id="f1" name="f1" method="post" action="user_profiles.html" onsubmit="return fmCheck();">
 		<fieldset class="filters"><legend>Search</legend>
-			<div class="content">
-				<ul>
-					<li><label>Email</label>
-						<input type="email" id="search_email" name="search_email" onkeyup="$('search_email_results').innerHTML='';if (this.value.length > 3 ) {new Ajax.Updater('search_email_results', '_search_by_email.html', {parameters:{ search_email: this.value}});}" onkeydown="if(event.keyCode == 13){new Ajax.Updater('search_email_results', '_search_by_email.html', {parameters:{ search_email: this.value}});}"/><br/>
-						<span id="search_email_results"></span>
-					</li>	
-					<li>
-						<label>Company Name</label>
-						<input type="text" onkeyup="filterDDM(this, f1.ddmCustomer);" onkeydown="if(event.keyCode == 13){f1.ddmUser.selectedIndex=-1;f1.btnFunction.value='';this.form.submit();}" class="filter" />
-						<select id="ddmCustomer" name="ddmCustomer" onchange="if(this.options[this.selectedIndex].value != ''){f1.ddmUser.selectedIndex=-1;f1.btnFunction.value='Go';f1.submit();}">
-							<option value="">All Companies</option>
-							<? echo ( openprint::Company::get_dropdown( $param{'ddmCustomer'} ); ) ?>
-						</select>
-						<? echo ( button( 'Go1', { onclick=>"f1.ddmUser.selectedIndex=-1;f1.btnFunction.value='Go';f1.submit();", 'text'=>'Go' } ); ) ?>
-					</li>
-					<li>
-						<label>User Type</label>
-						<select name="ddmUserRole" onchange="f1.btnFunction.value='';f1.submit();">
-							<option value="">All User Types</option>
-							<? echo ( make_drop_down( [ 'C', 'Customer', 'E', 'Employee','A', 'Administrator' ], $param{'ddmUserRole'} ); ) ?>
-						</select>
-					</li>
-					<li><label>Deleted?</label><? echo ( ssi::radio( 'deleted', [ '1','Yes', '0', 'No', '', 'Both' ], $param{'deleted'}, {onclick=>"f1.ddmUser.selectedIndex=-1;f1.btnFunction.value='Go';f1.submit();"} ); ) ?></li>
-					<li>
-						<label>User Name</label>
-						<select name="ddmUser" onchange="f1.btnFunction.value='';f1.submit();">
-							<option value="">Select a User</option>
-							<?FILL_USER_NAME?>
-						</select>
-					</li>
-				</ul>
-			</div>
+			<ul>
+				<li><label>Email</label>
+					<input type="email" id="search_email" name="search_email" onkeyup="$('search_email_results').innerHTML='';if (this.value.length > 3 ) {new Ajax.Updater('search_email_results', '_search_by_email.html', {parameters:{ search_email: this.value}});}" onkeydown="if(event.keyCode == 13){new Ajax.Updater('search_email_results', '_search_by_email.html', {parameters:{ search_email: this.value}});}"/><br/>
+					<span id="search_email_results"></span>
+				</li>	
+				<li>
+					<label>Company Name</label>
+					<input type="text" onkeyup="filterDDM(this, f1.ddmCustomer);" onkeydown="if(event.keyCode == 13){f1.ddmUser.selectedIndex=-1;f1.btnFunction.value='';this.form.submit();}" class="filter" />
+					<select id="ddmCustomer" name="ddmCustomer" onchange="if(this.options[this.selectedIndex].value != ''){f1.ddmUser.selectedIndex=-1;f1.btnFunction.value='Go';f1.submit();}">
+						<option value="">All Companies</option>
+						<? echo ( openprint::Company::get_dropdown( $param{'ddmCustomer'} ); ) ?>
+					</select>
+					<? echo ( button( 'Go1', { onclick=>"f1.ddmUser.selectedIndex=-1;f1.btnFunction.value='Go';f1.submit();", 'text'=>'Go' } ); ) ?>
+				</li>
+				<li>
+					<label>User Type</label>
+					<select name="ddmUserRole" onchange="f1.btnFunction.value='';f1.submit();">
+						<option value="">All User Types</option>
+						<? echo ( make_drop_down( [ 'C', 'Customer', 'E', 'Employee','A', 'Administrator' ], $param{'ddmUserRole'} ); ) ?>
+					</select>
+				</li>
+				<li><label>Deleted?</label><? echo ( radio( 'deleted', [ '1','Yes', '0', 'No', '', 'Both' ], $param{'deleted'}, {onclick=>"f1.ddmUser.selectedIndex=-1;f1.btnFunction.value='Go';f1.submit();"} ); ) ?></li>
+				<li>
+					<label>User Name</label>
+					<select name="ddmUser" onchange="f1.btnFunction.value='';f1.submit();">
+						<option value="">Select a User</option>
+						<?FILL_USER_NAME?>
+					</select>
+				</li>
+			</ul>
 		</fieldset>
 		<fieldset>
 			<p id="ButtonsTop" class="buttons"> 
@@ -118,13 +116,13 @@ Please select a company or user to obtain login information.<br/>
 								if ( $$variable{User}->Company()->deleted() ) {
 									unshift @Companies, $$variable{User}->Company();
 								} # end if
-								return ssi::make_drop_down( [ map { $_->id(), $_->name() } @Companies ], $$variable{User}->company_id() );
+								return make_drop_down( [ map { $_->id(), $_->name() } @Companies ], $$variable{User}->company_id() );
 							) ?>
 						</select>
 					</li>
 					<li class="salutation">
 						<label>Salutation</label>
-						<? echo ( ssi::radio( 'salutation', [ 'Mr.','Mr.','Mrs.','Mrs.','Ms.','Ms.','Miss','Miss' ], $$variable{User}->salutation() ); ) ?>
+						<? echo ( radio( 'salutation', [ 'Mr.','Mr.','Mrs.','Mrs.','Ms.','Ms.','Miss','Miss' ], $$variable{User}->salutation() ); ) ?>
 					</li>
 					<li> 
 						<label>First Name</label>
@@ -161,19 +159,19 @@ Please select a company or user to obtain login information.<br/>
 				<ul>
 					<li> 
 						<label>Add to our Mailing List</label>
-						<? echo ( ssi::radio( 'mailinglist', [ 'Y', 'Yes', 'N', 'No' ], $$variable{User}->mailinglist() ); ) ?>
+						<? echo ( radio( 'mailinglist', [ 'Y', 'Yes', 'N', 'No' ], $$variable{User}->mailinglist() ); ) ?>
 					</li>
 					<li class="administrator"> 
 						<label>Is this account a company administrator?</label>
-						<? echo ( ssi::radio( 'administrator', [ 'Y', 'Yes', 'N', 'No' ], $$variable{User}->administrator() ); ) ?>
+						<? echo ( radio( 'administrator', [ 'Y', 'Yes', 'N', 'No' ], $$variable{User}->administrator() ); ) ?>
 					</li>
 					<li> 
 						<label>Can this account login to the web site?</label>
-						<? echo ( ssi::radio( 'web_active', [ 'Y', 'Yes', 'N', 'No' ], $$variable{User}->web_active() ); ) ?>
+						<? echo ( radio( 'web_active', [ 'Y', 'Yes', 'N', 'No' ], $$variable{User}->web_active() ); ) ?>
 					</li>
 					<li class="ftp_active">
 						<label>Can this account login to the ftp site?</label>
-						<? echo ( ssi::radio( 'ftp_active', [ '1', 'Yes', '0', 'No' ], $$variable{User}->ftp_active() ); ) ?>
+						<? echo ( radio( 'ftp_active', [ '1', 'Yes', '0', 'No' ], $$variable{User}->ftp_active() ); ) ?>
 					</li>
 					<li class="ftp_root">
 						<label>Limit FTP access to this folder:</label>
@@ -202,7 +200,7 @@ Please select a company or user to obtain login information.<br/>
 					<li> 
 						<label>User Type</label>
 						<select name="type">
-							<? echo ( ssi::make_drop_down( [ 'C', 'Customer', 'E', 'Employee','A', 'Administrator' ], $$variable{User}->type() ); ) ?>
+							<? echo ( make_drop_down( [ 'C', 'Customer', 'E', 'Employee','A', 'Administrator' ], $$variable{User}->type() ); ) ?>
 						</select>
 					</li>
 					<? eval ( @{$$variable{'QuoteLevels'}} = sql::execute( undef, undef, 'SELECT id, name FROM QuoteLevels ORDER BY lower(name)' ); ) ?>
@@ -211,7 +209,7 @@ Please select a company or user to obtain login information.<br/>
 						<label>Quote Level</label>
 						<select name="quote_level">
 							<option value=""> select </option>
-							<? echo ( ssi::make_drop_down( $$variable{'QuoteLevels'}, $$variable{User}->quote_level() ); ) ?>
+							<? echo ( make_drop_down( $$variable{'QuoteLevels'}, $$variable{User}->quote_level() ); ) ?>
 						</select>
 					</li>
 					<? endif ( @{$$variable{'QuoteLevels'}} > 1 ) ?>
@@ -242,7 +240,7 @@ Please select a company or user to obtain login information.<br/>
 					<li class="csr_ids">
 						<label>Assistant to</label>
 						<select name="csr_ids" size="4" multiple="multiple">
-							<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } @{$$variable{'csr_ids'}} ], [$$variable{User}->csr_ids()] ); ) ?>
+							<? echo ( make_drop_down( [ map { $_->id(), $_->name() } @{$$variable{'csr_ids'}} ], [$$variable{User}->csr_ids()] ); ) ?>
 						</select>
 					</li>
 					<? endif ( @{$$variable{'csr_ids'}} = openprint::User->find('id !='=>$$variable{User}->id(), 'type'=>['E','A'], 'usergroup any'=>'Sales', 'order'=>'lower(firstname),lower(lastname)' ) ) ?>
@@ -255,7 +253,7 @@ Please select a company or user to obtain login information.<br/>
 					<li class="user_categories">
 						<label>User Category</label>
 						<select name="selectUserCategories" size="4" multiple="multiple">
-						<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } @{$$variable{'user_categories'}} ], [ openprint::MarketingCategory->find('user_id any'=>$$variable{User}->id()) ] ); ) ?>
+						<? echo ( make_drop_down( [ map { $_->id(), $_->name() } @{$$variable{'user_categories'}} ], [ openprint::MarketingCategory->find('user_id any'=>$$variable{User}->id()) ] ); ) ?>
 						</select>
 					</li>
 					<? endif ( @{$$variable{'user_categories'}} = openprint::MarketingCategory->find('order'=>'lower(name)') ) ?>
@@ -357,7 +355,7 @@ Please select a company or user to obtain login information.<br/>
 				my $n = $$variable{'User'}->notifications();
 				foreach my $Type ( openprint::User_Notification_Type->find( order=>'sort,lower(name)' ) ) {
 					$html .= '<li><label>'.$Type->name().'</label>';
-					$html .= ssi::radio( 'notification_'.$Type->id(), [ 'Yes', 'On', '', 'Off' ], $$n{$Type->name()} );
+					$html .= radio( 'notification_'.$Type->id(), [ 'Yes', 'On', '', 'Off' ], $$n{$Type->name()} );
 					$html .= '</li>';
 				} # end foreach Type
 				return $html;

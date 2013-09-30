@@ -930,7 +930,9 @@ sub hash_link {
 		if ( ! $config{debug} ) {
 			if ( $ext eq 'js' ) {
 				require JavaScript::Minifier::XS;
-				$blob = &JavaScript::Minifier::XS::minify( $blob );
+				eval { $blob = &JavaScript::Minifier::XS::minify( $blob ); };
+				$log->error( "Eval error of (minify), Reason: " . $@ ) if $@;
+
 			} elsif ( $ext eq 'css' ) {
 				require CSS::Minifier;
 				$blob = &CSS::Minifier::minify( input=>$blob );

@@ -74,9 +74,9 @@
 	<br class="spacer"/>
 	<?include('_view.html')?>
 	<? if ( sets::isin( $session{'user_type'},'A','E') and ( ( ! $$variable{Project}->docket() ) or ( $$variable{Project}->Order()->status() eq 'Re-Opened' ) ) ) ?>
-	<table>
+	<table class="List">
 		<tr class="totals unprintable">
-			<td><input type="text" name="txtServiceName" placeholder="enter custom service line description here"/></td>
+			<td class="description"><input type="text" name="txtServiceName" placeholder="enter custom service line description here"/></td>
 			<? echo (
 				return join("\n", map { '<td class="price">'.input( type=>'float', name=>'txtPrice'.$_, placeholder=>'custom price' ).'</td>' } $$variable{Project}->quantity_indexes() );
 			) ?>

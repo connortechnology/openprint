@@ -261,8 +261,8 @@ sub CustomerServiceReps {
 
 	my $query = "SELECT id, strStatus, (SELECT salesrep_id FROM Companies WHERE id=Projects.company_id),
 	   ";
-	$query .= "(SELECT curSalesPrice FROM Order_Contents, Orders WHERE Orders.Index=Order_Contents.OrderIndex AND Order_Contents.lngProjectIndex=Projects.id AND Orders.lngDocketNumber=Projects.lngDocketNumber),";
-	$query .= "(SELECT currency_id FROM Orders WHERE Orders.lngDocketNumber=Projects.lngDocketNumber)";
+	$query .= "(SELECT curSalesPrice FROM Order_Contents, Orders WHERE Orders.id=Order_Contents.OrderIndex AND Order_Contents.lngProjectIndex=Projects.id AND Orders.docket=Projects.lngDocketNumber),";
+	$query .= "(SELECT currency_id FROM Orders WHERE Orders.docket=Projects.lngDocketNumber)";
 
 	$query .= " FROM Projects ";
 	$query .= "WHERE dtmcreationdate BETWEEN '$$variable{'StartDate'} 00:00:00' AND '$$variable{'EndDate'} 23:59:59' ";

@@ -8,12 +8,14 @@
 	@{$$variable{quantity_indexes}} = $$variable{Project}->quantity_indexes();
     if ( $$variable{'QTYS'} == 3 ) {
 		$$variable{'Columns'} = 'Three';
-    } else {
+    } elsif ( $$variable{'QTYS'} == 2 ) {
 		$$variable{'Columns'} = 'Two';
+    } else {
+		$$variable{'Columns'} = 'One';
     } # end if
 ) ?>
 
-div.ProjectSummary p span.value {
+.ProjectSummary .value {
 	float: left;
 <? if ( $$variable{'QTYS'} == 1 ) ?>
     width: 60%;
@@ -33,7 +35,7 @@ There is no current project.
 	<? echo ( button( 'Print', { onclick=>'window.print();' } ); ) ?>
 </p>
 <div class="Project">
-<? echo ( include('/includes/project_header.html'); ) ?>
+<?include('/includes/project_header.html')?>
 <div class="ProjectSummary">
 	<fieldset><legend>Project Information</legend>
 	<? echo ( include('/includes/main/summ/project_create_edit.html'); ) ?>

@@ -1,8 +1,7 @@
-<? echo ( include('/includes/error_reporting.html'); ) ?>
-<script type="text/javascript" src="/javascripts/pricing.js"></script>
+<?include('/includes/error_reporting.html')?>
+<script type="text/javascript" src="<?hash_link(/javascripts/pricing.js)?>"></script>
 <form id="f1" name="f1" method="post" enctype="multipart/form-data" action="edit.html">
 	<fieldset class="filters"><legend>Search</legend>
-		<div class="content">
 		<ul>
 		<li> 
 			<label>Category</label>
@@ -30,7 +29,6 @@
 			</select>
 		</li>
 		</ul>
-		</div>
 		<p class="buttons">
 			<? echo ( 
 				my $html = '';

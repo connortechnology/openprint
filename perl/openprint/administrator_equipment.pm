@@ -127,6 +127,7 @@ sub _specification {
 		if ( $param{'field'} ne 'interpolate' ) {
 			$param{'value'} =~ s/\xc2\xa0//mg;
 			if ( $param{'field'} eq 'name' ) {
+				$param{value} =~ s/\+/ /g;
 			} elsif ( $param{'field'} eq 'min' ) {
 				$param{'value'} =~ s/[^\d\.]//g;
 			} elsif ( $param{'field'} eq 'max' ) {

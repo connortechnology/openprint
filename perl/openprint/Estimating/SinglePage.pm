@@ -32,6 +32,9 @@ my %variables = (
 	'PrintingType'=>['save'],'rdbTemplateType'=>['save'],
 	'help'=>['output'],'alert'=>['output'],
 	'ProjectIndex'=>[], 'ServiceIndex'=>[], 'ServiceType'=>[],
+	'txtPrice1'=>['save'],
+	'txtPrice2'=>['save'],
+	'txtPrice3'=>['save'],
 );
 
 sub variables {
@@ -61,7 +64,7 @@ $log->debug("adding a sig");
 	} # end if
 	foreach my $qty_index ( $Project->quantity_indexes() ) {
 		if ( $$specs{'txtPrice'.$qty_index} ) {
-			delete $$specs{'txtPrice'.$qty_index};
+			$$specs{'txtPrice'.$qty_index} = undef;
 		} # end if
 	}# end foreach
 
@@ -206,6 +209,9 @@ sub status {
 	} # end if
 	return 'calculated';
 } # end sub status
+
+sub save {
+} # end sub save
         
 1;
 __END__

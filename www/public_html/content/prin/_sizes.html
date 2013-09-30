@@ -1,6 +1,6 @@
 <div class="Size"><fieldset><legend>Size</legend>
 	<div class="content"><ul>
-		<? if ( ! sets::isin( $$variable{'ProjectType'}->name(), ['Banners','InkjetOutputs','BusinessCards', 'DoorHangers', 'ScratchPads', 'Covers','Posters','RackCards','GreetingCards','PresentationFolders','NCR','Letterhead','Labels'] ) ) ?>
+		<? if ( ! sets::isin( $$variable{'ProjectType'}->name(), ['Banners','InkjetOutputs','BusinessCards', 'DoorHangers', 'ScratchPads', 'Covers','Posters','RackCards','GreetingCards','PresentationFolders','NCR','Letterhead','Labels','Envelopes'] ) ) ?>
 		<li class="FoldType">
 			<label>Fold</label>
 			<select name="FoldType" id="FoldType" size="1" onchange="FoldType_onchange( this );">
@@ -25,7 +25,7 @@
 				 ) ?>
 			</select>
 		</li>
-		<? endif ( ! sets::isin( $$variable{'ProjectType'}->name(), ['Banners','InkjetOutputs','BusinessCards', 'DoorHangers', 'ScratchPads', 'Covers','Posters','RackCards','GreetingCards','PresentationFolders','NCR','Letterhead','Labels'] ) ) ?>
+		<? endif ( ! sets::isin( $$variable{'ProjectType'}->name(), ['Banners','InkjetOutputs','BusinessCards', 'DoorHangers', 'ScratchPads', 'Covers','Posters','RackCards','GreetingCards','PresentationFolders','NCR','Letterhead','Labels','Envelopes'] ) ) ?>
 		<? if ( $$variable{'ProjectType'}->name() eq 'GreetingCards' ) ?>
 			<input type="hidden" id="FoldType" name="FoldType" value="2PanelFold"/>
 		<? endif ( $$variable{'ProjectType'}->name() eq 'GreetingCards' ) ?>

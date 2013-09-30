@@ -11,9 +11,8 @@
 <? echo ( include('/includes/main/summ/grain_direction.html'); ) ?>
 <? echo ( include('/includes/main/summ/imposition.html'); ) ?>
 <? echo ( include('/includes/main/summ/press_approval.html'); ) ?>
-    
-<div class="row">
-    <span class="label">Breakdown</span>
+<li>
+    <label>Breakdown</label>
 <? echo (
 my $html;
 foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
@@ -21,4 +20,4 @@ foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
 } # end foreach
 return $html;
 ) ?>
-</div>
+</li>

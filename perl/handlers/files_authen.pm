@@ -63,8 +63,8 @@ $log->debug("Session is: $session{_session_id} $session{user_id} $session{compan
 
 $log->debug("Path: $path, filename: $filename " );
 	
-		if ( ! -e $config{ProjectFilesPath}.$path.$filename ) {
-$log->error("Path no found: " . $config{ProjectFilesPath}.$path.$filename );
+		if ( ! -e $config{ProjectFilesPath}.'/'.$path.$filename ) {
+$log->error("Path not found: " . $config{ProjectFilesPath}.'/'.$path.$filename );
 			return Apache2::Const::HTTP_NOT_FOUND;
 		} # end if
 		return if $session{user_type} eq 'A';
