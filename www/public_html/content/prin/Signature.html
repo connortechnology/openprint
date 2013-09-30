@@ -23,7 +23,7 @@
 <? if ( $dbh and ( ( ! $$variable{'ProjectType'}->please_call() ) or ( sets::isin( $session{'user_type'}, ['E','A'] ) ) ) ) ?>
 			<?include(_project_name.html)?>
 			<div class="ProjectSpecifications">
-				<h1><? echo ( $$variable{ProjectType}->name() ) ?> Specifications</h1>
+				<h1><? echo ( $$variable{ProjectType}->description() ) ?> Specifications</h1>
 				<?include(_sizes.html)?>
 				<? if ( $$variable{'ProjectType'}->name() eq 'Banners' ) ?>
 				<?include(/includes/main/proj/banner_printing.html)?>
