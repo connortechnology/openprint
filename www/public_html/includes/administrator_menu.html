@@ -33,7 +33,11 @@ onclick="$('ManagerialMenu').toggleClassName('on');">Managerial</a>
 			<li><a href="/article/history.html;NOSSL">Blog Articles</a></li>
 		</ul>
 	</li>
-	<li id="AdminReportsMenu"><a href="#" onclick="$('AdminReportsMenu').toggleClassName('on');">Reports</a>
+	<li id="AdminReportsMenu"
+<? if ( $$variable{uri} =~ /administrator\/reports/ ) ?>
+class="on"
+<? endif ( $$variable{uri} =~ /administrator\/reports/ ) ?>
+><a href="#" onclick="$('AdminReportsMenu').toggleClassName('on');">Reports</a>
 		<ul>
 			<li><a href="/administrator/reports/orders.html;SSL">Orders</a></li>
 			<li><a href="/administrator/reports/quotes.html;SSL">Quotes</a></li>
@@ -44,7 +48,11 @@ onclick="$('ManagerialMenu').toggleClassName('on');">Managerial</a>
 			<li><a href="/administrator/reports/bindery.html;SSL">Bindery</a></li>
 		</ul>
    </li>
-	<li id="SetupMenu"><a href="#" onclick="$('SetupMenu').toggleClassName('on');">Setup</a>
+	<li id="SetupMenu"
+<? if ( $$variable{uri} =~ /equipment/ or $$variable{uri} =~ /service_types/ or $$variable{uri} =~ /services/ or $$variable{uri} =~ /materials/ or $$variable{uri} =~ /project_types/ or $$variable{uri} =~ /production/ ) ?>
+class="on"
+<? endif ( $$variable{uri} =~ /equipment/ or $$variable{uri} =~ /service_types/ or $$variable{uri} =~ /services/ or $$variable{uri} =~ /materials/ or $$variable{uri} =~ /project_types/ or $$variable{uri} =~ /production/ ) ?>
+><a href="#" onclick="$('SetupMenu').toggleClassName('on');">Setup</a>
 		<ul>
 			<li><a href="/administrator/equipment/edit.html;SSL">Equipment</a></li>
 			<li><a href="/administrator/service_types/edit.html;SSL">Service Types</a></li>

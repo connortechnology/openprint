@@ -49,7 +49,11 @@
 	</li>
 	<? endif ( openprint::usergroup::is_user_in( ['Marketing'], $session{'user_id'} ) ) ?>
 	<? if ( openprint::usergroup::is_user_in( ['Inventory'], $session{'user_id'} ) ) ?>
-	<li id="InventoryMenu"><a href="#" onclick="$('InventoryMenu').toggleClassName('on');return false;">Inventory</a>
+	<li id="InventoryMenu"
+<? if ( $$variable{uri} =~ /purchase_order/ or $$variable{uri} =~ /inventory/ or $$variable{uri} =~ /claim/ ) ?>
+class="on"
+<? endif ( $$variable{uri} =~ /purchase_order/ or $$variable{uri} =~ /inventory/ or $$variable{uri} =~ /claim/ ) ?>
+><a href="#" onclick="$('InventoryMenu').toggleClassName('on');return false;">Inventory</a>
 		<ul>
 			<li><a href="/employee/purchase_order/history.html;NOSSL">Purchase Orders</a></li>
 			<li><a href="/employee/inventory/manifests.html;NOSSL">Manifests</a></li>
