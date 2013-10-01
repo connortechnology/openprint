@@ -425,6 +425,9 @@ foreach my $Template ( openprint::ProjectType_Template->find(projecttype=>'Poste
 foreach my $Template ( openprint::ProjectType_Template->find(projecttype=>'Posters',type=>'PostersPortrait' ) ) {
 	$Template->save({type=>'Portrait'});
 }
+sql::update( undef, undef, 'configuration', [ 'name=>', 'Add Default Press Proof' ], 'name', 'Add_Default_Press_Proof' );
+sql::update( undef, undef, 'configuration', [ 'name=>', 'Add Default Colour Proof' ], 'name', 'Add_Default_Colour_Proof' );
+sql::update( undef, undef, 'configuration', [ 'name=>', 'Add Default Layout Proof' ], 'name', 'Add_Default_Layout_Proof' );
 $dbh->disconnect();
 0;
 __END__
