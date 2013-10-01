@@ -2,7 +2,7 @@ use strict;
 package openprint::SRED_Content;
 our @ISA = qw(openprint::Object);
 require openprint::Object;
-require openprint::SRED_Asset;
+require openprint::Object_Asset;
 require openprint::SRED_Project;
 require openprint::SRED_Content_Type;
 
@@ -124,12 +124,13 @@ sub Duration {
 sub Assets {
 	my $self = shift;
 	my %params = @_;
-	$params{'content_id'} = $$self{'id'};
+	$params{'object_id'} = $$self{'id'};
+	$params{object_type} = 'openprint::SRED_Content';
 	if ( @_ ) {
-		return openprint::SRED_Asset->find(%params);
+		return openprint::Object_Asset->find(%params);
 	} # end if
-	if ( ! exists $_[0]{'Assets'} ) {
-		@{$_[0]{'Assets'}} = openprint::SRED_Asset->find(%params);
+	if ( ! exists $_[0]{Assets} ) {
+		$_[0]{Assets} = [ openprint::Object_Asset->find(%params) ];
 	} # end if
 	return @{$_[0]{'Assets'}};
 } # end sub Assets
