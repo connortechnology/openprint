@@ -311,7 +311,15 @@ function ddm_select_by_text_case_insensitive( ddm, value, defaultValue ) {
 
 function filterDDM( filter, ddm ) {
 	if ( ! filter.value.length ) {
-		ddm.selectedIndex = 0;
+		if ( ! ddm.defaultSelected ) {
+			for ( var index = 0, len = ddm.options.length; index < len; index += 1 ) {
+				if ( ddm.options[index].defaultSelected ) {
+					ddm.defaultSelected = index;
+					break;
+				} // end if
+			} //e nd for 
+		} // end if 
+		ddm.selectedIndex = ddm.defaultSelected;
 		return;
 	} // end if
 	var old_selected_index = ddm.selectedIndex;
@@ -1436,6 +1444,8 @@ function integerize(e) {
 function floatize(e) {
 	if ( e.value.match(/[^\d\-\.%\*]/) )
 		e.value = parseFloat(e.value.replace(/[^\d\-\.%\*]/g,''));
+	if ( e.value == 'NaN' )
+		e.value = '';
 	return e.value;
 }
 function floatize_calculator(e) {

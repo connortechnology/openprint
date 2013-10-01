@@ -1,7 +1,7 @@
 <? echo (
 	my $html = '';
-	my $Pricelist = $$variable{'Pricelist'};
-	my $service = $$variable{'service'};
+	my $Pricelist = $$variable{Pricelist};
+	my $service = $$variable{service};
 
 	my @Prices = openprint::PaperPrice->find(paper_id=>$$variable{Stock}->id(), service=>$service, pricelist_id=>$Pricelist->id(),order=>'equipment_id,lngmin NULLS FIRST,lngmax NULLS FIRST' );
 	foreach my $Price ( @Prices ) {

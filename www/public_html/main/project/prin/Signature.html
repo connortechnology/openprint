@@ -55,8 +55,7 @@
 <? endif ( $$variable{'txtSignatureType'} ) ?>
 
 <? if ( $$variable{'ProjectType'}->name() eq 'Envelopes' ) ?>
-                <?include(/includes/main/proj/templates/project_template_select.html)?>
-                <?include(/includes/main/proj/templates/envelopes.html)?>
+		<?include(/includes/main/proj/templates/generic.html)?>
 <? endif ( $$variable{'ProjectType'}->name() eq 'Envelopes' ) ?>
 
 <? echo ( 
@@ -69,7 +68,13 @@
 		return include('includes/main/proj/dimensions_boxes_only.html');
 	} elsif ( sets::isin( $$variable{'ProjectType'}->name(),['Banners'] ) )  {
 		return include('/includes/main/proj/banner_printing.html');
-
+	} elsif ( $$variable{'ProjectType'}->name() eq 'Envelopes' ) {
+		return qq`
+            <input type="hidden" id="txtWidth" name="txtWidth" value="$$variable{txtWidth}" />
+            <input type="hidden" id="txtHeight" name="txtHeight" value="$$variable{txtHeight}" />
+            <input type="hidden" id="txtFinalWidth" name="txtFinalWidth" value="$$variable{txtFinalWidth}" />
+            <input type="hidden" id="txtFinalHeight" name="txtFinalHeight" value="$$variable{txtFinalHeight}" />
+		`;
 	} # end if
 	return '';
 ) ?>

@@ -39,6 +39,8 @@ $serial = 'service_prices_id_seq';
 	interpolate		=>	0,
 	period_start    =>  undef,
 	period_end      =>  undef,
+	supplier_id		=>	undef,
+	equipment_id	=>	undef,
 );
 
 %transforms = (

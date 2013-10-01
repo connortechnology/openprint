@@ -9,7 +9,7 @@
 		$html .= '<fieldset><legend>Pricing for Price List: '.$Pricelist->name() . "</legend>\n";
 		my @Prices = openprint::ServicePrice->find( service_id=>$$variable{Service}->id(), pricelist_id=>$Pricelist->id() );
 
-		my @equipment_ids = sort( sets::union( map{ $_->equipment_id() } @Prices ) );
+		my @equipment_ids = $param{equipment_id} ? ($param{equipment_id}) : sort( sets::union( map{ $_->equipment_id() } @Prices ) );
 		push @equipment_ids, undef if ! @equipment_ids;
 		foreach my $Equipment ( map{new openprint::Equipment($_)} @equipment_ids ) {
 			$html .= '<fieldset class="Equipment">';

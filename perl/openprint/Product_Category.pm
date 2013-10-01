@@ -59,6 +59,7 @@ sub destroy {
 } # end sub destroy
 
 sub products {
+Carp::cluck("Deprecated call openprint::Product_Category::products");
 	return $_[0]->Products();
 } # end sub products
 sub Products {

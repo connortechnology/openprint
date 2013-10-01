@@ -5,13 +5,13 @@
 <? echo ( 
 	my $html = '';
 	if ( ($session{'user_id'} == $$variable{'Asset'}->created_by() ) or ( $session{'user_type'} eq 'A' ) or openprint::usergroup::is_user_in( ['Accounting','SalesAdmin','Sales'], $session{'user_id'} ) or sets::isin( $session{'user_id'}, $$variable{'Asset'}->editor_id() ) ) {
-		$html .= ssi::button( 'Edit', { href=> 'edit.html?asset_id='.$$variable{'Asset'}->id() } );
+		$html .= button( 'Edit', { href=> 'edit.html?asset_id='.$$variable{'Asset'}->id() } );
 		if ( $$variable{'Asset'}->deleted() ) {
-			$html .= ssi::button( 'Undelete', { onclick=>"f1.btnFunction.value='Undelete';f1.submit();" } );
+			$html .= button( 'Undelete', { onclick=>"f1.btnFunction.value='Undelete';f1.submit();" } );
 		} else {
-			$html .= ssi::button( 'Delete', { onclick=>"if(confirm('Are you sure?')){f1.btnFunction.value='Delete';f1.submit();}" } );
+			$html .= button( 'Delete', { onclick=>"if(confirm('Are you sure?')){f1.btnFunction.value='Delete';f1.submit();}" } );
 		} # end if
-		$html .= ssi::button( 'New', { 'href'=>'edit.html' } );
+		$html .= button( 'New', { 'href'=>'edit.html' } );
 	} # end if
 	return $html;
 ) ?>
@@ -67,8 +67,8 @@
 							<? echo ( $$variable{'Asset'}->license() ) ?>
 							</li>
 							<li><label>Used in</label>
+							<? echo ( join(',', map { sprintf('<a href="/employee/claim/view.html?claim_id=%1$d">Claim %1$d</a>', $_->object_id() ); } openprint::Object_Asset->find('asset_id'=>$$variable{'Asset'}->id()) ); ) ?>
 							<? echo ( join(',', map { sprintf('<a href="/employee/claim/view.html?claim_id=%1$d">Claim %1$d</a>', $_->claim_id() ); } openprint::Claim_Asset->find('asset_id'=>$$variable{'Asset'}->id()) ); ) ?>
-							<? echo ( join(',', map { sprintf('<a href="/employee/sred/view.html?content_id=%1$d">SRED %1$d</a>', $_->content_id() ); } openprint::SRED_Asset->find('asset_id'=>$$variable{'Asset'}->id()) ); ) ?>
 							<? echo ( join(',', map { sprintf('<a href="/article/view.html?article_id=%1$d">Article %1$d</a>', $_->article_id() ); } openprint::Article_Asset->find('asset_id'=>$$variable{'Asset'}->id()) ); ) ?>
 							</li>
 						</ul>

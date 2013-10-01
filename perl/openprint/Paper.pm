@@ -138,6 +138,9 @@ sub copy {
 } # end sub copy
 
 sub Prices {
+	if ( @_ > 1 ) {
+		$_[0]{Prices} = $_[1];
+	} # end if
 	if ( ! $_[0]{Prices} ) {
 		$_[0]{Prices} = [ openprint::PaperPrice->find( paper_id => $_[0]{id} ) ] if $_[0]{id};
 	} # end if
@@ -678,6 +681,9 @@ sub size {
 		return sprintf('%s" x %s"', @$self{'width','height'} );
 	} # end if
 } # end sub size
+sub size_id {
+	return $_[0]->size();
+}
 sub Owner {
 	my ( $self, $Owner ) = @_;
 	if ( defined $Owner ) {
@@ -908,7 +914,10 @@ sub get_price {
 	
 	my $price;
 	my $qty = $params{weight} ? $params{weight} : $params{sheets};
-	my $lookup_qty = $params{'lookup_weight'} ? $params{'lookup_weight'} : $params{'weight'};
+	my $lookup_qty = $params{'lookup_weight'} ? $params{'lookup_weight'} : $qty;
+	if ( ($params{'service'} eq 'Material') and ! $lookup_qty ) {
+		Carp::cluck("Paper qty lookup with no qty");
+	} #end if
 
 	if ( $$self{'Price'} and ($params{'service'} eq 'Material') ) {
 		# If custom paper
@@ -937,6 +946,31 @@ sub get_price {
 		if ( ! $price ) {
 			if ( $params{'service'} eq 'Material' or $debug ) {
 				$openprint::log->warn("Unable to find price for Stock id:$$self{id} $params{service} equip: $params{equipment_id} : $qty $lookup_qty");
+		foreach my $Price ( @Prices ) {
+			if ( $$Price{'pricelist_id'} != $list_id ) {
+				$openprint::log->debug("Wrong pricelist: " . $Price->to_string() );
+				next;
+			} 
+			if ( $params{'equipment_id'} and $$Price{'equipment_id'} and ( $params{'equipment_id'} != $$Price{'equipment_id'} ) ) {
+				$openprint::log->debug("Wrong equipment: " . $Price->to_string() );
+				next;
+			}
+			if ( $$Price{'service'} ne $params{'service'} ) {
+				$openprint::log->debug("Wrong service: " . $Price->to_string() );
+				next;
+			} 
+#$openprint::log->warn(sprintf('Price: %s - %s : %s',$Price->min(), $Price->max(), $Price->price() ) );
+			if ( 
+					( (!(1*$Price->min())) or $Price->min() <= $lookup_qty ) and
+					( (!(1*$Price->max())) or $Price->max() >= $lookup_qty )
+				) {
+				$price = $Price->clone();
+				last;
+			} else {
+				$openprint::log->debug("Wrong qty: $lookup_qty" . $Price->to_string() );
+			} # end if
+		} # end foreach Price
+				
 			} # end if
 			return;
 		} # end if

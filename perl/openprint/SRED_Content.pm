@@ -2,7 +2,7 @@ use strict;
 package openprint::SRED_Content;
 our @ISA = qw(openprint::Object);
 require openprint::Object;
-require openprint::SRED_Asset;
+require openprint::Object_Asset;
 require openprint::SRED_Project;
 require openprint::SRED_Content_Type;
 
@@ -68,6 +68,15 @@ $serial = 'sred_contents_id_seq';
 	'docket'			=>	undef,
 );
 
+sub view_url {
+	my $path = '/employee/sred/project.html';
+	if ( ref $_[0] eq 'openprint::SRED_Content' ) {
+		return $path.'?project_id='.$_->Object()->Project()->id();
+	} elsif ( $_[0] eq 'openprint::SRED_Content' ) {
+		return $path.'?project_id='.(new openprint::SRED_Content( $_[1] ))->Project()->id();
+	} # end if
+}
+
 sub duration {
 	if ( @_ > 1 ) {
 		$_[0]{'duration'} = $_[1];
@@ -115,12 +124,13 @@ sub Duration {
 sub Assets {
 	my $self = shift;
 	my %params = @_;
-	$params{'content_id'} = $$self{'id'};
+	$params{'object_id'} = $$self{'id'};
+	$params{object_type} = 'openprint::SRED_Content';
 	if ( @_ ) {
-		return openprint::SRED_Asset->find(%params);
+		return openprint::Object_Asset->find(%params);
 	} # end if
-	if ( ! exists $_[0]{'Assets'} ) {
-		@{$_[0]{'Assets'}} = openprint::SRED_Asset->find(%params);
+	if ( ! exists $_[0]{Assets} ) {
+		$_[0]{Assets} = [ openprint::Object_Asset->find(%params) ];
 	} # end if
 	return @{$_[0]{'Assets'}};
 } # end sub Assets

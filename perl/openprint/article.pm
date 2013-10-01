@@ -356,7 +356,7 @@ sub list {
 } # end sub list
 
 sub _list {
-	ssi::save_params('/article/list.html', 'paging_page','category_id', 'paging_per_page' );
+	ssi::save_params('/article/list.html', 'paging_page','category_id', 'paging_per_page', 'category' );
 } # end sub _list
 
 sub category {

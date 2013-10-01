@@ -141,7 +141,7 @@ sub calc {
 		next if ! $$specs{"txtQuantity$qty_index"};
 		my $qty = $$specs{"txtQuantity$qty_index"};
 		if ( ( $ProjectType->name() eq 'ScratchPads' ) and ( ! $$printing_specs{'PageQuantity'} ) ) {
-			$qty /= int( $$specs{'PageQuantity'} );
+			#$qty /= int( $$specs{'PageQuantity'} );
 		} elsif ( ( $ProjectType->name() eq 'NCR' ) and ( ! $$printing_specs{'PageQuantity'} ) ) {
 			$qty *= int( $$specs{'PageQuantity'} );
 		} # end if

@@ -69,7 +69,9 @@ sub new {
 			$self->load( $data );
 		} # end if
 		if ( ! $no_cache ) {
-			if ( $$self{'id'} ) {
+			if ( $id ) {
+				# Using $id instead of $$self{od} means that we cache non existent entries
+			#if ( $$self{'id'} ) {
 				$openprint::Object::cache{$config{'db_name'}}{$parent}{$id} = $self;
 			} # end if
 		} # end if
@@ -466,6 +468,8 @@ sub find_operators {
 		return '('.$field.$type.' IS NULL OR '.$field.$type.' < ?)', $value;
 	} elsif ( $operator eq 'null_or_=' or $operator eq 'is null or =' ) {
 		return '('.$field.$type.' IS NULL OR '.$field.$type.' = ?)', $value;
+	} elsif ( $operator eq 'null or in' ) {
+		return '('.$field.$type.' IS NULL OR '.$field.$type.' IN ('.join(',', map { '?' } @{$value} ) . '))', @{$value};
 	} elsif ( $operator eq 'exists' ) {
 		return ( $value ? ' EXISTS ' : 'NOT EXISTS ' ).$field;
 	} elsif ( $operator eq 'lc' ) {
