@@ -61,12 +61,12 @@ INSERT INTO configuration VALUES ('owner_id', '1', 'Supplier', 'Site Owner', 'Mi
 INSERT INTO configuration VALUES ('WhyRegister', '', 'textarea', 'Text to display on login page (and maybe elsewhere) explaining why a person should register on the site.', 'Disclaimers');
 INSERT INTO configuration VALUES ('meta-description', NULL, 'text', 'Default content to use for description meta tag.', 'Miscellaneous Settings');
 INSERT INTO configuration VALUES ('meta-keywords', NULL, 'text', 'Default content for the keywords meta tag.', 'Miscellaneous Settings');
-INSERT INTO configuration VALUES ('Small Asset Height', NULL, 'text', '', 'Asset Settings');
-INSERT INTO configuration VALUES ('Medium Asset Height', NULL, 'text', '', 'Asset Settings');
-INSERT INTO configuration VALUES ('Large Asset Height', NULL, 'text', '', 'Asset Settings');
-INSERT INTO configuration VALUES ('Large Asset Width', '800', 'text', '', 'Asset Settings');
-INSERT INTO configuration VALUES ('Medium Asset Width', '300', 'text', '', 'Asset Settings');
-INSERT INTO configuration VALUES ('Small Asset WIdth', '50', 'text', '', 'Asset Settings');
+INSERT INTO configuration VALUES ('Small_Asset_Height', NULL, 'text', '', 'Asset Settings');
+INSERT INTO configuration VALUES ('Medium_Asset_Height', NULL, 'text', '', 'Asset Settings');
+INSERT INTO configuration VALUES ('Large_Asset_Height', NULL, 'text', '', 'Asset Settings');
+INSERT INTO configuration VALUES ('Large_Asset_Width', '800', 'text', '', 'Asset Settings');
+INSERT INTO configuration VALUES ('Medium_Asset_Width', '300', 'text', '', 'Asset Settings');
+INSERT INTO configuration VALUES ('Small_Asset_Width', '50', 'text', '', 'Asset Settings');
 INSERT INTO configuration VALUES ('PhotoUploadDisclaimer', '', 'textarea', 'Content to show on photo upload pages.', 'Disclaimers');
 
 INSERT INTO configuration VALUES ('bitcoin_server', 'localhost', 'text', 'Bitcoin Server Hostname', 'Bitcoin Settings');

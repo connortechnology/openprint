@@ -428,6 +428,18 @@ foreach my $Template ( openprint::ProjectType_Template->find(projecttype=>'Poste
 sql::update( undef, undef, 'configuration', [ 'name=>', 'Add Default Press Proof' ], 'name', 'Add_Default_Press_Proof' );
 sql::update( undef, undef, 'configuration', [ 'name=>', 'Add Default Colour Proof' ], 'name', 'Add_Default_Colour_Proof' );
 sql::update( undef, undef, 'configuration', [ 'name=>', 'Add Default Layout Proof' ], 'name', 'Add_Default_Layout_Proof' );
+$dbh->do(q`INSERT INTO configuration VALUES ('Small_Asset_Height', NULL, 'text', '', 'Asset Settings');`) if ! $config{Small_Asset_Height};
+$dbh->do(q`INSERT INTO configuration VALUES ('Medium_Asset_Height', NULL, 'text', '', 'Asset Settings');`) if ! $config{Medium_Asset_Height};
+$dbh->do(q`INSERT INTO configuration VALUES ('Large_Asset_Height', NULL, 'text', '', 'Asset Settings');`) if ! $config{Large_Asset_Height};
+$dbh->do(q`INSERT INTO configuration VALUES ('Large_Asset_Width', '800', 'text', '', 'Asset Settings');`) if ! $config{Large_Asset_Width};
+$dbh->do(q`INSERT INTO configuration VALUES ('Medium_Asset_Width', '300', 'text', '', 'Asset Settings');`) if ! $config{Medium_Asset_Width};
+$dbh->do(q`INSERT INTO configuration VALUES ('Small_Asset_Width', '50', 'text', '', 'Asset Settings');`) if ! $config{Small_Asset_Width};
+
+foreach my $SRED_Asset ( openprint::SRED_Asset->find() ) {
+	my $Object_Asset = new openprint::Object_Asset();
+	$Object_Asset->save({ object_id=>$SRED_Asset->content_id(), asset_id=>$SRED_Asset->asset_id() });
+	$SRED_Asset->delete();
+} # end foreach my $SRED_Asset
 $dbh->disconnect();
 0;
 __END__
