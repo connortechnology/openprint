@@ -257,7 +257,7 @@ sub status {
 		if ( $Status->id() != $_[0]{status_id} ) {
 			sql::update( $log, $dbh, 'Orders', ['id=?', $_[0]{id}], 'status_id', $Status->id() );
 			$_[0]{status} = $_[1];
-			$_[0]->add_log( "Changed Status to $_[1]" );
+			$_[0]->add_log( "Changed Status to $_[1]" ) if $_[0]{id};
 		} # end if
 	} # end if
 	if ( ! $_[0]{status} ) {

@@ -5,6 +5,7 @@ require sql;
 require logger;
 require openprint::Object;
 require openprint::Article;
+require openprint::User;
 
 use openprint ();
 use vars qw( $log $dbh );
@@ -27,11 +28,15 @@ my $project_id = 0;
 my $company_id = 1;
 
 $dbh = sql::open_sql( $log, %sql_server );
+my $User = openprint::User->find_one(email=>'amin@topknotch.com');
+die 'No User' if ! $User;
+
 my $ac = sql::start_transaction( $dbh );
+
 my @data = sql::execute( undef, undef, 'SELECT id,text FROM testimonials' );
 while ( my ( $id, $text ) = splice @data, 0, 2 ) {
 	my $Article = new openprint::Article();
-	$_ = $Article->save({category=>'Testimonials', body=>$text });
+	$_ = $Article->save({category=>'Testimonials', body=>$text, created_by=>$$User{id}, company_id=>$$User{company_id} });
 	if ( $_ ) {
 		$dbh->rollback();
 		die $_;

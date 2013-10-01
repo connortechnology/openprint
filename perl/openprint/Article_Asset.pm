@@ -31,15 +31,17 @@ sub thumbnail_url {
 
 sub medium_html {
 	my $Asset = $_[0]->Asset();
-	return sprintf('<a class="medium %s" href="/article/view.html?article_id=%d"><img src="%s" alt="%s"/></a>', $Asset->layout(), $_[0]{article_id},$Asset->medium_url(), $Asset->caption() );
+	return sprintf('<a class="medium %s" href="/article/view.html?article_id=%d"><img src="%s" alt="%s"/></a>', 
+		$Asset->layout(), $_[0]{article_id},$Asset->sized_url('medium'), $Asset->caption() );
 } # end sub thumbnail_html
 
 sub thumbnail_html {
-	my $Asset = $_[0]->Asset();
+	my $self = $_[0];
+	my $Asset = $self->Asset();
 	if ( $Asset->layout() eq 'Landscape' ) {
-	return sprintf('<a class="Landscape" href="/article/view.html?article_id=%d"><img src="%s" alt="%s"/></a>', $_[0]{article_id},$Asset->sized_url('thumbnail'), $Asset->caption() );
+		return sprintf('<a class="Landscape" href="/article/view.html?article_id=%d"><img src="%s" alt="%s"/></a>', $$self{article_id},$Asset->sized_url('thumbnail'), $Asset->caption() );
 	} else {
-	return sprintf('<a class="Portrait" href="/article/view.html?article_id=%d"><img src="%s" alt="%s"/></a>', $_[0]{article_id},$Asset->sized_url('thumbnail'), $Asset->caption() );
+		return sprintf('<a class="Portrait" href="/article/view.html?article_id=%d"><img src="%s" alt="%s"/></a>', $$self{article_id},$Asset->sized_url('thumbnail'), $Asset->caption() );
 	} # end if
 } # end sub thumbnail_html
 

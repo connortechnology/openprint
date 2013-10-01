@@ -4,13 +4,13 @@ require openprint::Article_Category;
 package openprint::Article;
 our @ISA = qw(openprint::Object);
 
-use vars qw( $debug $table $serial %fields %defaults %transforms %config $log $dbh %session );
+use vars qw( $debug $table $serial %fields %defaults %transforms %config $log $dbh %session %find_fields );
 *session = \%openprint::session;
 *config = \%openprint::config;
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
 
-$debug = 0;
+$debug = 1;
 
 $table = 'articles';
 $serial = 'articles_id_seq';
@@ -46,6 +46,9 @@ $serial = 'articles_id_seq';
 	'user_type'			=>	'user_type',
 	'keywords'			=>	'keywords',
 	anonymous			=>	'anonymous',
+);
+%find_fields = (
+	category		=>	'(SELECT name FROM article_categories WHERE id=category_id)',
 );
 
 %transforms = (
