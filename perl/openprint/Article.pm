@@ -1,5 +1,6 @@
 use strict;
 require openprint::Article_Asset;
+require openprint::Article_Category;
 package openprint::Article;
 our @ISA = qw(openprint::Object);
 

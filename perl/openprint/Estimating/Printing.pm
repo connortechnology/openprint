@@ -21,7 +21,7 @@ package openprint::Estimating::Printing;
 my $threading = 0;
 #use threads;
 use constant DEBUG => 0;
-use constant DEBUG_VERSIONS => 0;
+use constant DEBUG_VERSIONS => 1;
 use constant DEBUG_FILTERING => 0;
 use constant DEBUG_PRICE_DECISIONS => 0;
 
@@ -3634,7 +3634,11 @@ $log->debug("Incomplete due to required versions more than imposition when overr
 					$imposition = int($imposition / $$specs{"UnspecifiedVersions$qty_index"}) * $$specs{"UnspecifiedVersions$qty_index"};
 				} # end 
 			} # end 
+			if ( $imposition < $$specs{"UnspecifiedVersions$qty_index"} ) {
 			$$Imposition{versions} = $imposition;
+			} else {
+				$$Imposition{versions} = $$specs{"UnspecifiedVersions$qty_index"};
+			} # end if
 		} # end if
 		my %VersionCharge = openprint::service::get_price_object( 'Version Setup', $$Imposition{versions} );
 		if ( %VersionCharge ) {
