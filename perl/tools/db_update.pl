@@ -1216,6 +1216,13 @@ if ( ! sets::isin( 'inks', \@tables ) ) {
 	if ( ! $$data{mix} ) {
 		$dbh->do('ALTER TABLE inks add mix BOOLEAN NOT NULL default false') or die $dbh->errstr();
 	} # end if
+	if ( ! $$data{name} ) {
+		if ( $$data{strcolourname} ) {
+			$dbh->do('ALTER TABLE inks rename column strcolourname to name');
+		} else {
+			$dbh->do('ALTER TABLE inks add name TEXT');
+		} # end if
+	} # end if
 } # end if
 
 if ( sets::isin( 'tbl_service_categories', \@tables ) ) {

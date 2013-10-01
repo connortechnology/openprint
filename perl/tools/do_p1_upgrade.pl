@@ -10,6 +10,9 @@ require openprint::Service;
 require openprint::Equipment;
 require openprint::ServiceType_Category;
 require openprint::ProjectType;
+require openprint::SRED_Asset;
+require openprint::Claim_Asset;
+require openprint::Object_Asset;
 
 use openprint ();
 use vars qw( $log $dbh %config );
@@ -425,9 +428,9 @@ foreach my $Template ( openprint::ProjectType_Template->find(projecttype=>'Poste
 foreach my $Template ( openprint::ProjectType_Template->find(projecttype=>'Posters',type=>'PostersPortrait' ) ) {
 	$Template->save({type=>'Portrait'});
 }
-sql::update( undef, undef, 'configuration', [ 'name=>', 'Add Default Press Proof' ], 'name', 'Add_Default_Press_Proof' );
-sql::update( undef, undef, 'configuration', [ 'name=>', 'Add Default Colour Proof' ], 'name', 'Add_Default_Colour_Proof' );
-sql::update( undef, undef, 'configuration', [ 'name=>', 'Add Default Layout Proof' ], 'name', 'Add_Default_Layout_Proof' );
+sql::update( undef, undef, 'configuration', [ 'name=?', 'Add Default Press Proof' ], 'name', 'Add_Default_Press_Proof' );
+sql::update( undef, undef, 'configuration', [ 'name=?', 'Add Default Colour Proof' ], 'name', 'Add_Default_Colour_Proof' );
+sql::update( undef, undef, 'configuration', [ 'name=?', 'Add Default Layout Proof' ], 'name', 'Add_Default_Layout_Proof' );
 $dbh->do(q`INSERT INTO configuration VALUES ('Small_Asset_Height', NULL, 'text', '', 'Asset Settings');`) if ! $config{Small_Asset_Height};
 $dbh->do(q`INSERT INTO configuration VALUES ('Medium_Asset_Height', NULL, 'text', '', 'Asset Settings');`) if ! $config{Medium_Asset_Height};
 $dbh->do(q`INSERT INTO configuration VALUES ('Large_Asset_Height', NULL, 'text', '', 'Asset Settings');`) if ! $config{Large_Asset_Height};
@@ -437,8 +440,13 @@ $dbh->do(q`INSERT INTO configuration VALUES ('Small_Asset_Width', '50', 'text', 
 
 foreach my $SRED_Asset ( openprint::SRED_Asset->find() ) {
 	my $Object_Asset = new openprint::Object_Asset();
-	$Object_Asset->save({ object_id=>$SRED_Asset->content_id(), asset_id=>$SRED_Asset->asset_id() });
+	$Object_Asset->save({ object_id=>$SRED_Asset->content_id(), asset_id=>$SRED_Asset->asset_id(), object_type=>'openprint::SRED_Content' });
 	$SRED_Asset->delete();
+} # end foreach my $SRED_Asset
+foreach my $Claim_Asset ( openprint::Claim_Asset->find() ) {
+	my $Object_Asset = new openprint::Object_Asset();
+	$Object_Asset->save({ object_id=>$Claim_Asset->claim_id(), asset_id=>$Claim_Asset->asset_id(), object_type=>'openprint::Claim_Content' });
+	$Claim_Asset->delete();
 } # end foreach my $SRED_Asset
 $dbh->disconnect();
 0;
