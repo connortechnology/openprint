@@ -16,7 +16,7 @@ require openprint::PurchaseOrder;
 require openprint::Company;
 require openprint::Currency;
 require openprint::Claim_Tax;
-require openprint::Claim_Asset;
+require openprint::Object_Asset;
 
 $debug = 0;
 
@@ -201,7 +201,7 @@ require MIME::QuotedPrint;
 	my @attachments = ();
 
 	my $email_template = misc::load_file( $log, $openprint::config{'SkinPath'} . '/email_template.html' );
-	$info{'ReplacementText'} = "<!--#include virtual=\"/email_content/claim_body.html\"-->";
+	$info{'ReplacementText'} = ssi::include( '/email_content/claim_body.html', \%info );
 	$_ = MIME::QuotedPrint::encode_qp( Encode::encode('utf-8', ssi::variable_substitution( \$email_template, \%info ) ) );
 	push @attachments, ('', $_, 'text/html', 'quoted-printable');
 
@@ -270,9 +270,10 @@ sub Tax {
 sub Assets {
 	return () if ! $_[0]{'id'};
 	my ( $self, %param ) = @_;
-	$param{'claim_id'} = $_[0]{'id'};
-	$param{'order'}	=	'asset_id' if ! $param{'order'};
-	my @Assets = openprint::Claim_Asset->find(%param);	
+	$param{object_id} = $_[0]{id};
+	$param{object_type} = 'openprint::Claim';
+	$param{order}	=	'asset_id' if ! $param{'order'};
+	my @Assets = openprint::Object_Asset->find(%param);	
 $openprint::log->debug("# of Assets: " . scalar @Assets );
 	return @Assets;
 } # end sub Assets

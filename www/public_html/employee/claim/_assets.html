@@ -1,4 +1,4 @@
-<? echo ( include('/includes/error_reporting.html'); ) ?>
+<?include('/includes/error_reporting.html')?>
 <h3>Attachments</h3>
 <table>
 	<thead>
@@ -17,16 +17,16 @@ foreach my $Claim_Asset ( $$variable{'Claim'}->Assets() ) {
 	my $Asset = $Claim_Asset->Asset();
 	$html .= sprintf('
 		<tr>
-			<td class="Name"><a href="/assets/%1$s" target="_blank">%2$s</a></td>
-			<td class="Filename"><a href="/assets/%1$s" target="_blank">%3$s</a></td>
-			<td class="DateTime"><a href="/assets/%1$s" target="_blank">%4$s</a></td>
-			<td class="Thumbnail"><a href="/assets/%1$s" target="_blank"><img src="%5$s" alt=""/></a></td>
+			<td class="Name"><a href="%1$s" target="_blank">%2$s</a></td>
+			<td class="Filename"><a href="%1$s" target="_blank">%3$s</a></td>
+			<td class="DateTime"><a href="%1$s" target="_blank">%4$s</a></td>
+			<td class="Thumbnail"><a href="%1$s" target="_blank"><img src="%5$s" alt=""/></a></td>
 			<td class="actions">%6$s</td>
 		</tr>
-		', $Asset->on_disk_filename(), $Asset->name(), $Asset->filename(),
-		Date::Format::time2str( $config{'DateTimeFormat'}, Date::Parse::str2time( $Asset->created_on() ) ),
-		$Asset->thumbnail_url(),
-		ssi::writeButton( $log, $dbh, 'd'.$Asset->id(), 'delete.gif', q`new Ajax.Updater( 'Assets', '_assets.html', { parameters: { claim_id: `.$$variable{'Claim'}->id().q`, asset_id: `.$Asset->id().q`, action: 'delete' } } );`, '', 'Delete' ),
+		', $Asset->url(), $Asset->name(), $Asset->filename(),
+		format_datetime( $Asset->created_on() ),
+		$Asset->sized_url('small'),
+		button( 'd'.$Asset->id(), { onclick=>q`new Ajax.Updater( 'Assets', '_assets.html', { parameters: { claim_id: `.$$variable{'Claim'}->id().q`, asset_id: `.$Asset->id().q`, action: 'delete' } } );`, text=> 'Delete' } ),
 		);
 } # end foreach Asset
 return $html;
@@ -35,7 +35,7 @@ return $html;
 		<tr class="unprintable">
 			<td class="Name"><input type="text" id="name" name="name"/></td>
 			<td colspan="3" class="Filename"><input type="file" id="filename" name="filename"/></td>
-			<td><? echo ( ssi::button( 'Upload', { onclick=>"f1.btnFunction.value='Attach';f1.submit();", href=>'', text=>'Upload' } ); ) ?></td>
+			<td><? echo ( button( 'Upload', { onclick=>"f1.btnFunction.value='Attach';f1.submit();", text=>'Upload' } ); ) ?></td>
 		</tr>
 	</tbody>
 </table>
