@@ -245,32 +245,34 @@
 	if ( $$variable{'Mode'} eq 'Easy' ) {
 		foreach my $qty_index ( $$variable{Project}->quantity_indexes() ) {
 			$html .= input( type=>'hidden', name=>'rdbPlateType'.$qty_index, value=>'CTP' );
-			$html .= input( type=>'hidden', name=>'PlateID'.$qty_index, value=>htmlize($$variable{'PlateID'.$qty_index}) );
-			$html .= input( type=>'hidden', name=>'PrintingType'.$qty_index, value=>htmlize($$variable{'PrintingType'.$qty_index}) );
-			$html .= input( type=>'hidden', name=>'chkOverridePrintingType'.$qty_index, value=>htmlize($$variable{'chkOverridePrintingType'.$qty_index}) );
+			$html .= input( type=>'hidden', name=>'PlateID'.$qty_index, value=>html_escape($$variable{'PlateID'.$qty_index}) );
+			$html .= input( type=>'hidden', name=>'PrintingType'.$qty_index, value=>html_escape($$variable{'PrintingType'.$qty_index}) );
+			$html .= input( type=>'hidden', name=>'chkOverridePrintingType'.$qty_index, value=>$$variable{'chkOverridePrintingType'.$qty_index} );
 		} # end foreach 
 		return $html;
 	} else {
-		my @PlateTypes = sql::execute( undef, undef, q{SELECT DISTINCT strvalue FROM tbl_Equipment_specifications WHERE strname='Plate Type'} );
+		
+		my @PlateTypes = sets::union( map { $_->specification('Plate Type') } openprint::Equipment->find( 'category any'=>'Printing', useinestimating=>1 ) );
+
 		if ( @PlateTypes > 1 ) {
 			$html .= '<ul id="Plates" ';
 			$html .= 'style="display:none"' if ( $$variable{PrintingType} eq 'Digital' );
 			$html .= '><li><label>'. writeTip( 'Plate' ).' type</label>';
 			foreach my $qty_index ( $$variable{Project}->quantity_indexes() ) {
 				$html .= '<span class="'.$$variable{Columns}.'Columns">';
-					$html .= radio( 'rdbPlateType'.$qty_index, [ 'CTP','CTP', 'Conventional', 'Conventional' ], htmlize($$variable{'rdbPlateType'.$qty_index}), { onclick=>q`calc('f1');`, default=>'CTP' ); ) ?>
-					$html .= write_override( 'chkOverridePlateType'.$$variable{'QTYIndex'}, $$variable{'chkOverridePlateType'.$$variable{'QTYIndex'}},'',"calc('f1');" );
+				$html .= radio( 'rdbPlateType'.$qty_index, [ map { $_, $_ } @PlateTypes ], html_escape($$variable{'rdbPlateType'.$qty_index}), { onclick=>q`calc('f1');`, default=>'CTP' } );
+				$html .= write_override( 'chkOverridePlateType'.$$variable{'QTYIndex'}, $$variable{'chkOverridePlateType'.$$variable{'QTYIndex'}},'',"calc('f1');" );
 				$html .= '</span>';
-				$html .= input( type=>'hidden', name=>'PlateID'.$qty_index, value=>htmlize($$variable{'PlateID'.$qty_index}) );
+				$html .= input( type=>'hidden', name=>'PlateID'.$qty_index, value=>html_escape($$variable{'PlateID'.$qty_index}) );
 			} # end foreach
 			$html .= '</li></ul>';
 		} else {
 			foreach my $qty_index ( $$variable{Project}->quantity_indexes() ) {
 				$html .= input( type=>'hidden', name=>'rdbPlateType'.$qty_index, value=>'CTP' );
-				$html .= input( type=>'hidden', name=>'PlateID'.$qty_index, value=>htmlize($$variable{'PlateID'.$qty_index}) );
+				$html .= input( type=>'hidden', name=>'PlateID'.$qty_index, value=>html_escape($$variable{'PlateID'.$qty_index}) );
 			} # end foreach 
-		} # end if
-	} # end if
+		} # end if more than 1 plate type
+	} # end if mode
 	return $html;
 ) ?>
 <ul>
