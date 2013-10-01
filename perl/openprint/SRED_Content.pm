@@ -68,6 +68,15 @@ $serial = 'sred_contents_id_seq';
 	'docket'			=>	undef,
 );
 
+sub view_url {
+	my $path = '/employee/sred/project.html';
+	if ( ref $_[0] eq 'openprint::SRED_Content' ) {
+		return $path.'?project_id='.$_->Object()->Project()->id();
+	} elsif ( $_[0] eq 'openprint::SRED_Content' ) {
+		return $path.'?project_id='.(new openprint::SRED_Content( $_[1] ))->Project()->id();
+	} # end if
+}
+
 sub duration {
 	if ( @_ > 1 ) {
 		$_[0]{'duration'} = $_[1];
