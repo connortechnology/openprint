@@ -229,7 +229,7 @@
 		my $html = '';
 		foreach my $qty_index ( $$variable{Project}->quantity_indexes() ) {
 			$html .= sprintf('<span class="%1$sColumns"><select name="PrintingType%2$d" size="1" onchange="calc(this.form.name);">', $$variable{'Columns'}, $qty_index );
-			$html .= ssi::make_drop_down( [ map { $_, $printingtypes{$_} } sort keys %printingtypes ], $$variable{'PrintingType'.$qty_index} );
+			$html .= make_drop_down( [ map { $_, $printingtypes{$_} } sort keys %printingtypes ], $$variable{'PrintingType'.$qty_index} );
 			$html .= '</select>';
 			$html .= write_override( 'OverridePrintingType'.$qty_index, $$variable{'OverridePrintingType'.$qty_index},"calc('f1');","calc('f1');" );
 			$html .= '</span>';
@@ -239,44 +239,41 @@
 	</li>
 <? endif ( 1 < sql::execute( undef, undef, q{SELECT DISTINCT strValue FROM tbl_Equipment_Specifications WHERE strName='Printing Type' } ) ) ?>
 <? endif ( $$variable{'Mode'} eq 'Easy' ) ?>
-
 </ul>
-<? if ( $$variable{'Mode'} eq 'Easy' ) ?>
-	<? eval ( $$variable{'QTYIndex'} = 1 ) ?>
-	<? while ( $$variable{'QTYIndex'} <= 3 ) ?>
-	<? if ( $$variable{Project}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
-	<input type="hidden" name="rdbPlateType<?QTYIndex?>" value="<? echo ( $$variable{'rdbPlates'.$$variable{'QTYIndex'}} ) ?>" />
-	<input type="hidden" name="PlateID<?QTYIndex?>" value="<? echo ( $$variable{'PlateID'.$$variable{'QTYIndex'}} ) ?>" />
-	<input type="hidden" name="PrintingType<?QTYIndex?>" value="<? echo ( $$variable{'PrintingType'.$$variable{'QTYIndex'}} ) ?>" />
-	<input type="hidden" name="chkOverridePrintingType<?QTYIndex?>" value="<? echo ( $$variable{"chkOverridePrintingType$$variable{'QTYIndex'}"} ) ?>" />
-	<? endif ( $$variable{Project}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
-	<? eval ( $$variable{'QTYIndex'} += 1 ) ?>
-	<? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
-<? else ( $$variable{'Mode'} eq 'Easy' ) ?>
-<ul id="Plates" <? if ( $$variable{'PrintingType'} eq 'Digital' ) ?>style="display:none"<? endif ( $$variable{'PrintingType'} eq 'Digital' ) ?>>
-<? if ( sql::execute( undef, undef, q{SELECT DISTINCT strvalue FROM tbl_Equipment_specifications WHERE strname='Plate Type'} ) > 1 ) ?>
-	<li><label><? echo ( ssi::writeTip( 'Plate' ); ) ?> type</label>
-<? echo ( my $html;
-	foreach my $qty_index ( $$variable{Project}->quantity_indexes() ) {
-		$html .= '<span class="'.$$variable{Columns}.'Columns">';
-			$html .= radio( 'rdbPlateType'.$qty_index, [ 'CTP','CTP', 'Conventional', 'Conventional' ], $$variable{'rdbPlateType'.$qty_index}, { onclick=>q`calc('f1');`, default=>'CTP' ); ) ?>
-			$html .= write_override( 'chkOverridePlateType'.$$variable{'QTYIndex'}, $$variable{'chkOverridePlateType'.$$variable{'QTYIndex'}},'',"calc('f1');" );
-		$html .= '</span>';
-		$html .= input( type=>'hidden', name=>'PlateID'.$qty_index, value=>$$variable{'PlateID'.$qty_index} );
-	} # end foreach
+<? echo (
+	my $html;
+	if ( $$variable{'Mode'} eq 'Easy' ) {
+		foreach my $qty_index ( $$variable{Project}->quantity_indexes() ) {
+			$html .= input( type=>'hidden', name=>'rdbPlateType'.$qty_index, value=>'CTP' );
+			$html .= input( type=>'hidden', name=>'PlateID'.$qty_index, value=>htmlize($$variable{'PlateID'.$qty_index}) );
+			$html .= input( type=>'hidden', name=>'PrintingType'.$qty_index, value=>htmlize($$variable{'PrintingType'.$qty_index}) );
+			$html .= input( type=>'hidden', name=>'chkOverridePrintingType'.$qty_index, value=>htmlize($$variable{'chkOverridePrintingType'.$qty_index}) );
+		} # end foreach 
+		return $html;
+	} else {
+		my @PlateTypes = sql::execute( undef, undef, q{SELECT DISTINCT strvalue FROM tbl_Equipment_specifications WHERE strname='Plate Type'} );
+		if ( @PlateTypes > 1 ) {
+			$html .= '<ul id="Plates" ';
+			$html .= 'style="display:none"' if ( $$variable{PrintingType} eq 'Digital' );
+			$html .= '><li><label>'. writeTip( 'Plate' ).' type</label>';
+			foreach my $qty_index ( $$variable{Project}->quantity_indexes() ) {
+				$html .= '<span class="'.$$variable{Columns}.'Columns">';
+					$html .= radio( 'rdbPlateType'.$qty_index, [ 'CTP','CTP', 'Conventional', 'Conventional' ], htmlize($$variable{'rdbPlateType'.$qty_index}), { onclick=>q`calc('f1');`, default=>'CTP' ); ) ?>
+					$html .= write_override( 'chkOverridePlateType'.$$variable{'QTYIndex'}, $$variable{'chkOverridePlateType'.$$variable{'QTYIndex'}},'',"calc('f1');" );
+				$html .= '</span>';
+				$html .= input( type=>'hidden', name=>'PlateID'.$qty_index, value=>htmlize($$variable{'PlateID'.$qty_index}) );
+			} # end foreach
+			$html .= '</li></ul>';
+		} else {
+			foreach my $qty_index ( $$variable{Project}->quantity_indexes() ) {
+				$html .= input( type=>'hidden', name=>'rdbPlateType'.$qty_index, value=>'CTP' );
+				$html .= input( type=>'hidden', name=>'PlateID'.$qty_index, value=>htmlize($$variable{'PlateID'.$qty_index}) );
+			} # end foreach 
+		} # end if
+	} # end if
 	return $html;
 ) ?>
-
-	</li>
-<? else ( sql::execute( undef, undef, q{SELECT DISTINCT strvalue FROM tbl_Equipment_specifications WHERE strname='Plate Type'} ) > 1 ) ?>
-<? echo ( my $html;
-	foreach my $qty_index ( $$variable{Project}->quantity_indexes() ) {
-		$html .= input( type=>'hidden', name=>'rdbPlateType'.$qty_index, value=>'CTP' );
-		$html .= input( type=>'hidden', name=>'PlateID'.$qty_index, value=>$$variable{'PlateID'.$qty_index} );
-	} # end foreach 
-	return $html;
-) ?>
-<? endif ( sql::execute( undef, undef, q{SELECT DISTINCT strvalue FROM tbl_Equipment_specifications WHERE strname='Plate Type'} ) > 1 ) ?>
+<ul>
 	<li>
 		<label><? echo ( ssi::writeTip( 'Plate' ); ) ?> quantity</label>
 		<? echo ( 
