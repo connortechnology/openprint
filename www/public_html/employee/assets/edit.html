@@ -1,5 +1,4 @@
 <script type="text/javascript">
-<!--
   tinyMCE.init({
 	theme : "advanced",
 	plugins : "tabfocus,paste",
@@ -15,16 +14,15 @@
 	tab_focus : ':prev,:next'
 
   });
--->
 </script>
 <form id="f1" name="f1" action="view.html<? echo ( $$variable{'Asset'}->id() ? '?asset_id='.$$variable{'Asset'}->id() : '' ) ?>" method="post" enctype="multipart/form-data">
-	<? echo ( include('/includes/error_reporting.html'); ) ?>
+	<?include('/includes/error_reporting.html')?>
 	<p class="buttons" id="buttons">
 <? echo ( 
 	my $html = '';
-	$html .= ssi::button( 'Save', { 'onclick'=>"\$('buttons').innerHTML='Please wait. Saving...';f1.btnFunction.value='Save';f1.submit();", 'text'=> $$variable{'Asset'}->id() ? 'Save' : 'Create Asset' } );
+	$html .= button( 'Save', { 'onclick'=>"\$('buttons').innerHTML='Please wait. Saving...';f1.btnFunction.value='Save';f1.submit();", 'text'=> $$variable{'Asset'}->id() ? 'Save' : 'Create Asset' } );
 	if ( $$variable{'Asset'}->id() ) {
-		$html .= ssi::button( 'Delete', { 'onclick'=>"\$('buttons').innerHTML='Please wait. Deleting...';f1.btnFunction.value='Delete';f1.submit();" } );
+		$html .= button( 'Delete', { 'onclick'=>"\$('buttons').innerHTML='Please wait. Deleting...';f1.btnFunction.value='Delete';f1.submit();" } );
 	}  # end if
 	return $html;
 ) ?>
