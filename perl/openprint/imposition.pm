@@ -438,34 +438,38 @@ $openprint::log->debug("Not Pretrimming on $$Press{strid}") if DEBUG;
 		$adjusted_paper_height -= $$specs{'colour_bar_size'};
 	} # end if
 
-# There needs to be enough space to put crop marks, but they can go in th bleed space, so it's only an nissue if we are running small or no bleeds.
-	$cropmarkspace = $$specs{'CropMarkSpace'};
-	$cropmarkspace -= $bleed_size if sets::isin( 'Top', \@bleed_locations );
-	$cropmarkspace = 0 if $cropmarkspace < 0;
-	$setup1->cropmark_top( $cropmarkspace );
+	if ( $Paper->cuttable() ) {
+	# There needs to be enough space to put crop marks, but they can go in th bleed space, so it's only an nissue if we are running small or no bleeds.
+		$cropmarkspace = $$specs{'CropMarkSpace'};
+		$cropmarkspace -= $bleed_size if sets::isin( 'Top', \@bleed_locations );
+		$cropmarkspace = 0 if $cropmarkspace < 0;
+		$setup1->cropmark_top( $cropmarkspace );
 
-	$cropmarkspace = $$specs{'CropMarkSpace'};
-	$cropmarkspace -= $bleed_size if sets::isin( 'Bottom', \@bleed_locations );
-	$cropmarkspace = 0 if $cropmarkspace < 0;
-	$setup1->cropmark_bottom( $cropmarkspace );
+		$cropmarkspace = $$specs{'CropMarkSpace'};
+		$cropmarkspace -= $bleed_size if sets::isin( 'Bottom', \@bleed_locations );
+		$cropmarkspace = 0 if $cropmarkspace < 0;
+		$setup1->cropmark_bottom( $cropmarkspace );
 
-	$adjusted_paper_height -= $setup1->cropmark_top();
-	$adjusted_paper_height -= $setup1->cropmark_bottom();
+		$adjusted_paper_height -= $setup1->cropmark_top();
+		$adjusted_paper_height -= $setup1->cropmark_bottom();
+	} # end if
 	$adjusted_paper_height = 0 if $adjusted_paper_height < 0;
 $openprint::log->debug("Height: $paper_height - CB $$specs{'colour_bar_size'} - Grip $$specs{'Grip Size'} CropTOp: $$setup1{cropmark_top} - CropBottom: $$setup1{cropmark_bottom} = $adjusted_paper_height") if DEBUG;
 
 	my $adjusted_paper_width = $paper_width; 
-	$cropmarkspace = $$specs{'CropMarkSpace'};
-	$cropmarkspace -= $bleed_size if sets::isin( 'Left', \@bleed_locations );
-	$cropmarkspace = 0 if $cropmarkspace < 0;
-	$setup1->cropmark_left( $cropmarkspace );
-	$gutters -= $cropmarkspace;
-	$cropmarkspace = $$specs{'CropMarkSpace'};
-	$cropmarkspace -= $bleed_size if sets::isin( 'Right', \@bleed_locations );
-	$cropmarkspace = 0 if $cropmarkspace < 0;
-	$setup1->cropmark_right( $cropmarkspace );
-	$gutters -= $cropmarkspace;
-	$gutters = 0 if $gutters < 0;
+	if ( $Paper->cuttable() ) {
+		$cropmarkspace = $$specs{'CropMarkSpace'};
+		$cropmarkspace -= $bleed_size if sets::isin( 'Left', \@bleed_locations );
+		$cropmarkspace = 0 if $cropmarkspace < 0;
+		$setup1->cropmark_left( $cropmarkspace );
+		$gutters -= $cropmarkspace;
+		$cropmarkspace = $$specs{'CropMarkSpace'};
+		$cropmarkspace -= $bleed_size if sets::isin( 'Right', \@bleed_locations );
+		$cropmarkspace = 0 if $cropmarkspace < 0;
+		$setup1->cropmark_right( $cropmarkspace );
+		$gutters -= $cropmarkspace;
+		$gutters = 0 if $gutters < 0;
+	} # end if
 	$setup1->gutters($gutters);
 	$adjusted_paper_width -= $gutters;
 
@@ -477,10 +481,11 @@ $openprint::log->debug("Height: $paper_height - CB $$specs{'colour_bar_size'} - 
 		$adjusted_paper_width -= $$specs{'colour_bar_size'};
 	} # end if
 
-	$adjusted_paper_width -= $setup1->cropmark_left();
-	$adjusted_paper_width -= $setup1->cropmark_right();
-
-	$adjusted_paper_width = 0 if $adjusted_paper_width < 0;
+	if ( $Paper->cuttable() ) {
+		$adjusted_paper_width -= $setup1->cropmark_left();
+		$adjusted_paper_width -= $setup1->cropmark_right();
+		$adjusted_paper_width = 0 if $adjusted_paper_width < 0;
+	} # end if
 	$openprint::log->debug("P Width gutters: $adjusted_paper_width") if DEBUG;
 
 	if ( sets::isin( $run_style, ['Perfecting','Sheet Work','Web'] ) ) {
@@ -591,32 +596,34 @@ $openprint::log->debug("Height: $paper_height - CB $$specs{'colour_bar_size'} - 
 		$adjusted_paper_height -= $$specs{'colour_bar_size'};
 	} # end if
 
-	$cropmarkspace = $$specs{'CropMarkSpace'};
-	$cropmarkspace -= $bleed_size if sets::isin( 'Left', \@bleed_locations );
-	$cropmarkspace = 0 if $cropmarkspace < 0;
-	$setup2->cropmark_top( $cropmarkspace );
+	if ( $Paper->cuttable() ) {
+		$cropmarkspace = $$specs{'CropMarkSpace'};
+		$cropmarkspace -= $bleed_size if sets::isin( 'Left', \@bleed_locations );
+		$cropmarkspace = 0 if $cropmarkspace < 0;
+		$setup2->cropmark_top( $cropmarkspace );
 
-	$cropmarkspace = $$specs{'CropMarkSpace'};
-	$cropmarkspace -= $bleed_size if sets::isin( 'Right', \@bleed_locations );
-	$cropmarkspace = 0 if $cropmarkspace < 0;
-	$setup2->cropmark_bottom( $cropmarkspace );
+		$cropmarkspace = $$specs{'CropMarkSpace'};
+		$cropmarkspace -= $bleed_size if sets::isin( 'Right', \@bleed_locations );
+		$cropmarkspace = 0 if $cropmarkspace < 0;
+		$setup2->cropmark_bottom( $cropmarkspace );
 
-	$adjusted_paper_height -= $setup2->cropmark_top();
-	$adjusted_paper_height -= $setup2->cropmark_bottom();
-	$adjusted_paper_height = 0 if $adjusted_paper_height < 0;
+		$adjusted_paper_height -= $setup2->cropmark_top();
+		$adjusted_paper_height -= $setup2->cropmark_bottom();
+		$adjusted_paper_height = 0 if $adjusted_paper_height < 0;
 
-	$adjusted_paper_width = $paper_width;
-	$cropmarkspace = $$specs{'CropMarkSpace'};
-	$cropmarkspace -= $bleed_size if sets::isin( 'Top', \@bleed_locations );
-	$cropmarkspace = 0 if $cropmarkspace < 0;
-	$setup2->cropmark_left( $cropmarkspace );
-	$gutters -= $cropmarkspace;
-	$cropmarkspace = $$specs{'CropMarkSpace'};
-	$cropmarkspace -= $bleed_size if sets::isin( 'Bottom', \@bleed_locations );
-	$cropmarkspace = 0 if $cropmarkspace < 0;
-	$setup2->cropmark_right( $cropmarkspace );
-	$gutters -= $cropmarkspace;
-	$gutters = 0 if $gutters < 0;
+		$adjusted_paper_width = $paper_width;
+		$cropmarkspace = $$specs{'CropMarkSpace'};
+		$cropmarkspace -= $bleed_size if sets::isin( 'Top', \@bleed_locations );
+		$cropmarkspace = 0 if $cropmarkspace < 0;
+		$setup2->cropmark_left( $cropmarkspace );
+		$gutters -= $cropmarkspace;
+		$cropmarkspace = $$specs{'CropMarkSpace'};
+		$cropmarkspace -= $bleed_size if sets::isin( 'Bottom', \@bleed_locations );
+		$cropmarkspace = 0 if $cropmarkspace < 0;
+		$setup2->cropmark_right( $cropmarkspace );
+		$gutters -= $cropmarkspace;
+		$gutters = 0 if $gutters < 0;
+	} # end if
 	$setup2->gutters($gutters);
 	$adjusted_paper_width -= $gutters;
 
@@ -628,9 +635,11 @@ $openprint::log->debug("Height: $paper_height - CB $$specs{'colour_bar_size'} - 
 		$adjusted_paper_width -= $$specs{'colour_bar_size'};
 	} # end if
 
+	if ( $Paper->cuttable() ) {
 	$adjusted_paper_width -= $setup2->cropmark_left();
 	$adjusted_paper_width -= $setup2->cropmark_right();
 	$adjusted_paper_width = 0 if $adjusted_paper_width < 0;
+	} # end if
 
 	if ( sets::isin( $run_style, ['Perfecting','Sheet Work','Web'] ) ) {
 		calc_setup( $setup2, $setup2->image_height(), $setup2->image_width(), $adjusted_paper_width, $adjusted_paper_height ? $adjusted_paper_height : $setup2->image_width() );
