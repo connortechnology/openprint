@@ -548,5 +548,15 @@ sub _view_log {
 } # end sub _view_log
 sub _UPS {
 } # end sub _UPS
+sub _order {
+	if ( $param{action} eq 'select_quantity' ) {
+		my $Project = openprint::OrderedProject->find_one( order_id=>$param{order_id}, project_id=>$param{project_id} );
+		if ( ! $Project ) {
+			$variable{error} = 'Project is not in order.<br/>';
+		} else {
+			$variable{error} .= $Project->save({quantity_index=>$param{quantity_index}});
+		} # end if
+	} # end if
+} # end sub _order
 1;
 __END__

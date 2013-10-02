@@ -12,10 +12,10 @@
 			<div class="shadow_left"><div class="shadow_right">
 				<div class="Questions">
 					<h3>Instant Pricing</h3>
-					<? echo ( include('_project_name.html'); ) ?>
+					<?include(_project_name.html) ?>
 					<div class="ProjectSpecifications">
 						<h1>Project Specifications</h1>
-						<? echo ( include('_sizes.html'); ) ?>
+						<?include(_sizes.html) ?>
 						<div class=">Colours">
 							<fieldset><legend>Colours</legend>
 								<div class="content">
@@ -26,8 +26,8 @@
 												<option value="4/4">4 Colour Both Sides</option>
 											</select>
 										</li>
-										<? echo ( include('_aqueous.html'); ) ?>
-										<? echo ( include('_uvcoating.html'); ) ?>
+										<?include(_aqueous.html) ?>
+										<?include(_uvcoating.html) ?>
 									</ul>
 								</div>
 							</fieldset>
@@ -36,7 +36,7 @@
 							<fieldset><legend>Stock</legend>
 								<div class="content">
 									<ul>
-										<? echo ( include('_paper_dropdowns.html'); ) ?>
+										<?include(_paper_dropdowns.html) ?>
 									</ul>
 								</div>
 							</fieldset>
@@ -45,9 +45,9 @@
 							<fieldset><legend>Finishing</legend>
 								<div class="content">
 									<ul>
-										<? echo ( include('_scoring.html'); ) ?>
-										<? echo ( include('_shrinkwrapping.html'); ) ?>
-										<? echo ( include('_bundling.html'); ) ?>
+										<?include(_scoring.html) ?>
+										<?include(_shrinkwrapping.html) ?>
+										<?include(_bundling.html) ?>
 									</ul>
 								</div>
 							</fieldset>
@@ -56,28 +56,28 @@
 							<fieldset><legend>Production</legend>
 								<div class="content">
 									<ul>
-									<? echo ( include('_design.html'); ) ?>
-									<? echo ( include('_proofs.html'); ) ?>
-									<? echo ( include('_turnaround.html'); ) ?>
-									<? echo ( include('_quantity.html'); ) ?>
+									<?include(_design.html) ?>
+									<?include(_proofs.html) ?>
+									<?include(_turnaround.html) ?>
+									<?include(_quantity.html) ?>
 									</ul>
 								</div>
 							</fieldset>
 						</div>
-						<? echo ( include('_ups.html'); ) ?>
+						<?include(_ups.html) ?>
 						<div id="AlertDiv" style="display:none;"></div>
 					</div><!--ProjectSpecifications-->
-					<? echo ( include('_prices.html'); ) ?>
+					<?include(_prices.html) ?>
 				</div><!--Questions-->
 			</div></div>
 			<div class="bottom_shadow"><div class="shadow_bl"></div><div class="shadow_br"></div></div>
 		</div>
 <? echo ( 
 	if ( -e $config{'SkinPath'}.'/content/'.$$variable{'ProjectType'}->name().'.html' ) {
-		return ssi::include( $config{'SkinPath'}.'/content/'.$$variable{'ProjectType'}->name().'.html' );
+		return include( '/content/'.$$variable{'ProjectType'}->name().'.html' );
 	} # end if
 	return '';
 ) ?>
-		<? echo ( include('_specials.html'); ) ?>
+		<?include(_specials.html) ?>
 	</div><!--InstantPricing-->
 </form>

@@ -12,9 +12,7 @@
 				<fieldset>
 					<div class="content">
 						<ul>
-							<li class="order_id"> 
-								<label>Order ID</label><? echo ( $$variable{'Order'}->id() ) ?>
-							</li>
+							<li class="order_id"><label>Order ID</label><? echo ( $$variable{'Order'}->id() ) ?></li>
 							<li class="po_id"> 
 								<label>Purchase Order</label>
 								<input type="text" id="txtPurchaseOrder" name="txtPurchaseOrder" value="<?txtPurchaseOrder?>" />
@@ -46,10 +44,10 @@
 					</div>
 				</fieldset>
 			</div><!--Information-->
-			<div id="BillingInformation"><? echo ( include('_billing_information.html'); ) ?></div>
+			<div id="BillingInformation"><?include(_billing_information.html) ?></div>
 <? if ( $config{'PaymentOnOrderInformation'} ) ?>
 			<div id="PaymentOptions">
-			<? echo ( include('_payment_options.html'); ) ?>
+			<?include(_payment_options.html) ?>
 			</div>
 <? endif ( $config{'PaymentOnOrderInformation'} ) ?>
 			<? eval ( 
@@ -62,8 +60,8 @@
 				<? echo (
 					# If there is only 1 thing in the order, then we can condense
 					$$variable{'Project'} = $$variable{'Contents'}[0]->Project();
-					my $html .= ssi::include( $ENV{'DOCUMENT_ROOT'} . '/main/order/_quantity_select.html' );
-					$html .= ssi::include( $ENV{'DOCUMENT_ROOT'} . '/main/order/_shipping_type_select.html' );
+					my $html .= '<fieldset><legend>Select Quantity</legend><div class="content"><ul>'.include( '/main/order/_quantity_select.html' ).'</ul></div></fieldset>';
+					$html .= include( '/main/order/_shipping_type_select.html' );
 					return $html;
 				) ?>
 			</div><!--Shipping-->
@@ -79,7 +77,7 @@
 							$html .= '<div class="Project"><h3 class="project_id"><a href="/main/project/view.html?ProjectIndex='.$Project->id().'">Project '.$Project->id().'</a></h3><p class="buttons">';
 							$html .= ssi::button( 'Remove'.$$Project{id}, { href=>"information.html?order_id=$$variable{order_id}&amp;action=remove&amp;project_id=$$Project{id}", text=>'Remove' } );
 							$html .= '</p><br class="spacer"/>';
-							$html .= ssi::include( $ENV{'DOCUMENT_ROOT'} . '/main/order/_project_information.html' );
+							$html .= include( '/main/order/_project_information.html' );
 							$html .= '</div>';
 						} # end foreach
 						return $html;
@@ -94,7 +92,7 @@
 							$html .= '<div class="Project"><p class="buttons">';
 							$html .= ssi::button( 'Remove'.$$Project{'id'}, { 'href'=>"information.html?order_id=$$variable{'order_id'}&amp;action=remove&amp;product_id=$$Product{id}", 'text' => 'Remove' } );
 							$html .= '</p><br class="spacer"/>';
-							$html .= ssi::include( $ENV{'DOCUMENT_ROOT'} . '/main/order/_product_information.html' );
+							$html .= include( '/main/order/_product_information.html' );
 							$html .= '</div>';
 						} # end foreach
 						return $html;
