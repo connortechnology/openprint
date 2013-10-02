@@ -20,9 +20,9 @@ use strict;
 package openprint::Estimating::Printing;
 my $threading = 0;
 #use threads;
-use constant DEBUG => 0;
+use constant DEBUG => 1;
 use constant DEBUG_VERSIONS => 1;
-use constant DEBUG_FILTERING => 0;
+use constant DEBUG_FILTERING => 1;
 use constant DEBUG_PRICE_DECISIONS => 0;
 
 my $master_time;
@@ -1277,6 +1277,9 @@ $openprint::log->debug("Non-process colours in get_impositions: @non_process_col
 #Paper might have different calliperso# Is this needed anymore
 			#$$project{'Calliper'} = $$Paper{'calliper'};
 			if ( ( $$specs{'OverrideStockType'.$qty_index} eq 'Y' ) and ( $$Paper{'type'} ne $$specs{'StockType'.$qty_index} ) ) {
+				if ( DEBUG ) {
+					$openprint::log->debug("Not overriden stock stype: " . $Paper->to_string() );
+				} # end if
 				next;
 			} # end if
 			if ( $$specs{'PreviousStockType'} and ( $$Paper{'type'} ne $$specs{'PreviousStockType'} ) ) {
@@ -1284,7 +1287,13 @@ $openprint::log->debug("Non-process colours in get_impositions: @non_process_col
 				next;
 			} # end if
 			my @imps;
-			next if ! $feeds{$$Paper{type}};
+			if ( ! $feeds{$$Paper{type}} ) {
+				if ( DEBUG ) {
+					$openprint::log->debug("Not in feeds: " . $Paper->to_string() . ' on ' . $Press->strid() );
+				} # end if
+				next;
+			} # end if
+
 			if ( $$Paper{'type'} eq 'Roll' ) {
 				
 				$$project{'Runstyles'} = $runstyles_roll;
@@ -1583,7 +1592,12 @@ $openprint::log->debug("Doing nothing, keeping all $add") if DEBUG_FILTERING;
 		} # end if
 
 		if ( ! @impositions ) {
-			$openprint::log->debug("No impositions for press " . $$Press{'strid'} . ' ' . $$specs{'ddmPress'.$qty_index} . ' ' . $$specs{'chkOverridePress'.$qty_index} ) if DEBUG;
+			if ( DEBUG ) {
+				$openprint::log->debug("No impositions for press " . $$Press{'strid'} . ' ' . $$specs{'ddmPress'.$qty_index} . ' ' . $$specs{'chkOverridePress'.$qty_index} );
+				foreach my $P (@$Papers) {
+					$openprint::log->debug($P->to_string() );
+				} # end foreach
+			} # end if
 			if ( ( $$specs{'chkOverridePress'.$qty_index} eq 'Y' ) and ( $$Press{'strid'} eq $$specs{'ddmPress'.$qty_index} ) ) {
 				if ( $Press->specification('Printing Type') eq 'Digital' ) {
 					my $digital = 0;
