@@ -1,4 +1,4 @@
-<? echo ( include('/includes/project_header.html'); ) ?>
+<?include(/includes/project_header.html) ?>
 <table class="List Services">
 	<thead>
 		<tr> 
@@ -127,7 +127,7 @@
 					} # end foreach qty_index
 
 					if ( ! $$variable{'Quote'} ) {
-						$html .= sprintf('<td class="status">%s</td>', $statuses{$ss_id} );
+						$html .= join( '<td class="status">',  $statuses{$ss_id}, '</td>' );
 
 						if ( ( ! $Project->docket() ) or ( $Project->Order()->status() eq 'Re-Opened' ) ) {
 							$html .= '<td class="unprintable actions">';
