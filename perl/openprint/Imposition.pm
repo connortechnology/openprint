@@ -353,8 +353,12 @@ sub used_height {
 } # end sub used_height
 
 sub object_area {
-	my $self = shift;
-	return $$self{'object_width'} * $$self{'object_height'} * $$self{'imposition'} * $$self{'spreads'};
+	$_[0]{object_area} = $_[1] if @_ > 1;
+	if ( ! exists $_[0]{object_area} ) {
+		$_[0]{object_area} = $_[0]{object_width} * $_[0]{object_height} * $_[0]{imposition} * $_[0]{spreads};
+	} 
+$openprint::log->debug("object_area: $_[0]{object_area} = $_[0]{object_width} * $_[0]{object_height} * $_[0]{imposition} * $_[0]{spreads}");
+	return $_[0]{object_area};
 }
 sub layout_area {
 	my $self = shift;

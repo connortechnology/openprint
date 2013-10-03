@@ -1222,6 +1222,13 @@ if ( ! sets::isin( 'inks', \@tables ) ) {
 	if ( ! $$data{grades} ) {
 		$dbh->do(q{alter table inks add grades INTEGER[]});
 	} # end if
+	if ( ! $$data{name} ) {
+		if ( $$data{strcolourname} ) {
+			$dbh->do('ALTER TABLE inks rename column strcolourname to name');
+		} else {
+			$dbh->do('ALTER TABLE inks add name TEXT');
+		} # end if
+	} # end if
 } # end if
 
 if ( sets::isin( 'tbl_service_categories', \@tables ) ) {

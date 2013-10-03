@@ -47,7 +47,7 @@
 					return $html;
 				) ?>
 			</p>
-			<div class="content leftColumn">
+			<div class="content">
 				<ul>
 <? if ( sets::isin( $session{user_type}, ['E','A'] ) ) ?>
 					<li><label for="company_id"><? translate(company) ?></label>
@@ -64,7 +64,7 @@
 						<select name="category_id" id="category_id" onchange="$('category').value='';">
 							<option value="">select</option>
 							<? echo (
-								return make_drop_down( [ map { $_->id(), $_->name() } openprint::Article_Category->find('order'=>'lower(name)') ], $$variable{Article}->category_id() );
+								make_drop_down( openprint::Article_Category->dropdown( order=>'lower(name)'), $$variable{Article}->category_id() );
 							) ?>
 						</select>
 					</li>
@@ -134,7 +134,7 @@
 				) ?>
 			</p>
 			</div>
-			<div class="rightColumn">
+			<div class="Assets">
 				<?include('/article/_upload.html')?>
 			</div>
 		</fieldset>

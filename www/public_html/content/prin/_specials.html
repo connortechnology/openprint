@@ -3,9 +3,8 @@
     $$variable{Categories} = [ openprint::Product_Category->find( order=>'lower(name)', projecttype_id=>$$variable{'ProjectType'}->id() ) ];
 	return if ! @{$$variable{'Categories'}};
 
-    my $list_id = openprint::pricing::get_pricelist_id( $log, $dbh, $variable );
-    $$variable{'Pricelist'} = new openprint::Pricelist( $list_id );
-    $$variable{'Currency'} = new openprint::Currency( $session{'Currency_id'} );
+    $$variable{'Pricelist'} = openprint::Pricelist::get_current();
+    $$variable{'Currency'} = openprint::Currency::get_current();
 
 	my $html = '<div id="Specials" align="center"><h2>';
 	if ( sets::isin( $$variable{'ProjectType'}->name() , ['Brochures','Posters','Magazines','Letterhead'] ) ) {
@@ -20,7 +19,7 @@
 	my ( $y, $m, $d ) = Date::Calc::Today();
 	$html .=' for ' . Date::Calc::Month_to_Text($m) . ' ' . $y . '</h2>';
 	foreach my $Category ( @{$$variable{'Categories'}} ) {
-		my @Products = $Category->products('order'=>'sort, lower(name)');
+		my @Products = $Category->Products(order=>'sort, lower(name)');
 		next if ! @Products;
 		my $rowclass;
 

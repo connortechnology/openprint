@@ -50,8 +50,7 @@ sub verify_login {
 	my ( $r, $log, $dbh, $cookie, $variable, $site ) = @_;
 		
 	# convert the email address to lower case. All email addresses stored in DB will be lower case.
-	my $email = lc $openprint::param{'email'};
-	$email =~ s/^\s*(.*?)\s*$/$1/;
+	my $email = openprint::User->transform('email', $openprint::param{'email'} );
 	if ( ! $email ) {
 		$$variable{'details'} = "\"$email\" is not a valid account.	Please try again.";
 		$$variable{'error'} = 'Authentication Failed.';
@@ -151,8 +150,7 @@ sub verify_login {
 			$info{'Site'} = $site;
 			$info{'UserType'} = $User->type();
 
-			$info{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/login_notification.html' );
-			$info{'ReplacementText'} = ssi::variable_substitution( \$info{'ReplacementText'}, \%info );
+			$info{'ReplacementText'} = ssi::include( '/email_content/login_notification.html', \%info );
 
 			my $email_template = misc::load_file( $log, $config{'SkinPath'}. '/email_template.html' );
 			$_ = MIME::QuotedPrint::encode_qp( Encode::encode('utf-8',ssi::variable_substitution( \$email_template, \%info ) ) );

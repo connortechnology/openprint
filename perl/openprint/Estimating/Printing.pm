@@ -20,9 +20,9 @@ use strict;
 package openprint::Estimating::Printing;
 my $threading = 0;
 #use threads;
-use constant DEBUG => 0;
-use constant DEBUG_VERSIONS => 0;
-use constant DEBUG_FILTERING => 0;
+use constant DEBUG => 1;
+use constant DEBUG_VERSIONS => 1;
+use constant DEBUG_FILTERING => 1;
 use constant DEBUG_PRICE_DECISIONS => 0;
 
 my $master_time;
@@ -1277,6 +1277,9 @@ $openprint::log->debug("Non-process colours in get_impositions: @non_process_col
 #Paper might have different calliperso# Is this needed anymore
 			#$$project{'Calliper'} = $$Paper{'calliper'};
 			if ( ( $$specs{'OverrideStockType'.$qty_index} eq 'Y' ) and ( $$Paper{'type'} ne $$specs{'StockType'.$qty_index} ) ) {
+				if ( DEBUG ) {
+					$openprint::log->debug("Not overriden stock stype: " . $Paper->to_string() );
+				} # end if
 				next;
 			} # end if
 			if ( $$specs{'PreviousStockType'} and ( $$Paper{'type'} ne $$specs{'PreviousStockType'} ) ) {
@@ -1284,7 +1287,13 @@ $openprint::log->debug("Non-process colours in get_impositions: @non_process_col
 				next;
 			} # end if
 			my @imps;
-			next if ! $feeds{$$Paper{type}};
+			if ( ! $feeds{$$Paper{type}} ) {
+				if ( DEBUG ) {
+					$openprint::log->debug("Not in feeds: " . $Paper->to_string() . ' on ' . $Press->strid() );
+				} # end if
+				next;
+			} # end if
+
 			if ( $$Paper{'type'} eq 'Roll' ) {
 				
 				$$project{'Runstyles'} = $runstyles_roll;
@@ -1583,7 +1592,12 @@ $openprint::log->debug("Doing nothing, keeping all $add") if DEBUG_FILTERING;
 		} # end if
 
 		if ( ! @impositions ) {
-			$openprint::log->debug("No impositions for press " . $$Press{'strid'} . ' ' . $$specs{'ddmPress'.$qty_index} . ' ' . $$specs{'chkOverridePress'.$qty_index} ) if DEBUG;
+			if ( DEBUG ) {
+				$openprint::log->debug("No impositions for press " . $$Press{'strid'} . ' ' . $$specs{'ddmPress'.$qty_index} . ' ' . $$specs{'chkOverridePress'.$qty_index} );
+				foreach my $P (@$Papers) {
+					$openprint::log->debug($P->to_string() );
+				} # end foreach
+			} # end if
 			if ( ( $$specs{'chkOverridePress'.$qty_index} eq 'Y' ) and ( $$Press{'strid'} eq $$specs{'ddmPress'.$qty_index} ) ) {
 				if ( $Press->specification('Printing Type') eq 'Digital' ) {
 					my $digital = 0;
@@ -2289,8 +2303,14 @@ foreach my $plate_id ( keys %PlateCounts ) {
 		$log->debug("Impositions in best price " . @{ $$best_price{'Impositions'} } );
 		foreach my $I ( @{ $$best_price{'Impositions'} } ) {
 			my $price = shift @{$$best_price{prices}};
+			$$specs{'hdnBreakdown'.$qty_index} .= sprintf( '<br/><b>Additional Signature %dpages %dout %s on %sx%s on %s</b><br/>', @$I{'pages', 'imposition', 'runstyle'}, $I->Paper()->width(), $I->Paper()->height(), $I->Press()->strid() );
 			$$specs{'hdnBreakdown'.$qty_index} .= breakdown( $price, $$I{specs} );
 		} # end foreach
+	$$specs{'hdnBreakdown'.$qty_index} .= $$best_price{'Stitching Breakdown'};
+	$$specs{'hdnBreakdown'.$qty_index} .= $$best_price{'SpinePaste Breakdown'};
+	$$specs{'hdnBreakdown'.$qty_index} .= $$best_price{'PerfectBound Breakdown'};
+	$$specs{'hdnBreakdown'.$qty_index} .= $$best_price{'Paper Breakdown'};
+	$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Comparison Cost: %.2f<br/>', $$best_price{'Comparison Cost'}) if $$best_price{'Comparison Cost'} ne '';
 
 		$Imposition->save( $specs, $qty_index );
 		@{$$specs{'Additional Impositions'.$qty_index}} = @{$$best_price{'Impositions'}};
@@ -2493,13 +2513,7 @@ sub breakdown {
 	$breakdown .= $$price{'DieCutting Breakdown'} if $$price{'DieCutting Breakdown'};
 	$breakdown .= $$price{'Folding Breakdown'};
 	$breakdown .= $$price{'Perforating Breakdown'} if $$price{'Perforating Breakdown'};
-	$breakdown .= $$price{'AdditionalSignature Breakdown'} if $$price{'AdditionalSignature Breakdown'};
 
-	$breakdown .= $$price{'Stitching Breakdown'};
-	$breakdown .= $$price{'SpinePaste Breakdown'};
-	$breakdown .= $$price{'PerfectBound Breakdown'};
-	$breakdown .= $$price{'Paper Breakdown'};
-	$breakdown .= sprintf('Comparison Cost: %.2f<br/>', $$price{'Comparison Cost'}) if $$price{'Comparison Cost'} ne '';
 	return $breakdown;
 } # end sub breakdown
 
@@ -3019,6 +3033,7 @@ if ( DEBUG ) {
 					$$newimp{specs} = $new_specs;
 
 					my $sig_price = calc_price( $Project, $$new_specs{ServiceIndex}, $newimp, $project, $services, $new_specs, $qty, $qty_index, \%PlateCounts, \%washed_colours, \@total_impositions );
+					#my $sig_price = get_project_price( $Project, $$new_specs{'ServiceIndex'}, $project, $service_specs, $new_specs, $qty, $qty_index, $possible_presses, $printing_specs, $versions, \%PlateCounts, \%PaperCounts, \%washed_colours, \%previous_forms_cache, \@signatures, $impositions, $other_impositions, undef, $recursion_depth + 1 );
 
 					$PaperCounts{$Paper->id_string()} += $$sig_price{'Stock Qty'};
 					$PlateCounts{$$sig_price{'Plate Costs'}{'Plate ID'}} += $$sig_price{'Plate Costs'}{'Plate Count'};
@@ -3633,7 +3648,11 @@ $log->debug("Incomplete due to required versions more than imposition when overr
 					$imposition = int($imposition / $$specs{"UnspecifiedVersions$qty_index"}) * $$specs{"UnspecifiedVersions$qty_index"};
 				} # end 
 			} # end 
+			if ( $imposition < $$specs{"UnspecifiedVersions$qty_index"} ) {
 			$$Imposition{versions} = $imposition;
+			} else {
+				$$Imposition{versions} = $$specs{"UnspecifiedVersions$qty_index"};
+			} # end if
 		} # end if
 		my %VersionCharge = openprint::service::get_price_object( 'Version Setup', $$Imposition{versions} );
 		if ( %VersionCharge ) {
@@ -4098,10 +4117,16 @@ if ( 0 ) {
 			next;
 		}	
 		my $area = $Imposition->object_area() * $impressions * ($$project{'inkCoverage'}{$real_colour}/100);
+$openprint::log->debug("Area $area = $$Imposition{object_area} * $impressions * ($$project{'inkCoverage'}{$real_colour}/100) ");
+
+		# Not exactly sure about this, but keeping it to make topknotch keep the same prices.  Will have to do more testing and thinking
+		# Thoughts:  if the colour is on both sides, then the coverage is increased, so the area needs to be descreased.
+		$area /= 2 if $Imposition->runstyle() eq 'Sheet Work' and $$specs{'sides_the_same'} ne 'Y';
 #$openprint::log->debug("Area: $area Impressions: $impressions " . $Imposition->object_area() );
 
 		if ( $ink_price{'units'} eq 'per cartridge' ) {
 			if ( sets::isin( $real_colour, $$project{'side_one_colour_names'} ) and sets::isin( $real_colour, $$project{'side_two_colour_names'} ) ) {
+$openprint::log->debug("Aarea of $real_colour $area / 2 ");
 				$area /= 2;
 			} # end if
 			
@@ -4198,7 +4223,7 @@ $openprint::log->debug("No Coverage for grade $grade Press: $$Press{strid}");
 			$price{'Setup Breakdown'} .= sprintf('%d units * $%.2f%s = $%.2f<br/>', @$press_setup_front{'Unit Count','Price','units','Total'} );
 			$price{'Plate Total'} += $$press_setup_front{'Plate Total'};
 			@price{'Plate Setup Price','Plate Setup Count','Plate Setup Units'} = @$press_setup_front{'Plate Price','Plate Count','Plate Units'};
-			if ( $$press_setup_front{units} ne 'Total' ) {
+			if ( $$press_setup_front{units} ne 'total' ) {
 				my $back_press_setup = press_setup_cost( 0, $plate_setup{'Plate Runs'}, $$project{side_two_colours}, $$Paper{calliper}, $qty_index, $Imposition );
 				$press_setup += $$back_press_setup{'Total'};
 				$price{'Setup Breakdown'} .= sprintf('%d units * $%.2f%s = $%.2f<br/>', @$back_press_setup{'Unit Count','Price','units','Total'} );

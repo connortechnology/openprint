@@ -130,7 +130,12 @@
 						$html .= sprintf('<td class="status">%s</td>', $statuses{$ss_id} );
 
 						if ( ( ! $Project->docket() ) or ( $Project->Order()->status() eq 'Re-Opened' ) ) {
-						$html .= '<td class="unprintable actions">';
+							$html .= '<td class="unprintable actions">';
+							if ( new openprint::User($session{'user_id'})->email() =~ /iconnor/ ) {
+								$html .= sprintf('<a href="/main/project/view.html?ProjectIndex=%1$d&amp;calc=%2$d">Calc</a><br/>', $Project->id(), $ss_id );
+							#} elsif ( $Project->Type()->url() ) {
+								#$html .= sprintf('<a href="/main/project/%3$s?ProjectIndex=%1$d&amp;ServiceIndex=%2$d">Edit</a><br/>', $Project->id(), $ss_id, $Project->Type()->url() );
+							} # end if
 							$html .= sprintf('<a href="/main/project/view.html?ProjectIndex=%1$d&amp;remove=%2$d">Remove</a>', $Project->id(), $ss_id );
 						$html .= '</td>';
 						} # end if

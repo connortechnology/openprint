@@ -468,6 +468,8 @@ sub find_operators {
 		return '('.$field.$type.' IS NULL OR '.$field.$type.' < ?)', $value;
 	} elsif ( $operator eq 'null_or_=' or $operator eq 'is null or =' ) {
 		return '('.$field.$type.' IS NULL OR '.$field.$type.' = ?)', $value;
+	} elsif ( $operator eq 'null or in' ) {
+		return '('.$field.$type.' IS NULL OR '.$field.$type.' IN ('.join(',', map { '?' } @{$value} ) . '))', @{$value};
 	} elsif ( $operator eq 'exists' ) {
 		return ( $value ? ' EXISTS ' : 'NOT EXISTS ' ).$field;
 	} elsif ( $operator eq 'lc' ) {
