@@ -1208,6 +1208,9 @@ if ( ! sets::isin( 'inks', \@tables ) ) {
 		$dbh->do(q{alter table inks add foreign key (service_id) REFERENCES tbl_Services (lngIndex)});
 		$dbh->do(q{alter table inks add PRIMARY key (id)});
 		$dbh->do(q{update inks set washups=1});
+		$dbh->do('ALTER TABLE inks add mix BOOLEAN NOT NULL default false') or die $dbh->errstr();
+		$dbh->do(q{alter table inks rename column strcolourname to name});
+		$dbh->do(q{alter table inks add grades INTEGER[]});
 	} else {
 		$dbh->do( misc::load_file( $log, q{../openprint/sql/Inks.sql}) );
 	} # end if
@@ -1215,6 +1218,9 @@ if ( ! sets::isin( 'inks', \@tables ) ) {
 	my $data = $dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='inks'", 'column_name');
 	if ( ! $$data{mix} ) {
 		$dbh->do('ALTER TABLE inks add mix BOOLEAN NOT NULL default false') or die $dbh->errstr();
+	} # end if
+	if ( ! $$data{grades} ) {
+		$dbh->do(q{alter table inks add grades INTEGER[]});
 	} # end if
 } # end if
 
