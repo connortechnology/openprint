@@ -93,7 +93,7 @@
 					<select id="Group" name="Group" size="1">
 						<option value="">select</option>
 					<? echo (
-							return make_drop_down( [ map { $_->id(), $_->name() } openprint::StockGroup->find(order=>'lower(name)') ], $$variable{'Stock'}->group_id() );
+							make_drop_down( openprint::StockGroup->dropdown(order=>'lower(name)'), $$variable{Stock}->group_id() );
 							) ?>
 					</select>
 					<input style="display: none;" type="text" id="txtGroup" name="txtGroup" onfocus="if(!this.value){this.value=get_ddm_text(f1.Group);}ddm_select_by_index( f1.Group, 0 );" />
@@ -103,7 +103,7 @@
 					<select id="ddmManufacturer" name="ddmManufacturer" size="1">
 						<option value="">select</option>
 					<? echo (
-							return make_drop_down( [ map { $_->id(), $_->name() } openprint::Manufacturer->find(order=>'lower(name)') ], $$variable{'Stock'}->manufacturer_id() );
+							make_drop_down( openprint::Manufacturer->dropdown(order=>'lower(name)'), $$variable{'Stock'}->manufacturer_id() );
 							) ?>
 					</select>
 					<input style="display: none;" type="text" id="txtManufacturer" name="txtManufacturer" onfocus="if(!this.value){this.value=get_ddm_text(f1.ddmManufacturer);}ddm_select_by_index( f1.ddmManufacturer, 0 );" />
@@ -113,7 +113,7 @@
 					<select id="ddmBrand" name="ddmBrand" size="1" onchange="f1.txtBrand.value='';">
 						<option value="">select</option>
 						<? echo (
-							return make_drop_down( [ map { $_->id(), $_->name() } openprint::StockBrand->find(order=>'lower(name)') ], $$variable{'Stock'}->brand_id() );
+							make_drop_down( openprint::StockBrand->dropdown(order=>'lower(name)'), $$variable{'Stock'}->brand_id() );
 						) ?>
 					</select>
 					<input style="display: none;" type="text" id="txtBrand" name="txtBrand" onfocus="if(!this.value){this.value=get_ddm_text(f1.ddmBrand);}ddm_select_by_index( f1.ddmBrand, 0 );" />
@@ -123,7 +123,7 @@
 					<select id="ddmFinish" name="ddmFinish" size="1" onchange="f1.txtFinish.value='';">
 						<option value="">select</option>
 					<? echo (
-							return make_drop_down( [ map { $_->id(), $_->name() } openprint::StockFinish->find(order=>'lower(name)') ], $$variable{'Stock'}->finish_id() );
+							make_drop_down( openprint::StockFinish->dropdown(order=>'lower(name)'), $$variable{'Stock'}->finish_id() );
 					) ?>
 					</select>
 					<input style="display: none;" type="text" id="txtFinish" name="txtFinish" onfocus="if(!this.value){this.value=get_ddm_text(f1.ddmFinish);}ddm_select_by_index( f1.ddmFinish, 0 );" />
@@ -133,7 +133,7 @@
 					<select id="ddmColour" name="ddmColour" size="1" onchange="f1.txtColour.value='';">
 						<option value="">select</option>
 						<? echo (
-							return make_drop_down( [ map { $_->id(), $_->name() } openprint::StockColour->find(order=>'lower(name)') ], $$variable{'Stock'}->colour_id() );
+							make_drop_down( openprint::StockColour->dropdown(order=>'lower(name)'), $$variable{'Stock'}->colour_id() );
 						) ?>
 					</select>
 					<input style="display: none;" type="text" id="txtColour" name="txtColour" onfocus="if(!this.value){this.value=get_ddm_text(f1.ddmColour);}ddm_select_by_index( f1.ddmColour, 0 );" />
@@ -143,7 +143,7 @@
 					<select id="ddmWeight" name="ddmWeight" size="1" onchange="f1.txtWeight.value='';">
 						<option value="">select</option>
 					<? echo (
-							return make_drop_down( [ map { $_->id(), $_->name() } openprint::StockWeight->find(order=>'lower(name)') ], $$variable{'Stock'}->weight_id() );
+							make_drop_down( openprint::StockWeight->dropdown(order=>'lower(name)'), $$variable{'Stock'}->weight_id() );
 							) ?>
 					</select>
 					<input style="display: none;" type="text" id="txtWeight" name="txtWeight" onfocus="ddm_select_by_index( f1.ddmWeight, 0 );" />
@@ -153,7 +153,7 @@
 					<select id="ddmQuality" name="ddmQuality" size="1">
 						<option value="">select</option>
 					<? echo (
-							return make_drop_down( [ map { $_->id(), $_->name() } openprint::StockQuality->find(order=>'lower(name)') ], $$variable{'Stock'}->quality_id() );
+							make_drop_down( openprint::StockQuality->dropdown(order=>'lower(name)'), $$variable{'Stock'}->quality_id() );
 							) ?>
 					</select>
 					<input style="display: none;" type="text" id="txtQuality" name="txtQuality" onfocus="ddm_select_by_index( f1.ddmQuality, 0 ) ;" />
@@ -163,7 +163,7 @@
 					<select id="material_id" name="material_id" size="1" onchange="f1.material.value='';">
 						<option value="">select</option>
 					<? echo (
-							return make_drop_down( [ map { $_->id(), $_->name() } openprint::StockMaterial->find(order=>'lower(name)') ], $$variable{'Stock'}->material_id() );
+							make_drop_down( openprint::StockMaterial->dropdown(order=>'lower(name)'), $$variable{'Stock'}->material_id() );
 							) ?>
 					</select>
 					<input style="display: none;" type="text" id="material" name="material" onfocus="ddm_select_by_index( f1.material_id, 0 );" />
@@ -173,7 +173,7 @@
 					<select id="grade" name="grade" size="1">
 					<? echo (
 						my @options = ( '', 'select one',1,'1 Gloss-coated stock',2,'2 Matte-coated stock',3,'3 Gloss-coated, web stock', 4, '4 Uncoated, white stock', 5, '5 Uncoated, yellow stock' );
-						return make_drop_down( \@options, $$variable{'Stock'}->grade() );
+						make_drop_down( \@options, $$variable{'Stock'}->grade() );
 					) ?>
 					</select>
 				</p>

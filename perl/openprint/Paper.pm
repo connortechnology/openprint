@@ -901,11 +901,15 @@ sub next {
 sub recommendations {
 	my $self = shift;
 	if ( @_ ) {
-		@{$$self{'recommendations'}} = @_;
-	} elsif ( ! exists $$self{'recommendations'} ) {
-		@{$$self{'recommendations'}} = sql::execute( undef, undef, q{SELECT lngProjectTypeIndex FROM paper_recommendations WHERE lngPaperIndex=?}, $$self{'id'} );
+		@{$$self{recommendations}} = @_;
+	} elsif ( ! exists $$self{recommendations} ) {
+		if ( $$self{id} ) {
+			$$self{recommendations} = [ sql::execute( undef, undef, q{SELECT lngProjectTypeIndex FROM paper_recommendations WHERE lngPaperIndex=?}, $$self{id} ) ];
+		} else {
+			$$self{recommendations} = [];
+		} # end if
 	} # end if
-	return @{$$self{'recommendations'}};
+	return @{$$self{recommendations}};
 } # end sub recommendations
 
 # From now on, qty is always weight
