@@ -294,7 +294,7 @@ sub calc {
 			if ( $$specs{"Needed-$$sig_specs{SignatureIndex}"} ne 'Y' ) {
 				next;
 			} # end if
-			next if ! $$sig_specs{txtImposition};
+			next if ! $$sig_specs{'txtImposition'.$qty_index};
 
 			$$specs{'hdnBreakdown'.$qty_index} .= "Signature: $$sig_specs{'txtServiceDescription'}, " if $$sig_specs{'txtServiceDescription'} ne '';
 			my $Imposition = new openprint::Imposition();

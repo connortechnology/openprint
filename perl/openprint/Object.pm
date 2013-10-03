@@ -442,9 +442,9 @@ sub find_operators {
 		return ( $field.$type.' ' . $operator . ' ?', $value );
 	} elsif ( sets::isin( $operator, [ '&&', '<@', '@>' ] ) ) {
 		if ( ref $value eq 'ARRAY' ) {
-		return ( $field.$type.' ' . $operator . ' ?', $value );
+			return ( $field.$type.' ' . $operator . ' ?', $value );
 		} else {
-		return ( $field.$type.' ' . $operator . ' ?', [ $value ] );
+			return ( $field.$type.' ' . $operator . ' ?', [ $value ] );
 		} # end if
 	} elsif ( sets::isin( $operator, [ 'in', 'not in' ] ) ) {
 		if ( ref $value eq 'ARRAY' ) {

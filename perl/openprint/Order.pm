@@ -20,7 +20,7 @@ require openprint::Payment;
 require openprint::Tax;
 require openprint::Order_Notification;
 
-$debug = 0;
+$debug = 1;
 
 $table = 'orders';
 $serial = 'orders_id_seq';
@@ -246,6 +246,7 @@ sub approve {
 sub Status {
 	return new openprint::Order_Status( $_[0]{status_id} );
 } # end sub Status
+
 sub status {
 	if ( @_ > 1 ) {
 		my $Status = openprint::Order_Status->find_one(name => $_[1]);
@@ -255,8 +256,9 @@ sub status {
 			$Status->save({name=>$_[1]});
 		} # end if
 		if ( $Status->id() != $_[0]{status_id} ) {
-			sql::update( $log, $dbh, 'Orders', ['id=?', $_[0]{id}], 'status_id', $Status->id() );
+			sql::update( $log, $dbh, 'Orders', ['id=?', $_[0]{id}], 'status_id', $Status->id() ) if $_[0]{id};
 			$_[0]{status} = $_[1];
+			$_[0]{status_id} = $Status->id();
 			$_[0]->add_log( "Changed Status to $_[1]" ) if $_[0]{id};
 		} # end if
 	} # end if
@@ -400,24 +402,25 @@ sub pay {
 } # end sub pay
 
 sub send_cancellation_notice {
-	my %order;
-	$order{'Order'} = $_[0];
-	$order{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/order_cancellation_notice.html' );
-	$order{'ReplacementText'} = ssi::variable_substitution( \$order{'ReplacementText'}, \%order );
-	my $email_template = misc::load_file( $log, $config{'SkinPath'} . '/email_template.html' );
 
 	my @Recipients;
 	# Send to inventory and scheduling people.
-	foreach my $Recipient ( openprint::User->find('usergroup in'=>['Inventory','Scheduling'],'type'=>['E','A']) ) {
+	foreach my $Recipient ( openprint::User->find('usergroup @>'=>['Inventory','Scheduling'],'type'=>['E','A']) ) {
 		next if $Recipient->id() == $session{'user_id'};
 		next if $Recipient->notification('Docket Cancellations') ne 'Yes';
 		push @Recipients, $Recipient;
 	} # end foreach Recipient
 
+	return if ! @Recipients;
+
+	my %order;
+	$order{'Order'} = $_[0];
+	$order{'ReplacementText'} = ssi::include('/email_content/order_cancellation_notice.html', \%order );
+	my $email_template = misc::load_file( $log, $config{'SkinPath'} . '/email_template.html' );
 	new openprint::Email()->send(
-			FROM	=> new openprint::User( $session{'user_id'} ),
+			FROM	=> new openprint::User( $session{user_id} ),
 			TO	=> \@Recipients,
-			SUBJECT => "Docket $_[0]{'docket'} has been cancelled.",
+			SUBJECT => "Docket $_[0]{docket} has been cancelled.",
 			ATTACHMENTS => [ '', MIME::QuotedPrint::encode_qp( ssi::variable_substitution( \$email_template, \%order ) ), 'text/html', 'quoted-printable'],
 			);
 	

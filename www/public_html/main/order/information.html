@@ -60,7 +60,13 @@
 				<? echo (
 					# If there is only 1 thing in the order, then we can condense
 					$$variable{'Project'} = $$variable{'Contents'}[0]->Project();
-					my $html .= '<fieldset><legend>Select Quantity</legend><div class="content"><ul>'.include( '/main/order/_quantity_select.html' ).'</ul></div></fieldset>';
+					my $html;
+					if ( $$variable{Project}->quantity_indexes() > 1 ) {
+						$html .= '<fieldset><legend>Select Quantity</legend><div class="content"><ul>';
+						$html .= include( '/main/order/_quantity_select.html' ).'</ul></div></fieldset>';
+					} else {
+						$html .= input( type=>'hidden', name=>'rdbQuantity'.$$variable{Project}->id(), value=>$$variable{Project}->ordered_quantity_index() );
+					} # end if
 					$html .= include( '/main/order/_shipping_type_select.html' );
 					return $html;
 				) ?>

@@ -603,6 +603,7 @@ sub get_scores {
 	} else { # normal printing
 		my $width_folds = sprintf('%.0f', ($$sig_specs{'txtWidth'}/$$sig_specs{'txtFinalWidth'})-1 ) if $$sig_specs{'txtFinalWidth'};
 		my $height_folds = sprintf('%.0f', ($$sig_specs{'txtHeight'}/$$sig_specs{'txtFinalHeight'}) -1 ) if $$sig_specs{'txtFinalHeight'};
+$openprint::log->debug("Width folds: $width_folds height folds: $height_folds template $$sig_specs{'rdbTemplateType'} $$sig_specs{'txtWidth'}/$$sig_specs{'txtFinalWidth'} $$sig_specs{'txtHeight'}/$$sig_specs{'txtFinalHeight'}");
 		if ( sets::isin( $$sig_specs{'rdbTemplateType'}, 'Portrait', 'Landscape' ) ) {
 # needs no folding
 		} elsif ( sets::isin( $$sig_specs{'rdbTemplateType'}, ['4PageSignatureFold','2PanelFold','BusCardLandscapeFold','BusCardPortraitFold']) ) {

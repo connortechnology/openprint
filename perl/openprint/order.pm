@@ -337,13 +337,13 @@ sub create_order {
 
 	my $Order = new openprint::Order();
 	$Order->save({
-		'user_id'		=>	$session{'user_id'},
-		'company_id'	=>	$session{'company_id'},
-		'session_id'	=>	$session{'_session_id'},
-		'created_on'	=>	'NOW()',
-		'status'		=>	'Incomplete',
-		'salesrep_id'	=>	new openprint::Company( $session{'company_id'} )->salesrep_id(),
-		'currency_id'	=>	openprint::Currency::get_current()->id(),
+		user_id		=>	$session{'user_id'},
+		company_id	=>	$session{'company_id'},
+		session_id	=>	$session{'_session_id'},
+		created_on	=>	'NOW()',
+		status		=>	'Incomplete',
+		salesrep_id	=>	new openprint::Company( $session{'company_id'} )->salesrep_id(),
+		currency_id	=>	openprint::Currency::get_current()->id(),
 		});
 
 	$Order->add_log( 'Created' );
@@ -605,7 +605,7 @@ sub cancel_order {
 	my ( $order_id ) = @_;
 
 	my $Order = new openprint::Order( $order_id );
-	$Order->save({'status'=>'Cancelled'});
+	$variable{error} .= $Order->save({ status=>'Cancelled' });
 	$_ = 'SELECT lngProjectIndex FROM Order_Contents WHERE OrderIndex=?';
 	foreach my $project_index ( sql::execute( $log, $dbh, $_, $order_id ) ) {
 		my $Project = new openprint::Project( $project_index );
