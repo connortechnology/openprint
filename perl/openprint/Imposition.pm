@@ -357,7 +357,6 @@ sub object_area {
 	if ( ! exists $_[0]{object_area} ) {
 		$_[0]{object_area} = $_[0]{object_width} * $_[0]{object_height} * $_[0]{imposition} * $_[0]{spreads};
 	} 
-$openprint::log->debug("object_area: $_[0]{object_area} = $_[0]{object_width} * $_[0]{object_height} * $_[0]{imposition} * $_[0]{spreads}");
 	return $_[0]{object_area};
 }
 sub layout_area {

@@ -154,8 +154,12 @@ $openprint::log->debug("Supplied: " . $SuppliedStock->id_string() );
 			if ( $$specs{"overrideqty-$ss_id-$stock_index-$qty_index"} ne 'Y' ) {
 				if ( $PressSheet->type() eq 'Sheet' ) {
 					my $sheets = $$sig_specs{'StockQuantity'.$qty_index};
+					if ( ! ( $PressSheet->area() and $PressSheet->start_area() ) ) {
+						Carp::cluck("No sheet area");
+					} else {
 					# convert to supplied count
 					$sheets = ceil( $sheets / ( $PressSheet->start_area()/$PressSheet->area() ) );
+					} # end if
 					$$specs{"qty-$ss_id-$stock_index-$qty_index"} = ceil( $sheets * $PressSheet->start_sheet_weight() );
 					$$specs{"sheets-$ss_id-$stock_index-$qty_index"} = $sheets;
 				} else {
