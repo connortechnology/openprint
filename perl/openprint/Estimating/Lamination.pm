@@ -59,7 +59,10 @@ sub calc {
 	my $Project = new openprint::Project( $project_index );
 	my $services = $Project->services();
 
-	my $printing_specs = openprint::service::get_specs_ref( $project_index, $$services{''}[0] );
+	my @sigs = $Project->signatures();
+
+	my $printing_specs = openprint::service::get_specs_ref( $project_index, $sigs[0] );
+	
 	if ( $$specs{'chkOverrideDimensions'} ne 'Y' ) {
 		@$specs{'txtFinalWidth','txtFinalHeight'} = @$printing_specs{'txtFinalWidth','txtFinalHeight'};
 	} # end if

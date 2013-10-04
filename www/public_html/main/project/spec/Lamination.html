@@ -11,13 +11,13 @@
 		<fieldset><legend><?ServiceTypeName?></legend>
 		<ul>
 
-		<? echo ( include('/includes/main/proj/finished_dimensions.html'); ) ?>
+		<?include(/includes/main/proj/finished_dimensions.html) ?>
 <? if ( 0 ) ?>
 		<li> 
 			<label>Type</label>
 			<select name="LaminationType" size="1" onchange="calc(this.form.name);">
 				<option value="">Please select one</option>
-				<? echo ( ssi::make_drop_down( [ map { $_->name(), $_->description() } openprint::Material->find('category'=>'Lamination Types', 'order'=>'lower(name)') ], $$variable{'LaminationType'}); ) ?>
+				<? echo ( make_drop_down( [ map { $_->name(), $_->description() } openprint::Material->find('category'=>'Lamination Types', 'order'=>'lower(name)') ], $$variable{'LaminationType'}); ) ?>
 			</select>
 		</li>
 <? else ( 0 ) ?>
@@ -25,14 +25,14 @@
 			<label>Type for front</label>
 			<select name="TypeFront" size="1" onchange="calc(this.form.name);">
 				<option value="">Please select one</option>
-				<? echo ( ssi::make_drop_down( [ 'None', 'None', map { $_->name(), $_->description() } openprint::Material->find('category'=>'Lamination Types', 'order'=>'lower(name)') ], $$variable{'TypeFront'}); ) ?>
+				<? echo ( make_drop_down( [ 'None', 'None', map { $_->name(), $_->description() } openprint::Material->find('category'=>'Lamination Types', 'order'=>'lower(name)') ], $$variable{'TypeFront'}); ) ?>
 			</select>
 		</li>
 		<li> 
 			<label>Type for back</label>
 			<select name="TypeBack" size="1" onchange="calc(this.form.name);">
 				<option value="">Please select one</option>
-				<? echo ( ssi::make_drop_down( [ 'None', 'None', map { $_->name(), $_->description() } openprint::Material->find('category'=>'Lamination Types', 'order'=>'lower(name)') ], $$variable{'TypeBack'}); ) ?>
+				<? echo ( make_drop_down( [ 'None', 'None', map { $_->name(), $_->description() } openprint::Material->find('category'=>'Lamination Types', 'order'=>'lower(name)') ], $$variable{'TypeBack'}); ) ?>
 			</select>
 		</li>
 <? endif ( 0 ) ?>
@@ -40,11 +40,11 @@
 		</fieldset>
 		<fieldset><legend>Results</legend>
 			<ul>
-		<? echo ( include('/includes/main/proj/quantities_equipment_prices.html'); ) ?>
+		<?include(/includes/main/proj/quantities_equipment_prices.html) ?>
 			</ul>
 		</fieldset>
 		<hr/>
-		<? echo ( include('/includes/main/proj/add_to_project.html'); ) ?>
+		<?include(/includes/main/proj/add_to_project.html) ?>
 		<input type="hidden" name="btnFunction" value="Save Service"/>
 		<input type="hidden" name="ProjectIndex" value="<?ProjectIndex?>"/>
 		<input type="hidden" name="ServiceIndex" value="<?ServiceIndex?>"/>
