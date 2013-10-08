@@ -468,6 +468,85 @@ if ( ! sets::isin( 'order_statuses_id_seq', \@sequences ) ) {
 
 } # en dif
 
+if ( ! sets::isin( 'payments', \@tables ) ) {
+	$dbh->do( misc::load_file( $log, q{../openprint/sql/Payments.sql}) );
+	die "died error from do " . $dbh->errstr() if $dbh->errstr();
+} else {
+	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='payments'", 'column_name');
+	if ( ! $data ) {
+		die 'Unable to load payments';
+	} # end if
+
+	if ( ! exists $$data{'owner_id'} ) {
+		$dbh->do('ALTER TABLE Payments add owner_id INTEGER');
+		$dbh->do('ALTER TABLE Payments add FOREIGN KEY (owner_id) REFERENCES Companies (id)');
+	} # end if
+	if ( exists $$data{'company_id'} ) {
+		$dbh->do('ALTER TABLE Payments rename column company_id to payor_id');
+		$dbh->do('ALTER TABLE Payments add FOREIGN KEY (payor_id) REFERENCES Companies (id)');
+	} # end if
+	if ( exists $$data{'curamount'} ) {
+		$dbh->do('ALTER TABLE Payments rename column curamount to amount');
+	} # end if
+	if ( ! exists $$data{'updated_on'} ) {
+		$dbh->do('ALTER TABLE Payments add updated_on timestamp with time zone not null default NOW()');
+	} # end if
+	if ( exists $$data{'dtmdate'} ) {
+		if ( ! exists $$data{received_on} ) {
+			$dbh->do('ALTER TABLE Payments rename column dtmdate to received_on');
+		} else {
+			$dbh->do('UPDATE TABLE Payments set received_on=dtmdate where received_on IS NULL');
+			$dbh->do('ALTER TABLE Payments drop column dtmdate');
+		} # end if
+	} elsif ( exists $$data{'date'} ) {
+		if ( ! exists $$data{received_on} ) {
+			$dbh->do('ALTER TABLE Payments rename column date to received_on');
+		} else {
+			$dbh->do('UPDATE Payments SET received_on=date WHERE received_on IS NULL') or die $dbh->errstr();
+			$dbh->do('ALTER TABLE Payments DROP COLUMN date') or die $dbh->errstr();
+		} # end if
+	} elsif ( ! exists $$data{'received_on'} ) {
+		$dbh->do('ALTER TABLE Payments add received_on date NOT NULL default NOW()');
+	} # end if
+	$data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='payments'", 'column_name');
+	if ( ! exists $$data{'received_on'} ) {
+		$dbh->do('ALTER TABLE Payments add received_on date NOT NULL default NOW()');
+	} # end if
+	if ( exists $$data{'strmethod'} ) {
+		if ( ! exists $$data{method} ) {
+			$dbh->do('ALTER TABLE Payments rename column strmethod to method');
+		} else {
+			$dbh->do('UPDATE TABLE Payments set method=strmethod where method IS NULL');
+			$dbh->do('ALTER TABLE Payments drop column method');
+		} # end if
+	} # end if
+	if ( exists $$data{'strtransactionid'} ) {
+		$dbh->do('ALTER TABLE Payments rename column strtransactionid to transaction_id');
+	} # end if
+	if ( exists $$data{'strdescription'} ) {
+		if ( ! exists $$data{memo} ) {
+			$dbh->do('ALTER TABLE Payments rename column strdescription to memo');
+		} else {
+			$dbh->do('UPDATE TABLE payments set memo=strdescription where memo IS NULL');
+			$dbh->do('ALTER TABLE payments drop strdescription');
+		} # end if
+	} elsif ( ! exists $$data{'memo'} ) {
+		$dbh->do('ALTER TABLE payments add memo text');
+	}
+	if ( ! exists $$data{'completed'} ) {
+		$dbh->do('ALTER TABLE Payments add completed boolean NOT NULL default false;');
+	} # end if
+	if ( ! exists $$data{'remaining'} ) {
+		$dbh->do('ALTER TABLE Payments add remaining float;');
+	} # end if
+	if ( ! exists $$data{'deleted'} ) {
+		$dbh->do('ALTER TABLE Payments add deleted boolean NOT NULL default false;');
+	} # end if
+	if ( $data and ! exists $$data{'type_id'} ) {
+		$dbh->do('ALTER TABLE payments add type_id INTEGER');
+		$dbh->do('ALTER TABLE payments add FOREIGN KEY (type_id) REFERENCES PaymentTypes (id)');
+	} # end if
+} # end if
 if ( ! sets::isin( 'orders', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/Orders.sql}) ) or die $dbh->errstr();
 } else {
@@ -2378,85 +2457,6 @@ if ( ! sets::isin( 'order_contents', \@tables ) ) {
 	} # end if
 }
 
-if ( ! sets::isin( 'payments', \@tables ) ) {
-	$dbh->do( misc::load_file( $log, q{../openprint/sql/Payments.sql}) );
-	die "died error from do " . $dbh->errstr() if $dbh->errstr();
-} else {
-	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='payments'", 'column_name');
-	if ( ! $data ) {
-		die 'Unable to load payments';
-	} # end if
-
-	if ( ! exists $$data{'owner_id'} ) {
-		$dbh->do('ALTER TABLE Payments add owner_id INTEGER');
-		$dbh->do('ALTER TABLE Payments add FOREIGN KEY (owner_id) REFERENCES Companies (id)');
-	} # end if
-	if ( exists $$data{'company_id'} ) {
-		$dbh->do('ALTER TABLE Payments rename column company_id to payor_id');
-		$dbh->do('ALTER TABLE Payments add FOREIGN KEY (payor_id) REFERENCES Companies (id)');
-	} # end if
-	if ( exists $$data{'curamount'} ) {
-		$dbh->do('ALTER TABLE Payments rename column curamount to amount');
-	} # end if
-	if ( ! exists $$data{'updated_on'} ) {
-		$dbh->do('ALTER TABLE Payments add updated_on timestamp with time zone not null default NOW()');
-	} # end if
-	if ( exists $$data{'dtmdate'} ) {
-		if ( ! exists $$data{received_on} ) {
-			$dbh->do('ALTER TABLE Payments rename column dtmdate to received_on');
-		} else {
-			$dbh->do('UPDATE TABLE Payments set received_on=dtmdate where received_on IS NULL');
-			$dbh->do('ALTER TABLE Payments drop column dtmdate');
-		} # end if
-	} elsif ( exists $$data{'date'} ) {
-		if ( ! exists $$data{received_on} ) {
-			$dbh->do('ALTER TABLE Payments rename column date to received_on');
-		} else {
-			$dbh->do('UPDATE Payments SET received_on=date WHERE received_on IS NULL') or die $dbh->errstr();
-			$dbh->do('ALTER TABLE Payments DROP COLUMN date') or die $dbh->errstr();
-		} # end if
-	} elsif ( ! exists $$data{'received_on'} ) {
-		$dbh->do('ALTER TABLE Payments add received_on date NOT NULL default NOW()');
-	} # end if
-	$data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='payments'", 'column_name');
-	if ( ! exists $$data{'received_on'} ) {
-		$dbh->do('ALTER TABLE Payments add received_on date NOT NULL default NOW()');
-	} # end if
-	if ( exists $$data{'strmethod'} ) {
-		if ( ! exists $$data{method} ) {
-			$dbh->do('ALTER TABLE Payments rename column strmethod to method');
-		} else {
-			$dbh->do('UPDATE TABLE Payments set method=strmethod where method IS NULL');
-			$dbh->do('ALTER TABLE Payments drop column method');
-		} # end if
-	} # end if
-	if ( exists $$data{'strtransactionid'} ) {
-		$dbh->do('ALTER TABLE Payments rename column strtransactionid to transaction_id');
-	} # end if
-	if ( exists $$data{'strdescription'} ) {
-		if ( ! exists $$data{memo} ) {
-			$dbh->do('ALTER TABLE Payments rename column strdescription to memo');
-		} else {
-			$dbh->do('UPDATE TABLE payments set memo=strdescription where memo IS NULL');
-			$dbh->do('ALTER TABLE payments drop strdescription');
-		} # end if
-	} elsif ( ! exists $$data{'memo'} ) {
-		$dbh->do('ALTER TABLE payments add memo text');
-	}
-	if ( ! exists $$data{'completed'} ) {
-		$dbh->do('ALTER TABLE Payments add completed boolean NOT NULL default false;');
-	} # end if
-	if ( ! exists $$data{'remaining'} ) {
-		$dbh->do('ALTER TABLE Payments add remaining float;');
-	} # end if
-	if ( ! exists $$data{'deleted'} ) {
-		$dbh->do('ALTER TABLE Payments add deleted boolean NOT NULL default false;');
-	} # end if
-	if ( $data and ! exists $$data{'type_id'} ) {
-		$dbh->do('ALTER TABLE payments add type_id INTEGER');
-		$dbh->do('ALTER TABLE payments add FOREIGN KEY (type_id) REFERENCES PaymentTypes (id)');
-	} # end if
-} # end if
 
 if ( ! sets::isin( 'skid_contents', \@tables ) ) {
 	$dbh->do(misc::load_file( $log, '../openprint/sql/Skid_Contents.sql' ) );
