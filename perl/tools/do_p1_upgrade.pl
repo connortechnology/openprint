@@ -445,7 +445,7 @@ foreach my $SRED_Asset ( openprint::SRED_Asset->find() ) {
 } # end foreach my $SRED_Asset
 foreach my $Claim_Asset ( openprint::Claim_Asset->find() ) {
 	my $Object_Asset = new openprint::Object_Asset();
-	$Object_Asset->save({ object_id=>$Claim_Asset->claim_id(), asset_id=>$Claim_Asset->asset_id(), object_type=>'openprint::Claim_Content' });
+	$Object_Asset->save({ object_id=>$Claim_Asset->claim_id(), asset_id=>$Claim_Asset->asset_id(), object_type=>'openprint::Claim' });
 	$Claim_Asset->delete();
 } # end foreach my $SRED_Asset
 $dbh->disconnect();

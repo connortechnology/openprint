@@ -22,7 +22,7 @@
 			<td colspan="4">Add New</td>
 		</tr>
 		<tr> 
-			<td><select name="projecttype_id-"><option value=""> all </option><? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } @{$$variable{'ProjectTypes'}} ] ); ) ?></select></td>
+			<td><select name="projecttype_id-"><option value=""> all </option><? echo ( make_drop_down( [ map { $_->id(), $_->name() } @{$$variable{'ProjectTypes'}} ] ); ) ?></select></td>
 			<td><input type="text" name="name-" /></td>
 			<td><input type="text" name="value-" /></td>
 			<td class="buttons">&nbsp;</td>

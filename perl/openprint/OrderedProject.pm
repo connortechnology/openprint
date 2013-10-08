@@ -2,29 +2,32 @@ use strict;
 package openprint::OrderedProject;
 our @ISA=qw(openprint::Object);
 
+require openprint::Object;
 require openprint::Project;
+require openprint::Project_Service;
+require openprint::Order;
+require sql;
 
-use vars qw( $debug $table @identified_by %fields %transforms %defaults );
+use vars qw( $debug $table $serial %fields %transforms %defaults );
 
-$debug = 0;
+$debug = 1;
 $table = 'order_contents';
-@identified_by = ( 'project_id', 'order_id' );
+$serial = 'order_contents_id_seq';
 
 %fields = (
-	'id'			=>	'id',
-	'order_id'		=>	'orderindex',
-	'project_id'	=>	'lngprojectindex',
-	'quantity'		=>	'intquantity',
-	'quantity_index'		=>	'intquantityindex',
-	'price'			=>	'cursalesprice',
-	'shipping_type'	=>	'shippingtype',
-	'requested_for'	=>	'daterequired',
-	'duedate'   	=>  'duedate',
-	'gst'       	=>  'dbltax1',
-	'hst'       	=>  'dbltax2',
-	'pst'       	=>  'dbltax3',
-	'description'   =>  'strdescription',
-
+	id				=>	'id',
+	order_id		=>	'orderindex',
+	project_id		=>	'lngprojectindex',
+	quantity		=>	'intquantity',
+	quantity_index	=>	'intquantityindex',
+	price			=>	'cursalesprice',
+	shipping_type	=>	'shippingtype',
+	requested_for	=>	'daterequired',
+	duedate			=>	'duedate',
+	gst				=>	'dbltax1',
+	hst				=>	'dbltax2',
+	pst				=>	'dbltax3',
+	description		=>	'strdescription',
 );
 
 sub Project {
@@ -51,6 +54,7 @@ sub quantity {
 	} # end if
 	return $_[0]{'quantity'};
 } # end sub quantity
+
 sub delete {
 	my $self = shift;
 
@@ -69,15 +73,15 @@ sub delete {
 } # end sub delete
 
 sub shippingtype {
-    my ( $self, $new ) = @_;
-    if ( $new ) {
-        $$self{'shippingtype'} = $new;
-    } # end if
-    if ( ! $$self{'shippingtype'} ) {
-        my $services = $self->Project()->services();
-        $$self{'shippingtype'} = join(',', map { $_->ServiceType()->name() } openprint::Project_Service->find('project_id'=>$$self{'project_id'},'category'=>'Shipping') );
-    } # end if
-    return $$self{'shippingtype'};
+	my ( $self, $new ) = @_;
+	if ( $new ) {
+		$$self{'shippingtype'} = $new;
+	} # end if
+	if ( ! $$self{'shippingtype'} ) {
+		my $services = $self->Project()->services();
+		$$self{'shippingtype'} = join(',', map { $_->ServiceType()->name() } openprint::Project_Service->find('project_id'=>$$self{'project_id'},'category'=>'Shipping') );
+	} # end if
+	return $$self{'shippingtype'};
 } # end sub shippingtype
 
 sub description { 

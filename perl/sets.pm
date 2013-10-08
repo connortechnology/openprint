@@ -149,7 +149,15 @@ sub equal {
 	} # end for
 	return 1;
 } # end sub equal
-1;
 
+# returns the index matching
+sub index {
+	my $value = shift;
+	for ( my $i = 0; $i < @_; $i += 1 ) {
+		return $i if $_[$i] eq $value;
+	} # end for
+	return -1;
+} # end sub index
+
+1;
 __END__
-~       

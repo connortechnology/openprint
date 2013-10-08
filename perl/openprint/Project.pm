@@ -1191,10 +1191,16 @@ sub add_service {
 	$openprint::service::specs_cache{$service_index} = {};
 	openprint::service::insert_service_spec( $log, $dbh, $$self{'id'}, $service_index, 'ServiceType', $ServiceType->name(), 1 );
 	#$_ = q{SELECT strFieldName, strDefaultValue FROM tbl_Service_Defaults WHERE lngServiceTypeIndex=? OR lngServiceTypeIndex IS NULL ORDER BY lngServiceTypeIndex NULLS FIRST};
-	my @defaults = map { $_->name(), $_->value() } openprint::ServiceType_Default->find( 'projecttype_id is null or =' => $ServiceType->id(), order=>'projecttype_id NULLS FIRST' );
+	my @Defaults = openprint::ServiceType_Default->find( 'projecttype_id is null or =' => $$self{type_id}, servicetype_id=>$ServiceType->id(), order=>'projecttype_id NULLS FIRST' );
+	foreach my $D ( @Defaults ) {
+		$log->debug("Got default " . $D->to_string() );
+	} # end foreach
+	my %defaults = map { $_->name(), $_->value() } @Defaults;
 	#$_ = q{SELECT name, value FROM User_Service_Defaults WHERE servicetype_id=? AND user_id=?};
 	#push @defaults, sql::execute( $log, $dbh, $_, $ServiceType->id(), $openprint::session{'user_id'} );
-	while ( my ( $n, $v ) = splice @defaults, 0, 2 ) {
+	foreach my $n ( keys %defaults ) {
+	#while ( my ( $n, $v ) = splice @defaults, 0, 2 ) {
+		my $v = $defaults{$n};
 		if ( $data and exists $$data{$n} ) {
 			openprint::service::insert_service_spec( $log, $dbh, $$self{'id'}, $service_index, $n, $$data{$n}, 1 );
 			delete $$data{$n};

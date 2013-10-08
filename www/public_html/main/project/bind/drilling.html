@@ -1,4 +1,4 @@
-<script type="text/javascript" src="<? echo ( hash_link('/javascripts/service.js') ) ?>"></script>
+<script type="text/javascript" src="<?hash_link(/javascripts/service.js)?>"></script>
 <? eval (
     if ( $$variable{'Project'}->quantity1() and $$variable{'Project'}->quantity2() and $$variable{'Project'}->quantity3() ) {
     $$variable{'Columns'} = 'Three';
@@ -31,10 +31,10 @@ Overridden
 				<label>Hole size</label>
 <? if ( $config{DrillingSizes} ) ?>
 <select name="txtHoleSize" onchange="calc(this.form.name);">
-<? echo ( ssi::make_drop_down( [ map { split '~', $_ } split ',', $config{DrillingSizes} ], $$variable{'txtHoleSize'} ); ) ?>
+<? echo ( make_drop_down( [ map { split '~', $_ } split(',', $config{DrillingSizes} ) ], $$variable{txtHoleSize} ); ) ?>
 </select>
 <? else ( $config{DrillingSizes} ) ?>
-					<? echo ( input( name=>'txtHoleSize', value=>$$variable{txtHoleSize', type=>'float', onkeyup=>'calc(this.form.name);' ); ) ?>
+					<? echo ( input( name=>'txtHoleSize', value=>$$variable{txtHoleSize}, type=>'float', onkeyup=>'calc(this.form.name);' ); ) ?>
 					in inches (ex: 0.125, 0.25)
 <? endif ( $config{DrillingSizes} ) ?>
 			</li>
@@ -55,10 +55,10 @@ Overridden
 		</fieldset>
 		<fieldset><legend>Results</legend>
 			<ul>
-			<? echo ( include('/includes/main/proj/quantities_equipment_prices.html'); ) ?>
+			<?include(/includes/main/proj/quantities_equipment_prices.html) ?>
 			</ul>
 		</fieldset>
-		<? echo ( include('/includes/main/proj/add_to_project.html'); ) ?>
+		<?include(/includes/main/proj/add_to_project.html) ?>
 		<input type="hidden" name="btnFunction" value="Save Service"/>
 		<input type="hidden" name="ProjectIndex" value="<?ProjectIndex?>"/>
 		<input type="hidden" name="ServiceIndex" value="<?ServiceIndex?>"/>

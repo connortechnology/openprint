@@ -1277,6 +1277,9 @@ $openprint::log->debug("Non-process colours in get_impositions: @non_process_col
 #Paper might have different calliperso# Is this needed anymore
 			#$$project{'Calliper'} = $$Paper{'calliper'};
 			if ( ( $$specs{'OverrideStockType'.$qty_index} eq 'Y' ) and ( $$Paper{'type'} ne $$specs{'StockType'.$qty_index} ) ) {
+				if ( DEBUG ) {
+					$openprint::log->debug("Not overriden stock stype: " . $Paper->to_string() );
+				} # end if
 				next;
 			} # end if
 			if ( $$specs{'PreviousStockType'} and ( $$Paper{'type'} ne $$specs{'PreviousStockType'} ) ) {
@@ -1284,7 +1287,13 @@ $openprint::log->debug("Non-process colours in get_impositions: @non_process_col
 				next;
 			} # end if
 			my @imps;
-			next if ! $feeds{$$Paper{type}};
+			if ( ! $feeds{$$Paper{type}} ) {
+				if ( DEBUG ) {
+					$openprint::log->debug("Not in feeds: " . $Paper->to_string() . ' on ' . $Press->strid() );
+				} # end if
+				next;
+			} # end if
+
 			if ( $$Paper{'type'} eq 'Roll' ) {
 				
 				$$project{'Runstyles'} = $runstyles_roll;
@@ -1583,7 +1592,12 @@ $openprint::log->debug("Doing nothing, keeping all $add") if DEBUG_FILTERING;
 		} # end if
 
 		if ( ! @impositions ) {
-			$openprint::log->debug("No impositions for press " . $$Press{'strid'} . ' ' . $$specs{'ddmPress'.$qty_index} . ' ' . $$specs{'chkOverridePress'.$qty_index} ) if DEBUG;
+			if ( DEBUG ) {
+				$openprint::log->debug("No impositions for press " . $$Press{'strid'} . ' ' . $$specs{'ddmPress'.$qty_index} . ' ' . $$specs{'chkOverridePress'.$qty_index} );
+				foreach my $P (@$Papers) {
+					$openprint::log->debug($P->to_string() );
+				} # end foreach
+			} # end if
 			if ( ( $$specs{'chkOverridePress'.$qty_index} eq 'Y' ) and ( $$Press{'strid'} eq $$specs{'ddmPress'.$qty_index} ) ) {
 				if ( $Press->specification('Printing Type') eq 'Digital' ) {
 					my $digital = 0;
@@ -3006,14 +3020,14 @@ if ( DEBUG ) {
 			$$price{Impositions} = [ $imp ];
 			push @total_impositions, $imp;
 
-			if ( $$service_specs{"UnspecifiedVersions$qty_index"} > $$imp{versions} ) {
+			if ( $$sig_specs{"UnspecifiedVersions$qty_index"} > $$imp{versions} ) {
 				
-				my $versions = $$service_specs{"UnspecifiedVersions$qty_index"} - $$imp{versions};
+				my $versions = $$sig_specs{"UnspecifiedVersions$qty_index"} - $$imp{versions};
 				$imp->display("Need more sigs for $versions versions ");
 				my @signatures = @$signatures;
 				my $newimp = $imp->copy();
 				
-				while ( $versions > 0 ) {
+				while ( $versions >= $$imp{versions} ) {
 					my $new_specs = get_new_specs( $Project, $service_index, $service_specs, \@signatures, $qty_index, undef, \%previous_forms_cache, $hash_key );
 					$$new_specs{"UnspecifiedVersions$qty_index"} = $versions;
 					$$newimp{specs} = $new_specs;
@@ -3037,6 +3051,63 @@ if ( DEBUG ) {
 						#last;
 					} # end if
 				} # end while versions
+
+               if ( $versions ) {
+				   if ( %best_price and ( $best_price{'Comparison Cost'} <= $$price{'Comparison Cost'} ) ) {
+					   if ( DEBUG_PRICE_DECISIONS ) {
+						   $imp->display( "Too expensive $best_price{'Comparison Cost'} <= $$price{'Comparison Cost'}" );
+						   if ( $$sig_specs{'Impositions'} ) {
+							   foreach my $I ( reverse @{ $$sig_specs{'Impositions'} } ) {
+								   $I->display( "THIS" );
+							   } # end while
+						   } 
+						   if ( $best_price{'Impositions'} ) {
+							   foreach my $I ( reverse @{ $best_price{'Impositions'} } ) {
+								   $I->display( "BEST" );
+							   } # end while
+						   } 
+					   } # end if
+					   next; # next Impo
+				   } # end if
+                    my $new_specs = get_new_specs( $Project, $service_index, $service_specs, \@signatures, $qty_index, undef, \%previous_forms_cache, $hash_key );
+                    $$new_specs{"UnspecifiedVersions$qty_index"} = $versions;
+
+$openprint::log->warn("Recursing cuz need another $versions");
+						my $price_cache_key = join(',', $qty_index, $$Press{strid}, $$imp{runstyle}, $$imp{versions} );
+
+						if ( ! $price_cache{$price_cache_key} ) {
+					$$new_specs{'PrintingTypes'} = [ $Press->specification('Printing Type') ];
+					$$new_specs{'PreviousStockType'} = $$Paper{'type'};
+					$$new_specs{'PreviousGrainDirection'} = $imp->grain_direction();
+							$price_cache{$price_cache_key} = 
+									get_project_price( $Project, $$new_specs{'ServiceIndex'}, $project, $service_specs, $new_specs, $qty, $qty_index, $possible_presses, $printing_specs, $versions, \%PlateCounts, \%PaperCounts, \%washed_colours, \%previous_forms_cache, \@signatures, $impositions, $other_impositions, undef, $recursion_depth + 1 );
+						} # end if
+						my $sig_price = $price_cache{$price_cache_key};
+							
+$openprint::log->warn("Back fr Recursing cuz need another $versions");
+					if ( $$sig_price{Imposition} ) {
+						my $newimp = $$sig_price{Imposition};
+
+						$PaperCounts{$Paper->id_string()} += $$sig_price{'Stock Qty'};
+						$PlateCounts{$$sig_price{'Plate Costs'}{'Plate ID'}} += $$sig_price{'Plate Costs'}{'Plate Count'};
+						$PlateCounts{'Blank'.$$sig_price{'Plate Costs'}{'Plate ID'}} += $$sig_price{'Plate Costs'}{'Blank Plates'};
+						$$price{'Comparison Cost'} += $$sig_price{'Comparison Cost'};
+
+						my $results = plate_cost( $sig_price, \%PlateCounts );
+						push @total_impositions, $newimp;
+						push @{$$price{Impositions}}, $newimp;
+						$versions -= $$newimp{versions};
+						push @{$$price{prices}}, $sig_price;
+						if ( ! $$newimp{versions} ) {
+							$openprint::log->error("Should not get no versions. ".$$service_specs{"UnspecifiedVersions$qty_index"}." $$imp{versions}");
+							#last;
+						} # end if
+					} else {
+						$openprint::log->error("recurses didn't work out");
+						$$price{complete} = 0;
+					} # end if
+                } # end while versions
+
 			} elsif ( $txtUnspecifiedPageQuantity ) {
 
 				my $new_specs;

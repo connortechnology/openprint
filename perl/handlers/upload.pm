@@ -199,6 +199,10 @@ $log->debug("content: $_");
 
 	untie %session;
 	undef %session;
+
+	# This is neccessary because these are shared with other handlrrs
+	%variable = ();
+	%param = ();
 	return Apache2::Const::OK;
 } # end sub handler
 

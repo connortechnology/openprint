@@ -22,7 +22,7 @@
 			if ( $$variable{'Order'}->status() eq 'Re-Opened' ) {
 				$html .= button( 'ReOpen', { onclick=>q`f1.action='information.html';f1.btnFunction.value='ReOpen';f1.submit();`, text=>'Continue' } );
 				$html .= button( 'Cancel',{ onclick=>q`f1.action='history_details.html';f1.btnFunction.value='Cancel';f1.submit();` } ) if $$variable{'Order'}->status() ne 'Cancelled';
-			} elsif ( $$variable{'Order'}->status() eq 'Incomplete' ) {
+			} elsif ( $$variable{'Order'}->status() eq 'Incomplete' or ! $$variable{'Order'}->status() ) {
 				$html .= button( 'Continue', { href=>'information.html?order_id='.$$variable{'order_id'} } );
 				$html .= button( 'Cancel', { onclick=>q`f1.action='history_details.html';f1.btnFunction.value='Cancel';f1.submit();` } ) if $$variable{'Order'}->status() ne 'Cancelled';
 			} elsif ( sets::isin( $$variable{'Order'}->status(), [ 'Complete', 'Paid','Pending Deposit','In Production','Cancelled','Waiting For Customer Approval','Waiting For QA Approval','Picked Up' ] ) ) {

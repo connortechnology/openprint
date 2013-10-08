@@ -14,7 +14,7 @@
 				<div class="Questions">
 					<h3>Instant Pricing</h3>
 
-					<? echo ( include('_project_name.html'); ) ?>
+					<?include(_project_name.html) ?>
 					<div class="ProjectSpecifications">
 						<h1>Project Specifications</h1>
 						<div class="Envelopes">
@@ -51,30 +51,30 @@
 							<fieldset><legend>Production</legend>
 								<div class="content">
 									<ul>
-									<? echo ( include('_design.html'); ) ?>
-									<? echo ( include('_proofs.html'); ) ?>
-									<? echo ( include('_turnaround.html'); ) ?>
-									<? echo ( include('_quantity.html'); ) ?>
-									<? echo ( include('_press_type.html'); ) ?>
+									<?include(_design.html) ?>
+									<?include(_proofs.html) ?>
+									<?include(_turnaround.html) ?>
+									<?include(_quantity.html) ?>
+									<?include(_press_type.html) ?>
 									</ul>
 								</div>
 							</fieldset>
 						</div>
-				<? echo ( include('_ups.html'); ) ?>
+				<?include(_ups.html) ?>
 						<div id="AlertDiv" style="display:none;"></div>
 						<br class="spacer"/>
 					</div><!--ProjectSpecifications-->
-					<? echo ( include('_prices.html'); ) ?>
+					<?include(_prices.html) ?>
 				</div><!--Questions-->
 			  </div></div>
 		   <div class="bottom_shadow"><div class="shadow_bl"></div><div class="shadow_br"></div></div>
 		</div><!--instant_price_section-->
 <? echo ( 
 	if ( -e $config{'SkinPath'}.'/content/'.$$variable{'ProjectType'}->name().'.html' ) {
-		return ssi::include( $config{'SkinPath'}.'/content/'.$$variable{'ProjectType'}->name().'.html' );
+		return include( '/content/'.$$variable{'ProjectType'}->name().'.html' );
 	} # end if
 	return '';
 ) ?>
-		<? echo ( include('_specials.html'); ) ?>
+		<?include(_specials.html) ?>
 	</div><!--InstantPricing-->
 </form>

@@ -41,8 +41,8 @@ sub cleanup {
 	if ( $r->connection->aborted( ) ) {
 		$log->debug("Was aborted");
 	} # end if
-	%variable = ();
-	%param = ();
+	%openprint::variable = ();
+	%openprint::param = ();
 	if ( $dbh ) {
 		openprint::pricing::clear_cache();
 		openprint::service::init_cache();
@@ -548,7 +548,7 @@ $openprint::log->warn('bind');
 			openprint::print_project::summary( $r, $log, $dbh, \%variable )					if $filename eq 'docket_sheet.html';
 			openprint::print_project::display_reuse_project( $r, $log, $dbh, \%variable ) 	if $filename eq 'reuse.html';
 		} elsif ( -e $ENV{'DOCUMENT_ROOT'}.$uri ) {
-			my ( $proc ) = $filename =~ /(.*).html/;
+			my ( $proc ) = $filename =~ /^(.*)\.(html|json|xml|rss)$/;
 			if ( $proc ) {
 				my $module = join('_', ($first, $second));
 				eval{ 
@@ -557,6 +557,8 @@ $openprint::log->warn('bind');
 				};
 				$log->error( "Eval error of ($module $proc), Reason: " . $@ )	if $@;
 			} # end if
+		} else {
+			$log->debug($ENV{'DOCUMENT_ROOT'}.$uri . ' does not exist.');
 		} # end if main:$second
 
 	} else {
