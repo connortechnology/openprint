@@ -214,7 +214,7 @@ sub _currency_conversions {
 
 sub user_profiles {
 
-	my $user_id = $param{ddmUser} ? openprint::User->transform( 'id', $param{ddmUser} ) : $session{user_id};
+	my $user_id = $param{ddmUser} ? openprint::User->transform( 'id', $param{ddmUser} ) : undef;
 	my $User = $variable{User} = new openprint::User( $user_id );
 
 	my $user_role = $param{'ddmUserRole'};

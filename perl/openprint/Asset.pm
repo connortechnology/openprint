@@ -58,10 +58,11 @@ $debug = 1;
 	'height'	=>	undef,
 );
 %transforms = (
-	width			=>	[ 's/\D//g' ],
-	height			=>	[ 's/\D//g' ],
-	filename		=>	[ 's/^\s+//', 's/\s+$//', 's/ /_/g', 's/[\/:\*\?\'"<>|]//g', 's/&/n/g' ],
-	name			=>	[ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
+	id			=>	[ 's/\D//g', '<2147483647' ],
+	width		=>	[ 's/\D//g' ],
+	height		=>	[ 's/\D//g' ],
+	filename	=>	[ 's/^\s+//', 's/\s+$//', 's/ /_/g', 's/[\/:\*\?\'"<>|]//g', 's/&/n/g' ],
+	name		=>	[ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
 	description	=>	[ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
 	attribution	=>	[ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
 	license		=>	[ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
@@ -138,14 +139,18 @@ sub sized_url {
 				if ( $_[0]->layout() eq 'Landscape' ) {
 					if ( $size eq 'medium' ) {
 						$height = $openprint::config{'Medium_Asset_Height'};
+						$width = $openprint::config{'Medium_Asset_Width'} if ! $height;
 					} elsif ( $size eq 'large' ) {
 						$height = $openprint::config{'Large_Asset_Height'};
+						$width = $openprint::config{'Large_Asset_Width'} if ! $height;
 					} elsif ( $size eq 'thumbnail' ) {
 						$height = $openprint::config{'Small_Asset_Height'};
+						$width = $openprint::config{'Small_Asset_Width'} if ! $height;
 					} elsif ( $size eq 'small' ) {
 						$height = $openprint::config{'Small_Asset_Height'};
+						$width = $openprint::config{'Small_Asset_Width'} if ! $height;
 					} # end if
-					if ( ! $height ) {
+					if ( ! ( $width or $height ) ) {
 						$openprint::log->error("No asset size in config for $size");
 						return '/assets/'.$filename;
 					} # end if	
