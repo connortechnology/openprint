@@ -30,7 +30,7 @@
 	my %statuses = sql::execute( $log, $dbh, q{SELECT lngServiceIndex, strStatus FROM tbl_Project_Contents WHERE lngProjectIndex=?}, $Project->id() );
     my $printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
 
-	foreach my $ServiceCategory ( openprint::ServiceType_Category->find('order'=>'sorting,name') ) {
+	foreach my $ServiceCategory ( openprint::ServiceType_Category->find( order=>'sorting,name') ) {
 		if ( $ServiceCategory->name() eq 'Printing' ) {
 			my $function_name = 'openprint::Estimating::'.$Project_Type->type();
 			my $summary = '';
@@ -48,12 +48,12 @@
 					$html .= sprintf('<tr%s><td class="description"><a href="/main/project/%s?ProjectIndex=%d&amp;ServiceIndex=%d"><b>Printing</b><br/>%s</a></td>', 
 						$rowclass, $Project_Type->url(), $Project->id(), $$services{''}[0], $summary );
 				} else {
-					$html .= sprintf('<tr%s><td><b>Printing</b></td>', $rowclass  );
+					$html .= sprintf('<tr%s><td class="description"><b>Printing</b></td>', $rowclass  );
 				} # end if
             } else {
-                $html .= sprintf('<tr%s><td><b>Printing</b><br/>%s</td>', $rowclass, $summary );
+                $html .= sprintf('<tr%s><td class="description"><b>Printing</b><br/>%s</td>', $rowclass, $summary );
             } # end if
-			if ( $$services{'Signature'} ) {
+			if ( $$services{Signature} ) {
 				$rowclass = $rowclass ? '' : ' class="colRow"';
 				my @totals;
 
@@ -127,7 +127,7 @@
 					} # end foreach qty_index
 
 					if ( ! $$variable{'Quote'} ) {
-						$html .= join( '<td class="status">',  $statuses{$ss_id}, '</td>' );
+						$html .= join( '', '<td class="status">', $SigService->status(), '</td>' );
 
 						if ( ( ! $Project->docket() ) or ( $Project->Order()->status() eq 'Re-Opened' ) ) {
 							$html .= '<td class="unprintable actions">';
