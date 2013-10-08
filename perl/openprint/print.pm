@@ -54,7 +54,7 @@ sub save_service {
 # Adds completed/edited services, and then displays the status of the project
 sub view_services {
 	my ( $r, $log, $dbh, $variable ) = @_;
-	my $project_index = $openprint::param{'ProjectIndex'};
+	my $project_index = $openprint::param{project_id} ? $openprint::param{project_id} : $openprint::param{'ProjectIndex'};
 
 	# I put these here because the don't need a project index
 	if ( defined $openprint::param{'btnFunction'} and ( $openprint::param{'btnFunction'} eq 'Save Project' ) ) {
