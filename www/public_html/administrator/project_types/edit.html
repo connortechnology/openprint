@@ -89,6 +89,7 @@
 	<br class="spacer"/>
 	<fieldset class="RequiredServices"> 
 		<legend>Required Services</legend>
+		The checked services will be automatically added to the project when this project type is selected.
 		<ul> 
 <? echo (
 		return checkboxes('required_services', 
@@ -99,26 +100,27 @@
 ) ?>
 		</ul>
 	</fieldset><!-- Column -->
-	<fieldset class="rightColumn"> 
+	<fieldset class="BlockedServices"> 
 		<legend>Blocked Services</legend>
-		<p> 
-			<select multiple="multiple" id="blocked_services" name="blocked_services" size="4">
+		The checked services will be automatically removed from the project when this project type is selected.
+		<ul> 
 <? echo (
-		return make_drop_down(
-			openprint::ServiceType->dropdown( order=>'lower(name)'),
-			[ $$variable{ProjectType}->blocked_services() ]
+		return checkboxes('blocked_services', 
+			[ map { $_->id(), $_->description() } openprint::ServiceType->find('order'=>'lower(name)') ],
+			[ $$variable{'ProjectType'}->blocked_services() ],
+			{ container=>['<li>','</li>'] }
 			);
 ) ?>
-			</select>
-		</p>
+		</ul>
 	</fieldset><!-- Column -->
-	<br class="spacer"/>
 <? if ( $$variable{'ProjectType'}->id() ) ?>
+	<div class="PaperRecommendations">
 	<fieldset><legend>Paper Recommendations</legend>
 		<div id="PaperRecommendations">
 			<?include('_paper_recommendations.html')?>
 		</div>	
 	</fieldset>
+	</div>
 <? endif ( $$variable{'ProjectType'}->id() ) ?>
 	<br class="spacer"/>
 	<input type="hidden" name="btnFunction"/>
