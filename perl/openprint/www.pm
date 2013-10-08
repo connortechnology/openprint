@@ -41,8 +41,8 @@ sub cleanup {
 	if ( $r->connection->aborted( ) ) {
 		$log->debug("Was aborted");
 	} # end if
-	%variable = ();
-	%param = ();
+	%openprint::variable = ();
+	%openprint::param = ();
 	if ( $dbh ) {
 		openprint::pricing::clear_cache();
 		openprint::service::init_cache();
