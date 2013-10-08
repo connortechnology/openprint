@@ -859,6 +859,7 @@ sub _stock_checkout {
 							$PA->delete();
 						} # end if
 					} # end foreach
+					$Project->add_to_log( @session{'company_id','user_id'}, "Checked out " . $C->quantity() . $C->units() . ' of ' . $C->Paper->to_string() );
 				} # end foreach C
 			} else {
 				my $PI = new openprint::PaperInventory();
@@ -872,6 +873,7 @@ sub _stock_checkout {
 						skid_id		=>	$Skid->id(),
 						units		=>	undef,
 						});
+				$Project->add_to_log( @session{'company_id','user_id'}, "Checked out something unknown." );
 			} # end if skid has contents
 		} # end if add_entry
 	} # end if
