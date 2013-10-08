@@ -1,7 +1,7 @@
 
 
 <VirtualHost *:80>
-	ServerAdmin	 iconnor@penultima.org
+	ServerAdmin	 iconnor@point-one.com
 	DocumentRoot	/var/www/point-one/www/public_html
 	ServerName	www.point-one.com
 	ErrorLog		/var/log/apache2/point-one.com/www.log
@@ -121,7 +121,7 @@
 </VirtualHost>
 
 <VirtualHost *:443>
-	ServerAdmin	 iconnor@penultima.org
+	ServerAdmin	 iconnor@point-one.com
 	DocumentRoot	/var/www/point-one/www/public_html
 	ServerName	www.point-one.com
 	ErrorLog		/var/log/apache2/point-one.com/www.log
@@ -244,7 +244,7 @@
 </VirtualHost>
 
 <VirtualHost *:443>
-	ServerAdmin		iconnor@penultima.org
+	ServerAdmin		iconnor@point-one.com
 	DocumentRoot	/var/www/point-one/www/public_html
 	ServerName		www.point-one.com
 	ServerAlias		*.point-one.com
