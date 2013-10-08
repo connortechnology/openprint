@@ -1213,6 +1213,45 @@ $openprint::log->debug("Not adding GRIP and GUTTER");
 			my $Runstyles = $Press->specification('Runstyles');
 			my $Maximum_Sheet_Width = $Press->specification('Maximum Sheet Width');
 
+			my %sheetsizes;
+			if ( my $sheets = $Press->specification('SheetSizes') ) {
+				my %available_sheets;
+				foreach my $Paper ( @Papers ) {
+					$available_sheets{join('x',$Paper->width(),$Paper->height())} = 1;
+				} # end foreach Paper
+				my @extra_sheets;
+
+				my @sheets = split(',', $sheets );
+				foreach my $sheet ( @sheets ) {
+					my ( $width, $height ) = split('x', $sheet);
+					$sheetsizes{join('x',$width,$height)} = 1;
+					$sheetsizes{join('x',$height,$width)} = 1;
+					if ( ! $available_sheets{join('x',$width,$height)} ) {
+						foreach my $Paper ( @Papers ) {
+							next if $Paper->width() < $width;
+							next if $Paper->height() < $height;
+							my $P = $Paper->clone();
+							$P->width($width);
+							$P->height($height);
+							push @extra_sheets, $P;
+						} # end foreach P
+						$available_sheets{join('x',$width,$height)} = 1;
+					} # end if
+					if ( ! $available_sheets{join('x',$height,$width)} ) {
+                        foreach my $Paper ( @Papers ) {
+							next if $Paper->width() < $height;
+							next if $Paper->height() < $width;
+                            my $P = $Paper->clone();
+                            $P->width($height);
+                            $P->height($width);
+                            push @extra_sheets, $P;
+                        } # end foreach P
+                        $available_sheets{join('x',$height,$width)} = 1;
+                    } # end if
+				} # end foreach
+				push @Papers, @extra_sheets;
+			} # end if
+			
 			foreach my $Paper ( @Papers ) {
 				if ( $$specs{'PreviousStockType'} and ( $Paper->type() ne $$specs{'PreviousStockType'} ) ) {
 					$openprint::log->debug("Not consider paper cuz it's not the previous stock type " . $Paper->type() .' ' .$$specs{'PreviousStockType'} ) if $debug or 1;
@@ -1278,6 +1317,7 @@ $log->debug("getting impositions for " . $Paper->to_string() );
 
 					next if ! ( $Paper->width() and $Paper->height() );
 					next if ( $Press->specification('Printing Type') eq 'Digital' and ! $Paper->digital() );
+					next if ( %sheetsizes and ! $sheetsizes{join('x', $Paper->width(),$Paper->height())} );
 					$project{'Runstyles'} = $Runstyles;
 
 					my $P = $Paper->clone();
