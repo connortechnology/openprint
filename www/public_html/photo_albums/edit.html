@@ -9,8 +9,8 @@
 			<p class="buttons">
 			<? echo (
 				my $html = '';
-				$html .= ssi::button( 'Delete', { onclick=>"if(confirm('Are you sure?')){f1.btnFunction.value='Delete';f1.submit();};", 'text'=>'Delete Album' } );
-				$html .= ssi::button( 'Save', { onclick=>"f1.btnFunction.value='Save';f1.submit();" } );
+				$html .= button( 'Delete', { onclick=>"if(confirm('Are you sure?')){f1.btnFunction.value='Delete';f1.submit();};", 'text'=>'Delete Album' } );
+				$html .= button( 'Save', { onclick=>"f1.btnFunction.value='Save';f1.submit();" } );
 				return $html;
 			) ?>
 			</p>
@@ -26,7 +26,7 @@
 								<? echo (
 	$$variable{company_id} = $param{company_id} ? $param{company_id} : 
 		( $$variable{Album}->id() ? $$variable{'Album'}->User()->company_id() : $session{company_id} );
- ssi::make_drop_down( openprint::Company->dropdown( ), $$variable{company_id} ); ) ?>
+ make_drop_down( openprint::Company->dropdown( ), $$variable{company_id} ); ) ?>
 							</select>
 							
 						</li>
@@ -35,7 +35,7 @@
 <option value="">no one</option>
 <? echo ( 
 	my $owner_id = ( $param{user_id} ? $param{user_id} : ( $$variable{Album}->id() ? $$variable{Album}->user_id() : $session{user_id} ) );
-ssi::make_drop_down( openprint::User->dropdown( company_id => $$variable{company_id}, order=>'lower(firstname),lower(lastname)'), $owner_id );
+make_drop_down( openprint::User->dropdown( company_id => $$variable{company_id}, order=>'lower(firstname),lower(lastname)'), $owner_id );
 ) ?>
 							</select>
 						</li>
