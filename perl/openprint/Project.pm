@@ -1168,11 +1168,10 @@ sub Ordered_Project {
 
 sub add_service {
 	my ( $self, $type, $data ) = @_;
-	my $service_index = 0;
 
 	my $ServiceType;
 	if ( ref $type ne 'openprint::ServiceType' ) {
-		if ( ! ( $ServiceType = openprint::ServiceType->find_one('name'=>$type) ) ) {
+		if ( ! ( $ServiceType = openprint::ServiceType->find_one( name=>$type ) ) ) {
 			$log->error("Service $type IS NOT in the system.");
 			return;
 		} # end if
@@ -1185,7 +1184,7 @@ sub add_service {
 
 	my $Service = new openprint::Project_Service();
 	$Service->save({ project_id=>$$self{id}, status=>'uncalculated', servicetype_id=>$ServiceType->id()});
-	$service_index = $$Service{service_id};
+	my $service_index = $$Service{service_id};
 
 	# Do this so that it doesn't try to load the specs, saving 1 db call.
 	$openprint::service::specs_cache{$service_index} = {};

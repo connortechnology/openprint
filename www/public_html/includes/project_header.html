@@ -97,9 +97,9 @@
 						) ?>
 					</li>
 					<? endif ( $$variable{Project}->predefined() and $session{'user_type'} eq 'A' ) ?>
-					<? if ( $$variable{Project}->reprint() ) ?>
+					<? if ( $$variable{Project}->reprint() and $$variable{Project}->reprint() ne 'N' ) ?>
 					<li><label>Reprint Reason</label><? echo ( $$variable{Project}->reprint_reason() ) ?></li>
-					<? endif ( $$variable{Project}->reprint() ) ?>
+					<? endif ( $$variable{Project}->reprint() and $$variable{Project}->reprint() ne 'N' ) ?>
 				</ul>
 			</div>
 		</fieldset>
