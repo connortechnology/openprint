@@ -1700,9 +1700,11 @@ $log->debug("WOuld update");
 sub _manifest_content {
 	if ( $param{action} eq 'Remove' ) {
 		my $C = new openprint::ManifestContent( $param{content_id} );
-		$variable{type_id} = $C->type_id();
-		$variable{Manifest} = $C->Manifest();
-		$variable{error} .= $C->delete();
+		if ( $$C{id} ) {
+			$variable{type_id} = $C->type_id();
+			$variable{Manifest} = $C->Manifest();
+			$variable{error} .= $C->delete();
+		} # end if
 	} elsif ( $param{action} eq 'Fix' ) {
 		my $MC = $variable{C} = new openprint::ManifestContent( $param{content_id} );
 		$variable{error} .= $MC->fix();
