@@ -111,8 +111,8 @@ sub calc {
 	if ( ! $$specs{'txtTotalPageQuantity'} ) {
 		$$specs{alert} .= 'Please enter the # of pages';
 		return $$specs{Status} = 'uncalculated';
-	} elsif ( $$specs{'txtTotalPageQuantity'} > 500 ) {
-		$$specs{alert} .= 'The maximum # of pages is 500.<br/>';
+	} elsif ( $$specs{'txtTotalPageQuantity'} > 1000 ) {
+		$$specs{alert} .= 'The maximum # of pages is 1000.<br/>';
 		$$specs{Status} = 'uncalculated';
 	} # end if
 

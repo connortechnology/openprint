@@ -1274,6 +1274,44 @@ $openprint::log->debug("Non-process colours in get_impositions: @non_process_col
 		my $runstyles_sheet = $Press->specification('RunstylesSheet');
 		$runstyles_sheet = $runstyles if ! $runstyles_sheet;
 
+		my %sheetsizes;
+		if ( my $sheets = $Press->specification('SheetSizes') ) {
+			my %available_sheets;
+			foreach my $Paper ( @{$Papers} ) {
+				$available_sheets{join('x',$Paper->width(),$Paper->height())} = 1;
+			} # end foreach Paper
+			my @extra_sheets;
+
+			my @sheets = split(',', $sheets );
+			foreach my $sheet ( @sheets ) {
+				my ( $width, $height ) = split('x', $sheet);
+				$sheetsizes{join('x',$width,$height)} = 1;
+				$sheetsizes{join('x',$height,$width)} = 1;
+				if ( ! $available_sheets{join('x',$width,$height)} ) {
+					foreach my $Paper ( @{$Papers} ) {
+						next if $Paper->width() < $width;
+						next if $Paper->height() < $height;
+						my $P = $Paper->clone();
+						$P->width($width);
+						$P->height($height);
+						push @extra_sheets, $P;
+					} # end foreach P
+					$available_sheets{join('x',$width,$height)} = 1;
+				} # end if
+				if ( ! $available_sheets{join('x',$height,$width)} ) {
+					foreach my $Paper ( @{$Papers} ) {
+						next if $Paper->width() < $height;
+						next if $Paper->height() < $width;
+						my $P = $Paper->clone();
+						$P->width($height);
+						$P->height($width);
+						push @extra_sheets, $P;
+					} # end foreach P
+					$available_sheets{join('x',$height,$width)} = 1;
+				} # end if
+			} # end foreach
+			push @{$Papers}, @extra_sheets;
+		} # end if
 		foreach my $Paper ( @$Papers ) {
 #Paper might have different calliperso# Is this needed anymore
 			#$$project{'Calliper'} = $$Paper{'calliper'};
@@ -1374,6 +1412,8 @@ $openprint::log->debug("Non-process colours in get_impositions: @non_process_col
 				next if ! ( $$Paper{width} and $$Paper{height} );
 				next if $use_cut_stocks and $Paper->is_cut();
 				next if $printing_type eq 'Digital' and ! $Paper->digital();
+				next if ( %sheetsizes and ! $sheetsizes{join('x', $Paper->width(),$Paper->height())} );
+
 				$$project{'Runstyles'} = $runstyles_sheet;
 
 				my $P = $Paper->clone();
