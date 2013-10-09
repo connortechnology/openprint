@@ -1276,7 +1276,7 @@ $openprint::log->debug("Non-process colours in get_impositions: @non_process_col
 		my %sheetsizes;
 		if ( my $sheets = $Press->specification('SheetSizes') ) {
 			my %available_sheets;
-			foreach my $Paper ( @Papers ) {
+			foreach my $Paper ( @{$Papers} ) {
 				$available_sheets{join('x',$Paper->width(),$Paper->height())} = 1;
 			} # end foreach Paper
 			my @extra_sheets;
@@ -1287,7 +1287,7 @@ $openprint::log->debug("Non-process colours in get_impositions: @non_process_col
 				$sheetsizes{join('x',$width,$height)} = 1;
 				$sheetsizes{join('x',$height,$width)} = 1;
 				if ( ! $available_sheets{join('x',$width,$height)} ) {
-					foreach my $Paper ( @Papers ) {
+					foreach my $Paper ( @{$Papers} ) {
 						next if $Paper->width() < $width;
 						next if $Paper->height() < $height;
 						my $P = $Paper->clone();
@@ -1298,7 +1298,7 @@ $openprint::log->debug("Non-process colours in get_impositions: @non_process_col
 					$available_sheets{join('x',$width,$height)} = 1;
 				} # end if
 				if ( ! $available_sheets{join('x',$height,$width)} ) {
-					foreach my $Paper ( @Papers ) {
+					foreach my $Paper ( @{$Papers} ) {
 						next if $Paper->width() < $height;
 						next if $Paper->height() < $width;
 						my $P = $Paper->clone();
@@ -1309,7 +1309,7 @@ $openprint::log->debug("Non-process colours in get_impositions: @non_process_col
 					$available_sheets{join('x',$height,$width)} = 1;
 				} # end if
 			} # end foreach
-			push @Papers, @extra_sheets;
+			push @{$Papers}, @extra_sheets;
 		} # end if
 		foreach my $Paper ( @$Papers ) {
 #Paper might have different calliperso# Is this needed anymore
