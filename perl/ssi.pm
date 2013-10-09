@@ -848,7 +848,7 @@ sub input {
 		} # end if
 		$options{'onkeyup'} = 'floatize_calculator(this);'.$options{'onkeyup'};
 	} # end if
-	$html .= ' value="'.$options{value}.'"' if $options{value} ne '';
+	$html .= ' value="'.html_escape($options{value}).'"' if $options{value} ne '';
 
 	foreach (@input_options) {
 		$html .= qq` $_="$options{$_}"` if $options{$_};

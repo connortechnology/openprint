@@ -22,7 +22,7 @@ my $threading = 0;
 #use threads;
 use constant DEBUG => 0;
 use constant DEBUG_VERSIONS => 1;
-use constant DEBUG_FILTERING => 0;
+use constant DEBUG_FILTERING => 1;
 use constant DEBUG_PRICE_DECISIONS => 0;
 
 my $master_time;
@@ -179,6 +179,7 @@ my %variables = (
 
 	'BleedLeft' => ['save'], 'BleedRight' => ['save'], 'BleedTop' => ['save'], 'BleedBottom' => ['save'],
 	'rdbColourBar' => ['save','output'], 'txtCropMarkSpace' => ['save'],
+	'ddmStockQuality'	=>	['save'],
 	'ddmStockBrand' => ['save'], 'txtSpecificStockBrand' => ['save'], 'ddmStockFinish' => ['save'], 'txtSpecificStockFinish' => ['save'], 'ddmStockColour' => ['save'], 'txtSpecificStockColour' => ['save'],
 
 	'ddmStockWeight' => ['save'], 'txtSpecificStockWeight'=>['save'],
@@ -4539,6 +4540,15 @@ sub select_presses {
 
 	foreach my $Press ( openprint::Equipment->find( 'category any'=>'Printing', 'useinestimating'=>1 ) ) {
 		my $press_id = $Press->id();
+
+		my ( $min_object_width, $min_object_length ) = ( $Press->specification( 'Minimum Object Width'), $Press->specification('Minimum Object Length') );
+
+		if ( $min_object_width and $min_object_length ) {
+			if ( ( $min_object_width > $$specs{txtWidth} and $min_object_length > $$specs{txtHeight} ) or ( $min_object_length > $$specs{txtWidth} and $min_object_width > $$specs{txtHeight} ) ) {
+				$results{$press_id} = 'Project is too small for press';
+				next;
+			} # end if
+		} # end if
 
 		my ( $max_width, $max_length ) = ( $Press->specification( 'Maximum Sheet Width'), $Press->specification('Maximum Sheet Length') );
 
