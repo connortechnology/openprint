@@ -597,6 +597,7 @@ $openprint::log->debug("Doing $name");
 } # end sub edit
 
 sub pricelists {
+	pricelist( $openprint::r, $openprint::log, $openprint::dbh, \%openprint::variable);
 } # end sub pricelists
 
 1;
