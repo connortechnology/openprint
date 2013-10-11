@@ -9,7 +9,7 @@ use vars qw( $table $debug $serial %fields %transforms %defaults );
 require sql;
 require openprint::Skid;
 
-$debug = 1;
+$debug = 0;
 $table = 'paper_inventory';
 $serial = 'paperinventory_id_seq';
 

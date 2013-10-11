@@ -23,7 +23,7 @@ my $threading = 0;
 use constant DEBUG => 0;
 use constant DEBUG_VERSIONS => 0;
 use constant DEBUG_FILTERING => 0;
-use constant DEBUG_PRICE_DECISIONS => 1;
+use constant DEBUG_PRICE_DECISIONS => 0;
 
 my $master_time;
 my %special_colours;
