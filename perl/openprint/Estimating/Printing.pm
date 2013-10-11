@@ -1231,9 +1231,7 @@ $openprint::log->debug("Not adding GRIP and GUTTER");
 							next if $Paper->width() < $width;
 							next if $Paper->height() < $height;
 							my $P = $Paper->clone();
-							$P->mweight( int( $P->mweight() / ( ( $P->width() *$P->width() ) / ( $width * $height ) ) ) );
-							$P->width($width);
-							$P->height($height);
+							$P->cut( $width, $height );
 							push @extra_sheets, $P;
 						} # end foreach P
 						$available_sheets{join('x',$width,$height)} = 1;
@@ -1243,9 +1241,7 @@ $openprint::log->debug("Not adding GRIP and GUTTER");
 							next if $Paper->width() < $height;
 							next if $Paper->height() < $width;
                             my $P = $Paper->clone();
-							$P->mweight( int( $P->mweight() / ( ( $P->width() *$P->width() ) / ( $width * $height ) ) ) );
-                            $P->width($height);
-                            $P->height($width);
+							$P->cut( $height, $width );
                             push @extra_sheets, $P;
                         } # end foreach P
                         $available_sheets{join('x',$height,$width)} = 1;
