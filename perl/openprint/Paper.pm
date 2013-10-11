@@ -33,7 +33,7 @@ require openprint::PaperAllocation;
 
 use Time::HiRes qw{ time gettimeofday tv_interval }; 
 
-use vars qw( $debug $table $serial %fields %find_fields %defaults %transforms );
+use vars qw( $debug $table $serial %fields %find_fields %defaults %transforms %grades );
 
 $debug = 0;
 $table = 'papers';
@@ -114,8 +114,16 @@ $serial	= 'paper_id_seq';
 	score_required	=>	'0',
 	die_score_required	=>	'0',
 	supplied		=>	undef,
+	multipart	=>	0,
 );
 
+%grades = (
+1	=>	'1 Gloss-coated stock',
+2	=>	'2 Matte-coated stock',
+3	=>	'3 Gloss-coated, web stock', 
+4	=>	'4 Uncoated, white stock', 
+5	=>	'5 Uncoated, yellow stock'
+);
 sub load {
 	my ( $self, $data ) = @_;
 	if ( ! $data ) {

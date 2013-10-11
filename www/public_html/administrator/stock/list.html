@@ -38,7 +38,7 @@
 	} // end function popup_window
 
 	function calc(formName) {
-		new Ajax.Updater('Stocks','/administrator/stock/_stocks.html', {method:'get',
+		new Ajax.Updater('Stocks','/administrator/stock/_stocks.html', {
 				onLoading:function(){ $('Stocks').innerHTML='Loading...'; },
 				onSuccess:function(){ TableKit.Sortable.reload('StocksTable'); },
 				parameters:Form.serialize($(formName))});
@@ -83,7 +83,7 @@
 			<select id="group_id" name="group_id" size="1" onchange="calc(this.form.name);">
 				<option value="">select</option>
 				<? echo (
-					return ssi::make_drop_down( [ map { $_->id(), $_->name() } @{$$variable{'Groups'}} ], $session{'/administrator/stock/list.html?group_id'} );
+					return make_drop_down( [ map { $_->id(), $_->name() } @{$$variable{'Groups'}} ], $session{'/administrator/stock/list.html?group_id'} );
 					) ?>
 			</select>
 		</li>
@@ -93,7 +93,7 @@
 			<select id="manufacturer_id" name="manufacturer_id" size="1" onchange="calc(this.form.name);">
 				<option value="">select</option>
 				<? echo (
-					return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Manufacturer->find('order'=>'lower(name)') ], $session{'/administrator/stock/list.html?manufacturer_id'} );
+					return make_drop_down( [ map { $_->id(), $_->name() } openprint::Manufacturer->find('order'=>'lower(name)') ], $session{'/administrator/stock/list.html?manufacturer_id'} );
 					) ?>
 			</select>
 		</li>
@@ -102,7 +102,7 @@
 			<select id="brand_id" name="brand_id" onchange="filter_onChange(this,'');">
 				<option value="">select</option>
 				<? echo (
-					return ssi::make_drop_down( openprint::StockBrand->dropdown( order=>'lower(name)'), $session{'/administrator/stock/list.html?brand_id'} );
+					return make_drop_down( openprint::StockBrand->dropdown( order=>'lower(name)'), $session{'/administrator/stock/list.html?brand_id'} );
 					) ?>
 			</select>
 		</li>
@@ -138,7 +138,7 @@
 		<li> 
 			<label>%3$s</label>
 			<select id="%1$s_id" name="%1$s_id" size="1" onchange="filter_onChange(this,'');"><option value=""> select one </option>%2$s</select>
-		</li>`, $lc_option, ssi::make_drop_down( [map { $_->id(), $_->name() } @sorted ], $session{'/administrator/stock/list.html?'.$lc_option.'_id'} ), $option );
+		</li>`, $lc_option, make_drop_down( [map { $_->id(), $_->name() } @sorted ], $session{'/administrator/stock/list.html?'.$lc_option.'_id'} ), $option );
 		$find{$lc_option.'_id'} = $session{'/administrator/stock/list.html?'.$lc_option.'_id'} if $session{'/administrator/stock/list.html?'.$lc_option.'_id'};
 	}# end foreach option
 	return $html;

@@ -7,11 +7,11 @@ use vars qw( $table $serial %fields %transforms %defaults );
 $table = 'stockcolours';
 $serial= 'stockcolours_id_seq';
 %fields = (
-	'id'	=>  'id',
-	'name' =>  'name',
+	id		=>  'id',
+	name	=>  'name',
 );
 %transforms = (
-    'name' => [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
+    name	=> [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
 );
 %defaults = (
 );
