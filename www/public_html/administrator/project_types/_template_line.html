@@ -4,13 +4,14 @@
 		my $Template = $$variable{'Template'};
  		my $html .= sprintf(q`
 <td class="type"><input type="text" name="type%1$d" value="%2$s" /></td>
-<td class="description"><input type="text" name="description%1$d" value="%3$s" /></td>
-<td class="finished_width">%4$s</td>
-<td class="finished_height">%5$s</td>
-<td class="flat_width">%6$s</td>
-<td class="flat_height">%7$s</td>
-<td class="message"><textarea name="message%1$d">%8$s</textarea></td>
-`, $Template->id(), ssi::htmlize( $Template->get('type','description') ),
+<td class="name"><input type="text" name="name%1$d" value="%3$s" /></td>
+<td class="description"><input type="text" name="description%1$d" value="%4$s" /></td>
+<td class="finished_width">%5$s</td>
+<td class="finished_height">%6$s</td>
+<td class="flat_width">%7$s</td>
+<td class="flat_height">%8$s</td>
+<td class="message"><textarea name="message%1$d">%9$s</textarea></td>
+`, $Template->id(), htmlize( $Template->get('type','name','description') ),
 input( type=>'float', name=>'finishedwidth'.$$Template{id}, value=> $$Template{finished_width} ),
 input( type=>'float', name=>'finishedheight'.$$Template{id}, value=> $$Template{finished_height} ),
 input( type=>'float', name=>'flatwidth'.$$Template{id}, value=> $$Template{flat_width} ),
@@ -19,19 +20,19 @@ $$Template{message},
  );
 
             $html .= '<td class="buttons">';
-            $html .= ssi::button( 'C'.$Template->id(), { 'onclick'=>qq`new Ajax.Updater( 'T$$Template{id}', '_template_line.html', {
+            $html .= button( 'C'.$Template->id(), { 'onclick'=>qq`new Ajax.Updater( 'T$$Template{id}', '_template_line.html', {
                 parameters: {
                     template_id:	'$$Template{id}',
 					action: 		'C'
                 },
                 insertion: 'after',
-                } );`, 'text'=>'C' } );
-            $html .= ssi::button( 'X'.$Template->id(), { 'onclick'=>qq`new Ajax.Updater( 'T$$Template{id}', '_template_line.html', {
+                } );`, text=>'C' } );
+            $html .= button( 'X'.$Template->id(), { 'onclick'=>qq`new Ajax.Updater( 'T$$Template{id}', '_template_line.html', {
                 parameters: {
                     template_id:	'$$Template{id}',
 					action:			'X'
                 }
-				} );`, 'text'=>'X' } );
+				} );`, text=>'X' } );
 		return $html;
 	) ?>
 	</td>

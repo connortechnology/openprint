@@ -8,6 +8,7 @@ use constant DEBUG => 0;
 
 use Apache2::Request ();
 use Apache2::RequestRec ();
+use Apache2::Connection ();
 use APR::URI ();
 use Apache2::Const -compile => qw(REDIRECT HTTP_INTERNAL_SERVER_ERROR OK DECLINED HTTP_NOT_FOUND HTTP_FORBIDDEN);# Offers OK, Error,etc for web server.
 use Apache2::Log ();
@@ -24,6 +25,7 @@ require configuration;
 
 require openprint::Object;
 require openprint::Currency;
+require openprint::Authorization;
 
 use openprint ();
 use vars qw( $r %variable %session %param %config $log $dbh %page_settings $starttime );
@@ -37,19 +39,22 @@ use vars qw( $r %variable %session %param %config $log $dbh %page_settings $star
 
 sub cleanup {
 	if ( $r->connection->aborted( ) ) {
-$log->debug("Was aborted");
+		$log->debug("Was aborted");
 	} # end if
-	%variable = ();
-	%param = ();
+	%openprint::variable = ();
+	%openprint::param = ();
 	if ( $dbh ) {
 		openprint::pricing::clear_cache();
 		openprint::service::init_cache();
 		openprint::Object::init_cache();
 		$session{lastupdated} = time;
 		untie %session;
+		if ( ! $dbh->{AutoCommit} ) {
+			$log->error("Uncommited transaction");
+		} # end if
 		$dbh->disconnect();
 	} else {
-$log->debug("No dbh at cleanup");
+		$log->debug("No dbh at cleanup");
 	} # end if
 } # end sub cleanup
 
@@ -58,7 +63,7 @@ sub handler {
 	my $request = shift;
 	$r = Apache2::Request->new( $request );
 
-	# Don't do any caching.  This makes the back button not work.
+	# Don't do any caching.	This makes the back button not work.
 	$r->no_cache(1);
 
 	$starttime = gettimeofday();
@@ -70,7 +75,7 @@ sub handler {
 	$log->debug( "Beginning of Request: Page: " . $page );
 
 	%param = ();
-	# Here we copy the param data into a hash that is sligthly more useful to use.  Wish we didn't have to do this.
+	# Here we copy the param data into a hash that is sligthly more useful to use.	Wish we didn't have to do this.
 	foreach my $key ( $r->param ) {
 	#foreach my $key ( sets::union( $r->param ) ) {
 		my @values = $r->param($key);
@@ -89,7 +94,7 @@ sub handler {
 		} else {
 			$log->debug("Parameter $key is (" . $param{$key} . ")" );
 		} # end if
-	}  # end foreach
+	}	# end foreach
 
 	$dbh = sql::open_sql( $log, 
 			database	=> $r->dir_config('db_name'),
@@ -143,7 +148,7 @@ $log->debug("Checking user level, need : " . $page_settings{$config{db_name}}{$p
 					( $page_settings{$config{db_name}}{$page}->user_level() eq 'E' and ! sets::isin( $session{'user_type'}, ['E','A'] ) ) 
 					or
 					( $page_settings{$config{db_name}}{$page}->user_level() eq 'A' and ! sets::isin( $session{'user_type'}, ['A'] ) ) 
-			   ) {
+				) {
 $log->debug("No good, need login");
 				if ( $page =~ /^.*\/_/ ) {
 					$r->content_type(q{text/javascript; charset=utf-8});
@@ -184,26 +189,25 @@ $log->debug("No good, need login");
 		} # end while
 	} # end if
 
-    if ( $lastpage =~ /\.html/ ) {
-        $r->content_type(q{text/html; charset=utf-8});
-    } elsif ( $lastpage =~ /\.json/ ) {
-        $r->content_type(q{text/javascript; charset=utf-8});
-    } elsif ( $lastpage =~ /\.xml/ ) {
-        $r->content_type(q{text/xml; charset=utf-8});
-    } elsif ( $lastpage =~ /\.rss/ ) {
-        $r->content_type(q{application/rss+xml; charset=utf-8});
-    } # end if
+	if ( $lastpage =~ /\.html/ ) {
+		$r->content_type(q{text/html; charset=utf-8});
+	} elsif ( $lastpage =~ /\.json/ ) {
+		$r->content_type(q{text/javascript; charset=utf-8});
+	} elsif ( $lastpage =~ /\.xml/ ) {
+		$r->content_type(q{text/xml; charset=utf-8});
+	} elsif ( $lastpage =~ /\.rss/ ) {
+		$r->content_type(q{application/rss+xml; charset=utf-8});
+	} # end if
 
-    if ( $variable{'ExternalRedirect'} ) {
+	if ( $variable{'ExternalRedirect'} ) {
 		foreach my $key ( 'error', 'warning', 'information' ) {
 			if ( $variable{$key} ) {
-				$log->debug("Sacing session $key $variable{$key}");
 				$session{$key} = $variable{$key};
 			} # end if
 		} # end foreach
-        $r->headers_out->set(Location=>$variable{'ExternalRedirect'});
-        $r->status(Apache2::Const::REDIRECT);
-        #$r->send_http_header;
+		$r->headers_out->set(Location=>$variable{'ExternalRedirect'});
+		$r->status(Apache2::Const::REDIRECT);
+		#$r->send_http_header;
 		$log->debug("Redirecting to " . $variable{'ExternalRedirect'} );
 	} elsif ( exists $variable{'Download'} and $variable{'Download'} ) {
 		if ( $variable{'File_Data'} ) {
@@ -222,16 +226,16 @@ $log->debug("No good, need login");
 	$log->debug( "Before loading content: ($page) Elapsed time: " . sprintf('%.4f', tv_interval([$starttime])*1000).' usecs' );
 		if ( ! exists $variable{'PageContent'} ) {
 			my $content;
-			if ( -e ($_ = join('/', $config{'SkinPath'}, 'html', $page )) ) {
-				$content = misc::load_file( $log, $_ );
+			if ( -e ( my $path = join('/', $config{'SkinPath'}, 'html', $page )) ) {
+				$content = misc::load_file( $log, $path );
 				if ( ! $content ) {
-					$log->error("Found no content at $_");
+					$log->error("Found no content at $path");
 				} # end if
-			} elsif ( -e ($_ = join('/', $config{'SkinPath'}, $page )) ) {
+			} elsif ( -e ( my $path = join('/', $config{'SkinPath'}, $page )) ) {
 $log->error("Deprecated SkinPath layout! $config{SkinPath}");
-				$content = misc::load_file( $log, $_ );
+				$content = misc::load_file( $log, $path );
 				if ( ! $content ) {
-					$log->error("Found no content at $_");
+					$log->error("Found no content at $path");
 				} # end if
 			} else {
 				$content = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . $page );
@@ -277,7 +281,6 @@ $log->debug("PageContent is $variable{PageContent}");
 	} # end if
 
 	$log->debug( 'Elapsed seconds: ' . sprintf('%.4f', tv_interval([$starttime])*1000).' usecs' );
-	# Clear all the caches AFTER we send the data to client! I'm hoping this allows browsers to render before we actually send the OK< the microsecond probably doesn't matter.
 	return Apache2::Const::OK;
 } # end sub handler
 
@@ -391,7 +394,7 @@ $log->debug("Found sig");
 							} 
 						} # end if
 						if ( ! $Equipment ) {
-$log->error("Unable to load equipment.  No PPF for you for signature $$PPF{'signature'}.");
+$log->error("Unable to load equipment.	No PPF for you for signature $$PPF{'signature'}.");
 						} else {
 						$PPF->send_ppf( $Equipment );
 						} # end if
@@ -433,9 +436,11 @@ $log->error("Unable to load equipment.  No PPF for you for signature $$PPF{'sign
 				$variable{'ProjectIndex'} = $openprint::param{'ProjectIndex'} if ! $variable{'ProjectIndex'};
 				$variable{'ProjectIndex'} = $openprint::session{'project_id'} if ! $variable{'ProjectIndex'};
 				$variable{'Project'} = new openprint::Project( $variable{'ProjectIndex'} );
-				my $Service = $variable{'Project'}->Service( $variable{'ServiceIndex'} );
-				$variable{'ServiceType'} = $Service->ServiceType();
-				@variable{'ServiceTypeID','ServiceTypeName','ServiceTypeType'} = $variable{'ServiceType'}->get('name','description','type' ) if $variable{'ServiceType'};
+				if ( $variable{ServiceIndex} ) {
+					my $Service = $variable{'Project'}->Service( $variable{'ServiceIndex'} );
+					$variable{'ServiceType'} = $Service->ServiceType();
+					@variable{'ServiceTypeID','ServiceTypeName','ServiceTypeType'} = $variable{ServiceType}->get('name','description','type') if $variable{ServiceType};
+				} # end if
 				my $Currency = openprint::Currency::get_current();
 				@variable{'CurrencyName','CurrencySymbol'} = ( $Currency->name(), $Currency->symbol() );
 				my $project_index = $variable{'ProjectIndex'};
@@ -448,11 +453,9 @@ $log->error("Unable to load equipment.  No PPF for you for signature $$PPF{'sign
 					@variable{keys %$specs} = @$specs{keys %$specs};
 				} # end if
 				$variable{'ProjectType'} = $variable{'Project'}->Type();
-#$openprint::log->debug("Pid: $variable{'ProjectIndex'} sid: $variable{'ServiceIndex'}");
-if ( ! $variable{'ServiceIndex'} ) {
-#$openprint::log->warn("Pid: $variable{'ProjectIndex'} sid: $variable{'ServiceIndex'}");
-$variable{'ServiceIndex'} = $service_index;
-} # end if
+				if ( ! $variable{'ServiceIndex'} ) {
+					$variable{'ServiceIndex'} = $service_index;
+				} # end if
 
 				if ( $third eq 'prin' ) {
 					$log->debug("** START OF MAIN:PROJ:PRIN * ($project_index) ($service_index)");
@@ -545,15 +548,17 @@ $openprint::log->warn('bind');
 			openprint::print_project::summary( $r, $log, $dbh, \%variable )					if $filename eq 'docket_sheet.html';
 			openprint::print_project::display_reuse_project( $r, $log, $dbh, \%variable ) 	if $filename eq 'reuse.html';
 		} elsif ( -e $ENV{'DOCUMENT_ROOT'}.$uri ) {
-			my ( $proc ) = $filename =~ /(.*).html/;
+			my ( $proc ) = $filename =~ /^(.*)\.(html|json|xml|rss)$/;
 			if ( $proc ) {
 				my $module = join('_', ($first, $second));
 				eval{ 
 					require "openprint/$module.pm"; 
 					('openprint::'.$module)->$proc( $r, $log, $dbh, \%variable );
 				};
-				$log->error( "Eval error of ($module $proc), Reason: " . $@ )  if $@;
+				$log->error( "Eval error of ($module $proc), Reason: " . $@ )	if $@;
 			} # end if
+		} else {
+			$log->debug($ENV{'DOCUMENT_ROOT'}.$uri . ' does not exist.');
 		} # end if main:$second
 
 	} else {

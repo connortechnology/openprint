@@ -2,60 +2,67 @@
 	return $variable{'error'} if $variable{'error'};
 	return if ! $$variable{'Price'}->id();
 	my $html = '';
-	my $Pricelist = $$variable{'Pricelist'};
+	my $Pricelist = $$variable{Pricelist};
 	my $service = $$variable{'service'};
 	my $Price = $$variable{'Price'};
 
 	if ( $Price->service() ne 'Material' ) {
-		$html .= sprintf(q`<tr id="paperprice-%1$d">
+		$html .= sprintf(q`<tr id="paperprice-%1$d" class="%9$s">
 				<td class="Equipment"><select name="equipment_id-%1$d" onchange="check_price(this);"><option value=""> all </option>%8$s</select></td>
-				<td class="Range">
-					<input type="numeric" name="min-%1$d" value="%2$s" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');check_price(this);"/>
-					<input type="numeric" name="max-%1$d" value="%3$s" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');check_price(this);"/>
-				</td>
-				<td class="Units"><input type="text" name="units-%1$d" value="%4$s" onkeyup="check_price(this);" /></td>
-				<td class="Cost"><input type="numeric" name="cost-%1$d" value="%5$s" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');calc_price(this);check_price(this);" /></td>
-				<td class="Markup"><input type="numeric" name="markup-%1$d" value="%6$s" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');calc_price(this);check_price(this);"/></td>
-				<td class="Price"><input type="numeric" name="price-%1$d" value="%7$s" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');calc_price(this);check_price(this);"/></td>
+				<td class="Range">%2$s %3$s</td>
+				<td class="Units">%4$s</td>
+				<td class="Cost">%5$s</td>
+				<td class="Markup">%6$s</td>
+				<td class="Price">%7$s</td>
 			`,
 			$Price->id(), 
-			( $Price->min() > 0 ? Number::Format::format_number($Price->min()) : $Price->min() ),
-			( $Price->max() > 0 ? Number::Format::format_number($Price->max()) : $Price->max() ),
-			$Price->units(),
-			$Price->cost(), $Price->markup(), $Price->price(),
-			ssi::make_drop_down( [ map { $_->id(), $_->name() } @{$$variable{'Equipment'}} ], $Price->equipment_id() ),
+			input( type=>'float', name=>'min-'.$Price->id(), value=> ( $Price->min() > 0 ? Number::Format::format_number($Price->min()) : $Price->min() ), onkeyup=>'check_price(this);' ),
+			input( type=>'float', name=>'max-'.$Price->id(), value=> ( $Price->max() > 0 ? Number::Format::format_number($Price->max()) : $Price->max() ), onkeyup=>'check_price(this);' ),
+			input( type=>'text', name=>'units-'.$Price->id(), value=>$Price->units(), onkeyup=>'check_price(this);' ),
+			input( type=>'float', name=>'cost-'.$Price->id(), value=>$Price->cost(), onkeyup=>'calc_price(this);check_price(this);' ),
+			input( type=>'float', name=>'markup-'.$Price->id(), value=>$Price->markup(), onkeyup=>'calc_price(this);check_price(this);' ),
+			input( type=>'float', name=>'price-'.$Price->id(), value=>$Price->price(), onkeyup=>'calc_price(this);check_price(this);' ),
+			make_drop_down( [ map { $_->id(), $_->name() } @{$$variable{'Equipment'}} ], $Price->equipment_id() ),
+			$Price->service(),
 		);
 	} else {
-		$html .= sprintf(q`<tr id="paperprice-%1$d">
+		$html .= sprintf(q`<tr id="paperprice-%1$d" class="Material">
 				<td class="Equipment"><input type="hidden" name="equipment_id-%1$d" id="equipment_id-%1$d" /></td>
-				<td class="Range">
-					<input type="numeric" name="min-%1$d" value="%2$s" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');check_price(this);" />
-					<input type="numeric" name="max-%1$d" value="%3$s" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');check_price(this);" />
-				</td>
-				<td class="Units"><input type="text" name="units-%1$d" value="%4$s"/></td>
-				<td class="Cost"><input type="numeric" name="cost-%1$d" value="%5$s" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');calc_price(this);check_price(this);"/></td>`,
+				<td class="Range">%2$s %3$s</td>
+				<td class="Units">%4$s</td>
+				<td class="Cost">%5$s</td>`,
 				$Price->id(), 
-				( $Price->min() > 0 ? Number::Format::format_number($Price->min()) : $Price->min() ),
-				( $Price->max() > 0 ? Number::Format::format_number($Price->max()) : $Price->max() ),
-				$Price->units(),
-				$Price->cost(), 
+				input( type=>'float', name=>'min-'.$Price->id(), value=> ( $Price->min() > 0 ? Number::Format::format_number($Price->min()) : $Price->min() ), onkeyup=>'check_price(this);' ),
+				input( type=>'float', name=>'max-'.$Price->id(), value=> ( $Price->max() > 0 ? Number::Format::format_number($Price->max()) : $Price->max() ), onkeyup=>'check_price(this);' ),
+				input( type=>'text', name=>'units-'.$Price->id(), value=>$Price->units(), onkeyup=>'check_price(this);' ),
+				input( type=>'float', name=>'cost-'.$Price->id(), value=>$Price->cost(), onkeyup=>'calc_price(this);check_price(this);' ),
 			);
 
-		if ( $$variable{'Stock'}->type() ne 'Roll' ) {
-			$html .= sprintf( q`<td class="Cost"><input type="numeric" name="costperm-%1$d" value="%2$s" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');calc_price(this);check_price(this);"/></td>`, $Price->id(), $Price->costperm() );
+		if ( $$variable{Stock}->type() ne 'Roll' ) {
+			$html .= '<td class="Cost">'.
+				input( type=>'float', name=>'costperm-'.$Price->id(), value=>$Price->costperm(), onkeyup=>'calc_price(this);check_price(this);' ).
+				'</td>';
 		} else {
-			$html .= sprintf( q`<td class="Cost"><input type="numeric" name="costperfoot-%1$d" value="%2$s" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');calc_price(this);check_price(this);"/></td>`, $Price->id(), $Price->costperfoot() );
+			$html .= '<td class="Cost">'.
+				input( type=>'float', name=>'costperfoot-'.$Price->id(), value=>$Price->costperfoot(), onkeyup=>'calc_price(this);check_price(this);' ).
+				'</td>';
 		} # end if
 		$html .= sprintf(q`
-				<td class="Markup"><input type="numeric" name="markup-%1$d" value="%2$s" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');calc_price(this);check_price(this);"/></td>
-				<td class="Price"><input type="numeric" name="price-%1$d" value="%3$s" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');calc_price(this);check_price(this);"/></td>
-				`, $Price->id(), $Price->markup(), $Price->price(),
+				<td class="Markup">%2$s</td>
+				<td class="Price">%3$s</td>
+				`, $Price->id(),
+				input( type=>'float', name=>'markup-'.$Price->id(), value=>$Price->markup(), onkeyup=>'calc_price(this);check_price(this);' ),
+				input( type=>'float', name=>'price-'.$Price->id(), value=>$Price->price(), onkeyup=>'calc_price(this);check_price(this);' ),
 			);
 
 		if ( $$variable{'Stock'}->type() ne 'Roll' ) {
-				$html .= sprintf( q`<td class="Price"><input type="numeric" name="priceperm-%1$d" value="%2$s" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');calc_price(this);check_price(this);"/></td>`, $Price->id(), $Price->priceperm() );
+			$html .= '<td class="Price">'.
+				input( type=>'float', name=>'priceperm-'.$Price->id(), value=>$Price->priceperm(), onkeyup=>'calc_price(this);check_price(this);' ).
+				'</td>';
 		} else {
-				$html .= sprintf( q`<td class="Price"><input type="numeric" name="priceperfoot-%1$d" value="%2$s" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');calc_price(this);check_price(this);"/></td>`, $Price->id(), $Price->priceperfoot() );
+			$html .= '<td class="Price">'.
+				input( type=>'float', name=>'priceperfoot-'.$Price->id(), value=>$Price->priceperfoot(), onkeyup=>'calc_price(this);check_price(this);' ).
+				'</td>';
 		} # end if
 	} # end if
 	$html .= sprintf(q`

@@ -10,22 +10,22 @@ $table = 'projecttype_defaults';
 $serial = 'projecttype_defaults_id_seq';
 
 %fields = (
-	'id'				=>	'id',
-	'projecttype_id'	=>	'projecttype_id',
-	'name'				=>	'name',
-	'value'				=>	'value',
+	id				=>	'id',
+	projecttype_id	=>	'projecttype_id',
+	name			=>	'name',
+	value			=>	'value',
 );
 %find_fields = (
-	'projecttype'		=>	'(SELECT name FROM project_types WHERE id=projecttype_id)',
+	projecttype		=>	'(SELECT name FROM project_types WHERE id=projecttype_id)',
 );
 
 %transforms = (
-	'id'				=>	[ 's/\D//g' ],
-	'projecttype_id'	=>	[ 's/\D//g' ],
+	id				=>	[ 's/\D//g' ],
+	projecttype_id	=>	[ 's/\D//g' ],
 );
 
 %defaults = (
-	'projecttype_id'	=>	q`undef`,
+	projecttype_id	=>	undef,
 );
 
 1;

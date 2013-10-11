@@ -1,9 +1,10 @@
-package openprint::InvoiceLog;
-@ISA = qw(openprint::Object);
-
 use strict;
+package openprint::InvoiceLog;
+our @ISA = qw(openprint::Object);
+
 use vars qw( $debug $table $serial %fields %defaults %transforms );
 
+$debug = 0;
 $table = 'invoice_logs';
 $serial = 'invoice_logs_id_seq';
 
@@ -18,7 +19,7 @@ $serial = 'invoice_logs_id_seq';
 %transforms = (
 );
 %defaults = (
-	'created_on'	=> q`'NOW()'`,
+	created_on	=> q`'NOW()'`,
 );
 
 1;

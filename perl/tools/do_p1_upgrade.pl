@@ -10,6 +10,9 @@ require openprint::Service;
 require openprint::Equipment;
 require openprint::ServiceType_Category;
 require openprint::ProjectType;
+require openprint::SRED_Asset;
+require openprint::Claim_Asset;
+require openprint::Object_Asset;
 
 use openprint ();
 use vars qw( $log $dbh %config );
@@ -20,9 +23,7 @@ use vars qw( $log $dbh %config );
 
 $log = new logger( 'debug' );
 
-my ( $src_db, $dst_db, $path ) = @ARGV;
-$src_db = 'point-one' if ! $src_db;
-$dst_db = 'point-one' if ! $dst_db;
+my $dst_db = 'point-one';
 
 $dbh = sql::open_sql( $log, ('database'=>$dst_db, 'driver'=>'Pg','login'=>'point-one', 'password'=>'point-one') );
 configuration::init( $log, $dbh );
@@ -30,9 +31,33 @@ configuration::init( $log, $dbh );
 my $BrochureType = openprint::ProjectType->find_one('name'=>'Brochures');
 if ( $BrochureType ) {
 	foreach my $PT ( openprint::ProjectType_Template->find( 'projecttype_id'=>$BrochureType->id(), 'type'=>'8PageSignatureFold') ) {
-		$_ = $PT->save({'type'=>'8PageFold'});
+		$_ = $PT->save({'type'=>'8 Page Fold'});
 		$log->error($_) if $_;
 	}
+	sql::update( undef, undef, 'tbl_service_specifications', [ 'name=?', '8PageSignatureFold' ], 'value', '8 Page Fold' );
+
+	my %templates = (
+		'NoFold' => 'No Fold',
+		'2PanelFold' => '2 Panel Fold',
+		'3PanelFold' => '3 Panel Fold',
+		'3PanelZFold' => '3 Panel Z Fold',
+		'4PanelFold' => '4 Panel Fold',
+		'4PanelZFold' => '4 Panel Z Fold',
+		'5PanelFold' => '5 Panel Fold',
+		'5PanelZFold' => '5 Panel Z Fold',
+		'6PanelFold' => '6 Panel Fold',
+		'6PanelZFold' => '6 Panel Z Fold',
+		'8PageFold' => '8 Page Fold',
+		'12pg3PanelRollFold' => '12pg 3 Panel Roll',
+		'12pg3PanelZFold' => '12pg 3 Panel Z',
+		'DoubleGateFold' => 'Double Gate Fold',
+		'SingleGateFold' => 'Single Gate Fold',
+		'AdditionalFoldTypes'	=>	'Additional Fold Types',
+	);
+	foreach my $key ( keys %templates ) {
+		sql::update( $log, undef, 'projecttemplate', [ 'type=?', $key ], 'name', $templates{$key} );
+	}
+
 } else {
 	$log->error("No Brochures");
 	die;
@@ -403,6 +428,26 @@ foreach my $Template ( openprint::ProjectType_Template->find(projecttype=>'Poste
 foreach my $Template ( openprint::ProjectType_Template->find(projecttype=>'Posters',type=>'PostersPortrait' ) ) {
 	$Template->save({type=>'Portrait'});
 }
+sql::update( undef, undef, 'configuration', [ 'name=?', 'Add Default Press Proof' ], 'name', 'Add_Default_Press_Proof' );
+sql::update( undef, undef, 'configuration', [ 'name=?', 'Add Default Colour Proof' ], 'name', 'Add_Default_Colour_Proof' );
+sql::update( undef, undef, 'configuration', [ 'name=?', 'Add Default Layout Proof' ], 'name', 'Add_Default_Layout_Proof' );
+$dbh->do(q`INSERT INTO configuration VALUES ('Small_Asset_Height', NULL, 'text', '', 'Asset Settings');`) if ! $config{Small_Asset_Height};
+$dbh->do(q`INSERT INTO configuration VALUES ('Medium_Asset_Height', NULL, 'text', '', 'Asset Settings');`) if ! $config{Medium_Asset_Height};
+$dbh->do(q`INSERT INTO configuration VALUES ('Large_Asset_Height', NULL, 'text', '', 'Asset Settings');`) if ! $config{Large_Asset_Height};
+$dbh->do(q`INSERT INTO configuration VALUES ('Large_Asset_Width', '800', 'text', '', 'Asset Settings');`) if ! $config{Large_Asset_Width};
+$dbh->do(q`INSERT INTO configuration VALUES ('Medium_Asset_Width', '300', 'text', '', 'Asset Settings');`) if ! $config{Medium_Asset_Width};
+$dbh->do(q`INSERT INTO configuration VALUES ('Small_Asset_Width', '50', 'text', '', 'Asset Settings');`) if ! $config{Small_Asset_Width};
+
+foreach my $SRED_Asset ( openprint::SRED_Asset->find() ) {
+	my $Object_Asset = new openprint::Object_Asset();
+	$Object_Asset->save({ object_id=>$SRED_Asset->content_id(), asset_id=>$SRED_Asset->asset_id(), object_type=>'openprint::SRED_Content' });
+	$SRED_Asset->delete();
+} # end foreach my $SRED_Asset
+foreach my $Claim_Asset ( openprint::Claim_Asset->find() ) {
+	my $Object_Asset = new openprint::Object_Asset();
+	$Object_Asset->save({ object_id=>$Claim_Asset->claim_id(), asset_id=>$Claim_Asset->asset_id(), object_type=>'openprint::Claim' });
+	$Claim_Asset->delete();
+} # end foreach my $SRED_Asset
 $dbh->disconnect();
 0;
 __END__

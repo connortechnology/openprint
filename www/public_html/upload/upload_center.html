@@ -3,6 +3,31 @@
 </div>
 <script type="text/javascript" src="<?hash_link(/javascripts/upload.js)?>"></script>
 <script type="text/javascript">
+function delete_files() {
+	var form = $('f1');
+	var chk = form.elements['chkFiles'];
+	if ( ! chk) {
+		alert('No files to delete!');
+		return false;
+	}
+	var files = new Array();
+	if ( chk.length ) {
+	for ( var i=0, len=chk.length; i < len; i+=1 ) {
+		if ( chk[i].checked ) 
+			files.push( chk[i] ) 
+	} // end foreach 
+	} else if ( chk.checked ) {
+		files.push( chk );
+	} // end if
+	if ( ! files.length ) {
+		alert('Please select which files to delete by selecting them with the corresponding checkbox!');
+		return false;
+	}
+
+	form.btnFunction.value='Delete';
+	LoadContent('FileList', '/upload/_files.html', Serialize(f1));
+	return true;
+} // end function delete_files
 
 function displayUploadResults(body) {
 	$('PendingCompletion').innerHTML = '';
@@ -46,12 +71,11 @@ function check_input( form ) {
 	return true;
 } // end function check_input
 </script>
-<link rel="stylesheet" href="<?hash_link(/css/upload.css)?>" type="text/css"/>
 <div id="uploadContainer">
 	<div id="uploadResults"></div>
 	<!--<iframe style="position: absolute; top: 0px; left: 0px; visibility: hidden;" id="UploadFrame" name="UploadFrame" src=""></iframe>-->
 	<div id="UploadForm">
-	<? echo ( include('_upload_form.html'); ) ?>
+	<?include('_upload_form.html')?>
 	</div>
 	<div id="progressMeter" style="display: none;">
 		<p><b>Do not close the browser, or navigate to another site until the upload has completed, or it will be cancelled.</b></p>
@@ -91,7 +115,7 @@ function check_input( form ) {
 				} elsif( $param{'project_id'} ) {
 					$qry = '?project_id=' . $param{'project_id'};
 				} # end if
-			ssi::button( 'Cancel', { href=>"/upload/upload_center.html$qry", text=>'Cancel Upload' } );
+			button( 'Cancel', { href=>"/upload/upload_center.html$qry", text=>'Cancel Upload' } );
 		) ?>
 		</p>
 	</div>
@@ -109,8 +133,8 @@ function check_input( form ) {
 			} # end if
 				
 			return join("\n",
-				ssi::button( 'Continue', { href=>"/upload/upload_center.html$qry", text=>'Upload More Files' } ),
-				ssi::button( 'Home', { href=>'/' } ),
+				button( 'Continue', { href=>"/upload/upload_center.html$qry", text=>'Upload More Files' } ),
+				button( 'Home', { href=>'/' } ),
 			);
 		) ?>
 		</p>

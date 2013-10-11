@@ -1,11 +1,10 @@
-<? echo ( include( $ENV{DOCUMENT_ROOT} . '/includes/error_reporting.html' ); ) ?>
+<?include(/includes/error_reporting.html)?>
 <? if ( @{$$variable{'Projects'}} ) ?>
 <table class="List">
 	<tr>
 		<th class="project_id">Project</th>
 		<th class="User">Created By</th>
 		<th class="Company">Company</th>
-		<th class="Project">Reference</th>
 		<th class="DateTime">Created On</th>
 		<th class="status">Status</th>
 		<th class="Price">Price 1</th>
@@ -23,19 +22,24 @@
 	<td class="project_id"><a href="/employee/project/view.html?ProjectIndex=%2$d">%2$d</a></td>
 	<td class="User"><a href="/employee/project/view.html?ProjectIndex=%2$d">%3$s</a></td>
 	<td class="Company"><a href="/employee/project/view.html?ProjectIndex=%2$d">%4$s</a></td>
-	<td class="Project"><a href="/employee/project/view.html?ProjectIndex=%2$d">%5$s</a></td>
 	<td class="DateTime"><a href="/employee/project/view.html?ProjectIndex=%2$d">%6$s</a></td>
 	<td class="status"><a href="/employee/project/view.html?ProjectIndex=%2$d">%7$s</a></td>
 	<td class="Price"><a href="/employee/project/view.html?ProjectIndex=%2$d">%8$s</a></td>
 	<td class="Price"><a href="/employee/project/view.html?ProjectIndex=%2$d">%9$s</a></td>
 	<td class="Price"><a href="/employee/project/view.html?ProjectIndex=%2$d">%10$s</a></td>
-</tr>`,
+</tr>
+<tr%1$s>
+	<td colspan="4">%5$s</td>
+	<td colspan="4">%11$s</td>
+</tr>
+`,
 			$rowclass, $Project->id(), $Project->User()->name(), ssi::htmlize($Project->Company()->name()), ssi::htmlize($Project->reference()),
 			Date::Format::time2str($config{'DateTimeFormat'}, Date::Parse::str2time($Project->created_on())),
 			$Project->status(),
 			openprint::Currency::format(1*$Project->price1()),
 			openprint::Currency::format(1*$Project->price2()),
 			openprint::Currency::format(1*$Project->price3()),
+			$Project->summary(),
 	);
 		
 			$rowclass = $rowclass ? '' : ' class="colRow"';
@@ -49,7 +53,6 @@
 	) ?>
 	<? if ( $$variable{'ReportCount'} ) ?>
 	<tr class="totals">
-		<td></td>
 		<td>Counts</td><td><?ReportCount?> Projects, <?OrderedCount?> Ordered</td>
 		<td>Percentage</td><td><? echo ( Math::Round::nearest(.1,($$variable{'OrderedCount'}/$$variable{'ReportCount'})*100 ); ) ?>%</td>
 		<td>Totals</td>

@@ -42,7 +42,7 @@ sub configuration {
 
 	if ( $param{'btnFunction'} eq 'New' ) {
 		if ( sql::execute( $log, $dbh, 'SELECT * FROM Configuration WHERE name=? LIMIT 1', $param{'name'} ) ) {
-			sql::update( $log, $dbh, 'configuration', [ 'name', $param{'name'} ], {
+			sql::update( $log, $dbh, 'configuration', [ 'name=?', $param{'name'} ], {
 				'description'	=>	$param{'description'},
 				'type'			=>	$param{'type'},
 				'category'		=>	( $param{'new_category'} ? $param{'new_category'} : $param{'category'} ),
@@ -214,7 +214,7 @@ sub _currency_conversions {
 
 sub user_profiles {
 
-	my $user_id = $param{ddmUser} ? openprint::User->transform( 'id', $param{ddmUser} ) : $session{user_id};
+	my $user_id = $param{ddmUser} ? openprint::User->transform( 'id', $param{ddmUser} ) : undef;
 	my $User = $variable{User} = new openprint::User( $user_id );
 
 	my $user_role = $param{'ddmUserRole'};
@@ -479,7 +479,8 @@ sub company_profiles {
 			my $ac = sql::start_transaction( $dbh );
 			my $Company = new openprint::Company( $index );
 			foreach my $type ( 'User','Order','Quote','Project', 'Claim', 'Log','Timetrack' ) {
-				foreach ( "openprint::$type"->find('company_id'=>$param{'merge_company_id'}) ) {
+				require "openprint/$type.pm";
+				foreach ( "openprint::$type"->find( company_id=>$param{'merge_company_id'}) ) {
 					$_->save({'company_id'=>$Company->id()});
 				} # end foreach
 			} # end foreach type
@@ -546,6 +547,7 @@ sub company_profiles {
 					my $Credit = new openprint::Company_Credit( {'company_id'=>$index, 'supplier_id'=>$Supplier->id() } );
 
 					if (
+							( $Credit->terms() != openprint::Company_Credit->transform('terms', $param{'terms-'.$$Supplier{id}} ) ) or
 							( $Credit->denydays() != openprint::Company_Credit->transform('denydays', $param{'denydays-'.$$Supplier{id}} ) ) or
 							( $Credit->warndays() != openprint::Company_Credit->transform('warndays', $param{'warndays-'.$$Supplier{id}} ) ) or
 							( $Credit->limit() != openprint::Company_Credit->transform('limit', $param{'limit-'.$$Supplier{id}} ) ) or
@@ -554,13 +556,13 @@ sub company_profiles {
 							( $Credit->cod() != openprint::Company_Credit->transform('cod', $param{'cod-'.$$Supplier{id}} ) ) or
 							( $Credit->late_payment_amount() != openprint::Company_Credit->transform('late_payment_amount', $param{'late_payment_amount-'.$$Supplier{id}} ) ) or
 							( $Credit->late_payment_units() ne openprint::Company_Credit->transform('late_payment_units', $param{'late_payment_units-'.$$Supplier{id}} ) ) or
-							( $Credit->early_payment_amount() != openprint::Company_Credit->transform('early_payment_discount', $param{'early_payment_discount-'.$$Supplier{id}} ) ) or
+							( $Credit->early_payment_amount() != openprint::Company_Credit->transform('early_payment_amount', $param{'early_payment_amount-'.$$Supplier{id}} ) ) or
 							( $Credit->early_payment_units() ne openprint::Company_Credit->transform('early_payment_units', $param{'early_payment_units-'.$$Supplier{id}} ) ) or
 							( $Credit->early_payment_days() != openprint::Company_Credit->transform('early_payment_days', $param{'early_payment_days-'.$$Supplier{id}} ) )
 					   ) {
 						my $note = 'Old credit: ' . $Credit->to_string() if $Credit->supplier_id();
 						$variable{'error'} .= $Credit->save( { 'company_id'=>$index, 'supplier_id'=>$Supplier->id(), 
-								map { $_ => $param{$_.'-'.$Supplier->id()} } ( 'denydays','warndays', 'limit', 'hold', 'downpayment', 'cod', 'late_payment_amount','late_payment_units','early_payment_amount','early_payment_units', 'early_payment_days' ) } );
+								map { $_ => $param{$_.'-'.$Supplier->id()} } ( 'terms', 'denydays', 'warndays', 'limit', 'hold', 'downpayment', 'cod', 'late_payment_amount','late_payment_units','early_payment_amount','early_payment_units', 'early_payment_days' ) } );
 						$note .= '<br/>new credit: ' . $Credit->to_string();
 						$variable{'error'} .= (new openprint::Log())->save( {
 								action		=> 	'Credit Information Changed', 
@@ -798,8 +800,8 @@ sub _search_by_email {
 sub page_settings {
 	require openprint::Page_Setting;
 	if ( $param{action} eq 'save' ) {
-		foreach my $PS ( openprint::Page_Setting->find() ) {
-			if ( ! $param{'url-'.$PS->id()} ) {
+		foreach my $PS ( openprint::Page_Setting->find(), new openprint::Page_Setting() ) {
+			if ( defined $PS->id() and ! $param{'url-'.$PS->id()} ) {
 				$PS->delete();
 			} elsif ( 
 					( $PS->url() ne openprint::Page_Setting->transform('url',$param{'url-'.$PS->id()}) ) or 
@@ -894,6 +896,29 @@ sub _logs {
 
 sub bitcoin {
 } # end sub bitcoin
+sub authorizations {
+	require openprint::Authorization;
+	require openprint::Object_Type;
+	_authorizations();
+	if ( $param{action} eq 'Save' ) {
+		foreach my $Auth ( (new openprint::Authorization()), openprint::Authorization->find() ) {
+			next if ! $param{"object_type_id-$$Auth{id}"};
+
+			$variable{error} .= $Auth->save({
+				mode			=>	$param{"mode-$$Auth{id}"},
+				object_type_id	=>	$param{"object_type_id-$$Auth{id}"},
+				object_id		=>	$param{"object_id-$$Auth{id}"},
+				usertype_id		=>	$param{"usertype_id-$$Auth{id}"},
+				usergroup_id	=>	$param{"usergroup_id-$$Auth{id}"},
+				setting			=>	$param{"setting-$$Auth{id}"},
+			});
+		} # end foreach Auth
+		$variable{ExternalRedirect} = '/administrator/managerial/authorizations.html';
+	} # end if
+} # end sub authorizations
+sub _authorizations {
+	ssi::save_params( '/administrator/managerial/authorizations.html', ( 'object_type_id' ) );
+} # end sub _authorizations
 
 1;
 __END__

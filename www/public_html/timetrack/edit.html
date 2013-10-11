@@ -38,22 +38,20 @@
 				<label class="radio" for="time_associated0">No</label>
 			</li>
 			<li><label>Start</label>
-			<span class="DateTimeSelector"><? echo ( ssi::datetime_select( 'starting', $$variable{'Timetrack'}->starting(), 
+			<? echo ( ssi::datetime_select( 'starting', $$variable{'Timetrack'}->starting(), 
 						{
 						onchange	=>	q`check_time_starting($('f1'),'starting','ending'); update_duration($('f1'),'starting','ending');`,
 						showtime	=>	sets::isin( $$variable{'Timetrack'}->time_associated(), [ '', 1 ] ),
 						with_today	=>	1,
 						} ); ) ?>
-</span>
 			</li>
 			<li><label>End</label>
-			<span class="DateTimeSelector"><? echo ( ssi::datetime_select( 'ending', $$variable{'Timetrack'}->ending(), 
+			<? echo ( ssi::datetime_select( 'ending', $$variable{'Timetrack'}->ending(), 
 						{
 						onchange	=>	q`update_duration(this.form,'starting','ending');`,
 						showtime	=>	sets::isin( $$variable{'Timetrack'}->time_associated(), [ '', 1 ] ),
 						with_today	=>	1,
 						} ); ) ?>
-</span>
 			</li>
 			<li><label>Duration</label>
 				<span id="duration">
@@ -84,6 +82,9 @@
 				<li>
 					<label for="description">Description</label>
 					<textarea id="description" name="description" rows="<? echo ( ssi::count_lines( $$variable{'Timetrack'}->description() ); ) ?>" onkeyup="textarea_resize(this);"><? echo ( $$variable{'Timetrack'}->description() ) ?></textarea>
+				</li>
+				<li><label for="po">Purchase Order #</label>
+					<? echo ( input(type=>'text',name=>'po', value=>$$variable{Timetrack}->po() ); ) ?>
 				</li>
 				<? if ( $$variable{'Timetrack'}->invoice_id() ) ?>
 				<li>

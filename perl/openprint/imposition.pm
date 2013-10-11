@@ -16,7 +16,7 @@ use vars qw( %blocks );
 		4	=>	[ [1,4], [4,1], [2,2] ],
 		5	=>	[ [1,5], [5,1] ],
 		6	=>	[ [2,3], [3,2], [1,6], [6,1] ],
-		7	=>	[ [7,1] ],
+		7	=>	[ [7,1], ],
 		8	=>	[ [2,4], [4,2] ],
 		9	=>	[ [3,3] ],
 		10	=>	[ [5,2], [2,5], [3,4], [4,3] ],
@@ -188,7 +188,7 @@ sub check_setup {
 } # end sub check_setup
 
 sub calc_setup_object {
-	my ( $specs, $image_width, $image_height, $Paper, $run_style, $Press ) = @_;
+	my ( $specs, $image_width, $image_height, $Paper, $run_style, $Press, $bleed_size ) = @_;
 
 	my $press_grain;
 	if ( my $Stock_Setting = $Press->Stock_Setting( $Paper ) ) {
@@ -222,6 +222,17 @@ sub calc_setup_object {
 		$openprint::log->debug("No grain discretion. $press_grain");
 	} # end if press_grain
 
+	if ( my $amount = $Press->specification($run_style.' Pre-trim stock') ) {
+$openprint::log->debug("Pretrimming by $amount") if DEBUG;
+		$Paper = $Paper->clone();
+		$Paper->width( $Paper->width() - $amount );
+		$Paper->width( 0 ) if $Paper->width() < 0;
+		$Paper->height( $Paper->height() - $amount );
+		$Paper->height( 0 ) if $Paper->height() < 0;
+	} else {
+$openprint::log->debug("Not Pretrimming on $$Press{strid}") if DEBUG;
+	} # end if
+
 	my $setup1 = new openprint::Imposition();
 	my $setup2 = new openprint::Imposition();
 	my @results;
@@ -234,7 +245,7 @@ sub calc_setup_object {
 	$setup1->runstyle( $run_style );
 	$setup1->image_orientation('Vertical');
 	$setup1->spread_size( $$specs{'txtSpreadSize'} );
-	$setup1->bleed_size( $$specs{'BleedSize'} );
+	$setup1->bleed_size( $bleed_size );
 	$setup1->spread_rows(1);
 	$setup1->spread_columns(1);
 	$setup1->object_width( $image_width );
@@ -248,11 +259,12 @@ sub calc_setup_object {
 	$setup1->colour_bar_orientation( $$specs{'Colour Bar Orientation'} );
 
 	$$setup2{'sides'} = $$specs{'print_sides'};
+
 	$setup2->paper( $Paper->clone() );
 	$setup2->runstyle( $run_style );
 	$setup2->image_orientation('Horizontal');
 	$setup2->spread_size( $$specs{'txtSpreadSize'} );
-	$setup2->bleed_size( $$specs{'BleedSize'} );
+	$setup2->bleed_size( $bleed_size );
 	$setup2->spread_rows(1);
 	$setup2->spread_columns(1);
 	$setup2->object_width( $image_width );
@@ -325,25 +337,25 @@ sub calc_setup_object {
 	my $bleed_width  = 2*$bindery_bleed; # .25
 	my $bleed_height  = 2*$bindery_bleed;#.25
 	if ( sets::isin( 'Right', \@bleed_locations ) ) {
-		$image_width += $$specs{'BleedSize'}; # 17.0625
-		$bleed_width -= $$specs{'BleedSize'}; # .1875
+		$image_width += $bleed_size; # 17.0625
+		$bleed_width -= $bleed_size; # .1875
 	} # end if
 	if ( sets::isin( 'Left', \@bleed_locations ) ) {
-		$image_width += $$specs{'BleedSize'}; # 17.125
-		$bleed_width -= $$specs{'BleedSize'}; #0.125
+		$image_width += $bleed_size; # 17.125
+		$bleed_width -= $bleed_size; #0.125
 	} # end if
 	if ( sets::isin( 'Top', \@bleed_locations ) ) {
-		$bindery_head -= $$specs{'BleedSize'};
-		$image_height += $$specs{'BleedSize'};
-		$bleed_height -= $$specs{'BleedSize'};
+		$bindery_head -= $bleed_size;
+		$image_height += $bleed_size;
+		$bleed_height -= $bleed_size;
 	} # end if
 	if ( sets::isin( 'Bottom', \@bleed_locations ) ) {
-		$image_height += $$specs{'BleedSize'};
-		$bleed_height -= $$specs{'BleedSize'};
+		$image_height += $bleed_size;
+		$bleed_height -= $bleed_size;
 	} # end if
 	$bleed_width = 0 if $bleed_width < 0;
 	$bleed_height = 0 if $bleed_height < 0;
-#$openprint::log->debug("BleedSize: $$specs{'BleedSize'} bindery: $bindery_bleed, width: image: $image_width + extra: $bleed_width");
+#$openprint::log->debug("BleedSize: $bleed_size bindery: $bindery_bleed, width: image: $image_width + extra: $bleed_width");
 
 	#$openprint::log->debug("Using perfectbind cover gutter: $bindery_head Bindery bleed: $bindery_bleed");
 	if ( $bindery_head < 0 ) {
@@ -370,10 +382,10 @@ sub calc_setup_object {
 	my $gutters = $$specs{'Gutter'};
 	$gutters = $bindery_gutters if $gutters < $bindery_gutters;
 	if ( sets::isin( 'Right', \@bleed_locations ) ) {
-		$gutters -= $$specs{'BleedSize'};
+		$gutters -= $bleed_size;
 	} # end if
 	if ( sets::isin( 'Left', \@bleed_locations ) ) {
-		$gutters -= $$specs{'BleedSize'};
+		$gutters -= $bleed_size;
 	} # end if
 #$openprint::log->debug("Gutters: $$specs{'Gutter'}, bindery: $bindery_gutters, minus bleeds: $gutters");
 #$openprint::log->debug("Bindery Gutters: $gutters <? $bindery_gutters");
@@ -396,10 +408,10 @@ sub calc_setup_object {
 		$gutters += $$specs{'Perfecting Single Gutter Size'};
 
 		if ( sets::isin( 'Right', \@bleed_locations ) ) {
-			$gutters -= $$specs{'BleedSize'};
+			$gutters -= $bleed_size;
 		} # end if
 		if ( sets::isin( 'Left', \@bleed_locations ) ) {
-			$gutters -= $$specs{'BleedSize'};
+			$gutters -= $bleed_size;
 		} # end if
 		$gutters = 0 if $gutters < 0;
 	} # end if
@@ -426,33 +438,38 @@ sub calc_setup_object {
 		$adjusted_paper_height -= $$specs{'colour_bar_size'};
 	} # end if
 
-# There needs to be enough space to put crop marks, but they can go in th bleed space, so it's only an nissue if we are running small or no bleeds.
-	$cropmarkspace = $$specs{'CropMarkSpace'};
-	$cropmarkspace -= $$specs{'BleedSize'} if sets::isin( 'Top', \@bleed_locations );
-	$cropmarkspace = 0 if $cropmarkspace < 0;
-	$setup1->cropmark_top( $cropmarkspace );
+	if ( $Paper->cuttable() ) {
+	# There needs to be enough space to put crop marks, but they can go in th bleed space, so it's only an nissue if we are running small or no bleeds.
+		$cropmarkspace = $$specs{'CropMarkSpace'};
+		$cropmarkspace -= $bleed_size if sets::isin( 'Top', \@bleed_locations );
+		$cropmarkspace = 0 if $cropmarkspace < 0;
+		$setup1->cropmark_top( $cropmarkspace );
 
-	$cropmarkspace = $$specs{'CropMarkSpace'};
-	$cropmarkspace -= $$specs{'BleedSize'} if sets::isin( 'Bottom', \@bleed_locations );
-	$cropmarkspace = 0 if $cropmarkspace < 0;
-	$setup1->cropmark_bottom( $cropmarkspace );
+		$cropmarkspace = $$specs{'CropMarkSpace'};
+		$cropmarkspace -= $bleed_size if sets::isin( 'Bottom', \@bleed_locations );
+		$cropmarkspace = 0 if $cropmarkspace < 0;
+		$setup1->cropmark_bottom( $cropmarkspace );
 
-	$adjusted_paper_height -= $setup1->cropmark_top();
-	$adjusted_paper_height -= $setup1->cropmark_bottom();
+		$adjusted_paper_height -= $setup1->cropmark_top();
+		$adjusted_paper_height -= $setup1->cropmark_bottom();
+	} # end if
 	$adjusted_paper_height = 0 if $adjusted_paper_height < 0;
+$openprint::log->debug("Height: $paper_height - CB $$specs{'colour_bar_size'} - Grip $$specs{'Grip Size'} CropTOp: $$setup1{cropmark_top} - CropBottom: $$setup1{cropmark_bottom} = $adjusted_paper_height") if DEBUG;
 
 	my $adjusted_paper_width = $paper_width; 
-	$cropmarkspace = $$specs{'CropMarkSpace'};
-	$cropmarkspace -= $$specs{'BleedSize'} if sets::isin( 'Left', \@bleed_locations );
-	$cropmarkspace = 0 if $cropmarkspace < 0;
-	$setup1->cropmark_left( $cropmarkspace );
-	$gutters -= $cropmarkspace;
-	$cropmarkspace = $$specs{'CropMarkSpace'};
-	$cropmarkspace -= $$specs{'BleedSize'} if sets::isin( 'Right', \@bleed_locations );
-	$cropmarkspace = 0 if $cropmarkspace < 0;
-	$setup1->cropmark_right( $cropmarkspace );
-	$gutters -= $cropmarkspace;
-	$gutters = 0 if $gutters < 0;
+	if ( $Paper->cuttable() ) {
+		$cropmarkspace = $$specs{'CropMarkSpace'};
+		$cropmarkspace -= $bleed_size if sets::isin( 'Left', \@bleed_locations );
+		$cropmarkspace = 0 if $cropmarkspace < 0;
+		$setup1->cropmark_left( $cropmarkspace );
+		$gutters -= $cropmarkspace;
+		$cropmarkspace = $$specs{'CropMarkSpace'};
+		$cropmarkspace -= $bleed_size if sets::isin( 'Right', \@bleed_locations );
+		$cropmarkspace = 0 if $cropmarkspace < 0;
+		$setup1->cropmark_right( $cropmarkspace );
+		$gutters -= $cropmarkspace;
+		$gutters = 0 if $gutters < 0;
+	} # end if
 	$setup1->gutters($gutters);
 	$adjusted_paper_width -= $gutters;
 
@@ -464,10 +481,11 @@ sub calc_setup_object {
 		$adjusted_paper_width -= $$specs{'colour_bar_size'};
 	} # end if
 
-	$adjusted_paper_width -= $setup1->cropmark_left();
-	$adjusted_paper_width -= $setup1->cropmark_right();
-
-	$adjusted_paper_width = 0 if $adjusted_paper_width < 0;
+	if ( $Paper->cuttable() ) {
+		$adjusted_paper_width -= $setup1->cropmark_left();
+		$adjusted_paper_width -= $setup1->cropmark_right();
+		$adjusted_paper_width = 0 if $adjusted_paper_width < 0;
+	} # end if
 	$openprint::log->debug("P Width gutters: $adjusted_paper_width") if DEBUG;
 
 	if ( sets::isin( $run_style, ['Perfecting','Sheet Work','Web'] ) ) {
@@ -477,7 +495,8 @@ sub calc_setup_object {
 		if ( check_setup( $setup1, $specs ) ) {
 			$openprint::log->debug(" CHECK 1 $run_style Using Paper $paper_width x $paper_height -> $adjusted_paper_width x $adjusted_paper_height Gutter: $gutters, Image: $$setup1{image_width} x $$setup1{image_height} Imposition: " . $setup1->imposition(). ":".$setup1->columns() . 'x' . $setup1->rows(). " $run_style " . $setup1->layout_width() . 'x' . $setup1->layout_height() ) if DEBUG;
 			push @results, $setup1;
-			if ( $$specs{'dutch'} ne 'N' ) {
+			if ( ( $$specs{'dutch'} ne 'N' ) and ( $run_style ne 'Perfecting' or ( $Paper->perfecting() ne 'Y' ) ) ) {
+				# Too hard to figure space for rollers
 				push @results, calc_dutch( $setup1, $adjusted_paper_width, $adjusted_paper_height, $specs );
 			} # end if
 			if ( ! $setup1->paper()->width() ) {
@@ -534,10 +553,10 @@ sub calc_setup_object {
 	$gutters = $$specs{'Gutter'};
 	$gutters = $bindery_gutters if $gutters < $bindery_gutters;
 	if ( sets::isin( 'Top', \@bleed_locations ) ) {
-		$gutters -= $$specs{'BleedSize'};
+		$gutters -= $bleed_size;
 	} # end if
 	if ( sets::isin( 'Bottom', \@bleed_locations ) ) {
-		$gutters -= $$specs{'BleedSize'};
+		$gutters -= $bleed_size;
 	} # end if
 #$openprint::log->debug("Bindery Gutters 2: $gutters <? $bindery_gutters");
 
@@ -547,10 +566,10 @@ sub calc_setup_object {
 	if ( $run_style eq 'Perfecting' and ! $Paper->perfecting() ) {
 		$gutters += $$specs{'Perfecting Single Gutter Size'} if ! $Paper->perfecting();
 		if ( sets::isin( 'Top', \@bleed_locations ) ) {
-			$gutters -= $$specs{'BleedSize'};
+			$gutters -= $bleed_size;
 		} # end if
 		if ( sets::isin( 'Bottom', \@bleed_locations ) ) {
-			$gutters -= $$specs{'BleedSize'};
+			$gutters -= $bleed_size;
 		} # end if
 		$gutters = 0 if $gutters < 0;
 	} # end if
@@ -577,32 +596,34 @@ sub calc_setup_object {
 		$adjusted_paper_height -= $$specs{'colour_bar_size'};
 	} # end if
 
-	$cropmarkspace = $$specs{'CropMarkSpace'};
-	$cropmarkspace -= $$specs{'BleedSize'} if sets::isin( 'Left', \@bleed_locations );
-	$cropmarkspace = 0 if $cropmarkspace < 0;
-	$setup2->cropmark_top( $cropmarkspace );
+	if ( $Paper->cuttable() ) {
+		$cropmarkspace = $$specs{'CropMarkSpace'};
+		$cropmarkspace -= $bleed_size if sets::isin( 'Left', \@bleed_locations );
+		$cropmarkspace = 0 if $cropmarkspace < 0;
+		$setup2->cropmark_top( $cropmarkspace );
 
-	$cropmarkspace = $$specs{'CropMarkSpace'};
-	$cropmarkspace -= $$specs{'BleedSize'} if sets::isin( 'Right', \@bleed_locations );
-	$cropmarkspace = 0 if $cropmarkspace < 0;
-	$setup2->cropmark_bottom( $cropmarkspace );
+		$cropmarkspace = $$specs{'CropMarkSpace'};
+		$cropmarkspace -= $bleed_size if sets::isin( 'Right', \@bleed_locations );
+		$cropmarkspace = 0 if $cropmarkspace < 0;
+		$setup2->cropmark_bottom( $cropmarkspace );
 
-	$adjusted_paper_height -= $setup2->cropmark_top();
-	$adjusted_paper_height -= $setup2->cropmark_bottom();
-	$adjusted_paper_height = 0 if $adjusted_paper_height < 0;
+		$adjusted_paper_height -= $setup2->cropmark_top();
+		$adjusted_paper_height -= $setup2->cropmark_bottom();
+		$adjusted_paper_height = 0 if $adjusted_paper_height < 0;
 
-	$adjusted_paper_width = $paper_width;
-	$cropmarkspace = $$specs{'CropMarkSpace'};
-	$cropmarkspace -= $$specs{'BleedSize'} if sets::isin( 'Top', \@bleed_locations );
-	$cropmarkspace = 0 if $cropmarkspace < 0;
-	$setup2->cropmark_left( $cropmarkspace );
-	$gutters -= $cropmarkspace;
-	$cropmarkspace = $$specs{'CropMarkSpace'};
-	$cropmarkspace -= $$specs{'BleedSize'} if sets::isin( 'Bottom', \@bleed_locations );
-	$cropmarkspace = 0 if $cropmarkspace < 0;
-	$setup2->cropmark_right( $cropmarkspace );
-	$gutters -= $cropmarkspace;
-	$gutters = 0 if $gutters < 0;
+		$adjusted_paper_width = $paper_width;
+		$cropmarkspace = $$specs{'CropMarkSpace'};
+		$cropmarkspace -= $bleed_size if sets::isin( 'Top', \@bleed_locations );
+		$cropmarkspace = 0 if $cropmarkspace < 0;
+		$setup2->cropmark_left( $cropmarkspace );
+		$gutters -= $cropmarkspace;
+		$cropmarkspace = $$specs{'CropMarkSpace'};
+		$cropmarkspace -= $bleed_size if sets::isin( 'Bottom', \@bleed_locations );
+		$cropmarkspace = 0 if $cropmarkspace < 0;
+		$setup2->cropmark_right( $cropmarkspace );
+		$gutters -= $cropmarkspace;
+		$gutters = 0 if $gutters < 0;
+	} # end if
 	$setup2->gutters($gutters);
 	$adjusted_paper_width -= $gutters;
 
@@ -614,9 +635,11 @@ sub calc_setup_object {
 		$adjusted_paper_width -= $$specs{'colour_bar_size'};
 	} # end if
 
+	if ( $Paper->cuttable() ) {
 	$adjusted_paper_width -= $setup2->cropmark_left();
 	$adjusted_paper_width -= $setup2->cropmark_right();
 	$adjusted_paper_width = 0 if $adjusted_paper_width < 0;
+	} # end if
 
 	if ( sets::isin( $run_style, ['Perfecting','Sheet Work','Web'] ) ) {
 		calc_setup( $setup2, $setup2->image_height(), $setup2->image_width(), $adjusted_paper_width, $adjusted_paper_height ? $adjusted_paper_height : $setup2->image_width() );
@@ -626,7 +649,7 @@ sub calc_setup_object {
 
 #	Rotating sheet reverses the grain direction, so grain width + rotated sheet is the same as grain height + non rotated sheet.
 #	if no grain direction is specified, then use the larger imposition
-			if ( $$specs{'dutch'} ne 'N' ) {
+			if ( ( $$specs{'dutch'} ne 'N' ) and ( $run_style ne 'Perfecting' or ( $Paper->perfecting() ne 'Y' ) ) ) {
 				push @results, calc_dutch( $setup2, $adjusted_paper_width, $adjusted_paper_height, $specs );
 			} # end if
 			$setup2->Paper()->width( $setup2->used_width() ) if ! $setup2->Paper()->width();
@@ -708,35 +731,31 @@ sub add_imposition {
 				next;
 			} # end if
 			# this is usually evelopes or forms
-			$openprint::log->debug(" ** Creating No Cut Imposition ** ");
+			$openprint::log->debug(" ** Creating No Cut Imposition ** $$project{BleedSize}");
 			#push @impositions, {'Imposition' => 1, 'Rows' => 1, 'Cols' => 1 };
-			foreach my $i ( calc_setup_object( $project, @$project{'image_width','image_height'}, $Paper, $run_style, $Press ) ) {
-				next if $i->imposition() != 1;
-				push @impositions, $i;
-			} # end foreach
+			foreach my $bleed_size ( $$project{'BleedSize'} ? split(',', $$project{'BleedSize'} ) : 0 ) {
+				foreach my $i ( calc_setup_object( $project, @$project{'image_width','image_height'}, $Paper, $run_style, $Press, $bleed_size ) ) {
+					next if $i->imposition() != 1;
+					push @impositions, $i;
+				} # end foreach
+			} # end foreach bleed
 			next;
 		} elsif ( ($Paper->type() eq 'Roll') and ($Press->specification('W&TonRoll') eq 'N') and sets::isin( $run_style, ['Work & Turn','Work & Tumble'] ) ) {
 			next;
 		} # end if
 
-		foreach my $i ( calc_setup_object( $project, @$project{'image_width','image_height'}, $Paper, $run_style, $Press ) ) {
-			if ( sets::isin( $run_style, ['Work & Turn','Work & Tumble']) ) {
-				if ( ($versions * 2) > $i->imposition() ) {
+		foreach my $bleed_size ( $$project{'BleedSize'} ? split(',', $$project{'BleedSize'} ) : 0 ) {
+			foreach my $i ( calc_setup_object( $project, @$project{'image_width','image_height'}, $Paper, $run_style, $Press, $bleed_size ) ) {
+				if ( sets::isin( $run_style, ['Work & Turn','Work & Tumble']) ) {
+					if ( ($versions * 2) > $i->imposition() ) {
 #$log->debug("Nixing imposition because W&T needds 2* versions > imposition");
-					next;
+						next;
+					} # end if
 				} # end if
-			} elsif ( $versions > $i->imposition() ) {
-				next;
-			} # end if
 
-# This is checked for in check_setup
-			#if ( $run_style eq 'Perfecting' ) {
-# make sure that we do not get any 1up perfecting!
-# Can only do 1 up perfecting if we are using perfecting paper, which doesn't need rollers
-				#next if ( $i->imposition() == 1 and ! $Paper->perfecting() );
-			#} # end if
-			push @impositions, $i;
-		} # end foreach
+				push @impositions, $i;
+			} # end foreach i
+		} # end foreach bleed
 	} # end foreach runstyle
 #if ( DEBUG ) {
 	#foreach my $i ( @impositions ) {
@@ -912,16 +931,33 @@ sub decrease_imposition {
 	foreach my $imposition ( @_ ) {
 		next if ( ($imposition->columns() * $imposition->rows()) <= 1 );
 
-		my $imp1 = $imposition->copy();
-		$imp1->rows( int ( $imp1->rows()/2 ) );
-		if ( $imp1->imposition() ) {
-			push @results, $imp1;
-		} # end if
+		if ( $imposition->dutch_columns() ) {
+			my $imp1 = $imposition->copy();
+			$imp1->dutch_rows( 0 );
+			$imp1->dutch_columns( 0 );
+			if ( $imp1->imposition() ) {
+				push @results, $imp1;
+			} # end if
 
-		my $imp2 = $imposition->copy();
-		$imp2->columns( int ( $imp2->columns()/2 ) );
-		if ( $imp2->imposition() ) {
-			push @results, $imp2;
+			my $imp2 = $imp1->copy();
+			$imp2->columns( $imposition->dutch_columns() );
+			$imp2->rows( $imposition->dutch_rows() );
+			if ( $imp2->imposition() ) {
+				push @results, $imp2;
+			} # end if
+		} else {
+
+			my $imp1 = $imposition->copy();
+			$imp1->rows( int ( $imp1->rows()/2 ) );
+			if ( $imp1->imposition() ) {
+				push @results, $imp1;
+			} # end if
+
+			my $imp2 = $imposition->copy();
+			$imp2->columns( int ( $imp2->columns()/2 ) );
+			if ( $imp2->imposition() ) {
+				push @results, $imp2;
+			} # end if
 		} # end if
 	} # end foreach
 

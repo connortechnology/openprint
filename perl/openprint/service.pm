@@ -47,7 +47,7 @@ sub get_price {
 
 sub get_price_object {
 	my ( $service, $range, $Equipment ) = @_;
-	my $Service = openprint::Service->find_one('name'=>$service);
+	my $Service = openprint::Service->find_one( name=>$service );
 	return if ! $Service;
 	return $Service->get_price( $range, $Equipment );
 } # end sub get_price_object
@@ -77,6 +77,7 @@ sub save_service {
 	eval ( 'require openprint::Estimating::'.$service_type.';' );
 	my @variables = eval( 'openprint::Estimating::'.$service_type.'::variables( $project_index, $service_index, $specs, \%openprint::param )');
 	$log->error($@) if $@;
+$log->debug("variables: @variables");
 	# make this fast by doing it in one transaction
 	my $ac = sql::start_transaction( $dbh );
 	foreach my $key (@variables) {
@@ -155,7 +156,7 @@ sub get_specs_ref {
 			Carp::cluck("********* Called get_specs_ref without Project Index ****************");
 			return;
 		} # end if
-		%{$specs_cache{$s_id}} = sql::execute( undef, undef, 
+		%{$specs_cache{$s_id}} = sql::execute( $openprint::log, undef, 
 				'SELECT strName, strValue FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND lngServiceIndex=?', $p_id, $s_id );
 	} # end if
 	return $specs_cache{$s_id};
@@ -341,7 +342,7 @@ sub auto_calculate {
 		} # end if
 	} # end if
 
-	foreach my $service_name ( 'Counting', 'Grommeting', 'Sewing' ) {
+	foreach my $service_name ( 'Counting', 'Grommeting', 'Sewing', 'Imposition' ) {
 		eval 'require openprint::Estimating::'.$service_name.';';
 		$openprint::log->error("Error requiring opepnrint::Estimating::$service_name: $@") if $@;
 		my $neccessary = eval 'openprint::Estimating::'.$service_name.'::neccessary( $Project )';
@@ -476,13 +477,14 @@ sub internal_calc {
 
 	my $package = 'openprint::Estimating::'.$service_type;
 	#require $package;
+	# We are doing this in an eval because we don't actually want to die.
 	eval 'require openprint::Estimating::'.$service_type;
 	$log->error("Error in requiring $package $@") if $@;
 	if ( my $function = $package->can('calc') ) {
 		my $status = $function->( $log, $dbh, $variable, $project_index, $service_index, \%specs, $qty_index );
 		$specs{'Status'} = $status;
 		my $elapsed = time - $starttime;
-		$log->debug( "\033" . sprintf( '[41;37m %s calc: (%s) Elapsed seconds: %d (%s)', $service_type, $status, $elapsed, $specs{'alert'} ) );
+		$log->debug( sprintf( '%s calc: (%s) Elapsed seconds: %d (%s)', $service_type, $status, $elapsed, $specs{'alert'} ) );
 
 		$Service->save({status=>$status}) if $status ne $Service->status();
 

@@ -82,8 +82,7 @@ sub rma {
 			Order	=>	$Order,
 		);
 
-		my $template = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/email_content/rma_notification.html' );
-		$template = ssi::variable_substitution( \$template, \%info );
+		my $template = ssi::include( '/email_content/rma_notification.html', \%info );
 
 		my $Email = new openprint::Email();
 		$Email->html_body( $template );
@@ -93,12 +92,9 @@ sub rma {
 				SUBJECT => 'Online RMA Submission.',
 				);
 
-		$info{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/rma_confirmation.html' );
-		$info{'ReplacementText'} = ssi::variable_substitution( \$info{'ReplacementText'}, \%info );
+		$info{ReplacementText} = ssi::include( '/email_content/rma_confirmation.html', \%info );
 
-		$template = misc::load_file( $log, $config{'SkinPath'}. '/email_template.html' );
-		$template = ssi::variable_substitution( \$template, \%info );
-
+		$template = ssi::include( '/email_template.html', \%info );
 		$Email->html_body( $template );
 		$Email->send(
 				TO		=> $info{'Email'},
@@ -110,99 +106,85 @@ sub rma {
 } # end sub rma
 
 sub help_desk {
-} # end sub help_desk
 
-sub confirmation_help_desk {
-
-	my $error = '';
-	$error .= 'Missing First Name<br/>' if $param{'txtFirstName'} eq '';
-	$error .= 'Missing Last Name<br/>' if $param{'txtLastName'} eq '';
-	$error .= 'Missing Address<br/>' if $param{'txtAddress1'} eq '';
-	$error .= 'Missing City<br/>' if $param{'txtCity'} eq '';
-	$error .= 'Missing Postal Code<br/>' if $param{'txtPostalCode'} eq '';
-	$error .= 'Missing Phone<br/>' if $param{'txtPhone'} eq '';
-	$error .= 'Missing/Invalid E-mail<br/>' if ( ! $param{'txtEmail'} ) or ( ! Email::Valid->address( $param{'txtEmail'} ) );
-	$error .= 'Missing Question or Comment<br/>' if $param{'txtQuestion-Quote'} eq '';
-	if ( ! $session{'user_id'} ) {
-		# Remove spaces, because some people want to put spaces between the characters, etc.
-		$param{'Captcha'} =~ s/\s//g;
-		require Authen::Captcha;
-		my $Captcha = new Authen::Captcha('data_folder' => '/tmp', 'output_folder' => $config{'SkinPath'}.'/images/captcha');
-		if ( 1 != $Captcha->check_code( $param{'Captcha'}, $param{'MD5SUM'} ) ) {
-			$error .= 'Validation Code incorrect. Please try again.';
+	if ( $param{btnSubmit} ) {
+		my $error = '';
+		$error .= 'Missing First Name<br/>' if $param{'txtFirstName'} eq '';
+		$error .= 'Missing Last Name<br/>' if $param{'txtLastName'} eq '';
+		$error .= 'Missing Address<br/>' if $param{'txtAddress1'} eq '';
+		$error .= 'Missing City<br/>' if $param{'txtCity'} eq '';
+		$error .= 'Missing Postal Code<br/>' if $param{'txtPostalCode'} eq '';
+		$error .= 'Missing Phone<br/>' if $param{'txtPhone'} eq '';
+		$error .= 'Missing/Invalid E-mail<br/>' if ( ! $param{'txtEmail'} ) or ( ! Email::Valid->address( $param{'txtEmail'} ) );
+		$error .= 'Missing Question or Comment<br/>' if $param{'txtQuestion-Quote'} eq '';
+		if ( ! $session{'user_id'} ) {
+			if ( $config{'UseCaptchaOnRegistration'} eq 'Y' ) {
+				# Remove spaces, because some people want to put spaces between the characters, etc.
+				$param{'Captcha'} =~ s/\s//g;
+				require Authen::Captcha;
+				my $Captcha = new Authen::Captcha('data_folder' => '/tmp', 'output_folder' => $config{'SkinPath'}.'/images/captcha');
+				if ( 1 != $Captcha->check_code( $param{'Captcha'}, $param{'MD5SUM'} ) ) {
+					$error .= 'Validation Code incorrect. Please try again.';
+				} # end if
+			} # end if
 		} # end if
-	} # end if
 
-	if ( $error ) {
-		return misc::error( $log, $dbh, \%variable, 'Bad Field', $error );
-	} # end if
+		if ( $error ) {
+			$variable{error} = $error;
+			return;
+		} # end if
 
-	my ( $index ) = sql::execute( $log, $dbh, q{SELECT nextval('HelpDesk_Id_seq')} );
-	if ( ! $index ) {
-		return misc::error( $log, $dbh, \%variable, 'System Error', 'Unable to create helpdesk entry.' );
-	} # end if
+		my ( $index ) = sql::execute( $log, $dbh, q{SELECT nextval('HelpDesk_Id_seq')} );
+		if ( ! $index ) {
+			return misc::error( $log, $dbh, \%variable, 'System Error', 'Unable to create helpdesk entry.' );
+		} # end if
 
-	sql::insert( $log, $dbh, 'Helpdesk',
-			'Id', $index,
-			'company_id', $session{'company_id'},
-			'user_id',	 $session{'user_id'},
-			'strCompanyName',	$param{'txtCompanyName'},
-			'strTitle',			$param{'txtTitle'},
-			'strFirstName',		$param{'txtFirstName'},
-			'strLastName',		$param{'txtLastName'},
-			'strAddress',		$param{'txtAddress1'},
-			'strAddress2',		$param{'txtAddress2'},
-			'strCity',			$param{'txtCity'},
-			'strStateProv',		$param{'ddmStateProvince'},
-			'strPostalCode',	$param{'txtPostalCode'},
-			'strCountry',		$param{'ddmCountry'},
-			'strPhone',			$param{'txtPhone'},
-			'strExtension',		$param{'txtExtension'},
-			'strEmail',			$param{'txtEmail'},
-			'blbdescription',	$param{'txtQuestion-Quote'},
-			'chrMethod',		$param{'rdbMethod'},
-			'dtmRequestDate',	'NOW()',
-			);
+		sql::insert( $log, $dbh, 'Helpdesk',
+				'Id', $index,
+				'company_id', $session{'company_id'},
+				'user_id',	 $session{'user_id'},
+				'strCompanyName',	$param{'txtCompanyName'},
+				'strTitle',			$param{'txtTitle'},
+				'strFirstName',		$param{'txtFirstName'},
+				'strLastName',		$param{'txtLastName'},
+				'strAddress',		$param{'txtAddress1'},
+				'strAddress2',		$param{'txtAddress2'},
+				'strCity',			$param{'txtCity'},
+				'strStateProv',		$param{'ddmStateProvince'},
+				'strPostalCode',	$param{'txtPostalCode'},
+				'strCountry',		$param{'ddmCountry'},
+				'strPhone',			$param{'txtPhone'},
+				'strExtension',		$param{'txtExtension'},
+				'strEmail',			$param{'txtEmail'},
+				'blbdescription',	$param{'txtQuestion-Quote'},
+				'chrMethod',		$param{'rdbMethod'},
+				'dtmRequestDate',	'NOW()',
+				);
 
-	my %info = ( 
-			'HelpDeskIndex' => $index,
-			'txtSalutation'	=>	$param{'rdbSalutation'},
-			'txtFirstName'	=>	$param{'txtFirstName'},
-			'txtLastName'	=>	$param{'txtLastName'},
-			);
+		my %info = ( 
+				'HelpDeskIndex' => $index,
+				'txtSalutation'	=>	$param{'rdbSalutation'},
+				'txtFirstName'	=>	$param{'txtFirstName'},
+				'txtLastName'	=>	$param{'txtLastName'},
+				);
 
-	@info{ keys %param } = @param{ keys %param };
-	
-	my $template = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/email_content/helpdesk_notification.html' );
-	$template = ssi::variable_substitution( \$template, \%info );
+		@info{ keys %param } = values %param;
 
-	my $Email = new openprint::Email();
-	$Email->send(
-			FROM	=> sprintf('"%s %s" <%s>', @param{'txtFirstName','txtLastName','txtEmail'} ),
-			TO		=> $config{'HelpdeskEmail'},
-			SUBJECT => 'Online Helpdesk Submission.',
-			ATTACHMENTS =>	[ '', MIME::QuotedPrint::encode_qp($template), 'text/html', 'quoted-printable' ],
-			);
+		my $template = ssi::include( '/email_content/helpdesk_notification.html', \%info );
 
-	if ( 0 ) {
-		# Sends an email saying we will get back to you as soon as possible.  Completely useless.
-	$info{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/helpdesk_confirmation.html' );
-	$info{'ReplacementText'} = ssi::variable_substitution( \$info{'ReplacementText'}, \%info );
-	my $email_template = misc::load_file( $log, $config{'SkinPath'}. '/email_template.html' );
-	$email_template = ssi::variable_substitution( \$email_template, \%info );
+		my $Email = new openprint::Email();
+		$Email->html_body( $template );
+		$Email->send(
+				FROM	=> sprintf('"%s %s" <%s>', @param{'txtFirstName','txtLastName','txtEmail'} ),
+				TO		=> $config{'HelpdeskEmail'},
+				SUBJECT => 'Online Helpdesk Submission.',
+				);
 
-	$Email = new openprint::Email();
-	$Email->send(
-			FROM	=> sprintf('"%s %s" <%s>', @param{'txtFirstName','txtLastName','txtEmail'} ),
-			TO		=> sprintf('"%s %s" <%s>', @param{'txtFirstName','txtLastName','txtEmail'} ),
-			FROM	=> $config{'HelpdeskEmail'},
-			SUBJECT => 'Online Helpdesk Submission.',
-			ATTACHMENTS =>	[ '', MIME::QuotedPrint::encode_qp($email_template), 'text/html', 'quoted-printable' ],
-		);
+		%param = ();
+		$variable{ExternalRedirect} = '/support/help_desk.html';
 	} # end if
 
 } # end sub helpdesk
 
 1;
-
 __END__

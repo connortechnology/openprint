@@ -219,6 +219,7 @@ sub continue_project {
 			my $Project = new openprint::Project( $project_index );
 			foreach my $qty_index ( $Project->quantity_indexes() ) {
 				if ( $_ = openprint::Estimating::MultiPage::status( $project_index, undef, $qty_index ) ) {
+					$log->debug("Multipage status says we need another sig of type $_");
 					my @sigs = $Project->signatures({'Group'=>$_});
 					my $src_id = pop @sigs;
 					my $src_specs = openprint::service::get_specs_ref( $Project, $src_id );
@@ -250,7 +251,7 @@ sub try_to_delete_project {
 		$error .= "Project $proj_reference does not belong to you.	Not deleted.<br/>";
 		$delete = 0;
 	} # end if
-	$_ = "SELECT Orders.Index FROM Orders,Order_Contents WHERE Orders.Index=Order_Contents.OrderIndex AND lngProjectIndex=? AND Orders.strStatus != 'Incomplete'";
+	$_ = "SELECT orders.id FROM Orders,Order_Contents WHERE orders.id=Order_Contents.OrderIndex AND lngProjectIndex=? AND Orders.status_id != (SELECT id FROM order_statuses WHERE name ='Incomplete')";
 	( $_ ) = sql::execute( $log, $dbh, $_, $project_index );
 	if ( $_ ) {
 		$error .= "Project $proj_reference is in order <a href=\"/main/order/history_details.html?order_id=$_\">$_</a>.	You must delete the order before you can delete the project.<br/>";
@@ -510,12 +511,7 @@ sub create_edit_process {
 	my $project_index = $session{'project_id'} = $Project->id();
 
 	my %services = $Project->get_services();
-	my @service_ids;
-	foreach my $stype ( keys %services ) {
-		foreach my $s_id ( @{$services{$stype}} ) {
-			push @service_ids, $s_id;
-		} # end foreach
-	} # end foreach
+	my @service_ids = map { $services{$_} ? @{$services{$_}} : () } keys %services;
 
 	if ( $param{'txtQuantity1'} != $Project->quantity1() ) {
 		$recalculate = 1;
@@ -560,8 +556,8 @@ sub create_edit_process {
 				foreach my $service_id ( @service_ids ) {
 					my $specs = openprint::service::get_specs_ref( $Project, $service_id );
 					foreach my $key ( keys %$specs ) {
-						next if $key =~ /^txtQuantity/;
-						if ( ( ! $key =~ /Special/ ) and ( $key =~ /^(.*)1$/ ) ) {
+						next if $key =~ /^txtQuantity/ or $key =~ /Special/;
+						if ( $key =~ /^(.*)1$/ ) {
 							openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $service_id, $1.'2', $$specs{$key} );
 						} # end if
 					} # end foreach
@@ -570,8 +566,8 @@ sub create_edit_process {
 				foreach my $service_id ( @service_ids ) {
 					my $specs = openprint::service::get_specs_ref( $Project, $service_id );
 					foreach my $key ( keys %$specs ) {
-						next if $key =~ /^txtQuantity/;
-						if ( ( ! $key =~ /Special/ ) and ( $key =~ /^(.*)3$/ ) ) {
+						next if $key =~ /^txtQuantity/ or $key =~ /Special/;
+						if ( $key =~ /^(.*)3$/ ) {
 							openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $service_id, $1.'2', $$specs{$key} );
 						} # end if
 					} # end foreach
@@ -596,8 +592,8 @@ sub create_edit_process {
 				foreach my $service_id ( @service_ids ) {
 					my $specs = openprint::service::get_specs_ref( $Project, $service_id );
 					foreach my $key ( keys %$specs ) {
-						next if $key =~ /^txtQuantity/;
-						if ( ( ! $key =~ /Special/ ) and ( $key =~ /^(.*)1$/ ) ) {
+						next if $key =~ /^txtQuantity/ or $key =~ /Special/;
+						if ( $key =~ /^(.*)1$/ ) {
 							openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $service_id, $1.'3', $$specs{$key} );
 						} # end if
 					} # end foreach
@@ -606,8 +602,8 @@ sub create_edit_process {
 				foreach my $service_id ( @service_ids ) {
 					my $specs = openprint::service::get_specs_ref( $Project, $service_id );
 					foreach my $key ( keys %$specs ) {
-						next if $key =~ /^txtQuantity/;
-						if ( ( ! $key =~ /Special/ ) and ( $key =~ /^(.*)2$/ ) ) {
+						next if $key =~ /^txtQuantity/ or $key =~ /Special/;
+						if ( $key =~ /^(.*)2$/ ) {
 							openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $service_id, $1.'3', $$specs{$key} );
 						} # end if
 					} # end foreach

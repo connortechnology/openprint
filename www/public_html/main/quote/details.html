@@ -90,8 +90,8 @@
 				<td align="right"> 
 					<input type="hidden" name="txtPrice<?index?>" value="<?stdprice?>" />
 					<? echo ( $$variable{'Quote'}->Currency()->symbol(); ) ?><?stdprice?></td>
-				<td align="right"><? echo ( $$variable{'Quote'}->Currency()->symbol(); ) ?> 
-					<input type="text" name="txtNewPrice<?index?><?project_index?>" size="9" style="width: auto; text-align: right;" value="<?newprice?>" onkeyup="calc_from_price( f1, this );" />
+				<td align="right">
+<? echo ( $$variable{'Quote'}->Currency()->symbol(); ) ?><input type="text" name="txtNewPrice<?index?><?project_index?>" style="width: 85%; text-align: right;" value="<?newprice?>" onkeyup="calc_from_price( f1, this );" />
 				</td>
 				<td align="right"><a href="/main/project/view.html?ProjectIndex=<?project_index?>">Edit</a>/<a href="details.html?quote_id=<? echo ( $$variable{'Quote'}->id() ) ?>&remove=<?project_index?>">Remove</a></td>
 			</tr>
@@ -106,8 +106,8 @@
 				<td align="right"> 
 					<input type="hidden" name="txtPrice<?index?>" value="<?stdprice?>" />
 					<? echo ( $$variable{'Quote'}->Currency()->symbol(); ) ?><?stdprice?></td>
-				<td align="right"><? echo ( $$variable{'Quote'}->Currency()->symbol(); ) ?> 
-					<input type="text" name="txtNewPrice<?index?><?project_index?>" size="9" style="width: auto; text-align: right; margin: 0px;" value="<?newprice?>"  onkeyup="calc_from_price( f1, this );" />
+				<td align="right">
+<? echo ( $$variable{'Quote'}->Currency()->symbol(); ) ?><input type="text" name="txtNewPrice<?index?><?project_index?>" style="width: 90%; text-align: right; margin: 0px;" value="<?newprice?>"  onkeyup="calc_from_price( f1, this );" />
 				</td>
 				<td align="right">&nbsp;</td>
 			</tr>
@@ -180,16 +180,14 @@
 			</tr>
 		</table>
 		<? endif ( new openprint::Company($session{'company_id'})->reseller() eq 'Y' or sets::isin( $session{'user_type'}, [ 'A', 'E' ] ) ) ?>
-		<div class="row">
-			<span style="float: right;">
+		<p class="buttons">
 				<? echo ( 
 					my $html;
-					$html .= ssi::writeButton( $log, $dbh, 'AddFromHistory','add_project_from_history.gif','','/main/project/history.html','Add Project From History' ) if $session{'user_id'};
-					$html .= ssi::writeButton( $log, $dbh, 'CreateNewProject','add_new_project.gif','','/main/project/create_edit.html','Add New Project' );
-					$html .= ssi::writeButton( $log, $dbh, 'Continue','continue.gif','f1.submit();','','Continue' );
+					$html .= button( 'AddFromHistory', { href=>'/main/project/history.html', text=>'Add Project From History' } ) if $session{'user_id'};
+					$html .= button( 'CreateNewProject', { href=>'/main/project/create_edit.html',text=>'Add New Project' } );
+					$html .= button( 'Continue', { onclick=>'f1.submit();', text=>'Continue' } );
 					) ?>
-			</span>
-		</div>
+		</p>
 	</form>
 	<? endif ( @{$$variable{'PROJECTS'}} == 0 ) ?>
 <? endif ( ! $$variable{'Quote'}->id() ) ?>

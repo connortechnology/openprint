@@ -22,7 +22,7 @@ use vars qw( $log $dbh $AUTOLOAD %cache %name_cache %fields %defaults %transform
 *config = \%openprint::config;
 
 my $debug = 0;
-my $debug_all = 0;
+use constant DEBUG_ALL => 0;
 $no_cache = 0;
 
 sub init_cache {
@@ -65,11 +65,13 @@ sub new {
 		bless $self, $parent;
 
 		if ( ( $$self{'id'} = $id ) or $data ) {
-#$log->debug("loading $parent $id") if $debug or $debug_all;
+#$log->debug("loading $parent $id") if $debug or DEBUG_ALL;
 			$self->load( $data );
 		} # end if
 		if ( ! $no_cache ) {
-			if ( $$self{'id'} ) {
+			if ( $id ) {
+				# Using $id instead of $$self{od} means that we cache non existent entries
+			#if ( $$self{'id'} ) {
 				$openprint::Object::cache{$config{'db_name'}}{$parent}{$id} = $self;
 			} # end if
 		} # end if
@@ -103,7 +105,7 @@ sub load {
 	no strict 'refs';
 	my $fields = \%{$type.'::fields'};
 	my $debug = ${$type.'::debug'};
-	$debug = $debug_all if ! $debug;
+	$debug = DEBUG_ALL if ! $debug;
 	my $starttime = [gettimeofday] if $debug;
 	if ( ! $data ) {
 #$log->debug("Object::load Loading from db $type");
@@ -133,7 +135,7 @@ sub load {
 			#$log->debug("Got $type: " . join(',', map { $_ . '=>' . $$data{$_} } keys %$data ) . ' in ' . sprintf('%.4f', tv_interval($starttime)*1000) .' useconds' );
 		} # end if
 	} # end if
-	my @keys = map { defined $$fields{$_} ? $_ : () } keys %$fields;
+	my @keys = map { (defined $$fields{$_} or exists $$data{$_} ) ? $_ : () } keys %$fields;
 	@$self{@keys} = @$data{@$fields{@keys}};
 } # end sub load
 
@@ -158,7 +160,7 @@ if ( $debug ) {
 	my $table = eval '$'.$type.'::table';
 	my $fields = eval '\%'.$type.'::fields';
 	my $debug = eval '$'.$type.'::debug';
-	$debug = $debug_all if ! $debug;
+	$debug = DEBUG_ALL if ! $debug;
 
 	my %sql;
 	foreach my $k ( keys %$fields ) {
@@ -168,15 +170,19 @@ if ( $debug ) {
 		$sql{$$fields{updated_by}} = $openprint::session{user_id} if exists $$fields{updated_by};
 		$sql{$$fields{updated_on}} = 'NOW()' if exists $$fields{updated_on};
 	} # end if
+	my $serial = eval '$'.$type.'::serial';
 	my @identified_by = eval '@'.$type.'::identified_by';
 	my $ac = sql::start_transaction( $local_dbh );
-	if ( @identified_by ) {
+	if ( ! $serial ) {
 		my $insert = $force_insert;
 		my %serial = eval '%'.$type.'::serial';
 		if ( ! %serial ) {
 $log->debug("No serial") if $debug;
 			# No serial columns defined, which means that we will do saving by delete/insert instead of insert/update
 			my $where = join(' AND ', map { $$fields{$_}.'=?' } @identified_by );
+			if ( $debug ) {
+				$log->debug("DELETE FROM $table WHERE $where");
+			} # end if
 			if ( ! ( ( $_ = $local_dbh->prepare("DELETE FROM $table WHERE $where") ) and $_->execute( @$self{@identified_by} ) ) ) {
 				$where =~ s/\?/\%s/g;
 				$log->error("Error deleting: DELETE FROM $table WHERE " .  sprintf($where, map { defined $_ ? $_ : 'undef' } ( @$self{@identified_by}) ).'):' . $local_dbh->errstr);
@@ -191,7 +197,7 @@ $log->debug("No serial") if $debug;
 			foreach my $id ( @identified_by ) {
 				next if ! $serial{$id};
 				($$self{$id}) = ($sql{$$fields{$id}}) = $local_dbh->selectrow_array( q{SELECT nextval('} . $serial{$id} . q{')} );
-				$log->debug("SQL statement execution SELECT nextval('$serial{$id}') returned $$self{$id}") if $debug or $debug_all;
+				$log->debug("SQL statement execution SELECT nextval('$serial{$id}') returned $$self{$id}") if $debug or DEBUG_ALL;
 				$insert = 1;
 			} # end foreach
 		} # end if
@@ -206,7 +212,7 @@ $log->debug("No serial") if $debug;
 				sql::end_transaction( $local_dbh, $ac );
 				return $error;
 			} # end if
-			if ( $debug or $debug_all ) {
+			if ( $debug or DEBUG_ALL ) {
 				$command =~ s/\?/\%s/g;
 				$log->debug('SQL statement execution: ('.sprintf($command, , map { defined $_ ? $_ : 'undef' } ( @sql{@keys} ) ).'):' );
 			} # end if
@@ -221,18 +227,21 @@ $log->debug("No serial") if $debug;
 				sql::end_transaction( $local_dbh, $ac );
 				return $error;
 			} # end if
-			if ( $debug or $debug_all ) {
+			if ( $debug or DEBUG_ALL ) {
 				$command =~ s/\?/\%s/g;
 				$log->debug('SQL DEBUG: ('.sprintf($command, map { defined $_ ? $_ : 'undef' } ( @sql{@keys,@identified_by} ) ).'):' );
 			} # end if
 		} # end if
 	} else { # not identified_by
-		if ( ( ! $$self{'id'} ) or $force_insert ) {
-			if ( ! $$self{'id'} ) {
-				my $serial = eval '$'.$type.'::serial';
+		@identified_by = ('id') if ! @identified_by;
+		my $need_serial = ! ( @identified_by == map { $$self{$_} ? $_ : () } @identified_by );
+
+		if ( $force_insert or $need_serial ) {
+			
+			if ( $need_serial ) {
 				if ( $serial ) {
-					($$self{id}) = ($sql{$$fields{id}}) = $local_dbh->selectrow_array( q{SELECT nextval('} . $serial . q{')} );
-					$log->debug("SQL statement execution SELECT nextval('$serial') returned $$self{id}") if $debug or $debug_all;
+					@$self{@identified_by} = @sql{@$fields{@identified_by}} = $local_dbh->selectrow_array( q{SELECT nextval('} . $serial . q{')} );
+					$log->debug("SQL statement execution SELECT nextval('$serial') returned ".join(',',@$self{@identified_by})) if $debug or DEBUG_ALL;
 				} # end if
 			} # end if
 			my @keys = keys %sql;
@@ -245,25 +254,25 @@ $log->debug("No serial") if $debug;
 				sql::end_transaction( $local_dbh, $ac );
 				return $error;
 			} # end if
-			if ( $debug or $debug_all ) {
+			if ( $debug or DEBUG_ALL ) {
 				$command =~ s/\?/\%s/g;
 				$log->debug('SQL DEBUG: ('.sprintf($command, map { defined $_ ? $_ : 'undef' } ( @sql{@keys} ) ).'):' );
 			} # end if
 		} else {
 			delete $sql{'created_on'};
 			my @keys = keys %sql;
-			my $command = "UPDATE $table SET " . join(',', map { $_ . ' = ?' } @keys ) . " WHERE $$fields{id} = ?";
-			if ( ! ( $_ = $local_dbh->prepare($command) and $_->execute( @sql{@keys}, $sql{$$fields{'id'}} ) ) ) {
+			my $command = "UPDATE $table SET " . join(',', map { $_ . ' = ?' } @keys ) . ' WHERE ' . join(' AND ', map { $$fields{$_} .'= ?' } @identified_by );
+			if ( ! ( $_ = $local_dbh->prepare($command) and $_->execute( @sql{@keys}, @sql{@$fields{@identified_by}} ) ) ) {
 				my $error = $local_dbh->errstr;
 				$command =~ s/\?/\%s/g;
-				$log->error('SQL failed: ('.sprintf($command, map { defined $_ ? $_ : 'undef' } ( @sql{@keys}, $$fields{'id'} ) ).'):' . $error) if $log;
+				$log->error('SQL failed: ('.sprintf($command, map { defined $_ ? $_ : 'undef' } ( @sql{@keys}, @$fields{@identified_by} ) ).'):' . $error) if $log;
 				$local_dbh->rollback();
 				sql::end_transaction( $local_dbh, $ac );
 				return $error;
 			} # end if
-			if ( $debug or $debug_all ) {
+			if ( $debug or DEBUG_ALL ) {
 				$command =~ s/\?/\%s/g;
-				$log->debug('SQL DEBUG: ('.sprintf($command, map { defined $_ ? ( ref $_ eq 'ARRAY' ? join(',',@{$_}) : $_ ) : 'undef' } ( @sql{@keys}, $$self{'id'} ) ).'):' );
+				$log->debug('SQL DEBUG: ('.sprintf($command, map { defined $_ ? ( ref $_ eq 'ARRAY' ? join(',',@{$_}) : $_ ) : 'undef' } ( @sql{@keys}, @$self{@identified_by} ) ).'):' );
 			} # end if
 		} # end if
 	} # end if
@@ -312,12 +321,7 @@ $openprint::log->debug("Running $field with $$params{$field}") if $debug;
 
 		if ( defined $$fields{$field} ) {
 			if ( $$self{$field} ) {
-				my @transforms = eval('@{$'.$type.'::transforms{$field}}');
-				$log->debug("Transforms: @transforms") if $debug;
-
-				foreach my $transform ( @transforms ) {
-					eval '$$self{$field} =~ ' . $transform;
-				} # end foreach
+				$$self{$field} = transform( $type, $field, $$self{$field} );
 			} # end if $$self{field}
 
 			if ( ( ( ! exists $$self{$field} ) or (!defined $$self{$field}) or ( $$self{$field} eq '' ) ) and exists $defaults{$field} ) {
@@ -434,8 +438,14 @@ my @sql_functions = (
 sub find_operators {
 	my ( $field, $type, $operator, $value ) = @_;
 
-	if ( sets::isin( $operator, [ '=', '!=', '<', '>', '<=', '>=', '<<=', '&&', '<@', '@>' ] ) ) {
+	if ( sets::isin( $operator, [ '=', '!=', '<', '>', '<=', '>=', '<<=' ] ) ) {
 		return ( $field.$type.' ' . $operator . ' ?', $value );
+	} elsif ( sets::isin( $operator, [ '&&', '<@', '@>' ] ) ) {
+		if ( ref $value eq 'ARRAY' ) {
+			return ( $field.$type.' ' . $operator . ' ?', $value );
+		} else {
+			return ( $field.$type.' ' . $operator . ' ?', [ $value ] );
+		} # end if
 	} elsif ( sets::isin( $operator, [ 'in', 'not in' ] ) ) {
 		if ( ref $value eq 'ARRAY' ) {
 			return ( $field.$type.' ' . $operator . ' ('. join(',', map { '?' } @{$value} ) . ')', @{$value} );
@@ -458,6 +468,8 @@ sub find_operators {
 		return '('.$field.$type.' IS NULL OR '.$field.$type.' < ?)', $value;
 	} elsif ( $operator eq 'null_or_=' or $operator eq 'is null or =' ) {
 		return '('.$field.$type.' IS NULL OR '.$field.$type.' = ?)', $value;
+	} elsif ( $operator eq 'null or in' ) {
+		return '('.$field.$type.' IS NULL OR '.$field.$type.' IN ('.join(',', map { '?' } @{$value} ) . '))', @{$value};
 	} elsif ( $operator eq 'exists' ) {
 		return ( $value ? ' EXISTS ' : 'NOT EXISTS ' ).$field;
 	} elsif ( $operator eq 'lc' ) {
@@ -496,7 +508,7 @@ sub find {
 	my $object_type = shift;
 
 	my $debug = ${$object_type.'::debug'};
-	$debug = $debug_all if ! $debug;
+	$debug = DEBUG_ALL if ! $debug;
 	my $starttime = [gettimeofday] if $debug;
 
 	my $params;
@@ -651,7 +663,7 @@ sub find {
 	} # end if
 
 	if ( $$fields{'deleted'} and ! sets::isin( 'deleted', \@used_fields ) ) {
-		push @where, '(deleted=? OR deleted IS NULL)';
+		push @where, 'deleted=?';
 		push @values, 0;
 	} # end if
 
@@ -727,12 +739,17 @@ sub AUTOLOAD {
 	my $type = ref($_[0]);
 	my $name = $AUTOLOAD;
 	$name =~ s/.*://;
-	return if $name eq 'DESTROY';
+	my $fields = eval '\%'.$type.'::fields';
 	if ( @_ > 1 ) {
+		if ( $fields ) {
+			# This looks to handle returning Objects
+			if ( ! exists $$fields{$name} ) {
+				Carp::cluck( "Bad autoload $type $name  = $_[1]" );
+			} # end if
+		} # end if
 #$openprint::log->debug("Autoload $type $name $_[0] $_[1] $self $newvalue");
 		return $_[0]{$name} = $_[1];
 	} else {
-		my $fields = eval '\%'.$type.'::fields';
 		if ( $fields ) {
 			# This looks to handle returning Objects
 			if ( exists $$fields{$name} ) {
@@ -754,7 +771,7 @@ sub AUTOLOAD {
 					}; # end eval
 					if ( $@ ){
 						$log->error( "Eval error of Object::AUTOLOAD $type -> $name, Reason: " . $@ );
-						return undef;
+						return;
 					} # end if
 					return $O;
 				} # end if
@@ -768,7 +785,7 @@ sub AUTOLOAD {
 sub to_string {
 	my $type = ref($_[0]);
 	my $fields = eval '\%'.$type.'::fields';
-    return $type . ': '. join(' ' , map { "$_ => $_[0]{$_}" } keys %$fields );
+    return $type . ': '. join(' ' , map { $_[0]{$_} ? "$_ => $_[0]{$_}" : () } keys %$fields );
 }
 
 sub dropdown {
@@ -782,7 +799,8 @@ sub sort_value {
 
 sub sort {
 	my $type = shift;
-	return sort { $$a{'name'} cmp $$b{'name'} } @_;
+	my @results = sort { $$a{'name'} cmp $$b{'name'} } @_;
+	return @results;
 } # end sub sort
 
 # Warning, this is destructive to objects
@@ -806,11 +824,11 @@ sub transform {
 $openprint::log->debug("evalling $_[2] ".$transform . " Now value is $_[2]" );
 				eval '$_[2] '.$transform;
 $openprint::log->error("Eval error $@") if $@;
-			};
+			}
 $openprint::log->debug("After $transform: $_[2]") if $debug;
 		} # end foreach
 	} else {
-		$openprint::log->error("Object::transform $_[1] not in fields for $type");
+		$openprint::log->error("Object::transform ($_[1]) not in fields for $type");
 	} # end if
 	return $_[2];
 
@@ -1010,13 +1028,16 @@ $openprint::log->debug("# of Assets: " . scalar @Assets );
 
 sub View {
 	return if ! $session{user_id};
-	my $View = openprint::Object_View->find_one('object_id'=>$_[0]{'id'}, 'object_type'=>ref $_[0], 'user_id'=>$session{'user_id'} );
+	return if ! $_[0]{id};
+	my $View = openprint::Object_View->find_one( object_id=>$_[0]{id}, object_type=>ref $_[0], user_id=>$session{user_id} );
 	if ( ! $View ) {
 		$View = new openprint::Object_View();
-		$View->save({'object_id'=>$_[0]{'id'}, 'object_type'=>ref $_[0], 'user_id'=>$session{'user_id'}});
+		$View->save({object_id=>$_[0]{id}, object_type=>ref $_[0], 'user_id'=>$session{user_id}});
 	} # end if
 	return $View;
 } # end sub View
+sub DESTROY {
+}
 
 1;
 __END__

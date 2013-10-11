@@ -28,16 +28,16 @@ $table = 'paper_allocations';
 $serial = 'paper_allocation_id_seq';
 
 %fields = (
-	'id'			=>	'id',
-	'paper_id'		=>	'paper_id',
-	'skid_id'		=>	'skid_id',
-	'operator_id'	=>	'operator_id',
-	'created_on'	=>	'created_on',
-	'project_id'	=>	'project_id',
-	'units'			=>	'units',
-	'quantity'		=>	'quantity',
-	'skid_ids'		=>	'skid_ids',
-	'condition_id'	=>	'condition_id',
+	id				=>	'id',
+	paper_id		=>	'paper_id',
+	skid_id			=>	'skid_id',
+	operator_id		=>	'operator_id',
+	created_on		=>	'created_on',
+	project_id		=>	'project_id',
+	units			=>	'units',
+	quantity		=>	'quantity',
+	skid_ids		=>	'skid_ids',
+	condition_id	=>	'condition_id',
 );
 %find_fields = (
 	docket	=>	'(SELECT lngdocketnumber FROM tbl_Projects WHERE index=project_id)',
@@ -119,7 +119,6 @@ sub send_notification {
 	my ( $self ) = @_;
 
 	my $Me = new openprint::User( $session{user_id} );
-	return if $Me->email() =~ /iconnor/;
 
 	my %info;
 	$info{Allocation} = $self;
@@ -127,7 +126,7 @@ sub send_notification {
 	my $Paper = $info{Paper} = $self->Paper();
 	my @old_skids = @{$info{'OldSkids'}} = $self->old_Skids();
 
-	my @recipients = openprint::User->find( 'usergroup'=>'InventoryManager' );
+	my @recipients = map { $_->notification('Stock Allocations') eq 'Yes' ? $_ : () } openprint::User->find( usergroup=>'InventoryManager' );
 
     my $offsite = 0;
 	my $nolocation = 0;

@@ -82,7 +82,7 @@ sub copy {
 
 sub prices {
 	if ( ! exists $_[0]{'Prices'} ) {
-		@{$_[0]{'Prices'}} = openprint::ProductPrice->find( 'product_id'=>$_[0]{'id'} );
+		@{$_[0]{'Prices'}} = openprint::ProductPrice->find( product_id=>$_[0]{id}, order=>'min NULLS FIRST' );
 	} # end if
 	return @{$_[0]{'Prices'}};
 } # end sub prices
@@ -115,7 +115,7 @@ sub get_price {
 
 	my $list_id = openprint::pricing::get_pricelist_id();
 
-	my %price = openprint::pricing::get_best_price_object( $log, $dbh, $openprint::session{'company_id'}, $$self{'id'}, $list_id, 'openprint::product_priceset', $qty, undef );
+	my %price = openprint::pricing::get_best_price_object( $openprint::session{'company_id'}, $$self{'id'}, $list_id, 'openprint::product_priceset', $qty, undef );
 	if ( ! %price ) {
 $log->debug("Looking for a price $qty");
 		foreach my $Price ( openprint::ProductPrice->find('product_id'=>$$self{'id'},'pricelist_id'=>$list_id,'order'=>'min desc NULLS FIRST') ) {
@@ -221,7 +221,7 @@ sub thumbnail_html {
 		} # end if
 		if ( $Asset and $$Asset{'id'} ) {
 			$$self{'thumbnail_html'} = sprintf('<a href="/product/view.html?product_id=%1$d" class="thumbnail"><img src="%2$s" alt="%3$s" title="%3$s" /></a>',
-					$$self{'id'}, $Asset->thumbnail_url(), $$self{'name'} );
+					$$self{'id'}, $Asset->sized_url('thumbnail'), $$self{'name'} );
 		} else {
 			$openprint::log->debug("No Asset for Product $$self{id} $$self{name}");
 		} # end if

@@ -18,14 +18,14 @@
 		my $subtotal;
 		my $newsubtotal;
 
-		foreach my $QP ( $$variable{'Quote'}->Quoted_Projects() ) {
+		foreach my $QP ( $$variable{Quote}->Quoted_Projects() ) {
 			my $Project = $QP->Project();
 		
 			$html .= sprintf(q`<tr%1$s> 
 				<td class="description"><a href="/main/project/view.html?ProjectIndex=%2$d">%3$s%4$s</a></td>
 				<td colspan="5">
 				<table>`, $rowclass, $Project->id(), 
-				( $Project->reference() ? ssi::htmlize( $Project->reference() ) . '<br/>' : '' ),
+				( $Project->reference() ? htmlize( $Project->reference() ) . '<br/>' : '' ),
 				$Project->summary(),
 				);
 
@@ -63,9 +63,11 @@
 			$html .= "</table>\n</td>\n</tr>\n";
 			$rowclass = $rowclass ? '' : ' class="colRow"';
 		} # end foreach QP
-		$html .= sprintf('<tr class="totals"><td colspan="4">Subtotal</td><td class="price">%1$s</td><td class="newprice">%2$s</td></tr>',
+		$html .= join( '', '<tr class="totals"><td colspan="4">Subtotal</td><td class="price">',
 				openprint::Currency::format( $subtotal ),
+				'</td><td class="newprice">', 
 				openprint::Currency::format( $newsubtotal ),
+				'</td></tr>',
 				);
 		return $html
 	) ?>
@@ -78,14 +80,15 @@
 			<th class="projects">Projects</th>
 			<th class="weight">Weight</th>
 			<th class="quantity">Qty</th>
-			<th class="newprice">Price</th>
+			<th class="price">Price</th>
 		</tr>
 	</thead>
 	<tbody>
 	<? echo (
 		my $html;
+		my $subtotal;
 		my $rowclass;
-		foreach my $QP ( $$variable{'Quote'}->Quoted_Projects() ) {
+		foreach my $QP ( $$variable{Quote}->Quoted_Projects() ) {
 			my $Project = $QP->Project();
 			$html .= sprintf(q`<tr%1$s> 
 				<td class="projects"><a href="/main/project/view.html?ProjectIndex=%2$d">%3$s%4$s</a></td>
@@ -100,34 +103,38 @@
 				$html .= '<tr><td class="weight">';
 				my $weight;
 
-				if ( $$services{'BulkSkids'} ) {
-					my $specs = openprint::service::get_specs_ref( $Project, $$services{'BulkSkids'}[0] );
+				if ( $$services{BulkSkids} ) {
+					my $specs = openprint::service::get_specs_ref( $Project, $$services{BulkSkids}[0] );
 					$weight = $$specs{'totalWeight'.$qty_index};
 				} elsif ( $$services{'PlainCartons'} ) {
-					my $specs = openprint::service::get_specs_ref( $Project, $$services{'PlainCartons'}[0] );
+					my $specs = openprint::service::get_specs_ref( $Project, $$services{PlainCartons}[0] );
 					$weight = $$specs{'totalWeight'.$qty_index};
 				} else {
 					$weight = openprint::print::get_finished_weight($Project->id()) * $Project->quantity($qty_index);
 				} # end if
 				my $g = $weight * 453.59237;
 				if ( $g > 1000 ) {
-					return sprintf( '%.0flb%s (%.0fkg)', $weight, ($weight>1?'s':''),$g/1000 );
+					$html .= sprintf( '%.0flb%s (%.0fkg)', $weight, ($weight>1?'s':''),$g/1000 );
 				} else {
-					return sprintf( '%.0flb%s (%.0fg)', $weight, ($weight>1?'s':''),$g );
+					$html .= sprintf( '%.0flb%s (%.0fg)', $weight, ($weight>1?'s':''),$g );
 				} # end if
-				$html .= sprintf('</td><td class="quantity">%1$s</td><td class="newprice">%2$s</td></tr>', 
+				$html .= join( '', '</td><td class="quantity">',
 						$Project->quantity($qty_index), 
+						'</td><td class="price">', 
 						openprint::Currency::format( $QP->price($qty_index) ),
+						'</td></tr>', 
 						);
 				$subtotal += $QP->price($qty_index);
 			} # end foreach qty_index
 			$html .= "</table>\n</td>\n</tr>\n";
-			$html .= sprintf('<tr class="totals"><td colspan="3">Subtotal</td><td class="price">%1$s</td></tr>',
-				openprint::Currency::format( $subtotal ),
-);
-			$rowclass = $rowclass ? '' : ' class="colRow"';
-			return $html;
-		) ?>
+		} # end foreach Project
+
+		$html .= join('', '<tr class="totals"><td colspan="3">Subtotal</td><td class="price">', 
+			openprint::Currency::format( $subtotal ), '</td></tr>' );
+		$rowclass = $rowclass ? '' : ' class="colRow"';
+$log->debug($html);
+		return $html;
+	) ?>
 </table>
 <? endif ( sets::isin( $session{'user_type'}, [ 'A', 'E' ] ) or new openprint::Company($session{'company_id'})->reseller() eq 'Y' ) ?>
 <? endif ( openprint::ProjectType->find_one() ) ?>

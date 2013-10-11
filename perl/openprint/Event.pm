@@ -11,7 +11,7 @@ package openprint::Event;
 our @ISA = qw( openprint::Object );
 
 use vars qw( $debug $table $serial %fields %find_fields %transforms %defaults );
-$debug = 1;
+$debug = 0;
 $table = 'events';
 $serial = 'events_id_seq';
 
@@ -38,9 +38,9 @@ $serial = 'events_id_seq';
 	template_id	=>	'template_id',
 );
 %find_fields = (
-	'attending'	=>	'(SELECT user_id FROM event_attendance WHERE event_id=events.id AND attending=true)',
-	#'attending'=>	'(SELECT attending FROM event_attendance WHERE event_id=events.id)',
+	attending	=>	'(SELECT user_id FROM event_attendance WHERE event_id=events.id AND attending=true)',
 	'name+info'	=>	q`name || info`,
+	company_id	=>	'(SELECT company_id FROM Users WHERE users.id=events.created_by)',
 );
 %transforms = (
 	id		=>	[ 's/\D//g', '<2147483647' ],
@@ -163,13 +163,13 @@ sub can_view {
 		$User = new openprint::User($openprint::session{user_id});
 	} # end if
 	return 1 if $$User{type} eq 'A';
-$openprint::log->debug("Event::can_view not an admin");
+#$openprint::log->debug("Event::can_view not an admin");
 	return 1 if $_[0]{created_by} == $$User{id};
-$openprint::log->debug("Event::can_view not creator");
+#$openprint::log->debug("Event::can_view not creator");
 	return 0 if $_[0]{deleted};
-$openprint::log->debug("Event::can_view not deleated");
+#$openprint::log->debug("Event::can_view not deleated");
 	return 0 if openprint::Blocklist::is_blocked( $openprint::session{user_id},$_[0]{created_by});
-$openprint::log->debug("Event::can_view not blocked");
+#$openprint::log->debug("Event::can_view not blocked");
 	my $Privacy = $_[0]->Privacy();
 	return 1 if ! $$Privacy{id};
 	return $Privacy->can_view($$User{id});
@@ -273,7 +273,7 @@ sub thumbnail_html {
 		my $Asset = $_[0]->Asset();
 		if ( $Asset and $$Asset{'id'} ) {
 			$_[0]{'thumbnail_html'} = sprintf('<a href="/event/view.html?event_id=%1$d" class="thumbnail"><img src="%2$s" alt="%3$s" title="%3$s" /></a>',
-					$_[0]{'id'}, $Asset->thumbnail_url(), $_[0]->name() );
+					$_[0]{'id'}, $Asset->sized_url('thumbnail'), $_[0]->name() );
 		} # end if
 	} # end if
 	return $_[0]{'thumbnail_html'};
@@ -397,6 +397,33 @@ sub Template {
 	} # end if
 	return $_[0]{Template};
 } # end sub Template
+
+sub head_html { 
+	my $Event = $_[0];
+
+	my $description;
+	if ( $Event->info() ) {
+		my $hs = HTML::Strip->new();
+		$description = $hs->parse($Event->info());
+		$hs->eof();
+	} # end if
+    my $Asset = $Event->Asset();
+
+	my $html =  '<head itemscope itemtype="http://schema.org/Event">'."\n";
+	$html .= '<link rel="image_src" href="'.$openprint::config{siteURL}.$Asset->sized_url('medium').'"/>' if $Asset;
+	$html .= '<meta name="RATING" content="RTA-5042-1996-1400-1577-RTA" />'."\n";
+	$html .= '<meta itemprop="name" content="'. ssi::html_escape( $Event->name() ).'"/>'."\n";
+	$html .= '<meta itemprop="description" content="'.$description.'"/>'."\n" if $description;
+	$html .= '<meta name="startDate" content="'. $Event->starting_on().'" />'."\n" if $Event->starting_on();
+	$html .= '<meta name="endDate" content="'. $Event->ending_on().'" />'."\n" if $Event->ending_on();
+	$html .= '<meta name="image" content="'.$Asset->sized_url('medium').'"/>'."\n" if $Asset;
+    
+	return $html;
+} # end sub html_head
+
+sub published_on {
+	return $_[0]{starting_on};
+}
 
 1;
 __END__

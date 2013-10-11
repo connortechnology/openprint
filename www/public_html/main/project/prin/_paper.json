@@ -1,5 +1,5 @@
 <? echo (
-	my $debug = 0;
+	use constant DEBUG => 1;
 	my %specs;
 	$specs{'form'} = $param{'form'};
 	$specs{'signature_id'} = $param{'signature_id'};
@@ -10,13 +10,13 @@
 	@options = ( 'Brand','Finish','Colour','Weight' ) if ! @options;
 	my @lc_options = map { lc $_ } @options;
 
-	my @user_types = ('');
-	push @user_types, 'C' if $openprint::session{'user_id'};
-	push @user_types, 'E' if $openprint::session{'user_type'} eq 'E';
-	push @user_types, ('A','E') if $openprint::session{'user_type'} eq 'A';
+	my @user_types = (undef,'');
+	push @user_types, 'C' if $session{'user_id'};
+	push @user_types, 'E' if $session{'user_type'} eq 'E';
+	push @user_types, ('A','E') if $session{'user_type'} eq 'A';
 
 	my %find = (
-		'user_type'	=>	\@user_types,
+		user_type	=>	\@user_types,
 		( $$ProjectType{'id'}?(
 							   'project_type_id any'	=>	$ProjectType->id(),
 							  ):(
@@ -24,7 +24,8 @@
 							   )),
 		( exists $param{'Supplied'} ? ( 'supplied is null or ='			=>	$param{'Supplied'} ) : () ),
 		);
-	$param{'selected'} =~ s/^ddmStock//;
+	$param{selected} =~ s/^ddmStock//;
+	my $selected_index = sets::index( $param{selected}, @options );
 
 # initially, load all stocks available as per projectype, supplied, and size.
 if ( 0 ) {
@@ -60,15 +61,16 @@ if ( 0 ) {
 		# i should only be 0 when selected is rdbSupplied
 		# So if selected is Finish, $i will be 2?
 		if ( $i and $param{$options[$i-1]} ) {
+$log->debug(" filtering by $options[$i-1] ");
 			for ( my $stock_index = 0; $stock_index < @Stocks; $stock_index += 1 ) {
 				# This ensure that the stock matches the previous option.  
 				my ( $value ) = $Stocks[$stock_index]->get($lc_options[$i-1]);
-if ( ! $value ) {
-$log->warn("No value for $lc_options[$i-1] in " . $Stocks[$stock_index]->to_string() )
-}
+#if ( ! $value ) {
+#$log->warn("No value for $lc_options[$i-1] in " . $Stocks[$stock_index]->to_string() )
+#}
 
 				if ( $value ne $param{$options[$i-1]} ) {
-$log->debug("Didn't match $value =? " . $param{$options[$i-1]});
+#$log->debug("Didn't match $value =? " . $param{$options[$i-1]});
 					push @removed_Stocks, splice @Stocks, $stock_index, 1;
 					$stock_index -= 1;
 					next;
@@ -83,6 +85,10 @@ $log->warn("No stocks, adding them back for $i $options[$i-1]");
 			# Tetll mem again, why we do this?
 			push @Stocks, @removed_Stocks;
 			$param{$options[$i]} = '';
+		} elsif ( DEBUG ) {
+			foreach my $S ( @Stocks ) {
+				$log->debug("Resulting stocks: " . $S->to_string() );
+			}
 		} # end if
 
 		@{$specs{$options[$i]}} = ();
@@ -110,7 +116,7 @@ $log->warn("No stocks, adding them back for $i $options[$i-1]");
 		} # end if Size or other, size gets special treatment for sorting
 	} # end foreach option
 
-    my @presses = openprint::Equipment->find( 'category any'=>'Printing', 'useinestimating'=>1 );
+    my @presses = openprint::Equipment->find( 'category any'=>'Printing', useinestimating=>1 );
 	if ( @presses ) {
 
 		my $min_width = -1;
@@ -175,7 +181,7 @@ $log->warn("No stocks, adding them back for $i $options[$i-1]");
 						$results{$width.'" x '.$height.'"'} = 1;
 						last if ! $Stock->cuttable();
 
-						$openprint::log->debug("Cut: $width x $height") if $debug;
+						$openprint::log->debug("Cut: $width x $height") if DEBUG;
 						if ( $height > $width ) {
 							$height /= 2;
 						} else {
@@ -199,5 +205,6 @@ $log->warn("No stocks, adding them back for $i $options[$i-1]");
 
 	$param{'callback'} = 'cbStockFillResults' if ! $param{'callback'};
 	my $json = JSON->new;
+$log->debug($json->encode( \%specs ));
 	return 'var results = new Hash(' . $json->encode( \%specs ) . ");\n$param{'callback'}(results);";
 ) ?>

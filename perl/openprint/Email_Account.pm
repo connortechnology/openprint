@@ -1,7 +1,6 @@
-package openprint::Email_Account;
-@ISA = qw( openprint::Object );
-
 use strict;
+package openprint::Email_Account;
+our @ISA = qw( openprint::Object );
 
 use vars qw( $debug $table $serial %fields %transforms %defaults );
 
@@ -18,3 +17,6 @@ $table = 'mailbox';
 	'updated_on'	=>	'modified',
 	'active'		=>	'active',
 );
+
+1;
+__END__

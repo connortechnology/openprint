@@ -9,19 +9,19 @@
 	<p class="buttons">
 		<? echo (
 			my $html = '';
-			$html = ssi::button( 'Back', { href=>'history.html' } );
+			$html = button( 'Back', { href=>'history.html' } );
 			if ( $$variable{Invoice}->id() ) {
 				if ( $$variable{Invoice}->deleted() ) {
-					$html .= ssi::button( 'Destroy', { onclick=>"if(confirm('Are you sure?')){f1.btnFunction.value='Destroy';f1.submit();}" } );
+					$html .= button( 'Destroy', { onclick=>"if(confirm('Are you sure?')){f1.btnFunction.value='Destroy';f1.submit();}" } );
 				} else {
 					if ( Date::Parse::str2time($$variable{'Invoice'}->due_on()) < time ) {
-						$html .= ssi::button( 'interest', { onclick=>"f1.action='view.html';f1.btnFunction.value='Calculate Interest';f1.submit();", text=>'Calculate Interest' } );
+						$html .= button( 'interest', { onclick=>"f1.action='view.html';f1.btnFunction.value='Calculate Interest';f1.submit();", text=>'Calculate Interest' } );
 					} # end if
-					$html .= ssi::button( 'Delete', { onclick=>q`f1.btnFunction.value='Delete';f1.submit();` } );
-					$html .= ssi::button( 'Edit', { href=>'edit.html?invoice_id='.$$variable{Invoice}->id() } );
-					$html .= ssi::button( 'Send', { onclick=>q`f1.btnFunction.value='Send';f1.submit();` } );
-					$html .= ssi::button( 'SendMe', { onclick=>q`f1.btnFunction.value='Send To Me';f1.submit();`, text=>'Send To Me' } );
-					$html .= ssi::button( 'Print', { onclick=>'window.print();' } );
+					$html .= button( 'Delete', { onclick=>q`f1.btnFunction.value='Delete';f1.submit();` } );
+					$html .= button( 'Edit', { href=>'edit.html?invoice_id='.$$variable{Invoice}->id() } );
+					$html .= button( 'Send', { onclick=>q`f1.btnFunction.value='Send';f1.submit();` } );
+					$html .= button( 'SendMe', { onclick=>q`f1.btnFunction.value='Send To Me';f1.submit();`, text=>'Send To Me' } );
+					$html .= button( 'Print', { onclick=>'window.print();' } );
 				} # end if
 			} # end if
 			return $html;
@@ -33,7 +33,7 @@
 		<? echo (
 			my $Invoicee = $$variable{Invoice}->Invoicee();
 			my $html = '';
-			$html .= $Invoicee->name().'<br/>';
+			$html .= ($Invoicee->business_name() ? $Invoicee->business_name() : $Invoicee->name()).'<br/>';
 			$html .= $Invoicee->address1().'<br/>';
 			$html .= $Invoicee->address2().'<br/>' if $Invoicee->address2();
 			$html .= join(', ', $Invoicee->get('city','state','country') ).'<br/>';
@@ -45,7 +45,7 @@
 		<? echo (
 			my $Invoicer = $$variable{Invoice}->Invoicer();
 			my $html = '';
-			$html .= $Invoicer->name().'<br/>';
+			$html .= ( $Invoicer->business_name() ? $Invoicer->business_name() : $Invoicer->name() ).'<br/>';
 			$html .= $Invoicer->address1().'<br/>';
 			$html .= $Invoicer->address2().'<br/>' if $Invoicer->address2();
 			$html .= join(', ', $Invoicer->get('city','state','country') ).'<br/>';
@@ -64,6 +64,7 @@ $$variable{Timetracks} = [ openprint::Timetrack->find(invoice_id=>$$variable{Inv
 			<tr>
 				<th class="Date">Date</th>
 				<th class="Service">Description</th>
+				<th class="PO">PO #</th>
 				<th class="Interval">Interval</th>
 				<th class="Rate">Rate</th>	
 				<th class="Price">Price</th>
@@ -77,12 +78,13 @@ $$variable{Timetracks} = [ openprint::Timetrack->find(invoice_id=>$$variable{Inv
 					$html .= sprintf( q`<tr %2$s>`, $Timetrack->id(), $rowclass );
 					$html .= sprintf('<td class="Date">%s</td>', Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $Timetrack->starting() ) ) );
 					$html .= sprintf('<td class="Service">%s</td>', ssi::html_escape( $Timetrack->Service()->name() ) );
+					$html .= '<td class="PO">'.ssi::html_escape( $Timetrack->po() ) . '</td>';
 					$html .= sprintf('<td class="Interval">%s</td>', misc::seconds_to_pretty_interval( $Timetrack->elapsed() ) ); 
 					my $Price = $Timetrack->Price();
 					$html .= sprintf('<td class="Rate">%s%s</td>', openprint::Currency::format( $$Price{'Price'} ), $$Price{'units'} );
 					$html .= sprintf('<td class="Price">%s</td>', openprint::Currency::format( $$Price{'Total'} ) );
 					$html .= sprintf(q`</tr><tr %2$s>`, $Timetrack->id(), $rowclass );
-					$html .= '<td>&nbsp;</td><td colspan="3">'.$Timetrack->description().'</td><td>&nbsp;</td>';
+					$html .= '<td>&nbsp;</td><td colspan="4">'.$Timetrack->description().'</td><td>&nbsp;</td>';
 					$html .= '</tr>';
 					$$variable{'service_total'} += $$Price{'Total'};
 					$rowclass = $rowclass ? '' : 'class="colRow"';
@@ -90,7 +92,7 @@ $$variable{Timetracks} = [ openprint::Timetrack->find(invoice_id=>$$variable{Inv
 				return $html;
 			) ?>
 			<tr class="totals">
-				<td colspan="4">Totals</td>
+				<td colspan="5">Totals</td>
 				<td class="Price"><? echo ( openprint::Currency::format( $$variable{'service_total'} ); ) ?></td>
 			</tr>
 		</table>
@@ -110,14 +112,14 @@ $$variable{Timetracks} = [ openprint::Timetrack->find(invoice_id=>$$variable{Inv
 </div>
 <?include(_totals.html)?>
 <? if ( $$variable{Invoice}->owing() ) ?>
-<?include(_payment_options.html)?>
-<? if ( $$variable{Invoice}->due_on() and ( Date::Parse::str2time($$variable{Invoice}->due_on() ) < time ) ) ?>
-<div class="Overdue">NOTICE:  This invoice is now overdue.  Please make payment or contact us to make an arrangement.</div>
-<? endif ( $$variable{Invoice}->due_on() and ( Date::Parse::str2time($$variable{Invoice}->due_on() ) < time ) ) ?>
-<? if ( $$variable{Invoice}->interest() ) ?>
-<div class="HasInterest">Late payment interest charges have been added to this invoice and are reflected in the amount owing.</div>
-<? endif ( $$variable{Invoice}->interest() ) ?>
+	<? if ( $$variable{Invoice}->due_on() and ( Date::Parse::str2time($$variable{Invoice}->due_on() ) < time ) ) ?>
+	<div class="Overdue">NOTICE:  This invoice is now overdue.  Please make payment or contact us to make an arrangement.</div>
+	<? endif ( $$variable{Invoice}->due_on() and ( Date::Parse::str2time($$variable{Invoice}->due_on() ) < time ) ) ?>
+	<? if ( $$variable{Invoice}->interest() ) ?>
+	<div class="HasInterest">Late payment interest charges have been added to this invoice and are reflected in the amount owing.</div>
+	<? endif ( $$variable{Invoice}->interest() ) ?>
+	<?include(_payment_options.html)?>
 <? endif ( $$variable{Invoice}->owing() ) ?>
-<? include('/invoice/_payments_view.html') ?>
-<? include('_logs.html') ?>
+<?include('/invoice/_payments_view.html') ?>
+<?include('_logs.html') ?>
 </div></div>

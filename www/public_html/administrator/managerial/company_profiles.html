@@ -1,4 +1,3 @@
-<a name="top"></a>
 <div class="CompanyProfiles">
 <?include(/includes/error_reporting.html)?>
 <form id="f1" name="f1" method="post" action="/administrator/managerial/company_profiles.html">
@@ -15,7 +14,7 @@
 			<select name="search_type" onchange="f1.btnFunction.value='Go';this.form.submit();">
 				<? echo ( 
 					my @options = ('All','Suppliers', 'Resellers', 'Customers');
-					return ssi::make_drop_down( [ map { $_, $_ } @options ], $param{'search_type'} );	
+					return make_drop_down( [ map { $_, $_ } @options ], $param{'search_type'} );	
 				) ?>
 			</select>
 		</li>
@@ -24,11 +23,11 @@
 			<label>Sales Rep</label>
 			<select name="search_salesrep_id" onchange="f1.btnFunction.value='Go';this.form.submit();">
 				<option value=""> All </option>
-				<? echo ( return ssi::make_drop_down( [ map { $_->id(),$_->name() } @{$$variable{'SalesReps'}} ], $param{'search_salesrep_id'} ); ) ?>
+				<? echo ( make_drop_down( [ map { $_->id(),$_->name() } @{$$variable{'SalesReps'}} ], $param{'search_salesrep_id'} ); ) ?>
 			</select>
 		</li>
 <? endif ( @{$$variable{'SalesReps'}} = openprint::User->find('id'=>[sql::execute( undef, undef, 'SELECT DISTINCT salesrep_id FROM companies')],'deleted'=>[0,1],'order'=>'lower(firstname),lower(lastname)') ) ?>
-		<li><label>Deleted?</label><? echo ( ssi::radio( 'deleted', [ '1','Yes', '0', 'No', '', 'Both' ], $param{'deleted'}, {onclick=>"f1.ddmCustomer.selectedIndex=-1;f1.btnFunction.value='Go';f1.submit();"} ); ) ?></li>
+		<li><label>Deleted?</label><? echo ( radio( 'deleted', [ '1','Yes', '0', 'No', '', 'Both' ], $param{'deleted'}, {onclick=>"f1.ddmCustomer.selectedIndex=-1;f1.btnFunction.value='Go';f1.submit();"} ); ) ?></li>
 		<li> 
 			<label>Company</label>
 			<input type="text" onkeyup="filterDDM(this, this.form.ddmCustomer);" onkeydown="if(event.keyCode == 13){f1.btnFunction.value='Go';this.form.submit();}" class="filter" />
@@ -48,12 +47,12 @@
 						$params{'supplier'} = 'N';
 						$params{'reseller'} = 'N';
 					} # end if
-					my @Companies = @{$$variable{'Companies'}} = openprint::Company->find( %params );
+					my @Companies = @{$$variable{Companies}} = openprint::Company->find( %params );
 					if ( ! sets::isin( $param{'ddmCustomer'}, map { $_->id() } @Companies ) ) {
 						unshift @Companies, new openprint::Company( $param{'ddmCustomer'} );
 					} # end if
 
-					return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Company->find( %params ) ], $$variable{'CustomerIndex'} );
+					return make_drop_down( [ map { $_->id(), $_->name() } openprint::Company->find( %params ) ], $$variable{'CustomerIndex'} );
 				) ?>
 			</select>
 			<? echo ( button( 'Go2', { onclick=>"f1.btnFunction.value='Go';fmCheck(f1);", text=>'Go' } ); ) ?>
@@ -67,41 +66,41 @@
 		
 			<? echo (
 				my $html = '';
-				$html .= button( 'Prev1', { onclick=>"f1.btnFunction.value='&lt;&lt;';fmCheck(f1);",text=>'&lt;&lt;' } );
-				$html .= button( 'Next1', { onclick=>"f1.btnFunction.value='&gt;&gt;';fmCheck(f1);",text=>'&gt;&gt;' } );
-				$html .= button( 'New1', { onclick=>"addCheck(f1);",text=>'New' } );
+				$html .= button( 'Prev1', { onclick=>q`f1.btnFunction.value='&lt;&lt;';fmCheck(f1);`,text=>'&lt;&lt;' } );
+				$html .= button( 'Next1', { onclick=>q`f1.btnFunction.value='&gt;&gt;';fmCheck(f1);`,text=>'&gt;&gt;' } );
+				$html .= button( 'New1', { onclick=>'addCheck(f1);',text=>'New' } );
 				if ( $$variable{'Company'}->deleted() ) {
 					$html .= button( 'Undelete1', { onclick=>"f1.btnFunction.value='Undelete';fmCheck(f1);",text=>'Undelete' } );
 					$html .= button( 'Destroy1',{ onclick=>"f1.btnFunction.value='Destroy';fmCheck(f1);",text=>'Destroy' } );
 				} else {
-					$html .= button( 'Delete1', { onclick=>"f1.btnFunction.value='Delete';fmChange=2;fmCheck(f1);",text,'Delete' } );
+					$html .= button( 'Delete1', { onclick=>"f1.btnFunction.value='Delete';fmChange=2;fmCheck(f1);",text=>'Delete' } );
 				} # end if
 				$html .= button( 'Save1',{ onclick=>"f1.btnFunction.value='Save';fmChange=3;fmCheck(f1);",text => 'Save' } );
-				$html .= button( 'Reset1', { onclick=>'f1.reset();',text,'Reset' } );
-				if ( (new openprint::User( $session{'user_id'} ))->email() =~ /^iconnor/ ) {
+				$html .= button( 'Reset1', { onclick=>'f1.reset();',text=>'Reset' } );
+				if ( (new openprint::User( $session{user_id} ))->email() =~ /^iconnor/ ) {
 					$html .= '<br/>';
 					$html .= button( 'Merge', { onclick=>"f1.btnFunction.value='merge';f1.submit();" } );
 					$html .= '<select name="merge_company_id"><option value=""> none </option>';
-					$html .= ssi::make_drop_down( [ map { $_->id(), $_->name() } @{$$variable{'Companies'}} ], $$variable{'CustomerIndex'} );
+					$html .= make_drop_down( [ map { $_->id(), $_->name() } map { $_->id() == $$variable{CustomerIndex} ? () : $_ } @{$$variable{'Companies'}} ], $$variable{'CustomerIndex'} );
 					$html .= '</select>';
 				} # end if
 				return $html;
 			) ?>
 		</p>
 		<? echo (
-			if ( $$variable{'Company'}->id() ) {
-				my @Companies = openprint::Company->find('name'=>$$variable{'Company'}->name(),'order'=>'id');
+			if ( $$variable{Company}->id() ) {
+				my @Companies = openprint::Company->find( name=>$$variable{Company}->name(), order=>'id');
 				if ( @Companies > 1 ) {
 					my $html = '<div class="warning">There are duplicate companies!<br/>';
 					foreach my $C ( @Companies ) {
 						next if $C->id() == $$variable{'Company'}->id();	
 						$html .= sprintf(q`<p><a href="/administrator/managerial/company_profiles.html?ddmCustomer=%1$d">%1$d : %2$s</a><br/>
 %3$s<br/>%4$d Users %5$d Projects %6$d Quotes %7$d Orders<br/>%8$s</p>`, $C->id(), $C->name(), join(' ', $C->get('address1','address2','city','state','country','postalcost')),
-scalar openprint::User->find('company_id'=>$C->id()),
-scalar openprint::Project->find('company_id'=>$C->id()),
-scalar openprint::Quote->find('company_id'=>$C->id()),
-scalar openprint::Order->find('company_id'=>$C->id()),
-button( 'merge'.$C->id(), { href=>'/administrator/managerial/company_profiles.html?ddmCustomer='.$$variable{'Company'}->id().'&amp;merge_company_id='.$C->id().'&amp;btnFunction=merge', text=>'Merge' } ) );
+scalar openprint::User->find( company_id=>$C->id()),
+scalar openprint::Project->find( company_id=>$C->id()),
+scalar openprint::Quote->find( company_id=>$C->id()),
+scalar openprint::Order->find( company_id=>$C->id()),
+button( 'merge'.$C->id(), { href=>'/administrator/managerial/company_profiles.html?ddmCustomer='.$$variable{Company}->id().'&amp;merge_company_id='.$C->id().'&amp;btnFunction=merge', text=>'Merge' } ) );
 					} # end foreach C
 					return '</div>'.$html;
 				} # end if have dups
@@ -189,7 +188,7 @@ button( 'merge'.$C->id(), { href=>'/administrator/managerial/company_profiles.ht
 		<? endif ( $$variable{'Company'}->id() ) ?>
 		<li>
 			<label>Notes</label>
-			<textarea id="notes" name="notes" cols="" rows="<? echo ( split("\n", $$variable{'notes'} ); ) ?>" onkeyup="textarea_resize(this);"><?notes?></textarea>
+			<textarea id="notes" name="notes" rows="<? echo ( count_lines( $$variable{notes} ); ) ?>" onkeyup="textarea_resize(this);"><?notes?></textarea>
 		</li>
 		<? if ( $$variable{'CustomerIndex'} ) ?>
 			<? eval (
@@ -364,7 +363,7 @@ button( 'merge'.$C->id(), { href=>'/administrator/managerial/company_profiles.ht
 			<? endif ( $$variable{'selectCustomerCategories'} ) ?>
 			<li> 
 				<label>Greeting Message</label>
-				<textarea name="greeting" cols="25" rows="<? echo ( scalar split "\n", $$variable{'Company'}->greeting() ) ?>" onkeyup="textarea_resize(this);"><? echo ( $$variable{'Company'}->greeting() ) ?></textarea>
+				<textarea name="greeting" rows="<? echo ( count_lines( $$variable{Company}->greeting() ); ) ?>" onkeyup="textarea_resize(this);"><? echo ( $$variable{'Company'}->greeting() ) ?></textarea>
 			</li>
 		</ul>
 	</fieldset>
@@ -439,33 +438,37 @@ button( 'merge'.$C->id(), { href=>'/administrator/managerial/company_profiles.ht
 <div class="CreditInformation">
 <? echo (
 	my $html;
-	foreach my $Supplier ( openprint::Company->find('offers_credit'=>1) ) {
-		my $Credit = $$variable{'Company'}->Credit($Supplier->id());
+	foreach my $Supplier ( openprint::Company->find( offers_credit=>1 ) ) {
+		my $Credit = $$variable{Company}->Credit($Supplier->id());
 
 		$html .= sprintf(q`
 	<fieldset><legend>Credit Information for %2$s:</legend>
 		<ul>
-			<li><label>Warn after</label><input type="number" name="warndays-%1$d" value="%3$d"/> Days</li>
-			<li><label>Deny after</label><input type="number" name="denydays-%1$d" value="%4$d"/> Days</li>
-			<li><label>Credit Account Limit</label><input type="text" name="limit-%1$d" value="%5$s" /></li>
-			<li><label>Current Credit Balance</label>%6$s</li>
-			<li><label>Remaining Credit</label>%7$s</li>
-			<li><label>Credit Hold</label>%8$s</li>
-			<li><label>Required Downpayment Amount</label>%9$s%</li>
-			<li><label>Required COD</label>%10$s%</li>
-			<li><label>Late Payment Amount</label>%11$s%12$s</li>
-			<li><label>Early Payment Amount</label>%13$s%14$s</li>
-			<li><label>Early Payment Days</label>%15$s</li>
+			<li><label>Terms</label>%3$s Days</li>
+			<li><label>Warn after</label>%4$s Days</li>
+			<li><label>Deny after</label>%5$s Days</li>
+			<li><label>Credit Account Limit</label>%6$s</li>
+			<li><label>Current Credit Balance</label>%7$s</li>
+			<li><label>Remaining Credit</label>%8$s</li>
+			<li><label>Credit Hold</label>%9$s</li>
+			<li><label>Required Downpayment Amount</label>%10$s%</li>
+			<li><label>Required COD</label>%11$s%</li>
+			<li><label>Late Payment Amount</label>%12$s%13$s</li>
+			<li><label>Early Payment Amount</label>%14$s%15$s</li>
+			<li><label>Early Payment Days</label>%16$s</li>
 		</ul>
 	</fieldset>
-		`, $Supplier->id(), $Supplier->name(), $Credit->warndays(), $Credit->denydays(), 
-		openprint::Currency::format( 1* $Credit->limit() ), 
+		`, $Supplier->id(), $Supplier->name(), 
+		input( type=>'cardinal', name=>'terms-'.$Supplier->id(), value=>$Credit->terms() ),
+		input( type=>'cardinal', name=>'warndays-'.$Supplier->id(), value=>$Credit->warndays() ),
+		input( type=>'cardinal', name=>'denydays-'.$Supplier->id(), value=>$Credit->denydays() ),
+		input( type=>'float', name=>'limit-'.$Supplier->id(), value=>$Credit->limit() ),
 		openprint::Currency::format( $Credit->debt() ), $Credit->remaining(), 
 		ssi::radio('hold-'.$Supplier->id(), ['Y','Yes','N','No'], $Credit->hold() ),
 		input(type=>'float', name=>'downpayment-'.$Supplier->id(), value=>$Credit->downpayment(), max=>100 ),
 		input(type=>'float', name=>'cod-'.$Supplier->id(), value=>$Credit->cod(), max=>100 ),
 		input(type=>'float', name=>'late_payment_amount-'.$Supplier->id(), value=>$Credit->late_payment_amount() ),
-		ssi::select( [ 'percent', 'Percent', 'amount', 'Amount' ], $Credit->late_units(), { name=>'late_payment_units-'.$Supplier->id() } ),
+		ssi::select( [ 'percent', 'Percent', 'amount', 'Amount' ], $Credit->late_payment_units(), { name=>'late_payment_units-'.$Supplier->id() } ),
 		input(type=>'float', name=>'early_payment_amount-'.$Supplier->id(), value=>$Credit->early_payment_amount() ),
 		ssi::select( [ 'percent', 'Percent', 'amount', 'Amount' ], $Credit->early_payment_units(), { name=>'early_payment_units-'.$Supplier->id() } ),
 		input(type=>'cardinal', name=>'early_payment_days-'.$Supplier->id(), value=>$Credit->early_payment_days() ),
@@ -592,20 +595,20 @@ button( 'merge'.$C->id(), { href=>'/administrator/managerial/company_profiles.ht
 </div>
 	<fieldset id="ButtonsBottom">
 		<p> 
-			<label><? if ( $$variable{'CustomerIndex'} ) ?><a href="user_profiles.html?ddmCustomer=<?CustomerIndex?>">Link to Users</a><? endif ( $$variable{'CustomerIndex'} ) ?>&nbsp;</label>
+			<label><? if ( $$variable{CustomerIndex} ) ?><a href="user_profiles.html?ddmCustomer=<?CustomerIndex?>">Link to Users</a><? endif ( $$variable{CustomerIndex} ) ?>&nbsp;</label>
 			
 			<? echo (
 				my $html = '';
-				$html .= button( 'Prev2', { onclick=>"f1.btnFunction.value='&lt;&lt;';fmCheck(f1);",text=>'&lt;&lt;' } );
-				$html .= button( 'Next2',{ onclick=>"f1.btnFunction.value='&gt;&gt;';fmCheck(f1);",text=>'&gt;&gt;' } );
-				$html .= button( 'New2',{ onclick=>"addCheck(f1);",text,'New' } );
+				$html .= button( 'Prev2', { onclick=>q`f1.btnFunction.value='&lt;&lt;';fmCheck(f1);`,text=>'&lt;&lt;' } );
+				$html .= button( 'Next2',{ onclick=>q`f1.btnFunction.value='&gt;&gt;';fmCheck(f1);`,text=>'&gt;&gt;' } );
+				$html .= button( 'New2',{ onclick=>'addCheck(f1);',text=>'New' } );
 				if ( $$variable{'Company'}->deleted() ) {
-					$html .= button( 'Undelete2', { onclick=>"f1.btnFunction.value='Undelete';fmCheck(f1);",text=>'Undelete' } );
-					$html .= button( 'Destroy2', { onclick=>"f1.btnFunction.value='Destroy';fmCheck(f1);",text=>'Destroy' } );
+					$html .= button( 'Undelete2', { onclick=>q`f1.btnFunction.value='Undelete';fmCheck(f1);`,text=>'Undelete' } );
+					$html .= button( 'Destroy2', { onclick=>q`f1.btnFunction.value='Destroy';fmCheck(f1);`,text=>'Destroy' } );
 				} else {
-					$html .= button( 'Delete2', { onclick=>"f1.btnFunction.value='Delete';fmChange=2;fmCheck(f1);",text=>'Delete' } );
+					$html .= button( 'Delete2', { onclick=>q`f1.btnFunction.value='Delete';fmChange=2;fmCheck(f1);`,text=>'Delete' } );
 				} # end if
-				$html .= button( 'Save2',{ onclick=>"f1.btnFunction.value='Save';fmChange=3;fmCheck(f1);",text=>'Save' } );
+				$html .= button( 'Save2',{ onclick=>q`f1.btnFunction.value='Save';fmChange=3;fmCheck(f1);`,text=>'Save' } );
 				$html .= button( 'Reset2', { onclick=>'f1.reset();',text => 'Reset' } );
 				return $html;
 			) ?>

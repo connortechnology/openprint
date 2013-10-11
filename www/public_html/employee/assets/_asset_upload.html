@@ -1,0 +1,64 @@
+<fieldset><legend>Assets</legend>
+<? if ( $$variable{Object}->can_edit() ) ?>
+	<div id="assets" class="qq-uploader">
+		<div class="droparea qq-upload-drop-area">
+		<div id="Photos"><? include('/employee/assets/_assets.html') ?></div>
+		<div id="uploadinstructions">
+			To upload files,
+			<span id="dragndropuploadmessage" style="display:none;">
+			simply drag and drop them here. Or </span>
+			<span id="formuploadmessage"> click on the Upload button. There is a 1GB file size limit.</span>
+		</div>
+		<? echo ( button( 'Upload', { class=>'qq-upload-button' } ); ) ?>
+		<span class="qq-drop-processing"><span></span><span class="qq-drop-processing-spinner"></span></span>
+		<ul id="upload_list" class="qq-upload-list"></ul>
+	</div>
+</div>
+	<fieldset><legend>Search for Assets</legend>
+		<ul id="asset_search">
+			<li><label>Name</label><input type="text" name="asset_name_search" onkeydown="if(event.keyCode == 13){new Ajax.Updater( 'asset_search_results', '/employee/assets/_search_results.html', { parameters: { asset_name: this.value } } ); return false;};return true;"/></li>
+		</ul>
+		<ul id="asset_search_results"></ul>
+	</fieldset>
+<? else ( $$variable{Object}->can_edit() ) ?>
+	<div id="assets"><?include('/employee/assets/_assets.html') ?></div>
+<? endif ( $$variable{Object}->can_edit() ) ?>
+</fieldset>
+<? if ( $$variable{Object}->can_edit() ) ?>
+<script type="text/javascript">
+    if ( window.FileReader ) {
+        $('dragndropuploadmessage').show();
+    } else {
+        $('dragndropuploadmessage').show();
+        $('formuploadmessage').hide();
+    }
+
+	var uploader = new qq.FineUploader({
+		element: $('assets'),
+		request: {
+			endpoint: '/upload.htm',
+			paramsInBody: false,
+			params: {
+				id: '<? echo ( $$variable{Object}->id() ) ?>',
+				UploadType: '<? echo ( my $type = ref $$variable{Object}; $type =~ s/^openprint:://; return $type; ) ?>'
+			}
+		},
+		validation: {
+			allowedExtensions: ['jpg', 'jpeg', 'png', 'gif','bmp','pdf','flv','avi','mp4'],
+			sizeLimit: 1024*1024*1024
+		},
+		template: null,
+		callbacks: {
+			onComplete: function(id, fileName){
+				new Ajax.Updater( 'assets', '/employee/assets/_assets.html', { parameters: { object_id: '<? echo ( $$variable{Object}->id() ) ?>', object_type: '<? echo ( ref $$variable{Object} ) ?>' } } );
+			}
+		},
+		dragAndDrop: {
+			hideDropzones: false
+		},
+		failedUploadTextDisplay: {
+			mode: 'custom',
+		}
+	});
+</script>
+<? endif ( $$variable{Object}->can_edit() ) ?>

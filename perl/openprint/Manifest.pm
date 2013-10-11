@@ -24,11 +24,15 @@ $debug = 0;
 	updated_on	=>	'updated_on',
 	received_on	=>	'received_on',
 	supplier_id	=>	'supplier_id',
+	deleted		=>	'deleted',
 );
 
 %find_fields = (
 	docket	=>	'(SELECT docket FROM Manifest_Content_Types WHERE manifest_id=manifests.id)',
 	po_id	=>	'(SELECT po_id FROM Manifest_Content_Types WHERE manifest_id=manifests.id)',
+	skid_id	=>	'(SELECT skid_id FROM ManifestContents WHERE manifest_id=manifests.id)',
+	rfidtag_id	=>	'(SELECT rfidtag_id FROM ManifestContents WHERE manifest_id=manifests.id)',
+	manufacturers_id	=>	'(SELECT manufacturers_id FROM ManifestContents WHERE manifest_id=manifests.id)',
 );
 
 %transforms = (
@@ -42,9 +46,10 @@ $debug = 0;
 	'updated_on'	=>	'NOW()',
 	'received_on'	=>	'NOW()',
 	'supplier_id'	=>	undef,
+	deleted	=>	0,
 );
 
-sub delete {
+sub destroy {
     my $self = shift;
     my $ac = sql::start_transaction( $openprint::dbh );
 	foreach my $PO ( openprint::PurchaseOrder->find('manifest_id'=>$$self{'name'}) ) {
@@ -62,7 +67,7 @@ sub delete {
 	return $openprint::dbh->errstr() if $openprint::dbh->errstr();
 	delete $openprint::Object::cache{'openprint::Manifest'}{$$self{'id'}};
 	return '';
-} # end sub delete
+} # end sub destroy
 
 sub Types {
 	my ( $self, %params ) = @_;
@@ -74,7 +79,7 @@ sub Types {
 	} # end if
 	if ( ! $$self{'Types'} ) {
 		if ( $$self{'id'} ) {
-			$params{'manifest_id'} = $$self{'id'};
+			$params{manifest_id} = $$self{'id'};
 			@{$$self{'Types'}} = openprint::Manifest_Content_Type->find(%params);
 		} # end if
 	} # end if
@@ -84,7 +89,9 @@ sub Types {
 
 sub Contents {
 	my ( $self, %params ) = @_;
-	if ( %params ) {
+	if ( ( @_ == 2 ) and ( ref $_[1] eq 'ARRAY' ) ) {
+		$$self{Contents} = $_[1];
+	} elsif ( %params ) {
 		if ( $$self{'id'} ) {
 			return openprint::ManifestContent->find('manifest_id'=>$$self{id}, %params );
 		} # end if
@@ -109,8 +116,56 @@ sub dockets {
 	return sets::union( map { $_->docket() } $_[0]->Types() );
 } # end sub dockets
 sub link_to {
-	return '<a href="/employee/inventory/manifest.html?manifest_id='.$_[0]{'id'}.'">'.$_[0]{'name'}.'</a>';
+	return '<a href="/employee/inventory/manifest_view.html?manifest_id='.$_[0]{'id'}.'">'.$_[0]{'name'}.'</a>';
 } # end sub link_to
+
+sub check {
+	my ( $Manifest ) = @_;
+	my @Contents = $Manifest->Contents();
+	my %skid_ids;
+	foreach ( @Contents ) {
+		push @{$skid_ids{$$_{skid_id}}}, $_ if $$_{skid_id};
+	} # end foreach
+	my %manufacturer_ids;
+	foreach ( @Contents ) {
+		push @{$manufacturer_ids{$$_{manufacturers_id}}}, $_ if $$_{manufacturers_id};
+	} # end foreach
+	my $error;
+	if ( keys %skid_ids != @Contents ) {
+		foreach my $id ( keys %skid_ids ) {
+			if ( @{$skid_ids{$id}} > 1 ) {
+				$error .= "Skid $id is listed " . @{$skid_ids{$id}} . ' times<br/>';
+			} # end if
+		} # end foreach skid
+	} # end if skid_ids duplicated
+	my @mfg_ids = keys %manufacturer_ids;
+
+	if ( @mfg_ids != @Contents ) {
+		foreach my $id ( @mfg_ids ) {
+			if ( @{$manufacturer_ids{$id}} > 1 ) {
+				$error .= "Manufacturers $id is listed " . @{$manufacturer_ids{$id}} . ' times<br/>';
+			} # end if
+		} # end foreach manufacturer
+	} # end if skid_ids duplicated
+	foreach my $C ( @Contents ) {
+		$error .= $C->check();
+	} # end foreach C
+	return $error;
+} # end sub check
+
+sub can_edit {
+	return 1 if ! $_[0]{id};
+	return 1 if $openprint::session{user_type} eq 'A';
+	return 1 if $openprint::session{user_id} == $_[0]{created_by};
+	return 1 if openprint::usergroup::is_user_in( ['Inventory','InventoryManager'], $openprint::session{user_id} );
+	return 0;
+} # end sub can_edit
+
+sub can_see_pricing {
+	return 1 if $openprint::session{user_type} eq 'A';
+	return 1 if openprint::usergroup::is_user_in( ['Accounting','InventoryManager'], $openprint::session{user_id} );
+	return 0;
+} # end sub can_see_pricing
 
 1;
 __END__

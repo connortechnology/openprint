@@ -1,6 +1,5 @@
 use strict;
 package openprint::upload;
-require openprint::File;
 require handlers::upload;
 
 use openprint ();
@@ -15,7 +14,7 @@ sub upload_center {
 } # end sub upload_center
 
 sub _upload_form {
-}
+} # end sub _upload_form
 
 sub _files {
 $log->debug("Here");

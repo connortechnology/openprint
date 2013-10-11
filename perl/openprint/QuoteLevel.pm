@@ -1,11 +1,9 @@
-package openprint::QuoteLevel;
-@ISA = qw(openprint::Object);
-
 use strict;
+package openprint::QuoteLevel;
+our @ISA = qw(openprint::Object);
 
-require sql;
-
-use vars qw( $table $serial %fields %transforms %defaults );
+use vars qw( $debug $table $serial %fields %transforms %defaults );
+$debug = 0;
 $table = 'quotelevels';
 $serial = 'quotelevels_id_seq';
 

@@ -1,41 +1,42 @@
 <? echo (
 	my $html;
-	my @Equipment = openprint::Equipment->find( order=>'lower(strid)');
+	my @Equipment = openprint::Equipment->find( order=>'lower(strid)' );
 	my @equipment_dropdown = map { $_->id(), $_->name() } @Equipment;
 
-	$$variable{'company_ids'} = [ map { $_->id(), $_->name() } openprint::Company->find( supplier=>'Y', order=>'lower(name)' ) ];
+	$$variable{company_ids} = [ map { $_->id(), $_->name() } openprint::Company->find( supplier=>'Y', order=>'lower(name)' ) ];
 
 	foreach my $Pricelist ( openprint::Pricelist->find( order=>'lower(name)') ) {
 		$html .= '<fieldset><legend>Pricing for Price List: '.$Pricelist->name() . "</legend>\n";
 		my @Prices = openprint::ServicePrice->find( service_id=>$$variable{Service}->id(), pricelist_id=>$Pricelist->id() );
 
-		my @equipment_ids = sort( sets::union( map{ $_->equipment_id() } @Prices ) );
+		my @equipment_ids = $param{equipment_id} ? ($param{equipment_id}) : sort( sets::union( map{ $_->equipment_id() } @Prices ) );
 		push @equipment_ids, undef if ! @equipment_ids;
 		foreach my $Equipment ( map{new openprint::Equipment($_)} @equipment_ids ) {
 			$html .= '<fieldset class="Equipment">';
 			if ( @Equipment ) {
 				$html .= '<p><label>Equipment</label>';
 				$html .= qq`<select name="ddmEquipment-$$Pricelist{id}-$$Equipment{id}"><option value="">All Equipment</option>`;
-				$html .= ssi::make_drop_down( \@equipment_dropdown, $Equipment->id() );
+				$html .= make_drop_down( \@equipment_dropdown, $Equipment->id() );
 				$html .= '</select></p>';
 			} # end if has equipment
-			$html .= qq'
-				<table class="List">
-					<thead><tr> 
-						<th class="Add">&nbsp;</th>
-						<th class="Supplier">Supplier</th>
+			$html .= '<table class="List"><thead><tr>';
+			$html .= '<th class="Supplier">Supplier</th>' if @{$$variable{company_ids}} > 2;
+			$html .= '
+						<th class="Period">Period</th>
 						<th class="Range">Quantity Range</th>
 						<th class="Units">Units</th>
 						<th class="Cost">Cost</th>
 						<th class="Markup">Mark up</th>
 						<th class="Price">Price</th>
 						<th class="Discount">Discount?</th>
-						<th class="buttons">&nbsp;</th>
+						<th class="buttons">
+'.
+				button( 'a'.$Equipment->id(), { onclick=>qq`add_price( \$('f1'), '$$Pricelist{id}', '$$Equipment{id}' );`, text=>'+', title=>'Add New Price' } ) . qq`</th>
 					</tr></thead><tbody id="prices-$$Pricelist{id}-$$Equipment{id}">
-					';
-			$$variable{'Equipment'} = $Equipment;
-			$$variable{'Pricelist'} = $Pricelist;
-			$html .= ssi::include( '/administrator/services/_prices_table_body.html', $variable );
+					`;
+			$$variable{Equipment} = $Equipment;
+			$$variable{Pricelist} = $Pricelist;
+			$html .= include( '/administrator/services/_prices_table_body.html', $variable );
 			$html .= '</tbody></table></fieldset><!--Equipment-->';
 		} # end foreach Equipment
 		$html .= '</fieldset><!--Pricelist-->';

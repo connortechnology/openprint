@@ -337,13 +337,13 @@ sub create_order {
 
 	my $Order = new openprint::Order();
 	$Order->save({
-		'user_id'		=>	$session{'user_id'},
-		'company_id'	=>	$session{'company_id'},
-		'session_id'	=>	$session{'_session_id'},
-		'created_on'	=>	'NOW()',
-		'status'		=>	'Incomplete',
-		'salesrep_id'	=>	new openprint::Company( $session{'company_id'} )->salesrep_id(),
-		'currency_id'	=>	openprint::Currency::get_current()->id(),
+		user_id		=>	$session{'user_id'},
+		company_id	=>	$session{'company_id'},
+		session_id	=>	$session{'_session_id'},
+		created_on	=>	'NOW()',
+		status		=>	'Incomplete',
+		salesrep_id	=>	new openprint::Company( $session{'company_id'} )->salesrep_id(),
+		currency_id	=>	openprint::Currency::get_current()->id(),
 		});
 
 	$Order->add_log( 'Created' );
@@ -450,7 +450,7 @@ sub save_project_information {
 			next if ! $$services{$ShippingType->name()};
 			foreach my $service_id ( @{$$services{$ShippingType->name()}} ) {
 
-				my $specs = openprint::service::internal_calc( $log, $dbh, \%variable, $project_index, $service_id, $ShippingType->name() );
+				my $specs = openprint::service::internal_calc( $log, $dbh, \%variable, $project_index, $service_id, $ShippingType->name(), $Project->ordered_quantity_index() );
 				$quantity_shipped -= $$specs{'txtQuantity'.$Project->ordered_quantity_index()};
 				$shipping_cost += $$specs{'txtPrice'.$OP->quantity_index()};
 				$log->warn($$specs{'alert'}) if $$specs{'alert'};
@@ -582,7 +582,13 @@ sub make_order_from_order {
 		# get the contents
 		my @contents = sql::execute( $log, $dbh, q{SELECT lngProjectIndex, intQuantityIndex FROM Order_Contents WHERE OrderIndex=?}, $src_order_id );
 
-		my $order_id = make_order( $log, $dbh, $session{'_session_id'}, \%variable, @contents );
+		my $order_id = make_order( $log, $dbh, $session{'_session_id'}, \%variable );
+		while ( my ( $p_id, $qty ) = splice( @contents, 0, 2 ) ) {
+			my $Project = new openprint::Project( $p_id );
+			my $New = $Project->copy();
+			$New->save({reference=>'ReOrder of ' . $New->reference() });
+			add_to_order( $log, $dbh, $order_id, \%variable, ( $New->id(), $qty ) );
+		} # end while
 		if ( $order_id ) {
 			foreach my $Product ( $SRC_Order->Products() ) {
 				my $NewProduct = $Product->copy();
@@ -599,7 +605,7 @@ sub cancel_order {
 	my ( $order_id ) = @_;
 
 	my $Order = new openprint::Order( $order_id );
-	$Order->save({'status'=>'Cancelled'});
+	$variable{error} .= $Order->save({ status=>'Cancelled' });
 	$_ = 'SELECT lngProjectIndex FROM Order_Contents WHERE OrderIndex=?';
 	foreach my $project_index ( sql::execute( $log, $dbh, $_, $order_id ) ) {
 		my $Project = new openprint::Project( $project_index );

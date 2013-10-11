@@ -1,6 +1,5 @@
-<script type="text/javascript" src="/javascripts/passwordmeter.js"></script>
+<script type="text/javascript" src="<?hash_link(/javascripts/passwordmeter.js)?>"></script>
 <script type="text/javascript">
-<!--
 function howdidyouhearaboutus_onchange(e) {
 	if ( e.value == 'Other' ) {
 		$('Other').show();
@@ -13,7 +12,6 @@ function howdidyouhearaboutus_onchange(e) {
 		$('salesrep_id').hide();
 	} // end if
 } // end function howdidyouhearaboutus_onchange(e)
--->
 </script>
 <div class="PageTitle">
 <h1>ACCOUNT</h1>
@@ -73,7 +71,7 @@ function howdidyouhearaboutus_onchange(e) {
 							<option value=""> Select </option>
 							<? echo (
 								$$variable{'country'} = $param{'country'} ? $param{'country'} : $session{'Country'};
-								return ssi::return_countries( $$variable{'country'});
+								return return_countries( $$variable{'country'});
 							) ?>					
 							</select>
 						</li>
@@ -91,7 +89,7 @@ function howdidyouhearaboutus_onchange(e) {
 								<option value=""> Select </option>
 							<? echo (
 								
-								return ssi::return_states( $param{'state'} ).ssi::return_provinces( $param{'state'} );
+								return return_states( $param{'state'} ).return_provinces( $param{'state'} );
 							) ?>
 							</select>
 						</li>
@@ -228,7 +226,7 @@ function howdidyouhearaboutus_onchange(e) {
 				<li class="password<? echo ( $$variable{'RequiredFields'}{'password'} ? ' required' : '' ) ?>">
 					<label for="password">Password</label>
 					<input type="password" id="password" name="password" onkeyup="updateStrength(this.value);check_passwords(this.form.password, this);" value="<? echo ( ssi::htmlize($param{'password'}); ) ?>" />
-					Strength <span id="psContainer"><span id="psStrength"></span></span>
+					<span id="password_strength">Strength <span id="psContainer"><span id="psStrength"></span></span></span>
 				</li>
 				<li class="verifypassword<? echo ( $$variable{'RequiredFields'}{'verifypassword'} ? ' required' : '' ) ?>">
 					<label for="verifypassword">Verify Password</label>
@@ -244,8 +242,8 @@ function howdidyouhearaboutus_onchange(e) {
 				<p><? echo ( $config{'RegistrationDisclaimer'} ) ?></p>
 <? endif ( $config{'RegistrationDisclaimer'} ) ?>
 				<p class="buttons">
-					<? echo ( ssi::button( 'Submit',{ 'onclick'=>"f1.submit();" } ); ) ?>
-					<? echo ( ssi::button( 'Reset',{ 'onclick'=>"f1.reset();" } ); ) ?>
+					<? echo ( button( 'Submit',{ onclick=>"f1.submit();" } ); ) ?>
+					<? echo ( button( 'Reset',{ onclick=>"f1.reset();" } ); ) ?>
 				</p>
 		 </fieldset>
 		</div>

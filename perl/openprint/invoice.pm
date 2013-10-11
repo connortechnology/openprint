@@ -2,7 +2,6 @@ use strict;
 package openprint::invoice;
 
 use openprint ();
-use Math::Round ();
 use vars qw( $r %variable %session %param %config $log $dbh );
 *variable = \%openprint::variable;
 *session = \%openprint::session;
@@ -11,6 +10,8 @@ use vars qw( $r %variable %session %param %config $log $dbh );
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
 *r = \$openprint::r;
+
+require Math::Round;
 
 require openprint::Invoice;
 require openprint::Invoice_Interest;
@@ -25,15 +26,15 @@ sub history {
 		foreach my $Product ( $Invoice->Products() ) {
 			$variable{error} .= $Product->save({
 				description	=>	$param{'product-description-'.$Product->id()},
-				price			=>	$param{'product-price-'.$Product->id()},
-				quantity		=>	$param{'product-quantity-'.$Product->id()},
+				price		=>	$param{'product-price-'.$Product->id()},
+				quantity	=>	$param{'product-quantity-'.$Product->id()},
 				po			=>	$param{'product-po-'.$Product->id()},
 				});
-		} # end foreach
-		$param{'currency_id'} = openprint::Currency::get_current()->id() if ! $param{'currency_id'};
-		$param{'due_on'} = sprintf('%.4d-%.2d-%.2d', @param{'due_on_year','due_on_month','due_on_day'} ) if ! $param{'due_on'};
+		} # end foreach Product
+		$param{currency_id} = openprint::Currency::get_current()->id() if ! $param{'currency_id'};
+		$param{due_on} = sprintf('%.4d-%.2d-%.2d', @param{'due_on_year','due_on_month','due_on_day'} ) if ! $param{'due_on'};
 		$param{early_payment_date} = sprintf('%.4d-%.2d-%.2d', @param{'early_payment_date_year','early_payment_date_month','early_payment_date_day'} ) if ! $param{early_payment_date};
-		$param{'invoicer_id'} = $session{'company_id'} if ! $param{'invoicer_id'};
+		$param{invoicer_id} = $session{'company_id'} if ! $param{'invoicer_id'};
 		if ( ! ( $variable{'error'} .= $Invoice->save(\%param) ) ) {
 			$variable{'information'} .= 'Invoice saved.<br/>';
 			%param = ();
@@ -44,6 +45,9 @@ sub history {
 			$Invoice->add_to_log( 'Invoice posted.' );
 			$variable{'information'} .= 'Invoice posted.<br/>';
 			delete $param{'invoice_id'};
+			if ( $session{'/invoice/history.html?company_id'} and ( $session{'/invoice/history.html?company_id'} != $Invoice->invoicee_id() ) ) {
+				delete $session{'/invoice/history.html?company_id'};
+			} # end if
 		} # end if
 	} elsif ( $param{'btnFunction'} eq 'UnPost' ) {
 		my $Invoice = new openprint::Invoice( $param{'invoice_id'} );
@@ -54,10 +58,10 @@ sub history {
 	} elsif ( $param{'btnFunction'} eq 'Send' ) {
 		my $Invoice = openprint::Invoice->find_one( 'id'=>$param{'invoice_id'} );
 		if ( ! $Invoice ) {
-			$variable{'error'} .= "Invoice $param{'invoice_id'} not found";
+			$variable{error} .= "Invoice $param{invoice_id} not found";
 		} else {
-			$variable{'error'} .= $Invoice->send();
-			$variable{'information'} .= 'Invoice ' . $Invoice->id() . ' sent.<br/>';
+			$variable{error} .= $Invoice->send();
+			$variable{information} .= 'Invoice ' . $Invoice->id() . ' sent.<br/>';
 		} # end if
 	} elsif ( $param{'btnFunction'} eq 'Send To Me' ) {
 		my $Invoice = openprint::Invoice->find_one( id=>$param{invoice_id} );
@@ -94,14 +98,10 @@ sub history {
 		my ($subtotal, $interest_total, $total, $owing_total, %tax_totals );
 
 		foreach my $Invoice ( openprint::Invoice->find( 
-					( Date::Calc::check_date( @param{'created_on_start_year','created_on_start_month','created_on_start_day'} ) ?
-					  ( 'created_on >='  => sprintf('%.4d-%.2d-%.2d 00:00:00', @param{'created_on_start_year','created_on_start_month','created_on_start_day'} ) ) : () ),
-					( Date::Calc::check_date( @param{'created_on_end_year','created_on_end_month','created_on_end_day'} ) ? 
-					  ( 'created_on <='    => sprintf('%.4d-%.2d-%.2d 23:59:59', @param{'created_on_end_year','created_on_end_month','created_on_end_day'} ) ) : () ),
-					( Date::Calc::check_date( @param{'due_on_start_year','due_on_start_month','due_on_start_day'} ) ?
-					  ( 'due_on >='  => sprintf('%.4d-%.2d-%.2d 00:00:00', @param{'due_on_start_year','due_on_start_month','due_on_start_day'} ) ) : () ),
-					( Date::Calc::check_date( @param{'due_on_end_year','due_on_end_month','due_on_end_day'} ) ? 
-					  ( 'due_on <='    => sprintf('%.4d-%.2d-%.2d 23:59:59', @param{'due_on_end_year','due_on_end_month','due_on_end_day'} ) ) : () ),
+					ssi::date_filter( 'created_on_start', 'created_on >=', \%param ),
+					ssi::date_filter( 'created_on_end', 'created_on <=', \%param ),
+					ssi::date_filter( 'due_on_start', 'due_on >=', \%param ),
+					ssi::date_filter( 'due_on_end', 'due_on <=', \%param ),
 					( $param{'company_id'} ? ( 'invoicee_id'       => $param{'company_id'} ) : () ),
 					'invoicer_id'       => $session{'company_id'},
 					'order'             => 'id',
@@ -142,8 +142,7 @@ sub history {
 
 		my $email_template = misc::load_file( $log, $config{'SkinPath'}.'/email_template.html' );
 		my @attachments;
-		$data{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/email_content/account_statement.html' );
-		$data{'ReplacementText'} = ssi::variable_substitution( \$data{'ReplacementText'}, \%data );
+		$data{'ReplacementText'} = ssi::include( '/email_content/account_statement.html', \%data );
 		push @attachments, '', MIME::QuotedPrint::encode_qp( ssi::variable_substitution( \$email_template, \%data ) ), 'text/html', 'quoted-printable';
 
 		my @Invoices = openprint::Invoice->find(
@@ -159,8 +158,7 @@ sub history {
 
 			$data{'uri'} = 'invoice';
 			$data{'Invoice'} = $Invoice;
-			$data{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/email_content/invoice.html' );
-			$data{'ReplacementText'} = ssi::variable_substitution( \$data{'ReplacementText'}, \%data );
+			$data{'ReplacementText'} = ssi::include( '/email_content/invoice.html', \%data );
 			push @attachments, 'Invoice '.$$Invoice{'id'}.'.html', MIME::QuotedPrint::encode_qp( Encode::encode('utf-8',ssi::variable_substitution( \$email_template, \%data ) ) ), 'text/html', 'quoted-printable';
 		} # end foreach Invoice
 
@@ -187,7 +185,12 @@ sub history {
 } # end sub history
 
 sub _history {
-	ssi::save_params( '/invoice/history.html', ( 'created_on_start_year','created_on_start_month','created_on_start_day','created_on_end_year','created_on_end_month','created_on_end_day', 'due_on_start_year','due_on_start_month','due_on_start_day','due_on_end_year','due_on_end_month','due_on_end_day', 'paid','company_id','bad_debt') );
+	ssi::save_params( '/invoice/history.html', ( 
+		( map { 'created_on_start_'.$_ } ( 'year','month','day' ) ),
+		( map { 'created_on_end_'.$_ } ( 'year','month','day' ) ),
+		( map { 'due_on_start_'.$_ } ( 'year','month','day' ) ),
+		( map { 'due_on_end_'.$_ } ( 'year','month','day' ) ),
+		'paid','company_id','bad_debt') );
 } # end sub _history
 
 sub edit {
@@ -210,7 +213,9 @@ sub edit {
 		$variable{error} .= $variable{Invoice}->save(\%param);
 	} # end if
 	if ( ! $variable{'Invoice'}->id() ) {
+		# Defaults, don't know who the company is yet
 		$variable{'Invoice'}->due_on( join('-', Date::Calc::Add_Delta_Days( Date::Calc::Today(), 15 ) ) );
+		$variable{'Invoice'}->early_payment_date( join('-', Date::Calc::Add_Delta_Days( Date::Calc::Today(), 7 ) ) );
 	} # end if
 } # end sub edit
 
@@ -280,8 +285,8 @@ $log->debug("Total: $total");
 	} # end if
 } # end sub view
 sub _timetracks {
-	$variable{'Invoice'} = new openprint::Invoice( $param{'invoice_id'} );
-	if ( $param{'timetrack_id'} ) {
+	my $Invoice = $variable{Invoice} = new openprint::Invoice( $param{invoice_id} );
+	if ( $param{timetrack_id} ) {
 		my $Timetrack = new openprint::Timetrack( $param{'timetrack_id'} );
 		if ( $param{'action'} eq 'add' ) {
 			$Timetrack->invoice_id( $variable{'Invoice'}->id() );
@@ -289,6 +294,9 @@ sub _timetracks {
 			$Timetrack->invoice_id( undef );
 		} # en dif
 		$variable{'error'} .= $Timetrack->save();
+	} # end if
+	if ( $param{invoicee_id} and $param{invoicee_id} != $Invoice->invoicee_id() ) {
+		$Invoice->invoicee_id( $param{invoicee_id} );
 	} # end if
 } # end sub _timetracks
 sub _invoiced_products {
@@ -338,3 +346,9 @@ sub _interests {
 		$variable{'error'} = $variable{'Invoice'}->save();
 	} # end if
 } # end sub _interests
+
+sub _invoicee_onchange {
+} # end sub _invoicee_onchange
+
+1;
+__END__

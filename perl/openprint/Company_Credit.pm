@@ -17,6 +17,7 @@ $table = 'company_credit';
 %fields = (
 		limit			=>	'dbllimit',
 		hold			=>	'hold',
+		terms			=>	'terms',
 		denydays		=>	'denydays',
 		warndays		=>	'warndays',
 		downpayment		=>	'downpayment',
@@ -33,6 +34,7 @@ $table = 'company_credit';
 %transforms = (
 		hold      		=>  [ 's/[^YN]//g' ],
 		limit			=>	[ 's/[^\d\.]//g' ],
+		terms			=>	[ 's/\D//g' ],
 		denydays		=>	[ 's/\D//g' ],
 		warndays		=>	[ 's/\D//g' ],
 		downpayment		=>	[ 's/[^\d\.]//g' ],
@@ -45,6 +47,7 @@ $table = 'company_credit';
 %defaults = (
 	supplier_id				=>	undef,
 	limit					=>	undef,
+	terms					=>	undef,
 	denydays				=>	undef,
 	warndays				=>	undef,
 	downpayment				=>	undef,
@@ -99,20 +102,20 @@ sub outstanding_orders {
 
 sub warn_orders {
     my $self = shift;
-    $_ = q{SELECT Index FROM Orders WHERE CompanyIndex=?
-    AND strStatus IN ('Pending Deposit','In Production','Complete','Shipped','Waiting For Pickup', 'Picked Up' )
-    AND ( curTotalSale > (SELECT SUM(amount) FROM Payments WHERE deleted=false AND completed=true and Payments.order_id=Orders.Index)
-    OR (SELECT SUM(amount) FROM Payments WHERE deleted=false AND completed=true and Payments.order_id=Orders.Index) IS NULL )
+    $_ = q{SELECT id FROM Orders WHERE company_id=?
+    AND status_id IN (SELECT id FROM Order_statuses WHERE name IN ('Pending Deposit','In Production','Complete','Shipped','Waiting For Pickup', 'Picked Up' ))
+    AND ( curTotalSale > (SELECT SUM(amount) FROM Payments WHERE deleted=false AND completed=true and Payments.order_id=Orders.id)
+    OR (SELECT SUM(amount) FROM Payments WHERE deleted=false AND completed=true and Payments.order_id=Orders.id) IS NULL )
     AND dtmorderdate + '?  days' < NOW() ORDER BY Index};
     return sql::execute( undef, undef, $_, @$self{'company_id','warndays'} );
 } # end sub warn_orders
 
 sub denied_orders {
     my $self = shift;
-    $_ = q{SELECT Index FROM Orders WHERE CompanyIndex=?
-    AND strStatus IN ('Pending Deposit','In Production','Complete','Shipped','Waiting For Pickup', 'Picked Up' )
-    AND ( curTotalSale > (SELECT SUM(amount) FROM Payments WHERE deleted=false AND completed=true and Payments.order_id=Orders.Index)
-    OR (SELECT SUM(amount) FROM Payments WHERE deleted=false AND completed=true and Payments.order_id=Orders.Index) IS NULL )
+    $_ = q{SELECT id FROM Orders WHERE company_id=?
+    AND status_id IN (SELECT id FROM order_statuses WHERE name IN ('Pending Deposit','In Production','Complete','Shipped','Waiting For Pickup', 'Picked Up' ))
+    AND ( curTotalSale > (SELECT SUM(amount) FROM Payments WHERE deleted=false AND completed=true and Payments.order_id=Orders.id)
+    OR (SELECT SUM(amount) FROM Payments WHERE deleted=false AND completed=true and Payments.order_id=Orders.id) IS NULL )
     AND dtmorderdate + '? days' < NOW() ORDER BY Index};
     return sql::execute( undef, undef, $_, @$self{'company_id','denydays'} );
 } # end sub denied_orders

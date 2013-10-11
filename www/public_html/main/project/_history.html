@@ -7,10 +7,10 @@
 		);
 	} else {
 		my %sql = (
-			ssi::date_filter( '/main/project/history.html?created_on_end', 'created_on <=' ),
-			ssi::date_filter( '/main/project/history.html?created_on_start', 'created_on >=' ),
-			ssi::date_filter( '/main/project/history.html?updated_on_end', 'updated_on <=' ),
-			ssi::date_filter( '/main/project/history.html?updated_on_start', 'updated_on >=' ),
+			date_filter( '/main/project/history.html?created_on_end', 'created_on <=' ),
+			date_filter( '/main/project/history.html?created_on_start', 'created_on >=' ),
+			date_filter( '/main/project/history.html?updated_on_end', 'updated_on <=' ),
+			date_filter( '/main/project/history.html?updated_on_start', 'updated_on >=' ),
 
 			( sets::isin( $session{user_type}, [ 'A', 'E' ] ) ? ( 
 				$session{'/main/project/history.html?company_id'} ? ( company_id => $session{'/main/project/history.html?company_id'} ) : ()
@@ -24,7 +24,7 @@
 		$sql{predefined} = $session{'/main/project/history.html?predefined'} if $session{'/main/project/history.html?predefined'};
 		$sql{'reference ilike'} = '%'.$param{'reference'}.'%' if $param{'reference'};
 
-		@{$$variable{'Projects'}} = openprint::Project->find( %sql );
+		$$variable{Projects} = [ openprint::Project->find( %sql ) ];
 	} # end if
 
 	$$variable{'Currency'} = openprint::Currency::get_current() if ! $$variable{'Currency'};
@@ -33,9 +33,7 @@
 <? if ( @{$$variable{'Projects'}} == 0 ) ?>
 	<? if ( sets::isin( $session{user_type}, ['A','E'] ) and $param{'ProjectID'} ) ?>
         <? eval (
-                @{$$variable{'Projects'}} = openprint::Project->find(
-                'id'=>$param{'ProjectID'},
-                );
+                @{$$variable{'Projects'}} = openprint::Project->find( id=>$param{ProjectID} );
         ) ?>
 		There were no projects matching your search criteria for your currently selected Company.<br/>
         <? if ( @{$$variable{'Projects'}} > 0 ) ?>
@@ -108,7 +106,7 @@
 			<th class="Price">Price 3</th>
 			<th class="status">Status</th>
 			<th class="Date">Created</th>
-			<th class="checkbox"><input type="checkbox" name="checkall" onclick="select_all(this.form,'project_id',this.checked);" /></th>
+			<th class="checkbox"><input type="checkbox" name="checkall" value="" onclick="select_all(this.form,'project_id',this.checked);" /></th>
 		</tr>
 		<? echo (
 			my $html;
@@ -139,7 +137,7 @@
 					( $Project->quantity(2) ? openprint::Currency::format( $Project->Currency()->convert_from( $Project->price(2) ) ) : '' ),
 					( $Project->quantity(3) ? openprint::Currency::format( $Project->Currency()->convert_from( $Project->price(3) ) ) : '' ),
 					$Project->status(), Date::Format::time2str($config{'DateFormat'}, Date::Parse::str2time($Project->created_on() ) ),
-					( ( ! $session{'/main/project/history.html?company_id'} ) and sets::isin( $session{user_type}, ['E','A'] ) ? '2' : '1' ),
+					( ( ( ! $session{'/main/project/history.html?company_id'} ) and sets::isin( $session{user_type}, ['E','A'] ) ) ? '2' : '1' ),
 					$Project->summary(), 
 					( 
 						( $Project->predefined() and $_ = join('<br/>', map { $_->category()->name() . ' ' . $_->name() } openprint::Product->find(project_id=>$Project->id()) ) ) ? '<br/>Predefined for ' . $_ : '<br/>Not assigned to a product.' 
@@ -154,9 +152,9 @@
 	<br class="spacer"/>
 <p class="buttons">
 <? echo ( 
-	my $html = ssi::button( 'Delete', { onclick=>"delete_confirm(document.f1);" } );
+	my $html = button( 'Delete', { onclick=>'delete_confirm(document.f1);' } );
 	if ( sets::isin( $session{user_type}, [ 'E','A' ] ) ) {
-		$html .= ssi::button( 'Copy', { onclick=>"popup_window('_copy_popup.html',f1.serialize() );" } );
+		$html .= button( 'Copy', { onclick=>"popup_window('_copy_popup.html',f1.serialize() );" } );
 	} # end if
 	return $html;
 ) ?>

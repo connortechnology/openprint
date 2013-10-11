@@ -1,6 +1,6 @@
 <? eval ( 
-	@{$$variable{'Pricelists'}} = openprint::Pricelist->find('order'=>'lower(name)');
-	$$variable{'Product'} = new openprint::Product( $param{'product_id'} ) if ! $$variable{'Product'};
+	$$variable{Pricelists} = [ openprint::Pricelist->find( order=>'lower(name)') ];
+	$$variable{Product} = new openprint::Product( $param{product_id} ) if ! $$variable{Product};
 ) ?>
 <? while ( $$variable{'Pricelist'} = shift @{$$variable{'Pricelists'}} ) ?>
 <fieldset><legend>Prices for Price List: <? echo ( $$variable{'Pricelist'}->name(); ) ?></legend>
@@ -30,13 +30,13 @@
 				<? echo ( input( type=>'float', name=>'cost-'.$$variable{Price}->id(), value=>Number::Format::format_number( $$variable{'Price'}->cost(), 2, 2 ), onkeyup=>qq`\$('chk-$$variable{Price}{id}').checked=true;calc_from_cost(this);`, onclick=>'this.onkeyup();' ); ) ?>
 			</td>
 			<td class="Markup"> 
-				<input type="number" name="markup-<? echo ( $$variable{'Price'}->id(); ) ?>" value="<? echo (  $$variable{'Price'}->markup(); ) ?>"  onkeyup="$('chk-<? echo ( $$variable{Price}->id(); ) ?>').checked=true;floatize(this);calc_from_markup(this);" onclick="this.onkeyup()" />
+				<? echo ( input( type=>'float', name=>'markup-'.$$variable{Price}->id(), value=>$$variable{'Price'}->markup(), onkeyup=>qq`\$('chk-$$variable{Price}{id}').checked=true;calc_from_markup(this);`, onclick=>'this.onkeyup();' ); ) ?>
 			</td>
 			<td class="Price"> 
 				<? echo ( input( type=>'float', name=>'price-'.$$variable{Price}->id(), value=>Number::Format::format_number( $$variable{'Price'}->price(), 2, 2 ), onkeyup=>qq`\$('chk-$$variable{Price}{id}').checked=true;calc_from_price(this);`, onclick=>'this.onkeyup(this);' ); ) ?>
 			</td>
 			<td class="Discount"> 
-				<? echo ( ssi::radio( 'discount-'.$$variable{'Price'}->id(), [ 'Y', 'Yes', 'N', 'No' ], $$variable{'discount'}, { 'onclick'=>qq`$('chk-$$variable{Price}{id}').checked=true;` } ); ) ?>
+				<? echo ( radio( 'discount-'.$$variable{Price}->id(), [ 1, 'Yes', 0, 'No' ], $$variable{Price}->discountable(), { onclick=>qq`$('chk-$$variable{Price}{id}').checked=true;` } ); ) ?>
 			</td>
 		</tr>
 		<? endwhile ( $$variable{'Price'} = shift @{$$variable{'Prices'}}; ) ?>

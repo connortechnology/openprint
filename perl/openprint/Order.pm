@@ -18,6 +18,7 @@ require openprint::Order_Tax;
 require openprint::Order_Status;
 require openprint::Payment;
 require openprint::Tax;
+require openprint::Order_Notification;
 
 $debug = 1;
 
@@ -66,8 +67,8 @@ $serial = 'orders_id_seq';
 	);
 
 %transforms = (
-	id		=>	[ 's/\D//g' ],
-	docket	=>	[ 's/\D//g' ],
+	id			=>	[ 's/\D//g', '<2147483647' ],
+	docket		=>	[ 's/\D//g', '<2147483647' ],
 );
 
 %find_fields = (
@@ -245,6 +246,7 @@ sub approve {
 sub Status {
 	return new openprint::Order_Status( $_[0]{status_id} );
 } # end sub Status
+
 sub status {
 	if ( @_ > 1 ) {
 		my $Status = openprint::Order_Status->find_one(name => $_[1]);
@@ -254,9 +256,10 @@ sub status {
 			$Status->save({name=>$_[1]});
 		} # end if
 		if ( $Status->id() != $_[0]{status_id} ) {
-			sql::update( $log, $dbh, 'Orders', ['id=?', $_[0]{id}], 'status_id', $Status->id() );
+			sql::update( $log, $dbh, 'Orders', ['id=?', $_[0]{id}], 'status_id', $Status->id() ) if $_[0]{id};
 			$_[0]{status} = $_[1];
-			$_[0]->add_log( "Changed Status to $_[1]" );
+			$_[0]{status_id} = $Status->id();
+			$_[0]->add_log( "Changed Status to $_[1]" ) if $_[0]{id};
 		} # end if
 	} # end if
 	if ( ! $_[0]{status} ) {
@@ -338,7 +341,7 @@ sub Projects {
 	my $self = shift;
 	return @{$$self{'Projects'}} if $$self{'Projects'};
 	return () if ! $$self{'id'};
-	@{$$self{'Projects'}} = map { $_->Project() } openprint::OrderedProject->find( 'order_id'=>$$self{id} );
+	$$self{'Projects'} = [ map { $_->Project() } openprint::OrderedProject->find( 'order_id'=>$$self{id} ) ];
 	return @{$$self{'Projects'}};
 } # end sub Projects
 
@@ -399,24 +402,25 @@ sub pay {
 } # end sub pay
 
 sub send_cancellation_notice {
-	my %order;
-	$order{'Order'} = $_[0];
-	$order{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/order_cancellation_notice.html' );
-	$order{'ReplacementText'} = ssi::variable_substitution( \$order{'ReplacementText'}, \%order );
-	my $email_template = misc::load_file( $log, $config{'SkinPath'} . '/email_template.html' );
 
 	my @Recipients;
 	# Send to inventory and scheduling people.
-	foreach my $Recipient ( openprint::User->find('usergroup in'=>['Inventory','Scheduling'],'type'=>['E','A']) ) {
+	foreach my $Recipient ( openprint::User->find('usergroup @>'=>['Inventory','Scheduling'],'type'=>['E','A']) ) {
 		next if $Recipient->id() == $session{'user_id'};
 		next if $Recipient->notification('Docket Cancellations') ne 'Yes';
 		push @Recipients, $Recipient;
 	} # end foreach Recipient
 
+	return if ! @Recipients;
+
+	my %order;
+	$order{'Order'} = $_[0];
+	$order{'ReplacementText'} = ssi::include('/email_content/order_cancellation_notice.html', \%order );
+	my $email_template = misc::load_file( $log, $config{'SkinPath'} . '/email_template.html' );
 	new openprint::Email()->send(
-			FROM	=> new openprint::User( $session{'user_id'} ),
+			FROM	=> new openprint::User( $session{user_id} ),
 			TO	=> \@Recipients,
-			SUBJECT => "Docket $_[0]{'docket'} has been cancelled.",
+			SUBJECT => "Docket $_[0]{docket} has been cancelled.",
 			ATTACHMENTS => [ '', MIME::QuotedPrint::encode_qp( ssi::variable_substitution( \$email_template, \%order ) ), 'text/html', 'quoted-printable'],
 			);
 	
@@ -515,13 +519,11 @@ sub send_sales_order {
 
 	my $email_template = misc::load_file( $log, $config{'SkinPath'}. '/email_template.html' );
 
-	$order{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/sales_order_body.html' );
-	$order{'ReplacementText'} = ssi::variable_substitution( \$order{'ReplacementText'}, \%order );
+	$order{'ReplacementText'} = ssi::include('/email_content/sales_order_body.html', \%order );
 	my @body = ('', MIME::QuotedPrint::encode_qp( Encode::encode( 'utf-8', ssi::variable_substitution( \$email_template, \%order ) ) ), 'text/html', 'quoted-printable');
 
 	my @sales_order;
-	my $sales_order = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/sales_order.html' );
-	$order{'ReplacementText'} = ssi::variable_substitution( \$sales_order, \%order );
+	$order{'ReplacementText'} = ssi::include( '/email_content/sales_order.html', \%order );
 	$_ = MIME::QuotedPrint::encode_qp( Encode::encode('utf-8', ssi::variable_substitution( \$email_template, \%order ) ) );
 	@sales_order = ( "Order$$self{id}.html", $_, 'text/html', 'quoted-printable' );
 
@@ -726,6 +728,53 @@ sub supplier_id {
 sub Supplier {
 	return new openprint::Company( $_[0]->supplier_id() );
 } # end sub Supplier
+
+sub AdditionalChargeNotifications {
+	if ( @_ > 1 ) {
+		delete $_[0]{Notifications};
+	} # end if
+	if ( ! $_[0]{Notifications} ) {
+		$_[0]{Notifications} = [ openprint::Order_Notification->find(order_id=>$_[0]{id}, order=>'user_id') ];
+	} # end if
+	if ( ! @{$_[0]{Notifications}} ) {
+		
+		my %users;
+		if ( $_[0]->email() ) {
+			foreach my $e ( split(',', lc $_[0]->email() ) ) {
+				next if ! $e;
+				next if $users{$e};
+				my $U = openprint::User->find_one(email=>$e);
+				if ( ! $U ) {
+					$U = new openprint::User();
+					$U->save({ email=>$e, company_id=>$_[0]{company_id} });
+				} # end if
+				my $ON = new openprint::Order_Notification();
+				$ON->save({order_id=>$_[0]{id}, user_id=>$$U{id}});
+				push @{$_[0]{Notifications}}, $ON;
+				$users{$$U{email}} = $U;
+			} # end foreach
+		} # end if 
+		my $CSR = $_[0]->CSR();
+		if ( $CSR->id() and ! $users{$CSR->email()} ) {
+			my $ON = new openprint::Order_Notification();
+			$ON->save({order_id=>$_[0]{id}, user_id=>$$CSR{id}});
+			push @{$_[0]{Notifications}}, $ON;
+			$users{$CSR->email()} = $CSR;
+		} # end if
+		$CSR = $_[0]->Company()->CSR();
+		if ( $CSR->id() and ! $users{$CSR->email()} ) {
+			my $ON = new openprint::Order_Notification();
+			$ON->save({order_id=>$_[0]{id}, user_id=>$$CSR{id}});
+			push @{$_[0]{Notifications}}, $ON;
+			$users{$CSR->email()} = $CSR;
+		} # end if
+	} # end if
+	return @{$_[0]{Notifications}};
+} # end sub AdditionalChargeNotifiactions
+
+sub CSR {
+	return new openprint::User( $_[0]{salesrep_id} );
+} # end sub CSR
 
 1;
 __END__

@@ -316,8 +316,10 @@ sub start_year {
 
 sub AccountingContacts {
 	my ( $self ) = @_;
+	my @user_ids = sql::execute(undef,undef,'SELECT user_id FROM companies_accountingcontacts WHERE company_id=?',$$self{id} );
 
-	return openprint::User->find('id'=>[sql::execute(undef,undef,'SELECT user_id FROM companies_accountingcontacts WHERE company_id=?',$$self{'id'} )] );
+	return openprint::User->find(id=>\@user_ids) if @user_ids;
+	return;
 } # end sub AccountingContacts
 
 sub get_shipping_address {
@@ -382,6 +384,12 @@ sub taxexempt2 {
 sub address {
 return join(', ', map { $_ ? $_ : () } @{$_[0]}{'address1','address2','city','state','postalcode','country'} );
 } # end sub address
+
+sub can_view_all {
+	return 1 if $openprint::session{user_type} eq 'A';
+	return 1 if openprint::usergroup::is_user_in( ['Estimating','Prepress','Accounting','Shipping','Inventory'], $openprint::session{'user_id'} );
+	return 0;
+} # end sub can_view_all
 
 sub find_filtered {
     return if ! $openprint::session{user_id};

@@ -79,5 +79,8 @@ sub project_summary {
 	my ( $Project, $service_id, $specs ) = @_;
 	return sprintf(' in %s day%s.',$$specs{'TurnaroundDays'}, $$specs{'TurnaroundDays'} == 1 ? '' : 's' );
 } # end sub project_summary
+
+sub save {
+} # end sub save
 1;
 __END__

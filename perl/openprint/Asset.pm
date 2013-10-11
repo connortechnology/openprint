@@ -19,7 +19,7 @@ our @ISA = qw(openprint::Object);
 
 use vars qw( $debug %fields %transforms %defaults $table $serial );
 
-$debug = 0;
+$debug = 1;
 
 %fields = (
 	'id'			=>	'id',
@@ -41,6 +41,7 @@ $debug = 0;
 	'layout'		=>	'layout',
 	'width'			=>	'width',
 	'height'		=>	'height',
+	source			=>	'source',
 );
 %defaults = (
 	'data'		=>	undef,
@@ -57,10 +58,11 @@ $debug = 0;
 	'height'	=>	undef,
 );
 %transforms = (
-	width			=>	[ 's/\D//g' ],
-	height			=>	[ 's/\D//g' ],
-	filename		=>	[ 's/^\s+//', 's/\s+$//', 's/ /_/g' ],
-	name			=>	[ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
+	id			=>	[ 's/\D//g', '<2147483647' ],
+	width		=>	[ 's/\D//g' ],
+	height		=>	[ 's/\D//g' ],
+	filename	=>	[ 's/^\s+//', 's/\s+$//', 's/ /_/g', 's/[\/:\*\?\'"<>|]//g', 's/&/n/g' ],
+	name		=>	[ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
 	description	=>	[ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
 	attribution	=>	[ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
 	license		=>	[ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
@@ -77,8 +79,9 @@ sub on_disk_path {
 } # end sub on_disk_path
 
 sub on_disk_filename {
-	return '' if ! $_[0]{'id'};
-	return $_[0]{'id'}.'_'.$_[0]{'filename'};
+	return '' if ! $_[0]{id};
+	$_ = $_[0]{id}.'_'.$_[0]{filename};
+	return $_;
 } # end sub on_disk_filename
 
 sub url {
@@ -112,13 +115,16 @@ sub sized_url {
 	my $size = $_[1];
 
 	my $src = $_[0]->on_disk_path();
-	my $path = $openprint::config{'AssetPath'}.'/'.$size.'/';
-	if ( $openprint::config{'AssetPath'} ) {
+	my $path = $openprint::config{AssetPath}.'/'.$size.'/';
+	if ( $openprint::config{AssetPath} ) {
 		if ( ! -e $path ) {
 			mkdir $path;
 			$openprint::log->error("Unable to create path $path: $!" );
 			return '/images/icons/file.png';
 		} # end if
+	} else {
+		$openprint::log->error("No Asssset Path");
+		return '/images/icons/file.png';
 	} # end if
 
 	my $filename = $_[0]->on_disk_filename();
@@ -129,23 +135,58 @@ sub sized_url {
 		if ( $openprint::config{'AssetPath'} ) {
 			my $dest = $path.$filename;
 			if ( ! -e $dest ) {
-				my $width;
-				if ( $size eq 'medium' ) {
-					$width = $openprint::config{'Medium_Asset_Width'};
-				} elsif ( $size eq 'large' ) {
-					$width = $openprint::config{'Large_Asset_Width'};
-				} # end if
-				if ( ! $width ) {
-					$openprint::log->error("No asset size in config for $size");
-					return '/assets/'.$filename;
+				my ( $width, $height );
+				if ( $_[0]->layout() eq 'Landscape' ) {
+					if ( $size eq 'medium' ) {
+						$height = $openprint::config{'Medium_Asset_Height'};
+						$width = $openprint::config{'Medium_Asset_Width'} if ! $height;
+					} elsif ( $size eq 'large' ) {
+						$height = $openprint::config{'Large_Asset_Height'};
+						$width = $openprint::config{'Large_Asset_Width'} if ! $height;
+					} elsif ( $size eq 'thumbnail' ) {
+						$height = $openprint::config{'Small_Asset_Height'};
+						$width = $openprint::config{'Small_Asset_Width'} if ! $height;
+					} elsif ( $size eq 'small' ) {
+						$height = $openprint::config{'Small_Asset_Height'};
+						$width = $openprint::config{'Small_Asset_Width'} if ! $height;
+					} # end if
+					if ( ! ( $width or $height ) ) {
+						$openprint::log->error("No asset size in config for $size");
+						return '/assets/'.$filename;
+					} # end if	
+				} else {
+					if ( $size eq 'medium' ) {
+						$width = $openprint::config{'Medium_Asset_Width'};
+					} elsif ( $size eq 'large' ) {
+						$width = $openprint::config{'Large_Asset_Width'};
+					} elsif ( $size eq 'thumbnail' ) {
+						$width = $openprint::config{'Small_Asset_Width'};
+					} elsif ( $size eq 'small' ) {
+						$width = $openprint::config{'Small_Asset_Width'};
+					} # end if
+					if ( ! $width ) {
+						$openprint::log->error("No asset size in config for $size");
+						return '/assets/'.$filename;
+					} # end if	
 				} # end if	
 				$openprint::log->debug("Creating $size at ${width} x $src $dest");
+				if ( ! -e $src ) {
+					$openprint::log->error("Source file $src does not exist.");
+					return '/assets/'.$filename;
+				} # end if
 				my ( $stderr, $stdout );
 				require IPC::Run3;
-				IPC::Run3::run3(qq`convert -adaptive-resize ${width}x "$src" "$dest"`, undef, $stdout, $stderr );
+				IPC::Run3::run3(qq`convert -adaptive-resize ${width}x${height} "$src" "$dest"`, undef, $stdout, $stderr );
 				if ( $? ) {
 					$openprint::log->error("ERror creating sized image. Reason: ($?) stdout($stdout) stderr($stderr)");
+					return '/assets/'.$filename;
 				} # end if convert
+				if ( $extension =~ /jpe?g/i ) {
+					IPC::Run3::run3(qq`jpegtran -optimize -copy none -outfile "$dest" "$dest"`, undef, $stdout, $stderr );
+					if ( $? ) {
+						$openprint::log->error("ERror optimising sized image. Reason: ($?) stdout($stdout) stderr($stderr)");
+					} # end if convert
+				} # end if
 			} # end if
 		} # end if
 #$openprint::log->debug("Return /thumbnails/$filename");
@@ -168,6 +209,10 @@ sub sized_url {
 					$width = $openprint::config{'Medium_Asset_Width'};
 				} elsif ( $size eq 'large' ) {
 					$width = $openprint::config{'Large_Asset_Width'};
+				} elsif ( $size eq 'thumbnail' ) {
+					$width = $openprint::config{'Small_Asset_Width'};
+				} elsif ( $size eq 'small' ) {
+					$width = $openprint::config{'Small_Asset_Width'};
 				} elsif ( ! $size ) {
 					$size = 'full';
 				} # end if
@@ -206,6 +251,12 @@ sub sized_url {
 					} # end if
 					unlink "/tmp/$filename/00000001.jpg";
 					rmdir "/tmp/$filename";
+					my ( $stdout, $stderr );
+					require IPC::Run3;
+					IPC::Run3::run3(qq`jpegtran -optimize -copy none -outfile "$dest" "$dest"`, undef, $stdout, $stderr );
+					if ( $? ) {
+						$openprint::log->error("ERror optimising sized image. Reason: ($?) stdout($stdout) stderr($stderr)");
+					} # end if convert
 				} else {
 					$openprint::log->error("Unable to create medium thumbnail at /tmp/$filename/: Wasn't there! $!" );
 					$openprint::log->debug("command was mplayer -frames 1 -nosound -quiet -zoom -vf scale=$width:-3 -vo jpeg:outdir=/tmp -ss 60 $src : $_ ");
@@ -215,13 +266,15 @@ sub sized_url {
 		} # end if
 		return  '/assets/'.$size.'/'.$blah.'.jpg';
 	} else {
-		if ( -e $openprint::config{'SkinPath'}.'/images/icons/'.(lc $extension).'png' ) {
+		if ( -e $openprint::config{'SkinPath'}.'/images/icons/'.(lc $extension).'.png' ) {
 			return '/images/icons/'.(lc $extension).'.png';
+		} else {
+$openprint::log->error("Shuold have found an icon.  Install icons!! for ($extension) at " . $openprint::config{'SkinPath'}.'/images/icons/'.(lc $extension).'png' ) if $extension;
 		} # end if
 	} # end if
 $openprint::log->error("unknown externsion or somerthitng.  Install icons!! for ($extension)") if $extension;
 	return '';
-}  # end sub
+}  # end sub sized_url
 
 sub medium_url {
 	return sized_url( $_[0], 'medium' );
@@ -229,63 +282,6 @@ sub medium_url {
 sub small_url {
 	return sized_url( $_[0], 'small' );
 } # end small_url
-
-# Will look for, generate thumbnails, returning the on disk path
-sub thumbnail_url {
-	my $src = $_[0]->on_disk_path();
-	if ( $openprint::config{'AssetPath'} ) {
-		if ( ! -e $openprint::config{'AssetPath'}.'/thumbnails/' ) {
-			mkdir $openprint::config{'AssetPath'}.'/thumbnails/';
-			$openprint::log->error("Unable to create thumbnail path $openprint::config{'AssetPath'}/thumbnails/: $!" );
-			return '/images/icons/file.png';
-		} # end if
-	} # end if
-
-	my $filename = $_[0]->on_disk_filename();
-#$openprint::log->debug("Asset:: on_disk_path: $src, Filename: $filename");
-
-	my ( $blah, $extension ) = $filename =~ /(.+)\.([^\.]+)$/;
-	if ( sets::isin( lc $extension, [ 'jpg','jpeg','png','gif','bmp' ] ) ) {
-		if ( $openprint::config{'AssetPath'} ) {
-			my $dest = $openprint::config{'AssetPath'}.'/thumbnails/'.$filename;
-			if ( ! -e $dest ) {
-				$openprint::log->debug("Creating thumbnail at 75x $src $dest");
-				if ( system(qq`convert -adaptive-resize 75x "$src" "$dest"`) ) {
-					$openprint::log->error("ERror creating thumbnail. Reason: $1");
-				} # end if convert
-			} # end if
-		} # end if
-#$openprint::log->debug("Return /thumbnails/$filename");
-		return '/thumbnails/'.$filename;
-	} elsif ( sets::isin( lc $extension, [ '3gp', '3g2', 'asf', 'avi', 'dat', 'divx', 'dsm', 'evo', 'flv', 'm1v', 'm2ts', 'm2v', 'm4a', 'mj2', 'mjpg', 'mjpeg', 'mkv', 'mov', 'moov', 'mp4', 'mpg', 'mpeg', 'mpv', 'nut', 'ogg', 'ogm', 'qt', 'swf', 'ts', 'vob', 'wmv', 'xvid' ] ) ) {
-		if ( $openprint::config{'AssetPath'} ) {
-			my $dest = $openprint::config{'AssetPath'}.'/thumbnails/'.$blah.'.jpg';
-			if ( ! -e $dest ) {
-				$openprint::log->debug("Creating thumbnail at 75x $src $dest");
-				
-				$_ = `mplayer -frames 1 -nosound -quiet -zoom -vf scale=75:-3 -vo jpeg:outdir=/tmp -ss 60 $src`;
-				if ( $! ) {
-					$openprint::log->error("Unable to create thumbnail at $dest: $!" );
-					return '/images/icons/image.png';
-				} else {
-					$openprint::log->debug($_);
-				} # end if
-				`mv /tmp/00000001.jpg $dest`;
-				if ( $! ) {
-					$openprint::log->error("Unable to mv thumbnail  $dest: $!" );
-					return '/images/icons/image.png';
-				} # end if
-			} # end if
-		} # end if
-		return  '/thumbnails/'.$blah.'.jpg';
-	} else {
-		if ( -e $openprint::config{'SkinPath'}.'/images/icons/'.(lc $extension).'png' ) {
-			return '/images/icons/'.(lc $extension).'.png';
-		} # end if
-	} # end if
-$openprint::log->error("unknown externsion or somerthitng.  Install icons!! for ($extension)") if $extension;
-	return '/images/icons/file.png';
-} # end sub thumbnail_url
 
 sub large_html {
 	return '' if ! $_[0]{'id'};
@@ -301,14 +297,20 @@ sub html {
 	return '' if ! $_[0]{'id'};
 	return sprintf('<img src="%1$s" alt="%2$s" title="%2$s" />', $_[0]->url(), $_[0]->name() );
 } # end sub html
+
 sub thumbnail_html {
-	return '' if ! $_[0]{'id'};
-	return sprintf('<img src="%1$s" alt="%2$s" title="%2$s" />', $_[0]->thumbnail_url(), $_[0]->name() );
+	if ( ! $_[0]{'id'} ) {
+		$openprint::log->warn('Called thumbnail_html on asset with no id');
+		return '';
+	} # end if
+	return sprintf('<img src="%1$s" alt="%2$s" title="%2$s" />', $_[0]->sized_url('small'), $_[0]->name() );
 } # end sub thumbnail_html
 
 sub thumbnail_path {
-	my $url = $_[0]->thumbnail_url();
+	my $url = $_[0]->sized_url('thumbnail');
 	if ( $url =~ /^\/thumbnails/ ) {
+		return $openprint::config{'AssetPath'}.$url;
+	} elsif ( $url =~ /^\/small/ ) {
 		return $openprint::config{'AssetPath'}.$url;
 	} else {
 		return $openprint::config{'SkinPath'}.$url;
@@ -378,62 +380,111 @@ sub destroy {
 } # end sub destroy
 
 sub fetch {
-	my ( $url ) = @_;
-$openprint::log->debug("Fetching from $url") if $debug;
-
-	require LWP::UserAgent;
-	require HTTP::Request;
-
-	my $ua = LWP::UserAgent->new;
-	$ua->agent("IQ/0.1 ");
-# Create a request
-	my $req = HTTP::Request->new( GET => $url );
-# Pass request to the user agent and get a response back
-	my $res = $ua->request($req);
-# Check the outcome of the response
-	if (! $res->is_success) {
-		$openprint::log->debug("No success.");
-		return "Failed to get file. URL($url)<br/>";
+	my ( $Asset, $url );
+	if ( @_ == 2 ) {
+		( $Asset, $url ) = @_;
+	} elsif ( ref $_[0] eq 'openprint::Asset' ) {
+		$Asset = $_[0];
+		$url = $Asset->source();
+	} else {
+		$url = $_[0];
 	} # end if
 
-	require URI;
-	require File::Basename;
+	if ( ! $url ) {
+		$openprint::log->error("Asset::fetch No source for @_");
+		return;
+	} # end if
+
+	$openprint::log->debug("Fetching from $url") if $debug;
+
+	my ( $md5, $filename );
+	my $data;
+
+	require URI::Escape;
 	require File::Slurp;
 
-	my $URI = URI->new($url);
-	my $path = $URI->path();
-	my $filename = File::Basename::basename( $path );
-$openprint::log->debug("fetch: filename: $filename path: $path from url $url");
-	if ( ! $filename ) {
-		return "Unable to determine filename from $url";
-	} elsif ( $debug ) {
-		$openprint::log->debug("saving to filename $filename");
-	} # endi f
-		
-	require Digest::MD5;
-	my $data;
-	my $md5 = Digest::MD5::md5_base64( $res->content );
-	if ( ! $md5 ) {
-		return "Unable to MD5?";
-	#} else {
-		#$openprint::log->debug("MD5 was $md5");
+	if ( $url =~ /^http/i ) {
+
+		require LWP::UserAgent;
+		require HTTP::Request;
+
+		my $ua = LWP::UserAgent->new;
+		$ua->agent("IQ/0.1 ");
+	# Create a request
+		my $req = HTTP::Request->new( GET => $url );
+	# Pass request to the user agent and get a response back
+		my $res = $ua->request($req);
+	# Check the outcome of the response
+		if (! $res->is_success) {
+			$openprint::log->warn("No success.");
+			return "Failed to get file. URL($url)<br/>";
+		} # end if
+		if ( ! $res->content() ) {
+			$openprint::log->warn("Empty content.");
+			return "Failed to get file. URL($url)<br/>";
+		} # end if
+
+		require URI;
+		require File::Basename;
+
+		my $URI = URI->new($url);
+		my $path = $URI->path();
+		$filename = File::Basename::basename( $path );
+		$openprint::log->debug("fetch: filename: $filename path: $path from url $url");
+		if ( ! $filename ) {
+			return "Unable to determine filename from $url";
+		} elsif ( $debug ) {
+			$openprint::log->debug("saving to filename $filename");
+		} # endi f
+		$filename = URI::Escape::uri_unescape( $filename );
+
+		require Digest::MD5;
+		$md5 = Digest::MD5::md5_base64( $res->content );
+		if ( ! $md5 ) {
+			return "Unable to MD5?";
+		} elsif( $debug ) {
+			$openprint::log->debug("MD5 for $filename was $md5");
+		} # end if
+		$data = $res->content;
+	} else {
+		$filename = File::Basename::basename( $url );
+		$data = File::Slurp::read_file( $filename );
 	} # end if
-	my $Asset = openprint::Asset->find_one( md5 => $md5 );
+	$Asset = openprint::Asset->find_one( md5 => $md5 ) if ! $Asset;
 	if ( ! $Asset ) {
 		$Asset = new openprint::Asset();
-		$! .= $Asset->save({ filename=>$filename, md5=>$md5 });
+		$_ = $Asset->save({ filename=>$filename, md5=>$md5, source => $url });
+		return $_ if $_;
 
-		if ( ! File::Slurp::write_file($Asset->on_disk_path(), { atomic => 1, err_mode=>'carp' }, $res->content ) ) {
+		if ( ! File::Slurp::write_file($Asset->on_disk_path(), { atomic => 1, err_mode=>'carp' }, $data ) ) {
 			return 'There was an error saving file ' . $filename.' to ' . $Asset->on_disk_path() . ": $!<br/>";
 		} # end if
 
+		# Why are we saving again?
 		$_ = $Asset->save();
 		return $_ if $_;
 	} else {
+		$openprint::log->debug("Asset with this md5 already exists." . $Asset->to_string() ) if $debug;
+		if ( $Asset->filename() ne URI::Escape::uri_unescape( $Asset->filename() ) ) {
+			$openprint::log->warn("Fixing asset filename from " . $Asset->filename() . ' to ' . URI::Escape::uri_unescape( $Asset->filename() ) );
+			$Asset->save({filename=>URI::Escape::uri_unescape( $Asset->filename() )});
+		} # end if
+		if ( $url and ! $Asset->source() ) {
+			$openprint::log->warn("Setting source to $url");
+			$Asset->save({source=>$url});
+		} # end if
 		if ( ! -e $Asset->on_disk_path() ) {
-			if ( ! File::Slurp::write_file($Asset->on_disk_path(), { atomic => 1, err_mode=>'carp' }, $res->content ) ) {
+			$openprint::log->debug( "File does not exist on disk at " . $Asset->on_disk_path() ) if $debug;
+			if ( ! File::Slurp::write_file($Asset->on_disk_path(), { atomic => 1, err_mode=>'carp' }, $data ) ) {
 				return 'There was an error saving file ' . $filename.' to ' . $Asset->on_disk_path() . ": $!<br/>";
 			} # end if
+		} elsif ( ! -s $Asset->on_disk_path() ) {
+			$openprint::log->debug( "File has no size at " . $Asset->on_disk_path() ) if $debug;
+			if ( ! File::Slurp::write_file($Asset->on_disk_path(), { atomic => 1, err_mode=>'carp' }, $data ) ) {
+				return 'There was an error saving file ' . $filename.' to ' . $Asset->on_disk_path() . ": $!<br/>";
+			} # end if
+		} else {
+			$openprint::log->debug( "File exists and has size " . ( -s $Asset->on_disk_path() ) ) if $debug;
 		} # end if
 	} # end if
 	return $Asset;
@@ -579,7 +630,6 @@ $openprint::log->debug("Calling video_url($type)");
 		$openprint::log->error("Called video_url on as asset that is not a video. " . $_[0]->to_string() );
 		return;
 	} # end if
-	my $dest = $path.$base.'.'.$type;
 	$self->generate_video( $type );
 	return '/assets/videos/'.$base.'.'.$type;
 } # end sub video_url
@@ -605,28 +655,41 @@ sub generate_video {
 	} # end if
 	if ( ! flock($lock, Fcntl::LOCK_EX) ) {
 		$openprint::log->error("Unable to lock semaphore\n");
+		return;
 	} # end if
 	if ( ! -e $dest ) {
 		# Create it
 		my $src  = $_[0]->on_disk_path();
 		my ( $base, $extension ) = $src =~ /\/([^\/]+)\.([^\.]+)$/;
 		if ( $type eq 'mp4' ) {
-			my $output = `avconv -i $src -threads 2 -vcodec libx264 -b 1500k -pre:v baseline -g 30 -f mp4 $dest.part`;
-			$openprint::log->debug("avconv -i $src -threads 2 -vcodec libx264 -b 1500k -pre:v baseline -g 30 -f mp4 $dest: $output");
+			$openprint::log->debug("avconv -i $src -threads 2 -vcodec libx264 -b 1500k -pre:v baseline -g 30 -f mp4 $dest.part:");
+			my $output = `avconv -i "$src" -threads 2 -vcodec libx264 -b 1500k -pre:v baseline -g 30 -f mp4 "$dest.part"`;
+			$openprint::log->debug("avconv -i $src -threads 2 -vcodec libx264 -b 1500k -pre:v baseline -g 30 -f mp4 $dest.part: $output");
 			if ( ! -e "$dest.part" ) {
-				$openprint::log->debug("avconv didn't do it's thing.");
+				$openprint::log->error("avconv didn't do it's thing.");
+			} else {
+				`qt-faststart "$dest.part" "$dest"`;
+				unlink "$dest.part";
 			} # end if
-			`qt-faststart $dest.part $dest`;
-			unlink "$dest.part";
 		} elsif ( $type eq 'ogg' ) {
-			`avconv -i $src -vcodec libtheora -b 1500k -acodec libvorbis -ab 160000 -g 30 -f ogg $dest.part`;
-			`mv $dest.part $dest`;
+			`avconv -i "$src" -vcodec libtheora -b 1500k -acodec libvorbis -ab 160000 -g 30 -f ogg "$dest.part"`;
+			if ( ! -e "$dest.part" ) {
+				$openprint::log->error("avconv didn't do it's thing.");
+			} else {
+				`mv $dest.part $dest`;
+			} # end if
 		} elsif ( $type eq 'webm' ) {
-		`avconv -i $src -vcodec libvpx -b 1500k -acodec libvorbis -ab 160000 -f webm $dest.part`;
-			`mv $dest.part $dest`;
+		`avconv -i "$src" -vcodec libvpx -b 1500k -acodec libvorbis -ab 160000 -f webm "$dest.part"`;
+			if ( ! -e "$dest.part" ) {
+				$openprint::log->error("avconv didn't do it's thing.");
+			} else {
+				`mv "$dest.part" "$dest"`;
+			} # end if
 		} else {
 			$openprint::log->error("Unknown type in video_url $type");
 		} # end if type
+	} else {
+		$openprint::log->debug("Asset::generate_video: Destination $dest already exists.");
 	} # end if ! -e $dest
 	close($lock);
 	unlink $dest.'.lck';

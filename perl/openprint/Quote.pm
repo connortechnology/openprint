@@ -304,7 +304,6 @@ sub send {
 	$quote{'uri'} = 'quote';
     openprint::quote::get_user_by_info( $log, $dbh, \%quote, $$self{id} );
     openprint::quote::get_user_for_info( $log, $dbh, \%quote, $$self{id} );
-
 	openprint::quote::get_finished_quote_contents( $log, $dbh, \%quote, $$self{id} );
 	my $email_template = misc::load_file( $log, $config{'SkinPath'}.'/email_template.html' );
 
@@ -417,18 +416,15 @@ sub send {
 	if ( $openprint::config{'SendQuoteToAdmin'} eq 'Y' ) {
 $log->debug("Sending quote to admin");
 # Send one to the admin
-		$quote{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/quote_admin_body.html' );
-		$quote{'ReplacementText'} = ssi::variable_substitution( \$quote{'ReplacementText'}, \%quote );
-		my $email_template = misc::load_file( $log, $config{'SkinPath'}.'/email_template.html' );
 		if ( $email_template ) {
+			$quote{'ReplacementText'} = ssi::include( '/email_content/quote_admin_body.html', \%quote );
 			$_ = MIME::QuotedPrint::encode_qp( Encode::encode('utf-8', ssi::variable_substitution( \$email_template, \%quote ) ) );
 			my @body = ('', $_, 'text/html', 'quoted-printable');
 
 			openprint::quote::get_finished_quote_contents( $log, $dbh, \%quote, $$self{id} );
-			$quote{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/quote_admin_invoice.html' );
-			$quote{'ReplacementText'} = ssi::variable_substitution( \$quote{'ReplacementText'}, \%quote );
+			$quote{'ReplacementText'} = ssi::include('/email_content/quote_admin_invoice.html', \%quote );
 			$email_template = MIME::QuotedPrint::encode_qp( Encode::encode('utf-8',ssi::variable_substitution( \$email_template, \%quote ) ) );
-			new openprint::Email()->send(
+			$results .= new openprint::Email()->send(
 					FROM    => $openprint::config{'QuotingEmail'},
 					TO      => $openprint::config{'QuotingEmail'},
 					SUBJECT => "$$self{'for_companyname'} : Quote $$self{id}",

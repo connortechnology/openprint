@@ -4,7 +4,8 @@
 	} //  end function check_inputs
 </script>
 <div class="Host"><div class="Edit">
-<form id="f1" name="f1" method="post" action="/employee/it/hosts.html" enctype="multipart/form-data">
+<?include(/includes/error_reporting.html)?>
+<form id="f1" name="f1" method="post" action="/employee/it/host.html" enctype="multipart/form-data">
 	<input type="hidden" id="host_id" name="host_id" value="<? echo ( $$variable{'Host'}->id() ) ?>" />
 	<input type="hidden" id="action" name="action" />
 	<fieldset><legend>Host <? echo ( $$variable{'Host'}->id() ) ?></legend>
@@ -60,13 +61,15 @@
 				<li class="buttons">
 					<? echo ( 
 						my $html;
-						$html .= ssi::button( 'Save', { 'onclick'=>"if( check_inputs( f1 ) ){f1.elements['action'].value='Save';f1.submit();}" } );
-						$html .= ssi::button( 'Reset', { 'onclick'=>'f1.reset();' } );
+						$html .= button( 'Save', { onclick=>"if( check_inputs( f1 ) ){f1.elements['action'].value='Save';f1.submit();}" } );
+						$html .= button( 'Reset', { onclick=>'f1.reset();' } );
 						if ( $$variable{'Host'}->id() ) {
-							$html .= ssi::button( 'Delete', { 'onclick'=>"if(confirm('Are you sure?')){f1.elements['action'].value='Delete';f1.submit();}" } ) if $$variable{'Host'}->id();
+							$html .= button( 'Delete', { onclick=>"if(confirm('Are you sure?')){f1.elements['action'].value='Delete';f1.submit();}" } ) if $$variable{'Host'}->id();
 						} # end if
-						$html .= ssi::button( 'Resolve', { 'onclick'=>"f1.elements['action'].value='Resolve';f1.action='/employee/it/host.html';f1.submit();" } );
-						$html .= ssi::button( 'Ping', { 'onclick'=>"f1.elements['action'].value='Resolve';f1.action='/employee/it/host.html';f1.submit();" } );
+						$html .= button( 'Resolve', { onclick=>"f1.elements['action'].value='Resolve';f1.action='/employee/it/host.html';f1.submit();" } );
+						$html .= button( 'Ping', { onclick=>"f1.elements['action'].value='ping';f1.action='/employee/it/host.html';f1.submit();" } );
+						$html .= button( 'Wake', { onclick=>"f1.elements['action'].value='Wake';f1.action='/employee/it/host.html';f1.submit();" } );
+						$html .= button( 'GEOLookup', { onclick=>"f1.elements['action'].value='GEOLookup';f1.action='/employee/it/host.html';f1.submit();" } );
 						#$html .= ssi::writeButton( $log, $dbh, 'clear', 'clear.gif', 'clearForm(f1);', '', 'Clear' );
 						return $html;
 					) ?>
@@ -81,11 +84,14 @@
 				<input type="file" name="filename" />
 				<input type="text" name="asset_name" placeholder="Name"/>
 				<p class="buttons">
-					<? echo ( ssi::button( 'Upload', { 'onclick'=>qq`var form = \$('f1');form.action='/employee/it/host.html';form.elements['action'].value='Upload';form.submit();`} ); ) ?>
+					<? echo ( button( 'Upload', { 'onclick'=>qq`var form = \$('f1');form.action='/employee/it/host.html';form.elements['action'].value='Upload';form.submit();`} ); ) ?>
 				</p>
 			</fieldset>
 			<fieldset><legend>Notifications</legend>
-				<div id="notifications"><? echo ( include('_notifications.html'); ) ?></div>
+				<div id="notifications"><?include('_notifications.html')?></div>
+			</fieldset>
+			<fieldset><legend>Information</legend>
+				<div id="information"><?include('_information.html')?></div>
 			</fieldset>
 		</div>
 	</fieldset>
@@ -123,9 +129,13 @@
 	) ?>
 		</ul>
 	</fieldset>
-<? else ( $config{'RADIUS Support'} eq 'Y' ) ?>
-No RADIUS Support
 <? endif ( $config{'RADIUS Support'} eq 'Y' ) ?>
+            <fieldset><legend>Where</legend>
+<? echo ( 
+    $$variable{'Location'} = $$variable{Host}->Location();
+    return ssi::include( '/location/_location_fields.html' );
+) ?>
+            </fieldset>
 	<fieldset><legend>Logs</legend>
 		<ul>
 			<li><label>Date</label>
@@ -144,7 +154,7 @@ No RADIUS Support
 				<? echo ( button( 'LoadLog', { onclick=>q`new Ajax.Updater( 'Logs', '/employee/it/_host_logs.html', { parameters: $('f1').serialize() } );`, text=>'Load' } ); ) ?>
 			</li>
 		</ul>
-		<div id="Logs"><? echo ( include('/employee/it/_host_logs.html'); ) ?></div>
+		<div id="Logs"><?include('/employee/it/_host_logs.html')?></div>
 	</fieldset>
 </form>
 </div></div>

@@ -4,31 +4,32 @@
 
 	if ( $param{'action'} eq 'add_service' ) {
 		foreach my $service_name ( ref $param{'service_name'} eq 'ARRAY' ? @{$param{'service_name'}} : $param{'service_name'} ) {
-			$Project->add_service( $param{'service_name'} );
+			$Project->add_service( $service_name );
 		} # end foreach service_name
 	} elsif ( $param{'action'} eq 'del service' ) {
 		my $services = $Project->services();
 		foreach my $service_name ( ref $param{'service_name'} eq 'ARRAY' ? @{$param{'service_name'}} : $param{'service_name'} ) {
 			next if ! $$services{$service_name}; 
 			foreach ( @{$$services{$service_name}} ) {
-				my $Service = new openprint::Project_Service( {'project_id'=>$$Project{'id'}, 'service_id'=>$_ } );
+				my $Service = new openprint::Project_Service( { project_id=>$$Project{id}, service_id=>$_ } );
 				$Service->delete();
 			} # end foreach service_id
 		} # end foreach service_name
 	} # end if
 
-    # Not sure this is a good idea, but it's neccessary for printing... why is it neccessary?
-	#my %specs_cache = %param;
-    $openprint::service::specs_cache{$param{ServiceIndex}} = \%param;
-    my %specs = %param;
-	$param{'method'} = 'calc' if ! $param{'method'};
 
 	my $module = 'openprint::Estimating::'.$param{'ServiceType'};
-
 	eval "require $module";
 	$log->error("Error requiring $module: $@") if $@;
+
+	$param{'method'} = 'calc' if ! $param{'method'};
+    # Not sure this is a good idea, but it's neccessary for printing... why is it neccessary?
+    $openprint::service::specs_cache{$param{ServiceIndex}} = \%param;
+    my %specs = %param;
 	if ( my $function = $module->can( $param{method} ) ) {
 		$specs{'Status'} = $function->( $log, $dbh, $variable, @param{'ProjectIndex','ServiceIndex'}, \%specs );
+	} else {
+		$log->error("Cant do $param{method} for $module");
 	} # end if
 
     my @results = ();
@@ -43,10 +44,11 @@
 	} # end if
 	if ( my $function = $module->can( 'no_outputs' ) ) {
 		my @no_outputs = sort $function->( @param{'ProjectIndex','ServiceIndex'}, \%specs );
-		$log->error("$module ::no_outputs: @no_outputs)") if $debug;
+		$log->debug("$module ::no_outputs: @no_outputs)") if $debug;
 		@vars = sets::exclude( \@no_outputs, \@vars );
 
 		foreach my $key ( @no_outputs ) {
+$log->debug("Deleting key $key in no_outputs ") if $debug;
 			delete $specs{$key};
 		} # end foreach
 	} # end if

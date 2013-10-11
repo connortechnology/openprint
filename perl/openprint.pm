@@ -5,6 +5,9 @@ use vars qw( $r %variable %session %param %config $log $dbh );
 sub session_init {
 	require Apache2::Cookie;
 	require Apache::Session::Postgres;
+	require openprint::Pricelist;
+	require openprint::Currency;
+
 	my $cookies = Apache2::Cookie->fetch( $r );
 	my $cookie;
 	if ( $$cookies{'_session_id'} ) {
@@ -62,19 +65,6 @@ sub session_init {
 
 	return if ! $dbh;
 
-	if ( $r->param('Currency') ) {
-		my $short = $r->param('Currency');
-		$short = substr( $short, 0, 3 );
-		$_ = openprint::Currency->find_one( short => $short );
-		$session{'Currency_id'} = $_->id() if $_;
-	} elsif ( $param{'select_currency_id'} ) {
-		my $Currency = new openprint::Currency( $param{'select_currency_id'} );
-		$session{'Currency_id'} = $Currency->id();
-	} elsif ( ! $session{'Currency_id'} ) {
-		$_ = openprint::Currency->find_one( 'short' => $r->dir_config('Currency') );
-		$session{'Currency_id'} = $_->id() if $_;
-	} # end if
-
 	if ( sets::isin( $session{'user_type'}, ['E','A'] ) ) {
 		if ( $r->param('btnFunction') eq 'SelectCompany' ) {
 			if ( $r->param('ddmCompany') != $session{'company_id'} ) {
@@ -88,10 +78,23 @@ sub session_init {
 		} elsif ( $r->param('btnFunction') eq 'SelectPricelist' ) {
 			my $Pricelist = new openprint::Pricelist( $r->param('pricelist_id') );
 			if ( ! $Pricelist->id() ) {
-				$Pricelist = new openprint::Pricelist( openprint::pricing::get_pricelist_id( ) );
+				$Pricelist = openprint::Pricelist::get_current();
 			} # end if
 			$session{'Pricelist_id'} = $Pricelist->id() if $Pricelist->id();
 		} # end if
+	} # end if
+
+	if ( $r->param('Currency') ) {
+		my $short = $r->param('Currency');
+		$short = substr( $short, 0, 3 );
+		$_ = openprint::Currency->find_one( short => $short );
+		$session{'Currency_id'} = $_->id() if $_;
+	} elsif ( $param{'select_currency_id'} ) {
+		my $Currency = new openprint::Currency( $param{'select_currency_id'} );
+		$session{'Currency_id'} = $Currency->id();
+	} elsif ( ! $session{'Currency_id'} ) {
+		$_ = openprint::Currency->find_one( 'short' => $r->dir_config('Currency') );
+		$session{'Currency_id'} = $_->id() if $_;
 	} # end if
 
 	if ( $config{Pricelist} ) {
@@ -100,13 +103,14 @@ sub session_init {
 			$session{Pricelist_id} = $_->id() if $_;
 		} # end if
 	} # end if
+
 	if ( ! $session{Pricelist_id} ) {
-		my $Pricelist = new openprint::Pricelist( openprint::pricing::get_pricelist_id( ) );
+		my $Pricelist = openprint::Pricelist::get_current();
 		$session{Pricelist_id} = $Pricelist->id() if $Pricelist->id();
 	} else {
 		my $Pricelist = new openprint::Pricelist( $session{Pricelist_id} );
 		if ( ! $Pricelist->id() ) {
-			$Pricelist = new openprint::Pricelist( openprint::pricing::get_pricelist_id( ) );
+			$Pricelist = openprint::Pricelist::get_current();
 			$session{Pricelist_id} = $Pricelist->id() if $Pricelist->id();
 		} # end if
 	} # end if

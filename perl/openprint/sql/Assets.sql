@@ -22,6 +22,7 @@ CREATE TABLE Assets (
 	layout		TEXT,
 	width		INTEGER,
 	height		INTEGER,
+	source		TEXT,
 	PRIMARY KEY (id)
 );
 alter table Users add foreign key (asset_id) REFERENCES assets (id);

@@ -2,7 +2,6 @@
 <div class="Quote">
 	<div class="Header">
 		<? include('/includes/quote_header.html') ?>
-		<br class="spacer"/>
 		<? include('/includes/quote_prepared_by.html') ?>
 		<? include('/includes/quote_prepared_for.html') ?>
 	</div>
@@ -68,7 +67,7 @@
                 $newsubtotal += $QP->price($qty_index);
             } # end foreach qty_index
             $html .= "</table>\n</td>\n</tr>\n";
-            $html .= sprintf('<tr class="totals"><td colspan="4">Subtotal</td><td class="price">%1$s</td><td class="newprice">%2$s</td></tr>',
+            $html .= sprintf('<tr class="totals"><td colspan="5">Subtotal</td><td class="price">%1$s</td><td class="newprice">%2$s</td></tr>',
                 openprint::Currency::format( $subtotal ),
                 openprint::Currency::format( $newsubtotal ),
 				);

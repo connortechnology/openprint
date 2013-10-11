@@ -45,6 +45,10 @@ sub no_outputs {
 	return @no_outputs;
 } # end sub
 
+sub outputs {
+	return ('txtPrice1' );
+}
+
 # creates a new project, first clearing out any previous projects
 sub calc {
 	my ( $log, $dbh, $variable, $project_index, $service_index, $specs ) = @_;
@@ -215,7 +219,7 @@ $log->debug("Presentation folder sizes $$specs{'chkPocketLeft'} $$specs{'chkPock
 	$log->debug("LOCKING tbl_Projects for project $$Project{id}");
 	$dbh->do( "SELECT * FROM Projects WHERE id=".$$Project{'id'}. ' FOR UPDATE' );
 	if ( $dbh->errstr() ) {
-		$log->error( DBI->errstr );
+		$log->error( $dbh->errstr() );
 		sql::end_transaction( $dbh, $ac );
 		$$specs{'alert'} .= 'Database error<br/>';
 		return $$specs{'Status'} = 'uncalculated';
@@ -225,12 +229,14 @@ $log->debug("Presentation folder sizes $$specs{'chkPocketLeft'} $$specs{'chkPock
 # It's a multi-page publication
 		if ( ! $$specs{'txtTotalPageQuantity'} ) {
 			$$specs{'alert'} .= 'Please enter the number of pages.<br/>';
+		sql::end_transaction( $dbh, $ac );
 			return $$specs{'Status'} = 'uncalculated';
 		} # end if
 		if ( $$specs{'rdbCover'} eq 'Different' ) {
 			foreach my $option ( @StockOptions ) {
 				if ( ! $$specs{'ddmStock'.$option.'1'} ) {
 					$$specs{'alert'} .= 'Please select a cover stock ' . lc $option .'.';
+		sql::end_transaction( $dbh, $ac );
 					return $$specs{'Status'} = 'uncalculated';
 				} # end if
 			} # end foreach option
@@ -238,15 +244,18 @@ $log->debug("Presentation folder sizes $$specs{'chkPocketLeft'} $$specs{'chkPock
 		foreach my $option ( @StockOptions ) {
 			if ( ! $$specs{'ddmStock'.$option.'2'} ) {
 				$$specs{'alert'} .= 'Please select an interior stock ' . lc $option .'.';
+		sql::end_transaction( $dbh, $ac );
 				return $$specs{'Status'} = 'uncalculated';
 			} # end if
 		} # end foreach option
 
 		if ( $$specs{'rdbTemplateType'} eq 'SaddleStitching' and $$specs{'txtTotalPageQuantity'} % 4 ) {
 			$$specs{'alert'} .= '# of pages should be a multiple of 4<br/>';
+		sql::end_transaction( $dbh, $ac );
 			return $$specs{'Status'} = 'uncalculated';
 		} elsif ( $$specs{'rdbTemplateType'} eq 'PerfectBound' and $$specs{'txtTotalPageQuantity'} % 2 ) {
 			$$specs{'alert'} .= '# of pages should be a multiple of 2<br/>';
+		sql::end_transaction( $dbh, $ac );
 			return $$specs{'Status'} = 'uncalculated';
 		} # end if
 
@@ -375,7 +384,7 @@ $log->debug("Presentation folder sizes $$specs{'chkPocketLeft'} $$specs{'chkPock
 # Non-book
 		my @signatures = $Project->signatures();
 		if ( ! @signatures ) {
-			push @signatures, $Project->add_signature( 'Signature', undef, undef, { txtQuantity1 => $$specs{txtQuantity1} } );	
+			push @signatures, $Project->add_signature( 1, undef, undef, { txtQuantity1 => $$specs{txtQuantity1} } );	
 		} # end if
 		my $sig_id = $signatures[0];
 		my $sig_specs = openprint::service::get_specs_ref( $Project, $sig_id );
@@ -422,10 +431,12 @@ $log->debug("Presentation folder sizes $$specs{'chkPocketLeft'} $$specs{'chkPock
 			foreach my $option ( @StockOptions ) {
 				if ( ! $$specs{'ddmStock'.$option} ) {
 					$$specs{'alert'} .= 'Please select stock ' . lc $option .'.';
+					sql::end_transaction( $dbh, $ac );
 					return $$specs{'Status'} = 'uncalculated';
 				} # end if
 			} # end foreach option
 		} # end if
+		
 
 		my $colourindex = 1;
 
@@ -517,18 +528,21 @@ $log->debug("Presentation folder sizes $$specs{'chkPocketLeft'} $$specs{'chkPock
 		$sig_specs = openprint::service::internal_calc( $log, $dbh, $variable, $$Project{'id'}, $sig_id, 'Printing' );
 		@$specs{'txtWidth','txtHeight','chkPocketCenter','alert','Status'} = @$sig_specs{'txtWidth','txtHeight','chkPocketCenter','alert','Status'};
 	} # end if printing (actually looks for txtTotalPageQut
+	openprint::service::internal_calc( $log, $dbh, $variable, $$Project{'id'}, $$services{''}[0], $ProjectType->type() );
 
-	$log->debug("DROPPING LOCK");
-	sql::end_transaction( $dbh, $ac );
 
 	if ( ! $$specs{'txtQuantity1'} ) {
 		$$specs{'alert'} .= 'Please enter the quantity.';
+		$log->debug("DROPPING LOCK");
+		sql::end_transaction( $dbh, $ac );
 		return $$specs{'Status'} = 'uncalculated';
 	} # end if
 
 	if ( $$specs{'Status'} eq 'uncalculated' ) {
 		delete $$specs{'txtPrice1'};
 		$$specs{'alert'} .= 'Problem calculating printing';
+		$log->debug("DROPPING LOCK");
+		sql::end_transaction( $dbh, $ac );
 		return $$specs{'Status'};
 	} # end if
 
@@ -562,7 +576,7 @@ $log->debug("Presentation folder sizes $$specs{'chkPocketLeft'} $$specs{'chkPock
 			} # end if
 			if ( ( ! sets::isin( 2, $proof_indexes{$signature_index} ) ) and $openprint::config{'Add Default Colour Proof'} eq 'Y' ) {
 				push @{$proof_indexes{$signature_index}}, 2;
-				openprint::Estimating::Proofs::insert_colour_proof( $Project, $sig_specs, 2, 1, $proof_specs, $Imposition );
+				openprint::Estimating::Proofs::insert_colour_proof( $Project, $sig_specs, 2, 1, $proof_specs );
 			} # end if
 #$openprint::log->debug("Adding press proof $openprint::config{'Add Default Press Proof'}");
 			if ( ( ! sets::isin( 3, $proof_indexes{$signature_index} ) ) and $openprint::config{'Add Default Press Proof'} eq 'Y' ) {
@@ -758,7 +772,6 @@ $log->debug("Presentation folder sizes $$specs{'chkPocketLeft'} $$specs{'chkPock
 		} # end foreach
 	} # end if LaminationType
 
-	my $ac = sql::start_transaction( $dbh );
 	foreach my $sid ( @{$$services{'Turnaround'}} ) {
 		foreach my $spec ( 'TurnaroundDays' ) {
 			openprint::service::insert_service_spec( $log, $dbh, $$Project{'id'}, $sid, $spec, $$specs{$spec} );
@@ -776,7 +789,6 @@ $log->debug("Presentation folder sizes $$specs{'chkPocketLeft'} $$specs{'chkPock
 			} # end foreach
 		} # end if
 	}  # end foreach service_name
-	sql::end_transaction( $dbh, $ac );
 
 	my @s = $Project->signatures();
 	$log->debug("Sigs: @s");
@@ -811,23 +823,30 @@ $log->debug("Presentation folder sizes $$specs{'chkPocketLeft'} $$specs{'chkPock
 		$$specs{'txtHoleQty'} = $$drill_specs{'txtHoleQty'};
 	} # end if
 
-	$services = $Project->services();
 	$$specs{'txtPrice1'} = 0;
 	$$specs{'txtUnitPrice1'} = 0;
 # add up the prices
-	if ( $$specs{'Status'} ne 'uncalculated' ) {
-		foreach my $service_name ( keys %{$services} ) {
-			foreach my $service_index ( @{$$services{$service_name}} ) {
-				my $service_specs = openprint::service::get_specs_ref( $Project, $service_index );
-				$$specs{'txtPrice1'} += $$service_specs{'txtPrice1'};	
-				#$log->debug("Prices for $service_name : $$service_specs{'txtPrice1'}");
-			} # end foreach service_index
-		} # end foreach service_name
-	} else {
-$log->warn("Have uncalculated service: ");
-	} # end if
+	#if ( $$specs{'Status'} ne 'uncalculated' ) {
+	foreach my $service_name ( keys %{$services} ) {
+		foreach my $service_index ( @{$$services{$service_name}} ) {
+			my $service_specs = openprint::service::get_specs_ref( $Project, $service_index );
+			$$specs{'txtPrice1'} += $$service_specs{'txtPrice1'};	
+			if ( $$service_specs{'Status'} eq 'uncalculated' ) {
+				$log->warn("$service_name is uncalculated");
+				$$specs{Status} = 'uncalculated';
+			} else {
+				$log->warn("$service_name is calculated");
+			} # en dif
+			#$log->debug("Prices for $service_name : $$service_specs{'txtPrice1'}");
+		} # end foreach service_index
+	} # end foreach service_name
+	#} else {
+#$log->warn("Have uncalculated service: ");
+	#} # end if
+$log->warn("price: $$specs{'txtPrice1'}");
 	$$specs{'txtPrice1'} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $$specs{'txtPrice1'} );
-	$$specs{'txtUnitPrice1'} = sprintf( '%.2f', $$specs{'txtPrice1'}/$$specs{'txtQuantity1'} );	
+	$$specs{'txtUnitPrice1'} = Math::Round::nearest( 0.01, $$specs{'txtPrice1'}/$$specs{'txtQuantity1'} );	
+$log->warn("unitprice: $$specs{'txtUnitPrice1'}");
 	$Project->price1( $$specs{'txtPrice1'} );
 	$Project->summary(undef);
 	if ( $_ = $Project->save() ) {
@@ -850,22 +869,24 @@ $log->warn("Have uncalculated service: ");
 	$$specs{'ShippingPrice1'} = sprintf( '%.2f', $$specs{'ShippingPrice1'} );
 	$$specs{'ProductionPrice1'} = sprintf( '%.2f', $$specs{'ProductionPrice1'} );
 
-	my %printing_types;
-	foreach my $ss_id ( $Project->signatures() ) {
-		my $sig_specs = openprint::service::get_specs_ref( $Project, $ss_id );
-		$printing_types{$$sig_specs{'PrintingType1'}} = 1;
-	} # end foreach
-	if ( %printing_types ) {
-		$$specs{'alert'} .= 'This quote is for printing on ' . join(',', keys %printing_types ) . ' presses.<br/>';
-	} # end if
 
 	$$specs{'Status'} = $Project->update_status( $variable );
 	if ( $$specs{'Status'} ne 'Unordered' ) {
 		$$specs{'alert'} = 'There was an error in calculations.  Please contact us for help.' if ! $$specs{'alert'};
 		$$specs{'txtPrice1'} = '';
 		$$specs{'txtUnitPrice1'} = '';
+	} else {
+		my %printing_types;
+		foreach my $ss_id ( $Project->signatures() ) {
+			my $sig_specs = openprint::service::get_specs_ref( $Project, $ss_id );
+			$printing_types{$$sig_specs{'PrintingType1'}} = 1;
+		} # end foreach
+		if ( %printing_types ) {
+			$$specs{'alert'} .= 'This quote is for printing on ' . join(',', keys %printing_types ) . ' presses.<br/>';
+		} # end if
 	} # end if
 	delete $$variable{'Redirect'};
+	sql::end_transaction( $dbh, $ac );
 	return $$specs{'Status'};
 } # end sub calc
 

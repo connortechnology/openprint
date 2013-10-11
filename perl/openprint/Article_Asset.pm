@@ -14,30 +14,40 @@ $table = 'article_assets';
 );
 
 sub Asset {
-	return new openprint::Asset( $_[0]{'asset_id'} );
+	return new openprint::Asset( $_[0]{asset_id} );
 } # end sub Asset
+
 sub Content {
-	return new openprint::Article( $_[0]{'article_id'} );
+	return new openprint::Article( $_[0]{article_id} );
 } # end sub Content
 
 sub url {
 	return $_[0]->Asset()->url();
 } # end sub url
+
 sub thumbnail_url {
-	return $_[0]->Asset()->thumbnail_url();
+	return $_[0]->Asset()->sized_url('thumbnail');
 } # end sub url
 
 sub medium_html {
 	my $Asset = $_[0]->Asset();
-	return sprintf('<a class="medium %s" href="/article/view.html?article_id=%d"><img src="%s" alt="%s"/></a>', $Asset->layout(), $_[0]{'article_id'},$Asset->medium_url(), $Asset->caption() );
+	return sprintf('<a class="medium %s" href="/article/view.html?article_id=%d"><img src="%s" alt="%s"/></a>', 
+		$Asset->layout(), $_[0]{article_id},$Asset->sized_url('medium'), $Asset->caption() );
 } # end sub thumbnail_html
+
 sub thumbnail_html {
-	my $Asset = $_[0]->Asset();
-	return sprintf('<a class="thumbnail" href="/article/view.html?article_id=%d"><img src="%s" alt="%s"/></a>', $_[0]{'article_id'},$Asset->thumbnail_url(), $Asset->caption() );
+	my $self = $_[0];
+	my $Asset = $self->Asset();
+	if ( $Asset->layout() eq 'Landscape' ) {
+		return sprintf('<a class="Landscape" href="/article/view.html?article_id=%d"><img src="%s" alt="%s"/></a>', $$self{article_id},$Asset->sized_url('thumbnail'), $Asset->caption() );
+	} else {
+		return sprintf('<a class="Portrait" href="/article/view.html?article_id=%d"><img src="%s" alt="%s"/></a>', $$self{article_id},$Asset->sized_url('thumbnail'), $Asset->caption() );
+	} # end if
 } # end sub thumbnail_html
+
 sub html {
 	my $Asset = $_[0]->Asset();
-	return sprintf('<a class="full" href="/article/view.html?article_id=%d"><img src="%s" alt="%s"/></a>', $_[0]{'article_id'},$Asset->url(), $Asset->caption() );
+	return sprintf('<a class="full" href="/article/view.html?article_id=%d"><img src="%s" alt="%s"/></a>', $_[0]{article_id},$Asset->url(), $Asset->caption() );
 } # end sub html
 1;
 __END__

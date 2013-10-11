@@ -7,30 +7,27 @@
 			);
 
 	} elsif ( $param{'StartDocket'} ) {
-		@{$$variable{'Projects'}} = openprint::Project->find( 'docket' => $param{'StartDocket'} );
+		$$variable{Projects} = [ openprint::Project->find( docket=>$param{StartDocket} ) ];
+		if ( ! @{$$variable{Projects}} ) {
+			my $Order = openprint::Order->find_one(docket=>$param{StartDocket});
+			if ( $Order ) {
+				my $Project = new openprint::Project();
+				$Project->docket($Order->docket());
+				$Project->status( $Order->status() );
+				$Project->order_id( $$Order{id} );
+				push @{$$variable{Projects}}, $Project;
+			} # end if
+		} # end if
 	} else {
-		$$variable{'DueDateStart'} = sprintf('%.4d-%.2d-%.2d', 
-			@session{
-			'/employee/production/projects.html?DueDateStartYear',
-			'/employee/production/projects.html?DueDateStartMonth',
-			'/employee/production/projects.html?DueDateStartDay'}
-			);
-		$$variable{'DueDateEnd'} = sprintf('%.4d-%.2d-%.2d',
-			@session{
-			'/employee/production/projects.html?DueDateEndYear',
-			'/employee/production/projects.html?DueDateEndMonth',
-			'/employee/production/projects.html?DueDateEndDay'}
-			);
-
 		my %filters = (
 				( $session{'/employee/production/projects.html?ddmPress'} ? (	'used_press_name in'	=> $session{'/employee/production/projects.html?ddmPress'} ) : () ),
 				( $session{'/employee/production/projects.html?ddmEmployee'} ? (	'operator_id in'	=> $session{'/employee/production/projects.html?ddmEmployee'} ) : () ),
-				'status'			=> [ split ',', $session{'/employee/production/projects.html?ProjectStatus'} ],
-				'due_date <='		=> $$variable{'DueDateEnd'},
-				'due_date >='		=> $$variable{'DueDateStart'},
-				#'due_date'			=> undef,
+				status			=> [ split ',', $session{'/employee/production/projects.html?ProjectStatus'} ],
 				'order_id is null'	=> 0,
-				'order'				=> 'due_date, lngDocketNumber',
+				date_filter( '/employee/production/projects.html?due_date_end', 'due_date <=' ),
+				date_filter( '/employee/production/projects.html?due_date_start', 'due_date >=' ),
+				due_date		=> undef,
+				'order'			=> 'due_date, lngDocketNumber',
 			);
 			if ( $session{'/employee/production/projects.html?ddmSalesRep'} ) {
 				$filters{'salesrep_id'} = $session{'/employee/production/projects.html?ddmSalesRep'};

@@ -4,15 +4,7 @@ CREATE TABLE Manifests (
 	received_on	timestamp with time zone NOT NULL default NOW(),
 	updated_on	timestamp with time zone NOT NULL default NOW(),
 	created_on	timestamp with time zone NOT NULL default NOW(),
+	deleted	BOOLEAN NOT NULL default false,
 	PRIMARY KEY (id)
 );
 ALTER TABLE PurchaseOrders ADD FOREIGN KEY (manifest_id) REFERENCES Manifests (id);
-CREATE TABLE ManifestContents (
-	id	SERIAL NOT NULL,
-	manifest_id	INTEGER NOT NULL, FOREIGN KEY (manifest_id) REFERENCES Manifests (id),
-	skid_id		INTEGER NOT NULL, FOREIGN KEY (skid_id) REFERENCES Skids (id),
-	quantity	INTEGER NOT NULL,
-	cost		FLOAT,	
-	docket		INTEGER,
-	PRIMARY KEY (id)
-);

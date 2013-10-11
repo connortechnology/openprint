@@ -3,26 +3,24 @@
 		<ul>
 			<li>
 				<label>Date</label>
-				<? echo ( ssi::date_select_session( '/administrator/managerial/upload_log.html', 'uploaded_on_start',  { 'onchange'=> '','with_today'=>1 } ); ) ?>
+				<? echo (date_select_session( '/administrator/managerial/upload_log.html', 'uploaded_on_start',  { with_today=>1 } ); ) ?>
 				to
-				<? echo ( ssi::date_select_session( '/administrator/managerial/upload_log.html', 'uploaded_on_end',  { 'onchange'=> '','with_today'=>1 } ); ) ?>
+				<? echo (date_select_session( '/administrator/managerial/upload_log.html', 'uploaded_on_end',  { with_today=>1 } ); ) ?>
 			</li>
 			<li>
 				<label>Company</label>
 				<input type="text" onkeyup="filterDDM(this,this.form.company_id);" onkeydown="if(event.keyCode==13){searchLog.btnFunction.value='Go';searchLog.submit();}" class="filter" />
 				<select name="company_id" id="company_id" onchange="searchLog.submit();" >
 					<option value="">All</option>
-					<? echo (
-						return openprint::Company::get_dropdown( $param{'company_id'} );
-					) ?>
+					<? echo ( return openprint::Company::get_dropdown( $param{'company_id'} );) ?>
 				</select>
 			</li>
 			<li><label>Type</label>
-				<? echo ( ssi::radio( 'type', [ 'FTP','FTP', 'Web','Web', '', 'All' ], $session{'/administrator/managerial/upload_log.html?type'} ); ) ?>
+				<? echo ( radio( 'type', [ 'FTP','FTP', 'Web','Web', '', 'All' ], $session{'/administrator/managerial/upload_log.html?type'} ); ) ?>
 			</li>
 		</ul>
 		<p class="buttons">
-		<? echo ( ssi::button( 'Search',{ 'onclick'=>'document.searchLog.submit();'} ); ) ?>
+		<? echo ( button( 'Search',{ onclick=>'document.searchLog.submit();'} ); ) ?>
 		</p>
 	</fieldset>
 </form>
@@ -42,8 +40,8 @@
 			my $html = '';
 			my $rowclass;
 			my @Uploads = openprint::Upload->find(
-				ssi::date_filter( '/administrator/managerial/upload_log.html?uploaded_on_start', 'start >=' ),
-				ssi::date_filter( '/administrator/managerial/upload_log.html?uploaded_on_end', 'start <=' ),
+				date_filter( '/administrator/managerial/upload_log.html?uploaded_on_end', 'start <=' ),
+				date_filter( '/administrator/managerial/upload_log.html?uploaded_on_start', 'start >=' ),
 				( $session{'/administrator/managerial/upload_log.html?type'} ? ( 'type'=>$session{'/administrator/managerial/upload_log.html?type'} ) : () ),
 				( $session{'/administrator/managerial/upload_log.html?company_id'} ? ( 'company_id'=>$session{'/administrator/managerial/upload_log.html?company_id'} ) : () ),
 				limit	=>	1000,
@@ -72,8 +70,8 @@
 					$rowclass,
 					Date::Format::time2str( $config{'DateTimeFormat'}, Date::Parse::str2time($Upload->start()) ),
 					$company_name,
-					$Upload->user_id() ? $Upload->User()->name() : $Upload->user(),
-					join('<br/>',@files ),
+					$Upload->user_id() ? $Upload->User()->name() : '',
+					join('<br/>', map { qq`<a href="/project_files/$company_name/$_">$_</a>` } @files ),
 					$Upload->type(),
 					$Upload->size_text(),
 					$Upload->total_text(),

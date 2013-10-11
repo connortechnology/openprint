@@ -6,7 +6,11 @@ require openprint::pricelist;
 require openprint::priceset;
 require openprint::price;
 
-my $debug = 0;
+use vars qw( $log $dbh );
+*log = \$openprint::log;
+*dbh = \$openprint::dbh;
+
+use constant DEBUG => 1;
 
 my %price_cache;
 
@@ -23,21 +27,17 @@ sub get_pricelist_id {
 
 	my $list_id;
 
-	my $Company = new openprint::Company( $openprint::session{'company_id'} );
-	if ( $Company->id() > 0 ) {
+	if ( $openprint::session{company_id} > 0 ) {
+		my $Company = new openprint::Company( $openprint::session{company_id} );
 		$list_id = $Company->pricelist_id();
+		if ( (! $list_id ) and $Company->country() ) {
+			$list_id = $openprint::config{'Default'.$Company->country().'Pricelist'};
+		} # end if
 	} # end if
-
-	if ( (! $list_id) and $Company->country() ) {
-		$list_id = $openprint::config{'Default'.$Company->country().'Pricelist'};
-	} # end if
-
-	if ( (! $list_id) and $openprint::session{'Country'} ) {
+	if ( ( ! $list_id ) and $openprint::session{'Country'} ) {
 		$list_id = $openprint::config{'Default'.$openprint::session{'Country'}.'Pricelist'};
-	} # end if
-	if ( ! $list_id ) {
-		$list_id = $openprint::config{'DefaultPricelist'};
-	} # end if
+	}  # end if
+	$list_id = $openprint::config{'DefaultPricelist'} if ! $list_id;
 	if ( ! $list_id ) {
 		$openprint::log->debug("No pricelist to be had! Country: $openprint::session{'Country'}" );
 	} # end if
@@ -144,7 +144,7 @@ sub split_by_equipment {
 
 memoize('get_best_prices');
 sub get_best_prices {
-	my ( $log, $dbh, $cust_id, $prod_index, $list_id, $pricesetclass, $equipment, $qty ) = @_;
+	my ( $cust_id, $prod_index, $list_id, $pricesetclass, $equipment, $qty, $period ) = @_;
 
 	#my $hash_index = "$list_id-$pricesetclass-$cust_id-$prod_index-$equipment-$qty";
 
@@ -156,7 +156,7 @@ sub get_best_prices {
 		} # end if
 
 		my @pricing = ();
-		my $priceGroup = $pricesetclass->new( $log, $dbh, $list_id, $prod_index, $equipment, $qty );
+		my $priceGroup = $pricesetclass->new( $log, $dbh, $list_id, $prod_index, $equipment, $qty, $period );
 		$priceGroup->load();	
 		push @pricing, @{$priceGroup->{prices}};
 
@@ -208,15 +208,15 @@ sub get_best_prices {
 } # end sub get_best_prices
 
 sub get_best_price {
-	my ( $log, $dbh, $cust_id, $prod_index, $list_id, $pricesetclass, $qty, $equipment ) = @_;
+	my ( $cust_id, $prod_index, $list_id, $pricesetclass, $qty, $equipment, $period ) = @_;
 
-	my %price = get_best_price_object( $log, $dbh, $cust_id, $prod_index, $list_id, $pricesetclass, $qty, $equipment );
+	my %price = get_best_price_object( $cust_id, $prod_index, $list_id, $pricesetclass, $qty, $equipment, $period );
 	return $price{Price};
 } # end sub get_best_price 
 
 sub get_best_price_object {
-	my ( $log, $dbh, $cust_id, $prod_index, $list_id, $pricesetclass, $qty, $equipment ) = @_;
-	my $prices = get_best_prices( $log, $dbh, $cust_id, $prod_index, $list_id, $pricesetclass, $equipment, $qty );
+	my ( $cust_id, $prod_index, $list_id, $pricesetclass, $qty, $equipment, $period ) = @_;
+	my $prices = get_best_prices( $cust_id, $prod_index, $list_id, $pricesetclass, $equipment, $qty, $period );
 	foreach my $price ( @$prices ) {
 		if ( $price and ( 
 					( (!defined $qty) or $qty eq '' ) or

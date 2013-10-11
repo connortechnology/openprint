@@ -7,6 +7,7 @@ require sql;
 require openprint::Object;
 require openprint::pricing;
 require openprint::logs;
+
 use openprint ();
 *session = \%openprint::session;
 *log = \$openprint::log;
@@ -18,29 +19,30 @@ $table = 'services';
 $serial = 'services_id_seq';
 
 %fields = (
-		'id'				=>	'id',
-		'name'				=>	'name',
-		'description'		=>	'description',
-		'supplier_id'		=>	'supplier_id',
-		'category_id'		=>	'category_id',
-		'category'			=>	undef,
-		'taxexempt1'		=>	'taxexempt1',
-		'taxexempt2'		=>	'taxexempt2',
-		'owner_id'			=>	'owner_id',
+		id				=>	'id',
+		name			=>	'name',
+		description		=>	'description',
+		supplier_id		=>	'supplier_id',
+		category_id		=>	'category_id',
+		category		=>	undef,
+		taxexempt1		=>	'taxexempt1',
+		taxexempt2		=>	'taxexempt2',
+		owner_id		=>	'owner_id',
 	 	);	
 %find_fields = (
-	'category' => '(SELECT name FROM Service_Categories WHERE service_categories.id=category_id)',
-	'equipment_id'	=> '(SELECT equipment_id FROM service_prices WHERE service_id=services.id)',
+	category		=> '(SELECT name FROM Service_Categories WHERE service_categories.id=category_id)',
+	equipment_id	=> '(SELECT equipment_id FROM service_prices WHERE service_id=services.id)',
 );
+
 
 %transforms = (
 		);
 
 %defaults = (
-		'supplier_id'	=>	undef,
-		'category_id'	=>	undef,
-		'taxexempt1'	=>	q`'N'`,
-		'taxexempt2'	=>	q`'N'`,
+		supplier_id	=>	undef,
+		category_id	=>	undef,
+		taxexempt1	=>	q`'N'`,
+		taxexempt2	=>	q`'N'`,
 		);
 
 $cache_field = 'name';
@@ -80,17 +82,26 @@ sub delete {
 } # end sub delete
 
 sub prices {
-	my $self = shift;
-
-	return openprint::ServicePrice->find( 'service_id'=>$$self{id} );
+	return openprint::ServicePrice->find( service_id=>$_[0]{id} );
 } # end sub prices
 
 sub get_price {
-    my ( $self, $quantity, $Equipment, $Pricelist ) = @_;
+    my ( $self, $quantity, $Equipment, $Pricelist, $period ) = @_;
+
+	if ( ! $period ) {
+		$period = 'NOW()';
+		if ( $debug ) {
+			$log->debug("No period specified defaulting to $period");
+		} # end if
+	} # end if
 
 	$Pricelist = openprint::Pricelist::get_current() if ! $Pricelist;
-    my %price = openprint::pricing::get_best_price_object( $log, $dbh, $openprint::session{'company_id'}, $$self{id}, $$Pricelist{'id'}, 'openprint::service_priceset', $quantity, $$Equipment{'id'} );
-    return if ! %price;
+    my %price = openprint::pricing::get_best_price_object( $openprint::session{company_id}, $$self{id}, $$Pricelist{id}, 'openprint::service_priceset', $quantity, $$Equipment{id}, $period );
+
+	if ( ! %price ) {
+		$log->debug("No price returned for $$self{name} $$Equipment{strid} $quantity $period") if $debug;
+		return ;
+	} # end if
 
 	$price{'currency_id'} = $Pricelist->currency_id();
 	$price{'ServiceName'} = $$self{'name'};

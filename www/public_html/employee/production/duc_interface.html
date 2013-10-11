@@ -221,7 +221,7 @@
 	<input type="hidden" name="Submit" />
 	<input type="hidden" name="btnFunction" />
 	<input type="hidden" name="remove" />
-<? echo ( ssi::writeButton( $log, $dbh, 'Generate', 'generate.gif', "f1.btnFunction.value='Schedule';f1.submit();", '', 'Generate Schedule'); ) ?>
+<? echo ( button( 'Generate', { onclick=>"f1.btnFunction.value='Schedule';f1.submit();", text=>'Generate Schedule' } ); ) ?>
 </form>
 <br class="spacer"/>
 <script type="text/javascript">document.f1.Project.focus();</script>
@@ -251,7 +251,7 @@
 				$html .= qq`<br/><span class="warning">Project is still waiting for customer approval</span>`;
 			} # end if
 			$html .= qq`</td><td>$weekday</td><td>$time</td><td>`;
-			$html .= ssi::writeButton( $log, $dbh, "Remove$service_id", '', "f1.remove.value=$service_id;f1.btnFunction.value='Delete';f1.submit();", '', 'remove' );
+			$html .= button( "Remove$service_id", { onclick=>"f1.remove.value=$service_id;f1.btnFunction.value='Delete';f1.submit();", text=>'remove' } );
 			$html .= '</td></tr>';
 			$rowclass = $rowclass ? '' : ' class="colRow"';
 		} # end while

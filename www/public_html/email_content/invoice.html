@@ -8,7 +8,7 @@
 			<? echo (
 				my $Invoicee = $$variable{Invoice}->Invoicee();
 				my $html = '';
-				$html .= $Invoicee->name().'<br/>';
+				$html .= ( $Invoicee->business_name() ? $Invoicee->business_name() : $Invoicee->name() ).'<br/>';
 				$html .= $Invoicee->address1().'<br/>';
 				$html .= $Invoicee->address2().'<br/>' if $Invoicee->address2();
 				$html .= join(', ', $Invoicee->get('city','state','country') ).'<br/>';
@@ -20,7 +20,7 @@
 			<? echo (
 				my $Invoicer = $$variable{Invoice}->Invoicer();
 				my $html = '';
-				$html .= $Invoicer->name().'<br/>';
+				$html .= ( $Invoicer->business_name() ? $Invoicer->business_name() : $Invoicer->name() ).'<br/>';
 				$html .= $Invoicer->address1().'<br/>';
 				$html .= $Invoicer->address2().'<br/>' if $Invoicer->address2();
 				$html .= join(', ', $Invoicer->get('city','state','country') ).'<br/>';
@@ -43,6 +43,7 @@
 			<tr>
 				<th class="Date">Date</th>
 				<th class="Service">Description</th>
+				<th class="PO">PO #</th>
 				<th class="Interval">Interval</th>
 				<th class="Rate">Rate</th>	
 				<th class="Price">Price</th>
@@ -51,12 +52,13 @@
 					$html .= sprintf( q`<tr %2$s>`, $Timetrack->id(), $rowclass );
 					$html .= sprintf('<td class="Date">%s</td>', ssi::format_date( $Timetrack->starting() ) );
 					$html .= sprintf('<td class="Service">%s</td>', ssi::html_escape( $Timetrack->Service()->name() ) );
+					$html .= '<td class="PO">'.ssi::html_escape( $Timetrack->po() ).'</td>';
 					$html .= sprintf('<td class="Interval">%s</td>', misc::seconds_to_pretty_interval( $Timetrack->elapsed() ) ); 
 					my $Price = $Timetrack->Price();
 					$html .= sprintf('<td class="Rate">%s%s</td>', openprint::Currency::format( $$Price{Price} ), $$Price{units} );
 					$html .= sprintf('<td class="Price">%s</td>', openprint::Currency::format( $$Price{Total} ) );
 					$html .= sprintf('</tr><tr %2$s>', $Timetrack->id(), $rowclass );
-					$html .= '<td>&nbsp;</td><td colspan="3">'.$Timetrack->description().'</td><td>&nbsp;</td>';
+					$html .= '<td>&nbsp;</td><td colspan="4">'.$Timetrack->description().'</td><td>&nbsp;</td>';
 					$html .= '</tr>';
 					$$variable{'service_total'} += $$Price{'Total'};
 					$rowclass = $rowclass ? '' : 'class="colRow"';
@@ -69,6 +71,7 @@
 						<tr>
 							<th class="Date">Date</th>
 							<th class="Service">Description</th>
+							<th class="PO">PO #</th>
 							<th class="Interval">Interval</th>
 							<th class="Rate">Rate</th>	
 							<th class="Price">Price</th>
@@ -77,12 +80,13 @@
 						$html .= sprintf( q`<tr %2$s>`, $Timetrack->id(), $rowclass );
 						$html .= sprintf('<td class="Date">%s</td>', Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $Timetrack->starting() ) ) );
 						$html .= sprintf('<td class="Service">%s</td>', ssi::html_escape( $Timetrack->Service()->name() ) );
+						$html .= '<td class="PO">'.ssi::html_escape( $Timetrack->po() ).'</td>';
 						$html .= sprintf('<td class="Interval">%s</td>', misc::seconds_to_pretty_interval( $Timetrack->elapsed() ) ); 
 						my $Price = $Timetrack->Price();
 						$html .= sprintf('<td class="Rate">%s%s</td>', openprint::Currency::format( $$Price{'Price'} ), $$Price{'units'} );
 						$html .= sprintf('<td class="Price">%s</td>', openprint::Currency::format( $$Price{'Total'} ) );
 						$html .= sprintf(q`</tr><tr %2$s>`, $Timetrack->id(), $rowclass );
-						$html .= '<td>&nbsp;</td><td>'.$Timetrack->description().'</td><td colspan="3">&nbsp;</td>';
+						$html .= '<td>&nbsp;</td><td colspan="4">'.$Timetrack->description().'</td><td>&nbsp;</td>';
 						$html .= '</tr>';
 						$$variable{'service_total'} += $$Price{'Total'};
 						$rowclass = $rowclass ? '' : 'class="colRow"';
@@ -91,7 +95,7 @@
 				return $html;
 			) ?>
 			<tr class="totals">
-				<td colspan="4">Totals</td>
+				<td colspan="5">Totals</td>
 				<td class="Price"><? echo ( openprint::Currency::format( $$variable{'service_total'} ); ) ?></td>
 			</tr>
 		</table>
@@ -100,7 +104,7 @@
 <div class="Notes">
 	<fieldset><legend>Notes</legend>
         <table class="List">
-            <tr><td width="105">Posted On</td><td><? echo ( Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time($$variable{Invoice}->posted_on() ) ); ) ?></td></tr>
+            <tr><td class="Date">Posted On</td><td><? echo ( Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time($$variable{Invoice}->posted_on() ) ); ) ?></td></tr>
             <tr><td><b>Due On</b></td><td><b><? echo ( Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $$variable{Invoice}->due_on() ) ); ) ?></b></td></tr>
             <tr><td>Notes</td><td><? echo ( $$variable{Invoice}->external_notes() ) ?></td></tr>
             <tr><td><b>Invoice Terms</b></td>
@@ -109,12 +113,14 @@
     </fieldset>
 </div>
 <? echo ( include('/invoice/_totals.html', $variable); ) ?>
-<? if ( $$variable{Invoice}->due_on() and ( Date::Parse::str2time($$variable{Invoice}->due_on() ) < time ) ) ?>
-<div class="Overdue">NOTICE:  This invoice is now overdue.  Please make payment or contact us to make an arrangement.</div>
-<? endif ( $$variable{Invoice}->due_on() and ( Date::Parse::str2time($$variable{Invoice}->due_on() ) < time ) ) ?>
-<? if ( $$variable{Invoice}->interest() ) ?>
-<div class="HasInterest">Late payment interest charges have been added to this invoice and are reflected in the amount owing.</div>
-<? endif ( $$variable{Invoice}->interest() ) ?>
-<?include(/invoice/_payment_options.html)?>
+<? if ( $$variable{Invoice}->owing() ) ?>
+	<? if ( $$variable{Invoice}->due_on() and ( Date::Parse::str2time($$variable{Invoice}->due_on() ) < time ) ) ?>
+	<div class="Overdue">NOTICE:  This invoice is now overdue.  Please make payment or contact us to make an arrangement.</div>
+	<? endif ( $$variable{Invoice}->due_on() and ( Date::Parse::str2time($$variable{Invoice}->due_on() ) < time ) ) ?>
+	<? if ( $$variable{Invoice}->interest() ) ?>
+	<div class="HasInterest">Late payment interest charges have been added to this invoice and are reflected in the amount owing.</div>
+	<? endif ( $$variable{Invoice}->interest() ) ?>
+	<?include(/invoice/_payment_options.html)?>
+<? endif ( $$variable{Invoice}->owing() ) ?>
 <? echo ( include('/invoice/_payments_view.html', $variable); ) ?>
 </div>

@@ -183,8 +183,8 @@ view_photo();
 } # end sub _view_photo
 
 sub view_photo {
-	$param{'asset_id'} =~ s/\D//g;
-	$param{'album_id'} =~ s/\D//g;
+	$param{asset_id} =~ s/\D//g;
+	$param{album_id} =~ s/\D//g;
 	if ( ! ( $param{asset_id} and $param{album_id} ) ) {
 		# Search engines, etc might get here
 		return;
@@ -254,6 +254,7 @@ $log->debug("Saving");
 		}
 	} # end if owner of the photo
 	$variable{'Photo'} = $Photo;
+	$variable{Album} = $Album;
 } # end sub view_photo
 
 sub _photo_comments {

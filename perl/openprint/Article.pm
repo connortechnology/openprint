@@ -1,15 +1,16 @@
 use strict;
 require openprint::Article_Asset;
+require openprint::Article_Category;
 package openprint::Article;
 our @ISA = qw(openprint::Object);
 
-use vars qw( $debug $table $serial %fields %defaults %transforms %config $log $dbh %session );
+use vars qw( $debug $table $serial %fields %defaults %transforms %config $log $dbh %session %find_fields );
 *session = \%openprint::session;
 *config = \%openprint::config;
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
 
-$debug = 0;
+$debug = 1;
 
 $table = 'articles';
 $serial = 'articles_id_seq';
@@ -46,10 +47,13 @@ $serial = 'articles_id_seq';
 	'keywords'			=>	'keywords',
 	anonymous			=>	'anonymous',
 );
+%find_fields = (
+	category		=>	'(SELECT name FROM article_categories WHERE id=category_id)',
+);
 
 %transforms = (
 	user_type	=>	[ 's/\s//g' ],
-	id			=>	[ 's/\D//g' ],
+	id			=>	[ 's/\D//g', '<2147483647' ],
 );
 %defaults = (
 	created_on		=> q`'NOW()'`,
@@ -245,7 +249,8 @@ sub link_to {
 } # end sub link_to
 
 sub Assets {
-	return openprint::Article_Asset->find( 'article_id' => $_[0]{'id'} );
+	return () if ! $_[0]{id};
+	return openprint::Article_Asset->find( article_id => $_[0]{id} );
 } # end sub Assets
 
 sub published_on_string {
@@ -299,5 +304,9 @@ sub body_escaped {
 $openprint::log->debug("body: $body");
 	return $body;
 } # end
+
+sub Created_By {
+	return new openprint::User( $_[0]{created_by} );
+} 
 1;
 __END__

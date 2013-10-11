@@ -4,37 +4,37 @@
 		<ul>
 		<li>
 			<label>Customer supplied</label>
-			<input type="radio" id="SuppliedStock<?Signature?>Y" name="rdbSuppliedStock<?Signature?>" value="Y" <? echo ( ssi::checked( $$variable{'rdbSuppliedStock'.$$variable{'Signature'}} eq 'Y' ); ) ?> onclick="$('SuppliedStockWarning<?Signature?>').show();Stock_onchange(this,'<?Signature?>');" />
+			<input type="radio" id="SuppliedStock<?Signature?>Y" name="rdbSuppliedStock<?Signature?>" value="Y" <? echo ( checked( $$variable{'rdbSuppliedStock'.$$variable{Signature}} eq 'Y' ); ) ?> onclick="$('SuppliedStockWarning<?Signature?>').show();Stock_onchange(this,'<?Signature?>');" />
 			<label class="radio" for="SuppliedStock<?Signature?>Y">Yes</label>
-			<input type="radio" id="SuppliedStock<?Signature?>N" name="rdbSuppliedStock<?Signature?>" value="N" <? echo ( ssi::checked( $$variable{'rdbSuppliedStock'.$$variable{'Signature'}} ne 'Y' ); ) ?> onclick="$('SuppliedStockWarning<?Signature?>').hide();Stock_onchange(this,'<?Signature?>');" />
+			<input type="radio" id="SuppliedStock<?Signature?>N" name="rdbSuppliedStock<?Signature?>" value="N" <? echo ( checked( $$variable{'rdbSuppliedStock'.$$variable{Signature}} ne 'Y' ); ) ?> onclick="$('SuppliedStockWarning<?Signature?>').hide();Stock_onchange(this,'<?Signature?>');" />
 			<label class="radio" for="SuppliedStock<?Signature?>N">No</label><br/>
-			<span id="SuppliedStockWarning<?Signature?>" class="error" <? echo ( 'style="display:none;"' if $$variable{'rdbSuppliedStock'.$$variable{'Signature'}} ne 'Y' ) ?>>Prices shown will not include the price of the stock.</span>
+			<span id="SuppliedStockWarning<?Signature?>" class="error" <? echo ( 'style="display:none;"' if $$variable{'rdbSuppliedStock'.$$variable{Signature}} ne 'Y' ) ?>>Prices shown will not include the price of the stock.</span>
 		</li>
 		<li>
 			<label>Unlisted stock</label>
-			<input type="radio" id="SpecificStock<?Signature?>Y" name="rdbSpecificStock<?Signature?>" value="Y" <? echo ( ssi::checked( $$variable{'rdbSpecificStock'.$$variable{'Signature'}} eq 'Y' ); ) ?> onclick="$('HouseStock<?Signature?>').hide();$('SpecificStock<?Signature?>').show();if(this.form.ddmStockSheetSize1){clear_ddm(this.form.ddmStockSheetSize1);};if(this.form.ddmStockSheetSize2){clear_ddm(this.form.ddmStockSheetSize2);};if(this.form.ddmStockSheetSize3){clear_ddm(this.form.ddmStockSheetSize3);};calc(this.form.name);" />
+			<input type="radio" id="SpecificStock<?Signature?>Y" name="rdbSpecificStock<?Signature?>" value="Y" <? echo ( checked( $$variable{'rdbSpecificStock'.$$variable{Signature}} eq 'Y' ); ) ?> onclick="$('HouseStock<?Signature?>').hide();$('SpecificStock<?Signature?>').show();if(this.form.ddmStockSheetSize1){clear_ddm(this.form.ddmStockSheetSize1);};if(this.form.ddmStockSheetSize2){clear_ddm(this.form.ddmStockSheetSize2);};if(this.form.ddmStockSheetSize3){clear_ddm(this.form.ddmStockSheetSize3);};calc(this.form.name);" />
 			<label class="radio" for="SpecificStock<?Signature?>Y">Yes</label>
-			<input type="radio" id="SpecificStock<?Signature?>N" name="rdbSpecificStock<?Signature?>" value="N" <? echo ( ssi::checked( $$variable{'rdbSpecificStock'.$$variable{'Signature'}} ne 'Y' ); ) ?> onclick="$('SpecificStock<?Signature?>').hide();$('HouseStock<?Signature?>').show();Stock_onchange(this,'<?Signature?>');calc(this.form.name);" />
+			<input type="radio" id="SpecificStock<?Signature?>N" name="rdbSpecificStock<?Signature?>" value="N" <? echo ( checked( $$variable{'rdbSpecificStock'.$$variable{Signature}} ne 'Y' ); ) ?> onclick="$('SpecificStock<?Signature?>').hide();$('HouseStock<?Signature?>').show();Stock_onchange(this,'<?Signature?>');" />
 			<label class="radio" for="SpecificStock<?Signature?>N">No</label>
 		</li>
 		</ul>
 		<? endif ( $$variable{'Mode'} ne 'Easy' ) ?>
-		<div id="SpecificStock<?Signature?>" style="display: <? echo ( $$variable{'rdbSpecificStock'.$$variable{'Signature'}} ne 'Y' ? 'none' : 'block' ) ?>;">
+		<div id="SpecificStock<?Signature?>" style="display: <? echo ( $$variable{'rdbSpecificStock'.$$variable{Signature}} ne 'Y' ? 'none' : 'block' ) ?>;">
 		<ul>
 			<li><label>Brand</label>
-			<input type="text" name="txtSpecificStockBrand<?Signature?>" value="<? echo ( $$variable{'txtSpecificStockBrand'.$$variable{'Signature'}} ) ?>" />
+			<input type="text" name="txtSpecificStockBrand<?Signature?>" value="<? echo ( $$variable{'txtSpecificStockBrand'.$$variable{Signature}} ) ?>" />
 			</li>
 			<li><label>Finish</label>
-			<input type="text" name="txtSpecificStockFinish<?Signature?>" value="<? echo ( $$variable{'txtSpecificStockFinish'.$$variable{'Signature'}} ) ?>" />
+			<input type="text" name="txtSpecificStockFinish<?Signature?>" value="<? echo ( $$variable{'txtSpecificStockFinish'.$$variable{Signature}} ) ?>" />
 			</li>
 			<li><label>Colour</label>
-			<input type="text" name="txtSpecificStockColour<?Signature?>" value="<? echo ( $$variable{'txtSpecificStockColour'.$$variable{'Signature'}} ? $$variable{'txtSpecificStockColour'.$$variable{'Signature'}} : 'White' ) ?>" />
+			<input type="text" name="txtSpecificStockColour<?Signature?>" value="<? echo ( $$variable{'txtSpecificStockColour'.$$variable{Signature}} ? $$variable{'txtSpecificStockColour'.$$variable{Signature}} : 'White' ) ?>" />
 			</li>
 			<li><label>Weight</label>
-			<input type="text" name="txtSpecificStockWeight<?Signature?>" value="<? echo ( $$variable{'txtSpecificStockWeight'.$$variable{'Signature'}} ) ?>" />
+			<input type="text" name="txtSpecificStockWeight<?Signature?>" value="<? echo ( $$variable{'txtSpecificStockWeight'.$$variable{Signature}} ) ?>" />
 			</li>
 			<li><label>Calliper</label>
-				<? echo ( ssi::input( type=>'number', name=>'txtSpecificStockCalliper'.$$variable{'Signature'}, value=>$$variable{'txtSpecificStockCalliper'.$$variable{'Signature'}}, 'onchange'=>'calc(this.form.name);', onkeyup=>"this.value=this.value.replace(/[^\d\-\.]/g, '' );" ); ) ?>
+				<? echo ( input( type=>'float', name=>'txtSpecificStockCalliper'.$$variable{Signature}, value=>$$variable{'txtSpecificStockCalliper'.$$variable{Signature}}, onchange=>'calc(this.form.name);' ); ) ?>
 				inches
 			</li>
 <? eval (
@@ -44,61 +44,61 @@
 ) ?>
 <? if ( @{$$variable{'PaperTypes'}} > 1 ) ?>
 			<li><label>Format</label>
-				<input type="radio" id="StockType<?Signature?>Sheet" name="StockType<?Signature?>" value="Sheet" <? echo ( ssi::checked( $$variable{'StockType'.$$variable{'Signature'}} eq 'Sheet' ); ) ?> onclick="if ( this.checked ) { $('SpecificStockHeight<?Signature?>').show();$('BasisSize<?Signature?>').hide();$('MWeight<?Signature?>').show();$('PricePerM<?Signature?>').show();gsm_to_mweight(this.form,'<?Signature?>');$('minimum_order_units<?Signature?>').innerHTML='sheets';$('sheets_per_package<?Signature?>').innerHTML='sheets';} calc(this.form.name);" />
+				<input type="radio" id="StockType<?Signature?>Sheet" name="StockType<?Signature?>" value="Sheet" <? echo ( checked( $$variable{'StockType'.$$variable{Signature}} eq 'Sheet' ); ) ?> onclick="if ( this.checked ) { $('SpecificStockHeight<?Signature?>').show();$('BasisSize<?Signature?>').hide();$('MWeight<?Signature?>').show();$('PricePerM<?Signature?>').show();gsm_to_mweight(this.form,'<?Signature?>');$('minimum_order_units<?Signature?>').innerHTML='sheets';$('sheets_per_package<?Signature?>').innerHTML='sheets';} calc(this.form.name);" />
 				<label class="radio" for="StockType<?Signature?>Sheet">Sheet</label>
-				<input type="radio" id="StockType<?Signature?>Roll" name="StockType<?Signature?>" value="Roll" <? echo ( ssi::checked( $$variable{'StockType'.$$variable{'Signature'}} eq 'Roll' ); ) ?> onclick="if ( this.checked ) { f1.elements['txtSpecificStockHeight<?Signature?>'].value='';$('SpecificStockHeight<?Signature?>').hide();$('BasisSize<?Signature?>').show();$('MWeight<?Signature?>').hide();$('PricePerM<?Signature?>').hide();gsm_to_mweight(this.form,'<?Signature?>');paper_price_calc(this,'<?Signature?>');$('minimum_order_units<?Signature?>').innerHTML='lbs';$('sheets_per_package<?Signature?>').innerHTML='lbs';}calc(this.form.name);" />
+				<input type="radio" id="StockType<?Signature?>Roll" name="StockType<?Signature?>" value="Roll" <? echo ( checked( $$variable{'StockType'.$$variable{Signature}} eq 'Roll' ); ) ?> onclick="if ( this.checked ) { f1.elements['txtSpecificStockHeight<?Signature?>'].value='';$('SpecificStockHeight<?Signature?>').hide();$('BasisSize<?Signature?>').show();$('MWeight<?Signature?>').hide();$('PricePerM<?Signature?>').hide();gsm_to_mweight(this.form,'<?Signature?>');paper_price_calc(this,'<?Signature?>');$('minimum_order_units<?Signature?>').innerHTML='lbs';$('sheets_per_package<?Signature?>').innerHTML='lbs';}calc(this.form.name);" />
 				<label class="radio" for="StockType<?Signature?>Roll">Roll</label>
 			</li>
 <? else ( @{$$variable{'PaperTypes'}} > 1 ) ?>
-	<input type="hidden" name="StockType<?Signature?>" value="<? echo ( if ( $$variable{'StockType'.$$variable{'Signature'}} ) { return $$variable{'StockType'.$$variable{'Signature'}}; } else { return $$variable{'PaperTypes'}[0] } ) ?>" />
+	<input type="hidden" name="StockType<?Signature?>" value="<? echo ( if ( $$variable{'StockType'.$$variable{Signature}} ) { return $$variable{'StockType'.$$variable{Signature}}; } else { return $$variable{'PaperTypes'}[0] } ) ?>" />
 <? endif ( @{$$variable{'PaperTypes'}} > 1 ) ?>
 			<li id="SpecificStockSize<?Signature?>">
 				<label>Size</label>
-				<? echo ( ssi::input( type=>'number', name=>'txtSpecificStockWidth'.$$variable{'Signature'}, value=>$$variable{'txtSpecificStockWidth'.$$variable{'Signature'}}, onkeyup=>"ddmStockWeight_onchange(this,'$$variable{Signature}');gsm_to_mweight(this.form,'$$variable{Signature}');paper_price_calc(this,'$$variable{Signature}');" ); ) ?>
-				<span id="SpecificStockHeight<?Signature?>" <? echo ( 'style="display: none;"' if $$variable{'StockType'.$$variable{'Signature'}} eq 'Roll' ) ?>> x 
-				<? echo ( ssi::input( type=>'number', name=>'txtSpecificStockHeight'.$$variable{'Signature'}, value=>$$variable{'txtSpecificStockHeight'.$$variable{'Signature'}}, onkeyup=>"ddmStockWeight_onchange(this,'$$variable{Signature}');gsm_to_mweight(this.form,'$$variable{Signature}');paper_price_calc(this,'$$variable{Signature}');" ); ) ?>
+				<? echo ( input( type=>'number', name=>'txtSpecificStockWidth'.$$variable{Signature}, value=>$$variable{'txtSpecificStockWidth'.$$variable{Signature}}, onkeyup=>"ddmStockWeight_onchange(this,'$$variable{Signature}');gsm_to_mweight(this.form,'$$variable{Signature}');paper_price_calc(this,'$$variable{Signature}');" ); ) ?>
+				<span id="SpecificStockHeight<?Signature?>" <? echo ( 'style="display: none;"' if $$variable{'StockType'.$$variable{Signature}} eq 'Roll' ) ?>> x 
+				<? echo ( input( type=>'number', name=>'txtSpecificStockHeight'.$$variable{Signature}, value=>$$variable{'txtSpecificStockHeight'.$$variable{Signature}}, onkeyup=>"ddmStockWeight_onchange(this,'$$variable{Signature}');gsm_to_mweight(this.form,'$$variable{Signature}');paper_price_calc(this,'$$variable{Signature}');" ); ) ?>
 </span>
 			</li>
-			<li id="MWeight<?Signature?>" <? echo ( 'style="display: none;"' if $$variable{'StockType'.$$variable{'Signature'}} eq 'Roll' ) ?>>
+			<li id="MWeight<?Signature?>" <? echo ( 'style="display: none;"' if $$variable{'StockType'.$$variable{Signature}} eq 'Roll' ) ?>>
 				<label>MWeight</label>
-				<? echo ( ssi::input( type=>'number', name=>'txtCustomMWeight'.$$variable{'Signature'}, value=>$$variable{'txtCustomMWeight'.$$variable{'Signature'}}, onkeyup=>"mweight_to_gsm(this.form,'$$variable{Signature}');calc(this.form.name);" ); ) ?>
+				<? echo ( input( type=>'number', name=>'txtCustomMWeight'.$$variable{Signature}, value=>$$variable{'txtCustomMWeight'.$$variable{Signature}}, onkeyup=>"mweight_to_gsm(this.form,'$$variable{Signature}');calc(this.form.name);" ); ) ?>
 			</li>
-			<li id="BasisSize<?Signature?>" <? echo ( 'style="display: none;"' if $$variable{'StockType'.$$variable{'Signature'}} ne 'Roll' ) ?>>
+			<li id="BasisSize<?Signature?>" <? echo ( 'style="display: none;"' if $$variable{'StockType'.$$variable{Signature}} ne 'Roll' ) ?>>
 				<label>Basis MWeight</label>
-				<? echo ( ssi::input( type=>'number', name=>'basis_mweight'.$$variable{'Signature'}, value=>$$variable{'basis_mweight'.$$variable{'Signature'}}, onkeyup=>"mweight_to_gsm(this.form,'$$variable{Signature}');calc(this.form.name);" ); ) ?><br/>
+				<? echo ( input( type=>'float', name=>'basis_mweight'.$$variable{Signature}, value=>$$variable{'basis_mweight'.$$variable{Signature}}, onkeyup=>"mweight_to_gsm(this.form,'$$variable{Signature}');calc(this.form.name);" ); ) ?><br/>
 				<label>Basis Size</label>
-				<? echo ( ssi::input( type=>'number', name=>'basis_width'.$$variable{'Signature'}, value=>$$variable{'basis_width'.$$variable{'Signature'}} ? $$variable{'basis_width'.$$variable{'Signature'}} : 25, onkeyup=>"gsm_to_mweight(this.form,'$$variable{Signature}');calc(this.form.name);" ); ) ?>
+				<? echo ( input( type=>'float', name=>'basis_width'.$$variable{Signature}, value=>$$variable{'basis_width'.$$variable{Signature}} ? $$variable{'basis_width'.$$variable{Signature}} : 25, onkeyup=>"gsm_to_mweight(this.form,'$$variable{Signature}');calc(this.form.name);" ); ) ?>
 				x
-				<? echo ( ssi::input( type=>'number', name=>'basis_height'.$$variable{'Signature'}, value=>$$variable{'basis_height'.$$variable{'Signature'}} ? $$variable{'basis_height'.$$variable{'Signature'}} : 38, onkeyup=>"gsm_to_mweight(this.form,'$$variable{Signature}');calc(this.form.name);" ); ) ?>
+				<? echo ( input( type=>'float', name=>'basis_height'.$$variable{Signature}, value=>$$variable{'basis_height'.$$variable{Signature}} ? $$variable{'basis_height'.$$variable{Signature}} : 38, onkeyup=>"gsm_to_mweight(this.form,'$$variable{Signature}');calc(this.form.name);" ); ) ?>
 			</li>
 			<li>
 				<label>Price</label>
-				<? echo ( ssi::input( type=>'number', name=>'CustomStockPrice'.$$variable{'Signature'}, value=>$$variable{'CustomStockPrice'.$$variable{'Signature'}}, onkeyup=>"paper_price_calc(this,'$$variable{Signature}');calc(this.form.name);" ); ) ?>/cwt
-				<span id="PricePerM<?Signature?>" <? echo ( $$variable{'StockType'.$$variable{'Signature'}} eq 'Roll' ? 'style="display:none;"' : '' ) ?>>
-				<? echo ( ssi::input( type=>'number', name=>'StockPricePerM'.$$variable{'Signature'}, value=>$$variable{'StockPricePerM'.$$variable{'Signature'}}, onkeyup=>"paper_price_calc(this,'$$variable{Signature}');calc(this.form.name);" ); ) ?>/M</span><br/>
+				<? echo ( input( type=>'float', name=>'CustomStockPrice'.$$variable{Signature}, value=>$$variable{'CustomStockPrice'.$$variable{Signature}}, onkeyup=>"paper_price_calc(this,'$$variable{Signature}');calc(this.form.name);" ); ) ?>/cwt
+				<span id="PricePerM<?Signature?>" <? echo ( $$variable{'StockType'.$$variable{Signature}} eq 'Roll' ? 'style="display:none;"' : '' ) ?>>
+				<? echo ( input( type=>'float', name=>'StockPricePerM'.$$variable{Signature}, value=>$$variable{'StockPricePerM'.$$variable{Signature}}, onkeyup=>"paper_price_calc(this,'$$variable{Signature}');calc(this.form.name);" ); ) ?>/M</span><br/>
 				<span id="PaperAlert<?Signature?>"></span>
 			</li>
 			<li><label>GSM</label>
-				<? echo ( ssi::input( type=>'number', name=>'txtStockGSM'.$$variable{'Signature'}, value=>$$variable{'txtStockGSM'.$$variable{'Signature'}}, onkeyup=>"gsm_to_mweight(this.form,'$$variable{Signature}');calc(this.form.name);" ); ) ?>/cwt
+				<? echo ( input( type=>'float', name=>'txtStockGSM'.$$variable{Signature}, value=>$$variable{'txtStockGSM'.$$variable{Signature}}, onkeyup=>"gsm_to_mweight(this.form,'$$variable{Signature}');calc(this.form.name);" ); ) ?>
 			</li>
 			<li><label>Double sided?</label>
-				<input id="CustomSheetDoubleSided<?Signature?>Y" name="CustomSheetDoubleSided<?Signature?>" type="radio" value="Y" onclick="calc(this.form.name);" <? echo ( ssi::checked( $$variable{'CustomSheetDoubleSided'.$$variable{'Signature'}} ne 'N' ); ) ?> />
+				<input id="CustomSheetDoubleSided<?Signature?>Y" name="CustomSheetDoubleSided<?Signature?>" type="radio" value="Y" onclick="calc(this.form.name);" <? echo ( checked( $$variable{'CustomSheetDoubleSided'.$$variable{Signature}} ne 'N' ); ) ?> />
 				<label class="radio" for="CustomSheetDoubleSided<?Signature?>Y">Yes</label>
-				<input id="CustomSheetDoubleSided<?Signature?>N" name="CustomSheetDoubleSided<?Signature?>" type="radio" value="N" onclick="calc(this.form.name);" <? echo ( ssi::checked( $$variable{'CustomSheetDoubleSided'.$$variable{'Signature'}} eq 'N' ); ) ?> />
+				<input id="CustomSheetDoubleSided<?Signature?>N" name="CustomSheetDoubleSided<?Signature?>" type="radio" value="N" onclick="calc(this.form.name);" <? echo ( checked( $$variable{'CustomSheetDoubleSided'.$$variable{Signature}} eq 'N' ); ) ?> />
 				<label class="radio" for="CustomSheetDoubleSided<?Signature?>N">No</label>
 			</li>
 			<li><label>Cuttable?</label>
-				<input id="cuttable<?Signature?>1" name="cuttable<?Signature?>" type="radio" value="1" onclick="calc(this.form.name);" <? echo ( ssi::checked( $$variable{'cuttable'.$$variable{'Signature'}} ne '0' ); ) ?> />
+				<input id="cuttable<?Signature?>1" name="cuttable<?Signature?>" type="radio" value="1" onclick="calc(this.form.name);" <? echo ( checked( $$variable{'cuttable'.$$variable{Signature}} ne '0' ); ) ?> />
 				<label class="radio" for="cuttable<?Signature?>1">Yes</label>
-				<input id="cuttable<?Signature?>0" name="cuttable<?Signature?>" type="radio" value="0" onclick="calc(this.form.name);" <? echo ( ssi::checked( $$variable{'cuttable'.$$variable{'Signature'}} eq '0' ); ) ?> />
+				<input id="cuttable<?Signature?>0" name="cuttable<?Signature?>" type="radio" value="0" onclick="calc(this.form.name);" <? echo ( checked( $$variable{'cuttable'.$$variable{Signature}} eq '0' ); ) ?> />
 				<label class="radio" for="cuttable<?Signature?>0">No</label>
 			</li>
 			<li><label>Perfecting w/o gutters?</label>
-				<input id="perfecting<?Signature?>Y" name="perfecting<?Signature?>" type="radio" value="Y" onclick="calc(this.form.name);" <? echo ( ssi::checked( $$variable{'perfecting'.$$variable{'Signature'}} eq 'Y' ); ) ?> />
+				<input id="perfecting<?Signature?>Y" name="perfecting<?Signature?>" type="radio" value="Y" onclick="calc(this.form.name);" <? echo ( checked( $$variable{'perfecting'.$$variable{Signature}} eq 'Y' ); ) ?> />
 				<label class="radio" for="perfecting<?Signature?>Y">Yes</label>
-				<input id="perfecting<?Signature?>N" name="perfecting<?Signature?>" type="radio" value="N" onclick="calc(this.form.name);" <? echo ( ssi::checked( $$variable{'perfecting'.$$variable{'Signature'}} eq 'N' ); ) ?> />
+				<input id="perfecting<?Signature?>N" name="perfecting<?Signature?>" type="radio" value="N" onclick="calc(this.form.name);" <? echo ( checked( $$variable{'perfecting'.$$variable{Signature}} eq 'N' ); ) ?> />
 				<label class="radio" for="perfecting<?Signature?>N">No</label>
-				<input id="perfecting<?Signature?>A" name="perfecting<?Signature?>" type="radio" value="" onclick="calc(this.form.name);" <? echo ( ssi::checked( $$variable{'perfecting'.$$variable{'Signature'}} eq '' ); ) ?> />
+				<input id="perfecting<?Signature?>A" name="perfecting<?Signature?>" type="radio" value="" onclick="calc(this.form.name);" <? echo ( checked( $$variable{'perfecting'.$$variable{Signature}} eq '' ); ) ?> />
 				<label class="radio" for="perfecting<?Signature?>A">Auto</label>
 			</li>
 			<li>
@@ -106,56 +106,62 @@
 				<select id="StockGrade<?Signature?>" name="StockGrade<?Signature?>" size="1" onchange="calc(this.form.name);">
 				<? echo (
 						my @options = ( '', 'select one',1,'1 Gloss-coated paper',2,'2 Matte-coated paper',3,'3 Gloss-coated, web paper', 4, '4 Uncoated, white paper', 5, '5 Uncoated, yellow paper' );
-						return ssi::make_drop_down( \@options, $$variable{'StockGrade'.$$variable{'Signature'}} );
+						return ssi::make_drop_down( \@options, $$variable{'StockGrade'.$$variable{Signature}} );
 						) ?>
 				</select>
 			</li>
 			<li>
 				<label for="minimum_order<?Signature?>">Minimum Order</label>
-				<input type="text" id="minimum_order<?Signature?>" name="minimum_order<?Signature?>" size="9" value="<? echo ( $$variable{'minimum_order'.$$variable{'Signature'}} ) ?>" onkeyup="calc(this.form.name);" />
-<span id="minimum_order_units<?Signature?>"><? echo ( $$variable{'StockType'.$$variable{'Signature'}} ne 'Roll' ? 'sheets' : 'lbs' ) ?></span>
+				<input type="text" id="minimum_order<?Signature?>" name="minimum_order<?Signature?>" size="9" value="<? echo ( $$variable{'minimum_order'.$$variable{Signature}} ) ?>" onkeyup="calc(this.form.name);" />
+<span id="minimum_order_units<?Signature?>"><? echo ( $$variable{'StockType'.$$variable{Signature}} ne 'Roll' ? 'sheets' : 'lbs' ) ?></span>
 			</li>
 			<li>
 				<label for="sheets_per_package<?Signature?>">Quantity Per Package</label>
-				<input type="text" id="sheets_per_package<?Signature?>" name="sheets_per_package<?Signature?>" size="9" value="<? echo ( $$variable{'sheets_per_package'.$$variable{'Signature'}} ) ?>" onkeyup="calc(this.form.name);" />
- <span id="sheets_per_package_units<?Signature?>"><? echo ( $$variable{'StockType'.$$variable{'Signature'}} ne 'Roll' ? 'sheets' : 'lbs' ) ?></span>
-				<input type="checkbox" id="full_packages<?Signature?>" name="full_packages<?Signature?>" value="1" <? echo ( ssi::checked( $$variable{'full_packages'.$$variable{'Signature'}} ); )?> onclick="calc(this.form.name);" /> Order full packages
+				<input type="text" id="sheets_per_package<?Signature?>" name="sheets_per_package<?Signature?>" size="9" value="<? echo ( $$variable{'sheets_per_package'.$$variable{Signature}} ) ?>" onkeyup="calc(this.form.name);" />
+ <span id="sheets_per_package_units<?Signature?>"><? echo ( $$variable{'StockType'.$$variable{Signature}} ne 'Roll' ? 'sheets' : 'lbs' ) ?></span>
+				<input type="checkbox" id="full_packages<?Signature?>" name="full_packages<?Signature?>" value="1" <? echo ( checked( $$variable{'full_packages'.$$variable{Signature}} ); )?> onclick="calc(this.form.name);" /> Order full packages
 
 			</li>
 			</ul>
 		</div><!-- Specific -->
-		<div id="HouseStock<?Signature?>" style="display: <? echo ( $$variable{'rdbSpecificStock'.$$variable{'Signature'}} eq 'Y' ? 'none' : 'block' ) ?>;">
+		<div id="HouseStock<?Signature?>" style="display: <? echo ( $$variable{'rdbSpecificStock'.$$variable{Signature}} eq 'Y' ? 'none' : 'block' ) ?>;">
 			<ul>
 <? echo (
 	my $html;
 	my @types = @{$$variable{'PaperTypes'}};
 
-	my @user_types = ('');
+	my @user_types = (undef, '');
 	push @user_types, 'C' if $session{'user_id'};
 	push @user_types, 'E' if $session{'user_type'} eq 'E';
 	push @user_types, ('A','E') if $session{'user_type'} eq 'A';
 
 	my %find = (
 			'project_type_id any'	=>	$$variable{'ProjectType'}->id(),
-			'supplied is null or ='	=>	$$variable{'rdbSuppliedStock'.$$variable{'Signature'}} eq 'Y' ? 1 : 0,
+			'supplied is null or ='	=>	$$variable{'rdbSuppliedStock'.$$variable{Signature}} eq 'Y' ? 1 : 0,
 			'type'					=>	\@types,
-			'user_type'				=>	\@user_types,
+			#'user_type is null or ='=>	\@user_types,
+			#user_type	=>	\@user_types,
 	);
 
-	my @StockOptions = split( ',', $config{$$variable{'ProjectType'}->name().'StockOptions'} );
+	my @StockOptions = split( ',', $config{$$variable{ProjectType}->name().'StockOptions'} );
+$log->warn("Stock Options @StockOptions");
 	@StockOptions = split( ',', $config{'StockOptions'} ) if ! @StockOptions;
 	@StockOptions = ( 'Brand','Finish','Colour','Weight' ) if ! @StockOptions;
 
 	foreach my $option ( @StockOptions ) {
+		next if ! $option;
 		my $lc_option = lc $option;
-		my %cache = map { $_->name(), $_ } ('openprint::Stock'.$option)->find();
+		my %cache = map { $_->name(), $_ } ('openprint::Stock'.$option)->find() if $option ne 'Size';
 
 		my @Papers = openprint::Paper->find( %find );
 		my @options = map { $_, $_ } ( sort ( sets::union( map { $_->$lc_option() } @Papers ) ) );
-		$$variable{'ddmStock'.$option.$$variable{'Signature'}} = $options[0] if @options == 2;
+		if ( ! @options ) {
+			$log->debug("No paper options for $lc_option %find");
+		} # end if
+		$$variable{'ddmStock'.$option.$$variable{Signature}} = $options[0] if @options == 2;
 
-		if ( $$variable{'ddmStock'.$option.$$variable{'Signature'}} and $cache{$$variable{'ddmStock'.$option.$$variable{'Signature'}}} ) {
-			$find{$lc_option.'_id'} = $cache{$$variable{'ddmStock'.$option.$$variable{'Signature'}}}->id() 
+		if ( $$variable{'ddmStock'.$option.$$variable{Signature}} and $cache{$$variable{'ddmStock'.$option.$$variable{Signature}}} ) {
+			$find{$lc_option.'_id'} = $cache{$$variable{'ddmStock'.$option.$$variable{Signature}}}->id() 
 		} # end if
 		$html .= sprintf(q`<li><label>Stock %1$s</label>
 				<select name="ddmStock%1$s%2$s" size="1" onchange="Stock_onchange( this, '%2$s' );">
@@ -163,29 +169,31 @@
 				%3$s
 				</select>
 			</li>
-			`, $option, $$variable{'Signature'}, 
-			ssi::make_drop_down( \@options, $$variable{'ddmStock'.$option.$$variable{'Signature'}} ),
+			`, $option, $$variable{Signature}, 
+			make_drop_down( \@options, $$variable{'ddmStock'.$option.$$variable{Signature}} ),
 		);
 	} # end foreach option
 	return $html;
 ) ?>
 		</ul>
 <? if ( $$variable{'ProjectType'}->name() eq 'Envelopes' ) ?>
+<? if ( 0 ) ?>
 		<ul>
-            <li><label>Stock Size</label>
-                <select name="ddmStockSheetSize" size="1" onchange="ddmStockSheetSize_onchange();">
-                    <option value="">Please select one</option>
-                    <? echo (
-                        ssi::make_drop_down( [ openprint::paper::get_sheetsizes( $$variable{'ProjectType'}->name(), @$variable{
-                                'ddmStockBrand'.$$variable{'Signature'},
-                                'ddmStockFinish'.$$variable{'Signature'},
-                                'ddmStockColour'.$$variable{'Signature'},
-                                'ddmStockWeight'.$$variable{'Signature'},
-                                } ) ], $$variable{'ddmStockSheetSize'} );
-                    ) ?>
-                </select>
-            </li>
+			<li><label>Stock Size</label>
+				<select name="ddmStockSheetSize" size="1" onchange="ddmStockSheetSize_onchange();">
+					<option value="">Please select one</option>
+					<? echo (
+						make_drop_down( [ openprint::paper::get_sheetsizes( $$variable{'ProjectType'}->name(), @$variable{
+								'ddmStockBrand'.$$variable{Signature},
+								'ddmStockFinish'.$$variable{Signature},
+								'ddmStockColour'.$$variable{Signature},
+								'ddmStockWeight'.$$variable{Signature},
+								} ) ], $$variable{'ddmStockSheetSize'} );
+					) ?>
+				</select>
+			</li>
 		</ul>
+<? endif ( 0 ) ?>
 <? endif ( $$variable{'ProjectType'}->name() eq 'Envelopes' ) ?>
 		</div><!-- House -->
 	</fieldset>

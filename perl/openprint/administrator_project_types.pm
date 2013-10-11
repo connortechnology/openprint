@@ -30,12 +30,15 @@ sub edit {
 		$variable{error} .= $ProjectType->delete();
 		$ProjectType = $ProjectType->next() if ! $variable{error};
 	} elsif ( $param{'btnFunction'} eq 'Copy' ) {
-		my @required_services = $ProjectType->required_services();
 		my @recommendations = sql::execute(undef,undef,'SELECT lngPaperIndex FROM Paper_Recommendations WHERE lngProjectTypeIndex=?', $ProjectType->id() );
 
 		$ProjectType = $ProjectType->copy();
 		$ProjectType->name('Copy of ' . $ProjectType->name() );
-		$variable{error} .= $ProjectType->save({required_services=>\@required_services});
+
+		my @required_services = $ProjectType->required_services();
+		my @blocked_services = $ProjectType->blocked_services();
+
+		$variable{error} .= $ProjectType->save({required_services=>\@required_services, blocked_services=>\@blocked_services });
 
 		foreach my $paper_id ( @recommendations ) {
 			sql::insert( undef, undef, 'Paper_recommendations','lngPaperIndex',$paper_id,'lngProjectTypeIndex', $ProjectType->id() );
@@ -167,9 +170,10 @@ sub templates {
 
 	if ( $param{'btnFunction'} eq 'Save' ) {
 		my $ac = sql::start_transaction( $dbh );
-		foreach my $Template ( openprint::ProjectType_Template->find('projecttype_id'=>$param{'ddmProjectType'}) ) {
+		foreach my $Template ( openprint::ProjectType_Template->find( projecttype_id=>$param{'ddmProjectType'}) ) {
 			$variable{'error'} .= $Template->save({
 					type				=>	$param{"type$$Template{id}"},
+					name				=>	$param{"name$$Template{id}"},
 					description			=>	$param{"description$$Template{id}"},
 					finished_width		=>	$param{"finishedwidth$$Template{id}"},
 					finished_height		=>	$param{"finishedheight$$Template{id}"},
@@ -188,6 +192,7 @@ sub templates {
 			$variable{'error'} .= new openprint::ProjectType_Template()->save({
 					projecttype_id	=>	$param{ddmProjectType},
 					type			=>	$param{typeNew},
+					name			=>	$param{nameNew},
 					description		=>	$param{descriptionNew},
 					finished_width	=>	$param{finishedwidthNew},
 					finished_height	=>	$param{finishedheightNew},
@@ -216,12 +221,12 @@ sub templates {
 
 			while ( <$io> ) {
 				my $status = $csv->parse($_);
-				my ( $projecttype_id, $id, $name, $desc, $fwidth, $fheight, $width, $height );
+				my ( $projecttype_id, $id, $type, $name, $desc, $fwidth, $fheight, $width, $height );
 				my @data = misc::trim( $csv->fields() );
-				if ( @data == 7 ) {
-					( $id, $name, $desc, $fwidth, $fheight, $width, $height ) = @data;
-				} elsif ( @data == 6 ) {
-					( $name, $desc, $fwidth, $fheight, $width, $height ) = @data;
+				if ( @data == 8 ) {
+					( $id, $type, $name, $desc, $fwidth, $fheight, $width, $height ) = @data;
+				} elsif ( @data == 7 ) {
+					( $type, $name, $desc, $fwidth, $fheight, $width, $height ) = @data;
 				} else {
 					$variable{'error'} .= "Wrong # of columns in input!<br/>";
 					next;
@@ -239,7 +244,8 @@ sub templates {
 				} # end if	
 				my @params = (
 						'ProjectType_id',		$projecttype_id,
-						'Type',					$name,
+						'type',					$type,
+						'name',					$name,
 						'Description',			$desc,
 						'dblFinishedWidth',		$fwidth * 1,
 						'dblFinishedHeight',	$fheight * 1,
@@ -251,20 +257,22 @@ sub templates {
 				} # end if
 			} # for each
 			sql::end_transaction( $dbh, $ac );
+			$variable{ExternalRedirect} = '/administrator/project_types/templates.html?ddmProjectType='.$param{'ddmProjectType'};
 			
 		} else {
 			$log->warn( "No file given to upload." );
 		} # end if
 	} elsif ( $param{'btnFunction'} eq 'Export Templates' ) {
 		if ( $param{'ddmProjectType'} ) {
-			my ($name) = sql::execute( $log, $dbh, q{SELECT strid FROM project_types WHERE lngIndex=?}, $param{'ddmProjectType'} );
-			my @header = ( 'Template Type', 'Description', 'Finished Width', 'Finished Height', 'Flat Width','Flat Height' );
-			$_ = q{SELECT Type, Description, dblFinishedWidth, dblFinishedHeight, dblFlatWidth, dblFlatHeight FROM ProjectTemplate WHERE projecttype_id=? ORDER BY Type};
+			my $ProjectType = new openprint::ProjectType( $param{ddmProjectType} );
+
+			my @header = ( 'Template Type', 'Name', 'Description', 'Finished Width', 'Finished Height', 'Flat Width','Flat Height' );
+			$_ = q{SELECT Type, Name, Description, dblFinishedWidth, dblFinishedHeight, dblFlatWidth, dblFlatHeight FROM ProjectTemplate WHERE projecttype_id=? ORDER BY Type};
 			my @data = sql::execute( $log, $dbh, $_, $param{'ddmProjectType'} );
-			misc::export_csv( $r, $log, \%variable, "Project Templates - $name.csv", \@header, \@data );
+			misc::export_csv( $r, $log, \%variable, "Project Templates - $$ProjectType{name}.csv", \@header, \@data );
 		} else {
-			my @header = ( 'Project Type', 'Template Type', 'Description', 'Finished Width', 'Finished Height', 'Flat Width','Flat Height' );
-			$_ = q{SELECT (SELECT name FROM Project_Types WHERE id=ProjectType_id) AS ProjectType, Type, Description, dblFinishedWidth, dblFinishedHeight, dblFlatWidth, dblFlatHeight FROM ProjectTemplate ORDER BY ProjectType,Type};
+			my @header = ( 'Project Type', 'Template Type', 'Name','Description', 'Finished Width', 'Finished Height', 'Flat Width','Flat Height' );
+			$_ = q{SELECT (SELECT name FROM Project_Types WHERE id=ProjectType_id) AS ProjectType, Type, Name, Description, dblFinishedWidth, dblFinishedHeight, dblFlatWidth, dblFlatHeight FROM ProjectTemplate ORDER BY ProjectType,Type};
 			my @data = sql::execute( $log, $dbh, $_ );
 			misc::export_csv( $r, $log, \%variable, 'Project Templates - All.csv', \@header, \@data );
 		} # end if

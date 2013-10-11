@@ -127,6 +127,7 @@ sub _specification {
 		if ( $param{'field'} ne 'interpolate' ) {
 			$param{'value'} =~ s/\xc2\xa0//mg;
 			if ( $param{'field'} eq 'name' ) {
+				$param{value} =~ s/\+/ /g;
 			} elsif ( $param{'field'} eq 'min' ) {
 				$param{'value'} =~ s/[^\d\.]//g;
 			} elsif ( $param{'field'} eq 'max' ) {
@@ -212,7 +213,7 @@ sub _stocks {
 		$variable{'error'} .= $Setting->save(\%param);
 		%param = ();
 	} # end if
-	ssi::save_params('/administrator/equipment/edit.html', 'Group','Manufacturer','Name','Finish','Colour','Weight','Types' );
+	ssi::save_params('/administrator/equipment/edit.html', 'Group','Manufacturer','Name','Finish','Colour','Weight','Types', 'material_id' );
 } # end sub _stocks
 
 sub _stock_settings {

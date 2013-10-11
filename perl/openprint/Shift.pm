@@ -1,8 +1,8 @@
+use strict;
 package openprint::Shift;
-@ISA = qw(openprint::Object);
+our @ISA = qw(openprint::Object);
 require openprint::Object;
 
-use strict;
 use openprint ();
 use vars qw(%variable $log $dbh %config %session $debug $table $serial %fields %find_fields %transforms %defaults );
 *variable = \%openprint::variable;
@@ -307,7 +307,7 @@ sub get_Shifts {
 	# Three cases, no shifts, shifts before, shifts after.
 
 	# Case #1 Shift before
-	if ( my $LastShift = openprint::Shift->find(
+	if ( my $LastShift = openprint::Shift->find_one(
 			'equipment_id'      =>  $Equipment->id(),
 			'starttime <'       =>  $parser->format_datetime( $start_dt ),
 			'order'             =>  'starttime DESC',

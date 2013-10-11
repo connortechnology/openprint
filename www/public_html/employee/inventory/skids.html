@@ -1,6 +1,9 @@
 <script type="text/javascript" src="<?hash_link(/javascripts/barcode.js)?>"></script>
 <?include(/includes/error_reporting.html)?>
 <script type="text/javascript">
+	function submit_handler() {
+		calc();
+	}
 	function calc() {
 		LoadContent( 'Results', '/employee/inventory/_skids_results.html', $('f1') );
 	}
@@ -15,7 +18,7 @@ Please select a Skid to view/edit.<br/>
 			<? echo ( join("\n",
 						input( type=>'cardinal', id=>'skid_id', name=>'skid_id', onchange=>'change_handler(this);', 
 							onkeypress=>'return input_handler(this,event);', onkeydown=>'if(event.keyCode==13){submit_handler(f1);}' ),
-						ssi::button( 'GoSkid', { onclick=>'calc();',text=>'Go' } ),
+						button( 'GoSkid', { onclick=>'calc();',text=>'Go' } ),
 						); ) ?>
 		</li>
 		<li class="rfid_id">
@@ -23,15 +26,15 @@ Please select a Skid to view/edit.<br/>
 			<? echo ( join("\n",
 						input( type=>'cardinal', id=>'rfid_id', name=>'rfid_id', onchange=>'change_handler(this);', 
 							onkeypress=>'return input_handler(this,event);', onkeydown=>'if(event.keyCode==13){submit_handler(f1);}' ),
-						ssi::button( 'GoRFID', { onclick=>'calc();',text=>'Go' } ),
+						button( 'GoRFID', { onclick=>'calc();',text=>'Go' } ),
 						); ) ?>
 		</li>
 		<li class="manufacturers_id">
 			<label for="manufacturers_id">Manufacturers ID</label>
 			<? echo ( join("\n",
-						input( type=>'text', id=>'manufacturers_id', name=>'manufacturers_id', onchange=>'change_handler(this);', 
+						input( type=>'text', id=>'manufacturers_id', name=>'manufacturers_id', 
 							onkeypress=>'return input_handler(this,event);', onkeydown=>'if(event.keyCode==13){submit_handler(f1);}' ),
-						ssi::button( 'GoManufacturers', { onclick=>'calc();',text=>'Go' } ),
+						button( 'GoManufacturers', { onclick=>'calc();',text=>'Go' } ),
 						); ) ?>
 		</li>
 		</ul>
@@ -46,7 +49,7 @@ Please select a Skid to view/edit.<br/>
 						input( type=>'cardinal', name=>'Docket', value=>$session{'/employee/inventory/skids.html?Docket'}, onchange=>'change_handler(this);', 
 							onkeypress=>'return input_handler(this,event);', 
 							onkeydown=>q`if(event.keyCode==13){calc();}` ),
-						ssi::button( 'GoDocket', { onclick=>q`calc();`,text=>'Go' } ),
+						button( 'GoDocket', { onclick=>q`calc();`,text=>'Go' } ),
 						); ) ?>
 		</li>
 		<li>
@@ -54,7 +57,7 @@ Please select a Skid to view/edit.<br/>
 			<? echo ( join("\n",
 						input( type=>'text', name=>'verification_code', value=>$session{'/employee/inventory/skids.html?verification_code'}, 
 							onchange=>'change_handler(this);', onkeypress=>'return input_handler(this,event);', onkeydown=>q`if(event.keyCode==13){calc();}` ),
-						ssi::button( 'Go3', { onclick=>q`calc();`, text=>'Go' } ),
+						button( 'Go3', { onclick=>q`calc();`, text=>'Go' } ),
 			); ) ?>
 		</li>
 		</ul>
@@ -117,15 +120,20 @@ Please select a Skid to view/edit.<br/>
 			<? echo ( radio( 'allocated', ['Y', 'Yes', 'N', 'No', '', 'All' ], $session{'/employee/inventory/skids.html?allocated'}, { onclick=>'calc();' } ); ) ?>
 		</li>
 		<li>
+            <label>Checked Out?</label>
+			<? echo ( radio( 'checked_out', ['Y', 'Yes', 'N', 'No', '', 'All' ], $session{'/employee/inventory/skids.html?checked_out'}, { onclick=>'calc();' } ); ) ?>
+		</li>
+		<li>
             <label>Has Manufacturers ID</label>
 			<? echo ( radio( 'hasmanufacturers', ['Y', 'Yes', 'N', 'No', '', 'All' ], $session{'/employee/inventory/skids.html?hasmanufacturers'}, { onclick=>'calc();' } ); ) ?>
 		</li>
 		<li>
             <label>With/Without RFID?</label>
-            <input type="checkbox" id="withrfid" name="withrfid" <? echo ( $session{'/employee/inventory/skids.html?withrfid'} ? 'checked="checked"' : '' ) ?> />
-            <label class="radio" for="withrfid">With RFID</label>
-            <input type="checkbox" id="withoutrfid" name="withoutrfid" <? echo ( $session{'/employee/inventory/skids.html?withoutrfid'} ? 'checked="checked"' : '' ) ?> />
-            <label class="radio" for="notempty">Without RFID</label>
+			<? echo ( radio( 'rfid', ['Y', 'Yes', 'N', 'No', '', 'All' ], $session{'/employee/inventory/skids.html?rfid'}, { onclick=>'calc();' } ); ) ?>
+		</li>
+		<li>
+            <label>Valid/Invalid RFID?</label>
+			<? echo ( radio( 'rfid_valid', ['Y', 'Yes', 'N', 'No', '', 'All' ], $session{'/employee/inventory/skids.html?rfid_valid'}, { onclick=>'calc();' } ); ) ?>
 		</li>
 		<li><label>Type</label>
 			<? echo ( radio( 'Type', ['Sheet','Sheet', 'Roll', 'Roll', '', 'Both'], $session{'/employee/inventory/skids.html?Type'}, { onclick=>'calc();' } ); ) ?>
@@ -133,7 +141,7 @@ Please select a Skid to view/edit.<br/>
 		<li><label>Location</label>
 			<select name="location_id" onchange="calc();">
 				<? echo ( 
-					my @options = ('','All', 'None', 'None',  map { $_->id(), $_->name() } openprint::Location->find( order=>'lower(name)') );
+					my @options = ('','All', 'None', 'None',  map { $_->id(), $_->name() } openprint::Location->find(type=>'place','order'=>'parent_id NULLS FIRST,lower(name)') );
 					ssi::make_drop_down( \@options, $session{'/employee/inventory/skids.html?location_id'} );
 				) ?>
 			</select>
@@ -146,12 +154,16 @@ Please select a Skid to view/edit.<br/>
 				) ?>
 			</select>
 		</li>
+			<li>
+				<label>Deleted</label>
+				<? echo ( radio( 'deleted', ['1','Yes','0','No','1,0','All'], $session{'/employee/inventory/skids.html?deleted'} ); ) ?>
+			</li>
 		</ul>
 		<p class="buttons">
 			<? echo ( join('',
-				ssi::button( 'ShowResults', { onclick=>'calc();', text=>'Show Results' } ),
-				ssi::button( 'Reset', { onclick=>'f2.reset();' } ),
-				ssi::button( 'Add', { href=>'skid_details.html', text=>'Add New Skid' } ),
+				button( 'ShowResults', { onclick=>'calc();', text=>'Show Results' } ),
+				button( 'Reset', { onclick=>'f2.reset();' } ),
+				button( 'Add', { href=>'skid_details.html', text=>'Add New Skid' } ),
 				); ) ?>
 		</p>
 	</fieldset>

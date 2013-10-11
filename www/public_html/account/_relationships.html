@@ -1,4 +1,4 @@
-<? echo ( include('/includes/error_reporting.html'); ) ?>
+<?include('/includes/error_reporting.html')?>
 <form id="f1" name="f1" action="/account/view.html?user_id=<? echo ( $$variable{'User'}->id() ) ?>" method="post">
 	<? echo (
 		my $html;
@@ -104,7 +104,7 @@ if ( ! $$variable{Company} ) {
 				} # end foreach $Type
 			} # end if %My_Requests
 			$html .= '</div>';
-		} else { # if ( $session{'user_id'} != $$variable{'User'}->id() ) 
+		} elsif ( $session{user_id} ) { # if ( $session{'user_id'} != $$variable{'User'}->id() ) 
 			@Relationships = map { sets::isin( $session{user_id}, [ $_->user_id1(), $_->user_id2() ] ) ? $_ : () } @Relationships;
 			$html .= sprintf(q`<div class="add">You want to be <select name="relationship_type_id" id="relationship_type_id"><option value="">select</option>%1$s</select>%2$s<p class="buttons">%3$s</p></div>`,
 				ssi::make_drop_down( openprint::User_Relationship_Type->dropdown('order'=>'sort,lower(name)', 

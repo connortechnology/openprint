@@ -83,7 +83,7 @@ foreach my $Twitter_ID ( openprint::User_Profile_Entry->find('field_id'=>$ID_Fie
 
 	my $content;
 	my $file;
-	my $arg = 'http://api.twitter.com/1/statuses/user_timeline.rss?screen_name='.$Twitter_ID->value();
+	my $arg = 'http://api.twitter.com/1.1/statuses/user_timeline.rss?screen_name='.$Twitter_ID->value();
 # argument is a URL
 	if ($arg=~ /http:/i) {
 		$content = Encode::encode('utf-8',get($arg));

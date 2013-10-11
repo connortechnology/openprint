@@ -11,6 +11,7 @@ require sql;
 
 use Memoize;
 memoize('fits');
+memoize('specification');
 
 use vars qw( $debug $log $dbh $table $serial %fields %find_fields %transforms %defaults $cache_field );
 *log = \$openprint::log;
@@ -68,30 +69,30 @@ sub fits {
 	my ( $self, $width, $height, $calliper, $service ) = @_;
 
 	$service = ' '.$service if $service;
-	my $max_width = $self->specification("Maximum$service Sheet Width");
-	my $max_length = $self->specification("Maximum$service Sheet Length");
-	my $max_height = $self->specification("Maximum$service Sheet Height");
-
-	if ( $max_width and $max_length ) {
-		my $imp = openprint::imposition::fit( $width, $height, $max_width, $max_length );
-#$log->debug("Impo: $$imp{'imposition'} $$imp{'rows'}x$$imp{'columns'} on $$self{'strid'}");
-		if ( ! $imp->imposition() ) {
-			return sprintf('Too big %s x %s on %s x %s', $width, $height, $max_width, $max_length );
-		} # end if
-	} elsif ( $max_width ) {
-		if ( ( $width > $max_width ) and ( $height > $max_width ) ) {
-			return sprintf('Too big %s x %s on %s', $width, $height, $max_width );
-		} # end if
-	} elsif ( $max_height ) {
-		if ( ( $width > $max_height ) and ( $height > $max_height ) ) {
-			return sprintf('Too big %s x %s on %s', $width, $height, $max_height );
-		} # end if
-	} # end if
-
-	my $min_width = $self->specification("Minimum$service Sheet Width");
-	my $min_length = $self->specification("Minimum$service Sheet Length");
-
 	if ( $width and $height ) {
+		my $max_width = $self->specification("Maximum$service Sheet Width");
+		my $max_length = $self->specification("Maximum$service Sheet Length");
+		my $max_height = $self->specification("Maximum$service Sheet Height");
+
+		if ( $max_width and $max_length ) {
+			my $imp = openprint::imposition::fit( $width, $height, $max_width, $max_length );
+	#$log->debug("Impo: $$imp{'imposition'} $$imp{'rows'}x$$imp{'columns'} on $$self{'strid'}");
+			if ( ! $imp->imposition() ) {
+				return sprintf('Too big %s x %s on %s x %s', $width, $height, $max_width, $max_length );
+			} # end if
+		} elsif ( $max_width ) {
+			if ( ( $width > $max_width ) and ( $height > $max_width ) ) {
+				return sprintf('Too big %s x %s on %s', $width, $height, $max_width );
+			} # end if
+		} elsif ( $max_height ) {
+			if ( ( $width > $max_height ) and ( $height > $max_height ) ) {
+				return sprintf('Too big %s x %s on %s', $width, $height, $max_height );
+			} # end if
+		} # end if
+
+		my $min_width = $self->specification("Minimum$service Sheet Width");
+		my $min_length = $self->specification("Minimum$service Sheet Length");
+
 		if ( $min_width and $min_length ) {
 			my $imp = openprint::imposition::fit( $min_width, $min_length, $width, $height );
 			if ( ! $imp->imposition() ) {
@@ -211,11 +212,11 @@ $openprint::log->debug("Fold for $$params{pages} " . $F->to_string() );
 			$openprint::log->debug("Wanted Calliper: $$params{calliper}, have min:$$Fold{min_calliper} max:$$Fold{max_calliper}") if $debug;
 			next;
 		} # end if
-		if ( $$Fold{'min_imposition'} and $$params{'imposition'} and ($$Fold{'min_imposition'} > $$params{'imposition'}) ) {
+		if ( defined $$Fold{'min_imposition'} and $$params{'imposition'} and ($$Fold{'min_imposition'} > $$params{'imposition'}) ) {
 			$openprint::log->debug("Wanted imposition: $$params{'imposition'}, have $$Fold{'min_imposition'} x $$Fold{'max_imposition'}") if $debug;
 			next;
 		} # end if
-		if ( $$Fold{'max_imposition'} and $$params{'imposition'} and ($$Fold{'max_imposition'} < $$params{'imposition'}) ) {
+		if ( defined $$Fold{'max_imposition'} and $$params{'imposition'} and ($$Fold{'max_imposition'} < $$params{'imposition'}) ) {
 			$openprint::log->debug("Wanted imposition: $$params{'imposition'}, have $$Fold{'min_imposition'} x $$Fold{'max_imposition'}") if $debug;
 			next;
 		} # end if
@@ -261,24 +262,23 @@ sub specification {
 sub Specification {
 	my ( $self, $name, $range, $debug ) = @_;
 
-
-	if ( ! $$self{'Specifications'} ) {
-		return if ! $$self{'id'};
-		foreach ( openprint::EquipmentSpecification->find( 'equipment_id'=>$$self{'id'}, 'order'=>'dblmin NULLS FIRST,dblmax NULLS FIRST' ) ) {
-			push @{$$self{'Specifications'}{$_->name()}}, $_;
+	if ( ! $$self{Specifications} ) {
+		return if ! $$self{id};
+		foreach ( openprint::EquipmentSpecification->find( equipment_id=>$$self{id}, order=>'dblmin NULLS FIRST,dblmax NULLS FIRST' ) ) {
+			push @{$$self{Specifications}{$_->name()}}, $_;
 		} # end foreach
 	} # end if
 
-	if ( ! $$self{'Specifications'} ) {
-		$openprint::log->warn("No specfications for " . $self->name() );
+	if ( ! $$self{Specifications} ) {
+		$openprint::log->debug("Equipment::Specification No specfications for " . $self->to_string() ) if $debug;
 		return;
 	} # end if
-	if ( ! $$self{'Specifications'}{$name} ) {
+	if ( ! $$self{Specifications}{$name} ) {
 		$openprint::log->warn("No specfications for ($name) " . $self->name() ) if $debug;
 		return;
 	} # end if
 
-	return misc::find_entry( $range, $$self{'Specifications'}{$name}, $debug );
+	return misc::find_entry( $range, $$self{Specifications}{$name}, $debug );
 } # end sub specification
 
 sub copy {
@@ -456,7 +456,7 @@ sub Equipment_Shifts {
 	my $Last_ES;
 	for ( my $ES_index = 0; $ES_index < @Equipment_Shifts; $ES_index += 1 ) {
 		if ( $Last_ES ) {
-			$Equipment_Shifts[$ES_index]->Prevous( $Last_ES );
+			$Equipment_Shifts[$ES_index]->Previous( $Last_ES );
 			$Last_ES->Next( $Equipment_Shifts[$ES_index] );
 		} # end if
 		$Last_ES = $Equipment_Shifts[$ES_index];

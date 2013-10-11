@@ -3,11 +3,12 @@ use strict;
 package openprint::Email;
 our @ISA = qw( openprint::Object );
 
+require Mail::Sendmail;
 use openprint ();
 require email;
-require misc;
 require ssi;
 require MIME::QuotedPrint;
+require Mail::Sendmail;
 require Encode;
 
 use vars qw( $debug $table $serial %fields %transforms %defaults );
@@ -45,11 +46,23 @@ sub send {
 		$$self{from} = $params{FROM};
 	} # end if
 
+	my @bcc;
+	if ( $params{BCC} ) {
+		foreach my $bcc ( ref $params{BCC} eq 'ARRAY' ? @{$params{BCC}} : $params{BCC} ) {
+			if ( ref $bcc eq 'openprint::User' ) {
+				push @bcc, sprintf('"%s" <%s>', $bcc->name(), $bcc->email() );
+			} else {
+				push @bcc, $bcc;
+			} # end if
+
+		} # end foreach bcc
+	} # end if
+
     my %mail = (
 			'content-type'	=>	$$self{'content-type'},
 			BOUNDARY =>	$$self{boundary},
 			CC		=>	$params{'CC'},
-			BCC		=>	$params{'BCC'},
+			( @bcc ? ( BCC		=>	join(',', @bcc ) ) : () ),
             SMTP    => $params{'SMTP'} ? $params{'SMTP'} : $openprint::config{'Mail Server'},
 			( $params{'Return-receipt-to'} ? ( 'Return-receipt-to' => $params{'Return-receipt-to'} ) : () ),
 			( $params{'Disposition-Notification-To'} ? ( 'Disposition-Notification-To' => $params{'Disposition-Notification-To'} ) : () ),
@@ -61,7 +74,39 @@ sub send {
 	my @attachments = $params{'ATTACHMENTS'} ? @{$params{'ATTACHMENTS'}} : ();
 	@attachments = ( $$self{'ATTACHMENTS'} ? @{$$self{'ATTACHMENTS'}} : () ) if ! @attachments;
 
-#$openprint::log->debug("Email: Attachments @attachments");
+    if ( @attachments ) {
+        my $message = $mail{BODY};
+        $mail{BOUNDARY} = "====" . time() . "====" if ! $mail{BOUNDARY};
+        $mail{'content-type'} = "multipart/mixed;\r\n  boundary=\"$mail{BOUNDARY}\"\r\n";
+
+# start with the current body
+        $mail{'BODY'} .= "This is a multi-part message in MIME format.\n\n";
+        if ( $message ) {
+            $mail{BODY} .= "--$mail{BOUNDARY}\n";
+            $mail{BODY} .= ($mail{'content-type'} ? $mail{'content-type'} : 'Content-Type: text/plain; charset="utf-8"')."\n";
+            $mail{BODY} .= "Content-Transfer-Encoding: 8-bit\n";
+            $mail{BODY} .= "\n$message\n";
+        } else {
+            my ( $name, $text, $type, $encoding ) = splice @attachments,0,4;
+            $mail{BODY} .= "--$mail{BOUNDARY}\nContent-Type: $type;\n";
+            $mail{BODY} .= "Content-Transfer-Encoding: $encoding\n";
+            $mail{BODY} .= "\n$text\n";
+        } # end if
+
+        while ( @attachments ) {
+            my ( $name, $text, $type, $encoding ) = splice ( @attachments,0,4 );
+            $mail{BODY} .= "--$mail{BOUNDARY}\nContent-Type: $type;\n";
+            $mail{BODY} .= "\tname=\"$name\"\n" if $name;
+            $mail{BODY} .= "Content-Transfer-Encoding: $encoding\n";
+            $mail{BODY} .= "Content-Disposition: attachment;\n";
+            $mail{BODY} .= "\tfilename=\"$name\"\n" if $name;
+            $mail{BODY} .= "\n$text\n";
+        } # end while
+
+# Signal end of attachments
+        $mail{BODY} .= "--$mail{BOUNDARY}--\n\n";
+    } # end if
+
 	my @recipients = $self->to();
 #$openprint::log->debug("Email: Recipients @recipients");
 	if ( $params{'TO'} ) {
@@ -121,10 +166,11 @@ sub send {
 				$mail{'TO'} = $recipient;
 			} # end if
 		} # end if
+
 		if ( $openprint::config{'EmailTo'} ) {
 			$mail{'TO'} = $openprint::config{EmailTo};
 		} # end if
-		misc::send_email_with_attachment( $openprint::log, \%mail, @attachments );
+		Mail::Sendmail::sendmail(%mail) || $openprint::log->error( "Error: $Mail::Sendmail::error\n" );
 		$results .= 'Sent to: ' .  ssi::htmlize( $mail{'TO'} ) . '<br/>';
 
 	} # end foreach recipient

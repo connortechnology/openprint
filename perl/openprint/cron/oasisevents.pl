@@ -26,6 +26,7 @@ require openprint::Event;
 require openprint::Location;
 require openprint::Asset;
 require Date::Calc;
+require openprint::Log;
 
 use vars qw( $log $dbh %config );
 *log = \$openprint::log;
@@ -103,6 +104,13 @@ if ( ! $User ) {
 	$User = new openprint::User();
 	$User->save({company_id=>$Company->id(), firstname=>'TONIATOASIS'});
 } # end if
+
+my $Category = openprint::Event_Category->find_one(name=>'Sexual Playground');
+if ( ! $Category ) {
+	$Category = new openprint::Event_Category();
+	$Category->save({name=>'Sexual Playground'});
+} # end if
+
 #indexed by url
 my %Assets;
 my %Templates;
@@ -166,10 +174,26 @@ $log->debug("GOt2 $posterurl");
 $log->debug("Title: $title, When: $when desc: $desc");
 	my ( $month, $day, $year, $hour, $minute, $ampm, $ending_year, $ending_month, $ending_day, $ending_hour, $ending_minute, $ending_ampm );
 
-	if ( ( $month, $day, $year, $hour, $minute, $ampm, $ending_hour, $ending_minute, $ending_ampm ) = $when =~ /^\s*(\d+)\.(\d+)\.(\d+)\s+(\d+):(\d+) (\w+)\s*-\s*(\d+):(\d+)\ (\w+)\s*$/m ) {
+	if ( ( $month, $day, $year, $hour, $minute, $ampm, $ending_hour, $ending_minute, $ending_ampm ) = $when =~ /^\s*(\d+)\.(\d+)\.(\d+)\s+(\d+):(\d+) (\w+)\s*\-\s*(\d+):(\d+)\ (\w+)\s*$/m ) {
 		if ( $ampm eq 'pm' ) {
 			$hour += 12;
 		} # end if
+		if ( $ending_ampm eq 'pm' ) {
+			$ending_hour += 12;
+		} # end if
+		if ( $ending_hour < $hour ) {
+			( $ending_year, $ending_month, $ending_day ) = Date::Calc::Add_Delta_Days( $year, $month, $day, 1 );
+		} else {
+			( $ending_year, $ending_month, $ending_day ) = ( $year, $month, $day );
+		} # end if
+	} elsif ( ( $month, $day, $year, $ending_month, $ending_day, $ending_year, $hour, $minute, $ampm, $ending_hour, $ending_minute, $ending_ampm ) = $when =~ /^\s*(\d+)\.(\d+)\.(\d+)\s-\s(\d+)\.(\d+)\.(\d+)\s*+(\d+):(\d+) (\w+)\s*\-\s*(\d+):(\d+)\ (\w+)\s*$/m ) {
+		if ( $ampm eq 'pm' ) {
+			$hour += 12;
+		} # end if
+		if ( $ending_ampm eq 'pm' ) {
+			$ending_hour += 12;
+		} # end if
+				
 	} elsif ( ( $month, $day, $year, $hour, $minute, $ampm ) = $when =~ /^\s*(\d+)\.(\d+)\.(\d+)\s+(\d+):(\d+) (\w+)\s*$/m ) {
 		# if no ending is given, assume 3am the next morning
 		if ( $ampm eq 'pm' ) {
@@ -178,8 +202,12 @@ $log->debug("Title: $title, When: $when desc: $desc");
 		( $ending_year, $ending_month, $ending_day ) = Date::Calc::Add_Delta_Days( $year, $month, $day, 1 );
 		( $ending_hour, $ending_minute) = ( 3, 0 );
 	} # end if
-	$log->debug(" Got event $title, $year-$month-$day $hour:$minute $ampm until $ending_year-$ending_month-$ending_day $ending_hour:$ending_minute");
-
+	if ( ! Date::Calc::check_date( $year, $month, $day ) ) {
+		$log->error(" Got event $title, $year-$month-$day $hour:$minute $ampm until $ending_year-$ending_month-$ending_day $ending_hour:$ending_minute");
+		next;
+	} else {
+		$log->debug(" Got event $title, $year-$month-$day $hour:$minute $ampm until $ending_year-$ending_month-$ending_day $ending_hour:$ending_minute");
+	} # end if
 
 	my $starting_on = sprintf('%.4d-%.2d-%.2d %.2d:%.2d:00', $year, $month, $day, $hour, $minute );
 	my $ending_on = sprintf( '%.4d-%.2d-%.2d %.2d:%.2d:00', $ending_year, $ending_month, $ending_day, $ending_hour, $ending_minute );
@@ -187,6 +215,14 @@ $log->debug("Title: $title, When: $when desc: $desc");
 	my $Event = openprint::Event->find_one( created_by=>$$User{id}, name=>$title, starting_on => $starting_on, template => 0 );
 
 	if ( $Event ) {
+		if ( ! defined $Event->time_associated() ) {
+			$_ = $Event->save({time_associated =>  ( $hour ? 1 : 0 )});
+			die $_ if $_;
+		} # end if
+		if ( ! defined $Event->category_id() ) {
+			$_ = $Event->save({category_id=>$$Category{id}});
+			die $_ if $_;
+		} # end if
 		next if (
 				( $Event->info() eq $desc ) 
 				and $$Event{album_id}
@@ -195,7 +231,7 @@ $log->debug("Title: $title, When: $when desc: $desc");
 	} else {
 		$Event = new openprint::Event();
 	} # end if
-	$Event->save({
+	$_ = $Event->save({
 		name =>  $title,
 		starting_on	=>	$starting_on,
 		ending_on	=>	$ending_on,
@@ -203,7 +239,13 @@ $log->debug("Title: $title, When: $when desc: $desc");
 		location_id	=>	$Location->id(),
 		created_by	=>	$User->id(),
 		template	=>	0,
+		time_associated =>	( $hour ? 1 : 0 ),
+		category_id	=>	$$Category{id},
 		});
+	die $_ if $_;
+			if ( ! openprint::Log->find_one(action=>'Create Event', object_type=>'openprint::Event',object_id=>$Event->id() ) ) {
+				(new openprint::Log())->save({action=>'Create Event', object_type=>'openprint::Event',object_id=>$Event->id()});
+			}
 	if ( $Asset ) {
 		my $Album = $Event->Album();
 		if ( ! $Album->id() ) {

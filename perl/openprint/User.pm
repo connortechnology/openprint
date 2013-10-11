@@ -12,7 +12,7 @@ use vars qw( $log $dbh %config %variable %param $debug %fields %find_fields %tra
 $table = 'users';
 $serial = 'users_id_seq';
 
-$debug = 0;
+$debug = 1;
 
 %fields = (
 	'id'				=>	'id',
@@ -426,7 +426,7 @@ if ( 0 ) {
 	if ( ! $_[0]{'icon'} ) {
 		$_[0]{'icon'} = sprintf('<a href="/account/view.html?user_id=%1$d" class="thumbnail"><img src="%2$s" alt="%3$s" title="%3$s"/></a>',
 		#$_[0]{'icon'} = sprintf('<a href="/account/view.html?user_id=%1$d" class="thumbnail"><img src="%2$s?user_id=%1$d" alt="%3$s" title="%3$s" /></a>',
-			$_[0]{'id'}, $_[0]->Asset()->thumbnail_url(), $_[0]->alias() );
+			$_[0]{'id'}, $_[0]->Asset()->sized_url('thumbnail'), $_[0]->alias() );
 	} # end if
 	return $_[0]{'icon'};
 }
@@ -451,7 +451,7 @@ sub html {
 	} # end if
 
 	my $Asset = $User->Asset();
-	my $thumbnail_url = $Asset->thumbnail_url();
+	my $thumbnail_url = $Asset->sized_url('thumbnail');
 
 	return sprintf(q`
 				<div class="User">
@@ -507,7 +507,7 @@ sub AUTOLOAD {
 		} else {
 			return $_[0]{$name};
 		} # end if
-	} elsif ( ! sets::isin( $name, [ 'DESTROY' ] ) ) {
+	} else {
 		my $Profile = $_[0]->Profile();
 		if ( exists $$Profile{'fields'}{$name} ) {
 			if ( @_ > 1 ) {
@@ -520,6 +520,9 @@ sub AUTOLOAD {
 	} # end if
 } # end sub AUTOLOAD
 
+sub DESTROY {
+}
+
 sub can_edit {
 	return 1 if ! $_[0]{id};
 	return 1 if $openprint::session{user_id} == $_[0]{id};
@@ -527,8 +530,8 @@ sub can_edit {
 	my $Me = new openprint::User( $openprint::session{user_id} );
 	return 1 if ( $Me->administrator() eq 'Y' ) and ( $_[0]{company_id} == $openprint::session{company_id} );
 	my $Company = new openprint::Company( $_[0]{company_id} );
-	return 1 if sets::isin( $Company->salesrep_id(), [ $openprint::session{user_id}, $Me->csr_ids(), $Me->assistant_ids() ] );
-	return 1 if openprint::usergroup::is_user_in( ['UserManagement'], $openprint::session{user_id} );
+	return 1 if $Company->salesrep_id() and sets::isin( $Company->salesrep_id(), [ $openprint::session{user_id}, $Me->csr_ids(), $Me->assistant_ids() ] );
+	return 1 if openprint::usergroup::exists('UserManagement') and openprint::usergroup::is_user_in( ['UserManagement'], $openprint::session{user_id} );
 	return 0;
 } # end sub can_edit
 
@@ -538,7 +541,7 @@ sub can_view {
 	my $Me = new openprint::User( $openprint::session{'user_id'} );
 	return 1 if ( $Me->administrator() eq 'Y' ) and ( $_[0]{'company_id'} == $openprint::session{'company_id'} );
 	my $Company = new openprint::Company( $_[0]{'company_id'} );
-	return 1 if sets::isin( $Company->salesrep_id(), [ $openprint::session{'user_id'}, $Me->csr_ids(), $Me->assistant_ids() ] );
+	return 1 if $Company->salesrep_id() and sets::isin( $Company->salesrep_id(), [ $openprint::session{'user_id'}, $Me->csr_ids(), $Me->assistant_ids() ] );
 	require openprint::Blocklist;
 	return 0 if openprint::Blocklist::is_blocked( $openprint::session{user_id},$_[0]{id});
 	return 1;
@@ -554,6 +557,9 @@ sub Location {
 		if ( ! $Location and $Profile->city() ) {
 			my $City = new openprint::Location( $Profile->city() );
 			$Location = openprint::Location->find_one( 'type'=>'city', 'name'=>$City->name() );
+		} # end if
+		if ( ! $Location ) {
+			$Location = openprint::Location::google( join('+', $Profile->postalcode(), $Profile->city() ) );
 		} # end if
 		if ( ! $Location ) {
 			$log->error("Still no location");

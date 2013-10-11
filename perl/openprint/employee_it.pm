@@ -17,6 +17,7 @@ require openprint::User_Type;
 require openprint::Session;
 require openprint::License;
 require openprint::Software;
+require openprint::Location;
 
 sub logs {
 	ssi::setup_date_select( '/employee/it/logs.html', 'date_time_start', -31 );
@@ -33,16 +34,6 @@ sub hosts {
 			my $Host = new openprint::Host( $host_id );
 			$variable{'error'} .= $Host->delete();
 		} # end foreach host_id
-		%param = ();
-	} elsif ( $param{'action'} eq 'Save' ) {
-		my $Host = new openprint::Host( $param{'host_id'} );
-		$param{'mac'} = [ map { split( ',', $_ ) } split("\n", $param{'mac'}) ];
-		if ( $param{'type_id'} ) {
-			delete $param{'type'};
-		} else {
-			delete $param{'type_id'};
-		} # end if
-		$variable{'error'} .= $Host->save(\%param);
 		%param = ();
 	} # end if
 	_hosts();
@@ -92,7 +83,7 @@ sub _hosts {
 } # end sub _hosts
 
 sub host {
-	my $Host = $variable{'Host'} = new openprint::Host( $param{'host_id'} );
+	my $Host = $variable{Host} = new openprint::Host( $param{host_id} );
 	if ( $param{'action'} eq 'Resolve' ) {
 		if ( ! $Host->ip() ) {
 			$variable{'error'} .= 'No ip.  Cant resolve without an ip.';
@@ -102,6 +93,35 @@ sub host {
 				'mac'		=> $Host->get_mac(),
 				});
 		} # end if
+	} elsif ( $param{action} eq 'Wake' ) {
+		foreach my $mac ( @{ $Host->mac() } ) {
+			`wakeonlan $mac`;
+		} # end foraech
+	} elsif ( $param{action} eq 'GEOLookup' ) {
+		if ( ! $Host->ip() ) {
+			$variable{error} .= 'Host does not have an ip.<br/>';
+		} else {
+			my $Location = openprint::Location::from_ip( $Host->ip() );
+			if ( ! $Location ) {
+				$variable{error} .= 'No Location found from ip.';
+			} else {
+				$$Host{location_id} = $Location->id();
+			} # end if
+		} # end if
+		
+	} elsif ( $param{action} eq 'Save' ) {
+		$param{mac} = [ map { split( ',', $_ ) } split("\n", $param{mac}) ];
+		if ( $param{type_id} ) {
+			delete $param{type};
+		} else {
+			delete $param{type_id};
+		} # end if
+		$variable{error} .= $Host->save(\%param);
+		if ( ! $variable{error} ) {
+			$variable{ExternalRedirect} = '/employee/it/hosts.html';
+			return;
+		} # end if
+		%param = ();
 	} elsif ( $param{'action'} eq 'ping' ) {
 		if ( $Host->ping() ) {
 			$variable{'information'} .= 'Host is alive.';
@@ -358,7 +378,7 @@ sub _licenses {
 	( map { 'purchased_on_end_' . $_ } ( 'year', 'month', 'day' ) ),
 	( map { 'expires_on_start_' . $_ } ( 'year', 'month', 'day' ) ),
 	( map { 'expires_on_end_' . $_ } ( 'year', 'month', 'day' ) ),
-			'ip','hostname','mac',
+			'ip','hostname','mac','software_id','serialkey',
 			'order',
 			);
 } # end sub _licenses
@@ -423,5 +443,27 @@ sub _license_allocations {
 		$variable{error} .= $LH->save({license_id=>$param{license_id}, host_id=>$param{host_id}});
 	} # end if	
 } # end sub _license_alliations
+
+sub _information {
+	my $Host = $variable{Host} = new openprint::Host( $param{host_id} );
+	if ( ! $Host->id() ) {
+		$variable{error} .= "Host not found: id=>$param{host_id}<br/>";
+		return;
+	} # end if
+
+	if ( $param{action} eq 'add' ) {
+		my $Info = new openprint::Host_Info();
+		$variable{error} .= $Info->save({
+				host_id	=>	$param{host_id},
+				name	=>	$param{name},
+				value	=>	$param{value}, 
+			});
+	} elsif ( $param{action} eq 'delete' ) {
+		my $Info = new openprint::Host_Info( $param{info_id} );
+		$variable{error} .= $Info->delete();
+	} # end if
+		
+} # end sub _information
+
 1;
 __END__

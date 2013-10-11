@@ -10,7 +10,7 @@ use vars qw( $log $dbh $debug $timing );
 use openprint ();
 *dbh = \$openprint::dbh;
 *log = \$openprint::log;
-$debug = 1;
+$debug = 0;
 $timing = 1;
 
 # This uses it's own dbh so as not to quash the global dbh.  This is so that we can easily open secondary db connections while maintaining the global one.
@@ -226,19 +226,25 @@ sub update {
 } # end sub update
 
 sub start_transaction {
-	my $dbh = shift;
-	my $ac = $dbh->{AutoCommit};
-	$dbh->{AutoCommit} = 0;
+	my ( $caller, undef, $line ) = caller;
+#$openprint::log->debug("Called start_transaction from $caller : $line");
+	my $d = shift;
+	$d = $dbh if ! $d;
+	my $ac = $d->{AutoCommit};
+	$d->{AutoCommit} = 0;
 	return $ac;
 } # end sub start_transaction
 
 sub end_transaction {
-	my ( $dbh, $ac ) = @_;
+	my ( $caller, undef, $line ) = caller;
+#$openprint::log->debug("Called end_transaction from $caller : $line");
+	my ( $d, $ac ) = @_;
+	$d = $dbh if ! $d;
 	if ( $ac ) {
 		#$log->debug("Committing");
-		$dbh->commit();
+		$d->commit();
 	} # end if
-	$dbh->{AutoCommit} = $ac;
+	$d->{AutoCommit} = $ac;
 } # end sub end_transaction
 
 

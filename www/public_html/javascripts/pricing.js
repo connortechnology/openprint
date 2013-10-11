@@ -80,6 +80,10 @@ function calc_from_price( element, precision ) {
 		} // end if
 	} // end if
 } // end function
+function add_price ( form, pricelist_id, equipment_id ) {
+	$('prices-'+pricelist_id+'-'+equipment_id).innerHTML = 'Please wait...loading.';
+	new Ajax.Updater( 'prices-'+pricelist_id+'-'+equipment_id, '_prices_table_body.html?action=delete&price_id='+price_id, { method: 'post', parameters:form.serialize() } );
+} /* end function del_price() */
 function del_price ( form, pricelist_id, equipment_id, price_id ) {
 	$('prices-'+pricelist_id+'-'+equipment_id).innerHTML = 'Please wait...loading.';
 	new Ajax.Updater( 'prices-'+pricelist_id+'-'+equipment_id, '_prices_table_body.html?action=delete&price_id='+price_id, { method: 'post', parameters:form.serialize() } );

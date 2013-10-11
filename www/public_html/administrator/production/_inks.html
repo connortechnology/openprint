@@ -23,7 +23,7 @@
 			5	=>	'Uncoated, yellow',
 		);
 		foreach my $Ink ( openprint::Ink->find(
-				'order'=>'pmsid,strcolourname',
+				'order'=>'pmsid,name',
 				( $session{'/administrator/production/inks.html?pmsid'} ? ( 'pmsid ilike' => '%'.$session{'/administrator/production/inks.html?pmsid'}.'%' ) : () ),
 				( $session{'/administrator/production/inks.html?name'} ? ( 'name ilike' => '%'.$session{'/administrator/production/inks.html?name'}.'%' ) : () ),
 				) ) {

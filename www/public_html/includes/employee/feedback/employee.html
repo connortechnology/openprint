@@ -1,5 +1,5 @@
 <? eval (
-	@$variable{'Operator','PickupDate'} = sql::execute( $log, $dbh, q{SELECT (SELECT strFirstName || ' ' || strLastName FROM Users WHERE Index=operator_id), starttime FROM tbl_Project_Contents WHERE lngProjectIndex=? AND lngServiceIndex=?}, @$variable{'ProjectIndex','ServiceIndex'} );
+	@$variable{'Operator','PickupDate'} = sql::execute( $log, $dbh, q{SELECT (SELECT FirstName || ' ' || LastName FROM Users WHERE id=operator_id), starttime FROM tbl_Project_Contents WHERE lngProjectIndex=? AND lngServiceIndex=?}, @$variable{'ProjectIndex','ServiceIndex'} );
 	) ?>
 <p>
 	<label>Operator</label>

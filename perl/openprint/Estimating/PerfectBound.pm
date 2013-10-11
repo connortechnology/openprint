@@ -20,6 +20,7 @@ use strict;
 require openprint::service;
 
 use constant DEBUG => 0;
+my @Equipment;
 
 my %variables = (
         'ProjectIndex'=>[],'ServiceIndex'=>[],
@@ -122,8 +123,9 @@ sub signature_calc {
 	} # end if
 
 	my $error;
-	# THe Equipment->find call gets cached... and the rest is impo-specific... so we can't really cache this.
-	my @possible_equipment = get_equipment( $specs, \$error, \@Impositions );
+	if ( ! $$specs{possible_equipment} ) {
+		$$specs{possible_equipment} = [ get_equipment( $specs, \$error, \@Impositions ) ];
+	} # end if
 
 	my @equipment = ();
 
@@ -131,7 +133,7 @@ sub signature_calc {
 $openprint::log->debug("Override PerfectBind to " . $$specs{"ddmEquipment$qty_index"} );
 		@equipment = openprint::Equipment->find( 'id' => $$specs{"ddmEquipment$qty_index"} );
 	} else {
-		@equipment = @possible_equipment;
+		@equipment = @{$$specs{possible_equipment}};
 	} # end if
 
 	my @sigs = $Project->signatures();

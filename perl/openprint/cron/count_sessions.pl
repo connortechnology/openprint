@@ -4,6 +4,7 @@ use strict;
 #use warnings;
 
 require sets;
+require configuration;
 require sql;
 require logger;
 require openprint::User;
@@ -46,6 +47,7 @@ $dbh = sql::open_sql( $log,
         );
 
 die 'Error opening db' if ! $dbh;
+configuration::init();
 
 my $session_ids = $dbh->selectcol_arrayref( q{SELECT id FROM sessions} );
 my @online;

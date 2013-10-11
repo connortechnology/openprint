@@ -70,7 +70,7 @@ sub information {
 			foreach my $OP ( $Order->Ordered_Projects() ) {
 				$variable{'error'} .= $OP->save({'price'=>undef});
 			} # end foreach
-			$Order->add_to_log( 'Re-Opened' );
+			$Order->add_log( 'Re-Opened' );
 		} else {
 			$error = 'No order_id given to Re-Open.';
 		} # end if order_id
@@ -103,95 +103,96 @@ sub information {
 	my $Order = new openprint::Order( $order_id );
 	$session{'order_id'} = $order_id;
 
-	if ( ! $variable{'error'} ) {
-		# Only check for errors if we don't have any yet
-		my @errors;
-		# If there are any unspecified quantities, keep looping on the selection page.
-		foreach my $Project ( openprint::OrderedProject->find('order_id'=>$Order->id() ) ) {
-			if ( ( ! $Project->quantity_index() ) and ( $Project->Project()->quantity_indexes() > 1 ) ) {
-				push @errors, "Please select the quantity to order for project $$Project{project_id}<br/>";
-			} # end if
-			if ( ! $Project->description() ) {
-				push @errors, "Please give project $$Project{project_id} a reference<br/>";
-			} # end if
-			if ( ! $Project->shippingtype() ) {
-				push @errors, "Please select a shipping type for project $$Project{project_id}<br/>";
-			} # end if
-		} # end foreach Project
-		if ( @errors ) {
-			$variable{'error'} = join('<br/>', @errors );
-			#$openprint::log->error( "Order Error: $variable{'error'}" );
-		} # end if
-	} # end if
-	if ( ! $variable{'error'} ) {
-		# Only check for errors if we don't have any yet
-		my @errors;
-		foreach my $Product ( $Order->Products() ) {
-$openprint::log->debug("Got product.");
-			if ( ! $Product->shippingtype() ) {
-				push @errors, "Please select a shipping type.<br/>";
-			} # end if
-		} # end foreach Project
-		if ( @errors ) {
-			$variable{'error'} = join('<br/>', @errors );
-		} # end if
-	} # end if
-
-# First thing to do is to try to load info directly from the order.
-	 @variable{'company_name',
-	 'salutation',
-	 'firstname',
-	 'lastname',
-	 'address1',
-	 'address2',
-	 'city',
-	 'state',
-	 'postalcode',
-	 'country',
-	 'phone',
-	 'fax',
-	 'email',
-	 'alsonotify',
-	} = $Order->get('company_name','salutation','firstname','lastname','address1','address2','city','state','postalcode','country','phone','fax','email','alsonotify');
-
-	if ( $variable{'company_name'} eq '' ) {
-		my $Company = new openprint::Company($session{company_id});
-		@variable{'company_name',
-			'address1',
-			'address2',
-			'city',
-			'state',
-			'postalcode',
-			'country',
-			'phone',
-			'fax'} = $Company->get('name','address1','address2','city','state','postalcode','country','phone','fax');
-	} # end if
-
-	if ( $variable{'email'} eq '' ) {
-		my $User = new openprint::User( $session{user_id} );
-		# Assume that we are acting on someone else's behalf
-		if ( sets::isin( $session{'user_type'}, [ 'A','E'] ) ) {
-		
-			# WE ARE logged in as someone else
-			if ( $User->company_id() != $session{'company_id'} ) {
-				my @Users = openprint::User->find( 
-						'company_id'=>$param{'company_id'} ? $param{'company_id'} : $session{'company_id'}, 
-						'order'=>'lower(lastname),lower(firstname)'
-						);
-				$User = $Users[0] if @Users;
+	if ( $order_id ) {
+		if ( ! $variable{'error'} ) {
+			# Only check for errors if we don't have any yet
+			my @errors;
+			# If there are any unspecified quantities, keep looping on the selection page.
+			foreach my $Project ( openprint::OrderedProject->find('order_id'=>$Order->id() ) ) {
+				if ( ( ! $Project->quantity_index() ) and ( $Project->Project()->quantity_indexes() > 1 ) ) {
+					push @errors, "Please select the quantity to order for project $$Project{project_id}<br/>";
+				} # end if
+				if ( ! $Project->description() ) {
+					push @errors, "Please give project $$Project{project_id} a reference<br/>";
+				} # end if
+				if ( ! $Project->shippingtype() ) {
+					push @errors, "Please select a shipping type for project $$Project{project_id}<br/>";
+				} # end if
+			} # end foreach Project
+			if ( @errors ) {
+				$variable{'error'} = join('<br/>', @errors );
+				#$openprint::log->error( "Order Error: $variable{'error'}" );
 			} # end if
 		} # end if
-		@variable{'email',
-			'title',
-			'firstname',
-			'lastname',
-			'salutation',
-			'phone',
-			'fax',
-		} = $User->get('email','title','firstname','lastname','salutation','phone','fax');
+		if ( ! $variable{'error'} ) {
+			# Only check for errors if we don't have any yet
+			my @errors;
+			foreach my $Product ( $Order->Products() ) {
+	$openprint::log->debug("Got product.");
+				if ( ! $Product->shippingtype() ) {
+					push @errors, "Please select a shipping type.<br/>";
+				} # end if
+			} # end foreach Project
+			if ( @errors ) {
+				$variable{'error'} = join('<br/>', @errors );
+			} # end if
+		} # end if
 
-	} # end if
+	# First thing to do is to try to load info directly from the order.
+		 @variable{'company_name',
+		 'salutation',
+		 'firstname',
+		 'lastname',
+		 'address1',
+		 'address2',
+		 'city',
+		 'state',
+		 'postalcode',
+		 'country',
+		 'phone',
+		 'fax',
+		 'email',
+		 'alsonotify',
+		} = $Order->get('company_name','salutation','firstname','lastname','address1','address2','city','state','postalcode','country','phone','fax','email','alsonotify');
 
+		if ( $variable{'company_name'} eq '' ) {
+			my $Company = new openprint::Company($session{company_id});
+			@variable{'company_name',
+				'address1',
+				'address2',
+				'city',
+				'state',
+				'postalcode',
+				'country',
+				'phone',
+				'fax'} = $Company->get('name','address1','address2','city','state','postalcode','country','phone','fax');
+		} # end if
+
+		if ( $variable{'email'} eq '' ) {
+			my $User = new openprint::User( $session{user_id} );
+			# Assume that we are acting on someone else's behalf
+			if ( sets::isin( $session{'user_type'}, [ 'A','E'] ) ) {
+			
+				# WE ARE logged in as someone else
+				if ( $User->company_id() != $session{'company_id'} ) {
+					my @Users = openprint::User->find( 
+							'company_id'=>$param{'company_id'} ? $param{'company_id'} : $session{'company_id'}, 
+							'order'=>'lower(lastname),lower(firstname)'
+							);
+					$User = $Users[0] if @Users;
+				} # end if
+			} # end if
+			@variable{'email',
+				'title',
+				'firstname',
+				'lastname',
+				'salutation',
+				'phone',
+				'fax',
+			} = $User->get('email','title','firstname','lastname','salutation','phone','fax');
+
+		} # end if
+	} # end if $Order_id
 	$variable{'order_id'} = $order_id;
 	$variable{'Order'} = new openprint::Order( $order_id );
 
@@ -548,5 +549,15 @@ sub _view_log {
 } # end sub _view_log
 sub _UPS {
 } # end sub _UPS
+sub _order {
+	if ( $param{action} eq 'select_quantity' ) {
+		my $Project = openprint::OrderedProject->find_one( order_id=>$param{order_id}, project_id=>$param{project_id} );
+		if ( ! $Project ) {
+			$variable{error} = 'Project is not in order.<br/>';
+		} else {
+			$variable{error} .= $Project->save({quantity_index=>$param{quantity_index}});
+		} # end if
+	} # end if
+} # end sub _order
 1;
 __END__

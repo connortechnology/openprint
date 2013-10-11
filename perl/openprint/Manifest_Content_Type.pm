@@ -5,12 +5,13 @@ require openprint::Object;
 
 use openprint ();
 use vars qw( $debug $table $serial %fields %find_fields %transforms %defaults );
-$debug = 0;
 
 require openprint::Manifest;
 require openprint::Paper;
 require openprint::PurchaseOrder_Content;
 require Math::Round;
+
+$debug = 0;
 
 $table = 'manifest_content_types';
 $serial = 'manifest_content_types_id_seq';
@@ -18,6 +19,7 @@ $serial = 'manifest_content_types_id_seq';
 %fields = (
 	'id'			=>	'id',
 	'cost'			=>	'cost',
+	'cost_units'	=>	'cost_units',
 	'docket'		=>	'docket',
 	'po_id'			=>	'po_id',
 	'po_content_id'	=>	'po_content_id',
@@ -25,6 +27,8 @@ $serial = 'manifest_content_types_id_seq';
 	'paper_id'		=>	'paper_id',
 	supplier_invoice	=>	'supplier_invoice',
 	item_count			=>	'item_count',
+	type			=>	'type',
+	manufacturers_name	=>	'manufacturers_name',
 );
 %find_fields = (
 	total_quantity	=>	'(SELECT SUM(quantity) FROM manifestcontents WHERE manifestcontents.manifest_id=manifest_content_types.manifest_id and type_id=manifest_content_types.id)',
@@ -32,20 +36,24 @@ $serial = 'manifest_content_types_id_seq';
 );
 
 %transforms = (
-	'paper_id'		=> [ 's/\D//g' ],
-	'po_id'			=> [ 's/\D//g' ],
-	'po_content_id'	=> [ 's/\D//g' ],
-	'item_count'	=> [ 's/\D//g' ],
-	'docket'	=> [ 's/\D//g' ],
-	'cost'		=> [ 's/[^\d\.]//g' ],
+	paper_id		=> [ 's/\D//g' ],
+	po_id			=> [ 's/\D//g' ],
+	po_content_id	=> [ 's/\D//g' ],
+	item_count		=> [ 's/\D//g' ],
+	docket			=> [ 's/\D//g' ],
+	cost			=> [ 's/[^\d\.]//g' ],
+    type			=> [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
 );
 
 %defaults = (
-	'cost'			=>	undef,
-	'docket'		=>	undef,
-	'po_id'			=>	undef,
-	'po_content_id'	=>	undef,
-	'paper_id'		=>	undef,
+	cost			=>	undef,
+	docket			=>	undef,
+	po_id			=>	undef,
+	po_content_id	=>	undef,
+	paper_id		=>	undef,
+	type			=>	undef,
+	item_count		=>	undef,
+	manufacturers_name	=>	undef,
 );
 
 sub Paper {
@@ -105,6 +113,34 @@ sub PurchaseOrder_Content {
 	} # end if
 	return $_[0]{'PurchaseOrder_Content'}; 
 } # end sub PurchaseOrder_Content
+
+sub type {
+	if ( @_ > 1 ) {
+		$_[0]{type} = $_[1];
+	} # end if
+	if ( ! $_[0]{type} ) {
+		if ( $_[0]{paper_id} ) {
+			$_[0]{type} = $_[0]->Paper()->type();
+		} # end if
+	} # end if
+	return $_[0]{type};
+} # end sub type
+
+sub Contents {
+	my ( $self, %params ) = @_;
+	if ( %params ) {
+		if ( $$self{id} ) {
+			return openprint::ManifestContent->find( manifest_id=>$$self{manifest_id}, type_id=>$$self{id}, %params );
+		} # end if
+	} # end if
+	if ( ! $$self{Contents} ) {
+		if ( $$self{id} ) {
+			@{$$self{Contents}} = openprint::ManifestContent->find( manifest_id=>$$self{manifest_id}, type_id=>$$self{id} );
+		} # end if
+	} # end if
+	return @{$$self{Contents}} if $$self{Contents};
+	return;
+} # end sub Contents
 
 1;
 __END__

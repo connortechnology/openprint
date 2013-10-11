@@ -20,7 +20,7 @@
 			<? echo ( 
 				my @csrs = sql::execute(undef,undef,'select DISTINCT lngsalesperson FROM Company WHERE index IN (SELECT DISTINCT company_id FROM Survey_responses WHERE survey_id=?)', $$variable{'Survey'}->id());
 				if ( @csrs ) {
-				return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User::find( 'order'=>'lower(strfirstName), lower(strlastName)','type'=>['E','A'],
+				return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User->find( 'order'=>'lower(firstName), lower(lastName)','type'=>['E','A'],
 						'id'=>\@csrs,
 						'deleted'=>[1,0] ) ], $param{'CSR'} );
 				} # end if

@@ -1,9 +1,9 @@
 <div class="PageTitle">
 <h1>Printing</h1>
 </div>
-<script type="text/javascript" src="<? echo ( hash_link('/javascripts/service.js'); ) ?>"></script>
-<script type="text/javascript" src="<? echo ( hash_link('/javascripts/printing.js'); ) ?>"></script>
-<script type="text/javascript" src="<? echo ( hash_link('/javascripts/proj/paper.js'); ) ?>"></script>
+<script type="text/javascript" src="<?hash_link(/javascripts/service.js)?>"></script>
+<script type="text/javascript" src="<?hash_link(/javascripts/printing.js)?>"></script>
+<script type="text/javascript" src="<?hash_link(/javascripts/proj/paper.js)?>"></script>
 <script type="text/javascript">
 	var quantities=new Array();
 	<?QUANTITIES?>
@@ -35,13 +35,13 @@
                     <label>Spread dimensions</label>
 					<? echo (
 						my $html = sprintf('%s x %s => %s x %s',
-							ssi::input( type=>'float', name=>'txtWidth', value=>$$variable{'txtWidth'}, onkeyup=>'calc(this.form.name);' ),
-							ssi::input( type=>'float', name=>'txtHeight', value=>$$variable{'txtHeight'}, onkeyup=>'calc(this.form.name);' ),
-							ssi::input( type=>'float', name=>'txtFinalWidth', value=>$$variable{'txtFinalWidth'}, onkeyup=>'calc(this.form.name);' ),
-							ssi::input( type=>'float', name=>'txtFinalHeight', value=>$$variable{'txtFinalHeight'}, onkeyup=>'calc(this.form.name);' ),
+							input( type=>'float', name=>'txtWidth', value=>$$variable{'txtWidth'}, onkeyup=>'calc(this.form.name);' ),
+							input( type=>'float', name=>'txtHeight', value=>$$variable{'txtHeight'}, onkeyup=>'calc(this.form.name);' ),
+							input( type=>'float', name=>'txtFinalWidth', value=>$$variable{'txtFinalWidth'}, onkeyup=>'calc(this.form.name);' ),
+							input( type=>'float', name=>'txtFinalHeight', value=>$$variable{'txtFinalHeight'}, onkeyup=>'calc(this.form.name);' ),
 							);
 						if ( sets::isin( $session{'user_type'}, ['A','E'] ) ) {
-							$html .= ssi::write_override( 'chkOverrideDimensions', $$variable{'chkOverrideDimensions'}, '', q`calc('f1');` );
+							$html .= write_override( 'chkOverrideDimensions', $$variable{'chkOverrideDimensions'}, '', q`calc('f1');` );
 						} # end if
 						return $html;
 					) ?>
@@ -49,38 +49,38 @@
             </div>
 <? if ( $$variable{'Group'} == 1 ) ?>
             <div class="rightColumn" id="PresentationFolderQuestions" <? echo ( ! sets::isin( $$variable{'rdbTemplateType'}, ['2Panel1Pocket','2Panel2Pocket','TriFoldDoublePocket'] ) ? 'style="display:none;"' : '' ) ?> >
-            <? echo (
-                my $html .= misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/includes/main/proj/presentation_folder_printing.html' );
-                return variable_substitution( \$html, $variable );
-            ) ?>
+            <?include('/includes/main/proj/presentation_folder_printing.html')?>
             </div>
 <? endif ( $$variable{'Group'} == 1 ) ?>
 <? endif ( $$variable{'txtSignatureType'} ) ?>
 
 <? if ( $$variable{'ProjectType'}->name() eq 'Envelopes' ) ?>
-                <?include(/includes/main/proj/templates/project_template_select.html)?>
-                <?include(/includes/main/proj/templates/envelopes.html)?>
+		<?include(/includes/main/proj/templates/generic.html)?>
 <? endif ( $$variable{'ProjectType'}->name() eq 'Envelopes' ) ?>
 
-<? if ( sets::isin( $$variable{'ProjectType'}->name(),['GreetingCards','Postcards','Posters','Signs','Banners','RackCards','Labels','NCR'] ) ) ?>
-		<?include(/includes/main/proj/templates/generic.html)?>
-		<?include(/includes/main/proj/dimensions.html)?>
-<? endif ( sets::isin( $$variable{'ProjectType'}->name(),['GreetingCards','Postcards','Posters','Signs','Banners','RackCards','Labels','NCR'] ) ) ?>
+<? echo ( 
+	if ( sets::isin( $$variable{'ProjectType'}->name(), [ 'DoorHangers', 'Brochures', 'GreetingCards','Postcards','Posters','Signs','Banners','RackCards','Labels','NCR' ] ) ) {
+		return join("\n",
+			include('/includes/main/proj/templates/generic.html'),
+			include('/includes/main/proj/dimensions.html'),
+		);
+	} elsif ( $$variable{'ProjectType'}->name() eq 'Custom' ) {
+		return include('includes/main/proj/dimensions_boxes_only.html');
+	} elsif ( sets::isin( $$variable{'ProjectType'}->name(),['Banners'] ) )  {
+		return include('/includes/main/proj/banner_printing.html');
+	} elsif ( $$variable{'ProjectType'}->name() eq 'Envelopes' ) {
+		return qq`
+            <input type="hidden" id="txtWidth" name="txtWidth" value="$$variable{txtWidth}" />
+            <input type="hidden" id="txtHeight" name="txtHeight" value="$$variable{txtHeight}" />
+            <input type="hidden" id="txtFinalWidth" name="txtFinalWidth" value="$$variable{txtFinalWidth}" />
+            <input type="hidden" id="txtFinalHeight" name="txtFinalHeight" value="$$variable{txtFinalHeight}" />
+		`;
+	} # end if
+	return '';
+) ?>
 <? if ( sets::isin( $$variable{'ProjectType'}->name(),['Banners'] ) ) ?>
 		<?include(/includes/main/proj/banner_printing.html)?>
 <? endif ( sets::isin( $$variable{'ProjectType'}->name(),['Banners'] ) ) ?>
-
-<? if ( $$variable{'ProjectType'}->name() eq 'DoorHangers' ) ?>
-		<?include(/includes/main/proj/templates/generic.html)?>
-		<?include(/includes/main/proj/dimensions.html)?>
-<? endif ( $$variable{'ProjectType'}->name() eq 'DoorHangers' ) ?>
-<? if ( $$variable{'ProjectType'}->name() eq 'Brochures' ) ?>
-		<?include(/includes/main/proj/templates/brochures.html)?>
-		<?include(/includes/main/proj/dimensions.html)?>
-<? endif ( $$variable{'ProjectType'}->name() eq 'Brochures' ) ?>
-<? if ( $$variable{'ProjectType'}->name() eq 'Custom' ) ?>
-		<?include(/includes/main/proj/dimensions_boxes_only.html)?>
-<? endif ( $$variable{'ProjectType'}->name() eq 'Custom' ) ?>
 <? if ( $$variable{'ProjectType'}->name() eq 'Flyers' ) ?>
 		<?include(/includes/main/proj/templates/brochures.html)?>
 		<?include(/includes/main/proj/dimensions.html)?>

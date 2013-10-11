@@ -8,7 +8,7 @@ require openprint::Pricelist;
 require openprint::Company;
 require sql;
 
-use vars qw( $log $dbh $debug $table $serial %fields %transforms %defaults );
+use vars qw( $log $dbh $debug $table $serial %fields %transforms %defaults $cache_field );
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
 
@@ -28,8 +28,9 @@ $serial = 'currencies_id_seq';
 %defaults = (
 );
 
+$cache_field = 'short';
 sub cache_field {
-	return 'short';
+	return $cache_field;
 }
 sub conversions {
 	my ( $self, $to ) = @_;
@@ -93,7 +94,7 @@ sub convert_to {
 	} # end if
 	if ( ! $To ) {
 		$log->error('No Currency for ' . $_[1] );
-		return undef;
+		return;
 	} # end if
 	if ( $To and ( $$To{id} != $$From{id} ) ) {
 		my $rate = $From->conversions( $To->id() );

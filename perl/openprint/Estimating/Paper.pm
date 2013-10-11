@@ -25,7 +25,7 @@ require openprint::service;
 require openprint::Currency;
 require openprint::Estimating::Printing;
 
-my $debug = 0;
+my $debug = 1;
 
 my @variables = (
         'txtPrice1', 'txtPrice2', 'txtPrice3',
@@ -154,8 +154,12 @@ $openprint::log->debug("Supplied: " . $SuppliedStock->id_string() );
 			if ( $$specs{"overrideqty-$ss_id-$stock_index-$qty_index"} ne 'Y' ) {
 				if ( $PressSheet->type() eq 'Sheet' ) {
 					my $sheets = $$sig_specs{'StockQuantity'.$qty_index};
+					if ( ! ( $PressSheet->area() and $PressSheet->start_area() ) ) {
+						Carp::cluck("No sheet area");
+					} else {
 					# convert to supplied count
 					$sheets = ceil( $sheets / ( $PressSheet->start_area()/$PressSheet->area() ) );
+					} # end if
 					$$specs{"qty-$ss_id-$stock_index-$qty_index"} = ceil( $sheets * $PressSheet->start_sheet_weight() );
 					$$specs{"sheets-$ss_id-$stock_index-$qty_index"} = $sheets;
 				} else {
@@ -234,14 +238,14 @@ $openprint::log->error("2No stock index for $paper_id");
 			if ( $$specs{"overridecost-$ss_id-$stock_index-$qty_index"} ne 'Y' ) {
 				my $price;
 				if ( $Paper->type() eq 'Sheet' ) {
-					$price = $Paper->get_price( 'weight'=>$totals{$paper_id}{"qty_$qty_index"} * $Paper->sheet_weight(),'service'=>'Material' );
+					$price = $Paper->get_price( sheets=>$totals{$paper_id}{"qty_$qty_index"},'service'=>'Material' );
 				} else {
 					$price = $Paper->get_price( 'weight'=>$totals{$paper_id}{"qty_$qty_index"},'service'=>'Material' );
 				} # end if
 				$$specs{"cost-$ss_id-$stock_index-$qty_index"} = $$price{'100lb Price'};
 #$openprint::log->warn("Getting prices for $stock_index $paper_id (".$totals{$paper_id}{"qty_$qty_index"}.'sheets) => $' . $price{'100lb Price'}.'/100lb');
 			} # end if
-			$$specs{"price-$ss_id-$stock_index-$qty_index"} = sprintf($openprint::config{'UnitPriceFormat'},$$specs{"cost-$ss_id-$stock_index-$qty_index"} * $$specs{"qty-$ss_id-$stock_index-$qty_index"} / 100 );
+			$$specs{"price-$ss_id-$stock_index-$qty_index"} = Math::Round::nearest( 0.01, $$specs{"cost-$ss_id-$stock_index-$qty_index"} * $$specs{"qty-$ss_id-$stock_index-$qty_index"} / 100 );
 			$totals{$paper_id}{'Cost'}[$qty_index] = $$specs{"cost-$ss_id-$stock_index-$qty_index"};
 			$$specs{"MPrice$qty_index"} += $$specs{"cost-$ss_id-$stock_index-$qty_index"} * ceil( (1000/$$sig_specs{'txtImposition'.$qty_index}) * $RunPaper->sheet_weight() )/ 100;
 		} # end foreach qty_index
@@ -314,8 +318,8 @@ sub display {
 
 			if ( $totals{$id}{Index} ) {
 				my $list_id = openprint::pricing::get_pricelist_id();
-				$price = openprint::pricing::get_best_price( $log, $dbh, $$variable{'company_id'}, $totals{$id}{Index}, $list_id, 'openprint::paper_priceset', 1 );
-				my $discounted_price = openprint::pricing::get_best_price( $log, $dbh, $$variable{'company_id'}, $totals{$id}{Index}, $list_id, 'openprint::paper_priceset', $totals{$id}{'hdnGrossSheetCount'.$qty_index} );
+				$price = openprint::pricing::get_best_price( $$variable{'company_id'}, $totals{$id}{Index}, $list_id, 'openprint::paper_priceset', 1 );
+				my $discounted_price = openprint::pricing::get_best_price( $$variable{'company_id'}, $totals{$id}{Index}, $list_id, 'openprint::paper_priceset', $totals{$id}{'hdnGrossSheetCount'.$qty_index} );
 				$discount = $price - $discounted_price;
 			} # end if
 

@@ -40,7 +40,7 @@ Getopt::Long::GetOptions($opts, 'attach-file', 'fifo=s', 'from=s', 'help', 'igno
 	'recipient=s', 'sleep=s', 'smtp-server=s', 'subject=s',
 	'watch-users=s','pid_file=s', 'db_name=s', 'db_host=s', 'db_user=s', 'db_pass=s',
 	'skin_path=s', 'document_root=s', 'file_path=s','site_title=s', 'site_url=s',
-	'scoreboard=s','max_files=s',
+	'scoreboard=s','max_files=s', 'config=s',
 );
 
 if ($opts->{help}) {
@@ -48,9 +48,16 @@ if ($opts->{help}) {
 	exit 0;
 }
 
+my %defaults = (
+    config  =>  '/etc/openprint/ftp_monitor.conf',
+);
+foreach my $default ( keys %defaults ) {
+    $$opts{$default} = $defaults{$default} if ! $$opts{$default};
+} # end foreach default
+
 $log = new logger(level=>'debug',program=>$program);
 # Get our configuration information
-if (my $err = configuration::from_file('/etc/ftp_monitor.conf')) {
+if (my $err = configuration::from_file($$opts{config})) {
     die $err;
 }
 
@@ -95,7 +102,7 @@ $openprint::dbh = sql::open_sql( $log,
 );
 die 'Error opening db' if ! $dbh;
 configuration::init( \%config );
-configuration::from_file('/etc/ftp_monitor.conf');
+configuration::from_file($$opts{config});
 # Cache of recently completed uploads.  keys are username, value is array of upload hashes.  When the user is no longer logged in or
 # older than a certain age, the email notification should go out, and the hash entry cleared.
 my %uploads;
@@ -224,7 +231,7 @@ if (open($fifoh, "< $config{fifo}")) {
 					);
 			die 'Error opening db' if ! $dbh;
 			configuration::init( \%config );
-			configuration::from_file('/etc/ftp_monitor.conf');
+			configuration::from_file($$opts{config});
 		} # end if
 	} # end while <input>
 
@@ -374,7 +381,7 @@ $log->debug("Found user $$upload{user} with out company.  Company is $$Company{n
 					@to = ( $Company->CSR() );
 				} # end if
 			} # end if
-			push @to, map { $_->User() } openprint::User_Notification->find('type'=>'Client File Uploads','value'=>'Yes');
+			push @to, map { $_->User() } openprint::User_Notification->find('type'=>'Client File Uploads','value'=>'Yes', company_id=>[ $config{Owner}, $Company->id() ] );
 		} # end if
 		
 		if ( ! @to ) {
@@ -387,7 +394,6 @@ $log->debug("Found user $$upload{user} with out company.  Company is $$Company{n
 			$variable{'Uploads'} = \@uploads;
 
 			$variable{'ReplacementText'} = ssi::include( '/email_content/ftp_csr_notification.html', \%variable );
-			$variable{'ReplacementText'} = ssi::variable_substitution( \$variable{'ReplacementText'}, \%variable );
 			my $email_template = misc::load_file( $log, $config{'skin_path'} . '/email_template.html' );
 			my $body = ssi::variable_substitution( \$email_template, \%variable );
 			my $Mail = new openprint::Email();

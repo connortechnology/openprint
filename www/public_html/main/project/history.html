@@ -2,9 +2,8 @@
 <h1>PROJECTS</h1>
 <h2>History</h2>
 </div>
-<? echo ( include('/includes/error_reporting.html'); ) ?>
+<?include('/includes/error_reporting.html')?>
 <script type="text/javascript">
-<!--
 	function delete_confirm(form) {
 		var number_of_deleted_projects = 0;
 		if ( form.elements['project_id'] ) {
@@ -31,11 +30,9 @@
 			} // end if
 		} // end if
 	}
-	function load_projects( form ) {
-		$('ProjectList').innerHTML = 'Please wait...';
-		new Ajax.Updater('ProjectList','/main/project/_history.html', {method:'get',parameters:Form.serialize(form)});
+	function load_projects() {
+		LoadContent( $('ProjectList'), '/main/project/_history.html', $('f1') );
 	} // end function
--->
 </script>	 
 <? if ( $session{'user_id'} ) ?>
 <form id="f1" name="f1" method="post" action="/main/project/history.html">
@@ -47,20 +44,20 @@
 			<li>
 				<label>Project #</label>
 				<? echo ( join("\n",
-					ssi::input( type=>'cardinal', name=>'ProjectID', onkeydown=>'if(event.keyCode == 13){load_projects( this.form );}' ),
-					ssi::button( 'Go1', { onclick=>q`load_projects( $('f1') );`, text=>'Go' } ), 
+					input( type=>'cardinal', id=>'ProjectID', name=>'ProjectID', onkeydown=>'if(event.keyCode==13){load_projects();}', value=>$param{ProjectID} ),
+					button( 'Go1', { onclick=>q`load_projects();`, text=>'Go' } ), 
 				); ) ?>
 			</li>
 			<li>
 				<label>Reference</label>
-				<input type="text" id="reference" name="reference" value="<? echo ( $param{'reference'} ) ?>" onkeyup="load_projects( this.form );" />
+				<input type="text" id="reference" name="reference" value="<? echo ( $param{'reference'} ) ?>" onkeyup="load_projects();" />
 			</li>
 			<li>
 				<label>Status</label>
-				<select id="ddmStatus" name="ddmStatus" multiple="multiple" size="4" onchange="load_projects( this.form );">
+				<select id="ddmStatus" name="ddmStatus" multiple="multiple" size="4" onchange="load_projects();">
 <? echo ( 
 		$_ = q{SELECT name, name FROM Project_Statuses ORDER BY sort,lower(name)};
-		ssi::make_drop_down( [ '', 'All', sql::execute( $log, $dbh, $_ )], [ split(',', $session{'/main/project/history.html?ddmStatus'} ) ] );
+		make_drop_down( [ '', 'All', sql::execute( $log, $dbh, $_ )], [ split(',', $session{'/main/project/history.html?ddmStatus'} ) ] );
 ) ?>
 				</select>
 			</li>
@@ -68,7 +65,7 @@
 				<label>Type</label>
 				<select id="type_id" name="type_id" onchange="load_projects( this.form );">
 					<option value="">All</option>
-					<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::ProjectType->find('order'=>'lower(name)') ], $session{'/main/project/history.html?type_id'} ); ) ?>
+					<? echo ( make_drop_down( openprint::ProjectType->dropdown( order=>'lower(name)' ), $session{'/main/project/history.html?type_id'} ); ) ?>
 				</select>
 			</li>
 			</ul>
@@ -77,47 +74,60 @@
 			<ul>
 			<li>
 				<label>Creation Date</label>
-<? echo ( ssi::date_select_session( '/main/project/history.html', 'created_on_start', { 'onchange'=>'load_projects(this.form);' } ); ) ?>
+<? echo ( date_select_session( '/main/project/history.html', 'created_on_start', { onchange=>'load_projects();' } ); ) ?>
 					to 
-<? echo ( ssi::date_select_session( '/main/project/history.html', 'created_on_end', { 'onchange'=>'load_projects(this.form);' } ); ) ?>
+<? echo ( date_select_session( '/main/project/history.html', 'created_on_end', { onchange=>'load_projects();' } ); ) ?>
 			</li>
 			<li>
 				<label>Last Updated</label>
-<? echo ( ssi::date_select_session( '/main/project/history.html', 'updated_on_start', { 'onchange'=>'load_projects(this.form);' } ); ) ?>
+<? echo ( date_select_session( '/main/project/history.html', 'updated_on_start', { onchange=>'load_projects();' } ); ) ?>
 					to 
-<? echo ( ssi::date_select_session( '/main/project/history.html', 'updated_on_end', { 'onchange'=>'load_projects(this.form);' } ); ) ?>
+<? echo ( date_select_session( '/main/project/history.html', 'updated_on_end', { onchange=>'load_projects();' } ); ) ?>
 			</li>
 <? if ( sets::isin( $session{user_type},[ 'E', 'A' ] ) ) ?>
 			<li><label>Company</label>
-				<select name="company_id" onchange="load_projects(this.form);">
+				<select name="company_id" onchange="load_projects();">
 					<option value="">All</option>
-					<? echo (
-						openprint::Company::get_dropdown( $session{'/main/project/history.html?company_id'} );
-					) ?>
+					<? echo ( openprint::Company::get_dropdown( $session{'/main/project/history.html?company_id'} );) ?>
 				</select>
 			</li>
 	<? if ( openprint::Product->find_one() ) ?>
 			<li><label>Predefined</label>
-				<input type="radio" name="predefined" id="predefined1" value="1" <? echo ( ssi::checked( $session{'/main/project/history.html?predefined'} eq '1' ) ) ?> onclick="load_projects(this.form);" />
+				<input type="radio" name="predefined" id="predefined1" value="1" <? echo ( checked( $session{'/main/project/history.html?predefined'} eq '1' ) ) ?> onclick="load_projects();" />
 				<label class="radio" for="predefined1">Yes</label>
-				<input type="radio" name="predefined" id="predefined0" value="0" <? echo ( ssi::checked( $session{'/main/project/history.html?predefined'} eq '0' ) ) ?> onclick="load_projects(this.form);" />
+				<input type="radio" name="predefined" id="predefined0" value="0" <? echo ( checked( $session{'/main/project/history.html?predefined'} eq '0' ) ) ?> onclick="load_projects();" />
 				<label class="radio" for="predefined0">No</label>
-				<input type="radio" name="predefined" id="predefined" value="" <? echo ( ssi::checked( $session{'/main/project/history.html?predefined'} eq '' ) ) ?> onclick="load_projects(this.form);" />
+				<input type="radio" name="predefined" id="predefined" value="" <? echo ( checked( $session{'/main/project/history.html?predefined'} eq '' ) ) ?> onclick="load_projects();" />
 				<label class="radio" for="predefined">Both</label>
 			</li>
 	<? endif ( openprint::Product->find_one() ) ?>
 <? endif ( sets::isin( $session{user_type},[ 'E', 'A' ] ) ) ?>
+<? eval ( 
+	$$variable{Users} = [ openprint::User->find(
+		company_id => ( $session{'/main/project/history.html?company_id'} ? $session{'/main/project/history.html?company_id'} : $session{user_id} ),
+		order=>'lower(firstname),lower(lastname)' ) ] ) ?>
+<? if ( @{$$variable{Users}} > 1 ) ?>
+			<li><label>Created By</label>
+				<select name="user_id" onchange="load_projects();">
+					<option value="">All</option>
+					<? echo (
+						make_drop_down( [ map { $_->id(), $_->name() } @{$$variable{Users}} ], $session{'/main/project/history.html?user_id'} );
+					) ?>
+				</select>
+			</li>
+<? endif ( @{$$variable{Users}} > 1 ) ?>
 			</ul>
 			</div>
 			</div>
 			<p class="buttons">
 				<? echo ( join( '',
-					ssi::button( 'ShowResults', { onclick=>'f1.submit();', text=>'Show Results' } ),
-					ssi::button( 'Reset', { onclick=>q`f1.btnFunction.value='Reset';f1.submit();`, text=>'Reset' } ),
+					button( 'ShowResults', { onclick=>'f1.submit();', text=>'Show Results' } ),
+					button( 'Create', { href=>'create_edit.html', text=>'Create New' } ),
+					button( 'Reset', { onclick=>q`f1.btnFunction.value='Reset';f1.submit();`, text=>'Reset' } ),
 				); ) ?>
 			</p>
 		</fieldset>
-		<div id="ProjectList"><? echo ( include('_history.html'); ) ?></div>
+		<div id="ProjectList"><? include('_history.html') ?></div>
 	</div>
 	</div>
 	<input type="hidden" name="btnFunction" />

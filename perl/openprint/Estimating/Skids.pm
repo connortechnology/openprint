@@ -137,6 +137,8 @@ sub calc {
         } # end if
 		$$specs{'hdnBreakdown'.$qty_index} = '';
         my $qty = $$specs{"txtQuantity$qty_index"};
+		$qty *= $$printing_specs{Versions} if $$printing_specs{Versions};
+		$$specs{'hdnBreakdown'.$qty_index} .= "Packaging $qty items<br/>";
 
 		my $material_charge = 0;
 		my $best_price = 0;
@@ -188,8 +190,14 @@ $log->debug("Materials: " . map { $_->name() } @Materials ) if DEBUG;
 							my $l = 3.14 * ( ( $width-1 ) / ( 2 * $$specs{'txtFinishedCalliper'} ) ) * ( $width + 1 )/2;
 							$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Max Length: %d<br/>', $l );
 							$items_by_size = int($l/$item_length);
+						} elsif ( $width == $height and $depth >= $item_length ) {
+							$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Rolling %sx%s on %s<br/>', $item_width, $item_length, $depth );
+							# L = pi * N * (D+d)/2 where N=(D-d)/(2*t)
+							my $l = 3.14 * ( ( $height-1 ) / ( 2 * $$specs{'txtFinishedCalliper'} ) ) * ( $height + 1 )/2;
+							$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Max Length: %d<br/>', $l );
+							$items_by_size = int($l/$item_width);
 						} else {
-							$$specs{'hdnBreakdown'.$qty_index} .= 'Cant Roll<br/>';
+							$$specs{'hdnBreakdown'.$qty_index} .= "Cant Roll<br/>";
 						} # end if
 					} # end if
 

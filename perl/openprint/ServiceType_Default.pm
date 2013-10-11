@@ -4,19 +4,19 @@ our @ISA = qw(openprint::Object);
 
 use vars qw( $debug $table $serial %fields %find_fields %transforms %defaults );
 
-$debug = 0;
+$debug = 1;
 
 $table = 'tbl_service_defaults';
 $serial = 'tbl_Service_Defaults_lngID_seq';
 
 %fields = (
-	'id'				=>	'lngindex',
-	'projecttype_id'	=>	'projecttype_id',
-	'projecttype'		=>	undef,
-	'servicetype_id'	=>	'lngservicetypeindex',
-	'servicetype'		=>	undef,
-	'name'				=>	'strfieldname',
-	'value'				=>	'strdefaultvalue',
+	id				=>	'lngindex',
+	projecttype_id	=>	'projecttype_id',
+	projecttype		=>	undef,
+	servicetype_id	=>	'lngservicetypeindex',
+	servicetype		=>	undef,
+	name			=>	'strfieldname',
+	value			=>	'strdefaultvalue',
 );
 %find_fields = (
 	'projecttype'	=>	'(SELECT name FROM project_types WHERE project_types.id=projecttype_id)',

@@ -32,6 +32,9 @@ my %variables = (
 	'PrintingType'=>['save'],'rdbTemplateType'=>['save'],
 	'help'=>['output'],'alert'=>['output'],
 	'ProjectIndex'=>[], 'ServiceIndex'=>[], 'ServiceType'=>[],
+	'txtPrice1'=>['save'],
+	'txtPrice2'=>['save'],
+	'txtPrice3'=>['save'],
 );
 
 sub variables {
@@ -61,7 +64,7 @@ $log->debug("adding a sig");
 	} # end if
 	foreach my $qty_index ( $Project->quantity_indexes() ) {
 		if ( $$specs{'txtPrice'.$qty_index} ) {
-			delete $$specs{'txtPrice'.$qty_index};
+			$$specs{'txtPrice'.$qty_index} = undef;
 		} # end if
 	}# end foreach
 
@@ -188,8 +191,27 @@ $openprint::log->debug( "Signature: @signatures");
 sub status {
 	my ( $project_index, $printing_specs, $qty_index ) = @_;
 
-	return;
+	my $Project = new openprint::Project( $project_index );
+	my @sigs = $Project->signatures();
+	return 'uncalculated' if ! @sigs;
+	
+	my $sig_specs = openprint::service::get_specs_ref( $Project, $sigs[0] );
+	my $needed_versions = $$sig_specs{Versions};
+	if ( $needed_versions ) {
+		my $versions = 0;
+		foreach my $sig_id ( @sigs ) {
+			my $sig_specs = openprint::service::get_specs_ref( $Project, $sig_id );
+			$versions += $$sig_specs{"Versions$qty_index"};
+		} # end foreach
+		if ( $versions < $needed_versions ) {
+			return 'uncalculated';
+		} # end if
+	} # end if
+	return 'calculated';
 } # end sub status
+
+sub save {
+} # end sub save
         
 1;
 __END__

@@ -1,17 +1,17 @@
 <? eval (
-	my @invoiced_on_start = ssi::date( '/employee/accounting/expenses.html?invoiced_on_start' );
-	my @invoiced_on_end = ssi::date( '/employee/accounting/expenses.html?invoiced_on_end' );
-	@{$$variable{'Taxes'}} = openprint::Tax->find(
-		( Date::Calc::check_date( @invoiced_on_end ) ? ( 'period_start null_or_<='	=>	sprintf('%.4d-%.2d-%.2d 23:59:59', @invoiced_on_end ) ) : () ),
-		( Date::Calc::check_date( @invoiced_on_start ) ?  ( 'period_end null_or_>='	=> sprintf('%.4d-%.2d-%.2d 00:00:00', @invoiced_on_start ) ) : () ),
-		'order'		=>	'period_start,name',
-	);
-	$$variable{'subtotal'} = $$variable{'federaltax_total'} = $$variable{'total'} = $$variable{'interest_total'} = $$variable{'owing_total'} = $$variable{'bus_total'} = $$variable{'business_subtotal'} = 0;
-	@{$$variable{'Expenses'}} = ();
-	if ( $param{'expense_id'} ) {
-		@{$$variable{'Expenses'}} = openprint::Expense->find( 'id'=>$param{'expense_id'} );
+	$$variable{Taxes} = [ openprint::Tax->find(
+		date_filter( '/employee/accounting/expenses.html?invoiced_on_end', 'period_start null_or_<=' ),
+		date_filter( '/employee/accounting/expenses.html?invoiced_on_start', 'period_end null_or_>=' ),
+		date_filter( '/employee/accounting/expenses.html?paid_on_end', 'period_start null_or_<=' ),
+		date_filter( '/employee/accounting/expenses.html?paid_on_start', 'period_end null_or_>=' ),
+		order		=>	'period_start,name',
+	) ];
+	$$variable{subtotal} = $$variable{total} = $$variable{bus_total} = $$variable{business_subtotal} = 0;
+	$$variable{Expenses} = [];
+	if ( $param{expense_id} ) {
+		$$variable{Expenses} = [ openprint::Expense->find( id=>$param{expense_id} ) ];
 	} else {
-	@{$$variable{'Expenses'}} = openprint::Expense->find( 
+	$$variable{Expenses} = [ openprint::Expense->find( 
 			( $session{'/employee/accounting/expenses.html?category_id'} ? ( 'category_id' => $session{'/employee/accounting/expenses.html?category_id'} ) : () ),
 			( $session{'/employee/accounting/expenses.html?recipient_id'} ? ( 'recipient_id' => $session{'/employee/accounting/expenses.html?recipient_id'} ) : () ),
 			( $session{'/employee/accounting/expenses.html?account_id'} ? ( 'account_id' => $session{'/employee/accounting/expenses.html?account_id'} ) : () ),
@@ -26,7 +26,7 @@
 			ssi::date_filter( '/employee/accounting/expenses.html?entered_on_start', 'created_on >=' ),
 			'owner_id'		=> $session{'company_id'},
 			'order'				=> 'paid_on,due_on',
-			);
+			) ];
 	} # end if
 	foreach my $Expense ( @{$$variable{'Expenses'}} ) {
 		$$variable{'subtotal'} += $Expense->amount();
@@ -69,7 +69,7 @@
 			my $rowclass;
 			foreach my $Expense ( @{$$variable{'Expenses'}} ) {
 				$html .= sprintf(q`
-					<tr%1$s onmouseover="this.addClassName('highlightOn');" onmouseout="this.removeClassName('highlightOn');"> 
+					<tr%1$s> 
 					<td class="Company"><a href="/employee/accounting/expense.html?expense_id=%2$d">%3$s</a></td>
 					<td class="Account"><a href="/employee/accounting/expense.html?expense_id=%2$d">%4$s</a></td>
 					<td class="Category"><a href="/employee/accounting/expense.html?expense_id=%2$d">%5$s</a></td>

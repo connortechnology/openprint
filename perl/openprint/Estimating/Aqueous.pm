@@ -138,7 +138,7 @@ sub calc {
 			my $Imposition = new openprint::Imposition();
 			$Imposition->load( $sig_specs, $qty_index );
 			my %results = signature_calc( $Project, $service_index, $specs, $signature_service_index, $sig_specs, $qty_index, $Imposition, \%MakeReadies );
-			$MakeReadies{$results{'Equipment'}->id()} = $$sig_specs{'StockWidth'.$qty_index} * $$sig_specs{'StockHeight'.$qty_index} if $results{'Equipment'};
+			$MakeReadies{$results{'Equipment'}->id()} = $Imposition->layout_area() if $results{'Equipment'};
 			@outputs = sets::union( @outputs, 
 					"ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index",
 					"txtImposition-$$sig_specs{'SignatureIndex'}-$qty_index",
@@ -204,6 +204,10 @@ sub calc {
 
 sub signature_calc {
     my ( $Project, $service_index, $specs, $signature_service_index, $sig_specs, $qty_index, $imposition, $MakeReadies ) = @_;
+
+#foreach my $equipment_id ( keys %{$MakeReadies} ) {
+#$openprint::log->debug("Makereadies $equipment_id $$MakeReadies{$equipment_id}");
+#}
 
 	my %bestPrice;
 	$bestPrice{'Status'} = 'uncalculated';
@@ -272,8 +276,6 @@ if ( 1 ) {
 		} # end if
 	} # end if
 
-	$imposition = $imposition->copy();
-
 	my @impositions = ();
 	my $services = $Project->services();
 	if ( $$services{'Cutting'} ) {
@@ -297,7 +299,7 @@ if ( 1 ) {
 			} # end for
 		} # end for
 	} else {
-		@impositions = ( $imposition );
+		@impositions = ( $imposition->copy() );
 	} # end if
 	#$openprint::log->debug('DOne Cutting :' . @impositions);
 
@@ -307,7 +309,7 @@ if ( 1 ) {
 			if ( $$sig_specs{'ddmPress'.$qty_index} ne $Equipment->strid() ) {
 				$$specs{'hdnBreakdown'.$qty_index} .= 'Not printing on this press.<br/>';
 				next;
-			} elsif ( @front_aq and @back_aq and ( $imposition->runstyle() eq 'Perfecting' ) ) {
+			} elsif ( @front_aq and @back_aq and ( $imposition->runstyle() eq 'Perfecting' ) and ! $Equipment->specification('Aqueous Double Sided When Perfecting') ) {
 				$$specs{'hdnBreakdown'.$qty_index} .= 'Cant perfect with double sided AQ.<br/>';
 				next;
 			} # end if
@@ -347,16 +349,17 @@ if ( 1 ) {
 			} else {
 				@types = (@front_aq, @back_aq);
 			} # end if
-			my $area = $imp->Paper()->area();
+			my $area = $imp->layout_area();
 
 			foreach my $type ( @types ) {
 
 				my %setupPrice;
-
+#$openprint::log->debug("Makereadies: $$Equipment{id} $area");
 				if ( $MakeReadies{$Equipment->id()} and (
 							(($area * 1.10 ) > $MakeReadies{$Equipment->id()} ) and
 							(($area * .90 ) < $MakeReadies{$Equipment->id()} )
 							) ) {
+#$openprint::log->debug("In Makereadies: $$Equipment{id} $area");
 				} else {
 					my $MRService = openprint::Service->find_one('name'=>$type.' MakeReady');
 					$MRService = openprint::Service->find_one('name'=>'AqueousMakeReady') if ! $MRService;

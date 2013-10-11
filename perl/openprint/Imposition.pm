@@ -7,7 +7,7 @@ use vars qw( $AUTOLOAD );
 
 my @fields = (
 	'start_imposition','start_columns','start_rows',
-	'imposition','rows','columns',
+	'versions','imposition','rows','columns',
 	'dutch_rows','dutch_columns', 'dutch_orientation',
 	'image_width','image_height', # dimensions + bleed
 	'object_width','object_height', # Flat dimensions
@@ -31,6 +31,7 @@ my @fields = (
 	'specs',
 	'pages',
 	'stock_weight',
+	'sides',
 );
 
 sub new {
@@ -43,6 +44,7 @@ sub new {
 sub AUTOLOAD {
     my $name = $AUTOLOAD;
     $name =~ s/.*://;
+#$openprint::log->debug("Imposition::AUTOLOAD::$name");
 
     if ( @_ > 1 ) {
 		$_[0]{$name} = $_[1];
@@ -92,8 +94,8 @@ sub display {
 	my $Paper = $$self{'paper'};
 	#$openprint::log->debug(sprintf('Imp %s: %dx%dout %dx%d+%dx%d:%dout spreads:%dx%d=%d pages:%dx%d=%d %s on: %sx%s %.3fx%.3f %s I: %.3fx%.3f L:%.3fx%.3f %s %s minimum: %s', $prefix,
 	#@$self{'quantity','start_imposition','columns','rows','dutch_columns','dutch_rows','imposition','spread_columns','spread_rows','spreads'},$self->page_columns(), $self->page_rows(), $self->pages(), $$self{'runstyle'}, $$self{paper}->{start_width},$$self{paper}->{start_height},$self->{paper}->{width},$self->{paper}->{height},$$self{Press}->{strid}, @$self{'image_width','image_height','layout_width','layout_height','image_orientation'},$self->grain_direction(), $$self{paper}->minimum_order() ) );
-	$openprint::log->debug(sprintf('Imp %s: %dx%d+%dx%d:%dout%s pages:%dx%d=%d %s on: %sx%s->%sx%s=%dsq min: %s %s %s', $prefix,
-	@$self{'columns','rows','dutch_columns','dutch_rows','imposition','image_orientation'},$self->page_columns(), $self->page_rows(), $self->pages(), $$self{'runstyle'}, @$Paper{'start_width','start_height','width','height'}, $Paper->area(),$$Paper{'minimum_order'}, $$self{Press}->{strid}, ( $$self{'Price'} ? $$self{'Price'} : '' ) ) );
+	$openprint::log->debug(sprintf('Imp %s: %dx%d+%dx%d:%dout%s pages:%dx%d=%d %s on: %sx%s->%sx%s=%dsq min: %s %s %s versions: %d', $prefix,
+	@$self{'columns','rows','dutch_columns','dutch_rows','imposition','image_orientation'},$self->page_columns(), $self->page_rows(), $self->pages(), $$self{'runstyle'}, @$Paper{'start_width','start_height','width','height'}, $Paper->area(),$$Paper{'minimum_order'}, $$self{Press}->{strid}, ( $$self{'Price'} ? $$self{'Price'} : '' ), $$self{versions} ) );
 } # end sub display
 
 sub get {
@@ -207,6 +209,7 @@ sub load {
 		} # end if
 		$$self{'Press'} = new openprint::Equipment() if ! $$self{'Press'};
 	} # end if
+	$$self{SignatureIndex} = $$specs{SignatureIndex};
 
 	$$self{'object_width'} = $$specs{'txtWidth'};
 	$$self{'object_height'} = $$specs{'txtHeight'};
@@ -216,6 +219,7 @@ sub load {
 	$$self{'image_height'} = $$self{'object_height'} if ! $$self{'image_height'};
 
 	$$self{'imposition'} = $$specs{'txtImposition'.$qty_index};
+	$$self{versions} = $$specs{'Versions'.$qty_index};
 	$$self{'start_columns'} = $$self{'columns'} = $$specs{'hdnImpositionColumns'.$qty_index};
 	$$self{'start_rows'} = $$self{'rows'} = $$specs{'hdnImpositionRows'.$qty_index};
 	#$$self{'columns'} = $$self{'imposition'} / $$self{'rows'} if $$self{'rows'} and ! $$self{'columns'};
@@ -296,6 +300,7 @@ sub load {
 			$$self{'spread_columns'} = 1;
 			$$self{'spreads'} = 1;
 		} # end if
+		$$self{pages} = $$self{'spreads'} * $$self{'spread_size'};
 	} # end if
 	return $self;
 } # end sub load
@@ -303,6 +308,7 @@ sub load {
 sub save {
 	my ( $self, $specs, $qty_index ) = @_;
 	$$specs{'txtImposition'.$qty_index} = $self->imposition();
+	$$specs{'Versions'.$qty_index} = $$self{versions};
 	$$specs{'hdnImpositionRows'.$qty_index} = $self->rows();
 	$$specs{'hdnImpositionColumns'.$qty_index} = $self->columns();
 	$$specs{'hdnImpositionDutchRows'.$qty_index} = $self->dutch_rows();
@@ -347,8 +353,11 @@ sub used_height {
 } # end sub used_height
 
 sub object_area {
-	my $self = shift;
-	return $$self{'object_width'} * $$self{'object_height'} * $$self{'imposition'} * $$self{'spreads'};
+	$_[0]{object_area} = $_[1] if @_ > 1;
+	if ( ! exists $_[0]{object_area} ) {
+		$_[0]{object_area} = $_[0]{object_width} * $_[0]{object_height} * $_[0]{imposition} * $_[0]{spreads};
+	} 
+	return $_[0]{object_area};
 }
 sub layout_area {
 	my $self = shift;
@@ -387,10 +396,19 @@ sub sheet_width {
 	$$self{'start_rows'} = $$self{'rows'} if ! $$self{'start_rows'};
 	if ( $$self{'rotate_sheet'} ) {
 		$$self{'paper'}->height( @_ ) if @_;
+		if ( $$self{'start_columns'} and $$self{'columns'} and $$self{'start_columns'} != $$self{'columns'} ) {
 		return $self->Paper()->height() / ( $$self{'start_columns'} / $$self{'columns'} );
+		} else {
+			return $self->Paper()->height();
+		} # end if
 	} else {
 		$$self{'paper'}->width( @_ ) if @_;
+		if ( $$self{'start_columns'} and $$self{'columns'} and $$self{'start_columns'} != $$self{'columns'} ) {
 		return $self->Paper()->width() / ( $$self{'start_columns'} / $$self{'columns'} );
+		} else {
+			return $self->Paper()->width();
+		} # end if
+
 	} # end if
 } # end sub sheet_width
 
@@ -400,16 +418,32 @@ sub sheet_height {
 	$$self{'start_rows'} = $$self{'rows'} if ! $$self{'start_rows'};
 	if ( $$self{'rotate_sheet'} ) {
 		$$self{'paper'}->width( @_ ) if @_;
+			if ( $$self{'start_rows'} and $$self{'rows'} and $$self{'start_rows'} != $$self{'rows'} ) {
 		return $self->Paper()->width() / ( $$self{'start_rows'} / $$self{'rows'} );
+		} else {
+			return $self->Paper()->width();
+		} # end if
 	} else {
 		$$self{'paper'}->height( @_ ) if @_;
 		if ( ! $self->Paper()->height() ) {
+			if ( $$self{'start_rows'} and $$self{'rows'} and $$self{'start_rows'} != $$self{'rows'} ) {
 			return $$self{'cut_off'} / ( $$self{'start_rows'} / $$self{'rows'} );
+			} else {
+				return $$self{'cut_off'};
+			} # end if
 		} else {
+			if ( $$self{'start_rows'} and $$self{'rows'} and $$self{'start_rows'} != $$self{'rows'} ) {
 			return $self->Paper()->height() / ( $$self{'start_rows'} / $$self{'rows'} );
+			} else {
+			return $self->Paper()->height();
+			} 
 		} # end if
 	} # end if
 } # end sub sheet_height
+
+sub sheet_area {
+	return $_[0]->sheet_width() * $_[0]->sheet_height();
+} # end sub sheet_area
 
 sub pages {
 	return $_[0]{'pages'};
@@ -454,7 +488,7 @@ sub equals {
 
 sub to_string {
 	if ( ! $_[0]{'to_string'} ) {
-		$_[0]{'to_string'} = sprintf('%s %dx%d+%dx%d=%dout %dx%d=%dp %sx%s %s', $_[0]->Press()->id(), $_[0]->get('columns','rows','dutch_columns','dutch_rows','imposition','page_columns','page_rows','pages', 'sheet_width','sheet_height', 'image_orientation') );
+		$_[0]{'to_string'} = sprintf('%s %dx%d+%dx%d=%dout %dx%d=%dp %sx%s %s', ( $_[0]{Press} ? $_[0]->Press()->strid() : 'unknown equipment' ), $_[0]->get('columns','rows','dutch_columns','dutch_rows','imposition','page_columns','page_rows','pages', 'sheet_width','sheet_height', 'image_orientation') );
 	}
 	return $_[0]{'to_string'};
 } # end sub to_string
@@ -475,6 +509,8 @@ sub sides {
 	$_[0]{'sides'} = $_[1] if @_ > 1;
 	return $_[0]{'sides'};
 } # end sub sides
+sub DESTROY {
+}
 
 1;
 __END__

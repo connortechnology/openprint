@@ -18,7 +18,7 @@
 				} # end if
 
 				return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Equipment->find(
-						servicetype_id	=>	$ServiceType->id(),
+						'servicetype_id @>'	=>	$ServiceType->id(),
 						useinscheduling	=>	1,
 						order			=>	'lower(strname)'
 					) ], $$variable{Job}->equipment_id() );
@@ -28,9 +28,9 @@
 	<p class="buttons">
 	<? echo ( 
 		my $html = '';
-		$html .= ssi::button( 'Ok',{onclick=> 
+		$html .= button( 'Ok',{onclick=> 
 				q`new Ajax.Updater('status`.join(',',@{$$variable{Job}->service_id()} ).q`', '/employee/project/_status.html', { parameters: $('bump_form').serialize() } );popupWin.close();`, text=>'Add to Schedule' } );
-		$html .= ssi::button( 'Cancel', { onclick=>'popupWin.close();', text=>'Cancel' } );
+		$html .= button( 'Cancel', { onclick=>'popupWin.close();', text=>'Cancel' } );
 		return $html;
 	) ?>
 	</p>

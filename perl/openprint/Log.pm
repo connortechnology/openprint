@@ -28,7 +28,8 @@ $serial = 'logs_id_seq';
 	'Object'		=>	undef,
 );
 %find_fields = (
-	'action'	=>	'(SELECT name FROM log_actions WHERE log_actions.id = logs.action_id)',
+	action		=>	'(SELECT name FROM log_actions WHERE log_actions.id = logs.action_id)',
+	object_type	=>	'(SELECT name FROM Object_Types WHERE object_types.id=logs.object_type_id)',
 );
 %defaults = (
 	'date_time'	=>	"'NOW()'",

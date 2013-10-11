@@ -57,7 +57,7 @@ sub save_article {
 	} # end if
 	if ( $param{'source'} ) {
 
-		if ( $param{'source'} =~ /epicurious\.com/ ) {
+		if ( 0 and  ( $param{'source'} =~ /epicurious\.com/ ) ) {
 			my $ua = LWP::UserAgent->new;
 			$ua->agent("MyApp/0.1 ");
 # Create a request
@@ -75,7 +75,7 @@ sub save_article {
 				$content =~ s/src="\//src="http:\/\/www.epicurious.com\//g;
 				$content =~ s/href="\//href="http:\/\/www.epicurious.com\//g;
 				my ( $title ) = $content =~ /<h1 class="fn">(.+?)<\/h1>/;
-				my ( $summary ) = $content =~ /<span id="truncatedText" class="summary">(.+?)<\/span>/;
+				my ( $summary ) = $content =~ /<div id="recipe_detail_module" class="content_unit detail_page">(.*)<\/div>/;
 				my ( $thumb ) = $content =~ /<div id="recipe_thumb">(.+?)<\/div>/;
 				
 				$param{'source_content'} = qq`<div class="Epicurious"><h1>$title</h1><div class="thumb">$thumb</div><div class="summary">$summary</div></div>`;
@@ -356,7 +356,7 @@ sub list {
 } # end sub list
 
 sub _list {
-	ssi::save_params('/article/list.html', 'paging_page','category_id', 'paging_per_page' );
+	ssi::save_params('/article/list.html', 'paging_page','category_id', 'paging_per_page', 'category' );
 } # end sub _list
 
 sub category {
@@ -386,14 +386,10 @@ sub view {
 	$param{article_id} = openprint::Article->transform( 'id', $param{article_id} );
 	my $Article = $variable{Article} = new openprint::Article( $param{article_id} );
 	
-	if ( $Article->id() and $session{user_id} ) {
-		my $View = openprint::View->find_one(object_type=>'openprint::Article', object_id=>$Article->id(), user_id=>$session{user_id} );
-		if ( ! $View ) {
-			$View = new openprint::View();
-			$View->save({object_type=>'openprint::Article', object_id=>$Article->id(), user_id=>$session{user_id}});
-		} # end if
-	} # end if
+	# WHy?
 	$Article->set( \%param );
+
+	# This will save the view as well.
 	$Article->View();
 } # end sub view
 

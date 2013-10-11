@@ -19,13 +19,13 @@
 			<li>
 				<label>Docket:</label>';
 				$html .= join("\n",
-							ssi::input( type=>'cardinal', name=>'Docket', onkeypress=>'return input_handler(this,event);' ),
-							ssi::button( 'clearAllocateDocket', { onclick=>"allocateform.Docket.value='';", text=>'C', title=>'Clear' } ),
+							input( type=>'cardinal', name=>'Docket', onkeypress=>'return input_handler(this,event);' ),
+							button( 'clearAllocateDocket', { onclick=>q`allocateform.Docket.value='';`, text=>'C', title=>'Clear' } ),
 							);
 			$html .= '</li><li><label>Project:</label>';
 			$html .= join("\n",
-							ssi::input( type=>'cardinal', name=>'Project', onkeypress=>'return input_handler(this,event);' ),
-							ssi::button( 'clearAllocateProject', { onclick=>"allocateform.Project.value='';", text=>'C', title=>'Clear' } ), 
+							input( type=>'cardinal', name=>'Project', onkeypress=>'return input_handler(this,event);' ),
+							button( 'clearAllocateProject', { onclick=>q`allocateform.Project.value='';`, text=>'C', title=>'Clear' } ), 
 							);
 			$html .= '</li><li>
 				<label><a title="Click to allocate specific skids on the floor.">Specific Skids:</label>
@@ -33,7 +33,7 @@
 			</li>
 			</ul>';
 			my @Conditions = openprint::InventoryCondition->find(order=>'lower(name)');
-			foreach my $Condition ( @Conditions ) {
+			foreach my $Condition ( @Conditions, new openprint::InventoryCondition() ) {
 				next if $Condition->message();
 				my $condition_id = $Condition->id();
 

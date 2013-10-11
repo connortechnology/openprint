@@ -224,6 +224,7 @@ sub view_services {
 			$Project->summary(undef);
 			$Project->save();
 		} elsif ( ( defined $openprint::param{'calc'} ) and $openprint::param{'calc'} ) {
+			$log->debug("Recalculating $openprint::param{calc}");
 			openprint::service::internal_calc( $log, $dbh, $variable, $project_index, $r->param('calc') );
 		} # end if
 
@@ -297,7 +298,7 @@ sub multipage_signatures {
 			$$param{'txtSpreadSize'} = 2;
 		} elsif ( sets::isin( $$param{'rdbTemplateType'}, ['SaddleStitching', 'LoopStitching'] ) ) {
 			$$param{'txtSpreadSize'} = 4;
-		} elsif ( sets::isin( $$param{'rdbTemplateType'}, ['CornerStitching', 'Cerlox', 'PlasticCoil','MetalCoil'] ) ) {
+		} elsif ( sets::isin( $$param{'rdbTemplateType'}, ['CornerStitching', 'Cerlox', 'PlasticCoil','MetalCoil', 'Unbound'] ) ) {
 			$$param{'txtSpreadSize'} = 2;
 		} elsif ( $Project->Type()->name() eq 'MultiPage' ) {
 			$openprint::log->warn("Unknown Bindery Type: $$param{'rdbTemplateType'}" );

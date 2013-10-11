@@ -162,7 +162,7 @@ sub send_approval_required_notification {
 	my %info;
 	$info{'From'} = $Me;
 	$info{'PurchaseOrder'} = $self;
-	$info{'ReplacementText'} = ssi::include( $ENV{DOCUMENT_ROOT}.'/email_content/purchase_order_notification.html', \%info );
+	$info{'ReplacementText'} = ssi::include( '/email_content/purchase_order_notification.html', \%info );
 
 	my @notification_types = map { 'PO ' . (new openprint::PurchaseOrder_ContentType( $_ )->name()) . ' Approvals' } sets::union( map { $_->type_id() } $self->Contents() );
 	$_ = MIME::QuotedPrint::encode_qp( Encode::encode('utf-8', ssi::variable_substitution( \$email_template, \%info ) ) );
@@ -195,7 +195,6 @@ sub send_approval_required_notification {
 				ATTACHMENTS	=>	\@body,
 				);
 	} # end foreach U
-$log->debug("Results: $results");
 	return $results;
 } # end sub send_approval_required_notification
 
@@ -393,8 +392,9 @@ sub copy {
 	$$New{'created_by'} = $session{'user_id'};
 	return $New;
 } # end sub copy
+
 sub Manifest {
-	return new openprint::Manifest( $_[0]{'manifest_id'} );
+	return new openprint::Manifest( $_[0]{manifest_id} );
 } # end sub Manifest
 
 # We don't make any db changes here.  That only happens on PO saving
@@ -471,13 +471,29 @@ sub Tax {
 
 sub can_edit {
 	return 1 if ! $_[0]{'id'};
-	if ( 
-			( $openprint::session{'user_type'} eq 'A' )
-			or ( $openprint::session{'user_id'} eq $_[0]{'created_by'} )
-			or ( openprint::usergroup::is_user_in( ['Accounting'], $openprint::session{'user_id'} ) ) 
-		) {
+	my $User = $_[1] ? $_[1] : new openprint::User( $openprint::session{user_id} );
+
+	if ( $$User{type} eq 'A' ) {
+		$log->debug("$$User{firstname} Is administrator") if $debug;
 		return 1;
 	} # end if
+	if ( sets::isin( $_[0]{'created_by'}, [ $$User{id}, $User->assistant_ids(), $User->csr_ids() ] ) ) {
+		$log->debug("$$User{firstname} Either created it or is an assistant") if $debug;
+		return 1;
+	} # end if
+
+	if ( openprint::usergroup::is_user_in( ['Accounting','Inventory'], $$User{id} ) )  {
+		$log->debug("$$User{firstname} Is in Accounting','Inventory'") if $debug;
+		return 1;
+	} # end if
+
+	foreach my $C ( $_[0]->Contents() ) {
+		my @contains = sets::contains( [ $$User{id}, $User->assistant_ids(), $User->csr_ids() ], [ map { $_->salesrep_id() } $C->Orders() ] );
+		if ( @contains ) {
+			$log->debug("can see because @contains in order salesreps") if $debug;
+			return 1;
+		} # end if
+	} # end foreach C
 	return 0;
 } # end sub can_edit
 
@@ -485,15 +501,34 @@ sub can_view {
 	return 1 if ! $_[0]{'id'};
 	my $User = $_[1] ? $_[1] : new openprint::User( $openprint::session{user_id} );
 
-	if ( 
-			( $$User{type} eq 'A' ) or
-			( sets::isin( $_[0]{'created_by'}, [ $$User{id}, $User->assistant_ids(), $User->csr_ids() ] ) )
-			or ( openprint::usergroup::is_user_in( ['Accounting','Shipping','Inventory'], $$User{id} ) ) 
-			
-			or ( sets::isin( $$User{id}, [ map { $_->Order()->salesrep_id() } $_[0]->Contents() ] ) )
-		) {
+	if ( $$User{type} eq 'A' ) {
+		$log->debug("$$User{firstname} Is administrator") if $debug;
 		return 1;
 	} # end if
+	if ( sets::isin( $_[0]{'created_by'}, [ $$User{id}, $User->assistant_ids(), $User->csr_ids() ] ) ) {
+		$log->debug("$$User{firstname} Either created it or is an assistant") if $debug;
+		return 1;
+	} # end if
+	if ( openprint::usergroup::is_user_in( ['Accounting','Shipping','Inventory'], $$User{id} ) )  {
+		$log->debug("$$User{firstname} Is in Accounting','Shipping','Inventory'") if $debug;
+		return 1;
+	} # end if
+			
+	foreach my $C ( $_[0]->Contents() ) {
+		my @contains = sets::contains( [ $$User{id}, $User->assistant_ids(), $User->csr_ids() ], [ map { $_->salesrep_id() } $C->Orders() ] );
+		if ( @contains ) {
+			$log->debug("can see because @contains in order salesreps") if $debug;
+			return 1;
+		} # end if
+	} # end foreach C
+
+	if ( $_[0]->notifications() ) {
+		if ( sets::isin( $$User{id}, $_[0]->notifications() ) ) {
+			$log->debug($$User{firstname} . ' can see because in notifications.' ) if $debug;
+			return 1;
+		} # end if
+	} # end if
+	$log->debug("$$User{firstname} cannot view this PO") if $debug;
 	return 0;
 } # end sub can_view
 
@@ -527,29 +562,41 @@ sub can_authorize {
 } # end sub can_authorize
 
 # ( $PO, $Content )
+# Can we assume that we can view it?
 sub can_see_pricing {
-if ( ! $_[0]{id} ) {
-$log->debug("Ccan see because new PO");
-	return 1;
-} # end if
+	if ( ! $_[0]{id} ) {
+		$log->debug("Ccan see because new PO") if $debug;
+		return 1;
+	} # end if
+
+	my $User = new openprint::User( $openprint::session{user_id} );
 	
-	if ( ( $session{user_id} == $_[0]->created_by() ) or ( $session{user_type} eq 'A' ) or openprint::usergroup::is_user_in( ['Accounting','SalesAdmin'], $session{user_id} ) ) {
-$log->debug('can see');
+	if ( ( $$User{id} == $_[0]->created_by() ) or ( $$User{type} eq 'A' ) or openprint::usergroup::is_user_in( ['Accounting','SalesAdmin','InventoryManager'], $$User{id} ) ) {
+$log->debug('can see') if $debug;
 		return 1;
 	} # end if
 
 	if ( $_[1] ) {
-			if ( sets::isin( $_[1]->Order()->salesrep_id(), [ $openprint::session{'user_id'}, new openprint::User($openprint::session{'user_id'})->assistant_ids(), new openprint::User($openprint::session{'user_id'})->csr_ids() ] ) ) {
-			$log->debug('can see');
+		my @contains = sets::contains( [ $$User{id}, $User->assistant_ids(), $User->csr_ids() ], [ map { $_->salesrep_id() } $_[1]->Orders() ] );
+		if ( @contains ) {
+			$log->debug("can see pricing because @contains in orders") if $debug;
 			return 1;
 		} # end if
 	} else {
 		foreach my $C ( $_[0]->Contents() ) {
-			if ( sets::isin( $C->Order()->salesrep_id(), [ $openprint::session{'user_id'}, new openprint::User($openprint::session{'user_id'})->assistant_ids(), new openprint::User($openprint::session{'user_id'})->csr_ids() ] ) ) {
-				$log->debug('can see');
+
+			my @contains = sets::contains( [ $$User{id}, $User->assistant_ids(), $User->csr_ids() ], [ map { $_->salesrep_id() } $C->Orders() ] );
+			if ( @contains ) {
+				$log->debug("can see pricing because @contains in orders") if $debug;
 				return 1;
 			} # end if
 		} # end foreach C
+	} # end if
+	if ( $_[0]->notifications() ) {
+		if ( sets::isin( $$User{id}, $_[0]->notifications() ) ) {
+			$log->debug($$User{firstname} . ' can see because in notifications.' ) if $debug;
+			return 1;
+		} # end if
 	} # end if
 	return 0;	
 } # end sub can_see_pricing

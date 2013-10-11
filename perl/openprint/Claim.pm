@@ -4,12 +4,8 @@ our @ISA = qw(openprint::Object);
 require openprint::Object;
 
 use openprint ();
-use vars qw(%variable $log $dbh %config %session $debug %fields %transforms %defaults $table $serial );
-*variable = \%openprint::variable;
+use vars qw( $log $debug %fields %find_fields %transforms %defaults $table $serial );
 *log = \$openprint::log;
-*dbh = \$openprint::dbh;
-*config = \%openprint::config;
-*session = \%openprint::session;
 
 require sql;
 require ssi;
@@ -20,8 +16,7 @@ require openprint::PurchaseOrder;
 require openprint::Company;
 require openprint::Currency;
 require openprint::Claim_Tax;
-require openprint::Claim_Asset;
-
+require openprint::Object_Asset;
 
 $debug = 0;
 
@@ -39,6 +34,8 @@ $serial = 'claims_id_seq';
 	'invoiced_on'	=>	'invoiced_on',
 	'cancelled_on'	=>	'cancelled_on',
 	'invoice_id'	=>	'invoice_id',
+	cancelled_on	=>	'cancelled_on',
+	paid_on			=>	'paid_on',
 	'po_id'			=>	'po_id',
 	'docket'		=>	'docket',
 	'supplier_id'	=>	'supplier_id',
@@ -64,6 +61,9 @@ $serial = 'claims_id_seq';
 	'also_notify'		=>	'also_notify',
 );
 
+%find_fields = (
+);
+
 %transforms = (
 	'updated_on'	=> [ 's/.*//g' ],
 	'po_id'			=>	[ 's/\D//g' ],
@@ -78,7 +78,8 @@ $serial = 'claims_id_seq';
 	'filed_on'	=>	undef,
 	'sent_to_accounts_on'	=>	undef,
 	'invoiced_on'	=>	undef,
-	'cancelled_on'	=>	undef,
+	cancelled_on	=>	undef,
+	paid_on			=>	undef,
 	'po_id'			=>	undef,
 	'docket'		=>	undef,
 	'supplier_id'	=>	undef,
@@ -102,8 +103,8 @@ sub save {
 		my $Currency = openprint::Currency::get_current();
 		$$hash{'currency_id'} = $Currency->id();
 	} # end if
-	$$self{'created_by'} = $session{'user_id'} if ! $$self{'created_by'};
-	$$self{'company_id'} = $session{'company_id'} if ! $$self{'company_id'};
+	$$self{'created_by'} = $openprint::session{'user_id'} if ! $$self{'created_by'};
+	$$self{'company_id'} = $openprint::session{'company_id'} if ! $$self{'company_id'};
 	my $error = $self->SUPER::save( $hash );
 	if ( ! $error ) {
 		# Taxes
@@ -119,10 +120,10 @@ sub destroy {
     my $ac = sql::start_transaction( );
     sql::execute( undef, undef, q{DELETE FROM Claim_Taxes WHERE claim_id=?}, $$self{'id'} );
     sql::execute( undef, undef, q{DELETE FROM Claim_Contents WHERE claim_id=?}, $$self{'id'} );
-	return $dbh->errstr() if $dbh->errstr();
+	return $openprint::dbh->errstr() if $openprint::dbh->errstr();
     sql::execute( undef, undef, q{DELETE FROM Claims WHERE id=?}, $$self{'id'} );
     sql::end_transaction( undef, $ac );
-	return $dbh->errstr() if $dbh->errstr();
+	return $openprint::dbh->errstr() if $openprint::dbh->errstr();
 	delete $openprint::Object::cache{'openprint::Claim'}{$$self{'id'}};
 	return '';
 } # end sub delete
@@ -136,7 +137,7 @@ sub Contents {
 	} # end if
 	if ( ! $$self{'Contents'} ) {
 		if ( $$self{'id'} ) {
-			@{$$self{'Contents'}} = openprint::Claim_Content->find('claim_id'=>$$self{id} );
+			$$self{'Contents'} = [ openprint::Claim_Content->find( claim_id=>$$self{id} ) ];
 		} # end if
 	} # end if
 	return @{$$self{'Contents'}} if $$self{'Contents'};
@@ -191,7 +192,7 @@ require MIME::Base64;
 require MIME::QuotedPrint;
 	my ( $self, @To ) = @_;
 
-	my $From = new openprint::User( $session{'user_id'} );
+	my $From = new openprint::User( $openprint::session{'user_id'} );
 	
 	my %info = (
 			'Claim'	=>	$self,
@@ -199,8 +200,8 @@ require MIME::QuotedPrint;
 			);
 	my @attachments = ();
 
-	my $email_template = misc::load_file( $log, $config{'SkinPath'} . '/email_template.html' );
-	$info{'ReplacementText'} = "<!--#include virtual=\"/email_content/claim_body.html\"-->";
+	my $email_template = misc::load_file( $log, $openprint::config{'SkinPath'} . '/email_template.html' );
+	$info{'ReplacementText'} = ssi::include( '/email_content/claim_body.html', \%info );
 	$_ = MIME::QuotedPrint::encode_qp( Encode::encode('utf-8', ssi::variable_substitution( \$email_template, \%info ) ) );
 	push @attachments, ('', $_, 'text/html', 'quoted-printable');
 
@@ -269,9 +270,10 @@ sub Tax {
 sub Assets {
 	return () if ! $_[0]{'id'};
 	my ( $self, %param ) = @_;
-	$param{'claim_id'} = $_[0]{'id'};
-	$param{'order'}	=	'asset_id' if ! $param{'order'};
-	my @Assets = openprint::Claim_Asset->find(%param);	
+	$param{object_id} = $_[0]{id};
+	$param{object_type} = 'openprint::Claim';
+	$param{order}	=	'asset_id' if ! $param{'order'};
+	my @Assets = openprint::Object_Asset->find(%param);	
 $openprint::log->debug("# of Assets: " . scalar @Assets );
 	return @Assets;
 } # end sub Assets

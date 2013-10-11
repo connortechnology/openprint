@@ -10,7 +10,7 @@ You may the download the results in CSV (spreadsheet format) to view in a progra
 		<p>
 			<label>Quote ID</label>
 			<input type="text" size="10" name="quote_id" onkeydown="if(event.keyCode == 13){f1.submit();}" onkeyup="this.value=this.value.replace(/\D/g,'');" />
-			<? echo ( ssi::writeButton( $log, $dbh, 'Go1','go.gif',"f1.action='../quote/view.html';f1.submit();", '', 'Go' ); ) ?>	
+			<? echo ( button( 'Go1', { onclick=>"f1.action='../quote/view.html';f1.submit();", text=>'Go' } ); ) ?>	
 		</p>
 		<p>
 			<label>Company</label>
@@ -43,7 +43,7 @@ return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Currency->
 			<label>Sales Reps</label>
 			<select name="salesrep_id" size="1">
 				<option value="">All Employees</option>
-			<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User->find('type'=>['E','A'], 'usergroups'=>['Sales'], 'order'=>'lower(firstname),lower(lastname)') ], $param{'salesrep_id'} ); ) ?>
+			<? echo ( make_drop_down( openprint::User->dropdown( type=>['E','A'], 'usergroup any'=>['Sales'], order=>'lower(firstname),lower(lastname)'), $param{salesrep_id} ); ) ?>
 			</select>
 		</p>
 		<p> 
@@ -69,9 +69,9 @@ return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Currency->
 		<p class="buttons">
 			<? echo (
 				my $html;	
-				$html .= ssi::writeButton( $log, $dbh, 'ShowResults', 'showResults.gif', "new Ajax.Updater( 'Results', '_quotes.html', { parameters: \$('f1').serialize() } );", '', 'Show Results' );
-				$html .= ssi::writeButton( $log, $dbh, 'DownloadCSV', 'downloadCSVFormat.gif', "f1.action='quotes.html?Download';f1.btnFunction.value='Download in CSV format';f1.submit();", '', 'Download in CSV Format' );
-				$html .= ssi::writeButton( $log, $dbh, 'Reset', 'reset.gif', "f1.reset();", '', 'Reset' );
+				$html .= button( 'ShowResults', { onclick=>"new Ajax.Updater( 'Results', '_quotes.html', { parameters: \$('f1').serialize() } );", text=>'Show Results' } );
+				$html .= button( 'DownloadCSV', { onclick=>"f1.action='quotes.html?Download';f1.btnFunction.value='Download in CSV format';f1.submit();", text=>'Download in CSV Format' } );
+				$html .= button( 'Reset', { onclick=>"f1.reset();", text=>'Reset' } );
 				return $html;
 			) ?>
 		</p>

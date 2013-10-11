@@ -4,7 +4,8 @@ require openprint::Location_Type;
 require openprint::Asset;
 require openprint::Photo_Album;
 require Geo::Coder::Googlev3;
-require Geo::IP;
+require Math::Round;
+use Geo::IP;
 
 package openprint::Location;
 our @ISA = qw( openprint::Object );
@@ -42,8 +43,8 @@ $serial = 'locations_id_seq';
 	'type'	=>	'(SELECT name FROM Location_Types WHERE location_types.id = locations.type_id)',
 );
 %transforms = (
-	id			=>	[ 's/\D//g' ],
-	parent_id	=>	[ 's/\D//g' ],
+	id			=>	[ 's/\D//g', '<2147483647' ],
+	parent_id	=>	[ 's/\D//g', '<2147483647' ],
 	postalcode	=>	[ 'tr/[a-z]/[A-Z]/' ],
     name		=>	[ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
     address		=>	[ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
@@ -153,7 +154,7 @@ sub parent_type {
 		$type = $_[0]->type();
 	} # end if
 	if ( $type eq 'country' ) {
-		return undef;
+		return;
 	} elsif ( $type eq 'state' ) {
 		return 'country';
 	} elsif ( $type eq 'city' ) {
@@ -177,7 +178,7 @@ sub child_type {
 	} elsif ( $type eq 'city' ) {
 		return 'place';
 	} elsif ( $type eq 'place' ) {
-		return undef;
+		return;
 	} # end if
 } # end sub child_type
 
@@ -200,7 +201,6 @@ sub google {
 	$string .= ' ' . $_[1] if @_ > 1;
 	$string =~ s/ /+/g;
 	my $coder = Geo::Coder::Googlev3->new();
-$openprint::log->debug('Get: ' . $string );
 	my $location = $coder->geocode( location => $string );
 	if ( ! $location ) {
 		$openprint::log->debug("No location for $string");
@@ -243,7 +243,7 @@ $openprint::log->debug('Get: ' . $string );
 		} # end foreach component
 	} # end if
 
-	my $address = $number . ' ' . $street if $number and $street;
+	$address = $number . ' ' . $street if $number and $street;
 
 	if ( $$location{'AddressDetails'} ) {
 		my $Address = $$location{'AddressDetails'};
@@ -391,7 +391,7 @@ $openprint::log->debug("Calcing distance from $lat1,$lon1 to $lat2,$lon2 units: 
 	} elsif ($unit eq "N") {
 		$dist = $dist * 0.8684;
 	}
-	return ($dist);
+	return Math::Round::nearest(0.1,$dist);
 }
 
 #::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -556,7 +556,7 @@ sub save_location {
 			$error .= $Location->save({
 					'name'			=>	$$param{'location'}, 
 					'parent_id'		=>	$parent_id, 
-					($$param{'type_id'}?('type_id'=>$$param{'type_id'}):('type'			=>	'place')), 
+					($$param{location_type_id}?(type_id=>$$param{location_type_id}):('type'			=>	'place')), 
 					'address'		=>	$$param{'address'},
 					'postalcode'	=>	$$param{'postalcode'},
 					});
@@ -581,17 +581,31 @@ $openprint::log->debug("Change:");
 
 sub googlemap_html {
 	if ( ! exists $_[0]{'googlemap_html'} ) {
-		$_[0]{'googlemap_html'} = sprintf('<iframe src="http://maps.google.com/maps?f=q&hl=en&ll=%1$s,%2$s&q=%3$s&z=13&output=embed" style="width: 100%; height:400px;"></iframe>', 
+		my $url = sprintf('http://maps.google.com/maps?f=q&amp;hl=en&amp;ll=%1$s,%2$s&amp;q=%3$s&amp;z=13&amp;output=embed', 
 				$_[0]->latitude(), $_[0]->longitude(), join('+',$_[0]->name(), $_[0]->address(), ( $_[0]->postalcode() ? $_[0]->postalcode() : () ), map{$_->name()} ( $_[0]->Parents() ) ) );
+		$url =~ s/ /%20/g;
+		$_[0]{'googlemap_html'} = '<iframe src="'.$url.'" style="width: 100%; height:400px;"></iframe>';
 	} # end if
 	return $_[0]{'googlemap_html'};
 } # end sub googlemap_html
 
 sub from_ip {
-	my $gi = Geo::IP->open("/usr/share/GeoIP/GeoIP.dat");
-	return if ! $gi;
-	my $record = $gi->record_by_name(@_ ? $_[0] : $ENV{'REMOTE_ADDR'});
-	return if ! $record;
+	my $gi = Geo::IP->open('/usr/share/GeoIP/GeoIPCity.dat' );
+#GeoIPASNum.dat   GeoIPCity.dat    GeoIP.dat        GeoIPv6.dat      GeoLiteCity.dat 
+	if ( ! $gi ) {
+		$openprint::log->error('No Geo::IP');
+		return;
+	} # end if
+	my $ip = @_ ? $_[0] : $ENV{'REMOTE_ADDR'};
+
+	my $record = $gi->record_by_addr($ip);
+	if ( ! $record ) {
+		$openprint::log->error("No record for $ip from Geo::IP " . $gi->database_info);
+		
+		return;
+	} elsif ( $debug ) {
+		$openprint::log->error('Got record from Geo::IP' . $gi->database_info);
+	} # end if
 
 	my $ac = sql::start_transaction( $openprint::dbh );
 	$openprint::dbh->do( 'LOCK TABLE Orders IN SHARE ROW EXCLUSIVE MODE' ) or $openprint::log->error( $openprint::dbi->errstr() );
@@ -675,6 +689,12 @@ sub filters {
     );
     $html .= ssi::select( [ '', 'All', map { $_->id(), $_->name() } @Cities ], $city_id, { name=>'city_id', id=>'city_id', onchange=>qq`Location_onchange( this, 'city'$option_string );` } );
 	$html .= '</li>';
+    #$html .= '<li><label>Place</label>';
+    #my @es = openprint::Location->find('order'=>'lower(name)','type'=>'place',
+        #( sets::isin( $state_id, [ map { $_->id() } @States ] ) ? ( parent_id=>$state_id ) : () ),
+    #);
+    #$html .= ssi::select( [ '', 'All', map { $_->id(), $_->name() } @Cities ], $city_id, { name=>'city_id', id=>'city_id', onchange=>qq`Location_onchange( this, 'city'$option_string );` } );
+	#$html .= '</li>';
 
     return $html;
 } # end sub filters

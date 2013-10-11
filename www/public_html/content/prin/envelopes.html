@@ -5,7 +5,7 @@
 <form id="f1" name="f1" method="post" action="/content/prin/prin_broc.html">
 	<input type="hidden" id="projecttype_id" name="projecttype_id" value="<? echo ( $$variable{'ProjectType'}->id() ) ?>" />
 	<input type="hidden" id="Status" name="Status" value="<?Status?>" />
-	<? echo ( include('/includes/error_reporting.html'); ) ?>
+	<?include('/includes/error_reporting.html')?>
 	<div class="InstantPricing">
 		<div id="instant_price_section">
 		   <div class="top_shadow"><div class="shadow_tl"></div><div class="shadow_tr"></div></div>
@@ -14,18 +14,26 @@
 				<div class="Questions">
 					<h3>Instant Pricing</h3>
 
-					<? echo ( include('_project_name.html'); ) ?>
+					<?include(_project_name.html) ?>
 					<div class="ProjectSpecifications">
 						<h1>Project Specifications</h1>
 						<div class="Envelopes">
 							<fieldset><legend>Envelopes</legend>
-										<input type="hidden" id="txtWidth" name="txtWidth" value="<?txtWidth?>" />
-										<input type="hidden" id="txtHeight" name="txtHeight" value="<?txtHeight?>" />
-										<input type="hidden" id="txtFinalWidth" name="txtFinalWidth" value="<?txtFinalWidth?>" />
-										<input type="hidden" id="txtFinalHeight" name="txtFinalHeight" value="<?txtFinalHeight?>" />
+								<input type="hidden" id="txtWidth" name="txtWidth" value="<?txtWidth?>" />
+								<input type="hidden" id="txtHeight" name="txtHeight" value="<?txtHeight?>" />
+								<input type="hidden" id="txtFinalWidth" name="txtFinalWidth" value="<?txtFinalWidth?>" />
+								<input type="hidden" id="txtFinalHeight" name="txtFinalHeight" value="<?txtFinalHeight?>" />
 							<div class="content">
 								<ul>
-									<? echo ( include('_paper_dropdowns.html'); ) ?>
+				<div class="Stock"><fieldset><legend>Stock</legend>
+					<div class="content">
+						<ul>
+						<?include(_paper_dropdowns.html)?>
+						</ul>
+					</div>
+					</fieldset>
+				</div>
+								<ul>
 									<li><label>Colours</label>
 										<select id="Colours" name="Colours" onchange="calc(this.form.name);">
 											<option value="1/0">Black Ink One Side</option>
@@ -43,30 +51,30 @@
 							<fieldset><legend>Production</legend>
 								<div class="content">
 									<ul>
-									<? echo ( include('_design.html'); ) ?>
-									<? echo ( include('_proofs.html'); ) ?>
-									<? echo ( include('_turnaround.html'); ) ?>
-									<? echo ( include('_quantity.html'); ) ?>
-									<? echo ( include('_press_type.html'); ) ?>
+									<?include(_design.html) ?>
+									<?include(_proofs.html) ?>
+									<?include(_turnaround.html) ?>
+									<?include(_quantity.html) ?>
+									<?include(_press_type.html) ?>
 									</ul>
 								</div>
 							</fieldset>
 						</div>
-				<? echo ( include('_ups.html'); ) ?>
+				<?include(_ups.html) ?>
 						<div id="AlertDiv" style="display:none;"></div>
 						<br class="spacer"/>
 					</div><!--ProjectSpecifications-->
-					<? echo ( include('_prices.html'); ) ?>
+					<?include(_prices.html) ?>
 				</div><!--Questions-->
 			  </div></div>
 		   <div class="bottom_shadow"><div class="shadow_bl"></div><div class="shadow_br"></div></div>
 		</div><!--instant_price_section-->
 <? echo ( 
 	if ( -e $config{'SkinPath'}.'/content/'.$$variable{'ProjectType'}->name().'.html' ) {
-		return ssi::include( $config{'SkinPath'}.'/content/'.$$variable{'ProjectType'}->name().'.html' );
+		return include( '/content/'.$$variable{'ProjectType'}->name().'.html' );
 	} # end if
 	return '';
 ) ?>
-		<? echo ( include('_specials.html'); ) ?>
+		<?include(_specials.html) ?>
 	</div><!--InstantPricing-->
 </form>

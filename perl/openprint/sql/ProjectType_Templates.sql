@@ -6,6 +6,7 @@ CREATE TABLE ProjectTemplate (
 	id	INTEGER NOT NULL default nextval('ProjectTemplate_id_seq'),
 	projecttype_id		 INTEGER NOT NULL, FOREIGN KEY (ProjectTYpe_id) REFERENCES Project_Types (id),
 	Type				TEXT NOT NULL,
+	name				TEXT,
 	Description			TEXT,
 	dblFinishedWidth	NUMERIC(10,4),
 	dblFinishedHeight	NUMERIC(10,4),

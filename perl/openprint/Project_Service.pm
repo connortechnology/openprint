@@ -30,7 +30,7 @@ $debug = 1;
 );
 $table = 'tbl_project_contents';
 $serial = 'ContentsServiceIndex_seq';
-@identified_by = ( 'project_id', 'service_id' );
+@identified_by = ( 'service_id' );
 
 sub Project {
 	return new openprint::Project( $_[0]{'project_id'} );
@@ -132,7 +132,7 @@ sub delete {
 	delete $$Project{'Services'};
 	delete $$Project{'signatures'};
 	delete $$Project{'service_types'};
-	my $Job = openprint::ScheduledJob->find_one('project_id'=>$$self{'project_id'}, 'service_id'=>$$self{'service_id'} );
+	my $Job = openprint::ScheduledJob->find_one('project_id'=>$$self{'project_id'}, 'service_id @>'=>$$self{'service_id'} );
 	$Job->save( { 'service_id' => [ sets::exclude( [ $$self{'service_id'} ], $Job->service_id() ) ] } ) if $Job;
 	my $specs = $self->specs();
 	$self->Project()->add_to_log( @openprint::session{'company_id','user_id'}, "Deleted service $$specs{'ServiceType'} $$specs{'ServiceName'}." );
@@ -148,6 +148,7 @@ sub overrides {
 	my ( $self, $qty_index ) = @_;
 	my $module = 'openprint::Estimating::'.$_[0]->ServiceType()->name();
 	$module = 'openprint::Estimating::Printing' if $module eq 'openprint::Estimating::AdditionalSignature';
+	$module = 'openprint::Estimating::Printing' if $module eq 'openprint::Estimating::Signature';
 	$module = 'openprint::Estimating::Printing' if $module eq 'openprint::Estimating::';
 	if ( my $function = $module->can( 'has_overrides' ) ) {
 		my $specs = $_[0]->specs();

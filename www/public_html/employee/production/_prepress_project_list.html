@@ -2,8 +2,8 @@
 	if ( $openprint::param{'StartDocket'} and $openprint::param{'EndDocket'}) {
 		my $sql = "SELECT Order_Contents.OrderIndex, tbl_Projects.Index, tbl_Projects.lngDocketNumber, SUBSTR(strProjectReference,0,50),".
 		"(SELECT strName FROM Company WHERE Company.Index=tbl_Projects.CompanyIndex),".
-			"(SELECT strFirstName FROM Users WHERE Index=operator_id),".
-			"(SELECT strLastName FROM Users WHERE Index=operator_id),".
+			"(SELECT FirstName FROM Users WHERE Id=operator_id),".
+			"(SELECT LastName FROM Users WHERE Id=operator_id),".
 		"to_char(tbl_Project_Contents.starttime, 'MM/DD/YYYY'), tbl_Projects.strStatus ".
 		"FROM Order_Contents, tbl_Projects, tbl_Project_Contents WHERE Order_Contents.lngProjectIndex = tbl_Projects.Index".
 		" AND tbl_Project_Contents.lngProjectIndex = tbl_Projects.Index";
@@ -18,9 +18,9 @@
 		@{$$variable{'PROJECTS'}} = sql::execute( $log, $dbh, $sql );
 	} elsif ( $$variable{'StartDocket'} ) {
 		my $sql = "SELECT Order_Contents.OrderIndex, tbl_Projects.Index, tbl_Projects.lngDocketNumber, SUBSTR(strProjectReference,0,50),".
-		"(SELECT strName FROM Company WHERE Company.Index=tbl_Projects.CompanyIndex),".
-			"(SELECT strFirstName FROM Users WHERE Index=operator_id),".
-			"(SELECT strLastName FROM Users WHERE Index=operator_id),".
+		"(SELECT name FROM Companies WHERE Companies.id=tbl_Projects.CompanyIndex),".
+			"(SELECT FirstName FROM Users WHERE Id=operator_id),".
+			"(SELECT LastName FROM Users WHERE Id=operator_id),".
 		"to_char(tbl_Project_Contents.starttime, 'MM/DD/YYYY'), tbl_Projects.strStatus ".
 		"FROM Order_Contents, tbl_Projects, tbl_Project_Contents WHERE Order_Contents.lngProjectIndex = tbl_Projects.Index".
 		" AND tbl_Project_Contents.lngProjectIndex = tbl_Projects.Index";
@@ -37,9 +37,9 @@
 		$$variable{'TakeOverStart'} = join( '-', @openprint::param{'TakeOverStartYear','TakeOverStartMonth','TakeOverStartDay'} );
 		$$variable{'TakeOverEnd'} = join( '-', @openprint::param{'TakeOverEndYear','TakeOverEndMonth','TakeOverEndDay'} );
 			my $sql = "SELECT Orders.Index, tbl_Projects.Index, tbl_Projects.lngDocketNumber, SUBSTR(strProjectReference,0,50),".
-			"(SELECT strName FROM Company WHERE Company.Index=tbl_Projects.CompanyIndex),".
-			"(SELECT strFirstName FROM Users WHERE Index=operator_id),".
-			"(SELECT strLastName FROM Users WHERE Index=operator_id),".
+			"(SELECT name FROM Companies WHERE Company.id=tbl_Projects.CompanyIndex),".
+			"(SELECT firstname FROM Users WHERE id=operator_id),".
+			"(SELECT lastname FROM Users WHERE id=operator_id),".
 			"to_char(tbl_Project_Contents.starttime, 'MM/DD/YYYY'), tbl_Projects.strStatus ".
 			"FROM Order_Contents, Orders, tbl_Projects, tbl_Project_Contents WHERE 1>0";
 		if (

@@ -169,7 +169,7 @@ if ( 1 ) {
 
 	} # end foreach Project
 	# Only Multipage and Scratch pads have a spceific page, everything else, uses the Signature ServiceType
-	$dbh->do(q`UPDATE project_types set url=NULL WHERE url='prin/prin_broc.html'`);
+	$dbh->do(q`UPDATE project_types set url=NULL WHERE url='prin/Signature.html'`);
 }
 $dbh->do(q`DELETE FROM projecttype_defaults where name='rdbAqueousSideOne'`);
 $dbh->do(q`DELETE FROM projecttype_defaults where name='rdbAqueousSideTwo'`);
@@ -206,6 +206,7 @@ foreach my $Default ( openprint::ProjectType_Default->find('projecttype'=>undef)
 	die $_ if $_;
 	$Default->destroy();
 } # end foreach
+$dbh->do(q`UPDATE project_types set url=NULL where url='prin/prin_broc.html'`);
 
 $dbh->disconnect();
 	

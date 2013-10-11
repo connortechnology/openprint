@@ -1,8 +1,7 @@
 #!/usr/bin/perl
 use utf8;
-use lib '/var/www/point-one/perl';
+use lib '/var/www/testing/perl';
 use strict;
-use LWP;
 
 require configuration;
 require sql;
@@ -26,7 +25,7 @@ my $program = basename($0);
 
 my $opts = {};
 GetOptions($opts, 'help', 
-    'db_name=s', 'db_host=s', 'db_user=s', 'db_pass=s','blacklist=s', 'debug=s', 'config=s',
+    'db_name=s', 'db_host=s', 'db_user=s', 'db_pass=s','blacklist=s', 'debug=s', 'config=s', 'ping_type=s',
  );
 
 if ($opts->{help}) {
@@ -34,8 +33,16 @@ if ($opts->{help}) {
     exit 0;
 }
 
+my %defaults = (
+	config	=>	'/etc/openprint/ip_monitor.conf',
+	ping_type	=>	'icmp',
+);
+foreach my $default ( keys %defaults ) {
+	$$opts{$default} = $defaults{$default} if ! $$opts{$default};
+} # end foreach
+
 configuration::init( );
-configuration::from_file( $$opts{'config'} ? $$opts{'config'} : '/etc/iq_monitor.conf' );
+configuration::from_file( $$opts{'config'} );
 configuration::merge( $opts );
 
 foreach my $param ( 'db_name','db_user','db_pass','from','recipient','smtp-server' ) {
@@ -67,21 +74,22 @@ if ( $config{'pid_file'} ) {
 	} # end if
 } # end if
 
-$config{'ping_wait'} = 1 if ! $config{'ping_wait'};
+$config{ping_wait} = 2 if ! $config{ping_wait};
 # udp has less network traffic overhead
-my $p = Net::Ping->new('icmp',$config{'ping_wait'});
-
+my $p = Net::Ping->new($config{ping_type},$config{ping_wait});
+my $hup;
 my %times;
+@SIG{qw(HUP)} = \&sig_handler;
 
 while(1) {
 	if ( ! ( $dbh and $dbh->ping ) ) {
 		$log->debug("Connecting to db");	
 		$dbh = sql::open_sql( $log,
-				'host'		=> $config{'db_host'},
-				'database'	=> $config{'db_name'},
-				'driver'	=> 'Pg',
-				'login'		=> $config{'db_user'},
-				'password'	=> $config{'db_pass'},
+				host		=> $config{db_host},
+				database	=> $config{db_name},
+				driver		=> 'Pg',
+				login		=> $config{db_user},
+				password	=> $config{db_pass},
 				);
 		if ( ! $dbh ) {
 			$log->error( 'Error opening db. Sleeping for 5.' );
@@ -89,12 +97,18 @@ while(1) {
 			next;
 		} # end if ! dbh
 		configuration::init( );
-		configuration::from_file( $$opts{'config'} ? $$opts{'config'} : '/etc/iq_monitor.conf' );
+		configuration::from_file( $$opts{'config'} );
 		configuration::merge( $opts );
+	} elsif ( $hup ) {
+		configuration::init( );
+		configuration::from_file($$opts{config});
+		configuration::merge($opts);
+		$log->hup();
+		$hup = 0;
 	} # end if ! dbh
 
 	$log->debug( "Getting hosts" );
-	my @Hosts = openprint::Host->find('monitored'=>1);
+	my @Hosts = openprint::Host->find( monitored=>1 );
 	$log->debug( 'Monitoring ' . @Hosts . ' hosts.' );
 	foreach my $Host ( @Hosts ) {
 		if ( ! $Host->ip() ) {
@@ -165,17 +179,20 @@ Please investigate.",
 
 		if ( $Host->online() ) {
 			if ( sets::isin( $Host->type(), [ 'AIC500', 'AIC500W', 'AIC777W', 'AIC747W' ] ) ) {
+				require LWP;
 				my $browser = LWP::UserAgent->new();
-				$browser->credentials( $Host->hostname().':80', 'Netcam', 'admin'=>'p1GraPHic' );
+				$browser->credentials( $Host->hostname().':80', 'Netcam', $Host->info('username') => $Host->info('password') );
 
 				$log->debug("URL: " . $Host->hostname().'/cgi/jpg/image.cgi' );
 				my $response = $browser->get('http://'.$Host->hostname().'/cgi/jpg/image.cgi');
 				if ( ! $response->is_success ) {
 					if ( $response->status_line() eq '401 Unauthorized' ) {
+$log->debug("Unauthorized with " . $Host->info('username') . ' password: ' . $Host->info('password') );
 						my $header = $response->header('WWW-Authenticate');
 						my ( $realm ) = $header =~ /realm="(.*)"/;
-						if ( $realm and $realm ne 'Netcam' ) {
-							$browser->credentials( $Host->hostname().':80', $realm, 'admin'=>'p1GraPHic' );
+						if ( $realm and ( $realm ne 'Netcam' ) ) {
+$log->debug("Different REALM $realm");
+							$browser->credentials( $Host->hostname().':80', $realm, $Host->info('username') => $Host->info('password') );
 							$response = $browser->get('http://'.$Host->hostname().'/cgi/jpg/image.cgi');
 						} # end if
 					} # end if
@@ -191,7 +208,7 @@ Please investigate.",
 						}  # end foreach
 						$response = $browser->get('http://'.$Host->hostname().'/admin/reboot.cgi?type=0');
 						$log->debug($response->is_success);
-						(new openprint::Log())->save({'action_id'=>102, 'ip_address'=>$Host->ip(), 'note'=>sprintf('<a href="/employee/it/host.html?host_id=%d">%s</a> has been rebooted.', @$Host{'id','hostname'})});
+						(new openprint::Log())->save({ action_id=>102, ip_address=>$Host->ip(), note=>sprintf('<a href="/employee/it/host.html?host_id=%d">%s</a> has been rebooted.', @$Host{'id','hostname'})});
 						my @To = map { $_->User() } $Host->Notifications();
 						if ( @To and ( @To < 10 ) ) {
 							$log->debug("Emailing: " . join(',', map { $_->email() } @To ) );
@@ -219,6 +236,15 @@ Please investigate.",
 $p->close();
 $dbh->disconnect() if $dbh;
 exit 0;
+
+sub sig_handler {
+	my $signame = shift;
+	if ( $signame eq 'HUP' ) {
+		$log->info('Got HUP, re-opening log, re-reading config');
+		$hup = 1;
+	} # end if
+	#die "Somebody sent me a SIG$signame";
+} # end sub sig_handler
 
 sub usage {
 	print <<EOH;

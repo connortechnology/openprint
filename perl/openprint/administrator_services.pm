@@ -1,17 +1,13 @@
 package openprint::administrator_services;
 
-use Text::CSV_XS;
-
 use strict;
 
 require sql;
-require misc;
-
 require openprint::Pricelist;
 require openprint::Service;
+require openprint::Timetrack;
 require openprint::ServiceCategory;
-require openprint::service_price;
-require openprint::service_priceset;
+require openprint::ServicePrice;
 require openprint::logs;
 
 use openprint ();
@@ -54,53 +50,30 @@ sub edit {
 		if ( ! $variable{'error'} ) {
 
 			my $ac = sql::start_transaction( $dbh );
-			foreach my $List ( openprint::Pricelist->find() ) {
-				my $list = $List->id();
-				my $price_set = new openprint::service_priceset( $log, $dbh, $list, $Service->id() );
-				foreach my $key ( %param ) {
-					if ( $key =~ /chk-$list-(.*)-(.*)/ ) {
-						my $equipment = $1;
-						my $index = $2;
-						if ( ! $param{"ddmEquipment-$list-$equipment"} ) {
-							my $price = new openprint::service_price( $log, $dbh, $price_set );
-							$price->set(
-									undef,
-									$param{"min-$list-$equipment-$index"},
-									$param{"max-$list-$equipment-$index"},
-									$param{"units-$list-$equipment-$index"},
-									$param{"cost-$list-$equipment-$index"},
-									$param{"markup-$list-$equipment-$index"},
-									$param{"price-$list-$equipment-$index"},
-									$param{"discount-$list-$equipment-$index"},
-									$param{"supplier_id-$list-$equipment-$index"},
-									);
-							$price_set->addPrice( $price );
-						} else {
-
-							foreach my $equipment_index ( ref $param{"ddmEquipment-$list-$equipment"} eq 'ARRAY' ? @{$param{"ddmEquipment-$list-$equipment"}} : $param{"ddmEquipment-$list-$equipment"} ) {
-								my $price = new openprint::service_price( $log, $dbh, $price_set );
-								$price->set(
-										$equipment_index,
-										$param{"min-$list-$equipment-$index"},
-										$param{"max-$list-$equipment-$index"},
-										$param{"units-$list-$equipment-$index"},
-										$param{"cost-$list-$equipment-$index"},
-										$param{"markup-$list-$equipment-$index"},
-										$param{"price-$list-$equipment-$index"},
-										$param{"discount-$list-$equipment-$index"},
-										$param{"supplier_id-$list-$equipment-$index"},
-										);
-								$price_set->addPrice( $price );
-							} # end foreach
-						} # end if equipment
-					} # end if chk 
-				} # end foreach
-				$price_set->save();
+			foreach my $Price ( openprint::ServicePrice->find( service_id=>$$Service{id},
+($param{equipment_id} ? ( equipment_id=>$param{equipment_id} ) : () ),
+						) ) {
+				$variable{error} .= $Price->save( {
+						#equipment_id	=>	$param{"equipment_id-$$Price{id}"},
+						period_start	=>	( Date::Calc::check_date( map { $param{"period_start-$$Price{id}_$_"} } ( 'year','month','day' ) ) ? sprintf('%.4d-%.2d-%.2d 00:00:00', map { $param{"period_start-$$Price{id}_$_"} } ( 'year','month','day' ) ) : undef ),
+						period_end		=>	( Date::Calc::check_date( map { $param{"period_end-$$Price{id}_$_"} } ( 'year','month','day' ) ) ? sprintf('%.4d-%.2d-%.2d 23:59:59', map { $param{"period_end-$$Price{id}_$_"} } ( 'year','month','day' ) ) : undef ),
+						min				=>	$param{"min-$$Price{id}"},
+						max				=>	$param{"max-$$Price{id}"},
+						units			=>	$param{"units-$$Price{id}"},
+						cost			=>	$param{"cost-$$Price{id}"},
+						markup			=>	$param{"markup-$$Price{id}"},
+						price			=>	$param{"price-$$Price{id}"},
+						discount		=>	$param{"discount-$$Price{id}"},
+						supplier_id		=>	$param{"supplier_id-$$Price{id}"},
+						} );
 			} # end foreach 
 			sql::end_transaction( $dbh, $ac );
 		} # end if not error
 		if ( ! $variable{error} ) {
 			$variable{ExternalRedirect} = '/administrator/services/edit.html?ddmService='.$Service->id();
+			if ( $param{equipment_id} ) {
+				$variable{ExternalRedirect} .= '&equipment_id='.$param{equipment_id};
+			} # end if
 		} # end if
     } elsif ( $param{'btnFunction'} eq 'Copy' ) {
         my @prices = $Service->prices();
@@ -123,19 +96,18 @@ sub edit {
 } # end sub edit
 
 sub _prices_table_body {
-	my $Price = new openprint::ServicePrice( $param{'price_id'} );
-	$variable{'Equipment'} = $Price->Equipment();
-	$variable{'Pricelist'} = $Price->Pricelist();
-	$variable{'Service'} = $Price->Service();
-	$variable{'company_ids'} = [ map { $_->id(), $_->name() } openprint::Company->find( 'supplier'=>'Y', 'order'=>'lower(name)' ) ];
-	if ( $param{'action'} eq 'copy' ) {
+	my $Price = new openprint::ServicePrice( $param{price_id} );
+	$variable{Equipment} = $Price->Equipment();
+	$variable{Pricelist} = $Price->Pricelist();
+	$variable{Service} = $Price->Service();
+	$variable{company_ids} = [ map { $_->id(), $_->name() } openprint::Company->find( supplier=>'Y', order=>'lower(name)' ) ];
+	if ( $param{action} eq 'copy' ) {
 		$Price = $Price->copy();
-		$variable{'error'} .= $Price->save();
-	} elsif ( $param{'action'} eq 'delete' ) {
-		$variable{'error'} .= $Price->delete();
+		$variable{error} .= $Price->save();
+	} elsif ( $param{action} eq 'delete' ) {
+		$variable{error} .= $Price->delete();
 	} # end if
 } # end sub _prices_table_body
 
 1;
-
 __END__
