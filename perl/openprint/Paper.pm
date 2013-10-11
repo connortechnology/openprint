@@ -1025,13 +1025,19 @@ $openprint::log->debug("Costs: ($$price{Cost}) ($$price{'100lb Price'})/100lb ($
 
 sub cut {
 	my $self = shift;
-
-	if ( $$self{'height'} > $$self{'width'} ) {
-		$$self{'height'} /= 2;
+	if ( @_ ) {
+		my ( $new_width, $new_height ) = @_;
+		$$self{mweight} = int( $$self{mweight} / ( ( $$self{width} * $$self{height} ) / ( $new_width * $new_height ) ) );
+		$$self{width} = $new_width;
+		$$self{height} = $new_height;
 	} else {
-		$$self{'width'} /= 2;
+		if ( $$self{height} > $$self{width} ) {
+			$$self{height} /= 2;
+		} else {
+			$$self{width} /= 2;
+		} # end if
+		$$self{mweight} /= 2;
 	} # end if
-	$$self{'mweight'} /= 2;
 	delete $$self{'to_string'};
 	delete $$self{'id_string'};
 	$$self{'grain_direction'} = undef; # force recalc of gd
