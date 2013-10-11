@@ -26,6 +26,7 @@ $serial = 'projecttemplate_id_seq';
 	'finished_height'	=>	'dblfinishedheight',
 	'flat_width'		=>	'dblflatwidth',
 	'flat_height'		=>	'dblflatheight',
+	message				=>	'message',
 );
 
 %transforms = (
@@ -37,6 +38,8 @@ $serial = 'projecttemplate_id_seq';
 
 my %find_cache;
 sub find {
+	shift @_ if $_[0] eq 'openprint::ProjectType_Template';
+	shift @_ if ref $_[0] eq 'openprint::ProjectType_Template';
 	my %params = @_;
 	@params{lc keys %params} = @params{keys %params};
 	my $hash_key = join(';',map { $_, ref $params{$_} eq 'HASH' ? join(';',%{$params{$_}}) :$params{$_} } sort keys %params );

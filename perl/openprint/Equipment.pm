@@ -57,6 +57,9 @@ sub find_one {
 	if ( $_[0] eq 'openprint::Equipment' ) {
 		shift;
 	} # end if
+	if ( ref $_[0] eq 'openprint::Equipment' ) {
+		shift;
+	} # end if
 	my %params = @_;
 	$params{'limit'}=1;
 	my @Results = find(%params);
@@ -591,7 +594,7 @@ sub Operator_Shifts {
 	my $Last_ES;
 	for ( my $ES_index = 0; $ES_index < @Equipment_Shifts; $ES_index += 1 ) {
 		if ( $Last_ES ) {
-			$Equipment_Shifts[$ES_index]->Prevous( $Last_ES );
+			$Equipment_Shifts[$ES_index]->Previous( $Last_ES );
 			$Last_ES->Next( $Equipment_Shifts[$ES_index] );
 		} # end if
 		$Last_ES = $Equipment_Shifts[$ES_index];

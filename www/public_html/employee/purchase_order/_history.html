@@ -5,11 +5,6 @@
 			company_id	=>	new openprint::User( $session{user_id} )->company_id(),
 			deleted		=>	[1,0],
 			order		=>	'id desc') ];
-	} elsif ( $param{docket} ) {
-		$$variable{PurchaseOrders} = [ openprint::PurchaseOrder->find( 
-			'docket any'=>	$param{docket}, 
-			company_id	=>	new openprint::User( $session{user_id} )->company_id(),
-			order		=>	'id desc') ];
 	} elsif ( $param{manifest_id} ) {
 		$$variable{PurchaseOrders} = [ openprint::PurchaseOrder->find( 
 			manifest_id	=>	$param{manifest_id}, 
@@ -17,10 +12,10 @@
 			order		=>	'id desc') ];
 	} else {
 		my %search = (
-			'company_id',		new openprint::User( $session{'user_id'} )->company_id(),
-			ssi::date_filter( '/employee/purchase_order/history.html?starting_end', 'created_on <=' ),
-			ssi::date_filter( '/employee/purchase_order/history.html?starting_start', 'created_on >=' ),
-			'order',			'id desc',
+			company_id	=>		new openprint::User( $session{'user_id'} )->company_id(),
+			date_filter( '/employee/purchase_order/history.html?starting_end', 'created_on <=' ),
+			date_filter( '/employee/purchase_order/history.html?starting_start', 'created_on >=' ),
+			order		=>	'id desc',
 		);
 		$search{'deleted'} = $session{'/employee/purchase_order/history.html?deleted'} if exists $session{'/employee/purchase_order/history.html?deleted'};
 		$search{'supplier_id'} = $session{'/employee/purchase_order/history.html?supplier_id'} if $session{'/employee/purchase_order/history.html?supplier_id'};
@@ -29,7 +24,7 @@
 				$search{'created_by'} = $session{'/employee/purchase_order/history.html?created_by'};
 			} # end if
 		} else {
-			$search{'created_by'} = [ sets::union( $session{'user_id'}, new openprint::User($session{'user_id'})->assistant_ids(), new openprint::User($session{'user_id'})->csr_ids() ) ];
+			#$search{'created_by'} = [ sets::union( $session{'user_id'}, new openprint::User($session{'user_id'})->assistant_ids(), new openprint::User($session{'user_id'})->csr_ids() ) ];
 		} # end if
 		$search{'cancelled'} = $session{'/employee/purchase_order/history.html?cancelled'} if $session{'/employee/purchase_order/history.html?cancelled'} ne '';
 		$search{'item_id in'} = $session{'/employee/purchase_order/history.html?item_id'} if $session{'/employee/purchase_order/history.html?item_id'};
@@ -47,6 +42,20 @@
 			next if $session{'/employee/purchase_order/history.html?authorized'} eq 'N' and $PO->authorized() ne '0';
 			next if $session{'/employee/purchase_order/history.html?authorized'} eq 'U' and $PO->authorized() ne '';
 			next if $session{'/employee/purchase_order/history.html?vendor_category_id'} and $PO->Supplier()->category_id() != $session{'/employee/purchase_order/history.html?vendor_category_id'};
+			next if ! $PO->can_view();
+
+			if ( $session{'/employee/purchase_order/history.html?docket'} ) {
+				my $next = 1;
+				my $docket = $session{'/employee/purchase_order/history.html?docket'};
+
+				foreach my $C ($PO->Contents()) {
+					if ( $C->docket() =~ /$docket/i ) {
+						$next = 0;
+						last;
+					} # end if
+				} # end foreach
+				next if $next;
+			} # end if
 
 			if ( $param{'contains'} ) {
 				my $next = 1;
@@ -73,8 +82,6 @@
 				next if ! sets::isin( $session{'/employee/purchase_order/history.html?department_id'}, [ map { $_->department_id() } $PO->Contents() ] );
 			} # end if
 
-		
-
 			push @{$$variable{'PurchaseOrders'}}, $PO;
 		} # end foreach PO
 		sql::end_transaction( $dbh, $ac );
@@ -83,6 +90,9 @@
 <? if ( @{$$variable{'PurchaseOrders'}} == 0 ) ?>
 	There are no purchase orders matching your search criteria.
 <? else ( @{$$variable{'PurchaseOrders'}} == 0 ) ?>
+	<? if ( @{$$variable{'PurchaseOrders'}} > 1000 ) ?>
+	<div class="warning">There are a large # of results being returned.  It may take a moment to display them.  You may wish to adjust your filters to return fewer results.	</div>
+	<? endif ( @{$$variable{'PurchaseOrders'}} > 1000 ) ?>
 	<p>Please click on a <b>Purchase Order #</b> to view details.</p>
 <table class="List sortable">
 	<tr>
@@ -94,7 +104,7 @@
 		<th class="Company">Supplier</th>
 		<th class="User">Created By</th>
 		<th class="AuthorizedBy">Authorized/Declined By</th>
-		<th class="manifest_id">Manifest</th>
+		<th class="Manifest">Manifest</th>
 		<th class="Docket">Docket</th>
 		<th class="Price">Total</th>
 	</tr>
@@ -102,7 +112,8 @@
 		my $html = '';
 		my $report_total = 0;
 		my $Currency = openprint::Currency::get_current();
-		while ( my $PO = shift @{$$variable{'PurchaseOrders'}} ) {
+		my $ac = sql::start_transaction( $dbh );
+		foreach my $PO ( @{$$variable{'PurchaseOrders'}} ) {
 			$html .= sprintf(q`<tr id="tr-%1$d" class="%2$s">`, $PO->id(), ( ( ! $PO->authorized ) and $PO->can_authorize() ) ? 'unauthorized' : 'authorized' );
 			if ( $session{'user_type'} eq 'A' ) {
 				$html .= '<td class="checkbox"><input type="checkbox" name="po_id" value="'.$PO->id().'"/></td>';
@@ -121,17 +132,18 @@
 				<td class="Company"><a href="/employee/purchase_order/view.html?po_id=%1$d">%3$s</a></td>
 				<td class="User"><a href="/employee/purchase_order/view.html?po_id=%1$d">%4$s</a></td>
 				<td class="AuthorizedBy"><a href="/employee/purchase_order/view.html?po_id=%1$d">%6$s</a></td>
-				<td class="manifest_id"><a href="/employee/purchase_order/view.html?po_id=%1$d">%7$s</a></td>
+				<td class="Manifest"><a href="/employee/purchase_order/view.html?po_id=%1$d">%7$s</a></td>
 				<td class="Docket"><a href="/employee/purchase_order/view.html?po_id=%1$d">%8$s</a></td>
 				<td class="Price">%5$s</td>
-			</tr>`, $PO->id(), Date::Format::time2str($config{'DateTimeFormat'}, Date::Parse::str2time($PO->created_on())), $PO->Supplier()->name(), $PO->Creator()->name(), 
+			</tr>`, $PO->id(), format_datetime($PO->created_on()), $PO->Supplier()->name(), $PO->Creator()->name(), 
 				$PO->cancelled() ? 'CANCELLED' : openprint::Currency::format($total), 
 				( ( $PO->authorized() and ! $PO->authorized_by() ) ? 'Authorized' : $PO->Authorized_By()->name() ),
-				$PO->manifest_id(),
+				$PO->Manifest()->name(),
 				join('<br/>', sets::exclude( [''], [ sets::union( map { $_->docket() } $PO->Contents() ) ] ) ),
 				);
 			$report_total += $total;
-		} # end while
+		} # end foreach
+		sql::end_transaction( $dbh, $ac );
 		$html .= '<tr class="totals"><td colspan="'.( $session{'user_type'} eq 'A' ? 8 : 7 ) . '">Total (' . $Currency->name().') :</td><td class="Price">';
 		$html .= openprint::Currency::format( $report_total );
 		$html .= '</td></tr>';
@@ -143,9 +155,9 @@
 		<? echo (
 			my $html;
 			if ( $session{user_type} eq 'A' ) {
-				$html .= ssi::button( 'Decline', { onclick=>'open_decline_window(f1);', text=>'Decline Selected' } );
-				$html .= ssi::button( 'Authorize', { onclick=>"f1.btnFunction.value='Authorize';f1.submit();", text=>'Authorize Selected' } );
-				$html .= ssi::button( 'Delete', { onclick=>"f1.btnFunction.value='Delete';f1.submit();", text=>'Delete Selected' } );
+				$html .= button( 'Decline', { onclick=>'open_decline_window(f1);', text=>'Decline Selected' } );
+				$html .= button( 'Authorize', { onclick=>"f1.btnFunction.value='Authorize';f1.submit();", text=>'Authorize Selected' } );
+				$html .= button( 'Delete', { onclick=>"f1.btnFunction.value='Delete';f1.submit();", text=>'Delete Selected' } );
 			} # end if
 			return $html;
 		) ?>

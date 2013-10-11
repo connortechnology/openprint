@@ -25,20 +25,20 @@ div.ProjectHeader fieldset {
     width: 47%;
     text-align: left;
 }
-div.ProjectHeader fieldset#ProjectInformation {
+div.ProjectHeader fieldset.ProjectInformation {
     float: left;
     width: 47%;
 }
-div.ProjectHeader fieldset#ContactInformation {
+div.ProjectHeader fieldset.ContactInformation {
     float: right;
     width: 47%;
 }
-div.ProjectHeader fieldset#Reference {
+div.ProjectHeader fieldset.Reference {
     float: left;
     text-align: left;
     width: 47%;
 }
-div.ProjectHeader fieldset#Description {
+div.ProjectHeader fieldset.Description {
     float: right;
     text-align: left;
     width: 47%;
@@ -238,4 +238,7 @@ span.SpotColour label, span.Coverages label {
 }
 .Project select {
 	max-width: 100%;
+}
+.WaitingForCustomerApproval {
+	color: red;
 }

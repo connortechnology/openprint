@@ -33,10 +33,12 @@ $log->debug("No answer to question $$Question{text}");
 	<input type="hidden" name="btnFunction" value="Submit"/>
 <? eval ( 
 	if ( $param{'survey_id'} ) {
-		$$variable{'survey_id'} = $param{'survey_id'} if ! sets::isin( $param{'survey_id'}, sql::execute( $log, $dbh, q{SELECT DISTINCT survey_id FROM Survey_Responses WHERE user_id=?}, $$variable{'user_id'} ) );
+		$$variable{survey_id} = $param{survey_id} if ! sets::isin( $param{survey_id}, sql::execute( $log, $dbh, 'SELECT DISTINCT survey_id FROM Survey_Responses WHERE user_id=?', $session{user_id} ) );
 	} else {
 		@$variable{'survey_id'} = sql::execute( $log, $dbh, q{SELECT MIN(id) FROM Surveys WHERE id NOT IN (SELECT DISTINCT survey_id FROM Survey_Responses WHERE user_id=?)}, $session{'user_id'} );
 	} # end if
+	require openprint::Survey;
+	$$variable{Survey} = new openprint::Survey( $$variable{survey_id} );
 	) ?>
 <? if ( $$variable{'survey_id'} ) ?>
 	<input type="hidden" name="survey_id" value="<?survey_id?>"/>
@@ -48,6 +50,7 @@ $log->debug("No answer to question $$Question{text}");
 	<br class="spacer"/>
 </div>
 	<br class="spacer"/>
+<h1><?echo($$variable{Survey}->name())?></h1>
 <br/>
 	<table width="100%" cellpadding="0" cellspacing="0" border="0">
 		<tr>

@@ -3,30 +3,28 @@
 	<p class="buttons">
 <? echo ( 
 	my $html = '';
-	$html .= ssi::writeButton( $log, $dbh, 'Print', 'print.gif', 'window.print();', '', 'Print' );
+	$html .= button( 'Print', { onclick=>'window.print();', text=>'Print' } );
 	if ( ($session{'user_id'} == $$variable{'Claim'}->created_by() ) or ( $session{'user_type'} eq 'A' ) or openprint::usergroup::is_user_in( ['Accounting','SalesAdmin','Sales'], $session{'user_id'} ) or sets::isin( $session{'user_id'}, $$variable{'Claim'}->editor_id() ) ) {
-		$html .= ssi::button( 'SendToMe', { onclick=>"f1.btnFunction.value='SendToMe';f1.submit();" } ) if new openprint::User( $session{'user_id'} )->email() =~ /iconnor/;
-		$html .= ssi::writeButton( $log, $dbh, 'Email', 'email.gif', "f1.btnFunction.value='Send';f1.submit();", '', 'Send Email' );
-		$html .= ssi::writeButton( $log, $dbh, 'Edit', 'edit.gif', '', 'edit.html?claim_id='.$$variable{'Claim'}->id(), 'Edit' );
-		#$html .= ssi::writeButton( $log, $dbh, 'Copy', 'copy.gif', "f1.action='view.html';f1.btnFunction.value='Copy';f1.submit();", '', 'Copy' );
+		$html .= button( 'SendToMe', { onclick=>"f1.btnFunction.value='SendToMe';f1.submit();" } ) if new openprint::User( $session{'user_id'} )->email() =~ /iconnor/;
+		$html .= button( 'Email', { onclick=>"f1.btnFunction.value='Send';f1.submit();", text=>'Send Email' } );
+		$html .= button( 'Edit', { href=>'edit.html?claim_id='.$$variable{'Claim'}->id() } );
+		#$html .= button( 'Copy', { onclick=>"f1.action='view.html';f1.btnFunction.value='Copy';f1.submit();", text=>'Copy' } );
 		if ( $$variable{'Claim'}->deleted() ) {
-			$html .= ssi::writeButton( $log, $dbh, 'UnDelete', 'undelete.gif', "f1.btnFunction.value='Undelete';f1.submit();", '', 'Undelete' );
+			$html .= button( 'UnDelete', { onclick=>"f1.btnFunction.value='Undelete';f1.submit();", text=>'Undelete' } );
 		} else {
-			$html .= ssi::writeButton( $log, $dbh, 'Delete', 'delete.gif', "if(confirm('Are you sure?')){f1.btnFunction.value='Delete';f1.submit();}", '', 'Delete' );
+			$html .= button( 'Delete', { onclick=>"if(confirm('Are you sure?')){f1.btnFunction.value='Delete';f1.submit();}", text=>'Delete' } );
 		} # end if
 	} # end if
 	return $html;
 ) ?>
 	</p>
-	<!--#include virtual="/includes/error_reporting.html"-->
+	<?include(/includes/error_reporting.html)?>
 	<div class="Claim"><div class="View">
 		<div class="Header">
 			<div class="Logo">
 				<table><tr>
-				<td width="70"><a href="/index.html"><img src="/images/header/logo.gif" alt="PointOne Graphics Inc"/></a></td>
-				<td align="left">
-					<a href="/index.html"><span class="PointOne">PointOne</span><br/><span class="GraphicsInc">GRAPHICS INC</span></a>
-				</td>
+				<td><a href="/index.html"><img src="/images/header/logo.gif" alt="PointOne Graphics Inc"/></a></td>
+				<td><a href="/index.html"><span class="PointOne">PointOne</span><br/><span class="GraphicsInc">GRAPHICS INC</span></a></td>
 				</tr></table>
 				<table class="HeaderText">
 					<tr>
@@ -117,8 +115,8 @@ join( ', ', map { sprintf('<a href="/employee/project/view.html?docket=%1$d">%1$
 		<th class="Quantity">Quantity</th>
 		<th class="Weight">&nbsp;</th>
 		<? if ( ($session{'user_id'} == $$variable{'Claim'}->created_by() ) or ( $session{'user_type'} eq 'A' ) or openprint::usergroup::is_user_in( ['Accounting','SalesAdmin','Sales'], $session{'user_id'} ) ) ?>
-		<th width="110">Unit Cost</th>
-		<th width="90">Total</th>
+		<th class="Cost">Unit Cost</th>
+		<th class="Price">Total</th>
 		<? endif ( ($session{'user_id'} == $$variable{'Claim'}->created_by() ) or ( $session{'user_type'} eq 'A' ) or openprint::usergroup::is_user_in( ['Accounting','SalesAdmin','Sales'], $session{'user_id'} ) ) ?>
 	</tr>
 <? echo ( my $html = '';
@@ -128,8 +126,8 @@ join( ', ', map { sprintf('<a href="/employee/project/view.html?docket=%1$d">%1$
 				<td>%5$s</td>
 				<td class="Quantity">%1$s%2$s</td>
 				<td class="Weight">%3$s%4$s</td>
-				<td style="text-align: right;">%6$s%7$s</td>
-				<td style="text-align: right;">%8$s</td>
+				<td class="Cost">%6$s%7$s</td>
+				<td class="Price">%8$s</td>
 			</tr>', $C->quantity(), $C->quantity_units(),
 			( $C->weight() ?  Number::Format::format_number($C->weight()) : '' ), $C->weight_units(), 
 			$C->description(), openprint::Currency::format($C->cost(),2), $C->cost_units(), openprint::Currency::format($C->total()) );
@@ -148,7 +146,7 @@ join( ', ', map { sprintf('<a href="/employee/project/view.html?docket=%1$d">%1$
 	<? if ( ($session{'user_id'} == $$variable{'Claim'}->created_by() ) or ( $session{'user_type'} eq 'A' ) or openprint::usergroup::is_user_in( ['Accounting','SalesAdmin','Sales'], $session{'user_id'} ) ) ?>
 	<tr class="subtotal">
 		<td colspan="4">SUBTOTAL</td>
-		<td><? echo ( return openprint::Currency::format( $$variable{'Claim'}->subtotal() ); ) ?></td>
+		<td class="Price"><? echo ( return openprint::Currency::format( $$variable{'Claim'}->subtotal() ); ) ?></td>
 	</tr>
 	<? echo ( 
 			my $html;
@@ -161,15 +159,14 @@ join( ', ', map { sprintf('<a href="/employee/project/view.html?docket=%1$d">%1$
 		) ?>
 	<tr class="total">
 		<td colspan="4">TOTAL</td>
-		<td><? echo ( return openprint::Currency::format( $$variable{'Claim'}->total() ); ) ?></td>
+		<td class="Price"><? echo ( return openprint::Currency::format( $$variable{'Claim'}->total() ); ) ?></td>
 	</tr>
 	<? endif ( ($session{'user_id'} == $$variable{'Claim'}->created_by() ) or ( $session{'user_type'} eq 'A' ) or openprint::usergroup::is_user_in( ['Accounting','SalesAdmin','Sales'], $session{'user_id'} ) ) ?>
 </table>
 		</div><!--Contents-->
 		<div id="Remarks"> <h3>Remarks:</h3> <? echo ( $$variable{'Claim'}->reason() ) ?> </div>
-		<div id="Payments"><!--#include virtual="_payments.html"-->
-		<div id="Assets" class="unprintable"><!--#include virtual="_assets.html"-->
-		 </div>
+		<div id="Payments"><?include(_payments.html)?>
+		<div id="Assets" class="unprintable"><?include(_assets.html)?></div>
 		<div class="rightColumn" style="text-align: right;">
 	<? if ( ($session{'user_id'} == $$variable{'Claim'}->created_by() ) or ( $session{'user_type'} eq 'A' ) or openprint::usergroup::is_user_in( ['Accounting','SalesAdmin','Sales'], $session{'user_id'} ) ) ?>
 		All prices are in <? echo ( $$variable{'Claim'}->Currency()->name() ) ?>.

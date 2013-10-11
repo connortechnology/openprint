@@ -14,7 +14,7 @@ require openprint::Email;
 require openprint::User_Notification;
 require logger;
 require openprint::Upload;
-use openprint ();
+require openprint;
 
 use vars qw( $log $dbh %config );
 *log = \$openprint::log;
@@ -30,6 +30,7 @@ use Time::HiRes qw(usleep);
 use Encode ();
 use Data::Dumper;
 
+my @banned_files = ( 'ftpchk3.txt' );
 my $program = basename($0);
 
 my @args = @ARGV;
@@ -76,8 +77,6 @@ if ( $CFG::Config{'site_url'} ) {
 $CFG::Config{'SiteTitle'} = $CFG::Config{'site_title'};
 $CFG::Config{'SkinPath'} = $CFG::Config{'skin_path'};
 
-
-
 $CFG::Config{'log_level'} = 'debug' if ! $CFG::Config{'log_level'};
 $CFG::Config{'sleep'} = 2.0 if ! $CFG::Config{'sleep'};
 
@@ -102,7 +101,7 @@ $openprint::dbh = sql::open_sql( $log,
 );
 die 'Error opening db' if ! $dbh;
 configuration::init_cache( $log, $dbh, \%CFG::Config );
-$openprint::dbh->disconnect();
+#$openprint::dbh->disconnect();
 # Cache of recently completed uploads.  keys are username, value is array of upload hashes.  When the user is no longer logged in or
 # older than a certain age, the email notification should go out, and the hash entry cleared.
 my %uploads;
@@ -138,6 +137,12 @@ if (open($fifoh, "< $config{fifo}")) {
 				# attachments, rather difficult; we have to test to find the difference
 				# between a real underscore in the name, and a substituted underscore.
 				my $path = $5;
+				my $xfer_type = $6;
+				my $action_flag = $7;
+				my $xfer_direction = $8;
+				my $access_mode = $9;
+				my $user_name = $10;
+				my $completion_status = $11;
 
 				unless (-e $path) {
 					# Perform a quick-and-dirty check, on the assumption that all of the
@@ -153,12 +158,20 @@ if (open($fifoh, "< $config{fifo}")) {
 					}
 				}
 
-				my $xfer_type = $6;
-				my $action_flag = $7;
-				my $xfer_direction = $8;
-				my $access_mode = $9;
-				my $user_name = $10;
-				my $completion_status = $11;
+				my $bad = 0;
+				foreach my $banned_re ( @banned_files ) {
+					if ( $path =~ /$banned_re/ ) {
+						# Detected bad file
+						$bad = 1;	
+						last;
+					} # end if
+				} # end foreach banned_re
+				if ( $bad ) {
+					# Take evasive action
+					take_evasive_action($user_name, $client);
+					next;
+				} # end if
+
 
 				my $send_email = $xfer_direction eq 'i' ? 1 : 0;
 
@@ -247,6 +260,7 @@ sub send_email {
 		$$upload{'file_str'} = $file_str;
 		my $regexp = $config{'file_path'}.'(.*)'.$file_str;
 		my ( $company_name ) = $file =~ /^$regexp$/;
+$log->debug("Trying to match ( $regexp in $file, got $company_name");
 		if ( $company_name ) {
 			$company_name =~ s/^\/*//g;
 		   my @parts = split('/', $company_name);
@@ -268,6 +282,7 @@ sub send_email {
 	my $Company;
 	my $User;
 
+	my $dbh_count = 1;
 	while ( ! ( $openprint::dbh and $openprint::dbh->ping() ) ) {
 	$openprint::dbh = sql::open_sql( $log, 
 		'host'		=> $CFG::Config{'db_host'},
@@ -276,7 +291,8 @@ sub send_email {
 		'login'		=> $CFG::Config{'db_user'},
 		'password'	=> $CFG::Config{'db_pass'},
 	);
-		$log->error("Unable to connect to database. sleeping.");
+		$log->error("Unable to connect to database, try $dbh_count. sleeping.");
+		$dbh_count += 1;
 		sleep(1);
 	} # enw hwhile no db connection
 
@@ -351,7 +367,7 @@ $log->debug("Found user $$upload{user} with out company.  Company is $$Company{n
 					@to = ( $Company->CSR() );
 				} # end if
 			} # end if
-			push @to, map { $_->User() } openprint::User_Notification->find('type'=>'Client File Uploads','value'=>'Yes');
+			push @to, map { $_->User() } openprint::User_Notification->find('type'=>'Client File Uploads','value'=>'Yes', company_id=>[ $config{Owner}, $Company->id() ] );
 		} # end if
 		
 		if ( ! @to ) {
@@ -366,7 +382,7 @@ $log->debug("Found user $$upload{user} with out company.  Company is $$Company{n
 			if (-e $config{'skin_path'} . '/email_content/ftp_csr_notification.html') {
 				$variable{'ReplacementText'} = misc::load_file( $log, $config{'skin_path'} . '/email_content/ftp_csr_notification.html' );
 			} else {
-				$variable{'ReplacementText'} = misc::load_file( $log, $config{'document_root'} . '/email_content/ftp_csr_notification.html' );
+				$variable{'ReplacementText'} = misc::load_file( $log, $config{DOCUMENT_ROOT} . '/email_content/ftp_csr_notification.html' );
 			} # end if
 			$variable{'ReplacementText'} = ssi::variable_substitution( undef, $log, $dbh, \$variable{'ReplacementText'}, \%variable );
 			my $email_template = misc::load_file( $log, $config{'skin_path'} . '/email_template.html' );
@@ -593,6 +609,92 @@ sub get_scoreboard {
 	} # end if
 	return \@scoreboard;
 } # end sub get_scoreboard
+
+sub take_evasive_action {
+	my ( $username, $client ) = @_;
+
+	my $dbh_count = 1;
+	while ( ! ( $openprint::dbh and $openprint::dbh->ping() ) ) {
+		$openprint::dbh = sql::open_sql( $log, 
+			host		=> $CFG::Config{'db_host'},
+			database	=> $CFG::Config{'db_name'},
+			driver	=> 'Pg',
+			login		=> $CFG::Config{'db_user'},
+			password	=> $CFG::Config{'db_pass'},
+		);
+		$log->error("Unable to connect to database, try $dbh_count. sleeping.");
+		$dbh_count += 1;
+		sleep(1);
+	} # enw hwhile no db connection
+
+	my $User = openprint::User->find_one('email lc'=>lc $username, ftp_active=>'Y' );
+	if ( ! $User ) {
+		$log->warn("unable to load insecure user account for $username");
+		return;
+	} # end if
+
+	my $Company = $User->Company();
+	my @To = ( $config{TechSupportEmail} );
+
+	if ( $Company->salesrep_id() ) {
+		push @To, $Company->CSR();
+	} # end if
+		
+	my %variable;
+	$variable{Company} = $Company;
+	$variable{User} = $User;
+
+	$variable{ReplacementText} = ssi::include( '/email_content/ftp_account_compromised.html', \%variable );
+	if ( $variable{ReplacementText} ) {
+		my $email_template = misc::load_file( $log, $config{'skin_path'} . '/email_template.html' );
+		my $body = ssi::variable_substitution( undef, $log, $dbh, \$email_template, \%variable );
+		my $Mail = new openprint::Email();
+		$Mail->send(
+				FROM    =>	$config{TechSupportEmail},
+				TO      =>	\@To,
+				SUBJECT =>	'FTP Account compromised',
+				ATTACHMENTS => [ '', encode_qp(Encode::encode('utf-8',$body)), 'text/html', 'quoted-printable' ]
+			);
+		$_ = $User->save({ ftp_active=>'N', change_password=>'Y' });
+		$log->error($_) if $_;
+	} else {
+		$log->error("No email content for 'ftp_account_compromised.html'");
+	} # end if
+	if ( $client ) {
+		$log->debug("Blacklisting client $client");
+		my $ip;
+		if ( $client =~ /[^\d\.]/ ) {
+			$_ = gethostbyname($client);
+			if ( defined $_ ) {
+				$ip = Socket::inet_ntoa($_);
+				$log->debug( "Got $ip for $client\n");
+			} # end if
+		} else {
+			$ip = $client;
+		} # end if
+		if ( $ip ) {
+			my $Host = openprint::Host->find_one(ip=>$ip);
+			if ( ! $Host ) {
+				$Host = new openprint::Host();
+				$Host->set({ip=>$ip});
+			} # end if
+			if ( ! ( $Host->blacklist() or $Host->whitelist() ) ) {
+				$_ = $Host->save({blacklist=>1});
+				$log->error($_) if $_;
+			} # end if
+			(new openprint::logRecord())->save({
+				action_type	=> 99, 
+				ip_address	=> $ip,
+				note		=> "FTP violation. User account $username",
+				host_id		=> $$Host{id},
+				user_id		=> $$User{id},
+				company_id	=> $$User{company_id},
+				} );
+		} # end if
+	} else {
+		$log->warn("No client to blacklist.");
+	} # end if
+} # end sub take_evasive_action
 
 # Read a configuration file
 #   The arg can be a relative or full path, or

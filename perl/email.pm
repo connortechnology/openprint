@@ -52,7 +52,7 @@ sub start_vacation {
 	my $autoreply_address = $1.'@'.$config{'mail_autoreply_domain'};
 
 	my $ac = sql::start_transaction( $dbh );
-	$dbh->do( 'LOCK TABLE vacation IN ACCESS EXCLUSIVE MODE' ) or $log->error( DBI->errstr );
+	$dbh->do( 'LOCK TABLE vacation IN ACCESS EXCLUSIVE MODE' ) or $log->error( $dbh->errstr );
 	sql::execute( $log, $dbh, q{DELETE FROM vacation_cache WHERE to_email=?}, $email );
 	sql::execute( $log, $dbh, q{DELETE FROM vacation WHERE email=?}, $email );
 	sql::insert( $log, $dbh, 'vacation', 

@@ -1,5 +1,6 @@
 use strict;
 require openprint::Object_Asset;
+require openprint::Object_Type;
 package openprint::Object;
 
 use openprint ();
@@ -232,17 +233,12 @@ $openprint::log->debug("Running $field with $$params{$field}") if $debug;
 		} # end if
 
 		if ( defined $fields{$field} ) {
-			my @transforms = eval('@{$'.$type.'::transforms{$field}}');
-			$openprint::log->debug("Transforms: @transforms") if $debug;
-
-			foreach my $transform ( @transforms ) {
-				eval '$$self{$field} =~ ' . $transform;
-			} # end foreach
+			$$self{$field} = transform( $type, $field, $$self{$field} );
 
 			if ( ( ( ! defined $$self{$field} ) or ( $$self{$field} eq '' ) ) and exists $defaults{$field} ) {
 				$openprint::log->debug("Setting default ($field) ($$self{$field}) ($defaults{$field}) ") if $debug;
 				$$self{$field} = $defaults{$field};
-				$self->$field( $defaults{$field} ) if $$self{$field} != $defaults{$field};;
+				$self->$field( $defaults{$field} ) if $$self{$field} ne $defaults{$field};
 			} # end if
 		} # end if
 	} # end foreach
@@ -560,19 +556,28 @@ sub AUTOLOAD {
 #$openprint::log->debug("Autoload $type $name");
 #}
 	$name =~ s/.*://;
+	return if $name eq 'DESTROY';
 	if ( @_ ) {
 #$openprint::log->debug("Autoload $type $name $_[0]");
 		return $self->{$name} = $_[0];
 	} else {
 		my $fields = eval '\%'.$type.'::fields';
-		if ( $fields and exists $$fields{lc $name . '_id'} ) {
-			if ( eval '\%openprint::'.$name.'::fields' ) {
-				return new("openprint::$name", $$self{lc $name . '_id'});
+		if ( %$fields ) {
+            # This looks to handle returning Objects
+            if ( exists $$fields{$name} ) {
+                return $self->{$name};
+			} elsif ( exists $$fields{lc $name . '_id'} ) {
+				if ( eval '\%openprint::'.$name.'::fields' ) {
+					return new("openprint::$name", $$self{lc $name . '_id'});
+				} # end if
+			} else {
+				Carp::cluck( "Bad autoload fields($fields) type($type) name($name) " );
 			} # end if
 		} # end if
 		return $self->{$name};
 	} # end if
 } # end sub AUTOLOAD
+
 sub to_string {
 	my $type = ref($_[0]);
 	my $fields = eval '\%'.$type.'::fields';
@@ -593,13 +598,24 @@ sub transform {
 
 	if ( defined $$fields{$_[1]} ) {
 		my @transforms = eval('@{$'.$type.'::transforms{$_[1]}}');
-		$openprint::log->debug("Transforms: @transforms") if $debug;
+		$openprint::log->debug("Transforms for $_[1] before $_[2]: @transforms") if $debug;
 
 		foreach my $transform ( @transforms ) {
-			eval '$_[2] =~ ' . $transform;
+			if ( $transform =~ /^s\// or $transform =~ /^tr\// ) {
+				eval '$_[2] =~ ' . $transform;
+			} elsif ( $transform =~ /^<(\d+)/ ) {
+				if ( $_[2] > $1 ) {
+					$_[2] = undef;
+				} # end if
+			} else {
+				$openprint::log->debug("evalling $_[2] ".$transform . " Now value is $_[2]" );
+				eval '$_[2] '.$transform;
+				$openprint::log->error("Eval error $@") if $@;
+			} # end if
+			$openprint::log->debug("After $transform: $_[2]") if $debug;
 		} # end foreach
 	} else {
-		$openprint::log->error("$_[1] not in fields for $type");
+		$openprint::log->error("Object::transform $_[1] not in fields for $type");
 	} # end if
 	return $_[2];
 
@@ -616,5 +632,45 @@ $openprint::log->debug("# of Assets: " . scalar @Assets );
 	return @Assets;
 } # end sub Assets
 
+sub Object_Type {
+    if ( $_[0]{'object_type_id'} ) {
+        $_[0]{'Object_Type'} = new openprint::Object_Type( $_[0]{'object_type_id'} );
+    } else {
+        $_[0]{'Object_Type'} = openprint::Object_Type->find_one('name'=>ref $_[0] );
+        $_[0]{'Object_Type'} = new openprint::Object_Type() if ! $_[0]{'Object_Type'};
+    } # end if
+    return $_[0]{'Object_Type'};
+} # end sub Object_Type
+
+sub object_type {
+    if ( @_ > 1 ) {
+        my $Type = openprint::Object_Type->find_one('name'=> $_[1] );
+        if ( ! $Type ) {
+            $Type = new openprint::Object_Type();
+            $Type->save({'name'=>$_[1], 'human'=>$_[1]});
+        } # end if
+        $_[0]{'object_type'} = $Type->name();
+        $_[0]{'object_type_id'} = $Type->id();
+    } # end if
+    if ( ! $_[0]{'object_type'} ) {
+        $_[0]{'object_type'} = new openprint::Object_Type( $_[0]{'object_type_id'} )->name();
+    } # end if
+    return $_[0]{'object_type'};
+} # end sub object_type
+
+sub Object {
+    if ( @_ > 1 ) {
+        $_[0]->object_type( ref $_[1] );
+        $_[0]{'object_id'} = $_[1]{'id'};
+    } # end if
+    my $type =  $_[0]->object_type();
+    if ( ! $type ) {
+        $log->error("No type in Object::Object". $_[0]->to_string());
+        return undef;
+    } # end if
+    $_ = $type->new( $_[0]{'object_id'} );
+    $openprint::log->debug( "Returning object of type " . ref $_ );
+    return $_;
+} # end sub Object
 1;
 __END__

@@ -1,0 +1,12 @@
+table .finished_width, table .finished_height, table .flat_width, table .flat_height {
+	width: 100px;
+}
+table .buttons {
+	width: 80px;
+}
+input[type="number"], textarea {
+	width: 100%;
+box-sizing: border-box;
+-moz-box-sizing: border-box;
+-webkit-box-sizing: border-box;
+}

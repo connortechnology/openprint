@@ -453,7 +453,10 @@ sub bindery_overview {
 
 sub projects {
 
-	ssi::save_params( '/employee/production/projects.html', 'DueDateStartYear','DueDateStartMonth','DueDateStartDay', 'DueDateEndYear','DueDateEndMonth','DueDateEndDay', 'ProjectStatus', 'ddmSalesRep', 'ddmEmployee', 'ddmCustomer', 'ddmPress' );
+	_project_list();
+	ssi::setup_date_select( '/employee/production/projects.html', 'due_date_start', -7 );
+	ssi::setup_date_select( '/employee/production/projects.html', 'due_date_end', '' );
+
 	my @projects;
 
 	my $startdocket = $param{'StartDocket'};
@@ -476,6 +479,13 @@ sub projects {
 			@projects = openprint::Project::find( 'docket_start'=>$startdocket, 'docket_end' => $enddocket );
 		} elsif ( $startdocket ) {
 			@projects = openprint::Project::find( 'docket'=>$startdocket );
+			if ( ! @projects ) {
+				my $Order = openprint::Order->find_one( docket=>$startdocket );
+				if ( $Order ) {
+					$variable{'ExternalRedirect'} = '/employee/project/view.html?OrderID='.$$Order{id};
+					return;
+				} # end if
+			} # end if
 		} elsif ( $enddocket ) {
 			@projects = openprint::Project::find( 'docket'=>$enddocket );
 		} # end if
@@ -506,7 +516,11 @@ sub projects {
 } # end sub projects
 
 sub _project_list {
-	ssi::save_params( '/employee/production/projects.html', 'DueDateStartYear','DueDateStartMonth','DueDateStartDay', 'DueDateEndYear','DueDateEndMonth','DueDateEndDay', 'ProjectStatus', 'ddmSalesRep', 'ddmEmployee', 'ddmCustomer', 'ddmPress' );
+	ssi::save_params( '/employee/production/projects.html', (
+		( map { 'due_date_start_'.$_ } ( 'year','month','day' ) ),
+		( map { 'due_date_end_'.$_ } ( 'year','month','day' ) ),
+		'ProjectStatus', 'ddmSalesRep', 'ddmEmployee', 'ddmCustomer', 'ddmPress'
+		)  );
 }
 
 sub project_view {
@@ -1003,6 +1017,7 @@ sub _labels {
 		$Label->save();
 	} # end if
 	$variable{'Project'} = new openprint::Project( $param{'project_id'} );
+	$variable{Order} = $variable{Project}->Order();
 } # end sub _labels
 
 sub _stock_popup {
@@ -1054,6 +1069,7 @@ sub _ul_div {
 		$variable{'Shift'} = openprint::Shift::get_from_ul_id( $param{'ul_id'} );
 		if ( ! $variable{'Shift'} ) {
 			$variable{'error'} .= "Unable to find shift for $param{'ul_id'}";
+			$variable{Shift} = new openprint::Shift();
 		} # end if
 	} else {
 		$variable{'error'} .= "No id given for shift";
@@ -1103,7 +1119,10 @@ sub _drop {
 		my $services = $param{'services'};
 		$services =~ s/$param{ul_id}\[\]=//g;
 		my @order = split( '&', $services );
-		return if ! @order;
+		if ( ! @order ) {
+			sql::end_transaction( $dbh, $ac );
+			return;
+		} # end if
 
 		if ( $param{'action'} ne 'add_services' ) {
 			my @servicetypes_to_add;
@@ -1907,6 +1926,10 @@ sub _split_popup {
 sub _li {
 
 	my $Job = $variable{'Job'} = new openprint::ScheduledJob( $param{'schedule_id'} );
+	if ( ! $$Job{id} ) {
+		$variable{error} .= 'Job does not exist.';
+		return;
+	} # end if
 	if ( $param{'action'} eq 'House Stock' ) {
 		my $stock = $Job->stock();
 		if ( ! ( $stock =~ /House Stock/ ) ) {
@@ -2048,6 +2071,70 @@ sub _datacollection {
 sub _signature_popup {
 	$variable{Signature} = new openprint::SignatureCapture( $param{signature_id} );
 } # end sub _signature_popup
+
+sub gracol {
+	require openprint::GRACoL;
+
+	my $GRACoL = $variable{GRACoL} = new openprint::GRACoL( $param{gracol_id} );
+	$GRACoL->type_id( $param{type_id} );
+	$GRACoL->data( [
+30.7,	-24.0,	-28.18,
+55.7,	-36.9,	-50.5,
+67.7,	-25.0,	-36.4,
+83.6,	-9.6,	-16.8,
+26.7,	42.1,	-0.6,
+47.5,	74.1,	-2.8,
+61.3,	51.5,	-5.3,
+80.7,	19.8,	-5.3,
+50.0,	-5.5,	49.3,
+88.9,	-5.7,	90.9,
+89.8,	-5.6,	60.4,
+92.4,	-2.5,	24.3,
+53.8,	-54.4,	-16.9,
+38.1,	53.8,	-22.0,
+72.1,	22.4,	71.4,
+51.5,	16.0,	33.3,
+42.8,	34.0,	14.8,
+35.1,	22.8,	-16.8,
+53.6,	-18.6,	27.5,
+37.5,	-2.4,	-26.8,
+93.8,	0.0,	-1.4,
+89.2,	0.2,	-1.9,
+78.8,	-0.1,	-1.6,
+61.5,	-0.6,	-0.4,
+41.5,	-1.1,	-0.1,
+27.1,	-0.4,	0.9,
+15.5,	0.9,	0.5,
+15.2,	10.3,	-24.4,
+24.1,	18.9,	-47.2,
+42.4,	18.4,	-36.6,
+71.1,	8.1,	-18.6,
+27.6,	37.6,	26.2,
+46.9,	69.1,	49.2,
+59.8,	47.4,	40.0,
+79.3,	16.7,	18.8,
+29.9,	-39.9,	13.5,
+51.1,	-68.3,	27.3,
+64.4,	-41.3,	22.0,
+81.4,	-14.2,	8.2,
+43.5,	-16.0,	-48.7,
+48.6,	72.2,	20.0,
+74.2,	-25.3,	64.4,
+72.0,	19.0,	19.0,
+54.3,	36.2,	29.3,
+42.2,	32.7,	27.8,
+47.2,	-27.7,	-1.5,
+94.8,	0.5,	-1.6,
+93.5,	0.5,	-1.1,
+88.3,	0.6,	-1.5,
+77.2,	0.4,	-1.4,
+58.9,	-0.7,	-0.2,
+41.0,	-0.8,	0.7,
+24.2,	-0.1,	1.5,
+11.5,	1.0,	-0.4,
+] );
+	
+} # end sub racol
 
 1;
 __END__

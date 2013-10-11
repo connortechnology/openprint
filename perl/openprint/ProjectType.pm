@@ -2,6 +2,7 @@ package openprint::ProjectType;
 @ISA = qw(openprint::Object);
 require openprint::Object;
 require openprint::logs;
+require openprint::ProjectType_Template;
 
 use strict;
 
@@ -153,7 +154,7 @@ sub delete {
 } # end sub delete
 
 sub Templates {
-    return openprint::ProjectType_Template::find('projecttype_id'=>$_[0]{'id'});
+    return openprint::ProjectType_Template->find('projecttype_id'=>$_[0]{'id'});
 } # end sub Templates
 
 1;

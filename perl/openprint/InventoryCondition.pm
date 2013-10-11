@@ -8,13 +8,13 @@ $debug = 1;
 $table = 'inventoryconditions';
 $serial= 'inventoryconditions_id_seq';
 %fields = (
-    'id'    =>  'id',
-    'name' =>  'name',
-	'message'	=>	'message',
+	id		=>	'id',
+	name	=>	'name',
+	message	=>	'message',
 );
 %transforms = (
-    'name' => [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
-    'message' => [ 's/^\s+//', 's/\s+$//' ],
+	name	=> [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
+	message	=> [ 's/^\s+//', 's/\s+$//' ],
 );
 %defaults = (
 );

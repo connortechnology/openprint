@@ -7,9 +7,9 @@
 	foreach ( 'ddmStatus','CreatedStartYear','CreatedStartMonth','CreatedStartDay','CreatedEndYear','CreatedEndMonth','CreatedEndDay','UpdatedStartYear','UpdatedStartMonth','UpdatedStartDay','UpdatedEndYear','UpdatedEndMonth','UpdatedEndDay', 'predefined','type_id' ) {
 		$session{"/main/project/history.html?$_"} = $param{$_} if exists $param{$_};
 	} # end foreach
-	if ( ! $session{'/main/project/history.html?ddmStatus'} ) {
-		$session{'/main/project/history.html?ddmStatus'} = [ 'uncalculated','Unordered','Pending Deposit','Ordered','In Prepress','Proofs Out','Waiting For Customer Approval','Waiting For QA Approval','Approved','Printed','Complete','Waiting For Pickup','Picked Up','Shipped' ];
-	} # end if
+	#if ( ! $session{'/main/project/history.html?ddmStatus'} ) {
+		#$session{'/main/project/history.html?ddmStatus'} = [ 'uncalculated','Unordered','Pending Deposit','Ordered','In Prepress','Proofs Out','Waiting For Customer Approval','Waiting For QA Approval','Approved','Printed','Complete','Waiting For Pickup','Picked Up','Shipped' ];
+	#} # end if
 
 	if ( $param{'ProjectID'} ) {
 		@{$$variable{'Projects'}} = openprint::Project::find( 
@@ -24,7 +24,9 @@
 		'updated_on_start'	=> sprintf('%.4d-%.2d-%.2d 00:00:00', @session{'/main/project/history.html?UpdatedStartYear','/main/project/history.html?UpdatedStartMonth','/main/project/history.html?UpdatedStartDay'} ),
 		'updated_on_end'	=> sprintf('%.4d-%.2d-%.2d 23:59:59', @session{'/main/project/history.html?UpdatedEndYear','/main/project/history.html?UpdatedEndMonth','/main/project/history.html?UpdatedEndDay'} ),
 		'company_id'		=> $session{'company_id'},
+		( $session{'/main/project/history.html?ddmStatus'} ? (
 		'status'			=> $session{'/main/project/history.html?ddmStatus'},
+		) : ( 'status !=' => 'Deleted' ) ),
 		'type_id'			=> $session{'/main/project/history.html?type_id'},
 		'predefined'		=> $session{'/main/project/history.html?predefined'},
 		'reference'			=> $param{'Reference'},

@@ -1,5 +1,6 @@
+use strict;
 package openprint::PAR;
-@ISA = qw(openprint::Object);
+our @ISA = qw(openprint::Object);
 
 use vars qw( %config $log $dbh %session );
 *session = \%openprint::session;
@@ -9,13 +10,11 @@ use vars qw( %config $log $dbh %session );
 
 require openprint::PAR_Area;
 require openprint::PAR_Reason;
-
-my $debug = 1;
-
-use strict;
-use vars qw( %fields %defaults %transforms );
-
+require MIME::QuotedPrint;
 require sql;
+
+use vars qw( $debug %fields %defaults %transforms );
+$debug = 1;
 
 %fields = (
 	'issued_to_id'	=> 'issued_to_id',
@@ -181,26 +180,23 @@ sub send_notifications {
 	if ( @Users ) {
 		my $From = new openprint::User( $session{'user_id'} );
 		my $email_template = misc::load_file( $log, $config{'SkinPath'} . '/email_template.html' );
-		my $text = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/email_content/iso_par_notification.html' );
 
 		my %info = (
 			'PAR'	=>	$self,
 		);
-		$info{'ReplacementText'} = ssi::variable_substitution( undef, $log, $dbh, \$text, \%info );
+		$info{'ReplacementText'} = ssi::include( '/email_content/iso_par_notification.html', \%info );
 
 		my $body = ssi::variable_substitution( undef, $log, $dbh, \$email_template, \%info );
-		foreach my $User ( @Users ) {
-			my %mail = (
-					SMTP    => $config{'Mail Server'},
-					FROM    => sprintf( '"%s" <%s>', $From->name(), $From->email() ),
-					TO      => sprintf( '"%s" <%s>', $User->name(), $User->email() ),
-					SUBJECT => 'A new PAR has been generated.',
-					);
-			misc::send_email_with_attachment( $log, \%mail, ('', encode_qp($body), 'text/html', 'quoted-printable'));
-		} # end foreach
+		my $Mail = new openprint::Email();
+		$Mail->send( 
+			FROM	=>	$From,
+			TO		=>	\@Users,
+			SUBJECT => 'A new PAR has been generated.',
+			ATTACHMENTS	=>	['', MIME::QuotedPrint::encode_qp($body), 'text/html', 'quoted-printable'],
+			);
 	} # end if to
-
 } # end sub send_notification
+
 sub Area {
 	return new openprint::PAR_Area( $_[0]{area_id} );
 } # end sub Area

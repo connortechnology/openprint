@@ -378,6 +378,10 @@ sub find {
 		$sql .= ' AND strEmail=?';
 		push @values, lc $param{'email'};
 	} # end if
+	if ( $param{'email lc'} ) {
+		$sql .= ' AND lower(strEmail)=?';
+		push @values, lc $param{'email lc'};
+	} # end if
 	if ( exists $param{'email_like'} ) {
 		$sql .= ' AND strEmail LIKE ?';
 		push @values, lc $param{'email_like'};

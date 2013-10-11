@@ -415,135 +415,140 @@ sub company_profiles {
 		} # end if
 	} elsif ( $openprint::param{'btnFunction'} eq 'Save' ) {
 
-		my $customer = new openprint::obj_customer( $log, $dbh, $index );
+		if ( ! $param{txtCompanyName} ) {
+			$variable{error} .= 'Empty company name. You must supply a Company Name.<br/>';
+		} else {
 
-		if ( $Company->activation() ne $openprint::param{'rdbAccountActivation'} ) {
-			my %info;
-			$info{'Company'} = $Company;
-			my $email_template = misc::load_file( $log, $config{'SkinPath'} . '/email_template.html' );
+			my $customer = new openprint::obj_customer( $log, $dbh, $index );
 
-			$_ = $openprint::param{'rdbAccountActivation'} eq 'Y' ? 'account_activated.html' : 'account_deactivated.html';
-			$info{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . "/email_content/$_" );
-			$info{'ReplacementText'} = ssi::variable_substitution( $r, $log, $dbh, \$info{'ReplacementText'}, \%info );
+			if ( $Company->activation() ne $openprint::param{'rdbAccountActivation'} ) {
+				my %info;
+				$info{'Company'} = $Company;
+				my $email_template = misc::load_file( $log, $config{'SkinPath'} . '/email_template.html' );
 
-			$email_template = ssi::variable_substitution( $r, $log, $dbh, \$email_template, \%info ); 
+				$_ = $openprint::param{'rdbAccountActivation'} eq 'Y' ? 'account_activated.html' : 'account_deactivated.html';
+				$info{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . "/email_content/$_" );
+				$info{'ReplacementText'} = ssi::variable_substitution( $r, $log, $dbh, \$info{'ReplacementText'}, \%info );
 
-			my @to = sql::execute( $log, $dbh, 'SELECT strEmail FROM Users WHERE CompanyIndex=?', $index );
-			my %mail = (
-					SMTP    => $openprint::config{'Mail Server'},
-					FROM    => $openprint::config{'AdministratorEmail'},
-					TO      => join( ',', @to ),
-					SUBJECT => "Customer account status has changed!",
-					);
-			misc::send_email_with_attachment( $log, \%mail, ( '', encode_qp($email_template), 'text/html', 'quoted-printable' ) );
-		} # end if
-		if ( $Company->reseller() and ( $Company->reseller() ne $openprint::param{'rdbReseller'} ) ) {
-			my %info;
-			my $email_template = misc::load_file( $log, $config{'SkinPath'} . '/email_template.html' );
-			$info{'Company'} = $Company;
-			my @to = sql::execute( $log, $dbh, 'SELECT strEmail FROM Users WHERE CompanyIndex=?', $index );
+				$email_template = ssi::variable_substitution( $r, $log, $dbh, \$email_template, \%info ); 
 
-			$_ = $openprint::param{'rdbReseller'} eq 'Y' ? 'customer_account_reseller.html' : 'customer_account_non_reseller.html';
-			$info{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . "/email_content/$_" );
-			$info{'ReplacementText'} = ssi::variable_substitution( $r, $log, $dbh, \$info{'ReplacementText'}, \%info );
+				my @to = sql::execute( $log, $dbh, 'SELECT strEmail FROM Users WHERE CompanyIndex=?', $index );
+				my %mail = (
+						SMTP    => $openprint::config{'Mail Server'},
+						FROM    => $openprint::config{'AdministratorEmail'},
+						TO      => join( ',', @to ),
+						SUBJECT => "Customer account status has changed!",
+						);
+				misc::send_email_with_attachment( $log, \%mail, ( '', encode_qp($email_template), 'text/html', 'quoted-printable' ) );
+			} # end if
+			if ( $Company->reseller() and ( $Company->reseller() ne $openprint::param{'rdbReseller'} ) ) {
+				my %info;
+				my $email_template = misc::load_file( $log, $config{'SkinPath'} . '/email_template.html' );
+				$info{'Company'} = $Company;
+				my @to = sql::execute( $log, $dbh, 'SELECT strEmail FROM Users WHERE CompanyIndex=?', $index );
 
-			$email_template = ssi::variable_substitution( $r, $log, $dbh, \$email_template, \%info ); 
-			my %mail = (
-					SMTP    => $openprint::config{'Mail Server'},
-					FROM    => $openprint::config{'AdministratorEmail'},
-					TO      => join( ',', @to ),
-					SUBJECT => "Customer account status has changed!",
-					);
-			misc::send_email_with_attachment( $log, \%mail, ( '', encode_qp($email_template), 'text/html', 'quoted-printable' ) );
-		} # end if
-if ( 0 ) {
-		if ( $Company->supplier() ne $openprint::param{'rdbSupplier'} ) {
-			my %info;
-			my $email_template = misc::load_file( $log, $config{'SkinPath'} . '/email_template.html' );
-			$info{'Company'} = $Company;
-			my @to = sql::execute( $log, $dbh, 'SELECT strEmail FROM Users WHERE CompanyIndex=?', $index );
+				$_ = $openprint::param{'rdbReseller'} eq 'Y' ? 'customer_account_reseller.html' : 'customer_account_non_reseller.html';
+				$info{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . "/email_content/$_" );
+				$info{'ReplacementText'} = ssi::variable_substitution( $r, $log, $dbh, \$info{'ReplacementText'}, \%info );
 
-			$_ = $openprint::param{'rdbSupplier'} eq 'Y' ? 'customer_account_supplier.html' : 'customer_account_non_supplier.html';
-			$info{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . "/email_content/$_" );
-			$info{'ReplacementText'} = ssi::variable_substitution( $r, $log, $dbh, \$info{'ReplacementText'}, \%info );
-			$email_template = ssi::variable_substitution( $r, $log, $dbh, \$email_template, \%info );
-			my %mail = (
-					SMTP    => $openprint::config{'Mail Server'},
-					FROM    => $openprint::config{'AdministratorEmail'},
-					TO      => join( ',', @to ),
-					SUBJECT => 'Customer account status has changed!',
-					);
-			misc::send_email_with_attachment( $log, \%mail, ( '', encode_qp($email_template), 'text/html', 'quoted-printable' ) );
-		} # end if
-} # end if
+				$email_template = ssi::variable_substitution( $r, $log, $dbh, \$email_template, \%info ); 
+				my %mail = (
+						SMTP    => $openprint::config{'Mail Server'},
+						FROM    => $openprint::config{'AdministratorEmail'},
+						TO      => join( ',', @to ),
+						SUBJECT => "Customer account status has changed!",
+						);
+				misc::send_email_with_attachment( $log, \%mail, ( '', encode_qp($email_template), 'text/html', 'quoted-printable' ) );
+			} # end if
+			if ( 0 ) {
+				if ( $Company->supplier() ne $openprint::param{'rdbSupplier'} ) {
+					my %info;
+					my $email_template = misc::load_file( $log, $config{'SkinPath'} . '/email_template.html' );
+					$info{'Company'} = $Company;
+					my @to = sql::execute( $log, $dbh, 'SELECT strEmail FROM Users WHERE CompanyIndex=?', $index );
 
-		my %params;
-		foreach my $field ( keys %fields ) {
-			$params{$fields{$field}} = $openprint::param{$field} if defined $openprint::param{$field};
-		} # end foreach
-		if ( $openprint::param{'txtStartYear'} ) {
-			$openprint::param{'ddmStartMonth'} = '01' if ! $openprint::param{'ddmStartMonth'};
-			$params{'BusinessStartDate'} = $openprint::param{'txtStartYear'} . '-' . $openprint::param{'ddmStartMonth'} . '-01';
-		} # end if
-		$customer->set( \%params );
-		$index = $customer->{index};
-		delete $openprint::Object::cache{'openprint::Company'}{$index};
-		$Company = new openprint::Company( $index );
+					$_ = $openprint::param{'rdbSupplier'} eq 'Y' ? 'customer_account_supplier.html' : 'customer_account_non_supplier.html';
+					$info{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . "/email_content/$_" );
+					$info{'ReplacementText'} = ssi::variable_substitution( $r, $log, $dbh, \$info{'ReplacementText'}, \%info );
+					$email_template = ssi::variable_substitution( $r, $log, $dbh, \$email_template, \%info );
+					my %mail = (
+							SMTP    => $openprint::config{'Mail Server'},
+							FROM    => $openprint::config{'AdministratorEmail'},
+							TO      => join( ',', @to ),
+							SUBJECT => 'Customer account status has changed!',
+							);
+					misc::send_email_with_attachment( $log, \%mail, ( '', encode_qp($email_template), 'text/html', 'quoted-printable' ) );
+				} # end if
+			} # end if
 
-		if ( $index > 0 ) {
-			my $ac = sql::start_transaction( $dbh );
+			my %params;
+			foreach my $field ( keys %fields ) {
+				$params{$fields{$field}} = $openprint::param{$field} if defined $openprint::param{$field};
+			} # end foreach
+			if ( $openprint::param{'txtStartYear'} ) {
+				$openprint::param{'ddmStartMonth'} = '01' if ! $openprint::param{'ddmStartMonth'};
+				$params{'BusinessStartDate'} = $openprint::param{'txtStartYear'} . '-' . $openprint::param{'ddmStartMonth'} . '-01';
+			} # end if
+			$customer->set( \%params );
+			$index = $customer->{index};
+			delete $openprint::Object::cache{'openprint::Company'}{$index};
+			$Company = new openprint::Company( $index );
+
+			if ( $index > 0 ) {
+				my $ac = sql::start_transaction( $dbh );
 # Otherwise Error!
 # Customer Categories
 # I was trying to do this the hard way.  Then it occurred to me: Just delete them all from the table, and add back in the ones we want.  
-			my @customercategories = sql::execute( $log, $dbh, 'SELECT id FROM Marketing_Categories' );
+				my @customercategories = sql::execute( $log, $dbh, 'SELECT id FROM Marketing_Categories' );
 
-			sql::execute( $log, $dbh, q{DELETE FROM Companies_in_Marketing_Categories WHERE company_Id =?}, $index );
+				sql::execute( $log, $dbh, q{DELETE FROM Companies_in_Marketing_Categories WHERE company_Id =?}, $index );
 # add them back in 
-			my $sth = $dbh->prepare( q{INSERT INTO Companies_in_Marketing_Categories (category_id,company_id) VALUES ( ?, ? )} );
-			foreach my $cat ( $openprint::param{'selectCustomerCategories'} ) {
-				if ( sets::isin( $cat, \@customercategories ) ) {
-					$sth->execute( $cat, $index ) or $log->error( DBI->errstr );
-				} # end if
-			} # end foreach
+				my $sth = $dbh->prepare( q{INSERT INTO Companies_in_Marketing_Categories (category_id,company_id) VALUES ( ?, ? )} );
+				foreach my $cat ( $openprint::param{'selectCustomerCategories'} ) {
+					if ( sets::isin( $cat, \@customercategories ) ) {
+						$sth->execute( $cat, $index ) or $log->error( DBI->errstr );
+					} # end if
+				} # end foreach
 
-			my %params;
-			foreach my $field ( keys %shipping_fields ) {
-				$params{$shipping_fields{$field}} = $openprint::param{$field} if defined $openprint::param{$field};
-			} # end foreach
-			$customer->save_shipping( \%params );
+				my %params;
+				foreach my $field ( keys %shipping_fields ) {
+					$params{$shipping_fields{$field}} = $openprint::param{$field} if defined $openprint::param{$field};
+				} # end foreach
+				$customer->save_shipping( \%params );
 
-			openprint::customer::save_tradereferences( $r, $log, $dbh, $index );
+				openprint::customer::save_tradereferences( $r, $log, $dbh, $index );
 
-			$dbh->do( 'LOCK TABLE Company_Credit IN ACCESS EXCLUSIVE MODE' ) or $log->error( DBI->errstr );
+				$dbh->do( 'LOCK TABLE Company_Credit IN ACCESS EXCLUSIVE MODE' ) or $log->error( DBI->errstr );
 
-			foreach my $Supplier ( openprint::Company->find('offers_credit'=>1) ) {
-				my $Credit = new openprint::Company_Credit( {'company_id'=>$index, 'supplier_id'=>$Supplier->id() } );
+				foreach my $Supplier ( openprint::Company->find('offers_credit'=>1) ) {
+					my $Credit = new openprint::Company_Credit( {'company_id'=>$index, 'supplier_id'=>$Supplier->id() } );
 
-                if (
-                        ( $Credit->denydays() != openprint::Company_Credit->transform('denydays', $param{'denydays-'.$$Supplier{id}} ) ) or
-                        ( $Credit->warndays() != openprint::Company_Credit->transform('warndays', $param{'warndays-'.$$Supplier{id}} ) ) or
-                        ( $Credit->limit() != openprint::Company_Credit->transform('limit', $param{'limit-'.$$Supplier{id}} ) ) or
-                        ( $Credit->hold() ne openprint::Company_Credit->transform('hold', $param{'hold-'.$$Supplier{id}} ) ) or
-                        ( $Credit->downpayment() != openprint::Company_Credit->transform('downpayment', $param{'downpayment-'.$$Supplier{id}} ) ) or
-                        ( $Credit->cod() != openprint::Company_Credit->transform('cod', $param{'cod-'.$$Supplier{id}} ) )
-                        ) {
-                    my $note = 'Old credit: ' . $Credit->to_string() if $Credit->supplier_id();
-					$variable{'error'} .= $Credit->save( { 'company_id'=>$index, 'supplier_id'=>$Supplier->id(), 
-							map { $_ => $param{$_.'-'.$Supplier->id()} } ( 'denydays','warndays', 'limit', 'hold', 'downpayment', 'cod' ) } );
-                    $note .= '<br/>new credit: ' . $Credit->to_string();
-                    $variable{'error'} .= (new openprint::logRecord())->save( {
-                            action_type =>  105,
-                            object_id   =>  $index,
-                            user_id     =>  $session{user_id},
-                            company_id  =>  $session{company_id},
-                            note        =>  $note,
-							});
-                } else {
-                    $variable{'information'} .= 'Credit unchanged for ' . $Supplier->name() . '<br/>';
-                } # end if
-			} # end foreach Supplier
-			sql::end_transaction( $dbh, $ac );
-		} # end if $index
+					if (
+							( $Credit->denydays() != openprint::Company_Credit->transform('denydays', $param{'denydays-'.$$Supplier{id}} ) ) or
+							( $Credit->warndays() != openprint::Company_Credit->transform('warndays', $param{'warndays-'.$$Supplier{id}} ) ) or
+							( $Credit->limit() != openprint::Company_Credit->transform('limit', $param{'limit-'.$$Supplier{id}} ) ) or
+							( $Credit->hold() ne openprint::Company_Credit->transform('hold', $param{'hold-'.$$Supplier{id}} ) ) or
+							( $Credit->downpayment() != openprint::Company_Credit->transform('downpayment', $param{'downpayment-'.$$Supplier{id}} ) ) or
+							( $Credit->cod() != openprint::Company_Credit->transform('cod', $param{'cod-'.$$Supplier{id}} ) )
+					   ) {
+						my $note = 'Old credit: ' . $Credit->to_string() if $Credit->supplier_id();
+						$variable{'error'} .= $Credit->save( { 'company_id'=>$index, 'supplier_id'=>$Supplier->id(), 
+								map { $_ => $param{$_.'-'.$Supplier->id()} } ( 'denydays','warndays', 'limit', 'hold', 'downpayment', 'cod' ) } );
+						$note .= '<br/>new credit: ' . $Credit->to_string();
+						$variable{'error'} .= (new openprint::logRecord())->save( {
+								action_type =>  105,
+								object_id   =>  $index,
+								user_id     =>  $session{user_id},
+								company_id  =>  $session{company_id},
+								note        =>  $note,
+								});
+					} else {
+						$variable{'information'} .= 'Credit unchanged for ' . $Supplier->name() . '<br/>';
+					} # end if
+				} # end foreach Supplier
+				sql::end_transaction( $dbh, $ac );
+			} # end if $index
+		} # end if no input errors
 	} elsif ( $openprint::param{'btnFunction'} eq 'Delete' ) {
 		$index = $Company->next();
 		$Company->delete();
@@ -648,6 +653,30 @@ sub upload_log {
 	ssi::setup_date_select( '/administrator/managerial/upload_log.html', 'uploaded_on_start', -7 );
 	ssi::setup_date_select( '/administrator/managerial/upload_log.html', 'uploaded_on_end', '' );
 } # end sub upload_log
+
+sub authorizations {
+	require openprint::Authorization;
+	require openprint::Object_Type;
+	_authorizations();
+	if ( $param{action} eq 'Save' ) {
+		foreach my $Auth ( (new openprint::Authorization()), openprint::Authorization->find() ) {
+			next if ! $param{"object_type_id-$$Auth{id}"};
+
+			$variable{error} .= $Auth->save({
+				mode			=>	$param{"mode-$$Auth{id}"},
+				object_type_id	=>	$param{"object_type_id-$$Auth{id}"},
+				object_id		=>	$param{"object_id-$$Auth{id}"},
+				usertype_id		=>	$param{"usertype_id-$$Auth{id}"},
+				usergroup_id	=>	$param{"usergroup_id-$$Auth{id}"},
+				setting			=>	$param{"setting-$$Auth{id}"},
+			});
+		} # end foreach Auth
+		$variable{ExternalRedirect} = '/administrator/managerial/authorizations.html';
+	} # end if
+} # end sub authorizations
+sub _authorizations {
+	ssi::save_params( '/administrator/managerial/authorizations.html', ( 'object_type_id' ) );
+} # end sub _authorizations
 
 1;
 __END__

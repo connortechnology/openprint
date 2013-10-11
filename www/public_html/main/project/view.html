@@ -15,6 +15,7 @@
 -->
 </script>
 <div id="ProjectView" style="float: left; width: 100%;">
+<?include(/includes/error_reporting.html)?>
 <? if ( $$variable{'ProjectIndex'} eq '' ) ?>
 There is no current project. 
 <? else ( $$variable{'ProjectIndex'} eq '' ) ?>
@@ -122,9 +123,9 @@ There is no current project.
 				} # end if
 			} # end if
 			my $summary = openprint::service::summary( $$variable{'ProjectIndex'}, $service_ids[0], $qty_index );
-			if ( $$variable{'name'} =~ /(\d+) Signatures/ ) {
+			if ( $$variable{name} =~ /(\d+) Signatures/ ) {
 				my $sig_qty = $1;
-				if ( $summary =~ /(.*)\n(.*Stock Qty: )(\d+) (lbs|sheets)(.*)$/m ) {
+				if ( $summary =~ /(.*)\n?(.*Stock Qty: )(\d+) ?(lbs|sheets)(.*)$/m ) {
 					$summary = $1."\n".$2.$$variable{'SignatureStockQty'.$qty_index.$service_ids[0]}.' '.$4.$5;
 				} # end if
 			} # end if

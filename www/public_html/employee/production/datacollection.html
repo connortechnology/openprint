@@ -28,7 +28,7 @@ function switch_inputs(e) {
 }
 
 function load_log() {
-	new Ajax.Updater('Log','_datacollection.html', { parameters: $('LogForm').serialize() } );
+	AjaxLoadContent( 'Log', '_datacollection.html', $('LogForm') );
 }
 
 function sig_popup(signature_id) {
@@ -177,6 +177,11 @@ $ipoo = 0;
 			</select>
 		</li>
 	</ul>
+		<p class="buttons">
+			<? echo ( join("\n",
+						button( 'ShowResults', { onclick=>'load_log();', text=>'Show Results' } ),
+			); ) ?>
+	</p>
 	<div id="Log"></div>
 </fieldset>
 </form>

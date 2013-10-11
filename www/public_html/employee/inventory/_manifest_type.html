@@ -1,13 +1,13 @@
 <fieldset>
 	<? eval (
+		$variable{'location_dropdown'} = openprint::Location->dropdown(order=>'parent_id NULLS FIRST, lower(name)') if ! exists $variable{'location_dropdown'};
 		if ( ! $param{'Name-'.$$variable{'type_id'}} ) {
 			my $Paper;
 			if ( $$variable{'Type'}->paper_id() ) {
 				$Paper = $$variable{'Type'}->Paper();
 			} else {
-				foreach my $C ( $$variable{'Manifest'}->Contents('type_id'=>$$variable{'type_id'}) ) {
+				foreach my $C ( $$variable{Type}->Contents() ) {
 					my $Skid = $C->Skid();
-
 					foreach my $SkidContent ( $Skid->Contents() ) {
 						$Paper = $SkidContent->Paper();
 						last;
@@ -21,7 +21,7 @@
 				$param{'Name-'.$$variable{'type_id'}} = $Paper->name_id();
 				$param{'Finish-'.$$variable{'type_id'}} = $Paper->finish_id();
 				$param{'Colour-'.$$variable{'type_id'}} = $Paper->colour_id();
-				if ( $Paper->weight() =~ /^(\d+)lb$/ ) {
+				if ( $Paper->weight() =~ /^([\d\.]+)lb$/ ) {
 					$param{'weight-'.$$variable{'type_id'}} = $1;
 				} # end if
 				$param{'Quality-'.$$variable{'type_id'}} = $Paper->quality_id();
@@ -31,17 +31,21 @@
 				$param{'height-'.$$variable{'type_id'}} = $Paper->height();
 				$param{'gsm-'.$$variable{'type_id'}} = $Paper->gsm();
 				$param{'fsc_code-'.$$variable{'type_id'}} = $Paper->fsc_code();
+				$param{'manufacturers_name='.$$variable{type_id}} = $Paper->manufacturers_name() if ! $$variable{Type}->manufacturers_name();
 			} # end if
 		} # end if
 		$$variable{'PO_Content'} = $$variable{'Type'}->PurchaseOrder_Content();
 
 		$$variable{'Owners'} = openprint::Company->dropdown() if ! $$variable{'Owners'};
+		if ( ! $$variable{Type}->type() ) {
+			$$variable{Type}->type('Sheet');
+		} # end if
 	) ?>
 	<div class="leftColumn">
 		<p id="Owner-<?type_id?>_div">
 			<label for="Owner-<?type_id?>">Owner:</label>
 			<input type="text" onkeyup="filterDDM(this, this.form.Owner);" class="filter" />
-			<select id="Owner-<?type_id?>" name="Owner-<?type_id?>"><? echo ( ssi::make_drop_down( $$variable{'Owners'}, $param{'Owner-'.$$variable{'type_id'}} ? $param{'Owner-'.$$variable{'type_id'}} : $session{'company_id'} ); ) ?></select>
+			<select id="Owner-<?type_id?>" name="Owner-<?type_id?>"><? echo ( make_drop_down( $$variable{'Owners'}, $param{'Owner-'.$$variable{'type_id'}} ? $param{'Owner-'.$$variable{'type_id'}} : $session{'company_id'} ); ) ?></select>
 		</p>
 		<p id="Manufacturer-<?type_id?>_div">
 			<label for="txtManufacturer-<?type_id?>" onclick="toggleInput('Manufacturer-<?type_id?>');">Manufacturer:</label>
@@ -54,7 +58,7 @@
 							$param{'Manufacturer-'.$$variable{'type_id'}} = $Manufacturers[0]->id();
 						} # end if
 					} # end if
-					return ssi::make_drop_down( [ map { $_->id(), $_->longname() } openprint::Manufacturer::find('order'=>'lower(longname)') ], $param{'Manufacturer-'.$$variable{'type_id'}} );
+					return make_drop_down( [ map { $_->id(), $_->longname() } openprint::Manufacturer::find('order'=>'lower(longname)') ], $param{'Manufacturer-'.$$variable{'type_id'}} );
 				) ?>
 			</select>
 			<input style="display: none;" type="text" id="txtManufacturer-<?type_id?>" name="txtManufacturer-<?type_id?>" />
@@ -64,7 +68,7 @@
 			<select id="Name-<?type_id?>" name="Name-<?type_id?>" size="1" onchange="Name_onChange(this,'-<?type_id?>');">
 				<option value="">select</option>
 			<? echo (
-					return ssi::make_drop_down( [ map { $_->id(), $_->longname() } openprint::StockName::find('order'=>'lower(longname)') ], $param{'Name-'.$$variable{'type_id'}} );
+					return make_drop_down( [ map { $_->id(), $_->longname() } openprint::StockName::find('order'=>'lower(longname)') ], $param{'Name-'.$$variable{'type_id'}} );
 					) ?>
 			</select>
 			<input style="display: none;" type="text" id="txtName-<?type_id?>" name="txtName-<?type_id?>" />
@@ -73,7 +77,7 @@
 			<select id="Finish-<?type_id?>" name="Finish-<?type_id?>" size="1" onchange="Finish_onChange(this,'-<?type_id?>');">
 				<option value="">select</option>
 				<? echo (
-					return ssi::make_drop_down( [ map { $_->id(), $_->longname() } openprint::StockFinish::find('order'=>'lower(longname)') ], $param{'Finish-'.$$variable{'type_id'}} );
+					return make_drop_down( [ map { $_->id(), $_->longname() } openprint::StockFinish::find('order'=>'lower(longname)') ], $param{'Finish-'.$$variable{'type_id'}} );
 				) ?>
 			</select>
 			<input style="display: none;" type="text" id="txtFinish-<?type_id?>" name="txtFinish-<?type_id?>" />
@@ -90,9 +94,9 @@
 				} # end if
 				my @Colours = openprint::StockColour::find('order'=>'lower(shortname)');
 				if ( @Colours == 1 ) {
-					return ssi::make_drop_down( [ map { $_->id(), $_->shortname() } @Colours ], $Colours[0]->id() );
+					return make_drop_down( [ map { $_->id(), $_->shortname() } @Colours ], $Colours[0]->id() );
 				} else {
-					return ssi::make_drop_down( [ map { $_->id(), $_->shortname() } @Colours ], $param{'Colour-'.$$variable{'type_id'}} );
+					return make_drop_down( [ map { $_->id(), $_->shortname() } @Colours ], $param{'Colour-'.$$variable{'type_id'}} );
 				} # end if
 				) ?>
 			</select>
@@ -115,19 +119,18 @@
 				} # end if
 				my @Qualities = openprint::StockQuality->find('order'=>'lower(name)');
 				if ( @Qualities == 1 ) {
-					return ssi::make_drop_down( [ map { $_->id(), $_->name() } @Qualities ], $Qualities[0]->id() );
+					return make_drop_down( [ map { $_->id(), $_->name() } @Qualities ], $Qualities[0]->id() );
 				} else {
-					return ssi::make_drop_down( [ map { $_->id(), $_->name() } @Qualities ], $param{'Quality-'.$$variable{'type_id'}} );
+					return make_drop_down( [ map { $_->id(), $_->name() } @Qualities ], $param{'Quality-'.$$variable{'type_id'}} );
 				} # end if
 			) ?>
 			</select>
 			<input style="display: none;" type="text" id="txtQuality-<?type_id?>" name="txtQuality-<?type_id?>" />
 		</p>
 		<p><label>Type:</label>
-			<input type="radio" id="type-<?type_id?>Sheet" name="type-<?type_id?>" value="Sheet" onclick="$('PaperHeight-<?type_id?>').show();$('MWeight-<?type_id?>').show();" <? echo ( 'checked="checked"' if $param{'type-'.$$variable{'type_id'}} eq 'Sheet'; ) ?> />
-			<label class="radio" for="type-<?type_id?>Sheet">Sheet</label>
-			<input type="radio" id="type-<?type_id?>Roll" name="type-<?type_id?>" value="Roll" onclick="$('PaperHeight-<?type_id?>').hide();$('MWeight-<?type_id?>').hide();" <? echo ( 'checked="checked"' if $param{'type-'.$$variable{'type_id'}} eq 'Roll'; ) ?> />
-			<label class="radio" for="type-<?type_id?>Roll">Roll</label>
+			<? echo ( radio( 'type-'.$$variable{type_id}, [ map { $_, $_ } ( 'Sheet','Roll' ) ], 
+						( $param{'type-'.$$variable{'type_id'}} ? $param{'type-'.$$variable{type_id}} : $$variable{Type}->type() ),
+						{ onclick=>qq`type_onclick(this);` } ); ) ?>
 		</p>
 		<p class="size">
 			<label for="width-<?type_id?>">Size:</label>
@@ -137,6 +140,10 @@
 			<? echo ( input( type=>'float', id=>'height-'.$$variable{type_id}, name=>'height-'.$$variable{type_id}, value=>$param{'height-'.$$variable{type_id}}, onkeyup=>"gsm_to_mweight(this.form,'$$variable{type_id}');" ); ) ?>
 			</span>
 		</p>
+		<? if ( $$variable{Type}->paper_id() ) ?>
+		<p><label>Link to stock</label><a href="/employee/inventory/paper_details.html?paper_id=<? echo ( $$variable{Type}->paper_id() ) ?>"><? echo ( $$variable{Type}->Paper()->to_string() ) ?></a>
+		</p>
+		<? endif ( $$variable{Type}->paper_id() ) ?>
 	</div>
 	<div class="rightColumn">
 		<p>
@@ -162,17 +169,20 @@
 		<p>
 			<label>Docket:</label>
 			<? echo ( input( type=>'cardinal', id=>'docket-'.$$variable{type_id}, name=>'docket-'.$$variable{type_id}, value=>$$variable{Type}->docket() ); ) ?>
-			<? echo ( ssi::button( 'LoadPos'.$$variable{'Type'}->id(), { 
+			<? echo ( button( 'LoadPos'.$$variable{'Type'}->id(), { 
 			'onclick'=>"new Ajax.Updater('PurchaseOrders$$variable{Type}{id}','_manifest_purchase_orders.html', { parameters: { supplier_id: \$('supplier_id').value, Docket: \$('docket-$$variable{Type}{id}').value} } );", 'text'=>'Load POs' } ); ) ?>
 		</p>
 		<div id="PurchaseOrders<? echo ( $$variable{'Type'}->id() ) ?>">
-		<? if ( ! $$variable{'Manifest'}->po_id() ) ?>
-			<!--#include virtual="_manifest_purchase_orders.html"-->
-		<? endif ( ! $$variable{'Manifest'}->po_id() ) ?>
+		<? if ( ! $$variable{Type}->po_id() ) ?>
+			<?include(_manifest_purchase_orders.html)?>
+		<? endif ( ! $$variable{Type}->po_id() ) ?>
 		</div>
 		<p>
 			<label>Purchase Order:</label>
-			<input type="number" id="po_id-<?type_id?>" name="po_id-<?type_id?>" value="<? echo ( $$variable{'Type'}->po_id() ) ?>" onkeyup="integerize(this);" /><? echo ( $$variable{'Type'}->po_id() ? ssi::button( 'GoPO'.$$variable{'Type'}->id(), { 'href'=>'/employee/purchase_order/view.html?po_id='.$$variable{'Type'}->po_id(), 'text'=>'Go' } ) : '' ) ?>
+			<? echo ( join("\n", 
+				input( type=>'cardinal', id=>"po_id-$$variable{type_id}", name=>"po_id-$$variable{type_id}", value=>$$variable{Type}->po_id() ),
+				( $$variable{Type}->po_id() ? button( 'GoPO'.$$variable{Type}->id(), { href=>'/employee/purchase_order/view.html?po_id='.$$variable{Type}->po_id(), 'text'=>'Go' } ) : '' ),
+			); ) ?>
 		</p>
 <div id="PO_<? echo ( $$variable{'Type'}->id() ) ?>">
 		<? echo ( 
@@ -190,11 +200,11 @@
 				} # end if
 			} elsif ( my $POC = $$variable{'Type'}->PurchaseOrder_Content() ) {
 				$html .= 'Guessed: ' . ( $POC->item() ? $POC->item() : $POC->description() );
-				$html .= ' ' . Number::Format::format_number($POC->qty()).$POC->units();
+				$html .= ' ' . ( $POC->qty() ? Number::Format::format_number($POC->qty()) : 0 ).$POC->units();
 				if ( openprint::usergroup::is_user_in( ['Accounting','InventoryManager'], $session{'user_id'} ) ) {
 					$html .= ' @ ' . openprint::Currency::format( $POC->price() );
 				} # end if
-				$html .= ssi::button('confirm'.$$POC{id}, { 'onclick'=>qq`new Ajax.Request('/employee/accounting/_stock.json', { parameters: { action: 'confirm_po_content', manifest_content_type_id: $$variable{'Type'}{id}, po_content_id: $$POC{id} } } );`, 'text'=>'Confirm' } ) . '<br/>';
+				$html .= button('confirm'.$$POC{id}, { 'onclick'=>qq`new Ajax.Request('/employee/accounting/_stock.json', { parameters: { action: 'confirm_po_content', manifest_content_type_id: $$variable{'Type'}{id}, po_content_id: $$POC{id} } } );`, 'text'=>'Confirm' } ) . '<br/>';
 			} else {
 				$html .= 'Select one:<br/>';
 				foreach my $C ( $PO->Contents() ) {
@@ -203,7 +213,7 @@
 					if ( openprint::usergroup::is_user_in( ['Accounting','InventoryManager'], $session{'user_id'} ) ) {
 						$html .= openprint::Currency::format( $POC->price() );
 					} # end if
-					$html .= ssi::button('confirm'.$$C{id}, { 'onclick'=>qq`new Ajax.Request('_manifest_po_content.json', { parameters: { action: 'confirm_po_content', manifest_content_type_id: $$variable{'Type'}{id}, po_content_id: $$C{id} } } );`, 'text'=>'Select' } ) . '<br/>';
+					$html .= button('confirm'.$$C{id}, { 'onclick'=>qq`new Ajax.Request('_manifest_po_content.json', { parameters: { action: 'confirm_po_content', manifest_content_type_id: $$variable{'Type'}{id}, po_content_id: $$C{id} } } );`, 'text'=>'Select' } ) . '<br/>';
 
 				} # end foreach C
 			} # end if
@@ -212,12 +222,18 @@
 		<? if ( openprint::usergroup::is_user_in( ['Accounting','InventoryManager'], $session{'user_id'} ) ) ?>
 		<p>
 			<label>Cost (/CWT):</label>
-			<input type="text" id="cost-<?type_id?>" name="cost-<?type_id?>" value="<? echo ( $$variable{'Type'}->cost() ) ?>" onkeyup="floatize();" />
+			<? echo ( input( type=>'float', id=>'cost-'.$$variable{type_id}, name=>'cost-'.$$variable{type_id}, value=>$$variable{Type}->cost() ); ) ?>
 		</p>
 		<? endif ( openprint::usergroup::is_user_in( ['Accounting','InventoryManager'], $session{'user_id'} ) ) ?>
+		<p><label>Manufacturers Name</label>
+			<? echo ( input( type=>'text', name=>'manufacturers_name-'.$$variable{type_id}, id=>'manufacturers_name-'.$$variable{type_id}, value=>$$variable{Type}->manufacturers_name() ); ) ?>
+		</p>
+		<p><label>Item Count</label>
+			<? echo ( input( type=>'cardinal', name=>'item_count-'.$$variable{type_id}, id=>'item_count-'.$$variable{type_id}, value=>$$variable{Type}->item_count() ); ) ?>
+		</p>
 	</div>
 	<br class="spacer"/>
 	<br class="spacer"/>
-	<div id="ManifestContents<? echo ( $$variable{'Type'}->id() ) ?>"><!--#include virtual="_manifest_contents.html"--></div>
+	<div id="ManifestContents<? echo ( $$variable{'Type'}->id() ) ?>"><?include(_manifest_contents.html)?></div>
 	<br class="spacer"/>
 </fieldset>

@@ -1,10 +1,10 @@
+use strict;
 package openprint::logRecord;
-@ISA = qw( openprint::Object );
+our @ISA = qw( openprint::Object );
 require openprint::Object;
 require openprint::User;
 require openprint::logAction;
 require openprint::Host;
-use strict;
 
 use vars qw( $log $dbh $table $serial %fields %transforms %defaults $debug );
 $debug = 1;
@@ -21,9 +21,12 @@ $serial = 'log_id_seq';
 	'host_id'		=>	'host_id',
 	'note'			=>	'note',
 	'object_id'		=>	'object_id',
+	object_type_id	=>	'object_type_id',
+	object_type		=>	undef,
 );
 %defaults = (
 	'object_id'		=>	undef,
+	'object_type_id'		=>	undef,
 	'user_id'		=>	undef,
 	'company_id'	=>	undef,
 	'host_id'		=>	undef,
@@ -53,6 +56,14 @@ sub find {
 	if ( $params{'object_id'} ) {
 		$sql .= ' AND object_id=?';
 		push @values, $params{'object_id'};
+	} # end if
+	if ( $params{'object_type_id'} ) {
+		$sql .= ' AND object_type_id=?';
+		push @values, $params{'object_type_id'};
+	} # end if
+	if ( $params{'object_type'} ) {
+		$sql .= ' AND object_type_id=(SELECT id FROM object_types WHERE name=?)';
+		push @values, $params{'object_type'};
 	} # end if
 	if ( $params{'user_id'} ) {
 		$sql .= ' AND user_id=?';

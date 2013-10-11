@@ -14,6 +14,7 @@ require sql;
 require openprint::logs;
 require openprint::OrderedProduct;
 require openprint::Payment;
+require openprint::Order_Notification;
 
 $debug = 1;
 %fields = (
@@ -76,8 +77,13 @@ sub find {
 		push @values, $params{'id'};
 	} # end if
 	if ( $params{'docket'} ) {
-		$sql .= ' AND lngdocketnumber=?';
-		push @values, $params{'docket'};
+		if ( ref $params{docket} eq 'ARRAY' ) {
+			$sql .= ' AND lngdocketnumber IN ('.join(',', map {'?'} @{$params{docket}}) . ')';
+			push @values, @{$params{docket}};
+		} else {
+			$sql .= ' AND lngdocketnumber=?';
+			push @values, $params{'docket'};
+		} # end if
 	} # end if
 	if ( $params{'invoice_id'} ) {
 		$sql .= ' AND invoice_id=?';
@@ -419,6 +425,7 @@ sub projects {
 	return map {new openprint::Project( $_ );} sql::execute( undef, undef, q{SELECT lngProjectIndex FROM Order_Contents WHERE OrderIndex=?}, $$self{'id'} );
 } # end sub projects
 sub Projects {
+	return () if ! $_[0]{id};
 	return map {new openprint::Project( $_ );} sql::execute( undef, undef, q{SELECT lngProjectIndex FROM Order_Contents WHERE OrderIndex=?}, $_[0]{'id'} );
 }
 
@@ -501,7 +508,7 @@ sub send_cancellation_notice {
 	# Send to inventory and scheduling people.
 	foreach my $Recipient ( openprint::User::find('usergroups'=>['Inventory','Scheduling']) ) {
 		next if $Recipient->id() == $session{'user_id'};
-		next if $Recipient->notification('Docket Cancellations') eq 'No';
+		next if $Recipient->notification('Docket Cancellations') ne 'Yes';
 		my %mail = (
 				SMTP	=> $config{'Mail Server'},
 				FROM	=> sprintf('"%s" <%s>', $Me->get('name','email') ),
@@ -600,6 +607,53 @@ sub supplier_id {
 sub Supplier {
 	return new openprint::Company( $_[0]->supplier_id() );
 } # end sub Supplier
+
+sub AdditionalChargeNotifications {
+	if ( @_ > 1 ) {
+		delete $_[0]{Notifications};
+	} # end if
+	if ( ! $_[0]{Notifications} ) {
+		$_[0]{Notifications} = [ openprint::Order_Notification->find(order_id=>$_[0]{id}, order=>'user_id') ];
+	} # end if
+	if ( ! @{$_[0]{Notifications}} ) {
+		
+		my %users;
+		if ( $_[0]->email() ) {
+			foreach my $e ( split(',', lc $_[0]->email() ) ) {
+				next if ! $e;
+				next if $users{$e};
+				my $U = openprint::User->find_one(email=>$e);
+				if ( ! $U ) {
+					$U = new openprint::User();
+					$U->save({ email=>$e, company_id=>$_[0]{company_id} });
+				} # end if
+				my $ON = new openprint::Order_Notification();
+				$ON->save({order_id=>$_[0]{id}, user_id=>$$U{id}});
+				push @{$_[0]{Notifications}}, $ON;
+				$users{$$U{email}} = $U;
+			} # end foreach
+		} # end if 
+		my $CSR = $_[0]->CSR();
+		if ( $CSR->id() and ! $users{$CSR->email()} ) {
+			my $ON = new openprint::Order_Notification();
+			$ON->save({order_id=>$_[0]{id}, user_id=>$$CSR{id}});
+			push @{$_[0]{Notifications}}, $ON;
+			$users{$CSR->email()} = $CSR;
+		} # end if
+		$CSR = $_[0]->Company()->CSR();
+		if ( $CSR->id() and ! $users{$CSR->email()} ) {
+			my $ON = new openprint::Order_Notification();
+			$ON->save({order_id=>$_[0]{id}, user_id=>$$CSR{id}});
+			push @{$_[0]{Notifications}}, $ON;
+			$users{$CSR->email()} = $CSR;
+		} # end if
+	} # end if
+	return @{$_[0]{Notifications}};
+} # end sub AdditionalChargeNotifiactions
+
+sub CSR {
+	return new openprint::User( $_[0]{salesrep_id} );
+} # end sub CSR
 
 1;
 __END__

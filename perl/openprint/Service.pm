@@ -7,7 +7,8 @@ require openprint::Object;
 require openprint::pricing;
 require openprint::logs;
 
-my %fields = (
+use vars qw( %fields %transforms %defaults );
+%fields = (
 		'id'				=>	'id',
 		'name'				=>	'name',
 		'description'		=>	'description',
@@ -17,10 +18,10 @@ my %fields = (
 		'taxexempt2'		=>	'taxexempt2',
 		);	
 
-my %transforms = (
+%transforms = (
 		);
 
-my %defaults = (
+%defaults = (
 		'supplier_id'	=>	undef,
 		'category_id'	=>	undef,
 		'taxexempt1'	=>	'N',

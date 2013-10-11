@@ -36,7 +36,7 @@ fieldset p, fieldset li {
 	padding-left: 140px;
 }
 fieldset p label, fieldset li label {
-	width: 140px;
+	width: 135px;
 	margin-left: -140px;
 }
 
@@ -136,7 +136,7 @@ table tr .ip {
 	margin-bottom: 20px;
 }
 table .RFID {
-	width: 140px;
+	width: 105px;
 	text-align: left;
 }
 table .Skid {
@@ -186,7 +186,7 @@ table .form {
 	width: 40px;
 }
 table .quantity {
-	text-align: left;
+	text-align: right;
 	width: 80px;
 }
 table .Equipment {

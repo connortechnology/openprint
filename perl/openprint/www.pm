@@ -6,6 +6,7 @@ package openprint::www;
 
 use Apache2::Request ();	# instead of CGI, it's MUCH faster, and does nice things.
 use Apache2::RequestRec ();
+use Apache2::Connection ();
 use APR::URI ();
 use Apache2::Const -compile => qw(HTTP_INTERNAL_SERVER_ERROR OK DECLINED HTTP_NOT_FOUND HTTP_FORBIDDEN);# Offers OK, Error,etc for web server.
 use Apache2::Log ();
@@ -31,6 +32,7 @@ require configuration;
 
 require openprint::Object;
 require openprint::Currency;
+require openprint::Authorization;
 
 use openprint ();
 use vars qw( $r %variable %session %param %config $log $dbh );
@@ -42,20 +44,40 @@ use vars qw( $r %variable %session %param %config $log $dbh );
 *dbh = \$openprint::dbh;
 *r = \$openprint::r;
 
+sub cleanup {
+    if ( $r->connection->aborted( ) ) {
+$log->debug("Was aborted");
+    } # end if
+    %variable = ();
+    %param = ();
+    if ( $dbh ) {
+        openprint::pricing::clear_cache();
+        openprint::service::init_cache();
+        openprint::Object::init_cache();
+        $session{lastupdated} = time;
+        untie %session;
+if ( ! $dbh->{AutoCommit} ) {
+$log->error("Uncommited transaction");
+} # end if
+        $dbh->disconnect();
+    } else {
+$log->debug("No dbh at cleanup");
+    } # end if
+} # end sub cleanup
+
 sub handler {
 	%variable = ();
 	%param = ();
 
 	my $request = shift;
 	$r = Apache2::Request->new( $request );
-	$r->content_type(q{text/html; charset=utf-8});
-
 
 	# Don't do any caching.  This makes the back button not work.
 	$r->no_cache(1);
 
 	my $starttime = time;
 	$log	= $r->log;
+	$request->push_handlers(PerlCleanupHandler => \&cleanup);
 	my $page = $r->uri();
 	$log->debug( "Beginning of Request: Time (seconds) : $starttime Page: " . $page );
 
@@ -116,7 +138,6 @@ $variable{'uri'} = $page;
     if ( $variable{'ExternalRedirect'} ) {
 		foreach my $key ( 'error', 'warning', 'information' ) {
 			if ( $variable{$key} ) {
-				$log->debug("Sacing session $key $variable{$key}");
 				$session{$key} = $variable{$key};
 			} # end if
 		} # end foreach
@@ -169,11 +190,11 @@ $log->debug("Redirecting to " . $variable{'ExternalRedirect'} );
 		} # end if _
 		if ( $template ) {
 			#$log->debug("parsing template!");
-			$log->debug("starting variable subst of template " . ( time - $starttime ) );
+			#$log->debug("starting variable subst of template " . ( time - $starttime ) );
 			my $h = ssi::variable_substitution( $r, $log, $dbh, \$template, \%variable );
-			$log->debug("starting variable subst of template " . ( time - $starttime ) );
+			#$log->debug("starting variable subst of template " . ( time - $starttime ) );
 			$r->print( $h );
-			$log->debug("ending variable subst of template " . ( time - $starttime ) );
+			#$log->debug("ending variable subst of template " . ( time - $starttime ) );
 		} else {
 			##$log->warn("No template!");
 		$log->warn($variable{'PageContent'});
@@ -183,15 +204,7 @@ $log->debug("Redirecting to " . $variable{'ExternalRedirect'} );
 		} # end if
 	} # end if
 
-	$session{'lastupdated'} = time;
-	untie %session;
-	$dbh->disconnect() if $dbh;
 	$log->debug( "Elapsed seconds: " . ( time - $starttime ) );
-	# Clear all the caches AFTER we send the data to client!  This is really smart.
-	openprint::service::init_cache();
-	openprint::pricing::clear_cache();
-	openprint::Object::init_cache();
-$log->debug("returningprint " . ( time - $starttime ) );
 	return Apache2::Const::OK;
 } # end sub handler
 

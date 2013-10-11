@@ -8,6 +8,9 @@ function selectProjectTemplate( formName ) {
 		add_option( form.ddmProjectSize, 'Custom','Custom' );
 		if ( TemplateType ) {
 			if ( options[TemplateType] ) {
+				if ( options[TemplateType][0].message ) {
+					alert(options[TemplateType][0].message);
+				}
 				for ( var x = 0; x < options[TemplateType].length; x++ ) {
 					var value = options[TemplateType][x].value;
 					var text = options[TemplateType][x].text;

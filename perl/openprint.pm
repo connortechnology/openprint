@@ -51,17 +51,6 @@ sub session_init {
 		$session{'Country'} = $r->param('Country');
 	} # end if
 
-	if ( $r->param('Currency') ) {
-		my @currencies = openprint::Currency::find( 'short' => $r->param('Currency') );
-#$session{'Currency'} = $Currency;
-		$session{'Currency_id'} = ( shift @currencies )->id() if @currencies;
-	} elsif ( $openprint::param{'select_currency_id'} ) {
-		my $Currency = new openprint::Currency( $openprint::param{'select_currency_id'} );;
-		$session{'Currency_id'} = $Currency->id();
-	} elsif ( ! $session{'Currency_id'} ) {
-		my @currencies = openprint::Currency::find( 'short' => $r->dir_config('Currency') );
-		$session{'Currency_id'} = ( shift @currencies )->id() if @currencies;
-	} # end if
 
 	if ( sets::isin( $session{'user_type'}, ['E','A'] ) and ($r->param('btnFunction') eq 'SelectCompany') ) {
 #$openprint::log->debug('Selecting company');
@@ -79,6 +68,18 @@ sub session_init {
 	} else {
 		#$log->debug("Country is " . $session{'Country'} );
 	} # end if
+
+	if ( $r->param('Currency') ) {
+		my @currencies = openprint::Currency::find( 'short' => $r->param('Currency') );
+		$session{'Currency_id'} = ( shift @currencies )->id() if @currencies;
+	} elsif ( $openprint::param{'select_currency_id'} ) {
+		my $Currency = new openprint::Currency( $openprint::param{'select_currency_id'} );;
+		$session{'Currency_id'} = $Currency->id();
+	} elsif ( ! $session{'Currency_id'} ) {
+		my @currencies = openprint::Currency::find( 'short' => $r->dir_config('Currency') );
+		$session{'Currency_id'} = ( shift @currencies )->id() if @currencies;
+	} # end if
+
 	if ( $config{'Pricelist'} ) {
 		if ( ! $session{'Pricelist_id'} ) {
 			my @pricelists = openprint::Pricelist::find( 'name' => $config{'Pricelist'} );
@@ -113,6 +114,7 @@ sub switch_company {
 		$session{'Currency_id'} = (shift @currencies)->id() if @currencies;
 	} # end if
 	my @keys = sets::exclude( [ 'Currency_id', '_session_id','user_id','company_id','user_type','Country' ], [ keys %session ] );
+	sql::update( undef, undef, 'orders', [ 'strsessionid=?', $session{_session_id} ], 'strsessionid', undef );
 	delete @session{@keys};
 } # end sub switch_company
 

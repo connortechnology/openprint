@@ -1,14 +1,14 @@
 <? eval (
 	my $zm_dbh = sql::open_sql( $log,
-		  'database'  => $config{'zm_db_name'},
-		  'driver'    => $config{'zm_db_driver'},
-		  'host'      => $config{'zm_db_hostname'},
-		  'login'     => $config{'zm_db_username'},
-		  'password'  => $config{'zm_db_password'},
+		  database  => $config{'zm_db_name'},
+		  driver    => $config{'zm_db_driver'},
+		  host      => $config{'zm_db_hostname'},
+		  login     => $config{'zm_db_username'},
+		  password  => $config{'zm_db_password'},
 		);
 	return 'Unable to connect to ZM database<br/>' if ! $zm_dbh;
 	require openprint::ZM_Monitor;
-	@{$$variable{'Monitors'}} = openprint::ZM_Monitor->find('dbh'=>$zm_dbh, 'order'=>'Sequence', 'function !=' => 'None' );
+	$$variable{Monitors} = [ openprint::ZM_Monitor->find( dbh=>$zm_dbh, order=>'Sequence', 'function !=' => 'None', enabled=>1 ) ];
 	$zm_dbh->disconnect();
 ) ?>
 <script type="text/javascript">
@@ -33,10 +33,10 @@
 </script>
 <div class="ZM_Monitors">
 <div class="Montage">
-	<fieldset><legend>Streams Viewing</legend>
+	<fieldset><legend onclick="AjaxToggleContent( 'Viewing', '/employee/it/_cameras_viewing.html', null, null );">Streams Viewing</legend>
 		<div id="Viewing"><!--#include virtual="/employee/it/_cameras_viewing.html"--></div>
 	</fieldset>
-	<fieldset><legend>Available Streams</legend>
+	<fieldset><legend onclick="AjaxToggleContent( 'Available', '/employee/it/_cameras_available.html', null, null );">Available Streams</legend>
 		<div id="Available"><!--#include virtual="/employee/it/_cameras_available.html"--></div>
 	</fieldset>
 </div><!--Montage-->

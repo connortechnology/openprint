@@ -4,6 +4,7 @@ use strict;
 
 require openprint::project;
 require openprint::ProjectTypeCategory;
+require openprint::ProjectType_Template;
 require openprint::ProjectType;
 require openprint::Object;
 require sql;
@@ -63,7 +64,7 @@ sub edit {
 			
 # Add record to audit log - action "Import Project Types".
 			openprint::logs::insertLogRecord('49', "(Single Import) Project Type ID: " . $ProjectType->id() . " Project Type: " . $ProjectType->name());
-      	
+			
 			while ( <$io> ) {
 				my $status = $csv->parse($_);
 				my ( $id, $name, $url, $sort ) = misc::trim( $csv->fields() );
@@ -91,11 +92,11 @@ sub edit {
 		} # end if
 
 	} elsif ( $openprint::param{'btnFunction'} eq 'Export' ) {
-	    my @header = ( 'Project ID', 'Project Name', 'URL', 'Sort Order');
-	    my @data = sql::execute( $log, $dbh, 'SELECT strID, strName, strDetailedUrl, lngSort FROM Project_Types ORDER BY lngSort' );
-    	misc::export_csv( $r, $log, $variable, 'projectTypes.csv', \@header, \@data );
+		my @header = ( 'Project ID', 'Project Name', 'URL', 'Sort Order');
+		my @data = sql::execute( $log, $dbh, 'SELECT strID, strName, strDetailedUrl, lngSort FROM Project_Types ORDER BY lngSort' );
+		misc::export_csv( $r, $log, $variable, 'projectTypes.csv', \@header, \@data );
 		# Add record to audit log - action "Export Project Types".
-   	openprint::logs::insertLogRecord('40',);
+		openprint::logs::insertLogRecord('40',);
 	} # end if
 	my @required_services;
 	$$variable{'ProjectType'} = $ProjectType;
@@ -147,7 +148,7 @@ sub defaults_edit {
 				} # end if
 				sql::insert( $log, $dbh, 'tbl_ProjectType_Defaults', 
 						'lngProjectTypeIndex', ( ( $id eq '' or $id eq 'All' ) ? undef : $cache{$id} ),
-						'strFieldName', $name, 'strDefaultValue', $value  );
+						'strFieldName', $name, 'strDefaultValue', $value	);
 			} # end foreach
 			sql::end_transaction( $openprint::dbh, $ac );
 
@@ -178,43 +179,38 @@ sub templates {
 
 	my $status = 'Error: ';
 
-    if ( $param{'btnFunction'} eq 'Save' ) {
+	if ( $param{'btnFunction'} eq 'Save' ) {
 		my $ac = sql::start_transaction( $dbh );
-		foreach my $index ( sql::execute( $log, $dbh, q{SELECT id FROM ProjectTemplate WHERE ProjectType_id=?}, $param{'ddmProjectType'} ) ) {
-			if ( ! $openprint::param{"type$index"} ) {
-				sql::execute( undef, undef, q{DELETE FROM ProjectTemplate WHERE id=?}, $index );
-			} else {
-				sql::update( $log, $dbh, 'ProjectTemplate', ['id=?', $index], 
-					'type',					$param{"type$index"},
-					'description',			$param{"description$index"},
-					'dblFinishedWidth', 	$param{"finishedwidth$index"},
-					'dblFinishedHeight',	$param{"finishedheight$index"},
-					'dblFlatWidth',			$param{"flatwidth$index"},
-					'dblFlatHeight',		$param{"flatheight$index"},
-				);
-
-      		# Add record to audit log - action "Update Project Template".
-         	openprint::logs::insertLogRecord('52', "Project Type ID: " . $param{"type$index"} . " - " . $param{"description$index"},);
-         	
-			} # end if
-		} # end foreach	
+		foreach my $Template ( openprint::ProjectType_Template->find('projecttype_id'=>$param{'ddmProjectType'}) ) {
+			$variable{'error'} .= $Template->save({
+					type				=>	$param{"type$$Template{id}"},
+					description			=>	$param{"description$$Template{id}"},
+					finished_width		=>	$param{"finishedwidth$$Template{id}"},
+					finished_height		=>	$param{"finishedheight$$Template{id}"},
+					flat_width			=>	$param{"flatwidth$$Template{id}"},
+					flat_height			=>	$param{"flatheight$$Template{id}"},
+					message				=>	$param{"message$$Template{id}"},
+				} );
+			# Add record to audit log - action "Update Project Template".
+			openprint::logs::insertLogRecord('52', "Project Type ID: $$Template{type} - $$Template{description}" );
+		} # end foreach Template
 		if ( $param{'typeNew'} ) {
-			sql::insert( $log, $dbh, 'ProjectTemplate',
-				'ProjectType_id',		$param{'ddmProjectType'},
-				'type',					$param{"typeNew"},
-				'description',			$param{"descriptionNew"},
-				'dblFinishedWidth', 	$param{"finishedwidthNew"},
-				'dblFinishedHeight',	$param{"finishedheightNew"},
-				'dblFlatWidth',			$param{"flatwidthNew"},
-				'dblFlatHeight',		$param{"flatheightNew"},
-			);
-
-   		# Add record to audit log - action "New Project Template".
-      	openprint::logs::insertLogRecord('55', "Project Type ID: " . $param{"typeNew"} . " - " . $param{"descriptionNew"},);
+			$variable{'error'} .= new openprint::ProjectType_Template()->save({
+					projecttype_id	=>	$param{ddmProjectType},
+					type			=>	$param{typeNew},
+					description		=>	$param{descriptionNew},
+					finished_width	=>	$param{finishedwidthNew},
+					finished_height	=>	$param{finishedheightNew},
+					flat_width		=>	$param{flatwidthNew},
+					flat_height		=>	$param{flatheightNew},
+					message			=>	$param{messageNew},
+				} );
+			# Add record to audit log - action "New Project Template".
+			openprint::logs::insertLogRecord('55', "Project Type ID: $param{typeNew} - $param{descriptionNew}",);
 		} # end if
 		sql::end_transaction( $dbh, $ac );
-    } elsif ( $param{'btnFunction'} eq 'Import Templates' ) {
-        if ( $param{'fileImport'} ) {
+	} elsif ( $param{'btnFunction'} eq 'Import Templates' ) {
+		if ( $param{'fileImport'} ) {
 			my $ac = sql::start_transaction( $dbh );
 			my %project_types = map { $_->strid(), $_->id() } openprint::ProjectType::find();
 
@@ -229,9 +225,9 @@ sub templates {
 			my $csv = Text::CSV_XS->new();
 
 			while ( <$io> ) {
-                my $status = $csv->parse($_);
-                my ( $projecttype_id, $id, $name, $desc, $fwidth, $fheight, $width, $height );
-                my @data = misc::trim( $csv->fields() );
+				my $status = $csv->parse($_);
+				my ( $projecttype_id, $id, $name, $desc, $fwidth, $fheight, $width, $height );
+				my @data = misc::trim( $csv->fields() );
 				if ( @data == 7 ) {
 					( $id, $name, $desc, $fwidth, $fheight, $width, $height ) = @data;
 				} elsif ( @data == 6 ) {
@@ -260,14 +256,14 @@ sub templates {
 						'dblFlatWidth',			$width * 1,
 						'dblFlatHeight',		$height * 1,
 						);
-                if ( ($_) = sql::insert( $log, $dbh, 'ProjectTemplate', @params ) ) {
+				if ( ($_) = sql::insert( $log, $dbh, 'ProjectTemplate', @params ) ) {
 					$variable{'error'} .= "Line Entry: $_<br/><br/>";
 				} # end if
-            } # for each
+			} # for each
 			sql::end_transaction( $dbh, $ac );
 			
-        } else {
-            $log->warn( "No file given to upload." );
+		} else {
+			$log->warn( "No file given to upload." );
 		} # end if
 	} elsif ( $param{'btnFunction'} eq 'Export Templates' ) {
 		if ( $param{'ddmProjectType'} ) {
@@ -287,6 +283,21 @@ sub templates {
 		openprint::logs::insertLogRecord('54',);
 	} # end if
 } # end sub templates
+
+sub _templates {
+} # end sub _templates
+
+sub _template_line {
+	$variable{'Template'} = new openprint::ProjectType_Template( $param{'template_id'} );
+	if ( $param{'action'} eq 'X' ) {
+		if ( ! ( $variable{'error'} .= $variable{'Template'}->delete() ) ) {
+			delete $variable{'Template'};
+		} # end if
+	} elsif ( $param{'action'} eq 'C' ) {
+		$variable{'Template'} = $variable{'Template'}->copy();
+		$variable{'error'} .= $variable{'Template'}->save();
+	} # end if
+} # end sub _template_line
 
 1;
 __END__

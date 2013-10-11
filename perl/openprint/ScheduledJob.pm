@@ -120,7 +120,11 @@ sub find {
 		push @values, $params{'servicetype'};
 	} # end if
 	if ( $params{'project_id'} ) {
-		if ( substr($params{'project_id'},0,1) == '!' ) {
+		if ( ref $params{project_id} eq 'ARRAY' ) {
+			$sql .= ' AND projectindex IN ('. join(',', map {'?'} @{$params{project_id}} ) . ')';
+			push @values, @{$params{project_id}};
+		
+		} elsif ( substr($params{'project_id'},0,1) == '!' ) {
 			$sql .= ' AND projectindex != ?';
 			push @values, substr $params{'project_id'}, 1, length $params{'project_id'};
 		} else {
@@ -446,6 +450,11 @@ sub get_li {
 			if ( $month ) { $html .= '&nbsp;'.substr( Date::Calc::Month_to_Text( $month ),0, 3); } # end if
 				$html .= qq` $day</span>`;
 		} # end if
+		if ( sets::isin( $$self{'servicetype_id'}, \@printing_service_type_ids ) ) {
+			my @presses = sort( sets::union( map { $_->equipment_id() ? $_->Equipment()->strid() : () } find( project_id=>$$self{project_id}, servicetype_id=>\@printing_service_type_ids, 'starttime_null' => 0 ) ) );
+			$html .= '<span class="Presses">'.join(' + ', @presses ).'</span>' if @presses > 1;
+		} # end if
+
 	} # end if
 
 	if ( openprint::usergroup::is_user_in( ['Scheduling'], $session{'user_id'} ) ) {

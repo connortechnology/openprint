@@ -1,0 +1,183 @@
+use strict;
+package openprint::Log;
+our @ISA = qw( openprint::Object );
+require openprint::Object;
+require openprint::User;
+require openprint::logAction;
+require openprint::Host;
+
+use vars qw( $log $dbh $table $serial %fields %transforms %defaults $debug );
+$debug = 1;
+$table = 'log';
+$serial = 'log_id_seq';
+%fields = (
+	'id'	=>	'id',
+	'ip_address'	=>	'ip_address',
+	'hostname'		=>	'hostname',
+	'user_id'		=>	'user_id',
+	'company_id'	=>	'company_id',
+	'date_time'		=>	'date_time',	
+	'action_type'	=>	'action_type',
+	action			=>	undef,
+	'host_id'		=>	'host_id',
+	'note'			=>	'note',
+	'object_id'		=>	'object_id',
+	object_type_id	=>	'object_type_id',
+	object_type		=>	undef,
+);
+%defaults = (
+	'object_id'		=>	undef,
+	'object_type_id'		=>	undef,
+	'user_id'		=>	undef,
+	'company_id'	=>	undef,
+	'host_id'		=>	undef,
+	'date_time'		=>	'NOW()',
+);
+
+
+sub find {
+	shift @_ if $_[0] eq 'openprint::Log';
+	shift @_ if ref $_[0] eq 'openprint::Log';
+	my %params = @_;
+	my @values;
+	my $sql = 'SELECT ';
+	$sql .= 'DISTINCT ' if $params{'distinct'};
+	delete $params{'distinct'};
+	$sql .= '* FROM log WHERE 1>0';
+
+	if ( $params{'id'} ) {
+        if ( ref $params{'id'} eq 'ARRAY' ) {
+            $sql .= q{ AND id IN (}.join(',', map {'?'} @{$params{'id'}} ).')';
+            push @values, @{$params{'id'}};
+        } else {
+            $sql .= q{ AND id=?};
+            push @values, $params{'id'};
+        } # end if
+	} # end if
+	if ( $params{'object_id'} ) {
+		$sql .= ' AND object_id=?';
+		push @values, $params{'object_id'};
+	} # end if
+	if ( $params{'object_type_id'} ) {
+		$sql .= ' AND object_type_id=?';
+		push @values, $params{'object_type_id'};
+	} # end if
+	if ( $params{'object_type'} ) {
+		$sql .= ' AND object_type_id=(SELECT id FROM object_types WHERE name=?)';
+		push @values, $params{'object_type'};
+	} # end if
+	if ( $params{'user_id'} ) {
+		$sql .= ' AND user_id=?';
+		push @values, $params{'user_id'};
+	} # end if
+	if ( $params{'company_id'} ) {
+		$sql .= ' AND company_id=?';
+		push @values, $params{'company_id'};
+	} # end if
+	if ( $params{'action_type'} ) {
+        if ( ref $params{'action_type'} eq 'ARRAY' ) {
+            $sql .= q{ AND action_type IN (}.join(',', map {'?'} @{$params{'action_type'}} ).')';
+            push @values, @{$params{'action_type'}};
+        } else {
+            $sql .= q{ AND action_type=?};
+            push @values, $params{'action_type'};
+        } # end if
+	} # end if
+	if ( $params{'action_type in'} ) {
+		$sql .= q{ AND action_type IN (}.join(',', map {'?'} @{$params{'action_type in'}} ).')';
+		push @values, @{$params{'action_type in'}};
+	} # end if
+
+	if ( exists $params{'date_time >='} ) {
+		$sql .= " AND $fields{date_time} >= ?";
+		push @values, $params{'date_time >='};
+		delete $params{'date_time >='};
+	} # end if
+	if ( exists $params{'date_time <='} ) {
+		$sql .= " AND $fields{date_time} <= ?";
+		push @values, $params{'date_time <='};
+		delete $params{'date_time <='};
+	} # end if
+	
+	if ( exists $params{'ip_address'} ) {
+        if ( ref $params{'ip_address'} eq 'ARRAY' ) {
+            $sql .= q{ AND ip_address IN (}.join(',', map {'?'} @{$params{'ip_address'}} ).')';
+            push @values, @{$params{'ip_address'}};
+        } else {
+			$sql .= ' AND ip_address=?';
+			push @values, $params{'ip_address'};
+        } # end if
+	} # end if
+	if ( $params{'when_start'} and $params{'when_end'} ) {
+		$sql .= q{ AND (date_time BETWEEN ? AND ?)};
+		push @values, @params{'when_start','when_end'};
+	} elsif ( $params{'when_start'} ) {
+		$sql .= q{ AND (date_time >= ?)};
+		push @values, $params{'when_start'};
+	} elsif ( $params{'when_end'} ) {
+		$sql .= q{ AND (date_time <= ?)};
+		push @values, $params{'when_end'};
+	} # end if
+
+	$sql .= " ORDER BY $params{'order'}" if $params{'order'};
+	$sql .= " LIMIT $params{'limit'}" if $params{'limit'};
+	my $data = $openprint::dbh->selectall_arrayref( $sql, {Slice=>{}}, @values );
+	if ( ! $data ) {
+		$openprint::log->error("Error loading logRecord: ($sql) (@values)");
+		return;
+	} elsif ( $debug ) {
+		$openprint::log->debug("Loading logRecord: ($sql) (@values) (".@$data.')');
+	} # end if
+	return map { new openprint::Log( $_->{id}, $_ ); } @$data;
+} # end sub find
+
+sub User {
+return new openprint::User( $_[0]{user_id} );	
+} # end sub User
+
+sub Company {
+	my $self = shift;
+	return new openprint::Company( $$self{company_id} );	
+} # end sub Company
+
+sub Action {
+	return new openprint::logAction( $_[0]{action_type} );	
+} # end sub Action
+
+sub action {
+    if ( @_ > 1 ) {
+        my $Action = openprint::logAction->find_one( name=>$_[1] );
+        if ( $_[1] and ! $Action ) {
+            $Action = new openprint::logAction();
+            $Action->save({ name=>$_[1], description=>$_[1]});
+        } # end if
+        $_[0]{'Action'} = $Action;
+        $_[0]{'action_type'} = $Action->id();
+        return $Action->name();
+    } # end if
+    return $_[0]->Action()->name();
+} # end sub action
+
+sub hostname {
+	my ( $self, $new ) = @_;
+	if ( @_ > 1 ) {
+		$self->Host()->save({'hostname'=>$new});
+	} # end if
+	return $self->Host()->hostname();
+} # end sub hostname
+
+sub Host {
+	if ( ! $_[0]{'host_id'} ) {
+		my $Host = openprint::Host->find_one('ip'=>$_[0]{'ip_address'});
+		if ( ! $Host ) {
+			$Host = new openprint::Host();
+			$Host->save({'ip'=>$_[0]{'ip_address'}});
+		} # endif	
+		$_[0]->save({'host_id'=>$Host->id()});
+	} # end if
+		
+	return new openprint::Host( $_[0]{'host_id'} );
+} # end sub Host
+
+1;
+__END__

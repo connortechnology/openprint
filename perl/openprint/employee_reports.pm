@@ -613,5 +613,15 @@ sub _customer_performance {
 } # end sub _customer_performance
 sub prepress_productivity {
 } # end sub prepress_productivity
+
+sub project_log {
+	_project_log();
+} # end sub project_log
+sub _project_log {
+	ssi::save_params('/employee/reports/project_log.html',
+			( map { 'created_on_start_'.$_ } ( 'year','month','day' ) ),
+			'company_id','user_id',
+			);
+} # end sub _project_log
 1;
 __END__

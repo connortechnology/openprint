@@ -1,3 +1,11 @@
 #width, #height,#calliper, #gsm, #mweight, #Quantity, #Kg, #weight {
 	width: 75px;
 }
+
+table .Cost {
+	width: 85px;
+}
+table .Value {
+	width: 75px;
+	text-align: right;
+}

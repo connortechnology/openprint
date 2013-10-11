@@ -2,10 +2,10 @@
 	$$variable{'Project'} = new openprint::Project( $$variable{'ProjectIndex'} ) if ! $$variable{'Project'};
 ) ?>
 <div class="ProjectHeader">
-	<fieldset id="ProjectInformation"><legend>Project Information</legend>
+	<fieldset class="ProjectInformation"><legend>Project Information</legend>
 		<p>
 			<label>Project #:</label>
-	  		<?ProjectIndex?>
+	  		<? echo ( $$variable{Project}->id() ) ?>
 		</p>
 	  	<? if ( $$variable{'Project'}->docket() ) ?>
 		<p>
@@ -34,19 +34,15 @@
 	  	<? endif ( $$variable{'Project'}->docket() ) ?>
    		<p>
 			<label>Status:</label>
-			<? if ( $$variable{'ProjectStatus'} eq 'Waiting For Customer Approval' ) ?>
-			<span style="color: red;"><?ProjectStatus?></span>
-			<? else ( $$variable{'ProjectStatus'} eq 'Waiting For Customer Approval' ) ?>
-			<?ProjectStatus?>
-			<? endif ( $$variable{'ProjectStatus'} eq 'Waiting For Customer Approval' ) ?>
+			<span class="<? echo ( $_ = $$variable{Project}->status(); $_  =~ s/ //g; return $_; ) ?>"><? echo ( $$variable{Project}->status() ) ?></span>
 		</p>
 	  	<p> 
 			<label>Creation Date:</label>
-	  		<?CreationDate?>
+	  		<? echo ( format_datetime( $$variable{'Project'}->created_on() ); ) ?>
 		</p>
 	  	<p> 
 			<label>Last Updated:</label>
-	  		<? echo ( Date::Format::time2str( $config{'DateTimeFormat'}, Date::Parse::str2time( $$variable{'Project'}->updated_on() ) ); ) ?>
+	  		<? echo ( format_datetime( $$variable{'Project'}->updated_on() ); ) ?>
 		</p>
 		<? if ( $$variable{'DocketNumber'} ) ?>
 		<? if ( $$variable{'Project'}->shippingtype() ) ?>
@@ -90,32 +86,20 @@
 		<p><label>Reprint Reason:</label><? echo ( $$variable{'Project'}->reprint_reason() ) ?></p>
 		<? endif ( $$variable{'Project'}->reprint() ) ?>
 	</fieldset>
-	<fieldset id="ContactInformation"><legend>Contact Information</legend>
-		<p>
-			<label>Company:</label>
-			<?CompanyName?>
-		</p>
-		<p>
-			<label>Name:</label>
-			<?CreatedByName?>
-		</p>
-		<p>
-			<label>Phone:</label>
-			<?CreatedByPhone?>
-		</p>
-		<p>
-			<label>Email:</label>
-			<a href="mailto:<?CreatedByEmail?>"><?CreatedByEmail?></a>
-		</p>
-		<? if ( $$variable{'CSRName'} ) ?>
+	<fieldset class="ContactInformation"><legend>Contact Information</legend>
+		<p><label>Company:</label><? echo ( $$variable{'Project'}->Company()->name() ) ?></p>
+		<p><label>Name:</label><? echo ( $$variable{'Project'}->User()->name() ) ?></p>
+		<p><label>Phone:</label><? echo ( $$variable{'Project'}->User()->phone() ) ?></p>
+		<p><label>Email:</label><a href="mailto:<? echo ( $$variable{'Project'}->User()->email() ) ?>"><? echo ( $$variable{'Project'}->User()->email() ) ?></a></p>
+		<? if ( $$variable{'Project'}->Company()->salesrep_id() ) ?>
 		<p>
 			<label>Customer Service Rep:</label>
-			<a href="mailto:<?CSREmail?>"><?CSRName?></a>
+			<a href="mailto:<? echo ( $$variable{'Project'}->Company()->CSR()->email() ) ?>"><? echo ( $$variable{'Project'}->Company()->CSR()->name() ) ?></a>
 		</p>
-		<? endif ( $$variable{'CSRName'} ) ?>
+		<? endif ( $$variable{'Project'}->Company()->salesrep_id() ) ?>
 	</fieldset>
 	<br class="spacer"/>
-	<fieldset id="Reference">
+	<fieldset class="Reference">
 	   <legend>Reference:</legend>
 		<? hecho ( $$variable{'Project'}->reference(); ) ?>
 		<? if ( $$variable{'Project'}->comments() ) ?>
@@ -125,7 +109,7 @@
 		</p>
 		<? endif ( $$variable{'Project'}->comments() ) ?>
 	</fieldset>
-	<fieldset id="Description">
+	<fieldset class="Description">
 	   <legend>Description:</legend>
 		<? echo ( 
 			return $$variable{'Project'}->summary();

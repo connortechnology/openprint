@@ -8,3 +8,7 @@
 tr.unauthorized {
 	background-color: yellow;
 }
+
+table .Manifest {
+	text-align: left;
+}

@@ -48,3 +48,21 @@ table .action_type, table .note {
 table .type {
 	text-align: left;
 }
+
+table .hostname, table .comment {
+	text-align: left;
+}
+table .ip, table .mac {
+	width: 100px;
+	text-align: left;
+}
+table .assigned_on, table .expires_on {
+	width: 100px;
+	text-align: left;
+}
+table .serialkey, table .software {
+	text-align: left;
+}
+table .hosts {
+	text-align: left;
+}

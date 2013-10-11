@@ -9,6 +9,7 @@ CREATE TABLE Manifest_Content_Types (
 	paper_id	INTEGER, 	FOREIGN KEY (paper_Id) REFERENCES Papers (id),
 	supplier_invoice	TEXT,
 	docket		INTEGER,
+	item_count	INTEGER,
 	PRIMARY KEY (id)
 );
 

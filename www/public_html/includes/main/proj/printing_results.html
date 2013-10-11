@@ -187,7 +187,7 @@
 					$printingtypes{$printing_type} = $printing_type_name;
 				}
 				
-				ssi::make_drop_down( [ map { $_, $printingtypes{$_} } sort keys %printingtypes ], $$variable{'PrintingType'} );
+				ssi::make_drop_down( [ ('','select' ), map { $_, $printingtypes{$_} } sort keys %printingtypes ], $$variable{'PrintingType'.$$variable{QTYIndex}} );
             ) ?>
         </select>
         <input type="checkbox" id="chkOverridePrintingType<?QTYIndex?>" name="chkOverridePrintingType<?QTYIndex?>" value="Y" <? echo ( 'checked="checked"' if $$variable{"chkOverridePrintingType$$variable{'QTYIndex'}"} eq 'Y'; ) ?> onclick="if (this.checked == false) calc('f1');" />
@@ -317,7 +317,7 @@ value="Y" onclick="if ( ! this.checked ) { calc(this.form.name);}" />
 <? endif ( $$variable{'ProjectTypeID'} eq 'PresentationFolders' ) ?>
 
 <? if ( $$variable{'txtSignatureType'} ) ?>
-<p>
+<p class="Pages">
 	<label>Page Quantity:</label>
 <? eval ( $$variable{'QTYIndex'} = 1 ) ?>
 <? while ( $$variable{'QTYIndex'} <= 3 ) ?>
@@ -334,21 +334,21 @@ value="Y" onclick="if ( ! this.checked ) { calc(this.form.name);}" />
 <? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
 </p>
 <? endif ( $$variable{'txtSignatureType'} ) ?>
-<p>
+<p class="Imposition">
     <label><? echo ( ssi::writeTip('Imposition'); ) ?>:</label>
 <? eval ( $$variable{'QTYIndex'} = 1 ) ?>
 <? while ( $$variable{'QTYIndex'} <= 3 ) ?>
 <? if ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
 	<span class="<?Columns?>Columns">
-        <input type="text" name="txtImposition<?QTYIndex?>" value="<? echo ( $$variable{'txtImposition'.$$variable{'QTYIndex'}} ) ?>" size="3" onkeyup="calc(this.form.name);" /> Out
+        <input type="number" name="txtImposition<?QTYIndex?>" value="<? echo ( $$variable{'txtImposition'.$$variable{'QTYIndex'}} ) ?>" size="3" onkeyup="calc(this.form.name);" /> Out
         <input type="checkbox" id="chkOverrideImposition<?QTYIndex?>" name="chkOverrideImposition<?QTYIndex?>" value="Y" onclick="if(!this.checked) calc(this.form.name);" <? echo ( 'checked="checked"' if $$variable{'chkOverrideImposition'.$$variable{'QTYIndex'}} eq 'Y' ) ?>
 />
 		<label class="radio" for="chkOverrideImposition<?QTYIndex?>">Override</label><br/>
-        <input type="text" size="2" readonly="readonly" name="hdnImpositionColumns<?QTYIndex?>" /> x <input type="text" readonly="readonly" size="2" name="hdnImpositionRows<?QTYIndex?>" /> + 
-        <input type="text" size="2" readonly="readonly" name="hdnImpositionDutchColumns<?QTYIndex?>" /> x <input type="text" readonly="readonly" size="2" name="hdnImpositionDutchRows<?QTYIndex?>" /> dutch
+        <input type="number" readonly="readonly" name="hdnImpositionColumns<?QTYIndex?>" /> x <input type="number" readonly="readonly" name="hdnImpositionRows<?QTYIndex?>" /> + 
+        <input type="number" readonly="readonly" name="hdnImpositionDutchColumns<?QTYIndex?>" /> x <input type="number" readonly="readonly" name="hdnImpositionDutchRows<?QTYIndex?>" /> dutch
         <br/>
-        <input type="text" name="txtLayoutWidth<?QTYIndex?>" readonly="readonly" size="9" onkeyup="calc('f1');" />
-        <input type="text" name="txtLayoutHeight<?QTYIndex?>" readonly="readonly" size="9" onkeyup="calc('f1');" />
+        <input type="text" name="txtLayoutWidth<?QTYIndex?>" readonly="readonly" onkeyup="calc('f1');" />
+        <input type="text" name="txtLayoutHeight<?QTYIndex?>" readonly="readonly" onkeyup="calc('f1');" />
         (W x H)
 	</span>
 <input type="hidden" name="SpreadRows<?QTYIndex?>" value="<? echo ( $$variable{'SpreadRows'.$$variable{'QTYIndex'}} ) ?>" />

@@ -1,6 +1,5 @@
-<script type="text/javascript" src="/javascripts/barcode.js"></script>
+<script type="text/javascript" src="<?hash_link(/javascripts/barcode.js)?>"></script>
 <script type="text/javascript">
-<!--
 	function check_inputs(form ) {
 		if ( form.btnFunction && form.btnFunction.value=='Allocate' ) {
 			if ( form.available_quantity && parseInt(form.Quantity.value) > parseInt(form.available_quantity.value) ) {
@@ -80,7 +79,6 @@ function calc_from_gsm( form ) {
 	form.elements['mweight'].value = parseInt((gsm/703064.5)*(width*height)*10000)/10;
 	form.elements['basis_weight'].value = parseInt((gsm/703064.5)*(basis_width*basis_height)*10000)/10;
 }
--->
 </script>
 
 <!--#include virtual="/includes/error_reporting.html"-->
@@ -98,7 +96,7 @@ function calc_from_gsm( form ) {
 				<select id="Manufacturer" name="Manufacturer" size="1">
 					<option value="">select</option>
 				<? echo (
-						return ssi::make_drop_down( [ map { $_->id(), $_->shortname() } openprint::Manufacturer::find('order'=>'lower(shortname)') ], $$variable{'Paper'}->manufacturer_id() );
+						return ssi::make_drop_down( [ map { $_->id(), $_->longname() } openprint::Manufacturer::find('order'=>'lower(shortname)') ], $$variable{'Paper'}->manufacturer_id() );
 						) ?>
 				</select>
 				<input style="display: none;" type="text" id="txtManufacturer" name="txtManufacturer" />
@@ -172,7 +170,7 @@ function calc_from_gsm( form ) {
 			</p>
 			<p>
 				<label>Basis Weight:</label>
-				<input type="text" id="basis_weight" name="basis_weight" value="<? echo ( $$variable{'Paper'}->basis_weight(); ) ?>" size="6" onkeyup="calc_from_basis_weight(this.form);" style="width: auto;" />
+				<input type="text" id="basis_weight" name="basis_weight" value="<? echo ( $$variable{'Paper'}->basis_mweight(); ) ?>" size="6" onkeyup="calc_from_basis_weight(this.form);" style="width: auto;" />
 			</p>
 			<p>
 				<label>Basis Size:</label>
@@ -190,6 +188,10 @@ function calc_from_gsm( form ) {
 			<p>
 				<label>FSC Code:</label>
 				<input type="text" id="fsc_code" name="fsc_code" value="<? echo ( $$variable{'Paper'}->fsc_code(); ) ?>" size="13"	/>
+			</p>
+			<p>
+				<label>Manufacturers Name:</label>
+				<input type="text" id="manufacturers_name" name="manufacturers_name" value="<? echo ( $$variable{'Paper'}->manufacturers_name(); ) ?>" />
 			</p>
 			<p>
 				<label for="Owner">Owner:</label>
@@ -271,15 +273,16 @@ function calc_from_gsm( form ) {
 	</fieldset>
  <? if ( $$variable{Paper}->id() ) ?>
  <? eval ( @{$$variable{Duplicates}} = openprint::Paper::find(
-		'owner_id'				=>$$variable{Paper}->owner_id(),
-		'manufacturer_id'		=>$$variable{Paper}->manufacturer_id(),
-		'name_id'				=>$$variable{Paper}->name_id(),
-		'finish_id'				=>$$variable{Paper}->finish_id(),
-		'colour_id'				=>$$variable{Paper}->colour_id(),
-		'weight_id'				=>$$variable{Paper}->weight_id(),
-		'width'					=>$$variable{Paper}->width(),
-		'height'				=>$$variable{Paper}->height(),
-		'fsc_code'				=>$$variable{Paper}->fsc_code(),
+		'owner_id'				=>	$$variable{Paper}->owner_id(),
+		'manufacturer_id'		=>	$$variable{Paper}->manufacturer_id(),
+		'name_id'				=>	$$variable{Paper}->name_id(),
+		'finish_id'				=>	$$variable{Paper}->finish_id(),
+		'colour_id'				=>	$$variable{Paper}->colour_id(),
+		'weight_id'				=>	$$variable{Paper}->weight_id(),
+		'width'					=>	$$variable{Paper}->width(),
+		'height'				=>	$$variable{Paper}->height(),
+		'fsc_code'				=>	$$variable{Paper}->fsc_code(),
+			type				=>	$$variable{Paper}->type(),
 		);
 		) ?>
 		<? if ( @{$$variable{Duplicates}} > 1 ) ?>

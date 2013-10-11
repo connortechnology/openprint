@@ -195,7 +195,7 @@ sub view {
 					});
 			delete $param{'po_id'};
 			delete $param{'btnFunction'};
-			$variable{'Redirect'} = '/employee/purchase_order/history.html';
+			$variable{'ExternalRedirect'} = '/employee/purchase_order/history.html';
 		} # end if
 	} elsif ( $param{'btnFunction'} eq 'Cancel' ) {
 		$variable{'error'} .= $PO->save({'cancelled'=>1});
@@ -208,7 +208,7 @@ sub view {
 					});
 			delete $param{'po_id'};
 			delete $param{'btnFunction'};
-			$variable{'Redirect'} = '/employee/purchase_order/history.html';
+			$variable{'ExternalRedirect'} = '/employee/purchase_order/history.html';
 		} # end if
 	} elsif ( $param{'btnFunction'} eq 'UnCancel' ) {
 		$variable{'error'} .= $PO->save({'cancelled'=>0});
@@ -221,7 +221,7 @@ sub view {
 					});
 			delete $param{'po_id'};
 			delete $param{'btnFunction'};
-			$variable{'Redirect'} = '/employee/purchase_order/history.html';
+			$variable{'ExternalRedirect'} = '/employee/purchase_order/history.html';
 		} # end if
 	} elsif ( $param{'btnFunction'} eq 'Undelete' ) {
 		$variable{'error'} .= $PO->undelete();
@@ -234,11 +234,38 @@ sub view {
 					});
 			delete $param{'po_id'};
 			delete $param{'btnFunction'};
-			$variable{'Redirect'} = '/employee/purchase_order/history.html';
+			$variable{'ExternalRedirect'} = '/employee/purchase_order/history.html';
 		} # end if
+	} elsif ( $param{'btnFunction'} eq 'Authorize' ) {
+		if ( $PO->can_authorize() ) {
+			if ( $_ = $PO->authorize() ) {
+				$variable{error} .= $_ . '<br/>';
+			} else {
+				$variable{information} .= 'PO ' . $$PO{id} . ' has been authorized.<br/>';
+			} # end if
+		} else {
+			$variable{error} .= 'You are not authorized to approve PO ' . $PO->id() . '<br/>';
+		} # end if
+		$variable{'ExternalRedirect'} = '/employee/purchase_order/history.html' if ! $variable{error};
+    } elsif ( $param{'btnFunction'} eq 'AuthorizeAndSend' ) {
+		if ( $PO->can_authorize() ) {
+			if ( $_ = $PO->authorize() ) {
+				$variable{error} .= $_ . '<br/>';
+			} else {
+				$variable{information} .= 'PO ' . $$PO{id} . ' has been authorized.<br/>';
+				$variable{error} .= $PO->send_to_vendor();
+			} # end if
+		} else {
+			$variable{error} .= 'You are not authorized to approve PO ' . $PO->id() . '<br/>';
+		} # end if
+		$variable{'ExternalRedirect'} = '/employee/purchase_order/history.html' if ! $variable{error};
 	} elsif ( $param{'btnFunction'} eq 'Send' ) {
 	} elsif ( $param{'btnFunction'} eq 'Email Vendor' ) {
 		$variable{'error'} = $PO->send_to_vendor();
+		$variable{'ExternalRedirect'} = '/employee/purchase_order/history.html' if ! $variable{error};
+	} elsif ( $param{'btnFunction'} eq 'Email Me' ) {
+		$variable{'error'} = $PO->send_to_me();
+		$variable{'ExternalRedirect'} = '/employee/purchase_order/history.html' if ! $variable{error};
 	} elsif ( $param{'btnFunction'} eq 'Received' ) {
 	} elsif ( $param{'btnFunction'} eq 'Copy' ) {
 		my $New = $PO->copy();
@@ -272,14 +299,26 @@ sub view {
 						'authorized_by'	=> $session{user_id},
 						});
 			} else {
-				$variable{information} .= $PO->send_approval_required_notification();
-				if ( ! $variable{information} ) {
-					$variable{warning} .= 'This PO needs approval but no one could be found to do it.';
-				} else {
-					$variable{information} =~ s/Sent/send/g;
-					$variable{information} = 'Approval request ' . $variable{information};
-				} # end if
+				$variable{error} .= $PO->save({
+						'authorized'	=> 0,
+						'authorized_on'	=> undef,
+						'authorized_by'	=> undef,
+						});
 			} # end if 
+		} # end if
+	} elsif ( $param{'btnFunction'} eq 'AuthRequest' ) {
+		$variable{information} .= $PO->send_approval_required_notification();
+		if ( ! $variable{information} ) {
+			$variable{warning} .= 'This PO needs approval but no one could be found to do it.';
+		} else {
+			$variable{information} =~ s/Sent/send/g;
+			$variable{information} = 'Approval request ' . $variable{information};
+			my $L = new openprint::PurchaseOrder_Log();
+			$L->save({
+					'user_id'	=>	$session{user_id},
+					'po_id'		=>	$PO->id(),
+					'reason'	=>	$variable{information}
+					});
 		} # end if
 	} elsif ( $param{'btnFunction'} eq 'Attach' ) {
 		my $Asset = new openprint::Asset();
@@ -411,13 +450,6 @@ $log->debug("Creating PO $$PO{id} from label $variable{error}");
 					$param{authorized_by} = $session{user_id},
 				} # end if
 			} else {
-				$variable{information} .= $PO->send_approval_required_notification();
-				if ( ! $variable{information} ) {
-					$variable{warning} .= 'This PO needs approval but no one could be found to do it.';
-				} else {
-					$variable{information} =~ s/Sent/send/g;
-					$variable{information} = 'Approval request ' . $variable{information};
-				} # end if
 			} # end if wasn't already authorized
 		} # end if
 
@@ -433,13 +465,14 @@ $log->debug("Creating PO $$PO{id} from label $variable{error}");
 				'reason'	=>	$param{reason},
 				});
 		} # end if
+		my @companies = ( $PO->company_id(), $PO->supplier_id() );
 		my @notifications = $PO->notifications(); # returns user_ids
 		my @new_notifications = @notifications;
 		if ( $PO->is_FSC() or $PO->is_PEFC() ) {
-			@new_notifications = sets::union( @new_notifications, map { $_->user_id() } openprint::User_Notification->find('type'=>'PSC/PEFC Notifications','value'=>'Yes' ) );
+			@new_notifications = sets::union( @new_notifications, map { $PO->can_view( $_->User() ) ? $_->user_id() : () } openprint::User_Notification->find( type=>'FSC/PEFC Notifications', value=>'Yes', company_id=>\@companies ) );
 		} # end if
 		foreach my $type ( keys %types ) {
-			@new_notifications = sets::union( @new_notifications, map { $_->user_id() } openprint::User_Notification->find('type'=>'PO ' . $type . ' Notifications','value'=>'Yes' ) );
+			@new_notifications = sets::union( @new_notifications, map { $PO->can_view( $_->User() ) ? $_->user_id() : () } openprint::User_Notification->find( type=>'PO ' . $type . ' Notifications', value=>'Yes', company_id=>\@companies ) );
 		} # end foreach
 		if ( scalar @notifications != scalar @new_notifications ) {
 			$PO->notifications(\@new_notifications);
@@ -562,6 +595,23 @@ sub history {
 			} # end if
 		} # end foreach po_id
 		delete $param{'po_id'};
+    } elsif ( $param{'btnFunction'} eq 'AuthorizeAndSend' ) {
+        foreach my $po_id ( ref $param{po_id} eq 'ARRAY' ? @{$param{po_id}} : $param{po_id} ) {
+            my $PO = new openprint::PurchaseOrder( $po_id );
+            next if ! $PO->id();
+            if ( $PO->can_authorize() ) {
+                if ( $_ = $PO->authorize() ) {
+                    $variable{error} .= $_ . '<br/>';
+                } else {
+                    $variable{information} .= 'PO ' . $po_id . ' has been authorized.<br/>';
+					$variable{error} .= $PO->send_to_vendor();
+                } # end if
+            } else {
+                $variable{error} .= 'You are authorized to approve PO ' . $PO->id() . '<br/>';
+            } # end if
+        } # end foreach po_id
+        delete $param{'po_id'};
+
 	} elsif ( $param{'btnFunction'} eq 'Decline' ) {
 		foreach my $po_id ( ref $param{'po_id'} eq 'ARRAY' ? @{$param{'po_id'}} : split(',',$param{'po_id'}) ) {
 			my $PO = new openprint::PurchaseOrder( $po_id );
@@ -572,14 +622,6 @@ sub history {
 			} # end if
 		} # end foreach po_id
 		delete $param{'po_id'};
-	} elsif ( $param{'btnFunction'} eq 'Email Vendor' ) {
-		my $PO = new openprint::PurchaseOrder( $param{'po_id'} );
-		$variable{'error'} .= $PO->send_to_vendor();
-		delete $param{'po_id'};
-	} elsif ( $param{'btnFunction'} eq 'Email Me' ) {
-		my $PO = new openprint::PurchaseOrder( $param{'po_id'} );
-		$variable{'error'} = $PO->send_to_me();
-		delete $param{'po_id'};
 	} # end if
 	_history();
 	ssi::setup_date_select( '/employee/purchase_order/history.html', 'starting_start', -7 );
@@ -589,7 +631,10 @@ sub history {
 } # end sub history
 
 sub _history {
-	ssi::save_params( '/employee/purchase_order/history.html', ( 'starting_start_year','starting_start_month','starting_start_day','starting_end_year','starting_end_month','starting_end_day','authorized', 'supplier_id','created_by','deleted','types', 'item_id', 'cancelled', 'vendor_category_id', 'department_id' ) );
+	ssi::save_params( '/employee/purchase_order/history.html', ( 
+				( map { 'starting_start_'.$_ } ( 'year', 'month','day' ) ),
+				( map { 'starting_end_'.$_ } ( 'year', 'month','day' ) ),
+				'authorized', 'supplier_id','created_by','deleted','types', 'item_id', 'cancelled', 'vendor_category_id', 'department_id', 'docket' ) );
 } # end sub _purchase_orders
 
 sub _po_autocomplete {

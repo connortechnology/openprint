@@ -55,12 +55,14 @@ sub union {
 sub contains {
 	my ( $setA, $setB ) = @_;
 
-	foreach ( @{$setB} ) {
-		if ( ! isin( $_, @{$setA} ) ) {
-			return 0;
+	my @contains;
+
+	foreach ( @{$setA} ) {
+		if ( isin( $_, $setB ) ) {
+			push @contains, $_;
 		} # end if
 	} # end foreach
-	return 1;
+	return @contains;
 } # end sub contains
 
 sub intersection {

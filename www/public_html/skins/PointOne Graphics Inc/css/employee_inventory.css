@@ -18,33 +18,24 @@ table .inventory {
 	text-align: left;
 	width: 200px;
 }
-table .condition {
+table .Condition {
 	text-align: left;
 	width: 100px;
 }
-table.List .buttons {
+table .buttons {
 	width: 60px;
 }
 table .mweight, table .gsm {
 	text-align: right;
 	width: 50px;
 }
-table .on_order, table .allocated, table .in_stock, table .Quantity, table .qty_lbs, table .qty_kgs, table .qty_feet {
+table .on_order, table .allocated, table .in_stock, table .Quantity, table .qty_lbs, table .qty_kgs, table .qty_feet, table .qty_sheets {
 	text-align: right;
-	width: 90px;
+	width: 75px;
 	padding-right: 5px;
 }
 table .Location {
 	text-align: left;
-}
-table .Condition {
-	text-align: left;
-}
-
-#SkidResults table .RFID,
-#Allocations table .RFID,
-#CurrentInventory table .RFID {
-	width: 95px;
 }
 
 input#quantity {
@@ -59,6 +50,7 @@ table .RFIDScanner {
 }
 #Allocate fieldset p {
 	padding: 0;
+	width: auto;
 }
 #Allocate fieldset li {
 padding-left: 100px;
@@ -82,10 +74,21 @@ padding-left: 100px;
 	vertical-align: middle;
 }
 
-.qty_feet input, .qty_lbs input, .qty_kgs input, .Docket input, .Skid input {
+.qty_feet input, .qty_lbs input, .qty_kgs input, .Docket input, .Skid input, .qty_sheets input {
 	width: 100%;
 }
 
 fieldset p.size input[type="number"] {
 	width: 75px;
+}
+table .ManufacturersID {
+	width: 130px;
+	text-align: left;
+}
+
+#manifests_within_days, #manifests_within_lbs {
+	width: 40px;
+}
+#location_log_form select {
+	width: auto;
 }

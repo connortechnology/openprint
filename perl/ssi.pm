@@ -44,7 +44,7 @@ sub do_new_substitution {
 			} # end while
 			return $replacement_text . variable_substitution( $r, $log, $dbh, \$end, $variable );
 		} else {
-			$log->debug("Unable to find terminating while ($$command)");
+			$log->error("Unable to find terminating while ($$command)");
 			return variable_substitution( $r, $log, $dbh, $text, $variable );
 		} # end if
 	} elsif ( $$command =~ /^if\s*\(\s*(.*)\s*\)/ ) {
@@ -69,7 +69,7 @@ sub do_new_substitution {
 			} # end if
 			return $replacement_text . variable_substitution( $r, $log, $dbh, \$end, $variable );
 		} else {
-			$log->debug("Unable to find terminating if ( $$command )");
+			$log->error("Unable to find terminating if ( $$command )");
 			return variable_substitution( $r, $log, $dbh, $text, $variable );
 		} # end if
 	} elsif ( $$command =~ /pop\s*\((.*)\)\s*=\s*([\%\w]*)/i ) {
@@ -100,6 +100,8 @@ sub do_new_substitution {
 		$result = htmlize($result);
 		$result .= variable_substitution( $r, $log, $dbh, $text, $variable ) if $text;
 		return $result;
+	} elsif ( $$command =~ /^include\s*\(\s*'?(.*?)'?\s*\)/ms ) {
+		return include( $1, $variable ).variable_substitution( $r, $log, $dbh, $text, $variable );;
 	} else {
 		my $replacement = $$variable{$$command};
 #my $replacement = variable_substitution( $r, $log, $dbh, $$variable{$command}, $variable );
@@ -118,12 +120,13 @@ sub include {
 		$path =~ s/(.*\/).*/$1/;
 		$file = $path . $file;
 	} # end if
-
 	my $content = '';
 	if ( -f $config{SkinPath}.$file ) {
 		$content = misc::load_file( $log, $config{SkinPath}.$file );
-	} elsif ( -f $ENV{DOCUMENT_ROOT}.$file ) {
+	} elsif ( $ENV{DOCUMENT_ROOT} and -f $ENV{DOCUMENT_ROOT}.$file ) {
 		$content = misc::load_file( $log, $ENV{DOCUMENT_ROOT}.$file );
+	} elsif ( $config{DOCUMENT_ROOT} and -f $config{DOCUMENT_ROOT}.$file ) {
+		$content = misc::load_file( $log, $config{DOCUMENT_ROOT}.$file );
 	} else {
 		$content = misc::load_file( $log, $file );
 	} # end if
@@ -563,8 +566,6 @@ $log->debug("$year-$month-$day");
 	if ( $$options{'fields'} ) {
 		@fields = split(',', $$options{'fields'} );
 	} 
-	
-	
 
 	my $html = '';
 	$html .= sprintf('<span id="%1$s_date">', $prefix );
@@ -750,7 +751,7 @@ sub date_filter {
 		#foreach my $k ( keys %$hash ) {
 			#$log->debug("ssi::date_filter hash{$k} => $$hash{$k}");
 		#} # end foreach
-	if ( ! ( $$hash{$field.'_year'} or $$hash{$field.'_month'} or $$hash{$field.'_day'} ) ) {
+	if ( ! ( $$hash{$field.'_year'} and $$hash{$field.'_month'} and $$hash{$field.'_day'} ) ) {
 #$log->debug("ssi::date_filter: No date specified for $field");
 		return ();
 	} # end if
@@ -868,12 +869,14 @@ sub hash_link {
         $ext =~ s/^\.//;
         my $blob = read_file($src);
 
-        if ( $ext eq 'js' ) {
-			require JavaScript::Minifier::XS;
-            $blob = &JavaScript::Minifier::XS::minify( $blob );
-        } elsif ( $ext eq 'css' ) {
-			require CSS::Minifier;
-            $blob = &CSS::Minifier::minify( input=>$blob );
+		if ( ! $config{debug} ) {
+			if ( $ext eq 'js' ) {
+				require JavaScript::Minifier::XS;
+				$blob = &JavaScript::Minifier::XS::minify( $blob );
+			} elsif ( $ext eq 'css' ) {
+				require CSS::Minifier;
+				$blob = &CSS::Minifier::minify( input=>$blob );
+			} # end if
         } # end if
 
         my $hash = md5_hex($blob);

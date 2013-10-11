@@ -26,17 +26,18 @@ $openprint::log->debug("openprint::pricing::get_pricelist_id returning cached Pr
 
 	my $list_id;
 
-	if ( $openprint::session{'company_id'} > 0 ) {
-		my $Company = new openprint::Company( $openprint::session{'company_id'} );
+	if ( $openprint::session{company_id} > 0 ) {
+		my $Company = new openprint::Company( $openprint::session{company_id} );
 		$list_id = $Company->pricelist_id();
 		if ( (! $list_id ) and $Company->country() ) {
 			$list_id = $openprint::config{'Default'.$Company->country().'Pricelist'};
 		} # end if
-	} elsif ( $openprint::session{'Country'} ) {
+	} # end if
+	if ( ( ! $list_id ) and $openprint::session{'Country'} ) {
 		$list_id = $openprint::config{'Default'.$openprint::session{'Country'}.'Pricelist'};
-	} elsif ( $openprint::session{'Country'} ) {
-		$list_id = $openprint::config{'Default'.$openprint::session{'Country'}.'Pricelist'};
-	} else {
+	}  # end if
+	$list_id = $openprint::config{'DefaultPricelist'} if ! $list_id;
+	if ( ! $list_id ) {
 		$openprint::log->debug("No pricelist to be had! Country: $openprint::session{'Country'}" );
 	} # end if
 	$openprint::session{'Pricelist_id'} = $list_id;

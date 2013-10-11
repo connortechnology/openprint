@@ -1,7 +1,12 @@
 <? echo (
 	$$variable{'Skid'} = new openprint::Skid( $param{'skid_id'} ) if ! $$variable{'Skid'};
 	my $html;
-	foreach my $paper_id ( sql::execute( $log, $dbh, q{SELECT DISTINCT paper_id FROM Paper_Inventory WHERE skid_id=?}, $$variable{'Skid'}->id() ) ) {
+	my %PIs;
+	foreach my $PI ( openprint::PaperInventory->find( skid_id=>$$variable{Skid}->id(), order=>'updated_on' ) ) {
+		push @{$PIs{$$PI{paper_id}}}, $PI;
+	} # end foreach PI
+
+	foreach my $paper_id ( sort keys %PIs ) {
 		my $Paper = new openprint::Paper( $paper_id );
 		$html .= sprintf('<b><a href="/employee/inventory/paper_details.html?paper_id=%1$d">%2$s</a></b>', $Paper->id(), $Paper->to_string() );
 		$html .= q{
@@ -15,12 +20,12 @@
 		</tr>
 		};
 		my $rowclass;
-		foreach my $PI ( openprint::PaperInventory::find('skid_id'=>$$variable{'Skid'}->id(), 'paper_id'=>$paper_id, 'order'=>'updated_on' ) ) {
+		foreach my $PI ( @{$PIs{$paper_id}} ) {
 			$html .= "<tr$rowclass>";
 			$html .= sprintf( '<td class="DateTime">%s</td>', Date::Format::time2str($config{'DateTimeFormat'}, Date::Parse::str2time($PI->updated_on) ) );
 			$html .= sprintf( '<td class="User">%s</td>', $PI->User()->name() );
-			$html .= sprintf( '<td class="Quantity">%s</td>', Number::Format::format_number($PI->delta()).$PI->Paper()->units() );
-			$html .= sprintf( '<td class="Quantity">%s</td>', Number::Format::format_number($PI->instock()).$PI->Paper()->units() );
+			$html .= sprintf( '<td class="Quantity">%s</td>', ($PI->delta() ? Number::Format::format_number($PI->delta()) : 0).$Paper->units() );
+			$html .= sprintf( '<td class="Quantity">%s</td>', ($PI->instock() ? Number::Format::format_number($PI->instock()) : 0 ).$Paper->units() );
 			$html .= sprintf( '<td class="Comment">%s</td>', $PI->comment_html(), );
 			$html .= '</tr>';
 			$rowclass = $rowclass ? '' : ' class="colRow"';

@@ -54,7 +54,7 @@ sub save_service {
 # Adds completed/edited services, and then displays the status of the project
 sub view_services {
 	my ( $r, $log, $dbh, $variable ) = @_;
-	my $project_index = $openprint::param{'ProjectIndex'};
+	my $project_index = $openprint::param{project_id} ? $openprint::param{project_id} : $openprint::param{'ProjectIndex'};
 
 	# I put these here because the don't need a project index
 	if ( defined $openprint::param{'btnFunction'} and ( $openprint::param{'btnFunction'} eq 'Save Project' ) ) {
@@ -189,6 +189,10 @@ sub view_services {
 				my $PS = $Project->Service( $s_id );
 				next if ! $PS->service_id();
 				my $ServiceType = $PS->ServiceType();
+				if ( sets::isin( $ServiceType->name(), ['Proofs'] ) ) {
+					$$variable{error} .= 'Proofs cannot be removed from the project.<br/>';
+					next;
+				} # end if
 				my $specs = $PS->specs();
 				$Project->add_to_log( @openprint::session{'company_id','user_id'}, $ServiceType->name().' ' . $$specs{'ServiceName'}.' service deleted.' );
 				openprint::print_project::delete_service( $log, $dbh, $project_index, $s_id );

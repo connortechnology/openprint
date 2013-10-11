@@ -71,16 +71,18 @@ sub view {
 	} # end if
 
 	my $Project = $variable{Project} = new openprint::Project( $project_index );
-	if ( ! $$Project{id} ) {
+	if ( $project_index and ! $$Project{id} ) {
+		$variable{Order} = new openprint::Order();
 		$variable{error} .= "Project $project_index not found.<br/>";
 		return;
 	} # end if
-	my $order_id = $param{'OrderID'};
+	my $order_id = $param{OrderID};
 	$order_id = $Project->order_id() if ! $order_id;
 	if ( $project_index and ( ! $order_id ) and $param{'Docket'} ) {
 		( $order_id ) = sql::execute( $log, $dbh, q{SELECT Index FROM Orders WHERE Index IN ( SELECT DISTINCT OrderIndex FROM Order_Contents WHERE lngProjectIndex=? ) AND lngDocketNumber=?}, $project_index, $param{'Docket'} );
 	} # end if
-	$variable{'OrderID'} = $order_id;
+	$variable{OrderID} = $order_id;
+	$variable{Order} = new openprint::Order( $order_id );
 
 	if ( $param{'action'} eq 'Change Status' ) {
 		foreach my $service_id ( split(',', $param{service_id} ) ) {
@@ -456,9 +458,16 @@ sub view {
 
 			sql::end_transaction( $dbh, $ac );
 			} # end if
+		} else {
+			$variable{error} .= 'Additional Charge must have either a type or description.<br/>';
 		} # end if NewServiceType or txtServiceName
 #openprint::service::auto_calculate( $r, $log, $dbh, \%variable, $project_index );
 ## needs approval
+		if ( $Project->docket() ) {
+		$variable{ExternalRedirect} = '/employee/project/view.html?docket='.$Project->docket();
+		} else {
+		$variable{ExternalRedirect} = '/employee/project/view.html?ProjectIndex='.$Project->id();
+		} # end if
 #        # email CSR
 	} elsif ( $param{'btnFunction'} eq 'AdditionalChargeNotify' ) {
 		send_additional_charges_notifications( @param{'OrderID','ProjectIndex'} );
@@ -484,21 +493,20 @@ sub view {
 		$Project->update_status();
 		openprint::order::update_order_status( $r, $log, $dbh, $order_id );
 	} # end if
-
-	if ( $project_index ) {
-		openprint::project::view( $log, $dbh, \%variable, $project_index );
-	} # end if
-
 } # end sub view_project
 
 sub send_additional_charges_notifications {
-	my ( $order_id, $project_index ) = @_;
+	my ( $order_id, $project_index, $message, @Notifications ) = @_;
 # Email CSR
 	my %info;
 	$info{'ProjectIndex'} = $project_index;
 	$info{'OrderID'} = $order_id;
+	$info{Message} = $message;
 
 	my $Order = new openprint::Order( $order_id );
+	@Notifications = $Order->AdditionalChargeNotifications() if ! @Notifications;
+	return 'No one to notify.' if ! @Notifications;
+
 	my $CSR = new openprint::User( $Order->salesrep_id() );
 	my $Operator = new openprint::User( $session{'user_id'} );
 
@@ -512,35 +520,21 @@ sub send_additional_charges_notifications {
 
 	my $email_template = misc::load_file( $log, $config{'SkinPath'} . '/email_template.html' );
 
-#$info{'ReplacementText'} = "<!--#include virtual=\"/email_content/additional_charges_csr_notification.html\"-->";
-#$_ = encode_qp( ssi::variable_substitution( $r, $log, $dbh, $email_template, \%info ) );
-#my @body = ('', $_, 'text/html', 'quoted-printable');
-#my %mail = (
-#SMTP    => $config{'Mail Server'},
-#FROM    => sprintf( '"%s %s" <%s>', @info{'EmployeeFirstName','EmployeeLastName','EmployeeEmail'}),
-#'Return-receipt-to'    => sprintf( '"%s %s" <%s>', @info{'EmployeeFirstName','EmployeeLastName','EmployeeEmail'}),
-#'Disposition-Notification-To' => sprintf( '"%s %s" <%s>', @info{'EmployeeFirstName','EmployeeLastName','EmployeeEmail'}),
-##TO      => 'iconnor@point-one.com, rick@point-one.com',
-#TO      => 'iconnor@point-one.com',
-#SUBJECT => "Additional Charges required for project $project_index",
-#);
-#misc::send_email_with_attachment( $log, \%mail, @body );
-
-	$info{'ReplacementText'} = "<!--#include virtual=\"/email_content/additional_charges_client_notification.html\"-->";
+	$info{'ReplacementText'} = ssi::include('/email_content/additional_charges_client_notification.html', \%info );
 	$_ = encode_qp( Encode::encode('utf-8', ssi::variable_substitution( $r, $log, $dbh, \$email_template, \%info ) ) );
 	my @body = ('', $_, 'text/html', 'quoted-printable');
 	my $results = (new openprint::Email())->send(
 			FROM    => $Operator,
 			'Return-receipt-to' => sprintf( '"%s %s" <%s>', $Operator->get('firstname','lastname','email') ),
 			'Disposition-Notification-To' => sprintf( '"%s %s" <%s>', $Operator->get('firstname','lastname','email') ),
-			CC      => sprintf( '"%s %s" <%s>', @info{'CSRFirstName','CSRLastName','CSREmail'}),
-			TO      => join(',', sprintf( "%s %s <%s>", @info{'CustomerFirstName','CustomerLastName','CustomerEmail'}), $param{'AdditionalEmailRecipients'}),
+			#CC      => sprintf( '"%s %s" <%s>', @info{'CSRFirstName','CSRLastName','CSREmail'}),
+			TO      => [ map { $_->User() } @Notifications ],
 			#TO		=>	'"Isaac Connor" <iconnor@point-one.com>',
 			SUBJECT => 'Additional Charges required',
 			ATTACHMENTS =>	\@body,
 			);
 	$Project->add_to_log( @session{'company_id','user_id'}, "Additional charges notification: $results" );
-
+	return $results;
 } # End sub send_additional_charges_notifications
 
 sub upload_pdfs {
@@ -701,7 +695,8 @@ sub send_proofs_approved_email {
 	my $Email = new openprint::Email();
 
 	my $CSR = new openprint::User( $Order->salesrep_id() );
-	my @Users = map { $_->User() } openprint::User_Notification->find('type'=>'Proofs Approval Notifications','value'=>'Yes' );
+	my @Users = map { $_->User() } openprint::User_Notification->find( type=>'Proofs Approval Notifications', value=>'Yes',
+			company_id=>[$Project->company_id(), $User->company_id(), ( $CSR->id() ? $CSR->company_id() : () ) ] );
 	push @Users, $CSR if ! sets::isin( $CSR->id(), [ map { $_->id() } @Users ] );
 
 	foreach my $User ( @Users ) {
@@ -733,13 +728,13 @@ sub send_duedate_change_notification {
 	@info{'EmployeeFirstName','EmployeeLastName','EmployeeEmail','EmployeeExtension'} = ( $User->firstname(), $User->lastname(), $User->email(), $User->extension() );
 	my $CSR = new openprint::User( $Order->salesrep_id() );
 	if ( $CSR->email() ) {
-		my $email_template = misc::load_file( $log, $config{'SkinPath'} . '/email_template.html' );
-		$info{'ReplacementText'} = "<!--#include virtual=\"/email_content/proofs_duedate_change-sales_rep.html\"-->";
+		my $email_template = misc::load_file( $log, $config{SkinPath} . '/email_template.html' );
+		$info{'ReplacementText'} = ssi::include( '/email_content/proofs_duedate_change-sales_rep.html', \%info );
 		$_ = encode_qp( Encode::encode('utf-8', ssi::variable_substitution( $r, $log, $dbh, \$email_template, \%info ) ) );
 		my @body = ('', $_, 'text/html', 'quoted-printable');
 		my %mail = (
 				SMTP    => $config{'Mail Server'},
-				FROM    => sprintf( "%s %s <%s>", @info{'EmployeeFirstName','EmployeeLastName','EmployeeEmail'}),
+				FROM    => sprintf( '"%s %s" <%s>', @info{'EmployeeFirstName','EmployeeLastName','EmployeeEmail'}),
 #TO      => 'iconnor@point-one.com',
 				TO      => sprintf( '"%s %s" <%s>', $CSR->firstname(), $CSR->lastname(), $CSR->email() ),
 				SUBJECT => "Docket $info{'DocketNumber'} DueDate Changed",
@@ -782,49 +777,38 @@ sub summary {
 
 sub _stock_checkout {
 	my $Project;
-	if ( $param{'project_id'} ) {
-		$Project = new openprint::Project( $param{'project_id'} );
-	} elsif ( $param{'docket'} ) {
-		my @Projects = openprint::Project::find('docket'=>$param{'docket'});
-		if ( ! @Projects ) {
-			$variable{'error'} .= 'Invalid docket.<br/>';
-			return;
-		} # end if
-		$Project = $Projects[0];
+	if ( $param{project_id} ) {
+		$Project = new openprint::Project( $param{project_id} );
+	} else {
+		$log->error("NO Project in _stock_checkout");
 	} # end if
-	$variable{'Project'} = $Project;
+	$variable{Project} = $Project;
 
-	if ( $param{'action'} eq 'Add' ) {
-		$param{'skid_id'} =~ s/\D//g;
-		$param{'rfidtag_id'} =~ s/[^a-zA-Z0-9]//g;
+	if ( $param{action} eq 'Add' ) {
+		$param{skid_id} =~ s/\D//g;
+		$param{rfidtag_id} = openprint::RFIDTag->transform( 'id', $param{rfidtag_id} );
 		my $Skid;
 		if ( $param{'skid_id'} ) {
-			$Skid = new openprint::Skid( $param{'skid_id'} );
-		} elsif ( $param{'rfidtag_id'} ) {
-			my $RFIDTag = new openprint::RFIDTag( $param{'rfidtag_id'} );
-			if ( ! $RFIDTag->id() ) {
-				my @Tags = openprint::RFIDTag->find( 'id_like'=>'%'.$param{'rfidtag_id'} );
-				if ( @Tags == 1 ) {
-					$RFIDTag = $Tags[0];
-				} # end if
-			} # end if
-			if ( ! $RFIDTag->id() ) {
+			$Skid = new openprint::Skid( $param{skid_id} );
+		} elsif ( $param{rfidtag_id} ) {
+			my $RFIDTag = openprint::RFIDTag::from_id( $param{rfidtag_id} );
+			if ( ! $RFIDTag ) {
 				$variable{'error'} .= 'RFID Tag ' .  $param{'rfidtag_id'} . ' is not in the system.<br/>';
 			} else {
 				$Skid = $RFIDTag->Skid();
 			} # end if
 		} else {
-			$variable{'error'} .='Please scan the barcode on the skid label or rfid tag.<br/>';
+			$variable{error} .='Please scan the barcode on the skid label or rfid tag.<br/>';
 		} # end if
 		if ( ! ( $Skid and $Skid->id() ) ) {
-			$variable{'error'} .= 'Unknown skid scanned.<br/>';
+			$variable{error} .= 'Unknown skid scanned.<br/>';
 			return;
 		} # end if
 
 		my $add_entry = 1;
 
 		if ( $Skid->is_empty() ) {
-			my @PI = openprint::PaperInventory::find('skid_id'=>$Skid->id(), 'comment_like'=>'Checked out%','order'=>'updated_on desc');
+			my @PI = openprint::PaperInventory->find( skid_id=>$Skid->id(), 'comment_like'=>'Checked out%', order=>'updated_on desc');
 			if ( @PI ) {
 				$variable{'error'} .= sprintf( '%1$s %2$d has already been checked out', ($PI[0]->Paper()->type() eq 'Roll' ? 'Roll' : 'Skid'), $Skid->id() );
 				if ( $PI[0]->docket() ) {
@@ -853,13 +837,14 @@ sub _stock_checkout {
 				foreach my $C ( $Skid->Contents() ) {
 					my $PI = new openprint::PaperInventory();
 					$PI->save({
-							'docket'	=>	$param{'docket'},
-							'paper_id'	=>	$C->paper_id(),
-							'user_id'	=>	$session{'user_id'},
-							'delta'		=>	-1*$C->quantity(),
-							'comment'	=>	sprintf('Checked out for docket <a href="/employee/project/view.html?ProjectIndex=%1$d">%2$d</a> by %3$s', $Project->id(), $Project->docket(), new openprint::User( $session{'user_id'} )->name() ),
-							'skid_id'	=>	$Skid->id(),
-							'units'		=>	$C->units(),
+							project_id	=>	$$Project{id},
+							docket		=>	$Project->docket(),
+							paper_id	=>	$C->paper_id(),
+							user_id		=>	$session{'user_id'},
+							delta		=>	-1*$C->quantity(),
+							comment		=>	sprintf('Checked out for docket <a href="/employee/project/view.html?ProjectIndex=%1$d">%2$d</a> by %3$s', $Project->id(), $Project->docket(), new openprint::User( $session{'user_id'} )->name() ),
+							skid_id		=>	$Skid->id(),
+							units		=>	$C->units(),
 							});
 					$C->quantity( 0 );
 					$C->save();
@@ -870,18 +855,21 @@ sub _stock_checkout {
 							$PA->delete();
 						} # end if
 					} # end foreach
+					$Project->add_to_log( @session{'company_id','user_id'}, "Checked out " . $C->quantity() . $C->units() . ' of ' . $C->Paper->to_string() );
 				} # end foreach C
 			} else {
 				my $PI = new openprint::PaperInventory();
 				$PI->save({
-						'docket'	=>	$Project->docket(),
-						'paper_id'	=>	undef,,
-						'user_id'	=>	$session{'user_id'},
-						'delta'		=>	0,
-						'comment'	=>	sprintf('Checked out for docket <a href="/employee/project/view.html?ProjectIndex=%1$d">%2$d</a> by %3$s', $Project->id(), $Project->docket(), new openprint::User( $session{'user_id'} )->name() ),
-						'skid_id'	=>	$Skid->id(),
-						'units'		=>	undef,
+						project_id	=>	$$Project{id},
+						docket		=>	$Project->docket(),
+						paper_id	=>	undef,,
+						user_id		=>	$session{'user_id'},
+						delta		=>	0,
+						comment		=>	sprintf('Checked out for docket <a href="/employee/project/view.html?ProjectIndex=%1$d">%2$d</a> by %3$s', $Project->id(), $Project->docket(), new openprint::User( $session{'user_id'} )->name() ),
+						skid_id		=>	$Skid->id(),
+						units		=>	undef,
 						});
+				$Project->add_to_log( @session{'company_id','user_id'}, "Checked out something unknown." );
 			} # end if skid has contents
 		} # end if add_entry
 	} # end if
@@ -1002,6 +990,40 @@ sub _production_log {
 
 sub _dearchive {
 } # end sub _dearchive
+
+sub _additional_charge_notifications {
+	require openprint::Order_Notification;
+
+	$variable{formname} = $param{formname};
+	my $Project = $variable{Project} = new openprint::Project( $param{project_id} );
+	return if ( ! $Project->id() );
+	my $Order = $variable{Order} = $Project->Order();
+	return if ! $Order->id();
+
+	my %Notifications = map { $_->email(), $_ } $Order->AdditionalChargeNotifications();
+
+	if ( $param{AdditionalEmailRecipients} ) {
+		foreach my $email ( split(',',lc $param{AdditionalEmailRecipients}) ) {
+			if ( ! $Notifications{$email} ) {
+				my $U = openprint::User->find_one(email=>$email);
+				if ( ! $U ) {
+					$U = new openprint::User();
+					$U->save({ email=>$email, company_id=>$Project->company_id() } );	
+				} # end if
+				my $ON = new openprint::Order_Notification();
+				$ON->save({order_id=>$$Project{order_id}, user_id=>$$U{id}});
+				$Order->AdditionalChargeNotifications( undef );
+			} # end if
+		} # end foreach email
+	} # end if Additional
+
+	if ( $param{action} eq 'Send' ) {
+		my @Notifications = openprint::Order_Notification->find(order_id=>$$Project{order_id}, ( $param{notify_user_id} ? ( user_id => $param{notify_user_id} ) : () ) );
+		$_ = send_additional_charges_notifications( @$Project{'order_id','id'}, $param{additionalchargecomments}, @Notifications );
+$log->debug('back');
+		$variable{'information'} = 'Additional Charges Email sent.' . $_;
+	} # end if action 
+} # end sub _additional_charge_notifications 
 
 1;
 __END__

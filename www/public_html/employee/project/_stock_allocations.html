@@ -1,7 +1,10 @@
 <table class="List">
-	<tr><th align="left">Stock</th><th align="left" width="80">Skid</th><th align="left" width="120">RFIDTAG</th>
-	<th align="left" width="120">Location</th>
-	<th align="right" width="80">Quantity</th>
+	<tr>
+		<th class="Stock">Stock</th>
+		<th class="Skid">Skid</th>
+		<th class="RFID">RFIDTAG</th>
+		<th class="Location">Location</th>
+		<th class="quantity">Quantity</th>
 	</tr>
 	<? echo (
 		require openprint::PaperAllocation;
@@ -9,7 +12,7 @@
 		my %Allocations;
 		my $rowclass;
 
-		foreach my $Allocation ( openprint::PaperAllocation->find('project_id'=>$$variable{'Project'}->id(), 'order'=>'created_on' ) ) {
+		foreach my $Allocation ( openprint::PaperAllocation->find( project_id=>$$variable{Project}->id(), order=>'created_on' ) ) {
 			push @{$Allocations{$Allocation->paper_id()}}, $Allocation;
 		} # end foreach Allocation
 
@@ -23,40 +26,40 @@
 			} # end foreach
 
 			if ( @{$Allocations{$paper_id}} == 1 ) {
-				$html .= sprintf('<tr%1$s><td><a href="/employee/inventory/paper_details.html?paper_id=%3$d">%4$s</a></td>', $rowclass, 
+				$html .= sprintf('<tr%1$s><td class="Stock"><a href="/employee/inventory/paper_details.html?paper_id=%3$d">%4$s</a></td>', $rowclass, 
 					1+($param{'allocation_details_'.$paper_id} ? scalar  @{$Allocations{$paper_id}} : 0 ), 
 					$Paper->id(), $Paper->to_string() );
 				my $Allocation = $Allocations{$paper_id}[0];
-				$html .= '<td>'.join('<br/>', map { sprintf('<a href="/employee/inventory/skid_details.html?skid_id=%1$d">%1$d</a>', $_->id() ); } $Allocation->Skids() ).'</td>';
-				$html .= '<td>'.join('<br/>', map { sprintf('<a href="/employee/inventory/rfidtag_details.html?rfidtag_id=%1$s">%1$s</a>', $_->rfidtag_id() ); } $Allocation->Skids() ).'</td>';
-				$html .= '<td>'.join('<br/>', map { $_->Location()->name() } $Allocation->Skids() ).'</td>';
-				$html .= sprintf('<td align="right">%1$s%2$s</td></tr>', Number::Format::format_number($Allocation->quantity()), $Allocation->units() );
+				$html .= '<td class="Skid">'.join('<br/>', map { sprintf('<a href="/employee/inventory/skid_details.html?skid_id=%1$d">%1$d</a>', $_->id() ); } $Allocation->Skids() ).'</td>';
+				$html .= '<td class="RFID">'.join('<br/>', map { sprintf('<a href="/employee/inventory/rfidtag_details.html?rfidtag_id=%1$s">%2$s</a>', $_->rfidtag_id(), $_->RFIDTag()->id_short() ); } $Allocation->Skids() ).'</td>';
+				$html .= '<td class="Location">'.join('<br/>', map { $_->Location()->name() } $Allocation->Skids() ).'</td>';
+				$html .= sprintf('<td class="quantity">%1$s%2$s</td></tr>', Number::Format::format_number($Allocation->quantity()), $Allocation->units() );
 			} else {
 				$html .= sprintf('<tr%1$s><td rowspan="%2$d"><a href="/employee/inventory/paper_details.html?paper_id=%3$d">%4$s</a></td>', $rowclass, 
 					1+($param{'allocation_details_'.$paper_id} ? scalar  @{$Allocations{$paper_id}} : 0 ), 
 					$Paper->id(), $Paper->to_string() );
-				$html .= sprintf('<td>%1$s</td>', $skid_count > 0 ? $skid_count . ( $Paper->type() eq 'Roll' ? ' rolls' : ' skids' ) : '' );
+				$html .= sprintf('<td class="Skid">%1$s</td>', $skid_count . $Paper->type() . ( $skid_count == 1 ? '' : 's' ) );
 				$html .= '<td colspan="2">';
 				if ( $param{'allocation_details_'.$paper_id} ) {
-					$html .= ssi::writeButton( $log, $dbh, 'allocation_details'.$paper_id, 'details.gif', 
+					$html .= button( 'allocation_details'.$paper_id, { onclick=>
 						sprintf(q`AjaxLoadContent('StockAllocations','_stock_allocations.html', { project_id: '%1$d', allocation_details_%2$d: 0 } );`, $$variable{'Project'}->id(), $paper_id ),
-						'', 'Hide details' ) . '</td>';
+						text=>'Hide details' } ) . '</td>';
 				} else {
-					$html .= ssi::writeButton( $log, $dbh, 'allocation_details'.$paper_id, 'details.gif', 
-							sprintf(q`AjaxLoadContent('StockAllocations','_stock_allocations.html', { project_id: '%1$d', allocation_details_%2$d: 1 } );`, $$variable{'Project'}->id(), $paper_id ),
-						'', 'Show details' ) . '</td>';
+					$html .= button( 'allocation_details'.$paper_id, { onclick=>
+						sprintf(q`AjaxLoadContent('StockAllocations','_stock_allocations.html', { project_id: '%1$d', allocation_details_%2$d: 1 } );`, $$variable{'Project'}->id(), $paper_id ),
+						text=>'Show details' } ) . '</td>';
 				} # end if
-				$html .= sprintf('<td align="right">%1$s%2$s</td></tr>', Number::Format::format_number($total), $Paper->units() );
+				$html .= sprintf('<td class="Quantity">%1$s%2$s</td></tr>', Number::Format::format_number($total), $Paper->units() );
 			} # end if
 
 			if ( $param{'allocation_details_'.$paper_id} ) {
 				foreach my $Allocation ( @{$Allocations{$paper_id}} ) {
 					$total += $Allocation->quantity();
 					$html .= sprintf('<tr%s>',$rowclass);
-					$html .= '<td>'.join('<br/>', map { sprintf('<a href="/employee/inventory/skid_details.html?skid_id=%1$d">%1$d</a>', $_->id() ); } $Allocation->Skids() ).'</td>';
-					$html .= '<td>'.join('<br/>', map { sprintf('<a href="/employee/inventory/rfidtag_details.html?rfidtag_id=%1$s">%1$s</a>', $_->rfidtag_id() ); } $Allocation->Skids() ).'</td>';
-					$html .= '<td>'.join('<br/>', map { $_->Location()->name() } $Allocation->Skids() ).'</td>';
-					$html .= sprintf('<td align="right">%2$s</td></tr>', Number::Format::format_number($Allocation->quantity()).$Allocation->units() );
+					$html .= '<td class="Skid">'.join('<br/>', map { sprintf('<a href="/employee/inventory/skid_details.html?skid_id=%1$d">%1$d</a>', $_->id() ); } $Allocation->Skids() ).'</td>';
+					$html .= '<td class="RFID">'.join('<br/>', map { sprintf('<a href="/employee/inventory/rfidtag_details.html?rfidtag_id=%1$s">%2$s</a>', $_->rfidtag_id(), $_->RFIDTag()->id_short() ); } $Allocation->Skids() ).'</td>';
+					$html .= '<td class="Location">'.join('<br/>', map { $_->Location()->name() } $Allocation->Skids() ).'</td>';
+					$html .= sprintf('<td class="quantity">%2$s</td></tr>', Number::Format::format_number($Allocation->quantity()).$Allocation->units() );
 				} # end foreach
 			} # end if
 			$rowclass = $rowclass ? '' : ' class="colRow"';

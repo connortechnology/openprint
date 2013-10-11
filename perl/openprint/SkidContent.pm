@@ -2,9 +2,6 @@ use strict;
 package openprint::SkidContent;
 our @ISA = qw(openprint::Object);
 
-use Carp qw( cluck );
-
-require sql;
 require openprint::StockPurpose;
 require openprint::InventoryCondition;
 require openprint::ManifestContent;
@@ -15,19 +12,19 @@ use vars qw( $log $dbh $debug %fields %transforms %defaults $table $serial );
 $debug = 0;
 
 %fields = (
-	'id'			=>	'id',
-	'skid_id'		=>	'skid_id',
-	'paper_id'		=>	'paper_id',
-	'quantity'		=>	'quantity',
-	'purpose_id'	=>	'purpose_id',
-	'units'			=>	'units',
-	'condition_id'	=>	'condition_id',
-	'manifestcontent_id'	=>	'manifestcontent_id',
+	id				=>	'id',
+	skid_id			=>	'skid_id',
+	paper_id		=>	'paper_id',
+	quantity		=>	'quantity',
+	purpose_id		=>	'purpose_id',
+	units			=>	'units',
+	condition_id	=>	'condition_id',
 );
 %defaults = (
-	'purpose_id'	=>	undef,
-	'condition_id'	=>	undef,
-	'manifestcontent_id'	=>	undef,
+	paper_id		=>	undef,
+	quantity		=>	undef,
+	purpose_id		=>	undef,
+	condition_id	=>	undef,
 );
 %transforms = (
 );
@@ -51,13 +48,38 @@ sub find {
 
 	my $sql = 'SELECT * FROM Skid_Contents WHERE 1>0';
 	my @values;
-	if ( $params{'skid_id'} ) {
-		$sql .= ' AND skid_id=?';
-		push @values, $params{'skid_id'};
+	if ( exists $params{'skid_id'} ) {
+		if ( ref $params{skid_id} eq 'ARRAY' ) {
+            $sql .= ' AND skid_id IN (' . join(',', map { '?' } @{$params{skid_id}} ) . ')';
+            push @values, @{$params{skid_id}};
+		} else {
+			$sql .= ' AND skid_id=?';
+			push @values, $params{'skid_id'};
+		} # end if
 	} # end if
+	if ( ( exists $params{paper_id} ) and ! defined $params{paper_id} ) {
+		$sql .= ' AND paper_id IS NULL';
+	} # end if
+
+	if ( exists $params{deleted} ) {
+		$sql .= ' AND ? = (SELECT deleted FROM SKids WHERE skids.id=skid_id)';
+		push @values, $params{deleted};
+	} elsif ( ! exists $params{'deleted in'} ) {
+		$sql .= ' AND false = (SELECT deleted FROM SKids WHERE skids.id=skid_id)';
+	} # end if
+	if ( exists $params{'deleted in'} and @{$params{'deleted in'}} != 2 ) {
+		$sql .= ' AND (SELECT deleted FROM SKids WHERE skids.id=skid_id) in ('.join(',', map { '?' } @{$params{'deleted in'}} ) . ')';
+		push @values, @{$params{'deleted in'}};
+	}
+
 	if ( $params{'paper_id'} ) {
-		$sql .= ' AND paper_id=?';
-		push @values, $params{'paper_id'};
+		if ( ref $params{paper_id} eq 'ARRAY' ) {
+            $sql .= ' AND paper_id IN (' . join(',', map { '?' } @{$params{paper_id}} ) . ')';
+            push @values, @{$params{paper_id}};
+		} else {
+			$sql .= ' AND paper_id=?';
+			push @values, $params{'paper_id'};
+		} # end if
 	} # end if
 	if ( $params{'condition_id'} ) {
 		$sql .= ' AND condition_id=?';
@@ -84,8 +106,8 @@ sub find {
 	if ( exists $params{'allocated is not null'} ) {
 		$sql .= ' AND (SELECT SUM(quantity) FROM Paper_Allocations WHERE Paper_Allocations.skid_id=Skid_Contents.skid_id AND paper_allocations.paper_id=Skid_Contents.paper_id) IS NOT NULL';
 	} # end if
-	if ( $params{'manifestcontent_id'} ) {
-		$sql .= ' AND manifestcontent_id=?';
+	if ( exists $params{'manifestcontent_id'} ) {
+		$sql .= ' AND ? IN (SELECT id FROM ManifestContents WHERE manifestcontents.skid_id=skid_contents.skid_id)';
 		push @values, $params{'manifestcontent_id'};
 	} # end if
 
@@ -93,7 +115,7 @@ sub find {
 	$sql .= " LIMIT $params{'limit'}" if $params{'limit'};
 	my $data = $dbh->selectall_arrayref( $sql, {Slice=>{}}, @values );
 	if ( ! $data ) {
-		$log->debug("openprint::SkidContent::find( $sql)" . $dbh->errstr);
+		$log->debug("openprint::SkidContent::find( $sql) (@values) :" . $dbh->errstr);
 		return;
 	} elsif ( $debug ) {
 		$log->debug("Loading openprint::SkidContent::find($sql) : @values # of results: " . @$data );
@@ -102,14 +124,11 @@ sub find {
 } # end sub find
 
 sub purpose {
-	my $self = shift;
-	return $self->Purpose()->name();
+	return $_[0]->Purpose()->name();
 } # end sub purpose
 
 sub Purpose {
-	my $self = shift;
-	my $Purpose = new openprint::StockPurpose( $$self{'purpose_id'} );
-	return $Purpose;
+	return new openprint::StockPurpose( $_[0]{purpose_id} );
 } # end sub Purpose
 
 sub Paper {
@@ -125,6 +144,7 @@ sub delete {
 	my $self = $_[0];
 	my $error = $self->SUPER::delete();
 	if ( !$error ) {
+		$self->Skid()->Contents(undef);
 		$self->Paper()->save();
 	} # end if
 } # end sub delete
@@ -163,35 +183,28 @@ sub Condition {
 } # end sub Condition
 
 # Looks to find a PO matching this stock and pulls the value from it.
+# SKids can have multiple manifests, but only one PO
 sub cost {
 	my $self = $_[0];
 	if ( ! exists $$self{'cost'} ) {
-		if ( ! $$self{'manifestcontent_id'} ) {
-			my @MCS = openprint::ManifestContent->find('skid_id'=>$$self{'skid_id'});
-			if ( @MCS == 1 ) {
-				$self->save({'manifestcontent_id'=>$MCS[0]->id()});
-			} elsif ( @MCS > 1 ) {
-				$log->error("TOo many MCs ffor SKID " .$$self{'skid_id'});
-			} # end if
-		}
-		my $MC = new openprint::ManifestContent( $$self{'manifestcontent_id'} );
-		if ( ! $MC->id() ) {
-			#$log->error("No Manifest Content found for skid_id $_[0]{'skid_id'}, paper_id $_[0]{'paper_id'}");
-			return;
-		} # end if
-		if ( $MC->Type()->cost() ) {
-			$$self{'cost'} = $MC->Type()->cost();
-		} else {
-			my $POC = $MC->Type()->PurchaseOrder_Content();
-			return if ! $POC;
-			my $POCurrency = $POC->PurchaseOrder()->Currency();
-			if ( $POCurrency ) {
-				$$self{'cost'} = $POCurrency->convert_from( $POC->price() );
+		my @MCS = openprint::ManifestContent->find('skid_id'=>$$self{'skid_id'});
+		foreach my $MC ( @MCS ) {
+			my $Type = $MC->Type();
+			if ( $Type->cost() ) {
+				$$self{'cost'} = $Type->cost();
 			} else {
-				$log->error("No POCurrency");
-				$$self{'cost'} = $POC->price();
+				my $POC = $Type->PurchaseOrder_Content();
+				return if ! $POC;
+				my $POCurrency = $POC->PurchaseOrder()->Currency();
+				if ( $POCurrency ) {
+					$$self{'cost'} = $POCurrency->convert_from( $POC->price() );
+				} else {
+					$log->error("No POCurrency");
+					$$self{'cost'} = $POC->price();
+				} # end if
 			} # end if
-		} # end if
+			last if $$self{cost};
+		} # end foreach MC
 	} # end if ! exists cost
     return $$self{'cost'};
 } # end sub cost
@@ -199,43 +212,43 @@ sub cost {
 sub value {
 	my $self = $_[0];
 	if ( ! exists $$self{'value'} ) {
-		if ( ! $$self{'manifestcontent_id'} ) {
-			my @MCS = openprint::ManifestContent->find('skid_id'=>$$self{'skid_id'});
-			if ( @MCS == 1 ) {
-				$self->save({'manifestcontent_id'=>$MCS[0]->id()});
-			} elsif ( @MCS > 1 ) {
-				$log->error("TOo many MCs ffor SKID " .$$self{'skid_id'});
-			} # end if
-		} # end if
-		my $MC = new openprint::ManifestContent( $$self{'manifestcontent_id'} );
-		if ( ! $MC->id() ) {
-			#$log->error("No Manifest Content found for skid_id $_[0]{'skid_id'}, paper_id $_[0]{'paper_id'}");
-			return;
-		} # end if
-		my ( $cost, $units );
-		if ( $MC->Type()->cost() ) {
-			$cost = $MC->Type()->cost();
-			$units = $MC->Type()->cost_units();
-		} else {
-			my $POC = $MC->Type()->PurchaseOrder_Content();
-			return if ! $POC;
-			my $POCurrency = $POC->PurchaseOrder()->Currency();
-			if ( $POCurrency ) {
-				$cost = $POCurrency->convert_from( $POC->price() );
+		my @MCS = openprint::ManifestContent->find( skid_id=>$$self{'skid_id'});
+		foreach my $MC ( @MCS ) {
+			my $Type = $MC->Type();
+
+			my ( $cost, $units );
+			if ( $Type->cost() ) {
+				$cost = $Type->cost();
+				$units = $Type->cost_units();
 			} else {
-				$log->error("No POCurrency");
-				$cost = $POC->price();
+				my $POC = $Type->PurchaseOrder_Content();
+				next if ! $POC;
+				my $POCurrency = $POC->PurchaseOrder()->Currency();
+				if ( $POCurrency ) {
+					$cost = $POCurrency->convert_from( $POC->price() );
+				} else {
+					$log->error("No POCurrency");
+					$cost = $POC->price();
+				} # end if
+				$units = $POC->price_units();
 			} # end if
-			$units = $POC->price_units();
-		} # end if
-		if ( (!$units) or sets::isin( $units, ['/100lbs', '', '/cwt' ] ) ) {
-			$$self{'value'} = $$self{'quantity'} * $cost / 100;
-		} else {
-			$$self{'value'} = $$self{'quantity'} * $cost;
-		} # end if
+			if ( (!$units) or sets::isin( $units, ['/100lbs', '', '/cwt' ] ) ) {
+				$$self{'value'} = $$self{'quantity'} * $cost / 100;
+			} else {
+				$$self{'value'} = $$self{'quantity'} * $cost;
+			} # end if
+			last if $$self{'value'};
+		} # end foreach MC
 	} # end if ! exists value
     return $$self{'value'};
 } # end sub value
+
+sub checked_out {
+	if ( ! exists $_[0]{checked_out} ) {
+		$_[0]{checked_out} = openprint::PaperInventory::find( skid_id=>$_[0]{skid_id}, paper_id=>$_[0]{paper_id}, 'comment_like'=>'Checked out%' ) ? 1 : 0; 
+	} 
+	return $_[0]{checked_out};
+} # end sub checked_out
 
 1;
 __END__

@@ -820,7 +820,7 @@ $openprint::log->debug("Got Paper " . $P->width() . 'x'.$P->height() . ' from ' 
 	} # end if
 
 # Do this once now, so we don't do it many times in calc_print_price
-	my @filtered_colours = filter_colours( @side_one_colours, @side_two_colours );
+	my @filtered_colours = filter_colours( \@side_one_colours, \@side_two_colours );
 
 	my @possible_presses = sort { $a->strid() cmp $b->strid() } select_presses( $project_index, $Papers[0], $specs, \@side_one_colours, \@side_two_colours );
 	if ( ! @possible_presses ) {
@@ -930,6 +930,10 @@ $openprint::log->debug("Grabbing UV Specs");
 			if ( $$specs{'txtUnspecifiedSpreadQuantity'.$qty_index} and ($$specs{'txtSignatureType'} eq 'GateFolded Spreads' ) ) {
 # We only specify GF spreads 1 at a time.
 				$$specs{'txtUnspecifiedSpreadQuantity'.$qty_index} = 1;
+			} # end if
+			if ( ( $$specs{txtSpreadSize} == 4 and $$specs{'txtUnspecifiedSpreadQuantity'.$qty_index} > 250 ) or ( $$specs{'txtUnspecifiedSpreadQuantity'.$qty_index} > 500 ) ) {
+				$$specs{'alert'} .= 'There are far too many pages required. We will not be able to calculate this.<br/>';
+				return $$specs{'Status'} = 'uncalculated';
 			} # end if
 
 		} # end if
@@ -1209,6 +1213,45 @@ $openprint::log->debug("Not adding GRIP and GUTTER");
 			my $Runstyles = $Press->specification('Runstyles');
 			my $Maximum_Sheet_Width = $Press->specification('Maximum Sheet Width');
 
+			my %sheetsizes;
+			if ( my $sheets = $Press->specification('SheetSizes') ) {
+				my %available_sheets;
+				foreach my $Paper ( @Papers ) {
+					$available_sheets{join('x',$Paper->width(),$Paper->height())} = 1;
+				} # end foreach Paper
+				my @extra_sheets;
+
+				my @sheets = split(',', $sheets );
+				foreach my $sheet ( @sheets ) {
+					my ( $width, $height ) = split('x', $sheet);
+					$sheetsizes{join('x',$width,$height)} = 1;
+					$sheetsizes{join('x',$height,$width)} = 1;
+					if ( ! $available_sheets{join('x',$width,$height)} ) {
+						foreach my $Paper ( @Papers ) {
+							next if $Paper->width() < $width;
+							next if $Paper->height() < $height;
+							my $P = $Paper->clone();
+							$P->width($width);
+							$P->height($height);
+							push @extra_sheets, $P;
+						} # end foreach P
+						$available_sheets{join('x',$width,$height)} = 1;
+					} # end if
+					if ( ! $available_sheets{join('x',$height,$width)} ) {
+                        foreach my $Paper ( @Papers ) {
+							next if $Paper->width() < $height;
+							next if $Paper->height() < $width;
+                            my $P = $Paper->clone();
+                            $P->width($height);
+                            $P->height($width);
+                            push @extra_sheets, $P;
+                        } # end foreach P
+                        $available_sheets{join('x',$height,$width)} = 1;
+                    } # end if
+				} # end foreach
+				push @Papers, @extra_sheets;
+			} # end if
+			
 			foreach my $Paper ( @Papers ) {
 				if ( $$specs{'PreviousStockType'} and ( $Paper->type() ne $$specs{'PreviousStockType'} ) ) {
 					$openprint::log->debug("Not consider paper cuz it's not the previous stock type " . $Paper->type() .' ' .$$specs{'PreviousStockType'} ) if $debug or 1;
@@ -1274,6 +1317,7 @@ $log->debug("getting impositions for " . $Paper->to_string() );
 
 					next if ! ( $Paper->width() and $Paper->height() );
 					next if ( $Press->specification('Printing Type') eq 'Digital' and ! $Paper->digital() );
+					next if ( %sheetsizes and ! $sheetsizes{join('x', $Paper->width(),$Paper->height())} );
 					$project{'Runstyles'} = $Runstyles;
 
 					my $P = $Paper->clone();
@@ -1295,6 +1339,11 @@ $log->debug("getting impositions for " . $Paper->to_string() );
 							$P->cut();
 						} # end while
 					} # end if
+next if (
+                            ( $P->width() > $Press->specification('Maximum Sheet Width') or $P->height() > $Press->specification('Maximum Sheet Length') )
+                            and
+                            ( $P->width() > $Press->specification('Maximum Sheet Length') or $P->height() > $Press->specification('Maximum Sheet Width') )
+                       );
 
 # Keep cutting while the sheet still fits on the press.  I originally thought that we shouldn't do this, because why would you want to run a half sheet if a full sheet fits?  The answer: small jobs, that due to overs requires the same sheets whether you run full or half.  So by running half, you need half the # of real sheets.
 					while (
@@ -1323,7 +1372,7 @@ $log->debug("getting impositions for " . $Paper->to_string() );
 					} # end while cutting it
 				} # end if Web or Sheet
 
-if ( $debug ) {
+if ( $debug or 0 ) {
 $openprint::log->debug("Sorting from paper " . $Paper->to_string() . ' on ' . $Press->strid() );	
 foreach my $i ( @imps ) {
 $i->display();
@@ -1585,7 +1634,7 @@ sub breakdown {
 	$breakdown .= sprintf("Press Wash Charge:\t\$%.2f * \%d washes = \$%.2f<br/>", @$price{'Press Wash Price','Press Washes','Press Wash Total'});
 	$breakdown .= sprintf('Plate Make Ready: $%.2f<br/>', $$price{'Plate Total'} );
 	$breakdown .= sprintf("Setup Total:\t\t\$%.2f<br/><b>Run Charges:</b><br/>", $$price{'Setup Total'} );
-	$breakdown .= sprintf('Roll2Sheet Charge: $%1$.2f%2$s%3$.2f<br/>', @$price{'Roll2SheetRunCost','Roll2SheetUnits','Roll2SheetRunCharge'} ) if $$price{'Roll2SheetRunCharge'};
+	$breakdown .= sprintf('Roll2Sheet Charge: $%1$.2f%2$s = $%3$.2f<br/>', @$price{'Roll2SheetRunCost','Roll2SheetUnits','Roll2SheetRunCharge'} ) if $$price{'Roll2SheetRunCharge'};
 	$breakdown .= sprintf('Impression Charge: %d Impressions/%d Per Hour * $%.2f%s = $%.2f<br/>', @$price{'Impressions','Run Speed','Impression Cost','Impression Units','Impression Price'} );
 	$breakdown .= sprintf("Inline Varnish Charge: \$%.4f\%s = %.2f<br/>", @$Varnish{'run_price','Run Units','Run Total'} ) if %$Varnish;;
 # if $$Varnish{'run_price'};
@@ -1601,7 +1650,7 @@ sub breakdown {
 
 	$breakdown .= sprintf( 'Blank Plates: %d plates * $%.2f per plate = $%.2f<br/>', @$plate_costs{'Blank Plates','Blank Price'}, $$plate_costs{'Blank Price'} * $$plate_costs{'Blank Plates'}) if defined $$plate_costs{'Blank Plates'};
 	my $stock_qty = $$price{'Stock Quantity'};
-	$breakdown .= sprintf( 'Overs: Base:%s Setup: %s Run:%s FM:%s Additional Plate:%s Bindery: %d Total:%s<br/>', @$stock_qty{'Net Sheet Count','Setup Overs','Run Overs','FM Overs','Additional Plate Overs', 'Bindery Overs','Total Overs'} );
+	$breakdown .= sprintf( 'Overs: Base:%s Initial Setups: %d*%d=%d, Additional Setups: %d*%d=%d Run:%s FM:%s Additional Plate:%s Bindery: %d Total:%s<br/>', @$stock_qty{'Net Sheet Count','Initial Setup Rate','Initial Setup Count','Initial Setup Overs','Additional Setup Rate','Additional Setup Count','Additional Setup Overs','Run Overs','FM Overs','Additional Plate Overs', 'Bindery Overs','Total Overs'} );
 	if ( $Paper->type() ne 'Roll' ) {
 		$breakdown .= sprintf( '%sx%s starting %sx%s<br/>', $Paper->width(), $Paper->height(), $Paper->start_width(), $Paper->start_height() );
 		$breakdown .= "\tPaper: $$price{'Gross Sheet Count'} sheets @".$Paper->mweight() . 'M = ' . $$price{'Gross Sheet Count'} * $Paper->mweight()/1000 . 'lbs * ';
@@ -1687,7 +1736,7 @@ sub get_project_price {
 		} # end if
 		if ( $SpreadLayout > 0 ) {
 			$openprint::log->debug("Converting Impositions spread Layout: $SpreadLayout : imps:" . @impositions) if $debug;
-			if ( $debug or 0 ) {
+			if ( $debug or 1 ) {
 				$openprint::log->debug("Impositions for Press: " . $P->strid() . ' before convert:' . @impositions);
 				foreach my $imp ( @impositions ) {
 					$imp->display();
@@ -1696,7 +1745,7 @@ sub get_project_price {
 			@impositions = openprint::imposition::convert_impositions( $SpreadLayout, $$specs{'txtSpreadSize'}, \@impositions );
 			if ( $debug or 1 ) {
 				$openprint::log->debug("Impositions for Press: " . $Press->strid() . ' after convert:' . @impositions);
-				if ( $debug > 1) {
+				if ( $debug > 1 or 1) {
 					foreach my $imp ( @impositions ) {
 						$imp->display();
 					}
@@ -2107,7 +2156,7 @@ $imp->display();
 			if ( my @materials = openprint::Material::find( 'name'=>$$price{'Plate Costs'}{'Plate ID'} ) ) {
 				%plate_price = $materials[0]->get_price( $PlateCounts{$$price{'Plate Costs'}{'Plate ID'}}, undef );
 			} # end if
-#$openprint::log->debug("Plates : " . $$price{'Plate Costs'}{'Plate ID'} . ':'. $PlateCounts{$$price{'Plate Costs'}{'Plate ID'}}.':'.$plate_price{'Price'} );
+#$openprint::log->error("Plates : " . $$price{'Plate Costs'}{'Plate ID'} . ':'. $PlateCounts{$$price{'Plate Costs'}{'Plate ID'}}.':'.$plate_price{'Price'} );
 			$$price{'PlateID'} = $$price{'Plate Costs'}{'Plate ID'};
 			$$price{'txtPlateQuantity'} = $$price{'Plate Costs'}{'Plate Count'};
 			$$price{'Plate Cost'} = $plate_price{'Price'};
@@ -2153,7 +2202,7 @@ $imp->display();
 
 			if ( $$price{'Comparison Cost'} < 0 ) {
 	
-				$openprint::log->debug("Negative price! $best_price{'Comparison Cost'} <= $$price{'Comparison Cost'}") if 1 or $debug;
+				#$openprint::log->debug("Negative price! $best_price{'Comparison Cost'} <= $$price{'Comparison Cost'}") if 1 or $debug;
 				#$imp->display();
 			} elsif ( %best_price and $best_price{'Comparison Cost'} <= $$price{'Comparison Cost'} ) {
 				#$imp->display();
@@ -2284,6 +2333,11 @@ sub calc_price {
 	#Initially we calculate based on colours, but really we need to calculate based on plates, which we will do once we figure out how many plates we need.
 	my $min_overs = $Press->specification( 'Press Run Overs Minimum', scalar @colours );
 	my $setup_rate = $Press->specification( 'Press Run Overs Rate', scalar @colours );
+	if ( $Paper->type() eq 'Roll' and sets::isin('Sheet', split(',', $Press->specification('Feed') ) ) ) {
+		if ( my $roll2sheet_overs_rate = $Press->specification( 'Roll2Sheet Additional Setup Overs' ) ) {
+			$setup_rate *= ( 1 + ( $roll2sheet_overs_rate / 100 ) );
+		} # end if
+	} # end if
 	my $setup_overs = ceil( $setup_rate * scalar @colours );
 	my $fm_overs = $Press->specification( 'FM Screening Additional Overs', undef ) if $$specs{'ScreenType'} eq 'FM';
 	$setup_overs += $fm_overs;
@@ -2292,6 +2346,11 @@ sub calc_price {
 	my $over_rate = $Press->specification( 'Press Run Overs', $base_impressions );
 	if ( $Press->specification( 'Double Overs For Covers' ) eq 'Yes' ) {
 		$over_rate *= 2;
+	} # end if
+	if ( $Paper->type() eq 'Roll' and sets::isin('Sheet', split(',', $Press->specification('Feed') ) ) ) {
+		if ( my $roll2sheet_overs_rate = $Press->specification( 'Roll2Sheet Additional Run Overs' ) ) {
+			$over_rate *= ( 1 + ( $roll2sheet_overs_rate / 100 ) );
+		} # end if
 	} # end if
 	my $run_overs = $base_impressions * $over_rate;
 	my $impressions = ceil( $base_impressions + ( $setup_overs > $run_overs ? $setup_overs : $run_overs ) );
@@ -2376,13 +2435,17 @@ $openprint::log->debug("Have runspeed");
 			if ( $unit =~ /([\d\.]+)x([\d\.]+)/ ) {
 $openprint::log->debug("Have unit $1 $2");
 				my $area = $1*$2;
-				$run_speed = int( $$RunSpeed{'value'} * $area/($$specs{'txtWidth'} * $$specs{'txtHeight'}) );
-$openprint::log->debug("Have runspeed $$RunSpeed{'value'}, area: $area, $run_speed");
+				if ( ! $$specs{'txtWidth'} * $$specs{'txtHeight'} ) {
+					$openprint::log->debug("Runspeed for $$specs{'txtWidth'} * $$specs{'txtHeight'} on $$Press{id}");
+				} else {
+					$run_speed = int( $$RunSpeed{'value'} * $area/($$specs{'txtWidth'} * $$specs{'txtHeight'}) );
+				} # end if
+				$openprint::log->debug("Have runspeed $$RunSpeed{'value'}, area: $area, $run_speed");
 			} else {
 $openprint::log->warn("Unknown Per setting $unit");
 			} # end if
 		} else {
-			$openprint::log->debug("No RunSpeed setting");
+			$openprint::log->debug("No RunSpeed setting GSM(".$Paper->gsm());
 		} # end if
 	} # end if
 	my $speed_mod = $Press->specification('Press Additional Run Speed',$Imposition->paper()->calliper());
@@ -2392,7 +2455,7 @@ $openprint::log->warn("Unknown Per setting $unit");
 	my %folding_results;
 
 	# Has to be NEED because they always leave folding out, and it chooses dumb impositions
-	if ( $$project{'NeedFolding'} ) {
+	if ( $$project{'NeedFolding'} and ( $Imposition->pages() >= 4 ) ) {
 #my $time = gettimeofday();
 		%folding_results = openprint::Estimating::Folding::signature_calc( $Project, $service_index, $specs, $$project{'FoldingSpecs'}, $qty_index, $Paper, $Imposition );
 		delete $$Imposition{'Folder'};
@@ -2401,6 +2464,7 @@ $openprint::log->warn("Unknown Per setting $unit");
 # do not want an invalid fold style to win out unless there are no other valid signatures.
 			$price{'Comparison Cost'} += 1000000; 
 			$openprint::log->debug("Unable to fold spreads:" . $Imposition->spreads() . ' alert:'. $$project{'FoldingSpecs'}{'alert'} ) if $debug;
+#$Imposition->display('unable to fold');
 		} else {
 			$$Imposition{'Folder'} = $folding_results{'Equipment'};
 			$$Imposition{'FoldingImposition'} = $folding_results{'Imposition'};
@@ -2424,10 +2488,12 @@ $openprint::log->warn("Unknown Per setting $unit");
 		if ( $folding_results{'Equipment'} ) {
 			$price{'Folding Breakdown'} .= sprintf('Folding %s (%d out) Price: $%.2f on %s', $fold_type, @folding_results{'Imposition','Price'}, $folding_results{'Equipment'}->name() ) .'<br/>' if $folding_results{'Equipment'};
 		} else {
-			$price{'Folding Breakdown'} .= sprintf('Unable to fold<br/>');
+			$price{'Folding Breakdown'} .= 'Unable to fold<br/>';
 		} # end if
 		$price{'Comparison Cost'} += $folding_results{'Price'};
 		return \%price if check_price( $price_to_beat, \%price, $specs, $qty_index, $Imposition, 'Folding' );
+	} else {
+		$price{'Folding Breakdown'} .= 'Folding not needed<br/>';
 	} # end if
 	if ( ! $run_speed ) {
 		$openprint::log->warn("Got no runspeed.");
@@ -2457,8 +2523,7 @@ $openprint::log->warn("Unknown Per setting $unit");
 		return \%price if check_price( $price_to_beat, \%price, $specs, $qty_index, $Imposition, 'SpinePaste' );
 	} # end if
 	if ( $$project{'HasPerforating'} ) {
-$openprint::log->debug("Perforating");
-$$specs{'Runspeed'} = $run_speed;
+		$$specs{'Runspeed'} = $run_speed;
 		my %perforating_results = openprint::Estimating::Perforating::signature_calc( $Project, @$project{'HasPerforating','PerforatingSpecs'}, $service_index, $specs, $qty_index, $Imposition );
 #$openprint::log->debug("Perforating");
 		if ( $perforating_results{'Status'} eq 'uncalculated' ) {
@@ -2477,7 +2542,19 @@ $$specs{'Runspeed'} = $run_speed;
 	#Initially we calculate based on colours, but really we need to calculate based on plates, which we will do once we figure out how many plates we need.
 	$min_overs = $Press->specification( 'Press Run Overs Minimum', $plate_setup{'Plate Count'} );
 	$setup_rate = $Press->specification( 'Press Run Overs Rate', $plate_setup{'Plate Count'} );
-	$setup_overs = ceil($setup_rate * ( $plate_setup{'Plate Count'} ));
+
+	my $initial_setup_rate = $setup_rate;
+
+	if ( $Paper->type() eq 'Roll' and sets::isin('Sheet', split(',', $Press->specification('Feed') ) ) ) {
+		if ( my $roll2sheet_overs_rate = $Press->specification( 'Roll2Sheet Additional Setup Overs' ) ) {
+			$initial_setup_rate *= ( 1 + ( $roll2sheet_overs_rate / 100 ) );
+		} # end if
+	} # end if
+	my $initial_setup_overs = ceil($initial_setup_rate*$plate_setup{'Setup Plate Count'});
+
+	my $additional_setup_count = $plate_setup{'Plate Count'}-$plate_setup{'Setup Plate Count'};
+	my $additional_setup_overs = ceil($setup_rate * $additional_setup_count);
+	$setup_overs = $initial_setup_overs + $additional_setup_overs;
 	$setup_overs += $fm_overs;
 	$setup_overs += $price{'SpinePaste MakeReady Overs'};
 	$setup_overs = $min_overs if $setup_overs < $min_overs;
@@ -2535,7 +2612,12 @@ $$specs{'Runspeed'} = $run_speed;
 			'Impressions'				=> $impressions, 
 			'Gross Sheet Count'			=> $gross_qty, 
 			'Net Sheet Count'			=> $base_impressions,
-			'Setup Overs'				=> $setup_rate * $plate_setup{'Plate Count'},
+			'Initial Setup Count'		=> $plate_setup{'Setup Plate Count'},
+			'Initial Setup Rate'		=> $initial_setup_rate,
+			'Initial Setup Overs'		=> $initial_setup_overs,
+			'Additional Setup Count'	=> $additional_setup_count,
+			'Additional Setup Rate'		=> $setup_rate,
+			'Additional Setup Overs'	=> $additional_setup_overs,
 			'Bindery Overs'				=> $price{'SpinePaste MakeReady Overs'},
 			'Run Overs'					=> $run_overs,
 			'Additional Plate Overs'	=> $additional_overs,
@@ -2547,6 +2629,8 @@ $$specs{'Runspeed'} = $run_speed;
 	$price{'Gross Sheet Count'} = $sheet_qty{'Gross Sheet Count'};
 	$price{'Net Sheet Count'} = $sheet_qty{'Net Sheet Count'};
 	$price{'Stock Weight'} = $sheet_qty{'Weight'};
+
+	$impressions *= $$project{print_sides} if (sets::isin($$Imposition{runstyle},['Sheet Work','Work & Turn','Work & Tumble'] ));
 
 	my %paper_price = openprint::Estimating::Paper::sheet_calc( $openprint::log, $openprint::dbh, $openprint::variable, $Paper, $$Paper{type} eq 'Roll' ? $sheet_qty{'Weight'} : $sheet_qty{'Gross Sheet Count'} );
 	@price{'Paper Cost', 'Paper Price', 'Sheet Cost', 'Sheet Price', '100lb'} = @paper_price{'Paper Cost', 'Paper Price', 'Sheet Cost', 'Sheet Price','100lb'};
@@ -2581,7 +2665,6 @@ $$specs{'Runspeed'} = $run_speed;
 	$price{'Comparison Cost'} += $price{'Paper Price'};
 	#return \%price if check_price( $price_to_beat, \%price, $specs, $qty_index, $Imposition, 'Paper' );
 
-	$impressions *= $$project{print_sides} if (sets::isin($$Imposition{runstyle},['Sheet Work','Work & Turn','Work & Tumble'] ));
 	
 	my %run_price;
 	my %aqueous = get_aqueous_price( $openprint::log, $openprint::dbh, $openprint::variable, $impressions, $Press, $$Imposition{runstyle}, $qty_index, $Project, $service_index, $specs, scalar @$side_one_colours, scalar @$side_two_colours ); 
@@ -2712,6 +2795,7 @@ $$specs{'Runspeed'} = $run_speed;
 
 		next if ! %ink_price;
 		my $area = $Imposition->object_area() * $impressions * ($$inkCoverage{$real_colour}/100);
+#$openprint::log->debug("Area: $area Impressions: $impressions " . $Imposition->object_area() );
 
 		if ( lc $ink_price{'units'} eq 'per kg' ) {
 			
@@ -3107,14 +3191,12 @@ sub get_aqueous_price {
 				$openprint::log->debug("Unknown units in Aqueous");
 				$aqueous_price{"Side$side Total"} = $Price{'Price'};
 			} # end if
-			if ( 
-					( $$specs{'rdbAqueousSideOne'} ne 'None' ) 
-					and 
-					( $$specs{'rdbAqueousSideTwo'} ne 'None' ) 
-					and 
-					( $$specs{'rdbAqueousSideOne'} ne $$specs{'rdbAqueousSideTwo'} ) 
-					and ( sets::isin( $runstyle, ['Work & Turn', 'Work & Tumble'] ) ) ) {
-				$aqueous_price{"Side$side Total"} += 1000000;
+			if ( ( $$specs{'rdbAqueousSideOne'} ne 'None' ) and ( $$specs{'rdbAqueousSideTwo'} ne 'None' )  ) {
+				if ( ( $$specs{'rdbAqueousSideOne'} ne $$specs{'rdbAqueousSideTwo'} ) and ( sets::isin( $runstyle, ['Work & Turn', 'Work & Tumble'] ) ) ) {
+					$aqueous_price{"Side$side Total"} += 1000000;
+				} elsif ( $runstyle eq 'Perfecting' ) {
+					$aqueous_price{"Side$side Total"} += 1000000;
+				} # end if
 			} # end if
 		} # end if
 	} # end if
@@ -3212,7 +3294,7 @@ sub get_run_price {
 		$run_price{'Cost'} = $running_price;
 		$run_price{'Price'} = $running_price * $run_price{'RunHours'};
 	} else {
-		$openprint::log->debug("Unknown Units: $run_price{'units'}");
+		$openprint::log->debug("Unknown Units: $run_price{'units'} for Impression price on $$Press{strid} $side_one_colours $side_two_colours");
 	} # end if
 #$openprint::log->debug("Impresion price: $run_price{'Cost'} $run_price{'units'} = $run_price{'Price'}");
 	return %run_price;
@@ -3245,6 +3327,9 @@ sub press_setup_cost {
 	if ( $Price{'units'} eq 'Stock Calliper - Per Plate' ) {
 		%Price = openprint::service::get_price_object( $log, $dbh, $variable, 'PressUnitMakeReady', $calliper, $Press);
 		$Price{'Total'} = $Price{'Price'} * $setup_count;
+	} elsif ( $Price{'units'} eq 'Per Job' ) {
+		my @signatures = $Project->signatures($$specs{'txtSignatureType'});
+		$Price{'Total'} = $Price{'Price'} if $signatures[0] == $service_index;
 	} elsif ( $Price{'units'} eq 'Per Form' ) {
 
 		my $previous_forms = 0;
@@ -3332,6 +3417,7 @@ sub plate_setup_cost {
 	my $plate_id = $plate_size . '-' . $plate_type . 'Plate';
 
 	my %setup_cost = (
+			'Setup Plate Count', scalar @$colours,
 			'Plate Count', $plate_count, 
 			'Plate Type', $plate_type,
 			'Plate ID', $plate_id,
@@ -3370,11 +3456,13 @@ sub plate_setup_cost {
 
 # This is only called for work and turn
 sub filter_colours {
-	my @filtered_colours = ();
+	my ( $front, $back ) = @_;
+	my @filtered_colours = @{$front};
 
 #$log->debug("*************** START OF FILTER COLOURS colours: @colours **************************");
 
-	foreach my $colour ( @_ ) {
+
+	foreach my $colour ( @{$back} ) {
 		if ( ! sets::isin( $colour, \@filtered_colours ) ) {
 # We only need one black
 			if ( $colour eq 'Black' ) {
@@ -3491,7 +3579,7 @@ sub runtime {
 	my @side_two_colours = openprint::Estimating::Printing::get_colours( $specs, 'SideTwo' );
 	my @colours;
 	if ( sets::isin( $$specs{'ddmRunStyle'.$qty_index}, ['Work & Turn', 'Work & Tumble'] ) ) {
-		@colours = openprint::Estimating::Printing::filter_colours( @side_one_colours, @side_two_colours );
+		@colours = openprint::Estimating::Printing::filter_colours( \@side_one_colours, \@side_two_colours );
 	} else {
 		@colours = ( @side_one_colours, @side_two_colours );
 	} # end if

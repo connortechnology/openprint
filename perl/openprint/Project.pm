@@ -336,6 +336,7 @@ sub update_status {
 
 	# The Pending Deposit to In Prepress trnasition is a manual one.
 	return if $$self{'status'} eq 'Pending Deposit';
+	return if $$self{'status'} eq 'Deleted';
 
 	my $Order = new openprint::Order( $$self{'order_id'} );
 	if ( $$self{'order_id'} and $Order->status() ne 'Incomplete' ) {
@@ -670,6 +671,10 @@ sub find {
 			$sql .= q{ AND (strStatus=?)};
 			push @values, $params{'status'};
 		} # end if
+	} # end if
+	if ( $params{'status !='} ) {
+			$sql .= q{ AND (strStatus!=?)};
+			push @values, $params{'status !='};
 	} # end if
 	if ( exists $params{'reprint'} ) {
 		if ( ref $params{'reprint'} eq 'ARRAY' ) {
@@ -1204,10 +1209,15 @@ sub signatures {
 		my $services = $self->services();
 		#if ( $self->Type()->name() ne 'MultiPagePublication' ) {
 		#} # end if
-		if ( $$services{'AdditionalSignature'} ) {
-			push @{$$self{'signatures'}}, @{$$services{'AdditionalSignature'}};
+		if ( $self->Type()->strid() eq 'MultiPagePublication' ) {
+			if ( $$services{'AdditionalSignature'} ) {
+				push @{$$self{'signatures'}}, @{$$services{'AdditionalSignature'}};
+			} #ned if
 		} else {
 			@{$$self{'signatures'}} = @{$$services{''}} if $$services{''};
+			if ( $$services{'AdditionalSignature'} ) {
+				push @{$$self{'signatures'}}, @{$$services{'AdditionalSignature'}};
+			} #ned if
 		} # end if
 	} # end if
 	if ( @_ ) {

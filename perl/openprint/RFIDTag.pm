@@ -16,26 +16,27 @@ $debug = 1;
 $table = 'rfidtags';
 $serial = 'rfidtags_id_seq';
 %fields = (
-	'id'			=>	'id',
-	'location_id'	=>	'location_id',
-	'type_id'		=>	'type_id',
-	'created_on'	=>	'created_on',
-	'updated_on'	=>	'updated_on',
-	'valid'			=>	'valid',
+	id			=>	'id',
+	location_id	=>	'location_id',
+	type_id		=>	'type_id',
+	created_on	=>	'created_on',
+	updated_on	=>	'updated_on',
+	valid		=>	'valid',
 );
 %find_fields = (
-	'skid_id'	=>	'(SELECT skid_id FROM skids WHERE skids.rfidtag_id=rfidtags.id)',
+	skid_id	=>	'(SELECT skid_id FROM skids WHERE skids.rfidtag_id=rfidtags.id)',
 );
 
 %transforms = (
+	id	=>	[ 's/\D//g' ],
 );
 
 %defaults = (
-	'created_on'	=>	'NOW()',
-	'updated_on'	=>	'NOW()',
-	'location_id'	=>	undef,
-	'type_id'		=>	undef,
-	'valid'			=>	0,
+	created_on	=>	'NOW()',
+	updated_on	=>	'NOW()',
+	location_id	=>	undef,
+	type_id		=>	undef,
+	valid		=>	0,
 );
 
 # Returns a paper object specified by the parameters
@@ -76,6 +77,18 @@ sub find {
 	if ( $params{'id_like'} ) {
 		$sql .= ' AND id LIKE ?';
 		push @values, $params{id_like};
+	} # end if
+	if ( $params{'id_ilike'} ) {
+		$sql .= ' AND id ILIKE ?';
+		push @values, $params{id_ilike};
+	} # end if
+	if ( $params{'id ilike'} ) {
+		$sql .= ' AND id ILIKE ?';
+		push @values, $params{'id ilike'};
+	} # end if
+	if ( $params{'id like'} ) {
+		$sql .= ' AND id LIKE ?';
+		push @values, $params{'id like'};
 	} # end if
 	if ( $params{'short_id'} ) {
 		$sql .= ' AND id = ?';
@@ -161,6 +174,7 @@ sub save {
 	} # end if
 
 	$$self{'updated_on'} = 'NOW()';
+	$self->valid( ! $self->is_invalid_id() );
 	
 	my $ac = sql::start_transaction( $dbh );
 
@@ -284,6 +298,29 @@ sub is_invalid_id {
 
 	return 0;
 } # end sub is_valid_id
+
+# Does a better of figuring out what has been entered as an id
+sub from_id {
+	my ( $tag_id ) = @_;
+
+	if ( my ( $type, $id ) = $tag_id =~ /^R?(\d)(\d{14})$/ ) {
+		my @RFID = openprint::RFIDTag->find( id=>sprintf('%d%.14d', $type, $id ) );
+		if ( @RFID == 1 ) {
+			return $RFID[0];
+		} else {
+			$openprint::log->debug("Got too many rfids for $type $id");
+		} # end if
+	} elsif ( my ( $id ) = $tag_id =~ /^(\d+)$/ ) {
+		my @RFID = openprint::RFIDTag->find( 'id ilike'=>'%'.$id );
+		if ( @RFID == 1 ) {
+			return $RFID[0];
+		} else {
+			$openprint::log->debug("Got too many rfids for $type $id : " . @RFID);
+		} # end if
+	
+	} # end if
+	return;
+} # end sub from_id
 
 1;
 __END__

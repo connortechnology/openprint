@@ -422,7 +422,7 @@ sub calc_setup_object {
 					$setup1->paper()->width( $setup1->used_width() );
 				} # end if
 				push @results, $setup1;
-				if ( ! ( $grain_direction or (exists $$specs{'SpreadLayout'}) or $$specs{'HasDieCutting'} or $$specs{'HasPerforating'} or $$specs{'HasScoring'} ) ) {
+				if ( ! ( $grain_direction or (exists $$specs{'SpreadLayout'}) or $$specs{'HasDieCutting'} or $$specs{'HasPerforating'} or $$specs{'HasScoring'} or ( $run_style eq 'Perfecting' and ( $Paper->perfecting() ne 'Y' ) ) ) ) {
 					push @results, calc_dutch( $setup1, $image_width, $image_height, $adjusted_paper_width, $adjusted_paper_height, $specs );
 				} # end if
 			} # end if check_setup
@@ -577,7 +577,7 @@ sub calc_setup_object {
 				if ( $setup2->imposition() ) {
 					push @results, $setup2;
 
-					if ( ! ( $grain_direction or (exists $$specs{'SpreadLayout'}) or $$specs{'HasDieCutting'} or $$specs{'HasPerforating'} or $$specs{'HasScoring'}  ) ) {
+					if ( ! ( $grain_direction or (exists $$specs{'SpreadLayout'}) or $$specs{'HasDieCutting'} or $$specs{'HasPerforating'} or $$specs{'HasScoring'} or ( $run_style eq 'Perfecting' and ( $Paper->perfecting() ne 'Y' ) ) ) ) {
 						push @results, calc_dutch( $setup2, $image_height, $image_width, $adjusted_paper_width, $adjusted_paper_height, $specs );
 					} # end if
 				} # end if

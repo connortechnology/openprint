@@ -23,6 +23,12 @@ $serial = 'project_files_id_seq';
 %defaults = (
 );
 
+sub directory {
+	my @path = split('/', $_[0]{filename} );
+	pop @path;
+	return join('/', @path );
+}
+
 sub size_text {
 	my ( $self ) = @_;
 	return misc::format_bytes( $$self{'size'} );

@@ -1,7 +1,7 @@
 
 
 <VirtualHost *:80>
-	ServerAdmin	 iconnor@penultima.org
+	ServerAdmin	 iconnor@point-one.com
 	DocumentRoot	/var/www/point-one/www/public_html
 	ServerName	www.point-one.com
 	ErrorLog		/var/log/apache2/point-one.com/www.log
@@ -39,6 +39,15 @@
 	PerlSetVar		db_password	 point-one
 	PerlSetVar		db_driver		Pg
 
+    <Directory "/media/Storage/Project Files/">
+        Options +Indexes
+        SetHandler      perl-script
+        PerlAuthenHandler    handlers::files_authen
+        AuthType Basic
+        AuthName "PointOne FTP Site"
+        Require valid-user
+    </Directory>
+
 	<Location /images/maps>
 		SetHandler		perl-script
 		PerlHandler	 MapImage
@@ -50,6 +59,7 @@
 	</FilesMatch>
 
     <Directory /var/www/point-one/www/public_html>
+        Options -Indexes
         RewriteEngine on
         RewriteRule ^(.*);SSL$  http://%{SERVER_NAME}/$1 [NC,R,L]
         RewriteRule ^(.*);NOSSL$ http://%{SERVER_NAME}/$1 [NC,R,L]
@@ -111,7 +121,7 @@
 </VirtualHost>
 
 <VirtualHost *:443>
-	ServerAdmin	 iconnor@penultima.org
+	ServerAdmin	 iconnor@point-one.com
 	DocumentRoot	/var/www/point-one/www/public_html
 	ServerName	www.point-one.com
 	ErrorLog		/var/log/apache2/point-one.com/www.log
@@ -154,6 +164,15 @@
 	PerlSetVar		db_password	point-one
 	PerlSetVar		db_driver	Pg
 
+    <Directory "/media/Storage/Project Files/">
+        Options +Indexes
+        SetHandler      perl-script
+        PerlAuthenHandler    handlers::files_authen
+        AuthType Basic
+        AuthName "PointOne FTP Site"
+        Require valid-user
+    </Directory>
+
 	<Location /images/maps>
 		SetHandler		perl-script
 		PerlHandler	 MapImage
@@ -164,6 +183,7 @@
 	</FilesMatch>
 
     <Directory /var/www/point-one/www/public_html>
+        Options -Indexes
         RewriteEngine on
         RewriteRule ^(.*);SSL$  http://%{SERVER_NAME}/$1 [NC,R,L]
         RewriteRule ^(.*);NOSSL$ http://%{SERVER_NAME}/$1 [NC,R,L]
@@ -224,7 +244,7 @@
 </VirtualHost>
 
 <VirtualHost *:443>
-	ServerAdmin		iconnor@penultima.org
+	ServerAdmin		iconnor@point-one.com
 	DocumentRoot	/var/www/point-one/www/public_html
 	ServerName		www.point-one.com
 	ServerAlias		*.point-one.com

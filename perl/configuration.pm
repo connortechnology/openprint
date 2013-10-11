@@ -8,6 +8,10 @@ require sql;
 
 *cache = \%openprint::config;
 
+sub init {
+	init_cache( undef, undef, @_ );
+}
+
 sub init_cache {
 	my ( $log, $dbh, $apr_table ) = @_;
 	

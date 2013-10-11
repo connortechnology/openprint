@@ -48,8 +48,9 @@ sub get_header {
 		@$variable{'OrderedQuantity','OrderedQuantityIndex','RequiredDate','ShippingType'} = sql::execute( $log, $dbh, $_, $$variable{'order_id'}, $project_index );
 		$_ = q{SELECT strPONumber, to_char(dtmOrderDate, 'MM/DD/YYYY') FROM Orders WHERE Index=?};
 		@$variable{'PONum','OrderedDate'} = sql::execute( $log, $dbh, $_, $$variable{'order_id'} );
-	my $Order = new openprint::Order( $$variable{'order_id'} );
-	@$variable{'OrderSalutation','OrderFirstName','OrderLastName','OrderPhone','OrderExtension'} = ( $Order->salutation(), $Order->first_name(), $Order->last_name(), $Order->phone(), $Order->extension() );
+		my $Order = new openprint::Order( $$variable{'order_id'} );
+		@$variable{'OrderSalutation','OrderFirstName','OrderLastName','OrderPhone','OrderExtension'} = ( $Order->salutation(), $Order->first_name(), $Order->last_name(), $Order->phone(), $Order->extension() );
+		$$variable{Order} = $Order;
 	} # end fi
 
 } # end sub get_header

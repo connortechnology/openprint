@@ -23,6 +23,9 @@ Please select a host to view/edit.<br>
 			MAC:
 			<input type="text" id="mac" name="mac" value="<? echo ( $session{'/employee/it/hosts.html?mac'} ) ?>" onkeyup="this.value=this.value.replace(/\s/g,'');" onkeydown="this.form.ip.value='';this.form.hostname.value='';if(event && event.keyCode == 13){load_host( $('f1') );}" />
 		</li>
+		<li><label>Type</label>
+			<? echo ( ssi::select( openprint::Host_Type->dropdown(order=>'lower(name)'), $session{'/employee/it/hosts.html?type_id'}, { name=>'type_id', prepend=>['','All'] } ); ) ?>
+		</li>
 		<li>
 			<label>Date Added:</label>
 			<span class="DateSelectorCT">

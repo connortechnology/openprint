@@ -6,7 +6,7 @@
 			my $html;
 			my $rowclass;
 			my $quantity_total = 0;
-			foreach my $PF ( openprint::ProductionFeedback->find('order'=>'id desc', 'project_id'=>$$variable{Project}->id() ) ) {
+			foreach my $PF ( openprint::ProductionFeedback->find( order=>'id desc', project_id=>$$variable{Project}->id() ) ) {
 				my $Project = $PF->Project();
 				my $Service = $Project->Service($PF->service_id()) if $PF->service_id();;
 				my $specs = $Service->specs() if $Service;

@@ -35,9 +35,6 @@ sub profile {
 			$variable{'warning'} .= 'New Password is the same as your current password.<br/>' if $param{'password'} eq $User->Password();
 		} # end if
         $variable{'error'} .= 'First Name cannot be blank.<br/>' if ! $param{'firstname'};
-        $variable{'error'} .= 'Last Name cannot be blank.<br/>' if ! $param{'lastname'};
-        $variable{'error'} .= 'You must select a Salutation.<br/>' if ! $param{'salutation'};
-        $variable{'error'} .= 'Phone cannot be blank.<br/>' if ! $param{'phone'};
         $variable{'error'} .= 'Email Cannot be blank.<br/>' if ! $param{'email'};
         if ( ! $variable{'error'} ) {
 			if ( ($session{'user_type'} eq 'A' ) or ( openprint::usergroup::is_user_in( ['UserManagement'], $session{'user_id'} ) ) ) {

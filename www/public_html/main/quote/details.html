@@ -90,8 +90,8 @@
 				<td align="right"> 
 					<input type="hidden" name="txtPrice<?index?>" value="<?stdprice?>" />
 					<? echo ( $$variable{'Quote'}->Currency()->symbol(); ) ?><?stdprice?></td>
-				<td align="right"><? echo ( $$variable{'Quote'}->Currency()->symbol(); ) ?> 
-					<input type="text" name="txtNewPrice<?index?><?project_index?>" size="9" style="width: auto; text-align: right;" value="<?newprice?>" onkeyup="calc_from_price( f1, this );" />
+				<td align="right">
+<? echo ( $$variable{'Quote'}->Currency()->symbol(); ) ?><input type="text" name="txtNewPrice<?index?><?project_index?>" style="width: 85%; text-align: right;" value="<?newprice?>" onkeyup="calc_from_price( f1, this );" />
 				</td>
 				<td align="right"><a href="/main/project/view.html?ProjectIndex=<?project_index?>">Edit</a>/<a href="details.html?quote_id=<? echo ( $$variable{'Quote'}->id() ) ?>&remove=<?project_index?>">Remove</a></td>
 			</tr>
@@ -106,8 +106,8 @@
 				<td align="right"> 
 					<input type="hidden" name="txtPrice<?index?>" value="<?stdprice?>" />
 					<? echo ( $$variable{'Quote'}->Currency()->symbol(); ) ?><?stdprice?></td>
-				<td align="right"><? echo ( $$variable{'Quote'}->Currency()->symbol(); ) ?> 
-					<input type="text" name="txtNewPrice<?index?><?project_index?>" size="9" style="width: auto; text-align: right; margin: 0px;" value="<?newprice?>"  onkeyup="calc_from_price( f1, this );" />
+				<td align="right">
+<? echo ( $$variable{'Quote'}->Currency()->symbol(); ) ?><input type="text" name="txtNewPrice<?index?><?project_index?>" style="width: 90%; text-align: right; margin: 0px;" value="<?newprice?>"  onkeyup="calc_from_price( f1, this );" />
 				</td>
 				<td align="right">&nbsp;</td>
 			</tr>
