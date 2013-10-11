@@ -262,9 +262,9 @@ sub copy {
 	@{$$New{'Prices'}} = $self->prices();
 	@{$$New{'recommendations'}} = $self->recommendations();
 
-   # Add record to audit log - action "Copy Paper".
+	# Add record to audit log - action "Copy Paper".
 # Don't do this.  A copies are created all the time, but never saved. The log should be done in administrator_paper.pm
-   #openprint::logs::insertLogRecord('65', "Original Paper ID: " . $$self{'id'},);
+	#openprint::logs::insertLogRecord('65', "Original Paper ID: " . $$self{'id'},);
 
 	return $New;
 } # end sub copy
@@ -303,8 +303,8 @@ sub save {
 		@$self{'weight_id','weight'} = sql::execute( undef, undef, q{SELECT id,longname FROM PaperWeights WHERE longname=?}, $$self{'weight'} );
 	} # end if weight_id
 	if ( $$self{'quality'} and ! $$self{'quality_id'} ) {
-        $$self{'quality'} = openprint::StockQuality->transform( 'name', $$self{'quality'} );
-        my $Quality = openprint::StockQuality->find_one('name lc'=>lc $$self{'quality'});
+		$$self{'quality'} = openprint::StockQuality->transform( 'name', $$self{'quality'} );
+		my $Quality = openprint::StockQuality->find_one('name lc'=>lc $$self{'quality'});
 		if ( ! $Quality ) {
 			$Quality = new openprint::StockQuality();
 			$Quality->save({'name'=>$$self{'quality'}});
@@ -342,8 +342,8 @@ sub save {
 
 		$error = sql::insert( undef, undef, 'Papers', \%sql );
 
-       # Add record to audit log - action "New Paper".
-       openprint::logs::insertLogRecord('63', "Paper ID: " . $$self{'id'},);
+		# Add record to audit log - action "New Paper".
+		openprint::logs::insertLogRecord('63', "Paper ID: " . $$self{'id'},);
 
 		if ( ! $error ) {
 
@@ -353,9 +353,9 @@ sub save {
 				$variable{'ReplacementText'} = ssi::variable_substitution( undef, $openprint::log, $openprint::dbh, \$variable{'ReplacementText'}, \%variable );
 				my $body = ssi::variable_substitution( undef, $openprint::log, $openprint::dbh, \$email_template, \%variable );
 				my %mail = (
-						SMTP    => $openprint::config{'Mail Server'},
-						FROM    => $openprint::config{'InventoryEmail'},
-						TO      => $openprint::config{'InventoryEmail'},
+						SMTP	=> $openprint::config{'Mail Server'},
+						FROM	=> $openprint::config{'InventoryEmail'},
+						TO	  => $openprint::config{'InventoryEmail'},
 						SUBJECT => 'A new paper has been added to inventory',
 						);
 				#misc::send_email_with_attachment( $openprint::log, \%mail, ( '', encode_qp($body), 'text/html', 'quoted-printable' ) );
@@ -366,22 +366,22 @@ sub save {
 			return $error;
 		} # end if
 
-    } else {
-        if ( $error = sql::update( undef, undef, 'Papers', ['id=?',$$self{'id'}], \%sql ) ) {
+	} else {
+		if ( $error = sql::update( undef, undef, 'Papers', ['id=?',$$self{'id'}], \%sql ) ) {
 			sql::end_transaction( $openprint::dbh, $ac );
 			return $error;
 		} # end if
-       # Add record to audit log - action "Update Paper".
-       openprint::logs::insertLogRecord('64', "Paper ID: " . $$self{'id'},);
-    } # end if
-    sql::execute( undef, undef, q{DELETE FROM PaperNames WHERE id NOT IN (SELECT DISTINCT name_id FROM Papers)} );
-    sql::execute( undef, undef, q{DELETE FROM PaperFinishes WHERE id NOT IN (SELECT DISTINCT finish_id FROM Papers)} );
-    sql::execute( undef, undef, q{DELETE FROM PaperColours WHERE id NOT IN (SELECT DISTINCT colour_id FROM Papers)} );
-    sql::execute( undef, undef, q{DELETE FROM PaperWeights WHERE id NOT IN (SELECT DISTINCT weight_id FROM Papers)} );
+		# Add record to audit log - action "Update Paper".
+		openprint::logs::insertLogRecord('64', "Paper ID: " . $$self{'id'},);
+	} # end if
+	sql::execute( undef, undef, q{DELETE FROM PaperNames WHERE id NOT IN (SELECT DISTINCT name_id FROM Papers)} );
+	sql::execute( undef, undef, q{DELETE FROM PaperFinishes WHERE id NOT IN (SELECT DISTINCT finish_id FROM Papers)} );
+	sql::execute( undef, undef, q{DELETE FROM PaperColours WHERE id NOT IN (SELECT DISTINCT colour_id FROM Papers)} );
+	sql::execute( undef, undef, q{DELETE FROM PaperWeights WHERE id NOT IN (SELECT DISTINCT weight_id FROM Papers)} );
 
-    my %types = sql::execute( undef, undef, q{SELECT strID, lngIndex FROM Project_Types} );
+	my %types = sql::execute( undef, undef, q{SELECT strID, lngIndex FROM Project_Types} );
 	my @recommendations = $self->recommendations();
-    sql::execute( undef, undef, q{DELETE FROM Paper_Recommendations WHERE lngPaperIndex=?}, $$self{'id'} );
+	sql::execute( undef, undef, q{DELETE FROM Paper_Recommendations WHERE lngPaperIndex=?}, $$self{'id'} );
 	foreach my $rec ( @recommendations ) {
 		sql::insert( undef, undef, 'Paper_Recommendations', 'lngPaperIndex', $$self{'id'},'lngProjectTypeIndex', $types{$rec} );
 	} # end foreach
@@ -413,66 +413,66 @@ sub merge {
 
 sub delete {
 	my $self = shift;
-    my $ac = sql::start_transaction( );
+	my $ac = sql::start_transaction( );
 	# We don't want to lose the paper if it's in a manifest
 	#sql::update( undef, undef, 'manifest_content_types', ['paper_id=?', $$self{'id'}], 'paper_id', undef );
-    sql::execute( undef, undef, q{DELETE FROM Paper_Allocations WHERE paper_id=?}, $$self{'id'} );
-    sql::execute( undef, undef, q{DELETE FROM Paper_Inventory WHERE paper_id=?}, $$self{'id'} );
-    sql::execute( undef, undef, q{DELETE FROM Paper_prices WHERE lngpaperindex=?}, $$self{'id'} );
-    sql::execute( undef, undef, q{DELETE FROM Paper_recommendations WHERE lngpaperindex=?}, $$self{'id'} );
-    sql::execute( undef, undef, q{DELETE FROM Skid_Contents WHERE paper_id=?}, $$self{'id'} );
-    sql::execute( undef, undef, q{DELETE FROM Papers WHERE id=?}, $$self{'id'} );
+	sql::execute( undef, undef, q{DELETE FROM Paper_Allocations WHERE paper_id=?}, $$self{'id'} );
+	sql::execute( undef, undef, q{DELETE FROM Paper_Inventory WHERE paper_id=?}, $$self{'id'} );
+	sql::execute( undef, undef, q{DELETE FROM Paper_prices WHERE lngpaperindex=?}, $$self{'id'} );
+	sql::execute( undef, undef, q{DELETE FROM Paper_recommendations WHERE lngpaperindex=?}, $$self{'id'} );
+	sql::execute( undef, undef, q{DELETE FROM Skid_Contents WHERE paper_id=?}, $$self{'id'} );
+	sql::execute( undef, undef, q{DELETE FROM Papers WHERE id=?}, $$self{'id'} );
 
-    if ( ! sql::execute( undef, undef, q{SELECT DISTINCT manufacturer_id FROM Papers WHERE manufacturer_id=?}, $$self{'manufacturer_id'} ) ) {
-        sql::execute( undef, undef, q{DELETE FROM Manufacturers WHERE Id=?}, $$self{'manufacturer_id'} );
-    } # end if
-    if ( ! sql::execute( undef, undef, q{SELECT DISTINCT name_id FROM Papers WHERE name_id=?}, $$self{'name_id'} ) ) {
-        sql::execute( undef, undef, q{DELETE FROM PaperNames WHERE Id=?}, $$self{'name_id'} );
-    } # end if
-    if ( ! sql::execute( undef, undef, q{SELECT DISTINCT finish_id FROM Papers WHERE finish_id=?}, $$self{'finish_id'} ) ) {
-        sql::execute( undef, undef, q{DELETE FROM PaperFinishes WHERE Id=?}, $$self{'finish_id'} );
-    } # end if
-    if ( ! sql::execute( undef, undef, q{SELECT DISTINCT colour_id FROM Papers WHERE colour_id=?}, $$self{'colour_id'} ) ) {
-        sql::execute( undef, undef, q{DELETE FROM PaperColours WHERE Id=?}, $$self{'colour_id'} );
-    } # end if
-    if ( ! sql::execute( undef, undef, q{SELECT DISTINCT weight_id FROM Papers WHERE weight_id=?}, $$self{'weight_id'} ) ) {
-        sql::execute( undef, undef, q{DELETE FROM PaperWeights WHERE Id=?}, $$self{'weight_id'} );
-    } # end if
-    #if ( ! sql::execute( undef, undef, q{SELECT DISTINCT quality_id FROM Papers WHERE quality_id=?}, $$self{'quality_id'} ) ) {
-        #sql::execute( undef, undef, q{DELETE FROM PaperQualities WHERE Id=?}, $$self{'quality_id'} );
-    #} # end if
-    
-    # Add record to audit log - action "Delete Paper".
-    openprint::logs::insertLogRecord('15', "Paper ID: " . $$self{'id'},);
-    sql::end_transaction( undef, $ac );
+	if ( ! sql::execute( undef, undef, q{SELECT DISTINCT manufacturer_id FROM Papers WHERE manufacturer_id=?}, $$self{'manufacturer_id'} ) ) {
+		sql::execute( undef, undef, q{DELETE FROM Manufacturers WHERE Id=?}, $$self{'manufacturer_id'} );
+	} # end if
+	if ( ! sql::execute( undef, undef, q{SELECT DISTINCT name_id FROM Papers WHERE name_id=?}, $$self{'name_id'} ) ) {
+		sql::execute( undef, undef, q{DELETE FROM PaperNames WHERE Id=?}, $$self{'name_id'} );
+	} # end if
+	if ( ! sql::execute( undef, undef, q{SELECT DISTINCT finish_id FROM Papers WHERE finish_id=?}, $$self{'finish_id'} ) ) {
+		sql::execute( undef, undef, q{DELETE FROM PaperFinishes WHERE Id=?}, $$self{'finish_id'} );
+	} # end if
+	if ( ! sql::execute( undef, undef, q{SELECT DISTINCT colour_id FROM Papers WHERE colour_id=?}, $$self{'colour_id'} ) ) {
+		sql::execute( undef, undef, q{DELETE FROM PaperColours WHERE Id=?}, $$self{'colour_id'} );
+	} # end if
+	if ( ! sql::execute( undef, undef, q{SELECT DISTINCT weight_id FROM Papers WHERE weight_id=?}, $$self{'weight_id'} ) ) {
+		sql::execute( undef, undef, q{DELETE FROM PaperWeights WHERE Id=?}, $$self{'weight_id'} );
+	} # end if
+	#if ( ! sql::execute( undef, undef, q{SELECT DISTINCT quality_id FROM Papers WHERE quality_id=?}, $$self{'quality_id'} ) ) {
+		#sql::execute( undef, undef, q{DELETE FROM PaperQualities WHERE Id=?}, $$self{'quality_id'} );
+	#} # end if
+	
+	# Add record to audit log - action "Delete Paper".
+	openprint::logs::insertLogRecord('15', "Paper ID: " . $$self{'id'},);
+	sql::end_transaction( undef, $ac );
 	
 } # end sub delete
 
 sub to_string {
 	my $self = shift;
-    if ( @_ ) {
-        $$self{'to_string'} = $_[0];
-    } # end if
-    if ( ! $$self{'to_string'} ) {
-        my $string = join(' ', ( $self->manufacturer(), $self->name(), $self->finish(), $self->colour(), $self->weight() ) );
-        if ( $self->type() eq 'Roll' ) {
-            $string .= ' ' . $self->width.'"' if $self->width();
-            $string .= ' Roll ';
-            #$string .= $self->basis_mweight().'M ' if $self->basis_mweight();
-        } else {
-            if ( $self->start_width() and ( ( $self->width() != $self->start_width() ) or ( $self->height() != $self->start_height() ) ) ) {
-                $string .= ' ' . $self->start_width().'x'.$self->start_height() . ' => '. $self->width().'x'.$self->height() . ' ';
-            } else {
-                $string .= ' ' . $self->width().'x'.$self->height() . ' ';
-            } # end if
-            #$string .= $self->mweight().'M ' if $self->mweight();
-        } # end if
+	if ( @_ ) {
+		$$self{'to_string'} = $_[0];
+	} # end if
+	if ( ! $$self{'to_string'} ) {
+		my $string = join(' ', ( $self->manufacturer(), $self->name(), $self->finish(), $self->colour(), $self->weight() ) );
+		if ( $self->type() eq 'Roll' ) {
+			$string .= ' ' . $self->width.'"' if $self->width();
+			$string .= ' Roll ';
+			#$string .= $self->basis_mweight().'M ' if $self->basis_mweight();
+		} else {
+			if ( $self->start_width() and ( ( $self->width() != $self->start_width() ) or ( $self->height() != $self->start_height() ) ) ) {
+				$string .= ' ' . $self->start_width().'x'.$self->start_height() . ' => '. $self->width().'x'.$self->height() . ' ';
+			} else {
+				$string .= ' ' . $self->width().'x'.$self->height() . ' ';
+			} # end if
+			#$string .= $self->mweight().'M ' if $self->mweight();
+		} # end if
 		$string .= sprintf('%.1fPT ', 1000*$self->calliper()) if $self->calliper();
 		$string .= $self->gsm().'gsm ' if $self->gsm();
-        $string .= 'FSC:' . $$self{'fsc_code'} if $$self{'fsc_code'};
-        #$string .= 'Minimum: ' . $$self{'minimum_order'} if $$self{'minimum_order'};
-        $$self{'to_string'} = $string;
-    } # end if
+		$string .= 'FSC:' . $$self{'fsc_code'} if $$self{'fsc_code'};
+		#$string .= 'Minimum: ' . $$self{'minimum_order'} if $$self{'minimum_order'};
+		$$self{'to_string'} = $string;
+	} # end if
 	return $$self{'to_string'};
 }
 
@@ -481,157 +481,157 @@ sub Name {
 }
 
 sub name {
-    my ( $self, $name ) = @_;
+	my ( $self, $name ) = @_;
 
 	if ( defined $name ) {
 $name =~ s/^\s+//;
 $name =~ s/\s+$//;
 $name =~ s/\s\s+$/ /;
-        @$self{'name_id','name'} = sql::execute( undef, undef, q{SELECT id, longname FROM PaperNames WHERE lower(longname)=?}, lc $name );
-        if ( ! $$self{'name_id'} ) {
+		@$self{'name_id','name'} = sql::execute( undef, undef, q{SELECT id, longname FROM PaperNames WHERE lower(longname)=?}, lc $name );
+		if ( ! $$self{'name_id'} ) {
 			$$self{'name'} = $name;
-        } # end if
-    } elsif ( $$self{'name_id'} and ! $$self{'name'} ) {
+		} # end if
+	} elsif ( $$self{'name_id'} and ! $$self{'name'} ) {
 		my $Name = new openprint::StockName( $$self{'name_id'} );
 		$$self{'name'} = $Name->longname();
-    } # end if
-    return $$self{'name'};
+	} # end if
+	return $$self{'name'};
 } # end sub name
 
 sub Manufacturer {
 	return openprint::Manufacturer( $_[0]{'manufacturer_id'} );
 }
 sub manufacturer {
-    my ( $self, $manufacturer ) = @_;
+	my ( $self, $manufacturer ) = @_;
 
-    if ( defined $manufacturer ) {
+	if ( defined $manufacturer ) {
 		$manufacturer =~ s/^\s+//;
 		$manufacturer =~ s/\s+$//;
 		$manufacturer =~ s/\s\s+$/ /;
-        @$self{'manufacturer_id','manufacturer'} = sql::execute( undef, undef, q{SELECT id, longname FROM Manufacturers WHERE lower(longname)=?}, lc $manufacturer );
-        if ( ! $$self{'manufacturer_id'} ) {
+		@$self{'manufacturer_id','manufacturer'} = sql::execute( undef, undef, q{SELECT id, longname FROM Manufacturers WHERE lower(longname)=?}, lc $manufacturer );
+		if ( ! $$self{'manufacturer_id'} ) {
 			$$self{'manufacturer'} = $manufacturer;
-        } # end if
-    } elsif ( $$self{'manufacturer_id'} and ! $$self{'manufacturer'} ) {
+		} # end if
+	} elsif ( $$self{'manufacturer_id'} and ! $$self{'manufacturer'} ) {
 		my $Manufacturer = new openprint::Manufacturer( $$self{'manufacturer_id'} );
 		$$self{'manufacturer'} = $Manufacturer->longname();
-    } # end if
-    return $$self{'manufacturer'};
+	} # end if
+	return $$self{'manufacturer'};
 } # end sub manufacturer
 
 sub Finish {
 	return openprint::StockFinish( $_[0]{'finish_id'} );
 }
 sub finish {
-    my ( $self, $finish ) = @_;
+	my ( $self, $finish ) = @_;
 
-    if ( defined $finish ) {
+	if ( defined $finish ) {
 		$finish =~ s/^\s+//;
 		$finish =~ s/\s+$//;
 		$finish =~ s/\s\s+$/ /;
-        @$self{'finish_id','finish'} = sql::execute( undef, undef, q{SELECT id,longname FROM PaperFinishes WHERE lower(longname)=?}, lc $finish );
-        if ( ! $$self{'finish_id'} ) {
+		@$self{'finish_id','finish'} = sql::execute( undef, undef, q{SELECT id,longname FROM PaperFinishes WHERE lower(longname)=?}, lc $finish );
+		if ( ! $$self{'finish_id'} ) {
 			$$self{'finish'} = $finish;
-        } # end if
-    } elsif ( $$self{'finish_id'} and ! $$self{'finish'} ) {
+		} # end if
+	} elsif ( $$self{'finish_id'} and ! $$self{'finish'} ) {
 		my $Finish = new openprint::StockFinish( $$self{'finish_id'} );
 		$$self{'finish'} = $Finish->longname();
-    } # end if
-    return $$self{'finish'};
+	} # end if
+	return $$self{'finish'};
 } # end sub finish
 
 sub Colour {
 	return openprint::StockColour( $_[0]{'colour_id'} );
 }
 sub colour {
-    my ( $self, $colour ) = @_;
+	my ( $self, $colour ) = @_;
 
-    if ( defined $colour ) {
+	if ( defined $colour ) {
 		$colour =~ s/^\s+//;
 		$colour =~ s/\s+$//;
 		$colour =~ s/\s\s+$/ /;
-        @$self{'colour_id','colour'} = sql::execute( undef, undef, q{SELECT id,longname FROM PaperColours WHERE lower(longname)=?}, lc $colour );
-        if ( ! $$self{'colour_id'} ) {
+		@$self{'colour_id','colour'} = sql::execute( undef, undef, q{SELECT id,longname FROM PaperColours WHERE lower(longname)=?}, lc $colour );
+		if ( ! $$self{'colour_id'} ) {
 			$$self{'colour'} = $colour;
-        } # end if
-    } elsif ( $$self{'colour_id'} and ! $$self{'colour'} ) {
+		} # end if
+	} elsif ( $$self{'colour_id'} and ! $$self{'colour'} ) {
 		my $Colour = new openprint::StockColour( $$self{'colour_id'} );
 		$$self{'colour'} = $Colour->longname();
-    } # end if
-    return $$self{'colour'};
+	} # end if
+	return $$self{'colour'};
 } # end sub colour
 
 sub Quality {
-    return new openprint::StockQuality( $_[0]{'quality_id'} );
+	return new openprint::StockQuality( $_[0]{'quality_id'} );
 } # end sub Quality
 
 sub quality {
 	my ( $self, $quality ) = @_;
-    if ( @_ > 1 ) {
-        $quality = openprint::StockQuality->transform( 'name', $quality );
-        if ( ! $$self{'custom'} ) {
-            my $Quality = openprint::StockQuality->find_one('name lc'=>lc $quality );
-            if ( $Quality ) {
-                @$self{'quality_id','quality'} = @$Quality{'id','name'};
-            } else {
-                @$self{'quality_id','quality'} = ( undef, $quality );
-            } # end if
-        } else {
-            $$self{'quality'} = $quality;
-        } # end if
-    } elsif ( $$self{'quality_id'} and ! $$self{'quality'} ) {
-        $$self{'quality'} = new openprint::StockQuality( $$self{'quality_id'} )->name();
-    } # end if
-    return $$self{'quality'};
+	if ( @_ > 1 ) {
+		$quality = openprint::StockQuality->transform( 'name', $quality );
+		if ( ! $$self{'custom'} ) {
+			my $Quality = openprint::StockQuality->find_one('name lc'=>lc $quality );
+			if ( $Quality ) {
+				@$self{'quality_id','quality'} = @$Quality{'id','name'};
+			} else {
+				@$self{'quality_id','quality'} = ( undef, $quality );
+			} # end if
+		} else {
+			$$self{'quality'} = $quality;
+		} # end if
+	} elsif ( $$self{'quality_id'} and ! $$self{'quality'} ) {
+		$$self{'quality'} = new openprint::StockQuality( $$self{'quality_id'} )->name();
+	} # end if
+	return $$self{'quality'};
 } # end sub quality
 
 sub Weight {
 	return openprint::StockWeight( $_[0]{'weight_id'} );
 }
 sub weight {
-    my ( $self, $weight ) = @_;
+	my ( $self, $weight ) = @_;
 
 
-    if ( defined $weight ) {
+	if ( defined $weight ) {
 		$weight =~ s/^\s+//;
 		$weight =~ s/\s+$//;
 		$weight =~ s/\s\s+$/ /;
-        @$self{'weight_id','weight'} = sql::execute( undef, undef, q{SELECT id, longname FROM PaperWeights WHERE lower(longname)=?}, lc $weight );
-        if ( ! $$self{'weight_id'} ) {
+		@$self{'weight_id','weight'} = sql::execute( undef, undef, q{SELECT id, longname FROM PaperWeights WHERE lower(longname)=?}, lc $weight );
+		if ( ! $$self{'weight_id'} ) {
 			$$self{'weight'} = $weight;
-        } # end if
-    } elsif ( $$self{'weight_id'} and ! $$self{'weight'} ) {
+		} # end if
+	} elsif ( $$self{'weight_id'} and ! $$self{'weight'} ) {
 		my $Weight = new openprint::StockWeight( $$self{'weight_id'} );
 		$$self{'weight'} = $Weight->longname();
-    } # end if
-    return $$self{'weight'};
+	} # end if
+	return $$self{'weight'};
 } # end sub weight
 
 
 sub width {
-    my ( $self, $width ) = @_;
-    if ( defined $width ) {
-        $width =~ s/[^\d\.]//g;
-        $$self{'width'} = $width;
+	my ( $self, $width ) = @_;
+	if ( defined $width ) {
+		$width =~ s/[^\d\.]//g;
+		$$self{'width'} = $width;
 		#$$self{'start_width'} = $$self{'width'} if ! $$self{'start_width'};
-    } # end if
-    return $$self{'width'};
+	} # end if
+	return $$self{'width'};
 } # end if
 sub height {
-    my ( $self, $height ) = @_;
-    if ( defined $height ) {
-        $height =~ s/[^\d\.]//g;
-        $$self{'height'} = $height;
+	my ( $self, $height ) = @_;
+	if ( defined $height ) {
+		$height =~ s/[^\d\.]//g;
+		$$self{'height'} = $height;
 		#$$self{'start_height'} = $$self{'height'} if ! $$self{'start_height'};
-    } # end if
-    return $$self{'height'};
+	} # end if
+	return $$self{'height'};
 } # end if
 
 sub mweight {
-    my ( $self, $mweight ) = @_;
-    if ( defined $mweight ) {
-        $mweight =~ s/[^\d\.]//g;
-        $$self{'mweight'} = 1*$mweight;
+	my ( $self, $mweight ) = @_;
+	if ( defined $mweight ) {
+		$mweight =~ s/[^\d\.]//g;
+		$$self{'mweight'} = 1*$mweight;
 	} # end if
 	if ( ! $$self{'mweight'} ) {
 		if ( $$self{'gsm'} ) {
@@ -649,21 +649,21 @@ sub mweight {
 $openprint::log->debug("Auto calcing mweight from " . $self->weight() );
 			$$self{'mweight'} = sprintf('%.0f', ($self->weight()*$$self{'width'}*$$self{'height'})/(25*38));
 		} # end if
-    } # end if
-    return $$self{'mweight'};
+	} # end if
+	return $$self{'mweight'};
 } # end sub mweight
 
 sub calliper {
-    my $self = shift;
-    if ( @_ ) {
-        my $c = shift;
-        $c =~ s/[^\d\.]//g;
-        $$self{'calliper'} = $c;
-    } # end if
-    return $$self{'calliper'};
+	my $self = shift;
+	if ( @_ ) {
+		my $c = shift;
+		$c =~ s/[^\d\.]//g;
+		$$self{'calliper'} = $c;
+	} # end if
+	return $$self{'calliper'};
 } # end sub calliper
 sub size {
-    my $self = shift;
+	my $self = shift;
 
 	if ( $$self{'type'} eq 'Roll' ) {
 		if ( $$self{'width'} ) {
@@ -682,9 +682,9 @@ sub Owner {
 	return new openprint::Company( $$self{'owner_id'} );
 } # endn sub Owner
 sub owner {
-    my $self = shift;
+	my $self = shift;
 	my $Company;
-    if ( @_ and $_[0] ) {
+	if ( @_ and $_[0] ) {
 		my @Companies = openprint::Company::find('name'=>$_[0]);
 		if ( ! @Companies ) {
 			$Company = new openprint::Company();
@@ -694,26 +694,26 @@ sub owner {
 			$Company = $Companies[0];
 		} # end if
 
-        $$self{'owner_id'} = $Company->id();
+		$$self{'owner_id'} = $Company->id();
 	} else {
 		$Company = new openprint::Company( $$self{'owner_id'} );
-    } # end if
-    return $Company->name();
+	} # end if
+	return $Company->name();
 } # end sub owner
 sub owner_id {
-    my $self = shift;
-    if ( @_ ) {
-        $$self{'owner_id'} = shift;
-        #$$self{'owner_id'} =~ s/\D//g;
-    } # end if
-    return $$self{'owner_id'};
+	my $self = shift;
+	if ( @_ ) {
+		$$self{'owner_id'} = shift;
+		#$$self{'owner_id'} =~ s/\D//g;
+	} # end if
+	return $$self{'owner_id'};
 } # end sub owner
 
 # This function assumes that the skid contents have already been updated
 sub add_inventory {
-    my ( $self, $Skid, $quantity, $units, $description, $Project ) = @_;
-    $quantity =~ s/[^\-\d]//g;
-    $quantity = int $quantity;
+	my ( $self, $Skid, $quantity, $units, $description, $Project ) = @_;
+	$quantity =~ s/[^\-\d]//g;
+	$quantity = int $quantity;
 
 	if ( ! $Project ) {
 		my $docket;
@@ -733,23 +733,23 @@ sub add_inventory {
 	$units = $self->units() if ! $units;
 	my $PI = new openprint::PaperInventory();
 	$PI->save({
-        paper_id	=>	$$self{id},
-        user_id		=>	$openprint::session{user_id},
-        poindex		=>	undef,
-        instock		=>	$self->in_stock() + $quantity,
-        delta		=>	$quantity,
-        comment		=>	$description,
-        skid_id		=>	$Skid->id(),
+		paper_id	=>	$$self{id},
+		user_id		=>	$openprint::session{user_id},
+		poindex		=>	undef,
+		instock		=>	$self->in_stock() + $quantity,
+		delta		=>	$quantity,
+		comment		=>	$description,
+		skid_id		=>	$Skid->id(),
 		units		=>	$units,
 		docket		=>	$$Project{docket},
 		project_id	=>	$$Project{id},
-        });
+		});
 	# Updates in_stock and allocated
 	$self->save();
 } # end sub add_inventory
 
 sub allocate {
-    my ( $self, $skid_id, $project_id, $quantity, $units, $condition_id ) = @_;
+	my ( $self, $skid_id, $project_id, $quantity, $units, $condition_id ) = @_;
 
 	my $skids;
 	if ( ref $skid_id eq 'openprint::Skid' ) {
@@ -782,15 +782,15 @@ sub allocate {
 } # end sub allocate
 
 sub back_ordered {
-    my $self = shift;
+	my $self = shift;
 	return 0 if ! $$self{'id'};
 
-    return 0;
+	return 0;
 } # end sub back_ordered
 
 sub allocated {
 	return 0 if ! $_[0]{id};
-    my ( $self, $project_id, $new ) = @_;
+	my ( $self, $project_id, $new ) = @_;
 	if ( @_ == 3 ) {
 		$$self{allocated} = $new;
 	} # end if
@@ -801,7 +801,7 @@ sub allocated {
 	if ( ! defined $$self{allocated} ) {
 		$$self{allocated} = misc::sum( map { $_->quantity() } openprint::PaperAllocation->find(paper_id=>$$self{id}) );
 	} # end if
-    return $$self{allocated};
+	return $$self{allocated};
 } # end sub allocated
 
 sub in_stock {
@@ -825,7 +825,7 @@ sub in_stock {
 			$_[0]{'in_stock'} += $SkidContent->quantity();
 		} # end foreach SkidContent
 	} # end if
-    return $_[0]{'in_stock'};
+	return $_[0]{'in_stock'};
 } # end sub in_stock
 
 sub SkidContents {
@@ -839,7 +839,7 @@ sub SkidContents {
 } # end sub SkidContents
 
 sub available {
-    my $self = shift;
+	my $self = shift;
 	if ( @_ ) {
 		if ( defined $_[0] ) {
 			$$self{'available'} = $_[0];
@@ -858,7 +858,7 @@ sub available {
 		} # end foreach SkidContent
 		$$self{'available'} -= $self->allocated();
 	} # end if
-    return $$self{available};
+	return $$self{available};
 } # end sub available
 
 sub skids {
@@ -868,24 +868,24 @@ sub skids {
 	} else {
 		return openprint::Skid::find('paper_id'=>$_[0]{id}, 'quantity_>='=>1);
 	} # end if
-    #return map { new openprint::Skid( $_ ) } sql::execute( undef, undef, q{SELECT skid_id FROM skid_contents WHERE paper_id=? and quantity > 0}, $$self{'id'} );
+	#return map { new openprint::Skid( $_ ) } sql::execute( undef, undef, q{SELECT skid_id FROM skid_contents WHERE paper_id=? and quantity > 0}, $$self{'id'} );
 } # end sub skids
 
 sub previous {
-    my $self = shift;
+	my $self = shift;
 	my @papers = find( 'order'=>'name,finish,colour,weight,width,height' );
 	for ( my $i = 0; $i < @papers; $i += 1 ) {
 		return $papers[$i-1] if ($papers[$i] == $self )and ($i > 0);
-    } # end if
-    return $self;
+	} # end if
+	return $self;
 } # end sub previous
 sub next {
-    my $self = shift;
+	my $self = shift;
 	my @papers = find( 'order'=>'name,finish,colour,weight,width,height' );
 	for ( my $i = 0; $i < @papers; $i += 1 ) {
 		return $papers[$i+1] if ($papers[$i] == $self )and ($i < @papers);
-    } # end if
-    return $self;
+	} # end if
+	return $self;
 } # end sub next
 
 sub recommendations {
@@ -900,7 +900,7 @@ sub recommendations {
 
 sub get_price {
 	my ( $self, $qty ) = @_;
-    my %price;
+	my %price;
 
 	my $factor = 1;
 	if ( $$self{'width'} and $$self{'height'} and $$self{'start_width'} and $$self{'start_height'} ) {
@@ -914,7 +914,7 @@ sub get_price {
 		# Roll
 	} # end if
 
-    if ( $$self{'Price'} ) {
+	if ( $$self{'Price'} ) {
 		# If custom paper
 		%price = ( 'Price' => $$self{'Price'}, 'Cost'=>$$self{'Price'}, 'units'=>$$self{'Units'});
 #$openprint::log->debug("Usnig custom price $$self{'Price'}$$self{'Units'}");
@@ -931,7 +931,7 @@ sub get_price {
 					( $Price->PricelistIndex() == $list_id ) and 
 					( $Price->Min() eq '' or $Price->Min() <= $qty ) and
 					( $Price->Max() eq '' or $Price->Max() >= $qty )
-			   ) {
+				) {
 				$bestPrice = $Price;
 				last;
 			} # end if
@@ -993,14 +993,22 @@ $openprint::log->warn("Invalid units in Paper.");
 
 
 sub cut {
-    my $self = shift;
-
-    if ( $$self{'height'} > $$self{'width'} ) {
-        $$self{'height'} /= 2;
-    } else {
-        $$self{'width'} /= 2;
-    } # end if
-    $$self{'mweight'} /= 2;
+	my $self = shift;
+	if ( @_ ) {
+		my ( $new_width, $new_height ) = @_;
+		$$self{mweight} = int( $$self{mweight} / ( ( $$self{width} * $$self{height} ) / ( $new_width * $new_height ) ) );
+		$$self{width} = $new_width;
+		$$self{height} = $new_height;
+	} else {
+		if ( $$self{height} > $$self{width} ) {
+			$$self{height} /= 2;
+		} else {
+			$$self{width} /= 2;
+		} # end if
+		$$self{mweight} /= 2;
+	} # end if
+	delete $$self{'to_string'};
+	delete $$self{'id_string'};
 	$$self{'grain_direction'} = undef; # force recalc of gd
 } # end sub cut
 
@@ -1201,10 +1209,10 @@ sub load_from_signature {
 		} # end if
 		my %params = (
 			'supplied'	=> $$specs{'rdbSuppliedStock'},
-			'name'      => $$specs{'ddmStockBrand'},
-			'finish'    => $$specs{'ddmStockFinish'},
-			'colour'    => $$specs{'ddmStockColour'},
-			'weight'    => $$specs{'ddmStockWeight'},
+			'name'	  => $$specs{'ddmStockBrand'},
+			'finish'	=> $$specs{'ddmStockFinish'},
+			'colour'	=> $$specs{'ddmStockColour'},
+			'weight'	=> $$specs{'ddmStockWeight'},
 			'project_type_id'=> ( $Project and $Project->type_id() ) ? $Project->Type()->id() : undef,
 		);
 		if ( $qty_index ) {
@@ -1213,18 +1221,18 @@ sub load_from_signature {
 			$params{'type'}		=	$$specs{'StockType'.$qty_index};
 		} # end if
 		my @Papers = openprint::Paper::find( %params );
-        if ( ! @Papers ) {
+		if ( ! @Papers ) {
 $openprint::log->debug("No papers found, looking for paper with no width or height");
-            delete $params{'width'};
-            delete $params{'height'};
-            @Papers = find( %params );
+			delete $params{'width'};
+			delete $params{'height'};
+			@Papers = find( %params );
 		#} elsif ( @Papers > 1 ) {
 			#$openprint::log->warn("More than 1 paper found in load_from_signature");
 			#foreach my $P ( @Papers ) {
 				#$openprint::log->warn( $P->id() . ' ' .$P->to_string() );
 			#} # end foreach P
-        } # end if
-        if ( ! @Papers ) {
+		} # end if
+		if ( ! @Papers ) {
 	$openprint::log->warn("No papers found");
 			$Paper = new openprint::Paper();
 			$Paper->name( $$specs{'ddmStockBrand'} );
@@ -1254,7 +1262,7 @@ $openprint::log->debug("No papers found, looking for paper with no width or heig
 			} # end if
 			#} # end if
 			@Papers = ( $Paper );
-        } # end if
+		} # end if
 		
 		if ( $qty_index ) {
 			my $qty = $$specs{'txtPressSheetQty'.$qty_index};
@@ -1330,10 +1338,10 @@ sub is_cut {
 } # end sub is_cut
 
 sub basis_mweight {
-    my ( $self, $mweight ) = @_;
-    if ( defined $mweight ) {
-        $mweight =~ s/[^\d\.]//g;
-        $$self{'basis_mweight'} = $mweight;
+	my ( $self, $mweight ) = @_;
+	if ( defined $mweight ) {
+		$mweight =~ s/[^\d\.]//g;
+		$$self{'basis_mweight'} = $mweight;
 	} # end if
 	if ( ! $$self{'basis_mweight'} ) {
 		if ( $$self{'gsm'} ) {
@@ -1344,14 +1352,14 @@ sub basis_mweight {
 		} elsif ( ( $$self{'weight'} =~ /^(\d+)lb$/i ) or ( $$self{'weight'} =~ /^(\d+)lbs$/i ) or ( $$self{'weight'} =~ /^(\d+)#$/i ) ) {
 			$$self{'basis_mweight'} = 2*$1;
 		} # end if
-    } # end if
-    return $$self{'basis_mweight'};
+	} # end if
+	return $$self{'basis_mweight'};
 } # end sub basis_mweight
 
 sub basis_width {
 	my ( $self, $width ) = @_;
 	if ( defined $width ) {
-        $width =~ s/[^\d\.]//g;
+		$width =~ s/[^\d\.]//g;
 		$$self{'basis_width'} = $width;
 	} # end if
 	if ( ! $$self{'basis_width'} ) {
@@ -1367,7 +1375,7 @@ sub basis_width {
 sub basis_height {
 	my ( $self, $height ) = @_;
 	if ( defined $height ) {
-        $height =~ s/[^\d\.]//g;
+		$height =~ s/[^\d\.]//g;
 		$$self{'basis_height'} = $height;
 	} # end if
 	if ( ! $$self{'basis_height'} ) {
@@ -1381,12 +1389,12 @@ sub basis_height {
 } # end sub basis_height
 
 sub sheet_weight {
-    return $_[0]{'width'} * $_[0]{'height'} * $_[0]->wpsi();
+	return $_[0]{'width'} * $_[0]{'height'} * $_[0]->wpsi();
 } # end sub sheet_weight
 
 sub start_sheet_weight {
-    my ( $self ) = @_;
-    return $$self{'start_width'} * $$self{'start_height'} * $self->wpsi();
+	my ( $self ) = @_;
+	return $$self{'start_width'} * $$self{'start_height'} * $self->wpsi();
 } # end sub start_sheet_weight
 
 sub units {
@@ -1417,9 +1425,9 @@ sub short {
 }
 
 sub factor {
-    my $factor = int($_[0]{'start_width'} / $_[0]{'width'} ) * int( $_[0]{'start_height'} / $_[0]{'height'} ) if $_[0]{'width'} and $_[0]{'height'};
-    return 1 if ! $factor;
-    return $factor;
+	my $factor = int($_[0]{'start_width'} / $_[0]{'width'} ) * int( $_[0]{'start_height'} / $_[0]{'height'} ) if $_[0]{'width'} and $_[0]{'height'};
+	return 1 if ! $factor;
+	return $factor;
 } # end sub factor
 
 
