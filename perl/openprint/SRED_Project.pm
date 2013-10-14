@@ -6,7 +6,7 @@ require openprint::User;
 require openprint::SRED_Content;
 
 use vars qw( $debug $table $serial %fields %transforms %defaults );
-$debug = 1;
+$debug = 0;
 $table = 'sred_projects';
 $serial = 'sred_projects_id_seq';
 
