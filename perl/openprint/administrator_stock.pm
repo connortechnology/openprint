@@ -58,7 +58,7 @@ sub list {
 					( $param{weight_id} ? ( 'weight_id'  => $param{'weight_id'} ) : () ),
 					( $param{quality_id} ? ( 'quality_id'        => $param{'quality_id'} ) : () ),
 					( $param{material_id} ? ( 'material_id'      => $param{'material_id'} ) : () ),
-					( $param{Types} ? ( 'type'           => [ split(',', $param{'Types'} ) ] ) : () ),
+					( $param{Types} ? ( 'type'           => $param{'Types'} ) : () ),
 					( $param{fsc_code} ? ( 'fsc_code'    => $param{'fsc_code'} ) : () ),
 					( $param{width} ? ( 'width'=>$param{width} ) : () ),
 					( $param{height} ? ( 'height'=>$param{'height'} ) : () ),
@@ -79,7 +79,43 @@ sub list {
 		} # end foreach
 		misc::export_csv( $r, $log, \%variable, 'stock.csv', \@header, \@data );
 
-	} elsif ( $param{'btnFunction'} eq 'ExportPrices' ) {
+	} elsif ( $param{'btnFunction'} eq 'Export Prices' ) {
+		my @header = ( 'Paper Brand', 'Finish','Colour','Weight','Width','Height','Pricelist', 'Service', 'Equipment', 'Min', 'Max', 'Units', 'Cost', 'Markup', 'Price', 'Discountable' );
+		my @data;
+		foreach my $Stock ( openprint::Paper->find( order=>'brand,finish,colour,weight,width,height',
+                    columns=>'*,(SELECT name FROM StockBrands WHERE Stockbrands.id=brand_id) AS brand,(SELECT name FROM StockFinishes WHERE StockFinishes.id=finish_id) AS finish,(SELECT name FROM StockColours WHERE StockColours.id=colour_id) AS colour,(SELECT name FROM StockWeights WHERE StockWeights.id=weight_id) AS weight ',
+                    ( $param{group_id} ? ( group_id => $param{group_id} ) : () ),
+                    ( $param{owner_id} ? ( owner_id => $param{owner_id} ) : () ),
+                    ( $param{manufacturer_id} ? ( manufacturer_id => $param{manufacturer_id} ) : () ),
+                    ( $param{brand_id} ? ( 'brand_id'    => $param{brand_id} ) : () ),
+                    ( $param{finish_id} ? ( 'finish_id'  => $param{'finish_id'} ) : () ),
+                    ( $param{colour_id} ? ( 'colour_id'  => $param{'colour_id'} ) : () ),
+                    ( $param{weight_id} ? ( 'weight_id'  => $param{'weight_id'} ) : () ),
+                    ( $param{quality_id} ? ( 'quality_id'        => $param{'quality_id'} ) : () ),
+                    ( $param{material_id} ? ( 'material_id'      => $param{'material_id'} ) : () ),
+                    ( $param{Types} ? ( 'type'           => $param{'Types'} ) : () ),
+                    ( $param{fsc_code} ? ( 'fsc_code'    => $param{'fsc_code'} ) : () ),
+                    ( $param{width} ? ( 'width'=>$param{width} ) : () ),
+                    ( $param{height} ? ( 'height'=>$param{'height'} ) : () ),
+                    ( $param{grain_direction} ? ( grain_direction => $param{grain_direction} ) : () ),
+                    ( $param{digital} ne '' ? ( digital=>$param{digital} ) : () ),
+                    'order'         => 'brand,finish,colour,weight, width, height'
+                    ) ) {
+            next if $param{recommendations} eq '0' and $Stock->recommendations();
+            next if $param{recommendations} eq '1' and ! $Stock->recommendations();
+            if ( $param{setup_prices} eq '1' ) {
+                next if ! openprint::PaperPrice->find_one(paper_id=>$$Stock{id}, service=>'Setup');
+            } elsif ( $param{setup_prices} eq '0' ) {
+                next if openprint::PaperPrice->find_one(paper_id=>$$Stock{id}, service=>'Setup');
+            } # end if
+
+            foreach my $Price ( openprint::PaperPrice->find( paper_id=>$$Stock{id}, order=>'lnglistindex, lngmin NULLS FIRST, lngmax NULLS FIRST') ) {
+                push @data, $Stock->brand(), $Stock->finish(),$Stock->colour(), $Stock->weight(), $Stock->width(), $Stock->height();
+                push @data, $Price->Pricelist()->name(), $Price->service(), $Price->Equipment()->strid(), $Price->min(), $Price->max(), $Price->units(), $Price->cost(), $Price->markup(), $Price->price(), $Price->discountable();
+            } # end foreach
+        } # end foreach Paper
+        misc::export_csv( $r, $log, \%variable, 'PaperPrices.csv', \@header, \@data );
+
 	} elsif ( $param{'btnFunction'} eq 'Copy' ) {
 		foreach my $Paper ( @Papers ) {
 			my $NewPaper = $Paper->copy();
@@ -143,6 +179,8 @@ $openprint::log->debug("Setting: $param{'amount'} " );
 			} # end if
 			sql::end_transaction( $dbh, $ac );
 		} # end foreach Paper
+	} else {
+		$log->error("Unknown function $param{btnFunction}");
 	} # end if
 } # end sub list
 
