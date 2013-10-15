@@ -148,7 +148,7 @@
 
 			my @Projects = openprint::Project->find( %sql );
 			my %Schedule;
-			foreach my $S ( openprint::ScheduledJob->find(project_id=>[ map { $_->id() } @Projects ], 'starttime_null'=>0 ) ) {
+			foreach my $S ( openprint::ScheduledJob->find(project_id=>[ map { $_->id() } @Projects ], 'starttime is null'=>0 ) ) {
 				push @{$Schedule{$$S{project_id}}}, $S;
 			} # end foreach
 
