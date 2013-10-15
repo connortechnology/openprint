@@ -6,7 +6,7 @@ require openprint::Host;
 require openprint::License;
 
 use vars qw( $debug $table @identified_by %fields %transforms %defaults );
-$debug = 1;
+$debug = 0;
 $table = 'license_hosts';
 @identified_by	= ( 'license_id', 'host_id' );
 %fields = (

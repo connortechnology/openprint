@@ -194,6 +194,17 @@ sub signature_calc {
 				my $type = $$folding_specs{"FoldType-$$sig_specs{SignatureIndex}-$qty_index-$index"};
 				next if ! $type;
 				my ( $pages ) = $type =~ /(\d+)PageFold/;
+				if ( ! $pages ) {
+					if ( $type eq 'SingleGateFold' ) {
+						$pages = 6;
+					} elsif ( $type eq 'DoubleGateFold' ) {
+						$pages = 8;
+					} # end if
+					if ( ! $pages ) {	
+						$openprint::log->error(" No pages in fold $type.");
+						next;
+					}
+				}
 				#$results{'Breakdown'} .= "Folding$index: $$sig_specs{SignatureIndex} sig_pages; $sig_pages type: $type pages: $pages qty: " . $$folding_specs{"FoldQty-$$sig_specs{SignatureIndex}-$qty_index-$index"} . '<br/>';
 				if ( $$folding_specs{"FoldQty-$$sig_specs{SignatureIndex}-$qty_index-$index"} * $pages > $sig_pages ) {
 					$pages{$pages} += int($sig_pages / $pages);
@@ -470,6 +481,17 @@ sub calc {
 						my $type = $$folding_specs{"FoldType-$$sig_specs{SignatureIndex}-$qty_index-$index"};
 						next if ! $type;
 						my ( $pages ) = $type =~ /(\d+)PageFold/;
+						if ( ! $pages ) {
+							if ( $type eq 'SingleGateFold' ) {
+								$pages = 6;
+							} elsif ( $type eq 'DoubleGateFold' ) {
+								$pages = 8;
+							} # end if
+							if ( ! $pages ) {	
+								$openprint::log->error(" No pages in fold $type.");
+								next;
+							}
+						}
 #$openprint::log->debug("Folding pages: $type $sig_pages / $pages");
 						if ( $$folding_specs{"FoldQty-$$sig_specs{SignatureIndex}-$qty_index-$index"} * $pages != $sig_pages ) {
 $openprint::log->error('1 ' . $$folding_specs{"FoldQty-$$sig_specs{SignatureIndex}-$qty_index-$index"} . ' > ' . $sig_pages);

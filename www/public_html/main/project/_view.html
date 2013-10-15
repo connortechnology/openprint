@@ -53,6 +53,7 @@
             } else {
                 $html .= sprintf('<tr%s><td class="description"><b>Printing</b><br/>%s</td>', $rowclass, $summary );
             } # end if
+
 			if ( $$services{Signature} ) {
 				$rowclass = $rowclass ? '' : ' class="colRow"';
 				my @totals;
