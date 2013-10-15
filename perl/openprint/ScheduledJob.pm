@@ -335,9 +335,9 @@ sub get_li {
 		} # end if
 		$html .= ssi::button( 'Remove'.$$self{'id'}, { onclick=>"remove_job($$self{id});", text=> 'D', title=>'Delete from schedule' } );
 		if ( $$self{'project_id'} ) {
-			if ( ( $$self{pertains_id} and @{$$self{'pertains_id'}} == 2 ) or ( @{$$self{service_id}} == 2 ) ) {
+			if ( ( $$self{pertains_id} and @{$$self{'pertains_id'}} == 2 ) or ( $$self{service_id} and @{$$self{service_id}} == 2 ) ) {
 				$html .= ssi::button( 'Split'.$$self{'id'}, { onclick=>"split_job('$ul_id',$$self{id});", text=> 'S', title=>'Split Job' } );
-			} elsif ( ( $$self{pertains_id} and @{$$self{'pertains_id'}} > 2 ) or ( @{$$self{service_id}} == 2 ) ) {
+			} elsif ( ( $$self{pertains_id} and @{$$self{'pertains_id'}} > 2 ) or ( $$self{service_id} and @{$$self{service_id}} == 2 ) ) {
 				$html .= ssi::button( 'Split'.$$self{'id'}, { onclick=>"popup_window('_split_popup.html', 'schedule_id=$$self{'id'}' );", text=> 'S', title=>'Split Job' } );
 			} # end if
 			if ( sets::isin( $self->ServiceType()->name(), [ '','Signature' ] ) ) {
