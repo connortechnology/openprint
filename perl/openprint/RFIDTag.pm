@@ -207,14 +207,16 @@ sub is_invalid_id {
 sub from_id {
 	my ( $tag_id ) = @_;
 
-	if ( my ( $type, $id ) = $tag_id =~ /^R?(\d)(\d{14})$/ ) {
+	my ( $type, $id );
+
+	if ( ( $type, $id ) = $tag_id =~ /^R?(\d)(\d{14})$/ ) {
 		my @RFID = openprint::RFIDTag->find( id=>sprintf('%d%.14d', $type, $id ) );
 		if ( @RFID == 1 ) {
 			return $RFID[0];
 		} else {
 			$openprint::log->debug("Got too many rfids for $type $id");
 		} # end if
-	} elsif ( my ( $id ) = $tag_id =~ /^(\d+)$/ ) {
+	} elsif ( ( $id ) = $tag_id =~ /^(\d+)$/ ) {
 		my @RFID = openprint::RFIDTag->find( 'id ilike'=>'%'.$id );
 		if ( @RFID == 1 ) {
 			return $RFID[0];
