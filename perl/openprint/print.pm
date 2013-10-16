@@ -291,7 +291,7 @@ sub multipage_signatures {
 		if ( $$param{'rdbTemplateType'} eq 'PerfectBound' ) {
 			# Insanity code:  Perfect Bound requires different cover.
 			$$param{'rdbCover'} = 'Different';
-			$$param{'txtSpreadSize'} = 2;
+			$$param{'txtSpreadSize'} = $openprint::config{PerfectBindSpreadSize} ? $openprint::config{PerfectBindSpreadSize} : 2;
 		} elsif ( $$param{'rdbTemplateType'} eq 'SpinePaste' ) {
 			# Insanity code:  Perfect Bound requires different cover.
 			$$param{'rdbCover'} = 'Self';
