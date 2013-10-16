@@ -70,7 +70,11 @@
 					$html .= '</td>';
 				} # end nif
 				$html .= "</tr>\n";
-				my @sigs = sort $Project->signatures();
+				my @sigs = sort {
+					my $a_specs = openprint::service::get_specs_ref( $Project, $a );
+					my $b_specs = openprint::service::get_specs_ref( $Project, $b );
+					$$a_specs{Group} <=> $$b_specs{Group} || $$a_specs{SignatureIndex} <=> $$b_specs{SignatureIndex};
+				} $Project->signatures();
 				while (@sigs) {
 					my $ss_id = shift @sigs;
 					next if $ss_id == $$services{''}[0];

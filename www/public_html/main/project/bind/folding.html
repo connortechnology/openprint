@@ -87,10 +87,17 @@ function Fold_onchange( element, signature, qty_index, index ) {
 		<fieldset><legend><?ServiceTypeName?></legend>
 		<? echo ( 
 			my $html;
-			my $services = $$variable{'Project'}->services();
+			my $Project = $$variable{Project};
+			my $services = $Project->services();
 			my $fragment = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/main/project/bind/_fold.html' );
 
-			foreach my $ss_id ( sort $$variable{'Project'}->signatures() ) {
+			my @sigs = sort {
+				my $a_specs = openprint::service::get_specs_ref( $Project, $a );
+				my $b_specs = openprint::service::get_specs_ref( $Project, $b );
+				$$a_specs{Group} <=> $$b_specs{Group} || $$a_specs{SignatureIndex} <=> $$b_specs{SignatureIndex};
+			} $Project->signatures();
+
+			foreach my $ss_id ( @sigs ) {
 				my $sig_specs = openprint::service::get_specs_ref( $$variable{'Project'}, $ss_id );
 				$html .= "<fieldset><legend>For Signature $$sig_specs{'SignatureIndex'}:";
 				$html .= openprint::service::summary( $$variable{'Project'}, $ss_id );
