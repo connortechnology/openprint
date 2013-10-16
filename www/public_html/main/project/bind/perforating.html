@@ -50,11 +50,11 @@
 		</fieldset>
 		<fieldset><legend>Results</legend>
 			<ul>
-			<? echo ( include('/includes/main/proj/scoring_results.html'); ) ?>
-			<? echo ( include('/includes/main/proj/quantities_prices.html'); ) ?>
+			<?include(/includes/main/proj/scoring_results.html) ?>
+			<?include(/includes/main/proj/quantities_prices.html) ?>
 			</ul>
 		</fieldset>
-		<? echo ( include('/includes/main/proj/add_to_project.html'); ) ?>
+		<?include(/includes/main/proj/add_to_project.html) ?>
 		<input type="hidden" name="btnFunction" value="Save Service"/>
 		<input type="hidden" name="ProjectIndex" value="<?ProjectIndex?>"/>
 		<input type="hidden" name="ServiceIndex" value="<?ServiceIndex?>"/>
