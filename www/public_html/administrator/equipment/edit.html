@@ -1,4 +1,4 @@
-<? echo ( include('/includes/error_reporting.html'); ) ?>
+<?include('/includes/error_reporting.html')?>
 <script type="text/javascript" src="<?hash_link(/javascripts/paper.js)?>"></script>
 <script type="text/javascript">
 function add_stock_setting( stock_id ) {
@@ -37,7 +37,7 @@ function filter_onChange( element, id, selected ) {
 
 } // end function Name_onChange()
 	function calc(formName) {
-		new Ajax.Updater('Stocks','/administrator/equipment/_stocks.html', {method:'get',
+		new Ajax.Updater('Stocks','/administrator/equipment/_stocks.html', {
 				onLoading:function(){ $('Stocks').innerHTML='Loading...'; },
 				parameters:Form.serialize($(formName))});
 				//evalScripts:true, 
@@ -50,9 +50,7 @@ function filter_onChange( element, id, selected ) {
 			<label>Category</label>
 			<select name="search_category_id" onchange="if(this.options[this.selectedIndex].value != ''){f1.btnFunction.value='';fmCheck(f1);};">
 				<option value="">All</option>
-<? echo (
-    ssi::make_drop_down( openprint::Equipment_Category->dropdown(order=>'lower(name)'), $param{search_category_id} );
-) ?>
+<? echo ( make_drop_down( openprint::Equipment_Category->dropdown(order=>'lower(name)'), $param{search_category_id} );) ?>
 			</select>
 		</li>
 		<li>
@@ -60,29 +58,29 @@ function filter_onChange( element, id, selected ) {
 			<select name="ddmEquipment" onchange="if(this.options[this.selectedIndex].value != ''){f1.btnFunction.value='';fmCheck(f1);}" >
 				<option value="">Select Equipment</option>
 <? echo (
-    ssi::make_drop_down( [ map { $_->id(), $_->strid() } openprint::Equipment->find( 'order' => 'lower(strID)' ) ], $$variable{'Equipment'}->id() );
+    make_drop_down( [ map { $_->id(), $_->strid() } openprint::Equipment->find( order => 'lower(strID)' ) ], $$variable{Equipment}->id() );
 ) ?>
 			</select>
 		</li>
 		</ul>
 		<p class="buttons">
 		<? echo ( join( '',
-				ssi::button( 'PreviousTop', { onclick=>"f1.btnFunction.value='Previous';fmCheck(f1);", href=>'', text=>'Previous' } ),
-				ssi::button( 'NextTop', { onclick=>"f1.btnFunction.value='Next';fmCheck(f1);", href=>'', text=>'Next' } ),
-				ssi::button( 'NewTop', { onclick=>"addCheck(f2);", href=>'', text=>'New' } ),
-				ssi::button( 'DeleteTop', { onclick=>"f1.btnFunction.value='Delete';fmChange=2;fmCheck(f1);", href=>'', text=>'Delete' } ),
-				ssi::button( 'SaveTop', { onclick=>"document.f2.btnFunction.value='Save';fmChange=3;fmCheck(document.f2);", href=>'', text=>'Save' } ),
-				ssi::button( 'CopyTop', { onclick=>"f1.btnFunction.value='Copy';f1.submit();", href=>'', text=>'Copy' } ),
-				ssi::button( 'ResetTop', { onclick=>'f1.reset();', href=>'', text=>'Reset' } ),
+				button( 'PreviousTop', { onclick=>"f1.btnFunction.value='Previous';fmCheck(f1);", href=>'', text=>'Previous' } ),
+				button( 'NextTop', { onclick=>"f1.btnFunction.value='Next';fmCheck(f1);", href=>'', text=>'Next' } ),
+				button( 'NewTop', { onclick=>"addCheck(f2);", href=>'', text=>'New' } ),
+				button( 'DeleteTop', { onclick=>"f1.btnFunction.value='Delete';fmChange=2;fmCheck(f1);", href=>'', text=>'Delete' } ),
+				button( 'SaveTop', { onclick=>"document.f2.btnFunction.value='Save';fmChange=3;fmCheck(document.f2);", href=>'', text=>'Save' } ),
+				button( 'CopyTop', { onclick=>"f1.btnFunction.value='Copy';f1.submit();", href=>'', text=>'Copy' } ),
+				button( 'ResetTop', { onclick=>'f1.reset();', href=>'', text=>'Reset' } ),
 				);
 			) ?>
 		</p>
 		<p class="buttons">
 			<input type="file" name="fileSpecifications"/>
 			<? echo ( join('',
-			ssi::button( 'Import', { onclick=>"f1.btnFunction.value='Import Specifications';f1.submit();", href=>'', text=>'Import' } ),
-			ssi::button( 'Export', { onclick=>"f1.btnFunction.value='Export Specifications';f1.submit();", href=>'', text=>'Export' } ),
-); ) ?>
+			button( 'Import', { onclick=>"f1.btnFunction.value='Import Specifications';f1.submit();", href=>'', text=>'Import' } ),
+			button( 'Export', { onclick=>"f1.btnFunction.value='Export Specifications';f1.submit();", href=>'', text=>'Export' } ),
+			); ) ?>
 		</p>
 	</fieldset>
 	<input type="hidden" name="btnFunction"/>
@@ -103,7 +101,7 @@ function filter_onChange( element, id, selected ) {
 			<p>
 				<label>Category</label>
 				<select name="category_id" multiple="multiple" size="4">
-				<? echo ( ssi::make_drop_down( openprint::Equipment_Category->dropdown(order=>'lower(name)'), $$variable{Equipment}->category_id() );) ?>
+				<? echo ( make_drop_down( openprint::Equipment_Category->dropdown(order=>'lower(name)'), $$variable{Equipment}->category_id() );) ?>
 				</select>
 			</p>
 			<p> 
@@ -126,27 +124,20 @@ function filter_onChange( element, id, selected ) {
 			</p>
 			<p>
 				<label>Use in estimating</label>
-				<input type="radio" id="useinestimatingtrue" name="useinestimating" value="true"  <? echo ( 'checked="checked"' if $$variable{Equipment}->useinestimating(); ) ?> />
-				<label class="radio" for="useinestimatingtrue">Yes</label>
-				<input type="radio" id="useinestimatingfalse" name="useinestimating" value="false"  <? echo ( 'checked="checked"' if ! $$variable{Equipment}->useinestimating(); ) ?> />
-				<label class="radio" for="useinestimatingfalse">No</label>
+				<? echo ( radio( 'useinestimating', [ '1', 'Yes', '0', 'No' ], $$variable{Equipment}->useinestimating(), { default=>'0' } ); ) ?>
 			</p>
 			<p>
 				<label>Use in scheduling</label>
-				<input type="radio" id="useinschedulingtrue" name="useinscheduling" value="true"  <? echo ( ssi::checked( $$variable{'Equipment'}->useinscheduling() ); ) ?> onclick="$('schedulingoptions').show();" />
-				<label class="radio" for="useinschedulingtrue">Yes</label>
-				<input type="radio" id="useinschedulingfalse" name="useinscheduling" value="false"  <? echo ( ssi::checked( ! $$variable{'Equipment'}->useinscheduling() ); ) ?> onclick="$('schedulingoptions').hide();" />
-				<label class="radio" for="useinschedulingfalse">No</label>
+				<? echo ( radio( 'useinscheduling', [ '1', 'Yes', '0', 'No' ], $$variable{Equipment}->useinscheduling(), { default=>'0', onclick=>q`if(this.value=='1'){$('schedulingoptions').show();}else{$('schedulingoptions').hide();}` } ); ) ?>
 			</p>
 	<div id="schedulingoptions" <? echo ( $$variable{'Equipment'}->useinscheduling() ? '' : 'style="display:none;"' ) ?>>
 			<p>
 				<label>Services</label>
 				<select name="servicetype_id" id="servicetype_id" multiple="multiple" size="4">
-
-					<? echo ( ssi::make_drop_down(
-						[ map { $_->id(), $_->name() } openprint::ServiceType->find('order'=>'lower(name)') ],
-						$$variable{'Equipment'}->servicetype_id(),
-	); ) ?>
+					<? echo ( make_drop_down(
+						openprint::ServiceType->dropdown( order=>'lower(name)'),
+						$$variable{Equipment}->servicetype_id(),
+						); ) ?>
 				</select>
 			</p>
 			<p>
@@ -264,8 +255,8 @@ function filter_onChange( element, id, selected ) {
 				@{$$variable{'Specifications'}} = $$variable{'Equipment'}->Specifications();
 				my $specification_html = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/administrator/equipment/_specification.html' );
 				while ( $$variable{'Specification'} = shift @{$$variable{'Specifications'}} ) {
-					$html .= ssi::variable_substitution( \$specification_html, $variable );
-					$$variable{'rowclass'} = $$variable{'rowclass'} ? '' : ' class="colRow"';
+					$html .= variable_substitution( \$specification_html, $variable );
+					$$variable{rowclass} = $$variable{rowclass} ? '' : ' class="colRow"';
 				} # end while
 				return $html;
 			) ?>
@@ -285,13 +276,16 @@ function filter_onChange( element, id, selected ) {
 				<option value="all">All</option>
 <? echo ( 
 	my %types;
-	foreach ( openprint::Fold->find('equipment_id'=>$$variable{'Equipment'}->id()) ) {
+	foreach ( openprint::Fold->find( equipment_id=>$$variable{Equipment}->id()) ) {
 		$types{$_->type()} = $openprint::Estimating::Folding::fold_types{$_->type()};
 	}
-	ssi::make_drop_down( [ map { $_, $types{$_} } sort keys %types ] );
+	make_drop_down( [ map { $_, $types{$_} } sort keys %types ] );
 ) ?>
 			</select>
-<? echo ( ssi::writeButton( $log, $dbh, 'AddFold', 'add.gif',"new Ajax.Request('/administrator/equipment/_fold.html?action=add&equipment_id=". $$variable{'Equipment'}->id() ."', { method: 'get', onSuccess: function(response){new Insertion.Top(\$('Folds'), response.responseText);SortableTable.load();} } );",'','Add' ); ) ?>
+<? echo ( join('',
+			button( 'AddFold', { onclick=>"new Ajax.Request('/administrator/equipment/_fold.html?action=add&equipment_id=". $$variable{'Equipment'}->id() ."', { onSuccess: function(response){new Insertion.Top(\$('Folds'), response.responseText);SortableTable.load();} } );", text=>'Add' } ),
+			button( 'ExportFolds', { onclick=>"f1.btnFunction.value='Export Folds';f1.submit();", text=>'Export Folds' } ),
+	);) ?>
 		</p>
 		<div id="Folds"> </div>
 	</fieldset>
@@ -301,8 +295,8 @@ function filter_onChange( element, id, selected ) {
 	<fieldset><legend>Specific Stock Settings</legend>
 		<div id="StockSettings"><? echo ( include('_stock_settings.html'); ) ?></div>
 		<p class="buttons">
-			<? echo ( ssi::button( 'addstocksetting', { onclick=>"popup_window('_stock_setting_popup.html','equipment_id=$$variable{Equipment}{id}', { width: '800px', height: '500px' } );", href=>'', text=>'Add' } ); ) ?>
-			<? echo ( ssi::button( 'savestocksetting', { onclick=>"new Ajax.Updater('StockSettings','_stock_settings.html?action=save', { parameters: stock_settings_form.serialize() } );", href=>'', text=>'Save' } ); ) ?>
+			<? echo ( button( 'addstocksetting', { onclick=>"popup_window('_stock_setting_popup.html','equipment_id=$$variable{Equipment}{id}', { width: '800px', height: '500px' } );", text=>'Add' } ); ) ?>
+			<? echo ( button( 'savestocksetting', { onclick=>"new Ajax.Updater('StockSettings','_stock_settings.html?action=save', { parameters: stock_settings_form.serialize() } );", text=>'Save' } ); ) ?>
 		</p>
 	</fieldset>
 </form>

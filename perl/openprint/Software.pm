@@ -3,7 +3,7 @@ package openprint::Software;
 our @ISA = qw(openprint::Object);
 
 use vars qw( $debug $table $serial %fields %transforms %defaults );
-$debug = 1;
+$debug = 0;
 $table = 'software';
 $serial='software_id_seq';
 %fields = (

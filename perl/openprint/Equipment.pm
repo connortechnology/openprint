@@ -148,7 +148,7 @@ $openprint::log->debug("Fold for $$params{pages} " . $F->to_string() );
 }
 }
 
-	foreach my $Fold ( @{$$self{'Folds'}{$$params{pages}}} ) {
+	foreach my $Fold ( $$params{pages} ? @{$$self{'Folds'}{$$params{pages}}} : map { @{$$self{'Folds'}{$_}} } keys %{$$self{'Folds'}} ) {
 		if ( $$params{type} and ( $$Fold{type} ne $$params{type} ) ) {
 			$openprint::log->debug("Looking at fold: " . $Fold->name() ) if $debug;
 			next;

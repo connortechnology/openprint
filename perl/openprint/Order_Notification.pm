@@ -4,7 +4,7 @@ our @ISA = qw(openprint::Object);
 
 use vars qw( $debug $table %fields %transforms %defaults @identified_by $AUTOLOAD );
 
-$debug = 1;
+$debug = 0;
 @identified_by = ( 'order_id', 'user_id' );
 $table = 'order_notifications';
 %fields = (
