@@ -110,7 +110,9 @@ sub calc {
 
 	if ( sets::isin( $$specs{'rdbTemplateType'}, ['SaddleStitching', 'LoopStitching', 'MetalCoil','PlasticCoil','PlasticComb','DoubleLoopWire'] ) ) {
 		$$specs{'txtSpreadSize'} = 4;
-	} elsif ( sets::isin( $$specs{'rdbTemplateType'}, ['CornerStitching','PerfectBound','SpinePaste'] ) ) {
+	} elsif ( $$specs{'rdbTemplateType'} eq 'PerfectBound' ) {
+		$$specs{'txtSpreadSize'} = $openprint::config{PerfectBindSpreadSize} ? $openprint::config{PerfectBindSpreadSize} : 2;
+	} elsif ( sets::isin( $$specs{'rdbTemplateType'}, ['CornerStitching','SpinePaste'] ) ) {
 		$$specs{'txtSpreadSize'} = 2;
 	} else {
 		$$specs{'txtSpreadSize'} = 2;
