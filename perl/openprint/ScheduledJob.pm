@@ -335,9 +335,9 @@ sub get_li {
 		} # end if
 		$html .= ssi::button( 'Remove'.$$self{'id'}, { onclick=>"remove_job($$self{id});", text=> 'D', title=>'Delete from schedule' } );
 		if ( $$self{'project_id'} ) {
-			if ( ( $$self{pertains_id} and @{$$self{'pertains_id'}} == 2 ) or ( @{$$self{service_id}} == 2 ) ) {
+			if ( ( $$self{pertains_id} and @{$$self{'pertains_id'}} == 2 ) or ( $$self{service_id} and @{$$self{service_id}} == 2 ) ) {
 				$html .= ssi::button( 'Split'.$$self{'id'}, { onclick=>"split_job('$ul_id',$$self{id});", text=> 'S', title=>'Split Job' } );
-			} elsif ( ( $$self{pertains_id} and @{$$self{'pertains_id'}} > 2 ) or ( @{$$self{service_id}} == 2 ) ) {
+			} elsif ( ( $$self{pertains_id} and @{$$self{'pertains_id'}} > 2 ) or ( $$self{service_id} and @{$$self{service_id}} == 2 ) ) {
 				$html .= ssi::button( 'Split'.$$self{'id'}, { onclick=>"popup_window('_split_popup.html', 'schedule_id=$$self{'id'}' );", text=> 'S', title=>'Split Job' } );
 			} # end if
 			if ( sets::isin( $self->ServiceType()->name(), [ '','Signature' ] ) ) {
@@ -461,14 +461,16 @@ sub impressions {
 		my $impressions = 0;
 
 		my $Project = $self->Project();
-		foreach my $sig_id ( $$self{pertains_id} ? @{$self->pertains_id()} : @{$self->service_id()} ) {
-			my $sig_specs = openprint::service::get_specs_ref( $Project, $sig_id );
-			if ( ! $$sig_specs{'ImpressionQuantity'} ) {
-				$$sig_specs{'ImpressionQuantity'} = $$sig_specs{'hdnImpressionQuantity'.$Project->ordered_quantity_index()};
-				openprint::service::insert_service_spec( $log, $dbh, $$self{'project_id'}, $sig_id, 'ImpressionQuantity', $$sig_specs{'ImpressionQuantity'} );
-			} # end if
-			$impressions += $$sig_specs{'ImpressionQuantity'};
-		} # end foreach sig
+		if ( $self->service_id() ) {
+			foreach my $sig_id ( $$self{pertains_id} ? @{$$self{pertains_id}} : @{$self->service_id()} ) {
+				my $sig_specs = openprint::service::get_specs_ref( $Project, $sig_id );
+				if ( ! $$sig_specs{'ImpressionQuantity'} ) {
+					$$sig_specs{'ImpressionQuantity'} = $$sig_specs{'hdnImpressionQuantity'.$Project->ordered_quantity_index()};
+					openprint::service::insert_service_spec( $log, $dbh, $$self{'project_id'}, $sig_id, 'ImpressionQuantity', $$sig_specs{'ImpressionQuantity'} );
+				} # end if
+				$impressions += $$sig_specs{'ImpressionQuantity'};
+			} # end foreach sig
+		} # end if
 		$$self{impressions} = $impressions;
 	} # end if
 	return $$self{impressions};

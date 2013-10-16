@@ -108,6 +108,18 @@ sub edit {
 		} # end if
 	} elsif ( $param{'btnFunction'} eq 'Export Specifications' ) {
 		export_specs( $Equipment );
+	} elsif ( $param{'btnFunction'} eq 'Export Folds' ) {
+		my @header = ( 'Equipment ID', 'Fold Type', 'Description', 'Pages', 'Horizontal Pages', 'Vertical Pages', 'Folds', 'Angles', 'Spine Direction', 'Min Imposition', 'Max Imposition', 'Min Page Width', 'Max Page Width', 'Min Page Height', 'Max Page Height', 'Min Calliper', 'Max Calliper', 'Printing Type', 'Make Ready Time', 'Make Ready Overs', 'Make Ready Units', 'Run Overs', 'Run Overs Units', 'Inline Cutting', 'When Stitching', 'When Perfect Binding', 'Spine Pasting', 'Min Weight', 'Max Weight', 'Units', 'Speed' );
+
+		my @data;
+		foreach my $Fold ( openprint::Fold->find( equipment_id=>$Equipment->id(), order=>'type, pages' ) ) {
+			foreach my $Speed ( $Fold->Specifications() ) {
+				push @data, $Fold->Equipment()->strid(), $Fold->type(), $Fold->name(), $Fold->pages(), $Fold->page_columns(), $Fold->page_rows(), $Fold->folds(), $Fold->angles(), $Fold->spine_direction(), $Fold->min_imposition(), $Fold->max_imposition(), $Fold->min_width(), $Fold->max_width(), $Fold->min_height(), $Fold->max_height(), $Fold->min_calliper(), $Fold->max_calliper(), $Fold->printing_type(), $Fold->makeready_time(), $Fold->makeready_overs(), $Fold->makeready_overs_units(), $Fold->run_overs(), $Fold->run_overs_units(), $Fold->cutting(), $Fold->stitching(), $Fold->perfectbind(), $Fold->spinepaste(), $Speed->min_weight(), $Speed->max_weight(), $Speed->weight_units(), $Speed->runspeed();
+			} # end foreach	
+		} # end foreach
+
+		misc::export_csv( $r, $log, \%variable, 'fold_definitionss'.($Equipment->id()?'_'.$Equipment->strid():'').'.csv', \@header, \@data );
+		(new openprint::Log())->save({ action=>'Export Fold Definitions' });
 	} # end if
 
 	$variable{'Equipment'} = $Equipment;

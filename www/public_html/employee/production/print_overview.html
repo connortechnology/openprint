@@ -81,10 +81,10 @@
         theme : "simple",
     };
 
-function textarea_init() {
-    tinyMCE.init( project_description_options );
-    tinyMCE.init( content_description_options );
-}
+	function textarea_init() {
+		tinyMCE.init( project_description_options );
+		tinyMCE.init( content_description_options );
+	}
 
 	function approve_job( ul_id, job_id ) {
 		new Ajax.Updater( ul_id, '_ul.html', { parameters: { schedule_id: job_id, action:'approve'}, evalScripts: true } );
@@ -160,8 +160,8 @@ function textarea_init() {
 <? echo ( 
 	@{$$variable{'Equipment'}} = ();
 	my @presses = openprint::Equipment->find(
-		( $session{'/employee/production/print_overview.html?category'} ? 
-		  ( 'category_id'=>$session{'/employee/production/print_overview.html?category_id'} ) : ()
+		( $session{'/employee/production/print_overview.html?category_id'} ? 
+		  ( 'category_id <@'=> [ split(',', $session{'/employee/production/print_overview.html?category_id'} ) ] ) : ()
 		),
 		'useinscheduling'=>1,'order'=>'sorting,lower(strname)'
 		);
@@ -176,7 +176,7 @@ function textarea_init() {
 	} # end foreach press
 
 	my $html = '<select name="Equipment" multiple="multiple" size="'. @presses.'">';
-	$html .= ssi::make_drop_down( [ map { $_->id(), $_->name() } @presses ], \@selected_equipment );
+	$html .= make_drop_down( [ map { $_->id(), $_->name() } @presses ], \@selected_equipment );
 	return $html;
 ) ?>
 			</select>
@@ -288,6 +288,9 @@ function textarea_init() {
 		$html .= '</tr></thead><tbody><tr>';
 		@{$$variable{'drops'}} = ();
 
+		my $ac = sql::start_transaction( $dbh );
+		$dbh->do( 'LOCK TABLE Schedule IN ACCESS EXCLUSIVE MODE' ) or $log->error( DBI->errstr );
+
 		foreach my $E ( @{$$variable{'Equipment'}} ) {
 			$html .= '<td class="PressColumn ' . join(' ', $E->categories() ). '">';
 
@@ -304,8 +307,6 @@ function textarea_init() {
 				'/employee/production/print_overview.html?schedule_end_day'}
 				) + 1;
 
-			my $ac = sql::start_transaction( $dbh );
-			$dbh->do( 'LOCK TABLE Schedule IN ACCESS EXCLUSIVE MODE' ) or $log->error( DBI->errstr );
 
 			# When its time to add shifts, we add in sets, until we find an already-implemented shift.
 			my @Equipment_Shifts = $E->Equipment_Shifts();
@@ -369,16 +370,16 @@ function textarea_init() {
 				push @{$$variable{'drops'}}, $Shift->ul_id() if $Shift->operator_id() or ! $E->smartscheduling();
 				$html .= $Shift->get_ul( );
 			} # end foreach Shift
-			sql::end_transaction( $dbh, $ac );
 
 			$html .= '</td>';
 		} # end foreach press
+		sql::end_transaction( $dbh, $ac );
 		$html .= '</tr></tbody></table>';
 		$html .= q`<div class="unprintable"><hr class="spacer"/><h3 onclick="LoadContent( 'PendingApproved', '/employee/production/_pending_approved.html' );">Pending Approved (click to hide/unhide):</h3><table class="PendingApproved"><tr id="PendingApproved">`;
-		$html .= ssi::include( $ENV{'DOCUMENT_ROOT'}.'/employee/production/_pending_approved.html' );
+		$html .= include( '/employee/production/_pending_approved.html' );
 		$html .= '</tr></table></div>';
 		$html .= q`<div class="unprintable"><hr class="spacer"/><h3 onclick="LoadContent('Pending','/employee/production/_pending.html');">Pending (click to hide/unhide):</h3><table class="Pending"><tr id="Pending">`;
-		$html .= ssi::include( $ENV{'DOCUMENT_ROOT'}.'/employee/production/_pending.html' );
+		$html .= include( '/employee/production/_pending.html' );
 		$html .= '</tr></table></div>';
 		return $html;
 	) ?>

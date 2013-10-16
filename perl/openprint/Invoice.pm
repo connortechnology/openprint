@@ -14,6 +14,7 @@ require openprint::Service;
 require openprint::InvoiceLog;
 require openprint::Tax;
 require openprint::Invoiced_Product;
+require openprint::Invoiced_Project;
 require openprint::Invoice_Interest;
 require openprint::Invoice_Payment;
 require openprint::Invoice_Tax;
@@ -266,6 +267,9 @@ sub send {
 sub Products {
 	return openprint::Invoiced_Product->find('invoice_id'=>$_[0]{'id'},'order'=>'id');
 } # end sub Products
+sub Projects {
+	return openprint::Invoiced_Project->find('invoice_id'=>$_[0]{'id'},'order'=>'id');
+} # end sub Projects
 
 sub Interests {
 	my $self = shift;

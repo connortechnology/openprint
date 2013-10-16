@@ -23,7 +23,7 @@ require openprint::Material;
 require openprint::imposition;
 require openprint::Imposition;
 
-my $debug = 0;
+use constant DEBUG => 0;
 
 my @all_equipment;
 my @stitchers;
@@ -136,9 +136,11 @@ sub calc {
 			} # end if
 			if ( $Price{'Equipment'} ) {
 				$$specs{"ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} = $Price{'Equipment'}->id();
-				$$specs{"txtImposition-$$sig_specs{'SignatureIndex'}-$qty_index"} = $Price{'Imposition'}->imposition();
-				$$specs{"txtLayoutWidth-$$sig_specs{'SignatureIndex'}-$qty_index"} = $Price{'Imposition'}->layout_width();
-				$$specs{"txtLayoutHeight-$$sig_specs{'SignatureIndex'}-$qty_index"} = $Price{'Imposition'}->layout_height();
+				if ( $Price{Imposition} ) {
+					$$specs{"txtImposition-$$sig_specs{'SignatureIndex'}-$qty_index"} = $Price{'Imposition'}->imposition();
+					$$specs{"txtLayoutWidth-$$sig_specs{'SignatureIndex'}-$qty_index"} = $Price{'Imposition'}->layout_width();
+					$$specs{"txtLayoutHeight-$$sig_specs{'SignatureIndex'}-$qty_index"} = $Price{'Imposition'}->layout_height();
+				} # end if
 				$status = $Price{'Status'};
 			} else {
 				$$specs{"ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} = '' if $$specs{"chkOverrideEquipment-$$sig_specs{SignatureIndex}-$qty_index"} ne 'Y';
@@ -213,8 +215,8 @@ sub signature_calc {
 	my @equipment;
 
 	if ( $$specs{"chkOverrideEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} eq 'Y' ) {
-		@equipment = openprint::Equipment->find( 'id'=>$$specs{"ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} );
-		#$openprint::log->debug("Overriding Equipment to: " . $$specs{"ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} ) if $debug;
+		@equipment = openprint::Equipment->find( id=>$$specs{"ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} );
+		#$openprint::log->debug("Overriding Equipment to: " . $$specs{"ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} ) if DEBUG;
 	} elsif ( ! $stitching_service_index ) {
 		@equipment = sets::exclude( \@stitchers, \@all_equipment );
 	} else {
@@ -240,7 +242,6 @@ sub signature_calc {
 	} else {
 		$imposition = $imposition->copy();
 	} # end if
-
 	if ( $$specs{"chkOverrideImposition-$$sig_specs{'SignatureIndex'}-$qty_index"} eq 'Y' ) {
 		if ( $$specs{"txtImposition-$$sig_specs{'SignatureIndex'}-$qty_index"} > $imposition->imposition() or $$specs{"txtImposition-$$sig_specs{'SignatureIndex'}-$qty_index"} <= 0 ) {
 			$$specs{'alert'} = 'The specified imposition is not possible.';
@@ -459,6 +460,7 @@ $openprint::log->debug("No printing runspeed");
 				$Results{'Equipment'} = $Equipment;
 				$Results{'Imposition'} = $imposition;
 				$Results{'Runspeed'} = $runspeed;
+$openprint::log->debug("Selected best: $imposition $$Equipment{strid}");
 			} # end if
 		} # end foreach imposition
 	} # end foreach equipment
