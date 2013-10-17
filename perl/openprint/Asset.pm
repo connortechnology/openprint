@@ -73,7 +73,7 @@ sub thumbnail_url {
 		if ( ! -e $dest ) {
 			$openprint::log->debug("Creating thumbnail at 75x $src $dest");
 			if ( system("convert  -adaptive-resize 75x $src $dest") ) {
-				$openprint::log->error("ERror creating thumbnail. Reason: $1");
+				$openprint::log->error("ERror creating thumbnail. Reason: $1 $?");
 			} # end if convert
 		} # end if
 		return '/thumbnails/'.$filename;
