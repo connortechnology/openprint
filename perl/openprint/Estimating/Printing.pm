@@ -1617,7 +1617,10 @@ $openprint::log->debug("Doing nothing, keeping all $add") if DEBUG_FILTERING;
 					} # end if
 				} # end for
 			} # end if overriden or not or cached
-			push @{$imps{$str}}, $imp if $add;
+			if ( $add ) {
+				push @{$imps{$str}}, $imp;
+				$Papers{$imp->Paper()->id_string()} = $imp->Paper() if ! $Papers{$imp->Paper()->id_string()};
+			} # end if
 		} # end foreach imposition
 
 		@impositions = map {@{$_}} values %imps;
@@ -3357,7 +3360,7 @@ sub get_project_price {
 				my @paper_strings = keys %PaperCounts;
 				if ( ( 1 == @paper_strings ) and ( $Paper->id_string() ne $paper_strings[0] ) ) {
 					$openprint::log->error("Different paper in count versus imposition: $paper_strings[0] ne " . $imp->Paper()->id_string() );
-				} elsif ( DEBUG ) {
+				} elsif ( DEBUG or 1 ) {
 					$log->warn("Paper Counts");
 					foreach my $k ( @paper_strings ) { $openprint::log->debug( "$k => $PaperCounts{$k}" ); } # end 
 				}
@@ -3367,6 +3370,8 @@ sub get_project_price {
 					if ( ! $Paper ) {
 						$log->error("No Paper Object for $paper_string");
 						foreach my $paper_string ( keys %Papers ) { $log->error("$paper_string $Papers{$paper_string}"); } 
+						$$price{'Comparison Cost'} += 1000000;
+						$$price{'Paper Breakdown'} .= 'Unable to calculate price for ' . $paper_string.'</br>';
 						next;
 					} elsif ( $paper_string ne $Paper->id_string() ) {
 						$openprint::log->error("Different paper in count versus imposition: $paper_string ne " . $Paper->id_string() );

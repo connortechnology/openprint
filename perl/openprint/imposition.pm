@@ -225,9 +225,8 @@ sub calc_setup_object {
 	if ( my $amount = $Press->specification($run_style.' Pre-trim stock') ) {
 $openprint::log->debug("Pretrimming by $amount") if DEBUG;
 		$Paper = $Paper->clone();
-		$Paper->width( $Paper->width() - $amount );
+		$Paper->cut( $Paper->width() - $amount, $Paper->height() - $amount );
 		$Paper->width( 0 ) if $Paper->width() < 0;
-		$Paper->height( $Paper->height() - $amount );
 		$Paper->height( 0 ) if $Paper->height() < 0;
 	} else {
 $openprint::log->debug("Not Pretrimming on $$Press{strid}") if DEBUG;
