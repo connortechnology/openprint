@@ -445,7 +445,13 @@ sub Album {
 	return new openprint::Photo_Album( $_[0]{'album_id'} );
 } # end sub Album
 sub can_edit {
-	if ( $_[0]{'id'} and ( $openprint::session{'user_id'} == $_[0]{'created_by'} or $openprint::session{'user_type'} eq 'A' ) ) {
+	if ( ! $_[0]{id} ) {
+		return 0;
+	} # end if
+	if ( ! $openprint::session{user_id} ) {
+		return 0;
+	} # end if
+	if ( $openprint::session{'user_id'} == $_[0]{'created_by'} or $openprint::session{'user_type'} eq 'A' ) {
 		return 1;
 	} # end if
 	return 0;
