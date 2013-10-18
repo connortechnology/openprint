@@ -819,6 +819,16 @@ sub summary {
 # The logic is, each group has to be either all sheetfed, or all web (or digital, etc).	
 			foreach my $group_id ( sort @groups ) {
 				my @sigs = $self->signatures({'Group'=>$group_id});
+				if ( ! @sigs ) {
+					$openprint::log->error( "No sigs for Group $group_id, but there pretty much to be since we have this group index.  Signatures must be out of date");
+					$self->services(undef);
+					@sigs = $self->signatures({'Group'=>$group_id});
+					if ( ! @sigs ) {
+						$openprint::log->error( "Still No sigs for Group $group_id, after reloading" );
+						next;
+					} # end if
+
+				} # end if
 
 				my $sig_specs = openprint::service::get_specs_ref( $self, $sigs[0] );
 				$summary .= openprint::Estimating::Printing::summary( $self, $sigs[0], $sig_specs );
