@@ -1,6 +1,6 @@
 package openprint::main_order;
 
-use Email::Valid;
+require Email::Valid;
 use Date::Calc qw(Add_Delta_Days check_date);
 
 use strict;
@@ -13,7 +13,7 @@ use vars qw( %config %param %variable $log $dbh %session );
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
 
-my $debug = 0;
+use constant DEBUG => 0;
 
 require sql;
 require openprint::Currency;
@@ -276,7 +276,8 @@ $openprint::log->debug("Initial price for " . $Product->quantity() . ' is : ' . 
 				push @errors, 'Please enter the Shipping Phone.' if ! $$specs{'ToPhone'};
 				#push @errors, 'Please enter the Shipping Email.' if	! $$specs{'ToEmail'};
 
-				if ( ! Email::Valid->address($$specs{'ToEmail'} ) ) {
+				$_ = Email::Valid->address($$specs{'ToEmail'} );
+				if ( ( ! $_ ) or ( $_ ne $$specs{'ToEmail'} ) ) {
 					push @errors, 'Shipping Email is not a valid email address.';
 				} # end if
 	

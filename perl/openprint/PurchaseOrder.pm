@@ -175,7 +175,8 @@ sub send_approval_required_notification {
 			$openprint::log->debug( $U->email() . ' Not mailing me.' );
 			next;
 		} # end if
-		if ( ! Email::Valid->address($U->email()) ) {
+		$_ = Email::Valid->address($U->email());
+		if ( ( ! $_ ) or ( $_ ne $U->email() ) ) {
 			$openprint::log->debug( $U->email() . ' is not a valid address.' );
 			next;
 		} # end if

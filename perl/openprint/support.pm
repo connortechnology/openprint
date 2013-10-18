@@ -2,7 +2,7 @@ use strict;
 package openprint::support;
 
 require MIME::QuotedPrint;
-use Email::Valid ();
+require Email::Valid;
 use openprint ();
 use vars qw( $r $log $dbh %variable %param %session %config);
 *r = \$openprint::r;
@@ -17,6 +17,10 @@ require sql;
 require openprint::RMA;
 require openprint::RMA_Type;
 require openprint::RMA_Status;
+
+require openprint::Project;
+require openprint::Order;
+require openprint::Company;
 
 sub rma {
 	if ( $param{action} eq 'Submit' ) {
@@ -115,7 +119,9 @@ sub help_desk {
 		$error .= 'Missing City<br/>' if $param{'txtCity'} eq '';
 		$error .= 'Missing Postal Code<br/>' if $param{'txtPostalCode'} eq '';
 		$error .= 'Missing Phone<br/>' if $param{'txtPhone'} eq '';
-		$error .= 'Missing/Invalid E-mail<br/>' if ( ! $param{'txtEmail'} ) or ( ! Email::Valid->address( $param{'txtEmail'} ) );
+		my $addr = Email::Valid->address( $param{'txtEmail'} );
+
+		$error .= 'Missing/Invalid E-mail<br/>' if ( ! $param{'txtEmail'} ) or ( ! $addr ) or ( $addr ne $param{'txtEmail'} );
 		$error .= 'Missing Question or Comment<br/>' if $param{'txtQuestion-Quote'} eq '';
 		if ( ! $session{'user_id'} ) {
 			if ( $config{'UseCaptchaOnRegistration'} eq 'Y' ) {

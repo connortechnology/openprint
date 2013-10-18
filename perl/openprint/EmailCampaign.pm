@@ -185,17 +185,23 @@ sub send {
 
 		if ( $User->mailinglist() eq 'N' ) {
 			$results .= sprintf('<span class="error">NOT Sending Email to: %s %s at %s : they have chosen to not receive email.</span><br/>', $replacements{User}->get('firstname','lastname','email') );
-		} elsif ( ! Email::Valid->address( $replacements{User}->email() ) ) {
-			$results .= sprintf('<span class="error">NOT Sending Email to: %s %s at %s : the email address appears to be invalid.</span><br/>', $replacements{User}->get('firstname','lastname','email') );
-		} else {
-			$replacements{ReplacementText} = ssi::variable_substitution( \$body, \%replacements );
-			if ( ! $replacements{ReplacementText} ) {
-				$results .= sprintf('<span class="error">NOT Sending Email to: %s %s at %s : No body.</span><br/>%s<br/>', $replacements{'User'}->get('firstname','lastname','email'),$@ );
-				next;
-			} # end if
-			$results .= sprintf('Sending Email to: %s %s at %s<br/>',$replacements{'User'}->get('firstname','lastname','email') );
-			$self->send_email( \%replacements );
+			next;
 		} # end if
+
+		my $addr = Email::Valid->address( $replacements{User}->email() );
+
+		if ( ( ! $addr ) or ( $addr ne $replacements{User}->email() ) ) {
+			$results .= sprintf('<span class="error">NOT Sending Email to: %s %s at %s : the email address appears to be invalid.</span><br/>', $replacements{User}->get('firstname','lastname','email') );
+			next;
+		} # end if
+
+		$replacements{ReplacementText} = ssi::variable_substitution( \$body, \%replacements );
+		if ( ! $replacements{ReplacementText} ) {
+			$results .= sprintf('<span class="error">NOT Sending Email to: %s %s at %s : No body.</span><br/>%s<br/>', $replacements{'User'}->get('firstname','lastname','email'),$@ );
+			next;
+		} # end if
+		$results .= sprintf('Sending Email to: %s %s at %s<br/>',$replacements{'User'}->get('firstname','lastname','email') );
+		$self->send_email( \%replacements );
 	} # for all mail user ids
 	return $results;
 } # end sub send
@@ -215,7 +221,9 @@ sub test {
 	if ( ! $replacements{ReplacementText} ) {
 		return 'No body.  Not sending<br/>';
 	} # end if
-	if ( ! Email::Valid->address( $replacements{'User'}->email() ) ) {
+
+	my $addr = Email::Valid->address( $replacements{'User'}->email() );
+	if ( ( ! $addr ) or ( $addr ne $replacements{User}->email() ) ) {
 		return sprintf('<span class="error">NOT Sending Email to: %s %s at %s because the email address appears to be invalid.</span><br/>', $replacements{'User'}->get('firstname','lastname','email') );
 	} else {
 		$self->send_email( \%replacements );

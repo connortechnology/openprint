@@ -339,10 +339,11 @@ sub _invitation_users {
 			$variable{error} .= $Privacy->save({user_id=>[ sets::union( @$privacy_users, @new_users ) ] });
 		} # end if
 	} elsif ( $param{email} ) {
-		foreach my $address ( misc::trim(split(/[,; ]/,$param{email})) ) {
+		foreach my $address ( misc::trim(split(/[,;]/,$param{email})) ) {
 			$address =~ s/\s//g;
 			next if ! $address;
-			if ( ! Email::Valid->address( $address ) ) {
+			$_ = Email::Valid->address( $address );
+			if ( ( ! $_ ) or ( $_ ne $address ) ) {
 				$variable{error} .= $address . ' is not a valid email address.<br/>';
 				next;
 			} # end if

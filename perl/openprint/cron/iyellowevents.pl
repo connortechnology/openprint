@@ -163,6 +163,7 @@ foreach my $post ( $posts->look_down( class=>'clearfloat') ) {
 		$post->dump();
 		next;
 	} # end if
+	$log->debug("Event: $title");
 
 	my $content = $post->look_down( class=>'spoiler');
 	$content = $content->as_HTML();

@@ -22,6 +22,7 @@ require openprint::Email;
 
 require MIME::QuotedPrint;
 require Encode;
+require Email::Valid;
 
 use openprint ();
 use vars qw( $r %variable %session %param %config $log $dbh );
@@ -308,7 +309,8 @@ $log->error("No destdir");
 				$from = new openprint::User( $session{'user_id'} );
 			} else {
 				$from = $param{'txtEmailAddress'};
-				if ( ! Email::Valid->address( $param{'txtEmailAddress'} ) ) {
+				$from = Email::Valid->address( $param{'txtEmailAddress'} );
+				if ( ! $from ) {
 					$from = $config{'OrderingEmail'};
 				} # end if
 			} # end if
