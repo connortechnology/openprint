@@ -5,15 +5,15 @@ use vars qw( $debug %fields %transforms %defaults $table $serial $dbh );
 use vars qw( %attributes );
 
 
-$debug = 0;
+$debug = 1;
 $table = 'radcheck';
 $serial = 'radcheck_id_seq';
 %fields = (
-	'id'	=>	'id',
-	'username'	=>	'username',
-	'attribute'	=>	'attribute',
-	'op'		=>	'op',
-	'value'		=>	'value',
+	id			=>	'id',
+	username	=>	'username',
+	attribute	=>	'attribute',
+	op			=>	'op',
+	value		=>	'value',
 );
 
 %attributes = (
