@@ -149,18 +149,25 @@ join( ', ', map { sprintf('<a href="/employee/project/view.html?docket=%1$d">%1$
 		<td class="Price"><? echo ( return openprint::Currency::format( $$variable{'Claim'}->subtotal() ); ) ?></td>
 	</tr>
 	<? echo ( 
-			my $html;
-			foreach my $Tax ( $$variable{'Claim'}->Taxes() ) {
-				$html .= sprintf('<tr class="tax"><td colspan="4" class="totals">%s (%d%)</td><td class="Price">%s</td></tr>',
-					$Tax->name(), $Tax->rate(), openprint::Currency::format( $Tax->amount() ),
-					);
-			} # end foreach Tax
-			return $html;
-		) ?>
+		my $html;
+		foreach my $Tax ( $$variable{Claim}->Taxes() ) {
+			$html .= sprintf('<tr class="tax"><td colspan="4" class="totals">%s (%d%)</td><td class="Price">%s</td></tr>',
+				$Tax->name(), $Tax->rate(), openprint::Currency::format( $Tax->amount() ),
+				);
+		} # end foreach Tax
+		return $html;
+	) ?>
 	<tr class="total">
 		<td colspan="4">TOTAL</td>
-		<td class="Price"><? echo ( return openprint::Currency::format( $$variable{'Claim'}->total() ); ) ?></td>
+		<td class="Price"><? echo ( return openprint::Currency::format( $$variable{Claim}->total() ); ) ?></td>
 	</tr>
+	<? if ( $$variable{Claim}->total() != $$variable{Claim}->owing() ) ?>
+	<tr class="owing">
+		<td colspan="4">Owing</td>
+		<td class="Price"><? echo ( return openprint::Currency::format( $$variable{Claim}->owing() ); ) ?></td>
+	</tr>
+	<? endif ( $$variable{Claim}->total() != $$variable{Claim}->owing() ) ?>
+
 	<? endif ( ($session{'user_id'} == $$variable{'Claim'}->created_by() ) or ( $session{'user_type'} eq 'A' ) or openprint::usergroup::is_user_in( ['Accounting','SalesAdmin','Sales'], $session{'user_id'} ) ) ?>
 </table>
 		</div><!--Contents-->

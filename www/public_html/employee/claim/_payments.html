@@ -17,7 +17,7 @@
 						<td class="Price">%5$s</td></tr>',
                         $Payment->id(),
                         $Payment->transaction_id(),
-                        Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $Payment->received_on() ) ),
+                        format_date( $Payment->received_on() ),
                         $Payment->memo(),
                         ( $P->amount() != $Payment->amount() ? openprint::Currency::format( $P->amount() ).'/'.openprint::Currency::format($Payment->amount()) : openprint::Currency::format( $P->amount() ) ),
  );
@@ -33,11 +33,11 @@
 			<tr class="new">
 				<td class="ID">New</td>
 				<td><input type="text" id="transaction_id" name="transaction_id"/></td>
-				<td><? echo ( ssi::date_select( 'payment_when' ); ) ?></td>
+				<td><? echo ( date_select( 'payment_when' ); ) ?></td>
 				<td><input type="text" id="notes" name="notes"/></td>
-				<td><input type="number" id="amount" name="amount"/></td>
+				<td><? echo ( input(type=>'float', id=>'amount', name=>'amount', value=>$$variable{Claim}->owing() ); ) ?></td>
 			</tr>
         </table>
-		<p class="buttons"><? echo ( ssi::button( 'SavePayment', { 'onclick'=>qq`new Ajax.Updater( 'Payments', '_payments.html?claim_id=$$variable{Claim}{id}&amp;action=addpayment', { parameters: \$('f1').serialize() } );` } ); ) ?></p>
+		<p class="buttons"><? echo ( button( 'SavePayment', { onclick=>qq`new Ajax.Updater( 'Payments', '_payments.html?claim_id=$$variable{Claim}{id}&amp;action=addpayment', { parameters: \$('f1').serialize() } );` } ); ) ?></p>
     </fieldset>
 </div>

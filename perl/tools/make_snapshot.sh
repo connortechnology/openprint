@@ -84,7 +84,7 @@ fi;
 if [ -d "$DEST$TYPE.new" ] ; then
 	TODAY=$($DATE -I)
 	CREATEDON=$($STAT -c %y "$DEST$TYPE.new" | $AWK '{ printf $1 "\n"}')
-	if (( TODAY > CREATEDON )) ; then 
+	if (( "$TODAY" > "$CREATEDON" )) ; then 
 		echo "$DEST$TYPE.new already exists, last modified on $CREATEDON. Is another backup already running?"
 		exit 1
 	else 
