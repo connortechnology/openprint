@@ -622,8 +622,6 @@ sub create_edit_process {
 		$Project->quantity3( int $param{'txtQuantity3'} );
 	} # end if
 
-	my $ProjectType = openprint::ProjectType->find_one( 'name' => $param{'rdbProjectType'} );
-	my $OldProjectType = $Project->Type();
 
 	$Project->reference( $param{'txtProjectReference'} );
 	$Project->comments( $param{'txtComments'} );
@@ -635,21 +633,16 @@ sub create_edit_process {
 	$Project->reprint( $openprint::param{'reprint'} );
 	$Project->reprint_reason( $openprint::param{'reprint_reason'} );
 
+	# This will likely never happen, because the act of cilcking on the different project type changes it.
+	my $ProjectType = openprint::ProjectType->find_one( name => $param{rdbProjectType} );
+	my $OldProjectType = $Project->Type();
 # Handle ProjectType
-	if ( $OldProjectType->id() ne $ProjectType->id() ) {
+	if ( $OldProjectType->id() != $ProjectType->id() ) {
 		$recalculate = 1;
-		if ( $services{''} ) {
-			foreach ( @{$services{''}} ) { delete_service( $Project->id(), $_ ); };
-		} # end if
-		delete $services{''};
-		$Project->type_id( $ProjectType->id() );
+		$error .= $Project->change_ProjectType( $ProjectType );
+	} else {
+		$error .= $Project->save();
 	} # end if
-	if ( ! $services{''} ) {
-		my $printing_service_index = insert_project_type( $r, $log, $dbh, $Project->id(), $param{'rdbProjectType'} );
-		push @{$services{''}}, $printing_service_index;
-		$recalculate = 1;
-	} # end if
-	$error .= $Project->save();
 
 	# take care of the Graphic Design service
 	if ( $param{'rdbGraphicDesign'} eq 'Y' ) {

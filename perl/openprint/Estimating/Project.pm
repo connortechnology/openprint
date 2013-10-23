@@ -60,11 +60,15 @@ sub calc {
 	$$specs{'txtPrice1'} = '';
 	$$specs{'txtUnitPrice1'} = '';
 
+$openprint::log->debug("In Project::calc");
 	my $ProjectType = new openprint::ProjectType( $$specs{'projecttype_id'} );
 	my $Project = new openprint::Project( $project_index );
 	my $services = $Project->services();
 	$Project->Currency( openprint::Currency::get_current() );
-	$Project->type_id( $ProjectType->id() );
+	if ( $Project->type_id() != $ProjectType->id() ) {
+		$Project->change_ProjectType( $ProjectType );
+	} # end if
+
 	if ( $Project->id() and ( $$specs{'txtQuantity1'} != $Project->quantity1() ) ) {
 		foreach my $service_name ( keys %$services ) {
 			foreach my $service_id ( @{$$services{$service_name}} ) {
@@ -920,37 +924,9 @@ sub create_calc {
 	} # end foreach qty_index
 
 	my $ProjectType = openprint::ProjectType->find_one( name => $$specs{'rdbProjectType'} );
-	if ( $Project->Type()->name() ne $ProjectType->name() ) {
-		my @oldRequiredServiceTypes = $Project->Type()->required_ServiceTypes();
-		my @newRequiredServiceTypes = $ProjectType->required_ServiceTypes();
-
-# Remove no longer needed services
-		foreach my $ServiceType ( @oldRequiredServiceTypes ) {
-			if ( ! sets::isin( $ServiceType, \@newRequiredServiceTypes ) ) {
-				foreach my $s_id ( @{$services{$ServiceType->name()}} ) {
-					openprint::print_project::delete_service( $Project->id(), $s_id );
-				} # end foreach
-				delete $services{$ServiceType->name()};
-			} # end if
-		} # end foreach
-
-# add needed services
-		foreach my $ServiceType ( @newRequiredServiceTypes ) {
-			if ( ! $services{$ServiceType->name()} ) {
-				my $s_id = $Project->add_service( $ServiceType );
-				push @{$services{$ServiceType->name()}}, $s_id;
-				openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $s_id, 'txtQuantity1', $$specs{'txtQuantity1'} );
-				openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $s_id, 'txtQuantity2', $$specs{'txtQuantity2'} );
-				openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $s_id, 'txtQuantity3', $$specs{'txtQuantity3'} );
-			} # endif
-		} # end foreach
-		if ( $services{''} ) {
-			foreach ( @{$services{''}} ) {
-				openprint::print_project::delete_service( $Project->id(), $_ );
-			} # end foreach
-		} # end if
-		$Project->Type( $ProjectType );
-		$Project->save();
+	if ( $Project->type_id() != $ProjectType->id() ) {
+		$Project->change_ProjectType( $ProjectType );
+		%services = $Project->get_services( );
 	} # end if ProjectType changed
 
 	foreach my $ServiceType ( openprint::ServiceType->find( 'create_visible' => 'Y' ) ) {
@@ -963,7 +939,7 @@ sub create_calc {
 
 	$$specs{'ProjectIndex'} = $Project->id();
 	return $$specs{'Status'} = 'calculated';
-} # end if
+} # end sub create_calc
 
 # This version JUST does colours, not coatings
 sub get_colours {
@@ -996,7 +972,6 @@ sub get_colours {
     } # end foreach
     return @colours;
 } # end sub get_colours
-
 
 1;
 
