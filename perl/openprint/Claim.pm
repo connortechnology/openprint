@@ -3,6 +3,7 @@ package openprint::Claim;
 our @ISA = qw(openprint::Object);
 require openprint::Object;
 
+
 use openprint ();
 use vars qw( $log $debug %fields %find_fields %transforms %defaults $table $serial );
 *log = \$openprint::log;
@@ -10,11 +11,14 @@ use vars qw( $log $debug %fields %find_fields %transforms %defaults $table $seri
 require sql;
 require ssi;
 require misc;
+require List::Util;
+require Math::Round;
 
 require openprint::Claim_Content;
 require openprint::PurchaseOrder;
 require openprint::Company;
 require openprint::Currency;
+require openprint::usergroup;
 require openprint::Claim_Tax;
 require openprint::Object_Asset;
 
@@ -165,7 +169,7 @@ sub subtotal {
 		foreach my $C ( $self->Contents() ) {
 			$$self{'subtotal'} += $C->total();
 		} # end foreach
-        $$self{'subtotal'} = sprintf('%.2f', $$self{'subtotal'} );
+        $$self{'subtotal'} = Math::Round::nearest( 0.01, $$self{'subtotal'} );
 	} # endif
 	return $$self{'subtotal'};
 } # end sub subtotal
@@ -178,7 +182,7 @@ sub total {
         foreach my $Tax ( $self->Taxes() ) {
             $$self{'total'} += $Tax->amount();
         } # end foreach Tax
-        $$self{'total'} = sprintf('%.2f', $$self{'total'} );
+        $$self{'total'} = Math::Round::nearest( 0.01, $$self{'total'} );
 	} # end if
 	return $$self{'total'};
 } # end sub total
@@ -195,8 +199,8 @@ require MIME::QuotedPrint;
 	my $From = new openprint::User( $openprint::session{'user_id'} );
 	
 	my %info = (
-			'Claim'	=>	$self,
-			'From'	=>	$From,
+			Claim	=>	$self,
+			From	=>	$From,
 			);
 	my @attachments = ();
 
@@ -205,8 +209,8 @@ require MIME::QuotedPrint;
 	$_ = MIME::QuotedPrint::encode_qp( Encode::encode('utf-8', ssi::variable_substitution( \$email_template, \%info ) ) );
 	push @attachments, ('', $_, 'text/html', 'quoted-printable');
 
-	my $content = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/email_content/claim.html' );
-	push @attachments, $From->Company()->name().'-CLAIM'.$$self{'id'}.'.html', MIME::QuotedPrint::encode_qp( Encode::encode('utf-8',ssi::variable_substitution( \$content, \%info ) ) ), 'text/html', 'quoted-printable';
+	my $content = ssi::include( '/email_content/claim.html', \%info );
+	push @attachments, $From->Company()->name().'-CLAIM'.$$self{'id'}.'.html', MIME::QuotedPrint::encode_qp( Encode::encode('utf-8',$content) ), 'text/html', 'quoted-printable';
 
 	if ( $self->include_attachments() ) {
 		require MIME::Types;
@@ -224,8 +228,8 @@ require MIME::QuotedPrint;
 	$results .= $Email->send( 
 			TO	=>	( @To ? \@To : ( ($self->Contact()->email() ? $self->Contact() : sprintf('<%s> "%s"', @$self{'vendor_contact','vendor_email'})) ) ),
 			BCC	=>	sprintf( '"%s" <%s>', $From->name(), $From->email() ),
-			#TO	=>	sprintf( '"%s" <%s>', $From->name(), $From->email() ),
-			FROM	=>	sprintf( '"%s" <%s>', $From->name(), $From->email() ),
+			#TO	=>	$From,
+			FROM	=>	$From,
 			SUBJECT	=>	'CLAIM ' . $self->id() . ' for ' . $self->Vendor()->name(),
 			ATTACHMENTS =>	\@attachments,
 			);
@@ -274,7 +278,6 @@ sub Assets {
 	$param{object_type} = 'openprint::Claim';
 	$param{order}	=	'asset_id' if ! $param{'order'};
 	my @Assets = openprint::Object_Asset->find(%param);	
-$openprint::log->debug("# of Assets: " . scalar @Assets );
 	return @Assets;
 } # end sub Assets
 
@@ -284,9 +287,37 @@ sub Payments {
 	$param{'claim_id'} = $_[0]{'id'};
 	$param{'order'}	=	'payment_id' if ! $param{'order'};
 	my @Payments = openprint::Claim_Payment->find(%param);	
-$openprint::log->debug("# of Payments: " . scalar @Payments );
 	return @Payments;
 } # end sub Payments
 
+sub paid {
+	if ( @_ > 1 ) {
+		$_[0]{paid} = $_[1];
+	} # end if
+	if ( ! $_[0]{paid} ) {
+		$_[0]{paid} = List::Util::sum( map { $_->amount() } $_[0]->Payments() );
+	} # endif
+	return $_[0]{paid};
+} # end sub paid
+
+sub owing {
+	return $_[0]->total() - $_[0]->paid();
+} # end sub owing
+
+sub can_view {
+	return 1 if ! $_[0]{id};
+	return 1 if $openprint::session{user_id} == $_[0]->created_by();
+	return 1 if $openprint::session{user_type} eq 'A';
+	return 1 if openprint::usergroup::is_user_in( ['Accounting','SalesAdmin','Sales'], $openprint::session{'user_id'} );
+	return 0;
+} # end sub can_view
+
+sub can_view_pricing {
+	return 1 if ! $_[0]{id};
+	return 1 if $openprint::session{user_id} == $_[0]->created_by();
+	return 1 if $openprint::session{user_type} eq 'A';
+	return 1 if openprint::usergroup::is_user_in( ['Accounting','SalesAdmin','Sales'], $openprint::session{'user_id'} );
+	return 0;
+} # end sub can_viww_pricieng
 1;
 __END__
