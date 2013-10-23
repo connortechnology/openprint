@@ -61,7 +61,7 @@
 	text-align: left;
 }
 .Claim table .Quantity {
-	width: 75px;
+	width: 95px;
 }
 .Claim table td.Quantity {
 	text-align: right;
@@ -179,6 +179,9 @@
 } 
 .Claim #Contents {
 	margin-top: 20px;
+}
+.Claim #Contents p {
+	padding: 0;
 }
 .Claim .Information {
 	padding: 5px;
@@ -334,4 +337,12 @@ fieldset.filters p.buttons {
 .Claim table .actions {
 	width: 60px;
 	text-align: right;
+}
+.owing {
+	text-transform: uppercase;
+	text-align: right;
+}
+.Payments .ID {
+	text-align: left;
+	width: 75px;
 }
