@@ -1287,7 +1287,7 @@ sub load_from_signature {
 					( $$specs{'PrintingType'.$qty_index} eq 'Digital' ? ( 'digital'=>1 ) : () ),
 					'order'		=>	'minimum_order',
 					);
-			if ( $qty_index ) {
+			if ( $qty_index and $$specs{'hdnSuppliedStockWidth'.$qty_index} ) {
 				$params{'width'} = $$specs{'hdnSuppliedStockWidth'.$qty_index};
 				$params{'type'}	= $$specs{'StockType'.$qty_index};
 				if ( $params{'type'} ne 'Roll' ) {

@@ -547,7 +547,9 @@ $openprint::log->debug("Specified Pages: $k => $specified_pages{$k}" );
 		} # end if
 
 		# Insert the desired Bindery Type
-		push @{$$services{$$param{'rdbTemplateType'}}}, openprint::print_project::insert_service( $log, $dbh, $project_index, $$param{'rdbTemplateType'} ) if ! $$services{$$param{'rdbTemplateType'}};
+		if ( ( ! $$services{$$param{'rdbTemplateType'}} ) and openprint::ServiceType->find_one( name=> $$param{'rdbTemplateType'} ) ) {
+			push @{$$services{$$param{'rdbTemplateType'}}}, openprint::print_project::insert_service( $log, $dbh, $project_index, $$param{'rdbTemplateType'} );
+		} # end if
 	} # end if
 
 	if ( sets::isin( $$param{'rdbTemplateType'}, ('SaddleStitching','LoopStitching','PerfectBound','Unbound') ) ) {

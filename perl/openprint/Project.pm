@@ -667,7 +667,7 @@ sub copy {
 	@$new{@keys} = @$self{@keys};
 
 	delete $$new{'Services'};
-	$new->save({'id'=>undef, 'created_on'=>undef,'production_comments'=>undef} );
+	$new->save({'id'=>undef, 'created_on'=>undef,'production_comments'=>undef, order_id=>undef, docket=>undef} );
 
 	my @dont_copy = (
 			'ServiceIndex','ProjectIndex','TemplateType',

@@ -4,7 +4,7 @@ use strict;
 require openprint::service;
 use POSIX           qw(ceil);
 
-my $debug = 1;
+use constant DEBUG => 1;
 
 my %variables = (
 	'Sides' => ['save'],
@@ -40,6 +40,7 @@ sub neccessary {
 		$openprint::log->debug(" ** Project is marked as No bindery, ThreeKnifeTrim not needed ! ** ");
 		return 0;
 	} # end if
+	return 0 if ! openprint::ServiceType->find_one(type=>'ThreeKnifeTrime');
 
 	my $printing_service_index = $$services{''}[0] if $$services{''};
 	my $specs = openprint::service::get_specs_ref( $Project, $printing_service_index );

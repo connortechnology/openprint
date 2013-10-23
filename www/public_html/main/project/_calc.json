@@ -17,6 +17,10 @@
 		} # end foreach service_name
 	} # end if
 
+	if ( ! $param{'ServiceType'} ) {
+		return;
+	} # end if
+
 
 	my $module = 'openprint::Estimating::'.$param{'ServiceType'};
 	eval "require $module";

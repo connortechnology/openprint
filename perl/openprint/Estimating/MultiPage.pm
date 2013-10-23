@@ -428,19 +428,19 @@ sub status {
 } # end sub status
         
 sub save {
-$openprint::log->debug("Starting Multipage::save");
+#$openprint::log->debug("Starting Multipage::save");
 	my ( $project_index, $service_index, $param ) = @_;
 	my $Project = new openprint::Project( $project_index );	
 	my $Service = $Project->Service($service_index);
 	foreach my $ssid ( $Project->signatures() ) {
 		my $sig_specs = openprint::service::get_specs_ref( $Project, $ssid );
 		my %new_specs = %$sig_specs;
-$openprint::log->debug("Spreadsize for sig $$sig_specs{SignatureIndex} orig: $new_specs{txtSpreadSize} new: $$sig_specs{txtSpreadSize}");
+#$openprint::log->debug("Spreadsize for sig $$sig_specs{SignatureIndex} orig: $new_specs{txtSpreadSize} new: $$sig_specs{txtSpreadSize}");
 		openprint::Estimating::Printing::set_size( $Project, \%new_specs, $Service->specs() );
-$openprint::log->debug("Spreadsize for sig $$sig_specs{SignatureIndex} orig: $new_specs{txtSpreadSize} new: $$sig_specs{txtSpreadSize}");
+#$openprint::log->debug("Spreadsize for sig $$sig_specs{SignatureIndex} orig: $new_specs{txtSpreadSize} new: $$sig_specs{txtSpreadSize}");
 		foreach my $v ( openprint::Estimating::Printing::variables() ) {
 			if ( $new_specs{$v} ne $$sig_specs{$v} ) {
-$openprint::log->debug("Saving $v");
+#$openprint::log->debug("Saving $v");
 				openprint::service::insert_service_spec( $openprint::log, $openprint::dbh, $Project->id(), $ssid, $v, $new_specs{$v} );
 			} # end if
 		} # end foreach v

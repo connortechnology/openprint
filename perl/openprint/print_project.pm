@@ -765,10 +765,8 @@ $openprint::log->debug("reusing $project_index");
 		( $param{'comments'} ) = misc::trim( $param{'comments'} );
 		$NewProject->comments( $param{'comments'} );
 	} # end if
-	$NewProject->docket( '' );
 	$NewProject->due_date( '' );
 	$NewProject->user_id( $session{'user_id'} );
-	$NewProject->order_id( '' );
 	# This allows uncalc->uncalc, everything else to UnOrdered
 	if ( sets::isin( $Project->status(), [ 'Pending Deposit', 'In Prepress', 'Proofs Out', 'Approved', 'Printed', 'Complete','Shipped','Picked Up' ] ) ) {
 		$NewProject->status('Unordered');
