@@ -448,6 +448,7 @@ foreach my $Claim_Asset ( openprint::Claim_Asset->find() ) {
 	$Object_Asset->save({ object_id=>$Claim_Asset->claim_id(), asset_id=>$Claim_Asset->asset_id(), object_type=>'openprint::Claim' });
 	$Claim_Asset->delete();
 } # end foreach my $SRED_Asset
+$dbh->do('UPDATE users SET deleted=false WHERE deleted IS NULL');
 $dbh->disconnect();
 0;
 __END__

@@ -542,6 +542,10 @@ if ( ! sets::isin( 'payments', \@tables ) ) {
 	if ( ! exists $$data{'deleted'} ) {
 		$dbh->do('ALTER TABLE Payments add deleted boolean NOT NULL default false;');
 	} # end if
+if ( ! sets::isin( 'paymenttypes', \@tables ) ) {
+	$dbh->do( misc::load_file( $log, q{../openprint/sql/PaymentTypes.sql}) ) or die $dbh->errstr();
+} else {
+} # end if
 	if ( $data and ! exists $$data{'type_id'} ) {
 		$dbh->do('ALTER TABLE payments add type_id INTEGER');
 		$dbh->do('ALTER TABLE payments add FOREIGN KEY (type_id) REFERENCES PaymentTypes (id)');
@@ -2431,10 +2435,6 @@ if ( ! sets::isin( 'survey_question_available_answers', \@tables ) ) {
 	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='survey_question_available_answers'", 'column_name');
 } # end if
 
-if ( ! sets::isin( 'paymenttypes', \@tables ) ) {
-	$dbh->do( misc::load_file( $log, q{../openprint/sql/PaymentTypes.sql}) ) or die $dbh->errstr();
-} else {
-} # end if
 
 if ( ! sets::isin( 'order_id_seq', \@sequences ) ) {
 	$dbh->do('create sequence order_id_seq');
