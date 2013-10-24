@@ -20,9 +20,9 @@ use strict;
 package openprint::Estimating::Printing;
 my $threading = 0;
 #use threads;
-use constant DEBUG => 0;
+use constant DEBUG => 1;
 use constant DEBUG_VERSIONS => 0;
-use constant DEBUG_FILTERING => 0;
+use constant DEBUG_FILTERING => 1;
 use constant DEBUG_PRICE_DECISIONS => 0;
 
 my $master_time;
@@ -1245,7 +1245,7 @@ $openprint::log->debug("Non-process colours in get_impositions: @non_process_col
 
 		my @impositions;
 
-		my $use_cut_stocks = $Press->specification('Use Cut Stocks') ne 'N' ? 1 : 0;
+		my $use_cut_stocks = ( $Press->specification('Use Cut Stocks') and ( $Press->specification('Use Cut Stocks') ne 'N' ) ) ? 1 : 0;
 		my $co = $Press->specification('Cut Off');
 		my @cut_offs;
 		if ( $co ) {
@@ -1309,6 +1309,14 @@ $openprint::log->debug("Non-process colours in get_impositions: @non_process_col
 				} # end if
 			} # end foreach
 			push @{$Papers}, @extra_sheets;
+			if ( DEBUG ) {
+				foreach my $P ( @extra_sheets ) {
+					$openprint::log->debug("Extra: " . $P->to_string() );
+				} # end foreach P
+				foreach my $P ( @{$Papers} ) {
+					$openprint::log->debug("Sheets " . $P->to_string() );
+				} # end foreach P
+			} # end if DEBUG
 		} # end if
 		foreach my $Paper ( @$Papers ) {
 #Paper might have different calliperso# Is this needed anymore
@@ -1408,16 +1416,27 @@ $openprint::log->debug("Non-process colours in get_impositions: @non_process_col
 				} # end if start_width or cut for all sizes
 			} else { # Sheet Fed
 				next if ! ( $$Paper{width} and $$Paper{height} );
-				next if $use_cut_stocks and $Paper->is_cut();
-				next if $printing_type eq 'Digital' and ! $Paper->digital();
-				next if ( %sheetsizes and ! $sheetsizes{join('x', $Paper->width(),$Paper->height())} );
+				if ( $use_cut_stocks and $Paper->is_cut() ) {
+					$openprint::log->debug("Not using " . $Paper->to_string() . " because its cut." ) if DEBUG;
+					next;
+				} # end if
+				if ( $printing_type eq 'Digital' and ! $Paper->digital() ) {
+					$openprint::log->debug("Not using " . $Paper->to_string() . " because not digital." ) if DEBUG;
+					next;
+				} # end if
+				if ( %sheetsizes and ! $sheetsizes{join('x', $Paper->width(),$Paper->height())} ) {
+					$openprint::log->debug("Not using " . $Paper->to_string() . " because not in sheetsizes." ) if DEBUG;
+					next;
+				} # end if
+					$openprint::log->debug("using " . $Paper->to_string() . " because not in sheetsizes." ) if DEBUG;
+					
 
 				$$project{'Runstyles'} = $runstyles_sheet;
 
 				my $P = $Paper->clone();
 
 # Cut to fit on press
-				if ( 
+				if ( ( $maximum_sheet_width and $maximum_sheet_length ) and 
 						( $P->width() > $maximum_sheet_width or $P->height() > $maximum_sheet_length )
 						and
 						( $P->width() > $maximum_sheet_length or $P->height() > $maximum_sheet_width )

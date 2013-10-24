@@ -17,7 +17,7 @@
 package openprint::Estimating::Stitching;
 use strict;
 
-use constant DEBUG => 0;
+use constant DEBUG => 1;
 
 require openprint::Equipment;
 require openprint::service;
@@ -270,9 +270,11 @@ $results{'Breakdown'} .= 'Imposition: ' . $imposition . 'out<br/>';
 			} # end if
 		} # end if
 	} else {
-		if ( $$calc_hash{'Stitching::signature_calc::equipment'} ) {
+		if ( 0 and $$calc_hash{'Stitching::signature_calc::equipment'} ) {
+$results{'Breakdown'} .= 'Using cached equipment';
 			@equipment = @{$$calc_hash{'Stitching::signature_calc::equipment'}};
 		} else {
+$results{'Breakdown'} .= 'getting freshequipment';
 			@{$$calc_hash{'Stitching::signature_calc::equipment'}} = @equipment = get_equipment( $specs, \$error );
 		} # end if
 	} # end if
@@ -714,11 +716,11 @@ sub get_equipment {
 			next;
 		} # end if
 		if ( $_ = $Equipment->specification('Maximum Spread Width') and ( $$specs{'Width'} > $_ ) ) {
-			$$error .= "For " . $Equipment->name() . ": Too big.<br/>";
+			$$error .= "For " . $Equipment->name() . ": spread too big.<br/>";
 			next;
 		} # end if
 		if ( $_ = $Equipment->specification('Minimum Spread Width') and ( $$specs{'Width'} < $_ ) ) {
-			$$error .= "For " . $Equipment->name() . ": Too small.<br/>";
+			$$error .= "For " . $Equipment->name() . ": spread too small.<br/>";
 			next;
 		} # end if
 		if ( $_ = $Equipment->specification('Maximum Calliper') and ( $$specs{'txtCalliper'} > $_ ) ) {

@@ -24,7 +24,7 @@ require openprint::service;
 
 use vars qw( @folds %fold_types );
 
-use constant DEBUG => 0;
+use constant DEBUG => 1;
 
 my @equipment;
 my @stitchers;
@@ -1249,7 +1249,8 @@ if ( 0 ) {
 
 		} # end foreach set of Impositions
 		# The idea is that if we find a price on the press, then we are done, cuz nothing else will be better.... 
-		last if $bestPrice and ( $Equipment->strid() eq $$sig_specs{'ddmPress'.$qty_index} );
+		# Can't do this... case of digital cover on offset interioer, stitched... the stitcher does the cover
+		#last if $bestPrice and ( $Equipment->strid() eq $$sig_specs{'ddmPress'.$qty_index} );
 		last if defined $bestPrice and ! $bestPrice;
 	} # end foreach Equipment
 
