@@ -50,8 +50,10 @@ sub insert_project_type {
 				'projecttype_id is null or ='=> $ProjectType->id(), 
 				'order'=>'projecttype_id NULLS FIRST' );
 
-		$_ = q{SELECT name, value FROM User_Service_Defaults WHERE servicetype_id IS NULL AND user_id=?};
-		push @defaults, sql::execute( $log, $dbh, $_, $session{'user_id'} );
+		if ( $$session{'user_id'} ) {
+			$_ = q{SELECT name, value FROM User_Service_Defaults WHERE servicetype_id IS NULL AND user_id=?};
+			push @defaults, sql::execute( $log, $dbh, $_, $session{'user_id'} );
+		} # end if
 		
 		if ( $param{'txtConventionalPlates'} == 1 ) {
 			push @defaults, 'rdbPlates','Conventional';

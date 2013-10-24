@@ -145,6 +145,7 @@ sub get_specifications_pairs {
 sub get_specs_ref {
 	my ( $p_id, $s_id ) = @_;
 	if ( ! $s_id ) {
+		$openprint::log->error("********* Called get_specs_ref without Service Index ($s_id)****************");
 		Carp::cluck("********* Called get_specs_ref without Service Index ($s_id)****************");
 		return;
 	} # end if
