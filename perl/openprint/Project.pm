@@ -1498,34 +1498,38 @@ sub change_ProjectType {
     } else {
             $openprint::log->debug("Not Removing sigs because project type is same $$OldProjectType{id} == $$ProjectType{id}");
     } # end if
-    if ( ! $$services{''} ) {
-        my $printing_service_index = openprint::print_project::insert_project_type( $openprint::r, $openprint::log, $openprint::dbh, $$Project{id}, $ProjectType->name() );
-        push @{$$services{''}}, $printing_service_index;
-    } # end if
-	my @oldRequiredServiceTypes = $OldProjectType->required_ServiceTypes();
-	my @newRequiredServiceTypes = $ProjectType->required_ServiceTypes();
-
-# Remove no longer needed services
-	foreach my $ServiceType ( @oldRequiredServiceTypes ) {
-		if ( ! sets::isin( $ServiceType, \@newRequiredServiceTypes ) ) {
-			foreach my $s_id ( @{$$services{$ServiceType->name()}} ) {
-				openprint::print_project::delete_service( $Project->id(), $s_id );
-			} # end foreach
-			delete $$services{$ServiceType->name()};
+	if ( $$Project{id} ) {
+		if ( ! $$services{''} ) {
+			my $printing_service_index = openprint::print_project::insert_project_type( $openprint::r, $openprint::log, $openprint::dbh, $$Project{id}, $ProjectType->name() );
+			push @{$$services{''}}, $printing_service_index;
 		} # end if
-	} # end foreach
+		my @oldRequiredServiceTypes = $OldProjectType->required_ServiceTypes();
+		my @newRequiredServiceTypes = $ProjectType->required_ServiceTypes();
 
-# add needed services
-	foreach my $ServiceType ( @newRequiredServiceTypes ) {
-		if ( ! $$services{$ServiceType->name()} ) {
-			my $s_id = $Project->add_service( $ServiceType );
-			push @{$$services{$ServiceType->name()}}, $s_id;
-			openprint::service::insert_service_spec( $openprint::log, $openprint::dbh, $Project->id(), $s_id, 'txtQuantity1', $Project->quantity1() );
-			openprint::service::insert_service_spec( $openprint::log, $openprint::dbh, $Project->id(), $s_id, 'txtQuantity2', $Project->quantity2() );
-			openprint::service::insert_service_spec( $openprint::log, $openprint::dbh, $Project->id(), $s_id, 'txtQuantity3', $Project->quantity3() );
-		} # endif
-	} # end foreach
-    $error .= $Project->save( { type_id => $ProjectType->id() } );
+	# Remove no longer needed services
+		foreach my $ServiceType ( @oldRequiredServiceTypes ) {
+			if ( ! sets::isin( $ServiceType, \@newRequiredServiceTypes ) ) {
+				foreach my $s_id ( @{$$services{$ServiceType->name()}} ) {
+					openprint::print_project::delete_service( $Project->id(), $s_id );
+				} # end foreach
+				delete $$services{$ServiceType->name()};
+			} # end if
+		} # end foreach
+
+	# add needed services
+		foreach my $ServiceType ( @newRequiredServiceTypes ) {
+			if ( ! $$services{$ServiceType->name()} ) {
+				my $s_id = $Project->add_service( $ServiceType );
+				push @{$$services{$ServiceType->name()}}, $s_id;
+				openprint::service::insert_service_spec( $openprint::log, $openprint::dbh, $Project->id(), $s_id, 'txtQuantity1', $Project->quantity1() );
+				openprint::service::insert_service_spec( $openprint::log, $openprint::dbh, $Project->id(), $s_id, 'txtQuantity2', $Project->quantity2() );
+				openprint::service::insert_service_spec( $openprint::log, $openprint::dbh, $Project->id(), $s_id, 'txtQuantity3', $Project->quantity3() );
+			} # endif
+		} # end foreach
+		$error .= $Project->save( { type_id => $ProjectType->id() } );
+	} else {
+		$$Project{type_id} = $ProjectType->id();
+	} # end if
 	return $error;
 } # end sub change_ProjectType
 
