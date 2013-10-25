@@ -1177,7 +1177,7 @@ sub Ordered_Project {
 } # end sub Ordered_Project
 
 sub add_service {
-	my ( $self, $type, $data ) = @_;
+	my ( $self, $type, $data, $options ) = @_;
 
 	my $ServiceType;
 	if ( ref $type ne 'openprint::ServiceType' ) {
@@ -1193,7 +1193,7 @@ sub add_service {
 	my $ac = sql::start_transaction( $dbh );
 
 	my $Service = new openprint::Project_Service();
-	$Service->save({ project_id=>$$self{id}, status=>'uncalculated', servicetype_id=>$ServiceType->id()});
+	$Service->save({ project_id=>$$self{id}, ( status=>$$options{status} ? $$options{status} : 'uncalculated' ), servicetype_id=>$ServiceType->id()});
 	my $service_index = $$Service{service_id};
 
 	# Do this so that it doesn't try to load the specs, saving 1 db call.

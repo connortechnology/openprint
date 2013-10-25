@@ -11,16 +11,16 @@
 		</div>
 		<div class="rightColumn">
 			<? echo (
-				my $html = '';
-				$html .= ssi::input( 'type'=>'float', id=>'txtFinalWidth', name=>'txtFinalWidth', value=>$$variable{'txtFinalWidth'}, onkeyup=>'dimensions_onChange(this.form);' );
-				$html .= ' x ';
-				$html .= ssi::input( 'type'=>'float', id=>'txtFinalHeight', name=>'txtFinalHeight', value=>$$variable{'txtFinalHeight'}, onkeyup=>'dimensions_onChange(this.form);' );
-			$html .= '('. ssi::writeTip( 'Finished' ).' - W x H in inches)<br/>';
-				$html .= ssi::input( 'type'=>'float', id=>'txtWidth', name=>'txtWidth', value=>$$variable{'txtWidth'}, onkeyup=>'dimensions_onChange(this.form);' );
-				$html .= ' x ';
-				$html .= ssi::input( 'type'=>'float', id=>'txtHeight', name=>'txtHeight', value=>$$variable{'txtHeight'}, onkeyup=>'dimensions_onChange(this.form);' );
-			$html .= '('. ssi::writeTip( 'Flat' ).' - W x H in inches)';
-			return $html;
+				join( "\n",
+				input( type=>'float', id=>'txtFinalWidth', name=>'txtFinalWidth', value=>$$variable{txtFinalWidth}, onkeyup=>'dimensions_onChange(this.form);', min=>0 ),
+				' x ',
+				input( type=>'float', id=>'txtFinalHeight', name=>'txtFinalHeight', value=>$$variable{txtFinalHeight}, onkeyup=>'dimensions_onChange(this.form);', min=>0 ),
+				'('. writeTip( 'Finished' ).' - W x H in inches)<br/>',
+				input( type=>'float', id=>'txtWidth', name=>'txtWidth', value=>$$variable{txtWidth}, onkeyup=>'dimensions_onChange(this.form);', min=>0 ),
+				' x ',
+				input( type=>'float', id=>'txtHeight', name=>'txtHeight', value=>$$variable{txtHeight}, onkeyup=>'dimensions_onChange(this.form);', min=>0 ),
+				'('. writeTip( 'Flat' ).' - W x H in inches)',
+				);
 			) ?>
 		</div>
 	</fieldset>

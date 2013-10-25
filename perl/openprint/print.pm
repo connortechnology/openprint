@@ -140,7 +140,7 @@ sub view_services {
 						( $openprint::param{txtPrice1} ? ( txtPrice1 => $conversion_rate * misc::moneyfilter($openprint::param{txtPrice1} ) ) : () ),
 						( $openprint::param{txtPrice2} ? ( txtPrice2 => $conversion_rate * misc::moneyfilter($openprint::param{txtPrice2} ) ) : () ),
 						( $openprint::param{txtPrice3} ? ( txtPrice3 => $conversion_rate * misc::moneyfilter($openprint::param{txtPrice3} ) ) : () ),
-						ServiceName => $service_name } );
+						ServiceName => $service_name }, { status=>'calculated' } );
  
 					$Project->add_to_log( @openprint::session{'company_id','user_id'}, sprintf( 'Adding Custom Line: %s, (%.2f, %.2f, %.2f)', $service_name, @openprint::param{'txtPrice1','txtPrice2','txtPrice3'} ) );
 				} # end if has Customer Service type
