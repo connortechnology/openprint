@@ -1,5 +1,3 @@
-DROP TABLE IF EXISTS Photos_in_Albums;
-DROP TABLE IF EXISTS Photo_Albums;
 
 CREATE TABLE Photo_Albums (
 	id	SERIAL,
