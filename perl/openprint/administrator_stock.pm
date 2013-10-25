@@ -179,7 +179,7 @@ $openprint::log->debug("Setting: $param{'amount'} " );
 			} # end if
 			sql::end_transaction( $dbh, $ac );
 		} # end foreach Paper
-	} else {
+	} elsif ( $param{btnFunction} ) {
 		$log->error("Unknown function $param{btnFunction}");
 	} # end if
 } # end sub list

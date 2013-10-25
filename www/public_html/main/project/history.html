@@ -74,15 +74,15 @@
 			<ul>
 			<li>
 				<label>Creation Date</label>
-<? echo ( date_select_session( '/main/project/history.html', 'created_on_start', { onchange=>'load_projects();' } ); ) ?>
+<? echo ( date_select_session( '/main/project/history.html', 'created_on_start', { onchange=>'load_projects();', with_today=>1 } ); ) ?>
 					to 
-<? echo ( date_select_session( '/main/project/history.html', 'created_on_end', { onchange=>'load_projects();' } ); ) ?>
+<? echo ( date_select_session( '/main/project/history.html', 'created_on_end', { onchange=>'load_projects();', with_today=>1 } ); ) ?>
 			</li>
 			<li>
 				<label>Last Updated</label>
-<? echo ( date_select_session( '/main/project/history.html', 'updated_on_start', { onchange=>'load_projects();' } ); ) ?>
+<? echo ( date_select_session( '/main/project/history.html', 'updated_on_start', { onchange=>'load_projects();', with_today=>1 } ); ) ?>
 					to 
-<? echo ( date_select_session( '/main/project/history.html', 'updated_on_end', { onchange=>'load_projects();' } ); ) ?>
+<? echo ( date_select_session( '/main/project/history.html', 'updated_on_end', { onchange=>'load_projects();', with_today=>1 } ); ) ?>
 			</li>
 <? if ( sets::isin( $session{user_type},[ 'E', 'A' ] ) ) ?>
 			<li><label>Company</label>

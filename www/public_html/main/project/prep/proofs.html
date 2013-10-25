@@ -27,6 +27,8 @@
 					if ( $$sig_specs{'txtImposition'.$qty_index} ) {
 						$$variable{'Reference'} = openprint::service::summary( $$variable{'Project'}->id(), $s_id );
 						$$variable{'Reference'} .= '<br/>Running ' . openprint::service::summary( $$variable{'Project'}->id(), $s_id, $qty_index );
+					} else {
+						next;
 					} # end if
 					$html .= $$variable{'Reference'};
 

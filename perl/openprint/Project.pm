@@ -1004,7 +1004,7 @@ sub signatures {
 		foreach my $s_id ( @{$$services{'Signature'}} ) {
 			my $specs = openprint::service::get_specs_ref( $self, $s_id );
 
-			if ( $$params{'type'} ) {
+			if ( $$params{type} ) {
 				next if $$specs{'txtSignatureType'} ne $$params{'type'};
 			} # end if
 			if ( exists $$params{'Group'} ) {

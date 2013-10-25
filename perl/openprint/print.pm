@@ -130,59 +130,20 @@ sub view_services {
 				$Project->summary(undef);
 				$Project->save();
 			} elsif ( $r->param('btnFunction') eq 'Modify Project' ) {
-				my $service_name = $openprint::param{'txtServiceName'};
-				if ( $service_name eq '' ) {
-					$service_name = 'Adjust';
-				} # end if
+				my $service_name = $openprint::param{'txtServiceName'} ? $openprint::param{'txtServiceName'} : 'Adjustment';
 				my $CurrentCurrency = openprint::Currency::get_current();
 				my $ProjectCurrency = $Project->Currency();
 				my $conversion_rate = $CurrentCurrency->conversions( $ProjectCurrency->id() );
 
-				if ( my @ServiceTypes = openprint::ServiceType->find('name'=>'CustomService') ) {
-					my $ac = sql::start_transaction( $dbh );
-
-					sql::insert( $log, $dbh, 'tbl_Project_Contents',
-							'lngProjectIndex',	$project_index,
-							'strStatus',		'',
-							'servicetype_id',	$ServiceTypes[0]->id(),
-							);
-
-					$_ = 'SELECT MAX(lngServiceIndex) FROM tbl_Project_Contents WHERE lngProjectIndex=?';
-					my ( $service_index ) = sql::execute( $log, $dbh, $_, $project_index );
-					sql::insert( $log, $dbh, 'tbl_Service_Specifications', [
-								'lngProjectIndex',  $project_index,
-								'lngServiceIndex',  $service_index,
-								'strName',          'ServiceType',
-								'strValue',         'CustomService' ]);
-					if ( defined $r->param('txtPrice1') ) {
-					sql::insert( $log, $dbh, 'tbl_Service_Specifications', [
-								'lngProjectIndex',  $project_index,
-								'lngServiceIndex',  $service_index,
-								'strName',          'txtPrice1',
-								'strValue',         $conversion_rate * misc::moneyfilter($r->param('txtPrice1') )]);
-					} # end if
-					if ( defined $r->param('txtPrice2') ) {
-					sql::insert( $log, $dbh, 'tbl_Service_Specifications', [
-								'lngProjectIndex',  $project_index,
-								'lngServiceIndex',  $service_index,
-								'strName',          'txtPrice2',
-								'strValue',         $conversion_rate * misc::moneyfilter($r->param('txtPrice2') )]);
-					} # end if
-					if ( defined $r->param('txtPrice3') ) {
-					sql::insert( $log, $dbh, 'tbl_Service_Specifications', [
-								'lngProjectIndex',  $project_index,
-								'lngServiceIndex',  $service_index,
-								'strName',          'txtPrice3',
-								'strValue',         $conversion_rate * misc::moneyfilter($r->param('txtPrice3') )]);
-					} # end if
-					sql::insert( $log, $dbh, 'tbl_Service_Specifications', [
-								'lngProjectIndex',  $project_index,
-								'lngServiceIndex',  $service_index,
-								'strName',          'ServiceName',
-								'strValue',         $service_name ]);
+				if ( my $ServiceType = openprint::ServiceType->find_one( name=>'CustomService' ) ) {
+					my $service_id = $Project->add_service( $ServiceType, {
+						( $openprint::param{txtPrice1} ? ( txtPrice1 => $conversion_rate * misc::moneyfilter($openprint::param{txtPrice1} ) ) : () ),
+						( $openprint::param{txtPrice2} ? ( txtPrice2 => $conversion_rate * misc::moneyfilter($openprint::param{txtPrice2} ) ) : () ),
+						( $openprint::param{txtPrice3} ? ( txtPrice3 => $conversion_rate * misc::moneyfilter($openprint::param{txtPrice3} ) ) : () ),
+						ServiceName => $service_name } );
+ 
 					$Project->add_to_log( @openprint::session{'company_id','user_id'}, sprintf( 'Adding Custom Line: %s, (%.2f, %.2f, %.2f)', $service_name, @openprint::param{'txtPrice1','txtPrice2','txtPrice3'} ) );
-					sql::end_transaction( $dbh, $ac );
-				} # end if
+				} # end if has Customer Service type
 
 			} elsif ( $openprint::param{'btnFunction'} eq 'Delete Services' ) {
 				foreach my $service_id ( ref $openprint::param{'service_id'} eq 'ARRAY' ? @$openprint::param{'service_id'} : ( $openprint::param{'service_id'} ) ) {

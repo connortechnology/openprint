@@ -46,7 +46,6 @@
 	}
 	function body_onLoad() {
 	}
--->
 </script>
 <form id="f1" name="f1" method="post" action="list.html">
 	<fieldset class="filters"><legend>Go to</legend>
@@ -83,7 +82,7 @@
 			<select id="group_id" name="group_id" size="1" onchange="calc(this.form.name);">
 				<option value="">select</option>
 				<? echo (
-					return make_drop_down( [ map { $_->id(), $_->name() } @{$$variable{'Groups'}} ], $session{'/administrator/stock/list.html?group_id'} );
+					make_drop_down( [ map { $_->id(), $_->name() } @{$$variable{'Groups'}} ], $session{'/administrator/stock/list.html?group_id'} );
 					) ?>
 			</select>
 		</li>
@@ -93,7 +92,7 @@
 			<select id="manufacturer_id" name="manufacturer_id" size="1" onchange="calc(this.form.name);">
 				<option value="">select</option>
 				<? echo (
-					return make_drop_down( [ map { $_->id(), $_->name() } openprint::Manufacturer->find('order'=>'lower(name)') ], $session{'/administrator/stock/list.html?manufacturer_id'} );
+					make_drop_down( openprint::Manufacturer->dropdown( order=>'lower(name)'), $session{'/administrator/stock/list.html?manufacturer_id'} );
 					) ?>
 			</select>
 		</li>
@@ -102,7 +101,7 @@
 			<select id="brand_id" name="brand_id" onchange="filter_onChange(this,'');">
 				<option value="">select</option>
 				<? echo (
-					return make_drop_down( openprint::StockBrand->dropdown( order=>'lower(name)'), $session{'/administrator/stock/list.html?brand_id'} );
+					make_drop_down( openprint::StockBrand->dropdown( order=>'lower(name)'), $session{'/administrator/stock/list.html?brand_id'} );
 					) ?>
 			</select>
 		</li>
@@ -161,11 +160,11 @@
 		</li>
 		<li>
 			<label>Recommendations</label>
-			<? echo ( ssi::radio( 'recommendations', [ '1','Yes','0','No', '', 'All' ], $session{'/administrator/stock/list.html?recommendations'}, { onclick=>'calc(this.form.name);' } ); ) ?>
+			<? echo ( radio( 'recommendations', [ '1','Yes','0','No', '', 'All' ], $session{'/administrator/stock/list.html?recommendations'}, { onclick=>'calc(this.form.name);' } ); ) ?>
 		</li>
 		<li>
 			<label>Grain Direction</label>
-			<? echo ( ssi::radio( 'grain_direction', [ 'width', 'Width','height', 'Height', '', 'Both' ], $session{'/administrator/stock/list.html?grain_direction'}, { onclick=>'calc(this.form.name);' } ); ) ?>
+			<? echo ( radio( 'grain_direction', [ 'width', 'Width','height', 'Height', '', 'Both' ], $session{'/administrator/stock/list.html?grain_direction'}, { onclick=>'calc(this.form.name);' } ); ) ?>
 		</li>
 		<li>
 			<label>FSC Code</label>
@@ -179,11 +178,11 @@
 		</li>
 		<li>
 			<label>Digital</label>
-			<? echo ( ssi::radio( 'digital', [ '1','Yes','0','No', '', 'All' ], $session{'/administrator/stock/list.html?digital'}, { onclick=>'calc(this.form.name);' } ); ) ?>
+			<? echo ( radio( 'digital', [ '1','Yes','0','No', '', 'All' ], $session{'/administrator/stock/list.html?digital'}, { onclick=>'calc(this.form.name);' } ); ) ?>
 		</li>
 		<li>
 			<label>Has Setup Prices</label>
-			<? echo ( ssi::radio( 'setup_prices', [ '1','Yes','0','No', '', 'All' ], $session{'/administrator/stock/list.html?setup_prices'}, { onclick=>'calc(this.form.name);' } ); ) ?>
+			<? echo ( radio( 'setup_prices', [ '1','Yes','0','No', '', 'All' ], $session{'/administrator/stock/list.html?setup_prices'}, { onclick=>'calc(this.form.name);' } ); ) ?>
 		</li>
 		</ul>
 		</div><br class="spacer"/>

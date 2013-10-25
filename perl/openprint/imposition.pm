@@ -5,7 +5,7 @@ use POSIX qw{ ceil };
 
 require openprint::Imposition;
 
-use constant DEBUG => 1;
+use constant DEBUG => 0;
 
 # The various way we can group spreads
 use vars qw( %blocks );

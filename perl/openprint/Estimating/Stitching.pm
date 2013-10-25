@@ -17,7 +17,7 @@
 package openprint::Estimating::Stitching;
 use strict;
 
-use constant DEBUG => 1;
+use constant DEBUG => 0;
 
 require openprint::Equipment;
 require openprint::service;
@@ -270,11 +270,11 @@ $results{'Breakdown'} .= 'Imposition: ' . $imposition . 'out<br/>';
 			} # end if
 		} # end if
 	} else {
-		if ( 0 and $$calc_hash{'Stitching::signature_calc::equipment'} ) {
-$results{'Breakdown'} .= 'Using cached equipment';
+		if ( $$calc_hash{'Stitching::signature_calc::equipment'} ) {
+#$results{'Breakdown'} .= 'Using cached equipment';
 			@equipment = @{$$calc_hash{'Stitching::signature_calc::equipment'}};
 		} else {
-$results{'Breakdown'} .= 'getting freshequipment';
+#$results{'Breakdown'} .= 'getting freshequipment';
 			@{$$calc_hash{'Stitching::signature_calc::equipment'}} = @equipment = get_equipment( $specs, \$error );
 		} # end if
 	} # end if
@@ -711,7 +711,7 @@ sub get_equipment {
 	my @all_equipment = openprint::Equipment->find( 'Specifications' => {'Stitching Capable'=>['Y','When Printing','When Digital']}, 'useinestimating'=>1,'order'=>'strName');
 
 	foreach my $Equipment ( @all_equipment ) {
-		if ( $_ = $Equipment->fits( $$specs{Width}, $$specs{Height} ) ) {
+		if ( $_ = $Equipment->fits( $$specs{Width}, $$specs{Height}, undef, 'Stitching' ) ) {
 			$$error .= 'For ' . $Equipment->name() . $_;
 			next;
 		} # end if

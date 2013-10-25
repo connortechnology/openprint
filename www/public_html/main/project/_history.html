@@ -70,7 +70,7 @@
 	<td>&nbsp;</td>
 	<td colspan="7"><a href="/main/project/view.html?ProjectIndex=%2$d">%10$s</a></td>
 </tr>`,
-					$rowclass, $Project->id(), $Project->Company()->name(), ssi::html_escape( $Project->reference() ), 
+					$rowclass, $Project->id(), $Project->Company()->name(), $Project->reference(), 
 					( $Project->quantity(1) ? openprint::Currency::format( $Project->Currency()->convert_from( $Project->price(1) ) ) : '' ),
 					( $Project->quantity(2) ? openprint::Currency::format( $Project->Currency()->convert_from( $Project->price(2) ) ) : '' ),
 					( $Project->quantity(3) ? openprint::Currency::format( $Project->Currency()->convert_from( $Project->price(3) ) ) : '' ),
@@ -132,7 +132,7 @@
 	<td colspan="%9$d">&nbsp;</td>
 	<td colspan="7"><a href="/main/project/view.html?ProjectIndex=%2$d">%10$s</a></td>
 </tr>`,
-					$rowclass, $Project->id(), ssi::html_escape( $Project->reference() ), 
+					$rowclass, $Project->id(), $Project->reference(), 
 					( $Project->quantity(1) ? openprint::Currency::format( $Project->Currency()->convert_from( $Project->price(1) ) ) : '' ),
 					( $Project->quantity(2) ? openprint::Currency::format( $Project->Currency()->convert_from( $Project->price(2) ) ) : '' ),
 					( $Project->quantity(3) ? openprint::Currency::format( $Project->Currency()->convert_from( $Project->price(3) ) ) : '' ),

@@ -20,9 +20,9 @@ use strict;
 package openprint::Estimating::Printing;
 my $threading = 0;
 #use threads;
-use constant DEBUG => 1;
+use constant DEBUG => 0;
 use constant DEBUG_VERSIONS => 0;
-use constant DEBUG_FILTERING => 1;
+use constant DEBUG_FILTERING => 0;
 use constant DEBUG_PRICE_DECISIONS => 0;
 
 my $master_time;
@@ -2390,8 +2390,11 @@ if ( 1 ) {
 		#shift @{$$specs{'Additional Impositions'.$qty_index}};
 
 		$$specs{'ddmBleedSize'.$qty_index} = $$Imposition{'bleed_size'};
+		if ( $Press ) {
 		$$specs{'ddmPress'.$qty_index} = $$Press{'strid'};
 		$$specs{'PrintingType'.$qty_index} = $Press->specification('Printing Type');
+		$$specs{'rdbPlateType'.$qty_index} = $Press->specification('Plate Type');
+		} # end if Press
 		$$specs{'txtMWeight'.$qty_index} = $Paper->mweight() ? $Paper->mweight() : $Paper->wpsi() * $$Paper{'width'} * $$Paper{'height'} * 1000;
 		$$specs{'paper_id'.$qty_index} = $Paper->id();
 		$$specs{'txtStockGSM'} = $Paper->gsm();
@@ -2430,7 +2433,6 @@ if ( 1 ) {
 			$$specs{'BlankPlateQuantity'.$qty_index} = $$plate_setup{'Blank Plates'};
 			$$specs{'PlateID'.$qty_index} = $$plate_setup{'Plate ID'};
 		} # end if
-		$$specs{'rdbPlateType'.$qty_index} = $Press->specification('Plate Type');
 #
 		$$specs{'PerPlateCost'.$qty_index} = $$best_price{'Plate Cost'};
 		$$specs{'PlateTotalCost'.$qty_index} = $$best_price{'Plate Price'};
@@ -3013,7 +3015,9 @@ sub get_project_price {
 #$openprint::log->debug("calculated_impositions: $$Press{strid} " . ( sprintf('%.4f', tv_interval( [$time])*1000) ) .' usecs' );
 		foreach my $base_imp ( @Is ) {
 # Imp still gets modified in calc_price, Folding adds Folder member
+			$$base_imp{Project} = $Project;
 			my $imp = $base_imp->copy();
+			$$imp{specs} = $sig_specs;
 			$$sig_specs{'ddmRunStyle'.$qty_index} = $$imp{'runstyle'};
 			$$sig_specs{'ddmPress'.$qty_index} = $$Press{'strid'};
 			$$sig_specs{'PageQuantity'.$qty_index} = $$imp{'pages'};
@@ -4129,6 +4133,7 @@ if ( $$project{'HasDieCutting'} and $$project{'NeedDieCutting'} ) {
 	#my %washed_colours = %{$washed_colours};
 	my @left_over_colours;
 	my $colourstarttime = gettimeofday() if DEBUG;
+	$impressions /= $$project{print_sides} if (sets::isin($$Imposition{runstyle},['Sheet Work','Work & Turn','Work & Tumble'] ));
 #$openprint::log->debug("Colours: @colours");
 	foreach my $Colour ( filter_coatings_from_colours(\@colours) ) {
 		my $real_colour = $$Colour{name};
@@ -4254,7 +4259,7 @@ if ( 0 ) {
 			next;
 		}	
 		my $area = $Imposition->object_area() * $impressions * ($$project{'inkCoverage'}{$real_colour}/100);
-$openprint::log->debug("Area $area = $$Imposition{object_area} * $impressions * ($$project{'inkCoverage'}{$real_colour}/100) ");
+#$openprint::log->debug("Area $area = $$Imposition{object_area} * $impressions * ($$project{'inkCoverage'}{$real_colour}/100) ");
 
 		# Not exactly sure about this, but keeping it to make topknotch keep the same prices.  Will have to do more testing and thinking
 		# Thoughts:  if the colour is on both sides, then the coverage is increased, so the area needs to be descreased.
@@ -4355,39 +4360,39 @@ $openprint::log->debug("No Coverage for grade $grade Press: $$Press{strid}");
 
 	if ( $$Imposition{runstyle} eq 'Sheet Work' ) {
 		if ( @{$$project{side_one_colours}} and @{$$project{side_two_colours}} ) {
-			my $press_setup_front = press_setup_cost( $$specs{'txtPlateChangeQuantity'.$qty_index}, $plate_setup{'Plate Runs'}, $$project{side_one_colours}, $$Paper{calliper}, $qty_index, $Imposition );
+			my $press_setup_front = press_setup_cost( $$specs{'txtPlateChangeQuantity'.$qty_index}, $plate_setup{'Plate Runs'}, $$project{side_one_colours}, $$Paper{calliper}, $qty_index, $Imposition, $other_impositions );
 			$press_setup += $press_setup_front->{'Total'};
 			$price{'Setup Breakdown'} .= sprintf('%d units * $%.2f%s = $%.2f<br/>', @$press_setup_front{'Unit Count','Price','units','Total'} );
 			$price{'Plate Total'} += $$press_setup_front{'Plate Total'};
 			@price{'Plate Setup Price','Plate Setup Count','Plate Setup Units'} = @$press_setup_front{'Plate Price','Plate Count','Plate Units'};
 			if ( $$press_setup_front{units} ne 'total' ) {
-				my $back_press_setup = press_setup_cost( 0, $plate_setup{'Plate Runs'}, $$project{side_two_colours}, $$Paper{calliper}, $qty_index, $Imposition );
+				my $back_press_setup = press_setup_cost( 0, $plate_setup{'Plate Runs'}, $$project{side_two_colours}, $$Paper{calliper}, $qty_index, $Imposition, $other_impositions );
 				$press_setup += $$back_press_setup{'Total'};
 				$price{'Setup Breakdown'} .= sprintf('%d units * $%.2f%s = $%.2f<br/>', @$back_press_setup{'Unit Count','Price','units','Total'} );
 				$price{'Plate Total'} += $$back_press_setup{'Plate Total'};
 				$price{'Plate Setup Count'} += $$back_press_setup{'Plate Count'};
 			} # end if
 		} elsif ( @{$$project{side_one_colours}} ) {
-			my $press_setup_front = press_setup_cost( $$specs{'txtPlateChangeQuantity'.$qty_index}, $plate_setup{'Plate Runs'}, $$project{side_one_colours}, $$Paper{calliper}, $qty_index, $Imposition );
+			my $press_setup_front = press_setup_cost( $$specs{'txtPlateChangeQuantity'.$qty_index}, $plate_setup{'Plate Runs'}, $$project{side_one_colours}, $$Paper{calliper}, $qty_index, $Imposition, $other_impositions );
 			$press_setup += $$press_setup_front{'Total'};
 			$price{'Setup Breakdown'} .= sprintf('%d units * $%.2f%s = $%.2f<br/>', @$press_setup_front{'Unit Count','Price','units','Total'} );
 			$price{'Plate Total'} += $$press_setup_front{'Plate Total'};
 			@price{'Plate Setup Price','Plate Setup Count','Plate Setup Units'} = @$press_setup_front{'Plate Price','Plate Count','Plate Units'};
 		} elsif ( @{$$project{side_two_colours}} ) {
-			my $press_setup_back = press_setup_cost( $$specs{'txtPlateChangeQuantity'.$qty_index}, $plate_setup{'Plate Runs'}, $$project{side_two_colours}, $$Paper{calliper}, $qty_index, $Imposition );
+			my $press_setup_back = press_setup_cost( $$specs{'txtPlateChangeQuantity'.$qty_index}, $plate_setup{'Plate Runs'}, $$project{side_two_colours}, $$Paper{calliper}, $qty_index, $Imposition, $other_impositions );
 			$press_setup += $$press_setup_back{'Total'};
 			$price{'Setup Breakdown'} .= sprintf('%d units * $%.2f%s = $%.2f<br/>', @$press_setup_back{'Unit Count','Price','units','Total'} );
 			$price{'Plate Total'} += $$press_setup_back{'Plate Total'};
 			@price{'Plate Setup Price','Plate Setup Count','Plate Setup Units'} = @$press_setup_back{'Plate Price','Plate Count','Plate Units'};
 		} # end if
 	} elsif ( sets::isin( $$Imposition{runstyle}, ['Web','Perfecting'] ) ) {
-		my $press_setup_cost = press_setup_cost( $$specs{'txtPlateChangeQuantity'.$qty_index}, $plate_setup{'Plate Runs'}, $$project{combined_colours}, $$Paper{calliper}, $qty_index, $Imposition );
+		my $press_setup_cost = press_setup_cost( $$specs{'txtPlateChangeQuantity'.$qty_index}, $plate_setup{'Plate Runs'}, $$project{combined_colours}, $$Paper{calliper}, $qty_index, $Imposition, $other_impositions );
 		$press_setup += $$press_setup_cost{'Total'};
 		$price{'Setup Breakdown'} .= sprintf('%d units * $%.2f%s = $%.2f<br/>', @$press_setup_cost{'Unit Count','Price','units','Total'} );
 		@price{'Plate Setup Price','Plate Setup Count','Plate Setup Units'} = @$press_setup_cost{'Plate Price','Plate Count','Plate Units'};
 		$price{'Plate Total'} += $$press_setup_cost{'Plate Total'};
 	} else {
-		my $press_setup_cost = press_setup_cost( $$specs{'txtPlateChangeQuantity'.$qty_index}, $plate_setup{'Plate Runs'}, $$project{filtered_colours}, $$Paper{calliper}, $qty_index, $Imposition );
+		my $press_setup_cost = press_setup_cost( $$specs{'txtPlateChangeQuantity'.$qty_index}, $plate_setup{'Plate Runs'}, $$project{filtered_colours}, $$Paper{calliper}, $qty_index, $Imposition, $other_impositions );
 		$press_setup += $$press_setup_cost{'Total'};
 		$price{'Setup Breakdown'} .= sprintf('%d units * $%.2f%s = $%.2f<br/>', @$press_setup_cost{'Unit Count','Price','units','Total'} );
 		$price{'Plate Total'} += $$press_setup_cost{'Plate Total'};
@@ -4937,7 +4942,7 @@ sub get_run_price {
 
 # This is called once perside, or just once for W&T
 sub press_setup_cost {
-	my ( $plate_change_qty, $plate_runs, $colours, $calliper, $qty_index, $Imposition ) = @_;
+	my ( $plate_change_qty, $plate_runs, $colours, $calliper, $qty_index, $Imposition, $other_impositions ) = @_;
 	my $Press = $Imposition->Press();
 
 	# These are pre-filtered in setup_project now
@@ -4952,8 +4957,40 @@ sub press_setup_cost {
 		%Price = openprint::service::get_price_object( 'PressUnitMakeReady', $calliper, $Press );
 		$Price{'Total'} = $Price{'Price'} * $setup_count;
 	} elsif ( $Price{'units'} eq 'per job' ) {
-		#my @signatures = $Project->signatures(type=>$$specs{'txtSignatureType'});
-		#$Price{'Total'} = $Price{'Price'} if $signatures[0] == $service_index;
+			my $specs = $$Imposition{specs};
+		my $charge = 1;
+		if ( $$specs{Group} != 1 ) {
+		foreach my $Imp ( @$other_impositions ) {
+			if ( $Imp->Press()->id() == $Press->id() ) {
+				$charge = 0;
+				my $sig_specs = $Imp->specs();
+		$openprint::log->warn("Turning off setup because imp for $$sig_specs{SignatureIndex} has it. My index is $$specs{SignatureIndex}");
+				last;
+			} # end if
+		} # end foreach
+		} # end if
+		if ( $charge ) {
+			my $Project = $Imposition->Project();
+			if ( $Project ) {
+				my @signatures = $Project->signatures();
+				foreach my $sig_id ( sort @signatures ) {
+					my $sig_specs = openprint::service::get_specs_ref( $Project, $sig_id );
+					if ( $$sig_specs{SignatureIndex} == $$specs{SignatureIndex} ) {
+						last;
+					} elsif ( $$sig_specs{"ddmPress$qty_index"} eq $Press->strid() ) {
+		$openprint::log->warn("Turning off setup because $$sig_specs{SignatureIndex} has it. My index is $$specs{SignatureIndex}");
+						$charge = 0;
+						last;
+					} # end if
+				} # end foreach
+			} else {
+				$openprint::log->error("No Project in iimposition");
+			} # end if
+			if ( $charge ) {
+$openprint::log->warn("Charging $Price{Price} setup for $$specs{SignatureIndex}");
+				$Price{'Total'} = $Price{'Price'};
+			} # end if
+		} # end if charge
 	} elsif ( $Price{'units'} eq 'per form' ) {
 		my $specs = $$Imposition{specs};
 		%Price = openprint::service::get_price_object( 'PressUnitMakeReady', $$specs{'PreviousForms'.$qty_index} + 1, $Press);
@@ -5459,7 +5496,7 @@ sub get_printing_types {
 
 		if ( $$specs{'txtSignatureType'} eq 'Cover Pages' ) {
 # FIgure out printing types
-
+$openprint::log->debug("We are cover");
 			# If this is the cover, then we should ignore the interior pages, except for if there is an override.
 			foreach my $index ( $Project->signatures({'type'=>'Interior Pages'}) ) {
 				my $sig_specs = openprint::service::get_specs_ref( $Project, $index );
@@ -5486,10 +5523,15 @@ sub get_printing_types {
 # if another interior spread is digital, then we need digital
 # if the cover is offset, then we need offset
 # if the cover is waterless, then we can do waterless, or offset
-			foreach my $index ( $Project->signatures({'type'=>'Interior Pages'}) ) {
+$openprint::log->debug("We are interior");
+			foreach my $index ( sort { $a <=> $b } $Project->signatures({type=>'Interior Pages'}) ) {
+$openprint::log->debug("We are interior $index");
+
 				next if $index == $service_index;
 				my $sig_specs = openprint::service::get_specs_ref( $Project, $index );
+				next if ! $$sig_specs{SignatureIndex};
 				next if ( ( $index > $service_index ) and ( $$sig_specs{'OverridePrintingType'.$qty_index} ne 'Y' ) );
+$openprint::log->debug("Getting prnting tpes from $$sig_specs{SignatureIndex} group: $$sig_specs{Group}");
 
 				if ( sets::isin( $$sig_specs{'PrintingType'.$qty_index}, $available_printingtypes ) ) {
 					if ( $$sig_specs{'PrintingType'.$qty_index} eq 'Digital' ) {
@@ -5502,6 +5544,8 @@ sub get_printing_types {
 						$results = ['Web'];
 					} elsif ( $$sig_specs{'PrintingType'.$qty_index} eq 'Sheetfed' ) {
 						$results = ['Sheetfed'];
+					} else {
+$openprint::log->warn("Unknown printing type in sig $$sig_specs{SignatureIndex} : " . $$sig_specs{'PrintingType'.$qty_index} );
 					} # end if
 				} # end if
 				last if $results;
