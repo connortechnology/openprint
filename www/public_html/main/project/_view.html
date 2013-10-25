@@ -89,7 +89,7 @@
 						my $SigService2 = $Project->Service( $sigs[$i] );
 						my $sig_specs2 = $SigService2->specs();
 
-						if ( ( $statuses{$sigs[$i]} eq $statuses{$ss_id} ) and openprint::Estimating::Printing::compare_signatures( \%sig_specs, $sig_specs2 ) ) {
+						if ( ( $statuses{$sigs[$i]} eq $statuses{$ss_id} ) and openprint::Estimating::Printing::compare_signatures( $Project, \%sig_specs, $sig_specs2 ) ) {
 							$sig_qty += 1;
 							if ( ! $session{'ShowAllSignatures'} ) {
 								foreach my $qty_index ( $Project->quantity_indexes() ) {

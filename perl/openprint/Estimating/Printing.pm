@@ -765,16 +765,24 @@ sub calc_from_imposition {
 			$$specs{'txtImposition'.$qty_index} = $$Imposition{'imposition'} if $$specs{'chkOverrideImposition'.$qty_index} ne 'Y';
 		} # end if
 
+$openprint::log->warn("Getting Previous Forms:");
 		$$specs{'PreviousForms'.$qty_index} = 0;
 		$$project{'roll2sheetcharged'} = 0;
 		my %PaperCounts;
 		my %PlateCounts;
 		foreach my $index ( $Project->signatures() ) {
+$openprint::log->warn("Getting Previous Forms: $index");
 			next if ($index >= $service_id);
 			my $sig_specs = openprint::service::get_specs_ref( $Project, $index );
 			$PlateCounts{$$specs{'PlateID'.$qty_index}} += $$sig_specs{'txtPlateQuantity'.$qty_index};
 			$PlateCounts{'Blank'.$$specs{'PlateID'.$qty_index}} += $$sig_specs{'BlankPlateQuantity'.$qty_index};
-			$$specs{'PreviousForms'.$qty_index} += 1 if compare_signatures_runstyle( $specs, $sig_specs, $qty_index );
+if ( compare_signatures_runstyle( $Project, $specs, $sig_specs, $qty_index ) ) {
+			$$specs{'PreviousForms'.$qty_index} += 1;
+$openprint::log->warn("Getting Previous Forms same: $index");
+			} else {
+$openprint::log->warn("Getting Previous Forms not same: $index");
+			} # end if
+$openprint::log->warn("Getting Previous Forms: $index :" . $$specs{'PreviousForms'.$qty_index});
 			$$project{'roll2sheetcharged'} = 1 if $$sig_specs{'Roll2SheetCharge'.$qty_index};
 			$$project{'stocksetupcharged'} = 1 if $$sig_specs{'StockSetupCharge'.$qty_index};
 		} # end foreach $index
@@ -2200,11 +2208,14 @@ $openprint::log->debug("aftger get printing_types: " . ( sprintf('%.4f', tv_inte
 			$PlateCounts{'Blank'.$$sig_specs{'PlateID'.$qty_index}} += $$sig_specs{'BlankPlateQuantity'.$qty_index};
 			$$project{'roll2sheetcharged'} = 1 if $$sig_specs{'Roll2SheetCharge'.$qty_index};
 			$$project{'stocksetupcharged'} = 1 if $$sig_specs{'StockSetupCharge'.$qty_index};
-			my $hash_key = join(',', @$sig_specs{'ddmPress'.$qty_index,'ddmRunStyle'.$qty_index,'PageQuantity'.$qty_index,'txtImposition'.$qty_index} );
+			my $hash_key = join(',', @$sig_specs{'ddmPress'.$qty_index,'ddmRunStyle'.$qty_index,'PageQuantity'.$qty_index,'txtImposition'.$qty_index,'hdnImpositionColumns'.$qty_index} );
 			$previous_forms_cache{$hash_key} += 1;
 		} # end foreach $index
 foreach my $plate_id ( keys %PlateCounts ) {
 	$log->debug("Plate Counts: $plate_id : $PlateCounts{$plate_id}");
+}
+foreach my $k ( keys %previous_forms_cache ) {
+	$log->debug("Previous forms: $k $previous_forms_cache{$k}");
 }
 		if ( ! $$project{'stocksetupcharged'} ) {
 			# Check to see if there even are any stock setup prices.  If not, don't both estimating them later
@@ -3029,7 +3040,7 @@ sub get_project_price {
 			$$sig_specs{'ddmPress'.$qty_index} = $$Press{'strid'};
 			$$sig_specs{'PageQuantity'.$qty_index} = $$imp{'pages'};
 			my %previous_forms_cache = %$previous_forms_cache;
-			my $hash_key = join(',', $$Press{'strid'}, $$imp{'runstyle'}, $$imp{'pages'}, $$imp{'imposition'}, $$imp{columns}, $$imp{page_columns} );
+			my $hash_key = join(',', $$Press{'strid'}, $$imp{'runstyle'}, $$imp{'pages'}, $$imp{'imposition'}, $$imp{columns} );
 			$$sig_specs{'PreviousForms'.$qty_index} = $previous_forms_cache{$hash_key};
 			$previous_forms_cache{$hash_key} += 1;
 
@@ -3390,7 +3401,7 @@ sub get_project_price {
 				my @paper_strings = keys %PaperCounts;
 				if ( ( 1 == @paper_strings ) and ( $Paper->id_string() ne $paper_strings[0] ) ) {
 					$openprint::log->error("Different paper in count versus imposition: $paper_strings[0] ne " . $imp->Paper()->id_string() );
-				} elsif ( DEBUG or 1 ) {
+				} elsif ( DEBUG or 0 ) {
 					$log->warn("Paper Counts");
 					foreach my $k ( @paper_strings ) { $openprint::log->debug( "$k => $PaperCounts{$k}" ); } # end 
 				}
@@ -5000,6 +5011,7 @@ $openprint::log->warn("Charging $Price{Price} setup for $$specs{SignatureIndex}"
 		} # end if charge
 	} elsif ( $Price{'units'} eq 'per form' ) {
 		my $specs = $$Imposition{specs};
+$openprint::log->debug("PressMakeRady per form: previous forms: " . ( $$specs{'PreviousForms'.$qty_index} + 1 ) );
 		%Price = openprint::service::get_price_object( 'PressUnitMakeReady', $$specs{'PreviousForms'.$qty_index} + 1, $Press);
 		$Price{'Total'} = $Price{'Price'};
 	} elsif ( $Price{'units'} eq 'total' ) {
@@ -5069,8 +5081,8 @@ sub filter_colours {
 } # end sub
 
 sub compare_signatures_runstyle {
-	my ( $sig1, $sig2, $qty_index, $exclude ) = @_;
-	foreach my $q_i ( $qty_index ? ( $qty_index ) : ( 1 .. 3 ) ) {
+	my ( $Project, $sig1, $sig2, $qty_index, $exclude ) = @_;
+	foreach my $q_i ( $qty_index ? ( $qty_index ) : ( $Project->quantity_indexes() ) ) {
 		foreach my $key ( 'ddmRunStyle', 'ddmPress','PageQuantity','txtImposition','ddmBleedSize','txtPlateChangeQuantity', 'Versions' ) {
 			if ( $$sig1{$key.$q_i} ne $$sig2{$key.$q_i} ) {
 #$openprint::log->debug("Not the same $key $$sig1{ServiceIndex} $$sig2{ServiceIndex} $$sig1{$key.$q_i} $$sig2{$key.$q_i} $$sig1{SignatureIndex} $$sig2{SignatureIndex}");
@@ -5101,18 +5113,18 @@ sub compare_signatures_runstyle {
 			'ColourCoatingType8SideTwo', 'ColourCoatingColour8SideTwo', 'ColourCoatingCoverage8SideTwo',
 			'BleedLeft','BleedRight','BleedTop','BleedBottom',
 			) {
-				next if $exclude and sets::isin( $key, $exclude );
-				if ( $$sig1{$key} ne $$sig2{$key} ) {
+		next if $exclude and sets::isin( $key, $exclude );
+		if ( $$sig1{$key} ne $$sig2{$key} ) {
 #$openprint::log->debug("Not the same $key $$sig1{ServiceIndex} $$sig2{ServiceIndex} $$sig1{$key} ne $$sig2{$key}");
-					return 0;
-				} # end if
-			} # end foreach
+			return 0;
+		} # end if
+	} # end foreach
 	return 1;
 }
 # compares two signature services in terms of their inputs, and returns true if equal, false if not
 sub compare_signatures {
-	my ( $sig1, $sig2, $qty_index, $exclude ) = @_;
-	return 0 if ! compare_signatures_runstyle( $sig1, $sig2, $qty_index, $exclude );
+	my ( $Project, $sig1, $sig2, $qty_index, $exclude ) = @_;
+	return 0 if ! compare_signatures_runstyle( $Project, $sig1, $sig2, $qty_index, $exclude );
 	foreach my $key (
 			'Group',
 			'CustomStockPrice','txtCustomMWeight',

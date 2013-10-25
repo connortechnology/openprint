@@ -135,25 +135,26 @@
 	</tr>
 	<? echo (
 		my $html = '';
-		my @sigs = $$variable{'Project'}->signatures();
+		my $Project = $$variable{Project};
+		my @sigs = $Project->signatures();
 		@sigs = sort { 
-			my $a_specs = openprint::service::get_specs_ref( $$variable{'Project'}, $a );
-			my $b_specs = openprint::service::get_specs_ref( $$variable{'Project'}, $b );
+			my $a_specs = openprint::service::get_specs_ref( $Project, $a );
+			my $b_specs = openprint::service::get_specs_ref( $Project, $b );
 			return $$a_specs{'PageQuantity'.$$variable{'qty_index'}} <=> $$b_specs{'PageQuantity'.$$variable{'qty_index'}};
 		} @sigs;
 		my $form = 1;
 
 		my $part = 0;
 		while ( my $service_index = shift @sigs ) {
-			my $sig_specs = openprint::service::get_specs_ref( $$variable{Project}, $service_index );
-			my $Paper = openprint::Paper::load_from_signature( $$variable{Project}, $sig_specs, $$variable{'Project'}->ordered_quantity_index() );
+			my $sig_specs = openprint::service::get_specs_ref( $Project, $service_index );
+			my $Paper = openprint::Paper::load_from_signature( $Project, $sig_specs, $Project->ordered_quantity_index() );
 			my $Imposition = new openprint::Imposition();
-			$Imposition->load( $sig_specs, $$variable{'Project'}->ordered_quantity_index() );
+			$Imposition->load( $sig_specs, $Project->ordered_quantity_index() );
 
 			my $signatures = 1;
 			for ( my $i=0; $i < @sigs; $i += 1 ) {
-				my $sig_specs2= openprint::service::get_specs_ref( $$variable{'Project'}, $sigs[$i] );
-				if ( openprint::Estimating::Printing::compare_signatures( $sig_specs, $sig_specs2, $$variable{'Project'}->ordered_quantity_index() ) ) {
+				my $sig_specs2= openprint::service::get_specs_ref( $Project, $sigs[$i] );
+				if ( openprint::Estimating::Printing::compare_signatures( $sig_specs, $sig_specs2, $Project->ordered_quantity_index() ) ) {
 					$signatures += 1;
 					splice @sigs, $i, 1;
 					$i -= 1;
