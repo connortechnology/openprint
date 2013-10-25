@@ -29,7 +29,7 @@ require openprint::Estimating::Spiral;
 require openprint::Estimating::UPS;
 require openprint::Estimating::MultiPage;
 require openprint::logs;
-require openprint::ProjectService;
+require openprint::Project_Service;
 
 use constant DEBUG => 0;
 
