@@ -62,6 +62,9 @@
 					if ( sets::isin( $$variable{Project}->status(), [ 'Proofs Out','Approved','Printed','Complete' ] ) ) {
 					$html .= button( 'ViewPDFs', { onclick=>"f1.action='/main/project/view_pdf.html';f1.btnFunction.value='View PDF';f1.submit();", text=>'View PDFs' } );
 				} # end if
+				if ( sets::isin( $$variable{Project}->status(), [ 'Pending Deposit','In Prepress', 'Proofs Out','Approved','Printed','Complete' ] ) ) {
+					$html .= button( 'Upload', { href=>'/upload/upload_center.html?project_id='.$$variable{Project}->id(), text=>'Upload Files' } );
+				} # end if
 				$html .= button( 'Print', { onclick=>'window.print();' } );
 				if ( sets::isin( $session{user_type}, ['A','E'] ) ) {
 					$html .= button( 'JDF', { href=>'/main/project/view.html?btnFunction=Export%20JDF&amp;ProjectIndex='.$$variable{ProjectIndex} } ) if $$variable{Project}->docket();

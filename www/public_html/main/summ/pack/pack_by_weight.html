@@ -1,3 +1,5 @@
-<? echo ( include('/includes/main/summ/package_size_weight.html'); ) ?>
-<? echo ( include('/includes/main/summ/package_quantity.html'); ) ?>
-<? echo ( include('/includes/main/summ/total_weight.html'); ) ?>
+<? echo ( join("\n",
+			include('/includes/main/summ/package_size_weight.html'),
+			include('/includes/main/summ/package_quantity.html'),
+			include('/includes/main/summ/total_weight.html'),
+); ) ?>

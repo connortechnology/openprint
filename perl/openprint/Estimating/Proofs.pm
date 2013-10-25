@@ -658,6 +658,44 @@ sub summary {
 	return '';
 } # end sub summary
 
+sub signature_summary {
+    my ( $Project, $service_id, $specs, $qty_index, $ss_id ) = @_;
+    $specs = openprint::service::get_specs_ref( $Project, $service_id ) if ! $specs;
+    if ( $qty_index ) {
+        my %proof_totals;
+		my $sig_specs = openprint::service::get_specs_ref( $Project, $ss_id );
+		if ( ! $$sig_specs{'txtImposition'.$qty_index} ) {
+			next;
+		} # end if
+		my $signature_index = $$sig_specs{'SignatureIndex'};
+		foreach my $key ( keys %{$specs} ) {
+			if ( my ($proof_index) = $key =~ /^txtProofIndex\-$signature_index\-(\d+)\-$qty_index$/ ) {
+				if ( my $Service = openprint::Service->find_one( name=>$$specs{"ddmProofType-$signature_index-$proof_index-$qty_index"}) ) {
+					if ( sets::isin( $$specs{"ddmProofType-$signature_index-$proof_index-$qty_index"}, [ 'PressProof', 'PDFProof' ] ) ) {
+						my $desc = sprintf('</td><td class="type">%s', $Service->description() );
+						$proof_totals{$desc} += $$specs{"txtProofQuantity-$signature_index-$proof_index-$qty_index"};
+					} else {
+						my $desc = sprintf('%s&quot; x %s&quot;</td><td class="type">%s', @$specs{
+								"txtProofWidth-$signature_index-$proof_index-$qty_index",
+								"txtProofHeight-$signature_index-$proof_index-$qty_index"}, $Service->description() );
+						$proof_totals{$desc} += $$specs{"txtProofQuantity-$signature_index-$proof_index-$qty_index"};
+					} # end if
+				} # end if
+			} # end if
+		} # end foreach key
+        if ( ! %proof_totals ) {
+            return '';
+        } # end if
+        my $summary = '<table class="ProofsSummary">';
+        foreach my $k ( keys %proof_totals ) {
+            next if ! $proof_totals{$k};
+            $summary .= '<tr><td class="quantity">'.$proof_totals{$k}.'</td><td class="size">'.$k.'</td></tr>';
+        } # end foreach
+        return $summary.'</table>';
+    } # end if qty_index
+    return '';
+} # end sub signature_summary
+
 sub breakupsummary {
 	my ( $Project, $service_id, $specs, $qty_index ) = @_;
 

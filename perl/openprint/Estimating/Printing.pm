@@ -2568,6 +2568,13 @@ sub breakdown {
 		$breakdown .= ' Used Minimum Overs ' if $$stock_qty{'Minimum Overs'} == $$stock_qty{'Total Overs'};
 		$breakdown .= '<br/>';
 	} # end if
+	if ( $Paper->type() ne 'Roll' ) {
+        $breakdown .= sprintf( '%sx%s starting %sx%s<br/>', $Paper->width(), $Paper->height(), $Paper->start_width(), $Paper->start_height() );
+        $breakdown .= "Paper: $$price{'Gross Sheet Count'} sheets @".$Paper->mweight() . 'M = ' . $$price{'Gross Sheet Count'} * $Paper->mweight()/1000 . 'lbs * ';
+        $breakdown .= " minimum order adjustment $$price{'minimum_order'}sheets<br/>" if $$price{'minimum_order'};
+    } elsif ( $Paper->width() ) {
+        $breakdown .= sprintf("Paper: \%sx\%s -> \%sx\%s * \%.6flbs/sq inch = \%.6f lbs per sheet (%d gsm, %sPT) Total: %slbs<br/>", $Paper->start_width(), $Paper->start_height(), $Paper->width(), $Paper->height(), $Paper->wpsi(), $Paper->width() * $Paper->height()* $Paper->wpsi(), $Paper->gsm(), $Paper->calliper(), $$price{'Stock Weight'} );
+    } # end if
 	$breakdown .= $$price{'Ink breakdown'};
 	$breakdown .= sprintf('Ink Total: $%.2f<br/>', $$price{'Ink Price'} );
 	$breakdown .= sprintf('Total: $%.2f<br/>', $$price{'Total Cost'} );

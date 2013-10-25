@@ -2,7 +2,7 @@
 <? echo ( 
 	my $html = '';
 	my @summaries;
-	$_ = openprint::service::summary( $$variable{'Project'},$$variable{'ServiceIndex'} );
+	$_ = openprint::service::summary( $$variable{Project},$$variable{'ServiceIndex'} );
 	@summaries = ref $_ eq 'ARRAY' ? @{$_} : ( $_ );
 	my @qty_summaries;
 	foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
@@ -19,14 +19,4 @@
 	} # end foreach summary
 	return $html;
 ) ?>
-</p>
-<p>
-	<label>MPrice</label>
-	<? eval ( $$variable{'QTYIndex'} = 1 ) ?>
-	<? while ( $$variable{'QTYIndex'} <= 3 ) ?>
-	<? if ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>
-	<span class="value"><? echo ( $$variable{'Currency'}->symbol().$$variable{'MPrice'.$$variable{'QTYIndex'}} ) ?></span>
-	<? endif ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>
-	<? eval ( $$variable{'QTYIndex'} += 1 ) ?>
-	<? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
 </p>

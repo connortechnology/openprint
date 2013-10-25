@@ -5,9 +5,9 @@
 			$html .= '<span class="value">';
 			my $g = $$variable{'totalWeight'.$qty_index}*453.59237;
 			if ( $g > 1000 ) {
-				$html .= sprintf( '%.0flbs (%.0fkg)', $$variable{'totalWeight'.$$variable{'QTYIndex'}}, $g/1000 );
+				$html .= sprintf( '%.0flbs (%.0fkg)', $$variable{'totalWeight'.$qty_index}, $g/1000 );
 			} else {
-				$html .=sprintf( '%.0flbs (%.0fg)', $$variable{'totalWeight'.$$variable{'QTYIndex'}}, $g );
+				$html .= sprintf( '%.0flbs (%.0fg)', $$variable{'totalWeight'.$qty_index}, $g );
 			} # end if
 			$html .= '</span>';
 		} # end foreach
