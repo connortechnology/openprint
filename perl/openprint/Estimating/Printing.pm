@@ -748,6 +748,7 @@ sub calc_from_imposition {
 			next;
 		} # end if
 		my $Imposition = shift @{$$source_specs{'Additional Impositions'.$qty_index}};
+		$$Imposition{specs} = $specs;
 		$$specs{'ddmRunStyle'.$qty_index} = $$Imposition{'runstyle'};
 		if ( $$specs{'chkOverridePress'.$qty_index} eq 'Y' and $$specs{'ddmPress'.$qty_index} ne $Imposition->Press()->strid() ) {
 			$openprint::log->error("Invaluid press");
