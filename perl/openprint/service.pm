@@ -464,7 +464,7 @@ sub internal_calc {
     $dbh->do( "SELECT * FROM Projects WHERE id=".$$Project{id}. ' FOR UPDATE' );
 	my $Service = $Project->Service($service_index) if $service_index;
 	if ( ! $Service ) {
-		$Service = new openprint::ProjectService();
+		$Service = new openprint::Project_Service();
 		$Service->set({ project_id=>$project_index, service_id=>$service_index, service_type=>$service_type });
 	} # end if	
 	my $specs = $Service->specs();
