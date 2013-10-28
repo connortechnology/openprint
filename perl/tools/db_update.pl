@@ -1264,6 +1264,9 @@ if ( sets::isin( 'services', \@tables ) ) {
 			$dbh->do('ALTER TABLE Services add owner_id INTEGER');
 			$dbh->do('ALTER TABLE Services add FOREIGN KEY(owner_id) REFERENCES companies (id)');
 		} # end if
+		if ( ! exists $$data{activity_code} ) {
+			$dbh->do('ALTER TABLE Services ADD activity_code TEXT');
+		} # end if
 	} # end if
 } else {
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/Services.sql}) );
