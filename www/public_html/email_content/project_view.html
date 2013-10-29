@@ -68,7 +68,7 @@
 						for ( my $i = 0; $i < @sigs; $i += 1 ) {
 							my $sig_specs2 = openprint::service::get_specs_ref( $Project, $sigs[$i] );
 
-							if ( ( $statuses{$sigs[$i]} eq $statuses{$ss_id} ) and openprint::Estimating::Printing::compare_signatures( \%sig_specs, $sig_specs2 ) ) {
+							if ( ( $statuses{$sigs[$i]} eq $statuses{$ss_id} ) and openprint::Estimating::Printing::compare_signatures( $Project, \%sig_specs, $sig_specs2 ) ) {
 								$sig_qty += 1;
 								foreach my $qty_index ( $Project->quantity_indexes() ) {
 									$sig_specs{'txtPrice'.$qty_index} += $ProjectCurrency->convert_from( $$sig_specs2{'txtPrice'.$qty_index} );

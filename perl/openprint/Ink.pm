@@ -17,6 +17,7 @@ $serial = 'inks_id_seq';
 	pmsid		=>	'pmsid',
 	name		=>	'name',
 	service_id	=>	'service_id',
+	mix_service_id	=>	'mix_service_id',
 	material_id	=>	'material_id',
 	washups		=>	'washups',
 	grades		=>	'grades',
@@ -26,6 +27,7 @@ $serial = 'inks_id_seq';
 %defaults = (
 	mix			=>	0,
 	washups		=>	undef,
+	mix_service_id	=>	undef,
 	service_id	=>	undef,
 	material_id	=>	undef,
 	grades		=>	undef,
@@ -47,5 +49,11 @@ sub Service {
 	} # end if
 	return $_[0]{Service};	
 } # end sub Service
+sub Mix_Service {
+	if ( ! $_[0]{Mix_Service} ) {
+		$_[0]{Mix_Service} = new openprint::Service( $_[0]{mix_service_id} );
+	} # end if
+	return $_[0]{Mix_Service};	
+} # end sub Mix_Service
 1;
 __END__

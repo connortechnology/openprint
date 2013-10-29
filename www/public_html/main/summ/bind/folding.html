@@ -15,7 +15,7 @@
 		my $Service = $$variable{'Project'}->Service( $s_id );
 		my $sig_specs = $Service->specs();
 		if ( $$sig_specs{'txtServiceDescription'} ) {
-			$html .= '<p>For <b>'.$$sig_specs{'txtServiceDescription'}.'</b></p>';
+			$html .= '<p>For <b>'.$$sig_specs{'txtServiceDescription'}.'</b> Form '.$$sig_specs{SignatureIndex}.'</p>';
 		} # end if
 		$html .= '<p><label>Folds</label>';
 		foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
@@ -24,8 +24,8 @@
 				next if ! $$variable{"FoldQty-$$sig_specs{SignatureIndex}-$qty_index-$fold_index"};
 	
 				$html .= $$variable{"FoldQty-$$sig_specs{SignatureIndex}-$qty_index-$fold_index"} . ' ' .
-$$variable{"FoldImposition-$$sig_specs{SignatureIndex}-$qty_index-$fold_index"}.'out '.
-$$variable{"FoldType-$$sig_specs{SignatureIndex}-$qty_index-$fold_index"} . '<br/>';
+				$$variable{"FoldImposition-$$sig_specs{SignatureIndex}-$qty_index-$fold_index"}.'out '.
+				$$variable{"FoldType-$$sig_specs{SignatureIndex}-$qty_index-$fold_index"} . '<br/>';
 			} # end foreach fold_index
 			$html .= '</span>';
 		} # end foreach

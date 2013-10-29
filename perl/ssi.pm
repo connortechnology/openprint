@@ -809,7 +809,7 @@ sub date_filter {
 	return ( $sql_field, sprintf('%.4d-%.2d-%.2d %.2d:%.2d:%.2d', ( $year, $month, $day, $hour, $minute, $second ) ) );
 } # end sub date_filter
 
-my @input_options = ( 'type','name','id','onblur','onfocus','onkeyup','onkeydown','onchange','class','pattern','ontouch','max', 'placeholder' );
+my @input_options = ( 'type','name','id','onblur','onfocus','onkeyup','onkeydown','onchange','class','pattern','ontouch','min','max', 'step', 'placeholder' );
 
 sub input {
 	my %options = @_;
@@ -838,6 +838,7 @@ sub input {
 		} else {
 			$options{type} = 'number';
 		} # end if
+		$options{step} = 'any' if ! exists $options{step};
 		$options{'onkeyup'} = 'floatize(this);'.$options{'onkeyup'};
 	} elsif ( $options{type} eq 'float_calculator' ) {
 		if ( $ENV{HTTP_USER_AGENT} =~ /ip(ad|od|hone)/i ) {
@@ -846,12 +847,13 @@ sub input {
 		} else {
 			$options{type} = 'number';
 		} # end if
+		$options{step} = 'any' if ! exists $options{step};
 		$options{'onkeyup'} = 'floatize_calculator(this);'.$options{'onkeyup'};
 	} # end if
 	$html .= ' value="'.html_escape($options{value}).'"' if $options{value} ne '';
 
 	foreach (@input_options) {
-		$html .= qq` $_="$options{$_}"` if $options{$_};
+		$html .= qq` $_="$options{$_}"` if exists $options{$_};
 	} # end foreach
 	$html .= ' required' if $options{required};
 	$html .= ' readonly="readonly"' if $options{readonly};

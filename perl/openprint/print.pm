@@ -106,8 +106,12 @@ sub view_services {
 
 				if ( (!$openprint::param{'ServiceType'} ) or $recalc ) {
 					multipage_signatures( \%openprint::param, $log, $dbh, $variable, $project_index, $service_index );
-					openprint::service::internal_calc( $log, $dbh, $variable, $project_index, $service_index, $Project->Type()->type() );
-					openprint::Estimating::MultiPage::calculate_signatures( $Project );
+					my $s = openprint::service::internal_calc( $log, $dbh, $variable, $project_index, $service_index, $Project->Type()->type() );
+					if ( $$s{Status} ne 'calculated' ) {
+						$log->error("Error calculting Project service");
+					} else {
+						openprint::Estimating::MultiPage::calculate_signatures( $Project );
+					} # end if
 					$recalc = 1;
 				} elsif ( $openprint::param{'ServiceType'} eq 'Printing' ) {
 					openprint::Estimating::MultiPage::calculate_signatures( $Project );
@@ -130,59 +134,20 @@ sub view_services {
 				$Project->summary(undef);
 				$Project->save();
 			} elsif ( $r->param('btnFunction') eq 'Modify Project' ) {
-				my $service_name = $openprint::param{'txtServiceName'};
-				if ( $service_name eq '' ) {
-					$service_name = 'Adjust';
-				} # end if
+				my $service_name = $openprint::param{'txtServiceName'} ? $openprint::param{'txtServiceName'} : 'Adjustment';
 				my $CurrentCurrency = openprint::Currency::get_current();
 				my $ProjectCurrency = $Project->Currency();
 				my $conversion_rate = $CurrentCurrency->conversions( $ProjectCurrency->id() );
 
-				if ( my @ServiceTypes = openprint::ServiceType->find('name'=>'CustomService') ) {
-					my $ac = sql::start_transaction( $dbh );
-
-					sql::insert( $log, $dbh, 'tbl_Project_Contents',
-							'lngProjectIndex',	$project_index,
-							'strStatus',		'',
-							'servicetype_id',	$ServiceTypes[0]->id(),
-							);
-
-					$_ = 'SELECT MAX(lngServiceIndex) FROM tbl_Project_Contents WHERE lngProjectIndex=?';
-					my ( $service_index ) = sql::execute( $log, $dbh, $_, $project_index );
-					sql::insert( $log, $dbh, 'tbl_Service_Specifications', [
-								'lngProjectIndex',  $project_index,
-								'lngServiceIndex',  $service_index,
-								'strName',          'ServiceType',
-								'strValue',         'CustomService' ]);
-					if ( defined $r->param('txtPrice1') ) {
-					sql::insert( $log, $dbh, 'tbl_Service_Specifications', [
-								'lngProjectIndex',  $project_index,
-								'lngServiceIndex',  $service_index,
-								'strName',          'txtPrice1',
-								'strValue',         $conversion_rate * misc::moneyfilter($r->param('txtPrice1') )]);
-					} # end if
-					if ( defined $r->param('txtPrice2') ) {
-					sql::insert( $log, $dbh, 'tbl_Service_Specifications', [
-								'lngProjectIndex',  $project_index,
-								'lngServiceIndex',  $service_index,
-								'strName',          'txtPrice2',
-								'strValue',         $conversion_rate * misc::moneyfilter($r->param('txtPrice2') )]);
-					} # end if
-					if ( defined $r->param('txtPrice3') ) {
-					sql::insert( $log, $dbh, 'tbl_Service_Specifications', [
-								'lngProjectIndex',  $project_index,
-								'lngServiceIndex',  $service_index,
-								'strName',          'txtPrice3',
-								'strValue',         $conversion_rate * misc::moneyfilter($r->param('txtPrice3') )]);
-					} # end if
-					sql::insert( $log, $dbh, 'tbl_Service_Specifications', [
-								'lngProjectIndex',  $project_index,
-								'lngServiceIndex',  $service_index,
-								'strName',          'ServiceName',
-								'strValue',         $service_name ]);
+				if ( my $ServiceType = openprint::ServiceType->find_one( name=>'CustomService' ) ) {
+					my $service_id = $Project->add_service( $ServiceType, {
+						( $openprint::param{txtPrice1} ? ( txtPrice1 => $conversion_rate * misc::moneyfilter($openprint::param{txtPrice1} ) ) : () ),
+						( $openprint::param{txtPrice2} ? ( txtPrice2 => $conversion_rate * misc::moneyfilter($openprint::param{txtPrice2} ) ) : () ),
+						( $openprint::param{txtPrice3} ? ( txtPrice3 => $conversion_rate * misc::moneyfilter($openprint::param{txtPrice3} ) ) : () ),
+						ServiceName => $service_name }, { status=>'calculated' } );
+ 
 					$Project->add_to_log( @openprint::session{'company_id','user_id'}, sprintf( 'Adding Custom Line: %s, (%.2f, %.2f, %.2f)', $service_name, @openprint::param{'txtPrice1','txtPrice2','txtPrice3'} ) );
-					sql::end_transaction( $dbh, $ac );
-				} # end if
+				} # end if has Customer Service type
 
 			} elsif ( $openprint::param{'btnFunction'} eq 'Delete Services' ) {
 				foreach my $service_id ( ref $openprint::param{'service_id'} eq 'ARRAY' ? @$openprint::param{'service_id'} : ( $openprint::param{'service_id'} ) ) {
@@ -280,6 +245,7 @@ sub print_prices {
 sub multipage_signatures {
 	my ( $param, $log, $dbh, $variable, $project_index, $service_index ) = @_;
 
+	my $ac = sql::start_transaction( $dbh );
 	my $Project = new openprint::Project( $project_index );
 	my $services = $Project->services();
 	$service_index = $$services{''}[0] if ! $service_index;
@@ -502,7 +468,6 @@ $openprint::log->debug("Specified Pages: $k => $specified_pages{$k}" );
 
 	if ( 0 and misc::sum( values %specified_pages ) < $$param{'txtTotalPageQuantity'} ) {
 # Must have at least 1 interioer signature
-		my $ac = sql::start_transaction( $dbh );
 		$dbh->do( "LOCK TABLE tbl_Service_Specifications IN SHARE ROW EXCLUSIVE MODE" ) or $log->error( DBI->errstr );
 		my ($print_service_index) = openprint::print_project::insert_service( $log, $dbh, $project_index, 'Signature' );
 		openprint::service::insert_service_spec( $log, $dbh, $project_index, $print_service_index, 'txtSignatureType', 'Interior Pages' );
@@ -515,7 +480,6 @@ $openprint::log->debug("Specified Pages: $k => $specified_pages{$k}" );
 		openprint::service::insert_service_spec( $log, $dbh, $project_index, $print_service_index, 'SignatureIndex', $signature_count );
 		openprint::service::insert_service_spec( $log, $dbh, $project_index, $print_service_index, 'PrintingType', $$param{'PrintingType'} );
 		openprint::service::insert_service_spec( $log, $dbh, $project_index, $print_service_index, 'txtSpreadSize', $$param{'txtSpreadSize'} );
-		sql::end_transaction( $dbh, $ac );
 	} # end if
 
 	my $old_bindery_type = get_book_type( $project_index );
@@ -557,6 +521,7 @@ $openprint::log->debug("Specified Pages: $k => $specified_pages{$k}" );
 		push @{$$services{'Folding'}}, openprint::print_project::insert_service( $log, $dbh, $project_index, 'Folding' ) if ! $$services{'Folding'};
 		push @{$$services{'Cutting'}}, openprint::print_project::insert_service( $log, $dbh, $project_index, 'Cutting' ) if ! $$services{'Cutting'};
 	} # end if
+	sql::end_transaction( $dbh, $ac );
 } # end sub multipage_signatures
 
 sub get_book_type {

@@ -6,7 +6,7 @@
 <? while ( @$variable{'SignatureServiceIndex','SignatureIndex','Reference'} = splice @{$$variable{'tempCuttingGroups'}},0,3; ) ?>
 	<? if ( $$variable{'Reference'} ) ?>
 		<p>
-			Information for:&nbsp; <b><?Reference?> </b><br/> 
+			Information for:&nbsp; <b><?Reference?> </b> Form <?SignatureIndex?><br/> 
 		</p>
 	<? endif ( $$variable{'Reference'} ) ?>
 <? if ( $$variable{"txtSuppliedStockWidth-$$variable{'SignatureIndex'}-$$variable{'QTYIndex'}"} != $$variable{"txtSheetSizeWidth-$$variable{'SignatureIndex'}-$$variable{'QTYIndex'}"} or $$variable{"txtSuppliedStockHeight-$$variable{'SignatureIndex'}-$$variable{'QTYIndex'}"} != $$variable{"txtSheetSizeHeight-$$variable{'SignatureIndex'}-$$variable{'QTYIndex'}"} ) ?>

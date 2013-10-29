@@ -5,11 +5,12 @@ CREATE TABLE Services (
 	category_id		INTEGER,
 	name 			TEXT NOT NULL, UNIQUE(name),
 	description		TEXT,
-    Supplier_id		INTEGER,
-	TaxExempt1		char(1) NOT NULL DEFAULT 'N',
-	TaxExempt2		char(1) NOT NULL DEFAULT 'N',
+    supplier_id		INTEGER,
+	taxexempt1		char(1) NOT NULL DEFAULT 'N',
+	taxexempt2		char(1) NOT NULL DEFAULT 'N',
 	strUrl			TEXT,
 	lngSortOrder	INTEGER,
+	activity_code	TEXT,
 	PRIMARY KEY (id)
 );
  

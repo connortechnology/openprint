@@ -35,7 +35,7 @@ use Time::HiRes qw{ time gettimeofday tv_interval };
 
 use vars qw( $debug $table $serial %fields %find_fields %defaults %transforms %grades );
 
-$debug = 1;
+$debug = 0;
 $table = 'papers';
 $serial	= 'paper_id_seq';
 %fields = (
@@ -999,7 +999,7 @@ sub get_price {
 		$$price{'currency_id'} = $Pricelist->currency_id();
 		openprint::Currency::convert( $price );
 	} else {
-		Carp::cluck("No custom price, and no paper::id for service: $params{service}" . $self->to_string());
+		Carp::cluck("No custom price, and no paper::id for service: $params{service}" . $self->to_string()) if $debug;
 	} # end if
 
 	my $Company = new openprint::Company( $openprint::session{company_id} );

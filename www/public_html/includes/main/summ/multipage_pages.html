@@ -1,28 +1,12 @@
 <p> 
-	<label>Cover Type</label>
+	<label>Pages / Cover</label>
 <? echo (
-	my $html;
-	foreach my $qty ( $$variable{'Project'}->quantities() ) {
-		next if ! $qty;
-		$html .= qq{<span class="value">$$variable{'rdbCover'}</span>};
-	} # end foreach
-	return $html;
-) ?>
-</p>
-<p> 
-	<label>Total pages/spreads</label>
-<? echo (
-	my $html;
-	foreach my $qty ( $$variable{'Project'}->quantities() ) {
-		next if ! $qty;
-		$html .= qq{<span class="value">$$variable{'txtTotalPageQuantity'} pages / $$variable{'txtTotalSpreadQuantity'} spreads</span>};
-	} # end foreach
-	return $html;
+	join("\n", map { qq{<span class="value">$$variable{'txtTotalPageQuantity'} pg $$variable{rdbCover} Cover</span>} } ( $$variable{'Project'}->quantity_indexes() ) );
 ) ?>
 </p>
 <? if ( $$variable{'txtGateFoldedSpreadQuantity'} ) ?>
 <p> 
-	<label>Total gate folded spread quantity</label>
+	<label>Gate folded spread quantity</label>
 <? echo (
 	my $html;
 	foreach my $qty ( $$variable{'Project'}->quantities() ) {

@@ -932,18 +932,19 @@ $openprint::log->debug(qq`Wrong imposition: $$specs{"FoldImposition-$$sig_specs{
 						} # end foreach F
 					} # end foreach my $k
 					if ( ! $found{$index} ) {
-						#$openprint::log->debug("Not found trying generic");
+						$openprint::log->debug("Not found trying generic") if DEBUG;
 						# Replace with a generic one
 						my $key = $$specs{"FoldType-$$sig_specs{'SignatureIndex'}-$qty_index-$index"}.'-'.$$specs{"FoldImposition-$$sig_specs{'SignatureIndex'}-$qty_index-$index"}.'out';
-						my $Fold;
 						my ( $pages ) = $$specs{"FoldType-$$sig_specs{'SignatureIndex'}-$qty_index-$index"} =~ /(\d)+Page/;
-						if ( $Fold = openprint::Fold->find_one( 
-									'min_imposition <='	=>	$$specs{"FoldImposition-$$sig_specs{'SignatureIndex'}-$qty_index-$index"},
-									'max_imposition >='	=>	$$specs{"FoldImposition-$$sig_specs{'SignatureIndex'}-$qty_index-$index"},
+						my $Fold = openprint::Fold->find_one( 
+									'min_imposition null_or_<='	=>	$$specs{"FoldImposition-$$sig_specs{'SignatureIndex'}-$qty_index-$index"},
+									'max_imposition null_or_>='	=>	$$specs{"FoldImposition-$$sig_specs{'SignatureIndex'}-$qty_index-$index"},
 									'type'			=>	$$specs{"FoldType-$$sig_specs{'SignatureIndex'}-$qty_index-$index"},
 									'equipment_id'	=>	$Equipment->id(),
 									'pages'			=>	$pages,
-									) ) {
+									);
+						if ( $Fold ) {
+							$openprint::log->debug("found the fold trying generic") if DEBUG;
 						} else {
 							$Fold = new openprint::Fold();
 							$$Fold{'type'} = $$specs{"FoldType-$$sig_specs{'SignatureIndex'}-$qty_index-$index"};
@@ -1205,6 +1206,8 @@ if ( 0 ) {
 					my $results = openprint::Estimating::Stitching::signature_calc( $Project, $stitching_service_index, $stitching_specs, $qty_index, \%fold_specs, $sig_specs, [ @$Signature_Impositions, $SignatureImposition ], $calc_hash );
 					if ( ! $$results{'Equipment'} ) {
 						$Breakdown .= "unable to determine stitching equipment: $$results{alert} $$stitching_specs{'hdnBreakdown'.$qty_index}<br/>";
+$openprint::log->warn($Breakdown);
+
 						$stitching_part = 1000000;
 						$totalPrice += 1000000;
 					} elsif ( $$results{'Equipment'}->id() != $Equipment->id() and $Equipment->specification('Folding Capable') eq 'When Stitching' ) {
@@ -1249,7 +1252,8 @@ if ( 0 ) {
 
 		} # end foreach set of Impositions
 		# The idea is that if we find a price on the press, then we are done, cuz nothing else will be better.... 
-		last if $bestPrice and ( $Equipment->strid() eq $$sig_specs{'ddmPress'.$qty_index} );
+		# Can't do this... case of digital cover on offset interioer, stitched... the stitcher does the cover
+		#last if $bestPrice and ( $Equipment->strid() eq $$sig_specs{'ddmPress'.$qty_index} );
 		last if defined $bestPrice and ! $bestPrice;
 	} # end foreach Equipment
 

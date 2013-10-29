@@ -141,7 +141,7 @@ sub add_project_to_press_schedule {
 			my $s_id_2 = $sigs_not_on_schedule[$i];
 
 			my $sig_specs2 = openprint::service::get_specs_ref( $Project, $s_id_2 );
-			if ( openprint::Estimating::Printing::compare_signatures( $sig_specs, $sig_specs2, $Project->ordered_quantity_index() ) ) {
+			if ( openprint::Estimating::Printing::compare_signatures( $Project, $sig_specs, $sig_specs2, $Project->ordered_quantity_index() ) ) {
 				push @service_ids, $s_id_2;
 				push @forms, $$sig_specs2{SignatureIndex};
 				splice @sigs_not_on_schedule, $i, 1;

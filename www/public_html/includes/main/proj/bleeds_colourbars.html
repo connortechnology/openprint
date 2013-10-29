@@ -4,10 +4,10 @@
 <? endif ( $$variable{'Mode'} ne 'Easy' ) ?>
 <? if ( $$variable{'ProjectType'}->name() eq 'PresentationFolders' ) ?>
 <? else ( $$variable{'ProjectType'}->name() eq 'PresentationFolders' ) ?>
-		<? echo ( include('/includes/main/proj/bleed.html'); ) ?>
+		<?include('/includes/main/proj/bleed.html')?>
 <? endif ( $$variable{'ProjectType'}->name() eq 'PresentationFolders' ) ?>
-		<? echo ( include('/includes/main/proj/colour_bars.html'); ) ?>
-		<? echo ( include('/includes/main/proj/cropmarks.html'); ) ?>
+		<?include('/includes/main/proj/colour_bars.html')?>
+		<?include('/includes/main/proj/cropmarks.html')?>
 <? if ( $$variable{'Mode'} ne 'Easy' ) ?>
 	</fieldset>
 <? endif ( $$variable{'Mode'} ne 'Easy' ) ?>
