@@ -1315,6 +1315,10 @@ if ( ! sets::isin( 'inks', \@tables ) ) {
 			$dbh->do('ALTER TABLE inks add name TEXT');
 		} # end if
 	} # end if
+	if ( ! exists $$data{mix_service_id} ) {
+		$dbh->do('ALTER TABLE Inks ADD mix_service_id INTEGER');
+		$dbh->do(q{alter table inks add foreign key (mix_service_id) REFERENCES Services (id)});
+	} # end if
 } # end if
 
 if ( sets::isin( 'tbl_service_categories', \@tables ) ) {

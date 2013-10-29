@@ -253,8 +253,6 @@ sub signature_calc {
 			$results{'Status'} = 'uncalculated';
 			return \%results;
 		} # end if
-	} else {
-		$$specs{'Imposition'.$qty_index} = $imposition;
 	} # end if
 $results{'Breakdown'} .= 'Imposition: ' . $imposition . 'out<br/>';
 
@@ -285,9 +283,11 @@ $results{'Breakdown'} .= 'Imposition: ' . $imposition . 'out<br/>';
 #$results{'Breakdown'} = 'Imposition: ' . $$specs{'Imposition'.$qty_index} .'<br/>';
 	my $I = $$Impositions[0];
 	my $Press = $I->Press();
+while ( ! $bestPrice and $imposition ) {
+	$$specs{'Imposition'.$qty_index} = $imposition;
 	foreach my $Equipment ( @equipment ) {
 		if ( $$services{'NoOfflineBindery'} ) {
-			if ( $I->Press()->id() != $Equipment->id() ) {
+			if ( $Press->id() != $Equipment->id() ) {
 				$results{'Breakdown'} .= "No Offline bindery and not printing on $$Equipment{name}.<br/>";
 				next;
 			} # end if
@@ -340,12 +340,21 @@ $results{'Breakdown'} .= 'Imposition: ' . $imposition . 'out<br/>';
 			$bestPrice = $price;
 		} # end if
 	} # end foreach Equipment
+	if ( $imposition > 1 and ! $bestPrice ) {
+		if ( $$specs{'OverrideImposition'.$qty_index} eq 'Y' ) {
+			last;
+		} # end if
+		$imposition -= 1;
+	} else {
+		last;
+	} # endif
+}
 #$openprint::log->debug("Breakdown: $$specs{'hdnBreakdown'.$qty_index}");
 	$results{'alert'} .= $error;
 	$results{'alert'} .= sprintf('%dout on %s %dpockets', $$bestPrice{'Imposition'},($bestEquipment ? $bestEquipment->strid() . ' ' . $bestEquipment->name() : '' ),$$specs{'txtPockets'.$qty_index} );
 	$results{'Imposition'} = $$bestPrice{'Imposition'};
 	$results{'Equipment'} = $bestEquipment;
-$openprint::log->debug( "Stitching Impo REsults: " . $results{'Imposition'} ) if DEBUG;
+$openprint::log->debug( "Stitching Impo REsults: " . $results{'Imposition'} .'out breakdown:' . $results{Breakdown} ) if DEBUG;
 	if ( $$bestPrice{'Imposition'} ) {
 		$results{'Status'} = 'calculated';
 		$results{'Price'} = $$bestPrice{'txtPrice'};
