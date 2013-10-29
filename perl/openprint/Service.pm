@@ -28,10 +28,11 @@ $serial = 'services_id_seq';
 		taxexempt1		=>	'taxexempt1',
 		taxexempt2		=>	'taxexempt2',
 		owner_id		=>	'owner_id',
+		activity_code	=>	'activity_code',
 	 	);	
 %find_fields = (
-	category		=> '(SELECT name FROM Service_Categories WHERE service_categories.id=category_id)',
-	equipment_id	=> '(SELECT equipment_id FROM service_prices WHERE service_id=services.id)',
+		category		=> '(SELECT name FROM Service_Categories WHERE service_categories.id=category_id)',
+		equipment_id	=> '(SELECT equipment_id FROM service_prices WHERE service_id=services.id)',
 );
 
 

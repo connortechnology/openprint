@@ -56,12 +56,16 @@
 			<input style="display:none;" type="text" id="new_category" name="new_category" value=""/>	
 			<select id="category_id" name="category_id">
 				<option value="">Select a category</option>
-				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::ServiceCategory->find('order'=>'lower(name)') ], $$variable{'Service'}->category_id() ); ) ?>
+				<? echo ( make_drop_down( openprint::ServiceCategory->dropdown(order=>'lower(name)'), $$variable{Service}->category_id() ); ) ?>
 			</select>
 		</p>
 		<p> 
 			<label>Description</label>
 			<input type="text" id="description" name="description" value="<? echo ( $$variable{'Service'}->description(); ) ?>" />
+		</p>
+		<p>
+			<label>Activity Code</label>
+			<input type="text" name="activity_code" value="<? echo ( $$variable{Service}->activity_code(); ) ?>" />
 		</p>
 	</fieldset>
 	</div>
