@@ -19,7 +19,6 @@ $table = 'services';
 $serial = 'services_id_seq';
 
 %fields = (
-<<<<<<< HEAD
 		id				=>	'id',
 		name			=>	'name',
 		description		=>	'description',
@@ -29,23 +28,13 @@ $serial = 'services_id_seq';
 		taxexempt1		=>	'taxexempt1',
 		taxexempt2		=>	'taxexempt2',
 		owner_id		=>	'owner_id',
+		activity_code	=>	'activity_code',
 	 	);	
 %find_fields = (
-	category		=> '(SELECT name FROM Service_Categories WHERE service_categories.id=category_id)',
-	equipment_id	=> '(SELECT equipment_id FROM service_prices WHERE service_id=services.id)',
+		category		=> '(SELECT name FROM Service_Categories WHERE service_categories.id=category_id)',
+		equipment_id	=> '(SELECT equipment_id FROM service_prices WHERE service_id=services.id)',
 );
 
-=======
-		'id'				=>	'id',
-		'name'				=>	'name',
-		'description'		=>	'description',
-		'supplier_id'		=>	'supplier_id',
-		'category_id'		=>	'category_id',
-		'taxexempt1'		=>	'taxexempt1',
-		'taxexempt2'		=>	'taxexempt2',
-		activity_code		=>	'activity_code',
-		);	
->>>>>>> 6dc4f545b93019a5e5fcedcef1d54a0355262a56
 
 %transforms = (
 		);
