@@ -272,8 +272,7 @@ sub save {
 
 			$variable{'Paper'} = $self;
 			if ( my $email_template = misc::load_file( $openprint::log, $config{'SkinPath'} . '/email_template.html' ) ) {
-				$variable{'ReplacementText'} = misc::load_file( $openprint::log, $ENV{'DOCUMENT_ROOT'} . '/email_content/new_paper_notification.html' );
-				$variable{'ReplacementText'} = ssi::variable_substitution( \$variable{'ReplacementText'}, \%variable );
+				$variable{'ReplacementText'} = ssi::include( '/email_content/new_paper_notification.html', \%variable );
 				my $body = ssi::variable_substitution( \$email_template, \%variable );
 				my %mail = (
 						SMTP	=> $openprint::config{'Mail Server'},

@@ -199,10 +199,10 @@ sub stock {
 		$variable{'information'} .= 'Stock ' . $Paper->id() . ' has been copied.';
 		my $NewPaper = $Paper->copy();
 		$NewPaper->save();
-			foreach my $Setting ( openprint::Equipment_Stock_Setting->find('stock_id'=>$Paper->id()) ) {
-				$Setting = $Setting->copy();
-				$Setting->save({'stock_id'=>$NewPaper->id()});
-			} # end foreach
+		foreach my $Setting ( openprint::Equipment_Stock_Setting->find('stock_id'=>$Paper->id()) ) {
+			$Setting = $Setting->copy();
+			$Setting->save({'stock_id'=>$NewPaper->id()});
+		} # end foreach
 		$Paper = $NewPaper;
 		$param{'stock_id'} = $Paper->id();
 	} elsif ( $param{'btnFunction'} eq 'Save' ) {
