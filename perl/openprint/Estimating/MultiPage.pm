@@ -195,7 +195,7 @@ $openprint::log->debug("Group: $group_id, remaining: $remaining_pages, override:
 		$$specs{'GroupPageQuantity'.$group_id} = $override_pages{$group_id};
 		if ( ! ( $variables{'GroupPageQuantity'.$group_id} and @{$variables{'GroupPageQuantity'.$group_id}} ) ) {
 $openprint::log->debug("Setting output on GroupPageQuantity$group_id");
-			$variables{'GroupPageQuantity'.$group_id} = [sets::union('output', @{$variables{'GroupPageQuantity'.$group_id}})]
+			$variables{'GroupPageQuantity'.$group_id} = [sets::union('output', @{$variables{'GroupPageQuantity'.$group_id}})];
 		} # end if
 		if ( $$specs{'chkOverrideDimensions'.$group_id} ne 'Y' ) {
 			$$specs{'txtFinalWidth'.$group_id} = $$specs{'txtFinalWidth'};
@@ -301,9 +301,9 @@ $openprint::log->debug( "Signature: @signatures");
 
 		if ( $$printing_specs{'PrintingType'} ) {
 			if ( 
-				 ( $Project->quantity1() and ( $$sig_specs{'PrintingType1'} ne $$printing_specs{'PrintingType'} ) )
-				 or ( $Project->quantity2() and ( $$sig_specs{'PrintingType2'} ne $$printing_specs{'PrintingType'} ) )
-					or ( $Project->quantity3() and ( $$sig_specs{'PrintingType3'} ne $$printing_specs{'PrintingType'}  ) )
+				 ( $Project->quantity1() and $$sig_specs{'PrintingType1'} and ( $$sig_specs{'PrintingType1'} ne $$printing_specs{'PrintingType'} ) )
+				 or ( $Project->quantity2() and $$sig_specs{'PrintingType2'} and ( $$sig_specs{'PrintingType2'} ne $$printing_specs{'PrintingType'} ) )
+					or ( $Project->quantity3() and $$sig_specs{'PrintingType3'} and ( $$sig_specs{'PrintingType3'} ne $$printing_specs{'PrintingType'}  ) )
 ) {
 # delete any similar signs
 				#$log->debug("Getting rid of extra sigs");

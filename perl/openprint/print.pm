@@ -106,8 +106,12 @@ sub view_services {
 
 				if ( (!$openprint::param{'ServiceType'} ) or $recalc ) {
 					multipage_signatures( \%openprint::param, $log, $dbh, $variable, $project_index, $service_index );
-					openprint::service::internal_calc( $log, $dbh, $variable, $project_index, $service_index, $Project->Type()->type() );
-					openprint::Estimating::MultiPage::calculate_signatures( $Project );
+					my $s = openprint::service::internal_calc( $log, $dbh, $variable, $project_index, $service_index, $Project->Type()->type() );
+					if ( $$s{Status} ne 'calculated' ) {
+						$log->error("Error calculting Project service");
+					} else {
+						openprint::Estimating::MultiPage::calculate_signatures( $Project );
+					} # end if
 					$recalc = 1;
 				} elsif ( $openprint::param{'ServiceType'} eq 'Printing' ) {
 					openprint::Estimating::MultiPage::calculate_signatures( $Project );
@@ -241,6 +245,7 @@ sub print_prices {
 sub multipage_signatures {
 	my ( $param, $log, $dbh, $variable, $project_index, $service_index ) = @_;
 
+	my $ac = sql::start_transaction( $dbh );
 	my $Project = new openprint::Project( $project_index );
 	my $services = $Project->services();
 	$service_index = $$services{''}[0] if ! $service_index;
@@ -463,7 +468,6 @@ $openprint::log->debug("Specified Pages: $k => $specified_pages{$k}" );
 
 	if ( 0 and misc::sum( values %specified_pages ) < $$param{'txtTotalPageQuantity'} ) {
 # Must have at least 1 interioer signature
-		my $ac = sql::start_transaction( $dbh );
 		$dbh->do( "LOCK TABLE tbl_Service_Specifications IN SHARE ROW EXCLUSIVE MODE" ) or $log->error( DBI->errstr );
 		my ($print_service_index) = openprint::print_project::insert_service( $log, $dbh, $project_index, 'Signature' );
 		openprint::service::insert_service_spec( $log, $dbh, $project_index, $print_service_index, 'txtSignatureType', 'Interior Pages' );
@@ -476,7 +480,6 @@ $openprint::log->debug("Specified Pages: $k => $specified_pages{$k}" );
 		openprint::service::insert_service_spec( $log, $dbh, $project_index, $print_service_index, 'SignatureIndex', $signature_count );
 		openprint::service::insert_service_spec( $log, $dbh, $project_index, $print_service_index, 'PrintingType', $$param{'PrintingType'} );
 		openprint::service::insert_service_spec( $log, $dbh, $project_index, $print_service_index, 'txtSpreadSize', $$param{'txtSpreadSize'} );
-		sql::end_transaction( $dbh, $ac );
 	} # end if
 
 	my $old_bindery_type = get_book_type( $project_index );
@@ -518,6 +521,7 @@ $openprint::log->debug("Specified Pages: $k => $specified_pages{$k}" );
 		push @{$$services{'Folding'}}, openprint::print_project::insert_service( $log, $dbh, $project_index, 'Folding' ) if ! $$services{'Folding'};
 		push @{$$services{'Cutting'}}, openprint::print_project::insert_service( $log, $dbh, $project_index, 'Cutting' ) if ! $$services{'Cutting'};
 	} # end if
+	sql::end_transaction( $dbh, $ac );
 } # end sub multipage_signatures
 
 sub get_book_type {
