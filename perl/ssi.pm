@@ -114,7 +114,7 @@ sub variable_substitution {
 				$log->error( "Eval error ($@) of ($1), Reason: " . $@ ) if $@;
 			} elsif ( $command =~ /^translate\s*\(\s*([\S]+)\s*\)/ms ) {
 				$result .= translate($1);
-			} elsif ( $command =~ /^hash_link\s*\(\s*'?([\S]+)'?\s*\)/ms ) {
+			} elsif ( $command =~ /^hash_link\s*\(\s*'?([^\s']+)'?\s*\)/ms ) {
 				$result .= hash_link($1);
 			} elsif ( $command =~ /^hecho\s*\(\s*(.*)\s*\)/ms ) {
 				$_ = eval $1;
@@ -479,7 +479,7 @@ sub button {
 		if ( $$options{text} ) {
 			$html .= $$options{text};
 		} # end if
-	} elsif ( $openprint::config{'SimpleButtons'} ) {
+	} elsif ( $openprint::config{'SimpleButtons'} eq 'Y' ) {
 		$html .= $$options{'text'};
 	} else {
 		$html .= '<span class="l"></span><span class="c" id="'.$name.'c"' . ( $$options{title} ? ' title="'.$$options{title}.'"' : '' ) .'>' . $$options{'text'} .'</span><span class="r"></span>';
@@ -914,8 +914,14 @@ sub hash_link {
 
 	my $script;
 	if ( ( ! $hash_cache{$config{SkinPath}} ) and -f $config{cache_dir}.'/config.json' ) {
-		$hash_cache{$config{SkinPath}} = JSON::from_json( File::Slurp::read_file($config{cache_dir}.'/config.json') );
-		$hash_cache{$config{SkinPath}} = {} if ! $hash_cache{$config{SkinPath}};
+		$_ = File::Slurp::read_file($config{cache_dir}.'/config.json');
+		if ( $_ ) {
+			$hash_cache{$config{SkinPath}} = JSON::from_json( $_ );
+			$hash_cache{$config{SkinPath}} = {} if ! $hash_cache{$config{SkinPath}};
+		} else {
+			$log->error("No content of $config{cache_dir}/config.json");
+			$hash_cache{$config{SkinPath}} = {};
+		} # end if
 	} # end if
 
 	if ( !($script = $hash_cache{$config{SkinPath}}{$path})

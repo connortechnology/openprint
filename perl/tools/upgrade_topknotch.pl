@@ -80,6 +80,6 @@ if ( $year ) {
 #$dbh->do(q`ALTER TABLE PAPers alter user_type set NOT NULL`);
 
 print "done\n";
-$dbh->disconnect();
+#$dbh->disconnect();
 1;
 __END__

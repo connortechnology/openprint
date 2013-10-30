@@ -161,7 +161,7 @@ $log->debug("COLLATING!!!!!!!!!!!!!!!!!!");
 			} # end if
 			$price{'MakeReady'} = openprint::service::get_price( 'CollatingMakeReady', undef, $Equipment );
 			my %servicePrice = openprint::service::get_price_object( 'Collating', $qty, $Equipment );
-			if ( sets::isin( $servicePrice{'units'}, 'per M', 'per 1000' )  ) {
+			if ( sets::isin( $servicePrice{'units'}, 'per m', 'per 1000' )  ) {
 				$price{'Service'} = $servicePrice{'Price'}/1000; # Service Price for Collating is per 1000
 			} else {
 				$$specs{'alert'} .= 'Unknown units in service price.<br/>';

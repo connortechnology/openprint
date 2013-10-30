@@ -24,7 +24,7 @@ use constant DEBUG => 0;
 use constant DEBUG_VERSIONS => 0;
 use constant DEBUG_FILTERING => 0;
 use constant DEBUG_PRICE_DECISIONS => 0;
-use constant DEBUG_INKS => 1;
+use constant DEBUG_INKS => 0;
 
 my $master_time;
 my %special_colours;
@@ -1767,9 +1767,7 @@ sub set_size {
 			$variables{'txtHeight'} = [ sets::exclude( ['output'], $variables{'txtHeight'} ) ];
 			$variables{'rdbTemplateType'} = [ sets::exclude( ['output'], $variables{'rdbTemplateType'} ) ];
 		} # end if
-	} # end if
-	if ( $$specs{'txtSignatureType'} ) {
-
+	} elsif ( $$specs{'txtSignatureType'} ) {
 		if ( $$specs{'txtSignatureType'} eq 'Gate Folded Pages' ) {
 			if ( $$specs{'rdbTemplateType'} eq 'SingleGateFold' ) {
 				if ( $$specs{'chkOverrideDimensions'} ne 'Y' ) {
@@ -1810,11 +1808,12 @@ sub set_size {
 				} # end if
 			} # end if
 		} elsif ( $$specs{'txtSignatureType'} eq 'Cover Pages' ) {
+
+			# Technically, something like a coil bound could be 2pg spread, just need two of them.  
 			$$specs{'txtSpreadSize'} = $$specs{'GroupPageQuantity'};
 			$variables{'txtSpreadSize'} = [ sets::union( 'output', @{$variables{'txtSpreadSize'}} ) ];
 			#$openprint::log->debug("SpreadSize: $$specs{'txtSpreadSize'}");
 			if ( ( ! defined $$specs{'chkOverrideDimensions'} ) or ( $$specs{'chkOverrideDimensions'} ne 'Y' ) ) {
-				#$openprint::log->debug("TemplateType: $$specs{rdbTemplateType}");
 				if ( sets::isin($$specs{'rdbTemplateType'}, ['2Panel1Pocket','2Panel2Pocket','TriFoldDoublePocket'] ) ) {
 					$$specs{'txtWidth'} = $$printing_specs{'txtFinalWidth'} * $$specs{'rdbPanels'};
 					my $pockets = 0;
@@ -1836,7 +1835,7 @@ sub set_size {
 					$$specs{'txtHeight'} = $$printing_specs{'txtFinalHeight'} + $$specs{'PocketSize'};
 				} elsif ( $$specs{'txtSpreadSize'} > 1 ) {
 					$$specs{'txtWidth'} = $$printing_specs{'txtFinalWidth'}*$$specs{'GroupPageQuantity'}/2;
-					$$specs{'txtHeight'} = $$printing_specs{'txtHeight'};
+					$$specs{'txtHeight'} = $$printing_specs{'txtFinalHeight'};
 				} else {
 					$$specs{'txtWidth'} = $$printing_specs{'txtFinalWidth'};
 					$$specs{'txtHeight'} = $$printing_specs{'txtFinalHeight'};
@@ -1866,32 +1865,38 @@ sub set_size {
 			} # end if
 			$$specs{'txtFinalWidth'} = $$printing_specs{'txtFinalWidth'};
 			$$specs{'txtFinalHeight'} = $$printing_specs{'txtFinalHeight'};
-		} else {
+		} else { # not folder, not cover
 			if ( $Project->Type()->name() eq 'ScratchPads' ) {
 				$$specs{'txtSpreadSize'} = 1;
-# if it's a book signature, then auto-populate the width and height
-			} elsif ( $$specs{'GroupPageQuantity'} % 4 ) {
-				$$specs{'txtSpreadSize'} = 2;
-			} else {	
-#$openprint::log->error("Spreadsize: $$specs{'txtSpreadSize'} ");
-				$$specs{'txtSpreadSize'} = $$printing_specs{'txtSpreadSize'};
-			} # end if
-			$variables{'txtSpreadSize'} = [ sets::union( 'output', @{$variables{'txtSpreadSize'}} ) ];
-
-			if ( ( ! defined $$specs{'chkOverrideDimensions'} ) or ( $$specs{'chkOverrideDimensions'} ne 'Y' ) ) {
-				if ( $$specs{'txtSpreadSize'} == 4 ) {
-					$$specs{'txtWidth'} = $$printing_specs{'txtWidth'};
-					$$specs{'txtHeight'} = $$printing_specs{'txtHeight'};
-				} elsif ( $$specs{'txtSpreadSize'} == 2 ) {
-					$$specs{'txtWidth'} = $$printing_specs{'txtFinalWidth'};
-					$$specs{'txtHeight'} = $$printing_specs{'txtFinalHeight'};
+			} else {
+				if ( sets::isin( $$printing_specs{rdbTemplateType}, ['SaddleStitching', 'LoopStitching'] ) ) {
+					$$specs{txtSpreadSize} = 4;
+				} elsif ( $openprint::config{$$printing_specs{'rdbTemplateType'}.'SpreadSize'} ) {
+					$$specs{'txtSpreadSize'} = $openprint::config{$$printing_specs{'rdbTemplateType'}.'SpreadSize'};
+				} elsif ( $$printing_specs{'rdbTemplateType'} eq 'PerfectBound' ) {
+					$$specs{'txtSpreadSize'} = $openprint::config{PerfectBindSpreadSize} ? $openprint::config{PerfectBindSpreadSize} : 2;
+				} elsif ( sets::isin( $$printing_specs{'rdbTemplateType'}, ['CornerStitching','SpinePaste'] ) ) {
+					$$specs{'txtSpreadSize'} = 2;
 				} else {
+					$$specs{'txtSpreadSize'} = 2;
+				} # end if
+			} # end if
+			$variables{txtSpreadSize} = [ sets::union( 'output', @{$variables{txtSpreadSize}} ) ];
+
+			if ( ( ! defined $$specs{chkOverrideDimensions} ) or ( $$specs{chkOverrideDimensions} ne 'Y' ) ) {
+				if ( $$specs{txtSpreadSize} == 4 ) {
+					$$specs{'txtWidth'} = $$printing_specs{'txtFinalWidth'} * 2;
+					$$specs{'txtHeight'} = $$printing_specs{'txtFinalHeight'};
+$openprint::log->debug("Setting widtha nd ehgiht to $$specs{txtWidth}x$$specs{txtHeight}");
+				} elsif ( $$specs{'txtSpreadSize'} == 2 ) {
+					@$specs{'txtWidth','txtHeight'} = @$printing_specs{'txtFinalWidth','txtFinalHeight'};
+				} else {
+$openprint::log->debug("Unknown spreadsize $$specs{txtSpreadSize}");
 					$$specs{'txtWidth'} = $$printing_specs{'txtFinalWidth'};
 					$$specs{'txtHeight'} = $$printing_specs{'txtFinalHeight'};
 				} # end if
 			} # end if
-			$$specs{'txtFinalWidth'} = $$printing_specs{'txtFinalWidth'};
-			$$specs{'txtFinalHeight'} = $$printing_specs{'txtFinalHeight'};
+			@$specs{'txtFinalWidth','txtFinalHeight'} = @$printing_specs{'txtFinalWidth','txtFinalHeight'};
 		} # end if Spread Type
 	} else { # not a book
 # If no spreadsize, then we are likely not a book, and the spread size is 2
@@ -3037,7 +3042,7 @@ sub get_project_price {
 		my $time = gettimeofday() if DEBUG;
 		$$sig_specs{'txtUnspecifiedPageQuantity'.$qty_index} = $txtUnspecifiedPageQuantity;
 		my @Is = sort { $$b{pages} <=> $$a{pages} } calculate_impositions( $Project, $Press, $sig_specs, $qty_index, $qty, $PaperCounts, $versions, $project, $impositions );
-		if ( DEBUG or 1 ) {
+		if ( DEBUG ) {
 			foreach my $I ( @Is ) {
 				$I->display( "Before calculation:" . @Is );
 			} # end while
@@ -3321,10 +3326,10 @@ $openprint::log->error( Data::Dumper::Dumper( $price ) );
 									get_project_price( $Project, $$new_specs{ServiceIndex}, $project, $service_specs, $new_specs, $qty, $qty_index, $possible_presses, $printing_specs, $versions, \%PlateCounts, \%PaperCounts, \%washed_colours, \%previous_forms_cache, \@signatures, $impositions, $other_impositions, undef, $recursion_depth + 1 );
 							} # end if
 							$sig_price = $price_cache{$price_cache_key};
-							$imp->display($recursion_depth . " After recurse: $$price{'Comparison Cost'} + $$sig_price{'Comparison Cost'} " );
-							foreach my $i ( @{$$sig_price{Impositions}} ) {
-								$i->display($recursion_depth . " After recurse: $$sig_price{'Comparison Cost'} " );
-							}
+							#$imp->display($recursion_depth . " After recurse: $$price{'Comparison Cost'} + $$sig_price{'Comparison Cost'} " );
+							#foreach my $i ( @{$$sig_price{Impositions}} ) {
+								#$i->display($recursion_depth . " After recurse: $$sig_price{'Comparison Cost'} " );
+							#}
 
 # Check to see if we actually should bother recursing
 #if ( %best_price and ( $best_price{'Comparison Cost'} < $$price{'Comparison Cost'} ) ) {
@@ -4262,7 +4267,7 @@ $openprint::log->debug("No plate for varnish $real_colour ");
 		   ) {
 			$price{'Press Washes'} += $$Ink{washups};
 			$$washed_colours{$key} += $$Ink{washups};
-$openprint::log->debug("Press Washes: $price{'Press Washes'} colour: $real_colour Washups: " . $$Ink{washups} ) if DEBUG_INKS;
+			$openprint::log->debug("Press Washes: $price{'Press Washes'} colour: $real_colour Washups: " . $$Ink{washups} ) if DEBUG_INKS;
 		} # end if
 #
 #$openprint::log->debug("Special Colour: $real_colour $$inkCoverage{$real_colour}") if DEBUG_INKS;
@@ -4343,11 +4348,11 @@ $openprint::log->debug("Was mixed") if DEBUG_INKS;
 				$ink_price{Total} += $p;
 				$price{'Ink breakdown'} .= sprintf( ' %d * $%.2f%s = %.2f', $impressions, @material_price{'Price','units'}, $p );
 			} elsif ( $material_price{'units'} eq 'per impression' ) {
-				my $p = Math::Round::nearest( 0.01, $ink_price{'Price'} * $impressions );
+				my $p = Math::Round::nearest( 0.01, $ink_price{Price} * $impressions );
 				$ink_price{Total} += $p;
 				$price{'Ink breakdown'} .= ' ' . $impressions . " * $material_price{'Price'}$material_price{'units'} = " . $p;
 			} else {
-				$openprint::log->error("Unknown units for $colour: $ink_price{'units'}" . $$Press{'strid'} );
+				$openprint::log->error("Unknown units for $colour: $ink_price{'units'}" . $$Press{'strid'} ) if DEBUG_INKS;
 			} # end if
 		} # end if
 
@@ -5284,9 +5289,6 @@ sub summary {
 	my $printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] ) if $$services{''};
 
 	if ( $qty_index ) {
-		if ( ! $$specs{'txtSpreadSize'} ) {
-			$$specs{'txtSpreadSize'} = $$printing_specs{'txtSpreadSize'};
-		} # end if
 		return '' if ! $$specs{'txtImposition'.$qty_index};
 		my $html;
 		if ( $Project->Type()->name() ne 'PresentationFolders' ) {

@@ -1,6 +1,6 @@
-<script type="text/javascript" src="<? echo ( hash_link('/javascripts/service.js') ) ?>"></script>
-<script type="text/javascript" src="<? echo ( hash_link('/javascripts/proj/paper.js') ) ?>"></script>
-<script type="text/javascript" src="<? echo ( hash_link('/javascripts/printing.js') ) ?>"></script>
+<script type="text/javascript" src="<?hash_link('/javascripts/service.js')?>"></script>
+<script type="text/javascript" src="<?hash_link('/javascripts/proj/paper.js')?>"></script>
+<script type="text/javascript" src="<?hash_link('/javascripts/printing.js')?>"></script>
 <script type="text/javascript">
 	function calc( formName, force ) {
 		var form = getFormObj( formName );
@@ -66,15 +66,11 @@ if ( 0 ) {
 			alert("Please enter the total quantity of pages.");
 			return 0;
 		} // end if
-		if ( parseFloat(form.txtGateFoldedSpreadQuantity.value) > parseFloat(form.txtTotalPageQuantity.value/form.txtSpreadSize.value) ) {
-			alert('The quantity of gate folded spreads can not exceed the total spread quantity.');
-			return 0;
-		} // end if
 
 		return 1;
 	} // end function
 </script>
-<? echo ( include('/main/project/prin/_templates.html'); ) ?>
+<?include('/main/project/prin/_templates.html')?>
 <div class="Service">
 	<form id="f1" name="f1" method="post" action="/main/project/view.html">
 		<input type="hidden" name="groups" />
@@ -82,15 +78,25 @@ if ( 0 ) {
 			<div class="ProjectSpecifications">
 			<?include('/includes/main/proj/templates/project_template_select.html')?>
 			<?include('/includes/main/proj/templates/multipage.html')?>
-			<?include('/includes/main/proj/dimensions.html')?>
-			<div id="OtherSpecifications">
-				<fieldset><legend>Other Specifications</legend>
-					<? include('/includes/main/proj/multipage_printing_type.html') ?>
-					<? include('/includes/main/proj/screen_type.html') ?>
-				</fieldset>
-			</div>
 			<div class="BookSpecifications">
 			<fieldset><legend>Book Specifications</legend>
+				<p><label>Finished Dimensions</label>
+            <select id="ddmProjectSize" name="ddmProjectSize" size="1" onchange="ddmProjectSize_onChange(this.form);">
+<? if ( $$variable{'ddmProjectSize'} ) ?>
+                <option value="<?ddmProjectSize?>"><?ddmProjectSize?></option>
+<? else ( $$variable{'ddmProjectSize'} ) ?>
+                <option value="custom">custom</option>
+<? endif ( $$variable{'ddmProjectSize'} ) ?>
+            </select>
+            <? echo (
+                join( "\n",
+                input( type=>'float', id=>'txtFinalWidth', name=>'txtFinalWidth', value=>$$variable{txtFinalWidth}, onkeyup=>'dimensions_onChange(this.form);', min=>0 ),
+                ' x ',
+                input( type=>'float', id=>'txtFinalHeight', name=>'txtFinalHeight', value=>$$variable{txtFinalHeight}, onkeyup=>'dimensions_onChange(this.form);', min=>0 ),
+                '(W x H in inches)<br/>',
+                );
+            ) ?>
+				</p>
 				<div id="PagesCover">
 				<p>
 					<label>Total pages</label>
@@ -106,27 +112,33 @@ if ( 0 ) {
 				</div>
 				<div id="GateInsert">
 				<p>
-					<label><? echo ( ssi::writeTip( 'Gate Folded' ); ) ?> pages</label>
+					<label><? echo ( writeTip( 'Gate Folded' ); ) ?> pages</label>
 					<? echo ( input( name=>'txtGateFoldedSpreadQuantity', value=>$$variable{txtGateFoldedSpreadQuantity},  type=>'cardinal', onkeyup=>'calc(this.form.name);' ); ) ?>
 				</p>
 				<p>
 					<label>Supplied Inserts</label>
-					<? echo ( input( name=>'txtInsertQuantity', value=>$$variable{txtInsertQuantity},  type=>'cardinal' ); ) ?>
+					<? echo ( input( name=>'txtInsertQuantity', value=>$$variable{txtInsertQuantity}, type=>'cardinal' ); ) ?>
 				</p>
-			<? if ( openprint::ServiceType->find('name'=>'Tipping') ) ?>
+			<? if ( openprint::ServiceType->find_one( name=>'Tipping') ) ?>
 				<p>
 					<label># of tip-ins</label>
-					<? echo ( input( name=>'TippingQuantity', value=>$$variable{TippingQuantity},  type=>'cardinal' ); ) ?>
+					<? echo ( input( name=>'TippingQuantity', value=>$$variable{TippingQuantity}, type=>'cardinal' ); ) ?>
 				</p>
-			<? endif ( openprint::ServiceType->find('name'=>'Tipping') ) ?>
-			<? if ( openprint::ServiceType->find('name'=>'Blowing') ) ?>
+			<? endif ( openprint::ServiceType->find_one( name=>'Tipping') ) ?>
+			<? if ( openprint::ServiceType->find_one( name=>'Blowing') ) ?>
 				<p>
 					<label># of blow-ins</label>
-					<? echo ( input( name=>'BlowingQuantity', value=>$$variable{BlowingQuantity},  type=>'cardinal' ); ) ?>
+					<? echo ( input( name=>'BlowingQuantity', value=>$$variable{BlowingQuantity}, type=>'cardinal' ); ) ?>
 				</p>
-			<? endif ( openprint::ServiceType->find('name'=>'Blowing') ) ?>
+			<? endif ( openprint::ServiceType->find_one( name=>'Blowing') ) ?>
 				</div>
 			</fieldset>
+			</div>
+			<div id="OtherSpecifications">
+				<fieldset><legend>Other Specifications</legend>
+					<? include('/includes/main/proj/multipage_printing_type.html') ?>
+					<? include('/includes/main/proj/screen_type.html') ?>
+				</fieldset>
 			</div>
 			</div><!--ProjectSpecifications-->
 			<div id="SignatureGroups">
@@ -179,12 +191,8 @@ if ( 0 ) {
 		<input type="hidden" name="ProjectIndex" value="<?ProjectIndex?>"/>
 		<input type="hidden" name="ServiceIndex" value="<?ServiceIndex?>"/>
 		<input type="hidden" name="btnFunction" value="Save Service"/>
-		<input type="hidden" name="txtPrice1" value="n/a"/>
-		<input type="hidden" name="txtPrice2" value="n/a"/>
-		<input type="hidden" name="txtPrice3" value="n/a"/>
 		<input type="hidden" name="ContinueProject" value="Y"/>
 		<input type="hidden" name="NewBook" value="Y"/>
-		<input type="hidden" name="txtSpreadSize" value="<?txtSpreadSize?>"/>
 		<!--<input type="hidden" name="ServiceType" value="MultiPage"/>_-->
 		<input type="hidden" name="remaining_pages" />
 		<input type="hidden" name="next_group_id" />

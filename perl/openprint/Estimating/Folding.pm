@@ -25,6 +25,7 @@ require openprint::service;
 use vars qw( @folds %fold_types );
 
 use constant DEBUG => 0;
+use constant DEBUG_NEEDS => 1;
 
 my @equipment;
 my @stitchers;
@@ -176,58 +177,71 @@ sub fold_types {
 sub signature_needs {
 	my ( $Project, $specs, $qty_index ) = @_;
 
-	return 0 if $Project->Type()->name() eq 'Banners';
+	if ( $Project->Type()->name() eq 'Banners' ) {
+		$openprint::log->debug("Folding::signature_needs: is a banner") if DEBUG_NEEDS;
+		return 0;
+	} # end if
+		
 	my $services = $Project->services();
 	if ( $$services{'NoBindery'} ) {
+		$openprint::log->debug("Folding::signature_needs: NoBidner") if DEBUG_NEEDS;
 		return 0;
 	} # end if
 	if ( $$services{'CornerStitching'} ) {
+		$openprint::log->debug("Folding::signature_needs: CornerStitched") if DEBUG_NEEDS;
 		return 0;
 	} # end if
 	if ( $$services{'SaddleStitching'} ) {
+		$openprint::log->debug("Folding::signature_needs: Stitched") if DEBUG_NEEDS;
 		return 1;
 	} # end if
 	if ( ($$specs{'pages_supplied'} eq 'Y') and ($$specs{'supplied_format'} eq 'Folded') ) {
+		$openprint::log->debug("Folding::signature_needs: supplied pages already folded") if DEBUG_NEEDS;
 		return 0;
 	} # end if
 
 	if ( $$services{''} ) {
 		my $printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
-		return 0 if $$printing_specs{rdbTemplateType} eq 'Unbound';
+		if ( $$printing_specs{rdbTemplateType} eq 'Unbound' ) {
+			$openprint::log->debug("Folding::signature_needs: Unbound") if DEBUG_NEEDS;
+			return 0;
+		} # end if
 	} # end if
 
 	if ( $fold_types{$$specs{'rdbTemplateType'}} ) {
-		$openprint::log->warn("FOLDING NEEDED got templatetype!") if DEBUG;
+		$openprint::log->warn("FOLDING NEEDED got templatetype!") if DEBUG_NEEDS;
 		return 1;
 	} else {
-		$openprint::log->warn("FOLDING NEEDED $$specs{'rdbTemplateType'} $fold_types{$$specs{'rdbTemplateType'}}!") if DEBUG;
+		$openprint::log->warn("FOLDING NEEDED $$specs{'rdbTemplateType'} $fold_types{$$specs{'rdbTemplateType'}}!") if DEBUG_NEEDS;
 	} # end if
 
 
 	if ( $$specs{'txtSignatureType'} ) {
 		if ( $$specs{'txtSpreadSize'} == 1 ) {
-			$openprint::log->warn("Folding not needed: spreadsize==1: $$specs{'txtSpreadSize'}");
+			$openprint::log->warn("Folding not needed: spreadsize==1: $$specs{'txtSpreadSize'}") if DEBUG_NEEDS;
 			return 0;
 		} # end if
 		if ( $qty_index ) {
 			if ( ( $$specs{'PageQuantity'.$qty_index} == 0 ) or ( $$specs{'PageQuantity'.$qty_index} == 2 ) ) {
-				$openprint::log->warn("Folding not needed: PageQuantity: $$specs{'PageQuantity'.$qty_index}");
+				$openprint::log->warn("Folding not needed: PageQuantity: $$specs{'PageQuantity'.$qty_index}") if DEBUG_NEEDS;
 				return 0;
 			} # end if	
 		} else {
 			foreach my $qty_index ( $Project->quantity_indexes() ) {
 				if ( $$specs{'PageQuantity'.$qty_index} == 2 ) {
-					$openprint::log->warn("Folding not needed: PageQuantity: $$specs{'PageQuantity'.$qty_index}");
+					$openprint::log->warn("Folding not needed: PageQuantity: $$specs{'PageQuantity'.$qty_index}") if DEBUG_NEEDS;
 					return 0;
 				} # end if	
 			} # end foreah qty_index
 		} # end if
+		
+		$openprint::log->debug("Folding::signature_needs: book sig return 1") if DEBUG_NEEDS;
 		return 1;
 	} # end if
 
 # This works for books because sigs don't have a txtFinalWidth, etc.
 	if ( ($$specs{'txtFinalWidth'} != $$specs{'txtWidth'}) or ($$specs{'txtFinalHeight'} != $$specs{'txtHeight'}) ) {
-		$openprint::log->warn("FOLDING NEEDED dimensions do not match!") if DEBUG;
+		$openprint::log->warn("FOLDING NEEDED dimensions do not match!") if DEBUG_NEEDS;
 		return 1;
 	} # end if
 

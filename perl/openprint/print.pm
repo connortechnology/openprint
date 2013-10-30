@@ -163,6 +163,7 @@ sub view_services {
 				$Project->currency_id( $openprint::session{Currency_id} );
 				$Project->recalculate();
 				openprint::print_project::continue_project( $log, $dbh, $variable, $project_index );
+				$$variable{ExternalRedirect} = '/main/project/view.html?project_id='.$project_index if ! $$variable{Redirect};
 			} elsif ( $openprint::param{'btnFunction'} eq 'Continue Project' ) {
 				$openprint::session{'project_id'} = $project_index;
 				$Project->currency_id( $openprint::session{Currency_id} );
