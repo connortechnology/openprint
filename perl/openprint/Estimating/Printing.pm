@@ -4158,7 +4158,7 @@ if ( $$project{'HasDieCutting'} and $$project{'NeedDieCutting'} ) {
 	my $colourstarttime = gettimeofday() if DEBUG;
 
 	# Remarked it out because colours is the mix of the colours... so sheet work, it will appear in there twice...w&t, just once
-	#$impressions /= $$project{print_sides} if (sets::isin($$Imposition{runstyle},['Sheet Work','Work & Turn','Work & Tumble'] ));
+	$impressions /= $$project{print_sides} if (sets::isin($$Imposition{runstyle},['Sheet Work','Work & Turn','Work & Tumble'] ));
 #$openprint::log->debug("Colours: @colours");
 	foreach my $Colour ( filter_coatings_from_colours(\@colours) ) {
 		my $real_colour = $$Colour{name};
