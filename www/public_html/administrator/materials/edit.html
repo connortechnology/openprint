@@ -8,6 +8,10 @@
 				<? echo ( make_drop_down( [ map { $_->id(), $_->name() } openprint::MaterialCategory->find('order'=>'lower(name)') ], $param{'ddmSearchCategory'} ); ) ?>
 			</select>
 		</li>
+		<li>
+			<label>Activity Code</label>
+			<input type="text" name="search_activity_code" value="<?echo($session{/administrator/materials/edit.html?search_activity_code})?>" />
+		</li>
 		<li><label>Equipment</label>
 			<select name="equipment_id" onchange="form.btnFunction.value='';f1.submit();">
 				<option value="">All</option>
