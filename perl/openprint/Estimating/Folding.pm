@@ -187,6 +187,7 @@ sub signature_needs {
 		$openprint::log->debug("Folding::signature_needs: NoBidner") if DEBUG_NEEDS;
 		return 0;
 	} # end if
+	my $printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] ) if $$services{''}[0] and @{$$services{''}};
 	if ( $$services{'CornerStitching'} ) {
 		$openprint::log->debug("Folding::signature_needs: CornerStitched") if DEBUG_NEEDS;
 		return 0;
@@ -225,6 +226,12 @@ sub signature_needs {
 			if ( ( $$specs{'PageQuantity'.$qty_index} == 0 ) or ( $$specs{'PageQuantity'.$qty_index} == 2 ) ) {
 				$openprint::log->warn("Folding not needed: PageQuantity: $$specs{'PageQuantity'.$qty_index}") if DEBUG_NEEDS;
 				return 0;
+			} # end if	
+			if ( $$printing_specs{rdbTemplateType} eq 'PlasticCoil' ) {
+				# Need singltons... anything < 8pg sigs...might as well just cut them out
+				if ( $$specs{'PageQuantity'.$qty_index} < 8 ) {
+					return 0
+				} # end if
 			} # end if	
 		} else {
 			foreach my $qty_index ( $Project->quantity_indexes() ) {
