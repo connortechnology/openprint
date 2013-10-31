@@ -21,7 +21,7 @@
 				my $quantity = $$variable{'Project'}->quantity($qty_index);
 				$html .= "<fieldset><legend>The following results are for Quantity $qty_index ($quantity)</legend>";
 
-				foreach my $s_id ( $$variable{'Project'}->signatures() ) {
+				foreach my $s_id ( $$variable{Project}->signatures({sort=>1}) ) {
 					my $sig_specs = openprint::service::get_specs_ref( $$variable{'Project'}, $s_id );
 					my $signature_index = $$sig_specs{SignatureIndex};
 					if ( $$sig_specs{'txtImposition'.$qty_index} ) {

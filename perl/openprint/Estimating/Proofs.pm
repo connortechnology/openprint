@@ -485,7 +485,7 @@ sub get_proof_specs {
 	foreach my $qty_index ( $Project->quantity_indexes() ) {
 		my %proof_indexes;
 		foreach my $key ( keys %$specs ) {
-$openprint::log->debug("key $key");
+#$openprint::log->debug("key $key");
 			if ( $key =~ /^txtProofIndex-(\d*)-(\d*)-$qty_index$/ ) {
 				push @{$proof_indexes{$1}}, $$specs{$key};
 			} # end if

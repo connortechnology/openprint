@@ -1698,5 +1698,23 @@ sub compact_impositions {
 sub save {
 } # end sub save
 
+sub load_Impositions($$$) {
+	my ( $folding_specs, $sig_specs, $qty_index ) = @_;
+
+	my @results;
+	foreach my $fold_index ( 1 .. 4 ) {
+		next if ! $$folding_specs{"FoldQty-$$sig_specs{SignatureIndex}-$qty_index-$fold_index"};
+
+		my $imp = new openprint::Imposition();
+		$imp->columns( $$folding_specs{"FoldColumns-$$sig_specs{SignatureIndex}-$qty_index-$fold_index"} );
+		$imp->rows( $$folding_specs{"FoldRows-$$sig_specs{SignatureIndex}-$qty_index-$fold_index"} );
+		my ( $pages ) = $$folding_specs{"FoldRows-$$sig_specs{SignatureIndex}-$qty_index-$fold_index"} =~ /^(\d+)PageFold$/;
+		$imp->pages( $pages );
+		$imp->quantity( $$folding_specs{"FoldQty-$$sig_specs{SignatureIndex}-$qty_index-$fold_index"} );
+		push @results, $imp;
+	} # end foreach fold_index
+	return @results;
+} # end sub load_Impositions
+
 1;
 __END__

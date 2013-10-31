@@ -1012,6 +1012,13 @@ sub signatures {
 			} # end if
 			push @sigs, $s_id;
 		} # end foreach signatures
+		if ( $$params{sort} ) {
+            return sort {
+                my $a_specs = openprint::service::get_specs_ref( $self, $a );
+                my $b_specs = openprint::service::get_specs_ref( $self, $b );
+                $$a_specs{Group} <=> $$b_specs{Group} || $$a_specs{SignatureIndex} <=> $$b_specs{SignatureIndex};
+            } @sigs;
+		} # end if
 		return @sigs;
 	} # end if
 	return @{$$services{'Signature'}} if $$services{'Signature'} and @{$$services{'Signature'}};

@@ -151,7 +151,7 @@ sub view_services {
 
 			} elsif ( $openprint::param{'btnFunction'} eq 'Delete Services' ) {
 				foreach my $service_id ( ref $openprint::param{'service_id'} eq 'ARRAY' ? @$openprint::param{'service_id'} : ( $openprint::param{'service_id'} ) ) {
-				openprint::print_project::delete_service( $project_index, $service_id );
+					openprint::print_project::delete_service( $project_index, $service_id );
 				} # end if
 			} elsif ( $openprint::param{'btnFunction'} eq 'Recalculate Project' ) {
 				if ( exists $openprint::param{'markup'} ) {
@@ -163,7 +163,6 @@ sub view_services {
 				$Project->currency_id( $openprint::session{Currency_id} );
 				$Project->recalculate();
 				openprint::print_project::continue_project( $log, $dbh, $variable, $project_index );
-				$$variable{ExternalRedirect} = '/main/project/view.html?project_id='.$project_index if ! $$variable{Redirect};
 			} elsif ( $openprint::param{'btnFunction'} eq 'Continue Project' ) {
 				$openprint::session{'project_id'} = $project_index;
 				$Project->currency_id( $openprint::session{Currency_id} );
@@ -171,6 +170,8 @@ sub view_services {
 				openprint::print_project::continue_project( $log, $dbh, $variable, $project_index );
 			} elsif ( $openprint::param{'btnFunction'} eq 'Reuse Project' ) {
 				$project_index = openprint::print_project::reuse_project( $r, $log, $dbh, $openprint::session{_session_id}, $variable, $project_index );
+			} # end if
+			if ( ! $$variable{Redirect} ) {
 				$$variable{ExternalRedirect} = '/main/project/view.html?project_id='.$project_index;
 				return;
 			} # end if
@@ -713,11 +714,16 @@ sub get_quantities {
 	if ( ! $$variable{'QUANTITIES'} ) {
 		my $Project = new openprint::Project( $project_index );
 		my @qtys = $Project->quantities();
+		my $columns;
 		for ( my $index = 0; $index < @qtys; $index += 1 ) {
 			$$variable{'QUANTITIES'} .= " quantities[$index] = '$qtys[$index]'; \n";
 			$$variable{'QUANTITY'.($index+1)} = $qtys[$index];
 			$$variable{'txtQuantity'.($index+1)} = $qtys[$index];
+			$columns += 1 if $qtys[$index];
 		} # end for
+		$$variable{Columns} = 'One' if $columns == 1;
+		$$variable{Columns} = 'Two' if $columns == 2;
+		$$variable{Columns} = 'Three' if $columns == 3;
 	} # end if
 } # end sub get_quantities
 

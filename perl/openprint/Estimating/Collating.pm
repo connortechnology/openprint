@@ -19,6 +19,7 @@ use strict;
 
 require openprint::service;
 require openprint::Project;
+require openprint::Estimating::Folding;
 
 my @variables = (
 	'txtQuantity1', 'txtQuantity2', 'txtQuantity3',
@@ -92,6 +93,11 @@ $log->debug("COLLATING!!!!!!!!!!!!!!!!!!");
 		return $$specs{Status} = 'uncalculated';
 	} # end if
 
+    my $folding_specs;
+    if ( $$services{'Folding'} and @{$$services{'Folding'}} ) {
+        $folding_specs = openprint::service::get_specs_ref( $Project, $$services{'Folding'}[0] );
+    } # end if
+
 	foreach my $qty_index ( $Project->quantity_indexes() ) {
 		if ( (!$$specs{'OverrideSignatureCount'.$qty_index} ) or ( $$specs{'OverrideSignatureCount'.$qty_index} ne 'Y' ) ) {
 
@@ -99,8 +105,15 @@ $log->debug("COLLATING!!!!!!!!!!!!!!!!!!");
 			foreach my $sig_id ( $Project->signatures() ) {
 				my $sig_specs = openprint::service::get_specs_ref( $Project, $sig_id );
 				next if ! $$sig_specs{"txtImposition$qty_index"};
+				my @folding_impositions = openprint::Estimating::Folding::load_Impositions( $folding_specs, $sig_specs, $qty_index ) if $folding_specs;
+				if ( @folding_impositions ) {
+					foreach my $Fold_Imp ( @folding_impositions ) {
+						$$specs{'txtSignatureCount'.$qty_index} += $Fold_Imp->quantity();
+					} # end foreach Fold product
+				} else {
+					$$specs{'txtSignatureCount'.$qty_index} += $$sig_specs{'PageQuantity'.$qty_index} / $$sig_specs{txtSpreadSize};
+				} # end if
 		
-				$$specs{'txtSignatureCount'.$qty_index} += $$sig_specs{'PageQuantity'.$qty_index} / $$sig_specs{txtSpreadSize};
 			} # end foreach signature
 		} # end if
 	} # end foreach qty_index

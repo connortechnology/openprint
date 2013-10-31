@@ -75,13 +75,6 @@ function Fold_onchange( element, signature, qty_index, index ) {
 		calc(element.form.name);
 } // end function
 </script>
-<? eval (
-    if ( $$variable{'Project'}->quantity1() and $$variable{'Project'}->quantity2() and $$variable{'Project'}->quantity3() ) {
-		$$variable{'Columns'} = 'Three';
-    } else {
-		$$variable{'Columns'} = 'Two';
-    } # end if
-) ?>
 <div class="Service <?ServiceTypeID?>">
 	<form id="f1" name="f1" method="post" action="/main/project/view.html">
 		<fieldset><legend><?ServiceTypeName?></legend>
@@ -91,13 +84,7 @@ function Fold_onchange( element, signature, qty_index, index ) {
 			my $services = $Project->services();
 			my $fragment = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/main/project/bind/_fold.html' );
 
-			my @sigs = sort {
-				my $a_specs = openprint::service::get_specs_ref( $Project, $a );
-				my $b_specs = openprint::service::get_specs_ref( $Project, $b );
-				$$a_specs{Group} <=> $$b_specs{Group} || $$a_specs{SignatureIndex} <=> $$b_specs{SignatureIndex};
-			} $Project->signatures();
-
-			foreach my $ss_id ( @sigs ) {
+			foreach my $ss_id ( $$variable{Project}->signatures({sort=>1}) ) {
 				my $sig_specs = openprint::service::get_specs_ref( $$variable{'Project'}, $ss_id );
 				$html .= "<fieldset><legend>For Signature $$sig_specs{'SignatureIndex'}:";
 				$html .= openprint::service::summary( $$variable{'Project'}, $ss_id );
