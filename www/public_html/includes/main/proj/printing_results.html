@@ -61,7 +61,7 @@
 		$html .= sprintf(q`
 			<span class="%1$sColumns">
 				<select name="ddmStockSheetSize%2$d" size="1" onchange="this.form.OverrideStockWidth%2$d.value='';this.form.OverrideStockHeight%2$d.value='';ddmStockSheetSize_onchange();"><option value="">Please select one</option>%3$s</select>
-				`, $$variable{Columns}, $qty_index, ssi::make_drop_down( [ 
+				`, $$variable{Columns}, $qty_index, make_drop_down( [ 
 					map { $_, join(' x ', map { $_.'"' } split('x', $_) ) } @sizes ], $$variable{'ddmStockSheetSize'.$qty_index} ),
 			);
 		if ( sets::isin( $session{user_type}, ['A','E'] ) ) {
