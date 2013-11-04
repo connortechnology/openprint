@@ -9,6 +9,7 @@ require openprint::PurchaseOrder_Tax;
 require openprint::PurchaseOrder_Department;
 require openprint::Company_Category;
 require openprint::Object_Asset;
+require openprint::Object_Payment;
 
 use vars qw( $r $log $dbh %variable %param %session %config );
 *r = \$openprint::r;
@@ -819,5 +820,53 @@ sub authorizations {
 sub _authorizations {
 	ssi::save_params( '/employee/purchase_order/authorizations.html', ( 'company_id','user_id' ) );
 } # end sub _items
+
+sub _payments_edit {
+	my $PO = $variable{PurchaseOrder} = new openprint::PurchaseOrder( $param{po_id} );
+	if ( ! $PO->id() ) {
+		$variable{error} = "Invalid Purchase Order specified: $param{po_id}<br/>";
+		return;
+	} # end if
+	if ( $param{action} eq 'Add' ) {
+		my $ac = sql::start_transaction( $openprint::dbh );
+		my $Payment = new openprint::Payment();
+		$variable{error} .= $Payment->save({ 
+				amount			=>	$param{amount},
+				currency_id		=>	$param{currency_id},
+				received_on		=>	$param{received_on},
+				memo			=>	$param{description},
+				recipient_id	=>	$PO->supplier_id(),
+				payor_id		=>	$PO->company_id(),
+				});
+		return if $variable{error};
+		my $PO_Payment = new openprint::Object_Payment();
+		$variable{error} .= $PO_Payment->save({payment_id=>$Payment->id(), object_id=>$PO->id(), object_type=>'openprint::PurchaseOrder', amount=>$param{amount} });
+		$PO->Payments( undef );
+		$PO->payments_total(undef);
+		$PO->total(undef);
+		$variable{error} .= $PO->save();
+		$openprint::dbh->rollback() if $variable{error};
+		sql::end_transaction( $openprint::dbh, $ac );
+	} elsif ( $param{action} eq 'Delete' ) {
+$openprint::log->debug("delet");
+		if ( ! sets::isin( $param{payment_id}, [ map { $_->payment_id() } $PO->Payments() ] ) ) {
+			$variable{error} .= "Payment $param{payment_id} is not attached to PO $$PO{id}<br/>";
+			return;
+		} # end if
+		#my $PO_Payment = openprint::Object_Payment->find_one( object_id=>$$PO{id}, payment_id=>int($param{payment_id}) );
+		my $PO_Payment = openprint::Object_Payment->find_one( object_id=>$$PO{id}, object_type=>'openprint::PurchaseOrder', payment_id=>int($param{payment_id}) );
+		if ( ! $PO_Payment ) {
+			$variable{error} .= 'Payment for this PO not found.';
+			return;
+		} # end if
+		my $ac = sql::start_transaction( $openprint::dbh );
+$openprint::log->debug("deleting");
+		if ( ( $variable{error} = $PO_Payment->delete() ) or ( $variable{error} = $PO->save() ) ) {
+			$openprint::dbh->rollback();
+		} # end if
+		sql::end_transaction( $openprint::dbh, $ac );
+	} # end if action
+} # end sub payments_edit
+
 1;
 __END__

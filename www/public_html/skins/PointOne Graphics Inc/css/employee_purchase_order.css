@@ -12,3 +12,15 @@ tr.unauthorized {
 table .Manifest {
 	text-align: left;
 }
+table .amount {
+	width: 110px;
+	text-align: right;
+}
+table .amount input {
+	text-align: right;
+	width: 65px;
+}
+
+#Payments .currency {
+	width: 140px;
+}

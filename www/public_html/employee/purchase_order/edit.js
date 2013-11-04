@@ -98,3 +98,14 @@ function getSelectionId(input, li) {
 		} // end if
 	} // end if
 } // end function getSelectionId
+
+function add_Payment(po_id) {
+	new Ajax.Updater( 'Payments', '_payments_edit.html', { parameters: { 
+		po_id: po_id, 
+		action: 'Add',
+		amount: $('payment_amount').value,
+		currency_id: $('payment_currency_id').value,
+		received_on: get_date_value( 'payment_received_on' ),
+		description: $('payment_description').value,
+		}, evalScripts: true } );
+} // end function addPayment)po_id)

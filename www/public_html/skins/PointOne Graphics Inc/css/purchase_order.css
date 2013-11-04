@@ -318,3 +318,15 @@ table .supplier, table .item_name, table .product {
 #Assets .actions {
 	width: 75px;
 }
+#Payments .Date {
+	width: 200px;
+}
+.Payments {
+	clear: both;
+}
+.payments_total label {
+	text-transform: uppercase;
+}
+.payments_total label:after {
+	content: ':';	
+}

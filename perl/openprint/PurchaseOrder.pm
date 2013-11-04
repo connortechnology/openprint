@@ -22,6 +22,7 @@ require openprint::PurchaseOrder_Log;
 require openprint::PurchaseOrder_Tax;
 require openprint::Email;
 require openprint::Manifest;
+require openprint::Object_Payment;
 
 $debug = 0;
 
@@ -47,6 +48,7 @@ $serial = 'purchaseorders_id_seq';
 	'shipping_method'	=>	'shipping_method',
 	'shipping_terms'	=>	'shipping_terms',
 	'vendor_contact'	=>	'vendor_contact',
+	contact_id			=>	'contact_id',
 	'vendor_name'		=>	'vendor_name',
 	'vendor_address1'	=>	'vendor_address1',
 	'vendor_address2'	=>	'vendor_address2',
@@ -85,6 +87,7 @@ $serial = 'purchaseorders_id_seq';
 );
 
 %defaults = (
+	contact_id		=>	undef,
 	'supplier_id'	=>	undef,
 	'created_on'	=> 'NOW()',
 	'updated_on'	=> 'NOW()',
@@ -314,6 +317,7 @@ sub total {
 		foreach my $Tax ( $_[0]->Taxes() ) {
 			$_[0]{total} += $Tax->amount();
 		} # end foreach Tax
+		$_[0]{total} -= $_[0]->payments_total();
 		$_[0]{total} = Math::Round::nearest( 0.01, $_[0]{total} );
 	} # end if
 	return $_[0]{total};
@@ -598,8 +602,28 @@ $log->debug('can see') if $debug;
 			return 1;
 		} # end if
 	} # end if
-	return 0;	
+	return 0;
 } # end sub can_see_pricing
+
+sub payments_total {
+	if ( @_ > 1 ) {
+		$_[0]{payments_total} = $_[1];
+	} # end if
+	if ( ! $_[0]{payments_total} ) {
+		$_[0]{payments_total} = Math::Round::nearest( 0.01, misc::sum( map { $_->amount() } $_[0]->Payments() ) );
+	} # end if
+	return $_[0]{payments_total};
+} # end sub payments_total
+
+sub Payments {
+	if ( @_ > 1 ) {
+		$_[0]{Payments} = $_[1];
+	} # end if
+	if ( ! $_[0]{Payments} ) {
+		 $_[0]{Payments} = [ openprint::Object_Payment->find( object_id=>$_[0]{id}, object_type=>'openprint::PurchaseOrder', order=>'id' ) ];
+	} # end if
+	return @{$_[0]{Payments}};
+} # end sub Payments
 
 1;
 __END__
