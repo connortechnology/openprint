@@ -68,6 +68,27 @@
 		) ?>
 				</p>
 			</div>
+<? if ( $$variable{PurchaseOrder}->notifications() ) ?>
+        <div id="Notifications">
+            <p><label>NOTIFY:</label>
+            <? echo (
+                my $html = '';
+                foreach my $U ( openprint::User->find( id=>[$$variable{PurchaseOrder}->notifications()], order=>'lower(strfirstName),lower(strlastname)' ) ) {
+                    $html .= sprintf( q{<a href="mailto:%1$s">%2$s &lt;%1$s&gt;</a><br/>}, $U->email(), $U->name() );
+                } # end foreach
+                return $html;
+            ) ?>
+            </p>
+        </div>
+<? endif ( $$variable{PurchaseOrder}->notifications() ) ?>
+        <div id="DocketSummary"><p><label>DOCKET:</label>
+<? echo ( my $html;
+    foreach my $C ( $$variable{PurchaseOrder}->Contents() ) {
+        $html .= $C->docket().'<br/>' if $C->docket();
+    } # end foreach C
+    return $html;
+) ?></p>
+        </div>
 			<br class="spacer"/><br/>
 			<table class="Shipping">
 				<tr>
