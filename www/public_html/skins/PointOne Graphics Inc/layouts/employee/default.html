@@ -57,7 +57,7 @@
 		<meta http-equiv="refresh" content="300">
 		<? endif ( $$variable{'uri'} =~ /prepress_schedule/ ) ?>
 		<? if ( $$variable{'uri'} =~ /purchase_order/ ) ?>
-		<link href="/css/purchase_order.css" rel="stylesheet" type="text/css"/>
+		<link href="<?hash_link(/css/purchase_order.css)?>" rel="stylesheet" type="text/css"/>
 		<? endif ( $$variable{'uri'} =~ /purchase_order/ ) ?>
 		<!-- calendar stylesheet -->
 		<link rel="stylesheet" type="text/css" media="all" href="/javascripts/jscalendar/calendar-win2k-cold-1.css" title="win2k-cold-1" />

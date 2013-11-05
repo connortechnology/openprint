@@ -1,5 +1,3 @@
-
-
 .PO {
 	background-color: white;
 }
@@ -19,49 +17,18 @@
 .PO table .totals {
 	text-align: right;
 }
-.PO table td input {
-	width: 96%;
-	min-width:0;
-	margin: 0;
-	padding: 0;
-}
-.PO table td input.RollQTY {
-	width: 60px;
-} 
-table .price {
+
+.price {
 	width: 110px;
 	text-align: right;
+	display: table-cell;
 }
-table .price input {
-	text-align: right;
-	width: 65px;
-}
-table .total {
+.line_total ,
+.amount,
+.payments_total {
 	width: 100px;
 	text-align: right;
-}
-table .total input {
-	text-align: right;
-}
-table td input.SheetQTY {
-	width: 60px;
-} 
-.PO table td input.SheetName {
-	width: 240px;
-} 
-.PO table td input.SheetWidth, .PO table td input.SheetHeight {
-	width: 60px;
-} 
-.PO table td input.SheetMWeight {
-	width: 40px;
-} 
-.PO table td textarea {
-	width: 98%;
-	min-width:0px;
-	margin: 0px;
-	padding: 0px;
-	min-height: 0px;
-	resize: vertical;
+	display: table-cell;
 }
 
 
@@ -189,29 +156,6 @@ div.autocomplete ul li {
 	width: 48%;
 	float: left;
 }
-.PO .Totals {
-	width: 200px;
-	float: right;
-}
-.PO .Totals ul, .PO .Totals ul li {
-	list-style: none;
-	margin: 0px;
-	padding: 0px;
-	text-align: right;
-}
-.PO .Totals ul li:after {
-    content: ".";
-    display: block;
-    height: 0;
-    font-size: 0;
-    clear: both;
-    visibility: hidden;
-}
-.PO .Totals ul li label {
-	width: 110px;
-	float: left;
-	text-align: right;
-}
 .PO ul.notifications li {
 	padding: 0;
 	width: 230px;
@@ -229,17 +173,20 @@ div.autocomplete ul li {
 table .buttons {
 	width: 55px;
 }
-table .quantity {
+.quantity {
 	width: 100px;
 	text-align: center;
 }
-table .product {
+.product {
 	width: 150px;
+}
+.description,
+.dept {
 }
 .description select {
 	max-width: 500px;
 }
-table .docket {
+.docket {
 	width: 75px;
 	text-align: center;
 }
@@ -317,4 +264,60 @@ table .supplier, table .item_name, table .product {
 }
 #Assets .actions {
 	width: 75px;
+}
+#Payments .Date {
+	width: 200px;
+}
+.Payments {
+	clear: both;
+	width: 100%;
+}
+.payments_total label {
+	text-transform: uppercase;
+}
+.payments_total label:after {
+	content: ':';	
+}
+.items {
+	margin-top: 10px;
+	clear: both;
+	display: table;
+	border: 1px solid #aebdd2;
+	width: 100%;
+	border-collapse: collapse;
+}
+.items div {
+	border: 1px solid #aebdd2;
+}
+.item div,
+.header div {
+	display: table-cell;
+}
+.item {
+	display: table-row;
+}
+
+.header {
+	width: 100%;
+	display: table-row;
+	background-color: #e4ebf4;
+}
+.totals {
+	display: table;
+	width: 200px;
+	float: right;
+}
+.totals label {
+	text-transform: uppercase;
+}
+.totals label:after {
+	content: ':';	
+}
+.tax,
+.subtotal,
+.total,
+.payments_total {
+	display: table-row;
+	width: 100%;
+	text-align: right;
 }

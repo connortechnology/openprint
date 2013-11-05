@@ -21,6 +21,7 @@ $serial = 'materialindex_seq';
 		'category_id'		=>	'category_id',
 		'taxexempt1'		=>	'taxexempt1',
 		'taxexempt2'		=>	'taxexempt2',
+		activity_code		=>	'activity_code',
 		);	
 
 %transforms = (

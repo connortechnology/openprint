@@ -1131,3 +1131,21 @@ function hexize(e) {
 	e.value = e.value.replace(/[^\da-fA-F%]/g,'');
 	return e.value;
 }
+
+function get_date_value( prefix, form=null ) {
+	var date = new Array();
+	[ 'year', 'month', 'day' ].each( function(suffix) {
+		var e = $(prefix+'_'+suffix);
+		if ( ! e ) { 
+			alert( 'No ' + prefix+'_'+suffix );
+			return '';
+		} // end if
+		var v = get_value( e );
+		if ( ! v ) {
+			alert( 'No value for ' + prefix+'_'+suffix );
+			return '';
+		} // end if
+		date.push( v );
+	});
+	return date.join('-');
+} //und function get_date_value
