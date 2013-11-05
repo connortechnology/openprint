@@ -224,6 +224,8 @@ sub send_to_vendor {
 	if ( File::Slurp::write_file('/tmp/'.$file_base.'.html', { atomic => 1, err_mode=>'carp' }, \$purchase_order) ) {
 		`wkhtmltopdf "/tmp/$file_base.html" "/tmp/$file_base.pdf"`;
 		$purchase_order = File::Slurp::read_file( "/tmp/$file_base.pdf" );
+		unlink "/tmp/$file_base.html";
+		unlink "/tmp/$file_base.pdf";
 		push @attachments, ($file_base.'.pdf', MIME::Base64::encode_base64($purchase_order), 'application/octet-stream', 'base64');
 	} else {
 		$openprint::log->error( "couldn't write PO to $file_base" );
@@ -291,6 +293,8 @@ $openprint::log->debug('send_to_me');
 	if ( File::Slurp::write_file('/tmp/'.$file_base.'.html', { atomic => 1, err_mode=>'carp' }, \$purchase_order) ) {
 		`wkhtmltopdf "/tmp/$file_base.html" "/tmp/$file_base.pdf"`;
 		$purchase_order = File::Slurp::read_file( "/tmp/$file_base.pdf" );
+		unlink "/tmp/$file_base.html";
+		unlink "/tmp/$file_base.pdf";
 		push @attachments, ($file_base.'.pdf', MIME::Base64::encode_base64($purchase_order), 'application/octet-stream', 'base64');
 	} else {
 		$openprint::log->error( "couldn't write PO to $file_base" );
