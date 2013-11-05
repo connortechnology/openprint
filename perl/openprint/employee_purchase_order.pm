@@ -832,7 +832,7 @@ sub _payments_edit {
 		my $Payment = new openprint::Payment();
 		$variable{error} .= $Payment->save({ 
 				amount			=>	$param{amount},
-				currency_id		=>	$param{currency_id},
+				currency_id		=>	$$PO{currency_id},
 				received_on		=>	$param{received_on},
 				memo			=>	$param{description},
 				recipient_id	=>	$PO->supplier_id(),

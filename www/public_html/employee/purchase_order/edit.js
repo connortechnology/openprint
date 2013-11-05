@@ -1,6 +1,6 @@
 function load_content_type( index, type ) {
 	$('content-'+index).innerHTML = '';
-	new Ajax.Updater('content-'+index, '_po_content_'+type+'.html', { method: 'get', parameters: { content_id: index } } );
+	new Ajax.Updater('content-'+index, '_po_content_'+type+'.html', { parameters: { content_id: index } } );
 } // end function load_content_type
 
 function dept_onchange( element ) {
@@ -79,8 +79,10 @@ function update_totals( form ) {
 			tax = 0;
 		} // end if
 		$('tax_amount-'+tax_ids[i]).innerHTML = do_decimals( tax, 2 );
+		
 		total += parseFloat( tax );
 	} // end for
+	total -= parseFloat( $('payments_total').innerHTML );
 
 	$('total').innerHTML = do_decimals( total, 2 );
 } // end function update_totals

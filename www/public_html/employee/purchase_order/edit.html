@@ -26,9 +26,9 @@ function update_taxes( form ) {
 		<? echo ( 
 			my $html = '';
 			if ( $$variable{PurchaseOrder}->id() ) {
-				$html .= ssi::button( 'Save', { 'onclick'=>"\$('buttons').innerHTML='Please wait. Saving...';f1.btnFunction.value='Save';f1.submit();" } );
+				$html .= button( 'Save', { onclick=>"\$('buttons').innerHTML='Please wait. Saving...';f1.btnFunction.value='Save';f1.submit();" } );
 			} else {
-				$html .= ssi::button( 'Save', { 'onclick'=>"\$('buttons').innerHTML='Please wait. Saving...';f1.btnFunction.value='Save';f1.submit();", 'text'=>'Create New' } );
+				$html .= button( 'Save', { onclick=>"\$('buttons').innerHTML='Please wait. Saving...';f1.btnFunction.value='Save';f1.submit();", text=>'Create New' } );
 			} # end if
 			return $html;
 		) ?>
@@ -47,7 +47,7 @@ function update_taxes( form ) {
 			<li><label for="shipto_country">Country:</label>
 				<select id="shipto_country" name="shipto_country" onchange="Country_onchange(this,this.form.shipto_state);">
 					<option value=""> select </option>
-					<? echo ( ssi::return_countries($$variable{PurchaseOrder}->shipto_country()); ) ?>
+					<? echo ( return_countries($$variable{PurchaseOrder}->shipto_country()); ) ?>
 				</select>
 			</li>
 			<li><label for="shipto_state"><span id="shipto_country_state"><? echo (
@@ -63,11 +63,11 @@ function update_taxes( form ) {
 					<option value=""> select </option>
 					<? echo (
 						if ( $$variable{PurchaseOrder}->shipto_country() eq 'US' ) {
-							return ssi::make_drop_down( \@states::states, $$variable{PurchaseOrder}->shipto_state() );
+							return make_drop_down( \@states::states, $$variable{PurchaseOrder}->shipto_state() );
 						} elsif ( $$variable{PurchaseOrder}->shipto_country() eq 'CA' ) {
-							return ssi::make_drop_down( \@provinces::provinces, $$variable{PurchaseOrder}->shipto_state() );
+							return make_drop_down( \@provinces::provinces, $$variable{PurchaseOrder}->shipto_state() );
 						} else {
-							return ssi::return_states_and_provinces($$variable{PurchaseOrder}->shipto_state());
+							return return_states_and_provinces($$variable{PurchaseOrder}->shipto_state());
 						} # end if
 					) ?>
 				</select>
@@ -138,29 +138,30 @@ function update_taxes( form ) {
 		<br/>
 		<div id="similar_pos"></div>
 <? if ( $$variable{PurchaseOrder}->id() ) ?>
-<table>
-	<tr>
-		<th class="buttons">&nbsp;</th>
-		<th class="quantity">QTY</th>
-		<th class="product">PRODUCT #</th>
-		<th class="description">ITEM / DESCRIPTION</th>
-		<th class="docket">DOCKET</th>
-		<th class="dept">DEPT</th>
-		<th class="price">UNIT PRICE</th>
-		<th class="total">LINE TOTAL</th>
-	</tr>
+<div class="items">
+	<div class="header">
+		<div class="buttons">&nbsp;</div>
+		<div class="quantity">QTY</div>
+		<div class="product">PRODUCT #</div>
+		<div class="description">ITEM / DESCRIPTION</div>
+		<div class="docket">DOCKET</div>
+		<div class="dept">DEPT</div>
+		<div class="price">UNIT PRICE</div>
+		<div class="line_total">LINE TOTAL</div>
+	</div>
 <? echo ( 
 	my $html = '';
 	my $line = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/employee/purchase_order/_po_content_line.html' );
 	foreach my $C ( $$variable{PurchaseOrder}->Contents() ) {
-		$$variable{'C'} = $C;
-		$html .= ssi::variable_substitution( $r, $log, $dbh, \$line, $variable );
+		$$variable{C} = $C;
+		$html .= variable_substitution( $r, $log, $dbh, \$line, $variable );
 	} # end foreach C
 	return $html;
 ) ?>
-	<tr class="unprintable" id="line-new">
-		<td class="buttons">
-	<? echo ( ssi::button( 'Add', { 'onclick'=>"
+</div>
+	<div class="item unprintable" id="line-new">
+		<div class="buttons">
+	<? echo ( button( 'Add', { onclick=>"
 		if ( \$('type_id-new').value ) {
 			new Ajax.Request('/employee/purchase_order/_po_content_line.html?action=add' +
 			'&amp;type_id=' + encodeURIComponent( \$('type_id-new').options[\$('type_id-new').selectedIndex].value ) +
@@ -171,58 +172,49 @@ function update_taxes( form ) {
 				} );
 		} else {
 			alert('Please select a type for the new line.');
-		}" } );
+		}", text=>'+', title=>'Add' } );
 ) ?>
-		</td>
-		<td class="quantity" colspan="2">
+		</div>
+		<div class="select_type">
 			<select name="type_id-new" id="type_id-new">
 				<option value=""> select one </option>
-<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::PurchaseOrder_ContentType->find('order'=>'lower(name)') ] ); ) ?>
+<? echo (make_drop_down( openprint::PurchaseOrder_ContentType->dropdown( order=>'lower(name)') ); ) ?>
 			</select>
-		</td>
-		<td colspan="5">Click on Add to add a new line to this PO.</td>
-	</tr>
-</table>
-<div class="Totals">
-	<ul>
-		<li>
-			<label>SUBTOTAL:</label>
-	<? echo ( sprintf('%s<span id="subtotal">%.2f</span>', $$variable{PurchaseOrder}->Currency()->symbol(), $$variable{PurchaseOrder}->subtotal() ); ) ?>
-		</li>
-	</ul>
-	<div id="Taxes">
+		</div>
+		<div class="instructions">Click on Add to add a new line to this PO.</div>
+	</div>
+<div class="totals">
+	<div class="subtotal">
+		<label>SUBTOTAL</label>
+		<div class="amount"><? echo ( sprintf('%s<span id="subtotal">%.2f</span>', $$variable{PurchaseOrder}->Currency()->symbol(), $$variable{PurchaseOrder}->subtotal() ); ) ?></div>
+	</div>
 		   <? echo ( 
 				my $html;
 				if ( $$variable{PurchaseOrder}->Taxes() ) {
-					$html .= '<ul>';
 					foreach my $Tax ( $$variable{PurchaseOrder}->Taxes() ) {
-						$html .= sprintf('<li class="tax" id="tax-%1$d"><label>%2$s (<span id="tax_rate-%1$d">%3$d</span>%)
-							<input type="checkbox" id="tax_charge-%1$d" name="tax_charge-%1$d" value="1" %6$s onclick="update_totals(this.form);" />:</label>%4$s<span id="tax_amount-%1$d">%5$.2f</span></li>', $Tax->tax_id(),
+						$html .= sprintf('<div class="tax" id="tax-%1$d"><label>%2$s (<span id="tax_rate-%1$d">%3$d</span>%)
+							<input type="checkbox" id="tax_charge-%1$d" name="tax_charge-%1$d" value="1" %6$s onclick="update_totals(this.form);" /></label><div class="amount">%4$s<span id="tax_amount-%1$d">%5$.2f</span></div></div>', $Tax->tax_id(),
 							$Tax->name(), $Tax->rate(), $$variable{PurchaseOrder}->Currency()->symbol(), $Tax->amount(),
 							checked( $Tax->charge() ),
 							);
 					} # end foreach Tax
-					$html .= '</ul>';
 				} # end if
 				return $html;
 			) ?>
+	<div class="payments_total"><label>Payments</label><div class="amount">
+		<? echo ( sprintf('%s<span id="payments_total">%.2f</span>', $$variable{PurchaseOrder}->Currency()->symbol(), $$variable{PurchaseOrder}->payments_total() ); ) ?></div>
 	</div>
-	<ul>
-		<li class="payments_total"><label>Payments</label>
-			<span id="payments_total"><? echo ( openprint::Currency::format( $$variable{PurchaseOrder}->payments_total() ); ) ?></span>
-		</li>
-		<li>
-			<label>TOTAL:</label>
-			<? echo ( sprintf('%s<span id="total">%.2f</span>', $$variable{PurchaseOrder}->Currency()->symbol(), $$variable{PurchaseOrder}->total() ); ) ?>
-		</li>
-	</ul>
+	<div class="total">
+		<label>Total</label><div class="amount">
+		<? echo ( sprintf('%s<span id="total">%.2f</span>', $$variable{PurchaseOrder}->Currency()->symbol(), $$variable{PurchaseOrder}->total() ); ) ?></div>
+	</div>
 </div>
 		<div class="Payments">
 			<fieldset><legend>Payment Details</legend>
 				<div id="Payments"><?include(_payments_edit.html)?></div>
 			</fieldset>
 		</div>
-		<div id="Assets" class="unprintable"><!--#include virtual="_assets.html"--></div>
+		<div id="Assets" class="unprintable"><?include(_assets.html)?></div>
 
 		<div class="leftColumn">
 			<ol>
@@ -236,7 +228,7 @@ function update_taxes( form ) {
 			Currency:
 			<select name="currency_id">
 				<option value=""> select one </option>
-				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Currency::find() ], $$variable{PurchaseOrder}->currency_id() ? $$variable{PurchaseOrder}->currency_id() : $session{'Currency_id'} ); ) ?>
+				<? echo ( make_drop_down( openprint::Currency->dropdown(order=>'lower(name)'), $$variable{PurchaseOrder}->currency_id() ? $$variable{PurchaseOrder}->currency_id() : $session{'Currency_id'} ); ) ?>
 			</select>
 			<br/>
 			<br/>
@@ -246,14 +238,14 @@ function update_taxes( form ) {
 			<br class="spacer"/>
 			<hr/>
 			<div class="leftColumn"><i>Authorized by: <? echo ( $$variable{PurchaseOrder}->Authorized_By()->name() ) ?></i></div>
-			<div class="rightColumn"><i>Date: <? echo ( Date::Format::time2str($config{'DateFormat'}, Date::Parse::str2time($$variable{PurchaseOrder}->authorized_on())) ) ?></i></div>
+			<div class="rightColumn"><i>Date: <? echo ( format_date($$variable{PurchaseOrder}->authorized_on()) ) ?></i></div>
 		<? endif ( $$variable{PurchaseOrder}->authorized() ) ?>
 		<? if ( $$variable{PurchaseOrder}->authorized() eq '0' ) ?>
 			<br/>
 			<br class="spacer"/>
 			<hr/>
 			<div class="leftColumn"><i>Declined by: <? echo ( $$variable{PurchaseOrder}->Authorized_By()->name() ) ?></i></div>
-			<div class="rightColumn"><i>Date:</i> <? echo ( Date::Format::time2str($config{'DateFormat'}, Date::Parse::str2time($$variable{PurchaseOrder}->authorized_on())); ) ?></div>
+			<div class="rightColumn"><i>Date:</i> <? echo ( format_date($$variable{PurchaseOrder}->authorized_on()); ) ?></div>
 		<? endif ( $$variable{PurchaseOrder}->authorized() eq '0' ) ?>
 			<br class="spacer"/>
 		</div>

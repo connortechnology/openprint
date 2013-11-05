@@ -23,6 +23,9 @@ require openprint::PurchaseOrder_Tax;
 require openprint::Email;
 require openprint::Manifest;
 require openprint::Object_Payment;
+require File::Slurp;
+require MIME::QuotedPrint;
+require MIME::Base64;
 
 $debug = 0;
 
@@ -275,12 +278,21 @@ $openprint::log->debug('send_to_me');
 	my @attachments = ();
 
 	my $email_template = misc::load_file( $log, $config{'SkinPath'} . '/email_template.html' );
-	$info{'ReplacementText'} = "<!--#include virtual=\"/email_content/purchase_order_body.html\"-->";
-	$_ = MIME::QuotedPrint::encode_qp( ssi::variable_substitution( undef, $log, $dbh, \$email_template, \%info ) );
+	$info{'ReplacementText'} = ssi::include("/email_content/purchase_order_body.html", \%info );
+	$_ = MIME::QuotedPrint::encode_qp( Encode::encode( 'utf-8', ssi::variable_substitution( undef, $log, $dbh, \$email_template, \%info ) ) );
 	push @attachments, ('', $_, 'text/html', 'quoted-printable');
 
-	my $purchase_order = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/email_content/purchase_order.html' );
-	push @attachments, $From->Company()->name().'-PO'.$$_[0]{'id'}.'.html', MIME::QuotedPrint::encode_qp( Encode::encode('utf-8',ssi::variable_substitution( undef, $log, $dbh, \$purchase_order, \%info ) ) ), 'text/html', 'quoted-printable';
+	my $purchase_order = ssi::include('/email_content/purchase_order.html', \%info );
+
+	my $file_base = $From->Company()->name().'-PO'.$_[0]{id};
+	if ( File::Slurp::write_file('/tmp/'.$file_base.'.html', { atomic => 1, err_mode=>'carp' }, \$purchase_order) ) {
+		`wkhtmltopdf "/tmp/$file_base.html" "/tmp/$file_base.pdf"`;
+		$purchase_order = File::Slurp::read_file( "/tmp/$file_base.pdf" );
+		push @attachments, ($file_base.'.pdf', MIME::Base64::encode_base64($purchase_order), 'application/octet-stream', 'base64');
+	} else {
+		$openprint::log->error( "couldn't write PO to $file_base" );
+		push @attachments, ($file_base.'.html', MIME::QuotedPrint::encode_qp($purchase_order), 'text/html', 'quoted-printable');
+	} # end if
 
 	my $receipt = (new openprint::Email())->send(
 			FROM	=> sprintf( '"%s" <%s>', $From->name(), $From->email() ),
@@ -288,7 +300,6 @@ $openprint::log->debug('send_to_me');
 			TO		=> $From,
 			ATTACHMENTS	=>	\@attachments,
 			);
-$openprint::log->debug($receipt);
 
 	my $results = 'PO ' . $_[0]{'id'} . ' emailed to the following recipients:<br/>' . $receipt;
 	return $results;

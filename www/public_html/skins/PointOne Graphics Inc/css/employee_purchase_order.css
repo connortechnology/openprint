@@ -12,15 +12,64 @@ tr.unauthorized {
 table .Manifest {
 	text-align: left;
 }
-table .amount {
+.amount {
 	width: 110px;
 	text-align: right;
 }
-table .amount input {
+.amount input {
 	text-align: right;
 	width: 65px;
 }
 
 #Payments .currency {
 	width: 140px;
+}
+.PO .items input {
+	width: 96%;
+	min-width:0;
+	margin: 0;
+	padding: 0;
+	box-sizing: border-box;
+	-moz-box-sizing: border-box;
+	-webkit-box-sizing: border-box;
+}
+.PO input.RollQTY {
+	width: 60px;
+} 
+.price input {
+	text-align: right;
+	width: 65px;
+}
+.total input {
+	text-align: right;
+}
+input.SheetQTY {
+	width: 60px;
+} 
+.PO input.SheetName {
+	width: 240px;
+} 
+.PO input.SheetWidth, .PO input.SheetHeight {
+	width: 60px;
+} 
+.PO input.SheetMWeight {
+	width: 40px;
+} 
+.PO textarea {
+	width: 98%;
+	min-width:0;
+	margin: 0;
+	padding: 0;
+	min-height: 0;
+	resize: vertical;
+}
+.items .buttons {
+	display: table-cell;
+	width: 55px;
+}
+.select_type {
+	width: 250px;
+}
+#line-new {
+	display: table-footer-group;
 }
