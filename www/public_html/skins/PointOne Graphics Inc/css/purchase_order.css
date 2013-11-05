@@ -220,10 +220,10 @@ table .buttons {
 	float: right;
 	width: 50%;
 }
-.Vendor p, .ShipTo p {
+.Vendor p, .ShipTo p, #Notifications p, #DocketSummary p {
 	padding: 0 0 0 80px;
 }
-.Vendor p label, .ShipTo p label {
+.Vendor p label, .ShipTo p label, #Notifications p label, #DocketSummary p label {
 	margin-left: -80px;
 	display: inline-block;
 	width: 75px;
@@ -320,4 +320,19 @@ table .supplier, table .item_name, table .product {
 	display: table-row;
 	width: 100%;
 	text-align: right;
+}
+#DocketSummary {
+	float: left;
+	width: 50%;
+	font-size: x-large;
+	font-weight: bold;
+}
+#DocketSummary label {
+	font-weight: normal;
+	font-size: small;
+}
+#Notifications {
+	float: right;
+	width: 50%;
+	clear: both;
 }

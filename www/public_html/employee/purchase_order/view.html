@@ -103,7 +103,9 @@ Manifest: <a href="/employee/inventory/manifest_view.html?manifest_id=<? echo ( 
 					return $html;
 				) ?>
 			</p>
+		</div>
 <? if ( $$variable{PurchaseOrder}->notifications() ) ?>
+		<div id="Notifications">
 			<p><label>NOTIFY:</label>
 			<? echo (
 				my $html = '';
@@ -113,7 +115,15 @@ Manifest: <a href="/employee/inventory/manifest_view.html?manifest_id=<? echo ( 
 				return $html;
 			) ?>
 			</p>
+		</div>
 <? endif ( $$variable{PurchaseOrder}->notifications() ) ?>
+		<div id="DocketSummary"><p><label>DOCKET:</label>
+<? echo ( my $html;
+	foreach my $C ( $$variable{PurchaseOrder}->Contents() ) {
+		$html .= $C->docket().'<br/>' if $C->docket();
+	} # end foreach C
+	return $html;
+) ?></p>
 		</div>
 		<br class="spacer"/><br/>
 		<table class="Shipping">
