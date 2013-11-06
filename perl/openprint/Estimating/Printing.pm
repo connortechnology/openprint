@@ -2598,7 +2598,7 @@ sub breakdown {
 	} # end if
 	if ( $Paper->type() ne 'Roll' ) {
         $breakdown .= sprintf( '%sx%s starting %sx%s<br/>', $Paper->width(), $Paper->height(), $Paper->start_width(), $Paper->start_height() );
-        $breakdown .= "Paper: $$price{'Gross Sheet Count'} sheets @".$Paper->mweight() . 'M = ' . $$price{'Gross Sheet Count'} * $Paper->mweight()/1000 . 'lbs * ';
+        $breakdown .= "Paper: $$price{'Gross Sheet Count'} sheets @".$Paper->mweight() . 'M = ' . $$price{'Gross Sheet Count'} * $Paper->mweight()/1000 . 'lbs<br/>';
         $breakdown .= " minimum order adjustment $$price{'minimum_order'}sheets<br/>" if $$price{'minimum_order'};
     } elsif ( $Paper->width() ) {
         $breakdown .= sprintf("Paper: \%sx\%s -> \%sx\%s * \%.6flbs/sq inch = \%.6f lbs per sheet (%d gsm, %sPT) Total: %slbs<br/>", $Paper->start_width(), $Paper->start_height(), $Paper->width(), $Paper->height(), $Paper->wpsi(), $Paper->width() * $Paper->height()* $Paper->wpsi(), $Paper->gsm(), $Paper->calliper(), $$price{'Stock Weight'} );
@@ -4236,7 +4236,6 @@ $openprint::log->debug("No plate for varnish $real_colour ");
 			$ink_price{Total} += $InkService{Total};
 		} # end if
 
-		my $InkMaterial;
 		my $Ink;
 
 		foreach my $C ( @{$special_colours{$colour}} ) {
@@ -4287,6 +4286,7 @@ $openprint::log->debug("Was mixed") if DEBUG_INKS;
 			} # end if
 		} # end if
 
+		my $InkMaterial;
 		if ( $$Ink{material_id} ) {
 			$InkMaterial = $Ink->Material();
 			my %material_price = $InkMaterial->get_price( undef, $Press );
@@ -4347,8 +4347,8 @@ $openprint::log->debug("Was mixed") if DEBUG_INKS;
 				my $p = Math::Round::nearest( 0.01, $material_price{'Price'} * $impressions/1000 );
 				$ink_price{Total} += $p;
 				$price{'Ink breakdown'} .= sprintf( ' %d * $%.2f%s = %.2f', $impressions, @material_price{'Price','units'}, $p );
-			} elsif ( $material_price{'units'} eq 'per impression' ) {
-				my $p = Math::Round::nearest( 0.01, $ink_price{Price} * $impressions );
+			} elsif ( $material_price{units} eq 'per impression' ) {
+				my $p = Math::Round::nearest( 0.01, $material_price{Price} * $impressions );
 				$ink_price{Total} += $p;
 				$price{'Ink breakdown'} .= ' ' . $impressions . " * $material_price{'Price'}$material_price{'units'} = " . $p;
 			} else {
