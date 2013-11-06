@@ -4932,17 +4932,33 @@ sub get_run_price {
 	
 	my $speed_mod;
 	if ( $std_speed ) {
-		my $Paper = $Imposition->Paper();
+		if ( $std_speed and ( $$std_speed{units} =~ /^Per (.+) Per Hour$/ ) ) {
+			my $unit = $1;
+			if ( $unit =~ /([\d\.]+)x([\d\.]+)/ ) {
+				$openprint::log->debug("Have unit $1 $2");
+				my $area = $1*$2;
+				if ( ! $$Imposition{object_width} * $$Imposition{object_height} ) {
+					$openprint::log->debug("Runspeed for $$Imposition{object_width} * $$Imposition{object_height} on $$Press{id}");
+				} else {
+					$run_speed = int( $$std_speed{value} * $area/($$Imposition{object_width} * $$Imposition{object_height}) );
+				} # end if
+				$openprint::log->debug("Have runspeed $$std_speed{value}, area: $area, $run_speed");
+			} else {
+				$openprint::log->warn("Unknown Per setting $unit");
+			} # end if
+		} else {
+			my $Paper = $Imposition->Paper();
 
-# Only load this if not already specified by some inline bindery service
-		$run_speed = $Press->specification('Run Speed', (lc $$std_speed{'units'} eq 'calliper' ? $$Paper{'calliper'} : $Paper->gsm()) ) if ! $run_speed;
-		if ( ! $run_speed ) {
-			$openprint::log->debug("No run sped on $$Press{strid} for $$std_speed{'units'} " . ($$std_speed{'units'} eq 'Calliper' ? $$Paper{'calliper'} : $Paper->gsm() ) ) if DEBUG or 0;
-			$run_speed = $$std_speed{value};
-		
-		} elsif ( $run_speed != $$std_speed{value} ) {
-			$speed_mod = Math::Round::nearest( .001, $$std_speed{'value'} / $run_speed );
-			$openprint::log->debug("1Press ".$$Press{'strid'}." Calliper: $$Paper{calliper} gsm: $$Paper{gsm} ($running_price) ($run_price{'units'}) STD: ($$std_speed{'value'}) RUN ($run_speed), mod: $speed_mod,  std/run: " . ( $speed_mod ? $run_speed/$speed_mod : $std_speed/$run_speed ) ) if DEBUG or 0;
+	# Only load this if not already specified by some inline bindery service
+			$run_speed = $Press->specification('Run Speed', (lc $$std_speed{'units'} eq 'calliper' ? $$Paper{'calliper'} : $Paper->gsm()) ) if ! $run_speed;
+			if ( ! $run_speed ) {
+				$openprint::log->debug("No run sped on $$Press{strid} for $$std_speed{'units'} " . ($$std_speed{'units'} eq 'Calliper' ? $$Paper{'calliper'} : $Paper->gsm() ) ) if DEBUG or 0;
+				$run_speed = $$std_speed{value};
+			
+			} elsif ( $run_speed != $$std_speed{value} ) {
+				$speed_mod = Math::Round::nearest( .001, $$std_speed{'value'} / $run_speed );
+				$openprint::log->debug("1Press ".$$Press{'strid'}." Calliper: $$Paper{calliper} gsm: $$Paper{gsm} ($running_price) ($run_price{'units'}) STD: ($$std_speed{'value'}) RUN ($run_speed), mod: $speed_mod,  std/run: " . ( $speed_mod ? $run_speed/$speed_mod : $std_speed/$run_speed ) ) if DEBUG or 0;
+			} # end if
 		} # end if
 	} else {
 		$run_speed = $Press->Specification('Run Speed') if ! $run_speed;
