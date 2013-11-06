@@ -653,7 +653,7 @@ sub signature_calc {
 
 	# Foreach equipment, figure out which folds are required.
 	foreach my $Equipment ( @my_equipment ) {
-		$Breakdown .= '<b>Equipment '.$$Equipment{name}.':</b><br/>';
+		$Breakdown .= '<br/><b>Equipment '.$$Equipment{name}.':</b><br/>';
 		#$openprint::log->debug('2 Equipment '.$Equipment->name()) if DEBUG;
 		if ( $$services{'NoOfflineBindery'} and ( $$sig_specs{'ddmPress'.$qty_index} ne $Equipment->strid() ) ) {
 			$Breakdown .= "No Offline bindery and not printing on $$Equipment{name}.<br/>";

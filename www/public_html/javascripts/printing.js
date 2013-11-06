@@ -369,11 +369,13 @@ function ddmProjectSize_onChange( form ) {
 	if (form.ddmProjectSize.options[index] && form.ddmProjectSize.options[index].value != 'Custom' ) {
 		var dimensions = form.ddmProjectSize.options[form.ddmProjectSize.selectedIndex].value.split(',');
 		var finished = dimensions[0].split('x');
-		var flat = dimensions[1].split('x');
 		form.txtFinalWidth.value = finished[0];
 		form.txtFinalHeight.value = finished[1];
-		form.txtWidth.value = flat[0];
-		form.txtHeight.value = flat[1];
+		if ( form.txtWidth && form.txtHeight ) {
+			var flat = dimensions[1].split('x');
+			form.txtWidth.value = flat[0];
+			form.txtHeight.value = flat[1];
+		} // end if
 	} // end if
 	calc( form.name );
 } // end function ddmProjectSize_onChange();

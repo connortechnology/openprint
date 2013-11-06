@@ -80,7 +80,7 @@ if ( 0 ) {
 			<?include('/includes/main/proj/templates/multipage.html')?>
 			<div class="BookSpecifications">
 			<fieldset><legend>Book Specifications</legend>
-				<p><label>Finished Dimensions</label>
+				<p><label>Dimensions</label>
             <select id="ddmProjectSize" name="ddmProjectSize" size="1" onchange="ddmProjectSize_onChange(this.form);">
 <? if ( $$variable{'ddmProjectSize'} ) ?>
                 <option value="<?ddmProjectSize?>"><?ddmProjectSize?></option>
@@ -88,12 +88,20 @@ if ( 0 ) {
                 <option value="custom">custom</option>
 <? endif ( $$variable{'ddmProjectSize'} ) ?>
             </select>
-            <? echo (
-                join( "\n",
-                input( type=>'float', id=>'txtFinalWidth', name=>'txtFinalWidth', value=>$$variable{txtFinalWidth}, onkeyup=>'dimensions_onChange(this.form);', min=>0 ),
+				</p>
+				<p><label>Finished</label>
+            <? echo ( join( "\n",
+                input( type=>'float', id=>'txtFinalWidth', name=>'txtFinalWidth', value=>$$variable{txtFinalWidth}, onkeyup=>'dimensions_onChange(this.form);', min=>0, title=>'Final Width in inches' ),
                 ' x ',
-                input( type=>'float', id=>'txtFinalHeight', name=>'txtFinalHeight', value=>$$variable{txtFinalHeight}, onkeyup=>'dimensions_onChange(this.form);', min=>0 ),
-                '(W x H in inches)<br/>',
+                input( type=>'float', id=>'txtFinalHeight', name=>'txtFinalHeight', value=>$$variable{txtFinalHeight}, onkeyup=>'dimensions_onChange(this.form);', min=>0, title=>'Final Height in inches' ),
+				); ) ?>
+				</p>
+				<p><label>Spread</label>
+                <? echo ( join( "\n",
+				
+                input( type=>'float', id=>'txtWidth', name=>'txtWidth', value=>$$variable{txtWidth}, onkeyup=>'dimensions_onChange(this.form);', min=>0, title=>'Flat Width in inches' ),
+                ' x ',
+                input( type=>'float', id=>'txtHeight', name=>'txtHeight', value=>$$variable{txtHeight}, onkeyup=>'dimensions_onChange(this.form);', min=>0, title=>'Flat Height in inches' ),
                 );
             ) ?>
 				</p>

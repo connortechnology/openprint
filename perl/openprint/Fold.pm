@@ -107,8 +107,9 @@ sub delete {
 } # end sub delete
 
 sub copy {
+	my $self = $_[0];
 	my $new = new openprint::Fold();
-	@$new{keys %fields} = values %fields;
+	@$new{keys %fields} =  @$self{ keys %fields};
 	@{$$new{'Specifications'}} = map { $_->copy() } $_[0]->Specifications();
 	delete $$new{id};
 	return $new;
