@@ -436,7 +436,7 @@ sub signature_calc {
 			if ( $$calc_hash{'Folding::signature_calc::equipment'} ) {
 				@my_equipment = @{$$calc_hash{'Folding::signature_calc::equipment'}};
 			} else {
-				my @folding_capable = ('Y');
+				my @folding_capable = ('Y', 'When Printing');
 				push @folding_capable, 'For Pocket Folders' if $Project->Type()->name() eq 'PresentationFolders';
 				push @folding_capable, 'When PerfectBound' if $$services{'PerfectBound'};
 				push @folding_capable, 'When Stitching' if ( $$services{'SaddleStitching'} or $$services{'LoopStitching'} );
@@ -653,7 +653,7 @@ sub signature_calc {
 
 	# Foreach equipment, figure out which folds are required.
 	foreach my $Equipment ( @my_equipment ) {
-		$Breakdown .= '<b>Equipment '.$$Equipment{name}.':</b><br/>';
+		$Breakdown .= '<br/><b>Equipment '.$$Equipment{name}.':</b><br/>';
 		#$openprint::log->debug('2 Equipment '.$Equipment->name()) if DEBUG;
 		if ( $$services{'NoOfflineBindery'} and ( $$sig_specs{'ddmPress'.$qty_index} ne $Equipment->strid() ) ) {
 			$Breakdown .= "No Offline bindery and not printing on $$Equipment{name}.<br/>";

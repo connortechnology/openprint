@@ -28,6 +28,7 @@ use constant DEBUG => 0;
 my %variables = (
 	'ddmProjectSize'=>['save','output'],
 	'txtFinalWidth'=>['save'],'txtFinalHeight'=>['save'], 
+	'txtWidth'=>['save'],'txtHeight'=>['save'], 
 	'txtTotalPageQuantity'=>['save'], 
 	'rdbCover'=>['save','output'],
 	'txtGateFoldedSpreadQuantity'=>['save','output'],
