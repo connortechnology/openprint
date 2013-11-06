@@ -16,6 +16,7 @@
 
 package openprint::Estimating::Collating;
 use strict;
+use constant DEBUG => 1;
 
 require openprint::service;
 require openprint::Project;
@@ -102,12 +103,14 @@ $log->debug("COLLATING!!!!!!!!!!!!!!!!!!");
 		if ( (!$$specs{'OverrideSignatureCount'.$qty_index} ) or ( $$specs{'OverrideSignatureCount'.$qty_index} ne 'Y' ) ) {
 
 			$$specs{'txtSignatureCount'.$qty_index} = 0;
-			foreach my $sig_id ( $Project->signatures() ) {
+			foreach my $sig_id ( $Project->signatures({sort=>1}) ) {
 				my $sig_specs = openprint::service::get_specs_ref( $Project, $sig_id );
 				next if ! $$sig_specs{"txtImposition$qty_index"};
 				my @folding_impositions = openprint::Estimating::Folding::load_Impositions( $folding_specs, $sig_specs, $qty_index ) if $folding_specs;
+$openprint::log->debug("Got " . @folding_impositions . " folds for form $$sig_specs{SignatureIndex}") if DEBUG;
 				if ( @folding_impositions ) {
 					foreach my $Fold_Imp ( @folding_impositions ) {
+$openprint::log->debug("Fold $qty_index: " . $Fold_Imp->type() . ' ' . $Fold_Imp->pages() . 'pg ' . $Fold_Imp->quantity() . ' ' . $Fold_Imp->imposition() );
 						$$specs{'txtSignatureCount'.$qty_index} += $Fold_Imp->quantity();
 					} # end foreach Fold product
 				} else {

@@ -1708,7 +1708,9 @@ sub load_Impositions($$$) {
 		my $imp = new openprint::Imposition();
 		$imp->columns( $$folding_specs{"FoldColumns-$$sig_specs{SignatureIndex}-$qty_index-$fold_index"} );
 		$imp->rows( $$folding_specs{"FoldRows-$$sig_specs{SignatureIndex}-$qty_index-$fold_index"} );
-		my ( $pages ) = $$folding_specs{"FoldRows-$$sig_specs{SignatureIndex}-$qty_index-$fold_index"} =~ /^(\d+)PageFold$/;
+
+		$imp->type( $$folding_specs{"FoldType-$$sig_specs{SignatureIndex}-$qty_index-$fold_index"} );
+		my ( $pages ) = $$folding_specs{"FoldType-$$sig_specs{SignatureIndex}-$qty_index-$fold_index"} =~ /^(\d+)PageFold$/;
 		$imp->pages( $pages );
 		$imp->quantity( $$folding_specs{"FoldQty-$$sig_specs{SignatureIndex}-$qty_index-$fold_index"} );
 		push @results, $imp;
