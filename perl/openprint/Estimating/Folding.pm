@@ -436,7 +436,7 @@ sub signature_calc {
 			if ( $$calc_hash{'Folding::signature_calc::equipment'} ) {
 				@my_equipment = @{$$calc_hash{'Folding::signature_calc::equipment'}};
 			} else {
-				my @folding_capable = ('Y', 'When Printing');
+				my @folding_capable = ('Y');
 				push @folding_capable, 'For Pocket Folders' if $Project->Type()->name() eq 'PresentationFolders';
 				push @folding_capable, 'When PerfectBound' if $$services{'PerfectBound'};
 				push @folding_capable, 'When Stitching' if ( $$services{'SaddleStitching'} or $$services{'LoopStitching'} );
