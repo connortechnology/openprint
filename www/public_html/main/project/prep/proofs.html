@@ -17,25 +17,25 @@
 		<!-- The rest is done for each qty -->
 		<? echo ( 
 			my $html = '';
-			foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
-				my $quantity = $$variable{'Project'}->quantity($qty_index);
+			foreach my $qty_index ( $$variable{Project}->quantity_indexes() ) {
+				my $quantity = $$variable{Project}->quantity($qty_index);
 				$html .= "<fieldset><legend>The following results are for Quantity $qty_index ($quantity)</legend>";
 
 				foreach my $s_id ( $$variable{Project}->signatures({sort=>1}) ) {
-					my $sig_specs = openprint::service::get_specs_ref( $$variable{'Project'}, $s_id );
+					my $sig_specs = openprint::service::get_specs_ref( $$variable{Project}, $s_id );
 					my $signature_index = $$sig_specs{SignatureIndex};
 					if ( $$sig_specs{'txtImposition'.$qty_index} ) {
-						$$variable{'Reference'} = openprint::service::summary( $$variable{'Project'}->id(), $s_id );
-						$$variable{'Reference'} .= '<br/>Running ' . openprint::service::summary( $$variable{'Project'}->id(), $s_id, $qty_index );
+						$$variable{'Reference'} = openprint::service::summary( $$variable{Project}->id(), $s_id );
+						$$variable{'Reference'} .= '<br/>Running ' . openprint::service::summary( $$variable{Project}->id(), $s_id, $qty_index );
 					} else {
 						next;
 					} # end if
-					$html .= $$variable{'Reference'};
+					$html .= $$variable{Reference};
 
 					$html .= sprintf( q`
 						<table>
 							<tr>
-								<th class="quantity">Qty</th>
+								<th class="quantity">Quantity</th>
 								<th class="dimensions">Dimensions</th>
 								<th class="type">Type</th>
 								<th class="Price">MR (%1$s)</th>
