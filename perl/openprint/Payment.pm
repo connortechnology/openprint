@@ -38,14 +38,14 @@ $serial = 'payments_id_seq';
 	amount	=>	[ 's/[^\d\.]//g' ],
 );
 %defaults = (
-	'order_id'		=>	undef,
-	'created_on'	=> q`'NOW()'`,
-	'updated_on'	=> q`'NOW()'`,
-	'received_on'	=>	undef,
-	'completed'		=>	1,
-	'deleted'		=>	0,
-	'owner_id'		=>	q`$openprint::config{'Owner'}`,
-	amount	=>	undef,
+	order_id	=>	undef,
+	created_on	=> q`'NOW()'`,
+	updated_on	=> q`'NOW()'`,
+	received_on	=>	undef,
+	completed	=>	1,
+	deleted		=>	0,
+	owner_id	=>	q`$openprint::config{'Owner'}`,
+	amount		=>	undef,
 );
 
 sub destroy {

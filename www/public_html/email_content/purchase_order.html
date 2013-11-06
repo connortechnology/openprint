@@ -4,8 +4,8 @@
 		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
 		<title><? echo ( $config{'SiteTitle'} ) ?></title>
 		<style type="text/css">
-		<? echo ( misc::load_file( $log, $config{'SkinPath'}.'/css/email.css' ); ) ?>
-		<? echo ( misc::load_file( $log, $config{'SkinPath'}.'/css/purchase_order.css' ); ) ?>
+		<?include(/css/email.css)?>
+		<?include(/css/purchase_order.css)?>
 		</style>
 		<base href="<? echo ( $config{'ExternalSiteURL'} ) ?>"/>
 	</head>
@@ -28,9 +28,9 @@
 				</div>
 				<div class="PageTitle">
 					<h1>PURCHASE ORDER</h1><br/>
-					P.O. # [ <? echo ( $$variable{'PurchaseOrder'}->id() ) ?> ]<br/>
+					P.O. # [ <? echo ( $$variable{PurchaseOrder}->id() ) ?> ]<br/>
 					Date: 
-					<? echo ( Date::Format::time2str($config{'DateFormat'}, Date::Parse::str2time( $$variable{'PurchaseOrder'}->created_on() ) ) ) ?><br/>
+					<? echo ( Date::Format::time2str($config{'DateFormat'}, Date::Parse::str2time( $$variable{PurchaseOrder}->created_on() ) ) ) ?><br/>
 				</div>
 			</div>
 			<div class="Vendor">
@@ -38,14 +38,14 @@
 				<label>VENDOR</label>
 		<? echo (
 		my $html = '';
-		$html .= $$variable{'PurchaseOrder'}->vendor_contact().'<br/>' if $$variable{'PurchaseOrder'}->vendor_contact();
-		$html .= $$variable{'PurchaseOrder'}->vendor_name().'<br/>' if $$variable{'PurchaseOrder'}->vendor_name();
-		$html .= $$variable{'PurchaseOrder'}->vendor_address1().'<br/>' if $$variable{'PurchaseOrder'}->vendor_address1();
-		$html .= $$variable{'PurchaseOrder'}->vendor_address2().'<br/>' if $$variable{'PurchaseOrder'}->vendor_address2();
-		$html .= sprintf('%s %s, %s', $$variable{'PurchaseOrder'}->get('vendor_city','vendor_state', 'vendor_postalcode')) . '<br/>';
-		$html .= 'Phone: ' . $$variable{'PurchaseOrder'}->vendor_phone().'<br/>' if $$variable{'PurchaseOrder'}->vendor_phone();
-		$html .= 'Fax: '.$$variable{'PurchaseOrder'}->vendor_fax().'<br/>' if $$variable{'PurchaseOrder'}->vendor_fax();
-		$html .= $$variable{'PurchaseOrder'}->vendor_email().'<br/>' if $$variable{'PurchaseOrder'}->vendor_email();
+		$html .= $$variable{PurchaseOrder}->vendor_contact().'<br/>' if $$variable{PurchaseOrder}->vendor_contact();
+		$html .= $$variable{PurchaseOrder}->vendor_name().'<br/>' if $$variable{PurchaseOrder}->vendor_name();
+		$html .= $$variable{PurchaseOrder}->vendor_address1().'<br/>' if $$variable{PurchaseOrder}->vendor_address1();
+		$html .= $$variable{PurchaseOrder}->vendor_address2().'<br/>' if $$variable{PurchaseOrder}->vendor_address2();
+		$html .= sprintf('%s %s, %s', $$variable{PurchaseOrder}->get('vendor_city','vendor_state', 'vendor_postalcode')) . '<br/>';
+		$html .= 'Phone: ' . $$variable{PurchaseOrder}->vendor_phone().'<br/>' if $$variable{PurchaseOrder}->vendor_phone();
+		$html .= 'Fax: '.$$variable{PurchaseOrder}->vendor_fax().'<br/>' if $$variable{PurchaseOrder}->vendor_fax();
+		$html .= $$variable{PurchaseOrder}->vendor_email().'<br/>' if $$variable{PurchaseOrder}->vendor_email();
 		return $html;
 		) ?>
 			</p>
@@ -55,14 +55,14 @@
 					<label>SHIP TO</label>
 		<? echo (
 		my $html = '';
-		$html .= $$variable{'PurchaseOrder'}->shipto_contact().'<br/>' if $$variable{'PurchaseOrder'}->shipto_contact();
-		$html .= $$variable{'PurchaseOrder'}->shipto_name().'<br/>' if $$variable{'PurchaseOrder'}->shipto_name();
-		$html .= $$variable{'PurchaseOrder'}->shipto_address1().'<br/>' if $$variable{'PurchaseOrder'}->shipto_address1();
-		$html .= $$variable{'PurchaseOrder'}->shipto_address2().'<br/>' if $$variable{'PurchaseOrder'}->shipto_address2();
-		$html .= sprintf('%s %s, %s', $$variable{'PurchaseOrder'}->get('shipto_city','shipto_state', 'shipto_postalcode')) . '<br/>';
-		$html .= 'Phone: ' . $$variable{'PurchaseOrder'}->shipto_phone().'<br/>' if $$variable{'PurchaseOrder'}->shipto_phone();
-		$html .= 'Fax: ' . $$variable{'PurchaseOrder'}->shipto_fax().'<br/>' if $$variable{'PurchaseOrder'}->shipto_fax();
-		$html .= $$variable{'PurchaseOrder'}->shipto_email().'<br/>' if $$variable{'PurchaseOrder'}->shipto_email();
+		$html .= $$variable{PurchaseOrder}->shipto_contact().'<br/>' if $$variable{PurchaseOrder}->shipto_contact();
+		$html .= $$variable{PurchaseOrder}->shipto_name().'<br/>' if $$variable{PurchaseOrder}->shipto_name();
+		$html .= $$variable{PurchaseOrder}->shipto_address1().'<br/>' if $$variable{PurchaseOrder}->shipto_address1();
+		$html .= $$variable{PurchaseOrder}->shipto_address2().'<br/>' if $$variable{PurchaseOrder}->shipto_address2();
+		$html .= sprintf('%s %s, %s', $$variable{PurchaseOrder}->get('shipto_city','shipto_state', 'shipto_postalcode')) . '<br/>';
+		$html .= 'Phone: ' . $$variable{PurchaseOrder}->shipto_phone().'<br/>' if $$variable{PurchaseOrder}->shipto_phone();
+		$html .= 'Fax: ' . $$variable{PurchaseOrder}->shipto_fax().'<br/>' if $$variable{PurchaseOrder}->shipto_fax();
+		$html .= $$variable{PurchaseOrder}->shipto_email().'<br/>' if $$variable{PurchaseOrder}->shipto_email();
 		return $html;
 		) ?>
 				</p>
@@ -75,55 +75,62 @@
 					<th class="delivery_date">Delivery Date</th>
 				</tr>
 				<tr>
-					<td class="method"><? echo ( $$variable{'PurchaseOrder'}->shipping_method() ) ?></td>
-					<td class="terms"><? echo ( $$variable{'PurchaseOrder'}->shipping_terms() ) ?></td>
+					<td class="method"><? echo ( $$variable{PurchaseOrder}->shipping_method() ) ?></td>
+					<td class="terms"><? echo ( $$variable{PurchaseOrder}->shipping_terms() ) ?></td>
 					<td class="delivery_date">
-						<? echo ( $$variable{'PurchaseOrder'}->delivered_on_switch() ne 'DATE' ? $$variable{'PurchaseOrder'}->delivered_on_switch().'<br/>' : '' ) ?>
-						<? echo ( $$variable{'PurchaseOrder'}->delivered_on() ? Date::Format::time2str($config{'DateFormat'}, Date::Parse::str2time( $$variable{'PurchaseOrder'}->delivered_on() ) ) : '' ) ?>
+						<? echo ( $$variable{PurchaseOrder}->delivered_on_switch() ne 'DATE' ? $$variable{PurchaseOrder}->delivered_on_switch().'<br/>' : '' ) ?>
+						<? echo ( $$variable{PurchaseOrder}->delivered_on() ? Date::Format::time2str($config{'DateFormat'}, Date::Parse::str2time( $$variable{PurchaseOrder}->delivered_on() ) ) : '' ) ?>
 					</td>
 				</tr>
 			</table>
-			<br class="spacer"/>
-			<table>
-				<tr>
-					<th class="quantity">QTY</th>
-					<th class="product">ITEM</th>
-					<th class="description">ITEM / DESCRIPTION</th>
-					<th class="docket">DOCKET</th>
-					<th class="price">UNIT PRICE</th>
-					<th class="total">LINE TOTAL</th>
-				</tr>
+			<div class="items">
+				<div class="header">
+					<div class="quantity">QTY</div>
+					<div class="product">ITEM</div>
+					<div class="description">ITEM / DESCRIPTION</div>
+					<div class="docket">DOCKET</div>
+					<div class="price">UNIT PRICE</div>
+					<div class="line_total">LINE TOTAL</div>
+				</div>
 		<? echo ( my $html = '';
-		foreach my $C ( $$variable{'PurchaseOrder'}->Contents() ) {
-			$html .= sprintf('<tr>
-				<td class="quantity">%1$d</td>
-				<td class="product">%2$s</td>
-				<td class="description">%3$s</td>
-				<td class="docket">%4$s</td>
-				<td class="price">%5$s</td>
-				<td class="total">%6$s</td>
-			</tr>', $C->qty(), $C->item(), $C->description(), $C->docket(), openprint::Currency::format($C->price(),4), openprint::Currency::format($C->total()) );
+		foreach my $C ( $$variable{PurchaseOrder}->Contents() ) {
+			$html .= sprintf('<div class="item">
+				<div class="quantity">%1$d</div>
+				<div class="product">%2$s</div>
+				<div class="description">%3$s</div>
+				<div class="docket">%4$s</div>
+				<div class="price">%5$s</div>
+				<div class="line_total">%6$s</div>
+			</div>', $C->qty(), $C->item(), $C->description(), $C->docket(), openprint::Currency::format($C->price(),4), openprint::Currency::format($C->total()) );
 		} # end foreach C
 		return $html;
 		) ?>
-		<tr>
-			<td colspan="5" class="totals">SUBTOTAL</td>
-			<td class="total"><? echo ( openprint::Currency::format( $$variable{'PurchaseOrder'}->subtotal() ); ) ?></td>
-		</tr>
+</div>
+<div class="totals">	
+		<div class="subtotal">
+			<label>SUBTOTAL</label>
+			<div class="amount"><? echo ( openprint::Currency::format( $$variable{PurchaseOrder}->subtotal() ); ) ?></div>
+		</div>
 		<? echo ( 
 			my $html;
-			foreach my $Tax ( $$variable{'PurchaseOrder'}->Taxes() ) {
-				$html .= sprintf('<tr class="tax"><td colspan="5" class="totals">%s (%d%)</td><td class="total">%s</td></tr>',
+			foreach my $Tax ( $$variable{PurchaseOrder}->Taxes() ) {
+				$html .= sprintf('<div class="tax"><label>%s (%d%)</label><div class="amount">%s</div></div>',
 					$Tax->name(), $Tax->rate(), openprint::Currency::format( $Tax->amount() ),
 					);
 			} # end foreach Tax
 			return $html;
 		) ?>
-		<tr>
-			<td colspan="5" class="totals">TOTAL</td>
-			<td class="total"><? echo ( openprint::Currency::format( $$variable{'PurchaseOrder'}->total() ); ) ?></td>
-		</tr>
-		</table>
+		<div class="payments_total">
+			<label>Payments</label>
+			<div class="amount"><? echo ( openprint::Currency::format( $$variable{PurchaseOrder}->payments_total() ); ) ?></div>
+		</div>
+		<div class="total">
+			<label>TOTAL</label>
+			<div class="amount"><? echo ( openprint::Currency::format( $$variable{PurchaseOrder}->total() ); ) ?></div>
+		</div>
+	</div>
+<?include(/employee/purchase_order/_payments_view.html)?>
+<? if (  $$variable{PurchaseOrder}->Assets() ) ?>
 <div id="Assets">
 <h3>Attachments:</h3>
 <table>
@@ -138,7 +145,7 @@
     <tbody>
 <? echo ( 
 my $html;
-foreach my $Object_Asset ( $$variable{'PurchaseOrder'}->Assets() ) {
+foreach my $Object_Asset ( $$variable{PurchaseOrder}->Assets() ) {
     my $Asset = $Object_Asset->Asset();
     $html .= sprintf('
         <tr>
@@ -148,7 +155,7 @@ foreach my $Object_Asset ( $$variable{'PurchaseOrder'}->Assets() ) {
             <td class="Thumbnail"><a href="/assets/%1$s" target="_blank"><img src="%5$s" alt=""/></a></td>
         </tr>
         ', $Asset->on_disk_filename(), $Asset->name(), $Asset->filename(),
-        Date::Format::time2str( $config{'DateTimeFormat'}, Date::Parse::str2time( $Asset->created_on() ) ),
+        format_datetime( $Asset->created_on() ),
         $Asset->thumbnail_url(),
         );
 } # end foreach Asset
@@ -157,6 +164,7 @@ return $html;
     </tbody>
 </table>
 </div>
+<? endif (  $$variable{PurchaseOrder}->Assets() ) ?>
 			<div class="leftColumn">
 				<ol>
 					<li> Please send your invoice with a copy of delivery note signed by receiving party.</li>
@@ -165,16 +173,16 @@ return $html;
 				</ol>
 			</div>
 			<div class="rightColumn" style="text-align: right;">
-			All prices are in <? echo ( $$variable{'PurchaseOrder'}->Currency()->name() ) ?>.
+			All prices are in <? echo ( $$variable{PurchaseOrder}->Currency()->name() ) ?>.
 			<br/><br/>
-		<? if ( $$variable{'PurchaseOrder'}->authorized() ) ?>
-				<div class="AuthorizedBy"><? echo ( $$variable{'PurchaseOrder'}->Authorized_By()->name() ) ?></div>
-				<div class="AuthorizedOn"><? echo ( Date::Format::time2str($config{'DateFormat'}, Date::Parse::str2time($$variable{'PurchaseOrder'}->authorized_on())); ) ?><br/></div>
+		<? if ( $$variable{PurchaseOrder}->authorized() ) ?>
+				<div class="AuthorizedBy"><? echo ( $$variable{PurchaseOrder}->Authorized_By()->name() ) ?></div>
+				<div class="AuthorizedOn"><? echo ( format_date($$variable{PurchaseOrder}->authorized_on()) ) ?><br/></div>
 				<br class="spacer"/>
 				<hr/>
-				<div class="AuthorizedBy"><i>Authorized<? if ( $$variable{'PurchaseOrder'}->authorized_by() ) ?> by<? endif ( $$variable{'PurchaseOrder'}->authorized_by() ) ?></i></div>
+				<div class="AuthorizedBy"><i>Authorized<? if ( $$variable{PurchaseOrder}->authorized_by() ) ?> by<? endif ( $$variable{PurchaseOrder}->authorized_by() ) ?></i></div>
 				<div class="AuthorizedOn"><i>Date</i></div>
-		<? endif ( $$variable{'PurchaseOrder'}->authorized() ) ?>
+		<? endif ( $$variable{PurchaseOrder}->authorized() ) ?>
 			</div>
 			<br class="spacer"/>
 			<div class="Logs">
@@ -186,8 +194,8 @@ return $html;
 					</tr>
 					<? echo (
 						my $html = '';
-						foreach my $L ( $$variable{'PurchaseOrder'}->Logs() ) {
-							$html .= sprintf('<tr><td class="Date">%s</td><td class="description">%s</td></tr>',  Date::Format::time2str($config{'DateFormat'}, Date::Parse::str2time( $L->created_on() ) ), $L->reason() );
+						foreach my $L ( $$variable{PurchaseOrder}->Logs() ) {
+							$html .= sprintf('<tr><td class="Date">%s</td><td class="description">%s</td></tr>', format_datetime( $L->created_on() ), $L->reason() );
 						} # end foreach
 						return $html;
 					) ?>

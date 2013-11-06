@@ -65,6 +65,10 @@
 			<label>Description</label>
 			<input type="text" id="description" name="description" value="<? hecho ( $$variable{'Material'}->description(); ) ?>" />
 		</p>
+		<p> 
+			<label>Activity Code</label>
+			<input type="text" id="activity_code" name="activity_code" value="<? echo ( $$variable{Material}->activity_code() ) ?>" />
+		</p>
 	</fieldset>
 	<fieldset class="rightColumn"><legend>Purchasing Information</legend>
 		<p> 

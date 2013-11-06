@@ -1,6 +1,6 @@
 function load_content_type( index, type ) {
 	$('content-'+index).innerHTML = '';
-	new Ajax.Updater('content-'+index, '_po_content_'+type+'.html', { method: 'get', parameters: { content_id: index } } );
+	new Ajax.Updater('content-'+index, '_po_content_'+type+'.html', { parameters: { content_id: index } } );
 } // end function load_content_type
 
 function dept_onchange( element ) {
@@ -79,8 +79,10 @@ function update_totals( form ) {
 			tax = 0;
 		} // end if
 		$('tax_amount-'+tax_ids[i]).innerHTML = do_decimals( tax, 2 );
+		
 		total += parseFloat( tax );
 	} // end for
+	total -= parseFloat( $('payments_total').innerHTML );
 
 	$('total').innerHTML = do_decimals( total, 2 );
 } // end function update_totals
@@ -98,3 +100,14 @@ function getSelectionId(input, li) {
 		} // end if
 	} // end if
 } // end function getSelectionId
+
+function add_Payment(po_id) {
+	new Ajax.Updater( 'Payments', '_payments_edit.html', { parameters: { 
+		po_id: po_id, 
+		action: 'Add',
+		amount: $('payment_amount').value,
+		currency_id: $('payment_currency_id').value,
+		received_on: get_date_value( 'payment_received_on' ),
+		description: $('payment_description').value,
+		}, evalScripts: true } );
+} // end function addPayment)po_id)
