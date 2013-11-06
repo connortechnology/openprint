@@ -1528,7 +1528,7 @@ Ajax.Request.prototype.abort = function() {
 	Ajax.activeRequestCount--;
 };
 
-function get_date_value( prefix, form=null ) {
+function get_date_value( prefix ) {
 	var date = new Array();
 	[ 'year', 'month', 'day' ].each( function(suffix) {
 		var e = $(prefix+'_'+suffix);
