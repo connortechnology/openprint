@@ -250,6 +250,23 @@ sub signature_calc {
 	if ( $$specs{'OverrideImposition'.$qty_index} eq 'Y' ) {
 		if ( $imposition < $$specs{'Imposition'.$qty_index} ) {
 			$results{'alert'} .= "Can't stitch $$specs{'Imposition'.$qty_index} out";
+	foreach my $I ( @$Impositions ) {
+			if ( ($$I{'FoldingImposition'} and $$I{'FoldingImposition'} % 2 ) ) {
+				$results{'alert'} .= ' Folding not multiple of 2out<br/>';
+			} # end if
+			if ( $$I{'imposition'} % 2 ) {
+				$results{'alert'} .= ' imposition not multiple of 2out<br/>';
+			} # end if
+			if ( ($$I{'image_orientation'} eq 'Vertical' and $$I{'rows'} % 2 ) ) {
+				$results{'alert'} .= ' vertical and rows not multiple of 2out<br/>';
+			} # end if
+			if ( $$I{'image_orientation'} eq 'Horizontal' and $$I{'columns'} % 2 ) {
+				$results{'alert'} .= ' horizontal and cols not multiple of 2out<br/>';
+			} # end if
+	} # end foreach
+	
+				
+
 			$results{'Status'} = 'uncalculated';
 			return \%results;
 		} # end if

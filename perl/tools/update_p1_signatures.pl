@@ -110,6 +110,9 @@ foreach my $Project ( openprint::Project->find( 'order'=>'id desc',
 			openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'txtSignatureType', 'Interior Pages' );
 			openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'Group', '2' );
 			openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'GroupPageQuantity', $$printing_specs{'txtTotalPageQuantity'} - ( $$printing_specs{'rdbCover'} eq 'Self' ? 0 : 4 ) );
+			foreach my $qty_index ( $Project->quantity_indexes() ) {
+			openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'MatchGrain'.$qty_index, 'Y' );
+			} # end foreach
 		} else {
 # Gate Fold?
 			openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'Group', '3' );

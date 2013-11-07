@@ -729,7 +729,6 @@ sub signature_calc {
 # Each piece of equipment can do different folds.	So we have to calculate what we can do as well.
 				if ( $$Equipment{id} == $$Press{id} ) {
 # Special case because we can't cut it in the middle of printing.	This case is basically for web presses
-$Imposition->display("Folding on press");
 
 					my $Fold = $Equipment->Fold( {
 							'pages'				=>	$Imposition->pages(),

@@ -10,12 +10,12 @@
 		</li>
 		<li>
 			<label>Activity Code</label>
-			<input type="text" name="search_activity_code" value="<?echo($session{/administrator/materials/edit.html?search_activity_code})?>" />
+			<input type="text" name="search_activity_code" value="<?echo($session{'/administrator/materials/edit.html?search_activity_code'})?>" />
 		</li>
 		<li><label>Equipment</label>
 			<select name="equipment_id" onchange="form.btnFunction.value='';f1.submit();">
 				<option value="">All</option>
-				<? echo ( make_drop_down( [ map { $_->id(), $_->name() } openprint::Equipment->find('order'=>'lower('.$openprint::Equipment::fields{'name'}.')') ], $param{'equipment_id'} ); ) ?>
+				<? echo ( make_drop_down( openprint::Equipment->dropdown( order=>'lower('.$openprint::Equipment::fields{name}.')'), $param{equipment_id} ); ) ?>
 			</select>
 		</li>	
 		<li> 

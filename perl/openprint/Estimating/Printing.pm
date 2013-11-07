@@ -770,12 +770,12 @@ sub calc_from_imposition {
 
 $openprint::log->warn("Getting Previous Forms:");
 		$$specs{'PreviousForms'.$qty_index} = 0;
-		$$project{'roll2sheetcharged'} = 0;
+		$$project{roll2sheetcharged} = 0;
 		my %PaperCounts;
 		my %PlateCounts;
-		foreach my $index ( $Project->signatures() ) {
+		foreach my $index ( sort $Project->signatures() ) {
 $openprint::log->warn("Getting Previous Forms: $index");
-			next if ($index >= $service_id);
+			last if ($index >= $service_id);
 			my $sig_specs = openprint::service::get_specs_ref( $Project, $index );
 			$PlateCounts{$$specs{'PlateID'.$qty_index}} += $$sig_specs{'txtPlateQuantity'.$qty_index};
 			$PlateCounts{'Blank'.$$specs{'PlateID'.$qty_index}} += $$sig_specs{'BlankPlateQuantity'.$qty_index};
@@ -2216,14 +2216,14 @@ $openprint::log->debug("aftger get printing_types: " . ( sprintf('%.4f', tv_inte
 		my %previous_forms_cache;
 		my %PaperCounts;
 		my %PlateCounts;
-		foreach my $index ( $Project->signatures() ) {
+		foreach my $index ( sort $Project->signatures() ) {
 # Get plates in each previous signature, so we can get qty discounts
-			next if ($index >= $service_index);
+			last if ($index >= $service_index);
 			my $sig_specs = openprint::service::get_specs_ref( $Project, $index );
 			next if $$sig_specs{'pages_supplied'} eq 'Y';
 			$PlateCounts{$$sig_specs{'PlateID'.$qty_index}} += $$sig_specs{'txtPlateQuantity'.$qty_index};
 			$PlateCounts{'Blank'.$$sig_specs{'PlateID'.$qty_index}} += $$sig_specs{'BlankPlateQuantity'.$qty_index};
-			$$project{'roll2sheetcharged'} = 1 if $$sig_specs{'Roll2SheetCharge'.$qty_index};
+			$$project{roll2sheetcharged} = 1 if $$sig_specs{'Roll2SheetCharge'.$qty_index};
 			$$project{'stocksetupcharged'} = 1 if $$sig_specs{'StockSetupCharge'.$qty_index};
 			my $hash_key = join(',', @$sig_specs{'ddmPress'.$qty_index,'ddmRunStyle'.$qty_index,'PageQuantity'.$qty_index,'txtImposition'.$qty_index,'hdnImpositionColumns'.$qty_index} );
 			$previous_forms_cache{$hash_key} += 1;
@@ -2234,6 +2234,7 @@ foreach my $plate_id ( keys %PlateCounts ) {
 foreach my $k ( keys %previous_forms_cache ) {
 	$log->debug("Previous forms: $k $previous_forms_cache{$k}");
 }
+$openprint::log->debug("roll2sheetcharged: $$project{roll2sheetcharged}");
 		if ( ! $$project{'stocksetupcharged'} ) {
 			# Check to see if there even are any stock setup prices.  If not, don't both estimating them later
 			if ( ! openprint::PaperPrice->find('service'=>'Setup') ) {
@@ -2555,7 +2556,7 @@ sub breakdown {
 	$breakdown .= sprintf('%s Colour Bar %s %s, Bleed: %s<br/>', ( $Press ? $Press->strid() : '' ), $Imposition->colour_bar_size(), $Imposition->colour_bar_orientation(), $$Imposition{'bleed_size'} );
 	$breakdown .= '<b>Setups</b><br/>';
 	$breakdown .= $$price{'Setup Breakdown'};
-	$breakdown .= sprintf('Roll2Sheet Charge: $%1$.2f<br/>', $$price{'Roll2SheetMakeReady'} ) if $$price{'Roll2SheetMakeReady'};
+	$breakdown .= sprintf('Roll2Sheet Charge: $%.2f<br/>', $$price{'Roll2SheetMakeReady'} ) if $$price{Roll2SheetMakeReady};
 	$breakdown .= sprintf('Stock Setup: $%1$.2f<br/>', $$price{'StockSetup'} ) if $$price{'StockSetup'};
 	if ( $$Imposition{versions} ) {
 		my $VersionPrice = $$price{'Version Price'};	
@@ -3090,11 +3091,12 @@ sub get_project_price {
 			$PlateCounts{$$price{'Plate Costs'}{'Plate ID'}} += $$price{'Plate Costs'}{'Plate Count'};
 			$PlateCounts{'Blank'.$$price{'Plate Costs'}{'Plate ID'}} += $$price{'Plate Costs'}{'Blank Plates'};
 			$PaperCounts{$Paper->id_string()} += $$price{'Stock Qty'};
-			if ( 1 ) {
+			if ( 0 ) {
 # Gets done later on, why do it here?  Maybe to fuill in plate costs... or to use them in best_price calcs...
 # I put this back on Sept 17th because for a 16+8, it didn't have the plate costs. Technically it should be done later when all plates are accounted for
 # Why doesn't the same lines down below do the job?
 # Because the one dowre runs when Unspecified Pages % pages is 0.  with a 16+8 it's not.
+# THis should happen down below
 
 				my $results = plate_cost( $price, \%PlateCounts );
 				$$price{'Total Cost'} += $$results{'Price'};
@@ -3145,7 +3147,6 @@ $openprint::log->error( Data::Dumper::Dumper( $price ) );
 					$PlateCounts{'Blank'.$$sig_price{'Plate Costs'}{'Plate ID'}} += $$sig_price{'Plate Costs'}{'Blank Plates'};
 					$$price{'Comparison Cost'} += $$sig_price{'Comparison Cost'};
 
-					my $results = plate_cost( $sig_price, \%PlateCounts );
 					$$sig_price{Imposition} = $newimp;
 					push @total_impositions, $newimp;
 					push @{$$price{Impositions}}, $newimp;
@@ -3198,7 +3199,6 @@ $openprint::log->error( Data::Dumper::Dumper( $price ) );
 						$PlateCounts{'Blank'.$$sig_price{'Plate Costs'}{'Plate ID'}} += $$sig_price{'Plate Costs'}{'Blank Plates'};
 						$$price{'Comparison Cost'} += $$sig_price{'Comparison Cost'};
 
-						my $results = plate_cost( $sig_price, \%PlateCounts );
 						push @total_impositions, $newimp;
 						push @{$$price{Impositions}}, $newimp;
 						$versions -= $$newimp{versions};
@@ -3236,7 +3236,6 @@ $openprint::log->error( Data::Dumper::Dumper( $price ) );
 						   ) {
 
 							my $sig_price = calc_price( $Project, $$new_specs{'ServiceIndex'}, $imp, $project, $services, $new_specs, $qty, $qty_index, \%PlateCounts, \%washed_colours, \@total_impositions );
-							my $results = plate_cost( $sig_price, \%PlateCounts );
 							$imp->display( $recursion_depth . ' UPQ: ' . $upq . ' first level calc_price' ) if DEBUG;
 #XXX
 #$$imp{price} = $sig_price;
@@ -3326,6 +3325,7 @@ $openprint::log->error( Data::Dumper::Dumper( $price ) );
 									get_project_price( $Project, $$new_specs{ServiceIndex}, $project, $service_specs, $new_specs, $qty, $qty_index, $possible_presses, $printing_specs, $versions, \%PlateCounts, \%PaperCounts, \%washed_colours, \%previous_forms_cache, \@signatures, $impositions, $other_impositions, undef, $recursion_depth + 1 );
 							} # end if
 							$sig_price = $price_cache{$price_cache_key};
+							$price_cache{$price_cache_key} = undef;
 							#$imp->display($recursion_depth . " After recurse: $$price{'Comparison Cost'} + $$sig_price{'Comparison Cost'} " );
 							#foreach my $i ( @{$$sig_price{Impositions}} ) {
 								#$i->display($recursion_depth . " After recurse: $$sig_price{'Comparison Cost'} " );
@@ -3406,13 +3406,49 @@ $openprint::log->warn("Unable to calculate additional signatures Complete: $$sig
 
 #if ( $txtUnspecifiedPageQuantity - $$imp{pages} ) ) {
 #$log->debug("$recursion_depth : At tail? $txtUnspecifiedPageQuantity - ( $$price{'sig_count'} * $$imp{pages} ) " . ( $txtUnspecifiedPageQuantity - ( $$price{'sig_count'} * $$imp{pages} ) ) );
-			if ( (!$txtUnspecifiedPageQuantity) or ( $txtUnspecifiedPageQuantity - ( $$price{'sig_count'} * $$imp{pages} ) == 0 ) ) {
 
-				if ( $recursion_depth ) {
-					my $results = plate_cost( $price, \%PlateCounts );
-					$$price{'Total Cost'} += $$results{'Price'};
-					$$price{'Comparison Cost'} += $$results{'Price'};
-				}
+		if ( $recursion_depth == 0 ) {
+				foreach my $p ( @{$$price{prices}} ) {
+					if ( $$p{PlateCosts} ) {
+						# They may be added into the Comparison cost in one of the sub prices
+						$$price{'Comparison Cost'} -= $$p{PlateCosts};
+					} # end if
+					# This should fill in the place costs line of the breakdown
+					plate_cost( $p, \%PlateCounts );
+				} # end foreach price
+				my $results = plate_cost( $price, \%PlateCounts );
+				$$price{'Total Cost'} += $$results{'Price'};
+				$$price{'Comparison Cost'} += $$results{'Price'};
+
+				if ( $$Paper{type} eq 'Roll' and $has_sheeter ) {
+# Add Roll2SheetSetup
+					if ( ! $$project{'roll2sheetcharged'} ) {
+						if ( $$price{'Roll2SheetMakeReady'} = openprint::service::get_price( 'Roll2SheetMakeReady', undef, $Press ) ) {
+							$$price{'Comparison Cost'} += $$price{'Roll2SheetMakeReady'};
+							$$price{'Total Cost'} += $$price{'Roll2SheetMakeReady'};
+							$$price{'Setup Total'} += $$price{'Roll2SheetMakeReady'};
+						} # end if
+					} # end if
+# Add Roll2SheetRun
+					if ( my %R2SPrice = openprint::service::get_price_object( 'Roll2Sheet', $$price{'Impressions'}, $Press ) ) {
+						if ( $R2SPrice{'units'} eq 'per m' ) {
+							$$price{'Roll2SheetRunCharge'} = Math::Round::nearest(0.01,$R2SPrice{'Price'} * $$price{'Impressions'}/1000);
+						} else {
+							$openprint::log->error("Unknown units on Woll2SheetRunCharge ( $R2SPrice{'units'} for $$Press{strid}");
+						} # end if
+						$$price{'Roll2SheetUnits'} = $R2SPrice{'units'};
+						$$price{'Roll2SheetRunCost'} = $R2SPrice{'Price'};
+						$$price{'Comparison Cost'} += $$price{'Roll2SheetRunCharge'};
+						$$price{'Total Cost'} += $$price{'Roll2SheetRunCharge'};
+						$$price{'Run Total'} += $$price{'Roll2SheetRunCharge'};
+					} # end if Has Roll2Sheet Price
+				} # end if Roll & has sheeter
+		} # end if
+			if ( (!$txtUnspecifiedPageQuantity) or ( $txtUnspecifiedPageQuantity - ( $$price{'sig_count'} * $$imp{pages} ) == 0 ) ) {
+				my $results = plate_cost( $price, \%PlateCounts );
+				$$price{PlateCosts} = $$results{'Price'};
+				$$price{'Comparison Cost'} += $$results{'Price'};
+
 # I don't think this is appropriate anymore
 #$$price{'Comparison Cost'} += $$price{'sig_count'} * $$results{'Price'};
 
@@ -3491,36 +3527,13 @@ $openprint::log->warn("Unable to calculate additional signatures Complete: $$sig
 					$$price{'Total Cost'} += $$price{'Paper Total'};
 				} # end if
 
-				if ( $$Paper{type} eq 'Roll' and $has_sheeter ) {
-# Add Roll2SheetSetup
-					if ( ! $$project{'roll2sheetcharged'} ) {
-						if ( $$price{'Roll2SheetMakeReady'} = openprint::service::get_price( 'Roll2SheetMakeReady', undef, $Press ) ) {
-							$$price{'Comparison Cost'} += $$price{'Roll2SheetMakeReady'};
-							$$price{'Total Cost'} += $$price{'Roll2SheetMakeReady'};
-							$$price{'Setup Total'} += $$price{'Roll2SheetMakeReady'};
-						} # end if
-					} # end if
-# Add Roll2SheetRun
-					if ( my %R2SPrice = openprint::service::get_price_object( 'Roll2Sheet', $$price{'Impressions'}, $Press ) ) {
-						if ( $R2SPrice{'units'} eq 'per m' ) {
-							$$price{'Roll2SheetRunCharge'} = Math::Round::nearest(0.01,$R2SPrice{'Price'} * $$price{'Impressions'}/1000);
-						} else {
-							$openprint::log->error("Unknown units on Woll2SheetRunCharge ( $R2SPrice{'units'} for $$Press{strid}");
-						} # end if
-						$$price{'Roll2SheetUnits'} = $R2SPrice{'units'};
-						$$price{'Roll2SheetRunCost'} = $R2SPrice{'Price'};
-						$$price{'Comparison Cost'} += $$price{'Roll2SheetRunCharge'};
-				$$price{'Total Cost'} += $$price{'Roll2SheetRunCharge'};
-				$$price{'Run Total'} += $$price{'Roll2SheetRunCharge'};
-			} # end if
-		} # end if
 
-		if ( ! $$project{'stocksetupcharged'} ) {
-			if ( my $StockSetupPrice = $Paper->get_price( 'weight'=>$$price{'Stock Weight'}, 'service'=>'Setup', 'equipment_id'=>$Press->id() ) ) {
-				$$price{'StockSetup'} = $$StockSetupPrice{'price'};
-				$$price{'Total Cost'} += $$StockSetupPrice{'price'};
-			} # end if
-		} # end if
+				if ( ! $$project{'stocksetupcharged'} ) {
+					if ( my $StockSetupPrice = $Paper->get_price( weight=>$$price{'Stock Weight'}, service=>'Setup', equipment_id=>$Press->id() ) ) {
+						$$price{'StockSetup'} = $$StockSetupPrice{'price'};
+						$$price{'Total Cost'} += $$StockSetupPrice{'price'};
+					} # end if
+				} # end if
 
 # The idea is to only calc these on the last sig
 		if ( ($$services{'LoopStitching'} or $$services{'SaddleStitching'}) and ($$sig_specs{'txtSignatureType'} ne 'Cover Pages') ) {

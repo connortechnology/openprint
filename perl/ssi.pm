@@ -743,6 +743,9 @@ sub radio {
 
 	my $onclick = $$options{'onclick'} if $options;
 	my $html;
+	if ( $$options{default} and ! $selected ) {
+		$selected = $$options{default};
+	} # end if
 
 	while ( my ( $value, $label ) = splice @{$values}, 0, 2 ) {
 		$html .= sprintf(q`
