@@ -450,6 +450,7 @@ sub setup_project {
 	if ( ( @{$project{side_one_colours}} > 0 ) and ( @{$project{side_two_colours}} > 0 ) ) {
 		$project{print_sides} = 2;
 	} # end if
+$openprint::log->debug("$project{print_sides} : " . @{$project{side_one_colours}} . ',' . @{$project{side_two_colours}} );
 
 	$project{'side_one_colour_names'} = [ map { $$_{'name'} } @{$side_one_colours} ];
 	$project{'side_two_colour_names'} = [ map { $$_{'name'}} @{$side_two_colours} ];
@@ -520,8 +521,10 @@ $openprint::log->debug("Adding special colour for $colour");
 		} # end if
 	} # end foreach
 	$project{special_colours} = \%special_colours;
+
 	$project{'Sheet WorkColours'} = [ @{$project{side_one_colours}}, @{$project{side_one_coatings}}, (
 ( $$specs{'sides_the_same'} eq 'Y' ) ? () :  @{$project{side_two_colours}},@{$project{side_two_coatings}} ) ];
+
 	$project{'WebColours'} = [ @{$project{side_one_colours}}, @{$project{side_one_coatings}}, @{$project{side_two_colours}},@{$project{side_two_coatings}} ];
 	$project{'PerfectingColours'} = [ @{$project{side_one_colours}}, @{$project{side_one_coatings}}, @{$project{side_two_colours}},@{$project{side_two_coatings}} ];
 	$project{'Work & TurnColours'} = [ @{$project{'filtered_colours'}},@{$project{filtered_coatings}} ];
@@ -1204,6 +1207,7 @@ $openprint::log->debug("Non-process colours in get_impositions: @non_process_col
 				$openprint::log->debug("No W&T on $$Press{strid} due to multipass colors:".(scalar@{$$project{'filtered_colours'}})." > $number_of_colours " . $$Papers[0]->gsm() );
 				$do_work_turn = 0;
 			} elsif ( $$specs{'sides_the_same'} eq 'Y' ) {
+				# No point in doing W&T, should just do sheetwork
 				$do_work_turn = 0;
 			} # end if
 		} # end if
@@ -4286,69 +4290,73 @@ $openprint::log->debug("Was mixed") if DEBUG_INKS;
 			$InkMaterial = $Ink->Material();
 			my %material_price = $InkMaterial->get_price( undef, $Press );
 			$ink_price{Material} = \%material_price;
-			my $area = $Imposition->object_area() * $impressions * ($$project{'inkCoverage'}{$real_colour}/100);
+			if ( %material_price ) {
+				my $area = $Imposition->object_area() * $impressions * ($$project{'inkCoverage'}{$real_colour}/100);
 	#$openprint::log->debug("Area $area = $$Imposition{object_area} * $impressions * ($$project{'inkCoverage'}{$real_colour}/100) ");
 
 			# Not exactly sure about this, but keeping it to make topknotch keep the same prices.  Will have to do more testing and thinking
 			# Thoughts:  if the colour is on both sides, then the coverage is increased, so the area needs to be descreased.
-			$area /= 2 if $Imposition->runstyle() eq 'Sheet Work' and $$specs{'sides_the_same'} ne 'Y';
+			#$area /= 2 if $Imposition->runstyle() eq 'Sheet Work' and $$specs{'sides_the_same'} ne 'Y';
+			# if it's sheetwork, then the colours array has two copies of process colours, but when calculating ink coverages, we have been adding up the coverages to get mrre... .  so we need to decrease the area.  
+			# TOpknotch doesn't charge for ink, so it's safe to remove
 	#$openprint::log->debug("Area: $area Impressions: $impressions " . $Imposition->object_area() );
 
-			if ( $material_price{'units'} eq 'per cartridge' ) {
-				if ( sets::isin( $real_colour, $$project{'side_one_colour_names'} ) and sets::isin( $real_colour, $$project{'side_two_colour_names'} ) ) {
-	$openprint::log->debug("Aarea of $real_colour $area / 2 ");
-					$area /= 2;
+				if ( $material_price{'units'} eq 'per cartridge' ) {
+					if ( sets::isin( $real_colour, $$project{'side_one_colour_names'} ) and sets::isin( $real_colour, $$project{'side_two_colour_names'} ) ) {
+		$openprint::log->debug("Aarea of $real_colour $area / 2 ");
+						$area /= 2;
+					} # end if
+					
+					my $Coverage = $InkMaterial->New_Specification('Coverage', { range=>$grade, equipment_id=>$$Press{id}} );
+					my $qty = Math::Round::nearest( 0.01, $area/$$Coverage{value} ) if $Coverage and $$Coverage{value};
+					%material_price = $InkMaterial->get_price( $qty, $Press );
+					$ink_price{Material} = \%material_price;
+					$material_price{'Total'} += Math::Round::nearest( 0.01, $material_price{'Price'} * $qty );
+					$ink_price{Total} += $material_price{Total};
+					$price{'Ink breakdown'} .= sprintf(' mileage: %d, %.2f * $%s%s=$%.2f', $$Coverage{value}, $qty, @material_price{'Price','units','Total'});
+				} elsif ( $material_price{units} eq 'per kg' ) {
+					if ( sets::isin( $real_colour, $$project{'side_one_colour_names'} ) and sets::isin( $real_colour, $$project{'side_two_colour_names'} ) ) {
+						$area /= 2;
+					} # end if
+					my $Coverage = $InkMaterial->New_Specification('Coverage', { range=>$grade, equipment_id=>$$Press{id}} );
+					if ( ( ! $Coverage ) or ! $$Coverage{value} ) {
+						$openprint::log->debug("No Coverage for grade $grade Press: $$Press{strid}");
+					}
+					my $qty = Math::Round::nearest( 0.01, $area/$$Coverage{value} ) if $Coverage and $$Coverage{value};
+					%material_price = $InkMaterial->get_price( $qty, $Press );
+					$material_price{Total} += Math::Round::nearest( 0.01, $material_price{Price} * $qty );
+					$ink_price{Material} = \%material_price;
+					$ink_price{Total} += $material_price{Total};
+					$price{'Ink breakdown'} .= sprintf(' mileage: %d, %.2f * $%s%s=$%.2f', $$Coverage{value}, $qty, @material_price{'Price','units','Total'});
+				} elsif ( $material_price{'units'} eq 'per square foot' ) {
+					$area /= 144;
+					$material_price{'Total'} += Math::Round::nearest( 0.01, $material_price{'Price'} * $area );
+					$ink_price{Total} += $material_price{Total};
+					$price{'Ink breakdown'} .= sprintf(' Grade: %d, %.2f sq feet * $%s%s = $%.2f', $grade, $area, @material_price{'Price','units','Total'} );
+				} elsif ( $material_price{'units'} eq 'per unit' ) {
+					if ( sets::isin( $real_colour, $$project{'side_one_colour_names'} ) and sets::isin( $real_colour, $$project{'side_two_colour_names'} ) ) {
+						$area /= 2;
+					} # end if
+					my $sheets_per_ink_unit = 750000;
+					my $p = Math::Round::nearest( 0.01, $material_price{Price} * ($area/$sheets_per_ink_unit) / $$project{'print_sides'} );
+					$ink_price{Total} += $p;
+					$price{'Ink breakdown'} .= sprintf(' %.2f sq feet * $%s%s / %d sheets per unit = $%.2f', $area, @material_price{'Price','units'}, $sheets_per_ink_unit, $p );
+				} elsif ( $material_price{'units'} eq 'per square inch' ) {
+					my $p = Math::Round::nearest( 0.01, $material_price{'Price'} * $area );
+					$ink_price{Total} += $p;
+					$price{'Ink breakdown'} .= sprintf(' Grade: %d, %d sq inches * $%s%s = $%.2f', $grade, $area, @material_price{'Price','units'}, $p );
+				} elsif ( $material_price{'units'} eq 'per m' ) {
+					my $p = Math::Round::nearest( 0.01, $material_price{'Price'} * $impressions/1000 );
+					$ink_price{Total} += $p;
+					$price{'Ink breakdown'} .= sprintf( ' %d * $%.2f%s = %.2f', $impressions, @material_price{'Price','units'}, $p );
+				} elsif ( $material_price{'units'} eq 'per impression' ) {
+					my $p = Math::Round::nearest( 0.01, $ink_price{'Price'} * $impressions );
+					$ink_price{Total} += $p;
+					$price{'Ink breakdown'} .= ' ' . $impressions . " * $material_price{'Price'}$material_price{'units'} = " . $p;
+				} else {
+					$openprint::log->error("Unknown units for $colour: $ink_price{'units'}" . $$Press{'strid'} );
 				} # end if
-				
-				my $Coverage = $InkMaterial->New_Specification('Coverage', { range=>$grade, equipment_id=>$$Press{id}} );
-				my $qty = Math::Round::nearest( 0.01, $area/$$Coverage{value} ) if $Coverage and $$Coverage{value};
-				%material_price = $InkMaterial->get_price( $qty, $Press );
-				$ink_price{Material} = \%material_price;
-				$material_price{'Total'} += Math::Round::nearest( 0.01, $material_price{'Price'} * $qty );
-				$ink_price{Total} += $material_price{Total};
-				$price{'Ink breakdown'} .= sprintf(' mileage: %d, %.2f * $%s%s=$%.2f', $$Coverage{value}, $qty, @material_price{'Price','units','Total'});
-			} elsif ( $material_price{units} eq 'per kg' ) {
-				if ( sets::isin( $real_colour, $$project{'side_one_colour_names'} ) and sets::isin( $real_colour, $$project{'side_two_colour_names'} ) ) {
-					$area /= 2;
-				} # end if
-				my $Coverage = $InkMaterial->New_Specification('Coverage', { range=>$grade, equipment_id=>$$Press{id}} );
-				if ( ( ! $Coverage ) or ! $$Coverage{value} ) {
-					$openprint::log->debug("No Coverage for grade $grade Press: $$Press{strid}");
-				}
-				my $qty = Math::Round::nearest( 0.01, $area/$$Coverage{value} ) if $Coverage and $$Coverage{value};
-				%material_price = $InkMaterial->get_price( $qty, $Press );
-				$material_price{Total} += Math::Round::nearest( 0.01, $material_price{Price} * $qty );
-				$ink_price{Material} = \%material_price;
-				$ink_price{Total} += $material_price{Total};
-				$price{'Ink breakdown'} .= sprintf(' mileage: %d, %.2f * $%s%s=$%.2f', $$Coverage{value}, $qty, @material_price{'Price','units','Total'});
-			} elsif ( $material_price{'units'} eq 'per square foot' ) {
-				$area /= 144;
-				$material_price{'Total'} += Math::Round::nearest( 0.01, $material_price{'Price'} * $area );
-				$ink_price{Total} += $material_price{Total};
-				$price{'Ink breakdown'} .= sprintf(' Grade: %d, %.2f sq feet * $%s%s = $%.2f', $grade, $area, @material_price{'Price','units','Total'} );
-			} elsif ( $material_price{'units'} eq 'per unit' ) {
-				if ( sets::isin( $real_colour, $$project{'side_one_colour_names'} ) and sets::isin( $real_colour, $$project{'side_two_colour_names'} ) ) {
-					$area /= 2;
-				} # end if
-				my $sheets_per_ink_unit = 750000;
-				my $p = Math::Round::nearest( 0.01, $material_price{Price} * ($area/$sheets_per_ink_unit) / $$project{'print_sides'} );
-				$ink_price{Total} += $p;
-				$price{'Ink breakdown'} .= sprintf(' %.2f sq feet * $%s%s / %d sheets per unit = $%.2f', $area, @material_price{'Price','units'}, $sheets_per_ink_unit, $p );
-			} elsif ( $material_price{'units'} eq 'per square inch' ) {
-				my $p = Math::Round::nearest( 0.01, $material_price{'Price'} * $area );
-				$ink_price{Total} += $p;
-				$price{'Ink breakdown'} .= sprintf(' Grade: %d, %d sq inches * $%s%s = $%.2f', $grade, $area, @material_price{'Price','units'}, $p );
-			} elsif ( $material_price{'units'} eq 'per m' ) {
-				my $p = Math::Round::nearest( 0.01, $material_price{'Price'} * $impressions/1000 );
-				$ink_price{Total} += $p;
-				$price{'Ink breakdown'} .= sprintf( ' %d * $%.2f%s = %.2f', $impressions, @material_price{'Price','units'}, $p );
-			} elsif ( $material_price{'units'} eq 'per impression' ) {
-				my $p = Math::Round::nearest( 0.01, $ink_price{'Price'} * $impressions );
-				$ink_price{Total} += $p;
-				$price{'Ink breakdown'} .= ' ' . $impressions . " * $material_price{'Price'}$material_price{'units'} = " . $p;
-			} else {
-				$openprint::log->error("Unknown units for $colour: $ink_price{'units'}" . $$Press{'strid'} );
-			} # end if
+			} # end if material_price
 		} # end if
 
 		if ( ! %ink_price ) {
