@@ -3035,6 +3035,9 @@ sub get_varnish_run_price {
 		} # end if
 	} # end for each
 	return if ! $varnish_sides;
+	if ( @$side_one_colours and @$side_two_colours and $varnish_sides == 1 ) {
+		$impressions /= 2;
+	} # end if
 		
 	my %price = openprint::service::get_price_object( $log, $dbh, $variable, 'VarnishMakeReady', 1, $Press);
 	if ( $price{'units'} eq 'Per Form' ) {
@@ -3062,7 +3065,6 @@ sub get_varnish_run_price {
 	if ( sets::isin( lc $price{'units'}, [ 'per m', 'per 1000' ] ) ) {
 		$price{'Run Price'} = $price{'Price'};
 		$price{'Total'} = $price{'Price'} * $impressions/1000;
-		$price{'Total'} /= 2 if ($varnish_sides == 1);
 	} # end if
 	$varnish_price{'run_price'} = $price{'Run Price'};
 	$varnish_price{'Run Total'} = $price{'Total'};
