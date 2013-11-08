@@ -9,6 +9,7 @@
 	LogLevel debug
 	#LogLevel warn
 	
+	Alias	/calamaris			"/var/www/calamaris"
 	Alias	/images			"/var/www/point-one/skins/PointOne Graphics Inc/images"
 	Alias	/favicon.ico	"/var/www/point-one/skins/PointOne Graphics Inc/images/favicon.ico"
 	Alias	/css			"/var/www/point-one/skins/PointOne Graphics Inc/css"
