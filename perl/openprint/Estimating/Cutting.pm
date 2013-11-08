@@ -425,6 +425,7 @@ sub signature_calc {
 			'Status'	=> 'calculated',
 			);
 	my $services = $Project->services();
+	my $printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] ) if $$services{''} and @{$$services{''}};
 
 	my @my_equipment;
 	if ( $$specs{"chkOverrideEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} eq 'Y' ) {
@@ -580,6 +581,20 @@ sub signature_calc {
 				$vertical_cuts += int ( ($I->page_columns()-1)*$I->columns()*2 ) + 2;
 			} elsif ( $stitching_imposition and ( $$I{'image_orientation'} eq 'Horizontal' ) ) {
 				$vertical_cuts += int ($$I{'columns'} / $stitching_imposition)-1;
+			} elsif ( $$printing_specs{rdbTemplateType} eq 'PlasticCoil' ) {
+				if ( $I->pages() > 8 ) {
+					# Going to fold it first.
+					my $columns =  $$folding_imposition{columns} ? $$I{'columns'} / $$folding_imposition{columns} : $$I{'columns'};
+					$vertical_cuts += 1+$columns;# = 2+$$I{'columns'}-1
+						if ( 
+								( $$I{'image_orientation'} eq 'Vertical' and ( $$sig_specs{'BleedLeft'} or $$sig_specs{'BleedRight'} ) ) or
+								( $$I{'image_orientation'} eq 'Horizontal' and ( $$sig_specs{'BleedTop'} or $$sig_specs{'BleedBottom'} ) )
+						   ) {
+							$vertical_cuts += $columns-1;
+						} # end if
+				} else {
+					$vertical_cuts += int ( ($I->page_columns()-1)* (($I->columns()-1)*2) ) + 2;
+				} # end if
 			} else {
 				$vertical_cuts += $$I{'columns'}-1;
 			} # end if
@@ -616,6 +631,20 @@ sub signature_calc {
 				$horizontal_cuts += int( ($I->page_rows()-1)*$I->rows() * 2 ) + 2;
 			} elsif ( $stitching_imposition and ( $I->image_orientation() eq 'Vertical' ) ) {
 				$horizontal_cuts += int ($$I{'rows'} / $stitching_imposition)-1; 
+			} elsif ( $$printing_specs{rdbTemplateType} eq 'PlasticCoil' ) {
+				if ( $I->pages() > 8 ) {
+					# Going to fold it first.
+					my $rows = $$folding_imposition{rows} ? $$I{'rows'}/$$folding_imposition{rows} : $$I{'rows'};
+					$horizontal_cuts += 1 + $rows;#2 + $$I{'rows'}-1
+						if ( $$sig_specs{'ddmBleedSize'.$qty_index} and ( 
+									( $$I{'image_orientation'} eq 'Horizontal' and ( $$sig_specs{'BleedLeft'} or $$sig_specs{'BleedRight'} ) ) or
+									( $$I{'image_orientation'} eq 'Vertical' and ( $$sig_specs{'BleedTop'} or $$sig_specs{'BleedBottom'} ) ) )
+						   ) {
+							$horizontal_cuts += $rows-1;
+						} # end if
+				} else {
+					$horizontal_cuts += int( ($I->page_rows()-1)*$I->rows() * 2 ) + 2;
+				} # end if
 			} else {
 				$horizontal_cuts += $$I{'rows'}-1;
 			} # end if

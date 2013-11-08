@@ -1,4 +1,4 @@
-<script type="text/javascript" src="<? echo ( hash_link('/javascripts/service.js') ) ?>"></script>
+<script type="text/javascript" src="<?hash_link(/javascripts/service.js)?>"></script>
 <? eval (
 	if ( $$variable{'Project'}->quantity1() and $$variable{'Project'}->quantity2() and $$variable{'Project'}->quantity3() ) {
 	$$variable{'Columns'} = 'Three';
@@ -12,11 +12,10 @@
 			<ul>
 			<li>
 				<label>Spine width</label>
-<? echo (
-	my $html;
-	$html = ssi::input( type=>'float', name=>'txtCalliper', onkeyup=>'calc(this.form.name);' ) . ' inches';
-	$html .= ssi::write_override( 'OverrideCalliper', $$variable{OverrideCalliper}, '', 'calc(this.form.name);' );
-	return $html;
+<? echo ( join("\n",
+	input( type=>'float', name=>'txtCalliper', onkeyup=>'calc(this.form.name);' ) , ' inches',
+	write_override( 'OverrideCalliper', $$variable{OverrideCalliper}, '', 'calc(this.form.name);' ),
+	);
 ) ?>
 			</li>
 <? eval ( 
@@ -41,7 +40,7 @@
 			
 						$html .= '<span class="'.$$variable{Columns}.'Columns">';
 						foreach my $page ( 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32, 34, 36, 38, 40, 42, 44, 46, 48 ) {
-							$html .= ssi::input( 
+							$html .= input( 
 								name	=>	"txtSignatureQty${page}Page-${qty_index}", 
 								value	=>	$$variable{"txtSignatureQty${page}Page-${qty_index}"},
 								type	=>	'cardinal',
@@ -50,7 +49,7 @@
 								);
 							$html .= $page . ' Page Signature(s)<br/>';
 						} # end foreach page
-						$html .= ssi::input(
+						$html .= input(
 							name	=>	"txtSignatureQtyGateFolded-$qty_index", 
 							value	=>	$$variable{"txtSignatureQtyGateFolded-$qty_index"},
 							type	=>	'cardinal', onkeyup=>'calc(this.form.name);',
@@ -58,10 +57,10 @@
 							);
 						$html .= 'Gate Folded Signature(s)<br/>';
 						if ( sets::isin( $session{user_type}, ['A','E'] ) ) {
-							$html .= ssi::write_override('OverridePockets'.$qty_index, $$variable{'OverridePockets'.$qty_index}, '', 'calc(this.form.name);' ) . ' Override';
+							$html .= write_override('OverridePockets'.$qty_index, $$variable{'OverridePockets'.$qty_index}, '', 'calc(this.form.name);' ) . ' Override';
 						} else {
 							if ( $$variable{'OverridePockets'.$qty_index} eq 'Y' ) {
-								$html .= ssi::input( type=>'hidden', name=>"OverridePockets$qty_index", value=>'Y' ).' Overriden';
+								$html .= input( type=>'hidden', name=>"OverridePockets$qty_index", value=>'Y' ).' Overriden';
 							} # end if
 						} # end if
 						$html .= '</span>';
@@ -79,10 +78,10 @@
 				my $html;
 				foreach my $qty_index ( $$variable{Project}->quantity_indexes() ) {
 					$html .= '<span class="'.$$variable{Columns}.'Columns">';
-					$html .= ssi::input( type=>'cardinal', name=>'Imposition'.$qty_index, value=>$$variable{'Imposition'.$qty_index}, onkeyup=>'calc(this.form.name);' ).' out';
+					$html .= input( type=>'cardinal', name=>'Imposition'.$qty_index, value=>$$variable{'Imposition'.$qty_index}, onkeyup=>'calc(this.form.name);' ).' out';
 
 					if ( sets::isin( $session{user_type}, ['A','E'] ) ) {
-						$html .= ssi::write_override( 'OverrideImposition'.$qty_index, $$variable{'OverrideImposition'.$qty_index}, '', 'calc(this.form.name)' );	
+						$html .= write_override( 'OverrideImposition'.$qty_index, $$variable{'OverrideImposition'.$qty_index}, '', 'calc(this.form.name)' );	
 					} # end if
 					$html .= '</span>';
 				} # end foreach $qty_index

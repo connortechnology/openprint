@@ -276,6 +276,7 @@ function cbFillPrintResults( results ) {
 			if ( type == 'Sheet' ) {
 				if ( ! ddm_select_by_value( ddm, width + 'x' + height, false ) ) {
 					ddm.options[ddm.options.length] = new Option( width+'" x ' + height+'"', width + 'x' + height, true );
+					ddm_select_by_value( ddm, width + 'x' + height, false );
 				} // end if
 			} else if ( type == 'Roll' ) {
 				if ( ! ddm_select_by_value( ddm, width, false ) ) {
@@ -283,6 +284,8 @@ function cbFillPrintResults( results ) {
 					ddm_select_by_value( ddm, width );
 				} // end if
 			} // end if
+		} else {
+			alert(ddmSelectedIndex);
 		} // end if
 	} // end for
 	block_calc = false;
@@ -366,11 +369,13 @@ function ddmProjectSize_onChange( form ) {
 	if (form.ddmProjectSize.options[index] && form.ddmProjectSize.options[index].value != 'Custom' ) {
 		var dimensions = form.ddmProjectSize.options[form.ddmProjectSize.selectedIndex].value.split(',');
 		var finished = dimensions[0].split('x');
-		var flat = dimensions[1].split('x');
 		form.txtFinalWidth.value = finished[0];
 		form.txtFinalHeight.value = finished[1];
-		form.txtWidth.value = flat[0];
-		form.txtHeight.value = flat[1];
+		if ( form.txtWidth && form.txtHeight ) {
+			var flat = dimensions[1].split('x');
+			form.txtWidth.value = flat[0];
+			form.txtHeight.value = flat[1];
+		} // end if
 	} // end if
 	calc( form.name );
 } // end function ddmProjectSize_onChange();
@@ -458,9 +463,12 @@ function cbStockFillResults( results ) {
 				var size = value[val_index].split('x');
 				if ( size.length == 1 ) {
 					//Roll
-					options[options.length] = create_option( value[ddm_index], size[0]+" Roll" );
+					options[options.length] = create_option( value[val_index], size[0]+'" Roll' );
 				} else {
-					options[options.length] = create_option( value[ddm_index], size.each(function(item){return (item+"&quot;");}).join( ' x ' ) );
+					var dimensions = new Array();
+					size.each(function(item){ dimensions[dimensions.length] = item+'"';});
+
+					options[options.length] = create_option( value[val_index], dimensions.join( ' x ' ) );
 				} // end if
 			} // end for
 			for ( var suffix_index = 0; suffix_index < suffixes.length; suffix_index += 1 ) {

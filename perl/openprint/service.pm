@@ -225,7 +225,7 @@ sub auto_calculate {
 	my $specs;
 
 	my @signature_indices = $Project->signatures();
-	if ( ! scalar @signature_indices ) {
+	if ( ! @signature_indices ) {
 		$openprint::log->warn("service::auto_calculate with no signatures");
 		return;
 	} # end if
@@ -245,9 +245,7 @@ sub auto_calculate {
 		} # end while
 	} else {
 		if ( ! $$services{'Folding'} ) {
-			if ( $Project->mode() ne 'Detailed' ) {
-				push @{$$services{'Folding'}}, $Project->add_service( 'Folding' );
-			} # end if
+			push @{$$services{'Folding'}}, $Project->add_service( 'Folding' );
 		} # end if
 	} # end if
 
@@ -259,9 +257,7 @@ sub auto_calculate {
 
 	if ( openprint::Estimating::Cutting::neccessary( $Project ) ) {
 		if ( ! $$services{'Cutting'} ) {
-			if ( $Project->mode() ne 'Detailed' ) { 
-				push @{$$services{'Cutting'}}, $Project->add_service( 'Cutting' );
-			} # end if
+			push @{$$services{'Cutting'}}, $Project->add_service( 'Cutting' );
 		} # end if
 	} # end if
 

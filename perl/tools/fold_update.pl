@@ -56,7 +56,7 @@ foreach my $E ( openprint::Equipment->find('Specifications'=>{'Folding Capable'=
 				$Fold->name( $pages.'PageFold' );
 				$Fold->type( $pages . 'PageFold' );
 				$Fold->pages( $pages );
-				$Fold->max_imposition( 2 );
+				$Fold->max_imposition( 1 );
 				$Fold->stitching( 1 );
 				$Fold->perfectbind( 1 );
 				if ( $_ = $E->Specification($pages.'PageSignatureFoldPrintingType') ) {
@@ -87,7 +87,7 @@ foreach my $E ( openprint::Equipment->find('Specifications'=>{'Folding Capable'=
 				$Fold->equipment_id( $E->id() );
 				$Fold->name( $type.'Fold' );
 				$Fold->type( $type.'Fold' );
-				$Fold->max_imposition( 2 );
+				$Fold->max_imposition( 1 );
 				$Fold->stitching( 1 );
 				$Fold->perfectbind( 1 );
 				if ( $_ = $E->Specification($type.'FoldPrintingType') ) {
@@ -303,6 +303,8 @@ foreach my $E ( openprint::Equipment->find() ) {
 		} # end if
 	} # end foreach
 } # end foreach
+
+$dbh->do('UPDATE folds set max_calliper=0.036/pages where equipment_id=7');
 
 $dbh->disconnect();
 print "Finished\n";

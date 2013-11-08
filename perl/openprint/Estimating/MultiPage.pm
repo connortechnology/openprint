@@ -28,7 +28,7 @@ use constant DEBUG => 0;
 my %variables = (
 	'ddmProjectSize'=>['save','output'],
 	'txtFinalWidth'=>['save'],'txtFinalHeight'=>['save'], 
-	'txtWidth'=>['save','output'],'txtHeight'=>['save','output'],
+	'txtWidth'=>['save'],'txtHeight'=>['save'], 
 	'txtTotalPageQuantity'=>['save'], 
 	'rdbCover'=>['save','output'],
 	'txtGateFoldedSpreadQuantity'=>['save','output'],
@@ -36,7 +36,7 @@ my %variables = (
 	'TippingQuantity'=>['save'],
 	'BlowingQuantity'=>['save'],
 	'ReplyCardQuantity'=>['save'],
-	'txtSpreadSize'=>['save','output'],'PrintingType'=>['save'],'rdbTemplateType'=>['save'],
+	'PrintingType'=>['save'],'rdbTemplateType'=>['save'],
 	'help'=>['output'],'alert'=>['output'],
 	'ProjectIndex'=>[], 'ServiceIndex'=>[], 'ServiceType'=>[], 'NewBook'=>[],
 	'remaining_pages'=>['output'],'next_group_id'=>['output'],'groups'=>['output'],
@@ -106,16 +106,6 @@ sub calc {
 
 	$$specs{Status} = 'calculated';
 
-	if ( sets::isin( $$specs{'rdbTemplateType'}, ['SaddleStitching', 'LoopStitching', 'MetalCoil','PlasticCoil','PlasticComb','DoubleLoopWire'] ) ) {
-		$$specs{'txtSpreadSize'} = 4;
-	} elsif ( $$specs{'rdbTemplateType'} eq 'PerfectBound' ) {
-		$$specs{'txtSpreadSize'} = $openprint::config{PerfectBindSpreadSize} ? $openprint::config{PerfectBindSpreadSize} : 2;
-	} elsif ( sets::isin( $$specs{'rdbTemplateType'}, ['CornerStitching','SpinePaste'] ) ) {
-		$$specs{'txtSpreadSize'} = 2;
-	} else {
-		$$specs{'txtSpreadSize'} = 2;
-	} # end if
-	
 	if ( $$specs{'rdbTemplateType'} eq 'PerfectBound' and $$specs{'rdbCover'} ne 'Different' ) {
 		$variables{'rdbCover'} = [sets::union('output', @{$variables{'rdbCover'}})];
 		$$specs{'rdbCover'} = 'Different';
@@ -158,7 +148,7 @@ sub calc {
 			my @g_signatures = $Project->signatures({'Group'=>$group_id});
 			if ( ! @g_signatures ) {
 				$Project->add_signature( undef, undef, {
-						'Group'=>$group_id,
+						Group=>$group_id,
 						( $group_id == 1 ? ( 'txtSignatureType'=>'Cover Pages', 'txtServiceDescription'=>'Cover' ) : () ),
 						( $group_id == 2 ? ( 'txtSignatureType'=>'Interior Pages', 'txtServiceDescription'=>'Interior Pages' ) : () ),
 						( $group_id == 3 ? ( 'txtSignatureType'=>'Gate Folded Pages', 'txtServiceDescription'=>'Gate Folded Pages' ) : () ),
@@ -175,9 +165,17 @@ sub calc {
 
 	# if there is a cover, then force it to be non-zero
 	if ( (! $override_pages{1} ) and ($$specs{'OverrideGroupPageQuantity1'} ne 'Y' ) and ($$specs{'rdbCover'} eq 'Different') ) {
+if ( 0 ) {
+		# Ithink the idea here is to give the cover either 4 or 6 pages... depending on the total # of pages.
 		my $new_remaining = int(($remaining_pages-4) / $$specs{'txtSpreadSize'} ) * $$specs{'txtSpreadSize'};
 		$override_pages{1} = $remaining_pages - $new_remaining;
 		$remaining_pages = $new_remaining;
+} else {
+		$override_pages{1} = 4;
+		
+		$remaining_pages -= $override_pages{1} = 4;
+$openprint::log->error("FIXM E");
+} # end if
 	} # end if
 
 	foreach my $group_id ( @Groups ) {
@@ -216,22 +214,11 @@ sub calc {
 
 	if ( ! ( $$specs{'txtFinalWidth'} or $$specs{'txtFinalHeight'} ) ) {
 		$$specs{'alert'} = 'Please select the dimensions.';
-		return $$specs{'Status'} = 'uncalculated';
-	} # end if
-	$$specs{'txtHeight'} = $$specs{'txtFinalHeight'};
-	if ( $$specs{'txtSpreadSize'} == 2 ) {
-		$$specs{'txtWidth'} = $$specs{'txtFinalWidth'};
-	} elsif ( $$specs{'txtSpreadSize'} == 4 ) {
-		$$specs{'txtWidth'} = 2*$$specs{'txtFinalWidth'};
-	} # end if
-
-	if ( ( $$specs{'txtWidth'} < $$specs{'txtFinalWidth'} ) or ( $$specs{'txtHeight'} < $$specs{'txtFinalHeight'} ) ) {
-		$$specs{'alert'} .= 'Flat size cannot be smaller than finished size!';
-		return $$specs{'Status'} = 'uncalculated';
+		return $$specs{Status} = 'uncalculated';
 	} # end if
 
 	if ( ! $$specs{'txtTotalPageQuantity'} ) {
-		$$specs{'alert'} = 'Please enter the # of pages';
+		$$specs{alert} = 'Please enter the # of pages';
 		return $$specs{'Status'} = 'uncalculated';
 	} elsif ( $$specs{'txtTotalPageQuantity'} > 500 ) {
 		$$specs{alert} .= 'The maximum # of pages is 500.<br/>';
@@ -239,7 +226,7 @@ sub calc {
 	} # end if
 
 	if ( ! $$specs{'rdbCover'} ) {
-		$$specs{'alert'} = 'Please select the cover type.';
+		$$specs{alert} = 'Please select the cover type.';
 		return $$specs{'Status'} = 'uncalculated';
 	} # end if
 
@@ -267,6 +254,7 @@ sub calc {
 		my $sig_specs = openprint::service::get_specs_ref( $Project, $sig_id );
 		my %new_specs = %{$sig_specs};
 		openprint::Estimating::Printing::set_size( $Project, \%new_specs, $specs );
+		# I think the idea here is to only update the sizes.... if they change...
 		foreach my $k ( 'txtWidth','txtHeight','txtFinalWidth','txtFinalHeight' ) {
 			openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, $k, $new_specs{$k} );
 		} # end foreach k

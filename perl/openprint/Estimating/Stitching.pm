@@ -17,7 +17,7 @@
 package openprint::Estimating::Stitching;
 use strict;
 
-use constant DEBUG => 0;
+use constant DEBUG => 1;
 
 require openprint::Equipment;
 require openprint::service;
@@ -133,7 +133,7 @@ sub get_imposition {
 		($$I{'imposition'} % 2 ) or 
 		($$I{'image_orientation'} eq 'Vertical' and $$I{'rows'} % 2 ) or 
 		($$I{'image_orientation'} eq 'Horizontal' and $$I{'columns'} % 2 ) or
-		(sets::isin( $$I{'runstyle'}, ['Work & Turn','Work & Tumble'] ) and $$I{'imposition'}%4) 
+		( $$I{'imposition'}%4 and sets::isin( $$I{'runstyle'}, ['Work & Turn','Work & Tumble'] ) ) 
 		);
 	} # end foreach Imposition
 	return $imposition;
@@ -250,6 +250,23 @@ sub signature_calc {
 	if ( $$specs{'OverrideImposition'.$qty_index} eq 'Y' ) {
 		if ( $imposition < $$specs{'Imposition'.$qty_index} ) {
 			$results{'alert'} .= "Can't stitch $$specs{'Imposition'.$qty_index} out";
+	foreach my $I ( @$Impositions ) {
+			if ( ($$I{'FoldingImposition'} and $$I{'FoldingImposition'} % 2 ) ) {
+				$results{'alert'} .= ' Folding not multiple of 2out<br/>';
+			} # end if
+			if ( $$I{'imposition'} % 2 ) {
+				$results{'alert'} .= ' imposition not multiple of 2out<br/>';
+			} # end if
+			if ( ($$I{'image_orientation'} eq 'Vertical' and $$I{'rows'} % 2 ) ) {
+				$results{'alert'} .= ' vertical and rows not multiple of 2out<br/>';
+			} # end if
+			if ( $$I{'image_orientation'} eq 'Horizontal' and $$I{'columns'} % 2 ) {
+				$results{'alert'} .= ' horizontal and cols not multiple of 2out<br/>';
+			} # end if
+	} # end foreach
+	
+				
+
 			$results{'Status'} = 'uncalculated';
 			return \%results;
 		} # end if
@@ -398,8 +415,7 @@ sub calc {
 
 	if ( $$specs{'txtPageQuantity'} <= 0 ) {
 		$$specs{'alert'} .= 'Unable to determine page quantity<br/>';
-		$$specs{'Status'} = 'uncalculated';
-		return 'uncalculated';
+		return $$specs{'Status'} = 'uncalculated';
 	} # end if
 
 	foreach my $qty_index ( $Project->quantity_indexes() ) {
@@ -419,13 +435,17 @@ sub calc {
 			my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
 #$openprint::log->debug(sprintf('%d %s %s %d %dx%d %s', $imposition, @$sig_specs{'txtSignatureType','ddmRunStyle'.$qty_index,'txtImposition'.$qty_index,'hdnImpositionColumns'.$qty_index,'hdnImpositionRows'.$qty_index,'hdnImageOrientation'.$qty_index} ) ) if DEBUG;
 			next if $$sig_specs{'txtSignatureType'} eq 'Cover Pages';
-			if ( 
-				($$sig_specs{'txtImposition'.$qty_index}%2) or 
-				($$sig_specs{'hdnImageOrientation'.$qty_index} eq 'Vertical' and $$sig_specs{'hdnImpositionRows'.$qty_index} % 2 ) or 
-				($$sig_specs{'hdnImageOrientation'.$qty_index} eq 'Horizontal' and $$sig_specs{'hdnImpositionColumns'.$qty_index} % 2 ) or
-				(sets::isin( $$sig_specs{'ddmRunStyle'.$qty_index}, ['Work & Turn','Work & Tumble'] ) and $$sig_specs{'txtImposition'.$qty_index} % 4 ) 
-			   ) {
+			if ( $$sig_specs{'txtImposition'.$qty_index}%2 ) {
+				$openprint::log->warn("Setting imposition to 1 : Imp:" . $$sig_specs{'txtImposition'.$qty_index} . ' imposition' );
+				$imposition = 1 
+			} elsif ($$sig_specs{'hdnImageOrientation'.$qty_index} eq 'Vertical' and $$sig_specs{'hdnImpositionRows'.$qty_index} % 2 ) {
+				$openprint::log->warn("Setting imposition to 1 : Imp:" . $$sig_specs{'txtImposition'.$qty_index} . ' vertical and rows' );
+				$imposition = 1 
 
+			} elsif ($$sig_specs{'hdnImageOrientation'.$qty_index} eq 'Horizontal' and $$sig_specs{'hdnImpositionColumns'.$qty_index} % 2 ) {
+				$openprint::log->warn("Setting imposition to 1 : Imp:" . $$sig_specs{'txtImposition'.$qty_index} . ' horizontal and rows' );
+				$imposition = 1 
+			} elsif ( $$sig_specs{'txtImposition'.$qty_index} % 4 and sets::isin( $$sig_specs{'ddmRunStyle'.$qty_index}, ['Work & Turn','Work & Tumble'] ) ) {
 				$openprint::log->warn("Setting imposition to 1 : Imp:" . $$sig_specs{'txtImposition'.$qty_index} . ' ' . $$sig_specs{'ddmRunStyle'.$qty_index} );
 				$imposition = 1 
 			} # end if

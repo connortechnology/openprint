@@ -16,14 +16,17 @@
 
 package openprint::Estimating::Collating;
 use strict;
+use constant DEBUG => 1;
 
-require sql;
 require openprint::service;
+require openprint::Project;
+require openprint::Estimating::Folding;
 
 my @variables = (
 	'txtQuantity1', 'txtQuantity2', 'txtQuantity3',
 	'txtPrice1', 'txtPrice2', 'txtPrice3',
-	'txtSignatureCount',
+	'txtSignatureCount1', 'txtSignatureCount2', 'txtSignatureCount3',
+	'OverrideSignatureCount1', 'OverrideSignatureCount2', 'OverrideSignatureCount3',
 	'chkOverrideEquipment1', 'chkOverrideEquipment2', 'chkOverrideEquipment3',
 	'ddmEquipment1', 'ddmEquipment2', 'ddmEquipment3',
 );
@@ -39,6 +42,7 @@ sub has_overrides {
     my @v;
 	foreach my $qty_index ( $Project->quantity_indexes() ) {
 		push @v, "chkOverrideEquipment$qty_index" if $$specs{"chkOverrideEquipment$qty_index"};
+		push @v, "OverrideSignatureCount$qty_index" if $$specs{"chkOverrideEquipment$qty_index"};
 	} # end foreach
 
     return @v;
@@ -83,22 +87,41 @@ sub calc {
 	my $services = $Project->services();
 
 $log->debug("COLLATING!!!!!!!!!!!!!!!!!!");
-	# Currently there is no equipmnet for collating
-
-	my $minimumCharge = openprint::service::get_price( 'CollatingMinimumCharge', undef, undef );
 
 	my $printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
-	if ( ! $$specs{'txtSignatureCount'} ) {
-		if ( ! $$printing_specs{'txtTotalPageQuantity'} ) {
-			$$specs{'alert'} = 'Number of pages is unknown!';
-			return 'uncalculated';
-		} elsif ( ! $$printing_specs{'txtSpreadSize'} ) {
-			$$specs{'alert'} = 'Spread Size is unknown!';
-			return 'uncalculated';
-		} # end if
-
-		$$specs{'txtSignatureCount'} = $$printing_specs{'txtTotalPageQuantity'} / $$printing_specs{'txtSpreadSize'};
+	if ( ! $$printing_specs{txtTotalPageQuantity} ) {
+		$$specs{alert} = 'Number of pages is unknown!';
+		return $$specs{Status} = 'uncalculated';
 	} # end if
+
+    my $folding_specs;
+    if ( $$services{'Folding'} and @{$$services{'Folding'}} ) {
+        $folding_specs = openprint::service::get_specs_ref( $Project, $$services{'Folding'}[0] );
+    } # end if
+
+	foreach my $qty_index ( $Project->quantity_indexes() ) {
+		if ( (!$$specs{'OverrideSignatureCount'.$qty_index} ) or ( $$specs{'OverrideSignatureCount'.$qty_index} ne 'Y' ) ) {
+
+			$$specs{'txtSignatureCount'.$qty_index} = 0;
+			foreach my $sig_id ( $Project->signatures({sort=>1}) ) {
+				my $sig_specs = openprint::service::get_specs_ref( $Project, $sig_id );
+				next if ! $$sig_specs{"txtImposition$qty_index"};
+				my @folding_impositions = openprint::Estimating::Folding::load_Impositions( $folding_specs, $sig_specs, $qty_index ) if $folding_specs;
+$openprint::log->debug("Got " . @folding_impositions . " folds for form $$sig_specs{SignatureIndex}") if DEBUG;
+				if ( @folding_impositions ) {
+					foreach my $Fold_Imp ( @folding_impositions ) {
+$openprint::log->debug("Fold $qty_index: " . $Fold_Imp->type() . ' ' . $Fold_Imp->pages() . 'pg ' . $Fold_Imp->quantity() . ' ' . $Fold_Imp->imposition() );
+						$$specs{'txtSignatureCount'.$qty_index} += $Fold_Imp->quantity();
+					} # end foreach Fold product
+				} else {
+					$$specs{'txtSignatureCount'.$qty_index} += $$sig_specs{'PageQuantity'.$qty_index} / $$sig_specs{txtSpreadSize};
+				} # end if
+		
+			} # end foreach signature
+		} # end if
+	} # end foreach qty_index
+
+	my $minimumCharge = openprint::service::get_price( 'CollatingMinimumCharge', undef, undef );
 
 	my @possible_equipment;
 	my @all_equipment = openprint::Equipment->find( 'Specifications' => {'Collating Capable'=>['Y','When Printing']}, 'useinestimating'=>1,'order'=>'strName');
@@ -116,8 +139,8 @@ $log->debug("COLLATING!!!!!!!!!!!!!!!!!!");
 
 	if ( ! @possible_equipment ) {
 # alert the user that no equipment is good.
-		$$specs{'alert'} = "Our collating equipment cannot run this project, for the following reasons:<br/>$error<br/> Please only print flat sheets and contact another bindery.";
-		return 'uncalculated';
+		$$specs{alert} = "Our collating equipment cannot run this project, for the following reasons:<br/>$error<br/> Please only print flat sheets and contact another bindery.";
+		return $$specs{Status} = 'uncalculated';
 	} # end if
 
 	foreach my $qty_index ( $Project->quantity_indexes() ) {
@@ -128,7 +151,7 @@ $log->debug("COLLATING!!!!!!!!!!!!!!!!!!");
 		$$specs{"txtQuantity$qty_index"} = int( $$specs{"txtQuantity$qty_index"} );
 		$$specs{"txtQuantity$qty_index"} = $Project->quantity( $qty_index ) if ! $$specs{"txtQuantity$qty_index"};
 
-		my $qty = $$specs{"txtQuantity$qty_index"} * $$specs{'txtSignatureCount'};
+		my $qty = $$specs{"txtQuantity$qty_index"} * $$specs{'txtSignatureCount'.$qty_index};
 
 		my @equipment = ();
 		if ( $$specs{"chkOverrideEquipment$qty_index"} eq 'Y' ) {
@@ -139,16 +162,18 @@ $log->debug("COLLATING!!!!!!!!!!!!!!!!!!");
 
 		foreach my $Equipment ( @equipment ) {
 			my %price = (
-				'Service'	=> 0,
-				'MakeReady'	=> 0,
-				'Equipment'	=> $Equipment,
-				'Total'		=> 0,
+				Service		=> 0,
+				MakeReady	=> 0,
+				Equipment	=> $Equipment,
+				Total		=> 0,
 			);
 			if ( $Equipment->specification('Collating Capable') eq 'When Printing' ) {
 				# All signatures must be printed on the same machine
 				my $cant = 0;
 				foreach my $sig_id ( $Project->signatures() ) {
 					my $sig_specs = openprint::service::get_specs_ref( $Project, $sig_id );
+					next if ! $$sig_specs{"txtImposition$qty_index"};
+
 					if ( $$sig_specs{'ddmPress'.$qty_index} ne $Equipment->strid() ) {
 						# cant
 						$cant = 1;
@@ -161,7 +186,7 @@ $log->debug("COLLATING!!!!!!!!!!!!!!!!!!");
 			} # end if
 			$price{'MakeReady'} = openprint::service::get_price( 'CollatingMakeReady', undef, $Equipment );
 			my %servicePrice = openprint::service::get_price_object( 'Collating', $qty, $Equipment );
-			if ( sets::isin( $servicePrice{'units'}, 'per M', 'per 1000' )  ) {
+			if ( sets::isin( $servicePrice{'units'}, 'per m', 'per 1000' )  ) {
 				$price{'Service'} = $servicePrice{'Price'}/1000; # Service Price for Collating is per 1000
 			} else {
 				$$specs{'alert'} .= 'Unknown units in service price.<br/>';
@@ -183,7 +208,7 @@ $log->debug("COLLATING!!!!!!!!!!!!!!!!!!");
 	} # end foreach qty_index
 
 	$log->debug("COLLATING!!!!!!!!!!!!!!!!!!");
-	return $status;
+	return $$specs{Status} = $status;
 } # end sub calc
 
 sub display {

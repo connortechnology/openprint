@@ -3,23 +3,24 @@
 	my $html = '';
 	my $equipment_array = [ map { $_->id(), $_->name() } openprint::Equipment->find('order'=>'lower(strID)') ];
 
-	foreach my $Pricelist ( openprint::Pricelist->find('order'=>'lower(name)') ) {
+	foreach my $Pricelist ( openprint::Pricelist->find( order=>'lower(name)') ) {
 
 		$html .= '<fieldset><legend>Pricing for Price List: '. $Pricelist->name() .'</legend>';
-		my @Prices = openprint::MaterialPrice->find('material_id'=>$$variable{'Material'}->id(), 'pricelist_id'=>$$Pricelist{id} );
+		my @Prices = openprint::MaterialPrice->find( material_id=>$$variable{Material}->id(), pricelist_id=>$$Pricelist{id} );
 		my @Equipment = map { new openprint::Equipment( $_ ) } sets::union( map{ $_->equipment_id() } @Prices );
 		foreach my $Equipment ( @Equipment, { } ) {
 			$html .= '<fieldset class="Equipment">
 				<p>
 					<label>Equipment</label>
 					<select name="ddmEquipment-'.$$Pricelist{id}.'-'.$$Equipment{id}.'"><option value="">All Equipment</option>';
-			$html .= ssi::make_drop_down( $equipment_array, $$Equipment{id} );
+			$html .= make_drop_down( $equipment_array, $$Equipment{id} );
 			$html .= '
 					</select>
 				</p>
 				<table class="List">
 					<tr> 
 						<th class="checkbox">&nbsp;</th>
+						<th class="ActivityCode">Activity Code</th>
 						<th class="Range">Quantity Range</th>
 						<th class="Units">Units</th>
 						<th class="Cost">Cost</th>
@@ -28,22 +29,23 @@
 						<th class="Discount">Discount?</th>
 					</tr>';
 			my @Prices = openprint::MaterialPrice->find(
-					'material_id'	=>	$$variable{'Material'}->id(), 
-					'pricelist_id'	=>	$$Pricelist{id},
-					'equipment_id'	=>	$$Equipment{id},	
-					'order'			=>	'lngmin NULLS FIRST,lngmax NULLS FIRST' );
+					material_id		=>	$$variable{Material}->id(), 
+					pricelist_id	=>	$$Pricelist{id},
+					equipment_id	=>	$$Equipment{id},	
+					order			=>	'lngmin NULLS FIRST,lngmax NULLS FIRST' );
 			foreach my $Price ( @Prices, { id=>'New' } ) {
 				$html .= sprintf('<tr>
 					<td class="checkbox"><input type="checkbox" name="chk-%1$d-%2$s-%3$d" checked="checked" /></td>
-					<td class="Range"><input type="number" name="min-%1$d-%2$s-%3$d" value="%4$s"/> - <input type="number" name="max-%1$d-%2$s-%3$d" value="%5$s"/></td>
-					<td class="Units"><input type="text" name="units-%1$d-%2$s-%3$d" value="%6$s"/></td>
-					<td class="Cost"><input type="number" name="cost-%1$d-%2$s-%3$d" value="%7$s" onkeyup="calc_from_cost(this);" /></td>
-					<td class="Markup"><input type="number" name="markup-%1$d-%2$s-%3$d" value="%8$s" onkeyup="calc_from_markup(this);"/></td>
-					<td class="Price"><input type="number" name="price-%1$d-%2$s-%3$d" value="%9$s" onkeyup="calc_from_price(this);"/></td>
-<td class="Discount"> %10$s</td>
+					<td class="ActivityCode"><input type="text" name="activity_code-%1$d-%2$s-%3$d" value="%4$s"/></td>
+					<td class="Range"><input type="number" name="min-%1$d-%2$s-%3$d" value="%5$s"/> - <input type="number" name="max-%1$d-%2$s-%3$d" value="%6$s"/></td>
+					<td class="Units"><input type="text" name="units-%1$d-%2$s-%3$d" value="%7$s"/></td>
+					<td class="Cost"><input type="number" name="cost-%1$d-%2$s-%3$d" value="%8$s" onkeyup="calc_from_cost(this);" /></td>
+					<td class="Markup"><input type="number" name="markup-%1$d-%2$s-%3$d" value="%9$s" onkeyup="calc_from_markup(this);"/></td>
+					<td class="Price"><input type="number" name="price-%1$d-%2$s-%3$d" value="%10$s" onkeyup="calc_from_price(this);"/></td>
+<td class="Discount">%11$s</td>
 </tr>
-', $$Pricelist{id}, $$Equipment{id}, @$Price{qw`id min max units cost markup price`},
-ssi::radio( 'discount-'.$$Pricelist{id}.'-'.$$Equipment{id}.'-'.$$Price{id}, ['Y','Yes','N','No'], $$Price{discountable} ),
+', $$Pricelist{id}, $$Equipment{id}, @$Price{qw`id activity_code min max units cost markup price`},
+radio( 'discount-'.$$Pricelist{id}.'-'.$$Equipment{id}.'-'.$$Price{id}, ['Y','Yes','N','No'], $$Price{discountable} ),
  );
 			} # end foreach Price
 			$html .= '</table></fieldset><!--Equipment-->';

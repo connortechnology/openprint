@@ -485,7 +485,7 @@ sub get_proof_specs {
 	foreach my $qty_index ( $Project->quantity_indexes() ) {
 		my %proof_indexes;
 		foreach my $key ( keys %$specs ) {
-$openprint::log->debug("key $key");
+#$openprint::log->debug("key $key");
 			if ( $key =~ /^txtProofIndex-(\d*)-(\d*)-$qty_index$/ ) {
 				push @{$proof_indexes{$1}}, $$specs{$key};
 			} # end if
@@ -525,7 +525,7 @@ $log->debug("Press proof not needed");
 $log->debug("Already had press proof");
 			} # end if
 
-			foreach my $proof_index ( @{$proof_indexes{$signature_index}} ) {
+			foreach my $proof_index ( sort @{$proof_indexes{$signature_index}} ) {
 				my ( $quantity, $width, $height, $type ) = @$sig_specs{
 					"txtProofQuantity-$signature_index-$proof_index-$qty_index",
 						"txtProofWidth-$signature_index-$proof_index-$qty_index",

@@ -25,6 +25,7 @@ require openprint::service;
 use vars qw( @folds %fold_types );
 
 use constant DEBUG => 0;
+use constant DEBUG_NEEDS => 1;
 
 my @equipment;
 my @stitchers;
@@ -176,58 +177,78 @@ sub fold_types {
 sub signature_needs {
 	my ( $Project, $specs, $qty_index ) = @_;
 
-	return 0 if $Project->Type()->name() eq 'Banners';
-	my $services = $Project->services();
-	if ( $$services{'NoBindery'} ) {
+	if ( $Project->Type()->name() eq 'Banners' ) {
+		$openprint::log->debug("Folding::signature_needs: is a banner") if DEBUG_NEEDS;
 		return 0;
 	} # end if
+		
+	my $services = $Project->services();
+	if ( $$services{'NoBindery'} ) {
+		$openprint::log->debug("Folding::signature_needs: NoBidner") if DEBUG_NEEDS;
+		return 0;
+	} # end if
+	my $printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] ) if $$services{''}[0] and @{$$services{''}};
 	if ( $$services{'CornerStitching'} ) {
+		$openprint::log->debug("Folding::signature_needs: CornerStitched") if DEBUG_NEEDS;
 		return 0;
 	} # end if
 	if ( $$services{'SaddleStitching'} ) {
+		$openprint::log->debug("Folding::signature_needs: Stitched") if DEBUG_NEEDS;
 		return 1;
 	} # end if
 	if ( ($$specs{'pages_supplied'} eq 'Y') and ($$specs{'supplied_format'} eq 'Folded') ) {
+		$openprint::log->debug("Folding::signature_needs: supplied pages already folded") if DEBUG_NEEDS;
 		return 0;
 	} # end if
 
 	if ( $$services{''} ) {
 		my $printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
-		return 0 if $$printing_specs{rdbTemplateType} eq 'Unbound';
+		if ( $$printing_specs{rdbTemplateType} eq 'Unbound' ) {
+			$openprint::log->debug("Folding::signature_needs: Unbound") if DEBUG_NEEDS;
+			return 0;
+		} # end if
 	} # end if
 
 	if ( $fold_types{$$specs{'rdbTemplateType'}} ) {
-		$openprint::log->warn("FOLDING NEEDED got templatetype!") if DEBUG;
+		$openprint::log->warn("FOLDING NEEDED got templatetype!") if DEBUG_NEEDS;
 		return 1;
 	} else {
-		$openprint::log->warn("FOLDING NEEDED $$specs{'rdbTemplateType'} $fold_types{$$specs{'rdbTemplateType'}}!") if DEBUG;
+		$openprint::log->warn("FOLDING NEEDED $$specs{'rdbTemplateType'} $fold_types{$$specs{'rdbTemplateType'}}!") if DEBUG_NEEDS;
 	} # end if
 
 
 	if ( $$specs{'txtSignatureType'} ) {
 		if ( $$specs{'txtSpreadSize'} == 1 ) {
-			$openprint::log->warn("Folding not needed: spreadsize==1: $$specs{'txtSpreadSize'}");
+			$openprint::log->warn("Folding not needed: spreadsize==1: $$specs{'txtSpreadSize'}") if DEBUG_NEEDS;
 			return 0;
 		} # end if
 		if ( $qty_index ) {
 			if ( ( $$specs{'PageQuantity'.$qty_index} == 0 ) or ( $$specs{'PageQuantity'.$qty_index} == 2 ) ) {
-				$openprint::log->warn("Folding not needed: PageQuantity: $$specs{'PageQuantity'.$qty_index}");
+				$openprint::log->warn("Folding not needed: PageQuantity: $$specs{'PageQuantity'.$qty_index}") if DEBUG_NEEDS;
 				return 0;
+			} # end if	
+			if ( $$printing_specs{rdbTemplateType} eq 'PlasticCoil' ) {
+				# Need singltons... anything < 8pg sigs...might as well just cut them out
+				if ( $$specs{'PageQuantity'.$qty_index} < 8 ) {
+					return 0
+				} # end if
 			} # end if	
 		} else {
 			foreach my $qty_index ( $Project->quantity_indexes() ) {
 				if ( $$specs{'PageQuantity'.$qty_index} == 2 ) {
-					$openprint::log->warn("Folding not needed: PageQuantity: $$specs{'PageQuantity'.$qty_index}");
+					$openprint::log->warn("Folding not needed: PageQuantity: $$specs{'PageQuantity'.$qty_index}") if DEBUG_NEEDS;
 					return 0;
 				} # end if	
 			} # end foreah qty_index
 		} # end if
+		
+		$openprint::log->debug("Folding::signature_needs: book sig return 1") if DEBUG_NEEDS;
 		return 1;
 	} # end if
 
 # This works for books because sigs don't have a txtFinalWidth, etc.
 	if ( ($$specs{'txtFinalWidth'} != $$specs{'txtWidth'}) or ($$specs{'txtFinalHeight'} != $$specs{'txtHeight'}) ) {
-		$openprint::log->warn("FOLDING NEEDED dimensions do not match!") if DEBUG;
+		$openprint::log->warn("FOLDING NEEDED dimensions do not match!") if DEBUG_NEEDS;
 		return 1;
 	} # end if
 
@@ -632,7 +653,7 @@ sub signature_calc {
 
 	# Foreach equipment, figure out which folds are required.
 	foreach my $Equipment ( @my_equipment ) {
-		$Breakdown .= '<b>Equipment '.$$Equipment{name}.':</b><br/>';
+		$Breakdown .= '<br/><b>Equipment '.$$Equipment{name}.':</b><br/>';
 		#$openprint::log->debug('2 Equipment '.$Equipment->name()) if DEBUG;
 		if ( $$services{'NoOfflineBindery'} and ( $$sig_specs{'ddmPress'.$qty_index} ne $Equipment->strid() ) ) {
 			$Breakdown .= "No Offline bindery and not printing on $$Equipment{name}.<br/>";
@@ -708,7 +729,6 @@ sub signature_calc {
 # Each piece of equipment can do different folds.	So we have to calculate what we can do as well.
 				if ( $$Equipment{id} == $$Press{id} ) {
 # Special case because we can't cut it in the middle of printing.	This case is basically for web presses
-$Imposition->display("Folding on press");
 
 					my $Fold = $Equipment->Fold( {
 							'pages'				=>	$Imposition->pages(),
@@ -1676,6 +1696,26 @@ sub compact_impositions {
 
 sub save {
 } # end sub save
+
+sub load_Impositions($$$) {
+	my ( $folding_specs, $sig_specs, $qty_index ) = @_;
+
+	my @results;
+	foreach my $fold_index ( 1 .. 4 ) {
+		next if ! $$folding_specs{"FoldQty-$$sig_specs{SignatureIndex}-$qty_index-$fold_index"};
+
+		my $imp = new openprint::Imposition();
+		$imp->columns( $$folding_specs{"FoldColumns-$$sig_specs{SignatureIndex}-$qty_index-$fold_index"} );
+		$imp->rows( $$folding_specs{"FoldRows-$$sig_specs{SignatureIndex}-$qty_index-$fold_index"} );
+
+		$imp->type( $$folding_specs{"FoldType-$$sig_specs{SignatureIndex}-$qty_index-$fold_index"} );
+		my ( $pages ) = $$folding_specs{"FoldType-$$sig_specs{SignatureIndex}-$qty_index-$fold_index"} =~ /^(\d+)PageFold$/;
+		$imp->pages( $pages );
+		$imp->quantity( $$folding_specs{"FoldQty-$$sig_specs{SignatureIndex}-$qty_index-$fold_index"} );
+		push @results, $imp;
+	} # end foreach fold_index
+	return @results;
+} # end sub load_Impositions
 
 1;
 __END__
