@@ -284,8 +284,23 @@ sub signature_calc {
 		} # end if
 	} # end if
 
-	my $Rule = openprint::Material->find_one('name'=>'PerforatingRule');
-	my $Wheel = openprint::Material->find_one('name'=>'PerforatingWheel');
+	my $Rule = openprint::Material->find_one( name =>'PerforatingRule'.$$specs{"VerticalTeeth-$$sig_specs{SignatureIndex}"}.' Tooth' );
+	if ( ! $Rule ) {
+		if ( $$specs{"VerticalTeeth-$$sig_specs{SignatureIndex}"} and ( $$specs{"VerticalTeeth-$$sig_specs{SignatureIndex}"} >= 25 ) ) {
+			$Rule = openprint::Material->find_one( name =>'PerforatingRule Micro Perf' );
+		} else {
+			$Rule = openprint::Material->find_one( name =>'PerforatingRule' );
+		} # end if
+	} # end if
+
+	my $Wheel = openprint::Material->find_one( name =>'PerforatingWheel'.$$specs{"HorizontalTeeth-$$sig_specs{SignatureIndex}"} );
+	if ( ! $Wheel ) {
+		if ( $$specs{"HorizontalTeeth-$$sig_specs{SignatureIndex}"} and ( $$specs{"HorizontalTeeth-$$sig_specs{SignatureIndex}"} >= 25 ) ) {
+			my $Wheel = openprint::Material->find_one( name =>'PerforatingWheel Micro Perf' );
+		} else {
+			$Wheel = openprint::Material->find_one( name =>'PerforatingWheel' );
+		} # end if
+	} # end if
 	$Wheel = $Rule if ! $Wheel;
 
 	foreach my $Equipment ( @equipment ) {
@@ -329,6 +344,9 @@ sub signature_calc {
 		my $setupPrice = openprint::service::get_price( 'PerforatingMakeReady', undef, $Equipment );
 		$Results{'Breakdown'} .= sprintf( 'Setup: $%.2f<br/>', $setupPrice );
 		my $max_impo = $Equipment->specification('Maximum Perforation Imposition');
+
+		my $CylinderCount = $Equipment->specification('Perforating # of Cylinders');
+		$Results{'Breakdown'} .= join( '', 'Cylinder Count: ', $CylinderCount, '<br/>' );
 
 		foreach my $imposition ( @impositions ) {
 			$Results{'Breakdown'} .= "Imposition: " . $imposition->imposition() .': ';
@@ -389,11 +407,14 @@ $openprint::log->debug("No printing runspeed");
 			if ( $imposition->image_orientation() eq 'Vertical' and $$specs{"txtHorizontalQty-$$sig_specs{SignatureIndex}"} ) {
 				$horizontal_rules = $$specs{"txtHorizontalQty-$$sig_specs{'SignatureIndex'}"} * $$imposition{rows};
 				$horizontal_length = $horizontal_rules * $width;
+				$horizontal_length *= $CylinderCount if $CylinderCount;
+
 				$Results{Breakdown} .= $$specs{"txtHorizontalQty-$$sig_specs{'SignatureIndex'}"} . ' x ' . $$imposition{rows} . ' rows = ' . $horizontal_rules . ' horizontal rules * ' . $width . ' = ' . $horizontal_length . 'inches of rule.<br/>';
 
 			} elsif ( $imposition->image_orientation() eq 'Horizontal' and  $$specs{"txtVerticalQty-$$sig_specs{SignatureIndex}"} ) {
 				$horizontal_rules = $$specs{"txtVerticalQty-$$sig_specs{SignatureIndex}"} * $$imposition{columns};
 				$horizontal_length = $horizontal_rules * $height;
+				$horizontal_length *= $CylinderCount if $CylinderCount;
 				$Results{Breakdown} .= $$specs{"txtVerticalQty-$$sig_specs{SignatureIndex}"} . ' x ' . $$imposition{columns} . ' columns = ' . $horizontal_rules . ' horizontal rules * ' . $height . ' = ' . $horizontal_length . 'inches of rule.<br/>';
 			} # end if
 		#$openprint::log->debug("Horizontal: $horizontal_rule");	
@@ -451,10 +472,12 @@ $openprint::log->debug("No printing runspeed");
 			if ( $imposition->image_orientation() eq 'Vertical' and  $$specs{"txtVerticalQty-$$sig_specs{'SignatureIndex'}"} ) {
 				$vertical_rules = $$specs{"txtVerticalQty-$$sig_specs{'SignatureIndex'}"} * $imposition->columns();
 				$vertical_length = $vertical_rules * $height;
+				$vertical_length *= $CylinderCount if $CylinderCount;
 				$Results{Breakdown} .= $$specs{"txtVerticalQty-$$sig_specs{SignatureIndex}"} . ' x ' . $$imposition{columns} . ' columns = ' . $vertical_rules . ' vertical rules * ' . $height . ' = ' . $vertical_length . 'inches of rule.<br/>';
 			} elsif ( $imposition->image_orientation() eq 'Horizontal' and  $$specs{"txtHorizontalQty-$$sig_specs{SignatureIndex}"} ) {
 				$vertical_rules = $$specs{"txtHorizontalQty-$$sig_specs{'SignatureIndex'}"} * $imposition->rows();
 				$vertical_length = $vertical_rules * $width;
+				$vertical_length *= $CylinderCount if $CylinderCount;
 				$Results{Breakdown} .= $$specs{"txtHorizontalQty-$$sig_specs{SignatureIndex}"} . ' x ' . $$imposition{rows} . ' rows = ' . $vertical_rules . ' vertical rules * ' . $width . ' = ' . $vertical_length . 'inches of rule.<br/>';
 			} # end if
 
