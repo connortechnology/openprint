@@ -24,7 +24,7 @@ use constant DEBUG => 0;
 use constant DEBUG_VERSIONS => 0;
 use constant DEBUG_FILTERING => 0;
 use constant DEBUG_PRICE_DECISIONS => 0;
-use constant DEBUG_INKS => 0;
+use constant DEBUG_INKS => 1;
 
 my $master_time;
 my %special_colours;
@@ -4176,11 +4176,12 @@ if ( $$project{'HasDieCutting'} and $$project{'NeedDieCutting'} ) {
 	my $colourstarttime = gettimeofday() if DEBUG;
 
 	# Remarked it out because colours is the mix of the colours... so sheet work, it will appear in there twice...w&t, just once
-	$impressions /= $$project{print_sides} if (sets::isin($$Imposition{runstyle},['Sheet Work','Work & Turn','Work & Tumble'] ));
+	#$impressions /= $$project{print_sides} if (sets::isin($$Imposition{runstyle},['Sheet Work','Work & Turn','Work & Tumble'] ));
 #$openprint::log->debug("Colours: @colours");
 	foreach my $Colour ( filter_coatings_from_colours(\@colours) ) {
+		my $colour_impressions = $impressions;	
 		my $real_colour = $$Colour{name};
-$openprint::log->debug("Colour: $real_colour") if DEBUG_INKS;
+$openprint::log->debug("Colour: $real_colour impressions $colour_impressions $$Imposition{'runstyle'}") if DEBUG_INKS;
 		my $colour;
 
 		$price{'Ink breakdown'} .= $real_colour;
@@ -4194,6 +4195,15 @@ $openprint::log->debug("Colour: $real_colour") if DEBUG_INKS;
 			if ( $$Imposition{'runstyle'} =~ /^Work/ ) {
 				if ( ( $real_colour =~ /Overall/ ) and ! ( sets::isin( $real_colour, $$project{'side_one_colour_names'} ) and sets::isin( $real_colour, $$project{'side_two_colour_names'} ) ) ) {
 					$real_colour =~ s/Overall/Spot/;
+				} # end if
+			} else {
+$openprint::log->debug("Not Work");
+				if ( $$Imposition{sides} == 2 ) {
+					if ( ! ( sets::isin( $real_colour, $$project{side_one_colour_names} ) and sets::isin( $real_colour, $$project{side_two_colour_names} ) ) ) {
+						$colour_impressions /= 2;
+} else {
+$openprint::log->debug("Not n both colours");
+					} # end if
 				} # end if
 			} # end if
 $openprint::log->debug("Varnish $real_colour") if DEBUG_INKS;
@@ -4236,15 +4246,15 @@ $openprint::log->debug("No plate for varnish $real_colour ");
 			} # end if
 		} # end if
 
-		my %InkService = openprint::service::get_price_object( $real_colour, $impressions, $Press );
+		my %InkService = openprint::service::get_price_object( $real_colour, $colour_impressions, $Press );
 		if ( %InkService ) {
 			if ( $InkService{'units'} eq 'per m' ) {
-				$InkService{'Total'} = $InkService{'Price'} * $impressions/1000;
+				$InkService{'Total'} = $InkService{Price} * $colour_impressions/1000;
 			} else {
 				$price{'Ink breakdown'} .= 'unknown units for '.$real_colour;
 				$openprint::log->error('unknown units for ' . $real_colour );
 			} # end if
-			$price{'Ink breakdown'} .= sprintf(' Run: $%1$.2f%2$s * %4$d/1000 = $%3$.2f', @InkService{'Price','units','Total'}, $impressions );
+			$price{'Ink breakdown'} .= sprintf(' Run: $%1$.2f%2$s * %4$d/1000 = $%3$.2f', @InkService{'Price','units','Total'}, $colour_impressions );
 			$ink_price{ServicePrice} = \%InkService;
 			$ink_price{Total} += $InkService{Total};
 		} # end if
@@ -4304,7 +4314,7 @@ $openprint::log->debug("Was mixed") if DEBUG_INKS;
 			$InkMaterial = $Ink->Material();
 			my %material_price = $InkMaterial->get_price( undef, $Press );
 			$ink_price{Material} = \%material_price;
-			my $area = $Imposition->object_area() * $impressions * ($$project{'inkCoverage'}{$real_colour}/100);
+			my $area = $Imposition->object_area() * $colour_impressions * ($$project{'inkCoverage'}{$real_colour}/100);
 	#$openprint::log->debug("Area $area = $$Imposition{object_area} * $impressions * ($$project{'inkCoverage'}{$real_colour}/100) ");
 
 			# Not exactly sure about this, but keeping it to make topknotch keep the same prices.  Will have to do more testing and thinking
@@ -4357,13 +4367,13 @@ $openprint::log->debug("Was mixed") if DEBUG_INKS;
 				$ink_price{Total} += $p;
 				$price{'Ink breakdown'} .= sprintf(' Grade: %d, %d sq inches * $%s%s = $%.2f', $grade, $area, @material_price{'Price','units'}, $p );
 			} elsif ( $material_price{'units'} eq 'per m' ) {
-				my $p = Math::Round::nearest( 0.01, $material_price{'Price'} * $impressions/1000 );
+				my $p = Math::Round::nearest( 0.01, $material_price{'Price'} * $colour_impressions/1000 );
 				$ink_price{Total} += $p;
-				$price{'Ink breakdown'} .= sprintf( ' %d * $%.2f%s = %.2f', $impressions, @material_price{'Price','units'}, $p );
+				$price{'Ink breakdown'} .= sprintf( ' %d * $%.2f%s = %.2f', $colour_impressions, @material_price{'Price','units'}, $p );
 			} elsif ( $material_price{units} eq 'per impression' ) {
-				my $p = Math::Round::nearest( 0.01, $material_price{Price} * $impressions );
+				my $p = Math::Round::nearest( 0.01, $material_price{Price} * $colour_impressions );
 				$ink_price{Total} += $p;
-				$price{'Ink breakdown'} .= ' ' . $impressions . " * $material_price{'Price'}$material_price{'units'} = " . $p;
+				$price{'Ink breakdown'} .= ' ' . $colour_impressions . " * $material_price{'Price'}$material_price{'units'} = " . $p;
 			} else {
 				$openprint::log->error("Unknown units for $colour: $ink_price{'units'}" . $$Press{'strid'} ) if DEBUG_INKS;
 			} # end if
