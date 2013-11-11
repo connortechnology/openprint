@@ -304,7 +304,7 @@ foreach my $E ( openprint::Equipment->find() ) {
 	} # end foreach
 } # end foreach
 
-$dbh->do('UPDATE folds set max_calliper=0.036/pages where equipment_id=7');
+$dbh->do('UPDATE folds set max_calliper=0.036/(pages/2) where equipment_id=7');
 
 $dbh->disconnect();
 print "Finished\n";
