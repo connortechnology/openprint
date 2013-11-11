@@ -218,7 +218,7 @@ sub send_to_vendor {
 	$_ = MIME::QuotedPrint::encode_qp( Encode::encode( 'utf-8', ssi::variable_substitution( undef, $log, $dbh, \$email_template, \%info ) ) );
 	push @attachments, ('', $_, 'text/html', 'quoted-printable');
 
-	my $purchase_order = ssi::include('/email_content/purchase_order.html', \%info );
+	my $purchase_order = Encode::encode( 'utf-8', ssi::include('/email_content/purchase_order.html', \%info ) );
 
 	my $file_base = $From->Company()->name().'-PO'.$_[0]{id};
 	if ( File::Slurp::write_file('/tmp/'.$file_base.'.html', { atomic => 1, err_mode=>'carp' }, \$purchase_order) ) {
@@ -287,7 +287,7 @@ $openprint::log->debug('send_to_me');
 	$_ = MIME::QuotedPrint::encode_qp( Encode::encode( 'utf-8', ssi::variable_substitution( undef, $log, $dbh, \$email_template, \%info ) ) );
 	push @attachments, ('', $_, 'text/html', 'quoted-printable');
 
-	my $purchase_order = ssi::include('/email_content/purchase_order.html', \%info );
+	my $purchase_order = Encode::encode( 'utf-8', ssi::include('/email_content/purchase_order.html', \%info ) );
 
 	my $file_base = $From->Company()->name().'-PO'.$_[0]{id};
 	if ( File::Slurp::write_file('/tmp/'.$file_base.'.html', { atomic => 1, err_mode=>'carp' }, \$purchase_order) ) {
