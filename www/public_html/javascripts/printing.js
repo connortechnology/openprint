@@ -167,7 +167,6 @@ function validate_data(formName) {
 } // end function validate_data
 
 function calc_print( formName, force, options ) {
-	if ( block_calc ) return;
 
 	var form = getFormObj( formName );
 

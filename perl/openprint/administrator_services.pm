@@ -63,7 +63,7 @@ sub edit {
 						cost			=>	$param{"cost-$$Price{id}"},
 						markup			=>	$param{"markup-$$Price{id}"},
 						price			=>	$param{"price-$$Price{id}"},
-						discount		=>	$param{"discount-$$Price{id}"},
+						discountable	=>	$param{"discount-$$Price{id}"},
 						supplier_id		=>	$param{"supplier_id-$$Price{id}"},
 						} );
 			} # end foreach 

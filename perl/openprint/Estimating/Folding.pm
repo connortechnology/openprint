@@ -25,7 +25,7 @@ require openprint::service;
 use vars qw( @folds %fold_types );
 
 use constant DEBUG => 0;
-use constant DEBUG_NEEDS => 1;
+use constant DEBUG_NEEDS => 0;
 
 my @equipment;
 my @stitchers;
@@ -648,7 +648,8 @@ sub signature_calc {
 				$I->display('Results after initial cuts');
 			} # end foreach
 		} # end if
-		@All_Impositions = ( \@Set_Of_Impositions );
+		#@All_Impositions = ( \@Set_Of_Impositions );
+		@All_Impositions = reduce_impositions( \@Set_Of_Impositions );
 	} # end if SignatureType
 
 	# Foreach equipment, figure out which folds are required.
@@ -694,6 +695,7 @@ sub signature_calc {
 			my $Set_Of_Impositions = $All_Impositions[$set_index];
 			if ( $$Equipment{id} == $$Press{id} ) {
 				next if scalar @$Set_Of_Impositions != 1;
+				next if $$Set_Of_Impositions[0]{quantity} != 1;
 			} # end if
 			# At this point, we don't modify the Set_Of_Impositions, we modify the equipment-specific copy of it.
 #$openprint::log->debug("Impositions in this set: " . @Impositions );
@@ -763,14 +765,16 @@ sub signature_calc {
 					if ( $$sig_specs{'rdbTemplateType'} and $fold_types{$$sig_specs{'rdbTemplateType'}} ) {
 $openprint::log->debug("Templatetype: $$sig_specs{'rdbTemplateType'}") if DEBUG;
 						my $rc = $Equipment->fits( $Imposition->layout_width(), $Imposition->layout_height(), $$Paper{'calliper'} );
-						$openprint::log->debug("Trying to fit " . $Imposition->layout_width() . 'x' . $Imposition->layout_height() . ' on ' . $Equipment->strid(). ' ' . $rc ) if DEBUG;
+						$openprint::log->debug("Trying to fit " . $Imposition->layout_width() . 'x' . $Imposition->layout_height() . ' on ' . $Equipment->strid(). ' (' . $rc.')' ) if DEBUG;
 						if ( $rc ) {
+$openprint::log->debug("Has rc");
 							if ( @my_equipment == 1 ) {
 								$Breakdown .= "Doesn't fit: $rc<br/>";
 							} # end if
 							%folds = ();
 							last;
 						} # end if
+$openprint::log->debug("No rc");
 							
 						my $Fold = $Equipment->Fold({
 								type			=>	$$sig_specs{'rdbTemplateType'},
@@ -779,8 +783,10 @@ $openprint::log->debug("Templatetype: $$sig_specs{'rdbTemplateType'}") if DEBUG;
 								imposition		=>	$$Imposition{'imposition'},
 								printing_type	=>	$ppt,
 								});
+$openprint::log->debug("fold: $Fold");
 						if ( $Fold ) {
 # Need to check feed width
+$openprint::log->debug("Has a fold, doing extra checks") if DEBUG;
 							if ( my $max_feed_width = $Equipment->specification('Maximum Feed Width') ) {
 								if ( $Equipment->specification('Orientation') ) {
 									if (						
@@ -818,6 +824,7 @@ $openprint::log->debug("Templatetype: $$sig_specs{'rdbTemplateType'}") if DEBUG;
 							} # end if has max_feed_width
 
 							if ( $Fold ) {
+$openprint::log->debug("Got Fold: " . $Fold->to_string() ) if DEBUG;
 								$Fold = $Fold->clone();
 								$Fold->Imposition( $Imposition );
 								push @{$folds{$$sig_specs{'rdbTemplateType'}.'-'.$$Imposition{'imposition'}.'out'}}, $Fold;
@@ -829,6 +836,7 @@ $openprint::log->debug("Templatetype: $$sig_specs{'rdbTemplateType'}") if DEBUG;
 									calliper		=>	".$$Paper{'calliper'}."<br/>
 									imposition		=>	$$Imposition{'imposition'}<br/>";
 							} # end if Fold passwes extra shceks
+$openprint::log->debug("No Fold") if DEBUG;
 						} # end if Fold found
 						$complete = 0;
 					} else { # No template, might be a book

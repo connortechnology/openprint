@@ -3016,10 +3016,26 @@ if ( 0 and ! openprint::Host->find_one() ) {
 	} # end foreach Log
 } # end if
 
-foreach my $Service ( openprint::Service->find('name'=>'1ColourImpressionPerfecting') ) {
-	$_ = $Service->save({'name'=>'PerfectingImpression1/1'});
-	print $_ if $_;
-} # end foreach Service
+foreach my $c ( 1 .. 4 ) {
+	foreach my $Service ( openprint::Service->find('name'=>$c.'ColourImpressionPerfecting') ) {
+		$_ = $Service->save({'name'=>'PerfectingImpression'.$c.'/'.$c});
+		print $_ if $_;
+		foreach my $c2 ( $c .. 4 ) {
+			my $Second = openprint::Service->find_one( name=>$c2.'ColourImpressionPerfecting') );
+			if ( $Second ) {
+				my $New = $Second->copy();
+				$New->save({name=>'PerfectingImpression'.$c2.'/'.$c});
+				foreach my $P ( $Second->prices() ) {
+					my $c_price = openprint::ServicePrice->find_one( service_id=>$$Service{id}, min=>$$P{min} );
+					if ( $c_price ) {
+						$P = $P->copy();
+						$P->save({service_id=>$$New{id},cost=>($$P{cost}+$$c_price{cost})/2, price=>($$P{price}+$$c_price{price})/2});
+					} # end if
+				} # end if
+			} # end if
+		} # end foreach c .. 4
+	} # end foreach Service
+} # end foreach 1 .. 4
 foreach my $Service ( openprint::Service->find('name'=>'2ColourImpressionPerfecting') ) {
 	$_ = $Service->save({'name'=>'PerfectingImpression2/2'});
 	print $_ if $_;

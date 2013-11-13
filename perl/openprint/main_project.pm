@@ -77,7 +77,7 @@ $log->debug("Reset $k");
 	} # end if
 	if ( ! exists $session{'/main/project/history.html?company_id'} ) {
 		$session{'/main/project/history.html?company_id'} = $session{company_id};
-	}
+	} # end if
 
 	_history();
 } # end sub history

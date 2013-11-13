@@ -13,7 +13,7 @@
 	There is no current project. 
 	<? else ( ! $$variable{Project}->id() ) ?>
 	<? if ( $$variable{Project}->company_id() != $session{'company_id'} ) ?>
-	<div class="warning unprintable">Warning: You are logged in as <? echo ( new openprint::Company( $session{'company_id'} )->name() ) ?> but this project belongs to <? echo ( $$variable{Project}->Company()->name() ) ?>!</div>
+	<div class="warning unprintable">Warning: You are logged in as <? echo ( new openprint::Company( $session{'company_id'} )->name() ) ?> but this project belongs to <a href="view.html?project_id=<?ProjectIndex?>&amp;btnFunction=SelectCompany&amp;ddmCompany=<?echo($$variable{Project}->company_id())?>"><? echo ( $$variable{Project}->Company()->name() ) ?></a>!</div>
 	<? endif ( $$variable{Project}->company_id() != $session{'company_id'} ) ?>
 	<form id="f1" name="f1" method="post" action="view.html">
 		<input type="hidden" name="btnFunction" value=""/>
