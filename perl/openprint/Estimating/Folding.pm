@@ -648,8 +648,8 @@ sub signature_calc {
 				$I->display('Results after initial cuts');
 			} # end foreach
 		} # end if
-		@All_Impositions = ( \@Set_Of_Impositions );
-		#@All_Impositions = reduce_impositions( \@Set_Of_Impositions );
+		#@All_Impositions = ( \@Set_Of_Impositions );
+		@All_Impositions = reduce_impositions( \@Set_Of_Impositions );
 	} # end if SignatureType
 
 	# Foreach equipment, figure out which folds are required.
@@ -695,6 +695,7 @@ sub signature_calc {
 			my $Set_Of_Impositions = $All_Impositions[$set_index];
 			if ( $$Equipment{id} == $$Press{id} ) {
 				next if scalar @$Set_Of_Impositions != 1;
+				next if $$Set_Of_Impositions[0]{quantity} != 1;
 			} # end if
 			# At this point, we don't modify the Set_Of_Impositions, we modify the equipment-specific copy of it.
 #$openprint::log->debug("Impositions in this set: " . @Impositions );

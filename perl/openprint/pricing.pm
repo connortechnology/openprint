@@ -10,7 +10,7 @@ use vars qw( $log $dbh );
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
 
-use constant DEBUG => 1;
+use constant DEBUG => 0;
 
 my %price_cache;
 
@@ -46,7 +46,7 @@ sub get_pricelist_id {
 	return $list_id;
 } # end sub get_pricelist_id
 
-memoize('find_price');
+#memoize('find_price');
 # returns an index into the passed array of the price entry that fits the specified quantity.
 # if $qty = '' then it will return the last entry
 # if the price array is empty, it will return -4, which isn't good.
@@ -142,7 +142,7 @@ sub split_by_equipment {
 	return %lists;
 } # end sub split_by_equipment
 
-memoize('get_best_prices');
+#memoize('get_best_prices');
 sub get_best_prices {
 	my ( $cust_id, $prod_index, $list_id, $pricesetclass, $equipment, $qty, $period ) = @_;
 
@@ -159,6 +159,9 @@ sub get_best_prices {
 		my $priceGroup = $pricesetclass->new( $log, $dbh, $list_id, $prod_index, $equipment, $qty, $period );
 		$priceGroup->load();	
 		push @pricing, @{$priceGroup->{prices}};
+if ( DEBUG ) {
+	$openprint::log->debug("Pricing: " . @pricing );
+}
 
 # Now if we are a customer, then we have more to do, including special pricing, adding discounts, etc. 
 		if ( $cust_id != 0 ) {
@@ -217,6 +220,13 @@ sub get_best_price {
 sub get_best_price_object {
 	my ( $cust_id, $prod_index, $list_id, $pricesetclass, $qty, $equipment, $period ) = @_;
 	my $prices = get_best_prices( $cust_id, $prod_index, $list_id, $pricesetclass, $equipment, $qty, $period );
+if ( DEBUG ) {
+	$openprint::log->debug("Prices in get_best_price_obejct" . @$prices);
+	foreach my $price ( @$prices ) {
+		$openprint::log->debug("$$price{min} $$price{max} $$price{Price}");
+	} # end foreach
+	
+}
 	foreach my $price ( @$prices ) {
 		if ( $price and ( 
 					( (!defined $qty) or $qty eq '' ) or

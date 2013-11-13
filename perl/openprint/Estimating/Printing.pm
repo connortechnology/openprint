@@ -24,7 +24,7 @@ use constant DEBUG => 0;
 use constant DEBUG_VERSIONS => 0;
 use constant DEBUG_FILTERING => 0;
 use constant DEBUG_PRICE_DECISIONS => 0;
-use constant DEBUG_INKS => 1;
+use constant DEBUG_INKS => 0;
 
 my $master_time;
 my %special_colours;
@@ -3434,6 +3434,7 @@ $openprint::log->warn("Unable to calculate additional signatures Complete: $$sig
 
 			if ( $recursion_depth == 0 ) {
 				my $results = plate_cost( $price, \%PlateCounts );
+				$$price{PlateCosts} = $$results{'Price'};
 				foreach my $p ( @{$$price{prices}} ) {
 					# This should fill in the place costs line of the breakdown
 					my $r = plate_cost( $p, \%PlateCounts );
@@ -3471,8 +3472,13 @@ $openprint::log->warn("Unable to calculate additional signatures Complete: $$sig
 						$$price{'Run Total'} += $$price{'Roll2SheetRunCharge'};
 					} # end if Has Roll2Sheet Price
 				} # end if Roll & has sheeter
-			} # end if
-			if ( (!$txtUnspecifiedPageQuantity) or ( $txtUnspecifiedPageQuantity - ( $$price{'sig_count'} * $$imp{pages} ) == 0 ) ) {
+			} # end if recursion == 0
+$openprint::log->debug("UPQ $txtUnspecifiedPageQuantity $$price{'sig_count'} * $$imp{pages} ");
+			if ( ($txtUnspecifiedPageQuantity <= 1) or ( $txtUnspecifiedPageQuantity - ( $$price{'sig_count'} * $$imp{pages} ) == 0 ) ) {
+				if ( $$price{PlateCosts} ) {
+# They may be added into the Comparison cost in one of the sub prices
+					$$price{'Comparison Cost'} -= $$price{PlateCosts};
+				}
 				my $results = plate_cost( $price, \%PlateCounts );
 				$$price{PlateCosts} = $$results{'Price'};
 				$$price{'Comparison Cost'} += $$results{'Price'};
@@ -3483,7 +3489,7 @@ $openprint::log->warn("Unable to calculate additional signatures Complete: $$sig
 				my @paper_strings = keys %PaperCounts;
 				if ( ( 1 == @paper_strings ) and ( $Paper->id_string() ne $paper_strings[0] ) ) {
 					$openprint::log->error("Different paper in count versus imposition: $paper_strings[0] ne " . $imp->Paper()->id_string() );
-				} elsif ( DEBUG or 0 ) {
+				} elsif ( DEBUG or 1) {
 					$log->warn("Paper Counts");
 					foreach my $k ( @paper_strings ) { $openprint::log->debug( "$k => $PaperCounts{$k}" ); } # end 
 				}
@@ -4208,7 +4214,7 @@ if ( $$project{'HasDieCutting'} and $$project{'NeedDieCutting'} ) {
 #$openprint::log->debug("Colours: @colours");
 	foreach my $Colour ( filter_coatings_from_colours(\@colours) ) {
 		my $colour_impressions = $impressions;
-		$colour_impressions /= 2 if $$Imposition{sides} == 2;
+		$colour_impressions = POSIX::ceil( $colour_impressions/2 ) if $$Imposition{sides} == 2;
 		
 		my $real_colour = $$Colour{name};
 $openprint::log->debug("Colour: $real_colour impressions $colour_impressions $$Imposition{'runstyle'}") if DEBUG_INKS;
@@ -4392,13 +4398,13 @@ $openprint::log->debug("Was mixed") if DEBUG_INKS;
 				} elsif ( $material_price{'units'} eq 'per m' ) {
 					my $p = Math::Round::nearest( 0.01, $material_price{'Price'} * $impressions/1000 );
 					$ink_price{Total} += $p;
-					$price{'Ink breakdown'} .= sprintf( ' %d * $%.2f%s = %.2f', $impressions, @material_price{'Price','units'}, $p );
+					$price{'Ink breakdown'} .= sprintf( ' %d * $%.2f%s = %.2f', $colour_impressions, @material_price{'Price','units'}, $p );
 				} elsif ( $material_price{'units'} eq 'per impression' ) {
-					my $p = Math::Round::nearest( 0.01, $ink_price{'Price'} * $impressions );
+					my $p = Math::Round::nearest( 0.01, $material_price{'Price'} * $colour_impressions );
 					$ink_price{Total} += $p;
-					$price{'Ink breakdown'} .= ' ' . $impressions . " * $material_price{'Price'}$material_price{'units'} = " . $p;
+					$price{'Ink breakdown'} .= ' ' . $colour_impressions . " * $material_price{'Price'}$material_price{'units'} = " . $p;
 				} else {
-					$openprint::log->error("Unknown units for $colour: $ink_price{'units'}" . $$Press{'strid'} );
+					$openprint::log->error("Unknown units for $colour: $material_price{'units'}" . $$Press{'strid'} );
 				} # end if
 			} # end if material_price
 		} # end if
@@ -4915,12 +4921,12 @@ sub get_run_price {
 
 	if ( sets::isin( $$Imposition{'runstyle'}, [ 'Web', 'Perfecting' ] ) ) {
 # A web does both sides at once, and cannot do multipass
-		$impression_service = $$Imposition{'runstyle'}.'Impression'.$side_one_colours.'/'.$side_two_colours;
+		$impression_service = $$Imposition{runstyle}.'Impression'.$side_one_colours.'/'.$side_two_colours;
 		my %RunPrice;
-		if ( ! ( %RunPrice = openprint::service::get_price_object( $$Imposition{'runstyle'}.'Impression'.$side_one_colours.'/'.$side_two_colours, $impressions, $Press ) ) ) {
-			%RunPrice = openprint::service::get_price_object( $$Imposition{'runstyle'}.'Impression', $impressions, $Press );
+		if ( ! ( %RunPrice = openprint::service::get_price_object( $impression_service, $impressions, $Press ) ) ) {
+			%RunPrice = openprint::service::get_price_object( $$Imposition{runstyle}.'Impression', $impressions, $Press );
 		} # end if
-		$run_price{'units'} = $RunPrice{'units'};
+		$run_price{units} = $RunPrice{units};
 		$running_price = $RunPrice{'Price'};
 	} else {
 		if ( $side_one_colours ) {
@@ -5022,7 +5028,7 @@ sub get_run_price {
 		$run_price{'Price'} = ($run_price{'Cost'} * $impressions)/1000;
 		$run_price{'MPrice'} = $run_price{'Cost'};
 
-	} elsif ( sets::isin( $run_price{'units'}, ['per impression'] ) ) {
+	} elsif ( $run_price{'units'} eq 'per impression' ) {
 		if ( $speed_mod ) {
 			$running_price *= $speed_mod;
 		} # end if
@@ -5041,7 +5047,7 @@ sub get_run_price {
 		$run_price{'Price'} = $running_price * $run_price{'RunHours'};
 		$run_price{'MPrice'} = ( $run_price{'Price'} / $impressions ) * 1000;
 	} else {
-		$openprint::log->warn("Unknown Units for $$Imposition{runstyle} ($side_one_colours/$side_two_colours) $impression_service: ($run_price{'units'}) on " . $$Press{'strid'} );
+		$openprint::log->warn("Unknown Units for $$Imposition{runstyle} ($side_one_colours/$side_two_colours) $impression_service: ($impressions imps) ($run_price{'units'}) on " . $$Press{'strid'} );
 	} # end if
 #$openprint::log->debug("Impresion price: $run_price{'Cost'} $run_price{'units'} = $run_price{'Price'}");
 	return \%run_price;
