@@ -72,7 +72,7 @@ sub calc {
 		return $$specs{'Status'} = 'uncalculated';
 	} # end if
 
-	my @Equipment = openprint::Equipment->find( Specifications=>{'Tipping Capable'=>\@capable},'use_in_estimating'=>1);
+	my @Equipment = openprint::Equipment->find( Specifications=>{'Tipping Capable'=>\@capable}, useinestimating=>1);
 	if ( ! @Equipment ) {
 		$$specs{'alert'} = 'We have no equipment for tip-ins.';
 		return $$specs{'Status'} = 'uncalculated';
@@ -201,7 +201,7 @@ sub display {
 	} elsif ( $$services{Folding} ) {
 		push @capable, 'When Folding';
 	} # end if
-	my @possible_equipment = openprint::Equipment->find( Specifications => {'Tipping Capable'=>\@capable}, 'use_in_estimating'=>1,'order'=>'lower(strName)');
+	my @possible_equipment = openprint::Equipment->find( Specifications => {'Tipping Capable'=>\@capable}, useinestimating=>1,'order'=>'lower(strName)');
 	$$variable{'Equipment'} = \@possible_equipment;
 } # end sub display
 
