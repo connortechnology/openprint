@@ -1,6 +1,5 @@
 CREATE TABLE Payments ( 
 	id					SERIAL,
-	order_id			INTEGER, FOREIGN KEY (order_id) REFERENCES Orders (id),
 	owner_id			INTEGER NOT NULL, FOREIGN KEY (owner_id) REFERENCES Companies (id),
 	payor_id			INTEGER NOT NULL, FOREIGN KEY (payor_id) REFERENCES Companies (id),
 	amount				FLOAT,
