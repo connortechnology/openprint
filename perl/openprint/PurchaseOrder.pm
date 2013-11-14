@@ -26,6 +26,8 @@ require openprint::Object_Payment;
 require File::Slurp;
 require MIME::QuotedPrint;
 require MIME::Base64;
+require openprint::Object_Asset;
+require openprint::Asset;
 
 $debug = 0;
 
@@ -212,6 +214,7 @@ sub send_to_vendor {
 			'From'			=>	$From,
 			);
 	my @attachments = ();
+	my $results;
 
 	my $email_template = misc::load_file( $log, $config{'SkinPath'} . '/email_template.html' );
 	$info{'ReplacementText'} = ssi::include("/email_content/purchase_order_body.html", \%info );
@@ -224,17 +227,32 @@ sub send_to_vendor {
 	if ( File::Slurp::write_file('/tmp/'.$file_base.'.html', { atomic => 1, err_mode=>'carp' }, \$purchase_order) ) {
 		`wkhtmltopdf "/tmp/$file_base.html" "/tmp/$file_base.pdf"`;
 		$purchase_order = File::Slurp::read_file( "/tmp/$file_base.pdf" );
-		unlink "/tmp/$file_base.html";
-		unlink "/tmp/$file_base.pdf";
-		push @attachments, ($file_base.'.pdf', MIME::Base64::encode_base64($purchase_order), 'application/octet-stream', 'base64');
-	} else {
+		if ( $purchase_order ) {
+			unlink "/tmp/$file_base.html";
+			unlink "/tmp/$file_base.pdf";
+			push @attachments, ($file_base.'.pdf', MIME::Base64::encode_base64($purchase_order), 'application/octet-stream', 'base64');
+
+			my $Asset = openprint::Asset->from_content( $file_base.'.pdf', $purchase_order );	
+			if ( ref $Asset eq 'openprint::Asset' ) {
+				if ( ! openprint::Object_Asset->find_one( asset_id=>$$Asset{id}, object_id=>$_[0]{id}, object_type=>'openprint::PurchaseOrder' ) ) {
+					my $OA = new openprint::Object_Asset();
+					$results .= $OA->save({asset_id=>$$Asset{id}, object_id=>$_[0]{id}, object_type=>'openprint::PurchaseOrder'});
+				} # end if
+			} else {
+				$results .= $Asset;
+			} # end if
+		} else {
+			$openprint::log->debug("Error making pdf");
+		} # end if has pdf contents
+	} # end if successfully wrote html content
+	if ( @attachments == 4 ) {
 		$openprint::log->error( "couldn't write PO to $file_base" );
 		push @attachments, ($file_base.'.html', MIME::QuotedPrint::encode_qp($purchase_order), 'text/html', 'quoted-printable');
 	} # end if
 
 	my $Email = new openprint::Email();
 
-	my $results = 'PO ' . $$self{'id'} . ' emailed to the following recipients:<br/>';
+	$results .= 'PO ' . $$self{'id'} . ' emailed to the following recipients:<br/>';
 	$results .= $Email->send(
 			FROM	=> $From,
 			SUBJECT => 'Purchase Order ' . $self->id() . ' from ' . $From->Company()->name(),

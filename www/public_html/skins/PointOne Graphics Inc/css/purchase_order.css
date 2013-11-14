@@ -302,7 +302,7 @@ table .supplier, table .item_name, table .product {
 	display: table-row;
 	background-color: #e4ebf4;
 }
-.totals {
+div.totals {
 	display: table;
 	width: 200px;
 	float: right;
