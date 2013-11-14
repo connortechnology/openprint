@@ -3021,7 +3021,7 @@ foreach my $c ( 1 .. 4 ) {
 		$_ = $Service->save({'name'=>'PerfectingImpression'.$c.'/'.$c});
 		print $_ if $_;
 		foreach my $c2 ( $c .. 4 ) {
-			my $Second = openprint::Service->find_one( name=>$c2.'ColourImpressionPerfecting') );
+			my $Second = openprint::Service->find_one( name=>$c2.'ColourImpressionPerfecting');
 			if ( $Second ) {
 				my $New = $Second->copy();
 				$New->save({name=>'PerfectingImpression'.$c2.'/'.$c});
