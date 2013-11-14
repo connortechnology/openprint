@@ -187,7 +187,6 @@ sub calc {
 
 sub signature_calc {
 	my ( $Project, $service_index, $specs, $signature_service_index, $sig_specs, $qty_index ) = @_;
-$openprint::log->debug("Scoring sign calc");
 
 	my $qty = $$specs{"txtQuantity$qty_index"};
 	if ( $$specs{'txtPressSheetComboItems'} ) {
@@ -473,6 +472,7 @@ sub get_scores {
 		return;
 	} # end if
 	if ( $$sig_specs{'txtSignatureType'} eq 'Cover Spreads' ) {
+$openprint::log->debug("Book type: " . openprint::print::get_book_type( $Project ) );
 		if ( openprint::print::get_book_type( $Project ) eq 'PerfectBound' ) {
 			$$specs{"txtVerticalQty-$$sig_specs{'SignatureIndex'}"} = 4;
 			$$specs{"txtHorizontalQty-$$sig_specs{'SignatureIndex'}"} = 0;

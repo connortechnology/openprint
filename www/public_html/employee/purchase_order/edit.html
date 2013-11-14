@@ -138,7 +138,7 @@ function update_taxes( form ) {
 		<br/>
 		<div id="similar_pos"></div>
 <? if ( $$variable{PurchaseOrder}->id() ) ?>
-<div class="items">
+<div class="items" id="items">
 	<div class="header">
 		<div class="buttons">&nbsp;</div>
 		<div class="quantity">QTY</div>
@@ -168,7 +168,7 @@ function update_taxes( form ) {
 			'&amp;po_id=' + " . $$variable{PurchaseOrder}->id() ." + 
 			'', { 
 					evalScripts: true, 
-					onSuccess: function(response){new Insertion.Before(\$('line-new'), response.responseText);update_totals(\$('f1'));}
+					onSuccess: function(response){\$('items').insert( { bottom: response.responseText } );update_totals(\$('f1'));}
 				} );
 		} else {
 			alert('Please select a type for the new line.');
