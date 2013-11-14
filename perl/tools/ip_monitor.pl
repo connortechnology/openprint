@@ -5,6 +5,7 @@ use strict;
 
 require configuration;
 require sql;
+require misc;
 require openprint::Host;
 require logger;
 require openprint::Email;
