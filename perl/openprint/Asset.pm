@@ -73,7 +73,7 @@ sub thumbnail_url {
 		if ( ! -e $dest ) {
 			$openprint::log->debug("Creating thumbnail at 75x $src $dest");
 			if ( system("convert  -adaptive-resize 75x $src $dest") ) {
-				$openprint::log->error("ERror creating thumbnail. Reason: $1");
+				$openprint::log->error("ERror creating thumbnail. Reason: $1 $?");
 			} # end if convert
 		} # end if
 		return '/thumbnails/'.$filename;
@@ -140,6 +140,40 @@ sub destroy {
 	unlink $_[0]->on_disk_path();
 	sql::execute( undef, undef, 'DELETE FROM Assets WHERE id=?', $_[0]{'id'} );
 } # end sub destroy
+
+sub from_content {
+	my ( $self, $filename, $content ) = @_;
+
+	if ( ! $content ) {
+		return "Empty content passed to Asset::from_content<br/>";
+	} # end if
+
+	require Digest::MD5;
+	my $md5 = Digest::MD5::md5_base64( $content );
+	if ( ! $md5 ) {
+		return "Unable to MD5?";
+	} else {
+		$openprint::log->debug("MD5 was $md5");
+	} # end if
+	my $Asset = openprint::Asset->find_one( md5 =>$md5 );
+	if ( ! $Asset ) {
+		$Asset = new openprint::Asset();
+		$! .= $Asset->save({ filename=>$filename, md5=>$md5});
+	} # end if
+	require File::Slurp;
+
+	if ( ! -e $Asset->on_disk_path() ) {
+		if ( ! File::Slurp::write_file( $Asset->on_disk_path(), { err_mode=>'quiet' }, $content ) ) {
+			return 'There was an error saving file ' . $filename.' to ' . $Asset->on_disk_path() . ": $!<br/>";
+		} # end if
+	} # end if
+
+	if ( ( @_ > 3 ) and $_[3] ) {
+# Should be a hash of more attribute
+		$Asset->save($_[3]);
+	} # end if
+	return $Asset;
+} # end sub from_content
 
 # What gets passed in the form element name
 sub upload {

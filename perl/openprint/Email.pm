@@ -55,7 +55,7 @@ sub send {
 			SMTP	=> ( $params{'SMTP'} ? $params{'SMTP'} : $config{'Mail Server'} ),
 			FROM	=> $$self{'from'},
 			SUBJECT => ( $params{'SUBJECT'} ? $params{'SUBJECT'} : $$self{'subject'} ),
-			BODY	=>	( $params{'BODY'} ? $params{'BODY'} : $$self{'body'} ),
+			BODY	=>	( exists $params{'BODY'} ? $params{'BODY'} : $$self{'body'} ),
 			);
 #$log->debug("SMTP: $mail{SMTP}, from: $mail{'from'} subject: $mail{SUBJECT}");
 	my @attachments = $params{'ATTACHMENTS'} ? @{$params{'ATTACHMENTS'}} : ();

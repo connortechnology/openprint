@@ -22,6 +22,12 @@ require openprint::PurchaseOrder_Log;
 require openprint::PurchaseOrder_Tax;
 require openprint::Email;
 require openprint::Manifest;
+require openprint::Object_Payment;
+require File::Slurp;
+require MIME::QuotedPrint;
+require MIME::Base64;
+require openprint::Object_Asset;
+require openprint::Asset;
 
 $debug = 0;
 
@@ -47,6 +53,7 @@ $serial = 'purchaseorders_id_seq';
 	'shipping_method'	=>	'shipping_method',
 	'shipping_terms'	=>	'shipping_terms',
 	'vendor_contact'	=>	'vendor_contact',
+	contact_id			=>	'contact_id',
 	'vendor_name'		=>	'vendor_name',
 	'vendor_address1'	=>	'vendor_address1',
 	'vendor_address2'	=>	'vendor_address2',
@@ -85,6 +92,7 @@ $serial = 'purchaseorders_id_seq';
 );
 
 %defaults = (
+	contact_id		=>	undef,
 	'supplier_id'	=>	undef,
 	'created_on'	=> 'NOW()',
 	'updated_on'	=> 'NOW()',
@@ -206,47 +214,68 @@ sub send_to_vendor {
 			'From'			=>	$From,
 			);
 	my @attachments = ();
+	my $results;
 
 	my $email_template = misc::load_file( $log, $config{'SkinPath'} . '/email_template.html' );
-	$info{'ReplacementText'} = "<!--#include virtual=\"/email_content/purchase_order_body.html\"-->";
-	$_ = MIME::QuotedPrint::encode_qp( ssi::variable_substitution( undef, $log, $dbh, \$email_template, \%info ) );
+	$info{'ReplacementText'} = ssi::include("/email_content/purchase_order_body.html", \%info );
+	$_ = MIME::QuotedPrint::encode_qp( Encode::encode( 'utf-8', ssi::variable_substitution( undef, $log, $dbh, \$email_template, \%info ) ) );
 	push @attachments, ('', $_, 'text/html', 'quoted-printable');
 
-	my $purchase_order = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/email_content/purchase_order.html' );
-	push @attachments, $From->Company()->name().'-PO'.$$self{'id'}.'.html', MIME::QuotedPrint::encode_qp( Encode::encode('utf-8',ssi::variable_substitution( undef, $log, $dbh, \$purchase_order, \%info ) ) ), 'text/html', 'quoted-printable';
+	my $purchase_order = Encode::encode( 'utf-8', ssi::include('/email_content/purchase_order.html', \%info ) );
 
-	my %mail = (
-			SMTP	=> $config{'Mail Server'},
-			FROM	=> sprintf( '"%s" <%s>', $From->name(), $From->email() ),
+	my $file_base = $From->Company()->name().'-PO'.$_[0]{id};
+	if ( File::Slurp::write_file('/tmp/'.$file_base.'.html', { atomic => 1, err_mode=>'carp' }, \$purchase_order) ) {
+		`wkhtmltopdf "/tmp/$file_base.html" "/tmp/$file_base.pdf"`;
+		$purchase_order = File::Slurp::read_file( "/tmp/$file_base.pdf" );
+		if ( $purchase_order ) {
+			unlink "/tmp/$file_base.html";
+			unlink "/tmp/$file_base.pdf";
+			push @attachments, ($file_base.'.pdf', MIME::Base64::encode_base64($purchase_order), 'application/octet-stream', 'base64');
+
+			my $Asset = openprint::Asset->from_content( $file_base.'.pdf', $purchase_order );	
+			if ( ref $Asset eq 'openprint::Asset' ) {
+				if ( ! openprint::Object_Asset->find_one( asset_id=>$$Asset{id}, object_id=>$_[0]{id}, object_type=>'openprint::PurchaseOrder' ) ) {
+					my $OA = new openprint::Object_Asset();
+					$results .= $OA->save({asset_id=>$$Asset{id}, object_id=>$_[0]{id}, object_type=>'openprint::PurchaseOrder'});
+				} # end if
+			} else {
+				$results .= $Asset;
+			} # end if
+		} else {
+			$openprint::log->debug("Error making pdf");
+		} # end if has pdf contents
+	} # end if successfully wrote html content
+	if ( @attachments == 4 ) {
+		$openprint::log->error( "couldn't write PO to $file_base" );
+		push @attachments, ($file_base.'.html', MIME::QuotedPrint::encode_qp($purchase_order), 'text/html', 'quoted-printable');
+	} # end if
+
+	my $Email = new openprint::Email();
+
+	$results .= 'PO ' . $$self{'id'} . ' emailed to the following recipients:<br/>';
+	$results .= $Email->send(
+			FROM	=> $From,
 			SUBJECT => 'Purchase Order ' . $self->id() . ' from ' . $From->Company()->name(),
+			TO		=> split(',', $self->vendor_email() ),
+			BODY	=>	'',
+			ATTACHMENTS	=>	\@attachments,
 			);
-
-	my $results = 'PO ' . $$self{'id'} . ' emailed to the following recipients:<br/>';
-	foreach my $email ( split(',', $self->vendor_email() ) ) {
-		$email =~ s/^\s*(.*)\s*$/$1/;
-		next if ! $email;
-		$mail{'TO'}	= $email;
-		misc::send_email_with_attachment( $log, \%mail, @attachments );
-		$results .= ssi::htmlize( $mail{'TO'} ) . '<br/>';
-	} # end foreach
 	if ( $self->shipto_email() and ( $self->vendor_email() ne $self->shipto_email() ) ) {
-		my $Email = new openprint::Email();
 		$results .= $Email->send( 
-				TO	=>	[ split(',', $self->shipto_email() ) ],
-				FROM	=>	$mail{'FROM'},
+				TO		=>	[ split(',', $self->shipto_email() ) ],
 				SUBJECT	=>	'Purchase Order '. $self->id() . ' for ' . $self->vendor_name(),
+				BODY	=>	'',
 				ATTACHMENTS =>	\@attachments,
 				);
 	} # end if
 	if ( $self->notifications() ) {
-		$info{'ReplacementText'} = "<!--#include virtual=\"/email_content/purchase_order_notification.html\"-->";
-		$_ = MIME::QuotedPrint::encode_qp( ssi::variable_substitution( undef, $log, $dbh, \$email_template, \%info ) );
+		$info{'ReplacementText'} = ssi::include('/email_content/purchase_order_notification.html', \%info );
+		$_ = MIME::QuotedPrint::encode_qp( Encode::encode( 'utf-8', ssi::variable_substitution( undef, $log, $dbh, \$email_template, \%info ) ) );
 		@attachments = ('', $_, 'text/html', 'quoted-printable');
-		my $Email = new openprint::Email();
 		$results .= 'Notifications: <br/>' . $Email->send( 
 				TO	=>	[ map { new openprint::User( $_ ) } $self->notifications() ],
-				FROM	=>	$mail{'FROM'},
 				SUBJECT	=>	'Purchase Order '. $self->id() . ' for ' . $self->vendor_name(),
+				BODY	=>	'',
 				ATTACHMENTS =>	\@attachments,
 				);
 	} # end if
@@ -272,12 +301,23 @@ $openprint::log->debug('send_to_me');
 	my @attachments = ();
 
 	my $email_template = misc::load_file( $log, $config{'SkinPath'} . '/email_template.html' );
-	$info{'ReplacementText'} = "<!--#include virtual=\"/email_content/purchase_order_body.html\"-->";
-	$_ = MIME::QuotedPrint::encode_qp( ssi::variable_substitution( undef, $log, $dbh, \$email_template, \%info ) );
+	$info{'ReplacementText'} = ssi::include("/email_content/purchase_order_body.html", \%info );
+	$_ = MIME::QuotedPrint::encode_qp( Encode::encode( 'utf-8', ssi::variable_substitution( undef, $log, $dbh, \$email_template, \%info ) ) );
 	push @attachments, ('', $_, 'text/html', 'quoted-printable');
 
-	my $purchase_order = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/email_content/purchase_order.html' );
-	push @attachments, $From->Company()->name().'-PO'.$$_[0]{'id'}.'.html', MIME::QuotedPrint::encode_qp( Encode::encode('utf-8',ssi::variable_substitution( undef, $log, $dbh, \$purchase_order, \%info ) ) ), 'text/html', 'quoted-printable';
+	my $purchase_order = Encode::encode( 'utf-8', ssi::include('/email_content/purchase_order.html', \%info ) );
+
+	my $file_base = $From->Company()->name().'-PO'.$_[0]{id};
+	if ( File::Slurp::write_file('/tmp/'.$file_base.'.html', { atomic => 1, err_mode=>'carp' }, \$purchase_order) ) {
+		`wkhtmltopdf "/tmp/$file_base.html" "/tmp/$file_base.pdf"`;
+		$purchase_order = File::Slurp::read_file( "/tmp/$file_base.pdf" );
+		unlink "/tmp/$file_base.html";
+		unlink "/tmp/$file_base.pdf";
+		push @attachments, ($file_base.'.pdf', MIME::Base64::encode_base64($purchase_order), 'application/octet-stream', 'base64');
+	} else {
+		$openprint::log->error( "couldn't write PO to $file_base" );
+		push @attachments, ($file_base.'.html', MIME::QuotedPrint::encode_qp($purchase_order), 'text/html', 'quoted-printable');
+	} # end if
 
 	my $receipt = (new openprint::Email())->send(
 			FROM	=> sprintf( '"%s" <%s>', $From->name(), $From->email() ),
@@ -285,7 +325,6 @@ $openprint::log->debug('send_to_me');
 			TO		=> $From,
 			ATTACHMENTS	=>	\@attachments,
 			);
-$openprint::log->debug($receipt);
 
 	my $results = 'PO ' . $_[0]{'id'} . ' emailed to the following recipients:<br/>' . $receipt;
 	return $results;
@@ -314,6 +353,7 @@ sub total {
 		foreach my $Tax ( $_[0]->Taxes() ) {
 			$_[0]{total} += $Tax->amount();
 		} # end foreach Tax
+		$_[0]{total} -= $_[0]->payments_total();
 		$_[0]{total} = Math::Round::nearest( 0.01, $_[0]{total} );
 	} # end if
 	return $_[0]{total};
@@ -598,8 +638,28 @@ $log->debug('can see') if $debug;
 			return 1;
 		} # end if
 	} # end if
-	return 0;	
+	return 0;
 } # end sub can_see_pricing
+
+sub payments_total {
+	if ( @_ > 1 ) {
+		$_[0]{payments_total} = $_[1];
+	} # end if
+	if ( ! $_[0]{payments_total} ) {
+		$_[0]{payments_total} = Math::Round::nearest( 0.01, misc::sum( map { $_->amount() } $_[0]->Payments() ) );
+	} # end if
+	return $_[0]{payments_total};
+} # end sub payments_total
+
+sub Payments {
+	if ( @_ > 1 ) {
+		$_[0]{Payments} = $_[1];
+	} # end if
+	if ( ! $_[0]{Payments} ) {
+		 $_[0]{Payments} = [ openprint::Object_Payment->find( object_id=>$_[0]{id}, object_type=>'openprint::PurchaseOrder', order=>'id' ) ];
+	} # end if
+	return @{$_[0]{Payments}};
+} # end sub Payments
 
 1;
 __END__

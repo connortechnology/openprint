@@ -66,3 +66,7 @@ table .serialkey, table .software {
 table .hosts {
 	text-align: left;
 }
+#mac, #ip { 
+	width: 140px;
+}
+

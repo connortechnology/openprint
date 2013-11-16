@@ -507,6 +507,10 @@ sub get_book_type {
 			return $service;
 		} # end if
 	} # end foreach
+	my $printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
+	if ( $$printing_specs{'rdbTemplateType'} eq 'PerfectBound' ) {
+		return 'PerfectBound';
+	} # end if
 	return;
 } # end sub get_book_type
 

@@ -2,10 +2,14 @@
 	if ( $param{username} and ( $param{username} !~ /%/ ) ) {
 		$param{username} = '%'.$param{username}.'%';
 	} # end if
+	if ( $param{value} and ( $param{value} !~ /%/ ) ) {
+		$param{value} = '%'.$param{value}.'%';
+	} # end if
 	my @Records = openprint::RADIUS_Check->find(
 			order => $param{order} ? $param{order} : 'lower(username),attribute',
 			( $param{username} ne '' ? ( 'username ilike' =>$param{username} ) : () ),
 			( $param{attribute} ne '' ? ( attribute => $param{attribute} ) : () ),
+			( $param{value} ne '' ? ( 'value ilike' => $param{value} ) : () ),
 			);
 
 	@{$$variable{Records}} = @Records;
@@ -40,5 +44,5 @@
 	</tbody>
 </table>
 <p class="buttons">
-<? echo ( ssi::button( 'delete', { 'onclick'=> "f1.elements['action'].value='Delete';new Ajax.Updater( 'Results','/employee/it/_radius.html', { method: 'get', parameters: f1.serialize() } );", 'text'=>'Delete Checked' } ); ) ?>
+<? echo ( button( 'delete', { onclick => "f1.elements['action'].value='Delete';new Ajax.Updater( 'Results','/employee/it/_radius.html', { parameters: f1.serialize() } );", text=>'Delete Checked' } ); ) ?>
 </p>
