@@ -542,6 +542,10 @@ if ( ! sets::isin( 'payments', \@tables ) ) {
 	if ( ! exists $$data{'deleted'} ) {
 		$dbh->do('ALTER TABLE Payments add deleted boolean NOT NULL default false;');
 	} # end if
+if ( ! sets::isin( 'paymenttypes', \@tables ) ) {
+	$dbh->do( misc::load_file( $log, q{../openprint/sql/PaymentTypes.sql}) ) or die $dbh->errstr();
+} else {
+} # end if
 	if ( $data and ! exists $$data{'type_id'} ) {
 		$dbh->do('ALTER TABLE payments add type_id INTEGER');
 		$dbh->do('ALTER TABLE payments add FOREIGN KEY (type_id) REFERENCES PaymentTypes (id)');
@@ -1260,6 +1264,9 @@ if ( sets::isin( 'services', \@tables ) ) {
 			$dbh->do('ALTER TABLE Services add owner_id INTEGER');
 			$dbh->do('ALTER TABLE Services add FOREIGN KEY(owner_id) REFERENCES companies (id)');
 		} # end if
+		if ( ! exists $$data{activity_code} ) {
+			$dbh->do('ALTER TABLE Services ADD activity_code TEXT');
+		} # end if
 	} # end if
 } else {
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/Services.sql}) );
@@ -1307,6 +1314,10 @@ if ( ! sets::isin( 'inks', \@tables ) ) {
 		} else {
 			$dbh->do('ALTER TABLE inks add name TEXT');
 		} # end if
+	} # end if
+	if ( ! exists $$data{mix_service_id} ) {
+		$dbh->do('ALTER TABLE Inks ADD mix_service_id INTEGER');
+		$dbh->do(q{alter table inks add foreign key (mix_service_id) REFERENCES Services (id)});
 	} # end if
 } # end if
 
@@ -2431,10 +2442,6 @@ if ( ! sets::isin( 'survey_question_available_answers', \@tables ) ) {
 	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='survey_question_available_answers'", 'column_name');
 } # end if
 
-if ( ! sets::isin( 'paymenttypes', \@tables ) ) {
-	$dbh->do( misc::load_file( $log, q{../openprint/sql/PaymentTypes.sql}) ) or die $dbh->errstr();
-} else {
-} # end if
 
 if ( ! sets::isin( 'order_id_seq', \@sequences ) ) {
 	$dbh->do('create sequence order_id_seq');
@@ -3009,10 +3016,26 @@ if ( 0 and ! openprint::Host->find_one() ) {
 	} # end foreach Log
 } # end if
 
-foreach my $Service ( openprint::Service->find('name'=>'1ColourImpressionPerfecting') ) {
-	$_ = $Service->save({'name'=>'PerfectingImpression1/1'});
-	print $_ if $_;
-} # end foreach Service
+foreach my $c ( 1 .. 4 ) {
+	foreach my $Service ( openprint::Service->find('name'=>$c.'ColourImpressionPerfecting') ) {
+		$_ = $Service->save({'name'=>'PerfectingImpression'.$c.'/'.$c});
+		print $_ if $_;
+		foreach my $c2 ( $c .. 4 ) {
+			my $Second = openprint::Service->find_one( name=>$c2.'ColourImpressionPerfecting');
+			if ( $Second ) {
+				my $New = $Second->copy();
+				$New->save({name=>'PerfectingImpression'.$c2.'/'.$c});
+				foreach my $P ( $Second->prices() ) {
+					my $c_price = openprint::ServicePrice->find_one( service_id=>$$Service{id}, min=>$$P{min} );
+					if ( $c_price ) {
+						$P = $P->copy();
+						$P->save({service_id=>$$New{id},cost=>($$P{cost}+$$c_price{cost})/2, price=>($$P{price}+$$c_price{price})/2});
+					} # end if
+				} # end if
+			} # end if
+		} # end foreach c .. 4
+	} # end foreach Service
+} # end foreach 1 .. 4
 foreach my $Service ( openprint::Service->find('name'=>'2ColourImpressionPerfecting') ) {
 	$_ = $Service->save({'name'=>'PerfectingImpression2/2'});
 	print $_ if $_;

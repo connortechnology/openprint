@@ -115,11 +115,13 @@ sub fits {
 		} # end if
 	} # end if
 
-	if ( $self->specification("Minimum$service Calliper") and $calliper and ( 1*$calliper < 1*$self->specification("Minimum$service Calliper") ) ) {
-		return "Project is too thin. Project Calliper: $calliper Inches, Equipment Min Calliper: " . $self->specification("Minimum$service Calliper") .' Inches.';
-	} # end if
-	if ( $self->specification("Maximum$service Calliper") and $calliper and ( 1*$calliper > 1*$self->specification("Maximum$service Calliper") ) ) {
-		return "Project is too thick. Project Calliper: $calliper Inches, Equipment Max Calliper: " . $self->specification("Maximum$service Calliper") .' Inches.';
+	if ( $calliper ) {
+		if ( $self->specification("Minimum$service Calliper") and ( 1*$calliper < 1*$self->specification("Minimum$service Calliper") ) ) {
+			return "Project is too thin. Project Calliper: $calliper Inches, Equipment Min Calliper: " . $self->specification("Minimum$service Calliper") .' Inches.';
+		} # end if
+		if ( $self->specification("Maximum$service Calliper") and ( 1*$calliper > 1*$self->specification("Maximum$service Calliper") ) ) {
+			return "Project is too thick. Project Calliper: $calliper Inches, Equipment Max Calliper: " . $self->specification("Maximum$service Calliper") .' Inches.';
+		} # end if
 	} # end if
 
 } # end sub fits
@@ -148,7 +150,7 @@ $openprint::log->debug("Fold for $$params{pages} " . $F->to_string() );
 }
 }
 
-	foreach my $Fold ( @{$$self{'Folds'}{$$params{pages}}} ) {
+	foreach my $Fold ( $$params{pages} ? @{$$self{'Folds'}{$$params{pages}}} : map { @{$$self{'Folds'}{$_}} } keys %{$$self{'Folds'}} ) {
 		if ( $$params{type} and ( $$Fold{type} ne $$params{type} ) ) {
 			$openprint::log->debug("Looking at fold: " . $Fold->name() ) if $debug;
 			next;

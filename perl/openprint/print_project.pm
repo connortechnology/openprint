@@ -50,8 +50,10 @@ sub insert_project_type {
 				'projecttype_id is null or ='=> $ProjectType->id(), 
 				'order'=>'projecttype_id NULLS FIRST' );
 
-		$_ = q{SELECT name, value FROM User_Service_Defaults WHERE servicetype_id IS NULL AND user_id=?};
-		push @defaults, sql::execute( $log, $dbh, $_, $session{'user_id'} );
+		if ( $session{'user_id'} ) {
+			$_ = q{SELECT name, value FROM User_Service_Defaults WHERE servicetype_id IS NULL AND user_id=?};
+			push @defaults, sql::execute( $log, $dbh, $_, $session{'user_id'} );
+		} # end if
 		
 		if ( $param{'txtConventionalPlates'} == 1 ) {
 			push @defaults, 'rdbPlates','Conventional';
@@ -622,8 +624,6 @@ sub create_edit_process {
 		$Project->quantity3( int $param{'txtQuantity3'} );
 	} # end if
 
-	my $ProjectType = openprint::ProjectType->find_one( 'name' => $param{'rdbProjectType'} );
-	my $OldProjectType = $Project->Type();
 
 	$Project->reference( $param{'txtProjectReference'} );
 	$Project->comments( $param{'txtComments'} );
@@ -635,21 +635,16 @@ sub create_edit_process {
 	$Project->reprint( $openprint::param{'reprint'} );
 	$Project->reprint_reason( $openprint::param{'reprint_reason'} );
 
+	# This will likely never happen, because the act of cilcking on the different project type changes it.
+	my $ProjectType = openprint::ProjectType->find_one( name => $param{rdbProjectType} );
+	my $OldProjectType = $Project->Type();
 # Handle ProjectType
-	if ( $OldProjectType->id() ne $ProjectType->id() ) {
+	if ( $OldProjectType->id() != $ProjectType->id() ) {
 		$recalculate = 1;
-		if ( $services{''} ) {
-			foreach ( @{$services{''}} ) { delete_service( $Project->id(), $_ ); };
-		} # end if
-		delete $services{''};
-		$Project->type_id( $ProjectType->id() );
+		$error .= $Project->change_ProjectType( $ProjectType );
+	} else {
+		$error .= $Project->save();
 	} # end if
-	if ( ! $services{''} ) {
-		my $printing_service_index = insert_project_type( $r, $log, $dbh, $Project->id(), $param{'rdbProjectType'} );
-		push @{$services{''}}, $printing_service_index;
-		$recalculate = 1;
-	} # end if
-	$error .= $Project->save();
 
 	# take care of the Graphic Design service
 	if ( $param{'rdbGraphicDesign'} eq 'Y' ) {
@@ -772,10 +767,8 @@ $openprint::log->debug("reusing $project_index");
 		( $param{'comments'} ) = misc::trim( $param{'comments'} );
 		$NewProject->comments( $param{'comments'} );
 	} # end if
-	$NewProject->docket( '' );
 	$NewProject->due_date( '' );
 	$NewProject->user_id( $session{'user_id'} );
-	$NewProject->order_id( '' );
 	# This allows uncalc->uncalc, everything else to UnOrdered
 	if ( sets::isin( $Project->status(), [ 'Pending Deposit', 'In Prepress', 'Proofs Out', 'Approved', 'Printed', 'Complete','Shipped','Picked Up' ] ) ) {
 		$NewProject->status('Unordered');

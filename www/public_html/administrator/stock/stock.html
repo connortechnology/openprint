@@ -70,14 +70,14 @@
 <form id="f1" name="f1" method="post" action="stock.html?stock_id=<? echo ( $$variable{'Stock'}->id(); ) ?>">
 	<p class="buttons">
 		<? echo ( join('',
-		ssi::writeButton($log, $dbh, 'Prev1','prev.gif',"f1.btnFunction.value='Prev';f1.submit();",'','&lt;&lt;'),
-		ssi::writeButton($log, $dbh, 'Next1','next.gif',"f1.btnFunction.value='Next';f1.submit();",'','&gt;&gt;'),
-		#ssi::writeButton($log, $dbh, 'Next1','next.gif',"f1.btnFunction.value='Next';fmChange=1;fmCheck(f1);",'','&gt;&gt;'),
-		ssi::writeButton($log, $dbh, 'Add1','add.gif',"f1.action='stock.html';f1.btnFunction.value='';f1.submit();",'','Add New'),
-		ssi::writeButton($log, $dbh, 'Delete1','delete.gif',"f1.btnFunction.value='Delete';fmChange=2;fmCheck(f1);",'','Delete'),
-		ssi::writeButton($log, $dbh, 'Copy1','copy.gif',"f1.btnFunction.value='Copy';f1.submit();",'','Copy'),
-		ssi::writeButton($log, $dbh, 'Save1','save.gif',"f1.btnFunction.value='Save';fmChange=3;fmCheck(f1);",'','Save'),
-		ssi::writeButton($log, $dbh, 'Reset1','reset.gif','f1.reset();','','Reset'),
+		button( 'Prev1', { onclick=>"f1.btnFunction.value='Prev';f1.submit();", href=>'', text=>'&lt;&lt;' } ),
+		button( 'Next1', { onclick=>"f1.btnFunction.value='Next';f1.submit();", href=>'', text=>'&gt;&gt;' } ),
+		#button( 'Next1', { onclick=>"f1.btnFunction.value='Next';fmChange=1;fmCheck(f1);", href=>'', text=>'&gt;&gt;' } ),
+		button( 'Add1', { onclick=>"f1.action='stock.html';f1.btnFunction.value='';f1.submit();", href=>'', text=>'Add New' } ),
+		button( 'Delete1', { onclick=>"f1.btnFunction.value='Delete';fmChange=2;fmCheck(f1);", href=>'', text=>'Delete' } ),
+		button( 'Copy1', { onclick=>"f1.btnFunction.value='Copy';f1.submit();", href=>'', text=>'Copy' } ),
+		button( 'Save1', { onclick=>"f1.btnFunction.value='Save';fmChange=3;fmCheck(f1);", href=>'', text=>'Save' } ),
+		button( 'Reset1', { onclick=>'f1.reset();', href=>'', text=>'Reset' } ),
 ); ) ?>
 	</p>
 	<br class="spacer"/>
@@ -172,14 +172,14 @@
 					<label for="grade">Grade</label>
 					<select id="grade" name="grade" size="1">
 					<? echo (
-						my @options = ( '', 'select one',1,'1 Gloss-coated stock',2,'2 Matte-coated stock',3,'3 Gloss-coated, web stock', 4, '4 Uncoated, white stock', 5, '5 Uncoated, yellow stock' );
+						my @options = ( '', 'select one', %openprint::Paper::grades );
 						make_drop_down( \@options, $$variable{'Stock'}->grade() );
 					) ?>
 					</select>
 				</p>
 				<p>
 					<label>Calliper</label>
-					<input type="number" id="calliper" name="calliper" value="<? echo ( $$variable{'Stock'}->calliper(); ) ?>" /> inches
+					<? echo ( input(type=>'float', id=>'calliper', name=>'calliper', value=> $$variable{Stock}->calliper() ); ) ?> inches
 				</p>
 				<p>
 					<label>Type</label>
@@ -190,25 +190,28 @@
 				</p>
 				<p>
 					<label>Size</label>
-					<input type="number" id="width" name="width" value="<? echo ( $$variable{'Stock'}->width(); ) ?>" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');gsm_to_mweight( this.form );"/>
+					<? echo ( input(type=>'float', id=>'width', name=>'width', value=>$$variable{Stock}->width(),  onkeyup=>'gsm_to_mweight( this.form );' ); ) ?>
 					<span id="StockHeight" <? echo ( 'style="display: none;"' if $$variable{Stock}->type() eq 'Roll' ) ?>> x
-					<input type="number" id="height" name="height" value="<? echo ( $$variable{'Stock'}->height(); ) ?>" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');gsm_to_mweight( this.form );"/>
-				
+					<? echo ( input(type=>'float', id=>'height', name=>'height', value=>$$variable{Stock}->height(),  onkeyup=>'gsm_to_mweight( this.form );' ); ) ?>
 					</span> inches
 				</p>
 				<p id="MWeight" <? echo ( 'style="display: none;"' if $$variable{Stock}->type() eq 'Roll' ) ?>>
 					<label>MWeight</label>
-					<input type="number" id="mweight" name="mweight" value="<? echo ( $$variable{'Stock'}->mweight(); ) ?>" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');mweight_to_gsm( this.form );" />
+					<? echo ( input(type=>'float', id=>'mweight', name=>'mweight', value=>$$variable{Stock}->mweight(),  onkeyup=>'mweight_to_gsm( this.form );' ); ) ?>
 				</p>
 				<p id="BasisSize" <? echo ( 'style="display: none;"' if $$variable{Stock}->type() ne 'Roll' ) ?>>
-					<label>Basis MWeight</label><input type="number" id="basis_mweight" name="basis_mweight" value="<? echo ( $$variable{Stock}->basis_mweight() ) ?>" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');mweight_to_gsm(this.form);" /><br/>
+					<label>Basis MWeight</label>
+					<? echo ( input(type=>'float', id=>'basis_mweight', name=>'basis_mweight', value=>$$variable{Stock}->basis_mweight(),  onkeyup=>'mweight_to_gsm( this.form );' ); ) ?>
+					<br/>
 					<label>Basis Size</label>
-					<input type="number" id="basis_width" name="basis_width" value="<? echo ( $$variable{Stock}->basis_width() ? $$variable{Stock}->basis_width() : 25 ) ?>" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');gsm_to_mweight(this.form);" /> x
-					<input type="number" id="basis_height" name="basis_height" value="<? echo ( $$variable{Stock}->basis_height() ?  $$variable{Stock}->basis_height() : 38 ) ?>" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');gsm_to_mweight(this.form);" />
+					<? echo ( join(' x ',
+								input(type=>'float', id=>'basis_width', name=>'basis_width', value=>( $$variable{Stock}->basis_width() ? $$variable{Stock}->basis_width() : 25 ),  onkeyup=>'gsm_to_mweight( this.form );' ),
+								input(type=>'float', id=>'basis_height', name=>'basis_height', value=>( $$variable{Stock}->basis_height() ? $$variable{Stock}->basis_height() : 38 ),  onkeyup=>'gsm_to_mweight( this.form );' ),
+						); ) ?>
 				</p>
 				<p>
 					<label>GSM</label>
-					<input type="number" id="gsm" name="gsm" value="<? echo ( $$variable{'Stock'}->gsm(); ) ?>" onkeyup="gsm_to_mweight( this.form );" />
+					<? echo ( input(type=>'float', id=>'gsm', name=>'gsm', value=>$$variable{Stock}->gsm(), onkeyup=>'gsm_to_mweight( this.form );' ); ) ?>
 				</p>
 				<p>
 					<label>WPSI</label>

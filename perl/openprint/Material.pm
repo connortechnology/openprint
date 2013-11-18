@@ -14,7 +14,7 @@ use vars qw{ $debug $log $dbh %session $table $serial %fields %find_fields %tran
 *dbh = \$openprint::dbh;
 *session = \%openprint::session;
 
-$debug = 1;
+$debug = 0;
 $table = 'materials';
 $serial = 'materialindex_seq';
 
@@ -26,6 +26,7 @@ $serial = 'materialindex_seq';
 		'category_id'		=>	'category_id',
 		'taxexempt1'		=>	'taxexempt1',
 		'taxexempt2'		=>	'taxexempt2',
+		activity_code		=>	'activity_code',
 		);	
 %find_fields = (
 		'category'	=>	'(SELECT name FROM Material_Categories WHERE id=category_id)',

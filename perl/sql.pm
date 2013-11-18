@@ -6,11 +6,11 @@ package sql;
 use DBI ();
 use Time::HiRes qw{ gettimeofday tv_interval }; 
 
-use vars qw( $log $dbh $debug $timing );
+use vars qw( $log $dbh $timing );
 use openprint ();
 *dbh = \$openprint::dbh;
 *log = \$openprint::log;
-$debug = 0;
+use constant DEBUG => 0;
 $timing = 1;
 
 # This uses it's own dbh so as not to quash the global dbh.  This is so that we can easily open secondary db connections while maintaining the global one.
@@ -40,7 +40,7 @@ sub execute_array {
 	$l = $log if ! defined $l;
 	$d = $dbh if ! $d;
 
-	if ( $l and $debug ) {
+	if ( $l and DEBUG ) {
 		$print_sql = $sql;
 		$print_sql =~ s/\?/\%s/g;
 		$print_sql = sprintf($print_sql, @values);
@@ -66,7 +66,7 @@ sub execute_array {
 		} # end while
 	} # end if
 	$sth->finish();
-	if ( $l and $debug ) {
+	if ( $l and DEBUG ) {
 		if ( $timing ) {
 			$l->debug("SQL (".sprintf('%.4f', tv_interval($starttime)*1000)." usecs). ($print_sql) Results:".join(',',@return_array));
 		} elsif ( @return_array ) {

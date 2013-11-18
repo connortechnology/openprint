@@ -101,7 +101,9 @@ Manifest: <a href="/employee/inventory/manifest_view.html?manifest_id=<? echo ( 
 					return $html;
 				) ?>
 			</p>
+		</div>
 <? if ( $$variable{PurchaseOrder}->notifications() ) ?>
+		<div id="Notifications">
 			<p><label>NOTIFY</label>
 			<? echo (
 				my $html = '';
@@ -111,7 +113,15 @@ Manifest: <a href="/employee/inventory/manifest_view.html?manifest_id=<? echo ( 
 				return $html;
 			) ?>
 			</p>
+		</div>
 <? endif ( $$variable{PurchaseOrder}->notifications() ) ?>
+		<div id="DocketSummary"><p><label>DOCKET:</label>
+<? echo ( my $html;
+	foreach my $C ( $$variable{PurchaseOrder}->Contents() ) {
+		$html .= $C->docket().'<br/>' if $C->docket();
+	} # end foreach C
+	return $html;
+) ?></p>
 		</div>
 		<br class="spacer"/><br/>
 		<table class="Shipping">
@@ -129,18 +139,18 @@ Manifest: <a href="/employee/inventory/manifest_view.html?manifest_id=<? echo ( 
 			</tr>
 		</table>
 		<br class="spacer"/>
-<table>
-	<tr>
-		<th class="quantity">QTY</th>
-		<th class="product">PRODUCT #</th>
-		<th class="description">ITEM / DESCRIPTION</th>
-		<th class="docket">DOCKET</th>
-		<th class="dept">DEPT</th>
+<div class="items">
+	<div class="header">
+		<div class="quantity">QTY</div>
+		<div class="product">PRODUCT #</div>
+		<div class="description">ITEM / DESCRIPTION</div>
+		<div class="docket">DOCKET</div>
+		<div class="dept">DEPT</div>
 		<? if ( $$variable{PurchaseOrder}->can_see_pricing() ) ?>
-		<th class="price">UNIT PRICE</th>
-		<th class="total">LINE TOTAL</th>
+		<div class="price">UNIT PRICE</div>
+		<div class="line_total">LINE TOTAL</div>
 		<? endif ( $$variable{PurchaseOrder}->can_see_pricing() ) ?>
-	</tr>
+	</div>
 <? echo ( my $html = '';
 	my $unseen = 0;
 	foreach my $C ( $$variable{PurchaseOrder}->Contents() ) {
@@ -149,62 +159,68 @@ Manifest: <a href="/employee/inventory/manifest_view.html?manifest_id=<? echo ( 
 			next;
 		} # end if
 			
+		$html .= '<div class="item">';
 		if ( $C->Type()->name() eq 'Roll Stock' ) {
-			$html .= sprintf('<tr><td class="quantity">%dlbs</td>', $C->qty() );
+			$html .= sprintf('<div class="quantity">%dlbs</div>', $C->qty() );
 		} elsif ( $C->Type()->name() eq 'Sheet Stock' ) {
-			$html .= sprintf('<tr><td class="quantity">%dsheets</td>', $C->qty() );
+			$html .= sprintf('<div class="quantity">%dsheets</div>', $C->qty() );
 		} else {
-			$html .= sprintf('<tr><td class="quantity">%d</td>', $C->qty() );
+			$html .= sprintf('<div class="quantity">%d</div>', $C->qty() );
 		} # end if
 			
 		$html .= sprintf('
-			<td class="product">%1$s</td>
-			<td class="description">%2$s<br/>%3$s</td>
-			<td class="docket"><a href="/employee/production/projects.html?StartDocket=%4$s">%4$s</a></td>
-			<td class="dept">%5$s</td>
+			<div class="product">%1$s</div>
+			<div class="description">%2$s<br/>%3$s</div>
+			<div class="docket"><a href="/employee/production/projects.html?StartDocket=%4$s">%4$s</a></div>
+			<div class="dept">%5$s</div>
 			', $C->product(), $C->item(), ( $C->item() eq $C->description() ? '' : $C->description() ), $C->docket(), $C->department(), 
 			);
 
 		if ( $$variable{PurchaseOrder}->can_see_pricing($C) ) {
+			$html .= '<div class="price">';
 			if ( sets::isin( $C->Type()->name(), [ 'Roll Stock', 'Sheet Stock' ] ) ) {
-				$html .= sprintf('<td class="price">%s/100lb</td><td class="total">%s</td>',
-					openprint::Currency::format($C->price(),4), openprint::Currency::format($C->total()) );
+				$html .= openprint::Currency::format($C->price(),4) . '/100lb';
 			} else {
-				$html .= sprintf('<td class="price">%s</td><td class="total">%s</td>',
-					openprint::Currency::format($C->price(),4), openprint::Currency::format($C->total()) );
+				$html .= openprint::Currency::format($C->price(),4);
 			} # end if
+			$html .= join('', '</div><div class="line_total">', openprint::Currency::format($C->total()), '</div>' );
 		} # end if can_see_pricing
-		$html .= '</tr>';
+		$html .= '</div>';
 	} # end foreach C
+	$html .= '</div>';
 	if ( $unseen ) {
-		if ( $$variable{PurchaseOrder}->can_see_pricing() ) {
-			$html .= '<tr><td colspan="7">There are other items in this purchase order that you cannot see.</td></tr>';
-		} else {
-			$html .= '<tr><td colspan="5">There are other items in this purchase order that you cannot see.</td></tr>';
-		} # end if
+		$html .= '<div class="unseen">There are other items in this purchase order that you cannot see.</div>';
 	} # end if $unseeen
 	return $html;
 ) ?>
 	<? if ( $$variable{PurchaseOrder}->can_see_pricing() ) ?>
-	<tr>
-		<td colspan="6" class="totals">SUBTOTAL</td>
-		<td class="total"><? echo ( openprint::Currency::format( $$variable{PurchaseOrder}->subtotal() ); ) ?></td>
-	</tr>
+	<div class="totals">
+		<div class="subtotal">
+			<label>SUBTOTAL</label>
+			<div class="amount"><? echo ( openprint::Currency::format( $$variable{PurchaseOrder}->subtotal() ); ) ?></div>
+		</div>
 		<? echo ( 
 			my $html;
 			foreach my $Tax ( $$variable{PurchaseOrder}->Taxes() ) {
-				$html .= sprintf('<tr class="tax"><td colspan="6" class="totals">%s (%d%)</td><td class="total">%s</td></tr>',
+				$html .= sprintf('<div class="tax"><label>%s (%d%)</label><div class="amount">%s</div></div>',
 					$Tax->name(), $Tax->rate(), openprint::Currency::format( $Tax->amount() ),
 					);
 			} # end foreach Tax
 			return $html;
 		) ?>
-	<tr>
-		<td colspan="6" class="totals">TOTAL</td>
-		<td class="total"><? echo ( openprint::Currency::format( $$variable{PurchaseOrder}->total() ); ) ?></td>
-	</tr>
+		<div class="payments_total">
+			<label>PAYMENTS</label>
+			<div class="amount"><? echo ( return openprint::Currency::format( $$variable{PurchaseOrder}->payments_total() ); ) ?></div>
+		</div>
+		<div class="total">
+			<label>TOTAL</label>
+			<div class="amount"><? echo ( return openprint::Currency::format( $$variable{PurchaseOrder}->total() ); ) ?></div>
+		</div>
+	</div>
 	<? endif ( $$variable{PurchaseOrder}->can_see_pricing() ) ?>
-</table>
+<? if ( $$variable{PurchaseOrder}->can_see_pricing() ) ?>
+<?include(_payments_view.html)?>
+<? endif ( $$variable{PurchaseOrder}->can_see_pricing() ) ?>
 <form id="f1" name="f1" action="view.html?po_id=<? echo ( $$variable{PurchaseOrder}->id() ) ?>" method="post" enctype="multipart/form-data">
 	<input type="hidden" name="btnFunction" />
 		<div id="Assets" class="unprintable"><? echo ( include('_assets.html'); ) ?></div>

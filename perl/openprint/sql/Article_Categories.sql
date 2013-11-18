@@ -1,4 +1,3 @@
-DROP TABLE IF EXISTS Article_Categories;
 CREATE TABLE Article_Categories (
 	id SERIAL,
 	name	TEXT,

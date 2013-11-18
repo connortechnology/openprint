@@ -29,6 +29,7 @@ require openprint::Estimating::Spiral;
 require openprint::Estimating::UPS;
 require openprint::Estimating::MultiPage;
 require openprint::logs;
+require openprint::Project_Service;
 
 use constant DEBUG => 0;
 
@@ -48,7 +49,12 @@ sub get_price {
 sub get_price_object {
 	my ( $service, $range, $Equipment ) = @_;
 	my $Service = openprint::Service->find_one( name=>$service );
-	return if ! $Service;
+	if ( ! $Service ) {
+		if ( DEBUG ) {
+			$openprint::log->debug("No Service for $service");
+		};
+		return;
+	}
 	return $Service->get_price( $range, $Equipment );
 } # end sub get_price_object
 
@@ -145,6 +151,7 @@ sub get_specifications_pairs {
 sub get_specs_ref {
 	my ( $p_id, $s_id ) = @_;
 	if ( ! $s_id ) {
+		$openprint::log->error("********* Called get_specs_ref without Service Index ($s_id)****************");
 		Carp::cluck("********* Called get_specs_ref without Service Index ($s_id)****************");
 		return;
 	} # end if
@@ -223,7 +230,7 @@ sub auto_calculate {
 	my $specs;
 
 	my @signature_indices = $Project->signatures();
-	if ( ! scalar @signature_indices ) {
+	if ( ! @signature_indices ) {
 		$openprint::log->warn("service::auto_calculate with no signatures");
 		return;
 	} # end if
@@ -243,9 +250,7 @@ sub auto_calculate {
 		} # end while
 	} else {
 		if ( ! $$services{'Folding'} ) {
-			if ( $Project->mode() ne 'Detailed' ) {
-				push @{$$services{'Folding'}}, $Project->add_service( 'Folding' );
-			} # end if
+			push @{$$services{'Folding'}}, $Project->add_service( 'Folding' );
 		} # end if
 	} # end if
 
@@ -257,9 +262,7 @@ sub auto_calculate {
 
 	if ( openprint::Estimating::Cutting::neccessary( $Project ) ) {
 		if ( ! $$services{'Cutting'} ) {
-			if ( $Project->mode() ne 'Detailed' ) { 
-				push @{$$services{'Cutting'}}, $Project->add_service( 'Cutting' );
-			} # end if
+			push @{$$services{'Cutting'}}, $Project->add_service( 'Cutting' );
 		} # end if
 	} # end if
 
@@ -462,7 +465,7 @@ sub internal_calc {
     $dbh->do( "SELECT * FROM Projects WHERE id=".$$Project{id}. ' FOR UPDATE' );
 	my $Service = $Project->Service($service_index) if $service_index;
 	if ( ! $Service ) {
-		$Service = new openprint::ProjectService();
+		$Service = new openprint::Project_Service();
 		$Service->set({ project_id=>$project_index, service_id=>$service_index, service_type=>$service_type });
 	} # end if	
 	my $specs = $Service->specs();

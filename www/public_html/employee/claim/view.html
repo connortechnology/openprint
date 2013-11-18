@@ -149,18 +149,25 @@ join( ', ', map { sprintf('<a href="/employee/project/view.html?docket=%1$d">%1$
 		<td class="Price"><? echo ( return openprint::Currency::format( $$variable{'Claim'}->subtotal() ); ) ?></td>
 	</tr>
 	<? echo ( 
-			my $html;
-			foreach my $Tax ( $$variable{'Claim'}->Taxes() ) {
-				$html .= sprintf('<tr class="tax"><td colspan="4" class="totals">%s (%d%)</td><td class="Price">%s</td></tr>',
-					$Tax->name(), $Tax->rate(), openprint::Currency::format( $Tax->amount() ),
-					);
-			} # end foreach Tax
-			return $html;
-		) ?>
+		my $html;
+		foreach my $Tax ( $$variable{Claim}->Taxes() ) {
+			$html .= sprintf('<tr class="tax"><td colspan="4" class="totals">%s (%d%)</td><td class="Price">%s</td></tr>',
+				$Tax->name(), $Tax->rate(), openprint::Currency::format( $Tax->amount() ),
+				);
+		} # end foreach Tax
+		return $html;
+	) ?>
 	<tr class="total">
 		<td colspan="4">TOTAL</td>
-		<td class="Price"><? echo ( return openprint::Currency::format( $$variable{'Claim'}->total() ); ) ?></td>
+		<td class="Price"><? echo ( return openprint::Currency::format( $$variable{Claim}->total() ); ) ?></td>
 	</tr>
+	<? if ( $$variable{Claim}->total() != $$variable{Claim}->owing() ) ?>
+	<tr class="owing">
+		<td colspan="4">Owing</td>
+		<td class="Price"><? echo ( return openprint::Currency::format( $$variable{Claim}->owing() ); ) ?></td>
+	</tr>
+	<? endif ( $$variable{Claim}->total() != $$variable{Claim}->owing() ) ?>
+
 	<? endif ( ($session{'user_id'} == $$variable{'Claim'}->created_by() ) or ( $session{'user_type'} eq 'A' ) or openprint::usergroup::is_user_in( ['Accounting','SalesAdmin','Sales'], $session{'user_id'} ) ) ?>
 </table>
 		</div><!--Contents-->
@@ -173,7 +180,7 @@ join( ', ', map { sprintf('<a href="/employee/project/view.html?docket=%1$d">%1$
 	<? endif ( ($session{'user_id'} == $$variable{'Claim'}->created_by() ) or ( $session{'user_type'} eq 'A' ) or openprint::usergroup::is_user_in( ['Accounting','SalesAdmin','Sales'], $session{'user_id'} ) ) ?>
 		</div>
 		<br class="spacer"/>
-		<div class="Disclaimer">This is a notification of claim.  If there is disagreement, you are requested to advise the sender in writing, either by e-mail or a letter within 5 business days from the date of this claim advice.  An official invoice will be issued if no objection to this claim is filed.</div>
+		<div class="Disclaimer">This is a notification of claim.  If there is disagreement, you are requested to advise the sender in writing, either by e-mail or a letter within 5 business days from the date of this claim advice.  An official invoice will be issued if no objection to this claim is filed. After 60 days the amount of claim will be automatically deducted from your account.</div>
 		</div>
 	</div><!--Claim-->
 </form>

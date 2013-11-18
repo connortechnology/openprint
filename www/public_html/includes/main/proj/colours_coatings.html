@@ -68,10 +68,7 @@
 	<fieldset><legend>Back
 <? if ( ! $$variable{'txtSignatureType'} ) ?>
 same as front?
-<input type="radio" id="sides_the_same<?Signature?>Y" name="sides_the_same<?Signature?>" value="Y" onclick="$('InksOnBackQuestions<?Signature?>').hide();calc(this.form.name);" <? echo ( ssi::checked($$variable{"sides_the_same$$variable{Signature}"} eq 'Y'); ) ?> />
-<label class="radio" for="sides_the_same<?Signature?>Y">Yes</label>
-<input type="radio" id="sides_the_same<?Signature?>N" name="sides_the_same<?Signature?>" value="N" onclick="$('InksOnBackQuestions<?Signature?>').show();calc(this.form.name);" <? echo ( ssi::checked($$variable{"sides_the_same$$variable{Signature}"} ne 'Y' ); ) ?> />
-<label class="radio" for="sides_the_same<?Signature?>N">No</label>
+<? echo ( radio( 'sides_the_same'.$$variable{Signature}, [ 'Y','Yes','N','No' ], $$variable{"sides_the_same$$variable{Signature}"}, { default=>'N', onclick=>qq`if(this.value=='Y'){\$('InksOnBackQuestions$$variable{Signature}').hide();}else{\$('InksOnBackQuestions$$variable{Signature}').show();};calc(this.form.name);` } ); ) ?>
 <? endif ( ! $$variable{'txtSignatureType'} ) ?>
 </legend>
 		<div id="InksOnBackQuestions<?Signature?>" <? echo ( $$variable{'sides_the_same'.$$variable{'Signature'}} eq 'Y' ? ' style="display:none;"':'') ?>>

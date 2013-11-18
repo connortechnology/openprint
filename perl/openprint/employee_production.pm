@@ -1216,7 +1216,7 @@ sub _drop {
 			if ( $previous and $previous->project_id() and $Job->project_id() and ( $previous->project_id() == $Job->project_id() ) ) {
 				my $sig_specs1 = openprint::service::get_specs_ref( $previous->Project(), $$previous{'service_id'}[0] );
 				my $sig_specs2 = openprint::service::get_specs_ref( $Job->Project(), $$Job{'service_id'}[0] );
-				if ( eval 'openprint::Estimating::'.$Job->ServiceType()->name().'::compare_signatures( $sig_specs1, $sig_specs2, $Job->Project()->ordered_quantity_index() )' ) {
+				if ( eval 'openprint::Estimating::'.$Job->ServiceType()->name().'::compare_signatures( $Job->Project(), $sig_specs1, $sig_specs2, $Job->Project()->ordered_quantity_index() )' ) {
 #$log->debug("Sigs are the same, coalescing ");
 					$_ = $previous->save({
 							'runtime'		=>	Date::Format::time2str( '%H:%M:%S', $previous->runtime_seconds() + $Job->runtime_seconds() ),

@@ -38,7 +38,7 @@ sub include {
 		$path =~ s/(.*\/).*/$1/;
 		$file = $path . $file;
 	} # end if
-$log->debug("Including $file");
+#$log->debug("Including $file");
 	my $content = '';
 	if ( -e $config{SkinPath}.$file ) {
 		$content = misc::load_file( $log, $config{SkinPath}.$file );
@@ -114,7 +114,7 @@ sub variable_substitution {
 				$log->error( "Eval error ($@) of ($1), Reason: " . $@ ) if $@;
 			} elsif ( $command =~ /^translate\s*\(\s*([\S]+)\s*\)/ms ) {
 				$result .= translate($1);
-			} elsif ( $command =~ /^hash_link\s*\(\s*'?([\S]+)'?\s*\)/ms ) {
+			} elsif ( $command =~ /^hash_link\s*\(\s*'?([^\s']+)'?\s*\)/ms ) {
 				$result .= hash_link($1);
 			} elsif ( $command =~ /^hecho\s*\(\s*(.*)\s*\)/ms ) {
 				$_ = eval $1;
@@ -479,7 +479,7 @@ sub button {
 		if ( $$options{text} ) {
 			$html .= $$options{text};
 		} # end if
-	} elsif ( $openprint::config{'SimpleButtons'} ) {
+	} elsif ( $openprint::config{'SimpleButtons'} eq 'Y' ) {
 		$html .= $$options{'text'};
 	} else {
 		$html .= '<span class="l"></span><span class="c" id="'.$name.'c"' . ( $$options{title} ? ' title="'.$$options{title}.'"' : '' ) .'>' . $$options{'text'} .'</span><span class="r"></span>';
@@ -743,6 +743,9 @@ sub radio {
 
 	my $onclick = $$options{'onclick'} if $options;
 	my $html;
+	if ( $$options{default} and ! $selected ) {
+		$selected = $$options{default};
+	} # end if
 
 	while ( my ( $value, $label ) = splice @{$values}, 0, 2 ) {
 		$html .= sprintf(q`
@@ -809,7 +812,7 @@ sub date_filter {
 	return ( $sql_field, sprintf('%.4d-%.2d-%.2d %.2d:%.2d:%.2d', ( $year, $month, $day, $hour, $minute, $second ) ) );
 } # end sub date_filter
 
-my @input_options = ( 'type','name','id','onblur','onfocus','onkeyup','onkeydown','onchange','class','pattern','ontouch','max', 'placeholder' );
+my @input_options = ( 'type','name','id','onblur','onfocus','onkeyup','onkeydown','onchange','class','pattern','ontouch','min','max', 'step', 'placeholder' );
 
 sub input {
 	my %options = @_;
@@ -838,6 +841,7 @@ sub input {
 		} else {
 			$options{type} = 'number';
 		} # end if
+		$options{step} = 'any' if ! exists $options{step};
 		$options{'onkeyup'} = 'floatize(this);'.$options{'onkeyup'};
 	} elsif ( $options{type} eq 'float_calculator' ) {
 		if ( $ENV{HTTP_USER_AGENT} =~ /ip(ad|od|hone)/i ) {
@@ -846,12 +850,13 @@ sub input {
 		} else {
 			$options{type} = 'number';
 		} # end if
+		$options{step} = 'any' if ! exists $options{step};
 		$options{'onkeyup'} = 'floatize_calculator(this);'.$options{'onkeyup'};
 	} # end if
 	$html .= ' value="'.html_escape($options{value}).'"' if $options{value} ne '';
 
 	foreach (@input_options) {
-		$html .= qq` $_="$options{$_}"` if $options{$_};
+		$html .= qq` $_="$options{$_}"` if exists $options{$_};
 	} # end foreach
 	$html .= ' required' if $options{required};
 	$html .= ' readonly="readonly"' if $options{readonly};
@@ -912,8 +917,14 @@ sub hash_link {
 
 	my $script;
 	if ( ( ! $hash_cache{$config{SkinPath}} ) and -f $config{cache_dir}.'/config.json' ) {
-		$hash_cache{$config{SkinPath}} = JSON::from_json( File::Slurp::read_file($config{cache_dir}.'/config.json') );
-		$hash_cache{$config{SkinPath}} = {} if ! $hash_cache{$config{SkinPath}};
+		$_ = File::Slurp::read_file($config{cache_dir}.'/config.json');
+		if ( $_ ) {
+			$hash_cache{$config{SkinPath}} = JSON::from_json( $_ );
+			$hash_cache{$config{SkinPath}} = {} if ! $hash_cache{$config{SkinPath}};
+		} else {
+			$log->error("No content of $config{cache_dir}/config.json");
+			$hash_cache{$config{SkinPath}} = {};
+		} # end if
 	} # end if
 
 	if ( !($script = $hash_cache{$config{SkinPath}}{$path})

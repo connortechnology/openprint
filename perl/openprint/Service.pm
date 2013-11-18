@@ -28,10 +28,11 @@ $serial = 'services_id_seq';
 		taxexempt1		=>	'taxexempt1',
 		taxexempt2		=>	'taxexempt2',
 		owner_id		=>	'owner_id',
+		activity_code	=>	'activity_code',
 	 	);	
 %find_fields = (
-	category		=> '(SELECT name FROM Service_Categories WHERE service_categories.id=category_id)',
-	equipment_id	=> '(SELECT equipment_id FROM service_prices WHERE service_id=services.id)',
+		category		=> '(SELECT name FROM Service_Categories WHERE service_categories.id=category_id)',
+		equipment_id	=> '(SELECT equipment_id FROM service_prices WHERE service_id=services.id)',
 );
 
 
@@ -84,6 +85,31 @@ sub delete {
 sub prices {
 	return openprint::ServicePrice->find( service_id=>$_[0]{id} );
 } # end sub prices
+
+sub get_Price {
+    my ( $self, $quantity, $Equipment, $Pricelist, $period ) = @_;
+
+    if ( ! $period ) {
+        $period = 'NOW()';
+        if ( $debug ) {
+            $log->debug("No period specified defaulting to $period");
+        } # end if
+    } # end if
+
+    $Pricelist = openprint::Pricelist::get_current() if ! $Pricelist;
+    my %price = openprint::pricing::get_best_price_object( $openprint::session{company_id}, $$self{id}, $$Pricelist{id}, 'openprint::service_priceset', $quantity, $$Equipment{id}, $period );
+
+    if ( ! %price ) {
+        $log->debug("No price returned for $$self{name} $$Equipment{strid} $quantity $period") if $debug;
+        return ;
+    } # end if
+
+    $price{'currency_id'} = $Pricelist->currency_id();
+    $price{'ServiceName'} = $$self{'name'};
+    $price{'Service'} = $self;
+    openprint::Currency::convert( \%price );
+    return \%price;
+} # end sub get_Price
 
 sub get_price {
     my ( $self, $quantity, $Equipment, $Pricelist, $period ) = @_;

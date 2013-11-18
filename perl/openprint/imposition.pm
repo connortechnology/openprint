@@ -219,15 +219,43 @@ sub calc_setup_object {
 			$openprint::log->debug("Proper grain Paper(".$Paper->grain_direction().") Press($press_grain)") if DEBUG;
 		} # end if
 	} elsif ( DEBUG ) {
-		$openprint::log->debug("No grain discretion. $press_grain");
+		$openprint::log->debug("No grain discretion. $$Paper{gsm}gsm");
 	} # end if press_grain
+	if ( $run_style eq 'Perfecting' ) {
+		my $press_grain = $Press->specification('Perfecting Grain', $Paper->gsm() );
+		
+#$openprint::log->debug("Grains: $grain_direction, Press: $press_grain, Paper: ". $Paper->grain_direction() . ', paper->long: ' . $Paper->long() );
+		if ( $press_grain and $press_grain ne 'Both' ) {
+			if ( $press_grain eq 'Long' ) {
+				if ( $Paper->grain_direction() ne $Paper->long() ) {
+					$openprint::log->debug("Improper perfecting grain Paper(".$Paper->grain_direction().") Long (".$Paper->long().")") if DEBUG;
+					return;
+				} elsif ( DEBUG ) {
+					$openprint::log->debug("PROPER perfecting grain Paper(".$Paper->grain_direction().") Long (".$Paper->long().")");
+				} # en dif
+			} elsif ( $press_grain eq 'Short' ) {
+				if ( $Paper->grain_direction() ne $Paper->short() ) {
+					$openprint::log->debug("Improper perfecting grain Paper(".$Paper->grain_direction().") Short (".$Paper->short().")") if DEBUG;
+					return;
+				} elsif ( DEBUG ) {
+					$openprint::log->debug("Proper perfecting grain Paper(".$Paper->grain_direction().") Short (".$Paper->short().")") if DEBUG;
+				} # en dif
+			} elsif ($press_grain ne $Paper->grain_direction() ) {
+				$openprint::log->debug("Improper perfecting grain Paper(".$Paper->grain_direction().") Press($press_grain)") if DEBUG;
+				return;
+			} elsif ( DEBUG ) {
+				$openprint::log->debug("Proper perfecting grain Paper(".$Paper->grain_direction().") Press($press_grain)") if DEBUG;
+			} # end if
+		} elsif ( DEBUG ) {
+			$openprint::log->debug("No perfecting grain discretion. $$Paper{gsm}");
+		} # end if press_grain
+	} # end if Perfecting
 
 	if ( my $amount = $Press->specification($run_style.' Pre-trim stock') ) {
 $openprint::log->debug("Pretrimming by $amount") if DEBUG;
 		$Paper = $Paper->clone();
-		$Paper->width( $Paper->width() - $amount );
+		$Paper->cut( $Paper->width() - $amount, $Paper->height() - $amount );
 		$Paper->width( 0 ) if $Paper->width() < 0;
-		$Paper->height( $Paper->height() - $amount );
 		$Paper->height( 0 ) if $Paper->height() < 0;
 	} else {
 $openprint::log->debug("Not Pretrimming on $$Press{strid}") if DEBUG;

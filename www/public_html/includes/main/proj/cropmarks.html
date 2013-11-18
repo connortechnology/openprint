@@ -1,7 +1,7 @@
 <? if ( $$variable{'Mode'} ne 'Easy' ) ?>
 <p>
 	<label>Crop mark space</label>
-	<? echo ( ssi::input( 'type'=>'number','name'=>'txtCropMarkSpace'.$$variable{'Signature'},'value'=>$$variable{'txtCropMarkSpace'.$$variable{'Signature'}}, 'onkeyup'=>'calc(this.form.name);'); ) ?> inches
+	<? echo ( input( type=>'float', name=>'txtCropMarkSpace'.$$variable{Signature}, value=>$$variable{'txtCropMarkSpace'.$$variable{Signature}}, onkeyup=>'calc(this.form.name);', min=>0 ); ) ?> inches
 </p>
 <? else ( $$variable{'Mode'} ne 'Easy' ) ?>
 <input type="hidden" name="txtCropMarkSpace<?Signature?>" value="<? echo ( $$variable{'txtCropMarkSpace'.$$variable{'Signature'}} ) ?>" />

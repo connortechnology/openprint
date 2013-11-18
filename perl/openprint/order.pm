@@ -14,7 +14,7 @@ use vars qw( %param %variable %config %session $log $dbh );
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
 
-my $debug = 0;
+use constant DEBUG => 0;
 
 require sql;
 require openprint::Currency;
@@ -402,7 +402,7 @@ sub save_project_information {
 		my $quantity_shipped = $Project->ordered_quantity();
 		my @ServiceTypes = openprint::ServiceType->find('category'=>'Shipping');
 		my $services = $Project->services();
-		$log->debug("ServiceTypes: " . join(',',map { $_->name() } @ServiceTypes )) if $debug;
+		$log->debug("ServiceTypes: " . join(',',map { $_->name() } @ServiceTypes )) if DEBUG;
 		foreach my $ShippingType ( @ServiceTypes ) {
 
 			# Add or delete services as relevant
@@ -495,7 +495,8 @@ sub store_order_info {
 	$error .= 'Email is a required field.<br/>' if	$param{'email'} eq '';
 	$error .= 'Please select a company.<br/>' if exists $param{'company_id'} and ! $param{'company_id'};
 
-	if ( ! Email::Valid->address($param{'email'}) ) {
+	$_ = Email::Valid->address($param{'email'});
+	if ( ( ! $_ ) or ( $_ ne $param{email} ) ) {
 		$error .= "Email is not a valid email address.<br>";
 	} # end if
 

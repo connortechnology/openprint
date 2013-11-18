@@ -38,14 +38,21 @@
 				<label>Material</label>
 				<select name="material_id">
 					<option value="">none</option>
-					<? echo ( make_drop_down( openprint::Material->dropdown('order'=>'lower(name)'), $$variable{Ink}->material_id() ); ) ?>
+					<? echo ( make_drop_down( openprint::Material->dropdown( order=>'lower(name)'), $$variable{Ink}->material_id() ); ) ?>
 				</select>
 			</li>
 			<li>
-				<label>Service</label>
+				<label>Service Charge</label>
 				<select name="service_id">
 					<option value="">none</option>
-					<? echo ( make_drop_down( openprint::Service->dropdown('order'=>'lower(name)'), $$variable{Ink}->service_id() ); ) ?>
+					<? echo ( make_drop_down( openprint::Service->dropdown( order=>'lower(name)'), $$variable{Ink}->service_id() ); ) ?>
+				</select>
+			</li>
+			<li>
+				<label>Mix Charge</label>
+				<select name="mix_service_id">
+					<option value="">none</option>
+					<? echo ( make_drop_down( openprint::Service->dropdown( order=>'lower(name)'), $$variable{Ink}->mix_service_id() ); ) ?>
 				</select>
 			</li>
 			<li>

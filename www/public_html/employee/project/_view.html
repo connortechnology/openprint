@@ -69,7 +69,7 @@
                 for ( my $i = 0; $i < @sigs; $i += 1 ) {
                     my $sig_specs2 = openprint::service::get_specs_ref( $Project, $sigs[$i] );
 
-                    if ( ( $statuses{$sigs[$i]} eq $statuses{$ss_id} ) and openprint::Estimating::Printing::compare_signatures( \%sig_specs, $sig_specs2, $qty_index, [ 'txtEmployeeComments' ] ) ) {
+                    if ( ( $statuses{$sigs[$i]} eq $statuses{$ss_id} ) and openprint::Estimating::Printing::compare_signatures( $Project, \%sig_specs, $sig_specs2, $qty_index, [ 'txtEmployeeComments' ] ) ) {
                         $sig_qty += 1;
                         $sig_specs{'txtPrice'.$qty_index} += $ProjectCurrency->convert_from( $$sig_specs2{'txtPrice'.$qty_index} );
                         $sig_specs{'txtPressSheetQty'.$qty_index} =~ s/\D//g;

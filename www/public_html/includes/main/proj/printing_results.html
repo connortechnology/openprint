@@ -61,7 +61,7 @@
 		$html .= sprintf(q`
 			<span class="%1$sColumns">
 				<select name="ddmStockSheetSize%2$d" size="1" onchange="this.form.OverrideStockWidth%2$d.value='';this.form.OverrideStockHeight%2$d.value='';ddmStockSheetSize_onchange();"><option value="">Please select one</option>%3$s</select>
-				`, $$variable{Columns}, $qty_index, ssi::make_drop_down( [ 
+				`, $$variable{Columns}, $qty_index, make_drop_down( [ 
 					map { $_, join(' x ', map { $_.'"' } split('x', $_) ) } @sizes ], $$variable{'ddmStockSheetSize'.$qty_index} ),
 			);
 		if ( sets::isin( $session{user_type}, ['A','E'] ) ) {
@@ -69,10 +69,12 @@
 					$$variable{'chkOverrideSheetSize'.$qty_index},
 					"\$('OverrideStockSize$qty_index').show();", 
 					"f1.OverrideStockWidth$qty_index.value='';f1.OverrideStockHeight$qty_index.value='';\$('OverrideStockSize$qty_index').hide();calc('f1');" );
-			$html .= sprintf(q`<br/><span id="OverrideStockSize%1$d"%2$s>`, $qty_index, ( $$variable{'chkOverrideSheetSize'.$qty_index} ne 'Y' ? '' : ' style="display:none;"' ) );
-			$html .= input( type=>'number', name=>"OverrideStockWidth$qty_index", value=>$$variable{'OverrideStockWidth'.$qty_index}, onkeyup=>"this.form.ddmStockSheetSize$qty_index.selectedIndex=0;calc(this.form.name);" );
-			$html .= ' x ';
-			$html .= input( type=>"number", name=>"OverrideStockHeight$qty_index", value=>$$variable{'OverrideStockHeight'.$qty_index}, onkeyup=>"this.form.ddmStockSheetSize$qty_index.selectedIndex=0;calc(this.form.name);" );
+			$html .= sprintf(q`<br/><span id="OverrideStockSize%1$d">`, $qty_index );
+			$html .= join("\n",
+					input( type=>'float', name=>"OverrideStockWidth$qty_index", value=>$$variable{'OverrideStockWidth'.$qty_index}, onkeyup=>"this.form.ddmStockSheetSize$qty_index.selectedIndex=0;calc(this.form.name);" ),
+					' x ',
+					input( type=>'float', name=>"OverrideStockHeight$qty_index", value=>$$variable{'OverrideStockHeight'.$qty_index}, onkeyup=>"this.form.ddmStockSheetSize$qty_index.selectedIndex=0;calc(this.form.name);" ),
+			);
 			$html .= '</span>';
 		} else {
 			$html .= sprintf(q`
@@ -367,7 +369,7 @@
 <? while ( $$variable{'QTYIndex'} <= 3 ) ?>
 <? if ( $$variable{Project}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
 	<span class="<?Columns?>Columns">
-		<input type="number" name="txtPressSheetQty<?QTYIndex?>" readonly="readonly" />
+		<input type="text" name="txtPressSheetQty<?QTYIndex?>" readonly="readonly" />
 	</span>
 <? endif ( $$variable{Project}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
 <? eval ( $$variable{'QTYIndex'} += 1 ) ?>

@@ -23,7 +23,7 @@
 			<span class="<?Columns?>Columns">
 <? echo ( 
 	my $html = '';
-	foreach my $page ( 4, 8, 12, 16, 20, 24, 32, 36, 40, 48, 64 ) {
+	foreach my $page ( 4, 6, 8, 12, 16, 20, 24, 32, 36, 40, 48, 64 ) {
 		$html .= ssi::input( 
 			name		=>	"txtSignatureQty${page}Page-$$variable{QTYIndex}",
 			value		=>	$$variable{"txtSignatureQty${page}Page-$$variable{QTYIndex}"},

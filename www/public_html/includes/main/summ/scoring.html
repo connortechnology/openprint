@@ -9,8 +9,8 @@
 <? while ( $$variable{'QTYIndex'} <= 3 ) ?>
 <? if ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>
 		<span class="value">
-<? echo ( $$variable{"txtVerticalQty-$$variable{'SignatureIndex'}"} ) ?> Vertical
-<? echo ( $$variable{"txtHorizontalQty-$$variable{'SignatureIndex'}"} ) ?> Horizontal
+<? echo ( int($$variable{"txtVerticalQty-$$variable{'SignatureIndex'}"}) ) ?> Vertical
+<? echo ( int($$variable{"txtHorizontalQty-$$variable{'SignatureIndex'}"}) ) ?> Horizontal
 		</span>
 <? endif ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>
 <? eval ( $$variable{'QTYIndex'} += 1 ) ?>

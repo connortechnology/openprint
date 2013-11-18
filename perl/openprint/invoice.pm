@@ -194,7 +194,7 @@ sub _history {
 } # end sub _history
 
 sub edit {
-	$variable{'Invoice'} = new openprint::Invoice( $param{'invoice_id'} );
+	my $Invoice = $variable{'Invoice'} = new openprint::Invoice( $param{'invoice_id'} );
 	if ( $param{'btnFunction'} eq 'Save' ) {
 		$param{'currency_id'} = openprint::Currency::get_current()->id() if ! $param{'currency_id'};
 		$param{due_on} = sprintf('%.4d-%.2d-%.2d', @param{'due_on_year','due_on_month','due_on_day'} ) if ! $param{due_on};
@@ -216,6 +216,16 @@ sub edit {
 		# Defaults, don't know who the company is yet
 		$variable{'Invoice'}->due_on( join('-', Date::Calc::Add_Delta_Days( Date::Calc::Today(), 15 ) ) );
 		$variable{'Invoice'}->early_payment_date( join('-', Date::Calc::Add_Delta_Days( Date::Calc::Today(), 7 ) ) );
+		if ( $param{order_id} ) {
+			my $Order = new openprint::Order($param{order_id});
+			$$Invoice{invoicee_id} = $Order->company_id();
+			my @Projects ;
+			foreach my $P ( $Order->Ordered_Projects() ) {
+				my $NewP = new openprint::Invoiced_Project();;
+				$NewP->project_id( $P->project_id() );
+				$NewP->Invoice( $Invoice );
+			} # end foreach
+		} # end if
 	} # end if
 } # end sub edit
 

@@ -220,7 +220,6 @@ sub calc {
 
 sub signature_calc {
 	my ( $Project, $service_index, $specs, $signature_service_index, $sig_specs, $qty_index, $imposition ) = @_;
-$openprint::log->debug("Scoring signature_calc");
 	my %Results = (
 		'Status' => 'calculated',
 		'Breakdown'	=>	'',
@@ -713,7 +712,7 @@ sub fits_on_equipment {
 	if ( $Equipment->specification('Maximum Score Size') and ( 1*$height > 1*$Equipment->specification('Maximum Score Size') ) ) {
 		return "Doesn't fit height max $height > " . $Equipment->specification('Maximum Score Size');
 	} # end if
-	if ( $Equipment->specification('Minimum Score Calliper') and 1*$calliper < 1*$Equipment->specifcation('Minimum Score Calliper') ) {
+	if ( $Equipment->specification('Minimum Score Calliper') and 1*$calliper < 1*$Equipment->specification('Minimum Score Calliper') ) {
 		return "Calliper too small: ($calliper), Min: " . $Equipment->specification('Minimum Score Calliper');
 	} # end if
 	if ( $Equipment->specification('Maximum Score Calliper') and 1*$calliper > 1*$Equipment->specification('Maximum Score Calliper') ) {

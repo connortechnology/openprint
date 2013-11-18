@@ -100,32 +100,38 @@ if ($res->is_success) {
 		my $Conversion = openprint::Currency_Conversion->find_one(from_id=>$Currencies{$cur}->id(), to_id=>$$BTC{id}, period_end=>undef);
 		if ( ! $Conversion ) {
 			$Conversion = new openprint::Currency_Conversion();
-			$Conversion->save({
+			$_ = $Conversion->save({
 					from_id	=>	$Currencies{$cur}->id(), 
 					to_id	=>	$$BTC{id},
 					rate	=>	Math::Round::nearest(0.0001,1/$rate),
 					});
-		} elsif ( Math::Round::nearest(0.01,$Conversion->rate()) != Math::Round::nearest(0.01, 1/$$rates{$cur}{'30d'} ) ) {
-			$Conversion->save({period_end=>'NOW()'});
-			$Conversion->save({
+			if ( $_ ) {
+				$log->error("Error saving currency conversion: $rate : $_ ");
+			} # end if
+		} elsif ( Math::Round::nearest(0.01,$Conversion->rate()) != Math::Round::nearest(0.01, 1/$rate ) ) {
+			#$Conversion->save({period_end=>'NOW()'});
+			$_ = $Conversion->save({
 				id=>undef,
 				period_start=>'NOW()',
 				period_end	=>	undef,
-				rate		=>	Math::Round::nearest(0.0001/1/$$rates{$cur}{'30d'}),
+				rate		=>	Math::Round::nearest(0.0001/1/$rate),
 				});
+			if ( $_ ) {
+				$log->error("Error saving currency conversion: $rate : $_ ");
+			} # end if
 		} # end if
 
 		my $Conversion = openprint::Currency_Conversion->find_one(to_id=>$Currencies{$cur}->id(), from_id=>$$BTC{id}, period_end=>undef);
 		if ( ! $Conversion ) {
 			$Conversion = new openprint::Currency_Conversion();
 			$Conversion->save({to_id=>$Currencies{$cur}->id(), from_id=>$$BTC{id},
-					rate=>$$rates{$cur}{'30d'},
+					rate=>$rate,
 					});
-		} elsif ( Math::Round::nearest(0.01,$Conversion->rate()) != Math::Round::nearest(0.01, $$rates{$cur}{'30d'} ) ) {
+		} elsif ( Math::Round::nearest(0.01,$Conversion->rate()) != Math::Round::nearest(0.01, $rate ) ) {
 			$Conversion->save({period_end=>'NOW()'});
 			$Conversion->save({id=>undef,period_start=>'NOW()',
 					period_end=>undef,
-					rate=>$$rates{$cur}{'30d'},
+					rate=>$rate,
 					});
 		} # end if
 

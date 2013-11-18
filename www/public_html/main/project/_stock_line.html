@@ -10,14 +10,14 @@
 		$html.= '<span class="'.$$variable{'Columns'}.'Columns">';
 
 		$html .= '<span class="quantity">';
-		$html .= input( type=>'cardinal', id=>'qty'.$key, name=>"qty$key", value=>$$variable{"qty$key"}, onkeyup=>'calc(this.form.name);' );
+		$html .= input( type=>'float', id=>'qty'.$key, name=>"qty$key", value=>$$variable{"qty$key"}, onkeyup=>'calc(this.form.name);' );
 		$html .= 'lbs ';
 
 		if ( $$variable{'Stock'}->type() ne 'Roll' ) {
 			$html .= input( type=>'cardinal', id=>"sheets$key", name=>"sheets$key", value=> $$variable{"qty$key"}, onkeyup=>'calc(this.form.name);' );
 			$html .= 'sheets ';
 		} # end if
-		$html .= ssi::write_override( "overrideqty$key", $$variable{"overrideqty$key"}, '', "calc('f1')" );
+		$html .= write_override( "overrideqty$key", $$variable{"overrideqty$key"}, '', "calc('f1')" );
 
 		$html .= '</span><span class="pricing"> @ '.$$variable{'Currency'}->symbol();
 		$html .= input( type=>'float', id=>"cost$key", name=>"cost$key", value=>$$variable{"cost$key"}, onkeyup=>'calc(this.form.name);' );

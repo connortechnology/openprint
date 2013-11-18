@@ -87,7 +87,7 @@ foreach my $E ( openprint::Equipment->find('Specifications'=>{'Folding Capable'=
 				$Fold->equipment_id( $E->id() );
 				$Fold->name( $type.'Fold' );
 				$Fold->type( $type.'Fold' );
-				$Fold->max_imposition( 2 );
+				$Fold->max_imposition( 6 );
 				$Fold->stitching( 1 );
 				$Fold->perfectbind( 1 );
 				if ( $_ = $E->Specification($type.'FoldPrintingType') ) {
@@ -115,7 +115,7 @@ foreach my $E ( openprint::Equipment->find('Specifications'=>{'Folding Capable'=
 			$Fold->equipment_id( $E->id() );
 			$Fold->name( $panel.'Panel'.$pocket.'Pocket'.$gusset );
 			$Fold->type( $panel.'Panel'.$pocket.'Pocket'.$gusset );
-			$Fold->max_imposition( 1 );
+			$Fold->max_imposition( 2 );
 			$_ = $Fold->save();
 			die $_ if $_;
 			my $FS = new openprint::FoldSpecification();
@@ -224,7 +224,7 @@ foreach my $E ( openprint::Equipment->find('Specifications'=>{'Folding Capable'=
 						if ( $spine_direction eq 'Vertical' ) {
 							$Fold->min_height( Math::Round::nearest(0.001, ($_->value()/$rows)) );
 						} else {
-							$Fold->min_width( Math::Round::nearest(0.001, ($_->value()/$columns)) );
+							$Fold->min_width( Math::Round::nearest(0.001, ($_->value()/$Fold->page_rows())) );
 						} # end if
 					} # end if
 					$_->delete();
@@ -303,6 +303,8 @@ foreach my $E ( openprint::Equipment->find() ) {
 		} # end if
 	} # end foreach
 } # end foreach
+
+$dbh->do('UPDATE folds set max_calliper=0.036/(pages/4) where equipment_id=7');
 
 $dbh->disconnect();
 print "Finished\n";

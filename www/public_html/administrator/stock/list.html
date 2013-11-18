@@ -38,7 +38,7 @@
 	} // end function popup_window
 
 	function calc(formName) {
-		new Ajax.Updater('Stocks','/administrator/stock/_stocks.html', {method:'get',
+		new Ajax.Updater('Stocks','/administrator/stock/_stocks.html', {
 				onLoading:function(){ $('Stocks').innerHTML='Loading...'; },
 				onSuccess:function(){ TableKit.Sortable.reload('StocksTable'); },
 				parameters:Form.serialize($(formName))});
@@ -46,7 +46,6 @@
 	}
 	function body_onLoad() {
 	}
--->
 </script>
 <form id="f1" name="f1" method="post" action="list.html">
 	<fieldset class="filters"><legend>Go to</legend>
@@ -83,7 +82,7 @@
 			<select id="group_id" name="group_id" size="1" onchange="calc(this.form.name);">
 				<option value="">select</option>
 				<? echo (
-					return ssi::make_drop_down( [ map { $_->id(), $_->name() } @{$$variable{'Groups'}} ], $session{'/administrator/stock/list.html?group_id'} );
+					make_drop_down( [ map { $_->id(), $_->name() } @{$$variable{'Groups'}} ], $session{'/administrator/stock/list.html?group_id'} );
 					) ?>
 			</select>
 		</li>
@@ -93,7 +92,7 @@
 			<select id="manufacturer_id" name="manufacturer_id" size="1" onchange="calc(this.form.name);">
 				<option value="">select</option>
 				<? echo (
-					return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Manufacturer->find('order'=>'lower(name)') ], $session{'/administrator/stock/list.html?manufacturer_id'} );
+					make_drop_down( openprint::Manufacturer->dropdown( order=>'lower(name)'), $session{'/administrator/stock/list.html?manufacturer_id'} );
 					) ?>
 			</select>
 		</li>
@@ -102,7 +101,7 @@
 			<select id="brand_id" name="brand_id" onchange="filter_onChange(this,'');">
 				<option value="">select</option>
 				<? echo (
-					return ssi::make_drop_down( openprint::StockBrand->dropdown( order=>'lower(name)'), $session{'/administrator/stock/list.html?brand_id'} );
+					make_drop_down( openprint::StockBrand->dropdown( order=>'lower(name)'), $session{'/administrator/stock/list.html?brand_id'} );
 					) ?>
 			</select>
 		</li>
@@ -138,7 +137,7 @@
 		<li> 
 			<label>%3$s</label>
 			<select id="%1$s_id" name="%1$s_id" size="1" onchange="filter_onChange(this,'');"><option value=""> select one </option>%2$s</select>
-		</li>`, $lc_option, ssi::make_drop_down( [map { $_->id(), $_->name() } @sorted ], $session{'/administrator/stock/list.html?'.$lc_option.'_id'} ), $option );
+		</li>`, $lc_option, make_drop_down( [map { $_->id(), $_->name() } @sorted ], $session{'/administrator/stock/list.html?'.$lc_option.'_id'} ), $option );
 		$find{$lc_option.'_id'} = $session{'/administrator/stock/list.html?'.$lc_option.'_id'} if $session{'/administrator/stock/list.html?'.$lc_option.'_id'};
 	}# end foreach option
 	return $html;
@@ -161,40 +160,42 @@
 		</li>
 		<li>
 			<label>Recommendations</label>
-			<? echo ( ssi::radio( 'recommendations', [ '1','Yes','0','No', '', 'All' ], $session{'/administrator/stock/list.html?recommendations'}, { onclick=>'calc(this.form.name);' } ); ) ?>
+			<? echo ( radio( 'recommendations', [ '1','Yes','0','No', '', 'All' ], $session{'/administrator/stock/list.html?recommendations'}, { onclick=>'calc(this.form.name);' } ); ) ?>
 		</li>
 		<li>
 			<label>Grain Direction</label>
-			<? echo ( ssi::radio( 'grain_direction', [ 'width', 'Width','height', 'Height', '', 'Both' ], $session{'/administrator/stock/list.html?grain_direction'}, { onclick=>'calc(this.form.name);' } ); ) ?>
+			<? echo ( radio( 'grain_direction', [ 'width', 'Width','height', 'Height', '', 'Both' ], $session{'/administrator/stock/list.html?grain_direction'}, { onclick=>'calc(this.form.name);' } ); ) ?>
 		</li>
 		<li>
 			<label>FSC Code</label>
 			<input type="text" id="fsc_code" name="fsc_code" value="<? echo ( $session{'/administrator/stock/list.html?fsc_code'} ) ?>" size="13" style="width: auto;" />
-			<? echo ( ssi::button( 'Go1', { onclick=>"calc('f1');", text=>'Go' } ); ) ?>
+			<? echo ( button( 'Go1', { onclick=>"calc('f1');", text=>'Go' } ); ) ?>
 		</li>
 		<li>
 			<label>Inventory Code</label>
 			<input type="text" id="inventory_number" name="inventory_number" value="<? echo ( $session{'/administrator/stock/list.html?inventory_number'} ) ?>" size="13" style="width: auto;" />
-			<? echo ( ssi::button( 'Go2', { onclick=>q`calc('f1');`, text=>'Go' } ); ) ?>
+			<? echo ( button( 'Go2', { onclick=>q`calc('f1');`, text=>'Go' } ); ) ?>
 		</li>
 		<li>
 			<label>Digital</label>
-			<? echo ( ssi::radio( 'digital', [ '1','Yes','0','No', '', 'All' ], $session{'/administrator/stock/list.html?digital'}, { onclick=>'calc(this.form.name);' } ); ) ?>
+			<? echo ( radio( 'digital', [ '1','Yes','0','No', '', 'All' ], $session{'/administrator/stock/list.html?digital'}, { onclick=>'calc(this.form.name);' } ); ) ?>
 		</li>
 		<li>
 			<label>Has Setup Prices</label>
-			<? echo ( ssi::radio( 'setup_prices', [ '1','Yes','0','No', '', 'All' ], $session{'/administrator/stock/list.html?setup_prices'}, { onclick=>'calc(this.form.name);' } ); ) ?>
+			<? echo ( radio( 'setup_prices', [ '1','Yes','0','No', '', 'All' ], $session{'/administrator/stock/list.html?setup_prices'}, { onclick=>'calc(this.form.name);' } ); ) ?>
 		</li>
 		</ul>
 		</div><br class="spacer"/>
 		<p class="buttons">
 			<? echo ( join('',
-				ssi::button( 'Show', { onclick=>q`calc('f1');` } ),
-				ssi::button( 'applychanges', { onclick=>'popup_window(f1);', text=>'Make Changes' } ),
-				ssi::button( 'New', { href=>'stock.html', text=>'Add A New Stock' } ),
-				ssi::button( 'Delete', { onclick=>"f1.btnFunction.value='Delete';fmChange=2;fmCheck(f1);",text=>'Delete Checked Stocks' } ),
-				#ssi::button( 'Save', { onclick=>"show_div('StockRecommendations', event );",text=>'Set Stock Recommendations' } ),
-				ssi::button( "Copy", { onclick=>"f1.btnFunction.value='Copy';f1.submit();", text=>'Copy' } ),
+				button( 'Show', { onclick=>q`calc('f1');` } ),
+				button( 'applychanges', { onclick=>'popup_window(f1);', text=>'Make Changes' } ),
+				button( 'New', { href=>'stock.html', text=>'Add A New Stock' } ),
+				button( 'Delete', { onclick=>"f1.btnFunction.value='Delete';fmChange=2;fmCheck(f1);",text=>'Delete Checked Stocks' } ),
+				#button( 'Save', { onclick=>"show_div('StockRecommendations', event );",text=>'Set Stock Recommendations' } ),
+				button( "Copy", { onclick=>"f1.btnFunction.value='Copy';f1.submit();", text=>'Copy' } ),
+				button( 'Export', { onclick=>"f1.btnFunction.value='Export';f1.submit();", text=>'Export' } ),
+				button( 'ExportPrices', { onclick=>"f1.btnFunction.value='Export Prices';f1.submit();", text=>'Export Prices' } ),
 			); ) ?>
 		</p>
 	</fieldset>

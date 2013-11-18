@@ -3,9 +3,11 @@ package openprint::PaperPrice;
 our @ISA = qw(openprint::Object);
 
 require Math::Round;
+require openprint::Pricelist;
+require openprint::Equipment;
 
 use vars qw( $debug $table $serial %find_fields %fields %transforms %defaults );
-$debug = 0;
+$debug = 1;
 $table = 'paper_prices';
 $serial = 'paper_prices_id_seq';
 
@@ -42,6 +44,13 @@ $serial = 'paper_prices_id_seq';
 	'price' => 0,
 	'markup' => 0,
 );
+
+sub Pricelist {
+	return new openprint::Pricelist( $_[0]{pricelist_id} );
+} # end sub Pricelist
+sub Equipment {
+	return new openprint::Equipment( $_[0]{equipment_id} );
+} # end sub Pricelist
 
 sub delete {
 	my $Paper = $_[0]->Paper();

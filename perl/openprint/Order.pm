@@ -11,6 +11,7 @@ use vars qw( $debug %session %config %variable $log $dbh $table $serial %fields 
 *dbh = \$openprint::dbh;
 
 require sql;
+require openprint::usergroup;
 require openprint::logs;
 require openprint::OrderedProduct;
 require openprint::OrderedProject;
@@ -20,7 +21,7 @@ require openprint::Payment;
 require openprint::Tax;
 require openprint::Order_Notification;
 
-$debug = 1;
+$debug = 0;
 
 $table = 'orders';
 $serial = 'orders_id_seq';
@@ -775,6 +776,14 @@ sub AdditionalChargeNotifications {
 sub CSR {
 	return new openprint::User( $_[0]{salesrep_id} );
 } # end sub CSR
+
+sub can_invoice {
+	return 0 if ! $_[0]{id};
+	return 0 if $_[0]{invoice_id};
+	return 1 if $openprint::session{user_type} eq 'A';
+	return 1 if openprint::usergroup::is_user_in( ['Accounting'], $session{user_id} );
+	return 0;
+} # end sub can_invoice
 
 1;
 __END__

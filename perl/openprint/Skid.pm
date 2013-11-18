@@ -20,7 +20,7 @@ require openprint::Manifest;
 require openprint::ManifestContent;
 require openprint::InventoryCondition;
 
-$debug = 1;
+$debug = 0;
 
 $table = 'Skids';
 $serial = 'skid_id_seq';
@@ -801,7 +801,7 @@ sub merge {
 			'skid_id'   =>  $$Keep{id},
 			});
 	$PI = new openprint::PaperInventory();
-	my $e = $PI->save({
+	$e .= $PI->save({
 			'paper_id'  =>  undef,
 			'user_id'   =>  $openprint::session{user_id},
 			'instock'   =>  0,

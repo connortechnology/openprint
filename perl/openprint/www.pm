@@ -9,6 +9,7 @@ use constant DEBUG => 0;
 use Apache2::Request ();
 use Apache2::RequestRec ();
 use Apache2::Connection ();
+use Apache2::RequestUtil ();
 use APR::URI ();
 use Apache2::Const -compile => qw(REDIRECT HTTP_INTERNAL_SERVER_ERROR OK DECLINED HTTP_NOT_FOUND HTTP_FORBIDDEN);# Offers OK, Error,etc for web server.
 use Apache2::Log ();

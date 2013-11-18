@@ -5,7 +5,9 @@ require openprint::Asset;
 require openprint::Photo_Album;
 require Geo::Coder::Googlev3;
 require Math::Round;
-use Geo::IP;
+#use Geo::IP;
+use Geo::IPfree;
+my $geo = 'Geo::IPfree';
 
 package openprint::Location;
 our @ISA = qw( openprint::Object );
@@ -445,7 +447,13 @@ sub Album {
 	return new openprint::Photo_Album( $_[0]{'album_id'} );
 } # end sub Album
 sub can_edit {
-	if ( $_[0]{'id'} and ( $openprint::session{'user_id'} == $_[0]{'created_by'} or $openprint::session{'user_type'} eq 'A' ) ) {
+	if ( ! $_[0]{id} ) {
+		return 0;
+	} # end if
+	if ( ! $openprint::session{user_id} ) {
+		return 0;
+	} # end if
+	if ( $openprint::session{'user_id'} == $_[0]{'created_by'} or $openprint::session{'user_type'} eq 'A' ) {
 		return 1;
 	} # end if
 	return 0;
@@ -590,7 +598,7 @@ sub googlemap_html {
 } # end sub googlemap_html
 
 sub from_ip {
-	my $gi = Geo::IP->open('/usr/share/GeoIP/GeoIPCity.dat' );
+	my $gi = $geo->open('/usr/share/GeoIP/GeoIPCity.dat' );
 #GeoIPASNum.dat   GeoIPCity.dat    GeoIP.dat        GeoIPv6.dat      GeoLiteCity.dat 
 	if ( ! $gi ) {
 		$openprint::log->error('No Geo::IP');

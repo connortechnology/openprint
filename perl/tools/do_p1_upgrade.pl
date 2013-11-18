@@ -7,7 +7,10 @@ require logger;
 require openprint::Object;
 require configuration;
 require openprint::Service;
+require openprint::Fold;
+require openprint::FoldSpecification;
 require openprint::Equipment;
+require openprint::EquipmentSpecification;
 require openprint::ServiceType_Category;
 require openprint::ProjectType;
 require openprint::SRED_Asset;
@@ -30,11 +33,15 @@ configuration::init( $log, $dbh );
 
 my $BrochureType = openprint::ProjectType->find_one('name'=>'Brochures');
 if ( $BrochureType ) {
+	my $need_update = 0;
 	foreach my $PT ( openprint::ProjectType_Template->find( 'projecttype_id'=>$BrochureType->id(), 'type'=>'8PageSignatureFold') ) {
 		$_ = $PT->save({'type'=>'8 Page Fold'});
 		$log->error($_) if $_;
+	$need_update = 1;
 	}
-	sql::update( undef, undef, 'tbl_service_specifications', [ 'name=?', '8PageSignatureFold' ], 'value', '8 Page Fold' );
+	if ( $need_update ) {
+	sql::update( undef, undef, 'tbl_service_specifications', [ 'strvalue=?', '8PageSignatureFold' ], 'strvalue', '8 Page Fold' );
+	} # end if
 
 	my %templates = (
 		'NoFold' => 'No Fold',
@@ -91,7 +98,7 @@ new openprint::ProjectType_Template()->save({
 	'flat_height'		=>	11,
 });
 }
-	sql::insert( undef, undef, 'configuration', 'name', 'SimpleButtons','value','Y', 'category'=>'Miscellaneous Settings', 'type'=>'yes/no', 'description'=>'SimpleButtons: When true, will use a simple anchor tag instead of one with left right and centre sections. This reduces page size and speeds up rendering.');
+	sql::insert( undef, undef, 'configuration', 'name', 'SimpleButtons','value','Y', 'category'=>'Miscellaneous Settings', 'type'=>'yes/no', 'description'=>'SimpleButtons: When true, will use a simple anchor tag instead of one with left right and centre sections. This reduces page size and speeds up rendering.') if ! $config{SimpleButtons};
 	sql::insert( undef, undef, 'configuration', 'name', 'ProjectViewDisclaimer','value','All CTP quotes must include a digital proof.
 All prices are subject to the viewing of artwork, film or electronic file.
 Please check specifications for accuracy.
@@ -339,7 +346,7 @@ These terms and conditions shall be interpreted under and governed by the laws i
 ,'description', 'Disclaimer to show at bottom of a quote.', 'category','Miscellaneous Settings' ) if ! exists $config{'QuoteViewDisclaimer'};
 	sql::insert( undef, undef, 'configuration', 'name', 'RegistrationRequiredFields','value',
 'company_name,firstname,lastname,email,Captcha,address1,country,state,city,postalcode,phone,password,verifypassword',
-'category','Required Fields', 'description', 'Comma-separated list of fields on the registration page which must be filled in.');
+'category','Required Fields', 'description', 'Comma-separated list of fields on the registration page which must be filled in.') if ! $config{'RegistrationRequiredFields'};
 
 my ( $version, $updated_on, $backup ) = sql::execute( undef, undef, q{SELECT version,updated_on, backup FROM database_info ORDER BY updated_on DESC LIMIT 1} );
 sql::insert(undef, undef, 'database_info', 'version', $version+1, 'updated_on', 'NOW()', 'backup', 0 );
@@ -448,6 +455,47 @@ foreach my $Claim_Asset ( openprint::Claim_Asset->find() ) {
 	$Object_Asset->save({ object_id=>$Claim_Asset->claim_id(), asset_id=>$Claim_Asset->asset_id(), object_type=>'openprint::Claim' });
 	$Claim_Asset->delete();
 } # end foreach my $SRED_Asset
+$dbh->do('UPDATE users SET deleted=false WHERE deleted IS NULL');
+
+foreach my $E ( openprint::Equipment->find( Specifications => {'Stitching Capable'=>'Y'}, useinestimating=>1,order=>'lower(strName)') ) {
+	my $Spec = $E->Specification('Folding Capable');
+	if ( ! $Spec ) {
+		$Spec = new openprint::EquipmentSpecification();
+		$Spec->save({equipment_id=>$E->id(), name=>'Folding Capable', value=>'When Stitching'});
+	} elsif ( $Spec->value() ne 'When Stitching' ) {
+		$Spec->save({value=>'When Stitching'});
+	} # end if
+	my $Spec = $E->Specification('Fold Covers Only');
+	if ( ! $Spec ) {
+		$Spec = new openprint::EquipmentSpecification();
+		$Spec->save({equipment_id=>$E->id(), name=>'Fold Covers Only', value=>'Y'});
+	} elsif ( $Spec->value() ne 'When Stitching' ) {
+		$Spec->save({value=>'Y'});
+	} # end if
+	my $Fold = openprint::Fold->find_one(equipment_id=>$E->id(), pages=>4);
+	if ( ! $Fold ) {
+		$Fold = new openprint::Fold();
+		$Fold->save({ equipment_id=>$E->id(), pages=>4, stitching=>1, type=>'4PageFold' });
+	} elsif ( ! $Fold->type() ) {
+		$Fold->save({type=>'4PageFold'});
+	} # end if
+		my $FoldSpec = openprint::FoldSpecification->find_one(fold_id=>$Fold->id());
+		if ( ! $FoldSpec ) {
+			$FoldSpec = new openprint::FoldSpecification();
+			$FoldSpec->save({fold_id=>$Fold->id()});
+		} # end if
+} # end foreach
+
+my $Folder = openprint::Equipment->find_one(strid=>'Folder-1' );
+foreach my $ServicePrice ( openprint::ServicePrice->find(equipment_id=>$$Folder{id}, 'service_name like' => '%PanelFoldMakeReady' ) ) {
+	if ( ! $ServicePrice->min() ) {
+		$ServicePrice->save({units=>'per imposition', min=>1, max=>1 });
+		foreach my $i ( 2 .. 6 ) {
+		my $Two = $ServicePrice->copy();
+		$Two->save({min=>$i,max=>$i, markup=>12*($i-1), price=>undef } );
+		} # end foreach
+	} # end if
+} # end foreach
 $dbh->disconnect();
 0;
 __END__

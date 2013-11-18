@@ -6,65 +6,65 @@
 <div class="Host"><div class="Edit">
 <?include(/includes/error_reporting.html)?>
 <form id="f1" name="f1" method="post" action="/employee/it/host.html" enctype="multipart/form-data">
-	<input type="hidden" id="host_id" name="host_id" value="<? echo ( $$variable{'Host'}->id() ) ?>" />
+	<input type="hidden" id="host_id" name="host_id" value="<? echo ( $$variable{Host}->id() ) ?>" />
 	<input type="hidden" id="action" name="action" />
-	<fieldset><legend>Host <? echo ( $$variable{'Host'}->id() ) ?></legend>
+	<fieldset><legend>Host <? echo ( $$variable{Host}->id() ) ?></legend>
 		<div class="content leftColumn">
 			<ul>
 				<li>
 					<label>Hostname</label>
-					<input type="text" id="hostname" name="hostname" value="<? echo ( $$variable{'Host'}->hostname() ) ?>" onkeyup="this.value=this.value.replace(/\s/g,'');" onchange="this.onkeyup.call(this);"/>
+					<input type="text" id="hostname" name="hostname" value="<? echo ( $$variable{Host}->hostname() ) ?>" onkeyup="this.value=this.value.replace(/\s/g,'');" onchange="this.onkeyup.call(this);"/>
 				</li>
 				<li>
 					<label>IP Address</label>
-					<input type="text" id="ip" name="ip" value="<? echo ( $$variable{'Host'}->ip() ) ?>" onkeyup="this.value=this.value.replace(/[^\.\d%\/\*]/g,'');" onchange="this.onkeyup.call(this);" />
-					<input type="checkbox" name="dhcp" id="dhcp" value="1" <? echo ( ssi::checked( $$variable{'Host'}->dhcp() ); ) ?> />
+					<input type="text" id="ip" name="ip" value="<? echo ( $$variable{Host}->ip() ) ?>" onkeyup="this.value=this.value.replace(/[^\.\d%\/\*]/g,'');" onchange="this.onkeyup.call(this);" />
+					<input type="checkbox" name="dhcp" id="dhcp" value="1" <? echo ( checked( $$variable{Host}->dhcp() ); ) ?> />
 					<label class="radio" for="dhcp">DHCP?</label>
 				</li>
 				<li>
 					<label>MAC</label>
-					<textarea id="mac" name="mac" rows="<? echo ( $$variable{'Host'}->mac() ? scalar @{$$variable{'Host'}->mac()} : 1 ) ?>" cols=""><? echo ( $$variable{'Host'}->mac() ? join("\n", @{$$variable{'Host'}->mac()} ) : '' ) ?></textarea>
+					<textarea id="mac" name="mac" rows="<? echo ( $$variable{Host}->mac() ? scalar @{$$variable{Host}->mac()} : 1 ) ?>" cols=""><? echo ( $$variable{Host}->mac() ? join("\n", @{$$variable{Host}->mac()} ) : '' ) ?></textarea>
 				</li>
 				<li><label onclick="toggle_input( $('type_id'), $('type') );">Type</label>
 					<input type="text" id="type" name="type" style="display:none;" onkeyup="ddm_select_by_text( $('type_id'), this.value, 0 );" />
 					<select name="type_id" id="type_id" onchange="$('type').value='';">
 						<option value="">select</option>
-						<? echo ( ssi::make_drop_down( openprint::Host_Type->dropdown(), $$variable{'Host'}->type_id() ); ) ?>
+						<? echo ( ssi::make_drop_down( openprint::Host_Type->dropdown(), $$variable{Host}->type_id() ); ) ?>
 					</select>
 				</li>
 				<li>
 					<label>Blacklist</label>
-					<? echo ( ssi::radio( 'blacklist', [ '1','Yes','0','No' ], $$variable{'Host'}->blacklist() ); ) ?>
+					<? echo ( ssi::radio( 'blacklist', [ '1','Yes','0','No' ], $$variable{Host}->blacklist() ); ) ?>
 				</li>
 				<li>
-					<label>Access violation count</label><input type="text" name="count" id="count" value="<? echo ( $$variable{'Host'}->count() ) ?>" />
+					<label>Access violation count</label><input type="text" name="count" id="count" value="<? echo ( $$variable{Host}->count() ) ?>" />
 				</li>
 				<li>
 					<label>Whitelist</label>
-					<? echo ( ssi::radio( 'whitelist', [ '1','Yes','0','No' ], $$variable{'Host'}->whitelist() ); ) ?>
+					<? echo ( ssi::radio( 'whitelist', [ '1','Yes','0','No' ], $$variable{Host}->whitelist() ); ) ?>
 				</li>
 				<li>
 					<label>Monitor</label>
-					<? echo ( ssi::radio( 'monitored', [ '1','Yes','0','No' ], $$variable{'Host'}->monitored(), { 'onclick'=>q`if(this.value==1){$('offline_seconds').show();}else{$('offline_seconds').hide()};`} ); ) ?>
+					<? echo ( ssi::radio( 'monitored', [ '1','Yes','0','No' ], $$variable{Host}->monitored(), { 'onclick'=>q`if(this.value==1){$('offline_seconds').show();}else{$('offline_seconds').hide()};`} ); ) ?>
 				</li>
-				<li id="offline_seconds"<? echo ( $$variable{'Host'}->monitored() ? '' : ' style="display: none;"' ) ?>><label>Seconds offline before notification</label>
-					<input type="number" name="offline_seconds" value="<? echo ( $$variable{'Host'}->offline_seconds() ) ?>" />
+				<li id="offline_seconds"<? echo ( $$variable{Host}->monitored() ? '' : ' style="display: none;"' ) ?>><label>Seconds offline before notification</label>
+					<input type="number" name="offline_seconds" value="<? echo ( $$variable{Host}->offline_seconds() ) ?>" />
 				</li>
 				<li>
-					<label>Online</label><? echo ( $$variable{'Host'}->online() ? 'Yes' : 'No' ) ?>
+					<label>Online</label><? echo ( $$variable{Host}->online() ? 'Yes' : 'No' ) ?>
 				</li>
 				<li><label>Description</label>
-					<textarea id="description" name="description" rows="<? echo (ssi::count_lines($$variable{'Host'}->description() ); ) ?>" onkeyup="textarea_resize(this);"><? echo ( $$variable{'Host'}->description() ) ?></textarea>
+					<textarea id="description" name="description" rows="<? echo (ssi::count_lines($$variable{Host}->description() ); ) ?>" onkeyup="textarea_resize(this);"><? echo ( $$variable{Host}->description() ) ?></textarea>
 				</li>
-				<li><label>Created On</label><? echo ( Date::Format::time2str( $config{'DateTimeFormat'}, Date::Parse::str2time( $$variable{'Host'}->created_on() ) ); ) ?></li>
-				<li><label>Updated On</label><? echo ( Date::Format::time2str( $config{'DateTimeFormat'}, Date::Parse::str2time( $$variable{'Host'}->created_on() ) ); ) ?></li>
+				<li><label>Created On</label><? echo ( Date::Format::time2str( $config{'DateTimeFormat'}, Date::Parse::str2time( $$variable{Host}->created_on() ) ); ) ?></li>
+				<li><label>Updated On</label><? echo ( Date::Format::time2str( $config{'DateTimeFormat'}, Date::Parse::str2time( $$variable{Host}->created_on() ) ); ) ?></li>
 				<li class="buttons">
 					<? echo ( 
 						my $html;
 						$html .= button( 'Save', { onclick=>"if( check_inputs( f1 ) ){f1.elements['action'].value='Save';f1.submit();}" } );
 						$html .= button( 'Reset', { onclick=>'f1.reset();' } );
-						if ( $$variable{'Host'}->id() ) {
-							$html .= button( 'Delete', { onclick=>"if(confirm('Are you sure?')){f1.elements['action'].value='Delete';f1.submit();}" } ) if $$variable{'Host'}->id();
+						if ( $$variable{Host}->id() ) {
+							$html .= button( 'Delete', { onclick=>"if(confirm('Are you sure?')){f1.elements['action'].value='Delete';f1.submit();}" } ) if $$variable{Host}->id();
 						} # end if
 						$html .= button( 'Resolve', { onclick=>"f1.elements['action'].value='Resolve';f1.action='/employee/it/host.html';f1.submit();" } );
 						$html .= button( 'Ping', { onclick=>"f1.elements['action'].value='ping';f1.action='/employee/it/host.html';f1.submit();" } );
@@ -99,7 +99,7 @@
 	<fieldset><legend>RADIUS Auth</legend>
 		<ul>
 	<? echo ( 
-		return if ! $$variable{'Host'}->mac();
+		return if ! $$variable{Host}->mac();
 		$openprint::RADIUS_Check::dbh = sql::open_sql( $log,
 			'database'  => $config{'RADIUS DB Name'},
 			'driver'	=> $config{'RADIUS DB Driver'},
@@ -114,7 +114,7 @@
 		my $html = '';
 		my $fragment = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/employee/it/_radius_mac_line.html' );
 		
-		foreach my $mac ( @{$$variable{'Host'}->mac()} ) {
+		foreach my $mac ( @{$$variable{Host}->mac()} ) {
 			if ( $mac =~ /^([[:xdigit:]]{2})[\:\-]?([[:xdigit:]]{2})[\:\-]?([[:xdigit:]]{2})[\:\-]?([[:xdigit:]]{2})[\:\-]?([[:xdigit:]]{2})[\:\-]?([[:xdigit:]]{2})$/ ) {
 				$mac = "$1-$2-$3-$4-$5-$6";
 			} # end if
@@ -122,7 +122,7 @@
 
 			$html .= qq`<li id="mac_$mac">`;
 			$$variable{'username'} = $mac;
-			$html .= ssi::variable_substitution( \$fragment, $variable );
+			$html .= variable_substitution( \$fragment, $variable );
 			$html .= '</li>';
 		} # end foreach mac
 		return $html;
@@ -133,23 +133,23 @@
             <fieldset><legend>Where</legend>
 <? echo ( 
     $$variable{'Location'} = $$variable{Host}->Location();
-    return ssi::include( '/location/_location_fields.html' );
+    return include( '/location/_location_fields.html' );
 ) ?>
             </fieldset>
 	<fieldset><legend>Logs</legend>
 		<ul>
 			<li><label>Date</label>
 				<? echo (
-						ssi::datetime_select_session( '/employee/it/host.html','log_created_on_start', {
-							'onchange'	=>q`new Ajax.Updater( 'Logs', '/employee/it/_host_logs.html', { parameters: $('f1').serialize() } );`,
-							'with_today'=>1,
-							'with_clear'=>1,
+						datetime_select_session( '/employee/it/host.html','log_created_on_start', {
+							onchange	=>q`new Ajax.Updater( 'Logs', '/employee/it/_host_logs.html', { parameters: $('f1').serialize() } );`,
+							with_today=>1,
+							with_clear=>1,
 							} ); ) ?> to
 				<? echo (
-						ssi::datetime_select_session( '/employee/it/host.html','log_created_on_end', {
-							'onchange'	=>q`new Ajax.Updater( 'Logs', '/employee/it/_host_logs.html', { parameters: $('f1').serialize() } );`,
-							'with_today'=>1,
-							'with_clear'=>1,
+						datetime_select_session( '/employee/it/host.html','log_created_on_end', {
+							onchange	=>q`new Ajax.Updater( 'Logs', '/employee/it/_host_logs.html', { parameters: $('f1').serialize() } );`,
+							with_today=>1,
+							with_clear=>1,
 							} ); ) ?>
 				<? echo ( button( 'LoadLog', { onclick=>q`new Ajax.Updater( 'Logs', '/employee/it/_host_logs.html', { parameters: $('f1').serialize() } );`, text=>'Load' } ); ) ?>
 			</li>

@@ -30,12 +30,12 @@
 					<? echo ( my $html = '';
 						foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
 							$html .= '<span class="'.$$variable{'Columns'}.'Columns">';
-							$html .= ssi::input( 
+							$html .= input( 
 								type	=>	'cardinal',
 								name	=>	"Runspeed$qty_index",
 								id		=>	"Runspeed$qty_index", value=>$$variable{'Runspeed'.$qty_index},
 								onkeyup	=>	'calc(this.form.name);' ).'/Hr';
-							$html .= ssi::write_override( 'OverrideRunspeed'.$qty_index, 'Y', '', "calc(\$('f1').name);" );
+							$html .= write_override( 'OverrideRunspeed'.$qty_index, 'Y', '', "calc(\$('f1').name);" );
 							$html .= '</span>';
 						} # end foreach qty_index
 						return $html;

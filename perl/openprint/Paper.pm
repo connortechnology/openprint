@@ -33,7 +33,7 @@ require openprint::PaperAllocation;
 
 use Time::HiRes qw{ time gettimeofday tv_interval }; 
 
-use vars qw( $debug $table $serial %fields %find_fields %defaults %transforms );
+use vars qw( $debug $table $serial %fields %find_fields %defaults %transforms %grades );
 
 $debug = 0;
 $table = 'papers';
@@ -114,8 +114,16 @@ $serial	= 'paper_id_seq';
 	score_required	=>	'0',
 	die_score_required	=>	'0',
 	supplied		=>	undef,
+	multipart	=>	0,
 );
 
+%grades = (
+1	=>	'1 Gloss-coated stock',
+2	=>	'2 Matte-coated stock',
+3	=>	'3 Gloss-coated, web stock', 
+4	=>	'4 Uncoated, white stock', 
+5	=>	'5 Uncoated, yellow stock'
+);
 sub load {
 	my ( $self, $data ) = @_;
 	if ( ! $data ) {
@@ -214,8 +222,8 @@ sub save {
 		@$self{'weight_id','weight'} = @$Weight{'id','name'};
 	} # end if weight_id
 	if ( $$self{'quality'} and ! $$self{'quality_id'} ) {
-        $$self{'quality'} = openprint::StockQuality->transform( 'name', $$self{'quality'} );
-        my $Quality = openprint::StockQuality->find_one('name lc'=>lc $$self{'quality'});
+		$$self{'quality'} = openprint::StockQuality->transform( 'name', $$self{'quality'} );
+		my $Quality = openprint::StockQuality->find_one('name lc'=>lc $$self{'quality'});
 		if ( ! $Quality ) {
 			$Quality = new openprint::StockQuality();
 			if ( $_ = $Quality->save({'name'=>$$self{'quality'}}) ) {
@@ -264,13 +272,12 @@ sub save {
 
 			$variable{'Paper'} = $self;
 			if ( my $email_template = misc::load_file( $openprint::log, $config{'SkinPath'} . '/email_template.html' ) ) {
-				$variable{'ReplacementText'} = misc::load_file( $openprint::log, $ENV{'DOCUMENT_ROOT'} . '/email_content/new_paper_notification.html' );
-				$variable{'ReplacementText'} = ssi::variable_substitution( \$variable{'ReplacementText'}, \%variable );
+				$variable{'ReplacementText'} = ssi::include( '/email_content/new_paper_notification.html', \%variable );
 				my $body = ssi::variable_substitution( \$email_template, \%variable );
 				my %mail = (
-						SMTP	=> $config{'Mail Server'},
-						FROM	=> $config{'InventoryEmail'},
-						TO		=> $config{'InventoryEmail'},
+						SMTP	=> $openprint::config{'Mail Server'},
+						FROM	=> $openprint::config{'InventoryEmail'},
+						TO	  => $openprint::config{'InventoryEmail'},
 						SUBJECT => 'A new paper has been added to inventory',
 						);
 				#misc::send_email_with_attachment( $openprint::log, \%mail, ( '', encode_qp($body), 'text/html', 'quoted-printable' ) );
@@ -559,22 +566,22 @@ sub Quality {
 
 sub quality {
 	my ( $self, $quality ) = @_;
-    if ( @_ > 1 ) {
-        $quality = openprint::StockQuality->transform( 'name', $quality );
-        if ( ! $$self{'custom'} ) {
-            my $Quality = openprint::StockQuality->find_one('name lc'=>lc $quality );
-            if ( $Quality ) {
-                @$self{'quality_id','quality'} = @$Quality{'id','name'};
-            } else {
-                @$self{'quality_id','quality'} = ( undef, $quality );
-            } # end if
-        } else {
-            $$self{'quality'} = $quality;
-        } # end if
-    } elsif ( $$self{'quality_id'} and ! $$self{'quality'} ) {
-        $$self{'quality'} = new openprint::StockQuality( $$self{'quality_id'} )->name();
-    } # end if
-    return $$self{'quality'};
+	if ( @_ > 1 ) {
+		$quality = openprint::StockQuality->transform( 'name', $quality );
+		if ( ! $$self{'custom'} ) {
+			my $Quality = openprint::StockQuality->find_one('name lc'=>lc $quality );
+			if ( $Quality ) {
+				@$self{'quality_id','quality'} = @$Quality{'id','name'};
+			} else {
+				@$self{'quality_id','quality'} = ( undef, $quality );
+			} # end if
+		} else {
+			$$self{'quality'} = $quality;
+		} # end if
+	} elsif ( $$self{'quality_id'} and ! $$self{'quality'} ) {
+		$$self{'quality'} = new openprint::StockQuality( $$self{'quality_id'} )->name();
+	} # end if
+	return $$self{'quality'};
 } # end sub quality
 
 sub Weight {
@@ -607,6 +614,7 @@ sub width {
 		$width =~ s/[^\d\.]//g;
 		$$self{'width'} = $width;
 		delete $$self{'to_string'};
+		delete $$self{'id_string'};
 	} # end if
 	return $$self{'width'};
 } # end if
@@ -616,6 +624,7 @@ sub height {
 		$height =~ s/[^\d\.]//g;
 		$$self{'height'} = $height;
 		delete $$self{'to_string'};
+		delete $$self{'id_string'};
 	} # end if
 	return $$self{'height'};
 } # end if
@@ -721,9 +730,9 @@ sub owner_id {
 
 # This function assumes that the skid contents have already been updated
 sub add_inventory {
-    my ( $self, $Skid, $quantity, $units, $description, $Project ) = @_;
-    $quantity =~ s/[^\-\d]//g;
-    $quantity = int $quantity;
+	my ( $self, $Skid, $quantity, $units, $description, $Project ) = @_;
+	$quantity =~ s/[^\-\d]//g;
+	$quantity = int $quantity;
 
 	if ( ! $Project ) {
 		my $docket;
@@ -741,23 +750,23 @@ sub add_inventory {
 	$units = $self->units() if ! $units;
 	my $PI = new openprint::PaperInventory();
 	$PI->save({
-        paper_id	=>	$$self{id},
-        user_id		=>	$openprint::session{user_id},
-        poindex		=>	undef,
-        instock		=>	$self->in_stock() + $quantity,
-        delta		=>	$quantity,
-        comment		=>	$description,
-        skid_id		=>	$Skid->id(),
+		paper_id	=>	$$self{id},
+		user_id		=>	$openprint::session{user_id},
+		poindex		=>	undef,
+		instock		=>	$self->in_stock() + $quantity,
+		delta		=>	$quantity,
+		comment		=>	$description,
+		skid_id		=>	$Skid->id(),
 		units		=>	$units,
 		docket		=>	$$Project{docket},
 		project_id	=>	$$Project{id},
-        });
+		});
 	# Updates in_stock and allocated
 	$self->save();
 } # end sub add_inventory
 
 sub allocate {
-    my ( $self, $skid_id, $project_id, $quantity, $units, $condition_id ) = @_;
+	my ( $self, $skid_id, $project_id, $quantity, $units, $condition_id ) = @_;
 
 	my $skids;
 	if ( ref $skid_id eq 'openprint::Skid' ) {
@@ -798,7 +807,7 @@ sub back_ordered {
 
 sub allocated {
 	return 0 if ! $_[0]{id};
-    my ( $self, $project_id, $new ) = @_;
+	my ( $self, $project_id, $new ) = @_;
 	if ( @_ == 3 ) {
 		$$self{allocated} = $new;
 	} # end if
@@ -832,7 +841,7 @@ sub in_stock {
 			$_[0]{'in_stock'} += $SkidContent->quantity();
 		} # end foreach SkidContent
 	} # end if
-    return $_[0]{'in_stock'};
+	return $_[0]{'in_stock'};
 } # end sub in_stock
 
 sub SkidContents {
@@ -874,7 +883,7 @@ sub skids {
 	} else {
 		return openprint::Skid->find( paper_id=>$_[0]{id}, 'quantity >='=>1);
 	} # end if
-    #return map { new openprint::Skid( $_ ) } sql::execute( undef, undef, q{SELECT skid_id FROM skid_contents WHERE paper_id=? and quantity > 0}, $$self{'id'} );
+	#return map { new openprint::Skid( $_ ) } sql::execute( undef, undef, q{SELECT skid_id FROM skid_contents WHERE paper_id=? and quantity > 0}, $$self{'id'} );
 } # end sub skids
 
 sub previous {
@@ -990,7 +999,7 @@ sub get_price {
 		$$price{'currency_id'} = $Pricelist->currency_id();
 		openprint::Currency::convert( $price );
 	} else {
-		Carp::cluck("No custom price, and no paper::id for service: $params{service}" . $self->to_string());
+		Carp::cluck("No custom price, and no paper::id for service: $params{service}" . $self->to_string()) if $debug;
 	} # end if
 
 	my $Company = new openprint::Company( $openprint::session{company_id} );
@@ -1025,13 +1034,19 @@ $openprint::log->debug("Costs: ($$price{Cost}) ($$price{'100lb Price'})/100lb ($
 
 sub cut {
 	my $self = shift;
-
-	if ( $$self{'height'} > $$self{'width'} ) {
-		$$self{'height'} /= 2;
+	if ( @_ ) {
+		my ( $new_width, $new_height ) = @_;
+		$$self{mweight} = int( $$self{mweight} / ( ( $$self{width} * $$self{height} ) / ( $new_width * $new_height ) ) );
+		$$self{width} = $new_width;
+		$$self{height} = $new_height;
 	} else {
-		$$self{'width'} /= 2;
+		if ( $$self{height} > $$self{width} ) {
+			$$self{height} /= 2;
+		} else {
+			$$self{width} /= 2;
+		} # end if
+		$$self{mweight} /= 2;
 	} # end if
-	$$self{'mweight'} /= 2;
 	delete $$self{'to_string'};
 	delete $$self{'id_string'};
 	$$self{'grain_direction'} = undef; # force recalc of gd
@@ -1271,7 +1286,7 @@ sub load_from_signature {
 					( $$specs{'PrintingType'.$qty_index} eq 'Digital' ? ( 'digital'=>1 ) : () ),
 					'order'		=>	'minimum_order',
 					);
-			if ( $qty_index ) {
+			if ( $qty_index and $$specs{'hdnSuppliedStockWidth'.$qty_index} ) {
 				$params{'width'} = $$specs{'hdnSuppliedStockWidth'.$qty_index};
 				$params{'type'}	= $$specs{'StockType'.$qty_index};
 				if ( $params{'type'} ne 'Roll' ) {
@@ -1501,7 +1516,7 @@ sub basis_height {
 } # end sub basis_height
 
 sub sheet_weight {
-    return $_[0]{'width'} * $_[0]{'height'} * $_[0]->wpsi();
+	return $_[0]{'width'} * $_[0]{'height'} * $_[0]->wpsi();
 } # end sub sheet_weight
 
 sub start_sheet_weight {
@@ -1558,5 +1573,6 @@ sub init_cache {
     openprint::StockQuality->find();
     openprint::StockMaterial->find();
 }
+
 1;
 __END__

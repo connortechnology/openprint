@@ -5,7 +5,7 @@
 	my $sig_specs = openprint::service::get_specs_ref( @$variable{'Project','ServiceIndex'} );
 	foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
 		$html .= '<span class="value">';
-		$html .= sprintf('%d impressions ', $$sig_specs{'ImpressionQuantity'.$qty_index} );
+		$html .= $$sig_specs{'hdnImpressionQuantity'.$qty_index} .' impressions ';
 
 		my $Paper = openprint::Paper::load_from_signature( $$variable{'Project'}, $sig_specs, $qty_index );
 

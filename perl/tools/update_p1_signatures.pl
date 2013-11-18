@@ -24,7 +24,7 @@ $sql_server{'password'} = $ARGV[2];
 $sql_server{'password'} = $sql_server{'login'} if ! $sql_server{'password'};
 
 $openprint::Object::no_cache = 1;
-my $projects_count = 0;
+my $projects_count = 1000;
 my $project_id = $ARGV[3];
 #
 #my $project_id = 407192;
@@ -110,6 +110,9 @@ foreach my $Project ( openprint::Project->find( 'order'=>'id desc',
 			openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'txtSignatureType', 'Interior Pages' );
 			openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'Group', '2' );
 			openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'GroupPageQuantity', $$printing_specs{'txtTotalPageQuantity'} - ( $$printing_specs{'rdbCover'} eq 'Self' ? 0 : 4 ) );
+			foreach my $qty_index ( $Project->quantity_indexes() ) {
+			openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'MatchGrain'.$qty_index, 'Y' );
+			} # end foreach
 		} else {
 # Gate Fold?
 			openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'Group', '3' );
@@ -425,6 +428,7 @@ foreach my $Service ( openprint::Service->find('name'=>'Imposition') ) {
 	sql::update( undef, undef, 'tbl_equipment_specifications', [ 'strname=? and lngequipmentindex=?', 'Standard Run Speed', 28], 'strname','Run Speed' );
 	sql::update( undef, undef, 'tbl_equipment_specifications', [ 'strname=?', 'Press Additional Run Speed' ], 'strname','Run Speed' );
 	$dbh->do(q`DELETE FROM tbl_equipment_specifications WHERE strname='Run Speed' and strvalue=''`);
+sql::update( undef, undef, 'tbl_equipment_specifications', [ 'strname=?', 'Runspeed' ], 'strname','Standard Run Speed' );
 
 
 	#sql::insert( undef, undef, 'tbl_equipment_specifications', 'lngequipmentindex', 1, 'strname','Run Speed', 'dblmin', 0.0031, 'dblmax', 0.0120, 'strvalue', 9000, 'interpolate', 0, 'strunits', 'Calliper' );

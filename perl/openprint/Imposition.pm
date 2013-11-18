@@ -32,6 +32,7 @@ my @fields = (
 	'pages',
 	'stock_weight',
 	'sides',
+	'Project',
 );
 
 sub new {

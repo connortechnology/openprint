@@ -1,8 +1,6 @@
 use strict;
 package openprint::main_quote;
 
-use Date::Calc qw(Add_Delta_Days);
-
 use openprint ();
 use vars qw( $r $log $dbh %variable %param %session %config );
 *r = \$openprint::r;
@@ -49,6 +47,7 @@ sub history {
     ssi::setup_date_select( '/main/quote/history.html', 'created_on_end', 0 );
 	_history();
 } # end sub history
+
 sub _history {
     ssi::save_params( '/main/quote/history.html',
             'created_on_start_year', 'created_on_start_month','created_on_start_day',
@@ -99,8 +98,8 @@ sub add_project_to_quote {
 	$session{'quote_id'} = $quote_id = $Quote->id();
 	return if ! $quote_id;
 
-	$project_id = $param{'ProjectIndex'} if ! $project_id;
-	$project_id = $session{'project_id'} if ! $project_id;
+	$project_id = $param{ProjectIndex} if ! $project_id;
+	$project_id = $session{project_id} if ! $project_id;
 	# check to make sure project isn't already in the quote.
 	my @QuotedProjects = openprint::QuotedProject->find('quote_id'=>$Quote->id(), 'project_id'=>$project_id );
 	if ( @QuotedProjects > 1 ) {
@@ -125,6 +124,7 @@ $openprint::log->error( "More than 1 occurrence of a project in a quote." );
 $openprint::log->error( $error );
 		} else {
 			$Quote->add_log( 'Added project ' . $project_id );
+			$Project->add_to_log( @openprint::session{'company_id','user_id'}, "Add to quote $quote_id" );
 		} # end if
 	} # end if
 	return $quote_id;

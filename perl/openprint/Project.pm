@@ -25,7 +25,7 @@ require openprint::Bug;
 require openprint::Estimating::MultiPage;
 require openprint::service;
 
-$debug = 0;
+$debug = 1;
 
 $table = 'projects';
 $serial = 'lngProjectIndex_seq';
@@ -667,7 +667,7 @@ sub copy {
 	@$new{@keys} = @$self{@keys};
 
 	delete $$new{'Services'};
-	$new->save({'id'=>undef, 'created_on'=>undef,'production_comments'=>undef} );
+	$new->save({'id'=>undef, 'created_on'=>undef,'production_comments'=>undef, order_id=>undef, docket=>undef} );
 
 	my @dont_copy = (
 			'ServiceIndex','ProjectIndex','TemplateType',
@@ -819,6 +819,16 @@ sub summary {
 # The logic is, each group has to be either all sheetfed, or all web (or digital, etc).	
 			foreach my $group_id ( sort @groups ) {
 				my @sigs = $self->signatures({'Group'=>$group_id});
+				if ( ! @sigs ) {
+					$openprint::log->error( "No sigs for Group $group_id, but there pretty much to be since we have this group index.  Signatures must be out of date");
+					$self->services(undef);
+					@sigs = $self->signatures({'Group'=>$group_id});
+					if ( ! @sigs ) {
+						$openprint::log->error( "Still No sigs for Group $group_id, after reloading" );
+						next;
+					} # end if
+
+				} # end if
 
 				my $sig_specs = openprint::service::get_specs_ref( $self, $sigs[0] );
 				$summary .= openprint::Estimating::Printing::summary( $self, $sigs[0], $sig_specs );
@@ -994,7 +1004,7 @@ sub signatures {
 		foreach my $s_id ( @{$$services{'Signature'}} ) {
 			my $specs = openprint::service::get_specs_ref( $self, $s_id );
 
-			if ( $$params{'type'} ) {
+			if ( $$params{type} ) {
 				next if $$specs{'txtSignatureType'} ne $$params{'type'};
 			} # end if
 			if ( exists $$params{'Group'} ) {
@@ -1002,6 +1012,13 @@ sub signatures {
 			} # end if
 			push @sigs, $s_id;
 		} # end foreach signatures
+		if ( $$params{sort} ) {
+            return sort {
+                my $a_specs = openprint::service::get_specs_ref( $self, $a );
+                my $b_specs = openprint::service::get_specs_ref( $self, $b );
+                $$a_specs{Group} <=> $$b_specs{Group} || $$a_specs{SignatureIndex} <=> $$b_specs{SignatureIndex};
+            } @sigs;
+		} # end if
 		return @sigs;
 	} # end if
 	return @{$$services{'Signature'}} if $$services{'Signature'} and @{$$services{'Signature'}};
@@ -1167,7 +1184,7 @@ sub Ordered_Project {
 } # end sub Ordered_Project
 
 sub add_service {
-	my ( $self, $type, $data ) = @_;
+	my ( $self, $type, $data, $options ) = @_;
 
 	my $ServiceType;
 	if ( ref $type ne 'openprint::ServiceType' ) {
@@ -1183,7 +1200,7 @@ sub add_service {
 	my $ac = sql::start_transaction( $dbh );
 
 	my $Service = new openprint::Project_Service();
-	$Service->save({ project_id=>$$self{id}, status=>'uncalculated', servicetype_id=>$ServiceType->id()});
+	$Service->save({ project_id=>$$self{id}, ( status=>$$options{status} ? $$options{status} : 'uncalculated' ), servicetype_id=>$ServiceType->id()});
 	my $service_index = $$Service{service_id};
 
 	# Do this so that it doesn't try to load the specs, saving 1 db call.
@@ -1463,6 +1480,65 @@ sub calliper {
 sub Currency {
 	return new openprint::Currency( $_[0]{'currency_id'} );
 } # end sub Currency
+
+sub change_ProjectType {
+	my $error;
+	my $Project = $_[0];
+   # This will likely never happen, because the act of cilcking on the different project type changes it.
+	my $services = $Project->services();
+    my $ProjectType = $_[1];
+    my $OldProjectType = $Project->Type();
+# Handle ProjectType
+    if ( $OldProjectType->id() != $ProjectType->id() ) {
+        if ( $$services{''} ) {
+            foreach ( @{$$services{''}} ) { openprint::print_project::delete_service( $$Project{id}, $_ ); };
+        } # end if
+        delete $$services{''};
+        if ( $OldProjectType->type() ne $ProjectType->type() ) {
+            $log->debug("Removing sigs because project type is different");
+            # Brochure to multipage or nice versa.  Have to remove sigs.
+            foreach ( $Project->signatures() ) { openprint::print_project::delete_service( $$Project{id}, $_ ); }
+            delete $$services{Signature};
+        } else {
+            $openprint::log->debug("Not Removing sigs because project type is same $$OldProjectType{type} == $$ProjectType{type}");
+        } # end if
+    } else {
+            $openprint::log->debug("Not Removing sigs because project type is same $$OldProjectType{id} == $$ProjectType{id}");
+    } # end if
+	if ( $$Project{id} ) {
+		if ( ! $$services{''} ) {
+			my $printing_service_index = openprint::print_project::insert_project_type( $openprint::r, $openprint::log, $openprint::dbh, $$Project{id}, $ProjectType->name() );
+			push @{$$services{''}}, $printing_service_index;
+		} # end if
+		my @oldRequiredServiceTypes = $OldProjectType->required_ServiceTypes();
+		my @newRequiredServiceTypes = $ProjectType->required_ServiceTypes();
+
+	# Remove no longer needed services
+		foreach my $ServiceType ( @oldRequiredServiceTypes ) {
+			if ( ! sets::isin( $ServiceType, \@newRequiredServiceTypes ) ) {
+				foreach my $s_id ( @{$$services{$ServiceType->name()}} ) {
+					openprint::print_project::delete_service( $Project->id(), $s_id );
+				} # end foreach
+				delete $$services{$ServiceType->name()};
+			} # end if
+		} # end foreach
+
+	# add needed services
+		foreach my $ServiceType ( @newRequiredServiceTypes ) {
+			if ( ! $$services{$ServiceType->name()} ) {
+				my $s_id = $Project->add_service( $ServiceType );
+				push @{$$services{$ServiceType->name()}}, $s_id;
+				openprint::service::insert_service_spec( $openprint::log, $openprint::dbh, $Project->id(), $s_id, 'txtQuantity1', $Project->quantity1() );
+				openprint::service::insert_service_spec( $openprint::log, $openprint::dbh, $Project->id(), $s_id, 'txtQuantity2', $Project->quantity2() );
+				openprint::service::insert_service_spec( $openprint::log, $openprint::dbh, $Project->id(), $s_id, 'txtQuantity3', $Project->quantity3() );
+			} # endif
+		} # end foreach
+		$error .= $Project->save( { type_id => $ProjectType->id() } );
+	} else {
+		$$Project{type_id} = $ProjectType->id();
+	} # end if
+	return $error;
+} # end sub change_ProjectType
 
 1;
 __END__

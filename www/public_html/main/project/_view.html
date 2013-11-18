@@ -53,6 +53,7 @@
             } else {
                 $html .= sprintf('<tr%s><td class="description"><b>Printing</b><br/>%s</td>', $rowclass, $summary );
             } # end if
+
 			if ( $$services{Signature} ) {
 				$rowclass = $rowclass ? '' : ' class="colRow"';
 				my @totals;
@@ -69,7 +70,13 @@
 					$html .= '</td>';
 				} # end nif
 				$html .= "</tr>\n";
-				my @sigs = sort $Project->signatures();
+
+
+				my @sigs = sort {
+					my $a_specs = openprint::service::get_specs_ref( $Project, $a );
+					my $b_specs = openprint::service::get_specs_ref( $Project, $b );
+					$$a_specs{Group} <=> $$b_specs{Group} || $$a_specs{SignatureIndex} <=> $$b_specs{SignatureIndex};
+				} $Project->signatures();
 				while (@sigs) {
 					my $ss_id = shift @sigs;
 					next if $ss_id == $$services{''}[0];
@@ -78,12 +85,16 @@
 					my %sig_specs = %{$SigService->specs()};
 
 					my $sig_qty = 1;
-					if ( ! $session{'ShowAllSignatures'} ) {
-						for ( my $i = 0; $i < @sigs; $i += 1 ) {
-							my $SigService2 = $Project->Service( $sigs[$i] );
-							my $sig_specs2 = $SigService2->specs();
+					my $similar_sig_qty = 1;
 
-							if ( ( $statuses{$sigs[$i]} eq $statuses{$ss_id} ) and openprint::Estimating::Printing::compare_signatures( \%sig_specs, $sig_specs2 ) ) {
+					for ( my $i = 0; $i < @sigs; $i += 1 ) {
+						my $SigService2 = $Project->Service( $sigs[$i] );
+						my $sig_specs2 = $SigService2->specs();
+
+						if ( ( $statuses{$sigs[$i]} eq $statuses{$ss_id} ) and openprint::Estimating::Printing::compare_signatures( $Project, \%sig_specs, $sig_specs2 ) ) {
+							$similar_sig_qty += 1;
+							
+							if ( ! $session{'ShowAllSignatures'} ) {
 								$sig_qty += 1;
 								foreach my $qty_index ( $Project->quantity_indexes() ) {
 									# Will be convereted later
@@ -100,9 +111,9 @@
 								} # end foreach $qty_index
 								splice @sigs, $i, 1;
 								$i -= 1;
-							} # end if
-						} # end for
-					} # end if
+							} # end if MergeSigs
+						} # end if
+					} # end for
 					if ( ( ( ! $Project->docket() ) or ( $Project->Order()->status() eq 'Re-Opened' ) ) and ( ! $$variable{'Quote'} ) ) {
 						$html .= sprintf('<tr%s><td class="description"><a href="/main/project/%s?ProjectIndex=%d&amp;ServiceIndex=%d"><b>%d %s</b><br/>%s%s</a></td>', $rowclass, 'prin/Signature.html', $Project->id(), $ss_id, $sig_qty, 'Signature' . ($sig_qty > 1 ? 's' : ''),
 							openprint::Estimating::Printing::summary($Project, $ss_id, \%sig_specs ),
@@ -137,6 +148,13 @@
 								#$html .= sprintf('<a href="/main/project/%3$s?ProjectIndex=%1$d&amp;ServiceIndex=%2$d">Edit</a><br/>', $Project->id(), $ss_id, $Project->Type()->url() );
 							} # end if
 							$html .= sprintf('<a href="/main/project/view.html?ProjectIndex=%1$d&amp;remove=%2$d">Remove</a>', $Project->id(), $ss_id );
+							if ( $similar_sig_qty > 1 ) {
+								if ( ! $openprint::session{ShowAllSignatures} ) {
+									$html .= sprintf('<br/><a href="/main/project/view.html?ProjectIndex=%1$d&amp;ShowAllSignatures=1">Show All</a>', $Project->id() );
+								} else {
+									$html .= sprintf('<br/><a href="/main/project/view.html?ProjectIndex=%1$d&amp;ShowAllSignatures=0">Hide All</a>', $Project->id() );
+								} # end if
+							} # end if
 						$html .= '</td>';
 						} # end if
 					} # end if

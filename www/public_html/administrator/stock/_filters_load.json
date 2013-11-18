@@ -1,5 +1,4 @@
 <? echo (
-	$r->content_type('text/javascript');
 	my $html;
 	my $Object = ('openprint::'.$param{type})->new($param{id});
 	if ( sets::isin( $param{type}, [ 'InventoryCondition','StockQuality' ] ) ) {

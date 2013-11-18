@@ -150,9 +150,11 @@ function cbFillResults( results ) {
 				} // end if
 			} else if ( element.type == 'radio' ) {
 			} else if ( element.type == 'text' || element.type == 'number' || element.type == 'email' ) {
+
 				if ( element.value != value ) {
-					if ( ! element.gotFocus )
+					if ( ! element.gotFocus ) {
 						element.value = value;
+					} 
 					if ( element.onchange ) element.onchange();
 				} // end if
 			} else if ( element.type == 'hidden' ) {
@@ -172,6 +174,7 @@ function cbFillResults( results ) {
 						} // endif
 					} // end if
 				} // end for
+
 			} // end if
 		} else if ( div = $(key) ) {
 			//alert('filling: ' + data[0] + ' with: ' + data[1] );

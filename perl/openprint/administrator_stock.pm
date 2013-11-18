@@ -43,6 +43,79 @@ sub list {
 		foreach my $Paper ( @Papers ) {
 			$Paper->delete();
 		} # end foreach
+	} elsif ( $param{'btnFunction'} eq 'Export' ) {
+		my @header = ( 'ID', 'Owner','Manufacturer','Group','Brand', 'Finish', 'Colour', 'Weight', 'Quality', 'MWeight', 'gsm','Calliper', 'Type','Width', 'Height', 'Basis Width','Basis Height', 'Grain Direction','Supplier','DoubleSided?','Cuttable?','Multiple Parts?','Perfecting','Scoring Required?','Blade Cleaning Required?','Grade','Sheets Per Package','Supplied', 'Digital','Full Packages','Minimum Order','Inventory #','Material Type','Message', 'Recommendations');
+		my @data;
+
+		foreach my $Stock ( openprint::Paper->find( 'order'=>'brand,finish,colour,weight,width,height', 
+					columns=>'*,(SELECT name FROM StockBrands WHERE Stockbrands.id=brand_id) AS brand,(SELECT name FROM StockFinishes WHERE StockFinishes.id=finish_id) AS finish,(SELECT name FROM StockColours WHERE StockColours.id=colour_id) AS colour,(SELECT name FROM StockWeights WHERE StockWeights.id=weight_id) AS weight ',
+					( $param{group_id} ? ( group_id => $param{group_id} ) : () ),
+					( $param{owner_id} ? ( owner_id => $param{owner_id} ) : () ),
+					( $param{manufacturer_id} ? ( manufacturer_id => $param{manufacturer_id} ) : () ),
+					( $param{brand_id} ? ( 'brand_id'    => $param{brand_id} ) : () ),
+					( $param{finish_id} ? ( 'finish_id'  => $param{'finish_id'} ) : () ),
+					( $param{colour_id} ? ( 'colour_id'  => $param{'colour_id'} ) : () ),
+					( $param{weight_id} ? ( 'weight_id'  => $param{'weight_id'} ) : () ),
+					( $param{quality_id} ? ( 'quality_id'        => $param{'quality_id'} ) : () ),
+					( $param{material_id} ? ( 'material_id'      => $param{'material_id'} ) : () ),
+					( $param{Types} ? ( 'type'           => $param{'Types'} ) : () ),
+					( $param{fsc_code} ? ( 'fsc_code'    => $param{'fsc_code'} ) : () ),
+					( $param{width} ? ( 'width'=>$param{width} ) : () ),
+					( $param{height} ? ( 'height'=>$param{'height'} ) : () ),
+					( $param{grain_direction} ? ( grain_direction => $param{grain_direction} ) : () ),
+					( $param{digital} ne '' ? ( digital=>$param{digital} ) : () ),
+					'order'         => 'brand,finish,colour,weight, width, height'
+					) ) {
+			next if $param{recommendations} eq '0' and $Stock->recommendations();
+			next if $param{recommendations} eq '1' and ! $Stock->recommendations();
+			if ( $param{setup_prices} eq '1' ) {
+				next if ! openprint::PaperPrice->find_one(paper_id=>$$Stock{id}, service=>'Setup');
+			} elsif ( $param{setup_prices} eq '0' ) {
+				next if openprint::PaperPrice->find_one(paper_id=>$$Stock{id}, service=>'Setup');
+			} # end if
+			push @data, $Stock->id(), $Stock->owner(), $Stock->manufacturer(), $Stock->group(), $Stock->brand(), $Stock->finish(), $Stock->colour(), $Stock->weight(), $Stock->quality(), 
+				 $Stock->mweight(), $Stock->gsm(), $Stock->calliper(), $Stock->type(), $Stock->width(), $Stock->height(), $Stock->basis_width(), $Stock->basis_height(), $Stock->grain_direction(), '', $Stock->doublesided(), $Stock->cuttable(), $Stock->multipart(), $Stock->perfecting(), $Stock->score_required(), $Stock->bladecleaning(), $openprint::Paper::grades{$Stock->grade()}, $Stock->sheets_per_package(), $Stock->supplied(), $Stock->digital(), $Stock->full_packages(), $Stock->minimum_order(), $Stock->inventory_number(), $Stock->material(), $Stock->message();
+			push @data, join(',', map { new openprint::ProjectType($_)->name() } $Stock->recommendations());
+		} # end foreach
+		misc::export_csv( $r, $log, \%variable, 'stock.csv', \@header, \@data );
+
+	} elsif ( $param{'btnFunction'} eq 'Export Prices' ) {
+		my @header = ( 'Paper Brand', 'Finish','Colour','Weight','Width','Height','Pricelist', 'Service', 'Equipment', 'Min', 'Max', 'Units', 'Cost', 'Markup', 'Price', 'Discountable' );
+		my @data;
+		foreach my $Stock ( openprint::Paper->find( order=>'brand,finish,colour,weight,width,height',
+                    columns=>'*,(SELECT name FROM StockBrands WHERE Stockbrands.id=brand_id) AS brand,(SELECT name FROM StockFinishes WHERE StockFinishes.id=finish_id) AS finish,(SELECT name FROM StockColours WHERE StockColours.id=colour_id) AS colour,(SELECT name FROM StockWeights WHERE StockWeights.id=weight_id) AS weight ',
+                    ( $param{group_id} ? ( group_id => $param{group_id} ) : () ),
+                    ( $param{owner_id} ? ( owner_id => $param{owner_id} ) : () ),
+                    ( $param{manufacturer_id} ? ( manufacturer_id => $param{manufacturer_id} ) : () ),
+                    ( $param{brand_id} ? ( 'brand_id'    => $param{brand_id} ) : () ),
+                    ( $param{finish_id} ? ( 'finish_id'  => $param{'finish_id'} ) : () ),
+                    ( $param{colour_id} ? ( 'colour_id'  => $param{'colour_id'} ) : () ),
+                    ( $param{weight_id} ? ( 'weight_id'  => $param{'weight_id'} ) : () ),
+                    ( $param{quality_id} ? ( 'quality_id'        => $param{'quality_id'} ) : () ),
+                    ( $param{material_id} ? ( 'material_id'      => $param{'material_id'} ) : () ),
+                    ( $param{Types} ? ( 'type'           => $param{'Types'} ) : () ),
+                    ( $param{fsc_code} ? ( 'fsc_code'    => $param{'fsc_code'} ) : () ),
+                    ( $param{width} ? ( 'width'=>$param{width} ) : () ),
+                    ( $param{height} ? ( 'height'=>$param{'height'} ) : () ),
+                    ( $param{grain_direction} ? ( grain_direction => $param{grain_direction} ) : () ),
+                    ( $param{digital} ne '' ? ( digital=>$param{digital} ) : () ),
+                    'order'         => 'brand,finish,colour,weight, width, height'
+                    ) ) {
+            next if $param{recommendations} eq '0' and $Stock->recommendations();
+            next if $param{recommendations} eq '1' and ! $Stock->recommendations();
+            if ( $param{setup_prices} eq '1' ) {
+                next if ! openprint::PaperPrice->find_one(paper_id=>$$Stock{id}, service=>'Setup');
+            } elsif ( $param{setup_prices} eq '0' ) {
+                next if openprint::PaperPrice->find_one(paper_id=>$$Stock{id}, service=>'Setup');
+            } # end if
+
+            foreach my $Price ( openprint::PaperPrice->find( paper_id=>$$Stock{id}, order=>'lnglistindex, lngmin NULLS FIRST, lngmax NULLS FIRST') ) {
+                push @data, $Stock->brand(), $Stock->finish(),$Stock->colour(), $Stock->weight(), $Stock->width(), $Stock->height();
+                push @data, $Price->Pricelist()->name(), $Price->service(), $Price->Equipment()->strid(), $Price->min(), $Price->max(), $Price->units(), $Price->cost(), $Price->markup(), $Price->price(), $Price->discountable();
+            } # end foreach
+        } # end foreach Paper
+        misc::export_csv( $r, $log, \%variable, 'PaperPrices.csv', \@header, \@data );
+
 	} elsif ( $param{'btnFunction'} eq 'Copy' ) {
 		foreach my $Paper ( @Papers ) {
 			my $NewPaper = $Paper->copy();
@@ -106,6 +179,8 @@ $openprint::log->debug("Setting: $param{'amount'} " );
 			} # end if
 			sql::end_transaction( $dbh, $ac );
 		} # end foreach Paper
+	} elsif ( $param{btnFunction} ) {
+		$log->error("Unknown function $param{btnFunction}");
 	} # end if
 } # end sub list
 
@@ -124,10 +199,10 @@ sub stock {
 		$variable{'information'} .= 'Stock ' . $Paper->id() . ' has been copied.';
 		my $NewPaper = $Paper->copy();
 		$NewPaper->save();
-			foreach my $Setting ( openprint::Equipment_Stock_Setting->find('stock_id'=>$Paper->id()) ) {
-				$Setting = $Setting->copy();
-				$Setting->save({'stock_id'=>$NewPaper->id()});
-			} # end foreach
+		foreach my $Setting ( openprint::Equipment_Stock_Setting->find('stock_id'=>$Paper->id()) ) {
+			$Setting = $Setting->copy();
+			$Setting->save({'stock_id'=>$NewPaper->id()});
+		} # end foreach
 		$Paper = $NewPaper;
 		$param{'stock_id'} = $Paper->id();
 	} elsif ( $param{'btnFunction'} eq 'Save' ) {
@@ -253,8 +328,10 @@ sub import_export {
 		my @header = ( 'ID', 'Owner','Manufacturer','Group','Brand', 'Finish', 'Colour', 'Weight', 'Quality', 'MWeight', 'gsm','Calliper', 'Type','Width', 'Height', 'Basis Width','Basis Height', 'Grain Direction','Supplier','DoubleSided?','Cuttable?','Multiple Parts?','Perfecting','Scoring Required?','Blade Cleaning Required?','Grade','Sheets Per Package','Supplied', 'Digital','Full Packages','Minimum Order','Inventory #','Material Type','Message', 'Recommendations');
 		my @data;
 
-		foreach my $Paper ( openprint::Paper->find( 'order'=>'name,finish,colour,weight,width,height' ) ) {
-			push @data, $Paper->id(), $Paper->owner(), $Paper->manufacturer(), $Paper->group(), $Paper->name(), $Paper->finish(), $Paper->colour(), $Paper->weight(), $Paper->quality(), $Paper->mweight(), $Paper->gsm(), $Paper->calliper(), $Paper->type(), $Paper->width(), $Paper->height(), $Paper->basis_width(), $Paper->basis_height(), $Paper->grain_direction(), '', $Paper->doublesided(), $Paper->cuttable(), $Paper->multipart(), $Paper->perfecting(), $Paper->score_required(), $Paper->bladecleaning(), $Paper->grade(), $Paper->sheets_per_package(), $Paper->supplied(), $Paper->digital(), $Paper->full_packages(), $Paper->minimum_order(), $Paper->inventory_number(), $Paper->material(), $Paper->message();
+		foreach my $Paper ( openprint::Paper->find( 'order'=>'brand,finish,colour,weight,width,height', 
+					columns=>'*,(SELECT name FROM StockBrands WHERE Stockbrands.id=brand_id) AS brand,(SELECT name FROM StockFinishes WHERE StockFinishes.id=finish_id) AS finish,(SELECT name FROM StockColours WHERE StockColours.id=colour_id) AS colour,(SELECT name FROM StockWeights WHERE StockWeights.id=weight_id) AS weight ') ) {
+			push @data, $Paper->id(), $Paper->owner(), $Paper->manufacturer(), $Paper->group(), $Paper->brand(), $Paper->finish(), $Paper->colour(), $Paper->weight(), $Paper->quality(), 
+			$Paper->mweight(), $Paper->gsm(), $Paper->calliper(), $Paper->type(), $Paper->width(), $Paper->height(), $Paper->basis_width(), $Paper->basis_height(), $Paper->grain_direction(), '', $Paper->doublesided(), $Paper->cuttable(), $Paper->multipart(), $Paper->perfecting(), $Paper->score_required(), $Paper->bladecleaning(), $openprint::Paper::grades{$Paper->grade()}, $Paper->sheets_per_package(), $Paper->supplied(), $Paper->digital(), $Paper->full_packages(), $Paper->minimum_order(), $Paper->inventory_number(), $Paper->material(), $Paper->message();
 			push @data, join(',', map { new openprint::ProjectType($_)->name() } $Paper->recommendations());
 		} # end foreach
 		misc::export_csv( $r, $log, \%variable, 'stock.csv', \@header, \@data );
@@ -272,6 +349,7 @@ sub import_export {
 			my %project_types = map { $_->name(), $_->id() } openprint::ProjectType->find();
 			my %owners = map { $_->name(), $_->id() } openprint::Company->find();
 			my %papers = map { $_->id(), $_ } openprint::Paper->find();
+			my %reverse_grades = reverse %openprint::Paper::grades;
 
 			my $csv = Text::CSV_XS->new();
 			while ( <$io> ) {
@@ -320,8 +398,8 @@ sub import_export {
 				$Paper->cuttable( $cuttable );
 				$Paper->doublesided( $double_sided );
 				$Paper->multipart( $multipart );
-				$Paper->bladecleaning( $scoring );
-				$Paper->grade( $scoring );
+				$Paper->bladecleaning( $bladecleaning );
+				$Paper->grade( $reverse_grades{$grade} );
 				$Paper->supplied( $supplied );
 				$Paper->digital( $digital );
 				$Paper->full_packages( $full_packages );

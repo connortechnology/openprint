@@ -14,26 +14,27 @@
 		<fieldset><legend><?ServiceTypeName?></legend>
 <? echo (
 	my $html = '';
-	$$variable{'Currency'} = openprint::Currency::get_current();
+	$$variable{Currency} = openprint::Currency::get_current();
 	my %totals;
 	my %sheets;
-	my %papers;
+	my %Supplied_Stocks;
 	my %indexes;
-	my $Project = $$variable{'Project'};
+	my $Project = $$variable{Project};
 
-	# prime that papers hash, which is then used to assign an index to each Stock
+	# prime the papers hash, which is then used to assign an index to each Stock
 	foreach my $ss_id ( $Project->signatures() ) {
 		my $sig_specs = openprint::service::get_specs_ref( $Project, $ss_id );
-		foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
+		foreach my $qty_index ( $Project->quantity_indexes() ) {
 			my $Paper = openprint::Paper::load_from_signature( $Project, $sig_specs, $qty_index )->Supplied();
 			next if ! ( $Paper->id() or $$Paper{custom} );
-			my $paper_string = $Paper->id_string();
-			$papers{$paper_string} = $Paper;
+			$Supplied_Stocks{$Paper->id_string()} = $Paper;
 		} # end foreach
 	} # end foreach signature
-	my @stocks = sort keys %papers;
-	foreach my $stock_index ( 1 .. @stocks ) {
-		$indexes{$stocks[$stock_index-1]} = $stock_index;
+
+	my @stock_ids = sort keys %Supplied_Stocks;
+	foreach my $stock_index ( 1 .. @stock_ids ) {
+		$indexes{$stock_ids[$stock_index-1]} = $stock_index;
+		$log->debug("Supplied Stocks: " . $stock_ids[$stock_index-1] );
 	} # end foreach
 
 	foreach my $ss_id ( sort $Project->signatures() ) {
@@ -43,47 +44,41 @@
 
 		my %sig_papers;
 		# What we do is load each stock for the signature, and assign it a stock_index, 1 .. 4, then deal with them in order.
-		foreach my $qty_index ( $$variable{Project}->quantity_indexes() ) {
+		foreach my $qty_index ( $Project->quantity_indexes() ) {
 			my $Paper = openprint::Paper::load_from_signature( $Project, $sig_specs, $qty_index );
-			if ( ! $Paper->id() ) {
-				next if $$Paper{custom};
-				$log->error("No paper found in signature!");
-				next;
-			} # end if
 			$Paper = $Paper->Supplied();
-			my $paper_string = $Paper->id_string();
-			$sig_papers{$paper_string} = $Paper;
+			$sig_papers{$Paper->id_string()} = $Paper;
 		} # end foreach
 		foreach my $id ( keys %sig_papers ) {
-$log->debug("Sig Papers $id");
+			$log->debug("Sig Papers $id");
 		}
 
-		foreach my $paper_string ( @stocks ) {
-			if ( ! $sig_papers{$paper_string} ) {
-				$log->error("$paper_string not in sig_papers");
+		# We use @stock_ids to put things in the same order for each sig.
+		foreach my $stock_string ( @stock_ids ) {
+			if ( ! $sig_papers{$stock_string} ) {
 				next;
 			} # end if
 
-			$$variable{'stock_index'} = $indexes{$paper_string};
-			$$variable{'Stock'} = $sig_papers{$paper_string};
-			$html .= ssi::include('/main/project/_stock_line.html');
+			$$variable{'stock_index'} = $indexes{$stock_string};
+			$$variable{'Stock'} = $sig_papers{$stock_string};
+			$html .= include('/main/project/_stock_line.html');
 		} # end foreach stock_index
 		$html .= "</ul></fieldset>\n";
 	} # end foreach signature
 
 	$html .= "<fieldset><legend>Totals</legend><ul>\n";
-	foreach my $stock ( @stocks ) {
+	foreach my $stock ( @stock_ids ) {
 		my $stock_id = $indexes{$stock};
 		$html .= '<li><label>'.$stock."</label>\n";
-		my $Paper = $papers{$stock};
+		my $Paper = $Supplied_Stocks{$stock};
 
-		foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
+		foreach my $qty_index ( $Project->quantity_indexes() ) {
 			my $blah = $stock_id.'-'.$qty_index;
 			$html .= '<span class="'.$$variable{'Columns'}.'Columns">';
-			$html .= ssi::input( type=>'number', id=>'qty-'.$blah, name=>'qty-'.$blah, value=>$totals{$stock}[$qty_index], onkeyup=>q`cardinalize(this);calc(this.form.name);` );
+			$html .= input( type=>'float', id=>'qty-'.$blah, name=>'qty-'.$blah, value=>$totals{$stock}[$qty_index], onkeyup=>q`calc(this.form.name);` );
 			$html .= 'lbs';
 			if ( $Paper->type() ne 'Roll' ) {
-				$html .= '<br/>'. ssi::input( type=>'number', id=>'sheets-'.$blah, name=>'sheets-'.$blah, value=>$sheets{$stock}[$qty_index], onkeyup=>q`cardinalize(this);calc(this.form.name);` );
+				$html .= '<br/>'. input( type=>'cardinal', id=>'sheets-'.$blah, name=>'sheets-'.$blah, value=>$sheets{$stock}[$qty_index], onkeyup=>q`calc(this.form.name);` );
 				$html .= 'sheets';
 			} # end if
 			$html .= "</span>\n";
@@ -91,7 +86,7 @@ $log->debug("Sig Papers $id");
 		$html .= "</li>\n";
 		$stock_id += 1;
 	} # end foreach stock
-	$html .= ssi::include( '/includes/main/proj/_service_price.html' );
+	$html .= include( '/includes/main/proj/_service_price.html' );
 	$html .= '</ul></fieldset>';
 	return $html;
 ) ?>
