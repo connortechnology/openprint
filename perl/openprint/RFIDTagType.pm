@@ -10,8 +10,8 @@ $table = 'rfidtagtypes';
 $serial = 'rfidtagtypes_id_seq';
 
 %fields = (
-	'id'		=>	'id',
-	'name'		=>	'name',
+	id		=>	'id',
+	name	=>	'name',
 );
 
 %transforms = (

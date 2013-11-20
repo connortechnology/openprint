@@ -518,7 +518,7 @@ sub from_content {
 	} # end if
 
 	if ( ( @_ > 3 ) and $_[3] ) {
-# Should be a hash of more attribute
+		# Should be a hash of more attribute
 		$Asset->save($_[3]);
 	} # end if
 	return $Asset;
