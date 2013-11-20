@@ -549,7 +549,7 @@ sub summary {
 					@$specs{'txtServiceDescription','txtWidth','txtHeight'}, 
 					openprint::Estimating::Printing::get_colour_description( $specs ),
 					$$specs{'rdbSuppliedStock'} eq 'Y' ? '<b>Customer Supplied</b>' : '',
-					$$specs{'rdbSpecificStock'} eq 'Y' ? 
+					$$specs{'rdbSpecificStock'} eq 'Y' ? '<b>Custom:</b>'.
 					join(',', @$specs{'txtSpecificStockBrand','txtSpecificStockFinish','txtSpecificStockColour','txtSpecificStockWeight'} ) :
 					join(',', @$specs{'ddmStockBrand','ddmStockFinish','ddmStockColour','ddmStockWeight'} ) 
 					,

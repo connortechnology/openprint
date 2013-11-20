@@ -109,7 +109,6 @@
 		} # end if
 
 		my $Paper = openprint::Paper::load_from_signature( $Project, $sig_specs, $qty_index );
-$log->debug("Paper: " . $Paper->to_string() );
 
 		my ( $sheets, $lbs );
 		if ( $$sig_specs{"txtPressSheetQty$qty_index"} =~ /(\d+) lbs/ ) {
