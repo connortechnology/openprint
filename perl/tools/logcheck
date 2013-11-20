@@ -1,4 +1,4 @@
-#!/usr/bin/perl -w
+#!/usr/bin/perl 
 use lib '/var/www/testing/perl';
 use strict;
 
@@ -190,10 +190,10 @@ if ( $opts->{'blacklist'} ) {
 		if ( $macs and @{$macs} ) {
 			foreach my $mac ( @{$macs} ) {
 				$mac =~ s/:/\-/g;
-				`shorewall drop ~$mac`;
+				`/sbin/shorewall drop ~$mac`;
 			} # end foreach mac
 		} elsif ( $Host->ip() ) {
-			`shorewall drop $$Host{ip}`;
+			`/sbin/shorewall drop $$Host{ip}`;
 		} # end if
 	} # end foreach Host
 } # end if

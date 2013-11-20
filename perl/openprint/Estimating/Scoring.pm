@@ -220,7 +220,6 @@ sub calc {
 
 sub signature_calc {
 	my ( $Project, $service_index, $specs, $signature_service_index, $sig_specs, $qty_index, $imposition ) = @_;
-$openprint::log->debug("Scoring signature_calc");
 	my %Results = (
 		'Status' => 'calculated',
 		'Breakdown'	=>	'',
