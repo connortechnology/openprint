@@ -2,8 +2,6 @@ use strict;
 package openprint::SkidContent;
 our @ISA = qw(openprint::Object);
 
-require openprint::StockPurpose;
-require openprint::InventoryCondition;
 require openprint::ManifestContent;
 use vars qw( $log $dbh $debug %fields %transforms %defaults $table $serial );
 *log = \$openprint::log;
@@ -128,6 +126,7 @@ sub purpose {
 } # end sub purpose
 
 sub Purpose {
+	require openprint::StockPurpose;
 	return new openprint::StockPurpose( $_[0]{purpose_id} );
 } # end sub Purpose
 
@@ -164,6 +163,7 @@ sub allocated {
 sub condition {
     my ( $self, $condition ) = @_;
 
+	require openprint::InventoryCondition;
     if ( defined $condition ) {
 		$condition = openprint::InventoryCondition->transform('name', $condition );
 		my $Condition = openprint::InventoryCondition->find_one('name lc'=>$condition);
@@ -179,6 +179,7 @@ sub condition {
 } # end sub condition
 
 sub Condition {
+	require openprint::InventoryCondition;
 	return new openprint::InventoryCondition( $_[0]{'condition_id'} );
 } # end sub Condition
 

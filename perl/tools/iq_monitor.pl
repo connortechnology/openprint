@@ -4,6 +4,7 @@ use lib '/var/www/point-one/perl';
 use strict;
 use LWP;
 
+require misc;
 require configuration;
 require sql;
 require openprint::Host;

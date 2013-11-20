@@ -8,8 +8,6 @@ use vars qw( $log $debug $table $serial %find_fields %fields %transforms %defaul
 *log = \$openprint::log;
 
 require openprint::Manifest;
-require openprint::Paper;
-require openprint::PurchaseOrder_Content;
 
 $debug = 0;
 
@@ -56,6 +54,7 @@ $serial = 'manifest_content_types_id_seq';
 );
 
 sub Paper {
+require openprint::Paper;
 	return new openprint::Paper( $_[0]{'paper_id'} );
 } # end sub Paper
 
@@ -69,6 +68,7 @@ sub PurchaseOrder {
 
 sub PurchaseOrder_Content {
 	if ( ! exists $_[0]{'PurchaseOrder_Content'} ) {
+require openprint::PurchaseOrder_Content;
 		if ( ! $_[0]{'po_content_id'} ) {
 			my $PO = new openprint::PurchaseOrder( $_[0]{'po_id'} );
 			my $Paper = $_[0]->Paper();

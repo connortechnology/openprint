@@ -1,9 +1,8 @@
-package openprint::RFIDTagType;
-@ISA = qw(openprint::Object);
-require openprint::Object;
-use MIME::QuotedPrint;
-
 use strict;
+package openprint::RFIDTagType;
+our @ISA = qw(openprint::Object);
+require openprint::Object;
+
 use openprint ();
 use vars qw(%variable $log $dbh %config %fields %transforms %defaults );
 *variable = \%openprint::variable;
