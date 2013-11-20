@@ -210,45 +210,44 @@ sub send_to_vendor {
 	my $From = $self->Creator();
 	
 	my %info = (
-			'PurchaseOrder'	=>	$self,
-			'From'			=>	$From,
+			PurchaseOrder	=>	$self,
+			From			=>	$From,
 			);
 	my @attachments = ();
 	my $results;
 
 	my $email_template = misc::load_file( $log, $config{'SkinPath'} . '/email_template.html' );
-	$info{'ReplacementText'} = ssi::include("/email_content/purchase_order_body.html", \%info );
+	$info{ReplacementText} = ssi::include('/email_content/purchase_order_body.html', \%info );
 	$_ = MIME::QuotedPrint::encode_qp( Encode::encode( 'utf-8', ssi::variable_substitution( undef, $log, $dbh, \$email_template, \%info ) ) );
 	push @attachments, ('', $_, 'text/html', 'quoted-printable');
 
 	my $purchase_order = Encode::encode( 'utf-8', ssi::include('/email_content/purchase_order.html', \%info ) );
 
-	my $file_base = $From->Company()->name().'-PO'.$_[0]{id};
-	if ( File::Slurp::write_file('/tmp/'.$file_base.'.html', { atomic => 1, err_mode=>'carp' }, \$purchase_order) ) {
+	my $file_base = $From->Company()->name().'-PO'.$$self{id};
+	if ( File::Slurp::write_file('/tmp/'.$file_base.'.html', { atomic => 1, err_mode=>'carp' }, \$purchase_order ) ) {
 		`wkhtmltopdf "/tmp/$file_base.html" "/tmp/$file_base.pdf"`;
-		$purchase_order = File::Slurp::read_file( "/tmp/$file_base.pdf" );
-		if ( $purchase_order ) {
-			unlink "/tmp/$file_base.html";
-			unlink "/tmp/$file_base.pdf";
-			push @attachments, ($file_base.'.pdf', MIME::Base64::encode_base64($purchase_order), 'application/octet-stream', 'base64');
-
-			my $Asset = openprint::Asset->from_content( $file_base.'.pdf', $purchase_order );	
-			if ( ref $Asset eq 'openprint::Asset' ) {
-				if ( ! openprint::Object_Asset->find_one( asset_id=>$$Asset{id}, object_id=>$_[0]{id}, object_type=>'openprint::PurchaseOrder' ) ) {
-					my $OA = new openprint::Object_Asset();
-					$results .= $OA->save({asset_id=>$$Asset{id}, object_id=>$_[0]{id}, object_type=>'openprint::PurchaseOrder'});
-				} # end if
-			} else {
-				$results .= $Asset;
-			} # end if
+		my $pdf_purchase_order = File::Slurp::read_file( "/tmp/$file_base.pdf" );
+		unlink "/tmp/$file_base.html";
+		unlink "/tmp/$file_base.pdf";
+		if ( $pdf_purchase_order ) {
+			push @attachments, ($file_base.'.pdf', MIME::Base64::encode_base64($pdf_purchase_order), 'application/octet-stream', 'base64');
 		} else {
 			$openprint::log->debug("Error making pdf");
 		} # end if has pdf contents
 	} # end if successfully wrote html content
-	if ( @attachments == 4 ) {
-		$openprint::log->error( "couldn't write PO to $file_base" );
+	if ( scalar @attachments == 4 ) {
+		$results .= 'Unable to make a pdf of this PO.  Using HTML version.<br/>';
 		push @attachments, ($file_base.'.html', MIME::QuotedPrint::encode_qp($purchase_order), 'text/html', 'quoted-printable');
 	} # end if
+	foreach my $OA ( $self->Assets() ) {
+		my $Asset = $OA->Asset();
+		$_ = File::Slurp::read_file( $Asset->on_disk_filename() );
+		if ( $_ ) {
+			push @attachments, ( $Asset->filename(), MIME::Base64::encode_base64( $_ ), 'application/octet-stream', 'base64');
+		} else { 
+			$results .= 'Unable to attach ' . $Asset->filename() . ' to email.<br/>';
+		} # end if
+	} # end foreach Asset
 
 	my $Email = new openprint::Email();
 
@@ -256,13 +255,13 @@ sub send_to_vendor {
 	$results .= $Email->send(
 			FROM	=> $From,
 			SUBJECT => 'Purchase Order ' . $self->id() . ' from ' . $From->Company()->name(),
-			TO		=> split(',', $self->vendor_email() ),
+			TO		=> $self->vendor_email(), # Email will split by ,
 			BODY	=>	'',
 			ATTACHMENTS	=>	\@attachments,
 			);
 	if ( $self->shipto_email() and ( $self->vendor_email() ne $self->shipto_email() ) ) {
 		$results .= $Email->send( 
-				TO		=>	[ split(',', $self->shipto_email() ) ],
+				TO		=>	$self->shipto_email(),
 				SUBJECT	=>	'Purchase Order '. $self->id() . ' for ' . $self->vendor_name(),
 				BODY	=>	'',
 				ATTACHMENTS =>	\@attachments,
@@ -293,10 +292,9 @@ sub send_to_vendor {
 
 sub send_to_me {
 	my $From = new openprint::User( $session{'user_id'} );
-$openprint::log->debug('send_to_me');	
 	my %info = (
-			'PurchaseOrder'	=>	$_[0],
-			'From'			=>	$From,
+			PurchaseOrder	=>	$_[0],
+			From			=>	$From,
 			);
 	my @attachments = ();
 
@@ -310,14 +308,25 @@ $openprint::log->debug('send_to_me');
 	my $file_base = $From->Company()->name().'-PO'.$_[0]{id};
 	if ( File::Slurp::write_file('/tmp/'.$file_base.'.html', { atomic => 1, err_mode=>'carp' }, \$purchase_order) ) {
 		`wkhtmltopdf "/tmp/$file_base.html" "/tmp/$file_base.pdf"`;
-		$purchase_order = File::Slurp::read_file( "/tmp/$file_base.pdf" );
-		unlink "/tmp/$file_base.html";
+		my $pdf_purchase_order = File::Slurp::read_file( "/tmp/$file_base.pdf" );
+		#unlink "/tmp/$file_base.html";
 		unlink "/tmp/$file_base.pdf";
-		push @attachments, ($file_base.'.pdf', MIME::Base64::encode_base64($purchase_order), 'application/octet-stream', 'base64');
-	} else {
-		$openprint::log->error( "couldn't write PO to $file_base" );
+		push @attachments, ($file_base.'.pdf', MIME::Base64::encode_base64($pdf_purchase_order), 'application/octet-stream', 'base64') if $pdf_purchase_order;
+	} # end if
+	my $results;
+	if ( @attachments == 4 ) {
+		$results .= 'Unable to make a pdf of this PO.  Using HTML version.<br/>';
 		push @attachments, ($file_base.'.html', MIME::QuotedPrint::encode_qp($purchase_order), 'text/html', 'quoted-printable');
 	} # end if
+    foreach my $OA ( $_[0]->Assets() ) {
+        my $Asset = $OA->Asset();
+        $_ = File::Slurp::read_file( $Asset->on_disk_filename() );
+        if ( $_ ) {
+            push @attachments, ( $Asset->filename(), MIME::Base64::encode_base64( $_ ), 'application/octet-stream', 'base64');
+        } else {
+            $results .= 'Unable to attach ' . $Asset->filename() . ' to email.<br/>';
+        } # end if
+    } # end foreach Asset
 
 	my $receipt = (new openprint::Email())->send(
 			FROM	=> sprintf( '"%s" <%s>', $From->name(), $From->email() ),
@@ -326,7 +335,7 @@ $openprint::log->debug('send_to_me');
 			ATTACHMENTS	=>	\@attachments,
 			);
 
-	my $results = 'PO ' . $_[0]{'id'} . ' emailed to the following recipients:<br/>' . $receipt;
+	$results = 'PO ' . $_[0]{'id'} . ' emailed to the following recipients:<br/>' . $receipt;
 	return $results;
 } # end sub send_to_me
 

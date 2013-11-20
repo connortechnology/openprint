@@ -129,28 +129,6 @@ td p label {
     margin-left: 0;
 }
 
-div.autocomplete {
-  position:absolute;
-  width:250px;
-  background-color:white;
-  border:1px solid #888;
-  margin:0px;
-  padding:0px;
-}
-div.autocomplete ul {
-  list-style-type:none;
-  margin:0px;
-  padding:0px;
-}
-div.autocomplete ul li.selected { background-color: #ffb;}
-div.autocomplete ul li {
-  list-style-type:none;
-  display:block;
-  margin:0;
-  padding:2px;
-  height:32px;
-  cursor:pointer;
-}
 
 .PO #VendorInformation {
 	width: 48%;
@@ -162,17 +140,10 @@ div.autocomplete ul li {
 }
 .PO .notifications .name {
 }
-.PO .notifications .buttons {
-	float: right;
-	margin: 0;
-}
 .PurchaseOrder table .id, .PurchaseOrder_Items table .id {
 	width: 45px;
 	text-align: left;
 } 
-table .buttons {
-	width: 55px;
-}
 .quantity {
 	width: 100px;
 	text-align: center;
@@ -248,9 +219,9 @@ table .buttons {
 	.delivery_date {
 		width: 217px;
 	}
-.method {
-	width: 203px;
-}
+	.method {
+		width: 203px;
+	}
 }
 
 table .supplier, table .item_name, table .product {
@@ -261,9 +232,6 @@ table .supplier, table .item_name, table .product {
 }
 #Assets .Thumbnail img {
 	width: 100%;
-}
-#Assets .actions {
-	width: 75px;
 }
 #Payments .Date {
 	width: 200px;

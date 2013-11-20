@@ -31,7 +31,7 @@
 					<h1>PURCHASE ORDER</h1><br/>
 					P.O. # [ <? echo ( $$variable{PurchaseOrder}->id() ) ?> ]<br/>
 					Date: 
-					<? echo ( Date::Format::time2str($config{'DateFormat'}, Date::Parse::str2time( $$variable{PurchaseOrder}->created_on() ) ) ) ?><br/>
+					<? echo ( format_date( $$variable{PurchaseOrder}->created_on() ); ) ?><br/>
 				</div>
 			</div>
 			<div class="Vendor">
@@ -101,7 +101,7 @@
 					<td class="terms"><? echo ( $$variable{PurchaseOrder}->shipping_terms() ) ?></td>
 					<td class="delivery_date">
 						<? echo ( $$variable{PurchaseOrder}->delivered_on_switch() ne 'DATE' ? $$variable{PurchaseOrder}->delivered_on_switch().'<br/>' : '' ) ?>
-						<? echo ( $$variable{PurchaseOrder}->delivered_on() ? Date::Format::time2str($config{'DateFormat'}, Date::Parse::str2time( $$variable{PurchaseOrder}->delivered_on() ) ) : '' ) ?>
+						<? echo ( format_date( $$variable{PurchaseOrder}->delivered_on() ) ) ?>
 					</td>
 				</tr>
 			</table>
@@ -172,6 +172,40 @@
 		<? endif ( $$variable{PurchaseOrder}->authorized() ) ?>
 			</div>
 			<br class="spacer"/>
+<? echo (
+	my @Assets = map { $_->Asset() } $$variable{PurchaseOrder}->Assets();
+	return if ! @Assets;
+	my $html = '
+<h3>Attachments:</h3>
+<table>
+    <thead>
+        <tr>
+            <th class="Name">Name</th>
+            <th class="Filename">Filename</th>
+            <th class="DateTime">Added On</th>
+            <th class="Thumbnail">Thumbnail</th>
+        </tr>
+    </thead>
+    <tbody>';
+foreach my $Asset ( @Assets ) {
+    $html .= sprintf('
+        <tr>
+            <td class="Name"><a href="/assets/%1$s" target="_blank">%2$s</a></td>
+            <td class="Filename"><a href="/assets/%1$s" target="_blank">%3$s</a></td>
+            <td class="DateTime"><a href="/assets/%1$s" target="_blank">%4$s</a></td>
+            <td class="Thumbnail"><a href="/assets/%1$s" target="_blank"><img src="%5$s" alt=""/></a></td>
+        </tr>
+        ', $Asset->on_disk_filename(), $Asset->name(), $Asset->filename(),
+        format_datetime( $Asset->created_on() ),
+        $Asset->thumbnail_url(),
+        );
+} # end foreach Asset
+	$html .='
+    </tbody>
+</table>
+';
+return $html;
+) ?>
 			<div class="Logs">
 			<fieldset><legend>Logs</legend>
 				<table class="List">

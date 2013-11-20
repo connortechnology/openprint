@@ -1,3 +1,25 @@
+div.autocomplete {
+  position:absolute;
+  width:250px;
+  background-color:white;
+  border:1px solid #888;
+  margin:0px;
+  padding:0px;
+}
+div.autocomplete ul {
+  list-style-type:none;
+  margin:0px;
+  padding:0px;
+}
+div.autocomplete ul li.selected { background-color: #ffb;}
+div.autocomplete ul li {
+  list-style-type:none;
+  display:block;
+  margin:0;
+  padding:2px;
+  height:32px;
+  cursor:pointer;
+}
 .PO .buttons {
 	margin: 0;
 }
@@ -72,4 +94,14 @@ input.SheetQTY {
 }
 #line-new {
 	display: table-footer-group;
+}
+table .buttons {
+	width: 55px;
+}
+#Assets .actions {
+	width: 75px;
+}
+.PO .notifications .buttons {
+	float: right;
+	margin: 0;
 }
