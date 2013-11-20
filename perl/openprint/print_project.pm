@@ -624,7 +624,6 @@ sub create_edit_process {
 		$Project->quantity3( int $param{'txtQuantity3'} );
 	} # end if
 
-
 	$Project->reference( $param{'txtProjectReference'} );
 	$Project->comments( $param{'txtComments'} );
 	$Project->mode( $param{'rdbMode'} );
@@ -678,12 +677,7 @@ sub create_edit_process {
 
 	$Project->add_to_log( @session{'company_id','user_id'}, 'Edited' );
 	if ( $recalculate ) {
-		$Project->Currency( openprint::Currency::get_current() );
-		openprint::service::internal_calc( $log, $dbh, \%variable, $Project->id(), $services{''}[0], $Project->Type()->type() );
-		openprint::Estimating::MultiPage::calculate_signatures( $Project );
-		openprint::service::auto_calculate( $Project, undef );
-		$Project->summary( undef );
-		$Project->save();
+		$Project->recalculate();
 	} # end if
 
 	return $Project->id();

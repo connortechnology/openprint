@@ -55,17 +55,8 @@ sub view_services {
 	if ( defined $openprint::param{'btnFunction'} and ( $openprint::param{'btnFunction'} eq 'Save Project' ) ) {
 		$log->debug("*** Time to Save Project - View Services Function ***");
 		$project_index = openprint::print_project::create_edit_process( $r, $log, $dbh, $variable );
-		return if $$variable{'Redirect'};
+		return if $$variable{Redirect}; # Redirects on error
 		$log->debug("*** Time to Save Project - View Services Function *** $project_index $openprint::session{'project_id'}");
-		my $Project = new openprint::Project( $project_index );
-		# On project creation, almost nothing should be done.  On Edit, a recalculate should be done, to pick up any missing 
-		# information, set statuses so that continue project will pick up which service to display.
-		$log->debug("*** Time to Save Project - View Services Function *** $project_index $openprint::session{'project_id'}" . $Project->Type()->type() );
-		# Will insert starting signatures
-		#multipage_signatures( \%openprint::param, $log, $dbh, $variable, $project_index, $$services{''}[0] ) if $Project->Type()->type() eq 'MultiPage';
-		# This calls the calc function for the Project service, if one exists, since they may actually store data, need to pass a s_id
-		# Not strictly needed, because MultiPage::calc will rough in any signatures needed
-		$Project->recalculate();	
 		# Display any resulting uncalculated services
 		openprint::print_project::continue_project( $log, $dbh, $variable, $project_index );
 		return if $$variable{'ExternalRedirect'};
@@ -291,7 +282,7 @@ sub multipage_signatures {
 	foreach my $k ( keys %$param ) {
 		if ( $k =~ /^txtSignatureType(\d*)/ ) {
 			my $group_id = $1;
-$log->debug("special group $group_id");
+$log->debug("group $group_id");
 
 			if ( $$param{'GroupPageQuantity'.$group_id} and ! $Project->signatures({'Group'=>$group_id}) ) {
 				$log->debug("adding special group $group_id");
