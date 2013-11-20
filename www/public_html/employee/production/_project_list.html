@@ -18,6 +18,9 @@
 				push @{$$variable{Projects}}, $Project;
 			} # end if
 		} # end if
+	} elsif ( $param{OrderID} ) {
+		my $Order = openprint::Order->find_one( id => $param{OrderID} );
+		push $$variable{Projects} = [ $Order->Projects() ];
 	} else {
 		my %filters = (
 				( $session{'/employee/production/projects.html?ddmPress'} ? (	'used_press_name in'	=> $session{'/employee/production/projects.html?ddmPress'} ) : () ),
