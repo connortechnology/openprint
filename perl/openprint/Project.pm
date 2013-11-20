@@ -1100,6 +1100,9 @@ sub add_signature {
 	} # end if
 	openprint::service::insert_service_spec( $log, $dbh, $self->id(), $print_service_index, 'SignatureIndex', $sig_index );
 	sql::end_transaction( $dbh, $ac );
+	if ( $$self{Services} ) {
+		push @{$$self{Services}{Signature}}, $print_service_index;
+	} # end if
 	return $print_service_index;
 } # end sub add_signature
 
