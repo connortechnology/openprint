@@ -266,7 +266,7 @@ sub view {
 		$variable{'ExternalRedirect'} = '/employee/purchase_order/history.html' if ! $variable{error};
 	} elsif ( $param{'btnFunction'} eq 'Email Me' ) {
 		$variable{'error'} = $PO->send_to_me();
-		$variable{'ExternalRedirect'} = '/employee/purchase_order/history.html' if ! $variable{error};
+		$variable{'ExternalRedirect'} = '/employee/purchase_order/view.html?po_id='.$PO->id();
 	} elsif ( $param{'btnFunction'} eq 'Received' ) {
 	} elsif ( $param{'btnFunction'} eq 'Copy' ) {
 		my $New = $PO->copy();

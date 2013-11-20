@@ -241,7 +241,7 @@ sub send_to_vendor {
 	} # end if
 	foreach my $OA ( $self->Assets() ) {
 		my $Asset = $OA->Asset();
-		$_ = File::Slurp::read_file( $Asset->on_disk_filename() );
+		$_ = File::Slurp::read_file( $Asset->on_disk_path() );
 		if ( $_ ) {
 			push @attachments, ( $Asset->filename(), MIME::Base64::encode_base64( $_ ), 'application/octet-stream', 'base64');
 		} else { 
@@ -320,7 +320,7 @@ sub send_to_me {
 	} # end if
     foreach my $OA ( $_[0]->Assets() ) {
         my $Asset = $OA->Asset();
-        $_ = File::Slurp::read_file( $Asset->on_disk_filename() );
+        $_ = File::Slurp::read_file( $Asset->on_disk_path() );
         if ( $_ ) {
             push @attachments, ( $Asset->filename(), MIME::Base64::encode_base64( $_ ), 'application/octet-stream', 'base64');
         } else {
