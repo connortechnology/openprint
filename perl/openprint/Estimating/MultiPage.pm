@@ -379,6 +379,7 @@ $openprint::log->debug("********************************************************
 					my $Imposition = shift @{$$sig_specs{'Additional Impositions'.$qty_index}};
 					my $price = $$Imposition{price};
 
+					$Imposition->save( \%specs, $qty_index );
 					openprint::Estimating::Printing::save_price( $Project, \%specs, $price, $Imposition, $qty_index );
 foreach my $k ( keys %{$price} ) {
 	$openprint::log->debug("Price: $k $$price{$k}");

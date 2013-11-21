@@ -30,7 +30,7 @@ my %variables = (
 		'hdnBreakdown1'=>['output'],'hdnBreakdown2'=>['output'],'hdnBreakdown3'=>['output'],
         'txtQuantity1'=>['save'], 'txtQuantity2'=>['save'], 'txtQuantity3'=>['save'],
         'ServiceType'=>[],
-		'alert'=>['output'],'Status'=>['output'],
+		'alert'=>['save','output'],'Status'=>['output'],
 		'txtInsertQuantity'=>['save','output'],'chkOverrideInsertQuantity'=>['save'],
 		'txtCalliper'=>['save','output'],
 		'OverrideImposition1'=>['save'], 'OverrideImposition2'=>['save'], 'OverrideImposition3'=>['save'],
