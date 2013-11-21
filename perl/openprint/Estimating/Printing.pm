@@ -189,9 +189,9 @@ my %variables = (
 	'perfecting'=>['save'],
 	'basis_width'=>['save'],'basis_height'=>['save'],'basis_mweight'=>['save'],
 	'StockGrade'	=> ['save'],	
-	'txtUnspecifiedPageQuantity1' => ['output'], 'PageQuantity1' => ['save','output'],
-	'txtUnspecifiedPageQuantity2' => ['output'], 'PageQuantity2' => ['save','output'],
-	'txtUnspecifiedPageQuantity3' => ['output'], 'PageQuantity3' => ['save','output'],
+	'txtUnspecifiedPageQuantity1' => ['save','output'], 'PageQuantity1' => ['save','output'],
+	'txtUnspecifiedPageQuantity2' => ['save','output'], 'PageQuantity2' => ['save','output'],
+	'txtUnspecifiedPageQuantity3' => ['save','output'], 'PageQuantity3' => ['save','output'],
 	'minimum_order'=>['save'],'sheets_per_package'=>['save'],'full_packages'=>['save'],
 	'chkOverridePageQuantity1' => ['save'], 'chkOverridePageQuantity2' => ['save'], 'chkOverridePageQuantity3' => ['save'],
 	'SpreadRows1' => ['save','output'],'SpreadCols1' => ['save','output'],
@@ -5712,6 +5712,7 @@ sub has_overrides {
     $specs = openprint::service::get_specs_ref( $Project, $service_id ) if ! $specs;
 
 	if ( $qty_index ) {
+		return () if $$specs{'txtUnspecifiedPageQuantity'.$qty_index} <= 0;
 		return map { $$specs{$_.$qty_index} eq 'Y' ? $_ : () } (
 				'chkOverrideBleedSize',
 				'chkOverridePageQuantity',
