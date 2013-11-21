@@ -37,7 +37,7 @@ my %variables = (
 	'BlowingQuantity'=>['save'],
 	'ReplyCardQuantity'=>['save'],
 	'PrintingType'=>['save'],'rdbTemplateType'=>['save'],
-	'help'=>['output'],'alert'=>['output'],
+	'help'=>['output'],'alert'=>['output','save'],
 	'ProjectIndex'=>[], 'ServiceIndex'=>[], 'ServiceType'=>[], 'NewBook'=>[],
 	'remaining_pages'=>['output'],'next_group_id'=>['output'],'groups'=>['output'],
 );
@@ -147,6 +147,8 @@ sub calc {
 			}
 			my @g_signatures = $Project->signatures({'Group'=>$group_id});
 			if ( ! @g_signatures ) {
+
+				# calc shouldn't really alter the project.
 				$Project->add_signature( undef, undef, {
 						Group=>$group_id,
 						( $group_id == 1 ? ( 'txtSignatureType'=>'Cover Pages', 'txtServiceDescription'=>'Cover' ) : () ),
@@ -449,6 +451,29 @@ sub save {
 	my ( $project_index, $service_index, $param ) = @_;
 	my $Project = new openprint::Project( $project_index );	
 	my $Service = $Project->Service($service_index);
+
+	my $specs = $Service->specs();
+	if ( $$specs{rdbCover} eq 'Different' ) {
+		# now add a cover spread if we need one.
+		# First, see if we have one.
+        if ( ! $Project->signatures({'type'=>'Cover Pages'}) ) {
+            $Project->add_signature( 'Signature', undef, undef, {
+                        txtSignatureType		=> 'Cover Pages',
+                        txtServiceDescription	=> 'Cover',
+                        Group					=>  1,
+                        PrintingType			=> $$param{'PrintingType'},
+                        txtSpreadSize			=>  4,
+                        } );
+        } # end if
+    } else {
+# Don't need a cover, so get rid of it
+        foreach ( $Project->signatures({'type'=>'Cover Pages'}) ) {
+            openprint::print_project::delete_service( $project_index, $_ );
+        } # end foreach
+        foreach ( $Project->signatures({'Group'=>1}) ) {
+            openprint::print_project::delete_service( $project_index, $_ );
+        } # end foreach
+    } # end if Self or Different Cover
 	foreach my $ssid ( $Project->signatures() ) {
 		my $sig_specs = openprint::service::get_specs_ref( $Project, $ssid );
 		my %new_specs = %$sig_specs;

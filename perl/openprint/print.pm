@@ -21,31 +21,6 @@ sub get_ServiceType {
 	return  new openprint::ServiceType(sql::execute( undef, undef, q{SELECT servicetype_id FROM tbl_Project_Contents WHERE lngProjectIndex=? AND lngServiceIndex=?}, $project_index, $service_index ) );
 } # end sub get_ServiceType
 
-sub save_service {
-	my ( $r, $log, $dbh, $variable, $Project, $service_index ) = @_;
-	
-	my $Service = $Project->Service( $service_index );
-	my $ServiceType = $Service->ServiceType();
-
-	if ( $ServiceType and ( $ServiceType->name() eq 'Proofs' ) ) {
-		openprint::Estimating::Proofs::save_proof_specs( $r, $log, $dbh, $variable, $Project->id(), $service_index );
-	} else {
-		openprint::service::save_service( $r, $log, $dbh, $Project->id(), $service_index );
-	} # end if service_type_id
-	$Service->save({'status'=>($openprint::param{'Status'} ? $openprint::param{'Status'} : 'calculated')}) if $Service->status() and $Service->status() ne 'Completed';
-
-	#sql::update( $log, $dbh, 'tbl_Project_Contents', ['lngProjectIndex=? AND lngServiceIndex=? AND (NOT strStatus=?) OR (strStatus IS NULL)', $Project->id(), $service_index, 'Completed' ], 'strStatus', ($openprint::param{'Status'} ? $openprint::param{'Status'} : 'calculated') );
-	#eval "openprint::service::internal_calc( $log, $dbh, $variable, $project_index, $service_index, $service_type_id );"
-	if ( $ServiceType->id() ) {
-		$Project->add_to_log( @openprint::session{'company_id','user_id'}, $ServiceType->name().' service saved.' );
-	} else {
-		$Project->add_to_log( @openprint::session{'company_id','user_id'}, 'Printing service saved.' );
-	} # end if
-	if ( $r->param('additional_service') eq 'Y' ) {
-		openprint::print_project::insert_service( $log, $dbh, $Project->id(), $ServiceType->name() );
-	} # end if
-} # end sub save_service
-
 # Adds completed/edited services, and then displays the status of the project
 sub view_services {
 	my ( $r, $log, $dbh, $variable ) = @_;
@@ -82,28 +57,44 @@ sub view_services {
 				$$variable{'error'} .= $Project->save();
 			} elsif ( $openprint::param{'btnFunction'} eq 'Save Service' ) {
 				# Update the 'current project'
-				$openprint::session{'project_id'} = $project_index;
+				$openprint::session{project_id} = $project_index;
 				$log->debug("** Save Service in View Services Function **");
 
 				my $service_index = $openprint::param{'ServiceIndex'};
-				my $Currency = openprint::Currency::get_current();
 				my $recalc = 0;	
-				save_service( $r, $log, $dbh, $variable, $Project, $service_index );
+				my $Service = $Project->Service( $service_index );
+				my $ServiceType = $Service->ServiceType();
+
+				if ( $ServiceType and ( $ServiceType->name() eq 'Proofs' ) ) {
+					openprint::Estimating::Proofs::save_proof_specs( $r, $log, $dbh, $variable, $Project->id(), $service_index );
+				} else {
+					openprint::service::save_service( $r, $log, $dbh, $Project->id(), $service_index );
+				} # end if service_type_id
+				$Service->save({ status=>($openprint::param{Status} ? $openprint::param{Status} : 'calculated')}) if $Service->status() and $Service->status() ne 'Completed';
+
+				if ( $ServiceType->id() ) {
+					$Project->add_to_log( @openprint::session{'company_id','user_id'}, $ServiceType->name().' service saved.' );
+				} else {
+					$Project->add_to_log( @openprint::session{'company_id','user_id'}, 'Printing service saved.' );
+				} # end if
+
+				my $Currency = openprint::Currency::get_current();
 				if ( $Project->currency_id() != $Currency->id() ) {
 					$Project->Currency( $Currency );
 					# Change of currency calls for complete recalc
 					$recalc = 1;
 				} # end if
 
-				if ( (!$openprint::param{'ServiceType'} ) or $recalc ) {
+				if ( (!$openprint::param{ServiceType} ) or $recalc ) {
 					multipage_signatures( \%openprint::param, $log, $dbh, $variable, $project_index, $service_index );
 					my $s = openprint::service::internal_calc( $log, $dbh, $variable, $project_index, $service_index, $Project->Type()->type() );
 					if ( $$s{Status} ne 'calculated' ) {
 						$log->error("Error calculting Project service");
+						# Don't want to redirect because it would be annoying.  Just go to view.
 					} else {
 						openprint::Estimating::MultiPage::calculate_signatures( $Project );
+						$recalc = 1;
 					} # end if
-					$recalc = 1;
 				} elsif ( $openprint::param{'ServiceType'} eq 'Printing' ) {
 					openprint::Estimating::MultiPage::calculate_signatures( $Project );
 					openprint::service::internal_calc( $log, $dbh, $variable, $project_index, $$services{''}[0], $Project->Type()->type() );
