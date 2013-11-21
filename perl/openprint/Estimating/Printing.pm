@@ -5460,6 +5460,13 @@ if ( 0 ) {
 				$string .= ' folded pages.';
 			} # end if
 		} # end if
+		if ( $Project->Type()->name() eq 'PresentationFolders' ) {
+			$string .= '<br/>' . $$specs{rdbPanels} . ' ' . ( $$specs{rdbPocketSize} ? $$specs{rdbPocketSize} . '&quot; ' : '' ) . ' panels on ' . join( ',', 
+				( $$specs{chkPocketLeft} ? ' left ' : () ),
+				( $$specs{chkPocketCenter} ? ' center ' : () ),
+				( $$specs{chkPocketRight} ? ' right ' : () ),
+			);
+		} # end if
 		return $string;
 	} # end if qty_index
 } # end sub summary

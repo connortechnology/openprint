@@ -179,6 +179,11 @@ sub choose_service {
 		if ( $status eq 'uncalculated' ) {
 			$log->debug("Printing service status $status uncalcaulted");
 			return ( $$services{''}[0], '/main/project/'.$Project->Type()->url() ) if $Project->Type()->url();
+			$log->debug("Project Type does not have a url");
+			if ( ! $$services{Signature} ) {
+				# There are no signatures, so .... 
+				return (undef,undef);
+			} # end if
 		} else {
 			$log->debug("Printing service status $status");
 		} # end if
