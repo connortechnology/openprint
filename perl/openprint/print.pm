@@ -34,7 +34,7 @@ sub view_services {
 		$log->debug("*** Time to Save Project - View Services Function *** $project_index $openprint::session{'project_id'}");
 		# Display any resulting uncalculated services
 		openprint::print_project::continue_project( $log, $dbh, $variable, $project_index );
-		return if $$variable{'ExternalRedirect'};
+		return if $$variable{ExternalRedirect};
 	} # end if
 
 	$project_index = $openprint::session{'project_id'} if ! $project_index;

@@ -170,12 +170,20 @@ sub choose_service {
 	my $services = $Project->services();
 
 	# get the printing service
-	my $status = openprint::service::status( $Project->id(), $$services{''}[0] ) if $$services{''};
-	
-	# if the printing service is unfinished, return it.
-	# the no url test will only occurr for the "no printing required" project type :)
-	if ( $status eq 'uncalculated' ) {
-		return ( $$services{''}[0], '/main/project/'.$Project->Type()->url() ) if $Project->Type()->url();
+	if ( $$services{''} ) {
+		$log->debug("Have a printing service");
+		my $status = openprint::service::status( $Project->id(), $$services{''}[0] );
+		
+		# if the printing service is unfinished, return it.
+		# the no url test will only occurr for the "no printing required" project type :)
+		if ( $status eq 'uncalculated' ) {
+			$log->debug("Printing service status $status uncalcaulted");
+			return ( $$services{''}[0], '/main/project/'.$Project->Type()->url() ) if $Project->Type()->url();
+		} else {
+			$log->debug("Printing service status $status");
+		} # end if
+	} else {
+		$log->debug("No printing service?");
 	} # end if
 
 	$log->debug("****** GETTING INCOMPLETE PRINTING SERVICES ********");
