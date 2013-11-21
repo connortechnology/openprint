@@ -270,41 +270,11 @@ sub multipage_signatures {
 
 	my %specified_pages;
 
-	foreach my $k ( keys %$param ) {
-		if ( $k =~ /^txtSignatureType(\d*)/ ) {
-			my $group_id = $1;
-$log->debug("group $group_id");
-
-			if ( $$param{'GroupPageQuantity'.$group_id} and ! $Project->signatures({'Group'=>$group_id}) ) {
-				$log->debug("adding special group $group_id");
-				my $print_service_index = $Project->add_signature( 'Signature', undef, undef, {
-						#'txtSignatureType'=>'Interior Pages',
-						#'txtServiceDescription'=>'Interior Pages',
-						'Group'	=>	$group_id,
-						'PrintingType'=>$$param{'PrintingType'},
-						'txtSpreadSize'	=>	$$param{'txtSpreadSize'},
-						} );
-				push @{$$services{'Signature'}}, $print_service_index;
-			} # end if
-
-			$specified_pages{$$param{$k}} += $$param{'GroupPageQuantity'.$group_id};
-			if ( $group_id > $max_group ) {
-				$max_group = $group_id;
-			} # end if
-		} # end if
-	} # end foreach param
-	$max_group = 3 if $max_group < 3; # Reserver 1, 2, 3 for Cover, Interior, Gate
-	$openprint::log->debug("Max group: $max_group");
-
-foreach my $k ( keys %specified_pages ) {
-$openprint::log->debug("Specified Pages: $k => $specified_pages{$k}" );
-} # end foreach
-
 	if ( $$param{'rdbCover'} eq 'Different' ) {
 # now add a cover spread if we need one.
 # First, see if we have one.
 		if ( ! $Project->signatures({'type'=>'Cover Pages'}) ) {
-			push @{$$services{'Signature'}}, $Project->add_signature( 'Signature', undef, undef, {
+			push @{$$services{'Signature'}}, $Project->add_signature( undef, undef, {
 						'txtSignatureType'=>'Cover Pages',
 						'txtServiceDescription'=>'Cover',
 						'Group'	=>	1,
@@ -328,13 +298,40 @@ $openprint::log->debug("Specified Pages: $k => $specified_pages{$k}" );
 		} # end foreach
 	} # end if Self or Different Cover
 
+
+	foreach my $k ( keys %$param ) {
+		if ( $k =~ /^txtSignatureType(\d*)/ ) {
+			my $group_id = $1;
+$log->debug("group $group_id");
+
+			if ( $$param{'GroupPageQuantity'.$group_id} and ! $Project->signatures({'Group'=>$group_id}) ) {
+				$log->debug("adding special group $group_id");
+				my $print_service_index = $Project->add_signature( undef, undef, {
+						#'txtSignatureType'=>'Interior Pages',
+						#'txtServiceDescription'=>'Interior Pages',
+						'Group'	=>	$group_id,
+						'PrintingType'=>$$param{'PrintingType'},
+						'txtSpreadSize'	=>	$$param{'txtSpreadSize'},
+						} );
+				push @{$$services{'Signature'}}, $print_service_index;
+			} # end if
+
+			$specified_pages{$$param{$k}} += $$param{'GroupPageQuantity'.$group_id};
+			if ( $group_id > $max_group ) {
+				$max_group = $group_id;
+			} # end if
+		} # end if
+	} # end foreach param
+	$max_group = 3 if $max_group < 3; # Reserver 1, 2, 3 for Cover, Interior, Gate
+	$openprint::log->debug("Max group: $max_group");
+
 # On each call to this, we save, then check to see if there are any unspecified signatures
 
 	# Now, make sure that we have all the gate spreads that we need
 	my @gate_spread_services = $Project->signatures({'type'=>'Gate Folded Pages'});
 	my $need_gate_spreads = int($$param{'txtGateFoldedSpreadQuantity'}) - scalar @gate_spread_services;
 	while ( $need_gate_spreads > 0 ) {
-		push @{$$services{'Signature'}}, $Project->add_signature( 'Signature', undef, undef, {
+		push @{$$services{'Signature'}}, $Project->add_signature( undef, undef, {
 				'txtSignatureType'=>'Gate Folded Pages',
 				'txtServiceDescription'=>'Gate Folded Pages',
 				'Group'	=>	3,
@@ -346,7 +343,7 @@ $openprint::log->debug("Specified Pages: $k => $specified_pages{$k}" );
 	if ( ! $Project->signatures({'type'=>'Interior Pages'}) ) {
 # Must have at least 1 interioer signature
 		$log->debug('add interiorpages');
-		my $print_service_index = $Project->add_signature( 'Signature', undef,  undef, {
+		my $print_service_index = $Project->add_signature( undef,  undef, {
 				'txtSignatureType'=>'Interior Pages',
 				'txtServiceDescription'=>'Interior Pages',
 				'Group'	=>	2,

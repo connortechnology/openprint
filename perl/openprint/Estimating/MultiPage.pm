@@ -457,7 +457,7 @@ sub save {
 		# now add a cover spread if we need one.
 		# First, see if we have one.
         if ( ! $Project->signatures({'type'=>'Cover Pages'}) ) {
-            $Project->add_signature( 'Signature', undef, undef, {
+            $Project->add_signature( undef, undef, {
                         txtSignatureType		=> 'Cover Pages',
                         txtServiceDescription	=> 'Cover',
                         Group					=>  1,

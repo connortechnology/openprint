@@ -388,7 +388,7 @@ $log->debug("Presentation folder sizes $$specs{'chkPocketLeft'} $$specs{'chkPock
 # Non-book
 		my @signatures = $Project->signatures();
 		if ( ! @signatures ) {
-			push @signatures, $Project->add_signature( 1, undef, undef, { txtQuantity1 => $$specs{txtQuantity1} } );	
+			push @signatures, $Project->add_signature( 1, undef, { txtQuantity1 => $$specs{txtQuantity1} } );	
 		} # end if
 		my $sig_id = $signatures[0];
 		my $sig_specs = openprint::service::get_specs_ref( $Project, $sig_id );
