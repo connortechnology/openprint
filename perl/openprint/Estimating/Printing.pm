@@ -3116,16 +3116,17 @@ sub get_project_price {
 			$PlateCounts{$$price{'Plate Costs'}{'Plate ID'}} += $$price{'Plate Costs'}{'Plate Count'};
 			$PlateCounts{'Blank'.$$price{'Plate Costs'}{'Plate ID'}} += $$price{'Plate Costs'}{'Blank Plates'};
 			$PaperCounts{$Paper->id_string()} += $$price{'Stock Qty'};
-			if ( 0 ) {
 # Gets done later on, why do it here?  Maybe to fuill in plate costs... or to use them in best_price calcs...
 # I put this back on Sept 17th because for a 16+8, it didn't have the plate costs. Technically it should be done later when all plates are accounted for
 # Why doesn't the same lines down below do the job?
 # Because the one dowre runs when Unspecified Pages % pages is 0.  with a 16+8 it's not.
 # THis should happen down below
 
+			if ( 1 ) {
 				my $results = plate_cost( $price, \%PlateCounts );
-				$$price{'Total Cost'} += $$results{'Price'};
-				$$price{'Comparison Cost'} += $$results{'Price'};
+				$$price{'Total Cost'} += $$results{Price};
+				$$price{'Comparison Cost'} += $$results{Price};
+				$$price{PlateCost} = $$results{Price};
 			}
 
 			if ( %best_price and ( $best_price{'Comparison Cost'} <= $$price{'Comparison Cost'} ) ) {
@@ -3266,6 +3267,12 @@ $openprint::log->error( Data::Dumper::Dumper( $price ) );
 #$$imp{price} = $sig_price;
 							$$sig_price{Imposition} = $imp;
 #$imp->display("additional calc_price this imp $$sig_price{'Comparison Cost'}");
+			if ( 1 ) {
+				my $results = plate_cost( $sig_price, \%PlateCounts );
+				$$sig_price{'Total Cost'} += $$results{Price};
+				$$sig_price{'Comparison Cost'} += $$results{Price};
+				$$sig_price{PlateCost} = $$results{Price} ;
+			}
 
 							if ( int($$sig_price{'Comparison Cost'}) == $last_sig_price ) {
 								my $sigs = int($upq/$$imp{'pages'});
@@ -3433,21 +3440,26 @@ $openprint::log->warn("Unable to calculate additional signatures Complete: $$sig
 #$log->debug("$recursion_depth : At tail? $txtUnspecifiedPageQuantity - ( $$price{'sig_count'} * $$imp{pages} ) " . ( $txtUnspecifiedPageQuantity - ( $$price{'sig_count'} * $$imp{pages} ) ) );
 
 			if ( $recursion_depth == 0 ) {
+				if ( $$price{PlateCost} ) {
+# They may be added into the Comparison cost in one of the sub prices
+					$$price{'Comparison Cost'} -= $$price{PlateCost};
+					$$price{'Total Cost'} -= $$price{PlateCost};
+				}
 				my $results = plate_cost( $price, \%PlateCounts );
-				$$price{PlateCosts} = $$results{'Price'};
+				$$price{PlateCost} = $$results{'Price'};
 				foreach my $p ( @{$$price{prices}} ) {
 					# This should fill in the place costs line of the breakdown
 					my $r = plate_cost( $p, \%PlateCounts );
-					if ( $$p{PlateCosts} ) {
+					if ( $$p{PlateCost} ) {
 						# They may be added into the Comparison cost in one of the sub prices
-						$$price{'Comparison Cost'} -= $$p{PlateCosts};
+						$$price{'Comparison Cost'} -= $$p{PlateCost};
 					} else {
 						$$p{'Total Cost'} += $$r{Price};
-						$$p{PlateCosts} = $$results{Price};
+						$$p{PlateCost} = $$results{Price};
 					} # end if
 				} # end foreach price
-				$$price{'Total Cost'} += $$results{'Price'};
-				$$price{'Comparison Cost'} += $$results{'Price'};
+				$$price{'Total Cost'} += $$results{Price};
+				$$price{'Comparison Cost'} += $$results{Price};
 
 				if ( $$Paper{type} eq 'Roll' and $has_sheeter ) {
 # Add Roll2SheetSetup
@@ -3475,13 +3487,13 @@ $openprint::log->warn("Unable to calculate additional signatures Complete: $$sig
 			} # end if recursion == 0
 $openprint::log->debug("UPQ $txtUnspecifiedPageQuantity $$price{'sig_count'} * $$imp{pages} ");
 			if ( ($txtUnspecifiedPageQuantity <= 1) or ( $txtUnspecifiedPageQuantity - ( $$price{'sig_count'} * $$imp{pages} ) == 0 ) ) {
-				if ( $$price{PlateCosts} ) {
+				if ( $$price{PlateCost} ) {
 # They may be added into the Comparison cost in one of the sub prices
-					$$price{'Comparison Cost'} -= $$price{PlateCosts};
+					$$price{'Comparison Cost'} -= $$price{PlateCost};
 				}
 				my $results = plate_cost( $price, \%PlateCounts );
-				$$price{PlateCosts} = $$results{'Price'};
-				$$price{'Comparison Cost'} += $$results{'Price'};
+				$$price{PlateCost} = $$results{Price};
+				$$price{'Comparison Cost'} += $$results{Price};
 
 # I don't think this is appropriate anymore
 #$$price{'Comparison Cost'} += $$price{'sig_count'} * $$results{'Price'};
