@@ -207,6 +207,9 @@ $log->debug("Presentation folder sizes $$specs{'chkPocketLeft'} $$specs{'chkPock
 		$$specs{'txtFinalWidth'} =~ s/[^\.\d]//g;
 		$$specs{'txtHeight'} =~ s/[^\.\d]//g;
 		$$specs{'txtFinalHeight'} =~ s/[^\.\d]//g;
+		if ( $$specs{spine} eq 'width' ) {
+			@$specs{'txtWidth','txtHeight'} = ( $$specs{txtFinalWidth}, 2*$$specs{txtFinalHeight} );
+		} # end if
 	} # end if
 
 	if ( $$specs{'FoldType'} and ! ( $$specs{'txtWidth'} and $$specs{'txtHeight'} and $$specs{'txtFinalWidth'} and $$specs{'txtFinalHeight'} ) ) {
@@ -233,14 +236,14 @@ $log->debug("Presentation folder sizes $$specs{'chkPocketLeft'} $$specs{'chkPock
 # It's a multi-page publication
 		if ( ! $$specs{'txtTotalPageQuantity'} ) {
 			$$specs{'alert'} .= 'Please enter the number of pages.<br/>';
-		sql::end_transaction( $dbh, $ac );
+			sql::end_transaction( $dbh, $ac );
 			return $$specs{'Status'} = 'uncalculated';
 		} # end if
 		if ( $$specs{'rdbCover'} eq 'Different' ) {
 			foreach my $option ( @StockOptions ) {
 				if ( ! $$specs{'ddmStock'.$option.'1'} ) {
 					$$specs{'alert'} .= 'Please select a cover stock ' . lc $option .'.';
-		sql::end_transaction( $dbh, $ac );
+					sql::end_transaction( $dbh, $ac );
 					return $$specs{'Status'} = 'uncalculated';
 				} # end if
 			} # end foreach option
@@ -248,23 +251,23 @@ $log->debug("Presentation folder sizes $$specs{'chkPocketLeft'} $$specs{'chkPock
 		foreach my $option ( @StockOptions ) {
 			if ( ! $$specs{'ddmStock'.$option.'2'} ) {
 				$$specs{'alert'} .= 'Please select an interior stock ' . lc $option .'.';
-		sql::end_transaction( $dbh, $ac );
+				sql::end_transaction( $dbh, $ac );
 				return $$specs{'Status'} = 'uncalculated';
 			} # end if
 		} # end foreach option
 
 		if ( $$specs{'rdbTemplateType'} eq 'SaddleStitching' and $$specs{'txtTotalPageQuantity'} % 4 ) {
 			$$specs{'alert'} .= '# of pages should be a multiple of 4<br/>';
-		sql::end_transaction( $dbh, $ac );
+			sql::end_transaction( $dbh, $ac );
 			return $$specs{'Status'} = 'uncalculated';
 		} elsif ( $$specs{'rdbTemplateType'} eq 'PerfectBound' and $$specs{'txtTotalPageQuantity'} % 2 ) {
 			$$specs{'alert'} .= '# of pages should be a multiple of 2<br/>';
-		sql::end_transaction( $dbh, $ac );
+			sql::end_transaction( $dbh, $ac );
 			return $$specs{'Status'} = 'uncalculated';
 		} # end if
 
 
-		foreach my $spec ( 'txtWidth','txtHeight','txtFinalWidth','txtFinalHeight','txtTotalPageQuantity','rdbCover','rdbTemplateType','PrintingType' ) {
+		foreach my $spec ( 'txtWidth','txtHeight','txtFinalWidth','txtFinalHeight','txtTotalPageQuantity','rdbCover','rdbTemplateType','PrintingType','spine' ) {
 			if ( $$project_specs{$spec} ne $$specs{$spec} ) {
 				openprint::service::insert_service_spec( $log, $dbh, $$Project{'id'}, $$services{''}[0], $spec, $$specs{$spec} );
 			} # end if
