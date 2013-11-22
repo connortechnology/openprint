@@ -170,7 +170,13 @@ sub signature_calc {
 	} # end if
 
 	# Need to figure out which dimension the spine bisects
-	if ( ( $$printing_specs{'txtFinalWidth'} == $$printing_specs{'txtWidth'} ) and ( $$printing_specs{'txtFinalHeight'} != $$printing_specs{'txtHeight'} ) ) {
+	if ( $$printing_specs{spine} ) {
+		if ( $$printing_specs{spine} eq 'width' ) {
+			@$specs{'Width','Height'} = @$printing_specs{'txtFinalHeight','txtFinalWidth'};
+		} else {
+			@$specs{'Width','Height'} = @$printing_specs{'txtFinalWidth','txtFinalHeight'};
+		} # end if
+	} elsif ( ( $$printing_specs{'txtFinalWidth'} == $$printing_specs{'txtWidth'} ) and ( $$printing_specs{'txtFinalHeight'} != $$printing_specs{'txtHeight'} ) ) {
 		@$specs{'Width','Height'} = @$printing_specs{'txtFinalHeight','txtFinalWidth'};
 	} elsif ( ( $$printing_specs{'txtFinalWidth'} != $$printing_specs{'txtWidth'} ) and ( $$printing_specs{'txtFinalHeight'} == $$printing_specs{'txtHeight'} ) ) {
 		@$specs{'Width','Height'} = @$printing_specs{'txtFinalWidth','txtFinalHeight'};
@@ -476,7 +482,13 @@ sub calc {
 	} # end if
 
 	# Need to figure out which dimension the spine bisects
-	if ( ( $$printing_specs{'txtFinalWidth'} == $$printing_specs{'txtWidth'} ) and ( $$printing_specs{'txtFinalHeight'} != $$printing_specs{'txtHeight'} ) ) {
+	if ( $$printing_specs{spine} ) {
+		if ( $$printing_specs{spine} eq 'width' ) {
+			@$specs{'Width','Height'} = @$printing_specs{'txtFinalHeight','txtFinalWidth'};
+		} else {
+			@$specs{'Width','Height'} = @$printing_specs{'txtFinalWidth','txtFinalHeight'};
+		} # end if
+	} elsif ( ( $$printing_specs{'txtFinalWidth'} == $$printing_specs{'txtWidth'} ) and ( $$printing_specs{'txtFinalHeight'} != $$printing_specs{'txtHeight'} ) ) {
 		@$specs{'Width','Height'} = @$printing_specs{'txtFinalHeight','txtFinalWidth'};
 	} elsif ( ( $$printing_specs{'txtFinalWidth'} != $$printing_specs{'txtWidth'} ) and ( $$printing_specs{'txtFinalHeight'} == $$printing_specs{'txtHeight'} ) ) {
 		@$specs{'Width','Height'} = @$printing_specs{'txtFinalWidth','txtFinalHeight'};

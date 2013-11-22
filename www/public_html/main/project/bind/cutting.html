@@ -1,21 +1,13 @@
-<script type="text/javascript" src="<? echo ( hash_link('/javascripts/service.js') ) ?>"></script>
+<script type="text/javascript" src="<?hash_link('/javascripts/service.js')?>"></script>
 <div class="Service">
 	<form id="f1" name="f1" method="post" action="/main/project/view.html">
-		<? echo ( include('/includes/main/proj/required_fields.html'); ) ?>
 		<fieldset><legend>Cutting Services</legend>
 			<ul>
-<? eval (
-	if ( $$variable{'Project'}->quantity1() and $$variable{'Project'}->quantity2() and $$variable{'Project'}->quantity3() ) {
-	$$variable{'Columns'} = 'Three';
-	} else {
-	$$variable{'Columns'} = 'Two';
-	} # end if
-) ?>
 <li>
 <? echo ( my $html = '';
 	foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
 		$html .= '<span class="'.$$variable{'Columns'}.'Columns">';
-		$html .= ssi::input( name=>"txtQuantity$qty_index", value=>$$variable{'txtQuantity'.$qty_index}, type=>'integer', onkeyup=>"calc('f1');" );
+		$html .= input( name=>"txtQuantity$qty_index", value=>$$variable{'txtQuantity'.$qty_index}, type=>'integer', onkeyup=>"calc('f1');" );
 		$html .= '</span>';
 	} # end foreach
 	return $html;
@@ -23,61 +15,57 @@
 </li>
 			</ul>
 		</fieldset>
-<? eval ( @{$$variable{'tempCuttingGroups'}} = @{$$variable{'CuttingGroups'}} ) ?>
-<? while ( @$variable{'SignatureServiceIndex','SignatureIndex','Reference'} = splice @{$$variable{'tempCuttingGroups'}},0,3; ) ?>
-<fieldset>
-	<? if ( $$variable{'Reference'} ) ?>
-	<legend><?Reference?></legend>
-	<? endif ( $$variable{'Reference'} ) ?>
-	<ul>
-	<li><? echo ( openprint::service::summary( @$variable{'ProjectIndex','SignatureServiceIndex'} ); ) ?></li>
-	<li>
-		<? eval ( $$variable{'QTYIndex'} = 1 ) ?>
-		<? while ( $$variable{'QTYIndex'} <= 3 ) ?>
-		<? if ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
-		<span class="<?Columns?>Columns">
-		<? echo ( openprint::service::summary( @$variable{'ProjectIndex','SignatureServiceIndex','QTYIndex'} ); ) ?>
-		</span>
-		<? endif ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
-		<? eval ( $$variable{'QTYIndex'} += 1 ) ?>
-		<? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
-		<input name="txtStockCalliper-<?SignatureIndex?>" type="hidden" value="<? echo ( $$variable{'txtStockCalliper-'.$$variable{'SignatureIndex'}} ) ?>" />
-	</li>
-	<? if ( sets::isin( $$variable{'ProjectTypeID'}, ['PressSheetCombination','NoPrintingRequired']) or sets::isin( $session{'user_type'},['E','A']) ) ?>
-	<li>
-    	<label>Additional cuts</label>
-        <input name="txtAdditionalCuts<?SignatureIndex?>" value="<? echo ( $$variable{'txtAdditionalCuts'.$$variable{'SignatureIndex'}} ) ?>" onkeyup="calc('f1');" />
-	</li>
-	<? endif ( sets::isin( $$variable{'ProjectTypeID'}, ['PressSheetCombination','NoPrintingRequired']) or sets::isin( $session{'user_type'},['E','A']) ) ?>
+<? echo (
+	my $html;
+	foreach my $ss_id ( $$variable{Project}->signatures({sort=>1}) ) {
+		my $sig_specs = openprint::service::get_specs_ref( $$variable{Project}, $ss_id );
+		$html .= '<fieldset>';
+	if ( $$sig_specs{txtServiceDescription} ) {
+	$html .= '<legend>'.$$sig_specs{txtServiceDescription}.'</legend>';
+	} # end if
+
+	$html .= '<ul><li>' . openprint::service::summary( $$variable{'ProjectIndex'}, $ss_id ).'</li>';
+	$html .= '<li>';
+	foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
+		$html .= '<span class="'.$$variable{'Columns'}.'Columns">';
+		$html .= openprint::service::summary( $$variable{'ProjectIndex'}, $ss_id, $qty_index );
+		$html .= '</span>';
+	} # end foreach qty_index
+	$html .= input( name=>"txtStockCalliper-$$sig_specs{SignatureIndex}", type=>'hidden', value=>$$variable{'txtStockCalliper-'.$$sig_specs{SignatureIndex}} );
+	$html .= '</li>';
+	if ( sets::isin( $$variable{'ProjectTypeID'}, ['PressSheetCombination','NoPrintingRequired']) or sets::isin( $session{'user_type'},['E','A']) ) {
+	$html .= '<li>
+    	<label>Additional cuts</label>';
+        $html .= input( name=>"txtAdditionalCuts$$sig_specs{SignatureIndex}", value=>$$variable{'txtAdditionalCuts'.$$sig_specs{SignatureIndex}}, onkeyup=>"calc('f1');" );
+	$html .= '</li>';
+	} # end if
+	$html .= '
 	</ul>
 </fieldset>
 <fieldset><legend>Pre-press Stock Cutting</legend>
 	<ul>
 	<li>
-		<label>Quantity</label>
-		<? eval ( $$variable{'QTYIndex'} = 1 ) ?>
-		<? while ( $$variable{'QTYIndex'} <= 3 ) ?>
-		<? if ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
-		<span class="<?Columns?>Columns"><? echo ( $$variable{'Project'}->quantity($$variable{'QTYIndex'}) ) ?></span>
-		<? endif ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
-		<? eval ( $$variable{'QTYIndex'} += 1 ) ?>
-		<? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
+		<label>Quantity</label>';
+	foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
+		$html .= '<span class="'.$$variable{'Columns'}.'Columns">';
+		$html .= $$variable{'Project'}->quantity($qty_index);
+		$html .= '</span>';
+	} # end foreach qty_index
+	$html .= '
 	</li>
 	<li>
-		<label>Sheet size</label>
-		<? eval ( $$variable{'QTYIndex'} = 1 ) ?>
-		<? while ( $$variable{'QTYIndex'} <= 3 ) ?>
-		<? if ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
-		<span class="<?Columns?>Columns">
-		<span id="txtSuppliedStockWidth-<?SignatureIndex?>-<?QTYIndex?>" ><? echo ( $$variable{"txtSuppliedStockWidth-$$variable{'SignatureIndex'}-$$variable{'QTYIndex'}"}; ) ?></span> x
+		<label>Sheet size</label>';
+	foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
+		$html .= '<span class="'.$$variable{'Columns'}.'Columns">';
+		$html .= sprintf('
+		<span id="txtSuppliedStockWidth-%1$d-%2$d">%3$d</span> x 
 		<span id="txtSuppliedStockHeight-<?SignatureIndex?>-<?QTYIndex?>" ><? echo ( $$variable{"txtSuppliedStockHeight-$$variable{'SignatureIndex'}-$$variable{'QTYIndex'}"}; ) ?></span>
 		->
 		<span id="txtSheetSizeWidth-<?SignatureIndex?>-<?QTYIndex?>" ><? echo ( $$variable{"txtSheetSizeWidth-$$variable{'SignatureIndex'}-$$variable{'QTYIndex'}"}; ) ?></span> x
 		<span id="txtSheetSizeHeight-<?SignatureIndex?>-<?QTYIndex?>" ><? echo ( $$variable{"txtSheetSizeHeight-$$variable{'SignatureIndex'}-$$variable{'QTYIndex'}"}; ) ?></span>
-		</span>
-		<? endif ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
-		<? eval ( $$variable{'QTYIndex'} += 1 ) ?>
-		<? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
+o ( $$variable{"txtSuppliedStockWidth-$$variable{'SignatureIndex'}-$$variable{'QTYIndex'}"}; ) ?></span> x
+		$html .= '</span>';
+	} # end foreach qty_index
 	</li>
 	<li>
 		<label>Equipment</label>
