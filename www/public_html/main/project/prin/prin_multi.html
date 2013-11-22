@@ -96,6 +96,9 @@ if ( 0 ) {
                 input( type=>'float', id=>'txtFinalHeight', name=>'txtFinalHeight', value=>$$variable{txtFinalHeight}, onkeyup=>'dimensions_onChange(this.form);', min=>0, title=>'Final Height in inches' ),
 				); ) ?>
 				</p>
+				<p><label>Spine</label>
+					<?echo(radio('spine', [ map { $_, $_ } 'height', 'width' ], $$variable{spine}, { default=>'height', onclick=>'calc(this.form.name)' } ); ) ?>
+				</p>
 				<p><label>Spread</label>
                 <? echo ( join( "\n",
 				

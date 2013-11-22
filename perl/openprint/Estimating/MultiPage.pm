@@ -28,7 +28,7 @@ use constant DEBUG => 0;
 my %variables = (
 	'ddmProjectSize'=>['save','output'],
 	'txtFinalWidth'=>['save'],'txtFinalHeight'=>['save'], 
-	'txtWidth'=>['save'],'txtHeight'=>['save'], 
+	'txtWidth'=>['save','output'],'txtHeight'=>['save','output'], 
 	'txtTotalPageQuantity'=>['save'], 
 	'rdbCover'=>['save','output'],
 	'txtGateFoldedSpreadQuantity'=>['save','output'],
@@ -40,6 +40,7 @@ my %variables = (
 	'help'=>['output'],'alert'=>['output','save'],
 	'ProjectIndex'=>[], 'ServiceIndex'=>[], 'ServiceType'=>[], 'NewBook'=>[],
 	'remaining_pages'=>['output'],'next_group_id'=>['output'],'groups'=>['output'],
+	spine	=>	 ['save'],
 );
 
 sub variables {
@@ -217,6 +218,15 @@ $openprint::log->error("FIXM E");
 	if ( ! ( $$specs{'txtFinalWidth'} or $$specs{'txtFinalHeight'} ) ) {
 		$$specs{'alert'} = 'Please select the dimensions.';
 		return $$specs{Status} = 'uncalculated';
+	} # end if
+	if ( ! $$specs{spine} ) {
+		$$specs{spine} = 'height';
+		$variables{spine} = ['save','output'];
+	} # end if
+	if ( $$specs{spine} eq 'width' ) {
+		@$specs{'txtWidth','txtHeight'} = ( $$specs{'txtFinalWidth'}, 2*$$specs{'txtFinalHeight'} );
+	} else {
+		@$specs{'txtWidth','txtHeight'} = ( 2*$$specs{'txtFinalWidth'},$$specs{'txtFinalHeight'} );
 	} # end if
 
 	if ( ! $$specs{'txtTotalPageQuantity'} ) {
