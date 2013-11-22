@@ -58,12 +58,15 @@
 	foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
 		$html .= '<span class="'.$$variable{'Columns'}.'Columns">';
 		$html .= sprintf('
-		<span id="txtSuppliedStockWidth-%1$d-%2$d">%3$d</span> x 
-		<span id="txtSuppliedStockHeight-<?SignatureIndex?>-<?QTYIndex?>" ><? echo ( $$variable{"txtSuppliedStockHeight-$$variable{'SignatureIndex'}-$$variable{'QTYIndex'}"}; ) ?></span>
-		->
-		<span id="txtSheetSizeWidth-<?SignatureIndex?>-<?QTYIndex?>" ><? echo ( $$variable{"txtSheetSizeWidth-$$variable{'SignatureIndex'}-$$variable{'QTYIndex'}"}; ) ?></span> x
-		<span id="txtSheetSizeHeight-<?SignatureIndex?>-<?QTYIndex?>" ><? echo ( $$variable{"txtSheetSizeHeight-$$variable{'SignatureIndex'}-$$variable{'QTYIndex'}"}; ) ?></span>
-o ( $$variable{"txtSuppliedStockWidth-$$variable{'SignatureIndex'}-$$variable{'QTYIndex'}"}; ) ?></span> x
+		<span id="txtSuppliedStockWidth-%1$d-%2$d">%3$d</span> x <span id="txtSuppliedStockHeight-%1$d-%2$d">%4$d</span> ->
+		<span id="txtSheetSizeWidth-%1$d-%2$d">%5$d</span> x <span id="txtSheetSizeHeight-%1$d-%2$d">%6%d</span>',
+			$$sig_specs{SignatureIndex}, $qty_index, 
+			@$variable{
+				"txtSuppliedStockWidth-$$sig_specs{SignatureIndex}-$qty_index"},
+				"txtSuppliedStockHeight-$$sig_specs{SignatureIndex}-$qty_index"},
+				"txtSheetSizeWidth-$$sig_specs{SignatureIndex}-$qty_index"},
+				"txtSheetSizeHeight-$$sig_specs{SignatureIndex}-$qty_index"},
+			} );
 		$html .= '</span>';
 	} # end foreach qty_index
 	</li>
@@ -77,8 +80,8 @@ o ( $$variable{"txtSuppliedStockWidth-$$variable{'SignatureIndex'}-$$variable{'Q
 						<option value="">No Cutting</option>%4$s
 					</select>%5$s</span>`,
 					@$variable{'Columns','SignatureIndex'}, $qty_index,
-					( $$variable{'StockCutEquipmentArray'} ?  ssi::make_drop_down( $$variable{'StockCutEquipmentArray'}, $$variable{"ddmStockCutEquipment-$$variable{SignatureIndex}-$$variable{QTYIndex}"} ) : '' ),
-					ssi::write_override( "chkOverrideStockCutEquipment-$$variable{SignatureIndex}-$qty_index", $$variable{"chkOverrideStockCutEquipment-$$variable{SignatureIndex}-$qty_index"}, '', "calc('f1');" ),
+					( $$variable{'StockCutEquipmentArray'} ? make_drop_down( $$variable{'StockCutEquipmentArray'}, $$variable{"ddmStockCutEquipment-$$variable{SignatureIndex}-$$variable{QTYIndex}"} ) : '' ),
+					write_override( "chkOverrideStockCutEquipment-$$variable{SignatureIndex}-$qty_index", $$variable{"chkOverrideStockCutEquipment-$$variable{SignatureIndex}-$qty_index"}, '', "calc('f1');" ),
 	);
 			} # end foreach qty_index
 			return $html;
@@ -122,7 +125,7 @@ o ( $$variable{"txtSuppliedStockWidth-$$variable{'SignatureIndex'}-$$variable{'Q
 					</span>`,
 					@$variable{'Columns','SignatureIndex'}, $qty_index, 
 					$$variable{"txtCalculatedCuts-$$variable{SignatureIndex}-$$variable{QTYIndex}"},
-					ssi::write_override( "chkOverrideCalculatedCuts-$$variable{SignatureIndex}-$qty_index", $$variable{"chkOverrideCalculatedCuts-$$variable{SignatureIndex}-$qty_index"}, '', "calc('f1');" ),
+					write_override( "chkOverrideCalculatedCuts-$$variable{SignatureIndex}-$qty_index", $$variable{"chkOverrideCalculatedCuts-$$variable{SignatureIndex}-$qty_index"}, '', "calc('f1');" ),
 					);
 			} # end foreach qty_index
 			return $html;
