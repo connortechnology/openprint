@@ -22,7 +22,7 @@ my $threading = 0;
 #use threads;
 use constant DEBUG => 0;
 use constant DEBUG_VERSIONS => 0;
-use constant DEBUG_FILTERING => 0;
+use constant DEBUG_FILTERING => 1;
 use constant DEBUG_PRICE_DECISIONS => 0;
 use constant DEBUG_INKS => 0;
 
@@ -772,31 +772,21 @@ sub calc_from_imposition {
 			$$specs{'txtImposition'.$qty_index} = $$Imposition{'imposition'} if $$specs{'chkOverrideImposition'.$qty_index} ne 'Y';
 		} # end if
 
-$openprint::log->warn("Getting Previous Forms:");
 		$$specs{'PreviousForms'.$qty_index} = 0;
 		$$project{roll2sheetcharged} = 0;
 		my %PaperCounts;
 		my %PlateCounts;
 		foreach my $index ( sort $Project->signatures() ) {
-$openprint::log->warn("Getting Previous Forms: $index");
 			next if ($index >= $service_id);
 			my $sig_specs = openprint::service::get_specs_ref( $Project, $index );
 			$PlateCounts{$$specs{'PlateID'.$qty_index}} += $$sig_specs{'txtPlateQuantity'.$qty_index};
 			$PlateCounts{'Blank'.$$specs{'PlateID'.$qty_index}} += $$sig_specs{'BlankPlateQuantity'.$qty_index};
-if ( compare_signatures_runstyle( $Project, $specs, $sig_specs, $qty_index ) ) {
-			$$specs{'PreviousForms'.$qty_index} += 1;
-$openprint::log->warn("Getting Previous Forms same: $index");
-			} else {
-$openprint::log->warn("Getting Previous Forms not same: $index");
+			if ( compare_signatures_runstyle( $Project, $specs, $sig_specs, $qty_index ) ) {
+				$$specs{'PreviousForms'.$qty_index} += 1;
 			} # end if
-$openprint::log->warn("Getting Previous Forms: $index :" . $$specs{'PreviousForms'.$qty_index});
 			$$project{'roll2sheetcharged'} = 1 if $$sig_specs{'Roll2SheetCharge'.$qty_index};
 			$$project{'stocksetupcharged'} = 1 if $$sig_specs{'StockSetupCharge'.$qty_index};
 		} # end foreach $index
-$openprint::log->debug("Plate Counts: %PlateCounts");
-foreach my $k ( keys %PlateCounts ) {
-$openprint::log->debug("Plate Coutns: $k => $PlateCounts{$k}");
-} # end foreach 
 
 		my $price = calc_price( $Project, $service_id, $Imposition, $project, $services, $specs, $Project->quantity($qty_index), $qty_index, \%PlateCounts, $$project{washed_colours}, [] );
 		my $results = plate_cost( $price, \%PlateCounts );
@@ -2240,13 +2230,6 @@ $openprint::log->debug("aftger get printing_types: " . ( sprintf('%.4f', tv_inte
 			my $hash_key = join(',', @$sig_specs{'ddmPress'.$qty_index,'ddmRunStyle'.$qty_index,'PageQuantity'.$qty_index,'txtImposition'.$qty_index,'hdnImpositionColumns'.$qty_index} );
 			$previous_forms_cache{$hash_key} += 1;
 		} # end foreach $index
-foreach my $plate_id ( keys %PlateCounts ) {
-	$log->debug("Plate Counts: $plate_id : $PlateCounts{$plate_id}");
-}
-foreach my $k ( keys %previous_forms_cache ) {
-	$log->debug("Previous forms: $k $previous_forms_cache{$k}");
-}
-$openprint::log->debug("roll2sheetcharged: $$project{roll2sheetcharged}");
 		if ( ! $$project{'stocksetupcharged'} ) {
 			# Check to see if there even are any stock setup prices.  If not, don't both estimating them later
 			if ( ! openprint::PaperPrice->find('service'=>'Setup') ) {
@@ -3502,7 +3485,7 @@ $openprint::log->debug("UPQ $txtUnspecifiedPageQuantity $$price{'sig_count'} * $
 				my @paper_strings = keys %PaperCounts;
 				if ( ( 1 == @paper_strings ) and ( $Paper->id_string() ne $paper_strings[0] ) ) {
 					$openprint::log->error("Different paper in count versus imposition: $paper_strings[0] ne " . $imp->Paper()->id_string() );
-				} elsif ( DEBUG or 1) {
+				} elsif ( DEBUG ) {
 					$log->warn("Paper Counts");
 					foreach my $k ( @paper_strings ) { $openprint::log->debug( "$k => $PaperCounts{$k}" ); } # end 
 				}
@@ -3816,25 +3799,28 @@ sub calc_price {
 	$price{'WorkTurn Dry Charge'} = 0;
 
 #$log->debug("\n\n************ START OF CALC PRINT PRICE QTY: $qty 1: @$side_one_colours, @$side_two_colours CAL: $paper_calliper DT: $dry_trap  STYLE: $run_style ********* \n\n\n");
-	my ( $is_sheetwork, $is_perfecting );
+	my ( $is_sheetwork, $is_perfecting, $is_wt );
 	if ( $$Imposition{'runstyle'} eq 'Sheet Work' or $$Imposition{runstyle} eq 'Web' ) {
 		$is_sheetwork = 1;
 		$is_perfecting = 0;
+		$is_wt = 0;
 		@colours = ( @{$$project{'side_one_colours'}}, @{$$project{'side_one_coatings'}} );
 		if ( ( $$specs{'sides_the_same'} eq 'Y' ) and ( $$Imposition{'runstyle'} eq 'Sheet Work' ) ) {
 		} else {
 			push @colours, @{$$project{'side_two_colours'}},@{$$project{'side_two_coatings'}};
 		} # end if
 
-	} elsif ( sets::isin( $$Imposition{'runstyle'}, ['Work & Turn','Work & Tumble'] ) ) {
+	} elsif ( $$Imposition{runstyle} eq 'Work & Turn' or $$Imposition{runstyle} eq 'Work & Tumble' ) {
 		$is_sheetwork = 0;
 		$is_perfecting = 0;
+		$is_wt = 1;
 		$price{'WorkTurn Dry Charge'} = openprint::service::get_price( 'WTDrying', $$Paper{'grade'}, $Press );
 		@colours = ( @{$$project{'filtered_colours'}},@{$$project{filtered_coatings}} );
 	} elsif ( $$Imposition{runstyle} eq 'Perfecting' ) {
 #$log->debug("************ WE HAVE PERFECTING ****************");
 		$is_sheetwork = 1;
 		$is_perfecting = 1;
+		$is_wt = 0;
 		@colours = ( @{$$project{'side_one_colours'}}, @{$$project{'side_one_coatings'}} );
 		if ( $$specs{'sides_the_same'} ne 'Y' ) {
 			push @colours, @{$$project{'side_two_colours'}},@{$$project{'side_two_coatings'}};
@@ -3856,7 +3842,7 @@ sub calc_price {
 			$$Imposition{versions} = $$specs{"Versions$qty_index"};
 		} else {
 # When W&T, each half has to be a multiple of the versions
-			if ( sets::isin( $$Imposition{'runstyle'}, ['Work & Turn','Work & Tumble'] ) ) {
+			if ( $is_wt ) {
 				$imposition = int($imposition/2);
 				if ( $imposition < $$specs{"UnspecifiedVersions$qty_index"} ) {
 #i.e. if imp = 12 and ver = 30 then only 10 of the slots get used.
@@ -3915,7 +3901,8 @@ sub calc_price {
 	$setup_rate = $Press->specification( 'MakeReady Overs Rate ' . $Paper->material(), scalar @colours ) if ! $setup_rate;
 	$setup_rate = $Press->specification( 'MakeReady Overs Rate', scalar @colours ) if ! $setup_rate;
 
-	if ( $Paper->type() eq 'Roll' and sets::isin('Sheet', split(',', $Press->specification('Feed') ) ) ) {
+	my $is_Roll2Sheet = ( $Paper->type() eq 'Roll' and sets::isin('Sheet', split(',', $Press->specification('Feed') ) ) ) ? 1 : 0;
+	if ( $is_Roll2Sheet ) {
 		if ( my $roll2sheet_overs_rate = $Press->specification( 'Roll2Sheet Additional Setup Overs' ) ) {
 			$setup_rate *= ( 1 + ( $roll2sheet_overs_rate / 100 ) );
 		} # end if
@@ -3930,7 +3917,7 @@ sub calc_price {
 		$setup_overs = $Press->specification( 'MakeReady Overs ' . $$Imposition{'runstyle'}, scalar @colours );
 		$setup_overs = $Press->specification( 'MakeReady Overs', scalar @colours ) if ! $setup_overs;
 	} # end if
-	if ( $Paper->type() eq 'Roll' and sets::isin('Sheet', split(',', $Press->specification('Feed') ) ) ) {
+	if ( $is_Roll2Sheet ) {
 		if ( my $roll2sheet_overs_rate = $Press->specification( 'Roll2Sheet Additional Run Overs' ) ) {
 			$setup_overs *= ( 1 + ( $roll2sheet_overs_rate / 100 ) );
 		} # end if
@@ -4045,35 +4032,32 @@ sub calc_price {
 #$openprint::log->debug("FOlding IMPOSITION $folding_results{'Imposition'}");
 
 		$price{'Comparison Cost'} += $folding_results{'Price'};
-#$price{'Folding Breakdown'} .= 'FOlding comparison price: ' . $price{'Comparison Cost'}.'<br/>';
-#} else {
-#$price{'Folding Breakdown'} .= 'Folding not needed<br/>';
-} # end if
-if ( $$services{'SpinePaste'} ) {
-	if ( $$Imposition{'pages'} < $$specs{'txtUnspecifiedPageQuantity'.$qty_index} ) {
-		$price{'SpinePaste Breakdown'} .= 'SpinePaste error: Must be 1 signature<br/>';
-		$price{'Comparison Cost'} += 1000000; # Can't SP this on
-			$price{'SpinePaste Cost'} = 1000000;
-		$price{'alert'} = 'SpinePaste error: Must be 1 signature';
-		return \%price;
 	} # end if
-#my $starttime = gettimeofday();
+	if ( $$services{'SpinePaste'} ) {
+		if ( $$Imposition{'pages'} < $$specs{'txtUnspecifiedPageQuantity'.$qty_index} ) {
+			$price{'SpinePaste Breakdown'} .= 'SpinePaste error: Must be 1 signature<br/>';
+			$price{'Comparison Cost'} += 1000000; # Can't SP this on
+				$price{'SpinePaste Cost'} = 1000000;
+			$price{'alert'} = 'SpinePaste error: Must be 1 signature';
+			return \%price;
+		} # end if
+	#my $starttime = gettimeofday();
 
-	my $results = openprint::Estimating::SpinePaste::signature_calc( $Project, $service_index, $Imposition, $$project{'SpinePasteSpecs'}, $qty_index, \%folding_results );
-	if ( $$results{'Status'} eq 'uncalculated' ) {
-		$price{'SpinePaste Breakdown'} .= "SpinePaste error: $$results{'alert'}<br/>";
-		$price{'Comparison Cost'} += 1000000; # Can't SP this on
-			$price{'SpinePaste Cost'} = 1000000;
-	} else {
-		$price{'SpinePaste Breakdown'} .= sprintf('SpinePaste MR: %dminutes RS: %d/hr Price: $%.2f<br/>%s<br/>', @$results{'MakeReadyTime','RunSpeed','Price','alert'} );
-		$price{'SpinePaste Cost'} = $$results{'Price'};
-		$price{'Comparison Cost'} += $$results{'Price'};
-#$openprint::log->debug( 'Stitching Calc: ' . sprintf('%.4f', tv_interval( [$starttime])*1000) );
-		if ( $$results{'Equipment'}->id() == $Press->id() ) {
-			$run_speed = $$results{'RunSpeed'} if $$results{'RunSpeed'} and ( $$results{'RunSpeed'} < $run_speed );
+		my $results = openprint::Estimating::SpinePaste::signature_calc( $Project, $service_index, $Imposition, $$project{'SpinePasteSpecs'}, $qty_index, \%folding_results );
+		if ( $$results{'Status'} eq 'uncalculated' ) {
+			$price{'SpinePaste Breakdown'} .= "SpinePaste error: $$results{'alert'}<br/>";
+			$price{'Comparison Cost'} += 1000000; # Can't SP this on
+				$price{'SpinePaste Cost'} = 1000000;
+		} else {
+			$price{'SpinePaste Breakdown'} .= sprintf('SpinePaste MR: %dminutes RS: %d/hr Price: $%.2f<br/>%s<br/>', @$results{'MakeReadyTime','RunSpeed','Price','alert'} );
+			$price{'SpinePaste Cost'} = $$results{'Price'};
+			$price{'Comparison Cost'} += $$results{'Price'};
+	#$openprint::log->debug( 'Stitching Calc: ' . sprintf('%.4f', tv_interval( [$starttime])*1000) );
+			if ( $$results{'Equipment'}->id() == $Press->id() ) {
+				$run_speed = $$results{'RunSpeed'} if $$results{'RunSpeed'} and ( $$results{'RunSpeed'} < $run_speed );
+			} # end if
 		} # end if
 	} # end if
-} # end if
 
 my %diecutting_results;
 #$openprint::log->debug("Need DieCutting $$project{'NeedDieCutting'}");
@@ -4163,9 +4147,6 @@ if ( $$project{'HasDieCutting'} and $$project{'NeedDieCutting'} ) {
 	if ( $$project{'HasCutting'} ) {
 #my $time = gettimeofday();
 		my %cutting_results = openprint::Estimating::Cutting::signature_calc( $Project, $specs, $$project{'CuttingSpecs'}, $qty_index, $Paper, $Imposition, $project );
-#foreach my $k ( keys %cutting_results ) {
-#$openprint::log->debug("Cutting: $k => $cutting_results{$k}");
-#}
 		
 #$openprint::log->debug("Elapsed cutting time:" . ( sprintf('%.4f', tv_interval( [$time])*1000) ) .' usecs' );
 		if ( $cutting_results{'Status'} eq 'uncalculated' ) {
@@ -4193,7 +4174,7 @@ if ( $$project{'HasDieCutting'} and $$project{'NeedDieCutting'} ) {
 
 	my $gross_sheets = $net_sheets + $overs;
 	$impressions = $gross_sheets;
-	$impressions *= 2 if $$project{print_sides} == 2 and sets::isin($$Imposition{runstyle},['Sheet Work','Work & Turn','Work & Tumble'] );
+	$impressions *= 2 if $$project{print_sides} == 2 and ( $is_wt or ( $$Imposition{runstyle} eq 'Sheet Work' ) );
 
 	my $min_impression_quantity = $Press->specification('Minimum Impression Quantity', $$Paper{calliper} );
 	if ( $min_impression_quantity and ( $min_impression_quantity > $impressions ) ) {
@@ -4241,7 +4222,7 @@ $openprint::log->debug("Colour: $real_colour impressions $colour_impressions $$I
 		if ( $real_colour =~ /Varnish/ ) {
 			#$price{'Press Washes'} += 1;
 			$colour = $real_colour;
-			if ( $$Imposition{'runstyle'} =~ /^Work/ ) {
+			if ( $is_wt ) {
 				if ( ( $real_colour =~ /Overall/ ) and ! ( sets::isin( $real_colour, $$project{'side_one_colour_names'} ) and sets::isin( $real_colour, $$project{'side_two_colour_names'} ) ) ) {
 					$real_colour =~ s/Overall/Spot/;
 				} # end if
@@ -4521,7 +4502,7 @@ $openprint::log->debug("Was mixed") if DEBUG_INKS;
 	$setup_rate = $Press->specification( 'MakeReady Overs Rate', $plate_setup{'Plate Count'} ) if ! $setup_rate;
 
 	my $initial_setup_rate = $setup_rate;
-    if ( $Paper->type() eq 'Roll' and sets::isin('Sheet', split(',', $Press->specification('Feed') ) ) ) {
+    if ( $is_Roll2Sheet ) {
         if ( my $roll2sheet_overs_rate = $Press->specification( 'Roll2Sheet Additional Setup Overs' ) ) {
             $initial_setup_rate *= ( 1 + ( $roll2sheet_overs_rate / 100 ) );
         } # end if
@@ -4569,7 +4550,7 @@ $openprint::log->debug("Was mixed") if DEBUG_INKS;
 
 	$gross_sheets = $net_sheets + $total_overs;
 	$impressions = $gross_sheets;
-	$impressions *= $$project{print_sides} if (sets::isin($$Imposition{runstyle},['Sheet Work','Work & Turn','Work & Tumble'] ));
+	$impressions *= $$project{print_sides} if $is_wt or $$Imposition{runstyle} eq 'Sheet Work';
 	my $weight = Math::Round::nearest( .01, $gross_sheets * $Paper->sheet_weight() );
 	if ( $Paper->type() eq 'Roll' and my $Waste = $Press->Specification('Waste Stock') ) {
 		if ( $$Waste{'units'} eq 'Inches' ) {
@@ -4642,7 +4623,7 @@ $openprint::log->warn("Something wrong in AQ");
 	} # end if Aqueous
 
 	my $run_price;
-	if ( sets::isin( $$Imposition{runstyle}, ['Work & Turn','Work & Tumble'] ) ) {
+	if ( $is_wt ) {
 		#my @c = filter_coatings_from_colours( \@colours );
 		$run_price = get_run_price( $impressions, scalar(@{$$project{filtered_colours}}), 0, $Imposition, $Press, $run_speed ); 
 	} else {
@@ -4932,7 +4913,7 @@ sub get_run_price {
 	} # end if
 	my $impression_service = $$Imposition{'runstyle'} eq 'Perfecting' ? 'ColourImpressionPerfecting' : 'ColourImpression';
 
-	if ( sets::isin( $$Imposition{'runstyle'}, [ 'Web', 'Perfecting' ] ) ) {
+	if ( $$Imposition{runstyle} eq 'Web' or $$Imposition{runstyle} eq 'Perfecting' ) {
 # A web does both sides at once, and cannot do multipass
 		$impression_service = $$Imposition{runstyle}.'Impression'.$side_one_colours.'/'.$side_two_colours;
 		my %RunPrice;
@@ -5083,7 +5064,7 @@ sub press_setup_cost {
 		%Price = openprint::service::get_price_object( 'PressUnitMakeReady', $calliper, $Press );
 		$Price{'Total'} = $Price{'Price'} * $setup_count;
 	} elsif ( $Price{'units'} eq 'per job' ) {
-			my $specs = $$Imposition{specs};
+		my $specs = $$Imposition{specs};
 		my $charge = 1;
 		if ( $$specs{Group} != 1 ) {
 		foreach my $Imp ( @$other_impositions ) {
