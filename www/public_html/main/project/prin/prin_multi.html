@@ -121,16 +121,16 @@ if ( 0 ) {
 				<div id="GateInsert">
 				<p>
 					<label><? echo ( writeTip( 'Gate Folded' ); ) ?> pages</label>
-					<? echo ( input( name=>'txtGateFoldedSpreadQuantity', value=>$$variable{txtGateFoldedSpreadQuantity},  type=>'cardinal', onkeyup=>'calc(this.form.name);' ); ) ?>
+					<? echo ( input( name=>'txtGateFoldedSpreadQuantity', value=>$$variable{txtGateFoldedSpreadQuantity},  type=>'cardinal', onkeyup=>'calc(this.form.name);', min=>0 ); ) ?>
 				</p>
 				<p>
 					<label>Supplied Inserts</label>
-					<? echo ( input( name=>'txtInsertQuantity', value=>$$variable{txtInsertQuantity}, type=>'cardinal' ); ) ?>
+					<? echo ( input( name=>'txtInsertQuantity', value=>$$variable{txtInsertQuantity}, type=>'cardinal', min=>0 ); ) ?>
 				</p>
 			<? if ( openprint::ServiceType->find_one( name=>'Tipping') ) ?>
 				<p>
 					<label># of tip-ins</label>
-					<? echo ( input( name=>'TippingQuantity', value=>$$variable{TippingQuantity}, type=>'cardinal' ); ) ?>
+					<? echo ( input( name=>'TippingQuantity', value=>$$variable{TippingQuantity}, type=>'cardinal', min=>0 ); ) ?>
 				</p>
 			<? endif ( openprint::ServiceType->find_one( name=>'Tipping') ) ?>
 			<? if ( openprint::ServiceType->find_one( name=>'Blowing') ) ?>
