@@ -30,7 +30,7 @@ my %variables = (
 	'txtFinalWidth'=>['save'],'txtFinalHeight'=>['save'], 
 	'txtWidth'=>['save','output'],'txtHeight'=>['save','output'],
 	'PrintingType'=>['save'],'rdbTemplateType'=>['save'],
-	'help'=>['output'],'alert'=>['output'],
+	'help'=>['output'],'alert'=>['save','output'],
 	'ProjectIndex'=>[], 'ServiceIndex'=>[], 'ServiceType'=>[],
 	'txtPrice1'=>['save'],
 	'txtPrice2'=>['save'],
@@ -56,10 +56,8 @@ sub no_outputs {
 
 sub calc {
 	my ( $log, $dbh, $variable, $project_index, $service_index, $specs ) = @_;
-$log->debug("Staring SignlePage calc");
 	my $Project = new openprint::Project( $project_index );
 	if ( ! $Project->signatures() ) {
-$log->debug("adding a sig");
 		$Project->add_signature( );
 	} # end if
 	foreach my $qty_index ( $Project->quantity_indexes() ) {
@@ -68,7 +66,7 @@ $log->debug("adding a sig");
 		} # end if
 	}# end foreach
 
-	return $$specs{'Status'} = 'calculated';
+	return $$specs{Status} = 'calculated';
 } # end sub calc
 
 sub calculate_signatures {
@@ -154,12 +152,59 @@ $openprint::log->debug( "Signature: @signatures");
 					( $$sig_specs{'Additional Impositions2'} and @{$$sig_specs{'Additional Impositions2'}} ) or
 					( $$sig_specs{'Additional Impositions3'} and @{$$sig_specs{'Additional Impositions3'}} ) ) {
 					if ( ! @sigs ) {
-						push @sigs, copy_signature( $$Project{'id'}, $sig_specs );
+						push @sigs, $Project->copy_signature( $sig_specs, {
+                            'chkOverrideImposition1' => '',
+                            'chkOverrideImposition2' => '',
+                            'chkOverrideImposition3' => '',
+                            'chkOverridePageQuantity1' => '',
+                            'chkOverridePageQuantity2' => '',
+                            'chkOverridePageQuantity3' => '',
+                            'chkOverridePress1' => '',
+                            'chkOverridePress2' => '',
+                            'chkOverridePress3' => '',
+                            'chkOverrideRunStyle1' => '',
+                            'chkOverrideRunStyle2' => '',
+                            'chkOverrideRunStyle3' => '',
+                            'chkOverrideSheetSize1' => '',
+                            'chkOverrideSheetSize2' => '',
+                            'chkOverrideSheetSize3' => '',
+						},'calculated' );
 					} # endif
 					my $a_ss_id = shift @sigs;
 					my $new_sig_specs = openprint::service::get_specs_ref( $Project, $a_ss_id );
 					my %specs = %{$new_sig_specs};
-					openprint::Estimating::Printing::calc_from_imposition( $Project, $a_ss_id, \%specs, $sig_specs );
+
+					foreach my $qty_index ( $Project->quantity_indexes() ) {
+						my $qty = $Project->quantity($qty_index);
+
+						if ( ! ( $$sig_specs{'Additional Impositions'.$qty_index} and @{$$sig_specs{'Additional Impositions'.$qty_index}} ) ) {
+							$specs{'ddmPress'.$qty_index} = '' if $specs{'chkOverridePress'.$qty_index} ne 'Y';
+							$specs{'PageQuantity'.$qty_index} = '' if $specs{'chkOverridePageQuantity'.$qty_index} ne 'Y';
+							$specs{'txtImposition'.$qty_index} = '';
+							$specs{'StockType'.$qty_index} = '';
+							$specs{'StockWidth'.$qty_index} = '';
+							$specs{'StockHeight'.$qty_index} = '';
+							$specs{'txtPressSheetQty'.$qty_index} = 0;
+							$specs{'hdnNetSheetCount'.$qty_index} = 0;
+							$specs{'StockQuantity'.$qty_index} = 0;
+							if ( $specs{'OverridePrice'.$qty_index} ne 'Y' ) {
+								$specs{'txtPrice'.$qty_index} = sprintf($openprint::config{'ProjectMoneyFormat'}, 0 );
+							} # end if
+							$specs{'txtUnitPrice'.$qty_index} = sprintf($openprint::config{'UnitPriceFormat'}, 0 );
+#$$openprint::log->debug("no additional impos for qty $qty_index");
+							next;
+						} # end if
+						my $Imposition = shift @{$$sig_specs{'Additional Impositions'.$qty_index}};
+						my $price = $$Imposition{price};
+
+						$Imposition->save( \%specs, $qty_index );
+						openprint::Estimating::Printing::save_price( $Project, \%specs, $price, $Imposition, $qty_index );
+						foreach my $k ( keys %{$price} ) {
+							$openprint::log->debug("Price: $k $$price{$k}");
+						}
+						$specs{'hdnBreakdown'.$qty_index} = openprint::Estimating::Printing::breakdown( $price, \%specs );
+
+					} # end foreach qty_index
 
 					my $ac = sql::start_transaction( $openprint::dbh );
 					sql::update( undef, undef, 'tbl_Project_Contents', ['lngProjectIndex=? AND lngServiceIndex=?', $$Project{'id'}, $a_ss_id], 'strStatus', $status );

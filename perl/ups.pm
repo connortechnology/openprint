@@ -292,9 +292,10 @@ sub sendRequest {
 	my ( $log, $url, $content ) = @_;
 
 	$ENV{HTTPS_VERSION} = 3;
-$log->debug($content);
-	my $req = POST $url, [ 'Content-Length' => length($content)];
-	$req->content($content);
+#$log->debug($content);
+	my $req = POST $url, Content=>$content;
+#, [ 'Content-Length' => length($content)];
+	#$req->content($content);
 
 	my $ua = new LWP::UserAgent;
 	my $response = $ua->request($req);
@@ -305,7 +306,7 @@ $log->debug($content);
 		#$log->debug( "Raw Reponse: " . $response->content );
 	} # end if
 
-$log->debug($response->content);
+#$log->debug($response->content);
 	return $response->content;
 } # end sub sendRequest
 

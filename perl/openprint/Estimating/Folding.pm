@@ -428,10 +428,20 @@ sub signature_calc {
 		if ( $$specs{"ddmEquipment-$$sig_specs{SignatureIndex}-$qty_index"} ) {
 			push @my_equipment, new openprint::Equipment( $$specs{"ddmEquipment-$$sig_specs{SignatureIndex}-$qty_index"} );
 		} else {
-			$openprint::log->warn("Folding Equipment override to nothing");
+			my 	%results = (
+					'Price'         => 0,
+					'MPrice'        => 0,
+					'Equipment'     => '',
+					'Status'        => 'calculated',
+					'Folds'         => '',
+					'Breakdown'     => 'Folding Equipment override to nothing',
+                );
+			push @no_outputs, "ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index";
+			return %results;
 		} # end if
 		push @no_outputs, "ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index";
 	} else {
+		@no_outputs = sets::exclude( [ "ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index" ], \@no_outputs );
 		if ( $Press->specification('Sheeter') eq 'Y' ) {
 			if ( $$calc_hash{'Folding::signature_calc::equipment'} ) {
 				@my_equipment = @{$$calc_hash{'Folding::signature_calc::equipment'}};
@@ -1450,9 +1460,10 @@ sub calc {
 				} else {
 					if ( $$specs{"chkOverrideEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} ne 'Y' ) {
 						$$specs{"ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} = '';
+					} elsif ( $$specs{"ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} ) {
+						$status = 'uncalculated';
+						$$specs{'alert'} .= "Unable to fold form $$sig_specs{SignatureIndex} qty $qty_index<br/>";
 					} # end if
-					$status = 'uncalculated';
-					$$specs{'alert'} .= "Unable to fold form $$sig_specs{SignatureIndex} qty $qty_index<br/>";
 				} # end if
 				if ( $results{'Status'} eq 'uncalculated' ) {
 					$status = 'uncalculated';

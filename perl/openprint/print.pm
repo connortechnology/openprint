@@ -21,31 +21,6 @@ sub get_ServiceType {
 	return  new openprint::ServiceType(sql::execute( undef, undef, q{SELECT servicetype_id FROM tbl_Project_Contents WHERE lngProjectIndex=? AND lngServiceIndex=?}, $project_index, $service_index ) );
 } # end sub get_ServiceType
 
-sub save_service {
-	my ( $r, $log, $dbh, $variable, $Project, $service_index ) = @_;
-	
-	my $Service = $Project->Service( $service_index );
-	my $ServiceType = $Service->ServiceType();
-
-	if ( $ServiceType and ( $ServiceType->name() eq 'Proofs' ) ) {
-		openprint::Estimating::Proofs::save_proof_specs( $r, $log, $dbh, $variable, $Project->id(), $service_index );
-	} else {
-		openprint::service::save_service( $r, $log, $dbh, $Project->id(), $service_index );
-	} # end if service_type_id
-	$Service->save({'status'=>($openprint::param{'Status'} ? $openprint::param{'Status'} : 'calculated')}) if $Service->status() and $Service->status() ne 'Completed';
-
-	#sql::update( $log, $dbh, 'tbl_Project_Contents', ['lngProjectIndex=? AND lngServiceIndex=? AND (NOT strStatus=?) OR (strStatus IS NULL)', $Project->id(), $service_index, 'Completed' ], 'strStatus', ($openprint::param{'Status'} ? $openprint::param{'Status'} : 'calculated') );
-	#eval "openprint::service::internal_calc( $log, $dbh, $variable, $project_index, $service_index, $service_type_id );"
-	if ( $ServiceType->id() ) {
-		$Project->add_to_log( @openprint::session{'company_id','user_id'}, $ServiceType->name().' service saved.' );
-	} else {
-		$Project->add_to_log( @openprint::session{'company_id','user_id'}, 'Printing service saved.' );
-	} # end if
-	if ( $r->param('additional_service') eq 'Y' ) {
-		openprint::print_project::insert_service( $log, $dbh, $Project->id(), $ServiceType->name() );
-	} # end if
-} # end sub save_service
-
 # Adds completed/edited services, and then displays the status of the project
 sub view_services {
 	my ( $r, $log, $dbh, $variable ) = @_;
@@ -55,20 +30,14 @@ sub view_services {
 	if ( defined $openprint::param{'btnFunction'} and ( $openprint::param{'btnFunction'} eq 'Save Project' ) ) {
 		$log->debug("*** Time to Save Project - View Services Function ***");
 		$project_index = openprint::print_project::create_edit_process( $r, $log, $dbh, $variable );
-		return if $$variable{'Redirect'};
-		$log->debug("*** Time to Save Project - View Services Function *** $project_index $openprint::session{'project_id'}");
+		return if $$variable{Redirect}; # Redirects on error
 		my $Project = new openprint::Project( $project_index );
-		# On project creation, almost nothing should be done.  On Edit, a recalculate should be done, to pick up any missing 
-		# information, set statuses so that continue project will pick up which service to display.
-		$log->debug("*** Time to Save Project - View Services Function *** $project_index $openprint::session{'project_id'}" . $Project->Type()->type() );
-		# Will insert starting signatures
-		#multipage_signatures( \%openprint::param, $log, $dbh, $variable, $project_index, $$services{''}[0] ) if $Project->Type()->type() eq 'MultiPage';
-		# This calls the calc function for the Project service, if one exists, since they may actually store data, need to pass a s_id
-		# Not strictly needed, because MultiPage::calc will rough in any signatures needed
-		$Project->recalculate();	
+		my $services = $Project->services();
+		my $s = openprint::service::internal_calc( $log, $dbh, $variable, $project_index, $$services{''}[0], $Project->Type()->type() );
+		$log->debug("*** Time to Save Project - View Services Function *** $project_index $openprint::session{'project_id'}");
 		# Display any resulting uncalculated services
 		openprint::print_project::continue_project( $log, $dbh, $variable, $project_index );
-		return if $$variable{'ExternalRedirect'};
+		return if $$variable{ExternalRedirect};
 	} # end if
 
 	$project_index = $openprint::session{'project_id'} if ! $project_index;
@@ -91,28 +60,44 @@ sub view_services {
 				$$variable{'error'} .= $Project->save();
 			} elsif ( $openprint::param{'btnFunction'} eq 'Save Service' ) {
 				# Update the 'current project'
-				$openprint::session{'project_id'} = $project_index;
+				$openprint::session{project_id} = $project_index;
 				$log->debug("** Save Service in View Services Function **");
 
 				my $service_index = $openprint::param{'ServiceIndex'};
-				my $Currency = openprint::Currency::get_current();
 				my $recalc = 0;	
-				save_service( $r, $log, $dbh, $variable, $Project, $service_index );
+				my $Service = $Project->Service( $service_index );
+				my $ServiceType = $Service->ServiceType();
+
+				if ( $ServiceType and ( $ServiceType->name() eq 'Proofs' ) ) {
+					openprint::Estimating::Proofs::save_proof_specs( $r, $log, $dbh, $variable, $Project->id(), $service_index );
+				} else {
+					openprint::service::save_service( $r, $log, $dbh, $Project->id(), $service_index );
+				} # end if service_type_id
+				$Service->save({ status=>($openprint::param{Status} ? $openprint::param{Status} : 'calculated')}) if $Service->status() and $Service->status() ne 'Completed';
+
+				if ( $ServiceType->id() ) {
+					$Project->add_to_log( @openprint::session{'company_id','user_id'}, $ServiceType->name().' service saved.' );
+				} else {
+					$Project->add_to_log( @openprint::session{'company_id','user_id'}, 'Printing service saved.' );
+				} # end if
+
+				my $Currency = openprint::Currency::get_current();
 				if ( $Project->currency_id() != $Currency->id() ) {
 					$Project->Currency( $Currency );
 					# Change of currency calls for complete recalc
 					$recalc = 1;
 				} # end if
 
-				if ( (!$openprint::param{'ServiceType'} ) or $recalc ) {
+				if ( (!$openprint::param{ServiceType} ) or $recalc ) {
 					multipage_signatures( \%openprint::param, $log, $dbh, $variable, $project_index, $service_index );
 					my $s = openprint::service::internal_calc( $log, $dbh, $variable, $project_index, $service_index, $Project->Type()->type() );
 					if ( $$s{Status} ne 'calculated' ) {
 						$log->error("Error calculting Project service");
+						# Don't want to redirect because it would be annoying.  Just go to view.
 					} else {
 						openprint::Estimating::MultiPage::calculate_signatures( $Project );
+						$recalc = 1;
 					} # end if
-					$recalc = 1;
 				} elsif ( $openprint::param{'ServiceType'} eq 'Printing' ) {
 					openprint::Estimating::MultiPage::calculate_signatures( $Project );
 					openprint::service::internal_calc( $log, $dbh, $variable, $project_index, $$services{''}[0], $Project->Type()->type() );
@@ -288,41 +273,11 @@ sub multipage_signatures {
 
 	my %specified_pages;
 
-	foreach my $k ( keys %$param ) {
-		if ( $k =~ /^txtSignatureType(\d*)/ ) {
-			my $group_id = $1;
-$log->debug("special group $group_id");
-
-			if ( $$param{'GroupPageQuantity'.$group_id} and ! $Project->signatures({'Group'=>$group_id}) ) {
-				$log->debug("adding special group $group_id");
-				my $print_service_index = $Project->add_signature( 'Signature', undef, undef, {
-						#'txtSignatureType'=>'Interior Pages',
-						#'txtServiceDescription'=>'Interior Pages',
-						'Group'	=>	$group_id,
-						'PrintingType'=>$$param{'PrintingType'},
-						'txtSpreadSize'	=>	$$param{'txtSpreadSize'},
-						} );
-				push @{$$services{'Signature'}}, $print_service_index;
-			} # end if
-
-			$specified_pages{$$param{$k}} += $$param{'GroupPageQuantity'.$group_id};
-			if ( $group_id > $max_group ) {
-				$max_group = $group_id;
-			} # end if
-		} # end if
-	} # end foreach param
-	$max_group = 3 if $max_group < 3; # Reserver 1, 2, 3 for Cover, Interior, Gate
-	$openprint::log->debug("Max group: $max_group");
-
-foreach my $k ( keys %specified_pages ) {
-$openprint::log->debug("Specified Pages: $k => $specified_pages{$k}" );
-} # end foreach
-
 	if ( $$param{'rdbCover'} eq 'Different' ) {
 # now add a cover spread if we need one.
 # First, see if we have one.
 		if ( ! $Project->signatures({'type'=>'Cover Pages'}) ) {
-			push @{$$services{'Signature'}}, $Project->add_signature( 'Signature', undef, undef, {
+			push @{$$services{'Signature'}}, $Project->add_signature( undef, undef, {
 						'txtSignatureType'=>'Cover Pages',
 						'txtServiceDescription'=>'Cover',
 						'Group'	=>	1,
@@ -346,13 +301,40 @@ $openprint::log->debug("Specified Pages: $k => $specified_pages{$k}" );
 		} # end foreach
 	} # end if Self or Different Cover
 
+
+	foreach my $k ( keys %$param ) {
+		if ( $k =~ /^txtSignatureType(\d*)/ ) {
+			my $group_id = $1;
+$log->debug("group $group_id");
+
+			if ( $$param{'GroupPageQuantity'.$group_id} and ! $Project->signatures({'Group'=>$group_id}) ) {
+				$log->debug("adding special group $group_id");
+				my $print_service_index = $Project->add_signature( undef, undef, {
+						#'txtSignatureType'=>'Interior Pages',
+						#'txtServiceDescription'=>'Interior Pages',
+						'Group'	=>	$group_id,
+						'PrintingType'=>$$param{'PrintingType'},
+						'txtSpreadSize'	=>	$$param{'txtSpreadSize'},
+						} );
+				push @{$$services{'Signature'}}, $print_service_index;
+			} # end if
+
+			$specified_pages{$$param{$k}} += $$param{'GroupPageQuantity'.$group_id};
+			if ( $group_id > $max_group ) {
+				$max_group = $group_id;
+			} # end if
+		} # end if
+	} # end foreach param
+	$max_group = 3 if $max_group < 3; # Reserver 1, 2, 3 for Cover, Interior, Gate
+	$openprint::log->debug("Max group: $max_group");
+
 # On each call to this, we save, then check to see if there are any unspecified signatures
 
 	# Now, make sure that we have all the gate spreads that we need
 	my @gate_spread_services = $Project->signatures({'type'=>'Gate Folded Pages'});
 	my $need_gate_spreads = int($$param{'txtGateFoldedSpreadQuantity'}) - scalar @gate_spread_services;
 	while ( $need_gate_spreads > 0 ) {
-		push @{$$services{'Signature'}}, $Project->add_signature( 'Signature', undef, undef, {
+		push @{$$services{'Signature'}}, $Project->add_signature( undef, undef, {
 				'txtSignatureType'=>'Gate Folded Pages',
 				'txtServiceDescription'=>'Gate Folded Pages',
 				'Group'	=>	3,
@@ -364,7 +346,7 @@ $openprint::log->debug("Specified Pages: $k => $specified_pages{$k}" );
 	if ( ! $Project->signatures({'type'=>'Interior Pages'}) ) {
 # Must have at least 1 interioer signature
 		$log->debug('add interiorpages');
-		my $print_service_index = $Project->add_signature( 'Signature', undef,  undef, {
+		my $print_service_index = $Project->add_signature( undef,  undef, {
 				'txtSignatureType'=>'Interior Pages',
 				'txtServiceDescription'=>'Interior Pages',
 				'Group'	=>	2,
@@ -540,6 +522,10 @@ sub get_book_type {
 			return $service;
 		} # end if
 	} # end foreach
+	my $printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
+	if ( $$printing_specs{'rdbTemplateType'} eq 'PerfectBound' ) {
+		return 'PerfectBound';
+	} # end if
 	return;
 } # end sub get_book_type
 

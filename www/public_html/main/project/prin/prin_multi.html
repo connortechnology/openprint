@@ -96,6 +96,9 @@ if ( 0 ) {
                 input( type=>'float', id=>'txtFinalHeight', name=>'txtFinalHeight', value=>$$variable{txtFinalHeight}, onkeyup=>'dimensions_onChange(this.form);', min=>0, title=>'Final Height in inches' ),
 				); ) ?>
 				</p>
+				<p><label>Spine</label>
+					<?echo(radio('spine', [ map { $_, $_ } 'height', 'width' ], $$variable{spine}, { default=>'height', onclick=>'calc(this.form.name)' } ); ) ?>
+				</p>
 				<p><label>Spread</label>
                 <? echo ( join( "\n",
 				
@@ -121,16 +124,16 @@ if ( 0 ) {
 				<div id="GateInsert">
 				<p>
 					<label><? echo ( writeTip( 'Gate Folded' ); ) ?> pages</label>
-					<? echo ( input( name=>'txtGateFoldedSpreadQuantity', value=>$$variable{txtGateFoldedSpreadQuantity},  type=>'cardinal', onkeyup=>'calc(this.form.name);' ); ) ?>
+					<? echo ( input( name=>'txtGateFoldedSpreadQuantity', value=>$$variable{txtGateFoldedSpreadQuantity},  type=>'cardinal', onkeyup=>'calc(this.form.name);', min=>0 ); ) ?>
 				</p>
 				<p>
 					<label>Supplied Inserts</label>
-					<? echo ( input( name=>'txtInsertQuantity', value=>$$variable{txtInsertQuantity}, type=>'cardinal' ); ) ?>
+					<? echo ( input( name=>'txtInsertQuantity', value=>$$variable{txtInsertQuantity}, type=>'cardinal', min=>0 ); ) ?>
 				</p>
 			<? if ( openprint::ServiceType->find_one( name=>'Tipping') ) ?>
 				<p>
 					<label># of tip-ins</label>
-					<? echo ( input( name=>'TippingQuantity', value=>$$variable{TippingQuantity}, type=>'cardinal' ); ) ?>
+					<? echo ( input( name=>'TippingQuantity', value=>$$variable{TippingQuantity}, type=>'cardinal', min=>0 ); ) ?>
 				</p>
 			<? endif ( openprint::ServiceType->find_one( name=>'Tipping') ) ?>
 			<? if ( openprint::ServiceType->find_one( name=>'Blowing') ) ?>

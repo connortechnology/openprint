@@ -1,10 +1,11 @@
 package openprint::Estimating::ClipSealing;
 use strict;
 
-use POSIX            qw(ceil);
+require POSIX;
 require openprint::service;
 
 my @variables = (
+	'alert',
 	'SealQuantity','SealType_id',
 	'ddmEquipment1', 'ddmEquipment2', 'ddmEquipment3',
 	'txtQuantity1', 'txtQuantity2', 'txtQuantity3',
@@ -67,7 +68,7 @@ sub calc {
 					next;
 				} # end if
 			} # end if
-			my $runs = ceil( $$specs{'SealQuantity'} / $clips_per_run );
+			my $runs = POSIX::ceil( $$specs{'SealQuantity'} / $clips_per_run );
 
 			my $totalPrice = 0;
 			my %MakeReadyPrice = openprint::service::get_price_object( 'ClipSealingMakeReady', undef, $Equipment );
@@ -158,10 +159,9 @@ sub display {
 
 	my $Project = new openprint::Project( $project_index );
 	my $services = $Project->services();
-	my @possible_equipment = openprint::Equipment->find( Specifications => {'ClipSealing Capable'=>['Y',
+	$$variable{Equipment} = [ openprint::Equipment->find( Specifications => {'ClipSealing Capable'=>['Y',
 			( $$services{Folding} ? 'When Folding' : () )
-]}, useinestimating=>1,'order'=>'lower(strName)');
-	@{$$variable{'Equipment'}} = @possible_equipment;
+			]}, useinestimating=>1,'order'=>'lower(strName)') ];
 } # end sub display
 
 sub save {

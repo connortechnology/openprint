@@ -100,7 +100,8 @@ $log->debug("variables: @variables");
 	eval( 'openprint::Estimating::'.$service_type.'::save( $project_index, $service_index, \%openprint::param )');
 	$log->error($@) if $@;
 
-	if ( $openprint::param{'Additional'} eq 'Y' ) {
+	# FIXME: should clean this up
+	if ( $openprint::param{'Additional'} eq 'Y' or $openprint::param{'additional_service'} eq 'Y' ) {
 		openprint::print_project::insert_service( $log, $dbh, $project_index, $service_type );
 	} # end if
 

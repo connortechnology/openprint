@@ -22,7 +22,7 @@ sub new {
 	if ( ref $opts eq 'HASH' ) {
 		$$self{level} = $levels{$$opts{level}};
 		$self->file( $$opts{file} );
-	} else {
+	} elsif ( $opts ) {
 		$self->{level} = $levels{$opts};
 		$self->file();
 	} # end if

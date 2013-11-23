@@ -1082,6 +1082,7 @@ sub User {
 } # end sub User
 
 # Was added when writing the PPF Monnitor, can be used to add a specific signature
+# it uses add-service, which clears Services hash
 sub add_signature {
 	my ( $self, $sig_index, $status, $data ) = @_;
 	
@@ -1090,6 +1091,7 @@ sub add_signature {
 	my $print_service_index = $self->add_service( 'Signature', $data );
 	if ( ! $print_service_index ) {
 		$log->error("Error adding Signature!");
+		sql::end_transaction( $dbh, $ac );
 		return;
 	} # end if
 	openprint::service::status( $self->id(), $print_service_index, $status ) if $status;

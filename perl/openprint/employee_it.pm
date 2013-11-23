@@ -93,6 +93,13 @@ sub host {
 				'mac'		=> $Host->get_mac(),
 				});
 		} # end if
+	} elsif ( $param{action} eq 'Delete' ) {
+		$variable{error} .= $Host->delete();
+		if ( ! $variable{error} ) {
+			$variable{ExternalRedirect} = '/employee/it/hosts.html';
+			return;
+		} # end if
+		%param = ();
 	} elsif ( $param{action} eq 'Wake' ) {
 		foreach my $mac ( @{ $Host->mac() } ) {
 			`wakeonlan $mac`;

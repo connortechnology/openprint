@@ -30,7 +30,7 @@ my %variables = (
 		'hdnBreakdown1'=>['output'],'hdnBreakdown2'=>['output'],'hdnBreakdown3'=>['output'],
         'txtQuantity1'=>['save'], 'txtQuantity2'=>['save'], 'txtQuantity3'=>['save'],
         'ServiceType'=>[],
-		'alert'=>['output'],'Status'=>['output'],
+		'alert'=>['save','output'],'Status'=>['output'],
 		'txtInsertQuantity'=>['save','output'],'chkOverrideInsertQuantity'=>['save'],
 		'txtCalliper'=>['save','output'],
 		'OverrideImposition1'=>['save'], 'OverrideImposition2'=>['save'], 'OverrideImposition3'=>['save'],
@@ -170,7 +170,13 @@ sub signature_calc {
 	} # end if
 
 	# Need to figure out which dimension the spine bisects
-	if ( ( $$printing_specs{'txtFinalWidth'} == $$printing_specs{'txtWidth'} ) and ( $$printing_specs{'txtFinalHeight'} != $$printing_specs{'txtHeight'} ) ) {
+	if ( $$printing_specs{spine} ) {
+		if ( $$printing_specs{spine} eq 'width' ) {
+			@$specs{'Width','Height'} = @$printing_specs{'txtFinalHeight','txtFinalWidth'};
+		} else {
+			@$specs{'Width','Height'} = @$printing_specs{'txtFinalWidth','txtFinalHeight'};
+		} # end if
+	} elsif ( ( $$printing_specs{'txtFinalWidth'} == $$printing_specs{'txtWidth'} ) and ( $$printing_specs{'txtFinalHeight'} != $$printing_specs{'txtHeight'} ) ) {
 		@$specs{'Width','Height'} = @$printing_specs{'txtFinalHeight','txtFinalWidth'};
 	} elsif ( ( $$printing_specs{'txtFinalWidth'} != $$printing_specs{'txtWidth'} ) and ( $$printing_specs{'txtFinalHeight'} == $$printing_specs{'txtHeight'} ) ) {
 		@$specs{'Width','Height'} = @$printing_specs{'txtFinalWidth','txtFinalHeight'};
@@ -476,7 +482,13 @@ sub calc {
 	} # end if
 
 	# Need to figure out which dimension the spine bisects
-	if ( ( $$printing_specs{'txtFinalWidth'} == $$printing_specs{'txtWidth'} ) and ( $$printing_specs{'txtFinalHeight'} != $$printing_specs{'txtHeight'} ) ) {
+	if ( $$printing_specs{spine} ) {
+		if ( $$printing_specs{spine} eq 'width' ) {
+			@$specs{'Width','Height'} = @$printing_specs{'txtFinalHeight','txtFinalWidth'};
+		} else {
+			@$specs{'Width','Height'} = @$printing_specs{'txtFinalWidth','txtFinalHeight'};
+		} # end if
+	} elsif ( ( $$printing_specs{'txtFinalWidth'} == $$printing_specs{'txtWidth'} ) and ( $$printing_specs{'txtFinalHeight'} != $$printing_specs{'txtHeight'} ) ) {
 		@$specs{'Width','Height'} = @$printing_specs{'txtFinalHeight','txtFinalWidth'};
 	} elsif ( ( $$printing_specs{'txtFinalWidth'} != $$printing_specs{'txtWidth'} ) and ( $$printing_specs{'txtFinalHeight'} == $$printing_specs{'txtHeight'} ) ) {
 		@$specs{'Width','Height'} = @$printing_specs{'txtFinalWidth','txtFinalHeight'};

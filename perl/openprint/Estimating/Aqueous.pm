@@ -31,6 +31,7 @@ use vars qw( @outputs );
 # This service doesn't store it's own data, other than price.  It gets the info from the printing service.
 #
 my @variables = (
+	'alert',
 	'txtQuantity1','txtQuantity2','txtQuantity3',
 	'Markup1', 'Markup2', 'Markup3',
 	'txtPrice1','txtPrice2','txtPrice3',

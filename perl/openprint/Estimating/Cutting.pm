@@ -60,13 +60,9 @@ sub variables {
 			push @v, "ddmStockCutEquipment-$$specs{'SignatureIndex'}-$qty_index";
 			push @v, "chkOverrideStockCutEquipment-$$specs{'SignatureIndex'}-$qty_index";
 			push @v, "chkOverrideCalculatedCuts-$$specs{'SignatureIndex'}-$qty_index";
-			push @v, "OverrideVerticalCuts-$$specs{'SignatureIndex'}-$qty_index";
 			push @v, "txtVerticalCuts-$$specs{'SignatureIndex'}-$qty_index";
-			push @v, "OverrideHorizontalCuts-$$specs{'SignatureIndex'}-$qty_index";
 			push @v, "txtHorizontalCuts-$$specs{'SignatureIndex'}-$qty_index";
-			push @v, "OverrideDVerticalCuts-$$specs{'SignatureIndex'}-$qty_index";
 			push @v, "txtDVerticalCuts-$$specs{'SignatureIndex'}-$qty_index";
-			push @v, "OverrideDHorizontalCuts-$$specs{'SignatureIndex'}-$qty_index";
 			push @v, "txtDHorizontalCuts-$$specs{'SignatureIndex'}-$qty_index";
 		} # end foreach
 	} # end foreach
@@ -422,7 +418,8 @@ sub signature_calc {
 	} # end if
 
 	my %results = (
-			'Status'	=> 'calculated',
+			Status	=> 'calculated',
+			Breakdown	=>	'<b>Post press:</b><br/>',
 			);
 	my $services = $Project->services();
 	my $printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] ) if $$services{''} and @{$$services{''}};
@@ -567,10 +564,14 @@ sub signature_calc {
 			next;
 		} # end if
 				
+		my $liftDepth;
+		if ( $$services{'UVCoating'} and openprint::Estimating::UVCoating::signature_needs( $Project, $sig_specs ) ) {
+			$liftDepth = $Equipment->specification( 'Maximum Lift Depth with UVCoating' );
+		} # end if
+		$liftDepth = $Equipment->specification( 'Maximum Lift Depth', $calliper ) if ! $liftDepth;
+		$results{'Breakdown'} .= "(Lift: $liftDepth)<br/>";
 # calculate cuts
 		my $vertical_cuts = 0;
-		$results{'Breakdown'} .= '<b>Regular Cuts: calliper:' . $calliper.'</b><br/>';
-
 # interior vertical cuts = $sig_specs{'hdnImpositionColumns'}-1
 		if ( exists $$sig_specs{'txtSignatureType'} ) {
 # Regular book signatures will be trimmed by the stitcher, so we only need 1 cut per imposition
@@ -697,41 +698,21 @@ sub signature_calc {
 			} # end if dutch imposition
 		} # end if exists signaturetype
 
-		if ( $$specs{'OverrideVerticalCuts-'.$signature_index.'-'.$qty_index} eq 'Y' ) {
+		if ( $$specs{'chkOverrideCalculatedCuts-'.$signature_index.'-'.$qty_index} eq 'Y' ) {
 			$vertical_cuts = $$specs{"txtVerticalCuts-$signature_index-$qty_index"};
-		} else {
-			$$specs{"txtVerticalCuts-$signature_index-$qty_index"} = $vertical_cuts;
-		}
-
-		if ( $$specs{'OverrideHorizontalCuts-'.$signature_index.'-'.$qty_index} eq 'Y' ) {
 			$horizontal_cuts = $$specs{"txtHorizontalCuts-$signature_index-$qty_index"};
-		} else {
-			$$specs{"txtHorizontalCuts-$signature_index-$qty_index"} = $horizontal_cuts;
-		}
-
-		if ( $$specs{'OverrideDVerticalCuts-'.$signature_index.'-'.$qty_index} eq 'Y' ) {
 			$dutch_vertical_cuts = $$specs{"txtDVerticalCuts-$signature_index-$qty_index"};
-		} else {
-			$$specs{"txtDVerticalCuts-$signature_index-$qty_index"} = $dutch_vertical_cuts;
-		}
-
-		if ( $$specs{'OverrideDHorizontalCuts-'.$signature_index.'-'.$qty_index} eq 'Y' ) {
 			$dutch_horizontal_cuts = $$specs{"txtDHorizontalCuts-$signature_index-$qty_index"};
 		} else {
+			$$specs{"txtVerticalCuts-$signature_index-$qty_index"} = $vertical_cuts;
+			$$specs{"txtHorizontalCuts-$signature_index-$qty_index"} = $horizontal_cuts;
+			$$specs{"txtDVerticalCuts-$signature_index-$qty_index"} = $dutch_vertical_cuts;
 			$$specs{"txtDHorizontalCuts-$signature_index-$qty_index"} = $dutch_horizontal_cuts;
-		}
-
-		if ( $$specs{'chkOverrideCalculatedCuts-'.$signature_index.'-'.$qty_index} ne 'Y' ) {
 			$$specs{"txtCalculatedCuts-$signature_index-$qty_index"} = $vertical_cuts + $horizontal_cuts + $dutch_vertical_cuts + $dutch_horizontal_cuts;
 		}
+
 		my $cuts = $$specs{"txtCalculatedCuts-$signature_index-$qty_index"};
 
-		my $liftDepth;
-		if ( $$services{'UVCoating'} and openprint::Estimating::UVCoating::signature_needs( $Project, $sig_specs ) ) {
-			$liftDepth = $Equipment->specification( 'Maximum Lift Depth with UVCoating' );
-		} # end if
-		$liftDepth = $Equipment->specification( 'Maximum Lift Depth', $calliper ) if ! $liftDepth;
-		$results{'Breakdown'} .= "(Lift: $liftDepth)<br/>";
 		my $totalPrice = 0;
 		my $mprice = 0;
 		my $price;
@@ -901,7 +882,7 @@ sub calc {
 	my $services = $Project->services();
 	my $calc_hash = {};
 
-	my @signatures = $Project->signatures();
+	my @signatures = $Project->signatures({sort=>1});
 
 	foreach my $qty_index ( $Project->quantity_indexes() ) {
 		$$specs{'txtQuantity'.$qty_index} = $Project->quantity($qty_index) if ! $$specs{"txtQuantity$qty_index"};
@@ -927,7 +908,7 @@ sub calc {
 
 			@variables = sets::union( @variables, ( "txtStockCalliper-$signature_index",
 						"txtCalculatedCuts-$signature_index-$qty_index", "chkOverrideCalculatedCuts-$signature_index-$qty_index",
-						"txtStockCuts-$signature_index-$qty_index", "chkOverrideCalculatedCuts-$signature_index-$qty_index",
+						"txtStockCuts-$signature_index-$qty_index", 
 						"txtAdditionalCuts$signature_index" ) 
 					);
 
@@ -937,14 +918,12 @@ sub calc {
 						"txtSheetSizeHeight-$signature_index-$qty_index",
 						)	);
 #added on 16-july-2008
-			@variables = sets::union( @variables, ( "txtVerticalCuts-$signature_index-$qty_index",
-						"OverrideVerticalCuts-$signature_index-$qty_index",
+			@variables = sets::union( @variables, ( 
+						"txtVerticalCuts-$signature_index-$qty_index",
 						"txtHorizontalCuts-$signature_index-$qty_index",
-						"OverrideHorizontalCuts-$signature_index-$qty_index",
 						"txtDVerticalCuts-$signature_index-$qty_index",
-						"OverrideDVerticalCuts-$signature_index-$qty_index",
 						"txtDHorizontalCuts-$signature_index-$qty_index",
-						"OverrideDHorizontalCuts-$signature_index-$qty_index",
+						"OverrideCalculatedCuts-$signature_index-$qty_index",
 						)	);
 
 			if ( ( $$sig_specs{'StockType'.$qty_index} ne 'Roll' ) and ( $$sig_specs{"hdnSuppliedStockWidth$qty_index"} != $$sig_specs{'StockWidth'.$qty_index} or $$sig_specs{"hdnSuppliedStockHeight$qty_index"} != $$sig_specs{'StockHeight'.$qty_index} ) ) {

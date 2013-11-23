@@ -1,4 +1,4 @@
-#!/usr/bin/perl
+#!/usr/bin/perl 
 use lib '/var/www/testing/perl';
 use strict;
 
@@ -113,9 +113,12 @@ print "Trying $re against $line\n" if $opts->{debug};
 							print "Got $ip for $source\n" if $opts->{debug};
 						} # end if
 					} # end if
+
+					next if $ip eq '127.0.0.1';
 					
 					if ( $ip and @whitelist and sets::isin( $ip, \@whitelist ) ) {
 						print "$ip is whitelisted\n" if $opts->{debug};
+						next;
 					} # end if
 					if ( ! $ip ) {
 						print "No ip for $source\n" if $opts->{debug};
@@ -150,9 +153,10 @@ print "Trying $re against $line\n" if $opts->{debug};
 } # end foreach
 
 foreach my $ip ( sort keys %host_counts ) {
-	next if ! $host_counts{$ip}{'update'};
-	if ( $host_counts{$ip}{'count'} > 20 ) { 
-		$host_counts{$ip}{'blacklist'}=1;
+	next if ! $host_counts{$ip}{update};
+	next if $host_counts{$ip}{whitelist};
+	if ( $host_counts{$ip}{count} > 20 ) { 
+		$host_counts{$ip}{blacklist}=1;
 	} # end if
 	$_ = $host_counts{$ip}->save();
 	if ( $_ ) {
@@ -186,10 +190,10 @@ if ( $opts->{'blacklist'} ) {
 		if ( $macs and @{$macs} ) {
 			foreach my $mac ( @{$macs} ) {
 				$mac =~ s/:/\-/g;
-				`shorewall drop ~$mac`;
+				`/sbin/shorewall drop ~$mac`;
 			} # end foreach mac
 		} elsif ( $Host->ip() ) {
-			`shorewall drop $$Host{ip}`;
+			`/sbin/shorewall drop $$Host{ip}`;
 		} # end if
 	} # end foreach Host
 } # end if

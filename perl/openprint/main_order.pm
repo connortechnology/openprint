@@ -549,6 +549,9 @@ sub _CustomerPickUp {
 sub _view_log {
 } # end sub _view_log
 sub _UPS {
+	$variable{Project} = new openprint::Project( $param{project_id} );
+	$variable{ProjectIndex} = $variable{Project}->id();
+	$variable{Order} = $variable{Project}->Order();
 } # end sub _UPS
 sub _order {
 	if ( $param{action} eq 'select_quantity' ) {
