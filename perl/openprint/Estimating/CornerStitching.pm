@@ -24,6 +24,7 @@ require sql;
 
 # This is an array of all the variables that need to be saved to the database for this service.
 my @variables = (
+		'alert',
 		'txtPageQuantity',
 		'ddmEquipment1',
 		'ddmEquipment2',
@@ -93,7 +94,7 @@ sub calc {
 	my @possible_equipment;
 
 	my $error = '';
-	my @all_equipment = openprint::Equipment->find( 'Specifications' => {'Stitching Capable'=>'Y'}, 'useinestimating'=>1,'order'=>'strName');
+	my @all_equipment = openprint::Equipment->find( Specifications => {'Stitching Capable'=>'Y'}, useinestimating=>1, order=>'strName');
 
 	foreach my $Equipment ( @all_equipment ) {
 

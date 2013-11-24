@@ -9,15 +9,10 @@ use vars qw( $log %session $debug $table $serial %fields %transforms %defaults %
 
 require sql;
 require openprint::Location;
-require openprint::Paper;
-require openprint::PaperInventory;
-require openprint::SkidContent;
 require openprint::RFIDTag;
 require openprint::Skid_Verification;
 require openprint::Project;
 require openprint::SkidContent;
-require openprint::Manifest;
-require openprint::ManifestContent;
 require openprint::InventoryCondition;
 
 $debug = 0;
@@ -451,7 +446,7 @@ sub location {
 		$self->location_id( $Location->id() );
 	} # end if
 	return new openprint::Location( $$self{location_id} )->name();
-} # end if
+} # end sub location
 
 sub location_id {
 
@@ -686,11 +681,13 @@ sub Manifest {
 	if ( my $MC = $_[0]->ManifestContent() ) {
 		return $MC->Manifest();
 	} # end if
+	require openprint::Manifest;
 	return new openprint::Manifest();
 } # end sub Manifest
 
 sub ManifestContent {
 	if ( ! $_[0]{'ManifestContent'} ) {
+		require openprint::ManifestContent;
 		$_[0]{'ManifestContent'} = openprint::ManifestContent->find_one('skid_id'=>$_[0]{id});
 	} # end if
 	return $_[0]{'ManifestContent'};
@@ -757,6 +754,7 @@ sub used {
 sub merge {
 	my ( $Keep, $Merge ) = @_;
 	
+	require openprint::ManifestContent;
 	my $ac = sql::start_transaction( $openprint::dbh );
 	foreach my $MC ( openprint::ManifestContent->find( skid_id=>$$Merge{id} ) ) {
 		if ( $MC->rfidtag_id() and $Keep->rfidtag_id() and ( $MC->rfidtag_id() ne $Keep->rfidtag_id() ) ) {

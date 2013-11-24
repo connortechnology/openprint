@@ -25,8 +25,8 @@ $sql_server{'password'} = $sql_server{'login'} if ! $sql_server{'password'};
 
 $openprint::Object::no_cache = 1;
 my $projects_count = 100;
-my $project_id = 0;
-my $company_id = 1;
+my $project_id = 112143;
+my $company_id = 0;
 
 $dbh = sql::open_sql( $log, %sql_server );
 my @projects;

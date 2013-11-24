@@ -220,7 +220,6 @@ sub calc {
 
 sub signature_calc {
 	my ( $Project, $service_index, $specs, $signature_service_index, $sig_specs, $qty_index, $imposition ) = @_;
-$openprint::log->debug("Scoring signature_calc");
 	my %Results = (
 		'Status' => 'calculated',
 		'Breakdown'	=>	'',
@@ -390,12 +389,12 @@ $openprint::log->debug("Scoring signature_calc");
 							( $orientation eq 'Landscape' and $I->layout_width() >= $I->layout_height() )
 					   ) {
 						if ( $I->layout_width() >= $max_feed_width ) {
-							$Results{'Breakdown'} .= "Score no good due to max feed width($max_feed_width) on width ($$sig_specs{txtWidth}).<br/>";
+							$Results{'Breakdown'} .= "Perf no good due to max feed width($max_feed_width) on width ($$sig_specs{txtWidth}).<br/>";
 							next;
 						} # end if
 					} else {
 						if ( $I->layout_height() >= $max_feed_width ) {
-							$Results{'Breakdown'} .= "Score no good due to max feed width($max_feed_width) on width ($$sig_specs{txtHeight}).<br/>";
+							$Results{'Breakdown'} .= "Perf no good due to max feed width($max_feed_width) on width ($$sig_specs{txtHeight}).<br/>";
 							next;
 						} # end if
 					} # end if
@@ -407,7 +406,7 @@ $openprint::log->debug("Scoring signature_calc");
 						if ( $I->image_orientation() eq 'Vertical' ) {
 							$Results{'Breakdown'} .= 'Running ' . $I->layout_width() . ' ' . $I->image_orientation() . ' on feed of ' . $max_feed_width . '<br/>';
 							if ( $I->layout_width() >= $max_feed_width ) {
-								$Results{'Breakdown'} .= "Score no good due to max feed width($max_feed_width) on width (".$I->layout_width().").<br/>";
+								$Results{'Breakdown'} .= "Perf no good due to max feed width($max_feed_width) on width (".$I->layout_width().").<br/>";
 								next;
 							} # end if
 						} else {
@@ -417,7 +416,7 @@ $openprint::log->debug("Scoring signature_calc");
 						if ( $I->image_orientation() eq 'Horizontal' ) {
 							$Results{'Breakdown'} .= 'Running ' . $I->layout_height() . ' on feed of ' . $max_feed_width . '<br/>';
 							if ( $I->layout_height() >= $max_feed_width ) {
-								$Results{'Breakdown'} .= "Score no good due to max feed width($max_feed_width) on width (".$I->layout_height().").<br/>";
+								$Results{'Breakdown'} .= "Perf no good due to max feed width($max_feed_width) on width (".$I->layout_height().").<br/>";
 								next;
 							} # end if
 						} else {

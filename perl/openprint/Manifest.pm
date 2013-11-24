@@ -10,7 +10,6 @@ require sql;
 require openprint::Manifest_Content_Type;
 require openprint::ManifestContent;
 require openprint::PurchaseOrder;
-require openprint::Company;
 
 $table = 'manifests';
 $serial = 'manifests_id_seq';
@@ -106,6 +105,7 @@ sub Contents {
 } # end sub Contents
 
 sub Vendor {
+	require openprint::Company;
 	return new openprint::Company( $_[0]{'supplier_id'} );
 } # end sub Vendor
 

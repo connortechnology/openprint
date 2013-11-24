@@ -34,9 +34,15 @@ function submit_handler( formName ) {
 	if ( ! form ) {
 		return false;
 	}
+	var AlertDiv = $('AlertDiv');
+	if ( AlertDiv && AlertDiv.innerHTML ) {
+		if ( ! confirm( "There are unresolved errors:\n\n" + AlertDiv.innerHTML + "\n\n Click OK to continue saving, or Cancel to stop and fix the problem." ) ) {
+			return false;
+		} // end if
+	} // end if
 
 	if ( gettingNewPrice && ! confirm('The system is still calculating a price.  Click OK to continue saving, or Cancel to wait for the system') ) {
-		return;
+		return false;
 	} // end if
 
 	var status = true;
@@ -74,7 +80,11 @@ function calc( formName, force, options ) {
 			timeout = setTimeout( "calc('" + formName + "');", 1000 );
 		} else {
 			timeout = null;
-			remove_div('AlertDiv');
+			var AlertDiv = $('AlertDiv');
+			if ( AlertDiv ) {
+				AlertDiv.innerHTML = '';
+				AlertDiv.hide();
+			} // end if
 			var div = $('InformationDiv');
 			if ( div ) {
 				div.innerHTML = 'Calculating';
@@ -98,7 +108,11 @@ function calc( formName, force, options ) {
 function cbFillResults( results ) {
 	block_calc = true;
     var form = getFormObj('f1');
-	$('AlertDiv').hide();
+	var AlertDiv = $('AlertDiv');
+	if ( AlertDiv ) {
+		AlertDiv.innerHTML = '';
+		AlertDiv.hide();
+	} // end if
 	if ( $('InformationDiv') )
 		$('InformationDiv').hide();
 	var keys = results.keys();
@@ -109,7 +123,7 @@ function cbFillResults( results ) {
 	
 		if ( key == 'alert') {
 			if (value != '') {
-				var div = $("AlertDiv");
+				var div = $('AlertDiv');
 				if ( div ) {
 					div.innerHTML = value;
 					div.show();

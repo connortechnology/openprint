@@ -4,9 +4,6 @@ our @ISA = qw(openprint::Object);
 
 use vars qw( $debug %fields %find_fields %transforms %defaults $table $serial );
 
-require openprint::StockPurpose;
-require openprint::InventoryCondition;
-require openprint::ManifestContent;
 
 $debug = 0;
 
@@ -41,6 +38,7 @@ sub purpose {
 } # end sub purpose
 
 sub Purpose {
+	require openprint::StockPurpose;
 	return new openprint::StockPurpose( $_[0]{purpose_id} );
 } # end sub Purpose
 
@@ -78,6 +76,7 @@ sub allocated {
 sub condition {
     my ( $self, $condition ) = @_;
 
+	require openprint::InventoryCondition;
     if ( defined $condition ) {
 		$condition = openprint::InventoryCondition->transform('name', $condition );
 		my $Condition = openprint::InventoryCondition->find_one('name lc'=>$condition);
@@ -93,6 +92,7 @@ sub condition {
 } # end sub condition
 
 sub Condition {
+	require openprint::InventoryCondition;
 	return new openprint::InventoryCondition( $_[0]{'condition_id'} );
 } # end sub Condition
 
@@ -101,6 +101,7 @@ sub Condition {
 sub cost {
 	my $self = $_[0];
 	if ( ! exists $$self{'cost'} ) {
+require openprint::ManifestContent;
 		my @MCS = openprint::ManifestContent->find('skid_id'=>$$self{'skid_id'});
 		foreach my $MC ( @MCS ) {
 			my $Type = $MC->Type();
@@ -125,6 +126,7 @@ sub cost {
 sub value {
 	my $self = $_[0];
 	if ( ! exists $$self{'value'} ) {
+require openprint::ManifestContent;
 		my @MCS = openprint::ManifestContent->find( skid_id=>$$self{'skid_id'});
 		foreach my $MC ( @MCS ) {
 			my $Type = $MC->Type();
