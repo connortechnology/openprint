@@ -3601,7 +3601,7 @@ $openprint::log->debug("UPQ $txtUnspecifiedPageQuantity $$price{'sig_count'} * $
 			} # end if
 		} # end if PerfectBound
 
-		if ( 0 and $$service_specs{'Group'} == 1 ) {
+		if ( 1 and $$service_specs{'Group'} == 1 ) {
 			if ( ! $other_group_cache{$$Press{id}} ) {
 # When doing the cover, need to calc additional sigs as well.
 # Add calculations for other Groups
