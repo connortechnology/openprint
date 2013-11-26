@@ -154,17 +154,17 @@ sub custom {
 
 sub customer_login {
 
-	ssi::get_start_end_dates( $log, $dbh, \%variable, @param{'ddmStartYear','ddmStartMonth','ddmStartDay','ddmEndYear','ddmEndMonth','ddmEndDay'} );
+	ssi::save_params( $r->uri(), ( 
+		( map { 'registered_on_start_'.$_ } ( 'year', 'month', 'day' ) ),
+		( map { 'registered_on_end_'.$_ } ( 'year', 'month', 'day' ) ),
+		( map { 'last_project_start_'.$_ } ( 'year', 'month', 'day' ) ),
+		( map { 'last_project_end_'.$_ } ( 'year', 'month', 'day' ) ),
+		( map { 'last_order_start_'.$_ } ( 'year', 'month', 'day' ) ),
+		( map { 'last_order_end_'.$_ } ( 'year', 'month', 'day' ) ),
+		( map { 'last_login_start_'.$_ } ( 'year', 'month', 'day' ) ),
+		( map { 'last_login_end_'.$_ } ( 'year', 'month', 'day' ) ),
+	) );
 
-	@variable{'LastProjectStartYears','LastProjectStartMonths','LastProjectStartDays','LastProjectStart'} = ssi::get_dates( $log, $dbh,
-			@param{'ddmLastProjectStartYear','ddmLastProjectStartMonth','ddmLastProjectStartDay'} );
-	@variable{'LastProjectEndYears','LastProjectEndMonths','LastProjectEndDays','LastProjectEnd'} = ssi::get_dates( $log, $dbh,
-			@param{'ddmLastProjectEndYear','ddmLastProjectEndMonth','ddmLastProjectEndDay'} );
-
-	@variable{'LastOrderStartYears','LastOrderStartMonths','LastOrderStartDays','LastOrderStart'} = ssi::get_dates( $log, $dbh,
-			@param{'ddmLastOrderStartYear','ddmLastOrderStartMonth','ddmLastOrderStartDay'} );
-	@variable{'LastOrderEndYears','LastOrderEndMonths','LastOrderEndDays','LastOrderEnd'} = ssi::get_dates( $log, $dbh,
-			@param{'ddmLastOrderEndYear','ddmLastOrderEndMonth','ddmLastOrderEndDay'} );
 
 	my $query = 'SELECT Companies.id, (SELECT MIN(id) FROM Users WHERE Users.company_id = Companies.id ), Companies.salesrep_id, ';
 	$query .= '(SELECT COUNT(id) FROM Projects WHERE Projects.company_id = companies.id ), ';
@@ -173,7 +173,15 @@ sub customer_login {
 	$query .= '(SELECT MAX(index) AS lastorder FROM Orders WHERE Orders.CompanyIndex = Companies.id ), ';
 	$query .= '(SELECT SUM(curtotalsale) FROM Orders WHERE Orders.CompanyIndex = Companies.id ) ';
 	$query .=  'FROM Companies ';
-	$query .=  "WHERE (Companies.created_on BETWEEN '$variable{'StartDate'} 00:00:00' AND '$variable{'EndDate'} 23:59:59') AND ( Companies.deleted != true OR Companies.deleted IS NULL )";
+	$query .=  "WHERE (Company.deleted != true OR Company.deleted IS NULL)";
+	if ( $param{registered_on_start_year} and $param{registered_on_start_month} and $param{registered_on_start_day} ) {
+		my $registered_on_start = sprintf('%.4d-%.2d-%.2d', @session{map { $r->uri().'?registered_on_start_'.$_ } ( 'year','month','day' ) } );
+		$query .= " AND (Company.dtmdateentered >= '$registered_on_start 00:00:00')";
+	} # end if
+	if ( $param{registered_on_end_year} and $param{registered_on_end_month} and $param{registered_on_end_day} ) {
+		my $registered_on_end = sprintf('%.4d-%.2d-%.2d', @session{map { $r->uri().'?registered_on_end_'.$_ } ( 'year','month','day' ) } );
+		$query .= " AND '$registered_on_end 23:59:59'";
+	} # end if
 	if ( $param{'ddmEmployees'} ) {
 		if ( $param{'ddmEmployees'} eq 'None' ) {
 			$query .= " AND salesrep_id IS NULL OR salesrep_id NOT IN ( SELECT id FROM Users WHERE type='E' AND strEmployeeType='Sales')";
@@ -181,39 +189,37 @@ sub customer_login {
 			$query .= " AND salesrep_id=" . $param{'ddmEmployees'};
 		} # end if
 	} # end if
-	if ( $param{'ddmLastProjectStartYear'} and $param{'ddmLastProjectStartMonth'} and $param{'ddmLastProjectStartDay'} ) {
-		if ( $param{'ddmLastProjectEndYear'} and $param{'ddmLastProjectEndMonth'} and $param{'ddmLastProjectEndDay'} ) {
-			$query .= " AND (SELECT MAX(dtmCreationDate) as lastprojectdate FROM Projects WHERE Projects.company_id = Companies.id ) BETWEEN '$variable{'LastProjectStart'} 00:00:00' AND '$variable{'LastProjectEnd'} 23:59:59'";
-		} else {
-			$query .= " AND (SELECT MAX(dtmCreationDate) as lastprojectdate FROM Projects WHERE Projects.company_id = Companies.id ) > '$variable{'LastProjectStart'} 00:00:00'";
-		} # end if
-	} elsif ( $param{'ddmLastProjectEndYear'} and $param{'ddmLastProjectEndMonth'} and $param{'ddmLastProjectEndDay'} ) {
-		$query .= " AND (SELECT MAX(dtmCreationDate) AS lastprojectdate FROM Projects WHERE Projects.company_id = Companies.id ) < '$variable{'LastProjectEnd'} 23:59:59'";
+
+	if ( $param{last_project_start_year} and $param{last_project_start_month} and $param{last_project_start_day} ) {
+		my $last_project_start = sprintf('%.4d-%.2d-%.2d', @session{map { $r->uri().'?last_project_start_'.$_ } ( 'year','month','day' ) } );
+		$query .= " AND (SELECT MAX(dtmCreationDate) as lastprojectdate FROM Projects WHERE Projects.company_id = companies.id ) >= '$last_project_start 00:00:00'";
+	} # end if
+	if ( $param{last_project_end_year} and $param{last_project_end_month} and $param{last_project_end_day} ) {
+		my $last_project_end = sprintf('%.4d-%.2d-%.2d', @session{map { $r->uri().'?last_project_end_'.$_ } ( 'year','month','day' ) } );
+		$query .= " AND (SELECT MAX(dtmCreationDate) AS lastprojectdate FROM Projects WHERE Projects.company_id = companies.id ) <= '$last_project_end 23:59:59'";
 	} # end if
 
-	if ( $param{'ddmLastOrderStartYear'} and $param{'ddmLastOrderStartMonth'} and $param{'ddmLastOrderStartDay'} ) {
-		if ( $param{'ddmLastOrderEndYear'} and $param{'ddmLastOrderEndMonth'} and $param{'ddmLastOrderEndDay'} ) {
-			$query .= " AND (SELECT MAX(dtmOrderDate) AS lastorder FROM Orders WHERE Orders.CompanyIndex = Companies.id ) BETWEEN '$variable{'LastOrderStart'} 00:00:00' AND '$variable{'LastOrderEnd'} 23:59:59'";
-		} else {
-			$query .= " AND (SELECT MAX(dtmOrderDate) AS lastorder FROM Orders WHERE Orders.CompanyIndex = Companies.id ) > '$variable{'LastOrderStart'} 00:00:00'";
-		} # end if
-	} elsif ( $param{'ddmLastOrderEndYear'} and $param{'ddmLastOrderEndMonth'} and $param{'ddmLastOrderEndDay'} ) {
-		$query .= " AND (SELECT MAX(dtmOrderDate) AS lastorder FROM Orders WHERE Orders.CompanyIndex = Companies.id ) < '$variable{'LastOrderEnd'} 23:59:59'";
+	if ( $param{last_order_start_year} and $param{last_order_start_month} and $param{last_order_start_day} ) {
+		my $last_order_start = sprintf('%.4d-%.2d-%.2d', @session{map { $r->uri().'?last_order_start_'.$_ } ( 'year','month','day' ) } );
+		$query .= " AND (SELECT MAX(dtmOrderDate) AS lastorder FROM Orders WHERE Orders.Company_id = companies.id )  >= '$last_order_start 00:00:00'";
 	} # end if
-	if ( $param{'lastlogin_start_year'} and $param{'lastlogin_start_month'} and $param{'lastlogin_start_day'} ) {
-		if ( $param{'lastlogin_end_year'} and $param{'lastlogin_end_month'} and $param{'lastlogin_end_day'} ) {
-			$query .= sprintf(q` AND (SELECT MAX(date_time) FROM logs WHERE action__id=2 AND company_id=Companies.id) BETWEEN '%.4d-%.2d-%.2d 00:00:00' AND '%.4d-%.2d-%.2d 23:59:59'`, @param{'lastlogin_start_year','lastlogin_start_month','lastlogin_start_day','lastlogin_end_year','lastlogin_end_month','lastlogin_end_day'} );
-		} else {
-			$query .= sprintf(q` AND (SELECT MAX(date_time) FROM logs WHERE action_id=2 AND company_id=Companies.id) > '%.4d-%.2d-%.2d 00:00:00'`, @param{'lastlogin_start_year','lastlogin_start_month','lastlogin_start_day'} );
-		} # end if
-	} elsif ( $param{'lastlogin_end_year'} and $param{'lastlogin_end_month'} and $param{'lastlogin_end_day'} ) {
-		$query .= sprintf(q` AND (SELECT MAX(date_time) FROM logs WHERE action_id=2 AND company_id=Companies.id) < '%.4d-%.2d-%.2d 23:59:59'`, @param{'lastlogin_end_year','lastlogin_end_month','lastlogin_end_day'} );
+
+	if ( $param{last_order_end_year} and $param{last_order_end_month} and $param{last_order_end_day} ) {
+		my $last_order_end = sprintf('%.4d-%.2d-%.2d', @session{map { $r->uri().'?last_order_end_'.$_ } ( 'year','month','day' ) } );
+		$query .= " AND (SELECT MAX(dtmOrderDate) AS lastorder FROM Orders WHERE Orders.company_id = Companies.id ) <= '$last_order_end 23:59:59'";
 	} # end if
-	if ( $param{'rdbActive'} ) {
-		$query .= " AND Companies.ysnAccountActivation = '$param{'rdbActive'}' AND (companies.deleted = false OR companies.deleted IS NULL)\n";
+	if ( $param{'last_login_start_year'} and $param{'last_login_start_month'} and $param{'last_login_start_day'} ) {
+		$query .= sprintf(q` AND (SELECT MAX(date_time) FROM log WHERE action_type=2 AND company_id=Companies.id) >= '%.4d-%.2d-%.2d 00:00:00'`, @param{'last_login_start_year','last_login_start_month','last_login_start_day'} );
+	} # end if
+	if ( $param{'last_login_end_year'} and $param{'last_login_end_month'} and $param{'last_login_end_day'} ) {
+		$query .= sprintf(q` AND (SELECT MAX(date_time) FROM log WHERE action_type=2 AND company_id=Companies.id) <= '%.4d-%.2d-%.2d 23:59:59'`, @param{'last_login_end_year','last_login_end_month','last_login_end_day'} );
+	} # end if
+	if ( $param{active} ) {
+		$query .= " AND Companies.ysnAccountActivation = '$param{active}' AND companies.deleted = false";
 	} # end if
 	$query .= ' ORDER BY lower(name)';
-	@{$variable{'DATA'}} = sql::execute( $log, $dbh, $query );
+$log->debug("sql: $query");
+	$variable{DATA} = [ sql::execute( $log, $dbh, $query ) ];
 
 	if ( $param{'btnFunction'} eq 'Download in CSV format' ) {
 		my @header = ( 'Company Name','Contact Name', 'Phone #', 'Email','City','State','Registration Date','Account Rep','# of Projects','Last Project','# of Orders','Last Order', 'Last Order Value');
@@ -225,11 +231,11 @@ sub customer_login {
 			my $Project = new openprint::Project( $last_project );
 			my $Order = new openprint::Order( $last_order );
 			push @data, $Company->name(), $User->name(), $Company->phone(), $User->email(), $Company->city(), $Company->state(),
-				Date::Format::time2str($config{'DateFormat'}, Date::Parse::str2time( $Company->created_on() ) ),
+				ssi::format_date( $Company->created_on() ),
 				$CSR->name(), $projects, 
-				$projects ? Date::Format::time2str($config{'DateFormat'}, Date::Parse::str2time( $Project->created_on() ) ) : '',
+				ssi::format_date( $Project->created_on() ),
 				$orders, 
-				$orders ? Date::Format::time2str($config{'DateFormat'}, Date::Parse::str2time( $Order->created_on() ) ) : '',
+				ssi::format_date( $Order->created_on() ),
 				$total;
 		} # end while
 		misc::export_csv( $r, $log, \%variable, 'customer_report.csv', \@header, \@data );

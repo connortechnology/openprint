@@ -5427,7 +5427,7 @@ if ( 0 ) {
 			$string .= sprintf( ' %s on %s %s',
 					get_colour_description( $specs ),
 					$$specs{'rdbSuppliedStock'} eq 'Y' ? '<b>Customer Supplied</b>' : '',
-					$$specs{'rdbSpecificStock'} eq 'Y' ?
+					$$specs{'rdbSpecificStock'} eq 'Y' ? '<b>Custom:</b>'.
 					join(', ', @$specs{'txtSpecificStockBrand','txtSpecificStockFinish','txtSpecificStockColour','txtSpecificStockWeight'} ) :
 					join(', ', @$specs{'ddmStockBrand','ddmStockFinish','ddmStockColour','ddmStockWeight'} )
 					,
