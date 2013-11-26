@@ -54,9 +54,9 @@
 		<? if ( $$variable{Order}->postalcode() ) ?><? echo ( $$variable{Order}->postalcode() ) ?><br/><? endif ( $$variable{Order}->postalcode() ) ?>
 		</p>
 <? endif ( $$variable{Order}->address1() or $$variable{Order}->address2() ) ?>
-		<? if ( $$variable{Order}->firstname() or $$variable{Order}->lastname() ) ?>
-		<p><label>Name</label><? echo ( join(' ', $$variable{Order}->get('salutation','firstname','lastname') ); ) ?><br/></p>
-		<? endif ( $$variable{Order}->firstname() or $$variable{Order}->lastname() ) ?>
+		<? if ( $$variable{Order}->first_name() or $$variable{Order}->last_name() ) ?>
+		<p><label>Name</label><? echo ( join(' ', $$variable{Order}->get('salutation','first_name','last_name') ); ) ?><br/></p>
+		<? endif ( $$variable{Order}->first_name() or $$variable{Order}->last_name() ) ?>
 		<? if ( $$variable{Order}->phone() ) ?>
 			<p><label>Phone</label>
 			<? echo ( $$variable{Order}->phone() ) ?><? if ( $$variable{Order}->extension() ) ?>x<? echo ( $$variable{Order}->extension() ) ?><? endif ( $$variable{Order}->extension() ) ?><br/>

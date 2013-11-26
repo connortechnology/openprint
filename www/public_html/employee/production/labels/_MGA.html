@@ -27,7 +27,7 @@
                     'consignee_state'=> $Order->state(),
                     'consignee_phone'=> $Order->phone(),
                     'consignee_city'=> $Order->city(),
-					'consignee_contact'=> $Order->firstname() . ' ' . $Order->lastname(),
+					'consignee_contact'=> $Order->first_name() . ' ' . $Order->last_name(),
                     );
             } # end if
 			$changed = 1;
@@ -58,7 +58,7 @@
 					'consignee_state'=> $Order->state(),
 					'consignee_phone'=> $Order->phone(),
 					'consignee_city'=> $Order->city(),
-					'consignee_contact'=> $Order->firstname() . ' ' . $Order->lastname(),
+					'consignee_contact'=> $Order->first_name() . ' ' . $Order->last_name(),
 					);
 			} # end if
 			$changed = 1;
