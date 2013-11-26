@@ -2588,7 +2588,11 @@ $openprint::log->warn("Unknown Per setting $unit");
 		} # end if
 	} # end if
 	if ( $Paper->minimum_order() ) {
+	
 		my $rate = $Imposition->pages() / $$project{'PrintingSpecs'}{'txtTotalPageQuantity'} if $Imposition->pages() and $$project{'PrintingSpecs'}{'txtTotalPageQuantity'};
+		if ( $$specs{txtSignatureType} eq 'Cover Spreads' ) {
+			$rate = 1;
+		} # end if
 		$rate = 1 if ! $rate;
 # Assume sheets for sheets, lbs for Rolls
 		if ( $Paper->type() eq 'Sheet' ) {
