@@ -1,21 +1,13 @@
 <script type="text/javascript" src="<?hash_link(/javascripts/service.js)?>"></script>
-<? eval (
-    if ( $$variable{'Project'}->quantity1() and $$variable{'Project'}->quantity2() and $$variable{'Project'}->quantity3() ) {
-    $$variable{'Columns'} = 'Three';
-    } else {
-    $$variable{'Columns'} = 'Two';
-    } # end if
-) ?>
 <div class="Service">
 	<form id="f1" name="f1" method="post" action="/main/project/view.html">
 		<fieldset><legend>Drilling</legend>
 			<ul>
 			<li>
-				<label>Finished Caliiper</label>
+				<label>Finished Calliper</label>
 				<? echo ( input( name=>'txtFinishedCalliper', value=>$$variable{txtFinishedCalliper}, type=>'float', onkeyup=>'calc(this.form.name);' ); ) ?>
 <? if ( sets::isin( $session{'user_type'}, ['E','A'] ) ) ?>
-				<input type="checkbox" id="chkOverrideFinishedCalliper" name="chkOverrideFinishedCalliper" value="Y" <? echo ( ssi::checked( $$variable{'chkOverrideFinishedCalliper'} eq 'Y' ); ) ?> />
-				<label class="radio" for="chkOverrideFinishedCalliper">Override</label>
+<? echo ( write_override( 'chkOverrideFinishedCalliper', $$variable{'chkOverrideFinishedCalliper'}, '', 'calc(this.form.name);' );) ?>
 <? else ( sets::isin( $session{'user_type'}, ['E','A'] ) ) ?>
 				<input type="hidden" name="chkOverrideFinishedCalliper" value="<? echo ( $$variable{'chkOverrideFinishedCalliper'} ) ?>" />
 <? if ( $$variable{'chkOverrideFinishedCalliper'} eq 'Y' ) ?>
@@ -42,13 +34,10 @@ Overridden
 				<label>Items per lift</label>
 				<? echo ( input( type=>'cardinal', id=>'ItemsPerLift', name=>'ItemsPerLift', value=>$$variable{ItemsPerLift}, onkeyup=>'calc(this.form.name);' ); ) ?>
 				<? if ( sets::isin( $session{'user_type'}, ['A','E'] ) ) ?>
-				<input type="checkbox" id="OverrideItemsPerLift" name="OverrideItemsPerLift" value="Y" <? echo ( ssi::checked( $$variable{'OverrideItemsPerLift'} eq 'Y' ); ) ?> />
-				<label class="radio" for="OverrideItemsPerLift">Override</label>
+				<? echo ( write_override( 'OverrideItemsPerLift', $$variable{OverrideItemsPerLift}, '', 'calc(this.form.name);' );) ?>
 				<? else ( sets::isin( $session{'user_type'}, ['A','E'] ) ) ?>
 				<input type="hidden" name="OverrideItemsPerLift" value="<?OverrideItemsPerLift" />
-<? if ( $$variable{'OverrideItemsPerLift'} eq 'Y' ) ?>
-Overridden
-<? endif ( $$variable{'OverrideItemsPerLift'} eq 'Y' ) ?>
+				<? if ( $$variable{'OverrideItemsPerLift'} eq 'Y' ) ?>Overridden<? endif ( $$variable{'OverrideItemsPerLift'} eq 'Y' ) ?>
 				<? endif ( sets::isin( $session{'user_type'}, ['A','E'] ) ) ?>
 			<li>
 			</ul>
