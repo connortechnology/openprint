@@ -35,7 +35,7 @@ return $html;
 		<tr class="unprintable">
 			<td class="Name"><input type="text" id="asset_name" name="asset_name"/></td>
 			<td colspan="3" class="Filename"><input type="file" id="filename" name="filename"/></td>
-			<td><? echo ( button( 'Upload', { onclick=>q`if(!$('filename').value){alert('No file selected.');}else{f1.enctype="multipart/form-data";f1.btnFunction.value='Attach';f1.submit();}` } ); ) ?></td>
+			<td><? echo ( button( 'Upload', { onclick=>q`if(!$('filename').value){alert('No file selected.');}else{f1.encoding='multipart/form-data';f1.btnFunction.value='Attach';f1.submit();}` } ); ) ?></td>
 		</tr>
 	</tbody>
 </table>
