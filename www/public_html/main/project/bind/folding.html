@@ -109,7 +109,7 @@ function Fold_onchange( element, signature, qty_index, index ) {
 					$html .= '<span class="'.$$variable{Columns}.'Columns">';
 					if ( $$sig_specs{"txtImposition$qty_index"} ) {
 						$html .= sprintf('<select name="ddmEquipment-%1$d-%2$d" onchange="calc(this.form.name);">', $$sig_specs{'SignatureIndex'}, $qty_index );
-						$html .= '<option value="">Equipment Options</option>';
+						$html .= '<option value="">No Folding</option>';
 						$html .= make_drop_down( $$variable{'EquipmentArray'}, $$variable{"ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} );
 						$html .= '</select>';
 

@@ -21,6 +21,7 @@ use strict;
 require openprint::service;
 
 my @variables = (
+		'alert',
         'txtPrice1', 'txtPrice2', 'txtPrice3',
         'txtNegativeQuantity1', 'txtNegativeQuantity3', 'txtNegativeQuantity2',
 		'chkOverrideNegativeQuantity1',

@@ -23,6 +23,7 @@ require openprint::Project;
 require openprint::Estimating::Folding;
 
 my @variables = (
+	'alert',
 	'txtQuantity1', 'txtQuantity2', 'txtQuantity3',
 	'txtPrice1', 'txtPrice2', 'txtPrice3',
 	'txtSignatureCount1', 'txtSignatureCount2', 'txtSignatureCount3',
@@ -143,6 +144,9 @@ $openprint::log->debug("Fold $qty_index: " . $Fold_Imp->type() . ' ' . $Fold_Imp
 		return $$specs{Status} = 'uncalculated';
 	} # end if
 
+	my $CollatingMakeReady = openprint::Service->find_one(name=>'CollatingMakeReady');
+	my $Collating = openprint::Service->find_one(name=>'Collating');
+
 	foreach my $qty_index ( $Project->quantity_indexes() ) {
 		my %bestPrice;
 
@@ -184,10 +188,11 @@ $openprint::log->debug("Fold $qty_index: " . $Fold_Imp->type() . ' ' . $Fold_Imp
 					next;
 				} # end if
 			} # end if
-			$price{'MakeReady'} = openprint::service::get_price( 'CollatingMakeReady', undef, $Equipment );
-			my %servicePrice = openprint::service::get_price_object( 'Collating', $qty, $Equipment );
+			my %MakeReadyPrice = $CollatingMakeReady->get_price( undef, $Equipment ) if $CollatingMakeReady;
+			$price{MakeReady} = $MakeReadyPrice{Price};
+			my %servicePrice = $Collating->get_price( $qty, $Equipment ) if $Collating;
 			if ( sets::isin( $servicePrice{'units'}, 'per m', 'per 1000' )  ) {
-				$price{'Service'} = $servicePrice{'Price'}/1000; # Service Price for Collating is per 1000
+				$price{Service} = $servicePrice{'Price'}/1000; # Service Price for Collating is per 1000
 			} else {
 				$$specs{'alert'} .= 'Unknown units in service price.<br/>';
 			} # end if
@@ -227,5 +232,4 @@ sub summary {
 }
 
 1;
-
 __END__

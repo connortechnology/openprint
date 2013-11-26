@@ -170,12 +170,25 @@ sub choose_service {
 	my $services = $Project->services();
 
 	# get the printing service
-	my $status = openprint::service::status( $Project->id(), $$services{''}[0] ) if $$services{''};
-	
-	# if the printing service is unfinished, return it.
-	# the no url test will only occurr for the "no printing required" project type :)
-	if ( $status eq 'uncalculated' ) {
-		return ( $$services{''}[0], '/main/project/'.$Project->Type()->url() ) if $Project->Type()->url();
+	if ( $$services{''} ) {
+		$log->debug("Have a printing service");
+		my $status = openprint::service::status( $Project->id(), $$services{''}[0] );
+		
+		# if the printing service is unfinished, return it.
+		# the no url test will only occurr for the "no printing required" project type :)
+		if ( $status eq 'uncalculated' ) {
+			$log->debug("Printing service status $status uncalcaulted");
+			return ( $$services{''}[0], '/main/project/'.$Project->Type()->url() ) if $Project->Type()->url();
+			$log->debug("Project Type does not have a url");
+			if ( ! $$services{Signature} ) {
+				# There are no signatures, so .... 
+				return (undef,undef);
+			} # end if
+		} else {
+			$log->debug("Printing service status $status");
+		} # end if
+	} else {
+		$log->debug("No printing service?");
 	} # end if
 
 	$log->debug("****** GETTING INCOMPLETE PRINTING SERVICES ********");
@@ -624,7 +637,6 @@ sub create_edit_process {
 		$Project->quantity3( int $param{'txtQuantity3'} );
 	} # end if
 
-
 	$Project->reference( $param{'txtProjectReference'} );
 	$Project->comments( $param{'txtComments'} );
 	$Project->mode( $param{'rdbMode'} );
@@ -678,12 +690,7 @@ sub create_edit_process {
 
 	$Project->add_to_log( @session{'company_id','user_id'}, 'Edited' );
 	if ( $recalculate ) {
-		$Project->Currency( openprint::Currency::get_current() );
-		openprint::service::internal_calc( $log, $dbh, \%variable, $Project->id(), $services{''}[0], $Project->Type()->type() );
-		openprint::Estimating::MultiPage::calculate_signatures( $Project );
-		openprint::service::auto_calculate( $Project, undef );
-		$Project->summary( undef );
-		$Project->save();
+		$Project->recalculate();
 	} # end if
 
 	return $Project->id();

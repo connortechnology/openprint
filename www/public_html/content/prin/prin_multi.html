@@ -49,6 +49,9 @@
 	</span>
 </div>
 								</li>
+				<li class="spine"><label>Spine</label>
+					<?echo(radio('spine', [ 'height', 'Height', 'width', 'Width' ], $$variable{spine}, { default=>'height', onclick=>'calc(this.form.name)' } ); ) ?>
+				</li>
 								<li class="pages">
 									<label>Pages</label>
 <? if ( $$variable{'ProjectType'}->name() eq 'Calendars' ) ?>
