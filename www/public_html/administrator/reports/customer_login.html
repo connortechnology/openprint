@@ -1,102 +1,51 @@
 Choose report criteria and click show results. You may the download the the results in CSV (spreadsheet format) to view in a program such as Microsoft Excel.<br/>
 <br/>
-<form name="f1" method="post" action="customer_login.html">
+<form id="f1" name="f1" method="post" action="customer_login.html">
 	<fieldset class="filters">
-		<p>
+		<ul>
+		<li>
 			<label>Sales Reps:</label>
 			<select name="ddmEmployees" size="1">
 				<option value="">All Employees</option>
 <? echo (
-    ssi::make_drop_down( [ ( 'None','None' ), map { $_->id(), $_->name() } openprint::User::find('type'=>['E','A'],'order'=>'lower(strfirstname),lower(strlastname)','usergroup'=>'Sales' ) ], $param{'ddmEmployees'} );
+    make_drop_down( [ ( 'None','None' ), map { $_->id(), $_->name() } openprint::User::find('type'=>['E','A'],'order'=>'lower(strfirstname),lower(strlastname)','usergroup'=>'Sales' ) ], $param{'ddmEmployees'} );
 ) ?>
 			</select>
-		</p>
-		<p> 
+		</li>
+		<li> 
 			<label>Registration Date:</label>
-			<select name="ddmStartMonth"><?startmonths?></select>
-			<select name="ddmStartDay"><?startdays?></select>
-			<select name="ddmStartYear"><?startyears?></select>
+			<? echo ( date_select_session( $r->uri(), 'registered_on_start', { with_today=>1, with_clear=>1 } ); ) ?>
 			to
-			<select name="ddmEndMonth"><?endmonths?></select>
-			<select name="ddmEndDay"><?enddays?></select>
-			<select name="ddmEndYear"><?endyears?></select>
-		</p>
-		<p>
+			<? echo ( date_select_session( $r->uri(), 'registered_on_end', { with_today=>1, with_clear=>1 } ); ) ?>
+		</li>
+		<li>
 			<label>Last Project:</label>
-			<select name="ddmLastProjectStartMonth">
-			<option value=""></option>
-			<?LastProjectStartMonths?>
-			</select>
-			<select name="ddmLastProjectStartDay">
-			<option value=""></option>
-			<?LastProjectStartDays?>
-			</select>
-			<select name="ddmLastProjectStartYear">
-			<option value=""></option>
-			<?LastProjectStartYears?>
-			</select>
+			<? echo ( date_select_session( $r->uri(), 'last_project_start', { with_today=>1, with_clear=>1 } ); ) ?>
 			to
-			<select name="ddmLastProjectEndMonth">
-			<option value=""></option>
-			<?LastProjectEndMonths?>
-			</select>
-			<select name="ddmLastProjectEndDay">
-			<option value=""></option>
-			<?LastProjectEndDays?>
-			</select>
-			<select name="ddmLastProjectEndYear">
-			<option value=""></option>
-			<?LastProjectEndYears?>
-			</select>
-		</p>
-		<p>
+			<? echo ( date_select_session( $r->uri(), 'last_project_end', { with_today=>1, with_clear=>1 } ); ) ?>
+		</li>
+		<li>
 			<label>Last Order:</label>
-				<select name="ddmLastOrderStartMonth">
-				<option value=""></option>
-				<?LastOrderStartMonths?>
-				</select>
-				<select name="ddmLastOrderStartDay">
-				<option value=""></option>
-				<?LastOrderStartDays?>
-				</select>
-				<select name="ddmLastOrderStartYear">
-				<option value=""></option>
-				<?LastOrderStartYears?>
-				</select>
+			<? echo ( date_select_session( $r->uri(), 'last_order_start', { with_today=>1, with_clear=>1 } ); ) ?>
 				to
-				<select name="ddmLastOrderEndMonth">
-				<option value=""></option>
-				<?LastOrderEndMonths?>
-				</select>
-				<select name="ddmLastOrderEndDay">
-				<option value=""></option>
-				<?LastOrderEndDays?>
-				</select>
-				<select name="ddmLastOrderEndYear">
-				<option value=""></option>
-				<?LastOrderEndYears?>
-				</select>
-		</p>
-		<p>
+			<? echo ( date_select_session( $r->uri(), 'last_order_end', { with_today=>1, with_clear=>1 } ); ) ?>
+		</li>
+		<li>
 			<label>Last Login:</label>
-			<? echo ( ssi::date_select( 'lastlogin_start', [@param{'lastlogin_start_year','lastlogin_start_month','lastlogin_start_day'}], { 'order'=>'m,d,y' } ); ) ?>
+			<? echo ( date_select_session( $r->uri(), 'last_login_start', { with_today=>1, with_clear=>1 } ); ) ?>
 			to
-			<? echo ( ssi::date_select( 'lastlogin_end', [@param{'lastlogin_end_year','lastlogin_end_month','lastlogin_end_day'}], { 'order'=>'m,d,y' } ); ) ?>
-		</p>
-		<p>
+			<? echo ( date_select_session( $r->uri(), 'last_login_end', { with_today=>1, with_clear=>1 } ); ) ?>
+		</li>
+		<li>
 			<label>Active?</label>
-			<input type="radio" id="rdbActiveY" name="rdbActive" value="Y" <? echo ( ssi::checked( $param{'rdbActive'} eq 'Y' ); ) ?> />
-			<label class="radio" for="rdbActiveY">Yes</label>
-			<input type="radio" id="rdbActiveY" name="rdbActive" value="N" <? echo ( ssi::checked( $param{'rdbActive'} eq 'N' ); ) ?> />
-			<label class="radio" for="rdbActiveN">No</label>
-			<input type="radio" id="rdbActive" name="rdbActive" value="" <? echo ( ssi::checked( $param{'rdbActive'} eq '' ); ) ?> />
-			<label class="radio" for="rdbActive">Both</label>
-		</p>
+			<? echo ( radio( 'active', [ 'Y', 'Yes', 'N', 'No', '', 'All' ], $session{$r->uri().'?active'}, { default=>'' } ); ) ?>
+		</li>
+		</ul>
 		<p class="buttons">
 			<? echo ( join('',
-				ssi::writeButton( $log, $dbh, 'ShowResults', 'showResults.gif', "f1.action='customer_login.html';f1.btnFunction.value='ShowResults';f1.submit();", '', 'Show Results' ),
-				ssi::writeButton( $log, $dbh, 'DownloadCSV', 'downloadCSVFormat.gif', "f1.action='customer_login.html?Download';f1.btnFunction.value='Download in CSV format';f1.submit();", '', 'Download in CSV Format' ),
-				ssi::writeButton( $log, $dbh, 'Reset', 'reset.gif', 'f1.reset();', '', 'Reset' ),
+				button( 'ShowResults', { onclick=>"f1.action='customer_login.html';f1.btnFunction.value='ShowResults';f1.submit();", href=>'', text=>'Show Results' } ),
+				button( 'DownloadCSV', { onclick=>"f1.action='customer_login.html?Download';f1.btnFunction.value='Download in CSV format';f1.submit();", href=>'', text=>'Download in CSV Format' } ),
+				button( 'Reset', { onclick=>'f1.reset();' } ),
 	); ) ?>
 		</p>
 	</fieldset>
