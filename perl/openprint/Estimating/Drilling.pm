@@ -83,12 +83,12 @@ sub calc {
 	my @capabilities = ( 'Y' );
 	my $stitching_service_index;
     # Can only use the stitcher for drilling if we are stitching.  There are also thickness constraints
-	if ( $services{'SaddleStitching'} ) {
-		$stitching_service_index = $services{'SaddleStitching'}[0] ;
+	if ( $$services{'SaddleStitching'} ) {
+		$stitching_service_index = $$services{'SaddleStitching'}[0] ;
 		push @capabilities, 'When Stitching';
-	} elsif ( $services{'LoopStitching'} ) {
+	} elsif ( $$services{'LoopStitching'} ) {
 		push @capabilities, 'When Stitching';
-		$stitching_service_index = $services{'LoopStitching'}[0];
+		$stitching_service_index = $$services{'LoopStitching'}[0];
 	} # end if
 	my $stitching_specs = openprint::service::get_specs_ref( $Project, $stitching_service_index );
 

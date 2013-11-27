@@ -38,6 +38,7 @@ my %converted_imposition_cache;
 my $use_converted_imposition_cache = 0;
 my %filtered_imposition_cache;
 my $use_filtered_imposition_cache = 0;
+my $calc_other_groups = 1;
 
 my %stitching_cache;
 my %price_cache;
@@ -3601,7 +3602,7 @@ $openprint::log->debug("UPQ $txtUnspecifiedPageQuantity $$price{'sig_count'} * $
 			} # end if
 		} # end if PerfectBound
 
-		if ( 1 and $$service_specs{'Group'} == 1 ) {
+		if ( $calc_other_groups and $$service_specs{'Group'} == 1 ) {
 			if ( ! $other_group_cache{$$Press{id}} ) {
 # When doing the cover, need to calc additional sigs as well.
 # Add calculations for other Groups
