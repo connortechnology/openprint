@@ -186,6 +186,7 @@ sub custom {
 
 sub customer_login {
 
+	ssi::setup_date_select( $r->uri(), 'registered_on_start', -30 );
 	ssi::save_params( $r->uri(), ( 
 		( map { 'registered_on_start_'.$_ } ( 'year', 'month', 'day' ) ),
 		( map { 'registered_on_end_'.$_ } ( 'year', 'month', 'day' ) ),
@@ -198,61 +199,63 @@ sub customer_login {
 	) );
 
 
-	my $query = 'SELECT Company.Index, (SELECT MIN(Index) FROM Users WHERE Users.CompanyIndex = Company.Index ), Company.lngSalesPerson, ';
-	$query .= '(SELECT COUNT(Index) FROM tbl_Projects WHERE tbl_Projects.CompanyIndex = Company.Index ), ';
-	$query .= '(SELECT MAX(Index) as lastproject FROM tbl_Projects WHERE tbl_Projects.CompanyIndex = Company.Index ), ';
-	$query .= '(SELECT COUNT(Index) FROM Orders WHERE Orders.CompanyIndex = Company.Index ), ';
-	$query .= '(SELECT MAX(index) AS lastorder FROM Orders WHERE Orders.CompanyIndex = Company.Index ), ';
-	$query .= '(SELECT SUM(curtotalsale) FROM Orders WHERE Orders.CompanyIndex = Company.Index ) ';
-	$query .=  'FROM Company ';
-	$query .=  "WHERE (Company.deleted != true OR Company.deleted IS NULL)";
-	if ( $param{registered_on_start_year} and $param{registered_on_start_month} and $param{registered_on_start_day} ) {
-		my $registered_on_start = sprintf('%.4d-%.2d-%.2d', @session{map { $r->uri().'?registered_on_start_'.$_ } ( 'year','month','day' ) } );
-		$query .= " AND (Company.dtmdateentered >= '$registered_on_start 00:00:00')";
-	} # end if
-	if ( $param{registered_on_end_year} and $param{registered_on_end_month} and $param{registered_on_end_day} ) {
-		my $registered_on_end = sprintf('%.4d-%.2d-%.2d', @session{map { $r->uri().'?registered_on_end_'.$_ } ( 'year','month','day' ) } );
-		$query .= " AND '$registered_on_end 23:59:59'";
-	} # end if
-	if ( $param{'ddmEmployees'} ) {
-		if ( $param{'ddmEmployees'} eq 'None' ) {
-			$query .= " AND lngsalesperson IS NULL OR lngSalesPerson NOT IN ( SELECT Index FROM Users WHERE chrType='E' AND strEmployeeType='Sales')";
-		} else {
-			$query .= " AND lngsalesperson=" . $param{'ddmEmployees'};
+	if ( $param{btnFunction} ) {
+		my $query = 'SELECT Company.Index, (SELECT MIN(Index) FROM Users WHERE Users.CompanyIndex = Company.Index ), Company.lngSalesPerson, ';
+		$query .= '(SELECT COUNT(Index) FROM tbl_Projects WHERE tbl_Projects.CompanyIndex = Company.Index ), ';
+		$query .= '(SELECT MAX(Index) as lastproject FROM tbl_Projects WHERE tbl_Projects.CompanyIndex = Company.Index ), ';
+		$query .= '(SELECT COUNT(Index) FROM Orders WHERE Orders.CompanyIndex = Company.Index ), ';
+		$query .= '(SELECT MAX(index) AS lastorder FROM Orders WHERE Orders.CompanyIndex = Company.Index ), ';
+		$query .= '(SELECT SUM(curtotalsale) FROM Orders WHERE Orders.CompanyIndex = Company.Index ) ';
+		$query .=  'FROM Company ';
+		$query .=  "WHERE (Company.deleted != true OR Company.deleted IS NULL)";
+		if ( $param{registered_on_start_year} and $param{registered_on_start_month} and $param{registered_on_start_day} ) {
+			my $registered_on_start = sprintf('%.4d-%.2d-%.2d', @session{map { $r->uri().'?registered_on_start_'.$_ } ( 'year','month','day' ) } );
+			$query .= " AND (Company.dtmdateentered >= '$registered_on_start 00:00:00')";
 		} # end if
-	} # end if
+		if ( $param{registered_on_end_year} and $param{registered_on_end_month} and $param{registered_on_end_day} ) {
+			my $registered_on_end = sprintf('%.4d-%.2d-%.2d', @session{map { $r->uri().'?registered_on_end_'.$_ } ( 'year','month','day' ) } );
+			$query .= " AND '$registered_on_end 23:59:59'";
+		} # end if
+		if ( $param{'ddmEmployees'} ) {
+			if ( $param{'ddmEmployees'} eq 'None' ) {
+				$query .= " AND lngsalesperson IS NULL OR lngSalesPerson NOT IN ( SELECT Index FROM Users WHERE chrType='E' AND strEmployeeType='Sales')";
+			} else {
+				$query .= " AND lngsalesperson=" . $param{'ddmEmployees'};
+			} # end if
+		} # end if
 
-	if ( $param{last_project_start_year} and $param{last_project_start_month} and $param{last_project_start_day} ) {
-		my $last_project_start = sprintf('%.4d-%.2d-%.2d', @session{map { $r->uri().'?last_project_start_'.$_ } ( 'year','month','day' ) } );
-		$query .= " AND (SELECT MAX(dtmCreationDate) as lastprojectdate FROM tbl_Projects WHERE tbl_Projects.CompanyIndex = Company.Index ) >= '$last_project_start 00:00:00'";
-	} # end if
-	if ( $param{last_project_end_year} and $param{last_project_end_month} and $param{last_project_end_day} ) {
-		my $last_project_end = sprintf('%.4d-%.2d-%.2d', @session{map { $r->uri().'?last_project_end_'.$_ } ( 'year','month','day' ) } );
-		$query .= " AND (SELECT MAX(dtmCreationDate) AS lastprojectdate FROM tbl_Projects WHERE tbl_Projects.CompanyIndex = Company.Index ) <= '$last_project_end 23:59:59'";
-	} # end if
+		if ( $param{last_project_start_year} and $param{last_project_start_month} and $param{last_project_start_day} ) {
+			my $last_project_start = sprintf('%.4d-%.2d-%.2d', @session{map { $r->uri().'?last_project_start_'.$_ } ( 'year','month','day' ) } );
+			$query .= " AND (SELECT MAX(dtmCreationDate) as lastprojectdate FROM tbl_Projects WHERE tbl_Projects.CompanyIndex = Company.Index ) >= '$last_project_start 00:00:00'";
+		} # end if
+		if ( $param{last_project_end_year} and $param{last_project_end_month} and $param{last_project_end_day} ) {
+			my $last_project_end = sprintf('%.4d-%.2d-%.2d', @session{map { $r->uri().'?last_project_end_'.$_ } ( 'year','month','day' ) } );
+			$query .= " AND (SELECT MAX(dtmCreationDate) AS lastprojectdate FROM tbl_Projects WHERE tbl_Projects.CompanyIndex = Company.Index ) <= '$last_project_end 23:59:59'";
+		} # end if
 
-	if ( $param{last_order_start_year} and $param{last_order_start_month} and $param{last_order_start_day} ) {
-		my $last_order_start = sprintf('%.4d-%.2d-%.2d', @session{map { $r->uri().'?last_order_start_'.$_ } ( 'year','month','day' ) } );
-		$query .= " AND (SELECT MAX(dtmOrderDate) AS lastorder FROM Orders WHERE Orders.CompanyIndex = Company.Index )  >= '$last_order_start 00:00:00'";
-	} # end if
+		if ( $param{last_order_start_year} and $param{last_order_start_month} and $param{last_order_start_day} ) {
+			my $last_order_start = sprintf('%.4d-%.2d-%.2d', @session{map { $r->uri().'?last_order_start_'.$_ } ( 'year','month','day' ) } );
+			$query .= " AND (SELECT MAX(dtmOrderDate) AS lastorder FROM Orders WHERE Orders.CompanyIndex = Company.Index )  >= '$last_order_start 00:00:00'";
+		} # end if
 
-	if ( $param{last_order_end_year} and $param{last_order_end_month} and $param{last_order_end_day} ) {
-		my $last_order_end = sprintf('%.4d-%.2d-%.2d', @session{map { $r->uri().'?last_order_end_'.$_ } ( 'year','month','day' ) } );
-		$query .= " AND (SELECT MAX(dtmOrderDate) AS lastorder FROM Orders WHERE Orders.CompanyIndex = Company.Index ) <= '$last_order_end 23:59:59'";
+		if ( $param{last_order_end_year} and $param{last_order_end_month} and $param{last_order_end_day} ) {
+			my $last_order_end = sprintf('%.4d-%.2d-%.2d', @session{map { $r->uri().'?last_order_end_'.$_ } ( 'year','month','day' ) } );
+			$query .= " AND (SELECT MAX(dtmOrderDate) AS lastorder FROM Orders WHERE Orders.CompanyIndex = Company.Index ) <= '$last_order_end 23:59:59'";
+		} # end if
+		if ( $param{'last_login_start_year'} and $param{'last_login_start_month'} and $param{'last_login_start_day'} ) {
+			$query .= sprintf(q` AND (SELECT MAX(date_time) FROM log WHERE action_type=2 AND company_id=Company.Index) >= '%.4d-%.2d-%.2d 00:00:00'`, @param{'last_login_start_year','last_login_start_month','last_login_start_day'} );
+		} # end if
+		if ( $param{'last_login_end_year'} and $param{'last_login_end_month'} and $param{'last_login_end_day'} ) {
+			$query .= sprintf(q` AND (SELECT MAX(date_time) FROM log WHERE action_type=2 AND company_id=Company.Index) <= '%.4d-%.2d-%.2d 23:59:59'`, @param{'last_login_end_year','last_login_end_month','last_login_end_day'} );
+		} # end if
+		if ( $param{active} ) {
+			$query .= " AND Company.ysnAccountActivation = '$param{active}' AND (company.deleted = false OR company.deleted IS NULL)";
+		} # end if
+		$query .= ' ORDER BY lower(strname)';
+		$variable{DATA} = [ sql::execute( $log, $dbh, $query ) ];
+	} else {
+		$variable{DATA} = [ ];
 	} # end if
-	if ( $param{'last_login_start_year'} and $param{'last_login_start_month'} and $param{'last_login_start_day'} ) {
-		$query .= sprintf(q` AND (SELECT MAX(date_time) FROM log WHERE action_type=2 AND company_id=Company.Index) >= '%.4d-%.2d-%.2d 00:00:00'`, @param{'last_login_start_year','last_login_start_month','last_login_start_day'} );
-	} # end if
-	if ( $param{'last_login_end_year'} and $param{'last_login_end_month'} and $param{'last_login_end_day'} ) {
-		$query .= sprintf(q` AND (SELECT MAX(date_time) FROM log WHERE action_type=2 AND company_id=Company.Index) <= '%.4d-%.2d-%.2d 23:59:59'`, @param{'last_login_end_year','last_login_end_month','last_login_end_day'} );
-	} # end if
-	if ( $param{active} ) {
-		$query .= " AND Company.ysnAccountActivation = '$param{active}' AND (company.deleted = false OR company.deleted IS NULL)";
-	} # end if
-	$query .= ' ORDER BY lower(strname)';
-$log->debug("sql: $query");
-	$variable{DATA} = [ sql::execute( $log, $dbh, $query ) ];
-
 	if ( $param{'btnFunction'} eq 'Download in CSV format' ) {
 		my @header = ( 'Company Name','Contact Name', 'Phone #', 'Email','City','State','Registration Date','Account Rep','# of Projects','Last Project','# of Orders','Last Order', 'Last Order Value');
 		my @data;
