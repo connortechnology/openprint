@@ -2172,10 +2172,8 @@ $log->warn("There are no quantities!");
 			$$specs{'hdnBreakdown'.$qty_index} .= " * $$specs{'txtNameQuantity'} names = $qty: ";
 		} # end if
 
-		$$specs{'totalSpreads'} = 1;
 # Figure out how many spreads we need!
 		if ( $$specs{'txtSignatureType'} ) {
-			$$specs{'totalSpreads'} = $$specs{'GroupPageQuantity'};
 #$openprint::log->debug("Master time before get_unspecified_pages: " . ( sprintf('%.4f', tv_interval( [$master_time])*1000) ) .' usecs' );
 			$$specs{'txtUnspecifiedPageQuantity'.$qty_index} = get_unspecified_pages( $Project, $service_index, $printing_specs, $specs, $qty_index );
 #$openprint::log->debug("Master time after get_unspecified_pages: " . ( sprintf('%.4f', tv_interval( [$master_time])*1000) ) .' usecs' );
@@ -3606,7 +3604,7 @@ $openprint::log->debug("UPQ $txtUnspecifiedPageQuantity $$price{'sig_count'} * $
 # When doing the cover, need to calc additional sigs as well.
 # Add calculations for other Groups
 				$openprint::log->debug("Calculating Additional Signatures for other group");
-				my @sigs = sort $Project->signatures({'Group'=>2});
+				my @sigs = sort $Project->signatures({Group=>2});
 				if ( @sigs ) {
 					my $Service = $Project->Service( $sigs[0] );
 					my $subsig_specs = $Service->specs();
@@ -3634,9 +3632,8 @@ $openprint::log->debug("UPQ $txtUnspecifiedPageQuantity $$price{'sig_count'} * $
 								$$price{'Comparison Cost'} += 1000000;
 $openprint::log->warn("Unable to calculate impositions for additional signatures.<br/>");
 							} else {
-								$$subsig_specs{'totalSpreads'} = $$subsig_specs{'GroupPageQuantity'};
-								$$subsig_specs{'txtUnspecifiedPageQuantity'.$qty_index} = get_unspecified_pages( $Project, $service_index, $printing_specs, $subsig_specs, $qty_index );
-								$$subsig_specs{'txtUnspecifiedPageQuantity'.$qty_index} = 0 if $$subsig_specs{'txtUnspecifiedPageQuantity'.$qty_index} < 0;
+								# Don't need to call get_unspecified_pages because we know that we are calculating all of them.
+								$$subsig_specs{'txtUnspecifiedPageQuantity'.$qty_index} = $$subsig_specs{GroupPageQuantity};
 
 								my $sig_price = get_project_price( $Project, $sigs[0], $new_project, $subsig_specs, $subsig_specs, $qty, $qty_index, 
 										\@possible_presses, $printing_specs, $versions, \%PlateCounts, \%PaperCounts, \%washed_colours, \%previous_forms_cache, \@sigs, \%impositions, $other_impositions, \%best_price, 0 );
@@ -3664,7 +3661,7 @@ $openprint::log->warn("Unable to calculate impositions for additional signatures
 				$$price{'Comparison Cost'} += $$sig_price{'Comparison Cost'};
 #$$price{'itionalSignature Breakdown'} .= breakdown( $sig_price, $sig_specs );
 			} else {
-				$openprint::log->debug("Calculating Additional Signatures for other group failure");
+				$openprint::log->error("Calculating Additional Signatures for other group failure");
 				$$price{'Breakdown'} .= 'Unable to calculate additional signatures.<br/>';
 				$$price{'Comparison Cost'} += 1000000;
 			} # end if
