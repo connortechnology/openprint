@@ -48,7 +48,7 @@ $serial = 'payments_id_seq';
 
 sub destroy {
 	my $self = shift;
-    sql::execute( undef, undef, q{DELETE FROM ledgers WHERE payment_id=?}, $$self{'id'} );
+    #sql::execute( undef, undef, q{DELETE FROM ledgers WHERE payment_id=?}, $$self{'id'} );
     return sql::execute( undef, undef, q{DELETE FROM Payments WHERE id=?}, $$self{'id'} );
 } # end sub destroy
 
