@@ -16,8 +16,8 @@
 				<td class="Price">%7$s</td>
 			`,
 			$Price->id(), 
-			input( type=>'float', name=>'min-'.$Price->id(), value=> ( $Price->min() > 0 ? Number::Format::format_number($Price->min()) : $Price->min() ), onkeyup=>'check_price(this);' ),
-			input( type=>'float', name=>'max-'.$Price->id(), value=> ( $Price->max() > 0 ? Number::Format::format_number($Price->max()) : $Price->max() ), onkeyup=>'check_price(this);' ),
+			input( type=>'float', name=>'min-'.$Price->id(), value=> $Price->min(), onkeyup=>'check_price(this);' ),
+			input( type=>'float', name=>'max-'.$Price->id(), value=> $Price->max(), onkeyup=>'check_price(this);' ),
 			input( type=>'text', name=>'units-'.$Price->id(), value=>$Price->units(), onkeyup=>'check_price(this);' ),
 			input( type=>'float', name=>'cost-'.$Price->id(), value=>$Price->cost(), onkeyup=>'calc_price(this);check_price(this);' ),
 			input( type=>'float', name=>'markup-'.$Price->id(), value=>$Price->markup(), onkeyup=>'calc_price(this);check_price(this);' ),
@@ -32,8 +32,8 @@
 				<td class="Units">%4$s</td>
 				<td class="Cost">%5$s</td>`,
 				$Price->id(), 
-				input( type=>'float', name=>'min-'.$Price->id(), value=> ( $Price->min() > 0 ? Number::Format::format_number($Price->min()) : $Price->min() ), onkeyup=>'check_price(this);' ),
-				input( type=>'float', name=>'max-'.$Price->id(), value=> ( $Price->max() > 0 ? Number::Format::format_number($Price->max()) : $Price->max() ), onkeyup=>'check_price(this);' ),
+				input( type=>'float', name=>'min-'.$Price->id(), value=>$Price->min(), onkeyup=>'check_price(this);' ),
+				input( type=>'float', name=>'max-'.$Price->id(), value=>$Price->max(), onkeyup=>'check_price(this);' ),
 				input( type=>'text', name=>'units-'.$Price->id(), value=>$Price->units(), onkeyup=>'check_price(this);' ),
 				input( type=>'float', name=>'cost-'.$Price->id(), value=>$Price->cost(), onkeyup=>'calc_price(this);check_price(this);' ),
 			);
@@ -77,8 +77,8 @@
 			$Price->id(), 
 			( $Price->discountable() eq 'Y' ? ( 'checked="checked"', '' ) : ( '', 'checked="checked"' ) ),
 			join('', 
-				ssi::writeButton( $log, $dbh, 'x'.$Price->id(), 'delete.gif', qq`delPrice( $$Price{id} );`, '', 'X' ),
-				ssi::writeButton( $log, $dbh, 'c'.$Price->id(), 'copy.gif', qq`copyPrice( $$Price{id} );`, '', 'C' ),
+				button( 'x'.$Price->id(), { onclick=>qq`delPrice( $$Price{id} );`, text=>'X' }),
+				button( 'c'.$Price->id(), { onclick=>qq`copyPrice( $$Price{id} );`, text=>'C' } ),
 				),
 		);
 	return $html;

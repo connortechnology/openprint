@@ -9,26 +9,26 @@
 		<option value="">Equipment Options</option>
 <? echo (
 	if ( $$variable{'Equipment'} ) {
-		return ssi::make_drop_down( [ map { $_->id(), $_->name() } @{$$variable{'Equipment'}} ], $$variable{'ddmEquipment'.$$variable{'QTYIndex'}} ? $$variable{'ddmEquipment'.$$variable{'QTYIndex'}} : $$variable{'Equipment'.$$variable{'QTYIndex'}} );
+		return make_drop_down( [ map { $_->id(), $_->name() } @{$$variable{'Equipment'}} ], $$variable{'ddmEquipment'.$$variable{'QTYIndex'}} ? $$variable{'ddmEquipment'.$$variable{'QTYIndex'}} : $$variable{'Equipment'.$$variable{'QTYIndex'}} );
 	} elsif ( $$variable{"ddmEquipment$$variable{'QTYIndex'}"} ) {
 		return $$variable{"ddmEquipment$$variable{'QTYIndex'}"};
 	} elsif ( $$variable{'EquipmentArray'} ) {
-		return ssi::fill_drop_down( $log, $dbh, "SELECT strID, strName FROM tbl_Equipment WHERE lngIndex IN (".join(',', @{$$variable{'EquipmentArray'}}).") ORDER BY lower(strName)", $$variable{"ddmEquipment-$$variable{'SignatureIndex'}-$$variable{'QTYIndex'}"} ); 
+		return fill_drop_down( $log, $dbh, "SELECT strID, strName FROM tbl_Equipment WHERE lngIndex IN (".join(',', @{$$variable{'EquipmentArray'}}).") ORDER BY lower(strName)", $$variable{"ddmEquipment-$$variable{'SignatureIndex'}-$$variable{'QTYIndex'}"} ); 
 	} elsif ( $$variable{'ddmEquipment'} ) {
 		return $$variable{'ddmEquipment'};
 	}
 ) ?>
-		</select>
-		<input type="checkbox" id="chkOverrideEquipment<?QTYIndex?>" name="chkOverrideEquipment<?QTYIndex?>" value="Y" onclick="if ( ! this.checked ) calc('f1');" 
-		<? echo ( ssi::checked( $$variable{'chkOverrideEquipment'.$$variable{'QTYIndex'}} eq 'Y' ); ) ?> />
-		<label class="radio" for="chkOverrideEquipment<?QTYIndex?>">Override</label>
+	 	</select>
+		<? echo ( write_override( 'chkOverrideEquipment'.$$variable{QTYIndex}, $$variable{"chkOverrideEquipment$$variable{QTYIndex}"}, '', 'calc(this.form.name);' );) ?>
 	</span>
 	<? endif ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
 	<? eval ( $$variable{'QTYIndex'} += 1 ) ?>
 	<? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
 </li>
-<? echo ( include('/includes/main/proj/_unit_price.html'); ) ?>
-<? echo ( include('/includes/main/proj/_mprice.html'); ) ?>
-<? echo ( include('/includes/main/proj/_markup.html'); ) ?>
-<? echo ( include('/includes/main/proj/_service_price.html'); ) ?>
-<? echo ( include('/includes/main/proj/_breakdown.html'); ) ?>
+<? echo ( join( "\n",
+			include('/includes/main/proj/_unit_price.html'),
+			include('/includes/main/proj/_mprice.html'),
+			include('/includes/main/proj/_markup.html'),
+			include('/includes/main/proj/_service_price.html'),
+			include('/includes/main/proj/_breakdown.html'),
+		); ) ?>

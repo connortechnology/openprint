@@ -87,6 +87,16 @@
 		$stock_id += 1;
 	} # end foreach stock
 	$html .= include( '/includes/main/proj/_service_price.html' );
+if ( sets::isin( $session{'user_type'}, ['A','E'] ) ) {
+            $html .= '<li>';
+    foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
+        $html .= sprintf('<span class="%sColumns">', $$variable{'Columns'} );
+        $html .= button( 'Breakdown'.$qty_index, { onclick=>"show_breakdown($qty_index);", text=>'Breakdown' } );
+        $html .= '</span>';
+    } # end foreach qty_index
+            $html .= '</li>';
+	} # end if
+
 	$html .= '</ul></fieldset>';
 	return $html;
 ) ?>
@@ -100,6 +110,9 @@
 		<input type="hidden" name="ServiceType" value="<?ServiceType?>">
 		<input type="hidden" name="ContinueProject" value="Y" />
 		<input type="hidden" name="Status" />
+		<div id="hdnBreakdown1" style="display: none;"></div>
+		<div id="hdnBreakdown2" style="display: none;"></div>
+		<div id="hdnBreakdown3" style="display: none;"></div>
 	</form>
 </div>
 
