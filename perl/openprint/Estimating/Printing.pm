@@ -3043,6 +3043,9 @@ sub get_project_price {
 			if ( $best_price{Imposition}->Press()->specification('Number of Colours') > $Press->specification('Number of Colours') ) {
 $openprint::log->debug("Giving up on $$Press{strid} bnecause it's bigger than the previous " .$best_price{Imposition}->Press()->strid() ); 
 				next;
+			} elsif ( $best_price{Imposition}->Press()->id() != $Press->id() and $best_price{Imposition}->Press()->specification('Number of Colours') == $Press->specification('Number of Colours') ) {
+				$openprint::log->debug("Giving up on $$Press{strid} bnecause it's the same # of colours, but a different press than the previous " .$best_price{Imposition}->Press()->strid() );
+				next;
 			} # end if
 		} # end if
 
@@ -3251,10 +3254,8 @@ $openprint::log->error( Data::Dumper::Dumper( $price ) );
 
 							my $sig_price = calc_price( $Project, $$new_specs{'ServiceIndex'}, $imp, $project, $services, $new_specs, $qty, $qty_index, \%PlateCounts, \%washed_colours, \@total_impositions );
 							$imp->display( $recursion_depth . ' UPQ: ' . $upq . ' first level calc_price' ) if DEBUG;
-#XXX
-#$$imp{price} = $sig_price;
 							$$sig_price{Imposition} = $imp;
-#$imp->display("additional calc_price this imp $$sig_price{'Comparison Cost'}");
+
 			if ( 1 ) {
 				my $results = plate_cost( $sig_price, \%PlateCounts );
 				$$sig_price{'Total Cost'} += $$results{Price};
@@ -3434,18 +3435,21 @@ $openprint::log->warn("Unable to calculate additional signatures Complete: $$sig
 					$$price{'Total Cost'} -= $$price{PlateCost};
 				}
 				my $results = plate_cost( $price, \%PlateCounts );
-				$$price{PlateCost} = $$results{'Price'};
+				$$price{PlateCost} = $$results{Price};
+
 				foreach my $p ( @{$$price{prices}} ) {
 					# This should fill in the place costs line of the breakdown
 					my $r = plate_cost( $p, \%PlateCounts );
 					if ( $$p{PlateCost} ) {
 						# They may be added into the Comparison cost in one of the sub prices
 						$$price{'Comparison Cost'} -= $$p{PlateCost};
-					} else {
-						$$p{'Total Cost'} += $$r{Price};
-						$$p{PlateCost} = $$results{Price};
-					} # end if
+						$$p{'Total Cost'} -= $$p{PlateCost};
+					} 
+					$$price{'Comparison Cost'} += $$p{sig_count} * $$p{PlateCost};
+					$$p{'Total Cost'} += $$r{Price};
+					$$p{PlateCost} = $$r{Price};
 				} # end foreach price
+
 				$$price{'Total Cost'} += $$results{Price};
 				$$price{'Comparison Cost'} += $$results{Price};
 
@@ -3478,10 +3482,12 @@ $openprint::log->warn("Unable to calculate additional signatures Complete: $$sig
 				if ( $$price{PlateCost} ) {
 # They may be added into the Comparison cost in one of the sub prices
 					$$price{'Comparison Cost'} -= $$price{PlateCost};
+					$$price{'Total Cost'} -= $$price{PlateCost};
 				}
 				my $results = plate_cost( $price, \%PlateCounts );
 				$$price{PlateCost} = $$results{Price};
 				$$price{'Comparison Cost'} += $$results{Price};
+				$$price{'Total Cost'} += $$price{PlateCost};
 
 # I don't think this is appropriate anymore
 #$$price{'Comparison Cost'} += $$price{'sig_count'} * $$results{'Price'};
