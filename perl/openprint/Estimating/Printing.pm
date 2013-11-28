@@ -229,7 +229,6 @@ my %variables = (
 	'PageCharge1' =>  ['save','output'], 'PageCharge2' => ['save','output'], 'PageCharge3' => ['save','output'],
 	'SteppingCharge1' =>  ['save','output'], 'SteppingCharge2' => ['save','output'], 'SteppingCharge3' => ['save','output'],
 	'InkTotalCharge1' =>  ['save','output'], 'InkTotalCharge2' => ['save','output'], 'InkTotalCharge3' => ['save','output'],
-	'InkMixCharge1' =>  ['save','output'], 'InkMixCharge2' => ['save','output'], 'InkMixCharge3' => ['save','output'],
 	'StockSetupCharge1'	=> ['save','output'], 'StockSetupCharge2'	=> ['save','output'], 'StockSetupCharge3'	=> ['save','output'],
 #
 
@@ -512,7 +511,7 @@ $openprint::log->debug("Adding special colour for $colour");
 			$$Ink{pmsid} = $colour;
 			$$Ink{name} = $colour;
 			if ( ! sets::isin( $colour, \@process_colours ) ) {
-				$$Ink{service_id} = $PMSInkMixService->id() if $PMSInkMixService;
+				$$Ink{mix_service_id} = $PMSInkMixService->id() if $PMSInkMixService;
 				$$Ink{mix} = 1;
 				$$Ink{washups} = 1;
 				my $Material = openprint::Material->find_one(name=>$colour.'Ink');
