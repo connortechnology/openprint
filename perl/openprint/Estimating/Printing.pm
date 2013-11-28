@@ -22,7 +22,7 @@ my $threading = 0;
 #use threads;
 use constant DEBUG => 0;
 use constant DEBUG_VERSIONS => 0;
-use constant DEBUG_FILTERING => 1;
+use constant DEBUG_FILTERING => 0;
 use constant DEBUG_PRICE_DECISIONS => 0;
 use constant DEBUG_INKS => 0;
 
@@ -38,7 +38,7 @@ my %converted_imposition_cache;
 my $use_converted_imposition_cache = 0;
 my %filtered_imposition_cache;
 my $use_filtered_imposition_cache = 0;
-my $calc_other_groups = 1;
+my $calc_other_groups = 0;
 
 my %stitching_cache;
 my %price_cache;
