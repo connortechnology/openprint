@@ -3040,6 +3040,12 @@ sub get_project_price {
 	foreach my $Press ( $$sig_specs{'chkOverridePress'.$qty_index} eq 'Y' ? openprint::Equipment->find_one('strid'=>$$sig_specs{'ddmPress'.$qty_index} ) : @$possible_presses ) {
 #$openprint::log->debug("Press: $$Press{strid}");
 		next if ! $Press;
+		if ( $best_price{Imposition} ) {
+			if ( $best_price{Imposition}->Press()->specification('Number of Colours') > $Press->specification('Number of Colours') ) {
+$openprint::log->debug("Giving up on $$Press{strid} bnecause it's bigger than the previous " .$best_price{Imposition}->Press()->strid() ); 
+				next;
+			} # end if
+		} # end if
 
 		my $has_sheeter = sets::isin('Sheet', [ split(',', $Press->specification('Feed') ) ] ) if ! $recursion_depth;
 
@@ -3468,7 +3474,7 @@ $openprint::log->warn("Unable to calculate additional signatures Complete: $$sig
 					} # end if Has Roll2Sheet Price
 				} # end if Roll & has sheeter
 			} # end if recursion == 0
-$openprint::log->debug("UPQ $txtUnspecifiedPageQuantity $$price{'sig_count'} * $$imp{pages} ");
+#$openprint::log->debug("UPQ $txtUnspecifiedPageQuantity $$price{'sig_count'} * $$imp{pages} ");
 			if ( ($txtUnspecifiedPageQuantity <= 1) or ( $txtUnspecifiedPageQuantity - ( $$price{'sig_count'} * $$imp{pages} ) == 0 ) ) {
 				if ( $$price{PlateCost} ) {
 # They may be added into the Comparison cost in one of the sub prices
