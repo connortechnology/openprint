@@ -371,6 +371,7 @@ if ( 1 ) {
 					} # end if
 					$Price{'MakeReady'} += $setupPrice{'Price'};
 					$MakeReadies{$Equipment->id()} = $area;
+					$Price{washups} = scalar @different_types;
 				} # end if
 				
 				my %BlanketCutPrice;
@@ -454,6 +455,7 @@ if ( 1 ) {
 				$bestPrice{'BlanketCut'} = $Price{'BlanketCut'};
 				$bestPrice{'Equipment'} = $Equipment;
 				$bestPrice{'Imposition'} = $imp;
+				$bestPrice{washups} = $Price{washups};
 			} # end if
 		} # end foreach equipment
 	} # end foreach imposition
