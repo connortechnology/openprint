@@ -30,8 +30,12 @@ function set_item(index) {
 	item.value += $('name-'+index).value;
 } // end function set_item(index)
 
-function filter_items( index, type_id ) {
-	new Ajax.Updater('item_id-'+index, '_items_dropdown.html', { parameters: { name_ilike: $('item-'+index).value, vendor_id: get_ddm_value($('supplier_id')), type_id: type_id } } );
+function filter_items( index, type_id, e ) {
+	if ( e.name == 'product-'+index ) {
+	new Ajax.Updater('item_id-'+index, '_items_dropdown.html', { parameters: { product_ilike: e.value, vendor_id: get_ddm_value($('supplier_id')), type_id: type_id } } );
+	} else {
+	new Ajax.Updater('item_id-'+index, '_items_dropdown.html', { parameters: { name_ilike: e.value, vendor_id: get_ddm_value($('supplier_id')), type_id: type_id } } );
+	} // end if
 }
 
 function calc_price( element ) {
