@@ -121,7 +121,7 @@ sub check_setup {
 	if ( sets::isin( $setup->runstyle(),[ 'Sheet Work', 'Web' ] ) ) {
 		#$log->debug(" *** Runstyle is:	Sheet Work ***");
 	} elsif ( $setup->runstyle() eq 'Perfecting' ) {
-		$openprint::log->debug("*** Runstyle is: Perfecting Imposition is : $$setup{'Imposition'} *** ($$specs{OverrideRunStyle})($$specs{OverrideImposition})" . $setup->Paper()->perfecting() );
+		#$openprint::log->debug("*** Runstyle is: Perfecting Imposition is : $$setup{'Imposition'} *** ($$specs{OverrideRunStyle})($$specs{OverrideImposition})" . $setup->Paper()->perfecting() );
 
 		if ( ( ! $setup->Paper()->perfecting() ) and ! ( $$specs{OverrideImposition} == $setup->imposition() and $$specs{OverrideRunStyle} eq 'Perfecting' ) ) {
 $setup->display();
