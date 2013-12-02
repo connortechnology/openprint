@@ -62,14 +62,14 @@
 				</select>
 			</p>
 			<p id="MWeight<?Signature?>" <? echo ( 'style="display: none;"' if $$variable{'StockType'.$$variable{'Signature'}} eq 'Roll' ) ?>>
-			<label>MWeight:</label><input type="text" name="txtCustomMWeight<?Signature?>" size="9" value="<? echo ( $$variable{'txtCustomMWeight'.$$variable{'Signature'}} ) ?>" onkeyup="mweight_to_gsm(this.form,'<?Signature?>');calc(this.form.name);" />
+			<label>MWeight:</label><input type="text" name="txtCustomMWeight<?Signature?>" size="9" value="<? echo ( $$variable{'txtCustomMWeight'.$$variable{'Signature'}} ) ?>" onkeyup="mweight_to_gsm(this.form,'<?Signature?>');calc(this.form.name);" onchange="this.onkeyup();" oninput="this.onkeyup();" />
 			</p>
 			<p id="BasisSize<?Signature?>" <? echo ( 'style="display: none;"' if $$variable{'StockType'.$$variable{'Signature'}} ne 'Roll' ) ?>>
 				<label>Basis MWeight:</label><input type="text" name="basis_mweight<?Signature?>" size="9" value="<? echo ( $$variable{'basis_mweight'.$$variable{'Signature'}} ) ?>" onkeyup="mweight_to_gsm(this.form,'<?Signature?>');calc(this.form.name);" /><br/>
 				<label>Basis Size:</label><input type="text" name="basis_width<?Signature?>" size="9" value="<? echo ( $$variable{'basis_width'.$$variable{'Signature'}} ? $$variable{'basis_width'.$$variable{'Signature'}} : 25 ) ?>" onkeyup="gsm_to_mweight(this.form,'<?Signature?>');calc(this.form.name);" />
 				<input type="text" name="basis_height<?Signature?>" size="9" value="<? echo ( $$variable{'basis_height'.$$variable{'Signature'}} ? $$variable{'basis_height'.$$variable{'Signature'}} : 38 ) ?>" onkeyup="gsm_to_mweight(this.form,'<?Signature?>');calc(this.form.name);" />
 			</p>
-			<p><label>GSM:</label><input type="text" id="txtStockGSM<?Signature?>" name="txtStockGSM<?Signature?>" size="9" value="<? echo ( $$variable{'txtStockGSM'.$$variable{'Signature'}} ) ?>" onkeyup="gsm_to_mweight(this.form,'<?Signature?>');calc(this.form.name);" /></p>
+			<p><label>GSM:</label><input type="text" id="txtStockGSM<?Signature?>" name="txtStockGSM<?Signature?>" size="9" value="<? echo ( $$variable{'txtStockGSM'.$$variable{'Signature'}} ) ?>" onkeyup="gsm_to_mweight(this.form,'<?Signature?>');calc(this.form.name);" onchange="this.onkeyup();" oninput="this.onkeyup();"/></p>
 			<p><label>Double sided?</label>
 				<input id="CustomSheetDoubleSided<?Signature?>Y" name="CustomSheetDoubleSided<?Signature?>" type="radio" value="Y" onclick="calc(this.form.name);" <? echo ( 'checked="checked"' if $$variable{'CustomSheetDoubleSided'.$$variable{'Signature'}} ne 'N' ) ?> />
 				<label class="radio" for="CustomSheetDoubleSided<?Signature?>Y">Yes</label>

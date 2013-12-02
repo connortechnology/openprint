@@ -118,6 +118,7 @@
 			$sheets = $1;
 			$lbs = $sheets * $Paper->area() * $Paper->wpsi();
 		} else {
+$log->error("Unknown qty in txtPressSheetQty" . $$sig_specs{"txtPressSheetQty$qty_index"});
 			$sheets = $impressions;
 			$lbs = $sheets * $Paper->area() * $Paper->wpsi();
 		} # end if
@@ -126,7 +127,7 @@
 			$totals{$Paper->to_string()} += $lbs;
 			$sheets{$Paper->to_string()} += $sheets;
 		} elsif ( $Paper->type() eq 'Sheet' ) {
-			if ( $Paper->start_area() and $Paper->area() ) {
+			if ( $Paper->start_area() and $Paper->area() and $Paper->start_area() != $Paper->area() ) {
 				$sheets /= ( $Paper->start_area() / $Paper->area() );
 				$sheets = ceil( $sheets );
 				$Paper = $Paper->Supplied();
