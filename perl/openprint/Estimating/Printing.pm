@@ -1080,8 +1080,12 @@ $openprint::log->debug(join(',',@{$$specs{'PrintingTypes'}} ));
 
 		if ( $$specs{'chkOverrideRunStyle'.$qty_index} eq 'Y' ) {
 			$variables{'ddmRunStyle'.$qty_index} = [ sets::exclude( ['output'], $variables{'ddmRunStyle'.$qty_index} ) ];
+			$project{OverrideRunStyle} = $$specs{'ddmRunStyle'.$qty_index};
 		} else {
 			$variables{'ddmRunStyle'.$qty_index} = [ sets::union( 'output', @{$variables{'ddmRunStyle'.$qty_index}} ) ];
+		} # end if
+		if ( $$specs{'chkOverrideImposition'.$qty_index} eq 'Y' ) {
+			$project{OverrideImposition} = $$specs{"txtImposition".$qty_index};
 		} # end if
 
 		if ( $$specs{'txtSignatureType'} ) {
