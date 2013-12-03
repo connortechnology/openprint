@@ -38,6 +38,7 @@ my %converted_imposition_cache;
 my $use_converted_imposition_cache = 0;
 my %filtered_imposition_cache;
 my $use_filtered_imposition_cache = 0;
+my $calc_other_groups = 1;
 
 my %stitching_cache;
 my %price_cache;
@@ -228,7 +229,6 @@ my %variables = (
 	'PageCharge1' =>  ['save','output'], 'PageCharge2' => ['save','output'], 'PageCharge3' => ['save','output'],
 	'SteppingCharge1' =>  ['save','output'], 'SteppingCharge2' => ['save','output'], 'SteppingCharge3' => ['save','output'],
 	'InkTotalCharge1' =>  ['save','output'], 'InkTotalCharge2' => ['save','output'], 'InkTotalCharge3' => ['save','output'],
-	'InkMixCharge1' =>  ['save','output'], 'InkMixCharge2' => ['save','output'], 'InkMixCharge3' => ['save','output'],
 	'StockSetupCharge1'	=> ['save','output'], 'StockSetupCharge2'	=> ['save','output'], 'StockSetupCharge3'	=> ['save','output'],
 #
 
@@ -511,7 +511,7 @@ $openprint::log->debug("Adding special colour for $colour");
 			$$Ink{pmsid} = $colour;
 			$$Ink{name} = $colour;
 			if ( ! sets::isin( $colour, \@process_colours ) ) {
-				$$Ink{service_id} = $PMSInkMixService->id() if $PMSInkMixService;
+				$$Ink{mix_service_id} = $PMSInkMixService->id() if $PMSInkMixService;
 				$$Ink{mix} = 1;
 				$$Ink{washups} = 1;
 				my $Material = openprint::Material->find_one(name=>$colour.'Ink');
@@ -2172,10 +2172,8 @@ $log->warn("There are no quantities!");
 			$$specs{'hdnBreakdown'.$qty_index} .= " * $$specs{'txtNameQuantity'} names = $qty: ";
 		} # end if
 
-		$$specs{'totalSpreads'} = 1;
 # Figure out how many spreads we need!
 		if ( $$specs{'txtSignatureType'} ) {
-			$$specs{'totalSpreads'} = $$specs{'GroupPageQuantity'};
 #$openprint::log->debug("Master time before get_unspecified_pages: " . ( sprintf('%.4f', tv_interval( [$master_time])*1000) ) .' usecs' );
 			$$specs{'txtUnspecifiedPageQuantity'.$qty_index} = get_unspecified_pages( $Project, $service_index, $printing_specs, $specs, $qty_index );
 #$openprint::log->debug("Master time after get_unspecified_pages: " . ( sprintf('%.4f', tv_interval( [$master_time])*1000) ) .' usecs' );
@@ -3041,6 +3039,15 @@ sub get_project_price {
 	foreach my $Press ( $$sig_specs{'chkOverridePress'.$qty_index} eq 'Y' ? openprint::Equipment->find_one('strid'=>$$sig_specs{'ddmPress'.$qty_index} ) : @$possible_presses ) {
 #$openprint::log->debug("Press: $$Press{strid}");
 		next if ! $Press;
+		if ( $best_price{Imposition} ) {
+			if ( $best_price{Imposition}->Press()->specification('Number of Colours') > $Press->specification('Number of Colours') ) {
+$openprint::log->debug("Giving up on $$Press{strid} bnecause it's bigger than the previous " .$best_price{Imposition}->Press()->strid() ); 
+				next;
+			} elsif ( $best_price{Imposition}->Press()->id() != $Press->id() and $best_price{Imposition}->Press()->specification('Number of Colours') == $Press->specification('Number of Colours') ) {
+				$openprint::log->debug("Giving up on $$Press{strid} bnecause it's the same # of colours, but a different press than the previous " .$best_price{Imposition}->Press()->strid() );
+				next;
+			} # end if
+		} # end if
 
 		my $has_sheeter = sets::isin('Sheet', [ split(',', $Press->specification('Feed') ) ] ) if ! $recursion_depth;
 
@@ -3247,10 +3254,8 @@ $openprint::log->error( Data::Dumper::Dumper( $price ) );
 
 							my $sig_price = calc_price( $Project, $$new_specs{'ServiceIndex'}, $imp, $project, $services, $new_specs, $qty, $qty_index, \%PlateCounts, \%washed_colours, \@total_impositions );
 							$imp->display( $recursion_depth . ' UPQ: ' . $upq . ' first level calc_price' ) if DEBUG;
-#XXX
-#$$imp{price} = $sig_price;
 							$$sig_price{Imposition} = $imp;
-#$imp->display("additional calc_price this imp $$sig_price{'Comparison Cost'}");
+
 			if ( 1 ) {
 				my $results = plate_cost( $sig_price, \%PlateCounts );
 				$$sig_price{'Total Cost'} += $$results{Price};
@@ -3430,18 +3435,21 @@ $openprint::log->warn("Unable to calculate additional signatures Complete: $$sig
 					$$price{'Total Cost'} -= $$price{PlateCost};
 				}
 				my $results = plate_cost( $price, \%PlateCounts );
-				$$price{PlateCost} = $$results{'Price'};
+				$$price{PlateCost} = $$results{Price};
+
 				foreach my $p ( @{$$price{prices}} ) {
 					# This should fill in the place costs line of the breakdown
 					my $r = plate_cost( $p, \%PlateCounts );
 					if ( $$p{PlateCost} ) {
 						# They may be added into the Comparison cost in one of the sub prices
 						$$price{'Comparison Cost'} -= $$p{PlateCost};
-					} else {
-						$$p{'Total Cost'} += $$r{Price};
-						$$p{PlateCost} = $$results{Price};
-					} # end if
+						$$p{'Total Cost'} -= $$p{PlateCost};
+					} 
+					$$price{'Comparison Cost'} += $$p{sig_count} * $$p{PlateCost};
+					$$p{'Total Cost'} += $$r{Price};
+					$$p{PlateCost} = $$r{Price};
 				} # end foreach price
+
 				$$price{'Total Cost'} += $$results{Price};
 				$$price{'Comparison Cost'} += $$results{Price};
 
@@ -3469,15 +3477,17 @@ $openprint::log->warn("Unable to calculate additional signatures Complete: $$sig
 					} # end if Has Roll2Sheet Price
 				} # end if Roll & has sheeter
 			} # end if recursion == 0
-$openprint::log->debug("UPQ $txtUnspecifiedPageQuantity $$price{'sig_count'} * $$imp{pages} ");
+#$openprint::log->debug("UPQ $txtUnspecifiedPageQuantity $$price{'sig_count'} * $$imp{pages} ");
 			if ( ($txtUnspecifiedPageQuantity <= 1) or ( $txtUnspecifiedPageQuantity - ( $$price{'sig_count'} * $$imp{pages} ) == 0 ) ) {
 				if ( $$price{PlateCost} ) {
 # They may be added into the Comparison cost in one of the sub prices
 					$$price{'Comparison Cost'} -= $$price{PlateCost};
+					$$price{'Total Cost'} -= $$price{PlateCost};
 				}
 				my $results = plate_cost( $price, \%PlateCounts );
 				$$price{PlateCost} = $$results{Price};
 				$$price{'Comparison Cost'} += $$results{Price};
+				$$price{'Total Cost'} += $$price{PlateCost};
 
 # I don't think this is appropriate anymore
 #$$price{'Comparison Cost'} += $$price{'sig_count'} * $$results{'Price'};
@@ -3601,12 +3611,12 @@ $openprint::log->debug("UPQ $txtUnspecifiedPageQuantity $$price{'sig_count'} * $
 			} # end if
 		} # end if PerfectBound
 
-		if ( 0 and $$service_specs{'Group'} == 1 ) {
+		if ( $calc_other_groups and $$service_specs{'Group'} == 1 ) {
 			if ( ! $other_group_cache{$$Press{id}} ) {
 # When doing the cover, need to calc additional sigs as well.
 # Add calculations for other Groups
 				$openprint::log->debug("Calculating Additional Signatures for other group");
-				my @sigs = sort $Project->signatures({'Group'=>2});
+				my @sigs = sort $Project->signatures({Group=>2});
 				if ( @sigs ) {
 					my $Service = $Project->Service( $sigs[0] );
 					my $subsig_specs = $Service->specs();
@@ -3634,9 +3644,8 @@ $openprint::log->debug("UPQ $txtUnspecifiedPageQuantity $$price{'sig_count'} * $
 								$$price{'Comparison Cost'} += 1000000;
 $openprint::log->warn("Unable to calculate impositions for additional signatures.<br/>");
 							} else {
-								$$subsig_specs{'totalSpreads'} = $$subsig_specs{'GroupPageQuantity'};
-								$$subsig_specs{'txtUnspecifiedPageQuantity'.$qty_index} = get_unspecified_pages( $Project, $service_index, $printing_specs, $subsig_specs, $qty_index );
-								$$subsig_specs{'txtUnspecifiedPageQuantity'.$qty_index} = 0 if $$subsig_specs{'txtUnspecifiedPageQuantity'.$qty_index} < 0;
+								# Don't need to call get_unspecified_pages because we know that we are calculating all of them.
+								$$subsig_specs{'txtUnspecifiedPageQuantity'.$qty_index} = $$subsig_specs{GroupPageQuantity};
 
 								my $sig_price = get_project_price( $Project, $sigs[0], $new_project, $subsig_specs, $subsig_specs, $qty, $qty_index, 
 										\@possible_presses, $printing_specs, $versions, \%PlateCounts, \%PaperCounts, \%washed_colours, \%previous_forms_cache, \@sigs, \%impositions, $other_impositions, \%best_price, 0 );
@@ -3664,7 +3673,7 @@ $openprint::log->warn("Unable to calculate impositions for additional signatures
 				$$price{'Comparison Cost'} += $$sig_price{'Comparison Cost'};
 #$$price{'itionalSignature Breakdown'} .= breakdown( $sig_price, $sig_specs );
 			} else {
-				$openprint::log->debug("Calculating Additional Signatures for other group failure");
+				$openprint::log->error("Calculating Additional Signatures for other group failure");
 				$$price{'Breakdown'} .= 'Unable to calculate additional signatures.<br/>';
 				$$price{'Comparison Cost'} += 1000000;
 			} # end if
@@ -5427,7 +5436,7 @@ if ( 0 ) {
 			$string .= sprintf( ' %s on %s %s',
 					get_colour_description( $specs ),
 					$$specs{'rdbSuppliedStock'} eq 'Y' ? '<b>Customer Supplied</b>' : '',
-					$$specs{'rdbSpecificStock'} eq 'Y' ?
+					$$specs{'rdbSpecificStock'} eq 'Y' ? '<b>Custom:</b>'.
 					join(', ', @$specs{'txtSpecificStockBrand','txtSpecificStockFinish','txtSpecificStockColour','txtSpecificStockWeight'} ) :
 					join(', ', @$specs{'ddmStockBrand','ddmStockFinish','ddmStockColour','ddmStockWeight'} )
 					,

@@ -61,15 +61,6 @@ sub calc {
 	my $Project = new openprint::Project( $project_index );
 	my $services = $Project->services();
 
-	my $stitching_service_index;
-    # Can only use the stitcher for drilling if we are stitching.  There are also thickness constraints
-	if ( $$services{'SaddleStitching'} ) {
-		$stitching_service_index = $$services{'SaddleStitching'}[0] ;
-	} elsif ( $$services{'LoopStitching'} ) {
-		$stitching_service_index = $$services{'LoopStitching'}[0];
-	} # end if
-	my $stitching_specs = $stitching_service_index ? openprint::service::get_specs_ref( $Project, $stitching_service_index ) : {};
-
 	if ( $$specs{'chkOverrideFinishedCalliper'} ne 'Y' ) {
 		$$specs{'txtFinishedCalliper'} = openprint::print::get_finished_calliper( $project_index );
 		@outputs = sets::union( 'txtFinishedCalliper', @outputs );
@@ -89,7 +80,19 @@ sub calc {
 
 	my $printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] ) if $$services{''};
 
-	my @possible_equipment = openprint::Equipment->find( 'Specifications' => {'Drilling Capable'=>'Y'}, 'useinestimating'=>1,'order'=>'strName');
+	my @capabilities = ( 'Y' );
+	my $stitching_service_index;
+    # Can only use the stitcher for drilling if we are stitching.  There are also thickness constraints
+	if ( $$services{'SaddleStitching'} ) {
+		$stitching_service_index = $$services{'SaddleStitching'}[0] ;
+		push @capabilities, 'When Stitching';
+	} elsif ( $$services{'LoopStitching'} ) {
+		push @capabilities, 'When Stitching';
+		$stitching_service_index = $$services{'LoopStitching'}[0];
+	} # end if
+	my $stitching_specs = openprint::service::get_specs_ref( $Project, $stitching_service_index );
+
+	my @possible_equipment = openprint::Equipment->find( 'Specifications' => {'Drilling Capable'=>\@capabilities}, 'useinestimating'=>1, order=>'strName');
 
 	foreach my $qty_index ( $Project->quantity_indexes() ) {
 		$$specs{"txtQuantity$qty_index"} = $Project->quantity( $qty_index ) if ! $$specs{"txtQuantity$qty_index"};
@@ -121,6 +124,10 @@ sub calc {
 				} # end if
 				if ( $$stitching_specs{'Imposition'.$qty_index} > 1 ) {
 					$$specs{'hdnBreakdown'.$qty_index} .="Not when stitching more than 1 out<br/>";
+					next;
+				} # end if
+				if ( $$stitching_specs{"ddmEquipment$qty_index"} != $Equipment->id() ) {
+					$$specs{'hdnBreakdown'.$qty_index} .="Not stitching on this stitcher<br/>";
 					next;
 				} # end if
 
@@ -172,6 +179,8 @@ sub calc {
 					$items_per_lift = 10;
 				} elsif ( $Equipment->specification('Maximum Lift Depth') ) {
 					$items_per_lift = int($Equipment->specification('Maximum Lift Depth')/$$specs{'txtFinishedCalliper'});
+				} else {
+					$items_per_lift = 1;
 				} # end if
 			} else {
 				$items_per_lift = $$specs{'ItemsPerLift'};
@@ -184,10 +193,10 @@ sub calc {
 				$$specs{'hdnBreakdown'.$qty_index} .= "No Service Price found for this quantity.<br/>";
 				next;
 			} # end if
-			my $runs = ceil( $$specs{'txtHoleQty'} / $Equipment->specification('Number of Drills'));
+				my $heads = $Equipment->specification('Number of Drills');
+				my $runs = $heads ? ceil( $$specs{'txtHoleQty'} / $heads ) : 1;
 			if ( sets::isin( $servicePrice{'units'}, 'per m', 'per 1000' ) ) {
 				%servicePrice = openprint::service::get_price_object( 'Drilling', $runs * $qty, $Equipment);
-
 				$servicePrice{'Total'} = $runs * $qty * ($servicePrice{Price}/1000);
 				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('ServicePrice: %d * %.3f %s = $%.2f<br/>',$qty, $servicePrice{'Price'}/1000, @servicePrice{'units','Total'} );
 			} elsif ( sets::isin( $servicePrice{'units'}, [ 'per lift', 'per drill' ] ) ) {
@@ -244,7 +253,13 @@ sub display {
 	my ( $log, $dbh, $variable, $project_index, $service_index ) = @_;
 
 	my $Project = new openprint::Project( $project_index );
-	my @equipment = openprint::Equipment->find( 'Specifications' => {'Drilling Capable'=>'Y'}, 'useinestimating'=>1,'order'=>'strName');
+	my $services = $Project->services();
+
+
+	my @capabilities = ( 'Y', 
+		( ( $$services{SaddleStitching} or $$services{LoopStitching} ) ? 'When Stitching' : () ),
+	);
+	my @equipment = openprint::Equipment->find( 'Specifications' => {'Drilling Capable'=>\@capabilities}, useinestimating=>1, order=>'strName');
 	foreach my $qty_index ( $Project->quantity_indexes() ) {
 		$$variable{'ddmEquipment'.$qty_index} = ssi::make_drop_down( [ map { $_->id(), $_->name() } @equipment ], $$variable{'ddmEquipment'.$qty_index} );
 	} # end foreach qty_index
