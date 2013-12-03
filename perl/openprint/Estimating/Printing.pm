@@ -1133,7 +1133,14 @@ sub get_impositions($$$$$$$) {
 	$$project{'txtSpreadSize'} = $$specs{'txtSpreadSize'};
 	my $ProjectTypeName = $Project->Type()->name();
 	$$project{'Quantity'} = $qty;
-
+	if ( sets::isin( $openprint::session{user_type}, [ 'A','E' ] ) ) {
+		if ( $$specs{'chkOverrideRunStyle'.$qty_index} eq 'Y' ) {
+			$project{OverrideRunStyle} = $$specs{'ddmRunStyle'.$qty_index} 
+		} # end if
+		if ( $$specs{'chkOverrideImposition'.$qty_index} eq 'Y' ) {
+			$project{OverrideImposition} = $$specs{"txtImposition".$qty_index};
+		} # end if
+	} # end if
 # add all the impositions for each press
 	foreach my $Press ( @$Presses ) {
 		my $printing_type = $Press->specification('Printing Type');

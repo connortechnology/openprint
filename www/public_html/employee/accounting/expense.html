@@ -112,7 +112,7 @@ function update_total( form ) {
 				</li>
 				<li><label for="amount">Amount (<? echo ( $$variable{'Expense'}->Currency()->symbol() ) ?>)</label>
 					<? echo ( join("\n",
-						input(type=>'float_calculator', name=>'amount', id=>'amount', value=>$$variable{'Expense'}->amount(), onkeyup=>'update_total(this.form);' ),
+						input(type=>'float_calculator', name=>'amount', id=>'amount', value=>$$variable{'Expense'}->amount(), onkeyup=>'update_total(this.form);', oninput=>'this.onkeyup();' ),
 						write_override( 'amount_locked', $$variable{'Expense'}->amount_locked() ),
 					); ) ?>
 					<select name="currency_id" id="currency_id">
@@ -127,7 +127,7 @@ function update_total( form ) {
 				<ul>
 				<li><label for="total">Total (<? echo ( $$variable{'Expense'}->Currency()->symbol() ) ?>)</label>
 					<? echo ( join("\n",
-						input(type=>'float', name=>'total', id=>'total', value=>$$variable{'Expense'}->total(), onkeyup=>'calc_amount_from_total(this.form);' ),
+						input(type=>'float', name=>'total', id=>'total', value=>$$variable{'Expense'}->total(), onkeyup=>'calc_amount_from_total(this.form);', oninput=>'this.onkeyup();' ),
 						write_override( 'total_locked', $$variable{'Expense'}->total_locked() ),
 					); ) ?>
 				</li>
