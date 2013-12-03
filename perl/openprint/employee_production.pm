@@ -1428,12 +1428,13 @@ $log->debug("ES: " . $NextES->name() );
 
 	my @fixed_jobs = ();
 	for ( my $i = 0; $i < @order; $i += 1 ) {
-		if ( $order[$i]{'starttime'} and $order[$i]{'locked'} ) {
+		if ( $order[$i]{starttime} and $order[$i]{locked} ) {
 			push @fixed_jobs, splice @order, $i, 1;
 			$i -= 1;
+			next;
 		} # end if
 		# Tentative jobs do not affect non-tentative jobs
-		if ( $order[$i]{'tentative'} ) {
+		if ( $order[$i]{tentative} ) {
 			splice @order, $i, 1;
 			$i -= 1;
 		} # end if

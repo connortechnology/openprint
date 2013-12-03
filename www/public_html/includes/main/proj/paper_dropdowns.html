@@ -54,22 +54,22 @@
 <? endif ( @{$$variable{'PaperTypes'}} > 1 ) ?>
 			<li id="SpecificStockSize<?Signature?>">
 				<label>Size</label>
-				<? echo ( input( type=>'float', name=>'txtSpecificStockWidth'.$$variable{Signature}, value=>$$variable{'txtSpecificStockWidth'.$$variable{Signature}}, onkeyup=>"ddmStockWeight_onchange(this,'$$variable{Signature}');gsm_to_mweight(this.form,'$$variable{Signature}');paper_price_calc(this,'$$variable{Signature}');" ); ) ?>
+				<? echo ( input( type=>'float', name=>'txtSpecificStockWidth'.$$variable{Signature}, value=>$$variable{'txtSpecificStockWidth'.$$variable{Signature}}, onkeyup=>"Stock_onchange(this,'$$variable{Signature}');gsm_to_mweight(this.form,'$$variable{Signature}');paper_price_calc(this,'$$variable{Signature}');" ); ) ?>
 				<span id="SpecificStockHeight<?Signature?>" <? echo ( 'style="display: none;"' if $$variable{'StockType'.$$variable{Signature}} eq 'Roll' ) ?>> x 
-				<? echo ( input( type=>'float', name=>'txtSpecificStockHeight'.$$variable{Signature}, value=>$$variable{'txtSpecificStockHeight'.$$variable{Signature}}, onkeyup=>"ddmStockWeight_onchange(this,'$$variable{Signature}');gsm_to_mweight(this.form,'$$variable{Signature}');paper_price_calc(this,'$$variable{Signature}');" ); ) ?>
+				<? echo ( input( type=>'float', name=>'txtSpecificStockHeight'.$$variable{Signature}, value=>$$variable{'txtSpecificStockHeight'.$$variable{Signature}}, onkeyup=>"Stock_onchange(this,'$$variable{Signature}');gsm_to_mweight(this.form,'$$variable{Signature}');paper_price_calc(this,'$$variable{Signature}');" ); ) ?>
 </span>
 			</li>
 			<li id="MWeight<?Signature?>" <? echo ( 'style="display: none;"' if $$variable{'StockType'.$$variable{Signature}} eq 'Roll' ) ?>>
 				<label>MWeight</label>
-				<? echo ( input( type=>'float', name=>'txtCustomMWeight'.$$variable{Signature}, value=>$$variable{'txtCustomMWeight'.$$variable{Signature}}, onkeyup=>"mweight_to_gsm(this.form,'$$variable{Signature}');calc(this.form.name);" ); ) ?>
+				<? echo ( input( type=>'float', name=>'txtCustomMWeight'.$$variable{Signature}, value=>$$variable{'txtCustomMWeight'.$$variable{Signature}}, onkeyup=>"mweight_to_gsm(this.form,'$$variable{Signature}');calc(this.form.name);", onchange=>'onkeyup(this);', oninput=>'onkeyup(this);' ); ) ?>
 			</li>
 			<li id="BasisSize<?Signature?>" <? echo ( 'style="display: none;"' if $$variable{'StockType'.$$variable{Signature}} ne 'Roll' ) ?>>
 				<label>Basis MWeight</label>
 				<? echo ( input( type=>'float', name=>'basis_mweight'.$$variable{Signature}, value=>$$variable{'basis_mweight'.$$variable{Signature}}, onkeyup=>"mweight_to_gsm(this.form,'$$variable{Signature}');calc(this.form.name);" ); ) ?><br/>
 				<label>Basis Size</label>
-				<? echo ( input( type=>'float', name=>'basis_width'.$$variable{Signature}, value=>$$variable{'basis_width'.$$variable{Signature}} ? $$variable{'basis_width'.$$variable{Signature}} : 25, onkeyup=>"gsm_to_mweight(this.form,'$$variable{Signature}');calc(this.form.name);" ); ) ?>
+				<? echo ( input( type=>'float', name=>'basis_width'.$$variable{Signature}, value=>$$variable{'basis_width'.$$variable{Signature}} ? $$variable{'basis_width'.$$variable{Signature}} : 25, onkeyup=>"gsm_to_mweight(this.form,'$$variable{Signature}');calc(this.form.name);", onchange=>'onkeyup(this);', oninput=>'onkeyup(this);' ); ) ?>
 				x
-				<? echo ( input( type=>'float', name=>'basis_height'.$$variable{Signature}, value=>$$variable{'basis_height'.$$variable{Signature}} ? $$variable{'basis_height'.$$variable{Signature}} : 38, onkeyup=>"gsm_to_mweight(this.form,'$$variable{Signature}');calc(this.form.name);" ); ) ?>
+				<? echo ( input( type=>'float', name=>'basis_height'.$$variable{Signature}, value=>$$variable{'basis_height'.$$variable{Signature}} ? $$variable{'basis_height'.$$variable{Signature}} : 38, onkeyup=>"gsm_to_mweight(this.form,'$$variable{Signature}');calc(this.form.name);", onchange=>'onkeyup(this);', oninput=>'onkeyup(this);' ); ) ?>
 			</li>
 			<li>
 				<label>Price</label>
@@ -79,7 +79,7 @@
 				<span id="PaperAlert<?Signature?>"></span>
 			</li>
 			<li><label>GSM</label>
-				<? echo ( input( type=>'float', name=>'txtStockGSM'.$$variable{Signature}, value=>$$variable{'txtStockGSM'.$$variable{Signature}}, onkeyup=>"gsm_to_mweight(this.form,'$$variable{Signature}');calc(this.form.name);" ); ) ?>
+				<? echo ( input( type=>'float', name=>'txtStockGSM'.$$variable{Signature}, value=>$$variable{'txtStockGSM'.$$variable{Signature}}, onkeyup=>"gsm_to_mweight(this.form,'$$variable{Signature}');calc(this.form.name);", onchange=>'onkeyup(this);', oninput=>'onkeyup(this);' ); ) ?>
 			</li>
 			<li><label>Double sided?</label>
 				<input id="CustomSheetDoubleSided<?Signature?>Y" name="CustomSheetDoubleSided<?Signature?>" type="radio" value="Y" onclick="calc(this.form.name);" <? echo ( checked( $$variable{'CustomSheetDoubleSided'.$$variable{Signature}} ne 'N' ); ) ?> />

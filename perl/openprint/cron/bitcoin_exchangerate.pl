@@ -66,7 +66,7 @@ configuration::merge( $opts );
 my $BTC = openprint::Currency->find_one(short=>'BTC');
 die "No Bitcoin currency found in system." if ! $BTC;
 
-my $url = 'http://bitcoincharts.com/t/weighted_prices.json';
+my $url = 'http://api.bitcoincharts.com/v1/weighted_prices.json';
 
 my $ua = LWP::UserAgent->new;
 $ua->agent("MyApp/0.1 ");
