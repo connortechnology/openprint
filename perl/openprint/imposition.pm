@@ -271,7 +271,7 @@ $openprint::log->debug("Not Pretrimming on $$Press{strid}") if DEBUG;
 	my $paper_height;
 	my $cropmarkspace;
 
-	$$setup1{'sides'} = $$specs{'print_sides'};
+	$$setup1{sides} = $$specs{'print_sides'};
 	$setup1->paper( $Paper->clone() );
 	$setup1->runstyle( $run_style );
 	$setup1->image_orientation('Vertical');
