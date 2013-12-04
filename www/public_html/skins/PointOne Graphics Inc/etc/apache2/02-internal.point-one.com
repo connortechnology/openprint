@@ -118,3 +118,12 @@
 	Alias /pdfs "/media/Storage/PDFS/"
 
 </VirtualHost>
+
+<VirtualHost *:80>
+	ServerAdmin		iconnor@point-one.com
+	DocumentRoot	/var/www/point-one/www/public_html
+	ServerName		internal.point-one.com
+	ServerAlias		*.internal.point-one.com
+	RewriteEngine	on
+	RewriteRule	^/(.*)$	http://www.internal.point-one.com/$1 [R,L]
+</VirtualHost>

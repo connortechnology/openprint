@@ -105,3 +105,6 @@ table .buttons {
 	float: right;
 	margin: 0;
 }
+#Payments .Date {
+	width: 210px;
+}
