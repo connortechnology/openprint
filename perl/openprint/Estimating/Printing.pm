@@ -22,7 +22,7 @@ my $threading = 0;
 #use threads;
 use constant DEBUG => 0;
 use constant DEBUG_VERSIONS => 0;
-use constant DEBUG_FILTERING => 1;
+use constant DEBUG_FILTERING => 0;
 use constant DEBUG_PRICE_DECISIONS => 0;
 use constant DEBUG_INKS => 0;
 
@@ -1135,10 +1135,10 @@ sub get_impositions($$$$$$$) {
 	$$project{'Quantity'} = $qty;
 	if ( sets::isin( $openprint::session{user_type}, [ 'A','E' ] ) ) {
 		if ( $$specs{'chkOverrideRunStyle'.$qty_index} eq 'Y' ) {
-			$project{OverrideRunStyle} = $$specs{'ddmRunStyle'.$qty_index} 
+			$$project{OverrideRunStyle} = $$specs{'ddmRunStyle'.$qty_index} 
 		} # end if
 		if ( $$specs{'chkOverrideImposition'.$qty_index} eq 'Y' ) {
-			$project{OverrideImposition} = $$specs{"txtImposition".$qty_index};
+			$$project{OverrideImposition} = $$specs{"txtImposition".$qty_index};
 		} # end if
 	} # end if
 # add all the impositions for each press
@@ -4045,7 +4045,9 @@ $openprint::log->debug("Impressions $impressions overs: $overs setup: $setup_ove
 
 	my $gross_sheets = $net_sheets + $overs;
 	$impressions = $gross_sheets;
-	$impressions *= 2 if $$project{print_sides} == 2 and ( $is_wt or ( $$Imposition{runstyle} eq 'Sheet Work' ) );
+$openprint::log->debug("Imperssions : gross sheets: $gross_sheets");
+	$impressions *= 2 if $$Imposition{sides} == 2 and ( $is_wt or ( $$Imposition{runstyle} eq 'Sheet Work' ) );
+$openprint::log->debug("Imperssions $impressions : gross sheets: $gross_sheets");
 
 	my $min_impression_quantity = $Press->specification('Minimum Impression Quantity', $$Paper{calliper} );
 	if ( $min_impression_quantity and ( $min_impression_quantity > $impressions ) ) {
@@ -4210,7 +4212,8 @@ $openprint::log->debug("No plate for varnish $real_colour ");
 
 	$gross_sheets = $net_sheets + $total_overs;
 	$impressions = $gross_sheets;
-	$impressions *= $$project{print_sides} if $is_wt or $$Imposition{runstyle} eq 'Sheet Work';
+	$impressions *= 2 if $$Imposition{sides} == 2 and ( $is_wt or $$Imposition{runstyle} eq 'Sheet Work');
+$openprint::log->debug("New impressions: $impressions");
 	my $weight = Math::Round::nearest( .01, $gross_sheets * $Paper->sheet_weight() );
 	if ( $Paper->type() eq 'Roll' and my $Waste = $Press->Specification('Waste Stock') ) {
 		if ( $$Waste{'units'} eq 'Inches' ) {
@@ -4257,6 +4260,7 @@ $openprint::log->debug("No plate for varnish $real_colour ");
 	my %mixed_colours = %{$$project{'mixed_colours'}};
 	my $colour_impressions = $impressions;
 	$colour_impressions = POSIX::ceil( $colour_impressions/2 ) if $$Imposition{sides} == 2;
+$openprint::log->debug("Impressions: $colour_impressions sides: $$Imposition{sides}");
 
 	foreach my $Colour ( filter_coatings_from_colours(\@colours) ) {
 		
