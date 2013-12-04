@@ -2437,7 +2437,7 @@ $openprint::log->debug("Have runspeed");
 			if ( $unit =~ /([\d\.]+)x([\d\.]+)/ ) {
 $openprint::log->debug("Have unit $1 $2");
 				my $area = $1*$2;
-				if ( ! $$specs{'txtWidth'} * $$specs{'txtHeight'} ) {
+				if ( ! ( $$specs{'txtWidth'} * $$specs{'txtHeight'} ) ) {
 					$openprint::log->debug("Runspeed for $$specs{'txtWidth'} * $$specs{'txtHeight'} on $$Press{id}");
 				} else {
 					$run_speed = int( $$RunSpeed{'value'} * $area/($$specs{'txtWidth'} * $$specs{'txtHeight'}) );
@@ -2801,12 +2801,13 @@ $openprint::log->warn("Unknown Per setting $unit");
 
 		next if ! %ink_price;
 		my $area = $Imposition->object_area() * $impressions * ($$inkCoverage{$real_colour}/100);
-#$openprint::log->debug("Area: $area Impressions: $impressions " . $Imposition->object_area() );
+$openprint::log->debug("Area: $area Impressions: $impressions " . $Imposition->object_area() .' ' . ($$inkCoverage{$real_colour}/100) );
 
 		if ( lc $ink_price{'units'} eq 'per kg' ) {
 			
 			if ( sets::isin( $real_colour, $side_one_colours ) and sets::isin( $real_colour, $side_two_colours ) ) {
 				$area /= 2;
+$openprint::log->debug("Nwe area: $area");
 			} # end if
 			if ( $InkMaterial ) {
 				my $coverage = $InkMaterial->specification('Coverage', $grade);
