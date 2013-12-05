@@ -118,7 +118,6 @@
 			$sheets = $1;
 			$lbs = $sheets * $Paper->area() * $Paper->wpsi();
 		} else {
-$log->error("Unknown qty in txtPressSheetQty" . $$sig_specs{"txtPressSheetQty$qty_index"});
 			$sheets = $impressions;
 			$lbs = $sheets * $Paper->area() * $Paper->wpsi();
 		} # end if
