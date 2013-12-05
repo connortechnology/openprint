@@ -11,6 +11,7 @@ use vars qw( $debug $table $serial %fields %transforms %defaults );
 $debug = 0;
 
 %fields = (
+	id				=>	'id',
 	'pricelist_id'	=>	'lnglistindex',
 	'service_id'	=>	'lngserviceindex',
 	'equipment_id'	=>	'lngequipmentindex',
