@@ -1,6 +1,6 @@
 <? echo (
 	my $html = '';
-	my $equipment_array = [ map { $_->id(), $_->strid() . ': '.$_->name() } openprint::Equipment->find( order=>'lower(strID)') ];
+	my $equipment_array = $variable{Equipment} ? $variable{Equipment} : [ map { $_->id(), $_->strid() . ': '.$_->name() } openprint::Equipment->find( order=>'lower(strID)') ];
 
 	foreach my $Pricelist ( openprint::Pricelist->find( order=>'lower(name)') ) {
 
@@ -31,19 +31,21 @@
 					material_id		=>	$$variable{Material}->id(), 
 					pricelist_id	=>	$$Pricelist{id},
 					equipment_id	=>	( $$Equipment{id} ? $$Equipment{id} : undef ),	
-					order			=>	'lngmin NULLS FIRST,lngmax NULLS FIRST' );
-			foreach my $Price ( @Prices, { id=>'New' } ) {
+					order			=>	'lngmin NULLS FIRST,lngmax NULLS FIRST, id' );
+			foreach my $Price ( @Prices, { } ) {
 				$html .= sprintf('<tr>
-					<td class="checkbox"><input type="checkbox" name="chk-%1$d-%2$s-%3$d" checked="checked" /></td>
-					<td class="ActivityCode"><input type="text" name="activity_code-%1$d-%2$s-%3$d" value="%4$s"/></td>
-					<td class="Range">%5$s - %6$s</td>
-					<td class="Units">%7$s</td>
-					<td class="Cost">%8$s</td>
-					<td class="Markup">%9$s</td>
-					<td class="Price">%10$s</td>
-<td class="Discount">%11$s</td>
-</tr>
-', $$Pricelist{id}, $$Equipment{id}, @$Price{qw`id activity_code`},
+					<td class="checkbox">%1$s</td>
+					<td class="ActivityCode">%2$s</td>
+					<td class="Range">%3$s - %4$s</td>
+					<td class="Units">%5$s</td>
+					<td class="Cost">%6$s</td>
+					<td class="Markup">%7$s</td>
+					<td class="Price">%8$s</td>
+					<td class="Discount">%9$s</td>
+					</tr>
+',
+checkboxes( join('-', 'chk', $$Pricelist{id}, $$Equipment{id}, $$Price{id} ), ( $$Price{id} ? [ $$Price{id} ] : undef ), $$Price{id} ),
+input( type=>'text', name=>join('-', 'activity_code', $$Pricelist{id}, $$Equipment{id}, $$Price{id} ), value=>$$Price{activity_code} ),
 input( type=>'float', name=>join('-', 'min', $$Pricelist{id}, $$Equipment{id}, $$Price{id} ), value=>$$Price{min} ),
 input( type=>'float', name=>join('-', 'max', $$Pricelist{id}, $$Equipment{id}, $$Price{id} ), value=>$$Price{max} ),
 input( type=>'text', name=>join('-', 'units', $$Pricelist{id}, $$Equipment{id}, $$Price{id} ), value=>$$Price{units} ),

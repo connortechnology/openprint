@@ -5,7 +5,7 @@ use openprint ();
 use openprint::Material;
 
 use vars qw( $debug $table $serial %fields %transforms %defaults );
-$debug = 0;
+$debug = 1;
 $table = 'Material_Specifications';
 $serial = 'materialspecification_id_seq';
 
@@ -22,10 +22,14 @@ $serial = 'materialspecification_id_seq';
 );
 
 %transforms = (
+	id				=>	[ 's/\D//g','<2147483647' ],
 );
 %defaults = (
-	'equipment_id'	=>	undef,
-	'interpolate'	=>	1,
+	equipment_id	=>	undef,
+	min				=>	undef,
+	max				=>	undef,
+	value			=>	undef,
+	interpolate		=>	1,
 );
 
 1;
