@@ -14,7 +14,7 @@ use vars qw{ $debug $log $dbh %session $table $serial %fields %find_fields %tran
 *dbh = \$openprint::dbh;
 *session = \%openprint::session;
 
-$debug = 0;
+$debug = 1;
 $table = 'materials';
 $serial = 'materialindex_seq';
 
