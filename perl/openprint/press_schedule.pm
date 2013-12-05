@@ -163,7 +163,7 @@ sub add_project_to_press_schedule {
 				$error .= 'Error adding to press schedule: ' . $_;
 				$Project->add_to_log( @openprint::session{'company_id','user_id'}, "Error Adding Form @forms to pending press schedule." );
 			} else {
-				$Project->add_to_log( @openprint::session{'company_id','user_id'}, "Added Form @forms to pending press schedule." );
+				$Project->add_to_log( @openprint::session{'company_id','user_id'}, "Added Form @forms to pending press schedule for " . $Job->Equipment()->strid() );
 			} # end if
 		} else {
 			$error .= "Error adding to press schedule: Press not found ($$sig_specs{UsePress}) for signature $$sig_specs{'SignatureIndex'}<br/>";
