@@ -204,23 +204,23 @@ td p label {
 	.unprintable, #Header, .Logs {
 		display: none;
 	}
-	table .product {
-		width: 100px;
+	.product {
+		width: 80px;
 	}
-	table .price {
-		width: 115px;
+	.price {
+		width: 90px;
 	}
-	table .total {
-		width: 100px;
+	.total {
+		width: 75px;
 	}
-	table .docket {
-		width: 70px;
+	.docket {
+		width: 60px;
 	}
 	.delivery_date {
-		width: 217px;
+		width: 185px;
 	}
 	.method {
-		width: 203px;
+		width: 180px;
 	}
 }
 
