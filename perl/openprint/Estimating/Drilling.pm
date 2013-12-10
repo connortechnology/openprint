@@ -89,7 +89,7 @@ sub calc {
 		push @capabilities, 'When Stitching';
 		$stitching_service_index = $services{'LoopStitching'}[0];
 	} # end if
-	my $stitching_specs = openprint::service::get_specs_ref( $Project, $stitching_service_index );
+	my $stitching_specs = openprint::service::get_specs_ref( $Project, $stitching_service_index ) if $stitching_service_index;
 
 	my @possible_equipment = openprint::Equipment::find( 'Specifications' => {'Drilling Capable'=>\@capabilities}, 'UseInEstimating'=>'Y','order'=>'strName');
 
