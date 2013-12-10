@@ -3,14 +3,24 @@
         DocumentRoot /usr/share/squirrelmail
         ServerName webmail.point-one.com
 		ServerAlias	mail.point-one.com
-        <Directory /usr/share/squirrelmail>
+	<IfModule mod_fcgid.c>
+		<Directory /usr/share/squirrelmail>
+			Options +ExecCGI
+			AllowOverride All
+			AddHandler fcgid-script .php
+			FCGIWrapper /usr/bin/php5-cgi
+			Order allow,deny
+			Allow from all
+		</Directory>
+	</IfModule>
 				<IfModule mod_php5.c>
+        <Directory /usr/share/squirrelmail>
                 php_flag register_globals off
-				</IfModule>
                 Options Indexes FollowSymLinks
                 <IfModule mod_dir.c>
                         DirectoryIndex index.php
                 </IfModule>
         </Directory>
+				</IfModule>
 </VirtualHost>
 

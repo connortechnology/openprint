@@ -158,7 +158,7 @@ ssi::button('Export',{ onclick=>q`var form = $('f1');form.btnFunction.value='Exp
 				</tr>
 				', $rowclass, $Order->id(), $Order->docket(), 
 					Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $Order->created_on() ) ),
-					$Order->invoice_id(), $Order->ponum(), 
+					$Order->invoice_id(), $Order->po(), 
 					openprint::Currency::format($Order->total()), openprint::Currency::format( $Order->owing() ),
 					$Order->status(),
 					);
