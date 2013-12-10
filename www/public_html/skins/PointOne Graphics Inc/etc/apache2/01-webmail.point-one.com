@@ -4,7 +4,7 @@
 	ServerName webmail.point-one.com
 	ServerAlias	mail.point-one.com
    <IfModule mod_fcgid.c>
-        <Directory /var/lib/roundcube/>
+        <Directory /usr/share/squirrelmail>
             Options +ExecCGI
             AllowOverride All
             AddHandler fcgid-script .php
