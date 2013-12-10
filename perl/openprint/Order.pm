@@ -521,7 +521,11 @@ sub send_cancellation_notice {
 } # end sub send_cancellation_notice
 
 sub owing {
-	return $_[0]{'total'} - $_[0]{'paid'};
+	if ( $_[0]{status} eq 'Cancelled' ) {
+		return 0;
+	} else {
+		return $_[0]{'total'} - $_[0]{'paid'};
+	} # end if
 }
 
 sub payment_days {
@@ -577,8 +581,12 @@ sub cod {
 # Returns the remmaining amount to pay on delivery
 sub cod_owing {
 	if ( ! exists $_[0]{'cod_owing'} ) {
-		$_[0]{'cod_owing'} = $_[0]->cod() - $_[0]->paid();
-		$_[0]{'cod_owing'} = 0 if $_[0]{'cod_owing'} < 0;
+		if ( $_[0]{status} eq 'Cancelled' ) {
+			$_[0]{'cod_owing'} = 0;
+		} else {
+			$_[0]{'cod_owing'} = $_[0]->cod() - $_[0]->paid();
+			$_[0]{'cod_owing'} = 0 if $_[0]{'cod_owing'} < 0;
+		} # end if
 	} # end if
 	return $_[0]{'cod_owing'};
 } # end sub cod_owing

@@ -3,7 +3,7 @@
 	DocumentRoot /usr/share/squirrelmail
 	ServerName webmail.point-one.com
 	ServerAlias	mail.point-one.com
-   <IfModule mod_fcgid.c>
+	<IfModule mod_fcgid.c>
         <Directory /usr/share/squirrelmail>
             Options +ExecCGI
             AllowOverride All

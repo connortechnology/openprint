@@ -9,30 +9,30 @@ Choose criteria and click show results. You may the download the results in CSV 
 		<p>
 			<label>Docket #:</label>
 			<? echo ( my $html;
-				$html .= ssi::input( type=>'cardinal', id=>'StartDocket', name=>'StartDocket', value=>$param{StartDocket}, onkeypress=>q`$('order_id').value='';$('invoice_id').value='';$('project_id').value='';return input_handler(this, event);`, onkeydown=>q`if(event.keyCode == 13){f1.btnFunction.value='Go';f1.submit();}`);
+				$html .= input( type=>'cardinal', id=>'StartDocket', name=>'StartDocket', value=>$param{StartDocket}, onkeypress=>q`$('order_id').value='';$('invoice_id').value='';$('project_id').value='';return input_handler(this, event);`, onkeydown=>q`if(event.keyCode == 13){f1.btnFunction.value='Go';f1.submit();}`);
 				$html .= ' - ';
-				$html .= ssi::input( type=>'cardinal', id=>'EndDocket', name=>'EndDocket', value=>$param{EndDocket}, onkeypress=>q`$('order_id').value='';$('invoice_id').value='';$('project_id').value='';return input_handler(this, event);`, onkeydown=>q`if(event.keyCode == 13){f1.btnFunction.value='Go';f1.submit();}`);
-				$html .= ssi::button( 'DocketGo', { 'onclick'=>"f1.btnFunction.value='Go';f1.submit();", 'text'=>'Go' } );
+				$html .= input( type=>'cardinal', id=>'EndDocket', name=>'EndDocket', value=>$param{EndDocket}, onkeypress=>q`$('order_id').value='';$('invoice_id').value='';$('project_id').value='';return input_handler(this, event);`, onkeydown=>q`if(event.keyCode == 13){f1.btnFunction.value='Go';f1.submit();}`);
+				$html .= button( 'DocketGo', { 'onclick'=>"f1.btnFunction.value='Go';f1.submit();", 'text'=>'Go' } );
 				return $html;
 			) ?>
 		</p>
 		<p>
 			<label>Order ID:</label>
 			<? echo ( join(' ',
-						ssi::input( type=>'cardinal', id=>'order_id', name=>'order_id', value=>$param{order_id}, onkeypress=>q`$('StartDocket').value='';$('EndDocket').value='';$('invoice_id').value='';$('project_id').value='';return input_handler( this, event);`, onkeydown=>q`if(event.keyCode == 13){f1.btnFunction.value='Go';f1.submit();}` ),
-						ssi::button( 'OrderGo', { 'onclick'=>q`f1.btnFunction.value='Go';f1.submit();`, 'text'=>'Go' } ) ,
+						input( type=>'cardinal', id=>'order_id', name=>'order_id', value=>$param{order_id}, onkeypress=>q`$('StartDocket').value='';$('EndDocket').value='';$('invoice_id').value='';$('project_id').value='';return input_handler( this, event);`, onkeydown=>q`if(event.keyCode == 13){f1.btnFunction.value='Go';f1.submit();}` ),
+						button( 'OrderGo', { 'onclick'=>q`f1.btnFunction.value='Go';f1.submit();`, 'text'=>'Go' } ) ,
 			); ) ?>
 		</p>
 		<p>
 			<label>Invoice ID:</label>
 			<input type="text" id="invoice_id" name="invoice_id" value="<? echo ( $param{'invoice_id'} ) ?>" onkeypress="$('StartDocket').value='';$('EndDocket').value='';$('order_id').value='';$('project_id').value='';return input_handler( this, event);" onkeydown="if(event.keyCode == 13){f1.btnFunction.value='Go';f1.submit();}" />
-			<? echo ( ssi::button( 'InvoiceGo', { 'onclick'=>"f1.btnFunction.value='Go';f1.submit();", 'text'=>'Go' } ); ) ?>
+			<? echo ( button( 'InvoiceGo', { 'onclick'=>"f1.btnFunction.value='Go';f1.submit();", 'text'=>'Go' } ); ) ?>
 		</p>
 		<p>
 			<label>Project ID:</label>
 			<? echo ( join(' ',
-			ssi::input( type=>'cardinal', name=>'project_id', value=>$param{'project_id'}, onkeypress=>q`$('StartDocket').value='';$('EndDocket').value='';$('order_id').value='';$('invoice_id').value='';return input_handler(this,event);`, onkeydown=>q`if(event.keyCode==13){f1.btnFunction.value='Go';f1.submit();};` ),
-			ssi::button( 'ProjectGo', { 'onclick'=>"f1.btnFunction.value='Go';f1.submit();", 'text'=>'Go' } ), ); ) ?>
+			input( type=>'cardinal', name=>'project_id', value=>$param{'project_id'}, onkeypress=>q`$('StartDocket').value='';$('EndDocket').value='';$('order_id').value='';$('invoice_id').value='';return input_handler(this,event);`, onkeydown=>q`if(event.keyCode==13){f1.btnFunction.value='Go';f1.submit();};` ),
+			button( 'ProjectGo', { 'onclick'=>"f1.btnFunction.value='Go';f1.submit();", 'text'=>'Go' } ), ); ) ?>
 		</p>
 </div>
 	<div class="rightColumn">
@@ -46,10 +46,10 @@ Choose criteria and click show results. You may the download the results in CSV 
 		</p>
 		<p> 
 			<label>Status:</label>
-			<select name="ddmStatus" size="1">
+			<select name="ddmStatus" multiple="multiple">
 				<option value="">All</option>
 				<? echo (
-						ssi::fill_drop_down( $log, $dbh, q{SELECT name,name FROM Order_statuses ORDER BY lower(name)}, $session{'/employee/accounting/search.html?ddmStatus'} );
+						make_drop_down( [ sql::execute( $log, $dbh, q{SELECT name,name FROM Order_statuses ORDER BY lower(name)} )], [ split(',',$session{'/employee/accounting/search.html?ddmStatus'} ) ] );
 						) ?>
 			</select>
 		</p>
@@ -58,7 +58,7 @@ Choose criteria and click show results. You may the download the results in CSV 
 			<select name="ddmEmployee" size="1">
 				<option value="">All Employees</option>
 				<? echo (
-					ssi::make_drop_down( 
+					make_drop_down( 
 						[ map { $_->id(), $_->name() } openprint::User::find( 'type'=>['E','A'], 'order'=>'lower(strfirstname),lower(strlastname)' ) ],
 						$session{'/employee/accounting/search.html?ddmEmployee'} ); 
 					) ?>
@@ -67,12 +67,12 @@ Choose criteria and click show results. You may the download the results in CSV 
 		<p> 
 			<label>Order Date:</label>
 				<span class="DateSelectorCT">
-				<? echo ( ssi::date_select_session( '/employee/accounting/search.html', 'ordered_on_start', { 'onchange' =>
+				<? echo ( date_select_session( '/employee/accounting/search.html', 'ordered_on_start', { 'onchange' =>
 							q`AjaxLoadContent('Results','/employee/accounting/_search.html', $('f1').serialize() );`,
 							'with_today'=>1, 'with_clear'=>1,
 							} ); ) ?>
 				</span>to<span class="DateSelectorCT">
-				<? echo ( ssi::date_select_session( '/employee/accounting/search.html', 'ordered_on_end', { 'onchange' =>
+				<? echo ( date_select_session( '/employee/accounting/search.html', 'ordered_on_end', { 'onchange' =>
 							q`AjaxLoadContent('Results','/employee/accounting/_search.html', $('f1').serialize() );`,
 							'with_today'=>1, 'with_clear'=>1,
 							} ); ) ?>
@@ -80,19 +80,17 @@ Choose criteria and click show results. You may the download the results in CSV 
 		</p>
 		<p> 
 			<label>Total Range:</label>
-			<? echo ( ssi::input( type=>'float', name=>'dblTotal1', value=>$session{'/employee/accounting/search.html?dblTotal1'} ); ) ?>
+			<? echo ( input( type=>'float', name=>'dblTotal1', value=>$session{'/employee/accounting/search.html?dblTotal1'} ); ) ?>
 			to 
-			<? echo ( ssi::input( type=>'float', name=>'dblTotal2', value=>$session{'/employee/accounting/search.html?dblTotal2'} ); ) ?>
+			<? echo ( input( type=>'float', name=>'dblTotal2', value=>$session{'/employee/accounting/search.html?dblTotal2'} ); ) ?>
 		</p>
 	</div>
 	</div>
 		<p class="buttons">
 		<? echo ( join('',
-					ssi::button( 'ShowResults', { 'onclick'=>
-						q`AjaxLoadContent('Results','/employee/accounting/_search.html', $('f1').serialize() );`,
-						'text'=>'Show Results' } ),
-					#ssi::button( 'DownloadCSV', { onclick=>"f1.action='/employee/accounting/search.html?Download';f1.btnFunction.value='Download in CSV format';f1.submit();", href=>'', text=>'Download in CSV Format' } ),
-					ssi::button( 'Reset', { onclick=>"f1.reset();", href=>'', text=>'Reset' } ),
+					button( 'ShowResults', { onclick=> q`AjaxLoadContent('Results','/employee/accounting/_search.html', $('f1').serialize() );`, text=>'Show Results' } ),
+					#button( 'DownloadCSV', { onclick=>"f1.action='/employee/accounting/search.html?Download';f1.btnFunction.value='Download in CSV format';f1.submit();", href=>'', text=>'Download in CSV Format' } ),
+					button( 'Reset', { onclick=>'f1.reset();' } ),
 					); ) ?>
 		</p>
 	</fieldset>
