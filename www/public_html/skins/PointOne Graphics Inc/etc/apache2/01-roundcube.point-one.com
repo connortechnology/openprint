@@ -54,10 +54,10 @@
 
 <VirtualHost *:80>
 	DocumentRoot /var/lib/roundcube
-	ServerName roundcube3.internal.point-one.com
+	ServerName roundcube5.internal.point-one.com
 	Alias /roundcube/program/js/tiny_mce/ /usr/share/tinymce/www/
 	Alias /roundcube /var/lib/roundcube
-	ErrorLog		/var/log/apache2/internal.point-one.com/roundcube3.log
+	ErrorLog		/var/log/apache2/internal.point-one.com/roundcube5.log
 	<IfModule mod_fcgid.c>
 		<Directory /var/lib/roundcube/>
 			Options +ExecCGI
