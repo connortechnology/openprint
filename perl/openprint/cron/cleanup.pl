@@ -123,7 +123,9 @@ if ( ( exists $config{'RFID'} ) and $config{'RFID'} ) {
 
 if ( 1 ) {
 # Resolve any unresolved IP's
-foreach my $Host ( openprint::Host->find('hostname is null'=>1) ) {
+my @Hosts = openprint::Host->find('hostname is null'=>1);
+$log->debug("# of hosts needing resolving: " . @Hosts );
+foreach my $Host ( @Hosts ) {
 	$Host->resolve() if $Host->ip();
 	$Host->save() if $Host->hostname();
 } # end foreach
@@ -155,13 +157,13 @@ $log->warn("Deleted $log_count log entries");
 		my $data = misc::load_file( $log, $Asset->on_disk_path() );
 		if ( $data ) {
 			$_ = $Asset->save({'md5'=>Digest::MD5::md5_base64( $data ) });
-			die if $_;
+			die $_ if $_;
 		} # end if
 	} # end foreach Asset
 	foreach my $Asset ( openprint::Asset->find('width is null'=>1) ) {
 		$Asset->layout();
 		$_ = $Asset->save() if $Asset->width();
-		die if $_;
+		die $_ if $_;
 	} # end foreach
 #} 
 
