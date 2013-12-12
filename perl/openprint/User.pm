@@ -13,7 +13,7 @@ use vars qw( $debug $log $dbh %config %variable %param %fields %transforms %defa
 *param = \%openprint::param;
 *variable = \%openprint::variable;
 
-$debug = 1;
+$debug = 0;
 
 %fields = (
 	'company_id'		=>	'companyindex',

@@ -197,9 +197,11 @@ sub process_request {
 			} elsif ( $Scanner->type() eq 'Checkout' ) {
 				if ( $Tag->type() eq 'Skid' ) {
 					if ( ! sets::isin( $Tag->location_id(), [ map { $_->location_id() } @checkout_tags ] ) ) {
-						$Tag->location_id( $Scanner->location_id(), $Scanner->id() );
-						if ( $_ = $Tag->save() ) {
-							$self->log(1, sprintf('%s : %s : error saving tag %s', $date, $ip_addr, $_ ));
+						if ( $Tag->location_id() != $Scanner->location_id() ) {
+							$Tag->location_id( $Scanner->location_id(), $Scanner->id() );
+							if ( $_ = $Tag->save() ) {
+								$self->log(1, sprintf('%s : %s : error saving tag %s', $date, $ip_addr, $_ ));
+							} # end if
 						} # end if
 					} # end if
 					Checkout_Skid( $Scanner, $Tag, $self, \@checkout_tags );

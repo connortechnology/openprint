@@ -15,8 +15,9 @@ require openprint::RFIDTag;
 require openprint::Skid_Verification;
 require openprint::SkidContent;
 require openprint::InventoryCondition;
+require openprint::PaperAllocation;
 
-$debug = 1;
+$debug = 0;
 
 $table = 'Skids';
 $serial = 'skid_id_seq';
@@ -473,6 +474,7 @@ sub allocateable {
 # Checkout all paper on the skid
 sub checkout {
 	my ( $self, $c ) = @_;
+	require openprint::PaperInventory;
 	my @contents = openprint::SkidContent::find('skid_id'=>$$self{id});
 	if ( ! @contents ) {
 		if ( ! openprint::PaperInventory::find( 'skid_id'=>$$self{'id'}, 'comment_like'=>'Checked out%' ) ) {
@@ -494,7 +496,8 @@ sub checkout {
 	foreach my $C ( @contents ) {
 		if ( ! openprint::PaperInventory::find( 'skid_id'=>$$self{'id'}, 'comment_like'=>'Checked out%' ) ) {
 			my $PA = openprint::PaperAllocation->find_one('skid_id'=>$$self{'id'}, 'paper_id'=>$C->paper_id());
-			my $desc = 'Checked out' . ($PA->project_id() ? ' for docket ' . $PA->Project()->docket() : '');
+			my $desc = 'Checked out';
+			$desc .= ($PA->project_id() ? ' for docket ' . $PA->Project()->docket() : '') if $PA;
 			my $PI = new openprint::PaperInventory();
 			my $e = $PI->save({
 					'paper_id'  =>  $C->paper_id(),

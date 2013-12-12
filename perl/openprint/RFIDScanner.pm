@@ -13,7 +13,7 @@ require openprint::Location;
 require openprint::RFIDTagHistory;
 require openprint::RFIDScannerHistory;
 
-$debug = 1;
+$debug = 0;
 
 %fields = (
 	'id'		=>	'id',

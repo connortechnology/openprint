@@ -4,7 +4,7 @@ our @ISA = qw(openprint::Object);
 
 use vars qw( $debug $table $serial %fields %transforms %defaults );
 
-$debug = 1;
+$debug = 0;
 
 $table = 'RFIDScannerHistory';
 $serial = 'RFIDScannerHistory_id_seq';

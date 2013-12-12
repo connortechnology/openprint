@@ -12,7 +12,7 @@ require sql;
 require openprint::RFIDTagType;
 require openprint::Location;
 
-$debug = 1;
+$debug = 0;
 $table = 'rfidtags';
 $serial = 'rfidtags_id_seq';
 %fields = (
