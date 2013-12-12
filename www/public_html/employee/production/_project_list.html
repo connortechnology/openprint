@@ -1,12 +1,12 @@
 <? eval (
 	if ( $param{'StartDocket'} and $param{'EndDocket'}) {
-		@{$$variable{'Projects'}} = openprint::Project->find(
-			'docket <='	=> $param{'EndDocket'},
-			'docket >=' => $param{'StartDocket'},
-			'order'=>'lngdocketnumber',
-			);
+		$$variable{Projects} = [ openprint::Project->find(
+			'docket <='	=> $param{EndDocket},
+			'docket >=' => $param{StartDocket},
+			order		=> 'lngdocketnumber',
+			) ];
 
-	} elsif ( $param{'StartDocket'} ) {
+	} elsif ( $param{StartDocket} ) {
 		$$variable{Projects} = [ openprint::Project->find( docket=>$param{StartDocket} ) ];
 		if ( ! @{$$variable{Projects}} ) {
 			my $Order = openprint::Order->find_one(docket=>$param{StartDocket});
@@ -20,7 +20,7 @@
 		} # end if
 	} elsif ( $param{OrderID} ) {
 		my $Order = openprint::Order->find_one( id => $param{OrderID} );
-		push $$variable{Projects} = [ $Order->Projects() ];
+		push $$variable{Projects} = [ $Order->Projects() ] if $Order;
 	} else {
 		my %filters = (
 				( $session{'/employee/production/projects.html?ddmPress'} ? (	'used_press_name in'	=> $session{'/employee/production/projects.html?ddmPress'} ) : () ),
@@ -30,15 +30,15 @@
 				date_filter( '/employee/production/projects.html?due_date_end', 'due_date <=' ),
 				date_filter( '/employee/production/projects.html?due_date_start', 'due_date >=' ),
 				due_date		=> undef,
-				'order'			=> 'due_date, lngDocketNumber',
+				order			=> 'due_date, lngDocketNumber',
 			);
 			if ( $session{'/employee/production/projects.html?ddmSalesRep'} ) {
-				$filters{'salesrep_id'} = $session{'/employee/production/projects.html?ddmSalesRep'};
+				$filters{salesrep_id} = $session{'/employee/production/projects.html?ddmSalesRep'};
 			} # end if
 			if ( $session{'/employee/production/projects.html?ddmCustomer'} ) {
-				$filters{'company_id'} = $session{'/employee/production/projects.html?ddmCustomer'};
+				$filters{company_id} = $session{'/employee/production/projects.html?ddmCustomer'};
 			} # end if
-		@{$$variable{'Projects'}} = openprint::Project->find( %filters );
+		$$variable{Projects} = [ openprint::Project->find( %filters ) ];
 	} # end if
 ) ?>
 <? if ( @{$$variable{'Projects'}} ) ?>
