@@ -2,14 +2,24 @@
 <table class="List">
 	<tr>
 		<th class="DateTime">When</th>
+<? if ( ! $$variable{RFIDTag} ) ?>
+		<th class="RFIDTag">Tag</th>
+<? endif ( ! $$variable{RFIDTag} ) ?>
+<? if ( ! $$variable{RFIDScanner} ) ?>
 		<th class="RFIDScanner">Scanner</th>
+<? endif ( ! $$variable{RFIDScanner} ) ?>
 		<th class="Location">Location</th>
 		<th class="Comment">Comment</th>
 	</tr>
 	<? while ( $$variable{'Entry'} = shift @{$$variable{'Entries'}} ) ?>	
 		<tr>
 			<td class="DateTime"><? echo ( Date::Format::time2str($config{'DateTimeFormat'}, Date::Parse::str2time($$variable{'Entry'}->updated_on() ) ); ) ?></td>
+<? if ( ! $$variable{RFIDTag} ) ?>
+			<td class="RFIDTag"><? echo ( $$variable{'Entry'}->RFIDTag()->id() ) ?></td>
+<? endif ( ! $$variable{RFIDTag} ) ?>
+<? if ( ! $$variable{RFIDScanner} ) ?>
 			<td class="RFIDScanner"><? echo ( $$variable{'Entry'}->Scanner()->name() ) ?></td>
+<? endif ( ! $$variable{RFIDScanner} ) ?>
 			<td class="Location"><? echo ( $$variable{'Entry'}->Location()->name() ) ?></td>
 			<td class="Comment"><? echo ( $$variable{'Entry'}->comment() ) ?></td>
 		</tr>

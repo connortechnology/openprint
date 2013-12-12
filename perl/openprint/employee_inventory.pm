@@ -2036,7 +2036,8 @@ sub _rfidtag_log_entries {
 	@param{'start_year','start_month','start_day'} =(0,0,0) if ! $param{'start_year'};
 	$param{'limit'} = 10 if ! exists $param{'limit'};
 	$variable{'Entries'} = [ openprint::RFIDTagHistory->find( 
-		'rfidtag_id'	=>	$param{'rfidtag_id'},
+		( $param{rfidtag_id} ? ( 'rfidtag_id'	=>	$param{'rfidtag_id'} ) : () ),
+		( $param{scanner_id} ? ( 'scanner_id'	=>	$param{'scanner_id'} ) : () ),
 ssi::date_filter( 'start', 'updated_on_start', \%param ),
 ssi::date_filter( 'end', 'updated_on_end', \%param ),
 		'order'	 =>	'updated_on DESC',
@@ -2045,13 +2046,14 @@ ssi::date_filter( 'end', 'updated_on_end', \%param ),
 
 	# This is to auto-load the start year
 	if ( ! @{$variable{'Entries'}} ) {
-		@{$variable{'Entries'}} = openprint::RFIDTagHistory->find( 
-				'rfidtag_id'	=>	$param{'rfidtag_id'},
-ssi::date_filter( 'start', 'updated_on_start', \%param ),
-ssi::date_filter( 'end', 'updated_on_end', \%param ),
+		$variable{'Entries'} = [ openprint::RFIDTagHistory->find( 
+		( $param{rfidtag_id} ? ( rfidtag_id	=>	$param{rfidtag_id} ) : () ),
+		( $param{scanner_id} ? ( scanner_id	=>	$param{scanner_id} ) : () ),
+		ssi::date_filter( 'start', 'updated_on_start', \%param ),
+		ssi::date_filter( 'end', 'updated_on_end', \%param ),
 				'limit'	 =>	$param{'limit'},
 				'order'	 =>	'updated_on DESC',
-				);
+				) ];
 		if ( @{$variable{'Entries'}} ) {
 			@param{'start_year','start_month','start_day'} = $variable{'Entries'}[@{$variable{'Entries'}}-1]->updated_on() =~ /^(\d+)-(\d+)-(\d+)/;
 		} # end if

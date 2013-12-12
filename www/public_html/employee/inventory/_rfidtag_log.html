@@ -1,6 +1,11 @@
 <form name="location_log_form" id="location_log_form">
+<? if ( $$variable{RFIDTag} ) ?>
 	<input type="hidden" name="rfidtag_id" value="<? echo ( $$variable{RFIDTag}->id() ) ?>" />
-	<fieldset><legend>Location Log</legend>
+<? endif ( $$variable{RFIDTag} ) ?>
+<? if ( $$variable{RFIDScanner} ) ?>
+	<input type="hidden" name="scanner_id" value="<? echo ( $$variable{RFIDScanner}->id() ) ?>" />
+<? endif ( $$variable{RFIDScanner} ) ?>
+	<fieldset><legend>Tag Log</legend>
 		<p>
 			<label>Date Filter</label>
 			<span class="DateSelectorCT">
