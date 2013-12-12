@@ -30,7 +30,7 @@
 			<option value="">All Companies</option>
 			<? echo ( openprint::Company::get_dropdown( $session{'/employee/production/projects.html?ddmCustomer'} ); ) ?>
 		</select>
-		<? echo ( button( 'CompanyGo', { onclick=>q`load_projects(f1);`, text=>'Go' } ); ) ?>
+		<? echo ( button( 'CompanyGo', { onclick=>'load_projects();', text=>'Go' } ); ) ?>
 	</li>
 	<li>
 		<label>Operator</label>
@@ -44,7 +44,7 @@
 	</li>
 	<li>
 		<label>Sales Rep</label>
-		<select name="ddmSalesRep" size="1" onchange="load_projects(this.form);">
+		<select name="ddmSalesRep" size="1" onchange="load_projects();">
 			<option value="">All Employees</option>
 <? echo (
 	$session{'/employee/production/projects.html?ddmSalesRep'} = $session{user_id} if ! $session{'/employee/production/projects.html?ddmSalesRep'};
