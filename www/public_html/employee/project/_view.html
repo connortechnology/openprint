@@ -55,6 +55,7 @@
             $rowclass = $rowclass ? '' : ' class="colRow"';
             my @totals;
 
+<<<<<<< HEAD
             $html .= '<td class="Price">&nbsp;</td>' if $$variable{canseepricing};
 			$html .= '<td class="status">&nbsp;</td>';
             $html .= "</tr>\n";
@@ -62,6 +63,19 @@
             while (@sigs) {
                 my $ss_id = shift @sigs;
                 next if $ss_id == $$services{''}[0];
+=======
+		my ( $sheets, $lbs );
+		if ( $$sig_specs{"txtPressSheetQty$qty_index"} =~ /(\d+) lbs/ ) {
+			$lbs = $1;
+			$sheets = $lbs / ( $Paper->area() * $Paper->wpsi() );
+		} elsif ( $$sig_specs{"txtPressSheetQty$qty_index"} =~ /(\d+)sheets/ ) {
+			$sheets = $1;
+			$lbs = $sheets * $Paper->area() * $Paper->wpsi();
+		} else {
+			$sheets = $impressions;
+			$lbs = $sheets * $Paper->area() * $Paper->wpsi();
+		} # end if
+>>>>>>> 099f4e8783c8aefa1283673cec8e9cb5bc6202ea
 
                 my %sig_specs = %{openprint::service::get_specs_ref( $Project, $ss_id)};
 

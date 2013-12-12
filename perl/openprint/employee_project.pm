@@ -952,7 +952,7 @@ sub _status {
 		} else {
 			if ( sets::isin( $variable{'name'}, 'Printing','Signature' ) ) {
 				my $sig_specs = $Service->specs();
-				$Job->Project()->add_to_log( @session{'company_id','user_id'}, "Added Form $$sig_specs{'SignatureIndex'} to pending schedule." );
+				$Job->Project()->add_to_log( @session{'company_id','user_id'}, "Added Form $$sig_specs{'SignatureIndex'} to pending schedule for " . $Job->Equipment()->strid() );
 			} else {
 				$Job->Project()->add_to_log( @session{'company_id','user_id'}, "Added " . $Service->ServiceType->name() . " to pending schedule." );
 			} # end if
