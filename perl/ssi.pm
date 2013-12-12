@@ -773,13 +773,15 @@ sub checkboxes {
 	my $onclick = $$options{'onclick'} if $options;
 	my $html;
 	my @container = @{$$options{container}} if $$options{container};
+	$values = ['on', '' ] if ! $values;
 
 	while ( my ( $value, $label ) = splice @{$values}, 0, 2 ) {
 		$html .= $container[0] if @container;
-		$html .= sprintf(q`
-				<input type="checkbox" name="%1$s" value="%2$s" id="%1$s%2$s" %4$s%5$s />
-				<label class="radio" for="%1$s%2$s">%3$s</label>
-				`, $name, $value, $label, checked( sets::isin( $value, $selected ) ), $onclick ? ' onclick="'.$onclick.'"' : '' );
+		$html .= sprintf(q`<input type="checkbox" name="%1$s" value="%2$s" id="%1$s%2$s" %3$s%4$s />`,
+				$name, $value, checked( sets::isin( $value, $selected ) ), $onclick ? ' onclick="'.$onclick.'"' : '' );
+		if ( $label ) {
+			$html .= sprintf(q`<label class="radio" for="%1$s%2$s">%3$s</label>`, $name, $value, $label );
+		} # end if
 		$html .= $container[1] if @container;
 	} # end foreach value
 	return $html;
