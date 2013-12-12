@@ -264,6 +264,7 @@ require openprint::Estimating::Stitching;
 		} # end if
 	} # end if
 
+	require openprint::Estimating::ThreeKnifeTrim;
 	if ( openprint::Estimating::ThreeKnifeTrim::neccessary( $Project ) ) {
 		if ( ! $$services{'ThreeKnifeTrim'} ) {
 			push @{$$services{'ThreeKnifeTrim'}}, $Project->add_service( 'ThreeKnifeTrim' );
