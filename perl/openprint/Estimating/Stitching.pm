@@ -282,7 +282,9 @@ sub calc {
 
 		foreach my $signature_service_index ( @signatures ) {
 			my $sig_specs = openprint::service::get_specs_ref( $project_index, $signature_service_index );
-			next if $$sig_specs{'txtSignatureType'} eq 'Cover Spreads';
+
+			# According to Brendan, both cover and interior need to be 2out
+			#next if $$sig_specs{'txtSignatureType'} eq 'Cover Spreads';
 $openprint::log->debug( sprintf('QTY %d imp:%d, %dx%d, %s', $qty_index, $imposition, @$sig_specs{'hdnImpositionColumns'.$qty_index,'hdnImpositionRows'.$qty_index,'hdnImageOrientation'.$qty_index} ) ) if $debug;
 
 			if ( ( $$sig_specs{'txtImposition'.$qty_index} % 2 ) or (sets::isin( $$sig_specs{'ddmRunStyle'.$qty_index}, ['Work & Turn','Work & Tumble'] ) and $$sig_specs{'txtImposition'.$qty_index} % 4 ) ) {
