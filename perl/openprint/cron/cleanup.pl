@@ -162,8 +162,12 @@ $log->warn("Deleted $log_count log entries");
 	} # end foreach Asset
 	foreach my $Asset ( openprint::Asset->find('width is null'=>1) ) {
 		$Asset->layout();
-		$_ = $Asset->save() if $Asset->width();
-		die $_ if $_;
+		if ( $Asset->width() ) {
+			$_ = $Asset->save();
+			die $_ if $_;
+		} else {
+			$log->debug("Unable to calc image wiwdth: " . $Asset->to_string() );
+		} # end if width
 	} # end foreach
 #} 
 
