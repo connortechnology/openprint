@@ -441,6 +441,7 @@ $log->error("Unable to load equipment.	No PPF for you for signature $$PPF{'signa
 					my $Service = $variable{'Project'}->Service( $variable{'ServiceIndex'} );
 					$variable{'ServiceType'} = $Service->ServiceType();
 					@variable{'ServiceTypeID','ServiceTypeName','ServiceTypeType'} = $variable{ServiceType}->get('name','description','type') if $variable{ServiceType};
+$log->debug("ServiceType: $variable{'ServiceTypeType'}");
 				} # end if
 				my $Currency = openprint::Currency::get_current();
 				@variable{'CurrencyName','CurrencySymbol'} = ( $Currency->name(), $Currency->symbol() );
@@ -451,7 +452,7 @@ $log->error("Unable to load equipment.	No PPF for you for signature $$PPF{'signa
 				openprint::print::get_quantities( \%variable, $project_index );
 				if ( $project_index and $service_index ) {
 					my $specs = openprint::service::get_specs_ref( $variable{'Project'}, $service_index );
-					@variable{keys %$specs} = @$specs{keys %$specs};
+					@variable{keys %$specs} = values %$specs;
 				} # end if
 				$variable{'ProjectType'} = $variable{'Project'}->Type();
 				if ( ! $variable{'ServiceIndex'} ) {
@@ -527,6 +528,9 @@ $openprint::log->warn('bind');
 				} elsif ($third eq 'pack') {
 					if ( $filename eq 'pack_by_weight.html' ) {
 						openprint::Estimating::Skids::display( $log, $dbh, \%variable, $project_index, $service_index );
+					} elsif ( $filename eq 'pack_by_quantity.html' ) {
+						require openprint::Estimating::ShrinkWrapping;
+						openprint::Estimating::ShrinkWrapping::display( \%variable, $variable{Project}, $service_index );
 					} # end if
 				} elsif ($third eq 'shipping') {
 

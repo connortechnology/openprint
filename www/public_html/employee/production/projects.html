@@ -5,7 +5,6 @@
 		new Ajax.Updater('ProjectList','/employee/production/_project_list.html', { parameters: form.serialize() } );
 	} // end function
 </script>
-
 <form id="f1" name="f1" method="post" action="projects.html">
 <fieldset class="filters"><legend>Enter Docket #</legend>
 	<ul>
@@ -31,25 +30,25 @@
 			<option value="">All Companies</option>
 			<? echo ( openprint::Company::get_dropdown( $session{'/employee/production/projects.html?ddmCustomer'} ); ) ?>
 		</select>
-		<? echo ( button( 'CompanyGo', { onclick=>q`load_projects(f1);`, text=>'Go' } ); ) ?>
+		<? echo ( button( 'CompanyGo', { onclick=>'load_projects();', text=>'Go' } ); ) ?>
 	</li>
 	<li>
 		<label>Operator</label>
 		<select name="ddmEmployee" size="1" onchange="load_projects();">
 			<option value="">All Employees</option>
 <? echo (
-	make_drop_down( [ map { $_->id(), $_->name() } openprint::User->find( 'order'=>'lower(firstname)', 'usergroup any'=>['Prepress'], 'type'=>['E','A'] ) ],
+	make_drop_down( [ map { $_->id(), $_->name() } openprint::User->find( order=>'lower(firstname)', 'usergroup any'=>['Prepress'], type=>['E','A'] ) ],
 	$session{'/employee/production/projects.html?dmEmployee'} );
 )?>
 			</select>
 	</li>
 	<li>
 		<label>Sales Rep</label>
-		<select name="ddmSalesRep" size="1" onchange="load_projects(this.form);">
+		<select name="ddmSalesRep" size="1" onchange="load_projects();">
 			<option value="">All Employees</option>
 <? echo (
-	$session{'/employee/production/projects.html?ddmSalesRep'} = $session{'user_id'} if ! $session{'/employee/production/projects.html?ddmSalesRep'};
-	my @Users = openprint::User->find( 'order'=>'lower(firstname),lower(lastname)', 'type'=>['E','A'],'usergroup any'=>['Sales']);
+	$session{'/employee/production/projects.html?ddmSalesRep'} = $session{user_id} if ! $session{'/employee/production/projects.html?ddmSalesRep'};
+	my @Users = openprint::User->find( order=>'lower(firstname),lower(lastname)', type=>['E','A'],'usergroup any'=>['Sales']);
 	if ( ! sets::isin( $session{'/employee/production/projects.html?ddmSalesRep'}, [ map { $_->id() } @Users ] ) ) {
 		$session{'/employee/production/projects.html?ddmSalesRep'} = '';
 	} # end if
