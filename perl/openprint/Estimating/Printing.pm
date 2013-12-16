@@ -69,6 +69,7 @@ require openprint::Estimating::Scoring;
 require openprint::Estimating::Perforating;
 require openprint::Estimating::Cutting;
 require openprint::Estimating::Stitching;
+require openprint::Estimating::PerfectBound;
 require openprint::Estimating::SpinePaste;
 require openprint::Estimating::UVCoating;
 require openprint::Estimating::Aqueous;
