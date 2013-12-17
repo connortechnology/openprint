@@ -2970,13 +2970,21 @@ sub select_presses {
 		} # end if
 
 		if ( 
-				(
-				 ( $$specs{'rdbAqueousSideOne'} and ( $$specs{'rdbAqueousSideOne'} ne 'None' ) ) or
-				 ( $$specs{'rdbAqueousSideTwo'} and ( $$specs{'rdbAqueousSideTwo'} ne 'None' ) ) 
-				) and ( $Press->specification('Aqueous Coating') ne 'Y' )
+				( $$specs{'rdbAqueousSideOne'} and ( $$specs{'rdbAqueousSideOne'} ne 'None' ) ) or
+				( $$specs{'rdbAqueousSideTwo'} and ( $$specs{'rdbAqueousSideTwo'} ne 'None' ) ) 
 		   ) {
-			$openprint::log->debug(" ** Press $press_id Failed Aqueous Check (".$Press->specification('Aqueous Coating').")**") if $debug;
-			next;
+
+
+			if ( $Press->specification('Aqueous Coating') ne 'Y' ) {
+				$openprint::log->debug(" ** Press $press_id Failed Aqueous Check (".$Press->specification('Aqueous Coating').")**") if $debug;
+				next;
+			} # end if
+			if ( $_ = $Press->Specification('Aqueous Minimum Weight') ) {
+				if ( ( $$_{units} eq 'gsm' ) and ( $Paper->gsm() < $$_{value} ) ) {
+					$openprint::log->debug(" ** Press $press_id Failed Aqueous Minimum Weight Check (".$$_{value}." > $$Paper{gsm})gsm**") if $debug;
+					next;
+				} # end if
+			} # end if
 		} # end if
 
 		if ( $Press->specification('Printing Type') eq 'Digital' ) {
