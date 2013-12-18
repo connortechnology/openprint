@@ -2,8 +2,9 @@ package openprint::Estimating::Inkjetting;
 use strict;
 
 require openprint::service;
+require sets;
 
-my $debug = 1;
+use constant DEBUG => 0;
 
 my %variables = (
 	'Quantity' => ['save'],

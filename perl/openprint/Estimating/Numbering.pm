@@ -20,7 +20,7 @@ require openprint::service;
 require openprint::Project;
 use POSIX           qw(ceil);
 
-my $debug = 1;
+use constant DEBUG => 0;
 
 my %variables = (
 	'SetsOfNumbers' => ['save'],

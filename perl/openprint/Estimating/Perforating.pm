@@ -23,7 +23,7 @@ require openprint::Material;
 require openprint::imposition;
 require openprint::Imposition;
 
-use constant DEBUG => 1;
+use constant DEBUG => 0;
 
 my @all_equipment;
 my @stitchers;
@@ -90,7 +90,7 @@ sub calc {
 
 	my $Project = new openprint::Project( $project_index );
 
-	$log->debug("BEGIN PERFING!!!!!!!!!!!!!!!!!!");
+	$log->debug("BEGIN PERFING!!!!!!!!!!!!!!!!!!") if DEBUG;
 
 	foreach my $qty_index ( $Project->quantity_indexes() ) {
 		$$specs{"Markup$qty_index"} =~ s/[^\d\.\-]//g;
@@ -178,7 +178,7 @@ sub calc {
 		} # end if
 	} # end foreach quantities
 
-	$log->debug("END PERFING!!!!!!!!!!!!!!!!!!");
+	$log->debug("END PERFING!!!!!!!!!!!!!!!!!!") if DEBUG;
 	return $status;
 } # end sub calc
 
@@ -277,7 +277,7 @@ sub signature_calc {
 
 		( $scor_equipment, $scor_imposition ) = @$score_specs{"ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index", "txtImposition-$$sig_specs{'SignatureIndex'}-$qty_index"};
 		if ( ( $$score_specs{"txtVerticalQty-$$sig_specs{'SignatureIndex'}"} or $$score_specs{"txtHorizontalQty-$$sig_specs{'SignatureIndex'}"} ) and ! $scor_equipment ) {
-			$openprint::log->debug("No equipment selected for scoring.  Quitting.");
+			$openprint::log->debug("No equipment selected for scoring.  Quitting.") if DEBUG;
 			$$specs{'alert'} = 'Scoring calculations are not complete.  Your project contains a scoring service.  It must be completed before the Perforating service.';
 			$Results{'Status'} = 'uncalculated';
 			return %Results;
@@ -325,12 +325,12 @@ sub signature_calc {
 				next;
 			} # end if
 		} elsif ( ( $Equipment->specification('Cross Perforating / Scoring') eq 'N' ) and $$specs{"txtHorizontalQty-$$sig_specs{'SignatureIndex'}"} and $$specs{"txtVerticalQty-$$sig_specs{'SignatureIndex'}"} ) {
-				if ( $$specs{"chkOverrideEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} eq 'Y' ) {
-					$$specs{'alert'} = 'Doesnt support cross Perfing<br/>';
-					$Results{'Equipment'} = $Equipment;
-					$Results{'Status'} = 'uncalculated';
-					return %Results;	
-				} # end if
+			if ( $$specs{"chkOverrideEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} eq 'Y' ) {
+				$$specs{'alert'} = 'Doesnt support cross Perfing<br/>';
+				$Results{'Equipment'} = $Equipment;
+				$Results{'Status'} = 'uncalculated';
+				return %Results;	
+			} # end if
 			next;
 		} else {
 			@impositions = @cut_impositions;
@@ -429,9 +429,9 @@ sub signature_calc {
 			my $runspeed = 0;
 
 			if ( $$Runspeed{'units'} eq 'Percent' ) {
-if ( ! $$sig_specs{'Runspeed'} ) {
-$openprint::log->debug("No printing runspeed");
-}
+				if ( ! $$sig_specs{'Runspeed'} ) {
+					$openprint::log->error("No printing runspeed");
+				}
 				$runspeed = int( $$sig_specs{'Runspeed'} - ( $$sig_specs{'Runspeed'} * $$Runspeed{'value'}/100 ) );
 			} else {
 				$runspeed = $$Runspeed{'value'};
@@ -604,7 +604,7 @@ $openprint::log->debug("No printing runspeed");
 				$Results{'Equipment'} = $Equipment;
 				$Results{'Imposition'} = $I;
 				$Results{'Runspeed'} = $runspeed;
-$openprint::log->debug("Selected best: $I $$Equipment{strid}");
+				$openprint::log->debug("Selected best: $I $$Equipment{strid}") if DEBUG;
 			} # end if
 		} # end foreach imposition
 	} # end foreach equipment
