@@ -1323,6 +1323,7 @@ sub get_impositions($$$$$$$) {
 						my $P = $Paper->clone();
 						$P->cut( $width, $height );
 						push @extra_sheets, $P;
+						$Papers{$P->id_string()} = $P->clone() if ! $Papers{$P->id_string()};
 					} # end foreach P
 					$available_sheets{join('x',$width,$height)} = 1;
 				} # end if
@@ -1333,6 +1334,7 @@ sub get_impositions($$$$$$$) {
 						my $P = $Paper->clone();
 						$P->cut( $height, $width );
 						push @extra_sheets, $P;
+						$Papers{$P->id_string()} = $P->clone() if ! $Papers{$P->id_string()};
 					} # end foreach P
 					$available_sheets{join('x',$height,$width)} = 1;
 				} # end if
@@ -1415,6 +1417,7 @@ sub get_impositions($$$$$$$) {
 								} # end if
 								if ( $add ) {
 									push @{$paper_impositions{$key}}, $i;
+									$Papers{$P->id_string()} = $P->clone() if ! $Papers{$P->id_string()};
 								} # end if
 							} #end if	
 						} # end foreach i
