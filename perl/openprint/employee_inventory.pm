@@ -2040,6 +2040,7 @@ sub _rfidtag_log_entries {
 		( $param{scanner_id} ? ( 'scanner_id'	=>	$param{'scanner_id'} ) : () ),
 ssi::date_filter( 'start', 'updated_on_start', \%param ),
 ssi::date_filter( 'end', 'updated_on_end', \%param ),
+		( $param{type_id} ? ( type_id=>$param{type_id} ) : () ),
 		'order'	 =>	'updated_on DESC',
 		'limit'	 =>	$param{'limit'},
 		) ];
