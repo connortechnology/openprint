@@ -3842,7 +3842,7 @@ sub calc_price {
 		return \%price;
 	} # end if
 	$$specs{'hdnImpressionQuantity'.$qty_index} = $impressions;
-$openprint::log->debug("Impressions $impressions overs: $overs setup: $setup_overs run: $run_overs");
+#$openprint::log->debug("Impressions $impressions overs: $overs setup: $setup_overs run: $run_overs");
 
 	my $std_speed = $Press->Specification('Standard Run Speed');
 	$std_speed = $Press->Specification('Run Speed') if ! $std_speed;
