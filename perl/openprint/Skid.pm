@@ -774,6 +774,19 @@ sub checked_out {
 	return $_[0]{checked_out};
 } # end sub checked_out
 
+sub description {
+	if ( ! exists $_[0]{description} ) {
+		$_[0]{description} = '';
+		foreach my $SC ( $_[0]->Contents() ) {
+			$_[0]{description} .= $SC->Paper()->link_to().'<br/>';
+		} # end foreach
+	} # end if
+	return $_[0]{description};
+} # end sub description
+
+sub link_to {
+	return sprintf('<a href="/employee/inventory/skid_details.html?skid_id=%1$d">%2$s %1$d</a>', $_[0]{id}, $_[0]->type() eq 'Roll' ? 'Roll':'Skid' );
+} # end sub link_to
 
 1;
 __END__

@@ -2032,9 +2032,6 @@ sub _rfidtag_log {
 } # end sub _rfidtag_log
 
 sub _rfidtag_log_entries {
-	@param{'end_year','end_month','end_day'} = Date::Calc::Today() if ! $param{'end_year'};
-	@param{'start_year','start_month','start_day'} =(0,0,0) if ! $param{'start_year'};
-	$param{'limit'} = 10 if ! exists $param{'limit'};
 	$variable{'Entries'} = [ openprint::RFIDTagHistory->find( 
 		( $param{rfidtag_id} ? ( 'rfidtag_id'	=>	$param{'rfidtag_id'} ) : () ),
 		( $param{scanner_id} ? ( 'scanner_id'	=>	$param{'scanner_id'} ) : () ),

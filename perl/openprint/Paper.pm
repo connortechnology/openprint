@@ -1430,6 +1430,10 @@ sub factor {
 	return $factor;
 } # end sub factor
 
+sub link_to {
+	return sprintf('<a href="/employee/inventory/paper_details.html?paper_id=%1$d">%2$s</a>', $_[0]{id}, $_[0]->to_string() );
+} # end sub link_to
+
 
 1;
 __END__
