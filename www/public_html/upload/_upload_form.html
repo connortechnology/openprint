@@ -62,54 +62,12 @@
 	} # end if
 	if ( $Project and ( $Project->status() eq 'Unordered' ) ) {
 		$$variable{'txtQuoteNumber'} = $Project->id();
-		$$variable{'txtQuotedPrice'} = $Project->price1();
-		my $services = $Project->services();
-		my $sig_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] ) if $$services{''};
-		if ( $sig_specs ) {
-			my $Paper = openprint::Paper::load_from_signature( $Project, $sig_specs, 1 );
-			$$variable{'Stock'} = $Paper->to_string();
-			$$variable{'Size'} = $$sig_specs{'txtFinalWidth'} . '&quot; x ' . $$sig_specs{'txtFinalHeight'}.'&quot; Finished';
-		} # end if
-		$$variable{'Quantity'} = $Project->quantity1();
-		if ( $$services{'Turnaround'} ) {
-			my $turnaround_specs = openprint::service::get_specs_ref( $Project, $$services{'Turnaround'}[0] );
-			@$variable{'ddmDueDateYear','ddmDueDateMonth','ddmDueDateDay'} = Date::Calc::Add_Delta_Days( Date::Calc::Today(), $$turnaround_specs{'TurnaroundDays'} );
-		} # end if
 	} # end if
 ) ?>
 			<p>
 				<label for="txtQuoteNumber">Quote #:</label>
 				<input type="text" id="txtQuoteNumber" name="txtQuoteNumber" value="<?txtQuoteNumber?>" onkeyup="this.value=this.value.replace(/\D/,'');" />
 			</p>
-			<p>
-				<label for="txtQuotedPrice">Quoted Price:</label>
-				<input type="text" id="txtQuotedPrice" name="txtQuotedPrice" value="<?txtQuotedPrice?>" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');" />
-			</p>
-			<p>
-				<label for="ddmDueDateMonth">Due Date:</label>
-				<span class="DateSelector">
-				<? echo ( ssi::date_select( 'duedate', [ @$variable{'ddmDueDateYear','ddmDueDateMonth','ddmDueDateDay'} ] ); ) ?>
-				</span>
-			</p>
-			<p>
-				<label>Size:</label>
-				<input type="text" id="Size" name="Size" value="<?Size?>" />
-			</p>
-			<p>
-				<label>Qty:</label>
-				<input type="text" id="Quantity" name="Quantity" value="<?Quantity?>" onkeyup="this.value=this.value.replace(/\D/,'');" />
-			</p>
-			<p>
-				<label>Stock:</label>
-				<input type="text" id="Stock" name="Stock" value="<?Stock?>" />
-			</p>
-			<? if ( $$variable{'txtQuoteNumber'} ) ?>
-				<p><label>Summary:</label>
-				<? echo (
-					new openprint::Project( $$variable{'txtQuoteNumber'} )->summary();
-				) ?>
-				</p>
-			<? endif ( $$variable{'txtQuoteNumber'} ) ?>
 			<p>
 				<label for="txtJobDescription">Description:</label>
 				<textarea name="txtJobDescription" rows="4" onkeyup="textarea_resize(this);">
@@ -119,14 +77,6 @@
 				) ?>
 			<? endif ( $$variable{'txtQuoteNumber'} ) ?>
 				</textarea>
-			</p>
-			<p class="proof_type">
-				<label>Proof Required:</label>
-				<select name="proof_type">
-				<option value="">please select proof type</option>
-				<option value="No Proof Required">No Proof Required</option>
-				<? echo ( ssi::make_drop_down( [ map { $_->name(), $_->description() } openprint::Service::find('category'=>'Proofs') ], $$variable{'proof_type'} ); ) ?>
-				</select>
 			</p>
 		</fieldset>
 <? endif ( ! ( $param{'docket'} or $param{'project_id'} ) ) ?>
