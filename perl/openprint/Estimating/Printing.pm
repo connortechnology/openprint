@@ -3761,8 +3761,9 @@ sub calc_price {
 
 	my $net_sheets;
 	$net_sheets = ceil($qty / $imposition);
-	$net_sheets *= $$Imposition{versions} if $$Imposition{versions}; # qty is already adjusted
-		$net_sheets *= $$Paper{parts} if $$Paper{parts};
+	$net_sheets *= $$Imposition{versions} if $$Imposition{versions}; # qty is already adjusted, not sure this is valid anymore
+	$net_sheets *= $$Paper{parts} if $$Paper{parts};
+
 #Initially we calculate based on colours, but really we need to calculate based on plates, which we will do once we figure out how many plates we need.
 	my $min_overs = $Press->specification( 'Overs Minimum ' . $Paper->material(), scalar @colours );
 	$min_overs = $Press->specification( 'Overs Minimum', scalar @colours ) if ! $min_overs;
@@ -3830,7 +3831,6 @@ sub calc_price {
 	} else {
 		$overs += ceil( $setup_overs + $run_overs );
 	} # end if
-#$overs *= $Paper->parts() if $Paper->parts();
 	$overs = $min_overs if $overs < $min_overs;
 
 	my $impressions = $net_sheets + $overs;
@@ -4192,13 +4192,11 @@ sub calc_price {
 		$setup_overs = $Press->specification( 'MakeReady Overs', $plate_setup{'Plate Count'} ) if ! $setup_overs;
  	} # end if
 	$setup_overs += $fm_overs;
-	#$setup_overs *= $Paper->parts() if $Paper->parts();
 
 	if ( $$specs{'OverrideRun'.$qty_index} eq 'Y' ) {
 		$run_overs = $$specs{'OverRun'.$qty_index};
 	} else {
 		$run_overs = ceil( $net_sheets * $over_rate );
-		#$run_overs *= $Paper->parts() if $Paper->parts();
 	} # end if
 
 	my $total_overs = $additional_overs;
@@ -4213,7 +4211,6 @@ sub calc_price {
 	$min_overs = $Press->specification( 'Overs Minimum ' . $Paper->material(), $plate_setup{'Plate Count'} );
 #$log->debug("Overs min " . $Paper->material() . " $min_overs");
 	$min_overs = $Press->specification( 'Overs Minimum', $plate_setup{'Plate Count'} ) if ! $min_overs;
-	#$total_overs *= $Paper->parts() if $Paper->parts();
 	$total_overs = $min_overs if $total_overs < $min_overs;
 
 	$gross_sheets = $net_sheets + $total_overs;
