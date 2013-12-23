@@ -45,7 +45,7 @@ function add_to_notifications( form, project_id ) {
 	var div = $('AdditionalChargeActions'+project_id);
 	if ( div ) {
 		div.innerHTML = 'Adding...';
-		new Ajax.Updater( div, '_additional_charge_notifications.html', { parameters: inputs } );
+		new Ajax.Updater( div, '/employee/project/_additional_charge_notifications.html', { parameters: inputs } );
 	} 
 }
 function send_notifications( form, project_id ) {
@@ -57,7 +57,9 @@ function send_notifications( form, project_id ) {
 	var div = $('AdditionalChargeActions'+project_id);
 	if ( div ) {
 		div.innerHTML = 'Sending...';
-		new Ajax.Updater( div, '_additional_charge_notifications.html', { parameters: inputs } );
+		new Ajax.Updater( div, '/employee/project/_additional_charge_notifications.html', { parameters: inputs } );
+	} else {
+		alert('Unable to send notifications.');
 	} 
 }
 </script>
