@@ -345,6 +345,10 @@ require openprint::Estimating::Stitching;
 	} # end while service_type
 
 	foreach my $type ( keys %{$services} ) {
+		if ( ! @{$$services{$type}} ) {
+			$openprint::log->error("Have $type but no actual service");
+			next;
+		} # end if
 		next if sets::isin( $type, [ 'SaddleStitching','LoopStitching','Folding','Signature' ] );
 		next if $exclude and sets::isin( $type, $exclude );
 
@@ -357,8 +361,13 @@ require openprint::Estimating::Stitching;
 			$alert .= $$specs{'alert'};
 		} # end foreach service_index
 	} # end while service_type
-	foreach my $ServiceType ( openprint::ServiceType->find('category'=>'Shipping') ) {
+
+	foreach my $ServiceType ( openprint::ServiceType->find( category=>'Shipping' ) ) {
 		if ( $$services{$ServiceType->name()} ) {
+			if ( ! @{$$services{$ServiceType->name()}} ) {
+				$openprint::log->error("Have $$ServiceType{name} but no actual service");
+				next;
+			} # end if
 			foreach my $service_index ( @{$$services{$ServiceType->name()}} ) {
 				$specs = internal_calc( $openprint::log, $openprint::dbh, \%openprint::variable, $$Project{'id'}, $service_index, $ServiceType->type() );
 				$alert .= $$specs{'alert'};
@@ -441,11 +450,14 @@ sub internal_calc {
     $log->debug("LOCKING Projects for project $$Project{id}");
     $dbh->do( "SELECT * FROM Projects WHERE id=".$$Project{id}. ' FOR UPDATE' );
 	my $Service = $Project->Service($service_index) if $service_index;
+	my $specs;
 	if ( ! $Service ) {
+$openprint::log->error("Doing internal calc without service_index or, not found");
 		$Service = new openprint::Project_Service();
 		$Service->set({ project_id=>$project_index, service_id=>$service_index, service_type=>$service_type });
+	} else {
+		$specs = $Service->specs();
 	} # end if	
-	my $specs = $Service->specs();
 	my %specs = %{$specs} if $specs;
 
 	if ( ! $service_type ) {
