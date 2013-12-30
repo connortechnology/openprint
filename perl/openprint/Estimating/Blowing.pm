@@ -3,7 +3,7 @@ use strict;
 
 require openprint::service;
 
-use constant DEBUG => 1;
+use constant DEBUG => 0;
 
 my %variables = (
 	'alert' => ['save','output'],

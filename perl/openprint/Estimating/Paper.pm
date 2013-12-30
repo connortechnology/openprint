@@ -25,7 +25,7 @@ require openprint::service;
 require openprint::Currency;
 require openprint::Estimating::Printing;
 
-my $debug = 1;
+use constant DEBUG => 0;
 
 my @variables = (
         'txtPrice1', 'txtPrice2', 'txtPrice3',
@@ -129,7 +129,7 @@ sub calc {
 	foreach my $stock_index ( 1 .. scalar @stocks ) {
 		my $paper_string = $stocks[$stock_index-1];
 		$indexes{$paper_string} = $stock_index;
-$openprint::log->debug("Indexes: $paper_string => $stock_index") if $debug;
+$openprint::log->debug("Indexes: $paper_string => $stock_index") if DEBUG;
 	} # end foreach
 
 	foreach my $ss_id ( $Project->signatures() ) {
@@ -176,7 +176,7 @@ $openprint::log->debug("Supplied: " . $SuppliedStock->id_string() );
 		} # end foreach qty_index
 	} # end foreach signature
 
-if ( $debug ) {
+if ( DEBUG ) {
 $openprint::log->debug('Total Paper Totals:');
 	foreach my $paper_string ( keys %papers ) {
 		my $Paper = $papers{$paper_string};
@@ -256,7 +256,7 @@ $openprint::log->error("2No stock index for $paper_id");
 		$$specs{"txtPrice$qty_index"} = 0;
 		foreach my $paper_id ( sort keys %papers ) {
 			my $Paper = $papers{$paper_id};
-			if ( $debug ) {
+			if ( DEBUG ) {
 				$openprint::log->debug($paper_id . ' => totals: ' . $totals{$paper_id}{"qty_$qty_index"} );
 				if ( ! $totals{$paper_id}{"qty_$qty_index"} ) {
 					foreach my $k ( keys %totals ) {
@@ -276,7 +276,7 @@ $openprint::log->error("2No stock index for $paper_id");
 		} # end foreach Stock
 		$$specs{"MPrice$qty_index"} = sprintf($openprint::config{'UnitPriceFormat'}, $$specs{"MPrice$qty_index"} * (1+$Project->markup()/100) );
 		$$specs{"txtPrice$qty_index"} = sprintf($openprint::config{'ProjectMoneyFormat'}, $$specs{"txtPrice$qty_index"} * (1+$Project->markup()/100) );
-$openprint::log->debug("Price $qty_index " . $$specs{"txtPrice$qty_index"} ) if $debug;
+$openprint::log->debug("Price $qty_index " . $$specs{"txtPrice$qty_index"} ) if DEBUG;
 	} # end foreach qty_index
 
 	return $$specs{'Status'} = 'calculated';

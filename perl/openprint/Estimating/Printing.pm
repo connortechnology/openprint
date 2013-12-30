@@ -69,6 +69,7 @@ require openprint::Estimating::Scoring;
 require openprint::Estimating::Perforating;
 require openprint::Estimating::Cutting;
 require openprint::Estimating::Stitching;
+require openprint::Estimating::PerfectBound;
 require openprint::Estimating::SpinePaste;
 require openprint::Estimating::UVCoating;
 require openprint::Estimating::Aqueous;
@@ -1322,6 +1323,7 @@ sub get_impositions($$$$$$$) {
 						my $P = $Paper->clone();
 						$P->cut( $width, $height );
 						push @extra_sheets, $P;
+						$Papers{$P->id_string()} = $P->clone() if ! $Papers{$P->id_string()};
 					} # end foreach P
 					$available_sheets{join('x',$width,$height)} = 1;
 				} # end if
@@ -1332,6 +1334,7 @@ sub get_impositions($$$$$$$) {
 						my $P = $Paper->clone();
 						$P->cut( $height, $width );
 						push @extra_sheets, $P;
+						$Papers{$P->id_string()} = $P->clone() if ! $Papers{$P->id_string()};
 					} # end foreach P
 					$available_sheets{join('x',$height,$width)} = 1;
 				} # end if
@@ -1414,6 +1417,7 @@ sub get_impositions($$$$$$$) {
 								} # end if
 								if ( $add ) {
 									push @{$paper_impositions{$key}}, $i;
+									$Papers{$P->id_string()} = $P->clone() if ! $Papers{$P->id_string()};
 								} # end if
 							} #end if	
 						} # end foreach i
@@ -1456,10 +1460,9 @@ sub get_impositions($$$$$$$) {
 					$openprint::log->debug("Not using " . $Paper->to_string() . " because not in sheetsizes." ) if DEBUG;
 					next;
 				} # end if
-					$openprint::log->debug("using " . $Paper->to_string() . " because not in sheetsizes." ) if DEBUG;
-					
+				$openprint::log->debug("using " . $Paper->to_string() . " because not in sheetsizes." ) if DEBUG;
 
-				$$project{'Runstyles'} = $runstyles_sheet;
+				$$project{Runstyles} = $runstyles_sheet;
 
 				my $P = $Paper->clone();
 
@@ -1498,7 +1501,10 @@ sub get_impositions($$$$$$$) {
 					my @i = openprint::imposition::get_imposition( $project, $do_work_turn, $do_perfecting, $$specs{'Versions'}, $P, $Press );
 					last if ! @i;
 					push @impositions, @i;
-					$Papers{$P->id_string()} = $P if ! $Papers{$P->id_string()};
+					foreach my $i ( @i ) {
+						my $P2 = $i->Paper();
+						$Papers{$P2->id_string()} = $P2 if ! $Papers{$P2->id_string()};
+					} # end if
 					last if ! $use_cut_stocks;
 					last if ( ! $P->cuttable() );
 					$P = $P->clone();
@@ -3755,8 +3761,9 @@ sub calc_price {
 
 	my $net_sheets;
 	$net_sheets = ceil($qty / $imposition);
-	$net_sheets *= $$Imposition{versions} if $$Imposition{versions}; # qty is already adjusted
-		$net_sheets *= $$Paper{parts} if $$Paper{parts};
+	$net_sheets *= $$Imposition{versions} if $$Imposition{versions}; # qty is already adjusted, not sure this is valid anymore
+	$net_sheets *= $$Paper{parts} if $$Paper{parts};
+
 #Initially we calculate based on colours, but really we need to calculate based on plates, which we will do once we figure out how many plates we need.
 	my $min_overs = $Press->specification( 'Overs Minimum ' . $Paper->material(), scalar @colours );
 	$min_overs = $Press->specification( 'Overs Minimum', scalar @colours ) if ! $min_overs;
@@ -3824,7 +3831,6 @@ sub calc_price {
 	} else {
 		$overs += ceil( $setup_overs + $run_overs );
 	} # end if
-#$overs *= $Paper->parts() if $Paper->parts();
 	$overs = $min_overs if $overs < $min_overs;
 
 	my $impressions = $net_sheets + $overs;
@@ -3836,7 +3842,7 @@ sub calc_price {
 		return \%price;
 	} # end if
 	$$specs{'hdnImpressionQuantity'.$qty_index} = $impressions;
-$openprint::log->debug("Impressions $impressions overs: $overs setup: $setup_overs run: $run_overs");
+#$openprint::log->debug("Impressions $impressions overs: $overs setup: $setup_overs run: $run_overs");
 
 	my $std_speed = $Press->Specification('Standard Run Speed');
 	$std_speed = $Press->Specification('Run Speed') if ! $std_speed;
@@ -4045,9 +4051,9 @@ $openprint::log->debug("Impressions $impressions overs: $overs setup: $setup_ove
 
 	my $gross_sheets = $net_sheets + $overs;
 	$impressions = $gross_sheets;
-$openprint::log->debug("Imperssions : gross sheets: $gross_sheets");
+#$openprint::log->debug("Imperssions : gross sheets: $gross_sheets") if DEBUG;
 	$impressions *= 2 if $$Imposition{sides} == 2 and ( $is_wt or ( $$Imposition{runstyle} eq 'Sheet Work' ) );
-$openprint::log->debug("Imperssions $impressions : gross sheets: $gross_sheets");
+#$openprint::log->debug("Imperssions $impressions : gross sheets: $gross_sheets");
 
 	my $min_impression_quantity = $Press->specification('Minimum Impression Quantity', $$Paper{calliper} );
 	if ( $min_impression_quantity and ( $min_impression_quantity > $impressions ) ) {
@@ -4072,7 +4078,7 @@ $openprint::log->debug("Imperssions $impressions : gross sheets: $gross_sheets")
 		my $real_colour = $$Colour{name};
 		my $key = $real_colour.'-'.$$Press{strid}.'-'.$qty_index;
 		if ( $real_colour =~ /Varnish/ and $real_colour =~ /Overall/ and $$washed_colours{$key} ) {
-$openprint::log->debug("No plate for varnish $real_colour ");
+#$openprint::log->debug("No plate for varnish $real_colour ");
 		} else {
 			$plate_count += 1;
 		} # end if
@@ -4186,13 +4192,11 @@ $openprint::log->debug("No plate for varnish $real_colour ");
 		$setup_overs = $Press->specification( 'MakeReady Overs', $plate_setup{'Plate Count'} ) if ! $setup_overs;
  	} # end if
 	$setup_overs += $fm_overs;
-	#$setup_overs *= $Paper->parts() if $Paper->parts();
 
 	if ( $$specs{'OverrideRun'.$qty_index} eq 'Y' ) {
 		$run_overs = $$specs{'OverRun'.$qty_index};
 	} else {
 		$run_overs = ceil( $net_sheets * $over_rate );
-		#$run_overs *= $Paper->parts() if $Paper->parts();
 	} # end if
 
 	my $total_overs = $additional_overs;
@@ -4207,13 +4211,12 @@ $openprint::log->debug("No plate for varnish $real_colour ");
 	$min_overs = $Press->specification( 'Overs Minimum ' . $Paper->material(), $plate_setup{'Plate Count'} );
 #$log->debug("Overs min " . $Paper->material() . " $min_overs");
 	$min_overs = $Press->specification( 'Overs Minimum', $plate_setup{'Plate Count'} ) if ! $min_overs;
-	#$total_overs *= $Paper->parts() if $Paper->parts();
 	$total_overs = $min_overs if $total_overs < $min_overs;
 
 	$gross_sheets = $net_sheets + $total_overs;
 	$impressions = $gross_sheets;
 	$impressions *= 2 if $$Imposition{sides} == 2 and ( $is_wt or $$Imposition{runstyle} eq 'Sheet Work');
-$openprint::log->debug("New impressions: $impressions");
+#$openprint::log->debug("New impressions: $impressions");
 	my $weight = Math::Round::nearest( .01, $gross_sheets * $Paper->sheet_weight() );
 	if ( $Paper->type() eq 'Roll' and my $Waste = $Press->Specification('Waste Stock') ) {
 		if ( $$Waste{'units'} eq 'Inches' ) {
@@ -4260,7 +4263,7 @@ $openprint::log->debug("New impressions: $impressions");
 	my %mixed_colours = %{$$project{'mixed_colours'}};
 	my $colour_impressions = $impressions;
 	$colour_impressions = POSIX::ceil( $colour_impressions/2 ) if $$Imposition{sides} == 2;
-$openprint::log->debug("Impressions: $colour_impressions sides: $$Imposition{sides}");
+#$openprint::log->debug("Impressions: $colour_impressions sides: $$Imposition{sides}");
 
 	foreach my $Colour ( filter_coatings_from_colours(\@colours) ) {
 		

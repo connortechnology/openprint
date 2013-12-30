@@ -109,5 +109,27 @@ sub _prices_table_body {
 	} # end if
 } # end sub _prices_table_body
 
+sub _price {
+	$variable{Equipment} = new openprint::Equipment( $param{equipment_id} );
+	$variable{Pricelist} = new openprint::Pricelist( $param{pricelist_id} );
+	$variable{Service} = new openprint::Service( $param{service_id} );
+	$variable{company_ids} = [ map { $_->id(), $_->name() } openprint::Company->find( supplier=>'Y', order=>'lower(name)' ) ];
+	if ( $param{action} eq 'add' ) {
+		my $Price = $variable{Price} = new openprint::ServicePrice();
+		$variable{error} .= $Price->save({ equipment_id=>$param{equipment_id}, pricelist_id=>$param{pricelist_id}, service_id=>$param{service_id} });
+	} # end if
+} # end sub _price
+
+sub _prices_per_equipment {
+	$variable{Equipment} = new openprint::Equipment( $param{equipment_id} );
+	$variable{Pricelist} = new openprint::Pricelist( $param{pricelist_id} );
+	$variable{Service} = new openprint::Service( $param{service_id} );
+	$variable{company_ids} = [ map { $_->id(), $_->name() } openprint::Company->find( supplier=>'Y', order=>'lower(name)' ) ];
+	if ( $param{action} eq 'add' ) {
+		my $Price = new openprint::ServicePrice();
+		$variable{error} .= $Price->save({ equipment_id=>$param{equipment_id}, pricelist_id=>$param{pricelist_id}, service_id=>$param{service_id} });
+	} # end if
+} # end sub _prices_per_equipment
+
 1;
 __END__

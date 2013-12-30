@@ -14,6 +14,7 @@ require openprint::StockBrand;
 require openprint::StockFinish;
 require openprint::StockColour;
 require openprint::StockQuality;
+require openprint::StockPurpose;
 require openprint::InventoryCondition;
 require openprint::RFIDTag;
 require openprint::RFIDTagType;

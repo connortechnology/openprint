@@ -20,20 +20,20 @@
 		<tr> 
 			<td class="checkbox"><input type="checkbox" id="chk-<? echo ( $$variable{'Price'}->id(); ) ?>" name="chk-<? echo ( $$variable{'Price'}->id(); ) ?>" checked="checked" /></span>
 			<td class="Range"> 
-				<? echo ( input( type=>'float', name=>'min-'.$$variable{Price}->id(), value=>($$variable{'Price'}->min() ne '' ? Number::Format::format_number( $$variable{'Price'}->min(), 0, 0 ) : ''), onkeyup=>qq`\$('chk-$$variable{Price}{id}').checked=true;` ); ) ?>
-				<? echo ( input( type=>'float', name=>'max-'.$$variable{Price}->id(), value=>($$variable{'Price'}->max() ne '' ? Number::Format::format_number( $$variable{'Price'}->max(), 0, 0 ) : ''), onkeyup=>qq`\$('chk-$$variable{Price}{id}').checked=true;` ); ) ?>
+				<? echo ( input( type=>'float', name=>'min-'.$$variable{Price}->id(), value=>($$variable{'Price'}->min() ne '' ? Number::Format::format_number( $$variable{'Price'}->min(), 0, 0 ) : ''), onkeyup=>qq`\$('chk-$$variable{Price}{id}').checked=true;`, oninput=>'this.onkeyup();' ); ) ?>
+				<? echo ( input( type=>'float', name=>'max-'.$$variable{Price}->id(), value=>($$variable{'Price'}->max() ne '' ? Number::Format::format_number( $$variable{'Price'}->max(), 0, 0 ) : ''), onkeyup=>qq`\$('chk-$$variable{Price}{id}').checked=true;`, oninput=>'this.onkeyup();' ); ) ?>
 			</td>
 			<td class="Units"> 
-				<input type="text" name="units-<? echo ( $$variable{'Price'}->id(); ) ?>" value="<? echo (  $$variable{'Price'}->units(); ) ?>" onkeyup="$('chk-<? echo ( $$variable{Price}->id(); ) ?>').checked=true;" />
+				<input type="text" name="units-<? echo ( $$variable{'Price'}->id(); ) ?>" value="<? echo (  $$variable{'Price'}->units(); ) ?>" onkeyup="$('chk-<? echo ( $$variable{Price}->id(); ) ?>').checked=true;" oninput="this.onkeyup();" />
 			</td>
 			<td class="Cost"> 
-				<? echo ( input( type=>'float', name=>'cost-'.$$variable{Price}->id(), value=>Number::Format::format_number( $$variable{'Price'}->cost(), 2, 2 ), onkeyup=>qq`\$('chk-$$variable{Price}{id}').checked=true;calc_from_cost(this);`, onclick=>'this.onkeyup();' ); ) ?>
+				<? echo ( input( type=>'float', name=>'cost-'.$$variable{Price}->id(), value=>Number::Format::format_number( $$variable{'Price'}->cost(), 2, 2 ), onkeyup=>qq`\$('chk-$$variable{Price}{id}').checked=true;calc_from_cost(this);`, onclick=>'this.onkeyup();', oninput=>'this.onkeyup();' ); ) ?>
 			</td>
 			<td class="Markup"> 
-				<? echo ( input( type=>'float', name=>'markup-'.$$variable{Price}->id(), value=>$$variable{'Price'}->markup(), onkeyup=>qq`\$('chk-$$variable{Price}{id}').checked=true;calc_from_markup(this);`, onclick=>'this.onkeyup();' ); ) ?>
+				<? echo ( input( type=>'float', name=>'markup-'.$$variable{Price}->id(), value=>$$variable{'Price'}->markup(), onkeyup=>qq`\$('chk-$$variable{Price}{id}').checked=true;calc_from_markup(this);`, onclick=>'this.onkeyup();', oninput=>'this.onkeyup();' ); ) ?>
 			</td>
 			<td class="Price"> 
-				<? echo ( input( type=>'float', name=>'price-'.$$variable{Price}->id(), value=>Number::Format::format_number( $$variable{'Price'}->price(), 2, 2 ), onkeyup=>qq`\$('chk-$$variable{Price}{id}').checked=true;calc_from_price(this);`, onclick=>'this.onkeyup(this);' ); ) ?>
+				<? echo ( input( type=>'float', name=>'price-'.$$variable{Price}->id(), value=>Number::Format::format_number( $$variable{'Price'}->price(), 2, 2 ), onkeyup=>qq`\$('chk-$$variable{Price}{id}').checked=true;calc_from_price(this);`, onclick=>'this.onkeyup(this);', oninput=>'this.onkeyup();' ); ) ?>
 			</td>
 			<td class="Discount"> 
 				<? echo ( radio( 'discount-'.$$variable{Price}->id(), [ 1, 'Yes', 0, 'No' ], $$variable{Price}->discountable(), { onclick=>qq`$('chk-$$variable{Price}{id}').checked=true;` } ); ) ?>
@@ -45,20 +45,20 @@
 		<tr>
 			<td class="checkbox"><input type="checkbox" id="chk-<? echo ( $$variable{'Pricelist'}->id(); ) ?>-New" name="chk-<? echo ( $$variable{'Pricelist'}->id(); ) ?>-New" /></td>
 			<td class="Range"> 
-				<input type="number" name="min-<? echo ( $$variable{'Pricelist'}->id(); ) ?>-New" onkeyup="$('chk-<? echo ( $$variable{Pricelist}->id(); ) ?>-New').checked=true;this.value=this.value.replace(/[^\d\.]/,'');" />
-				<input type="number" name="max-<? echo ( $$variable{'Pricelist'}->id(); ) ?>-New" onkeyup="$('chk-<? echo ( $$variable{Pricelist}->id(); ) ?>-New').checked=true;this.value=this.value.replace(/[^\d\.]/,'');" />
+				<? echo ( input( type=>'float', name=>'min-'.$$variable{Pricelist}->id().'-New', onkeyup=>qq`\$('chk-$$variable{Pricelist}{id}-New').checked=true;`, oninput=>'this.onkeyup();' ); ) ?>
+				<? echo ( input( type=>'float', name=>'max-'.$$variable{Pricelist}->id().'-New', onkeyup=>qq`\$('chk-$$variable{Pricelist}{id}-New').checked=true;`, oninput=>'this.onkeyup();' ); ) ?>
 			</td>
 			<td class="Units"> 
 				<input type="text" name="units-<? echo ( $$variable{'Pricelist'}->id(); ) ?>-New" onkeyup="$('chk-<? echo ( $$variable{Pricelist}->id(); ) ?>-New').checked=true;" />
 			</td>
 			<td class="Cost"> 
-				<input type="number" name="cost-<? echo ( $$variable{'Pricelist'}->id(); ) ?>-New" onkeyup="$('chk-<? echo ( $$variable{Pricelist}->id(); ) ?>-New').checked=true;this.value=this.value.replace(/[^\d\.]/,'');calc_from_cost(this);" />
+				<? echo ( input( type=>'float', name=>'cost-'.$$variable{Pricelist}->id().'-New', onkeyup=>qq`\$('chk-$$variable{Pricelist}{id}-New').checked=true;calc_from_cost(this);`, oninput=>'this.onkeyup();' ); ) ?>
 			</td>
 			<td class="Markup"> 
-				<input type="number" name="markup-<? echo ( $$variable{'Pricelist'}->id(); ) ?>-New" onkeyup="$('chk-<? echo ( $$variable{Pricelist}->id(); ) ?>-New').checked=true;this.value=this.value.replace(/[^\d\.]/,'');calc_from_markup(this);" />
+				<? echo ( input( type=>'float', name=>'markup-'.$$variable{Pricelist}->id().'-New', onkeyup=>qq`\$('chk-$$variable{Pricelist}{id}-New').checked=true;calc_from_markup(this);`, oninput=>'this.onkeyup();' ); ) ?>
 			</td>
 			<td class="Price"> 
-				<input type="number" name="price-<? echo ( $$variable{'Pricelist'}->id(); ) ?>-New" onkeyup="$('chk-<? echo ( $$variable{Pricelist}->id(); ) ?>-New').checked=true;this.value=this.value.replace(/[^\d\.]/,'');calc_from_price(this);" />
+				<? echo ( input( type=>'float', name=>'price-'.$$variable{Pricelist}->id().'-New', onkeyup=>qq`\$('chk-$$variable{Pricelist}{id}-New').checked=true;calc_from_price(this);`, oninput=>'this.onkeyup();' ); ) ?>
 			</td>
 			<td class="Discount"> 
 				<input type="radio" id="discount-<? echo ( $$variable{'Pricelist'}->id(); ) ?>-NewY" name="rdbDiscount-<? echo ( $$variable{'Pricelist'}->id(); ) ?>-New" value='Y' checked="checked"  />

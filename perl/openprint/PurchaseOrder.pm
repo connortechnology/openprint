@@ -671,7 +671,11 @@ sub Payments {
 		$_[0]{Payments} = $_[1];
 	} # end if
 	if ( ! $_[0]{Payments} ) {
-		 $_[0]{Payments} = [ openprint::Object_Payment->find( object_id=>$_[0]{id}, object_type=>'openprint::PurchaseOrder', order=>'id' ) ];
+		if ( $_[0]{id} ) {
+			$_[0]{Payments} = [ openprint::Object_Payment->find( object_id=>$_[0]{id}, object_type=>'openprint::PurchaseOrder', order=>'id' ) ];
+		} else {
+			return ();
+		} # end if
 	} # end if
 	return @{$_[0]{Payments}};
 } # end sub Payments

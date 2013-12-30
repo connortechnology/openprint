@@ -1,30 +1,31 @@
-<? echo ( include('/includes/main/proj/_quantities.html'); ) ?>
-<li class="equipment">
-	<label>Equipment</label>
-	<? eval ( $$variable{'QTYIndex'} = 1 ) ?>
-	<? while ( $$variable{'QTYIndex'} <= 3 ) ?>
-	<? if ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
-	<span class="<?Columns?>Columns">
-		<select name="ddmEquipment<?QTYIndex?>" size="1" onchange="calc(this.form.name);">
-		<option value="">Equipment Options</option>
+<?include('/includes/main/proj/_quantities.html')?>
 <? echo (
-	if ( $$variable{'Equipment'} ) {
-		return make_drop_down( [ map { $_->id(), $_->name() } @{$$variable{'Equipment'}} ], $$variable{'ddmEquipment'.$$variable{'QTYIndex'}} ? $$variable{'ddmEquipment'.$$variable{'QTYIndex'}} : $$variable{'Equipment'.$$variable{'QTYIndex'}} );
-	} elsif ( $$variable{"ddmEquipment$$variable{'QTYIndex'}"} ) {
-		return $$variable{"ddmEquipment$$variable{'QTYIndex'}"};
-	} elsif ( $$variable{'EquipmentArray'} ) {
-		return fill_drop_down( $log, $dbh, "SELECT strID, strName FROM tbl_Equipment WHERE lngIndex IN (".join(',', @{$$variable{'EquipmentArray'}}).") ORDER BY lower(strName)", $$variable{"ddmEquipment-$$variable{'SignatureIndex'}-$$variable{'QTYIndex'}"} ); 
+	return if $$variable{Equipment} and ! @{$$variable{Equipment}};
+
+	my $html = '<li class="equipment"><label>Equipment</label>';
+	foreach my $qty_index ( $$variable{Project}->quantity_indexes() ) {
+		$html .= '<span class="'.$$variable{Columns}.'Columns">';
+		$html .=qq` 
+	<select name="ddmEquipment$qty_index" size="1" onchange="calc(this.form.name);">
+	<option value="">Equipment Options</option>
+`;
+	if ( $$variable{Equipment} ) {
+		$html .= make_drop_down( [ map { $_->id(), $_->name() } @{$$variable{Equipment}} ], $$variable{'ddmEquipment'.$qty_index} ? $$variable{'ddmEquipment'.$qty_index} : $$variable{'Equipment'.$qty_index} );
+	} elsif ( $$variable{"ddmEquipment$qty_index"} ) {
+		$html .= $$variable{"ddmEquipment$qty_index"};
+	} elsif ( $$variable{EquipmentArray} ) {
+$log->error("Should deprecate use of fill_dropdown");
+		$html .= fill_drop_down( $log, $dbh, "SELECT strID, strName FROM tbl_Equipment WHERE lngIndex IN (".join(',', @{$$variable{'EquipmentArray'}}).") ORDER BY lower(strName)", $$variable{"ddmEquipment-$$variable{'SignatureIndex'}-$qty_index"} ); 
 	} elsif ( $$variable{'ddmEquipment'} ) {
-		return $$variable{'ddmEquipment'};
+		$html .= $$variable{'ddmEquipment'};
 	}
+	$html .= '</select>';
+	$html .= write_override( 'chkOverrideEquipment'.$qty_index, $$variable{"chkOverrideEquipment$qty_index"}, '', q`calc('f1');` );
+	$html .= '</span>';
+	} # end foreach qty_index
+	$html .= '</li>';
+	return $html;
 ) ?>
-	 	</select>
-		<? echo ( write_override( 'chkOverrideEquipment'.$$variable{QTYIndex}, $$variable{"chkOverrideEquipment$$variable{QTYIndex}"}, '', 'calc(this.form.name);' );) ?>
-	</span>
-	<? endif ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
-	<? eval ( $$variable{'QTYIndex'} += 1 ) ?>
-	<? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
-</li>
 <? echo ( join( "\n",
 			include('/includes/main/proj/_unit_price.html'),
 			include('/includes/main/proj/_mprice.html'),

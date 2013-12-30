@@ -22,10 +22,14 @@ $serial = 'materialspecification_id_seq';
 );
 
 %transforms = (
+	id				=>	[ 's/\D//g','<2147483647' ],
 );
 %defaults = (
-	'equipment_id'	=>	undef,
-	'interpolate'	=>	1,
+	equipment_id	=>	undef,
+	min				=>	undef,
+	max				=>	undef,
+	value			=>	undef,
+	interpolate		=>	1,
 );
 
 1;
