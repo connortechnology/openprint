@@ -139,7 +139,7 @@ function textarea_init() {
 	} # end if
 ) ?>
 <!--#include virtual="/includes/error_reporting.html"-->
-<form name="f1" method="post" action="/employee/production/print_overview.html">
+<form id="f1" name="f1" method="post" action="/employee/production/print_overview.html">
 	<input type="hidden" name="btnFunction"/>
 	<input type="hidden" name="ProjectIndex" />
 	<input type="hidden" name="ServiceIndex" />
@@ -184,20 +184,13 @@ function textarea_init() {
 				<label>Date Range:</label>
 				<span class="DateSelector">
 					<? echo ( 
-						my $html = ssi::date_select( 'schedule_start', [ @session{'/employee/production/print_overview.html?schedule_start_year',
-	'/employee/production/print_overview.html?schedule_start_month',
-	'/employee/production/print_overview.html?schedule_start_day'} ] );
-						$html .= ssi::button( 'Today_start', { onclick=>'set_today( f1.schedule_start_year, f1.schedule_start_month, f1.schedule_start_day );f1.submit();', text=>'T' } ); 
+						date_select_session( '/employee/production/print_overview.html', 'schedule_start', { with_today=>1, onchange=>q`check_time_starting($('f1'),'schedule_start','schedule_end');` } );
 					) ?>
 				&nbsp;to&nbsp;
 				</span>
 				<span class="DateSelector">
 					<? echo ( 
-						my $html = ssi::date_select( 'schedule_end', [ @session{'/employee/production/print_overview.html?schedule_end_year',
-	'/employee/production/print_overview.html?schedule_end_month',
-	'/employee/production/print_overview.html?schedule_end_day'} ] );
-						$html .= ssi::button( 'Today_end', { onclick=>'set_today( f1.schedule_end_year, f1.schedule_end_month, f1.schedule_end_day );f1.submit();', text=>'T' } );
-						return $html;
+						date_select_session( '/employee/production/print_overview.html', 'schedule_end', { with_today=>1, onchange=>q`check_time_starting($('f1'),'schedule_start','schedule_end');` } );
 					) ?>
 				</span>
 			</li>
