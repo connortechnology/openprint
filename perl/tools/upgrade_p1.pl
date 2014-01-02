@@ -82,6 +82,7 @@ sql::insert( undef, undef, 'database_info', 'version', $version+1, 'backup', 'fa
 print "done\n";
 map { $_->save({type=>'place'}) } openprint::Location->find(name=>['POGI','Metro','Missing','Trigistrix', 'On Order']);
 
+if ( 0 ) {
 foreach my $Project ( openprint::Project->find('created_on >'=>sprintf('%.4d-%.2d-%.2d 00:00:00', Date::Calc::Add_Delta_Days( Date::Calc::Today(), '7 days') ) ) ) {
 	my @qtys = $Project->quantities();
 	$Project->recalculate();
@@ -91,6 +92,7 @@ foreach my $Project ( openprint::Project->find('created_on >'=>sprintf('%.4d-%.2
 		} # end if
 	} # end foreach qty_index
 } # end foreach Project
+}
 $dbh->disconnect();
 `/etc/init.d/postgresql restart`;
 #`su postgres -c /usr/lib/postgresql/9.1/bin/vacuumdb`;

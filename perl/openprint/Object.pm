@@ -437,6 +437,7 @@ my @sql_functions = (
 # We make this a separate function so that we can use it to generate the sql statements for each value in an OR
 sub find_operators {
 	my ( $field, $type, $operator, $value ) = @_;
+$log->debug("find_operators: field($field) type($type) op($operator) value($value)") if DEBUG_ALL;
 
 	if ( sets::isin( $operator, [ '=', '!=', '<', '>', '<=', '>=', '<<=' ] ) ) {
 		return ( $field.$type.' ' . $operator . ' ?', $value );
@@ -494,6 +495,8 @@ sub find_operators {
 		} else {
 			return $field.$type. ' is not null';
 		} # end if
+	} else {
+$log->warn("find_operators: op not found field($field) type($type) op($operator) value($value)");
 	} # end if
 	return;
 } # end sub
@@ -583,16 +586,22 @@ sub find {
 	@search{@param_keys} = @$params{@param_keys};
 	
 	foreach my $k ( @param_keys ) {
-		my ( $field, $type, $function ) = $k =~ /^([\+\w\-]+)(::\w+)?[\s_]*(.*)?$/;
+		my ( $field, $type, $function ) = $k =~ /^([_\+\w\-]+)(::\w+)?[\s_]*(.*)?$/;
 		$type = '' if ! defined $type;
-#$log->debug("$object_type param $field($type) $function " . ( ref $search{$k} eq 'ARRAY' ? join(',',@{$search{$k}}) : $search{$k} ) );
+#$log->debug("$object_type param $field($type) func($function) " . ( ref $search{$k} eq 'ARRAY' ? join(',',@{$search{$k}}) : $search{$k} ) );
 
 		foreach ( 'find_fields', 'fields' ) {
 			my $fields = \%{$object_type.'::'.$_};
-			next if ! $fields;
+			if ( ! $fields ) {
+				$log->debug("No $fields in $object_type") if DEBUG_ALL;
+				next;
+			} # end if
 
 #$log->debug("looking for ($k) in $type :: $_ , $$f{$k}");
-			next if ! $$fields{$field};
+			if ( ! $$fields{$field} ) {
+				$log->debug("No $field in $_ for $object_type") if DEBUG_ALL;
+				next;
+			} # end if
 
 # This allows mainly for find_fields to reference multiple values, opinion in Project, value
 			foreach my $db_field ( ref $$fields{$field} eq 'ARRAY' ? @{$$fields{$field}} : $$fields{$field} ) {
