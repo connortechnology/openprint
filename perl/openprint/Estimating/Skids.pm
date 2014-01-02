@@ -220,7 +220,7 @@ $log->debug("Materials: " . map { $_->name() } @Materials ) if DEBUG;
 						} # end if
 					} else {
 # No versions?
-						$openprint::log->debug("No versions");
+						#$openprint::log->debug("No versions");
 					} # end if
 				} else {
 					$openprint::log->debug("No signatnures");

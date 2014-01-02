@@ -224,9 +224,11 @@ sub auto_calculate {
 # Folding - first find out if we need it, and make sure we have it or don't as neccessary
 	require openprint::Estimating::Folding;
 	if ( ! openprint::Estimating::Folding::neccessary( $Project ) ) {
-		while ( my $si = shift @{$$services{'Folding'}} ) {
-			openprint::print_project::delete_service( $$Project{'id'}, $si );
-		} # end while
+		if ( $$services{Folding} ) {
+			while ( my $si = shift @{$$services{'Folding'}} ) {
+				openprint::print_project::delete_service( $$Project{'id'}, $si );
+			} # end while
+		} # end if
 	} else {
 		if ( ! $$services{'Folding'} ) {
 			push @{$$services{'Folding'}}, $Project->add_service( 'Folding' );
@@ -291,7 +293,7 @@ require openprint::Estimating::Stitching;
 			push @{$$services{'Collating'}}, $Project->add_service( 'Collating' );
 		} # end if
 	} else {
-		if ( ! $$services{'Collating'} ) {
+		if ( $$services{'Collating'} ) {
 			foreach my $si ( @{$$services{'Collating'}} ) {
 				openprint::print_project::delete_service( $$Project{'id'}, $si );
 			} # end foreach
