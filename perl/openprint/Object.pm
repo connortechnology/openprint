@@ -22,7 +22,7 @@ use vars qw( $log $dbh $AUTOLOAD %cache %name_cache %fields %defaults %transform
 *config = \%openprint::config;
 
 my $debug = 0;
-use constant DEBUG_ALL => 0;
+use constant DEBUG_ALL => 1;
 $no_cache = 0;
 
 sub init_cache {
@@ -261,11 +261,16 @@ $log->debug("No serial") if $debug;
 		} else {
 			delete $sql{'created_on'};
 			my @keys = keys %sql;
+$log->debug("Keys: @keys");
+$log->debug("values: @sql{@keys}");
+			@keys = sets::exclude( [ @$fields{@identified_by} ], \@keys );
+$log->debug("Keys: @keys");
+$log->debug("values: @sql{@keys}");
 			my $command = "UPDATE $table SET " . join(',', map { $_ . ' = ?' } @keys ) . ' WHERE ' . join(' AND ', map { $$fields{$_} .'= ?' } @identified_by );
 			if ( ! ( $_ = $local_dbh->prepare($command) and $_->execute( @sql{@keys}, @sql{@$fields{@identified_by}} ) ) ) {
 				my $error = $local_dbh->errstr;
 				$command =~ s/\?/\%s/g;
-				$log->error('SQL failed: ('.sprintf($command, map { defined $_ ? $_ : 'undef' } ( @sql{@keys}, @$fields{@identified_by} ) ).'):' . $error) if $log;
+				$log->error('SQL failed: ('.sprintf($command, map { defined $_ ? $_ : 'undef' } ( @sql{@keys}, @sql{@$fields{@identified_by}} ) ).'):' . $error) if $log;
 				$local_dbh->rollback();
 				sql::end_transaction( $local_dbh, $ac );
 				return $error;

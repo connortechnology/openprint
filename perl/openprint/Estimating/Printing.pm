@@ -4681,7 +4681,7 @@ sub select_presses {
 		my $paper_ok = 0;
 		my $Paper;
 
-		my $AQ_Min_Weight_ = $Press->Specification('Aqueous Minimum Weight');
+		my $AQ_Min_Weight = $Press->Specification('Aqueous Minimum Weight');
 
 		foreach $Paper ( @$Papers ) {
 			my $max_calliper = $Press->specification('Maximum Calliper', $$Paper{'grade'} );
@@ -4703,7 +4703,7 @@ sub select_presses {
 				$results{$press_id} = "Failed Minimum Basis Weight Check **" . $Paper->basis_mweight() . ' < ' . $Press->specification('Minimum Basis Weight');
 				next;
 			} # end if
-			if ( $AQ_Min_Weight and ( $$_{units} eq 'gsm' ) and ( $Paper->gsm() < $$_{value} ) ) {
+			if ( $AQ_Min_Weight and ( $$AQ_Min_Weight{units} eq 'gsm' ) and ( $Paper->gsm() < $$AQ_Min_Weight{value} ) ) {
 				$results{$press_id} .= " ** Press $press_id Failed Aqueous Minimum Weight Check (".$$AQ_Min_Weight{value}." > $$Paper{gsm})gsm<br/>";
 				next;
 			} # end if
