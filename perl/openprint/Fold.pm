@@ -11,7 +11,7 @@ use vars qw( $debug $table $serial $log $dbh %fields %transforms %defaults );
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
 
-$debug = 0;
+$debug = 1;
 $table = 'folds';
 $serial= 'folds_id_seq';
 
@@ -210,6 +210,9 @@ sub RunSpeed {
 	my ( $self, $gsm ) = @_;
 	if ( ! exists $$self{runspeed_cache} ) {
 		$$self{runspeed_cache} = {};
+	} # end if
+	if ( ! $gsm ) {
+		$openprint::log->error("No gsm in Fold->runspeed");
 	} # end if
 	if ( ! exists $$self{runspeed_cache}{$gsm} ) {
 		$$self{runspeed_cache}{$gsm} = $self->Specification( $gsm );

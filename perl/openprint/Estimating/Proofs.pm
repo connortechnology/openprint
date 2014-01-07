@@ -422,7 +422,7 @@ sub insert_layout_proof {
 
 	my ( $default_proof_type ) = $Equipment->specification( 'Default Layout Proof' );
 	if ( ! $default_proof_type ) {
-		$openprint::log->debug("No Default Layout Proof for " . $Equipment->strid() );
+		$openprint::log->debug("No Default Layout Proof for " . $Equipment->strid() ) if DEBUG;
 		return;
 	} # end if
 

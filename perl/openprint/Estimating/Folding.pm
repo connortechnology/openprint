@@ -960,7 +960,7 @@ $openprint::log->debug(qq`Wrong imposition: $$specs{"FoldImposition-$$sig_specs{
 						$openprint::log->debug("Not found trying generic") if DEBUG;
 						# Replace with a generic one
 						my $key = $$specs{"FoldType-$$sig_specs{'SignatureIndex'}-$qty_index-$index"}.'-'.$$specs{"FoldImposition-$$sig_specs{'SignatureIndex'}-$qty_index-$index"}.'out';
-						my ( $pages ) = $$specs{"FoldType-$$sig_specs{'SignatureIndex'}-$qty_index-$index"} =~ /(\d)+Page/;
+						my ( $pages ) = $$specs{"FoldType-$$sig_specs{'SignatureIndex'}-$qty_index-$index"} =~ /(\d+)Page/;
 						my $Fold = openprint::Fold->find_one( 
 									'min_imposition null_or_<='	=>	$$specs{"FoldImposition-$$sig_specs{'SignatureIndex'}-$qty_index-$index"},
 									'max_imposition null_or_>='	=>	$$specs{"FoldImposition-$$sig_specs{'SignatureIndex'}-$qty_index-$index"},
@@ -1372,7 +1372,7 @@ sub calc {
 
 		my $previous_imposition;
 
-		my @signatures = sort $Project->signatures();
+		my @signatures = $Project->signatures( { sort=> 1 });
 		my @Signature_Impositions;
 		foreach ( @signatures ) {
 			my $sig_specs = openprint::service::get_specs_ref( $Project, $_ );
