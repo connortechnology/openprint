@@ -27,18 +27,20 @@ use vars qw( $r $log $dbh %variable %param %session %config);
 
 sub search {
 	if ( $param{'btnFunction'} eq 'Go' ) {
-        if ( $param{'StartDocket'} ) {
-            my @orders = openprint::Order->find('docket'=>$param{'StartDocket'},'id'=>$param{'order_id'}, 'invoice_id'=>$param{'invoice_id'} );
-            if ( @orders == 1 ) {
-                $param{'order_id'} = $orders[0]->id();
-                $variable{'Redirect'} = '/employee/accounting/details.html';
+        if ( $param{StartDocket} or $param{order_id} or $param{invoice_id} ) {
+            my @Orders = openprint::Order->find(
+				( $param{StartDocket} ? ( docket=>$param{StartDocket} ) : () ),
+				( $param{order_id} ? ( id=>$param{order_id} ) : () ),
+				( $param{invoice_id} ? ( invoice_id=>$param{invoice_id} ) : () ),
+				);
+            if ( @Orders == 1 ) {
+                $variable{ExternalRedirect} = '/employee/accounting/details.html?order_id='.$Orders[0]->id();
                 return;
             } # end if
-        } elsif ( $param{'project_id'} ) {
+        } elsif ( $param{project_id} ) {
 			my $Project = new openprint::Project( $param{'project_id'} );
 			if ( $Project->id() and $Project->order_id() ) {
-                $param{'order_id'} = $Project->order_id();
-                $variable{'Redirect'} = '/employee/accounting/details.html';
+                $variable{ExternalRedirect} = '/employee/accounting/details.html?order_id='.$Project->order_id();
                 return;
             } # end if
         } # end if
