@@ -413,11 +413,11 @@ $html .= '</tr>';
 			if ( @bindery_services ) {
 				$html .= button( 'CompleteBindery'.$$variable{Project}{id}, { onclick=>qq`form_submit('$$variable{formname}','BinderyComplete');`, text=>'Complete Bindery' } );
 			} # end if
-			if ( sets::isin( $$variable{'ShippingType'}, [ 'Delivery', 'Shipping' ] ) and $$variable{'Project'}->status() ne 'Shipped' ) {
+			if ( sets::isin( $$variable{Project}->shippingtype(), [ 'Delivery', 'Shipping' ] ) and $$variable{'Project'}->status() ne 'Shipped' ) {
 
 				$html .= button( 'Shipped'.$$variable{Project}{id}, { onclick=>qq`form_submit('$$variable{formname}','Shipped');`, text=>'Shipped' } );
 			} # end if
-			if ( $$variable{'ShippingType'} eq 'CustomerPickUp' and $$variable{'Project'}->status() ne 'Picked Up' ) {
+			if ( $$variable{Project}->shippingtype() eq 'CustomerPickUp' and $$variable{'Project'}->status() ne 'Picked Up' ) {
 				$html .= button( 'PickedUp'.$$variable{Project}{id}, { onclick=>qq`form_submit('$$variable{formname}','Picked Up');`, text=>'Picked Up' } );
 			} # end if
 			if ( $session{'user_type'} eq 'A' or openprint::usergroup::is_user_in( ['Sales Admin','Scheduling','PrepressManager'], $session{'user_id'} ) ) {
