@@ -1378,7 +1378,7 @@ $log->debug($P->id_string());
 			} elsif ( $Paper->width() >= $$specs{'StockWidth'.$qty_index} ) {
 				$Paper->width( $$specs{'StockWidth'.$qty_index} );
 			} else {
-				$log->warn("Unsuitable Stock");
+				$log->warn("Unsuitable Stock" . $Paper->to_string() );
 				return new openprint::Paper();
 			} # end if
 
