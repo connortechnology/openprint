@@ -268,10 +268,10 @@ $log->warn("Paper was supplied");
 sub _order_history_results {
 	my %parameters; 
 	if ( ( $session{'user_type'} ne 'A' ) and ! openprint::usergroup::is_user_in( ['Sales Admin','Reporting','Accounting'], $session{'user_id'} ) ) {
-		$parameters{'SalesPerson'} = $session{'user_id'};
+		$parameters{'salesrep_id'} = $session{'user_id'};
 		$parameters{'or'} = "companies.id=(SELECT company_id FROM users WHERE users.id=$session{'user_id'})";
 	} elsif ( $param{'CSR'} ) {
-		$parameters{'SalesPerson'} = $param{'CSR'};
+		$parameters{'salesrep_id'} = $param{'CSR'};
 	} # end if
 	my @Companies = openprint::Company->find( %parameters ) if %parameters;
 	my %companies = map { int($_->id()), $_->name() } @Companies;
