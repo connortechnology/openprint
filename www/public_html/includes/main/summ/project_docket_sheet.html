@@ -378,11 +378,11 @@ $log->debug("Paper: " . $Paper->id_string() );
 <? eval ( 
 	openprint::print_project::get_service_specifications( $r, $log, $dbh, $variable, $$variable{'ProjectIndex'}, $$variable{'ProofServiceIndex'} );
 	openprint::Estimating::Proofs::get_proof_specs( $log, $dbh, $variable, @$variable{'ProjectIndex','ProofServiceIndex'} );
- ) ?>
+) ?>
 <? while ( @{$$variable{'SignatureGroups'}} ) ?>
 	<tr>
 		<td class="headerText">
-<? if ( @$variable{'SignatureIndex','Reference','SignatureQuantity'} = splice @{$$variable{'SignatureGroups'}},0,2; ) ?>
+<? if ( @$variable{'SignatureIndex','Reference'} = splice @{$$variable{'SignatureGroups'}},0,2; ) ?>
 <? if ( $$variable{'Reference'} ) ?><b>For <?Reference?></b><br/><? endif ( $$variable{'Reference'} ) ?>
 	<table>
 		<tr>
@@ -403,10 +403,12 @@ $log->debug("Paper: " . $Paper->id_string() );
 			<? if ( $$variable{'ProofType'} eq 'PDFProof' ) ?>PDF Proof<? endif ( $$variable{'ProofType'} eq 'PDFProof' ) ?>
 			</td>
 		</tr>
+		<? else ( $$variable{'ProofQuantity'} ) ?>
+No proofs
 		<? endif ( $$variable{'ProofQuantity'} ) ?>
 		<? endwhile ( @$variable{'ProofIndex','ProofQuantity','ProofWidth','ProofHeight','ProofType','ddmProofType'} = splice @{$$variable{'Proofs-'.$$variable{'SignatureIndex'}.'-'.$$variable{'Project'}->ordered_quantity_index()}},0,6; ) ?>
 	</table>
-<? endif ( @$variable{'SignatureIndex','Reference','SignatureQuantity'} = splice @{$$variable{'SignatureGroups'}},0,2; ) ?>
+<? endif ( @$variable{'SignatureIndex','Reference'} = splice @{$$variable{'SignatureGroups'}},0,2; ) ?>
 </td>
 		<td class="docketText">
 <? if ( @$variable{'SignatureIndex','Reference','SignatureQuantity'} = splice @{$$variable{'SignatureGroups'}},0,2; ) ?>

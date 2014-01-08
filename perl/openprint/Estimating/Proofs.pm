@@ -518,7 +518,7 @@ $Imposition->display( "For sig $signature_index");
 					push @{$proof_indexes{$signature_index}}, 3;
 					$log->debug("Adding Press Proof");
 					insert_press_proof( $Project, $sig_specs, 3, $qty_index, $variable, $Imposition );
-				} else {
+				} elsif ( DEBUG ) {
 $log->debug("Press proof not needed");
 				} # end if
 			} elsif ( DEBUG ) {
