@@ -793,5 +793,15 @@ sub can_invoice {
 	return 0;
 } # end sub can_invoice
 
+sub Invoice {
+	return new openprint::Invoice( $_[0]{invoice_id} );
+} # end sub Invoice
+
+sub invoiced_on {
+	if ( $_[0]{invoice_id} ) {
+		return $_[0]->Invoice()->created_on();
+	} # end if		
+}  # end sub invoiced_on
+
 1;
 __END__
