@@ -41,9 +41,9 @@ $debug = 0;
 );
 
 %defaults = (
-	'created_on'	=>	'NOW()',
-	'updated_on'	=>	'NOW()',
-	'received_on'	=>	'NOW()',
+	'created_on'	=>	q`'NOW()'`,
+	'updated_on'	=>	q`'NOW()'`,
+	'received_on'	=>	q`'NOW()'`,
 	'supplier_id'	=>	undef,
 	deleted	=>	0,
 );
