@@ -537,6 +537,7 @@ sub history_details {
 				invoicee_id=>$Order->company_id(),
 				total=>$Order->total(),
 				num=>$param{invoice_id},
+				currency_id	=>	$Order->currency_id(),
 				});
 		} # end if ! Invoice
 	   $variable{error} .= $Order->save({ invoice_id=> $Invoice->id() });
