@@ -2992,7 +2992,7 @@ $openprint::log->debug("Giving up on $$Press{strid} bnecause it's bigger than th
 			if ( %best_price and ( $best_price{'Comparison Cost'} <= $$price{'Comparison Cost'} ) ) {
 				if ( DEBUG_PRICE_DECISIONS or $$sig_specs{Group} == 1 ) {
 					$imp->display( "Too expensive $best_price{'Comparison Cost'} <= $$price{'Comparison Cost'}" );
-$openprint::log->error( Data::Dumper::Dumper( $price ) );
+#$openprint::log->error( Data::Dumper::Dumper( $price ) );
 					if ( $$sig_specs{'Impositions'} ) {
 						foreach my $I ( reverse @{ $$sig_specs{'Impositions'} } ) {
 							$I->display( "THIS" );
