@@ -86,11 +86,11 @@
 				<? echo ( 
 					my @Skids = openprint::Skid->find( rfidtag_id=>$$variable{RFIDTag}->id(), deleted=>[0,1] );
 					if ( ! @Skids ) {
-						return button( 'SkidAllocate', href=>'rfidtag_details.html?rfidtag_id='.$$variable{'RFIDTag'}->id().q`&btnFunction=AllocateSkid`, text=>'Allocate' } );
+						return button( 'SkidAllocate', { href=>'rfidtag_details.html?rfidtag_id='.$$variable{'RFIDTag'}->id().q`&btnFunction=AllocateSkid`, text=>'Allocate' } );
 					} elsif ( 1 == @Skids ) {
 						$$variable{'Skid'} = $Skids[0];
 						$$variable{'skid_id'} = $$variable{'Skid'}->id();
-						return button( 'SkidGo', href=>'skid_details.html?skid_id='.$$variable{'skid_id'}, text=>'Go' } );
+						return button( 'SkidGo', { href=>'skid_details.html?skid_id='.$$variable{'skid_id'}, text=>'Go' } );
 					} else {
                         my $html = '<br/><span class="error">There are multiple skids with this RFIDTag.  Please correct.</span><br/>';
                         foreach my $Skid ( @Skids ) {
