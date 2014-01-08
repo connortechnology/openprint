@@ -6,7 +6,7 @@
 	} # end if
 	$$variable{'Company'} = $$variable{'Project'}->Company();
 	my %services = $$variable{'Project'}->get_services();
-	$$variable{'Operator'} = new openprint::User( sql::execute( undef, undef, q{SELECT operator_id FROM tbl_Project_Contents WHERE lngProjectIndex=? AND lngserviceindex=?}, $param{project_id}, $services{'Proofs'} ? $services{'Proofs'}[0] : $services{'FilmStripping'}[0] ) );
+	$$variable{'Operator'} = new openprint::User( sql::execute( undef, undef, q{SELECT operator_id FROM tbl_Project_Contents WHERE lngProjectIndex=? AND lngserviceindex=?}, $$variable{Project}->id(), $services{'Proofs'} ? $services{'Proofs'}[0] : $services{'FilmStripping'}[0] ) );
 ) ?>
 <style type="text/css">
 	table.Docket .label {
