@@ -3578,8 +3578,8 @@ $openprint::log->warn("Unable to calculate impositions for additional signatures
 	if ( $$price{'Comparison Cost'} < 0 ) {
 		$openprint::log->error("Negative price! $best_price{'Comparison Cost'} <= $$price{'Comparison Cost'}");
 	} elsif ( %best_price and ( $best_price{'Comparison Cost'} < $$price{'Comparison Cost'} ) ) {
-		if ( DEBUG_PRICE_DECISIONS or $$sig_specs{Group} == 1 ) {
-			$openprint::log->error("Resulting price worst than best: $best_price{'Comparison Cost'} <= $$price{'Comparison Cost'}");
+		if ( DEBUG_PRICE_DECISIONS ) {
+			$openprint::log->debug("Resulting price worst than best: $best_price{'Comparison Cost'} <= $$price{'Comparison Cost'}");
 			$imp->display($recursion_depth.'Worst than best');
 			$openprint::log->debug( 'this: ' . breakdown( $price, $sig_specs ) );
 			$best_price{Imposition}->display($recursion_depth.'best');
@@ -3588,7 +3588,7 @@ $openprint::log->warn("Unable to calculate impositions for additional signatures
 
 	} else {
 
-		if ( DEBUG_PRICE_DECISIONS or $$sig_specs{Group} == 1  ) {
+		if ( DEBUG_PRICE_DECISIONS ) {
 			$imp->display("New best price chosen: $best_price{'Comparison Cost'} >= $$price{'Comparison Cost'}");
 			foreach my $I ( @{ $best_price{'Impositions'} } ) {
 				$I->display( $recursion_depth . "OLD BEST:" );
