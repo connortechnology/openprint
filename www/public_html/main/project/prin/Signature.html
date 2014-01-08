@@ -65,7 +65,7 @@
 			include('/includes/main/proj/dimensions.html'),
 		);
 	} elsif ( $$variable{'ProjectType'}->name() eq 'Custom' ) {
-		return include('includes/main/proj/dimensions_boxes_only.html');
+		return include('/includes/main/proj/dimensions_boxes_only.html');
 	} elsif ( sets::isin( $$variable{'ProjectType'}->name(),['Banners'] ) )  {
 		return include('/includes/main/proj/banner_printing.html');
 	} elsif ( $$variable{'ProjectType'}->name() eq 'Envelopes' ) {
