@@ -1,7 +1,8 @@
 <?include(/includes/project_header.html)?>
 <?eval(
 	$$variable{formname}='f'.$$variable{Project}->id();
-	$$variable{canseepricing} = $session{user_type} eq 'A' || openprint::usergroup::is_user_in( ['Accounting'], $session{'user_id'} );
+	$$variable{canseepricing} = $$variable{Order}->can_see_pricing();
+
 	$$variable{canseepaperpricing} = $$variable{canseepricing} || openprint::usergroup::is_user_in( ['InventoryManager'], $session{user_id} );
 ) ?>
 <div class="buttons">
