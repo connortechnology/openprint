@@ -20,10 +20,10 @@ $table = 'survey_responses';
 
 %defaults = (
 	'created_on'	=>	q`'NOW()'`,
-	'answer_ids'	=>	q`undef`,
-	'company_id'	=>	q`undef`,
-	'survey_id'		=>	q`undef`,
-	'answer'		=>	q`undef`,
+	answer_ids	=>	undef,
+	company_id	=>	undef,
+	survey_id		=>	undef,
+	answer		=>	undef,
 );
 
 sub Answers {

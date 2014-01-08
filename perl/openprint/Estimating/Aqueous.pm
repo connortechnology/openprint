@@ -31,6 +31,7 @@ use vars qw( @outputs );
 # This service doesn't store it's own data, other than price.  It gets the info from the printing service.
 #
 my @variables = (
+	'alert',
 	'txtQuantity1','txtQuantity2','txtQuantity3',
 	'Markup1', 'Markup2', 'Markup3',
 	'txtPrice1','txtPrice2','txtPrice3',
@@ -370,6 +371,7 @@ if ( 1 ) {
 					} # end if
 					$Price{'MakeReady'} += $setupPrice{'Price'};
 					$MakeReadies{$Equipment->id()} = $area;
+					$Price{washups} = scalar @different_types;
 				} # end if
 				
 				my %BlanketCutPrice;
@@ -453,6 +455,7 @@ if ( 1 ) {
 				$bestPrice{'BlanketCut'} = $Price{'BlanketCut'};
 				$bestPrice{'Equipment'} = $Equipment;
 				$bestPrice{'Imposition'} = $imp;
+				$bestPrice{washups} = $Price{washups};
 			} # end if
 		} # end foreach equipment
 	} # end foreach imposition

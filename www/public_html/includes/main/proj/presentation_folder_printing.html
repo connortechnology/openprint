@@ -1,5 +1,7 @@
 <div class="PresentationFolderQuestions">
-	<p>
+	<fieldset><legend>Presentation Folder Options</legend>
+	<ul>
+	<li>
 		<label>Number of panels</label>
 		<span class="checkOption">
 		<input type="radio" id="rdbPanels2<?Signature?>" name="rdbPanels<?Signature?>" value="2" onclick="$('PocketCenter<?Signature?>').hide();calc(this.form.name);" <? echo ( $$variable{'rdbPanels'.$$variable{'Signature'}} == 2 ? 'checked="checked"' : '' ) ?> />
@@ -13,8 +15,8 @@
 		<input type="radio" id="rdbPanels4<?Signature?>" name="rdbPanels<?Signature?>" value="4" onclick="$('PocketCenter<?Signature?>').show();calc(this.form.name);" <? echo ( $$variable{'rdbPanels'.$$variable{'Signature'}} == 4 ? 'checked="checked"' : '' ) ?> />
 		<label class="radio" for="rdbPanels4<?Signature?>">4</label>
 		</span>
-	</p>
-	<p>
+	</li>
+	<li>
 		<label>Pocket size</label>
 		<span class="checkOption">
 		<input type="radio" id="rdbPocketSize3<?Signature?>" name="rdbPocketSize<?Signature?>" value="3" onclick="calc(this.form.name);" <? echo ( ssi::checked( $$variable{'PocketSize'.$$variable{'Signature'}} == 3 ); ) ?> />
@@ -29,8 +31,8 @@
 		<label class="radio" for="rdbPocketSizeOther<?Signature?>">Other</label>
 			<input type="text" name="PocketSize<?Signature?>" value="<? echo ( $$variable{'PocketSize'.$$variable{'Signature'}} ) ?>" onkeyup="this.value=this.value.replace(/[^\d\.]/, '' );$('rdbPocketSizeOther<?Signature?>').checked=true;calc(this.form.name);" size="2"/>
 		</span>
-	</p>
-	<p>
+	</li>
+	<li>
 		<label>Pocket location</label>
 		<span class="checkOption">
 			<input type="checkbox" id="chkPocketLeft<?Signature?>" name="chkPocketLeft<?Signature?>" value="Left" onclick="calc(this.form.name);" <? echo ( $$variable{'chkPocketLeft'.$$variable{'Signature'}} eq 'Left' ? 'checked="checked"' : '' ) ?> />
@@ -44,6 +46,7 @@
 			<input type="checkbox" id="chkPocketRight<?Signature?>" name="chkPocketRight<?Signature?>" value="Right" onclick="calc(this.form.name);" <? echo ( $$variable{'chkPocketRight'.$$variable{'Signature'}} eq 'Right' ? 'checked="checked"' : '' ) ?> />
 			<label class="radio" for="chkPocketRight<?Signature?>">Right</label>
 		</span>
-	</p>
+	</li>
+	</ul>
+	</fieldset>
 </div>
-<br class="spacer"/>

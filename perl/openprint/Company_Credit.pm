@@ -1,6 +1,5 @@
 use strict;
 require openprint::Currency;
-require openprint::Order;
 require openprint::Company;
 require openprint::User;
 require misc;
@@ -61,6 +60,7 @@ $table = 'company_credit';
 
 sub debt {
 	if ( ! exists $_[0]{debt} ) {
+		require openprint::Order;
 		$_[0]{debt} = misc::sum( map { $_->total() - $_->paid() } openprint::Order->find(
 					company_id		=>	$_[0]{company_id},
 					supplier_id		=>	$_[0]{supplier_id},
@@ -84,6 +84,7 @@ sub remaining {
 
 sub outstanding_Orders {
 	if ( ! $_[0]{'outstanding_Orders'} ) {
+		require openprint::Order;
    $_[0]{'outstanding_Orders'} = [ openprint::Order->find(
 	
         'company_id'    =>	$_[0]{company_id},

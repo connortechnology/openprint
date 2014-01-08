@@ -1,23 +1,23 @@
-<? echo ( include('/includes/error_reporting.html'); ) ?>
+<?include(/includes/error_reporting.html)?>
 <form id="f1" name="f1" action="payment_options.html" method="post">
 	<fieldset>
 		<p>
 			<label>Payment Type</label>
 			<select name="paymenttype_id" onchange="if(this.options[this.selectedIndex].value != '') f1.submit();">
 				<option value="">select</option>
-				<? echo ( ssi::make_drop_down( openprint::PaymentType->dropdown('order'=>'lower(name)'), $$variable{'PaymentType'}->id() ); ) ?>
+				<? echo ( make_drop_down( openprint::PaymentType->dropdown( order=>'lower(name)'), $$variable{PaymentType}->id() ); ) ?>
 			</select>
 		</p>
 		<p class="buttons">
 			<? echo ( my $html;
-				$html .= ssi::button( 'Prev1', { onclick=>"f1.btnFunction.value='<<';fmCheck(f1);", text=>'<<' } );
-				$html .= ssi::button( 'Next1', { onclick=>"f1.btnFunction.value='>>';fmCheck(f1);", text=>'>>' } );
-				$html .= ssi::button( 'New1', { onclick=>"", text=>'New' } );
+				$html .= button( 'Prev1', { onclick=>"f1.btnFunction.value='<<';fmCheck(f1);", text=>'<<' } );
+				$html .= button( 'Next1', { onclick=>"f1.btnFunction.value='>>';fmCheck(f1);", text=>'>>' } );
+				$html .= button( 'New1', { onclick=>"", text=>'New' } );
 				if ( $param{paymenttype_id} ) {
-					$html .= ssi::button( 'Delete1', { onclick=>"f1.btnFunction.value='Delete';fmChange=2;fmCheck(f1);", text=>'Delete' } );
+					$html .= button( 'Delete1', { onclick=>"f1.btnFunction.value='Delete';fmChange=2;fmCheck(f1);", text=>'Delete' } );
 				} # end if
-				$html .= ssi::button( 'Save1', { onclick=>"f1.btnFunction.value='Save';fmChange=3;fmCheck(f1);", text=>'Save' } );
-				$html .= ssi::button( 'Reset1', { onclick=>'f1.reset();', text=>'Reset' } );
+				$html .= button( 'Save1', { onclick=>"f1.btnFunction.value='Save';fmChange=3;fmCheck(f1);", text=>'Save' } );
+				$html .= button( 'Reset1', { onclick=>'f1.reset();', text=>'Reset' } );
 				return $html;
 			) ?>
 		</p>

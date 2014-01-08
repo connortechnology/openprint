@@ -9,16 +9,12 @@ use vars qw( $log %session $debug $table $serial %fields %transforms %defaults %
 
 require sql;
 require openprint::Location;
-require openprint::Paper;
-require openprint::PaperInventory;
-require openprint::SkidContent;
 require openprint::RFIDTag;
 require openprint::Skid_Verification;
 require openprint::Project;
 require openprint::SkidContent;
-require openprint::Manifest;
-require openprint::ManifestContent;
 require openprint::InventoryCondition;
+require openprint::PaperAllocation;
 
 $debug = 0;
 
@@ -451,7 +447,7 @@ sub location {
 		$self->location_id( $Location->id() );
 	} # end if
 	return new openprint::Location( $$self{location_id} )->name();
-} # end if
+} # end sub location
 
 sub location_id {
 
@@ -533,6 +529,7 @@ sub allocateable {
 # Checkout all paper on the skid
 sub checkout {
 	my ( $self, $c ) = @_;
+	require openprint::PaperInventory;
 	my @contents = openprint::SkidContent->find( skid_id=>$$self{id});
 	if ( ! @contents ) {
 		if ( ! openprint::PaperInventory->find( skid_id=>$$self{id}, 'comment like'=>'Checked out%' ) ) {
@@ -554,7 +551,8 @@ sub checkout {
 	foreach my $C ( @contents ) {
 		if ( ! openprint::PaperInventory->find( skid_id=>$$self{id}, 'comment like'=>'Checked out%' ) ) {
 			my $PA = openprint::PaperAllocation->find_one( skid_id=>$$self{id}, paper_id=>$C->paper_id());
-			my $desc = 'Checked out' . ($PA->project_id() ? ' for docket ' . $PA->Project()->docket() : '');
+			my $desc = 'Checked out';
+			$desc .= ($PA->project_id() ? ' for docket ' . $PA->Project()->docket() : '') if $PA;
 			my $PI = new openprint::PaperInventory();
 			my $e = $PI->save({
 					'paper_id'  =>  $C->paper_id(),
@@ -686,11 +684,13 @@ sub Manifest {
 	if ( my $MC = $_[0]->ManifestContent() ) {
 		return $MC->Manifest();
 	} # end if
+	require openprint::Manifest;
 	return new openprint::Manifest();
 } # end sub Manifest
 
 sub ManifestContent {
 	if ( ! $_[0]{'ManifestContent'} ) {
+		require openprint::ManifestContent;
 		$_[0]{'ManifestContent'} = openprint::ManifestContent->find_one('skid_id'=>$_[0]{id});
 	} # end if
 	return $_[0]{'ManifestContent'};
@@ -757,6 +757,7 @@ sub used {
 sub merge {
 	my ( $Keep, $Merge ) = @_;
 	
+	require openprint::ManifestContent;
 	my $ac = sql::start_transaction( $openprint::dbh );
 	foreach my $MC ( openprint::ManifestContent->find( skid_id=>$$Merge{id} ) ) {
 		if ( $MC->rfidtag_id() and $Keep->rfidtag_id() and ( $MC->rfidtag_id() ne $Keep->rfidtag_id() ) ) {
@@ -827,6 +828,19 @@ sub checked_out {
 	return $_[0]{checked_out};
 } # end sub checked_out
 
+sub description {
+	if ( ! exists $_[0]{description} ) {
+		$_[0]{description} = '';
+		foreach my $SC ( $_[0]->Contents() ) {
+			$_[0]{description} .= $SC->Paper()->link_to().'<br/>';
+		} # end foreach
+	} # end if
+	return $_[0]{description};
+} # end sub description
+
+sub link_to {
+	return sprintf('<a href="/employee/inventory/skid_details.html?skid_id=%1$d">%2$s %1$d</a>', $_[0]{id}, $_[0]->type() eq 'Roll' ? 'Roll':'Skid' );
+} # end sub link_to
 
 1;
 __END__

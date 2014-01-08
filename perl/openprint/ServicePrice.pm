@@ -5,7 +5,7 @@ require Math::Round;
 package openprint::ServicePrice;
 our @ISA = qw( openprint::Object );
 
-use vars qw( $debug $table $serial %fields %transforms %defaults );
+use vars qw( $debug $table $serial %fields %find_fields %transforms %defaults );
 
 $debug = 0;
 $table = 'Service_Prices';
@@ -28,6 +28,9 @@ $serial = 'service_prices_id_seq';
 	supplier_id		=>	'supplier_id',
 	period_start	=>	'period_start',
 	period_end		=>	'period_end',
+);
+%find_fields  = 	(
+	service_name	=>	'(SELECT name from services WHERE services.id=service_id)',
 );
 %defaults = (
 	min		=>	undef,

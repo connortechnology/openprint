@@ -210,6 +210,23 @@ $log->debug("Materials: " . map { $_->name() } @Materials ) if DEBUG;
 				} else {
 					$items_per_package = $items_by_weight;
 				} # end if
+				if ( $$services{Signature} and @{$$services{Signature}} ) {
+					my $sig_specs = openprint::service::get_specs_ref( $Project, $$services{Signature}[0] );
+					if ( $$sig_specs{Versions} ) {
+						my $versions_per_package = int( $qty / $$sig_specs{Versions} );
+						$openprint::log->debug("Per package due to versions: $qty / $$sig_specs{Versions} = $versions_per_package");
+						if ( $versions_per_package < $items_per_package ) {
+							$items_per_package = $versions_per_package;
+						} # end if
+					} else {
+# No versions?
+						#$openprint::log->debug("No versions");
+					} # end if
+				} else {
+					$openprint::log->debug("No signatnures");
+				} # end if
+
+
 			} else {
 				$items_per_package = int $$specs{'txtItemsPerPackage'.$qty_index};
 			} # end if

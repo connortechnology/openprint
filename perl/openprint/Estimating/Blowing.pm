@@ -2,12 +2,11 @@ package openprint::Estimating::Blowing;
 use strict;
 
 require openprint::service;
-use sql;
-use POSIX           qw(ceil);
 
-my $debug = 1;
+use constant DEBUG => 0;
 
 my %variables = (
+	'alert' => ['save','output'],
 	'Quantity' => ['save'],
 	'ddmEquipment1' => ['save','output'], 'ddmEquipment2' => ['save','output'], 'ddmEquipment3' => ['save','output'],
 	'OverridePrice1' => ['save'], 'OverridePrice2' => ['save'], 'OverridePrice3' => ['save'],
@@ -58,15 +57,21 @@ sub calc {
 		return $$specs{'Status'} = 'uncalculated';
 	} # end if
 
-	my @Equipment = openprint::Equipment->find('Specifications'=>{'Blowing Capable'=>'Y'},'useinestimating'=>1);
-	push @Equipment, openprint::Equipment->find('Specifications'=>{'Blowing Capable'=>'When PerfectBound'},'useinestimating'=>1) if $$services{'PerfectBind'};
-	push @Equipment, openprint::Equipment->find('Specifications'=>{'Blowing Capable'=>'When Stitching'},'useinestimating'=>1) if $$services{'SaddleStitching'} or $$services{'LoopStitching'};
+	my @capabilities = ( 'Y', 
+			( $$services{'PerfectBind'} ? ( 'When PerfectBound' ) : () ),
+			( $$services{'SaddleStitching'} or $$services{'LoopStitching'} ? ( 'When Stitching' ) : () ),
+			);
+	
+	my @Equipment = openprint::Equipment->find('Specifications'=>{'Blowing Capable'=>\@capabilities},'useinestimating'=>1);
 	if ( ! @Equipment ) {
 		$$specs{'alert'} = 'We have no equipment for blow-ins.';
 		return $$specs{'Status'} = 'uncalculated';
 	} # end if
 
 	my $status = 'calculated';
+
+	my $BlowingMakeReady = openprint::Service->find_one(name=>'BlowingMakeReady');
+	my $Blowing = openprint::Service->find_one(name=>'Blowing');
 
 	foreach my $qty_index ( $Project->quantity_indexes() ) {
 		$$specs{'txtPrice'.$qty_index} =~ s/[^\d\.]//g;
@@ -88,7 +93,7 @@ sub calc {
 
 			my $total = 0;
 
-			my %MakeReady = openprint::service::get_price_object('BlowingMakeReady', undef, $Equipment );
+			my %MakeReady = $BlowingMakeReady->get_price( undef, $Equipment ) if $BlowingMakeReady;
 			if ( ! %MakeReady ) {
 				$$specs{'hdnBreakdown'.$qty_index} .= 'No MakeReady price.<br/>';
 			} else {
@@ -96,7 +101,7 @@ sub calc {
 				$total += $MakeReady{'Price'};
 			} # end if
 
-			my %ServicePrice = openprint::service::get_price_object('Blowing', undef, $Equipment ); 
+			my %ServicePrice = $Blowing->get_price( undef, $Equipment ) if $Blowing;
 			if ( ! %ServicePrice ) {
 				$$specs{'hdnBreakdown'.$qty_index} .= 'No Service price.<br/>';
 			} elsif ( lc $ServicePrice{'units'} eq 'per m' ) {
@@ -167,10 +172,12 @@ sub display {
 
 	my $Project = new openprint::Project( $project_index );
 	my $services = $Project->services();
-	my @possible_equipment = openprint::Equipment->find( 'Specifications' => {'Blowing Capable'=>'Y'}, 'useinestimating'=>1,'order'=>'lower(strName)');
-	push @possible_equipment, openprint::Equipment->find( 'Specifications' => {'Blowing Capable'=>'When Stitching'}, 'useinestimating'=>1,'order'=>'lower(strName)') if $$services{'SaddleStitching'} or $$services{'LoopStitching'};
-	push @possible_equipment, openprint::Equipment->find( 'Specifications' => {'Blowing Capable'=>'When PerfectBound'}, 'useinestimating'=>1,'order'=>'lower(strName)') if $$services{'PerfectBound'};
-	@{$$variable{'Equipment'}} = @possible_equipment;
+	my @capabilities = ( 'Y', 
+			( $$services{'PerfectBind'} ? ( 'When PerfectBound' ) : () ),
+			( $$services{'SaddleStitching'} or $$services{'LoopStitching'} ? ( 'When Stitching' ) : () ),
+			);
+	
+	$$variable{Equipment} = [ openprint::Equipment->find('Specifications'=>{'Blowing Capable'=>\@capabilities},'useinestimating'=>1, order=>'lower(strName)') ];
 } # end sub display
 
 1;

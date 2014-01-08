@@ -407,7 +407,7 @@ sub to_string {
 		$$self{'to_string'} = $_[0];
 	} # end if
 	if ( ! $$self{'to_string'} ) {
-		my $string = join(' ', ( $self->manufacturer(), $self->brand(), $self->finish(), $self->colour(), $self->weight() ) );
+		my $string = ($$self{id} ? '' : 'Custom: ').join(' ', ( $self->manufacturer(), $self->brand(), $self->finish(), $self->colour(), $self->weight() ) );
 		if ( $self->type() eq 'Roll' ) {
 			$string .= ' ' . $self->width.'"' if $self->width();
 			$string .= ' Roll ';
@@ -1573,6 +1573,10 @@ sub init_cache {
     openprint::StockQuality->find();
     openprint::StockMaterial->find();
 }
+
+sub link_to {
+	return sprintf('<a href="/employee/inventory/paper_details.html?paper_id=%1$d">%2$s</a>', $_[0]{id}, $_[0]->to_string() );
+} # end sub link_to
 
 1;
 __END__

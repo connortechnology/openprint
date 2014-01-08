@@ -39,10 +39,10 @@
 				<td class="Description">
 					<select id="product-category-id-" name="product-category-id-" onchange="new Ajax.Updater( 'product-id-', '/includes/_products_ddm.html', { parameters: { category_id: this.value } } );">
 					<option value="">all</option>
-					<? echo ( ssi::make_drop_down( openprint::Product_Category->dropdown( order =>'lower(name)'), $param{'product-category-id-'} ); ) ?>
+					<? echo ( make_drop_down( openprint::Product_Category->dropdown( order =>'lower(name)'), $param{'product-category-id-'} ); ) ?>
 					</select>
 					<select id="product-id-" name="product-id-">
-					<? echo ( ssi::make_drop_down( openprint::Product->dropdown( order =>'lower(name)'), $param{'product-id-'} ); ) ?>
+					<? echo ( make_drop_down( openprint::Product->dropdown( order =>'lower(name)'), $param{'product-id-'} ); ) ?>
 					</select>
 				</td>
 				<td class="po"><input type="text" id="product-po-" name="product-po-" value="" onkeyup=""/></td>

@@ -45,8 +45,10 @@
 
             if ( ( ( ! $Project->docket() ) or ( $Project->Order()->status() eq 'Re-Opened' ) ) and ( ! $$variable{'Quote'} ) ) {
 				if ( $Project->Type()->url() ) {
-					$html .= sprintf('<tr%s><td class="description"><a href="/main/project/%s?ProjectIndex=%d&amp;ServiceIndex=%d"><b>Printing</b><br/>%s</a></td>', 
-						$rowclass, $Project_Type->url(), $Project->id(), $$services{''}[0], $summary );
+					$html .= sprintf('<tr%s><td class="description"><a href="/main/project/%s?ProjectIndex=%d&amp;ServiceIndex=%d"><b>Printing</b><br/>%s%s</a></td>', 
+						$rowclass, $Project_Type->url(), $Project->id(), $$services{''}[0], $summary,
+						( $$printing_specs{alert} ? join( $$printing_specs{alert}, '<span class="error">','</span>' ) : '' ),
+						);
 				} else {
 					$html .= sprintf('<tr%s><td class="description"><b>Printing</b></td>', $rowclass  );
 				} # end if
@@ -223,6 +225,9 @@
 							( $$specs{'txtServiceDescription'} ? ' - '.$$specs{'txtServiceDescription'} : '' ),
 							$summary,
 							);
+					} # end if
+					if ( $$specs{alert} ) {
+						$html .= join( $$specs{alert}, '<span class="error">', '</span>' );
 					} # end if
 					$html .= '</td>';
 					foreach my $qty_index ( $Project->quantity_indexes() ) {

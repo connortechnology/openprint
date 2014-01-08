@@ -4,7 +4,7 @@ our @ISA = qw(openprint::Object);
 require openprint::Object;
 
 use openprint ();
-use vars qw( $debug $log $dbh $table $serial %fields %transforms %defaults );
+use vars qw( $debug $log $dbh $table $serial %fields %transforms %defaults @types );
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
 
@@ -40,6 +40,10 @@ $debug = 0;
 
 $table = 'rfidscanners';
 $serial = 'rfidscanners_id_seq';
+
+@types = (
+'Checkout', 'Fixed','Mobile', 'Truck Inventory','Truck Location'
+);
 
 sub delete {
     my $self = shift;

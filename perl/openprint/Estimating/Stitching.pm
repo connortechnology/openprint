@@ -17,7 +17,7 @@
 package openprint::Estimating::Stitching;
 use strict;
 
-use constant DEBUG => 1;
+use constant DEBUG => 0;
 
 require openprint::Equipment;
 require openprint::service;
@@ -30,7 +30,7 @@ my %variables = (
 		'hdnBreakdown1'=>['output'],'hdnBreakdown2'=>['output'],'hdnBreakdown3'=>['output'],
         'txtQuantity1'=>['save'], 'txtQuantity2'=>['save'], 'txtQuantity3'=>['save'],
         'ServiceType'=>[],
-		'alert'=>['output'],'Status'=>['output'],
+		'alert'=>['save','output'],'Status'=>['output'],
 		'txtInsertQuantity'=>['save','output'],'chkOverrideInsertQuantity'=>['save'],
 		'txtCalliper'=>['save','output'],
 		'OverrideImposition1'=>['save'], 'OverrideImposition2'=>['save'], 'OverrideImposition3'=>['save'],
@@ -170,7 +170,13 @@ sub signature_calc {
 	} # end if
 
 	# Need to figure out which dimension the spine bisects
-	if ( ( $$printing_specs{'txtFinalWidth'} == $$printing_specs{'txtWidth'} ) and ( $$printing_specs{'txtFinalHeight'} != $$printing_specs{'txtHeight'} ) ) {
+	if ( $$printing_specs{spine} ) {
+		if ( $$printing_specs{spine} eq 'width' ) {
+			@$specs{'Width','Height'} = @$printing_specs{'txtFinalHeight','txtFinalWidth'};
+		} else {
+			@$specs{'Width','Height'} = @$printing_specs{'txtFinalWidth','txtFinalHeight'};
+		} # end if
+	} elsif ( ( $$printing_specs{'txtFinalWidth'} == $$printing_specs{'txtWidth'} ) and ( $$printing_specs{'txtFinalHeight'} != $$printing_specs{'txtHeight'} ) ) {
 		@$specs{'Width','Height'} = @$printing_specs{'txtFinalHeight','txtFinalWidth'};
 	} elsif ( ( $$printing_specs{'txtFinalWidth'} != $$printing_specs{'txtWidth'} ) and ( $$printing_specs{'txtFinalHeight'} == $$printing_specs{'txtHeight'} ) ) {
 		@$specs{'Width','Height'} = @$printing_specs{'txtFinalWidth','txtFinalHeight'};
@@ -434,14 +440,14 @@ sub calc {
 		foreach my $signature_service_index ( @signatures ) {
 			my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
 #$openprint::log->debug(sprintf('%d %s %s %d %dx%d %s', $imposition, @$sig_specs{'txtSignatureType','ddmRunStyle'.$qty_index,'txtImposition'.$qty_index,'hdnImpositionColumns'.$qty_index,'hdnImpositionRows'.$qty_index,'hdnImageOrientation'.$qty_index} ) ) if DEBUG;
-			next if $$sig_specs{'txtSignatureType'} eq 'Cover Pages';
+			# According to Brendan, both cover and interior need to be 2out
+			#next if $$sig_specs{'txtSignatureType'} eq 'Cover Pages';
 			if ( $$sig_specs{'txtImposition'.$qty_index}%2 ) {
 				$openprint::log->warn("Setting imposition to 1 : Imp:" . $$sig_specs{'txtImposition'.$qty_index} . ' imposition' );
 				$imposition = 1 
 			} elsif ($$sig_specs{'hdnImageOrientation'.$qty_index} eq 'Vertical' and $$sig_specs{'hdnImpositionRows'.$qty_index} % 2 ) {
 				$openprint::log->warn("Setting imposition to 1 : Imp:" . $$sig_specs{'txtImposition'.$qty_index} . ' vertical and rows' );
 				$imposition = 1 
-
 			} elsif ($$sig_specs{'hdnImageOrientation'.$qty_index} eq 'Horizontal' and $$sig_specs{'hdnImpositionColumns'.$qty_index} % 2 ) {
 				$openprint::log->warn("Setting imposition to 1 : Imp:" . $$sig_specs{'txtImposition'.$qty_index} . ' horizontal and rows' );
 				$imposition = 1 
@@ -476,7 +482,13 @@ sub calc {
 	} # end if
 
 	# Need to figure out which dimension the spine bisects
-	if ( ( $$printing_specs{'txtFinalWidth'} == $$printing_specs{'txtWidth'} ) and ( $$printing_specs{'txtFinalHeight'} != $$printing_specs{'txtHeight'} ) ) {
+	if ( $$printing_specs{spine} ) {
+		if ( $$printing_specs{spine} eq 'width' ) {
+			@$specs{'Width','Height'} = @$printing_specs{'txtFinalHeight','txtFinalWidth'};
+		} else {
+			@$specs{'Width','Height'} = @$printing_specs{'txtFinalWidth','txtFinalHeight'};
+		} # end if
+	} elsif ( ( $$printing_specs{'txtFinalWidth'} == $$printing_specs{'txtWidth'} ) and ( $$printing_specs{'txtFinalHeight'} != $$printing_specs{'txtHeight'} ) ) {
 		@$specs{'Width','Height'} = @$printing_specs{'txtFinalHeight','txtFinalWidth'};
 	} elsif ( ( $$printing_specs{'txtFinalWidth'} != $$printing_specs{'txtWidth'} ) and ( $$printing_specs{'txtFinalHeight'} == $$printing_specs{'txtHeight'} ) ) {
 		@$specs{'Width','Height'} = @$printing_specs{'txtFinalWidth','txtFinalHeight'};

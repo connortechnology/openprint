@@ -95,7 +95,7 @@
 					foreach my $C ( @Companies ) {
 						next if $C->id() == $$variable{'Company'}->id();	
 						$html .= sprintf(q`<p><a href="/administrator/managerial/company_profiles.html?ddmCustomer=%1$d">%1$d : %2$s</a><br/>
-%3$s<br/>%4$d Users %5$d Projects %6$d Quotes %7$d Orders<br/>%8$s</p>`, $C->id(), $C->name(), join(' ', $C->get('address1','address2','city','state','country','postalcost')),
+%3$s<br/>%4$d Users %5$d Projects %6$d Quotes %7$d Orders<br/>%8$s</p>`, $C->id(), $C->name(), join(' ', $C->get('address1','address2','city','state','country','postalcode')),
 scalar openprint::User->find( company_id=>$C->id()),
 scalar openprint::Project->find( company_id=>$C->id()),
 scalar openprint::Quote->find( company_id=>$C->id()),

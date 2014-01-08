@@ -1,7 +1,7 @@
 use strict;
 package openprint::administrator_materials;
 
-use Text::CSV_XS;
+require Text::CSV_XS;
 
 require sql;
 require openprint::pricing;
@@ -9,8 +9,6 @@ require openprint::Equipment;
 
 require openprint::pricelist;
 require openprint::material_price;
-require openprint::priceset;
-require openprint::material_priceset;
 require openprint::Material;
 require openprint::MaterialCategory;
 require openprint::Log;
@@ -49,58 +47,72 @@ sub edit {
 		} # end if
 		$Material->save( \%param );
 		my $ac = sql::start_transaction( $dbh );
-		foreach my $List ( openprint::Pricelist->find( ) ) {
-			my $list = $List->id();
-			my $price_set = new openprint::material_priceset( $log, $dbh, $list, $Material->id() );
-			foreach my $key ( %param ) {
-				if ( $key =~ /^ddmEquipment-$list-(.*)$/ ) {
-					my $equipment_index = $1;
-					foreach my $key ( %param ) {
-						if ( $key =~ /chk-$list-$equipment_index-(.*)/ ) {
-							
-							my $price = new openprint::material_price( $log, $dbh, $price_set );
-							$price->set( 
-									$param{"ddmEquipment-$list-$equipment_index"} ? $param{"ddmEquipment-$list-$equipment_index"} : undef,
-									$param{"min-$list-$equipment_index-$1"},
-									$param{"max-$list-$equipment_index-$1"},
-									$param{"units-$list-$equipment_index-$1"},
-									$param{"cost-$list-$equipment_index-$1"},
-									$param{"markup-$list-$equipment_index-$1"},
-									$param{"price-$list-$equipment_index-$1"},
-									$param{"discount-$list-$equipment_index-$1"}
-									);
-							$price_set->addPrice( $price );
-						} # end if
-					} # end foreach
+		my @Pricelists = openprint::Pricelist->find( );
+		my @Prices = 	openprint::MaterialPrice->find( material_id=>$Material->id() );
+		my @Equipment = map { $_ ? new openprint::Equipment($_) : () } sets::union( map { $_->equipment_id() } @Prices );
+
+		my @NewPrices;
+		foreach my $Pricelist ( @Pricelists ) {
+			foreach my $Equipment ( @Equipment, {} ) {
+				my $NewPrice = new openprint::MaterialPrice();
+				$NewPrice->set( { pricelist_id=>$$Pricelist{id}, equipment_id=>$$Equipment{id}, material_id=>$$Material{id} } );
+				push @NewPrices,$NewPrice;
+			} # end foreach Equipment
+		} # end foreach Pricelist;
+
+		foreach my $Price ( @Prices, @NewPrices ) {
+			if ( ! $param{"chk-$$Price{pricelist_id}-$$Price{equipment_id}-$$Price{id}"} ) {
+				$Price->delete() if $$Price{id};
+			} else {
+				if ( $Price->set( {
+						equipment_id	=>	$param{"ddmEquipment-$$Price{pricelist_id}-$$Price{equipment_id}"},
+						min				=>	$param{"min-$$Price{pricelist_id}-$$Price{equipment_id}-$$Price{id}"},
+						max				=>	$param{"max-$$Price{pricelist_id}-$$Price{equipment_id}-$$Price{id}"},
+						units			=>	$param{"units-$$Price{pricelist_id}-$$Price{equipment_id}-$$Price{id}"},
+						cost			=>	$param{"cost-$$Price{pricelist_id}-$$Price{equipment_id}-$$Price{id}"},
+						markup			=>	$param{"markup-$$Price{pricelist_id}-$$Price{equipment_id}-$$Price{id}"},
+						price			=>	$param{"price-$$Price{pricelist_id}-$$Price{equipment_id}-$$Price{id}"},
+						discount		=>	$param{"discount-$$Price{pricelist_id}-$$Price{equipment_id}-$$Price{id}"},
+						} ) ) {
+					$_ = $Price->save();
+					if ( $_ ) {
+						$variable{error} .= $_;
+						$dbh->rollback();
+						last;
+					} # end if
+				} # end if
+			} # end if
+		} # end foreach Price
+
+		if ( ! $variable{error} ) {
+			my $New = new openprint::MaterialSpecification();
+			$New->set( { material_id=>$Material->id() } );
+			foreach my $Spec ( $Material->Specifications(), $New ) {
+
+				if ( $param{"txtSpecificationName$$Spec{id}"} ) {
+					$variable{error} .= $Spec->save({
+							equipment_id	=>	$param{'spec_equipment_id-'.$$Spec{id}},
+							min				=>	$param{'txtSpecificationMin'.$$Spec{id}},
+							max				=>	$param{'txtSpecificationMax'.$$Spec{id}},
+							units			=>	$param{'txtSpecificationUnits'.$$Spec{id}},
+							name			=>	$param{'txtSpecificationName'.$$Spec{id}},
+							value			=>	$param{'txtSpecificationValue'.$$Spec{id}},
+							interpolate		=>	$param{'interpolate'.$$Spec{id}},
+							});
+				} elsif ( $Spec->id() ) {
+					$variable{error} .= $Spec->delete();
+				} # end if key
+				if ( $variable{error} ) {
+					$dbh->rollback();
+					last;
 				} # end if
 			} # end foreach
-			$price_set->save();
-		} # end foreach
-
-		my %Specs = map { $_->id() => $_ } $Material->Specifications();
-
-		foreach my $key ( keys %param ) {
-			if ( $key =~ /^txtSpecificationName(.*)/ ) {
-				my $Spec = $Specs{$1};
-				$Spec = new openprint::MaterialSpecification() if ! $Spec;
-
-				if ( ! $param{$key} ) {
-					$Spec->delete();
-				} else {
-					$variable{'error'} .= $Spec->save({
-							'material_id'	=>	$Material->id(),
-							'equipment_id'	=>	( $param{'spec_equipment_id-'.$1} ? $openprint::param{'spec_equipment_id-'.$1} : undef ),
-							'min'			=>	( $param{'txtSpecificationMin'.$1} ? $param{'txtSpecificationMin'.$1} : undef ),
-							'max'			=>	( $param{'txtSpecificationMax'.$1} ? $param{'txtSpecificationMax'.$1} : undef ),
-							'units'			=>	$param{'txtSpecificationUnits'.$1},
-							'name'			=>	$param{'txtSpecificationName'.$1},
-							'value'			=>	$param{'txtSpecificationValue'.$1},
-							'interpolate'	=>	$param{'interpolate'.$1},
-							});
-				} # end if name is empty
-			} # end if key
-		} # end foreach
+		} # end if
 		sql::end_transaction( $dbh, $ac );
+		if ( ! $variable{error} ) {
+			$variable{ExternalRedirect} = '/administrator/materials/edit.html?ddmMaterial='.$Material->id();
+			return;
+		} # end if
 
 	} elsif ( $param{'btnFunction'} eq 'Copy' ) {
 		my @prices = $Material->prices();

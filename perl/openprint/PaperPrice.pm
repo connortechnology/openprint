@@ -7,7 +7,7 @@ require openprint::Pricelist;
 require openprint::Equipment;
 
 use vars qw( $debug $table $serial %find_fields %fields %transforms %defaults );
-$debug = 1;
+$debug = 0;
 $table = 'paper_prices';
 $serial = 'paper_prices_id_seq';
 

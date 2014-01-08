@@ -9,6 +9,7 @@ use File::Basename;
 require sets;
 require sql;
 require openprint;
+require File::Slurp;
 
 use vars qw( $r %variable %session %param %config $log $dbh );
 *variable = \%openprint::variable;
@@ -28,28 +29,36 @@ my $Glossary;
 # Used for translations
 my $Lexicon;
 
+sub slurp_content {
+	my ( $file ) = @_;
+
+	if ( ! ( $file =~ /^\// ) ) {
+		# Use a path relative to the current page
+		my $path = $variable{uri};
+		$path =~ s/(.*\/).*/$1/;
+		$file = $path . $file;
+	} # end if
+$log->debug("Including $file");
+	my $content = '';
+	if ( -e $config{SkinPath}.$file ) {
+		$content = File::Slurp::read_file($config{SkinPath}.$file );
+	} elsif ( -e $config{SkinPath}.'/html/'.$file ) {
+		$content = File::Slurp::read_file($config{SkinPath}.'/html/'.$file );
+	} elsif ( $ENV{DOCUMENT_ROOT} and ( -e ($ENV{DOCUMENT_ROOT}.$file) ) ) {
+		$content = File::Slurp::read_file($ENV{DOCUMENT_ROOT}.$file );
+	} elsif ( $config{DOCUMENT_ROOT} and ( -e $config{DOCUMENT_ROOT}.$file ) ) {
+		$content = File::Slurp::read_file($config{DOCUMENT_ROOT}.$file );
+	} else {
+		$content = File::Slurp::read_file($file );
+	} # end if
+	return $content;
+} # end sub slurp_content
+
 sub include {
 	my ( $file, $variable ) = @_;
 	$variable = \%variable if ! $variable;
 
-	if ( ! ( $file =~ /^\// ) ) {
-		# Use a path relative to the current page
-		my $path = $$variable{uri};
-		$path =~ s/(.*\/).*/$1/;
-		$file = $path . $file;
-	} # end if
-#$log->debug("Including $file");
-	my $content = '';
-	if ( -e $config{SkinPath}.$file ) {
-		$content = misc::load_file( $log, $config{SkinPath}.$file );
-	} elsif ( $ENV{DOCUMENT_ROOT} and ( -e ($ENV{DOCUMENT_ROOT}.$file) ) ) {
-		$content = misc::load_file( $log, $ENV{DOCUMENT_ROOT}.$file );
-	} elsif ( $config{DOCUMENT_ROOT} and ( -e $config{DOCUMENT_ROOT}.$file ) ) {
-		$content = misc::load_file( $log, $config{DOCUMENT_ROOT}.$file );
-	} else {
-		$content = misc::load_file( $log, $file );
-	} # end if
-
+	my $content = slurp_content( $file );
 	return variable_substitution( \$content, $variable );
 } # end sub include
 
@@ -58,6 +67,8 @@ sub include {
 # the text is huge, so the more we break it down, the faster these get.
 sub variable_substitution {
 	my ( $text, $variable ) = @_;
+
+	$variable = \%openprint::variable if ! $variable;
 
 	my $result = '';
 	my $after = $$text;
@@ -764,13 +775,15 @@ sub checkboxes {
 	my $onclick = $$options{'onclick'} if $options;
 	my $html;
 	my @container = @{$$options{container}} if $$options{container};
+	$values = ['on', '' ] if ! $values;
 
 	while ( my ( $value, $label ) = splice @{$values}, 0, 2 ) {
 		$html .= $container[0] if @container;
-		$html .= sprintf(q`
-				<input type="checkbox" name="%1$s" value="%2$s" id="%1$s%2$s" %4$s%5$s />
-				<label class="radio" for="%1$s%2$s">%3$s</label>
-				`, $name, $value, $label, checked( sets::isin( $value, $selected ) ), $onclick ? ' onclick="'.$onclick.'"' : '' );
+		$html .= sprintf(q`<input type="checkbox" name="%1$s" value="%2$s" id="%1$s%2$s" %3$s%4$s />`,
+				$name, $value, checked( sets::isin( $value, $selected ) ), $onclick ? ' onclick="'.$onclick.'"' : '' );
+		if ( $label ) {
+			$html .= sprintf(q`<label class="radio" for="%1$s%2$s">%3$s</label>`, $name, $value, $label );
+		} # end if
 		$html .= $container[1] if @container;
 	} # end foreach value
 	return $html;
@@ -812,7 +825,7 @@ sub date_filter {
 	return ( $sql_field, sprintf('%.4d-%.2d-%.2d %.2d:%.2d:%.2d', ( $year, $month, $day, $hour, $minute, $second ) ) );
 } # end sub date_filter
 
-my @input_options = ( 'type','name','id','onblur','onfocus','onkeyup','onkeydown','onchange','class','pattern','ontouch','min','max', 'step', 'placeholder' );
+my @input_options = ( 'type','name','id','onblur','onfocus','onkeyup','onkeydown','onchange','class','pattern','ontouch','min','max', 'step', 'placeholder', 'oninput' );
 
 sub input {
 	my %options = @_;
@@ -909,7 +922,6 @@ sub hash_link {
 		return $path;
 	} # end if
 
-	require File::Slurp;
 	require JSON;
 	require Digest::MD5;
 

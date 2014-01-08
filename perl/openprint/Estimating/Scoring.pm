@@ -389,12 +389,12 @@ sub signature_calc {
 							( $orientation eq 'Landscape' and $I->layout_width() >= $I->layout_height() )
 					   ) {
 						if ( $I->layout_width() >= $max_feed_width ) {
-							$Results{'Breakdown'} .= "Score no good due to max feed width($max_feed_width) on width ($$sig_specs{txtWidth}).<br/>";
+							$Results{'Breakdown'} .= "Perf no good due to max feed width($max_feed_width) on width ($$sig_specs{txtWidth}).<br/>";
 							next;
 						} # end if
 					} else {
 						if ( $I->layout_height() >= $max_feed_width ) {
-							$Results{'Breakdown'} .= "Score no good due to max feed width($max_feed_width) on width ($$sig_specs{txtHeight}).<br/>";
+							$Results{'Breakdown'} .= "Perf no good due to max feed width($max_feed_width) on width ($$sig_specs{txtHeight}).<br/>";
 							next;
 						} # end if
 					} # end if
@@ -406,7 +406,7 @@ sub signature_calc {
 						if ( $I->image_orientation() eq 'Vertical' ) {
 							$Results{'Breakdown'} .= 'Running ' . $I->layout_width() . ' ' . $I->image_orientation() . ' on feed of ' . $max_feed_width . '<br/>';
 							if ( $I->layout_width() >= $max_feed_width ) {
-								$Results{'Breakdown'} .= "Score no good due to max feed width($max_feed_width) on width (".$I->layout_width().").<br/>";
+								$Results{'Breakdown'} .= "Perf no good due to max feed width($max_feed_width) on width (".$I->layout_width().").<br/>";
 								next;
 							} # end if
 						} else {
@@ -416,7 +416,7 @@ sub signature_calc {
 						if ( $I->image_orientation() eq 'Horizontal' ) {
 							$Results{'Breakdown'} .= 'Running ' . $I->layout_height() . ' on feed of ' . $max_feed_width . '<br/>';
 							if ( $I->layout_height() >= $max_feed_width ) {
-								$Results{'Breakdown'} .= "Score no good due to max feed width($max_feed_width) on width (".$I->layout_height().").<br/>";
+								$Results{'Breakdown'} .= "Perf no good due to max feed width($max_feed_width) on width (".$I->layout_height().").<br/>";
 								next;
 							} # end if
 						} else {
@@ -602,7 +602,7 @@ sub get_scores {
 	} else { # normal printing
 		my $width_folds = sprintf('%.0f', ($$sig_specs{'txtWidth'}/$$sig_specs{'txtFinalWidth'})-1 ) if $$sig_specs{'txtFinalWidth'};
 		my $height_folds = sprintf('%.0f', ($$sig_specs{'txtHeight'}/$$sig_specs{'txtFinalHeight'}) -1 ) if $$sig_specs{'txtFinalHeight'};
-$openprint::log->debug("Width folds: $width_folds height folds: $height_folds template $$sig_specs{'rdbTemplateType'} $$sig_specs{'txtWidth'}/$$sig_specs{'txtFinalWidth'} $$sig_specs{'txtHeight'}/$$sig_specs{'txtFinalHeight'}");
+$openprint::log->debug("Width folds: $width_folds height folds: $height_folds template $$sig_specs{'rdbTemplateType'} $$sig_specs{'txtWidth'}/$$sig_specs{'txtFinalWidth'} $$sig_specs{'txtHeight'}/$$sig_specs{'txtFinalHeight'}") if DEBUG;
 		if ( sets::isin( $$sig_specs{'rdbTemplateType'}, 'Portrait', 'Landscape' ) ) {
 # needs no folding
 		} elsif ( sets::isin( $$sig_specs{'rdbTemplateType'}, ['4PageSignatureFold','2PanelFold','BusCardLandscapeFold','BusCardPortraitFold']) ) {

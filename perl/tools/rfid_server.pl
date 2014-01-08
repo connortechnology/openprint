@@ -1,5 +1,5 @@
-#!/usr/bin/perl -T
-use lib '/etc/apache2/lib/perl';
+#!/usr/bin/perl
+use lib '/var/www/point-one/perl';
 use Net::Server::PreFork;
 
 @ISA = qw(Net::Server::PreFork);
@@ -93,6 +93,13 @@ sub process_request {
 		my $data;
 		my $tag = '';
 		while ( read(STDIN, $data, 40) ) {
+			while ( ! ( $dbh and $dbh->ping() ) ) {
+				$dbh = sql::open_sql( $log, ('database'=>'point-one', 'driver'=>'Pg','login'=>'point-one', 'password'=>'point-one','host'=>'database') );
+				if ( ! $dbh ) {
+					$self->log("No connection to db.  Sleeping.");
+					sleep 10;
+				} # end if
+			} # end if
 			$tag .= $data;
 			my ( $antenna, $tag_id, $end ) = $tag =~ /<TAG>\[A(\d)\]\s*(\w+)<\/TAG>(.*)/;
 			if ( ! $tag_id ) {
@@ -186,9 +193,11 @@ sub process_request {
 			} elsif ( $Scanner->type() eq 'Checkout' ) {
 				if ( $Tag->type() eq 'Skid' ) {
 					if ( ! sets::isin( $Tag->location_id(), [ map { $_->location_id() } @checkout_tags ] ) ) {
-						$Tag->location_id( $Scanner->location_id(), $Scanner->id() );
-						if ( $_ = $Tag->save() ) {
-							$self->log(1, sprintf('%s : %s : error saving tag %s', $date, $ip_addr, $_ ));
+						if ( $Tag->location_id() != $Scanner->location_id() ) {
+							$Tag->location_id( $Scanner->location_id(), $Scanner->id() );
+							if ( $_ = $Tag->save() ) {
+								$self->log(1, sprintf('%s : %s : error saving tag %s', $date, $ip_addr, $_ ));
+							} # end if
 						} # end if
 					} # end if
 					Checkout_Skid( $Scanner, $Tag, $self, \@checkout_tags );

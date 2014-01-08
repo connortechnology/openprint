@@ -232,6 +232,7 @@ sub get_destdir {
 		return '' if ! create_dir( $config{'ProjectFilesPath'}.$destdir );
 	} else {
 # This ends up prefixing the file with the company's name
+		$param{'txtCompanyName'} = openprint::Company->transform('name', $param{'txtCompanyName'});
 		$destdir .= $param{'txtCompanyName'} . '_';
 	} # end if
 

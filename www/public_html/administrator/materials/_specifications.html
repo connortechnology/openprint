@@ -1,55 +1,39 @@
 <fieldset><legend>Specifications</legend>
-		<table class="List">
-			<tr>
-				<th class="Name">Specification</th>
-				<th class="Equipment">Equipment</th>
-				<th class="Min">Min</th>
-				<th class="Max">Max</th>
-				<th width="10%">Value</th>
-				<th width="10%">Units</th>
-				<th class="interpolate">Interpolate</th>
-			</tr>
-			<? echo ( 
-				my $html = '';
-				my $rowclass;
-				$$variable{Equipment} = [ map { $_->id(), $_->strid() . $_->name() } openprint::Equipment->find('order'=>'lower(strid)') ];
-				foreach my $Spec ( $$variable{'Material'}->Specifications() ) {
-					$html .= sprintf( q`
-					<tr%1$s> 
-						<td class="Name"><input type="text" name="txtSpecificationName%2$d" value="%3$s" /></td>
-						<td class="Equipment"><select name="spec_equipment_id-%2$d"><option value="">All</option>%4$s</select></td>
-						<td class="Min">%5$s</td>
-						<td class="Max">%6$s</td>
-						<td><input type="text" name="txtSpecificationValue%2$d" value="%7$s" /></td>
-						<td><input type="text" name="txtSpecificationUnits%2$d" value="%8$s" /></td>
-						<td class="interpolate">%9$s</td>
-					</tr>
-				`, $rowclass, $$Spec{id}, $$Spec{name}, 
-				ssi::make_drop_down( $$variable{Equipment}, $$Spec{equipment_id} ),
-				ssi::input( type=>'float', name=>'txtSpecificationMin'.$$Spec{id}, value=>$$Spec{min} ),
-				ssi::input( type=>'float', name=>'txtSpecificationMax'.$$Spec{id}, value=>$$Spec{max} ),
-				HTML::Entities::encode_entities($Spec->value()), $Spec->units(),
-				ssi::radio( 'interpolate'.$$Spec{id}, [ 'true','Yes', 'false', 'No' ], $$Spec{interpolate} ),
-				);
-			$rowclass = $rowclass ? '' : ' class="colRow"';
-				} # end foreach Spec
-				return $html;
-			) ?>
-			<tr> 
-				<td><input type="text" name="txtSpecificationNameNew" /></td>
-				<td><select name="spec_equipment_id-New"><option value="">All</option>
-					<? echo ( ssi::make_drop_down( $$variable{'Equipment'} ); ) ?>
-					</select></td>
-				<td><input type="text" name="txtSpecificationMinNew" /></td>
-				<td><input type="text" name="txtSpecificationMaxNew" /></td>
-				<td><input type="text" name="txtSpecificationValueNew" /></td>
-				<td><input type="text" name="txtSpecificationUnitsNew" /></td>
-				<td class="interpolate">
-					<input type="radio" id="interpolateNewtrue" name="interpolateNew" value="true"/>
-					<label class="radio" for="interpolateNewtrue">Yes</label>
-					<input type="radio" id="interpolateNewfalse" name="interpolateNew" value="false"/>
-					<label class="radio" for="interpolateNewfalse">No</label>
-				</td>
-			</tr>
-		</table>
-	</fieldset>
+	<table class="List">
+		<tr>
+			<th class="Name">Specification</th>
+			<th class="Equipment">Equipment</th>
+			<th class="Min">Min</th>
+			<th class="Max">Max</th>
+			<th class="Value">Value</th>
+			<th class="Units">Units</th>
+			<th class="interpolate">Interpolate</th>
+		</tr>
+		<? echo ( 
+			my $html = '';
+			my $rowclass;
+			$$variable{Equipment} = [ map { $_->id(), $_->strid() . $_->name() } openprint::Equipment->find( order=>'lower(strid)') ] if ! $$variable{Equipment};
+			foreach my $Spec ( $$variable{'Material'}->Specifications(), { } ) {
+				$html .= sprintf( q`
+				<tr%1$s> 
+					<td class="Name"><input type="text" name="txtSpecificationName%2$s" value="%3$s" /></td>
+					<td class="Equipment"><select name="spec_equipment_id-%2$s"><option value="">All</option>%4$s</select></td>
+					<td class="Min">%5$s</td>
+					<td class="Max">%6$s</td>
+					<td class="Value"><input type="text" name="txtSpecificationValue%2$s" value="%7$s" /></td>
+					<td class="Units"><input type="text" name="txtSpecificationUnits%2$s" value="%8$s" /></td>
+					<td class="interpolate">%9$s</td>
+				</tr>
+			`, $rowclass, $$Spec{id}, $$Spec{name}, 
+			make_drop_down( $$variable{Equipment}, $$Spec{equipment_id} ),
+			input( type=>'float', name=>'txtSpecificationMin'.$$Spec{id}, value=>$$Spec{min} ),
+			input( type=>'float', name=>'txtSpecificationMax'.$$Spec{id}, value=>$$Spec{max} ),
+			HTML::Entities::encode_entities($$Spec{value}), $$Spec{units},
+			radio( 'interpolate'.$$Spec{id}, [ 'true','Yes', 'false', 'No' ], $$Spec{interpolate} ),
+			);
+				$rowclass = $rowclass ? '' : ' class="colRow"';
+			} # end foreach Spec
+			return $html;
+		) ?>
+	</table>
+</fieldset>

@@ -1,13 +1,12 @@
-<script type="text/javascript" src="/javascripts/pricing.js"></script>
 <? echo (
 	my $html = '';
-	my $equipment_array = [ map { $_->id(), $_->name() } openprint::Equipment->find('order'=>'lower(strID)') ];
+	my $equipment_array = $variable{Equipment} ? $variable{Equipment} : [ map { $_->id(), $_->strid() . ': '.$_->name() } openprint::Equipment->find( order=>'lower(strID)') ];
 
 	foreach my $Pricelist ( openprint::Pricelist->find( order=>'lower(name)') ) {
 
 		$html .= '<fieldset><legend>Pricing for Price List: '. $Pricelist->name() .'</legend>';
 		my @Prices = openprint::MaterialPrice->find( material_id=>$$variable{Material}->id(), pricelist_id=>$$Pricelist{id} );
-		my @Equipment = map { new openprint::Equipment( $_ ) } sets::union( map{ $_->equipment_id() } @Prices );
+		my @Equipment = map { $_ ? new openprint::Equipment( $_ ) : () } sets::union( map{ $_->equipment_id() } @Prices );
 		foreach my $Equipment ( @Equipment, { } ) {
 			$html .= '<fieldset class="Equipment">
 				<p>
@@ -31,20 +30,28 @@
 			my @Prices = openprint::MaterialPrice->find(
 					material_id		=>	$$variable{Material}->id(), 
 					pricelist_id	=>	$$Pricelist{id},
-					equipment_id	=>	$$Equipment{id},	
-					order			=>	'lngmin NULLS FIRST,lngmax NULLS FIRST' );
-			foreach my $Price ( @Prices, { id=>'New' } ) {
+					equipment_id	=>	( $$Equipment{id} ? $$Equipment{id} : undef ),	
+					order			=>	'lngmin NULLS FIRST,lngmax NULLS FIRST, id' );
+			foreach my $Price ( @Prices, { } ) {
 				$html .= sprintf('<tr>
-					<td class="checkbox"><input type="checkbox" name="chk-%1$d-%2$s-%3$d" checked="checked" /></td>
-					<td class="ActivityCode"><input type="text" name="activity_code-%1$d-%2$s-%3$d" value="%4$s"/></td>
-					<td class="Range"><input type="number" name="min-%1$d-%2$s-%3$d" value="%5$s"/> - <input type="number" name="max-%1$d-%2$s-%3$d" value="%6$s"/></td>
-					<td class="Units"><input type="text" name="units-%1$d-%2$s-%3$d" value="%7$s"/></td>
-					<td class="Cost"><input type="number" name="cost-%1$d-%2$s-%3$d" value="%8$s" onkeyup="calc_from_cost(this);" /></td>
-					<td class="Markup"><input type="number" name="markup-%1$d-%2$s-%3$d" value="%9$s" onkeyup="calc_from_markup(this);"/></td>
-					<td class="Price"><input type="number" name="price-%1$d-%2$s-%3$d" value="%10$s" onkeyup="calc_from_price(this);"/></td>
-<td class="Discount">%11$s</td>
-</tr>
-', $$Pricelist{id}, $$Equipment{id}, @$Price{qw`id activity_code min max units cost markup price`},
+					<td class="checkbox">%1$s</td>
+					<td class="ActivityCode">%2$s</td>
+					<td class="Range">%3$s - %4$s</td>
+					<td class="Units">%5$s</td>
+					<td class="Cost">%6$s</td>
+					<td class="Markup">%7$s</td>
+					<td class="Price">%8$s</td>
+					<td class="Discount">%9$s</td>
+					</tr>
+',
+checkboxes( join('-', 'chk', $$Pricelist{id}, $$Equipment{id}, $$Price{id} ), ( $$Price{id} ? [ $$Price{id} ] : undef ), $$Price{id} ),
+input( type=>'text', name=>join('-', 'activity_code', $$Pricelist{id}, $$Equipment{id}, $$Price{id} ), value=>$$Price{activity_code} ),
+input( type=>'float', name=>join('-', 'min', $$Pricelist{id}, $$Equipment{id}, $$Price{id} ), value=>$$Price{min} ),
+input( type=>'float', name=>join('-', 'max', $$Pricelist{id}, $$Equipment{id}, $$Price{id} ), value=>$$Price{max} ),
+input( type=>'text', name=>join('-', 'units', $$Pricelist{id}, $$Equipment{id}, $$Price{id} ), value=>$$Price{units} ),
+input( type=>'float', name=>join('-', 'cost', $$Pricelist{id}, $$Equipment{id}, $$Price{id} ), value=>$$Price{cost}, onkeyup=>'calc_from_cost(this);', oninput=>'this.onkeyup();' ),
+input( type=>'float', name=>join('-', 'markup', $$Pricelist{id}, $$Equipment{id}, $$Price{id} ), value=>$$Price{markup}, onkeyup=>'calc_from_markup(this);', oninput=>'this.onkeyup();' ),
+input( type=>'float', name=>join('-', 'price', $$Pricelist{id}, $$Equipment{id}, $$Price{id} ), value=>$$Price{price}, onkeyup=>'calc_from_price(this);', oninput=>'this.onkeyup();' ),
 radio( 'discount-'.$$Pricelist{id}.'-'.$$Equipment{id}.'-'.$$Price{id}, ['Y','Yes','N','No'], $$Price{discountable} ),
  );
 			} # end foreach Price

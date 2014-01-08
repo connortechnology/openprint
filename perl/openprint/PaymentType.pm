@@ -1,7 +1,6 @@
-package openprint::PaymentType;
-@ISA = qw(openprint::Object);
-
 use strict;
+package openprint::PaymentType;
+our @ISA = qw(openprint::Object);
 
 use vars qw( $debug $table $serial %fields %transforms %defaults );
 
@@ -10,14 +9,14 @@ $table = 'paymenttypes';
 $serial = 'paymenttypes_id_seq';
 
 %fields = (
-	'id'			=>	'id',
-	'name'			=>	'name',
-	'description'	=>	'description',
-	'created_on'	=>	'created_on',
-	'updated_on'	=>	'updated_on',
+	id			=>	'id',
+	name		=>	'name',
+	description	=>	'description',
+	created_on	=>	'created_on',
+	updated_on	=>	'updated_on',
 );
 %defaults = (
-	'created_on'	=>	q`'NOW()'`,
+	created_on	=>	q`'NOW()'`,
 );
 
 1;

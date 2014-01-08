@@ -18,10 +18,10 @@ package openprint::Estimating::CDBurning;
 
 use strict;
 
-require sql;
 require openprint::service;
 
 my @variables = (
+	'alert',
 		'txtPrice1', 'txtPrice2', 'txtPrice3',
 		'txtQuantity1', 'txtQuantity3', 'txtQuantity2',
 		'chkOverrideNegativeQuantity',
