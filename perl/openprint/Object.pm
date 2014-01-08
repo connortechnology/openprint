@@ -333,8 +333,12 @@ $openprint::log->debug("Running $field with $$params{$field}") if $debug;
 				$log->debug("Setting default ($field) ($$self{$field}) ($defaults{$field}) ") if $debug;
 				if ( defined $defaults{$field} ) {
 					$log->debug("Default $field is defined: $defaults{$field}") if $debug;
+					if ( $defaults{$field} eq 'NOW()' ) {
+						$$self{$field} = 'NOW()';
+					} else {
 					$$self{$field} = eval($defaults{$field});
 					$log->error( "Eval error of object default $field default ($defaults{$field}) Reason: " . $@ ) if $@;
+					} # end if
 				} else {
 					$$self{$field} = $defaults{$field};
 				} # end if

@@ -108,6 +108,8 @@ $serial	= 'paper_id_seq';
 );
 
 %defaults = (
+	grade		=>	undef,
+	calliper	=>	undef,
 	allocated	=>	q`'0'`,
 	in_stock	=>	q`'0'`,
 	user_type	=>	q`''`,
