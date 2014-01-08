@@ -730,7 +730,7 @@ sub supplier_id {
 		$_[0]{supplier_id} = $_[1];
 	} 
 	if ( ! $_[0]{supplier_id} ) {
-		$_[0]{supplier_id} = $openprint::config{'Owner'};
+		$_[0]{supplier_id} = $openprint::config{owner_id};
 	} # end if
 	return $_[0]{supplier_id};
 } # end sub supplier_id

@@ -25,6 +25,7 @@ require openprint::OrderedProject;
 require openprint::press_schedule;
 require openprint::Payment;
 require openprint::Tax;
+require openprint::Invoice;
 
 sub information {
 
@@ -528,9 +529,17 @@ sub history_details {
 			} # end if
 		} # end if
    } elsif ( $param{'btnFunction'} eq 'Invoice' ) {
-	   $Order->invoice_id( $param{'invoice_id'} );
-	   $Order->invoiced_on( 'NOW()' );
-	   $Order->save();
+		my $Invoice = openprint::Invoice->find_one(num=>$param{invoice_id});
+		if ( ! $Invoice ) {
+			$Invoice = new openprint::Invoice();
+			$variable{error} .= $Invoice->save({ 
+				invoicer_id=>$config{owner_id},
+				invoicee_id=>$Order->company_id(),
+				total=>$Order->total(),
+				num=>$param{invoice_id},
+				});
+		} # end if ! Invoice
+	   $variable{error} .= $Order->save({ invoice_id=> $Invoice->id() });
 	} elsif ( $param{'btnFunction'} eq 'Resend') {
 		$Order->send_sales_order( );
 		$variable{'information'} .= "Order emails sent.<br/>";
