@@ -38,7 +38,6 @@ sub slurp_content {
 		$path =~ s/(.*\/).*/$1/;
 		$file = $path . $file;
 	} # end if
-$log->debug("Including $file");
 	my $content = '';
 	if ( -e $config{SkinPath}.$file ) {
 		$content = File::Slurp::read_file($config{SkinPath}.$file,err_mode => 'carp' );
