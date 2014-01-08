@@ -197,7 +197,8 @@
                 $html .= $string . '<br/>';
             } # end foreach string
 
-            $html .= '</td><td class="Price"><br/>';
+            $html .= '</td>';
+			$html .= '<td class="Price"><br/>';
             foreach my $string ( sort keys %totals ) {
                 my $Stock = $Stocks{$string};
 
@@ -215,13 +216,17 @@
                 } # end if
                 $html .= '<br/>';
             } # end foreach key
-			$html .= '</td><td class="status">';
+			$html .= '</td>';
+if($$variable{canseepricing}){
+			$html .= '<td class="status">';
             foreach my $string ( sort keys %totals ) {
                 my $Stock = $Stocks{$string};
                 $html .= $prices{$string} if $prices{$string};
                 $html .= '<br/>';
             } # end foreach key
-            $html .= '</td></tr>';
+            $html .= '</td>';
+}
+$html .= '</tr>';
         } # end if
     } # end if $$services{Paper}
     return $html;
@@ -340,7 +345,9 @@
 				} # end if
 				) ?>
 			</td>
+<?if($$variable{canseepricing})?>
 			<td class="status"></td>
+<?endif($$variable{canseepricing})?>
 		</tr>
 		<? endif ( openprint::usergroup::is_user_in( ['Shipping'], $session{'user_id'} ) ) ?>
 		<? endif ( $session{'user_type'} eq 'A' or openprint::usergroup::is_user_in( ['Accounting','PrepressManager'], $session{'user_id'} ) ) ?>

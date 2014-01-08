@@ -270,7 +270,7 @@ sub make_order_from_quote {
 
 	if ( @quote > 0 ) {
 		foreach my $project_index ( @quote ) {
-			( $order_id, $_ ) =	add_project_to_order( $project_index, $order_id );
+			( $order_id, $_ ) =	add_project_to_order( new openprint::Project( $project_index ), $order_id );
 			$error .= $_;
 		} # end foreach
 		return ( $order_id, $error );
