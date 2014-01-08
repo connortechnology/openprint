@@ -79,9 +79,21 @@ sub details {
 		$variable{'error'} .= $Order->pay();
 		$variable{'ExternalRedirect'} = '/employee/accounting/details.html?order_id='.$Order->id() if ! $variable{'error'};
 	} elsif ( $param{'btnFunction'} eq 'Invoice' ) {
-		$Order->invoice_id( $param{'invoice_id'} );
-		$Order->invoiced_on( 'NOW()' );
-		$Order->save();
+		my $Invoice = openprint::Invoice->find_one(num=>$param{invoice_id});
+        if ( ! $Invoice ) {
+            $Invoice = new openprint::Invoice();
+            $variable{error} .= $Invoice->save({
+                invoicer_id=>$config{owner_id},
+                invoicee_id=>$Order->company_id(),
+                total=>$Order->total(),
+                num=>$param{invoice_id},
+                currency_id =>  $Order->currency_id(),
+                });
+        } # end if ! Invoice
+        $variable{error} .= $Order->save({ invoice_id=> $Invoice->id() });
+        if ( ! $variable{error} ) {
+            $variable{ExternalRedirect} = '/employee/accounting/details.html?order_id='.$Order->id();
+        } # end if
 	} elsif ( $param{'btnFunction'} eq 'ChangeSupplier' ) {
 		if ( ! $param{'supplier_id'} ) {
 			$variable{'error'} .= 'No supplier specified.  No change made.<br/>';

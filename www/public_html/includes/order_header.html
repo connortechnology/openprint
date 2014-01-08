@@ -9,7 +9,7 @@
 			<li><label>Docket</label><? echo ( $$variable{Order}->docket(); ) ?></li>
 		<? endif ( $$variable{Order}->docket() ) ?>
 			<? if ( $$variable{Order}->invoice_id() ) ?>
-			<li><label>Invoice ID</label><? echo ( $$variable{Order}->Invoice()->num() ) ?></li>
+			<li><label>Invoice ID</label><? echo ( $$variable{Order}->Invoice()->link_to() ) ?></li>
 			<li><label>Date Invoiced</label><? echo ( format_datetime( $$variable{Order}->invoiced_on() ) ) ?></li>
 			<? else ( $$variable{Order}->invoice_id() ) ?>
 <? if ( $$variable{Order}->status() ne 'Incomplete' ) ?>

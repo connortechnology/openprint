@@ -12,7 +12,7 @@
 <form name="f1" method="post" action="/employee/accounting/details.html?order_id=<?OrderID?>">
 	<p class="buttons">
 	<? echo ( my $html;
-			$html .= button( 'Log', { onclick=>"ajax_window('/main/order/_view_log.html?order_id=".$$variable{Order}->id()."', 800 );", text=> 'View Log' } );
+		$html .= button( 'Log', { onclick=>"ajax_window('/main/order/_view_log.html?order_id=".$$variable{Order}->id()."', 800 );", text=> 'View Log' } );
 		#writeButton('Send','sendEmailInvoice.gif', "f1.btnFunction.value='Send';f1.submit();",'','Send Email Invoice' );
 		$html .= button( 'Pay', { onclick=>"f1.btnFunction.value='Pay';f1.submit();" } ) if $$variable{'Order'}->owing() > 0;
 		#$html .= writeButton( $log, $dbh, 'Back','back.gif', '','search.html','Back' );
@@ -23,8 +23,6 @@
 		} # end if
 		return $html;
 		) ?>
-		<span style="float: left;">Invoice ID: <input type="text" id="invoice_id" name="invoice_id" /></span>
-		<? echo ( button( 'Invoice', { onclick=>"f1.btnFunction.value='Invoice';f1.submit();", href=>'', text=>'Mark Invoiced' } ); ) ?>
 	</p><br class="spacer"/>
 	<div class="Order">
 	<? echo ( include('/includes/order_header.html'); ) ?>

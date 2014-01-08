@@ -540,7 +540,10 @@ sub history_details {
 				currency_id	=>	$Order->currency_id(),
 				});
 		} # end if ! Invoice
-	   $variable{error} .= $Order->save({ invoice_id=> $Invoice->id() });
+		$variable{error} .= $Order->save({ invoice_id=> $Invoice->id() });
+		if ( ! $variable{error} ) {
+			$variable{ExternalRedirect} = '/main/order/history_details.html?order_id='.$Order->id();
+		} # end if
 	} elsif ( $param{'btnFunction'} eq 'Resend') {
 		$Order->send_sales_order( );
 		$variable{'information'} .= "Order emails sent.<br/>";
