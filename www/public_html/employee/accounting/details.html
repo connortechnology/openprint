@@ -7,25 +7,26 @@
 		} // end if
 	} // end function confirm_delete()
 </script>
-<link href="/css/order.css" rel="stylesheet" type="text/css"/>
-<? echo ( include('/includes/error_reporting.html'); ) ?>
+<link href="<?hash_link(/css/order.css)?>" rel="stylesheet" type="text/css"/>
+<?include('/includes/error_reporting.html')?>
 <form name="f1" method="post" action="/employee/accounting/details.html?order_id=<?OrderID?>">
 	<p class="buttons">
 	<? echo ( my $html;
-			$html .= ssi::button( 'Log', { onclick=>"ajax_window('/main/order/_view_log.html?order_id=".$$variable{Order}->id()."', 800 );", text=> 'View Log' } );
+			$html .= button( 'Log', { onclick=>"ajax_window('/main/order/_view_log.html?order_id=".$$variable{Order}->id()."', 800 );", text=> 'View Log' } );
 		#writeButton('Send','sendEmailInvoice.gif', "f1.btnFunction.value='Send';f1.submit();",'','Send Email Invoice' );
-		$html .= ssi::button( 'Pay', { onclick=>"f1.btnFunction.value='Pay';f1.submit();" } ) if $$variable{'Order'}->owing() > 0;
-		#$html .= ssi::writeButton( $log, $dbh, 'Back','back.gif', '','search.html','Back' );
-		my @Suppliers = openprint::Company->find( supplier =>'Y', offers_credit =>1, order=>'lower(strname)' );
+		$html .= button( 'Pay', { onclick=>"f1.btnFunction.value='Pay';f1.submit();" } ) if $$variable{'Order'}->owing() > 0;
+		#$html .= writeButton( $log, $dbh, 'Back','back.gif', '','search.html','Back' );
+		my @Suppliers = openprint::Company->find( supplier =>'Y', offers_credit =>1, order=>'lower(name)' );
 		if ( @Suppliers > 1 ) {
-			$html .= ssi::button( 'ChangeSupplier', { onclick=>q`f1.btnFunction.value='ChangeSupplier';f1.submit();`, text=>'Change Supplier to' } );
-			$html .= '<select name="supplier_id"><option value="">select</option>'.ssi::make_drop_down([ map { $_->id(), $_->name() } @Suppliers ], $$variable{'Order'}->supplier_id() ).'</select>';
+			$html .= button( 'ChangeSupplier', { onclick=>q`f1.btnFunction.value='ChangeSupplier';f1.submit();`, text=>'Change Supplier to' } );
+			$html .= '<select name="supplier_id"><option value="">select</option>'.make_drop_down([ map { $_->id(), $_->name() } @Suppliers ], $$variable{'Order'}->supplier_id() ).'</select>';
 		} # end if
 		return $html;
 		) ?>
 		<span style="float: left;">Invoice ID: <input type="text" id="invoice_id" name="invoice_id" /></span>
-		<? echo ( ssi::button( 'Invoice', { onclick=>"f1.btnFunction.value='Invoice';f1.submit();", href=>'', text=>'Mark Invoiced' } ); ) ?>
+		<? echo ( button( 'Invoice', { onclick=>"f1.btnFunction.value='Invoice';f1.submit();", href=>'', text=>'Mark Invoiced' } ); ) ?>
 	</p><br class="spacer"/>
+	<div class="Order">
 	<? echo ( include('/includes/order_header.html'); ) ?>
 	<br class="spacer"/>
 	<table class="List">
@@ -40,6 +41,7 @@
 		</tr>
 		<? echo (
 			my $html;
+			my $rowclass;
 			foreach my $Project ( $$variable{'Order'}->Projects() ) {
 				$html .= sprintf(q`
 		<tr%1$s>
@@ -60,12 +62,11 @@
 	</table>
 	<div style="float: right; width: 250px;">
 		<? echo ( include('/main/order/_totals.html'); ) ?>
-		<br/>
-		<span class="Currency">All prices listed in <?CurrencyName?>.</span>
 	</div>
 	<br class="spacer"/>
 	<div id="Payments">
 	<? echo ( include('/employee/accounting/_payments.html'); ) ?>
+	</div>
 	</div>
 	<input type="hidden" name="PaymentIndex"/>
 	<input type="hidden" name="btnFunction"/>

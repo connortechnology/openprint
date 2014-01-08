@@ -1,5 +1,9 @@
 <? eval (
-	$$variable{'Project'} = new openprint::Project( $param{'project_id'} );
+	if ( ! $$variable{Project} ) {
+	$$variable{'Project'} = new openprint::Project( $param{'project_id'} ) if $param{project_id};
+	} elsif ( $param{docket} ) {
+		$$variable{'Project'} = openprint::Project->find_one( docket=>$param{docket} );
+	} # end if
 	$$variable{'Company'} = $$variable{'Project'}->Company();
 	my %services = $$variable{'Project'}->get_services();
 	$$variable{'Operator'} = new openprint::User( sql::execute( undef, undef, q{SELECT operator_id FROM tbl_Project_Contents WHERE lngProjectIndex=? AND lngserviceindex=?}, $param{project_id}, $services{'Proofs'} ? $services{'Proofs'}[0] : $services{'FilmStripping'}[0] ) );

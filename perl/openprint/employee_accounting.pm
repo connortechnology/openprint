@@ -144,7 +144,7 @@ sub details {
 	openprint::order::get_misc( \%variable, $Order );
 	$variable{'OrderID'} = $order_id;
 	my $Currency = $Order->Currency();
-	@variable{'CurrencyName','CurrencySymbol'} = ( $Currency->name(), $Currency->symbol() );
+	@variable{'Currency','CurrencyName','CurrencySymbol'} = ( $Currency, $Currency->name(), $Currency->symbol() );
 	$variable{'Order'} = $Order;
 } # end sub details
 
