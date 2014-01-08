@@ -173,7 +173,7 @@ sub approve {
 	my @Taxes = openprint::Tax->find( state =>$self->state() );
 	my ( $pst_rate, $hst_rate, $gst_rate ) = $Taxes[0]->get('statetax_rate','harmonizedtax_rate','federaltax_rate') if @Taxes;
 
-	$_ = q{SELECT ysnPSTExempt, ysnGSTExempt FROM Company WHERE Index=?};
+	$_ = q{SELECT ysnPSTExempt, ysnGSTExempt FROM Companies WHERE id=?};
 	my ( $pst_exempt, $gst_exempt ) = sql::execute( $log, $dbh, $_, $openprint::session{'company_id'} );
 
 	my $sub_total = 0;
@@ -232,7 +232,7 @@ sub approve {
 		$total += $price + $gst_amount + $pst_amount + $hst_amount;
 	} # end while
 
-	sql::update( $log, $dbh, 'Orders', ['Index=?',$$self{id}],
+	sql::update( $log, $dbh, 'Orders', ['id=?',$$self{id}],
 			'curFedTax',	( $gst_total ne '' ? $gst_total : undef ),
 			'curProvTax',	( $pst_total ne '' ? $pst_total : undef ),
 			'curHarmTax',	( $hst_total ne '' ? $hst_total : undef ),
