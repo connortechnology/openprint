@@ -179,7 +179,7 @@ $log->debug("$option $lower_option = $option_id $$Stock{$option_id}");
 							} # end foreach $L
 						} # end if
 						$session{'/employee/inventory/available_paper.html?location_id'} = join(',',sets::intersection( @selected, @options ));
-						return ssi::make_drop_down( \@options, \@selected );
+						make_drop_down( \@options, \@selected );
 					) ?>
 					</select>
 				</li>
