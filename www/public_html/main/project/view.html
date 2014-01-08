@@ -36,7 +36,7 @@
 						button( 'Delete', { onclick=>"f1.action='/main/project/history.html';f1.btnFunction.value='Delete Project';f1.submit();",  text=>'Delete' } ),
 					);
 				} # end if
-				$html .= button( 'Copy', { href=>'/main/project/reuse.html?ProjectIndex='.$$variable{ProjectIndex} } );
+				$html .= button( 'Reuse', { href=>'/main/project/reuse.html?ProjectIndex='.$$variable{ProjectIndex} } );
 				return $html;
 			) ?>
 			</div>
