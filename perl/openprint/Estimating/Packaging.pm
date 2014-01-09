@@ -92,6 +92,21 @@ sub calc {
 		my $qty = $$specs{'txtPressSheetComboItems'} ? $$specs{'txtQuantity'.$qty_index} * $$specs{'txtPressSheetComboItems'} : $$specs{'txtQuantity'.$qty_index};
 		next if ! $qty;
 
+		if ( $$services{Signature} and @{$$services{Signature}} ) {
+			my $sig_specs = openprint::service::get_specs_ref( $Project, $$services{Signature}[0] );
+			if ( $$sig_specs{Versions} ) {
+				my $versions_per_package = int( $qty / $$sig_specs{Versions} );
+$openprint::log->debug("Per package due to versions: $qty / $$sig_specs{Versions} = $versions_per_package");
+				if ( $versions_per_package < $$specs{'txtItemsPerPackage'} ) {
+					$$specs{'txtItemsPerPackage'} = $versions_per_package;
+				} # end if
+			} else {
+				# No versions?
+			$openprint::log->debug("No versions");
+			} # end if
+		} else {
+			$openprint::log->debug("No signatnures");
+		} # end if
 		my $package_qty = $$specs{'txtItemsPerPackage'} ? ceil( $qty/$$specs{'txtItemsPerPackage'}) : 0;
 
 		$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Minimum Charge: $%.2f<br/>', $minCharge );

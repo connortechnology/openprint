@@ -38,10 +38,12 @@ sub slurp_content {
 		$path =~ s/(.*\/).*/$1/;
 		$file = $path . $file;
 	} # end if
-#$log->debug("Including $file");
+$log->debug("Including $file");
 	my $content = '';
 	if ( -e $config{SkinPath}.$file ) {
 		$content = File::Slurp::read_file($config{SkinPath}.$file );
+	} elsif ( -e $config{SkinPath}.'/html/'.$file ) {
+		$content = File::Slurp::read_file($config{SkinPath}.'/html/'.$file );
 	} elsif ( $ENV{DOCUMENT_ROOT} and ( -e ($ENV{DOCUMENT_ROOT}.$file) ) ) {
 		$content = File::Slurp::read_file($ENV{DOCUMENT_ROOT}.$file );
 	} elsif ( $config{DOCUMENT_ROOT} and ( -e $config{DOCUMENT_ROOT}.$file ) ) {

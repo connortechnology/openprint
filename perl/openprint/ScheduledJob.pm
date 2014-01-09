@@ -186,10 +186,10 @@ sub stock {
 		my $Equipment = $self->Equipment();
 		my $Project = new openprint::Project( $$self{'project_id'} );
 		my $Stock;
-		my $PA = openprint::PaperAllocation->find_one('project_id'=>$$self{'project_id'});
+		my $PA = openprint::PaperAllocation->find_one( project_id=>$$self{project_id} );
 		if ( $PA ) {
 			$Stock = $PA->Paper();
-		} else {
+		} elsif ( $$self{'service_id'}[0] ) {
 			my $sig_specs = openprint::service::get_specs_ref( $Project, $$self{'service_id'}[0] );
 			$Stock = openprint::Paper::load_from_signature( $Project, $sig_specs, $Project->ordered_quantity_index() ) if ! $Stock;
 		} # end if

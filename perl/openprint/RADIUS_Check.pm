@@ -5,7 +5,7 @@ use vars qw( $debug %fields %transforms %defaults $table $serial $dbh );
 use vars qw( %attributes );
 
 
-$debug = 1;
+$debug = 0;
 $table = 'radcheck';
 $serial = 'radcheck_id_seq';
 %fields = (

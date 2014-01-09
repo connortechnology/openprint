@@ -641,7 +641,7 @@ sub signature_calc {
 		} # end if
 
 		@All_Impositions = reduce_impositions( \@Set_Of_Impositions );
-		if ( DEBUG and 1 ) {
+		if ( DEBUG ) {
 			$openprint::log->debug("Sets of Maximum Impositions: " . @All_Impositions);
 			foreach my $Set ( @All_Impositions ) {
 				$openprint::log->debug("Impositions in set: " . @$Set);
@@ -649,9 +649,9 @@ sub signature_calc {
 					$I->display('quantity '.$I->quantity() );
 				} # end foreach I
 			} # end foreach set
+			$openprint::log->debug(sprintf('Original Sign info: %dx%d*%d,%dout', $SignatureImposition->spread_columns(), $SignatureImposition->spread_rows(), $SignatureImposition->spread_size(), $SignatureImposition->imposition() ) );
 		} # end if debug
 
-		$openprint::log->debug(sprintf('Original Sign info: %dx%d*%d,%dout', $SignatureImposition->spread_columns(), $SignatureImposition->spread_rows(), $SignatureImposition->spread_size(), $SignatureImposition->imposition() ) ) if DEBUG;
 	} else { # is a book signature
 		if ( DEBUG ) {
 			foreach my $I ( @Set_Of_Impositions ) {
@@ -777,14 +777,12 @@ $openprint::log->debug("Templatetype: $$sig_specs{'rdbTemplateType'}") if DEBUG;
 						my $rc = $Equipment->fits( $Imposition->layout_width(), $Imposition->layout_height(), $$Paper{'calliper'} );
 						$openprint::log->debug("Trying to fit " . $Imposition->layout_width() . 'x' . $Imposition->layout_height() . ' on ' . $Equipment->strid(). ' (' . $rc.')' ) if DEBUG;
 						if ( $rc ) {
-$openprint::log->debug("Has rc");
 							if ( @my_equipment == 1 ) {
 								$Breakdown .= "Doesn't fit: $rc<br/>";
 							} # end if
 							%folds = ();
 							last;
 						} # end if
-$openprint::log->debug("No rc");
 							
 						my $Fold = $Equipment->Fold({
 								type			=>	$$sig_specs{'rdbTemplateType'},
@@ -793,7 +791,6 @@ $openprint::log->debug("No rc");
 								imposition		=>	$$Imposition{'imposition'},
 								printing_type	=>	$ppt,
 								});
-$openprint::log->debug("fold: $Fold");
 						if ( $Fold ) {
 # Need to check feed width
 $openprint::log->debug("Has a fold, doing extra checks") if DEBUG;
@@ -917,9 +914,11 @@ $openprint::log->debug("No Fold") if DEBUG;
 			if ( $$specs{"chkOverrideFold-$$sig_specs{'SignatureIndex'}-$qty_index"} eq 'Y' ) {
 				# Find out if folds satisfies the overrides
 				my %found;
+				if ( DEBUG ) {
 				foreach my $key ( keys %folds ) {
-					$openprint::log->debug("DUmp folds $key...") if DEBUG;
+					$openprint::log->debug("DUmp folds $key...");
 				}
+				} 
 				foreach my $index ( 1 .. 4 ) {
 #$openprint::log->debug("OverrideFOld $$sig_specs{'SignatureIndex'}-$qty_index-$index (".$$specs{"FoldQty-$$sig_specs{'SignatureIndex'}-$qty_index-$index"}.")");
 					next if ! $$specs{"FoldQty-$$sig_specs{SignatureIndex}-$qty_index-$index"};
@@ -961,7 +960,7 @@ $openprint::log->debug(qq`Wrong imposition: $$specs{"FoldImposition-$$sig_specs{
 						$openprint::log->debug("Not found trying generic") if DEBUG;
 						# Replace with a generic one
 						my $key = $$specs{"FoldType-$$sig_specs{'SignatureIndex'}-$qty_index-$index"}.'-'.$$specs{"FoldImposition-$$sig_specs{'SignatureIndex'}-$qty_index-$index"}.'out';
-						my ( $pages ) = $$specs{"FoldType-$$sig_specs{'SignatureIndex'}-$qty_index-$index"} =~ /(\d)+Page/;
+						my ( $pages ) = $$specs{"FoldType-$$sig_specs{'SignatureIndex'}-$qty_index-$index"} =~ /(\d+)Page/;
 						my $Fold = openprint::Fold->find_one( 
 									'min_imposition null_or_<='	=>	$$specs{"FoldImposition-$$sig_specs{'SignatureIndex'}-$qty_index-$index"},
 									'max_imposition null_or_>='	=>	$$specs{"FoldImposition-$$sig_specs{'SignatureIndex'}-$qty_index-$index"},
@@ -1373,7 +1372,7 @@ sub calc {
 
 		my $previous_imposition;
 
-		my @signatures = sort $Project->signatures();
+		my @signatures = $Project->signatures( { sort=> 1 });
 		my @Signature_Impositions;
 		foreach ( @signatures ) {
 			my $sig_specs = openprint::service::get_specs_ref( $Project, $_ );

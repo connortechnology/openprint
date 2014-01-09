@@ -4,7 +4,7 @@ use strict;
 require openprint::service;
 use POSIX           qw(ceil);
 
-my $debug = 1;
+use constant DEBUG => 0;
 
 my %variables = (
 	'Folds' => ['save'],

@@ -30,7 +30,7 @@ use vars qw( $log $dbh %variable %config %session );
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
 
-my $debug = 1;
+use constant DEBUG => 0;
 
 my %variables = (
 	'txtQuantity1'=>['save','output'], 'txtQuantity2'=>['save','output'], 'txtQuantity3'=>['save','output'],
@@ -71,7 +71,7 @@ $log->debug("UPS!!!!!!!!!!");
 
 	my $services = $Project->services();
 
-	if ( ! $$services{'PlainCartons'} ) {
+	if ( ! ( $$services{'PlainCartons'} and @{$$services{'PlainCartons'}} ) ) {
 		$$specs{'alert'} = 'UPS Shipping requires that the project be packed in cartons.';
 		$$specs{'NeedPlainCartons'} = 1;
 		return $$specs{'Status'} = 'uncalculated';
@@ -118,7 +118,6 @@ $log->debug("Carton Status: $carton_status");
 		} # end if
 		$qty_index = $qty_i if $$specs{"txtPackageQuantity$qty_i"} and ! $qty_index;
 	} # end foreach
-$openprint::log->debug("PostalCode: $$specs{'ToPostalCode'}");
 	$$specs{'ToPostalCode'} =~ s/[^0-9A-Za-z]//g;
 	if ( ! $$specs{'ToPostalCode'} ) {
 		$$specs{'alert'} = 'Please enter your postal code.';
@@ -232,7 +231,7 @@ sub calc {
 		$rated_services{$service} = $price;
 	} # end while
 	if ( ! $$specs{'ddmServiceType'} ) {
-		$log->debug("Choosing	$bestService{'Service'} as the ServiceType") if $debug;
+		$log->debug("Choosing	$bestService{'Service'} as the ServiceType") if DEBUG;
 		$$specs{'ddmServiceType'} = $bestService{'Service'};
 	} # end if
 	if ( ! $$specs{'ddmPickupType'} ) {
@@ -295,10 +294,10 @@ $log->debug("Pickup: $$specs{'ddmPickupType'} Service: $$specs{'ddmServiceType'}
 			$_ =~ /([\d\.]*)(\w*)/;
 			my $cost = $1;
 			my $currency = $2;
-			$log->debug("Currency returned: $currency") if $debug;
+			$log->debug("Currency returned: $currency") if DEBUG;
 			my $UPS_Currency = openprint::Currency->find_one( short => $currency );
 			my $MY_Currency = $Project->Currency();
-			$log->debug("MY Currency: " . $MY_Currency->id() . ' ' . $MY_Currency->name() ) if $debug;
+			$log->debug("MY Currency: " . $MY_Currency->id() . ' ' . $MY_Currency->name() ) if DEBUG;
 			# Now... we need to do currency conversions
 			if ( ! $UPS_Currency ) {
 				$$specs{alert} .= 'UPS Currency not found.  Price may be incorrect.<br/>';

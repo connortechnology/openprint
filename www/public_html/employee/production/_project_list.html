@@ -29,7 +29,6 @@
 				'order_id is null'	=> 0,
 				date_filter( '/employee/production/projects.html?due_date_end', 'due_date <=' ),
 				date_filter( '/employee/production/projects.html?due_date_start', 'due_date >=' ),
-				due_date		=> undef,
 				order			=> 'due_date, lngDocketNumber',
 			);
 			if ( $session{'/employee/production/projects.html?ddmSalesRep'} ) {

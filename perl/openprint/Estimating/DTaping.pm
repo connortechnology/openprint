@@ -3,7 +3,7 @@ use strict;
 
 require openprint::service;
 
-my $debug = 1;
+use constant DEBUG => 0;
 
 my %variables = (
 	'ddmEquipment1' => ['save','output'], 'ddmEquipment2' => ['save','output'], 'ddmEquipment3' => ['save','output'],

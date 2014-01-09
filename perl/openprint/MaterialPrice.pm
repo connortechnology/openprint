@@ -9,7 +9,7 @@ use Math::Round qw(nearest);
 require openprint::logs;
 
 use vars qw( $debug $table $serial %fields %transforms %defaults );
-$debug = 1;
+$debug = 0;
 $table = 'tbl_material_prices';
 $serial = 'materialprices_id_seq';
 
