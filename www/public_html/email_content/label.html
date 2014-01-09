@@ -15,7 +15,7 @@
 				if ( ! $$variable{'Label'}->type_id() ) {
 					return 'Unknown label type.';
 				} else {
-					return include( '/employee/production/labels/_'.$$variable{'Label'}->Type()->name().'_view.html' );
+					return include( '/employee/production/labels/_'.$$variable{'Label'}->Type()->name().'_view.html', $variable );
 				} # end if
 			) ?>
 		</div>
