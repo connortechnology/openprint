@@ -203,7 +203,10 @@ sub google {
 	$string .= ' ' . $_[1] if @_ > 1;
 	$string =~ s/ /+/g;
 	my $coder = Geo::Coder::Googlev3->new();
-	my $location = $coder->geocode( location => $string );
+	my $location;
+	eval {
+		$location = $coder->geocode( location => $string );
+	};
 	if ( ! $location ) {
 		$openprint::log->debug("No location for $string");
 		return;
