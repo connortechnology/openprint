@@ -1259,15 +1259,14 @@ sub send_paper_arrival_notification {
 
 		if ( @To ) {
 # Send notification to maybe CSR's
-			my $email_template = misc::load_file( $log, $config{'SkinPath'} . '/email_template.html' );
+			my $email_template = ssi::slurp_content( '/email_template.html' );
 
-			$info{'ReplacementText'} = "<!--#include virtual=\"/email_content/paper_arrived_notification.html\"-->";
-			$_ = MIME::QuotedPrint::encode_qp( ssi::variable_substitution( \$email_template, \%info ) );
+			$info{'ReplacementText'} = ssi::include( '/email_content/paper_arrived_notification.html', \%info );
 			(new openprint::Email())->send(
 					FROM	=> new openprint::User( $session{'user_id'} ),
 					TO	=> @To,
 					SUBJECT => 'Paper ' . $Paper->to_string() . ' has arrived',
-					ATTACHMENTS=>['', $_, 'text/html', 'quoted-printable'],
+					ATTACHMENTS=>['', MIME::QuotedPrint::encode_qp( ssi::variable_substitution( \$email_template, \%info ) ), 'text/html', 'quoted-printable'],
 					);
 		} # end if to
 	} # end foreach Paper

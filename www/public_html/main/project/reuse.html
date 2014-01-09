@@ -40,7 +40,7 @@
 			<ul>
 				<li> 
 					<label>Please provide a reference</label>
-					<textarea name="reference" rows="<? echo ( count_lines( $$variable{Project}->reference() ) ) ?>" onkeyup="textarea_resize(this);"><? echo ( $$variable{'Project'}->reference(); ) ?></textarea>
+					<textarea name="reference" rows="<? echo ( count_lines( $$variable{Project}->reference() ) ) ?>" onkeyup="textarea_resize(this);"><? echo ( unhtmlize( $$variable{'Project'}->reference() ); ) ?></textarea>
 				</li>
 				<li>
 					<label>Additional comments or instructions</label>

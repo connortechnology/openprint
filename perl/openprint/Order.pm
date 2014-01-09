@@ -515,10 +515,9 @@ sub send_sales_order {
 	# When an order is made,the Order currency will be the current session Currency.	
 	# All resends should stay in the currency that the order was created in.
 	my $Currency = $self->Currency();
-	@order{'CurrencyName','CurrencySymbol'} = ( $Currency->name(), $Currency->symbol() );
-	$order{'Currency'} = $Currency;
+	@order{'Currency','CurrencyName','CurrencySymbol'} = ( $Currency, $Currency->name(), $Currency->symbol() );
 
-	my $email_template = misc::load_file( $log, $config{'SkinPath'}. '/email_template.html' );
+	my $email_template = ssi::slurp_content( '/email_template.html' );
 
 	$order{'ReplacementText'} = ssi::include('/email_content/sales_order_body.html', \%order );
 	my @body = ('', MIME::QuotedPrint::encode_qp( Encode::encode( 'utf-8', ssi::variable_substitution( \$email_template, \%order ) ) ), 'text/html', 'quoted-printable');
@@ -540,8 +539,7 @@ sub send_sales_order {
 
 	my $sales_person_email;
 	if ( $self->salesrep_id() ) {
-		my $CSR = new openprint::User( $self->salesrep_id() );
-		$sales_person_email = sprintf( '"%s" <%s>', $CSR->name(), $CSR->email() );
+		$sales_person_email = new openprint::User( $self->salesrep_id() );
 	}
 	if ( ! $sales_person_email ) {
 		$sales_person_email = $config{'OrderingEmail'};
@@ -567,14 +565,14 @@ sub send_sales_order {
 
 	$log->debug("***************** ADDING PROJECT DOCKET *************************");
 	my $docket_content = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/order_docket_sheet.html' );
-	foreach my $Project ($self->Projects()) {
-		my %data;
-		openprint::print_project::summary( $openprint::r, $log, $dbh, \%data, $Project->id() );
-		if ( $_ ) {
+	if ( $docket_content ) {
+		foreach my $Project ($self->Projects()) {
+			my %data;
+			openprint::print_project::summary( $openprint::r, $log, $dbh, \%data, $Project->id() );
 			$_ = MIME::QuotedPrint::encode_qp( Encode::encode('utf-8', ssi::variable_substitution( \$docket_content, \%data ) ) );
 			push @project_dockets, "ProjectDocket$$Project{id}.html", $_, 'text/html', 'quoted-printable';
-		} # end if
-	} # for each
+		} # for each
+	} # end if
 
 	my @admin_emails = split( ',', $config{'OrderingEmail'} );
 	@admin_emails = map { misc::trim(lc $_) } @admin_emails;
@@ -588,8 +586,8 @@ sub send_sales_order {
 		new openprint::Email()->send(
 				FROM	=> $config{'OrderingEmail'},
 				'Reply-to'	=> $$self{'email'},
-				TO		=> join(',',@admin_emails),
-				#BCC	 =>	'iconnor@penultima.org',
+				#TO		=> join(',',@admin_emails),
+				TO	 =>	'iconnor@point-one.com',
 				SUBJECT => "Order $$self{id}",
 				ATTACHMENTS	=>	[ @body, @sales_order, @project_summaries, @project_dockets ],
 				);
