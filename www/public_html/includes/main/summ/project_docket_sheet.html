@@ -123,7 +123,6 @@
 			my $sig_specs = $Service->specs();
 
 			my $Paper = openprint::Paper::load_from_signature( $Project, $sig_specs, $qty_index );
-$log->debug("Paper: " . $Paper->id_string() );
 			my $Imposition = new openprint::Imposition();
 			$Imposition->load( $sig_specs, $qty_index );
 
