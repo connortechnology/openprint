@@ -529,11 +529,11 @@ sub send_sales_order {
 
 	# Add a project summary for each project in the order
 	my @project_summaries = ();
-	my $content = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/project_summary.html' );
+	my $content = ssi::slurp_content( '/email_content/project_summary.html' );
 	foreach my $Project ($self->Projects()) {
 		my %data;
 		openprint::print_project::summary( $openprint::r, $log, $dbh, \%data, $Project->id() );
-		$variable{'ReplacementText'} = ssi::variable_substitution( \$content, \%data );
+		$data{'ReplacementText'} = ssi::variable_substitution( \$content, \%data );
 		push @project_summaries, "ProjectSummary$$Project{id}.html", MIME::QuotedPrint::encode_qp( Encode::encode('utf-8', ssi::variable_substitution( \$email_template, \%data ))), 'text/html', 'quoted-printable';
 	} # for each Project
 
@@ -592,8 +592,8 @@ sub send_sales_order {
 		new openprint::Email()->send(
 				FROM	=> $config{'OrderingEmail'},
 				'Reply-to'	=> $$self{'email'},
-				TO		=> join(',',@admin_emails),
-				#TO	 =>	'iconnor@point-one.com',
+				#TO		=> join(',',@admin_emails),
+				TO	 =>	'iconnor@point-one.com',
 				SUBJECT => "Order $$self{id}",
 				ATTACHMENTS	=>	[ @body, @sales_order, @project_summaries, @project_dockets ],
 				);
