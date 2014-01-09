@@ -134,6 +134,8 @@ sub variable_substitution {
 				$result .= checked( eval $1 );
 			} elsif ( $command =~ /^include\s*\(\s*'?([^'\)]*)'?\s*\)/ms ) {
 				$result .= include( $1, $variable );
+			} elsif ( $command =~ /^slurp\s*\(\s*'?([^'\)]*)'?\s*\)/ms ) {
+				$result .= slurp_content( $1 );
 			} else {
 				$result .= $$variable{$command};
 			} # end if

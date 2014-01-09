@@ -491,7 +491,6 @@ $log->debug("ServiceType: $variable{'ServiceTypeType'}");
 					} # end if
 
 				} elsif ($third eq 'bind') {
-$openprint::log->warn('bind');
 					if ( $filename eq 'folding.html' ) {
 						require openprint::Estimating::Folding;
 						openprint::Estimating::Folding::display( $log, $dbh, \%variable, $project_index, $service_index );

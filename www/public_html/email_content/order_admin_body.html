@@ -8,7 +8,7 @@ Docket<a href="<? echo ( $openprint::config{'InternalSiteURL'} ) ?>/employee/ord
 </div>
 <div class="rightColumn">
 	<b>Ordered By</b><br/>
-	<? hecho ( join(' ', $$variable{'Order'}->get('salutation','firstname','lastname') ); ) ?>
+	<? hecho ( join(' ', $$variable{'Order'}->get('salutation','firstname','lastname') ); ) ?><br/>
 	<? hecho ( $$variable{'Order'}->company_name() ) ?> <br/>
 	<? hecho ( $$variable{'Order'}->address1() ) ?> <br/>
 	<? if ( $$variable{'Order'}->address2() ) ?>

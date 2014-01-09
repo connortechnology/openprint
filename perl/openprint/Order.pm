@@ -568,7 +568,12 @@ sub send_sales_order {
 	my $docket_content = ssi::slurp_content( '/email_content/order_docket_sheet.html' );
 	if ( $docket_content ) {
 		foreach my $Project ($self->Projects()) {
-			my %data;
+			my %data = (
+					OrderID => $$self{id},
+					Order => $self,
+					Project =>	$Project,
+					);
+			
 			openprint::print_project::summary( $openprint::r, $log, $dbh, \%data, $Project->id() );
 			$_ = MIME::QuotedPrint::encode_qp( Encode::encode('utf-8', ssi::variable_substitution( \$docket_content, \%data ) ) );
 			push @project_dockets, "ProjectDocket$$Project{id}.html", $_, 'text/html', 'quoted-printable';
@@ -588,7 +593,7 @@ sub send_sales_order {
 				FROM	=> $config{'OrderingEmail'},
 				'Reply-to'	=> $$self{'email'},
 				TO		=> join(',',@admin_emails),
-				BCC	 =>	'iconnor@point-one.com',
+				#TO	 =>	'iconnor@point-one.com',
 				SUBJECT => "Order $$self{id}",
 				ATTACHMENTS	=>	[ @body, @sales_order, @project_summaries, @project_dockets ],
 				);

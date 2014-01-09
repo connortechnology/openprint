@@ -166,7 +166,7 @@ sub view_services {
 				my $PS = $Project->Service( $s_id );
 				next if ! $PS->service_id();
 				my $ServiceType = $PS->ServiceType();
-				if ( sets::isin( $ServiceType->name(), ['Proofs'] ) ) {
+				if ( sets::isin( $ServiceType->name(), ['Proofs'] ) and ( @{$$services{$ServiceType->name()}} == 1 ) ) {
 					$$variable{error} .= 'Proofs cannot be removed from the project.<br/>';
 					next;
 				} # end if
