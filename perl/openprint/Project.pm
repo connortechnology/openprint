@@ -25,7 +25,7 @@ require openprint::Bug;
 require openprint::Estimating::MultiPage;
 require openprint::service;
 
-$debug = 0;
+$debug = 1;
 
 $table = 'projects';
 $serial = 'lngProjectIndex_seq';
@@ -1236,10 +1236,14 @@ if ( $data ) {
 	} # end foreach 
 }
 
-	sql::end_transaction( $dbh, $ac );
 	delete $$self{'Services'};
 	delete $$self{'service_types'};
 	delete $$self{'signatures'};
+	foreach my $qty_index ( $self->quantity_indexes() ) {
+		$self->price($qty_index,undef);
+	} # end foreach
+	$self->save();
+	sql::end_transaction( $dbh, $ac );
 	return $service_index;
 } # end sub add_service
 

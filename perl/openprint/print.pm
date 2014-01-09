@@ -132,6 +132,7 @@ sub view_services {
 						ServiceName => $service_name }, { status=>'calculated' } );
  
 					$Project->add_to_log( @openprint::session{'company_id','user_id'}, sprintf( 'Adding Custom Line: %s, (%.2f, %.2f, %.2f)', $service_name, @openprint::param{'txtPrice1','txtPrice2','txtPrice3'} ) );
+
 				} # end if has Customer Service type
 
 			} elsif ( $openprint::param{'btnFunction'} eq 'Delete Services' ) {
