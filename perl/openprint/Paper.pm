@@ -108,6 +108,12 @@ $serial	= 'paper_id_seq';
 );
 
 %defaults = (
+	basis_width	=>	undef,
+	basis_height	=>	undef,
+	basis_mweight	=>	undef,
+	width		=>	undef,
+	height		=>	undef,
+	gsm			=>	undef,	
 	grade		=>	undef,
 	calliper	=>	undef,
 	allocated	=>	q`'0'`,
@@ -117,6 +123,8 @@ $serial	= 'paper_id_seq';
 	die_score_required	=>	'0',
 	supplied		=>	undef,
 	multipart	=>	0,
+	sheets_per_package	=>	undef,
+	wpsi				=>	undef,
 );
 
 %grades = (
