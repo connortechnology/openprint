@@ -20,12 +20,12 @@ use strict;
 package openprint::Estimating::Printing;
 my $threading = 0;
 #use threads;
-use constant DEBUG => 0;
+use constant DEBUG => 1;
 use constant DEBUG_VERSIONS => 0;
-use constant DEBUG_FILTERING => 0;
+use constant DEBUG_FILTERING => 1;
 use constant DEBUG_PRICE_DECISIONS => 1;
 use constant DEBUG_INKS => 0;
-use constant DEBUG_STOCK => 0;
+use constant DEBUG_STOCK => 1;
 
 my $master_time;
 my %special_colours;
@@ -1275,7 +1275,7 @@ sub get_impositions($$$$$$$) {
 
 		my @impositions;
 
-		my $use_cut_stocks = ( $Press->specification('Use Cut Stocks') and ( $Press->specification('Use Cut Stocks') ne 'N' ) ) ? 1 : 0;
+		my $use_cut_stocks = ( $Press->specification('Use Cut Stocks') and ( $Press->specification('Use Cut Stocks') eq 'N' ) ) ? 0 : 1;
 		my $co = $Press->specification('Cut Off');
 		my @cut_offs;
 		if ( $co ) {
@@ -1933,7 +1933,7 @@ sub calc {
 	$$specs{SideOneColours} = \@side_one_colours;
 	$$specs{SideTwoColours} = \@side_two_colours;
 
-$openprint::log->debug("Side one @side_one_colours twp: @side_two_colours");
+#$openprint::log->debug("Side one @side_one_colours twp: @side_two_colours");
 	my %inkCoverage = get_inkcoverage( $Project, $specs );
 	if ( ! ( $$services{'NoPrinting'} or @side_one_colours or @side_two_colours ) ) {
 		$$specs{'alert'} .= 'Please choose the colours to be printed.<br/>';
