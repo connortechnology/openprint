@@ -744,7 +744,7 @@ sub find_one {
 		%{$params} = @_;
 	} # end if
 	$$params{limit}=1;
-	my @Results = $object_type->find($params);
+	my @Results = $object_type->find(%$params);
 	return $Results[0] if @Results;
 } # end sub find_one
 

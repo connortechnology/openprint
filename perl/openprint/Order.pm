@@ -564,7 +564,7 @@ sub send_sales_order {
 	my @project_dockets = ();
 
 	$log->debug("***************** ADDING PROJECT DOCKET *************************");
-	my $docket_content = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/order_docket_sheet.html' );
+	my $docket_content = ssi::slurp_content( '/email_content/order_docket_sheet.html' );
 	if ( $docket_content ) {
 		foreach my $Project ($self->Projects()) {
 			my %data;
@@ -587,7 +587,7 @@ sub send_sales_order {
 				FROM	=> $config{'OrderingEmail'},
 				'Reply-to'	=> $$self{'email'},
 				TO		=> join(',',@admin_emails),
-				#TO	 =>	'iconnor@point-one.com',
+				BCC	 =>	'iconnor@point-one.com',
 				SUBJECT => "Order $$self{id}",
 				ATTACHMENTS	=>	[ @body, @sales_order, @project_summaries, @project_dockets ],
 				);
