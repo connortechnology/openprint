@@ -24,17 +24,24 @@
 		<td>&nbsp;</td>
 	</tr>
 </table>
+<div class="Project">
 <?include('/includes/project_header.html')?>
 <div class="ProjectSummary">
 	<fieldset><legend>Project Information</legend>
 	<?include('/includes/main/summ/project_create_edit.html')?>
 	</fieldset>
-	<? while ( @$variable{'ServiceIndex','ServiceName','prod_url'} = splice @{$$variable{'SERVICES'}},0,3; ) ?>
-	<? eval ( openprint::print_project::get_service_specifications( $r, $log, $dbh, $variable, @$variable{'ProjectIndex','ServiceIndex'} ); ) ?>
-	<fieldset><legend><?ServiceTypeName?> <?txtServiceDescription?></legend>
-		<? if ( $$variable{'prod_url'} ) ?>
-		<? echo ( include('/main/summ/'.$$variable{prod_url}, $variable ); ) ?><br>
-		<? endif ( $$variable{'prod_url'} ) ?>
-	</fieldset>
-	<? endwhile ( @$variable{'ServiceIndex','ServiceName','prod_url'} = splice @{$$variable{'SERVICES'}},0,3; ) ?>
+<? echo ( my $html;
+	while ( @$variable{'ServiceIndex','ServiceName','prod_url'} = splice @{$$variable{'SERVICES'}},0,3 ) {
+		openprint::print_project::get_service_specifications( $r, $log, $dbh, $variable, @$variable{'ProjectIndex','ServiceIndex'} );
+		if ( $$variable{'prod_url'} ) {
+			$html .= '<fieldset><legend>'.$$variable{ServiceTypeName}.' ' . $$variable{txtServiceDescription}.'</legend>';
+			$html .= include('/main/summ/'.$$variable{prod_url}, $variable );
+			$html .= '</fieldset>';
+		} else {
+$log->error("No summary urul for " . $$variable{Project}->id() . " service " . $$variable{ServiceName} );
+		} # end if
+	} # end while
+	return $html;
+) ?>
+</div>
 </div>
