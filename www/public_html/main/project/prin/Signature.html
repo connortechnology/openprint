@@ -52,7 +52,7 @@
             <?include('/includes/main/proj/presentation_folder_printing.html')?>
             </div>
 <? endif ( $$variable{'Group'} == 1 ) ?>
-<? endif ( $$variable{'txtSignatureType'} ) ?>
+<? else ( $$variable{'txtSignatureType'} ) ?>
 
 <? if ( $$variable{'ProjectType'}->name() eq 'Envelopes' ) ?>
 		<?include(/includes/main/proj/templates/generic.html)?>
@@ -78,6 +78,7 @@
 	} # end if
 	return '';
 ) ?>
+<? endif ( $$variable{'txtSignatureType'} ) ?>
 <? if ( sets::isin( $$variable{'ProjectType'}->name(),['Banners'] ) ) ?>
 		<?include(/includes/main/proj/banner_printing.html)?>
 <? endif ( sets::isin( $$variable{'ProjectType'}->name(),['Banners'] ) ) ?>
