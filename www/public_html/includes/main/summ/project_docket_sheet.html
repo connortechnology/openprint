@@ -389,7 +389,13 @@
 			<td class="headerText"><b>Size</b></td>
 			<td class="headerText"><b>Type</b></td>
 		</tr>
+<? echo (
+	$log->debug("Proofs: " . @{$$variable{'Proofs-'.$$variable{'SignatureIndex'}.'-'.$$variable{'Project'}->ordered_quantity_index()}} );
+) ?>
 		<? while ( @$variable{'ProofIndex','ProofQuantity','ProofWidth','ProofHeight','ProofType','ddmProofType'} = splice @{$$variable{'Proofs-'.$$variable{'SignatureIndex'}.'-'.$$variable{'Project'}->ordered_quantity_index()}},0,6; ) ?>
+<? echo (
+	$log->debug("Proofs:  @$variable{'ProofIndex','ProofQuantity','ProofWidth','ProofHeight','ProofType','ddmProofType'} ");
+) ?>
 		<? if ( $$variable{'ProofQuantity'} ) ?>
 		<tr>
 			<td class="docketText"><?ProofQuantity?>&nbsp;</td>
@@ -402,8 +408,6 @@
 			<? if ( $$variable{'ProofType'} eq 'PDFProof' ) ?>PDF Proof<? endif ( $$variable{'ProofType'} eq 'PDFProof' ) ?>
 			</td>
 		</tr>
-		<? else ( $$variable{'ProofQuantity'} ) ?>
-No proofs
 		<? endif ( $$variable{'ProofQuantity'} ) ?>
 		<? endwhile ( @$variable{'ProofIndex','ProofQuantity','ProofWidth','ProofHeight','ProofType','ddmProofType'} = splice @{$$variable{'Proofs-'.$$variable{'SignatureIndex'}.'-'.$$variable{'Project'}->ordered_quantity_index()}},0,6; ) ?>
 	</table>
