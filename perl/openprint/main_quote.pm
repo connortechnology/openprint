@@ -45,6 +45,7 @@ sub history {
 	} # end if
     ssi::setup_date_select( '/main/quote/history.html', 'created_on_start', -30 );
     ssi::setup_date_select( '/main/quote/history.html', 'created_on_end', 0 );
+	$session{'/main/quote/history.html?company_id'} = $session{company_id} if ! exists $session{'/main/quote/history.html?company_id'};
 	_history();
 } # end sub history
 
@@ -123,8 +124,8 @@ $openprint::log->error( "More than 1 occurrence of a project in a quote." );
 						} ) ) ) {
 $openprint::log->error( $error );
 		} else {
-			$Quote->add_log( 'Added project ' . $project_id );
-			$Project->add_to_log( @openprint::session{'company_id','user_id'}, "Add to quote $quote_id" );
+			$Quote->add_log( 'Added project ' . $project_id . ' prices: ' . join(', ', $Project->prices() ) );
+			$Project->add_to_log( @openprint::session{'company_id','user_id'}, "Add to quote $quote_id prices: " . join(', ', $Project->prices() ) );
 		} # end if
 	} # end if
 	return $quote_id;

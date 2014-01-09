@@ -1097,7 +1097,7 @@ $openprint::log->debug("Folds: $set_index : $key " . $impo_qty );
 					} # end if
 				} # end if
 
-				$Breakdown .= sprintf( '%s: %d*%dout layout: %sx%s qty: %d StockWeight %.2fgsm<br/>', $Fold->name(), $impo_qty, $imposition, $Imposition->get('layout_width', 'layout_height'), $run_qty, $Paper->gsm() );
+				$Breakdown .= sprintf( '%s: %d*%dout layout: %sx%s qty: %d StockWeight %.2fgsm calliper:%.4f<br/>', $Fold->name(), $impo_qty, $imposition, $Imposition->get('layout_width', 'layout_height'), $run_qty, $Paper->gsm(), $Paper->calliper() );
 
 				my %setupPrice = openprint::service::get_price_object( $Fold->type().'MakeReady', $imposition, $Equipment );
 				if ( ! %setupPrice ) {
