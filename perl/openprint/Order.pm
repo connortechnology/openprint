@@ -250,6 +250,7 @@ sub Status {
 
 sub status {
 	if ( @_ > 1 ) {
+$openprint::log->debug("Setting status to $_[1]");
 		my $Status = openprint::Order_Status->find_one(name => $_[1]);
 		if ( ! $Status ) {
 			$log->error("New Order Status! $_[1]");
@@ -264,6 +265,9 @@ sub status {
 	} # end if
 	if ( ! $_[0]{status} ) {
 		$_[0]{status} = $_[0]->Status()->name();
+		if ( !$_[0]{status} ) {
+			$_[0]{status} = 'Incomplete';
+		} # end if
 	} # end if
 	return $_[0]{status};
 } # end sub status
