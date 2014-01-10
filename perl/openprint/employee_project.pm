@@ -705,8 +705,7 @@ sub send_proofs_approved_email {
 		
 		$Email->send(
 				FROM    => $Me,
-				#TO      => $User,
-				TO		=>	'iconnor@point-one.com',
+				TO      => $User,
 				SUBJECT => "Docket $info{'DocketNumber'} $$Order{'company_name'} - Proofs Approved",
 				ATTACHMENTS	=>	\@body,
 				);
