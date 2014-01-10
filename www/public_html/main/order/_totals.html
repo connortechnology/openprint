@@ -20,7 +20,7 @@
 			<? echo ( openprint::Currency::format( $$variable{'Order'}->Currency()->convert_from( $$variable{'Order'}->total() ) ); ) ?>
 		</li>
 		<? endif ( $$variable{'Order'}->total() ) ?>
-		<? if ( $config{'ShowAccountingOnOrder'} ne 'N' ) ?>
+		<? if ( $config{'ShowAccountingOnOrder'} ne 'N' or ( $session{user_type} eq 'A' or $session{user_type} eq 'E' ) ) ?>
 		<li>
 			<label>Amount Paid</label>
             <? echo ( openprint::Currency::format( $variable{Order}->paid() ); ) ?>
@@ -37,7 +37,7 @@
             <? echo ( openprint::Currency::format( $$variable{Order}->owing() ); ) ?>
         </li>
         <? endif ( $$variable{Order}->owing() ) ?>
-		<? endif ( $config{'ShowAccountingOnOrder'} ne 'N' ) ?>
+		<? endif ( $config{'ShowAccountingOnOrder'} ne 'N' or ( $session{user_type} eq 'A' or $session{user_type} eq 'E' ) ) ?>
 	</ul>
 	</div>
 	<span class="Currency">All prices listed in <? echo ( $$variable{'Currency'}->name() ) ?>.
