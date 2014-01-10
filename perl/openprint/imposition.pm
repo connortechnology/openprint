@@ -989,6 +989,18 @@ sub decrease_imposition {
 			if ( $imp2->imposition() ) {
 				push @results, $imp2;
 			} # end if
+			
+			my $imp3 = $imposition->copy();
+			$imp3->columns( $imp3->columns()-1 );
+			if ( $imp3->imposition() ) {
+				push @results, $imp3;
+			} # end if
+
+			my $imp4 = $imposition->copy();
+			$imp4->rows( $imp4->rows()-1 );
+			if ( $imp4->imposition() ) {
+				push @results, $imp4;
+			} # end if
 		} # end if
 	} # end foreach
 

@@ -2650,7 +2650,9 @@ $imp->dispay('Ma imposition!') if DEBUG or DEBUG_FILTERING or 1;
 				} # end if
 			} # end foreach I
 			if ( ! @results2 ) {
+$log->warn("Getting all impos");
 				foreach my $I ( openprint::imposition::get_all_impositions( @results ) ) {
+$I->display("Getting all impos");
 					if ( $I->imposition() == $$sig_specs{'txtImposition'.$qty_index} ) {
 						push @results2, $I;
 					} # end if
