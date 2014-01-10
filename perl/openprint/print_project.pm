@@ -750,7 +750,6 @@ sub display_reuse_project {
 sub reuse_project {
 	my ( $r, $log, $dbh, $cookie, $variable, $project_index ) = @_;
 
-$openprint::log->debug("reusing $project_index");
 	my $Project = new openprint::Project( $project_index );
 	if ( ! $Project->id() ) {
 		return misc::error( $log, $dbh, $variable, 'Error', "Source project $project_index could not be found." );
@@ -781,6 +780,8 @@ $openprint::log->debug("reusing $project_index");
 	# This allows uncalc->uncalc, everything else to UnOrdered
 	if ( sets::isin( $Project->status(), [ 'Pending Deposit', 'In Prepress', 'Proofs Out', 'Approved', 'Printed', 'Complete','Shipped','Picked Up' ] ) ) {
 		$NewProject->status('Unordered');
+	} else {
+		$NewProject->status('uncalculated');
 	} # end if
 	$NewProject->company_id( $param{'ddmCompany'} ) if $param{'ddmCompany'};
 	$variable{error} .= $NewProject->save();
