@@ -39,7 +39,7 @@ my %converted_imposition_cache;
 my $use_converted_imposition_cache = 0;
 my %filtered_imposition_cache;
 my $use_filtered_imposition_cache = 0;
-my $calc_other_groups = 1;
+my $calc_other_groups = 0;
 
 my %stitching_cache;
 my %price_cache;
