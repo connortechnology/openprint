@@ -329,6 +329,7 @@ sub confirmation {
 	} # end if
 
 	my $Order = new openprint::Order( $order_id );
+$log->debug("Got order $$Order{id}");
 
 	if ( $Order->id() and ( sets::isin( $Order->status(), ['Incomplete','Re-Opened'] ) ) ) {
 		if ( ( $Order->company_id() == $session{'company_id'} ) and ( $session{'company_id'} == new openprint::User( $session{'user_id'})->company_id() ) ) {
@@ -420,6 +421,8 @@ sub confirmation {
 		if ( $variable{'Downpayment'} > 0 ) {
 		#	send_invoice( $r, $log, $dbh, $order_id );
 		} # end if
+	} else {
+		$log->debug("Already complete");
 	} # end if
 
 	$variable{'order_id'} = $order_id;
