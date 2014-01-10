@@ -80,20 +80,25 @@ sub details {
 		$variable{'error'} .= $Order->pay();
 		$variable{'ExternalRedirect'} = '/employee/accounting/details.html?order_id='.$Order->id() if ! $variable{'error'};
 	} elsif ( $param{'btnFunction'} eq 'Invoice' ) {
-		my $Invoice = openprint::Invoice->find_one(num=>$param{invoice_id});
-        if ( ! $Invoice ) {
-            $Invoice = new openprint::Invoice();
-            $variable{error} .= $Invoice->save({
-                invoicer_id=>$config{owner_id},
-                invoicee_id=>$Order->company_id(),
-                total=>$Order->total(),
-                num=>$param{invoice_id},
-                currency_id =>  $Order->currency_id(),
-                });
-        } # end if ! Invoice
-        $variable{error} .= $Order->save({ invoice_id=> $Invoice->id() });
-        if ( ! $variable{error} ) {
-            $variable{ExternalRedirect} = '/employee/accounting/details.html?order_id='.$Order->id();
+		$param{invoice_id} = openprint::Invoice->transform( 'num', $param{invoice_id} );
+		if ( $param{invoice_id} ) {
+			my $Invoice = openprint::Invoice->find_one(num=>$param{invoice_id});
+			if ( ! $Invoice ) {
+				$Invoice = new openprint::Invoice();
+				$variable{error} .= $Invoice->save({
+					invoicer_id=>$config{owner_id},
+					invoicee_id=>$Order->company_id(),
+					total=>$Order->total(),
+					num=>$param{invoice_id},
+					currency_id =>  $Order->currency_id(),
+					});
+			} # end if ! Invoice
+			$variable{error} .= $Order->save({ invoice_id=> $Invoice->id() });
+			if ( ! $variable{error} ) {
+				$variable{ExternalRedirect} = '/employee/accounting/details.html?order_id='.$Order->id();
+			} # end if
+		} else {
+			$variable{error} .= 'Please enter an invoice #<br/>';
         } # end if
 	} elsif ( $param{'btnFunction'} eq 'ChangeSupplier' ) {
 		if ( ! $param{'supplier_id'} ) {

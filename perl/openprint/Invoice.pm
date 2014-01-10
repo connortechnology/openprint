@@ -347,7 +347,7 @@ sub upload {
 } # end sub upload
 
 sub link_to {
-	return sprintf('<a href="/invoice/view.html?invoice_id=%d">%s</a>', $_[0]{id}, $_[0]{num} );
+	return sprintf('<a href="/invoice/view.html?invoice_id=%d">%s</a>', $_[0]{id}, $_[0]{num} ? $_[0]{num} : 'id ' . $_[0]{id} );
 } # end sub link_to
 
 1;
