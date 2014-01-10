@@ -111,6 +111,7 @@
         } else {
             foreach my $ServiceType ( openprint::ServiceType->find( category_id=>$ServiceCategory->id(), order=>'sorting', view_visible=>1 ) ) {
                 next if ! $$services{$ServiceType->name()};
+				next if $ServiceType->name() eq 'Paper';
                 foreach my $service_id ( @{$$services{$ServiceType->name()}} ) {
                     $rowclass = ' class="colRowRed"' if $statuses{$service_id} eq 'Waiting For Customer Approval';
                     my $specs = openprint::service::get_specs_ref( $Project, $service_id );
@@ -149,7 +150,7 @@
         } # end if Printing or else
     } # end foreach ServiceType_Category
 
-    if ( ! $$services{'Paper'} ) {
+    #if ( ! $$services{'Paper'} ) {
         my %totals;
         my %sheets;
         my %prices;
@@ -211,7 +212,7 @@ $log->error("NO paper weight for project $$Project{id} " . $Paper->to_string() )
 
             $html .= '</td>';
 if($$variable{canseepaperpricing}){
-			$html .= '<td class="Price">'.join('<br/>', map { $_ ? $_ : () } @prices{sort keys %totals} ).'</td>';
+			$html .= '<td class="Price"><br/>'.join('<br/>', map { $_ ? $_ : () } @prices{sort keys %totals} ).'</td>';
 }
 			$html .= '<td class="status"><br/>';
             foreach my $string ( sort keys %totals ) {
@@ -223,7 +224,7 @@ if($$variable{canseepaperpricing}){
                     } else {
                         $html .= $totals{$string}.'lbs';
                         if ( $Stock->type() eq 'Roll' ) {
-                            $html .= '<br/>'.int((($totals{$string}/$Stock->wpsi())/$Stock->width())/12).'feet';
+                            $html .= ' '.int((($totals{$string}/$Stock->wpsi())/$Stock->width())/12).'feet';
                         } # end if
                     } # end if
                 } else {
@@ -234,7 +235,7 @@ if($$variable{canseepaperpricing}){
 			$html .= '</td>';
 $html .= '</tr>';
         } # end if
-    } # end if $$services{Paper}
+    #} # end if $$services{Paper}
     return $html;
 ) ?>
 		<? if ( $session{'user_type'} eq 'A' or openprint::usergroup::is_user_in( ['Prepress'], $session{'user_id'} ) ) ?>
