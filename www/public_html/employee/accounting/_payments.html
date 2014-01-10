@@ -35,16 +35,12 @@
 		<td class="payment_id">New</td>
 		<td class="Date"><? echo ( date_select('received_on', [ Date::Calc::Today() ] ); ) ?></td>
 		<td class="TransactionID"><input type="text" name="transaction_id" /></td>
-		<td class="Method">                <select id="method" name="method">
-<? echo ( 
-my @options = ( '', 'Cash','Cheque','Email Transfer','Paypal','Work In Trade' );
-make_drop_down( [ map { $_, $_ } @options ] );
-) ?>
-			</select>
-</td>
+		<td class="Method">
+<? echo ( ssi::select( [ map { $_, $_ } ( '', 'Cash','Cheque','Email Transfer','Paypal','Work In Trade' ) ], undef, { id=>'method', name=>'method' } ); ) ?>
+		</td>
 		<td class="Memo"><input type="text" name="memo" /></td>
-		<td class="Price"><? echo ( ssi::input( type=>'float', name=>'amount', onkeydown=>"this.lastValue = this.value;return check_decimal(this,event);" ); ) ?></td>
-		<td class="buttons"><? echo (ssi::button( 'AddPayment', { onclick=> q`f1.btnFunction.value='Save';f1.submit();`,text=>'Add' } ); ) ?></td>
+		<td class="Price"><? echo ( input( type=>'float', name=>'amount', value=>$$variable{Order}->owing(), onkeydown=>"this.lastValue = this.value;return check_decimal(this,event);" ); ) ?></td>
+		<td class="buttons"><? echo (button( 'AddPayment', { onclick=> q`f1.btnFunction.value='Save';f1.submit();`,text=>'Add' } ); ) ?></td>
 	</tr>
 </table>
 

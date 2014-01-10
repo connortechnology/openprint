@@ -72,9 +72,10 @@ sub details {
 	} elsif ( $param{'btnFunction'} eq 'Delete' ) {
 		my $Payment = new openprint::Payment( $param{payment_id} );
 		if ( $Payment->id() ) {
-			$variable{'error'} .= $Payment->delete();
+			$variable{error} .= $Payment->delete();
+			$variable{error} .= $Order->save() if ! $variable{error};
 		} # end if
-		$variable{'ExternalRedirect'} = '/employee/accounting/details.html?order_id='.$Order->id() if ! $variable{'error'};
+		$variable{'ExternalRedirect'} = '/employee/accounting/details.html?order_id='.$Order->id() if ! $variable{error};
 	} elsif ( $param{'btnFunction'} eq 'Pay' ) {
 		$variable{'error'} .= $Order->pay();
 		$variable{'ExternalRedirect'} = '/employee/accounting/details.html?order_id='.$Order->id() if ! $variable{'error'};
@@ -132,14 +133,14 @@ sub details {
 
 		if ( $variable{'DepositDue'} > 0 ) {
 			foreach my $project_index ( sql::execute( $log, $dbh, 'SELECT lngProjectIndex FROM Order_Contents WHERE OrderIndex=?', $order_id ) ) {
-				sql::update( $log, $dbh, 'Projects', ['Index=? AND strStatus=?', $project_index, 'In Prepress'], 'strStatus', 'Pending Deposit' );
+				sql::update( $log, $dbh, 'Projects', ['id=? AND strStatus=?', $project_index, 'In Prepress'], 'strStatus', 'Pending Deposit' );
 				sql::update( $log, $dbh, 'tbl_Project_Contents', "lngProjectIndex=$project_index AND strStatus='Ordered'", 'strStatus', 'Pending Deposit' );
 			} # end foreach
 		} else {
 			$Order->status('In Production') if $Order->status() eq 'Pending Deposit';
 
 			foreach my $project_index ( sql::execute( $log, $dbh, 'SELECT lngProjectIndex FROM Order_Contents WHERE OrderIndex=?', $order_id ) ) {
-				sql::update( $log, $dbh, 'Projects', ['Index=? AND strStatus=?', $project_index, 'Pending Deposit'], 'strStatus', 'In Prepress' );
+				sql::update( $log, $dbh, 'Projects', ['id=? AND strStatus=?', $project_index, 'Pending Deposit'], 'strStatus', 'In Prepress' );
 				sql::update( $log, $dbh, 'tbl_Project_Contents', ['lngProjectIndex=? AND strStatus=?', $project_index, 'Pending Deposit'], 'strStatus', 'Ordered' );
 			} # end foreach
 			if ( $variable{'AmountPaid'} >= $variable{'TOTAL'} ) {

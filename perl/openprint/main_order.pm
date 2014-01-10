@@ -576,5 +576,8 @@ sub _order {
 		} # end if
 	} # end if
 } # end sub _order
+
+sub _user_info {
+} # end sbu _user_info
 1;
 __END__

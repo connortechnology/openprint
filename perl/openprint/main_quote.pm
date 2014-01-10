@@ -476,6 +476,8 @@ sub _products_dropdown {
 sub _view_log {
 } # end sub _view_log
 
+sub _user_information {
+} # end sub _user_information
 1;
 
 __END__

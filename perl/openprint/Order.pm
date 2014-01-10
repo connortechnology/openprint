@@ -81,7 +81,7 @@ sub save {
 	my ( $self, $params ) = @_;
 
 	$self->set( $params );
-
+	$self->paid(undef);
 	$$self{'owing'} = $$self{'total'} - $$self{'paid'};
 	$$self{'company_id'} = $session{'company_id'} if ! $$self{'company_id'};
 	$$self{'user_id'} = $session{'user_id'} if ! $$self{'user_id'};
@@ -257,9 +257,8 @@ sub status {
 			$Status->save({name=>$_[1]});
 		} # end if
 		if ( $Status->id() != $_[0]{status_id} ) {
-			sql::update( $log, $dbh, 'Orders', ['id=?', $_[0]{id}], 'status_id', $Status->id() ) if $_[0]{id};
+			$_[0]->save({ status_id => $Status->id() }) if $_[0]{id};
 			$_[0]{status} = $_[1];
-			$_[0]{status_id} = $Status->id();
 			$_[0]->add_log( "Changed Status to $_[1]" ) if $_[0]{id};
 		} # end if
 	} # end if
