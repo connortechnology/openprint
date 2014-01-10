@@ -72,8 +72,8 @@ sub signature_needs {
 	my ( $Project, $sig_specs ) = @_;
 	my $services = $Project->services();
 	return 0 if $$services{'NoPrinting'};
-	return 1 if $$sig_specs{'rdbSuppliedStock'} ne 'Y';
-	return 0;
+	#return 1 if $$sig_specs{'rdbSuppliedStock'} ne 'Y';
+	return 1;
 } # end sub
 
 sub neccessary {

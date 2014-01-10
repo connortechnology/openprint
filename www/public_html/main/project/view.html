@@ -33,7 +33,11 @@
 				if ( ( ! $$variable{Project}->order_id() ) or ( sets::isin( $$variable{Project}->Order->status(), ['Re-Opened','Incomplete'] ) ) ) {
 					$html .= join("\n",
 						button( 'Edit', { href=>'/main/project/create_edit.html?ProjectIndex='.$$variable{ProjectIndex} } ),
-						button( 'Delete', { onclick=>"f1.action='/main/project/history.html';f1.btnFunction.value='Delete Project';f1.submit();",  text=>'Delete' } ),
+						( $$variable{Project}->deleted() ?
+							button( 'UnDelete', { onclick=>"f1.btnFunction.value='Undelete Project';f1.submit();", text=>'Undelete' } )
+							:
+							button( 'Delete', { onclick=>"f1.btnFunction.value='Delete Project';f1.submit();", text=>'Delete' } ),
+						)
 					);
 				} # end if
 				$html .= button( 'Reuse', { href=>'/main/project/reuse.html?ProjectIndex='.$$variable{ProjectIndex} } );
