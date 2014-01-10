@@ -372,8 +372,8 @@ if ( 1 ) {
 	my $Contact = $CustomerInfo->appendChild( $doc->createElement('Contact') );
 	$Contact->setAttribute('ContactTypes', 'Customer' );
 	my $Person = $Contact->appendChild( $doc->createElement('Person') );
-	$Person->setAttribute('FamilyName', $self->Order()->last_name() );
-	$Person->setAttribute('FirstName', $self->Order()->first_name() );
+	$Person->setAttribute('FamilyName', $self->Order()->lastname() );
+	$Person->setAttribute('FirstName', $self->Order()->firstname() );
 	if ( $self->Order()->email() ) {
 		my $ComChannel = $Person->appendChild( $doc->createElement('ComChannel') );
 		$ComChannel->setAttribute('ChannelType','Email');

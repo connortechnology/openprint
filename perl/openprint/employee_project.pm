@@ -518,7 +518,7 @@ sub send_additional_charges_notifications {
 	my $Operator = new openprint::User( $session{'user_id'} );
 
 	@info{'CSRFirstName','CSRLastName','CSREmail'} = ( $CSR->firstname(), $CSR->lastname(), $CSR->email() );
-	@info{'CustomerFirstName','CustomerLastName','CustomerEmail'} = ( $Order->first_name(), $Order->last_name(), $Order->email() );
+	@info{'CustomerFirstName','CustomerLastName','CustomerEmail'} = ( $Order->firstname(), $Order->lastname(), $Order->email() );
 	$info{'Operator'} = $Operator;
 	@info{'EmployeeFirstName','EmployeeLastName','EmployeeEmail','EmployeeExtension'} = ( $Operator->firstname(), $Operator->lastname(), $Operator->email(), $Operator->extension() );
 
@@ -630,22 +630,19 @@ sub send_proofs_complete_email {
 	my $Project = new openprint::Project( $project_index );
 	$order_id = $Project->order_id() if ! $order_id;
 
-	( my $user_index, @info{'DocketNumber','ProjectReference'} ) = ( $Project->user_id(), $Project->docket(), $Project->reference() );
-	$info{'ProjectIndex'} = $project_index;
+	( my $user_index, @info{'DocketNumber','ProjectReference','ProjectIndex'} ) = ( $Project->user_id(), $Project->docket(), $Project->reference(), $project_index );
 
 	my $Order = new openprint::Order( $order_id );
-	@info{'CustomerFirstName','CustomerLastName','CustomerEmail'} = ( $Order->first_name(), $Order->last_name(), $Order->email() );
+	@info{'CustomerFirstName','CustomerLastName','CustomerEmail'} = ( $Order->firstname(), $Order->lastname(), $Order->email() );
 
 	my $User = new openprint::User( $session{'user_id'} );
 	@info{'EmployeeFirstName','EmployeeLastName','EmployeeEmail','EmployeeExtension'} = ( $User->firstname(), $User->lastname(), $User->email(), $User->extension() );
 
 	$info{'CompletionDate'} = Date::Format::time2str( $config{'DateTimeFormat'}, time );
 
-	$info{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/proofs_complete.html' );
-	$info{'ReplacementText'} = ssi::variable_substitution( \$info{'ReplacementText'}, \%info );
+	$info{'ReplacementText'} = ssi::include( '/email_content/proofs_complete.html', \%info );
 
-	$_ = misc::load_file( $log, $config{'SkinPath'} . '/email_template.html' );
-	$_ = encode_qp( Encode::encode('utf-8', ssi::variable_substitution( \$_, \%info ) ) );
+	$_ = encode_qp( Encode::encode('utf-8', ssi::include('/email_template.html', \%info ) ) );
 	my @body = ('', $_, 'text/html', 'quoted-printable');
 	my %mail = (
 			SMTP    => $config{'Mail Server'},
@@ -682,14 +679,11 @@ sub send_proofs_approved_email {
 
 	my $Project = new openprint::Project( $project_index );
 	$order_id = $Project->order_id() if ! $order_id;
-	@info{'DocketNumber','ProjectReference'} = ( $Project->docket(), $Project->reference() );
-	$info{'ProjectIndex'} = $project_index;
-	$info{'OrderID'} = $order_id;
-
+	@info{'DocketNumber','ProjectReference','ProjectIndex','OrderID'} = ( $Project->docket(), $Project->reference(), $project_index, $order_id );
 	$info{'DueDate'} = Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $Project->due_date() ) );
 
 	my $Order = new openprint::Order( $order_id );
-	@info{'CustomerFirstName','CustomerLastName','CustomerEmail'} = ( $Order->first_name(), $Order->last_name(), $Order->email() );
+	@info{'CustomerFirstName','CustomerLastName','CustomerEmail'} = ( $Order->firstname(), $Order->lastname(), $Order->email() );
 
 	my $Me = new openprint::User( $session{user_id} );
 	@info{'EmployeeFirstName','EmployeeLastName','EmployeeEmail','EmployeeExtension'} = $Me->get(qw(firstname lastname email extension) );
@@ -697,8 +691,7 @@ sub send_proofs_approved_email {
 	$info{'CompletionDate'} = Date::Format::time2str( $config{'DateTimeFormat'}, time );
 
 	$info{'ReplacementText'} = ssi::include( '/email_content/proofs_approved-sales_rep.html', \%info );
-	$_ = misc::load_file( $log, $config{'SkinPath'} . '/email_template.html' );
-	$_ = encode_qp( Encode::encode('utf-8', ssi::variable_substitution( $r, $log, $dbh, \$_, \%info ) ) );
+	$_ = encode_qp( Encode::encode('utf-8', ssi::include( '/email_template.html', \%info ) ) );
 	my @body = ('', $_, 'text/html', 'quoted-printable');
 	my $Email = new openprint::Email();
 
@@ -712,7 +705,8 @@ sub send_proofs_approved_email {
 		
 		$Email->send(
 				FROM    => $Me,
-				TO      => $User,
+				#TO      => $User,
+				TO		=>	'iconnor@point-one.com',
 				SUBJECT => "Docket $info{'DocketNumber'} $$Order{'company_name'} - Proofs Approved",
 				ATTACHMENTS	=>	\@body,
 				);
