@@ -27,18 +27,29 @@ sub view_services {
 	my $project_index = $openprint::param{project_id} ? $openprint::param{project_id} : $openprint::param{'ProjectIndex'};
 
 	# I put these here because the don't need a project index
-	if ( defined $openprint::param{'btnFunction'} and ( $openprint::param{'btnFunction'} eq 'Save Project' ) ) {
-		$log->debug("*** Time to Save Project - View Services Function ***");
-		$project_index = openprint::print_project::create_edit_process( $r, $log, $dbh, $variable );
-		return if $$variable{Redirect}; # Redirects on error
-		my $Project = new openprint::Project( $project_index );
-		my $services = $Project->services();
-		my $s = openprint::service::internal_calc( $log, $dbh, $variable, $project_index, $$services{''}[0], $Project->Type()->type() );
-		$log->debug("*** Time to Save Project - View Services Function *** $project_index $openprint::session{'project_id'}");
-		# Display any resulting uncalculated services
-		openprint::print_project::continue_project( $log, $dbh, $variable, $project_index );
-		return if $$variable{ExternalRedirect};
-	} # end if
+	if ( defined $openprint::param{'btnFunction'} ) {
+		if ( $openprint::param{'btnFunction'} eq 'Save Project' ) {
+			$log->debug("*** Time to Save Project - View Services Function ***");
+			$project_index = openprint::print_project::create_edit_process( $r, $log, $dbh, $variable );
+			return if $$variable{Redirect}; # Redirects on error
+			my $Project = new openprint::Project( $project_index );
+			my $services = $Project->services();
+			my $s = openprint::service::internal_calc( $log, $dbh, $variable, $project_index, $$services{''}[0], $Project->Type()->type() );
+			$log->debug("*** Time to Save Project - View Services Function *** $project_index $openprint::session{'project_id'}");
+# Display any resulting uncalculated services
+			openprint::print_project::continue_project( $log, $dbh, $variable, $project_index );
+			return if $$variable{ExternalRedirect};
+		} elsif ( $openprint::param{'btnFunction'} eq 'Delete Project' ) {
+			$$variable{'error'} .= openprint::print_project::try_to_delete_project( $openprint::log, $openprint::dbh, \%openprint::variable, $project_index );
+			if ( ! $$variable{error} ) {
+				$$variable{ExternalRedirect} = '/main/project/history.html';
+				return;
+			} # end if
+		} elsif ( $openprint::param{'btnFunction'} eq 'Undelete Project' ) {
+			my $Project = new openprint::Project( $project_index );
+			$$variable{'error'} .= $Project->undelete();
+		} # end if
+	} # end if defined btnFunction
 
 	$project_index = $openprint::session{'project_id'} if ! $project_index;
 	my $Project = $$variable{'Project'} = new openprint::Project( $project_index );

@@ -109,6 +109,16 @@ sub delete {
 	sql::update( undef, undef, $table, ['id=?', $$self{'id'}], ['strStatus', 'Deleted'] );
 } # end sub delete
 
+sub deleted {
+	return $_[0]{status} eq 'Deleted' ? 1 : 0;
+} # end sub deleted
+
+sub undelete {
+	$_[0]{status} = 'uncalculated';
+	$_[0]->update_status();
+	return '';
+} # end sub undelete
+
 sub destroy {
 	my $self = shift;
 	my $ac = sql::start_transaction( $openprint::dbh );
