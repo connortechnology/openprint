@@ -107,8 +107,8 @@ sub view_services {
 						# Don't want to redirect because it would be annoying.  Just go to view.
 					} else {
 						openprint::Estimating::MultiPage::calculate_signatures( $Project );
-						$recalc = 1;
 					} # end if
+					$recalc = 1;
 				} elsif ( $openprint::param{'ServiceType'} eq 'Printing' ) {
 					openprint::Estimating::MultiPage::calculate_signatures( $Project );
 					openprint::service::internal_calc( $log, $dbh, $variable, $project_index, $$services{''}[0], $Project->Type()->type() );

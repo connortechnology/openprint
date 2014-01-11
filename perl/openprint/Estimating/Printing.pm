@@ -2901,6 +2901,7 @@ sub get_new_specs {
 } # end sub get_new_specs
 
 sub get_project_price {
+	return {} if $openprint::r->connection()->aborted();
 	my ( $Project, $service_index, $project, $service_specs, $sig_specs, $qty, $qty_index, $possible_presses, $printing_specs, $versions, $PlateCounts, $PaperCounts, $washed_colours, $previous_forms_cache, $signatures, $impositions, $other_impositions, $best_price, $recursion_depth ) = @_;
 	my %best_price = $best_price ? %{$best_price} : ();
 	$openprint::log->debug("Best price: $recursion_depth starting get_project_price: ($best_price{'Comparison Cost'}) ($best_price{'Comparison Cost'}) UPQ " . $$sig_specs{'txtUnspecifiedPageQuantity'.$qty_index} );
