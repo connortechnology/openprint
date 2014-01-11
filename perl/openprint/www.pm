@@ -156,7 +156,11 @@ $log->debug("No good, need login");
 					$r->print( q`window.location='/error/error_login.html';` );
 					return Apache2::Const::OK;
 				} else {
+					if ( $page =~ /employee/ ) {
+					$page = '/employee/account/login.html';
+					} else {
 					$page = '/error/error_login.html';
+					} # end if
 				} # end if
 				$variable{'Destination'} = misc::get_destination( $r, $r->uri() );
 				#$r->headers_out->set(Location=>'/error/error_login.html');
