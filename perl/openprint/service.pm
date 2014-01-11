@@ -450,7 +450,7 @@ sub internal_calc {
 	my $ac = sql::start_transaction( $dbh );
 	my $Project = new openprint::Project( $project_index );
     $log->debug("LOCKING Projects for project $$Project{id}");
-    $dbh->do( "SELECT * FROM Projects WHERE id=".$$Project{id}. ' FOR UPDATE' );
+    #$dbh->do( "SELECT * FROM Projects WHERE id=".$$Project{id}. ' FOR UPDATE' );
 	my $Service = $Project->Service($service_index) if $service_index;
 	my $specs;
 	if ( ! $Service ) {

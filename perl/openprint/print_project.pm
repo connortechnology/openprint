@@ -328,16 +328,13 @@ sub summary {
 		return;
 	} # end if
 
-	my $order_id = $param{'Order_Id'};
-	
-	$$variable{'OrderId'} = $order_id;
-	my $Project = new openprint::Project( $project_index );
+	my $Project = $$variable{Project} = new openprint::Project( $project_index );
 	$$variable{'Order'} = $Project->Order();
-	$$variable{'Project'} = $Project;
+	$$variable{'OrderId'} = $Project->order_id();
 	my $services = $Project->services();
 	$$variable{'Services'} = $services;
 
-	if ( $$services{''} ) {
+	if ( $$services{''} and @{$$services{''}} ) {
 		my $ProjectType = $Project->Type();
 		# print service comes first
 		@$variable{'ProjectTypeName','ProjectTypeURL'} = ( $ProjectType->name(), $ProjectType->url() );
@@ -345,6 +342,8 @@ sub summary {
 		@services = ( $$services{''}[0], 'Printing', $$variable{'ProjectTypeURL'} );
 
 		openprint::print_project::get_service_specifications( $r, $log, $dbh, $variable, $project_index, $$services{''}[0] );
+	} else {
+		Carp::cluck( "No ProjectService in Project $$Project{id}");
 	} # end if
 	
    push @services, sql::execute( $log, $dbh, q{SELECT lngServiceIndex, name, strdetailedurl FROM tbl_Project_Contents, Service_Types WHERE servicetype_id=Service_Types.id AND lngProjectIndex=? AND view_visible=true AND servicetype_id IS NOT NULL ORDER BY sorting,lngServiceIndex}, $project_index );
@@ -369,6 +368,9 @@ sub summary {
 	# new stuff
 
 	$$variable{'ProofServiceIndex'}	= $$services{'Proofs'} ? $$services{'Proofs'}[0] : $$services{'FilmStripping'}[0];
+	if ( ! $$variable{'ProofServiceIndex'} ) {
+		Carp::cluck( "No ProofServiceIndex in Project $$Project{id}");
+	} # end if
 
 	my $Currency = openprint::Currency::get_current();
 	if ( $Currency ) {
@@ -748,7 +750,6 @@ sub display_reuse_project {
 sub reuse_project {
 	my ( $r, $log, $dbh, $cookie, $variable, $project_index ) = @_;
 
-$openprint::log->debug("reusing $project_index");
 	my $Project = new openprint::Project( $project_index );
 	if ( ! $Project->id() ) {
 		return misc::error( $log, $dbh, $variable, 'Error', "Source project $project_index could not be found." );
@@ -779,6 +780,8 @@ $openprint::log->debug("reusing $project_index");
 	# This allows uncalc->uncalc, everything else to UnOrdered
 	if ( sets::isin( $Project->status(), [ 'Pending Deposit', 'In Prepress', 'Proofs Out', 'Approved', 'Printed', 'Complete','Shipped','Picked Up' ] ) ) {
 		$NewProject->status('Unordered');
+	} else {
+		$NewProject->status('uncalculated');
 	} # end if
 	$NewProject->company_id( $param{'ddmCompany'} ) if $param{'ddmCompany'};
 	$variable{error} .= $NewProject->save();

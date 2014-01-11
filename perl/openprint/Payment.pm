@@ -44,7 +44,7 @@ $serial = 'payments_id_seq';
 	received_on	=>	undef,
 	completed	=>	1,
 	deleted		=>	0,
-	owner_id	=>	q`$openprint::config{'Owner'}`,
+	owner_id	=>	q`$openprint::config{owner_id}`,
 	amount		=>	undef,
 );
 

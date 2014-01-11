@@ -38,18 +38,17 @@ sub slurp_content {
 		$path =~ s/(.*\/).*/$1/;
 		$file = $path . $file;
 	} # end if
-$log->debug("Including $file");
 	my $content = '';
 	if ( -e $config{SkinPath}.$file ) {
-		$content = File::Slurp::read_file($config{SkinPath}.$file );
+		$content = File::Slurp::read_file($config{SkinPath}.$file,err_mode => 'carp' );
 	} elsif ( -e $config{SkinPath}.'/html/'.$file ) {
-		$content = File::Slurp::read_file($config{SkinPath}.'/html/'.$file );
+		$content = File::Slurp::read_file($config{SkinPath}.'/html/'.$file,err_mode => 'carp' );
 	} elsif ( $ENV{DOCUMENT_ROOT} and ( -e ($ENV{DOCUMENT_ROOT}.$file) ) ) {
-		$content = File::Slurp::read_file($ENV{DOCUMENT_ROOT}.$file );
+		$content = File::Slurp::read_file($ENV{DOCUMENT_ROOT}.$file,err_mode => 'carp' );
 	} elsif ( $config{DOCUMENT_ROOT} and ( -e $config{DOCUMENT_ROOT}.$file ) ) {
-		$content = File::Slurp::read_file($config{DOCUMENT_ROOT}.$file );
+		$content = File::Slurp::read_file($config{DOCUMENT_ROOT}.$file,err_mode => 'carp' );
 	} else {
-		$content = File::Slurp::read_file($file );
+		$content = File::Slurp::read_file($file,err_mode => 'carp' );
 	} # end if
 	return $content;
 } # end sub slurp_content
@@ -135,6 +134,8 @@ sub variable_substitution {
 				$result .= checked( eval $1 );
 			} elsif ( $command =~ /^include\s*\(\s*'?([^'\)]*)'?\s*\)/ms ) {
 				$result .= include( $1, $variable );
+			} elsif ( $command =~ /^slurp\s*\(\s*'?([^'\)]*)'?\s*\)/ms ) {
+				$result .= slurp_content( $1 );
 			} else {
 				$result .= $$variable{$command};
 			} # end if

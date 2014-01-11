@@ -25,6 +25,7 @@ require openprint::OrderedProject;
 require openprint::press_schedule;
 require openprint::Payment;
 require openprint::Tax;
+require openprint::Invoice;
 
 sub information {
 
@@ -328,6 +329,7 @@ sub confirmation {
 	} # end if
 
 	my $Order = new openprint::Order( $order_id );
+$log->debug("Got order $$Order{id}");
 
 	if ( $Order->id() and ( sets::isin( $Order->status(), ['Incomplete','Re-Opened'] ) ) ) {
 		if ( ( $Order->company_id() == $session{'company_id'} ) and ( $session{'company_id'} == new openprint::User( $session{'user_id'})->company_id() ) ) {
@@ -419,6 +421,8 @@ sub confirmation {
 		if ( $variable{'Downpayment'} > 0 ) {
 		#	send_invoice( $r, $log, $dbh, $order_id );
 		} # end if
+	} else {
+		$log->debug("Already complete");
 	} # end if
 
 	$variable{'order_id'} = $order_id;
@@ -528,9 +532,21 @@ sub history_details {
 			} # end if
 		} # end if
    } elsif ( $param{'btnFunction'} eq 'Invoice' ) {
-	   $Order->invoice_id( $param{'invoice_id'} );
-	   $Order->invoiced_on( 'NOW()' );
-	   $Order->save();
+		my $Invoice = openprint::Invoice->find_one(num=>$param{invoice_id});
+		if ( ! $Invoice ) {
+			$Invoice = new openprint::Invoice();
+			$variable{error} .= $Invoice->save({ 
+				invoicer_id=>$config{owner_id},
+				invoicee_id=>$Order->company_id(),
+				total=>$Order->total(),
+				num=>$param{invoice_id},
+				currency_id	=>	$Order->currency_id(),
+				});
+		} # end if ! Invoice
+		$variable{error} .= $Order->save({ invoice_id=> $Invoice->id() });
+		if ( ! $variable{error} ) {
+			$variable{ExternalRedirect} = '/main/order/history_details.html?order_id='.$Order->id();
+		} # end if
 	} elsif ( $param{'btnFunction'} eq 'Resend') {
 		$Order->send_sales_order( );
 		$variable{'information'} .= "Order emails sent.<br/>";
@@ -563,5 +579,8 @@ sub _order {
 		} # end if
 	} # end if
 } # end sub _order
+
+sub _user_info {
+} # end sbu _user_info
 1;
 __END__

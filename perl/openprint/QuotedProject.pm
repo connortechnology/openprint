@@ -7,7 +7,7 @@ use vars qw( $debug $table $serial %fields %transforms %defaults );
 
 require openprint::QuoteLevel;
 
-$debug = 0;
+$debug = 1;
 
 $table = 'tbl_quote_details';
 $serial = 'tbl_quote_details_id_seq';

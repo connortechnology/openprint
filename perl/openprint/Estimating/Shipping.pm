@@ -79,10 +79,6 @@ sub calc {
 		$$specs{'alert'} .= 'Please enter To city<br/>';
 		return $$specs{'Status'} = 'uncalculated';
 	} # end if
-	if ( !$$specs{'ToPostalCode'} ) {
-		$$specs{'alert'} .= 'Please enter To Postal Code<br/>';
-		return $$specs{'Status'} = 'uncalculated';
-	} # end if
 	if ( !$$specs{'ToStateProvince'} ) {
 		$$specs{'alert'} .= 'Please enter To State/Province<br/>';
 		return $$specs{'Status'} = 'uncalculated';

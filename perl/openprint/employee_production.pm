@@ -248,7 +248,7 @@ sub print_overview {
 	} # end if
 
 	# This looks expensive, but isn't due to the index on status... 
-	my @missing_jobs = sql::execute( $log, $dbh, q{SELECT Index FROM tbl_Projects WHERE strStatus='Approved' AND Index NOT IN (SELECT ProjectIndex FROM Schedule)} );
+	my @missing_jobs = sql::execute( $log, $dbh, q{SELECT id FROM tbl_Projects WHERE strStatus='Approved' AND id NOT IN (SELECT ProjectIndex FROM Schedule)} );
 	foreach my $project_id ( @missing_jobs ) {
 		my $Project = new openprint::Project( $project_id );
 		foreach my $signature_service_index ( $Project->signatures() ) {

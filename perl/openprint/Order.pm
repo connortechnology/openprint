@@ -21,7 +21,7 @@ require openprint::Payment;
 require openprint::Tax;
 require openprint::Order_Notification;
 
-$debug = 0;
+$debug = 1;
 
 $table = 'orders';
 $serial = 'orders_id_seq';
@@ -81,7 +81,7 @@ sub save {
 	my ( $self, $params ) = @_;
 
 	$self->set( $params );
-
+	$self->paid(undef);
 	$$self{'owing'} = $$self{'total'} - $$self{'paid'};
 	$$self{'company_id'} = $session{'company_id'} if ! $$self{'company_id'};
 	$$self{'user_id'} = $session{'user_id'} if ! $$self{'user_id'};
@@ -173,7 +173,7 @@ sub approve {
 	my @Taxes = openprint::Tax->find( state =>$self->state() );
 	my ( $pst_rate, $hst_rate, $gst_rate ) = $Taxes[0]->get('statetax_rate','harmonizedtax_rate','federaltax_rate') if @Taxes;
 
-	$_ = q{SELECT ysnPSTExempt, ysnGSTExempt FROM Company WHERE Index=?};
+	$_ = q{SELECT ysnPSTExempt, ysnGSTExempt FROM Companies WHERE id=?};
 	my ( $pst_exempt, $gst_exempt ) = sql::execute( $log, $dbh, $_, $openprint::session{'company_id'} );
 
 	my $sub_total = 0;
@@ -232,7 +232,7 @@ sub approve {
 		$total += $price + $gst_amount + $pst_amount + $hst_amount;
 	} # end while
 
-	sql::update( $log, $dbh, 'Orders', ['Index=?',$$self{id}],
+	sql::update( $log, $dbh, 'Orders', ['id=?',$$self{id}],
 			'curFedTax',	( $gst_total ne '' ? $gst_total : undef ),
 			'curProvTax',	( $pst_total ne '' ? $pst_total : undef ),
 			'curHarmTax',	( $hst_total ne '' ? $hst_total : undef ),
@@ -250,6 +250,7 @@ sub Status {
 
 sub status {
 	if ( @_ > 1 ) {
+$openprint::log->debug("Setting status to $_[1]");
 		my $Status = openprint::Order_Status->find_one(name => $_[1]);
 		if ( ! $Status ) {
 			$log->error("New Order Status! $_[1]");
@@ -257,14 +258,16 @@ sub status {
 			$Status->save({name=>$_[1]});
 		} # end if
 		if ( $Status->id() != $_[0]{status_id} ) {
-			sql::update( $log, $dbh, 'Orders', ['id=?', $_[0]{id}], 'status_id', $Status->id() ) if $_[0]{id};
+			$_[0]->save({ status_id => $Status->id() }) if $_[0]{id};
 			$_[0]{status} = $_[1];
-			$_[0]{status_id} = $Status->id();
 			$_[0]->add_log( "Changed Status to $_[1]" ) if $_[0]{id};
 		} # end if
 	} # end if
 	if ( ! $_[0]{status} ) {
 		$_[0]{status} = $_[0]->Status()->name();
+		if ( !$_[0]{status} ) {
+			$_[0]{status} = 'Incomplete';
+		} # end if
 	} # end if
 	return $_[0]{status};
 } # end sub status
@@ -406,7 +409,10 @@ sub send_cancellation_notice {
 
 	my @Recipients;
 	# Send to inventory and scheduling people.
-	foreach my $Recipient ( openprint::User->find('usergroup @>'=>['Inventory','Scheduling'],'type'=>['E','A']) ) {
+	foreach my $Recipient ( 
+		openprint::User->find(usergroup=>'Inventory',type=>['E','A']),
+		openprint::User->find(usergroup=>'Scheduling','type'=>['E','A'])
+		) {
 		next if $Recipient->id() == $session{'user_id'};
 		next if $Recipient->notification('Docket Cancellations') ne 'Yes';
 		push @Recipients, $Recipient;
@@ -515,10 +521,9 @@ sub send_sales_order {
 	# When an order is made,the Order currency will be the current session Currency.	
 	# All resends should stay in the currency that the order was created in.
 	my $Currency = $self->Currency();
-	@order{'CurrencyName','CurrencySymbol'} = ( $Currency->name(), $Currency->symbol() );
-	$order{'Currency'} = $Currency;
+	@order{'Currency','CurrencyName','CurrencySymbol'} = ( $Currency, $Currency->name(), $Currency->symbol() );
 
-	my $email_template = misc::load_file( $log, $config{'SkinPath'}. '/email_template.html' );
+	my $email_template = ssi::slurp_content( '/email_template.html' );
 
 	$order{'ReplacementText'} = ssi::include('/email_content/sales_order_body.html', \%order );
 	my @body = ('', MIME::QuotedPrint::encode_qp( Encode::encode( 'utf-8', ssi::variable_substitution( \$email_template, \%order ) ) ), 'text/html', 'quoted-printable');
@@ -530,18 +535,18 @@ sub send_sales_order {
 
 	# Add a project summary for each project in the order
 	my @project_summaries = ();
-	my $content = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/project_summary.html' );
+	my $content = ssi::slurp_content( '/email_content/project_summary.html' );
 	foreach my $Project ($self->Projects()) {
 		my %data;
 		openprint::print_project::summary( $openprint::r, $log, $dbh, \%data, $Project->id() );
-		$variable{'ReplacementText'} = ssi::variable_substitution( \$content, \%data );
+		$data{'ReplacementText'} = ssi::variable_substitution( \$content, \%data );
 		push @project_summaries, "ProjectSummary$$Project{id}.html", MIME::QuotedPrint::encode_qp( Encode::encode('utf-8', ssi::variable_substitution( \$email_template, \%data ))), 'text/html', 'quoted-printable';
 	} # for each Project
 
 	my $sales_person_email;
 	if ( $self->salesrep_id() ) {
 		my $CSR = new openprint::User( $self->salesrep_id() );
-		$sales_person_email = sprintf( '"%s" <%s>', $CSR->name(), $CSR->email() );
+		$sales_person_email = sprintf('"%s %s" <%s>', $CSR->get('firstname','lastname','email')),
 	}
 	if ( ! $sales_person_email ) {
 		$sales_person_email = $config{'OrderingEmail'};
@@ -566,15 +571,20 @@ sub send_sales_order {
 	my @project_dockets = ();
 
 	$log->debug("***************** ADDING PROJECT DOCKET *************************");
-	my $docket_content = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/order_docket_sheet.html' );
-	foreach my $Project ($self->Projects()) {
-		my %data;
-		openprint::print_project::summary( $openprint::r, $log, $dbh, \%data, $Project->id() );
-		if ( $_ ) {
+	my $docket_content = ssi::slurp_content( '/email_content/order_docket_sheet.html' );
+	if ( $docket_content ) {
+		foreach my $Project ($self->Projects()) {
+			my %data = (
+					OrderID => $$self{id},
+					Order => $self,
+					Project =>	$Project,
+					);
+			
+			openprint::print_project::summary( $openprint::r, $log, $dbh, \%data, $Project->id() );
 			$_ = MIME::QuotedPrint::encode_qp( Encode::encode('utf-8', ssi::variable_substitution( \$docket_content, \%data ) ) );
 			push @project_dockets, "ProjectDocket$$Project{id}.html", $_, 'text/html', 'quoted-printable';
-		} # end if
-	} # for each
+		} # for each
+	} # end if
 
 	my @admin_emails = split( ',', $config{'OrderingEmail'} );
 	@admin_emails = map { misc::trim(lc $_) } @admin_emails;
@@ -589,7 +599,7 @@ sub send_sales_order {
 				FROM	=> $config{'OrderingEmail'},
 				'Reply-to'	=> $$self{'email'},
 				TO		=> join(',',@admin_emails),
-				#BCC	 =>	'iconnor@penultima.org',
+				#TO	 =>	'iconnor@point-one.com',
 				SUBJECT => "Order $$self{id}",
 				ATTACHMENTS	=>	[ @body, @sales_order, @project_summaries, @project_dockets ],
 				);
@@ -730,7 +740,7 @@ sub supplier_id {
 		$_[0]{supplier_id} = $_[1];
 	} 
 	if ( ! $_[0]{supplier_id} ) {
-		$_[0]{supplier_id} = $openprint::config{'Owner'};
+		$_[0]{supplier_id} = $openprint::config{owner_id};
 	} # end if
 	return $_[0]{supplier_id};
 } # end sub supplier_id
@@ -792,6 +802,24 @@ sub can_invoice {
 	return 1 if openprint::usergroup::is_user_in( ['Accounting'], $session{user_id} );
 	return 0;
 } # end sub can_invoice
+
+sub Invoice {
+	return new openprint::Invoice( $_[0]{invoice_id} );
+} # end sub Invoice
+
+sub invoiced_on {
+	if ( $_[0]{invoice_id} ) {
+		return $_[0]->Invoice()->created_on();
+	} # end if		
+}  # end sub invoiced_on
+
+sub can_see_pricing {
+	return 1 if $openprint::session{user_type} eq 'A';
+	return 1 if $_[0]{user_id} == $openprint::session{user_id};
+	return 1 if $_[0]{salesrep_id} == $openprint::session{user_id};
+	return 1 if openprint::usergroup::is_user_in( ['Accounting'], $openprint::session{user_id} );
+	return 0;
+} # end sub can_see_pricing
 
 1;
 __END__

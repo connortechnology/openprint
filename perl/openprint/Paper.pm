@@ -108,6 +108,14 @@ $serial	= 'paper_id_seq';
 );
 
 %defaults = (
+	basis_width	=>	undef,
+	basis_height	=>	undef,
+	basis_mweight	=>	undef,
+	width		=>	undef,
+	height		=>	undef,
+	gsm			=>	undef,	
+	grade		=>	undef,
+	calliper	=>	undef,
 	allocated	=>	q`'0'`,
 	in_stock	=>	q`'0'`,
 	user_type	=>	q`''`,
@@ -115,6 +123,8 @@ $serial	= 'paper_id_seq';
 	die_score_required	=>	'0',
 	supplied		=>	undef,
 	multipart	=>	0,
+	sheets_per_package	=>	undef,
+	wpsi				=>	undef,
 );
 
 %grades = (
@@ -1378,7 +1388,7 @@ $log->debug($P->id_string());
 			} elsif ( $Paper->width() >= $$specs{'StockWidth'.$qty_index} ) {
 				$Paper->width( $$specs{'StockWidth'.$qty_index} );
 			} else {
-				$log->warn("Unsuitable Stock");
+				$log->warn("Unsuitable Stock" . $Paper->to_string() );
 				return new openprint::Paper();
 			} # end if
 

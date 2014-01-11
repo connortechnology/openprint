@@ -23,7 +23,7 @@ my $threading = 0;
 use constant DEBUG => 0;
 use constant DEBUG_VERSIONS => 0;
 use constant DEBUG_FILTERING => 0;
-use constant DEBUG_PRICE_DECISIONS => 1;
+use constant DEBUG_PRICE_DECISIONS => 0;
 use constant DEBUG_INKS => 0;
 use constant DEBUG_STOCK => 0;
 
@@ -39,7 +39,7 @@ my %converted_imposition_cache;
 my $use_converted_imposition_cache = 0;
 my %filtered_imposition_cache;
 my $use_filtered_imposition_cache = 0;
-my $calc_other_groups = 1;
+my $calc_other_groups = 0;
 
 my %stitching_cache;
 my %price_cache;
@@ -1275,7 +1275,7 @@ sub get_impositions($$$$$$$) {
 
 		my @impositions;
 
-		my $use_cut_stocks = ( $Press->specification('Use Cut Stocks') and ( $Press->specification('Use Cut Stocks') ne 'N' ) ) ? 1 : 0;
+		my $use_cut_stocks = ( $Press->specification('Use Cut Stocks') and ( $Press->specification('Use Cut Stocks') eq 'N' ) ) ? 0 : 1;
 		my $co = $Press->specification('Cut Off');
 		my @cut_offs;
 		if ( $co ) {
@@ -1933,7 +1933,7 @@ sub calc {
 	$$specs{SideOneColours} = \@side_one_colours;
 	$$specs{SideTwoColours} = \@side_two_colours;
 
-$openprint::log->debug("Side one @side_one_colours twp: @side_two_colours");
+#$openprint::log->debug("Side one @side_one_colours twp: @side_two_colours");
 	my %inkCoverage = get_inkcoverage( $Project, $specs );
 	if ( ! ( $$services{'NoPrinting'} or @side_one_colours or @side_two_colours ) ) {
 		$$specs{'alert'} .= 'Please choose the colours to be printed.<br/>';
@@ -1971,6 +1971,9 @@ $openprint::log->debug("Before select presses: " . ( sprintf('%.4f', tv_interval
 	} # end foreach
 	if ( ! @possible_presses ) {
 		$$specs{'alert'} = 'There were no possible presses. Your project may be too large for us.<br/>';
+		foreach my $press_id ( keys %presses ) {
+			$$specs{'alert'} .= new openprint::Equipment( $press_id )->strid() . ' : ' . $presses{$press_id} . '</br>';
+		} # end foreach
 		return $$specs{'Status'} = 'uncalculated';
 	} elsif ( DEBUG ) {
 		$openprint::log->debug( "Presses: " . join(',', map { $_->strid() } @possible_presses ) );
@@ -2023,7 +2026,7 @@ $log->warn("There are no quantities!");
 			$$specs{'txtUnspecifiedPageQuantity'.$qty_index} = get_unspecified_pages( $Project, $service_index, $printing_specs, $specs, $qty_index );
 #$openprint::log->debug("Master time after get_unspecified_pages: " . ( sprintf('%.4f', tv_interval( [$master_time])*1000) ) .' usecs' );
 			$$specs{'txtUnspecifiedPageQuantity'.$qty_index} = 0 if $$specs{'txtUnspecifiedPageQuantity'.$qty_index} < 0;
-			if ( ( $$specs{txtSpreadSize} == 4 and $$specs{'txtUnspecifiedSpreadQuantity'.$qty_index} > 125 ) or ( $$specs{'txtUnspecifiedSpreadQuantity'.$qty_index} > 250 ) ) {
+			if ( ( $$specs{txtSpreadSize} == 4 and $$specs{'txtUnspecifiedSpreadQuantity'.$qty_index} > 375 ) or ( $$specs{'txtUnspecifiedSpreadQuantity'.$qty_index} > 750 ) ) {
 				$$specs{'alert'} .= 'There are far too many pages required. We will not be able to calculate this.<br/>';
 				return $$specs{'Status'} = 'uncalculated';
 			} # end if
@@ -2647,7 +2650,9 @@ $imp->dispay('Ma imposition!') if DEBUG or DEBUG_FILTERING or 1;
 				} # end if
 			} # end foreach I
 			if ( ! @results2 ) {
+$log->warn("Getting all impos");
 				foreach my $I ( openprint::imposition::get_all_impositions( @results ) ) {
+$I->display("Getting all impos");
 					if ( $I->imposition() == $$sig_specs{'txtImposition'.$qty_index} ) {
 						push @results2, $I;
 					} # end if
@@ -2896,6 +2901,7 @@ sub get_new_specs {
 } # end sub get_new_specs
 
 sub get_project_price {
+	return {} if $openprint::r->connection()->aborted();
 	my ( $Project, $service_index, $project, $service_specs, $sig_specs, $qty, $qty_index, $possible_presses, $printing_specs, $versions, $PlateCounts, $PaperCounts, $washed_colours, $previous_forms_cache, $signatures, $impositions, $other_impositions, $best_price, $recursion_depth ) = @_;
 	my %best_price = $best_price ? %{$best_price} : ();
 	$openprint::log->debug("Best price: $recursion_depth starting get_project_price: ($best_price{'Comparison Cost'}) ($best_price{'Comparison Cost'}) UPQ " . $$sig_specs{'txtUnspecifiedPageQuantity'.$qty_index} );
@@ -2992,7 +2998,7 @@ $openprint::log->debug("Giving up on $$Press{strid} bnecause it's bigger than th
 			if ( %best_price and ( $best_price{'Comparison Cost'} <= $$price{'Comparison Cost'} ) ) {
 				if ( DEBUG_PRICE_DECISIONS or $$sig_specs{Group} == 1 ) {
 					$imp->display( "Too expensive $best_price{'Comparison Cost'} <= $$price{'Comparison Cost'}" );
-$openprint::log->error( Data::Dumper::Dumper( $price ) );
+#$openprint::log->error( Data::Dumper::Dumper( $price ) );
 					if ( $$sig_specs{'Impositions'} ) {
 						foreach my $I ( reverse @{ $$sig_specs{'Impositions'} } ) {
 							$I->display( "THIS" );
@@ -4704,16 +4710,20 @@ sub select_presses {
 				next;
 			} # end if
 			if ( $AQ_Min_Weight and ( $$AQ_Min_Weight{units} eq 'gsm' ) and ( $Paper->gsm() < $$AQ_Min_Weight{value} ) ) {
-				$results{$press_id} .= " ** Press $press_id Failed Aqueous Minimum Weight Check (".$$AQ_Min_Weight{value}." > $$Paper{gsm})gsm<br/>";
+				$results{$press_id} = " ** Press $press_id Failed Aqueous Minimum Weight Check (".$$AQ_Min_Weight{value}." > $$Paper{gsm})gsm<br/>";
+$openprint::log->debug(" ** Press $press_id Failed Aqueous Minimum Weight Check (".$$AQ_Min_Weight{value}." > $$Paper{gsm})gsm<br/>");
 				next;
 			} # end if
+$openprint::log->debug("Got ok paper");
 			$paper_ok = 1;
 			last;
 		} # end foreach Paper
-		$Paper = $$Papers[0] if ! $Paper;
+
 		if ( ! $paper_ok ) {
 			next;
 		} # end if
+
+		$Paper = $$Papers[0] if ! $Paper;
 
 		if ( $Press->specification('Printing Type') eq 'Digital' ) {
 # Digital only support Process, no PMS, etc...

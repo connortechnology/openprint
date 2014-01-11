@@ -25,7 +25,7 @@ require openprint::Bug;
 require openprint::Estimating::MultiPage;
 require openprint::service;
 
-$debug = 0;
+$debug = 1;
 
 $table = 'projects';
 $serial = 'lngProjectIndex_seq';
@@ -93,7 +93,7 @@ $serial = 'lngProjectIndex_seq';
 %find_fields = (
 	take_over		=> q{(SELECT MIN(starttime) FROM tbl_Project_Contents WHERE lngProjectIndex=id)},
 	ordered_on		=>	q{(SELECT dtmOrderDate FROM Orders WHERE orders.id=order_id)},
-	salesrep_id		=>	'(SELECT employeeindex FROM Orders WHERE orders.id=order_id)',
+	salesrep_id		=>	'(SELECT salesrep_id FROM Orders WHERE orders.id=order_id)',
 	takenover_on	=>	q{(SELECT MIN(dtmtimestamp) FROM Project_Log WHERE project_id=projects.id AND description LIKE 'Taken Over by%')},
 	approved_on		=>	q{(SELECT MAX(dtmtimestamp) FROM Project_Log WHERE project_id=projects.id AND description IN ('Marked Approved','Marked Proofs QA Approved'))},
 	csr_id			=>	'(SELECT salesrep_id FROM Companies WHERE companies.id=company_id)',
@@ -108,6 +108,16 @@ sub delete {
 	my $self = shift;
 	sql::update( undef, undef, $table, ['id=?', $$self{'id'}], ['strStatus', 'Deleted'] );
 } # end sub delete
+
+sub deleted {
+	return $_[0]{status} eq 'Deleted' ? 1 : 0;
+} # end sub deleted
+
+sub undelete {
+	$_[0]{status} = 'uncalculated';
+	$_[0]->update_status();
+	return '';
+} # end sub undelete
 
 sub destroy {
 	my $self = shift;
@@ -372,8 +382,8 @@ if ( 1 ) {
 	my $Contact = $CustomerInfo->appendChild( $doc->createElement('Contact') );
 	$Contact->setAttribute('ContactTypes', 'Customer' );
 	my $Person = $Contact->appendChild( $doc->createElement('Person') );
-	$Person->setAttribute('FamilyName', $self->Order()->last_name() );
-	$Person->setAttribute('FirstName', $self->Order()->first_name() );
+	$Person->setAttribute('FamilyName', $self->Order()->lastname() );
+	$Person->setAttribute('FirstName', $self->Order()->firstname() );
 	if ( $self->Order()->email() ) {
 		my $ComChannel = $Person->appendChild( $doc->createElement('ComChannel') );
 		$ComChannel->setAttribute('ChannelType','Email');
@@ -1236,10 +1246,14 @@ if ( $data ) {
 	} # end foreach 
 }
 
-	sql::end_transaction( $dbh, $ac );
 	delete $$self{'Services'};
 	delete $$self{'service_types'};
 	delete $$self{'signatures'};
+	foreach my $qty_index ( $self->quantity_indexes() ) {
+		$self->price($qty_index,undef);
+	} # end foreach
+	$self->save();
+	sql::end_transaction( $dbh, $ac );
 	return $service_index;
 } # end sub add_service
 

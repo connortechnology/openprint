@@ -69,9 +69,9 @@ sub display {
 sub summary {
 	my ( $Project, $service_id, $specs, $qty_index ) = @_;
 	$specs = openprint::service::get_specs_ref( $Project, $service_id );
-	if ( ! $qty_index ) {
-		return $$specs{'ServiceName'};
-	} # end if
+	#if ( ! $qty_index ) {
+		#return $$specs{'ServiceName'};
+	#} # end if
 	return '';
 }
 

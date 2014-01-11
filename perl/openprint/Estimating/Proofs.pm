@@ -26,7 +26,7 @@ require sql;
 require openprint::service;
 require openprint::Estimating::Printing;
 
-use constant DEBUG => 0;
+use constant DEBUG => 1;
 my @variables = (
 		'txtPrice',
 		'CustomProofSpecs',
@@ -486,7 +486,7 @@ sub get_proof_specs {
 		my %proof_indexes;
 		foreach my $key ( keys %$specs ) {
 #$openprint::log->debug("key $key");
-			if ( $key =~ /^txtProofIndex-(\d*)-(\d*)-$qty_index$/ ) {
+			if ( $key =~ /^txtProofIndex-(\d+)-(\d+)-$qty_index$/ ) {
 				push @{$proof_indexes{$1}}, $$specs{$key};
 			} # end if
 		} # end foreach
@@ -518,15 +518,16 @@ $Imposition->display( "For sig $signature_index");
 					push @{$proof_indexes{$signature_index}}, 3;
 					$log->debug("Adding Press Proof");
 					insert_press_proof( $Project, $sig_specs, 3, $qty_index, $variable, $Imposition );
-				} else {
+				} elsif ( DEBUG ) {
 $log->debug("Press proof not needed");
 				} # end if
 			} elsif ( DEBUG ) {
 $log->debug("Already had press proof");
 			} # end if
 
+				@{$$variable{'Proofs-'.$signature_index.'-'.$qty_index}} = ();
 			foreach my $proof_index ( sort @{$proof_indexes{$signature_index}} ) {
-				my ( $quantity, $width, $height, $type ) = @$sig_specs{
+				my ( $quantity, $width, $height, $type ) = @$specs{
 					"txtProofQuantity-$signature_index-$proof_index-$qty_index",
 						"txtProofWidth-$signature_index-$proof_index-$qty_index",
 						"txtProofHeight-$signature_index-$proof_index-$qty_index",

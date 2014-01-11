@@ -261,11 +261,7 @@ $log->debug("No serial") if $debug;
 		} else {
 			delete $sql{'created_on'};
 			my @keys = keys %sql;
-$log->debug("Keys: @keys");
-$log->debug("values: @sql{@keys}");
 			@keys = sets::exclude( [ @$fields{@identified_by} ], \@keys );
-$log->debug("Keys: @keys");
-$log->debug("values: @sql{@keys}");
 			my $command = "UPDATE $table SET " . join(',', map { $_ . ' = ?' } @keys ) . ' WHERE ' . join(' AND ', map { $$fields{$_} .'= ?' } @identified_by );
 			if ( ! ( $_ = $local_dbh->prepare($command) and $_->execute( @sql{@keys}, @sql{@$fields{@identified_by}} ) ) ) {
 				my $error = $local_dbh->errstr;
@@ -333,8 +329,12 @@ $openprint::log->debug("Running $field with $$params{$field}") if $debug;
 				$log->debug("Setting default ($field) ($$self{$field}) ($defaults{$field}) ") if $debug;
 				if ( defined $defaults{$field} ) {
 					$log->debug("Default $field is defined: $defaults{$field}") if $debug;
+					if ( $defaults{$field} eq 'NOW()' ) {
+						$$self{$field} = 'NOW()';
+					} else {
 					$$self{$field} = eval($defaults{$field});
 					$log->error( "Eval error of object default $field default ($defaults{$field}) Reason: " . $@ ) if $@;
+					} # end if
 				} else {
 					$$self{$field} = $defaults{$field};
 				} # end if
@@ -744,7 +744,7 @@ sub find_one {
 		%{$params} = @_;
 	} # end if
 	$$params{limit}=1;
-	my @Results = $object_type->find($params);
+	my @Results = $object_type->find(%$params);
 	return $Results[0] if @Results;
 } # end sub find_one
 

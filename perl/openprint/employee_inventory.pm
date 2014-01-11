@@ -1259,15 +1259,14 @@ sub send_paper_arrival_notification {
 
 		if ( @To ) {
 # Send notification to maybe CSR's
-			my $email_template = misc::load_file( $log, $config{'SkinPath'} . '/email_template.html' );
+			my $email_template = ssi::slurp_content( '/email_template.html' );
 
-			$info{'ReplacementText'} = "<!--#include virtual=\"/email_content/paper_arrived_notification.html\"-->";
-			$_ = MIME::QuotedPrint::encode_qp( ssi::variable_substitution( \$email_template, \%info ) );
+			$info{'ReplacementText'} = ssi::include( '/email_content/paper_arrived_notification.html', \%info );
 			(new openprint::Email())->send(
 					FROM	=> new openprint::User( $session{'user_id'} ),
 					TO	=> @To,
 					SUBJECT => 'Paper ' . $Paper->to_string() . ' has arrived',
-					ATTACHMENTS=>['', $_, 'text/html', 'quoted-printable'],
+					ATTACHMENTS=>['', MIME::QuotedPrint::encode_qp( ssi::variable_substitution( \$email_template, \%info ) ), 'text/html', 'quoted-printable'],
 					);
 		} # end if to
 	} # end foreach Paper
@@ -1403,7 +1402,7 @@ sub save_Manifest {
 
 	my $error;
 	my $ac = sql::start_transaction( $dbh );
-	$dbh->do( 'LOCK TABLE company IN EXCLUSIVE MODE' ) or $log->error( DBI->errstr );
+	$dbh->do( 'LOCK TABLE companies IN EXCLUSIVE MODE' ) or $log->error( DBI->errstr );
 
 	$Manifest->received_on( join('-', @param{'received_on_year','received_on_month','received_on_day'} ) );
 

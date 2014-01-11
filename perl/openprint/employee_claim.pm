@@ -196,7 +196,7 @@ sub _contents {
 		$variable{'error'} .= $C->delete();
 	} elsif ( $param{'action'} eq 'Add' ) {
 		my $C = new openprint::Claim_Content();
-		$variable{'error'} .= $C->save( { 'claim_id'	=>	$Claim->id(), 'type_id'=>$param{'type_id'} } );
+		$variable{error} .= $C->save( { claim_id	=>	$Claim->id(), type_id=>$param{type_id} } );
 	} # end if
 } # end sub _contents
 

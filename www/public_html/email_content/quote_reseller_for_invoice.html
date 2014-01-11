@@ -1,9 +1,9 @@
 <style type="text/css"><? echo ( misc::load_file( $log, $config{'SkinPath'} . '/css/quote.css' ); ) ?></style>
 <div class="Quote">
 	<div class="Header">
-		<? echo ( include('/includes/quote_header.html'); ) ?>
-		<? echo ( include('/includes/quote_prepared_by.html'); ) ?>
-		<? echo ( include('/includes/quote_prepared_for.html'); ) ?>
+		<?include('/includes/quote_header.html')?>
+		<?include('/includes/quote_prepared_by.html')?>
+		<?include('/includes/quote_prepared_for.html')?>
 	</div>
 <? if ( $$variable{'Quote'}->Quoted_Projects() ) ?>
 	<table class="List">
@@ -55,7 +55,7 @@
 		) ?>
 	</table>
 <? endif ( $$variable{'Quote'}->Quoted_Projects() ) ?>
-	<? echo ( include('/email_content/_quote_products_for.html'); ) ?>
+	<?include('/email_content/_quote_products_for.html')?>
 	<span class="Currency">All prices are in <? echo ( $$variable{'Quote'}->Currency()->name() ) ?> and are subject to applicable taxes.</span><br/>
 	<? echo ( $config{'QuoteViewDisclaimer'} ) ?>
 </div>

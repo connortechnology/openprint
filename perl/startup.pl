@@ -45,7 +45,7 @@ BEGIN {
 	use	Digest::MD5 ();
 	use File::Slurp ();
 
-	#use CGI ();
+	use CGI ();
 	use sql ();
 	use misc ();
 	use ssi ();

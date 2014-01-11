@@ -16,7 +16,7 @@
 		my $qty = $C->quantity();
 		$html .= sprintf('<label>Qty:</label><img src="/barcode.png?code=Q%1$d+&amp;NoText=1&amp;Height=30" alt="%1$d"/>', $qty );
 		$html .= '</div>';
-		my $paper_detail = sprintf('%s %s %s', $Paper->name(), $Paper->finish(), $Paper->colour() );
+		my $paper_detail = sprintf('%s %s %s', $Paper->brand(), $Paper->finish(), $Paper->colour() );
 		$paper_detail .= '<br/>';
 		if ( $Paper->type() eq 'Roll' ) {
 			$paper_detail .= sprintf('<b>%s %s</b>', $Paper->weight, $Paper->width().'" Roll' );

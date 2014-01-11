@@ -40,7 +40,7 @@ $serial = 'paper_allocation_id_seq';
 	condition_id	=>	'condition_id',
 );
 %find_fields = (
-	docket	=>	'(SELECT lngdocketnumber FROM tbl_Projects WHERE index=project_id)',
+	docket	=>	'(SELECT lngdocketnumber FROM Projects WHERE id=project_id)',
 );
 
 %transforms = (

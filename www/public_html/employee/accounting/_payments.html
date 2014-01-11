@@ -22,10 +22,10 @@
 					<td class="Price">%7$s</td>
 					<td class="buttons">%8$s</td>
 				</tr>`, $rowclass, $Payment->id(),
-					( $Payment->received_on() ? Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $Payment->received_on() ) ) : '' ),
+					format_date( $Payment->received_on() ),
 					$Payment->transaction_id(),
 					$Payment->method(), $Payment->memo(), openprint::Currency::format($Payment->amount()),
-					ssi::button('Delete'.$$Payment{id}, { onclick=>"confirm_delete( document.f1, '$$Payment{id}' );", text=> 'Delete' } ),
+					button('Delete'.$$Payment{id}, { onclick=>"confirm_delete( document.f1, '$$Payment{id}' );", text=> 'Delete' } ),
 				);
 				$rowclass = $rowclass ? '' : ' class="colRow"';
 		} # end foreach Payment
@@ -33,18 +33,14 @@
 	) ?>
 	<tr class="totals">
 		<td class="payment_id">New</td>
-		<td class="Date"><? echo ( ssi::date_select('received_on'); ) ?></td>
+		<td class="Date"><? echo ( date_select('received_on', [ Date::Calc::Today() ] ); ) ?></td>
 		<td class="TransactionID"><input type="text" name="transaction_id" /></td>
-		<td class="Method">                <select id="method" name="method">
-<? echo ( 
-my @options = ( '', 'Cash','Cheque','Email Transfer','Paypal','Work In Trade' );
-return ssi::make_drop_down( [ map { $_, $_ } @options ] );
-) ?>
-			</select>
-</td>
+		<td class="Method">
+<? echo ( ssi::select( [ map { $_, $_ } ( '', 'Cash','Cheque','Email Transfer','Paypal','Work In Trade' ) ], undef, { id=>'method', name=>'method' } ); ) ?>
+		</td>
 		<td class="Memo"><input type="text" name="memo" /></td>
-		<td class="Price"><? echo ( ssi::input( type=>'float', name=>'amount', onkeydown=>"this.lastValue = this.value;return check_decimal(this,event);" ); ) ?></td>
-		<td class="buttons"><? echo (ssi::button( 'AddPayment', { onclick=> q`f1.btnFunction.value='Save';f1.submit();`,text=>'Add' } ); ) ?></td>
+		<td class="Price"><? echo ( input( type=>'float', name=>'amount', value=>$$variable{Order}->owing(), onkeydown=>"this.lastValue = this.value;return check_decimal(this,event);" ); ) ?></td>
+		<td class="buttons"><? echo (button( 'AddPayment', { onclick=> q`f1.btnFunction.value='Save';f1.submit();`,text=>'Add' } ); ) ?></td>
 	</tr>
 </table>
 

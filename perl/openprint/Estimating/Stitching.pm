@@ -17,7 +17,7 @@
 package openprint::Estimating::Stitching;
 use strict;
 
-use constant DEBUG => 0;
+use constant DEBUG => 1;
 
 require openprint::Equipment;
 require openprint::service;
@@ -279,7 +279,7 @@ sub signature_calc {
 	} # end if
 $results{'Breakdown'} .= 'Imposition: ' . $imposition . 'out<br/>';
 
-	my $error;
+	my %error;
 	my @equipment = ();
 
 	if ( $$specs{"chkOverrideEquipment$qty_index"} eq 'Y' ) {
@@ -297,7 +297,7 @@ $results{'Breakdown'} .= 'Imposition: ' . $imposition . 'out<br/>';
 			@equipment = @{$$calc_hash{'Stitching::signature_calc::equipment'}};
 		} else {
 #$results{'Breakdown'} .= 'getting freshequipment';
-			@{$$calc_hash{'Stitching::signature_calc::equipment'}} = @equipment = get_equipment( $specs, \$error );
+			@{$$calc_hash{'Stitching::signature_calc::equipment'}} = @equipment = get_equipment( $specs, \%error );
 		} # end if
 	} # end if
 
@@ -373,7 +373,10 @@ while ( ! $bestPrice and $imposition ) {
 	} # endif
 }
 #$openprint::log->debug("Breakdown: $$specs{'hdnBreakdown'.$qty_index}");
-	$results{'alert'} .= $error;
+		foreach my $press_id ( keys %error ) {
+			my $Equipment = new openprint::Equipment( $press_id );
+			$$specs{'alert'} .= 'For ' . $Equipment->name() . ': ' .  $error{$press_id};
+		} # end foreach
 	$results{'alert'} .= sprintf('%dout on %s %dpockets', $$bestPrice{'Imposition'},($bestEquipment ? $bestEquipment->strid() . ' ' . $bestEquipment->name() : '' ),$$specs{'txtPockets'.$qty_index} );
 	$results{'Imposition'} = $$bestPrice{'Imposition'};
 	$results{'Equipment'} = $bestEquipment;
@@ -538,10 +541,10 @@ sub calc {
 						}
 #$openprint::log->debug("Folding pages: $type $sig_pages / $pages");
 						if ( $$folding_specs{"FoldQty-$$sig_specs{SignatureIndex}-$qty_index-$index"} * $pages != $sig_pages ) {
-$openprint::log->error('1 ' . $$folding_specs{"FoldQty-$$sig_specs{SignatureIndex}-$qty_index-$index"} . ' > ' . $sig_pages);
+$openprint::log->debug(" fold qty * pages($pages) != sig_pages($sig_pages) foldQty: " . $$folding_specs{"FoldQty-$$sig_specs{SignatureIndex}-$qty_index-$index"}) if DEBUG;
 							$pages{$pages} += Math::Round::nearest( 1, $$sig_specs{'PageQuantity'.$qty_index} / $pages );
 						} elsif ( $$folding_specs{"FoldQty-$$sig_specs{SignatureIndex}-$qty_index-$index"} * $pages == $sig_pages ) {
-$openprint::log->debug('2 ' . $$folding_specs{"FoldQty-$$sig_specs{SignatureIndex}-$qty_index-$index"}) if DEBUG;
+$openprint::log->debug(" fold qty * pages($pages) == sig_pages($sig_pages) foldQty: " . $$folding_specs{"FoldQty-$$sig_specs{SignatureIndex}-$qty_index-$index"}) if DEBUG;
 							$pages{$pages} += $$folding_specs{"FoldQty-$$sig_specs{SignatureIndex}-$qty_index-$index"};
 						} # end if
 					} # end foreach index
@@ -566,16 +569,25 @@ $openprint::log->debug('2 ' . $$folding_specs{"FoldQty-$$sig_specs{SignatureInde
 	} # end foreach qty_index
 
 	#At this point, if the job supports 2out impo, our setup is 2out.  This may change later, depending on the equipment's ability to support 2out stitching
-	my $error;
-	my @possible_equipment = get_equipment( $specs, \$error );
-	@{$$calc_hash{'Stitching::signature_calc::equipment'}} = @possible_equipment;
+	my %error;
+	my @possible_equipment = get_equipment( $specs, \%error );
+	$$calc_hash{'Stitching::signature_calc::equipment'} = \@possible_equipment;
 
 	if ( ! @possible_equipment ) {
-		$error =~ s/\n/<br\/>/g;
 		# alert the user that no equipment is good.
-		$$specs{'alert'} = "Our stitching equipment cannot run this project, for the following reasons:<br/>$error<br/> Please only print flat sheets and contact another bindery.";
+		$$specs{'alert'} = 'Our stitching equipment cannot run this project, for the following reasons:<br/>';
+		foreach my $press_id ( keys %error ) {
+			my $Equipment = new openprint::Equipment( $press_id );
+			$$specs{'alert'} .= 'For ' . $Equipment->name() . ': ' .  $error{$press_id};
+		} # end foreach
+		$$specs{'alert'} .= '<br/> Please only print flat sheets and contact another bindery.';
 		$$specs{'Status'} = 'uncalculated';
 		return 'uncalculated';
+	} elsif ( DEBUG ) {
+		foreach my $press_id ( keys %error ) {
+			my $Equipment = new openprint::Equipment( $press_id );
+			$log->debug( 'For ' . $Equipment->name() . ': ' .  $error{$press_id} );
+		} # end foreach
 	} # end if
 
 	# Get one of the sigs, so we can look at which press it was printed on.  Technically we should look at all
@@ -621,6 +633,9 @@ $openprint::log->debug('2 ' . $$folding_specs{"FoldQty-$$sig_specs{SignatureInde
 		} else {
 			$variables{"ddmEquipment$qty_index"} = [ sets::union( 'output', @{$variables{"ddmEquipment$qty_index"}} ) ];
 			@equipment = @possible_equipment;
+		} # end if
+		if ( DEBUG ) {
+			$log->debug("Equipment:f or $qty_index " . join( map { $_->strid() } @possible_equipment ) );
 		} # end if
 
 		foreach my $Equipment ( @equipment ) {
@@ -750,27 +765,27 @@ sub get_equipment {
 	my ( $specs, $error ) = @_;
 
 	my @possible_equipment;
-	my @all_equipment = openprint::Equipment->find( 'Specifications' => {'Stitching Capable'=>['Y','When Printing','When Digital']}, 'useinestimating'=>1,'order'=>'strName');
+	my @all_equipment = openprint::Equipment->find( Specifications => {'Stitching Capable'=>['Y','When Printing','When Digital']}, useinestimating=>1,order=>'strName');
 
 	foreach my $Equipment ( @all_equipment ) {
 		if ( $_ = $Equipment->fits( $$specs{Width}, $$specs{Height}, undef, 'Stitching' ) ) {
-			$$error .= 'For ' . $Equipment->name() . $_;
+			$$error{$$Equipment{id}} .= $_;
 			next;
 		} # end if
 		if ( $_ = $Equipment->specification('Maximum Spread Width') and ( $$specs{'Width'} > $_ ) ) {
-			$$error .= "For " . $Equipment->name() . ": spread too big.<br/>";
+			$$error{$$Equipment{id}} .= ': spread too big.<br/>';
 			next;
 		} # end if
 		if ( $_ = $Equipment->specification('Minimum Spread Width') and ( $$specs{'Width'} < $_ ) ) {
-			$$error .= "For " . $Equipment->name() . ": spread too small.<br/>";
+			$$error{$$Equipment{id}} .= ': spread too small.<br/>';
 			next;
 		} # end if
 		if ( $_ = $Equipment->specification('Maximum Calliper') and ( $$specs{'txtCalliper'} > $_ ) ) {
-			$$error .= "For " . $Equipment->name() . ": Too Thick.<br/>";
+			$$error{$$Equipment{id}} .= ': Too Thick.<br/>';
 			next;
 		} # end if
 		if ( $_ = $Equipment->specification('Minimum Calliper') and ( $$specs{'txtCalliper'} < $_ ) ) {
-			$$error .= "For " . $Equipment->name() . ": Too Thick.<br/>";
+			$$error{$$Equipment{id}} .= ': Too Thick.<br/>';
 			next;
 		} # end if
 		push @possible_equipment, $Equipment;
@@ -948,7 +963,9 @@ sub summary {
 	my ( $Project, $service_id, $specs, $qty_index ) = @_;
 
 	if ( $qty_index ) {
-		return $$specs{'Imposition'.$qty_index} .'out on ' . new openprint::Equipment( $$specs{'ddmEquipment'.$qty_index} )->name();
+		if ( $$specs{'Imposition'.$qty_index} and $$specs{'ddmEquipment'.$qty_index} ) {
+			return $$specs{'Imposition'.$qty_index} .'out on ' . new openprint::Equipment( $$specs{'ddmEquipment'.$qty_index} )->name();
+		} # en dif
 	} # end if
 	return '';
 } # end sub summary

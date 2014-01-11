@@ -156,7 +156,11 @@ $log->debug("No good, need login");
 					$r->print( q`window.location='/error/error_login.html';` );
 					return Apache2::Const::OK;
 				} else {
+					if ( $page =~ /employee/ ) {
+					$page = '/employee/account/login.html';
+					} else {
 					$page = '/error/error_login.html';
+					} # end if
 				} # end if
 				$variable{'Destination'} = misc::get_destination( $r, $r->uri() );
 				#$r->headers_out->set(Location=>'/error/error_login.html');
@@ -491,7 +495,6 @@ $log->debug("ServiceType: $variable{'ServiceTypeType'}");
 					} # end if
 
 				} elsif ($third eq 'bind') {
-$openprint::log->warn('bind');
 					if ( $filename eq 'folding.html' ) {
 						require openprint::Estimating::Folding;
 						openprint::Estimating::Folding::display( $log, $dbh, \%variable, $project_index, $service_index );
