@@ -444,6 +444,10 @@ if ( ! sets::isin( 'invoices', \@tables ) ) {
 		$dbh->do('ALTER TABLE Invoices ADD early_payment_date DATE');
 	} # end if
 } # end if
+if ( ! sets::isin( 'invoice_interests', \@tables ) ) {
+    $dbh->do( misc::load_file( $log, '../openprint/sql/Invoice_Interests.sql' ) );
+    die $dbh->errstr() if $dbh->errstr();
+} # end if
 
 if ( ! sets::isin( 'invoices_id_seq', \@sequences ) ) {
 	$dbh->do('CREATE SEQUENCE invoices_id_seq');
