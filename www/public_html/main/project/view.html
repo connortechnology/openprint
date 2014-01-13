@@ -58,7 +58,7 @@
 						} # end if
 					} # end if
 					if ( $$variable{Project}->order_id() and sets::isin( $$variable{Project}->Order()->status(), ['Incomplete', 'Re-Opened'] ) ) {
-						$html .= button( 'ContinueOrder', { href=>'/main/order/information.html?OrderID='.$$variable{Project}->order_id(), text=>'Continue Order' } );
+						$html .= button( 'ContinueOrder', { href=>'/main/order/information.html?order_id='.$$variable{Project}->order_id(), text=>'Continue Order' } );
 					} # end if
 					if ( sets::isin( $session{'user_type'}, ['A', 'E'] ) and $$variable{Project}->Order()->status() ) {
 						$html .= button( 'Docket', { onclick=>'open_project_docket();' } );

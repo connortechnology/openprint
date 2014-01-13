@@ -320,10 +320,10 @@
 			my $parser = 'DateTime::Format::Pg';
 
 			my @Shifts = openprint::Shift->find( 
-				'equipment_id' 		=>	$E->id(),
-				'starttime >='		=>	$parser->format_datetime( $st ),
+				equipment_id 		=>	$E->id(),
 				'starttime <'		=>	$parser->format_datetime( $et ),
-				'order'				=>	'starttime',
+				'starttime >='		=>	$parser->format_datetime( $st ),
+				order				=>	'starttime',
 				);
 
 			if ( ! @Shifts ) {
