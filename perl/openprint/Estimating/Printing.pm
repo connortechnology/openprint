@@ -20,7 +20,7 @@ use strict;
 package openprint::Estimating::Printing;
 my $threading = 0;
 #use threads;
-use constant DEBUG => 0;
+use constant DEBUG => 1;
 use constant DEBUG_VERSIONS => 0;
 use constant DEBUG_FILTERING => 0;
 use constant DEBUG_PRICE_DECISIONS => 0;
@@ -1275,7 +1275,9 @@ sub get_impositions($$$$$$$) {
 
 		my @impositions;
 
-		my $use_cut_stocks = ( $Press->specification('Use Cut Stocks') and ( $Press->specification('Use Cut Stocks') eq 'N' ) ) ? 0 : 1;
+		$_ = $Press->specification('Use Cut Stocks');
+$openprint::log->debug($$Press{strid} . ' Use cut stocks: ' . $_ );
+		my $use_cut_stocks = ( $_ and ( $_ eq 'N' ) ) ? 0 : 1;
 		my $co = $Press->specification('Cut Off');
 		my @cut_offs;
 		if ( $co ) {
@@ -1451,8 +1453,8 @@ sub get_impositions($$$$$$$) {
 				} # end if start_width or cut for all sizes
 			} else { # Sheet Fed
 				next if ! ( $$Paper{width} and $$Paper{height} );
-				if ( $use_cut_stocks and $Paper->is_cut() ) {
-					$openprint::log->debug("Not using " . $Paper->to_string() . " because its cut." ) if DEBUG;
+				if ( (!$use_cut_stocks) and $Paper->is_cut() ) {
+					$openprint::log->debug($$Press{strid}." : Not using " . $Paper->to_string() . " because its cut." . $use_cut_stocks ) if DEBUG;
 					next;
 				} # end if
 				if ( $printing_type eq 'Digital' and ! $Paper->digital() ) {
