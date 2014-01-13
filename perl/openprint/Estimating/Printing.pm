@@ -1657,7 +1657,7 @@ sub set_size {
 		} elsif ( $$specs{'txtSignatureType'} eq 'Cover Pages' ) {
 
 			# Technically, something like a coil bound could be 2pg spread, just need two of them.  
-			$$specs{'txtSpreadSize'} = $$specs{'GroupPageQuantity'};
+			$$specs{'txtSpreadSize'} = ( $$specs{'GroupPageQuantity'} > 6 ? 4 : $$specs{'GroupPageQuantity'} );
 			$variables{'txtSpreadSize'} = [ sets::union( 'output', @{$variables{'txtSpreadSize'}} ) ];
 			#$openprint::log->debug("SpreadSize: $$specs{'txtSpreadSize'}");
 			if ( ( ! defined $$specs{'chkOverrideDimensions'} ) or ( $$specs{'chkOverrideDimensions'} ne 'Y' ) ) {
@@ -1681,7 +1681,7 @@ sub set_size {
 					} # end if
 					$$specs{'txtHeight'} = $$printing_specs{'txtFinalHeight'} + $$specs{'PocketSize'};
 				} elsif ( $$specs{'txtSpreadSize'} > 1 ) {
-					$$specs{'txtWidth'} = $$printing_specs{'txtFinalWidth'}*$$specs{'GroupPageQuantity'}/2;
+					$$specs{'txtWidth'} = $$printing_specs{'txtFinalWidth'}*$$specs{'txtSpreadSize'}/2;
 					$$specs{'txtHeight'} = $$printing_specs{'txtFinalHeight'};
 				} else {
 					$$specs{'txtWidth'} = $$printing_specs{'txtFinalWidth'};
