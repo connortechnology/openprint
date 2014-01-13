@@ -35,7 +35,7 @@ use Time::HiRes qw{ time gettimeofday tv_interval };
 
 use vars qw( $debug $table $serial %fields %find_fields %defaults %transforms %grades );
 
-$debug = 0;
+$debug = 1;
 $table = 'papers';
 $serial	= 'paper_id_seq';
 %fields = (
@@ -832,7 +832,7 @@ sub allocated {
 } # end sub allocated
 
 sub in_stock {
-	return 0 if ! $_[0]{'id'};
+	return 0 if ! $_[0]{id};
 
 	if ( @_ > 1 ) {
 		if ( ref $_[1] eq 'openprint::StockQuality' ) {
@@ -842,16 +842,16 @@ sub in_stock {
 			} # end foreach C
 			return $in_stock;
 		} else {
-			$_[0]{'in_stock'} = $_[1];
+			$_[0]{in_stock} = $_[1];
 		} # end if
 	} # end if
 
-	if ( ! defined $_[0]{'in_stock'} ) {
+	if ( ! defined $_[0]{in_stock} ) {
 		foreach my $SkidContent ( $_[0]->SkidContents() ) {
-			$_[0]{'in_stock'} += $SkidContent->quantity();
+			$_[0]{in_stock} += $SkidContent->quantity();
 		} # end foreach SkidContent
 	} # end if
-	return $_[0]{'in_stock'};
+	return $_[0]{in_stock};
 } # end sub in_stock
 
 sub SkidContents {

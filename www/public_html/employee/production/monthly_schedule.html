@@ -16,14 +16,14 @@
 	}
 	table#MonthlySchedule tbody tr {
 	}
-a.buttonImageOff, a.buttonImageOn {
+a.button, a.button {
 	margin: 1px;
 }
-a.buttonImageOff .c {
+a.button .c {
 	padding: 1px 2px 1px 2px;
 }
 
-a.buttonImageOn .c {
+a.button .c {
 	padding: 1px 2px 1px 2px;
 }
 </style>
@@ -59,7 +59,7 @@ a.buttonImageOn .c {
 		ReservationWindow.showCenter();
 	} // end function openpPOpup
 </script>
-<? echo ( include('/includes/error_reporting.html'); ) ?>
+<?include(/includes/error_reporting.html)?>
 <form id="f1" name="f1" action="monthly_schedule.html" method="post">
 	<fieldset class="filters"><legend>Display Criteria</legend>
         <div style="float: left; width: 47%;">
@@ -69,8 +69,8 @@ a.buttonImageOn .c {
 				<option value=""> select </option>
 <? echo (
 	$session{'/employee/production/monthly_schedule.html?Press'} = $param{'Press'} if $param{'Press'};
-    my @presses = map { $_->id(), $_->name() } openprint::Equipment->find('category'=>'Printing','useinscheduling'=>1,'order'=>'lower(strname)');
-	return ssi::make_drop_down( \@presses, $session{'/employee/production/monthly_schedule.html?Press'} );
+    my @presses = map { $_->id(), $_->name() } openprint::Equipment->find('category any'=>'Printing',useinscheduling=>1,order=>'lower(strname)');
+	make_drop_down( \@presses, $session{'/employee/production/monthly_schedule.html?Press'} );
 ) ?>
                 </select>
         </p>

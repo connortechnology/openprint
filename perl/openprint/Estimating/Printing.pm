@@ -2543,6 +2543,7 @@ $log->debug("Calcing SpreadLayout as $$sig_specs{'txtUnspecifiedPageQuantity'.$q
 			$max_impositions{$pages} = $$imp{'imposition'} if $$imp{'imposition'} > $max_impositions{$pages};
 		} # end foreach
 		$max_pages = ceil( $max_pages / 3 );
+$openprint::log->debug("Max pages: $max_pages") if DEBUG_FILTERING;
 
 		foreach my $imp ( @impositions ) {
 			my $Paper = $imp->Paper();
@@ -2623,20 +2624,21 @@ $imp->display("Previous Imposition") if DEBUG or DEBUG_FILTERING;
 					} # end if
 				} else {
 					if ( sets::isin( $$imp{'pages'}, \@dont_do_pages ) ) {
-$imp->dispay('In dont do pages') if DEBUG or DEBUG_FILTERING;
+$imp->display('In dont do pages') if DEBUG or DEBUG_FILTERING;
 						next;
 					} # end if
 				} # end if chkOverriDEPageQuantity
 				if (($max_pages >= $$imp{'pages'} ) and ( ( ! defined $$sig_specs{'chkOverridePageQuantity'.$qty_index} ) or ( $$sig_specs{'chkOverridePageQuantity'.$qty_index} ne 'Y' ) ) ) {
 $imp->display("Max pages: max $max_pages >= imp " . $$imp{'pages'} ) if DEBUG or DEBUG_FILTERING;
 					next;
-				} elsif ( $max_impositions{$$imp{'pages'}} > $$imp{'imposition'}) {
+				} elsif ( $max_impositions{$$imp{'pages'}}/2 > $$imp{'imposition'}) {
 # Only do this if not sheet size overrides
-$imp->dispay('Ma imposition!') if DEBUG or DEBUG_FILTERING or 1;
+$imp->display("Ma imposition! for $$imp{pages} is $max_impositions{$$imp{'pages'}} > $$imp{imposition} ") if DEBUG or DEBUG_FILTERING;
 					next;
 				} # end if
 
 			} # end if SpreadLayout
+$imp->display("Accepting");
 			push @results, $imp;
 		} # end foreach imp
 
@@ -2650,7 +2652,7 @@ $imp->dispay('Ma imposition!') if DEBUG or DEBUG_FILTERING or 1;
 				} # end if
 			} # end foreach I
 			if ( ! @results2 ) {
-$log->warn("Getting all impos");
+$log->warn("Getting all impos results: " . @results );
 				foreach my $I ( openprint::imposition::get_all_impositions( @results ) ) {
 $I->display("Getting all impos");
 					if ( $I->imposition() == $$sig_specs{'txtImposition'.$qty_index} ) {
@@ -2676,6 +2678,12 @@ $I->display("Getting all impos");
 				} # end foreach I
 			} # end if
 		} # end if
+
+if ( DEBUG or DEBUG_FILTERING ) {
+	foreach my $I ( @results ) {
+		$I->display("After first round of filtering");
+	}
+}
 
 		my %imps;
 		foreach my $imp ( @results ) {
@@ -2901,7 +2909,12 @@ sub get_new_specs {
 } # end sub get_new_specs
 
 sub get_project_price {
-	return {} if $openprint::r->connection()->aborted();
+	if ( $openprint::r->connection()->aborted() ) {
+		return {};
+	} else {
+		$openprint::log->debug("Not aborted");
+	} # edn if
+	$openprint::r->print("\n");
 	my ( $Project, $service_index, $project, $service_specs, $sig_specs, $qty, $qty_index, $possible_presses, $printing_specs, $versions, $PlateCounts, $PaperCounts, $washed_colours, $previous_forms_cache, $signatures, $impositions, $other_impositions, $best_price, $recursion_depth ) = @_;
 	my %best_price = $best_price ? %{$best_price} : ();
 	$openprint::log->debug("Best price: $recursion_depth starting get_project_price: ($best_price{'Comparison Cost'}) ($best_price{'Comparison Cost'}) UPQ " . $$sig_specs{'txtUnspecifiedPageQuantity'.$qty_index} );
