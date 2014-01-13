@@ -22,10 +22,12 @@
 	<div class="Claim"><div class="View">
 		<div class="Header">
 			<div class="Logo">
-				<table><tr>
-				<td><a href="/index.html"><img src="/images/header/logo.gif" alt="PointOne Graphics Inc"/></a></td>
-				<td><a href="/index.html"><span class="PointOne">PointOne</span><br/><span class="GraphicsInc">GRAPHICS INC</span></a></td>
-				</tr></table>
+				<a href="/index.html">
+					<img src="/images/header/logo.gif" alt="PointOne Graphics Inc" id="LogoImage"/>
+					<span class="LogoText">
+						<span class="PointOne">PointOne</span><br/><span class="GraphicsInc">GRAPHICS INC</span>
+					</span>
+				</a>
 				<table class="HeaderText">
 					<tr>
 						<td colspan="2"><? echo ( join(' ', new openprint::User( $session{'user_id'} )->Company()->get('address1','city','state','postalcode') );) ?></td>
@@ -182,5 +184,5 @@ join( ', ', map { sprintf('<a href="/employee/project/view.html?docket=%1$d">%1$
 		<br class="spacer"/>
 		<div class="Disclaimer">This is a notification of claim.  If there is disagreement, you are requested to advise the sender in writing, either by e-mail or a letter within 5 business days from the date of this claim advice.  An official invoice will be issued if no objection to this claim is filed. After 60 days the amount of claim will be automatically deducted from your account.</div>
 		</div>
-	</div><!--Claim-->
+	</div></div><!--Claim-->
 </form>
