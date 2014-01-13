@@ -2355,5 +2355,8 @@ sub manifest_view {
 	} # end if
 } # end sub manifest_view
 
+sub _stock {
+}
+
 1;
 __END__

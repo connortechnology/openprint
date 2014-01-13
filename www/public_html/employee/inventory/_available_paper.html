@@ -8,13 +8,13 @@
 		'in_stock null_or_>'	=>	1,
 		type					=>	[ split( ',', $session{'/employee/inventory/available_paper.html?type'} ) ],
 		columns					=>	'*,(SELECT SUM(quantity) FROM paper_allocations WHERE paper_id=papers.id) AS allocated',
-		( ( $session{'/employee/inventory/available_paper.html?OrLarger'} eq 'Y' ? (
-		( $session{'/employee/inventory/available_paper.html?width'} ? ( width=>$session{'/employee/inventory/available_paper.html?width'} ) : () ),
-		( $session{'/employee/inventory/available_paper.html?height'} ? ( height=>$session{'/employee/inventory/available_paper.html?height'} ) : () ),
-) : (
-		( $session{'/employee/inventory/available_paper.html?width'} ? ( 'width >='=>$session{'/employee/inventory/available_paper.html?width'} ) : () ),
-		( $session{'/employee/inventory/available_paper.html?height'} ? ( 'height >='=>$session{'/employee/inventory/available_paper.html?height'} ) : () ),
-),
+		( $session{'/employee/inventory/available_paper.html?OrLarger'} ne 'Y' ? (
+			( $session{'/employee/inventory/available_paper.html?width'} ? ( width=>$session{'/employee/inventory/available_paper.html?width'} ) : () ),
+			( $session{'/employee/inventory/available_paper.html?height'} ? ( height=>$session{'/employee/inventory/available_paper.html?height'} ) : () ),
+		) : (
+			( $session{'/employee/inventory/available_paper.html?width'} ? ( 'width >='=>$session{'/employee/inventory/available_paper.html?width'} ) : () ),
+			( $session{'/employee/inventory/available_paper.html?height'} ? ( 'height >='=>$session{'/employee/inventory/available_paper.html?height'} ) : () ),
+	) ),
 	);
 	foreach my $filter ( 'owner_id','manufacturer_id','brand_id','finish_id','colour_id','weight_id','quality_id', 'material_id' ) {
 		if ( $session{'/employee/inventory/available_paper.html?'.$filter} ) {
