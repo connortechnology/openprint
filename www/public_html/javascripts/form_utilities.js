@@ -723,12 +723,12 @@ function Country_onchange( country_ddm, state ) {
 	var postal_label = $(country_ddm.name + '_postal');
 	if ( country == 'US' ) {
 		$(state.name+'_container').innerHTML = '<select name="' + state.name + '" id="' + state.id + '" />';
-		new Ajax.Updater( state.name, '/includes/_states.html' );
+		new Ajax.Updater( state.id, '/includes/_states.html' );
 		if ( state_label ) state_label.innerHTML='State';
 		if ( postal_label ) postal_label.innerHTML='ZIP Code';
 	} else if ( country == 'CA' ) {
 		$(state.name+'_container').innerHTML = '<select name="' + state.name + '" id="' + state.id + '" />';
-		new Ajax.Updater( state.name, '/includes/_provinces.html' );
+		new Ajax.Updater( state.id, '/includes/_provinces.html' );
 		if ( state_label ) state_label.innerHTML='Province';
 		if ( postal_label ) postal_label.innerHTML='Postal Code';
 	} else {
