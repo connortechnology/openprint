@@ -279,7 +279,8 @@
 								$html .= $$summary[$line+1];
 								$html .= '</td>';
 							} # end foreach qty_index
-							$html .= '<td colspan="2">&nbsp;</td></tr>';
+							$html .= '<td>&nbsp;</td>';
+							$html .= '<td class="unprintable actions">&nbsp;</td></tr>';
 						} # end foreach summary
 					} # end if summaries
 					$rowclass = $rowclass ? '' : ' class="colRow"';
