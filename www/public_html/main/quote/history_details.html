@@ -27,7 +27,7 @@ function delete_confirm(form) {
 					$html .= openprint::Company::get_dropdown( $session{'company_id'} );
 					$html .= '</select>';
 				} else {
-					$html .= button( 'Reuse', { onclick=>"f1.action='/main/quote/details.html';f1.btnFunction.value='Process New Quote';f1.submit();", text=>'Copy' } );
+					$html .= button( 'Reuse', { onclick=>"f1.action='/main/quote/information.html';f1.btnFunction.value='Process New Quote';f1.submit();", text=>'Copy' } );
 				} # end if
 			if ( $$variable{'Quote'}->status() eq 'Complete' ) {
 				$html .= button( 'Resend', { onclick=>"f1.action='/main/quote/history_details.html';f1.btnFunction.value='Resend';f1.submit();", text=>'Resend' } );
