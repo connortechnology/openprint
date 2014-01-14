@@ -177,7 +177,7 @@ if ( 0 ) {
 		$override_pages{1} = 4;
 		
 		$remaining_pages -= $override_pages{1} = 4;
-$openprint::log->error("FIXM E");
+$openprint::log->warn("FIXM E");
 } # end if
 	} # end if
 
