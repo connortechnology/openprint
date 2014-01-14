@@ -136,7 +136,6 @@ sub destroy {
 	sql::execute( $openprint::log, $openprint::dbh, q{DELETE FROM Project_Log WHERE project_id=?}, $$self{'id'} );
 	sql::execute( $openprint::log, $openprint::dbh, q{DELETE FROM Barcode_Log WHERE project_id=?}, $$self{'id'} );
 	sql::execute( $openprint::log, $openprint::dbh, q{DELETE FROM Schedule WHERE projectindex=?}, $$self{'id'} );
-	sql::execute( $openprint::log, $openprint::dbh, q{DELETE FROM Bindery_Schedule WHERE projectindex=?}, $$self{'id'} );
 	sql::execute( $openprint::log, $openprint::dbh, q{DELETE FROM paper_allocations WHERE project_id=?}, $$self{'id'} );
 	sql::execute( $openprint::log, $openprint::dbh, q{DELETE FROM Project_files WHERE project_id=?}, $$self{'id'} );
 	sql::execute( $openprint::log, $openprint::dbh, q{DELETE FROM Order_Contents WHERE lngprojectindex=?}, $$self{'id'} );
@@ -1065,7 +1064,6 @@ sub status_change {
 		foreach my $Job ( openprint::ScheduledJob->find('project_id'=>$$self{'id'}) ) {
 			$Job->delete();
 		} # end foreach
-		sql::execute( undef, undef, q{DELETE FROM Bindery_Schedule WHERE ProjectIndex=?}, $$self{'id'} );
 		$self->update_status();
 		foreach my $PA ( openprint::PaperAllocation->find('project_id'=>$$self{'id'}) ) {
 			$PA->delete();
@@ -1077,7 +1075,6 @@ sub status_change {
 		foreach my $Job ( openprint::ScheduledJob->find('project_id'=>$$self{'id'}) ) {
 			$Job->delete();
 		} # end foreach
-		sql::execute( undef, undef, q{DELETE FROM Bindery_Schedule WHERE ProjectIndex=?}, $$self{'id'} );
 		$self->status($new_status);
 		foreach my $PA ( openprint::PaperAllocation->find('project_id'=>$$self{'id'}) ) {
 			$PA->delete();

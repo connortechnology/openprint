@@ -11,7 +11,6 @@ require openprint::main_project;
 require openprint::service;
 require openprint::Equipment;
 require openprint::employee_schedule;
-require openprint::bindery_schedule;
 require openprint::press_schedule;
 require openprint::employee_production;
 
@@ -402,8 +401,6 @@ sub view {
 		$Project->status_change( undef, undef, 'Bindery Complete' );
 	} elsif ( $param{'btnFunction'} eq 'Complete' ) {
 		$Project->status_change( undef, undef, 'Complete' );
-	} elsif ( $param{'btnFunction'} eq 'AddToBinderySchedule' ) {
-		openprint::bindery_schedule::add_project( $Project );
 	} elsif ( $param{'btnFunction'} eq 'AddToPressSchedule' ) {
 		$variable{'error'} .= openprint::press_schedule::add_project_to_press_schedule( $Project, $param{'ServiceIndex'} );
 	} elsif ( $param{'btnFunction'} eq 'RemoveFromPressSchedule' ) {

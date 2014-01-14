@@ -18,7 +18,6 @@ require openprint::Equipment;
 require openprint::employee_project;
 require openprint::Equipment_Category;
 require openprint::employee_schedule;
-require openprint::bindery_schedule;
 require openprint::press_schedule;
 
 require sql;
@@ -971,10 +970,6 @@ $log->error("No service_id in service for project $project_id, $service_id: " . 
 	foreach my $Job ( openprint::ScheduledJob->find( 'project_id'=>$project_id, 'service_id'=>$service_id ) ) {
 		$Job->delete();
 	} # end foreach Job
-# Update Bindery Schedule
-	sql::update( $log, $dbh, 'Bindery_Schedule', ['ProjectIndex=?', $project_id], 'starttime', 
-			sql::execute( $log, $dbh, q{SELECT NOW() + '2 hours'::interval} )
-			);
 	$Project->add_to_log( @session{'company_id','user_id'}, "Form $$specs{'SignatureIndex'} Completed". ( $Service->operator_id() != $session{user_id} ? ' for ' . $Service->Operator()->name() : '' ) );
 	sql::end_transaction( $dbh, $ac );
 } # end sub complete_signature
@@ -1993,9 +1988,6 @@ sub _add_maintenance {
 	my ( $referer ) = $ENV{'HTTP_REFERER'} =~ /^https?:\/\/[^\/:]+([^?]*).*$/;
 	$variable{'referer'} = $referer;
 } # end sub _add_maintenance
-
-sub bindery_schedule {
-} # end sub bindery_schedule
 
 sub prepress_overview {
 	ssi::save_params( '/employee/production/prepress_overview.html', ( 'operator_id' ) );
