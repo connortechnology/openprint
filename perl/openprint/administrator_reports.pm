@@ -182,7 +182,7 @@ sub customer_login {
 		} # end if
 		if ( $param{registered_on_end_year} and $param{registered_on_end_month} and $param{registered_on_end_day} ) {
 			my $registered_on_end = sprintf('%.4d-%.2d-%.2d', @session{map { $r->uri().'?registered_on_end_'.$_ } ( 'year','month','day' ) } );
-			$query .= " AND '$registered_on_end 23:59:59'";
+			$query .= " AND (Companies.created_on <= '$registered_on_end 23:59:59')";
 		} # end if
 		if ( $param{'ddmEmployees'} ) {
 			if ( $param{'ddmEmployees'} eq 'None' ) {
@@ -203,23 +203,24 @@ sub customer_login {
 
 		if ( $param{last_order_start_year} and $param{last_order_start_month} and $param{last_order_start_day} ) {
 			my $last_order_start = sprintf('%.4d-%.2d-%.2d', @session{map { $r->uri().'?last_order_start_'.$_ } ( 'year','month','day' ) } );
-			$query .= " AND (SELECT MAX(dtmOrderDate) AS lastorder FROM Orders WHERE Orders.company_id = companies.id )  >= '$last_order_start 00:00:00'";
+			$query .= " AND (SELECT MAX(created_on) AS lastorder FROM Orders WHERE Orders.company_id = companies.id )  >= '$last_order_start 00:00:00'";
 		} # end if
 
 		if ( $param{last_order_end_year} and $param{last_order_end_month} and $param{last_order_end_day} ) {
 			my $last_order_end = sprintf('%.4d-%.2d-%.2d', @session{map { $r->uri().'?last_order_end_'.$_ } ( 'year','month','day' ) } );
-			$query .= " AND (SELECT MAX(dtmOrderDate) AS lastorder FROM Orders WHERE Orders.company_id = Companies.id ) <= '$last_order_end 23:59:59'";
+			$query .= " AND (SELECT MAX(created_on) AS lastorder FROM Orders WHERE Orders.company_id = Companies.id ) <= '$last_order_end 23:59:59'";
 		} # end if
 		if ( $param{'last_login_start_year'} and $param{'last_login_start_month'} and $param{'last_login_start_day'} ) {
-			$query .= sprintf(q` AND (SELECT MAX(date_time) FROM log WHERE action_type=2 AND company_id=Companies.id) >= '%.4d-%.2d-%.2d 00:00:00'`, @param{'last_login_start_year','last_login_start_month','last_login_start_day'} );
+			$query .= sprintf(q` AND (SELECT MAX(date_time) FROM logs WHERE action_id=2 AND company_id=Companies.id) >= '%.4d-%.2d-%.2d 00:00:00'`, @param{'last_login_start_year','last_login_start_month','last_login_start_day'} );
 		} # end if
 		if ( $param{'last_login_end_year'} and $param{'last_login_end_month'} and $param{'last_login_end_day'} ) {
-			$query .= sprintf(q` AND (SELECT MAX(date_time) FROM log WHERE action_type=2 AND company_id=Companies.id) <= '%.4d-%.2d-%.2d 23:59:59'`, @param{'last_login_end_year','last_login_end_month','last_login_end_day'} );
+			$query .= sprintf(q` AND (SELECT MAX(date_time) FROM logs WHERE action_id=2 AND company_id=Companies.id) <= '%.4d-%.2d-%.2d 23:59:59'`, @param{'last_login_end_year','last_login_end_month','last_login_end_day'} );
 		} # end if
 		if ( $param{active} ) {
 			$query .= " AND Companies.ysnAccountActivation = '$param{active}' AND companies.deleted = false";
 		} # end if
 		$query .= ' ORDER BY lower(name)';
+$log->debug("Query: $query");
 		$variable{DATA} = [ sql::execute( $log, $dbh, $query ) ];
 
 	} else {
