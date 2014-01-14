@@ -34,9 +34,11 @@ function submit_handler( formName ) {
 	if ( ! form ) {
 		return false;
 	}
-	var AlertDiv = $('AlertDiv');
+	var AlertDiv = $('Alert');
 	if ( AlertDiv && AlertDiv.innerHTML ) {
-		if ( ! confirm( "There are unresolved errors:\n\n" + AlertDiv.innerHTML + "\n\n Click OK to continue saving, or Cancel to stop and fix the problem." ) ) {
+		var alert_content = AlertDiv.innerHTML;
+		alert_content = alert_content.replace(/<br\/?>/, "\n" );
+		if ( ! confirm( "There are unresolved errors:\n\n" + alert_content + "\n\n Click OK to continue saving, or Cancel to stop and fix the problem." ) ) {
 			return false;
 		} // end if
 	} // end if
