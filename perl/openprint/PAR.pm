@@ -63,7 +63,7 @@ sub send_notifications {
 	my @Users = openprint::User->find( type=>['E','A'], 'usergroup @>'=>'Quality Control Notifications');
 
 	if ( @Users ) {
-		my $From = new openprint::User( $session{'user_id'} );
+		my $From = new openprint::User( $openprint::session{'user_id'} );
 		my $email_template = misc::load_file( $openprint::log, $openprint::config{'SkinPath'} . '/email_template.html' );
 
 		my %info = ( 'PAR'	=>	$self);

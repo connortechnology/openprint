@@ -23,7 +23,7 @@
 		<? if ( $config{'ShowAccountingOnOrder'} ne 'N' or ( $session{user_type} eq 'A' or $session{user_type} eq 'E' ) ) ?>
 		<li>
 			<label>Amount Paid</label>
-            <? echo ( openprint::Currency::format( $variable{Order}->paid() ); ) ?>
+            <? echo ( openprint::Currency::format( $$variable{Order}->paid() ); ) ?>
 		</li>
         <? if ( $$variable{'DepositDue'} ) ?>
         <li>

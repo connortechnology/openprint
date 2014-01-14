@@ -5190,10 +5190,10 @@ sub runtime {
 	my %time;
 
 	if ( ! $Equipment ) {
-		$Equipment = openprint::Equipment->find_one( 'strid'=>$$specs{'UsePress'} );
 		if ( ! $$specs{'UsePress'} ) {
 			$$specs{'UsePress'} = $$specs{'ddmPress'.$qty_index};
 		} # end if
+		$Equipment = openprint::Equipment->find_one( 'strid'=>$$specs{'UsePress'} );
 	} # end if
 	if ( ! $Equipment ) {
 		$openprint::log->error("No equipment found for $$specs{'UsePress'}");

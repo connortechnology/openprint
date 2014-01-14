@@ -257,5 +257,8 @@ sub to {
 			);
 } # end sub to
 
+sub save {
+} # end sub save
+
 1;
 __END__
