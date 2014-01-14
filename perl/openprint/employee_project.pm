@@ -769,7 +769,7 @@ sub docket_sheet {
 	openprint::print_project::summary( @_ );
 } # end sub docket_sheet
 sub summary {
-	openprint::print_project::summary( @_ );
+	openprint::print_project::summary( $r, $log, $dbh, \%variable, $param{ProjectIndex} );
 } # end sub summary
 
 sub _stock_checkout {

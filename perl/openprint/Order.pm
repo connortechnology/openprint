@@ -400,6 +400,7 @@ sub pay {
 			'received_on'	=>	'NOW()',
 			});
 	if ( ! $error ) {
+		$self->add_log("Paid.");
 		$self->update_status();
 	} # end if
 	return $error;

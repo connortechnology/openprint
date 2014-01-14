@@ -20,7 +20,7 @@ use strict;
 package openprint::Estimating::Printing;
 my $threading = 0;
 #use threads;
-use constant DEBUG => 0;
+use constant DEBUG => 1;
 use constant DEBUG_VERSIONS => 0;
 use constant DEBUG_FILTERING => 0;
 use constant DEBUG_PRICE_DECISIONS => 0;
@@ -4702,7 +4702,7 @@ sub select_presses {
 		my $paper_ok = 0;
 		my $Paper;
 
-		my $AQ_Min_Weight = $Press->Specification('Aqueous Minimum Weight');
+		my $AQ_Min_Weight = $Press->Specification('Aqueous Minimum Weight') if $aqueous;
 
 		foreach $Paper ( @$Papers ) {
 			my $max_calliper = $Press->specification('Maximum Calliper', $$Paper{'grade'} );
