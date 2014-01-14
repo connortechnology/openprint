@@ -20,9 +20,9 @@ use strict;
 package openprint::Estimating::Printing;
 my $threading = 0;
 #use threads;
-use constant DEBUG => 1;
+use constant DEBUG => 0;
 use constant DEBUG_VERSIONS => 0;
-use constant DEBUG_FILTERING => 1;
+use constant DEBUG_FILTERING => 0;
 use constant DEBUG_PRICE_DECISIONS => 0;
 use constant DEBUG_INKS => 0;
 use constant DEBUG_STOCK => 0;
@@ -572,6 +572,8 @@ $openprint::log->debug("Adding special colour for $colour");
 		if ( ! $$services{'Aqueous'} ) {
 			push @{$$services{'Aqueous'}}, $Project->add_service( 'Aqueous' );
 		} # end if	
+		$project{'HasAqueous'} = $$services{'Aqueous'}[0];
+	} elsif ( $$services{'Aqueous'} and @{$$services{'Aqueous'}} ) {
 		$project{'HasAqueous'} = $$services{'Aqueous'}[0];
 	} # end if	
 
@@ -2272,7 +2274,7 @@ if ( 1 ) {
 				$$specs{'alert'} .= "QTY $qty_index: There are ".(-1*$$specs{'txtUnspecifiedPageQuantity'.$qty_index}). ' more pages specified than are required.  Please correct this situation.<br/>';
 			} # end if
 		} # end if
-		if ( ! ( $$project{'NeedAqueous'} ) ) {
+		if ( ! ( $$project{'HasAqueous'} or $$specs{'AqueousMessage'} ) ) {
 			$$specs{'AqueousMessage'} = 1;
 			$$specs{'popup'} .= $Paper->message() if $Paper->message();
 		} # end if
