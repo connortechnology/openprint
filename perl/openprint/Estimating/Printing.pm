@@ -22,7 +22,7 @@ my $threading = 0;
 #use threads;
 use constant DEBUG => 1;
 use constant DEBUG_VERSIONS => 0;
-use constant DEBUG_FILTERING => 0;
+use constant DEBUG_FILTERING => 1;
 use constant DEBUG_PRICE_DECISIONS => 0;
 use constant DEBUG_INKS => 0;
 use constant DEBUG_STOCK => 0;
@@ -2651,16 +2651,23 @@ $imp->display("Accepting");
 			foreach my $I ( @results ) {
 				if ( $I->imposition() == $$sig_specs{'txtImposition'.$qty_index} ) {
 					push @results2, $I;
+				} else {
+$I->display("Not the overriden imposition");
 				} # end if
 			} # end foreach I
 			if ( ! @results2 ) {
+				my %cuts;
 $log->warn("Getting all impos results: " . @results );
 				foreach my $I ( openprint::imposition::get_all_impositions( @results ) ) {
 $I->display("Getting all impos");
 					if ( $I->imposition() == $$sig_specs{'txtImposition'.$qty_index} ) {
-						push @results2, $I;
+						my $str = sprintf('%d=%dx%d %dx%d-%s-%s-%s-%d-%d', @$I{'pages','spread_columns','spread_rows','columns','rows','runstyle','image_orientation','bleed_size','columns','row'} );
+						if ( ! $cuts{$str} ) {
+							$cuts{$str} = $I;
+						} # en dif
 					} # end if
 				} # end foreach I
+				@results2 = map { $cuts{$_} } keys %cuts;
 			} # end if
 			@results = @results2;
 		} else {
@@ -2949,6 +2956,7 @@ $openprint::log->debug("Giving up on $$Press{strid} bnecause it's bigger than th
 		my $time = gettimeofday() if DEBUG;
 		$$sig_specs{'txtUnspecifiedPageQuantity'.$qty_index} = $txtUnspecifiedPageQuantity;
 		my @Is = sort { $$b{pages} <=> $$a{pages} } calculate_impositions( $Project, $Press, $sig_specs, $qty_index, $qty, $PaperCounts, $versions, $project, $impositions );
+		$openprint::log->debug( 'calc_impositions: ' . sprintf('%.4f', tv_interval( [$time])*1000) );
 		if ( DEBUG ) {
 			foreach my $I ( @Is ) {
 				$I->display( "Before calculation:" . @Is );
