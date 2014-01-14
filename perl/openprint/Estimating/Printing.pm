@@ -2896,9 +2896,9 @@ sub get_new_specs {
 # These will only have an effect if we get down to call get_project_price. If we get there, we are looking at a smaller # of pages, so might want a different press.
 		$new_specs{'chkOverrideImposition'.$qty_index} = '';
 		$new_specs{'chkOverridePageQuantity'.$qty_index} = '';
-		$new_specs{'chkOverridePress'.$qty_index} = '';
-		$new_specs{'chkOverrideRunStyle'.$qty_index} = '';
-		$new_specs{'chkOverrideSheetSize'.$qty_index} = '';
+		#$new_specs{'chkOverridePress'.$qty_index} = '';
+		#$new_specs{'chkOverrideRunStyle'.$qty_index} = '';
+		#$new_specs{'chkOverrideSheetSize'.$qty_index} = '';
 	} elsif ( ( defined $new_specs{'chkOverridePageQuantity'.$qty_index} ) and ( $new_specs{'chkOverridePageQuantity'.$qty_index} eq 'Y' ) and ( $new_specs{'PageQuantity'.$qty_index} > $upq ) ) {
 		$new_specs{'chkOverridePageQuantity'.$qty_index} = '';
 	} # end if
