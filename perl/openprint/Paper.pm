@@ -105,6 +105,7 @@ $serial	= 'paper_id_seq';
 
 %transforms = (
 	manufacturers_name => [ 's/^\s+//', 's/\s+$//', 's/\s\s+$/ /g' ],
+	gsm	=>	 [ 's/[^\d\.]//g' ],
 );
 
 %defaults = (
