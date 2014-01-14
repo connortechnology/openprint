@@ -24,6 +24,7 @@ require sets;
 
 my %variables = (
 	'txtPrice1'=>['save','output'], 'txtPrice2'=>['save','output'], 'txtPrice3'=>['save','output'],'txtPriceUsed'=>['save'],
+	OverridePrice1	=>	['save'], OverridePrice2	=>	['save'], OverridePrice3	=>	['save'],
 	'txtQuantity1'=>['save','output'], 'txtQuantity2'=>['save','output'], 'txtQuantity3'=>['save','output'],'txtQuantityUsed'=>['save'],
 	'txtPackageQuantity1'=>['save','output'], 'txtPackageQuantity2'=>['save','output'], 'txtPackageQuantity3'=>['save','output'],'txtPackageQuantityUsed'=>['save','output'],
     'chkOverridePackageQuantity' => ['save'],
@@ -63,17 +64,21 @@ sub calc {
 	my $status = 'calculated';
 	my ( $carton_service_index ) = $$services{'PlainCartons'}[0] if $$services{'PlainCartons'}[0];
 	if ( ! $carton_service_index ) {
+if( $openprint::config{NeedCartonsForShipping} ) {
 		$$specs{'alert'} = 'Shipping requires that the project be packed in cartons.';
 		$$specs{'NeedPlainCartons'} = 1;
 		return 'uncalculated';
+}
 	} else {
 		$$specs{'NeedPlainCartons'} = 0;
 	} # end if
-	my $carton_status = openprint::service::status( $project_index, $carton_service_index );
-	if ( sets::isin( $carton_status,['', 'uncalculated'] ) ) {
-		openprint::service::internal_calc( $log, $dbh, $variable, $project_index, $carton_service_index, 'Skids' );
+	if ( $carton_service_index ) {
+		my $carton_status = openprint::service::status( $project_index, $carton_service_index );
+		if ( sets::isin( $carton_status,['', 'uncalculated'] ) ) {
+			openprint::service::internal_calc( $log, $dbh, $variable, $project_index, $carton_service_index, 'Skids' );
+		} # end if
 	} # end if
-	my $carton_specs = openprint::service::get_specs_ref( $Project, $carton_service_index );
+	my $carton_specs = openprint::service::get_specs_ref( $Project, $carton_service_index ) if $carton_service_index;
 
 	if ( ! $$specs{'ToCity'} ) {
 		$$specs{'alert'} .= 'Please enter To city<br/>';
@@ -132,12 +137,15 @@ $openprint::log->debug("Other Shipped Quantity: $other_shipped_quantity");
             $status = 'uncalculated';
         } # end if
 
+		if ( $$carton_specs{'txtItemsPerPackage'.$qty_index} ) {
 		if ( $$specs{'chkOverridePackageQuantity'} ne 'Y' ) {
 			$$specs{'txtPackageQuantity'.$qty_index} = ceil( $$specs{'txtQuantity'.$qty_index}/$$carton_specs{'txtItemsPerPackage'.$qty_index} );
 		} # end if
 		$$specs{"txtTotalWeight$qty_index"} = sprintf('%.2f', (int( $$specs{'txtQuantity'.$qty_index}/$$carton_specs{'txtItemsPerPackage'.$qty_index} ) * $$specs{'txtPackageWeight'.$qty_index}) + (($$specs{'txtQuantity'.$qty_index} % $$carton_specs{'txtItemsPerPackage'.$qty_index} ) * $$carton_specs{'txtFinishedWeight'}) );
-
+		} # end if
+		if ( ! $$specs{"OverridePrice$qty_index"} or $$specs{"OverridePrice$qty_index"} ne 'Y' ) {
 		$$specs{"txtPrice$qty_index"} = sprintf('%.2f', $$specs{"txtPrice$qty_index"});
+		} # end if
 	} # end foreach
 	return $$specs{'Status'} = $status;
 } # end sub calc
