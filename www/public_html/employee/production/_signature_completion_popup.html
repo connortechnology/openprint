@@ -10,7 +10,7 @@
 					my $operator_id = $$variable{'Job'}->operator_id();
 					$operator_id = $session{'user_id'} if ! $operator_id;
 
-					return make_drop_down( openprint::User->dropdown('usergroup in'=>[$$variable{Job}->Equipment()->categories()], order=>'lower(firstname),lower(lastname)'), $operator_id );
+					return make_drop_down( openprint::User->dropdown('usergroup any'=>[$$variable{Job}->Equipment()->categories()], order=>'lower(firstname),lower(lastname)'), $operator_id );
 				) ?>
 			</select>
 		</p>
