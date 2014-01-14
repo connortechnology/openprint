@@ -208,6 +208,7 @@ sub get_ul {
 	my $total_impressions;
 
 	my @Jobs = $Shift->Schedule();
+	openprint::Project->find(id=>[ map { $$_{project_id} } @Jobs ]) if @Jobs;
 	foreach my $Job ( @Jobs ) {
 		if ( $filters ) {
 			if ( $$filters{Status} ) {

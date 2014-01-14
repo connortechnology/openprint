@@ -370,6 +370,7 @@ sub delete {
     my $type = ref $self;
 	
     my $table = eval '$'.$type.'::table';
+	my $debug = eval '$'.$type.'::debug';
 	my %fields = eval '%'.$type.'::fields';
 	my @identified_by = eval '@'.$type.'::identified_by';
 	@identified_by = ( 'id' ) if ! @identified_by;
@@ -389,6 +390,8 @@ sub delete {
 	} else {
 		my $rows = $local_dbh->do( 'DELETE FROM '.$table.' WHERE '.$where, undef, @$self{@identified_by} );
 		$log->warn("No rows deleted for 'DELETE FROM $table WHERE $where, @$self{@identified_by}") if ! $rows;
+		$log->debug("DELETE FROM $table WHERE $where, @$self{@identified_by}") if $debug;
+	
 		return $local_dbh->errstr if $local_dbh->errstr;
 		delete $openprint::Object::cache{$config{'db_name'}}{$type}{join('-',@$self{@identified_by})};
 	} # end if
@@ -591,7 +594,7 @@ sub find {
 	@search{@param_keys} = @$params{@param_keys};
 	
 	foreach my $k ( @param_keys ) {
-		my ( $field, $type, $function ) = $k =~ /^([_\+\w\-]+)(::\w+)?[\s_]*(.*)?$/;
+		my ( $field, $type, $function ) = $k =~ /^([_\+\w\-]+)(::\w+\[?\]?)?[\s_]*(.*)?$/;
 		$type = '' if ! defined $type;
 #$log->debug("$object_type param $field($type) func($function) " . ( ref $search{$k} eq 'ARRAY' ? join(',',@{$search{$k}}) : $search{$k} ) );
 
@@ -706,7 +709,7 @@ sub find {
 #$log->debug( 'find prepare: ' . sprintf('%.4f', tv_interval($starttime)*1000) ." useconds") if $debug;
 	my $data = $local_dbh->selectall_arrayref( $sql, { Slice => {} }, @values );
 	if ( ! $data ) {
-		$log->error('Error ' . $local_dbh->errstr() . " loading $object_type ($sql) (@values) " );
+		$log->error('Error ' . $local_dbh->errstr() . " loading $object_type ($sql) (". join(',', map { ref $_ eq 'ARRAY' ? 'ARRAY('.join(',',@$_).')' : $_ } @values ) . ") " );
 		return ();
 	#} elsif ( ( ! @$data ) and $debug ) {
 		#$log->debug("No $type ($sql) (@values) " );
