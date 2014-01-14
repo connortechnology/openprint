@@ -1,4 +1,4 @@
-<script type="text/javascript" src="/javascripts/production_feedback.js"></script>
+<script type="text/javascript" src="<?hash_link(/javascripts/production_feedback.js)?>"></script>
 <script type="text/javascript" src="/includes/employee/feedback/paper.js"></script>
 <div class="Service">
 	<fieldset><legend>
@@ -11,8 +11,8 @@
 		$$variable{'ServiceIndex'} = $s_id;
 		my $sig_specs = openprint::service::get_specs_ref( $$variable{'Project'}, $s_id );
 		$html .= '<div class="Signature">';
-		$html .= "<p>Information for form $$sig_specs{SignatureIndex}: </p>" if ( $$variable{'Reference'} );
-$html .= ssi::include($ENV{'DOCUMENT_ROOT'}.'/employee/proj/prin/_signature.html');
+		$html .= "<p>Information for form $$sig_specs{SignatureIndex}: </p>" if $$variable{Reference};
+$html .= include('/employee/proj/prin/_signature.html');
 		$html .= '</div>';
 	} # end foreach
 	return $html;

@@ -506,18 +506,18 @@ $Imposition->display( "For sig $signature_index");
 			if ( ( ! sets::isin( 1, $proof_indexes{$signature_index} ) ) and $openprint::config{'Add_Default_Layout_Proof'} eq 'Y') {
 				push @{$proof_indexes{$signature_index}}, 1;
 				$openprint::log->debug("ADDING Layout Proof to $signature_index") if DEBUG;
-				insert_layout_proof( $sig_specs, 1, $qty_index, $variable, $Imposition );
+				insert_layout_proof( $sig_specs, 1, $qty_index, $specs, $Imposition );
 			} # end if
 			if ( ( ! sets::isin( 2, $proof_indexes{$signature_index} ) ) and $openprint::config{'Add_Default_Colour_Proof'} eq 'Y') {
 				push @{$proof_indexes{$signature_index}}, 2;
 				$openprint::log->debug("ADDING Colour Proof to $signature_index") if DEBUG;
-				insert_colour_proof( $Project, $sig_specs, 2, $qty_index, $variable );
+				insert_colour_proof( $Project, $sig_specs, 2, $qty_index, $specs );
 			} # end if
 			if ( ! sets::isin( 3, $proof_indexes{$signature_index} ) ) {
 				if ( ( $openprint::config{'Add_Default_Press_Proof'} eq 'Y' ) or ( $Equipment and $Equipment->specification('Require Press Proof') eq 'Y' ) ) {
 					push @{$proof_indexes{$signature_index}}, 3;
 					$log->debug("Adding Press Proof");
-					insert_press_proof( $Project, $sig_specs, 3, $qty_index, $variable, $Imposition );
+					insert_press_proof( $Project, $sig_specs, 3, $qty_index, $specs, $Imposition );
 				} elsif ( DEBUG ) {
 $log->debug("Press proof not needed");
 				} # end if
