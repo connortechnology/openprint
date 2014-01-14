@@ -84,7 +84,7 @@ sub get_all_children {
 } # end sub get_all_children
 
 sub parent {
-$openprint::log->error("use of deprecated method");
+$openprint::log->error("use of deprecated method Location parent");
 	return new openprint::Location( $_[0]{'parent_id'}) if $_[0]{'parent_id'};
 } # end sub parent
 sub Parent {
