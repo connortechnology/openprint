@@ -34,7 +34,7 @@ function submit_handler( formName ) {
 	if ( ! form ) {
 		return false;
 	}
-	var AlertDiv = $('Alert');
+	var AlertDiv = $('AlertDiv');
 	if ( AlertDiv && AlertDiv.innerHTML ) {
 		var alert_content = AlertDiv.innerHTML;
 		alert_content = alert_content.replace(/<br\/?>/, "\n" );

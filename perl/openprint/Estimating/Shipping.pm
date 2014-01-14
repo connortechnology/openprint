@@ -112,7 +112,7 @@ if( $openprint::config{NeedCartonsForShipping} ) {
 	# Load from skids or cartons
 			$$specs{"txtPackageWeight".$qty_index} = $$carton_specs{"txtPackageWeight".$qty_index};
 		} # end if
-		if ( ! $$carton_specs{'txtItemsPerPackage'.$qty_index} ) {
+		if ( $carton_service_index and ! $$carton_specs{'txtItemsPerPackage'.$qty_index} ) {
 			# XXX DEPRECATE
 			if ( $$carton_specs{'txtItemsPerPackage'} ) {
 				$$carton_specs{'txtItemsPerPackage'.$qty_index} = $$carton_specs{'txtItemsPerPackage'};
