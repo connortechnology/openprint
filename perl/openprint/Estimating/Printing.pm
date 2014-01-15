@@ -40,6 +40,7 @@ my $use_converted_imposition_cache = 0;
 my %filtered_imposition_cache;
 my $use_filtered_imposition_cache = 0;
 my $calc_other_groups = 0;
+my $third_level_filtering = 1;
 
 my %stitching_cache;
 my %price_cache;
@@ -2836,7 +2837,47 @@ $imp->display("Comparing mino weight:" . $Paper->minimum_order_weight() . 'Price
 				push @{$imps{$str}}, $imp if $add;
 			} # end if ServerLaoutout
 		} # end foreach imp
+if ( $third_level_filtering ) {
+		@results = map {@{$_}} values %imps;
+if ( DEBUG or DEBUG_FILTERING or 1) {
+	foreach my $I ( @results ) {
+		$I->display("After second round of filtering");
+	}
+}
+		%imps = ();
+my $bump_count = 0;
+		# Now need to look at each paper and filter out small impositions
+		foreach my $I ( @results ) {
+			my $Paper = $I->Paper();
+			my $key = join('-',$Paper->width(),$Paper->height(),$Paper->minimum_order(), $I->pages(),$I->image_orientation(),$I->runstyle());
+		
+			if ( ! $imps{$key} ) {
+				$imps{$key} = [ $I ];
+				next;
+			} # end if
+
+			my $add = 1;
+			for ( my $i = 0; $i < @{$imps{$key}}; $i += 1 ) {
+				my $B = $imps{$key}[$i];
+				if ( $$B{imposition} < $I ) {
+					splice @{$imps{$key}}, 0, 1;
+					$i -= 1;
+$bump_count += 1;
+					next;
+				} elsif ( $$B{imposition} > $I ) {
+					$add = 0;
+				} # end if
+			} # end for
+			if ( $add ) {
+			push @{$imps{$key}}, $I;
+			} else {
+				$bump_count += 1;
+			}
+		} # end foreach I
+$openprint::log->debug("Bumped $bump_count impos in 3rd filtering");
+} # end if 3rd
 		@impositions = map {@{$_}} values %imps;
+		
 		$filtered_imposition_cache{$cache_string} = \@impositions if $use_filtered_imposition_cache;
 	} # end if using cache=
 
@@ -2958,8 +2999,8 @@ $openprint::log->debug("Giving up on $$Press{strid} bnecause it's bigger than th
 		my $time = gettimeofday() if DEBUG;
 		$$sig_specs{'txtUnspecifiedPageQuantity'.$qty_index} = $txtUnspecifiedPageQuantity;
 		my @Is = sort { $$b{pages} <=> $$a{pages} } calculate_impositions( $Project, $Press, $sig_specs, $qty_index, $qty, $PaperCounts, $versions, $project, $impositions );
-		$openprint::log->debug( 'calc_impositions: ' . sprintf('%.4f', tv_interval( [$time])*1000) );
 		if ( DEBUG ) {
+		$openprint::log->debug( 'calc_impositions: ' . sprintf('%.4f', tv_interval( [$time])*1000) );
 			foreach my $I ( @Is ) {
 				$I->display( "Before calculation:" . @Is );
 			} # end while

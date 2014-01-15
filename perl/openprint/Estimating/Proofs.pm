@@ -26,7 +26,7 @@ require sql;
 require openprint::service;
 require openprint::Estimating::Printing;
 
-use constant DEBUG => 1;
+use constant DEBUG => 0;
 my @variables = (
 		'txtPrice',
 		'CustomProofSpecs',
