@@ -2837,7 +2837,7 @@ $imp->display("Comparing mino weight:" . $Paper->minimum_order_weight() . 'Price
 				push @{$imps{$str}}, $imp if $add;
 			} # end if ServerLaoutout
 		} # end foreach imp
-if ( $third_level_filtering ) {
+if ( $third_level_filtering and $$sig_specs{"chkOverrideImposition$qty_index"} ne 'Y' ) {
 		@results = map {@{$_}} values %imps;
 if ( DEBUG or DEBUG_FILTERING or 1) {
 	foreach my $I ( @results ) {
@@ -2881,7 +2881,7 @@ $openprint::log->debug("Bumped $bump_count impos in 3rd filtering");
 		$filtered_imposition_cache{$cache_string} = \@impositions if $use_filtered_imposition_cache;
 	} # end if using cache=
 
-	$log->debug("Press Impositions after filtering: " . @impositions ) if DEBUG or DEBUG_FILTERING;
+	$log->debug("Press Impositions after filtering: " . @impositions ) if DEBUG or DEBUG_FILTERING or 1;
 	if ( $$sig_specs{'versions'} > 1 and @impositions < 30 ) {
 		$openprint::log->debug("Calling do_versions, # of imps: " . @impositions ) if DEBUG_VERSIONS;
 		@impositions = openprint::imposition::do_versions( $versions, \@impositions );
@@ -2893,7 +2893,7 @@ $openprint::log->debug("Bumped $bump_count impos in 3rd filtering");
 		$openprint::log->debug("Impositions for Press: " . $$Press{'strid'} . ' after folding:' . @impositions) if DEBUG;
 	} # end if Folding
 
-	if ( DEBUG or DEBUG_FILTERING ) {
+	if ( DEBUG or DEBUG_FILTERING or 1 ) {
 
 		$openprint::log->debug($qty_index.'UPQ:'.$$sig_specs{'txtUnspecifiedPageQuantity'.$qty_index} . " Press: " .$$Press{'strid'} . ' # ' . @impositions );
 		foreach my $imp ( @impositions ) {
@@ -2909,6 +2909,8 @@ sub get_new_specs {
 	my %new_specs;
 
 	if ( $s_id ) {
+
+if ( 0 ) {
 # Look for overrides first. 
 		for ( my $j = 0; $j < @$signatures; $j += 1 ) {
 # This code can theortically unsort the sognatures, so we shouldn't really have special cases for when the s_id is greater than the current one.
@@ -2930,6 +2932,7 @@ sub get_new_specs {
 				$j -= 1;
 			} # end if
 		} # end foreach
+}
 
 # If we get here, @signatures has been cleaned out, and no overrides found.
 		if ( ( $s_id == $service_index ) and @$signatures ) {
@@ -2944,8 +2947,8 @@ sub get_new_specs {
 		$s_id = 0;
 		%new_specs = %$service_specs;
 # These will only have an effect if we get down to call get_project_price. If we get there, we are looking at a smaller # of pages, so might want a different press.
-		$new_specs{'chkOverrideImposition'.$qty_index} = '';
-		$new_specs{'chkOverridePageQuantity'.$qty_index} = '';
+		#$new_specs{'chkOverrideImposition'.$qty_index} = '';
+		#$new_specs{'chkOverridePageQuantity'.$qty_index} = '';
 		#$new_specs{'chkOverridePress'.$qty_index} = '';
 		#$new_specs{'chkOverrideRunStyle'.$qty_index} = '';
 		#$new_specs{'chkOverrideSheetSize'.$qty_index} = '';
@@ -3204,23 +3207,27 @@ $openprint::log->debug("Giving up on $$Press{strid} bnecause it's bigger than th
 							$imp->display( $recursion_depth . ' UPQ: ' . $upq . ' first level calc_price' ) if DEBUG;
 							$$sig_price{Imposition} = $imp;
 
-			if ( 1 ) {
-				my $results = plate_cost( $sig_price, \%PlateCounts );
-				$$sig_price{'Total Cost'} += $$results{Price};
-				$$sig_price{'Comparison Cost'} += $$results{Price};
-				$$sig_price{PlateCost} = $$results{Price} ;
-			}
+							if ( 1 ) {
+								my $results = plate_cost( $sig_price, \%PlateCounts );
+								$$sig_price{'Total Cost'} += $$results{Price};
+								$$sig_price{'Comparison Cost'} += $$results{Price};
+								$$sig_price{PlateCost} = $$results{Price} ;
+							}
 
 							if ( int($$sig_price{'Comparison Cost'}) == $last_sig_price ) {
 								my $sigs = int($upq/$$imp{'pages'});
 								$$price{'Comparison Cost'} += $$sig_price{'Comparison Cost'} * $sigs;
 								$PaperCounts{$Paper->id_string()} += $sigs * $$sig_price{'Stock Qty'};
+								my $sig;
 								foreach ( 1 .. $sigs ) {
 									push @{$$price{Impositions}}, $imp;
 									push @{$$price{prices}}, $sig_price;
 									push @total_impositions, $imp;
 									$previous_forms_cache{$hash_key} += 1;
+
+									$sig = shift @signatures;
 								} # end foreach
+								unshift @signatures, $sig;
 								$upq = $upq % $$imp{pages};
 								$PlateCounts{$$sig_price{'Plate Costs'}{'Plate ID'}} += $sigs * $$sig_price{'Plate Costs'}{'Plate Count'};
 # Blanks get re-used
@@ -3264,6 +3271,7 @@ $openprint::log->debug("Giving up on $$Press{strid} bnecause it's bigger than th
 
 					if ( $upq ) {
 						if ( ! $new_specs ) {
+# new_specs is notnull when we encountered an unmatching ovveride
 							$imp = $base_imp->copy();
 							$new_specs = get_new_specs( $Project, $service_index, $service_specs, \@signatures, $qty_index, $upq, \%previous_forms_cache, $hash_key );
 							$$imp{specs} = $new_specs;
