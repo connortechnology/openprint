@@ -97,7 +97,9 @@ if ( 0 ) {
 				); ) ?>
 				</p>
 				<p><label>Spine</label>
-					<?echo(radio('spine', [ map { $_, $_ } 'height', 'width' ], $$variable{spine}, { default=>'height', onclick=>'calc(this.form.name)' } ); ) ?>
+					<?echo(
+$log->debug("Spine: " . $$variable{spine} );
+radio('spine', [ map { $_, $_ } 'height', 'width' ], $$variable{spine}, { default=>'height', onclick=>'calc(this.form.name);' } ); ) ?>
 				</p>
 				<p><label>Spread</label>
                 <? echo ( join( "\n",

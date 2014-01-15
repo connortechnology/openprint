@@ -2643,7 +2643,6 @@ $imp->display("Ma imposition! for $$imp{pages} is $max_impositions{$$imp{'pages'
 				} # end if
 
 			} # end if SpreadLayout
-$imp->display("Accepting");
 			push @results, $imp;
 		} # end foreach imp
 

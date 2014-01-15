@@ -30,6 +30,7 @@ my %variables = (
     'chkOverridePackageQuantity'=>['save'],
     'txtTotalWeight1'=>['save','output'], 'txtTotalWeight2'=>['save','output'], 'txtTotalWeight3'=>['save','output'],
     'txtPackageWeight'=>['save','output'],
+	alert	=> ['save','output' ],
 );
 
 sub variables {
