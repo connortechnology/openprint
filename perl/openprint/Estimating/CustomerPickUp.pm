@@ -54,6 +54,7 @@ sub calc {
 	my ( $log, $dbh, $variable, $project_index, $service_index, $specs ) = @_;
 
 	my $status = 'calculated';
+	$$specs{alert} = '';
 
 	my $Project = new openprint::Project( $project_index );
 	my $services = $Project->services();
