@@ -192,9 +192,9 @@ if ( $$variable{'CAR'}->reprint_on() ) {
 	<tr>
 		<td>Approved by</td>
 		<td>
-			<select name="approved_by_id"><? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User->find('type'=>['E','A'],'usergroup'=>'Reprint Approvals','order'=>'lower(firstname),lower(lastname)') ], $session{user_id} ); ) ?></select>
+			<select name="approved_by_id"><option value="">select</option><? echo ( make_drop_down( openprint::User->dropdown( type=>['E','A'],'usergroup any'=>'Reprint Approvals',order=>'lower(firstname),lower(lastname)'), $session{user_id} ); ) ?></select>
 		</td>
-		<td>Approved on:</td>
+		<td>Approved on</td>
 		<td>
 <? eval (
 	if ( $$variable{'CAR'}->approved_on() ) {
@@ -222,7 +222,7 @@ if ( $$variable{'CAR'}->reprint_on() ) {
 </form>
 <p class="buttons">
 	<? echo ( join('',
-		ssi::button( 'Save', { onclick=>"if(check_part1(\$('part1form'))){new Ajax.Updater('Part1','/employee/iso/_car_view_part1.html',
+		button( 'Save', { onclick=>"if(check_part1(\$('part1form'))){new Ajax.Updater('Part1','/employee/iso/_car_view_part1.html',
 		{
 			parameters: \$('part1form').serialize(),
 			evalScripts: true,

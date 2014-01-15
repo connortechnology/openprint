@@ -1,10 +1,10 @@
-package openprint::CAR_Reason;
-@ISA = qw(openprint::Object);
-
 use strict;
+package openprint::CAR_Reason;
+our @ISA = qw(openprint::Object);
+
 use vars qw( $debug $table $serial %fields %defaults %transforms );
 
-$debug = 0;
+$debug = 1;
 $table = 'car_reasons';
 $serial = 'car_reasons_id_seq';
 
