@@ -206,9 +206,9 @@ sub calc {
 sub signature_calc {
     my ( $Project, $service_index, $specs, $signature_service_index, $sig_specs, $qty_index, $imposition, $MakeReadies ) = @_;
 
-#foreach my $equipment_id ( keys %{$MakeReadies} ) {
-#$openprint::log->debug("Makereadies $equipment_id $$MakeReadies{$equipment_id}");
-#}
+foreach my $equipment_id ( keys %{$MakeReadies} ) {
+$openprint::log->debug("Makereadies $equipment_id $$MakeReadies{$equipment_id}");
+}
 
 	my %bestPrice;
 	$bestPrice{'Status'} = 'uncalculated';
@@ -216,6 +216,7 @@ sub signature_calc {
 	my @front_aq;
     $$sig_specs{SideOneColours} = [openprint::Estimating::Printing::get_colours( $sig_specs, 'SideOne' )] if ! $$sig_specs{SideOneColours};
 	foreach ( @{$$sig_specs{SideOneColours}} ) {
+$openprint::log->debug("blah  $$_{name}");
 		if ( $$_{'name'} =~ /Aqueous/ ) {
 			push @front_aq, $$_{'name'};
 			#$openprint::log->debug("Side one Aqueous: $_");
@@ -231,7 +232,7 @@ sub signature_calc {
 		} # end if
 	} # end foreach colour
 
-	#$openprint::log->debug("Signature : $signature_service_index");
+	$openprint::log->debug("Signature : $signature_service_index");
 	if ( ! ( @front_aq or @back_aq ) ) {
 $openprint::log->warn("Doing AQ when not needed");
 		$bestPrice{'Status'} = 'calculated';	
@@ -279,12 +280,12 @@ if ( 1 ) {
 
 	my @impositions = ();
 	my $services = $Project->services();
-	if ( $$services{'Cutting'} ) {
-		#$openprint::log->debug('Cutting');
+	if ( 0 and $$services{'Cutting'} ) {
+		$openprint::log->debug('Cutting');
 		my @imps = openprint::imposition::get_all_impositions( $imposition );
-		#$openprint::log->debug('After get all Cutting' . @imps);
+		$openprint::log->debug('After get all Cutting' . @imps);
 		for ( my $i = 0; $i < @imps; $i += 1 ) {
-			#$openprint::log->debug("Imposition: " . $imps[$i]{'imposition'} . 'out' );
+			$openprint::log->debug("Imposition: " . $imps[$i]{'imposition'} . 'out' );
 			if ( ( $$specs{"chkOverrideImposition-$$sig_specs{'SignatureIndex'}-$qty_index"} ne 'Y' )
 					or ( $$specs{"txtImposition-$$sig_specs{'SignatureIndex'}-$qty_index"} == $imps[$i]->imposition() )
 			   ) {
@@ -302,9 +303,10 @@ if ( 1 ) {
 	} else {
 		@impositions = ( $imposition->copy() );
 	} # end if
-	#$openprint::log->debug('DOne Cutting :' . @impositions);
+	$openprint::log->debug('AQ DOne Cutting :' . @impositions);
 
 	foreach my $Equipment ( @equipment ) {
+$openprint::log->debug("AQ Equipment $$Equipment{strid}");
 		$$specs{'hdnBreakdown'.$qty_index} .= 'Equipment: '.$Equipment->strid().' ' . $Equipment->specification('Aqueous Capable') . ' ' . $$sig_specs{'ddmPress'.$qty_index} . ',<br/>';
 		if ( $Equipment->specification('Aqueous Capable') eq 'When Printing' ) {
 			if ( $$sig_specs{'ddmPress'.$qty_index} ne $Equipment->strid() ) {
@@ -318,6 +320,7 @@ if ( 1 ) {
 		my %minimum = openprint::service::get_price_object( 'AqueousMinimumCharge', undef, $Equipment );
 
 		foreach my $imp ( @impositions ) {
+$imp->display("AQ");
 			my %MakeReadies = $MakeReadies ? %$MakeReadies : ();
 			$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Imposition: %dx%d+%dx%d=%dout %s:', @$imp{'columns','rows','dutch_columns','dutch_rows','imposition','runstyle'} );
 			next if ! ( $imp->rows() * $imp->columns() );
@@ -351,7 +354,7 @@ if ( 1 ) {
 				@types = (@front_aq, @back_aq);
 			} # end if
 			my $area = $imp->layout_area();
-
+$openprint::log->debug("AQ types @types");
 			foreach my $type ( @types ) {
 
 				my %setupPrice;

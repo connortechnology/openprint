@@ -20,12 +20,12 @@ use strict;
 package openprint::Estimating::Printing;
 my $threading = 0;
 #use threads;
-use constant DEBUG => 0;
+use constant DEBUG => 1;
 use constant DEBUG_VERSIONS => 0;
-use constant DEBUG_FILTERING => 0;
-use constant DEBUG_PRICE_DECISIONS => 0;
-use constant DEBUG_INKS => 0;
-use constant DEBUG_STOCK => 0;
+use constant DEBUG_FILTERING => 1;
+use constant DEBUG_PRICE_DECISIONS => 1;
+use constant DEBUG_INKS => 1;
+use constant DEBUG_STOCK => 1;
 
 my $master_time;
 my %special_colours;
@@ -2850,7 +2850,7 @@ my $bump_count = 0;
 			my $Paper = $I->Paper();
 			my $key = join('-',$Paper->width(),$Paper->height(),$Paper->minimum_order(), $I->pages(),$I->image_orientation(),$I->runstyle());
 		
-			if ( ! $imps{$key} ) {
+			if ( ! ( $imps{$key} and @{$imps{$key}} ) ) {
 				$imps{$key} = [ $I ];
 				next;
 			} # end if
@@ -3218,15 +3218,17 @@ $openprint::log->debug("Giving up on $$Press{strid} bnecause it's bigger than th
 								$$price{'Comparison Cost'} += $$sig_price{'Comparison Cost'} * $sigs;
 								$PaperCounts{$Paper->id_string()} += $sigs * $$sig_price{'Stock Qty'};
 								my $sig;
+$openprint::log->debug("Sigs: $sigs");
 								foreach ( 1 .. $sigs ) {
 									push @{$$price{Impositions}}, $imp;
 									push @{$$price{prices}}, $sig_price;
 									push @total_impositions, $imp;
 									$previous_forms_cache{$hash_key} += 1;
 
-									$sig = shift @signatures;
+									$imp = $base_imp->copy();
+									$$imp{specs} = $sig = shift @signatures if @signatures;
 								} # end foreach
-								unshift @signatures, $sig;
+								unshift @signatures, $sig if $sig;
 								$upq = $upq % $$imp{pages};
 								$PlateCounts{$$sig_price{'Plate Costs'}{'Plate ID'}} += $sigs * $$sig_price{'Plate Costs'}{'Plate Count'};
 # Blanks get re-used
@@ -4573,6 +4575,7 @@ $openprint::log->debug("Was mixed") if DEBUG_INKS;
 		$price{'Ink Price'} += $ink_price{Total};
 		$price{'Ink breakdown'} .= '<br/>';
 	} # end foreach colour/coating
+$openprint::log->debug("Done coatings");
 
 	if ( $Press->specification('Charge for setup overs') eq 'N' ) {
 		$impressions -= $setup_overs;
@@ -4584,6 +4587,7 @@ $openprint::log->debug("Was mixed") if DEBUG_INKS;
 		if ( ($$Paper{'type'} ne 'Roll') and ($$Paper{'start_width'} != $$Paper{'width'} or $$Paper{'start_height'} != $$Paper{'height'} ) ) {
 #my $time = gettimeofday();
 			my %cutting_results = openprint::Estimating::Cutting::signature_calc_stock_cutting( $Project, $specs, $$project{'CuttingSpecs'}, $qty_index, $Paper, $project );
+$openprint::log->debug("Done cutting");
 #foreach my $k ( keys %cutting_results ) {
 #$openprint::log->debug("Cutting: $k => $cutting_results{$k}");
 #}
@@ -4607,6 +4611,7 @@ $openprint::log->debug("Was mixed") if DEBUG_INKS;
 $openprint::log->warn("Something wrong in AQ");
 		} # end if
 	} # end if Aqueous
+$openprint::log->debug("Done AqQ");
 
 #$price{'Press Washes'} += $varnish_price{'Press Washes'};
 	if ( $price{'Press Washes'} ) {

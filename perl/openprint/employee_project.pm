@@ -910,7 +910,7 @@ sub _status {
 			if ( ! $Job ) {
 				$variable{'error'} .= 'Job not found on schedule.';
 			} else {
-				my @service_ids = sets::exclude( $service_id, $Job->service_id() );
+				my @service_ids = sets::exclude( [ $service_id ], $Job->service_id() );
 				if ( ! @service_ids ) {
 					$variable{'error'} .= $Job->delete();
 				} else {
