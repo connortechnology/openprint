@@ -1357,6 +1357,9 @@ sub reorder_jobs {
 		return;
 	} # end if
 
+	# Cache for speed
+	openprint::Project->find(id=>[map { $_->project_id() ? $_->project_id() : () } @order ]);
+
 	foreach my $Job ( @order ) {
 		next if ! $Job->project_id();	
 		my $Project = $Job->Project();
@@ -1380,12 +1383,12 @@ sub reorder_jobs {
 #$log->debug("Running job,moving up starttime");
 		$start_time = $row->starttime_seconds();
 	} # end if
-#$log->debug("Grab all");
+$log->debug("Grab all $start_time");
 	# Grab all shifts.  We will only add a shift at the end
 	my @Shifts = openprint::Shift->find(
-			'equipment_id'	=>	$$row{'equipment_id'},
-			'endtime <='	=>	Date::Format::time2str('%Y-%m-%d %H:%M%z', $start_time ),
-			'order'			=>	'starttime',
+			equipment_id	=>	$$row{equipment_id},
+			'endtime >='	=>	Date::Format::time2str('%Y-%m-%d %H:%M%z', $start_time ),
+			order			=>	'starttime',
 			);
 #foreach my $S ( @Shifts ) {
 #$log->debug("Shifts: " . $S->to_string() );
@@ -1397,7 +1400,7 @@ $log->debug("No shifts");
 		my $NextES;
 
 		# This is neccessary, because it happens because we have no shifts in teh array
-		my $PreviousShift = openprint::Shift->find_one( 'equipment_id' => $$row{'equipment_id'}, 'order'=>'starttime DESC' );
+		my $PreviousShift = openprint::Shift->find_one( equipment_id => $$row{equipment_id}, order=>'starttime DESC' );
 		if ( $PreviousShift ) {
 			# The logic here should be, grab the ES from the last shift, and then get the next ES.  It should not be based on time
 			$NextES = $PreviousShift->Equipment_Shift()->Next();

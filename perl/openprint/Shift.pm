@@ -19,7 +19,7 @@ require openprint::Equipment_Shift;
 require openprint::User;
 require openprint::ScheduledJob;
 
-$debug = 0;
+$debug = 1;
 
 $table = 'shifts';
 $serial = 'shifts_id_seq';
