@@ -8,6 +8,7 @@ require openprint::Object;
 require openprint::pricing;
 require openprint::logs;
 
+use Memoize;
 use openprint ();
 *session = \%openprint::session;
 *log = \$openprint::log;
@@ -111,6 +112,7 @@ sub get_Price {
     return \%price;
 } # end sub get_Price
 
+memoize('get_price');
 sub get_price {
     my ( $self, $quantity, $Equipment, $Pricelist, $period ) = @_;
 

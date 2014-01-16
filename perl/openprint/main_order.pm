@@ -1,9 +1,9 @@
+use strict;
 package openprint::main_order;
 
 require Email::Valid;
 use Date::Calc qw(Add_Delta_Days check_date);
 
-use strict;
 use openprint ();
 use vars qw( %config %param %variable $log $dbh %session );
 *variable = \%openprint::variable;
@@ -64,12 +64,13 @@ sub information {
 		$order_id = openprint::order::make_order_from_order( $order_id );
 		return if ! $order_id;
 	} elsif ( $param{'btnFunction'} eq 'ReOpen' ) {
-		openprint::order::delete_unfinished_orders();
-		if ( $order_id = $param{'order_id'} ) {
+		if ( $order_id ) {
+			openprint::order::delete_unfinished_orders();
 			my $Order = new openprint::Order( $order_id );
 			$Order->save({'status'=>'Re-Opened','session_id'=>$session{'_session_id'}});
 			foreach my $OP ( $Order->Ordered_Projects() ) {
 				$variable{'error'} .= $OP->save({'price'=>undef});
+				
 			} # end foreach
 			$Order->add_log( 'Re-Opened' );
 		} else {

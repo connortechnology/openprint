@@ -4575,7 +4575,6 @@ $openprint::log->debug("Was mixed") if DEBUG_INKS;
 		$price{'Ink Price'} += $ink_price{Total};
 		$price{'Ink breakdown'} .= '<br/>';
 	} # end foreach colour/coating
-$openprint::log->debug("Done coatings");
 
 	if ( $Press->specification('Charge for setup overs') eq 'N' ) {
 		$impressions -= $setup_overs;
@@ -4611,7 +4610,6 @@ $openprint::log->debug("Done cutting");
 $openprint::log->warn("Something wrong in AQ");
 		} # end if
 	} # end if Aqueous
-$openprint::log->debug("Done AqQ");
 
 #$price{'Press Washes'} += $varnish_price{'Press Washes'};
 	if ( $price{'Press Washes'} ) {

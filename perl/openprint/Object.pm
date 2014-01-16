@@ -22,7 +22,7 @@ use vars qw( $log $dbh $AUTOLOAD %cache %name_cache %fields %defaults %transform
 *config = \%openprint::config;
 
 my $debug = 0;
-use constant DEBUG_ALL => 1;
+use constant DEBUG_ALL => 0;
 $no_cache = 0;
 
 sub init_cache {
@@ -607,7 +607,7 @@ sub find {
 
 #$log->debug("looking for ($k) in $type :: $_ , $$f{$k}");
 			if ( ! $$fields{$field} ) {
-				$log->debug("No $field in $_ for $object_type") if DEBUG_ALL;
+				#$log->debug("No $field in $_ for $object_type") if DEBUG_ALL;
 				next;
 			} # end if
 

@@ -1553,5 +1553,13 @@ sub change_ProjectType {
 	return $error;
 } # end sub change_ProjectType
 
+sub url_to {
+	return '/main/project/view.html?project_id='.$_[0]{id};
+} # end sub url_to
+
+sub link_to {
+	return sprintf('<a href="/main/project/view.html?project_id=%1$d">%2$s</a>', $_[0]{id}, ( $_[1] ? $_[1] : $_[0] ) );
+} # end sub link_to
+
 1;
 __END__
