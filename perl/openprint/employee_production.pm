@@ -1287,7 +1287,7 @@ $log->debug("Order after coalesce: @order : " . join(',', map { new openprint::S
 				} # end foreach row
 
 # Get the rest of the jobs on this equipment
-				my @jobs = openprint::ScheduledJob->find( 'equipment_id'=>$Shift->equipment_id(),'starttime <='=>$Shift->starttime(),'servicetype_id'=>$Equipment->servicetype_id(), 'order'=>'starttime' );
+				my @jobs = openprint::ScheduledJob->find( 'equipment_id'=>$Shift->equipment_id(),'starttime >='=>$Shift->starttime(),'servicetype_id'=>$Equipment->servicetype_id(), 'order'=>'starttime' );
 
 # Search for each job in the list of remaining jobs.  If we don't find it, it might be on another press.
 				foreach my $row_id ( @order ) {
@@ -1429,7 +1429,6 @@ $log->debug("ES: " . $NextES->name() );
 		if ( $order[$i]{starttime} and $order[$i]{locked} ) {
 			push @fixed_jobs, splice @order, $i, 1;
 			$i -= 1;
-			next;
 		} # end if
 		# Tentative jobs do not affect non-tentative jobs
 		if ( $order[$i]{tentative} ) {

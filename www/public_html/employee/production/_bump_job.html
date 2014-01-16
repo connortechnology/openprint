@@ -15,19 +15,19 @@
 			<? echo ( 
 				make_drop_down( openprint::Equipment->dropdown(
 						'useinscheduling'	=>	1,
-						'servicetype_id any'	=>	$$variable{'Job'}->servicetype_id(),
+						( $$variable{Job}->servicetype_id() ? ( 'servicetype_id any'	=>	$$variable{'Job'}->servicetype_id() ) : () ),
 						order				=>	'lower(strid)'
 					), $$variable{'Job'}->equipment_id() );
 			) ?>
 		</select>
 	</p>
 	<br/>
-	<div id="other_servicetypes"><? echo ( include('_bump_job_popup_servicetypes.html'); ) ?></div>
+	<div id="other_servicetypes"><?include('_bump_job_popup_servicetypes.html')?></div>
 	<br/>
 	<p class="buttons">
 	<? echo ( 
 		my $html = '';
-		$html .= button( 'BumpOk', { onclick=>"new Ajax.Request( '_li_change.json', {parameters: \$('bump_form').serialize(), evalScripts: true } );popupWin.destroy();", href=>'', text=>'Ok' } );
+		$html .= button( 'BumpOk', { onclick=>"new Ajax.Request( '_li_change.json', {parameters: \$('bump_form').serialize(), evalScripts: true } );popupWin.destroy();", text=>'Ok' } );
 		$html .= button( 'BumpCancel', { onclick=>"popupWin.destroy();", text=>'Cancel' } );
 		return $html;
 	) ?>
