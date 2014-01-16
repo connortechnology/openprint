@@ -83,10 +83,20 @@ if ( $$variable{'country'} eq 'US' ) {
 				<span id="state_container">
 				<select name="state" id="state">
 					<option value=""> Select </option>
-					<? echo ( join("\n",
+					<? echo ( 
+					if ( $$variable{'country'} eq 'US' ) {
+					require states;
+						return make_drop_down( \@states::states, $$variable{'state'} );
+					} elsif ( $$variable{'country'} eq 'CA' ) {
+						require provinces;
+						return make_drop_down( \@provinces::provinces, $$variable{'state'} );
+					}
+					require states;
+					join("\n",
 						make_drop_down( \@states::states, $$variable{'state'} ),
 						make_drop_down( \@provinces::provinces, $$variable{'state'} ),
-					); ) ?> 
+					); 
+					) ?> 
 				</select>
 				</span>
 			</li>
