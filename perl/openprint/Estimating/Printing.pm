@@ -1726,7 +1726,13 @@ sub set_size {
 				} elsif ( $openprint::config{$$printing_specs{'rdbTemplateType'}.'SpreadSize'} ) {
 					$$specs{'txtSpreadSize'} = $openprint::config{$$printing_specs{'rdbTemplateType'}.'SpreadSize'};
 				} elsif ( $$printing_specs{'rdbTemplateType'} eq 'PerfectBound' ) {
-					$$specs{'txtSpreadSize'} = $openprint::config{PerfectBindSpreadSize} ? $openprint::config{PerfectBindSpreadSize} : 2;
+					if ( $openprint::config{PerfectBindSpreadSize} ) {
+						$$specs{'txtSpreadSize'} = $openprint::config{PerfectBindSpreadSize};
+					} elsif ( $$specs{'GroupPageQuantity'} % 4 ) {
+						$$specs{'txtSpreadSize'} = 2;
+					} else {
+						$$specs{'txtSpreadSize'} = 4;
+					} # end if
 				} elsif ( sets::isin( $$printing_specs{'rdbTemplateType'}, ['CornerStitching','SpinePaste'] ) ) {
 					$$specs{'txtSpreadSize'} = 2;
 				} else {

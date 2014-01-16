@@ -449,9 +449,11 @@ sub internal_calc {
 
 	my $ac = sql::start_transaction( $dbh );
 	my $Project = new openprint::Project( $project_index );
+	$Project->save({status=>'uncalculated'}) if $Project->status() ne 'uncalculated';
     $log->debug("LOCKING Projects for project $$Project{id}");
     #$dbh->do( "SELECT * FROM Projects WHERE id=".$$Project{id}. ' FOR UPDATE' );
 	my $Service = $Project->Service($service_index) if $service_index;
+	$Service->save({status=>'uncalculated'}) if $Service->status() ne 'uncalculated';
 	my $specs;
 	if ( ! $Service ) {
 $openprint::log->error("Doing internal calc without service_index or, not found");
