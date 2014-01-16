@@ -296,7 +296,7 @@ sub find {
 		$log->debug("Debug loaded skids ($sql) (@values) # of results: " . @$data );
 	} # end if
 	if ( @$data >= 100 ) {
-		Carp::cluck("Loading a lot of skids?! $sql");
+		Carp::cluck("Loading a lot of skids?! $sql : #". @$data );
 	} # end if
 	return map { new openprint::Skid( $_->{id}, $_ ) } @$data;
 

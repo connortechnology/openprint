@@ -3196,10 +3196,10 @@ $openprint::log->debug("Giving up on $$Press{strid} bnecause it's bigger than th
 						$$imp{specs} = $new_specs;
 
 						if ( 
-								( ($$new_specs{'chkOverridePageQuantity'.$qty_index} ne 'Y') or ($$new_specs{'PageQuantity'.$qty_index} == $$imp{'pages'}) ) and
-								( ($$new_specs{'chkOverrideImposition'.$qty_index} ne 'Y') or ($$new_specs{'txtImposition'.$qty_index} == $$imp{'imposition'}) ) and
+								( ($$new_specs{'chkOverridePageQuantity'.$qty_index} ne 'Y') or ($$new_specs{'PageQuantity'.$qty_index} == $$imp{pages}) ) and
+								( ($$new_specs{'chkOverrideImposition'.$qty_index} ne 'Y') or ($$new_specs{'txtImposition'.$qty_index} == $$imp{imposition}) ) and
 								( ($$new_specs{'chkOverridePress'.$qty_index} ne 'Y') or ($$new_specs{'ddmPress'.$qty_index} eq $Press->strid()) ) and
-								( ($$new_specs{'chkOverrideRunStyle'.$qty_index} ne 'Y') or ($$new_specs{'ddmRunStyle'.$qty_index} eq $$imp{'runstyle'}) )
+								( ($$new_specs{'chkOverrideRunStyle'.$qty_index} ne 'Y') or ($$new_specs{'ddmRunStyle'.$qty_index} eq $$imp{runstyle}) )
 						   ) {
 
 							my $sig_price = calc_price( $Project, $$new_specs{'ServiceIndex'}, $imp, $project, $services, $new_specs, $qty, $qty_index, \%PlateCounts, \%washed_colours, \@total_impositions );
@@ -3226,7 +3226,10 @@ $openprint::log->debug("Sigs: $sigs");
 									$previous_forms_cache{$hash_key} += 1;
 
 									$imp = $base_imp->copy();
-									$$imp{specs} = $sig = shift @signatures if @signatures;
+									if ( @signatures ) {
+										$sig = shift @signatures;
+										$$imp{specs} = openprint::service::get_specs_ref( $Project, $sig );
+									} # end if
 								} # end foreach
 								unshift @signatures, $sig if $sig;
 								$upq = $upq % $$imp{pages};
