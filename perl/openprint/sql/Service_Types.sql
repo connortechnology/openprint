@@ -8,6 +8,7 @@ CREATE TABLE Service_Types (
 	strDetailedURL	TEXT,
 	create_visible	CHAR(1) default 'Y',
 	view_visible	CHAR(1) default 'Y',
+	summary_visible	BOOLEAN NOT NULL default true,
 	sorting			INTEGER,
 	type			TEXT,
 	PRIMARY KEY (id)

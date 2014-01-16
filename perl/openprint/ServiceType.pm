@@ -7,7 +7,7 @@ require openprint::ServiceType_Default;
 
 use vars qw( $debug $table $serial %find_fields %fields %transforms %defaults $cache_field );
 
-$debug = 0;
+$debug = 1;
 $table = 'service_types';
 $serial = 'service_types_id_seq';
 
@@ -21,8 +21,9 @@ $serial = 'service_types_id_seq';
 	sorting			=> 'sorting',
 	create_visible	=> 'create_visible',
 	view_visible	=> 'view_visible',
-	category		=>	undef,
-	deleted			=>	'deleted',
+	summary_visible	=> 'summary_visible',
+	category		=> undef,
+	deleted			=> 'deleted',
 );
 %find_fields = (
 	category	=>	'(SELECT name FROM ServiceType_Categories WHERE id=category_id)',
@@ -33,6 +34,7 @@ $serial = 'service_types_id_seq';
 	deleted			=>	0,
 	category_id		=>	undef,
 	sorting			=>	undef,
+	summary_visible	=>	1,
 );
 
 sub cache_field {

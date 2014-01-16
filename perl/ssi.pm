@@ -755,7 +755,7 @@ sub radio {
 
 	my $onclick = $$options{'onclick'} if $options;
 	my $html;
-	if ( $$options{default} and ! $selected ) {
+	if ( $$options{default} and ! defined $selected ) {
 $log->debug("Selecting default $$options{default}");
 		$selected = $$options{default};
 	} # end if

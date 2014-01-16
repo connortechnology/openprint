@@ -898,6 +898,9 @@ if ( ! sets::isin( 'service_types', \@tables ) ) {
 		} # end if
 		$dbh->do('ALTER TABLE service_types DROP COLUMN category');
 	}# end if
+	if ( ! exists $$data{summary_visible} ) {
+		$dbh->do('ALTER TABLE service_types add summary_visible BOOLEAN NOT NULL default true');
+	} # end if
 }# end if
 if ( ! sets::isin( 'service_categories_id_seq', \@sequences ) ) {
 	$dbh->do('create sequence service_categories_id_seq;');
