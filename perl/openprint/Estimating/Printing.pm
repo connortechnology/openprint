@@ -899,6 +899,7 @@ sub get_Stocks {
 				} elsif ( $$P{'type'} eq 'Sheet' ) {
 # Don't cut sheets into rolls
 					next if ! $$specs{'OverrideStockHeight'.$qty_index};
+if ( 1 ) {
 					my $width_factor2 = $$P{'start_height'} / $$specs{'OverrideStockWidth'.$qty_index};
 					my $height_factor2 = $$P{'start_width'} / $$specs{'OverrideStockHeight'.$qty_index};
 					if ( ! (
@@ -909,6 +910,11 @@ sub get_Stocks {
 
 						next;
 					} # end if
+} else {
+					if ( ! ( $width_factor1 == int($width_factor1) and $height_factor1 == int($height_factor1) ) ) {
+						next;
+					} # end if
+}
 				} # end if
 				$found = 1;
 $openprint::log->debug( 'Found stock to cut: ' . $P->id_string() . ' for ' . $$specs{'OverrideStockWidth'.$qty_index} . 'x' . $$specs{'OverrideStockHeight'.$qty_index} );
@@ -5496,11 +5502,11 @@ sub get_colour_description {
 		} # end foreach
 	} # end if
 	return sprintf( '%s%s%s%s/%s%s%s%s %s',
-			($front_colours ? $front_colours : ''),
+			($front_colours ? $front_colours : '0'),
 			$colorsideone,
 			($front_pms ? '+'.$front_pms.'PMS' : ''),
 			$front_coatings,
-			( $back_colours ? $back_colours : '' ),
+			( $back_colours ? $back_colours : '0' ),
 			$colorsidetwo,
 			($back_pms ? '+'.$back_pms.'PMS' : ''),
 			$back_coatings,
