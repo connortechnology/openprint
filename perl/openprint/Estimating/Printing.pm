@@ -1735,8 +1735,10 @@ sub set_size {
 					} # end if
 				} elsif ( sets::isin( $$printing_specs{'rdbTemplateType'}, ['CornerStitching','SpinePaste'] ) ) {
 					$$specs{'txtSpreadSize'} = 2;
-				} else {
+				} elsif ( $$specs{'GroupPageQuantity'} % 4 ) {
 					$$specs{'txtSpreadSize'} = 2;
+				} else {
+					$$specs{'txtSpreadSize'} = 4;
 				} # end if
 			} # end if
 			$variables{txtSpreadSize} = [ sets::union( 'output', @{$variables{txtSpreadSize}} ) ];
