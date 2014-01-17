@@ -29,8 +29,9 @@
 		<fieldset><legend><? echo ( $$variable{'Project'}->Type()->name() ) ?> <?txtSignatureType?></legend>
 <? if ( $$variable{'txtSignatureType'} ) ?>
             <div class="<? echo ( my $type = $$variable{'txtSignatureType'}; $type =~ s/\s//g; return $type; ) ?>">
-                <p><label>Description</label><input type="text" name="txtServiceDescription" value="<?txtServiceDescription?>" /></p>
-                <p class="Dimensions">
+				<ul>
+                <li><label>Description</label><input type="text" name="txtServiceDescription" value="<?txtServiceDescription?>" /></li>
+                <li class="Dimensions">
                     <label>Spread dimensions</label>
 					<? echo (
 						my $html = sprintf('%s x %s => %s x %s',
@@ -44,10 +45,19 @@
 						} # end if
 						return $html;
 					) ?>
-                </p>
-				<p><label>Pages per spread</label>
-				<? echo ( input( type=>'cardinal', name=>'txtSpreadSize', id=>'txtSpreadSize', value=>$$variable{txtSpreadSize}, min=>2 ); ) ?>
-				</p>
+                </li>
+				<? echo (
+						if ( sets::isin( $session{'user_type'}, ['A','E'] ) ) {
+						return join("\n",	
+						'<li><label>Pages per spread</label>',
+						input( type=>'cardinal', name=>'txtSpreadSize', id=>'txtSpreadSize', value=>$$variable{txtSpreadSize}, min=>2 ),
+						write_override( 'OverrideSpreadSize', $$variable{'OverrideSpreadSize'}, '', q`calc('f1');` ),
+						'</li>'
+						);
+						} # end if
+						input( type=>'hidden', name=>'txtSpreadSize', id=>'txtSpreadSize', value=>$$variable{txtSpreadSize} );
+				) ?>
+				</ul>
             </div>
 <? if ( $$variable{'Group'} == 1 ) ?>
             <div class="rightColumn" id="PresentationFolderQuestions" <? echo ( ! sets::isin( $$variable{'rdbTemplateType'}, ['2Panel1Pocket','2Panel2Pocket','TriFoldDoublePocket'] ) ? 'style="display:none;"' : '' ) ?> >

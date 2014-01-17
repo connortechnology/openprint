@@ -1620,8 +1620,8 @@ $openprint::log->debug("Unknown spreadsize $$specs{txtSpreadSize}");
 					$$specs{'txtWidth'} = $$printing_specs{'txtFinalWidth'};
 					$$specs{'txtHeight'} = $$printing_specs{'txtFinalHeight'};
 				} # end if
+				@$specs{'txtFinalWidth','txtFinalHeight'} = @$printing_specs{'txtFinalWidth','txtFinalHeight'};
 			} # end if
-			@$specs{'txtFinalWidth','txtFinalHeight'} = @$printing_specs{'txtFinalWidth','txtFinalHeight'};
 		} # end if Spread Type
 	} else { # not a book
 # If no spreadsize, then we are likely not a book, and the spread size is 2
