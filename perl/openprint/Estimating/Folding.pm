@@ -506,10 +506,15 @@ sub signature_calc {
 	foreach my $SigImpo ( @{$Signature_Impositions} ) {
 		if ( $$SigImpo{folding_results} ) {
 			my $Folds = $$SigImpo{folding_results}{Folds};
+			if ( $Folds ) {
+
 			foreach my $key ( keys %$Folds ) {
 				my ( $fold_type, $imposition ) = $key =~ /(.*)-(\d+)out$/;
 				push @{$makereadies{$$SigImpo{folding_results}{Equipment}->id()}}, $fold_type;
 			} # end foreach
+			} else {
+$openprint::log->error("No folds from sigimpo");
+			} # end if
 		} else {
 			my $s_specs = $$SigImpo{specs};
 			next if $$SigImpo{SignatureIndex} and $$SigImpo{SignatureIndex} == $$sig_specs{SignatureIndex};
