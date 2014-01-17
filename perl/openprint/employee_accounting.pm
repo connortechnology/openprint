@@ -134,7 +134,7 @@ sub details {
 		if ( $error ) {
 			return misc::error( $log, $dbh, \%variable, 'Error Saving Payment', $error );
 		} else {
-			$Order->add_log( "Add payment $$$Payment{amount}." );
+			$Order->add_log( "Add payment $$Payment{amount}." );
 		} # end if
 
 		openprint::order::get_misc( \%variable, $Order );
