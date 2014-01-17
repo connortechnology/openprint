@@ -46,7 +46,7 @@
 					) ?>
                 </p>
 				<p><label>Pages per spread</label>
-				<? echo ( input( type=>'cardinal', name=>'txtSpreadSize', id=>'txtSpreadSize', value=>'$$variable{txtSpreadSize}, min=>2 ); ) ?>
+				<? echo ( input( type=>'cardinal', name=>'txtSpreadSize', id=>'txtSpreadSize', value=>$$variable{txtSpreadSize}, min=>2 ); ) ?>
 				</p>
             </div>
 <? if ( $$variable{'Group'} == 1 ) ?>

@@ -234,7 +234,7 @@ $openprint::log->debug("blah  $$_{name}");
 
 	$openprint::log->debug("Signature : $signature_service_index");
 	if ( ! ( @front_aq or @back_aq ) ) {
-$openprint::log->warn("Doing AQ when not needed");
+$openprint::log->warn("Doing AQ when not needed @front_aq @back_aq");
 		$bestPrice{'Status'} = 'calculated';	
 		return %bestPrice;
 	} # end if
