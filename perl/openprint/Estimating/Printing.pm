@@ -3939,7 +3939,7 @@ sub calc_price {
 		$$Imposition{'FoldingImposition'} = $folding_results{'Imposition'};
 #$openprint::log->debug("FOlding IMPOSITION $folding_results{'Imposition'}");
 
-		$price{'Comparison Cost'} += $folding_results{'Price'};
+		$price{'Comparison Cost'} += $folding_results{Comparison};
 	} # end if
 	if ( $$services{'SpinePaste'} ) {
 		if ( $$Imposition{'pages'} < $$specs{'txtUnspecifiedPageQuantity'.$qty_index} ) {

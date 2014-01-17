@@ -451,7 +451,7 @@ sub _history {
 } # end sub _history
 
 sub history_details {
-	my $order_id = $param{'order_id'};
+	my $order_id = $param{'order_id'} ? $param{'order_id'} : $param{OrderID};
 	my $Order = new openprint::Order( $order_id );
 
 	if ( $param{'btnFunction'} eq 'AcceptTerms' ) {

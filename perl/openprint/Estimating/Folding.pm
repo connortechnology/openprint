@@ -292,7 +292,7 @@ sub has_overrides {
 		my $sig_specs = openprint::service::get_specs_ref( $Project, $s_s_id );
 		foreach my $qty_index ( $Project->quantity_indexes() ) {
 			push @v, "chkOverrideEquipment-$$sig_specs{'SignatureIndex'}-$qty_index" if $$specs{"chkOverrideEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"};
-			push @v, "chkOverrideFoldType-$$sig_specs{'SignatureIndex'}-$qty_index" if $$specs{"chkOverrideFoldType-$$sig_specs{'SignatureIndex'}-$qty_index"};
+			push @v, "chkOverrideFold-$$sig_specs{'SignatureIndex'}-$qty_index" if $$specs{"chkOverrideFold-$$sig_specs{'SignatureIndex'}-$qty_index"};
 		} # end foreach
 	} # end foreach
 
@@ -450,7 +450,7 @@ sub signature_calc {
 				push @folding_capable, 'For Pocket Folders' if $Project->Type()->name() eq 'PresentationFolders';
 				push @folding_capable, 'When PerfectBound' if $$services{'PerfectBound'};
 				push @folding_capable, 'When Stitching' if ( $$services{'SaddleStitching'} or $$services{'LoopStitching'} );
-				@my_equipment = openprint::Equipment->find( 'useinestimating'=>1, 'Specifications'=>{'Folding Capable'=>\@folding_capable} );
+				@my_equipment = openprint::Equipment->find( useinestimating=>1, Specifications=>{'Folding Capable'=>\@folding_capable} );
 				@{$$calc_hash{'Folding::signature_calc::equipment'}} = @my_equipment;
 			} # end if 
 		} elsif ( DEBUG ) {
@@ -911,6 +911,7 @@ $openprint::log->debug("No Fold") if DEBUG;
 			} # end foreach Imposition in the set
 			next if ! %folds;
 
+			my $all_found = 1;
 			if ( $$specs{"chkOverrideFold-$$sig_specs{'SignatureIndex'}-$qty_index"} eq 'Y' ) {
 				# Find out if folds satisfies the overrides
 				my %found;
@@ -957,12 +958,17 @@ $openprint::log->debug(qq`Wrong imposition: $$specs{"FoldImposition-$$sig_specs{
 						} # end foreach F
 					} # end foreach my $k
 					if ( ! $found{$index} ) {
-						$openprint::log->debug("Not found trying generic") if DEBUG;
-						# Replace with a generic one
+						if ( DEBUG ) {
+							$openprint::log->debug("Not found trying generic for index $index");
+							foreach my $key ( keys %folds ) {
+								$openprint::log->debug("$key => " . @{$folds{$key}} );
+							}
+						}
+# Replace with a generic one
 						my $key = $$specs{"FoldType-$$sig_specs{'SignatureIndex'}-$qty_index-$index"}.'-'.$$specs{"FoldImposition-$$sig_specs{'SignatureIndex'}-$qty_index-$index"}.'out';
 						my ( $pages ) = $$specs{"FoldType-$$sig_specs{'SignatureIndex'}-$qty_index-$index"} =~ /(\d+)Page/;
 						my $Fold = openprint::Fold->find_one( 
-									'min_imposition null_or_<='	=>	$$specs{"FoldImposition-$$sig_specs{'SignatureIndex'}-$qty_index-$index"},
+								'min_imposition null_or_<='	=>	$$specs{"FoldImposition-$$sig_specs{'SignatureIndex'}-$qty_index-$index"},
 									'max_imposition null_or_>='	=>	$$specs{"FoldImposition-$$sig_specs{'SignatureIndex'}-$qty_index-$index"},
 									'type'			=>	$$specs{"FoldType-$$sig_specs{'SignatureIndex'}-$qty_index-$index"},
 									'equipment_id'	=>	$Equipment->id(),
@@ -981,27 +987,29 @@ $openprint::log->debug(qq`Wrong imposition: $$specs{"FoldImposition-$$sig_specs{
 						} # end if
 						$$Fold{'Imposition'}{'quantity'} = $$specs{"FoldQty-$$sig_specs{'SignatureIndex'}-$qty_index-$index"};
 						$$Fold{'found'} = $index;
+						$$Fold{undesired} = 1;
 			
 						$folds{$key} = [ $Fold ];
 					} # end if ! found
 				} # end foreach index
 
-				my $all_found = 1;
 				foreach my $k ( keys %folds ) {
 					$all_found = 0 if ! $folds{$k}[0]{found};
 				} # end foreach k
 				my $folds_found = 1;
 				foreach ( 1 .. 4 ) {
-					$folds_found = 0 if exists$found{$_} and ! $found{$_};
+					$folds_found = 0 if exists $found{$_} and ! $found{$_};
 				}
 
 				# Get rid of fold that are not specified... so that we don't price them.
 				foreach my $k ( keys %folds ) {
+					$folds{$k}[0]{undesired} = 1 if ! $all_found or ! $folds_found;
 					delete $folds{$k} if ! $folds{$k}[0]{'found'};
 				} 
 			} # end if override
 			my $totalTime = $Equipment->specification('Station Make Ready') * 60;
 
+			my $comparison_cost = 0;
 			my $totalPrice;
 			my $mprice = 0;
 if ( DEBUG ) {
@@ -1029,6 +1037,7 @@ $openprint::log->debug("Folds: $set_index : $key " . $impo_qty );
 				last if ! $imposition;
 
 				my $Fold = $folds{$key}[0];
+				$comparison_cost += 1000 if $$Fold{undesired};
 				my $impo_qty = 0;
 				foreach (@{$folds{$key}}) {
 					$impo_qty += $_->Imposition()->quantity();
@@ -1253,7 +1262,7 @@ $openprint::log->warn($Breakdown);
 				} # end if
 			} # end if has sittiching
 
-			my $comparison_cost = $totalPrice + $stitching_part + $cutting_results{'Price'};
+			$comparison_cost += $totalPrice + $stitching_part + $cutting_results{'Price'};
 			if ( $cutting_results{'Equipment'} ) {
 				$Breakdown .= 'Cutting: ' . $cutting_results{'Price'} . ' on ' . $cutting_results{'Equipment'}->name() . '<br/>';
 			} else { 
@@ -1275,6 +1284,15 @@ $openprint::log->warn($Breakdown);
 				last if ! $bestPrice;
 			} # end if
 
+			if ( $$specs{"chkOverrideFold-$$sig_specs{'SignatureIndex'}-$qty_index"} eq 'Y' ) {
+				if ( $all_found ) {
+					last;
+				} # end if
+			} else {
+				# First max impo should always be the best...
+				last;
+			} # end if
+
 		} # end foreach set of Impositions
 		# The idea is that if we find a price on the press, then we are done, cuz nothing else will be better.... 
 		# Can't do this... case of digital cover on offset interioer, stitched... the stitcher does the cover
@@ -1283,6 +1301,7 @@ $openprint::log->warn($Breakdown);
 	} # end foreach Equipment
 
 	my %results = (
+		Comparison		=>	$bestComparison,
 		'Price'			=> $bestPrice,
 		'MPrice'		=> $$specs{'txtQuantity'.$qty_index} ? ($bestM/$$specs{'txtQuantity'.$qty_index})*1000 : 0,
 		'Equipment'		=> $bestEquipment,
@@ -1334,6 +1353,7 @@ sub calc {
 	$log->debug(" Start FOLDING!!!!!!!!!!!!!!!!!!");
 	# sig_calc overwrites $$specs{Status}, so we keep our own copy
 	my $status = 'calculated';
+	$$specs{alert} = '';
 
 	my $Project = new openprint::Project( $project_index );
 	my $services = $Project->services();
