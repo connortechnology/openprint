@@ -20,7 +20,6 @@
 	<form id="f1" name="f1" method="post" action="/main/project/view.html">
 		<?include(/includes/main/proj/hdn_fields_printing.html)?>
         <input type="hidden" name="txtSignatureType" value="<?txtSignatureType?>" />
-        <input type="hidden" name="txtSpreadSize" value="<?txtSpreadSize?>" />
 		<input type="hidden" name="hdnFolding" value="<?hdnFolding?>"/>
 		<input type="hidden" name="hdnCutting" value="<?hdnCutting?>"/>
         <? if ( $$variable{'txtSignatureType'} eq 'Cover Pages' or $$variable{'txtSignatureType'} eq 'GateFolded Spreads' ) ?>
@@ -46,6 +45,9 @@
 						return $html;
 					) ?>
                 </p>
+				<p><label>Pages per spread</label>
+				<? echo ( input( type=>'cardinal', name=>'txtSpreadSize', id=>'txtSpreadSize', value=>'$$variable{txtSpreadSize}, min=>2 ); ) ?>
+				</p>
             </div>
 <? if ( $$variable{'Group'} == 1 ) ?>
             <div class="rightColumn" id="PresentationFolderQuestions" <? echo ( ! sets::isin( $$variable{'rdbTemplateType'}, ['2Panel1Pocket','2Panel2Pocket','TriFoldDoublePocket'] ) ? 'style="display:none;"' : '' ) ?> >

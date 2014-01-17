@@ -1595,10 +1595,8 @@ sub set_size {
 				} elsif ( $$printing_specs{'rdbTemplateType'} eq 'PerfectBound' ) {
 					if ( $openprint::config{PerfectBindSpreadSize} ) {
 						$$specs{'txtSpreadSize'} = $openprint::config{PerfectBindSpreadSize};
-					} elsif ( $$specs{'GroupPageQuantity'} % 4 ) {
-						$$specs{'txtSpreadSize'} = 2;
 					} else {
-						$$specs{'txtSpreadSize'} = 4;
+						$$specs{'txtSpreadSize'} = 2;
 					} # end if
 				} elsif ( sets::isin( $$printing_specs{'rdbTemplateType'}, ['CornerStitching','SpinePaste'] ) ) {
 					$$specs{'txtSpreadSize'} = 2;
