@@ -82,15 +82,15 @@ if( $openprint::config{NeedCartonsForShipping} ) {
 
 	if ( ! $$specs{'ToCity'} ) {
 		$$specs{'alert'} .= 'Please enter To city<br/>';
-		return $$specs{'Status'} = 'uncalculated';
+		#return $$specs{'Status'} = 'uncalculated';
 	} # end if
 	if ( !$$specs{'ToStateProvince'} ) {
 		$$specs{'alert'} .= 'Please enter To State/Province<br/>';
-		return $$specs{'Status'} = 'uncalculated';
+		#return $$specs{'Status'} = 'uncalculated';
 	} # end if
 	if ( ! $$specs{'ToCountry'} ) {
 		$$specs{'alert'} .= 'Please enter To Country<br/>';
-		return $$specs{'Status'} = 'uncalculated';
+		#return $$specs{'Status'} = 'uncalculated';
 	} # end if
 	my @shipping_services;
 	foreach my $ServiceType ( openprint::ServiceType->find('category'=>'Shipping') ) {
