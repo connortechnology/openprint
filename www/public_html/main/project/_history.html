@@ -109,7 +109,7 @@ $log->debug("listing project $$Project{id} ");
 			<th class="checkbox"><input type="checkbox" name="checkall" value="" onclick="select_all(this.form,'project_id',this.checked);" /></th>
 		</tr>
 		<? echo (
-			my $html;
+			my @html;
 			my $rowclass;
 			my $has_Products = openprint::Product->find_one();
 
@@ -119,14 +119,14 @@ if ( ! $$Project{summary} ) {
 $log->debug("Redoing summary");
 	sql::update( undef, undef, 'projects', [ 'id=?', $$Project{id} ], [ 'summary', $Project->summary() ] );
 }
-				$html .= sprintf(q`
+				push @html, sprintf(q`
 <tr%1$s> 
 	<td class="project_id"><a href="/main/project/view.html?ProjectIndex=%2$d">%2$d</a></td>`, $rowclass, $Project->id() );
 
 				if ( ( ! $session{'/main/project/history.html?company_id'} ) and sets::isin( $session{user_type}, ['E','A'] ) ) {
-					$html .= sprintf( '<td class="Company"><a href="/main/project/view.html?ProjectIndex=%1$d">%2$s</a></td>', $Project->id(), $Project->Company()->name() );
+					push @html, sprintf( '<td class="Company"><a href="/main/project/view.html?ProjectIndex=%1$d">%2$s</a></td>', $Project->id(), $Project->Company()->name() );
 				} # end if
-	$html .= sprintf( q`
+	push @html, sprintf( q`
 	<td class="description"><a href="/main/project/view.html?ProjectIndex=%2$d">%3$s</a></td>
 	<td class="Price">%4$s</td>
 	<td class="Price">%5$s</td>
@@ -152,7 +152,7 @@ $log->debug("Redoing summary");
 				);
 				$rowclass = $rowclass ? '' : ' class="colRow"';
 			} # end foreach Project
-			return $html;
+			return join( "\n", @html );
 		) ?>
 	</table>
 	<span class="Currency">All prices listed in <? echo ( new openprint::Currency( $session{'Currency_id'} )->name(); ) ?></span>
