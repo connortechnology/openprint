@@ -192,6 +192,10 @@ sub view_services {
 		} elsif ( ( defined $openprint::param{'calc'} ) and $openprint::param{'calc'} ) {
 			$log->debug("Recalculating $openprint::param{calc}");
 			openprint::service::internal_calc( $log, $dbh, $variable, $project_index, $r->param('calc') );
+			$Project->summary(undef);
+			$Project->save();
+			$$variable{ExternalRedirect} = '/main/project/view.html?project_id='.$project_index;
+			return;
 		} # end if
 
 		if ( $r->param('ContinueProject') and $r->param('ContinueProject') ne 'Incomplete Form' ) {

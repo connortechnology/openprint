@@ -47,7 +47,7 @@
 			<div style="float: right;">
 				<? echo (
 					my $html = '';
-					if ( sets::isin( $$variable{Project}->status(), ['Unordered','uncalculated'] ) ) {
+					if ( sets::isin( $$variable{Project}->status(), ['Unordered','uncalculated'] ) or $$variable{Project}->Order()->status() eq 'Re-Opened' ) {
 						$html .= button( 'RecalculateProject', { onclick=>"f1.action='/main/project/view.html';f1.btnFunction.value='Recalculate Project';f1.submit();", text=>'Recalculate' } );
 					} # end if
 					if ( ( $$variable{Project}->status() ne 'uncalculated' ) and ! $$variable{Project}->order_id() ) {
