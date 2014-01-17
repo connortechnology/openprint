@@ -22,10 +22,10 @@
         <input type="hidden" name="txtSignatureType" value="<?txtSignatureType?>" />
 		<input type="hidden" name="hdnFolding" value="<?hdnFolding?>"/>
 		<input type="hidden" name="hdnCutting" value="<?hdnCutting?>"/>
-        <? if ( $$variable{'txtSignatureType'} eq 'Cover Pages' or $$variable{'txtSignatureType'} eq 'GateFolded Spreads' ) ?>
+        <? if ( $$variable{'txtSignatureType'} eq 'Cover Pages' or $$variable{'txtSignatureType'} eq 'Gate Folded Pages' ) ?>
             <?include(/includes/main/proj/templates/signature_template_select.html)?>
             <?include(/includes/main/proj/templates/signatures.html)?>
-        <? endif ( $$variable{'txtSignatureType'} eq 'Cover Pages' or $$variable{'txtSignatureType'} eq 'GateFolded Spreads' ) ?>
+        <? endif ( $$variable{'txtSignatureType'} eq 'Cover Pages' or $$variable{'txtSignatureType'} eq 'Gate Folded Pages' ) ?>
 		<fieldset><legend><? echo ( $$variable{'Project'}->Type()->name() ) ?> <?txtSignatureType?></legend>
 <? if ( $$variable{'txtSignatureType'} ) ?>
             <div class="<? echo ( my $type = $$variable{'txtSignatureType'}; $type =~ s/\s//g; return $type; ) ?>">
