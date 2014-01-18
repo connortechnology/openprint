@@ -12,7 +12,7 @@
 				</td><td>
 					<input type="text" id="rfidtag_id" name="rfidtag_id" onkeypress="return input_handler( this, event);" onkeydown="if(event.keyCode == 13){new Ajax.Updater( 'List', '_update_inventory.html', {parameters: $('f1').serialize(), evalScripts: true} );}" onkeyup="if(this.value){new Ajax.Request( '/employee/production/_check_for_skid.json', {parameters: {rfidtag_id: this.value}, evalScripts: true } );}" />
 				</td><td>
-					<? echo ( button( 'Submit', { onclick=> q`new Ajax.Updater('StockCheckout','_stock_checkout.html', { parameters: checkout_form.serialize() } );` ); ) ?>
+					<? echo ( button( 'Submit', { onclick=> q`new Ajax.Updater('StockCheckout','_stock_checkout.html', { parameters: checkout_form.serialize() } );` } ); ) ?>
 				</td>
 			</tr>
 			<? echo ( 
