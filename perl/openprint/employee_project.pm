@@ -187,7 +187,7 @@ sub view {
 				my $Equipment = openprint::Equipment->find_one('strid'=>$param{"UsePress-$$sig_specs{'SignatureIndex'}"} );
 				next if ! $Equipment;
 
-				foreach my $Job ( openprint::ScheduledJob->find( 'service_id'	=> $signature_service_index ) ) {
+				foreach my $Job ( openprint::ScheduledJob->find( 'service_id @>'	=> $signature_service_index ) ) {
 					$Job->save({ 'equipment_id'	=> $Equipment->id(), 'runtime'		=> "$runtime minutes", });
 				} # end foreach Job
 			} # end foreach signature_service_index
@@ -350,7 +350,7 @@ sub view {
 				if ( ! is_sig_complete( $project_index, $signature_service_index ) ) {
 					$complete = 0;
 				} else {
-					foreach my $Job ( openprint::ScheduledJob->find('project_id'=>$project_index, 'service_id'=>$signature_service_index ) ) {
+					foreach my $Job ( openprint::ScheduledJob->find('project_id'=>$project_index, 'service_id @>'=>$signature_service_index ) ) {
 						$Job->delete();
 					} # end foreach
 					if ( my $Equipment = openprint::Equipment->find_one('strid'=>$$sig_specs{'UsePress'}) ) {
@@ -755,7 +755,7 @@ sub is_sig_complete {
 	sql::update( $log, $dbh, 'tbl_Project_Contents', ['lngProjectIndex=? AND lngServiceIndex=?', $project_index, $signature_service_index], 'strStatus','Complete' );
 
 # Remove jobs from the Schedule when marked complete.
-	foreach my $Job ( openprint::ScheduledJob->find( 'project_id' => $project_index, 'service_id' => $signature_service_index ) ) {
+	foreach my $Job ( openprint::ScheduledJob->find( project_id => $project_index, 'service_id @>' => $signature_service_index ) ) {
 		$Job->delete();
 	} # end foreach
 
@@ -906,7 +906,7 @@ sub _status {
 
 	if ( $param{'action'} eq 'removefromschedule' ) {
 		foreach my $service_id ( @service_ids ) {
-			my $Job = openprint::ScheduledJob->find_one(project_id=>$param{project_id}, 'service_id any'=>$service_id);
+			my $Job = openprint::ScheduledJob->find_one(project_id=>$param{project_id}, 'service_id @>'=>$service_id);
 			if ( ! $Job ) {
 				$variable{'error'} .= 'Job not found on schedule.';
 			} else {
