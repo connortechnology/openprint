@@ -74,9 +74,12 @@
 			<li>
 				<label>Company</label>
 				<input type="text" onkeyup="filterDDM(this, this.form.ddmCompany);" class="filter" />
-				<select name="ddmCompany">
+				<select id="ddmCompany" name="ddmCompany">
 					<option value="">Select a Customer</option>
-					<? echo ( openprint::Company::get_dropdown( $session{'company_id'} ); ) ?>
+					<? echo (
+# openprint::Company::get_dropdown( $session{'company_id'} );
+return '<option value="'.$session{company_id}.'">'.new openprint::Company( $session{company_id} )->name() .'</option>';
+ ) ?>
 				</select>
 			</li>
 		</ul>
@@ -94,3 +97,5 @@
 	</form>
 </div>
 </div>
+<script type="text/javascript">new Ajax.Updater( 'ddmCompany', '/includes/_company_ddm.html', { parameters: { selected_id: <?echo($session{company_id})?> } } );</script>
+</script>

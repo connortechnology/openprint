@@ -25,6 +25,7 @@ require openprint::imposition;
 require openprint::Imposition;
 
 use vars qw( @outputs );
+use constant DEBUG => 0;
 
 # Offline Aqueous
 # Let's assume that each piece of equipment can do 1 coat at a time
@@ -206,8 +207,10 @@ sub calc {
 sub signature_calc {
     my ( $Project, $service_index, $specs, $signature_service_index, $sig_specs, $qty_index, $imposition, $MakeReadies ) = @_;
 
+if ( DEBUG ) {
 foreach my $equipment_id ( keys %{$MakeReadies} ) {
 $openprint::log->debug("Makereadies $equipment_id $$MakeReadies{$equipment_id}");
+}
 }
 
 	my %bestPrice;
@@ -216,7 +219,7 @@ $openprint::log->debug("Makereadies $equipment_id $$MakeReadies{$equipment_id}")
 	my @front_aq;
     $$sig_specs{SideOneColours} = [openprint::Estimating::Printing::get_colours( $sig_specs, 'SideOne' )] if ! $$sig_specs{SideOneColours};
 	foreach ( @{$$sig_specs{SideOneColours}} ) {
-$openprint::log->debug("blah  $$_{name}");
+#$openprint::log->debug("blah  $$_{name}");
 		if ( $$_{'name'} =~ /Aqueous/ ) {
 			push @front_aq, $$_{'name'};
 			#$openprint::log->debug("Side one Aqueous: $_");

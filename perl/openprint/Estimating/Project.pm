@@ -916,12 +916,15 @@ sub create_calc {
 
 	my %services = $Project->get_services( );
 	foreach my $qty_index ( 1 .. 3 ) {
+# Should not do this
 		if ( $$specs{'txtQuantity'.$qty_index} != $Project->quantity($qty_index) ) {
+if ( 0 ) {
 			foreach my $service_id ( keys %services ) {
 				foreach my $s_id ( @{$services{$service_id}} ) {
 					openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $s_id, 'txtQuantity'.$qty_index, $$specs{'txtQuantity'.$qty_index} );
 				} # end foreach
 			} # end foreach
+} 
 			$Project->quantity( $qty_index, $$specs{'txtQuantity'.$qty_index} );
 		} # end if
 	} # end foreach qty_index

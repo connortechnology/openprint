@@ -694,14 +694,20 @@ sub get_inkcoverage {
 		foreach my $k ( keys %$specs ) {
 # checked on
 			if ( my ( $index ) = $k =~ /^chkColourCoating(\d+)$side$signature/ ) {
+$openprint::log->debug( $k );
 				next if ! $$specs{"chkColourCoating$index$side$signature"};
 				my $type = $$specs{"ColourCoatingType$index$side$signature"};
 				if ( $type =~ /Overall/ ) {
 # Nothing cuz coverage is 100%
 					$$specs{'ColourCoatingCoverage'.$index.$side.$signature} = 100;
+$openprint::log->warn("Oeral for $index $side $signature " . $$specs{'ColourCoatingCoverage'.$index.$side.$signature} .' ' . int($$specs{'ColourCoatingCoverage'.$index.$side.$signature}) );
 				} elsif ( ! int($$specs{'ColourCoatingCoverage'.$index.$side.$signature}) ) {
+$openprint::log->warn("Coverage for $index $side $signature " . $$specs{'ColourCoatingCoverage'.$index.$side.$signature} .' ' . int($$specs{'ColourCoatingCoverage'.$index.$side.$signature}) );
 					$$specs{'ColourCoatingCoverage'.$index.$side.$signature} = $DefaultInkCoverage;
 					$$v{'ColourCoatingCoverage'.$index.$side.$signature} = [ sets::union( 'output', @{$$v{'ColourCoatingCoverage'.$index.$side.$signature}} ) ];
+				} else {
+$openprint::log->warn("Coverage for $index $side $signature " . $$specs{'ColourCoatingCoverage'.$index.$side.$signature} .' removing from outputs' );
+					$$v{'ColourCoatingCoverage'.$index.$side.$signature} = [ sets::exclude( ['output'], $$v{'ColourCoatingCoverage'.$index.$side.$signature} ) ];
 				} # end if
 				$$specs{'ColourCoatingCoverage'.$index.$side.$signature} =~ s/[^\d\.]//g;
 				if ( $type =~ /PMS/ ) {
@@ -2109,7 +2115,7 @@ $openprint::log->debug("aftger get printing_types: " . ( sprintf('%.4f', tv_inte
 
 		$log->debug("Impositions in best price " . @{ $$best_price{'Impositions'} } );
 		my $price;
-		my $stock_breakdown = $$best_price{'Paper Breakdown'};;
+		my $stock_breakdown = $$best_price{'Paper Breakdown'};
 		foreach my $I ( @{ $$best_price{'Impositions'} } ) {
 			$price = shift @{$$best_price{prices}};
 $I->display("The price for this impo is $price left " . @{$$best_price{prices}});
@@ -2119,7 +2125,7 @@ $I->display("The price for this impo is $price left " . @{$$best_price{prices}})
 			$stock_breakdown = $$price{'Paper Breakdown'} if $$price{'Paper Breakdown'};
 		} # end foreach
 if ( ! $stock_breakdown ) {
-$openprint::log->error("No stock breakdown $stock_breakdown");
+$openprint::log->error("No stock breakdown $stock_breakdown for $qty_index");
 } 
 
 		$price = $best_price if ! $price;
@@ -3080,7 +3086,7 @@ $openprint::log->debug("Giving up on $$Press{strid} bnecause it's bigger than th
 						   ) {
 
 							my $sig_price = calc_price( $Project, $$new_specs{'ServiceIndex'}, $imp, $project, $services, $new_specs, $qty, $qty_index, \%PlateCounts, \%washed_colours, \@total_impositions );
-			$$sig_price{'sig_count'} = 1;
+							$$sig_price{'sig_count'} = 1;
 							$imp->display( $recursion_depth . ' UPQ: ' . $upq . ' first level calc_price' ) if DEBUG;
 							$$sig_price{Imposition} = $imp;
 
@@ -3116,7 +3122,7 @@ $openprint::log->debug("Sigs: $sigs");
 								$PlateCounts{$$sig_price{'Plate Costs'}{'Plate ID'}} += $sigs * $$sig_price{'Plate Costs'}{'Plate Count'};
 # Blanks get re-used
 								$PlateCounts{'Blank'.$$sig_price{'Plate Costs'}{'Plate ID'}} += $$sig_price{'Plate Costs'}{'Blank Plates'};
-								$$price{'sig_count'} += $sigs;
+								$$price{'sig_count'} = $sigs;
 							} else {
 								$$price{'Comparison Cost'} += $$sig_price{'Comparison Cost'};
 								$$price{'Comparison Log'} .= 'signature ' . $$sig_price{'Comparison Cost'} . '<br/>' if COMPARISON_LOG;
@@ -3129,7 +3135,6 @@ $openprint::log->debug("Sigs: $sigs");
 								$PlateCounts{$$sig_price{'Plate Costs'}{'Plate ID'}} += $$sig_price{'Plate Costs'}{'Plate Count'};
 								$PlateCounts{'Blank'.$$sig_price{'Plate Costs'}{'Plate ID'}} += $$sig_price{'Plate Costs'}{'Blank Plates'};
 								$previous_forms_cache{$hash_key} += 1;
-								$$price{'sig_count'} += 1;
 							} # end if
 							$imp->display( $recursion_depth . ' UPQ: ' . $upq . ' after first level calc_price' ) if DEBUG;
 
@@ -3333,8 +3338,8 @@ $openprint::log->warn("Unable to calculate additional signatures Complete: $$sig
 					} # end if Has Roll2Sheet Price
 				} # end if Roll & has sheeter
 			} # end if recursion == 0
-#$openprint::log->debug("UPQ $txtUnspecifiedPageQuantity $$price{'sig_count'} * $$imp{pages} ");
-			if ( ($txtUnspecifiedPageQuantity <= 1) or ( $txtUnspecifiedPageQuantity - ( $$price{'sig_count'} * $$imp{pages} ) == 0 ) ) {
+$openprint::log->debug("UPQ $txtUnspecifiedPageQuantity $$price{'sig_count'} * $$imp{pages} ");
+			if ( ($txtUnspecifiedPageQuantity <= 1) or ( $txtUnspecifiedPageQuantity - ( $$price{'sig_count'} * $$imp{pages} ) <= 0 ) ) {
 				if ( $$price{PlateCost} ) {
 # They may be added into the Comparison cost in one of the sub prices
 					$$price{'Comparison Cost'} -= $$price{PlateCost};
