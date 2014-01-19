@@ -26,7 +26,7 @@ require sql;
 require openprint::service;
 require openprint::Estimating::Printing;
 
-use constant DEBUG => 1;
+use constant DEBUG => 0;
 my @variables = (
 		'txtPrice',
 		'CustomProofSpecs',
@@ -293,6 +293,7 @@ $log->debug("Proof indexes " . join(',', @{$$indexes{$signature_index}}  ) ) if 
 		$$specs{"txtProofUnitPrice-$signature_index-$proof_index-$qty_index"} = sprintf( $openprint::config{ProjectMoneyFormat}, $price{Total} );
 		$Results{'Total'} += $price{Total} + $MakeReady{Price};
 	} # end foreach my $proof_index
+	$Results{Total} = Math::Round::nearest(0.01,$Results{Total});
 	return %Results;
 } # end sub signature_calc
 

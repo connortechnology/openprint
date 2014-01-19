@@ -183,6 +183,11 @@ function calc_print( formName, force, options ) {
 	//timeout = null;
 
 	clear_price_data(form);
+	var AlertDiv = $('AlertDiv');
+	if ( AlertDiv ) {
+		AlertDiv.innerHTML = '';
+		AlertDiv.hide();
+	} // end if
 	var div = $('InformationDiv');
 	if ( div ) {
 		div.innerHTML = 'Calculating....';

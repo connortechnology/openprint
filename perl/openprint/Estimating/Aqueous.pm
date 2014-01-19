@@ -88,18 +88,45 @@ sub neccessary {
 
 	return 0;
 } # end sub neccessary
+
+sub get_colours {
+    my ( $specs, $side ) = @_;
+    my @colours;
+    if ( ( defined $$specs{'sides_the_same'} ) and ( $$specs{'sides_the_same'} eq 'Y' ) and ( $side eq 'SideTwo' ) ) {
+        $side = 'SideOne';
+    } # end if
+
+    foreach my $k ( keys %$specs ) {
+        if ( my ( $index ) = $k =~ /^chkColourCoating(\d+)$side/ ) {
+            next if ! $$specs{"chkColourCoating$index$side"};
+			if ( $$specs{"ColourCoatingColour$index$side"} =~ /Aqueous/i ) {
+				push @colours, $$specs{"ColourCoatingColour$index$side"};
+            } # end if
+        } # end if
+    } # end foreach
+    return @colours;
+} # end sub get_colours
+
 sub signature_needs {
 	my ( $Project, $sig_specs ) = @_;
 
-    $$sig_specs{SideOneColours} = [openprint::Estimating::Printing::get_colours( $sig_specs, 'SideOne' )] if ! $$sig_specs{SideOneColours};
-	foreach ( @{$$sig_specs{SideOneColours}} ) {
-		return 1 if $$_{'name'} =~ /Aqueous/;
-	} # end foreach colour
+	if ( $$sig_specs{SideOneColours} ) {
+		foreach ( @{$$sig_specs{SideOneColours}} ) {
+			return 1 if $$_{'name'} =~ /Aqueous/;
+		} # end foreach colour
+	} else {
+		$$sig_specs{SideOneAQ} = [ get_colours( $sig_specs, 'SideOne' ) ] if ! $$sig_specs{SideOneAQ};
+		return 1 if @{$$sig_specs{SideOneAQ}};
+	} # en dif
 
-    $$sig_specs{SideTwoColours} = [openprint::Estimating::Printing::get_colours( $sig_specs, 'SideTwo' )] if ! $$sig_specs{SideTwoColours};
+	if ( $$sig_specs{SideTwoColours} ) {
 	foreach ( @{$$sig_specs{SideTwoColours}} ) {
 		return 1 if $$_{'name'} =~ /Aqueous/;
 	} # end foreach colour
+	} else {
+		$$sig_specs{SideTwoAQ} = [ get_colours( $sig_specs, 'SideTwo' ) ] if ! $$sig_specs{SideTwoAQ};
+		return 1 if @{$$sig_specs{SideTwoAQ}};
+	} # en dif
 } # end sub signature_needs
 
 sub calc {

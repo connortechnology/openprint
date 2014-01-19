@@ -16,7 +16,7 @@ package openprint::User_Notification;
 our @ISA = qw(openprint::Object);
 
 use vars qw( $debug $table @identified_by %fields %find_fields %defaults %transforms );
-$debug = 0;
+$debug = 1;
 $table = 'user_notifications';
 @identified_by = ( 'user_id', 'type_id' );
 

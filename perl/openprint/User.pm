@@ -334,6 +334,8 @@ sub notifications {
 		$$self{notifications} = $notifications_hash;
 	} elsif ( ! exists $$self{notifications} ) {
 		%{$$self{notifications}} = sql::execute( undef, undef, 'SELECT (SELECT name FROM User_Notification_Types WHERE id=type_id),value FROM User_Notifications WHERE user_id=?', $$self{id} );
+	} else {
+	$openprint::log->debug("Have notifications");
 	} # end if
 	
 	return $$self{notifications};
