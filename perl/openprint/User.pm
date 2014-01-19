@@ -323,19 +323,20 @@ sub notifications {
 	
 	require openprint::User_Notification;
 	if ( $notifications_hash ) {
-		my %types = sql::execute( undef, undef, 'SELECT id, name FROM User_Notification_types' );
 		my $ac = sql::start_transaction( $dbh );
+		my %types = sql::execute( undef, undef, 'SELECT id, name FROM User_Notification_types' );
+		$dbh->do( 'LOCK TABLE User_Notifications IN ACCESS EXCLUSIVE MODE' );
 		sql::execute( undef, undef, 'DELETE FROM User_Notifications WHERE user_id=?', $$self{'id'} );
 		foreach my $k ( keys %types ) {
-			sql::insert( undef, undef, 'User_Notifications', { 'user_id'=>$$self{'id'},'type_id'=>$k, 'value'=>$$notifications_hash{$types{$k}} } ) if $$notifications_hash{$types{$k}};
+			sql::insert( undef, undef, 'User_Notifications', { user_id=>$$self{id},type_id=>$k, value=>$$notifications_hash{$types{$k}} } ) if $$notifications_hash{$types{$k}};
 		} # end foreach k
 		sql::end_transaction( $dbh, $ac );
-		$$self{'notifications'} = $notifications_hash;
-	} elsif ( ! exists $$self{'notifications'} ) {
-		%{$$self{'notifications'}} = sql::execute( undef, undef, 'SELECT (SELECT name FROM User_Notification_Types WHERE id=type_id),value FROM User_Notifications WHERE user_id=?', $$self{'id'} );
+		$$self{notifications} = $notifications_hash;
+	} elsif ( ! exists $$self{notifications} ) {
+		%{$$self{notifications}} = sql::execute( undef, undef, 'SELECT (SELECT name FROM User_Notification_Types WHERE id=type_id),value FROM User_Notifications WHERE user_id=?', $$self{id} );
 	} # end if
 	
-	return $$self{'notifications'};
+	return $$self{notifications};
 } # end sub notifications
 
 sub notification {
