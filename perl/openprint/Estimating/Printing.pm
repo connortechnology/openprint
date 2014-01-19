@@ -5622,7 +5622,7 @@ $openprint::log->warn("Unknown printing type in sig $$sig_specs{SignatureIndex} 
 				} elsif ( $cover_type eq 'Web' ) {
 					$results = ['Sheetfed','Web'];
 				} elsif ( $cover_type eq 'Sheetfed' ) {
-					$results = ['Sheetfed','Web'];
+					$results = ['Sheetfed','Web', 'Digital'];
 				} # end if
 			} # end if
 		} # end if Spread Type
