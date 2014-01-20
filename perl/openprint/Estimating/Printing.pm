@@ -2380,8 +2380,13 @@ sub calculate_impositions {
 			$log->error("No spread size in calculate_impositions.");
 			$$project{'txtSpreadSize'} = 4;
 		} # end if
-		$SpreadLayout = ( $$sig_specs{'chkOverridePageQuantity'.$qty_index} eq 'Y' ? $$sig_specs{'PageQuantity'.$qty_index} : $$sig_specs{'txtUnspecifiedPageQuantity'.$qty_index} ) / $$project{'txtSpreadSize'};
-$log->debug("Calcing SpreadLayout as $$sig_specs{'txtUnspecifiedPageQuantity'.$qty_index} ) / $$project{'txtSpreadSize'} = $SpreadLayout");
+		if ( $$sig_specs{'chkOverridePageQuantity'.$qty_index} eq 'Y' ) {
+			$SpreadLayout = $$sig_specs{'PageQuantity'.$qty_index} / $$project{'txtSpreadSize'};
+			$log->debug("Calcing SpreadLayout as overriden upq: $$sig_specs{'PageQuantity'.$qty_index} / spreadsize:$$project{'txtSpreadSize'} = layout$SpreadLayout");
+		} else {
+			$SpreadLayout = $$sig_specs{'txtUnspecifiedPageQuantity'.$qty_index} / $$project{'txtSpreadSize'};
+			$log->debug("Calcing SpreadLayout as upq: $$sig_specs{'txtUnspecifiedPageQuantity'.$qty_index} / spreadsize:$$project{'txtSpreadSize'} = layout$SpreadLayout");
+		} # end if
 	} # end if
 	my $cache_string = join('-', $qty_index, $$Press{id}, $SpreadLayout, @$sig_specs{'PreviousStockType', 'PreviousGrainDirection'} );
 	if ( ! $Press ) {
@@ -2533,24 +2538,24 @@ $imp->display("Ma imposition! for $$imp{pages} is $max_impositions{$$imp{'pages'
 			my @results2;
 			foreach my $I ( @results ) {
 				if ( $I->imposition() == $$sig_specs{'txtImposition'.$qty_index} ) {
+#$I->display("Got the overriden imposition want " . $$sig_specs{'txtImposition'.$qty_index} );
 					push @results2, $I;
 				} else {
-$I->display("Not the overriden imposition");
+#$I->display("Not the overriden imposition want " . $$sig_specs{'txtImposition'.$qty_index} . ' but have ' . $I->imposition() );
 				} # end if
 			} # end foreach I
 			if ( ! @results2 ) {
 				my %cuts;
-$log->warn("Getting all impos results: " . @results );
+#$log->warn("Getting all impos results: " . @results );
 				foreach my $I ( openprint::imposition::get_all_impositions( map { $$_{imposition} > $$sig_specs{'txtImposition'.$qty_index} ? $_ : () } @results ) ) {
-$I->display("Getting all impos");
 					if ( $I->imposition() == $$sig_specs{'txtImposition'.$qty_index} ) {
-						my $str = sprintf('%d=%dx%d %dx%d-%s-%s-%s-%d-%d', @$I{'pages','spread_columns','spread_rows','columns','rows','runstyle','image_orientation','bleed_size','columns','row'} );
+						my $str = sprintf('%d=%dx%d %dx%d-%s-%s-%s-%d-%d', @$I{'pages','spread_columns','spread_rows','columns','rows','runstyle','image_orientation'} );
 						if ( ! $cuts{$str} ) {
 							$cuts{$str} = $I;
 						} # en dif
 					} # end if
 				} # end foreach I
-				@results2 = map { $cuts{$_} } keys %cuts;
+				@results2 = values %cuts;
 			} # end if
 			@results = @results2;
 		} else {
@@ -3207,17 +3212,25 @@ $openprint::log->debug("Sigs: $sigs");
 							$new_specs = get_new_specs( $Project, $service_index, $service_specs, \@signatures, $qty_index, $$price{upq}, \%previous_forms_cache, $hash_key );
 							$$imp{specs} = $new_specs;
 						} # end if
-						if ( 0 and ! ( $$imp{pages} % $$price{upq} ) ) {
+						if ( ( ! ( $$imp{pages} % $$price{upq} ) ) and ( (! $$new_specs{ServiceIndex} ) or (
+								( ($$new_specs{'chkOverridePageQuantity'.$qty_index} ne 'Y') or ($$new_specs{'PageQuantity'.$qty_index} == $$imp{upq} ) ) and
+								( ($$new_specs{'chkOverrideImposition'.$qty_index} ne 'Y') or ($$new_specs{'txtImposition'.$qty_index} == $$imp{pages} / $$price{upq} ) ) and
+								( ($$new_specs{'chkOverridePress'.$qty_index} ne 'Y') or ($$new_specs{'ddmPress'.$qty_index} eq $Press->strid()) ) and
+								( ($$new_specs{'chkOverrideRunStyle'.$qty_index} ne 'Y') or ($$new_specs{'ddmRunStyle'.$qty_index} eq $$imp{runstyle}) )
+) ) ) {
 $openprint::log->warn("Override subsig values $$imp{pages}pg $$price{upq} upq");
 							# if that pages needed divide the current pages count, then stay on the same press, and sheet and runstyle, buecause it's just an image change.
 								$$new_specs{'chkOverridePageQuantity'.$qty_index} = 'Y';
-								$$new_specs{'PageQuantity'.$qty_index} = $$imp{upq};
+								$$new_specs{'PageQuantity'.$qty_index} = $$price{upq};
                                 $$new_specs{'chkOverrideImposition'.$qty_index} = 'Y';
 								$$new_specs{'txtImposition'.$qty_index} = $$imp{pages} / $$price{upq};
                                 $$new_specs{'chkOverridePress'.$qty_index} = 'Y';
 								$$new_specs{'ddmPress'.$qty_index} = $Press->strid();
                                 $$new_specs{'chkOverrideRunStyle'.$qty_index} = 'Y';
 								$$new_specs{'ddmRunStyle'.$qty_index} = $$imp{runstyle};
+$$new_specs{'chkOverrideSheetSize'.$qty_index} = 'Y';
+$$new_specs{"OverrideStockWidth$qty_index"} = $Paper->width();
+$$new_specs{"OverrideStockHeight$qty_index"} = $Paper->height();
 						} # end if
 
 						$do_final_pricing = 0;
