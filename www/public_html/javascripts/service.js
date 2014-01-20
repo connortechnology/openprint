@@ -37,7 +37,7 @@ function submit_handler( formName ) {
 	var AlertDiv = $('AlertDiv');
 	if ( AlertDiv && AlertDiv.innerHTML ) {
 		var alert_content = AlertDiv.innerHTML;
-		alert_content = alert_content.replace(/<br\/?>/, "\n" );
+		alert_content = alert_content.replace(/<br\/?>/g, "\n" );
 		if ( ! confirm( "There are unresolved errors:\n\n" + alert_content + "\n\n Click OK to continue saving, or Cancel to stop and fix the problem." ) ) {
 			return false;
 		} // end if

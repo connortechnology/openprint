@@ -583,7 +583,7 @@ $log->debug("Undefing $object_type $cache_field $$params{$cache_field}") if DEBU
 			#$name_cache{$object_type}{$$params{$cache_field}} = undef;
 		} # end if
 	} else {
-		$log->debug("Not doing caching using $cache_field with params $$params{$cache_field} ");
+		$log->debug("Not doing caching using $cache_field with params $$params{$cache_field} ") if DEBUG_ALL;
 	} # end if
 
 	# no operators, just which fields are being searched on. Mostly just useful for detetion of the deleted field.

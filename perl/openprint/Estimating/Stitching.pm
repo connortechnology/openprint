@@ -144,6 +144,7 @@ sub get_imposition {
 sub signature_calc {
 	my ( $Project, $service_index, $specs, $qty_index, $folding_specs, $sig_specs, $Impositions, $calc_hash ) = @_;
 
+	
 	my %results;
 	my $services = $Project->services();
 	my $printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
@@ -393,6 +394,7 @@ $openprint::log->debug( "Stitching Impo REsults: " . $results{'Imposition'} .'ou
 sub calc {
 	my ( $log, $dbh, $variable, $project_index, $service_index, $specs ) = @_;
 
+	$$specs{alert} = '';
 	$$specs{'Status'} = 'calculated';
 	my $Project = new openprint::Project( $project_index );
 	my $ServiceType = $Project->ServiceType( $service_index );
