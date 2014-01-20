@@ -4838,7 +4838,7 @@ $openprint::log->debug("Got ok paper");
 			$results{$press_id} = "Failed Aqueous check.";
 			next;
 		} # end if
-		if ( my $stocknames = $Press->specification('StockNames') ) {
+		if ( my $stocknames = $Press->specification('StockBrands') ) {
 			my ( @allowed, @disallowed );
 			foreach ( split(',',$stocknames) ) {
 				if ( $_ =~ /^\!(.+)$/ ) {
