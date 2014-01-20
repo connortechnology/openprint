@@ -3208,11 +3208,12 @@ $openprint::log->debug("Sigs: $sigs");
 							$$imp{specs} = $new_specs;
 						} # end if
 						if ( ! ( $$imp{pages} % $$price{upq} ) ) {
+$openprint::log->warn("Override subsig values $$imp{pages}pg $$price{upq} upq");
 							# if that pages needed divide the current pages count, then stay on the same press, and sheet and runstyle, buecause it's just an image change.
 								$$new_specs{'chkOverridePageQuantity'.$qty_index} = 'Y';
 								$$new_specs{'PageQuantity'.$qty_index} = $$imp{upq};
                                 $$new_specs{'chkOverrideImposition'.$qty_index} = 'Y';
-								$$new_specs{'txtImposition'.$qty_index} = $$imp{imposition} / $$price{upq};
+								$$new_specs{'txtImposition'.$qty_index} = $$imp{pages} / $$price{upq};
                                 $$new_specs{'chkOverridePress'.$qty_index} = 'Y';
 								$$new_specs{'ddmPress'.$qty_index} = $Press->strid();
                                 $$new_specs{'chkOverrideRunStyle'.$qty_index} = 'Y';
