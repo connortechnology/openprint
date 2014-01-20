@@ -3215,7 +3215,7 @@ $openprint::log->debug("Sigs: $sigs: signatures( @signatures )");
 							$$imp{specs} = $new_specs;
 						} # end if
 						
-						if ( ( ! ( $$imp{pages} % $$price{upq} ) ) and ( (! $$new_specs{ServiceIndex} ) or (
+						if ( ( ! ( $$imp{pages} % $$price{upq} ) ) and ( ($Press->specification('Folding Capable') ne 'When Printing') and (! $$new_specs{ServiceIndex} ) or (
 								( ($$new_specs{'chkOverridePageQuantity'.$qty_index} ne 'Y') or ($$new_specs{'PageQuantity'.$qty_index} == $$imp{upq} ) ) and
 								( ($$new_specs{'chkOverrideImposition'.$qty_index} ne 'Y') or ($$new_specs{'txtImposition'.$qty_index} == ($$imp{pages}*$$imp{imposition} / $$price{upq} ) ) ) and
 								( ($$new_specs{'chkOverridePress'.$qty_index} ne 'Y') or ($$new_specs{'ddmPress'.$qty_index} eq $Press->strid()) ) and
