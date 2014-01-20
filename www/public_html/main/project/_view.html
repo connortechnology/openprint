@@ -133,7 +133,7 @@
 					foreach my $qty_index ( $Project->quantity_indexes() ) {
 						my $price = $ProjectCurrency->convert_from( $sig_specs{'txtPrice'.$qty_index} );
 						$html .= sprintf('<td class="price"><a href="/main/project/%s?ProjectIndex=%d&amp;ServiceIndex=%d">%s</a><br/>%s%s', 'prin/Signature.html', 
-								$$Project{id}, join(',',@sigs),
+								$$Project{id}, $ss_id,
 								openprint::Currency::format( $price ),
 								openprint::Estimating::Printing::summary($Project, $ss_id, \%sig_specs, $qty_index ),
 								( $SigService->overrides($qty_index) ? '<br/><b>With Overrides</b>' : '' ),
