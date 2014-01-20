@@ -3207,7 +3207,7 @@ $openprint::log->debug("Sigs: $sigs");
 							$new_specs = get_new_specs( $Project, $service_index, $service_specs, \@signatures, $qty_index, $$price{upq}, \%previous_forms_cache, $hash_key );
 							$$imp{specs} = $new_specs;
 						} # end if
-						if ( ! ( $$imp{pages} % $$price{upq} ) ) {
+						if ( 0 and ! ( $$imp{pages} % $$price{upq} ) ) {
 $openprint::log->warn("Override subsig values $$imp{pages}pg $$price{upq} upq");
 							# if that pages needed divide the current pages count, then stay on the same press, and sheet and runstyle, buecause it's just an image change.
 								$$new_specs{'chkOverridePageQuantity'.$qty_index} = 'Y';
