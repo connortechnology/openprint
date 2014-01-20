@@ -462,7 +462,9 @@ sub signature_calc {
 		my $capable = $Press->specification('Folding Capable');	
 		if ( $capable and ( $capable ne 'N' ) ) {
 			if ( $$sig_specs{'PreviousImposition'} and $$sig_specs{'PreviousImposition'} != $$SignatureImposition{imposition} ) {
-				$add = 0;
+$openprint::log->debug("Not adding because previousimposition != sigImposition");
+# I don't understand this code. Why would the previous impo being different have any effect on whether we are folding on web
+				#$add = 0;
 			} # end if
 
 			if ( $$services{'UVCoating'} and openprint::Estimating::UVCoating::signature_needs( $Project, $sig_specs ) ) {
@@ -709,7 +711,10 @@ $openprint::log->error("No folds from sigimpo");
 		for ( my $set_index = 0; $set_index < @All_Impositions; $set_index += 1 ) {
 			my $Set_Of_Impositions = $All_Impositions[$set_index];
 			if ( $$Equipment{id} == $$Press{id} ) {
-				next if scalar @$Set_Of_Impositions != 1;
+				if ( scalar @$Set_Of_Impositions != 1 ) {
+$openprint::log->debug("Sets of impos != 1 for $$Equipment{strid}");
+					next;
+				} # end if
 				next if $$Set_Of_Impositions[0]{quantity} != 1;
 			} # end if
 			# At this point, we don't modify the Set_Of_Impositions, we modify the equipment-specific copy of it.
@@ -1304,7 +1309,10 @@ $openprint::log->warn($Breakdown);
 		# The idea is that if we find a price on the press, then we are done, cuz nothing else will be better.... 
 		# Can't do this... case of digital cover on offset interioer, stitched... the stitcher does the cover
 		#last if $bestPrice and ( $Equipment->strid() eq $$sig_specs{'ddmPress'.$qty_index} );
-		last if defined $bestPrice and ! $bestPrice;
+		if ( defined $bestPrice and ! $bestPrice ) {
+			$openprint::log->debug("Quitting at $$Equipment{strid}");
+			last;
+		} # end if
 	} # end foreach Equipment
 
 	my %results = (

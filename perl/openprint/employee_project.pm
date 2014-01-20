@@ -730,14 +730,17 @@ sub send_duedate_change_notification {
 	@info{'EmployeeFirstName','EmployeeLastName','EmployeeEmail','EmployeeExtension'} = ( $User->firstname(), $User->lastname(), $User->email(), $User->extension() );
 	my $CSR = new openprint::User( $Order->salesrep_id() );
 	if ( $CSR->email() ) {
-		my $email_template = misc::load_file( $log, $config{'SkinPath'} . '/email_template.html' );
-		$info{'ReplacementText'} = ssi::include( '/email_content/proofs_duedate_change-sales_rep.html', \%info );
-		new openprint::Email()->send(
-				FROM    => $User,
-				TO      => $CSR,
-				SUBJECT => "Docket $info{'DocketNumber'} DueDate Changed",
-				ATTACHMENTS	=>	['', encode_qp( Encode::encode('utf-8', ssi::variable_substitution( \$email_template, \%info ) ) ), 'text/html', 'quoted-printable'],
-				);
+		my $Notification = $CSR->notification('Docket Due Date Changes');
+		if ( ( ! $Notification ) or $Notification->value() ne 'No' ) {
+			my $email_template = ssi::slurp_content( '/email_template.html' );
+			$info{'ReplacementText'} = ssi::include( '/email_content/proofs_duedate_change-sales_rep.html', \%info );
+			new openprint::Email()->send(
+					FROM    => $User,
+					TO      => $CSR,
+					SUBJECT => "Docket $info{'DocketNumber'} DueDate Changed",
+					ATTACHMENTS	=>	['', encode_qp( Encode::encode('utf-8', ssi::variable_substitution( \$email_template, \%info ) ) ), 'text/html', 'quoted-printable'],
+					);
+		} # end if Notifications
 	} # end if
 } # end sub send_duedate_change_notification
 

@@ -662,31 +662,8 @@ sub send_proofs_complete_email {
 
 sub send_duedate_change_notification {
 	my ( $r, $log, $dbh, $variable, $project_index, $order_id ) = @_;
-
-# Send email to sales rep
-	my %info;
-
-	$info{'ProjectIndex'} = $project_index;
-	$info{'OrderID'} = $order_id;
-	my $Order = new openprint::Order( $order_id );
-
-	my $Project = new openprint::Project( $project_index );
-	$info{'DueDate'} = Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $Project->due_date() ) );
-
-	my $User = new openprint::User( $session{'user_id'} );
-	@info{'EmployeeFirstName','EmployeeLastName','EmployeeEmail','EmployeeExtension'} = ( $User->firstname(), $User->lastname(), $User->email(), $User->extension() );
-	my $CSR = new openprint::User( $Order->salesrep_id() );
-	if ( $CSR->email() ) {
-		my $email_template = misc::load_file( $log, $config{'SkinPath'}. '/email_template.html' );
-		$info{'ReplacementText'} = "<!--#include virtual=\"/email_content/proofs_duedate_change-sales_rep.html\"-->";
-		$_ = encode_qp( ssi::variable_substitution( \$email_template, \%info ) );
-		new openprint::Email()->send(
-				FROM    => $User,
-				TO      => $CSR,
-				SUBJECT => "Docket $info{'DocketNumber'} DueDate Changed",
-				ATTACHMENTS	=>	['', $_, 'text/html', 'quoted-printable'],
-				);
-	} # end if
+	$log->error("DEPRECATED CALL TO send_duedate_change_notification");
+	return openprint::employee_project::send_duedate_change_notification( $project_index, $order_id );
 } # end sub send_duedate_change_notification
 
 sub load_press_completion {
