@@ -2188,10 +2188,13 @@ $openprint::log->debug("Press: $Press" . join(',', map { $_.'=>'.$$Press{$_} } k
 		$$specs{'PrintingType'.$qty_index} = $Press->specification('Printing Type');
 		$$specs{'rdbPlateType'.$qty_index} = $Press->specification('Plate Type');
 	} # end if Press
-	$$specs{'txtMWeight'.$qty_index} = $Paper->mweight() ? $Paper->mweight() : $Paper->wpsi() * $$Paper{'width'} * $$Paper{'height'} * 1000;
-	$$specs{'paper_id'.$qty_index} = $Paper->id();
-	$$specs{'txtStockGSM'} = $Paper->gsm();
-	$$specs{'txtSpecificStockCalliper'} = $$Paper{'calliper'};
+
+	if ( $Paper->id() ) {
+		$$specs{'txtMWeight'.$qty_index} = $Paper->mweight() ? $Paper->mweight() : $Paper->wpsi() * $$Paper{'width'} * $$Paper{'height'} * 1000;
+		$$specs{'paper_id'.$qty_index} = $Paper->id();
+		$$specs{'txtStockGSM'} = $Paper->gsm();
+		$$specs{'txtSpecificStockCalliper'} = $$Paper{'calliper'};
+	} # end if
 	if ( $$Paper{'type'} eq 'Roll' ) {
 		$$specs{'ddmStockSheetSize'.$qty_index} = $$Paper{'width'} . '" Roll';
 		$$specs{'txtPressSheetQty'.$qty_index} = $$price{'Stock Weight'}.'lbs';
@@ -2888,12 +2891,11 @@ if ( 0 ) {
 } # end sub get_new_specs
 
 sub get_project_price {
-	if ( $openprint::r->connection()->aborted() ) {
-		return {};
-	} else {
-		$openprint::log->debug("Not aborted");
-	} # edn if
 	$openprint::r->print("\n");
+	if ( $openprint::r->connection()->aborted() ) {
+$openprint::log->warn("ABORTED");
+		return {};
+	} # edn if
 	my ( $Project, $service_index, $project, $service_specs, $sig_specs, $qty, $qty_index, $possible_presses, $printing_specs, $versions, $PlateCounts, $PaperCounts, $washed_colours, $previous_forms_cache, $signatures, $impositions, $other_impositions, $best_price, $recursion_depth ) = @_;
 	my %best_price = $best_price ? %{$best_price} : ();
 	$openprint::log->debug("Best price: $recursion_depth starting get_project_price: ($best_price{'Comparison Cost'}) ($best_price{'Comparison Cost'}) UPQ " . $$sig_specs{'txtUnspecifiedPageQuantity'.$qty_index} );
@@ -3148,7 +3150,7 @@ $openprint::log->debug("Giving up on $$Press{strid} bnecause it's bigger than th
 								$$price{'Comparison Log'} .= 'signature ' . $$sig_price{'Comparison Cost'} * $sigs . '<br/>' if COMPARISON_LOG;
 								$PaperCounts{$Paper->id_string()} += $sigs * $$sig_price{'Stock Qty'};
 								my $sig;
-$openprint::log->debug("Sigs: $sigs");
+$openprint::log->debug("Sigs: $sigs: signatures( @signatures )");
 								foreach ( 1 .. $sigs ) {
 									push @{$$price{Impositions}}, $imp;
 									push @{$$price{prices}}, $sig_price;

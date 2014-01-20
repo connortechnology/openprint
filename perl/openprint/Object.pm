@@ -563,25 +563,27 @@ sub find {
 	}
 	delete $$params{'dbh'};
 
+	my $do_cache = 0;
 	my $cache_field = ${$object_type.'::cache_field'};
 	if ( $cache_field and $$params{$cache_field} and ( ( 1 == keys %$params ) or ( 2 == keys %$params and exists $$params{'limit'} ) ) ) {
+		$do_cache = 1;
 
-#$log->debug("have cache field $cache_field flr $$params{$cache_field}");
+$log->debug("have cache field $cache_field for $$params{$cache_field}") if DEBUG_ALL;
 		if ( exists $name_cache{$object_type} and exists $name_cache{$object_type}{$$params{$cache_field}} ) {
-#$log->debug("There is an object in the cache");
+$log->debug("There is an object in the cache") if DEBUG_ALL;
 			if ( $name_cache{$object_type}{$$params{$cache_field}} ) {
-#$log->debug("returning " . $name_cache{$type}{$$params{$cache_field}} . " for $type $cache_field $$params{$cache_field}");
-				return $name_cache{$object_type}{$$params{$cache_field}} 
+$log->debug("returning " . $name_cache{$object_type}{$$params{$cache_field}} . " for $object_type $cache_field $$params{$cache_field}") if DEBUG_ALL;
+				return @{$name_cache{$object_type}{$$params{$cache_field}}}; 
 			} else {
-#$log->debug("returning nothing for $type $cache_field $$params{$cache_field}");
+$log->debug("returning nothing for $object_type $cache_field $$params{$cache_field}") if DEBUG_ALL;
 				return ();
 			} # end if
 		} else {
-#$log->debug("Undefing $type $cache_field $params{$cache_field}");
-			$name_cache{$object_type}{$$params{$cache_field}} = undef;
+$log->debug("Undefing $object_type $cache_field $$params{$cache_field}") if DEBUG_ALL;
+			#$name_cache{$object_type}{$$params{$cache_field}} = undef;
 		} # end if
-	#} else {
-		#$log->debug("Not doing caching using $cache_field with params $$params{$cache_field} ");
+	} else {
+		$log->debug("Not doing caching using $cache_field with params $$params{$cache_field} ");
 	} # end if
 
 	# no operators, just which fields are being searched on. Mostly just useful for detetion of the deleted field.
@@ -717,13 +719,9 @@ sub find {
 		$log->debug("Loading Debug:$debug $object_type ($sql) (@values) # of results:" . @$data . ' in ' . sprintf('%.4f', tv_interval($starttime)*1000) .' useconds' );
 	} # end if
 	if ( $$fields{'id'} ) {
-		if ( $cache_field and 1 ) {
-			my @results;
-			foreach ( @$data ) {
-				my $result = $object_type->new( $_->{$$fields{'id'}}, $_ );
-				$name_cache{$object_type}{$$result{$$fields{$cache_field}}} = $result;
-				push @results, $result;
-			} # end foreach results
+		if ( $do_cache ) {
+			my @results = map { $object_type->new( $_->{$$fields{id}}, $_ ) } @$data;
+			$name_cache{$object_type}{$$params{$cache_field}} = \@results;
 			return @results;
 		} # end if
 		return map { $object_type->new( $_->{$$fields{'id'}}, $_ ) } @$data;
