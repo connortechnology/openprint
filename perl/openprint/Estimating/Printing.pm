@@ -2613,7 +2613,7 @@ if ( DEBUG or DEBUG_FILTERING ) {
 			} # end if
 
 			if ( $SpreadLayout > 0 ) {
-				my $str = sprintf('%d=%dx%d %dx%d-%s-%s-%s', @$imp{'pages','spread_columns','spread_rows','columns','rows','runstyle','image_orientation','bleed_size'} );
+				my $str = join(',', @$imp{'pages','spread_columns','spread_rows','columns','rows','runstyle','image_orientation','bleed_size'} );
 				if ( $imps{$str} ) {
 					for ( my $j = 0; $j < @{$imps{$str}}; $j += 1 ) {
 						my $I = $imps{$str}[$j];
