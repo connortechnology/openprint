@@ -2541,7 +2541,7 @@ $I->display("Not the overriden imposition");
 			if ( ! @results2 ) {
 				my %cuts;
 $log->warn("Getting all impos results: " . @results );
-				foreach my $I ( openprint::imposition::get_all_impositions( @results ) ) {
+				foreach my $I ( openprint::imposition::get_all_impositions( map { $$_{imposition} > $$sig_specs{'txtImposition'.$qty_index} ? $_ : () } @results ) ) {
 $I->display("Getting all impos");
 					if ( $I->imposition() == $$sig_specs{'txtImposition'.$qty_index} ) {
 						my $str = sprintf('%d=%dx%d %dx%d-%s-%s-%s-%d-%d', @$I{'pages','spread_columns','spread_rows','columns','rows','runstyle','image_orientation','bleed_size','columns','row'} );
@@ -3206,6 +3206,17 @@ $openprint::log->debug("Sigs: $sigs");
 							$imp = $base_imp->copy();
 							$new_specs = get_new_specs( $Project, $service_index, $service_specs, \@signatures, $qty_index, $$price{upq}, \%previous_forms_cache, $hash_key );
 							$$imp{specs} = $new_specs;
+						} # end if
+						if ( ! ( $$imp{pages} % $$price{upq} ) ) {
+							# if that pages needed divide the current pages count, then stay on the same press, and sheet and runstyle, buecause it's just an image change.
+								$$new_specs{'chkOverridePageQuantity'.$qty_index} = 'Y';
+								$$new_specs{'PageQuantity'.$qty_index} = $$imp{upq};
+                                $$new_specs{'chkOverrideImposition'.$qty_index} = 'Y';
+								$$new_specs{'txtImposition'.$qty_index} = $$imp{imposition} / $$price{upq};
+                                $$new_specs{'chkOverridePress'.$qty_index} = 'Y';
+								$$new_specs{'ddmPress'.$qty_index} = $Press->strid();
+                                $$new_specs{'chkOverrideRunStyle'.$qty_index} = 'Y';
+								$$new_specs{'ddmRunStyle'.$qty_index} = $$imp{runstyle};
 						} # end if
 
 						$do_final_pricing = 0;

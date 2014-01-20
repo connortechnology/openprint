@@ -100,7 +100,7 @@ sub insert_service {
 sub create_edit_display {
 	my $project_index = $param{'ProjectIndex'};
 
-	my $Project = new openprint::Project( $project_index );
+	my $Project = $variable{Project} = new openprint::Project( $project_index );
 
 	@{$variable{'ProjectTypes'}} = map { $_->name(), $_->description() } openprint::ProjectType->find( 'order'=>'sorting, lower(name)' );
 	# Check the appropriate button for project type
@@ -668,6 +668,10 @@ sub create_edit_process {
 	my %statuses = sql::execute( $log, $dbh, 'SELECT lngserviceindex, strstatus FROM tbl_Project_Contents WHERE lngprojectindex=?', $project_index );
 
 	foreach my $ServiceType ( openprint::ServiceType->find( 'create_visible'=>'Y') ) {
+		if ( $ServiceType->type() eq 'CustomService' ) {
+			$log->error("CustomService is visible in project create.");
+			next;
+		} # end if
 		if ( $param{'chkServices'.$ServiceType->name()} eq $ServiceType->name() ) {
 			if ( ! $services{$ServiceType->name()} ) {	
 				push @{$services{$ServiceType->name()}}, $Project->add_service($ServiceType->name());

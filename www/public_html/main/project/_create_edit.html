@@ -74,7 +74,7 @@
 				$html .= sprintf('<li><input type="checkbox" name="chkServices%1$s" id="chkServices%1$s" value="%1$s" onclick="service_onclick( this );" %2$s /> <label for="chkServices%1$s">%3$s</label></li>', 
 				$ServiceType->name(),
 				(sets::isin( $ServiceType->name(), $$variable{'SelectedServices'} ) ? 'checked="checked"' : ''),
-				ssi::writeTip( $ServiceType->description() ),
+				writeTip( $ServiceType->description() ),
 				);
 			} # end foreach Service Type
 			return $html;
@@ -195,11 +195,11 @@
 	<? endif ( @{$$variable{'design_options'}} > 2 ) ?>
 		<li class="reference"> 
 			<label>Please provide a reference</label>
-			<textarea id="reference" name="txtProjectReference" rows="1" onkeyup="textarea_resize( this );"><?txtProjectReference?></textarea>
+			<textarea id="reference" name="txtProjectReference" rows="<?echo(count_lines(unhtmlize($$variable{Project}->reference()));)?>" onkeyup="textarea_resize( this );"><? echo ( unhtmlize($$variable{Project}->reference()) ) ?></textarea>
 		</li>
 		<li class="comments">
 			<label>Additional comments or instructions</label>
-			<textarea id="comments" name="txtComments" rows="1" onkeyup="textarea_resize( this );"><?txtComments?></textarea>
+			<textarea id="comments" name="txtComments" rows="<?echo(count_lines(unhtmlize($$variable{Project}->comments()));)?>" onkeyup="textarea_resize( this );"><? echo ( unhtmlize($$variable{Project}->comments()); )?></textarea>
 		</li>
 	</ul>
 </fieldset>

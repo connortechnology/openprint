@@ -61,6 +61,14 @@ sub calc {
 	my $ServiceType = $Project->ServiceType( $service_index );
 	my $status = 'calculated';
 	my $printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
+	if ( ! $$printing_specs{txtFinalWidth} and $$printing_specs{txtFinalHeight} ) {
+		my @sigs = $Project->signatures();
+		if ( ! @sigs ) {
+			$$specs{alert} .= 'There are no signatures... cannot determine size.<br/>';
+			return $$specs{'Status'} = 'uncalculated';
+		} # end if
+		$printing_specs = openprint::service::get_specs_ref( $Project, $sigs[0] );
+	} # end if
 
 	$$specs{'txtItemsPerPackage'} = int($$specs{'txtItemsPerPackage'});
 	if ( ! $$specs{'txtItemsPerPackage'} ) {	# a zero value is still calculated, just with a zero price.d
@@ -137,8 +145,8 @@ sub calc {
 
 			if ( $$specs{'rdbCardboardBacking'} eq 'Y' ) {
 
-				if ( my @Materials = openprint::Material->find('name'=>'CardboardBacking') ) {
-					my %CardboardPrice = $Materials[0]->get_price( $package_qty, undef );
+				if ( my $Material = openprint::Material->find('name'=>'CardboardBacking') ) {
+					my %CardboardPrice = $Material->get_price( $package_qty, undef );
 					if ( $CardboardPrice{'units'} eq 'per square inch' ) {
 						$CardboardPrice{'Total'} = $CardboardPrice{'Price'} * $$printing_specs{'txtFinalWidth'} * $$printing_specs{'txtFinalHeight'};
 					} elsif ( $CardboardPrice{'units'} eq 'per square foot' ) {
