@@ -3214,9 +3214,10 @@ $openprint::log->debug("Sigs: $sigs: signatures( @signatures )");
 							$new_specs = get_new_specs( $Project, $service_index, $service_specs, \@signatures, $qty_index, $$price{upq}, \%previous_forms_cache, $hash_key );
 							$$imp{specs} = $new_specs;
 						} # end if
+						
 						if ( ( ! ( $$imp{pages} % $$price{upq} ) ) and ( (! $$new_specs{ServiceIndex} ) or (
 								( ($$new_specs{'chkOverridePageQuantity'.$qty_index} ne 'Y') or ($$new_specs{'PageQuantity'.$qty_index} == $$imp{upq} ) ) and
-								( ($$new_specs{'chkOverrideImposition'.$qty_index} ne 'Y') or ($$new_specs{'txtImposition'.$qty_index} == $$imp{pages} / $$price{upq} ) ) and
+								( ($$new_specs{'chkOverrideImposition'.$qty_index} ne 'Y') or ($$new_specs{'txtImposition'.$qty_index} == ($$imp{pages}*$$imp{imposition} / $$price{upq} ) ) ) and
 								( ($$new_specs{'chkOverridePress'.$qty_index} ne 'Y') or ($$new_specs{'ddmPress'.$qty_index} eq $Press->strid()) ) and
 								( ($$new_specs{'chkOverrideRunStyle'.$qty_index} ne 'Y') or ($$new_specs{'ddmRunStyle'.$qty_index} eq $$imp{runstyle}) )
 ) ) ) {
@@ -3225,7 +3226,7 @@ $openprint::log->warn("Override subsig values $$imp{pages}pg $$price{upq} upq");
 								$$new_specs{'chkOverridePageQuantity'.$qty_index} = 'Y';
 								$$new_specs{'PageQuantity'.$qty_index} = $$price{upq};
                                 $$new_specs{'chkOverrideImposition'.$qty_index} = 'Y';
-								$$new_specs{'txtImposition'.$qty_index} = $$imp{pages} / $$price{upq};
+								$$new_specs{'txtImposition'.$qty_index} = $$imp{pages} *$$imp{imposition} / $$price{upq};
                                 $$new_specs{'chkOverridePress'.$qty_index} = 'Y';
 								$$new_specs{'ddmPress'.$qty_index} = $Press->strid();
                                 $$new_specs{'chkOverrideRunStyle'.$qty_index} = 'Y';
@@ -4392,7 +4393,7 @@ $openprint::log->debug("Colour: $real_colour impressions $colour_impressions $$I
 					$real_colour =~ s/Overall/Spot/;
 				} # end if
 			} else {
-$openprint::log->debug("Not Work");
+#$openprint::log->debug("Not Work");
 # Not needed, @colours has each colour twice if it's both sides.
 				#if ( $$Imposition{sides} == 2 ) {
 					#if ( ! ( sets::isin( $real_colour, $$project{side_one_colour_names} ) and sets::isin( $real_colour, $$project{side_two_colour_names} ) ) ) {
