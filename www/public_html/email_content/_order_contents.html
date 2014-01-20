@@ -3,9 +3,9 @@
 	<tr> 
 		<th class="project_id">ID</td>
 		<th class="reference">Reference</td>
-		<th class="required_on">Required Date</td>
+		<th class="Date">Required Date</td>
 		<th class="quantity">Quantity</td>
-		<th class="total">Total</td>
+		<th class="Price">Price</td>
 	</tr>
 <? echo (
 	my $rowclass; 
@@ -16,9 +16,9 @@
 <tr%1$s>
 		<td class="project_id">%2$s</td>
 		<td class="reference">%3$s</td>
-		<td class="required_on">%4$s</td>
+		<td class="Date">%4$s</td>
 		<td class="quantity">%5$s</td>
-		<td class="total">
+		<td class="Price">
 `, $rowclass, $Project->link_to(), $Project->link_to( join('<br/>', $Project->reference(), $Project->summary() ) ), 
 format_date( $Project->requested_date() ), $Project->ordered_quantity(),
  );
@@ -40,13 +40,12 @@ format_date( $Project->requested_date() ), $Project->ordered_quantity(),
 					eval(' require openprint::Estimating::'.$ServiceType->name().';' );
 					my $summary = eval('openprint::Estimating::'.$ServiceType->name().'::summary( $Project, $service_index, $specs, $Project->ordered_quantity_index() );') . ' to<br/>'.eval('openprint::Estimating::'.$ServiceType->name().'::summary( $Project, $service_index, $specs );');
 					$openprint::log->error("Error ". $@) if $@;
-					$shipping_html .= qq`<tr$$variable{'rowclass'}><td>`.$ServiceType->description().qq`</td><td colspan="2">$summary</td><td align="right">$$specs{'alert'}</td><td align="right">`.sprintf('%s%.2f', $$variable{Currency}->symbol(), $price).'</td></tr>';
+					$shipping_html .= qq`<tr$$variable{'rowclass'}><td>`.$ServiceType->description().qq`</td><td colspan="2">$summary</td><td align="right">$$specs{'alert'}</td><td align="right">`. $$variable{Currency}->format($price).'</td></tr>';
 				} # end foreach
 			} # end if
 		} # end foreach
 
-    $html .= sprintf( '%s%.2f</td></tr>', $$variable{Currency}->symbol(), $$variable{'price'} );
-	$$variable{'SUB_TOTAL'} += $$variable{'price'};
+    $html .= $$variable{Currency}->format( $$variable{'price'} ).  '</td></tr>';
 	$rowclass = $rowclass ? '' : ' class="colRow"';
 
     $html .= $shipping_html;
