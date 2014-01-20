@@ -289,7 +289,7 @@ my %variables = (
 	'MatchGrain1' => ['save'], 'MatchGrain2' => ['save'], 'MatchGrain3' => ['save'], 
 	'chkOverrideGrainDirection1' => ['save'], 'chkOverrideGrainDirection2' => ['save'], 'chkOverrideGrainDirection3' => ['save'],
 	'txtPressSheetComboItems'=>['save'],
-	'txtSpreadSize' => ['save'],
+	'txtSpreadSize' => ['save'],'OverrideSpreadSize' => ['save'],
 	'Group' => ['save'], 'GroupPageQuantity' => ['save'],
 	'PaperMessage1'=>['output'], 'PaperMessage2'=>['output'], 'PaperMessage3'=>['output'],
 
@@ -1536,8 +1536,10 @@ sub set_size {
 		} elsif ( $$specs{'txtSignatureType'} eq 'Cover Pages' ) {
 
 			# Technically, something like a coil bound could be 2pg spread, just need two of them.  
-			$$specs{'txtSpreadSize'} = ( $$specs{'GroupPageQuantity'} > 6 ? 4 : $$specs{'GroupPageQuantity'} );
-			$variables{'txtSpreadSize'} = [ sets::union( 'output', @{$variables{'txtSpreadSize'}} ) ];
+			if ( $$specs{OverrideSpreadSize} ne 'Y' ) {
+				$$specs{'txtSpreadSize'} = ( $$specs{'GroupPageQuantity'} > 6 ? 4 : $$specs{'GroupPageQuantity'} );
+				$variables{'txtSpreadSize'} = [ sets::union( 'output', @{$variables{'txtSpreadSize'}} ) ];
+			} # end if
 			#$openprint::log->debug("SpreadSize: $$specs{'txtSpreadSize'}");
 			if ( ( ! defined $$specs{'chkOverrideDimensions'} ) or ( $$specs{'chkOverrideDimensions'} ne 'Y' ) ) {
 				if ( sets::isin($$specs{'rdbTemplateType'}, ['2Panel1Pocket','2Panel2Pocket','TriFoldDoublePocket'] ) ) {
@@ -1592,28 +1594,30 @@ sub set_size {
 			$$specs{'txtFinalWidth'} = $$printing_specs{'txtFinalWidth'};
 			$$specs{'txtFinalHeight'} = $$printing_specs{'txtFinalHeight'};
 		} else { # not folder, not cover
-			if ( $Project->Type()->name() eq 'ScratchPads' ) {
-				$$specs{'txtSpreadSize'} = 1;
-			} else {
-				if ( sets::isin( $$printing_specs{rdbTemplateType}, ['SaddleStitching', 'LoopStitching'] ) ) {
-					$$specs{txtSpreadSize} = 4;
-				} elsif ( $openprint::config{$$printing_specs{'rdbTemplateType'}.'SpreadSize'} ) {
-					$$specs{'txtSpreadSize'} = $openprint::config{$$printing_specs{'rdbTemplateType'}.'SpreadSize'};
-				} elsif ( $$printing_specs{'rdbTemplateType'} eq 'PerfectBound' ) {
-					if ( $openprint::config{PerfectBindSpreadSize} ) {
-						$$specs{'txtSpreadSize'} = $openprint::config{PerfectBindSpreadSize};
-					} else {
-						$$specs{'txtSpreadSize'} = 2;
-					} # end if
-				} elsif ( sets::isin( $$printing_specs{'rdbTemplateType'}, ['CornerStitching','SpinePaste'] ) ) {
-					$$specs{'txtSpreadSize'} = 2;
-				} elsif ( $$specs{'GroupPageQuantity'} % 4 ) {
-					$$specs{'txtSpreadSize'} = 2;
+			if ( $$specs{OverrideSpreadSize} ne 'Y' ) {
+				if ( $Project->Type()->name() eq 'ScratchPads' ) {
+					$$specs{'txtSpreadSize'} = 1;
 				} else {
-					$$specs{'txtSpreadSize'} = 4;
+					if ( sets::isin( $$printing_specs{rdbTemplateType}, ['SaddleStitching', 'LoopStitching'] ) ) {
+						$$specs{txtSpreadSize} = 4;
+					} elsif ( $openprint::config{$$printing_specs{'rdbTemplateType'}.'SpreadSize'} ) {
+						$$specs{'txtSpreadSize'} = $openprint::config{$$printing_specs{'rdbTemplateType'}.'SpreadSize'};
+					} elsif ( $$printing_specs{'rdbTemplateType'} eq 'PerfectBound' ) {
+						if ( $openprint::config{PerfectBindSpreadSize} ) {
+							$$specs{'txtSpreadSize'} = $openprint::config{PerfectBindSpreadSize};
+						} else {
+							$$specs{'txtSpreadSize'} = 2;
+						} # end if
+					} elsif ( sets::isin( $$printing_specs{'rdbTemplateType'}, ['CornerStitching','SpinePaste'] ) ) {
+						$$specs{'txtSpreadSize'} = 2;
+					} elsif ( $$specs{'GroupPageQuantity'} % 4 ) {
+						$$specs{'txtSpreadSize'} = 2;
+					} else {
+						$$specs{'txtSpreadSize'} = 4;
+					} # end if
 				} # end if
+				$variables{txtSpreadSize} = [ sets::union( 'output', @{$variables{txtSpreadSize}} ) ];
 			} # end if
-			$variables{txtSpreadSize} = [ sets::union( 'output', @{$variables{txtSpreadSize}} ) ];
 
 			if ( ( ! defined $$specs{chkOverrideDimensions} ) or ( $$specs{chkOverrideDimensions} ne 'Y' ) ) {
 				if ( $$specs{txtSpreadSize} == 4 ) {
