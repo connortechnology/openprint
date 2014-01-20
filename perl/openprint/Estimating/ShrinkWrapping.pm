@@ -32,6 +32,7 @@ my @variables = (
 	'type_id',
 	'material_id',
 	'ddmEquipment1','ddmEquipment2', 'ddmEquipment3',
+	'alert',
 );
 sub variables {
     return @variables;
@@ -51,6 +52,7 @@ sub no_outputs {
 
 sub calc {
 	my ( $log, $dbh, $variable, $project_index, $service_index, $specs ) = @_;
+	$$specs{alert} = '';
 
 	my $Project = new openprint::Project( $project_index );
 	my $services = $Project->services();
@@ -61,15 +63,24 @@ sub calc {
 	my $ServiceType = $Project->ServiceType( $service_index );
 	my $status = 'calculated';
 	my $printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
-	if ( ! $$printing_specs{txtFinalWidth} and $$printing_specs{txtFinalHeight} ) {
+	if ( ! ( $$printing_specs{txtFinalWidth} and $$printing_specs{txtFinalHeight} ) ) {
 		my @sigs = $Project->signatures();
 		if ( ! @sigs ) {
 			$$specs{alert} .= 'There are no signatures... cannot determine size.<br/>';
 			return $$specs{'Status'} = 'uncalculated';
 		} # end if
+		foreach my $sig_id ( @sigs ) {
 		$printing_specs = openprint::service::get_specs_ref( $Project, $sigs[0] );
+			last if $$printing_specs{txtFinalWidth} and $$printing_specs{txtFinalHeight};
+		} # end foreach
+	} # end if
+	if ( ! ( $$printing_specs{txtFinalWidth} and $$printing_specs{txtFinalHeight} ) ) {
+		$openprint::log->error('Unable to determine dimensions.<br/>');
+		$$specs{alert} .= 'Unable to determine dimensions.<br/>';
+		return $$specs{'Status'} = 'uncalculated';
 	} # end if
 
+$openprint::log->debug(" $$printing_specs{txtFinalWidth} and $$printing_specs{txtFinalHeight}");
 	$$specs{'txtItemsPerPackage'} = int($$specs{'txtItemsPerPackage'});
 	if ( ! $$specs{'txtItemsPerPackage'} ) {	# a zero value is still calculated, just with a zero price.d
 		if ( $ServiceType->name() eq 'Bundling' ) {
@@ -145,17 +156,18 @@ sub calc {
 
 			if ( $$specs{'rdbCardboardBacking'} eq 'Y' ) {
 
-				if ( my $Material = openprint::Material->find('name'=>'CardboardBacking') ) {
+				if ( my $Material = openprint::Material->find_one( name=>'CardboardBacking') ) {
 					my %CardboardPrice = $Material->get_price( $package_qty, undef );
 					if ( $CardboardPrice{'units'} eq 'per square inch' ) {
-						$CardboardPrice{'Total'} = $CardboardPrice{'Price'} * $$printing_specs{'txtFinalWidth'} * $$printing_specs{'txtFinalHeight'};
+						$CardboardPrice{Total} = $CardboardPrice{Price} * $$printing_specs{txtFinalWidth} * $$printing_specs{txtFinalHeight};
 					} elsif ( $CardboardPrice{'units'} eq 'per square foot' ) {
-						$CardboardPrice{'Total'} = $CardboardPrice{'Price'} * ($$printing_specs{'txtFinalWidth'} * $$printing_specs{'txtFinalHeight'}/144);
+						$CardboardPrice{Total} = $CardboardPrice{Price} * ($$printing_specs{txtFinalWidth} * $$printing_specs{txtFinalHeight}/144);
 					} elsif ( $CardboardPrice{'units'} eq 'per pad' ) {
 						$CardboardPrice{'Total'} = $CardboardPrice{'Price'};
 					} # end if
+$openprint::log->debug("Cardboard size: $$printing_specs{txtFinalWidth} * $$printing_specs{txtFinalHeight}");
 					$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Cardboard Price: $%.2f %s * %s x %s = $%.2f per package = %.2f total<br/>',@CardboardPrice{'Price','units'}, @$printing_specs{'txtFinalWidth','txtFinalHeight'}, $CardboardPrice{'Total'}, $CardboardPrice{'Total'}*$package_qty );
-					$price += $CardboardPrice{'Total'} * $package_qty;
+					$price += $CardboardPrice{Total} * $package_qty;
 				} # end if
 			} # end if
 			if ( my @Materials = openprint::Material->find('category'=>$ServiceType->name()) ) {
@@ -212,7 +224,7 @@ sub calc {
 			$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $$specs{"txtPrice$qty_index"} );
 		} # endif
 		$$specs{"txtUnitPrice$qty_index"} = sprintf( $openprint::config{'UnitPriceFormat'}, ( $bestPrice{Unit}/$qty ) * (1+$Project->markup()/100) );
-		$$specs{"ddmEquipment$qty_index"} = $bestPrice{Equipment}->id();
+		$$specs{"ddmEquipment$qty_index"} = $bestPrice{Equipment} ? $bestPrice{Equipment}->id() : '';
 	} # end foreach qty_index
 
 	return $$specs{'Status'} = $status;
