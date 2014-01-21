@@ -20,10 +20,10 @@ use strict;
 package openprint::Estimating::Printing;
 my $threading = 0;
 #use threads;
-use constant DEBUG => 0;
+use constant DEBUG => 1;
 use constant DEBUG_VERSIONS => 0;
 use constant DEBUG_FILTERING => 1;
-use constant DEBUG_PRICE_DECISIONS => 0;
+use constant DEBUG_PRICE_DECISIONS => 1;
 use constant DEBUG_INKS => 0;
 use constant DEBUG_STOCK => 0;
 use constant COMPARISON_LOG => 0;
@@ -2440,7 +2440,7 @@ sub calculate_impositions {
 			$max_pages = $pages if $pages > $max_pages;
 			$max_impositions{$pages} = $$imp{'imposition'} if $$imp{'imposition'} > $max_impositions{$pages};
 		} # end foreach
-		$max_pages = ceil( $max_pages / 3 );
+		$max_pages = int( $max_pages / 3 );
 $openprint::log->debug("Max pages: $max_pages") if DEBUG_FILTERING;
 
 		foreach my $imp ( @impositions ) {
