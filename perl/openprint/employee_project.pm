@@ -492,9 +492,12 @@ sub view {
 		sql::end_transaction( $dbh, $ac );
 	} elsif ( $param{'btnFunction'} eq 'Approve' ) {
 		my $Order = new openprint::Order( $param{'OrderID'} );
-		$Order->approve();
-		$Project->update_status();
-		$Order->update_status();
+		$variable{error} .= $Order->approve();
+		if ( ! $variable{error} ) {
+			$Project->update_status();
+			$Order->update_status();
+			$variable{ExternalRedirect} = '/employee/project/view.html?docket='.$Order->docket();
+		} # end if
 	} # end if
 
 } # end sub view

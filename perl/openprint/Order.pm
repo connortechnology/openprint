@@ -169,79 +169,46 @@ sub to_string {
 # Approve is acknowledging the prices, etc and giving the go ahead. So this function updates all the prices, taxes, statuses, etc.
 sub approve {
 	my $self = shift;
-# get taxes
-	my @Taxes = openprint::Tax->find( state =>$self->state() );
-	my ( $pst_rate, $hst_rate, $gst_rate ) = $Taxes[0]->get('statetax_rate','harmonizedtax_rate','federaltax_rate') if @Taxes;
 
-	$_ = q{SELECT ysnPSTExempt, ysnGSTExempt FROM Companies WHERE id=?};
-	my ( $pst_exempt, $gst_exempt ) = sql::execute( $log, $dbh, $_, $openprint::session{'company_id'} );
+	my $error;
+	my $ac = sql::start_transaction( $openprint::dbh );
 
-	my $sub_total = 0;
-	my $gst_total;
-	my $pst_total;
-	my $hst_total;
-	my $total = 0;
 
-	$_ = q{SELECT lngProjectIndex, intQuantityIndex FROM Order_Contents WHERE OrderIndex=?};
-	my @data = sql::execute( $log, $dbh, $_, $$self{'id'} );
-	while ( my ( $project_id, $qty ) = splice @data, 0, 2 ) {
-		my ( $pst_amount, $gst_amount, $hst_amount );
-		my $Project = new openprint::Project( $project_id );
-		my @prices = $Project->prices();
-		my $price = $prices[$qty-1];
-
-# get product tax exemption
-		my ( $prod_tax1_exempt, $prod_tax2_exempt );
-
-		if ( $pst_rate ne '' ) {
-			if ( $pst_exempt ne 'Y' and $prod_tax2_exempt ne 'Y' ) {
-				$pst_amount = $price * ($pst_rate/100);
-			} else {
-				$pst_amount = 0;
-			} # end if
-		} # end if
-		if ( $gst_rate ne '' ) {
-			if ( $gst_exempt ne 'Y' and $prod_tax1_exempt ne 'Y' ) {
-				$gst_amount = $price * ($gst_rate/100);
-			} else {
-				$gst_amount = 0;
-			} # end if
-		} # end if
-
-		if ( $hst_rate ne '' ) {
-			if ( $gst_exempt ne 'Y' and $prod_tax1_exempt ne 'Y' ) {
-				$hst_amount = $price * ($hst_rate/100);
-			} else {
-				$hst_amount = 0;
-			} # end if
-		} # end if
-
-		sql::update( $log, $dbh, 'tbl_Project_Contents', ['lngProjectIndex=? AND strStatus=?', $project_id, 'Waiting For Customer Approval'], 'strstatus', 'Ordered' );
+	foreach my $OP ( $self->Ordered_Projects() ) {
+		my $Project = $OP->Project();
+		sql::update( $log, $dbh, 'tbl_Project_Contents', ['lngProjectIndex=? AND strStatus=?', $Project->id(), 'Waiting For Customer Approval'], 'strstatus', 'Ordered' );
 		$Project->add_to_log( @openprint::session{'company_id', 'user_id'}, 'Additional Charges Approved' );
-		sql::update( $log, $dbh, 'Order_Contents', ['OrderIndex=? AND lngProjectIndex=?', $$self{'id'}, $project_id ],
-				'curSalesPrice',	$price,
-				'dblTax1', ( $gst_amount ne '' ? $gst_amount : undef ),
-				'dblTax2', ( $pst_amount ne '' ? $pst_amount : undef ),
-				'dblTax3', ( $hst_amount ne '' ? $hst_amount : undef ),
-				);
-
-		$sub_total += $price;
-		$gst_total += $gst_amount if $gst_amount ne '';
-		$pst_total += $pst_amount if $pst_amount ne '';
-		$hst_total += $hst_amount if $hst_amount ne '';
-		$total += $price + $gst_amount + $pst_amount + $hst_amount;
+		$Project->price( $Project->ordered_quantity_index(), undef );
+		$error .= $Project->save();
+		$error .= $OP->save({price=>undef});
+		last if $error;
 	} # end while
+	if ( $error ) {
+		$dbh->rollback();
+		sql::end_transaction( $openprint::dbh, $ac );
+		return $error;
+	} # end if
+	foreach my $Tax ( $self->Taxes() ) {
+		$Tax->amount(undef);
+		$error .= $Tax->save();
+	} # end foreach
+	if ( $error ) {
+		$dbh->rollback();
+		sql::end_transaction( $openprint::dbh, $ac );
+		return $error;
+	} # end if
 
-	sql::update( $log, $dbh, 'Orders', ['id=?',$$self{id}],
-			'curFedTax',	( $gst_total ne '' ? $gst_total : undef ),
-			'curProvTax',	( $pst_total ne '' ? $pst_total : undef ),
-			'curHarmTax',	( $hst_total ne '' ? $hst_total : undef ),
-			'curTotalSale', ( $total ne '' ? $total : undef ),
-			'strStatus',	'In Production',
-			);
-
+	$self->subtotal( undef );
+	$self->total( undef );
+	$error .= $self->save({ status => 'In Production'});
+	if ( $error ) {
+		$dbh->rollback();
+		sql::end_transaction( $openprint::dbh, $ac );
+		return $error;
+	} # end if
 	$self->add_log( 'Customer Approved' );
-
+	sql::end_transaction( $openprint::dbh, $ac );
+	return;
 } # end sub approve
 
 sub Status {

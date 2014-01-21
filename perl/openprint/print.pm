@@ -37,7 +37,9 @@ sub view_services {
 			my $s = openprint::service::internal_calc( $log, $dbh, $variable, $project_index, $$services{''}[0], $Project->Type()->type() );
 			$log->debug("*** Time to Save Project - View Services Function *** $project_index $openprint::session{'project_id'}");
 # Display any resulting uncalculated services
+$log->debug("before contintue");
 			openprint::print_project::continue_project( $log, $dbh, $variable, $project_index );
+$log->debug("after continue $$variable{ExternalRedirect}");
 			return if $$variable{ExternalRedirect};
 		} elsif ( $openprint::param{'btnFunction'} eq 'Delete Project' ) {
 			$$variable{'error'} .= openprint::print_project::try_to_delete_project( $openprint::log, $openprint::dbh, \%openprint::variable, $project_index );
