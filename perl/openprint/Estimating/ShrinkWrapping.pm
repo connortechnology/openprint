@@ -184,7 +184,7 @@ $openprint::log->debug("Cardboard size: $$printing_specs{txtFinalWidth} * $$prin
 					my %MaterialPrice = $Material->get_price( $package_qty );
 
 					my $material_qty = $package_qty;
-					$material_qty *= $$specs{'bands_per_package'};
+					$material_qty *= $$specs{'bands_per_package'} if $$specs{'bands_per_package'};
 	# if $$specs{'bands_per_package'};
 					if ( $MaterialPrice{units} eq 'per m' ) {
 						$MaterialPrice{'Total'} = $MaterialPrice{'Price'} * $material_qty / 1000;
@@ -205,9 +205,9 @@ $openprint::log->debug("Cardboard size: $$printing_specs{txtFinalWidth} * $$prin
 							$Roll_Length = { value => 42000, units=>'inches' };
 						} # end if
 
-						$$specs{'hdnBreakdown'.$qty_index} .= 'Length per roll : ' . $Roll_Length{value}.$Roll_Length{units} . '<br/>';
+						$$specs{'hdnBreakdown'.$qty_index} .= 'Length per roll : ' . $$Roll_Length{value}.$$Roll_Length{units} . '<br/>';
 						
-						my $rolls = ceil( $Roll_Length{value} / $inches );
+						my $rolls = ceil( $inches / $$Roll_Length{value} );
 						$MaterialPrice{Total} = $MaterialPrice{Price} * $rolls;
 						$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Material Price: $%1$.2f%2$s * %4$d rolls = $%3$.2f<br/>',@MaterialPrice{'Price','units','Total'}, $rolls );
 					} # end if
