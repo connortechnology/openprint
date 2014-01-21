@@ -600,7 +600,7 @@ sub send_sales_order {
 				FROM	=> $config{'OrderingEmail'},
 				'Reply-to'	=> $$self{'email'},
 				TO		=> join(',',@admin_emails),
-				TO	 =>	'iconnor@point-one.com',
+				#TO	 =>	'iconnor@point-one.com',
 				SUBJECT => "Order $$self{id}",
 				ATTACHMENTS	=>	[ @body, @sales_order, @project_summaries, @project_dockets ],
 				);
