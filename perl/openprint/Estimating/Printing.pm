@@ -35,7 +35,7 @@ my %folding_cache;
 my %Papers;
 # indexed by press
 #my %impositions;
-my $do_initial_filtering = 0;
+my $do_initial_filtering = 1;
 my $max_recursion_depth = 3;
 my %converted_imposition_cache;
 my $use_converted_imposition_cache = 0;
@@ -4992,10 +4992,9 @@ sub select_presses {
 			} # end if
 			if ( $AQ_Min_Weight and ( $$AQ_Min_Weight{units} eq 'gsm' ) and ( $Paper->gsm() < $$AQ_Min_Weight{value} ) ) {
 				$results{$press_id} = " ** Press $press_id Failed Aqueous Minimum Weight Check (".$$AQ_Min_Weight{value}." > $$Paper{gsm})gsm<br/>";
-$openprint::log->debug(" ** Press $press_id Failed Aqueous Minimum Weight Check (".$$AQ_Min_Weight{value}." > $$Paper{gsm})gsm<br/>");
+#$openprint::log->debug(" ** Press $press_id Failed Aqueous Minimum Weight Check (".$$AQ_Min_Weight{value}." > $$Paper{gsm})gsm<br/>");
 				next;
 			} # end if
-$openprint::log->debug("Got ok paper");
 			$paper_ok = 1;
 			last;
 		} # end foreach Paper
