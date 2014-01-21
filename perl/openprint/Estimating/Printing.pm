@@ -22,7 +22,7 @@ my $threading = 0;
 #use threads;
 use constant DEBUG => 0;
 use constant DEBUG_VERSIONS => 0;
-use constant DEBUG_FILTERING => 0;
+use constant DEBUG_FILTERING => 1;
 use constant DEBUG_PRICE_DECISIONS => 0;
 use constant DEBUG_INKS => 0;
 use constant DEBUG_STOCK => 0;
@@ -2187,7 +2187,7 @@ sub save_price( $$$$$ ) {
 
 	$$specs{'ddmBleedSize'.$qty_index} = $$Imposition{'bleed_size'};
 	if ( $Press and $$Press{strid} ) {
-$openprint::log->debug("Press: $Press" . join(',', map { $_.'=>'.$$Press{$_} } keys %$Press ) );
+#$openprint::log->debug("Press: $Press" . join(',', map { $_.'=>'.$$Press{$_} } keys %$Press ) );
 		$$specs{'ddmPress'.$qty_index} = $$Press{'strid'};
 		$$specs{'PrintingType'.$qty_index} = $Press->specification('Printing Type');
 		$$specs{'rdbPlateType'.$qty_index} = $Press->specification('Plate Type');
@@ -2597,6 +2597,7 @@ if ( DEBUG or DEBUG_FILTERING ) {
 
 			# My thoughts here:  have to base it purely on this sig. Need to look up price by total, but compare based just on this sig.
 			my $stock_qty = int( $qty/$$imp{'imposition'} ) * $Paper->factor();
+				$stock_qty *= int( $$sig_spec{"UnspecifiedPageQuantity$qty_index"} / $$imp{pages} );
 			my $lookup_stock_qty = $stock_qty;
 
 			if ( $$Paper{'type'} eq 'Roll' ) {
@@ -2639,12 +2640,13 @@ $I->display('Considering') if DEBUG or DEBUG_FILTERING;
 									);
 						} # end if
 if ( DEBUG or DEBUG_FILTERING ) {
-$I->display("Comparing mino weight:". $P->minimum_order_weight() . ' Price: ' . $$BiggerPrice{'100lb Price'} . ' total: ' . $$BiggerPrice{'100lb Total'} .' cut ' . $P->is_cut());
-$imp->display("Comparing mino weight:" . $Paper->minimum_order_weight() . 'Price: ' . $$SmallerPrice{'100lb Price'} . ' total: ' . $$SmallerPrice{'100lb Total'} . ' cut' . $Paper->is_cut() );
+$I->display("Comparing B mino weight:". $P->minimum_order_weight() . ' Price: ' . $$BiggerPrice{'100lb Price'} . ' total: ' . $$BiggerPrice{'100lb Total'} .' cut ' . $P->is_cut());
+$imp->display("Comparing A mino weight:" . $Paper->minimum_order_weight() . 'Price: ' . $$SmallerPrice{'100lb Price'} . ' total: ' . $$SmallerPrice{'100lb Total'} . ' cut' . $Paper->is_cut() );
 } 
 						if ( ($$I{pages} == $$sig_specs{'txtUnspecifiedPageQuantity'.$qty_index} ) 
-							and ( $P->factor() <= $Paper->factor() )
-							and ( (1*$$BiggerPrice{'100lb Total'}) >= (1*$$SmallerPrice{'100lb Total'}) )
+# if this is going to be the only sig... then... we can make some stronger determinations
+							#and ( $P->factor() <= $Paper->factor() )
+							and ( ($$BiggerPrice{'100lb Total'}) >= ($$SmallerPrice{'100lb Total'}) )
 						   ) {
 							# There won't be any additional signatures, so we can compare directly on value
 							splice @{$imps{$str}}, $j, 1;
@@ -2656,10 +2658,10 @@ $imp->display("Comparing mino weight:" . $Paper->minimum_order_weight() . 'Price
 							}
 							
 						}elsif ( ( $P->area() >= $Paper->area() )
-								and ( $P->factor() <= $Paper->factor() )
 								and ( $P->minimum_order_weight() >= $Paper->minimum_order_weight() )
 								and ( (1*$$BiggerPrice{'100lb Total'}) >= (1*$$SmallerPrice{'100lb Total'}) )
 								and ( $P->is_cut() or ! $Paper->is_cut() )
+								#and ( $P->factor() >= $Paper->factor() )
 						   ) {
 							splice @{$imps{$str}}, $j, 1;
 							$j -= 1;
@@ -2670,7 +2672,7 @@ $imp->display("Comparing mino weight:" . $Paper->minimum_order_weight() . 'Price
 							}
 
 						} elsif ( ( $P->area() <= $Paper->area() )
-								and ( $P->factor() >= $Paper->factor() )
+								#and ( $P->factor() >= $Paper->factor() )
 								and ( $P->minimum_order_weight() <= $Paper->minimum_order_weight() )
 								and ( (1*$$BiggerPrice{'100lb Total'}) <= (1*$$SmallerPrice{'100lb Total'}) )
 								and ( ( ! $P->is_cut() ) or ( $Paper->is_cut() ) )
@@ -2684,7 +2686,9 @@ $imp->display("Comparing mino weight:" . $Paper->minimum_order_weight() . 'Price
 							}
 
 						} elsif ( DEBUG or DEBUG_FILTERING ) {
-							$openprint::log->debug( "Not Dropping $$BiggerPrice{'100lb'} $$SmallerPrice{'100lb'}");
+							$openprint::log->debug( "Not Dropping BPrice:$$BiggerPrice{'100lb'} IPrice$$SmallerPrice{'100lb'}");
+							$openprint::log->debug( "Not Dropping Bfactor:".$P->factor() . ' I factor ' . $Paper->factor() );
+							$openprint::log->debug( "Not Dropping Barea:".$P->area() . ' I area ' . $Paper->area() );
 							$I->display();
 							$imp->display();
 						} # end if
@@ -2729,6 +2733,36 @@ $imp->display("Comparing mino weight:" . $Paper->minimum_order_weight() . 'Price
 				push @{$imps{$str}}, $imp if $add;
 			} # end if ServerLaoutout
 		} # end foreach imp
+		@results = map {@{$_}} values %imps;
+		%imps = ();
+		my $bump_count = 0;
+		foreach my $I ( @results ) {
+			my $Paper = $I->Paper();
+			my $key = join(',', $Paper->width(), $Paper->height(), $$I{pages}, $I->image_orientation(), $I->imposition() );
+			if ( ! ( $imps{$key} and @{$imps{$key}} ) ) {
+				$imps{$key} = [ $I ];
+				next;
+			} # end if
+			my $add = 1;
+			for ( my $i = 0; $i < @{$imps{$key}}; $i += 1 ) {
+				my $B = $imps{$key}[$i];
+				if ( sets::isin( $$B{runstyle}, [ 'Sheet Work','Work & Turn', 'Work & Tumble' ] ) and  $$I{runstyle} eq 'Perfecting' ) {
+					splice @{$imps{$key}}, 0, 1;
+					$i -= 1;
+$bump_count += 1;
+					next;
+				} elsif ( $$B{runstyle} eq 'Perfecting' and sets::isin( $$I{runstyle}, [ 'Sheet Work','Work & Turn', 'Work & Tumble' ] ) ) {
+					$add = 0;
+				} # end if
+			} # end for
+			if ( $add ) {
+				push @{$imps{$key}}, $I;
+			} else {
+				$bump_count += 1;
+			}
+		} 
+$openprint::log->debug("Bumped $bump_count for Ppppreeccting vs Sheet Work");
+
 if ( $third_level_filtering and $$sig_specs{"chkOverrideImposition$qty_index"} ne 'Y' ) {
 		@results = map {@{$_}} values %imps;
 		if ( DEBUG or DEBUG_FILTERING or 1) {
@@ -4592,7 +4626,7 @@ $openprint::log->debug("Was mixed") if DEBUG_INKS;
 		if ( ($$Paper{'type'} ne 'Roll') and ($$Paper{'start_width'} != $$Paper{'width'} or $$Paper{'start_height'} != $$Paper{'height'} ) ) {
 #my $time = gettimeofday();
 			my %cutting_results = openprint::Estimating::Cutting::signature_calc_stock_cutting( $Project, $specs, $$project{'CuttingSpecs'}, $qty_index, $Paper, $project );
-$openprint::log->debug("Done cutting");
+#$openprint::log->debug("Done cutting");
 #foreach my $k ( keys %cutting_results ) {
 #$openprint::log->debug("Cutting: $k => $cutting_results{$k}");
 #}
