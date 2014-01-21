@@ -2926,7 +2926,7 @@ $openprint::log->debug("Giving up on $$Press{strid} bnecause it's bigger than th
 
 # When calculating the get_project_price for remaining sigs, we must make sure that we stay with the same type
 		if ( $$sig_specs{'PrintingTypes'} and @{$$sig_specs{'PrintingTypes'}} and ($$sig_specs{'OverridePrintingType'.$qty_index} ne 'Y' ) and ! sets::isin( $Press->specification('Printing Type'), $$sig_specs{'PrintingTypes'} ) ) {
-			$openprint::log->debug("Wrong type " . $$Press{'strid'} . " : " . $Press->specification('Printing Type') . ': want ' . join(',', @{$$sig_specs{'PrintingTypes'}} ) ) if DEBUG;
+			$openprint::log->error("Wrong type " . $$Press{'strid'} . " : " . $Press->specification('Printing Type') . ': want ' . join(',', @{$$sig_specs{'PrintingTypes'}} ) );
 			next;
 		} # end if
 		my $time = gettimeofday() if DEBUG;
