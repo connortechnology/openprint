@@ -17,6 +17,7 @@
 use strict;
 package openprint::Estimating::ShrinkWrapping;
 use POSIX qw(ceil);
+use warnings;
 
 require openprint::service;
 require sql;
@@ -170,7 +171,8 @@ $openprint::log->debug("Cardboard size: $$printing_specs{txtFinalWidth} * $$prin
 					$price += $CardboardPrice{Total} * $package_qty;
 				} # end if
 			} # end if
-			if ( my @Materials = openprint::Material->find('category'=>$ServiceType->name()) ) {
+			if ( my @Materials = openprint::Material->find( category=>$ServiceType->name()) ) {
+				$$specs{'hdnBreakdown'.$qty_index} .= 'Dimension used for amount of film calculation: ' . $length . ' total length of film used: ' . $inches. '<br/>';
 				if ( scalar @Materials == 1 ) {
 					$$specs{'type_id'} = $Materials[0]->id();
 				} # end if
@@ -197,11 +199,17 @@ $openprint::log->debug("Cardboard size: $$printing_specs{txtFinalWidth} * $$prin
 						$MaterialPrice{'Total'} = $MaterialPrice{'Price'} * $$printing_specs{'txtFinalWidth'} * $$printing_specs{'txtFinalHeight'} * $material_qty / 144;
 					$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Material Price: $%1$.2f%2$s * %4$d packages * %5$d per package = $%3$.2f<br/>',@MaterialPrice{'Price','units','Total'}, $package_qty, $$specs{'bands_per_package'} );
 					} elsif ( $MaterialPrice{units} eq 'per roll' ) {
-						my $roll_length = $Material->specification('Length');
+						my $Roll_Length = $Material->Specification('Length');
+						if ( ! $Roll_Length ) {
+							$$specs{'hdnBreakdown'.$qty_index} .= 'Unable to find roll Length.  Assuming  42000Inches.<br/>';
+							$Roll_Length = { value => 42000, units=>'inches' };
+						} # end if
+
+						$$specs{'hdnBreakdown'.$qty_index} .= 'Length per roll : ' . $Roll_Length{value}.$Roll_Length{units} . '<br/>';
 						
-						my $rolls = ceil( $roll_length / $inches );
+						my $rolls = ceil( $Roll_Length{value} / $inches );
 						$MaterialPrice{Total} = $MaterialPrice{Price} * $rolls;
-					$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Material Price: $%1$.2f%2$s * %4$d rolls = $%3$.2f<br/>',@MaterialPrice{'Price','units','Total'}, $rolls );
+						$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Material Price: $%1$.2f%2$s * %4$d rolls = $%3$.2f<br/>',@MaterialPrice{'Price','units','Total'}, $rolls );
 					} # end if
 					$price += $MaterialPrice{'Total'};
 					$unitPrice += $MaterialPrice{'Total'};
