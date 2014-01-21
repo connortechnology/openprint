@@ -456,8 +456,7 @@ sub send_completion_notice {
 
 	my @attachments = ();
 
-	$order{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/order_completion_notice.html' );
-	$order{'ReplacementText'} = ssi::variable_substitution( \$order{'ReplacementText'}, \%order );
+	$order{'ReplacementText'} = ssi::include( '/email_content/order_completion_notice.html', \%order );
 	my $email_template = misc::load_file( $log, $config{'SkinPath'}. '/email_template.html' );
 	$_ = MIME::QuotedPrint::encode_qp( Encode::encode( 'utf-8', ssi::variable_substitution( \$email_template, \%order ) ) );
 	my @body = ('', $_, 'text/html', 'quoted-printable');

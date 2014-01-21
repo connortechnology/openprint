@@ -733,8 +733,8 @@ sub send_duedate_change_notification {
 	@info{'EmployeeFirstName','EmployeeLastName','EmployeeEmail','EmployeeExtension'} = ( $User->firstname(), $User->lastname(), $User->email(), $User->extension() );
 	my $CSR = new openprint::User( $Order->salesrep_id() );
 	if ( $CSR->email() ) {
-		my $Notification = $CSR->notification('Docket Due Date Changes');
-		if ( ( ! $Notification ) or $Notification->value() ne 'No' ) {
+		my $notification = $CSR->notification('Docket Due Date Changes');
+		if ( ( ! $notification ) or $notification ne 'No' ) {
 			my $email_template = ssi::slurp_content( '/email_template.html' );
 			$info{'ReplacementText'} = ssi::include( '/email_content/proofs_duedate_change-sales_rep.html', \%info );
 			new openprint::Email()->send(
