@@ -191,6 +191,7 @@ $log->debug("after continue $$variable{ExternalRedirect}");
 			$openprint::session{'project_id'} = $project_index;
 			$Project->summary(undef);
 			$Project->save();
+			$$variable{ExternalRedirect} = '/main/project/view.html?project_id='.$Project->id();
 		} elsif ( ( defined $openprint::param{'calc'} ) and $openprint::param{'calc'} ) {
 			$log->debug("Recalculating $openprint::param{calc}");
 			openprint::service::internal_calc( $log, $dbh, $variable, $project_index, $r->param('calc') );
