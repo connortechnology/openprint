@@ -2597,7 +2597,7 @@ if ( DEBUG or DEBUG_FILTERING ) {
 
 			# My thoughts here:  have to base it purely on this sig. Need to look up price by total, but compare based just on this sig.
 			my $stock_qty = int( $qty/$$imp{'imposition'} ) * $Paper->factor();
-			$stock_qty *= int( $$sig_specs{"UnspecifiedPageQuantity$qty_index"} / $$imp{pages} );
+			#$stock_qty *= int( $$sig_specs{"UnspecifiedPageQuantity$qty_index"} / $$imp{pages} );
 			my $lookup_stock_qty = $stock_qty;
 
 			if ( $$Paper{'type'} eq 'Roll' ) {
