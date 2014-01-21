@@ -1,9 +1,11 @@
 <? if ( $$variable{Signature} ) ?>
+<fieldset id="SignatureGroup<?Signature?>" <? echo ( ( $$variable{'Signature'} == 1 and ( $$variable{'rdbCover'} ne 'Different' and $$variable{'Backing'} ne 'Printed' ) ) 
 <? if ( $$variable{'SignatureType'.$$variable{'Signature'}} eq 'Cover Pages' ) ?>
 	<? echo ( include('/includes/main/proj/templates/signatures.html'); ) ?>
 <? endif ( $$variable{'SignatureType'.$$variable{'Signature'}} eq 'Cover Pages' ) ?>
+? 'style="display:none;"' : '' ) ?> class="SignatureGroup" >
 
-<fieldset><legend>Information for <? echo ( $$variable{'txtServiceDescription'.$$variable{'Signature'}} ? $$variable{'txtServiceDescription'.$$variable{'Signature'}} : ( $$variable{'Signature'} == 1 ? 'Cover' : 'Other Pages' ) ) ?></legend>
+<legend>Information for <? echo ( $$variable{'txtServiceDescription'.$$variable{'Signature'}} ? $$variable{'txtServiceDescription'.$$variable{'Signature'}} : ( $$variable{'Signature'} == 1 ? 'Cover' : 'Other Pages' ) ) ?></legend>
 	<div class="leftColumn">
 		<ul>
 		<li>
