@@ -17,6 +17,7 @@
 use strict;
 package openprint::Estimating::ShrinkWrapping;
 use POSIX qw(ceil);
+use warnings;
 
 require openprint::service;
 require sql;
@@ -199,6 +200,10 @@ $openprint::log->debug("Cardboard size: $$printing_specs{txtFinalWidth} * $$prin
 					$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Material Price: $%1$.2f%2$s * %4$d packages * %5$d per package = $%3$.2f<br/>',@MaterialPrice{'Price','units','Total'}, $package_qty, $$specs{'bands_per_package'} );
 					} elsif ( $MaterialPrice{units} eq 'per roll' ) {
 						my $Roll_Length = $Material->Specification('Length');
+						if ( ! $Roll_Length ) {
+							$$specs{'hdnBreakdown'.$qty_index} .= 'Unable to find roll Length.  Assuming  42000Inches.<br/>';
+							$Roll_Length = { value => 42000, units=>'inches' };
+						} # end if
 
 						$$specs{'hdnBreakdown'.$qty_index} .= 'Length per roll : ' . $Roll_Length{value}.$Roll_Length{units} . '<br/>';
 						
