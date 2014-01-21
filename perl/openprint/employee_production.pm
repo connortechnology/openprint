@@ -1577,7 +1577,9 @@ sub _li_change {
 					$Project->add_to_log(@session{'company_id','user_id'}, "Duplicating form $$sig_specs{SignatureIndex} " . ( $param{forms} - @service_ids ).' for press schedule');
 					while ( @service_ids < $param{forms} ) {
 						push @service_ids, $Project->copy_signature( $sig_specs, { 
-								'txtPrice'.$Project->ordered_quantity_index()   => 0,
+								'txtPrice1'  => 0,
+								'txtPrice2'  => 0,
+								'txtPrice3'  => 0,
 								}, 'Ordered' );
 					} # end while
 					$sql{pertains_id} = \@service_ids;
