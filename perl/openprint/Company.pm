@@ -236,9 +236,15 @@ sub save_tradereferences {
 
 
 sub Credit {
+	
 	my $supplier = $_[1] ? $_[1] : $openprint::config{'owner_id'};;
 
 	require openprint::Company_Credit;
+	if ( ! $_[0]{id} ) {
+		$_ =  new openprint::Company_Credit();
+		$_->set({supplier_id=>$supplier});
+		return $_;
+	} # end if
 	return new openprint::Company_Credit( { 'company_id'=>$_[0]{id}, 'supplier_id'=>$supplier } );
 } # end sub Credit
 
