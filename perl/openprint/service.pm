@@ -63,6 +63,7 @@ sub save_service {
 $log->debug("variables: @variables");
 	# make this fast by doing it in one transaction
 	my $ac = sql::start_transaction( $dbh );
+	$dbh->do('LOCK tbl_service_specifications IN EXCLUSIVE MODE');
 	foreach my $key (@variables) {
 #$log->debug("Key: $key ($openprint::param{$key}) ( $$specs{$key})");
 		if ( ref $openprint::param{$key} eq 'ARRAY' ) {
