@@ -5556,19 +5556,54 @@ sub compare_signatures {
 	my ( $Project, $sig1, $sig2, $qty_index, $exclude ) = @_;
 	return 0 if ! compare_signatures_runstyle( $Project, $sig1, $sig2, $qty_index, $exclude );
 	foreach my $key (
-			'Group',
-			'CustomStockPrice','txtCustomMWeight',
-			'txtSpecificStockBrand','txtSpecificStockFinish','txtSpecificStockColour',
-			'txtSpecificStockWidth', 'txtSpecificStockHeight',
-			'ddmStockBrand', 'ddmStockFinish', 'ddmStockColour', 'ddmStockWeight',
-			'rdbSuppliedStock','rdbSpecificStock','txtEmployeeComments',
+			'Group', 'rdbSuppliedStock','rdbSpecificStock','txtEmployeeComments',
 			) {
 		next if $exclude and sets::isin( $key, $exclude );
 		if ( $$sig1{$key} ne $$sig2{$key} ) {
 $openprint::log->debug("Not the same $key $$sig1{ServiceIndex} $$sig2{ServiceIndex} $$sig1{$key} ne $$sig2{$key}");
-			return 0
+			return 0;
 		} # end if
 	} # end foreach
+	if ( $$sig1{rdbSpecificStock} eq 'Y' ) {
+		foreach my $key (
+				'CustomStockPrice','StockType',
+				'txtSpecificStockBrand','txtSpecificStockFinish','txtSpecificStockColour',
+				'txtSpecificStockWidth', 'txtSpecificStockHeight',
+				) {
+			next if $exclude and sets::isin( $key, $exclude );
+			if ( $$sig1{$key} ne $$sig2{$key} ) {
+				$openprint::log->debug("Not the same $key $$sig1{ServiceIndex} $$sig2{ServiceIndex} $$sig1{$key} ne $$sig2{$key}");
+				return 0;
+			} # end if
+		} # end foreach
+		if ( $$sig1{StockType} eq 'Roll' ) {
+			foreach my $key ( 'basis_width', 'basis_height', 'basis_mweight' ) {
+				next if $exclude and sets::isin( $key, $exclude );
+				if ( $$sig1{$key} ne $$sig2{$key} ) {
+					$openprint::log->debug("Not the same $key $$sig1{ServiceIndex} $$sig2{ServiceIndex} $$sig1{$key} ne $$sig2{$key}");
+					return 0;
+				} # end if
+			} # end foreach
+		} else {
+			foreach my $key ('txtCustomMWeight') {
+				next if $exclude and sets::isin( $key, $exclude );
+				if ( $$sig1{$key} ne $$sig2{$key} ) {
+					$openprint::log->debug("Not the same $key $$sig1{ServiceIndex} $$sig2{ServiceIndex} $$sig1{$key} ne $$sig2{$key}");
+					return 0;
+				} # end if
+			} # end foreach
+		} # end if
+	} else {
+		foreach my $key (
+				'ddmStockBrand', 'ddmStockFinish', 'ddmStockColour', 'ddmStockWeight',
+				) {
+			next if $exclude and sets::isin( $key, $exclude );
+			if ( $$sig1{$key} ne $$sig2{$key} ) {
+				$openprint::log->debug("Not the same $key $$sig1{ServiceIndex} $$sig2{ServiceIndex} $$sig1{$key} ne $$sig2{$key}");
+				return 0;
+			} # end if
+		} # end foreach
+	} # end if
 #foreach my $key ( 'txtStockGSM' ) {
 #if ( sprintf('%.0f', $$sig1{$key}) ne sprintf('%.0f', $$sig2{$key}) ) {
 ##$openprint::log->debug("Not the same $key $$sig1{ServiceIndex} $$sig2{ServiceIndex} $$sig1{$key} ne $$sig2{$key}");
