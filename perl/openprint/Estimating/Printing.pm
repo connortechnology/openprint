@@ -1001,7 +1001,7 @@ $log->debug("Considering: " . $P->id_string() );
 	return map { $_->clone() } @Papers;
 } # end sub get_Stocks
 
-sub get_impositions($$$$$$$) {
+sub get_impositions($$$$$$$$) {
 	my ( $Project, $specs, $project, $qty, $qty_index, $Presses, $Papers ) = @_;
 	my %impositions;
 
@@ -2254,8 +2254,23 @@ $openprint::log->debug("aftger get printing_types: " . ( sprintf('%.4f', tv_inte
 			next;
 		} # end if
 
+		my %Overrides;
+		foreach my $index ( $Project->signatures({'Group'=>$$specs{'Group'}}) ) {
+			my $sig_specs = openprint::service::get_specs_ref( $Project, $index );
+			foreach my $qty_index ( $Project->quantity_indexes() ) {
+				if ( $$sig_specs{'chkOverrideSheetSize'.$qty_index} ) {
+					push @{$Overrides{'chkOverrideSheetSize'.$qty_index}}, 'Y';
+					push @{$Overrides{"OverrideStockWidth$qty_index"}}, $$sig_specs{"OverrideStockWidth$qty_index"};
+					push @{$Overrides{"OverrideStockHeight$qty_index"}}, $$sig_specs{"OverrideStockHeight$qty_index"};
+				} # end if
+				if ( $$sig_specs{"chkOverrideImposition"} ) {
+					push @{$Overrides{"chkOverrideImposition$qty_index"}}, $$sig_specs{"txtImposition$qty_index"};
+				} # end if
+			} # end foreach
+		} # end foreach
+
 #$openprint::log->debug("before get_impositions: " . ( sprintf('%.4f', tv_interval( [$master_time])*1000) ) .' usecs' );
-		my %impositions = get_impositions( $Project, $specs, $project, $qty, $qty_index, \@possible_presses, \@Papers );
+		my %impositions = get_impositions( $Project, $specs, $project, $qty, $qty_index, \@possible_presses, \@Papers, \%Overrides );
 #$openprint::log->debug("after get_impositions: " . ( sprintf('%.4f', tv_interval( [$master_time])*1000) ) .' usecs' );
 
 		if ( ! values %impositions ) {
@@ -3936,6 +3951,22 @@ $openprint::log->warn("Unable to calculate additional signatures Complete: $$sig
 					my %inkCoverage = get_inkcoverage( $Project, $subsig_specs );
 					my @Papers = get_Stocks( $Project, $subsig_specs );
 					if ( @Papers ) {
+
+       my %Overrides;
+        foreach my $index ( @sigs ) {
+            my $sig_specs = openprint::service::get_specs_ref( $Project, $index );
+            foreach my $qty_index ( $Project->quantity_indexes() ) {
+                if ( $$sig_specs{'chkOverrideSheetSize'.$qty_index} ) {
+                    push @{$Overrides{'chkOverrideSheetSize'.$qty_index}}, 'Y';
+                    push @{$Overrides{"OverrideStockWidth$qty_index"}}, $$sig_specs{"OverrideStockWidth$qty_index"};
+                    push @{$Overrides{"OverrideStockHeight$qty_index"}}, $$sig_specs{"OverrideStockHeight$qty_index"};
+                } # end if
+                if ( $$sig_specs{"chkOverrideImposition"} ) {
+                    push @{$Overrides{"chkOverrideImposition$qty_index"}}, $$sig_specs{"txtImposition$qty_index"};
+                } # end if
+            } # end foreach
+        } # end foreach
+
 						my $new_project = setup_project( $Project, $sigs[0], $Project->services(), $subsig_specs, \@side_one_colours, \@side_two_colours, \%inkCoverage, $Papers[0] );
 						my %presses = select_presses( $Project, \@Papers, $subsig_specs, $new_project );
 						my @possible_presses;
@@ -3948,7 +3979,7 @@ $openprint::log->warn("Unable to calculate additional signatures Complete: $$sig
 							@possible_presses = sort { $a->strid() <=> $b->strid() } @possible_presses;
 							my @available_printingtypes = sets::union( map { $_->specification('Printing Type') } @possible_presses );
 							$$subsig_specs{'PrintingTypes'} = get_printing_types( $Project, $sigs[0], $printing_specs, $subsig_specs, $qty_index, \@available_printingtypes, $imp );
-							my %impositions = get_impositions( $Project, $subsig_specs, $new_project, $qty, $qty_index, \@possible_presses, \@Papers );
+							my %impositions = get_impositions( $Project, $subsig_specs, $new_project, $qty, $qty_index, \@possible_presses, \@Papers, \%Overrides );
 							if ( ! %impositions ) {
 								$$price{'Breakdown'} .= 'Unable to calculate impositions for additional signatures.<br/>';
 								$$price{'Comparison Cost'} += 1000000;
