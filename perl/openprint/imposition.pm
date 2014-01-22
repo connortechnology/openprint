@@ -1044,5 +1044,24 @@ sub breakup_impositions {
 
 } # end sub breakup_impositions
 
+sub sort {
+	return sort {
+		if ( $$a{runstyle} ne $$b{runstyle} ) {
+			return $$a{runstyle} cmp $$b{runstyle};
+		} elsif ( $$a{imposition} != $$b{imposition} ) {
+			return $$a{imposition} <=> $$b{impositon};
+		} elsif ( $$a{columns} != $$b{columns} ) {
+			return $$a{columns} <=> $$b{columns};
+		} # end if
+		my $APaper = $a->Paper();
+		my $BPaper = $b->Paper();
+		if ( $$APaper{width} != $$BPaper{width} ) {
+			return $$APaper{width} <=> $$BPaper{width};
+		} elsif ( $$APaper{height} != $$BPaper{height} ) {
+			return $$APaper{height} <=> $$BPaper{height};
+		} # end if	
+	} @_;
+}
+
 1;
 __END__
