@@ -1095,7 +1095,7 @@ sub add_signature {
 	my ( $self, $sig_index, $status, $data ) = @_;
 	
 	my $ac = sql::start_transaction( $dbh );
-	$dbh->do( 'LOCK TABLE tbl_Service_Specifications IN SHARE ROW EXCLUSIVE MODE' ) or $log->error( $dbh->errstr() );
+	$dbh->do( 'LOCK TABLE tbl_Service_Specifications IN EXCLUSIVE MODE' ) or $log->error( $dbh->errstr() );
 	my $print_service_index = $self->add_service( 'Signature', $data );
 	if ( ! $print_service_index ) {
 		$log->error("Error adding Signature!");
