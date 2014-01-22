@@ -190,7 +190,7 @@ button( 'merge'.$C->id(), { href=>'/administrator/managerial/company_profiles.ht
 			<label>Notes</label>
 			<textarea id="notes" name="notes" rows="<? echo ( count_lines( $$variable{notes} ); ) ?>" onkeyup="textarea_resize(this);"><?notes?></textarea>
 		</li>
-		<? if ( $$variable{'CustomerIndex'} ) ?>
+		<? if ( $$variable{Company}->id() ) ?>
 			<? eval (
 				@{$$variable{'Orders'}} = openprint::Order->find('company_id'=>$$variable{'CustomerIndex'},'order'=>'id DESC');
 			) ?>
@@ -213,7 +213,7 @@ button( 'merge'.$C->id(), { href=>'/administrator/managerial/company_profiles.ht
 				<label>Accounting Contacts</label>
 				<span id="AccountingContacts"><? echo ( include('_company_accounting_contacts.html'); ) ?></span>
 			</li>
-		<? endif ( $$variable{'CustomerIndex'} ) ?>
+		<? endif ( $$variable{Company}->id() ) ?>
 			</ul>
 		</div>
 	</fieldset>
@@ -228,7 +228,7 @@ button( 'merge'.$C->id(), { href=>'/administrator/managerial/company_profiles.ht
 			<li><label>Company Category</label>
 				<select name="category_id" id="category_id">
 					<option value="">select</option>
-				<? echo ( ssi::make_drop_down( openprint::Company_Category->dropdown('order'=>'lower(name)'), $$variable{'Company'}->category_id() ); ) ?>
+				<? echo ( make_drop_down( openprint::Company_Category->dropdown( order=>'lower(name)'), $$variable{Company}->category_id() ); ) ?>
 				</select>
 			</li>
 			<li> 

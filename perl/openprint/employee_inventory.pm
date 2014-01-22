@@ -1163,10 +1163,10 @@ sub allocate {
 	$docket =~ s/\D//g;
 	$quantity =~ s/[^\d\.]//g;
 	$quantity =~ s/(\d+)\..*/$1/g;
-	my @Projects = openprint::Project->find( 'id'=>$project_id, 'docket'=>$docket ) if $project_id or $docket;
+	my @Projects = openprint::Project->find( ( $project_id ? ( id=>$project_id ) : () ), ( $docket ? ( docket=>$docket ) : () ) ) if $project_id or $docket;
 
 	if ( $docket and ! @Projects ) {
-		if ( my @Orders = openprint::Order->find('docket'=>$docket) ) {
+		if ( my @Orders = openprint::Order->find(docket=>$docket) ) {
 			@Projects = $Orders[0]->Projects();
 		} # end if
 	} # end if

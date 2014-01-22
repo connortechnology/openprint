@@ -9,5 +9,6 @@ CREATE TABLE Bugs (
 	created_on	TIMESTAMP WITH TIME ZONE NOT NULL default NOW(),
 	updated_on	TIMESTAMP WITH TIME ZONE NOT NULL default NOW(),
 	status_id	INTEGER, FOREIGN KEY (status_id) REFERENCES bug_statuses (id),
+	deleted		BOOLEAN NOT NULL DEFAULT False,
 	PRIMARY KEY (id)
 );

@@ -492,9 +492,12 @@ sub view {
 		sql::end_transaction( $dbh, $ac );
 	} elsif ( $param{'btnFunction'} eq 'Approve' ) {
 		my $Order = new openprint::Order( $param{'OrderID'} );
-		$Order->approve();
-		$Project->update_status();
-		$Order->update_status();
+		$variable{error} .= $Order->approve();
+		if ( ! $variable{error} ) {
+			$Project->update_status();
+			$Order->update_status();
+			$variable{ExternalRedirect} = '/employee/project/view.html?docket='.$Order->docket();
+		} # end if
 	} # end if
 
 } # end sub view
@@ -730,8 +733,8 @@ sub send_duedate_change_notification {
 	@info{'EmployeeFirstName','EmployeeLastName','EmployeeEmail','EmployeeExtension'} = ( $User->firstname(), $User->lastname(), $User->email(), $User->extension() );
 	my $CSR = new openprint::User( $Order->salesrep_id() );
 	if ( $CSR->email() ) {
-		my $Notification = $CSR->notification('Docket Due Date Changes');
-		if ( ( ! $Notification ) or $Notification->value() ne 'No' ) {
+		my $notification = $CSR->notification('Docket Due Date Changes');
+		if ( ( ! $notification ) or $notification ne 'No' ) {
 			my $email_template = ssi::slurp_content( '/email_template.html' );
 			$info{'ReplacementText'} = ssi::include( '/email_content/proofs_duedate_change-sales_rep.html', \%info );
 			new openprint::Email()->send(

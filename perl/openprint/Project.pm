@@ -968,7 +968,7 @@ sub price {
 			foreach my $k ( keys %$services ) {
 				foreach ( @{$$services{$k}} ) {
 					my $specs = openprint::service::get_specs_ref( $self, $_ );
-					$$self{'price'.$qty_index} += $$specs{'txtPrice'.$qty_index} ? $$specs{'txtPrice'.$qty_index} : $$specs{'txtPrice1'};
+					$$self{'price'.$qty_index} += $$specs{'txtPrice'.$qty_index};
 				} # end foreach
 			} # end foreach
 		} # end if

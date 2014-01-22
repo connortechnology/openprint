@@ -32,6 +32,7 @@
 		} else {
 			$('SignatureGroup1').show();
 		} // end if
+if ( 0 ) {
 		var Groups = form.groups.value.split(',');
 		for ( var i = 0; i < Groups.length; i += 1 ) {
 			var group_id = Groups[i];
@@ -48,6 +49,7 @@
 					 } );
 			} // end if Group exists
 		} // end for each group
+}
 
 if ( 0 ) {
 		if ( ( form.remaining_pages.value > 0 ) && ! $('SignatureGroup'+form.next_group_id.value) ) {
@@ -69,6 +71,16 @@ if ( 0 ) {
 
 		return 1;
 	} // end function
+	function add_group() {
+		var form = $('f1');
+	   new Ajax.Updater( 'alert', '/main/project/prin/_signature.html', {
+			parameters: { project_id : form.ProjectIndex.value, action: 'add_group' },
+			onSuccess: function(response){new Insertion.Bottom($('SignatureGroups'), response.responseText);}}
+			//onSuccess: function(response){new Insertion.Bottom($('SignatureGroups'), response.responseText);calc('f1');}}
+			//onSuccess: function(response){new Insertion.Bottom($('SignatureGroups'), response.responseText);}
+		 );
+	}
+  
 </script>
 <?include('/main/project/prin/_templates.html')?>
 <div class="Service">
@@ -155,6 +167,7 @@ radio('spine', [ map { $_, $_ } 'height', 'width' ], $$variable{spine}, { defaul
 			</div>
 			</div><!--ProjectSpecifications-->
 			<div id="SignatureGroups">
+<? echo ( button( 'AddSignature', { onclick=>'add_group();', text=>'Add Another Group of Signatures' } ); ) ?>
 			<? echo (
 				my @Groups = sql::execute( undef, undef, 'SELECT DISTINCT strvalue FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strname=? ORDER BY strvalue', $$variable{'ProjectIndex'}, 'Group' );
 				my $ServiceType = openprint::ServiceType->find_one( name=>'Signature');

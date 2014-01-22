@@ -32,6 +32,8 @@ my $Lexicon;
 sub slurp_content {
 	my ( $file ) = @_;
 
+$log->debug("Slurping file $file");
+
 	if ( ! ( $file =~ /^\// ) ) {
 		# Use a path relative to the current page
 		my $path = $variable{uri};

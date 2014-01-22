@@ -38,7 +38,11 @@
 			$html .= include('/main/summ/'.$$variable{prod_url}, $variable );
 			$html .= '</fieldset>';
 		} else {
-$log->error("No summary urul for " . $$variable{Project}->id() . " service " . $$variable{ServiceName} );
+			my $Service = $$variable{Project}->Service( $$variable{ServiceIndex} );
+			if ( $Service->Type()->name() eq 'CustomService' ) {
+			} else {
+$log->error("No summary urul for " . $$variable{Project}->id() . " service " . $$variable{ServiceName} . $Service->Type()->to_string() );
+			} # end if
 		} # end if
 	} # end while
 	return $html;

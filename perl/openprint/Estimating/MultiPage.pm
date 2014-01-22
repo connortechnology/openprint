@@ -131,6 +131,10 @@ sub calc {
 	} # end if
 
 	my $Project = new openprint::Project( $project_index );
+	if ( ! $$Project{id} ) {
+		$$specs{alert} = 'Project not found.';
+		return $$specs{Status} = 'uncalculated';
+	} # end if
 
 	my $remaining_pages = $$specs{'txtTotalPageQuantity'};
 	my %override_pages;
