@@ -22,7 +22,7 @@ my $threading = 0;
 #use threads;
 use constant DEBUG => 0;
 use constant DEBUG_VERSIONS => 0;
-use constant DEBUG_FILTERING => 0;
+use constant DEBUG_FILTERING => 1;
 use constant DEBUG_PRICE_DECISIONS => 0;
 use constant DEBUG_INKS => 0;
 use constant DEBUG_STOCK => 0;
@@ -35,7 +35,7 @@ my %folding_cache;
 my %Papers;
 # indexed by press
 #my %impositions;
-my $do_initial_filtering = 1;
+my $do_initial_filtering = 0;
 my $max_recursion_depth = 3;
 my %converted_imposition_cache;
 my $use_converted_imposition_cache = 0;
@@ -1281,26 +1281,29 @@ $openprint::log->debug($$Press{strid} . ' Use cut stocks: ' . $_ );
 								push @{$paper_impositions{$key}}, $i;
 							} else {
 								my $add = 1;
-								#if ( ( $$specs{'OverrideCutOff'.$qty_index} ne 'Y' ) and ( $$P{height} != $$specs{"CutOff$qty_index"} ) ) {
+								if ( ( $$specs{'OverrideCutOff'.$qty_index} eq 'Y' ) and ( $$P{height} == $$specs{"CutOff$qty_index"} ) ) {
+								} else {
 								
-								my $iarea = $i->Paper()->area();
-								for ( my $imp_index = 0; $imp_index < @{$paper_impositions{$key}}; $imp_index += 1 ) {
-									my $j = $paper_impositions{$key}[$imp_index];
-									my $jarea = $j->Paper()->area();
-									if ( $iarea < $jarea ) {
-#$j->display('1 dumping');
-#$i->display('1 for');
-										splice @{$paper_impositions{$key}}, $imp_index, 1;
-										$imp_index -= 1;
-#$i->display('1 for');
-									} elsif ( $jarea < $iarea ) {
-										$add = 0;
-										last;
-#$i->display('2 dumping');
-#$j->display('2 for');
-									} # end if
-								} # end for
-								#} # end if
+									my $iarea = $i->Paper()->area();
+									for ( my $imp_index = 0; $imp_index < @{$paper_impositions{$key}}; $imp_index += 1 ) {
+										my $j = $paper_impositions{$key}[$imp_index];
+										my $B = $j->Paper();
+								next if ( ( $$specs{'OverrideCutOff'.$qty_index} eq 'Y' ) and ( $$B{height} == $$specs{"CutOff$qty_index"} ) );
+										my $jarea = $j->Paper()->area();
+										if ( $iarea < $jarea ) {
+	#$j->display('1 dumping');
+	#$i->display('1 for');
+											splice @{$paper_impositions{$key}}, $imp_index, 1;
+											$imp_index -= 1;
+	#$i->display('1 for');
+										} elsif ( $jarea < $iarea ) {
+											$add = 0;
+											last;
+	#$i->display('2 dumping');
+	#$j->display('2 for');
+										} # end if
+									} # end for
+								} # end if
 								if ( $add ) {
 									push @{$paper_impositions{$key}}, $i;
 									$Papers{$P->id_string()} = $P->clone() if ! $Papers{$P->id_string()};
@@ -1398,34 +1401,39 @@ $openprint::log->debug($$Press{strid} . ' Use cut stocks: ' . $_ );
 				} # end while cutting it
 			} # end if Web or Sheet
 
-			foreach my $i ( @imps ) {
-				my $key = join(',',@$i{'imposition','runstyle','image_orientation'});
-				if ( ! $imps{$key} ) {
-					$imps{$key} = [ $i ];
-					next;
-				} # end if
-				my $add = 1;
-				my $Aarea = $i->Paper()->area();
-				for ( my $imp_index = 0; $imp_index < @{$imps{$key}}; $imp_index += 1 ) {
-					my $B = $imps{$key}[$imp_index];
-					my $Barea = $B->Paper()->area();
-					if ( $Aarea < $Barea ) {
-						splice @{$imps{$key}}, $imp_index, 1;
-						$imp_index -= 1;
-					} elsif ( $Aarea > $Barea ) {
-						$add = 0;
-						last;
-					} # end if
-				} # end foreach B
-				if ( $add ) {
-					push @{$imps{$key}}, $i;
-				} # end if
-			} # end foreach i
+			if ( $do_initial_filtering ) {
 
-			my @b = map { @{$_} } values %imps;
-			$openprint::log->warn("1st imps: " . @imps . ' down to ' . @b);
-			push @impositions, @b;
-			%imps = ();
+				foreach my $i ( @imps ) {
+					my $key = join(',',@$i{'imposition','runstyle','image_orientation'});
+					if ( ! $imps{$key} ) {
+						$imps{$key} = [ $i ];
+						next;
+					} # end if
+					my $add = 1;
+					my $Aarea = $i->Paper()->area();
+					for ( my $imp_index = 0; $imp_index < @{$imps{$key}}; $imp_index += 1 ) {
+						my $B = $imps{$key}[$imp_index];
+						my $Barea = $B->Paper()->area();
+						if ( $Aarea < $Barea ) {
+							splice @{$imps{$key}}, $imp_index, 1;
+							$imp_index -= 1;
+						} elsif ( $Aarea > $Barea ) {
+							$add = 0;
+							last;
+						} # end if
+					} # end foreach B
+					if ( $add ) {
+						push @{$imps{$key}}, $i;
+					} # end if
+				} # end foreach i
+
+				my @b = map { @{$_} } values %imps;
+				$openprint::log->warn("1st imps: " . @imps . ' down to ' . @b);
+				push @impositions, @b;
+				%imps = ();
+			} else {
+				push @impositions, @imps;
+			} # end if
 
 		} # end foreach Paper
 
@@ -1641,7 +1649,7 @@ $openprint::log->debug("Doing nothing, keeping all add:$add") if DEBUG_FILTERING
 			} # end if
 		} # end if ! impositions
 
-		$impositions{$Press->id()} = \@impositions if @impositions;
+		$impositions{$Press->strid()} = \@impositions if @impositions;
 	} # end foreach Press
 
 	return %impositions;
@@ -2619,8 +2627,8 @@ sub calculate_impositions {
 		} # end if
 	} # end if
 
-	foreach my $strid ( keys %{$impositions} ) {
-		my $Press = openprint::Equipment->find_one( id=>$strid );
+	foreach my $strid ( $$sig_specs{"chkOverridePress$qty_index"} eq 'Y' ? ( $$sig_specs{"ddmPress$qty_index"} ) : keys %{$impositions} ) {
+		my $Press = openprint::Equipment->find_one( strid=>$strid );
 
 		if ( ! $Press ) {
 			$openprint::log->error("No Pressf or $strid");
@@ -2629,23 +2637,28 @@ sub calculate_impositions {
 		if ( $SpreadLayout > 0 ) {
 			my %dont_do_pages = map { $_,  $) } split(',', $Press->specification('DontDoPages'));
 #$openprint::log->debug("NOTin Cache string: $cache_string");
-			push @impositions, map { $dont_do_pages{$$_{pages}} ? () : $_ } sort { $$b{pages} <=> $$a{pages} } openprint::imposition::convert_impositions( $SpreadLayout, $$project{'txtSpreadSize'}, $$impositions{$Press->id()} );
+			push @impositions, map { $dont_do_pages{$$_{pages}} ? () : $_ } sort { $$b{pages} <=> $$a{pages} } openprint::imposition::convert_impositions( $SpreadLayout, $$project{'txtSpreadSize'}, $$impositions{$Press->strid()} );
 			$openprint::log->debug("Converting Impositions spread Layout: $SpreadLayout : imps:" . @impositions) if DEBUG or DEBUG_FILTERING;
 			if ( ! @impositions ) {
 				$openprint::log->debug("Press $$Press{strid} " );
-				$openprint::log->debug("Press $$Press{strid} " . scalar @{$$impositions{$Press->id()}} ) if  $$impositions{$Press->id()};
+				$openprint::log->debug("Press $$Press{strid} " . scalar @{$$impositions{$Press->id()}} ) if  $$impositions{$Press->strid()};
 			} 
 		} else {
-			push @impositions, @{$$impositions{$Press->id()}} if $$impositions{$Press->id()};
+			push @impositions, @{$$impositions{$Press->strid()}} if $$impositions{$Press->strid()};
 		} # end if
 		if ( DEBUG or DEBUG_FILTERING ) {
 			$openprint::log->debug("QTY_index: $qty_index before filtering impositions count:" . @impositions . ' on press: ' . $Press->strid());
-			foreach my $imp ( @impositions ) {
+			foreach my $imp ( openprint::imposition::sort( @impositions ) ) {
 				$imp->display();
 			} # end foreach
 #$openprint::log->debug("SPread Layout: $SpreadLayout");
 		} # end if
 	} # end foreach press
+
+	if ( ! @impositions ) {
+		$openprint::log->debug("No impsoitions!" );
+		return ();
+	} 
 
 	if ( ( $$sig_specs{'chkOverrideSheetSize'.$qty_index} eq 'Y' ) and ! $$sig_specs{"OverrideStockWidth$qty_index"} ) {
 		@$sig_specs{"OverrideStockWidth$qty_index","OverrideStockHeight$qty_index"} = $$sig_specs{"ddmStockSheetSize$qty_index"} =~ /^([\d\.]+)"?\s*x?\s*([\d\.]+)?"?\s*$/;;
@@ -2803,8 +2816,8 @@ $openprint::log->debug("Max pages: $max_pages") if DEBUG_FILTERING;
 		}
 	}
 
+	my %imps = ();
 	if ( $$sig_specs{"chkOverridePress$qty_index"} ne 'Y' ) {
-		my %imps = ();
 		my $bump_count = 0;
 		foreach my $I ( @results ) {
 			my $Paper = $I->Paper();
@@ -2845,6 +2858,7 @@ $openprint::log->debug("Max pages: $max_pages") if DEBUG_FILTERING;
 		$bump_count = 0;
 		@results = map {@{$_}} values %imps;
 	} # end if
+
 	%imps = ();
 	if ( DEBUG or DEBUG_FILTERING or 1) {
 		$openprint::log->debug("Afgter filtering by Press");
