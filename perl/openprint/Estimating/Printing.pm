@@ -1232,6 +1232,7 @@ $openprint::log->debug($$Press{strid} . ' Use cut stocks: ' . $_ );
 				} # end foreach P
 			} # end if DEBUG
 		} # end if
+        my %imps;
 		foreach my $Paper ( @Papers ) {
 #Paper might have different calliperso# Is this needed anymore
 			#$$project{'Calliper'} = $$Paper{'calliper'};
@@ -1282,9 +1283,9 @@ $openprint::log->debug($$Press{strid} . ' Use cut stocks: ' . $_ );
 								my $add = 1;
 								#if ( ( $$specs{'OverrideCutOff'.$qty_index} ne 'Y' ) and ( $$P{height} != $$specs{"CutOff$qty_index"} ) ) {
 								
+								my $iarea = $i->Paper()->area();
 								for ( my $imp_index = 0; $imp_index < @{$paper_impositions{$key}}; $imp_index += 1 ) {
 									my $j = $paper_impositions{$key}[$imp_index];
-									my $iarea = $i->Paper()->area();
 									my $jarea = $j->Paper()->area();
 									if ( $iarea < $jarea ) {
 #$j->display('1 dumping');
@@ -1294,6 +1295,7 @@ $openprint::log->debug($$Press{strid} . ' Use cut stocks: ' . $_ );
 #$i->display('1 for');
 									} elsif ( $jarea < $iarea ) {
 										$add = 0;
+										last;
 #$i->display('2 dumping');
 #$j->display('2 for');
 									} # end if
@@ -1312,14 +1314,14 @@ $openprint::log->debug($$Press{strid} . ' Use cut stocks: ' . $_ );
 					push @i, openprint::imposition::get_imposition( $project, $do_work_turn, $do_perfecting, $$specs{'Versions'}, $P, $Press );
 				} # end if
 				if ( $$P{'start_width'} ) {
-					push @impositions, @i;
+					push @imps, @i;
 				} else {
 					foreach my $i ( @i ) {
 						my $i2 = $i->copy();
 						$i2->Paper()->width( $i2->used_width() ) if ! $i2->Paper()->width();
 						$Papers{$i2->Paper()->id_string()} = $i2->Paper()->clone() if ! $Papers{$i2->Paper()->id_string()};
 						while ( $i2->columns() ) {
-							push @impositions, $i2;
+							push @imps, $i2;
 							$i2 = $i2->copy();
 							$i2->columns( $i2->columns()-1 );
 							$i2->Paper()->width( $i2->used_width() );
@@ -1384,7 +1386,7 @@ $openprint::log->debug($$Press{strid} . ' Use cut stocks: ' . $_ );
 
 					my @i = openprint::imposition::get_imposition( $project, $do_work_turn, $do_perfecting, $$specs{'Versions'}, $P, $Press );
 					last if ! @i;
-					push @impositions, @i;
+					push @imps, @i;
 					foreach my $i ( @i ) {
 						my $P2 = $i->Paper();
 						$Papers{$P2->id_string()} = $P2 if ! $Papers{$P2->id_string()};
@@ -1396,17 +1398,47 @@ $openprint::log->debug($$Press{strid} . ' Use cut stocks: ' . $_ );
 				} # end while cutting it
 			} # end if Web or Sheet
 
+			foreach my $i ( @imps ) {
+				my $key = join(',',@$i{'imposition','runstyle','image_orientation'});
+				if ( ! $imps{$key} ) {
+					$imps{$key} = [ $i ];
+					next;
+				} # end if
+				my $add = 1;
+				my $Aarea = $i->Paper()->area();
+				for ( my $imp_index = 0; $imp_index < @{$imps{$key}}; $imp_index += 1 ) {
+					my $B = $imps{$key}[$imp_index];
+					my $Barea = $B->Paper()->area();
+					if ( $Aarea < $Barea ) {
+						splice @{$imps{$key}}, $imp_index, 1;
+						$imp_index -= 1;
+					} elsif ( $Aarea > $Barea ) {
+						$add = 0;
+						last;
+					} # end if
+				} # end foreach B
+				if ( $add ) {
+					push @{$imps{$key}}, $i;
+				} # end if
+			} # end foreach i
+
+			my @b = map { @{$_} } values %imps;
+			$openprint::log->warn("1st imps: " . @imps . ' down to ' . @b);
+			push @impositions, @b;
+			%imps = ();
+
 		} # end foreach Paper
 
 if ( $do_initial_filtering ) {
         # Used in filtering
-        my %imps;
         my %dutches;
         if ( DEBUG_FILTERING or 1 ) {
             $openprint::log->debug('Impositions before filtering on ' . $$Press{'strid'} . ' ' . @impositions . ' impositions' . ( sprintf('%.4f', tv_interval( [$master_time])*1000) ) .' usecs');
+if ( 0 ) {
             foreach my $i ( @impositions ) {
                 $i->display();
             }
+}
         }
         my $max_imposition;
         foreach my $imp ( @impositions ) {
@@ -1415,11 +1447,6 @@ if ( $do_initial_filtering ) {
         $max_imposition = int( $max_imposition / 3 );
 
         foreach my $imp ( @impositions ) {
-            $$imp{sides} = $$project{print_sides};
-            if ( $$imp{'imposition'} > $qty ) {
-                $openprint::log->debug("Next because $$imp{imposition} > $qty");
-                #next;
-            } # end if
             if ( $$imp{'imposition'} < $max_imposition ) {
                 next;
             } # end if
@@ -1430,7 +1457,8 @@ if ( $do_initial_filtering ) {
                 if ( $openprint::imposition::blocks{$$imp{'imposition'}} ) {
 					# If we have a similar imposition, without dutch, then do not consider the dutch
 					foreach my $arrangement ( $openprint::imposition::blocks{$$imp{'imposition'}} ) {
-						my $str = sprintf('%dx%d+%dx%d-%s-%s-%s', @$arrangement, 0, 0, @$imp{'runstyle','image_orientation','bleed_size'}, $$A{digital} );
+						my $str = join(',', @$arrangement, '', '', @$imp{'runstyle','image_orientation','bleed_size'}, $$A{digital} );
+						#my $str = ntf('%dx%d+%dx%d-%s-%s-%s', @$arrangement, 0, 0, @$imp{'runstyle','image_orientation','bleed_size'}, $$A{digital} );
 
 						if ( $imps{$str} ) {
 							foreach my $I ( @{$imps{$str}} ) {
@@ -1452,13 +1480,16 @@ if ( $do_initial_filtering ) {
                 for ( my $dutch_index = 0; $dutch_index < @{$dutches{$$imp{'imposition'}}}; $dutch_index += 1 ) {
                     my $dutch_imp = $dutches{$$imp{'imposition'}}[$dutch_index];
                     if ( $dutch_imp->Paper()->area() >= $A->area() ) {
-                        #$dutch_imp->display('kicking out dutch');
-                        my $str = sprintf('%dx%d+%dx%d-%s-%s-%s-%s', @$dutch_imp{'columns','rows','dutch_columns','dutch_rows','runstyle','image_orientation','bleed_size', $dutch_imp->Paper()->digital() } );
+                        $dutch_imp->display('kicking out dutch');
+                        my $str = join(',', @$dutch_imp{'columns','rows','dutch_columns','dutch_rows','runstyle','image_orientation','bleed_size', $dutch_imp->Paper()->digital() } );
+                        #my $str = sprintf('%dx%d+%dx%d-%s-%s-%s-%s', @$dutch_imp{'columns','rows','dutch_columns','dutch_rows','runstyle','image_orientation','bleed_size', $dutch_imp->Paper()->digital() } );
                         if ( $imps{$str} ) {
                             for ( my $index = 0; $index < @{$imps{$str}}; $index += 1 ) {
                                 splice @{$imps{$str}}, $index, 1;
                                 $index -= 1;
                             } # end foreach
+						} else {
+							$openprint::log->debug("No other duteches to remove");
                         } # end if
                         splice @{$dutches{$$imp{'imposition'}}}, $dutch_index, 1;
                         $dutch_index -= 1;
@@ -1467,7 +1498,9 @@ if ( $do_initial_filtering ) {
             } # end if
             next if ! $add;
 
-            my $str = sprintf('%dx%d+%dx%d-%s-%s-%s-%s', @$imp{'columns','rows','dutch_columns','dutch_rows','runstyle','image_orientation','bleed_size'}, $$A{digital} );
+            my $str = join(',', @$imp{'columns','rows','dutch_columns','dutch_rows','runstyle','image_orientation','bleed_size'}, $$A{digital} );
+$openprint::log->debug("Str using join $str");
+            #my $str = sprintf('%dx%d+%dx%d-%s-%s-%s-%s', @$imp{'columns','rows','dutch_columns','dutch_rows','runstyle','image_orientation','bleed_size'}, $$A{digital} );
 
             if ( ($$specs{'chkOverrideSheetSize'.$qty_index} eq 'Y') and ( $$A{width} == $$specs{"OverrideStockWidth$qty_index"} )
                     and ( ( $$A{type} eq 'Roll' ) or ( $$A{height} == $$specs{"OverrideStockHeight$qty_index"} ) )
@@ -1477,22 +1510,27 @@ if ( $do_initial_filtering ) {
             } elsif ( ( $$specs{'OverrideCutOff'.$qty_index} eq 'Y' ) and ( $$A{height} == $$specs{"CutOff$qty_index"} ) ) {
 #$add = 1;
             } elsif ( $imps{$str} ) {
-                my $APrice = $$imp{PaperPrice} = $A->get_price('service'=>'Material', weight=> 1);
-$imp->display('Comparing A QTY 1 $' . $$imp{PaperPrice}{'100lb Price'}) if DEBUG_FILTERING or 1;
+				my $a_stock_minimum = $$specs{"txtQuantity$qty_index"} / $$imp{imposition};
+				my $a_stock_lbs = $a_stock_minimum * $A->area() * $A->wpsi();
+
+                my $APrice = $$imp{PaperPrice} = $A->get_price('service'=>'Material', weight=> $a_stock_lbs );
+$imp->display('Comparing A QTY $' . $$imp{PaperPrice}{'100lb Price'}. " for $a_stock_lbs" ) if DEBUG_FILTERING or 1;
 
                 # Can't do any decisions based on absolute price or qty, because we just don't know how much paper we need
                 for ( my $j = 0; $j < @{$imps{$str}}; $j += 1 ) {
                     my $I = $imps{$str}[$j];
                     my $B = $I->Paper();
+					my $b_stock_minimum = $$specs{"txtQuantity$qty_index"} / $$imp{imposition};
+					my $b_stock_lbs = $b_stock_minimum * $B->area() * $B->wpsi();
 
                     if ( ($$specs{'chkOverrideSheetSize'.$qty_index} eq 'Y') and ( $$B{width} == $$specs{"OverrideStockWidth$qty_index"}) and ( $$B{height} == $$specs{"OverrideStockHeight$qty_index"} )) {
                         last;
                     } elsif ( ( $$specs{'OverrideCutOff'.$qty_index} eq 'Y' ) and ( $$B{height} == $$specs{"CutOff$qty_index"} ) ) {
                         last;
                     } # end if
-                    $$I{PaperPrice} = $B->get_price( service=>'Material', weight=> 1) if ! $$I{PaperPrice};
+                    $$I{PaperPrice} = $B->get_price( service=>'Material', weight=> $b_stock_lbs ) if ! $$I{PaperPrice};
                     my $BPrice = $$I{PaperPrice};
-$I->display('Comparing B QTY ' . '$' . $$BPrice{'100lb Price'}) if DEBUG_FILTERING or 1;
+$I->display('Comparing B QTY $' . $$BPrice{'100lb Price'}) if DEBUG_FILTERING or 1;
 if ( ! $$I{PaperPrice} ) {
 $log->error("No price for stock ".$B->to_string() );
 } elsif ( ! $$BPrice{'100lb Price'} ) {
@@ -1503,7 +1541,7 @@ $log->error("No 100lb price for stock ".$B->get_price( service=>'Material')->to_
                     if (
                             ( $B->area() >= $A->area() )
                             and
-                            ( $B->minimum_order() >= $A->minimum_order() )
+                            ( ( $B->minimum_order() >= $A->minimum_order() ) or ( $a_stock_lbs > $$A{minimum_order} ) )
                             and
                             ( $$BPrice{'100lb Price'} >= $$APrice{'100lb Price'} )
                             and
@@ -1517,7 +1555,7 @@ $openprint::log->debug('removing B larger') if DEBUG_FILTERING or 1;
                     } elsif (
                             ( $B->area() <= $A->area() )
                             and
-                            ( $B->minimum_order() <= $A->minimum_order() )
+                            ( ( $B->minimum_order() <= $A->minimum_order() ) or ( $$B{minimum_order} < $b_stock_lbs ) ) 
                             and
                             ( $$BPrice{'100lb Price'} <= $$APrice{'100lb Price'} )
                             and
@@ -1528,34 +1566,8 @@ $openprint::log->debug('removing B larger') if DEBUG_FILTERING or 1;
                         $add = 0;
 $openprint::log->debug('removing A larger') if DEBUG_FILTERING or 1;
                         last;
-                    #} elsif (
-                            #( $B->area() <= $A->area() )
-                            #and
-                            #( $B->minimum_order() <= $A->minimum_order() )
-                            #and
-                            #( (1*$$BPrice{'100lb'}) <= (1*$$APrice{'100lb'}) )
-                            #and
-                            #( ( ! $B->is_cut() ) or ( $A->is_cut() ) )
-                            #) {
-## Already have a much better sheet
-                        #$add = 0;
-#$openprint::log->debug('removing A smaller') if DEBUG;
-                    #} elsif (
-                            #( $B->area() < $A->area() )
-                            #and
-                            #( $B->minimum_order() <= $A->minimum_order() )
-                            #and
-                           #( (1*$$BPrice{'100lb Total'}) <= (1*$$A{'100lb Total'}) )
-                            #and
-                            #( ( ! $B->is_cut() ) or ( $A->is_cut() ) )
-                            #) {
-# Already have a much better sheet
-#$openprint::log->debug('removing B smaller') if DEBUG;
-                        #splice @{$imps{$str}}, $j, 1;
-                        #$j -= 1;
                     } else {
 $openprint::log->debug("Doing nothing, keeping all add:$add") if DEBUG_FILTERING or 1;
-
                     } # end if
                 } # end for
             } # end if overriden or not or cached
@@ -1586,6 +1598,7 @@ $openprint::log->debug("Doing nothing, keeping all add:$add") if DEBUG_FILTERING
 					$bump_count += 1;
 				} elsif ( $$B{runstyle} eq 'Perfecting' and sets::isin( $$I{runstyle}, [ 'Sheet Work','Work & Turn', 'Work & Tumble' ] ) ) {
 					$add = 0;
+					last;
 				} # end if
 			} # end for each imp
 			if ( $add ) {
@@ -2790,46 +2803,48 @@ $openprint::log->debug("Max pages: $max_pages") if DEBUG_FILTERING;
 		}
 	}
 
-	my %imps = ();
-	my $bump_count = 0;
-	foreach my $I ( @results ) {
-		my $Paper = $I->Paper();
-		my $Press = $I->Press();
-		my $AValue = $Press->specification('Value');
+	if ( $$sig_specs{"chkOverridePress$qty_index"} ne 'Y' ) {
+		my %imps = ();
+		my $bump_count = 0;
+		foreach my $I ( @results ) {
+			my $Paper = $I->Paper();
+			my $Press = $I->Press();
+			my $AValue = $Press->specification('Value');
 
-		my $key = join(',', $Paper->width(), $Paper->height(), $$I{pages}, $$I{page_columns}, $I->image_orientation(), $I->imposition(), $I->columns(), $I->runstyle() );
-		if ( ! ( $imps{$key} and @{$imps{$key}} ) ) {
-			$imps{$key} = [ $I ];
-			next;
-		} # end if
-		my $add = 1;
-		if ( $AValue ) {
-			for ( my $i = 0; $i < @{$imps{$key}}; $i += 1 ) {
-				my $B = $imps{$key}[$i];
-				my $BPress = $B->Press();
-				my $BValue = $BPress->specification('Value');
-				if ( $BValue ) {
-					if ( $BValue > $AValue ) {
-						splice @{$imps{$key}}, $i, 1;
-						$i -= 1;
-						$bump_count += 1;
-					} elsif ( $BValue < $AValue ) {
-						$add = 0;
-					} # end if
-				} # end if	
-				
-			} # end for B
-		} # en dif
-		if ( $add ) {
-			push @{$imps{$key}}, $I;
-		} else {
-			$bump_count += 1;
-		}
-	} # end foreach I
+			my $key = join(',', $Paper->width(), $Paper->height(), $$I{pages}, $$I{page_columns}, $I->image_orientation(), $I->imposition(), $I->columns(), $I->runstyle() );
+			if ( ! ( $imps{$key} and @{$imps{$key}} ) ) {
+				$imps{$key} = [ $I ];
+				next;
+			} # end if
+			my $add = 1;
+			if ( $AValue ) {
+				for ( my $i = 0; $i < @{$imps{$key}}; $i += 1 ) {
+					my $B = $imps{$key}[$i];
+					my $BPress = $B->Press();
+					my $BValue = $BPress->specification('Value');
+					if ( $BValue ) {
+						if ( $BValue > $AValue ) {
+							splice @{$imps{$key}}, $i, 1;
+							$i -= 1;
+							$bump_count += 1;
+						} elsif ( $BValue < $AValue ) {
+							$add = 0;
+						} # end if
+					} # end if	
+					
+				} # end for B
+			} # en dif
+			if ( $add ) {
+				push @{$imps{$key}}, $I;
+			} else {
+				$bump_count += 1;
+			}
+		} # end foreach I
 
-	$openprint::log->debug("Bumped $bump_count for Press");
-	$bump_count = 0;
-	@results = map {@{$_}} values %imps;
+		$openprint::log->debug("Bumped $bump_count for Press");
+		$bump_count = 0;
+		@results = map {@{$_}} values %imps;
+	} # end if
 	%imps = ();
 	if ( DEBUG or DEBUG_FILTERING or 1) {
 		$openprint::log->debug("Afgter filtering by Press");
