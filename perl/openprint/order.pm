@@ -577,6 +577,8 @@ sub make_order_from_order {
 		misc::error( $log, $dbh, \%variable, 'Can\'t re-order.', 'The given order is not complete.' );
 		return 0;
 	} else {
+
+		my $ac = sql::start_transaction( $openprint::dbh );
 		# this goes before get_order_id so that we re-use orderids
 		delete_unfinished_orders( );
 
@@ -597,6 +599,12 @@ sub make_order_from_order {
 				$NewProduct->save();
 			} # end foreach
 		} # end if
+		if ( $openprint::dbh->errstr() ) {
+			$openprint::dbh->rollback();
+			sql::end_transaction( $openprint::dbh, $ac );
+			return;
+		} # end if
+		sql::end_transaction( $openprint::dbh, $ac );
 		return $order_id;
 	} # end if
 	return 0;
