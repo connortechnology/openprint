@@ -17,7 +17,7 @@
 #use warnings;
 use Carp qw( cluck );
 
-#use strict;
+use strict;
 package openprint::Estimating::Printing;
 my $threading = 0;
 #use threads;
@@ -2678,9 +2678,6 @@ sub calculate_impositions {
 
 		my $printing_type = $Press->specification('Printing Type');
 		if ( $$sig_specs{'PrintingTypes'} and ! sets::isin( $printing_type, $$sig_specs{'PrintingTypes'} ) ) {
-			if ( $$sig_specs{'chkOverridePress'.$qty_index} eq 'Y' and $$sig_specs{'ddmPress'.$qty_index} eq $$Press{'strid'} ) {
-				$$specs{'alert'} .= 'Press ' . $$Press{'strid'} . " Printing Type ($printing_type) is not in PrintingTypes  ". join(',', @{$$sig_specs{'PrintingTypes'}} ) . '<br/>';
-			} # end if
 			next;
 		} # end if
 
@@ -2718,7 +2715,22 @@ sub calculate_impositions {
 			} # end foreach
 #$openprint::log->debug("SPread Layout: $SpreadLayout");
 		} # end if
-		push @impositions, @press_impositions;
+		my %max_impositions;
+		foreach my $imp ( @press_impositions ) {
+			$max_impositions{$$imp{pages}} = $$imp{'imposition'} if $$imp{'imposition'} > $max_impositions{$$imp{pages}};
+		} # end foraech
+		foreach my $pages ( keys %max_impositions ) {
+			$max_impositions{$pages} = int($max_impositions{$pages} / 3 );
+		} # end foreach
+		foreach my $I ( @press_impositions ) {
+			if ( $max_impositions{$$I{pages}} > $$I{imposition}) {
+# Only do this if not sheet size overrides
+				$I->display("Ma imposition! for $$I{pages} is $max_impositions{$$I{pages}} > $$I{imposition} ") if DEBUG_FILTERING;
+				next;
+			} 
+			push @impositions, $I;
+		} # end foreach 
+
 	} # end foreach press
 
 	if ( ! @impositions ) {
@@ -2730,12 +2742,10 @@ sub calculate_impositions {
 		@$sig_specs{"OverrideStockWidth$qty_index","OverrideStockHeight$qty_index"} = $$sig_specs{"ddmStockSheetSize$qty_index"} =~ /^([\d\.]+)"?\s*x?\s*([\d\.]+)?"?\s*$/;;
 	}
 	my @results;
-	my %max_impositions;
 	my $max_pages = 0;
 	foreach my $imp ( @impositions ) {
 		my $pages = $$imp{'pages'};
 		$max_pages = $pages if $pages > $max_pages;
-		$max_impositions{$pages} = $$imp{'imposition'} if $$imp{'imposition'} > $max_impositions{$pages};
 	} # end foreach
 	$max_pages = Math::Round::nearest(1, $max_pages / 3 );
 	$max_pages = $$project{'txtSpreadSize'} if $max_pages < $$project{'txtSpreadSize'};
@@ -2823,10 +2833,10 @@ $openprint::log->debug("Max pages: $max_pages") if DEBUG_FILTERING;
 			if (($max_pages > $$imp{pages}) and ( $$sig_specs{'chkOverridePageQuantity'.$qty_index} ne 'Y' ) ) {
 				$imp->display("Max pages: max $max_pages >= imp " . $$imp{'pages'} ) if DEBUG_FILTERING;
 				next;
-			} elsif ( $max_impositions{$$imp{'pages'}}/2 > $$imp{'imposition'}) {
+			#} elsif ( $max_impositions{$$imp{'pages'}} > $$imp{'imposition'}) {
 # Only do this if not sheet size overrides
-				$imp->display("Ma imposition! for $$imp{pages} is $max_impositions{$$imp{'pages'}} > $$imp{imposition} ") if DEBUG_FILTERING;
-				next;
+				#$imp->display("Ma imposition! for $$imp{pages} is $max_impositions{$$imp{'pages'}} > $$imp{imposition} ") if DEBUG_FILTERING;
+				#next;
 			} # end if
 
 		} # end if SpreadLayout
@@ -4411,32 +4421,34 @@ sub calc_price {
 		} # end if
 
 		delete $$Imposition{'Folder'};
-		if ( ( $folding_results{'Status'} eq 'uncalculated' ) or ! $folding_results{'Equipment'} ) {
+		if ( ( $folding_results{'Status'} eq 'uncalculated' ) or ( ( ! $folding_results{'Equipment'} ) and ( $$project{'FoldingSpecs'}{"chkOverrideEquipment-$$specs{'SignatureIndex'}-$qty_index"} ne 'Y' ) ) ) {
 # do not want an invalid fold style to win out unless there are no other valid signatures.
-			$price{'Folding Breakdown'} .= sprintf('Unable to fold<br/>');
+			$price{'Folding Breakdown'} .= sprintf('Unable to fold<br/>'.$folding_results{'Breakdown'});
 			$price{'Comparison Cost'} += 10000000; 
 			if ( $$project{'FoldingSpecs'}{"chkOverrideEquipment-$$specs{'SignatureIndex'}-$qty_index"} ne 'Y' ) {
 				$$project{'FoldingSpecs'}{"ddmEquipment-$$specs{'SignatureIndex'}-$qty_index"} = '';
 			} # end if
 		} else {
-			if ( $folding_results{'Equipment'}->id() == $Press->id() ) {
+			if ( $folding_results{'Equipment'} ) {
+				if ( $folding_results{'Equipment'}->id() == $Press->id() ) {
 #$openprint::log->debug("Runspeed: $folding_results{'RunSpeed'}");
-				$run_speed = $folding_results{'RunSpeed'} if $folding_results{'RunSpeed'};
-			} # end if
-			$$Imposition{'Folder'} = $folding_results{'Equipment'};
+					$run_speed = $folding_results{'RunSpeed'} if $folding_results{'RunSpeed'};
+				} # end if
+				$$Imposition{'Folder'} = $folding_results{'Equipment'};
 #$$Imposition{'FoldingCost'} = $folding_results{'Price'};
 
-			foreach my $k ( keys %{$folding_results{'Folds'}} ) {
-				my ( $fold_type, $imposition ) = $k =~ /(.*)-(\d+)out$/;
-				my $fold_qty = 0;
-				foreach my $Fold ( @{$folding_results{'Folds'}{$k}} ) {
-					my $Fold_Imposition = $Fold->Imposition();
-					$fold_qty += $$Fold_Imposition{'quantity'};
+				foreach my $k ( keys %{$folding_results{'Folds'}} ) {
+					my ( $fold_type, $imposition ) = $k =~ /(.*)-(\d+)out$/;
+					my $fold_qty = 0;
+					foreach my $Fold ( @{$folding_results{'Folds'}{$k}} ) {
+						my $Fold_Imposition = $Fold->Imposition();
+						$fold_qty += $$Fold_Imposition{'quantity'};
+					} # end foreach
+					$price{'Folding Breakdown'} .= sprintf('Folding %d %s (%d out) %d/hr Price: $%.2f on %s', $fold_qty, $folding_results{'Folds'}{$k}[0]->name(), $imposition, @folding_results{'RunSpeed','Price'}, $folding_results{'Equipment'}->name() ) .'<br/>' if $folding_results{'Equipment'};
 				} # end foreach
-				$price{'Folding Breakdown'} .= sprintf('Folding %d %s (%d out) %d/hr Price: $%.2f on %s', $fold_qty, $folding_results{'Folds'}{$k}[0]->name(), $imposition, @folding_results{'RunSpeed','Price'}, $folding_results{'Equipment'}->name() ) .'<br/>' if $folding_results{'Equipment'};
-			} # end foreach
-			if ( $$project{'FoldingSpecs'}{"chkOverrideEquipment-$$specs{'SignatureIndex'}-$qty_index"} ne 'Y' ) {
-				$$project{'FoldingSpecs'}{"ddmEquipment-$$specs{'SignatureIndex'}-$qty_index"} = $folding_results{'Equipment'}->id();
+				if ( $$project{'FoldingSpecs'}{"chkOverrideEquipment-$$specs{'SignatureIndex'}-$qty_index"} ne 'Y' ) {
+					$$project{'FoldingSpecs'}{"ddmEquipment-$$specs{'SignatureIndex'}-$qty_index"} = $folding_results{'Equipment'}->id();
+				} # end if
 			} # end if
 		} # end if
 		if ( DEBUG and tv_interval([$time])*1000 > 10 ) {
