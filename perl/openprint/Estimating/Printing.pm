@@ -4362,10 +4362,10 @@ sub calc_price {
 		$additional_overs = $minimum if $minimum > $additional_overs;
 	} # end if
 	$overs = $additional_overs;
-	if ( $Press->specification('Overs') ne 'All' ) {
-		$overs += ceil( ($setup_overs > $run_overs) ? $setup_overs : $run_overs );
-	} else {
+	if ( $_ = $Press->specification('Overs')  and ( $$_{value} eq 'All' ) ) {
 		$overs += ceil( $setup_overs + $run_overs );
+	} else {
+		$overs += ceil( ($setup_overs > $run_overs) ? $setup_overs : $run_overs );
 	} # end if
 	$overs = $min_overs if $overs < $min_overs;
 
@@ -4738,10 +4738,10 @@ sub calc_price {
 
 	my $total_overs = $additional_overs;
 
-	if ( $_ = $Press->specification('Overs') and $$_{value} ne 'All' ) {
-		$total_overs += ceil( ( $setup_overs > $run_overs ) ? $setup_overs : $run_overs );
-	} else {
+	if ( $_ = $Press->Specification('Overs') and $$_{value} eq 'All' ) {
 		$total_overs += ceil( $run_overs + $setup_overs );
+	} else {
+		$total_overs += ceil( ( $setup_overs > $run_overs ) ? $setup_overs : $run_overs );
 	} # end if
 	$total_overs += ( $bindery_overs - $total_overs ) if $bindery_overs > $total_overs;
 
