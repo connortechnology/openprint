@@ -35,7 +35,7 @@ my %folding_cache;
 my %Papers;
 # indexed by press
 #my %impositions;
-my $do_initial_filtering = 0;
+my $do_initial_filtering = 1;
 my $max_recursion_depth = 3;
 my %converted_imposition_cache;
 my $use_converted_imposition_cache = 0;

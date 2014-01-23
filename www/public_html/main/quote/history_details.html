@@ -10,6 +10,10 @@ function delete_confirm(form) {
 }
 </script>
 <?include('/includes/error_reporting.html')?>
+	<? if ( $$variable{Quote}->company_id() != $session{company_id} ) ?>
+	<div class="warning unprintable">Warning: You are logged in as <? echo ( new openprint::Company( $session{company_id} )->name() ) ?> but this order belongs to <a href="history_details.html?quote_id=<?echo($$variable{Quote}->id())?>&amp;btnFunction=SelectCompany&amp;ddmCompany=<?echo($$variable{Quote}->company_id())?>"><? echo ( $$variable{Quote}->Company()->name() ) ?></a>!</div>
+	<? endif ( $$variable{Quote}->company_id() != $session{company_id} ) ?>
+<form name="f1" id="f1" method="post" action="history_details.html">
 <form id="f1" name="f1" method="post" action="/main/quote/history_details.html">
 	<p class="buttons">
 		<input type="hidden" name="btnFunction" value="Delete Quote"/>
