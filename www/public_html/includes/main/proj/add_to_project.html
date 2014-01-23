@@ -9,6 +9,9 @@
 	<span class="AddToProjectButtons">
 		<? echo (
 			my $html;
+			if ( $$variable{ServiceTypeName} eq 'Signature' ) {
+				$html .= button( 'Impositions', { onclick=>q`get_impositions( 'f1' );` } );
+			} 
 			if ( $$variable{'ServiceIndex'} ) {
 				$html .= button( 'Recalculate', { onclick=>"calc('f1',true);" } );
 				$html .= button( 'Save', { onclick=>"submit_handler('f1');", text=>'Save and Continue' } );
