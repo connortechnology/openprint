@@ -77,9 +77,14 @@
 				<select id="ddmCompany" name="ddmCompany">
 					<option value="">Select a Customer</option>
 					<? echo (
-# openprint::Company::get_dropdown( $session{'company_id'} );
-return '<option value="'.$session{company_id}.'" selected="selected">'.new openprint::Company( $session{company_id} )->name() .'</option><option value="">Please wait, loading the rest</option>';
- ) ?>
+							my $html ='<option value="'.$session{company_id}.'" selected="selected">'.new openprint::Company( $session{company_id} )->name() .'</option>';
+							my $User = new openprint::User($session{user_id} );
+							if ( $session{company_id} != $User->company_id() ) {
+								$html .= '<option value="'.$User->company_id().'" selected="selected">'.$User->Company()->name().'</option>';
+							}
+							return $html;
+							) ?>
+					<option value="">Please wait, loading the rest</option>
 				</select>
 			</li>
 		</ul>
