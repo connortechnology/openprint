@@ -2119,11 +2119,7 @@ $openprint::log->debug("Before select presses: " . ( sprintf('%.4f', tv_interval
 	@possible_presses = sort { $$a{strid} <=>$$b{strid} } @possible_presses;
 $openprint::log->debug("after sorting presses: " . ( sprintf('%.4f', tv_interval( [$master_time])*1000) ) .' usecs' );
 
-	my @available_printingtypes;
-	foreach my $Press ( @possible_presses ) {
-		push @available_printingtypes, $Press->specification('Printing Type');
-	} # end foreach
-	@available_printingtypes = sets::union( @available_printingtypes );
+	my @available_printingtypes = sets::union( map { $_->specification('Printing Type') } @possible_presses );
 
 #$openprint::log->debug("Master time before qty: " . ( sprintf('%.4f', tv_interval( [$master_time])*1000) ) .' usecs' );
 	my %threads;
@@ -2195,8 +2191,8 @@ $log->warn("There are no quantities!");
 			} else {
 				$openprint::log->debug("No printing types");
 			} # end if
+			$openprint::log->debug("aftger get printing_types: " . ( sprintf('%.4f', tv_interval( [$master_time])*1000) ) .' usecs' );
 		} # end if
-$openprint::log->debug("aftger get printing_types: " . ( sprintf('%.4f', tv_interval( [$master_time])*1000) ) .' usecs' ) if DEBUG;
 
 		$$project{'roll2sheetcharged'} = 0;
 		my %previous_forms_cache;
@@ -2677,6 +2673,14 @@ sub calculate_impositions {
 
 		if ( ! $Press ) {
 			$openprint::log->error("No Pressf or $strid");
+			next;
+		} # end if
+
+		my $printing_type = $Press->specification('Printing Type');
+		if ( $$sig_specs{'PrintingTypes'} and ! sets::isin( $printing_type, $$sig_specs{'PrintingTypes'} ) ) {
+			if ( $$sig_specs{'chkOverridePress'.$qty_index} eq 'Y' and $$sig_specs{'ddmPress'.$qty_index} eq $$Press{'strid'} ) {
+				$$specs{'alert'} .= 'Press ' . $$Press{'strid'} . " Printing Type ($printing_type) is not in PrintingTypes  ". join(',', @{$$sig_specs{'PrintingTypes'}} ) . '<br/>';
+			} # end if
 			next;
 		} # end if
 
