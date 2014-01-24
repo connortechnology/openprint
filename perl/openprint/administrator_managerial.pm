@@ -10,6 +10,7 @@ require Configuration;
 require email;
 require openprint::Currency;
 require openprint::User;
+require openprint::User_Type;
 require openprint::logs;
 require openprint::address;
 require openprint::Company;

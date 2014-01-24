@@ -19,15 +19,15 @@
 	<ul>
 		<li>
 			<label for="Quantity1">Quantity 1</label>
-			<? echo ( input( name=>'txtQuantity1', id=>'Quantity1', value=>$$variable{'txtQuantity1'}, type=>'cardinal' ); ) ?>
+			<? echo ( input( name=>'txtQuantity1', id=>'Quantity1', value=>$$variable{'txtQuantity1'}, type=>'cardinal', max=>2147483647 ); ) ?>
 		</li>
 		<li>
 			<label for="Quantity2">Quantity 2</label>
-			<? echo ( input( name=>'txtQuantity2', id=>'Quantity2', value=>$$variable{'txtQuantity2'}, type=>'cardinal' ); ) ?>
+			<? echo ( input( name=>'txtQuantity2', id=>'Quantity2', value=>$$variable{'txtQuantity2'}, type=>'cardinal', max=>2147483647 ); ) ?>
 		</li>
 		<li>
 			<label for="Quantity3">Quantity 3</label>
-			<? echo ( input( name=>'txtQuantity3', id=>'Quantity3', value=>$$variable{'txtQuantity3'}, type=>'cardinal' ); ) ?>
+			<? echo ( input( name=>'txtQuantity3', id=>'Quantity3', value=>$$variable{'txtQuantity3'}, type=>'cardinal', max=>2147483647 ); ) ?>
 		</li>
 	</ul>
 </fieldset>
@@ -100,13 +100,13 @@
 ) ?>
 	</ul>
 </fieldset>
-<fieldset><legend>What type of bindery services are required for the project?</legend>
+<fieldset class="Bindery"><legend>What type of bindery services are required for the project?</legend>
 	<ul>
 <? echo ( 
 	my $html = '';
 	foreach my $ServiceType ( openprint::ServiceType->find('category'=>'Bindery','create_visible'=>1,'order'=>'sorting,lower(description)') ) {
 		$html .= sprintf(q`
-			<li>
+			<li class="%1$s">
 				<input type="checkbox" name="chkServices%1$s" id="chkServices%1$s" value="%1$s" onclick="service_onclick( this );" %3$s />
 				<label for="chkServices%1$s">%2$s</label>
 			</li>
