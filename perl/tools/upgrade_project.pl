@@ -13,7 +13,7 @@ use vars qw( $log $dbh );
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
 
-$log = new logger( 'warn' );
+$log = new logger( 'debug' );
 my %sql_server;
 $sql_server{'database'} = $ARGV[0];
 $sql_server{'database'} = 'point-one' if ! $sql_server{'database'};
@@ -220,7 +220,7 @@ openprint::Object::init_cache();
 foreach my $Project ( openprint::Project->find( 'order'=>'id desc',
 			( $project_id ? ( 'id'=>$project_id) : () ),
 			( $company_id ? ( 'company_id'=>$company_id ) : () ),
-			offset=>$projects_count  ) ) {
+			limit=>$projects_count  ) ) {
 # Skip multipage projects
 	next if sets::isin( $Project->Type()->name(), [ 'MultiPage', 'Magazines','Calendars' ] );
 	my $services = $Project->services();
@@ -232,10 +232,14 @@ foreach my $Project ( openprint::Project->find( 'order'=>'id desc',
 	if ( @sigs == 1 ) {
 		my $PService = $Project->Service( $sigs[0] );
 		my $sig_specs = $Project->specs();
-		if ( ! ( $$sig_specs{txtWidth} and $$sig_specs{txtHeight} ) ) {
+		if ( 1 or ! ( $$sig_specs{txtWidth} and $$sig_specs{txtHeight} ) ) {
 			$PService->delete();
-	my $new_signature = $Project->copy_signature( $print_specs, {}, openprint::service::status( $Project->id(), $$services{''}[0] ) );
-
+			my $new_signature = $Project->copy_signature( $print_specs, {}, openprint::service::status( $Project->id(), $$services{''}[0] ) );
+			foreach my $qty_index ( $Project->quantity_indexes() ) {
+				openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $$services{''}[0], 'txtPrice'.$qty_index, undef );
+			} # end foreach
+		} else {
+			$log->debug("Not changing $$Project{id}");
 		} # end if
 	} # end if
 
