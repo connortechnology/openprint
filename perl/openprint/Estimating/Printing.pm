@@ -30,7 +30,7 @@ use constant DEBUG_INKS => 0;
 use constant DEBUG_STOCK => 0;
 use constant COMPARISON_LOG => 0;
 use constant USE_SUBSIG => 0;
-use constant USE_PRICE_CACHE => 0;
+use constant USE_PRICE_CACHE => 1;
 
 my $master_time;
 my %special_colours;
