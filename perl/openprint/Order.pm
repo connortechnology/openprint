@@ -16,6 +16,7 @@ require openprint::logs;
 require openprint::OrderedProduct;
 require openprint::OrderedProject;
 require openprint::Order_Tax;
+require openprint::Order_Invoice;
 require openprint::Order_Status;
 require openprint::Payment;
 require openprint::Tax;
@@ -766,15 +767,18 @@ sub CSR {
 
 sub can_invoice {
 	return 0 if ! $_[0]{id};
-	return 0 if $_[0]{invoice_id};
 	return 1 if $openprint::session{user_type} eq 'A';
-	return 1 if openprint::usergroup::is_user_in( ['Accounting'], $session{user_id} );
+	return 1 if $openprint::session{user_type} eq 'E' and openprint::usergroup::is_user_in( ['Accounting'], $session{user_id} );
 	return 0;
 } # end sub can_invoice
 
 sub Invoice {
 	return new openprint::Invoice( $_[0]{invoice_id} );
 } # end sub Invoice
+
+sub Invoices {
+	return openprint::Order_Invoice->find( order_id=>$_[0]{id} );
+} # end sub Invoices
 
 sub invoiced_on {
 	if ( $_[0]{invoice_id} ) {
