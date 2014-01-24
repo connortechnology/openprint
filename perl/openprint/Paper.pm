@@ -1111,7 +1111,7 @@ sub gsm {
 			$$self{'gsm'} = sprintf('%.2f', $$self{'wpsi'} * 703064.5 );
 		} else { 
 			$$self{'gsm'} = 'unknown';
-			$openprint::log->warn("Can't calculate gsm for " . $self->to_string() );
+			$openprint::log->warn("Can't calculate gsm for " . $self->to_string() ) if $$self{brand};
 		} # end if
 	} # end if
 	return $$self{'gsm'};
@@ -1269,10 +1269,10 @@ sub load_from_signature {
 		$$Paper{Units} = $$specs{'CustomStockPriceUnits'};
 		$Paper->basis_width( $$specs{'basis_width'} );
 		$Paper->basis_height( $$specs{'basis_height'} );
-		$Paper->basis_mweight( $$specs{'basis_mweight'} );
+		$Paper->basis_mweight( $$specs{'basis_mweight'} ) if $$specs{'basis_mweight'};
 		$Paper->score_required( $Paper->calliper() > 0.008 );
 		#if ( $$specs{'StockType'} ne 'Roll' ) {
-			$Paper->mweight( $$specs{'txtCustomMWeight'} );
+			$Paper->mweight( $$specs{'txtCustomMWeight'} ) if ! $Paper->gsm();
 		#} # end if
 		$Paper->supplied( $$specs{'rdbSuppliedStock'} eq 'Y' ? 1 : 0 );
 	} else {
