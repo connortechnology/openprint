@@ -768,7 +768,9 @@ sub CSR {
 sub can_invoice {
 	return 0 if ! $_[0]{id};
 	return 1 if $openprint::session{user_type} eq 'A';
-	return 1 if $openprint::session{user_type} eq 'E' and openprint::usergroup::is_user_in( ['Accounting'], $session{user_id} );
+$openprint::log->debug("No admin");
+	return 1 if $openprint::session{user_type} eq 'E' and openprint::usergroup::is_user_in( ['Accounting'], $openprint::session{user_id} );
+$openprint::log->debug("Not employee" );
 	return 0;
 } # end sub can_invoice
 

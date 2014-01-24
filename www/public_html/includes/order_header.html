@@ -7,21 +7,7 @@
 			<li><label>Order ID</label><? echo ( $$variable{Order}->id() ) ?></li>
 		<? if ( $$variable{Order}->docket() ) ?>
 			<li><label>Docket</label><? echo ( $$variable{Order}->docket(); ) ?></li>
-			<li><label>Invoices</label>
-<? echo ( my $html;
-	my $can_invoice = $$variable{Order}->can_invoice();
-
-	foreach my $Invoice ( $$variable{Order}->Invoices() ) {
-		$html .= $Invoice->link_to( $$Invoice{num} . ' on ' . format_datetime( $Invoice->created_on() ) ).'<br/>';
-	} # end foreach
-					
-	if ( $can_invoice ) {
-		$html .= '</li><li class="unprintable invoice_id"><label>New Invoice ID</label><input type="text" id="invoice_id" name="invoice_id" /></span>';
-			$html .= button( 'Invoice', { onclick=>q`if($('invoice_id').value) {f1.btnFunction.value='Invoice';f1.submit();}else{alert('Please enter an invoice #');};`, text=>'Add Invoice ID' } );
-		$html .= '</li>';
-	} # end if can_invoice
-	return $html;
-) ?>
+			<li><label>Invoices</label><div id="Invoices"><?include('/employee/accounting/_order_invoices.html')?></div></li>
 		<? endif ( $$variable{Order}->docket() ) ?>
 			<li><label>Created</label><? echo ( format_date( $$variable{Order}->created_on() ) ) ?></li>
 			<li><label>Status</label><? echo ( $$variable{Order}->status() ) ?></li>
