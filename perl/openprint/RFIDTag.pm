@@ -78,7 +78,7 @@ sub save {
 		} # end if
 	} # end if
 
-	$self->valid( ! $self->is_invalid_id() );
+	$self->valid( $self->is_invalid_id() ? 0 : 1 );
 	
 	my $ac = sql::start_transaction( $dbh );
 
