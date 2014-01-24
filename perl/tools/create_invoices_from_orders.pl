@@ -23,16 +23,22 @@ $ARGV[2] = $ARGV[1] if ! $ARGV[2];
 
 $dbh = sql::open_sql( $log, ('database'=>$ARGV[0], 'driver'=>'Pg','login'=>$ARGV[1], 'password'=>$ARGV[2], 'host'=>$ARGV[3]) );
 
-if ( 0 ) {
+if ( 1 ) {
 my $ac = sql::start_transaction( $dbh );
 
 foreach my $Order ( openprint::Order->find( 'invoice_id is null'=>0 ) ) {
 	next if ! $Order->invoice_id();
 
 	if ( $Order->invoice_id() =~ /\D/ ) {
-	next if openprint::Invoice->find_one(num=>$Order->invoice_id());
+		next if openprint::Invoice->find_one(num=>$Order->invoice_id());
 	} else {
-	next if openprint::Invoice->find_one(id=>$Order->invoice_id());
+		next if openprint::Invoice->find_one(id=>$Order->invoice_id());
+	} # end if
+
+	my ( $invoiced_on ) = sql::execute( undef, undef, 'SELECT invoiced_on FROM ORders where id=?', $Order->id() );
+	if ( ! $invoiced_on ) {
+		$log->warn( "No invoiced_on for $$Order{id}" );
+		next;
 	} # end if
 
 	my $Invoice = new openprint::Invoice();
@@ -46,11 +52,6 @@ foreach my $Order ( openprint::Order->find( 'invoice_id is null'=>0 ) ) {
 		$dbh->rollback();
 		die $_;
 	} # end if
-	my ( $invoiced_on ) = sql::execute( undef, undef, 'SELECT invoiced_on FROM ORders where id=?', $Order->id() );
-	if ( ! $invoiced_on ) {
-		$dbh->rollback();
-		die "No invoiced_on for $$Order{id}"
-	} # end if
 	sql::update( undef, undef, 'invoices', [ 'id=?', $Invoice->id() ], 'created_on', $invoiced_on );
 	sql::update( undef, undef, 'orders', [ 'id=?', $Order->id() ], 'invoice_id', $Invoice->id() );
 } # end foreach Order
@@ -61,8 +62,16 @@ if ( 1 ) {
 my $ac = sql::start_transaction( $dbh );
 foreach my $Order ( openprint::Order->find( 'invoice_id is null'=>0 ) ) {
 	next if ! $Order->invoice_id();
+	if ( $Order->invoice_id() =~ /\D/ ) {
+		$log->warn("Bad invoice_id on Order $$Order{id} : $$Order{invoice_id} ");
+		next;
+	} # end if
 
 	next if $Order->Invoices();
+	if ( ! openprint::Invoice->find_one(id=>$Order->invoice_id()) ) {
+		$log->warn("No invoice found for Order $$Order{id} : $$Order{invoice_id} ");
+		next;
+	} # end if
 	my $OI = new openprint::Order_Invoice();
 	$_ = $OI->save({order_id=>$$Order{id}, invoice_id=>$$Order{invoice_id} });
 

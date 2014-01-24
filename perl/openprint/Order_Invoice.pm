@@ -9,7 +9,7 @@ require openprint::Invoice;
 
 $debug = 0;
 
-$table = 'order_invoicees';
+$table = 'order_invoices';
 @identified_by = ( 'order_id', 'invoice_id' );
 
 %fields = (

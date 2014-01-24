@@ -8,18 +8,18 @@
 		<? if ( $$variable{Order}->docket() ) ?>
 			<li><label>Docket</label><? echo ( $$variable{Order}->docket(); ) ?></li>
 			<li><label>Invoices</label>
-				<? echo ( my $html;
-					my $can_invoice = ( $session{user_type} eq 'A' ) or ( $session{user_type} eq 'E' and openprint::usergroup::is_user_in( ['Accounting'], $session{'user_id'} ) );
+<? echo ( my $html;
+	my $can_invoice = $$variable{Order}->can_invoice();
 
-					foreach my $Invoice ( $Order->Invoices() ) {
-						$html .= $Invoice->link_to( $$Invoice{num} . ' on ' . format_datetime( $Invoice->created_on() ) ).'<br/>';
-					} # end foreach
+	foreach my $Invoice ( $$variable{Order}->Invoices() ) {
+		$html .= $Invoice->link_to( $$Invoice{num} . ' on ' . format_datetime( $Invoice->created_on() ) ).'<br/>';
+	} # end foreach
 					
- if ( $can_invoice ) {
-	$html .= '</li><li class="unprintable invoice_id"><label>New Invoice ID</label><input type="text" id="invoice_id" name="invoice_id" /></span>';
-        $html .= button( 'Invoice', { onclick=>q`if($('invoice_id').value) {f1.btnFunction.value='Invoice';f1.submit();}else{alert('Please enter an invoice #');};`, text=>'Add Invoice ID' } );
-    $html .= '</li>';
-} # end if can_invoice
+	if ( $can_invoice ) {
+		$html .= '</li><li class="unprintable invoice_id"><label>New Invoice ID</label><input type="text" id="invoice_id" name="invoice_id" /></span>';
+			$html .= button( 'Invoice', { onclick=>q`if($('invoice_id').value) {f1.btnFunction.value='Invoice';f1.submit();}else{alert('Please enter an invoice #');};`, text=>'Add Invoice ID' } );
+		$html .= '</li>';
+	} # end if can_invoice
 	return $html;
 ) ?>
 		<? endif ( $$variable{Order}->docket() ) ?>
