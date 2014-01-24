@@ -86,6 +86,8 @@ function send_notifications( form, project_id ) {
 				$html .= '<div class="warning">This Project has not been ordered.</div>';
 			}
 			$html .= '<div class="Project">'.include('_view.html').'</div>';
+		} else {
+			$html .= '<div class="error">There do not appear to be any projects in this order.</div>';
 		} # end if
 		return $html;
 	) ?>

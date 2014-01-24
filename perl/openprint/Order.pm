@@ -450,9 +450,11 @@ sub total {
 sub send_completion_notice {
 	my ( $self ) = @_;
 
-	my %order;
-	$order{'OrderID'} = $self->id();
-	$order{'Order'} = $self;
+	my %order = (
+		OrderID => $self->id(),
+		Order	=> $self,
+		Currency	=>$self->Currency(),
+	);
 
 	my @attachments = ();
 
