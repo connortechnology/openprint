@@ -16,7 +16,7 @@
 
 package openprint::Estimating::Aqueous;
 use strict;
-#use warnings;
+use warnings;
 
 require sql;
 require openprint::service;
@@ -25,7 +25,7 @@ require openprint::imposition;
 require openprint::Imposition;
 
 use vars qw( @outputs );
-use constant DEBUG => 0;
+use constant DEBUG => 1;
 
 # Offline Aqueous
 # Let's assume that each piece of equipment can do 1 coat at a time
@@ -97,10 +97,12 @@ sub get_colours {
     } # end if
 
     foreach my $k ( keys %$specs ) {
+$openprint::log->debug("AQ get_colours $k => $$specs{$k}");
         if ( my ( $index ) = $k =~ /^chkColourCoating(\d+)$side/ ) {
+$openprint::log->debug("AQ get_colours $k => $$specs{$k} index is $index");
             next if ! $$specs{"chkColourCoating$index$side"};
-			if ( $$specs{"ColourCoatingColour$index$side"} =~ /Aqueous/i ) {
-				push @colours, $$specs{"ColourCoatingColour$index$side"};
+			if ( $$specs{"ColourCoatingType$index$side"} =~ /Aqueous/i ) {
+				push @colours, $$specs{"ColourCoatingType$index$side"};
             } # end if
         } # end if
     } # end foreach
@@ -136,7 +138,7 @@ sub calc {
 
 	my $Project = new openprint::Project( $project_index );
 
-	@all_equipment = openprint::Equipment->find( 'Specifications' => {'Aqueous Capable'=>['Y','When Printing']}, 'useinestimating'=>1,'order'=>'lower(strName)') if ! @all_equipment;
+	@all_equipment = openprint::Equipment->find( Specifications => {'Aqueous Capable'=>['Y','When Printing']}, useinestimating=>1, order=>'lower(strName)') if ! @all_equipment;
 
 	foreach my $qty_index ( $Project->quantity_indexes() ) {
 		$$specs{"Markup$qty_index"} =~ s/[^\d\.\-]//g;
@@ -156,9 +158,9 @@ sub calc {
 		my %MakeReadies;
 
 		my $GrandTotal = 0;
-		foreach my $signature_service_index ( $Project->signatures() ) {
+		foreach my $signature_service_index ( $Project->signatures( { sort=>1 } ) ) {
 			my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
-			$$specs{'hdnBreakdown'.$qty_index} .= "Signature: $$sig_specs{'txtServiceDescription'},<br/>" if $$sig_specs{'txtServiceDescription'} ne '';
+			$$specs{'hdnBreakdown'.$qty_index} .= "<br/>Signature: $$sig_specs{'txtServiceDescription'},<br/>" if $$sig_specs{'txtServiceDescription'} ne '';
 # If any of the signatures doesn't have an imposition, then we are in an incomplete state.
 			if ( ! $$sig_specs{'txtImposition'.$qty_index} ) {
 				$$specs{'hdnBreakdown'.$qty_index} .= 'No imposition was found for printing.<br/>';
@@ -293,7 +295,7 @@ if ( 1 ) {
 } # end if
 #$openprint::log->debug("Impressions: $impressions");
 
-	@all_equipment = openprint::Equipment->find( 'Specifications' => {'Aqueous Capable'=>['Y','When Printing']}, 'useinestimating'=>1,'order'=>'lower(strName)') if ! @all_equipment;
+	@all_equipment = openprint::Equipment->find( Specifications => {'Aqueous Capable'=>['Y','When Printing']}, useinestimating=>1,order=>'lower(strName)') if ! @all_equipment;
 	my @equipment;	
 	if ( $$specs{"chkOverrideEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} eq 'Y' ) {
 		@equipment = ( new openprint::Equipment( $$specs{"ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} ) );
@@ -350,7 +352,6 @@ $openprint::log->debug("AQ Equipment $$Equipment{strid}");
 		my %minimum = openprint::service::get_price_object( 'AqueousMinimumCharge', undef, $Equipment );
 
 		foreach my $imp ( @impositions ) {
-$imp->display("AQ");
 			my %MakeReadies = $MakeReadies ? %$MakeReadies : ();
 			$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Imposition: %dx%d+%dx%d=%dout %s:', @$imp{'columns','rows','dutch_columns','dutch_rows','imposition','runstyle'} );
 			next if ! ( $imp->rows() * $imp->columns() );

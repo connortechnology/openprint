@@ -1,30 +1,21 @@
-<script type="text/javascript" src="/javascripts/service.js"></script>
-<? eval (
-	if ( $$variable{'Project'}->quantity1() and $$variable{'Project'}->quantity2() and $$variable{'Project'}->quantity3() ) {
-	$$variable{'Columns'} = 'Three';
-	} else {
-	$$variable{'Columns'} = 'Two';
-	} # end if
-) ?>
+<script type="text/javascript" src="<?hash_link(/javascripts/service.js)?>"></script>
 <div class="Service">
 	<form id="f1" name="f1" method="post" action="/main/project/view.html">
 		<fieldset><legend>Aqueous Coating</legend>
-		<? eval ( @{$$variable{'Signatures'}} = $$variable{'Project'}->signatures() ) ?>
+		<? eval ( @{$$variable{'Signatures'}} = $$variable{'Project'}->signatures( { sort => 1 } );
+$log->debug("Signatures " . join(',', @{$$variable{'Signatures'}} ) );
+ ) ?>
 		<? while ( $$variable{'SignatureServiceIndex'} = shift @{$$variable{'Signatures'}} ) ?>
 			<? eval ( 
+				require openprint::Estimating::Aqueous;
 				$$variable{'sig_specs'} = openprint::service::get_specs_ref( @$variable{'Project','SignatureServiceIndex'} ); 
 				$$variable{'Reference'} = openprint::service::summary( $$variable{'Project'}->id(), $$variable{'SignatureServiceIndex'} );
 				$$variable{'SignatureIndex'} = $$variable{'sig_specs'}{'SignatureIndex'};
-				$$variable{'FrontCoatings'} = $$variable{'BackCoatings'} = '';
-				foreach my $colour ( openprint::Estimating::Printing::get_colours( $$variable{'sig_specs'}, 'SideOne' ) ) {
-					next if ! ( $$colour{'name'} =~ /Aqueous/i );
-					$$variable{'FrontCoatings'} .= $$colour{'name'} . '<br/>';
-				} # end foreach
+				$$variable{'FrontCoatings'} = join(',', openprint::Estimating::Aqueous::get_colours( $$variable{'sig_specs'}, 'SideOne' ) );
+$log->debug( $$variable{'FrontCoatings'} );
 				$$variable{'FrontCoatings'} = 'None' if $$variable{'FrontCoatings'} eq '';
-				foreach my $colour ( openprint::Estimating::Printing::get_colours( $$variable{'sig_specs'}, 'SideTwo' ) ) {
-					next if ! ( $$colour{'name'} =~ /Aqueous/i );
-					$$variable{'BackCoatings'} .= $$colour{'name'} . '<br/>';
-				} # end foreach
+				$$variable{'BackCoatings'} = join(',', openprint::Estimating::Aqueous::get_colours( $$variable{'sig_specs'}, 'SideTwo' ) );
+$log->debug( $$variable{'BackCoatings'} );
 				$$variable{'BackCoatings'} = 'None' if ! $$variable{'BackCoatings'};
 			) ?>
 			<? if ( $$variable{'FrontCoatings'} ne 'None' or $$variable{'BackCoatings'} ne 'None' ) ?>
@@ -45,13 +36,24 @@
 				<br class="spacer"/>
 				<div id="Results-<?SignatureIndex?>" >
 					<ul>
+					<li><label>Printed</label><? echo ( 
+						my $html;
+						foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
+							$html .= '<span class="'.$$variable{Columns}.'Columns">';
+							my $Imposition = new openprint::Imposition(); 
+							$Imposition->load( $$variable{sig_specs}, $qty_index );
+							$html .= $Imposition->to_string();
+							$html .= '</span>';
+						} # end foreach
+						return $html;
+					) ?>
 <? if ( sets::isin( $session{'user_type'}, ['A','E'] ) ) ?>
 					<li class="MakeReadyPrice"><label>Make Ready (<?CurrencySymbol?>)</label>
 					<? echo ( my $html;
 						foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
 							$html .= '<span class="'.$$variable{Columns}.'Columns">';
-							$html .= ssi::input( type=>"number", name=>"MakeReadyPrice-$$variable{SignatureIndex}-$qty_index", value=> $$variable{"MakeReadyPrice-$$variable{SignatureIndex}-$qty_index"}, onkeyup=>"floatize(this);calc(this.form.name);" );
-							$html .= ssi::write_override( "OverrideMakeReadyPrice-$$variable{SignatureIndex}-$qty_index", $$variable{"OverrideMakeReadyPrice-$$variable{SignatureIndex}-$qty_index"}, '', q`calc('f1')` );
+							$html .= input( type=>'float', name=>"MakeReadyPrice-$$variable{SignatureIndex}-$qty_index", value=> $$variable{"MakeReadyPrice-$$variable{SignatureIndex}-$qty_index"}, onkeyup=>'calc(this.form.name);' );
+							$html .= write_override( "OverrideMakeReadyPrice-$$variable{SignatureIndex}-$qty_index", $$variable{"OverrideMakeReadyPrice-$$variable{SignatureIndex}-$qty_index"}, '', q`calc('f1')` );
 							$html .= '</span>';
 						} # end foreach qty_index
 						return $html;
