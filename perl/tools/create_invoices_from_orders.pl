@@ -23,6 +23,7 @@ $ARGV[2] = $ARGV[1] if ! $ARGV[2];
 
 $dbh = sql::open_sql( $log, ('database'=>$ARGV[0], 'driver'=>'Pg','login'=>$ARGV[1], 'password'=>$ARGV[2], 'host'=>$ARGV[3]) );
 
+if ( 0 ) {
 my $ac = sql::start_transaction( $dbh );
 
 foreach my $Order ( openprint::Order->find( 'invoice_id is null'=>0 ) ) {
@@ -54,5 +55,25 @@ foreach my $Order ( openprint::Order->find( 'invoice_id is null'=>0 ) ) {
 	sql::update( undef, undef, 'orders', [ 'id=?', $Order->id() ], 'invoice_id', $Invoice->id() );
 } # end foreach Order
 sql::end_transaction( $dbh, $ac );
+}
+
+if ( 1 ) {
+my $ac = sql::start_transaction( $dbh );
+foreach my $Order ( openprint::Order->find( 'invoice_id is null'=>0 ) ) {
+	next if ! $Order->invoice_id();
+
+	next if $Order->Invoices();
+	my $OI = new openprint::Order_Invoice();
+	$_ = $OI->save({order_id=>$$Order{id}, invoice_id=>$$Order{invoice_id} });
+
+	if ( $_ ) {
+		$dbh->rollback();
+		die $_;
+	} # end if
+} # end foreach Order
+sql::end_transaction( $dbh, $ac );
+}
+	
+
 	
 
