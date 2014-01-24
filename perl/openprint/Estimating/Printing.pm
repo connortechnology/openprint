@@ -2029,11 +2029,11 @@ sub calc {
 		$$specs{'alert'} .= 'Please enter width and height<br/>';
 		return $$specs{'Status'} = 'uncalculated';
 	} # end if
-	if ( ! $$specs{txtSignatureType} ) {
-	if ( ! ( $$specs{'txtFinalWidth'} and $$specs{'txtFinalHeight'} ) ) {
-		$$specs{'alert'} .= 'Please enter finished width and height<br/>';
-		return $$specs{'Status'} = 'uncalculated';
-	} # end if
+
+	if ( $Project->Type()->name() eq 'PressSheetCombination' ) {
+		@$specs{'txtFinalWidth','txtFinalHeight'} = @$specs{'txtWidth','txtHeight'};
+	} else {
+$openprint::log->debug("Type: " . $Project->Type()->name());
 	} # end if
 
 	if ( ! $$specs{txtSignatureType} ) {
@@ -2057,10 +2057,6 @@ sub calc {
 	} elsif ( $$specs{'txtFinalHeight'} and ( $$specs{'txtHeight'} < $$specs{'txtFinalHeight'} ) ) {
 		$$specs{'alert'} .= 'Flat Height must be greater than Final Height.<br/>';
 		return $$specs{'Status'} = 'uncalculated';
-	} # end if
-
-	if ( $Project->Type()->name() eq 'PressSheetCombination' ) {
-		@$specs{'txtFinalWidth','txtFinalHeight'} = @$specs{'txtWidth','txtHeight'};
 	} # end if
 
 	if ( ( ! $$specs{'txtSignatureType'} ) and ! ( $$specs{'txtFinalHeight'} and $$specs{'txtFinalWidth'} ) ) {
