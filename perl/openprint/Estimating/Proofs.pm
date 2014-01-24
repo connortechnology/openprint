@@ -496,7 +496,7 @@ sub get_proof_specs {
 			my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
 			my $signature_index = $$sig_specs{'SignatureIndex'};
 			if ( ! $$sig_specs{'txtImposition'.$qty_index} ) {
-$log->error("No imposition in signature $signature_index");
+$log->warn("No imposition in signature $signature_index");
 				next;
 			} # end if
 			my $Imposition = new openprint::Imposition();

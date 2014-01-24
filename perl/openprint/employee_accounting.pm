@@ -616,5 +616,22 @@ sub credit_application {
 
 } # end sub credit_application
 
+sub _order_invoices {
+	$variable{Order} = new openprint::Order( $param{order_id} );
+	if ( $param{action} eq 'Delete' ) {
+		my $OI = openprint::Order_Invoice->find_one( { order_id=>$param{order_id}, invoice_id=>$param{invoice_id} } );
+		if ( $OI ) {
+			$OI->Order()->add_log( 'Invoice ' . $OI->Invoice()->link_to() . 'removed. ' . $param{reason} );
+			$OI->delete();
+		} else {
+			$variable{error} = 'Invoice not found.  Not deleted<br/>';
+		} # end if
+	} # end if action
+} # end sub _order_invoices
+
+sub _delete_order_invoice {
+	$variable{OI} = new openprint::Order_Invoice( { order_id=>$param{order_id}, invoice_id=>$param{invoice_id} } );
+} # end sub _delete_order_invoice
+
 1;
 __END__
