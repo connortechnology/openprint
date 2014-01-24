@@ -25,7 +25,7 @@ require openprint::imposition;
 require openprint::Imposition;
 
 use vars qw( @outputs );
-use constant DEBUG => 1;
+use constant DEBUG => 0;
 
 # Offline Aqueous
 # Let's assume that each piece of equipment can do 1 coat at a time
