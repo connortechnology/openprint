@@ -5,7 +5,7 @@ CREATE TABLE invoice_interests (
     amount numeric(10,2),
     created_on timestamp with time zone DEFAULT now() NOT NULL,
     updated_on timestamp with time zone DEFAULT now() NOT NULL,
-    id integer DEFAULT nextval('invoice_interests_id_seq'::regclass) NOT NULL,
+    id SERIAL,
     compounded_on date
 );
 
