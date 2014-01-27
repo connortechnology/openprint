@@ -506,14 +506,16 @@ $openprint::log->debug("Not adding because previousimposition != sigImposition")
 	#foreach my $ss_id ( $Project->signatures() ) {
 	# We assume that Signature_Impositions is all impos that come before
 	foreach my $SigImpo ( @{$Signature_Impositions} ) {
+		next if $$SigImpo{service_id} >= $signature_service_index;
 		if ( $$SigImpo{folding_results} ) {
+$openprint::log->error("folds from sigimpo");
 			my $Folds = $$SigImpo{folding_results}{Folds};
 			if ( $Folds ) {
 
-			foreach my $key ( keys %$Folds ) {
-				my ( $fold_type, $imposition ) = $key =~ /(.*)-(\d+)out$/;
-				push @{$makereadies{$$SigImpo{folding_results}{Equipment}->id()}}, $fold_type;
-			} # end foreach
+				foreach my $key ( keys %$Folds ) {
+					my ( $fold_type, $imposition ) = $key =~ /(.*)-(\d+)out$/;
+					push @{$makereadies{$$SigImpo{folding_results}{Equipment}->id()}}, $fold_type;
+				} # end foreach
 			} else {
 $openprint::log->error("No folds from sigimpo");
 			} # end if
@@ -1409,12 +1411,13 @@ sub calc {
 
 		my @signatures = $Project->signatures( { sort=> 1 });
 		my @Signature_Impositions;
-		foreach ( @signatures ) {
-			my $sig_specs = openprint::service::get_specs_ref( $Project, $_ );
+		foreach my $sig_id ( @signatures ) {
+			my $sig_specs = openprint::service::get_specs_ref( $Project, $sig_id );
 			next if ! $$sig_specs{'txtImposition'.$qty_index};
 			my $i = new openprint::Imposition();
 			$i->load( $sig_specs, $qty_index );
 			push @Signature_Impositions, $i;
+			$$i{service_id} = $sig_id;
 
 			if ( $$specs{"chkOverrideFold-$$sig_specs{'SignatureIndex'}-$qty_index"} ne 'Y' ) {
 				foreach my $index ( 1 .. 4 ) {
