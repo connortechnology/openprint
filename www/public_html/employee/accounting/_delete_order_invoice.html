@@ -7,7 +7,7 @@
 		<textarea name="reason" placeholder="Enter a reason for the deletion"></textarea>
 		<p class="buttons">
 		<? echo (  join("\n",
-			button( 'DeleteOI', { onclick=> qq`new Ajax.Updater('Invoices','/employee/accounting/_order_invoices.html', { parameters: \$('OIDeleteForm') } );`,text=>'Remove' } ),
+			button( 'DeleteOI', { onclick=> qq`new Ajax.Updater('Invoices','/employee/accounting/_order_invoices.html', { parameters: \$('OIDeleteForm').serialize(), onSuccess: function(transport){popupWin.close();} } );`,text=>'Remove' } ),
 			button( 'CancelOI', { onclick=>'popupWin.close();', text=>'Cancel' } )
 			); ) ?>
 	</p>

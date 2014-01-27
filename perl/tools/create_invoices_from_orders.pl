@@ -29,11 +29,8 @@ my $ac = sql::start_transaction( $dbh );
 foreach my $Order ( openprint::Order->find( 'invoice_id is null'=>0 ) ) {
 	next if ! $Order->invoice_id();
 
-	if ( $Order->invoice_id() =~ /\D/ ) {
-		next if openprint::Invoice->find_one(num=>$Order->invoice_id());
-	} else {
-		next if openprint::Invoice->find_one(id=>$Order->invoice_id());
-	} # end if
+	next if openprint::Invoice->find_one(num=>$Order->invoice_id(), invoicee_id => $Order->company_id() );
+	next if openprint::Invoice->find_one(id=>$Order->invoice_id(), invoicee_id => $Order->company_id() );
 
 	my ( $invoiced_on ) = sql::execute( undef, undef, 'SELECT invoiced_on FROM Orders where id=?', $Order->id() );
 	if ( ! $invoiced_on ) {
@@ -42,11 +39,10 @@ foreach my $Order ( openprint::Order->find( 'invoice_id is null'=>0 ) ) {
 	} # end if
 
 	my $Invoice = new openprint::Invoice();
-	$_ = $Invoice->save({ num=>$Order->invoice_id(),
+	$_ = $Invoice->save({
+		num=>$Order->invoice_id(),
 		invoicer_id=>6,
 		invoicee_id=>$Order->company_id(),
-		total		=>	$Order->total(),
-		currency_id	=>	$Order->currency_id(),
 		 });
 	if ( $_ ) {
 		$dbh->rollback();
