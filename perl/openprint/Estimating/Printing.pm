@@ -1488,7 +1488,7 @@ if ( 0 ) {
 						} # end if
 					} # end foreach arrangement
 				} else {
-					$openprint::log->error("NO blocks for $$imp{imposition}");
+					$openprint::log->warn("NO blocks for $$imp{imposition}");
                 } # end if
                 if ( $add ) {
                     push @{$dutches{$$imp{'imposition'}}}, $imp;
@@ -1554,7 +1554,7 @@ if ( ! $$I{PaperPrice} ) {
 $log->error("No price for stock ".$B->to_string() );
 } elsif ( ! $$BPrice{'100lb Price'} ) {
 $log->error("No 100lb price for stock ".$B->to_string() );
-$log->error("No 100lb price for stock ".$B->get_price( service=>'Material')->to_string() );
+#$log->error("No 100lb price for stock ".$B->get_price( service=>'Material')->to_string() );
 }
 
                     if (
@@ -2855,6 +2855,25 @@ $openprint::log->debug("Max pages: $max_pages") if DEBUG_FILTERING;
 			#} # end if
 		#} # end foreach I
 		if ( ! @results2 ) {
+			my @lesser_imps = map { $$_{imposition} >= $$sig_specs{'chkOverrideImposition'.$qty_index} ? $_ : () } @results;
+$openprint::log->debug( " first set: " . @lesser_imps );
+			@lesser_imps = map { $$_{imposition} >= $$sig_specs{'chkOverrideImposition'.$qty_index} ? $_ : () } openprint::imposition::decrease_imposition( @lesser_imps );
+$openprint::log->debug( " second set: " . @lesser_imps );
+			@results2 = map { $$_{imposition} == $$sig_specs{'txtImposition'.$qty_index} ? $_ : () } @lesser_imps;
+
+			
+			while ( (!@results2) and @lesser_imps ) {
+				my $I = shift @lesser_imps;
+				if ( $$I{imposition} == $$sig_specs{'chkOverrideImposition'.$qty_index} ) {
+					push @results2, $I;
+				} elsif ( $$I{imposition} > $$sig_specs{'chkOverrideImposition'.$qty_index} ) {
+					push @lesser_imps, map { $$_{imposition} >= $$sig_specs{'chkOverrideImposition'.$qty_index} ? $_ : () } openprint::imposition::decrease_imposition( $I );
+				} # end if
+
+$openprint::log->debug( " during set: " . @lesser_imps );
+			} # end while
+	
+if ( 0 ) {
 			my %cuts;
 $log->warn("Getting all impos results: " . @results );
 			foreach my $I ( openprint::imposition::get_all_impositions( map { $$_{imposition} > $$sig_specs{'txtImposition'.$qty_index} ? $_ : () } @results ) ) {
@@ -2867,6 +2886,7 @@ $log->warn("Getting all impos results: " . @results );
 			} # end foreach I
 			@results2 = values %cuts;
 		} # end if
+}
 		@results = @results2;
 	} else {
 		$openprint::log->debug("NOT Override Imposition: $qty_index, " . $$sig_specs{'txtImposition'.$qty_index} . ' ' . $$sig_specs{'chkOverrideImposition'.$qty_index} ) if DEBUG_FILTERING;
