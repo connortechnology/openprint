@@ -50,7 +50,7 @@
 						);
 					if ( ( $session{'user_type'} eq 'A' ) or openprint::usergroup::is_user_in( ['Accounting','SalesAdmin','Sales'], $session{'user_id'} ) ) {
 						$html .= '<td class="Price">'.openprint::Currency::format( defined $C->cost() ? $C->cost() : 0 ) . '/100lb</td>';
-						$html .= '<td class="Price">'.openprint::Currency::format( defined $C->value() ? $C->Value() : 0 ).'</td>';
+						$html .= '<td class="Price">'.openprint::Currency::format( defined $C->value() ? $C->value() : 0 ).'</td>';
 						$$variable{'value_total'} += $C->value();
 					} # end if
 					$html .= '<td class="buttons">';

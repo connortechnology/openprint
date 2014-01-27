@@ -36,8 +36,8 @@ function sig_popup(signature_id) {
 }
 
 function category_onchange(ddm) {
-	new Ajax.Updater( 'equipment_id', '/includes/_equipment.html', { parameters: { category_id: ddm.value, selected_id: $('equipment_id').value } } );
-	new Ajax.Updater( 'user_id', '/includes/_users.html', { parameters: { usergroup: ddm.options[ddm.selectedIndex].text, type: [ 'E','A' ], selected_id: $('user_id').value } } );
+	new Ajax.Updater( 'equipment_id', '/includes/_equipment.html', { parameters: { 'category_id any': ddm.value, selected_id: $('equipment_id').value } } );
+	new Ajax.Updater( 'user_id', '/includes/_users.html', { parameters: { 'usergroup any': ddm.options[ddm.selectedIndex].text, type: [ 'E','A' ], selected_id: $('user_id').value } } );
 } // end function category_onchange
 
 	var current_input;
