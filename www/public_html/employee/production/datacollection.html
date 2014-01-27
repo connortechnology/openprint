@@ -51,7 +51,7 @@ function category_onchange(ddm) {
 	<div class="leftColumn">
 		<ul>
 			<li><label>Docket</label>
-				<? echo ( ssi::input(type=>'cardinal', name=>'docket', id=>'docket', onfocus=>'switch_inputs(this);', onkeyup=>q`if(this.value.length>=2){new Ajax.Request('_datacollection.json', { parameters: { docket: this.value } } );}`, value=>$param{docket} ); ) ?>
+				<? echo ( input(type=>'cardinal', name=>'docket', id=>'docket', onfocus=>'switch_inputs(this);', onkeyup=>q`if(this.value.length>=2){new Ajax.Request('_datacollection.json', { parameters: { docket: this.value } } );}`, value=>$param{docket} ); ) ?>
 				<span class="error" id="docket_alert"></span>
 			</li>
 			<li><label>Company</label><span id="company_name"><? echo ( 
@@ -65,26 +65,28 @@ function category_onchange(ddm) {
 			<select name="category_id" id="category_id" onchange="category_onchange(this);">
 				<option value="">All</option>
 <? echo (
-	return ssi::make_drop_down( openprint::Equipment_Category->dropdown(order=>'lower(name)'), $session{'/employee/production/datacollection.html?category_id'} );
+	make_drop_down( openprint::Equipment_Category->dropdown(order=>'lower(name)'), $session{'/employee/production/datacollection.html?category_id'} );
 ) ?>
 			</select>
 			</li>		
 			<li><label>Operator</label><select name="user_id" id="user_id"><option value="">select</option>
-				<? echo ( ssi::make_drop_down( openprint::User->dropdown(order=>'lower(firstname),lower(lastname)',type=>['E','A'] ), 
+				<? echo ( make_drop_down( openprint::User->dropdown(order=>'lower(firstname),lower(lastname)',type=>['E','A'] ), 
 $session{'/employee/production/datacollection.html?user_id'} ? $session{'/employee/production/datacollection.html?user_id'} : $session{user_id} ); ) ?>
 				</select>
 			</li>
 			<li><label>Form</label>
-				<? echo ( ssi::input(type=>'cardinal', name=>'form', id=>'form', onfocus=>'switch_inputs(this);', value=>$param{form} ); ) ?>
-				<? echo ( ssi::button( 'EntireProject', { onclick=>q`$('form').value='Entire Project';`, text=>'All' } ); ) ?>
+				<? echo ( join("\n",
+							input(type=>'cardinal', name=>'form', id=>'form', onfocus=>'switch_inputs(this);', value=>$param{form} ),
+							button( 'EntireProject', { onclick=>q`$('form').value='Entire Project';`, text=>'All' } ),
+				); ) ?>
 			</li>
 			<li><label>Version</label>
-				<? echo ( ssi::input(type=>'text', name=>'version', id=>'version', onfocus=>'switch_inputs(this);', value=>$param{version} ); ) ?></li>
+				<? echo ( input(type=>'text', name=>'version', id=>'version', onfocus=>'switch_inputs(this);', value=>$param{version} ); ) ?></li>
 			<li><label>Quantity</label>
-				<? echo ( ssi::input(type=>'cardinal', name=>'quantity', id=>'quantity', onfocus=>'switch_inputs(this);', value=>$param{quantity} ); ) ?></li>
+				<? echo ( input(type=>'cardinal', name=>'quantity', id=>'quantity', onfocus=>'switch_inputs(this);', value=>$param{quantity} ); ) ?></li>
 			<li><label>Equipment</label>
 				<select name="equipment_id" id="equipment_id">
-					<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->strid() . ' : '.$_->name() } openprint::Equipment->find('order'=>'lower(strid)') ], $session{'/employee/production/datacollection.html?equipment_id'} ); ) ?>
+					<? echo ( make_drop_down( [ map { $_->id(), $_->strid() . ' : '.$_->name() } openprint::Equipment->find('order'=>'lower(strid)') ], $session{'/employee/production/datacollection.html?equipment_id'} ); ) ?>
 				</select>
 			</li>
 			<li><label>Comment</label><textarea name="comment" id="comment"></textarea></li>
@@ -96,35 +98,37 @@ $session{'/employee/production/datacollection.html?user_id'} ? $session{'/employ
 $ipoo = 0;
 				my $event = $ipoo ? 'ontouch' : 'onclick';
 				return join('<br/>',
-				join("\n", map { ssi::button($_, { $event=>qq`current_input.value += '$_';` } ) } ( 1 .. 3 ) ),
-				join("\n", map { ssi::button($_, { $event=>qq`current_input.value += '$_';` } ) } ( 4 .. 6 ) ),
-				join("\n", map { ssi::button($_, { $event=>qq`current_input.value += '$_';` } ) } ( 7 .. 9 ) ),
+				join("\n", map { button($_, { $event=>qq`current_input.value += '$_';` } ) } ( 1 .. 3 ) ),
+				join("\n", map { button($_, { $event=>qq`current_input.value += '$_';` } ) } ( 4 .. 6 ) ),
+				join("\n", map { button($_, { $event=>qq`current_input.value += '$_';` } ) } ( 7 .. 9 ) ),
 				join('', 
-					ssi::button('C', { $event=>qq`current_input.value = '';`, title=>'Clear' } ),
-					ssi::button('0', { $event=>qq`current_input.value += '0';` } ),
-					ssi::button('D', { $event=>qq`current_input.value = current_input.value.substr(0,current_input.value.length-1);`,title=>'Delete' } ),
+					button('C', { $event=>qq`current_input.value = '';`, title=>'Clear' } ),
+					button('0', { $event=>qq`current_input.value += '0';` } ),
+					button('D', { $event=>qq`current_input.value = current_input.value.substr(0,current_input.value.length-1);`,title=>'Delete' } ),
 				),
 				join('', 
-					ssi::button('Minus', { $event=>qq`current_input.value += '-';`, text=>'-' } ),
-					ssi::button('Plus', { $event=>qq`current_input.value += '+';`, text=>'+' } ),
-					ssi::button('Refresh', { $event=>qq`window.location.reload();`, text=>'R', title=>'Refresh' } ),
+					button('Minus', { $event=>qq`current_input.value += '-';`, text=>'-' } ),
+					button('Plus', { $event=>qq`current_input.value += '+';`, text=>'+' } ),
+					button('Refresh', { $event=>qq`window.location.reload();`, text=>'R', title=>'Refresh' } ),
 				),
 				join('', 
-					ssi::button('Multiply', { $event=>qq`current_input.value += '*';`, text=>'*' } ),
-					ssi::button('Divide', { $event=>qq`current_input.value += '/';`, text=>'/' } ),
-					ssi::button('Equals', { $event=>qq`current_input.value = eval(current_input.value);`, text=>'=' } ),
+					button('Multiply', { $event=>qq`current_input.value += '*';`, text=>'*' } ),
+					button('Divide', { $event=>qq`current_input.value += '/';`, text=>'/' } ),
+					button('Equals', { $event=>qq`current_input.value = eval(current_input.value);`, text=>'=' } ),
 				),
 			); ) ?>
 	</div>
 </fieldset>
+<div class="SignatureArea">
 <fieldset><legend>Signature</legend>
 <embed id="signature" src="/images/signature.svg?v=4" type="image/svg+xml"/>
 <input type="hidden" name="signature"/>
 </fieldset>
+</div>
 <p class="buttons">
 <? echo ( join('',
-			ssi::button('Clear', { onclick=>q`top.clearSignature();$('signature').value='';` } ),
-			ssi::button('Submit', { onclick=>'form_submit();' } ),
+			button('Clear', { onclick=>q`top.clearSignature();$('signature').value='';` } ),
+			button('Submit', { onclick=>'form_submit();' } ),
 			); ) ?>
 </p>
 </form>
@@ -135,19 +139,19 @@ $ipoo = 0;
 		<li><label>When</label>
 			<span class="DateselectorT">
 			<? echo ( 
-				ssi::date_select_session( '/employee/production/datacollection.html', 'when_start', { onchange=>q`load_log();`, with_today=>1 } );
+				date_select_session( '/employee/production/datacollection.html', 'when_start', { onchange=>q`load_log();`, with_today=>1 } );
 			) ?>
 			</span>to
 			<span class="DateselectorT">
 			<? echo ( 
-				ssi::date_select_session( '/employee/production/datacollection.html', 'when_end', { onchange=>q`load_log();`, with_today=>1 } );
+				date_select_session( '/employee/production/datacollection.html', 'when_end', { onchange=>q`load_log();`, with_today=>1 } );
 			) ?>
 			</span>
 		</li>
 		<li><label>Equipment</label>
 			<select name="equipment_id" onchange="load_log();">
 				<option value="">All</option>
-				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->strid() . ' : '.$_->name() } openprint::Equipment->find('order'=>'lower(strid)') ], $session{'/employee/production/datacollection.html?equipment_id'} ); ) ?>
+				<? echo ( make_drop_down( [ map { $_->id(), $_->strid() . ' : '.$_->name() } openprint::Equipment->find('order'=>'lower(strid)') ], $session{'/employee/production/datacollection.html?equipment_id'} ); ) ?>
 			</select>
 		</li>
 		<li><label>Company</label>
@@ -162,18 +166,18 @@ $ipoo = 0;
 			<select name="employee_id" size="1" onchange="load_log();">
 				<option value="">All Employees</option>
 	<? echo (
-		ssi::make_drop_down( openprint::User->dropdown( order=>'lower(firstname),lower(lastname)', type=>['E','A'] ),
+		make_drop_down( openprint::User->dropdown( order=>'lower(firstname),lower(lastname)', type=>['E','A'] ),
 		$session{'/employee/production/datacollection.html?employee_id'} );
 	)?>
 			</select>
 		</li>
 		<li><label>Quantity</label>
-			<? echo ( ssi::input( type=>'cardinal', name=>'quantity_start', id=>'quantity_start', onkeydown=>'if(event.keyCode==13){load_log();}' ); ) ?> to
-			<? echo ( ssi::input( type=>'cardinal', name=>'quantity_end', id=>'quantity_end', onkeydown=>'if(event.keyCode==13){load_log();}' ); ) ?>
+			<? echo ( input( type=>'cardinal', name=>'quantity_start', id=>'quantity_start', onkeydown=>'if(event.keyCode==13){load_log();}' ); ) ?> to
+			<? echo ( input( type=>'cardinal', name=>'quantity_end', id=>'quantity_end', onkeydown=>'if(event.keyCode==13){load_log();}' ); ) ?>
 		</li>
 		<li><label>Limit Results</label>
 			<select name="limit" size="1" onchange="load_log();">
-				<? echo ( ssi::make_drop_down( [ '', 'All', 10,10, 100, 100, 1000, 1000 ], $session{'/employee/production/datacollection.html?limit'} ); ) ?>
+				<? echo ( make_drop_down( [ '', 'All', 10,10, 100, 100, 1000, 1000 ], $session{'/employee/production/datacollection.html?limit'} ); ) ?>
 			</select>
 		</li>
 	</ul>

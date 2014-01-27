@@ -24,7 +24,7 @@ require openprint::service;
 
 use vars qw( @folds %fold_types );
 
-use constant DEBUG => 0;
+use constant DEBUG => 1;
 use constant DEBUG_NEEDS => 0;
 
 my @equipment;
@@ -506,14 +506,16 @@ $openprint::log->debug("Not adding because previousimposition != sigImposition")
 	#foreach my $ss_id ( $Project->signatures() ) {
 	# We assume that Signature_Impositions is all impos that come before
 	foreach my $SigImpo ( @{$Signature_Impositions} ) {
+		next if $$SigImpo{service_id} >= $signature_service_index;
 		if ( $$SigImpo{folding_results} ) {
+$openprint::log->error("folds from sigimpo");
 			my $Folds = $$SigImpo{folding_results}{Folds};
 			if ( $Folds ) {
 
-			foreach my $key ( keys %$Folds ) {
-				my ( $fold_type, $imposition ) = $key =~ /(.*)-(\d+)out$/;
-				push @{$makereadies{$$SigImpo{folding_results}{Equipment}->id()}}, $fold_type;
-			} # end foreach
+				foreach my $key ( keys %$Folds ) {
+					my ( $fold_type, $imposition ) = $key =~ /(.*)-(\d+)out$/;
+					push @{$makereadies{$$SigImpo{folding_results}{Equipment}->id()}}, $fold_type;
+				} # end foreach
 			} else {
 $openprint::log->error("No folds from sigimpo");
 			} # end if
@@ -804,7 +806,7 @@ $openprint::log->debug("Templatetype: $$sig_specs{'rdbTemplateType'}") if DEBUG;
 						if ( $Fold ) {
 # Need to check feed width
 $openprint::log->debug("Has a fold, doing extra checks") if DEBUG;
-							if ( my $max_feed_width = $Equipment->specification('Maximum Feed Width') ) {
+							if ( my $max_feed_width = $Equipment->specification('Maximum Feed Width', $$Imposition{imposition} ) ) {
 								if ( $Equipment->specification('Orientation') ) {
 									if (						
 											( $Equipment->specification('Orientation') eq 'Portrait' and $Imposition->layout_width() <= $Imposition->layout_height() ) or
@@ -1122,7 +1124,7 @@ $openprint::log->debug("Folds: $set_index : $key " . $impo_qty );
 
 				my %setupPrice = openprint::service::get_price_object( $Fold->type().'MakeReady', $imposition, $Equipment );
 				if ( ! %setupPrice ) {
-					$openprint::log->debug("No MakeReady for " . $Fold->type().'MakeReady' . ' ' . $imposition ) if DEBUG;
+					$openprint::log->debug("No MakeReady for " . $Fold->type().'MakeReady' . ' ' . $imposition . ' out on ' . $Equipment->strid() ) if DEBUG;
 					%setupPrice = openprint::service::get_price_object( 'FoldMakeReady', $imposition, $Equipment );
 				} else {
 					$openprint::log->debug("Got MakeReady for " . $Fold->type().'MakeReady' . ' imp:' . $imposition . " \$$setupPrice{Price} $setupPrice{units}" ) if DEBUG;
@@ -1409,12 +1411,13 @@ sub calc {
 
 		my @signatures = $Project->signatures( { sort=> 1 });
 		my @Signature_Impositions;
-		foreach ( @signatures ) {
-			my $sig_specs = openprint::service::get_specs_ref( $Project, $_ );
+		foreach my $sig_id ( @signatures ) {
+			my $sig_specs = openprint::service::get_specs_ref( $Project, $sig_id );
 			next if ! $$sig_specs{'txtImposition'.$qty_index};
 			my $i = new openprint::Imposition();
 			$i->load( $sig_specs, $qty_index );
 			push @Signature_Impositions, $i;
+			$$i{service_id} = $sig_id;
 
 			if ( $$specs{"chkOverrideFold-$$sig_specs{'SignatureIndex'}-$qty_index"} ne 'Y' ) {
 				foreach my $index ( 1 .. 4 ) {
