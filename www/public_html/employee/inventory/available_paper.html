@@ -90,7 +90,6 @@ Please select a Paper to view/edit.<br>
 		foreach my $Stock ( @Papers ) {
 			# Load up the filter
 			$filters{$option}{$Stock->$lower_option()} = $$Stock{$option_id} if $$Stock{$option_id};
-$log->debug("$option $lower_option = $option_id $$Stock{$option_id}");
 		} # end foreach $Stock
 		if ( $session{'/employee/inventory/available_paper.html?'.$option_id} ) {
 			@Papers = map { $$_{$option_id} eq $session{'/employee/inventory/available_paper.html?'.$option_id} ? $_ : () } @Papers;
