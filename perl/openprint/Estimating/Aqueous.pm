@@ -16,7 +16,7 @@
 
 package openprint::Estimating::Aqueous;
 use strict;
-use warnings;
+#use warnings;
 
 require sql;
 require openprint::service;
@@ -135,15 +135,16 @@ sub calc {
 	my ( $log, $dbh, $variable, $project_index, $service_index, $specs ) = @_;
 
 	my $status = 'calculated';
+	$$specs{alert} = '';
 
 	my $Project = new openprint::Project( $project_index );
 
 	@all_equipment = openprint::Equipment->find( Specifications => {'Aqueous Capable'=>['Y','When Printing']}, useinestimating=>1, order=>'lower(strName)') if ! @all_equipment;
 
 	foreach my $qty_index ( $Project->quantity_indexes() ) {
-		$$specs{"Markup$qty_index"} =~ s/[^\d\.\-]//g;
-		$$specs{"txtPrice$qty_index"} =~ s/[^\d\.]//g;
-		$$specs{"txtQuantity$qty_index"} =~ s/[^\d\.]//g;
+		$$specs{"Markup$qty_index"} =~ s/[^\d\.\-]//g if $$specs{"Markup$qty_index"};
+		$$specs{"txtPrice$qty_index"} =~ s/[^\d\.]//g if $$specs{"txtPrice$qty_index"};
+		$$specs{"txtQuantity$qty_index"} =~ s/[^\d\.]//g if $$specs{"txtQuantity$qty_index"};
 		$$specs{"txtQuantity$qty_index"} = $Project->quantity($qty_index) if ! $$specs{"txtQuantity$qty_index"};
 		if ( ! $$specs{"txtQuantity$qty_index"} > 0 ) {
 			next;

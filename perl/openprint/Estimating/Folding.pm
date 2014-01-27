@@ -24,7 +24,7 @@ require openprint::service;
 
 use vars qw( @folds %fold_types );
 
-use constant DEBUG => 0;
+use constant DEBUG => 1;
 use constant DEBUG_NEEDS => 0;
 
 my @equipment;
@@ -1122,7 +1122,7 @@ $openprint::log->debug("Folds: $set_index : $key " . $impo_qty );
 
 				my %setupPrice = openprint::service::get_price_object( $Fold->type().'MakeReady', $imposition, $Equipment );
 				if ( ! %setupPrice ) {
-					$openprint::log->debug("No MakeReady for " . $Fold->type().'MakeReady' . ' ' . $imposition ) if DEBUG;
+					$openprint::log->debug("No MakeReady for " . $Fold->type().'MakeReady' . ' ' . $imposition . ' out on ' . $Equipment->strid() ) if DEBUG;
 					%setupPrice = openprint::service::get_price_object( 'FoldMakeReady', $imposition, $Equipment );
 				} else {
 					$openprint::log->debug("Got MakeReady for " . $Fold->type().'MakeReady' . ' imp:' . $imposition . " \$$setupPrice{Price} $setupPrice{units}" ) if DEBUG;
