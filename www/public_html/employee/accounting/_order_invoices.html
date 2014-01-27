@@ -1,3 +1,4 @@
+
 <? echo ( my $html;
     my $can_invoice = $$variable{Order}->can_invoice();
     foreach my $OI ( $$variable{Order}->Invoices() ) {
@@ -8,9 +9,8 @@ $html .= '<br/>';
     } # end foreach
 
     if ( $can_invoice ) {
-        $html .= '</li><li class="unprintable invoice_id"><label>New Invoice</label><input type="text" id="invoice_id" name="invoice_id" /></span>';
-            $html .= button( 'Invoice', { onclick=>q`if($('invoice_id').value) {f1.btnFunction.value='Invoice';f1.submit();}else{alert('Please enter an invoice #');};`, text=>'Add Invoice ID' } );
-        $html .= '</li>';
+        $html .= '<input type="text" id="invoice_id" name="invoice_id" />';
+		$html .= button( 'Invoice', { onclick=>q`if($('invoice_id').value) {f1.btnFunction.value='Invoice';f1.submit();}else{alert('Please enter an invoice #');};`, text=>'Add Invoice ID' } );
     } # end if can_invoice
     return $html;
 ) ?>
