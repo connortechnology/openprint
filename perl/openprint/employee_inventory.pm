@@ -1025,9 +1025,12 @@ sub check_out {
 
 	my $available_qty = $Paper->in_stock();
 	my $units = $Paper->type() eq 'Roll' ? 'lbs' : 'sheets';
-	$project_id =~ s/\D//g;
-	$docket =~ s/\D//g;
-	my @Projects = openprint::Project->find( 'id'=>$project_id, 'docket'=>$docket ) if $project_id or $docket;
+	$project_id = openprint::Project->transform( 'id', $project_id );
+	$docket = openprint::Project->transform( 'docket', $docket );
+	my @Projects = openprint::Project->find( 
+		( $project_id ? ( id=>$project_id ) : () ),
+		( $docket ? ( docket=>$docket ) : () ),
+	) if $project_id or $docket;
 
 	my @skids;
 	if ( $skid_id ) {
@@ -1166,8 +1169,8 @@ sub allocate {
 	my @Projects = openprint::Project->find( ( $project_id ? ( id=>$project_id ) : () ), ( $docket ? ( docket=>$docket ) : () ) ) if $project_id or $docket;
 
 	if ( $docket and ! @Projects ) {
-		if ( my @Orders = openprint::Order->find(docket=>$docket) ) {
-			@Projects = $Orders[0]->Projects();
+		if ( my $Order = openprint::Order->find_one(docket=>$docket) ) {
+			@Projects = $Order->Projects();
 		} # end if
 	} # end if
 	if ( ! @Projects ) {
@@ -1942,7 +1945,7 @@ sub _paper_allocations {
 		$param{'skid_id'} =~ s/\D//g;
 		$param{'Docket'} =~ s/\D//g;
 		$param{'AllocationQuantity'} =~ s/[^\d\-]//g;
-		my @Projects = openprint::Project->find( 'docket'=>$param{'Docket'} ) if $param{'Docket'};
+		my @Projects = openprint::Project->find( docket=>$param{Docket} ) if $param{Docket};
 		if ( ! @Projects ) {
 			$variable{'error'} .= "Docket $param{'Docket'} not found.";
 		} else {
@@ -1960,7 +1963,9 @@ sub _paper_allocations {
 sub _skid_allocations {
     if ( $param{'action'} eq 'Add' ) {
         my $Paper = new openprint::Paper( $param{'paper_id'} );
-        my @Projects = openprint::Project->find( 'id'=>$param{'ProjectID'}, 'docket'=>$param{'Docket'} ) if $param{'ProjectID'} or $param{'Docket'};
+        my @Projects = openprint::Project->find( 
+			( $param{ProjectID} ? ( id=>$param{ProjectID} ) : () ),
+			( $param{Docket} ? ( docket=>$param{Docket} ) : () ) ) if $param{ProjectID} or $param{Docket};
         my $Skid = new openprint::Skid( $param{'skid_id'} );
 
         if ( ! @Projects ) {

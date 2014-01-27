@@ -64,7 +64,7 @@
 					$PA->units(),
 					$PA->Condition()->name(),
 					);
-				$html .= button( 'Delete'.$$PA{id}, { onclick=>qq`popup_window('_deallocate_popup.html?allocation_id=$$PA{id}', '' { width: 400 } );`, text=>'Delete' } );
+				$html .= button( 'Delete'.$$PA{id}, { onclick=>qq`popup_window('_deallocate_popup.html?allocation_id=$$PA{id}', '', { width: 400 } );`, text=>'Delete' } );
 				$html .= '</td></tr>',
 
 				$rowclass = $rowclass ? '' : ' class="colRow"';

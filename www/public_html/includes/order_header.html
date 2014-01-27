@@ -7,25 +7,14 @@
 			<li><label>Order ID</label><? echo ( $$variable{Order}->id() ) ?></li>
 		<? if ( $$variable{Order}->docket() ) ?>
 			<li><label>Docket</label><? echo ( $$variable{Order}->docket(); ) ?></li>
+			<li><label>Invoices</label><div id="Invoices"><?include('/employee/accounting/_order_invoices.html')?></div></li>
 		<? endif ( $$variable{Order}->docket() ) ?>
-			<? if ( $$variable{Order}->invoice_id() ) ?>
-			<li><label>Invoice ID</label><? echo ( $$variable{Order}->Invoice()->link_to() ) ?></li>
-			<li><label>Date Invoiced</label><? echo ( format_datetime( $$variable{Order}->invoiced_on() ) ) ?></li>
-			<? else ( $$variable{Order}->invoice_id() ) ?>
-<? if ( $$variable{Order}->status() ne 'Incomplete' ) ?>
-<? if ( ( $session{user_type} eq 'A' ) or ( $session{user_type} eq 'E' and openprint::usergroup::is_user_in( ['Accounting'], $session{'user_id'} ) ) ) ?>
-	<li class="unprintable invoice_id">
-        <label>Invoice ID</label><input type="text" id="invoice_id" name="invoice_id" /></span>
-        <? echo ( button( 'Invoice', { onclick=>q`if($('invoice_id').value) {f1.btnFunction.value='Invoice';f1.submit();}else{alert('Please enter an invoice #');};`, text=>'Add Invoice ID' } ); ) ?>
-    </li>
-<? endif ( ( $session{user_type} eq 'A' ) or ( $session{user_type} eq 'E' and openprint::usergroup::is_user_in( ['Accounting'], $session{'user_id'} ) ) ) ?>
-<? endif ( $$variable{Order}->status() ne 'Incomplete' ) ?>
-			<? endif ( $$variable{Order}->invoice_id() ) ?>
 			<li><label>Created</label><? echo ( format_date( $$variable{Order}->created_on() ) ) ?></li>
 			<li><label>Status</label><? echo ( $$variable{Order}->status() ) ?></li>
 		</ul></div>
 	</fieldset>
-	</div><div id="BillingInformation">
+	</div>
+	<div id="BillingInformation">
 	<fieldset><legend>Billing Information</legend>
 		<div class="content"><ul>
 			<? if ( $$variable{Order}->company_name() ) ?>

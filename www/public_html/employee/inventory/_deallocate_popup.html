@@ -13,8 +13,8 @@
 			<p class="buttons">
 			<? echo ( 
 				my $html = '';
-				$html .= button( 'DeAllocate',{ onclick=> qq`new Ajax.Updater('Allocations','_paper_allocations.html', { parameters: { allocation_id: '$param{allocation_id}', reason: \$('reason').value, paper_id: '`. $$variable{'Allocation'}->Paper()->id() . q`', action: 'Delete Allocation' }, onSuccess: function(transport){contentWin.destroy();}, evalScripts: true } );`, text=>'Delete' } );
-				$html .= button( 'CancelAllocate', { onclick=>'contentWin.destroy();', text=>'Cancel' } ); 
+				$html .= button( 'DeAllocate',{ onclick=> qq`new Ajax.Updater('Allocations','_paper_allocations.html', { parameters: { allocation_id: '$param{allocation_id}', reason: \$('reason').value, paper_id: '`. $$variable{'Allocation'}->Paper()->id() . q`', action: 'Delete Allocation' }, onSuccess: function(transport){popupWin.destroy();}, evalScripts: true } );`, text=>'Delete' } );
+				$html .= button( 'CancelAllocate', { onclick=>'popupWin.destroy();', text=>'Cancel' } ); 
 				return $html;
 			) ?>
 			</p>

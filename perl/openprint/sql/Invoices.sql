@@ -3,7 +3,7 @@ CREATE TABLE Invoices (
     invoicer_id integer NOT NULL,
     invoicee_id integer NOT NULL,
     posted_on date,
-    due_on date NOT NULL,
+    due_on date,
     external_notes text,
     internal_notes text,
     monthly_interest numeric(10,2),

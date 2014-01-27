@@ -82,18 +82,20 @@ sub details {
 	} elsif ( $param{'btnFunction'} eq 'Invoice' ) {
 		$param{invoice_id} = openprint::Invoice->transform( 'num', $param{invoice_id} );
 		if ( $param{invoice_id} ) {
-			my $Invoice = openprint::Invoice->find_one(num=>$param{invoice_id});
+			my $Invoice = openprint::Invoice->find_one(num=>$param{invoice_id}, invoicee_id=>$Order->company_id() );
 			if ( ! $Invoice ) {
 				$Invoice = new openprint::Invoice();
 				$variable{error} .= $Invoice->save({
 					invoicer_id=>$config{owner_id},
 					invoicee_id=>$Order->company_id(),
-					total=>$Order->total(),
 					num=>$param{invoice_id},
 					currency_id =>  $Order->currency_id(),
+					total		=>	$param{amount},
 					});
 			} # end if ! Invoice
-			$variable{error} .= $Order->save({ invoice_id=> $Invoice->id() });
+			my $OI = new openprint::Order_Invoice();
+			$variable{error} .= $OI->save({ order_id=>$$Order{id}, invoice_id=>$$Invoice{id} });
+			#$variable{error} .= $Order->save({ invoice_id=> $Invoice->id() });
 			if ( ! $variable{error} ) {
 				$variable{ExternalRedirect} = '/employee/accounting/details.html?order_id='.$Order->id();
 			} # end if
@@ -615,6 +617,23 @@ sub credit_application {
 	} # end if
 
 } # end sub credit_application
+
+sub _order_invoices {
+	$variable{Order} = new openprint::Order( $param{order_id} );
+	if ( $param{action} eq 'Delete' ) {
+		my $OI = openprint::Order_Invoice->find_one( { order_id=>$param{order_id}, invoice_id=>$param{invoice_id} } );
+		if ( $OI ) {
+			$OI->Order()->add_log( 'Invoice ' . $OI->Invoice()->link_to() . ' removed. ' . $param{reason} );
+			$OI->delete();
+		} else {
+			$variable{error} = 'Invoice not found.  Not deleted<br/>';
+		} # end if
+	} # end if action
+} # end sub _order_invoices
+
+sub _delete_order_invoice {
+	$variable{OI} = openprint::Order_Invoice->find_one( { order_id=>$param{order_id}, invoice_id=>$param{invoice_id} } );
+} # end sub _delete_order_invoice
 
 1;
 __END__

@@ -168,7 +168,7 @@ sub load_used {
 	$$self{'dutch_orientation'} = $$self{'image_orientation'} eq 'Vertical' ? 'Horizontal' : 'Vertical';
 	$$self{'bleed_size'} = $$specs{'ddmBleedSize'.$qty_index};
 	if ( ! $$self{'Press'} ) {
-		if ( $$self{'UsePress'} ) {
+		if ( $$specs{'UsePress'} ) {
 			$$self{'Press'} = openprint::Equipment->find_one('strid'=>$$specs{'UsePress'});
 			if ( ! $$self{'Press'} ) {
 				$openprint::log->error("No Press found for $qty_index " . $$specs{'UsePress'} );

@@ -1321,6 +1321,13 @@ onDestroy: function(eventName, win) {
 		popupWin.setHTMLContent( options.content );
 	} else {
 		if ( parameters ) {
+			if ( parameters == '[object HTMLFormElement]' ) {
+				var p = parameters.serialize(true);
+				if ( p )
+					parameters = $H(p).toQueryString();
+			} else if ( typeof parameters == 'object' ) {
+				parameters = $H(parameters).toQueryString();
+			}
 			url += '?' + parameters;
 		}
 		popupWin.setAjaxContent(url, null , true);

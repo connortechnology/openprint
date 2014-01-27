@@ -39,7 +39,7 @@
 			$html .= '</fieldset>';
 		} else {
 			my $Service = $$variable{Project}->Service( $$variable{ServiceIndex} );
-			if ( $Service->Type()->name() eq 'CustomService' ) {
+			if ( $Service->ServiceType()->name() eq 'CustomService' ) {
 			} else {
 $log->error("No summary urul for " . $$variable{Project}->id() . " service " . $$variable{ServiceName} . $Service->Type()->to_string() );
 			} # end if

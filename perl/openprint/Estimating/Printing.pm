@@ -29,6 +29,8 @@ use constant DEBUG_PRICE_DECISIONS => 0;
 use constant DEBUG_INKS => 0;
 use constant DEBUG_STOCK => 0;
 use constant COMPARISON_LOG => 0;
+use constant USE_SUBSIG => 0;
+use constant USE_PRICE_CACHE => 1;
 
 my $master_time;
 my %special_colours;
@@ -1486,7 +1488,7 @@ if ( 0 ) {
 						} # end if
 					} # end foreach arrangement
 				} else {
-					$openprint::log->error("NO blocks for $$imp{imposition}");
+					$openprint::log->warn("NO blocks for $$imp{imposition}");
                 } # end if
                 if ( $add ) {
                     push @{$dutches{$$imp{'imposition'}}}, $imp;
@@ -1552,7 +1554,7 @@ if ( ! $$I{PaperPrice} ) {
 $log->error("No price for stock ".$B->to_string() );
 } elsif ( ! $$BPrice{'100lb Price'} ) {
 $log->error("No 100lb price for stock ".$B->to_string() );
-$log->error("No 100lb price for stock ".$B->get_price( service=>'Material')->to_string() );
+#$log->error("No 100lb price for stock ".$B->get_price( service=>'Material')->to_string() );
 }
 
                     if (
@@ -2027,11 +2029,11 @@ sub calc {
 		$$specs{'alert'} .= 'Please enter width and height<br/>';
 		return $$specs{'Status'} = 'uncalculated';
 	} # end if
-	if ( ! $$specs{txtSignatureType} ) {
-	if ( ! ( $$specs{'txtFinalWidth'} and $$specs{'txtFinalHeight'} ) ) {
-		$$specs{'alert'} .= 'Please enter finished width and height<br/>';
-		return $$specs{'Status'} = 'uncalculated';
-	} # end if
+
+	if ( $Project->Type()->name() eq 'PressSheetCombination' ) {
+		@$specs{'txtFinalWidth','txtFinalHeight'} = @$specs{'txtWidth','txtHeight'};
+	} else {
+$openprint::log->debug("Type: " . $Project->Type()->name());
 	} # end if
 
 	if ( ! $$specs{txtSignatureType} ) {
@@ -2055,10 +2057,6 @@ sub calc {
 	} elsif ( $$specs{'txtFinalHeight'} and ( $$specs{'txtHeight'} < $$specs{'txtFinalHeight'} ) ) {
 		$$specs{'alert'} .= 'Flat Height must be greater than Final Height.<br/>';
 		return $$specs{'Status'} = 'uncalculated';
-	} # end if
-
-	if ( $Project->Type()->name() eq 'PressSheetCombination' ) {
-		@$specs{'txtFinalWidth','txtFinalHeight'} = @$specs{'txtWidth','txtHeight'};
 	} # end if
 
 	if ( ( ! $$specs{'txtSignatureType'} ) and ! ( $$specs{'txtFinalHeight'} and $$specs{'txtFinalWidth'} ) ) {
@@ -2857,6 +2855,25 @@ $openprint::log->debug("Max pages: $max_pages") if DEBUG_FILTERING;
 			#} # end if
 		#} # end foreach I
 		if ( ! @results2 ) {
+			my @lesser_imps = map { $$_{imposition} >= $$sig_specs{'chkOverrideImposition'.$qty_index} ? $_ : () } @results;
+$openprint::log->debug( " first set: " . @lesser_imps );
+			@lesser_imps = map { $$_{imposition} >= $$sig_specs{'chkOverrideImposition'.$qty_index} ? $_ : () } openprint::imposition::decrease_imposition( @lesser_imps );
+$openprint::log->debug( " second set: " . @lesser_imps );
+			@results2 = map { $$_{imposition} == $$sig_specs{'txtImposition'.$qty_index} ? $_ : () } @lesser_imps;
+
+			
+			while ( (!@results2) and @lesser_imps ) {
+				my $I = shift @lesser_imps;
+				if ( $$I{imposition} == $$sig_specs{'chkOverrideImposition'.$qty_index} ) {
+					push @results2, $I;
+				} elsif ( $$I{imposition} > $$sig_specs{'chkOverrideImposition'.$qty_index} ) {
+					push @lesser_imps, map { $$_{imposition} >= $$sig_specs{'chkOverrideImposition'.$qty_index} ? $_ : () } openprint::imposition::decrease_imposition( $I );
+				} # end if
+
+$openprint::log->debug( " during set: " . @lesser_imps );
+			} # end while
+	
+if ( 0 ) {
 			my %cuts;
 $log->warn("Getting all impos results: " . @results );
 			foreach my $I ( openprint::imposition::get_all_impositions( map { $$_{imposition} > $$sig_specs{'txtImposition'.$qty_index} ? $_ : () } @results ) ) {
@@ -2869,6 +2886,7 @@ $log->warn("Getting all impos results: " . @results );
 			} # end foreach I
 			@results2 = values %cuts;
 		} # end if
+}
 		@results = @results2;
 	} else {
 		$openprint::log->debug("NOT Override Imposition: $qty_index, " . $$sig_specs{'txtImposition'.$qty_index} . ' ' . $$sig_specs{'chkOverrideImposition'.$qty_index} ) if DEBUG_FILTERING;
@@ -3640,7 +3658,7 @@ $openprint::log->debug("Sigs: $sigs: signatures( @signatures )");
 							$$imp{specs} = $new_specs;
 						} # end if
 						
-						if ( ( ! ( $$imp{pages} % $$price{upq} ) ) and ( ($Press->specification('Folding Capable') ne 'When Printing') and (! $$new_specs{ServiceIndex} ) or (
+						if ( USE_SUBSIG and ( ! ( $$imp{pages} % $$price{upq} ) ) and ( ($Press->specification('Folding Capable') ne 'When Printing') and (! $$new_specs{ServiceIndex} ) or (
 								( ($$new_specs{'chkOverridePageQuantity'.$qty_index} ne 'Y') or ($$new_specs{'PageQuantity'.$qty_index} == $$imp{upq} ) ) and
 								( ($$new_specs{'chkOverrideImposition'.$qty_index} ne 'Y') or ($$new_specs{'txtImposition'.$qty_index} == ($$imp{pages}*$$imp{imposition} / $$price{upq} ) ) ) and
 								( ($$new_specs{'chkOverridePress'.$qty_index} ne 'Y') or ($$new_specs{'ddmPress'.$qty_index} eq $Press->strid()) ) and
@@ -3694,7 +3712,7 @@ $$new_specs{"OverrideStockHeight$qty_index"} = $Paper->height();
 									get_project_price( $Project, $$new_specs{ServiceIndex}, $project, $service_specs, $new_specs, $qty, $qty_index, \@new_possible_presses, $printing_specs, $versions, \%PlateCounts, \%PaperCounts, \%washed_colours, \%previous_forms_cache, \@signatures, $impositions, $other_impositions, undef, $recursion_depth + 1 );
 							} # end if
 							$sig_price = $price_cache{$price_cache_key};
-							#$price_cache{$price_cache_key} = undef;
+							$price_cache{$price_cache_key} = undef if ! USE_PRICE_CACHE;
 							#$imp->display($recursion_depth . " After recurse: $$price{'Comparison Cost'} + $$sig_price{'Comparison Cost'} " );
 							#foreach my $i ( @{$$sig_price{Impositions}} ) {
 								#$i->display($recursion_depth . " After recurse: $$sig_price{'Comparison Cost'} " );

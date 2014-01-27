@@ -804,7 +804,7 @@ $openprint::log->debug("Templatetype: $$sig_specs{'rdbTemplateType'}") if DEBUG;
 						if ( $Fold ) {
 # Need to check feed width
 $openprint::log->debug("Has a fold, doing extra checks") if DEBUG;
-							if ( my $max_feed_width = $Equipment->specification('Maximum Feed Width') ) {
+							if ( my $max_feed_width = $Equipment->specification('Maximum Feed Width', $$Imposition{imposition} ) ) {
 								if ( $Equipment->specification('Orientation') ) {
 									if (						
 											( $Equipment->specification('Orientation') eq 'Portrait' and $Imposition->layout_width() <= $Imposition->layout_height() ) or
