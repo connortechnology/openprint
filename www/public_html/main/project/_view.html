@@ -28,7 +28,10 @@
 	my $ProjectCurrency = $Project->Currency();
 	my $services = $Project->services();
 	my %statuses = sql::execute( $log, $dbh, q{SELECT lngServiceIndex, strStatus FROM tbl_Project_Contents WHERE lngProjectIndex=?}, $Project->id() );
-    my $printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
+    my $printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] ) if $$services{''}[0];
+	if ( ! $$services{''}[0] ) {
+		Carp::cluck("No project service for project $$Project{id}");
+	} # end if
 
 	foreach my $ServiceCategory ( openprint::ServiceType_Category->find( order=>'sorting,name') ) {
 		if ( $ServiceCategory->name() eq 'Printing' ) {
@@ -130,7 +133,7 @@
 					foreach my $qty_index ( $Project->quantity_indexes() ) {
 						my $price = $ProjectCurrency->convert_from( $sig_specs{'txtPrice'.$qty_index} );
 						$html .= sprintf('<td class="price"><a href="/main/project/%s?ProjectIndex=%d&amp;ServiceIndex=%d">%s</a><br/>%s%s', 'prin/Signature.html', 
-								$$Project{id}, join(',',@sigs),
+								$$Project{id}, $ss_id,
 								openprint::Currency::format( $price ),
 								openprint::Estimating::Printing::summary($Project, $ss_id, \%sig_specs, $qty_index ),
 								( $SigService->overrides($qty_index) ? '<br/><b>With Overrides</b>' : '' ),
@@ -276,7 +279,8 @@
 								$html .= $$summary[$line+1];
 								$html .= '</td>';
 							} # end foreach qty_index
-							$html .= '<td colspan="2">&nbsp;</td></tr>';
+							$html .= '<td>&nbsp;</td>';
+							$html .= '<td class="unprintable actions">&nbsp;</td></tr>';
 						} # end foreach summary
 					} # end if summaries
 					$rowclass = $rowclass ? '' : ' class="colRow"';

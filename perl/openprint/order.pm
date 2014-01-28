@@ -270,7 +270,7 @@ sub make_order_from_quote {
 
 	if ( @quote > 0 ) {
 		foreach my $project_index ( @quote ) {
-			( $order_id, $_ ) =	add_project_to_order( $project_index, $order_id );
+			( $order_id, $_ ) =	add_project_to_order( new openprint::Project( $project_index ), $order_id );
 			$error .= $_;
 		} # end foreach
 		return ( $order_id, $error );
@@ -577,6 +577,8 @@ sub make_order_from_order {
 		misc::error( $log, $dbh, \%variable, 'Can\'t re-order.', 'The given order is not complete.' );
 		return 0;
 	} else {
+
+		my $ac = sql::start_transaction( $openprint::dbh );
 		# this goes before get_order_id so that we re-use orderids
 		delete_unfinished_orders( );
 
@@ -597,6 +599,12 @@ sub make_order_from_order {
 				$NewProduct->save();
 			} # end foreach
 		} # end if
+		if ( $openprint::dbh->errstr() ) {
+			$openprint::dbh->rollback();
+			sql::end_transaction( $openprint::dbh, $ac );
+			return;
+		} # end if
+		sql::end_transaction( $openprint::dbh, $ac );
 		return $order_id;
 	} # end if
 	return 0;
@@ -673,7 +681,7 @@ sub list_orders {
 	my $row_class = '';
 	foreach my $order_id ( @orders ) {
 		my ( $date, $name, $status, $total, $payment, $currency_id ) = sql::execute( $log, $dbh,
-				q{SELECT	to_char(dtmOrderDate, 'MM/DD/YYYY'), strFirstName || ' ' || strLastName, strStatus, curTotalSale,(SELECT SUM(amount) FROM Payments WHERE order_id=? AND (deleted=false OR deleted IS NULL) AND completed=true), currency_id FROM Orders WHERE id=?}, $order_id, $order_id );
+				q{SELECT	to_char(dtmOrderDate, 'MM/DD/YYYY'), strFirstName || ' ' || strLastName, (SELECT name FROM Order_Statuses WHERE order_statuses.id = orders.status_id), curTotalSale,(SELECT SUM(amount) FROM Payments WHERE order_id=? AND (deleted=false OR deleted IS NULL) AND completed=true), currency_id FROM Orders WHERE id=?}, $order_id, $order_id );
 		$report_total += $total;
 		$report_balance += $total-$payment;
 		$total = sprintf('%.2f', $total );

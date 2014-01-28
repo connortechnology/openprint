@@ -11,7 +11,6 @@ require openprint::main_project;
 require openprint::service;
 require openprint::Equipment;
 require openprint::employee_schedule;
-require openprint::bindery_schedule;
 require openprint::press_schedule;
 require openprint::employee_production;
 
@@ -79,7 +78,7 @@ sub view {
 	my $order_id = $param{OrderID};
 	$order_id = $Project->order_id() if ! $order_id;
 	if ( $project_index and ( ! $order_id ) and $param{'Docket'} ) {
-		( $order_id ) = sql::execute( $log, $dbh, q{SELECT Index FROM Orders WHERE Index IN ( SELECT DISTINCT OrderIndex FROM Order_Contents WHERE lngProjectIndex=? ) AND lngDocketNumber=?}, $project_index, $param{'Docket'} );
+		( $order_id ) = sql::execute( $log, $dbh, q{SELECT id FROM Orders WHERE id IN ( SELECT DISTINCT OrderIndex FROM Order_Contents WHERE lngProjectIndex=? ) AND lngDocketNumber=?}, $project_index, $param{Docket} );
 	} # end if
 	$variable{OrderID} = $order_id;
 	$variable{Order} = new openprint::Order( $order_id );
@@ -188,7 +187,7 @@ sub view {
 				my $Equipment = openprint::Equipment->find_one('strid'=>$param{"UsePress-$$sig_specs{'SignatureIndex'}"} );
 				next if ! $Equipment;
 
-				foreach my $Job ( openprint::ScheduledJob->find( 'service_id'	=> $signature_service_index ) ) {
+				foreach my $Job ( openprint::ScheduledJob->find( 'service_id @>'	=> $signature_service_index ) ) {
 					$Job->save({ 'equipment_id'	=> $Equipment->id(), 'runtime'		=> "$runtime minutes", });
 				} # end foreach Job
 			} # end foreach signature_service_index
@@ -351,7 +350,7 @@ sub view {
 				if ( ! is_sig_complete( $project_index, $signature_service_index ) ) {
 					$complete = 0;
 				} else {
-					foreach my $Job ( openprint::ScheduledJob->find('project_id'=>$project_index, 'service_id'=>$signature_service_index ) ) {
+					foreach my $Job ( openprint::ScheduledJob->find('project_id'=>$project_index, 'service_id @>'=>$signature_service_index ) ) {
 						$Job->delete();
 					} # end foreach
 					if ( my $Equipment = openprint::Equipment->find_one('strid'=>$$sig_specs{'UsePress'}) ) {
@@ -402,8 +401,6 @@ sub view {
 		$Project->status_change( undef, undef, 'Bindery Complete' );
 	} elsif ( $param{'btnFunction'} eq 'Complete' ) {
 		$Project->status_change( undef, undef, 'Complete' );
-	} elsif ( $param{'btnFunction'} eq 'AddToBinderySchedule' ) {
-		openprint::bindery_schedule::add_project( $Project );
 	} elsif ( $param{'btnFunction'} eq 'AddToPressSchedule' ) {
 		$variable{'error'} .= openprint::press_schedule::add_project_to_press_schedule( $Project, $param{'ServiceIndex'} );
 	} elsif ( $param{'btnFunction'} eq 'RemoveFromPressSchedule' ) {
@@ -495,9 +492,12 @@ sub view {
 		sql::end_transaction( $dbh, $ac );
 	} elsif ( $param{'btnFunction'} eq 'Approve' ) {
 		my $Order = new openprint::Order( $param{'OrderID'} );
-		$Order->approve();
-		$Project->update_status();
-		$Order->update_status();
+		$variable{error} .= $Order->approve();
+		if ( ! $variable{error} ) {
+			$Project->update_status();
+			$Order->update_status();
+			$variable{ExternalRedirect} = '/employee/project/view.html?docket='.$Order->docket();
+		} # end if
 	} # end if
 
 } # end sub view
@@ -518,7 +518,7 @@ sub send_additional_charges_notifications {
 	my $Operator = new openprint::User( $session{'user_id'} );
 
 	@info{'CSRFirstName','CSRLastName','CSREmail'} = ( $CSR->firstname(), $CSR->lastname(), $CSR->email() );
-	@info{'CustomerFirstName','CustomerLastName','CustomerEmail'} = ( $Order->first_name(), $Order->last_name(), $Order->email() );
+	@info{'CustomerFirstName','CustomerLastName','CustomerEmail'} = ( $Order->firstname(), $Order->lastname(), $Order->email() );
 	$info{'Operator'} = $Operator;
 	@info{'EmployeeFirstName','EmployeeLastName','EmployeeEmail','EmployeeExtension'} = ( $Operator->firstname(), $Operator->lastname(), $Operator->email(), $Operator->extension() );
 
@@ -630,22 +630,19 @@ sub send_proofs_complete_email {
 	my $Project = new openprint::Project( $project_index );
 	$order_id = $Project->order_id() if ! $order_id;
 
-	( my $user_index, @info{'DocketNumber','ProjectReference'} ) = ( $Project->user_id(), $Project->docket(), $Project->reference() );
-	$info{'ProjectIndex'} = $project_index;
+	( my $user_index, @info{'DocketNumber','ProjectReference','ProjectIndex'} ) = ( $Project->user_id(), $Project->docket(), $Project->reference(), $project_index );
 
 	my $Order = new openprint::Order( $order_id );
-	@info{'CustomerFirstName','CustomerLastName','CustomerEmail'} = ( $Order->first_name(), $Order->last_name(), $Order->email() );
+	@info{'CustomerFirstName','CustomerLastName','CustomerEmail'} = ( $Order->firstname(), $Order->lastname(), $Order->email() );
 
 	my $User = new openprint::User( $session{'user_id'} );
 	@info{'EmployeeFirstName','EmployeeLastName','EmployeeEmail','EmployeeExtension'} = ( $User->firstname(), $User->lastname(), $User->email(), $User->extension() );
 
 	$info{'CompletionDate'} = Date::Format::time2str( $config{'DateTimeFormat'}, time );
 
-	$info{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/proofs_complete.html' );
-	$info{'ReplacementText'} = ssi::variable_substitution( \$info{'ReplacementText'}, \%info );
+	$info{'ReplacementText'} = ssi::include( '/email_content/proofs_complete.html', \%info );
 
-	$_ = misc::load_file( $log, $config{'SkinPath'} . '/email_template.html' );
-	$_ = encode_qp( Encode::encode('utf-8', ssi::variable_substitution( \$_, \%info ) ) );
+	$_ = encode_qp( Encode::encode('utf-8', ssi::include('/email_template.html', \%info ) ) );
 	my @body = ('', $_, 'text/html', 'quoted-printable');
 	my %mail = (
 			SMTP    => $config{'Mail Server'},
@@ -682,14 +679,11 @@ sub send_proofs_approved_email {
 
 	my $Project = new openprint::Project( $project_index );
 	$order_id = $Project->order_id() if ! $order_id;
-	@info{'DocketNumber','ProjectReference'} = ( $Project->docket(), $Project->reference() );
-	$info{'ProjectIndex'} = $project_index;
-	$info{'OrderID'} = $order_id;
-
+	@info{'DocketNumber','ProjectReference','ProjectIndex','OrderID'} = ( $Project->docket(), $Project->reference(), $project_index, $order_id );
 	$info{'DueDate'} = Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $Project->due_date() ) );
 
 	my $Order = new openprint::Order( $order_id );
-	@info{'CustomerFirstName','CustomerLastName','CustomerEmail'} = ( $Order->first_name(), $Order->last_name(), $Order->email() );
+	@info{'CustomerFirstName','CustomerLastName','CustomerEmail'} = ( $Order->firstname(), $Order->lastname(), $Order->email() );
 
 	my $Me = new openprint::User( $session{user_id} );
 	@info{'EmployeeFirstName','EmployeeLastName','EmployeeEmail','EmployeeExtension'} = $Me->get(qw(firstname lastname email extension) );
@@ -697,15 +691,18 @@ sub send_proofs_approved_email {
 	$info{'CompletionDate'} = Date::Format::time2str( $config{'DateTimeFormat'}, time );
 
 	$info{'ReplacementText'} = ssi::include( '/email_content/proofs_approved-sales_rep.html', \%info );
-	$_ = misc::load_file( $log, $config{'SkinPath'} . '/email_template.html' );
-	$_ = encode_qp( Encode::encode('utf-8', ssi::variable_substitution( $r, $log, $dbh, \$_, \%info ) ) );
+	$_ = encode_qp( Encode::encode('utf-8', ssi::include( '/email_template.html', \%info ) ) );
 	my @body = ('', $_, 'text/html', 'quoted-printable');
 	my $Email = new openprint::Email();
 
 	my $CSR = new openprint::User( $Order->salesrep_id() );
 	my @Users = map { $_->User() } openprint::User_Notification->find( type =>'Proofs Approval Notifications', value =>'Yes',
 			company_id=>[$Project->company_id(), $Me->company_id(), ( $CSR->id() ? $CSR->company_id() : () ) ] );
-	push @Users, $CSR if ! sets::isin( $CSR->id(), [ map { $_->id() } @Users ] );
+
+	if ( ! sets::isin( $CSR->id(), [ map { $_->id() } @Users ] ) ) {
+		my $Notification = $CSR->notification('Proofs Approval Notifications');
+		push @Users, $CSR if ( ! $Notification );
+	} # end if
 
 	foreach my $User ( @Users ) {
 		next if $User->id() == $session{user_id};
@@ -736,14 +733,17 @@ sub send_duedate_change_notification {
 	@info{'EmployeeFirstName','EmployeeLastName','EmployeeEmail','EmployeeExtension'} = ( $User->firstname(), $User->lastname(), $User->email(), $User->extension() );
 	my $CSR = new openprint::User( $Order->salesrep_id() );
 	if ( $CSR->email() ) {
-		my $email_template = misc::load_file( $log, $config{'SkinPath'} . '/email_template.html' );
-		$info{'ReplacementText'} = ssi::include( '/email_content/proofs_duedate_change-sales_rep.html', \%info );
-		new openprint::Email()->send(
-				FROM    => $User,
-				TO      => $CSR,
-				SUBJECT => "Docket $info{'DocketNumber'} DueDate Changed",
-				ATTACHMENTS	=>	['', encode_qp( Encode::encode('utf-8', ssi::variable_substitution( \$email_template, \%info ) ) ), 'text/html', 'quoted-printable'],
-				);
+		my $notification = $CSR->notification('Docket Due Date Changes');
+		if ( ( ! $notification ) or $notification ne 'No' ) {
+			my $email_template = ssi::slurp_content( '/email_template.html' );
+			$info{'ReplacementText'} = ssi::include( '/email_content/proofs_duedate_change-sales_rep.html', \%info );
+			new openprint::Email()->send(
+					FROM    => $User,
+					TO      => $CSR,
+					SUBJECT => "Docket $info{'DocketNumber'} DueDate Changed",
+					ATTACHMENTS	=>	['', encode_qp( Encode::encode('utf-8', ssi::variable_substitution( \$email_template, \%info ) ) ), 'text/html', 'quoted-printable'],
+					);
+		} # end if Notifications
 	} # end if
 } # end sub send_duedate_change_notification
 
@@ -765,7 +765,7 @@ sub is_sig_complete {
 	sql::update( $log, $dbh, 'tbl_Project_Contents', ['lngProjectIndex=? AND lngServiceIndex=?', $project_index, $signature_service_index], 'strStatus','Complete' );
 
 # Remove jobs from the Schedule when marked complete.
-	foreach my $Job ( openprint::ScheduledJob->find( 'project_id' => $project_index, 'service_id' => $signature_service_index ) ) {
+	foreach my $Job ( openprint::ScheduledJob->find( project_id => $project_index, 'service_id @>' => $signature_service_index ) ) {
 		$Job->delete();
 	} # end foreach
 
@@ -776,7 +776,7 @@ sub docket_sheet {
 	openprint::print_project::summary( @_ );
 } # end sub docket_sheet
 sub summary {
-	openprint::print_project::summary( @_ );
+	openprint::print_project::summary( $r, $log, $dbh, \%variable, $param{ProjectIndex} );
 } # end sub summary
 
 sub _stock_checkout {
@@ -916,11 +916,11 @@ sub _status {
 
 	if ( $param{'action'} eq 'removefromschedule' ) {
 		foreach my $service_id ( @service_ids ) {
-			my $Job = openprint::ScheduledJob->find_one(project_id=>$param{project_id}, 'service_id any'=>$service_id);
+			my $Job = openprint::ScheduledJob->find_one(project_id=>$param{project_id}, 'service_id @>'=>$service_id);
 			if ( ! $Job ) {
 				$variable{'error'} .= 'Job not found on schedule.';
 			} else {
-				my @service_ids = sets::exclude( $service_id, $Job->service_id() );
+				my @service_ids = sets::exclude( [ $service_id ], $Job->service_id() );
 				if ( ! @service_ids ) {
 					$variable{'error'} .= $Job->delete();
 				} else {

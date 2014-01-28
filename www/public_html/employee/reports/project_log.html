@@ -25,8 +25,8 @@
 			<select name="user_id" size="1">
 			<? echo (
 					my @options = ( '', 'All' );
-					push @options, map { $_->id(), $_->name() } openprint::User->find( type =>['E','A'], order=>'lower(strfirstname),lower(strlastname)');
-					return make_drop_down( \@options, $session{'/employee/reports/project_log.html?user_id'} );
+					push @options, map { $_->id(), $_->name() } openprint::User->find( type =>['E','A'], order=>'lower(firstname),lower(lastname)');
+					make_drop_down( \@options, $session{'/employee/reports/project_log.html?user_id'} );
 					) ?>
 
 			 </select>

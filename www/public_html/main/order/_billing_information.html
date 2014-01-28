@@ -34,7 +34,7 @@
 				<select name="ddmUsers" onchange="ddmUsers_onchange(this.form);">
 					<option value="">Please Select</option>
 					<? echo ( 
-						return ssi::make_drop_down( [ map { $_->id(), $_->name() } @{$$variable{'Users'}} ],
+						make_drop_down( [ map { $_->id(), $_->name() } @{$$variable{'Users'}} ],
 								$param{'ddmUsers'} ? $param{'ddmUsers'} : $session{'user_id'} 
 						);
 					) ?>
@@ -66,7 +66,7 @@
 				<select name="country" onchange="Country_onchange(this, this.form.state);">
 					<option value=""> Select </option>
 					<? echo ( 
-						ssi::make_drop_down( \@countries::countries, $$variable{'country'} );
+						make_drop_down( \@countries::countries, $$variable{'country'} );
 					) ?> 
 				</select>
 			</li>
@@ -80,13 +80,25 @@ if ( $$variable{'country'} eq 'US' ) {
 	return 'State/Province';
 } # end if
 ) ?></span></label>
-				<select name="state">
+				<span id="state_container">
+				<select name="state" id="state">
 					<option value=""> Select </option>
 					<? echo ( 
-						ssi::make_drop_down( \@states::states, $$variable{'state'} ).
-						ssi::make_drop_down( \@provinces::provinces, $$variable{'state'} );
+					if ( $$variable{'country'} eq 'US' ) {
+					require states;
+						return make_drop_down( \@states::states, $$variable{'state'} );
+					} elsif ( $$variable{'country'} eq 'CA' ) {
+						require provinces;
+						return make_drop_down( \@provinces::provinces, $$variable{'state'} );
+					}
+					require states;
+					join("\n",
+						make_drop_down( \@states::states, $$variable{'state'} ),
+						make_drop_down( \@provinces::provinces, $$variable{'state'} ),
+					); 
 					) ?> 
 				</select>
+				</span>
 			</li>
 			<li class="required"> 
 				<label>City</label>

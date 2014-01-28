@@ -293,6 +293,9 @@ sub check {
 	if ( $Skid->deleted() ) {
 		$error = qq`Skid <a href="/employee/inventory/skid_details.html?skid_id=$$Skid{id}">$$Skid{id}</a> is deleted.<br/>`;
 	} # end if
+	if ( ! $MC->location_id() ) {
+		$error .= 'No location for ' . $Skid->link_to().'<br/>';
+	} # end if
 	if ( $MC->skid_id() ) {
 		my @SkidContents = $Skid->Contents();
 		if ( @SkidContents > 1 ) {

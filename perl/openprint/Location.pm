@@ -84,7 +84,7 @@ sub get_all_children {
 } # end sub get_all_children
 
 sub parent {
-$openprint::log->error("use of deprecated method");
+$openprint::log->error("use of deprecated method Location parent");
 	return new openprint::Location( $_[0]{'parent_id'}) if $_[0]{'parent_id'};
 } # end sub parent
 sub Parent {
@@ -203,7 +203,10 @@ sub google {
 	$string .= ' ' . $_[1] if @_ > 1;
 	$string =~ s/ /+/g;
 	my $coder = Geo::Coder::Googlev3->new();
-	my $location = $coder->geocode( location => $string );
+	my $location;
+	eval {
+		$location = $coder->geocode( location => $string );
+	};
 	if ( ! $location ) {
 		$openprint::log->debug("No location for $string");
 		return;

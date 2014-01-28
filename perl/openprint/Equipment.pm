@@ -11,7 +11,7 @@ require sql;
 
 use Memoize;
 memoize('fits');
-memoize('specification');
+memoize('Specification');
 
 use vars qw( $debug $log $dbh $table $serial %fields %find_fields %transforms %defaults $cache_field );
 *log = \$openprint::log;
@@ -23,7 +23,7 @@ sub cache_field {
     return $cache_field;
 }
 
-$debug = 0;
+$debug = 1;
 %fields = (
 	'id'	=>	'id',
 	'strid'	=>	'strid',

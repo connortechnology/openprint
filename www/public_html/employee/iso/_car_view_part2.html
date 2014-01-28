@@ -12,11 +12,11 @@
 </table>
 <? if ( ($$variable{'CAR'}->issued_to_id() == $session{'user_id'} ) or ($$variable{'CAR'}->part2_user_id() == $session{'user_id'}) or openprint::usergroup::is_user_in( ['Quality Control'], $session{'user_id'} ) ) ?>
 	<p class="buttons">
-		<? echo ( ssi::writeButton( $log, $dbh, 'EditPart2', 'edit.gif', sprintf(q`new Ajax.Updater('Part2', '/employee/iso/_car_edit_part2.html', { method: 'get', parameters: {car_id:%1$d} } );`, $$variable{'CAR'}->id() ), '', 'Edit' ); ) ?>.
+		<? echo ( button( 'EditPart2', { onclick=>sprintf(q`new Ajax.Updater('Part2', '/employee/iso/_car_edit_part2.html', { parameters: {car_id:%1$d} } );`, $$variable{'CAR'}->id() ), text=>'Edit' } ); ) ?>.
 	</p>
 <? endif ( ($$variable{'CAR'}->issued_to_id() == $session{'user_id'} ) or ($$variable{'CAR'}->part2_user_id() == $session{'user_id'}) or openprint::usergroup::is_user_in( ['Quality Control'], $session{'user_id'} ) ) ?>
 <? if ( ( ! $$variable{'CAR'}->part2_user_id() ) and openprint::usergroup::is_user_in( ['Quality Control'], $session{'user_id'} ) ) ?>
 <script type="text/javascript">
-	new Ajax.Updater( 'Part3', '/employee/iso/_car_edit_part3.html', { method: 'get', parameters: {car_id<? echo ( $$variable{'CAR'}->id() ) ?>} } );
+	new Ajax.Updater( 'Part3', '/employee/iso/_car_edit_part3.html', { parameters: {car_id<? echo ( $$variable{'CAR'}->id() ) ?>} } );
 </script>
 <? endif ( ( ! $$variable{'CAR'}->part2_user_id() ) and openprint::usergroup::is_user_in( ['Quality Control'], $session{'user_id'} ) ) ?>

@@ -148,7 +148,7 @@
 <? while ( $$variable{'Project'} = shift @{$$variable{'UnassignedProjects'}} ) ?>
 	<tr<?colrow?>>
 		<td valign="top"><a href="/employee/project/view.html?project_id=<? echo ( $$variable{'Project'}->id(); ) ?>"><? echo ( $$variable{'Project'}->id(); ) ?></a></td>
-		<td valign="top"><? echo ( ssi::htmlize( $$variable{'Project'}->reference() ); ) ?></td>
+		<td valign="top"><? echo ( $$variable{'Project'}->reference() ) ?></td>
 		<td valign="top"><? echo ( ssi::htmlize( $$variable{'Project'}->Company()->name() ); ) ?></td>
 		<td class="Date"><? echo ( Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $$variable{'Project'}->ordered_on() ) ); ) ?></td>
 	</tr>

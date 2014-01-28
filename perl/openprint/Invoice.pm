@@ -23,7 +23,7 @@ require openprint::Object_Asset;
 
 use vars qw( $debug $table $serial %fields %find_fields %defaults %transforms );
 
-$debug = 0;
+$debug = 1;
 
 $table = 'invoices';
 $serial = 'invoices_id_seq';
@@ -345,6 +345,14 @@ sub can_view {
 sub upload {
 	openprint::Object_Asset::upload( @_ );
 } # end sub upload
+
+sub link_to {
+	if ( $_[0]{id} ) {
+		my $text = $_[1] ? $_[1] : ( $_[0]{num} ? $_[0]{num} : 'id ' . $_[0]{id} );
+		return sprintf('<a href="/invoice/view.html?invoice_id=%d">%s</a>', $_[0]{id}, $text );
+	}
+	return '';
+} # end sub link_to
 
 1;
 __END__

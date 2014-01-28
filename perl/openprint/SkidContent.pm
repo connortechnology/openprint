@@ -4,7 +4,6 @@ our @ISA = qw(openprint::Object);
 
 use vars qw( $debug %fields %find_fields %transforms %defaults $table $serial );
 
-
 $debug = 0;
 
 %fields = (

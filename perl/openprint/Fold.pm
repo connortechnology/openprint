@@ -6,12 +6,14 @@ require openprint::Equipment;
 require openprint::FoldSpecification;
 require sql;
 
+use Memoize;
+memoize('Specification');
 
 use vars qw( $debug $table $serial $log $dbh %fields %transforms %defaults );
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
 
-$debug = 1;
+$debug = 0;
 $table = 'folds';
 $serial= 'folds_id_seq';
 
@@ -212,7 +214,7 @@ sub RunSpeed {
 		$$self{runspeed_cache} = {};
 	} # end if
 	if ( ! $gsm ) {
-		$openprint::log->error("No gsm in Fold->runspeed");
+		$openprint::log->warn("No gsm in Fold->runspeed");
 	} # end if
 	if ( ! exists $$self{runspeed_cache}{$gsm} ) {
 		$$self{runspeed_cache}{$gsm} = $self->Specification( $gsm );

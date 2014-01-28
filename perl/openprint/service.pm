@@ -63,6 +63,7 @@ sub save_service {
 $log->debug("variables: @variables");
 	# make this fast by doing it in one transaction
 	my $ac = sql::start_transaction( $dbh );
+	$dbh->do('LOCK tbl_service_specifications IN EXCLUSIVE MODE');
 	foreach my $key (@variables) {
 #$log->debug("Key: $key ($openprint::param{$key}) ( $$specs{$key})");
 		if ( ref $openprint::param{$key} eq 'ARRAY' ) {
@@ -449,9 +450,11 @@ sub internal_calc {
 
 	my $ac = sql::start_transaction( $dbh );
 	my $Project = new openprint::Project( $project_index );
-    $log->debug("LOCKING Projects for project $$Project{id}");
-    $dbh->do( "SELECT * FROM Projects WHERE id=".$$Project{id}. ' FOR UPDATE' );
+	$Project->save({status=>'uncalculated'}) if $Project->status() ne 'uncalculated';
+    $log->debug("LOCKING Projects for project $$Project{id} $ac");
+    #$dbh->do( "SELECT * FROM Projects WHERE id=".$$Project{id}. ' FOR UPDATE' );
 	my $Service = $Project->Service($service_index) if $service_index;
+	$Service->save({status=>'uncalculated'}) if $Service->status() ne 'uncalculated';
 	my $specs;
 	if ( ! $Service ) {
 $openprint::log->error("Doing internal calc without service_index or, not found");
@@ -489,6 +492,7 @@ $openprint::log->error("Doing internal calc without service_index or, not found"
 	} else {
 		$log->error($package . ' cant calc');
 	} # end if
+    $log->debug("UNLOCKING Projects for project $$Project{id} $ac");
 	sql::end_transaction( $dbh, $ac );
 	return \%specs;
 } # end sub internal_calc
@@ -508,6 +512,8 @@ sub summary {
 
 	$Project = new openprint::Project( $Project ) if ref $Project ne 'openprint::Project';
 	my $services = $Project->services();
+	my $ServiceType = $Project->ServiceType( $service_id );
+	return '' if ! $ServiceType->summary_visible();
 
 	my $specs = get_specs_ref( $Project, $service_id );
 	if ( $$specs{'ServiceType'} eq 'Signature' or ( $$specs{'ServiceType'} eq '' and ! $$specs{'txtTotalPageQuantity'}  ) ) {
@@ -520,7 +526,6 @@ sub summary {
 		require openprint::Estimating::Stitching;
 		return openprint::Estimating::Stitching::summary($Project, $service_id, $specs, $qty_index );
 	} else {
-		my $ServiceType = $Project->ServiceType( $service_id );
 		my $ServiceTypeType = $ServiceType->type();
 		return if ! $ServiceTypeType;
 		

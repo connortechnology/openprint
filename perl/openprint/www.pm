@@ -156,7 +156,11 @@ $log->debug("No good, need login");
 					$r->print( q`window.location='/error/error_login.html';` );
 					return Apache2::Const::OK;
 				} else {
+					if ( $page =~ /employee/ ) {
+					$page = '/employee/account/login.html';
+					} else {
 					$page = '/error/error_login.html';
+					} # end if
 				} # end if
 				$variable{'Destination'} = misc::get_destination( $r, $r->uri() );
 				#$r->headers_out->set(Location=>'/error/error_login.html');
@@ -270,14 +274,19 @@ $log->debug("PageContent is $variable{PageContent}");
 			} # end while
 			} # end if
 		} # end if _
+	$log->debug( "After finding template: ($page) Elapsed time: " . sprintf('%.4f', tv_interval([$starttime])*1000).' usecs' );
+local $|=1;
 		if ( $template ) {
 			#$log->debug("parsing template! $template");
 			$r->print( ssi::variable_substitution( \$template, \%variable ) );
 		} else {
+
 			#$log->warn("No template!" . $r->content_type());
 			$variable{PageContent} = ssi::variable_substitution( \$variable{'PageContent'}, \%variable ) if $variable{'PageContent'} ne '';
 			$log->warn($variable{PageContent});
+	$log->debug( "Before printing: ($page) Elapsed time: " . sprintf('%.4f', tv_interval([$starttime])*1000).' usecs' . length( $variable{PageContent} ) );
 			$r->print( $variable{PageContent} );
+	$log->debug( "After printing: ($page) Elapsed time: " . sprintf('%.4f', tv_interval([$starttime])*1000).' usecs' );
 		} # end if
 	} # end if
 
@@ -491,7 +500,6 @@ $log->debug("ServiceType: $variable{'ServiceTypeType'}");
 					} # end if
 
 				} elsif ($third eq 'bind') {
-$openprint::log->warn('bind');
 					if ( $filename eq 'folding.html' ) {
 						require openprint::Estimating::Folding;
 						openprint::Estimating::Folding::display( $log, $dbh, \%variable, $project_index, $service_index );

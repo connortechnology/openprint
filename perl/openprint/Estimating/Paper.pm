@@ -72,8 +72,8 @@ sub signature_needs {
 	my ( $Project, $sig_specs ) = @_;
 	my $services = $Project->services();
 	return 0 if $$services{'NoPrinting'};
-	return 1 if $$sig_specs{'rdbSuppliedStock'} ne 'Y';
-	return 0;
+	#return 1 if $$sig_specs{'rdbSuppliedStock'} ne 'Y';
+	return 1;
 } # end sub
 
 sub neccessary {
@@ -363,7 +363,7 @@ sub summary {
 				if ( $Paper->type() eq 'Sheet' ) {
 					$html .= $$specs{"sheets-$stock_id-$qty_index"}.'sheets ';
 				} # end if
-				$html .= $$specs{"qty-$stock_id-$qty_index"}.'lbs';
+				$html .= Number::Format::format_number( Math::Round::nearest(1, $$specs{"qty-$stock_id-$qty_index"} ) ).' lbs';
 				my $Price = $Paper->get_price( 'weight'=>$$specs{"qty-$stock_id-$qty_index"},'service'=>'Material' );
 				if ( $$Price{'units'} eq 'per square foot' ) {
 					$html .= ' ' . Math::Round::nearest( 1, ( $$specs{"qty-$stock_id-$qty_index"} / $Paper->wpsi() ) / 144 ).' sq feet';

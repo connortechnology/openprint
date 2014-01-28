@@ -32,7 +32,7 @@ while ( my $line = <STDIN> ) {
 		$line = <STDIN>;
 		my ( $id ) = $line =~ /\(SELECT id,longname FROM PaperNames WHERE longname=$changes{longname}\) Results:(\d+),$changes{longname}/;
 		die if ! $id;
-		my $Finish = new openprint::StockName();
+		my $Finish = new openprint::StockBrand();
 		$_ = $Finish->save({id=>$id, shortname=>$changes{longname}, longname=>$changes{longname}}, 1);
 		die $_ if $_;
 	} elsif ( $line =~ /INSERT INTO PaperFinishes \(([^\)]+)\) VALUES \(([^\)]+)\)/ ) {

@@ -20,18 +20,18 @@
 	<form id="f1" name="f1" method="post" action="/main/project/view.html">
 		<?include(/includes/main/proj/hdn_fields_printing.html)?>
         <input type="hidden" name="txtSignatureType" value="<?txtSignatureType?>" />
-        <input type="hidden" name="txtSpreadSize" value="<?txtSpreadSize?>" />
 		<input type="hidden" name="hdnFolding" value="<?hdnFolding?>"/>
 		<input type="hidden" name="hdnCutting" value="<?hdnCutting?>"/>
-        <? if ( $$variable{'txtSignatureType'} eq 'Cover Pages' or $$variable{'txtSignatureType'} eq 'GateFolded Spreads' ) ?>
+        <? if ( $$variable{'txtSignatureType'} eq 'Cover Pages' or $$variable{'txtSignatureType'} eq 'Gate Folded Pages' ) ?>
             <?include(/includes/main/proj/templates/signature_template_select.html)?>
             <?include(/includes/main/proj/templates/signatures.html)?>
-        <? endif ( $$variable{'txtSignatureType'} eq 'Cover Pages' or $$variable{'txtSignatureType'} eq 'GateFolded Spreads' ) ?>
+        <? endif ( $$variable{'txtSignatureType'} eq 'Cover Pages' or $$variable{'txtSignatureType'} eq 'Gate Folded Pages' ) ?>
 		<fieldset><legend><? echo ( $$variable{'Project'}->Type()->name() ) ?> <?txtSignatureType?></legend>
 <? if ( $$variable{'txtSignatureType'} ) ?>
             <div class="<? echo ( my $type = $$variable{'txtSignatureType'}; $type =~ s/\s//g; return $type; ) ?>">
-                <p><label>Description</label><input type="text" name="txtServiceDescription" value="<?txtServiceDescription?>" /></p>
-                <p class="Dimensions">
+				<ul>
+                <li><label>Description</label><input type="text" name="txtServiceDescription" value="<?txtServiceDescription?>" /></li>
+                <li class="Dimensions">
                     <label>Spread dimensions</label>
 					<? echo (
 						my $html = sprintf('%s x %s => %s x %s',
@@ -45,14 +45,26 @@
 						} # end if
 						return $html;
 					) ?>
-                </p>
+                </li>
+				<? echo (
+						if ( sets::isin( $session{'user_type'}, ['A','E'] ) ) {
+						return join("\n",	
+						'<li><label>Pages per spread</label>',
+						input( type=>'cardinal', name=>'txtSpreadSize', id=>'txtSpreadSize', value=>$$variable{txtSpreadSize}, min=>2 ),
+						write_override( 'OverrideSpreadSize', $$variable{'OverrideSpreadSize'}, '', q`calc('f1');` ),
+						'</li>'
+						);
+						} # end if
+						input( type=>'hidden', name=>'txtSpreadSize', id=>'txtSpreadSize', value=>$$variable{txtSpreadSize} );
+				) ?>
+				</ul>
             </div>
 <? if ( $$variable{'Group'} == 1 ) ?>
             <div class="rightColumn" id="PresentationFolderQuestions" <? echo ( ! sets::isin( $$variable{'rdbTemplateType'}, ['2Panel1Pocket','2Panel2Pocket','TriFoldDoublePocket'] ) ? 'style="display:none;"' : '' ) ?> >
             <?include('/includes/main/proj/presentation_folder_printing.html')?>
             </div>
 <? endif ( $$variable{'Group'} == 1 ) ?>
-<? endif ( $$variable{'txtSignatureType'} ) ?>
+<? else ( $$variable{'txtSignatureType'} ) ?>
 
 <? if ( $$variable{'ProjectType'}->name() eq 'Envelopes' ) ?>
 		<?include(/includes/main/proj/templates/generic.html)?>
@@ -65,7 +77,7 @@
 			include('/includes/main/proj/dimensions.html'),
 		);
 	} elsif ( $$variable{'ProjectType'}->name() eq 'Custom' ) {
-		return include('includes/main/proj/dimensions_boxes_only.html');
+		return include('/includes/main/proj/dimensions_boxes_only.html');
 	} elsif ( sets::isin( $$variable{'ProjectType'}->name(),['Banners'] ) )  {
 		return include('/includes/main/proj/banner_printing.html');
 	} elsif ( $$variable{'ProjectType'}->name() eq 'Envelopes' ) {
@@ -78,6 +90,7 @@
 	} # end if
 	return '';
 ) ?>
+<? endif ( $$variable{'txtSignatureType'} ) ?>
 <? if ( sets::isin( $$variable{'ProjectType'}->name(),['Banners'] ) ) ?>
 		<?include(/includes/main/proj/banner_printing.html)?>
 <? endif ( sets::isin( $$variable{'ProjectType'}->name(),['Banners'] ) ) ?>
@@ -157,6 +170,7 @@
 		<?include(/includes/main/proj/dimensions.html)?>
 <? endif ( $$variable{'ProjectType'}->name() eq 'Covers' ) ?>
 <? if ( ! $$variable{'NoPrinting'} ) ?>
+<!--
 	<div id="OtherSpecifications">
 		<fieldset><legend>Other Specifications</legend>
 			<ul>
@@ -165,6 +179,7 @@
 			</ul>
 		</fieldset>
 	</div>
+-->
 <br class="spacer"/>
 	<?include(_versions.html)?>
 	<?include(/includes/main/proj/colours_coatings.html)?>

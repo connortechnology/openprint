@@ -27,18 +27,31 @@ sub view_services {
 	my $project_index = $openprint::param{project_id} ? $openprint::param{project_id} : $openprint::param{'ProjectIndex'};
 
 	# I put these here because the don't need a project index
-	if ( defined $openprint::param{'btnFunction'} and ( $openprint::param{'btnFunction'} eq 'Save Project' ) ) {
-		$log->debug("*** Time to Save Project - View Services Function ***");
-		$project_index = openprint::print_project::create_edit_process( $r, $log, $dbh, $variable );
-		return if $$variable{Redirect}; # Redirects on error
-		my $Project = new openprint::Project( $project_index );
-		my $services = $Project->services();
-		my $s = openprint::service::internal_calc( $log, $dbh, $variable, $project_index, $$services{''}[0], $Project->Type()->type() );
-		$log->debug("*** Time to Save Project - View Services Function *** $project_index $openprint::session{'project_id'}");
-		# Display any resulting uncalculated services
-		openprint::print_project::continue_project( $log, $dbh, $variable, $project_index );
-		return if $$variable{ExternalRedirect};
-	} # end if
+	if ( defined $openprint::param{'btnFunction'} ) {
+		if ( $openprint::param{'btnFunction'} eq 'Save Project' ) {
+			$log->debug("*** Time to Save Project - View Services Function ***");
+			$project_index = openprint::print_project::create_edit_process( $r, $log, $dbh, $variable );
+			return if $$variable{Redirect}; # Redirects on error
+			my $Project = new openprint::Project( $project_index );
+			my $services = $Project->services();
+			my $s = openprint::service::internal_calc( $log, $dbh, $variable, $project_index, $$services{''}[0], $Project->Type()->type() );
+			$log->debug("*** Time to Save Project - View Services Function *** $project_index $openprint::session{'project_id'}");
+# Display any resulting uncalculated services
+$log->debug("before contintue");
+			openprint::print_project::continue_project( $log, $dbh, $variable, $project_index );
+$log->debug("after continue $$variable{ExternalRedirect}");
+			return if $$variable{ExternalRedirect};
+		} elsif ( $openprint::param{'btnFunction'} eq 'Delete Project' ) {
+			$$variable{'error'} .= openprint::print_project::try_to_delete_project( $openprint::log, $openprint::dbh, \%openprint::variable, $project_index );
+			if ( ! $$variable{error} ) {
+				$$variable{ExternalRedirect} = '/main/project/history.html';
+				return;
+			} # end if
+		} elsif ( $openprint::param{'btnFunction'} eq 'Undelete Project' ) {
+			my $Project = new openprint::Project( $project_index );
+			$$variable{'error'} .= $Project->undelete();
+		} # end if
+	} # end if defined btnFunction
 
 	$project_index = $openprint::session{'project_id'} if ! $project_index;
 	my $Project = $$variable{'Project'} = new openprint::Project( $project_index );
@@ -96,8 +109,8 @@ sub view_services {
 						# Don't want to redirect because it would be annoying.  Just go to view.
 					} else {
 						openprint::Estimating::MultiPage::calculate_signatures( $Project );
-						$recalc = 1;
 					} # end if
+					$recalc = 1;
 				} elsif ( $openprint::param{'ServiceType'} eq 'Printing' ) {
 					openprint::Estimating::MultiPage::calculate_signatures( $Project );
 					openprint::service::internal_calc( $log, $dbh, $variable, $project_index, $$services{''}[0], $Project->Type()->type() );
@@ -132,6 +145,7 @@ sub view_services {
 						ServiceName => $service_name }, { status=>'calculated' } );
  
 					$Project->add_to_log( @openprint::session{'company_id','user_id'}, sprintf( 'Adding Custom Line: %s, (%.2f, %.2f, %.2f)', $service_name, @openprint::param{'txtPrice1','txtPrice2','txtPrice3'} ) );
+
 				} # end if has Customer Service type
 
 			} elsif ( $openprint::param{'btnFunction'} eq 'Delete Services' ) {
@@ -166,7 +180,7 @@ sub view_services {
 				my $PS = $Project->Service( $s_id );
 				next if ! $PS->service_id();
 				my $ServiceType = $PS->ServiceType();
-				if ( sets::isin( $ServiceType->name(), ['Proofs'] ) ) {
+				if ( sets::isin( $ServiceType->name(), ['Proofs'] ) and ( @{$$services{$ServiceType->name()}} == 1 ) ) {
 					$$variable{error} .= 'Proofs cannot be removed from the project.<br/>';
 					next;
 				} # end if
@@ -177,9 +191,14 @@ sub view_services {
 			$openprint::session{'project_id'} = $project_index;
 			$Project->summary(undef);
 			$Project->save();
+			$$variable{ExternalRedirect} = '/main/project/view.html?project_id='.$Project->id();
 		} elsif ( ( defined $openprint::param{'calc'} ) and $openprint::param{'calc'} ) {
 			$log->debug("Recalculating $openprint::param{calc}");
 			openprint::service::internal_calc( $log, $dbh, $variable, $project_index, $r->param('calc') );
+			$Project->summary(undef);
+			$Project->save();
+			$$variable{ExternalRedirect} = '/main/project/view.html?project_id='.$project_index;
+			return;
 		} # end if
 
 		if ( $r->param('ContinueProject') and $r->param('ContinueProject') ne 'Incomplete Form' ) {

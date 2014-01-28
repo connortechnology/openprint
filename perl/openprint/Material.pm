@@ -1,6 +1,7 @@
 use strict;
 package openprint::Material;
 our @ISA = qw( openprint::Object );
+use Memoize;
 
 require sql;
 require openprint::Object;
@@ -134,6 +135,7 @@ sub Specifications {
 	return openprint::MaterialSpecification->find( 'material_id'=>$$self{'id'}, 'order'=>'name,min NULLS FIRST' );
 } # end sub Specifications
 
+memoize('get_price');
 sub get_price {
 	return if ! $_[0]{id};
 	my ( $self, $quantity, $Equipment ) = @_;

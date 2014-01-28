@@ -105,9 +105,18 @@ $serial	= 'paper_id_seq';
 
 %transforms = (
 	manufacturers_name => [ 's/^\s+//', 's/\s+$//', 's/\s\s+$/ /g' ],
+	gsm	=>	 [ 's/[^\d\.]//g' ],
 );
 
 %defaults = (
+	basis_width	=>	undef,
+	basis_height	=>	undef,
+	basis_mweight	=>	undef,
+	width		=>	undef,
+	height		=>	undef,
+	gsm			=>	undef,	
+	grade		=>	undef,
+	calliper	=>	undef,
 	allocated	=>	q`'0'`,
 	in_stock	=>	q`'0'`,
 	user_type	=>	q`''`,
@@ -115,6 +124,8 @@ $serial	= 'paper_id_seq';
 	die_score_required	=>	'0',
 	supplied		=>	undef,
 	multipart	=>	0,
+	sheets_per_package	=>	undef,
+	wpsi				=>	undef,
 );
 
 %grades = (
@@ -822,7 +833,7 @@ sub allocated {
 } # end sub allocated
 
 sub in_stock {
-	return 0 if ! $_[0]{'id'};
+	return 0 if ! $_[0]{id};
 
 	if ( @_ > 1 ) {
 		if ( ref $_[1] eq 'openprint::StockQuality' ) {
@@ -832,16 +843,16 @@ sub in_stock {
 			} # end foreach C
 			return $in_stock;
 		} else {
-			$_[0]{'in_stock'} = $_[1];
+			$_[0]{in_stock} = $_[1];
 		} # end if
 	} # end if
 
-	if ( ! defined $_[0]{'in_stock'} ) {
+	if ( ! defined $_[0]{in_stock} ) {
 		foreach my $SkidContent ( $_[0]->SkidContents() ) {
-			$_[0]{'in_stock'} += $SkidContent->quantity();
+			$_[0]{in_stock} += $SkidContent->quantity();
 		} # end foreach SkidContent
 	} # end if
-	return $_[0]{'in_stock'};
+	return $_[0]{in_stock};
 } # end sub in_stock
 
 sub SkidContents {
@@ -1100,7 +1111,7 @@ sub gsm {
 			$$self{'gsm'} = sprintf('%.2f', $$self{'wpsi'} * 703064.5 );
 		} else { 
 			$$self{'gsm'} = 'unknown';
-			$openprint::log->warn("Can't calculate gsm for " . $self->to_string() );
+			$openprint::log->warn("Can't calculate gsm for " . $self->to_string() ) if $$self{brand};
 		} # end if
 	} # end if
 	return $$self{'gsm'};
@@ -1258,10 +1269,10 @@ sub load_from_signature {
 		$$Paper{Units} = $$specs{'CustomStockPriceUnits'};
 		$Paper->basis_width( $$specs{'basis_width'} );
 		$Paper->basis_height( $$specs{'basis_height'} );
-		$Paper->basis_mweight( $$specs{'basis_mweight'} );
+		$Paper->basis_mweight( $$specs{'basis_mweight'} ) if $$specs{'basis_mweight'};
 		$Paper->score_required( $Paper->calliper() > 0.008 );
 		#if ( $$specs{'StockType'} ne 'Roll' ) {
-			$Paper->mweight( $$specs{'txtCustomMWeight'} );
+			$Paper->mweight( $$specs{'txtCustomMWeight'} ) if ! $Paper->gsm();
 		#} # end if
 		$Paper->supplied( $$specs{'rdbSuppliedStock'} eq 'Y' ? 1 : 0 );
 	} else {
@@ -1368,7 +1379,11 @@ $log->debug($P->id_string());
 	$Paper = $Paper->clone();
 #$openprint::log->debug($Paper->to_string() );
 	if ( $qty_index ) {
-		if ( ( $Paper->width() != $$specs{'StockWidth'.$qty_index} ) or ($Paper->type() eq 'Sheet' and $Paper->height() != $$specs{'StockHeight'.$qty_index} ) ) {
+		if ( 
+			( ( $Paper->width() != $$specs{'StockWidth'.$qty_index} ) or ($Paper->type() eq 'Sheet' and $Paper->height() != $$specs{'StockHeight'.$qty_index} ) )
+			and
+			( ( $Paper->height() != $$specs{'StockWidth'.$qty_index} ) or ($Paper->type() eq 'Sheet' and $Paper->width() != $$specs{'StockHeight'.$qty_index} ) )
+) {
 #Carp::cluck("Custom size $$specs{'StockWidth'.$qty_index}x$$specs{'StockHeight'.$qty_index}");
 #$openprint::log->debug("Custom size $$Paper{width}x$$Paper{height} => $$specs{'StockWidth'.$qty_index}x$$specs{'StockHeight'.$qty_index}");
 			if ( ! $Paper->start_width() ) {
@@ -1378,7 +1393,7 @@ $log->debug($P->id_string());
 			} elsif ( $Paper->width() >= $$specs{'StockWidth'.$qty_index} ) {
 				$Paper->width( $$specs{'StockWidth'.$qty_index} );
 			} else {
-				$log->warn("Unsuitable Stock");
+				$log->warn("Unsuitable Stock" . $Paper->to_string() . ' desired: ' . $$specs{'StockWidth'.$qty_index} . 'x' . $$specs{'StockHeight'.$qty_index});
 				return new openprint::Paper();
 			} # end if
 

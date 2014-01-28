@@ -19,7 +19,7 @@ use vars qw( %blocks );
 		7	=>	[ [7,1], ],
 		8	=>	[ [2,4], [4,2] ],
 		9	=>	[ [3,3] ],
-		10	=>	[ [5,2], [2,5], [3,4], [4,3] ],
+		10	=>	[ [5,2], [2,5], ],
 		12	=>	[ [3,4], [4,3], [6,2], [2,6] ],
 		14	=>	[ [7,2], [2,7] ],
 		15	=>	[ [3,5],[5,3] ],
@@ -27,7 +27,7 @@ use vars qw( %blocks );
 		18	=>	[ [3,6],[6,3] ],
 		20	=>	[ [4,5], [5,4] ],
 		21	=>	[ [3,7],[7,3] ],
-		22	=>	[ [3,8],[8,3] ],
+		#22	=>	[ [3,8],[8,3] ],
 		24	=>	[ [6,4],[4,6],[2,12],[12,2],[3,8],[8,3] ],
 		32	=>	[ [8,4],[4,8],[2,16],[16,2] ],
 		);
@@ -989,6 +989,18 @@ sub decrease_imposition {
 			if ( $imp2->imposition() ) {
 				push @results, $imp2;
 			} # end if
+			
+			my $imp3 = $imposition->copy();
+			$imp3->columns( $imp3->columns()-1 );
+			if ( $imp3->imposition() ) {
+				push @results, $imp3;
+			} # end if
+
+			my $imp4 = $imposition->copy();
+			$imp4->rows( $imp4->rows()-1 );
+			if ( $imp4->imposition() ) {
+				push @results, $imp4;
+			} # end if
 		} # end if
 	} # end foreach
 
@@ -1030,6 +1042,25 @@ sub breakup_impositions {
 	} # end foreach
 
 } # end sub breakup_impositions
+
+sub sort {
+	return sort {
+		if ( $$a{runstyle} ne $$b{runstyle} ) {
+			return $$a{runstyle} cmp $$b{runstyle};
+		} elsif ( $$a{imposition} != $$b{imposition} ) {
+			return $$a{imposition} <=> $$b{impositon};
+		} elsif ( $$a{columns} != $$b{columns} ) {
+			return $$a{columns} <=> $$b{columns};
+		} # end if
+		my $APaper = $a->Paper();
+		my $BPaper = $b->Paper();
+		if ( $$APaper{width} != $$BPaper{width} ) {
+			return $$APaper{width} <=> $$BPaper{width};
+		} elsif ( $$APaper{height} != $$BPaper{height} ) {
+			return $$APaper{height} <=> $$BPaper{height};
+		} # end if	
+	} @_;
+}
 
 1;
 __END__

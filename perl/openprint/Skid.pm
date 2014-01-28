@@ -2,6 +2,7 @@ use strict;
 package openprint::Skid;
 our @ISA = qw( openprint::Object );
 
+use Carp;
 use openprint ();
 use vars qw( $log %session $debug $table $serial %fields %transforms %defaults %find_fields $debug );
 *session = \%openprint::session;
@@ -16,7 +17,7 @@ require openprint::SkidContent;
 require openprint::InventoryCondition;
 require openprint::PaperAllocation;
 
-$debug = 0;
+$debug = 1;
 
 $table = 'Skids';
 $serial = 'skid_id_seq';
@@ -133,7 +134,7 @@ sub find {
             $sql .= ' AND manufacturers_id IN (' . join(',', map { '?' } @{$params{'manufacturers_id'}} ) . ')';
             push @values, @{$params{'manufacturers_id'}};
         } else {
-            $sql .= ' and manufacturers_id=?';
+            $sql .= ' AND manufacturers_id=?';
             push @values, $params{manufacturers_id};
         } # end if
 	} # end if
@@ -225,7 +226,7 @@ sub find {
 		push @values, $params{'updated_on <='};
 	} # end if
 	if ( $params{'allocated_to_docket'} ) {
-		$sql .= ' AND id IN ( SELECT skid_id FROM paper_allocations WHERE project_id=(SELECT Index FROM Projects WHERE lngDocketNumber=?))';
+		$sql .= ' AND id IN ( SELECT skid_id FROM paper_allocations WHERE project_id=(SELECT id FROM Projects WHERE lngDocketNumber=?))';
 		push @values, $params{'allocated_to_docket'};
 	} # end if
 	if ( $params{'fsc_code'} ) {
@@ -284,12 +285,18 @@ sub find {
 	} # end if
 	
 	$sql .= " ORDER BY $params{'order'}" if $params{'order'};
+	if ( @values == 1) {
+		Carp::cluck("Loading all skids?! $sql");
+	} # end if
 
 	my $data = $openprint::dbh->selectall_arrayref( $sql, { Slice => {} }, @values );
 	if ( ! $data ) {
 		$log->debug("Error loading skids SQL($sql)" . DBI->errstr );
 	} elsif ( $debug ) {
 		$log->debug("Debug loaded skids ($sql) (@values) # of results: " . @$data );
+	} # end if
+	if ( $data and @$data >= 100 ) {
+		Carp::cluck("Loading a lot of skids?! $sql : #". @$data );
 	} # end if
 	return map { new openprint::Skid( $_->{id}, $_ ) } @$data;
 
@@ -403,7 +410,7 @@ sub add {
 } # end sub add
 
 sub remove {
-	my ( $self, $Paper, $quantity, $purpose_id ) = @_;
+	my ( $self, $Paper, $quantity ) = @_;
 	$quantity =~ s/[^\-\d]//g;
 	$quantity = int $quantity;
 	my $C = $self->Content( $Paper );
@@ -421,7 +428,7 @@ sub set_quantity {
 	my ( $self, $Paper, $quantity, $purpose_id ) = @_;
 	$quantity =~ s/[^\-\d]//g;
 	$quantity = int $quantity;
-	my @contents = $self->Contents( 'Paper'=>$Paper, 'purpose_id'=>$purpose_id );
+	my @contents = $self->Contents( paper_id=>$Paper->id(), ( $purpose_id ? ( 'purpose_id'=>$purpose_id ) : () ) );
 	if ( ! @contents ) {
 		return 'Specified stock is not on this skid';
 	} # end if

@@ -7,7 +7,7 @@
 		if ( ! f1 ) {
 			alert('No form. Tell Isaac about this please.');
 		} 
-		LoadContent( 'Results',	'/employee/inventory/_paper_results.html', f1.serialize() );
+		LoadContent( 'Results',	'/employee/inventory/_paper_results.html', f1 );
 	} // end function calc
 </script>
 <?include('/includes/error_reporting.html')?>
@@ -16,7 +16,7 @@ Please select a Paper to view/edit.<br>
 	<fieldset class="filters"><legend>Search Criteria</legend>
 		<p>
 			<label>Docket</label>
-			<? echo ( input( type=>'cardinal', id=>'Docket', name=>'Docket', value=>$session{'/employee/inventory/paper.html?Docket'}, onkeypress='return input_handler(this,event);', onkeydown=>q`if(event.keyCode==13){LoadContent('Results','/employee/inventory/_paper_results.html',$('f1').serialize());}` ); ) ?>
+			<? echo ( input( type=>'cardinal', id=>'Docket', name=>'Docket', value=>$session{'/employee/inventory/paper.html?Docket'}, onkeypress=>'return input_handler(this,event);', onkeydown=>q`if(event.keyCode==13){LoadContent('Results','/employee/inventory/_paper_results.html',$('f1'));}` ); ) ?>
 		</p>
 	</fieldset>
 	<fieldset class="filters"><legend>Or</legend>

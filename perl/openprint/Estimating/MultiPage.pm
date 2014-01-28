@@ -131,6 +131,10 @@ sub calc {
 	} # end if
 
 	my $Project = new openprint::Project( $project_index );
+	if ( ! $$Project{id} ) {
+		$$specs{alert} = 'Project not found.';
+		return $$specs{Status} = 'uncalculated';
+	} # end if
 
 	my $remaining_pages = $$specs{'txtTotalPageQuantity'};
 	my %override_pages;
@@ -177,7 +181,7 @@ if ( 0 ) {
 		$override_pages{1} = 4;
 		
 		$remaining_pages -= $override_pages{1} = 4;
-$openprint::log->error("FIXM E");
+$openprint::log->warn("FIXM E");
 } # end if
 	} # end if
 
@@ -232,8 +236,8 @@ $openprint::log->error("FIXM E");
 	if ( ! $$specs{'txtTotalPageQuantity'} ) {
 		$$specs{alert} = 'Please enter the # of pages';
 		return $$specs{'Status'} = 'uncalculated';
-	} elsif ( $$specs{'txtTotalPageQuantity'} > 500 ) {
-		$$specs{alert} .= 'The maximum # of pages is 500.<br/>';
+	} elsif ( $$specs{'txtTotalPageQuantity'} > 1500 ) {
+		$$specs{alert} .= 'The maximum # of pages is 1500.<br/>';
 		$$specs{Status} = 'uncalculated';
 	} # end if
 
@@ -412,8 +416,12 @@ $openprint::log->debug("********************************************************
 					
 					my $price = $$Imposition{price};
 $Imposition->display("Saving for $qty_index");
+if ( $specs{"chkOverrideImposition$qty_index"} eq 'Y' and $specs{"txtImposition$qty_index"} != $$Imposition{imposition} ) {
+$status = 'uncalculated';
+} else {
 					$Imposition->save( \%specs, $qty_index );
 					openprint::Estimating::Printing::save_price( $Project, \%specs, $price, $Imposition, $qty_index );
+}
 #foreach my $k ( keys %{$price} ) {
 	#$openprint::log->debug("Price: $k $$price{$k}");
 #}

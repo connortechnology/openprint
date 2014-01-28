@@ -468,7 +468,7 @@
 			$$variable{'Columns'},
 			input( type=>'cardinal', name=>"txtImposition$qty_index", value=>$$variable{'txtImposition'.$qty_index}, onkeyup=>'calc(this.form.name);' ),
 			write_override( 'chkOverrideImposition'.$qty_index, $$variable{'chkOverrideImposition'.$qty_index},'',"calc('f1');" ),
-			radio( 'dutch'.$qty_index, [ 'Y', 'Yes', 'N', 'No' ], $$variable{'dutch'.$qty_index} ),
+			radio( 'dutch'.$qty_index, [ 'Y', 'Yes', 'N', 'No' ], $$variable{'dutch'.$qty_index}, { onclick=>q`calc('f1');` } ),
 			input( type=>"number", readonly=>"readonly", name=>"hdnImpositionColumns$qty_index" ),
 			input( type=>"number", readonly=>"readonly", name=>"hdnImpositionRows$qty_index" ),
 			input( type=>"number", readonly=>"readonly", name=>"hdnImpositionDutchColumns$qty_index" ),

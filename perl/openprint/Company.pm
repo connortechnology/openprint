@@ -236,9 +236,15 @@ sub save_tradereferences {
 
 
 sub Credit {
+	
 	my $supplier = $_[1] ? $_[1] : $openprint::config{'owner_id'};;
 
 	require openprint::Company_Credit;
+	if ( ! $_[0]{id} ) {
+		$_ =  new openprint::Company_Credit();
+		$_->set({supplier_id=>$supplier});
+		return $_;
+	} # end if
 	return new openprint::Company_Credit( { 'company_id'=>$_[0]{id}, 'supplier_id'=>$supplier } );
 } # end sub Credit
 
@@ -279,6 +285,7 @@ sub dropdown {
 } # end sub dropdown
 
 sub get_dropdown {
+	shift @_ if $_[0] eq 'openprint::Company';
 	my $companies = dropdown( $_[1] ? $_[1] : () );
 	return $companies ? ssi::make_drop_down( $companies, $_[0] ) : '';
 } # sub get_dropdown
