@@ -386,7 +386,7 @@ sub summary {
 		} # end foreach key
 		return \@summaries;
 	} # end if
-	return \@keys;
+	return [ map { $Papers{$_}->message() ? $_ . '<br/>' . $Papers{$_}->message() : $_ } @keys ];
 } # end sub summary
 
 sub save {
