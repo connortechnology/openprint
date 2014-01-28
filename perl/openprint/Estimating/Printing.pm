@@ -1552,7 +1552,7 @@ $imp->display('Comparing A QTY $' . $$imp{PaperPrice}{'100lb Price'}. " for $a_s
 $I->display('Comparing B QTY $' . $$BPrice{'100lb Price'}) if DEBUG_INITIAL_FILTERING;
 if ( ! $$I{PaperPrice} ) {
 $log->error("No price for stock ".$B->to_string() );
-} elsif ( ! $$BPrice{'100lb Price'} ) {
+} elsif ( ( ! $$BPrice{'100lb Price'} ) and ( ! $$B{custom} ) ) {
 $log->error("No 100lb price for stock ".$B->to_string() );
 #$log->error("No 100lb price for stock ".$B->get_price( service=>'Material')->to_string() );
 }
