@@ -394,11 +394,11 @@ $log->debug("Found user $$upload{user} with out company.  Company is $$Company{n
 			$variable{'Uploads'} = \@uploads;
 
 			$variable{'ReplacementText'} = ssi::include( '/email_content/ftp_csr_notification.html', \%variable );
-			my $email_template = misc::load_file( $log, $config{'skin_path'} . '/email_template.html' );
-			my $body = ssi::variable_substitution( \$email_template, \%variable );
+			my $body = ssi::include( '/email_template.html', \%variable );
 			my $Mail = new openprint::Email();
 			$Mail->send(
-					FROM    => $from,
+					FROM    => ( $config{AdministratorEmail} ? $config{AdministratorEmail} : $from ),
+					'Reply-To'	=>	$from,
 					TO      => \@to,
 BCC		=>	'iconnor@penultima.org',
 					SUBJECT => $subject,

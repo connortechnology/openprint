@@ -365,6 +365,7 @@ sub can_edit {
 	return 1 if $openprint::session{'user_type'} eq 'A';
 	return 1 if $_[0]->salesrep_id() == $openprint::session{'user_id'};
 	my $Me = new openprint::User( $openprint::session{'user_id'} );
+	return 1 if sets::isin( $_[0]->salesrep_id(), $Me->csr_ids() );
 	return 1 if $_[0]{'id'} == $$Me{'company_id'} and $$Me{'administrator'} eq 'Y';
 } # end sub can_edit
 

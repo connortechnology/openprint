@@ -18,6 +18,7 @@ $debug = 0;
 	from	=>	'from',
 	subject	=>	'subject',
 	ATTACHMENTS	=>	'ATTACHMENTS',
+	'Reply-To'	=>	'Reply-To',
 );
 
 sub html_body {
@@ -45,6 +46,9 @@ sub send {
 	if ( $params{'FROM'} ) {
 		$$self{from} = $params{FROM};
 	} # end if
+	if ( $params{'Reply-To'} ) {
+		$$self{'Reply-To'} = $params{'Reply-To'};
+	} # end if
 
 	my @bcc;
 	if ( $params{BCC} ) {
@@ -67,6 +71,7 @@ sub send {
 			( $params{'Return-receipt-to'} ? ( 'Return-receipt-to' => $params{'Return-receipt-to'} ) : () ),
 			( $params{'Disposition-Notification-To'} ? ( 'Disposition-Notification-To' => $params{'Disposition-Notification-To'} ) : () ),
             FROM    => ( ref $$self{from} eq 'openprint::User' ? sprintf('"%s" <%s>', $$self{from}->get('name','email') ) : $$self{from} ),
+             ( $$self{'Reply-To'} ? ( 'Reply-To'    => ( ref $$self{'Reply-To'} eq 'openprint::User' ? sprintf('"%s" <%s>', $$self{'Reply-To'}->get('name','email') ) : $$self{'Reply-To'} ) ) : () ),
             SUBJECT => ( $params{'SUBJECT'} ? $params{'SUBJECT'} : $$self{'subject'} ),
 			BODY	=>	( exists $params{'BODY'} ? $params{'BODY'} : $$self{'body'} ),
 			);

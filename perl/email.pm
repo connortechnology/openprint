@@ -89,10 +89,12 @@ sub stop_vacation {
 
 	my @aliases;
 	( $_ ) = sql::execute( $log, $dbh, q{SELECT goto FROM alias WHERE address=?}, $email );
+	if ( $_ ) {
 	foreach my $alias ( split( ',', $_ ) ) {
 		push @aliases, $alias unless $alias =~ /autoreply/;
 	} # end foreach alias
 	sql::update( $log, $dbh, 'alias', ['address=?', $email], 'goto', join(',', @aliases ), 'modified', 'NOW()' );
+	} # en dif
 	sql::end_transaction( $dbh, $ac );
 
 } # end sub stop_vacation
