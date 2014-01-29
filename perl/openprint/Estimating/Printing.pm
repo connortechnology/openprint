@@ -3013,27 +3013,31 @@ $log->warn("Getting all impos results: " . @results );
 #$imp->display('Filtering:');
 
 # My thoughts here:  have to base it purely on this sig. Need to look up price by total, but compare based just on this sig.
-		my $stock_qty = int( $qty/$$imp{'imposition'} ) * $Paper->factor();
-#$openprint::log->debug("Before  stockqty: $stock_qty upq ". $$sig_specs{"txtUnspecifiedPageQuantity$qty_index"} ."pages $$imp{pages} spread: $SpreadLayout ");
-		$stock_qty *= int( $$sig_specs{"txtUnspecifiedPageQuantity$qty_index"} / $$imp{pages} ) if $SpreadLayout > 0;
-		my $lookup_stock_qty = $stock_qty;
+		if ( ! $$imp{stock_qty} ) {
 
-		if ( $$Paper{'type'} eq 'Roll' ) {
-# Convert to weight
-			$stock_qty = int( $stock_qty * $Paper->area() * $Paper->wpsi() );
-			$lookup_stock_qty += $$PaperCounts{$Paper->id_string()};
-		} else {
-			$lookup_stock_qty += $$PaperCounts{$Paper->id_string()} * $Paper->factor();
-			$stock_qty = POSIX::ceil( $stock_qty * $Paper->area() * $Paper->wpsi() );
-			$lookup_stock_qty = POSIX::ceil( $lookup_stock_qty * $Paper->area() * $Paper->wpsi() );
+			my $stock_qty = int( $qty/$$imp{'imposition'} ) * $Paper->factor();
+	#$openprint::log->debug("Before  stockqty: $stock_qty upq ". $$sig_specs{"txtUnspecifiedPageQuantity$qty_index"} ."pages $$imp{pages} spread: $SpreadLayout ");
+			$stock_qty *= int( $$sig_specs{"txtUnspecifiedPageQuantity$qty_index"} / $$imp{pages} ) if $SpreadLayout > 0;
+			my $lookup_stock_qty = $stock_qty;
+
+			if ( $$Paper{'type'} eq 'Roll' ) {
+	# Convert to weight
+				$stock_qty = int( $stock_qty * $Paper->area() * $Paper->wpsi() );
+				$lookup_stock_qty += $$PaperCounts{$Paper->id_string()};
+			} else {
+				$lookup_stock_qty += $$PaperCounts{$Paper->id_string()} * $Paper->factor();
+				$stock_qty = POSIX::ceil( $stock_qty * $Paper->area() * $Paper->wpsi() );
+				$lookup_stock_qty = POSIX::ceil( $lookup_stock_qty * $Paper->area() * $Paper->wpsi() );
+			} # end if
+			$$imp{stock_qty} = $lookup_stock_qty;
 		} # end if
 
 		my $SmallerPrice;
-		if ( $$imp{'PaperPrice'} ) {
-			$SmallerPrice = $$imp{'PaperPrice'};
-		} else {
-			$$imp{'PaperPrice'} = $SmallerPrice = $Paper->get_price('weight'=>($stock_qty > $Paper->minimum_order_weight() ? $stock_qty : $Paper->minimum_order_weight()),'service'=>'Material' );
-		} # end if
+		#if ( $$imp{'PaperPrice'} ) {
+			#$SmallerPrice = $$imp{'PaperPrice'};
+		#} else {
+			$$imp{'PaperPrice'} = $SmallerPrice = $Paper->get_price('weight'=>($$imp{stock_qty} > $Paper->minimum_order_weight() ? $$imp{stock_qty} : $Paper->minimum_order_weight()),'service'=>'Material' );
+		#} # end if
 
 		if ( $SpreadLayout > 0 ) {
 			my $str = join(',', $imp->Press()->id(), @$imp{'pages','spread_columns','spread_rows','columns','rows','runstyle','image_orientation','bleed_size'} );
@@ -3049,14 +3053,14 @@ $log->warn("Getting all impos results: " . @results );
 						next;
 					} # end if
 					my $BiggerPrice;
-					if ( $$I{'PaperPrice'} ) {
-						$BiggerPrice = $$I{'PaperPrice'};
-					} else {
+					#if ( $$I{'PaperPrice'} ) {
+						#$BiggerPrice = $$I{'PaperPrice'};
+					#} else {
 						$BiggerPrice = $$I{'PaperPrice'} = $P->get_price(
-								'weight' => ( $stock_qty > $P->minimum_order_weight() ? $stock_qty : $P->minimum_order_weight() ),
+								'weight' => ( $$I{stock_qty} > $P->minimum_order_weight() ? $$I{stock_qty} : $P->minimum_order_weight() ),
 								'service'=>'Material'
 								);
-					} # end if
+					#} # end if
 					if ( DEBUG_FILTERING ) {
 						$imp->display("Comparing A mino weight:" . $Paper->minimum_order_weight() . 'Price: ' . $$SmallerPrice{'100lb Price'} . ' total: ' . $$SmallerPrice{'100lb Total'} . ' cut' . $Paper->is_cut() );
 						$I->display("Comparing B mino weight:". $P->minimum_order_weight() . ' Price: ' . $$BiggerPrice{'100lb Price'} . ' total: ' . $$BiggerPrice{'100lb Total'} .' cut ' . $P->is_cut());
@@ -3069,7 +3073,7 @@ $log->warn("Getting all impos results: " . @results );
 						splice @{$imps{$str}}, $j, 1;
 						$j -= 1;
 						if ( DEBUG_FILTERING ) {
-							$openprint::log->debug( "Dropping Bigger $$BiggerPrice{'100lb Total'} " . $I->Paper()->minimum_order_weight() . " $$SmallerPrice{'100lb Total'}" . $Paper->minimum_order_weight() );
+							$openprint::log->debug( "Dropping Bigger $$BiggerPrice{'100lb Total'} " . $P->minimum_order_weight() . " $$SmallerPrice{'100lb Total'}" . $Paper->minimum_order_weight() );
 							$I->display();
 							$imp->display();
 						} # end if DEBUG
