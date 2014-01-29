@@ -3,9 +3,8 @@
 	<h1>Invoice #<? echo ( $$variable{'Invoice'}->id() ) ?></h1>
 	<h2><? echo ( $$variable{'Invoice'}->Invoicer()->gst_number() ? 'HST # ' . $$variable{'Invoice'}->Invoicer()->gst_number().'</h2>' : '' ) ?>
 </div>
-<form name="f1" id="f1" action="history.html" method="post">
+<form name="f1" id="f1" action="view.html?invoice_id=<? echo ( $$variable{'Invoice'}->id() ) ?>" method="post">
 	<input type="hidden" name="btnFunction" />
-	<input type="hidden" name="invoice_id" value="<? echo ( $$variable{'Invoice'}->id() ) ?>" />
 	<p class="buttons">
 		<? echo (
 			my $html = '';
