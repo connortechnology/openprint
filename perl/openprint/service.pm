@@ -57,8 +57,10 @@ sub save_service {
 	if ( ! $service_type ) {
 		$service_type = $Project->Type()->type();
 	} # end if
-	eval ( 'require openprint::Estimating::'.$service_type.';' );
-	my @variables = eval( 'openprint::Estimating::'.$service_type.'::variables( $project_index, $service_index, $specs, \%openprint::param )');
+	my $module = 'openprint::Estimating::'.$service_type;
+
+	eval ( 'require '.$module.';' );
+	my @variables = eval( $module.'::variables( $project_index, $service_index, $specs, \%openprint::param )');
 	$log->error($@) if $@;
 $log->debug("variables: @variables");
 	# make this fast by doing it in one transaction
@@ -75,8 +77,9 @@ $log->debug("variables: @variables");
 		} # end if
 	} # end foreach
 	sql::end_transaction( $dbh, $ac );
-	eval( 'openprint::Estimating::'.$service_type.'::save( $project_index, $service_index, \%openprint::param )');
-	$log->error($@) if $@;
+	if ( my $function = $module->can('save') ) {
+		$function->( $project_index, $service_index, \%openprint::param );
+	} # end if
 
 	# FIXME: should clean this up
 	if ( $openprint::param{'Additional'} eq 'Y' or $openprint::param{'additional_service'} eq 'Y' ) {
