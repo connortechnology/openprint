@@ -5,6 +5,8 @@
 		my $Shift = new openprint::Shift();
 		$Shift->name('Pending');
 
+		my $ac = sql::start_transaction($dbh);
+
 		foreach my $E ( @{$$variable{'Equipment'}} ) {
 			$html .= '<td class="PressColumn" style="width:'. int (100/(@{$$variable{'Equipment'}})).'%;">';
 			$Shift->equipment_id( $$E{id} );
@@ -13,6 +15,8 @@ $log->debug("ul_id: " . $Shift->ul_id() );
 			$html .= $Shift->get_ul( {'Status'=>['','In Prepress','Proofs Out','Waiting For QA Approval','Waiting For Customer Approval','Printed','Complete','Pending Deposit']});
 			$html .= '</td>';
 		} # end foreach Equipment
+
+		sql::end_transaction( $dbh, $ac );
 	} # end if 
 	return $html;
 ) ?>

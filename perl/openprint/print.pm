@@ -131,6 +131,8 @@ $log->debug("after continue $$variable{ExternalRedirect}");
 		
 				$Project->summary(undef);
 				$Project->save();
+				openprint::print_project::continue_project( $log, $dbh, $variable, $project_index );
+			return if $$variable{ExternalRedirect};
 			} elsif ( $r->param('btnFunction') eq 'Modify Project' ) {
 				my $service_name = $openprint::param{'txtServiceName'} ? $openprint::param{'txtServiceName'} : 'Adjustment';
 				my $CurrentCurrency = openprint::Currency::get_current();
@@ -162,11 +164,13 @@ $log->debug("after continue $$variable{ExternalRedirect}");
 				$Project->currency_id( $openprint::session{Currency_id} );
 				$Project->recalculate();
 				openprint::print_project::continue_project( $log, $dbh, $variable, $project_index );
+			return if $$variable{ExternalRedirect};
 			} elsif ( $openprint::param{'btnFunction'} eq 'Continue Project' ) {
 				$openprint::session{'project_id'} = $project_index;
 				$Project->currency_id( $openprint::session{Currency_id} );
 				$Project->recalculate();
 				openprint::print_project::continue_project( $log, $dbh, $variable, $project_index );
+			return if $$variable{ExternalRedirect};
 			} elsif ( $openprint::param{'btnFunction'} eq 'Reuse Project' ) {
 				$project_index = openprint::print_project::reuse_project( $r, $log, $dbh, $openprint::session{_session_id}, $variable, $project_index );
 			} # end if
@@ -204,6 +208,7 @@ $log->debug("after continue $$variable{ExternalRedirect}");
 		if ( $r->param('ContinueProject') and $r->param('ContinueProject') ne 'Incomplete Form' ) {
 			$log->debug("*** Continue Project called From View Services ( view.html ) Function ***");
 			openprint::print_project::continue_project( $log, $dbh, $variable, $project_index );
+			return if $$variable{ExternalRedirect};
 		} # end if 
 		if ( ! $$variable{'Redirect'} ) {
 			$Project->update_status();

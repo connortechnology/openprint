@@ -25,7 +25,7 @@ use constant DEBUG => 0;
 use constant DEBUG_VERSIONS => 0;
 use constant DEBUG_FILTERING => 0;
 use constant DEBUG_INITIAL_FILTERING => 0;
-use constant DEBUG_PRICE_DECISIONS => 0;
+use constant DEBUG_PRICE_DECISIONS => 1;
 use constant DEBUG_INKS => 0;
 use constant DEBUG_STOCK => 0;
 use constant COMPARISON_LOG => 0;
@@ -610,8 +610,8 @@ $openprint::log->debug("Adding special colour for $colour");
 # Now it will return an array of hash refs, which may someday become Objects
 sub get_colours {
 	my ( $specs, $side, $v, $signature ) = @_;
-	my ( $caller, undef, $line ) = caller;
-$openprint::log->debug("Called get_colours from $caller : $line");
+	#my ( $caller, undef, $line ) = caller;
+#$openprint::log->debug("Called get_colours from $caller : $line");
 	my @colours;
 	if ( ( defined $$specs{'sides_the_same'} ) and ( $$specs{'sides_the_same'} eq 'Y' ) and ( $side eq 'SideTwo' ) ) {
 		$side = 'SideOne';
@@ -1466,6 +1466,7 @@ if ( 0 ) {
 
         foreach my $imp ( @impositions ) {
             if ( $$imp{'imposition'} < $max_imposition ) {
+$imp->display(" Less than $max_imposition");
                 next;
             } # end if
             my $A = $imp->Paper();
