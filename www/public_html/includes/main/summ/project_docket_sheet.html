@@ -68,6 +68,14 @@
 	</tr>
 </table>
 <br/>
+<? eval (
+	my $services = $$variable{Project}->services();
+	my $printing_specs = openprint::service::get_specs_ref( $$variable{Project}, $$services{''}[0] ) if $$services{''};
+	if ( ! ( $$printing_specs{txtWidth} and $$printing_specs{txtHeight} and $$printing_specs{txtFinalWidth} and $$printing_specs{txtFinalHeight} ) ) {
+		$printing_specs = openprint::service::get_specs_ref( $$variable{Project}, $$services{'Signature'}[0] ) if $$services{'Signature'};
+	} # end if
+	@$variable{'txtWidth','txtHeight','txtFinalWidth','txtFinalHeight'} = @$printing_specs{'txtWidth','txtHeight','txtFinalWidth','txtFinalHeight'};
+) ?>
 <table width="100%" border="1" cellspacing="0" cellpadding="0">
 	<tr> 
 		<td class="headerText" width="25%"><b>Flat Size</b>&nbsp;<?txtWidth?>&quot; x <?txtHeight?>&quot;</td>
