@@ -63,7 +63,7 @@
 
 				$$variable{'information'} .= qq`Added $param{"txtProofQuantity-$$sig_specs{'SignatureIndex'}"} $param{"ddmProofType-$$sig_specs{'SignatureIndex'}"} to Signature $$sig_specs{'SignatureIndex'}<br/>`;
 
-				$Project->add_to_log( @session{'company_id','user_id'}, sprintf( 'Added Proof %d %sx%s %s', @param{"txtProofQuantity-$$sig_specs{'SignatureIndex'}", "txtProofWidth-$$sig_specs{'SignatureIndex'}", "txtProofHeight-$$sig_specs{'SignatureIndex'}", "ddmProofType-$$sig_specs{'SignatureIndex'}"}) );
+				$Project->add_to_log( @session{'company_id','user_id'}, sprintf( 'Added Proof %d %sx%s %s for signature %s', @param{"txtProofQuantity-$$sig_specs{'SignatureIndex'}", "txtProofWidth-$$sig_specs{'SignatureIndex'}", "txtProofHeight-$$sig_specs{'SignatureIndex'}", "ddmProofType-$$sig_specs{'SignatureIndex'}"}, $$sig_specs{SignatureIndex}) );
 
 				$custom_line .= sprintf( '%d Additional %sx%s %s Proof', @param{"txtProofQuantity-$$sig_specs{'SignatureIndex'}", "txtProofWidth-$$sig_specs{'SignatureIndex'}", "txtProofHeight-$$sig_specs{'SignatureIndex'}", "ddmProofType-$$sig_specs{'SignatureIndex'}"});
 
