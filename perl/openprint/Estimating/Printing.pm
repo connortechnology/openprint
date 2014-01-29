@@ -25,7 +25,7 @@ use constant DEBUG => 0;
 use constant DEBUG_VERSIONS => 0;
 use constant DEBUG_FILTERING => 0;
 use constant DEBUG_INITIAL_FILTERING => 0;
-use constant DEBUG_PRICE_DECISIONS => 1;
+use constant DEBUG_PRICE_DECISIONS => 0;
 use constant DEBUG_INKS => 0;
 use constant DEBUG_STOCK => 0;
 use constant COMPARISON_LOG => 0;
@@ -295,7 +295,7 @@ my %variables = (
 	'chkOverrideGrainDirection1' => ['save'], 'chkOverrideGrainDirection2' => ['save'], 'chkOverrideGrainDirection3' => ['save'],
 	'txtPressSheetComboItems'=>['save'],
 	'txtSpreadSize' => ['save'],'OverrideSpreadSize' => ['save'],
-	'Group' => ['save'], 'GroupPageQuantity' => ['save'],
+	'Group' => ['save'], 'GroupPageQuantity' => ['save'], OverrideGroupPageQuantity => [ 'save' ],
 	'PaperMessage1'=>['output'], 'PaperMessage2'=>['output'], 'PaperMessage3'=>['output'],
 
 # These two are for when the customer is supplying the pages. The first just says whether the pages are supplied, the second tells us whether they are supplying sheets or folded signatures.
@@ -701,19 +701,18 @@ sub get_inkcoverage {
 		foreach my $k ( keys %$specs ) {
 # checked on
 			if ( my ( $index ) = $k =~ /^chkColourCoating(\d+)$side$signature/ ) {
-$openprint::log->debug( $k );
 				next if ! $$specs{"chkColourCoating$index$side$signature"};
 				my $type = $$specs{"ColourCoatingType$index$side$signature"};
 				if ( $type =~ /Overall/ ) {
 # Nothing cuz coverage is 100%
 					$$specs{'ColourCoatingCoverage'.$index.$side.$signature} = 100;
-$openprint::log->warn("Oeral for $index $side $signature " . $$specs{'ColourCoatingCoverage'.$index.$side.$signature} .' ' . int($$specs{'ColourCoatingCoverage'.$index.$side.$signature}) );
+#$openprint::log->warn("Oeral for $index $side $signature " . $$specs{'ColourCoatingCoverage'.$index.$side.$signature} .' ' . int($$specs{'ColourCoatingCoverage'.$index.$side.$signature}) );
 				} elsif ( ! int($$specs{'ColourCoatingCoverage'.$index.$side.$signature}) ) {
-$openprint::log->warn("Coverage for $index $side $signature " . $$specs{'ColourCoatingCoverage'.$index.$side.$signature} .' ' . int($$specs{'ColourCoatingCoverage'.$index.$side.$signature}) );
+#$openprint::log->warn("Coverage for $index $side $signature " . $$specs{'ColourCoatingCoverage'.$index.$side.$signature} .' ' . int($$specs{'ColourCoatingCoverage'.$index.$side.$signature}) );
 					$$specs{'ColourCoatingCoverage'.$index.$side.$signature} = $DefaultInkCoverage;
 					$$v{'ColourCoatingCoverage'.$index.$side.$signature} = [ sets::union( 'output', @{$$v{'ColourCoatingCoverage'.$index.$side.$signature}} ) ];
 				} else {
-$openprint::log->warn("Coverage for $index $side $signature " . $$specs{'ColourCoatingCoverage'.$index.$side.$signature} .' removing from outputs' );
+#$openprint::log->warn("Coverage for $index $side $signature " . $$specs{'ColourCoatingCoverage'.$index.$side.$signature} .' removing from outputs' );
 					$$v{'ColourCoatingCoverage'.$index.$side.$signature} = [ sets::exclude( ['output'], $$v{'ColourCoatingCoverage'.$index.$side.$signature} ) ];
 				} # end if
 				$$specs{'ColourCoatingCoverage'.$index.$side.$signature} =~ s/[^\d\.]//g;
@@ -1627,7 +1626,7 @@ $openprint::log->debug("Doing nothing, keeping all add:$add") if DEBUG_INITIAL_F
 				$bump_count += 1;
 			}
 		} # end foreach I
-		$openprint::log->debug("Initial Bumped $bump_count for Perfecting vs Sheet Work");
+		$openprint::log->debug("Initial Bumped $bump_count for Perfecting vs Sheet Work") if DEBUG_INITIAL_FILTERING;
 
 		@impositions = map {@{$_}} values %imps;
 		%imps = ();
@@ -2840,7 +2839,7 @@ $openprint::log->debug("Max pages: $max_pages") if DEBUG_FILTERING;
 
 		} # end if SpreadLayout
 		push @results, $imp;
-		$imp->display('Good');
+		$imp->display('Good') if DEBUG_FILTERING;
 	} # end foreach imp
 
 # Now filter by imposition
@@ -3594,7 +3593,7 @@ $log->warn("Getting all impos results: " . @results );
 								$$price{'Comparison Log'} .= 'signature ' . $$sig_price{'Comparison Cost'} * $sigs . '<br/>' if COMPARISON_LOG;
 								$PaperCounts{$Paper->id_string()} += $sigs * $$sig_price{'Stock Qty'};
 								my $sig;
-$openprint::log->debug("Sigs: $sigs: signatures( @signatures )");
+#$openprint::log->debug("Sigs: $sigs: signatures( @signatures )");
 								foreach ( 1 .. $sigs ) {
 									push @{$$price{Impositions}}, $imp;
 									push @{$$price{prices}}, $sig_price;
@@ -5963,6 +5962,7 @@ sub save {
 	my ( $p_id, $s_id, $param ) = @_;
 	my $Project = new openprint::Project( $p_id );
 	my $services = $Project->services();
+$openprint::log->debug("Printing::save");
 
 	if ( $$services{'Padding'} ) {
 		foreach my $padding_id ( @{$$services{'Padding'}} ) {
@@ -5981,6 +5981,37 @@ sub save {
 		} # end foreach
 		} # end foreach
 	} # end if
+
+	my $sig_specs = openprint::service::get_specs_ref( $Project, $s_id );
+	if ( $$sig_specs{Group} ) {
+		my @sigs = sort { $a <=> $b } $Project->signatures({ Group=>$$sig_specs{Group} });
+		if ( $s_id != $sigs[0] ) {
+$openprint::log->debug("Not first");
+			my $first_sig_specs = openprint::service::get_specs_ref( $Project, $sigs[0] );
+			if ( ! compare_signatures( $Project, $first_sig_specs, $sig_specs ) ) {
+$openprint::log->debug("Not different");
+# Split into a new group
+				$_ = q{SELECT MAX(strValue::integer) FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strName='Group'};
+				my ( $new_group ) = sql::execute( $log, $dbh, $_, $Project->id() );
+				$new_group += 1;
+				openprint::service::insert_service_spec( $openprint::log, $openprint::dbh, $p_id, $s_id, 'Group', $new_group );
+				my $pages = $$sig_specs{txtSpreadSize};
+				foreach my $qty_index ( $Project->quantity_indexes() ) {
+					$pages = $$sig_specs{"PageQuantity$qty_index"} if $$sig_specs{"PageQuantity$qty_index"} > $pages;
+				} # end foreach
+				my $new_pages = $$first_sig_specs{GroupPageQuantity}-$pages;
+				
+				openprint::service::insert_service_spec( $openprint::log, $openprint::dbh, $p_id, $s_id, 'GroupPageQuantity', $pages );
+				openprint::service::insert_service_spec( $openprint::log, $openprint::dbh, $p_id, $s_id, 'OverrideGroupPageQuantity', 'Y' );
+				foreach my $sig_id ( @sigs ) {
+					next if $sig_id == $s_id;
+					openprint::service::insert_service_spec( $openprint::log, $openprint::dbh, $p_id, $sig_id, 'GroupPageQuantity', $new_pages );
+				} # end foreach sig_id
+			} # end if
+		} # en dif not the first sig in the group
+	} else {
+$openprint::log->debug("No group");
+	} # end if Group
 
 } # end sub save
 

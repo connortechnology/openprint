@@ -91,7 +91,7 @@ $log->debug("after continue $$variable{ExternalRedirect}");
 				if ( $ServiceType->id() ) {
 					$Project->add_to_log( @openprint::session{'company_id','user_id'}, $ServiceType->name().' service saved.' );
 				} else {
-					$Project->add_to_log( @openprint::session{'company_id','user_id'}, 'Printing service saved.' );
+					$Project->add_to_log( @openprint::session{'company_id','user_id'}, 'Project service saved.' );
 				} # end if
 
 				my $Currency = openprint::Currency::get_current();
