@@ -23,7 +23,7 @@ my $threading = 0;
 #use threads;
 use constant DEBUG => 0;
 use constant DEBUG_VERSIONS => 0;
-use constant DEBUG_FILTERING => 0;
+use constant DEBUG_FILTERING => 1;
 use constant DEBUG_INITIAL_FILTERING => 0;
 use constant DEBUG_PRICE_DECISIONS => 0;
 use constant DEBUG_INKS => 0;
@@ -5680,10 +5680,9 @@ sub compare_signatures_runstyle {
 	} # end foreach
 	return 1;
 }
-# compares two signature services in terms of their inputs, and returns true if equal, false if not
-sub compare_signatures {
-	my ( $Project, $sig1, $sig2, $qty_index, $exclude ) = @_;
-	return 0 if ! compare_signatures_runstyle( $Project, $sig1, $sig2, $qty_index, $exclude );
+
+sub compare_signatures_no_results {
+	my ( $Project, $sig1, $sig2, $exclude ) = @_;
 	foreach my $key (
 			'Group', 'rdbSuppliedStock','rdbSpecificStock','txtEmployeeComments',
 			) {
@@ -5733,6 +5732,13 @@ $openprint::log->debug("Not the same $key $$sig1{ServiceIndex} $$sig2{ServiceInd
 			} # end if
 		} # end foreach
 	} # end if
+	return 1;
+} # end sub compare_signatures_noresults
+# compares two signature services in terms of their inputs, and returns true if equal, false if not
+sub compare_signatures {
+	my ( $Project, $sig1, $sig2, $qty_index, $exclude ) = @_;
+	return 0 if ! compare_signatures_runstyle( $Project, $sig1, $sig2, $qty_index, $exclude );
+	return compare_signatures_no_results( $Project, $sig1, $sig2, $exclude );
 #foreach my $key ( 'txtStockGSM' ) {
 #if ( sprintf('%.0f', $$sig1{$key}) ne sprintf('%.0f', $$sig2{$key}) ) {
 ##$openprint::log->debug("Not the same $key $$sig1{ServiceIndex} $$sig2{ServiceIndex} $$sig1{$key} ne $$sig2{$key}");
@@ -5740,7 +5746,6 @@ $openprint::log->debug("Not the same $key $$sig1{ServiceIndex} $$sig2{ServiceInd
 #} # end if
 #} # end foreach
 
-	return 1;
 } # end sub compare_signatures
 
 sub runtime {
@@ -5988,7 +5993,7 @@ $openprint::log->debug("Printing::save");
 		if ( $s_id != $sigs[0] ) {
 $openprint::log->debug("Not first");
 			my $first_sig_specs = openprint::service::get_specs_ref( $Project, $sigs[0] );
-			if ( ! compare_signatures( $Project, $first_sig_specs, $sig_specs ) ) {
+			if ( ! compare_signatures_no_results( $Project, $first_sig_specs, $sig_specs ) ) {
 $openprint::log->debug("Not different");
 # Split into a new group
 				$_ = q{SELECT MAX(strValue::integer) FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strName='Group'};

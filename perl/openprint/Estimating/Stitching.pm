@@ -837,7 +837,7 @@ sub get_price {
 # Calculate Full Passes
 	if ( $maxPockets and ( $neededPockets > $maxPockets ) ) {
 # Loaded here, so we don't do it in the loop many times
-$openprint::log->debug("Need more pockets $maxPockets");
+$openprint::log->debug("Need more pockets $maxPockets") if DEBUG;
 		my %servicePrice;
 		if ( ! ( %servicePrice = openprint::service::get_price_object( $$ServiceType{'name'}.$maxPockets.'Pockets', $qty, $Equipment ) ) ) {
 			%servicePrice = openprint::service::get_price_object( $$ServiceType{'name'}, $maxPockets, $Equipment );
