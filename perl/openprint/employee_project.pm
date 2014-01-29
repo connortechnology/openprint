@@ -1017,6 +1017,7 @@ sub _additional_charge_notifications {
 				my $ON = new openprint::Order_Notification();
 				$ON->save({order_id=>$$Project{order_id}, user_id=>$$U{id}});
 				$Order->AdditionalChargeNotifications( undef );
+				$param{notify_user_id} = ref $param{notify_user_id} eq 'ARRAY' ? [ @{$param{notify_user_id}}, $$U{id} ] : [ $param{notify_user_id}, $$U{id} ];
 			} # end if
 		} # end foreach email
 	} # end if Additional
@@ -1024,7 +1025,6 @@ sub _additional_charge_notifications {
 	if ( $param{action} eq 'Send' ) {
 		my @Notifications = openprint::Order_Notification->find(order_id=>$$Project{order_id}, ( $param{notify_user_id} ? ( user_id => $param{notify_user_id} ) : () ) );
 		$_ = send_additional_charges_notifications( @$Project{'order_id','id'}, $param{additionalchargecomments}, @Notifications );
-$log->debug('back');
 		$variable{'information'} = 'Additional Charges Email sent.' . $_;
 	} # end if action 
 } # end sub _additional_charge_notifications 
