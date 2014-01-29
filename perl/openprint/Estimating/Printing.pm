@@ -4568,7 +4568,7 @@ sub calc_price {
 			$price{'Perforating Breakdown'} .= "Perforating error: $perforating_results{'alert'} $$project{'PerforatingSpecs'}{alert} " . $perforating_results{'Breakdown'} . '<br/>';
 			$price{'Comparison Cost'} += 1000000; 
 		} else {
-			$price{'Perforating Breakdown'} .= sprintf('Perforating Price: %.2f speed: %s<br/>', @perforating_results{'Price','Runspeed'} );
+			$price{'Perforating Breakdown'} .= sprintf('Perforating Price: %.2f speed: %s on %s<br/>', @perforating_results{'Price','Runspeed'}, ( $perforating_results{'Equipment'} ? $perforating_results{'Equipment'}->name() : 'no press' ) );
 			$price{'Comparison Cost'} += $perforating_results{'Price'};
 			if ( $perforating_results{'Equipment'} and ($perforating_results{'Equipment'}->id() == $Press->id()) ) {
 				if ( $perforating_results{'Runspeed'} =~ /(.*)\%/ ) {
