@@ -179,7 +179,7 @@ sub calc {
 	} # end foreach quantities
 
 	$log->debug("END PERFING!!!!!!!!!!!!!!!!!!") if DEBUG;
-	return $status;
+	return $$specs{Status} = $status;
 } # end sub calc
 
 sub signature_calc {
