@@ -24,7 +24,7 @@ require openprint::service;
 
 use vars qw( @folds %fold_types );
 
-use constant DEBUG => 1;
+use constant DEBUG => 0;
 use constant DEBUG_NEEDS => 0;
 
 my @equipment;
@@ -508,7 +508,7 @@ $openprint::log->debug("Not adding because previousimposition != sigImposition")
 	foreach my $SigImpo ( @{$Signature_Impositions} ) {
 		next if $$SigImpo{service_id} >= $signature_service_index;
 		if ( $$SigImpo{folding_results} ) {
-$openprint::log->error("folds from sigimpo");
+#$openprint::log->error("folds from sigimpo");
 			my $Folds = $$SigImpo{folding_results}{Folds};
 			if ( $Folds ) {
 
