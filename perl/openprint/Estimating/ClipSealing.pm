@@ -102,9 +102,10 @@ sub calc {
 			} # end if
 
 			
+			my %MaterialPrice;
 			if ( $$specs{'SealType_id'} ) {
 				my $Material = new openprint::Material( $$specs{'SealType_id'} );
-				my %MaterialPrice = $Material->get_price( $$specs{'txtQuantity'.$qty_index} * $$specs{'SealQuantity'} );
+				%MaterialPrice = $Material->get_price( $$specs{'txtQuantity'.$qty_index} * $$specs{'SealQuantity'} );
 				if ( ! %MaterialPrice ) {
 					$$specs{'hdnBreakdown'.$qty_index} .= 'No Material Price.<br/>';
 				} elsif ( $MaterialPrice{'units'} eq 'per m' ) {
