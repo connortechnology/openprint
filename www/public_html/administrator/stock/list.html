@@ -155,8 +155,10 @@
 		</li>
 		<li>
 			<label>Size</label>
-			<? echo ( ssi::input( type=>'float', name=>'width', id=>'width', value=>$session{'/administrator/stock/list.html?width'}, onkeyup=>'calc(this.form.name);' ); ) ?>x
-			<? echo ( ssi::input( type=>'float', name=>'height', id=>'height', value=>$session{'/administrator/stock/list.html?height'}, onkeyup=>'calc(this.form.name);' ); ) ?>x
+			<? echo ( join(' x ',
+input( type=>'float', name=>'width', id=>'width', value=>$session{'/administrator/stock/list.html?width'}, onkeyup=>'calc(this.form.name);' ),
+input( type=>'float', name=>'height', id=>'height', value=>$session{'/administrator/stock/list.html?height'}, onkeyup=>'calc(this.form.name);' ),
+); ) ?>
 		</li>
 		<li>
 			<label>Recommendations</label>
