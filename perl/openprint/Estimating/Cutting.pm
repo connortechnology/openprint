@@ -313,7 +313,7 @@ sub signature_calc_folding_cutting {
 	my ( $Project, $sig_specs, $specs, $qty_index, $Paper, $I, $fold_specs, $calc_hash ) = @_;
 
 	my %results = (
-			'Status'	=> 'calculated',
+			Status	=> 'calculated',
 			);
 
 	my $services = $Project->services();
@@ -328,9 +328,12 @@ sub signature_calc_folding_cutting {
 	foreach my $fold_index ( 1 .. 4 ) {
 		if ( $$fold_specs{"FoldQty-$$sig_specs{'SignatureIndex'}-$qty_index-$fold_index"} ) {
 			$folds{$$fold_specs{"FoldType-$$sig_specs{'SignatureIndex'}-$qty_index-$fold_index"}} = $$fold_specs{"FoldQty-$$sig_specs{'SignatureIndex'}-$qty_index-$fold_index"};
+		} else {
+$openprint::log->debug("No folds for index $fold_index");
 		} # end if
 	} # end foreach fold
 	my $folding_cuts = misc::sum( map { $folds{$_} } keys %folds);
+$openprint::log->debug("Folding cuts $folding_cuts");
 	$results{'Breakdown'} .= sprintf('<b>Cutting prior to folding sig: %d qty: %d: %dpg -> folds %s</b><br/>', $$sig_specs{'SignatureIndex'}, $qty_index, $I->pages(), join(',',keys %folds ) );
 	if ( $folding_cuts <= 1 ) {
 		$results{'Breakdown'} .= sprintf('Not needed<br/>' );
@@ -880,6 +883,8 @@ sub calc {
 
 	my $Project = new openprint::Project( $project_index );
 	my $services = $Project->services();
+	
+	my $fold_specs = openprint::service::get_specs_ref( $Project, $$services{Folding}[0] ) if $$services{Folding} and @{$$services{Folding}};
 	my $calc_hash = {};
 
 	my @signatures = $Project->signatures({sort=>1});
@@ -939,7 +944,7 @@ sub calc {
 
 			# Folding
 			if ( $$services{'Folding'} and @{$$services{'Folding'}} ) {
-				my %results = signature_calc_folding_cutting( $Project, $sig_specs, $specs, $qty_index, $Paper, $Imposition, $calc_hash );
+				my %results = signature_calc_folding_cutting( $Project, $sig_specs, $specs, $qty_index, $Paper, $Imposition, $fold_specs, $calc_hash );
 				$$specs{"ddmFoldCutEquipment-$signature_index-$qty_index"} = $results{'Equipment'} ? $results{'Equipment'}->id() : '';
 				$$specs{"txtFoldCutPrice-$signature_index-$qty_index"} = $results{'Price'};
 				$price += $results{'Price'};

@@ -24,7 +24,7 @@ require openprint::service;
 
 use vars qw( @folds %fold_types );
 
-use constant DEBUG => 0;
+use constant DEBUG => 1;
 use constant DEBUG_NEEDS => 0;
 
 my @equipment;
@@ -894,8 +894,12 @@ $openprint::log->debug("No Fold") if DEBUG;
 							} elsif ( DEBUG ) {
 								$Imposition->display('Didnt find fold:' ) if DEBUG;
 							} # end if
-						} elsif ( DEBUG or ( @my_equipment == 1 ) ) {
+						} elsif ( DEBUG ) {
+							if ( @my_equipment == 1 ) {
 							$Breakdown .= "Doesn't fit $_.<br/>";
+							} else {
+								$Imposition->display('Didnt fiit:'.$_ );
+							}
 						} # end if
 
 						# If we get here, then we couldn't find the fold
@@ -1225,7 +1229,7 @@ $openprint::log->debug("Runspeed: $fold_type(".$Fold->name().") : " . $Equipment
 					$Breakdown .= qq`No Units ($servicePrice{'units'}) given for `.$Fold->name().' on '.$Equipment->name().',<br/>';
 					$servicePrice{'Total'} += 1000000;
 				} else {
-					$Breakdown .= qq`No Price given for `.$$Fold{'name'}.' on '.$$Equipment{'name'}.',<br/>';
+					$Breakdown .= qq`No Price given for `.$$Fold{type}.' on '.$$Equipment{'name'}.',<br/>';
 				} # end if
 
 				$mprice += $servicePrice{'Total'};
@@ -1264,14 +1268,14 @@ if ( 0 ) {
 						$totalPrice += 1000000;
 					} else {
 						$stitching_part = $$results{'Price'};
-						$Breakdown .= "Stitching cost: $stitching_part on " . $$results{'Equipment'}->strid() . '<br/>';
+						$Breakdown .= "Stitching cost: $stitching_part on " . $$results{'Equipment'}->name() . '<br/>';
 					} # end if
-					$Breakdown .= $$results{Breakdown};
+					#$Breakdown .= $$results{Breakdown}.'<br/>';
 				} elsif ( $$specs{'StitchingEquipment'}->id() != $Equipment->id() and $Equipment->specification('Folding Capable') eq 'When Stitching' ) {
 					$Breakdown .= 'Not stitching on ' . $Equipment->strid().' stitching on '.$$specs{'StitchingEquipment'}->strid() .'.<br/>';
 				} else {
 					$stitching_part = $$specs{'StitchingCost'};
-					$Breakdown .= "Stitching cost: $stitching_part on " . $$specs{'StitchingEquipment'}->strid() . '<br/>';
+					$Breakdown .= "Stitching cost: $stitching_part on " . $$specs{'StitchingEquipment'}->name() . '<br/>';
 				} # end if
 			} # end if has sittiching
 
