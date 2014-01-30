@@ -23,7 +23,6 @@ function filter_onChange( element, id, selected ) {
 			var v = get_value( filter );
             if ( ! v ) continue;
 			
-alert(filter.name + ' value: ' + v );
 			h.set(filter.name, v );
 			if ( filter.type == 'select-one' ) {
 				filter.disabled = true;
@@ -32,7 +31,6 @@ alert(filter.name + ' value: ' + v );
 			if ( filter ) {
 				var v = get_value( filter );
 				if ( v ) h.set(filter.name, v );
-alert(filter.name + ' value: ' + v );
 			} // end if
         } // end if filter exists
     } // end for 
