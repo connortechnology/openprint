@@ -17,7 +17,7 @@
 package openprint::Estimating::Stitching;
 use strict;
 
-use constant DEBUG => 0;
+use constant DEBUG => 1;
 
 require openprint::Equipment;
 require openprint::service;
@@ -192,15 +192,19 @@ sub signature_calc {
 	my $Folding_Equipment = new openprint::Equipment( $$folding_specs{"ddmEquipment-$$sig_specs{SignatureIndex}-$qty_index"} );
 
 	foreach my $I ( @$Impositions ) {
-#$I->display('In Stitching:') if DEBUG;
+$I->display('In Stitching:') if DEBUG;
 		my $sig_specs = $I->specs();
 		my %pages;
 		my $sig_pages = $I->pages();
 		if ( $folding_specs ) {
+
+			my %folds;
 			foreach my $index ( 1 .. 4 ) {
-				next if ! $$folding_specs{"FoldQty-$$sig_specs{SignatureIndex}-$qty_index-$index"};
+				my $fold_qty = $$folding_specs{"FoldQty-$$sig_specs{SignatureIndex}-$qty_index-$index"};
+				next if ! $fold_qty;
 				my $type = $$folding_specs{"FoldType-$$sig_specs{SignatureIndex}-$qty_index-$index"};
 				next if ! $type;
+
 				my ( $pages ) = $type =~ /(\d+)PageFold/;
 				if ( ! $pages ) {
 					if ( $type eq 'SingleGateFold' ) {
@@ -208,23 +212,44 @@ sub signature_calc {
 					} elsif ( $type eq 'DoubleGateFold' ) {
 						$pages = 8;
 					} # end if
-					if ( ! $pages ) {	
+					if ( ! $pages ) {
 						$openprint::log->error(" No pages in fold $type.");
 						next;
 					}
-				}
-				#$results{'Breakdown'} .= "Folding$index: $$sig_specs{SignatureIndex} sig_pages; $sig_pages type: $type pages: $pages qty: " . $$folding_specs{"FoldQty-$$sig_specs{SignatureIndex}-$qty_index-$index"} . '<br/>';
-				if ( $$folding_specs{"FoldQty-$$sig_specs{SignatureIndex}-$qty_index-$index"} * $pages > $sig_pages ) {
-					$pages{$pages} += int($sig_pages / $pages);
-				} elsif ( $$folding_specs{"FoldQty-$$sig_specs{SignatureIndex}-$qty_index-$index"} * $pages == $$sig_specs{'PageQuantity'.$qty_index} ) {
-					$pages{$pages} += $$folding_specs{"FoldQty-$$sig_specs{SignatureIndex}-$qty_index-$index"};
-				} else {
-					$pages{$pages} += 1;
 				} # end if
-#$$folding_specs{"FoldQty-$$sig_specs{SignatureIndex}-$qty_index-$index"};
-			} # end foreach index
+				$folds{$pages} += $fold_qty;
+			} # end foreach fold index
+			my $total_pages = misc::sum( map { $_ * $folds{$_} } keys %folds );
+SIG_FIX_PAGES: while( $total_pages > $sig_pages ) {
+			   if ( $folds{$total_pages-$sig_pages} > 1 ) {
+				   $folds{$total_pages-$sig_pages} -= 1;
+				   $total_pages -= ( $total_pages-$sig_pages );
+				   next;
+			   }
+			   foreach my $pages ( keys %folds ) {
+				   if ( $folds{$pages} > 1 ) {
+					   $folds{$pages} -= 1;
+					   $total_pages -= $pages;
+					   next SIG_FIX_PAGES;
+				   } # end if
+			   } # end foreach
+			   $openprint::log->warn("Unable to figure out pages $total_pages $sig_pages.");
+			   last;
+		   } # end while
 
-	# If not all pages have been folde, then revert to just pull from the sig.
+		   foreach my $pages ( keys %folds ) {
+# Stitching should never stitch more pages than are printed in a sig, despite what's in folding
+			   $openprint::log->debug("Folding pages: $sig_pages / $pages folding $folds{$pages}");
+			   if ( $sig_pages == $pages ) {
+				   $pages{$pages} += 1;
+				   last;
+			   } else{
+				   $openprint::log->debug(" fold qty * pages($pages) == sig_pages($sig_pages) foldQty: " . $folds{$pages}) if DEBUG;
+				   $pages{$pages} += $folds{$pages};
+			   } # end if
+		   } # end foreach index
+
+# If not all pages have been folde, then revert to just pull from the sig.
 			if ( misc::sum( map { $_ * $pages{$_} } keys %pages ) < $sig_pages ) {
 				$$specs{"txtPockets$qty_index"} += 1;
 				$$specs{'txtSignatureQty'.$sig_pages.'Page-'.$qty_index} += 1;
@@ -525,10 +550,13 @@ sub calc {
 				my %pages;
 				my $sig_pages = $$sig_specs{'PageQuantity'.$qty_index};
 				if ( $folding_specs ) {
+					my %folds;
 					foreach my $index ( 1 .. 4 ) {
-						next if ! $$folding_specs{"FoldQty-$$sig_specs{SignatureIndex}-$qty_index-$index"};
+						my $fold_qty = $$folding_specs{"FoldQty-$$sig_specs{SignatureIndex}-$qty_index-$index"};
+						next if ! $fold_qty;
 						my $type = $$folding_specs{"FoldType-$$sig_specs{SignatureIndex}-$qty_index-$index"};
 						next if ! $type;
+
 						my ( $pages ) = $type =~ /(\d+)PageFold/;
 						if ( ! $pages ) {
 							if ( $type eq 'SingleGateFold' ) {
@@ -540,14 +568,38 @@ sub calc {
 								$openprint::log->error(" No pages in fold $type.");
 								next;
 							}
+						} # end if
+						$folds{$pages} += $fold_qty;
+					} # end foreach fold index
+					my $total_pages = misc::sum( map { $_ * $folds{$_} } keys %folds );
+					FIX_PAGES: while( $total_pages > $sig_pages ) {
+						if ( $folds{$total_pages-$sig_pages} > 1 ) {
+							$folds{$total_pages-$sig_pages} -= 1;
+							$total_pages -= ( $total_pages-$sig_pages );
+							next;
 						}
-#$openprint::log->debug("Folding pages: $type $sig_pages / $pages");
-						if ( $$folding_specs{"FoldQty-$$sig_specs{SignatureIndex}-$qty_index-$index"} * $pages != $sig_pages ) {
-$openprint::log->debug(" fold qty * pages($pages) != sig_pages($sig_pages) foldQty: " . $$folding_specs{"FoldQty-$$sig_specs{SignatureIndex}-$qty_index-$index"}) if DEBUG;
-							$pages{$pages} += Math::Round::nearest( 1, $$sig_specs{'PageQuantity'.$qty_index} / $pages );
-						} elsif ( $$folding_specs{"FoldQty-$$sig_specs{SignatureIndex}-$qty_index-$index"} * $pages == $sig_pages ) {
-$openprint::log->debug(" fold qty * pages($pages) == sig_pages($sig_pages) foldQty: " . $$folding_specs{"FoldQty-$$sig_specs{SignatureIndex}-$qty_index-$index"}) if DEBUG;
-							$pages{$pages} += $$folding_specs{"FoldQty-$$sig_specs{SignatureIndex}-$qty_index-$index"};
+						foreach my $pages ( keys %folds ) {
+							if ( $folds{$pages} > 1 ) {
+								$folds{$pages} -= 1;
+								$total_pages -= $pages;
+								next FIX_PAGES;
+							} # end if
+						} # end foreach
+						$openprint::log->error("Unable to figure out pages $total_pages $sig_pages.");
+						last;
+					} # end while
+					foreach my $pages ( keys %folds ) {
+						# Stitching should never stitch more pages than are printed in a sig, despite what's in folding
+$openprint::log->debug("Folding pages: $sig_pages / $pages folding $folds{$pages}");
+						if ( $sig_pages == $pages ) {
+
+							$pages{$pages} += 1;
+							last;
+						#} elsif ( $folds{$pages} * $pages != $sig_pages ) {
+						#} elsif ( $fold_qty * $pages == $sig_pages ) {
+						} else{
+$openprint::log->debug(" fold qty * pages($pages) == sig_pages($sig_pages) foldQty: " . $folds{$pages}) if DEBUG;
+							$pages{$pages} += $folds{$pages};
 						} # end if
 					} # end foreach index
 				} # end if
