@@ -81,7 +81,7 @@ sub calc {
 			my $runs = POSIX::ceil( $$specs{'SealQuantity'} / $clips_per_run );
 
 			my $totalPrice = 0;
-			my %MakeReadyPrice = openprint::service::get_price_object( 'ClipSealingMakeReady', undef, $Equipment );
+			my %MakeReadyPrice = openprint::service::get_price_object( 'ClipSealingMakeReady', $$specs{SealQuantity}, $Equipment );
 			if ( %MakeReadyPrice ) {
 				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('MakeReady Price: $%1$f%2$s<br/>', @MakeReadyPrice{'Price','units'} );
 				$totalPrice += $MakeReadyPrice{'Price'};
