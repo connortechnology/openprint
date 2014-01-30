@@ -415,27 +415,26 @@ sub insert_layout_proof {
 #$openprint::log->debug("Called insert_layout_proof from $caller : $line");
 #$Imposition->display('insert_layout_proof');
 	my $Equipment = $Imposition->Press();
-	$Equipment = openprint::Equipment->find_one( 'strid'=>$$sig_specs{'ddmPress'.$qty_index} ) if ! $Equipment;
+	$Equipment = openprint::Equipment->find_one( strid=>$$sig_specs{'ddmPress'.$qty_index} ) if ! $Equipment;
 	if ( ! $Equipment ) {
 		$openprint::log->warn("No equipment in insert_layout_proof");
 		return;
 	} # end if
 
+	my $quantity = 0;
 	my ( $default_proof_type ) = $Equipment->specification( 'Default Layout Proof' );
 	if ( ! $default_proof_type ) {
 		$openprint::log->debug("No Default Layout Proof for " . $Equipment->strid() ) if DEBUG;
-		return;
-	} # end if
-
-	$$sig_specs{SideOneColours} = [openprint::Estimating::Printing::get_colours( $sig_specs, 'SideOne' )] if ! $$sig_specs{SideOneColours};
-	$$sig_specs{SideTwoColours} = [openprint::Estimating::Printing::get_colours( $sig_specs, 'SideTwo' )] if ! $$sig_specs{SideTwoColours};
-
-	my $quantity = 0;
-	if ( sets::isin( $$Imposition{'runstyle'}, ['Web','Sheet Work', 'Perfecting'] ) ) {
-		$quantity += 1 if @{$$sig_specs{SideOneColours}};
-		$quantity += 1 if @{$$sig_specs{SideTwoColours}};
 	} else {
-		$quantity += 1 if @{$$sig_specs{SideOneColours}} or @{$$sig_specs{SideTwoColours}};
+		$$sig_specs{SideOneColours} = [openprint::Estimating::Printing::get_colours( $sig_specs, 'SideOne' )] if ! $$sig_specs{SideOneColours};
+		$$sig_specs{SideTwoColours} = [openprint::Estimating::Printing::get_colours( $sig_specs, 'SideTwo' )] if ! $$sig_specs{SideTwoColours};
+
+		if ( sets::isin( $$Imposition{'runstyle'}, ['Web','Sheet Work', 'Perfecting'] ) ) {
+			$quantity += 1 if @{$$sig_specs{SideOneColours}};
+			$quantity += 1 if @{$$sig_specs{SideTwoColours}};
+		} else {
+			$quantity += 1 if @{$$sig_specs{SideOneColours}} or @{$$sig_specs{SideTwoColours}};
+		} # end if
 	} # end if
 
 	insert_new_proof( $specs, $proof_index, $$sig_specs{'SignatureIndex'}, $quantity, $Imposition->stock_width(), $Imposition->stock_height(), $default_proof_type, $qty_index );
