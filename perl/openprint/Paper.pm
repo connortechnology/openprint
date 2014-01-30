@@ -836,9 +836,9 @@ sub in_stock {
 	return 0 if ! $_[0]{id};
 
 	if ( @_ > 1 ) {
-		if ( ref $_[1] eq 'openprint::StockQuality' ) {
+		if ( ref $_[1] eq 'openprint::InventoryCondition' ) {
 			my $in_stock = 0;
-			foreach my $C ( openprint::SkidContent->find(deleted=>0,paper_id=>$_[0]{id}, quality_id=>$_[0]->id() ) ) {
+			foreach my $C ( openprint::SkidContent->find(deleted=>0,paper_id=>$_[0]{id}, condition_id=>$_[1]->id() ) ) {
 				$in_stock += $C->quantity();
 			} # end foreach C
 			return $in_stock;

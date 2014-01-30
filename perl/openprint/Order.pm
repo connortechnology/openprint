@@ -379,8 +379,8 @@ sub send_cancellation_notice {
 	my @Recipients;
 	# Send to inventory and scheduling people.
 	foreach my $Recipient ( 
-		openprint::User->find(usergroup=>'Inventory',type=>['E','A']),
-		openprint::User->find(usergroup=>'Scheduling','type'=>['E','A'])
+		openprint::User->find('usergroup any'=>'Inventory',type=>['E','A']),
+		openprint::User->find('usergroup any'=>'Scheduling','type'=>['E','A'])
 		) {
 		next if $Recipient->id() == $session{'user_id'};
 		next if $Recipient->notification('Docket Cancellations') ne 'Yes';
@@ -392,12 +392,11 @@ sub send_cancellation_notice {
 	my %order;
 	$order{'Order'} = $_[0];
 	$order{'ReplacementText'} = ssi::include('/email_content/order_cancellation_notice.html', \%order );
-	my $email_template = misc::load_file( $log, $config{'SkinPath'} . '/email_template.html' );
 	new openprint::Email()->send(
 			FROM	=> new openprint::User( $session{user_id} ),
 			TO	=> \@Recipients,
 			SUBJECT => "Docket $_[0]{docket} has been cancelled.",
-			ATTACHMENTS => [ '', MIME::QuotedPrint::encode_qp( ssi::variable_substitution( \$email_template, \%order ) ), 'text/html', 'quoted-printable'],
+			ATTACHMENTS => [ '', MIME::QuotedPrint::encode_qp( ssi::include( '/email_template.html', \%order ) ), 'text/html', 'quoted-printable'],
 			);
 	
 } # end sub send_cancellation_notice

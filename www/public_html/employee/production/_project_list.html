@@ -1,4 +1,5 @@
 <? eval (
+	$$variable{Projects} = [];
 	if ( $param{'StartDocket'} and $param{'EndDocket'}) {
 		$$variable{Projects} = [ openprint::Project->find(
 			'docket <='	=> $param{EndDocket},
@@ -20,7 +21,8 @@
 		} # end if
 	} elsif ( $param{OrderID} ) {
 		my $Order = openprint::Order->find_one( id => $param{OrderID} );
-		push $$variable{Projects} = [ $Order->Projects() ] if $Order;
+		$$variable{Projects} = [ $Order->Projects() ] if $Order;
+		
 	} else {
 		my %filters = (
 				( $session{'/employee/production/projects.html?ddmPress'} ? (	'used_press_name in'	=> $session{'/employee/production/projects.html?ddmPress'} ) : () ),
