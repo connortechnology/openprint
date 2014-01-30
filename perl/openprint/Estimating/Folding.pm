@@ -511,12 +511,11 @@ $openprint::log->debug("Not adding because previousimposition != sigImposition")
 #$openprint::log->error("folds from sigimpo");
 			my $Folds = $$SigImpo{folding_results}{Folds};
 			if ( $Folds ) {
-
 				foreach my $key ( keys %$Folds ) {
 					my ( $fold_type, $imposition ) = $key =~ /(.*)-(\d+)out$/;
 					push @{$makereadies{$$SigImpo{folding_results}{Equipment}->id()}}, $fold_type;
 				} # end foreach
-			} else {
+			} elsif ( DEBUG ) {
 $openprint::log->error("No folds from sigimpo");
 			} # end if
 		} else {
