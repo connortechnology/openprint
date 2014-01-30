@@ -1,17 +1,22 @@
 <script type="text/javascript" src="<?hash_link(/javascripts/service.js)?>"></script>
 <div class="Service">
 	<form id="f1" name="f1" method="post" action="/main/project/view.html">
-		<?include(/includes/main/proj/required_fields.html)?>
 		<fieldset><legend><?ServiceTypeName?></legend>
 			<ul>
 			<li><label># of seals</label>
 				<? echo ( input( type=>'cardinal', id=>'SealQuantity', name=>'SealQuantity', value=>$$variable{SealQuantity}, onkeyup=>'calc(this.form.name);' ); ) ?>
 			</li>
 			<li><label>Seal type</label>
-				<select id="SealType_id" name="SealType_id" onchange="calc(this.form.name);">
-					<option value=""> select </option>
-<? echo ( make_drop_down( [ map { $_->id(), $_->description() } openprint::Material->find( 'category'=>'Clip Seal Types', 'order'=>'lower(name)' ) ], $$variable{'SealType_id'} ); ) ?>
-				</select>
+			<? echo (
+				my @Types = openprint::Material->find( category=>'Clip Seal Types', order=>'lower(name)' );
+				if ( @Types > 1 ) {
+					return ssi::select( 
+						[ map { $_->id(), $_->description() } @Types ], $$variable{'SealType_id'}, { name=>'SealType_id', id=>'SealType_id', prepend=>['','select'] } );
+				} elsif ( @Types == 1 ) {
+					return input( type=>'hidden', name=>'SealType_id', value=>$Types[0]{id} ) . $Types[0]->description();
+				} # end if
+				return 'There are no available types.';
+			) ?>
 			</li>
 			<?include('/includes/main/proj/quantities_equipment_prices.html')?>
 			</ul>
