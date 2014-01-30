@@ -1237,7 +1237,7 @@ sub add_service {
 	} # end foreach
 	if ( $data ) {
 		foreach my $n ( keys %$data ) {
-			openprint::service::insert_service_spec( $log, $dbh, $$self{'id'}, $service_index, $n, $$data{$n}, 1 );
+			openprint::service::insert_service_spec( $log, $dbh, $$self{'id'}, $service_index, $n, $$data{$n} );
 		} # end foreach 
 	}
 

@@ -29,36 +29,37 @@ my $ac = sql::start_transaction( $dbh );
 foreach my $Order ( openprint::Order->find( 'invoice_id is null'=>0 ) ) {
 	next if ! $Order->invoice_id();
 
-	if ( $Order->invoice_id() =~ /\D/ ) {
-		next if openprint::Invoice->find_one(num=>$Order->invoice_id());
-	} else {
-		next if openprint::Invoice->find_one(id=>$Order->invoice_id());
-	} # end if
+	next if openprint::Invoice->find_one(num=>$Order->invoice_id(), invoicee_id => $Order->company_id() );
+	next if openprint::Invoice->find_one(id=>$Order->invoice_id(), invoicee_id => $Order->company_id() );
 
-	my ( $invoiced_on ) = sql::execute( undef, undef, 'SELECT invoiced_on FROM ORders where id=?', $Order->id() );
+	my ( $invoiced_on ) = sql::execute( undef, undef, 'SELECT invoiced_on FROM Orders where id=?', $Order->id() );
 	if ( ! $invoiced_on ) {
 		$log->warn( "No invoiced_on for $$Order{id}" );
 		next;
 	} # end if
 
 	my $Invoice = new openprint::Invoice();
-	$_ = $Invoice->save({ num=>$Order->invoice_id(),
+	$_ = $Invoice->save({
+		num=>$Order->invoice_id(),
 		invoicer_id=>6,
 		invoicee_id=>$Order->company_id(),
-		total		=>	$Order->total(),
-		currency_id	=>	$Order->currency_id(),
 		 });
 	if ( $_ ) {
 		$dbh->rollback();
 		die $_;
 	} # end if
-	sql::update( undef, undef, 'invoices', [ 'id=?', $Invoice->id() ], 'created_on', $invoiced_on );
+	if ( $dbh->errstr() ) {
+		$dbh->rollback();
+		die $$dbh->errstr();
+	} # end if
+	$$Order{invoice_id} = $Invoice->id();
+	sql::update( undef, undef, 'invoices', [ 'id=?', $Invoice->id() ], 'created_on', $invoiced_on ) if $invoiced_on;
 	sql::update( undef, undef, 'orders', [ 'id=?', $Order->id() ], 'invoice_id', $Invoice->id() );
 } # end foreach Order
 sql::end_transaction( $dbh, $ac );
 }
 
-if ( 1 ) {
+if ( 0 ) {
 my $ac = sql::start_transaction( $dbh );
 foreach my $Order ( openprint::Order->find( 'invoice_id is null'=>0 ) ) {
 	next if ! $Order->invoice_id();
@@ -78,6 +79,10 @@ foreach my $Order ( openprint::Order->find( 'invoice_id is null'=>0 ) ) {
 	if ( $_ ) {
 		$dbh->rollback();
 		die $_;
+	} # end if
+	if ( $dbh->errstr() ) {
+		$dbh->rollback();
+		die $dbh->errstr();
 	} # end if
 } # end foreach Order
 sql::end_transaction( $dbh, $ac );

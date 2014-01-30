@@ -361,7 +361,7 @@ Date::Format::time2str('%Y-%m-%d %H:%M', Date::Parse::str2time($I->updated_on())
 sub _paper_results {
 	ssi::save_params( '/employee/inventory/paper.html', ( 
 				'manufacturer_id','brand_id','finish_id','colour_id','weight_id','quality_id', 
-				'type','owner_id','material_id','group_id',
+				'type','owner_id','material_id','group_id', 'condition_id',
 				( map { 'added_on_start_'.$_ } ( 'year','month','day' ) ),
 				( map { 'added_on_end_'.$_ } ( 'year','month','day' ) ),
 				'Docket','fsc_code','width','height','OrLarger','instock','owner_id_exclude','allocated',
@@ -524,8 +524,6 @@ sub save_Paper {
 			( $param{'Weight'.$id} ? ( 'weight_id' =>	$param{'Weight'.$id} ) : () ),
 			'weight'	=>	$weight,
 # We might 
-			#'quality_id' =>	$param{'Quality'.$id},
-			#'quality'	=>	$param{'txtQuality'.$id},
 			( $param{'width'.$id} ? ( 'width'		=> $param{'width'.$id} ) : () ),
 			( $param{'height'.$id} ? ( 'height'	=>	$param{'type'.$id} ne 'Roll' ? $param{'height'.$id} : undef ) : () ),
 			( $param{'type'.$id} ? ( 'type'		=>	$param{'type'.$id} ) : () ),
@@ -1025,9 +1023,12 @@ sub check_out {
 
 	my $available_qty = $Paper->in_stock();
 	my $units = $Paper->type() eq 'Roll' ? 'lbs' : 'sheets';
-	$project_id =~ s/\D//g;
-	$docket =~ s/\D//g;
-	my @Projects = openprint::Project->find( 'id'=>$project_id, 'docket'=>$docket ) if $project_id or $docket;
+	$project_id = openprint::Project->transform( 'id', $project_id );
+	$docket = openprint::Project->transform( 'docket', $docket );
+	my @Projects = openprint::Project->find( 
+		( $project_id ? ( id=>$project_id ) : () ),
+		( $docket ? ( docket=>$docket ) : () ),
+	) if $project_id or $docket;
 
 	my @skids;
 	if ( $skid_id ) {
@@ -1166,8 +1167,8 @@ sub allocate {
 	my @Projects = openprint::Project->find( ( $project_id ? ( id=>$project_id ) : () ), ( $docket ? ( docket=>$docket ) : () ) ) if $project_id or $docket;
 
 	if ( $docket and ! @Projects ) {
-		if ( my @Orders = openprint::Order->find(docket=>$docket) ) {
-			@Projects = $Orders[0]->Projects();
+		if ( my $Order = openprint::Order->find_one(docket=>$docket) ) {
+			@Projects = $Order->Projects();
 		} # end if
 	} # end if
 	if ( ! @Projects ) {
@@ -1942,7 +1943,7 @@ sub _paper_allocations {
 		$param{'skid_id'} =~ s/\D//g;
 		$param{'Docket'} =~ s/\D//g;
 		$param{'AllocationQuantity'} =~ s/[^\d\-]//g;
-		my @Projects = openprint::Project->find( 'docket'=>$param{'Docket'} ) if $param{'Docket'};
+		my @Projects = openprint::Project->find( docket=>$param{Docket} ) if $param{Docket};
 		if ( ! @Projects ) {
 			$variable{'error'} .= "Docket $param{'Docket'} not found.";
 		} else {
@@ -1960,7 +1961,9 @@ sub _paper_allocations {
 sub _skid_allocations {
     if ( $param{'action'} eq 'Add' ) {
         my $Paper = new openprint::Paper( $param{'paper_id'} );
-        my @Projects = openprint::Project->find( 'id'=>$param{'ProjectID'}, 'docket'=>$param{'Docket'} ) if $param{'ProjectID'} or $param{'Docket'};
+        my @Projects = openprint::Project->find( 
+			( $param{ProjectID} ? ( id=>$param{ProjectID} ) : () ),
+			( $param{Docket} ? ( docket=>$param{Docket} ) : () ) ) if $param{ProjectID} or $param{Docket};
         my $Skid = new openprint::Skid( $param{'skid_id'} );
 
         if ( ! @Projects ) {

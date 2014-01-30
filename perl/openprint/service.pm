@@ -57,8 +57,10 @@ sub save_service {
 	if ( ! $service_type ) {
 		$service_type = $Project->Type()->type();
 	} # end if
-	eval ( 'require openprint::Estimating::'.$service_type.';' );
-	my @variables = eval( 'openprint::Estimating::'.$service_type.'::variables( $project_index, $service_index, $specs, \%openprint::param )');
+	my $module = 'openprint::Estimating::'.$service_type;
+
+	eval ( 'require '.$module.';' );
+	my @variables = eval( $module.'::variables( $project_index, $service_index, $specs, \%openprint::param )');
 	$log->error($@) if $@;
 $log->debug("variables: @variables");
 	# make this fast by doing it in one transaction
@@ -75,8 +77,9 @@ $log->debug("variables: @variables");
 		} # end if
 	} # end foreach
 	sql::end_transaction( $dbh, $ac );
-	eval( 'openprint::Estimating::'.$service_type.'::save( $project_index, $service_index, \%openprint::param )');
-	$log->error($@) if $@;
+	if ( my $function = $module->can('save') ) {
+		$function->( $project_index, $service_index, \%openprint::param );
+	} # end if
 
 	# FIXME: should clean this up
 	if ( $openprint::param{'Additional'} eq 'Y' or $openprint::param{'additional_service'} eq 'Y' ) {
@@ -229,6 +232,7 @@ sub auto_calculate {
 			while ( my $si = shift @{$$services{'Folding'}} ) {
 				openprint::print_project::delete_service( $$Project{'id'}, $si );
 			} # end while
+			delete $$services{Folding};
 		} # end if
 	} else {
 		if ( ! $$services{'Folding'} ) {
@@ -258,6 +262,7 @@ require openprint::Estimating::PerfectBound;
 		while ( my $si = shift @{$$services{'PerfectBound'}} ) {
 			openprint::print_project::delete_service( $$Project{'id'}, $si );
 		} # end while
+		delete $$services{'PerfectBound'};
 	} # end if
 
 require openprint::Estimating::Stitching;
@@ -298,6 +303,7 @@ require openprint::Estimating::Stitching;
 			foreach my $si ( @{$$services{'Collating'}} ) {
 				openprint::print_project::delete_service( $$Project{'id'}, $si );
 			} # end foreach
+			delete $$services{'Collating'};
 		} # end if
 	} # end if
 
@@ -451,7 +457,7 @@ sub internal_calc {
 	my $ac = sql::start_transaction( $dbh );
 	my $Project = new openprint::Project( $project_index );
 	$Project->save({status=>'uncalculated'}) if $Project->status() ne 'uncalculated';
-    $log->debug("LOCKING Projects for project $$Project{id} $ac");
+    $log->debug("LOCKING Projects for project $$Project{id} ac: $ac service_index: $service_index $service_type");
     #$dbh->do( "SELECT * FROM Projects WHERE id=".$$Project{id}. ' FOR UPDATE' );
 	my $Service = $Project->Service($service_index) if $service_index;
 	$Service->save({status=>'uncalculated'}) if $Service->status() ne 'uncalculated';

@@ -63,7 +63,7 @@
 
 				$$variable{'information'} .= qq`Added $param{"txtProofQuantity-$$sig_specs{'SignatureIndex'}"} $param{"ddmProofType-$$sig_specs{'SignatureIndex'}"} to Signature $$sig_specs{'SignatureIndex'}<br/>`;
 
-				$Project->add_to_log( @session{'company_id','user_id'}, sprintf( 'Added Proof %d %sx%s %s', @param{"txtProofQuantity-$$sig_specs{'SignatureIndex'}", "txtProofWidth-$$sig_specs{'SignatureIndex'}", "txtProofHeight-$$sig_specs{'SignatureIndex'}", "ddmProofType-$$sig_specs{'SignatureIndex'}"}) );
+				$Project->add_to_log( @session{'company_id','user_id'}, sprintf( 'Added Proof %d %sx%s %s for signature %s', @param{"txtProofQuantity-$$sig_specs{'SignatureIndex'}", "txtProofWidth-$$sig_specs{'SignatureIndex'}", "txtProofHeight-$$sig_specs{'SignatureIndex'}", "ddmProofType-$$sig_specs{'SignatureIndex'}"}, $$sig_specs{SignatureIndex}) );
 
 				$custom_line .= sprintf( '%d Additional %sx%s %s Proof', @param{"txtProofQuantity-$$sig_specs{'SignatureIndex'}", "txtProofWidth-$$sig_specs{'SignatureIndex'}", "txtProofHeight-$$sig_specs{'SignatureIndex'}", "ddmProofType-$$sig_specs{'SignatureIndex'}"});
 
@@ -80,17 +80,15 @@
 			openprint::Estimating::Proofs::calc( $log, $dbh, $variable, @param{'ProjectIndex','ServiceIndex'}, \%proof_specs );
 
 			# Now do the abominable thing and add a custom line item for it too...
-			if ( my @ServiceTypes = openprint::ServiceType->find('name'=>'CustomService') ) {
-				my $ac = sql::start_transaction( $dbh );
-				sql::insert( $log, $dbh, 'tbl_Project_Contents', 'lngProjectIndex', $param{'ProjectIndex'}, 'strStatus', 'Waiting For Customer Approval', 'servicetype_id', $ServiceTypes[0]->id() );
-				$_ = q{SELECT MAX(lngServiceIndex) FROM tbl_Project_Contents WHERE lngProjectIndex=?};
-				my ( $service_index ) = sql::execute( $log, $dbh, $_, $param{'ProjectIndex'} );
-				openprint::service::insert_service_spec( $log, $dbh, $param{'ProjectIndex'}, $service_index, 'ServiceType', 'CustomService' );
-				openprint::service::insert_service_spec( $log, $dbh, $param{'ProjectIndex'}, $service_index, 'ServiceName', $custom_line );
-				openprint::service::insert_service_spec( $log, $dbh, $param{'ProjectIndex'}, $service_index, 'txtPrice1', $proof_specs{'txtPrice1'}-$prices[0] );
-				openprint::service::insert_service_spec( $log, $dbh, $param{'ProjectIndex'}, $service_index, 'txtPrice2', $proof_specs{'txtPrice2'}-$prices[1] );
-				openprint::service::insert_service_spec( $log, $dbh, $param{'ProjectIndex'}, $service_index, 'txtPrice3', $proof_specs{'txtPrice3'}-$prices[2] );
-				sql::end_transaction( $dbh, $ac );
+
+			if ( my $ServiceType = openprint::ServiceType->find_one(name=>'CustomService') ) {
+               $Project->add_service( $ServiceType, { ServiceName => $custom_line,
+                        txtPrice1 => $proof_specs{'txtPrice1'}-$prices[0],
+                        txtPrice2 => $proof_specs{'txtPrice2'}-$prices[1],
+                        txtPrice3 => $proof_specs{'txtPrice3'}-$prices[2],
+						}, { status	=> 'Waiting For Customer Approval' }
+                        );
+
 			} else {
 				$$variable{'ErrorMessage'}.='Error adding proof: Unable to find service CustomService';
 			} # end if
@@ -104,16 +102,16 @@
 	<input type="hidden" name="ProjectIndex" value="<?ProjectIndex?>"/>
 	<input type="hidden" name="ServiceIndex" value="<?ServiceIndex?>"/>
 	<input type="hidden" name="order_id" value="<?OrderID?>"/>
-	<input type="hidden" name="btnFunction" value=""/>
+	<input type="hidden" name="btnFunction" />
 	<? eval ( 
 		@{$$variable{'Presses'}} = map { $_->strid(), $_->name() } openprint::Equipment->find('category any'=>'Printing', useinscheduling=>1, order=>'lower(strname)');
 		openprint::Estimating::Proofs::get_proof_specs( $log, $dbh, $variable, @$variable{'ProjectIndex','ServiceIndex'} ); 
 
-		@{$$variable{'SignatureIndices'}} = $$variable{'Project'}->signatures();
+		@{$$variable{'SignatureIndices'}} = $$variable{'Project'}->signatures( { sort=>1 } );
 	) ?>
-	<? while ( $$variable{'SignatureServiceIndex'} = shift @{$$variable{'SignatureIndices'}} ) ?>
+	<? while ( $$variable{'SignatureServiceIndex'} = shift @{$$variable{SignatureIndices}} ) ?>
 	<? eval ( $$variable{'SignatureSpecs'} = openprint::service::get_specs_ref( @$variable{'ProjectIndex','SignatureServiceIndex'} ); ) ?>
-	<fieldset><legend>Signature: <? echo ( $$variable{'SignatureSpecs'}{'Reference'} ) ?></legend>
+	<fieldset><legend>Form <? echo ( $$variable{'SignatureSpecs'}{'SignatureIndex'} . ': ' . $$variable{'SignatureSpecs'}{'Reference'} ) ?></legend>
 		<? echo ( 
 			my $specs = $$variable{'SignatureSpecs'};
 			my $html;
@@ -172,8 +170,8 @@
 		<? echo ( 
 			if ( $session{'user_type'} eq 'A' or openprint::usergroup::is_user_in( ['Prepress'], $session{'user_id'} ) ) {
 				return join('',
-					button( 'Save', { onclick=>"if(check_input(f2,'$$variable{SignatureSpecs}{SignatureIndex}')){f2.btnFunction.value='Add Proof';LoadContent('Signatures','/employee/proj/prep/_proofs_signatures.html',Serialize(f2) );}", text=>'Save' } ),
-					button( 'Delete', { onclick=>"f2.btnFunction.value='Delete Proofs';LoadContent('Signatures','/employee/proj/prep/_proofs_signatures.html',Serialize(f2) );", text=>'Delete Checked' } ),
+					button( 'Save', { onclick=>"if(check_input(f2,'$$variable{SignatureSpecs}{SignatureIndex}')){f2.btnFunction.value='Add Proof';LoadContent('Signatures','/employee/proj/prep/_proofs_signatures.html',\$('f2') );}", text=>'Save' } ),
+					button( 'Delete', { onclick=>"f2.btnFunction.value='Delete Proofs';LoadContent('Signatures','/employee/proj/prep/_proofs_signatures.html',\$('f2') );", text=>'Delete Checked' } ),
 				);
 			} # end if
 			return '';
@@ -181,5 +179,5 @@
 		</span>
 		<br class="spacer"/>
 	</fieldset>
-	<? endwhile ( $$variable{'SignatureServiceIndex'} = shift @{$$variable{'SignatureIndices'}} ) ?>
+	<? endwhile ( $$variable{'SignatureServiceIndex'} = shift @{$$variable{SignatureIndices}} ) ?>
 </form>
