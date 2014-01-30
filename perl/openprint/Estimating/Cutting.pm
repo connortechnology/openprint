@@ -328,12 +328,9 @@ sub signature_calc_folding_cutting {
 	foreach my $fold_index ( 1 .. 4 ) {
 		if ( $$fold_specs{"FoldQty-$$sig_specs{'SignatureIndex'}-$qty_index-$fold_index"} ) {
 			$folds{$$fold_specs{"FoldType-$$sig_specs{'SignatureIndex'}-$qty_index-$fold_index"}} = $$fold_specs{"FoldQty-$$sig_specs{'SignatureIndex'}-$qty_index-$fold_index"};
-		} else {
-$openprint::log->debug("No folds for index $fold_index");
 		} # end if
 	} # end foreach fold
 	my $folding_cuts = misc::sum( map { $folds{$_} } keys %folds);
-$openprint::log->debug("Folding cuts $folding_cuts");
 	$results{'Breakdown'} .= sprintf('<b>Cutting prior to folding sig: %d qty: %d: %dpg -> folds %s</b><br/>', $$sig_specs{'SignatureIndex'}, $qty_index, $I->pages(), join(',',keys %folds ) );
 	if ( $folding_cuts <= 1 ) {
 		$results{'Breakdown'} .= sprintf('Not needed<br/>' );
