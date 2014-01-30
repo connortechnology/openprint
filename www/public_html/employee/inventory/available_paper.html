@@ -103,9 +103,9 @@ Please select a Paper to view/edit.<br>
 		$session{'/employee/inventory/available_paper.html?'.$option_id} = $options[0] if ( @options == 2 );
 
 		$html .= sprintf(q`<li><label>%1$s</label>
-				<select name="%2$s_id%3$s" id="%2$s_id%3$s" size="1" onchange="filter_onChange(this,'');">
-				<option value=""> All </option> %4$s </select>
-			</li>`, $option, $lower_option, $$variable{Signature},
+				<select name="%2$s_id" id="%2$s_id" size="1" onchange="filter_onChange(this,'');">
+				<option value=""> All </option> %3$s </select>
+			</li>`, $option, $lower_option, 
 			make_drop_down( \@options, $session{'/employee/inventory/available_paper.html?'.$option_id} ),
 		);
 	} # end foreach option
