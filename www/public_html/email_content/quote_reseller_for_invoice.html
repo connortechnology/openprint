@@ -30,10 +30,10 @@
 
 					if ( $$services{'BulkSkids'} ) {
 						my $specs = openprint::service::get_specs_ref( $Project, $$services{'BulkSkids'}[0] );
-						$weight = $$specs{'totalWeight'.$$variable{qty_index}};
+						$weight = $$specs{'totalWeight'.$qty_index};
 					} elsif ( $$services{'PlainCartons'} ) {
 						my $specs = openprint::service::get_specs_ref( $Project, $$services{'PlainCartons'}[0] );
-						$weight = $$specs{'totalWeight'.$$variable{qty_index}};
+						$weight = $$specs{'totalWeight'.$qty_index};
 					} else {
 						$weight = openprint::print::get_finished_weight( $Project->id() ) * $Project->quantity( $qty_index );
 					} # end if
