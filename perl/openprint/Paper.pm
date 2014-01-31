@@ -343,6 +343,7 @@ sub merge {
 	sql::update( undef, undef, 'paper_recommendations', [ 'lngpaperindex=?', $Duplicate->id() ], 'lngpaperindex', $self->id() );
 	sql::update( undef, undef, 'manifest_content_types', [ 'paper_id=?', $Duplicate->id() ], 'paper_id', $self->id() );
 	$Duplicate->delete();
+	$self->save({in_stock=>undef});
 	sql::end_transaction( $openprint::dbh, $ac );
 } # end sub merge
 
@@ -380,7 +381,7 @@ sub delete {
 	sql::execute( undef, undef, q{DELETE FROM StockMaterials WHERE id NOT IN (SELECT DISTINCT material_id FROM Papers)} );
 	
 	# Add record to audit log - action "Delete Paper".
-	openprint::logs::insertLogRecord('15', "Paper ID: " . $$self{'id'},);
+	new openprint::Log()->save({action=>'Delete Paper', note=>'Stock ID: '.$$self{'id'} });
 	sql::end_transaction( undef, $ac );
 	
 } # end sub delete

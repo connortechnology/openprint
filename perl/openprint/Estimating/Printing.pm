@@ -5912,7 +5912,7 @@ sub summary {
 				$html .= sprintf(' on %s" x %s"', @$specs{'StockWidth'.$qty_index,'StockHeight'.$qty_index});
 			} # end if
 		} # end if
-		if ( sets::isin( $openprint::session{'user_type'}, [ 'E', 'A' ] ) ) {
+		if ( 0 and sets::isin( $openprint::session{'user_type'}, [ 'E', 'A' ] ) ) {
 			if ( $$services{'Folding'} and @{$$services{'Folding'}} ) {
 				$html .= "\nfolded " . openprint::Estimating::Folding::signature_summary( $Project, $$services{'Folding'}[0], undef, $qty_index, $service_index, undef );
 			} # end if
