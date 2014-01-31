@@ -39,8 +39,8 @@
 						);
 					) ?>
 				</select>
-				<input type="hidden" name="firstname" value="<?firstname?>"/>
-				<input type="hidden" name="lastname" value="<?lastname?>"/>
+				<input type="hidden" id="firstname" name="firstname" value="<?firstname?>"/>
+				<input type="hidden" id="lastname" name="lastname" value="<?lastname?>"/>
 			</li>
 		<? else ( sets::isin( $session{'user_type'}, [ 'A','E'] ) ) ?>
 			<li> 
