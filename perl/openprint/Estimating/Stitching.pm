@@ -17,7 +17,7 @@
 package openprint::Estimating::Stitching;
 use strict;
 
-use constant DEBUG => 1;
+use constant DEBUG => 0;
 
 require openprint::Equipment;
 require openprint::service;
@@ -239,7 +239,7 @@ SIG_FIX_PAGES: while( $total_pages > $sig_pages ) {
 
 		   foreach my $pages ( keys %folds ) {
 # Stitching should never stitch more pages than are printed in a sig, despite what's in folding
-			   $openprint::log->debug("Folding pages: $sig_pages / $pages folding $folds{$pages}");
+			   $openprint::log->debug("Folding pages: $sig_pages / $pages folding $folds{$pages}") if DEBUG;
 			   if ( $sig_pages == $pages ) {
 				   $pages{$pages} += 1;
 				   last;
@@ -590,7 +590,7 @@ sub calc {
 					} # end while
 					foreach my $pages ( keys %folds ) {
 						# Stitching should never stitch more pages than are printed in a sig, despite what's in folding
-$openprint::log->debug("Folding pages: $sig_pages / $pages folding $folds{$pages}");
+$openprint::log->debug("Folding pages: $sig_pages / $pages folding $folds{$pages}") if DEBUG;
 						if ( $sig_pages == $pages ) {
 
 							$pages{$pages} += 1;
