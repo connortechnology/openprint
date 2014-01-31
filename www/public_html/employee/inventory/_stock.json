@@ -59,7 +59,7 @@
 
 		@{$specs{$options[$i]}} = ();
 		my %data;
-		if ( exists $param{lc $options[$i].'_id'} ) {
+		if ( exists $openprint::Paper::fields{lc $options[$i].'_id'} ) {
 			%data = map { $_->get(lc($options[$i]), lc($options[$i]).'_id' ) } @Stocks;
 		} else {
 			%data = map { $_->get(lc($options[$i]), lc($options[$i]) ) } @Stocks;
