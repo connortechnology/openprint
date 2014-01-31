@@ -1565,12 +1565,15 @@ sub summary {
 	my ( $Project, $service_id, $specs, $qty_index ) = @_;
 	$specs = openprint::service::get_specs_ref( $Project, $service_id ) if ! $specs;
 	if ( $qty_index ) {
-		foreach my $s_s_id ( $Project->signatures() ) {
+		my $html;
+		foreach my $s_s_id ( $Project->signatures( { sort=>1 } ) ) {
 			my $sig_specs = openprint::service::get_specs_ref( $Project, $s_s_id );
-			if ( $$specs{"chkOverrideEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} or $$specs{"chkOverrideFoldType-$$sig_specs{'SignatureIndex'}-$qty_index"} ) {
-				return 'Overridden';
-			} # end if
+			#if ( $$specs{"chkOverrideEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} or $$specs{"chkOverrideFoldType-$$sig_specs{'SignatureIndex'}-$qty_index"} ) {
+				#return 'Overridden';
+			#} # end if
+			$html .= 'Form ' . $$sig_specs{SignatureIndex} . ' ' . $$sig_specs{txtServiceDescription} . ' folded ' ."\n".signature_summary( $Project, $service_id, undef, $qty_index, $s_s_id, undef ) . "\n";
 		} # end foreach
+		return $html;
 	} else {
 		if ( $$specs{'alert'} ) {
 			return '<div class="warning">'.$$specs{'alert'}.'</span>';
