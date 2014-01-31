@@ -499,7 +499,7 @@ sub signature_calc {
 		} # end foreach fold_index
 	} # end if
 
-$openprint::log->debug("Folding impos " . @folding_impositions  . ' eq ' . @my_equipment );
+#$openprint::log->debug("Folding impos " . @folding_impositions  . ' eq ' . @my_equipment );
 
 	if ( $$Imposition{'image_orientation'} eq 'Horizontal' ) {
 		$stitching_imposition = $$Imposition{'columns'} if $stitching_imposition > $$Imposition{'columns'};
@@ -583,7 +583,7 @@ $openprint::log->debug("Folding impos " . @folding_impositions  . ' eq ' . @my_e
 # Regular book signatures will be trimmed by the stitcher, so we only need 1 cut per imposition
 # but if we are cutting into smaller signatures, then we need more cutting
 #$openprint::log->debug("Sitching $stitching_imposition to $$sig_specs{'txtImposition'.$qty_index}");
-$openprint::log->debug("have signaturetype $$sig_specs{'txtSignatureType'} ");
+#$openprint::log->debug("have signaturetype $$sig_specs{'txtSignatureType'} ");
 			if ( $I->pages() and ! $folding_specs ) {
 # Have to cut the pages out
 				$vertical_cuts += int ( ($I->page_columns()-1)*$I->columns()*2 ) + 2;

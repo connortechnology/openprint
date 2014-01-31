@@ -23,7 +23,7 @@ my $threading = 0;
 #use threads;
 use constant DEBUG => 0;
 use constant DEBUG_VERSIONS => 0;
-use constant DEBUG_FILTERING => 1;
+use constant DEBUG_FILTERING => 0;
 use constant DEBUG_INITIAL_FILTERING => 0;
 use constant DEBUG_PRICE_DECISIONS => 0;
 use constant DEBUG_INKS => 0;
@@ -2435,9 +2435,9 @@ if ( 1 ) {
 			$$specs{'popup'} .= $Paper->message() if $Paper->message();
 		} # end if
 		$$specs{'PaperMessage'.$qty_index} = $Paper->message();
-		$$specs{'NeedCutting'} = openprint::Estimating::Cutting::signature_needs( $Project, $specs );
 $openprint::log->debug("Master time after qty: $qty_index" . ( sprintf('%.4f', tv_interval( [$master_time])*1000) ) .' usecs' ) if DEBUG;
 	} # end foreach quantity
+	$$specs{'NeedCutting'} = openprint::Estimating::Cutting::signature_needs( $Project, $specs ) if ! $$project{HasCutting};
 $openprint::log->debug("Leaving Printing::calc status: $$specs{'Status'}");
 	return $$specs{'Status'};
 } # end sub calc
@@ -2920,7 +2920,7 @@ $log->warn("Getting all impos results: " . @results );
 			my $Press = $I->Press();
 			my $AValue = $Press->specification('Value');
 
-			my $key = join(',', $Paper->width(), $Paper->height(), $$I{pages}, $$I{page_columns}, $I->image_orientation(), $I->imposition(), $I->columns(), $I->runstyle() );
+			my $key = join(',', $Paper->width(), $$I{pages}, $$I{page_columns}, $I->image_orientation(), $I->imposition(), $I->columns(), $I->runstyle() );
 			if ( ! ( $imps{$key} and @{$imps{$key}} ) ) {
 				$imps{$key} = [ $I ];
 				next;
@@ -2932,11 +2932,11 @@ $log->warn("Getting all impos results: " . @results );
 					my $BPress = $B->Press();
 					my $BValue = $BPress->specification('Value');
 					if ( $BValue ) {
-						if ( $BValue > $AValue ) {
+						if ( $BValue > $AValue and ( $Paper->area() <= $B->Paper()->area() ) ) {
 							splice @{$imps{$key}}, $i, 1;
 							$i -= 1;
 							$bump_count += 1;
-						} elsif ( $BValue < $AValue ) {
+						} elsif ( $BValue < $AValue and ( $B->Paper()->area() <= $Paper->area() ) ) {
 							$add = 0;
 							last;
 						} # end if
@@ -3062,20 +3062,21 @@ $log->warn("Getting all impos results: " . @results );
 						$imp->display("Comparing A mino weight:" . $Paper->minimum_order_weight() . 'Price: ' . $$SmallerPrice{'100lb Price'} . ' total: ' . $$SmallerPrice{'100lb Total'} . ' cut' . $Paper->is_cut() );
 						$I->display("Comparing B mino weight:". $P->minimum_order_weight() . ' Price: ' . $$BiggerPrice{'100lb Price'} . ' total: ' . $$BiggerPrice{'100lb Total'} .' cut ' . $P->is_cut());
 					} 
-					if ( ( ! ( $$sig_specs{'txtUnspecifiedPageQuantity'.$qty_index} % $$imp{pages} ) )
-							and ( $P->factor() <= $Paper->factor() )
-							and ( $$BiggerPrice{'100lb Total'} >= $$SmallerPrice{'100lb Total'} )
-					   ) {
-# There won't be any additional signatures, so we can compare directly on value
-						splice @{$imps{$str}}, $j, 1;
-						$j -= 1;
-						if ( DEBUG_FILTERING ) {
-							$openprint::log->debug( "Dropping Bigger $$BiggerPrice{'100lb Total'} " . $P->minimum_order_weight() . " $$SmallerPrice{'100lb Total'}" . $Paper->minimum_order_weight() );
-							$I->display();
-							$imp->display();
-						} # end if DEBUG
+					#if ( ( ! ( $$sig_specs{'txtUnspecifiedPageQuantity'.$qty_index} % $$imp{pages} ) )
+							#and ( $P->factor() <= $Paper->factor() )
+							#and ( $$BiggerPrice{'100lb Total'} >= $$SmallerPrice{'100lb Total'} )
+					   #) {
+## There won't be any additional signatures, so we can compare directly on value
+						#splice @{$imps{$str}}, $j, 1;
+						#$j -= 1;
+						#if ( DEBUG_FILTERING  or 1) {
+							#$openprint::log->debug( "Dropping weird  Bigger $$BiggerPrice{'100lb Total'} " . $P->minimum_order_weight() . " $$SmallerPrice{'100lb Total'}" . $Paper->minimum_order_weight() );
+							#$I->display( 'B' );
+							#$imp->display( 'A' );
+						#} # end if DEBUG
 
-					} elsif ( ( $P->area() >= $Paper->area() )
+					#} elsif ( ( $P->area() >= $Paper->area() )
+					if ( ( $P->area() >= $Paper->area() )
 							and ( $P->factor() <= $Paper->factor() )
 							and ( $P->minimum_order_weight() >= $Paper->minimum_order_weight() )
 							and ( $$BiggerPrice{'100lb Total'} >= $$SmallerPrice{'100lb Total'} )
@@ -3230,6 +3231,7 @@ $log->warn("Getting all impos results: " . @results );
 		$openprint::log->debug("Bumped $bump_count impos in 3rd filtering");
 		$bump_count = 0;
 		@results = map {@{$_}} values %imps;
+		%imps = ();
 		foreach my $I ( @results ) {
 			my $Paper = $I->Paper();
 			my $key = join('-',$Paper->width(),$Paper->minimum_order(), $I->pages(),$I->image_orientation(),$I->runstyle());
@@ -3700,7 +3702,7 @@ $$new_specs{"OverrideStockHeight$qty_index"} = $Paper->height();
 							$imp->display('Recursion Depth :' . $recursion_depth ) if DEBUG;
 							$$sig_price{'complete'} = 0;
 						} else {
-							my $price_cache_key = join(',', $qty_index, $$Press{strid}, $$price{upq}, $$imp{runstyle}, $$Paper{type}, $$Paper{width},$$Paper{height} );
+							my $price_cache_key = join(',', keys %PaperCounts, $qty_index, $$Press{strid}, $$price{upq}, $$imp{runstyle}, $$Paper{type}, $$Paper{width},$$Paper{height} );
 
 							if ( ! $price_cache{$price_cache_key} ) {
 								my @new_possible_presses;
@@ -4133,6 +4135,7 @@ $openprint::log->warn("Unable to calculate impositions for additional signatures
 
 		if ( DEBUG_PRICE_DECISIONS ) {
 			$imp->display("New best price chosen: $best_price{'Comparison Cost'} >= $$price{'Comparison Cost'}");
+			$openprint::log->debug( 'this: ' . breakdown( \%best_price, $sig_specs ) );
 			foreach my $I ( @{ $best_price{'Impositions'} } ) {
 				$I->display( $recursion_depth . "OLD BEST:" );
 			} # end while
@@ -4160,6 +4163,7 @@ $openprint::log->warn("Unable to calculate impositions for additional signatures
 #$best_price{'Breakdown'} = breakdown( \%best_price, $sig_specs );
 #} # end if
 		if ( DEBUG_PRICE_DECISIONS or $$sig_specs{Group} == 1 ) {
+			$openprint::log->debug( 'new: ' . breakdown( \%best_price, $sig_specs ) );
 			foreach my $I ( @{ $best_price{'Impositions'} } ) {
 				$I->display( $recursion_depth . "NEW BEST qty_index: $qty_index:" );
 			} # end while
