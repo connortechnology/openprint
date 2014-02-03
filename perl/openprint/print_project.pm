@@ -92,12 +92,6 @@ sub add_service {
 	} # end foreach
 } # end sub add_service
 
-sub insert_service {
-	my ( $log, $dbh, $project_index, $service_id ) = @_;
-	my $Project = new openprint::Project( $project_index );
-	return $Project->add_service( $service_id );
-} # end sub insert_service
-
 sub create_edit_display {
 	my $project_index = $param{'ProjectIndex'};
 

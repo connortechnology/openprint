@@ -25,7 +25,7 @@ sub _signature {
 		  $variable{Group} += 1;
 		  $variable{'Signature'} = $variable{Group};
 
-		  my ($print_service_index) = openprint::print_project::insert_service( $log, $dbh, $Project->id(), 'Signature' );
+		  my $print_service_index = $Project->add_service( 'Signature' );
 		  openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $print_service_index, 'txtSignatureType', 'Interior Pages' );
 		  openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $print_service_index, 'txtServiceDescription', 'Interior Pages' );
 		  openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $print_service_index, 'Group', $variable{Group} );
@@ -47,7 +47,7 @@ sub _signature {
 		if ( ! $Project->signatures({'Group'=>$param{'group_id'}}) ) {
 			my $ac = sql::start_transaction( $dbh );
 			$dbh->do( "LOCK TABLE tbl_Service_Specifications IN EXCLUSIVE MODE" ) or $log->error( DBI->errstr );
-			my ($print_service_index) = openprint::print_project::insert_service( $log, $dbh, $Project->id(), 'Signature' );
+			my $print_service_index = $Projcet->add_service( 'Signature' );
 			openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $print_service_index, 'txtSignatureType', 'Interior Pages' );
 			openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $print_service_index, 'txtServiceDescription', 'Interior Pages' );
 			openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $print_service_index, 'Group', $param{'group_id'} );
