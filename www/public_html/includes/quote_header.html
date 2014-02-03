@@ -9,7 +9,7 @@
 				<li class="reference"><label>Reference</label>
 				<? echo ( $$variable{'Quote'}->reference() ) ?>
 				</li>
-				<? if ( $$variable{'Quote'}->reference() ) ?>
+				<? endif ( $$variable{'Quote'}->reference() ) ?>
 				<? if ( $$variable{'Quote'}->comments() ) ?>
 				<li class="comments"><label>Comments</label>
 				<? echo ( $$variable{'Quote'}->comments() ) ?>
