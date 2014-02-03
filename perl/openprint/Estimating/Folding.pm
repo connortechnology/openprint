@@ -1566,12 +1566,30 @@ sub summary {
 	$specs = openprint::service::get_specs_ref( $Project, $service_id ) if ! $specs;
 	if ( $qty_index ) {
 		my $html;
-		foreach my $s_s_id ( $Project->signatures( { sort=>1 } ) ) {
+		my $cur_sig_specs;
+		my @signatures = $Project->signatures( { sort=>1 } );
+
+		for ( my $sig_index = 0; $sig_index < @signatures; $sig_index += 1 ) {
+			my $s_s_id = $signatures[$sig_index];
 			my $sig_specs = openprint::service::get_specs_ref( $Project, $s_s_id );
-			#if ( $$specs{"chkOverrideEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} or $$specs{"chkOverrideFoldType-$$sig_specs{'SignatureIndex'}-$qty_index"} ) {
-				#return 'Overridden';
-			#} # end if
+			my $sig_count = 1;
+
+			if ( $sig_index < @signatures - 1 ) {
+				for ( my $sig_index2 = $sig_index + 1; $sig_index2 < @signatures; $sig_index2 += 1 ) {
+					my $sig_specs2 = openprint::service::get_specs_ref( $Project, $signatures[$sig_index2] );
+					if ( openprint::Estimating::Printing::compare_signatures( $Project, $sig_specs, $sig_specs2, $qty_index ) ) {
+						$sig_count += 1;
+					} else {
+						last;
+					} # end if
+				} # end for
+				splice @signatures, $sig_index+1,$sig_count-1 if $sig_count > 1;
+			} 
+			if ( $sig_count > 1 ) {
+				$html .= ($sig_count) . ' Forms ' . $$sig_specs{txtServiceDescription} . ' folded ' ."\n".signature_summary( $Project, $service_id, undef, $qty_index, $s_s_id, undef ) . "\n";
+			} else {
 			$html .= 'Form ' . $$sig_specs{SignatureIndex} . ' ' . $$sig_specs{txtServiceDescription} . ' folded ' ."\n".signature_summary( $Project, $service_id, undef, $qty_index, $s_s_id, undef ) . "\n";
+			} # end if
 		} # end foreach
 		return $html;
 	} else {

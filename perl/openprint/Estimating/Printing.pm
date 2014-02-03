@@ -6178,7 +6178,7 @@ $openprint::log->debug("We are cover");
 				my $sig_specs = openprint::service::get_specs_ref( $Project, $index );
 				if ( sets::isin( $$sig_specs{'PrintingType'.$qty_index}, $available_printingtypes ) and ( $$sig_specs{'OverridePrintingType'.$qty_index} eq 'Y' ) ) {
 					if ( $$sig_specs{'PrintingType'.$qty_index} eq 'Digital' ) {
-						$results = ['Digital'];
+						$results = ['Digital','Sheetfed'];
 					} elsif ( $$sig_specs{'PrintingType'.$qty_index} eq 'Waterless' ) {
 						$results = [ 'Waterless', 'Offset' ];
 					} elsif ( $$sig_specs{'PrintingType'.$qty_index} eq 'Offset' ) {
