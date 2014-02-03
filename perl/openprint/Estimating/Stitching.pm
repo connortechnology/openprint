@@ -144,6 +144,7 @@ sub get_imposition {
 sub signature_calc {
 	my ( $Project, $service_index, $specs, $qty_index, $folding_specs, $sig_specs, $Impositions, $calc_hash ) = @_;
 
+	
 	my %results;
 	my $services = $Project->services();
 	my $printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
@@ -191,15 +192,19 @@ sub signature_calc {
 	my $Folding_Equipment = new openprint::Equipment( $$folding_specs{"ddmEquipment-$$sig_specs{SignatureIndex}-$qty_index"} );
 
 	foreach my $I ( @$Impositions ) {
-#$I->display('In Stitching:') if DEBUG;
+$I->display('In Stitching:') if DEBUG;
 		my $sig_specs = $I->specs();
 		my %pages;
 		my $sig_pages = $I->pages();
 		if ( $folding_specs ) {
+
+			my %folds;
 			foreach my $index ( 1 .. 4 ) {
-				next if ! $$folding_specs{"FoldQty-$$sig_specs{SignatureIndex}-$qty_index-$index"};
+				my $fold_qty = $$folding_specs{"FoldQty-$$sig_specs{SignatureIndex}-$qty_index-$index"};
+				next if ! $fold_qty;
 				my $type = $$folding_specs{"FoldType-$$sig_specs{SignatureIndex}-$qty_index-$index"};
 				next if ! $type;
+
 				my ( $pages ) = $type =~ /(\d+)PageFold/;
 				if ( ! $pages ) {
 					if ( $type eq 'SingleGateFold' ) {
@@ -207,23 +212,44 @@ sub signature_calc {
 					} elsif ( $type eq 'DoubleGateFold' ) {
 						$pages = 8;
 					} # end if
-					if ( ! $pages ) {	
+					if ( ! $pages ) {
 						$openprint::log->error(" No pages in fold $type.");
 						next;
 					}
-				}
-				#$results{'Breakdown'} .= "Folding$index: $$sig_specs{SignatureIndex} sig_pages; $sig_pages type: $type pages: $pages qty: " . $$folding_specs{"FoldQty-$$sig_specs{SignatureIndex}-$qty_index-$index"} . '<br/>';
-				if ( $$folding_specs{"FoldQty-$$sig_specs{SignatureIndex}-$qty_index-$index"} * $pages > $sig_pages ) {
-					$pages{$pages} += int($sig_pages / $pages);
-				} elsif ( $$folding_specs{"FoldQty-$$sig_specs{SignatureIndex}-$qty_index-$index"} * $pages == $$sig_specs{'PageQuantity'.$qty_index} ) {
-					$pages{$pages} += $$folding_specs{"FoldQty-$$sig_specs{SignatureIndex}-$qty_index-$index"};
-				} else {
-					$pages{$pages} += 1;
 				} # end if
-#$$folding_specs{"FoldQty-$$sig_specs{SignatureIndex}-$qty_index-$index"};
-			} # end foreach index
+				$folds{$pages} += $fold_qty;
+			} # end foreach fold index
+			my $total_pages = misc::sum( map { $_ * $folds{$_} } keys %folds );
+SIG_FIX_PAGES: while( $total_pages > $sig_pages ) {
+			   if ( $folds{$total_pages-$sig_pages} > 1 ) {
+				   $folds{$total_pages-$sig_pages} -= 1;
+				   $total_pages -= ( $total_pages-$sig_pages );
+				   next;
+			   }
+			   foreach my $pages ( keys %folds ) {
+				   if ( $folds{$pages} > 1 ) {
+					   $folds{$pages} -= 1;
+					   $total_pages -= $pages;
+					   next SIG_FIX_PAGES;
+				   } # end if
+			   } # end foreach
+			   $openprint::log->warn("Unable to figure out pages $total_pages $sig_pages.");
+			   last;
+		   } # end while
 
-	# If not all pages have been folde, then revert to just pull from the sig.
+		   foreach my $pages ( keys %folds ) {
+# Stitching should never stitch more pages than are printed in a sig, despite what's in folding
+			   $openprint::log->debug("Folding pages: $sig_pages / $pages folding $folds{$pages}") if DEBUG;
+			   if ( $sig_pages == $pages ) {
+				   $pages{$pages} += 1;
+				   last;
+			   } else{
+				   $openprint::log->debug(" fold qty * pages($pages) == sig_pages($sig_pages) foldQty: " . $folds{$pages}) if DEBUG;
+				   $pages{$pages} += $folds{$pages};
+			   } # end if
+		   } # end foreach index
+
+# If not all pages have been folde, then revert to just pull from the sig.
 			if ( misc::sum( map { $_ * $pages{$_} } keys %pages ) < $sig_pages ) {
 				$$specs{"txtPockets$qty_index"} += 1;
 				$$specs{'txtSignatureQty'.$sig_pages.'Page-'.$qty_index} += 1;
@@ -279,7 +305,7 @@ sub signature_calc {
 	} # end if
 $results{'Breakdown'} .= 'Imposition: ' . $imposition . 'out<br/>';
 
-	my $error;
+	my %error;
 	my @equipment = ();
 
 	if ( $$specs{"chkOverrideEquipment$qty_index"} eq 'Y' ) {
@@ -297,7 +323,7 @@ $results{'Breakdown'} .= 'Imposition: ' . $imposition . 'out<br/>';
 			@equipment = @{$$calc_hash{'Stitching::signature_calc::equipment'}};
 		} else {
 #$results{'Breakdown'} .= 'getting freshequipment';
-			@{$$calc_hash{'Stitching::signature_calc::equipment'}} = @equipment = get_equipment( $specs, \$error );
+			@{$$calc_hash{'Stitching::signature_calc::equipment'}} = @equipment = get_equipment( $specs, \%error );
 		} # end if
 	} # end if
 
@@ -373,7 +399,10 @@ while ( ! $bestPrice and $imposition ) {
 	} # endif
 }
 #$openprint::log->debug("Breakdown: $$specs{'hdnBreakdown'.$qty_index}");
-	$results{'alert'} .= $error;
+		foreach my $press_id ( keys %error ) {
+			my $Equipment = new openprint::Equipment( $press_id );
+			$$specs{'alert'} .= 'For ' . $Equipment->name() . ': ' .  $error{$press_id};
+		} # end foreach
 	$results{'alert'} .= sprintf('%dout on %s %dpockets', $$bestPrice{'Imposition'},($bestEquipment ? $bestEquipment->strid() . ' ' . $bestEquipment->name() : '' ),$$specs{'txtPockets'.$qty_index} );
 	$results{'Imposition'} = $$bestPrice{'Imposition'};
 	$results{'Equipment'} = $bestEquipment;
@@ -390,6 +419,7 @@ $openprint::log->debug( "Stitching Impo REsults: " . $results{'Imposition'} .'ou
 sub calc {
 	my ( $log, $dbh, $variable, $project_index, $service_index, $specs ) = @_;
 
+	$$specs{alert} = '';
 	$$specs{'Status'} = 'calculated';
 	my $Project = new openprint::Project( $project_index );
 	my $ServiceType = $Project->ServiceType( $service_index );
@@ -440,14 +470,14 @@ sub calc {
 		foreach my $signature_service_index ( @signatures ) {
 			my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
 #$openprint::log->debug(sprintf('%d %s %s %d %dx%d %s', $imposition, @$sig_specs{'txtSignatureType','ddmRunStyle'.$qty_index,'txtImposition'.$qty_index,'hdnImpositionColumns'.$qty_index,'hdnImpositionRows'.$qty_index,'hdnImageOrientation'.$qty_index} ) ) if DEBUG;
-			next if $$sig_specs{'txtSignatureType'} eq 'Cover Pages';
+			# According to Brendan, both cover and interior need to be 2out
+			#next if $$sig_specs{'txtSignatureType'} eq 'Cover Pages';
 			if ( $$sig_specs{'txtImposition'.$qty_index}%2 ) {
 				$openprint::log->warn("Setting imposition to 1 : Imp:" . $$sig_specs{'txtImposition'.$qty_index} . ' imposition' );
 				$imposition = 1 
 			} elsif ($$sig_specs{'hdnImageOrientation'.$qty_index} eq 'Vertical' and $$sig_specs{'hdnImpositionRows'.$qty_index} % 2 ) {
 				$openprint::log->warn("Setting imposition to 1 : Imp:" . $$sig_specs{'txtImposition'.$qty_index} . ' vertical and rows' );
 				$imposition = 1 
-
 			} elsif ($$sig_specs{'hdnImageOrientation'.$qty_index} eq 'Horizontal' and $$sig_specs{'hdnImpositionColumns'.$qty_index} % 2 ) {
 				$openprint::log->warn("Setting imposition to 1 : Imp:" . $$sig_specs{'txtImposition'.$qty_index} . ' horizontal and rows' );
 				$imposition = 1 
@@ -520,10 +550,16 @@ sub calc {
 				my %pages;
 				my $sig_pages = $$sig_specs{'PageQuantity'.$qty_index};
 				if ( $folding_specs ) {
+					my %folds;
 					foreach my $index ( 1 .. 4 ) {
-						next if ! $$folding_specs{"FoldQty-$$sig_specs{SignatureIndex}-$qty_index-$index"};
+						my $fold_qty = $$folding_specs{"FoldQty-$$sig_specs{SignatureIndex}-$qty_index-$index"};
+						next if ! $fold_qty;
 						my $type = $$folding_specs{"FoldType-$$sig_specs{SignatureIndex}-$qty_index-$index"};
 						next if ! $type;
+						if ( $$folding_specs{"FoldImposition-$$sig_specs{SignatureIndex}-$qty_index-$index"} < $$specs{"txtImposition$qty_index"} ) {
+							$$specs{"txtImposition$qty_index"} = $$folding_specs{"FoldImposition-$$sig_specs{SignatureIndex}-$qty_index-$index"};
+						} # ebduf
+
 						my ( $pages ) = $type =~ /(\d+)PageFold/;
 						if ( ! $pages ) {
 							if ( $type eq 'SingleGateFold' ) {
@@ -535,14 +571,38 @@ sub calc {
 								$openprint::log->error(" No pages in fold $type.");
 								next;
 							}
+						} # end if
+						$folds{$pages} += $fold_qty;
+					} # end foreach fold index
+					my $total_pages = misc::sum( map { $_ * $folds{$_} } keys %folds );
+					FIX_PAGES: while( $total_pages > $sig_pages ) {
+						if ( $folds{$total_pages-$sig_pages} > 1 ) {
+							$folds{$total_pages-$sig_pages} -= 1;
+							$total_pages -= ( $total_pages-$sig_pages );
+							next;
 						}
-#$openprint::log->debug("Folding pages: $type $sig_pages / $pages");
-						if ( $$folding_specs{"FoldQty-$$sig_specs{SignatureIndex}-$qty_index-$index"} * $pages != $sig_pages ) {
-$openprint::log->error('1 ' . $$folding_specs{"FoldQty-$$sig_specs{SignatureIndex}-$qty_index-$index"} . ' > ' . $sig_pages);
-							$pages{$pages} += Math::Round::nearest( 1, $$sig_specs{'PageQuantity'.$qty_index} / $pages );
-						} elsif ( $$folding_specs{"FoldQty-$$sig_specs{SignatureIndex}-$qty_index-$index"} * $pages == $sig_pages ) {
-$openprint::log->debug('2 ' . $$folding_specs{"FoldQty-$$sig_specs{SignatureIndex}-$qty_index-$index"}) if DEBUG;
-							$pages{$pages} += $$folding_specs{"FoldQty-$$sig_specs{SignatureIndex}-$qty_index-$index"};
+						foreach my $pages ( keys %folds ) {
+							if ( $folds{$pages} > 1 ) {
+								$folds{$pages} -= 1;
+								$total_pages -= $pages;
+								next FIX_PAGES;
+							} # end if
+						} # end foreach
+						$openprint::log->error("Unable to figure out pages $total_pages $sig_pages.");
+						last;
+					} # end while
+					foreach my $pages ( keys %folds ) {
+						# Stitching should never stitch more pages than are printed in a sig, despite what's in folding
+$openprint::log->debug("Folding pages: $sig_pages / $pages folding $folds{$pages}") if DEBUG;
+						if ( $sig_pages == $pages ) {
+
+							$pages{$pages} += 1;
+							last;
+						#} elsif ( $folds{$pages} * $pages != $sig_pages ) {
+						#} elsif ( $fold_qty * $pages == $sig_pages ) {
+						} else{
+$openprint::log->debug(" fold qty * pages($pages) == sig_pages($sig_pages) foldQty: " . $folds{$pages}) if DEBUG;
+							$pages{$pages} += $folds{$pages};
 						} # end if
 					} # end foreach index
 				} # end if
@@ -566,16 +626,25 @@ $openprint::log->debug('2 ' . $$folding_specs{"FoldQty-$$sig_specs{SignatureInde
 	} # end foreach qty_index
 
 	#At this point, if the job supports 2out impo, our setup is 2out.  This may change later, depending on the equipment's ability to support 2out stitching
-	my $error;
-	my @possible_equipment = get_equipment( $specs, \$error );
-	@{$$calc_hash{'Stitching::signature_calc::equipment'}} = @possible_equipment;
+	my %error;
+	my @possible_equipment = get_equipment( $specs, \%error );
+	$$calc_hash{'Stitching::signature_calc::equipment'} = \@possible_equipment;
 
 	if ( ! @possible_equipment ) {
-		$error =~ s/\n/<br\/>/g;
 		# alert the user that no equipment is good.
-		$$specs{'alert'} = "Our stitching equipment cannot run this project, for the following reasons:<br/>$error<br/> Please only print flat sheets and contact another bindery.";
+		$$specs{'alert'} = 'Our stitching equipment cannot run this project, for the following reasons:<br/>';
+		foreach my $press_id ( keys %error ) {
+			my $Equipment = new openprint::Equipment( $press_id );
+			$$specs{'alert'} .= 'For ' . $Equipment->name() . ': ' .  $error{$press_id};
+		} # end foreach
+		$$specs{'alert'} .= '<br/> Please only print flat sheets and contact another bindery.';
 		$$specs{'Status'} = 'uncalculated';
 		return 'uncalculated';
+	} elsif ( DEBUG ) {
+		foreach my $press_id ( keys %error ) {
+			my $Equipment = new openprint::Equipment( $press_id );
+			$log->debug( 'For ' . $Equipment->name() . ': ' .  $error{$press_id} );
+		} # end foreach
 	} # end if
 
 	# Get one of the sigs, so we can look at which press it was printed on.  Technically we should look at all
@@ -621,6 +690,9 @@ $openprint::log->debug('2 ' . $$folding_specs{"FoldQty-$$sig_specs{SignatureInde
 		} else {
 			$variables{"ddmEquipment$qty_index"} = [ sets::union( 'output', @{$variables{"ddmEquipment$qty_index"}} ) ];
 			@equipment = @possible_equipment;
+		} # end if
+		if ( DEBUG ) {
+			$log->debug("Equipment:f or $qty_index " . join( map { $_->strid() } @possible_equipment ) );
 		} # end if
 
 		foreach my $Equipment ( @equipment ) {
@@ -750,27 +822,27 @@ sub get_equipment {
 	my ( $specs, $error ) = @_;
 
 	my @possible_equipment;
-	my @all_equipment = openprint::Equipment->find( 'Specifications' => {'Stitching Capable'=>['Y','When Printing','When Digital']}, 'useinestimating'=>1,'order'=>'strName');
+	my @all_equipment = openprint::Equipment->find( Specifications => {'Stitching Capable'=>['Y','When Printing','When Digital']}, useinestimating=>1,order=>'strName');
 
 	foreach my $Equipment ( @all_equipment ) {
 		if ( $_ = $Equipment->fits( $$specs{Width}, $$specs{Height}, undef, 'Stitching' ) ) {
-			$$error .= 'For ' . $Equipment->name() . $_;
+			$$error{$$Equipment{id}} .= $_;
 			next;
 		} # end if
 		if ( $_ = $Equipment->specification('Maximum Spread Width') and ( $$specs{'Width'} > $_ ) ) {
-			$$error .= "For " . $Equipment->name() . ": spread too big.<br/>";
+			$$error{$$Equipment{id}} .= ': spread too big.<br/>';
 			next;
 		} # end if
 		if ( $_ = $Equipment->specification('Minimum Spread Width') and ( $$specs{'Width'} < $_ ) ) {
-			$$error .= "For " . $Equipment->name() . ": spread too small.<br/>";
+			$$error{$$Equipment{id}} .= ': spread too small.<br/>';
 			next;
 		} # end if
 		if ( $_ = $Equipment->specification('Maximum Calliper') and ( $$specs{'txtCalliper'} > $_ ) ) {
-			$$error .= "For " . $Equipment->name() . ": Too Thick.<br/>";
+			$$error{$$Equipment{id}} .= ': Too Thick.<br/>';
 			next;
 		} # end if
 		if ( $_ = $Equipment->specification('Minimum Calliper') and ( $$specs{'txtCalliper'} < $_ ) ) {
-			$$error .= "For " . $Equipment->name() . ": Too Thick.<br/>";
+			$$error{$$Equipment{id}} .= ': Too Thick.<br/>';
 			next;
 		} # end if
 		push @possible_equipment, $Equipment;
@@ -820,6 +892,7 @@ sub get_price {
 # Calculate Full Passes
 	if ( $maxPockets and ( $neededPockets > $maxPockets ) ) {
 # Loaded here, so we don't do it in the loop many times
+$openprint::log->debug("Need more pockets $maxPockets") if DEBUG;
 		my %servicePrice;
 		if ( ! ( %servicePrice = openprint::service::get_price_object( $$ServiceType{'name'}.$maxPockets.'Pockets', $qty, $Equipment ) ) ) {
 			%servicePrice = openprint::service::get_price_object( $$ServiceType{'name'}, $maxPockets, $Equipment );
@@ -887,7 +960,7 @@ sub get_price {
 
 
 		if ( 
-( $$sig_specs{'txtWidth'}/2 != $$specs{'Width'} or $$sig_specs{'txtHeight'} != $$specs{'Height'} ) or
+#( $$sig_specs{'txtWidth'}/2 != $$specs{'Width'} or $$sig_specs{'txtHeight'} != $$specs{'Height'} ) or
 ( sets::isin( $$sig_specs{'rdbTemplateType'}, ['2Panel1Pocket','2Panel2Pocket','TriFoldDoublePocket'] ) or $$sig_specs{'PageQuantity'.$qty_index} > 4 ) 
 ) {
 			if ( (!$$specs{'CoverFit'}) or ($$specs{'CoverFit'} eq 'Exact') ) {
@@ -948,7 +1021,9 @@ sub summary {
 	my ( $Project, $service_id, $specs, $qty_index ) = @_;
 
 	if ( $qty_index ) {
-		return $$specs{'Imposition'.$qty_index} .'out on ' . new openprint::Equipment( $$specs{'ddmEquipment'.$qty_index} )->name();
+		if ( $$specs{'Imposition'.$qty_index} and $$specs{'ddmEquipment'.$qty_index} ) {
+			return $$specs{'Imposition'.$qty_index} .'out on ' . new openprint::Equipment( $$specs{'ddmEquipment'.$qty_index} )->name();
+		} # en dif
 	} # end if
 	return '';
 } # end sub summary

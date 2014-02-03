@@ -161,7 +161,7 @@ function calc_from_gsm( form ) {
 				<label for="width">Size</label>
 				<? echo ( input( type=>'float', id=>'width', name=>'width', value=>$$variable{Paper}->width(), onkeyup=>'gsm_to_mweight(this.form);' ); ) ?>
 				<span id="PaperHeight"<? echo ( $$variable{'Paper'}->type() eq 'Roll' ? ' style="display:none;"' : '' ) ?>>
-				&nbsp;x&nbsp;
+				x
 				<? echo ( input( type=>'float', id=>'height', name=>'height', value=>$$variable{Paper}->height(), onkeyup=>'gsm_to_mweight(this.form);' ); ) ?>
 				</span>
 			</p>

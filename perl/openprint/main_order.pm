@@ -1,9 +1,9 @@
+use strict;
 package openprint::main_order;
 
 require Email::Valid;
 use Date::Calc qw(Add_Delta_Days check_date);
 
-use strict;
 use openprint ();
 use vars qw( %config %param %variable $log $dbh %session );
 *variable = \%openprint::variable;
@@ -63,12 +63,13 @@ sub information {
 		$order_id = openprint::order::make_order_from_order( $order_id );
 		return if ! $order_id;
 	} elsif ( $param{'btnFunction'} eq 'ReOpen' ) {
-		openprint::order::delete_unfinished_orders();
-		if ( $order_id = $param{'order_id'} ) {
+		if ( $order_id ) {
+			openprint::order::delete_unfinished_orders();
 			my $Order = new openprint::Order( $order_id );
 			$Order->save({'status'=>'Re-Opened','session_id'=>$session{'_session_id'}});
 			foreach my $OP ( $Order->Ordered_Projects() ) {
 				$variable{'error'} .= $OP->save({'price'=>undef});
+				
 			} # end foreach
 			$Order->add_log( 'Re-Opened' );
 		} else {
@@ -328,6 +329,7 @@ sub confirmation {
 	} # end if
 
 	my $Order = new openprint::Order( $order_id );
+$log->debug("Got order $$Order{id}");
 
 	if ( $Order->id() and ( sets::isin( $Order->status(), ['Incomplete','Re-Opened'] ) ) ) {
 		if ( ( $Order->company_id() == $session{'company_id'} ) and ( $session{'company_id'} == new openprint::User( $session{'user_id'})->company_id() ) ) {
@@ -419,6 +421,8 @@ sub confirmation {
 		if ( $variable{'Downpayment'} > 0 ) {
 		#	send_invoice( $r, $log, $dbh, $order_id );
 		} # end if
+	} else {
+		$log->debug("Already complete");
 	} # end if
 
 	$variable{'order_id'} = $order_id;
@@ -528,9 +532,33 @@ sub history_details {
 			} # end if
 		} # end if
    } elsif ( $param{'btnFunction'} eq 'Invoice' ) {
-	   $Order->invoice_id( $param{'invoice_id'} );
-	   $Order->invoiced_on( 'NOW()' );
-	   $Order->save();
+	   require openprint::Invoice;
+	   require openprint::Order_Invoice;
+		$param{invoice_id} = openprint::Invoice->transform('num', $param{invoice_id} );
+		if ( ! $param{invoice_id} ) {
+			$variable{error} .= 'Empty or invalid Invoice #.<br/>';
+		} elsif ( ! $param{order_id} ) {
+			$variable{error} .= 'Empty or invalid Order #.<br/>';
+		} else {
+			my $Invoice = openprint::Invoice->find_one(num=>$param{invoice_id});
+			if ( ! $Invoice ) {
+				$Invoice = new openprint::Invoice();
+				$variable{error} .= $Invoice->save({ 
+					invoicer_id=>$config{owner_id},
+					invoicee_id=>$Order->company_id(),
+					total=>$param{amount},
+					num=>$param{invoice_id},
+					currency_id	=>	$Order->currency_id(),
+					});
+			} # end if ! Invoice
+			my $OI = new openprint::Order_Invoice();
+			$variable{error} .= $OI->save({ order_id=>$$Order{id}, invoice_id=>$$Invoice{id} });
+			$Order->add_log('Invoiced # ' . $Invoice->link_to());
+		} # end if
+		#$variable{error} .= $Order->save({ invoice_id=> $Invoice->id() });
+		if ( ! $variable{error} ) {
+			$variable{ExternalRedirect} = '/main/order/history_details.html?order_id='.$Order->id();
+		} # end if
 	} elsif ( $param{'btnFunction'} eq 'Resend') {
 		$Order->send_sales_order( );
 		$variable{'information'} .= "Order emails sent.<br/>";
@@ -563,5 +591,8 @@ sub _order {
 		} # end if
 	} # end if
 } # end sub _order
+
+sub _user_info {
+} # end sbu _user_info
 1;
 __END__

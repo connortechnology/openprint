@@ -36,3 +36,5 @@ insert into log_actions (name,description) values ('Update User Profile','Update
 insert into log_actions (name,description) values ('Update Configuration','Update Configuration');
 insert into log_actions (name,description) values ('Login Failed','Unsuccessful Login Attempt');
 insert into log_actions (name,description) values ('Switch Company','Switch Company');
+
+create index logs_company_action_idx on logs (company_id,action_id);

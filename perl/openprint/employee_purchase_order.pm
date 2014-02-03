@@ -25,7 +25,7 @@ sub save_supplier {
 	my $Company;
 
 	my $ac = sql::start_transaction( $dbh );
-	$dbh->do( 'LOCK TABLE Company IN EXCLUSIVE MODE' ) or $log->error( DBI->errstr );
+	$dbh->do( 'LOCK TABLE Companies IN EXCLUSIVE MODE' ) or $log->error( DBI->errstr );
 
 	my @Companies = openprint::Company->find( 'name lc'=> lc openprint::Company->transform('name', $$p{vendor_name} ) );
 	if ( ! @Companies ) {

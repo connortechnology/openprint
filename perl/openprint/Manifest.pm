@@ -41,9 +41,9 @@ $debug = 0;
 );
 
 %defaults = (
-	'created_on'	=>	'NOW()',
-	'updated_on'	=>	'NOW()',
-	'received_on'	=>	'NOW()',
+	'created_on'	=>	q`'NOW()'`,
+	'updated_on'	=>	q`'NOW()'`,
+	'received_on'	=>	q`'NOW()'`,
 	'supplier_id'	=>	undef,
 	deleted	=>	0,
 );
@@ -51,7 +51,7 @@ $debug = 0;
 sub destroy {
     my $self = shift;
     my $ac = sql::start_transaction( $openprint::dbh );
-	foreach my $PO ( openprint::PurchaseOrder->find('manifest_id'=>$$self{'name'}) ) {
+	foreach my $PO ( openprint::PurchaseOrder->find('manifest_id'=>$$self{id}) ) {
 		$PO->save({'manifest_id'=>undef});
 	} # end foreach $PO
 	foreach my $C ( $self->Contents() ) {
@@ -72,13 +72,13 @@ sub Types {
 	my ( $self, %params ) = @_;
 	if ( %params ) {
 		if ( $$self{'id'} ) {
-			$params{'manifest_id'} = $$self{'id'};
+			$params{'manifest_id'} = $$self{id};
 			return openprint::Manifest_Content_Type->find(%params);
 		} # end if
 	} # end if
 	if ( ! $$self{'Types'} ) {
 		if ( $$self{'id'} ) {
-			$params{manifest_id} = $$self{'id'};
+			$params{manifest_id} = $$self{id};
 			@{$$self{'Types'}} = openprint::Manifest_Content_Type->find(%params);
 		} # end if
 	} # end if

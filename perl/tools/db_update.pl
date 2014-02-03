@@ -444,6 +444,10 @@ if ( ! sets::isin( 'invoices', \@tables ) ) {
 		$dbh->do('ALTER TABLE Invoices ADD early_payment_date DATE');
 	} # end if
 } # end if
+if ( ! sets::isin( 'invoice_interests', \@tables ) ) {
+    $dbh->do( misc::load_file( $log, '../openprint/sql/Invoice_Interests.sql' ) );
+    die $dbh->errstr() if $dbh->errstr();
+} # end if
 
 if ( ! sets::isin( 'invoices_id_seq', \@sequences ) ) {
 	$dbh->do('CREATE SEQUENCE invoices_id_seq');
@@ -894,6 +898,9 @@ if ( ! sets::isin( 'service_types', \@tables ) ) {
 		} # end if
 		$dbh->do('ALTER TABLE service_types DROP COLUMN category');
 	}# end if
+	if ( ! exists $$data{summary_visible} ) {
+		$dbh->do('ALTER TABLE service_types add summary_visible BOOLEAN NOT NULL default true');
+	} # end if
 }# end if
 if ( ! sets::isin( 'service_categories_id_seq', \@sequences ) ) {
 	$dbh->do('create sequence service_categories_id_seq;');
@@ -970,6 +977,11 @@ if ( ! sets::isin( 'bug_statuses', \@tables ) ) {
 }
 if ( ! sets::isin( 'bugs', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, '../openprint/sql/Bugs.sql' ) ) or die;
+} else {
+	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='manufacturers'", 'column_name');
+	if ( ! exists $$data{deleted} ) {
+		$dbh->do('ALTER TABLE bugs add deleted BOOLEAN NOT NULL default False');
+	} # end if
 }
 if ( ! sets::isin( 'bug_comments', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, '../openprint/sql/Bug_Comments.sql' ) ) or die;

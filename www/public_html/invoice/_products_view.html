@@ -22,7 +22,7 @@
 						<td class="Quantity">%6$s</td>
 						<td class="Price">%7$s</td>
 						<td class="Price">%8$s</td>
-					</tr>', $rowclass, $Product->id(), $Product->name(), $Product->description(), $Invoiced_Product->po(), 
+					</tr>', $rowclass, $Product->id(), $Invoiced_Product->name(), $Invoiced_Product->description(), $Invoiced_Product->po(), 
 					$Invoiced_Product->quantity(), 
 					openprint::Currency::format($Invoiced_Product->price()), 
 					openprint::Currency::format($Invoiced_Product->total()),

@@ -40,11 +40,11 @@
 			<ul>
 				<li> 
 					<label>Please provide a reference</label>
-					<textarea name="reference" rows="<? echo ( ssi::count_lines( $$variable{'Project'}->reference() ); ) ?>" cols="" wrap="virtual" onkeyup="textarea_resize(this);"><? echo ( $$variable{'Project'}->reference(); ) ?></textarea>
+					<textarea name="reference" rows="<? echo ( count_lines( $$variable{Project}->reference() ) ) ?>" onkeyup="textarea_resize(this);"><? echo ( unhtmlize( $$variable{'Project'}->reference() ); ) ?></textarea>
 				</li>
 				<li>
 					<label>Additional comments or instructions</label>
-					<textarea name="comments" rows="<? echo ( ssi::count_lines( $$variable{'Project'}->comments() ); ) ?>" cols="" wrap="virtual" onkeyup="textarea_resize(this);"><? echo ( ssi::htmlize( $$variable{'Project'}->comments() ); ) ?></textarea>
+					<textarea name="comments" rows="<? echo ( count_lines( $$variable{Project}->comments() ); ) ?>" onkeyup="textarea_resize(this);"><? echo ( ssi::htmlize( $$variable{'Project'}->comments() ); ) ?></textarea>
 				</li>
 			</ul>
 		</fieldset>
@@ -54,15 +54,15 @@
 			<ul>
 				<li class="quantity1">
 					<label for="quantity1">Quantity 1</label>
-					<? echo ( ssi::input( type=>'cardinal', id=>'quantity1', name=>'quantity1', value=>$$variable{Project}->quantity1() ); ) ?>
+					<? echo ( input( type=>'cardinal', id=>'quantity1', name=>'quantity1', value=>$$variable{Project}->quantity1() ); ) ?>
 				</li>
 				<li class="quantity2">
 					<label for="quantity2">Quantity 2</label>
-					<? echo ( ssi::input( type=>'cardinal', id=>'quantity2', name=>'quantity2', value=>$$variable{Project}->quantity2() ); ) ?>
+					<? echo ( input( type=>'cardinal', id=>'quantity2', name=>'quantity2', value=>$$variable{Project}->quantity2() ); ) ?>
 				</li>
 				<li class="quantity3">
 					<label for="quantity3">Quantity 3</label>
-					<? echo ( ssi::input( type=>'cardinal', id=>'quantity3', name=>'quantity3', value=>$$variable{Project}->quantity3() ); ) ?>
+					<? echo ( input( type=>'cardinal', id=>'quantity3', name=>'quantity3', value=>$$variable{Project}->quantity3() ); ) ?>
 				</li>
 			</ul>
 		</fieldset>
@@ -74,9 +74,17 @@
 			<li>
 				<label>Company</label>
 				<input type="text" onkeyup="filterDDM(this, this.form.ddmCompany);" class="filter" />
-				<select name="ddmCompany">
+				<select id="ddmCompany" name="ddmCompany">
 					<option value="">Select a Customer</option>
-					<? echo ( openprint::Company::get_dropdown( $session{'company_id'} ); ) ?>
+					<? echo (
+							my $html ='<option value="'.$session{company_id}.'" selected="selected">'.new openprint::Company( $session{company_id} )->name() .'</option>';
+							my $User = new openprint::User($session{user_id} );
+							if ( $session{company_id} != $User->company_id() ) {
+								$html .= '<option value="'.$User->company_id().'">'.$User->Company()->name().'</option>';
+							}
+							return $html;
+							) ?>
+					<option value="">Please wait, loading the rest</option>
 				</select>
 			</li>
 		</ul>
@@ -85,8 +93,8 @@
 		Please click &quot;Save &amp; Continue&quot; if you have provided all the relevant project information.
 		<p class="buttons">
 			<? echo ( join('',
-					ssi::button( 'Reset', { onclick=>'f1.reset();' } ),
-					ssi::button( 'SaveAndContinue', { onclick=>'f1.submit();',text=>'Save And Continue'}),
+					button( 'Reset', { onclick=>'f1.reset();' } ),
+					button( 'SaveAndContinue', { onclick=>'f1.submit();',text=>'Save And Continue'}),
 			); ) ?>
 		</p>
 		<input type="hidden" name="ProjectIndex" value="<?ProjectIndex?>"/>
@@ -94,3 +102,6 @@
 	</form>
 </div>
 </div>
+		<? if ( sets::isin( $session{'user_type'}, [ 'E', 'A'] ) ) ?>
+<script type="text/javascript">new Ajax.Updater( 'ddmCompany', '/includes/_company_ddm.html', { parameters: { selected_id: <?echo($session{company_id})?> } } );</script>
+		<? endif ( sets::isin( $session{'user_type'}, [ 'E', 'A'] ) ) ?>

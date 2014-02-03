@@ -75,7 +75,7 @@
 						<label>Country</label>
 						<select id="ByCountry" name="ByCountry" onchange="Country_onchange( this, this.form.ByStateProvince );">
 							<option value=""> Select </option>
-							<? echo ( ssi::return_countries($$variable{'ByCountry'}); ) ?>
+							<? echo ( return_countries($$variable{'ByCountry'}); ) ?>
 						</select>
 					</li>
 					<li> 
@@ -90,7 +90,7 @@
 		) ?></span></label>
 						<select id="ByStateProvince" name="ByStateProvince">
 							<option value=""> Select </option>
-							<? echo ( ssi::return_states_and_provinces($$variable{'ByStateProvince'}); ) ?>
+							<? echo ( return_states_and_provinces($$variable{'ByStateProvince'}); ) ?>
 						</select>
 					</li>
 					<li> 
@@ -147,7 +147,9 @@
 				<input type="text" onkeyup="if(filterDDM(this, this.form.user_id))user_onchange($('user_id'));;" onkeydown="if(event.keyCode == 13){user_onchange($('user_id'));}" />
 				<select id="user_id" name="user_id" onchange="user_onchange(this);">
 					<option value="">select</option>
-					<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User->find( 'company_id'=>$session{'company_id'},'order'=>'lower(firstname),lower(lastname)' ) ], $session{'user_id'} ); ) ?>
+					<? echo ( 
+my @Users = openprint::User->find( company_id=>$session{company_id},order=>'lower(firstname),lower(lastname)' );
+ return make_drop_down( [ map { $_->id(), $_->name() } @Users ], @Users == 1 ? $Users[0]{id} : $session{'user_id'} ); ) ?>
 				</select>	
 			</li>
 <? endif ( sets::isin( $session{'user_type'}, ['A','E'] ) ) ?>
@@ -295,7 +297,7 @@ if ( $$variable{'ForCountry'} eq 'US' ) {
 			<? if ( $$variable{'qty'} ) ?>
 			<tr<?rowclass?>> 
 				<td class="markup"> 
-					<? echo ( input( 'type'=>'number', 'name'=>sprintf('markup-%d_%d', @$variable{'index','project_index'} ), 'value'=>$$variable{'markup'}, 'onkeyup'=>q`calc_from_markup(this,2);` ); ) ?> 
+					<? echo ( input( type=>'float', name=>sprintf('markup-%d_%d', @$variable{'index','project_index'} ), value=>$$variable{markup}, onkeyup=>q`calc_from_markup(this,2);` ); ) ?> 
 				</td>
 				<td class="quantity"><?qty?></td>
 				<td class="price"> 
@@ -303,7 +305,7 @@ if ( $$variable{'ForCountry'} eq 'US' ) {
 					<? echo ( $$variable{'Quote'}->Currency()->symbol(); ) ?><?stdprice?>
 				</td>
 				<td class="newprice"><? echo ( $$variable{'Quote'}->Currency()->symbol(); ) ?> 
-					<? echo ( input( 'type'=>'number', 'name'=>sprintf('price-%d_%d', @$variable{'index','project_index'} ), 'value'=>$$variable{'newprice'}, 'onkeyup'=>q`calc_from_price(this,2);` ); ) ?> 
+					<? echo ( input( type=>'float', name=>sprintf('price-%d_%d', @$variable{'index','project_index'} ), value=>( $$variable{newprice} ? $$variable{newprice} : $$variable{stdprice}), onkeyup=>q`calc_from_price(this,2);` ); ) ?> 
 				</td>
 				<td class="changes"></td>
 			</tr>

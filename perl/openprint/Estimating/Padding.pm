@@ -107,7 +107,7 @@ sub calc {
 	if ( $Project->Type()->name() eq 'ScratchPads' ) {
 		if ( $$specs{'PageQuantity'} < $openprint::config{'MinimumPagesWithoutCounting'} ) {
 			if ( ! $$services{'Counting'} ) {
-				$_ = openprint::print_project::insert_service( $log, $dbh, $project_index, 'Counting' );
+				$_ = $Project->add_service( 'Counting' );
 				openprint::service::internal_calc( $log, $dbh, $variable, $project_index, $_, 'Counting' ) if $_;
 			} # end if
 		} # end if

@@ -32,24 +32,25 @@ my $Lexicon;
 sub slurp_content {
 	my ( $file ) = @_;
 
+$log->debug("Slurping file $file");
+
 	if ( ! ( $file =~ /^\// ) ) {
 		# Use a path relative to the current page
 		my $path = $variable{uri};
 		$path =~ s/(.*\/).*/$1/;
 		$file = $path . $file;
 	} # end if
-$log->debug("Including $file");
 	my $content = '';
 	if ( -e $config{SkinPath}.$file ) {
-		$content = File::Slurp::read_file($config{SkinPath}.$file );
+		$content = File::Slurp::read_file($config{SkinPath}.$file,err_mode => 'carp' );
 	} elsif ( -e $config{SkinPath}.'/html/'.$file ) {
-		$content = File::Slurp::read_file($config{SkinPath}.'/html/'.$file );
+		$content = File::Slurp::read_file($config{SkinPath}.'/html/'.$file,err_mode => 'carp' );
 	} elsif ( $ENV{DOCUMENT_ROOT} and ( -e ($ENV{DOCUMENT_ROOT}.$file) ) ) {
-		$content = File::Slurp::read_file($ENV{DOCUMENT_ROOT}.$file );
+		$content = File::Slurp::read_file($ENV{DOCUMENT_ROOT}.$file,err_mode => 'carp' );
 	} elsif ( $config{DOCUMENT_ROOT} and ( -e $config{DOCUMENT_ROOT}.$file ) ) {
-		$content = File::Slurp::read_file($config{DOCUMENT_ROOT}.$file );
+		$content = File::Slurp::read_file($config{DOCUMENT_ROOT}.$file,err_mode => 'carp' );
 	} else {
-		$content = File::Slurp::read_file($file );
+		$content = File::Slurp::read_file($file,err_mode => 'carp' );
 	} # end if
 	return $content;
 } # end sub slurp_content
@@ -135,6 +136,8 @@ sub variable_substitution {
 				$result .= checked( eval $1 );
 			} elsif ( $command =~ /^include\s*\(\s*'?([^'\)]*)'?\s*\)/ms ) {
 				$result .= include( $1, $variable );
+			} elsif ( $command =~ /^slurp\s*\(\s*'?([^'\)]*)'?\s*\)/ms ) {
+				$result .= slurp_content( $1 );
 			} else {
 				$result .= $$variable{$command};
 			} # end if
@@ -239,16 +242,18 @@ sub make_drop_down {
 	if ( $$options{prepend} ) {
 		for ( my $n = 0; $n < @{$$options{prepend}}; $n += 2) {
 			$temp .= sprintf('<option value="%s"%s>%s</option>',
-					HTML::Entities::encode_entities(Encode::encode('utf-8',$$options{prepend}[$n])),
+					( $$options{encode} ? HTML::Entities::encode_entities(Encode::encode('utf-8',$$options{prepend}[$n])) : $$options{prepend}[$n] ),
 					( sets::isin( $$options{prepend}[$n], $check_array ) ? ' selected="selected"' : '' ),
-					HTML::Entities::encode_entities( Encode::encode('utf-8',$$options{length} ? substr($$options{prepend}[$n + 1],0, $$options{length}) : $$options{prepend}[$n + 1] ) ) );
+					( $$options{encode} ? HTML::Entities::encode_entities( Encode::encode('utf-8',$$options{length} ? substr($$options{prepend}[$n + 1],0, $$options{length}) : $$options{prepend}[$n + 1] ) ) : $$options{length} ? substr($$options{prepend}[$n + 1],0, $$options{length}) : $$options{prepend}[$n + 1] ),
+					);
 		} # end for
 	} # end if
 	for ( my $n = 0; $n < @{$search_data}; $n += 2) {
 		$temp .= sprintf('<option value="%s"%s>%s</option>',
-			HTML::Entities::encode_entities(Encode::encode('utf-8',$$search_data[$n])),
+			( $$options{encode} ? HTML::Entities::encode_entities(Encode::encode('utf-8',$$search_data[$n])) : $$search_data[$n] ),
 			( sets::isin( $$search_data[$n], $check_array ) ? ' selected="selected"' : '' ),
-			HTML::Entities::encode_entities( Encode::encode('utf-8',$$options{length} ? substr($$search_data[$n + 1],0, $$options{length}) : $$search_data[$n + 1] ) ) );
+			( $$options{encode} ? HTML::Entities::encode_entities( Encode::encode('utf-8',$$options{length} ? substr($$search_data[$n + 1],0, $$options{length}) : $$search_data[$n + 1] ) ) : ( $$options{length} ? substr($$search_data[$n + 1],0, $$options{length}) : $$search_data[$n + 1] ) ),
+		);
 	} # end for
 	return $temp;
 } # sub make_drop_down
@@ -754,7 +759,8 @@ sub radio {
 
 	my $onclick = $$options{'onclick'} if $options;
 	my $html;
-	if ( $$options{default} and ! $selected ) {
+	if ( $$options{default} and ! defined $selected ) {
+$log->debug("Selecting default $$options{default}");
 		$selected = $$options{default};
 	} # end if
 
@@ -996,6 +1002,10 @@ sub format_date {
 sub format_datetime {
 	return $_[0] ? Date::Format::time2str( $config{DateTimeFormat}, Date::Parse::str2time( $_[0] ) ) : '';
 } # end sub format_datetime
+
+sub link {
+	return '<link rel="stylesheet" type="text/css" href="'.hash_link($_[0]).'"/>';
+}
 
 1;
 __END__

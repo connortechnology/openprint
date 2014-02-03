@@ -33,33 +33,13 @@ my $company_id = 0;
 $dbh = sql::open_sql( $log, %sql_server );
 my @projects;
 
-foreach my $bleed ( 'Top','Bottom','Left','Right' ) {
-	sql::update( undef, undef, 'ProjectType_Defaults', ['name=?', 'chkBleed'.$bleed], 'name', 'Bleed'.$bleed );
-	sql::update( undef, undef, 'tbl_service_Defaults', ['strfieldname=?', 'chkBleed'.$bleed], 'strfieldname', 'Bleed'.$bleed );
-} # end foreach bleed
-my $ServiceType = openprint::ServiceType->find_one('name'=>'Signature');
-if ( ! $ServiceType ) {
-	$ServiceType = new openprint::ServiceType();
-	$ServiceType->save({'name'=>'Signature','description'=>'Signature','url'=>'prin/Signature.html','view_visible'=>1,'category'=>'Printing','type'=>'Printing'});
-}
-my $BrochureType = openprint::ProjectType->find_one('name'=>'Brochures');
-if ( $BrochureType ) {
-    foreach my $PT ( openprint::ProjectType_Template->find( 'projecttype_id'=>$BrochureType->id(), 'type'=>'8PageSignatureFold') ) {
-        $_ = $PT->save({'type'=>'8PageFold'});
-        $log->error($_) if $_;
-    }
-} else {
-    $log->error("No Brochures");
-}
-
-
 if ( 1 ) {
 $log->warn("Updating $projects_count projects for $company_id or just $project_id");
-foreach my $Project ( openprint::Project->find( 'order'=>'id desc',
-	( $project_id ? ( 'id'=>$project_id) : 
-	( $company_id ? ('company_id'=>$company_id) : () ),
+foreach my $Project ( openprint::Project->find( order=>'id desc',
+	( $project_id ? ( id=>$project_id) : 
+	( $company_id ? (company_id=>$company_id) : () ),
 	),
-	'limit'=>$projects_count ) ) {
+	offset=>$projects_count ) ) {
 #$log->warn("Updating rpoject $$Project{id}");
 	my $services = $Project->services();
 
@@ -93,111 +73,111 @@ foreach my $Project ( openprint::Project->find( 'order'=>'id desc',
 				} # end if
 			} # end foreach
 #if ( ! exists $$sig_specs{'Group'} ) {
-	if ( $$sig_specs{'txtSignatureType'} ) {
-		if ( ! $$sig_specs{txtFinalWidth} ) {
-			openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'txtFinalWidth', $$sig_specs{txtWidth} );
-		} # end if
-		if ( ! $$sig_specs{txtFinalHeight} ) {
-			openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'txtFinalHeight', $$sig_specs{txtHeight} );
-		} # end if
+			if ( $$sig_specs{'txtSignatureType'} ) {
+				if ( ! $$sig_specs{txtFinalWidth} ) {
+					openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'txtFinalWidth', $$sig_specs{txtWidth} );
+				} # end if
+				if ( ! $$sig_specs{txtFinalHeight} ) {
+					openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'txtFinalHeight', $$sig_specs{txtHeight} );
+				} # end if
 
-		if ( $$sig_specs{'txtSignatureType'} eq 'Cover Spreads' or $$sig_specs{'txtSignatureType'} eq 'Cover Pages' ) {
-			openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'txtSignatureType', 'Cover Pages' );
-			openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'Group', '1' );
-			openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'GroupPageQuantity', '4' );
+				if ( $$sig_specs{'txtSignatureType'} eq 'Cover Spreads' or $$sig_specs{'txtSignatureType'} eq 'Cover Pages' ) {
+					openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'txtSignatureType', 'Cover Pages' );
+					openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'Group', '1' );
+					openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'GroupPageQuantity', '4' );
 
-		} elsif ( $$sig_specs{'txtSignatureType'} eq 'Interior Spreads' or $$sig_specs{'txtSignatureType'} eq 'Interior Pages' ) {
-			openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'txtSignatureType', 'Interior Pages' );
-			openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'Group', '2' );
-			openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'GroupPageQuantity', $$printing_specs{'txtTotalPageQuantity'} - ( $$printing_specs{'rdbCover'} eq 'Self' ? 0 : 4 ) );
+				} elsif ( $$sig_specs{'txtSignatureType'} eq 'Interior Spreads' or $$sig_specs{'txtSignatureType'} eq 'Interior Pages' ) {
+					openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'txtSignatureType', 'Interior Pages' );
+					openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'Group', '2' );
+					openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'GroupPageQuantity', $$printing_specs{'txtTotalPageQuantity'} - ( $$printing_specs{'rdbCover'} eq 'Self' ? 0 : 4 ) );
+					foreach my $qty_index ( $Project->quantity_indexes() ) {
+						openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'MatchGrain'.$qty_index, 'Y' );
+					} # end foreach
+				} else {
+		# Gate Fold?
+					openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'Group', '3' );
+					openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'GroupPageQuantity', '4' );
+				} # end if
+			} # end if
+
 			foreach my $qty_index ( $Project->quantity_indexes() ) {
-			openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'MatchGrain'.$qty_index, 'Y' );
-			} # end foreach
-		} else {
-# Gate Fold?
-			openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'Group', '3' );
-			openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'GroupPageQuantity', '4' );
-		} # end if
-	} # end if
+				if ( $$sig_specs{'chkOverridePrintingType'.$qty_index} eq 'Y' ) {
+					openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'OverridePrintingType'.$qty_index, 'Y' );
+					openprint::service::delete_service_spec( $Project->id(), $sig_id,'chkOverridePrintingType'.$qty_index);
+				} # end if
+				if ( $$sig_specs{'chkOverrideSignatureSpreadQuantity'.$qty_index} eq 'Y' and $$sig_specs{'chkOverridePageQuantity'.$qty_index} ne 'Y' ) {
+					openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'chkOverridePageQuantity'.$qty_index, 'Y' );
+					if ( ! $$sig_specs{'PageQuantity'.$qty_index} ) {
+						openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'PageQuantity'.$qty_index, $$sig_specs{'txtSignatureSpreadQuantity'.$qty_index} * $$sig_specs{'txtSpreadSize'} );
+					} # end if
+					openprint::service::delete_service_spec( $Project->id(), $sig_id, 'chkOverrideSignatureSpreadQuantity'.$qty_index );
+				} # end if
+				openprint::service::delete_service_spec( $Project->id(), $sig_id, 'txtSignatureSpreadQuantity'.$qty_index );
 
-	foreach my $qty_index ( $Project->quantity_indexes() ) {
-		if ( $$sig_specs{'chkOverridePrintingType'.$qty_index} eq 'Y' ) {
-			openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'OverridePrintingType'.$qty_index, 'Y' );
-			openprint::service::delete_service_spec( $Project->id(), $sig_id,'chkOverridePrintingType'.$qty_index);
-		} # end if
-		if ( $$sig_specs{'chkOverrideSignatureSpreadQuantity'.$qty_index} eq 'Y' and $$sig_specs{'chkOverridePageQuantity'.$qty_index} ne 'Y' ) {
-			openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'chkOverridePageQuantity'.$qty_index, 'Y' );
-			if ( ! $$sig_specs{'PageQuantity'.$qty_index} ) {
-				openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'PageQuantity'.$qty_index, $$sig_specs{'txtSignatureSpreadQuantity'.$qty_index} * $$sig_specs{'txtSpreadSize'} );
-			} # end if
-			openprint::service::delete_service_spec( $Project->id(), $sig_id, 'chkOverrideSignatureSpreadQuantity'.$qty_index );
-		} # end if
-		openprint::service::delete_service_spec( $Project->id(), $sig_id, 'txtSignatureSpreadQuantity'.$qty_index );
-
-	} # end foreach qty_index
-#} # end if
-	foreach my $side ( 'SideOne','SideTwo' ) {
-		my $index;
-		foreach $index ( 1 .. 8 ) {
-			last if ! $$sig_specs{'ColourCoatingColour'.$index.$side};
-		} # end foreach
-		$index += 1;
-		$index = 1 if $index >= 8;
-		foreach my $colour_index ( 1 .. 8 ) {
-			if ( $$sig_specs{"chkSpecial${side}Colour$colour_index"} eq 'Y' ) {
-				openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'chkColourCoating'.$index.$side, 'Y' );
-				openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'ColourCoatingType'.$index.$side, 'PMS' );
-				openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'ColourCoatingColour'.$index.$side,  $$sig_specs{"txtSpecial${side}Colour$colour_index"} );
-				openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'ColourCoatingCoverage'.$index.$side,  $$sig_specs{"txtSpecial${side}ColourInkPercent$colour_index"} );
-				$index += 1;
-			} # end if
-		} # end foreach index
-		if ( sets::isin( $$sig_specs{'rdbAqueous'.$side}, ['Gloss','Matte','Satin','SoftTouch'] ) ) {
-			openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'chkColourCoating'.$index.$side, 'Y' );
-			openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'ColourCoatingType'.$index.$side, 'Aqueous '.$$sig_specs{'rdbAqueous'.$side} );
-			$index += 1;
-		} # end if
-		if ( $$sig_specs{'chkVarnishOverallGloss'.$side} ) {
-			openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'chkColourCoating'.$index.$side, 'Y' );
-			openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'ColourCoatingType'.$index.$side, 'Varnish Gloss Overall' );
-			$index += 1;
-		} # end if	
-		if ( $$sig_specs{'chkVarnishSpotGloss'.$side} ) {
-			openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'chkColourCoating'.$index.$side, 'Y' );
-			openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'ColourCoatingType'.$index.$side, 'Varnish Gloss Spot' );
-			$index += 1;
-		} # end if	
-		if ( $$sig_specs{'chkVarnishOverallMatte'.$side} ) {
-			openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'chkColourCoating'.$index.$side, 'Y' );
-			openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'ColourCoatingType'.$index.$side, 'Varnish Matte Overall' );
-			$index += 1;
-		} # end if	
-		if ( $$sig_specs{'chkVarnishSpotMatte'.$side} ) {
-			openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'chkColourCoating'.$index.$side, 'Y' );
-			openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'ColourCoatingType'.$index.$side, 'Varnish Matte Spot' );
-			$index += 1;
-		} # end if	
-	} # end foreach side
-
-	if ( $$services{'Scoring'} ) {
-		foreach my $scoring_service_id ( @{$$services{'Scoring'}} ) {
-			my $scoring_specs = openprint::service::get_specs_ref( $Project, $scoring_service_id );
-			foreach my $sig_id ( $Project->signatures() ? $Project->signatures() : $$services{''}[0] ) {
-				my $sig_specs = openprint::service::get_specs_ref( $Project, $sig_id );
-				foreach my $qty_index ( $Project->quantity_indexes() ) {
-					next if ! $$scoring_specs{"ddmEquipment-$$sig_specs{SignatureIndex}-$qty_index"};
-					next if ! ( $$scoring_specs{"ddmEquipment-$$sig_specs{SignatureIndex}-$qty_index"} =~ /\D/ );
-					my $Equipment = openprint::Equipment->find_one( 'strid'=>$$scoring_specs{"ddmEquipment-$$sig_specs{SignatureIndex}-$qty_index"}, deleted=>[0,1,undef] );
-					if ( ! $Equipment ) {
-						$log->error( 'No equipment found for ' . $$scoring_specs{"ddmEquipment-$$sig_specs{SignatureIndex}-$qty_index"} );
-						next;
-					} 
-					openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $scoring_service_id, "ddmEquipment-$$sig_specs{SignatureIndex}-$qty_index", $Equipment->id() );
+			} # end foreach qty_index
+		#} # end if
+			foreach my $side ( 'SideOne','SideTwo' ) {
+				my $index;
+				foreach $index ( 1 .. 8 ) {
+					last if ! $$sig_specs{'ColourCoatingColour'.$index.$side};
 				} # end foreach
-			} # end foreach sig
+				$index += 1;
+				$index = 1 if $index >= 8;
+				foreach my $colour_index ( 1 .. 8 ) {
+					if ( $$sig_specs{"chkSpecial${side}Colour$colour_index"} eq 'Y' ) {
+						openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'chkColourCoating'.$index.$side, 'Y' );
+						openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'ColourCoatingType'.$index.$side, 'PMS' );
+						openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'ColourCoatingColour'.$index.$side,  $$sig_specs{"txtSpecial${side}Colour$colour_index"} );
+						openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'ColourCoatingCoverage'.$index.$side,  $$sig_specs{"txtSpecial${side}ColourInkPercent$colour_index"} );
+						$index += 1;
+					} # end if
+				} # end foreach index
+				if ( sets::isin( $$sig_specs{'rdbAqueous'.$side}, ['Gloss','Matte','Satin','SoftTouch'] ) ) {
+					openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'chkColourCoating'.$index.$side, 'Y' );
+					openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'ColourCoatingType'.$index.$side, 'Aqueous '.$$sig_specs{'rdbAqueous'.$side} );
+					$index += 1;
+				} # end if
+				if ( $$sig_specs{'chkVarnishOverallGloss'.$side} ) {
+					openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'chkColourCoating'.$index.$side, 'Y' );
+					openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'ColourCoatingType'.$index.$side, 'Varnish Gloss Overall' );
+					$index += 1;
+				} # end if	
+				if ( $$sig_specs{'chkVarnishSpotGloss'.$side} ) {
+					openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'chkColourCoating'.$index.$side, 'Y' );
+					openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'ColourCoatingType'.$index.$side, 'Varnish Gloss Spot' );
+					$index += 1;
+				} # end if	
+				if ( $$sig_specs{'chkVarnishOverallMatte'.$side} ) {
+					openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'chkColourCoating'.$index.$side, 'Y' );
+					openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'ColourCoatingType'.$index.$side, 'Varnish Matte Overall' );
+					$index += 1;
+				} # end if	
+				if ( $$sig_specs{'chkVarnishSpotMatte'.$side} ) {
+					openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'chkColourCoating'.$index.$side, 'Y' );
+					openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'ColourCoatingType'.$index.$side, 'Varnish Matte Spot' );
+					$index += 1;
+				} # end if	
+			} # end foreach side
 
-		} # end foreach service_id in Scoring
-	} # end if Scoring
+			if ( $$services{'Scoring'} ) {
+				foreach my $scoring_service_id ( @{$$services{'Scoring'}} ) {
+					my $scoring_specs = openprint::service::get_specs_ref( $Project, $scoring_service_id );
+					foreach my $sig_id ( $Project->signatures() ? $Project->signatures() : $$services{''}[0] ) {
+						my $sig_specs = openprint::service::get_specs_ref( $Project, $sig_id );
+						foreach my $qty_index ( $Project->quantity_indexes() ) {
+							next if ! $$scoring_specs{"ddmEquipment-$$sig_specs{SignatureIndex}-$qty_index"};
+							next if ! ( $$scoring_specs{"ddmEquipment-$$sig_specs{SignatureIndex}-$qty_index"} =~ /\D/ );
+							my $Equipment = openprint::Equipment->find_one( 'strid'=>$$scoring_specs{"ddmEquipment-$$sig_specs{SignatureIndex}-$qty_index"}, deleted=>[0,1,undef] );
+							if ( ! $Equipment ) {
+								$log->error( 'No equipment found for ' . $$scoring_specs{"ddmEquipment-$$sig_specs{SignatureIndex}-$qty_index"} );
+								next;
+							} 
+							openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $scoring_service_id, "ddmEquipment-$$sig_specs{SignatureIndex}-$qty_index", $Equipment->id() );
+						} # end foreach
+					} # end foreach sig
+
+				} # end foreach service_id in Scoring
+			} # end if Scoring
 
 		} # end foreach sig_id
 	} # end if
@@ -250,9 +230,9 @@ if ( 1 ) {
 		foreach my $Project ( openprint::Project->find( 'order'=>'id desc',
 					( $project_id ? ( 'id'=>$project_id) : () ),
 					( $company_id ? ( 'company_id'=>$company_id ) : () ),
-					'limit'=>$projects_count  ) ) {
-			# Skip multipage projects
-			next if sets::isin( $Project->Type()->name(), [ 'MultiPage', 'Newsletters','Magazines','Calendars' ] );
+					offset=>$projects_count  ) ) {
+# Skip multipage projects
+			next if sets::isin( $Project->Type()->name(), [ 'MultiPage', 'Magazines','Calendars' ] );
 			my $services = $Project->services();
 			next if ! $$services{''};
 			next if ! $$services{''}[0];
@@ -263,41 +243,41 @@ if ( 1 ) {
 				openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $$services{''}[0], 'txtPrice'.$qty_index, 0 );
 			} # end foreach
 			if ( $$services{'Folding'} ) {
-my %fold_types = (
-    '2PanelFold', '2 Panel Fold',
-    '3PanelFold', '3 Panel Fold',
-    '3PanelZFold', '3 Panel Z Fold',
-    '4PanelFold', '4 Panel Fold',
-    '4PanelZFold', '4 Panel Z Fold',
-    '5PanelFold', '5 Panel Fold',
-    '5PanelZFold', '5 Panel Z Fold',
-    '6PanelFold', '6 Panel Fold',
-    '6PanelZFold', '6 Panel Z Fold',
-    'SingleGateFold', 'Single Gate Fold',
-    'DoubleGateFold', 'Double Gate Fold',
-    '4PageSignatureFold', '4PageSignatureFold',
-    '6PageSignatureFold', '6PageSignatureFold',
-    '8PageSignatureFold', '8PageSignatureFold',
-    '12PageSignatureFold', '12PageSignatureFold',
-    '16PageSignatureFold', '16PageSignatureFold',
-    '18PageSignatureFold', '18PageSignatureFold',
-    '20PageSignatureFold', '20PageSignatureFold',
-    '24PageSignatureFold', '24PageSignatureFold',
-    '28PageSignatureFold', '28PageSignatureFold',
-    '32PageSignatureFold', '32PageSignatureFold',
-    '36PageSignatureFold', '36PageSignatureFold',
-    '40PageSignatureFold', '40PageSignatureFold',
-    '44PageSignatureFold', '44PageSignatureFold',
-    '48PageSignatureFold', '48PageSignatureFold',
-    'PerpendicularSoftFold', 'PerpendicularSoftFold',
-    'ParallelSoftFold', 'ParallelSoftFold',
-    '2Panel1Pocket', 'Single Pocket Presentation Folder',
-    '2Panel2Pocket', 'Double Pocket Presentation Folder',
-    '2Panel2PocketGusset', 'Double Pocket Presentation Folder with Gussets',
-    '3Panel2Pocket', '3 Panel Double Pocket Presentation Folder',
-    '3Panel2PocketGusset', '3 Panel Double Pocket Presentation Folder with Gussets',
-    'MapFold','Map Fold',
-);
+				my %fold_types = (
+						'2PanelFold', '2 Panel Fold',
+						'3PanelFold', '3 Panel Fold',
+						'3PanelZFold', '3 Panel Z Fold',
+						'4PanelFold', '4 Panel Fold',
+						'4PanelZFold', '4 Panel Z Fold',
+						'5PanelFold', '5 Panel Fold',
+						'5PanelZFold', '5 Panel Z Fold',
+						'6PanelFold', '6 Panel Fold',
+						'6PanelZFold', '6 Panel Z Fold',
+						'SingleGateFold', 'Single Gate Fold',
+						'DoubleGateFold', 'Double Gate Fold',
+						'4PageSignatureFold', '4PageSignatureFold',
+						'6PageSignatureFold', '6PageSignatureFold',
+						'8PageSignatureFold', '8PageSignatureFold',
+						'12PageSignatureFold', '12PageSignatureFold',
+						'16PageSignatureFold', '16PageSignatureFold',
+						'18PageSignatureFold', '18PageSignatureFold',
+						'20PageSignatureFold', '20PageSignatureFold',
+						'24PageSignatureFold', '24PageSignatureFold',
+						'28PageSignatureFold', '28PageSignatureFold',
+						'32PageSignatureFold', '32PageSignatureFold',
+						'36PageSignatureFold', '36PageSignatureFold',
+						'40PageSignatureFold', '40PageSignatureFold',
+						'44PageSignatureFold', '44PageSignatureFold',
+						'48PageSignatureFold', '48PageSignatureFold',
+						'PerpendicularSoftFold', 'PerpendicularSoftFold',
+						'ParallelSoftFold', 'ParallelSoftFold',
+						'2Panel1Pocket', 'Single Pocket Presentation Folder',
+						'2Panel2Pocket', 'Double Pocket Presentation Folder',
+						'2Panel2PocketGusset', 'Double Pocket Presentation Folder with Gussets',
+						'3Panel2Pocket', '3 Panel Double Pocket Presentation Folder',
+						'3Panel2PocketGusset', '3 Panel Double Pocket Presentation Folder with Gussets',
+						'MapFold','Map Fold',
+						);
 				foreach my $service ( @{$$services{'Folding'}} ) {
 					my $specs = openprint::service::get_specs_ref( $Project, $service );
 					foreach my $qty_index ( $Project->quantity_indexes() ) {
@@ -307,7 +287,7 @@ my %fold_types = (
 						} # end if
 						foreach my $sig ( $Project->signatures() ) {
 							my $sig_specs = openprint::service::get_specs_ref( $Project, $sig );
-							
+
 							if ( $$specs{"chkOverrideFoldType-$$sig_specs{'SignatureIndex'}-$qty_index"} ) {
 								openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $service, "chkOverrideFold-$$sig_specs{'SignatureIndex'}-$qty_index", $$specs{"chkOverrideFoldType-$$sig_specs{'SignatureIndex'}-$qty_index"} );
 								openprint::service::delete_service_spec( $Project->id(), $service, "chkOverrideFoldType-$$sig_specs{'SignatureIndex'}-$qty_index" );
@@ -390,7 +370,7 @@ my %fold_types = (
 							openprint::service::delete_service_spec( $Project->id(), $service_id, "$spec-0-$qty_index" );
 						} # end foreach qty_index
 					} # end foreach spec
-					
+
 				} # end foreach service_id in Perforating
 			} # end if Perforating
 			if ( $$services{'Scoring'} ) {
@@ -406,7 +386,7 @@ my %fold_types = (
 							openprint::service::delete_service_spec( $Project->id(), $service_id, "$spec-0-$qty_index" );
 						} # end foreach qty_index
 					} # end foreach spec
-					
+
 				} # end foreach service_id in Scoring
 			} # end if Scoring
 		} # end foreach Project
@@ -414,44 +394,7 @@ my %fold_types = (
 	$dbh->do(q`UPDATE project_types set url=NULL where url='prin/prin_broc.html'`);
 }
 
-# This appears to have already been applied to live
-foreach my $Service ( openprint::Service->find('name'=>'Imposition') ) {
-	foreach my $Price ( $Service->prices() ) {
-		if ( $Price->units() eq 'Per Page' ) {
-			$Price->units('Per Imposition');
-			$Price->save();
-		} # end if
-	} # end foreach
-} # end foreach
-
-	sql::update( undef, undef, 'tbl_equipment_specifications', [ 'strname=?', 'Press Standard Run Speed'], 'strname','Standard Run Speed' );
-	sql::update( undef, undef, 'tbl_equipment_specifications', [ 'strname=? and lngequipmentindex=?', 'Standard Run Speed', 28], 'strname','Run Speed' );
-	sql::update( undef, undef, 'tbl_equipment_specifications', [ 'strname=?', 'Press Additional Run Speed' ], 'strname','Run Speed' );
-	$dbh->do(q`DELETE FROM tbl_equipment_specifications WHERE strname='Run Speed' and strvalue=''`);
-sql::update( undef, undef, 'tbl_equipment_specifications', [ 'strname=?', 'Runspeed' ], 'strname','Standard Run Speed' );
-
-
-	#sql::insert( undef, undef, 'tbl_equipment_specifications', 'lngequipmentindex', 1, 'strname','Run Speed', 'dblmin', 0.0031, 'dblmax', 0.0120, 'strvalue', 9000, 'interpolate', 0, 'strunits', 'Calliper' );
-	#sql::insert( undef, undef, 'tbl_equipment_specifications', 'lngequipmentindex', 4, 'strname','Run Speed', 'dblmin', 0.0029, 'dblmax', 0.0099, 'strvalue', 9000, 'interpolate', 0, 'strunits', 'Calliper' );
-	#sql::insert( undef, undef, 'tbl_equipment_specifications', 'lngequipmentindex', 27, 'strname','Run Speed', 'dblmin', 0.0029, 'dblmax', 0.0099, 'strvalue', 9000, 'interpolate', 0, 'strunits', 'Calliper' );
-	#sql::insert( undef, undef, 'tbl_equipment_specifications', 'lngequipmentindex', 25, 'strname','Run Speed', 'dblmin', 0.0029, 'dblmax', 0.0099, 'strvalue', 9000, 'interpolate', 0, 'strunits', 'Calliper' );
-	#sql::insert( undef, undef, 'tbl_equipment_specifications', 'lngequipmentindex', 30, 'strname','Run Speed', 'dblmin', 0.0029, 'dblmax', 0.0099, 'strvalue', 9000, 'interpolate', 0, 'strunits', 'Calliper' );
-
-	new openprint::ServiceType_Category()->save({'name'=>'Printing','sorting'=>1}) if ! openprint::ServiceType_Category->find('name'=>'Printing');
-	new openprint::ServiceType_Category()->save({'name'=>'Coatings','sorting'=>2}) if ! openprint::ServiceType_Category->find('name'=>'Coatings');
-	new openprint::ServiceType_Category()->save({'name'=>'Prepress','sorting'=>3}) if ! openprint::ServiceType_Category->find('name'=>'Prepress');
-	new openprint::ServiceType_Category()->save({'name'=>'Bindery','sorting'=>4}) if ! openprint::ServiceType_Category->find('name'=>'Bindery');
-	new openprint::ServiceType_Category()->save({'name'=>'Specialty','sorting'=>5}) if ! openprint::ServiceType_Category->find('name'=>'Specialty');
-	new openprint::ServiceType_Category()->save({'name'=>'Packaging','sorting'=>6}) if ! openprint::ServiceType_Category->find('name'=>'Packaging');
-	new openprint::ServiceType_Category()->save({'name'=>'Shipping','sorting'=>7}) if ! openprint::ServiceType_Category->find('name'=>'Shipping');
-	new openprint::ServiceType_Category()->save({'name'=>'Materials','sorting'=>8}) if ! openprint::ServiceType_Category->find('name'=>'Materials');
-	new openprint::ServiceType_Category()->save({'name'=>'Custom Services','sorting'=>10}) if ! openprint::ServiceType_Category->find('name'=>'Custom Services');
-
-foreach my $E ( openprint::Equipment->find( 'category any'=>'Printing' ) ) {
-	next if ! ( my $Spec = $E->Specification('Aqueous Capable') );
-	$Spec->save({value=>'When Printing'});
-} # end foreach
 $dbh->disconnect();
-	
+
 1;
 __END__

@@ -92,7 +92,7 @@ sub AUTOLOAD {
 
 sub display {
 	my ( $self, $prefix ) = @_;
-	my $Paper = $$self{'paper'};
+	my $Paper = $$self{'paper'} ? $$self{paper} : new openprint::Paper();
 	#$openprint::log->debug(sprintf('Imp %s: %dx%dout %dx%d+%dx%d:%dout spreads:%dx%d=%d pages:%dx%d=%d %s on: %sx%s %.3fx%.3f %s I: %.3fx%.3f L:%.3fx%.3f %s %s minimum: %s', $prefix,
 	#@$self{'quantity','start_imposition','columns','rows','dutch_columns','dutch_rows','imposition','spread_columns','spread_rows','spreads'},$self->page_columns(), $self->page_rows(), $self->pages(), $$self{'runstyle'}, $$self{paper}->{start_width},$$self{paper}->{start_height},$self->{paper}->{width},$self->{paper}->{height},$$self{Press}->{strid}, @$self{'image_width','image_height','layout_width','layout_height','image_orientation'},$self->grain_direction(), $$self{paper}->minimum_order() ) );
 	$openprint::log->debug(sprintf('Imp %s: %dx%d+%dx%d:%dout%s pages:%dx%d=%d %s on: %sx%s->%sx%s=%dsq min: %s %s %s versions: %d', $prefix,
@@ -168,7 +168,7 @@ sub load_used {
 	$$self{'dutch_orientation'} = $$self{'image_orientation'} eq 'Vertical' ? 'Horizontal' : 'Vertical';
 	$$self{'bleed_size'} = $$specs{'ddmBleedSize'.$qty_index};
 	if ( ! $$self{'Press'} ) {
-		if ( $$self{'UsePress'} ) {
+		if ( $$specs{'UsePress'} ) {
 			$$self{'Press'} = openprint::Equipment->find_one('strid'=>$$specs{'UsePress'});
 			if ( ! $$self{'Press'} ) {
 				$openprint::log->error("No Press found for $qty_index " . $$specs{'UsePress'} );
@@ -277,13 +277,13 @@ sub load {
 		} # end if
 	} # end if
 	if ( $$specs{'txtSignatureType'} ) {
-		$$self{'pages'} = $$specs{'PageQuantity'.$qty_index};
-		$$self{'spreads'} = $$specs{'PageQuantity'.$qty_index} / $$specs{'txtSpreadSize'};
+		$$self{pages} = $$specs{'PageQuantity'.$qty_index};
+		$$self{spread_size} = $$specs{'txtSpreadSize'};
+		$$self{spreads} = $$self{pages} / $$self{spread_size} if $$self{spread_size};
 		$$self{'spread_rows'} = $$specs{'SpreadRows'.$qty_index};
 		$$self{'spread_columns'} = $$specs{'SpreadCols'.$qty_index};
 		#$$self{'layout_width'} = $$self{'spread_columns'} * $$self{'layout_width'};
 		#$$self{'layout_height'} = $$self{'spread_rows'} * $$self{'layout_height'};
-		$$self{'spread_size'} = $$specs{'txtSpreadSize'};
 		#$$self{'image_width'} = $$self{'spread_columns'} * $$self{'image_width'};
 		#$$self{'image_height'} = $$self{'spread_rows'} * $$self{'image_height'};
 
@@ -510,6 +510,11 @@ sub sides {
 	$_[0]{'sides'} = $_[1] if @_ > 1;
 	return $_[0]{'sides'};
 } # end sub sides
+sub Press { 
+	$_[0]{Press} = $_[1] if @_ > 1;
+	return $_[0]{Press};
+} # end sub Press
+
 sub DESTROY {
 }
 

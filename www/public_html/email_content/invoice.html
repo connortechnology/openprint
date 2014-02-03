@@ -100,7 +100,7 @@
 			</tr>
 		</table>
 	</fieldset>
-	<? echo ( include( '/invoice/_products_view.html', $variable ); ) ?>
+	<?include(/invoice/_products_view.html)?>
 <div class="Notes">
 	<fieldset><legend>Notes</legend>
         <table class="List">
@@ -112,7 +112,7 @@
         </table>
     </fieldset>
 </div>
-<? echo ( include('/invoice/_totals.html', $variable); ) ?>
+<?include('/invoice/_totals.html')?>
 <? if ( $$variable{Invoice}->owing() ) ?>
 	<? if ( $$variable{Invoice}->due_on() and ( Date::Parse::str2time($$variable{Invoice}->due_on() ) < time ) ) ?>
 	<div class="Overdue">NOTICE:  This invoice is now overdue.  Please make payment or contact us to make an arrangement.</div>
@@ -122,5 +122,5 @@
 	<? endif ( $$variable{Invoice}->interest() ) ?>
 	<?include(/invoice/_payment_options.html)?>
 <? endif ( $$variable{Invoice}->owing() ) ?>
-<? echo ( include('/invoice/_payments_view.html', $variable); ) ?>
+<?include('/invoice/_payments_view.html') ?>
 </div>

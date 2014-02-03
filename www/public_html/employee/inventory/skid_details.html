@@ -111,7 +111,7 @@
 				<select id="ddmLocation" name="ddmLocation">
 					<option value="">select</option>
 					<? echo ( 
-						return ssi::make_drop_down( openprint::Location->dropdown(order=>'parent_id NULLS FIRST,lower(name)'), $$variable{Skid} ? $$variable{Skid}->location_id() : $param{ddmLocation} );
+						make_drop_down( openprint::Location->dropdown(type=>'place', order=>'parent_id NULLS FIRST,lower(name)'), $$variable{Skid} ? $$variable{Skid}->location_id() : $param{ddmLocation} );
 						) ?>
 				</select>
 				<? echo ( join('',
@@ -196,9 +196,9 @@
 </fieldset>
 	<? echo ( 
 		if ( $$variable{Skid}{rfidtag_id} ) {
-			@param{'end_year','end_month','end_day'} = Date::Calc::Today();
+			$param{rfidtag_id} = $$variable{Skid}{rfidtag_id};
 			$$variable{RFIDTag} = $$variable{Skid}->RFIDTag();
-			openprint::employee_inventory::_rfidtag_log_entries();
+			openprint::employee_inventory::_rfidtag_log();
 			return include('_rfidtag_log.html');
 		} # end if
 		return;

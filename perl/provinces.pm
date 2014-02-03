@@ -1,4 +1,7 @@
+use strict;
 package provinces;
+
+use vars qw( @provinces %provinces );
 
 @provinces = (
 	'AB', 'Alberta',
@@ -18,6 +21,5 @@ package provinces;
 
 %provinces = @provinces;
 
-1,
-
+1;
 __END__

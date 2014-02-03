@@ -8,6 +8,13 @@
 		'in_stock null_or_>'	=>	1,
 		type					=>	[ split( ',', $session{'/employee/inventory/available_paper.html?type'} ) ],
 		columns					=>	'*,(SELECT SUM(quantity) FROM paper_allocations WHERE paper_id=papers.id) AS allocated',
+		( $session{'/employee/inventory/available_paper.html?OrLarger'} ne 'Y' ? (
+			( $session{'/employee/inventory/available_paper.html?width'} ? ( width=>$session{'/employee/inventory/available_paper.html?width'} ) : () ),
+			( $session{'/employee/inventory/available_paper.html?height'} ? ( height=>$session{'/employee/inventory/available_paper.html?height'} ) : () ),
+		) : (
+			( $session{'/employee/inventory/available_paper.html?width'} ? ( 'width >='=>$session{'/employee/inventory/available_paper.html?width'} ) : () ),
+			( $session{'/employee/inventory/available_paper.html?height'} ? ( 'height >='=>$session{'/employee/inventory/available_paper.html?height'} ) : () ),
+	) ),
 	);
 	foreach my $filter ( 'owner_id','manufacturer_id','brand_id','finish_id','colour_id','weight_id','quality_id', 'material_id' ) {
 		if ( $session{'/employee/inventory/available_paper.html?'.$filter} ) {
@@ -33,21 +40,14 @@
 		return $_ if $_;
 
 	} openprint::Paper->find( %sql ) ];
-		my @paper_ids = map { $$_{id} } @{$$variable{Papers}};
-		my %Allocations;
-		foreach my $PA ( openprint::PaperAllocation->find(paper_id=>\@paper_ids) ) {
-			$Allocations{$$PA{paper_id}} += $$PA{quantity};
-		} # end foreach PA
-		foreach my $Paper ( @{$$variable{Papers}}  ) {
-			$Paper->allocated( undef, exists $Allocations{$$Paper{id}} ? $Allocations{$$Paper{id}} : 0 );
-		} # end foreach Paper
-		my %SkidContents;
-		foreach my $SC ( openprint::SkidContent->find( paper_id=>\@paper_ids, 'quantity >' => 0 ) ) {
-			push @{$SkidContents{$$SC{paper_id}}}, $SC;
-		} # end foreach
-		foreach my $Paper ( @{$$variable{Papers}}  ) {
-			$Paper->SkidContents( $SkidContents{$$Paper{id}} );
-		} # end foreach Paper
+	my @paper_ids = @{$$variable{paper_ids}} = map { $$_{id} } @{$$variable{Papers}};
+	my %SkidContents;
+	foreach my $SC ( openprint::SkidContent->find( paper_id=>\@paper_ids, 'quantity >' => 1 ) ) {
+		push @{$SkidContents{$$SC{paper_id}}}, $SC;
+	} # end foreach
+	foreach my $Paper ( @{$$variable{Papers}}  ) {
+		$Paper->SkidContents( $SkidContents{$$Paper{id}} );
+	} # end foreach Paper
 ) ?>
 <? if ( @{$$variable{'Papers'}} ) ?>
 	<table class="List">
@@ -83,12 +83,12 @@
 			my $available_weight;
 			my $available_sheets;
 
-			my @SkidContents = openprint::SkidContent->find('condition not in' => ['Damaged','Used'], paper_id=>[ map { $$_{id} } @{$$variable{Papers}} ], deleted=>0, 'location not in' => 'Missing' );
+			my @SkidContents = openprint::SkidContent->find('condition not in' => ['Damaged','Used'], paper_id=>$$variable{paper_ids}, deleted=>0, 'location not in' => 'Missing', 'quantity >' => 1 );
 			my %SkidContents;
 			my %SkidContentsByPaper;
 			my @skid_ids = map { $$_{skid_id} } @SkidContents;
 $log->debug("After SkidIds");
-			my %Skids = map { $$_{id}, $_ } openprint::Skid->find(id=>\@skid_ids);
+			my %Skids = map { $$_{id}, $_ } openprint::Skid->find(id=>\@skid_ids) if @skid_ids;
 $log->debug("After Skids");
 			my %SkidsByPaper;
 

@@ -34,6 +34,7 @@ sub Checkout_Skid {
 	#$context->log(1, sprintf('%s : %s : checkout skid with rfid tag %s', $date, $context->{server}->{peeraddr}, $Tag->id() ));
 	my $Skid = $Tag->Skid();
 	$Skid->rfidtag_id( $Tag->id() ) if ! $Skid->rfidtag_id();
+	$Skid->location_id( $Scanner->location_id() );
 	my $error = $Skid->save() if ! $Skid->id();
 	if ( $error ) {
 		$context->log(1, sprintf('%s : %s : error saving skid: %s', $date, $context->{server}->{peeraddr}, $error ));
@@ -193,9 +194,11 @@ sub process_request {
 			} elsif ( $Scanner->type() eq 'Checkout' ) {
 				if ( $Tag->type() eq 'Skid' ) {
 					if ( ! sets::isin( $Tag->location_id(), [ map { $_->location_id() } @checkout_tags ] ) ) {
-						$Tag->location_id( $Scanner->location_id(), $Scanner->id() );
-						if ( $_ = $Tag->save() ) {
-							$self->log(1, sprintf('%s : %s : error saving tag %s', $date, $ip_addr, $_ ));
+						if ( $Tag->location_id() != $Scanner->location_id() ) {
+							$Tag->location_id( $Scanner->location_id(), $Scanner->id() );
+							if ( $_ = $Tag->save() ) {
+								$self->log(1, sprintf('%s : %s : error saving tag %s', $date, $ip_addr, $_ ));
+							} # end if
 						} # end if
 					} # end if
 					Checkout_Skid( $Scanner, $Tag, $self, \@checkout_tags );

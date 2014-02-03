@@ -40,7 +40,7 @@ $serial = 'paper_allocation_id_seq';
 	condition_id	=>	'condition_id',
 );
 %find_fields = (
-	docket	=>	'(SELECT lngdocketnumber FROM tbl_Projects WHERE index=project_id)',
+	docket	=>	'(SELECT lngdocketnumber FROM Projects WHERE id=project_id)',
 );
 
 %transforms = (
@@ -126,7 +126,7 @@ sub send_notification {
 	my $Paper = $info{Paper} = $self->Paper();
 	my @old_skids = @{$info{'OldSkids'}} = $self->old_Skids();
 
-	my @recipients = map { $_->notification('Stock Allocations') eq 'Yes' ? $_ : () } openprint::User->find( usergroup=>'InventoryManager' );
+	my @recipients = map { $_->notification('Stock Allocations') eq 'Yes' ? $_ : () } openprint::User->find( 'usergroup any'=>'InventoryManager' );
 
     my $offsite = 0;
 	my $nolocation = 0;

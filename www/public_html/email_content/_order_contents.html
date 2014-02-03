@@ -1,68 +1,58 @@
 <? if ( @{$$variable{'Projects'}} = $$variable{'Order'}->Projects(); ) ?>
 <table class="List">
 	<tr> 
-		<th width="60" align="left">ID</td>
-		<th align="left">Reference</td>
-		<th width="155" align="left">Required Date</td>
-		<th width="100" align="left">Quantity</td>
-		<th width="100" align="right">Total</td>
+		<th class="project_id">ID</td>
+		<th class="reference">Reference</td>
+		<th class="Date">Required Date</td>
+		<th class="quantity">Quantity</td>
+		<th class="Price">Price</td>
 	</tr>
-<? eval (
-	$$variable{'rowclass'} = ''; 
-) ?>
-
-<? while ( $$variable{'Project'} = shift @{$$variable{'Projects'}} ) ?>
-	<tr<?rowclass?>> 
-		<td><a href="<? echo ( $config{ExternalSiteURL} ) ?>/main/project/view.html?ProjectIndex=<? echo ( $$variable{'Project'}->id(); ) ?>"><? echo ( $$variable{'Project'}->id(); ) ?></a></td>
-		<td><a href="<? echo ( $config{ExternalSiteURL} ) ?>/main/project/view.html?ProjectIndex=<? echo ( $$variable{'Project'}->id(); ) ?>"><? echo ( ssi::htmlize( $$variable{'Project'}->reference() ) . '<br/>' . $$variable{'Project'}->summary(); ) ?></a></td>
-		<td><? echo ( Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $$variable{'Project'}->requested_date() ) ); ) ?></td>
-		<td><? echo ( $$variable{'Project'}->ordered_quantity(); ) ?></td>
-		<td align="right">
 <? echo (
-		$$variable{'price'} = $$variable{'Project'}->ordered_price();
-		my ( $html, $shipping_html );
-		my @ShippingServices = openprint::ServiceType->find('category'=>'Shipping');
-		my %services = $$variable{'Project'}->get_services();
+	my $rowclass; 
+	my $html;
+
+	foreach my $Project ( @{$$variable{'Projects'}} ) {
+	$html .= sprintf(q`
+<tr%1$s>
+		<td class="project_id">%2$s</td>
+		<td class="reference">%3$s</td>
+		<td class="Date">%4$s</td>
+		<td class="quantity">%5$s</td>
+		<td class="Price">
+`, $rowclass, $Project->link_to(), $Project->link_to( join('<br/>', $Project->reference(), $Project->summary() ) ), 
+format_date( $Project->requested_date() ), $Project->ordered_quantity(),
+ );
+
+		$$variable{'price'} = $Project->ordered_price();
+		my $shipping_html;
+		my @ShippingServices = openprint::ServiceType->find( category=>'Shipping' );
+		my %services = $Project->get_services();
 		foreach my $ServiceType ( @ShippingServices ) {
 			if ( $services{$ServiceType->name()} ) {
 				foreach my $service_index ( @{$services{$ServiceType->name()}} ) {
-					my $specs = openprint::service::get_specs_ref( $$variable{'Project'}->id(), $service_index );
-					my $price = $$specs{'txtPrice'.$$variable{'Project'}->ordered_quantity_index()};
+					my $specs = openprint::service::get_specs_ref( $Project->id(), $service_index );
+					my $price = $$specs{'txtPrice'.$Project->ordered_quantity_index()};
 					$$variable{'price'} -= $price;
-					if ( $$variable{'Project'}->currency_id() != $$variable{'CurrencyIndex'} ) {
-						my $rate = $$variable{'Currency'}->conversions( $$variable{'Project'}->currency_id() );
+					if ( $Project->currency_id() != $$variable{Currency}->id() ) {
+						my $rate = $$variable{Currency}->conversions( $Project->currency_id() );
 						$price *= $rate;
 					} # end if
 					eval(' require openprint::Estimating::'.$ServiceType->name().';' );
-					my $summary = eval('openprint::Estimating::'.$ServiceType->name().'::summary( $$variable{Project}, $service_index, $specs, $$variable{Project}->ordered_quantity_index() );') . ' to<br/>'.eval('openprint::Estimating::'.$ServiceType->name().'::summary( $$variable{Project}, $service_index, $specs );');
+					my $summary = eval('openprint::Estimating::'.$ServiceType->name().'::summary( $Project, $service_index, $specs, $Project->ordered_quantity_index() );') . ' to<br/>'.eval('openprint::Estimating::'.$ServiceType->name().'::summary( $Project, $service_index, $specs );');
 					$openprint::log->error("Error ". $@) if $@;
-					$shipping_html .= qq`<tr$$variable{'rowclass'}><td>`.$ServiceType->description().qq`</td><td colspan="2">$summary</td><td align="right">$$specs{'alert'}</td><td align="right">`.sprintf('%s%.2f', $$variable{'Currency'}->symbol(), $price).'</td></tr>';
+					$shipping_html .= qq`<tr$$variable{'rowclass'}><td>`.$ServiceType->description().qq`</td><td colspan="2">$summary</td><td align="right">$$specs{'alert'}</td><td align="right">`. $$variable{Currency}->format($price).'</td></tr>';
 				} # end foreach
 			} # end if
 		} # end foreach
 
-    $html = sprintf( '%s%.2f</td></tr>', $$variable{'Currency'}->symbol(), $$variable{'price'} );
-	$$variable{'SUB_TOTAL'} += $$variable{'price'};
-	$$variable{'rowclass'} = $$variable{'rowclass'} ? '' : ' class="colRow"';
+    $html .= $$variable{Currency}->format( $$variable{'price'} ).  '</td></tr>';
+	$rowclass = $rowclass ? '' : ' class="colRow"';
 
-    return $html . $shipping_html;
+    $html .= $shipping_html;
 
+$html .= '</td></tr>';
+} # end foreach Project
+return $html
 ) ?>
-</td>
-	</tr>
-<? endwhile ( $$variable{'Project'} = shift @{$$variable{'Projects'}} ) ?>
 </table>
 <? endif ( @{$$variable{'Projects'}} = $$variable{'Order'}->projects(); ) ?>
-<? echo ( include('/main/order/_totals.html'); ) ?>
-	<? if ( $$variable{'AdministratorName'} ne '' ) ?>
-	<tr>
-		<td colspan="3" align="left"><b>Service Representative</b> <?AdministratorName?></td>
-	</tr>
-	<? endif ( $$variable{'AdministratorName'} ne '' ) ?>
-	<? if ( $$variable{'AdministratorComments'} ne '' ) ?>
-	<tr>
-		<td colspan="3" align="left"><b>CSR Comments</b> <?AdministratorComments?></td>
-	</tr>
-	<? endif ( $$variable{'AdministratorComments'} ne '' ) ?>
-</table>
-<span class="Currency">All prices in <?CurrencyName?>.</span>

@@ -57,12 +57,15 @@ sub save_service {
 	if ( ! $service_type ) {
 		$service_type = $Project->Type()->type();
 	} # end if
-	eval ( 'require openprint::Estimating::'.$service_type.';' );
-	my @variables = eval( 'openprint::Estimating::'.$service_type.'::variables( $project_index, $service_index, $specs, \%openprint::param )');
+	my $module = 'openprint::Estimating::'.$service_type;
+
+	eval ( 'require '.$module.';' );
+	my @variables = eval( $module.'::variables( $project_index, $service_index, $specs, \%openprint::param )');
 	$log->error($@) if $@;
 $log->debug("variables: @variables");
 	# make this fast by doing it in one transaction
 	my $ac = sql::start_transaction( $dbh );
+	$dbh->do('LOCK tbl_service_specifications IN EXCLUSIVE MODE');
 	foreach my $key (@variables) {
 #$log->debug("Key: $key ($openprint::param{$key}) ( $$specs{$key})");
 		if ( ref $openprint::param{$key} eq 'ARRAY' ) {
@@ -74,12 +77,13 @@ $log->debug("variables: @variables");
 		} # end if
 	} # end foreach
 	sql::end_transaction( $dbh, $ac );
-	eval( 'openprint::Estimating::'.$service_type.'::save( $project_index, $service_index, \%openprint::param )');
-	$log->error($@) if $@;
+	if ( my $function = $module->can('save') ) {
+		$function->( $project_index, $service_index, \%openprint::param );
+	} # end if
 
 	# FIXME: should clean this up
 	if ( $openprint::param{'Additional'} eq 'Y' or $openprint::param{'additional_service'} eq 'Y' ) {
-		openprint::print_project::insert_service( $log, $dbh, $project_index, $service_type );
+		$Project->add_service( $service_type );
 	} # end if
 
 	$log->debug("***** END  OF  save_service ************");
@@ -228,10 +232,11 @@ sub auto_calculate {
 			while ( my $si = shift @{$$services{'Folding'}} ) {
 				openprint::print_project::delete_service( $$Project{'id'}, $si );
 			} # end while
+			delete $$services{Folding};
 		} # end if
 	} else {
-		if ( ! $$services{'Folding'} ) {
-			push @{$$services{'Folding'}}, $Project->add_service( 'Folding' );
+		if ( ! $$services{Folding} ) {
+			push @{$$services{Folding}}, $Project->add_service( 'Folding' );
 		} # end if
 	} # end if
 
@@ -257,6 +262,7 @@ require openprint::Estimating::PerfectBound;
 		while ( my $si = shift @{$$services{'PerfectBound'}} ) {
 			openprint::print_project::delete_service( $$Project{'id'}, $si );
 		} # end while
+		delete $$services{'PerfectBound'};
 	} # end if
 
 require openprint::Estimating::Stitching;
@@ -297,6 +303,7 @@ require openprint::Estimating::Stitching;
 			foreach my $si ( @{$$services{'Collating'}} ) {
 				openprint::print_project::delete_service( $$Project{'id'}, $si );
 			} # end foreach
+			delete $$services{'Collating'};
 		} # end if
 	} # end if
 
@@ -449,9 +456,11 @@ sub internal_calc {
 
 	my $ac = sql::start_transaction( $dbh );
 	my $Project = new openprint::Project( $project_index );
-    $log->debug("LOCKING Projects for project $$Project{id}");
-    $dbh->do( "SELECT * FROM Projects WHERE id=".$$Project{id}. ' FOR UPDATE' );
+	$Project->save({status=>'uncalculated'}) if $Project->status() ne 'uncalculated';
+    $log->debug("LOCKING Projects for project $$Project{id} ac: $ac service_index: $service_index $service_type");
+    #$dbh->do( "SELECT * FROM Projects WHERE id=".$$Project{id}. ' FOR UPDATE' );
 	my $Service = $Project->Service($service_index) if $service_index;
+	$Service->save({status=>'uncalculated'}) if $Service->status() ne 'uncalculated';
 	my $specs;
 	if ( ! $Service ) {
 $openprint::log->error("Doing internal calc without service_index or, not found");
@@ -489,6 +498,7 @@ $openprint::log->error("Doing internal calc without service_index or, not found"
 	} else {
 		$log->error($package . ' cant calc');
 	} # end if
+    $log->debug("UNLOCKING Projects for project $$Project{id} $ac");
 	sql::end_transaction( $dbh, $ac );
 	return \%specs;
 } # end sub internal_calc
@@ -508,6 +518,8 @@ sub summary {
 
 	$Project = new openprint::Project( $Project ) if ref $Project ne 'openprint::Project';
 	my $services = $Project->services();
+	my $ServiceType = $Project->ServiceType( $service_id );
+	return '' if ! $ServiceType->summary_visible();
 
 	my $specs = get_specs_ref( $Project, $service_id );
 	if ( $$specs{'ServiceType'} eq 'Signature' or ( $$specs{'ServiceType'} eq '' and ! $$specs{'txtTotalPageQuantity'}  ) ) {
@@ -520,7 +532,6 @@ sub summary {
 		require openprint::Estimating::Stitching;
 		return openprint::Estimating::Stitching::summary($Project, $service_id, $specs, $qty_index );
 	} else {
-		my $ServiceType = $Project->ServiceType( $service_id );
 		my $ServiceTypeType = $ServiceType->type();
 		return if ! $ServiceTypeType;
 		

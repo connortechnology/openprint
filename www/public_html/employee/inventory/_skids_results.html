@@ -113,6 +113,7 @@
 			my %Allocations;
 			
 			# I think this is ok, because there are never that many allocations at any given time
+			# This is because skids_ids is an array type... need to make this better.
 			foreach my $Allocation ( openprint::PaperAllocation->find() ) {
 				foreach my $Skid ( $Allocation->Skids() ) {
 					push @{$Allocations{$$Skid{id}}}, $Allocation;

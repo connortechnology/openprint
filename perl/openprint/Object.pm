@@ -204,7 +204,7 @@ $log->debug("No serial") if $debug;
 		if ( $insert ) {
 			my @keys = keys %sql;
 			my $command = "INSERT INTO $table (" . join(',', @keys ) . ') VALUES (' . join(',', map { '?' } @sql{@keys} ) . ')';
-			if ( ! ( $_ = $local_dbh->prepare($command) and $_->execute( @sql{@keys} ) ) ) {
+			if ( ! ( ( $_ = $local_dbh->prepare($command) ) and $_->execute( @sql{@keys} ) ) ) {
 				my $error = $dbh->errstr;
 				$command =~ s/\?/\%s/g;
 				$log->error('SQL statement execution failed: ('.sprintf($command, , map { defined $_ ? $_ : 'undef' } ( @sql{@keys}) ).'):' . $local_dbh->errstr);
@@ -261,11 +261,12 @@ $log->debug("No serial") if $debug;
 		} else {
 			delete $sql{'created_on'};
 			my @keys = keys %sql;
+			@keys = sets::exclude( [ @$fields{@identified_by} ], \@keys );
 			my $command = "UPDATE $table SET " . join(',', map { $_ . ' = ?' } @keys ) . ' WHERE ' . join(' AND ', map { $$fields{$_} .'= ?' } @identified_by );
 			if ( ! ( $_ = $local_dbh->prepare($command) and $_->execute( @sql{@keys}, @sql{@$fields{@identified_by}} ) ) ) {
 				my $error = $local_dbh->errstr;
 				$command =~ s/\?/\%s/g;
-				$log->error('SQL failed: ('.sprintf($command, map { defined $_ ? $_ : 'undef' } ( @sql{@keys}, @$fields{@identified_by} ) ).'):' . $error) if $log;
+				$log->error('SQL failed: ('.sprintf($command, map { defined $_ ? $_ : 'undef' } ( @sql{@keys}, @sql{@$fields{@identified_by}} ) ).'):' . $error) if $log;
 				$local_dbh->rollback();
 				sql::end_transaction( $local_dbh, $ac );
 				return $error;
@@ -328,8 +329,12 @@ $openprint::log->debug("Running $field with $$params{$field}") if $debug;
 				$log->debug("Setting default ($field) ($$self{$field}) ($defaults{$field}) ") if $debug;
 				if ( defined $defaults{$field} ) {
 					$log->debug("Default $field is defined: $defaults{$field}") if $debug;
+					if ( $defaults{$field} eq 'NOW()' ) {
+						$$self{$field} = 'NOW()';
+					} else {
 					$$self{$field} = eval($defaults{$field});
 					$log->error( "Eval error of object default $field default ($defaults{$field}) Reason: " . $@ ) if $@;
+					} # end if
 				} else {
 					$$self{$field} = $defaults{$field};
 				} # end if
@@ -365,6 +370,7 @@ sub delete {
     my $type = ref $self;
 	
     my $table = eval '$'.$type.'::table';
+	my $debug = eval '$'.$type.'::debug';
 	my %fields = eval '%'.$type.'::fields';
 	my @identified_by = eval '@'.$type.'::identified_by';
 	@identified_by = ( 'id' ) if ! @identified_by;
@@ -384,6 +390,8 @@ sub delete {
 	} else {
 		my $rows = $local_dbh->do( 'DELETE FROM '.$table.' WHERE '.$where, undef, @$self{@identified_by} );
 		$log->warn("No rows deleted for 'DELETE FROM $table WHERE $where, @$self{@identified_by}") if ! $rows;
+		$log->debug("DELETE FROM $table WHERE $where, @$self{@identified_by}") if $debug;
+	
 		return $local_dbh->errstr if $local_dbh->errstr;
 		delete $openprint::Object::cache{$config{'db_name'}}{$type}{join('-',@$self{@identified_by})};
 	} # end if
@@ -555,25 +563,27 @@ sub find {
 	}
 	delete $$params{'dbh'};
 
+	my $do_cache = 0;
 	my $cache_field = ${$object_type.'::cache_field'};
 	if ( $cache_field and $$params{$cache_field} and ( ( 1 == keys %$params ) or ( 2 == keys %$params and exists $$params{'limit'} ) ) ) {
+		$do_cache = 1;
 
-#$log->debug("have cache field $cache_field flr $$params{$cache_field}");
+$log->debug("have cache field $cache_field for $$params{$cache_field}") if DEBUG_ALL;
 		if ( exists $name_cache{$object_type} and exists $name_cache{$object_type}{$$params{$cache_field}} ) {
-#$log->debug("There is an object in the cache");
+$log->debug("There is an object in the cache") if DEBUG_ALL;
 			if ( $name_cache{$object_type}{$$params{$cache_field}} ) {
-#$log->debug("returning " . $name_cache{$type}{$$params{$cache_field}} . " for $type $cache_field $$params{$cache_field}");
-				return $name_cache{$object_type}{$$params{$cache_field}} 
+$log->debug("returning " . $name_cache{$object_type}{$$params{$cache_field}} . " for $object_type $cache_field $$params{$cache_field}") if DEBUG_ALL;
+				return @{$name_cache{$object_type}{$$params{$cache_field}}}; 
 			} else {
-#$log->debug("returning nothing for $type $cache_field $$params{$cache_field}");
+$log->debug("returning nothing for $object_type $cache_field $$params{$cache_field}") if DEBUG_ALL;
 				return ();
 			} # end if
 		} else {
-#$log->debug("Undefing $type $cache_field $params{$cache_field}");
-			$name_cache{$object_type}{$$params{$cache_field}} = undef;
+$log->debug("Undefing $object_type $cache_field $$params{$cache_field}") if DEBUG_ALL;
+			#$name_cache{$object_type}{$$params{$cache_field}} = undef;
 		} # end if
-	#} else {
-		#$log->debug("Not doing caching using $cache_field with params $$params{$cache_field} ");
+	} else {
+		$log->debug("Not doing caching using $cache_field with params $$params{$cache_field} ") if DEBUG_ALL;
 	} # end if
 
 	# no operators, just which fields are being searched on. Mostly just useful for detetion of the deleted field.
@@ -586,7 +596,7 @@ sub find {
 	@search{@param_keys} = @$params{@param_keys};
 	
 	foreach my $k ( @param_keys ) {
-		my ( $field, $type, $function ) = $k =~ /^([_\+\w\-]+)(::\w+)?[\s_]*(.*)?$/;
+		my ( $field, $type, $function ) = $k =~ /^([_\+\w\-]+)(::\w+\[?\]?)?[\s_]*(.*)?$/;
 		$type = '' if ! defined $type;
 #$log->debug("$object_type param $field($type) func($function) " . ( ref $search{$k} eq 'ARRAY' ? join(',',@{$search{$k}}) : $search{$k} ) );
 
@@ -599,7 +609,7 @@ sub find {
 
 #$log->debug("looking for ($k) in $type :: $_ , $$f{$k}");
 			if ( ! $$fields{$field} ) {
-				$log->debug("No $field in $_ for $object_type") if DEBUG_ALL;
+				#$log->debug("No $field in $_ for $object_type") if DEBUG_ALL;
 				next;
 			} # end if
 
@@ -701,7 +711,7 @@ sub find {
 #$log->debug( 'find prepare: ' . sprintf('%.4f', tv_interval($starttime)*1000) ." useconds") if $debug;
 	my $data = $local_dbh->selectall_arrayref( $sql, { Slice => {} }, @values );
 	if ( ! $data ) {
-		$log->error('Error ' . $local_dbh->errstr() . " loading $object_type ($sql) (@values) " );
+		$log->error('Error ' . $local_dbh->errstr() . " loading $object_type ($sql) (". join(',', map { ref $_ eq 'ARRAY' ? 'ARRAY('.join(',',@$_).')' : $_ } @values ) . ") " );
 		return ();
 	#} elsif ( ( ! @$data ) and $debug ) {
 		#$log->debug("No $type ($sql) (@values) " );
@@ -709,13 +719,9 @@ sub find {
 		$log->debug("Loading Debug:$debug $object_type ($sql) (@values) # of results:" . @$data . ' in ' . sprintf('%.4f', tv_interval($starttime)*1000) .' useconds' );
 	} # end if
 	if ( $$fields{'id'} ) {
-		if ( $cache_field and 1 ) {
-			my @results;
-			foreach ( @$data ) {
-				my $result = $object_type->new( $_->{$$fields{'id'}}, $_ );
-				$name_cache{$object_type}{$$result{$$fields{$cache_field}}} = $result;
-				push @results, $result;
-			} # end foreach results
+		if ( $do_cache ) {
+			my @results = map { $object_type->new( $_->{$$fields{id}}, $_ ) } @$data;
+			$name_cache{$object_type}{$$params{$cache_field}} = \@results;
 			return @results;
 		} # end if
 		return map { $object_type->new( $_->{$$fields{'id'}}, $_ ) } @$data;
@@ -739,7 +745,7 @@ sub find_one {
 		%{$params} = @_;
 	} # end if
 	$$params{limit}=1;
-	my @Results = $object_type->find($params);
+	my @Results = $object_type->find(%$params);
 	return $Results[0] if @Results;
 } # end sub find_one
 

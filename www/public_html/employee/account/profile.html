@@ -10,9 +10,9 @@
 				<input type="text" onkeyup="filterDDM(this, f1.company_id);" onkeydown="if(event.keyCode==13){this.form.submit();}" class="filter" />
 				<select name="company_id" id="company_id" onchange="if(this.options[this.selectedIndex].value != '') f1.submit();">
 					<option value="">select</option>
-					<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Company->find('order'=>'lower(name)' ) ], $param{'company_id'} ); ) ?>
+					<? echo ( make_drop_down( openprint::Company->dropdown(order=>'lower(name)' ), $param{company_id} ? $param{company_id} : $session{company_id} ); ) ?>
 				</select>
-				<? echo ( ssi::button( 'Go1', { onclick=>"f1.btnFunction.value='Go';f1.submit();", text=>'Go' } ); ) ?>
+				<? echo ( button( 'Go1', { onclick=>"f1.btnFunction.value='Go';f1.submit();", text=>'Go' } ); ) ?>
 			</li>
 			<li>
 				<label>User</label>
@@ -26,9 +26,9 @@
 						if ( $session{'user_type'} ne 'A' ) {
 							$params{'type'} = ['C','E'];
 						} # end if
-						ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User->find( %params ) ], $param{'user_id'} ? $param{'user_id'} : $session{'user_id'} ); ) ?>
+						make_drop_down( openprint::User->dropdown( %params ), $param{user_id} ? $param{user_id} : $session{user_id} ); ) ?>
 				</select>
-				<? echo ( ssi::button( 'Go2', { onclick=>"f1.btnFunction.value='Go';f1.submit();", text=>'Go' } ); ) ?>
+				<? echo ( button( 'Go2', { onclick=>"f1.btnFunction.value='Go';f1.submit();", text=>'Go' } ); ) ?>
 			</li>
 			</ul>
 		</fieldset>
@@ -38,10 +38,10 @@
 				<? echo ( 
 					my $html;
 					if ( ($session{'user_type'} eq 'A' ) or ( openprint::usergroup::is_user_in( ['UserManagement'], $session{'user_id'} ) ) ) {
-						$html .= ssi::button( 'New1', { onclick=>'addCheck(f1);', text=>'New' } ),
+						$html .= button( 'New1', { onclick=>'addCheck(f1);', text=>'New' } ),
 					} # end if
-					$html .= ssi::button( 'Submit1', { onclick=>"f1.btnFunction.value='Save';f1.submit();", text=>'Save' } );
-					$html .= ssi::button( 'Reset1', { onclick=>'f1.reset();', text=>'Reset' } );
+					$html .= button( 'Submit1', { onclick=>"f1.btnFunction.value='Save';f1.submit();", text=>'Save' } );
+					$html .= button( 'Reset1', { onclick=>'f1.reset();', text=>'Reset' } );
 					return $html;
 				) ?>
 			</p>
@@ -113,7 +113,7 @@
 				<li>
 					<label>User Type</label>
 					<select name="type">
-						<? echo ( ssi::make_drop_down( [ 'C', 'Customer', 'E', 'Employee','A', 'Administrator' ], $$variable{'User'}->type() ); ) ?>
+						<? echo ( make_drop_down( [ 'C', 'Customer', 'E', 'Employee','A', 'Administrator' ], $$variable{'User'}->type() ); ) ?>
 					</select>
 				</li>
 		<? endif ( ($session{'user_type'} eq 'A' ) or ( openprint::usergroup::is_user_in( ['UserManagement'], $session{'user_id'} ) ) ) ?>
@@ -169,7 +169,7 @@
         my $fragment = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/employee/it/_radius_mac_line.html' );
 		$$variable{'username'} = $$variable{'User'}->email();
 		$html .= qq`<li id="mac_$$variable{username}">`;
-		$html .= ssi::variable_substitution( \$fragment, $variable );
+		$html .= variable_substitution( \$fragment, $variable );
 		$html .= '</li>';
         return $html;
     ) ?>
@@ -184,11 +184,11 @@
 			<ul>
 			<li> 
 				<label>Purchasing Limit (per PO)</label>
-				<? echo ( ssi::input( type=>'float', name=>'purchasing_limit', value=>$$variable{User}->purchasing_limit() ); ) ?>
+				<? echo ( input( type=>'float', name=>'purchasing_limit', value=>$$variable{User}->purchasing_limit() ); ) ?>
 			</li>
 			<li> 
 				<label>Purchasing Limit (Total)</label>
-				<? echo ( ssi::input( type=>'float', name=>'purchasing_total_limit', value=>$$variable{User}->purchasing_total_limit() ); ) ?>
+				<? echo ( input( type=>'float', name=>'purchasing_total_limit', value=>$$variable{User}->purchasing_total_limit() ); ) ?>
 			</li>
 			<? echo (
 				my $html;
@@ -207,7 +207,7 @@
 			my $n = $$variable{User}->notifications();
 			foreach my $Type ( openprint::User_Notification_Type->find( order=>'sort,lower(name)' ) ) {
 				$html .= '<p><label>'.$Type->name().'</label>';
-				$html .= ssi::radio( 'notification_'.$Type->id(), [ 'Yes', 'On', '', 'Off' ], $$n{$Type->name()} );
+				$html .= radio( 'notification_'.$Type->id(), [ 'Yes', 'On', '', 'Off' ], $$n{$Type->name()} );
 				$html .= '</p>';
 			} # end foreach Type
 			return $html;
@@ -222,23 +222,27 @@
 			<? if ( sets::isin( $$variable{'User'}->type(), ['E','A'] ) ) ?>
 			<li> 
 				<label>Commission Rate</label>
-				<? echo ( ssi::input( type=>'float', name=>'commission', value=>$$variable{User}->commission() ); ) ?>%
+				<? echo ( input( type=>'float', name=>'commission', value=>$$variable{User}->commission() ); ) ?>%
 			</li>
 			<li class="assistant_to">
 				<label>Assistant to</label>
-				<? echo ( ssi::checkboxes( 'csr_ids', [ map { $_->id(), $_->name() } openprint::User->find(type=>['E','A'], 'usergroup any'=>'Sales', order=>'lower(firstname),lower(lastname)' ) ], [$$variable{'User'}->csr_ids()] ); ) ?>
+				<ul>
+				<? echo ( checkboxes( 'csr_ids', [ map { $_->id(), $_->name() } openprint::User->find(type=>['E','A'], 'usergroup any'=>'Sales', order=>'lower(firstname),lower(lastname)' ) ], [$$variable{'User'}->csr_ids()], { container=>['<li>','</li>'] } ); ) ?>
+				</ul>
 			</li>
 			<? endif ( sets::isin( $$variable{'User'}->type(), ['E','A'] ) ) ?>
 			<? endif ( ($session{'user_type'} eq 'A' ) or ( openprint::usergroup::is_user_in( ['UserManagement'], $session{'user_id'} ) ) ) ?>
 			<li class="marketing_categories"> 
 				<label>User Category</label>
+				<ul>
 				<? echo (
 					my @users_categories;
 					if ( $$variable{'User'}->id() ) {
 						@users_categories = sql::execute( $log, $dbh,'SELECT category_id FROM Users_in_Marketing_Categories WHERE user_id=?', $$variable{'User'}->id() );
 					} # end if
-					ssi::checkboxes( 'marketing_categories', [ map { $_->id(), $_->name() } openprint::MarketingCategory->find('order'=>'lower(name)') ], \@users_categories );
+					checkboxes( 'marketing_categories', [ map { $_->id(), $_->name() } openprint::MarketingCategory->find('order'=>'lower(name)') ], \@users_categories, { container=>['<li>','</li>'] } );
 				) ?>
+				</ul>
 			</li>
 			<li>
 				<label>Groups</label>
@@ -247,7 +251,7 @@
 					my $html = '<ul class="UserGroups">';
 					my @usergroup_ids = map { $_->id() } $$variable{'User'}->Groups();
 					foreach my $Group ( openprint::UserGroup->find( 'order'=>'lower(name)' ) ) {
-						$html .= sprintf('<li><input type="checkbox" id="UserGroups%1$d" name="UserGroups" value="%1$d" %3$s /><label for="UserGroups%1$d">%2$s</label></li>', $Group->id(), $Group->name(), ssi::checked( sets::isin( $Group->id(), \@usergroup_ids ) ) );
+						$html .= sprintf('<li><input type="checkbox" id="UserGroups%1$d" name="UserGroups" value="%1$d" %3$s /><label for="UserGroups%1$d">%2$s</label></li>', $Group->id(), $Group->name(), checked( sets::isin( $Group->id(), \@usergroup_ids ) ) );
 					} # end foreach
 					return $html . '</ul>';
 				) ?>

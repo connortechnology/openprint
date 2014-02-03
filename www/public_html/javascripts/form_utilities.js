@@ -721,18 +721,19 @@ function Country_onchange( country_ddm, state ) {
 	var country = get_ddm_value( country_ddm );
 	var state_label = $(country_ddm.name + '_state');
 	var postal_label = $(country_ddm.name + '_postal');
+	var onchange = state.getAttribute('onchange');
 	if ( country == 'US' ) {
-		$(state.name+'_container').innerHTML = '<select name="' + state.name + '" id="' + state.id + '" />';
-		new Ajax.Updater( state.name, '/includes/_states.html' );
+		$(state.name+'_container').innerHTML = '<select name="' + state.name + '" id="' + state.id + '"' + ( onchange ? ' onchange="' + onchange + '"' : '' ) + '/>';
+		new Ajax.Updater( state.id, '/includes/_states.html' );
 		if ( state_label ) state_label.innerHTML='State';
 		if ( postal_label ) postal_label.innerHTML='ZIP Code';
 	} else if ( country == 'CA' ) {
-		$(state.name+'_container').innerHTML = '<select name="' + state.name + '" id="' + state.id + '" />';
-		new Ajax.Updater( state.name, '/includes/_provinces.html' );
+		$(state.name+'_container').innerHTML = '<select name="' + state.name + '" id="' + state.id + '"' + ( onchange ? ' onchange="' + onchange + '"' : '' ) + '/>';
+		new Ajax.Updater( state.id, '/includes/_provinces.html' );
 		if ( state_label ) state_label.innerHTML='Province';
 		if ( postal_label ) postal_label.innerHTML='Postal Code';
 	} else {
-		$(state.name+'_container').innerHTML = '<input type="text" name="' + state.name + '" id="' + state.id + '" />';
+		$(state.name+'_container').innerHTML = '<input type="text" name="' + state.name + '" id="' + state.id + '" '+ ( onchange ? ' onchange="' + onchange + '"' : '' ) + '/>';
 		if ( state_label ) state_label.innerHTML='State/Province';
 		if ( postal_label ) postal_label.innerHTML='Postal Code';
 	} // end if
@@ -1320,6 +1321,13 @@ onDestroy: function(eventName, win) {
 		popupWin.setHTMLContent( options.content );
 	} else {
 		if ( parameters ) {
+			if ( parameters == '[object HTMLFormElement]' ) {
+				var p = parameters.serialize(true);
+				if ( p )
+					parameters = $H(p).toQueryString();
+			} else if ( typeof parameters == 'object' ) {
+				parameters = $H(parameters).toQueryString();
+			}
 			url += '?' + parameters;
 		}
 		popupWin.setAjaxContent(url, null , true);

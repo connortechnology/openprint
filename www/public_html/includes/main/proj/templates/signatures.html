@@ -1,17 +1,17 @@
 <div class="templates">
     <p>
 		<img src="/images/templates/2PanelFold.gif" alt="2 Panel Fold"/>
-		<input type="radio" id="rdbTemplateType4PageSignatureFold<?Signature?>" name="rdbTemplateType<?Signature?>" value="4PageSignatureFold" onclick="$('PresentationFolderQuestions').hide();" <? echo ( ($$variable{'rdbTemplateType'.$$variable{'Signature'}} eq '4PageSignatureFold' or $$variable{'rdbTemplateType'.$$variable{'Signature'}} eq  '' ) ? 'checked="checked"' : '' ) ?> />
+		<input type="radio" id="rdbTemplateType4PageSignatureFold<?Signature?>" name="rdbTemplateType<?Signature?>" value="4PageSignatureFold" onclick="var div=$('PresentationFolderQuestions');if(div){div.hide();};selectProjectTemplate('f1');" <? echo ( ($$variable{'rdbTemplateType'.$$variable{'Signature'}} eq '4PageSignatureFold' or $$variable{'rdbTemplateType'.$$variable{'Signature'}} eq  '' ) ? 'checked="checked"' : '' ) ?> />
 		<label for="rdbTemplateType4PageSignatureFold<?Signature?>">2 Panel</label>
 	</p>
     <p>
 		<img src="/images/templates/SingleGateFold.gif" alt="Single Gate Fold"/> 
-		<input type="radio" id="rdbTemplateTypeSingleGateFold<?Signature?>" name="rdbTemplateType<?Signature?>" value="SingleGateFold" onclick="$('PresentationFolderQuestions').hide();" <? echo ( $$variable{'rdbTemplateType'.$$variable{'Signature'}} eq 'SingleGateFold' ? 'checked="checked"' : '' ) ?> /> 
+		<input type="radio" id="rdbTemplateTypeSingleGateFold<?Signature?>" name="rdbTemplateType<?Signature?>" value="SingleGateFold" onclick="var div = $('PresentationFolderQuestions');if(div){div.hide();};selectProjectTemplate('f1');" <? echo ( $$variable{'rdbTemplateType'.$$variable{'Signature'}} eq 'SingleGateFold' ? 'checked="checked"' : '' ) ?> /> 
 		<label for="rdbTemplateTypeSingleGateFold<?Signature?>">Single Gate Fold</label>
 	</p>
     <p>
 		<img src="/images/templates/DoubleGateFold.gif" alt="Double Gate Fold" />
-		<input type="radio" id="rdbTemplateTypeDoubleGateFold<?Signature?>" name="rdbTemplateType<?Signature?>" value="DoubleGateFold" onclick="$('PresentationFolderQuestions').hide();" <? echo ( $$variable{'rdbTemplateType'.$$variable{'Signature'}} eq 'DoubleGateFold' ? 'checked="checked"' : '' ) ?> />
+		<input type="radio" id="rdbTemplateTypeDoubleGateFold<?Signature?>" name="rdbTemplateType<?Signature?>" value="DoubleGateFold" onclick="var div=$('PresentationFolderQuestions');if(div){div.hide();};selectProjectTemplate('f1');" <? echo ( $$variable{'rdbTemplateType'.$$variable{'Signature'}} eq 'DoubleGateFold' ? 'checked="checked"' : '' ) ?> />
 		<label for="rdbTemplateTypeDoubleGateFold<?Signature?>">Double Gate Fold</label>
 	</p>
 <? if ( openprint::ProjectType->find_one('name'=>'PresentationFolders') ) ?>

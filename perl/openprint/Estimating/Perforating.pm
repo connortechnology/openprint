@@ -23,7 +23,7 @@ require openprint::Material;
 require openprint::imposition;
 require openprint::Imposition;
 
-use constant DEBUG => 0;
+use constant DEBUG => 1;
 
 my @all_equipment;
 my @stitchers;
@@ -179,7 +179,7 @@ sub calc {
 	} # end foreach quantities
 
 	$log->debug("END PERFING!!!!!!!!!!!!!!!!!!") if DEBUG;
-	return $status;
+	return $$specs{Status} = $status;
 } # end sub calc
 
 sub signature_calc {
@@ -573,10 +573,10 @@ sub signature_calc {
 						} # end if
 					} elsif ( $vertical_price{units} eq 'per package' ) {
 						my $package_qty;
-						if ( $$Package_Qty{units} eq 'feet' ) {
+						if ( lc $$Package_Qty{units} eq 'feet' ) {
 							$Results{Breakdown} .= sprintf( 'Needed %.2f feet', POSIX::ceil($vertical_length/12) );
 							$package_qty = POSIX::ceil( ( $vertical_length / 12 ) / $$Package_Qty{value} );
-						} elsif ( $$Package_Qty{units} eq 'inches' ) {
+						} elsif ( lc $$Package_Qty{units} eq 'inches' ) {
 							$Results{Breakdown} .= sprintf( 'Needed %d inches', POSIX::ceil($vertical_length) );
 							$package_qty = POSIX::ceil( $vertical_length / $$Package_Qty{value} );
 						} # end if

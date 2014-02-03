@@ -105,9 +105,18 @@ $serial	= 'paper_id_seq';
 
 %transforms = (
 	manufacturers_name => [ 's/^\s+//', 's/\s+$//', 's/\s\s+$/ /g' ],
+	gsm	=>	 [ 's/[^\d\.]//g' ],
 );
 
 %defaults = (
+	basis_width	=>	undef,
+	basis_height	=>	undef,
+	basis_mweight	=>	undef,
+	width		=>	undef,
+	height		=>	undef,
+	gsm			=>	undef,	
+	grade		=>	undef,
+	calliper	=>	undef,
 	allocated	=>	q`'0'`,
 	in_stock	=>	q`'0'`,
 	user_type	=>	q`''`,
@@ -115,6 +124,8 @@ $serial	= 'paper_id_seq';
 	die_score_required	=>	'0',
 	supplied		=>	undef,
 	multipart	=>	0,
+	sheets_per_package	=>	undef,
+	wpsi				=>	undef,
 );
 
 %grades = (
@@ -332,6 +343,7 @@ sub merge {
 	sql::update( undef, undef, 'paper_recommendations', [ 'lngpaperindex=?', $Duplicate->id() ], 'lngpaperindex', $self->id() );
 	sql::update( undef, undef, 'manifest_content_types', [ 'paper_id=?', $Duplicate->id() ], 'paper_id', $self->id() );
 	$Duplicate->delete();
+	$self->save({in_stock=>undef});
 	sql::end_transaction( $openprint::dbh, $ac );
 } # end sub merge
 
@@ -369,7 +381,7 @@ sub delete {
 	sql::execute( undef, undef, q{DELETE FROM StockMaterials WHERE id NOT IN (SELECT DISTINCT material_id FROM Papers)} );
 	
 	# Add record to audit log - action "Delete Paper".
-	openprint::logs::insertLogRecord('15', "Paper ID: " . $$self{'id'},);
+	new openprint::Log()->save({action=>'Delete Paper', note=>'Stock ID: '.$$self{'id'} });
 	sql::end_transaction( undef, $ac );
 	
 } # end sub delete
@@ -822,26 +834,26 @@ sub allocated {
 } # end sub allocated
 
 sub in_stock {
-	return 0 if ! $_[0]{'id'};
+	return 0 if ! $_[0]{id};
 
 	if ( @_ > 1 ) {
-		if ( ref $_[1] eq 'openprint::StockQuality' ) {
+		if ( ref $_[1] eq 'openprint::InventoryCondition' ) {
 			my $in_stock = 0;
-			foreach my $C ( openprint::SkidContent->find(deleted=>0,paper_id=>$_[0]{id}, quality_id=>$_[0]->id() ) ) {
+			foreach my $C ( openprint::SkidContent->find(deleted=>0,paper_id=>$_[0]{id}, condition_id=>$_[1]->id() ) ) {
 				$in_stock += $C->quantity();
 			} # end foreach C
 			return $in_stock;
 		} else {
-			$_[0]{'in_stock'} = $_[1];
+			$_[0]{in_stock} = $_[1];
 		} # end if
 	} # end if
 
-	if ( ! defined $_[0]{'in_stock'} ) {
+	if ( ! defined $_[0]{in_stock} ) {
 		foreach my $SkidContent ( $_[0]->SkidContents() ) {
-			$_[0]{'in_stock'} += $SkidContent->quantity();
+			$_[0]{in_stock} += $SkidContent->quantity();
 		} # end foreach SkidContent
 	} # end if
-	return $_[0]{'in_stock'};
+	return $_[0]{in_stock};
 } # end sub in_stock
 
 sub SkidContents {
@@ -1100,7 +1112,7 @@ sub gsm {
 			$$self{'gsm'} = sprintf('%.2f', $$self{'wpsi'} * 703064.5 );
 		} else { 
 			$$self{'gsm'} = 'unknown';
-			$openprint::log->warn("Can't calculate gsm for " . $self->to_string() );
+			$openprint::log->warn("Can't calculate gsm for " . $self->to_string() ) if $$self{brand};
 		} # end if
 	} # end if
 	return $$self{'gsm'};
@@ -1258,10 +1270,10 @@ sub load_from_signature {
 		$$Paper{Units} = $$specs{'CustomStockPriceUnits'};
 		$Paper->basis_width( $$specs{'basis_width'} );
 		$Paper->basis_height( $$specs{'basis_height'} );
-		$Paper->basis_mweight( $$specs{'basis_mweight'} );
+		$Paper->basis_mweight( $$specs{'basis_mweight'} ) if $$specs{'basis_mweight'};
 		$Paper->score_required( $Paper->calliper() > 0.008 );
 		#if ( $$specs{'StockType'} ne 'Roll' ) {
-			$Paper->mweight( $$specs{'txtCustomMWeight'} );
+			$Paper->mweight( $$specs{'txtCustomMWeight'} ) if ! $Paper->gsm();
 		#} # end if
 		$Paper->supplied( $$specs{'rdbSuppliedStock'} eq 'Y' ? 1 : 0 );
 	} else {
@@ -1368,7 +1380,11 @@ $log->debug($P->id_string());
 	$Paper = $Paper->clone();
 #$openprint::log->debug($Paper->to_string() );
 	if ( $qty_index ) {
-		if ( ( $Paper->width() != $$specs{'StockWidth'.$qty_index} ) or ($Paper->type() eq 'Sheet' and $Paper->height() != $$specs{'StockHeight'.$qty_index} ) ) {
+		if ( 
+			( ( $Paper->width() != $$specs{'StockWidth'.$qty_index} ) or ($Paper->type() eq 'Sheet' and $Paper->height() != $$specs{'StockHeight'.$qty_index} ) )
+			and
+			( ( $Paper->height() != $$specs{'StockWidth'.$qty_index} ) or ($Paper->type() eq 'Sheet' and $Paper->width() != $$specs{'StockHeight'.$qty_index} ) )
+) {
 #Carp::cluck("Custom size $$specs{'StockWidth'.$qty_index}x$$specs{'StockHeight'.$qty_index}");
 #$openprint::log->debug("Custom size $$Paper{width}x$$Paper{height} => $$specs{'StockWidth'.$qty_index}x$$specs{'StockHeight'.$qty_index}");
 			if ( ! $Paper->start_width() ) {
@@ -1378,7 +1394,7 @@ $log->debug($P->id_string());
 			} elsif ( $Paper->width() >= $$specs{'StockWidth'.$qty_index} ) {
 				$Paper->width( $$specs{'StockWidth'.$qty_index} );
 			} else {
-				$log->warn("Unsuitable Stock");
+				$log->warn("Unsuitable Stock" . $Paper->to_string() . ' desired: ' . $$specs{'StockWidth'.$qty_index} . 'x' . $$specs{'StockHeight'.$qty_index});
 				return new openprint::Paper();
 			} # end if
 
@@ -1573,6 +1589,10 @@ sub init_cache {
     openprint::StockQuality->find();
     openprint::StockMaterial->find();
 }
+
+sub link_to {
+	return sprintf('<a href="/employee/inventory/paper_details.html?paper_id=%1$d">%2$s</a>', $_[0]{id}, $_[0]->to_string() );
+} # end sub link_to
 
 1;
 __END__

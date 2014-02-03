@@ -7,7 +7,7 @@ These charges will need to be approved before production will continue.<br/>
 <?Message?>
 <? endif ( $$variable{Message} ) ?>
 <br/>
-<? eval ( openprint::project::get_header( $log, $dbh, $variable, $$variable{'Project'}->id() ); ) ?>
+<div class="Project">
 <?include('/includes/project_header.html')?>
 <table class="List">
 	<tr> 
@@ -45,11 +45,12 @@ These charges will need to be approved before production will continue.<br/>
 	) ?>
 </table>
 <span>All prices are in <b><? echo ( $$variable{'Project'}->Currency()->name() ) ?></b>.</span>
+</div>
 <br/>
 <span style="float: right;">
 	<? echo ( 
-		if ( sets::isin( $$variable{'Project'}->status(), [ 'Proofs Out', 'Waiting for Client Approval' ] ) ) {
-			return button( 'SignOff', href=> qq`sign-off.html?ProjectIndex=$$variable{'ProjectIndex'}`, text=>'Sign Off' } );
+		if ( sets::isin( $$variable{Project}->status(), [ 'Proofs Out', 'Waiting for Client Approval' ] ) ) {
+			return button( 'SignOff', { href=> qq`sign-off.html?ProjectIndex=$$variable{Project}{id}`, text=>'Sign Off' } );
 		} # end if
 		return;
 	) ?>

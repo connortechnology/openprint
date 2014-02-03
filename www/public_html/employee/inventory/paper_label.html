@@ -6,15 +6,17 @@
 	<b>Skid #</b> <? echo ( $$variable{'Skid'}->id() ) ?><br/>
 	<? echo ( Date::Format::time2str('%d %b %Y %H:%M', Date::Parse::str2time($$variable{'Skid'}->created_on()) );) ?>
 </div>
-<div style="border: 1px solid black; padding: 0px 7px 0px 5px; height: 90px; margin-bottom: 2px;">
+<div class="Contents">
 <? echo ( 
 	my $html;
-	my $Paper = new openprint::Paper( $$variable{'paper_id'} );
-	foreach my $C ( $$variable{'Skid'}->Contents( 'paper_id'=>$$variable{'paper_id'} ) ) {
-		$html .= '<table style="float: right; width:50%;">';
-		$html .= sprintf('<tr><td>Qty</td><td align="right"><img src="/barcode.png?code=Q%1$d+&amp;NoText=1&amp;Height=30" alt="%1$d"/></td></tr>', $C->quantity() );
-		$html .= '</table>';
-		my $paper_detail = sprintf('%s %s %s', $Paper->name(), $Paper->finish(), $Paper->colour() );
+	foreach my $C ( $$variable{Skid}->Contents() ) {
+		$html .= '<div class="Content">';
+		my $Paper = $C->Paper();
+		$html .= '<div class="StockDetails"><div class="StockQuantity">';
+		my $qty = $C->quantity();
+		$html .= sprintf('<label>Qty:</label><img src="/barcode.png?code=Q%1$d+&amp;NoText=1&amp;Height=30" alt="%1$d"/>', $qty );
+		$html .= '</div>';
+		my $paper_detail = sprintf('%s %s %s', $Paper->brand(), $Paper->finish(), $Paper->colour() );
 		$paper_detail .= '<br/>';
 		if ( $Paper->type() eq 'Roll' ) {
 			$paper_detail .= sprintf('<b>%s %s</b>', $Paper->weight, $Paper->width().'" Roll' );
@@ -26,34 +28,35 @@
 		} else {
 			$html .= $paper_detail;
 		} # end if
-		$html .= '<br/><b>'. $C->quantity() . ' '. $Paper->units() .'</b><br class="spacer"/>';
-	} # end foreach
+		$html .= '<br/><b>'. $qty . ' '. $Paper->units().'</b></div>';
+		my @Allocations = openprint::PaperAllocation->find( paper_id=>$$Paper{id}, 'skid_ids any'=>$$variable{Skid}{id}, order=>'created_on' );
+		my %totals = map { $_->Project()->docket(), $_->quantity() } @Allocations;
+
+		foreach my $docket ( sort keys %totals ) {
+			$html .= qq`
+<div class="Allocation">
+	<div class="docket">
+		<label>Docket:</label>
+		<img src="/barcode.png?code=D$docket+&amp;NoText=1&amp;Height=30"/>
+	</div>
+	<div class="allocated">
+		<label>Allocated:</label>
+		<img src="/barcode.png?code=Q$totals{$docket}+&amp;NoText=1&amp;Height=30"/>
+			$docket
+	</div>
+</div>`;
+		} # end foreach
+		
+		if ( $param{'docket'} ) {
+			$html .= qq`
+<div class="docket">
+	<label>Docket:</label>
+	<img src="/barcode.png?code=D$param{docket}+&amp;NoText=1&amp;Height=30">
+	$param{docket}
+</div>`;
+		} # end if docket
+		$html .= '</div>';
+	} # end foreach stock
 	return $html;
 ) ?>
 </div>
-<? echo (
-	if ( $$variable{'paper_id'} ) {
-		my $html;
-		my @Allocations = openprint::PaperAllocation->find('paper_id'=>$$variable{'paper_id'}, 'skid_id'=>$$variable{'Skid'}{'id'},'order'=>'created_on');
-		my %totals = map { $_->Project()->docket(), $_->quantity() } @Allocations;
-
-				foreach my $docket ( sort keys %totals ) {
-					$html .= '<div style="padding:0px 7px 0px 7px;">';
-					$html .= qq`<img style="float: right; margin-bottom: 7px;" src="/barcode.png?code=D$docket+&amp;NoText=1&amp;Height=30"/><b>Docket</b><br class="spacer"/>`;
-					$html .= '<img style="float: right;" src="/barcode.png?code=Q'.$totals{$docket}.'+&amp;NoText=1&amp;Height=30"><b>Allocated</b>';
-					$html .= qq`<div style="font-size: 99pt; text-align: center;"><b>$docket</b></div></div><br class="pagebreak"/>`;
-				} # end foreach
-			} # end if
-		} # end foreach
-		
-		return $html;
-	} elsif ( $param{'docket'} ) {
-			my $html;
-			$html .= '<div style="padding:0px 7px 0px 7px;">';
-			$html .= qq`<img style="float: right; margin-bottom: 7px;" src="/barcode.png?code=D$param{docket}+&amp;NoText=1&amp;Height=30"><b>Docket</b><br class="spacer"/>`;
-			$html .= qq`<div style="font-size: 99pt; text-align: center;"><b>$param{docket}</b></div></div><br class="pagebreak"/>`;
-			return $html;
-	} else {
-		return '<br class="pagebreak"/>';
-	} # end if docket
-) ?>

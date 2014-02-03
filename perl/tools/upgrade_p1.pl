@@ -26,6 +26,7 @@ $src_db = 'point-one' if ! $src_db;
 $dst_db = 'point-one' if ! $dst_db;
 `/etc/init.d/apache2 reload`;
 
+if ( 0 ) {
 if ( ! $path ) {
 	my ( $year, $month, $day ) = Date::Calc::Add_Delta_Days( Date::Calc::Today(), -1 );
 	$path = "/media/ARCHIVE/Backups/database/$src_db/$year-$month-$day.sql.bz2";
@@ -60,6 +61,7 @@ if ( ! $path ) {
 	print "done\n";
 
 } # end if
+} # end if
 
 `chmod +x $lib_path/tools/db_update.pl`;
 print "upgrading structures 1...\n";
@@ -78,7 +80,7 @@ print 'Turning off backups...';
 $dbh = sql::open_sql( $log, ('database'=>$dst_db, 'driver'=>'Pg','login'=>'point-one', 'password'=>'point-one') );
 configuration::init( $log, $dbh );
 my ( $version, $updated_on, $backup ) = sql::execute( undef, undef, q{SELECT version,updated_on, backup FROM database_info ORDER BY updated_on DESC LIMIT 1} );
-sql::insert( undef, undef, 'database_info', 'version', $version+1, 'backup', 'false' );
+#sql::insert( undef, undef, 'database_info', 'version', $version+1, 'backup', 'false' );
 print "done\n";
 map { $_->save({type=>'place'}) } openprint::Location->find(name=>['POGI','Metro','Missing','Trigistrix', 'On Order']);
 
@@ -94,7 +96,7 @@ foreach my $Project ( openprint::Project->find('created_on >'=>sprintf('%.4d-%.2
 } # end foreach Project
 }
 $dbh->disconnect();
-`/etc/init.d/postgresql restart`;
+#`/etc/init.d/postgresql restart`;
 #`su postgres -c /usr/lib/postgresql/9.1/bin/vacuumdb`;
 0;
 __END__

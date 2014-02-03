@@ -30,6 +30,7 @@
     # Not sure this is a good idea, but it's neccessary for printing... why is it neccessary?
     $openprint::service::specs_cache{$param{ServiceIndex}} = \%param;
     my %specs = %param;
+$openprint::log->debug("Paper Message 1 " . ( exists $specs{PaperMessage1} ? ' exists ' : 'not exists' ) . ' ' . $specs{PaperMessage1} );
 	if ( my $function = $module->can( $param{method} ) ) {
 		$specs{'Status'} = $function->( $log, $dbh, $variable, @param{'ProjectIndex','ServiceIndex'}, \%specs );
 	} else {
@@ -61,8 +62,9 @@ $log->debug("Deleting key $key in no_outputs ") if $debug;
 			$log->debug("$key => $specs{$key}");
 		} # end foreach
 	} # end if debug
+$openprint::log->debug("Paper Message 1 " . ( exists $specs{PaperMessage1} ? ' exists ' : 'not exists' ) . ' ' . $specs{PaperMessage1} );
     foreach my $key ( @vars ) {
-        if ( (exists $specs{$key}) and ($specs{$key} eq $param{$key}) ) {
+        if ( (exists $param{$key}) and ($specs{$key} eq $param{$key}) ) {
 $log->debug("Deleting $key cuz it's the same $key") if $debug;
 			delete $specs{$key};
         } # end if

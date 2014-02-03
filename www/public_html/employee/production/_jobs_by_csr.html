@@ -4,9 +4,9 @@
 	my @statuses = split(',', $session{'/employee/production/jobs_by_csr.html?status'} );
 
 	@{$$variable{CSRS}} = openprint::User->find(
-		usergroup	=>	'Sales',
+		'usergroup any'	=>	'Sales',
 		( $session{'/employee/production/jobs_by_csr.html?salesrep_id'} ? ( id =>	[ split(',',$session{'/employee/production/jobs_by_csr.html?salesrep_id'}) ] ) : () ),
-		order		=>	'lower(strfirstname),lower(strlastname)',
+		order		=>	'lower(firstname),lower(lastname)',
 	);
 	my $html;
 	foreach my $CSR ( @{$$variable{CSRS}} ) {

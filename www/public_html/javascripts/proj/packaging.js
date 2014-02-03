@@ -1,15 +1,3 @@
-function calc( formName ){
-	gettingNewPrice = true;
-    var form = getFormObj(formName);
-	var h = form.serialize(true);
-	if ( form.ServiceType ) {
-		h.ServiceType = form.ServiceType.value;
-	} else {
-		h.ServiceType = 'Packaging';
-	} // end if
-	new Ajax.Request( '/main/project/_calc.json', { method: 'post', parameters: h, evalScripts: true } );
-} // end calc
-
 function validate_data(formName) {
     var form = getFormObj(formName);
     var text = '';

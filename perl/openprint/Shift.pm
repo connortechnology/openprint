@@ -19,7 +19,7 @@ require openprint::Equipment_Shift;
 require openprint::User;
 require openprint::ScheduledJob;
 
-$debug = 0;
+$debug = 1;
 
 $table = 'shifts';
 $serial = 'shifts_id_seq';
@@ -208,6 +208,7 @@ sub get_ul {
 	my $total_impressions;
 
 	my @Jobs = $Shift->Schedule();
+	openprint::Project->find(id=>[ map { $$_{project_id} } @Jobs ]) if @Jobs;
 	foreach my $Job ( @Jobs ) {
 		if ( $filters ) {
 			if ( $$filters{Status} ) {

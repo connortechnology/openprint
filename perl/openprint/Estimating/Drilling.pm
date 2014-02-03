@@ -68,7 +68,7 @@ sub calc {
 		@outputs = sets::exclude( ['txtFinishedCalliper'], \@outputs );
 	} # end if
 
-	if ( ! $$specs{'txtFinishedCalliper'} ) {
+	if ( ! 1*$$specs{txtFinishedCalliper} ) {
 		$$specs{'alert'} = 'Please specify the finished calliper.';
 		return $$specs{'Status'} = 'uncalculated';
 	} # end if
@@ -101,7 +101,7 @@ sub calc {
 		$$specs{'txtPrice'.$qty_index} =~ s/[^\d\.]//g;
 		my %BestPrice;
 		$$specs{'hdnBreakdown'.$qty_index} = "QTY $qty_index ($qty):<br/>";
-		$$specs{'hdnBreakdown'.$qty_index} .= 'Finished Calliper: ' . $$specs{'txtFinishedCalliper'}.'<br/>';
+		$$specs{'hdnBreakdown'.$qty_index} .= 'Finished Calliper: ' . $$specs{txtFinishedCalliper}.'<br/>';
 		if ( $$specs{'txtPressSheetComboItems'} > 1 ) {
 			$qty *= $$specs{'txtPressSheetComboItems'};
 		} # end if
@@ -158,7 +158,7 @@ sub calc {
 				$$specs{'hdnBreakdown'.$qty_index} .= " Doesn't support $$specs{'txtHoleSize'}\" holes.\n";
 				next;
 			} # end if
-			if ( $Equipment->specification('Maximum Lift Depth') and $Equipment->specification('Maximum Lift Depth') < $$specs{'txtFinishedCalliper'} ) {
+			if ( $Equipment->specification('Maximum Lift Depth') and $Equipment->specification('Maximum Lift Depth') < $$specs{txtFinishedCalliper} ) {
 				$$specs{'hdnBreakdown'.$qty_index} .= " Too thick.\n";
 				next;
 			} # end if
@@ -178,7 +178,7 @@ sub calc {
 				if ( $$services{'Scoring'} or $$services{'Perforating'} ) {
 					$items_per_lift = 10;
 				} elsif ( $Equipment->specification('Maximum Lift Depth') ) {
-					$items_per_lift = int($Equipment->specification('Maximum Lift Depth')/$$specs{'txtFinishedCalliper'});
+					$items_per_lift = int($Equipment->specification('Maximum Lift Depth')/$$specs{txtFinishedCalliper});
 				} else {
 					$items_per_lift = 1;
 				} # end if

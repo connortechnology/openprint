@@ -51,13 +51,14 @@
 		<div class="leftColumn">
 			<ul>
 		<? if ( $$variable{'RFIDScanner'}->id() ) ?>
+			<input type="hidden" name="rfidscanner_id" value="<? echo ( $$variable{'RFIDScanner'}->id() ) ?>" />
 			<li>
 				<label>Created</label>
-				<? echo ( format_datetime( $$variable{'RFIDScanner'}->created_on() ); ) ?> 
+				<? echo ( format_datetime( $$variable{RFIDScanner}->created_on() ); ) ?> 
 			</li>
 			<li>
 				<label>Last Updated</label>
-				<? echo ( format_datetime( $$variable{'RFIDScanner'}->updated_on() ); ) ?> 
+				<? echo ( format_datetime( $$variable{RFIDScanner}->updated_on() ); ) ?> 
 			</li>
 		<? endif ( $$variable{'RFIDScanner'}->id() ) ?>
 			<li>
@@ -72,7 +73,7 @@
 				<label>Other Data</label>
 				<? if ( $$variable{'RFIDScanner'}->type() eq 'Truck Location' ) ?>
 				<select name="other">
-					<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::RFIDScanner->find('order'=>'name') ], $$variable{'RFIDScanner'}->other() ); ) ?>
+					<? echo ( make_drop_down( [ map { $_->id(), $_->name() } openprint::RFIDScanner->find( order=>'name') ], $$variable{RFIDScanner}->other() ); ) ?>
 				</select>
 				<? else ( $$variable{'RFIDScanner'}->type() eq 'Truck Location' ) ?>
 				<input type="text" name="other" value="<? echo ( $$variable{'RFIDScanner'}->other() ) ?>" />
@@ -81,10 +82,7 @@
 			<li><label>Type</label>
 				<select name="type" id="type">
 					<option value="">select</option>
-					<? echo ( 
-						my @options = ( 'Checkout', 'Fixed','Mobile', 'Truck Inventory','Truck Location' );
-						return ssi::make_drop_down( [ map { $_, $_ } @options ], $$variable{'RFIDScanner'}->type() );
-					) ?>
+					<? echo ( make_drop_down( [ map { $_, $_ } @openprint::RFIDScanner::types ], $$variable{RFIDScanner}->type() );) ?>
 				</select>
 			</li>
 			<li id="Location">
@@ -92,20 +90,28 @@
 				<select id="location_id" name="location_id">
 					<option value="">select</option>
 					<? echo ( 
-						return ssi::make_drop_down( openprint::Location->dropdown( order=>'lower(name)'), $$variable{RFIDScanner} ? $$variable{RFIDScanner}->location_id() : $param{location_id} );
+						make_drop_down( openprint::Location->dropdown( order=>'lower(name)'), $$variable{RFIDScanner} ? $$variable{RFIDScanner}->location_id() : $param{location_id} );
 						) ?>
 				</select>
-			</p>
+			</li>
+			<li>
+				<label>Monitor:</label>
+				<input type="radio" id="monitor1" name="monitor" value="1" <? echo ( checked( $$variable{'RFIDScanner'}->monitor() ) ) ?> />
+				<label class="radio" for="monitor1">Yes</label>
+				<input type="radio" id="monitor0" name="monitor" value="0" <? echo ( checked( ! $$variable{'RFIDScanner'}->monitor() ) ) ?> />
+				<label class="radio" for="monitor0">No</label>
+			</li>
+			</ul>
 			<p class="buttons">
 				<? echo ( 
 						my $html;
-						$html .= ssi::button( 'save', { onclick=>"if(check_inputs(f1)){f1.btnFunction.value='Save';f1.submit();}", text=>'Save' } );
+						$html .= button( 'save', { onclick=>"if(check_inputs(f1)){f1.btnFunction.value='Save';f1.submit();}", text=>'Save' } );
 						if ( $$variable{'RFIDScanner'}->id() ) {
-							$html .= ssi::button( 'delete', { onclick=>"if(confirm('Are you sure?')){f1.action='rfidscanners.html';f1.btnFunction.value='Delete';f1.submit();}", text=>'Delete' } ) if $$variable{'RFIDScanner'}->id();
-							$html .= ssi::button( 'addnew', { onclick=>'', href=>'rfidscanner_details.html', text=>'Add New RFIDScanner' } );
+							$html .= button( 'delete', { onclick=>"if(confirm('Are you sure?')){f1.action='rfidscanners.html';f1.btnFunction.value='Delete';f1.submit();}", text=>'Delete' } );
+							$html .= button( 'addnew', { href=>'rfidscanner_details.html', text=>'Add New RFIDScanner' } );
 						} # end if
-						$html .= ssi::button( 'reset', { onclick=>'f1.reset();', text=>'Reset' } );
-						#$html .= ssi::button( 'clear', { onclick=>'clearForm(f1);', text=>'Clear' } );
+						$html .= button( 'reset', { onclick=>'f1.reset();', text=>'Reset' } );
+						#$html .= button( 'clear', { onclick=>'clearForm(f1);', text=>'Clear' } );
 						return $html;
 				) ?>
 			</p>
@@ -117,6 +123,7 @@
 	</fieldset>
 </form>
 <? if ( $$variable{'RFIDScanner'}->id() ) ?>
+<!--
 <form name="f2" id="f2">
 	<input type="hidden" name="rfidscanner_id" value="<? echo ( $$variable{'RFIDScanner'}->id() ) ?>" />
 	<fieldset><legend>Location Log</legend>
@@ -131,5 +138,7 @@
 		<div id="Log"><? include('_rfidscanner_log.html') ?></div>
 	</fieldset>
 </form>
+-->
+<?include(_rfidtag_log.html)?>
 <? endif ( $$variable{'RFIDScanner'}->id() ) ?>
 <script type="text/javascript">document.jump.rfidscanner_id.focus();</script>

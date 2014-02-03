@@ -43,13 +43,13 @@
 		<? echo (
 			my $html = '';
 			my $ac = sql::start_transaction( $dbh );
-			my $content = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/employee/inventory/_manifest_type.html' );
+			my $content = slurp_content('/employee/inventory/_manifest_type.html' );
 			$variable{'location_dropdown'} = openprint::Location->dropdown(order=>'parent_id NULLS FIRST, lower(name)');
 			
 			foreach my $Type ( $$variable{'Manifest'}->Types() ) {
 				$$variable{Type} = $Type;
 				$$variable{type_id} = $Type->id();
-				$html .= ssi::variable_substitution( \$content, $variable );
+				$html .= variable_substitution( \$content, $variable );
 			} # end foreach
 			sql::end_transaction( $dbh, $ac );
 			return $html;

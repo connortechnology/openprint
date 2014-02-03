@@ -4,7 +4,7 @@
 
     if ( $param{'ServiceTypeName'} and ! $param{'service_id'} ) {
         if ( ! $$services{$param{'ServiceTypeName'}} ) {
-            my $new_service_index = openprint::print_project::insert_service( $log, $dbh, $$variable{'Project'}->id(), $param{'ServiceTypeName'} );
+            my $new_service_index = $$variable{Project}->add_service( $param{ServiceTypeName} );
             push @{$$services{$param{'ServiceTypeName'}}}, $new_service_index;
             $param{'service_id'} = $new_service_index;
         } else {

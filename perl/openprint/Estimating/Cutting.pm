@@ -261,7 +261,7 @@ sub signature_calc_stock_cutting {
 
 		my $width_cuts = int( $$specs{"txtSuppliedStockWidth-$signature_index-$qty_index"} / $$specs{"txtSheetSizeWidth-$signature_index-$qty_index"} );
 		my $height_cuts = int( $$specs{"txtSuppliedStockHeight-$signature_index-$qty_index"} / $$specs{"txtSheetSizeHeight-$signature_index-$qty_index"} );
-		my $sheets = int( $$sig_specs{'txtPressSheetQty'.$qty_index} / ($width_cuts * $height_cuts) );
+		my $sheets = int( $$sig_specs{'txtPressSheetQty'.$qty_index} / ($width_cuts * $height_cuts) ) if $width_cuts and $height_cuts;
 		if ( $width_cuts == 1 and $$specs{"txtSuppliedStockWidth-$signature_index-$qty_index"} != $$specs{"txtSheetSizeWidth-$signature_index-$qty_index"} ) {
 			$width_cuts += 1;
 		} # end if
@@ -313,7 +313,7 @@ sub signature_calc_folding_cutting {
 	my ( $Project, $sig_specs, $specs, $qty_index, $Paper, $I, $fold_specs, $calc_hash ) = @_;
 
 	my %results = (
-			'Status'	=> 'calculated',
+			Status	=> 'calculated',
 			);
 
 	my $services = $Project->services();
@@ -409,7 +409,7 @@ sub signature_calc_folding_cutting {
 } # end sub signature_calc_folding_cutting
 
 sub signature_calc {
-	my ( $Project, $sig_specs, $specs, $qty_index, $Paper, $Imposition, $calc_hash ) = @_;
+	my ( $Project, $sig_specs, $specs, $qty_index, $Paper, $Imposition, $folding_specs, $calc_hash ) = @_;
 
 	if ( ! $Paper->cuttable() ) {
 		$$specs{'alert'} = $Paper->to_string() . ': Stock is not cuttable.';
@@ -483,17 +483,23 @@ sub signature_calc {
 		$stitching_imposition = $$stitching_specs{'Imposition'.$qty_index};
 	} # end if
 
-	my $folding_imposition = new openprint::Imposition();
-	my $folding_specs;
+	my @folding_impositions;
+
 	if ( $$services{'Folding'} and @{$$services{'Folding'}} ) {
-		$folding_specs = openprint::service::get_specs_ref( $Project, $$services{'Folding'}[0] );
-		$folding_imposition->columns( $$folding_specs{"FoldColumns-$$sig_specs{'SignatureIndex'}-$qty_index-1"} );
-		$folding_imposition->rows( $$folding_specs{"FoldRows-$$sig_specs{'SignatureIndex'}-$qty_index-1"} );
-		#imposition is automatic
-	} else {
-		$folding_imposition->columns( 1 );
-		$folding_imposition->rows( 1 );
+		$folding_specs = openprint::service::get_specs_ref( $Project, $$services{'Folding'}[0] ) if ! $folding_specs;
+		foreach my $fold_index ( 1 .. 4 ) {
+			next if ! $$folding_specs{"FoldQty-$$sig_specs{SignatureIndex}-$qty_index-$fold_index"};
+			next if ! $$folding_specs{"FoldType-$$sig_specs{SignatureIndex}-$qty_index-$fold_index"};
+			my $folding_imposition = new openprint::Imposition();
+			$folding_imposition->columns( $$folding_specs{"FoldColumns-$$sig_specs{'SignatureIndex'}-$qty_index-$fold_index"} );
+			$folding_imposition->rows( $$folding_specs{"FoldRows-$$sig_specs{'SignatureIndex'}-$qty_index-$fold_index"} );
+			$folding_imposition->quantity( $$folding_specs{"FoldQty-$$sig_specs{'SignatureIndex'}-$qty_index-$fold_index"} );
+			push @folding_impositions, $folding_imposition;
+			$folding_imposition->display('Fold ' . $$folding_specs{"FoldType-$$sig_specs{SignatureIndex}-$qty_index-$fold_index"} );
+		} # end foreach fold_index
 	} # end if
+
+#$openprint::log->debug("Folding impos " . @folding_impositions  . ' eq ' . @my_equipment );
 
 	if ( $$Imposition{'image_orientation'} eq 'Horizontal' ) {
 		$stitching_imposition = $$Imposition{'columns'} if $stitching_imposition > $$Imposition{'columns'};
@@ -573,10 +579,11 @@ sub signature_calc {
 # calculate cuts
 		my $vertical_cuts = 0;
 # interior vertical cuts = $sig_specs{'hdnImpositionColumns'}-1
-		if ( exists $$sig_specs{'txtSignatureType'} ) {
+		if ( $$sig_specs{'txtSignatureType'} ) {
 # Regular book signatures will be trimmed by the stitcher, so we only need 1 cut per imposition
 # but if we are cutting into smaller signatures, then we need more cutting
 #$openprint::log->debug("Sitching $stitching_imposition to $$sig_specs{'txtImposition'.$qty_index}");
+#$openprint::log->debug("have signaturetype $$sig_specs{'txtSignatureType'} ");
 			if ( $I->pages() and ! $folding_specs ) {
 # Have to cut the pages out
 				$vertical_cuts += int ( ($I->page_columns()-1)*$I->columns()*2 ) + 2;
@@ -585,14 +592,16 @@ sub signature_calc {
 			} elsif ( $$printing_specs{rdbTemplateType} eq 'PlasticCoil' ) {
 				if ( $I->pages() > 8 ) {
 					# Going to fold it first.
-					my $columns =  $$folding_imposition{columns} ? $$I{'columns'} / $$folding_imposition{columns} : $$I{'columns'};
-					$vertical_cuts += 1+$columns;# = 2+$$I{'columns'}-1
+					foreach my $folding_imposition ( @folding_impositions ) {
+						my $columns =  $$folding_imposition{columns} ? $$I{'columns'} / $$folding_imposition{columns} : $$I{'columns'};
+						$vertical_cuts += 1+$columns;# = 2+$$I{'columns'}-1
 						if ( 
 								( $$I{'image_orientation'} eq 'Vertical' and ( $$sig_specs{'BleedLeft'} or $$sig_specs{'BleedRight'} ) ) or
 								( $$I{'image_orientation'} eq 'Horizontal' and ( $$sig_specs{'BleedTop'} or $$sig_specs{'BleedBottom'} ) )
 						   ) {
 							$vertical_cuts += $columns-1;
 						} # end if
+					} # end foreach
 				} else {
 					$vertical_cuts += int ( ($I->page_columns()-1)* (($I->columns()-1)*2) ) + 2;
 				} # end if
@@ -608,20 +617,33 @@ sub signature_calc {
 					} # end if
 				} # end if
 			} # end if
-		} else {
+		} elsif ( @folding_impositions ) {
 # The 2 is for outside edge cuts
-			my $columns =  $$folding_imposition{columns} ? $$I{'columns'} / $$folding_imposition{columns} : $$I{'columns'};
-			$vertical_cuts += 1+$columns;# = 2+$$I{'columns'}-1
+$openprint::log->debug("Folds: " .@folding_impositions );
+			foreach my $folding_imposition ( @folding_impositions ) {
+				my $columns =  $$folding_imposition{columns} ? $$folding_imposition{columns} : $$I{'columns'};
+				$vertical_cuts += 1+$columns;# = 2+$$I{'columns'}-1
 				if ( 
+					( $$I{'image_orientation'} eq 'Vertical' and ( $$sig_specs{'BleedLeft'} or $$sig_specs{'BleedRight'} ) ) or
+					( $$I{'image_orientation'} eq 'Horizontal' and ( $$sig_specs{'BleedTop'} or $$sig_specs{'BleedBottom'} ) )
+				   ) {
+					$vertical_cuts += $columns-1;
+				} # end if
+$folding_imposition->display("Vertical cuts: $vertical_cuts");
+			} # end foreach
+# Splitting the folded products is done on the folder for free
+#if ( ( $$folding_imposition{'columns'} > 1 ) and ( $$folding_imposition{'columns'} < $$I{'columns'} ) ) {
+#$vertical_cuts += ($$I{'columns'} / $$folding_imposition{'columns'})-1;
+#} # end if
+		} else {
+			my $columns =  $$I{'columns'};
+			$vertical_cuts += 1+$columns;# = 2+$$I{'columns'}-1
+				if (
 						( $$I{'image_orientation'} eq 'Vertical' and ( $$sig_specs{'BleedLeft'} or $$sig_specs{'BleedRight'} ) ) or
 						( $$I{'image_orientation'} eq 'Horizontal' and ( $$sig_specs{'BleedTop'} or $$sig_specs{'BleedBottom'} ) )
 				   ) {
 					$vertical_cuts += $columns-1;
 				} # end if
-# Splitting the folded products is done on the folder for free
-#if ( ( $$folding_imposition{'columns'} > 1 ) and ( $$folding_imposition{'columns'} < $$I{'columns'} ) ) {
-#$vertical_cuts += ($$I{'columns'} / $$folding_imposition{'columns'})-1;
-#} # end if
 		} # end if
 
 # interior horizontal cuts = $sig_specs{'hdnImpositionRows'}-1 with bleeds
@@ -635,14 +657,16 @@ sub signature_calc {
 			} elsif ( $$printing_specs{rdbTemplateType} eq 'PlasticCoil' ) {
 				if ( $I->pages() > 8 ) {
 					# Going to fold it first.
-					my $rows = $$folding_imposition{rows} ? $$I{'rows'}/$$folding_imposition{rows} : $$I{'rows'};
-					$horizontal_cuts += 1 + $rows;#2 + $$I{'rows'}-1
+					foreach my $folding_imposition ( @folding_impositions ) {
+						my $rows = $$folding_imposition{rows} ?$$folding_imposition{rows} : $$I{rows};
+						$horizontal_cuts += 1 + $rows;#2 + $$I{'rows'}-1
 						if ( $$sig_specs{'ddmBleedSize'.$qty_index} and ( 
 									( $$I{'image_orientation'} eq 'Horizontal' and ( $$sig_specs{'BleedLeft'} or $$sig_specs{'BleedRight'} ) ) or
 									( $$I{'image_orientation'} eq 'Vertical' and ( $$sig_specs{'BleedTop'} or $$sig_specs{'BleedBottom'} ) ) )
 						   ) {
 							$horizontal_cuts += $rows-1;
 						} # end if
+					} # end foreach
 				} else {
 					$horizontal_cuts += int( ($I->page_rows()-1)*$I->rows() * 2 ) + 2;
 				} # end if
@@ -657,25 +681,37 @@ sub signature_calc {
 					} # end if
 				} # end if
 			} # end if
-		} else {
-			my $rows = $$folding_imposition{rows} ? $$I{'rows'}/$$folding_imposition{rows} : $$I{'rows'};
-			$horizontal_cuts += 1 + $rows;#2 + $$I{'rows'}-1
+		} elsif ( @folding_impositions ) {
+			foreach my $folding_imposition ( @folding_impositions ) {
+				my $rows = $$folding_imposition{rows} ? $$folding_imposition{rows} : $$I{rows};
+				$horizontal_cuts += 1 + $rows;
 				if ( $$sig_specs{'ddmBleedSize'.$qty_index} and ( 
 							( $$I{'image_orientation'} eq 'Horizontal' and ( $$sig_specs{'BleedLeft'} or $$sig_specs{'BleedRight'} ) ) or
 							( $$I{'image_orientation'} eq 'Vertical' and ( $$sig_specs{'BleedTop'} or $$sig_specs{'BleedBottom'} ) ) )
 				   ) {
 					$horizontal_cuts += $rows-1;
 				} # end if
+$folding_imposition->display("Horizontal cuts: $horizontal_cuts");
+			} # end foreach
 # Splitting the folded products is done on the folder for free
 #if ( ($$folding_imposition{'rows'} > 1 ) and ( $$folding_imposition{'rows'} < $$I{'rows'} ) ) {
 #$horizontal_cuts += ($$I{'rows'} / $$folding_imposition{'rows'})-1;
 #} # end if
+		} else {
+				my $rows = $$I{'rows'};
+				$horizontal_cuts += 1 + $rows;#2 + $$I{'rows'}-1
+				if ( $$sig_specs{'ddmBleedSize'.$qty_index} and ( 
+							( $$I{'image_orientation'} eq 'Horizontal' and ( $$sig_specs{'BleedLeft'} or $$sig_specs{'BleedRight'} ) ) or
+							( $$I{'image_orientation'} eq 'Vertical' and ( $$sig_specs{'BleedTop'} or $$sig_specs{'BleedBottom'} ) ) )
+				   ) {
+					$horizontal_cuts += $rows-1;
+				} # end if
 		} # end if
 
 		my $dutch_vertical_cuts = 0;
 		my $dutch_horizontal_cuts = 0;
 # Dutch cuts don't happen on books
-		if ( ! exists $$sig_specs{'txtSignatureType'} ) {
+		if ( ( ! exists $$sig_specs{'txtSignatureType'} ) and ! @folding_impositions ) {
 # Now consider Dutch cuts
 			if ( $$I{'dutch_columns'} and $$I{'dutch_rows'} ) {
 				$dutch_vertical_cuts += 1 + $$I{'dutch_columns'};
@@ -880,6 +916,8 @@ sub calc {
 
 	my $Project = new openprint::Project( $project_index );
 	my $services = $Project->services();
+	
+	my $fold_specs = openprint::service::get_specs_ref( $Project, $$services{Folding}[0] ) if $$services{Folding} and @{$$services{Folding}};
 	my $calc_hash = {};
 
 	my @signatures = $Project->signatures({sort=>1});
@@ -939,7 +977,7 @@ sub calc {
 
 			# Folding
 			if ( $$services{'Folding'} and @{$$services{'Folding'}} ) {
-				my %results = signature_calc_folding_cutting( $Project, $sig_specs, $specs, $qty_index, $Paper, $Imposition, $calc_hash );
+				my %results = signature_calc_folding_cutting( $Project, $sig_specs, $specs, $qty_index, $Paper, $Imposition, $fold_specs, $calc_hash );
 				$$specs{"ddmFoldCutEquipment-$signature_index-$qty_index"} = $results{'Equipment'} ? $results{'Equipment'}->id() : '';
 				$$specs{"txtFoldCutPrice-$signature_index-$qty_index"} = $results{'Price'};
 				$price += $results{'Price'};
@@ -950,7 +988,7 @@ sub calc {
 #$openprint::log->warn("Status from sig_calc_folding: $results{'Status'}");
 			} # end if
 
-			my %results = signature_calc( $Project, $sig_specs, $specs, $qty_index, $Paper, $Imposition, $calc_hash );
+			my %results = signature_calc( $Project, $sig_specs, $specs, $qty_index, $Paper, $Imposition, $fold_specs, $calc_hash );
 			$$specs{'Status'} = 'uncalculated' if $results{'Status'} eq 'uncalculated';
 			$$specs{'alert'} .= $results{'alert'};
 			$$specs{'hdnBreakdown'.$qty_index} .= $results{'Breakdown'};

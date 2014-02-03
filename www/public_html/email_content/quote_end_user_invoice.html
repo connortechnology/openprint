@@ -29,7 +29,7 @@
 					<td class="description"><a href="/main/project/view.html?ProjectIndex=%2$d">%3$s%4$s</a></td>
 					<td colspan="3">
 					<table>`, $rowclass, $Project->id(),
-					( $Project->reference() ? htmlize( $Project->reference() ) . ':<br/>' : '' ),
+					( $Project->reference() ? $Project->reference() . ':<br/>' : '' ),
 					$Project->summary(),
 					);
 

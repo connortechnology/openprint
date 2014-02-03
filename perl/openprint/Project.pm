@@ -93,7 +93,7 @@ $serial = 'lngProjectIndex_seq';
 %find_fields = (
 	take_over		=> q{(SELECT MIN(starttime) FROM tbl_Project_Contents WHERE lngProjectIndex=id)},
 	ordered_on		=>	q{(SELECT dtmOrderDate FROM Orders WHERE orders.id=order_id)},
-	salesrep_id		=>	'(SELECT employeeindex FROM Orders WHERE orders.id=order_id)',
+	salesrep_id		=>	'(SELECT salesrep_id FROM Orders WHERE orders.id=order_id)',
 	takenover_on	=>	q{(SELECT MIN(dtmtimestamp) FROM Project_Log WHERE project_id=projects.id AND description LIKE 'Taken Over by%')},
 	approved_on		=>	q{(SELECT MAX(dtmtimestamp) FROM Project_Log WHERE project_id=projects.id AND description IN ('Marked Approved','Marked Proofs QA Approved'))},
 	csr_id			=>	'(SELECT salesrep_id FROM Companies WHERE companies.id=company_id)',
@@ -108,6 +108,16 @@ sub delete {
 	my $self = shift;
 	sql::update( undef, undef, $table, ['id=?', $$self{'id'}], ['strStatus', 'Deleted'] );
 } # end sub delete
+
+sub deleted {
+	return $_[0]{status} eq 'Deleted' ? 1 : 0;
+} # end sub deleted
+
+sub undelete {
+	$_[0]{status} = 'uncalculated';
+	$_[0]->update_status();
+	return '';
+} # end sub undelete
 
 sub destroy {
 	my $self = shift;
@@ -126,7 +136,6 @@ sub destroy {
 	sql::execute( $openprint::log, $openprint::dbh, q{DELETE FROM Project_Log WHERE project_id=?}, $$self{'id'} );
 	sql::execute( $openprint::log, $openprint::dbh, q{DELETE FROM Barcode_Log WHERE project_id=?}, $$self{'id'} );
 	sql::execute( $openprint::log, $openprint::dbh, q{DELETE FROM Schedule WHERE projectindex=?}, $$self{'id'} );
-	sql::execute( $openprint::log, $openprint::dbh, q{DELETE FROM Bindery_Schedule WHERE projectindex=?}, $$self{'id'} );
 	sql::execute( $openprint::log, $openprint::dbh, q{DELETE FROM paper_allocations WHERE project_id=?}, $$self{'id'} );
 	sql::execute( $openprint::log, $openprint::dbh, q{DELETE FROM Project_files WHERE project_id=?}, $$self{'id'} );
 	sql::execute( $openprint::log, $openprint::dbh, q{DELETE FROM Order_Contents WHERE lngprojectindex=?}, $$self{'id'} );
@@ -372,8 +381,8 @@ if ( 1 ) {
 	my $Contact = $CustomerInfo->appendChild( $doc->createElement('Contact') );
 	$Contact->setAttribute('ContactTypes', 'Customer' );
 	my $Person = $Contact->appendChild( $doc->createElement('Person') );
-	$Person->setAttribute('FamilyName', $self->Order()->last_name() );
-	$Person->setAttribute('FirstName', $self->Order()->first_name() );
+	$Person->setAttribute('FamilyName', $self->Order()->lastname() );
+	$Person->setAttribute('FirstName', $self->Order()->firstname() );
 	if ( $self->Order()->email() ) {
 		my $ComChannel = $Person->appendChild( $doc->createElement('ComChannel') );
 		$ComChannel->setAttribute('ChannelType','Email');
@@ -851,6 +860,7 @@ sub summary {
 			next if sets::isin( $Category->name(), [ 'Printing','Coatings' ] );
 			foreach my $ServiceType ( openprint::ServiceType->find('category_id'=>$Category->id()) ) {
 				next if ! $$services{$ServiceType->name()};
+				next if ! $ServiceType->summary_visible();
 				foreach my $service_id ( @{$$services{$ServiceType->name()}} ) {
 					my $service_specs = openprint::service::get_specs_ref( $self, $service_id );
 					my $project_summary = eval( 'openprint::Estimating::'.$ServiceType->type().'::project_summary( $self, $service_id, $service_specs );' );
@@ -958,7 +968,7 @@ sub price {
 			foreach my $k ( keys %$services ) {
 				foreach ( @{$$services{$k}} ) {
 					my $specs = openprint::service::get_specs_ref( $self, $_ );
-					$$self{'price'.$qty_index} += $$specs{'txtPrice'.$qty_index} ? $$specs{'txtPrice'.$qty_index} : $$specs{'txtPrice1'};
+					$$self{'price'.$qty_index} += $$specs{'txtPrice'.$qty_index};
 				} # end foreach
 			} # end foreach
 		} # end if
@@ -1055,7 +1065,6 @@ sub status_change {
 		foreach my $Job ( openprint::ScheduledJob->find('project_id'=>$$self{'id'}) ) {
 			$Job->delete();
 		} # end foreach
-		sql::execute( undef, undef, q{DELETE FROM Bindery_Schedule WHERE ProjectIndex=?}, $$self{'id'} );
 		$self->update_status();
 		foreach my $PA ( openprint::PaperAllocation->find('project_id'=>$$self{'id'}) ) {
 			$PA->delete();
@@ -1067,7 +1076,6 @@ sub status_change {
 		foreach my $Job ( openprint::ScheduledJob->find('project_id'=>$$self{'id'}) ) {
 			$Job->delete();
 		} # end foreach
-		sql::execute( undef, undef, q{DELETE FROM Bindery_Schedule WHERE ProjectIndex=?}, $$self{'id'} );
 		$self->status($new_status);
 		foreach my $PA ( openprint::PaperAllocation->find('project_id'=>$$self{'id'}) ) {
 			$PA->delete();
@@ -1087,7 +1095,7 @@ sub add_signature {
 	my ( $self, $sig_index, $status, $data ) = @_;
 	
 	my $ac = sql::start_transaction( $dbh );
-	$dbh->do( 'LOCK TABLE tbl_Service_Specifications IN SHARE ROW EXCLUSIVE MODE' ) or $log->error( $dbh->errstr() );
+	$dbh->do( 'LOCK TABLE tbl_Service_Specifications IN EXCLUSIVE MODE' ) or $log->error( $dbh->errstr() );
 	my $print_service_index = $self->add_service( 'Signature', $data );
 	if ( ! $print_service_index ) {
 		$log->error("Error adding Signature!");
@@ -1185,6 +1193,9 @@ sub Ordered_Project {
 	return $_[0]{'Ordered_Project'};
 } # end sub Ordered_Project
 
+
+# Let's talk LOCKING
+# don't need to lock project_contents... cuz it's just an insert....
 sub add_service {
 	my ( $self, $type, $data, $options ) = @_;
 
@@ -1200,6 +1211,12 @@ sub add_service {
 
 	# Make this all one transaction...
 	my $ac = sql::start_transaction( $dbh );
+	# Shoudln't need to lock this... theya re all just inserts
+	#$dbh->do( 'LOCK TABLE tbl_Service_Specifications IN EXCLUSIVE MODE' ) or $log->error( $dbh->errstr() );
+$log->debug("Project: $$self{id} $self");
+foreach my $k ( keys %{$$self{Services}} ) {
+	$log->debug(" Services: $k => " . join( ',', @{$$self{Services}{$k}} ) );
+} # end ofreach
 
 	my $Service = new openprint::Project_Service();
 	$Service->save({ project_id=>$$self{id}, ( status=>$$options{status} ? $$options{status} : 'uncalculated' ), servicetype_id=>$ServiceType->id()});
@@ -1210,9 +1227,6 @@ sub add_service {
 	openprint::service::insert_service_spec( $log, $dbh, $$self{'id'}, $service_index, 'ServiceType', $ServiceType->name(), 1 );
 	#$_ = q{SELECT strFieldName, strDefaultValue FROM tbl_Service_Defaults WHERE lngServiceTypeIndex=? OR lngServiceTypeIndex IS NULL ORDER BY lngServiceTypeIndex NULLS FIRST};
 	my @Defaults = openprint::ServiceType_Default->find( 'projecttype_id is null or =' => $$self{type_id}, servicetype_id=>$ServiceType->id(), order=>'projecttype_id NULLS FIRST' );
-	foreach my $D ( @Defaults ) {
-		$log->debug("Got default " . $D->to_string() );
-	} # end foreach
 	my %defaults = map { $_->name(), $_->value() } @Defaults;
 	#$_ = q{SELECT name, value FROM User_Service_Defaults WHERE servicetype_id=? AND user_id=?};
 	#push @defaults, sql::execute( $log, $dbh, $_, $ServiceType->id(), $openprint::session{'user_id'} );
@@ -1230,16 +1244,20 @@ sub add_service {
 		openprint::service::insert_service_spec( $log, $dbh, $$self{'id'}, $service_index, "txtQuantity$qty_index", 
 		( ( $data and exists $$data{"txtQuantity$qty_index"} ) ? $$data{"txtQuantity$qty_index"} : $self->quantity($qty_index) ), 1 );
 	} # end foreach
-if ( $data ) {
-	foreach my $n ( keys %$data ) {
-			openprint::service::insert_service_spec( $log, $dbh, $$self{'id'}, $service_index, $n, $$data{$n}, 1 );
-	} # end foreach 
-}
+	if ( $data ) {
+		foreach my $n ( keys %$data ) {
+			openprint::service::insert_service_spec( $log, $dbh, $$self{'id'}, $service_index, $n, $$data{$n} );
+		} # end foreach 
+	}
 
-	sql::end_transaction( $dbh, $ac );
 	delete $$self{'Services'};
 	delete $$self{'service_types'};
 	delete $$self{'signatures'};
+	foreach my $qty_index ( $self->quantity_indexes() ) {
+		$self->price($qty_index,undef);
+	} # end foreach
+	$self->save();
+	sql::end_transaction( $dbh, $ac );
 	return $service_index;
 } # end sub add_service
 
@@ -1541,6 +1559,14 @@ sub change_ProjectType {
 	} # end if
 	return $error;
 } # end sub change_ProjectType
+
+sub url_to {
+	return '/main/project/view.html?project_id='.$_[0]{id};
+} # end sub url_to
+
+sub link_to {
+	return sprintf('<a href="/main/project/view.html?project_id=%1$d">%2$s</a>', $_[0]{id}, ( $_[1] ? $_[1] : $_[0]{id} ) );
+} # end sub link_to
 
 1;
 __END__

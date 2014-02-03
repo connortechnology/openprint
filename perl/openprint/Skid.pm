@@ -2,6 +2,7 @@ use strict;
 package openprint::Skid;
 our @ISA = qw( openprint::Object );
 
+use Carp;
 use openprint ();
 use vars qw( $log %session $debug $table $serial %fields %transforms %defaults %find_fields $debug );
 *session = \%openprint::session;
@@ -14,8 +15,9 @@ require openprint::Skid_Verification;
 require openprint::Project;
 require openprint::SkidContent;
 require openprint::InventoryCondition;
+require openprint::PaperAllocation;
 
-$debug = 0;
+$debug = 1;
 
 $table = 'Skids';
 $serial = 'skid_id_seq';
@@ -111,10 +113,6 @@ sub find {
 		push @values, $params{'quantity >='};
 	} # end if
 
-	if ( $params{'quality_id'} ) {
-		$sql .= ' AND id IN (SELECT skid_id FROM skid_contents WHERE quality_id = ?)';
-		push @values, $params{'quality_id'};
-	} # end if
 	if ( $params{'owner_id'} ) {
 		$sql .= ' AND owner_id=?';
 		push @values, $params{'owner_id'};
@@ -132,7 +130,7 @@ sub find {
             $sql .= ' AND manufacturers_id IN (' . join(',', map { '?' } @{$params{'manufacturers_id'}} ) . ')';
             push @values, @{$params{'manufacturers_id'}};
         } else {
-            $sql .= ' and manufacturers_id=?';
+            $sql .= ' AND manufacturers_id=?';
             push @values, $params{manufacturers_id};
         } # end if
 	} # end if
@@ -224,7 +222,7 @@ sub find {
 		push @values, $params{'updated_on <='};
 	} # end if
 	if ( $params{'allocated_to_docket'} ) {
-		$sql .= ' AND id IN ( SELECT skid_id FROM paper_allocations WHERE project_id=(SELECT Index FROM Projects WHERE lngDocketNumber=?))';
+		$sql .= ' AND id IN ( SELECT skid_id FROM paper_allocations WHERE project_id=(SELECT id FROM Projects WHERE lngDocketNumber=?))';
 		push @values, $params{'allocated_to_docket'};
 	} # end if
 	if ( $params{'fsc_code'} ) {
@@ -283,12 +281,18 @@ sub find {
 	} # end if
 	
 	$sql .= " ORDER BY $params{'order'}" if $params{'order'};
+	if ( @values == 1) {
+		Carp::cluck("Loading all skids?! $sql");
+	} # end if
 
 	my $data = $openprint::dbh->selectall_arrayref( $sql, { Slice => {} }, @values );
 	if ( ! $data ) {
 		$log->debug("Error loading skids SQL($sql)" . DBI->errstr );
 	} elsif ( $debug ) {
 		$log->debug("Debug loaded skids ($sql) (@values) # of results: " . @$data );
+	} # end if
+	if ( $data and @$data >= 100 ) {
+		Carp::cluck("Loading a lot of skids?! $sql : #". @$data );
 	} # end if
 	return map { new openprint::Skid( $_->{id}, $_ ) } @$data;
 
@@ -402,7 +406,7 @@ sub add {
 } # end sub add
 
 sub remove {
-	my ( $self, $Paper, $quantity, $purpose_id ) = @_;
+	my ( $self, $Paper, $quantity ) = @_;
 	$quantity =~ s/[^\-\d]//g;
 	$quantity = int $quantity;
 	my $C = $self->Content( $Paper );
@@ -420,7 +424,7 @@ sub set_quantity {
 	my ( $self, $Paper, $quantity, $purpose_id ) = @_;
 	$quantity =~ s/[^\-\d]//g;
 	$quantity = int $quantity;
-	my @contents = $self->Contents( 'Paper'=>$Paper, 'purpose_id'=>$purpose_id );
+	my @contents = $self->Contents( paper_id=>$Paper->id(), ( $purpose_id ? ( 'purpose_id'=>$purpose_id ) : () ) );
 	if ( ! @contents ) {
 		return 'Specified stock is not on this skid';
 	} # end if
@@ -528,6 +532,7 @@ sub allocateable {
 # Checkout all paper on the skid
 sub checkout {
 	my ( $self, $c ) = @_;
+	require openprint::PaperInventory;
 	my @contents = openprint::SkidContent->find( skid_id=>$$self{id});
 	if ( ! @contents ) {
 		if ( ! openprint::PaperInventory->find( skid_id=>$$self{id}, 'comment like'=>'Checked out%' ) ) {
@@ -549,7 +554,8 @@ sub checkout {
 	foreach my $C ( @contents ) {
 		if ( ! openprint::PaperInventory->find( skid_id=>$$self{id}, 'comment like'=>'Checked out%' ) ) {
 			my $PA = openprint::PaperAllocation->find_one( skid_id=>$$self{id}, paper_id=>$C->paper_id());
-			my $desc = 'Checked out' . ($PA->project_id() ? ' for docket ' . $PA->Project()->docket() : '');
+			my $desc = 'Checked out';
+			$desc .= ($PA->project_id() ? ' for docket ' . $PA->Project()->docket() : '') if $PA;
 			my $PI = new openprint::PaperInventory();
 			my $e = $PI->save({
 					'paper_id'  =>  $C->paper_id(),
@@ -825,6 +831,19 @@ sub checked_out {
 	return $_[0]{checked_out};
 } # end sub checked_out
 
+sub description {
+	if ( ! exists $_[0]{description} ) {
+		$_[0]{description} = '';
+		foreach my $SC ( $_[0]->Contents() ) {
+			$_[0]{description} .= $SC->Paper()->link_to().'<br/>';
+		} # end foreach
+	} # end if
+	return $_[0]{description};
+} # end sub description
+
+sub link_to {
+	return sprintf('<a href="/employee/inventory/skid_details.html?skid_id=%1$d">%2$s %1$d</a>', $_[0]{id}, $_[0]->type() eq 'Roll' ? 'Roll':'Skid' );
+} # end sub link_to
 
 1;
 __END__

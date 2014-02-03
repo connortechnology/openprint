@@ -32,7 +32,7 @@
 				$param{'gsm-'.$$variable{'type_id'}} = $Paper->gsm();
 				$param{'fsc_code-'.$$variable{'type_id'}} = $Paper->fsc_code();
 				$param{'manufacturers_name='.$$variable{type_id}} = $Paper->manufacturers_name() if ! $$variable{Type}->manufacturers_name();
-			} # end if
+			} # end if Paper
 		} # end if
 		$$variable{'PO_Content'} = $$variable{'Type'}->PurchaseOrder_Content();
 
@@ -68,7 +68,7 @@
 			<select id="Brand-<?type_id?>" name="Brand-<?type_id?>" size="1" onchange="Brand_onChange(this,'-<?type_id?>');">
 				<option value="">select</option>
 			<? echo (
-					return make_drop_down( openprint::StockBrand->dropdown( order=>'lower(name)'), $param{'Brand-'.$$variable{'type_id'}} );
+					make_drop_down( openprint::StockBrand->dropdown( order=>'lower(name)'), $param{'Brand-'.$$variable{'type_id'}} );
 					) ?>
 			</select>
 			<input style="display: none;" type="text" id="txtBrand-<?type_id?>" name="txtBrand-<?type_id?>" />
@@ -77,7 +77,7 @@
 			<select id="Finish-<?type_id?>" name="Finish-<?type_id?>" size="1" onchange="Finish_onChange(this,'-<?type_id?>');">
 				<option value="">select</option>
 				<? echo (
-					return ssi::make_drop_down( openprint::StockFinish->dropdown('order'=>'lower(name)') ], $param{'Finish-'.$$variable{'type_id'}} );
+					make_drop_down( openprint::StockFinish->dropdown('order'=>'lower(name)'), $param{'Finish-'.$$variable{'type_id'}} );
 				) ?>
 			</select>
 			<input style="display: none;" type="text" id="txtFinish-<?type_id?>" name="txtFinish-<?type_id?>" />

@@ -361,7 +361,7 @@ Date::Format::time2str('%Y-%m-%d %H:%M', Date::Parse::str2time($I->updated_on())
 sub _paper_results {
 	ssi::save_params( '/employee/inventory/paper.html', ( 
 				'manufacturer_id','brand_id','finish_id','colour_id','weight_id','quality_id', 
-				'type','owner_id','material_id','group_id',
+				'type','owner_id','material_id','group_id', 'condition_id',
 				( map { 'added_on_start_'.$_ } ( 'year','month','day' ) ),
 				( map { 'added_on_end_'.$_ } ( 'year','month','day' ) ),
 				'Docket','fsc_code','width','height','OrLarger','instock','owner_id_exclude','allocated',
@@ -524,8 +524,6 @@ sub save_Paper {
 			( $param{'Weight'.$id} ? ( 'weight_id' =>	$param{'Weight'.$id} ) : () ),
 			'weight'	=>	$weight,
 # We might 
-			#'quality_id' =>	$param{'Quality'.$id},
-			#'quality'	=>	$param{'txtQuality'.$id},
 			( $param{'width'.$id} ? ( 'width'		=> $param{'width'.$id} ) : () ),
 			( $param{'height'.$id} ? ( 'height'	=>	$param{'type'.$id} ne 'Roll' ? $param{'height'.$id} : undef ) : () ),
 			( $param{'type'.$id} ? ( 'type'		=>	$param{'type'.$id} ) : () ),
@@ -776,13 +774,13 @@ sub skid_details {
 
 	if ( ! @skid_ids ) {
 		if ( $param{'rfidtag_id'} ) {
-			my @RFIDTags = openprint::RFIDTag->find( 'id_like' => '%'.$param{'rfidtag_id'}, 'order' => 'id','type'=>'Skid');
+			my @RFIDTags = openprint::RFIDTag->find( 'id like' => '%'.$param{'rfidtag_id'}, 'order' => 'id','type'=>'Skid');
 			if ( @RFIDTags == 1 ) {
 				@skid_ids = ( $RFIDTags[0]->skid_id() );
 				#$param{'skid_id'} = $skid_ids[0];
 			} # end if
 		} elsif ( $param{'rfidtag_hex'} ) {
-			my @RFIDTags = openprint::RFIDTag->find( 'id_like' => '%'.hex($param{'rfidtag_hex'}).'%', 'order' => 'id','type'=>'Skid');
+			my @RFIDTags = openprint::RFIDTag->find( 'id like' => '%'.hex($param{'rfidtag_hex'}).'%', 'order' => 'id','type'=>'Skid');
 			if ( @RFIDTags == 1 ) {
 				@skid_ids = ( $RFIDTags[0]->skid_id() );
 				#$param{'skid_id'} = $skid_ids[0];
@@ -1025,9 +1023,12 @@ sub check_out {
 
 	my $available_qty = $Paper->in_stock();
 	my $units = $Paper->type() eq 'Roll' ? 'lbs' : 'sheets';
-	$project_id =~ s/\D//g;
-	$docket =~ s/\D//g;
-	my @Projects = openprint::Project->find( 'id'=>$project_id, 'docket'=>$docket ) if $project_id or $docket;
+	$project_id = openprint::Project->transform( 'id', $project_id );
+	$docket = openprint::Project->transform( 'docket', $docket );
+	my @Projects = openprint::Project->find( 
+		( $project_id ? ( id=>$project_id ) : () ),
+		( $docket ? ( docket=>$docket ) : () ),
+	) if $project_id or $docket;
 
 	my @skids;
 	if ( $skid_id ) {
@@ -1163,11 +1164,11 @@ sub allocate {
 	$docket =~ s/\D//g;
 	$quantity =~ s/[^\d\.]//g;
 	$quantity =~ s/(\d+)\..*/$1/g;
-	my @Projects = openprint::Project->find( 'id'=>$project_id, 'docket'=>$docket ) if $project_id or $docket;
+	my @Projects = openprint::Project->find( ( $project_id ? ( id=>$project_id ) : () ), ( $docket ? ( docket=>$docket ) : () ) ) if $project_id or $docket;
 
 	if ( $docket and ! @Projects ) {
-		if ( my @Orders = openprint::Order->find('docket'=>$docket) ) {
-			@Projects = $Orders[0]->Projects();
+		if ( my $Order = openprint::Order->find_one(docket=>$docket) ) {
+			@Projects = $Order->Projects();
 		} # end if
 	} # end if
 	if ( ! @Projects ) {
@@ -1259,15 +1260,14 @@ sub send_paper_arrival_notification {
 
 		if ( @To ) {
 # Send notification to maybe CSR's
-			my $email_template = misc::load_file( $log, $config{'SkinPath'} . '/email_template.html' );
+			my $email_template = ssi::slurp_content( '/email_template.html' );
 
-			$info{'ReplacementText'} = "<!--#include virtual=\"/email_content/paper_arrived_notification.html\"-->";
-			$_ = MIME::QuotedPrint::encode_qp( ssi::variable_substitution( \$email_template, \%info ) );
+			$info{'ReplacementText'} = ssi::include( '/email_content/paper_arrived_notification.html', \%info );
 			(new openprint::Email())->send(
 					FROM	=> new openprint::User( $session{'user_id'} ),
 					TO	=> @To,
 					SUBJECT => 'Paper ' . $Paper->to_string() . ' has arrived',
-					ATTACHMENTS=>['', $_, 'text/html', 'quoted-printable'],
+					ATTACHMENTS=>['', MIME::QuotedPrint::encode_qp( ssi::variable_substitution( \$email_template, \%info ) ), 'text/html', 'quoted-printable'],
 					);
 		} # end if to
 	} # end foreach Paper
@@ -1403,7 +1403,7 @@ sub save_Manifest {
 
 	my $error;
 	my $ac = sql::start_transaction( $dbh );
-	$dbh->do( 'LOCK TABLE company IN EXCLUSIVE MODE' ) or $log->error( DBI->errstr );
+	$dbh->do( 'LOCK TABLE companies IN EXCLUSIVE MODE' ) or $log->error( DBI->errstr );
 
 	$Manifest->received_on( join('-', @param{'received_on_year','received_on_month','received_on_day'} ) );
 
@@ -1943,7 +1943,7 @@ sub _paper_allocations {
 		$param{'skid_id'} =~ s/\D//g;
 		$param{'Docket'} =~ s/\D//g;
 		$param{'AllocationQuantity'} =~ s/[^\d\-]//g;
-		my @Projects = openprint::Project->find( 'docket'=>$param{'Docket'} ) if $param{'Docket'};
+		my @Projects = openprint::Project->find( docket=>$param{Docket} ) if $param{Docket};
 		if ( ! @Projects ) {
 			$variable{'error'} .= "Docket $param{'Docket'} not found.";
 		} else {
@@ -1961,7 +1961,9 @@ sub _paper_allocations {
 sub _skid_allocations {
     if ( $param{'action'} eq 'Add' ) {
         my $Paper = new openprint::Paper( $param{'paper_id'} );
-        my @Projects = openprint::Project->find( 'id'=>$param{'ProjectID'}, 'docket'=>$param{'Docket'} ) if $param{'ProjectID'} or $param{'Docket'};
+        my @Projects = openprint::Project->find( 
+			( $param{ProjectID} ? ( id=>$param{ProjectID} ) : () ),
+			( $param{Docket} ? ( docket=>$param{Docket} ) : () ) ) if $param{ProjectID} or $param{Docket};
         my $Skid = new openprint::Skid( $param{'skid_id'} );
 
         if ( ! @Projects ) {
@@ -2041,35 +2043,21 @@ sub _manifest_purchase_orders {
 } # end sub _manifest_purchase_orders
 
 sub _rfidtag_log {
+	if ( ! exists $param{start_year} ) {
+		my $Entry = openprint::RFIDTagHistory->find_one( 
+			( $param{rfidtag_id} ? ( rfidtag_id	=>	$param{rfidtag_id} ) : () ),
+			( $param{scanner_id} ? ( scanner_id	=>	$param{scanner_id} ) : () ),
+			order		=>	'updated_on DESC',
+			limit		=>	$param{limit},
+			);
+		if ( $Entry ) {
+			@param{'start_year','start_month','start_day'} = $Entry->updated_on() =~ /^(\d+)-(\d+)-(\d+)/;
+		} # end if
+	} # end if
+
 } # end sub _rfidtag_log
 
 sub _rfidtag_log_entries {
-	@param{'end_year','end_month','end_day'} = Date::Calc::Today() if ! $param{'end_year'};
-	@param{'start_year','start_month','start_day'} =(0,0,0) if ! $param{'start_year'};
-	$param{'limit'} = 10 if ! exists $param{'limit'};
-	$variable{'Entries'} = [ openprint::RFIDTagHistory->find( 
-		rfidtag_id	=>	$param{rfidtag_id},
-		ssi::date_filter( 'start', 'updated_on >=', \%param ),
-		ssi::date_filter( 'end', 'updated_on <=', \%param ),
-		order	 =>	'updated_on DESC',
-		limit	 =>	$param{limit},
-		) ];
-
-	# This is to auto-load the start year
-	if ( ! @{$variable{'Entries'}} ) {
-		$variable{'Entries'} = [ openprint::RFIDTagHistory->find( 
-				rfidtag_id	=>	$param{rfidtag_id},
-				ssi::date_filter( 'start', 'updated_on >=', \%param ),
-				ssi::date_filter( 'end', 'updated_on <=', \%param ),
-				limit	 =>	$param{limit},
-				order	 =>	'updated_on DESC',
-				) ];
-		if ( @{$variable{'Entries'}} ) {
-			@param{'start_year','start_month','start_day'} = $variable{'Entries'}[@{$variable{'Entries'}}-1]->updated_on() =~ /^(\d+)-(\d+)-(\d+)/;
-		} # end if
-	} elsif ( ! $param{'start_year'} ) {
-		@param{'start_year','start_month','start_day'} = $variable{'Entries'}[@{$variable{'Entries'}}-1]->updated_on() =~ /^(\d+)-(\d+)-(\d+)/;
-	} # end if
 } # end sub _rfidtag_log_entries
 
 sub _manifest_type {
@@ -2369,6 +2357,9 @@ sub manifest_view {
 		$variable{ExternalRedirect} = '/employee/inventory/manifest_view.html?manifest_id='.$Manifest->id();
 	} # end if
 } # end sub manifest_view
+
+sub _stock {
+}
 
 1;
 __END__
