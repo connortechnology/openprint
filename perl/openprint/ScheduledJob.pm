@@ -858,7 +858,7 @@ sub approve {
 	} # end if
 	my $services = $Project->services();
 	if ( ! ( $$services{'Proofs'} or $$services{'FilmStripping'} ) ) {
-		push @{$$services{'Proofs'}}, openprint::print_project::insert_service( $log, $dbh, $Project->id(), 'Proofs' );
+		push @{$$services{'Proofs'}}, $Project->add_service( 'Proofs' );
 	} # end if
 	require openprint::employee_project;
 	openprint::employee_production::mark_proofs_approved( $log, $dbh, \%variable, $Project->id() );

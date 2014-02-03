@@ -240,7 +240,7 @@ sub save {
 	my $services = $Project->services();
 
 	if ( ($$param{'AccurateCount'} eq 'Y' ) and ! $$services{'Counting'} ) {
-		openprint::print_project::insert_service( $openprint::log, $openprint::dbh, $project_index, 'Counting' );
+		$Project->add_service( 'Counting' );
 	} # end if
 } # end sub save
 

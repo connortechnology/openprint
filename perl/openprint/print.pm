@@ -396,7 +396,7 @@ $log->debug("group $group_id");
 				if ( my $ProjectType = openprint::ProjectType->find_one('name'=>'PresentationFolders') ) {
 					foreach my $ServiceType ( $ProjectType->required_ServiceTypes() ) {
 						if ( ! $$services{$ServiceType->name()} ) {
-							push @{$$services{$ServiceType->name()}}, openprint::print_project::insert_service( $log, $dbh, $Project->id(), $ServiceType );
+							push @{$$services{$ServiceType->name()}}, $Project->add_service( $ServiceType );
 						} # end if
 					} # end foreach servicetype
 				} # end if
@@ -479,12 +479,12 @@ $log->debug("group $group_id");
 	if ( 0 and misc::sum( values %specified_pages ) < $$param{'txtTotalPageQuantity'} ) {
 # Must have at least 1 interioer signature
 		$dbh->do( "LOCK TABLE tbl_Service_Specifications IN SHARE ROW EXCLUSIVE MODE" ) or $log->error( DBI->errstr );
-		my ($print_service_index) = openprint::print_project::insert_service( $log, $dbh, $project_index, 'Signature' );
+		my $print_service_index = $Project->add_service( 'Signature' );
 		openprint::service::insert_service_spec( $log, $dbh, $project_index, $print_service_index, 'txtSignatureType', 'Interior Pages' );
 		openprint::service::insert_service_spec( $log, $dbh, $project_index, $print_service_index, 'txtServiceDescription', 'Interior Pages' );
 		openprint::service::insert_service_spec( $log, $dbh, $project_index, $print_service_index, 'Group', $max_group + 1 );
 		openprint::service::insert_service_spec( $log, $dbh, $project_index, $print_service_index, 'GroupPageQuantity', $needed_pages{'Interior Pages'} - $specified_pages{'Interior Pages'} );
-		$_ = q{SELECT MAX(strValue) FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strName='SignatureIndex'};
+		$_ = q{SELECT MAX(strValue::integer) FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strName='SignatureIndex'};
 		my ( $signature_count ) = sql::execute( $log, $dbh, $_, $project_index );
 		$signature_count += 1;
 		openprint::service::insert_service_spec( $log, $dbh, $project_index, $print_service_index, 'SignatureIndex', $signature_count );
@@ -510,7 +510,7 @@ $log->debug("group $group_id");
 			} # end if
 		} # end foreach
 		
-		push @{$$services{'NoBindery'}}, openprint::print_project::insert_service( $log, $dbh, $project_index, 'NoBindery' ) if ! $$services{'NoBindery'};
+		push @{$$services{'NoBindery'}}, $Project->add_service( 'NoBindery' ) if ! $$services{'NoBindery'};
 	} elsif ( $$param{'rdbTemplateType'} ) {
 		# Delete No Bindery Service
 		if ( $$services{'NoBindery'} ) {
@@ -522,14 +522,15 @@ $log->debug("group $group_id");
 
 		# Insert the desired Bindery Type
 		if ( ( ! $$services{$$param{'rdbTemplateType'}} ) and openprint::ServiceType->find_one( name=> $$param{'rdbTemplateType'} ) ) {
-			push @{$$services{$$param{'rdbTemplateType'}}}, openprint::print_project::insert_service( $log, $dbh, $project_index, $$param{'rdbTemplateType'} );
+			next if $$services{$$param{'rdbTemplateType'}};
+			push @{$$services{$$param{'rdbTemplateType'}}}, $Project->add_service( $$param{'rdbTemplateType'} );
 		} # end if
 	} # end if
 
 	if ( sets::isin( $$param{'rdbTemplateType'}, ('SaddleStitching','LoopStitching','PerfectBound','Unbound') ) ) {
 		# Saddle and Loop Stitching requires Folding
-		push @{$$services{'Folding'}}, openprint::print_project::insert_service( $log, $dbh, $project_index, 'Folding' ) if ! $$services{'Folding'};
-		push @{$$services{'Cutting'}}, openprint::print_project::insert_service( $log, $dbh, $project_index, 'Cutting' ) if ! $$services{'Cutting'};
+		push @{$$services{'Folding'}}, $Project->add_service( 'Folding' ) if ! $$services{'Folding'};
+		push @{$$services{'Cutting'}}, $Project->add_service( 'Cutting' ) if ! $$services{'Cutting'};
 	} # end if
 	sql::end_transaction( $dbh, $ac );
 } # end sub multipage_signatures

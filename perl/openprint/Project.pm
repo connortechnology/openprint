@@ -1193,6 +1193,9 @@ sub Ordered_Project {
 	return $_[0]{'Ordered_Project'};
 } # end sub Ordered_Project
 
+
+# Let's talk LOCKING
+# don't need to lock project_contents... cuz it's just an insert....
 sub add_service {
 	my ( $self, $type, $data, $options ) = @_;
 
@@ -1208,6 +1211,12 @@ sub add_service {
 
 	# Make this all one transaction...
 	my $ac = sql::start_transaction( $dbh );
+	# Shoudln't need to lock this... theya re all just inserts
+	#$dbh->do( 'LOCK TABLE tbl_Service_Specifications IN EXCLUSIVE MODE' ) or $log->error( $dbh->errstr() );
+$log->debug("Project: $$self{id} $self");
+foreach my $k ( keys %{$$self{Services}} ) {
+	$log->debug(" Services: $k => " . join( ',', @{$$self{Services}{$k}} ) );
+} # end ofreach
 
 	my $Service = new openprint::Project_Service();
 	$Service->save({ project_id=>$$self{id}, ( status=>$$options{status} ? $$options{status} : 'uncalculated' ), servicetype_id=>$ServiceType->id()});

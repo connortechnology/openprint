@@ -20,13 +20,11 @@
 		} # end if dummy docket
 		
 		if ( $form == -1 ) {
-			 my $new_service_index = openprint::print_project::insert_service( $log, $dbh, $project_id, 'Signature' );
-			 $_ = q{SELECT MAX(strValue) FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strName='SignatureIndex'};
-			 my ( $signature_count ) = sql::execute( $log, $dbh, $_, $project_id );
-			 openprint::service::insert_service_spec( $log, $dbh, $project_id, $new_service_index, 'txtSignatureType', 'Signature' );
-			 openprint::service::insert_service_spec( $log, $dbh, $project_id, $new_service_index, 'txtServiceDescription', 'Additional Signature' );
-			 openprint::service::insert_service_spec( $log, $dbh, $project_id, $new_service_index, 'SignatureIndex', ++$signature_count );
-			 $Project->add_to_log( @openprint::session{'company_id','user_id'}, sprintf( 'Added Service: %s', 'Signature' ) );
+			my $new_service_index = $Project->add_serice( undef, 'uncalcalated', {
+					txtSignatureType		=> 'Signature',
+					txtServiceDescription	=> 'Additional Signature',
+					} );
+			$Project->add_to_log( @openprint::session{'company_id','user_id'}, sprintf( 'Added Service: %s', 'Signature' ) );
 			push @schedule, $project_id, $new_service_index, $r->param('Equipment'), $r->param('Weekday'), $r->param('Time');
 
 		} else {
