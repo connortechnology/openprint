@@ -556,6 +556,9 @@ sub calc {
 						next if ! $fold_qty;
 						my $type = $$folding_specs{"FoldType-$$sig_specs{SignatureIndex}-$qty_index-$index"};
 						next if ! $type;
+						if ( $$folding_specs{"FoldImposition-$$sig_specs{SignatureIndex}-$qty_index-$index"} < $$specs{"txtImposition$qty_index"} ) {
+							$$specs{"txtImposition$qty_index"} = $$folding_specs{"FoldImposition-$$sig_specs{SignatureIndex}-$qty_index-$index"};
+						} # ebduf
 
 						my ( $pages ) = $type =~ /(\d+)PageFold/;
 						if ( ! $pages ) {

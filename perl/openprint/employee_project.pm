@@ -411,7 +411,7 @@ sub view {
 
 		if ( $param{'NewServiceType'} ) {
 			my $ServiceType = new openprint::ServiceType( $param{'NewServiceType'} );
-			my $new_service_index = openprint::print_project::insert_service( $log, $dbh, $project_index, $ServiceType->name() );
+			my $new_service_index = $Project->add_service( $ServiceType );
 
 			if ( $ServiceType->name() eq 'Signature' ) {
 				$_ = q{SELECT MAX(strValue::integer) FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strName='SignatureIndex'};

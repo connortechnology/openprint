@@ -83,7 +83,7 @@ $log->debug("variables: @variables");
 
 	# FIXME: should clean this up
 	if ( $openprint::param{'Additional'} eq 'Y' or $openprint::param{'additional_service'} eq 'Y' ) {
-		openprint::print_project::insert_service( $log, $dbh, $project_index, $service_type );
+		$Project->add_service( $service_type );
 	} # end if
 
 	$log->debug("***** END  OF  save_service ************");
@@ -235,8 +235,8 @@ sub auto_calculate {
 			delete $$services{Folding};
 		} # end if
 	} else {
-		if ( ! $$services{'Folding'} ) {
-			push @{$$services{'Folding'}}, $Project->add_service( 'Folding' );
+		if ( ! $$services{Folding} ) {
+			push @{$$services{Folding}}, $Project->add_service( 'Folding' );
 		} # end if
 	} # end if
 

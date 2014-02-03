@@ -12,13 +12,17 @@
 			 'extension',
 			 'fax'} = $Company->get( 'name','address1','address2','city','state','postalcode','country','phone','extension','fax' );
 	} # end if
-	my @Users = @{$$variable{'Users'}} = openprint::User->find( 
-		 'company_id'=>$param{'company_id'} ? $param{'company_id'} : $session{'company_id'}, 
-		 'order'=>'lower(firstname),lower(lastname)'
+	my @Users = @{$$variable{Users}} = openprint::User->find( 
+		 company_id	=> $param{company_id} ? $param{company_id} : $session{company_id}, 
+		 order	=>'lower(firstname),lower(lastname)'
 	);
 	if ( scalar @Users == 1 ) {
 		$param{'ddmUsers'} = $Users[0]->id();
 		@$variable{'salutation','firstname','lastname','email'} = $Users[0]->get('salutation','firstname','lastname','email');
+	} elsif ( $$variable{Order}->email() ) {
+		my $SelectedUser = openprint::User->find_one( company_id=>$param{'company_id'} ? $param{'company_id'} : $session{'company_id'}, email=>$$variable{Order}->email() );
+
+		$param{ddmUsers} = $SelectedUser->id() if $SelectedUser;
 	} # end if
 ) ?>
 <fieldset><legend>Billing Information</legend>
