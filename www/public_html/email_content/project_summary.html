@@ -41,7 +41,7 @@
 			my $Service = $$variable{Project}->Service( $$variable{ServiceIndex} );
 			if ( $Service->ServiceType()->name() eq 'CustomService' ) {
 			} else {
-$log->error("No summary urul for " . $$variable{Project}->id() . " service " . $$variable{ServiceName} . $Service->Type()->to_string() );
+$log->error("No summary urul for " . $$variable{Project}->id() . " service " . $$variable{ServiceName} . $Service->ServiceType()->to_string() );
 			} # end if
 		} # end if
 	} # end while
