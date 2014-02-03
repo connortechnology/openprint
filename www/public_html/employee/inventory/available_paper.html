@@ -82,6 +82,10 @@ Please select a Paper to view/edit.<br>
 
 	my %filters;
 	foreach my $option ( @StockOptions ) {
+		eval { 
+			my @values = ('openprint::Stock'.$option)->find();
+		next if @values == 1;
+ };
 		my ( $lower_option, $option_id ) = ( lc $option, lc $option.'_id' );
 		# Validate the filter
 		$session{'/employee/inventory/available_paper.html?'.$option_id} = undef if ! sets::isin( 
