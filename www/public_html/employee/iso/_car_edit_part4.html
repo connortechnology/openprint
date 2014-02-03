@@ -5,7 +5,7 @@
 	<tr><td colspan="4"><textarea name="effectiveness" rows="5" style="width:99%;" onkeyup="textarea_resize(this);"><? echo ( $$variable{'CAR'}->effectiveness(); ) ?></textarea></td></tr>
 	<tr><td width="10%">QS Mgt Rep / Designate</td>
 		<td width="40%">
-		<select name="part4_user_id"><? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User->find('type'=>['E','A'],'order'=>'lower(firstname),lower(lastname)') ], $$variable{'CAR'}->part4_user_id() ?  $$variable{'CAR'}->part4_user_id() : $session{'user_id'} ); ) ?></select>
+		<select name="part4_user_id"><? echo ( make_drop_down( openprint::User->dropdown( type=>['E','A'], order=>'lower(firstname),lower(lastname)'), $$variable{CAR}->part4_user_id() ?  $$variable{CAR}->part4_user_id() : $session{user_id} ); ) ?></select>
 	</td>
 	<td width="10%">Date</td>
 	<td width="40%">
@@ -27,6 +27,6 @@ if ( $$variable{'CAR'}->part4_signed_on() ) {
 </form>
 <p class="buttons">
 	<? echo ( join('',
-		ssi::writeButton( $log, $dbh, 'Save', 'save.gif', "new Ajax.Updater('Part4','_car_view_part4.html', {method:'get',parameters: Form.serialize( \$('part4form') ) } );", '','Save' ),
+		button( 'Save', { onclick=>"new Ajax.Updater('Part4','_car_view_part4.html', {parameters: \$('part4form').serialize() } );", text=>'Save' } ),
 		); ) ?>
 </p>
