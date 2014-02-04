@@ -694,7 +694,7 @@ sub summary {
 			my $sig_specs = openprint::service::get_specs_ref( $Project, $s_s_id );
 			my $Paper = openprint::Paper::load_from_signature( $Project, $sig_specs, $qty_index );
 			if ( signature_needs( $Project, $specs, $sig_specs, $Paper ) ) {
-				$html .= 'Form ' . $$sig_specs{SignatureIndex} . ' ' . $$sig_specs{txtServiceDescription} . ' folded ' ."\n".signature_summary( $Project, $service_id, undef, $qty_index, $s_s_id, undef ) . "\n";
+				$html .= 'Form ' . $$sig_specs{SignatureIndex} . ' ' . $$sig_specs{txtServiceDescription} . ' scored ' ."\n".signature_summary( $Project, $service_id, undef, $qty_index, $s_s_id, undef ) . "\n";
 			} # end if
 		} # end foreach
 		return $html;
