@@ -23,7 +23,7 @@ require openprint::Estimating::Printing;
 require openprint::service;
 require sets;
 
-use constant DEBUG => 0;
+use constant DEBUG => 1;
 
 my %variables = (
 	'ddmProjectSize'=>['save','output'],
@@ -140,7 +140,10 @@ sub calc {
 	my %override_pages;
 	foreach my $group_id ( @Groups ) {
 		if ( exists $$specs{'OverrideGroupPageQuantity'.$group_id} ) {
-			$override_pages{$group_id} = $$specs{'GroupPageQuantity'.$group_id} if $$specs{'OverrideGroupPageQuantity'.$group_id} eq 'Y';
+			if ( $$specs{'OverrideGroupPageQuantity'.$group_id} eq 'Y' ) {
+				$override_pages{$group_id} = $$specs{'GroupPageQuantity'.$group_id};
+				$log->debug("Setting override pages for group $group_id to " . $$specs{'GroupPageQuantity'.$group_id} );
+			} # end if
 		} elsif ( $$specs{'txtSignatureType'.$group_id} eq 'PerfReplyCard' ) {
 			$override_pages{$group_id} = 2;
 			if ( $$specs{'txtServiceDescription'.$group_id} eq 'Interior Pages' ) {
@@ -161,11 +164,11 @@ sub calc {
 						( $group_id == 3 ? ( 'txtSignatureType'=>'Gate Folded Pages', 'txtServiceDescription'=>'Gate Folded Pages' ) : () ),
 						} );
 			} # end if
-			foreach my $sig_id ( $Project->signatures({'Group'=>$group_id}) ) {
-				my $sig_specs = openprint::service::get_specs_ref( $Project, $sig_id );
-				$override_pages{$group_id} = $$sig_specs{'GroupPageQuantity'} if $$sig_specs{'OverrideGroupPageQuantity'} eq 'Y';
-				last if $override_pages{$group_id};
-			} # end foreach signature
+			#foreach my $sig_id ( $Project->signatures({'Group'=>$group_id}) ) {
+				#my $sig_specs = openprint::service::get_specs_ref( $Project, $sig_id );
+				#$override_pages{$group_id} = $$sig_specs{'GroupPageQuantity'} if $$sig_specs{'OverrideGroupPageQuantity'} eq 'Y';
+				#last if $override_pages{$group_id};
+			#} # end foreach signature
 		} # end if
 		$remaining_pages -= $override_pages{$group_id};
 	} # end foreach group
@@ -238,6 +241,11 @@ $openprint::log->warn("FIXM E");
 		return $$specs{'Status'} = 'uncalculated';
 	} elsif ( $$specs{'txtTotalPageQuantity'} > 1500 ) {
 		$$specs{alert} .= 'The maximum # of pages is 1500.<br/>';
+		$$specs{Status} = 'uncalculated';
+	} # end if
+
+	if ( $$specs{remaining_pages} ) {
+		$$specs{alert} .= 'There are ' . $$specs{remaining_pages} . ' unspecified pages.';
 		$$specs{Status} = 'uncalculated';
 	} # end if
 

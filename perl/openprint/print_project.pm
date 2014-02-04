@@ -236,6 +236,8 @@ sub continue_project {
 					$service_index = $Project->copy_signature( $src_specs );
 					( $service_index, $redirect ) = choose_service( $log, $dbh, $project_index );
 					last;
+				} else {
+					$log->debug("Multpage status says we ok");
 				} # end if
 			} # end foreach
 		} # end if
