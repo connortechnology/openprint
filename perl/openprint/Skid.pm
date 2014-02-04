@@ -501,8 +501,8 @@ sub Contents {
 			$$self{Contents} = $_[0];
 		} else {
 			my %params = @_;
-			$params{'skid_id'} = $$self{'id'};
-			$params{'deleted_in'} = [0,1] if ! exists $params{'deleted in'};
+			$params{skid_id} = $$self{'id'};
+			$params{deleted} = [0,1] if ! exists $params{'deleted in'};
 			return openprint::SkidContent->find( %params );
 		} # end if
 	} elsif ( ! $$self{Contents} ) {
