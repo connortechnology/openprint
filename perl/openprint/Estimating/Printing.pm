@@ -24,10 +24,10 @@ my $threading = 0;
 use constant DEBUG => 0;
 use constant DEBUG_VERSIONS => 0;
 use constant DEBUG_FILTERING => 0;
-use constant DEBUG_INITIAL_FILTERING => 0;
+use constant DEBUG_INITIAL_FILTERING => 1;
 use constant DEBUG_PRICE_DECISIONS => 0;
 use constant DEBUG_INKS => 0;
-use constant DEBUG_STOCK => 0;
+use constant DEBUG_STOCK => 1;
 use constant COMPARISON_LOG => 0;
 use constant USE_SUBSIG => 0;
 use constant USE_PRICE_CACHE => 1;
@@ -1451,7 +1451,7 @@ if ( $do_initial_filtering ) {
         my %dutches;
         if ( DEBUG_INITIAL_FILTERING ) {
             $openprint::log->debug('Impositions before filtering on ' . $$Press{'strid'} . ' ' . @impositions . ' impositions' . ( sprintf('%.4f', tv_interval( [$master_time])*1000) ) .' usecs');
-if ( 0 ) {
+if ( 1 ) {
             foreach my $i ( @impositions ) {
                 $i->display();
             }
@@ -2741,11 +2741,11 @@ sub calculate_impositions {
 	}
 	my @results;
 	my $max_pages = 0;
-	foreach my $imp ( @impositions ) {
-		my $pages = $$imp{'pages'};
-		$max_pages = $pages if $pages > $max_pages;
-	} # end foreach
-	$max_pages = Math::Round::nearest(1, $max_pages / 3 );
+	#foreach my $imp ( @impositions ) {
+		#my $pages = $$imp{'pages'};
+		#$max_pages = $pages if $pages > $max_pages;
+	#} # end foreach
+	#$max_pages = Math::Round::nearest(1, $max_pages / 3 );
 	$max_pages = $$project{'txtSpreadSize'} if $max_pages < $$project{'txtSpreadSize'};
 $openprint::log->debug("Max pages: $max_pages") if DEBUG_FILTERING;
 

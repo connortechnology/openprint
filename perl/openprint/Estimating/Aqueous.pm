@@ -144,16 +144,21 @@ sub calc {
 	foreach my $qty_index ( $Project->quantity_indexes() ) {
 		$$specs{"Markup$qty_index"} =~ s/[^\d\.\-]//g if $$specs{"Markup$qty_index"};
 		$$specs{"txtPrice$qty_index"} =~ s/[^\d\.]//g if $$specs{"txtPrice$qty_index"};
-		$$specs{"txtQuantity$qty_index"} =~ s/[^\d\.]//g if $$specs{"txtQuantity$qty_index"};
+		$$specs{"txtQuantity$qty_index"} =~ s/\D//g if $$specs{"txtQuantity$qty_index"};
 		$$specs{"txtQuantity$qty_index"} = $Project->quantity($qty_index) if ! $$specs{"txtQuantity$qty_index"};
-		if ( ! $$specs{"txtQuantity$qty_index"} > 0 ) {
+		if ( ! ( $$specs{"txtQuantity$qty_index"} > 0 ) ) {
 			next;
 		} # end if
 		$$specs{'hdnBreakdown'.$qty_index} = sprintf('QTY: %d<br/>',$$specs{"txtQuantity$qty_index"} );
 
 		my $qty = $$specs{"txtQuantity$qty_index"};
 		if ( $$specs{'txtPressSheetComboItems'} ) {
-			$qty *= $$specs{'txtPressSheetComboItems'};
+			$$specs{'txtPressSheetComboItems'} =~ s/\D//g;
+			if ( $$specs{'txtPressSheetComboItems'} ) {
+				$qty *= $$specs{'txtPressSheetComboItems'} 
+			} else {
+				$$specs{alert} .= 'Combination items is invalid.';
+			} # end if
 		} # end if
 
 		my %MakeReadies;

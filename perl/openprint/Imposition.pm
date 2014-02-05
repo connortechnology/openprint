@@ -176,7 +176,7 @@ sub load_used {
 		} # end if
 		if ( ! $$self{'Press'} ) {
 			if ( ! $$specs{'ddmPress'.$qty_index} ) {
-				$openprint::log->error("No ddmPress for $qty_index");
+				#$openprint::log->error("No ddmPress for $qty_index");
 			} else {
 				$$self{'Press'} = openprint::Equipment->find_one('strid'=>$$specs{'ddmPress'.$qty_index});
 				if ( ! $$self{'Press'} ) {

@@ -1202,7 +1202,7 @@ sub add_service {
 	my $ServiceType;
 	if ( ref $type ne 'openprint::ServiceType' ) {
 		if ( ! ( $ServiceType = openprint::ServiceType->find_one( name=>$type ) ) ) {
-			$log->error("Service $type IS NOT in the system.");
+			$log->warn("Service $type IS NOT in the system.");
 			return;
 		} # end if
 	} else {

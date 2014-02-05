@@ -495,7 +495,7 @@ sub signature_calc {
 			$folding_imposition->rows( $$folding_specs{"FoldRows-$$sig_specs{'SignatureIndex'}-$qty_index-$fold_index"} );
 			$folding_imposition->quantity( $$folding_specs{"FoldQty-$$sig_specs{'SignatureIndex'}-$qty_index-$fold_index"} );
 			push @folding_impositions, $folding_imposition;
-			$folding_imposition->display('Fold ' . $$folding_specs{"FoldType-$$sig_specs{SignatureIndex}-$qty_index-$fold_index"} );
+			$folding_imposition->display('Fold ' . $$folding_specs{"FoldType-$$sig_specs{SignatureIndex}-$qty_index-$fold_index"} ) if DEBUG;
 		} # end foreach fold_index
 	} # end if
 

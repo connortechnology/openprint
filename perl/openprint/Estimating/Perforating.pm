@@ -430,7 +430,7 @@ sub signature_calc {
 
 			if ( $$Runspeed{'units'} eq 'Percent' ) {
 				if ( ! $$sig_specs{'Runspeed'} ) {
-					$openprint::log->error("No printing runspeed");
+					$openprint::log->error("No perfing runspeed on $$Equipment{strid}");
 				}
 				$runspeed = int( $$sig_specs{'Runspeed'} - ( $$sig_specs{'Runspeed'} * $$Runspeed{'value'}/100 ) );
 			} else {

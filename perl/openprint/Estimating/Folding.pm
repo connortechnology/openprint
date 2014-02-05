@@ -713,7 +713,7 @@ $openprint::log->error("No folds from sigimpo");
 			my $Set_Of_Impositions = $All_Impositions[$set_index];
 			if ( $$Equipment{id} == $$Press{id} ) {
 				if ( scalar @$Set_Of_Impositions != 1 ) {
-$openprint::log->debug("Sets of impos != 1 for $$Equipment{strid}");
+$openprint::log->debug("Sets of impos != 1 for $$Equipment{strid}") if DEBUG;
 					next;
 				} # end if
 				next if $$Set_Of_Impositions[0]{quantity} != 1;
