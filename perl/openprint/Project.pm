@@ -1474,7 +1474,8 @@ $openprint::log->debug("Project::recalculate");
 	$self->currency_id( $openprint::session{Currency_id} );
 	my $services = $self->services();
 	if ( $$services{''} ) {
-		my $status = openprint::service::internal_calc( $openprint::log, $openprint::dbh, \%openprint::variable, $$self{'id'}, $$services{''}[0], $self->Type()->type() );
+		my $specs = openprint::service::internal_calc( $openprint::log, $openprint::dbh, \%openprint::variable, $$self{'id'}, $$services{''}[0], $self->Type()->type() );
+		my $status = $$specs{Status};
 		# Why is this ne calculated... if the project service can't calc... then neither can the signatures
 		if ( $status eq 'calculated' ) {
 			# Recalc signatures

@@ -21,10 +21,10 @@ use strict;
 package openprint::Estimating::Printing;
 my $threading = 0;
 #use threads;
-use constant DEBUG => 0;
+use constant DEBUG => 1;
 use constant DEBUG_VERSIONS => 0;
-use constant DEBUG_FILTERING => 0;
-use constant DEBUG_INITIAL_FILTERING => 0;
+use constant DEBUG_FILTERING => 1;
+use constant DEBUG_INITIAL_FILTERING => 1;
 use constant DEBUG_PRICE_DECISIONS => 0;
 use constant DEBUG_INKS => 0;
 use constant DEBUG_STOCK => 0;
@@ -1208,6 +1208,7 @@ sub get_impositions($$$$$$$$) {
 					foreach my $Paper ( @Sheets ) {
 						next if $Paper->width() < $width;
 						next if $Paper->height() < $height;
+						next if ! $Paper->cuttable();
 						my $P = $Paper->clone();
 						$P->cut( $width, $height );
 						push @extra_sheets, $P;
@@ -1219,6 +1220,7 @@ sub get_impositions($$$$$$$$) {
 					foreach my $Paper ( @Sheets ) {
 						next if $Paper->width() < $height;
 						next if $Paper->height() < $width;
+						next if ! $Paper->cuttable();
 						my $P = $Paper->clone();
 						$P->cut( $height, $width );
 						push @extra_sheets, $P;
@@ -1352,7 +1354,7 @@ sub get_impositions($$$$$$$$) {
 					next;
 				} # end if
 				if ( %sheetsizes and ! $sheetsizes{join('x', $Paper->width(),$Paper->height())} ) {
-					$openprint::log->debug("Not using " . $Paper->to_string() . " because not in sheetsizes." ) if DEBUG;
+					$openprint::log->debug("Not using " . $Paper->to_string() . " because not in sheetsizes. for $$Press{strid}" ) if DEBUG;
 					next;
 				} # end if
 				$openprint::log->debug("using " . $Paper->to_string() . " because not in sheetsizes." ) if DEBUG;
@@ -1401,7 +1403,7 @@ sub get_impositions($$$$$$$$) {
 						$Papers{$P2->id_string()} = $P2 if ! $Papers{$P2->id_string()};
 					} # end if
 					last if ! $use_cut_stocks;
-					last if ( ! $P->cuttable() );
+					last if ! $P->cuttable();
 					$P = $P->clone();
 					$P->cut();
 				} # end while cutting it
@@ -5904,10 +5906,12 @@ sub summary {
 		if ( $Project->Type()->name() ne 'PresentationFolders' ) {
 			$html .= $$specs{'PageQuantity'.$qty_index} ? $$specs{'PageQuantity'.$qty_index}.'pg ' : '';
 		} # end if
-		$html .= sprintf(qq{%dout %s},
-				$$specs{'txtImposition'.$qty_index},
-				($$specs{'ddmRunStyle'.$qty_index} eq 'Web' ? $$specs{'StockWidth'.$qty_index} . '" ' . ssi::htmlize($$specs{'ddmRunStyle'.$qty_index}) : ssi::htmlize($$specs{'ddmRunStyle'.$qty_index}) ), 
-				);
+		$html .= $$specs{'txtImposition'.$qty_index}.'out ';
+		if ( $$specs{"PrintingType$qty_index"} eq 'Digital' ) {
+			$html .= 'Digital';
+		} else {
+			$html .= $$specs{'ddmRunStyle'.$qty_index} eq 'Web' ? $$specs{'StockWidth'.$qty_index} . '" Web' : ssi::html_escape($$specs{'ddmRunStyle'.$qty_index}) ;
+		} # end if
 		$html .= ' ' . $$specs{"Versions$qty_index"}.' versions' if $$specs{Versions};
 		#$html .= sprintf(qq{ on %s\n}, $$specs{'ddmPress'.$qty_index} ) if ! $$services{'NoPrinting'};
 
