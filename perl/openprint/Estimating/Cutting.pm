@@ -591,17 +591,22 @@ sub signature_calc {
 				$vertical_cuts += int ($$I{'columns'} / $stitching_imposition)-1;
 			} elsif ( $$printing_specs{rdbTemplateType} eq 'PlasticCoil' ) {
 				if ( $I->pages() > 8 ) {
-					# Going to fold it first.
-					foreach my $folding_imposition ( @folding_impositions ) {
-						my $columns =  $$folding_imposition{columns} ? $$I{'columns'} / $$folding_imposition{columns} : $$I{'columns'};
-						$vertical_cuts += 1+$columns;# = 2+$$I{'columns'}-1
-						if ( 
-								( $$I{'image_orientation'} eq 'Vertical' and ( $$sig_specs{'BleedLeft'} or $$sig_specs{'BleedRight'} ) ) or
-								( $$I{'image_orientation'} eq 'Horizontal' and ( $$sig_specs{'BleedTop'} or $$sig_specs{'BleedBottom'} ) )
-						   ) {
-							$vertical_cuts += $columns-1;
-						} # end if
-					} # end foreach
+					if ( @folding_impositions == 1 and $folding_impositions[0]->quantity() <= 1 and $folding_impositions[0]->imposition() == 1 ) {
+						# According to Brendan, will trim it first.
+						$vertical_cuts += 2;
+					} else {
+						# Going to fold it first.
+						foreach my $folding_imposition ( @folding_impositions ) {
+							my $columns =  $$folding_imposition{columns} ? $$I{'columns'} / $$folding_imposition{columns} : $$I{'columns'};
+							$vertical_cuts += 1+$columns;# = 2+$$I{'columns'}-1
+							if ( 
+									( $$I{'image_orientation'} eq 'Vertical' and ( $$sig_specs{'BleedLeft'} or $$sig_specs{'BleedRight'} ) ) or
+									( $$I{'image_orientation'} eq 'Horizontal' and ( $$sig_specs{'BleedTop'} or $$sig_specs{'BleedBottom'} ) )
+							   ) {
+								$vertical_cuts += $columns-1;
+							} # end if
+						} # end foreach
+					} # end if
 				} else {
 					$vertical_cuts += int ( ($I->page_columns()-1)* (($I->columns()-1)*2) ) + 2;
 				} # end if
@@ -656,6 +661,10 @@ $folding_imposition->display("Vertical cuts: $vertical_cuts");
 				$horizontal_cuts += int ($$I{'rows'} / $stitching_imposition)-1; 
 			} elsif ( $$printing_specs{rdbTemplateType} eq 'PlasticCoil' ) {
 				if ( $I->pages() > 8 ) {
+					if ( @folding_impositions == 1 and $folding_impositions[0]->quantity() <= 1 and $folding_impositions[0]->imposition() == 1 ) {
+						# According to Brendan, will trim it first.
+							$horizontal_cuts += 2;
+					} else {
 					# Going to fold it first.
 					foreach my $folding_imposition ( @folding_impositions ) {
 						my $rows = $$folding_imposition{rows} ?$$folding_imposition{rows} : $$I{rows};
@@ -667,6 +676,7 @@ $folding_imposition->display("Vertical cuts: $vertical_cuts");
 							$horizontal_cuts += $rows-1;
 						} # end if
 					} # end foreach
+					} # end if
 				} else {
 					$horizontal_cuts += int( ($I->page_rows()-1)*$I->rows() * 2 ) + 2;
 				} # end if

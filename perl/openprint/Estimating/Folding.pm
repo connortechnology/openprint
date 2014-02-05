@@ -543,7 +543,7 @@ $openprint::log->error("No folds from sigimpo");
 	my $width_folds = Math::Round::nearest( 1, $$sig_specs{'txtWidth'}/$$sig_specs{'txtFinalWidth'})-1;
 	my $height_folds = Math::Round::nearest( 1, $$sig_specs{'txtHeight'}/$$sig_specs{'txtFinalHeight'}) -1;
 	@$SignatureImposition{'width_folds','height_folds'} = ( $width_folds, $height_folds );
-	$openprint::log->debug("FOlds: $width_folds x $height_folds");
+	$openprint::log->debug("FOlds: $width_folds x $height_folds") if DEBUG;
 
 	# IF it's a W&T, we have to cut in half first, so just do it.
 	if ( $$SignatureImposition{runstyle} eq 'Work & Turn' ) {
@@ -647,7 +647,7 @@ $openprint::log->debug("No folds") if DEBUG;
 		} # end if finalwidth and height
 		# Now we have a base set of Maximal Impositions.	Now some of the I's in this set may have an imposition > 1.	
 		# Problem is that we apparently also need to price the situation of doing them 1 out, and everything in between.	
-		if ( DEBUG and 1 ) {
+		if ( DEBUG ) {
 			foreach my $I ( @Set_Of_Impositions ) {
 				$I->display('Results after initial cuts qty: ' . $$I{quantity} . 'x ');
 			} # end foreach

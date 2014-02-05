@@ -24,10 +24,10 @@ my $threading = 0;
 use constant DEBUG => 0;
 use constant DEBUG_VERSIONS => 0;
 use constant DEBUG_FILTERING => 0;
-use constant DEBUG_INITIAL_FILTERING => 1;
+use constant DEBUG_INITIAL_FILTERING => 0;
 use constant DEBUG_PRICE_DECISIONS => 0;
 use constant DEBUG_INKS => 0;
-use constant DEBUG_STOCK => 1;
+use constant DEBUG_STOCK => 0;
 use constant COMPARISON_LOG => 0;
 use constant USE_SUBSIG => 0;
 use constant USE_PRICE_CACHE => 1;
@@ -881,7 +881,7 @@ sub get_Stocks {
 		next if $$specs{'chkOverrideSheetSize'.$qty_index} ne 'Y';
 
 		if ( ! ( $$specs{'OverrideStockWidth'.$qty_index} or $$specs{'OverrideStockHeight'.$qty_index} ) ) {
-			@$specs{'OverrideStockWidth'.$qty_index, 'OverrideStockHeight'.$qty_index} = split 'x', $$specs{'ddmStockSheetSize'.$qty_index};
+			@$specs{'OverrideStockWidth'.$qty_index, 'OverrideStockHeight'.$qty_index} = split( 'x', $$specs{'ddmStockSheetSize'.$qty_index} );
 		} # end if
 		my $found = 0;
 
@@ -2681,7 +2681,7 @@ sub calculate_impositions {
 
 		my @press_impositions;
 		if ( $SpreadLayout > 0 ) {
-		if ( DEBUG_FILTERING ) {
+		if ( DEBUG_FILTERING and 0 ) {
 			$openprint::log->debug("QTY_index: $qty_index before filtering impositions count:" . @{$$impositions{$strid}} . ' on press: ' . $Press->strid());
 			foreach my $imp ( openprint::imposition::sort( @{$$impositions{$strid}} ) ) {
 				$imp->display();
@@ -2694,7 +2694,7 @@ sub calculate_impositions {
 			if ( %dont_do_pages ) {
 		 @press_impositions = map { $dont_do_pages{$$_{pages}} ? () : $_ } sort { $$b{pages} <=> $$a{pages} } openprint::imposition::convert_impositions( $SpreadLayout, $$project{txtSpreadSize}, $$impositions{$strid} );
 			} elsif ( $SpreadLayout > 1 ) {
-			 @press_impositions = sort { $$b{pages} <=> $$a{pages} } openprint::imposition::convert_impositions( $SpreadLayout, $$project{txtSpreadSize}, $$impositions{$strid} );
+			 @press_impositions = openprint::imposition::convert_impositions( $SpreadLayout, $$project{txtSpreadSize}, $$impositions{$strid} );
 			} else {
 			 @press_impositions = @{ $$impositions{$strid} };
 			} # end if
@@ -2736,8 +2736,20 @@ sub calculate_impositions {
 		return ();
 	} 
 
-	if ( ( $$sig_specs{'chkOverrideSheetSize'.$qty_index} eq 'Y' ) and ! $$sig_specs{"OverrideStockWidth$qty_index"} ) {
-		@$sig_specs{"OverrideStockWidth$qty_index","OverrideStockHeight$qty_index"} = $$sig_specs{"ddmStockSheetSize$qty_index"} =~ /^([\d\.]+)"?\s*x?\s*([\d\.]+)?"?\s*$/;;
+	if ( ( $$sig_specs{'chkOverrideSheetSize'.$qty_index} eq 'Y' ) ) {
+		if ( ! $$sig_specs{"ddmStockSheetSize$qty_index"} ) {
+			$openprint::log->error("NO ddm Stock SheetSize!");
+		} elsif ( ! $$sig_specs{"OverrideStockWidth$qty_index"} ) {
+			if ( $$sig_specs{"StockType$qty_index"} eq 'Roll' ) {
+			@$sig_specs{"OverrideStockWidth$qty_index"} = $$sig_specs{"ddmStockSheetSize$qty_index"} =~ /^([\d\.]+)("? Roll)?\s*$/;
+			} else {
+			@$sig_specs{"OverrideStockWidth$qty_index","OverrideStockHeight$qty_index"} = $$sig_specs{"ddmStockSheetSize$qty_index"} =~ /^([\d\.]+)"?\s*x?\s*([\d\.]+)?"?\s*$/;
+			} # end if
+			if ( ! $$sig_specs{"OverrideStockWidth$qty_index"} ) {
+				$openprint::log->error( "Failure to parse ".$$sig_specs{"ddmStockSheetSize$qty_index"});
+				$$sig_specs{'chkOverrideSheetSize'.$qty_index} = '';
+			}
+		} # end if
 	}
 	my @results;
 	my $max_pages = 0;
@@ -3014,20 +3026,23 @@ $log->warn("Getting all impos results: " . @results );
 
 # My thoughts here:  have to base it purely on this sig. Need to look up price by total, but compare based just on this sig.
 		if ( ! $$imp{stock_qty} ) {
-
 			my $stock_qty = int( $qty/$$imp{'imposition'} ) * $Paper->factor();
 	#$openprint::log->debug("Before  stockqty: $stock_qty upq ". $$sig_specs{"txtUnspecifiedPageQuantity$qty_index"} ."pages $$imp{pages} spread: $SpreadLayout ");
-			#$stock_qty *= int( $$sig_specs{"txtUnspecifiedPageQuantity$qty_index"} / $$imp{pages} ) if $SpreadLayout > 0;
+			$stock_qty *= int( $$sig_specs{"txtUnspecifiedPageQuantity$qty_index"} / $$imp{pages} ) if $SpreadLayout > 0;
 			my $lookup_stock_qty = $stock_qty;
+	#$openprint::log->debug("Lookup impressioions: $lookup_stock_qty");
 
 			if ( $$Paper{'type'} eq 'Roll' ) {
 	# Convert to weight
 				$stock_qty = int( $stock_qty * $Paper->area() * $Paper->wpsi() );
-				$lookup_stock_qty += $$PaperCounts{$Paper->id_string()};
+				$lookup_stock_qty = $stock_qty + $$PaperCounts{$Paper->id_string()};
+	#$openprint::log->debug("Roll stock_weight $stock_qty Lookup impressioions: $lookup_stock_qty");
 			} else {
 				$lookup_stock_qty += $$PaperCounts{$Paper->id_string()} * $Paper->factor();
+	#$openprint::log->debug("Sheets $stock_qty Lookup impressioions: $lookup_stock_qty");
 				$stock_qty = POSIX::ceil( $stock_qty * $Paper->area() * $Paper->wpsi() );
 				$lookup_stock_qty = POSIX::ceil( $lookup_stock_qty * $Paper->area() * $Paper->wpsi() );
+	#$openprint::log->debug("Sheet weight $stock_qty Lookup impressioions: $lookup_stock_qty");
 			} # end if
 			$$imp{stock_qty} = $lookup_stock_qty;
 		} # end if
@@ -3044,7 +3059,7 @@ $log->warn("Getting all impos results: " . @results );
 			if ( $imps{$str} ) {
 				for ( my $j = 0; $j < @{$imps{$str}}; $j += 1 ) {
 					my $I = $imps{$str}[$j];
-					$I->display('Considering') if DEBUG_FILTERING;
+					$I->display('Considering B') if DEBUG_FILTERING;
 					my $P = $I->Paper();
 
 					if ( ($$sig_specs{'chkOverrideSheetSize'.$qty_index} eq 'Y') and ( $$P{width} == $$sig_specs{"OverrideStockWidth$qty_index"}) and ( $$P{height} == $$sig_specs{"OverrideStockHeight$qty_index"} )) {
@@ -3059,8 +3074,8 @@ $log->warn("Getting all impos results: " . @results );
 								#);
 					#} # end if
 					if ( DEBUG_FILTERING ) {
-						$imp->display("Comparing A mino weight:" . $Paper->minimum_order_weight() . 'Price: ' . $$SmallerPrice{'100lb Price'} . ' total: ' . $$SmallerPrice{'100lb Total'} . ' cut' . $Paper->is_cut() );
-						$I->display("Comparing B mino weight:". $P->minimum_order_weight() . ' Price: ' . $$BiggerPrice{'100lb Price'} . ' total: ' . $$BiggerPrice{'100lb Total'} .' cut ' . $P->is_cut());
+						$imp->display("Comparing A mino weight:" . $Paper->minimum_order_weight() . 'Price: ' . $$SmallerPrice{'100lb Price'} . ' total: ' . $$SmallerPrice{'100lb Total'} . ' cut' . $Paper->is_cut() . ' factor: ' . $Paper->factor() . ' stock _qty: ' . $$imp{stock_qty}  );
+						$I->display("Comparing B mino weight:". $P->minimum_order_weight() . ' Price: ' . $$BiggerPrice{'100lb Price'} . ' total: ' . $$BiggerPrice{'100lb Total'} .' cut ' . $P->is_cut() . ' factor: ' . $P->factor() . ' stock _qty: ' . $$I{stock_qty} );
 					} 
 					#if ( ( ! ( $$sig_specs{'txtUnspecifiedPageQuantity'.$qty_index} % $$imp{pages} ) )
 							#and ( $P->factor() <= $Paper->factor() )
