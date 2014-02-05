@@ -132,8 +132,18 @@ sub delete {
 	delete $$Project{'Services'};
 	delete $$Project{'signatures'};
 	delete $$Project{'service_types'};
-	my $Job = openprint::ScheduledJob->find_one('project_id'=>$$self{'project_id'}, 'service_id @>'=>$$self{'service_id'} );
-	$Job->save( { 'service_id' => [ sets::exclude( [ $$self{'service_id'} ], $Job->service_id() ) ] } ) if $Job;
+	foreach my $Job ( openprint::ScheduledJob->find( project_id=>$$self{project_id}, 'service_id any'=>$$self{service_id} ) ) {
+		$Job->save( { 
+				service_id => [ sets::exclude( [ $$self{service_id} ], $Job->service_id() ) ],
+				pertains_id => [ sets::exclude( [ $$self{service_id} ], $Job->pertains_id() ) ],
+				} );
+	} # end foreach Job
+	foreach my $Job ( openprint::ScheduledJob->find( project_id=>$$self{project_id}, 'pertains_id any'=>$$self{service_id} ) ) {
+		$Job->save( {
+				pertains_id => [ sets::exclude( [ $$self{service_id} ], $Job->pertains_id() ) ],
+				} );
+	} # end foreach Job
+
 	my $specs = $self->specs();
 	$self->Project()->add_to_log( @openprint::session{'company_id','user_id'}, "Deleted service $$specs{'ServiceType'} $$specs{'ServiceName'}." );
 	sql::end_transaction( $openprint::dbh, $ac );

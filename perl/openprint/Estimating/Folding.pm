@@ -739,11 +739,13 @@ $openprint::log->debug("Sets of impos != 1 for $$Equipment{strid}") if DEBUG;
 					$Imposition->display('trying ' . $$Imposition{quantity} . 'x ');
 				} # end if
 
+if ( 0 ) {
 				if ( $$Imposition{imposition} > 3 and ( $$Imposition{columns} > 1 and $$Imposition{rows} > 1 ) ) {
 $openprint::log->debug("Can't do that impo");
 					$complete = 0;
 					last;
 				} # end if
+}
 
 				if ( my $required_bleed = $Equipment->specification($$Imposition{imposition}.'out Required Bleed') ) {
 					if ( $required_bleed > $$Imposition{bleed_size} ) {

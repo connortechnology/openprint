@@ -167,7 +167,6 @@ radio('spine', [ map { $_, $_ } 'height', 'width' ], $$variable{spine}, { defaul
 			</div>
 			</div><!--ProjectSpecifications-->
 			<div id="SignatureGroups">
-<? echo ( button( 'AddSignature', { onclick=>'add_group();', text=>'Add Another Group of Signatures' } ); ) ?>
 			<? echo (
 				my @Groups = sql::execute( undef, undef, 'SELECT DISTINCT strvalue FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strname=? ORDER BY strvalue', $$variable{'ProjectIndex'}, 'Group' );
 				my $ServiceType = openprint::ServiceType->find_one( name=>'Signature');

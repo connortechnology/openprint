@@ -713,27 +713,9 @@ sub del_service {
 
 sub delete_service {
 	my ( $project_index, $service_index ) = @_;
-#$log->debug("DELETING service: " . new openprint::Project_Service({ project_id=>$project_index, service_id=>$service_index})->service_type() );
-	my $ac = sql::start_transaction( $openprint::dbh );
-	sql::execute( undef,undef, q{DELETE FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND lngServiceIndex=?}, $project_index, $service_index );
-	sql::execute( undef,undef, q{DELETE FROM tbl_Project_Contents WHERE lngProjectIndex=? AND lngServiceIndex=?}, $project_index, $service_index );
 	my $Project = new openprint::Project( $project_index );
-	delete $$Project{'Services'};
-	delete $$Project{'signatures'};
-	delete $$Project{'service_types'};
-	foreach my $Job ( openprint::ScheduledJob->find('project_id'=>$Project->id(), 'service_id any'=>$service_index ) ) {
-		$Job->save( { 
-				service_id	=> [ sets::exclude( [ $service_index ], $Job->service_id() ) ],
-				pertains_id	=> [ sets::exclude( [ $service_index ], $Job->pertains_id() ) ],
-				} );
-	} # end foreach Job
-	foreach my $Job ( openprint::ScheduledJob->find('project_id'=>$Project->id(), 'pertains_id any'=>$service_index ) ) {
-		$Job->save( { 
-				pertains_id => [ sets::exclude( [ $service_index ], $Job->pertains_id() ) ],
-				} );
-	} # end foreach Job
-	sql::end_transaction( $dbh, $ac );
-	#openprint::logs::insertLogRecord('10', "Service Index: " . $service_index . " for Project Index: " . $project_index,);
+	my $Service = $Project->Service( $service_index );
+	return $Service->delete();
 } # end sub delete_service
 
 sub display_reuse_project {

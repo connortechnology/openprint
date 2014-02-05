@@ -2,11 +2,11 @@
 	Default with a specified project type will override default with no project type.  This allows us to do things like
 	set bleeds for everything, and then set no bleeds for Letterhead.  The letterhead setting will override.
         <p class="buttons">
-			<? echo ( ssi::writeButton( $log, $dbh, 'Save','save.gif',"f1.btnFunction.value='Save';fmChange=3;fmCheck(f1);", '', 'Save' ); ) ?>
-			<? echo ( ssi::writeButton( $log, $dbh, 'Reset','reset.gif',"f1.reset()';", '', 'Reset' ); ) ?>
+			<? echo ( button( 'Save', { onclick=>"f1.btnFunction.value='Save';fmChange=3;fmCheck(f1);", text=>'Save' } ); ) ?>
+			<? echo ( button( 'Reset', { onclick=>'f1.reset();' } ); ) ?>
 			<input type="file" name="fileImport" >
-			<? echo ( ssi::writeButton( $log, $dbh, 'Import','import.gif',"f1.action='project_defaults.html';f1.btnFunction.value='Import';f1.submit();", '', 'Import' ); ) ?>
-			<? echo ( ssi::writeButton( $log, $dbh, 'Export','export.gif',"f1.action='project_defaults.html?Download';f1.btnFunction.value='Export';f1.submit();", '', 'Export' ); ) ?>
+			<? echo ( button( 'Import', { onclick=>"f1.action='project_defaults.html';f1.btnFunction.value='Import';f1.submit();", text=>'Import' } ); ) ?>
+			<? echo ( button( 'Export', { onclick=>"f1.action='project_defaults.html?Download';f1.btnFunction.value='Export';f1.submit();", text=>'Export' } ); ) ?>
 		</p>
 	<br class="spacer">
 	<table class="List">
@@ -43,13 +43,13 @@
 		<tr> 
 			<td>&nbsp;</td>
 			<td>
-				<select name="txtID-New">
+				<select name="projecttype_id-New">
 					<option value=""> all </option>
-					<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::ProjectType->find('order'=>'lower(name)')] ); ) ?>
+					<? echo ( make_drop_down( openprint::ProjectType->dropdown( order=>'lower(name)') ); ) ?>
 				</select>
 				</td>
-			<td><input type="text" name="txtName-New"></td>
-			<td><input type="text" name="txtValue-New"></td>
+			<td><input type="text" name="name-New"></td>
+			<td><input type="text" name="value-New"></td>
 		</tr>
 	</table>
 	<input type="hidden" name="btnFunction"/>

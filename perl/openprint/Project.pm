@@ -1509,21 +1509,23 @@ sub change_ProjectType {
     my $ProjectType = $_[1];
     my $OldProjectType = $Project->Type();
 # Handle ProjectType
-    if ( $OldProjectType->id() != $ProjectType->id() ) {
-        if ( $$services{''} ) {
-            foreach ( @{$$services{''}} ) { openprint::print_project::delete_service( $$Project{id}, $_ ); };
-        } # end if
-        delete $$services{''};
-        if ( $OldProjectType->type() ne $ProjectType->type() ) {
-            $log->debug("Removing sigs because project type is different");
-            # Brochure to multipage or nice versa.  Have to remove sigs.
-            foreach ( $Project->signatures() ) { openprint::print_project::delete_service( $$Project{id}, $_ ); }
-            delete $$services{Signature};
-        } else {
-            $openprint::log->debug("Not Removing sigs because project type is same $$OldProjectType{type} == $$ProjectType{type}");
-        } # end if
-    } else {
-            $openprint::log->debug("Not Removing sigs because project type is same $$OldProjectType{id} == $$ProjectType{id}");
+	if ( $$Project{type_id} ) {
+		if ( $OldProjectType->id() != $ProjectType->id() ) {
+			if ( $$services{''} ) {
+				foreach ( @{$$services{''}} ) { openprint::print_project::delete_service( $$Project{id}, $_ ); };
+			} # end if
+			delete $$services{''};
+			if ( $OldProjectType->type() ne $ProjectType->type() ) {
+				$log->debug("Removing sigs because project type is different");
+				# Brochure to multipage or nice versa.  Have to remove sigs.
+				foreach ( $Project->signatures() ) { openprint::print_project::delete_service( $$Project{id}, $_ ); }
+				delete $$services{Signature};
+			} else {
+				$openprint::log->debug("Not Removing sigs because project type is same $$OldProjectType{type} == $$ProjectType{type}");
+			} # end if
+		} else {
+			$openprint::log->debug("Not Removing sigs because project type is same $$OldProjectType{id} == $$ProjectType{id}");
+		} # end if
     } # end if
 	if ( $$Project{id} ) {
 		if ( ! $$services{''} ) {
