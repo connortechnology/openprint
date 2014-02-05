@@ -26,7 +26,7 @@ my @fields = (
 	'colour_bar_orientation',
 	'cropmark_top','cropmark_bottom','cropmark_left','cropmark_right',
 	'stock_width','stock_height',
-	'quantity',
+	'quantity','width_folds','height_folds',
 	'bleed_size',
 	'specs',
 	'pages',
@@ -142,8 +142,9 @@ sub set {
 } # end sub set
 
 sub copy {
+	my $src = $_[0];
 	my $copy = new openprint::Imposition();
-	@$copy{@fields} = @{$_[0]}{@fields};
+	@$copy{@fields} = @$src{@fields};
 	$$copy{paper} = $$copy{paper}->clone() if $$copy{paper};
 	return $copy
 } # end copy

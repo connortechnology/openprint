@@ -405,6 +405,7 @@ sub signature_calc {
 		$SignatureImposition->display('Signature Imposition:');
 	} # end if
 
+
 	my $stitching_service_index;
 	if ( $$services{'SaddleStitching'} ) {
 		if ( ! $stitching_specs ) {
@@ -539,6 +540,11 @@ $openprint::log->error("No folds from sigimpo");
 	my @Set_Of_Impositions;
 	my @All_Impositions;
 
+	my $width_folds = Math::Round::nearest( 1, $$sig_specs{'txtWidth'}/$$sig_specs{'txtFinalWidth'})-1;
+	my $height_folds = Math::Round::nearest( 1, $$sig_specs{'txtHeight'}/$$sig_specs{'txtFinalHeight'}) -1;
+	@$SignatureImposition{'width_folds','height_folds'} = ( $width_folds, $height_folds );
+	$openprint::log->debug("FOlds: $width_folds x $height_folds");
+
 	# IF it's a W&T, we have to cut in half first, so just do it.
 	if ( $$SignatureImposition{runstyle} eq 'Work & Turn' ) {
 		my $i = $SignatureImposition->copy();
@@ -592,30 +598,26 @@ $openprint::log->error("No folds from sigimpo");
 			} # end foreach
 
 			@Set_Of_Impositions = @Impositions if $modified;
-			if ( DEBUG and 0 ) {
+			if ( DEBUG ) {
 				foreach my $I ( @Impositions ) {
 					$I->display('Results from dutch cuts');
 				} # end foreach
 			} # end if
 		} # end if
 
-		my $cut_dimension = '';
 		if ( $$sig_specs{'txtFinalWidth'} and $$sig_specs{'txtFinalHeight'} ) {
 			# Something else entirely
 			my @Impositions = @Set_Of_Impositions;
 			@Set_Of_Impositions = ();
 			foreach my $I ( @Impositions ) {
-				# Used to be sprintf... question is, should it be int or round? I think int.	
-				my $width_folds = int(($$sig_specs{'txtWidth'}/$$sig_specs{'txtFinalWidth'})-1 );
-				my $height_folds = int(($$sig_specs{'txtHeight'}/$$sig_specs{'txtFinalHeight'}) -1 );
-				if ( $width_folds and $height_folds ) {
+				if ( $$I{width_folds} and $$I{height_folds} ) {
 	# All impositions must be 1 out. This may not be true
 					my $Singleton = $I->copy();
 					$Singleton->rows( 1 );
 					$Singleton->columns( 1 );
 					$Singleton->quantity( $I->quantity()*$I->imposition() );
 					push @Set_Of_Impositions, $Singleton;
-				} elsif ( $width_folds ) {
+				} elsif ( $$I{width_folds} ) {
 					my $Singleton = $I->copy();
 					if ( $$I{'image_orientation'} eq 'Vertical' ) {
 						$Singleton->quantity( $I->quantity()*$I->columns() );
@@ -625,7 +627,7 @@ $openprint::log->error("No folds from sigimpo");
 						$Singleton->rows( 1 );
 					} # end if
 					push @Set_Of_Impositions, $Singleton;
-				} elsif ( $height_folds ) {
+				} elsif ( $$I{height_folds} ) {
 					my $Singleton = $I->copy();
 					if ( $$I{image_orientation} eq 'Vertical' ) {
 						$Singleton->quantity( $I->quantity()*$I->rows() );
@@ -636,15 +638,18 @@ $openprint::log->error("No folds from sigimpo");
 					} # end if Orientation
 					push @Set_Of_Impositions, $Singleton;
 				} else {
+$openprint::log->debug("No folds") if DEBUG;
 					push @Set_Of_Impositions, $I;
 				} # end if
 			} # end foreach I in the set of impositons
+		} else {
+			$openprint::log->warn("No final width and height!");
 		} # end if finalwidth and height
 		# Now we have a base set of Maximal Impositions.	Now some of the I's in this set may have an imposition > 1.	
 		# Problem is that we apparently also need to price the situation of doing them 1 out, and everything in between.	
 		if ( DEBUG and 1 ) {
 			foreach my $I ( @Set_Of_Impositions ) {
-				$I->display('Results after initial cuts');
+				$I->display('Results after initial cuts qty: ' . $$I{quantity} . 'x ');
 			} # end foreach
 		} # end if
 
@@ -662,6 +667,7 @@ $openprint::log->error("No folds from sigimpo");
 
 	} else { # is a book signature
 		if ( DEBUG ) {
+			$openprint::log->debug("Is a book signatures: $$sig_specs{txtSignatureType}");
 			foreach my $I ( @Set_Of_Impositions ) {
 				$I->display('Results after initial cuts');
 			} # end foreach
@@ -725,11 +731,18 @@ $openprint::log->debug("Sets of impos != 1 for $$Equipment{strid}") if DEBUG;
 			my $complete = 1;
 
 			my %folds;
+			$openprint::log->debug("Impositions in this set: " . @$Set_Of_Impositions );
 			for ( my $imp_index = 0; $imp_index < @$Set_Of_Impositions; $imp_index += 1 ) {
 				my $Imposition = $$Set_Of_Impositions[$imp_index];
 
 				if ( DEBUG ) {
-					$Imposition->display('trying');
+					$Imposition->display('trying ' . $$Imposition{quantity} . 'x ');
+				} # end if
+
+				if ( $$Imposition{imposition} > 3 and ( $$Imposition{columns} > 1 and $$Imposition{rows} > 1 ) ) {
+$openprint::log->debug("Can't do that impo");
+					$complete = 0;
+					last;
 				} # end if
 
 				if ( my $required_bleed = $Equipment->specification($$Imposition{imposition}.'out Required Bleed') ) {
@@ -1307,7 +1320,8 @@ if ( 0 ) {
 				} # end if
 			} else {
 				# First max impo should always be the best...
-				last;
+				# Not neccessarily
+				#last;
 			} # end if
 
 		} # end foreach set of Impositions
