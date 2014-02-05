@@ -382,7 +382,7 @@ sub send {
 			$results .= (new openprint::Email())->send(
 					FROM    => sprintf('"%s %s" <%s>', @$self{'by_firstname','by_lastname','by_email'}),
 					#TO    => sprintf('"%s %s" <%s>', @$self{'by_firstname','by_lastname','by_email'}),
-					BCC		=>	'iconnor@point-one.com',
+					#BCC		=>	'iconnor@point-one.com',
 					TO      => sprintf('"%s %s" <%s>', @$self{'for_firstname','for_lastname','for_email'}),
 					SUBJECT => "Quote $$self{id} : " . $self->reference(),
 					ATTACHMENTS	=>	[ @attachments, @project_summaries ],

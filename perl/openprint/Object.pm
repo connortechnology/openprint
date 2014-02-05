@@ -55,7 +55,7 @@ sub new {
 
 	my $ref = ref $id;
 	if ( ! $ref ) {
-		if ( $id and (!$data) and $openprint::Object::cache{$config{'db_name'}}{$parent} and $openprint::Object::cache{$config{'db_name'}}{$parent}{$id} ) {
+		if ( $id and (!$data) and $cache{$config{db_name}}{$parent} and $cache{$config{db_name}}{$parent}{$id} ) {
 #$log->debug("Loading from cache $parent $id");
 			# If the object is cached
 			return $openprint::Object::cache{$config{'db_name'}}{$parent}{$id};
@@ -72,8 +72,11 @@ sub new {
 			if ( $id ) {
 				# Using $id instead of $$self{od} means that we cache non existent entries
 			#if ( $$self{'id'} ) {
-				$openprint::Object::cache{$config{'db_name'}}{$parent}{$id} = $self;
+$log->debug("Caching $config{db_name} $parent $id = $self") if $debug;
+				$cache{$config{db_name}}{$parent}{$id} = $self;
 			} # end if
+		} else {
+$log->debug("NOT Caching $config{db_name} $parent $id = $self") if $debug;
 		} # end if
 		return $self;
 	} elsif ( ref $id eq 'HASH' ) {
@@ -280,7 +283,12 @@ $log->debug("No serial") if $debug;
 	sql::end_transaction( $local_dbh, $ac );
 	$self->load();
 #$log->debug("Got here");
-	delete $openprint::Object::cache{$config{'db_name'}}{$type}{$$self{id}};
+	if ( $$fields{id} ) {
+		if ( ! $openprint::Object::cache{$config{'db_name'}}{$type}{$$self{id}} ) {
+			$openprint::Object::cache{$config{'db_name'}}{$type}{$$self{id}} = $self;
+		} # end if
+	#delete $openprint::Object::cache{$config{'db_name'}}{$type}{$$self{id}};
+	} # end if
 #$log->debug("after delete");
 	eval 'if ( %'.$type.'::find_cache ) { %'.$type.'::find_cache = (); }';
 #$log->debug("after clear cache");

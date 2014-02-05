@@ -1213,10 +1213,12 @@ sub add_service {
 	my $ac = sql::start_transaction( $dbh );
 	# Shoudln't need to lock this... theya re all just inserts
 	#$dbh->do( 'LOCK TABLE tbl_Service_Specifications IN EXCLUSIVE MODE' ) or $log->error( $dbh->errstr() );
+if ( $debug ) {
 $log->debug("Project: $$self{id} $self");
 foreach my $k ( keys %{$$self{Services}} ) {
 	$log->debug(" Services: $k => " . join( ',', @{$$self{Services}{$k}} ) );
 } # end ofreach
+}
 
 	my $Service = new openprint::Project_Service();
 	$Service->save({ project_id=>$$self{id}, ( status=>$$options{status} ? $$options{status} : 'uncalculated' ), servicetype_id=>$ServiceType->id()});
@@ -1473,7 +1475,8 @@ $openprint::log->debug("Project::recalculate");
 	my $services = $self->services();
 	if ( $$services{''} ) {
 		my $status = openprint::service::internal_calc( $openprint::log, $openprint::dbh, \%openprint::variable, $$self{'id'}, $$services{''}[0], $self->Type()->type() );
-		if ( $status ne 'calculated' ) {
+		# Why is this ne calculated... if the project service can't calc... then neither can the signatures
+		if ( $status eq 'calculated' ) {
 			# Recalc signatures
 			my $module = 'openprint::Estimating::'.$self->Type()->type();
 			if ( my $function = $module->can( 'calculate_signatures' ) ) {
@@ -1481,7 +1484,7 @@ $openprint::log->debug("Project::recalculate");
 $openprint::log->debug("Calculate_Sigs: status: $status");
 				openprint::service::status( $$self{'id'}, $$services{''}[0], $status );
 			} # end if
-			openprint::service::auto_calculate( $self, $$services{''}[0] );
+			openprint::service::auto_calculate( $self, $$services{''}[0] ) if $status eq 'calculated';
 		} # end if
 	} # end if
 	$self->update_status();
