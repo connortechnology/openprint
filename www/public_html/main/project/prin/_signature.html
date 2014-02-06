@@ -110,4 +110,5 @@
 	</ul>
 </div>
 </fieldset>
+<? echo ( button( 'CopySignature'.$$variable{Signature}, { onclick=>qq`copy_group($$variable{Signature});`, text=>'Copy Signature Group' } ); ) ?>
 <? endif ( $$variable{Signature} ) ?>
