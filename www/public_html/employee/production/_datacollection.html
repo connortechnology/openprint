@@ -17,7 +17,7 @@
 					) ) {
 		
 				my $Project = $PF->Project();
-				my $Service = $Project->Service($PF->service_id()) if $PF->service_id();;
+				my $Service = $Project->Service($PF->service_id()) if $PF->service_id();
 				my $specs = $Service->specs() if $Service;
 
 				$html .= sprintf(q`

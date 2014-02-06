@@ -17,7 +17,7 @@
 package openprint::Estimating::Stitching;
 use strict;
 
-use constant DEBUG => 0;
+use constant DEBUG => 1;
 
 require openprint::Equipment;
 require openprint::service;
@@ -204,6 +204,9 @@ $I->display('In Stitching:') if DEBUG;
 				next if ! $fold_qty;
 				my $type = $$folding_specs{"FoldType-$$sig_specs{SignatureIndex}-$qty_index-$index"};
 				next if ! $type;
+				if ( $$folding_specs{"FoldImposition-$$sig_specs{SignatureIndex}-$qty_index-$index"} < $imposition ) {
+					$imposition = $$folding_specs{"FoldImposition-$$sig_specs{SignatureIndex}-$qty_index-$index"};
+				} # en dif
 
 				my ( $pages ) = $type =~ /(\d+)PageFold/;
 				if ( ! $pages ) {
@@ -377,9 +380,11 @@ while ( ! $bestPrice and $imposition ) {
 				next;
 			} # end if
 		} # end if
-		if ( ( $Folding_Equipment->specification('Folding Capable') eq 'When Stitching' ) and ( $Folding_Equipment->id() != $Equipment->id() ) ) {
-			$results{Breakdown} .= $Equipment->strid() . ' is not the folding equipment<br/>';
-			next;
+		if ( $Folding_Equipment->specification('Folding Capable') eq 'When Stitching' ) {
+			if ( $Folding_Equipment->id() != $Equipment->id() ) {
+				$results{Breakdown} .= $Equipment->strid() . ' is not the folding equipment<br/>';
+				next;
+			} 
 		} # end if
 		my $price = get_price( $Project, $ServiceType, $Equipment, $specs, $plusCover, $qty_index );
 		$$price{'ComparisonPrice'} = $$price{'txtPrice'} + $$folding_specs{"Price-$$sig_specs{SignatureIndex}-$qty_index"};
@@ -476,10 +481,10 @@ sub calc {
 				$openprint::log->warn("Setting imposition to 1 : Imp:" . $$sig_specs{'txtImposition'.$qty_index} . ' imposition' );
 				$imposition = 1 
 			} elsif ($$sig_specs{'hdnImageOrientation'.$qty_index} eq 'Vertical' and $$sig_specs{'hdnImpositionRows'.$qty_index} % 2 ) {
-				$openprint::log->warn("Setting imposition to 1 : Imp:" . $$sig_specs{'txtImposition'.$qty_index} . ' vertical and rows' );
+				$openprint::log->warn("Setting imposition to 1 : Imp:" . $$sig_specs{'txtImposition'.$qty_index} . ' vertical and odd rows' );
 				$imposition = 1 
 			} elsif ($$sig_specs{'hdnImageOrientation'.$qty_index} eq 'Horizontal' and $$sig_specs{'hdnImpositionColumns'.$qty_index} % 2 ) {
-				$openprint::log->warn("Setting imposition to 1 : Imp:" . $$sig_specs{'txtImposition'.$qty_index} . ' horizontal and rows' );
+				$openprint::log->warn("Setting imposition to 1 : Imp:" . $$sig_specs{'txtImposition'.$qty_index} . ' horizontal and odd rows' );
 				$imposition = 1 
 			} elsif ( $$sig_specs{'txtImposition'.$qty_index} % 4 and sets::isin( $$sig_specs{'ddmRunStyle'.$qty_index}, ['Work & Turn','Work & Tumble'] ) ) {
 				$openprint::log->warn("Setting imposition to 1 : Imp:" . $$sig_specs{'txtImposition'.$qty_index} . ' ' . $$sig_specs{'ddmRunStyle'.$qty_index} );
@@ -533,6 +538,7 @@ sub calc {
 		$$specs{'hdnBreakdown'.$qty_index} .= "Face Trim: $$specs{'Width'} Spine Length: $$specs{'Height'}<br/>";
 
 		if ( $$specs{'OverridePockets'.$qty_index} ne 'Y' ) {
+			$$specs{"folding_imposition$qty_index"} = undef;
 			foreach my $signature_service_index ( @signatures ) {
 				my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
 
@@ -549,6 +555,7 @@ sub calc {
 
 				my %pages;
 				my $sig_pages = $$sig_specs{'PageQuantity'.$qty_index};
+
 				if ( $folding_specs ) {
 					my %folds;
 					foreach my $index ( 1 .. 4 ) {
@@ -556,8 +563,8 @@ sub calc {
 						next if ! $fold_qty;
 						my $type = $$folding_specs{"FoldType-$$sig_specs{SignatureIndex}-$qty_index-$index"};
 						next if ! $type;
-						if ( $$folding_specs{"FoldImposition-$$sig_specs{SignatureIndex}-$qty_index-$index"} < $$specs{"txtImposition$qty_index"} ) {
-							$$specs{"txtImposition$qty_index"} = $$folding_specs{"FoldImposition-$$sig_specs{SignatureIndex}-$qty_index-$index"};
+						if ( (!defined $$specs{"folding_imposition$qty_index"}) or ( $$folding_specs{"FoldImposition-$$sig_specs{SignatureIndex}-$qty_index-$index"} < $$specs{"folding_imposition$qty_index"} ) ) {
+							$$specs{"folding_imposition$qty_index"} = $$folding_specs{"FoldImposition-$$sig_specs{SignatureIndex}-$qty_index-$index"};
 						} # ebduf
 
 						my ( $pages ) = $type =~ /(\d+)PageFold/;
@@ -605,7 +612,7 @@ $openprint::log->debug(" fold qty * pages($pages) == sig_pages($sig_pages) foldQ
 							$pages{$pages} += $folds{$pages};
 						} # end if
 					} # end foreach index
-				} # end if
+				} # end if folding_specs
 
 				# If not all pages have been folde, then revert to just pull from the sig.
 				if ( misc::sum( map { $_ * $pages{$_} } keys %pages ) < $sig_pages ) {
@@ -618,6 +625,7 @@ $openprint::log->debug(" fold qty * pages($pages) == sig_pages($sig_pages) foldQ
 					} # end foreach
 				} # end if
 			} # end foreach signature
+			$$specs{"Imposition$qty_index"} = $$specs{"folding_imposition$qty_index"} if defined $$specs{"folding_imposition$qty_index"} and ( $$specs{"Imposition$qty_index"} > $$specs{"folding_imposition$qty_index"} );
 		} else { # Override Pockets
 			foreach my $pages ( 4, 8, 12, 16, 20, 24, 32, 36, 40, 48, 64, 96 ) {
 				$$specs{"txtPockets$qty_index"} += $$specs{'txtSignatureQty'.$pages.'Page-'.$qty_index};
@@ -730,6 +738,10 @@ $openprint::log->debug(" fold qty * pages($pages) == sig_pages($sig_pages) foldQ
 				} # end if
 				if ( $$folding_specs{"ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} != $Equipment->id() ) {
 					$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Folding equipment not the same: %s<br/>',$$folding_specs{"ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} );
+					next;
+				} # end if
+				if ( ( defined $$specs{"folding_imposition$qty_index"} ) and ( $$specs{"folding_imposition$qty_index"} != $$specs{"Imposition$qty_index"} ) ) {
+					$$specs{'hdnBreakdown'.$qty_index} .= 'Folding and stitching imposition must match when inline stitching.<br/>';
 					next;
 				} # end if
 			} # end if

@@ -1003,7 +1003,7 @@ sub calc {
 			$$specs{'alert'} .= $results{'alert'};
 			$$specs{'hdnBreakdown'.$qty_index} .= $results{'Breakdown'};
 
-			my $minCharge = openprint::service::get_price( 'CuttingChargeMinimum', undef, $results{'Equipment'} );
+			my $minCharge = openprint::service::get_price( 'CuttingSignatureChargeMinimum', undef, $results{'Equipment'} );
 			$results{'Price'} = $minCharge if $results{'Price'} and ($results{'Price'} < $minCharge);
 
 			$$specs{"txtRegularCutPrice-$signature_index-$qty_index"} = Math::Round::nearest( 0.01, $results{'Price'} );
@@ -1012,6 +1012,9 @@ sub calc {
 			$$specs{"ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} = $results{'Equipment'} ? $results{'Equipment'}->id() : '';
 			$$specs{'hdnBreakdown'.$qty_index} .= '<hr/>';
 		} # end foreach signature_index
+
+		my $minCharge = openprint::service::get_price( 'CuttingChargeMinimum' );
+		$price = $minCharge if $price and ($price < $minCharge);
 
 		if ( $$specs{"OverridePrice$qty_index"} eq 'Y' ) {
 			$$specs{"txtPrice$qty_index"} = sprintf( $config{'ProjectMoneyFormat'}, $$specs{"txtPrice$qty_index"} );

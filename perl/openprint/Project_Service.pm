@@ -33,18 +33,22 @@ $serial = 'ContentsServiceIndex_seq';
 @identified_by = ( 'service_id' );
 
 sub Project {
-	return new openprint::Project( $_[0]{'project_id'} );
+	return new openprint::Project( $_[0]{project_id} );
 } # end sub Project
 
 sub Operator {
-	return new openprint::User( $_[0]{'operator_id'} );
+	return new openprint::User( $_[0]{operator_id} );
 } # end sub Operator
 
 sub specs {
-	if ( ! $_[0]{'specs'} ) {
-		$_[0]{'specs'} = openprint::service::get_specs_ref( $_[0]->Project(), $_[0]{'service_id'} );
+	if ( ! $_[0]{specs} ) {
+		if ( $_[0]{service_id} ) {
+			$_[0]{specs} = openprint::service::get_specs_ref( $_[0]->Project(), $_[0]{'service_id'} );
+		} else {
+			$_[0]{specs} = {};
+		} # end if
 	} # end if
-	return $_[0]{'specs'};
+	return $_[0]{specs};
 } # end sub specs
 
 sub ServiceType {
@@ -106,18 +110,18 @@ sub runtime {
 	my $Project = $self->Project();
     my $qty_index = $Project->ordered_quantity_index();
     my $specs = $self->specs();
-#$log->debug("Project Service runtime $$specs{'ServiceType'}");
-    if ( $$specs{'ProjectType'} or ( $$specs{'ServiceType'} eq 'Signature' ) ) {
+#$log->debug("Project Service runtime $$specs{ServiceType}");
+    if ( $$specs{ProjectType} or ( $$specs{ServiceType} eq 'Signature' ) ) {
 		my $time = openprint::Estimating::Printing::runtime( $Project, $specs, $Equipment, $impressions, $speed );
-		return $$time{'Total'} if $time;
+		return $$time{Total} if $time;
 		return 0;
-    } elsif ( $$specs{'ServiceType'} eq 'Cutting' ) {
+    } elsif ( $$specs{ServiceType} eq 'Cutting' ) {
         return openprint::Estimating::Cutting::runtime( $Project, $self, $Equipment, $qty_index, $impressions, $speed, $pertains_to );
-    } elsif ( $$specs{'ServiceType'} eq 'Folding' ) {
+    } elsif ( $$specs{ServiceType} eq 'Folding' ) {
        return openprint::Estimating::Folding::runtime( $Project, $self, $Equipment, $qty_index, $impressions, $speed, $pertains_to );
-    } elsif ( $$specs{'ServiceType'} eq 'Drilling' ) {
+    } elsif ( $$specs{ServiceType} eq 'Drilling' ) {
         return openprint::Estimating::Drilling::runtime( $Project->id(), $$self{'service_id'}, $specs, $qty_index );
-    } elsif ( sets::isin( $$specs{'ServiceType'}, 'SaddleStitching','LoopStitching' ) ) {
+    } elsif ( sets::isin( $$specs{ServiceType}, 'SaddleStitching','LoopStitching' ) ) {
         return openprint::Estimating::Stitching::runtime( $Project, $self, $Equipment, $qty_index, $speed );
     } # end if
 
@@ -145,7 +149,7 @@ sub delete {
 	} # end foreach Job
 
 	my $specs = $self->specs();
-	$self->Project()->add_to_log( @openprint::session{'company_id','user_id'}, "Deleted service $$specs{'ServiceType'} $$specs{'ServiceName'}." );
+	$self->Project()->add_to_log( @openprint::session{'company_id','user_id'}, "Deleted service $$specs{ServiceType} $$specs{ServiceName}." );
 	sql::end_transaction( $openprint::dbh, $ac );
 } # end sub delete
 
