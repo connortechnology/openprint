@@ -194,7 +194,7 @@
 
 				foreach my $paper_id ( keys %manifest_weight ) {
 					my $Paper = new openprint::Paper( $paper_id );
-					$html .= sprintf('%s : %dlbs : %d %s%s', $Paper->to_string(), $manifest_weight{$paper_id}, $manifest_skids{$paper_id},
+					$html .= sprintf('%s : %d%s : %d %s%s', $Paper->to_string(), $manifest_weight{$paper_id}, $Paper->units(), $manifest_skids{$paper_id},
   ( $Paper->type() eq 'Roll' ? 'roll' : 'skid' ), ( $manifest_skids{$paper_id} ==1 ? '' : 's' ) );
 					if ( openprint::usergroup::is_user_in( ['Accounting','InventoryManager'], $session{'user_id'} ) ) {
 						my $Type = openprint::Manifest_Content_Type->find_one('manifest_id'=>$Manifest->id(), 'paper_id'=>($paper_id?$paper_id:undef));
@@ -215,7 +215,7 @@
 					$html .= '<span class="warning"><br/>Actual skid contents<br/>';
 					foreach my $paper_id ( keys %real_weight ) {
 						my $Paper = new openprint::Paper( $paper_id );
-						$html .= sprintf('%s : %dlbs : %d %s%s<br/>', $Paper->to_string(), $real_weight{$paper_id}, $real_skids{$paper_id}, ( $Paper->type() eq 'Roll' ? 'roll' : 'skid' ), ($real_skids{$paper_id} ==1 ? '' : 's' ) );
+						$html .= sprintf('%s : %d%s : %d %s%s<br/>', $Paper->to_string(), $real_weight{$paper_id}, $Paper->units(), $real_skids{$paper_id}, ( $Paper->type() eq 'Roll' ? 'roll' : 'skid' ), ($real_skids{$paper_id} ==1 ? '' : 's' ) );
 					} # end foreach
 					$html .= '</span>';
 				} # end if

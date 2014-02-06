@@ -136,7 +136,7 @@
 								. '</td>';
 					} # end if
 					if ( $SkidContents and @{$SkidContents} ) {
-						$html .= '<td class="in_stock">'. Number::Format::format_number( Math::Round::nearest( 1, $$SkidContents[0]->quantity() ) ) . ' lbs</td>';
+						$html .= '<td class="in_stock">'. Number::Format::format_number( Math::Round::nearest( 1, $$SkidContents[0]->quantity() ) ) . ' '.$Paper->units().'</td>';
 						$html .= '<td class="last_seen">'. $$SkidContents[0]->Skid()->last_seen_days().' days</td>';
 					} else {
 						$html .= '<td colspan="2">&nbsp;</a>';
@@ -151,7 +151,7 @@
 
 				$html .= '<tr class="totals"><td>Totals:</td><td colspan="2">'.scalar @Contents . ' skids/rolls</td>';
 				if ( $Type->type() eq 'Sheet' ) {
-					my $lbs = $total*$Paper->wpsi()*$Paper->width()*$Paper->height();
+					my $lbs = $total*$Paper->wpsi()*$Paper->area();
 					$html .= sprintf('<td class="qty_lbs">%1$s</td><td class="qty_kgs">%2$s</td><td class="qty_sheets">%3$s</td>',
 							Number::Format::format_number( Math::Round::nearest( 1,$lbs)), Number::Format::format_number(Math::Round::nearest( 1,$lbs/2.2046)), Number::Format::format_number($total) );
 				} else { # A Roll
