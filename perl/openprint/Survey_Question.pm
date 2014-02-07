@@ -31,7 +31,7 @@ $serial = 'survey_questions_id_seq';
 
 sub Available_Answers {
 	return () if ! $_[0]{'id'};
-	return openprint::Survey_Question_Available_Answer->find('question_id'=>$_[0]{'id'});
+	return openprint::Survey_Question_Available_Answer->find(question_id=>$_[0]{id}, order=>'sorting' );
 } # end sub Available_Answers
 
 sub delete {

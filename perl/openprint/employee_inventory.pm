@@ -207,8 +207,10 @@ sub inventory_report {
 			my $weight = 0;
 			if ( $Paper->type() eq 'Roll' ) {
 				$weight = $C->quantity();
-			} else {
+			} elsif ( $Paper->type() eq 'Sheet' ) {
 				$weight += $Paper->sheet_weight() * $C->quantity();
+			} else {
+				$log->error("Unknown stock type! " . $Paper->to_string() );
 			} # end if
 			$total_weight += $weight;
 			$count += 1;

@@ -217,7 +217,7 @@ $RFIDTag->id(),
 			
 				foreach my $C ( $Skid->Contents() ) {
 					my $Paper = $C->Paper();
-					$html .= sprintf( '<a href="/employee/inventory/skid_details.html?skid_id=%d">%s - %d%s %s</a><br/>',
+					$html .= sprintf( '<a href="/employee/inventory/skid_details.html?skid_id=%d">%s - %s %d%s %s</a><br/>',
 						$$Skid{'id'},
 						$Paper->to_string(),
 						( $$C{purpose_id} ? new openprint::StockPurpose( $C->purpose_id() )->name() : '' ),

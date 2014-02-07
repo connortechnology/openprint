@@ -282,7 +282,8 @@ sub find {
 	
 	$sql .= " ORDER BY $params{'order'}" if $params{'order'};
 	if ( @values == 1) {
-		Carp::cluck("Loading all skids?! $sql");
+		$log->warn("Loading all skids!");
+		#Carp::cluck("Loading all skids?! $sql");
 	} # end if
 
 	my $data = $openprint::dbh->selectall_arrayref( $sql, { Slice => {} }, @values );
