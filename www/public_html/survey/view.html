@@ -31,7 +31,7 @@
 			my @Questions = openprint::Survey_Question->find( survey_id=>$$variable{Survey}->id(), category_id=>($$Category{id} ? $$Category{id} : undef ), order=>'sorting' );
 
 			foreach my $Question ( @Questions ) {
-				$html .= sprintf('<li class="Question"><div class="text">%s</div>', $Question->text() );
+$html .= sprintf('<li class="Question"><div class="text">%s</div>', $Question->text() );
 				my $Response = undef;
 				my %Responses;
 				my @Responses = openprint::Survey_Response->find( question_id=>$Question->id() );
