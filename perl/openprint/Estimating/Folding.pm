@@ -24,7 +24,7 @@ require openprint::service;
 
 use vars qw( @folds %fold_types );
 
-use constant DEBUG => 1;
+use constant DEBUG => 0;
 use constant DEBUG_NEEDS => 0;
 
 my @equipment;
@@ -666,12 +666,30 @@ $openprint::log->debug("No folds") if DEBUG;
 		} # end if debug
 
 	} else { # is a book signature
+		my @Impositions = @Set_Of_Impositions;
+		@Set_Of_Impositions = ();
+		foreach my $I ( @Impositions ) {
+			if ( ( $$I{columns} > 1 ) and ( $$I{'image_orientation'} eq 'Vertical' ) ) {
+				my $Singleton = $I->copy();
+				$Singleton->quantity( $I->quantity()*$I->columns() );
+				$Singleton->columns( 1 );
+				push @Set_Of_Impositions, $Singleton;
+			} elsif ( $$I{rows} > 1 and ( $$I{'image_orientation'} eq 'Horizontal' ) ) {
+				my $Singleton = $I->copy();
+				$Singleton->quantity( $I->quantity()*$I->rows() );
+				$Singleton->rows( 1 );
+				push @Set_Of_Impositions, $Singleton;
+			} else {
+				push @Set_Of_Impositions, $I;
+			} # end if
+		} # end foreach I in the set of impositons
 		if ( DEBUG ) {
 			$openprint::log->debug("Is a book signatures: $$sig_specs{txtSignatureType}");
 			foreach my $I ( @Set_Of_Impositions ) {
 				$I->display('Results after initial cuts');
 			} # end foreach
 		} # end if
+
 		#@All_Impositions = ( \@Set_Of_Impositions );
 		@All_Impositions = reduce_impositions( \@Set_Of_Impositions );
 	} # end if SignatureType
