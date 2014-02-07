@@ -23,7 +23,7 @@ my $threading = 0;
 #use threads;
 use constant DEBUG => 0;
 use constant DEBUG_VERSIONS => 0;
-use constant DEBUG_FILTERING => 0;
+use constant DEBUG_FILTERING => 1;
 use constant DEBUG_INITIAL_FILTERING => 0;
 use constant DEBUG_PRICE_DECISIONS => 0;
 use constant DEBUG_INKS => 0;
@@ -3243,11 +3243,13 @@ $log->warn("Getting all impos results: " . @results );
 		} # end foreach I
 		$openprint::log->debug("Bumped $bump_count impos in 3rd filtering");
 		$bump_count = 0;
+if ( 0 ) {
 		@results = map {@{$_}} values %imps;
 		%imps = ();
 		foreach my $I ( @results ) {
+$I->display("Considering");
 			my $Paper = $I->Paper();
-			my $key = join('-',$Paper->width(),$Paper->minimum_order(), $I->pages(),$I->image_orientation(),$I->runstyle());
+			my $key = join('-',$Paper->width(),$Paper->minimum_order(), $I->pages(),$I->image_orientation(),$I->runstyle(), $I->columns() );
 			if ( ! ( $imps{$key} and @{$imps{$key}} ) ) {
 				$imps{$key} = [ $I ];
 				next;
@@ -3257,18 +3259,20 @@ $log->warn("Getting all impos results: " . @results );
 				my $B = $imps{$key}[$i];
 
 				if ( $$B{imposition} < $$I{imposition} ) {
-					my $paper_factor = $Paper->height() / $B->Paper()->height();
+					my $paper_factor = Math::Round::nearest( 1, $Paper->height() / $B->Paper()->height() );
 					my $impo_factor = $$I{imposition} / $$B{imposition};
-					if ( $paper_factor < $impo_factor ) {
+					if ( $paper_factor > $impo_factor ) {
+$B->display("Bumping B paper_factor $paper_factor impo factor: $impo_factor ") if DEBUG_FILTERING;
 						splice @{$imps{$key}}, 0, 1;
 						$i -= 1;
 						$bump_count += 1;
 						next;
 					} 
 				} elsif ( $$B{imposition} > $$I{imposition} ) {
-					my $paper_factor = $B->Paper()->height() / $Paper->height();
+					my $paper_factor = Math::Round::nearest( 1, $B->Paper()->height() / $Paper->height() );
 					my $impo_factor = $$B{imposition} / $$I{imposition};
-					if ( $paper_factor < $impo_factor ) {
+					if ( $paper_factor > $impo_factor ) {
+$I->display("Bumping A paper_factor $paper_factor impo factor: $impo_factor ") if DEBUG_FILTERING;
 						$add = 0;
 							last;
 					} # en dif
@@ -3281,7 +3285,7 @@ $log->warn("Getting all impos results: " . @results );
 			}
 		} # end foreach I
 		$openprint::log->debug("Bumped $bump_count impos in 4th filtering");
-
+}
 	} # end if 3rd
 	@impositions = map {@{$_}} values %imps;
 
