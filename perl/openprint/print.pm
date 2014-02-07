@@ -330,6 +330,7 @@ sub multipage_signatures {
 		if ( $k =~ /^txtSignatureType(\d*)/ ) {
 			my $group_id = $1;
 $log->debug("group $group_id");
+			next if $group_id == 1 and $$param{'rdbCover'} ne 'Different';
 
 			if ( $$param{'GroupPageQuantity'.$group_id} and ! $Project->signatures({'Group'=>$group_id}) ) {
 				$log->debug("adding special group $group_id");

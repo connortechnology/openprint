@@ -24,7 +24,7 @@ require openprint::service;
 
 use vars qw( @folds %fold_types );
 
-use constant DEBUG => 0;
+use constant DEBUG => 1;
 use constant DEBUG_NEEDS => 0;
 
 my @equipment;
@@ -731,7 +731,7 @@ $openprint::log->debug("Sets of impos != 1 for $$Equipment{strid}") if DEBUG;
 			my $complete = 1;
 
 			my %folds;
-			$openprint::log->debug("Impositions in this set: " . @$Set_Of_Impositions );
+			$openprint::log->debug("Impositions in this set: " . @$Set_Of_Impositions ) if DEBUG;
 			for ( my $imp_index = 0; $imp_index < @$Set_Of_Impositions; $imp_index += 1 ) {
 				my $Imposition = $$Set_Of_Impositions[$imp_index];
 
