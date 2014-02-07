@@ -23,7 +23,7 @@ my $threading = 0;
 #use threads;
 use constant DEBUG => 0;
 use constant DEBUG_VERSIONS => 0;
-use constant DEBUG_FILTERING => 1;
+use constant DEBUG_FILTERING => 0;
 use constant DEBUG_INITIAL_FILTERING => 0;
 use constant DEBUG_PRICE_DECISIONS => 0;
 use constant DEBUG_INKS => 0;
