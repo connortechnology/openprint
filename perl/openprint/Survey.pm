@@ -3,6 +3,7 @@ package openprint::Survey;
 our @ISA = qw( openprint::Object );
 
 require sql;
+require openprint::usergroup;
 require openprint::Survey_Question;
 require openprint::Survey_Response;
 
@@ -95,6 +96,7 @@ sub can_edit {
 	return 1 if ! $_[0]{'id'};
 	return 1 if $openprint::session{'user_type'} eq 'A';
 	return 1 if ( $openprint::session{'user_id'} == $_[0]{'created_by'} );
+	return 1 if openprint::usergroup::is_user_in( ['Quality Control'], $openprint::session{user_id} );
 	return 0;
 } # end sub can_edit
 
