@@ -35,10 +35,8 @@
 				my $Response = undef;
 				my %Responses;
 				my @Responses = openprint::Survey_Response->find( question_id=>$Question->id() );
-$log->debug("Responses: " . @Responses );
 				foreach my $R ( @Responses ) {
 					foreach my $answer_id ( $R->answer_ids() ? @{$R->answer_ids()} :() ) {
-$log->debug("Asnwer: $answer_id");
 						push @{$Responses{$answer_id}}, $R;
 					} # end foreach
 					if (
@@ -80,9 +78,14 @@ $log->debug("Asnwer: $answer_id");
 						$html .= sprintf('<select name="answer_id-%1$d" id="answer_id-%1$d">%2$s</select>', $$Question{'id'},
 								make_drop_down( [ map { $_->answer_id(), $_->Answer()->text() } $Question->Available_Answers() ], $Response->answer_ids() ) );
 					} # end if
-					$html .= sprintf('<textarea name="answer-%1$d" id="answer-%1$d" placeholder="additional comments"></textarea></div>
-					<input type="checkbox" name="public-%1$d" value="1" /> Allow others to see my response
-					</li>', $Question->id() );
+					if ( $$Question{allow_comments} ) {
+						$html .= sprintf('<textarea name="answer-%1$d" id="answer-%1$d" placeholder="additional comments"></textarea>', $$Question{id} );
+					}
+					$html .= '</div>';
+					if ( $$Question{allow_public} ) {
+						$html .= sprintf('<input type="checkbox" name="public-%1$d" value="1" /> Allow others to see my response', $$Question{id} );
+					} # end if
+					$html .= '</li>';	
 				} # end if Response
 			} # end foreach Question
 			} # end foreach Category
