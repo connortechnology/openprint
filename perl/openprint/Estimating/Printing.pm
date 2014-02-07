@@ -2683,22 +2683,22 @@ sub calculate_impositions {
 
 		my @press_impositions;
 		if ( $SpreadLayout > 0 ) {
-		if ( DEBUG_FILTERING and 0 ) {
-			$openprint::log->debug("QTY_index: $qty_index before filtering impositions count:" . @{$$impositions{$strid}} . ' on press: ' . $Press->strid());
-			foreach my $imp ( openprint::imposition::sort( @{$$impositions{$strid}} ) ) {
-				$imp->display();
-			} # end foreach
-		}
+			if ( DEBUG_FILTERING and 0 ) {
+				$openprint::log->debug("QTY_index: $qty_index before filtering impositions count:" . @{$$impositions{$strid}} . ' on press: ' . $Press->strid());
+				foreach my $imp ( openprint::imposition::sort( @{$$impositions{$strid}} ) ) {
+					$imp->display();
+				} # end foreach
+			}
 #$openprint::log->debug("SPread Layout: $SpreadLayout");
 
 			my %dont_do_pages = map { $_,  $) } split(',', $Press->specification('DontDoPages'));
 #$openprint::log->debug("NOTin Cache string: $cache_string");
 			if ( %dont_do_pages ) {
-		 @press_impositions = map { $dont_do_pages{$$_{pages}} ? () : $_ } sort { $$b{pages} <=> $$a{pages} } openprint::imposition::convert_impositions( $SpreadLayout, $$project{txtSpreadSize}, $$impositions{$strid} );
+				@press_impositions = map { $dont_do_pages{$$_{pages}} ? () : $_ } sort { $$b{pages} <=> $$a{pages} } openprint::imposition::convert_impositions( $SpreadLayout, $$project{txtSpreadSize}, $$impositions{$strid} );
 			} elsif ( $SpreadLayout > 1 ) {
-			 @press_impositions = openprint::imposition::convert_impositions( $SpreadLayout, $$project{txtSpreadSize}, $$impositions{$strid} );
+				@press_impositions = openprint::imposition::convert_impositions( $SpreadLayout, $$project{txtSpreadSize}, $$impositions{$strid} );
 			} else {
-			 @press_impositions = @{ $$impositions{$strid} };
+				@press_impositions = @{ $$impositions{$strid} };
 			} # end if
 			$openprint::log->debug("Converting Impositions spread Layout: $SpreadLayout : imps:" . @press_impositions) if DEBUG or DEBUG_FILTERING;
 			if ( ! @press_impositions ) {
@@ -2706,7 +2706,7 @@ sub calculate_impositions {
 				$openprint::log->debug("Press $$Press{strid} " . scalar @{$$impositions{$strid}} ) if $$impositions{$strid};
 			} 
 		} else {
-		@press_impositions = @{$$impositions{$strid}} if $$impositions{$strid};
+			@press_impositions = @{$$impositions{$strid}} if $$impositions{$strid};
 		} # end if
 		if ( DEBUG_FILTERING ) {
 			$openprint::log->debug("QTY_index: $qty_index before filtering impositions count:" . @press_impositions . ' on press: ' . $Press->strid());
@@ -2719,6 +2719,10 @@ sub calculate_impositions {
 		foreach my $imp ( @press_impositions ) {
 			$max_impositions{$$imp{pages}} = $$imp{'imposition'} if $$imp{'imposition'} > $max_impositions{$$imp{pages}};
 		} # end foraech
+	my $max_pages = sets::max( keys %max_impositions );
+	$max_pages = Math::Round::nearest(1, $max_pages / 3 );
+	$max_pages = $$project{'txtSpreadSize'} if $max_pages < $$project{'txtSpreadSize'};
+	$openprint::log->debug("Max pages: $max_pages") if DEBUG_FILTERING;
 		foreach my $pages ( keys %max_impositions ) {
 			$max_impositions{$pages} = int($max_impositions{$pages} / 3 );
 		} # end foreach
@@ -2728,6 +2732,14 @@ sub calculate_impositions {
 				$I->display("Ma imposition! for $$I{pages} is $max_impositions{$$I{pages}} > $$I{imposition} ") if DEBUG_FILTERING;
 				next;
 			} 
+			if (($max_pages > $$I{pages}) and ( $$sig_specs{'chkOverridePageQuantity'.$qty_index} ne 'Y' ) ) {
+				$I->display("Max pages: max $max_pages >= imp " . $$I{pages} ) if DEBUG_FILTERING;
+				next;
+			#} elsif ( $max_impositions{$$imp{'pages'}} > $$imp{'imposition'}) {
+# Only do this if not sheet size overrides
+				#$imp->display("Ma imposition! for $$imp{pages} is $max_impositions{$$imp{'pages'}} > $$imp{imposition} ") if DEBUG_FILTERING;
+				#next;
+			} # end if
 			push @impositions, $I;
 		} # end foreach 
 
@@ -2743,9 +2755,9 @@ sub calculate_impositions {
 			$openprint::log->error("NO ddm Stock SheetSize!");
 		} elsif ( ! $$sig_specs{"OverrideStockWidth$qty_index"} ) {
 			if ( $$sig_specs{"StockType$qty_index"} eq 'Roll' ) {
-			@$sig_specs{"OverrideStockWidth$qty_index"} = $$sig_specs{"ddmStockSheetSize$qty_index"} =~ /^([\d\.]+)("? Roll)?\s*$/;
+				@$sig_specs{"OverrideStockWidth$qty_index"} = $$sig_specs{"ddmStockSheetSize$qty_index"} =~ /^([\d\.]+)("? Roll)?\s*$/;
 			} else {
-			@$sig_specs{"OverrideStockWidth$qty_index","OverrideStockHeight$qty_index"} = $$sig_specs{"ddmStockSheetSize$qty_index"} =~ /^([\d\.]+)"?\s*x?\s*([\d\.]+)?"?\s*$/;
+				@$sig_specs{"OverrideStockWidth$qty_index","OverrideStockHeight$qty_index"} = $$sig_specs{"ddmStockSheetSize$qty_index"} =~ /^([\d\.]+)"?\s*x?\s*([\d\.]+)?"?\s*$/;
 			} # end if
 			if ( ! $$sig_specs{"OverrideStockWidth$qty_index"} ) {
 				$openprint::log->error( "Failure to parse ".$$sig_specs{"ddmStockSheetSize$qty_index"});
@@ -2754,14 +2766,6 @@ sub calculate_impositions {
 		} # end if
 	}
 	my @results;
-	my $max_pages = 0;
-	#foreach my $imp ( @impositions ) {
-		#my $pages = $$imp{'pages'};
-		#$max_pages = $pages if $pages > $max_pages;
-	#} # end foreach
-	#$max_pages = Math::Round::nearest(1, $max_pages / 3 );
-	$max_pages = $$project{'txtSpreadSize'} if $max_pages < $$project{'txtSpreadSize'};
-$openprint::log->debug("Max pages: $max_pages") if DEBUG_FILTERING;
 
 	foreach my $imp ( @impositions ) {
 		my $Paper = $imp->Paper();
@@ -2842,14 +2846,6 @@ $openprint::log->debug("Max pages: $max_pages") if DEBUG_FILTERING;
 				} # end if
 			} else {
 			} # end if chkOverriDEPageQuantity
-			if (($max_pages > $$imp{pages}) and ( $$sig_specs{'chkOverridePageQuantity'.$qty_index} ne 'Y' ) ) {
-				$imp->display("Max pages: max $max_pages >= imp " . $$imp{'pages'} ) if DEBUG_FILTERING;
-				next;
-			#} elsif ( $max_impositions{$$imp{'pages'}} > $$imp{'imposition'}) {
-# Only do this if not sheet size overrides
-				#$imp->display("Ma imposition! for $$imp{pages} is $max_impositions{$$imp{'pages'}} > $$imp{imposition} ") if DEBUG_FILTERING;
-				#next;
-			} # end if
 
 		} # end if SpreadLayout
 		push @results, $imp;

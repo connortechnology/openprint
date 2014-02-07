@@ -1422,9 +1422,9 @@ sub calc {
 	my $aq_specs = openprint::service::get_specs_ref( $Project, $$services{'Aqueous'}[0] ) if $$services{'Aqueous'};
 
 	foreach my $qty_index ( $Project->quantity_indexes() ) {
-		$$specs{"txtPrice$qty_index"} =~ s/[^\d\.]//g;
-		$$specs{"Markup$qty_index"} =~ s/[^\d\.\-]//g;
-		$$specs{"txtQuantity$qty_index"} =~ s/[^\d\.]//g;
+		$$specs{"txtPrice$qty_index"} =~ s/[^\d\.]//g if $$specs{"txtPrice$qty_index"};
+		$$specs{"Markup$qty_index"} =~ s/[^\d\.\-]//g if $$specs{"Markup$qty_index"};
+		$$specs{"txtQuantity$qty_index"} =~ s/[^\d\.]//g if $$specs{"txtQuantity$qty_index"};
 		if ( ! $$specs{"txtQuantity$qty_index"} ) {
 			$$specs{"txtQuantity$qty_index"} = $Project->quantity($qty_index) if ! $$specs{"txtQuantity$qty_index"};
 			if ( @{$$services{'Folding'}} > 1 ) {
@@ -1446,11 +1446,14 @@ sub calc {
 
 		my $previous_imposition;
 
-		my @signatures = $Project->signatures( { sort=> 1 });
+		my @signatures = $Project->signatures( { sort => 1 });
 		my @Signature_Impositions;
 		foreach my $sig_id ( @signatures ) {
 			my $sig_specs = openprint::service::get_specs_ref( $Project, $sig_id );
-			next if ! $$sig_specs{'txtImposition'.$qty_index};
+			if ( ! $$sig_specs{'txtImposition'.$qty_index} ) {
+				$openprint::log->debug("No imp in signature $$sig_specs{SignatureIndex}") if DEBUG;
+				next;
+			} # end if
 			my $i = new openprint::Imposition();
 			$i->load( $sig_specs, $qty_index );
 			push @Signature_Impositions, $i;
@@ -1473,9 +1476,11 @@ sub calc {
 		my $calc_hash = {};
 		foreach my $signature_service_index ( @signatures ) {
 			my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
+$openprint::log->debug($$sig_specs{"ddmRunStyle$qty_index"});
 			$$specs{'hdnBreakdown'.$qty_index} .= "<fieldset><legend>Signature: $$sig_specs{SignatureIndex} $$sig_specs{'txtSignatureType'} Ref: $$sig_specs{'txtServiceDescription'}:</legend>";
 			$$specs{'hdnBreakdown'.$qty_index} .= openprint::service::summary( $Project, $signature_service_index ) . '<br/>';
 			$$specs{'hdnBreakdown'.$qty_index} .= openprint::service::summary( $Project, $signature_service_index, $qty_index ) . '<br/>';
+$openprint::log->debug($$sig_specs{"ddmRunStyle$qty_index"});
 
 			$$sig_specs{'PreviousImposition'} = $previous_imposition;
 
@@ -1492,6 +1497,7 @@ sub calc {
 			if ( ( ! exists $$sig_specs{'PageQuantity'.$qty_index} ) or $$sig_specs{'PageQuantity'.$qty_index} ) {
 				my $Imposition = new openprint::Imposition;
 				$Imposition->load( $sig_specs, $qty_index );
+$Imposition->display();
 				my %results = signature_calc( $Project, $signature_service_index, $sig_specs, $specs, $qty_index, $Imposition, $uv_specs, $aq_specs, {}, \@Signature_Impositions, $calc_hash );
 				$$specs{'hdnBreakdown'.$qty_index} .= $results{'Breakdown'};
 				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('MR Waste: %d, Run Waste: %d<br/>', @results{'MakeReadyOvers','RunOvers'} );

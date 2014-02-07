@@ -156,8 +156,10 @@ my %html_replacements = (
 );
 my $replacement_string = join '', keys %html_replacements;
 sub html_escape {
-	$_[0]=~ s/([\Q$replacement_string\E])/$html_replacements{$1}/g;
-	return $_[0];
+	my $thing = $_[0];
+
+	$thing =~ s/([\Q$replacement_string\E])/$html_replacements{$1}/g;
+	return $thing;
 }
 
 sub escape_quotes {
