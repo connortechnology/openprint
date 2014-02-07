@@ -2440,6 +2440,14 @@ if ( ! sets::isin( 'survey_question_categories', \@tables ) ) {
 } # end if
 if ( ! sets::isin( 'survey_questions', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/Survey_Questions.sql}) ) or die $dbh->errstr();
+} else {
+	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='survey_questions'", 'column_name');
+	if ( $$data{allow_comments} ) {
+		$dbh->do('alter table survey_questions add allow_comments BOOLEAN NOT NULL DEFAULT false');
+	}
+	if ( $$data{allow_public} ) {
+		$dbh->do('alter table survey_questions add allow_public BOOLEAN NOT NULL DEFAULT false');
+	}
 } # end if
 if ( ! sets::isin( 'survey_answers', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/Survey_Answers.sql}) ) or die $dbh->errstr();
