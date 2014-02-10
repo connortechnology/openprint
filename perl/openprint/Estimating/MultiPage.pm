@@ -367,6 +367,7 @@ $openprint::log->debug("********************************************************
 				my %specs = %{$new_sig_specs};
 
 				foreach my $qty_index ( $Project->quantity_indexes() ) {
+					my $Imposition;
 					if ( ! ( $$sig_specs{'Additional Impositions'.$qty_index} and @{$$sig_specs{'Additional Impositions'.$qty_index}} ) ) {
 						$specs{'ddmPress'.$qty_index} = '' if $specs{'chkOverridePress'.$qty_index} ne 'Y';
 						$specs{'PageQuantity'.$qty_index} = '' if $specs{'chkOverridePageQuantity'.$qty_index} ne 'Y';
@@ -382,8 +383,18 @@ $openprint::log->debug("********************************************************
 						} # end if
 						$specs{'txtUnitPrice'.$qty_index} = sprintf($openprint::config{'UnitPriceFormat'}, 0 );
 			#$$openprint::log->debug("no additional impos for qty $qty_index");
+                        $Imposition = new openprint::Imposition();
+                        $$Imposition{paper} = new openprint::Paper();
+					} else {
+						$Imposition = shift @{$$sig_specs{'Additional Impositions'.$qty_index}};
 					} # end if
-					my $Imposition = shift @{$$sig_specs{'Additional Impositions'.$qty_index}};
+					if ( ref $Imposition ne 'openprint::Imposition' ) {
+                        cluck( "Bad Imposition! $Imposition" );
+                        $status = 'uncalculated';
+                        next;
+                    } # end if
+
+
 					my $price = $$Imposition{price};
 
 					$Imposition->save( \%specs, $qty_index );
