@@ -160,7 +160,7 @@ sub insert {
 		$l->error("SQL statement execution failed: ($print_command):" . $d->errstr) if $l;
 		return $d->errstr;
 	} # end if
-	$l->debug(sprintf('SQL (%.4f usecs) (%s): ', tv_interval($starttime)*1000, $print_command ) ) if $l;
+	$l->debug(sprintf('SQL (%.4f usecs) (%s): ', tv_interval($starttime)*1000, $print_command ) ) if DEBUG and $l;
 	return;
 } # end sub insert
 
