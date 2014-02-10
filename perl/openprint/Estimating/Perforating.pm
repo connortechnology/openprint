@@ -471,10 +471,10 @@ sub signature_calc {
 				$Results{Breakdown} .= $$specs{"txtHorizontalQty-$$sig_specs{'SignatureIndex'}"} . ' x ' . $$I{rows} . ' rows = ' . $horizontal_rules . ' horizontal rules * ' . $width . ' = ' . $horizontal_length . 'inches of rule.<br/>';
 
 			} elsif ( $I->image_orientation() eq 'Horizontal' and  $$specs{"txtVerticalQty-$$sig_specs{SignatureIndex}"} ) {
-				$horizontal_rules = $$specs{"txtVerticalQty-$$sig_specs{SignatureIndex}"} * $$I{columns};
+				$horizontal_rules = $$specs{"txtVerticalQty-$$sig_specs{SignatureIndex}"} * $$I{rows};
 				$horizontal_length = $horizontal_rules * $width;
 				$horizontal_length *= $CylinderCount if $CylinderCount;
-				$Results{Breakdown} .= $$specs{"txtVerticalQty-$$sig_specs{SignatureIndex}"} . ' x ' . $$I{columns} . ' columns = ' . $horizontal_rules . ' horizontal rules * ' . $width . ' = ' . $horizontal_length . 'inches of rule.<br/>';
+				$Results{Breakdown} .= $$specs{"txtVerticalQty-$$sig_specs{SignatureIndex}"} . ' x ' . $$I{rows} . ' rows = ' . $horizontal_rules . ' horizontal rules * ' . $width . ' = ' . $horizontal_length . 'inches of rule.<br/>';
 			} # end if
 		#$openprint::log->debug("Horizontal: $horizontal_rule");	
 			if ( $horizontal_rules ) {
@@ -534,10 +534,10 @@ sub signature_calc {
 				$vertical_length *= $CylinderCount if $CylinderCount;
 				$Results{Breakdown} .= $$specs{"txtVerticalQty-$$sig_specs{SignatureIndex}"} . ' x ' . $$I{columns} . ' columns = ' . $vertical_rules . ' vertical rules * ' . $height . ' = ' . $vertical_length . 'inches of rule.<br/>';
 			} elsif ( $I->image_orientation() eq 'Horizontal' and $$specs{"txtHorizontalQty-$$sig_specs{SignatureIndex}"} ) {
-				$vertical_rules = $$specs{"txtHorizontalQty-$$sig_specs{'SignatureIndex'}"} * $I->rows();
+				$vertical_rules = $$specs{"txtHorizontalQty-$$sig_specs{'SignatureIndex'}"} * $I->columns();
 				$vertical_length = $vertical_rules * $height;
 				$vertical_length *= $CylinderCount if $CylinderCount;
-				$Results{Breakdown} .= $$specs{"txtHorizontalQty-$$sig_specs{SignatureIndex}"} . ' x ' . $$I{rows} . ' rows = ' . $vertical_rules . ' vertical rules * ' . $height . ' = ' . $vertical_length . 'inches of rule.<br/>';
+				$Results{Breakdown} .= $$specs{"txtHorizontalQty-$$sig_specs{SignatureIndex}"} . ' x ' . $$I{columns} . ' columns = ' . $vertical_rules . ' vertical rules * ' . $height . ' = ' . $vertical_length . 'inches of rule.<br/>';
 			} # end if
 
 		#$openprint::log->debug("Vertical: $vertical_rule");	
