@@ -18,13 +18,14 @@
 use Carp qw( cluck );
 
 use strict;
+use Data::Dumper;
 package openprint::Estimating::Printing;
 my $threading = 0;
 #use threads;
 use constant DEBUG => 0;
 use constant DEBUG_VERSIONS => 0;
 use constant DEBUG_FILTERING => 0;
-use constant DEBUG_INITIAL_FILTERING => 0;
+use constant DEBUG_INITIAL_FILTERING => 1;
 use constant DEBUG_PRICE_DECISIONS => 0;
 use constant DEBUG_INKS => 0;
 use constant DEBUG_STOCK => 0;
@@ -882,6 +883,7 @@ sub get_Stocks {
 
 		if ( ! ( $$specs{'OverrideStockWidth'.$qty_index} or $$specs{'OverrideStockHeight'.$qty_index} ) ) {
 			@$specs{'OverrideStockWidth'.$qty_index, 'OverrideStockHeight'.$qty_index} = split( 'x', $$specs{'ddmStockSheetSize'.$qty_index} );
+$openprint::log->debug("size: " . $$specs{'ddmStockSheetSize'.$qty_index} . ' width: ' . $$specs{'OverrideStockWidth'.$qty_index} . ' height: ' . $$specs{'OverrideStockHeight'.$qty_index} );
 		} # end if
 		my $found = 0;
 
@@ -1471,6 +1473,9 @@ $imp->display(" Less than $max_imposition");
                 next;
             } # end if
             my $A = $imp->Paper();
+				my $a_stock_minimum = $$specs{"txtQuantity$qty_index"} / $$imp{imposition};
+				my $a_stock_lbs = $a_stock_minimum * $A->area() * $A->wpsi();
+$$imp{stock_lbs} = $a_stock_lbs;
 
             my $add = 1;
             if ( $$imp{'dutch_columns'} ) {
@@ -1520,17 +1525,16 @@ $imp->display(" Less than $max_imposition");
 
             my $str = join(',', @$imp{'columns','rows','dutch_columns','dutch_rows','runstyle','image_orientation','bleed_size'}, $$A{digital} );
             #my $str = sprintf('%dx%d+%dx%d-%s-%s-%s-%s', @$imp{'columns','rows','dutch_columns','dutch_rows','runstyle','image_orientation','bleed_size'}, $$A{digital} );
-
+$openprint::log->error("A $$A{width}x$$A{height} " . join(',', @{$$Overrides{"OverrideStockWidth$qty_index"}} ) . ' heights: ' . join(',', @{$$Overrides{"OverrideStockHeight$qty_index"}} ) );
             if ( ($$Overrides{'chkOverrideSheetSize'.$qty_index} eq 'Y') and sets::isin( $$A{width}, $$Overrides{"OverrideStockWidth$qty_index"} )
                     and ( ( $$A{type} eq 'Roll' ) or sets::isin( $$A{height}, $$Overrides{"OverrideStockHeight$qty_index"} ) )
                ) {
 # If it matches the override, the consider it no matter what
+$imp->display("Leeping because of Overrides");
 
             } elsif ( $$Overrides{'OverrideCutOff'.$qty_index} and sets::isin( $$A{height}, $$Overrides{"CutOff$qty_index"} ) ) {
 #$add = 1;
             } elsif ( $imps{$str} ) {
-				my $a_stock_minimum = $$specs{"txtQuantity$qty_index"} / $$imp{imposition};
-				my $a_stock_lbs = $a_stock_minimum * $A->area() * $A->wpsi();
 
                 my $APrice = $$imp{PaperPrice} = $A->get_price('service'=>'Material', weight=> $a_stock_lbs );
 $imp->display('Comparing A QTY $' . $$imp{PaperPrice}{'100lb Price'}. " for $a_stock_lbs" ) if DEBUG_INITIAL_FILTERING;
@@ -1539,8 +1543,6 @@ $imp->display('Comparing A QTY $' . $$imp{PaperPrice}{'100lb Price'}. " for $a_s
                 for ( my $j = 0; $j < @{$imps{$str}}; $j += 1 ) {
                     my $I = $imps{$str}[$j];
                     my $B = $I->Paper();
-					my $b_stock_minimum = $$specs{"txtQuantity$qty_index"} / $$imp{imposition};
-					my $b_stock_lbs = $b_stock_minimum * $B->area() * $B->wpsi();
 
                     if ( $$Overrides{'chkOverrideSheetSize'.$qty_index} and 
 							sets::isin( $$B{width}, $$Overrides{"OverrideStockWidth$qty_index"}) and 
@@ -1549,7 +1551,7 @@ $imp->display('Comparing A QTY $' . $$imp{PaperPrice}{'100lb Price'}. " for $a_s
                     } elsif ( ( $$Overrides{'OverrideCutOff'.$qty_index} eq 'Y' ) and sets::isin( $$B{height}, $$Overrides{"CutOff$qty_index"} ) ) {
                         last;
                     } # end if
-                    $$I{PaperPrice} = $B->get_price( service=>'Material', weight=> $b_stock_lbs ) if ! $$I{PaperPrice};
+                    $$I{PaperPrice} = $B->get_price( service=>'Material', weight=> $$I{stock_lbs} ) if ! $$I{PaperPrice};
                     my $BPrice = $$I{PaperPrice};
 $I->display('Comparing B QTY $' . $$BPrice{'100lb Price'}) if DEBUG_INITIAL_FILTERING;
 if ( ! $$I{PaperPrice} ) {
@@ -1576,7 +1578,7 @@ $openprint::log->debug('removing B larger') if DEBUG_INITIAL_FILTERING;
                     } elsif (
                             ( $B->area() <= $A->area() )
                             and
-                            ( ( $B->minimum_order() <= $A->minimum_order() ) or ( $$B{minimum_order} < $b_stock_lbs ) ) 
+                            ( ( $B->minimum_order() <= $A->minimum_order() ) or ( $$B{minimum_order} < $$B{stock_lbs} ) ) 
                             and
                             ( $$BPrice{'100lb Price'} <= $$APrice{'100lb Price'} )
                             and
@@ -2273,7 +2275,19 @@ $log->warn("There are no quantities!");
 			my $sig_specs = openprint::service::get_specs_ref( $Project, $index );
 			foreach my $qty_index ( $Project->quantity_indexes() ) {
 				if ( $$sig_specs{'chkOverrideSheetSize'.$qty_index} ) {
-					push @{$Overrides{'chkOverrideSheetSize'.$qty_index}}, 'Y';
+					$Overrides{'chkOverrideSheetSize'.$qty_index} = 'Y';
+					if ( ! $$sig_specs{"ddmStockSheetSize$qty_index"} ) {
+						$openprint::log->error("NO ddm Stock SheetSize!");
+					} elsif ( ! $$sig_specs{"OverrideStockWidth$qty_index"} ) {
+
+						if ( @$sig_specs{"OverrideStockWidth$qty_index"} = $$sig_specs{"ddmStockSheetSize$qty_index"} =~ /^([\d\.]+)("? Roll)?\s*$/ ) {
+						} elsif ( 
+							@$sig_specs{"OverrideStockWidth$qty_index","OverrideStockHeight$qty_index"} = $$sig_specs{"ddmStockSheetSize$qty_index"} =~ /^([\d\.]+)"?\s*x\s*([\d\.]+)"?\s*$/ ) {
+						} else {
+							$openprint::log->error( "Failure to parse ".$$sig_specs{"ddmStockSheetSize$qty_index"});
+							$$sig_specs{'chkOverrideSheetSize'.$qty_index} = '';
+						}
+					} # end if
 					push @{$Overrides{"OverrideStockWidth$qty_index"}}, $$sig_specs{"OverrideStockWidth$qty_index"};
 					push @{$Overrides{"OverrideStockHeight$qty_index"}}, $$sig_specs{"OverrideStockHeight$qty_index"};
 				} # end if
@@ -2286,6 +2300,8 @@ $log->warn("There are no quantities!");
 				} # end if
 			} # end foreach
 		} # end foreach
+
+$openprint::log->debug(Data::Dumper::Dumper( \%Overrides ) );
 
 #$openprint::log->debug("before get_impositions: " . ( sprintf('%.4f', tv_interval( [$master_time])*1000) ) .' usecs' );
 		my %impositions = get_impositions( $Project, $specs, $project, $qty, $qty_index, \@possible_presses, \@Papers, \%Overrides );
@@ -4072,7 +4088,23 @@ $imp->display('[warn]');
             my $sig_specs = openprint::service::get_specs_ref( $Project, $index );
             foreach my $qty_index ( $Project->quantity_indexes() ) {
                 if ( $$sig_specs{'chkOverrideSheetSize'.$qty_index} ) {
-                    push @{$Overrides{'chkOverrideSheetSize'.$qty_index}}, 'Y';
+                    $Overrides{'chkOverrideSheetSize'.$qty_index} = 'Y';
+$openprint::log->debug("Sheetsize: " . $$sig_specs{"ddmStockSheetSize$qty_index"} );
+        if ( ! $$sig_specs{"ddmStockSheetSize$qty_index"} ) {
+            $openprint::log->error("NO ddm Stock SheetSize!");
+        } elsif ( ! $$sig_specs{"OverrideStockWidth$qty_index"} ) {
+            if ( $$sig_specs{"StockType$qty_index"} eq 'Roll' ) {
+                @$sig_specs{"OverrideStockWidth$qty_index"} = $$sig_specs{"ddmStockSheetSize$qty_index"} =~ /^([\d\.]+)("? Roll)?\s*$/;
+            } else {
+                @$sig_specs{"OverrideStockWidth$qty_index","OverrideStockHeight$qty_index"} = $$sig_specs{"ddmStockSheetSize$qty_index"} =~ /^([\d\.]+)"?\s*x?\s*([\d\.]+)?"?\s*$/;
+            } # end if
+            if ( ! $$sig_specs{"OverrideStockWidth$qty_index"} ) {
+                $openprint::log->error( "Failure to parse ".$$sig_specs{"ddmStockSheetSize$qty_index"});
+                $$sig_specs{'chkOverrideSheetSize'.$qty_index} = '';
+            }
+        } # end if
+
+
                     push @{$Overrides{"OverrideStockWidth$qty_index"}}, $$sig_specs{"OverrideStockWidth$qty_index"};
                     push @{$Overrides{"OverrideStockHeight$qty_index"}}, $$sig_specs{"OverrideStockHeight$qty_index"};
                 } # end if
