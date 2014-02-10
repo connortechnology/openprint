@@ -25,7 +25,7 @@ my $threading = 0;
 use constant DEBUG => 0;
 use constant DEBUG_VERSIONS => 0;
 use constant DEBUG_FILTERING => 0;
-use constant DEBUG_INITIAL_FILTERING => 1;
+use constant DEBUG_INITIAL_FILTERING => 0;
 use constant DEBUG_PRICE_DECISIONS => 0;
 use constant DEBUG_INKS => 0;
 use constant DEBUG_STOCK => 0;
@@ -1525,12 +1525,12 @@ $$imp{stock_lbs} = $a_stock_lbs;
 
             my $str = join(',', @$imp{'columns','rows','dutch_columns','dutch_rows','runstyle','image_orientation','bleed_size'}, $$A{digital} );
             #my $str = sprintf('%dx%d+%dx%d-%s-%s-%s-%s', @$imp{'columns','rows','dutch_columns','dutch_rows','runstyle','image_orientation','bleed_size'}, $$A{digital} );
-$openprint::log->error("A $$A{width}x$$A{height} " . join(',', @{$$Overrides{"OverrideStockWidth$qty_index"}} ) . ' heights: ' . join(',', @{$$Overrides{"OverrideStockHeight$qty_index"}} ) );
+#$openprint::log->error("A $$A{width}x$$A{height} " . join(',', @{$$Overrides{"OverrideStockWidth$qty_index"}} ) . ' heights: ' . join(',', @{$$Overrides{"OverrideStockHeight$qty_index"}} ) );
             if ( ($$Overrides{'chkOverrideSheetSize'.$qty_index} eq 'Y') and sets::isin( $$A{width}, $$Overrides{"OverrideStockWidth$qty_index"} )
                     and ( ( $$A{type} eq 'Roll' ) or sets::isin( $$A{height}, $$Overrides{"OverrideStockHeight$qty_index"} ) )
                ) {
 # If it matches the override, the consider it no matter what
-$imp->display("Leeping because of Overrides");
+#$imp->display("Leeping because of Overrides");
 
             } elsif ( $$Overrides{'OverrideCutOff'.$qty_index} and sets::isin( $$A{height}, $$Overrides{"CutOff$qty_index"} ) ) {
 #$add = 1;
@@ -4089,7 +4089,6 @@ $imp->display('[warn]');
             foreach my $qty_index ( $Project->quantity_indexes() ) {
                 if ( $$sig_specs{'chkOverrideSheetSize'.$qty_index} ) {
                     $Overrides{'chkOverrideSheetSize'.$qty_index} = 'Y';
-$openprint::log->debug("Sheetsize: " . $$sig_specs{"ddmStockSheetSize$qty_index"} );
         if ( ! $$sig_specs{"ddmStockSheetSize$qty_index"} ) {
             $openprint::log->error("NO ddm Stock SheetSize!");
         } elsif ( ! $$sig_specs{"OverrideStockWidth$qty_index"} ) {
