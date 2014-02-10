@@ -24,7 +24,7 @@ require openprint::service;
 
 use vars qw( @folds %fold_types );
 
-use constant DEBUG => 0;
+use constant DEBUG => 1;
 use constant DEBUG_NEEDS => 0;
 
 my @equipment;
@@ -544,6 +544,14 @@ $openprint::log->error("No folds from sigimpo");
 	my $height_folds = Math::Round::nearest( 1, $$sig_specs{'txtHeight'}/$$sig_specs{'txtFinalHeight'}) -1;
 	@$SignatureImposition{'width_folds','height_folds'} = ( $width_folds, $height_folds );
 	$openprint::log->debug("FOlds: $width_folds x $height_folds") if DEBUG;
+if ( $$sig_specs{txtSignatureType} and $$sig_specs{txtSpreadSize} == 2 ) {
+	if ( $$SignatureImposition{image_orientation} eq 'Vertical' ) {
+		$width_folds = 1;
+	} else {
+		$height_folds = 1;
+	} # end if
+	$openprint::log->debug("FOlds: $width_folds x $height_folds") if DEBUG;
+} # end if
 
 	# IF it's a W&T, we have to cut in half first, so just do it.
 	if ( $$SignatureImposition{runstyle} eq 'Work & Turn' ) {
@@ -666,9 +674,11 @@ $openprint::log->debug("No folds") if DEBUG;
 		} # end if debug
 
 	} else { # is a book signature
+if ( 0 ) {
 		my @Impositions = @Set_Of_Impositions;
 		@Set_Of_Impositions = ();
 		foreach my $I ( @Impositions ) {
+			push @Set_Of_Impositions, $I;
 			if ( ( $$I{columns} > 1 ) and ( $$I{'image_orientation'} eq 'Vertical' ) ) {
 				my $Singleton = $I->copy();
 				$Singleton->quantity( $I->quantity()*$I->columns() );
@@ -689,6 +699,7 @@ $openprint::log->debug("No folds") if DEBUG;
 				$I->display('Results after initial cuts');
 			} # end foreach
 		} # end if
+}
 
 		#@All_Impositions = ( \@Set_Of_Impositions );
 		@All_Impositions = reduce_impositions( \@Set_Of_Impositions );
@@ -757,7 +768,8 @@ $openprint::log->debug("Sets of impos != 1 for $$Equipment{strid}") if DEBUG;
 					$Imposition->display('trying ' . $$Imposition{quantity} . 'x ');
 				} # end if
 
-if ( 0 ) {
+# Web has dual delivery
+if ( $$Equipment{id} != $$Press{id} ) {
 				if ( $$Imposition{imposition} > 3 and ( $$Imposition{columns} > 1 and $$Imposition{rows} > 1 ) ) {
 $openprint::log->debug("Can't do that impo");
 					$complete = 0;
@@ -1476,11 +1488,9 @@ sub calc {
 		my $calc_hash = {};
 		foreach my $signature_service_index ( @signatures ) {
 			my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
-$openprint::log->debug($$sig_specs{"ddmRunStyle$qty_index"});
 			$$specs{'hdnBreakdown'.$qty_index} .= "<fieldset><legend>Signature: $$sig_specs{SignatureIndex} $$sig_specs{'txtSignatureType'} Ref: $$sig_specs{'txtServiceDescription'}:</legend>";
 			$$specs{'hdnBreakdown'.$qty_index} .= openprint::service::summary( $Project, $signature_service_index ) . '<br/>';
 			$$specs{'hdnBreakdown'.$qty_index} .= openprint::service::summary( $Project, $signature_service_index, $qty_index ) . '<br/>';
-$openprint::log->debug($$sig_specs{"ddmRunStyle$qty_index"});
 
 			$$sig_specs{'PreviousImposition'} = $previous_imposition;
 
