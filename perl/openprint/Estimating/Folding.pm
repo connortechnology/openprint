@@ -771,7 +771,7 @@ $openprint::log->debug("Sets of impos != 1 for $$Equipment{strid}") if DEBUG;
 # Web has dual delivery
 if ( $$Equipment{id} != $$Press{id} ) {
 				if ( $$Imposition{imposition} > 3 and ( $$Imposition{columns} > 1 and $$Imposition{rows} > 1 ) ) {
-$openprint::log->debug("Can't do that impo");
+$openprint::log->debug("Can't do that impo") if DEBUG;
 					$complete = 0;
 					last;
 				} # end if
