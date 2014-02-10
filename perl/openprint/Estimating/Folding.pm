@@ -1898,5 +1898,22 @@ sub load_Impositions($$$) {
 	return @results;
 } # end sub load_Impositions
 
+sub get_Folds {
+	my ( $folding_specs, $sig_specs, $qty_index ) = @_;
+	my @folds;
+
+	foreach my $fold_index ( 1 .. 4 ) {
+		next if ! $$folding_specs{"FoldQty-$$sig_specs{SignatureIndex}-$qty_index-$fold_index"};
+		next if ! $$folding_specs{"FoldType-$$sig_specs{SignatureIndex}-$qty_index-$fold_index"};
+		my $folding_imposition = new openprint::Imposition();
+		$folding_imposition->columns( $$folding_specs{"FoldColumns-$$sig_specs{'SignatureIndex'}-$qty_index-$fold_index"} );
+		$folding_imposition->rows( $$folding_specs{"FoldRows-$$sig_specs{'SignatureIndex'}-$qty_index-$fold_index"} );
+		$folding_imposition->quantity( $$folding_specs{"FoldQty-$$sig_specs{'SignatureIndex'}-$qty_index-$fold_index"} );
+		push @folds, $folding_imposition;
+		#$folding_imposition->display('Fold ' . $$folding_specs{"FoldType-$$sig_specs{SignatureIndex}-$qty_index-$fold_index"} ) if DEBUG;
+	} # end foreach fold_index
+	return @folds;
+} # end sub get_Folds
+
 1;
 __END__

@@ -26,7 +26,7 @@ require openprint::Paper;
 require openprint::Estimating::Folding;
 require openprint::Equipment;
 
-use constant DEBUG => 0;
+use constant DEBUG => 1;
 
 my @variables = (
 	'txtQuantity',
@@ -252,6 +252,8 @@ sub signature_calc {
 	$stitching_service_index = ( $$services{'LoopStitching'} ? $$services{'LoopStitching'}[0] : undef ) if ! $stitching_service_index;
 	# juts for efficeincy
 	my $cutting_service_index = $$services{'Cutting'} ? $$services{'Cutting'}[0] : undef;
+	my $folding_service_index = ( ( $$services{Folding} and @{$$services{Folding}} ) ? $$services{'Folding'}[0] : undef );
+	my $folding_specs = openprint::service::get_specs_ref( $Project, $folding_service_index ) if $folding_service_index;
 
 	$Results{'Status'} = 'uncalculated';
 	my @equipment;	
@@ -261,7 +263,7 @@ sub signature_calc {
 	} else {
 		my @capabilities = ('Y','When Printing');
 		push @capabilities, 'For Pocket Folders' if $Project->Type()->name() eq 'PresentationFolders';
-		push @capabilities, 'When Folding' if $$services{'Folding'} and @{$$services{'Folding'}};
+		push @capabilities, 'When Folding' if $folding_specs;
 		push @capabilities, 'When PerfectBinding' if $$services{'PerfectBound'} and @{$$services{'PerfectBound'}};
 		push @capabilities, 'When Stitching' if $stitching_service_index;
 		
@@ -306,7 +308,7 @@ sub signature_calc {
 		#$imposition->display();
 		my @imps = openprint::imposition::get_all_impositions( $imposition );
 		for ( my $i = 0; $i < @imps; $i += 1 ) {
-			$imps[$i]->display() if DEBUG;
+			$imps[$i]->display('After get all inmpositions') if DEBUG;
 			if ( ( $$specs{"chkOverrideImposition-$$sig_specs{'SignatureIndex'}-$qty_index"} ne 'Y' )
 					or ( $$specs{"txtImposition-$$sig_specs{'SignatureIndex'}-$qty_index"} == $imps[$i]->imposition() )
 				) {
@@ -389,12 +391,12 @@ sub signature_calc {
 							( $orientation eq 'Landscape' and $I->layout_width() >= $I->layout_height() )
 					   ) {
 						if ( $I->layout_width() >= $max_feed_width ) {
-							$Results{'Breakdown'} .= "Perf no good due to max feed width($max_feed_width) on width ($$sig_specs{txtWidth}).<br/>";
+							$Results{'Breakdown'} .= "Score no good due to max feed width($max_feed_width) on width ($$sig_specs{txtWidth}).<br/>";
 							next;
 						} # end if
 					} else {
 						if ( $I->layout_height() >= $max_feed_width ) {
-							$Results{'Breakdown'} .= "Perf no good due to max feed width($max_feed_width) on width ($$sig_specs{txtHeight}).<br/>";
+							$Results{'Breakdown'} .= "Score no good due to max feed width($max_feed_width) on width ($$sig_specs{txtHeight}).<br/>";
 							next;
 						} # end if
 					} # end if
@@ -714,7 +716,7 @@ sub fits_on_equipment {
 		return "Doesn't fit height minimum Score Size $height < " . $Equipment->specification('Minimum Score Size');
 	} # end if
 	if ( $Equipment->specification('Maximum Score Size') and ( 1*$width > 1*$Equipment->specification('Maximum Score Size') ) ) {
-		return "Doesn't fit width maximum $width > " . $Equipment->specification('Maximum Score Size');
+		return "Doesn't fit width $width > maximum score size " . $Equipment->specification('Maximum Score Size');
 	} # end if
 
 	if ( $Equipment->specification('Maximum Score Size') and ( 1*$height > 1*$Equipment->specification('Maximum Score Size') ) ) {
