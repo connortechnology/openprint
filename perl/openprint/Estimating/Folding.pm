@@ -1714,6 +1714,8 @@ sub runtime {
 sub reduce_impositions {
 	my ( $impositions ) = @_;
 	my @results = ( $impositions );
+
+	# Find the max impo, so on each iteration, we generate a set of impositions with only the max's cut up
 	my $max_impo = 1;
 	foreach my $i ( @$impositions ) {
 		$max_impo = $$i{imposition} if $$i{imposition} > $max_impo;
@@ -1739,6 +1741,55 @@ sub reduce_impositions {
 		} # end foreach I
 		@new = compact_impositions( @new );
 		push @results, reduce_impositions( \@new );
+
+		# SOmething like a 3x2 will be cut into a 1x2+2x2 but never a 2 3x1's... so do this
+		my $extra = 0;
+		my @new = @$impositions;
+		for ( my $i = 0; $i < @new; $i += 1 ) {
+			if ( $new[$i]->imposition() == $max_impo ) {
+				my $I2 = $new[$i]->copy();
+				my $I3 = $new[$i]->copy();
+				if ( $I2->rows() > 1 and $I2->columns() > 1 ) {
+					$I2->rows( int($I2->rows()/2) );
+					$I3->rows( $I3->rows() - $I2->rows() );
+					$extra = 1;
+					splice @new, $i, 1, ( $I2, $I3 );
+					$i += 1;
+				} # end if
+			} # end if
+		} # end foreach I
+		if ( $extra ) {
+			@new = compact_impositions( @new );
+			push @results, reduce_impositions( \@new );
+		} # end if
+
+		$extra = 0;
+		my @new = @$impositions;
+		for ( my $i = 0; $i < @new; $i += 1 ) {
+			if ( $new[$i]->imposition() == $max_impo ) {
+				my $I2 = $new[$i]->copy();
+				if ( $I2->columns() > 2 and ( $I2->columns() % 2 ) ) {
+					$I2->quantity( $I2->columns() );
+					$I2->columns( 1 );
+					$extra = 1;
+				} elsif ( $I2->rows() > 2 and ( $I2->rows() % 2 ) ) {
+					$I2->quantity( $I2->rows() );
+					$I2->rows( 1 );
+					$extra = 1;
+				} # end if
+
+				if ( $extra ) {
+					splice @new, $i, 1, $I2;
+				} # end if
+			} # end if
+		} # end foreach I
+		if ( $extra ) {
+		@new = compact_impositions( @new );
+		push @results, reduce_impositions( \@new );
+		} # end if
+
+
+
 	} # end if
 	return @results;
 	
