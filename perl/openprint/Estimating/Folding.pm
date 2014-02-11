@@ -24,7 +24,7 @@ require openprint::service;
 
 use vars qw( @folds %fold_types );
 
-use constant DEBUG => 0;
+use constant DEBUG => 1;
 use constant DEBUG_NEEDS => 0;
 
 my @equipment;
@@ -1769,11 +1769,11 @@ sub reduce_impositions {
 			if ( $new[$i]->imposition() == $max_impo ) {
 				my $I2 = $new[$i]->copy();
 				if ( $I2->columns() > 2 and ( $I2->columns() % 2 ) ) {
-					$I2->quantity( $I2->columns() );
+					$I2->quantity( $I2->quantity()+$I2->columns() );
 					$I2->columns( 1 );
 					$extra = 1;
 				} elsif ( $I2->rows() > 2 and ( $I2->rows() % 2 ) ) {
-					$I2->quantity( $I2->rows() );
+					$I2->quantity( $I2->quantity()+$I2->rows() );
 					$I2->rows( 1 );
 					$extra = 1;
 				} # end if
