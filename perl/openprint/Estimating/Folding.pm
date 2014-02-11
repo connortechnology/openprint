@@ -914,17 +914,17 @@ $openprint::log->debug("No Fold") if DEBUG;
 						if ( ! $_ )	{
 							$openprint::log->debug("Fits") if DEBUG;
 							my $Fold = $Equipment->Fold({
-									'pages'				=>	$Imposition->pages(),
-									'page_columns'		=>	$Imposition->page_columns(),
-									'page_rows'			=>	$Imposition->page_rows(),
-									'spine_direction'	=>	$$Imposition{'image_orientation'},
-									'stitching'			=>	(($$services{'SaddleStitching'} or $$services{'LoopStitching'}) ? 1 : 0),
-									'perfectbind'		=>	($$services{'PerfectBound'} ? 1 : 0),
-									'spinepaste'		=>	($$services{'SpinePaste'} ? 1 : 0),
-									'gsm'				=>	$Paper->gsm(),
-									'calliper'			=>	$$Paper{'calliper'},
-									'imposition'		=>	$$Imposition{'imposition'},
-									'printing_type'		=>	$ppt,
+									pages			=>	$Imposition->pages(),
+									page_columns	=>	$Imposition->page_columns(),
+									page_rows		=>	$Imposition->page_rows(),
+									spine_direction	=>	$$Imposition{'image_orientation'},
+									stitching		=>	(($$services{'SaddleStitching'} or $$services{'LoopStitching'}) ? 1 : 0),
+									perfectbind		=>	($$services{'PerfectBound'} ? 1 : 0),
+									spinepaste		=>	($$services{'SpinePaste'} ? 1 : 0),
+									gsm				=>	$Paper->gsm(),
+									calliper		=>	$$Paper{'calliper'},
+									imposition		=>	$$Imposition{'imposition'},
+									printing_type	=>	$ppt,
 									});
 							if ( $Fold ) {
 								$Fold = $Fold->clone();
@@ -1220,12 +1220,13 @@ $openprint::log->debug("Folds: $set_index : $key " . $impo_qty );
 $openprint::log->debug("Runspeed: $fold_type(".$Fold->name().") : " . $Equipment->name() . ' ' . $Fold->runspeed() .' ' . $Paper->gsm() ) if DEBUG;
 #$Breakdown .= sprintf( '&nbsp;Folds: QTY: %d, %dout Runspeed: %d/Hr = %.2f hours<br/>', $qty, $imposition, $$RunSpeed{runspeed}, $runTime );
 # We are assumin at this point, that all these folds are posible on this equipment, so any errors are soft errors
-				my %servicePrice = openprint::service::get_price_object( $$Fold{'type'}, $run_qty, $Equipment );
+				my %servicePrice = openprint::service::get_price_object( 'Folding'.$imposition.'out', $run_qty, $Equipment );
 				if ( ! %servicePrice ) {
-					%servicePrice = openprint::service::get_price_object( 'Folding'.$imposition.'up', $run_qty, $Equipment );
-				} # end if
-				if ( ! %servicePrice ) {
-					%servicePrice = openprint::service::get_price_object( 'Folding',$imposition, $Equipment );
+$openprint::log->warn("Don't have Folding${imposition}out");
+					%servicePrice = openprint::service::get_price_object( $$Fold{type}, $run_qty, $Equipment );
+					if ( ! %servicePrice ) {
+						%servicePrice = openprint::service::get_price_object( 'Folding',$imposition, $Equipment );
+					} # end if
 				} # end if
 				my %AnglePrice = openprint::service::get_price_object( 'FoldingAngle'.$imposition.'up', $run_qty, $Equipment );
 				%AnglePrice = openprint::service::get_price_object( 'FoldingAngle', $imposition, $Equipment ) if ! %AnglePrice;
