@@ -494,6 +494,10 @@ $openprint::log->debug("Basis:: " . $Paper->basis_mweight() );
 sub save_Paper {
 	my ( $id ) = @_;
 
+	if ( $param{'calliper'.$id} > 1 ) {
+		$param{'calliper'.$id} /= 1000;
+	} # end if
+
 	my $weight;
 	if ( $param{'txtWeight'.$id} ) {
 		$weight = $param{'txtWeight'.$id};
@@ -506,11 +510,7 @@ sub save_Paper {
 			$weight .= 'lb' if ! ( $param{'weight'.$id} =~ /lb/ );
 		} # end if
 	} elsif ( $param{'calliper'.$id} ) {
-		if ( $param{'calliper'.$id} < 1 ) {
-			$weight = ($param{'calliper'.$id}*1000).'PT';
-		} else {
-			$weight =( 1*$param{'calliper'.$id}) . 'PT';
-		} # end if
+		$weight = ($param{'calliper'.$id}*1000).'PT';
 	} # end if
 
 	my @Papers = openprint::Paper->find(
@@ -1453,6 +1453,7 @@ sub save_Manifest {
 			po_id		=>	$param{'po_id-'.$Type->id()},
 			manufacturers_name	=>	$param{'manufacturers_name-'.$$Type{id}},
 			item_count	=>	$param{'item_count-'.$$Type{id}},
+			condition_id	=>	$param{'condition_id-'.$$Type{id}},
 		);
 		$data{cost} = $param{'cost-'.$Type->id()} if exists $param{'cost-'.$Type->id()};
 		$data{supplier_invoice} = $param{'supplier_invoice-'.$Type->id()} if exists $param{'supplier_invoice-'.$Type->id()};
@@ -2014,6 +2015,10 @@ sub available_paper {
 	$session{'/employee/inventory/available_paper.html?owner_id_exclude'} = $param{'owner_id_exclude'} if exists $param{'owner_id'};
 	$session{'/employee/inventory/available_paper.html?type'} = 'Roll' if ! $session{'/employee/inventory/available_paper.html?type'};
 	$session{'/employee/inventory/available_paper.html?Owner'} = new openprint::User( $session{'user_id'} )->company_id() if ! exists $session{'/employee/inventory/available_paper.html?Owner'};
+	if ( ! exists $session{'/employee/inventory/available_paper.html?condition_id'} ) {
+		my $New = openprint::InventoryCondition->find_one( name=>'new' );
+		$session{'/employee/inventory/available_paper.html?condition_id'} = $New->id() if $New;
+	} # end if
 } # end sub available_paper
 sub _available_paper {
 	ssi::save_params( '/employee/inventory/available_paper.html', 

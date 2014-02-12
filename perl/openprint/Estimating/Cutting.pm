@@ -587,6 +587,29 @@ sub signature_calc {
 			if ( $I->pages() and ! $folding_specs ) {
 # Have to cut the pages out
 				$vertical_cuts += int ( ($I->page_columns()-1)*$I->columns()*2 ) + 2;
+			} elsif ( @folding_impositions ) {
+					if ( @folding_impositions == 1 and $folding_impositions[0]->quantity() <= 1 and $folding_impositions[0]->imposition() == 1 ) {
+						# According to Brendan, will trim it first.
+						$vertical_cuts += 2;
+					} else {
+	# The 2 is for outside edge cuts
+	$openprint::log->debug("Folds: " .@folding_impositions ) if DEBUG;
+				foreach my $folding_imposition ( @folding_impositions ) {
+					my $columns =  $$folding_imposition{columns} ? $$folding_imposition{columns} : $$I{'columns'};
+					$vertical_cuts += 1+$columns;# = 2+$$I{'columns'}-1
+					if ( 
+						( $$I{'image_orientation'} eq 'Vertical' and ( $$sig_specs{'BleedLeft'} or $$sig_specs{'BleedRight'} ) ) or
+						( $$I{'image_orientation'} eq 'Horizontal' and ( $$sig_specs{'BleedTop'} or $$sig_specs{'BleedBottom'} ) )
+					   ) {
+						$vertical_cuts += $columns-1;
+					} # end if
+	$folding_imposition->display("Vertical cuts: $vertical_cuts") if DEBUG;
+				} # end foreach
+				} # en dif
+	# Splitting the folded products is done on the folder for free
+	#if ( ( $$folding_imposition{'columns'} > 1 ) and ( $$folding_imposition{'columns'} < $$I{'columns'} ) ) {
+	#$vertical_cuts += ($$I{'columns'} / $$folding_imposition{'columns'})-1;
+	#} # end if
 			} elsif ( $stitching_imposition and ( $$I{'image_orientation'} eq 'Horizontal' ) ) {
 				$vertical_cuts += int ($$I{'columns'} / $stitching_imposition)-1;
 			} elsif ( $$printing_specs{rdbTemplateType} eq 'PlasticCoil' ) {
@@ -657,6 +680,23 @@ $folding_imposition->display("Vertical cuts: $vertical_cuts");
 			if ( $I->pages() and ! $folding_specs ) {
 # Have to cut the pages out
 				$horizontal_cuts += int( ($I->page_rows()-1)*$I->rows() * 2 ) + 2;
+			} elsif ( @folding_impositions ) {
+				if ( @folding_impositions == 1 and $folding_impositions[0]->quantity() <= 1 and $folding_impositions[0]->imposition() == 1 ) {
+# According to Brendan, will trim it first.
+					$vertical_cuts += 2;
+				} else {
+					foreach my $folding_imposition ( @folding_impositions ) {
+						my $rows = $$folding_imposition{rows} ? $$folding_imposition{rows} : $$I{rows};
+						$horizontal_cuts += 1 + $rows;
+						if ( $$sig_specs{'ddmBleedSize'.$qty_index} and ( 
+									( $$I{'image_orientation'} eq 'Horizontal' and ( $$sig_specs{'BleedLeft'} or $$sig_specs{'BleedRight'} ) ) or
+									( $$I{'image_orientation'} eq 'Vertical' and ( $$sig_specs{'BleedTop'} or $$sig_specs{'BleedBottom'} ) ) )
+						   ) {
+							$horizontal_cuts += $rows-1;
+						} # end if
+						$folding_imposition->display("Horizontal cuts: $horizontal_cuts");
+					} # end foreach
+				} # end if
 			} elsif ( $stitching_imposition and ( $I->image_orientation() eq 'Vertical' ) ) {
 				$horizontal_cuts += int ($$I{'rows'} / $stitching_imposition)-1; 
 			} elsif ( $$printing_specs{rdbTemplateType} eq 'PlasticCoil' ) {
@@ -986,7 +1026,7 @@ sub calc {
 			} # end if
 
 			# Folding
-			if ( $$services{'Folding'} and @{$$services{'Folding'}} ) {
+			if ( 0 and $$services{'Folding'} and @{$$services{'Folding'}} ) {
 				my %results = signature_calc_folding_cutting( $Project, $sig_specs, $specs, $qty_index, $Paper, $Imposition, $fold_specs, $calc_hash );
 				$$specs{"ddmFoldCutEquipment-$signature_index-$qty_index"} = $results{'Equipment'} ? $results{'Equipment'}->id() : '';
 				$$specs{"txtFoldCutPrice-$signature_index-$qty_index"} = $results{'Price'};
