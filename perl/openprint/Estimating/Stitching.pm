@@ -18,7 +18,7 @@ package openprint::Estimating::Stitching;
 use strict;
 use warnings;
 
-use constant DEBUG => 0;
+use constant DEBUG => 1;
 
 require openprint::Equipment;
 require openprint::service;
@@ -712,6 +712,12 @@ $openprint::log->debug(" fold qty * pages($pages) == sig_pages($sig_pages) foldQ
 					next;
 				} # end if
 			} # end if
+
+			my $max_imp = $Equipment->specification("Maximum $$ServiceType{name} Imposition");
+			if ( $max_imp and ( $max_imp < $$specs{"Imposition$qty_index"} ) ) {
+				$$specs{"Imposition$qty_index"} = $max_imp;
+			} # end if
+				
 			if ( $Equipment->specification('Maximum Spine Length') and ( $$specs{'Height'} > $Equipment->specification('Maximum Spine Length', $$specs{'Imposition'.$qty_index} ) ) ) {
 				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Spine Too big. Spine: %s, Maximum: %s<br/>', $$specs{'Height'}, $Equipment->specification('Maximum Spine Length') );
 				next;
@@ -793,6 +799,7 @@ $openprint::log->debug(" fold qty * pages($pages) == sig_pages($sig_pages) foldQ
 			$$specs{'hdnBreakdown'.$qty_index} .= 'Total: $'. sprintf('%.2f', int($$price{'txtPrice'})).'<br/><br/>';
 		} # end foreach
 		if ( ! $bestEquipment ) {
+$openprint::log->error("No best equipment in Stitching");
 			$$specs{'Status'} = 'uncalculated';
 			$$specs{"ddmEquipment$qty_index"} = '' if $$specs{'chkOverrideEquipment'.$qty_index} ne 'Y';
 			if ( $$specs{'OverrideImposition'.$qty_index} ne 'Y' ) {
