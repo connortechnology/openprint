@@ -535,7 +535,7 @@ $openprint::log->debug("Adding special colour for $colour");
 					$Material = openprint::Material->find_one(name=>'PMSInk') if ! $Material and $$real_colour{type} eq 'PMS';
 					$$Ink{material_id} = $Material->id() if $Material;
 				} # end if
-			} # endif
+			} # end if foudn Ink
 			$special_colours{$colour} = [ $Ink ];
 		} # end if
 	} # end foreach
