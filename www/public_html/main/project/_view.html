@@ -168,7 +168,8 @@
 				} # end while sigs
 			} else {
 				my $service_id = $$services{''}[0];
-				my $specs = openprint::service::get_specs_ref( $Project, $service_id );
+				my $Service = $Project->Service( $service_id );
+				my $specs = $Service->specs();
 
 				foreach my $qty_index ( $Project->quantity_indexes() ) {
 					$html .= '<td class="price">';
@@ -181,8 +182,7 @@
 					my $summary = openprint::service::summary( $Project->id(), $service_id, $qty_index );
 					$summary =~ s/\n/<br\/>/g;
 					$html .= $summary;
-					my $Service = $Project->Service( $service_id );
-					if ( $Service->overrides() ) {
+					if ( $Service->overrides( $qty_index ) ) {
 						$summary .= '<br/><b>With Overrides</b>';
 					} # end if
 					$html .= '</td>';
@@ -206,7 +206,8 @@
 			foreach my $ServiceType ( openprint::ServiceType->find('category_id'=>$ServiceCategory->id(),'order'=>'sorting', 'view_visible'=>1) ) {
 				next if ! $$services{$ServiceType->name()};
 				foreach my $service_id ( @{$$services{$ServiceType->name()}} ) {
-					my $specs = openprint::service::get_specs_ref( $Project, $service_id );
+					my $Service = $Project->Service( $service_id );
+					my $specs = $Service->specs();
 
 					my @summaries;
 					my $summary = openprint::service::summary( $Project->id(),$service_id );
@@ -232,6 +233,9 @@
 					if ( $$specs{alert} ) {
 						$html .= join( $$specs{alert}, '<span class="error">', '</span>' );
 					} # end if
+					if ( $Service->overrides( ) ) {
+						$html .= '<br/><b>With Overrides</b>';
+					} # end if
 					$html .= '</td>';
 					foreach my $qty_index ( $Project->quantity_indexes() ) {
 						$html .= '<td class="price">';
@@ -248,6 +252,9 @@
 						} else {
 							$summary =~ s/\n/<br\/>/g;
 							$html .= $summary;
+						} # end if
+						if ( $Service->overrides( $qty_index ) ) {
+							$html .= '<br/><b>With Overrides</b>';
 						} # end if
 						$html .= '</td>';
 					} # end foreach qty_index

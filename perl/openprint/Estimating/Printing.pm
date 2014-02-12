@@ -27,7 +27,7 @@ use constant DEBUG_VERSIONS => 0;
 use constant DEBUG_FILTERING => 0;
 use constant DEBUG_INITIAL_FILTERING => 0;
 use constant DEBUG_PRICE_DECISIONS => 0;
-use constant DEBUG_INKS => 0;
+use constant DEBUG_INKS => 1;
 use constant DEBUG_STOCK => 0;
 use constant COMPARISON_LOG => 0;
 use constant USE_SUBSIG => 0;
@@ -520,19 +520,22 @@ $openprint::log->debug("$project{print_sides} : " . @{$project{side_one_colours}
 
 		if ( ! $special_colours{$colour} ) {
 $openprint::log->debug("Adding special colour for $colour");
+			my $Ink = openprint::Ink->find_one( name=>$colour );
 
-			# Some PMS or other ink that we don't have in the system, since CMYK are in teh system (we assume), washes can be 1
-			my $Ink = new openprint::Ink();
-			$$Ink{pmsid} = $colour;
-			$$Ink{name} = $colour;
-			if ( ! sets::isin( $colour, \@process_colours ) ) {
-				$$Ink{mix_service_id} = $PMSInkMixService->id() if $PMSInkMixService;
-				$$Ink{mix} = 1;
-				$$Ink{washups} = 1;
-				my $Material = openprint::Material->find_one(name=>$colour.'Ink');
-				$Material = openprint::Material->find_one(name=>'PMSInk') if ! $Material and $$real_colour{type} eq 'PMS';
-				$$Ink{material_id} = $Material->id() if $Material;
-			} # end if
+			if ( ! $Ink ) {
+				# Some PMS or other ink that we don't have in the system, since CMYK are in teh system (we assume), washes can be 1
+				$Ink = new openprint::Ink();
+				$$Ink{pmsid} = $colour;
+				$$Ink{name} = $colour;
+				if ( ! sets::isin( $colour, \@process_colours ) ) {
+					$$Ink{mix_service_id} = $PMSInkMixService->id() if $PMSInkMixService;
+					$$Ink{mix} = 1;
+					$$Ink{washups} = 1;
+					my $Material = openprint::Material->find_one(name=>$colour.'Ink');
+					$Material = openprint::Material->find_one(name=>'PMSInk') if ! $Material and $$real_colour{type} eq 'PMS';
+					$$Ink{material_id} = $Material->id() if $Material;
+				} # end if
+			} # endif
 			$special_colours{$colour} = [ $Ink ];
 		} # end if
 	} # end foreach
@@ -2472,7 +2475,7 @@ sub save_price( $$$$$ ) {
 	if ( $Press and $$Press{strid} ) {
 #$openprint::log->debug("Press: $Press" . join(',', map { $_.'=>'.$$Press{$_} } keys %$Press ) );
 		$$specs{'ddmPress'.$qty_index} = $$Press{'strid'};
-		$$specs{'PrintingType'.$qty_index} = $Press->specification('Printing Type');
+		$$specs{'PrintingType'.$qty_index} = $Imposition->printing_type();
 		$$specs{'rdbPlateType'.$qty_index} = $Press->specification('Plate Type');
 	} # end if Press
 
@@ -2842,10 +2845,17 @@ sub calculate_impositions {
 			next;
 		} # end if
 
+if ( 0 ) {
+# Now done in select_presses
 		if ( ( $$imp{'runstyle'} eq 'Web' ) and $openprint::usergroup::groups_cache{'Web Estimating'} and ! openprint::usergroup::is_user_in( ['Web Estimating'], $openprint::session{'user_id'} ) ) {
 			$openprint::log->debug('No Web 4 U') if DEBUG_FILTERING;
 			next;
 		} # end if
+		if ( ( $$imp{printing_type} eq 'Digital' ) and $openprint::usergroup::groups_cache{'Digital Estimating'} and ! openprint::usergroup::is_user_in( ['Digital Estimating'], $openprint::session{'user_id'} ) ) {
+			$openprint::log->debug('No Digital 4 U') if DEBUG_FILTERING;
+			next;
+		} # end if
+} # end if
 
 		if ( $$sig_specs{'PreviousStockType'} and ( $$Paper{'type'} ne $$sig_specs{'PreviousStockType'} ) ) {
 			$imp->display("PreviousStockType: $$sig_specs{'PreviousStockType'} ne " . $Paper->to_string() ) if DEBUG_FILTERING;
@@ -5009,7 +5019,7 @@ $openprint::log->debug("Varnish $real_colour") if DEBUG_INKS;
 				$openprint::log->error($C->to_string() );
 			} # end foreach C
 		} elsif ( DEBUG_INKS ) {
-			#$openprint::log->debug("Got INK: " . $Ink->to_string() );
+			$openprint::log->debug("Got INK: " . $Ink->to_string() );
 		} # end if
 
 # Washed_colours contains each colour used in the other signatures
@@ -5346,7 +5356,8 @@ sub select_presses {
 
 		$Paper = $$Papers[0] if ! $Paper;
 
-		if ( $Press->specification('Printing Type') eq 'Digital' ) {
+		my $printing_type = $Press->specification('Printing Type');
+		if ( $printing_type eq 'Digital' ) {
 # Digital only support Process, no PMS, etc...
 			if ( ( scalar @$side_one_colours == 1 ) and ( ! sets::isin( $$project{'side_one_colour_names'}[0], ['Black', 'Black Spot Colour'] ) ) ) {
 				$results{$press_id} = "Digital doesn't do non-black: $$side_one_colours[0]";
@@ -5381,6 +5392,13 @@ sub select_presses {
 				$results{$press_id} = "Digital doesn't do non-process";
 				next;
 			} # end if
+			if ( $openprint::usergroup::groups_cache{'Digital Estimating'} and ! openprint::usergroup::is_user_in( ['Digital Estimating'], $openprint::session{user_id} ) ) {
+				$results{$press_id} = "You are not authorized for estimating on Digital presses.";
+				next;
+			} # end if
+		} elsif ( ( $printing_type eq 'Web' ) and $openprint::usergroup::groups_cache{'Web Estimating'} and ! openprint::usergroup::is_user_in( ['Web Estimating'], $openprint::session{'user_id'} ) ) {
+			$results{$press_id} = "You are not authorized for estimating on Web presses.";
+			next;
 		} # end if
 
 		my $number_of_colours = $Press->specification('Number of Colours');
