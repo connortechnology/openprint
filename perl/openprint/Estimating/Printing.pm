@@ -519,19 +519,22 @@ $openprint::log->debug("$project{print_sides} : " . @{$project{side_one_colours}
 
 		if ( ! $special_colours{$colour} ) {
 $openprint::log->debug("Adding special colour for $colour");
+			my $Ink = openprint::Ink->find_one( name=>$colour );
 
-			# Some PMS or other ink that we don't have in the system, since CMYK are in teh system (we assume), washes can be 1
-			my $Ink = new openprint::Ink();
-			$$Ink{pmsid} = $colour;
-			$$Ink{name} = $colour;
-			if ( ! sets::isin( $colour, \@process_colours ) ) {
-				$$Ink{mix_service_id} = $PMSInkMixService->id() if $PMSInkMixService;
-				$$Ink{mix} = 1;
-				$$Ink{washups} = 1;
-				my $Material = openprint::Material->find_one(name=>$colour.'Ink');
-				$Material = openprint::Material->find_one(name=>'PMSInk') if ! $Material and $$real_colour{type} eq 'PMS';
-				$$Ink{material_id} = $Material->id() if $Material;
-			} # end if
+            if ( ! $Ink ) {
+				# Some PMS or other ink that we don't have in the system, since CMYK are in teh system (we assume), washes can be 1
+				$Ink = new openprint::Ink();
+				$$Ink{pmsid} = $colour;
+				$$Ink{name} = $colour;
+				if ( ! sets::isin( $colour, \@process_colours ) ) {
+					$$Ink{mix_service_id} = $PMSInkMixService->id() if $PMSInkMixService;
+					$$Ink{mix} = 1;
+					$$Ink{washups} = 1;
+					my $Material = openprint::Material->find_one(name=>$colour.'Ink');
+					$Material = openprint::Material->find_one(name=>'PMSInk') if ! $Material and $$real_colour{type} eq 'PMS';
+					$$Ink{material_id} = $Material->id() if $Material;
+				} # end if
+			} # end if foudn Ink
 			$special_colours{$colour} = [ $Ink ];
 		} # end if
 	} # end foreach
