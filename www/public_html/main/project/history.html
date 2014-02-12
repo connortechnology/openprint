@@ -118,6 +118,9 @@
 				</select>
 			</li>
 <? endif ( @{$$variable{Users}} > 1 ) ?>
+			<li><label>Contains</label>
+				<? echo ( ssi::select( openprint::ServiceType->dropdown(order=>'lower(name)'), $session{'/main/project/history.html?servicetype_id'}, { name=>'servicetype_id', prepend=>['','All'] } ); ) ?>
+			</li>
 			</ul>
 			</div>
 			</div>
