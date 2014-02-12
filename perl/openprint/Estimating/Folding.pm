@@ -1222,7 +1222,6 @@ $openprint::log->debug("Runspeed: $fold_type(".$Fold->name().") : " . $Equipment
 # We are assumin at this point, that all these folds are posible on this equipment, so any errors are soft errors
 				my %servicePrice = openprint::service::get_price_object( 'Folding'.$imposition.'out', $run_qty, $Equipment );
 				if ( ! %servicePrice ) {
-$openprint::log->warn("Don't have Folding${imposition}out");
 					%servicePrice = openprint::service::get_price_object( $$Fold{type}, $run_qty, $Equipment );
 					if ( ! %servicePrice ) {
 						%servicePrice = openprint::service::get_price_object( 'Folding',$imposition, $Equipment );
