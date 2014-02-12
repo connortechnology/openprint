@@ -180,6 +180,7 @@ function get_impositions( form ) {
 
 function calc_print( formName, force, options ) {
 
+
 	var form = getFormObj( formName );
 
 	if ( gettingNewPrice && ! force ) {

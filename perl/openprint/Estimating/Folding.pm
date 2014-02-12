@@ -284,17 +284,19 @@ sub neccessary {
 # Looks at the imposition, and if the width is too small for the fold, tries to pad the image until it can fold, wasting paper, but sometimes this is desireable.
 
 sub has_overrides {
-	my ( $Project, $service_id, $specs ) = @_;
+	my ( $Project, $service_id, $specs, $qty_index ) = @_;
 	$specs = openprint::service::get_specs_ref( $Project, $service_id ) if ! $specs;
 
 	my @v;
+	if ( $qty_index ) {
 	foreach my $s_s_id ( $Project->signatures() ) {
 		my $sig_specs = openprint::service::get_specs_ref( $Project, $s_s_id );
-		foreach my $qty_index ( $Project->quantity_indexes() ) {
+		#foreach my $qty_index ( $Project->quantity_indexes() ) {
 			push @v, "chkOverrideEquipment-$$sig_specs{'SignatureIndex'}-$qty_index" if $$specs{"chkOverrideEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"};
 			push @v, "chkOverrideFold-$$sig_specs{'SignatureIndex'}-$qty_index" if $$specs{"chkOverrideFold-$$sig_specs{'SignatureIndex'}-$qty_index"};
-		} # end foreach
+		#} # end foreach
 	} # end foreach
+	} # end if
 
 	return @v;
 	
@@ -1222,7 +1224,6 @@ $openprint::log->debug("Runspeed: $fold_type(".$Fold->name().") : " . $Equipment
 # We are assumin at this point, that all these folds are posible on this equipment, so any errors are soft errors
 				my %servicePrice = openprint::service::get_price_object( 'Folding'.$imposition.'out', $run_qty, $Equipment );
 				if ( ! %servicePrice ) {
-$openprint::log->warn("Don't have Folding${imposition}out");
 					%servicePrice = openprint::service::get_price_object( $$Fold{type}, $run_qty, $Equipment );
 					if ( ! %servicePrice ) {
 						%servicePrice = openprint::service::get_price_object( 'Folding',$imposition, $Equipment );
@@ -1906,11 +1907,12 @@ sub get_Folds {
 	foreach my $fold_index ( 1 .. 4 ) {
 		next if ! $$folding_specs{"FoldQty-$$sig_specs{SignatureIndex}-$qty_index-$fold_index"};
 		next if ! $$folding_specs{"FoldType-$$sig_specs{SignatureIndex}-$qty_index-$fold_index"};
-		my $folding_imposition = new openprint::Imposition();
-		$folding_imposition->columns( $$folding_specs{"FoldColumns-$$sig_specs{'SignatureIndex'}-$qty_index-$fold_index"} );
-		$folding_imposition->rows( $$folding_specs{"FoldRows-$$sig_specs{'SignatureIndex'}-$qty_index-$fold_index"} );
-		$folding_imposition->quantity( $$folding_specs{"FoldQty-$$sig_specs{'SignatureIndex'}-$qty_index-$fold_index"} );
-		push @folds, $folding_imposition;
+		my $Imposition = new openprint::Imposition();
+		$Imposition->load( $sig_specs, $qty_index );
+		$Imposition->columns( $$folding_specs{"FoldColumns-$$sig_specs{'SignatureIndex'}-$qty_index-$fold_index"} );
+		$Imposition->rows( $$folding_specs{"FoldRows-$$sig_specs{'SignatureIndex'}-$qty_index-$fold_index"} );
+		$Imposition->quantity( $$folding_specs{"FoldQty-$$sig_specs{'SignatureIndex'}-$qty_index-$fold_index"} );
+		push @folds, $Imposition;
 		#$folding_imposition->display('Fold ' . $$folding_specs{"FoldType-$$sig_specs{SignatureIndex}-$qty_index-$fold_index"} ) if DEBUG;
 	} # end foreach fold_index
 	return @folds;

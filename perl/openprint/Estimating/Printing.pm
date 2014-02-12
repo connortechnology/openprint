@@ -274,6 +274,7 @@ my %variables = (
 	'hdnImageOrientation1' => ['save','output'], 'hdnImageOrientation2' => ['save','output'], 'hdnImageOrientation3' => ['save','output'], 
 	'hdnNetSheetCount1' => ['save','output'], 'hdnNetSheetCount2' => ['save','output'], 'hdnNetSheetCount3' => ['save','output'],
 	'StockQuantity1' => ['save','output'], 'StockQuantity2' => ['save','output'], 'StockQuantity3' => ['save','output'],
+	'Runspeed1' => ['save','output'], 'Runspeed2' => ['save','output'], 'Runspeed3' => ['save','output'],
 	'RunTime1' => ['save','output'], 'RunTime2' => ['save','output'], 'RunTime3' => ['save','output'],
 	'txtWidth' => ['save'], 'txtHeight' => ['save'], 'txtFinalWidth' => ['save'], 'txtFinalHeight' => ['save'],
 	'chkOverrideDimensions'	=> ['save'],
@@ -521,7 +522,7 @@ $openprint::log->debug("$project{print_sides} : " . @{$project{side_one_colours}
 $openprint::log->debug("Adding special colour for $colour");
 			my $Ink = openprint::Ink->find_one( name=>$colour );
 
-            if ( ! $Ink ) {
+			if ( ! $Ink ) {
 				# Some PMS or other ink that we don't have in the system, since CMYK are in teh system (we assume), washes can be 1
 				$Ink = new openprint::Ink();
 				$$Ink{pmsid} = $colour;
@@ -2474,7 +2475,7 @@ sub save_price( $$$$$ ) {
 	if ( $Press and $$Press{strid} ) {
 #$openprint::log->debug("Press: $Press" . join(',', map { $_.'=>'.$$Press{$_} } keys %$Press ) );
 		$$specs{'ddmPress'.$qty_index} = $$Press{'strid'};
-		$$specs{'PrintingType'.$qty_index} = $Press->specification('Printing Type');
+		$$specs{'PrintingType'.$qty_index} = $Imposition->printing_type();
 		$$specs{'rdbPlateType'.$qty_index} = $Press->specification('Plate Type');
 	} # end if Press
 
@@ -2544,6 +2545,7 @@ sub save_price( $$$$$ ) {
 	$$specs{'StockSetupCharge'.$qty_index} = $$price{'StockSetup'};
 	$$specs{'hdnImpressionQuantity'.$qty_index} = $$price{'Impressions'};
 #$$specs{'RunTime'.$qty_index} = $price{'RunTime'};
+	$$specs{'Runspeed'.$qty_index} = $$price{Runspeed};
 
 	if ( ( ! defined $$specs{'OverridePrice'.$qty_index} ) or $$specs{'OverridePrice'.$qty_index} ne 'Y' ) {
 		if ( $$specs{'pages_supplied'} eq 'Y' ) {
@@ -2616,9 +2618,9 @@ sub breakdown {
 	$breakdown .= sprintf('Roll2Sheet Charge: $%1$.2f%2$s=%3$.2f<br/>', @$price{'Roll2SheetRunCost','Roll2SheetUnits','Roll2SheetRunCharge'} ) if $$price{'Roll2SheetRunCharge'};
 	if ( my $run_price = $$price{'Run Price'} ) {
 		if ( $_ = $Press->Specification('Charge for setup overs') and $$_{value} eq 'N' ) {
-			$breakdown .= sprintf('Impression Charge: %d/(%d Per Hour) * $%.2f%s = $%.2f<br/>', ( $$price{'Impressions'}-$$stock_qty{'Setup Overs'} ),@$price{'Run Speed'}, @$run_price{'Cost','units','Price'} );
+			$breakdown .= sprintf('Impression Charge: %d/(%d Per Hour) * $%.2f%s = $%.2f<br/>', ( $$price{'Impressions'}-$$stock_qty{'Setup Overs'} ),@$price{Runspeed}, @$run_price{'Cost','units','Price'} );
 		} else {
-			$breakdown .= sprintf('Impression Charge: %d/(%d Per Hour) * $%.2f%s = $%.2f<br/>', $$price{'Impressions'},@$price{'Run Speed'},@$run_price{'Cost','units','Price'} );
+			$breakdown .= sprintf('Impression Charge: %d/(%d Per Hour) * $%.2f%s = $%.2f<br/>', $$price{'Impressions'},@$price{Runspeed},@$run_price{'Cost','units','Price'} );
 		} # end if
 	} # end if
 
@@ -2843,10 +2845,17 @@ sub calculate_impositions {
 			next;
 		} # end if
 
+if ( 0 ) {
+# Now done in select_presses
 		if ( ( $$imp{'runstyle'} eq 'Web' ) and $openprint::usergroup::groups_cache{'Web Estimating'} and ! openprint::usergroup::is_user_in( ['Web Estimating'], $openprint::session{'user_id'} ) ) {
 			$openprint::log->debug('No Web 4 U') if DEBUG_FILTERING;
 			next;
 		} # end if
+		if ( ( $$imp{printing_type} eq 'Digital' ) and $openprint::usergroup::groups_cache{'Digital Estimating'} and ! openprint::usergroup::is_user_in( ['Digital Estimating'], $openprint::session{'user_id'} ) ) {
+			$openprint::log->debug('No Digital 4 U') if DEBUG_FILTERING;
+			next;
+		} # end if
+} # end if
 
 		if ( $$sig_specs{'PreviousStockType'} and ( $$Paper{'type'} ne $$sig_specs{'PreviousStockType'} ) ) {
 			$imp->display("PreviousStockType: $$sig_specs{'PreviousStockType'} ne " . $Paper->to_string() ) if DEBUG_FILTERING;
@@ -4480,12 +4489,11 @@ sub calc_price {
 
 	my $std_speed = $Press->Specification('Standard Run Speed');
 	$std_speed = $Press->Specification('Run Speed') if ! $std_speed;
-	my $run_speed;
 	if ( lc $$std_speed{'units'} eq 'calliper' ) {
-		$run_speed = $Press->specification('Run Speed', $$Paper{calliper} );
+		$$specs{Runspeed} = $price{Runspeed} = $Press->specification('Run Speed', $$Paper{calliper} );
 #$openprint::log->debug("Runspeed by calliper($$Paper{calliper}): $run_speed on $$Press{strid}");
 	} else {
-		$run_speed = $Press->specification('Run Speed', $Paper->gsm() );
+		$$specs{Runspeed} = $price{Runspeed} = $Press->specification('Run Speed', $Paper->gsm() );
 	} # end if
 #$run_speed = $$std_speed{value} if ! $run_speed;
 #$openprint::log->debug("Initial Runspeed: $run_speed, standard: $$std_speed{value}$$std_speed{units}");
@@ -4516,7 +4524,7 @@ sub calc_price {
 			if ( $folding_results{'Equipment'} ) {
 				if ( $folding_results{'Equipment'}->id() == $Press->id() ) {
 #$openprint::log->debug("Runspeed: $folding_results{'RunSpeed'}");
-					$run_speed = $folding_results{'RunSpeed'} if $folding_results{'RunSpeed'};
+					$$specs{Runspeed} = $price{Runspeed} = $folding_results{'RunSpeed'} if $folding_results{'RunSpeed'};
 				} # end if
 				$$Imposition{'Folder'} = $folding_results{'Equipment'};
 #$$Imposition{'FoldingCost'} = $folding_results{'Price'};
@@ -4585,7 +4593,7 @@ $$project{'FoldingSpecs'}{"FoldQty-$$specs{'SignatureIndex'}-$qty_index-$index"}
 			$price{'Comparison Cost'} += $$results{'Price'};
 	#$openprint::log->debug( 'Stitching Calc: ' . sprintf('%.4f', tv_interval( [$starttime])*1000) );
 			if ( $$results{'Equipment'}->id() == $Press->id() ) {
-				$run_speed = $$results{'RunSpeed'} if $$results{'RunSpeed'} and ( $$results{'RunSpeed'} < $run_speed );
+				$price{Runspeed} = $$specs{Runspeed} = $$results{'RunSpeed'} if $$results{'RunSpeed'} and ( $$results{'RunSpeed'} < $price{Runspeed} );
 			} # end if
 		} # end if
 	} # end if
@@ -4636,9 +4644,10 @@ $$project{'FoldingSpecs'}{"FoldQty-$$specs{'SignatureIndex'}-$qty_index-$index"}
 			$price{'Comparison Cost'} += $scoring_results{'Price'};
 			if ( $scoring_results{'Equipment'} and ( $scoring_results{'Equipment'}->id() == $Press->id() ) ) {
 				if ( $scoring_results{'Runspeed'} =~ /(.*)\%/ ) {
-					$run_speed *= (1+$1/100);
+					$price{Runspeed} *= (1+$1/100);
+					$$specs{Runspeed} = $price{Runspeed};
 				} else {
-					$run_speed = $scoring_results{'Runspeed'} if $run_speed > $scoring_results{'Runspeed'};
+					$$specs{Runspeed} = $price{Runspeed} = $scoring_results{'Runspeed'} if $price{Runspeed} > $scoring_results{'Runspeed'};
 				} # end if
 			} # end if
 			$scoring_results{'Overs'} = ceil( $scoring_results{'Overs'} / ( $$Imposition{'imposition'}/$scoring_results{'Imposition'}->imposition() ) ) if $scoring_results{'Imposition'}->imposition();
@@ -4654,9 +4663,10 @@ $$project{'FoldingSpecs'}{"FoldQty-$$specs{'SignatureIndex'}-$qty_index-$index"}
 			$price{'Comparison Cost'} += $perforating_results{'Price'};
 			if ( $perforating_results{'Equipment'} and ($perforating_results{'Equipment'}->id() == $Press->id()) ) {
 				if ( $perforating_results{'Runspeed'} =~ /(.*)\%/ ) {
-					$run_speed *= (1+$1/100);
+					$price{Runspeed} *= (1+$1/100);
+					$$specs{Runspeed} = $price{Runspeed};
 				} else {
-					$run_speed = $perforating_results{'Runspeed'} if $run_speed > $perforating_results{'Runspeed'};
+					$$specs{Runspeed} = $price{Runspeed} = $perforating_results{'Runspeed'} if $price{Runspeed} > $perforating_results{'Runspeed'};
 				} # end if
 			} # end if
 		} # end if
@@ -4695,8 +4705,6 @@ $$project{'FoldingSpecs'}{"FoldQty-$$specs{'SignatureIndex'}-$qty_index-$index"}
 	} else {
 		$openprint::log->debug("Has no cutting") if DEBUG;
 	} # end if
-
-	$price{'Run Speed'} = $run_speed;
 
 	# Now we know the bindery overs
 	my $bindery_overs = sets::max( $folding_results{'MakeReadyOvers'} + $folding_results{'RunOvers'}, $scoring_results{'Overs'}, $uv_results{'Overs'}, $diecutting_results{'Overs'}, $price{'Cutting Overs'} );
@@ -5011,7 +5019,7 @@ $openprint::log->debug("Varnish $real_colour") if DEBUG_INKS;
 				$openprint::log->error($C->to_string() );
 			} # end foreach C
 		} elsif ( DEBUG_INKS ) {
-			#$openprint::log->debug("Got INK: " . $Ink->to_string() );
+			$openprint::log->debug("Got INK: " . $Ink->to_string() );
 		} # end if
 
 # Washed_colours contains each colour used in the other signatures
@@ -5170,12 +5178,11 @@ $openprint::log->warn("Something wrong in AQ");
 	my $run_price;
 	if ( $is_wt ) {
 		#my @c = filter_coatings_from_colours( \@colours );
-		$run_price = get_run_price( $impressions, scalar(@{$$project{filtered_colours}}), 0, $Imposition, $Press, $run_speed ); 
+		$run_price = get_run_price( $impressions, scalar(@{$$project{filtered_colours}}), 0, $Imposition, $Press, $price{Runspeed} ); 
 	} else {
-		$run_price = get_run_price( $impressions, scalar @{$$project{side_one_colours}}, scalar @{$$project{side_two_colours}}, $Imposition, $Press, $run_speed );
+		$run_price = get_run_price( $impressions, scalar @{$$project{side_one_colours}}, scalar @{$$project{side_two_colours}}, $Imposition, $Press, $price{Runspeed} );
 	} # end if
-	$run_speed = $$run_price{run_speed};
-	$price{'Run Speed'} = $run_speed;
+	$price{Runspeed} = $$specs{Runspeed} = $$run_price{run_speed};
 
 	if ( $plate_setup{'Plate Type'} ne 'Conventional' ) {
 		my $ImpositionPrice = openprint::Estimating::Imposition::signature_calc( $Project, $Imposition, $$specs{'PreviousForms'.$qty_index}+1, $qty_index );
@@ -5349,7 +5356,8 @@ sub select_presses {
 
 		$Paper = $$Papers[0] if ! $Paper;
 
-		if ( $Press->specification('Printing Type') eq 'Digital' ) {
+		my $printing_type = $Press->specification('Printing Type');
+		if ( $printing_type eq 'Digital' ) {
 # Digital only support Process, no PMS, etc...
 			if ( ( scalar @$side_one_colours == 1 ) and ( ! sets::isin( $$project{'side_one_colour_names'}[0], ['Black', 'Black Spot Colour'] ) ) ) {
 				$results{$press_id} = "Digital doesn't do non-black: $$side_one_colours[0]";
@@ -5384,6 +5392,13 @@ sub select_presses {
 				$results{$press_id} = "Digital doesn't do non-process";
 				next;
 			} # end if
+			if ( $openprint::usergroup::groups_cache{'Digital Estimating'} and ! openprint::usergroup::is_user_in( ['Digital Estimating'], $openprint::session{user_id} ) ) {
+				$results{$press_id} = "You are not authorized for estimating on Digital presses.";
+				next;
+			} # end if
+		} elsif ( ( $printing_type eq 'Web' ) and $openprint::usergroup::groups_cache{'Web Estimating'} and ! openprint::usergroup::is_user_in( ['Web Estimating'], $openprint::session{'user_id'} ) ) {
+			$results{$press_id} = "You are not authorized for estimating on Web presses.";
+			next;
 		} # end if
 
 		my $number_of_colours = $Press->specification('Number of Colours');
