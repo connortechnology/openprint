@@ -33,6 +33,7 @@ my @fields = (
 	'stock_weight',
 	'sides',
 	'Project',
+	'printing_type',
 );
 
 sub new {

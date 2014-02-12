@@ -796,8 +796,7 @@ sub reuse_project {
 	if ( $Project->quantity1() != $NewProject->quantity1()
 			or $Project->quantity2() != $NewProject->quantity2()
 			or $Project->quantity3() != $NewProject->quantity3() ) {
-		openprint::Estimating::MultiPage::calculate_signatures( $NewProject );
-		openprint::service::auto_calculate( $NewProject, undef );
+		$NewProject->recalculate();
 	} # endif
 	$session{'project_id'} = $NewProject->id();
 	return $NewProject->id();

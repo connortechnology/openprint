@@ -111,6 +111,7 @@ sub handler {
 	# This one has to go here, because it loads data, the others clear data, so they can go after the requires
 	configuration::init( $r->dir_config() );
 	openprint::session_init();
+	openprint::usergroup::init_cache();
 	if ( $dbh ) {
 		if ( ! $page_settings{$config{db_name}} or ! $page_settings{$config{db_name}}{$page} ) {
 $log->debug("loading Page settings for $config{db_name} for $page") if DEBUG;

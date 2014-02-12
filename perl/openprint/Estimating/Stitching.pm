@@ -16,6 +16,7 @@
 
 package openprint::Estimating::Stitching;
 use strict;
+use warnings;
 
 use constant DEBUG => 0;
 
@@ -732,7 +733,8 @@ $openprint::log->debug(" fold qty * pages($pages) == sig_pages($sig_pages) foldQ
 					#$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Too many pockets: %d<br/>', $$specs{'txtPockets'.$qty_index} );
 					#next;
 				#} # end if
-				if ( $$sig_specs{'ddmPress'.$qty_index} ne $Equipment->strid() ) {
+				my @presses = sets::union( map { my $s=openprint::service::get_specs_ref( $Project, $_ ); $$s{"ddmPress$qty_index"} ? $$s{"ddmPress$qty_index"} : (); } @signatures );
+				if ( @presses > 1 or $presses[0] ne $Equipment->strid() ) {
 					$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Printing equipment not the same: %s<br/>',$$sig_specs{"ddmPress$qty_index"} );
 					next;
 				} # end if
