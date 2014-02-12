@@ -404,19 +404,26 @@ sub signature_calc {
 		my $totalPrice;
 
 		if ( ( $type eq 'Folder' ) and @Folds ) {
+			my $impressions;
+			my $parts = 0;
 			foreach my $Fold ( @Folds ) {
-                my $Price = get_price( $Equipment, $$specs{"txtVerticalQty-$$sig_specs{'SignatureIndex'}"}, $$specs{"txtHorizontalQty-$$sig_specs{'SignatureIndex'}"}, $qty, $Fold );
+				$parts += $Fold->imposition() * $Fold->quantity();
+			} # end if
+
+			foreach my $Fold ( @Folds ) {
+				$$Fold{impressions} = $qty * ( $parts / ( $Fold->imposition() * $Fold->quantity() ) );
+                my $Price = get_price( $Equipment, $$specs{"txtVerticalQty-$$sig_specs{'SignatureIndex'}"}, $$specs{"txtHorizontalQty-$$sig_specs{'SignatureIndex'}"}, $$Fold{impressions}, $Fold );
                 $totalPrice += $$Price{setup} + $$Price{Vertical}{Total} + $$Price{Horizontal}{Total} + $$Price{Service}{Total};
                 $Results{Breakdown} .= $$Price{Breakdown};
 			} # end foreach my $Fold
-                    #$Results{'Imposition'} = $Fold;
-                $Results{'Breakdown'} .= sprintf('Total: $%.2f<br/>', $totalPrice );
+#$Results{'Imposition'} = $Fold;
+			$Results{'Breakdown'} .= sprintf('Total: $%.2f<br/>', $totalPrice );
 
-                if ( $totalPrice < $Results{'Price'} or ! exists $Results{'Price'} ) {
-                    $Results{'Price'} = $totalPrice;
-                    $Results{'Equipment'} = $Equipment;
-                    $Results{'Runspeed'} = $Equipment->specification('Scoring Runspeed');
-                } # end if
+			if ( $totalPrice < $Results{'Price'} or ! exists $Results{'Price'} ) {
+				$Results{'Price'} = $totalPrice;
+				$Results{'Equipment'} = $Equipment;
+				$Results{'Runspeed'} = $Equipment->specification('Scoring Runspeed');
+			} # end if
 
 		} else {
 
@@ -471,7 +478,6 @@ sub get_price {
 
 	my $type = $Equipment->specification('Type');
 	my %Results;
-	$qty *= $I->quantity() if $I->quantity();
 	my $horizontal_rule = 0;
 	my $horizontal_length = 0;
 	my %horizontal_price;
@@ -535,7 +541,7 @@ sub get_price {
 
 		my $hours = $qty / $runspeed if $runspeed;
 		$servicePrice{Total} = Math::Round::nearest( 0.01, $servicePrice{'Price'} * $hours );
-		$Results{'Breakdown'} .= sprintf('Service: $%.2f%s @ %d%s =%.2f', @servicePrice{'Price','units'}, $runspeed, 'Per Hour', $servicePrice{Total} );
+		$Results{'Breakdown'} .= sprintf('Service: $%.2f%s * %d @ %d%s =%.2f', @servicePrice{'Price','units'}, $qty, $runspeed, 'Per Hour', $servicePrice{Total} );
 	} elsif ( $servicePrice{'Price'} ) {
 		$Results{'Breakdown'} .= "Unknown units set on service price ($score_qty) ($servicePrice{'units'}) <br/>";
 	} # end if
