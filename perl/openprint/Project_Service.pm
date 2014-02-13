@@ -149,7 +149,7 @@ sub delete {
 	} # end foreach Job
 
 	my $specs = $self->specs();
-	$self->Project()->add_to_log( @openprint::session{'company_id','user_id'}, "Deleted service $$specs{ServiceType} $$specs{ServiceName}." );
+	$Project->add_to_log( @openprint::session{'company_id','user_id'}, "Deleted service ".$self->ServiceType()->type() . " $$specs{ServiceName}." );
 	sql::end_transaction( $openprint::dbh, $ac );
 } # end sub delete
 
