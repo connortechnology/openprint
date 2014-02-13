@@ -103,6 +103,7 @@ $serial = 'lngProjectIndex_seq';
 	operator_id		=>	q`(SELECT operator_id FROM tbl_Project_Contents WHERE lngProjectIndex=id)`,
 	quote_id		=>	q`(SELECT quote_id FROM tbl_quote_details WHERE project_id=Projects.id)`,
 	servicetype_id	=>	'(SELECT servicetype_id FROM tbl_project_contents WHERE lngprojectIndex=id)',
+	type	=>	'(SELECT name FROM project_types WHERE project_types.id=type_id)',
 );
 
 sub delete {
