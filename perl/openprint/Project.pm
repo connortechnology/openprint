@@ -847,9 +847,11 @@ sub summary {
 					if ( $k =~ /^PrintingType/i ) {
 						if ( $$sig_specs{'Group'} eq $group_id ) {
 							if ( $$sig_specs{$k} eq 'Web' ) { 
-								$summary .= ', '. 'Printed Web,<br/>';
+								$summary .= ', <span class="Web">Printed Web</span>,<br/>';
+							} elsif ( $$sig_specs{$k} eq 'Digital' ) { 
+								$summary .= ', '. '<span class="Digital">Printed Digital</span>,<br/>';
 							} else {
-								$summary .= ', '. 'Printed Sheetfed,<br/>';
+								$summary .= ', '. '<span class="Sheetfed">Printed Sheetfed</span>,<br/>';
 							} #endif Web
 							last;
 						} # end if group_id

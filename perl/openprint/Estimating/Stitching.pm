@@ -1027,10 +1027,12 @@ $openprint::log->debug("Need more pockets $maxPockets") if DEBUG;
 	$price{'Imposition Discount'} = $Equipment->specification( 'Imposition Discount', $price{'Imposition'} );
 	$price{'Service'} *= ( 1 - $price{'Imposition Discount'}/100);
 	$price{'MPrice'} += ( $price{'Service'} / $qty ) * 1000 if $qty;
-	if ( $Equipment->specification( 'SpineLength Discount' ) ) {
-		$price{'SpineLength Discount'} = $Equipment->specification( 'SpineLength Discount', $$specs{'Height'} );
+	if ( my $spinelength_discount = $Equipment->specification( 'SpineLength Discount', $$specs{'Height'} ) ) {
+		$price{'SpineLength Discount'} = $spinelength_discount;
 		$price{'Service'} *= ( 1 - $price{'SpineLength Discount'}/100);
 		$price{'MPrice'} *= ( 1 - $price{'SpineLength Discount'}/100);
+	} else {
+		$price{'SpineLength Discount'} = '';
 	} # end if
 
 	$price{'txtPrice'} = Math::Round::nearest(0.01,$price{'MakeReady'} + $price{'Service'} + $price{'Insert'});
