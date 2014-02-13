@@ -173,7 +173,8 @@ sub load_used {
 		if ( $$specs{'UsePress'} ) {
 			$$self{'Press'} = openprint::Equipment->find_one('strid'=>$$specs{'UsePress'});
 			if ( ! $$self{'Press'} ) {
-				$openprint::log->error("No Press found for $qty_index " . $$specs{'UsePress'} );
+				# This can happen when a press is deleted
+				$openprint::log->debug("No Press found for $qty_index " . $$specs{'UsePress'} );
 			} # end if
 		} # end if
 		if ( ! $$self{'Press'} ) {
