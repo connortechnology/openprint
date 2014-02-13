@@ -24,7 +24,7 @@ my $threading = 0;
 #use threads;
 use constant DEBUG => 0;
 use constant DEBUG_VERSIONS => 0;
-use constant DEBUG_FILTERING => 0;
+use constant DEBUG_FILTERING => 1;
 use constant DEBUG_INITIAL_FILTERING => 0;
 use constant DEBUG_PRICE_DECISIONS => 0;
 use constant DEBUG_INKS => 0;
@@ -1558,12 +1558,12 @@ $imp->display('Comparing A QTY $' . $$imp{PaperPrice}{'100lb Price'}. " for $a_s
                     $$I{PaperPrice} = $B->get_price( service=>'Material', weight=> $$I{stock_lbs} ) if ! $$I{PaperPrice};
                     my $BPrice = $$I{PaperPrice};
 $I->display('Comparing B QTY $' . $$BPrice{'100lb Price'}) if DEBUG_INITIAL_FILTERING;
-if ( ! $$I{PaperPrice} ) {
-$log->error("No price for stock ".$B->to_string() );
-} elsif ( ( ! $$BPrice{'100lb Price'} ) and ( ! $$B{custom} ) and ( ! $$B{supplied} ) ) {
-$log->error("No 100lb price for stock ".$B->to_string() );
+#if ( ! $$I{PaperPrice} ) {
+#$log->error("No price for stock ".$B->to_string() ) if ! ( $B->custom() or $B->supplied() );
+#} elsif ( ( ! $$BPrice{'100lb Price'} ) and ( ! $$B{custom} ) and ( ! $$B{supplied} ) ) {
+#$log->error("No 100lb price for stock ".$B->to_string() );
 #$log->error("No 100lb price for stock ".$B->get_price( service=>'Material')->to_string() );
-}
+#}
 
                     if (
                             ( $B->area() >= $A->area() )
@@ -2215,6 +2215,9 @@ $log->warn("There are no quantities!");
 			$$project{'stocksetupcharged'} = 1 if $$sig_specs{'StockSetupCharge'.$qty_index};
 			my $hash_key = join(',', @$sig_specs{'ddmPress'.$qty_index,'ddmRunStyle'.$qty_index,'PageQuantity'.$qty_index,'txtImposition'.$qty_index,'hdnImpositionColumns'.$qty_index} );
 			$previous_forms_cache{$hash_key} += 1;
+			my $Paper = openprint::Paper::load_from_signature( $Project, $sig_specs, $qty_index );
+			$PaperCounts{$Paper->id_string()} += $$sig_specs{'StockQuantity'.$qty_index};
+			$Papers{$Paper->id_string()} = $Paper if ! $Papers{$Paper->id_string()};
 		} # end foreach $index
 		if ( ! $$project{'stocksetupcharged'} ) {
 			# Check to see if there even are any stock setup prices.  If not, don't both estimating them later
@@ -3065,6 +3068,7 @@ $log->warn("Getting all impos results: " . @results );
 				$stock_qty = int( $stock_qty * $Paper->area() * $Paper->wpsi() );
 				$lookup_stock_qty = $stock_qty + $$PaperCounts{$Paper->id_string()};
 	#$openprint::log->debug("Roll stock_weight $stock_qty Lookup impressioions: $lookup_stock_qty");
+$imp->display(" qty in paper counts. " . $$PaperCounts{$Paper->id_string()} );
 			} else {
 				$lookup_stock_qty += $$PaperCounts{$Paper->id_string()} * $Paper->factor();
 	#$openprint::log->debug("Sheets $stock_qty Lookup impressioions: $lookup_stock_qty");
@@ -3072,8 +3076,16 @@ $log->warn("Getting all impos results: " . @results );
 				$lookup_stock_qty = POSIX::ceil( $lookup_stock_qty * $Paper->area() * $Paper->wpsi() );
 	#$openprint::log->debug("Sheet weight $stock_qty Lookup impressioions: $lookup_stock_qty");
 			} # end if
-			$$imp{stock_qty} = $lookup_stock_qty;
+			$$imp{stock_qty} = $stock_qty;
+			$$imp{lookup_stock_qty} = $lookup_stock_qty;
+			if ( $$imp{lookup_stock_qty} < $Paper->minimum_order_weight() ) {
+				$$imp{stock_qty} = $$imp{lookup_stock_qty} = $Paper->minimum_order_weight();
+			} # end if
 		} # end if
+
+foreach my $k ( keys %{$PaperCounts} ) {
+$openprint::log->debug("Whats in papercounts: $k $$PaperCounts{$k}");
+} # end foreach
 
 		my $SmallerPrice;
 if ( ! int($$imp{stock_qty}) ) {
@@ -3083,7 +3095,7 @@ $imp->display("qty: $qty unspec ". $$sig_specs{"txtUnspecifiedPageQuantity$qty_i
 		#if ( $$imp{'PaperPrice'} ) {
 			#$SmallerPrice = $$imp{'PaperPrice'};
 		#} else {
-		$$imp{'PaperPrice'} = $SmallerPrice = $Paper->get_price( weight=>($$imp{stock_qty} > $Paper->minimum_order_weight() ? $$imp{stock_qty} : $Paper->minimum_order_weight()), service=>'Material' );
+		$$imp{'PaperPrice'} = $SmallerPrice = $Paper->get_price( weight=>$$imp{stock_qty}, lookup_qty => $$imp{lookup_stock_qty}, service=>'Material' );
 		#} # end if
 
 		if ( $SpreadLayout > 0 ) {
