@@ -1019,6 +1019,7 @@ $openprint::log->debug(qq`Wrong imposition: $$specs{"FoldImposition-$$sig_specs{
 #$openprint::log->debug("Overriding FOlds and Angles $$F{folds} $$F{angles}");
 							$$F{'folds'} = $$specs{"FoldFolds-$$sig_specs{'SignatureIndex'}-$qty_index-$index"};
 							$$F{'angles'} = $$specs{"FoldAngles-$$sig_specs{'SignatureIndex'}-$qty_index-$index"};
+							$$F{runspeed} = $$specs{"FoldRunspeed-$$sig_specs{'SignatureIndex'}-$qty_index-$index"} if $$specs{"FoldRunspeed-$$sig_specs{'SignatureIndex'}-$qty_index-$index"};
 						} # end foreach F
 					} # end foreach my $k
 					if ( ! $found{$index} ) {

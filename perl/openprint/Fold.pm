@@ -223,8 +223,12 @@ sub RunSpeed {
 } # end sub RunSpeed
 
 sub runspeed {
+	if ( $_[0]{runspeed} ) {
+		return $_[0]{runspeed};
+	} else {
 	my $RunSpeed = $_[0]->RunSpeed($_[1]);
 	return $RunSpeed ? $$RunSpeed{'runspeed'} : undef;
+	} # end if
 } # end sub runspeed
 
 sub Imposition {
