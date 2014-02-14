@@ -52,6 +52,7 @@ sub history {
 		} elsif ( $param{'ProjectIndex'} ) {
 			$variable{'error'} .= openprint::print_project::try_to_delete_project( $log, $dbh, \%variable, $param{'ProjectIndex'} );
 		} # end if
+		$variable{ExternalRedirect} = '/main/project/history.html';
 	} elsif ( $param{'btnFunction'} eq 'Reuse Project' ) {
 		foreach my $project_id ( ref $param{'project_id'} eq 'ARRAY' ? @{$param{'project_id'}} : $param{'project_id'} ) {
 			openprint::print_project::reuse_project( $r, $log, $dbh, $session{_session_id}, \%variable, $project_id );
