@@ -26,7 +26,7 @@ require sql;
 require openprint::service;
 require openprint::Estimating::Printing;
 
-use constant DEBUG => 0;
+use constant DEBUG => 1;
 my @variables = (
 		'txtPrice',
 		'CustomProofSpecs',
@@ -794,20 +794,16 @@ sub has_overrides {
 	foreach my $ss_id ( $Project->signatures() ) {
 		my $sig_specs = openprint::service::get_specs_ref( $Project, $ss_id );
 		my $signature_index = $$sig_specs{SignatureIndex};
-		$openprint::log->debug("Proofs:: has_overrides for form $signature_index");
 		foreach my $key ( keys %{$specs} ) {
 			if ( $key =~ /^txtProofIndex-$signature_index-(\d+)-$qty_index$/ ) {
 				my ( $proof_index ) = ( $1 );
-				$openprint::log->debug("Proofs:: have proof for $proof_index qty $qty_index");
 				if ( $$specs{"chkOverride-$signature_index-$proof_index-$qty_index"} ) {
 					push @v,    "chkOverride-$signature_index-$proof_index-$qty_index";
 				} # end if
 			} # end if
 		} # end foreach key
 	} # end foreach signature
-	$openprint::log->debug("Proofs: has_overrides: @v");
     return @v;
-
 } # end sub has_overrides
 
 

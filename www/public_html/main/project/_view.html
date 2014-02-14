@@ -287,7 +287,10 @@
 								$html .= '</td>';
 							} # end foreach qty_index
 							$html .= '<td>&nbsp;</td>';
-							$html .= '<td class="unprintable actions">&nbsp;</td></tr>';
+				if ( ( ! $Project->docket() ) or ( $Project->Order()->status() eq 'Re-Opened' ) ) {
+							$html .= '<td class="unprintable actions">&nbsp;</td>';
+					}
+							$html .= '</tr>';
 						} # end foreach summary
 					} # end if summaries
 					$rowclass = $rowclass ? '' : ' class="colRow"';
