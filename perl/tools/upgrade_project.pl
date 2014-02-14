@@ -26,6 +26,8 @@ $sql_server{'password'} = $sql_server{'login'} if ! $sql_server{'password'};
 $openprint::Object::no_cache = 1;
 my $projects_count = 10000;
 my $project_id = $ARGV[3];
+die if ! $project_id;
+
 #
 #my $project_id = 407192;
 my $company_id = 0;
@@ -232,7 +234,7 @@ foreach my $Project ( openprint::Project->find( 'order'=>'id desc',
 	if ( @sigs == 1 ) {
 		my $PService = $Project->Service( $sigs[0] );
 		my $sig_specs = $Project->specs();
-		if ( 1 or ! ( $$sig_specs{txtWidth} and $$sig_specs{txtHeight} ) ) {
+		if ( ! ( $$sig_specs{txtWidth} and $$sig_specs{txtHeight} ) ) {
 			$PService->delete();
 			my $new_signature = $Project->copy_signature( $print_specs, {}, openprint::service::status( $Project->id(), $$services{''}[0] ) );
 			foreach my $qty_index ( $Project->quantity_indexes() ) {
