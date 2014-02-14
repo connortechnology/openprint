@@ -225,6 +225,7 @@ $I->display('In Stitching:') if DEBUG;
 			} # end foreach fold index
 			my $total_pages = misc::sum( map { $_ * $folds{$_} } keys %folds );
 SIG_FIX_PAGES: while( $total_pages > $sig_pages ) {
+$openprint::log->debug("Total: $total_pages - $sig_pages");
 			   if ( $folds{$total_pages-$sig_pages} > 1 ) {
 				   $folds{$total_pages-$sig_pages} -= 1;
 				   $total_pages -= ( $total_pages-$sig_pages );
@@ -815,13 +816,21 @@ $openprint::log->error("No best equipment in Stitching");
 				#$$specs{'txtSignatureQty'.$pages.'Page-'.$qty_index} *= $$specs{'Imposition'.$qty_index} / $$bestPrice{'Imposition'};
 			#} # end foreach
 		#} # end if
+		if ( $$specs{"Markup$qty_index"} ) {
+			$$bestPrice{'MPrice'} *= (1+$$specs{"Markup$qty_index"}/100);
+			$$bestPrice{txtPrice} *= (1+$$specs{"Markup$qty_index"}/100);
+		} # end if
+		if ( $Project->markup() ) {
+			$$bestPrice{'MPrice'} *= (1+$Project->markup()/100);
+			$$bestPrice{txtPrice} *= (1+$Project->markup()/100);
+		} # end if
 		if ( $$specs{'OverridePrice'.$qty_index} ne 'Y' ) {
-			$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $$bestPrice{'txtPrice'} * (1+$$specs{"Markup$qty_index"}/100) * (1+$Project->markup()/100) );
+			$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $$bestPrice{txtPrice} );
 		} else {
 			$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $$specs{'txtPrice'.$qty_index} );
 		} # end if
-		$$specs{"MPrice$qty_index"} = sprintf( $openprint::config{'UnitPriceFormat'}, $$bestPrice{'MPrice'} *(1+$$specs{"Markup$qty_index"}/100) * (1+$Project->markup()/100) );
-		$$specs{"txtUnitPrice$qty_index"} = sprintf( $openprint::config{'UnitPriceFormat'}, ( $$bestPrice{'txtPrice'}/$$specs{"txtQuantity$qty_index"} ) * (1+$Project->markup()/100) );
+		$$specs{"txtUnitPrice$qty_index"} = sprintf( $openprint::config{'UnitPriceFormat'}, $$bestPrice{txtPrice}/$$specs{"txtQuantity$qty_index"} );
+		$$specs{"MPrice$qty_index"} = sprintf( $openprint::config{'UnitPriceFormat'}, $$bestPrice{'MPrice'} );
 		$$specs{"txtRunTime$qty_index"} = $$bestPrice{'RunTime'};
 	} # end foreach qty_index
 	$log->debug("END STITCHING!!!!!!!");

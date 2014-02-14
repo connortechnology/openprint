@@ -73,6 +73,7 @@ $log->debug("variables: @variables");
 		} elsif ( ! exists $openprint::param{$key} ) {
 			delete_service_spec( $project_index, $service_index, $key );
 		} else {
+			s/^\s+//, s/\s+$// for $openprint::param{$key};
 			insert_service_spec( $log, $dbh, $project_index, $service_index, $key, $openprint::param{$key}, 0 );
 		} # end if
 	} # end foreach

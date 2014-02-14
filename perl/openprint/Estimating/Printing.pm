@@ -2722,7 +2722,7 @@ sub calculate_impositions {
 			} elsif ( $SpreadLayout > 1 ) {
 				@press_impositions = openprint::imposition::convert_impositions( $SpreadLayout, $$project{txtSpreadSize}, $$impositions{$strid} );
 			} else {
-				@press_impositions = @{ $$impositions{$strid} };
+				@press_impositions = @{ $$impositions{$strid} } if $$impositions{$strid};
 			} # end if
 			$openprint::log->debug("Converting Impositions spread Layout: $SpreadLayout : imps:" . @press_impositions) if DEBUG or DEBUG_FILTERING;
 			if ( ! @press_impositions ) {
@@ -5339,6 +5339,11 @@ sub select_presses {
 				$results{$press_id} = "Press $press_id Failed Calliper Check.  Maximum calliper is $max_calliper";
 				next;
 			} # end if
+			my $min_calliper = $Press->specification('Minimum Calliper', $$Paper{'grade'} );
+			if ( $min_calliper and ( $$Paper{calliper} < $min_calliper ) ) {
+				$results{$press_id} = "Press $press_id Failed Minimum Calliper Check.  Minimum calliper is $min_calliper";
+				next;
+			} # end if
 			my $max_gsm = $Press->specification('Maximum GSM', $Paper->gsm() );
 			if ( $max_gsm and ( $$Paper{'gsm'} > $max_gsm ) ) {
 				$results{$press_id} = "Press $press_id Failed gsm Check.  Maximum gsm is $max_gsm";
@@ -6054,8 +6059,8 @@ if ( 0 ) {
 					get_colour_description( $specs ),
 					$$specs{'rdbSuppliedStock'} eq 'Y' ? '<b>Customer Supplied</b>' : '',
 					$$specs{'rdbSpecificStock'} eq 'Y' ? '<b>Custom:</b>'.
-					join(', ', @$specs{'txtSpecificStockBrand','txtSpecificStockFinish','txtSpecificStockColour','txtSpecificStockWeight'} ) :
-					join(', ', @$specs{'ddmStockBrand','ddmStockFinish','ddmStockColour','ddmStockWeight'} )
+					join(', ', @$specs{'txtSpecificStockBrand','txtSpecificStockFinish','txtSpecificStockColour','txtSpecificStockWeight'}, ($$specs{'txtSpecificStockCalliper'} * 1000).'PT' ) :
+					join(', ', @$specs{'ddmStockBrand','ddmStockFinish','ddmStockColour','ddmStockWeight'}, ($$specs{'txtSpecificStockCalliper'} * 1000).'PT' )
 					,
 					);
 		} # end if

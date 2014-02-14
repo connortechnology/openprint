@@ -24,7 +24,7 @@ require openprint::service;
 
 use vars qw( @folds %fold_types );
 
-use constant DEBUG => 0;
+use constant DEBUG => 1;
 use constant DEBUG_NEEDS => 0;
 
 my @equipment;
@@ -534,7 +534,7 @@ $openprint::log->error("No folds from sigimpo");
 	if ( DEBUG ) {
 		foreach my $k ( keys %makereadies ) {
 			my @mrs = @{$makereadies{$k}};
-			$openprint::log->error("Makereadies for $k : @mrs");
+			$openprint::log->debug("Makereadies for $k : @mrs");
 		}
 	}
 
@@ -1220,7 +1220,7 @@ $openprint::log->debug("Folds: $set_index : $key " . $impo_qty );
 					$runTime = Math::Round::nearest( 0.0001, $run_qty / $runspeed ); # in hours
 					$Breakdown .= sprintf('Runspeed: %d @ %d/HR = %d:%d:%d<br/>', $run_qty, $runspeed, misc::seconds_to_interval( int( 3600*$runTime ) ) );
 				} # end if
-$openprint::log->debug("Runspeed: $fold_type(".$Fold->name().") : " . $Equipment->name() . ' ' . $Fold->runspeed() .' ' . $Paper->gsm() ) if DEBUG;
+$openprint::log->debug("Runspeed: $fold_type(".$Fold->name().") : " . $Equipment->name() . ' ' . $runspeed .' ' . $Paper->gsm() ) if DEBUG;
 #$Breakdown .= sprintf( '&nbsp;Folds: QTY: %d, %dout Runspeed: %d/Hr = %.2f hours<br/>', $qty, $imposition, $$RunSpeed{runspeed}, $runTime );
 # We are assumin at this point, that all these folds are posible on this equipment, so any errors are soft errors
 				my %servicePrice = openprint::service::get_price_object( 'Folding'.$imposition.'out', $run_qty, $Equipment );
@@ -1463,6 +1463,7 @@ sub calc {
 
 		my @signatures = $Project->signatures( { sort => 1 });
 		my @Signature_Impositions;
+		my %Impositions;
 		foreach my $sig_id ( @signatures ) {
 			my $sig_specs = openprint::service::get_specs_ref( $Project, $sig_id );
 			if ( ! $$sig_specs{'txtImposition'.$qty_index} ) {
@@ -1472,6 +1473,7 @@ sub calc {
 			my $i = new openprint::Imposition();
 			$i->load( $sig_specs, $qty_index );
 			push @Signature_Impositions, $i;
+			$Impositions{$sig_id} = $i;
 			$$i{service_id} = $sig_id;
 
 			if ( $$specs{"chkOverrideFold-$$sig_specs{'SignatureIndex'}-$qty_index"} ne 'Y' ) {
@@ -1507,10 +1509,10 @@ sub calc {
 				next;
 			} # end if
 
+			my $Imposition = $Impositions{$signature_service_index};
+			$$specs{'hdnBreakdown'.$qty_index} .= $Imposition->Paper()->to_string() . '<br/>';
+
 			if ( ( ! exists $$sig_specs{'PageQuantity'.$qty_index} ) or $$sig_specs{'PageQuantity'.$qty_index} ) {
-				my $Imposition = new openprint::Imposition;
-				$Imposition->load( $sig_specs, $qty_index );
-$Imposition->display();
 				my %results = signature_calc( $Project, $signature_service_index, $sig_specs, $specs, $qty_index, $Imposition, $uv_specs, $aq_specs, {}, \@Signature_Impositions, $calc_hash );
 				$$specs{'hdnBreakdown'.$qty_index} .= $results{'Breakdown'};
 				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('MR Waste: %d, Run Waste: %d<br/>', @results{'MakeReadyOvers','RunOvers'} );
