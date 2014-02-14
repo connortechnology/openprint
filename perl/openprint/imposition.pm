@@ -282,6 +282,7 @@ $openprint::log->debug("Not Pretrimming on $$Press{strid}") if DEBUG;
 	$setup1->object_width( $image_width );
 	$setup1->object_height( $image_height );
 	$setup1->Press( $Press );
+	$setup1->printing_type( $Press->specification('Printing Type') );
 	if ( $run_style eq 'Perfecting' ) {
 		$setup1->colour_bar_size( $$specs{'Perfecting_colour_bar_size'} );
 	} else {
@@ -301,6 +302,7 @@ $openprint::log->debug("Not Pretrimming on $$Press{strid}") if DEBUG;
 	$setup2->object_width( $image_width );
 	$setup2->object_height( $image_height );
 	$setup2->Press( $Press );
+	$setup2->printing_type( $Press->specification('Printing Type') );
 	if ( $run_style eq 'Perfecting' ) {
 		$setup2->colour_bar_size( $$specs{'Perfecting_colour_bar_size'} );
 	} else {

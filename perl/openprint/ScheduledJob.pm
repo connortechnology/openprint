@@ -205,7 +205,7 @@ sub stock {
 			} else {
 				$$self{'stock'} .= ' not ordered.';
 			} # end if
-		} else {
+		} elsif ( $Stock ) {
 			if ( $Stock->type() eq 'Roll' ) {
 				$$self{'stock'} .= $Stock->width().'&quot; Roll';
 			} else {

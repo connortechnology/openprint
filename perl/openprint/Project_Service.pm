@@ -149,7 +149,7 @@ sub delete {
 	} # end foreach Job
 
 	my $specs = $self->specs();
-	$self->Project()->add_to_log( @openprint::session{'company_id','user_id'}, "Deleted service $$specs{ServiceType} $$specs{ServiceName}." );
+	$Project->add_to_log( @openprint::session{'company_id','user_id'}, "Deleted service ".$self->ServiceType()->type() . " $$specs{ServiceName}." );
 	sql::end_transaction( $openprint::dbh, $ac );
 } # end sub delete
 
@@ -160,14 +160,16 @@ sub ordered_price {
 
 sub overrides {
 	my ( $self, $qty_index ) = @_;
-	my $module = 'openprint::Estimating::'.$_[0]->ServiceType()->name();
-	$module = 'openprint::Estimating::Printing' if $module eq 'openprint::Estimating::AdditionalSignature';
+	my $module = 'openprint::Estimating::'.$_[0]->ServiceType()->type();
 	$module = 'openprint::Estimating::Printing' if $module eq 'openprint::Estimating::Signature';
+	$module = 'openprint::Estimating::Printing' if $module eq 'openprint::Estimating::AdditionalSignature';
 	$module = 'openprint::Estimating::Printing' if $module eq 'openprint::Estimating::';
 	if ( my $function = $module->can( 'has_overrides' ) ) {
 		my $specs = $_[0]->specs();
 		my @o = $function->( $self->Project(), $$self{'service_id'}, $specs, $qty_index );
 		return @o;
+	} else {
+		$openprint::log->warn("No has_overrides for " . $_[0]->ServiceType()->name() );
 	} # end if
 	return ();
 } # end sub overrides

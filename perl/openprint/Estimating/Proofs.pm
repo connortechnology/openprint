@@ -785,5 +785,27 @@ sub get_next_proof_index {
 	return sets::max( \@proof_indexes ) + 1;
 }
 
+sub has_overrides {
+	my ( $Project, $service_id, $specs, $qty_index ) = @_;
+	$specs = openprint::service::get_specs_ref( $Project, $service_id ) if ! $specs;
+
+	my @v;
+
+	foreach my $ss_id ( $Project->signatures() ) {
+		my $sig_specs = openprint::service::get_specs_ref( $Project, $ss_id );
+		my $signature_index = $$sig_specs{SignatureIndex};
+		foreach my $key ( keys %{$specs} ) {
+			if ( $key =~ /^txtProofIndex-$signature_index-(\d+)-$qty_index$/ ) {
+				my ( $proof_index ) = ( $1 );
+				if ( $$specs{"chkOverride-$signature_index-$proof_index-$qty_index"} ) {
+					push @v,    "chkOverride-$signature_index-$proof_index-$qty_index";
+				} # end if
+			} # end if
+		} # end foreach key
+	} # end foreach signature
+    return @v;
+} # end sub has_overrides
+
+
 1;
 __END__

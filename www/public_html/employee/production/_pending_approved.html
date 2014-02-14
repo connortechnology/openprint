@@ -5,6 +5,8 @@
 		my $Shift = new openprint::Shift();
 		$Shift->name('Approved');
 
+		my $ac = sql::start_transaction($dbh);
+
 		foreach my $E ( @{$$variable{'Equipment'}} ) {
 			$html .= '<td class="PressColumn">'."\n";
 			$Shift->equipment_id( $E->id() );
@@ -12,6 +14,8 @@
 			$html .= $Shift->get_ul( {'Status'=>['Approved','Shipped','Picked Up']} );
 			$html .= "</td>\n";
 		} # end foreach Equipment
+
+		sql::end_transaction( $dbh, $ac );
 	} # end if
 	return $html;
 ) ?>

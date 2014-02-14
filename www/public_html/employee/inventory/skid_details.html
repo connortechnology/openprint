@@ -18,8 +18,8 @@
 			); ) ?>
 		</li>
 		<li class="RFID">
-			<label for="rfidtag_id">RFID Tag ID #</label>
-			<input type="number" id="rfidtag_id" name="rfidtag_id" onkeyup="this.value=this.value.replace(/\s/,'');" onkeypress="return input_handler( this, event);" onkeydown="this.form.skid_id.value='';this.form.rfidtag_hex.value='';if(event.keyCode == 13){$('jump').submit();}" value="<?rfidtag_id?>" />
+			<label>RFID Tag ID #</label>
+			<input type="number" name="rfidtag_id" onkeyup="this.value=this.value.replace(/\s/,'');" onkeypress="return input_handler( this, event);" onkeydown="this.form.skid_id.value='';this.form.rfidtag_hex.value='';if(event.keyCode == 13){$('jump').submit();}" value="<?rfidtag_id?>" />
 			Hex:
 			<input type="text" id="rfidtag_hex" name="rfidtag_hex" onkeyup="this.value=this.value.replace(/\s/,'');" onkeydown="this.form.skid_id.value='';this.form.rfidtag_id.value='';if(event.keyCode == 13){$('jump').submit( );}" />
 			<? echo ( button( 'Load', { onclick=>q`$('jump').submit();`, text=>'Load' } ); ) ?><br/>
@@ -27,8 +27,8 @@
 				<? echo ( return join('<br/>', map { sprintf('<a href="/employee/inventory/rfidtag_details.html?rfidtag_id=%2$s">%2$s</a> <a href="/employee/inventory/skid_details.html?skid_id=%1$d">%1$d</a>', $_->skid_id(), $_->id() ); }  openprint::RFIDTag->find('id like'=>'%'.$param{'rfidtag_id'}.'%','type'=>'Skid') ); ) ?>
 			<? endif ( ! $$variable{'Skid'}->id() and $param{'rfidtag_id'} ) ?>
 		</li>
-		<li>
-			<label for="manufacturers_id">Manufacturers ID</label>
+		<li class="manufacturers_id">
+			<label>Manufacturers ID</label>
 			<? echo ( input( type=>'text', name=>'manufacturers_id', onkeypress=>'return input_handler(this,event);', onkeydown=>q`this.form.skid_id.value='';this.form.rfidtag_id.value='';this.form.rfidtag_hex.value='';if(event.keyCode==13){$('jump').submit();}`, value=>$$variable{manufacturers_id} ); ) ?>
 		</li>
 		</ul>
@@ -91,19 +91,19 @@
 				<? echo ( input( type=>'cardinal', name=>'skid_quantity', value=>$param{skid_quantity} ); ) ?>
 			</li>
 		<? endif ( $$variable{'Skid'}->id() ) ?>
-			<li><label>RFID Tag</label>
+			<li class="RFID"><label>RFID Tag</label>
 				<input type="text" id="rfidtag_id" name="rfidtag_id" value="<? echo ( $$variable{'Skid'}->rfidtag_id() ) ?>" />
 				<? if ( $$variable{'Skid'}->rfidtag_id() ) ?>
 					<? echo ( button( 'ViewTag', { href=>'rfidtag_details.html?rfidtag_id='.$$variable{Skid}->rfidtag_id(), text=>'View Tag' } ); ) ?><br/>
 					Last seen: <? echo ( format_date( $$variable{'Skid'}->RFIDTag()->updated_on() ); ) ?>
 				<? endif ( $$variable{'Skid'}->rfidtag_id() ) ?>
 			</li>
-			<li>
-				<label for="manufacturers_id">Manufacturers ID</label>
+			<li class="manufacturers_id">
+				<label>Manufacturers ID</label>
 				<? echo ( input( type=>'text', name=>'manufacturers_id', onkeypress=>'return input_handler(this,event);', value=>$$variable{Skid}->manufacturers_id() ); ) ?>
 			</li>
-			<li><label>Verification</label>
-				<input type="text" id="verification_code" name="verification_code" onchange="change_handler(this);" onkeypress="return input_handler(this,event);" value="<? echo ( $session{'/employee/inventory/skid_details.html?verification_code'} ) ?>" />
+			<li class="verification_code"><label>Verification</label>
+				<input type="text" name="verification_code" onchange="change_handler(this);" onkeypress="return input_handler(this,event);" value="<? echo ( $session{'/employee/inventory/skid_details.html?verification_code'} ) ?>" />
 			<? echo ( button( 'vpopulate', { onclick=>"f1.verification_code.value='".Date::Format::time2str( '%Y', time )."';", text=>'Verification:' } ); ) ?>
 			</li>
 			<li>
