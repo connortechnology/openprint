@@ -225,8 +225,7 @@ $I->display('In Stitching:') if DEBUG;
 			} # end foreach fold index
 			my $total_pages = misc::sum( map { $_ * $folds{$_} } keys %folds );
 SIG_FIX_PAGES: while( $total_pages > $sig_pages ) {
-$openprint::log->debug("Total: $total_pages - $sig_pages");
-			   if ( $folds{$total_pages-$sig_pages} > 1 ) {
+			   if ( $folds{$total_pages-$sig_pages} and ( $folds{$total_pages-$sig_pages} > 1 ) ) {
 				   $folds{$total_pages-$sig_pages} -= 1;
 				   $total_pages -= ( $total_pages-$sig_pages );
 				   next;
@@ -1027,11 +1026,13 @@ $openprint::log->debug("Need more pockets $maxPockets") if DEBUG;
 		} # end if
 	} # end if
 
-	$price{'Calliper Markup'} = $Equipment->specification( 'Calliper Price Adjustment', $$specs{'txtCalliper'} );
-	$price{'Service'} *= ( 1 + $price{'Calliper Markup'}/100);
+	if ( $price{'Calliper Markup'} = $Equipment->specification( 'Calliper Price Adjustment', $$specs{'txtCalliper'} ) ) {
+		$price{'Service'} *= ( 1 + $price{'Calliper Markup'}/100);
+	} # end if
 
-	$price{'RunCost Discount'} = $Equipment->specification( 'RunCost Discount', $$specs{"txtQuantity$qty_index"} );
-	$price{'Service'} *= ( 1 - $price{'RunCost Discount'}/100);
+	if ( $price{'RunCost Discount'} = $Equipment->specification( 'RunCost Discount', $$specs{"txtQuantity$qty_index"} ) ) {
+		$price{'Service'} *= ( 1 - $price{'RunCost Discount'}/100);
+	} # end if
 
 	$price{'Imposition Discount'} = $Equipment->specification( 'Imposition Discount', $price{'Imposition'} );
 	$price{'Service'} *= ( 1 - $price{'Imposition Discount'}/100);
