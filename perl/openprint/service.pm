@@ -338,8 +338,9 @@ require openprint::Estimating::Stitching;
 		my $neccessary = eval 'openprint::Estimating::'.$service_name.'::neccessary( $Project )';
 		$openprint::log->error("Error opepnrint::Estimating::$service_name::neccessary $@") if $@;
 
-		if ( $neccessary ) {
-			push @{$$services{$service_name}}, $Project->add_service($service_name) if ! $$services{$service_name};
+		if ( $neccessary and ! $$services{$service_name} ) {
+			$_ = $Project->add_service($service_name);
+			push @{$$services{$service_name}}, $_ if $_;
 		} # end if
 	} # end foreach service_name;
 

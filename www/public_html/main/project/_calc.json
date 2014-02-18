@@ -65,6 +65,10 @@ $log->debug("Deleting key $key in no_outputs ") if $debug;
         if ( (exists $param{$key}) and ($specs{$key} eq $param{$key}) ) {
 $log->debug("Deleting $key cuz it's the same $key") if $debug;
 			delete $specs{$key};
+       } elsif ( ref $specs{$key} ) {
+$log->error("Got a non-scalar in specs! $key => $specs{$key}");
+            delete $specs{$key};
+
         } # end if
     } # end foreach
 
