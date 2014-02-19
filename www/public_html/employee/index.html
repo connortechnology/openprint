@@ -33,7 +33,7 @@ You may use a barcode scanner.  Simply scan the code and click Go.<br/>
 		<li>
 			<label>Docket #</label>
 			<? echo ( join('', 
-						input(type=>'cardinal',name=>'StartDocket', onchange=>'change_handler(this);', onkeypress=>'return input_handler( this, event );', onkeydown=>'if(event.keyCode == 13){submit_handler(f1);}'),
+						input(type=>'cardinal',name=>'StartDocket', onchange=>'change_handler(this);', onkeypress=>'return input_handler( this, event );', onkeydown=>'if(event.keyCode == 13){submit_handler(f1);}', min=>1),
 						button( 'Go1', { onclick=>'submit_handler( f1 );', text=>'Go' } ),
 						); ) ?>
 		</li>

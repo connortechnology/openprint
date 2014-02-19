@@ -1578,5 +1578,24 @@ sub link_to {
 	return sprintf('<a href="/main/project/view.html?project_id=%1$d">%2$s</a>', $_[0]{id}, ( $_[1] ? $_[1] : $_[0]{id} ) );
 } # end sub link_to
 
+sub lock {
+	$_[0]{ac} = sql::start_transaction( $openprint::dbh );
+	my ( $caller, undef, $line ) = caller;
+	$openprint::log->debug("LOCKING Projects for project $_[0]{id} ac: $_[0]{ac} caller: $caller line: $line");
+    $openprint::dbh->do( "SELECT * FROM Projects WHERE id=".$_[0]{id}. ' FOR UPDATE' );
+
+} # end sub lock
+
+sub unlock {
+	my ( $caller, undef, $line ) = caller;
+	$openprint::log->debug("UNLOCKING Projects for project $_[0]{id} ac: $_[0]{ac} caller: $caller line: $line");
+	if ( ! exists $_[0]{ac} ) {
+		$openprint::log->debug("unlock with no AC!");
+		return;
+	} # end if
+	sql::end_transaction( $openprint::dbh, $_[0]{ac} );
+} # end sub unlock
+
+
 1;
 __END__

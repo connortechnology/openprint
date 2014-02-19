@@ -183,7 +183,13 @@ sub add_log {
 } # end sub add_log
 
 sub Quoted_Projects {
-	return openprint::QuotedProject->find('quote_id'=>$_[0]{'id'});
+	if ( @_ > 1 ) {
+		$_[0]{Quoted_Projects} = $_[1];
+	} 
+	if ( ! $_[0]{Quoted_Projects} ) {
+		$_[0]{Quoted_Projects} = [ openprint::QuotedProject->find(quote_id=>$_[0]{id}) ];
+	} # end if
+	return @{$_[0]{Quoted_Projects}};
 } # end sub Quoted_Projects
 
 sub Projects {

@@ -364,8 +364,6 @@ $openprint::log->debug("********************************************************
 					( $$sig_specs{'Additional Impositions2'} and @{$$sig_specs{'Additional Impositions2'}} ) or
 					( $$sig_specs{'Additional Impositions3'} and @{$$sig_specs{'Additional Impositions3'}} ) ) {
 
-
-
 				if ( ! @sigs ) {
 
 					push @sigs, $Project->copy_signature( $sig_specs, {
@@ -453,9 +451,10 @@ $status = 'uncalculated';
 			} # end while Additional Imposition
 
 # Clean up any leftovers XXX Could be written better, such a small gain though
-			$openprint::log->debug("Remaining sigs " . @sigs);
+			$openprint::log->debug("Remaining sigs " . @sigs . " @sigs");
 			while ( @sigs and ( my $ss_id = shift @sigs ) ) {
-				openprint::print_project::delete_service( $$Project{id}, $ss_id );
+				my $Service = $Project->Service( $ss_id );
+				$Service->delete();
 				@signatures = sets::exclude( [ $ss_id ], \@signatures );
 			} # end while sigs
 		} else {

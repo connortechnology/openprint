@@ -101,6 +101,7 @@ $log->debug("after continue $$variable{ExternalRedirect}");
 					$recalc = 1;
 				} # end if
 
+				$Project->lock();
 				if ( (!$openprint::param{ServiceType} ) or $recalc ) {
 					multipage_signatures( \%openprint::param, $log, $dbh, $variable, $project_index, $service_index );
 					my $s = openprint::service::internal_calc( $log, $dbh, $variable, $project_index, $service_index, $Project->Type()->type() );
@@ -128,6 +129,7 @@ $log->debug("after continue $$variable{ExternalRedirect}");
 					} # end if
 				} # end if
 				openprint::service::auto_calculate( $Project, $service_index ) if $recalc;
+				$Project->unlock();
 		
 				$Project->summary(undef);
 				$Project->save();

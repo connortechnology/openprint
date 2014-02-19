@@ -847,6 +847,7 @@ sub input {
 		} # end if
 		$options{filter} = 'cardinalize(this);' if ! $options{filter};
 		$options{onkeyup} = $options{filter}.$options{onkeyup};
+		$options{step} = '1' if ! exists $options{step};
 	} elsif ( $options{type} eq 'integer' ) {
 		if ( $ENV{HTTP_USER_AGENT} =~ /ip(ad|od|hone)/i ) {
 			$options{type} = 'text';

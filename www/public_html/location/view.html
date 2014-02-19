@@ -55,8 +55,9 @@
 				<div class="leftColumn">
 				<ul>
 					<li><label>Location</label>
-						<? echo ( my $html = $$variable{'Location'}->where_link();
-							if ( $session{'user_id'} ) {
+						<? echo ( 
+							my $html = $$variable{'Location'}->where_link();
+							if ( $session{user_id} ) {
 								my $MyLocation = new openprint::User($session{'user_id'})->Location();
 								if ( ! ( $MyLocation->latitude() and $MyLocation->longitude() ) ) {
 									$MyLocation->get_latitude_and_longitude();

@@ -32,7 +32,7 @@
 			<ul>
 			<li>
 				<label for="QuoteID">Quote ID</label>
-				<? echo ( input(type=>'cardinal', id=>'QuoteID', name=>'QuoteID', value=>$param{QuoteID}, onkeyup=>q`if(this.value.length>3){load_quotes(this.form);};` ); ) ?>
+				<? echo ( input(type=>'cardinal', id=>'QuoteID', name=>'QuoteID', value=>$param{QuoteID}, onkeydown=>q`if(event.keyCode == 13){load_quotes(this.form);};` ); ) ?>
 			</li>
 <? if ( sets::isin( $session{'user_type'}, ['E','A'] ) ) ?>
 			<li>

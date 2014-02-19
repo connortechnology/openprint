@@ -90,8 +90,8 @@ sub edit {
 			
 		if ( ( $_ = openprint::Location->find_one(
 			( $param{'location_id'} ? ( 'id !='=>$param{'location_id'} ) : () ),
-			'name lc'=> lc openprint::Location->transform('name',$param{'location'}), 
-			( $param{'type_id'} ? ( type_id=>$param{type_id} ) : () ),
+			'name lc'=> lc $param{location}, 
+			( $param{'location_type_id'} ? ( type_id=>$param{location_type_id} ) : () ),
 			) ) ) {
 			$variable{'error'} .= 'A location with that name at that place already exists.';
 		} else {
