@@ -26,7 +26,7 @@ use constant DEBUG => 0;
 use constant DEBUG_VERSIONS => 0;
 use constant DEBUG_FILTERING => 0;
 use constant DEBUG_INITIAL_FILTERING => 0;
-use constant DEBUG_PRICE_DECISIONS => 0;
+use constant DEBUG_PRICE_DECISIONS => 1;
 use constant DEBUG_INKS => 0;
 use constant DEBUG_STOCK => 0;
 use constant COMPARISON_LOG => 0;
@@ -1469,7 +1469,7 @@ if ( 1 ) {
         foreach my $imp ( @impositions ) {
             $max_imposition = $$imp{'imposition'} if $$imp{'imposition'} > $max_imposition;
         } # end foraech
-        $max_imposition = int( $max_imposition / 3 );
+        $max_imposition = int( $max_imposition / 4 );
 
         foreach my $imp ( @impositions ) {
             if ( $$imp{'imposition'} < $max_imposition ) {
@@ -2748,7 +2748,7 @@ sub calculate_impositions {
 	$max_pages = $$project{'txtSpreadSize'} if $max_pages < $$project{'txtSpreadSize'};
 	$openprint::log->debug("Max pages: $max_pages") if DEBUG_FILTERING;
 		foreach my $pages ( keys %max_impositions ) {
-			$max_impositions{$pages} = int($max_impositions{$pages} / 3 );
+			$max_impositions{$pages} = int($max_impositions{$pages} / 4 );
 		} # end foreach
 		foreach my $I ( @press_impositions ) {
 			if ( $max_impositions{$$I{pages}} > $$I{imposition}) {
@@ -3539,6 +3539,7 @@ sub get_project_price {
 					$$newimp{specs} = $new_specs;
 
 					my $sig_price = calc_price( $Project, $$new_specs{ServiceIndex}, $newimp, $project, $services, $new_specs, $qty, $qty_index, \%PlateCounts, \%washed_colours, \@total_impositions );
+					$$sig_price{sig_count} = 1;
 #my $sig_price = get_project_price( $Project, $$new_specs{'ServiceIndex'}, $project, $service_specs, $new_specs, $qty, $qty_index, $possible_presses, $printing_specs, $versions, \%PlateCounts, \%PaperCounts, \%washed_colours, \%previous_forms_cache, \@signatures, $impositions, $other_impositions, undef, $recursion_depth + 1 );
 
 					$PaperCounts{$Paper->id_string()} += $$sig_price{'Stock Qty'};
@@ -3686,7 +3687,6 @@ $openprint::log->error("Got 0 sigs from $$price{upq}/$$imp{pages}");
 								$PlateCounts{$$sig_price{'Plate Costs'}{'Plate ID'}} += $sigs * $$sig_price{'Plate Costs'}{'Plate Count'};
 # Blanks get re-used
 								$PlateCounts{'Blank'.$$sig_price{'Plate Costs'}{'Plate ID'}} += $$sig_price{'Plate Costs'}{'Blank Plates'};
-								$$sig_price{sig_count} += $sigs -1;
 							} else {
 								$$price{'Comparison Cost'} += $$sig_price{'Comparison Cost'};
 								$$price{'Comparison Log'} .= 'signature ' . $$sig_price{'Comparison Cost'} . '<br/>' if COMPARISON_LOG;
@@ -3853,7 +3853,14 @@ $imp->display('[warn]');
 						$$price{'Proofs Breakdown'} .= $Results{'Breakdown'};
 					} # end if
 				} # end if UnspecifiedPageQuanitty
-
+			} else {
+					if ( $$project{HasProofs} ) {
+# Add proof costs.  Proofs only depends on colours, equipment so doesn't need to be part of the rest of calc
+						my %Results = openprint::Estimating::Proofs::signature_calc( $Project, $$project{ProofsSpecs}, $sig_specs, $qty_index, undef, undef, $Press, $imp );
+						$$price{'Comparison Cost'} += $$price{'sig_count'} * $Results{'Total'};
+						$$price{'Comparison Log'} .= 'proofs ' . $$price{'sig_count'} * $Results{'Total'} . '<br/>' if COMPARISON_LOG;
+						$$price{'Proofs Breakdown'} .= $Results{'Breakdown'};
+					} # end if
 			} # end if versions vs unspecifiedpages
 
 			if ( ! $$price{complete} ) {
