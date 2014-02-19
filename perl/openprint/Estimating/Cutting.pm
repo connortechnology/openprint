@@ -694,7 +694,7 @@ $folding_imposition->display("Vertical cuts: $vertical_cuts");
 						   ) {
 							$horizontal_cuts += $rows-1;
 						} # end if
-						$folding_imposition->display("Horizontal cuts: $horizontal_cuts");
+						$folding_imposition->display("Horizontal cuts: $horizontal_cuts") if DEBUG;
 					} # end foreach
 				} # end if
 			} elsif ( $stitching_imposition and ( $I->image_orientation() eq 'Vertical' ) ) {
