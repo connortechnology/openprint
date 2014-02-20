@@ -24,7 +24,7 @@ require openprint::service;
 
 use vars qw( @folds %fold_types );
 
-use constant DEBUG => 0;
+use constant DEBUG => 1;
 use constant DEBUG_NEEDS => 0;
 
 my @equipment;
@@ -1742,24 +1742,31 @@ sub reduce_impositions {
 
 	if ( $max_impo > 1 ) {
 		my @new = @$impositions;
+		my $extra = 0;
 		for ( my $i = 0; $i < @new; $i += 1 ) {
 			if ( $new[$i]->imposition() == $max_impo ) {
 				my $I2 = $new[$i]->copy();
 				my $I3 = $new[$i]->copy();
-				if ( $I2->columns() > 1 ) {
+				if ( ! $I2->columns() % 2 ) {
 					$I2->columns( int($I2->columns()/2) );
 					$I3->columns( $I3->columns() - $I2->columns() );
-				} else {
-					$I2->rows( int($I2->rows()/2) );
-					$I3->rows( $I3->rows() - $I2->rows() );
-				} # end if
-
+					$extra = 1;
 				splice @new, $i, 1, ( $I2, $I3 );
 				$i += 1;
+				} elsif ( ! $I2->rows() % 2 ) {
+					$I2->rows( int($I2->rows()/2) );
+					$I3->rows( $I3->rows() - $I2->rows() );
+					$extra = 1;
+				splice @new, $i, 1, ( $I2, $I3 );
+				$i += 1;
+				} # end if
+
 			} # end if
 		} # end foreach I
+		if ( $extra ) {
 		@new = compact_impositions( @new );
 		push @results, reduce_impositions( \@new );
+		} # end if
 
 		# SOmething like a 3x2 will be cut into a 1x2+2x2 but never a 2 3x1's... so do this
 		my $extra = 0;

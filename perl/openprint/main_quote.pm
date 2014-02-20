@@ -478,6 +478,10 @@ sub _view_log {
 
 sub _user_information {
 } # end sub _user_information
+
+sub _company_information {
+} # end sub _company_information
+
 1;
 
 __END__

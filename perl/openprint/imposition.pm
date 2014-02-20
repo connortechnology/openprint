@@ -620,9 +620,11 @@ $openprint::log->debug("Height: $paper_height - CB $$specs{'colour_bar_size'} - 
 	# Becomes printable area
 	$adjusted_paper_height -= $$specs{'Grip Size'} if $$specs{'Add Grip Width'} ne 'N';
 
-	if ( ($adjusted_paper_height<=0) or ( $$specs{'Maximum Image Area Length'} > 0 and $adjusted_paper_height > $$specs{'Maximum Image Area Length'} ) ) {
+	if ( ($adjusted_paper_height<=0) or ( ( $$specs{'Maximum Image Area Length'} > 0 ) and ( $adjusted_paper_height > $$specs{'Maximum Image Area Length'} ) ) ) {
 		$openprint::log->debug("*** Using Max Image Length2: Before: $adjusted_paper_height After: $$specs{'Maximum Image Area Length'}***") if DEBUG;
 		$adjusted_paper_height = $$specs{'Maximum Image Area Length'};
+	} else {
+		$openprint::log->debug("*** NOT Using Max Image Length2: $adjusted_paper_height After: $$specs{'Maximum Image Area Length'}***") if DEBUG;
 	} # end if
 
 	if ( $$specs{'Colour Bar Orientation'} ne 'Length' ) {
@@ -669,9 +671,9 @@ $openprint::log->debug("Height: $paper_height - CB $$specs{'colour_bar_size'} - 
 	} # end if
 
 	if ( $Paper->cuttable() ) {
-	$adjusted_paper_width -= $setup2->cropmark_left();
-	$adjusted_paper_width -= $setup2->cropmark_right();
-	$adjusted_paper_width = 0 if $adjusted_paper_width < 0;
+		$adjusted_paper_width -= $setup2->cropmark_left();
+		$adjusted_paper_width -= $setup2->cropmark_right();
+		$adjusted_paper_width = 0 if $adjusted_paper_width < 0;
 	} # end if
 
 	if ( sets::isin( $run_style, ['Perfecting','Sheet Work','Web'] ) ) {
