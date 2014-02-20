@@ -713,8 +713,20 @@ sub get_inkcoverage {
 					$$specs{'ColourCoatingCoverage'.$index.$side.$signature} = 100;
 #$openprint::log->warn("Oeral for $index $side $signature " . $$specs{'ColourCoatingCoverage'.$index.$side.$signature} .' ' . int($$specs{'ColourCoatingCoverage'.$index.$side.$signature}) );
 				} elsif ( ! int($$specs{'ColourCoatingCoverage'.$index.$side.$signature}) ) {
-#$openprint::log->warn("Coverage for $index $side $signature " . $$specs{'ColourCoatingCoverage'.$index.$side.$signature} .' ' . int($$specs{'ColourCoatingCoverage'.$index.$side.$signature}) );
-					$$specs{'ColourCoatingCoverage'.$index.$side.$signature} = $DefaultInkCoverage;
+$openprint::log->warn("Coverage for $index $side $signature $type" . $$specs{'ColourCoatingCoverage'.$index.$side.$signature} .' ' . int($$specs{'ColourCoatingCoverage'.$index.$side.$signature}) );
+$type =~ s/ /_/g;
+my $coverage;
+if ( $openprint::config{"Default${type}Coverage$ProjectTypeName"} ) {
+$openprint::log->debug(" Got default for $type ProjectTypeName");
+$coverage = $openprint::config{"Default${type}Coverage$ProjectTypeName"};
+} elsif ( $openprint::config{"Default${type}Coverage"} ) {
+$openprint::log->debug(" Got default for $type ");
+	$coverage = $openprint::config{"Default${type}Coverage"};
+} else {
+$openprint::log->debug(" Suing regualr default instead of $type ");
+$coverage = $DefaultInkCoverage;
+}
+					$$specs{'ColourCoatingCoverage'.$index.$side.$signature} = $coverage;
 					$$v{'ColourCoatingCoverage'.$index.$side.$signature} = [ sets::union( 'output', @{$$v{'ColourCoatingCoverage'.$index.$side.$signature}} ) ];
 				} else {
 #$openprint::log->warn("Coverage for $index $side $signature " . $$specs{'ColourCoatingCoverage'.$index.$side.$signature} .' removing from outputs' );
@@ -3673,6 +3685,7 @@ sub get_project_price {
 									push @total_impositions, $imp;
 									$previous_forms_cache{$hash_key} += 1;
 
+								$$price{upq} -= $$imp{pages};
 # Doesn't really matter about upq, because we aren't calculating on these sigs.
 					$imp = $base_imp->copy();
 					$new_specs = get_new_specs( $Project, $service_index, $service_specs, \@signatures, $qty_index, $$price{upq}, \%previous_forms_cache, $hash_key );
@@ -3680,13 +3693,12 @@ sub get_project_price {
 								} # end foreach
 									$sig_count += $sigs -1;
 								unshift @signatures, $sig if $sig;
-								$$price{upq} = $$price{upq} % $$imp{pages};
-$openprint::log->debug("New upq: $$price{upq}");
+#$openprint::log->debug("New upq: $$price{upq}");
 								$PlateCounts{$$sig_price{'Plate Costs'}{'Plate ID'}} += $sigs * $$sig_price{'Plate Costs'}{'Plate Count'};
 # Blanks get re-used
 								$PlateCounts{'Blank'.$$sig_price{'Plate Costs'}{'Plate ID'}} += $$sig_price{'Plate Costs'}{'Blank Plates'};
 							} else {
-$openprint::log->debug("Got diff comparison cost");
+#$openprint::log->debug("Got diff comparison cost");
 								$$price{'Comparison Cost'} += $$sig_price{'Comparison Cost'};
 								$$price{'Comparison Log'} .= 'signature ' . $$sig_price{'Comparison Cost'} . '<br/>' if COMPARISON_LOG;
 								$last_sig_price = int($$sig_price{'Comparison Cost'});
@@ -3695,7 +3707,7 @@ $openprint::log->debug("Got diff comparison cost");
 								push @{$$price{prices}}, $sig_price;
 								push @total_impositions, $imp;
 								$$price{upq} -= $$imp{pages};
-$openprint::log->debug("New upq: $$price{upq}");
+#$openprint::log->debug("New upq: $$price{upq}");
 								$PlateCounts{$$sig_price{'Plate Costs'}{'Plate ID'}} += $$sig_price{'Plate Costs'}{'Plate Count'};
 								$PlateCounts{'Blank'.$$sig_price{'Plate Costs'}{'Plate ID'}} += $$sig_price{'Plate Costs'}{'Blank Plates'};
 								$previous_forms_cache{$hash_key} += 1;
@@ -3771,8 +3783,9 @@ $$new_specs{"OverrideStockHeight$qty_index"} = $Paper->height();
 						$$new_specs{'Impositions'} = $$price{'Impositions'};
 
 						my $sig_price = {};
-						if ( $recursion_depth >= 3 ) {
+						if ( $recursion_depth >= $max_recursion_depth ) {
 							$imp->display('Recursion Depth :' . $recursion_depth ) if DEBUG;
+							$$sig_price{alert} .= 'Too deep ' . $recursion_depth;
 							$$sig_price{'complete'} = 0;
 						} else {
 							my $price_cache_key = join(',', keys %PaperCounts, $qty_index, $$Press{strid}, $$price{upq}, $$imp{runstyle}, $$Paper{type}, $$Paper{width},$$Paper{height} );
@@ -3788,7 +3801,7 @@ $$new_specs{"OverrideStockHeight$qty_index"} = $Paper->height();
 									get_project_price( $Project, $$new_specs{ServiceIndex}, $project, $service_specs, $new_specs, $qty, $qty_index, \@new_possible_presses, $printing_specs, $versions, \%PlateCounts, \%PaperCounts, \%washed_colours, \%previous_forms_cache, \@signatures, $impositions, $other_impositions, undef, $recursion_depth + 1 );
 							} # end if
 							$sig_price = $price_cache{$price_cache_key};
-							$price_cache{$price_cache_key} = undef if ! USE_PRICE_CACHE;
+							$price_cache{$price_cache_key} = undef if ( ! $$sig_price{complete} ) or ! USE_PRICE_CACHE;
 							#$imp->display($recursion_depth . " After recurse: $$price{'Comparison Cost'} + $$sig_price{'Comparison Cost'} " );
 							#foreach my $i ( @{$$sig_price{Impositions}} ) {
 								#$i->display($recursion_depth . " After recurse: $$sig_price{'Comparison Cost'} " );
@@ -3807,7 +3820,7 @@ $$new_specs{"OverrideStockHeight$qty_index"} = $Paper->height();
 
 # get_project_price is recursive so we are done
 							if ( ( ! $$sig_price{complete} ) or ( ! $$sig_price{Imposition} ) ) {
-$openprint::log->warn("Unable to calculate additional signatures Complete: $$sig_price{complete}, pages: " . $$imp{'pages'} . ' of ' . $$price{upq} );
+$openprint::log->warn("Unable to calculate additional signatures Complete: $$sig_price{complete}, imp pages: " . $$imp{'pages'} . ' of upq: ' . $$price{upq}. ' alert: ' . $$sig_price{alert} );
 $imp->display('[warn]');
 								$$price{complete} = $$sig_price{complete} = 0;
 								$$price{'Comparison Cost'} += 10000000;
@@ -3817,7 +3830,7 @@ $imp->display('[warn]');
 
 # get_project_price is recursive so we are done
 						if ( ( ! $$sig_price{'complete'} ) or ( ! $$sig_price{'Imposition'} ) ) {
-							$openprint::log->debug("Unable to calculate additional signatures Complete: $$sig_price{complete}, pages: " . $$imp{'pages'} . ' of ' . $$price{upq} . 'Spread size:' . $$service_specs{txtSpreadSize} ) if DEBUG or 1;
+							$openprint::log->debug("Unable to calculate additional signatures Complete: $$sig_price{complete}, imp pages: " . $$imp{'pages'} . ' of upq: ' . $$price{upq} . 'Spread size:' . $$service_specs{txtSpreadSize} . ' alert: ' . $$sig_price{alert}) if DEBUG or 1;
 							$$price{'complete'} = $$sig_price{'complete'} = 0;
 							$$price{'Comparison Cost'} += 10000000;
 							$$price{'Breakdown'} .= 'Unable to calculate additional signatures.<br/>';
