@@ -346,7 +346,7 @@ $openprint::log->debug("********************************************************
 			$status = $$sig_specs{'Status'};
 # Successfully calculated the first sig
 # In sig_specs should be an array of Impositions to apply to other signatures, so let's add/delete/apply
-			$openprint::log->debug("MultiPage::calculate_signatures $status $$sig_specs{'Additional Impositions1'} $$sig_specs{'Additional Impositions2'} $$sig_specs{'Additional Impositions3'} ");
+			$openprint::log->debug("MultiPage::calculate_signatures $status $$sig_specs{'Additional Impositions1'} $$sig_specs{'Additional Impositions2'} $$sig_specs{'Additional Impositions3'} ") if DEBUG;
 
 			# Remove Impos for other groups
 			foreach my $qty_index ( $Project->quantity_indexes() ) {
@@ -354,6 +354,7 @@ $openprint::log->debug("********************************************************
                     my $Imposition = $$sig_specs{'Additional Impositions'.$qty_index}[0];
 					my $specs = $Imposition->specs();
 					if ( $$specs{Group} and ( $$specs{Group} != $group ) ) {
+$openprint::log->debug("Removing impo cuz wrong group") if DEBUG;
 						shift @{$$sig_specs{'Additional Impositions'.$qty_index}};
 					} # end if
 				} # end if

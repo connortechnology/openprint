@@ -410,7 +410,7 @@ $results{'Breakdown'} .= 'Imposition: ' . $imposition . 'out<br/>';
 			} # end if
 		} # end foreach Equipment
 		if ( $imposition > 1 and ! $bestPrice ) {
-			if ( $$specs{'OverrideImposition'.$qty_index} eq 'Y' ) {
+			if ( ( defined $$specs{'OverrideImposition'.$qty_index} ) and ( $$specs{'OverrideImposition'.$qty_index} eq 'Y' ) ) {
 				last;
 			} # end if
 			$imposition -= 1;
@@ -642,7 +642,7 @@ $openprint::log->debug(" fold qty * pages($pages) == sig_pages($sig_pages) foldQ
 			$$specs{"Imposition$qty_index"} = $$specs{"folding_imposition$qty_index"} if defined $$specs{"folding_imposition$qty_index"} and ( $$specs{"Imposition$qty_index"} > $$specs{"folding_imposition$qty_index"} );
 		} else { # Override Pockets
 			foreach my $pages ( 4, 8, 12, 16, 20, 24, 32, 36, 40, 48, 64, 96 ) {
-				$$specs{"txtPockets$qty_index"} += $$specs{'txtSignatureQty'.$pages.'Page-'.$qty_index};
+				$$specs{"txtPockets$qty_index"} += $$specs{'txtSignatureQty'.$pages.'Page-'.$qty_index} if $$specs{'txtSignatureQty'.$pages.'Page-'.$qty_index};
 			} # end foreach
 		} # end if
 	} # end foreach qty_index
@@ -836,7 +836,7 @@ $openprint::log->error("No best equipment in Stitching");
 			$$bestPrice{'MPrice'} *= (1+$Project->markup()/100);
 			$$bestPrice{txtPrice} *= (1+$Project->markup()/100);
 		} # end if
-		if ( $$specs{'OverridePrice'.$qty_index} ne 'Y' ) {
+		if ( ( defined $$specs{'OverridePrice'.$qty_index} ) and ( $$specs{'OverridePrice'.$qty_index} ne 'Y' ) ) {
 			$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $$bestPrice{txtPrice} );
 		} else {
 			$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $$specs{'txtPrice'.$qty_index} );

@@ -2405,7 +2405,7 @@ $openprint::log->debug(Data::Dumper::Dumper( \%Overrides ) );
 		$$specs{'hdnBreakdown'.$qty_index} = breakdown( $best_price, $specs );
 		shift @{$$best_price{Impositions}};
 
-		$log->debug("Impositions in best price " . @{ $$best_price{'Impositions'} } );
+		$log->debug("Additional Impositions in best price " . @{ $$best_price{'Impositions'} } );
 		my $price;
 		my $stock_breakdown = $$best_price{'Paper Breakdown'};
 		foreach my $I ( @{ $$best_price{'Impositions'} } ) {
@@ -3623,7 +3623,7 @@ sub get_project_price {
 				} # end while versions
 
 			} elsif ( $txtUnspecifiedPageQuantity ) {
-				$imp->display( $recursion_depth . ' UPQ: ' . $txtUnspecifiedPageQuantity ) if DEBUG;
+				$imp->display( $recursion_depth . ' UPQ: ' . $txtUnspecifiedPageQuantity . ' real upq ' . $$price{upq}) if DEBUG;
 
 				my $new_specs;
 # UPQ can be negative on single-page items
@@ -3631,6 +3631,13 @@ sub get_project_price {
 					my @signatures = @$signatures;
 #$openprint::log->debug("Initial Signatures @signatures");
 					my $last_sig_price = int($$price{'Comparison Cost'});
+
+					$imp = $base_imp->copy();
+					$new_specs = get_new_specs( $Project, $service_index, $service_specs, \@signatures, $qty_index, $$price{upq}, \%previous_forms_cache, $hash_key );
+					$$imp{specs} = $new_specs;
+
+					# This is used solely for proofs
+					my $sig_count = 1;
 
 					while ( $$price{upq} >= $$imp{pages} ) {
 						if ( 
@@ -3640,14 +3647,9 @@ sub get_project_price {
 								( ($$new_specs{'chkOverrideRunStyle'.$qty_index} ne 'Y') or ($$new_specs{'ddmRunStyle'.$qty_index} eq $$imp{runstyle}) )
 						   ) {
 
-							$imp = $base_imp->copy();
-							$new_specs = get_new_specs( $Project, $service_index, $service_specs, \@signatures, $qty_index, $$price{upq}, \%previous_forms_cache, $hash_key );
-							$$imp{specs} = $new_specs;
-
 							my $sig_price = calc_price( $Project, $$new_specs{'ServiceIndex'}, $imp, $project, $services, $new_specs, $qty, $qty_index, \%PlateCounts, \%washed_colours, \@total_impositions );
 							$imp->display( $recursion_depth . ' UPQ: ' . $$price{upq} . ' first level calc_price' ) if DEBUG;
 							$$sig_price{Imposition} = $imp;
-								
 							$$sig_price{sig_count} = 1;
 
 							if ( 1 ) {
@@ -3660,9 +3662,6 @@ sub get_project_price {
 
 							if ( int($$sig_price{'Comparison Cost'}) == $last_sig_price ) {
 								my $sigs = int($$price{upq}/$$imp{pages});
-if ( ! $sigs ) {
-$openprint::log->error("Got 0 sigs from $$price{upq}/$$imp{pages}");
-}
 								$$price{'Comparison Cost'} += $$sig_price{'Comparison Cost'} * $sigs;
 								$$price{'Comparison Log'} .= 'signature ' . $$sig_price{'Comparison Cost'} * $sigs . '<br/>' if COMPARISON_LOG;
 								$PaperCounts{$Paper->id_string()} += $sigs * $$sig_price{'Stock Qty'};
@@ -3674,20 +3673,20 @@ $openprint::log->error("Got 0 sigs from $$price{upq}/$$imp{pages}");
 									push @total_impositions, $imp;
 									$previous_forms_cache{$hash_key} += 1;
 
-									$imp = $base_imp->copy();
-									if ( @signatures ) {
-										$sig = shift @signatures;
-										$$imp{specs} = openprint::service::get_specs_ref( $Project, $sig );
-									} else {
-										$$imp{specs} = $new_specs;
-									} # end if
+# Doesn't really matter about upq, because we aren't calculating on these sigs.
+					$imp = $base_imp->copy();
+					$new_specs = get_new_specs( $Project, $service_index, $service_specs, \@signatures, $qty_index, $$price{upq}, \%previous_forms_cache, $hash_key );
+					$$imp{specs} = $new_specs;
 								} # end foreach
+									$sig_count += $sigs -1;
 								unshift @signatures, $sig if $sig;
 								$$price{upq} = $$price{upq} % $$imp{pages};
+$openprint::log->debug("New upq: $$price{upq}");
 								$PlateCounts{$$sig_price{'Plate Costs'}{'Plate ID'}} += $sigs * $$sig_price{'Plate Costs'}{'Plate Count'};
 # Blanks get re-used
 								$PlateCounts{'Blank'.$$sig_price{'Plate Costs'}{'Plate ID'}} += $$sig_price{'Plate Costs'}{'Blank Plates'};
 							} else {
+$openprint::log->debug("Got diff comparison cost");
 								$$price{'Comparison Cost'} += $$sig_price{'Comparison Cost'};
 								$$price{'Comparison Log'} .= 'signature ' . $$sig_price{'Comparison Cost'} . '<br/>' if COMPARISON_LOG;
 								$last_sig_price = int($$sig_price{'Comparison Cost'});
@@ -3696,17 +3695,21 @@ $openprint::log->error("Got 0 sigs from $$price{upq}/$$imp{pages}");
 								push @{$$price{prices}}, $sig_price;
 								push @total_impositions, $imp;
 								$$price{upq} -= $$imp{pages};
+$openprint::log->debug("New upq: $$price{upq}");
 								$PlateCounts{$$sig_price{'Plate Costs'}{'Plate ID'}} += $$sig_price{'Plate Costs'}{'Plate Count'};
 								$PlateCounts{'Blank'.$$sig_price{'Plate Costs'}{'Plate ID'}} += $$sig_price{'Plate Costs'}{'Blank Plates'};
 								$previous_forms_cache{$hash_key} += 1;
+								$sig_count += 1;
+					$imp = $base_imp->copy();
+					$new_specs = get_new_specs( $Project, $service_index, $service_specs, \@signatures, $qty_index, $$price{upq}, \%previous_forms_cache, $hash_key );
+					$$imp{specs} = $new_specs;
 							} # end if
 							$imp->display( $recursion_depth . ' UPQ: ' . $$price{upq} . ' after first level calc_price' ) if DEBUG;
 
 # This is here so that we don't allocate another when recursing
 						} else {
-							$new_specs = undef;
 							last;
-						} # end if upq > imp->pages
+						} # end if specs are acceptable
 					} # end while upq > imp->pages
 
 # Doing this here, and down below means we may be doing it twice per sig
@@ -3715,8 +3718,8 @@ $openprint::log->error("Got 0 sigs from $$price{upq}/$$imp{pages}");
 # Add proof costs.  Proofs only depends on colours, equipment so doesn't need to be part of the rest of calc
 						my %Results = openprint::Estimating::Proofs::signature_calc( $Project, $$project{'ProofsSpecs'}, $sig_specs, $qty_index, undef, undef, $Press, $imp );
 #$openprint::log->debug( 'Proofs Calc: ' . sprintf('%.4f', tv_interval( [$proofs_time])*1000) );
-						$$price{'Comparison Cost'} += $$price{'sig_count'} * $Results{'Total'};
-						$$price{'Comparison Log'} .= 'proofs for ' . $$price{'sig_count'} . 'sigs. '. $$price{'sig_count'} * $Results{Total} . 'total: ' . $$price{'Comparison Cost'} . '<br/>' if COMPARISON_LOG;
+						$$price{'Comparison Cost'} += $sig_count * $Results{'Total'};
+						$$price{'Comparison Log'} .= 'proofs for ' . $sig_count . 'sigs. '. $sig_count * $Results{Total} . 'total: ' . $$price{'Comparison Cost'} . '<br/>' if COMPARISON_LOG;
 						$$price{'Proofs Breakdown'} .= $Results{'Breakdown'};
 					} # end if
 
@@ -4550,7 +4553,7 @@ sub calc_price {
 		my $time = gettimeofday() if DEBUG;
 		if ( $$Imposition{'folding_results'} ) {
 			%folding_results = %{$$Imposition{'folding_results'}};
-			$openprint::log->debug("Using cached folding");
+			#$openprint::log->debug("Using cached folding");
 		} else {
 #my @all_impositions = ( @{$other_impositions}, $Imposition );
 			%folding_results = openprint::Estimating::Folding::signature_calc( $Project, $service_index, $specs, $$project{'FoldingSpecs'}, $qty_index, $Imposition, @$project{'UVCoatingSpecs','AqueousSpecs','StitchingSpecs'}, $other_impositions, $project );
@@ -4692,7 +4695,7 @@ $$project{'FoldingSpecs'}{"FoldQty-$$specs{'SignatureIndex'}-$qty_index-$index"}
 					$price{Runspeed} *= (1+$1/100);
 					$$specs{Runspeed} = $price{Runspeed};
 				} else {
-					$$specs{Runspeed} = $price{Runspeed} = $scoring_results{'Runspeed'} if $price{Runspeed} > $scoring_results{'Runspeed'};
+					$$specs{Runspeed} = $price{Runspeed} = $scoring_results{'Runspeed'} if $price{Runspeed} > $scoring_results{Runspeed};
 				} # end if
 			} # end if
 			$scoring_results{'Overs'} = ceil( $scoring_results{'Overs'} / ( $$Imposition{'imposition'}/$scoring_results{'Imposition'}->imposition() ) ) if $scoring_results{'Imposition'}->imposition();
@@ -5627,7 +5630,7 @@ sub get_run_price {
 			} # end if
 		} # end if
 	} else {
-		$run_speed = $Press->Specification('Run Speed') if ! $run_speed;
+		$run_speed = $Press->specification('Run Speed') if ! $run_speed;
 		$openprint::log->debug("No standard speed on $$Press{strid}") if DEBUG;
 	} # end if
 	$run_price{run_speed} = $run_speed;

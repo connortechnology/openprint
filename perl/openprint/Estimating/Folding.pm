@@ -1401,10 +1401,10 @@ if ( 0 ) {
 			$results{'MakeReadyOvers'} += $Fold->makeready_overs();
 		} # end if
 		#my $RunSpeed = $Fold->Specification( $Paper->gsm() );
-		$results{'RunSpeed'} = $Fold->runspeed($$Paper{'gsm'});
+		$results{RunSpeed} = $Fold->runspeed($$Paper{'gsm'});
 #$openprint::log->debug("SettingRunspeed $key : $fold_type : $imposition " . $Fold->name() . ' ' . $Fold->runspeed() );
-		$results{'RunOvers'} += $Fold->run_overs();
-		$results{'RunOvers'} += (($$specs{'txtQuantity'.$qty_index}/$imposition)/$SignatureImposition->imposition()) * $Fold->run_overs() /100;
+		$results{RunOvers} += $Fold->run_overs();
+		$results{RunOvers} += (($$specs{'txtQuantity'.$qty_index}/$imposition)/$SignatureImposition->imposition()) * $Fold->run_overs() /100;
 	} # end foreach
 	
 	$$specs{'Status'} = $bestEquipment ? 'calculated' : 'uncalculated';
