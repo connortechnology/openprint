@@ -2,8 +2,8 @@
     my @Entries = openprint::RFIDTagHistory->find(
         ( $param{rfidtag_id} ? ( rfidtag_id   =>  $param{rfidtag_id} ) : () ),
         ( $param{scanner_id} ? ( scanner_id   =>  $param{scanner_id} ) : () ),
-		date_filter( 'start', 'updated_on_start', \%param ),
-		date_filter( 'end', 'updated_on_end', \%param ),
+		date_filter( 'end', 'updated_on <=', \%param ),
+		date_filter( 'start', 'updated_on >=', \%param ),
         ( $param{type_id} ? ( type_id=>$param{type_id} ) : () ),
         order  => 'updated_on DESC',
         limit  => $param{limit},
@@ -14,8 +14,8 @@
         @Entries = openprint::RFIDTagHistory->find(
 			( $param{rfidtag_id} ? ( rfidtag_id =>  $param{rfidtag_id} ) : () ),
 			( $param{scanner_id} ? ( scanner_id =>  $param{scanner_id} ) : () ),
-			date_filter( 'start', 'updated_on_start', \%param ),
-			date_filter( 'end', 'updated_on_end', \%param ),
+			date_filter( 'end', 'updated_on <=', \%param ),
+			date_filter( 'start', 'updated_on >=', \%param ),
 			limit  => $param{limit},
 			order  => 'updated_on DESC',
 		);
