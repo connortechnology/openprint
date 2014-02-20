@@ -647,7 +647,7 @@ sub signature_calc {
 			} # end if
 		} elsif ( @folding_impositions ) {
 # The 2 is for outside edge cuts
-$openprint::log->debug("Folds: " .@folding_impositions );
+$openprint::log->debug("Folds: " .@folding_impositions ) if DEBUG;
 			foreach my $folding_imposition ( @folding_impositions ) {
 				my $columns =  $$folding_imposition{columns} ? $$folding_imposition{columns} : $$I{'columns'};
 				$vertical_cuts += 1+$columns;# = 2+$$I{'columns'}-1

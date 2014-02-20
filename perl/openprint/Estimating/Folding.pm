@@ -388,6 +388,19 @@ sub signature_calc {
 		return %results;
 	} # end if
 
+	if ( ! ( $$sig_specs{txtFinalWidth} and $$sig_specs{txtFinalHeight} ) ) {
+$openprint::log->error("No finished width and height, cannot continue $$Project{id} $signature_service_index $qty_index");
+		# Does not need folding
+		my %results = (
+				'Price'			=> 0,
+				'MPrice'		=> 0,
+				'Equipment'		=> '',
+				'Status'		=> 'uncalculated',
+				'Folds'			=> '',
+				'Breakdown'		=> 'No finished width and height, cannot continue',
+				);
+		return %results;
+	} # end if
 	my $Paper = $SignatureImposition->Paper();
 	my $Press = $SignatureImposition->Press();
 	my $ppt = $Press->specification('Printing Type');
@@ -542,8 +555,9 @@ $openprint::log->error("No folds from sigimpo");
 	my @Set_Of_Impositions;
 	my @All_Impositions;
 
-	my $width_folds = Math::Round::nearest( 1, $$sig_specs{'txtWidth'}/$$sig_specs{'txtFinalWidth'})-1;
-	my $height_folds = Math::Round::nearest( 1, $$sig_specs{'txtHeight'}/$$sig_specs{'txtFinalHeight'}) -1;
+
+	my $width_folds = Math::Round::nearest( 1, $$sig_specs{txtWidth}/$$sig_specs{txtFinalWidth})-1;
+	my $height_folds = Math::Round::nearest( 1, $$sig_specs{txtHeight}/$$sig_specs{txtFinalHeight}) -1;
 	@$SignatureImposition{'width_folds','height_folds'} = ( $width_folds, $height_folds );
 	$openprint::log->debug("FOlds: $width_folds x $height_folds") if DEBUG;
 if ( $$sig_specs{txtSignatureType} and $$sig_specs{txtSpreadSize} == 2 ) {
