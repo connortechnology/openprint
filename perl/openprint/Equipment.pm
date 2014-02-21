@@ -11,7 +11,7 @@ require sql;
 
 use Memoize;
 memoize('fits');
-memoize('Specification');
+#memoize('Specification');
 
 use vars qw( $debug $log $dbh $table $serial %fields %find_fields %transforms %defaults $cache_field );
 *log = \$openprint::log;
@@ -249,8 +249,7 @@ $openprint::log->debug("Didn't find runspeed for $$params{gsm}gsm(" . openprint:
 } # end sub Fold
 
 sub Specifications {
-	my $self = shift;
-	return openprint::EquipmentSpecification->find( 'equipment_id'=>$$self{'id'}, 'order'=>'strname, dblmin NULLS FIRST', @_ );
+	return openprint::EquipmentSpecification->find( equipment_id=>$_[0]{id}, order=>'strname, dblmin NULLS FIRST', @_ );
 } # end sub Specifications
 
 sub specification {
@@ -258,29 +257,28 @@ sub specification {
 	if ( ! $Specification ) {
 		return;
 	} # end if
-	return $$Specification{'value'};
+	return $$Specification{value};
 } # end sub specification
 
 sub Specification {
-	my ( $self, $name, $range, $debug ) = @_;
+	my ( $self, $name, $range, $s_debug ) = @_;
 
 	if ( ! $$self{Specifications} ) {
 		return if ! $$self{id};
 		foreach ( openprint::EquipmentSpecification->find( equipment_id=>$$self{id}, order=>'dblmin NULLS FIRST,dblmax NULLS FIRST' ) ) {
-			push @{$$self{Specifications}{$_->name()}}, $_;
+			push @{$$self{Specifications}{$$_{name}}}, $_;
 		} # end foreach
 	} # end if
 
 	if ( ! $$self{Specifications} ) {
-		$openprint::log->debug("Equipment::Specification No specfications for " . $self->to_string() ) if $debug;
+		$openprint::log->debug("Equipment::Specification No specfications for " . $self->to_string() ) if $s_debug;
 		return;
 	} # end if
 	if ( ! $$self{Specifications}{$name} ) {
-		$openprint::log->warn("No specfications for ($name) " . $self->name() ) if $debug;
+		$openprint::log->warn("No specfications for ($name) " . $self->name() ) if $s_debug;
 		return;
 	} # end if
-
-	return misc::find_entry( $range, $$self{Specifications}{$name}, $debug );
+	return misc::find_entry( $range, $$self{Specifications}{$name}, $s_debug );
 } # end sub specification
 
 sub copy {

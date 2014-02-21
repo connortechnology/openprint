@@ -879,13 +879,17 @@ sub get_equipment {
 			$$error{$$Equipment{id}} .= ': spread too small.<br/>';
 			next;
 		} # end if
-		if ( $_ = $Equipment->specification('Maximum Calliper') and ( $$specs{'txtCalliper'} > $_ ) ) {
-			$$error{$$Equipment{id}} .= ': Too Thick.<br/>';
-			next;
-		} # end if
-		if ( $_ = $Equipment->specification('Minimum Calliper') and ( $$specs{'txtCalliper'} < $_ ) ) {
-			$$error{$$Equipment{id}} .= ': Too Thick.<br/>';
-			next;
+		if ( $$specs{'txtCalliper'} ) {
+			if ( $_ = $Equipment->specification('Maximum Calliper') and ( $$specs{'txtCalliper'} > $_ ) ) {
+				$$error{$$Equipment{id}} .= ': Too Thick.<br/>';
+				next;
+			} # end if
+			if ( $_ = $Equipment->specification('Minimum Calliper') and ( $$specs{'txtCalliper'} < $_ ) ) {
+				$$error{$$Equipment{id}} .= ': Too Thick.<br/>';
+				next;
+			} # end if
+		} else {
+			$openprint::log->warn("No calliper in Stitching::get_equipment");
 		} # end if
 		push @possible_equipment, $Equipment;
 	} # end foreach equipment

@@ -523,7 +523,7 @@ sub signature_calc {
 		if ( ( defined $$specs{"OverrideFoldingCuts-$$sig_specs{SignatureIndex}-$qty_index"} ) and ( $$specs{"OverrideFoldingCuts-$$sig_specs{SignatureIndex}-$qty_index"} eq 'Y' ) ) {
 			$folding_cuts = $$specs{"FoldingCuts-$$sig_specs{SignatureIndex}-$qty_index"};
 		} else {
-			if ( @folding_impositions == 1 and $folding_impositions[0]->imposition() == 1 ) {
+			if ( @folding_impositions == 1 and $folding_impositions[0]->imposition() == 1 and ( ! $stitching_imposition ) ) {
 			} else {
 				$openprint::log->debug("Folds: " .@folding_impositions ) if DEBUG;
 				foreach my $folding_imposition ( @folding_impositions ) {
@@ -656,9 +656,9 @@ sub signature_calc {
 					$vertical_cuts += int ( ($I->page_columns()-1)*$I->columns()*2 ) + 2;
 					$horizontal_cuts += int( ($I->page_rows()-1)*$I->rows() * 2 ) + 2;
 			
-				} elsif ( (!@folding_impositions) and $stitching_imposition and ( $$I{'image_orientation'} eq 'Horizontal' ) ) {
-					$vertical_cuts += int ($$I{'columns'} / $stitching_imposition)-1;
-					$horizontal_cuts += int ($$I{'rows'} / $stitching_imposition)-1; 
+				} elsif ( $stitching_imposition ) {
+					#$vertical_cuts += int ($$I{'columns'} / $stitching_imposition)-1;
+					#$horizontal_cuts += int ($$I{'rows'} / $stitching_imposition)-1; 
 				} elsif ( $$printing_specs{rdbTemplateType} eq 'PlasticCoil' ) {
 					# This is special... something about if it's plasticCoil... you have to cut it into 8's...
 

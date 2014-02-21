@@ -47,8 +47,8 @@ sub calc_setup {
 # will be useful in other spots.
 	my ( $setup, $object_width, $object_height, $space_width, $space_height ) = @_;
 
-	my $cols = $object_width ? int(($space_width / $object_width)) : 0;
-	my $rows = $object_height ? int(($space_height / $object_height)) : 0;
+	my $cols = $object_width > 1 ? int(($space_width / $object_width)) : 0;
+	my $rows = $object_height > 1 ? int(($space_height / $object_height)) : 0;
 
 	$setup->set('imposition'=>$rows * $cols, 'rows'=>$rows, 'columns'=>$cols );
 } # end sub calc_setup

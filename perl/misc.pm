@@ -12,6 +12,9 @@ use Date::Format qw( time2str );
 use Mail::Sendmail ();
 
 use openprint ();
+use Memoize;
+memoize('find_entry');
+#memoize('Specification');
 
 sub send_email_with_attached_files {
 	my ( $r, $log, $mail, @attachments ) = @_; 
