@@ -3,10 +3,10 @@
 	<form id="f1" name="f1" method="post" action="/main/project/view.html">
 		<fieldset><legend>Cutting Services</legend>
 			<ul>
-<li>
+<li><label>Quantity</label>
 <? echo ( my $html = '';
 	foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
-		$html .= '<span class="'.$$variable{'Columns'}.'Columns">';
+		$html .= '<span class="'.$$variable{Columns}.'Columns">';
 		$html .= input( name=>"txtQuantity$qty_index", value=>$$variable{'txtQuantity'.$qty_index}, type=>'integer', onkeyup=>"calc('f1');" );
 		$html .= '</span>';
 	} # end foreach
@@ -17,6 +17,8 @@
 		</fieldset>
 <? echo (
 	my $html;
+	my $services = $$variable{Project}->services();
+
 	foreach my $ss_id ( $$variable{Project}->signatures({sort=>1}) ) {
 		my $sig_specs = openprint::service::get_specs_ref( $$variable{Project}, $ss_id );
 		$html .= '<fieldset>';
@@ -70,37 +72,67 @@
 						<option value="">No Cutting</option>%4$s
 					</select>%5$s</span>`,
 					$$variable{Columns},$$sig_specs{SignatureIndex}, $qty_index,
-					( $$variable{'StockCutEquipmentArray'} ? make_drop_down( $$variable{'StockCutEquipmentArray'}, $$variable{"ddmStockCutEquipment-$$sig_specs{SignatureIndex}-$$variable{QTYIndex}"} ) : '' ),
+					( $$variable{'StockCutEquipmentArray'} ? make_drop_down( $$variable{'StockCutEquipmentArray'}, $$variable{"ddmStockCutEquipment-$$sig_specs{SignatureIndex}-$qty_index"} ) : '' ),
 					write_override( "chkOverrideStockCutEquipment-$$sig_specs{SignatureIndex}-$qty_index", $$variable{"chkOverrideStockCutEquipment-$$sig_specs{SignatureIndex}-$qty_index"}, '', "calc('f1');" ),
 	);
 			} # end foreach qty_index
-	$html .= '</li><li><label>Price ('.$$variable{CurrencySymbol}.')</label>';
+			$html .= '</li><li><label>Price ('.$$variable{CurrencySymbol}.')</label>';
 			foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
 				$html .= sprintf(q`<span class="%1$sColumns"><input name="txtStockCutPrice-%2$d-%3$d" readonly="readonly" /></span>`,
 					$$variable{'Columns'},$$sig_specs{'SignatureIndex'}, $qty_index,
 					);
 			} # end foreach qty_index
-	$html .= '</li></ul></fieldset>';
-	$html .= '<fieldset><legend>Post-press Cutting</legend>';
-	$html .= '<ul>';
-	$html .= '</li><li class="postpresscuts"><label>Cuts</label>';
+			$html .= '</li></ul></fieldset>';
+			if ( $$services{Folding} ) {
+				$html .= '<fieldset><legend>Pre-Folding Cutting</legend><ul>';
+				$html .= '<li class="foldingcuts"><label>Cuts</label>';
+				foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
+					$html .= join("\n",
+							'<span class="'.$$variable{Columns}.'Columns">',
+							input( type=>'cardinal', name=>"FoldingCuts-$$sig_specs{SignatureIndex}-$qty_index", value=>$$variable{"FoldingCuts-$$sig_specs{SignatureIndex}-$qty_index"}, onkeyup=>"calc('f1');" ),
+							write_override( "OverrideFoldingCuts-$$sig_specs{SignatureIndex}-$qty_index", $$variable{"OverrideFoldingCuts-$$sig_specs{SignatureIndex}-$qty_index"}, '', "calc('f1');" ),
+							'</span>',
+						);
+				} # end foreach qty_index
+				$html .= '</li><li><label>Equipment</label>';
+				foreach my $qty_index ( $$variable{Project}->quantity_indexes() ) {
+					$html .= sprintf(q`<span class="%1$sColumns">
+                    <select id="FoldingEquipment-%2$d-%3$d" name="FoldingEquipment-%2$d-%3$d" size="1" onchange="calc('f1');">
+                        <option value="">No Cutting</option>%4$s
+                    </select>%5$s</span>`,
+                    $$variable{'Columns'},$$sig_specs{SignatureIndex}, $qty_index,
+                    ( $$variable{'EquipmentArray'} ? make_drop_down( $$variable{EquipmentArray}, $$variable{"FoldingEquipment-$$sig_specs{SignatureIndex}-$qty_index"} ) : '' ),
+                    write_override( "OverrideFoldingEquipment-$$sig_specs{SignatureIndex}-$qty_index", $$variable{"OverrideFoldingEquipment-$$sig_specs{SignatureIndex}-$qty_index"}, '', "calc('f1');" ),
+    );
+            } # end foreach qty_index
+			$html .= '</li><li><label>Pre-Folding price ('.$$variable{CurrencySymbol}.')</label>';
+            foreach my $qty_index ( $$variable{Project}->quantity_indexes() ) {
+                $html .= sprintf(q`<span class="%1$sColumns"><input id="FoldingCutPrice-%2$d-%3$d" name="FoldingCutPrice-%2$d-%3$d" readonly="readonly" /></span>`,
+                    $$variable{Columns},$$sig_specs{SignatureIndex}, $qty_index,
+                    );
+            } # end foreach qty_index
+				$html .= '</li></ul></fieldset>';
+			} # end if
+			$html .= '<fieldset><legend>Post-press Cutting</legend><ul>';
+			$html .= '<li class="postpresscuts"><label>Cuts</label>';
 			foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
-				$html .= '<span class="'.$$variable{Columns}.'Columns">';
-					$html .= input( type=>'cardinal', name=>"txtVerticalCuts-$$sig_specs{SignatureIndex}-$qty_index", value=>$$variable{"txtVerticalCuts-$$sig_specs{SignatureIndex}-$qty_index"}, onkeyup=>"calc('f1');" );
-					$html .= ' x ';
-					$html .= input( type=>'cardinal', name=>"txtHorizontalCuts-$$sig_specs{SignatureIndex}-$qty_index", value=>$$variable{"txtHorizontalCuts-$$sig_specs{SignatureIndex}-$qty_index"}, onkeyup=>"calc('f1');" );
-					$html .= ' + dutch ';
-					$html .= input( type=>'cardinal', name=>"txtDVerticalCuts-$$sig_specs{SignatureIndex}-$qty_index", value=>$$variable{"txtDVerticalCuts-$$sig_specs{SignatureIndex}-$qty_index"}, onkeyup=>"calc('f1');" );
-					$html .= ' x ';
-					$html .= input( type=>'cardinal', name=>"txtDHorizontalCuts-$$sig_specs{SignatureIndex}-$qty_index", value=>$$variable{"txtDHorizontalCuts-$$sig_specs{SignatureIndex}-$qty_index"}, onkeyup=>"calc('f1');" );
-					$html .= ' = ';
-					$html .= input( type=>'cardinal', name=>"txtCalculatedCuts-$$sig_specs{SignatureIndex}-$qty_index", value=>$$variable{"txtCalculatedCuts-$$sig_specs{SignatureIndex}-$qty_index"}, onkeyup=>"calc('f1');" );
-
-					$html .= write_override( "chkOverrideCalculatedCuts-$$sig_specs{SignatureIndex}-$qty_index", $$variable{"chkOverrideCalculatedCuts-$$sig_specs{SignatureIndex}-$qty_index"}, '', "calc('f1');" );
-					$html .= '</span>';
+					$html .= join("\n",
+							'<span class="'.$$variable{Columns}.'Columns">',
+							input( type=>'cardinal', name=>"txtVerticalCuts-$$sig_specs{SignatureIndex}-$qty_index", value=>$$variable{"txtVerticalCuts-$$sig_specs{SignatureIndex}-$qty_index"}, onkeyup=>"calc('f1');" ),
+							' x ',
+							input( type=>'cardinal', name=>"txtHorizontalCuts-$$sig_specs{SignatureIndex}-$qty_index", value=>$$variable{"txtHorizontalCuts-$$sig_specs{SignatureIndex}-$qty_index"}, onkeyup=>"calc('f1');" ),
+							' + ',
+							input( type=>'cardinal', name=>"txtDVerticalCuts-$$sig_specs{SignatureIndex}-$qty_index", value=>$$variable{"txtDVerticalCuts-$$sig_specs{SignatureIndex}-$qty_index"}, onkeyup=>"calc('f1');", title=>'Dutch Vertical Cuts' ),
+							' x ',
+							input( type=>'cardinal', name=>"txtDHorizontalCuts-$$sig_specs{SignatureIndex}-$qty_index", value=>$$variable{"txtDHorizontalCuts-$$sig_specs{SignatureIndex}-$qty_index"}, onkeyup=>"calc('f1');", title=>'Dutch Horizontal Cuts' ),
+							' = ',
+							input( type=>'cardinal', name=>"txtCalculatedCuts-$$sig_specs{SignatureIndex}-$qty_index", value=>$$variable{"txtCalculatedCuts-$$sig_specs{SignatureIndex}-$qty_index"}, onkeyup=>"calc('f1');" ),
+							write_override( "chkOverrideCalculatedCuts-$$sig_specs{SignatureIndex}-$qty_index", $$variable{"chkOverrideCalculatedCuts-$$sig_specs{SignatureIndex}-$qty_index"}, '', "calc('f1');" ),
+							'</span>',
+						);
 			} # end foreach qty_index
 
-	$html .= '</li><li><label>Equipment</label>';
+			$html .= '</li><li><label>Equipment</label>';
 
 			foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
 				$html .= sprintf(q`<span class="%1$sColumns">
@@ -108,7 +140,7 @@
 						<option value="">No Cutting</option>%4$s
 					</select>%5$s</span>`,
 					$$variable{'Columns'},$$sig_specs{'SignatureIndex'}, $qty_index,
-					( $$variable{'EquipmentArray'} ?  ssi::make_drop_down( $$variable{'EquipmentArray'}, $$variable{"ddmEquipment-$$sig_specs{SignatureIndex}-$$variable{QTYIndex}"} ) : '' ),
+					( $$variable{'EquipmentArray'} ?  ssi::make_drop_down( $$variable{'EquipmentArray'}, $$variable{"ddmEquipment-$$sig_specs{SignatureIndex}-$qty_index"} ) : '' ),
 					write_override( "chkOverrideEquipment-$$sig_specs{SignatureIndex}-$qty_index", $$variable{"chkOverrideEquipment-$$sig_specs{SignatureIndex}-$qty_index"}, '', "calc('f1');" ),
 	);
 			} # end foreach qty_index

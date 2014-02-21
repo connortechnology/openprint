@@ -261,7 +261,7 @@
 					$html .= '<td class="status">'.$statuses{$service_id}.'</td>';
 					if ( ( ! $Project->docket() ) or ( $Project->Order()->status() eq 'Re-Opened' ) ) {
 						$html .= '<td class="unprintable actions">';
-						if ( new openprint::User($session{'user_id'})->email() =~ /iconnor/ ) {
+						if ( new openprint::User($session{user_id})->email() =~ /iconnor/ ) {
 							$html .= sprintf('<a href="/main/project/view.html?ProjectIndex=%1$d&amp;calc=%2$d">Calc</a><br/>', $Project->id(), $service_id );
 						} elsif ( $ServiceType->url() ) {
 							$html .= sprintf('<a href="/main/project/%3$s?ProjectIndex=%1$d&amp;ServiceIndex=%2$d">Edit</a><br/>', $Project->id(), $service_id, $ServiceType->url() );
@@ -287,9 +287,9 @@
 								$html .= '</td>';
 							} # end foreach qty_index
 							$html .= '<td>&nbsp;</td>';
-				if ( ( ! $Project->docket() ) or ( $Project->Order()->status() eq 'Re-Opened' ) ) {
-							$html .= '<td class="unprintable actions">&nbsp;</td>';
-					}
+							if ( ( ! $Project->docket() ) or ( $Project->Order()->status() eq 'Re-Opened' ) ) {
+								$html .= '<td class="unprintable actions">&nbsp;</td>';
+							}
 							$html .= '</tr>';
 						} # end foreach summary
 					} # end if summaries
