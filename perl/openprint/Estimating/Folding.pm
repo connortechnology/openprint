@@ -1746,26 +1746,22 @@ sub reduce_impositions {
 		for ( my $i = 0; $i < @new; $i += 1 ) {
 			if ( $new[$i]->imposition() == $max_impo ) {
 				my $I2 = $new[$i]->copy();
-				my $I3 = $new[$i]->copy();
-				if ( ! $I2->columns() % 2 ) {
-					$I2->columns( int($I2->columns()/2) );
-					$I3->columns( $I3->columns() - $I2->columns() );
+				if ( ! ( $I2->columns() % 2 ) ) {
+					$I2->columns( $I2->columns()/2 );
+					$I2->quantity( $I2->quantity() * 2 );
 					$extra = 1;
-				splice @new, $i, 1, ( $I2, $I3 );
-				$i += 1;
-				} elsif ( ! $I2->rows() % 2 ) {
-					$I2->rows( int($I2->rows()/2) );
-					$I3->rows( $I3->rows() - $I2->rows() );
+					splice @new, $i, 1, $I2;
+				} elsif ( ! ( $I2->rows() % 2 ) ) {
+					$I2->rows( $I2->rows()/2 );
+					$I2->quantity( $I2->quantity() * 2 );
 					$extra = 1;
-				splice @new, $i, 1, ( $I2, $I3 );
-				$i += 1;
+					splice @new, $i, 1, $I2;
 				} # end if
-
 			} # end if
 		} # end foreach I
 		if ( $extra ) {
-		@new = compact_impositions( @new );
-		push @results, reduce_impositions( \@new );
+			@new = compact_impositions( @new );
+			push @results, reduce_impositions( \@new );
 		} # end if
 
 		# SOmething like a 3x2 will be cut into a 1x2+2x2 but never a 2 3x1's... so do this

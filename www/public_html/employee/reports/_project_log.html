@@ -45,7 +45,7 @@
 </tr>
 `,
 			$Project->id(), 
-			Date::Format::time2str($config{'DateTimeFormat'}, Date::Parse::str2time($Log->created_on())),
+			format_datetime( $Log->created_on() ),
 			$Log->description(),
 	);
 		
