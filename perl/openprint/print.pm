@@ -172,7 +172,7 @@ $log->debug("after continue $$variable{ExternalRedirect}");
 				$Project->currency_id( $openprint::session{Currency_id} );
 				$Project->recalculate();
 				openprint::print_project::continue_project( $log, $dbh, $variable, $project_index );
-			return if $$variable{ExternalRedirect};
+				return if $$variable{ExternalRedirect};
 			} elsif ( $openprint::param{'btnFunction'} eq 'Reuse Project' ) {
 				$project_index = openprint::print_project::reuse_project( $r, $log, $dbh, $openprint::session{_session_id}, $variable, $project_index );
 			} # end if
@@ -193,6 +193,9 @@ $log->debug("after continue $$variable{ExternalRedirect}");
 				my $specs = $PS->specs();
 				$Project->add_to_log( @openprint::session{'company_id','user_id'}, $ServiceType->name().' ' . $$specs{'ServiceName'}.' service deleted.' );
 				openprint::print_project::delete_service( $project_index, $s_id );
+				if ( $ServiceType->name() eq 'Signature' ) {
+					openprint::service::internal_calc( $log, $dbh, $variable, $project_index, $$services{''}[0], $Project->Type()->type() );
+				} # end if
 			} # end foreach s_id
 			$openprint::session{'project_id'} = $project_index;
 			$Project->summary(undef);

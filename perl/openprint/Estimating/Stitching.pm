@@ -801,9 +801,11 @@ $openprint::log->debug(" fold qty * pages($pages) == sig_pages($sig_pages) foldQ
 			$$specs{'hdnBreakdown'.$qty_index} .= 'Estimated Run Time: '. sprintf('%.1f', $$price{'RunTime'} ) . ",<br/>";
 			$$specs{'hdnBreakdown'.$qty_index} .= 'Number of Passes: '. sprintf('%.1f', $$price{'Passes'} ) . ",<br/>";
 			$$specs{'hdnBreakdown'.$qty_index} .= 'Imposition: '. sprintf('%dout', $$price{'Imposition'} ) . ",<br/>";
-			$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Discounts: Run %d% Imposition: %d%, SpineLength: %d%<br/>', @$price{'RunCost Discount','Imposition Discount','SpineLength Discount'} );
+			$$specs{'hdnBreakdown'.$qty_index} .= 'Run Discount' . $$price{'RunCost Discount'}.'%<br/>' if $$price{'RunCost Discount'};
+			$$specs{'hdnBreakdown'.$qty_index} .= 'Imposition Discount: '. $$price{'Imposition Discount'} .'%<br/>' if $$price{'Imposition Discount'};
+			$$specs{'hdnBreakdown'.$qty_index} .= 'Spine Length Discount: ' . $$price{'SpineLength Discount'} . '%<br/>' if $$price{'SpineLength Discount'};
 			$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Calliper Markup %d%<br/>', @$price{'Calliper Markup'} );
-			$$specs{'hdnBreakdown'.$qty_index} .= 'MakeReady: $' . sprintf( '%.2f', $$price{'MakeReady'}).",<br/>";
+			$$specs{'hdnBreakdown'.$qty_index} .= 'MakeReady: $' . Math::Round::nearest( 0.01, $$price{MakeReady}).',<br/>';
 			if ( my $servicePrice = $$price{'ServicePrice'} ) {
 				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Service: %d passes at $%.2f%s=$%.2f<br/>', $$price{'Passes'} -1, @$servicePrice{'Price','units','Total'});
 			} # end if

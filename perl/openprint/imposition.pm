@@ -285,8 +285,10 @@ $openprint::log->debug("Not Pretrimming on $$Press{strid}") if DEBUG;
 	$setup1->printing_type( $Press->specification('Printing Type') );
 	if ( $run_style eq 'Perfecting' ) {
 		$setup1->colour_bar_size( $$specs{'Perfecting_colour_bar_size'} );
+		$setup2->colour_bar_size( $$specs{'Perfecting_colour_bar_size'} );
 	} else {
 		$setup1->colour_bar_size( $$specs{'colour_bar_size'} );
+		$setup2->colour_bar_size( $$specs{'colour_bar_size'} );
 	} # end if
 	$setup1->colour_bar_orientation( $$specs{'Colour Bar Orientation'} );
 
@@ -303,11 +305,6 @@ $openprint::log->debug("Not Pretrimming on $$Press{strid}") if DEBUG;
 	$setup2->object_height( $image_height );
 	$setup2->Press( $Press );
 	$setup2->printing_type( $Press->specification('Printing Type') );
-	if ( $run_style eq 'Perfecting' ) {
-		$setup2->colour_bar_size( $$specs{'Perfecting_colour_bar_size'} );
-	} else {
-		$setup2->colour_bar_size( $$specs{'colour_bar_size'} );
-	} # end if
 	$setup2->colour_bar_orientation( $$specs{'Colour Bar Orientation'} );
 
 	# Grain is on the second dimension by default (according to Rick)
@@ -468,7 +465,7 @@ $openprint::log->debug("Not Pretrimming on $$Press{strid}") if DEBUG;
 	} # end if
 
 	if ( $$specs{'Colour Bar Orientation'} ne 'Length' ) {
-		$adjusted_paper_height -= $$specs{'colour_bar_size'};
+		$adjusted_paper_height -= $$setup1{colour_bar_size};
 	} # end if
 
 	if ( $Paper->cuttable() ) {
@@ -511,7 +508,7 @@ $openprint::log->debug("Height: $paper_height - CB $$specs{'colour_bar_size'} - 
 		$adjusted_paper_width = $$specs{'Maximum Image Area Width'};
 	} # end if
 	if ( $$specs{'Colour Bar Orientation'} eq 'Length' ) {
-		$adjusted_paper_width -= $$specs{'colour_bar_size'};
+		$adjusted_paper_width -= $$setup1{'colour_bar_size'};
 	} # end if
 
 	if ( $Paper->cuttable() ) {
@@ -628,7 +625,7 @@ $openprint::log->debug("Height: $paper_height - CB $$specs{'colour_bar_size'} - 
 	} # end if
 
 	if ( $$specs{'Colour Bar Orientation'} ne 'Length' ) {
-		$adjusted_paper_height -= $$specs{'colour_bar_size'};
+		$adjusted_paper_height -= $$setup2{colour_bar_size};
 	} # end if
 
 	if ( $Paper->cuttable() ) {
@@ -667,7 +664,7 @@ $openprint::log->debug("Height: $paper_height - CB $$specs{'colour_bar_size'} - 
 		$openprint::log->debug("*** Using Max Image Width2: $adjusted_paper_width ***") if DEBUG;
 	} # end if
 	if ( $$specs{'Colour Bar Orientation'} eq 'Length' ) {
-		$adjusted_paper_width -= $$specs{'colour_bar_size'};
+		$adjusted_paper_width -= $$setup2{colour_bar_size};
 	} # end if
 
 	if ( $Paper->cuttable() ) {
