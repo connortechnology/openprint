@@ -538,10 +538,15 @@ sub get_price {
 		$Results{'Breakdown'} .= sprintf('Service: $%.2f%s * %d * %d scores=$%.2f<br/>', @servicePrice{'Price','units'}, $qty, $score_qty, $servicePrice{Total} );
 	} elsif ( $servicePrice{'units'} eq 'per hour' ) {
 		my $runspeed = $Equipment->specification('PerfScoreRunSpeed');
-
-		my $hours = $qty / $runspeed if $runspeed;
-		$servicePrice{Total} = Math::Round::nearest( 0.01, $servicePrice{'Price'} * $hours );
-		$Results{'Breakdown'} .= sprintf('Service: $%.2f%s * %d @ %d%s =%.2f', @servicePrice{'Price','units'}, $qty, $runspeed, 'Per Hour', $servicePrice{Total} );
+		if ( $runspeed ) {
+			if ( int($runspeed) ) {
+				my $hours = $qty / $runspeed;
+				$servicePrice{Total} = Math::Round::nearest( 0.01, $servicePrice{'Price'} * $hours );
+				$Results{'Breakdown'} .= sprintf('Service: $%.2f%s * %d @ %d%s =%.2f', @servicePrice{'Price','units'}, $qty, $runspeed, 'Per Hour', $servicePrice{Total} );
+			} else {
+				$openprint::log->error("Bogus runspeed ($runspeed) on $$Equipment{strid}");
+			} # end if
+		} # end if
 	} elsif ( $servicePrice{'Price'} ) {
 		$Results{'Breakdown'} .= "Unknown units set on service price ($score_qty) ($servicePrice{'units'}) <br/>";
 	} # end if

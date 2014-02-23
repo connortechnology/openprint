@@ -5692,11 +5692,15 @@ sub get_run_price {
 		$run_price{'Price'} = ($run_price{'Cost'} * $impressions);
 		$run_price{'MPrice'} = $run_price{'Cost'} * 1000;
 
-	} elsif ( $run_price{'units'} eq 'per hour' ) {
+	} elsif ( $run_price{units} eq 'per hour' ) {
 		if ( $run_speed ) {
-# In Minutes, not hours
-			$run_price{'RunHours'} = $impressions / $run_speed;
-			$run_price{'RunTime'} = int ( 60 * $impressions / $run_speed );
+			if ( int($run_speed) ) {
+	# In Minutes, not hours
+				$run_price{'RunHours'} = $impressions / $run_speed;
+				$run_price{'RunTime'} = int ( 60 * $impressions / $run_speed );
+			} else {
+				$openprint::log->error(" Bogus value for runspeed: $run_speed in get_run_price on $$Press{strid}");
+			} # end if
 		} # end if
 		$run_price{'Cost'} = $running_price;
 		$run_price{'Price'} = $running_price * $run_price{'RunHours'};
