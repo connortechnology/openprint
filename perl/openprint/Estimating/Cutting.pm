@@ -706,7 +706,7 @@ sub signature_calc {
 						} # end if
 					} # end if
 				} # end if
-			} elsif ( @folding_impositions > 1 and $folding_impositions[0]->imposition() > 1 ) {
+			} elsif ( @folding_impositions >= 1 and $folding_impositions[0]->imposition() > 1 ) {
 
 	# Splitting the folded products is done on the folder for free
 	#if ( ( $$folding_imposition{'columns'} > 1 ) and ( $$folding_imposition{'columns'} < $$I{'columns'} ) ) {
