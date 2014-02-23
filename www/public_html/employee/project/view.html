@@ -93,6 +93,12 @@ function send_notifications( form, project_id ) {
 	) ?>
 	<br/>
 	<? if ( $$variable{Order}->docket() ) ?>
+<br class="spacer"/>
+<fieldset><legend onclick="toggleContent('StockAllocations','_stock_allocations.html?docket=<? echo ( $$variable{Order}->docket() ) ?>', null, null );">Allocated</legend>
+<div id="StockAllocations" class="StockAllocated"><?include(/employee/project/_stock_allocations.html)?></div>
+</fieldset>
+<br/>
+<div id="StockCheckout" class="StockCheckout"><?include(/employee/project/_stock_checkout.html)?></div>
 	<div class="leftColumn">
 	<? eval (
 		$$variable{PurchaseOrders} = [ openprint::PurchaseOrder_Content->find( docket=>$$variable{Order}->docket() ) ];

@@ -48,11 +48,13 @@
 				
 				foreach my $A ( @{$allocations{$key}} ) {	
 					$quantity += $A->quantity();
-					if ( $A->skid_id() ) {
-						my $age = time - Date::Parse::str2time( $A->Skid()->created_on() );
-						if ( $age > $max_age ) {
-							$max_age = $age;
-						} # end if
+					if ( $_ = $A->skid_ids() and @{$_} ) {
+						foreach my $Skid ( openprint::Skid->find( id=>$A->skid_ids() ) ) {
+							my $age = time - Date::Parse::str2time( $Skid->created_on() );
+							if ( $age > $max_age ) {
+								$max_age = $age;
+							} # end if
+						} # end foreach Skid
 					} else {
 						foreach my $SkidContent ( openprint::SkidContent->find('paper_id'=>$A->paper_id(),'quantity >'=>0) ) {
 							my $age = time - Date::Parse::str2time( $SkidContent->Skid()->created_on() );
@@ -85,7 +87,7 @@ $log->debug("Max end: $max_age_end Max Age $max_age");
 
 				$html .= "<tr$rowclass>";
 				$html .= qq`<td class="checkbox"><input type="checkbox" name="allocations" value="$$Allocation{'id'}"/></td>`;
-				$html .= sprintf( '<td class="Docket"><a href="skid_details.html?skid_id=%d">%s</a></td>', $$Allocation{skid_id}, $Allocation->docket() );
+				$html .= sprintf( '<td class="Docket"><a href="/employee/project/view.html?docket=%d">%s</a></td>', $$Allocation{docket}, $Allocation->docket() );
 				$html .= sprintf( '<td class="Company"><a href="skid_details.html?skid_id=%d">%s</a></td>', $$Allocation{skid_id}, $Allocation->Project()->Company()->name() );
 				$html .= sprintf( '<td class="Stock"><a href="paper_details.html?paper_id=%d">%s</a></td>', $$Allocation{paper_id}, $Allocation->Paper()->to_string() );
 				$html .= sprintf( '<td class="Quantity"><a href="skid_details.html?skid_id=%d">%s%s</a></td>', $$Allocation{'id'}, Number::Format::format_number($quantity), $Allocation->Paper()->type() eq 'Roll' ? 'lbs' : 'sheets' );

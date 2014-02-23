@@ -12,7 +12,7 @@
 		my %Allocations;
 		my $rowclass;
 
-		foreach my $Allocation ( openprint::PaperAllocation->find( project_id=>$$variable{Project}->id(), order=>'created_on' ) ) {
+		foreach my $Allocation ( openprint::PaperAllocation->find( docket=>$$variable{Order}->docket(), order=>'created_on' ) ) {
 			push @{$Allocations{$Allocation->paper_id()}}, $Allocation;
 		} # end foreach Allocation
 
@@ -42,11 +42,11 @@
 				$html .= '<td colspan="2">';
 				if ( $param{'allocation_details_'.$paper_id} ) {
 					$html .= button( 'allocation_details'.$paper_id, { onclick=>
-						sprintf(q`LoadContent('StockAllocations%1$d','_stock_allocations.html', { project_id: '%1$d', allocation_details_%2$d: 0 } );`, $$variable{'Project'}->id(), $paper_id ),
+						sprintf(q`LoadContent('StockAllocations%1$d','_stock_allocations.html', { docket: '%1$d', allocation_details_%2$d: 0 } );`, $$variable{Order}->docket(), $paper_id ),
 						text=>'Hide details' } ) . '</td>';
 				} else {
 					$html .= button( 'allocation_details'.$paper_id, { onclick=>
-						sprintf(q`LoadContent('StockAllocations%1$d','_stock_allocations.html', { project_id: '%1$d', allocation_details_%2$d: 1 } );`, $$variable{'Project'}->id(), $paper_id ),
+						sprintf(q`LoadContent('StockAllocations%1$d','_stock_allocations.html', { docket: '%1$d', allocation_details_%2$d: 1 } );`, $$variable{Order}->docket(), $paper_id ),
 						text=>'Show details' } ) . '</td>';
 				} # end if
 				$html .= sprintf('<td class="Quantity">%1$s%2$s</td></tr>', Number::Format::format_number($total), $Paper->units() );
