@@ -1595,6 +1595,7 @@ sub unlock {
 		return;
 	} # end if
 	$_[0]{ac} = sql::end_transaction( $openprint::dbh, $_[0]{ac} );
+	delete $_[0]{ac};
 } # end sub unlock
 
 

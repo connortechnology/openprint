@@ -155,6 +155,7 @@ sub signature_calc {
 		$results{'Status'} = 'uncalculated';
 		return \%results;
 	} # end if
+	my $scoring_specs = openprint::service::get_specs_ref( $Project, $$services{Scoring}[0] ) if $$services{Scoring} and @{$$services{Scoring}};
 
 	my $plusCover = $$printing_specs{'rdbCover'} eq 'Different' ? 1 : 0;
 
@@ -393,6 +394,12 @@ $results{'Breakdown'} .= 'Imposition: ' . $imposition . 'out<br/>';
 					$results{Breakdown} .= "Folder not the same: " . $$folding_specs{"ddmEquipment-$$sig_specs{SignatureIndex}-$qty_index"}. ' != ' . $Equipment->id() if DEBUG;
 					next;
 				} # end if
+				if ( $scoring_specs and openprint::Estimating::Scoring::signature_needs( $Project, $scoring_specs, $sig_specs, $I->Paper() ) ) {
+					if ( $$scoring_specs{"ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} != $Equipment->id() ) {
+						$results{Breakdown} .= "Scoring not the same: " . $$scoring_specs{"ddmEquipment-$$sig_specs{SignatureIndex}-$qty_index"}. ' != ' . $Equipment->id() if DEBUG;
+                    next;
+					} # end if
+				} # end if
 			} # end if
 			if ( $Folding_Equipment->specification('Folding Capable') eq 'When Stitching' ) {
 				if ( $Folding_Equipment->id() != $Equipment->id() ) {
@@ -461,11 +468,11 @@ sub calc {
 	# Figure out whether we need a cover
 	my $printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
 	@$specs{'txtPageQuantity','txtFinalWidth','txtFinalHeight'} = @$printing_specs{'txtTotalPageQuantity','txtFinalWidth','txtFinalHeight'};
-	if ( $$specs{'chkOverrideInsertQuantity'} ne 'Y' ) {
+	if ( (defined $$specs{'chkOverrideInsertQuantity'}) and ( $$specs{'chkOverrideInsertQuantity'} eq 'Y' ) ) {
+		$variables{txtInsertQuantity} = [ sets::exclude( ['output'], $variables{txtInsertQuantity} ) ];
+	} else {
 		$variables{txtInsertQuantity} = [ sets::union( 'output', @{$variables{txtInsertQuantity}} ) ];
 		$$specs{txtInsertQuantity} = $$printing_specs{'txtInsertQuantity'};
-	} else {
-		$variables{txtInsertQuantity} = [ sets::exclude( ['output'], $variables{txtInsertQuantity} ) ];
 	} # end if
 
 	if ( $$specs{'txtPageQuantity'} <= 0 ) {
@@ -529,6 +536,7 @@ sub calc {
 		$log->debug("************* We Have Plus Cover *************************");
 		$plusCover = 1;
 	} # end if
+	my $scoring_specs = openprint::service::get_specs_ref( $Project, $$services{Scoring}[0] ) if $$services{Scoring} and @{$$services{Scoring}};
 
 	# Need to figure out which dimension the spine bisects
 	if ( $$printing_specs{spine} ) {
@@ -676,7 +684,7 @@ $openprint::log->debug(" fold qty * pages($pages) == sig_pages($sig_pages) foldQ
 	foreach my $qty_index ( $Project->quantity_indexes() ) {
 		next if ! $$specs{"txtQuantity$qty_index"};
 
-		if ( $$specs{'txtInsertQuantity'} > 0 ) {
+		if ( (defined $$specs{'txtInsertQuantity'} ) and ( $$specs{'txtInsertQuantity'} > 0 ) ) {
 			$$specs{"txtPockets$qty_index"} += $$specs{'txtInsertQuantity'};
 		} # end if
 
@@ -764,6 +772,20 @@ $openprint::log->debug(" fold qty * pages($pages) == sig_pages($sig_pages) foldQ
 				if ( ( defined $$specs{"folding_imposition$qty_index"} ) and ( $$specs{"folding_imposition$qty_index"} != $$specs{"Imposition$qty_index"} ) ) {
 					$$specs{'hdnBreakdown'.$qty_index} .= 'Folding and stitching imposition must match when inline stitching.<br/>';
 					next;
+				} # end if
+				if ( $scoring_specs ) {
+					my $scoring_good = 1;
+					foreach my $ss_id ( @signatures ) {
+						my $sig_specs = openprint::service::get_specs_ref( $Project, $ss_id );
+						if ( openprint::Estimating::Scoring::signature_needs( $Project, $scoring_specs, $sig_specs ) ) {
+							if ( $$scoring_specs{"ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} != $Equipment->id() ) {
+								$$specs{"hdnBreakdown$qty_index"} .= "Scoring not the same: " . new openprint::Equipment($$scoring_specs{"ddmEquipment-$$sig_specs{SignatureIndex}-$qty_index"})->strid(). ' != ' . $Equipment->strid();
+								$scoring_good = 0;
+								last;
+							} # end if
+						} # end if
+					} # end foreach ss_id
+					next if ! $scoring_good;
 				} # end if
 			} # end if
 
