@@ -732,7 +732,7 @@ sub signature_calc {
 			} # end if
 
 	# Dutch cuts don't happen on books
-			if ( ( ! exists $$sig_specs{'txtSignatureType'} ) and ! @folding_impositions ) {
+			if ( ( ! $$sig_specs{'txtSignatureType'} ) and ! @folding_impositions ) {
 	# Now consider Dutch cuts
 				if ( $$I{'dutch_columns'} and $$I{'dutch_rows'} ) {
 					$dutch_vertical_cuts += 1 + $$I{'dutch_columns'};
