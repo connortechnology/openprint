@@ -774,6 +774,7 @@ sub services {
 		my %results;
 		my @data = sql::execute( $openprint::log, $openprint::dbh, q{SELECT (SELECT name FROM Service_Types WHERE id=servicetype_id), lngServiceIndex FROM tbl_Project_Contents WHERE lngProjectIndex=?}, $$self{'id'} );
 		while ( my ( $id, $index ) = splice @data, 0, 2 ) {
+			$id = '' if ! $id;
 			push @{$results{$id}}, $index;
 		} # end while
 		$$self{'Services'} = \%results;
@@ -1445,7 +1446,7 @@ sub production_cost {
 
 sub Service {
 	my ( $self, $service_id ) = @_;
-	return new openprint::Project_Service( {'project_id'=>$$self{'id'}, 'service_id'=>$service_id} );
+	return new openprint::Project_Service( {project_id=>$$self{id}, service_id=>$service_id} );
 } # end sub Service
 
 sub used_press_names {

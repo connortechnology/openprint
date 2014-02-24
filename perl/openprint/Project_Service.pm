@@ -9,7 +9,7 @@ require openprint::ServiceType;
 
 use vars qw( $debug %fields %find_fields %transforms %defaults $table $serial @identified_by );
 
-$debug = 0;
+$debug = 1;
 %fields = (
 	'service_id'	=>	'lngserviceindex',
 	'project_id'	=>	'lngprojectindex',
@@ -129,12 +129,19 @@ sub runtime {
 
 sub delete {
 	my ( $self ) = @_;
+if ( ! $$self{project_id} ) {
+	$openprint::log->error("Attempt to delete a Project Service with no project.");
+	return;
+} # end if
 	my $ac = sql::start_transaction( $openprint::dbh );
+$openprint::log->warn("Deleting " . $self->to_string() );
 	sql::execute( undef, $openprint::dbh, q{DELETE FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND lngServiceIndex=?}, @$self{'project_id','service_id'} );
 	sql::execute( undef, $openprint::dbh, q{DELETE FROM tbl_Project_Contents WHERE lngProjectIndex=? AND lngServiceIndex=?}, @$self{'project_id', 'service_id'} );
 	my $Project = $self->Project();
+$openprint::log->warn("Deleting Service from " . $Project->to_string() );
 	delete $$Project{'Services'};
 	delete $$Project{'signatures'};
+	delete $$Project{'Signature'};
 	delete $$Project{'service_types'};
 	foreach my $Job ( openprint::ScheduledJob->find( project_id=>$$self{project_id}, 'service_id any'=>$$self{service_id} ) ) {
 		$Job->save( { 
