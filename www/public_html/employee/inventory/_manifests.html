@@ -40,7 +40,7 @@
 			) ];
 	} elsif ( $param{manufacturers_id} ) {
 		$$variable{Manifests} = [ openprint::Manifest->find( 
-			manufacturers_id	=>	$param{manufacturers_id},
+			'manufacturers_id any'	=>	$param{manufacturers_id},
 			order	=>	'received_on DESC',
 			limit	=>	100,
 			( $session{'/employee/inventory/manifests.html?deleted'} ? ( deleted => [ split(',', $session{'/employee/inventory/manifests.html?deleted'} ) ] ) : () ),
