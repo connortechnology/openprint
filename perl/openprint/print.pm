@@ -177,6 +177,7 @@ $log->debug("after continue $$variable{ExternalRedirect}");
 				$project_index = openprint::print_project::reuse_project( $r, $log, $dbh, $openprint::session{_session_id}, $variable, $project_index );
 			} # end if
 			if ( ! $$variable{Redirect} ) {
+				$Project->update_status();
 				$$variable{ExternalRedirect} = '/main/project/view.html?project_id='.$project_index;
 				return;
 			} # end if
@@ -200,12 +201,14 @@ $log->debug("after continue $$variable{ExternalRedirect}");
 			$openprint::session{'project_id'} = $project_index;
 			$Project->summary(undef);
 			$Project->save();
+			$Project->update_status();
 			$$variable{ExternalRedirect} = '/main/project/view.html?project_id='.$Project->id();
 		} elsif ( ( defined $openprint::param{'calc'} ) and $openprint::param{'calc'} ) {
 			$log->debug("Recalculating $openprint::param{calc}");
 			openprint::service::internal_calc( $log, $dbh, $variable, $project_index, $r->param('calc') );
 			$Project->summary(undef);
 			$Project->save();
+			$Project->update_status();
 			$$variable{ExternalRedirect} = '/main/project/view.html?project_id='.$project_index;
 			return;
 		} # end if
@@ -216,10 +219,9 @@ $log->debug("after continue $$variable{ExternalRedirect}");
 			return if $$variable{ExternalRedirect};
 		} # end if 
 		if ( ! $$variable{'Redirect'} ) {
-			$Project->update_status();
 			openprint::main_project::view( $project_index );
 		} # end if
-	} # end if
+	} # end if can_edit
 
 } # end sub view_services
 

@@ -571,12 +571,12 @@ sub update_status {
 		} # end if
 	} # end if
 
-	if ( $$self{'status'} ne $new_status ) {
-		$$self{'status'} = $new_status;
+	if ( $$self{status} ne $new_status ) {
+		$self->add_to_log( @openprint::session{'company_id','user_id'}, "Marked $new_status from $$self{status}" );
+		$$self{status} = $new_status;
 		$self->save();
-		$self->add_to_log( @openprint::session{'company_id','user_id'}, "Marked $new_status" );
 	} # end if
-	return $$self{'status'};
+	return $$self{status};
 
 } # end sub update_project_status
 
@@ -1583,6 +1583,7 @@ sub lock {
 	my ( $caller, undef, $line ) = caller;
 	$openprint::log->debug("LOCKING Projects for project $_[0]{id} ac: $_[0]{ac} caller: $caller line: $line");
     $openprint::dbh->do( "SELECT * FROM Projects WHERE id=".$_[0]{id}. ' FOR UPDATE' );
+	$openprint::dbh->do( 'SET CONSTRAINTS ALL DEFERRED' );
 
 } # end sub lock
 
