@@ -239,6 +239,9 @@ sub end_transaction {
 	#my ( $caller, undef, $line ) = caller;
 #$openprint::log->debug("Called end_transaction from $caller : $line");
 	my ( $d, $ac ) = @_;
+if ( ! defined $ac ) {
+	$log->error("Undefined ac");
+}
 	$d = $dbh if ! $d;
 	if ( $ac ) {
 		#$log->debug("Committing");

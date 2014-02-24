@@ -38,14 +38,14 @@
 		value	=>	$$variable{'FoldRows-'.$blah},
 		);
 	$html .= '</td><td class="Type">';
-	my @options = ( '', 'select fold' );;
-	push @options, map { $_, $openprint::Estimating::Folding::fold_types{$_} } sql::execute( undef, undef, 'SELECT DISTINCT type FROM folds ORDER BY type');
+	@{$$variable{fold_options}} = sort { my ( $pagesa ) = $a =~ /(\d*)/; my ( $pagesb ) = $b =~ /(\d*)/; $pagesa <=> $pagesb; } ( map { $_, $openprint::Estimating::Folding::fold_types{$_} } sql::execute( undef, undef, 'SELECT DISTINCT type FROM folds') ) if ! $$variable{fold_options};
 	$html .= ssi::select(
-			\@options, $$variable{'FoldType-'.$blah},
+			$$variable{fold_options}, $$variable{'FoldType-'.$blah},
 			{
 			id		=>	'FoldType-'.$blah,
 			name	=>	'FoldType-'.$blah,
-			onkeyup	=>$onkeyup,
+			onchange	=>$onkeyup,
+			prepend	=>	[ '', 'select fold' ],
 			} );
 	$html .= '</td><td class="Folds">';
 	$html .= input(
