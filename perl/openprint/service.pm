@@ -63,9 +63,9 @@ sub save_service {
 	my @variables = eval( $module.'::variables( $project_index, $service_index, $specs, \%openprint::param )');
 	$log->error($@) if $@;
 $log->debug("variables: @variables");
-	# make this fast by doing it in one transaction
-	my $ac = sql::start_transaction( $dbh );
-	#$dbh->do('LOCK tbl_service_specifications IN EXCLUSIVE MODE');
+# We cannot locak tbl_service_specifications or tbl_project_contents.  Just too nasty.  So use tbl_Projects as the contention point.
+	# make this fast by doing it in one transaction, locking does the tranasaction for us
+	$Project->lock();
 	foreach my $key (@variables) {
 #$log->debug("Key: $key ($openprint::param{$key}) ( $$specs{$key})");
 		if ( ref $openprint::param{$key} eq 'ARRAY' ) {
@@ -77,7 +77,7 @@ $log->debug("variables: @variables");
 			insert_service_spec( $log, $dbh, $project_index, $service_index, $key, $openprint::param{$key}, 0 );
 		} # end if
 	} # end foreach
-	sql::end_transaction( $dbh, $ac );
+	$Project->unlock();
 	if ( my $function = $module->can('save') ) {
 		$function->( $project_index, $service_index, \%openprint::param );
 	} # end if
@@ -456,11 +456,9 @@ sub get_type {
 sub internal_calc {
 	my ( $log, $dbh, $variable, $project_index, $service_index, $service_type, $qty_index ) = @_;
 
-	my $ac = sql::start_transaction( $dbh );
 	my $Project = new openprint::Project( $project_index );
+	$Project->lock();
 	$Project->save({status=>'uncalculated'}) if $Project->status() ne 'uncalculated';
-    $log->debug("LOCKING Projects for project $$Project{id} ac: $ac service_index: $service_index $service_type");
-    $dbh->do( "SELECT * FROM Projects WHERE id=".$$Project{id}. ' FOR UPDATE' );
 	my $Service = $Project->Service($service_index) if $service_index;
 	$Service->save({status=>'uncalculated'}) if $Service->status() ne 'uncalculated';
 	my $specs;
@@ -500,8 +498,7 @@ $openprint::log->error("Doing internal calc without service_index or, not found"
 	} else {
 		$log->error($package . ' cant calc');
 	} # end if
-    $log->debug("UNLOCKING Projects for project $$Project{id} $ac");
-	sql::end_transaction( $dbh, $ac );
+	$Project->unlock();
 	return \%specs;
 } # end sub internal_calc
 

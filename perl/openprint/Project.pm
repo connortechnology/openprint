@@ -1582,8 +1582,8 @@ sub lock {
 	$_[0]{ac} = sql::start_transaction( $openprint::dbh );
 	my ( $caller, undef, $line ) = caller;
 	$openprint::log->debug("LOCKING Projects for project $_[0]{id} ac: $_[0]{ac} caller: $caller line: $line");
-    #$openprint::dbh->do( "SELECT * FROM Projects WHERE id=".$_[0]{id}. ' FOR UPDATE' );
-	#$openprint::dbh->do( 'SET CONSTRAINTS ALL DEFERRED' );
+    $openprint::dbh->do( "SELECT * FROM Projects WHERE id=".$_[0]{id}. ' FOR UPDATE' );
+	$openprint::dbh->do( 'SET CONSTRAINTS ALL DEFERRED' );
 
 } # end sub lock
 
