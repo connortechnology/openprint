@@ -1576,17 +1576,21 @@ sub link_to {
 } # end sub link_to
 
 sub lock {
+	if ( $_[0]{ac} ) {
+		#already locked
+	} else {
 	$_[0]{ac} = sql::start_transaction( $openprint::dbh );
 	my ( $caller, undef, $line ) = caller;
-	$openprint::log->debug("LOCKING Projects for project $_[0]{id} ac: $_[0]{ac} caller: $caller line: $line");
+	$openprint::log->debug("LOCKING Projects for project $_[0]{id} ac: $_[0]{ac} caller: $caller line: $line project ref:" . $_[0]);
     $openprint::dbh->do( "SELECT * FROM Projects WHERE id=".$_[0]{id}. ' FOR UPDATE' );
-	$openprint::dbh->do( 'SET CONSTRAINTS ALL DEFERRED' );
+	#$openprint::dbh->do( 'SET CONSTRAINTS ALL DEFERRED' );
+	} # end if
 
 } # end sub lock
 
 sub unlock {
 	my ( $caller, undef, $line ) = caller;
-	$openprint::log->debug("UNLOCKING Projects for project $_[0]{id} ac: $_[0]{ac} caller: $caller line: $line");
+	$openprint::log->debug("UNLOCKING Projects for project $_[0]{id} ac: $_[0]{ac} caller: $caller line: $line" . $_[0]);
 	if ( ! exists $_[0]{ac} ) {
 		$openprint::log->debug("unlock with no AC!");
 		return;
