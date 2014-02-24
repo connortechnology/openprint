@@ -1098,12 +1098,11 @@ sub User {
 sub add_signature {
 	my ( $self, $sig_index, $status, $data ) = @_;
 	
-	my $ac = sql::start_transaction( $dbh );
-	$dbh->do( 'LOCK TABLE tbl_Service_Specifications IN EXCLUSIVE MODE' ) or $log->error( $dbh->errstr() );
+	$self->lock();
 	my $print_service_index = $self->add_service( 'Signature', $data );
 	if ( ! $print_service_index ) {
 		$log->error("Error adding Signature!");
-		sql::end_transaction( $dbh, $ac );
+		$self->unlock();
 		return;
 	} # end if
 	openprint::service::status( $self->id(), $print_service_index, $status ) if $status;
@@ -1113,7 +1112,7 @@ sub add_signature {
 		$sig_index += 1;
 	} # end if
 	openprint::service::insert_service_spec( $log, $dbh, $self->id(), $print_service_index, 'SignatureIndex', $sig_index );
-	sql::end_transaction( $dbh, $ac );
+	$self->unlock();
 	return $print_service_index;
 } # end sub add_signature
 
@@ -1213,10 +1212,7 @@ sub add_service {
 		$ServiceType = $type;
 	} # end if
 
-	# Make this all one transaction...
-	my $ac = sql::start_transaction( $dbh );
-	# Shoudln't need to lock this... theya re all just inserts
-	#$dbh->do( 'LOCK TABLE tbl_Service_Specifications IN EXCLUSIVE MODE' ) or $log->error( $dbh->errstr() );
+	$self->lock();
 if ( $debug ) {
 $log->debug("Project: $$self{id} $self");
 foreach my $k ( keys %{$$self{Services}} ) {
@@ -1263,7 +1259,7 @@ foreach my $k ( keys %{$$self{Services}} ) {
 		$self->price($qty_index,undef);
 	} # end foreach
 	$self->save();
-	sql::end_transaction( $dbh, $ac );
+	$self->unlock();
 	return $service_index;
 } # end sub add_service
 
@@ -1594,7 +1590,7 @@ sub unlock {
 		$openprint::log->debug("unlock with no AC!");
 		return;
 	} # end if
-	sql::end_transaction( $openprint::dbh, $_[0]{ac} );
+	$_[0]{ac} = sql::end_transaction( $openprint::dbh, $_[0]{ac} );
 } # end sub unlock
 
 

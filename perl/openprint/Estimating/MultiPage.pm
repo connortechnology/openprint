@@ -41,13 +41,22 @@ my %variables = (
 	'ProjectIndex'=>[], 'ServiceIndex'=>[], 'ServiceType'=>[], 'NewBook'=>[],
 	'remaining_pages'=>['output'],'next_group_id'=>['output'],'groups'=>['output'],
 	spine	=>	 ['save'],
+
 );
 
 sub variables {
+	my ( $project_id, $service_id, $specs, $incoming_specs ) = @_;
 	my @v;
 	foreach my $k ( keys %variables ) {
 		push @v, $k if sets::isin( 'save', $variables{$k} );
 	} # end foreach;
+	my @Groups = sql::execute( undef, undef, 'SELECT DISTINCT strvalue FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strName=?', $project_id, 'Group' );
+	foreach my $group_id ( @Groups ) {
+		push @v, 'ddmRunStyle'.$group_id;
+		push @v, 'ddmPress'.$group_id;
+		push @v, 'ddmPrintingType'.$group_id;
+		push @v, 'Pages'.$group_id;
+	} # end foreach
 	return @v;
 } # end sub variables
 

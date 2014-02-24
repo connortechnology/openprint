@@ -65,7 +65,7 @@ sub variables {
 	foreach my $k ( keys %variables ) {
 		push @v, $k, if sets::isin( 'save', $variables{$k} );
 	} # end foreach;
-	if ( int $$specs{'txtInsertQuantity'} ) {
+	if ( (defined $$specs{'txtInsertQuantity'} ) and int $$specs{'txtInsertQuantity'} ) {
 		foreach my $insert_id ( 1 .. int $$specs{'txtInsertQuantity'} ) {
 			push @v, 'txtInsertPage1-'.$insert_id, 'txtInsertPage2-'.$insert_id;
 		} # end foreach
@@ -680,7 +680,7 @@ $openprint::log->debug(" fold qty * pages($pages) == sig_pages($sig_pages) foldQ
 			$$specs{"txtPockets$qty_index"} += $$specs{'txtInsertQuantity'};
 		} # end if
 
-		if ( $$specs{'rdbGateFoldFit'} eq 'Exact' ) {
+		if ( (defined $$specs{'rdbGateFoldFit'}) and ( $$specs{'rdbGateFoldFit'} eq 'Exact' ) ) {
 			$$specs{"txtPockets$qty_index"} -= ( $$specs{'txtSignatureQtySingleGateFolded'.$qty_index} + $$specs{'txtSignatureQtyDoubleGateFolded'.$qty_index} );
 		} # end if
 
@@ -699,7 +699,7 @@ $openprint::log->debug(" fold qty * pages($pages) == sig_pages($sig_pages) foldQ
 
 
 		my @equipment = ();
-		if ( $$specs{"chkOverrideEquipment$qty_index"} eq 'Y' ) {
+		if ( ( defined $$specs{"chkOverrideEquipment$qty_index"} ) and ( $$specs{"chkOverrideEquipment$qty_index"} eq 'Y' ) ) {
             $variables{"ddmEquipment$qty_index"} = [ sets::exclude( ['output'], $variables{"ddmEquipment$qty_index"} ) ];
 			if ( ! $$specs{"ddmEquipment$qty_index"} ) {
 				$$specs{'alert'} .= 'Please select a piece of equipment to stitch your job.<br/>';
