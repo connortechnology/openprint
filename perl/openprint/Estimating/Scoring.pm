@@ -641,9 +641,15 @@ sub get_scores {
 		} elsif ( sets::isin( $$sig_specs{'rdbTemplateType'}, '3PanelFold', '3PanelZFold' ) ) {
 			$$specs{"txtVerticalQty-$$sig_specs{'SignatureIndex'}"} = $width_folds;
 			$$specs{"txtHorizontalQty-$$sig_specs{'SignatureIndex'}"} = $height_folds;
-		} elsif ( sets::isin( $$sig_specs{'rdbTemplateType'}, '4PanelFold','4PanelZFold', 'AccordianFold', 'AccordianFold4Panel') ) {
+		} elsif ( sets::isin( $$sig_specs{'rdbTemplateType'}, 'AccordianFold') ) {
 			$$specs{"txtVerticalQty-$$sig_specs{'SignatureIndex'}"} = $width_folds;
 			$$specs{"txtHorizontalQty-$$sig_specs{'SignatureIndex'}"} = $height_folds;
+		} elsif ( sets::isin( $$sig_specs{'rdbTemplateType'}, '4PanelFold','4PanelZFold', 'AccordianFold4Panel') ) {
+			if ( $width_folds ) {
+				$$specs{"txtVerticalQty-$$sig_specs{'SignatureIndex'}"} = 3;
+			} else {
+				$$specs{"txtHorizontalQty-$$sig_specs{'SignatureIndex'}"} = 3;
+			} # end if
 		} elsif ( sets::isin( $$sig_specs{'rdbTemplateType'}, '5PanelFold', '5PanelZFold') ) {
 			$$specs{"txtVerticalQty-$$sig_specs{'SignatureIndex'}"} = $width_folds;
 			$$specs{"txtHorizontalQty-$$sig_specs{'SignatureIndex'}"} = $height_folds;
