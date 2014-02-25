@@ -49,9 +49,9 @@
 			$Paper = $Paper->Supplied();
 			$sig_papers{$Paper->id_string()} = $Paper;
 		} # end foreach
-		foreach my $id ( keys %sig_papers ) {
-			$log->debug("Sig Papers $id");
-		}
+		#foreach my $id ( keys %sig_papers ) {
+			#$log->debug("Sig Papers $id");
+		#}
 
 		# We use @stock_ids to put things in the same order for each sig.
 		foreach my $stock_string ( @stock_ids ) {
@@ -87,14 +87,14 @@
 		$stock_id += 1;
 	} # end foreach stock
 	$html .= include( '/includes/main/proj/_service_price.html' );
-if ( sets::isin( $session{'user_type'}, ['A','E'] ) ) {
-            $html .= '<li>';
-    foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
-        $html .= sprintf('<span class="%sColumns">', $$variable{'Columns'} );
-        $html .= button( 'Breakdown'.$qty_index, { onclick=>"show_breakdown($qty_index);", text=>'Breakdown' } );
-        $html .= '</span>';
-    } # end foreach qty_index
-            $html .= '</li>';
+	if ( sets::isin( $session{'user_type'}, ['A','E'] ) ) {
+		$html .= '<li>';
+		foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
+			$html .= sprintf('<span class="%sColumns">', $$variable{'Columns'} );
+			$html .= button( 'Breakdown'.$qty_index, { onclick=>"show_breakdown($qty_index);", text=>'Breakdown' } );
+			$html .= '</span>';
+		} # end foreach qty_index
+		$html .= '</li>';
 	} # end if
 
 	$html .= '</ul></fieldset>';

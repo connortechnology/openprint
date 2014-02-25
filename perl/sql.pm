@@ -47,6 +47,10 @@ sub execute_array {
 		$starttime = [gettimeofday] if $timing;
 	} # end if
 	my $sth;
+	if ( ! $d ) {
+		$l->error( "No dbh $print_sql" ) if $l;
+		return;
+	} # end if
 	if ( ! ( $sth = $d->prepare_cached($sql) ) ) {
 		$l->error( "Error Preparing SQL: ($print_sql): " . $d->errstr ) if $l;
 		return;
