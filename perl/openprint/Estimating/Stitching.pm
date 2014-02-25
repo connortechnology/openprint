@@ -16,7 +16,7 @@
 
 package openprint::Estimating::Stitching;
 use strict;
-use warnings;
+#use warnings;
 
 use constant DEBUG => 0;
 
@@ -401,7 +401,7 @@ $results{'Breakdown'} .= 'Imposition: ' . $imposition . 'out<br/>';
 					} # end if
 				} # end if
 			} # end if
-			if ( $Folding_Equipment->specification('Folding Capable') eq 'When Stitching' ) {
+			if ( ( $_ = $Folding_Equipment->specification('Folding Capable') ) and ( $_ eq 'When Stitching' ) ) {
 				if ( $Folding_Equipment->id() != $Equipment->id() ) {
 					$results{Breakdown} .= $Equipment->strid() . ' is not the folding equipment<br/>';
 					next;
@@ -1076,7 +1076,7 @@ $openprint::log->debug("Need more pockets $maxPockets") if DEBUG;
 	} # end if
 
 	$price{'Imposition Discount'} = $Equipment->specification( 'Imposition Discount', $price{'Imposition'} );
-	$price{'Service'} *= ( 1 - $price{'Imposition Discount'}/100);
+	$price{'Service'} *= ( 1 - $price{'Imposition Discount'}/100) if $price{'Imposition Discount'};
 	$price{'MPrice'} += ( $price{'Service'} / $qty ) * 1000 if $qty;
 	if ( my $spinelength_discount = $Equipment->specification( 'SpineLength Discount', $$specs{'Height'} ) ) {
 		$price{'SpineLength Discount'} = $spinelength_discount;

@@ -2861,20 +2861,13 @@ sub calculate_impositions {
 			next;
 		} # end if
 
-if ( 0 ) {
-# Now done in select_presses
-		if ( ( $$imp{'runstyle'} eq 'Web' ) and $openprint::usergroup::groups_cache{'Web Estimating'} and ! openprint::usergroup::is_user_in( ['Web Estimating'], $openprint::session{'user_id'} ) ) {
-			$openprint::log->debug('No Web 4 U') if DEBUG_FILTERING;
-			next;
-		} # end if
-		if ( ( $$imp{printing_type} eq 'Digital' ) and $openprint::usergroup::groups_cache{'Digital Estimating'} and ! openprint::usergroup::is_user_in( ['Digital Estimating'], $openprint::session{'user_id'} ) ) {
-			$openprint::log->debug('No Digital 4 U') if DEBUG_FILTERING;
-			next;
-		} # end if
-} # end if
-
 		if ( $$sig_specs{'PreviousStockType'} and ( $$Paper{'type'} ne $$sig_specs{'PreviousStockType'} ) ) {
 			$imp->display("PreviousStockType: $$sig_specs{'PreviousStockType'} ne " . $Paper->to_string() ) if DEBUG_FILTERING;
+			next;
+		} # end if
+
+		if ( $$sig_specs{PreviousStockWidth} and $$Paper{width} > $$sig_specs{PreviousStockWidth} ) {
+			$imp->display("PreviousStockWidth: $$sig_specs{'PreviousStockWidth'} < " . $Paper->to_string() ) if DEBUG_FILTERING;
 			next;
 		} # end if
 
@@ -3151,7 +3144,7 @@ $imp->display("qty: $qty unspec ". $$sig_specs{"txtUnspecifiedPageQuantity$qty_i
 					#} elsif ( ( $P->area() >= $Paper->area() )
 					if ( ( $P->area() >= $Paper->area() )
 							and ( $P->factor() <= $Paper->factor() )
-							and ( $P->minimum_order_weight() >= $Paper->minimum_order_weight() )
+							and ( $P->minimum_order_weight() >= $Paper->minimum_order_weight() or $Paper->minimum_order_weight() > $$imp{stock_qty} )
 							and ( $$BiggerPrice{'100lb Total'} >= $$SmallerPrice{'100lb Total'} )
 							and ( $P->is_cut() or ! $Paper->is_cut() )
 						   ) {
@@ -3164,7 +3157,7 @@ $imp->display("qty: $qty unspec ". $$sig_specs{"txtUnspecifiedPageQuantity$qty_i
 						} # end if
 					} elsif ( ( $P->area() < $Paper->area() )
                             and ( $P->factor() >= $Paper->factor() )
-                            and ( $P->minimum_order_weight() <= $Paper->minimum_order_weight() )
+                            and ( $P->minimum_order_weight() <= $Paper->minimum_order_weight() or $P->minimum_order_weight() < $$I{stock_qty} )
                             and ( (1*$$BiggerPrice{'100lb Total'}) <= (1*$$SmallerPrice{'100lb Total'}) )
                             and ( ( ! $P->is_cut() ) or ( $Paper->is_cut() ) )
                             ) {
@@ -3779,6 +3772,7 @@ $$new_specs{"OverrideStockHeight$qty_index"} = $Paper->height();
 
 						$$new_specs{'PrintingTypes'} = [ $Press->specification('Printing Type') ];
 						$$new_specs{'PreviousStockType'} = $$Paper{'type'};
+						$$new_specs{'PreviousStockWIdth'} = $$Paper{width};
 						$$new_specs{'PreviousGrainDirection'} = $imp->grain_direction();
 						if ( $$imp{'Folder'} and ( $$Press{'id'} == $$imp{'Folder'}->id() ) ) {
 #This is used in Folding to tell it not to mix impositions when inline folded
@@ -3792,7 +3786,8 @@ $$new_specs{"OverrideStockHeight$qty_index"} = $Paper->height();
 							$$sig_price{alert} .= 'Too deep ' . $recursion_depth;
 							$$sig_price{'complete'} = 0;
 						} else {
-							my $price_cache_key = join(',', keys %PaperCounts, $qty_index, $$Press{strid}, $$price{upq}, $$imp{runstyle}, $$Paper{type}, $$Paper{width},$$Paper{height} );
+							my $price_cache_key = join(',', keys %PaperCounts, $qty_index, $$Press{strid}, $$price{upq}, $$imp{runstyle}, $$Paper{type}, $$Paper{width} );
+							#my $price_cache_key = join(',', keys %PaperCounts, $qty_index, $$Press{strid}, $$price{upq}, $$imp{runstyle}, $$Paper{type}, $$Paper{width},$$Paper{height} );
 
 							if ( ! $price_cache{$price_cache_key} ) {
 								my @new_possible_presses;
@@ -3805,7 +3800,7 @@ $$new_specs{"OverrideStockHeight$qty_index"} = $Paper->height();
 									get_project_price( $Project, $$new_specs{ServiceIndex}, $project, $service_specs, $new_specs, $qty, $qty_index, \@new_possible_presses, $printing_specs, $versions, \%PlateCounts, \%PaperCounts, \%washed_colours, \%previous_forms_cache, \@signatures, $impositions, $other_impositions, undef, $recursion_depth + 1 );
 							} # end if
 							$sig_price = $price_cache{$price_cache_key};
-							$price_cache{$price_cache_key} = undef if ( ! $$sig_price{complete} ) or ! USE_PRICE_CACHE;
+							$price_cache{$price_cache_key} = undef if ! USE_PRICE_CACHE;
 							#$imp->display($recursion_depth . " After recurse: $$price{'Comparison Cost'} + $$sig_price{'Comparison Cost'} " );
 							#foreach my $i ( @{$$sig_price{Impositions}} ) {
 								#$i->display($recursion_depth . " After recurse: $$sig_price{'Comparison Cost'} " );

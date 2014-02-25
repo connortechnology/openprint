@@ -22,6 +22,7 @@ $cache_field = 'strid';
 sub cache_field {
     return $cache_field;
 }
+my %Specification_cache;
 
 $debug = 0;
 %fields = (
@@ -264,6 +265,10 @@ sub specification {
 sub Specification {
 	my ( $self, $name, $range, $s_debug ) = @_;
 
+	if ( $Specification_cache{$$self{id}.$name.$range} ) {
+		return $Specification_cache{$$self{id}.$name.$range};
+	} # end if
+
 	if ( ! $$self{Specifications} ) {
 		return if ! $$self{id};
 		foreach ( openprint::EquipmentSpecification->find( equipment_id=>$$self{id}, order=>'dblmin NULLS FIRST,dblmax NULLS FIRST' ) ) {
@@ -279,7 +284,9 @@ sub Specification {
 		$openprint::log->warn("No specfications for ($name) " . $self->name() ) if $s_debug;
 		return;
 	} # end if
-	return misc::find_entry( $range, $$self{Specifications}{$name}, $s_debug );
+	my $Spec = misc::find_entry( $range, $$self{Specifications}{$name}, $s_debug );
+	$Specification_cache{$$self{id}.$name.$range} = $Spec;
+	return $Spec;
 } # end sub specification
 
 sub copy {

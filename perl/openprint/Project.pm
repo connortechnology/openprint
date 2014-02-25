@@ -1579,11 +1579,11 @@ sub lock {
 	if ( $_[0]{ac} ) {
 		#already locked
 	} else {
-	$_[0]{ac} = sql::start_transaction( $openprint::dbh );
-	my ( $caller, undef, $line ) = caller;
-	$openprint::log->debug("LOCKING Projects for project $_[0]{id} ac: $_[0]{ac} caller: $caller line: $line project ref:" . $_[0]);
-    $openprint::dbh->do( "SELECT * FROM Projects WHERE id=".$_[0]{id}. ' FOR UPDATE' );
-	#$openprint::dbh->do( 'SET CONSTRAINTS ALL DEFERRED' );
+		$_[0]{ac} = sql::start_transaction( $openprint::dbh );
+		my ( $caller, undef, $line ) = caller;
+		$openprint::log->debug("LOCKING Projects for project $_[0]{id} ac: $_[0]{ac} caller: $caller line: $line project ref:" . $_[0]);
+		$openprint::dbh->do( "SELECT * FROM Projects WHERE id=".$_[0]{id}. ' FOR UPDATE' );
+		#$openprint::dbh->do( 'SET CONSTRAINTS ALL DEFERRED' );
 	} # end if
 
 } # end sub lock
@@ -1595,7 +1595,7 @@ sub unlock {
 		$openprint::log->debug("unlock with no AC!");
 		return;
 	} # end if
-	$_[0]{ac} = sql::end_transaction( $openprint::dbh, $_[0]{ac} );
+	$_[0]{ac} = sql::end_transaction( $openprint::dbh, $_[0]{ac} ) if $_[0]{ac};
 	delete $_[0]{ac};
 } # end sub unlock
 
