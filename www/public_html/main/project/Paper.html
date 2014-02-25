@@ -69,8 +69,8 @@
 	$html .= "<fieldset><legend>Totals</legend><ul>\n";
 	foreach my $stock ( @stock_ids ) {
 		my $stock_id = $indexes{$stock};
-		$html .= '<li><label>'.$stock."</label>\n";
 		my $Paper = $Supplied_Stocks{$stock};
+		$html .= '<li><label>'.$Paper->to_string()."</label>\n";
 
 		foreach my $qty_index ( $Project->quantity_indexes() ) {
 			my $blah = $stock_id.'-'.$qty_index;
