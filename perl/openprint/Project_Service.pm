@@ -171,6 +171,7 @@ sub overrides {
 	$module = 'openprint::Estimating::Printing' if $module eq 'openprint::Estimating::Signature';
 	$module = 'openprint::Estimating::Printing' if $module eq 'openprint::Estimating::AdditionalSignature';
 	$module = 'openprint::Estimating::Printing' if $module eq 'openprint::Estimating::';
+	eval ( 'require '.$module.';' );
 	if ( my $function = $module->can( 'has_overrides' ) ) {
 		my $specs = $_[0]->specs();
 		my @o = $function->( $self->Project(), $$self{'service_id'}, $specs, $qty_index );

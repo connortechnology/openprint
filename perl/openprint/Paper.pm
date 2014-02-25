@@ -1347,7 +1347,7 @@ $log->debug("Didn't find specific paper $params{'width'} x $params{'height'}");
 						$$specs{'StockQuantity'.$qty_index} = $$specs{'txtPressSheetQty'.$qty_index};
 						$$specs{'StockQuantity'.$qty_index} =~ s/\D//g;
 					} # end if
-					if ( $$specs{'StockQuantity'.$qty_index} < $P->minimum_order() ) {
+					if ( $$specs{'StockQuantity'.$qty_index} and ( $$specs{'StockQuantity'.$qty_index} < $P->minimum_order() ) ) {
 						$openprint::log->debug("Paper no good due to minimum order. Need " . $$specs{'StockQuantity'.$qty_index} . ' have ' . $P->minimum_order() ) if $debug;
 						next;
 					} # end if
