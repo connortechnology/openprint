@@ -699,15 +699,15 @@ sub copy {
 
 # uncalc->uncalc,	*->calc
 		if ( $status ne '' and sets::isin( $status, [ 'Pending Deposit', 'Ordered', 'Proofs Out', 'Approved', 'Complete' ] ) ) {
-			$status = 'calculated';
+			$status = 'Unordered';
 		} # end if
 
 		my ( $new_service_index ) = sql::execute( undef, undef, q{SELECT nextval('ContentsServiceIndex_seq')} );
 		sql::insert( undef, undef, 'tbl_Project_Contents',[
-				'lngProjectIndex',	$$new{id},
-				'lngServiceIndex', $new_service_index,
-				'servicetype_id',	$servicetype_id,
-				'strStatus',	$status
+				lngProjectIndex	=>	$$new{id},
+				lngServiceIndex	=>	$new_service_index,
+				servicetype_id	=>	$servicetype_id,
+				strStatus		=>	$status
 				] );
 		openprint::service::insert_service_spec( $openprint::log, $openprint::dbh, $new->id(), $new_service_index, 'ProjectIndex', $new->id(), 1 );
 		openprint::service::insert_service_spec( $openprint::log, $openprint::dbh, $new->id(), $new_service_index, 'ServiceIndex', $new_service_index, 1 );

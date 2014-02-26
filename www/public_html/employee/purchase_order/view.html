@@ -178,8 +178,11 @@ Manifest: <a href="/employee/inventory/manifest_view.html?manifest_id=<? echo ( 
 
 		if ( $$variable{PurchaseOrder}->can_see_pricing($C) ) {
 			$html .= '<div class="price">';
-			if ( sets::isin( $C->Type()->name(), [ 'Roll Stock', 'Sheet Stock' ] ) ) {
-				$html .= openprint::Currency::format($C->price(),4) . '/100lb';
+			if ( $C->type() eq 'Roll Stock' ) {
+				$html .= openprint::Currency::format($C->price(),2) . '/100lb';
+			} elsif ( $C->type() eq 'Sheet Stock' ) {
+				$html .= openprint::Currency::format($C->price(),2) . '/100lb<br/>';
+				$html .= openprint::Currency::format($C->mprice(),2) . '/1000';
 			} else {
 				$html .= openprint::Currency::format($C->price(),4);
 			} # end if

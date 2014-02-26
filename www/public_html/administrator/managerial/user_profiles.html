@@ -138,8 +138,8 @@ Please select a company or user to obtain login information.<br/>
 					</li>
 					<li class="phone"> 
 						<label>Phone</label>
-						<input type="tel" name="phone" value="<? hecho ( $$variable{User}->phone() ) ?>" />x
-						<input type="tel" name="extension" value="<? hecho ( $$variable{User}->extension() ) ?>" />
+						<input type="tel" id="phone" name="phone" value="<? hecho ( $$variable{User}->phone() ) ?>" />x
+						<input type="tel" id="extension" name="extension" value="<? hecho ( $$variable{User}->extension() ) ?>" />
 					</li>
 					<li class="mobile"> 
 						<label>Mobile</label>
@@ -157,7 +157,7 @@ Please select a company or user to obtain login information.<br/>
 			</div>
 			<div class="rightColumn">
 				<ul>
-					<li> 
+					<li class="mailinglist"> 
 						<label>Add to our Mailing List</label>
 						<? echo ( radio( 'mailinglist', [ 'Y', 'Yes', 'N', 'No' ], $$variable{User}->mailinglist() ); ) ?>
 					</li>
@@ -165,7 +165,7 @@ Please select a company or user to obtain login information.<br/>
 						<label>Is this account a company administrator?</label>
 						<? echo ( radio( 'administrator', [ 'Y', 'Yes', 'N', 'No' ], $$variable{User}->administrator() ); ) ?>
 					</li>
-					<li> 
+					<li class="web_active"> 
 						<label>Can this account login to the web site?</label>
 						<? echo ( radio( 'web_active', [ 'Y', 'Yes', 'N', 'No' ], $$variable{User}->web_active() ); ) ?>
 					</li>
@@ -186,10 +186,10 @@ Please select a company or user to obtain login information.<br/>
 						<textarea id="notes" name="notes" rows="<? echo ( ssi::count_lines( $$variable{User}->notes() ); ) ?>" onkeyup="textarea_resize(this);"><? echo ( $$variable{User}->notes() ) ?></textarea>
 					</li>
 					<li><label>Created</label>
-						<? echo ( Date::Format::time2str($config{'DateTimeFormat'}, Date::Parse::str2time( $$variable{User}->created_on() ) ); ) ?>
+						<? echo ( format_datetime( $$variable{User}->created_on() ); ) ?>
 					</li>
 					<li><label>Updated</label>
-						<? echo ( Date::Format::time2str($config{'DateTimeFormat'}, Date::Parse::str2time( $$variable{User}->updated_on() ) ); ) ?>
+						<? echo ( format_datetime( $$variable{User}->updated_on() ); ) ?>
 					</li>
 		
 				</ul>

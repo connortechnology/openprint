@@ -8,16 +8,20 @@
 			<input type="text" onkeyup="filterDDM(this, this.form.ddmCompany);" size="4" style="width: auto;"/>
 			<select name="ddmCompany">
 				<option value="">Select a Customer</option>
-				<? echo ( openprint::Company::get_dropdown( $session{'company_id'} ); ) ?>
+				<? echo ( openprint::Company::get_dropdown( $session{company_id} ); ) ?>
 			</select>
+		</p>
+		If you would like these projects to be recalculated to update their pricing, select yes.
+		<p><label>Recalculate</label>
+			<? echo ( radio( 'recalculate', [ '1', 'Yes', '0', 'No' ], '0' ); ) ?>
 		</p>
 	</fieldset>
 	<? endif ( $session{'user_type'} eq 'E' or $session{'user_type'} eq 'A' ) ?>
 	Please click &quot;Save &amp; Continue&quot; if you have provided all the relevant project information.
 	<p class="buttons">
 		<? echo ( join('',
-				ssi::writeButton( $log, $dbh, 'Cancel','cancel.gif','popupWin.destroy();','','Cancel'),
-				ssi::writeButton( $log, $dbh, 'SaveAndContinue','save_and_continue.gif','copy_popup_form.submit();','','Save And Continue'),
+				button( 'Cancel', { onclick=>'popupWin.destroy();', text=>'Cancel' } ),
+				button( 'SaveAndContinue', { onclick=>'copy_popup_form.submit();', text=>'Save And Continue' } ),
 		); ) ?>
 	</p>
 	<input type="hidden" name="btnFunction" value="Reuse Project"/>

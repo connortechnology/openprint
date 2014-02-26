@@ -555,21 +555,20 @@ $openprint::log->error("No folds from sigimpo");
 	my @Set_Of_Impositions;
 	my @All_Impositions;
 
-
 	my $width_folds = Math::Round::nearest( 1, $$sig_specs{txtWidth}/$$sig_specs{txtFinalWidth})-1;
 	my $height_folds = Math::Round::nearest( 1, $$sig_specs{txtHeight}/$$sig_specs{txtFinalHeight}) -1;
 	@$SignatureImposition{'width_folds','height_folds'} = ( $width_folds, $height_folds );
 	$openprint::log->debug("FOlds: $width_folds x $height_folds") if DEBUG;
-if ( $$sig_specs{txtSignatureType} and $$sig_specs{txtSpreadSize} == 2 ) {
-	if ( $$SignatureImposition{image_orientation} eq 'Vertical' ) {
-		$width_folds = 1;
-	} else {
-		$height_folds = 1;
+	if ( $$sig_specs{txtSignatureType} and $$sig_specs{txtSpreadSize} == 2 ) {
+		if ( $$SignatureImposition{image_orientation} eq 'Vertical' ) {
+			$width_folds = 1;
+		} else {
+			$height_folds = 1;
+		} # end if
+		$openprint::log->debug("FOlds: $width_folds x $height_folds") if DEBUG;
 	} # end if
-	$openprint::log->debug("FOlds: $width_folds x $height_folds") if DEBUG;
-} # end if
 
-	# IF it's a W&T, we have to cut in half first, so just do it.
+# IF it's a W&T, we have to cut in half first, so just do it.
 	if ( $$SignatureImposition{runstyle} eq 'Work & Turn' ) {
 		my $i = $SignatureImposition->copy();
 		$i->runstyle('Sheet Work');
@@ -730,6 +729,7 @@ if ( 0 ) {
 			$openprint::log->debug('No Offline Equipment '.$Equipment->name()) if DEBUG;
 			next;
 		} # end if
+		my $orientation = $Equipment->specification('Orientation');
 		my $capable = $Equipment->specification( 'Folding Capable' );
 		if ( $capable eq 'When PerfectBound' ) {
 # Means it's a PerfectBinder, so can only do covers
@@ -779,19 +779,28 @@ $openprint::log->debug("Sets of impos != 1 for $$Equipment{strid}") if DEBUG;
 			$openprint::log->debug("Impositions in this set: " . @$Set_Of_Impositions ) if DEBUG;
 			for ( my $imp_index = 0; $imp_index < @$Set_Of_Impositions; $imp_index += 1 ) {
 				my $Imposition = $$Set_Of_Impositions[$imp_index];
+				my $max_feed_width = $Equipment->specification('Maximum Feed Width', $$Imposition{imposition} );
 
 				if ( DEBUG ) {
 					$Imposition->display('trying ' . $$Imposition{quantity} . 'x ');
 				} # end if
 
 # Web has dual delivery
-if ( $$Equipment{id} != $$Press{id} ) {
-				if ( $$Imposition{imposition} > 3 and ( $$Imposition{columns} > 1 and $$Imposition{rows} > 1 ) ) {
-$openprint::log->debug("Can't do that impo") if DEBUG;
-					$complete = 0;
-					last;
-				} # end if
-}
+				if ( $$Equipment{id} != $$Press{id} ) {
+					if ( $$Imposition{imposition} > 3 and ( $$Imposition{columns} > 1 and $$Imposition{rows} > 1 ) ) {
+						$openprint::log->debug("Can't do that impo") if DEBUG;
+						$complete = 0;
+						last;
+					} elsif ( ( $$Imposition{columns} > 1 ) and ( $$Imposition{image_orientation} eq 'Vertical' ) ) {
+						$openprint::log->debug("Can't do that impo") if DEBUG;
+						$complete = 0;
+						last;
+					} elsif ( $$Imposition{rows} > 1 and ( $$Imposition{image_orientation} eq 'Horizontal' ) ) {
+						$openprint::log->debug("Can't do that impo") if DEBUG;
+						$complete = 0;
+						last;
+					} # end if
+				}
 
 				if ( my $required_bleed = $Equipment->specification($$Imposition{imposition}.'out Required Bleed') ) {
 					if ( $required_bleed > $$Imposition{bleed_size} ) {
@@ -866,11 +875,11 @@ $openprint::log->debug("Templatetype: $$sig_specs{'rdbTemplateType'}") if DEBUG;
 						if ( $Fold ) {
 # Need to check feed width
 $openprint::log->debug("Has a fold, doing extra checks") if DEBUG;
-							if ( my $max_feed_width = $Equipment->specification('Maximum Feed Width', $$Imposition{imposition} ) ) {
-								if ( $Equipment->specification('Orientation') ) {
+							if ( $max_feed_width ) {
+								if ( $orientation ) {
 									if (						
-											( $Equipment->specification('Orientation') eq 'Portrait' and $Imposition->layout_width() <= $Imposition->layout_height() ) or
-											( $Equipment->specification('Orientation') eq 'Landscape' and $Imposition->layout_width() >= $Imposition->layout_height() ) 
+											( $orientation eq 'Portrait' and $Imposition->layout_width() <= $Imposition->layout_height() ) or
+											( $orientation eq 'Landscape' and $Imposition->layout_width() >= $Imposition->layout_height() ) 
 										) {
 										if ( $Imposition->layout_width() >= $max_feed_width ) {
 											$openprint::log->debug("Fold no good due to max feed width ($max_feed_width) on width ($$sig_specs{txtWidth}).") if DEBUG;
@@ -884,8 +893,6 @@ $openprint::log->debug("Has a fold, doing extra checks") if DEBUG;
 									} # end if
 								} else {
 # decide whether it's running portrait or landscape basessd on which way the folds go
-									my $width_folds = int( ($$sig_specs{'txtWidth'}/$$sig_specs{'txtFinalWidth'})-1 );
-									my $height_folds = int( ($$sig_specs{'txtHeight'}/$$sig_specs{'txtFinalHeight'})-1 );
 									$openprint::log->debug("Has max feed width width: $width_folds height: $height_folds $$sig_specs{'txtWidth'} $$sig_specs{'txtHeight'} $max_feed_width") if DEBUG;
 									if ( ( $width_folds and ! $height_folds ) or ( $width_folds == $$Fold{'folds'} and $height_folds == $$Fold{'angles'} ) ) {
 # If folds are on width, we grip on height...
@@ -926,7 +933,6 @@ $openprint::log->debug("No Fold") if DEBUG;
 
 						# See if it fits
 						$_ = $Equipment->fits( $Imposition->layout_width(), $Imposition->layout_height(), $$Paper{'calliper'} );
-
 						if ( ! $_ )	{
 							$openprint::log->debug("Fits") if DEBUG;
 							my $Fold = $Equipment->Fold({
@@ -942,6 +948,44 @@ $openprint::log->debug("No Fold") if DEBUG;
 									imposition		=>	$$Imposition{'imposition'},
 									printing_type	=>	$ppt,
 									});
+							if ( $Fold and $max_feed_width ) {
+								my $fits;
+								if ( $orientation ) {
+									if (
+											( $orientation eq 'Portrait' and $Imposition->layout_width() <= $Imposition->layout_height() ) or
+											( $orientation eq 'Landscape' and $Imposition->layout_width() >= $Imposition->layout_height() )
+									   ) {
+										if ( $Imposition->layout_width() >= $max_feed_width ) {
+											$fits = "Fold no good due to max feed width ($max_feed_width) on width ($$sig_specs{txtWidth}).";
+											$Fold = undef;
+										} # end if
+									} else {
+										if ( $Imposition->layout_height() >= $max_feed_width ) {
+											$fits = "Fold no good due to max feed width ($max_feed_width) on height ($$sig_specs{txtHeight}).";
+											$Fold = undef;
+										} # end if
+									} # end if
+								} else {
+# decide whether it's running portrait or landscape basessd on which way the folds go
+									$openprint::log->debug("Has max feed width width: $width_folds height: $height_folds $$sig_specs{'txtWidth'} $$sig_specs{'txtHeight'} $max_feed_width") if DEBUG;
+									if ( ( $width_folds and ! $height_folds ) or ( $width_folds == $$Fold{'folds'} and $height_folds == $$Fold{'angles'} ) ) {
+# If folds are on width, we grip on height...
+										if ( $Imposition->layout_width() >= $max_feed_width ) {
+											$fits = "Fold no good due to max feed width ($max_feed_width) on width ($$sig_specs{'txtHeight'}).";
+											$Fold = undef;
+                                        } # end if
+                                    } elsif ( ( $height_folds and ! $width_folds ) or ( $height_folds == $$Fold{'folds'} and $height_folds == $$Fold{'angles'} ) ) {
+                                        if ( $Imposition->layout_height() >= $max_feed_width ) {
+                                            $fits = "Fold no good due to max feed width ($max_feed_width) on height ($$sig_specs{txtWidth}.";
+											$Fold = undef;
+                                        } # end if
+                                    } else {
+                                        $openprint::log->error("No fold match");
+                                    } # end if
+                                } # end if has an orientation
+								$openprint::log->debug($fits) if $fits;
+							} # end if
+
 							if ( $Fold ) {
 								$Fold = $Fold->clone();
 								$Fold->Imposition( $Imposition );
@@ -1762,11 +1806,33 @@ sub reduce_impositions {
 		if ( $extra ) {
 			@new = compact_impositions( @new );
 			push @results, reduce_impositions( \@new );
+		} else {
+			for ( my $i = 0; $i < @new; $i += 1 ) {
+				if ( $new[$i]->imposition() == $max_impo ) {
+					my $I2 = $new[$i]->copy();
+					my $I3 = $new[$i]->copy();
+					if ( $I2->columns() > 1 ) {
+						$I2->columns( int($I2->columns()/2) );
+						$I3->columns( $I3->columns() - $I2->columns() );
+					} else {
+						$I2->rows( int($I2->rows()/2) );
+						$I3->rows( $I3->rows() - $I2->rows() );
+					} # end if
+
+					splice @new, $i, 1, ( $I2, $I3 );
+					$i += 1;
+					$extra = 1;
+				} # end if
+			} # end foreach I
+			if ( $extra ) {
+				@new = compact_impositions( @new );
+				push @results, reduce_impositions( \@new );
+			} # end if
 		} # end if
 
 		# SOmething like a 3x2 will be cut into a 1x2+2x2 but never a 2 3x1's... so do this
-		my $extra = 0;
-		my @new = @$impositions;
+		$extra = 0;
+		@new = @$impositions;
 		for ( my $i = 0; $i < @new; $i += 1 ) {
 			if ( $new[$i]->imposition() == $max_impo ) {
 				if ( $new[$i]->rows() > 1 and $new[$i]->columns() > 1 ) {
@@ -1786,7 +1852,7 @@ sub reduce_impositions {
 		} # end if
 
 		$extra = 0;
-		my @new = @$impositions;
+		@new = @$impositions;
 		for ( my $i = 0; $i < @new; $i += 1 ) {
 			if ( $new[$i]->imposition() == $max_impo ) {
 				my $I2 = $new[$i]->copy();
@@ -1806,12 +1872,9 @@ sub reduce_impositions {
 			} # end if
 		} # end foreach I
 		if ( $extra ) {
-		@new = compact_impositions( @new );
-		push @results, reduce_impositions( \@new );
+			@new = compact_impositions( @new );
+			push @results, reduce_impositions( \@new );
 		} # end if
-
-
-
 	} # end if
 	return @results;
 	
