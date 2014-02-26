@@ -783,8 +783,13 @@ sub _stock_checkout {
 	my $Order;
 	if ( $param{docket} ) {
 		$Order = openprint::Order->find_one( docket=>$param{docket} );
+		if ( ! $Order ) {
+			$variable{error} .= 'No docket found for ' . $param{docket} . '<br/>';
+			return;
+		} # end if
 	} else {
 		$log->error("NO docket in _stock_checkout");
+		return;
 	} # end if
 	$variable{Order} = $Order;
 
