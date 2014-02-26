@@ -774,6 +774,7 @@ $openprint::log->debug("Not employee" );
 } # end sub can_invoice
 
 sub Invoice {
+$openprint::log->error("Deprecated call to Order::Invoice");
 	return new openprint::Invoice( $_[0]{invoice_id} );
 } # end sub Invoice
 
