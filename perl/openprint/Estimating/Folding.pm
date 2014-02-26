@@ -776,7 +776,14 @@ $openprint::log->debug("Sets of impos != 1 for $$Equipment{strid}") if DEBUG;
 			my $complete = 1;
 
 			my %folds;
-			$openprint::log->debug("Impositions in this set: " . @$Set_Of_Impositions ) if DEBUG;
+			if ( DEBUG ) {
+				$openprint::log->debug("Impositions in this set: " . @$Set_Of_Impositions );
+				for ( my $imp_index = 0; $imp_index < @$Set_Of_Impositions; $imp_index += 1 ) {
+					my $Imposition = $$Set_Of_Impositions[$imp_index];
+					$Imposition->display($$Imposition{quantity} . 'x ');
+				} #end for
+			} # end if
+
 			for ( my $imp_index = 0; $imp_index < @$Set_Of_Impositions; $imp_index += 1 ) {
 				my $Imposition = $$Set_Of_Impositions[$imp_index];
 				my $max_feed_width = $Equipment->specification('Maximum Feed Width', $$Imposition{imposition} );
@@ -792,11 +799,11 @@ $openprint::log->debug("Sets of impos != 1 for $$Equipment{strid}") if DEBUG;
 						$complete = 0;
 						last;
 					} elsif ( ( $$Imposition{columns} > 1 ) and ( $$Imposition{image_orientation} eq 'Vertical' ) ) {
-						$openprint::log->debug("Can't do that impo") if DEBUG;
+						$openprint::log->debug("Can't do that impovertical and columns $$Imposition{columns} > 1") if DEBUG;
 						$complete = 0;
 						last;
 					} elsif ( $$Imposition{rows} > 1 and ( $$Imposition{image_orientation} eq 'Horizontal' ) ) {
-						$openprint::log->debug("Can't do that impo") if DEBUG;
+						$openprint::log->debug("Can't do that impo horizontal and rows $$Imposition{rows} > 1") if DEBUG;
 						$complete = 0;
 						last;
 					} # end if
@@ -1031,17 +1038,17 @@ $openprint::log->debug("No Fold") if DEBUG;
 					} # end if 
 				} # end if Press or not
 			} # end foreach Imposition in the set
-			next if ! %folds;
+			next if ! ($complete and %folds );
 
+			if ( DEBUG ) {
+				foreach my $key ( keys %folds ) {
+					$openprint::log->debug("DUmp folds $key...");
+				}
+			} 
 			my $all_found = 1;
 			if ( $$specs{"chkOverrideFold-$$sig_specs{'SignatureIndex'}-$qty_index"} eq 'Y' ) {
 				# Find out if folds satisfies the overrides
 				my %found;
-				if ( DEBUG ) {
-				foreach my $key ( keys %folds ) {
-					$openprint::log->debug("DUmp folds $key...");
-				}
-				} 
 				foreach my $index ( 1 .. 4 ) {
 #$openprint::log->debug("OverrideFOld $$sig_specs{'SignatureIndex'}-$qty_index-$index (".$$specs{"FoldQty-$$sig_specs{'SignatureIndex'}-$qty_index-$index"}.")");
 					next if ! $$specs{"FoldQty-$$sig_specs{SignatureIndex}-$qty_index-$index"};
@@ -1806,7 +1813,7 @@ sub reduce_impositions {
 		if ( $extra ) {
 			@new = compact_impositions( @new );
 			push @results, reduce_impositions( \@new );
-		} else {
+		} elsif ( 1 )  {
 			for ( my $i = 0; $i < @new; $i += 1 ) {
 				if ( $new[$i]->imposition() == $max_impo ) {
 					my $I2 = $new[$i]->copy();
