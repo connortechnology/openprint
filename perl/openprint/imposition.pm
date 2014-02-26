@@ -1060,6 +1060,9 @@ sub sort {
 		} elsif ( $$APaper{height} != $$BPaper{height} ) {
 			return $$APaper{height} <=> $$BPaper{height};
 		} # end if	
+		my $APress = $a->Press();
+		my $BPress = $b->Press();
+		return $$APress{strid} cmp $$BPress{strid};
 	} @_;
 }
 
