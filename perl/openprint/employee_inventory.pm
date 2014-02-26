@@ -621,9 +621,7 @@ sub save_Paper {
 sub save_inventory {
 	my ( $Skid, $Paper, $qty, $comment, $Condition, $Purpose ) = @_;
 	my $delta = $Skid->add( $Paper, $qty, $Condition, $Purpose );
-$log->debug("Bufer $delta");
 	$Paper->add_inventory( $Skid, $delta, $param{'Units'}, $comment ) if ( $delta or $comment );
-$log->debug("after");
 #FIXME
 	if ( $delta > 0 ) {
 		$variable{'information'} .= sprintf( 'Added %1$d%2$s to inventory for skid <a href="/employee/inventory/skid_details.html?skid_id=%3$d">%3$d</a>.<br/>', $delta,$Paper->type() eq 'Roll' ? 'lbs' : 'sheets', $Skid->id() );

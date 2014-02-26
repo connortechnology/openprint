@@ -400,7 +400,6 @@ sub add {
 			( ( $Purpose and $Purpose->id() ) ? ( purpose_id => $Purpose->id() ) : () ),
 			});
 	if ( $_ ) {
-		$log->debug("Bufer");
 		$openprint::log->error("Error adding skidcontent: $_");
 	} # end if
 	return $quantity - $old_quantity;

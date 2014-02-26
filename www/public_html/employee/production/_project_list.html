@@ -69,7 +69,7 @@
 						<td class="docket"><a href="/employee/project/view.html?project_id=%1$d">%2$d</a>&nbsp;</td>
 						<td class="Company"><a href="/employee/project/view.html?project_id=%1$d">%3$s</a>&nbsp;</td>
 						<td class="reference"><a href="/employee/project/view.html?project_id=%1$d">%4$s</a>&nbsp;</td>
-			`, $Project->id(), $Project->docket(), $Project->Company()->name(), ssi::htmlize($Project->reference()),
+			`, $Project->id(), $Project->docket(), $Project->Company()->name(), $Project->reference(),
  );
 
 				if ( ! $param{'ddmEmployee'} ) {
