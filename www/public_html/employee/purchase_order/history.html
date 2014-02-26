@@ -94,7 +94,7 @@
 				<label>Cancelled</label>
 				<? echo ( radio( 'cancelled', [ '1','Yes','0', 'No', '', 'Both' ], $session{'/employee/purchase_order/history.html?cancelled'}, { onclick=>q`page_load('Results',$('f1'));`, default=>'' } ); ) ?>
 			</li>
-			<li><label>Department:</label>
+			<li><label>Department</label>
 				<select name="department_id" onchange="page_load('Results',$('f1'));">
 					<option value="">All</option>
 					<? echo ( make_drop_down( openprint::PurchaseOrder_Department->dropdown('order'=>'lower(name)'), $session{'/employee/purchase_order/history.html?department_id'} ); ) ?>
