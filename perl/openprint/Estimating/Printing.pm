@@ -27,7 +27,7 @@ use constant DEBUG_PLATES => 0;
 use constant DEBUG_VERSIONS => 0;
 use constant DEBUG_FILTERING => 0;
 use constant DEBUG_INITIAL_FILTERING => 0;
-use constant DEBUG_PRICE_DECISIONS => 0;
+use constant DEBUG_PRICE_DECISIONS => 1;
 use constant DEBUG_INKS => 0;
 use constant DEBUG_STOCK => 0;
 use constant COMPARISON_LOG => 0;
@@ -2936,7 +2936,7 @@ $log->warn("Getting all impos results: " . @results );
 }
 		@results = @results2;
 	} else {
-		$openprint::log->debug("NOT Override Imposition: $qty_index, " . $$sig_specs{'txtImposition'.$qty_index} . ' ' . $$sig_specs{'chkOverrideImposition'.$qty_index} ) if DEBUG_FILTERING;
+		#$openprint::log->debug("NOT Override Imposition: $qty_index, " . $$sig_specs{'txtImposition'.$qty_index} . ' ' . $$sig_specs{'chkOverrideImposition'.$qty_index} ) if DEBUG_FILTERING;
 		my $needs_smaller = 1;
 		foreach my $I ( @results ) {
 			if ( $I->imposition() <= $$sig_specs{'txtQuantity'.$qty_index} ) {
@@ -3181,7 +3181,7 @@ $imp->display("qty: $qty unspec ". $$sig_specs{"txtUnspecifiedPageQuantity$qty_i
 		} else { # No SpreadLayout
 # if not multipage... can make a relatively definit determination about stock qty... not exact... but better.
 
-			my $str = sprintf('%d=%dx%d %s %s %s', @$imp{'imposition','columns','rows','runstyle','image_orientation','bleed_size'} );
+			my $str = join('-', @$imp{'imposition','columns','rows','runstyle','image_orientation','bleed_size'}, $imp->Press()->id() );
 			if ( $imps{$str} ) {
 				for ( my $j = 0; $j < @{$imps{$str}}; $j += 1 ) {
 					my $I = $imps{$str}[$j];
@@ -3444,8 +3444,8 @@ sub get_project_price {
 #$openprint::log->error("WHat we doin 'ere? $txtUnspecifiedPageQuantity");
 #return {};
 #} # e
-	my @Is = sort { $$b{pages} <=> $$a{pages} } calculate_impositions( $Project, $sig_specs, $qty_index, $qty, $PaperCounts, $versions, $project, $impositions );
-	if ( DEBUG ) {
+	my @Is = openprint::imposition::sort( calculate_impositions( $Project, $sig_specs, $qty_index, $qty, $PaperCounts, $versions, $project, $impositions ) );
+	if ( DEBUG or 1 ) {
 		foreach my $I ( @Is ) {
 			$I->display( "Before calculation:" . @Is );
 		} # end while
