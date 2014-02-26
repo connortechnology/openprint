@@ -776,6 +776,7 @@ sub reuse_project {
 	if ( ( $NewProject->quantity1() and ( $Project->quantity1() != $NewProject->quantity1() ) )
 			or ( $NewProject->quantity2() and ( $Project->quantity2() != $NewProject->quantity2() ) )
 			or ( $NewProject->quantity3() and ( $Project->quantity3() != $NewProject->quantity3() ) )
+			or ( $param{recalculate} == 1 )
 	   ) {
 		$NewProject->recalculate();
 	} # endif
