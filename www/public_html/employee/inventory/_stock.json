@@ -81,7 +81,7 @@
 		} elsif ( $options[$i] eq 'width' or $options[$i] eq 'height' ) {
 			@{$specs{$options[$i]}} = map { $data{$_} ? ( $data{$_}, $_ ) : () } sort { $a <=> $b } keys %data
 		} else {
-			@{$specs{$options[$i]}} = map { $data{$_}, $_ } sort keys %data;
+			@{$specs{$options[$i]}} = map { $data{$_} ? ( $data{$_}, $_ ) : () } sort keys %data;
 		} # end if Size or other, size gets special treatment for sorting
 	} # end foreach option
 

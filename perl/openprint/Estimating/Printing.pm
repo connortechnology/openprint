@@ -6137,7 +6137,7 @@ if ( 0 ) {
 					join(', ', @$specs{'ddmStockBrand','ddmStockFinish','ddmStockColour','ddmStockWeight'} ),
 					);
 			if ( ! ( $$specs{ddmStockWeight} =~ /PT/ ) ) {
-				$string .= ($$specs{txtSpecificStockCalliper} * 1000).'PT';
+				$string .= ' ' . ($$specs{txtSpecificStockCalliper} * 1000).'PT';
 			} # end if
 		} # end if
 		if ( ( defined $$specs{'pages_supplied'} ) and ( $$specs{'pages_supplied'} eq 'Y' ) ) {
