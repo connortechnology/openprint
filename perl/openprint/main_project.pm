@@ -55,7 +55,7 @@ sub history {
 		$variable{ExternalRedirect} = '/main/project/history.html';
 	} elsif ( $param{'btnFunction'} eq 'Reuse Project' ) {
 		foreach my $project_id ( ref $param{'project_id'} eq 'ARRAY' ? @{$param{'project_id'}} : $param{'project_id'} ) {
-			openprint::print_project::reuse_project( $r, $log, $dbh, $session{_session_id}, \%variable, $project_id );
+			openprint::print_project::reuse_project( $project_id );
 		} # end if
 	} elsif ( $param{btnFunction} eq 'Reset' ) {
 $log->debug("Reset");

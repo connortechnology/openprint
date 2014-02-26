@@ -731,19 +731,20 @@ sub display_reuse_project {
 } # end sub
 
 sub reuse_project {
-	my ( $r, $log, $dbh, $cookie, $variable, $project_index ) = @_;
+	my ( $project_index ) = @_;
 
 	my $Project = new openprint::Project( $project_index );
 	if ( ! $Project->id() ) {
-		return misc::error( $log, $dbh, $variable, 'Error', "Source project $project_index could not be found." );
+		$variable{error} .= "Source project $project_index could not be found.";
+		return;
 	} # end if
 	my $NewProject = $Project->copy();
 	$variable{error} .= $NewProject->save({
-		( map { 'quantity'.$_	=>	$param{'quantity'.$_} } ( 1 .. 3 ) ),
-		( map { $_ => $param{$_} } ( 'reference', 'comments' ) ),
+		( map { exists $param{'quantity'.$_} ? ( 'quantity'.$_	=>	$param{'quantity'.$_} ) : ()  } ( 1 .. 3 ) ),
+		( map { exists $param{$_} ? ( $_ => $param{$_} ) : () } ( 'reference', 'comments' ) ),
 		due_date => undef,
 		user_id	=>	$session{user_id},
-		status	=> ( sets::isin( $Project->status(), [ 'Pending Deposit', 'In Prepress', 'Proofs Out', 'Approved', 'Printed', 'Complete','Shipped','Picked Up' ] ) ? 'Unordered' : 'uncalculated' ),
+		status	=> ( sets::isin( $Project->status(), [ 'Unordered', 'Pending Deposit', 'In Prepress', 'Proofs Out', 'Approved', 'Printed', 'Complete','Shipped','Picked Up' ] ) ? 'Unordered' : 'uncalculated' ),
 		( $param{'ddmCompany'} ? ( company_id => $param{'ddmCompany'} ) : () ),
 	} );
 
