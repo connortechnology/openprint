@@ -41,7 +41,7 @@ my @projects;
 
 foreach my $Project ( openprint::Project->find( 'order'=>'id desc',
 			'type !='	=>	'MultiPage',
-			'status not in'	=>	['uncalculated','Deleted'],
+			#'status not in'	=>	['uncalculated','Deleted'],
 			( $project_id ? ( 'id'=>$project_id) : () ),
 			( $company_id ? ( 'company_id'=>$company_id ) : () ),
 			limit=>$projects_count  ) ) {

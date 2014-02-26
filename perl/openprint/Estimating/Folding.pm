@@ -1830,9 +1830,9 @@ sub reduce_impositions {
 			} # end if
 		} # end if
 
-# SOmething like a 3x2 will be cut into a 1x2+2x2 but never a 2 3x1's... so do this
-		my $extra = 0;
-		my @new = @$impositions;
+		# SOmething like a 3x2 will be cut into a 1x2+2x2 but never a 2 3x1's... so do this
+		$extra = 0;
+		@new = @$impositions;
 		for ( my $i = 0; $i < @new; $i += 1 ) {
 			if ( $new[$i]->imposition() == $max_impo ) {
 				if ( $new[$i]->rows() > 1 and $new[$i]->columns() > 1 ) {
@@ -1852,7 +1852,7 @@ sub reduce_impositions {
 		} # end if
 
 		$extra = 0;
-		my @new = @$impositions;
+		@new = @$impositions;
 		for ( my $i = 0; $i < @new; $i += 1 ) {
 			if ( $new[$i]->imposition() == $max_impo ) {
 				my $I2 = $new[$i]->copy();
@@ -1872,12 +1872,9 @@ sub reduce_impositions {
 			} # end if
 		} # end foreach I
 		if ( $extra ) {
-		@new = compact_impositions( @new );
-		push @results, reduce_impositions( \@new );
+			@new = compact_impositions( @new );
+			push @results, reduce_impositions( \@new );
 		} # end if
-
-
-
 	} # end if
 	return @results;
 	
