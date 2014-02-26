@@ -4551,7 +4551,7 @@ sub calc_price {
 		$additional_overs = $minimum if $minimum > $additional_overs;
 	} # end if
 	$overs = $additional_overs;
-	if ( $_ = $Press->specification('Overs')  and ( $$_{value} eq 'All' ) ) {
+	if ( ( $_ = $Press->Specification('Overs') ) and ( $$_{value} eq 'All' ) ) {
 		$overs += ceil( $setup_overs + $run_overs );
 	} else {
 		$overs += ceil( ($setup_overs > $run_overs) ? $setup_overs : $run_overs );
