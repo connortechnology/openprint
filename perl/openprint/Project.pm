@@ -960,7 +960,7 @@ sub ordered_Price {
 
 sub prices {
 	my $self = shift;
-	return @$self{'price1','price2','price3'};
+	return @$self{map { $$self{"quantity$_"} ? 'price'.$_ : () } ( 1 .. 3 ) };
 }
 sub price {
 	my ( $self, $qty_index, $new ) = @_;
