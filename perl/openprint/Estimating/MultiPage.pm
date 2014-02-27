@@ -342,7 +342,6 @@ $openprint::log->debug("********************************************************
 	my @groups = sort( sql::execute(undef, undef, 'SELECT DISTINCT strvalue FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strname=?', $$Project{'id'}, 'Group' ) );
 	@groups = ( undef ) if ! @groups;
 
-	my @printing_types = sql::execute( undef, undef, q{SELECT DISTINCT strValue FROM tbl_Equipment_Specifications WHERE strName='Printing Type'} );
 	foreach my $group ( @groups ) {
 		my @sigs = sort( $Project->signatures( $group ? { Group=>$group } : () ) );
 		$openprint::log->debug( "Sigs in group $group : @sigs " );
@@ -439,9 +438,6 @@ $status = 'uncalculated';
 					$Imposition->save( \%specs, $qty_index );
 					openprint::Estimating::Printing::save_price( $Project, \%specs, $price, $Imposition, $qty_index );
 }
-#foreach my $k ( keys %{$price} ) {
-	#$openprint::log->debug("Price: $k $$price{$k}");
-#}
 					$specs{'hdnBreakdown'.$qty_index} = openprint::Estimating::Printing::breakdown( $price, \%specs );
 					
 				} # end foreach qty_index

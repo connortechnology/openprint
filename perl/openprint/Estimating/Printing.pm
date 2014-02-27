@@ -3445,7 +3445,7 @@ sub get_project_price {
 #return {};
 #} # e
 	my @Is = openprint::imposition::sort( calculate_impositions( $Project, $sig_specs, $qty_index, $qty, $PaperCounts, $versions, $project, $impositions ) );
-	if ( DEBUG or 1 ) {
+	if ( DEBUG ) {
 		foreach my $I ( @Is ) {
 			$I->display( "Before calculation:" . @Is );
 		} # end while

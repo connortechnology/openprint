@@ -24,7 +24,7 @@ require openprint::service;
 
 use vars qw( @folds %fold_types );
 
-use constant DEBUG => 1;
+use constant DEBUG => 0;
 use constant DEBUG_NEEDS => 0;
 
 my @equipment;
@@ -1399,7 +1399,9 @@ if ( 0 ) {
 				$Breakdown .= 'No Cutting: ' . $cutting_results{'Price'} . ' ' . $cutting_results{'alert'} . ' ' . $cutting_results{'Breakdown'}.'<br/>';
 			} # end if
 
-			$Breakdown .= 'Total: $' . sprintf($openprint::config{'ProjectMoneyFormat'}, $totalPrice ) . ' + stitching: ' . $stitching_part . ' / comparison : ' . $comparison_cost . ' <br/><br/>';
+			$Breakdown .= 'Total: $' . sprintf($openprint::config{'ProjectMoneyFormat'}, $totalPrice ) ;
+			$Breakdown .= ' + stitching: ' . $stitching_part . ' / ' if $stitching_service_index;
+			$Breakdown .= ' comparison : ' . $comparison_cost . ' <br/><br/>';
 
 			if ( ( $comparison_cost < $bestComparison ) or ( ! defined $bestComparison ) ) {
 #$openprint::log->debug("Got better prrice $totalPrice < $bestPrice " . $Equipment->name() ) if DEBUG;
