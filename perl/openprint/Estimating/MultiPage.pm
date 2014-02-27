@@ -23,7 +23,7 @@ require openprint::Estimating::Printing;
 require openprint::service;
 require sets;
 
-use constant DEBUG => 1;
+use constant DEBUG => 0;
 
 my %variables = (
 	'ddmProjectSize'=>['save','output'],
@@ -541,10 +541,10 @@ sub save {
 #$openprint::log->debug("Spreadsize for sig $$sig_specs{SignatureIndex} orig: $new_specs{txtSpreadSize} new: $$sig_specs{txtSpreadSize}");
 		foreach my $v ( openprint::Estimating::Printing::variables() ) {
 			if ( $new_specs{$v} ne $$sig_specs{$v} ) {
-$openprint::log->debug("Saving $v");
+$openprint::log->debug("Saving $v") if DEBUG;
 				openprint::service::insert_service_spec( $openprint::log, $openprint::dbh, $Project->id(), $ssid, $v, $new_specs{$v} );
 			} else {
-$openprint::log->debug("Not Saving $v");
+$openprint::log->debug("Not Saving $v") if DEBUG;
 			} # end if
 		} # end foreach v
 	}  # end foreach signature

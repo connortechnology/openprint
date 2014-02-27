@@ -1576,11 +1576,13 @@ sub link_to {
 } # end sub link_to
 
 sub lock {
+		my ( $caller, undef, $line ) = caller;
 	if ( $_[0]{ac} ) {
 		#already locked
+		$openprint::log->debug("ALREADY LOCKED Projects for project $_[0]{id} ac: $_[0]{ac} caller: $caller line: $line project ref:" . $_[0]);
+		$_[0]{ac} += 1;
 	} else {
 		$_[0]{ac} = sql::start_transaction( $openprint::dbh );
-		my ( $caller, undef, $line ) = caller;
 		$openprint::log->debug("LOCKING Projects for project $_[0]{id} ac: $_[0]{ac} caller: $caller line: $line project ref:" . $_[0]);
 		$openprint::dbh->do( "SELECT * FROM Projects WHERE id=".$_[0]{id}. ' FOR UPDATE' );
 		#$openprint::dbh->do( 'SET CONSTRAINTS ALL DEFERRED' );
@@ -1591,12 +1593,15 @@ sub lock {
 sub unlock {
 	my ( $caller, undef, $line ) = caller;
 	$openprint::log->debug("UNLOCKING Projects for project $_[0]{id} ac: $_[0]{ac} caller: $caller line: $line" . $_[0]);
-	if ( ! exists $_[0]{ac} ) {
+	if ( ! $_[0]{ac} ) {
 		$openprint::log->debug("unlock with no AC!");
 		return;
 	} # end if
-	$_[0]{ac} = sql::end_transaction( $openprint::dbh, $_[0]{ac} ) if $_[0]{ac};
-	delete $_[0]{ac};
+	if ( $_[0]{ac} == 1 ) {
+		sql::end_transaction( $openprint::dbh, $_[0]{ac} );
+	} else {
+		$_[0]{ac} -= 1;
+	} # end if
 } # end sub unlock
 
 

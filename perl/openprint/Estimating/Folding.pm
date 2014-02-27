@@ -1431,7 +1431,7 @@ if ( 0 ) {
 		# Can't do this... case of digital cover on offset interioer, stitched... the stitcher does the cover
 		#last if $bestPrice and ( $Equipment->strid() eq $$sig_specs{'ddmPress'.$qty_index} );
 		if ( defined $bestPrice and ! $bestPrice ) {
-			$openprint::log->debug("Quitting at $$Equipment{strid}");
+			$openprint::log->debug("Quitting at $$Equipment{strid}") if DEBUG;
 			last;
 		} # end if
 	} # end foreach Equipment
@@ -1815,7 +1815,6 @@ sub reduce_impositions {
 			} # end foreach I
 		} # end if
 		if ( $extra ) {
-$openprint::log->debug("Got mod2 " . @new);
 			@new = compact_impositions( @new );
 			push @results, reduce_impositions( \@new );
 			$extra = 0;
@@ -1838,7 +1837,6 @@ $openprint::log->debug("Got mod2 " . @new);
 				} # end if
 			} # end foreach I
 			if ( $extra ) {
-$openprint::log->debug("Mod2.5");
 				@new = compact_impositions( @new );
 				push @results, reduce_impositions( \@new );
 				$extra = 0;
@@ -1861,7 +1859,6 @@ $openprint::log->debug("Mod2.5");
 			} # end if
 		} # end foreach I
 		if ( $extra ) {
-$openprint::log->debug("Mod3");
 			@new = compact_impositions( @new );
 			push @results, reduce_impositions( \@new );
 			$extra = 0;
@@ -1887,7 +1884,6 @@ $openprint::log->debug("Mod3");
 			} # end if
 		} # end foreach I
 		if ( $extra ) {
-$openprint::log->debug("Mod4");
 			@new = compact_impositions( @new );
 			push @results, reduce_impositions( \@new );
 		} # end if
