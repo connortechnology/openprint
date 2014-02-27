@@ -62,7 +62,6 @@
 			ssi::date_filter( '/employee/inventory/manifests.html?updated_on_end', 'updated_on <=' ),
 			ssi::date_filter( '/employee/inventory/manifests.html?updated_on_start', 'updated_on >=' ),
 			order		=>	'received_on DESC',
-			limit	=>	100,
 			( $session{'/employee/inventory/manifests.html?deleted'} ? ( deleted => [ split(',', $session{'/employee/inventory/manifests.html?deleted'} ) ] ) : () ),
 		);
 # speed up by caching these skids
