@@ -24,7 +24,7 @@ require openprint::service;
 
 use vars qw( @folds %fold_types );
 
-use constant DEBUG => 0;
+use constant DEBUG => 1;
 use constant DEBUG_NEEDS => 0;
 
 my @equipment;
@@ -1794,26 +1794,30 @@ sub reduce_impositions {
 	if ( $max_impo > 1 ) {
 		my @new = @$impositions;
 		my $extra = 0;
-		for ( my $i = 0; $i < @new; $i += 1 ) {
-			if ( $new[$i]->imposition() == $max_impo ) {
-				my $I2 = $new[$i]->copy();
-				if ( ! ( $I2->columns() % 2 ) ) {
-					$I2->columns( $I2->columns()/2 );
-					$I2->quantity( $I2->quantity() * 2 );
-					$extra = 1;
-					splice @new, $i, 1, $I2;
-				} elsif ( ! ( $I2->rows() % 2 ) ) {
-					$I2->rows( $I2->rows()/2 );
-					$I2->quantity( $I2->quantity() * 2 );
-					$extra = 1;
-					splice @new, $i, 1, $I2;
+		if ( ! ( $max_impo % 2 ) ) {
+			for ( my $i = 0; $i < @new; $i += 1 ) {
+				if ( $new[$i]->imposition() == $max_impo ) {
+					my $I2 = $new[$i]->copy();
+					if ( ! ( $I2->columns() % 2 ) ) {
+						$I2->columns( $I2->columns()/2 );
+						$I2->quantity( $I2->quantity() * 2 );
+						$extra = 1;
+						splice @new, $i, 1, $I2;
+					} elsif ( ! ( $I2->rows() % 2 ) ) {
+						$I2->rows( $I2->rows()/2 );
+						$I2->quantity( $I2->quantity() * 2 );
+						$extra = 1;
+						splice @new, $i, 1, $I2;
+					} # end if
 				} # end if
-			} # end if
-		} # end foreach I
+			} # end foreach I
+		} # end if
 		if ( $extra ) {
+$openprint::log->debug("Got mod2 " . @new);
 			@new = compact_impositions( @new );
 			push @results, reduce_impositions( \@new );
-		} elsif ( 1 )  {
+			$extra = 0;
+		} else {
 			for ( my $i = 0; $i < @new; $i += 1 ) {
 				if ( $new[$i]->imposition() == $max_impo ) {
 					my $I2 = $new[$i]->copy();
@@ -1832,14 +1836,15 @@ sub reduce_impositions {
 				} # end if
 			} # end foreach I
 			if ( $extra ) {
+$openprint::log->debug("Mod2.5");
 				@new = compact_impositions( @new );
 				push @results, reduce_impositions( \@new );
+				$extra = 0;
 			} # end if
 		} # end if
 
+		my @new = @$impositions;
 		# SOmething like a 3x2 will be cut into a 1x2+2x2 but never a 2 3x1's... so do this
-		$extra = 0;
-		@new = @$impositions;
 		for ( my $i = 0; $i < @new; $i += 1 ) {
 			if ( $new[$i]->imposition() == $max_impo ) {
 				if ( $new[$i]->rows() > 1 and $new[$i]->columns() > 1 ) {
@@ -1854,12 +1859,13 @@ sub reduce_impositions {
 			} # end if
 		} # end foreach I
 		if ( $extra ) {
+$openprint::log->debug("Mod3");
 			@new = compact_impositions( @new );
 			push @results, reduce_impositions( \@new );
+			$extra = 0;
 		} # end if
 
-		$extra = 0;
-		@new = @$impositions;
+		my @new = @$impositions;
 		for ( my $i = 0; $i < @new; $i += 1 ) {
 			if ( $new[$i]->imposition() == $max_impo ) {
 				my $I2 = $new[$i]->copy();
@@ -1879,6 +1885,7 @@ sub reduce_impositions {
 			} # end if
 		} # end foreach I
 		if ( $extra ) {
+$openprint::log->debug("Mod4");
 			@new = compact_impositions( @new );
 			push @results, reduce_impositions( \@new );
 		} # end if
