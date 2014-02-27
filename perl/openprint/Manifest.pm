@@ -32,6 +32,7 @@ $debug = 0;
 	skid_id	=>	'(SELECT skid_id FROM ManifestContents WHERE manifest_id=manifests.id)',
 	rfidtag_id	=>	'(SELECT rfidtag_id FROM ManifestContents WHERE manifest_id=manifests.id)',
 	manufacturers_id	=>	'(SELECT manufacturers_id FROM ManifestContents WHERE manifest_id=manifests.id)',
+	type		=>	'(SELECT type from Manifest_Content_Types WHERE manifest_id=manifests.id)',
 );
 
 %transforms = (

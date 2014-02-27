@@ -55,23 +55,34 @@
 	} else {
 		my %search = (
 			( $param{'manifest like'} ? ( 'name ilike'	=> $param{'manifest like'} ) : () ),
-			ssi::date_filter( '/employee/inventory/manifests.html?received_on_end', 'received_on <=' ),
-			ssi::date_filter( '/employee/inventory/manifests.html?received_on_start', 'received_on >=' ),
-			ssi::date_filter( '/employee/inventory/manifests.html?created_on_end', 'created_on <=' ),
-			ssi::date_filter( '/employee/inventory/manifests.html?created_on_start', 'created_on >=' ),
-			ssi::date_filter( '/employee/inventory/manifests.html?updated_on_end', 'updated_on <=' ),
-			ssi::date_filter( '/employee/inventory/manifests.html?updated_on_start', 'updated_on >=' ),
+			date_filter( '/employee/inventory/manifests.html?received_on_end', 'received_on <=' ),
+			date_filter( '/employee/inventory/manifests.html?received_on_start', 'received_on >=' ),
+			date_filter( '/employee/inventory/manifests.html?created_on_end', 'created_on <=' ),
+			date_filter( '/employee/inventory/manifests.html?created_on_start', 'created_on >=' ),
+			date_filter( '/employee/inventory/manifests.html?updated_on_end', 'updated_on <=' ),
+			date_filter( '/employee/inventory/manifests.html?updated_on_start', 'updated_on >=' ),
 			order		=>	'received_on DESC',
 			( $session{'/employee/inventory/manifests.html?deleted'} ? ( deleted => [ split(',', $session{'/employee/inventory/manifests.html?deleted'} ) ] ) : () ),
 		);
+if ( $session{'/employee/inventory/manifests.html?type'} ) {
+            my @types = split(',',$session{'/employee/inventory/manifests.html?type'} );
+            if ( @types ) {
+                if ( sets::isin( 'Unknown', \@types ) ) {
+            $search{'type is null or in'}      = [ map { $_ ne 'Unknown' ? $_ : () } @types ];
+                } else {
+            $search{'type any'}      = \@types;
+                } # end if
+            } # end if
+        }
+
 # speed up by caching these skids
 		openprint::Skid->find(
-			ssi::date_filter( '/employee/inventory/manifests.html?received_on_end', 'received_on <=' ),
-			ssi::date_filter( '/employee/inventory/manifests.html?received_on_start', 'received_on >=' ),
-			ssi::date_filter( '/employee/inventory/manifests.html?created_on_end', 'created_on <=' ),
-			ssi::date_filter( '/employee/inventory/manifests.html?created_on_start', 'created_on >=' ),
-			ssi::date_filter( '/employee/inventory/manifests.html?updated_on_end', 'updated_on <=' ),
-			ssi::date_filter( '/employee/inventory/manifests.html?updated_on_start', 'updated_on >=' ),
+			date_filter( '/employee/inventory/manifests.html?received_on_end', 'received_on <=' ),
+			date_filter( '/employee/inventory/manifests.html?received_on_start', 'received_on >=' ),
+			date_filter( '/employee/inventory/manifests.html?created_on_end', 'created_on <=' ),
+			date_filter( '/employee/inventory/manifests.html?created_on_start', 'created_on >=' ),
+			date_filter( '/employee/inventory/manifests.html?updated_on_end', 'updated_on <=' ),
+			date_filter( '/employee/inventory/manifests.html?updated_on_start', 'updated_on >=' ),
 		);
 
 		$search{'supplier_id'} = $session{'/employee/inventory/manifests.html?supplier_id'} if $session{'/employee/inventory/manifests.html?supplier_id'};
@@ -175,6 +186,10 @@
 					$value += $MC->value();	
 				} # end foreach MC
 
+				my $error = $Manifest->check();
+				next if $error and $session{'/employee/inventory/manifests.html?has_errors'} eq '0';
+				next if (!$error) and $session{'/employee/inventory/manifests.html?has_errors'} eq '1';
+
 				$html .= sprintf(q`<tr>
 				<td class="checkbox"><input type="checkbox" name="manifests" value="%1$s"/></td>
 				<td class="manifest_num"><a href="manifest_view.html?manifest_id=%1$s">%2$s</a></td>
@@ -206,7 +221,7 @@
 					$html .= '<br/>';
 				} # end foreach
 
-				if ( my $error = $Manifest->check() ) {
+				if ( $error ) {
 					$html .= '<span class="warning">' . $error . '</span>';
 				} # end if
 

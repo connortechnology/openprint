@@ -185,7 +185,7 @@ sub skids {
 	$session{'/employee/inventory/skids.html?rfid'} = '' if ! defined $session{'/employee/inventory/skids.html?rfid'};
 	$session{'/employee/inventory/skids.html?rfid_valid'} = '' if ! defined $session{'/employee/inventory/skids.html?rfid_valid'};
 	$session{'/employee/inventory/skids.html?hasmanifest'} = '' if ! defined $session{'/employee/inventory/skids.html?hasmanifest'};
-	$session{'/employee/inventory/skids.html?Type'} = '' if ! defined $session{'/employee/inventory/skids.html?Type'};
+	$session{'/employee/inventory/skids.html?type'} = '' if ! defined $session{'/employee/inventory/skids.html?type'};
 	$session{'/employee/inventory/skids.html?deleted'} = '0' if ! exists $session{'/employee/inventory/skids.html?deleted'};
  
 } # end sub skids
@@ -1838,6 +1838,7 @@ sub manifests {
 	ssi::setup_date_select( '/employee/inventory/manifests.html', 'created_on_start', -7 );
 	ssi::setup_date_select( '/employee/inventory/manifests.html', 'created_on_end', '' );
 	$session{'/employee/inventory/manifests.html?deleted'} = '0' if ! exists $session{'/employee/inventory/manifests.html?deleted'};
+	$session{'/employee/inventory/manifests.html?has'} = '' if ! exists $session{'/employee/inventory/manifests.html?has_errors'};
 } # end sub manifests
 
 sub _manifests {
@@ -1848,7 +1849,7 @@ sub _manifests {
 				( map { 'created_on_end_'.$_ } ( 'year','month','day' ) ),
 				( map { 'updated_on_start_'.$_ } ( 'year','month','day' ) ),
 				( map { 'updated_on_end_'.$_ } ( 'year','month','day' ) ),
-				'supplier_id', 'delivery','deleted',
+				'supplier_id', 'delivery','deleted','has_errors','type',
 				) );
 } # end sub _manifests
 
@@ -2096,7 +2097,7 @@ sub _allocations {
 sub _deallocate_popup {
 }
 sub _skids_results {
-	ssi::save_params( '/employee/inventory/skids.html', ( 'PaperManufacturer','PaperBrand','PaperFinish','PaperColour','PaperWeight','Type',
+	ssi::save_params( '/employee/inventory/skids.html', ( 'PaperManufacturer','PaperBrand','PaperFinish','PaperColour','PaperWeight','type',
 				( map { 'received_on_start_' . $_ } ( 'year','month','day' ) ),
 				( map { 'received_on_end_' . $_ } ( 'year','month','day' ) ),
 				( map { 'created_on_start_' . $_ } ( 'year','month','day' ) ),

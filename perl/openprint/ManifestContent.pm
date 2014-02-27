@@ -406,6 +406,10 @@ sub apply {
 		$$MC{location_id} = undef;
 		$skid_changes .= 'Changed location to ' . $Skid->Location()->name() . '<br/>';
 	} # end if
+	my $Paper = $MC->Type()->Paper();
+
+	$Skid->type( $Paper->type() ) if ! $Skid->type();
+
 	if ( ! $Skid->id() ) {
 		$skid_changes .= 'Skid Created.<br/>';
 		$$Skid{id} = $$MC{skid_id} if $$MC{skid_id};
@@ -415,7 +419,6 @@ sub apply {
 	} # end if
 	return $error if ! $Skid->id();
 
-	my $Paper = $MC->Type()->Paper();
 	my $Manifest = $MC->Manifest();
 
 	if ( $skid_changes ) {

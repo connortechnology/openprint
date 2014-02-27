@@ -59,8 +59,15 @@
 			$sql{'has manufacturers_id'} = 1;
 		}
 		
-		if ( $session{'/employee/inventory/skids.html?Type'} ) {
-			$sql{'type'}		= $session{'/employee/inventory/skids.html?Type'};
+		if ( $session{'/employee/inventory/skids.html?type'} ) {
+			my @types = split(',',$session{'/employee/inventory/skids.html?type'} );
+			if ( @types ) {
+				if ( sets::isin( 'Unknown', \@types ) ) {
+			$sql{'type is null or in'}		= [ map { $_ ne 'Unknown' ? $_ : () } @types ];
+				} else {
+			$sql{type}		= \@types;
+				} # end if
+			} # end if
 		}
 		$sql{'condition_id'} = $session{'/employee/inventory/skids.html?condition_id'} if $session{'/employee/inventory/skids.html?condition_id'};
 
