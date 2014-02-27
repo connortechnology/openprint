@@ -24,7 +24,7 @@ require openprint::service;
 
 use vars qw( @folds %fold_types );
 
-use constant DEBUG => 0;
+use constant DEBUG => 1;
 use constant DEBUG_NEEDS => 0;
 
 my @equipment;
@@ -988,7 +988,7 @@ $openprint::log->debug("No Fold") if DEBUG;
 											$fits = "Fold no good due to max feed width ($max_feed_width) on width ($$sig_specs{'txtHeight'}).";
 											$Fold = undef;
                                         } # end if
-                                    } elsif ( ( $height_folds and ! $width_folds ) or ( $height_folds == $$Fold{'folds'} and $height_folds == $$Fold{'angles'} ) ) {
+                                    } elsif ( ( $height_folds and ! $width_folds ) or ( $height_folds == $$Fold{'folds'} and $width_folds == $$Fold{'angles'} ) ) {
                                         if ( $Imposition->layout_height() >= $max_feed_width ) {
                                             $fits = "Fold no good due to max feed width ($max_feed_width) on height ($$sig_specs{txtWidth}.";
 											$Fold = undef;

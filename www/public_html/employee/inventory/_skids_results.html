@@ -121,11 +121,9 @@
 			} # end foreach
 			my @skid_ids = map { $$_{id} } @{$$variable{'Skids'}};
 			my %SkidContents;
+			my %empty;
 			foreach my $SC ( openprint::SkidContent->find( skid_id => \@skid_ids ) ) {
 				push @{$SkidContents{$$SC{skid_id}}}, $SC;
-			} # end foreach SC
-			my %empty;
-			foreach my $SC ( openprint::SkidContent->find( skid_id => \@skid_ids, 'quantity >=' => 1 ) ) {
 				$empty{$$SC{skid_id}} += $$SC{quantity};
 			} # end foreach SC
 
@@ -133,10 +131,10 @@
 				$Skid->Contents( $SkidContents{$$Skid{id}} ? $SkidContents{$$Skid{id}} : [] );
 				my $empty = $empty{$$Skid{id}};
 				if ( $session{'/employee/inventory/skids.html?empty'} eq 'Y' ) {
-                    next if ! $empty;
+                    next if $empty;
                 } # end if
                 if ( $session{'/employee/inventory/skids.html?empty'} eq 'N' ) {
-                    next if $empty;
+                    next if ! $empty;
                 } # end if
 				if ( $session{'/employee/inventory/skids.html?contents'} eq 'Y' ) {
                     next if ! $Skid->Contents();

@@ -68,27 +68,27 @@ Please select a Skid to view/edit.<br/>
 	<ul>
 		<li>
 			<label>Received On</label>
-<? echo ( ssi::date_select_session( '/employee/inventory/skids.html', 'received_on_start', { with_today=>1, with_clear=>1 } ); ) ?>
+<? echo ( date_select_session( '/employee/inventory/skids.html', 'received_on_start', { with_today=>1, with_clear=>1 } ); ) ?>
 			to 
-<? echo ( ssi::date_select_session( '/employee/inventory/skids.html', 'received_on_end', { with_today=>1, with_clear=>1 } ); ) ?>
+<? echo ( date_select_session( '/employee/inventory/skids.html', 'received_on_end', { with_today=>1, with_clear=>1 } ); ) ?>
 		</li>
 		<li>
 			<label>Date Entered</label>
-<? echo ( ssi::date_select_session( '/employee/inventory/skids.html', 'created_on_start', { with_today=>1, with_clear=>1 } ); ) ?>
+<? echo ( date_select_session( '/employee/inventory/skids.html', 'created_on_start', { with_today=>1, with_clear=>1 } ); ) ?>
 			to 
-<? echo ( ssi::date_select_session( '/employee/inventory/skids.html', 'created_on_end', { with_today=>1, with_clear=>1 } ); ) ?>
+<? echo ( date_select_session( '/employee/inventory/skids.html', 'created_on_end', { with_today=>1, with_clear=>1 } ); ) ?>
 		</li>
 		<li>
 			<label>Last Updated</label>
-<? echo ( ssi::date_select_session( '/employee/inventory/skids.html', 'updated_on_start', { with_today=>1, with_clear=>1 } ); ) ?>
+<? echo ( date_select_session( '/employee/inventory/skids.html', 'updated_on_start', { with_today=>1, with_clear=>1 } ); ) ?>
 			to 
-<? echo ( ssi::date_select_session( '/employee/inventory/skids.html', 'updated_on_end', { with_today=>1, with_clear=>1 } ); ) ?>
+<? echo ( date_select_session( '/employee/inventory/skids.html', 'updated_on_end', { with_today=>1, with_clear=>1 } ); ) ?>
 		</li>
 		<li>
 			<label>Last Seen (RFID)</label>
-<? echo ( ssi::date_select_session( '/employee/inventory/skids.html', 'last_seen_start', { with_today=>1, with_clear=>1 } ); ) ?>
+<? echo ( date_select_session( '/employee/inventory/skids.html', 'last_seen_start', { with_today=>1, with_clear=>1 } ); ) ?>
 			to 
-<? echo ( ssi::date_select_session( '/employee/inventory/skids.html', 'last_seen_end', { with_today=>1, with_clear=>1 } ); ) ?>
+<? echo ( date_select_session( '/employee/inventory/skids.html', 'last_seen_end', { with_today=>1, with_clear=>1 } ); ) ?>
 		</li>
 		<li>
 			<label>Purpose</label>
