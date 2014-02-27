@@ -57,6 +57,7 @@ sub variables {
 		push @v, 'ddmPrintingType'.$group_id;
 		push @v, 'Pages'.$group_id;
 		push @v, 'OverrideGroupPageQuantity'.$group_id;
+		push @v, 'GroupPageQuantity'.$group_id;
 	} # end foreach
 	return @v;
 } # end sub variables

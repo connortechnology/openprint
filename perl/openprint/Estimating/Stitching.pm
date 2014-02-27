@@ -18,7 +18,7 @@ package openprint::Estimating::Stitching;
 use strict;
 #use warnings;
 
-use constant DEBUG => 0;
+use constant DEBUG => 1;
 
 require openprint::Equipment;
 require openprint::service;
@@ -209,6 +209,7 @@ $I->display('In Stitching:') if DEBUG;
 		my %pages;
 		my $sig_pages = $I->pages();
 		if ( $folding_specs ) {
+			if ( $$folding_specs{"chkOverrideEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} ne 'Y' or $$folding_specs{"ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} ) {
 
 			my %folds;
 			foreach my $index ( 1 .. 4 ) {
@@ -278,19 +279,32 @@ SIG_FIX_PAGES: while( $total_pages > $sig_pages ) {
 					$$specs{'txtSignatureQty'.$page.'Page-'.$qty_index} += $pages{$page};
 				} # end foreach
 			} # end if
+			} else {
+$openprint::log->debug("Ignoring folding due to override");
+			} # end if has folding for this sig
 		} else {
 			$$specs{"txtPockets$qty_index"} += 1;
 		} # end if
 
 		if ( $imposition > 1 ) {
-			$imposition = 1 if ( 
-			($$I{'FoldingImposition'} and $$I{'FoldingImposition'} % 2 ) or 
-			($$I{'imposition'} % 2 ) or 
-			($$I{'image_orientation'} eq 'Vertical' and $$I{'rows'} % 2 ) or 
-			($$I{'image_orientation'} eq 'Horizontal' and $$I{'columns'} % 2 ) or
-			(sets::isin( $$I{'runstyle'}, ['Work & Turn','Work & Tumble'] ) and ($$I{'imposition'}%4) ) 
-			);
-			#$openprint::log->debug(" $$I{'runstyle'} " . ($$I{'imposition'}%4) );
+	
+			if ( ( ( $$folding_specs{"chkOverrideEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} ne 'Y' or $$folding_specs{"ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} ) and $$I{'FoldingImposition'} and $$I{'FoldingImposition'} % 2 ) ) {
+				$imposition = 1;
+				$I->display("Setting imposition to 1 due to foldingositions") if DEBUG;
+			} elsif ($$I{'imposition'} % 2 ) {
+				$I->display("Setting imposition to 1 due to odd impositions") if DEBUG;
+				$imposition = 1;
+			} elsif ($$I{'image_orientation'} eq 'Vertical' and $$I{'rows'} % 2 ) {
+				$I->display("Setting imposition to 1 due to Vertial and odd rows") if DEBUG;
+				$imposition = 1;
+			} elsif ($$I{'image_orientation'} eq 'Horizontal' and $$I{'columns'} % 2 ) {
+				$I->display("Setting imposition to 1 due to Horizal and odd cols") if DEBUG;
+				$imposition = 1;
+			} elsif (sets::isin( $$I{'runstyle'}, ['Work & Turn','Work & Tumble'] ) and ($$I{'imposition'}%4) ) {
+				$I->display("Setting imposition to 1 due to W&T impo not % 4 ") if DEBUG;
+				$imposition = 1;
+
+			} # end if
 		} # end if
 	} # end foreach Imposition
 #$results{'Breakdown'} .= 'Initial pockets: 	' . $$specs{"txtPockets$qty_index"} . '<br/>';
@@ -300,23 +314,20 @@ SIG_FIX_PAGES: while( $total_pages > $sig_pages ) {
 	if ( ( defined $$specs{'OverrideImposition'.$qty_index} eq 'Y' ) and ( $$specs{'OverrideImposition'.$qty_index} eq 'Y' ) ) {
 		if ( $imposition < $$specs{'Imposition'.$qty_index} ) {
 			$results{'alert'} .= "Can't stitch $$specs{'Imposition'.$qty_index} out";
-	foreach my $I ( @$Impositions ) {
-			if ( ($$I{'FoldingImposition'} and $$I{'FoldingImposition'} % 2 ) ) {
-				$results{'alert'} .= ' Folding not multiple of 2out<br/>';
-			} # end if
-			if ( $$I{'imposition'} % 2 ) {
-				$results{'alert'} .= ' imposition not multiple of 2out<br/>';
-			} # end if
-			if ( ($$I{'image_orientation'} eq 'Vertical' and $$I{'rows'} % 2 ) ) {
-				$results{'alert'} .= ' vertical and rows not multiple of 2out<br/>';
-			} # end if
-			if ( $$I{'image_orientation'} eq 'Horizontal' and $$I{'columns'} % 2 ) {
-				$results{'alert'} .= ' horizontal and cols not multiple of 2out<br/>';
-			} # end if
-	} # end foreach
-	
-				
-
+			foreach my $I ( @$Impositions ) {
+				if ( ($$I{'FoldingImposition'} and $$I{'FoldingImposition'} % 2 ) ) {
+					$results{'alert'} .= ' Folding not multiple of 2out<br/>';
+				} # end if
+				if ( $$I{'imposition'} % 2 ) {
+					$results{'alert'} .= ' imposition not multiple of 2out<br/>';
+				} # end if
+				if ( ($$I{'image_orientation'} eq 'Vertical' and $$I{'rows'} % 2 ) ) {
+					$results{'alert'} .= ' vertical and rows not multiple of 2out<br/>';
+				} # end if
+				if ( $$I{'image_orientation'} eq 'Horizontal' and $$I{'columns'} % 2 ) {
+					$results{'alert'} .= ' horizontal and cols not multiple of 2out<br/>';
+				} # end if
+			} # end foreach
 			$results{'Status'} = 'uncalculated';
 			return \%results;
 		} # end if
@@ -480,6 +491,11 @@ sub calc {
 		return $$specs{'Status'} = 'uncalculated';
 	} # end if
 
+	my $calc_hash = {};
+	my $folding_specs = 0;
+	if ( $$services{'Folding'} ) {
+		$folding_specs = $$calc_hash{'folding_specs'} = openprint::service::get_specs_ref( $Project, $$services{'Folding'}[0] );
+	} # end if
 	foreach my $qty_index ( $Project->quantity_indexes() ) {
 		$$specs{'txtPrice'.$qty_index} =~ s/[^\d\.]//g;
 		$$specs{'txtQuantity'.$qty_index} =~ s/[^\d\.]//g;
@@ -495,11 +511,16 @@ sub calc {
 
 		foreach my $signature_service_index ( @signatures ) {
 			my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
+			if ( $folding_specs and $$folding_specs{"chkOverrideEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} eq 'Y' and ! $$folding_specs{"ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} ) {
+				$openprint::log->debug("Overrode folding to nothing.");
+			} # end if
+			my $Imposition = new openprint::Imposition();
+			$Imposition->load( $sig_specs, $qty_index );
 #$openprint::log->debug(sprintf('%d %s %s %d %dx%d %s', $imposition, @$sig_specs{'txtSignatureType','ddmRunStyle'.$qty_index,'txtImposition'.$qty_index,'hdnImpositionColumns'.$qty_index,'hdnImpositionRows'.$qty_index,'hdnImageOrientation'.$qty_index} ) ) if DEBUG;
 			# According to Brendan, both cover and interior need to be 2out
 			#next if $$sig_specs{'txtSignatureType'} eq 'Cover Pages';
 			if ( $$sig_specs{'txtImposition'.$qty_index}%2 ) {
-				$openprint::log->warn("Setting imposition to 1 : Imp:" . $$sig_specs{'txtImposition'.$qty_index} . ' imposition' );
+				$openprint::log->warn("Setting imposition to 1 : Imp:" . $$sig_specs{'txtImposition'.$qty_index} . ' imposition'  );
 				$imposition = 1 
 			} elsif ($$sig_specs{'hdnImageOrientation'.$qty_index} eq 'Vertical' and $$sig_specs{'hdnImpositionRows'.$qty_index} % 2 ) {
 				$openprint::log->warn("Setting imposition to 1 : Imp:" . $$sig_specs{'txtImposition'.$qty_index} . ' vertical and odd rows' );
@@ -525,11 +546,6 @@ sub calc {
 		} # end if
 	} # end foreach qty_index
 
-	my $calc_hash = {};
-	my $folding_specs = 0;
-	if ( $$services{'Folding'} ) {
-		$folding_specs = $$calc_hash{'folding_specs'} = openprint::service::get_specs_ref( $Project, $$services{'Folding'}[0] );
-	} # end if
 	$$specs{'txtCalliper'} = openprint::print::get_finished_calliper( $project_index );
 	my $plusCover = 0;
 	if ( $$printing_specs{'rdbCover'} eq 'Different' ) {
@@ -1087,7 +1103,7 @@ $openprint::log->debug("Need more pockets $maxPockets") if DEBUG;
 	} # end if
 
 	$price{'txtPrice'} = Math::Round::nearest(0.01,$price{'MakeReady'} + $price{'Service'} + $price{'Insert'});
-$openprint::log->debug($price{'Imposition'} . ' on ' .$Equipment->name() . ' max imp: ' . $Equipment->specification("Maximum $$ServiceType{'name'} Imposition") . 'Discount: ' . $Equipment->specification( 'Imposition Discount', $price{Imposition} ) . ' ' . $price{'txtPrice'} ) if DEBUG;
+$openprint::log->debug($price{'Imposition'} . 'out on ' .$Equipment->name() . ' max imp: ' . $Equipment->specification("Maximum $$ServiceType{'name'} Imposition") . 'Discount: ' . $Equipment->specification( 'Imposition Discount', $price{Imposition} ) . ' ' . $price{'txtPrice'} ) if DEBUG;
 	return \%price;
 } # end sub get_price
 

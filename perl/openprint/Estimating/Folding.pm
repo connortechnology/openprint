@@ -752,6 +752,13 @@ if ( 0 ) {
 				$Breakdown .= "Not stitching on $$Equipment{name}:<br/>";
 				next;
 			} # end if
+		} elsif ( $capable eq 'When Printing' ) {
+			$Breakdown .= $capable.':';
+			if ( $$Press{id} != $$Equipment{id} ) {
+				$Breakdown .= "Not printing on $$Equipment{name}:<br/>";
+				next;
+			} # end if
+			
 		} # end if
 		if ( $ppt and ( my $pt = $Equipment->specification('PrintingTypes') ) ) {
 			if ( ! sets::isin( $ppt, [ split(',',$pt ) ] ) ) {
@@ -990,7 +997,7 @@ $openprint::log->debug("No Fold") if DEBUG;
                                         $openprint::log->error("No fold match");
                                     } # end if
                                 } # end if has an orientation
-								$openprint::log->debug($fits) if $fits;
+								$openprint::log->debug($fits) if $fits and DEBUG;
 							} # end if
 
 							if ( $Fold ) {

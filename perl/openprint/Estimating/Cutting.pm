@@ -656,9 +656,9 @@ sub signature_calc {
 					$vertical_cuts += int ( ($I->page_columns()-1)*$I->columns()*2 ) + 2;
 					$horizontal_cuts += int( ($I->page_rows()-1)*$I->rows() * 2 ) + 2;
 			
-				} elsif ( $stitching_imposition ) {
-					#$vertical_cuts += int ($$I{'columns'} / $stitching_imposition)-1;
-					#$horizontal_cuts += int ($$I{'rows'} / $stitching_imposition)-1; 
+				} elsif ( $stitching_imposition and ! @folding_impositions ) {
+					$vertical_cuts += int ($$I{'columns'} / $stitching_imposition)-1;
+					$horizontal_cuts += int ($$I{'rows'} / $stitching_imposition)-1; 
 				} elsif ( $$printing_specs{rdbTemplateType} eq 'PlasticCoil' ) {
 					# This is special... something about if it's plasticCoil... you have to cut it into 8's...
 
