@@ -184,9 +184,9 @@ sub calc {
 				#$$specs{"txtLayoutHeight-$$sig_specs{'SignatureIndex'}-$qty_index"} = 0;
 				if ( $Price{'Status'} eq 'uncalculated' ) {
 					if ( $$specs{"chkOverrideEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} eq 'Y' ) {
-						$$specs{'alert'} = "The selected equipment can not handle your project.	This may be because the stock is too heavy, or too large.";
+						$$specs{'alert'} = "QTY $qty_index: The selected equipment can not handle your project.	This may be because the stock is too heavy, or too large.";
 					} else {
-						$$specs{'alert'} = "No suitable equipment could be found for your project.	This may be because the stock is too heavy, or too large.";
+						$$specs{'alert'} = "QTY $qty_index: No suitable equipment could be found for your project.	This may be because the stock is too heavy, or too large.";
 					} # end if
 				} # end if
 			} # end if
@@ -201,7 +201,7 @@ sub calc {
 			} # end if
 			$price += $Price{'Price'};
 			$status = 'uncalculated' if $Price{'Status'} eq 'uncalculated';
-		} # end foreach
+		} # end foreach qty_index
 
 		my $unitPrice = 0;
 
@@ -751,20 +751,23 @@ sub fits_on_equipment {
 	my $width = $I->layout_width();
 	my $height = $I->layout_height();
 
-	if ( $Equipment->specification('Minimum Score Size') and ( 1*$width < 1*$Equipment->specification('Minimum Score Size') ) ) {
-		return "Doesn't fit minimum Score Size $width < " . $Equipment->specification('Minimum Score Size');
+	my $minimum_score_size = $Equipment->specification('Minimum Score Size');
+	if ( $minimum_score_size ) {
+		if ( $vertical_scores and $height < $minimum_score_size ) {
+			return "Doesn't fit minimum Score Size Height $height < $minimum_score_size";
+		} elsif ( $horizontal_scores and $width < $minimum_score_size ) {
+			return "Doesn't fit minimum Score Size Width $width < $minimum_score_size";
+		} # end if
+	} # end if
+	my $maximum_score_size = $Equipment->specification('Maximum Score Size');
+	if ( $maximum_score_size ) {
+		if ( $vertical_scores and $height > $maximum_score_size ) {
+			return "Doesn't fit maximum Score Size Height $height > $maximum_score_size";
+		} elsif ( $horizontal_scores and $width > $maximum_score_size ) {
+			return "Doesn't fit maximum Score Size Width $width > $maximum_score_size";
+		} # end if
 	} # end if
 
-	if ( $Equipment->specification('Minimum Score Size') and ( 1*$height < 1*$Equipment->specification('Minimum Score Size') ) ) {
-		return "Doesn't fit height minimum Score Size $height < " . $Equipment->specification('Minimum Score Size');
-	} # end if
-	if ( $Equipment->specification('Maximum Score Size') and ( 1*$width > 1*$Equipment->specification('Maximum Score Size') ) ) {
-		return "Doesn't fit width $width > maximum score size " . $Equipment->specification('Maximum Score Size');
-	} # end if
-
-	if ( $Equipment->specification('Maximum Score Size') and ( 1*$height > 1*$Equipment->specification('Maximum Score Size') ) ) {
-		return "Doesn't fit height max $height > " . $Equipment->specification('Maximum Score Size');
-	} # end if
 	if ( $Equipment->specification('Minimum Score Calliper') and 1*$calliper < 1*$Equipment->specification('Minimum Score Calliper') ) {
 		return "Calliper too small: ($calliper), Min: " . $Equipment->specification('Minimum Score Calliper');
 	} # end if
@@ -791,17 +794,23 @@ sub fits_on_equipment {
 # Do nothing, we already know it fits on the machine, and it has to go one way or another.
 			} elsif ( $vertical_scores ) {
 				if ( $I->image_orientation() eq 'Vertical' ) {
+					if ( $height >= $max_feed_width ) {
+						return "Perf no good due to max feed width($max_feed_width) on height (".$height.").<br/>";
+					} # end if
+				} else {
 					if ( $width >= $max_feed_width ) {
 						return "Perf no good due to max feed width($max_feed_width) on width (".$width.").<br/>";
 					} # end if
 				} # end if
 			} elsif ( $horizontal_scores ) {
-				if ( $I->image_orientation() eq 'Horizontal' ) {
-					if ( $height >= $max_feed_width ) {
-						return "Perf no good due to max feed width($max_feed_width) on width (".$height.").<br/>";
+				if ( $I->image_orientation() eq 'Vertical' ) {
+					if ( $width >= $max_feed_width ) {
+						return "Perf no good due to max feed width($max_feed_width) on width (".$width.").<br/>";
 					} # end if
 				} else {
-					return 'Running ' . $width . ' on feed of ' . $max_feed_width . '<br/>';
+					if ( $height >= $max_feed_width ) {
+						return "Perf no good due to max feed width($max_feed_width) on height (".$height.").<br/>";
+					} # end if
 				} # end if
 			} else {
 				return 'Running ' . $height . ' on feed of ' . $max_feed_width . '<br/>';
