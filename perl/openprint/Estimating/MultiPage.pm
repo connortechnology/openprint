@@ -250,8 +250,8 @@ $openprint::log->warn("FIXM E");
 	if ( ! $$specs{'txtTotalPageQuantity'} ) {
 		$$specs{alert} = 'Please enter the # of pages';
 		return $$specs{'Status'} = 'uncalculated';
-	} elsif ( $$specs{'txtTotalPageQuantity'} > 1500 ) {
-		$$specs{alert} .= 'The maximum # of pages is 1500.<br/>';
+	} elsif ( $$specs{'txtTotalPageQuantity'} > 2000 ) {
+		$$specs{alert} .= 'The maximum # of pages is 2000.<br/>';
 		$$specs{Status} = 'uncalculated';
 	} # end if
 
