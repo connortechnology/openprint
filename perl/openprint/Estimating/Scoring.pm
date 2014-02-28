@@ -26,7 +26,7 @@ require openprint::Paper;
 require openprint::Estimating::Folding;
 require openprint::Equipment;
 
-use constant DEBUG => 1;
+use constant DEBUG => 0;
 
 my @variables = (
 	'txtQuantity',

@@ -767,13 +767,6 @@ if ( 0 ) {
 		} # end if
 
 		my $orientation = $Equipment->specification('Orientation');
-		my $min_panel_width = $Equipment->specification('Minimum Panel Width');
-		if ( $min_panel_width ) {
-			if ( $$sig_specs{txtFinalWidth} < $min_panel_width and $$sig_specs{txtFinalHeight} < $min_panel_width ) {
-				$Breakdown .= "Minimum panel width is $min_panel_width: Job is too small.<br/>";
-				next;
-			} # end if
-		} # end if
 
 		for ( my $set_index = 0; $set_index < @All_Impositions; $set_index += 1 ) {
 			my $Set_Of_Impositions = $All_Impositions[$set_index];
@@ -888,6 +881,7 @@ $openprint::log->debug("Templatetype: $$sig_specs{'rdbTemplateType'}") if DEBUG;
 						} # end if
 							
 						my $Fold = $Equipment->Fold({
+							'page_width'		=>	$$sig_specs{txtFinalWidth},
 								type			=>	$$sig_specs{'rdbTemplateType'},
 								gsm				=>	$Paper->gsm(),
 								calliper		=>	$$Paper{'calliper'},
