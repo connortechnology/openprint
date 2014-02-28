@@ -77,7 +77,7 @@ $serial = 'quotes_id_seq';
 	);
 
 %find_fields = (
-	'salesrep_id' => '(SELECT lngsalespersion FROM companies WHERE id=company_id)',
+	'salesrep_id' => '(SELECT salesrep_id FROM companies WHERE id=companyindex)',
 	'for_name' => q{(SELECT strFirstName || ' ' || strLastName FROM tbl_Quote_Users_for WHERE quote_id=quotes.id)},
 );
 %defaults = (

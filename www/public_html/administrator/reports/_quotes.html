@@ -34,7 +34,7 @@
 		<? while ( $$variable{'Quote'} = shift @{$$variable{'Quotes'}}; ) ?>
 		<tr<?rowclass?>> 
 			<td class="quote_id"><a href="/main/quote/history_details.html?quote_id=<? echo ( $$variable{'Quote'}->id() ) ?>"><? echo ( $$variable{'Quote'}->id() ) ?></a></td>
-			<td class="Date"><? echo ( Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $$variable{'Quote'}->created_on() ) ); ) ?></td>
+			<td class="Date"><? echo ( format_date( $$variable{'Quote'}->created_on() ) ) ?></td>
 			<td align="left"><? echo ( $$variable{'Quote'}->by_name() ) ?></td>
 			<td class="Company"><? echo ( $$variable{'Quote'}->Company()->name() ) ?></td>
 			<td align="left"><? echo ( $$variable{'Quote'}->for_name() ) ?></td>
@@ -57,6 +57,6 @@
 			<td class="Price"><? echo ( openprint::Currency::format( $$variable{'Total3'} ); ) ?></td>
 		</tr>
 	</table>
-	<? else ( @{$$variable{'Quotes'}} ) ?>
-	There were no results matching your criteria.
-	<? endif ( @{$$variable{'Quotes'}} ) ?>
+<? else ( @{$$variable{'Quotes'}} ) ?>
+There were no results matching your criteria.
+<? endif ( @{$$variable{'Quotes'}} ) ?>
