@@ -26,7 +26,7 @@ require sql;
 require openprint::service;
 require openprint::Estimating::Printing;
 
-use constant DEBUG => 0;
+use constant DEBUG => 1;
 my @variables = (
 		'txtPrice',
 		'CustomProofSpecs',
@@ -377,31 +377,31 @@ sub insert_colour_proof($$$$$) {
 	return if ! $Equipment;
 
 	my ( $default_proof_type ) = $Equipment->specification( 'Default Colour Proof' );
-	return if ! $default_proof_type;
-
 	my $quantity = 0;
 
-	if ( 
-			( $$specs{'RequireColourProofs'} eq 'Y' )  or (
-				($$specs{'RequireColourProofs'} ne 'N') and $$sig_specs{'chkProcessColourSideOne'} ) ) {
-		$quantity += 1;
-	} # end if
-	if ( 
-			( $$specs{'RequireColourProofs'} eq 'Y' )  or (
-				($$specs{'RequireColourProofs'} ne 'N') and $$sig_specs{'chkProcessColourSideTwo'} ) ) {
-		$quantity += 1;
-	} # end if
+	if ( $default_proof_type ) {
+		if ( 
+				( $$specs{'RequireColourProofs'} eq 'Y' )  or (
+					($$specs{'RequireColourProofs'} ne 'N') and $$sig_specs{'chkProcessColourSideOne'} ) ) {
+			$quantity += 1;
+		} # end if
+		if ( 
+				( $$specs{'RequireColourProofs'} eq 'Y' )  or (
+					($$specs{'RequireColourProofs'} ne 'N') and $$sig_specs{'chkProcessColourSideTwo'} ) ) {
+			$quantity += 1;
+		} # end if
 
-	# we need extra proofs for business cards.
-	if ( $$sig_specs{'txtNameQuantity'} > 1 ) {
-		$quantity *= $$sig_specs{'txtNameQuantity'};
-	} # end if
-	if ( $$sig_specs{'PageQuantity'.$qty_index} ) {
-		$quantity *= $$sig_specs{'PageQuantity'.$qty_index} / $$sig_specs{'txtSpreadSize'} if $$sig_specs{'txtSpreadSize'};
-	} # end if
+		# we need extra proofs for business cards.
+		if ( $$sig_specs{'txtNameQuantity'} > 1 ) {
+			$quantity *= $$sig_specs{'txtNameQuantity'};
+		} # end if
+		if ( $$sig_specs{'PageQuantity'.$qty_index} ) {
+			$quantity *= $$sig_specs{'PageQuantity'.$qty_index} / $$sig_specs{'txtSpreadSize'} if $$sig_specs{'txtSpreadSize'};
+		} # end if
 
-	if ( $$specs{'RequireColourProofs'} eq 'N' ) {
-		$quantity = 0;
+		if ( $$specs{'RequireColourProofs'} eq 'N' ) {
+			$quantity = 0;
+		} # end if
 	} # end if
 
 # only if project requires 4 colour process.

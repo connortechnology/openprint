@@ -54,7 +54,8 @@ sub variables {
 	foreach my $group_id ( @Groups ) {
 		push @v, 'ddmRunStyle'.$group_id;
 		push @v, 'ddmPress'.$group_id;
-		push @v, 'ddmPrintingType'.$group_id;
+		push @v, 'PrintingType'.$group_id;
+		push @v, 'StockType'.$group_id;
 		push @v, 'Pages'.$group_id;
 		push @v, 'OverrideGroupPageQuantity'.$group_id;
 		push @v, 'GroupPageQuantity'.$group_id;
