@@ -92,7 +92,7 @@ $serial = 'lngProjectIndex_seq';
 
 %find_fields = (
 	take_over		=> q{(SELECT MIN(starttime) FROM tbl_Project_Contents WHERE lngProjectIndex=id)},
-	ordered_on		=>	q{(SELECT dtmOrderDate FROM Orders WHERE orders.id=order_id)},
+	ordered_on		=>	q{(SELECT created_on FROM Orders WHERE orders.id=order_id)},
 	salesrep_id		=>	'(SELECT salesrep_id FROM Orders WHERE orders.id=order_id)',
 	takenover_on	=>	q{(SELECT MIN(dtmtimestamp) FROM Project_Log WHERE project_id=projects.id AND description LIKE 'Taken Over by%')},
 	approved_on		=>	q{(SELECT MAX(dtmtimestamp) FROM Project_Log WHERE project_id=projects.id AND description IN ('Marked Approved','Marked Proofs QA Approved'))},

@@ -415,7 +415,7 @@ sub send {
 				FROM    => sprintf('"%s %s" <%s>', @$self{'by_firstname','by_lastname','by_email'}),
 				#TO    => sprintf('"%s %s" <%s>', @$self{'by_firstname','by_lastname','by_email'}),
 				TO      => sprintf('"%s %s" <%s>', @$self{'for_firstname','for_lastname','for_email'}),
-					BCC		=>	'iconnor@point-one.com',
+					#BCC		=>	'iconnor@point-one.com',
 				SUBJECT => "$openprint::config{'SiteTitle'}:Quote $$self{id}",
 				ATTACHMENTS	=>	[ @attachments ],
 				);

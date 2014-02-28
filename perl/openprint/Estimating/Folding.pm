@@ -729,7 +729,6 @@ if ( 0 ) {
 			$openprint::log->debug('No Offline Equipment '.$Equipment->name()) if DEBUG;
 			next;
 		} # end if
-		my $orientation = $Equipment->specification('Orientation');
 		my $capable = $Equipment->specification( 'Folding Capable' );
 		if ( $capable eq 'When PerfectBound' ) {
 # Means it's a PerfectBinder, so can only do covers
@@ -763,6 +762,15 @@ if ( 0 ) {
 		if ( $ppt and ( my $pt = $Equipment->specification('PrintingTypes') ) ) {
 			if ( ! sets::isin( $ppt, [ split(',',$pt ) ] ) ) {
 				$Breakdown .= 'Wrong printing type.<br/>';
+				next;
+			} # end if
+		} # end if
+
+		my $orientation = $Equipment->specification('Orientation');
+		my $min_panel_width = $Equipment->specification('Minimum Panel Width');
+		if ( $min_panel_width ) {
+			if ( $$sig_specs{txtFinalWidth} < $min_panel_width and $$sig_specs{txtFinalHeight} < $min_panel_width ) {
+				$Breakdown .= "Minimum panel width is $min_panel_width: Job is too small.<br/>";
 				next;
 			} # end if
 		} # end if
