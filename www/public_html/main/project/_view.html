@@ -176,15 +176,15 @@
 					if ( $$specs{'txtQuantity'.$qty_index} and $$specs{'txtQuantity'.$qty_index} != $Project->quantity($qty_index) ) {
 						$html .= '('.$$specs{'txtQuantity'.$qty_index}.') ';
 					} # end if
+					if ( $Service->overrides( $qty_index ) ) {
+						$html .= '<b>With Overrides</b> ';
+					} # end if
 					if ( $session{'user_type'} eq 'A' or ! $Project->Ordered_Product() ) {
 						$html .= '<b>'.openprint::Currency::format( $ProjectCurrency->convert_from( $$specs{'txtPrice'.$qty_index} ) ).'</b><br/>';
 					} # end if
 					my $summary = openprint::service::summary( $Project->id(), $service_id, $qty_index );
 					$summary =~ s/\n/<br\/>/g;
 					$html .= $summary;
-					if ( $Service->overrides( $qty_index ) ) {
-						$summary .= '<br/><b>With Overrides</b>';
-					} # end if
 					$html .= '</td>';
 				} # end foreach qty_index
 				$html .= '<td class="status">'.$statuses{$service_id}.'</td>';
@@ -242,6 +242,9 @@
 						if ( $$specs{'txtQuantity'.$qty_index} and $$specs{'txtQuantity'.$qty_index} != $Project->quantity($qty_index) ) {
 							$html .= '('.$$specs{'txtQuantity'.$qty_index}.') ';
 						} # end if
+						if ( $Service->overrides( $qty_index ) ) {
+							$html .= '<b>With Overrides</b> ';
+						} # end if
 						if ( $session{'user_type'} eq 'A' or ! $Project->Ordered_Product() ) {
 							$html .= '<b>'.openprint::Currency::format( $ProjectCurrency->convert_from( $$specs{'txtPrice'.$qty_index} ) ).'</b><br/>';
 						} # end if
@@ -252,9 +255,6 @@
 						} else {
 							$summary =~ s/\n/<br\/>/g;
 							$html .= $summary;
-						} # end if
-						if ( $Service->overrides( $qty_index ) ) {
-							$html .= '<br class="spacer"/><b>With Overrides</b>';
 						} # end if
 						$html .= '</td>';
 					} # end foreach qty_index

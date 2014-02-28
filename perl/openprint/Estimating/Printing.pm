@@ -2468,11 +2468,14 @@ if ( 1 ) {
 				$$specs{'alert'} .= "QTY $qty_index: There are ".(-1*$$specs{'txtUnspecifiedPageQuantity'.$qty_index}). ' more pages specified than are required.  Please correct this situation.<br/>';
 			} # end if
 		} # end if
-		if ( ! ( $$project{'HasAqueous'} or $$specs{'AqueousMessage'} ) ) {
-			$$specs{'AqueousMessage'} = 1;
-			$$specs{'popup'} .= $Paper->message() if $Paper->message();
+		if ( $Paper->message() ) {
+			my $paper_message = ssi::variable_substitution( \$Paper->message(), { Project=>$Project } );
+			if ( ! ( $$project{HasAqueous} or $$specs{AqueousMessage} ) ) {
+				$$specs{AqueousMessage} = 1;
+				$$specs{popup} .= $paper_message;
+			} # end if
+			$$specs{'PaperMessage'.$qty_index} = $paper_message;
 		} # end if
-		$$specs{'PaperMessage'.$qty_index} = $Paper->message();
 $openprint::log->debug("Master time after qty: $qty_index" . ( sprintf('%.4f', tv_interval( [$master_time])*1000) ) .' usecs' ) if DEBUG;
 	} # end foreach quantity
 	$$specs{'NeedCutting'} = openprint::Estimating::Cutting::signature_needs( $Project, $specs ) if ! $$project{HasCutting};

@@ -1693,6 +1693,9 @@ sub signature_summary {
 	$sig_specs = openprint::service::get_specs_ref( $Project, $s_id ) if ! $sig_specs;
 	if ( $qty_index ) {
 		my @folds;
+		if ( ( defined $$specs{"chkOverrideEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} ) and ( $$specs{"chkOverrideEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} eq 'Y' ) and ! $$specs{"ddmOverrideEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} ) {
+			return 'not folded';
+		} else {
 		my $Equipment = new openprint::Equipment( $$specs{"ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} );
 		foreach my $fold_index ( 1 .. 4 ) {
 			next if ! $$specs{"FoldQty-$$sig_specs{'SignatureIndex'}-$qty_index-$fold_index"};
@@ -1701,6 +1704,7 @@ sub signature_summary {
 					"FoldType-$$sig_specs{'SignatureIndex'}-$qty_index-$fold_index"} );
 		} # end foreach
 		return join(', ', @folds).' on ' . $Equipment->name();
+		} # end if
 	} # end if
 } # end sub signature_summary
 
@@ -1728,11 +1732,13 @@ sub summary {
 				} # end for
 				splice @signatures, $sig_index+1,$sig_count-1 if $sig_count > 1;
 			} 
+			my $summary = signature_summary( $Project, $service_id, undef, $qty_index, $s_s_id, undef );
 			if ( $sig_count > 1 ) {
-				$html .= ($sig_count) . ' Forms ' . $$sig_specs{txtServiceDescription} . ' folded ' ."\n".signature_summary( $Project, $service_id, undef, $qty_index, $s_s_id, undef ) . "\n";
+				$html .= ($sig_count) . ' Forms ' . $$sig_specs{txtServiceDescription} ;
 			} else {
-			$html .= 'Form ' . $$sig_specs{SignatureIndex} . ' ' . $$sig_specs{txtServiceDescription} . ' folded ' ."\n".signature_summary( $Project, $service_id, undef, $qty_index, $s_s_id, undef ) . "\n";
+				$html .= 'Form ' . $$sig_specs{SignatureIndex} . ' ' . $$sig_specs{txtServiceDescription};
 			} # end if
+			$html .= ' ' . ( $summary eq 'not folded' ? $summary : 'folded ' . $summary ) . "\n";
 		} # end foreach
 		return $html;
 	} else {
