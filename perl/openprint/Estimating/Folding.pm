@@ -24,7 +24,7 @@ require openprint::service;
 
 use vars qw( @folds %fold_types );
 
-use constant DEBUG => 0;
+use constant DEBUG => 1;
 use constant DEBUG_NEEDS => 0;
 
 my @equipment;
@@ -983,15 +983,29 @@ $openprint::log->debug("No Fold") if DEBUG;
 # decide whether it's running portrait or landscape basessd on which way the folds go
 									$openprint::log->debug("Has max feed width width: $width_folds height: $height_folds $$sig_specs{'txtWidth'} $$sig_specs{'txtHeight'} $max_feed_width") if DEBUG;
 									if ( ( $width_folds and ! $height_folds ) or ( $width_folds == $$Fold{'folds'} and $height_folds == $$Fold{'angles'} ) ) {
+										if ( $$Imposition{image_orientation} eq 'Vertical' ) {
 # If folds are on width, we grip on height...
-										if ( $Imposition->layout_width() >= $max_feed_width ) {
-											$fits = "Fold no good due to max feed width ($max_feed_width) on width ($$sig_specs{'txtHeight'}).";
-											$Fold = undef;
-                                        } # end if
+											if ( $Imposition->layout_height() >= $max_feed_width ) {
+												$fits = "Fold no good due to max feed width ($max_feed_width). $width_folds x $height_folds size: ($$Imposition{layout_height}).";
+												$Fold = undef;
+											} # end if
+										} else {
+											if ( $Imposition->layout_width() >= $max_feed_width ) {
+												$fits = "Fold no good due to max feed width ($max_feed_width). $width_folds x $height_folds size: ($$Imposition{layout_width}).";
+												$Fold = undef;
+											} # end if
+										} # end if
                                     } elsif ( ( $height_folds and ! $width_folds ) or ( $height_folds == $$Fold{'folds'} and $width_folds == $$Fold{'angles'} ) ) {
-                                        if ( $Imposition->layout_height() >= $max_feed_width ) {
-                                            $fits = "Fold no good due to max feed width ($max_feed_width) on height ($$sig_specs{txtWidth}.";
-											$Fold = undef;
+										if ( $$Imposition{image_orientation} eq 'Vertical' ) {
+											if ( $Imposition->layout_width() >= $max_feed_width ) {
+												$fits = "Fold no good due to max feed width ($max_feed_width). $width_folds x $height_folds size: ($$Imposition{layout_width}).";
+												$Fold = undef;
+											} # end if
+										} else {
+											if ( $Imposition->layout_height() >= $max_feed_width ) {
+												$fits = "Fold no good due to max feed width ($max_feed_width). $width_folds x $height_folds size: ($$Imposition{layout_height}).";
+												$Fold = undef;
+											} # end if
                                         } # end if
                                     } else {
                                         $openprint::log->error("No fold match");
