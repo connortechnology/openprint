@@ -483,6 +483,11 @@ $openprint::log->error("Doing internal calc without service_index or, not found"
 	# We are doing this in an eval because we don't actually want to die.
 	eval 'require openprint::Estimating::'.$service_type;
 	$log->error("Error in requiring $package $@") if $@;
+	if ( DEBUG ) {
+		foreach my $key ( eval( 'openprint::Estimating::'.$service_type.'::variables( $project_index, $service_index, \%specs )') ) {
+			$log->debug("Internal Calc:: before calc $key $specs{$key} :". $specs_cache{$service_index}{$key});
+		} # end foreach
+	} # end if
 	if ( my $function = $package->can('calc') ) {
 		my $status = $function->( $log, $dbh, $variable, $project_index, $service_index, \%specs, $qty_index );
 		$specs{'Status'} = $status;

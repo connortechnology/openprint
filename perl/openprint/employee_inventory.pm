@@ -192,15 +192,16 @@ sub skids {
 
 sub inventory_report {
 	my %param = @_;
-	my @header = ('Paper ID','Type','Owner','Manufacturer','Name','Finish','Colour','Weight','Type','Width','Height','Quality', 'MWeight','GSM','Skid#','RFIDTag #','Received On', 'Date Added','Location', 'In Stock (sheets)','In Stock(lbs)', 'Condition', 'Last Seen', 'Cost', 'Value' );
+	my @header = ('Paper ID','Type','Owner','Manufacturer','Name','Finish','Colour','Weight','Material','Group','Type','Width','Height','Quality', 'MWeight','GSM','Skid#','RFIDTag #','Received On', 'Date Added','Location', 'In Stock (sheets)','In Stock(lbs)', 'Condition', 'Last Seen', 'Cost', 'Value' );
 
 	my @data;
 	my $count = 0;
 	my $total_weight = 0;
+	openprint::Location->find();
 	foreach my $Skid ( openprint::Skid->find(
 				ssi::date_filter( 'added_on_start', 'created_on >=', \%param ),
 				ssi::date_filter( 'added_on_end', 'created_on <=', \%param ),
-				'quantity >='=>1,'type !='=>'Sheet') ) {
+				'quantity >='=>1,'type is null or in'=>[split(',',$param{type})] ) ) {
 		foreach my $C ( $Skid->Contents() ) {
 			next if ! $C;
 			my $Paper = $C->Paper();
@@ -215,7 +216,7 @@ sub inventory_report {
 			$total_weight += $weight;
 			$count += 1;
 			push @data,(
-					$$Paper{'id'},
+					$$Paper{id},
 					$$Skid{type},
 					new openprint::Company($Paper->owner_id())->name(),
 					$Paper->manufacturer(),
@@ -223,13 +224,15 @@ sub inventory_report {
 					$Paper->finish(),
 					$Paper->colour(),
 					$Paper->weight(),
+					$Paper->material(),
+					$Paper->group(),
 					$Paper->type(),
 					$Paper->width(),
 					$Paper->height(),
 					$Paper->quality(),
 					$Paper->mweight(),
 					$Paper->gsm(),
-					$$Skid{'id'},
+					$$Skid{id},
 					$Skid->RFIDTag()->id_short(),
 					$$Skid{'received_on'},
 					$$Skid{'created_on'},
@@ -244,7 +247,7 @@ sub inventory_report {
 		} # end foreach C
 	} # end foreach Skid
 	my $date = Date::Format::time2str('%Y-%m-%d %H:%M', time );
-	push @data, ( 'Report generated',$date,'Count:',$count,undef,undef,undef,undef, undef, undef, undef, undef, undef, undef, undef, undef, undef, undef,undef, 'Total Weight (lbs):', $total_weight, undef, undef );
+	push @data, ( 'Report generated',$date,'Count:',$count,undef,undef,undef,undef, undef,undef,undef, undef, undef, undef, undef, undef, undef, undef, undef, undef,undef, 'Total Weight (lbs):', $total_weight, undef, undef );
 	return ( \@header, \@data );
 } # end sub inventory_report
 

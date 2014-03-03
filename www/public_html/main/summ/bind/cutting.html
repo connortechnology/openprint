@@ -1,84 +1,73 @@
 <? eval ( 
 	openprint::Estimating::Cutting::display( $log, $dbh, $variable, @$variable{'ProjectIndex','ServiceIndex'} );
-	@{$$variable{'tempCuttingGroups'}} = @{$$variable{'CuttingGroups'}};
 ) ?>
-
-<? while ( @$variable{'SignatureServiceIndex','SignatureIndex','Reference'} = splice @{$$variable{'tempCuttingGroups'}},0,3; ) ?>
-	<? if ( $$variable{'Reference'} ) ?>
-		<p>
-			Information for:&nbsp; <b><?Reference?> </b> Form <?SignatureIndex?><br/> 
-		</p>
-	<? endif ( $$variable{'Reference'} ) ?>
 <? echo (
 	my $html;
+	foreach my $s_id ( $$variable{Project}->signatures({sort=>1}) ) {
+		my $Service = $$variable{Project}->Service( $s_id );
 
-	my $show_stock_cutting = 0;
-	foreach my $qty_index ( $$variable{Project}->quantity_indexes() ) {
-		if ( 
-			( $$variable{"txtSuppliedStockWidth-$$variable{SignatureIndex}-$qty_index"} != $$variable{"txtSheetSizeWidth-$$variable{SignatureIndex}-$qty_index"} ) or 
-			( $$variable{"txtSuppliedStockHeight-$$variable{SignatureIndex}-$qty_index"} != $$variable{"txtSheetSizeHeight-$$variable{SignatureIndex}-$qty_index"} ) ) {
-			$show_stock_cutting = 1;
-			last;
+		my $sig_specs = $Service->specs();
+		if ( $$sig_specs{'txtServiceDescription'} ) {
+			$html .= '<p>For <b>'.$$sig_specs{'txtServiceDescription'}.'</b> Form '.$$sig_specs{SignatureIndex}.'</p>';
 		} # end if
-	} # end foraech qty_index
-	if ( $show_stock_cutting ) {
-		$html = '<p><label>Supplied Sheet Size</label>';
+
+		my $show_stock_cutting = 0;
 		foreach my $qty_index ( $$variable{Project}->quantity_indexes() ) {
-			$html .= join("\n", '<span class="value">',
-				$$variable{"txtSuppliedStockWidth-$$variable{SignatureIndex}-$qty_index"},
-				' x ',
-				$$variable{"txtSuppliedStockHeight-$$variable{SignatureIndex}-$qty_index"},
-				'</span>' );
-		} # end foreach qty_index
-		$html .= '</p><p><label>Running Press Sheet Size</label>';
-		foreach my $qty_index ( $$variable{Project}->quantity_indexes() ) {
-			$html .= join("\n", '<span class="value">',
-				$$variable{"txtSheetSizeWidth-$$variable{SignatureIndex}-$qty_index"},
-				' x ',
-				$$variable{"txtSheetSizeHeight-$$variable{SignatureIndex}-$qty_index"},
-				'</span>' );
-		} # end foreach qty_index
-	} # end if
-	my $show_fold_cutting = 0;
-	foreach my $qty_index ( $$variable{Project}->quantity_indexes() ) {
-		if ( $$variable{"FoldingCuts-$$variable{SignatureIndex}-$qty_index"} ) {
-			$show_fold_cutting = 1;
-			last;
+			if ( 
+				( $$variable{"txtSuppliedStockWidth-$$sig_specs{SignatureIndex}-$qty_index"} != $$variable{"txtSheetSizeWidth-$$sig_specs{SignatureIndex}-$qty_index"} ) or 
+				( $$variable{"txtSuppliedStockHeight-$$sig_specs{SignatureIndex}-$qty_index"} != $$variable{"txtSheetSizeHeight-$$sig_specs{SignatureIndex}-$qty_index"} ) ) {
+				$show_stock_cutting = 1;
+				last;
+			} # end if
+		} # end foraech qty_index
+		if ( $show_stock_cutting ) {
+			$html .= '<p><label>Supplied Sheet Size</label>';
+			foreach my $qty_index ( $$variable{Project}->quantity_indexes() ) {
+				$html .= join("\n", '<span class="value">',
+					$$variable{"txtSuppliedStockWidth-$$sig_specs{SignatureIndex}-$qty_index"},
+					' x ',
+					$$variable{"txtSuppliedStockHeight-$$sig_specs{SignatureIndex}-$qty_index"},
+					'</span>' );
+			} # end foreach qty_index
+			$html .= '</p><p><label>Running Press Sheet Size</label>';
+			foreach my $qty_index ( $$variable{Project}->quantity_indexes() ) {
+				$html .= join("\n", '<span class="value">',
+					$$variable{"txtSheetSizeWidth-$$sig_specs{SignatureIndex}-$qty_index"},
+					' x ',
+					$$variable{"txtSheetSizeHeight-$$sig_specs{SignatureIndex}-$qty_index"},
+					'</span>' );
+			} # end foreach qty_index
 		} # end if
-	} # end foraech qty_index
-	if ( $show_fold_cutting ) {
-		$html = '<p><label>Cutting before folding</label>';
+		my $show_fold_cutting = 0;
 		foreach my $qty_index ( $$variable{Project}->quantity_indexes() ) {
-			$html .= join("\n", '<span class="value">', 1*$$variable{"FoldingCuts-$$variable{SignatureIndex}-$qty_index"} , 'cuts', '</span>' );
+			if ( $$variable{"FoldingCuts-$$sig_specs{SignatureIndex}-$qty_index"} ) {
+				$show_fold_cutting = 1;
+				last;
+			} # end if
+		} # end foraech qty_index
+		if ( $show_fold_cutting ) {
+			$html .= '<p><label>Cutting before folding</label>';
+			foreach my $qty_index ( $$variable{Project}->quantity_indexes() ) {
+				$html .= join("\n", '<span class="value">', 1*$$variable{"FoldingCuts-$$sig_specs{SignatureIndex}-$qty_index"} , 'cuts', '</span>' );
+			} # end foreach qty_index
+		} # end if
+		$html .= '<p><label>Calculated regular cuts</label>';
+		foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
+			$html .= '<span class="value">'. sprintf('%dx%d=%d',
+				@$variable{
+				join('-', 'txtVerticalCuts',$$sig_specs{SignatureIndex}, $qty_index),
+				join('-', 'txtHorizontalCuts',$$sig_specs{SignatureIndex}, $qty_index),
+				join('-', 'txtCalculatedCuts',$$sig_specs{SignatureIndex}, $qty_index),
+				}).'</span>';
 		} # end foreach qty_index
-	} # end if
+		$html .= '</p>';
+		if ( $$variable{'txtAdditionalCuts'.$$sig_specs{SignatureIndex}} ) {
+			$html .= '<p><label>Additional Cuts</label>';
+			foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
+				$html .= '<span class="value">'.$$variable{'txtAdditionalCuts'.$$sig_specs{SignatureIndex}}.'</span>';
+			} # end foreach
+			$html .= '</p>';
+		} # end if additiaonl
+	} # end foreach sig
 	return $html;
 ) ?>
-    <p>
-        <label>Calculated regular cuts</label>
-<? echo (
-	my $html;
-	foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
-        $html .= '<span class="value">'. sprintf('%dx%d=%d',
-@$variable{
-join('-', 'txtVerticalCuts',$$variable{SignatureIndex}, $qty_index),
-join('-', 'txtHorizontalCuts',$$variable{SignatureIndex}, $qty_index),
-join('-', 'txtCalculatedCuts',$$variable{SignatureIndex}, $qty_index),
-}).'</span>';
-} # end foreach qty_index
-return $html;
-) ?>
-    </p>
-    <? if ( $$variable{'txtAdditionalCuts'.$$variable{'SignatureIndex'}} ) ?>
-    <p>
-        <label>Additional Cuts</label>
-<? echo (
-my $html;
-foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
-        $html .= '<span class="value">'.$$variable{'txtAdditionalCuts'.$$variable{'SignatureIndex'}}.'</span>';
-} # end foreach
-return $html;
-) ?>
-    </p>
-    <? endif ( $$variable{'txtAdditionalCuts'.$$variable{'SignatureIndex'}} ) ?>
-<? endwhile ( @$variable{'SignatureServiceIndex','SignatureIndex','Reference'} = splice @{$$variable{'tempCuttingGroups'}},0,3; ) ?>

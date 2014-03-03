@@ -1040,7 +1040,7 @@ sub get_price {
 		} # end if
 		$$price{'100lb Total'} = $$price{'100lb Price'} * $qty/100;
 	} # end if
-$openprint::log->debug("Costs: ($$price{Cost}) ($$price{'100lb Price'})/100lb ($$price{'100lb Cost'}) ($$price{'Price'}) T($$price{'100lb Total'})") if $debug;
+$openprint::log->debug("Costs: cost($$price{cost}) Price($$price{'100lb Price'})/100lb cost($$price{'100lb Cost'})/cwt Price($$price{'Price'}) qty($qty) Total($$price{'100lb Total'})") if $debug;
 	return $price;
 } # end sub get_price
 

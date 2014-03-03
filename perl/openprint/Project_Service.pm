@@ -21,6 +21,7 @@ $debug = 0;
 );
 %find_fields = (
 	'category'	=>	'(SELECT ServiceType_Categories.name FROM ServiceType_Categories,Service_Types WHERE ServiceType_Categories.id=Service_Types.category_id AND Service_Types.id=servicetype_id)',
+	servicetype		=>	'(SELECT name FROM service_types WHERE service_types.id=servicetype_id)',
 );
 %transforms = (
 );

@@ -373,10 +373,9 @@ sub insert_colour_proof($$$$$) {
 	my ( $Project, $sig_specs, $proof_index, $qty_index, $specs ) = @_;
 
 	#$log->debug("*** Inserting Colour Proof *******");
-	my $Equipment = openprint::Equipment->find_one( 'strid'=>$$sig_specs{'ddmPress'.$qty_index} );
-	return if ! $Equipment;
+	my $Equipment = openprint::Equipment->find_one( strid=>$$sig_specs{'ddmPress'.$qty_index} ) if $$sig_specs{'ddmPress'.$qty_index};
 
-	my ( $default_proof_type ) = $Equipment->specification( 'Default Colour Proof' );
+	my ( $default_proof_type ) = $Equipment->specification( 'Default Colour Proof' ) if $Equipment;
 	my $quantity = 0;
 
 	if ( $default_proof_type ) {
@@ -418,13 +417,12 @@ sub insert_layout_proof {
 	$Equipment = openprint::Equipment->find_one( strid=>$$sig_specs{'ddmPress'.$qty_index} ) if ! $Equipment;
 	if ( ! $Equipment ) {
 		$openprint::log->warn("No equipment in insert_layout_proof");
-		return;
 	} # end if
 
 	my $quantity = 0;
-	my ( $default_proof_type ) = $Equipment->specification( 'Default Layout Proof' );
+	my ( $default_proof_type ) = $Equipment->specification( 'Default Layout Proof' ) if $Equipment;
 	if ( ! $default_proof_type ) {
-		$openprint::log->debug("No Default Layout Proof for " . $Equipment->strid() ) if DEBUG;
+		$openprint::log->debug("No Default Layout Proof for " . $Equipment->strid() ) if DEBUG and $Equipment;
 	} else {
 		$$sig_specs{SideOneColours} = [openprint::Estimating::Printing::get_colours( $sig_specs, 'SideOne' )] if ! $$sig_specs{SideOneColours};
 		$$sig_specs{SideTwoColours} = [openprint::Estimating::Printing::get_colours( $sig_specs, 'SideTwo' )] if ! $$sig_specs{SideTwoColours};

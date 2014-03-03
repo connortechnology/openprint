@@ -51,7 +51,7 @@ There is no current project.
 			$$variable{'ServiceSpecifications'} = openprint::service::get_specs_ref( @$variable{'Project','ServiceIndex'} );
 		) ?>
 		
-		<fieldset><legend><?ServiceTypeName?> <?txtServiceDescription?></legend>
+		<fieldset><legend><?ServiceTypeName?> <?txtServiceDescription?><?if($$variable{ServiceTypeName} eq 'Signature')?> Form <?SignatureIndex?><?endif($$variable{ServiceTypeName} eq 'Signature')?></legend>
 			<? if ( $$variable{'prod_url'} ) ?>
 			<? echo ( include('/main/summ/'.$$variable{prod_url}, $variable ); ) ?>
 			<? endif ( $$variable{'prod_url'} ) ?>

@@ -22,6 +22,7 @@ require openprint::Currency;
 require openprint::User;
 require openprint::logs;
 require openprint::Estimating::MultiPage;
+require Math::Round;
 
 # Projects are like Orders, in that you can have several in here, but only ONE of them may be unfinished.
 
@@ -342,17 +343,28 @@ sub summary {
 	} else {
 		Carp::cluck( "No ProjectService in Project $$Project{id}");
 	} # end if
+
+	foreach my $sig_id ( $Project->signatures( { sort => 1 } ) ) {
+		my $Service = $Project->Service( $sig_id );
+		my $Type = $Service->ServiceType();
+		push @services, $sig_id, $Type->name(), $Type->url();
+	} # end foreach signature
+
+	foreach my $ServiceCategory ( openprint::ServiceType_Category->find( order=>'sorting,name') ) {
+		foreach my $ServiceType ( openprint::ServiceType->find( category_id=>$$ServiceCategory{id}, order=>'sorting' ) ) {
+			next if ! $$services{$$ServiceType{name}};
+			next if $ServiceType->name() eq 'Signature';
+			foreach my $s_id ( @{$$services{$$ServiceType{name}}} ) {
+				my $Service = $Project->Service( $s_id );
+				push @services, $s_id, $ServiceType->name(), $ServiceType->url();
+			} # end foreach
+		} # end foreach
+	} # end foreach signature
+	$$variable{SERVICES} = \@services;
 	
-   push @services, sql::execute( $log, $dbh, q{SELECT lngServiceIndex, name, strdetailedurl FROM tbl_Project_Contents, Service_Types WHERE servicetype_id=Service_Types.id AND lngProjectIndex=? AND view_visible=true AND servicetype_id IS NOT NULL ORDER BY sorting,lngServiceIndex}, $project_index );
-
-   while ( @services ) {
-        my ( $service_index, $name, $url ) = splice @services,0,3;
-        push @{$$variable{'SERVICES'}}, $service_index, $name, $url;
-    } # end while
-
-	$$variable{'TOTAL1'} = sprintf( '%.2f', $Project->price1() );
-	$$variable{'TOTAL2'} = sprintf( '%.2f', $Project->price2() );
-	$$variable{'TOTAL3'} = sprintf( '%.2f', $Project->price3() );
+	$$variable{'TOTAL1'} = Math::Round::nearest( 0.01, $Project->price1() );
+	$$variable{'TOTAL2'} = Math::Round::nearest( 0.01, $Project->price2() );
+	$$variable{'TOTAL3'} = Math::Round::nearest( 0.01, $Project->price3() );
 
 	$$variable{'UNITPRICE1'} = $$variable{'txtQuantity1'} ? sprintf( "%.2f", $$variable{'TOTAL1'}/$$variable{'txtQuantity1'} ) : '0.00';
 	$$variable{'UNITPRICE2'} = $$variable{'txtQuantity2'} ? sprintf( "%.2f", $$variable{'TOTAL2'}/$$variable{'txtQuantity2'} ) : '0.00';
