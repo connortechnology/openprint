@@ -219,11 +219,14 @@ $RFIDTag->id(),
 				$html .= "<tr$rowclass>";
 				
 				$html .= '<td class="checkbox">&nbsp;</td><td colspan="8">';
-			
-				foreach my $C ( $Skid->Contents() ) {
+				my @C = $Skid->Contents();
+				if ( @C != 1 ) {
+					$html .= '<span class="warning">';	
+				} # end if
+				foreach my $C ( @C ) {
 					my $Paper = $C->Paper();
-					$html .= sprintf( '<a href="/employee/inventory/skid_details.html?skid_id=%d">%s - %s %d%s %s</a><br/>',
-						$$Skid{'id'},
+					$html .= sprintf( '<a href="/employee/inventory/skid_details.html?skid_id=%d">%s : %s %d%s %s</a><br/>',
+						$$Skid{id},
 						$Paper->to_string(),
 						( $$C{purpose_id} ? new openprint::StockPurpose( $C->purpose_id() )->name() : '' ),
 						$C->quantity(),
@@ -238,8 +241,10 @@ $RFIDTag->id(),
 						$total_sheets += $C->quantity();
 					} # end if	
 				} # end foreach
-				$html .= '</td>';
-				$html .= '</tr>';
+				if ( @C != 1 ) {
+					$html .= '</span>';	
+				} # end if
+				$html .= '</td></tr>';
 				$rowclass = $rowclass ? '' : ' class="colRow"';
 			} # end foreach Skid
 			$html .= '<tr class="totals"><td class="checkbox"></td><td colspan="5">Totals</td><td>';

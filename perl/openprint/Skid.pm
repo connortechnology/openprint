@@ -269,9 +269,12 @@ sub find {
 			$sql .= ' AND (type IS NULL OR type!=?)';
 			push @values, $params{'type !='};
 	} elsif ( exists $params{'type is null or in'} ) {
-		if ( @{$params{'type is null or in'}} ) {
-			$sql .= ' AND type IN (' . join(',', map {'?'} @{$params{'type is null or in'}}) . ')';
+		if ( ref $params{'type is null or in'} eq 'ARRAY' ) {
+			$sql .= ' AND ( type IS NULL OR type IN (' . join(',', map {'?'} @{$params{'type is null or in'}}) . '))';
 			push @values, @{$params{'type is null or in'}};
+		} elsif ( $params{'type is null or in'} ) {
+			$sql .= ' AND (type IS NULL OR type = ?)';
+			push @values, $params{'type is null or in'};
 		} else {
 			$sql .= ' AND type IS NULL';
 		} # en dif

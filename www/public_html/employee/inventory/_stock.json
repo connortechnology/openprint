@@ -87,6 +87,6 @@
 
 	$param{'callback'} = 'cbStockFillResults' if ! $param{'callback'};
 	my $json = JSON->new;
-$log->debug($json->encode( \%specs ));
+#$log->debug($json->encode( \%specs ));
 	return 'var results = new Hash(' . $json->encode( \%specs ) . ");\n$param{'callback'}(results);";
 ) ?>

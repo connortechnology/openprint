@@ -192,7 +192,7 @@ sub skids {
 
 sub inventory_report {
 	my %param = @_;
-	my @header = ('Paper ID','Type','Owner','Manufacturer','Name','Finish','Colour','Weight','Material','Group','Type','Width','Height','Quality', 'MWeight','GSM','Skid#','RFIDTag #','Received On', 'Date Added','Location', 'In Stock (sheets)','In Stock(lbs)', 'Condition', 'Last Seen', 'Cost', 'Value' );
+	my @header = ('Paper ID','Type','Owner','Manufacturer','Name','Finish','Colour','Weight','Material','Group','Type','Width','Height','Quality', 'MWeight','GSM','Skid#','RFIDTag #','Received On', 'Date Added','Last Updated', 'Location', 'In Stock (sheets)','In Stock(lbs)', 'Condition', 'Last Seen', 'Cost', 'Value' );
 
 	my @data;
 	my $count = 0;
@@ -201,7 +201,7 @@ sub inventory_report {
 	foreach my $Skid ( openprint::Skid->find(
 				ssi::date_filter( 'added_on_start', 'created_on >=', \%param ),
 				ssi::date_filter( 'added_on_end', 'created_on <=', \%param ),
-				'quantity >='=>1,'type is null or in'=>[split(',',$param{type})] ) ) {
+				'quantity >='=>1,'type is null or in'=>$param{type} ) ) {
 		foreach my $C ( $Skid->Contents() ) {
 			next if ! $C;
 			my $Paper = $C->Paper();
@@ -236,6 +236,7 @@ sub inventory_report {
 					$Skid->RFIDTag()->id_short(),
 					$$Skid{'received_on'},
 					$$Skid{'created_on'},
+					$$Skid{'updated_on'},
 					$Skid->Location()->name(),
 					$Paper->type() eq 'Sheet' ? $C->quantity() : '',
 					$weight,
