@@ -363,7 +363,7 @@ sub summary {
 				if ( $Paper->type() eq 'Sheet' ) {
 					$html .= $$specs{"sheets-$stock_id-$qty_index"}.'sheets ';
 				} # end if
-				$html .= $$specs{"qty-$stock_id-$qty_index"}.'lbs';
+				$html .= Number::Format::format_number( Math::Round::nearest(1, $$specs{"qty-$stock_id-$qty_index"} ) ).' lbs';
 				my $Price = $Paper->get_price( 'weight'=>$$specs{"qty-$stock_id-$qty_index"},'service'=>'Material' );
 				if ( $$Price{'units'} eq 'per square foot' ) {
 					$html .= ' ' . Math::Round::nearest( 1, ( $$specs{"qty-$stock_id-$qty_index"} / $Paper->wpsi() ) / 144 ).' sq feet';
@@ -386,7 +386,7 @@ sub summary {
 		} # end foreach key
 		return \@summaries;
 	} # end if
-	return \@keys;
+	return [ map { $Papers{$_}->message() ? $_ . '<br/><span class="StockMessage">'. ssi::variable_substitution( \$Papers{$_}->message(), { Project => $Project } ) . '</span>' : $_ } @keys ];
 } # end sub summary
 
 sub save {

@@ -10,7 +10,7 @@
 				<input type="text" onkeyup="filterDDM(this, f1.company_id);" onkeydown="if(event.keyCode==13){this.form.submit();}" class="filter" />
 				<select name="company_id" id="company_id" onchange="if(this.options[this.selectedIndex].value != '') f1.submit();">
 					<option value="">select</option>
-					<? echo ( make_drop_down( [ map { $_->id(), $_->name() } openprint::Company->find('order'=>'lower(name)' ) ], $param{'company_id'} ); ) ?>
+					<? echo ( make_drop_down( openprint::Company->dropdown(order=>'lower(name)' ), $param{company_id} ? $param{company_id} : $session{company_id} ); ) ?>
 				</select>
 				<? echo ( button( 'Go1', { onclick=>"f1.btnFunction.value='Go';f1.submit();", text=>'Go' } ); ) ?>
 			</li>
@@ -26,7 +26,7 @@
 						if ( $session{'user_type'} ne 'A' ) {
 							$params{'type'} = ['C','E'];
 						} # end if
-						make_drop_down( [ map { $_->id(), $_->name() } openprint::User->find( %params ) ], $param{'user_id'} ? $param{'user_id'} : $session{'user_id'} ); ) ?>
+						make_drop_down( openprint::User->dropdown( %params ), $param{user_id} ? $param{user_id} : $session{user_id} ); ) ?>
 				</select>
 				<? echo ( button( 'Go2', { onclick=>"f1.btnFunction.value='Go';f1.submit();", text=>'Go' } ); ) ?>
 			</li>

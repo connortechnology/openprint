@@ -187,27 +187,9 @@ sub verify_login {
 	} elsif ( $session{'Destination'} =~ /^Click <a href="(.*)">here<\/a>/ ) {
      
 		$$variable{'ExternalRedirect'} = $1;
-		#foreach my $p ( split('&', $2 ) ) {
-			#my ( $k, $v ) = split('=', $p );
-			#$openprint::log->debug("verify_login: Parsmd: $p, $k = $v ");
-			#$openprint::param{$k} = $v;
-		#} # end foreach
 	} elsif ( $session{'Destination'} =~ /^Click <a href="(.*)">here<\/a> to continue the survey\./ ) {
      
 		$$variable{'ExternalRedirect'} = $1;
-		#foreach my $p ( split('&', $2 ) ) {
-			#my ( $k, $v ) = split('=', $p );
-			#if ( $openprint::param{$k} ) {
-				#if ( ref $openprint::param{$k} eq 'ARRAY' ) {
-					#push @{$openprint::param{$k}}, $v;
-				#} else {
-					#$openprint::param{$k} = [ $openprint::param{$k}, $v ];
-				#} # end if
-			#} else {
-				#$openprint::param{$k} = $v;
-			#}
-		#} # end foreach
-		#delete $session{'Destination'};
 	} elsif ( (!$variable{error}) and ( $r->uri() =~ /\/account\/login.html/ ) ) {
 		$$variable{'ExternalRedirect'} = $r->uri();
 	} # end if

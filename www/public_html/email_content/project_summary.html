@@ -33,13 +33,11 @@
 <? echo ( my $html;
 	while ( @$variable{'ServiceIndex','ServiceName','prod_url'} = splice @{$$variable{'SERVICES'}},0,3 ) {
 		openprint::print_project::get_service_specifications( $r, $log, $dbh, $variable, @$variable{'ProjectIndex','ServiceIndex'} );
+		$html .= '<fieldset><legend>'.$$variable{ServiceTypeName}.' ' . $$variable{txtServiceDescription}.'</legend>';
 		if ( $$variable{'prod_url'} ) {
-			$html .= '<fieldset><legend>'.$$variable{ServiceTypeName}.' ' . $$variable{txtServiceDescription}.'</legend>';
 			$html .= include('/main/summ/'.$$variable{prod_url}, $variable );
-			$html .= '</fieldset>';
-		} else {
-$log->error("No summary urul for " . $$variable{Project}->id() . " service " . $$variable{ServiceName} );
 		} # end if
+		$html .= '</fieldset>';
 	} # end while
 	return $html;
 ) ?>

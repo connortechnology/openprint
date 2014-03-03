@@ -464,20 +464,36 @@
 	<? echo ( my $html = '';
 		foreach my $qty_index ( $$variable{Project}->quantity_indexes() ) {
 
+		if ( $$variable{'txtSignatureType'} ) {
+		$html .= sprintf( '<span class="%sColumns">%s Out %s<br/> %s x %s + %s x %s<br/>%s x %s (W x H)</span>%s%s',
+			$$variable{'Columns'},
+			input( type=>'cardinal', name=>"txtImposition$qty_index", value=>$$variable{'txtImposition'.$qty_index}, onkeyup=>'calc(this.form.name);' ),
+			write_override( 'chkOverrideImposition'.$qty_index, $$variable{'chkOverrideImposition'.$qty_index},'',"calc('f1');" ),
+			input( type=>'cardinal', readonly=>"readonly", name=>"hdnImpositionColumns$qty_index" ),
+			input( type=>'cardinal', readonly=>"readonly", name=>"hdnImpositionRows$qty_index" ),
+			input( type=>'cardinal', readonly=>"readonly", name=>"hdnImpositionDutchColumns$qty_index" ),
+			input( type=>'cardinal', readonly=>"readonly", name=>"hdnImpositionDutchRows$qty_index" ),
+			input( type=>'float', readonly=>"readonly", name=>"txtLayoutWidth$qty_index" ),
+			input( type=>'float', readonly=>"readonly", name=>"txtLayoutHeight$qty_index" ),
+			input( type=>"hidden", name=>"txtImageWidth$qty_index" ),
+			input( type=>"hidden", name=>"txtImageHeight$qty_index" ),
+			);
+		} else {
 		$html .= sprintf( '<span class="%sColumns">%s Out %s Dutch?: %s <br/> %s x %s + %s x %s<br/>%s x %s (W x H)</span>%s%s',
 			$$variable{'Columns'},
 			input( type=>'cardinal', name=>"txtImposition$qty_index", value=>$$variable{'txtImposition'.$qty_index}, onkeyup=>'calc(this.form.name);' ),
 			write_override( 'chkOverrideImposition'.$qty_index, $$variable{'chkOverrideImposition'.$qty_index},'',"calc('f1');" ),
 			radio( 'dutch'.$qty_index, [ 'Y', 'Yes', 'N', 'No' ], $$variable{'dutch'.$qty_index}, { onclick=>q`calc('f1');` } ),
-			input( type=>"number", readonly=>"readonly", name=>"hdnImpositionColumns$qty_index" ),
-			input( type=>"number", readonly=>"readonly", name=>"hdnImpositionRows$qty_index" ),
-			input( type=>"number", readonly=>"readonly", name=>"hdnImpositionDutchColumns$qty_index" ),
-			input( type=>"number", readonly=>"readonly", name=>"hdnImpositionDutchRows$qty_index" ),
-			input( type=>"number", readonly=>"readonly", name=>"txtLayoutWidth$qty_index" ),
-			input( type=>"number", readonly=>"readonly", name=>"txtLayoutHeight$qty_index" ),
+			input( type=>'cardinal', readonly=>"readonly", name=>"hdnImpositionColumns$qty_index" ),
+			input( type=>'cardinal', readonly=>"readonly", name=>"hdnImpositionRows$qty_index" ),
+			input( type=>'cardinal', readonly=>"readonly", name=>"hdnImpositionDutchColumns$qty_index" ),
+			input( type=>'cardinal', readonly=>"readonly", name=>"hdnImpositionDutchRows$qty_index" ),
+			input( type=>'float', readonly=>"readonly", name=>"txtLayoutWidth$qty_index" ),
+			input( type=>'float', readonly=>"readonly", name=>"txtLayoutHeight$qty_index" ),
 			input( type=>"hidden", name=>"txtImageWidth$qty_index" ),
 			input( type=>"hidden", name=>"txtImageHeight$qty_index" ),
 			);
+		} # end if
 		} # end foreach
 		return $html;
 	) ?>

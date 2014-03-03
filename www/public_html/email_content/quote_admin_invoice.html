@@ -32,7 +32,7 @@
 			<table>
 			`, $rowclass, $config{'ExternalSiteURL'}, $QP->project_id(),
 			(
-			 ( $Project->reference() ? ssi::htmlize($Project->reference()) . '<br/>' : '' ) .
+			 ( $Project->reference() ? $Project->reference() . '<br/>' : '' ) .
 			 ( $config{'ShowProjectSummaryOnQuote'} ne 'N' ? $Project->summary() : '' ),
 			),
 			);

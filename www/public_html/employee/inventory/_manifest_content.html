@@ -104,7 +104,7 @@ if ( tr ) tr.remove();
 					) . '</td>';
 		} # end if
 		if ( $SkidContents and @{$SkidContents} ) {
-			$html .= '<td class="in_stock">'. Number::Format::format_number( $$SkidContents[0]->quantity()). ' lbs' . ( $Skid->used() ? '<br/>Checked Out' : ''  ).'</td>';
+			$html .= '<td class="in_stock">'. Number::Format::format_number( $$SkidContents[0]->quantity()). ' ' . $Paper->units() . ( $Skid->used() ? '<br/>Checked Out' : ''  ).'</td>';
 			$html .= sprintf( '<td class="last_seen">%s days</td>', $$SkidContents[0]->Skid()->last_seen_days() );
 		} else {
 			$html .= '<td colspan="2">&nbsp;</td>';

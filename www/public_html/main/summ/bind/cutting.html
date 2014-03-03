@@ -9,24 +9,51 @@
 			Information for:&nbsp; <b><?Reference?> </b> Form <?SignatureIndex?><br/> 
 		</p>
 	<? endif ( $$variable{'Reference'} ) ?>
-<? if ( $$variable{"txtSuppliedStockWidth-$$variable{'SignatureIndex'}-$$variable{'QTYIndex'}"} != $$variable{"txtSheetSizeWidth-$$variable{'SignatureIndex'}-$$variable{'QTYIndex'}"} or $$variable{"txtSuppliedStockHeight-$$variable{'SignatureIndex'}-$$variable{'QTYIndex'}"} != $$variable{"txtSheetSizeHeight-$$variable{'SignatureIndex'}-$$variable{'QTYIndex'}"} ) ?>
-		<p>
-			<label>Supplied Sheet Size</label>
-			<span class="value">
-				<? echo ( $$variable{"txtSuppliedStockWidth-$$variable{'SignatureIndex'}-$$variable{'QTYIndex'}"} ) ?>&nbsp;x&nbsp;
-				<? echo ( $$variable{"txtSuppliedStockHeight-$$variable{'SignatureIndex'}-$$variable{'QTYIndex'}"} ) ?>
-			</span>
-		</p>
-		<p>
-			<label>Running Press Sheet Size</label> 
-			<span class="value">
-				<? echo ( join(' x ', 
-							$$variable{"txtSheetSizeWidth-$$variable{'SignatureIndex'}-$$variable{'QTYIndex'}"},
-							$$variable{"txtSheetSizeHeight-$$variable{'SignatureIndex'}-$$variable{'QTYIndex'}"},
-				); ) ?>
-			</span>
-		</p>
-<? endif ( $$variable{"txtSuppliedStockWidth-$$variable{'SignatureIndex'}-$$variable{'QTYIndex'}"} != $$variable{"txtSheetSizeWidth-$$variable{'SignatureIndex'}-$$variable{'QTYIndex'}"} or $$variable{"txtSuppliedStockHeight-$$variable{'SignatureIndex'}-$$variable{'QTYIndex'}"} != $$variable{"txtSheetSizeHeight-$$variable{'SignatureIndex'}-$$variable{'QTYIndex'}"} ) ?>
+<? echo (
+	my $html;
+
+	my $show_stock_cutting = 0;
+	foreach my $qty_index ( $$variable{Project}->quantity_indexes() ) {
+		if ( 
+			( $$variable{"txtSuppliedStockWidth-$$variable{SignatureIndex}-$qty_index"} != $$variable{"txtSheetSizeWidth-$$variable{SignatureIndex}-$qty_index"} ) or 
+			( $$variable{"txtSuppliedStockHeight-$$variable{SignatureIndex}-$qty_index"} != $$variable{"txtSheetSizeHeight-$$variable{SignatureIndex}-$qty_index"} ) ) {
+			$show_stock_cutting = 1;
+			last;
+		} # end if
+	} # end foraech qty_index
+	if ( $show_stock_cutting ) {
+		$html = '<p><label>Supplied Sheet Size</label>';
+		foreach my $qty_index ( $$variable{Project}->quantity_indexes() ) {
+			$html .= join("\n", '<span class="value">',
+				$$variable{"txtSuppliedStockWidth-$$variable{SignatureIndex}-$qty_index"},
+				' x ',
+				$$variable{"txtSuppliedStockHeight-$$variable{SignatureIndex}-$qty_index"},
+				'</span>' );
+		} # end foreach qty_index
+		$html .= '</p><p><label>Running Press Sheet Size</label>';
+		foreach my $qty_index ( $$variable{Project}->quantity_indexes() ) {
+			$html .= join("\n", '<span class="value">',
+				$$variable{"txtSheetSizeWidth-$$variable{SignatureIndex}-$qty_index"},
+				' x ',
+				$$variable{"txtSheetSizeHeight-$$variable{SignatureIndex}-$qty_index"},
+				'</span>' );
+		} # end foreach qty_index
+	} # end if
+	my $show_fold_cutting = 0;
+	foreach my $qty_index ( $$variable{Project}->quantity_indexes() ) {
+		if ( $$variable{"FoldingCuts-$$variable{SignatureIndex}-$qty_index"} ) {
+			$show_fold_cutting = 1;
+			last;
+		} # end if
+	} # end foraech qty_index
+	if ( $show_fold_cutting ) {
+		$html = '<p><label>Cutting before folding</label>';
+		foreach my $qty_index ( $$variable{Project}->quantity_indexes() ) {
+			$html .= join("\n", '<span class="value">', 1*$$variable{"FoldingCuts-$$variable{SignatureIndex}-$qty_index"} , 'cuts', '</span>' );
+		} # end foreach qty_index
+	} # end if
+	return $html;
+) ?>
     <p>
         <label>Calculated regular cuts</label>
 <? echo (

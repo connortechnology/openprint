@@ -166,7 +166,20 @@ function validate_data(formName) {
 	return true;
 } // end function validate_data
 
+function get_impositions( form ) {
+	form = $(form);
+	var h = $H(form.serialize(true));
+	h.each(function(pair) {
+		if ( pair.value == '' ) 
+			h.unset(pair.key);
+		if ( pair.key == 'btnFunction' ) 
+			h.unset(pair.key);
+	});
+	popup_window( '/main/project/prin/_impositions.html', h );
+} 
+
 function calc_print( formName, force, options ) {
+
 
 	var form = getFormObj( formName );
 

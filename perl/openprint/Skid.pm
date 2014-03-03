@@ -17,7 +17,7 @@ require openprint::SkidContent;
 require openprint::InventoryCondition;
 require openprint::PaperAllocation;
 
-$debug = 1;
+$debug = 0;
 
 $table = 'Skids';
 $serial = 'skid_id_seq';
@@ -113,10 +113,6 @@ sub find {
 		push @values, $params{'quantity >='};
 	} # end if
 
-	if ( $params{'quality_id'} ) {
-		$sql .= ' AND id IN (SELECT skid_id FROM skid_contents WHERE quality_id = ?)';
-		push @values, $params{'quality_id'};
-	} # end if
 	if ( $params{'owner_id'} ) {
 		$sql .= ' AND owner_id=?';
 		push @values, $params{'owner_id'};
@@ -226,7 +222,7 @@ sub find {
 		push @values, $params{'updated_on <='};
 	} # end if
 	if ( $params{'allocated_to_docket'} ) {
-		$sql .= ' AND id IN ( SELECT skid_id FROM paper_allocations WHERE project_id=(SELECT Index FROM Projects WHERE lngDocketNumber=?))';
+		$sql .= ' AND id IN ( SELECT skid_id FROM paper_allocations WHERE project_id=(SELECT id FROM Projects WHERE lngDocketNumber=?))';
 		push @values, $params{'allocated_to_docket'};
 	} # end if
 	if ( $params{'fsc_code'} ) {
@@ -269,6 +265,16 @@ sub find {
 			$sql .= ' AND type=?';
 			push @values, $params{'type'};
 		} # end if
+	} elsif ( exists $params{'type !='} ) {
+			$sql .= ' AND (type IS NULL OR type!=?)';
+			push @values, $params{'type !='};
+	} elsif ( exists $params{'type is null or in'} ) {
+		if ( @{$params{'type is null or in'}} ) {
+			$sql .= ' AND type IN (' . join(',', map {'?'} @{$params{'type is null or in'}}) . ')';
+			push @values, @{$params{'type is null or in'}};
+		} else {
+			$sql .= ' AND type IS NULL';
+		} # en dif
 	} # end if
 	if ( exists $params{'location_id'} ) {
 		if ( ref $params{'location_id'} eq 'ARRAY' ) {
@@ -286,7 +292,8 @@ sub find {
 	
 	$sql .= " ORDER BY $params{'order'}" if $params{'order'};
 	if ( @values == 1) {
-		Carp::cluck("Loading all skids?! $sql");
+		$log->warn("Loading all skids!");
+		#Carp::cluck("Loading all skids?! $sql");
 	} # end if
 
 	my $data = $openprint::dbh->selectall_arrayref( $sql, { Slice => {} }, @values );
@@ -295,9 +302,9 @@ sub find {
 	} elsif ( $debug ) {
 		$log->debug("Debug loaded skids ($sql) (@values) # of results: " . @$data );
 	} # end if
-	if ( @$data >= 100 ) {
-		Carp::cluck("Loading a lot of skids?! $sql : #". @$data );
-	} # end if
+	#if ( $data and @$data >= 100 ) {
+		#Carp::cluck("Loading a lot of skids?! $sql : #". @$data );
+	#} # end if
 	return map { new openprint::Skid( $_->{id}, $_ ) } @$data;
 
 } # end sub find
@@ -403,14 +410,13 @@ sub add {
 			( ( $Purpose and $Purpose->id() ) ? ( purpose_id => $Purpose->id() ) : () ),
 			});
 	if ( $_ ) {
-		$log->debug("Bufer");
 		$openprint::log->error("Error adding skidcontent: $_");
 	} # end if
 	return $quantity - $old_quantity;
 } # end sub add
 
 sub remove {
-	my ( $self, $Paper, $quantity, $purpose_id ) = @_;
+	my ( $self, $Paper, $quantity ) = @_;
 	$quantity =~ s/[^\-\d]//g;
 	$quantity = int $quantity;
 	my $C = $self->Content( $Paper );
@@ -428,7 +434,7 @@ sub set_quantity {
 	my ( $self, $Paper, $quantity, $purpose_id ) = @_;
 	$quantity =~ s/[^\-\d]//g;
 	$quantity = int $quantity;
-	my @contents = $self->Contents( 'Paper'=>$Paper, 'purpose_id'=>$purpose_id );
+	my @contents = $self->Contents( paper_id=>$Paper->id(), ( $purpose_id ? ( 'purpose_id'=>$purpose_id ) : () ) );
 	if ( ! @contents ) {
 		return 'Specified stock is not on this skid';
 	} # end if
@@ -505,8 +511,8 @@ sub Contents {
 			$$self{Contents} = $_[0];
 		} else {
 			my %params = @_;
-			$params{'skid_id'} = $$self{'id'};
-			$params{'deleted_in'} = [0,1] if ! exists $params{'deleted in'};
+			$params{skid_id} = $$self{'id'};
+			$params{deleted} = [0,1] if ! exists $params{'deleted in'};
 			return openprint::SkidContent->find( %params );
 		} # end if
 	} elsif ( ! $$self{Contents} ) {

@@ -10,7 +10,7 @@ use vars qw( $log $dbh $timing );
 use openprint ();
 *dbh = \$openprint::dbh;
 *log = \$openprint::log;
-use constant DEBUG => 1;
+use constant DEBUG => 0;
 $timing = 1;
 
 # This uses it's own dbh so as not to quash the global dbh.  This is so that we can easily open secondary db connections while maintaining the global one.
@@ -47,6 +47,10 @@ sub execute_array {
 		$starttime = [gettimeofday] if $timing;
 	} # end if
 	my $sth;
+	if ( ! $d ) {
+		$l->error( "No dbh $print_sql" ) if $l;
+		return;
+	} # end if
 	if ( ! ( $sth = $d->prepare_cached($sql) ) ) {
 		$l->error( "Error Preparing SQL: ($print_sql): " . $d->errstr ) if $l;
 		return;
@@ -160,7 +164,7 @@ sub insert {
 		$l->error("SQL statement execution failed: ($print_command):" . $d->errstr) if $l;
 		return $d->errstr;
 	} # end if
-	$l->debug(sprintf('SQL (%.4f usecs) (%s): ', tv_interval($starttime)*1000, $print_command ) ) if $l;
+	$l->debug(sprintf('SQL (%.4f usecs) (%s): ', tv_interval($starttime)*1000, $print_command ) ) if DEBUG and $l;
 	return;
 } # end sub insert
 
@@ -226,7 +230,7 @@ sub update {
 } # end sub update
 
 sub start_transaction {
-	my ( $caller, undef, $line ) = caller;
+	#my ( $caller, undef, $line ) = caller;
 #$openprint::log->debug("Called start_transaction from $caller : $line");
 	my $d = shift;
 	$d = $dbh if ! $d;
@@ -236,12 +240,15 @@ sub start_transaction {
 } # end sub start_transaction
 
 sub end_transaction {
-	my ( $caller, undef, $line ) = caller;
+	#my ( $caller, undef, $line ) = caller;
 #$openprint::log->debug("Called end_transaction from $caller : $line");
 	my ( $d, $ac ) = @_;
+if ( ! defined $ac ) {
+	$log->error("Undefined ac");
+}
 	$d = $dbh if ! $d;
 	if ( $ac ) {
-		#$log->debug("Committing");
+		$log->debug("Committing");
 		$d->commit();
 	} # end if
 	$d->{AutoCommit} = $ac;

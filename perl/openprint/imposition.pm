@@ -20,7 +20,6 @@ use vars qw( %blocks );
 		8	=>	[ [2,4], [4,2] ],
 		9	=>	[ [3,3] ],
 		10	=>	[ [5,2], [2,5], ],
-# [3,4], [4,3] ],
 		12	=>	[ [3,4], [4,3], [6,2], [2,6] ],
 		14	=>	[ [7,2], [2,7] ],
 		15	=>	[ [3,5],[5,3] ],
@@ -48,8 +47,8 @@ sub calc_setup {
 # will be useful in other spots.
 	my ( $setup, $object_width, $object_height, $space_width, $space_height ) = @_;
 
-	my $cols = $object_width ? int(($space_width / $object_width)) : 0;
-	my $rows = $object_height ? int(($space_height / $object_height)) : 0;
+	my $cols = $object_width > 1 ? int(($space_width / $object_width)) : 0;
+	my $rows = $object_height > 1 ? int(($space_height / $object_height)) : 0;
 
 	$setup->set('imposition'=>$rows * $cols, 'rows'=>$rows, 'columns'=>$cols );
 } # end sub calc_setup
@@ -283,10 +282,13 @@ $openprint::log->debug("Not Pretrimming on $$Press{strid}") if DEBUG;
 	$setup1->object_width( $image_width );
 	$setup1->object_height( $image_height );
 	$setup1->Press( $Press );
+	$setup1->printing_type( $Press->specification('Printing Type') );
 	if ( $run_style eq 'Perfecting' ) {
 		$setup1->colour_bar_size( $$specs{'Perfecting_colour_bar_size'} );
+		$setup2->colour_bar_size( $$specs{'Perfecting_colour_bar_size'} );
 	} else {
 		$setup1->colour_bar_size( $$specs{'colour_bar_size'} );
+		$setup2->colour_bar_size( $$specs{'colour_bar_size'} );
 	} # end if
 	$setup1->colour_bar_orientation( $$specs{'Colour Bar Orientation'} );
 
@@ -302,11 +304,7 @@ $openprint::log->debug("Not Pretrimming on $$Press{strid}") if DEBUG;
 	$setup2->object_width( $image_width );
 	$setup2->object_height( $image_height );
 	$setup2->Press( $Press );
-	if ( $run_style eq 'Perfecting' ) {
-		$setup2->colour_bar_size( $$specs{'Perfecting_colour_bar_size'} );
-	} else {
-		$setup2->colour_bar_size( $$specs{'colour_bar_size'} );
-	} # end if
+	$setup2->printing_type( $Press->specification('Printing Type') );
 	$setup2->colour_bar_orientation( $$specs{'Colour Bar Orientation'} );
 
 	# Grain is on the second dimension by default (according to Rick)
@@ -467,7 +465,7 @@ $openprint::log->debug("Not Pretrimming on $$Press{strid}") if DEBUG;
 	} # end if
 
 	if ( $$specs{'Colour Bar Orientation'} ne 'Length' ) {
-		$adjusted_paper_height -= $$specs{'colour_bar_size'};
+		$adjusted_paper_height -= $$setup1{colour_bar_size};
 	} # end if
 
 	if ( $Paper->cuttable() ) {
@@ -510,7 +508,7 @@ $openprint::log->debug("Height: $paper_height - CB $$specs{'colour_bar_size'} - 
 		$adjusted_paper_width = $$specs{'Maximum Image Area Width'};
 	} # end if
 	if ( $$specs{'Colour Bar Orientation'} eq 'Length' ) {
-		$adjusted_paper_width -= $$specs{'colour_bar_size'};
+		$adjusted_paper_width -= $$setup1{'colour_bar_size'};
 	} # end if
 
 	if ( $Paper->cuttable() ) {
@@ -527,7 +525,7 @@ $openprint::log->debug("Height: $paper_height - CB $$specs{'colour_bar_size'} - 
 		if ( check_setup( $setup1, $specs ) ) {
 			$openprint::log->debug(" CHECK 1 $run_style Using Paper $paper_width x $paper_height -> $adjusted_paper_width x $adjusted_paper_height Gutter: $gutters, Image: $$setup1{image_width} x $$setup1{image_height} Imposition: " . $setup1->imposition(). ":".$setup1->columns() . 'x' . $setup1->rows(). " $run_style " . $setup1->layout_width() . 'x' . $setup1->layout_height() ) if DEBUG;
 			push @results, $setup1;
-			if ( ( $$specs{'dutch'} ne 'N' ) and ( $run_style ne 'Perfecting' or ( $Paper->perfecting() ne 'Y' ) ) ) {
+			if ( ( $$specs{'dutch'} ne 'N' ) and ( $run_style ne 'Perfecting' or ( $Paper->perfecting() eq 'Y' ) ) ) {
 				# Too hard to figure space for rollers
 				push @results, calc_dutch( $setup1, $adjusted_paper_width, $adjusted_paper_height, $specs );
 			} # end if
@@ -619,13 +617,15 @@ $openprint::log->debug("Height: $paper_height - CB $$specs{'colour_bar_size'} - 
 	# Becomes printable area
 	$adjusted_paper_height -= $$specs{'Grip Size'} if $$specs{'Add Grip Width'} ne 'N';
 
-	if ( ($adjusted_paper_height<=0) or ( $$specs{'Maximum Image Area Length'} > 0 and $adjusted_paper_height > $$specs{'Maximum Image Area Length'} ) ) {
+	if ( ($adjusted_paper_height<=0) or ( ( $$specs{'Maximum Image Area Length'} > 0 ) and ( $adjusted_paper_height > $$specs{'Maximum Image Area Length'} ) ) ) {
 		$openprint::log->debug("*** Using Max Image Length2: Before: $adjusted_paper_height After: $$specs{'Maximum Image Area Length'}***") if DEBUG;
 		$adjusted_paper_height = $$specs{'Maximum Image Area Length'};
+	} else {
+		$openprint::log->debug("*** NOT Using Max Image Length2: $adjusted_paper_height After: $$specs{'Maximum Image Area Length'}***") if DEBUG;
 	} # end if
 
 	if ( $$specs{'Colour Bar Orientation'} ne 'Length' ) {
-		$adjusted_paper_height -= $$specs{'colour_bar_size'};
+		$adjusted_paper_height -= $$setup2{colour_bar_size};
 	} # end if
 
 	if ( $Paper->cuttable() ) {
@@ -664,13 +664,13 @@ $openprint::log->debug("Height: $paper_height - CB $$specs{'colour_bar_size'} - 
 		$openprint::log->debug("*** Using Max Image Width2: $adjusted_paper_width ***") if DEBUG;
 	} # end if
 	if ( $$specs{'Colour Bar Orientation'} eq 'Length' ) {
-		$adjusted_paper_width -= $$specs{'colour_bar_size'};
+		$adjusted_paper_width -= $$setup2{colour_bar_size};
 	} # end if
 
 	if ( $Paper->cuttable() ) {
-	$adjusted_paper_width -= $setup2->cropmark_left();
-	$adjusted_paper_width -= $setup2->cropmark_right();
-	$adjusted_paper_width = 0 if $adjusted_paper_width < 0;
+		$adjusted_paper_width -= $setup2->cropmark_left();
+		$adjusted_paper_width -= $setup2->cropmark_right();
+		$adjusted_paper_width = 0 if $adjusted_paper_width < 0;
 	} # end if
 
 	if ( sets::isin( $run_style, ['Perfecting','Sheet Work','Web'] ) ) {
@@ -681,7 +681,7 @@ $openprint::log->debug("Height: $paper_height - CB $$specs{'colour_bar_size'} - 
 
 #	Rotating sheet reverses the grain direction, so grain width + rotated sheet is the same as grain height + non rotated sheet.
 #	if no grain direction is specified, then use the larger imposition
-			if ( ( $$specs{'dutch'} ne 'N' ) and ( $run_style ne 'Perfecting' or ( $Paper->perfecting() ne 'Y' ) ) ) {
+			if ( ( $$specs{'dutch'} ne 'N' ) and ( $run_style ne 'Perfecting' or ( $Paper->perfecting() eq 'Y' ) ) ) {
 				push @results, calc_dutch( $setup2, $adjusted_paper_width, $adjusted_paper_height, $specs );
 			} # end if
 			$setup2->Paper()->width( $setup2->used_width() ) if ! $setup2->Paper()->width();
@@ -1043,6 +1043,28 @@ sub breakup_impositions {
 	} # end foreach
 
 } # end sub breakup_impositions
+
+sub sort {
+	return sort {
+		if ( $$a{runstyle} ne $$b{runstyle} ) {
+			return $$a{runstyle} cmp $$b{runstyle};
+		} elsif ( $$a{imposition} != $$b{imposition} ) {
+			return $$a{imposition} <=> $$b{impositon};
+		} elsif ( $$a{columns} != $$b{columns} ) {
+			return $$a{columns} <=> $$b{columns};
+		} # end if
+		my $APaper = $a->Paper();
+		my $BPaper = $b->Paper();
+		if ( $$APaper{width} != $$BPaper{width} ) {
+			return $$APaper{width} <=> $$BPaper{width};
+		} elsif ( $$APaper{height} != $$BPaper{height} ) {
+			return $$APaper{height} <=> $$BPaper{height};
+		} # end if	
+		my $APress = $a->Press();
+		my $BPress = $b->Press();
+		return $$APress{strid} cmp $$BPress{strid};
+	} @_;
+}
 
 1;
 __END__

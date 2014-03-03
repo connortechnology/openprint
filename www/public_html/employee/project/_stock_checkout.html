@@ -1,6 +1,6 @@
 <?include(/includes/error_reporting.html)?>
-<form id="checkout_form<?echo($$variable{Project}->id())?>" name="checkout_form<?echo($$variable{Project}->id())?>">
-	<input type="hidden" name="project_id" value="<? echo ( $$variable{'Project'}->id() ) ?>" />
+<form id="checkout_form" name="checkout_form">
+	<input type="hidden" name="docket" value="<? echo ( $$variable{Order}->docket() ) ?>" />
 	<input type="hidden" name="action" value="Add" />
 	<fieldset><legend>Stock Used</legend>
 		<table class="List">
@@ -15,7 +15,7 @@
 				my %Entries;
 				my $rowclass;
 
-				foreach my $PI ( openprint::PaperInventory->find( docket=>$$variable{'Project'}->docket(), order=>'updated_on' ) ) {
+				foreach my $PI ( openprint::PaperInventory->find( docket=>$$variable{Order}->docket(), order=>'updated_on' ) ) {
 					push @{$Entries{$PI->paper_id()}}, $PI;
 				} # end foreach PI
 				foreach my $paper_id ( keys %Entries ) {
@@ -48,11 +48,11 @@
 				<tr class="unprintable">
 					<td>Checkout Stock</td>
 					<td class="Skid">
-						<? echo ( input( type=>'text', name=>'skid_id', onkeypress=>'return input_handler(this,event);', onkeyup=>q`this.value=this.value.replace(/\s/g,'');`, onkeydown=>qq`if(event.keyCode==13){new Ajax.Updater('StockCheckout','/employee/project/_stock_checkout.html',{ parameters: \$('checkout_form$$variable{Project}{id}').serialize()} );}` ); ) ?>
+						<? echo ( input( type=>'text', name=>'skid_id', onkeypress=>'return input_handler(this,event);', onkeyup=>q`this.value=this.value.replace(/\s/g,'');`, onkeydown=>qq`if(event.keyCode==13){new Ajax.Updater('StockCheckout','/employee/project/_stock_checkout.html',{ parameters: \$('checkout_form').serialize()} );}` ); ) ?>
 					</td><td class="RFID">
-						<? echo ( input( type=>'text', name=>'rfidtag_id',  onkeypress=>'return input_handler(this,event);', onkeyup=>q`this.value=this.value.replace(/\s/g,'');`, onkeydown=>qq`if(event.keyCode==13){new Ajax.Updater( 'StockCheckout', '/employee/project/_stock_checkout.html', { parameters: \$('checkout_form$$variable{Project}{id}').serialize()} );};` ); ) ?>
+						<? echo ( input( type=>'text', name=>'rfidtag_id',  onkeypress=>'return input_handler(this,event);', onkeyup=>q`this.value=this.value.replace(/\s/g,'');`, onkeydown=>qq`if(event.keyCode==13){new Ajax.Updater( 'StockCheckout', '/employee/project/_stock_checkout.html', { parameters: \$('checkout_form').serialize()} );};` ); ) ?>
 					</td><td colspan="2">
-						<? echo ( button( 'Submit'.$$variable{Project}{id}, { onclick=> qq`new Ajax.Updater('StockCheckout$$variable{Project}{id}','/employee/project/_stock_checkout.html', { parameters: \$('checkout_form$$variable{Project}{id}').serialize() } );`,text=>'Submit' } ); ) ?>
+						<? echo ( button( 'CheckOut', { onclick=> qq`new Ajax.Updater('StockCheckout','/employee/project/_stock_checkout.html', { parameters: \$('checkout_form').serialize() } );`,text=>'Submit' } ); ) ?>
 					</td>
 				</tr>
 		</table>

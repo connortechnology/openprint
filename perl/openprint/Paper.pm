@@ -126,6 +126,7 @@ $serial	= 'paper_id_seq';
 	multipart	=>	0,
 	sheets_per_package	=>	undef,
 	wpsi				=>	undef,
+	type				=>	q`''`,
 );
 
 %grades = (
@@ -343,6 +344,7 @@ sub merge {
 	sql::update( undef, undef, 'paper_recommendations', [ 'lngpaperindex=?', $Duplicate->id() ], 'lngpaperindex', $self->id() );
 	sql::update( undef, undef, 'manifest_content_types', [ 'paper_id=?', $Duplicate->id() ], 'paper_id', $self->id() );
 	$Duplicate->delete();
+	$self->save({in_stock=>undef});
 	sql::end_transaction( $openprint::dbh, $ac );
 } # end sub merge
 
@@ -380,7 +382,7 @@ sub delete {
 	sql::execute( undef, undef, q{DELETE FROM StockMaterials WHERE id NOT IN (SELECT DISTINCT material_id FROM Papers)} );
 	
 	# Add record to audit log - action "Delete Paper".
-	openprint::logs::insertLogRecord('15', "Paper ID: " . $$self{'id'},);
+	new openprint::Log()->save({action=>'Delete Paper', note=>'Stock ID: '.$$self{'id'} });
 	sql::end_transaction( undef, $ac );
 	
 } # end sub delete
@@ -430,7 +432,7 @@ sub to_string {
 			} # end if
 			#$string .= $self->mweight().'M ' if $self->mweight();
 		} # end if
-		$string .= sprintf('%.1fPT ', 1000*$self->calliper()) if $self->calliper();
+		$string .= sprintf('%.1fPT ', 1000*$self->calliper()) if $self->calliper() and ! $self->weight() =~ /PT/;
 		$string .= $self->gsm().'gsm ' if $self->gsm();
 		$string .= 'FSC:' . $$self{'fsc_code'} if $$self{'fsc_code'};
 		#$string .= 'Minimum: ' . $$self{'minimum_order'} if $$self{'minimum_order'};
@@ -836,9 +838,9 @@ sub in_stock {
 	return 0 if ! $_[0]{id};
 
 	if ( @_ > 1 ) {
-		if ( ref $_[1] eq 'openprint::StockQuality' ) {
+		if ( ref $_[1] eq 'openprint::InventoryCondition' ) {
 			my $in_stock = 0;
-			foreach my $C ( openprint::SkidContent->find(deleted=>0,paper_id=>$_[0]{id}, quality_id=>$_[0]->id() ) ) {
+			foreach my $C ( openprint::SkidContent->find(deleted=>0,paper_id=>$_[0]{id}, condition_id=>$_[1]->id() ) ) {
 				$in_stock += $C->quantity();
 			} # end foreach C
 			return $in_stock;
@@ -909,9 +911,9 @@ sub previous {
 } # end sub previous
 sub next {
 	my $self = shift;
-	my @papers = openprint::Paper->find( 
-'columns'   =>  '*,(select name from stockbrands where id=brand_id) AS brand, (select name from stockfinishes where id=finish_id) AS finish, (select name from stockcolours where id=colour_id) AS colour, (select name from stockweights where id=weight_id) AS weight',
-'order'=>'brand,finish,colour,weight,width,height' );
+	my @papers = openprint::Paper->find_one( 
+			columns   =>  '*,(select name from stockbrands where id=brand_id) AS brand, (select name from stockfinishes where id=finish_id) AS finish, (select name from stockcolours where id=colour_id) AS colour, (select name from stockweights where id=weight_id) AS weight',
+'order'=>'brand,finish,colour,weight,width,height', 'brand >=' => $self->brand(), 'id !=' => $$self{id} );
 	for ( my $i = 0; $i < @papers; $i += 1 ) {
 		return $papers[$i+1] if ($papers[$i] == $self )and ($i < @papers);
 	} # end if
@@ -1111,7 +1113,7 @@ sub gsm {
 			$$self{'gsm'} = sprintf('%.2f', $$self{'wpsi'} * 703064.5 );
 		} else { 
 			$$self{'gsm'} = 'unknown';
-			$openprint::log->warn("Can't calculate gsm for " . $self->to_string() );
+			$openprint::log->warn("Can't calculate gsm for " . $self->to_string() ) if $$self{brand};
 		} # end if
 	} # end if
 	return $$self{'gsm'};
@@ -1269,10 +1271,10 @@ sub load_from_signature {
 		$$Paper{Units} = $$specs{'CustomStockPriceUnits'};
 		$Paper->basis_width( $$specs{'basis_width'} );
 		$Paper->basis_height( $$specs{'basis_height'} );
-		$Paper->basis_mweight( $$specs{'basis_mweight'} );
+		$Paper->basis_mweight( $$specs{'basis_mweight'} ) if $$specs{'basis_mweight'};
 		$Paper->score_required( $Paper->calliper() > 0.008 );
 		#if ( $$specs{'StockType'} ne 'Roll' ) {
-			$Paper->mweight( $$specs{'txtCustomMWeight'} );
+			$Paper->mweight( $$specs{'txtCustomMWeight'} ) if ! $Paper->gsm();
 		#} # end if
 		$Paper->supplied( $$specs{'rdbSuppliedStock'} eq 'Y' ? 1 : 0 );
 	} else {
@@ -1329,8 +1331,8 @@ $log->debug("Didn't find specific paper $params{'width'} x $params{'height'}");
 
 				$Paper->grade( $$specs{'StockGrade'});
 
-				$Paper->Price( $$specs{'CustomStockPrice'} );
-				$Paper->units( $$specs{'CustomStockPriceUnits'} );
+				$$Paper{Price} = $$specs{'CustomStockPrice'};
+				$$Paper{Units} = $$specs{'CustomStockPriceUnits'};
 				$Paper->basis_width( $$specs{'basis_width'} );
 				$Paper->basis_height( $$specs{'basis_height'} );
 				$Paper->basis_mweight( $$specs{'basis_mweight'} );
@@ -1346,7 +1348,7 @@ $log->debug("Didn't find specific paper $params{'width'} x $params{'height'}");
 						$$specs{'StockQuantity'.$qty_index} = $$specs{'txtPressSheetQty'.$qty_index};
 						$$specs{'StockQuantity'.$qty_index} =~ s/\D//g;
 					} # end if
-					if ( $$specs{'StockQuantity'.$qty_index} < $P->minimum_order() ) {
+					if ( $$specs{'StockQuantity'.$qty_index} and ( $$specs{'StockQuantity'.$qty_index} < $P->minimum_order() ) ) {
 						$openprint::log->debug("Paper no good due to minimum order. Need " . $$specs{'StockQuantity'.$qty_index} . ' have ' . $P->minimum_order() ) if $debug;
 						next;
 					} # end if

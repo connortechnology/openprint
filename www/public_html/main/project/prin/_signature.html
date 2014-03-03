@@ -1,9 +1,11 @@
-<fieldset id="SignatureGroup<?Signature?>" <? echo ( ( $$variable{'Signature'} == 1 and ( $$variable{'rdbCover'} ne 'Different' and $$variable{'Backing'} ne 'Printed' ) ) ? 'style="display:none;"' : '' ) ?> class="SignatureGroup" >
+<? if ( $$variable{Signature} ) ?>
+<fieldset id="SignatureGroup<?Signature?>" <? echo ( ( $$variable{'Signature'} == 1 and ( $$variable{'rdbCover'} ne 'Different' and $$variable{'Backing'} ne 'Printed' ) ) 
+? 'style="display:none;"' : '' ) ?> class="SignatureGroup" >
 <? if ( $$variable{'SignatureType'.$$variable{'Signature'}} eq 'Cover Pages' ) ?>
 	<? echo ( include('/includes/main/proj/templates/signatures.html'); ) ?>
 <? endif ( $$variable{'SignatureType'.$$variable{'Signature'}} eq 'Cover Pages' ) ?>
 
-	<legend>Information for <? echo ( $$variable{'txtServiceDescription'.$$variable{'Signature'}} ? $$variable{'txtServiceDescription'.$$variable{'Signature'}} : ( $$variable{'Signature'} == 1 ? 'Cover' : 'Other Pages' ) ) ?></legend>
+<legend>Information for <? echo ( $$variable{'txtServiceDescription'.$$variable{'Signature'}} ? $$variable{'txtServiceDescription'.$$variable{'Signature'}} : ( $$variable{'Signature'} == 1 ? 'Cover' : 'Other Pages' ) ) ?></legend>
 	<div class="leftColumn">
 		<ul>
 		<li>
@@ -84,13 +86,6 @@
 
 		return variable_substitution( \$html, $variable );
 	) ?>
-<? eval (
-    if ( $$variable{'Project'}->quantity1() and $$variable{'Project'}->quantity2() and $$variable{'Project'}->quantity3() ) {
-		$$variable{'Columns'} = 'Three';
-    } else {
-		$$variable{'Columns'} = 'Two';
-    } # end if
-) ?>
 <hr class="spacer"/>
 <div class="Quantities">
 	<ul>
@@ -107,4 +102,6 @@
 	</li>
 	</ul>
 </div>
+<? echo ( button( 'CopySignature'.$$variable{Signature}, { onclick=>qq`copy_group($$variable{Signature});`, text=>'Copy Signature Group' } ); ) ?>
 </fieldset>
+<? endif ( $$variable{Signature} ) ?>

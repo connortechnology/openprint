@@ -179,7 +179,7 @@ sub calc {
 	} # end foreach quantities
 
 	$log->debug("END PERFING!!!!!!!!!!!!!!!!!!") if DEBUG;
-	return $status;
+	return $$specs{Status} = $status;
 } # end sub calc
 
 sub signature_calc {
@@ -346,6 +346,7 @@ sub signature_calc {
 
 		my $Runspeed = $Equipment->Specification('PerfScoreRunSpeed');
 		$Runspeed = $Equipment->Specification('Perforating Runspeed') if ! $Runspeed;
+		my $MaxRunSpeed = $Equipment->Specification('PerfScoreMaximumRunSpeed');
 		my $setupPrice = openprint::service::get_price( 'PerforatingMakeReady', undef, $Equipment );
 		$Results{'Breakdown'} .= sprintf( 'Setup: $%.2f<br/>', $setupPrice );
 		my $max_impo = $Equipment->specification('Maximum Perforation Imposition');
@@ -430,11 +431,14 @@ sub signature_calc {
 
 			if ( $$Runspeed{'units'} eq 'Percent' ) {
 				if ( ! $$sig_specs{'Runspeed'} ) {
-					$openprint::log->error("No printing runspeed");
+					$openprint::log->error("No perfing runspeed on $$Equipment{strid}");
 				}
 				$runspeed = int( $$sig_specs{'Runspeed'} - ( $$sig_specs{'Runspeed'} * $$Runspeed{'value'}/100 ) );
 			} else {
 				$runspeed = $$Runspeed{'value'};
+			} # end if
+			if ( $MaxRunSpeed and ( $$MaxRunSpeed{value} < $runspeed ) ) {
+				$runspeed = $$MaxRunSpeed{value};
 			} # end if
 #$openprint::log->debug("Runspeed setting on $$Equipment{strid} $$Runspeed{value}$$Runspeed{'units'} $runspeed");
 
@@ -456,6 +460,9 @@ sub signature_calc {
 			my $horizontal_rules = 0;
 			my $horizontal_length = 0;
 			my %horizontal_price;
+			my $remaining_inches = 0;
+
+			$Results{Breakdown} .= 'Image orientation: ' . $I->image_orientation() .'<br/>';
 
 			if ( $I->image_orientation() eq 'Vertical' and $$specs{"txtHorizontalQty-$$sig_specs{SignatureIndex}"} ) {
 				$horizontal_rules = $$specs{"txtHorizontalQty-$$sig_specs{'SignatureIndex'}"} * $$I{rows};
@@ -465,10 +472,10 @@ sub signature_calc {
 				$Results{Breakdown} .= $$specs{"txtHorizontalQty-$$sig_specs{'SignatureIndex'}"} . ' x ' . $$I{rows} . ' rows = ' . $horizontal_rules . ' horizontal rules * ' . $width . ' = ' . $horizontal_length . 'inches of rule.<br/>';
 
 			} elsif ( $I->image_orientation() eq 'Horizontal' and  $$specs{"txtVerticalQty-$$sig_specs{SignatureIndex}"} ) {
-				$horizontal_rules = $$specs{"txtVerticalQty-$$sig_specs{SignatureIndex}"} * $$I{columns};
-				$horizontal_length = $horizontal_rules * $height;
+				$horizontal_rules = $$specs{"txtVerticalQty-$$sig_specs{SignatureIndex}"} * $$I{rows};
+				$horizontal_length = $horizontal_rules * $width;
 				$horizontal_length *= $CylinderCount if $CylinderCount;
-				$Results{Breakdown} .= $$specs{"txtVerticalQty-$$sig_specs{SignatureIndex}"} . ' x ' . $$I{columns} . ' columns = ' . $horizontal_rules . ' horizontal rules * ' . $height . ' = ' . $horizontal_length . 'inches of rule.<br/>';
+				$Results{Breakdown} .= $$specs{"txtVerticalQty-$$sig_specs{SignatureIndex}"} . ' x ' . $$I{rows} . ' rows = ' . $horizontal_rules . ' horizontal rules * ' . $width . ' = ' . $horizontal_length . 'inches of rule.<br/>';
 			} # end if
 		#$openprint::log->debug("Horizontal: $horizontal_rule");	
 			if ( $horizontal_rules ) {
@@ -505,6 +512,7 @@ sub signature_calc {
 						} elsif ( $$Package_Qty{units} eq 'inches' ) {
 							$Results{Breakdown} .= sprintf( 'Needed %d inches', POSIX::ceil($horizontal_length) );
 							$package_qty = POSIX::ceil( $horizontal_length / $$Package_Qty{value} );
+							$remaining_inches = ( $$Package_Qty{value} * $package_qty ) - $horizontal_length;
 						} # end if
 	
 						$horizontal_price{Total} = Math::Round::nearest( 0.01, $horizontal_price{Price} * $package_qty );
@@ -527,11 +535,11 @@ sub signature_calc {
 				$vertical_length = $vertical_rules * $height;
 				$vertical_length *= $CylinderCount if $CylinderCount;
 				$Results{Breakdown} .= $$specs{"txtVerticalQty-$$sig_specs{SignatureIndex}"} . ' x ' . $$I{columns} . ' columns = ' . $vertical_rules . ' vertical rules * ' . $height . ' = ' . $vertical_length . 'inches of rule.<br/>';
-			} elsif ( $I->image_orientation() eq 'Horizontal' and  $$specs{"txtHorizontalQty-$$sig_specs{SignatureIndex}"} ) {
-				$vertical_rules = $$specs{"txtHorizontalQty-$$sig_specs{'SignatureIndex'}"} * $I->rows();
-				$vertical_length = $vertical_rules * $width;
+			} elsif ( $I->image_orientation() eq 'Horizontal' and $$specs{"txtHorizontalQty-$$sig_specs{SignatureIndex}"} ) {
+				$vertical_rules = $$specs{"txtHorizontalQty-$$sig_specs{'SignatureIndex'}"} * $I->columns();
+				$vertical_length = $vertical_rules * $height;
 				$vertical_length *= $CylinderCount if $CylinderCount;
-				$Results{Breakdown} .= $$specs{"txtHorizontalQty-$$sig_specs{SignatureIndex}"} . ' x ' . $$I{rows} . ' rows = ' . $vertical_rules . ' vertical rules * ' . $width . ' = ' . $vertical_length . 'inches of rule.<br/>';
+				$Results{Breakdown} .= $$specs{"txtHorizontalQty-$$sig_specs{SignatureIndex}"} . ' x ' . $$I{columns} . ' columns = ' . $vertical_rules . ' vertical rules * ' . $height . ' = ' . $vertical_length . 'inches of rule.<br/>';
 			} # end if
 
 		#$openprint::log->debug("Vertical: $vertical_rule");	
@@ -573,11 +581,18 @@ sub signature_calc {
 						} # end if
 					} elsif ( $vertical_price{units} eq 'per package' ) {
 						my $package_qty;
+							
 						if ( lc $$Package_Qty{units} eq 'feet' ) {
 							$Results{Breakdown} .= sprintf( 'Needed %.2f feet', POSIX::ceil($vertical_length/12) );
+							if ( $$Wheel{id} == $$Rule{id} ) {
+								$vertical_length -= 12 * $remaining_inches;
+							} # end if
 							$package_qty = POSIX::ceil( ( $vertical_length / 12 ) / $$Package_Qty{value} );
 						} elsif ( lc $$Package_Qty{units} eq 'inches' ) {
 							$Results{Breakdown} .= sprintf( 'Needed %d inches', POSIX::ceil($vertical_length) );
+							if ( $$Wheel{id} == $$Rule{id} ) {
+								$vertical_length -= $remaining_inches;
+							} # end if
 							$package_qty = POSIX::ceil( $vertical_length / $$Package_Qty{value} );
 						} # end if
 	

@@ -88,7 +88,7 @@
 			my %SkidContentsByPaper;
 			my @skid_ids = map { $$_{skid_id} } @SkidContents;
 $log->debug("After SkidIds");
-			my %Skids = map { $$_{id}, $_ } openprint::Skid->find(id=>\@skid_ids);
+			my %Skids = map { $$_{id}, $_ } openprint::Skid->find(id=>\@skid_ids) if @skid_ids;
 $log->debug("After Skids");
 			my %SkidsByPaper;
 

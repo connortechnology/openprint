@@ -616,22 +616,24 @@ window.open(summaryPage,'pop','newWin,left=140,width=640,top=50,height=400,resiz
 }
 
 function checkLoginData( usernameInput, passwordInput ) {
+	var div = $( 'missingLoginMessage' );
 	if( usernameInput && ! usernameInput.value ) {
 		// Display login name error.
-		$( 'missingLoginMessage' ).show();
+		if ( div ) div.show();
 		usernameInput.focus();
 		return false;
-	} else {
-		$( 'missingLoginMessage' ).hide();
+	} else if ( div ) {
+		div.hide();
 	}
 
+	div = $( 'missingPasswordMessage' );
 	if( passwordInput && ! passwordInput.value ) {
 		// Display login password error.
-		$( 'missingPasswordMessage' ).show();
+		if ( div ) div.show();
 		passwordInput.focus();
 		return false;
-	} else {
-		$( 'missingPasswordMessage' ).hide();
+	} else if ( div ) {
+		div.hide();
 	}
 
 	usernameInput.form.submit();
@@ -1321,6 +1323,13 @@ onDestroy: function(eventName, win) {
 		popupWin.setHTMLContent( options.content );
 	} else {
 		if ( parameters ) {
+			if ( parameters == '[object HTMLFormElement]' ) {
+				var p = parameters.serialize(true);
+				if ( p )
+					parameters = $H(p).toQueryString();
+			} else if ( typeof parameters == 'object' ) {
+				parameters = $H(parameters).toQueryString();
+			}
 			url += '?' + parameters;
 		}
 		popupWin.setAjaxContent(url, null , true);

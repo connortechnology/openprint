@@ -205,7 +205,7 @@ sub stock {
 			} else {
 				$$self{'stock'} .= ' not ordered.';
 			} # end if
-		} else {
+		} elsif ( $Stock ) {
 			if ( $Stock->type() eq 'Roll' ) {
 				$$self{'stock'} .= $Stock->width().'&quot; Roll';
 			} else {
@@ -238,8 +238,10 @@ sub get_li {
 	my $Equipment = $self->Equipment();
 
 	my $colour = '';
-	my @printing_service_type_ids = map { $_->id() } openprint::ServiceType->find('category'=>'Printing');
-	my @bindery_service_type_ids = map { $_->id() } openprint::ServiceType->find('category'=>'Bindery');
+	my %printing_service_type_ids = map { $$_{id}, $$_{id} } openprint::ServiceType->find('category'=>'Printing');
+	my %bindery_service_type_ids = map { $$_{id}, $$_{id} } openprint::ServiceType->find('category'=>'Bindery');
+
+	my @equipment;
 
 	if ( $$self{'project_id'} ) {
 		if ( sets::isin( $Project->status(), ['In Prepress', 'Proofs Out','Waiting For QA Approval'] ) ) {
@@ -248,10 +250,16 @@ sub get_li {
 			$colour = 'complete';
 		} elsif ( sets::isin( $Project->status(), ['Waiting For Customer Approval'] ) ) {
 			$colour = 'approval';
-		} elsif ( sets::isin( $$self{'servicetype_id'}, \@printing_service_type_ids ) and ( openprint::ScheduledJob->find( 'project_id'=>$$self{'project_id'}, 'servicetype_id'=>\@printing_service_type_ids, 'equipment_id !='=>$$self{'equipment_id'} ) ) ) {
-			$colour = 'multipress';
-		} elsif ( sets::isin( $$self{'servicetype_id'}, \@bindery_service_type_ids ) and ( openprint::ScheduledJob->find( 'project_id'=>$$self{'project_id'}, 'servicetype_id'=>\@bindery_service_type_ids, 'equipment_id !='=>$$self{'equipment_id'} ) ) ) {
-			$colour = 'multibindery';
+		} elsif ( $printing_service_type_ids{$$self{servicetype_id}} ) {
+			@equipment = sets::union( map { $_->equipment_id() ? $_->equipment_id() : () } openprint::ScheduledJob->find( project_id=>$$self{project_id}, servicetype_id=>[ keys %printing_service_type_ids ] ) );
+			if ( sets::exclude( [ $$self{'equipment_id'} ], \@equipment ) ) {
+				$colour = 'multipress';
+			}
+		} elsif ( $bindery_service_type_ids{$$self{servicetype_id}} ) {
+			@equipment = sets::union( map { $_->equipment_id() ? $_->equipment_id() : () } openprint::ScheduledJob->find( project_id=>$$self{project_id}, servicetype_id=>[ keys %bindery_service_type_ids ] ) );
+			if ( sets::exclude( [ $$self{'equipment_id'} ], \@equipment ) ) {
+				$colour = 'multibindery';
+			} # en dif
 		#} elsif ( 1 < find( 'project_id'=>$$self{'project_id'} ) ) {
 			#$colour = 'earlier_services';
 		} # end if
@@ -288,9 +296,8 @@ sub get_li {
 			if ( $month ) { $html .= '&nbsp;'.substr( Date::Calc::Month_to_Text( $month ),0, 3); } # end if
 				$html .= qq` $day</span>`;
 		} # end if
-		if ( sets::isin( $$self{'servicetype_id'}, \@printing_service_type_ids ) ) {
-			my @presses = sort( sets::union( map { $_->equipment_id() ? $_->Equipment()->strid() : () } openprint::ScheduledJob->find( project_id=>$$self{project_id}, servicetype_id=>\@printing_service_type_ids, 'starttime is null' => 0 ) ) );
-			$html .= '<span class="Presses">'.join(' + ', @presses ).'</span>' if @presses > 1;
+		if ( $printing_service_type_ids{$$self{servicetype_id}} ) {
+			$html .= '<span class="Presses">'.join(' + ', sort( map { new openprint::Equipment( $_ )->strid() } @equipment ) ).'</span>' if @equipment > 1;
 		} # end if
 
 	} # end if
@@ -851,7 +858,7 @@ sub approve {
 	} # end if
 	my $services = $Project->services();
 	if ( ! ( $$services{'Proofs'} or $$services{'FilmStripping'} ) ) {
-		push @{$$services{'Proofs'}}, openprint::print_project::insert_service( $log, $dbh, $Project->id(), 'Proofs' );
+		push @{$$services{'Proofs'}}, $Project->add_service( 'Proofs' );
 	} # end if
 	require openprint::employee_project;
 	openprint::employee_production::mark_proofs_approved( $log, $dbh, \%variable, $Project->id() );

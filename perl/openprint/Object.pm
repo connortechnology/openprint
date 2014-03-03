@@ -55,7 +55,7 @@ sub new {
 
 	my $ref = ref $id;
 	if ( ! $ref ) {
-		if ( $id and (!$data) and $openprint::Object::cache{$config{'db_name'}}{$parent} and $openprint::Object::cache{$config{'db_name'}}{$parent}{$id} ) {
+		if ( $id and (!$data) and $cache{$config{db_name}}{$parent} and $cache{$config{db_name}}{$parent}{$id} ) {
 #$log->debug("Loading from cache $parent $id");
 			# If the object is cached
 			return $openprint::Object::cache{$config{'db_name'}}{$parent}{$id};
@@ -72,8 +72,11 @@ sub new {
 			if ( $id ) {
 				# Using $id instead of $$self{od} means that we cache non existent entries
 			#if ( $$self{'id'} ) {
-				$openprint::Object::cache{$config{'db_name'}}{$parent}{$id} = $self;
+$log->debug("Caching $config{db_name} $parent $id = $self") if $debug;
+				$cache{$config{db_name}}{$parent}{$id} = $self;
 			} # end if
+		} else {
+$log->debug("NOT Caching $config{db_name} $parent $id = $self") if $debug;
 		} # end if
 		return $self;
 	} elsif ( ref $id eq 'HASH' ) {
@@ -91,7 +94,7 @@ sub new {
 		my $self = {};
 		bless $self, $parent;
 #$log->debug("Multi-key Obejct @$id @$data{@$id}" );
-		@$self{@$id} = @$data{@$id};
+		@$self{@$id} = @$data{@$id} if @$id;
 		$self->load( $data );
 #$log->debug( $parent . ': ' .$self->to_string() );
 		return $self;
@@ -204,7 +207,7 @@ $log->debug("No serial") if $debug;
 		if ( $insert ) {
 			my @keys = keys %sql;
 			my $command = "INSERT INTO $table (" . join(',', @keys ) . ') VALUES (' . join(',', map { '?' } @sql{@keys} ) . ')';
-			if ( ! ( $_ = $local_dbh->prepare($command) and $_->execute( @sql{@keys} ) ) ) {
+			if ( ! ( ( $_ = $local_dbh->prepare($command) ) and $_->execute( @sql{@keys} ) ) ) {
 				my $error = $dbh->errstr;
 				$command =~ s/\?/\%s/g;
 				$log->error('SQL statement execution failed: ('.sprintf($command, , map { defined $_ ? $_ : 'undef' } ( @sql{@keys}) ).'):' . $local_dbh->errstr);
@@ -280,7 +283,12 @@ $log->debug("No serial") if $debug;
 	sql::end_transaction( $local_dbh, $ac );
 	$self->load();
 #$log->debug("Got here");
-	delete $openprint::Object::cache{$config{'db_name'}}{$type}{$$self{id}};
+	if ( $$fields{id} ) {
+		if ( ! $openprint::Object::cache{$config{'db_name'}}{$type}{$$self{id}} ) {
+			$openprint::Object::cache{$config{'db_name'}}{$type}{$$self{id}} = $self;
+		} # end if
+	#delete $openprint::Object::cache{$config{'db_name'}}{$type}{$$self{id}};
+	} # end if
 #$log->debug("after delete");
 	eval 'if ( %'.$type.'::find_cache ) { %'.$type.'::find_cache = (); }';
 #$log->debug("after clear cache");
@@ -728,7 +736,7 @@ $log->debug("Undefing $object_type $cache_field $$params{$cache_field}") if DEBU
 	} else {
 		my @identified_by = eval '@'.$object_type.'::identified_by';
 		if ( ! @identified_by ) {
-			$log->error("Multi key object $object_type but no identified by");
+			$log->debug("Multi key object $object_type but no identified by") if $debug;
 		} # end if
 		return map { $object_type->new( \@identified_by, $_ ) } @$data;
 #$log->debug("Objs: "  . scalar @objs );

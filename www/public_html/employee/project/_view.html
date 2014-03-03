@@ -40,6 +40,7 @@
     my %statuses = map { $_->service_id(), $_->status() } openprint::Project_Service->find( project_id=>$Project->id());
     my $qty_index = $Project->ordered_quantity_index();
     my $printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
+    my $status_html .= slurp_content( '/employee/project/_status.html' );
 
     foreach my $ServiceCategory ( openprint::ServiceType_Category->find( order=>'sorting,name') ) {
         if ( $ServiceCategory->name() eq 'Printing' ) {
@@ -103,7 +104,7 @@
                 $html .= '<td class="status" id="status'.$ss_id.'">';
                 $$variable{'index'} = $ss_id;
                 $$variable{'status'} = $statuses{$ss_id};
-                $html .= include( '/employee/project/_status.html' );
+                $html .= variable_substitution( \$status_html, $variable );
                 $html .= "</td></tr>\n";
                 $rowclass = $rowclass ? '' : ' class="colRow"';
             } # end while sigs
@@ -142,7 +143,7 @@
                     } # end if
                     $html .= '<td class="status" id="status'.$service_id.'">';
                     @$variable{'status','index'} = ( $statuses{$service_id}, $service_id );
-                    $html .= include( '/employee/project/_status.html' );
+					$html .= variable_substitution( \$status_html, $variable );
                     $html .= "</td></tr>\n";
                     $rowclass = $rowclass ? '' : ' class="colRow"';
                 } # end foreach service_id
@@ -190,11 +191,11 @@
                 $totals{$string} += POSIX::ceil( $sheets * $Paper->start_area() * $Paper->wpsi() );
                 $sheets{$string} += $sheets;
 			} else {
-$log->error("Unknown stock type " . $Paper->to_string() );
+$log->error("Unknown stock type for sig $ss_id form $$sig_specs{SignatureIndex} " . $Paper->to_string() ) if $$sig_specs{"txtPrice$qty_index"};
             } # end if
             if ( ( ! $Paper->supplied() ) and $$variable{canseepaperpricing} ) {
 if ( ! $totals{$string} ) {
-$log->error("NO paper weight for project $$Project{id} " . $Paper->to_string() );
+$log->error("NO paper weight for project $$Project{id} " . $Paper->to_string() ) if $$sig_specs{"txtPrice$qty_index"};
 } else {
 				my $price = $Paper->get_price( weight=>$totals{$string}, service=>'Material' );
 				$prices{$string} = sprintf('* $%.2f/100lb = $%.2f', @$price{'100lb Price','100lb Total'} );
@@ -442,14 +443,6 @@ $html .= '</tr>';
 	<input type="hidden" name="btnFunction"/>
 	<input type="hidden" name="OrderID" value="<?OrderID?>"/>
 </form>
-<br class="spacer"/>
-<fieldset><legend onclick="toggleContent('StockAllocations<?echo($$variable{Project}{id})?>','_stock_allocations.html?project_id=<? echo ( $$variable{Project}->id() ) ?>', null, null );">Allocated</legend>
-<div id="StockAllocations<?echo($$variable{Project}{id})?>" class="StockAllocated"><?include(/employee/project/_stock_allocations.html)?></div>
-</fieldset>
-<br/>
-<? if ( $$variable{'Project'}->docket() ) ?>
-<div id="StockCheckout<?echo($$variable{Project}{id})?>" class="StockCheckout"><?include(/employee/project/_stock_checkout.html)?></div>
-<? endif ( $$variable{'Project'}->docket() ) ?>
 <br class="spacer"/>
 <fieldset><legend onclick="toggleContent( 'ProductionLog<?echo($$variable{Project}{id})?>', '/employee/project/_production_log.html?project_id=<? echo ( $$variable{Project}->id() ) ?>', null, null );">Production Log (click to hide/show)</legend>
 <? if ( $session{'/employee/project/view.html?production_log'} ) ?>

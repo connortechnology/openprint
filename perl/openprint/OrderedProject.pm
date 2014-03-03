@@ -10,7 +10,7 @@ require sql;
 
 use vars qw( $debug $table $serial %fields %transforms %defaults );
 
-$debug = 0;
+$debug = 1;
 $table = 'order_contents';
 $serial = 'order_contents_id_seq';
 

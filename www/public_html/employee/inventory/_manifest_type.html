@@ -40,6 +40,7 @@
 		if ( ! $$variable{Type}->type() ) {
 			$$variable{Type}->type('Sheet');
 		} # end if
+		$param{'condition_id-'.$$variable{type_id}} = $$variable{Type}->condition_id() if ! $param{'condition_id-'.$$variable{type_id}};
 	) ?>
 	<div class="leftColumn">
 		<p id="Owner-<?type_id?>_div">
@@ -102,7 +103,7 @@
 			</select>
 			<input style="display: none;" type="text" id="txtColour-<?type_id?>" name="txtColour-<?type_id?>" />
 		</p>
-		<p>
+		<p class="weight">
 			<label for="weight-<?type_id?>">Weight</label>
 			<input type="text" id="weight-<?type_id?>" name="weight-<?type_id?>" value="<? echo ( my $weight = $param{'weight-'.$$variable{'type_id'}}; $weight =~ s/lb//; return $weight; ) ?>" onkeyup="floatize(this);"/>lb
 		</p>
@@ -140,13 +141,19 @@
 			<? echo ( input( type=>'float', id=>'height-'.$$variable{type_id}, name=>'height-'.$$variable{type_id}, value=>$param{'height-'.$$variable{type_id}}, onkeyup=>"gsm_to_mweight(this.form,'$$variable{type_id}');" ); ) ?>
 			</span>
 		</p>
+			<p>
+				<label>Condition</label>
+				<? echo (
+						ssi::select( openprint::InventoryCondition->dropdown( order=>'lower(name)'), $param{'condition_id-'.$$variable{type_id}}, { name=>'condition_id-'.$$variable{type_id}, prepend=>['','select'] } );
+					) ?>
+			</p>
 		<? if ( $$variable{Type}->paper_id() ) ?>
 		<p><label>Link to stock</label><a href="/employee/inventory/paper_details.html?paper_id=<? echo ( $$variable{Type}->paper_id() ) ?>"><? echo ( $$variable{Type}->Paper()->to_string() ) ?></a>
 		</p>
 		<? endif ( $$variable{Type}->paper_id() ) ?>
 	</div>
 	<div class="rightColumn">
-		<p>
+		<p class="calliper">
 			<label>Calliper</label>
 			<? echo ( input( type=>'float', id=>'calliper-'.$$variable{type_id}, name=>'calliper-'.$$variable{type_id}, value=>$param{'calliper-'.$$variable{type_id}} ); )?>PT
 		</p>
@@ -154,7 +161,7 @@
 			<label>GSM</label>
 			<? echo ( input( type=>'float', id=>'gsm-'.$$variable{type_id}, name=>'gsm-'.$$variable{type_id}, value=>$param{'gsm-'.$$variable{type_id}}, onkeyup=>"gsm_to_mweight(this.form,'$$variable{type_id}');" ); ) ?>
 		</p>
-		<p id="MWeight-<?type_id?>" <? echo ( 'style="display:none;"' if $param{'type-'.$$variable{'type_id'}} eq 'Roll' ) ?> >
+		<p class="mweight" id="MWeight-<?type_id?>" <? echo ( 'style="display:none;"' if $param{'type-'.$$variable{'type_id'}} eq 'Roll' ) ?> >
 			<label>MWeight</label>
 			<? echo ( input( type=>'float', id=>'mweight-'.$$variable{type_id}, name=>'mweight-'.$$variable{type_id}, value=>$param{'mweight-'.$$variable{type_id}}, onkeyup=>"mweight_to_gsm(this.form,'$$variable{type_id}');" ); ) ?>M
 		</p>
@@ -166,7 +173,7 @@
 			<label>Supplier Invoice#</label>
 			<input type="text" id="supplier_invoice-<?type_id?>" name="supplier_invoice-<?type_id?>" value="<? echo ( $$variable{'Type'}->supplier_invoice() ) ?>" />
 		</p>
-		<p>
+		<p class="docket">
 			<label>Docket</label>
 			<? echo ( input( type=>'cardinal', id=>'docket-'.$$variable{type_id}, name=>'docket-'.$$variable{type_id}, value=>$$variable{Type}->docket() ); ) ?>
 			<? echo ( button( 'LoadPos'.$$variable{'Type'}->id(), { 
@@ -177,7 +184,7 @@
 			<?include(_manifest_purchase_orders.html)?>
 		<? endif ( ! $$variable{Type}->po_id() ) ?>
 		</div>
-		<p>
+		<p class="purchaseorder">
 			<label>Purchase Order</label>
 			<? echo ( join("\n", 
 				input( type=>'cardinal', id=>"po_id-$$variable{type_id}", name=>"po_id-$$variable{type_id}", value=>$$variable{Type}->po_id() ),

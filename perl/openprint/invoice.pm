@@ -71,16 +71,6 @@ sub history {
 			$variable{'error'} .= $Invoice->send( new openprint::User( $session{user_id} ) );
 			$variable{'information'} .= 'Invoice ' . $Invoice->id() . ' sent.<br/>';
 		} # end if
-	} elsif ( $param{'btnFunction'} eq 'Delete' ) {
-		my $Invoice = new openprint::Invoice( $param{'invoice_id'} );
-		if ( ! ( $variable{'error'} .= $Invoice->delete() ) ) {
-			$variable{'information'} .= 'Invoice ' . $Invoice->id() . ' deleted.<br/>';
-		} # end if
-	} elsif ( $param{'btnFunction'} eq 'Destroy' ) {
-		my $Invoice = new openprint::Invoice( $param{'invoice_id'} );
-		if ( ! ( $variable{'error'} .= $Invoice->destroy() ) ) {
-			$variable{'information'} .= 'Invoice ' . $Invoice->id() . ' destroyed.<br/>';
-		} # end if
 	} elsif ( $param{'btnFunction'} eq 'Download' ) {
 		my @Taxes = openprint::Tax->find(
 				( Date::Calc::check_date( @param{'created_on_start_year','created_on_start_month','created_on_start_day'} ) ?
@@ -230,7 +220,11 @@ sub edit {
 } # end sub edit
 
 sub view {
-	$variable{'Invoice'} = new openprint::Invoice( $param{'invoice_id'} );
+	my $Invoice = $variable{'Invoice'} = new openprint::Invoice( $param{'invoice_id'} );
+	if ( ! $Invoice ) {
+		$variable{'error'} .= "Invoice $param{'invoice_id'} not found";
+		return;
+	} 
 	if ( $param{'btnFunction'} eq 'Calculate Interest' ) {
 		if ( ! $variable{'Invoice'}->monthly_interest() ) {
 			$variable{error} .= 'Invoice has no monthly interest rate!';
@@ -291,7 +285,23 @@ $log->debug("Total: $total");
 			delete $variable{'Invoice'}{'interest'};
 			$variable{'Invoice'}->interest();
 			$variable{'Invoice'}->save();
+		} # e,nd if
+	} elsif ( $param{'btnFunction'} eq 'Delete' ) {
+		if ( ! ( $variable{'error'} .= $Invoice->delete() ) ) {
+			$variable{'information'} .= 'Invoice ' . $Invoice->id() . ' deleted.<br/>';
+			$variable{ExternalRedirect} = '/invoice/history.html';
 		} # end if
+	} elsif ( $param{'btnFunction'} eq 'Destroy' ) {
+		if ( ! ( $variable{'error'} .= $Invoice->destroy() ) ) {
+			$variable{'information'} .= 'Invoice ' . $Invoice->id() . ' destroyed.<br/>';
+			$variable{ExternalRedirect} = '/invoice/history.html';
+		} # end if
+	} elsif ( $param{'btnFunction'} eq 'Send' ) {
+		$variable{error} .= $Invoice->send();
+		$variable{information} .= 'Invoice ' . $Invoice->id() . ' sent.<br/>';
+	} elsif ( $param{'btnFunction'} eq 'Send To Me' ) {
+		$variable{'error'} .= $Invoice->send( new openprint::User( $session{user_id} ) );
+		$variable{'information'} .= 'Invoice ' . $Invoice->id() . ' sent.<br/>';
 	} # end if
 } # end sub view
 sub _timetracks {

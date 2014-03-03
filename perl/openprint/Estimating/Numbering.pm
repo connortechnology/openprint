@@ -172,14 +172,12 @@ sub signature_calc {
 		return \%Results;
 	} # end if
 
-	my $printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] ) if $$services{''};
-
 	$Results{'Status'} = 'calculated';
 
-	my @side_one_colours = openprint::Estimating::Printing::get_colours( $printing_specs, 'SideOne' );
+	my @side_one_colours = openprint::Estimating::Printing::get_colours( $sig_specs, 'SideOne' );
 	$openprint::log->debug("@side_one_colours : " . ( sets::intersection( 'Cyan','Magenta','Yellow','Black', @side_one_colours ) ) );
 	my $Press = $Imposition->Press();
-$openprint::log->debug("Got press $Press for " . $$printing_specs{"ddmPress$qty_index"});
+$openprint::log->debug("Got press $Press for " . $$sig_specs{"ddmPress$qty_index"});
 	if ( ! $Press ) {
 		$Results{'alert'} .= 'No press.';
 		$Results{'Status'} = 'uncalculated';

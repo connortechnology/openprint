@@ -7,7 +7,7 @@ require openprint::ServiceType_Default;
 
 use vars qw( $debug $table $serial %find_fields %fields %transforms %defaults $cache_field );
 
-$debug = 1;
+$debug = 0;
 $table = 'service_types';
 $serial = 'service_types_id_seq';
 

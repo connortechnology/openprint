@@ -20,17 +20,21 @@ function filter_onChange( element, id, selected ) {
 		} // end if filter exists
         var filter = form.elements[filters[index].toLowerCase()+'_id'+id];
         if ( filter ) {
-            h.set(filter.name, get_value( filter ) );
+			var v = get_value( filter );
+            if ( ! v ) continue;
+			
+			h.set(filter.name, v );
 			if ( filter.type == 'select-one' ) {
 				filter.disabled = true;
 			} // end if
 			filter = form.elements[filters[index].toLowerCase()+'_id_exclude'+id];
 			if ( filter ) {
-				h.set(filter.name, get_value( filter ) );
+				var v = get_value( filter );
+				if ( v ) h.set(filter.name, v );
 			} // end if
         } // end if filter exists
     } // end for 
-    new Ajax.Request( '_stock.json', { parameters: h, evalScripts: true } );
+    new Ajax.Request( '/employee/inventory/_stock.json', { parameters: h, evalScripts: true } );
 } // end function Name_onChange()
 
 function cbStockFillResults( results ) {

@@ -260,7 +260,7 @@
 				</p>
 				<p class="message">
 					<label>Message</label>
-					<textarea id="message" name="message" rows="2" onkeyup="textarea_resize( this );"><? echo ( $$variable{'Stock'}->message(); ) ?></textarea>
+					<textarea id="message" name="message" rows="<? echo ( count_lines($$variable{Stock}->message())) ?>" onkeyup="textarea_resize(this);"><? echo ( $$variable{Stock}->message() ) ?></textarea>
 				</p>
 				<p class="cuttable">
 					<label>Can this stock be cut?</label>

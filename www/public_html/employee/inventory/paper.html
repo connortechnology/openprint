@@ -26,7 +26,7 @@ Please select a Paper to view/edit.<br>
 				<select id="owner_id" name="owner_id" size="1" onchange="filter_onChange(this,'');">
 				<option value=""> All </option>
 				<? echo ( 
-					make_drop_down( [ map { $_->id(), $_->name() } openprint::Company->find( id=>[sql::execute(undef, undef, q{SELECT DISTINCT owner_id FROM papers} )], order=>'lower(name)' ) ], $session{'/employee/inventory/paper.html?Owner'} ? $session{'/employee/inventory/available_paper.html?owner_id'} : $session{company_id} );
+					make_drop_down( [ map { $_->id(), $_->name() } openprint::Company->find( id=>[sql::execute(undef, undef, q{SELECT DISTINCT owner_id FROM papers} )], order=>'lower(name)' ) ], $session{'/employee/inventory/paper.html?Owner'} ? $session{'/employee/inventory/paper.html?owner_id'} : $session{company_id} );
 				) ?>
 				</select>
 				<input type="checkbox" name="owner_id_exclude" id="owner_id_exclude" value="1" onclick="filter_onChange(this,'');" <? echo ( checked( $session{'/employee/inventory/paper.html?owner_id_exclude'} ); ) ?> />
@@ -36,7 +36,7 @@ Please select a Paper to view/edit.<br>
 	my $html;
 
 	my %find = (
-			( $session{'/employee/inventory/paper.html?type'} ? ( type => [ split( ',', $session{'/employee/inventory/available_paper.html?type'} ) ] ) : () ),
+			( $session{'/employee/inventory/paper.html?type'} ? ( type => [ split( ',', $session{'/employee/inventory/paper.html?type'} ) ] ) : () ),
 	);
 	if ( $session{'/employee/inventory/paper.html?owner_id'} ) {
 		if ( $session{'/employee/inventory/paper.html?owner_id_exclude'} ) {
@@ -128,7 +128,7 @@ Please select a Paper to view/edit.<br>
 		</li>
 		<li>
 			<label>Type</label>
-			<? echo ( checkboxes( 'Type', [ 'Sheet','Sheet','Roll','Roll' ], [ split(',', $session{'/employee/inventory/paper.html?Type'} ) ] ); ) ?>
+			<? echo ( checkboxes( 'type', [ 'Sheet','Sheet','Roll','Roll','Unknown','Unknown' ], [ split(',', $session{'/employee/inventory/paper.html?type'} ) ] ); ) ?>
 		</li>
 		<li>
 			<label>Date Added</label>
@@ -146,6 +146,8 @@ Please select a Paper to view/edit.<br>
 		</li>
 		<li><label>Allocated</label>
 			<? echo ( radio( 'allocated', [ '1','Yes','0','No','','Both' ], $session{'/employee/inventory/paper.html?allocated'} ); ) ?>
+		</li>
+		<li><label>Condition</label><? echo ( ssi::select( openprint::InventoryCondition->dropdown(order=>'lower(name)'), $session{'/employee/inventory/paper.html?condition_id'}, { name=>'condition_id', prepend=>['','all'] } ); ) ?>
 		</li>
 		</ul>
 

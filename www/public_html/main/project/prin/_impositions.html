@@ -1,0 +1,8 @@
+<? echo (
+	my $html;
+
+	my $Project = new openprint::Project( $param{project_id} );
+	my $specs = openprint::service::get_specs_ref( $Project, $param{service_id} );
+	return $html;
+) ?>
+	

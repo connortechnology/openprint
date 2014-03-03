@@ -23,7 +23,7 @@ require openprint::Object_Asset;
 
 use vars qw( $debug $table $serial %fields %find_fields %defaults %transforms );
 
-$debug = 0;
+$debug = 1;
 
 $table = 'invoices';
 $serial = 'invoices_id_seq';
@@ -241,18 +241,40 @@ sub add_to_log {
 sub send {
 	my ( $self, $To ) = @_;
 
-	my %data;
-	$data{'Invoice'} = $self;
-	$data{'uri'} = 'invoice';
-	my $email_template = misc::load_file( $log, $config{'SkinPath'}.'/email_template.html' );
+	my $results;
+
+	my %data = (
+			Invoice => $self,
+			uri => 'invoice',
+			Currency	=>	$self->Currency(),
+	);
+	my $email_template = ssi::slurp_content('/email_template.html');
 	my @attachments;
 	$data{'ReplacementText'} = ssi::include( '/email_content/invoice_body.html', \%data );
 	push @attachments, '', MIME::QuotedPrint::encode_qp( Encode::encode('utf-8', ssi::variable_substitution( \$email_template, \%data ) ) ), 'text/html', 'quoted-printable';
 	$data{'ReplacementText'} = ssi::include( '/email_content/invoice.html', \%data );
-	push @attachments, 'Invoice '.$$self{'id'}.'.html', MIME::QuotedPrint::encode_qp( Encode::encode('utf-8',ssi::variable_substitution( \$email_template, \%data ) ) ), 'text/html', 'quoted-printable';
+	my $invoice_html = Encode::encode('utf-8',ssi::variable_substitution( \$email_template, \%data ) );
+
+	my $file_base = 'Invoice'.$$self{id};
+	if ( File::Slurp::write_file('/tmp/'.$file_base.'.html', { atomic => 1, err_mode=>'carp' }, \$invoice_html ) ) {
+		`wkhtmltopdf "/tmp/$file_base.html" "/tmp/$file_base.pdf"`;
+		my $invoice_pdf = File::Slurp::read_file( "/tmp/$file_base.pdf" );
+		unlink "/tmp/$file_base.html";
+		unlink "/tmp/$file_base.pdf";
+		if ( $invoice_pdf ) {
+			push @attachments, ($file_base.'.pdf', MIME::Base64::encode_base64($invoice_pdf), 'application/octet-stream', 'base64');
+		} else {
+			$openprint::log->debug("Error making pdf");
+		} # end if has pdf contents
+    } # end if successfully wrote html content
+
+    if ( scalar @attachments == 4 ) {
+        $results .= 'Unable to make a pdf of this Invoice.  Using HTML version.<br/>';
+        push @attachments, ($file_base.'.html', MIME::QuotedPrint::encode_qp($invoice_html), 'text/html', 'quoted-printable');
+    } # end if
 
 	my $Email = new openprint::Email();
-	my $results = $Email->send(
+	$results = $Email->send(
 		BCC			=>	new openprint::User( $session{'user_id'} ),
 		#'TO'			=>	new openprint::User( $session{'user_id'} ),
 		TO			=>	( $To ? $To : [$self->Invoicee()->AccountingContacts()] ),
@@ -348,7 +370,8 @@ sub upload {
 
 sub link_to {
 	if ( $_[0]{id} ) {
-	return sprintf('<a href="/invoice/view.html?invoice_id=%d">%s</a>', $_[0]{id}, $_[0]{num} ? $_[0]{num} : 'id ' . $_[0]{id} );
+		my $text = $_[1] ? $_[1] : ( $_[0]{num} ? $_[0]{num} : 'id ' . $_[0]{id} );
+		return sprintf('<a href="/invoice/view.html?invoice_id=%d">%s</a>', $_[0]{id}, $text );
 	}
 	return '';
 } # end sub link_to

@@ -92,6 +92,7 @@ function calc( formName, force, options ) {
 				div.innerHTML = 'Calculating';
 			} // end if
 			gettingNewPrice = true;
+			clear_price_data( form );
 			var h = $H(form.serialize(true));
 			h.each(function(pair) {
 			if ( options ) {
@@ -205,3 +206,10 @@ function cbFillResults( results ) {
 	block_calc = false;
 } // end function cbFillResults
 
+function clear_price_data( form ) {
+    for ( var qtyNum = 1; qtyNum <= 3; qtyNum += 1 ) {
+            if ( form.elements['txtPrice'+qtyNum] && form.elements['OverridePrice'+qtyNum] && ! get_value(form.elements['OverridePrice'+qtyNum]) ) form.elements["txtPrice"+qtyNum].value = '';
+            if ( form.elements['txtUnitPrice'+qtyNum] ) form.elements["txtUnitPrice"+qtyNum].value = '';
+            if ( form.elements['MPrice'+qtyNum] ) form.elements["MPrice"+qtyNum].value = '';
+	} // end for
+} // end function clear_price_data( form )

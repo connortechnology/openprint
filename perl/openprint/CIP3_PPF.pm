@@ -364,7 +364,7 @@ sub generate_previews {
 		} # end if force or ! side_preivew
 		if ( $path ) {
 			my $filename = sprintf('%s%dsg%dsd%s.jpg', $path, $self->get('docket','signature'), $side );
-			$log->debug("Writing to $filename");
+			$log->debug("Writing to $filename") if $debug;
 			if ( $$self{lc($side).'_preview'} ) {
 				$_ = misc::save_file( $log, $filename, decode_base64($$self{lc($side).'_preview'}) );
 				$log->error( $_ ) if $_;

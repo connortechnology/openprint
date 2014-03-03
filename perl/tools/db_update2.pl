@@ -206,10 +206,7 @@ if ( ! openprint::Invoice_Tax->find_one() ) {
 } # end if
 
 if ( ! sets::isin('order_taxes', \@tables ) ) {
-	$_ = misc::load_file( $log, q{../openprint/sql/Order_Taxes.sql});
-	foreach my $st ( split(';', $_ ) ) {
-		$dbh->do($st);
-	} # end foreach
+	$dbh->do(ssi::slurp_content( '../openprint/sql/Order_Invoices.sql' ));
 } # end if
 
 if ( ! openprint::Order_Tax->find_one() ) {

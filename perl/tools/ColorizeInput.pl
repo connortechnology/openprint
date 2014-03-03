@@ -90,9 +90,10 @@ sub color_message($$) {
 #
 sub colorize_string($) {
 
-	$_[0] =~ s/^\[\w{3} \w{3} \d{2} \d\d:\d\d:\d\d \d{4}\] //;
+	$_[0] =~ s/^\[\w{3} \w{3} \d{2} \d\d:\d\d:\d\d(\.\d+)? \d{4}\] //;
 	$_[0] =~ s/, referer: .*$//;
-	$_[0] =~ s/\[client [\d\.]+\] //;
+	$_[0] =~ s/\[client [:\d\.]+\] //;
+	$_[0] =~ s/\[pid [\d\.]+\] //;
 	
 	return if $_[0] =~ /^\[debug\] mod_headers/;
 	return if $_[0] =~ /^\[debug\] mod_deflate/;
