@@ -1606,6 +1606,8 @@ sub apply_Manifest {
 			} # end if
 		} # end if po_id
 
+		# Update in_stock
+		$error .= $Paper->save();
 	} # end foreach Type
 	sql::end_transaction( $dbh, $ac );
 	return $error;
