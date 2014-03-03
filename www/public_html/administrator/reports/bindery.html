@@ -39,7 +39,10 @@
 	</p>
 </fieldset>
 <? eval ( 
-	$$variable{'Projects'} = [ openprint::Project->find( 'ordered_on >='=>"$$variable{'Start'} 00:00:00", 'ordered_on <='=>"$$variable{'End'} 23:59:59" ) ];
+	$$variable{'Projects'} = [ openprint::Project->find( 
+		'ordered_on <='=>"$$variable{'End'} 23:59:59",
+		'ordered_on >='=>"$$variable{'Start'} 00:00:00", 
+		) ];
 	if ( @{$$variable{'Projects'}} ) {
 		
 		%{$$variable{'BinderyServices'}} = map { $_->name(), $_->description() } openprint::ServiceType->find('view_visible'=>1,'category'=>'Bindery');
@@ -87,7 +90,7 @@
 	</tr>
 <? echo (
 	my $html = '';
-	my %params = ( 'type'=>['E','A'], 'order'=>'lower(strfirstname),lower(strlastname)' );
+	my %params = ( type=>['E','A'], order=>'lower(firstname),lower(lastname)' );
 	if ( $param{'ddmEmployee'} eq 'Bindery' ) {
 		$params{'usergroup'} = 'Bindery';
 	} elsif ( $param{'ddmEmployee'} ne 'All' ) {
