@@ -97,6 +97,7 @@ sub colorize_string($) {
 	
 	return if $_[0] =~ /^\[debug\] mod_headers/;
 	return if $_[0] =~ /^\[debug\] mod_deflate/;
+	return if $_[0] =~ /^\[debug\] mod_auth/;
 
 	if ($_[0] =~ m/$errors/) {
 		return color_message("ERROR: " . $_[0], $error_color);

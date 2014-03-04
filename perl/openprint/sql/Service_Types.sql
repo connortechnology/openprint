@@ -1,5 +1,4 @@
 
-DROP TABLE IF EXISTS Service_Types;
 CREATE TABLE Service_Types (
 	id				SERIAL NOT NULL,
 	name			TEXT,

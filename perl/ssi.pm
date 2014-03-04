@@ -767,6 +767,7 @@ $log->debug("Selecting default $$options{default}");
 	} # end if
 
 	while ( my ( $value, $label ) = splice @{$values}, 0, 2 ) {
+		$html .= $$options{container}[0] if $$options{container};
 		$html .= sprintf(q`
 				<input type="radio" name="%1$s" value="%2$s" id="%1$s%6$s%2$s" %4$s%5$s />
 				<label class="radio" for="%1$s%2$s">%3$s</label>
@@ -774,6 +775,7 @@ $log->debug("Selecting default $$options{default}");
 				( $onclick ? ' onclick="'.$onclick.'"' : '' ),
 				$$options{id},
 				);
+		$html .= $$options{container}[1] if $$options{container};
 	} # end foreach value
 	return $html;
 } # end sub radio

@@ -7,7 +7,11 @@ require Geo::Coder::Googlev3;
 require Math::Round;
 #use Geo::IP;
 use Geo::IPfree;
-my $geo = 'Geo::IPfree';
+my $geo = Geo::IPfree->new();
+#$geo->LoadDB( '/usr/share/GeoIP/GeoIP.dat' );
+#'/usr/share/GeoIP/GeoIP.dat');
+#my $geo = $Geo::IP->open( '/usr/share/GeoIP/GeoIP.dat' );
+$geo->Faster();
 
 package openprint::Location;
 our @ISA = qw( openprint::Object );
@@ -16,7 +20,7 @@ use constant PI => atan2(1,1)*4;
 # 3.14159265358979;
 
 use vars qw( $debug $table $serial %fields %find_fields %transforms %defaults );
-$debug = 0;
+$debug = 1;
 $table = 'locations';
 $serial = 'locations_id_seq';
 %fields = (
@@ -601,43 +605,58 @@ sub googlemap_html {
 } # end sub googlemap_html
 
 sub from_ip {
-	my $gi = $geo->open('/usr/share/GeoIP/GeoIPCity.dat' );
-#GeoIPASNum.dat   GeoIPCity.dat    GeoIP.dat        GeoIPv6.dat      GeoLiteCity.dat 
-	if ( ! $gi ) {
-		$openprint::log->error('No Geo::IP');
-		return;
-	} # end if
+	$openprint::log->debug("from_ip");
 	my $ip = @_ ? $_[0] : $ENV{'REMOTE_ADDR'};
-
-	my $record = $gi->record_by_addr($ip);
-	if ( ! $record ) {
-		$openprint::log->error("No record for $ip from Geo::IP " . $gi->database_info);
-		
-		return;
-	} elsif ( $debug ) {
-		$openprint::log->error('Got record from Geo::IP' . $gi->database_info);
+	if ( ref $geo eq 'Geo:IPfree' ) {
+$openprint::log->debug("Doing lookup for $ip");
+		my ( $code1, $name1 ) = $geo->LookUp( $ip );
+$openprint::log->debug("Back from lookup for $ip");
+		my $ac = sql::start_transaction( $openprint::dbh );
+		$openprint::dbh->do( 'LOCK TABLE Orders IN SHARE ROW EXCLUSIVE MODE' ) or $openprint::log->error( $openprint::dbi->errstr() );
+		my $Country = openprint::Location->find_one('type'=>'country','name lc'=>lc $name1);
+		if ( ! $Country ) {
+			$Country = new openprint::Location();
+			$Country->save({'name'=>$name1,'type'=>'country',short=>$code1});
+		} # end if
+		sql::end_transaction( $openprint::dbh, $ac );
+		return $Country;
 	} # end if
+		my $gi = $geo->new('/usr/share/GeoIP/GeoIPCity.dat' );
+#GeoIPASNum.dat   GeoIPCity.dat    GeoIP.dat        GeoIPv6.dat      GeoLiteCity.dat 
+		if ( ! $gi ) {
+			$openprint::log->error('No Geo::IP');
+			return;
+		} # end if
 
-	my $ac = sql::start_transaction( $openprint::dbh );
-	$openprint::dbh->do( 'LOCK TABLE Orders IN SHARE ROW EXCLUSIVE MODE' ) or $openprint::log->error( $openprint::dbi->errstr() );
-	my $Country = openprint::Location->find_one('type'=>'country','name lc'=>lc $record->country_name());
-	if ( ! $Country ) {
-		$Country = new openprint::Location();
-		$Country->save({'name'=>$record->country_name(),'type'=>'country'});
-	} # end if
+		my $record = $gi->record_by_addr($ip);
+		if ( ! $record ) {
+			$openprint::log->error("No record for $ip from Geo::IP " . $gi->database_info);
 
-	my $State = openprint::Location->find_one('type'=>'state','name lc'=>lc $record->region_name(),'parent_id'=>$Country->id());
-	if ( ! $State ) {
-		$State = new openprint::Location();
-		$State->save({'name'=>$record->region_name(),'type'=>'state','parent_id'=>$Country->id()});
-	} # end if
-	my $City = openprint::Location->find_one('type'=>'city','name lc'=>lc $record->city(),'parent_id'=>$State->id());
+			return;
+		} elsif ( $debug ) {
+			$openprint::log->error('Got record from Geo::IP' . $gi->database_info);
+		} # end if
 
-	if ( ! $City ) {
-		$City = new openprint::Location();
-		$City->save({'name'=>$record->city(),'type'=>'city','parent_id'=>$State->id()});
-	} # end if
-	sql::end_transaction( $openprint::dbh, $ac );
+		my $ac = sql::start_transaction( $openprint::dbh );
+		$openprint::dbh->do( 'LOCK TABLE Orders IN SHARE ROW EXCLUSIVE MODE' ) or $openprint::log->error( $openprint::dbi->errstr() );
+		my $Country = openprint::Location->find_one('type'=>'country','name lc'=>lc $record->country_name());
+		if ( ! $Country ) {
+			$Country = new openprint::Location();
+			$Country->save({'name'=>$record->country_name(),'type'=>'country'});
+		} # end if
+
+		my $State = openprint::Location->find_one('type'=>'state','name lc'=>lc $record->region_name(),'parent_id'=>$Country->id());
+		if ( ! $State ) {
+			$State = new openprint::Location();
+			$State->save({'name'=>$record->region_name(),'type'=>'state','parent_id'=>$Country->id()});
+		} # end if
+		my $City = openprint::Location->find_one('type'=>'city','name lc'=>lc $record->city(),'parent_id'=>$State->id());
+
+		if ( ! $City ) {
+			$City = new openprint::Location();
+			$City->save({'name'=>$record->city(),'type'=>'city','parent_id'=>$State->id()});
+		} # end if
+		sql::end_transaction( $openprint::dbh, $ac );
 	return $City;
 } # end sub from_ip
 
@@ -657,38 +676,38 @@ sub filters {
 	my $option_string;
 	if ( $$options{onSuccess} ) {
 		$option_string = 'onSuccess: function(){' . $$options{onSuccess}.'}';
-	} # end if
-	if ( $option_string ) {
-		$option_string = ',{'.$option_string.'}';
-	} # end if
+		} # end if
+		if ( $option_string ) {
+			$option_string = ',{'.$option_string.'}';
+			} # end if
 
-	my ( $country_id, $state_id, $city_id );
-	if ( ref $selected eq 'openprint::Location' ) {
-		$_ = $selected->ancestor('country');
-		$country_id = $_->id() if $_;
-		$_ = $selected->ancestor('state');
-		$state_id = $_->id() if $_;
-		$_ = $selected->ancestor('city');
-		$city_id = $_->id() if $_;
-	} elsif ( ref $selected eq 'HASH' ) {
-		( $country_id, $state_id, $city_id ) = @$selected{'country','state','city'};
-	} elsif ( ref $selected eq 'ARRAY' ) {
-		( $country_id, $state_id, $city_id ) = @$selected;
-	} # end if	
-    my $html = '<li><label>Country</label>';
-    my @Countries = openprint::Location->find(order=>'lower(name)',type=>'country');
-    $html .= ssi::select( [ '', 'All', map { $_->id(), $_->name() } @Countries ], $country_id, { name=>'country_id', id=>'country_id', onchange=>qq`Location_onchange( this, 'country'$option_string );` } );
+			my ( $country_id, $state_id, $city_id );
+			if ( ref $selected eq 'openprint::Location' ) {
+				$_ = $selected->ancestor('country');
+				$country_id = $_->id() if $_;
+				$_ = $selected->ancestor('state');
+				$state_id = $_->id() if $_;
+				$_ = $selected->ancestor('city');
+				$city_id = $_->id() if $_;
+			} elsif ( ref $selected eq 'HASH' ) {
+				( $country_id, $state_id, $city_id ) = @$selected{'country','state','city'};
+			} elsif ( ref $selected eq 'ARRAY' ) {
+				( $country_id, $state_id, $city_id ) = @$selected;
+			} # end if	
+			my $html = '<li><label>Country</label>';
+			my @Countries = openprint::Location->find(order=>'lower(name)',type=>'country');
+			$html .= ssi::select( [ '', 'All', map { $_->id(), $_->name() } @Countries ], $country_id, { name=>'country_id', id=>'country_id', onchange=>qq`Location_onchange( this, 'country'$option_string );` } );
 
-    $html .= '</li><li><label>';
-	my $Country = new openprint::Location($country_id);
-	if ( $Country->name() eq 'Canada' ) {
-		$html .= 'Province';
-	} elsif ( $Country->name() eq 'United States' ) {
-		$html .= 'State';
-	} else {
-		$html .= 'State/Province';
-	} # end if
-	$html .= '</label>';
+			$html .= '</li><li><label>';
+			my $Country = new openprint::Location($country_id);
+			if ( $Country->name() eq 'Canada' ) {
+				$html .= 'Province';
+			} elsif ( $Country->name() eq 'United States' ) {
+				$html .= 'State';
+			} else {
+				$html .= 'State/Province';
+			} # end if
+			$html .= '</label>';
     my @States = openprint::Location->find(order=>'lower(name)',type=>'state',
 			( sets::isin( $country_id, [ map { $_->id() } @Countries ] ) ? ( 'parent_id'=>$country_id ) : () ),
 			);
