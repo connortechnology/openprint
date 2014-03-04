@@ -54,10 +54,10 @@
 			<select id="vendor_state" name="vendor_state" <? if ( $$variable{'PurchaseOrder'}->id() ) ?>onchange="update_taxes( this.form );"<? endif ( $$variable{'PurchaseOrder'}->id() ) ?>>
 				<option value=""> Select </option>
 				<? echo ( 
-					if ( $$variable{'PurchaseOrder'}->vendor_country() eq 'US' ) {
-						return ssi::make_drop_down( \@states::states, $$variable{'PurchaseOrder'}->vendor_state() );
-					} elsif ( $$variable{'PurchaseOrder'}->vendor_country() eq 'CA' ) {
-						return ssi::make_drop_down( \@provinces::provinces, $$variable{'PurchaseOrder'}->vendor_state() );
+					if ( $$variable{PurchaseOrder}->vendor_country() eq 'US' ) {
+						return return_states( $$variable{PurchaseOrder}->vendor_state() );
+					} elsif ( $$variable{PurchaseOrder}->vendor_country() eq 'CA' ) {
+						return return_provinces( $$variable{PurchaseOrder}->vendor_state() );
 					} else {
 						return ssi::return_states_and_provinces($$variable{'PurchaseOrder'}->vendor_state());
 					} # end if
