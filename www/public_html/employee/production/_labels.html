@@ -9,10 +9,10 @@
 	my $html = '';
 	my @Labels = openprint::Label->find( docket=>$$variable{Order}->docket(), order=>'id');
 	foreach my $Label ( @Labels ) {
-		$html .= sprintf('<tr><td class="Date"><a href="/employee/production/labels/label.html?id=%1$d&amp;project_id=%2$d" title="%3$s">%4$s</a></td><td><a href="/employee/production/labels/label.html?id=%1$d&amp;project_id=%2$d">%5$s</a></td><td>%6$s</td><td class="buttons">%7$s</td></tr>', 
-			$Label->id(), $$variable{'Project'}->id(), 
-			Date::Format::time2str($config{'DateTimeFormat'}, Date::Parse::str2time($Label->created_on() ) ), 
-			Date::Format::time2str($config{'DateFormat'}, Date::Parse::str2time($Label->created_on() ) ), 
+		$html .= sprintf('<tr><td class="Date"><a href="/employee/production/labels/label.html?id=%1$d&amp;project_id=%2$d&amp;docket=%3$d" title="%4$s">%5$s</a></td><td><a href="/employee/production/labels/label.html?id=%1$d&amp;project_id=%2$d&amp;docket=%3$d">%6$s</a></td><td>%7$s</td><td class="buttons">%8$s</td></tr>', 
+			$Label->id(), $$variable{'Project'}->id(), $$variable{Order}->docket(),
+			format_datetime( $Label->created_on() ), 
+			format_date( $Label->created_on() ), 
 			$Label->Type()->name(), $Label->reference(),
 			join('',
 				button( 'delete'.$Label->id(), { onclick=>qq`new Ajax.Updater('Labels','/employee/production/_labels.html', { parameters:{action:'delete', id: $$Label{id}, project_id: $$variable{'Project'}{id} } } );`, text=>'X', title=>'Delete' } ),
