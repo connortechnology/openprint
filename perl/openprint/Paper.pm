@@ -53,7 +53,7 @@ $serial	= 'paper_id_seq';
 		'taxexempt1'	=>	'taxexempt1',
 		'taxexempt2'	=>	'taxexempt2',
 		'cuttable'		=>	'cuttable', 
-		'multipart'		=>	'mulipart', 
+		'multipart'		=>	'multipart', 
 		'doublesided'	=>	'doublesided', 
 		'perfecting'	=>	'perfecting', 
 		'score_required'	=>	'score_required',
@@ -127,6 +127,8 @@ $serial	= 'paper_id_seq';
 	sheets_per_package	=>	undef,
 	wpsi				=>	undef,
 	type				=>	q`''`,
+	manufacturer_id		=>	undef,
+	group_id			=>	undef,
 );
 
 %grades = (
@@ -264,49 +266,17 @@ sub save {
 	
 	my $error;
 	$error .= 'An owner must be selected.<br/>' if ! $$self{'owner_id'};
-	$error .= 'A manufacturer must be selected.<br/>' if ! $$self{'manufacturer_id'};
+	# Why?
+	#$error .= 'A manufacturer must be selected.<br/>' if ! $$self{'manufacturer_id'};
 
 	return $error if $error;
 
-	my %sql = map { $_, $$self{$_} } keys %fields;
-	delete $sql{'created_on'};
-	
 	my $ac = sql::start_transaction( $openprint::dbh );
-	if ( ! $$self{'id'} ) {
-		@$self{'id'} = sql::execute( undef, undef, q{SELECT nextval('paper_id_seq')} );
-		$sql{'id'} = $$self{'id'};
-
-		$error = sql::insert( undef, undef, 'Papers', \%sql );
-
-		(new openprint::Log())->save({'action'=>'New Stock', 'note'=>'Paper ID: ' . $$self{'id'}});
-
-		if ( ! $error ) {
-
-			$variable{'Paper'} = $self;
-			if ( my $email_template = misc::load_file( $openprint::log, $config{'SkinPath'} . '/email_template.html' ) ) {
-				$variable{'ReplacementText'} = ssi::include( '/email_content/new_paper_notification.html', \%variable );
-				my $body = ssi::variable_substitution( \$email_template, \%variable );
-				my %mail = (
-						SMTP	=> $openprint::config{'Mail Server'},
-						FROM	=> $openprint::config{'InventoryEmail'},
-						TO	  => $openprint::config{'InventoryEmail'},
-						SUBJECT => 'A new paper has been added to inventory',
-						);
-				#misc::send_email_with_attachment( $openprint::log, \%mail, ( '', encode_qp($body), 'text/html', 'quoted-printable' ) );
-			} # end if
-		} else {
-			$$self{'id'} = undef;
-			sql::end_transaction( $openprint::dbh, $ac );
-			return $error;
-		} # end if
-
-	} else {
-		if ( $error = sql::update( undef, undef, 'Papers', ['id=?',$$self{'id'}], \%sql ) ) {
-			sql::end_transaction( $openprint::dbh, $ac );
-			return $error;
-		} # end if
-		# Add record to audit log - action "Update Paper".
-		(new openprint::Log())->save({'action'=>'Update Stock', 'note'=>'Paper ID: ' . $$self{'id'}});
+	$error = $self->SUPER::save();
+	if ( $error ) {
+		$openprint::dbh->rollback();
+		sql::end_transaction( $openprint::dbh, $ac );
+		return $error;
 	} # end if
 	sql::execute( undef, undef, q{DELETE FROM StockBrands WHERE id NOT IN (SELECT DISTINCT brand_id FROM Papers)} );
 	sql::execute( undef, undef, q{DELETE FROM StockFinishes WHERE id NOT IN (SELECT DISTINCT finish_id FROM Papers)} );

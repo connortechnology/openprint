@@ -208,19 +208,19 @@ sub stock {
 	} elsif ( $param{'btnFunction'} eq 'Save' ) {
 		$Paper->owner_id( $param{'ddmOwner'} );
 		$Paper->manufacturer( $param{'txtManufacturer'} ) if $param{'txtManufacturer'};
-		$Paper->manufacturer_id( $param{'ddmManufacturer'} ) if $param{'ddmManufacturer'};
+		$Paper->manufacturer_id( $param{'ddmManufacturer'} ) if ! $param{'txtManufacturer'};
 		$Paper->group( $param{'txtGroup'} ) if $param{'txtGroup'};
-		$Paper->group_id( $param{'Group'} ) if $param{'Group'};
+		$Paper->group_id( $param{'Group'} ) if ! $param{'txtGroup'};
 		$Paper->brand( $param{'txtBrand'} ) if $param{'txtBrand'};
-		$Paper->brand_id( $param{'ddmBrand'} ) if $param{'ddmBrand'};
+		$Paper->brand_id( $param{'ddmBrand'} ) if ! $param{'txtBrand'};
 		$Paper->finish( $param{'txtFinish'} ) if $param{'txtFinish'};
-		$Paper->finish_id( $param{'ddmFinish'} ) if $param{'ddmFinish'};
+		$Paper->finish_id( $param{'ddmFinish'} ) if ! $param{'txtFinish'};
 		$Paper->colour( $param{'txtColour'} ) if $param{'txtColour'};
-		$Paper->colour_id( $param{'ddmColour'} ) if $param{'ddmColour'};
+		$Paper->colour_id( $param{'ddmColour'} ) if ! $param{'txtColour'};
 		$Paper->weight( $param{'txtWeight'} ) if $param{'txtWeight'};
-		$Paper->weight_id( $param{'ddmWeight'} ) if $param{'ddmWeight'};
+		$Paper->weight_id( $param{'ddmWeight'} ) if ! $param{'txtWeight'};
 		$Paper->quality( $param{'txtQuality'} ) if $param{'txtQuality'};
-		$Paper->quality_id( $param{'ddmQuality'} ) if $param{'ddmQuality'};
+		$Paper->quality_id( $param{'ddmQuality'} ) if ! $param{'txtQuality'};
 		$Paper->material( $param{'material'} );
 		$Paper->material_id( $param{'material_id'} ) if $param{'material_id'};
 		if ( $param{'ddmPaperSize'} ) {
