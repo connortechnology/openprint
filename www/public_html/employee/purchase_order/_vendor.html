@@ -5,7 +5,7 @@
 			<input type="text" onkeyup="filterDDM(this, this.form.supplier_id);" onkeydown="if(event.keyCode == 13){this.form.supplier_id.onchange();}" class="filter" />
 			<select id="supplier_id" name="supplier_id" onchange="new Ajax.Request('/employee/purchase_order/_po_select_vendor.json', { parameters: { supplier_id: this.value } } );">
 				<option value="">select</option>
-				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Company->find( 'order'=>'lower(name)', 'supplier'=>'Y') ], $$variable{'PurchaseOrder'}->supplier_id() ); ) ?>
+				<? echo ( make_drop_down( [ map { $_->id(), $_->name() } openprint::Company->find( order=>'lower(name)', supplier=>'Y') ], $$variable{PurchaseOrder}->supplier_id() ); ) ?>
 			</select>
 		</li>
 		<li id="contacts" <? echo ( $$variable{'PurchaseOrder'}->supplier_id() ? '' : ' style="display:none;"' ) ?>><label>Available Contacts</label>
@@ -39,7 +39,7 @@
 		<li><label for="vendor_country">Country</label>
 			<select id="vendor_country" name="vendor_country" onchange="Country_onchange( this, this.form.vendor_state );<? if ( $$variable{'PurchaseOrder'}->id() ) ?>update_taxes( this.form );<? endif ( $$variable{'PurchaseOrder'}->id() ) ?>">
 				<option value=""> select </option>
-				<? echo ( ssi::return_countries($$variable{'PurchaseOrder'}->vendor_country() ); ) ?>
+				<? echo ( return_countries($$variable{'PurchaseOrder'}->vendor_country() ); ) ?>
 			</select>
 		</li>
 		<li><label for="vendor_state"><span id="vendor_country_state"><? echo (

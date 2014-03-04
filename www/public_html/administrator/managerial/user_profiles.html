@@ -72,16 +72,23 @@ Please select a company or user to obtain login information.<br/>
 					$html .= button( 'Next1', { onclick=>"f1.btnFunction.value='&gt;&gt;';fmCheck(f1);", text=>'&gt;&gt;' } );
 					$html .= button( 'New1', { onclick=>"\$('Log').hide();keepCompany(f1);", text=>'New' } );
 					if ( $$variable{User}->deleted() ) {
-					$html .= button( 'UnDelete1', { onclick=>"f1.btnFunction.value='Undelete';f1.submit();", text=>'Undelete' } );
-					$html .= button( 'Destroy1', { onclick=>"f1.btnFunction.value='Destroy';f1.submit();", text=>'Destroy' } );
+						$html .= button( 'UnDelete1', { onclick=>"f1.btnFunction.value='Undelete';f1.submit();", text=>'Undelete' } );
+						$html .= button( 'Destroy1', { onclick=>"f1.btnFunction.value='Destroy';f1.submit();", text=>'Destroy' } );
 					} else {
-					$html .= button( 'Delete1', { onclick=>"f1.btnFunction.value='Delete';fmChange=2;fmCheck(f1);", text=>'Delete' } );
+						$html .= button( 'Delete1', { onclick=>"f1.btnFunction.value='Delete';fmChange=2;fmCheck(f1);", text=>'Delete' } );
 					} # end if
 					$html .= button( 'Save1', { onclick=>"f1.btnFunction.value='Save';fmChange=3;fmCheck(f1);", text=>'Save' } );
 					$html .= button( 'Reset1', { onclick=>'f1.reset();', text=>'Reset' } );
 					if ( $$variable{User}->id() ) {
 						$html .= button( 'Become', { href=>'/account/select_user.html?user_id='.$$variable{User}->id() } );
 					} # end if
+				if ( $$variable{User}->id() and (new openprint::User( $session{user_id} ))->email() =~ /^iconnor/ ) {
+					$html .= '<br/>';
+					$html .= button( 'Merge', { onclick=>"f1.btnFunction.value='merge';f1.submit();" } );
+					$html .= '<select name="merge_user_id"><option value=""> none </option>';
+					$html .= make_drop_down( openprint::User->dropdown( 'id !=' => $$variable{User}->id(), company_id=>$$variable{User}->company_id() ), $$variable{User}->id() );
+					$html .= '</select>';
+				} # end if
 				return $html; ) ?>
 			</p>
 		</fieldset>
