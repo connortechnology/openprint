@@ -26,7 +26,7 @@ require openprint::Paper;
 require openprint::Estimating::Folding;
 require openprint::Equipment;
 
-use constant DEBUG => 1;
+use constant DEBUG => 0;
 
 my @variables = (
 	'txtQuantity',
@@ -144,8 +144,9 @@ sub calc {
 	foreach my $qty_index ( $Project->quantity_indexes() ) {
 		$$specs{'txtPrice'.$qty_index} =~ s/[^\d\.]//g;
 		$$specs{'Markup'.$qty_index} =~ s/[^\d\.\-]//g;
+		$$specs{"txtQuantity$qty_index"} =~ s/[^\d\.\-]//g if $$specs{"txtQuantity$qty_index"};
 		$$specs{"txtQuantity$qty_index"} = $Project->quantity($qty_index) if ! $$specs{"txtQuantity$qty_index"};
-		if ( ! $$specs{"txtQuantity$qty_index"} > 0 ) {
+		if ( ! ( $$specs{"txtQuantity$qty_index"} > 0 ) ) {
 			next;
 		} # end if
 		my $qty = $$specs{"txtQuantity$qty_index"};
@@ -183,9 +184,9 @@ sub calc {
 				#$$specs{"txtLayoutHeight-$$sig_specs{'SignatureIndex'}-$qty_index"} = 0;
 				if ( $Price{'Status'} eq 'uncalculated' ) {
 					if ( $$specs{"chkOverrideEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} eq 'Y' ) {
-						$$specs{'alert'} = "The selected equipment can not handle your project.	This may be because the stock is too heavy, or too large.";
+						$$specs{'alert'} = "QTY $qty_index: The selected equipment can not handle your project.	This may be because the stock is too heavy, or too large.";
 					} else {
-						$$specs{'alert'} = "No suitable equipment could be found for your project.	This may be because the stock is too heavy, or too large.";
+						$$specs{'alert'} = "QTY $qty_index: No suitable equipment could be found for your project.	This may be because the stock is too heavy, or too large.";
 					} # end if
 				} # end if
 			} # end if
@@ -200,7 +201,7 @@ sub calc {
 			} # end if
 			$price += $Price{'Price'};
 			$status = 'uncalculated' if $Price{'Status'} eq 'uncalculated';
-		} # end foreach
+		} # end foreach qty_index
 
 		my $unitPrice = 0;
 
@@ -538,10 +539,15 @@ sub get_price {
 		$Results{'Breakdown'} .= sprintf('Service: $%.2f%s * %d * %d scores=$%.2f<br/>', @servicePrice{'Price','units'}, $qty, $score_qty, $servicePrice{Total} );
 	} elsif ( $servicePrice{'units'} eq 'per hour' ) {
 		my $runspeed = $Equipment->specification('PerfScoreRunSpeed');
-
-		my $hours = $qty / $runspeed if $runspeed;
-		$servicePrice{Total} = Math::Round::nearest( 0.01, $servicePrice{'Price'} * $hours );
-		$Results{'Breakdown'} .= sprintf('Service: $%.2f%s * %d @ %d%s =%.2f', @servicePrice{'Price','units'}, $qty, $runspeed, 'Per Hour', $servicePrice{Total} );
+		if ( $runspeed ) {
+			if ( int($runspeed) ) {
+				my $hours = $qty / $runspeed;
+				$servicePrice{Total} = Math::Round::nearest( 0.01, $servicePrice{'Price'} * $hours );
+				$Results{'Breakdown'} .= sprintf('Service: $%.2f%s * %d @ %d%s =%.2f', @servicePrice{'Price','units'}, $qty, $runspeed, 'Per Hour', $servicePrice{Total} );
+			} else {
+				$openprint::log->error("Bogus runspeed ($runspeed) on $$Equipment{strid}");
+			} # end if
+		} # end if
 	} elsif ( $servicePrice{'Price'} ) {
 		$Results{'Breakdown'} .= "Unknown units set on service price ($score_qty) ($servicePrice{'units'}) <br/>";
 	} # end if
@@ -636,9 +642,15 @@ sub get_scores {
 		} elsif ( sets::isin( $$sig_specs{'rdbTemplateType'}, '3PanelFold', '3PanelZFold' ) ) {
 			$$specs{"txtVerticalQty-$$sig_specs{'SignatureIndex'}"} = $width_folds;
 			$$specs{"txtHorizontalQty-$$sig_specs{'SignatureIndex'}"} = $height_folds;
-		} elsif ( sets::isin( $$sig_specs{'rdbTemplateType'}, '4PanelFold','4PanelZFold', 'AccordianFold', 'AccordianFold4Panel') ) {
+		} elsif ( sets::isin( $$sig_specs{'rdbTemplateType'}, 'AccordianFold') ) {
 			$$specs{"txtVerticalQty-$$sig_specs{'SignatureIndex'}"} = $width_folds;
 			$$specs{"txtHorizontalQty-$$sig_specs{'SignatureIndex'}"} = $height_folds;
+		} elsif ( sets::isin( $$sig_specs{'rdbTemplateType'}, '4PanelFold','4PanelZFold', 'AccordianFold4Panel') ) {
+			if ( $width_folds ) {
+				$$specs{"txtVerticalQty-$$sig_specs{'SignatureIndex'}"} = 3;
+			} else {
+				$$specs{"txtHorizontalQty-$$sig_specs{'SignatureIndex'}"} = 3;
+			} # end if
 		} elsif ( sets::isin( $$sig_specs{'rdbTemplateType'}, '5PanelFold', '5PanelZFold') ) {
 			$$specs{"txtVerticalQty-$$sig_specs{'SignatureIndex'}"} = $width_folds;
 			$$specs{"txtHorizontalQty-$$sig_specs{'SignatureIndex'}"} = $height_folds;
@@ -739,20 +751,23 @@ sub fits_on_equipment {
 	my $width = $I->layout_width();
 	my $height = $I->layout_height();
 
-	if ( $Equipment->specification('Minimum Score Size') and ( 1*$width < 1*$Equipment->specification('Minimum Score Size') ) ) {
-		return "Doesn't fit minimum Score Size $width < " . $Equipment->specification('Minimum Score Size');
+	my $minimum_score_size = $Equipment->specification('Minimum Score Size');
+	if ( $minimum_score_size ) {
+		if ( $vertical_scores and $height < $minimum_score_size ) {
+			return "Doesn't fit minimum Score Size Height $height < $minimum_score_size";
+		} elsif ( $horizontal_scores and $width < $minimum_score_size ) {
+			return "Doesn't fit minimum Score Size Width $width < $minimum_score_size";
+		} # end if
+	} # end if
+	my $maximum_score_size = $Equipment->specification('Maximum Score Size');
+	if ( $maximum_score_size ) {
+		if ( $vertical_scores and $height > $maximum_score_size ) {
+			return "Doesn't fit maximum Score Size Height $height > $maximum_score_size";
+		} elsif ( $horizontal_scores and $width > $maximum_score_size ) {
+			return "Doesn't fit maximum Score Size Width $width > $maximum_score_size";
+		} # end if
 	} # end if
 
-	if ( $Equipment->specification('Minimum Score Size') and ( 1*$height < 1*$Equipment->specification('Minimum Score Size') ) ) {
-		return "Doesn't fit height minimum Score Size $height < " . $Equipment->specification('Minimum Score Size');
-	} # end if
-	if ( $Equipment->specification('Maximum Score Size') and ( 1*$width > 1*$Equipment->specification('Maximum Score Size') ) ) {
-		return "Doesn't fit width $width > maximum score size " . $Equipment->specification('Maximum Score Size');
-	} # end if
-
-	if ( $Equipment->specification('Maximum Score Size') and ( 1*$height > 1*$Equipment->specification('Maximum Score Size') ) ) {
-		return "Doesn't fit height max $height > " . $Equipment->specification('Maximum Score Size');
-	} # end if
 	if ( $Equipment->specification('Minimum Score Calliper') and 1*$calliper < 1*$Equipment->specification('Minimum Score Calliper') ) {
 		return "Calliper too small: ($calliper), Min: " . $Equipment->specification('Minimum Score Calliper');
 	} # end if
@@ -779,17 +794,23 @@ sub fits_on_equipment {
 # Do nothing, we already know it fits on the machine, and it has to go one way or another.
 			} elsif ( $vertical_scores ) {
 				if ( $I->image_orientation() eq 'Vertical' ) {
+					if ( $height >= $max_feed_width ) {
+						return "Perf no good due to max feed width($max_feed_width) on height (".$height.").<br/>";
+					} # end if
+				} else {
 					if ( $width >= $max_feed_width ) {
 						return "Perf no good due to max feed width($max_feed_width) on width (".$width.").<br/>";
 					} # end if
 				} # end if
 			} elsif ( $horizontal_scores ) {
-				if ( $I->image_orientation() eq 'Horizontal' ) {
-					if ( $height >= $max_feed_width ) {
-						return "Perf no good due to max feed width($max_feed_width) on width (".$height.").<br/>";
+				if ( $I->image_orientation() eq 'Vertical' ) {
+					if ( $width >= $max_feed_width ) {
+						return "Perf no good due to max feed width($max_feed_width) on width (".$width.").<br/>";
 					} # end if
 				} else {
-					return 'Running ' . $width . ' on feed of ' . $max_feed_width . '<br/>';
+					if ( $height >= $max_feed_width ) {
+						return "Perf no good due to max feed width($max_feed_width) on height (".$height.").<br/>";
+					} # end if
 				} # end if
 			} else {
 				return 'Running ' . $height . ' on feed of ' . $max_feed_width . '<br/>';

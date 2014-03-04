@@ -265,6 +265,19 @@ sub find {
 			$sql .= ' AND type=?';
 			push @values, $params{'type'};
 		} # end if
+	} elsif ( exists $params{'type !='} ) {
+			$sql .= ' AND (type IS NULL OR type!=?)';
+			push @values, $params{'type !='};
+	} elsif ( exists $params{'type is null or in'} ) {
+		if ( ref $params{'type is null or in'} eq 'ARRAY' ) {
+			$sql .= ' AND ( type IS NULL OR type IN (' . join(',', map {'?'} @{$params{'type is null or in'}}) . '))';
+			push @values, @{$params{'type is null or in'}};
+		} elsif ( $params{'type is null or in'} ) {
+			$sql .= ' AND (type IS NULL OR type = ?)';
+			push @values, $params{'type is null or in'};
+		} else {
+			$sql .= ' AND type IS NULL';
+		} # en dif
 	} # end if
 	if ( exists $params{'location_id'} ) {
 		if ( ref $params{'location_id'} eq 'ARRAY' ) {
@@ -292,9 +305,9 @@ sub find {
 	} elsif ( $debug ) {
 		$log->debug("Debug loaded skids ($sql) (@values) # of results: " . @$data );
 	} # end if
-	if ( $data and @$data >= 100 ) {
-		Carp::cluck("Loading a lot of skids?! $sql : #". @$data );
-	} # end if
+	#if ( $data and @$data >= 100 ) {
+		#Carp::cluck("Loading a lot of skids?! $sql : #". @$data );
+	#} # end if
 	return map { new openprint::Skid( $_->{id}, $_ ) } @$data;
 
 } # end sub find
@@ -400,7 +413,6 @@ sub add {
 			( ( $Purpose and $Purpose->id() ) ? ( purpose_id => $Purpose->id() ) : () ),
 			});
 	if ( $_ ) {
-		$log->debug("Bufer");
 		$openprint::log->error("Error adding skidcontent: $_");
 	} # end if
 	return $quantity - $old_quantity;

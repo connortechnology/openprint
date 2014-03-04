@@ -94,7 +94,7 @@ $log->debug("NOT Caching $config{db_name} $parent $id = $self") if $debug;
 		my $self = {};
 		bless $self, $parent;
 #$log->debug("Multi-key Obejct @$id @$data{@$id}" );
-		@$self{@$id} = @$data{@$id};
+		@$self{@$id} = @$data{@$id} if @$id;
 		$self->load( $data );
 #$log->debug( $parent . ': ' .$self->to_string() );
 		return $self;
@@ -736,7 +736,7 @@ $log->debug("Undefing $object_type $cache_field $$params{$cache_field}") if DEBU
 	} else {
 		my @identified_by = eval '@'.$object_type.'::identified_by';
 		if ( ! @identified_by ) {
-			$log->error("Multi key object $object_type but no identified by");
+			$log->debug("Multi key object $object_type but no identified by") if $debug;
 		} # end if
 		return map { $object_type->new( \@identified_by, $_ ) } @$data;
 #$log->debug("Objs: "  . scalar @objs );

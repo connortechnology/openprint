@@ -1262,9 +1262,9 @@ function LoadContent( divID, page, parameters, message ) {
 		if ( p )
 			parameters = $H(p).toQueryString();
 	} else if ( typeof parameters == 'object' ) {
-		var p = parameters.serialize(true);
-		if ( p )
-			parameters = $H(p).toQueryString();
+		//var p = parameters.serialize(true);
+		//if ( p )
+			parameters = $H(parameters).toQueryString();
 	} 
 	if ( parameters.length > 8190 ) 
 		method = 'post';

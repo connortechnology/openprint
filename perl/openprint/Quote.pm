@@ -77,7 +77,7 @@ $serial = 'quotes_id_seq';
 	);
 
 %find_fields = (
-	'salesrep_id' => '(SELECT lngsalespersion FROM companies WHERE id=company_id)',
+	'salesrep_id' => '(SELECT salesrep_id FROM companies WHERE id=companyindex)',
 	'for_name' => q{(SELECT strFirstName || ' ' || strLastName FROM tbl_Quote_Users_for WHERE quote_id=quotes.id)},
 );
 %defaults = (
@@ -183,7 +183,13 @@ sub add_log {
 } # end sub add_log
 
 sub Quoted_Projects {
-	return openprint::QuotedProject->find('quote_id'=>$_[0]{'id'});
+	if ( @_ > 1 ) {
+		$_[0]{Quoted_Projects} = $_[1];
+	} 
+	if ( ! $_[0]{Quoted_Projects} ) {
+		$_[0]{Quoted_Projects} = [ openprint::QuotedProject->find(quote_id=>$_[0]{id}) ];
+	} # end if
+	return @{$_[0]{Quoted_Projects}};
 } # end sub Quoted_Projects
 
 sub Projects {
@@ -409,7 +415,7 @@ sub send {
 				FROM    => sprintf('"%s %s" <%s>', @$self{'by_firstname','by_lastname','by_email'}),
 				#TO    => sprintf('"%s %s" <%s>', @$self{'by_firstname','by_lastname','by_email'}),
 				TO      => sprintf('"%s %s" <%s>', @$self{'for_firstname','for_lastname','for_email'}),
-					BCC		=>	'iconnor@point-one.com',
+					#BCC		=>	'iconnor@point-one.com',
 				SUBJECT => "$openprint::config{'SiteTitle'}:Quote $$self{id}",
 				ATTACHMENTS	=>	[ @attachments ],
 				);

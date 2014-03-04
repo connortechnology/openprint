@@ -41,13 +41,25 @@ my %variables = (
 	'ProjectIndex'=>[], 'ServiceIndex'=>[], 'ServiceType'=>[], 'NewBook'=>[],
 	'remaining_pages'=>['output'],'next_group_id'=>['output'],'groups'=>['output'],
 	spine	=>	 ['save'],
+
 );
 
 sub variables {
+	my ( $project_id, $service_id, $specs, $incoming_specs ) = @_;
 	my @v;
 	foreach my $k ( keys %variables ) {
 		push @v, $k if sets::isin( 'save', $variables{$k} );
 	} # end foreach;
+	my @Groups = sql::execute( undef, undef, 'SELECT DISTINCT strvalue FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strName=?', $project_id, 'Group' );
+	foreach my $group_id ( @Groups ) {
+		push @v, 'ddmRunStyle'.$group_id;
+		push @v, 'ddmPress'.$group_id;
+		push @v, 'PrintingType'.$group_id;
+		push @v, 'StockType'.$group_id;
+		push @v, 'Pages'.$group_id;
+		push @v, 'OverrideGroupPageQuantity'.$group_id;
+		push @v, 'GroupPageQuantity'.$group_id;
+	} # end foreach
 	return @v;
 } # end sub variables
 
@@ -239,8 +251,8 @@ $openprint::log->warn("FIXM E");
 	if ( ! $$specs{'txtTotalPageQuantity'} ) {
 		$$specs{alert} = 'Please enter the # of pages';
 		return $$specs{'Status'} = 'uncalculated';
-	} elsif ( $$specs{'txtTotalPageQuantity'} > 1500 ) {
-		$$specs{alert} .= 'The maximum # of pages is 1500.<br/>';
+	} elsif ( $$specs{'txtTotalPageQuantity'} > 2000 ) {
+		$$specs{alert} .= 'The maximum # of pages is 2000.<br/>';
 		$$specs{Status} = 'uncalculated';
 	} # end if
 
@@ -332,7 +344,6 @@ $openprint::log->debug("********************************************************
 	my @groups = sort( sql::execute(undef, undef, 'SELECT DISTINCT strvalue FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strname=?', $$Project{'id'}, 'Group' ) );
 	@groups = ( undef ) if ! @groups;
 
-	my @printing_types = sql::execute( undef, undef, q{SELECT DISTINCT strValue FROM tbl_Equipment_Specifications WHERE strName='Printing Type'} );
 	foreach my $group ( @groups ) {
 		my @sigs = sort( $Project->signatures( $group ? { Group=>$group } : () ) );
 		$openprint::log->debug( "Sigs in group $group : @sigs " );
@@ -346,7 +357,7 @@ $openprint::log->debug("********************************************************
 			$status = $$sig_specs{'Status'};
 # Successfully calculated the first sig
 # In sig_specs should be an array of Impositions to apply to other signatures, so let's add/delete/apply
-			$openprint::log->debug("MultiPage::calculate_signatures $status $$sig_specs{'Additional Impositions1'} $$sig_specs{'Additional Impositions2'} $$sig_specs{'Additional Impositions3'} ");
+			$openprint::log->debug("MultiPage::calculate_signatures $status $$sig_specs{'Additional Impositions1'} $$sig_specs{'Additional Impositions2'} $$sig_specs{'Additional Impositions3'} ") if DEBUG;
 
 			# Remove Impos for other groups
 			foreach my $qty_index ( $Project->quantity_indexes() ) {
@@ -354,6 +365,7 @@ $openprint::log->debug("********************************************************
                     my $Imposition = $$sig_specs{'Additional Impositions'.$qty_index}[0];
 					my $specs = $Imposition->specs();
 					if ( $$specs{Group} and ( $$specs{Group} != $group ) ) {
+$openprint::log->debug("Removing impo cuz wrong group") if DEBUG;
 						shift @{$$sig_specs{'Additional Impositions'.$qty_index}};
 					} # end if
 				} # end if
@@ -363,8 +375,6 @@ $openprint::log->debug("********************************************************
 					( $$sig_specs{'Additional Impositions1'} and @{$$sig_specs{'Additional Impositions1'}} ) or
 					( $$sig_specs{'Additional Impositions2'} and @{$$sig_specs{'Additional Impositions2'}} ) or
 					( $$sig_specs{'Additional Impositions3'} and @{$$sig_specs{'Additional Impositions3'}} ) ) {
-
-
 
 				if ( ! @sigs ) {
 
@@ -423,16 +433,13 @@ $openprint::log->debug("********************************************************
 					} # end if
 					
 					my $price = $$Imposition{price};
-$Imposition->display("Saving for $qty_index");
-if ( $specs{"chkOverrideImposition$qty_index"} eq 'Y' and $specs{"txtImposition$qty_index"} != $$Imposition{imposition} ) {
-$status = 'uncalculated';
-} else {
-					$Imposition->save( \%specs, $qty_index );
-					openprint::Estimating::Printing::save_price( $Project, \%specs, $price, $Imposition, $qty_index );
-}
-#foreach my $k ( keys %{$price} ) {
-	#$openprint::log->debug("Price: $k $$price{$k}");
-#}
+					$Imposition->display("Saving for $qty_index");
+					if ( $specs{"chkOverrideImposition$qty_index"} eq 'Y' and $specs{"txtImposition$qty_index"} != $$Imposition{imposition} ) {
+						$status = 'uncalculated';
+					} else {
+						$Imposition->save( \%specs, $qty_index );
+						openprint::Estimating::Printing::save_price( $Project, \%specs, $price, $Imposition, $qty_index );
+					}
 					$specs{'hdnBreakdown'.$qty_index} = openprint::Estimating::Printing::breakdown( $price, \%specs );
 					
 				} # end foreach qty_index
@@ -453,9 +460,10 @@ $status = 'uncalculated';
 			} # end while Additional Imposition
 
 # Clean up any leftovers XXX Could be written better, such a small gain though
-			$openprint::log->debug("Remaining sigs " . @sigs);
+			$openprint::log->debug("Remaining sigs " . @sigs . " @sigs");
 			while ( @sigs and ( my $ss_id = shift @sigs ) ) {
-				openprint::print_project::delete_service( $$Project{id}, $ss_id );
+				my $Service = $Project->Service( $ss_id );
+				$Service->delete();
 				@signatures = sets::exclude( [ $ss_id ], \@signatures );
 			} # end while sigs
 		} else {
@@ -535,8 +543,10 @@ sub save {
 #$openprint::log->debug("Spreadsize for sig $$sig_specs{SignatureIndex} orig: $new_specs{txtSpreadSize} new: $$sig_specs{txtSpreadSize}");
 		foreach my $v ( openprint::Estimating::Printing::variables() ) {
 			if ( $new_specs{$v} ne $$sig_specs{$v} ) {
-#$openprint::log->debug("Saving $v");
+$openprint::log->debug("Saving $v") if DEBUG;
 				openprint::service::insert_service_spec( $openprint::log, $openprint::dbh, $Project->id(), $ssid, $v, $new_specs{$v} );
+			} else {
+$openprint::log->debug("Not Saving $v") if DEBUG;
 			} # end if
 		} # end foreach v
 	}  # end foreach signature

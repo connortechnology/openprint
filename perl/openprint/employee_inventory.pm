@@ -185,22 +185,23 @@ sub skids {
 	$session{'/employee/inventory/skids.html?rfid'} = '' if ! defined $session{'/employee/inventory/skids.html?rfid'};
 	$session{'/employee/inventory/skids.html?rfid_valid'} = '' if ! defined $session{'/employee/inventory/skids.html?rfid_valid'};
 	$session{'/employee/inventory/skids.html?hasmanifest'} = '' if ! defined $session{'/employee/inventory/skids.html?hasmanifest'};
-	$session{'/employee/inventory/skids.html?Type'} = '' if ! defined $session{'/employee/inventory/skids.html?Type'};
+	$session{'/employee/inventory/skids.html?type'} = '' if ! defined $session{'/employee/inventory/skids.html?type'};
 	$session{'/employee/inventory/skids.html?deleted'} = '0' if ! exists $session{'/employee/inventory/skids.html?deleted'};
  
 } # end sub skids
 
 sub inventory_report {
 	my %param = @_;
-	my @header = ('ID','Owner','Manufacturer','Name','Finish','Colour','Weight','Type','Width','Height','Quality', 'MWeight','GSM','Skid#','RFIDTag #','Received On', 'Date Added','Location', 'In Stock (sheets)','In Stock(lbs)', 'Condition', 'Last Seen', 'Cost', 'Value' );
+	my @header = ('Paper ID','Type','Owner','Manufacturer','Name','Finish','Colour','Weight','Material','Group','Type','Width','Height','Quality', 'MWeight','GSM','Skid#','RFIDTag #','Received On', 'Date Added','Last Updated', 'Location', 'In Stock (sheets)','In Stock(lbs)', 'Condition', 'Last Seen', 'Cost', 'Value' );
 
 	my @data;
 	my $count = 0;
 	my $total_weight = 0;
+	openprint::Location->find();
 	foreach my $Skid ( openprint::Skid->find(
 				ssi::date_filter( 'added_on_start', 'created_on >=', \%param ),
 				ssi::date_filter( 'added_on_end', 'created_on <=', \%param ),
-				'quantity >='=>1,'type'=>'Roll') ) {
+				'quantity >='=>1,'type is null or in'=>$param{type} ) ) {
 		foreach my $C ( $Skid->Contents() ) {
 			next if ! $C;
 			my $Paper = $C->Paper();
@@ -215,23 +216,27 @@ sub inventory_report {
 			$total_weight += $weight;
 			$count += 1;
 			push @data,(
-					$$Paper{'id'},
+					$$Paper{id},
+					$$Skid{type},
 					new openprint::Company($Paper->owner_id())->name(),
 					$Paper->manufacturer(),
 					$Paper->brand(),
 					$Paper->finish(),
 					$Paper->colour(),
 					$Paper->weight(),
+					$Paper->material(),
+					$Paper->group(),
 					$Paper->type(),
 					$Paper->width(),
 					$Paper->height(),
 					$Paper->quality(),
 					$Paper->mweight(),
 					$Paper->gsm(),
-					$$Skid{'id'},
+					$$Skid{id},
 					$Skid->RFIDTag()->id_short(),
 					$$Skid{'received_on'},
 					$$Skid{'created_on'},
+					$$Skid{'updated_on'},
 					$Skid->Location()->name(),
 					$Paper->type() eq 'Sheet' ? $C->quantity() : '',
 					$weight,
@@ -243,7 +248,7 @@ sub inventory_report {
 		} # end foreach C
 	} # end foreach Skid
 	my $date = Date::Format::time2str('%Y-%m-%d %H:%M', time );
-	push @data, ( 'Report generated',$date,'Count:',$count,undef,undef,undef, undef, undef, undef, undef, undef, undef, undef, undef, undef, undef,undef, 'Total Weight (lbs):', $total_weight, undef, undef );
+	push @data, ( 'Report generated',$date,'Count:',$count,undef,undef,undef,undef, undef,undef,undef, undef, undef, undef, undef, undef, undef, undef, undef, undef,undef, 'Total Weight (lbs):', $total_weight, undef, undef );
 	return ( \@header, \@data );
 } # end sub inventory_report
 
@@ -621,9 +626,7 @@ sub save_Paper {
 sub save_inventory {
 	my ( $Skid, $Paper, $qty, $comment, $Condition, $Purpose ) = @_;
 	my $delta = $Skid->add( $Paper, $qty, $Condition, $Purpose );
-$log->debug("Bufer $delta");
 	$Paper->add_inventory( $Skid, $delta, $param{'Units'}, $comment ) if ( $delta or $comment );
-$log->debug("after");
 #FIXME
 	if ( $delta > 0 ) {
 		$variable{'information'} .= sprintf( 'Added %1$d%2$s to inventory for skid <a href="/employee/inventory/skid_details.html?skid_id=%3$d">%3$d</a>.<br/>', $delta,$Paper->type() eq 'Roll' ? 'lbs' : 'sheets', $Skid->id() );
@@ -1604,6 +1607,8 @@ sub apply_Manifest {
 			} # end if
 		} # end if po_id
 
+		# Update in_stock
+		$error .= $Paper->save();
 	} # end foreach Type
 	sql::end_transaction( $dbh, $ac );
 	return $error;
@@ -1839,6 +1844,7 @@ sub manifests {
 	ssi::setup_date_select( '/employee/inventory/manifests.html', 'created_on_start', -7 );
 	ssi::setup_date_select( '/employee/inventory/manifests.html', 'created_on_end', '' );
 	$session{'/employee/inventory/manifests.html?deleted'} = '0' if ! exists $session{'/employee/inventory/manifests.html?deleted'};
+	$session{'/employee/inventory/manifests.html?has'} = '' if ! exists $session{'/employee/inventory/manifests.html?has_errors'};
 } # end sub manifests
 
 sub _manifests {
@@ -1849,7 +1855,7 @@ sub _manifests {
 				( map { 'created_on_end_'.$_ } ( 'year','month','day' ) ),
 				( map { 'updated_on_start_'.$_ } ( 'year','month','day' ) ),
 				( map { 'updated_on_end_'.$_ } ( 'year','month','day' ) ),
-				'supplier_id', 'delivery','deleted',
+				'supplier_id', 'delivery','deleted','has_errors','type',
 				) );
 } # end sub _manifests
 
@@ -2097,7 +2103,7 @@ sub _allocations {
 sub _deallocate_popup {
 }
 sub _skids_results {
-	ssi::save_params( '/employee/inventory/skids.html', ( 'PaperManufacturer','PaperBrand','PaperFinish','PaperColour','PaperWeight','Type',
+	ssi::save_params( '/employee/inventory/skids.html', ( 'PaperManufacturer','PaperBrand','PaperFinish','PaperColour','PaperWeight','type',
 				( map { 'received_on_start_' . $_ } ( 'year','month','day' ) ),
 				( map { 'received_on_end_' . $_ } ( 'year','month','day' ) ),
 				( map { 'created_on_start_' . $_ } ( 'year','month','day' ) ),

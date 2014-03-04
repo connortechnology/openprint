@@ -492,21 +492,48 @@ sub where {
 	return $_[0]{where};
 } # end sub where
 
+sub address {
+	if ( @_ > 1 ) {
+		$_[0]{address} = $_[1];
+	} # end if
+	if ( ! $_[0]{address} ) {
+		if ( $_[0]{parent_id} ) {
+			$_[0]{address} = $_[0]->Parent()->address();
+		} # end if
+	} # end if
+	return $_[0]{address};
+}#sub address
+sub postalcode {
+	if ( @_ > 1 ) {
+		$_[0]{postalcode} = $_[1];
+	} # end if
+	if ( ! $_[0]{postalcode} ) {
+		if ( $_[0]{parent_id} ) {
+			$_[0]{postalcode} = $_[0]->Parent()->postalcode();
+		} # end if
+	} # end if
+	return $_[0]{postalcode};
+}#sub address
+
 sub where_link {
 	if ( ! $_[0]{'where_link'} ) {
 		my $L = $_[0];
 		$_[0]{'where_link'} = '<a href="/location/view.html?location_id='.$L->id().'">';
-		$_[0]{'where_link'} .= join(', ', map { $_->name() } $L->Parents() );
 		if ( $L->address() or $L->postalcode() ) {
 			$_[0]{'where_link'} .= '<br/>' . $L->address() . ', '.$L->postalcode();
 		} # end if
 		$_[0]{'where_link'} .= '</a>';
+		$_[0]{'where_link'} .= join(', ', map { $_->link_to() } $L->Parents() );
 		if ( $L->url() ) {
 			$_[0]{'where_link'} .= '<br/><a target="_blank" href="'.$L->url().'">'.$L->url().'</a>';
 		} # end if
 	} # end if
 	return $_[0]{'where_link'};
 } # end sub where_link
+
+sub link_to {
+	return join('', '<a href="/location/view.html?location_id=', $_[0]{id}, '">', $_[0]{name}, '</a>' );
+} # end sub link_to
 
 # Takes a hash, probably %param, and does all the saving neccessary, returns a Location object.
 # If no location name is given, returns the parent. So if in an event I specified Toronto, then the location would be Toronto
@@ -515,8 +542,8 @@ sub save_location {
 	my $parent_id;
 	my $error;
 
-	if ( $$param{'country'} ) {
-		my $Country = openprint::Location->find_one('name lc'=> lc $$param{'country'}, 'type'=>'country' );
+	if ( $$param{country} ) {
+		my $Country = openprint::Location->find_one('name lc'=> lc $$param{country}, type=>'country' );
 		if ( ! $Country ) {
 			$Country = new openprint::Location();
 			$error .= $Country->save({'name'=>$$param{'country'}, 'type'=>'country'});
@@ -569,11 +596,11 @@ sub save_location {
 			# Different from what we have in db, add new
 			$Location = new openprint::Location();
 			$error .= $Location->save({
-					'name'			=>	$$param{'location'}, 
-					'parent_id'		=>	$parent_id, 
-					($$param{location_type_id}?(type_id=>$$param{location_type_id}):('type'			=>	'place')), 
-					'address'		=>	$$param{'address'},
-					'postalcode'	=>	$$param{'postalcode'},
+					name			=>	$$param{'location'}, 
+					parent_id		=>	$parent_id, 
+					($$param{location_type_id}?(type_id=>$$param{location_type_id}):(type => 'place')), 
+					address		=>	$$param{address},
+					postalcode	=>	$$param{postalcode},
 					});
 		
 		} else {

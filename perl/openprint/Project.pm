@@ -92,7 +92,7 @@ $serial = 'lngProjectIndex_seq';
 
 %find_fields = (
 	take_over		=> q{(SELECT MIN(starttime) FROM tbl_Project_Contents WHERE lngProjectIndex=id)},
-	ordered_on		=>	q{(SELECT dtmOrderDate FROM Orders WHERE orders.id=order_id)},
+	ordered_on		=>	q{(SELECT created_on FROM Orders WHERE orders.id=order_id)},
 	salesrep_id		=>	'(SELECT salesrep_id FROM Orders WHERE orders.id=order_id)',
 	takenover_on	=>	q{(SELECT MIN(dtmtimestamp) FROM Project_Log WHERE project_id=projects.id AND description LIKE 'Taken Over by%')},
 	approved_on		=>	q{(SELECT MAX(dtmtimestamp) FROM Project_Log WHERE project_id=projects.id AND description IN ('Marked Approved','Marked Proofs QA Approved'))},
@@ -571,12 +571,12 @@ sub update_status {
 		} # end if
 	} # end if
 
-	if ( $$self{'status'} ne $new_status ) {
-		$$self{'status'} = $new_status;
+	if ( $$self{status} ne $new_status ) {
+		$self->add_to_log( @openprint::session{'company_id','user_id'}, "Marked $new_status from $$self{status}" );
+		$$self{status} = $new_status;
 		$self->save();
-		$self->add_to_log( @openprint::session{'company_id','user_id'}, "Marked $new_status" );
 	} # end if
-	return $$self{'status'};
+	return $$self{status};
 
 } # end sub update_project_status
 
@@ -699,15 +699,15 @@ sub copy {
 
 # uncalc->uncalc,	*->calc
 		if ( $status ne '' and sets::isin( $status, [ 'Pending Deposit', 'Ordered', 'Proofs Out', 'Approved', 'Complete' ] ) ) {
-			$status = 'calculated';
+			$status = 'Unordered';
 		} # end if
 
 		my ( $new_service_index ) = sql::execute( undef, undef, q{SELECT nextval('ContentsServiceIndex_seq')} );
 		sql::insert( undef, undef, 'tbl_Project_Contents',[
-				'lngProjectIndex',	$$new{id},
-				'lngServiceIndex', $new_service_index,
-				'servicetype_id',	$servicetype_id,
-				'strStatus',	$status
+				lngProjectIndex	=>	$$new{id},
+				lngServiceIndex	=>	$new_service_index,
+				servicetype_id	=>	$servicetype_id,
+				strStatus		=>	$status
 				] );
 		openprint::service::insert_service_spec( $openprint::log, $openprint::dbh, $new->id(), $new_service_index, 'ProjectIndex', $new->id(), 1 );
 		openprint::service::insert_service_spec( $openprint::log, $openprint::dbh, $new->id(), $new_service_index, 'ServiceIndex', $new_service_index, 1 );
@@ -774,6 +774,7 @@ sub services {
 		my %results;
 		my @data = sql::execute( $openprint::log, $openprint::dbh, q{SELECT (SELECT name FROM Service_Types WHERE id=servicetype_id), lngServiceIndex FROM tbl_Project_Contents WHERE lngProjectIndex=?}, $$self{'id'} );
 		while ( my ( $id, $index ) = splice @data, 0, 2 ) {
+			$id = '' if ! $id;
 			push @{$results{$id}}, $index;
 		} # end while
 		$$self{'Services'} = \%results;
@@ -959,7 +960,7 @@ sub ordered_Price {
 
 sub prices {
 	my $self = shift;
-	return @$self{'price1','price2','price3'};
+	return @$self{map { $$self{"quantity$_"} ? 'price'.$_ : () } ( 1 .. 3 ) };
 }
 sub price {
 	my ( $self, $qty_index, $new ) = @_;
@@ -1098,12 +1099,11 @@ sub User {
 sub add_signature {
 	my ( $self, $sig_index, $status, $data ) = @_;
 	
-	my $ac = sql::start_transaction( $dbh );
-	$dbh->do( 'LOCK TABLE tbl_Service_Specifications IN EXCLUSIVE MODE' ) or $log->error( $dbh->errstr() );
+	$self->lock();
 	my $print_service_index = $self->add_service( 'Signature', $data );
 	if ( ! $print_service_index ) {
 		$log->error("Error adding Signature!");
-		sql::end_transaction( $dbh, $ac );
+		$self->unlock();
 		return;
 	} # end if
 	openprint::service::status( $self->id(), $print_service_index, $status ) if $status;
@@ -1113,7 +1113,7 @@ sub add_signature {
 		$sig_index += 1;
 	} # end if
 	openprint::service::insert_service_spec( $log, $dbh, $self->id(), $print_service_index, 'SignatureIndex', $sig_index );
-	sql::end_transaction( $dbh, $ac );
+	$self->unlock();
 	return $print_service_index;
 } # end sub add_signature
 
@@ -1213,10 +1213,7 @@ sub add_service {
 		$ServiceType = $type;
 	} # end if
 
-	# Make this all one transaction...
-	my $ac = sql::start_transaction( $dbh );
-	# Shoudln't need to lock this... theya re all just inserts
-	#$dbh->do( 'LOCK TABLE tbl_Service_Specifications IN EXCLUSIVE MODE' ) or $log->error( $dbh->errstr() );
+	$self->lock();
 if ( $debug ) {
 $log->debug("Project: $$self{id} $self");
 foreach my $k ( keys %{$$self{Services}} ) {
@@ -1263,7 +1260,7 @@ foreach my $k ( keys %{$$self{Services}} ) {
 		$self->price($qty_index,undef);
 	} # end foreach
 	$self->save();
-	sql::end_transaction( $dbh, $ac );
+	$self->unlock();
 	return $service_index;
 } # end sub add_service
 
@@ -1449,7 +1446,7 @@ sub production_cost {
 
 sub Service {
 	my ( $self, $service_id ) = @_;
-	return new openprint::Project_Service( {'project_id'=>$$self{'id'}, 'service_id'=>$service_id} );
+	return new openprint::Project_Service( {project_id=>$$self{id}, service_id=>$service_id} );
 } # end sub Service
 
 sub used_press_names {
@@ -1577,6 +1574,36 @@ sub url_to {
 sub link_to {
 	return sprintf('<a href="/main/project/view.html?project_id=%1$d">%2$s</a>', $_[0]{id}, ( $_[1] ? $_[1] : $_[0]{id} ) );
 } # end sub link_to
+
+sub lock {
+		my ( $caller, undef, $line ) = caller;
+	if ( $_[0]{ac} ) {
+		#already locked
+		$openprint::log->debug("ALREADY LOCKED Projects for project $_[0]{id} ac: $_[0]{ac} caller: $caller line: $line project ref:" . $_[0]);
+		$_[0]{ac} += 1;
+	} else {
+		$_[0]{ac} = sql::start_transaction( $openprint::dbh );
+		$openprint::log->debug("LOCKING Projects for project $_[0]{id} ac: $_[0]{ac} caller: $caller line: $line project ref:" . $_[0]);
+		$openprint::dbh->do( "SELECT * FROM Projects WHERE id=".$_[0]{id}. ' FOR UPDATE' );
+		#$openprint::dbh->do( 'SET CONSTRAINTS ALL DEFERRED' );
+	} # end if
+
+} # end sub lock
+
+sub unlock {
+	my ( $caller, undef, $line ) = caller;
+	$openprint::log->debug("UNLOCKING Projects for project $_[0]{id} ac: $_[0]{ac} caller: $caller line: $line" . $_[0]);
+	if ( ! $_[0]{ac} ) {
+		$openprint::log->debug("unlock with no AC!");
+		return;
+	} # end if
+	if ( $_[0]{ac} == 1 ) {
+		sql::end_transaction( $openprint::dbh, $_[0]{ac} );
+	} else {
+		$_[0]{ac} -= 1;
+	} # end if
+} # end sub unlock
+
 
 1;
 __END__

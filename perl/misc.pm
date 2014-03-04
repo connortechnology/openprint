@@ -12,6 +12,8 @@ use Date::Format qw( time2str );
 use Mail::Sendmail ();
 
 use openprint ();
+use Memoize;
+#memoize('find_entry');
 
 sub send_email_with_attached_files {
 	my ( $r, $log, $mail, @attachments ) = @_; 
@@ -146,12 +148,17 @@ sub data_to_csv {
 
 sub export_csv {
 	my ( $r, $log, $variable, $filename, $header, $data ) = @_;
-	if ( scalar @{$header}<= 0 ) {
+	if ( scalar @{$header} <= 0 ) {
 		$log->error('Invalid Header!');
 		return;
 	} # end if
 	my @data = data_to_csv( $header, $data );
-	return export( $r, $log, $variable, $filename, \@data );
+
+	$r->headers_out->{'Content-Disposition'} = "attachment; filename=\"$filename\"";
+	$r->content_type( "text/csv; name=\"$filename\"" );
+	#$r->content_encoding( "binary" );
+	$$variable{'Download'} = $filename;
+	return $$variable{'File_Data'} = \@data;
 } # end sub
 
 sub export {

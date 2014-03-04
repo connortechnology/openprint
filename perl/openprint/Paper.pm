@@ -126,6 +126,7 @@ $serial	= 'paper_id_seq';
 	multipart	=>	0,
 	sheets_per_package	=>	undef,
 	wpsi				=>	undef,
+	type				=>	q`''`,
 );
 
 %grades = (
@@ -431,7 +432,7 @@ sub to_string {
 			} # end if
 			#$string .= $self->mweight().'M ' if $self->mweight();
 		} # end if
-		$string .= sprintf('%.1fPT ', 1000*$self->calliper()) if $self->calliper();
+		$string .= sprintf('%.1fPT ', 1000*$self->calliper()) if $self->calliper() and ! $self->weight() =~ /PT/;
 		$string .= $self->gsm().'gsm ' if $self->gsm();
 		$string .= 'FSC:' . $$self{'fsc_code'} if $$self{'fsc_code'};
 		#$string .= 'Minimum: ' . $$self{'minimum_order'} if $$self{'minimum_order'};
@@ -910,9 +911,9 @@ sub previous {
 } # end sub previous
 sub next {
 	my $self = shift;
-	my @papers = openprint::Paper->find( 
-'columns'   =>  '*,(select name from stockbrands where id=brand_id) AS brand, (select name from stockfinishes where id=finish_id) AS finish, (select name from stockcolours where id=colour_id) AS colour, (select name from stockweights where id=weight_id) AS weight',
-'order'=>'brand,finish,colour,weight,width,height' );
+	my @papers = openprint::Paper->find_one( 
+			columns   =>  '*,(select name from stockbrands where id=brand_id) AS brand, (select name from stockfinishes where id=finish_id) AS finish, (select name from stockcolours where id=colour_id) AS colour, (select name from stockweights where id=weight_id) AS weight',
+'order'=>'brand,finish,colour,weight,width,height', 'brand >=' => $self->brand(), 'id !=' => $$self{id} );
 	for ( my $i = 0; $i < @papers; $i += 1 ) {
 		return $papers[$i+1] if ($papers[$i] == $self )and ($i < @papers);
 	} # end if
@@ -1039,7 +1040,7 @@ sub get_price {
 		} # end if
 		$$price{'100lb Total'} = $$price{'100lb Price'} * $qty/100;
 	} # end if
-$openprint::log->debug("Costs: ($$price{Cost}) ($$price{'100lb Price'})/100lb ($$price{'100lb Cost'}) ($$price{'Price'}) T($$price{'100lb Total'})") if $debug;
+$openprint::log->debug("Costs: cost($$price{cost}) Price($$price{'100lb Price'})/100lb cost($$price{'100lb Cost'})/cwt Price($$price{'Price'}) qty($qty) Total($$price{'100lb Total'})") if $debug;
 	return $price;
 } # end sub get_price
 
@@ -1347,7 +1348,7 @@ $log->debug("Didn't find specific paper $params{'width'} x $params{'height'}");
 						$$specs{'StockQuantity'.$qty_index} = $$specs{'txtPressSheetQty'.$qty_index};
 						$$specs{'StockQuantity'.$qty_index} =~ s/\D//g;
 					} # end if
-					if ( $$specs{'StockQuantity'.$qty_index} < $P->minimum_order() ) {
+					if ( $$specs{'StockQuantity'.$qty_index} and ( $$specs{'StockQuantity'.$qty_index} < $P->minimum_order() ) ) {
 						$openprint::log->debug("Paper no good due to minimum order. Need " . $$specs{'StockQuantity'.$qty_index} . ' have ' . $P->minimum_order() ) if $debug;
 						next;
 					} # end if

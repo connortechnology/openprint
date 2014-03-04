@@ -22,7 +22,7 @@ require openprint::Payment;
 require openprint::Tax;
 require openprint::Order_Notification;
 
-$debug = 1;
+$debug = 0;
 
 $table = 'orders';
 $serial = 'orders_id_seq';
@@ -524,7 +524,7 @@ sub send_sales_order {
 	new openprint::Email()->send(
 		FROM	=> $sales_person_email,
 		TO		=> sprintf('"%s %s" <%s>', $self->get('firstname','lastname','email')),
-		BCC	 =>	'iconnor@point-one.com',
+		#BCC	 =>	'iconnor@point-one.com',
 		SUBJECT => "Order $$self{id}",
 		ATTACHMENTS	=>	[ @body, @sales_order ],
 		);
@@ -774,17 +774,20 @@ $openprint::log->debug("Not employee" );
 } # end sub can_invoice
 
 sub Invoice {
+$openprint::log->error("Deprecated call to Order::Invoice");
 	return new openprint::Invoice( $_[0]{invoice_id} );
 } # end sub Invoice
 
 sub Invoices {
-	return openprint::Order_Invoice->find( order_id=>$_[0]{id} );
+	return openprint::Order_Invoice->find( order_id=>$_[0]{id}, order=>'invoice_id' );
 } # end sub Invoices
 
 sub invoiced_on {
-	if ( $_[0]{invoice_id} ) {
-		return $_[0]->Invoice()->created_on();
-	} # end if		
+	my @Invoices = $_[0]->Invoices() ;
+	if ( @Invoices ) {
+		return $Invoices[0]->created_on();
+	} 
+	return;	
 }  # end sub invoiced_on
 
 sub can_see_pricing {

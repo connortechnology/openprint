@@ -75,7 +75,7 @@ sub summary {
 	return '';
 }
 sub has_overrides {
-	return '';
+	return ();
 }
 
 1;

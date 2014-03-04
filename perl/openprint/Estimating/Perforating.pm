@@ -460,6 +460,7 @@ sub signature_calc {
 			my $horizontal_rules = 0;
 			my $horizontal_length = 0;
 			my %horizontal_price;
+			my $remaining_inches = 0;
 
 			$Results{Breakdown} .= 'Image orientation: ' . $I->image_orientation() .'<br/>';
 
@@ -511,6 +512,7 @@ sub signature_calc {
 						} elsif ( $$Package_Qty{units} eq 'inches' ) {
 							$Results{Breakdown} .= sprintf( 'Needed %d inches', POSIX::ceil($horizontal_length) );
 							$package_qty = POSIX::ceil( $horizontal_length / $$Package_Qty{value} );
+							$remaining_inches = ( $$Package_Qty{value} * $package_qty ) - $horizontal_length;
 						} # end if
 	
 						$horizontal_price{Total} = Math::Round::nearest( 0.01, $horizontal_price{Price} * $package_qty );
@@ -579,11 +581,18 @@ sub signature_calc {
 						} # end if
 					} elsif ( $vertical_price{units} eq 'per package' ) {
 						my $package_qty;
+							
 						if ( lc $$Package_Qty{units} eq 'feet' ) {
 							$Results{Breakdown} .= sprintf( 'Needed %.2f feet', POSIX::ceil($vertical_length/12) );
+							if ( $$Wheel{id} == $$Rule{id} ) {
+								$vertical_length -= 12 * $remaining_inches;
+							} # end if
 							$package_qty = POSIX::ceil( ( $vertical_length / 12 ) / $$Package_Qty{value} );
 						} elsif ( lc $$Package_Qty{units} eq 'inches' ) {
 							$Results{Breakdown} .= sprintf( 'Needed %d inches', POSIX::ceil($vertical_length) );
+							if ( $$Wheel{id} == $$Rule{id} ) {
+								$vertical_length -= $remaining_inches;
+							} # end if
 							$package_qty = POSIX::ceil( $vertical_length / $$Package_Qty{value} );
 						} # end if
 	

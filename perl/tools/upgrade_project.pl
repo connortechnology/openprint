@@ -9,6 +9,8 @@ require openprint::Project;
 require openprint::service;
 
 use openprint ();
+use configuration ();
+
 use vars qw( $log $dbh );
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
@@ -22,6 +24,8 @@ $sql_server{'login'}    = $ARGV[1];
 $sql_server{'login'} = $sql_server{'database'} if ! $sql_server{'login'};
 $sql_server{'password'} = $ARGV[2];
 $sql_server{'password'} = $sql_server{'login'} if ! $sql_server{'password'};
+
+$openprint::Object::config{"db_name"} = $sql_server{'database'};
 
 $openprint::Object::no_cache = 1;
 my $projects_count = 0;
@@ -37,7 +41,7 @@ my @projects;
 
 foreach my $Project ( openprint::Project->find( 'order'=>'id desc',
 			'type !='	=>	'MultiPage',
-			'status not in'	=>	['uncalculated','Deleted'],
+			#'status not in'	=>	['uncalculated','Deleted'],
 			( $project_id ? ( 'id'=>$project_id) : () ),
 			( $company_id ? ( 'company_id'=>$company_id ) : () ),
 			limit=>$projects_count  ) ) {
@@ -59,13 +63,14 @@ foreach my $Project ( openprint::Project->find( 'order'=>'id desc',
 	} # end foreach sig
 	next if $dead != @sigs;
 
-	print $Project->id() . "\n";
+	print $Project->id() . " hit enter to do it\n";
 	my $input = <STDIN>;
 	last if $input eq 'q';
 	next if $input eq 'n';
 
 	my $ac = sql::start_transaction( $dbh );
 	my $print_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
+	$log->debug("Sigs: @sigs ");
 	foreach my $sig ( @sigs ) {
 		my $PService = $Project->Service( $sig );
 		my $sig_specs = $PService->specs();
@@ -74,6 +79,7 @@ foreach my $Project ( openprint::Project->find( 'order'=>'id desc',
 		} # end if
 	} # end foreach sig
 	@sigs = $Project->signatures();
+	$log->debug("Sigs after deleting: @sigs ");
 	if ( ! @sigs ) {
 		my $new_signature = $Project->copy_signature( $print_specs, {}, openprint::service::status( $Project->id(), $$services{''}[0] ) );
 		foreach my $qty_index ( $Project->quantity_indexes() ) {
@@ -88,9 +94,9 @@ foreach my $Project ( openprint::Project->find( 'order'=>'id desc',
 			$log->debug("Not changing $$Project{id}");
 		} # end if
 	} # end if
-	if ( $dbh->errstr() ) {
+	if ( $_ = $dbh->errstr() ) {
 		$dbh->rollback();
-		die $dbh->errstr();
+		die $_;
 	} # end if
 	sql::end_transaction( $dbh, $ac );
 

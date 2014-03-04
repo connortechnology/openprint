@@ -21,6 +21,7 @@ $debug = 0;
 );
 %find_fields = (
 	'category'	=>	'(SELECT ServiceType_Categories.name FROM ServiceType_Categories,Service_Types WHERE ServiceType_Categories.id=Service_Types.category_id AND Service_Types.id=servicetype_id)',
+	servicetype		=>	'(SELECT name FROM service_types WHERE service_types.id=servicetype_id)',
 );
 %transforms = (
 );
@@ -129,12 +130,19 @@ sub runtime {
 
 sub delete {
 	my ( $self ) = @_;
+if ( ! $$self{project_id} ) {
+	$openprint::log->error("Attempt to delete a Project Service with no project.");
+	return;
+} # end if
 	my $ac = sql::start_transaction( $openprint::dbh );
+$openprint::log->warn("Deleting " . $self->to_string() );
 	sql::execute( undef, $openprint::dbh, q{DELETE FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND lngServiceIndex=?}, @$self{'project_id','service_id'} );
 	sql::execute( undef, $openprint::dbh, q{DELETE FROM tbl_Project_Contents WHERE lngProjectIndex=? AND lngServiceIndex=?}, @$self{'project_id', 'service_id'} );
 	my $Project = $self->Project();
+$openprint::log->warn("Deleting Service from " . $Project->to_string() );
 	delete $$Project{'Services'};
 	delete $$Project{'signatures'};
+	delete $$Project{'Signature'};
 	delete $$Project{'service_types'};
 	foreach my $Job ( openprint::ScheduledJob->find( project_id=>$$self{project_id}, 'service_id any'=>$$self{service_id} ) ) {
 		$Job->save( { 
@@ -164,6 +172,7 @@ sub overrides {
 	$module = 'openprint::Estimating::Printing' if $module eq 'openprint::Estimating::Signature';
 	$module = 'openprint::Estimating::Printing' if $module eq 'openprint::Estimating::AdditionalSignature';
 	$module = 'openprint::Estimating::Printing' if $module eq 'openprint::Estimating::';
+	eval ( 'require '.$module.';' );
 	if ( my $function = $module->can( 'has_overrides' ) ) {
 		my $specs = $_[0]->specs();
 		my @o = $function->( $self->Project(), $$self{'service_id'}, $specs, $qty_index );

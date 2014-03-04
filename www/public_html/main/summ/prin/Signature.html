@@ -14,12 +14,8 @@
 <p>
 	<label>Breakdown</label>
 	<? echo ( 
-		my $html = '';
 		my $sig_specs = openprint::service::get_specs_ref( @$variable{'Project', 'ServiceIndex'} );
-		foreach my $qty_index ( $$variable{Project}->quantity_indexes() ) {
-			$html .= '<span class="value">'.$$sig_specs{'hdnBreakdown'.$qty_index}.'</span>';
-		} 
-		return $html;
+		return join("\n", map { ('<span class="value">', $$sig_specs{'hdnBreakdown'.$_}, '&nbsp;</span>') } $$variable{Project}->quantity_indexes() );
 	) ?>
 </p>
 

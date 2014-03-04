@@ -146,11 +146,12 @@ sub send_reprint_request_notification {
 	my $Email = new openprint::Email();
 	$Email->send(
 			FROM    => $From,
-			TO      => [ openprint::User->find( 'type'=>['E','A'], 'usergroup @>'=>['Reprint Approvals']) ],
+			TO      => [ openprint::User->find( type=>['E','A'], 'usergroup any'=>'Reprint Approvals') ],
 			SUBJECT => 'CAR Reprint Request',
 			ATTACHMENTS => ['', MIME::QuotedPrint::encode_qp( ssi::variable_substitution( \$email_template, \%info ) ), 'text/html', 'quoted-printable' ],
 			);
 } # end sub send_reprint_request_notification
+
 sub send_reprint_approval_notification {
 	my ($self) = @_;
 

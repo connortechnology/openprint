@@ -406,6 +406,10 @@ sub apply {
 		$$MC{location_id} = undef;
 		$skid_changes .= 'Changed location to ' . $Skid->Location()->name() . '<br/>';
 	} # end if
+	my $Paper = $MC->Type()->Paper();
+
+	$Skid->type( $Paper->type() ) if ! $Skid->type();
+
 	if ( ! $Skid->id() ) {
 		$skid_changes .= 'Skid Created.<br/>';
 		$$Skid{id} = $$MC{skid_id} if $$MC{skid_id};
@@ -415,7 +419,6 @@ sub apply {
 	} # end if
 	return $error if ! $Skid->id();
 
-	my $Paper = $MC->Type()->Paper();
 	my $Manifest = $MC->Manifest();
 
 	if ( $skid_changes ) {
@@ -448,10 +451,9 @@ $openprint::log->debug("Setting skid_id to $$Skid{id}");
 	if ( ( $$SkidContent{quantity} != $$MC{quantity} ) and ! $checked_out ) {
 		openprint::employee_inventory::save_inventory( $Skid, $Paper, $$MC{quantity}, sprintf('Inventory adjusted by manifest <a href="/employee/inventory/manifest_view.html?manifest_id=%1$d">%2$s</a>.', $Manifest->id(), $Manifest->name() ), $MC->Type()->Condition() );
 		if ( $SkidContent = openprint::SkidContent->find_one( skid_id=>$Skid->id(), paper_id=>$$Paper{id} ) ) {
-	
-		$openprint::log->debug("New skidcontent: " . $SkidContent->to_string() );
+			$openprint::log->debug("New skidcontent: " . $SkidContent->to_string() );
 		} else {
-		$openprint::log->debug("No New skidcontent: " );
+			$openprint::log->debug("No New skidcontent: " );
 		} 
 	} # end if
 	if ( $Project and ! $checked_out ) {

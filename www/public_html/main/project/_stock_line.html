@@ -3,17 +3,16 @@
 	my $stock_id = join( '-', @$variable{'ss_id', 'stock_index'} );
 	my $stock_string = $$variable{Stock}->id_string();
 
-	$html .= '<li><label>'.$stock_string.'</label>';
+	$html .= '<li><label>'.$$variable{Stock}->to_string().'</label>';
 	$html .= sprintf('<input type="hidden" id="id-%1$d-%2$d" name="id-%1$d-%2$d" value="%3$s" />', @$variable{'ss_id', 'stock_index','paper_id'} );;
 	foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
-		my $key = '-'.$stock_id.'-'.$qty_index;
-		$html.= '<span class="'.$$variable{'Columns'}.'Columns">';
-
+		my $key = join('', '-',$stock_id,'-',$qty_index );
+		$html .= '<span class="'.$$variable{Columns}.'Columns">';
 		$html .= '<span class="quantity">';
 		$html .= input( type=>'float', id=>'qty'.$key, name=>"qty$key", value=>$$variable{"qty$key"}, onkeyup=>'calc(this.form.name);' );
 		$html .= 'lbs ';
 
-		if ( $$variable{'Stock'}->type() ne 'Roll' ) {
+		if ( $$variable{Stock}->type() ne 'Roll' ) {
 			$html .= input( type=>'cardinal', id=>"sheets$key", name=>"sheets$key", value=> $$variable{"qty$key"}, onkeyup=>'calc(this.form.name);' );
 			$html .= 'sheets ';
 		} # end if
