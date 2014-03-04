@@ -16,9 +16,9 @@
 			<table cellspacing="0" cellpadding="0" border="0" width="100%">
 				<tr>
 					<td width="16%" class="headerText"><b>Company Name</b></td>
-					<td width="55%" class="hugeText"><b><? echo ( $$variable{Order}->Company()->name() ) ?></b></td>
+					<td width="55%" class="hugeText"><b><? echo ( $$variable{Company}->name() ) ?></b></td>
 					<td width="4%" class="headerText"><b>CSR</b></td>
-					<td width="25%" class="docketText"><? echo ( $$variable{Order}->Company()->CSR()->name() ) ?></td>
+					<td width="25%" class="docketText"><? echo ( $$variable{CSR}->name() ) ?></td>
 				</tr>
 			</table>
 		</td>
@@ -389,8 +389,9 @@
 		<td colspan="3" class="headerText"><b>Proofs</b></td>
 	</tr>
 <? echo ( 
-	openprint::print_project::get_service_specifications( $r, $log, $dbh, $variable, $$variable{'ProjectIndex'}, $$variable{'ProofServiceIndex'} );
-	openprint::Estimating::Proofs::get_proof_specs( $log, $dbh, $variable, @$variable{'ProjectIndex','ProofServiceIndex'} );
+	my $services = $$variable{Project}->services();
+	openprint::print_project::get_service_specifications( $r, $log, $dbh, $variable, $$variable{Project}->id(), $$services{Proofs}[0] );
+	openprint::Estimating::Proofs::get_proof_specs( $log, $dbh, $variable, $$variable{Project}->id(), $$services{Proofs}[0] );
 	my $html;
 	my $qty_index = $$variable{Project}->ordered_quantity_index();
 
@@ -467,8 +468,6 @@
 	<? echo ( my $html;
 		my @BinderyServices = openprint::Project_Service->find(category=>'Bindery', project_id=>$$variable{Project}->id());
 		my @BinderyServiceNames = map { $_->ServiceType()->name() } @BinderyServices;
-$log->debug("Binder: @BinderyServiceNames");
-
 
 		my @bindery_text;
 
@@ -496,8 +495,8 @@ $log->debug("Binder: @BinderyServiceNames");
 				my @signatures = $$variable{Project}->signatures();
 				foreach my $signature_service_index ( @signatures ) {
 					my $sig_specs = openprint::service::get_specs_ref( $$variable{Project}, $signature_service_index );
-					next if ! $$specs{"txtQty-$$sig_specs{'SignatureIndex'}"};
-					$scoring_html .= $$specs{"txtQty-$$sig_specs{'SignatureIndex'}"} . ' Score' . ($$specs{"txtQty-$$sig_specs{'SignatureIndex'}"} ? 's' : '') . ' on form ' . $$sig_specs{'SignatureIndex'} . '<br/>';
+					next if ! $$specs{"txtQty-$$sig_specs{SignatureIndex}"};
+					$scoring_html .= $$specs{"txtQty-$$sig_specs{SignatureIndex}"} . ' Score' . ($$specs{"txtQty-$$sig_specs{'SignatureIndex'}"} ? 's' : '') . ' on form ' . $$sig_specs{'SignatureIndex'} . '<br/>';
 				} # end foreach
 				$scoring_html .= '</b>';
 				push @bindery_text, $scoring_html;
@@ -507,7 +506,7 @@ $log->debug("Binder: @BinderyServiceNames");
 				push @bindery_text, sprintf(' Fold %s&quot; x %s&quot;-&gt;%s&quot; x %s&quot;', @$variable{'txtWidth','txtHeight','txtFinalWidth','txtFinalHeight'} );
 			} # end if
 		} # end if no stitching
-		if ( sets::isin( 'Drilling', @BinderyServiceNames) ) {
+		if ( sets::isin( 'Drilling', \@BinderyServiceNames) ) {
 			my $drill_specs = openprint::service::get_specs_ref( $$variable{'Project'}, $$services{'Drilling'}[0] );
 			push @bindery_text, sprintf('Drill %d holes (%s&quot;)', @$drill_specs{'txtHoleQty','txtHoleSize'} );
 		} # end if
