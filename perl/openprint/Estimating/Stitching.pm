@@ -18,7 +18,7 @@ package openprint::Estimating::Stitching;
 use strict;
 #use warnings;
 
-use constant DEBUG => 1;
+use constant DEBUG => 0;
 
 require openprint::Equipment;
 require openprint::service;
