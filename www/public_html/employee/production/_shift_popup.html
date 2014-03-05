@@ -24,9 +24,10 @@
 				<label>Operator</label>
 				<select id="operator_id" name="operator_id" size="1"><option value="">select one</option>
 				<? echo ( 
-				   make_drop_down ( [ map { $_->id(), $_->name() } openprint::User->find( type=>'E', 
-#usergroup=>[ $$variable{Shift}->Equipment()->categories() ],
-order=>'lower(firstname)' ) ], $$variable{'Shift'}->operator_id() );
+					my @Usergroups = openprint::UserGroup->find( name=> [ $$variable{Shift}->Equipment()->categories()] );
+					my @Usersin = openprint::User_in_UserGroup->find( usergroup_id=>[ map { $$_{id} } @Usergroups] );
+					make_drop_down( openprint::User->dropdown(id=>[ map { $$_{user_id} } @Usersin], order=>'lower(firstname),lower(lastname)'), $$variable{Shift}->operator_id() );
+
 				   ) ?>
 				</select>
 			</li>
