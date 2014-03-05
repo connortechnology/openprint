@@ -358,18 +358,19 @@ sub pay {
 	} # end if
 
 	my $error = (new openprint::Payment())->save({
-			'order_id'		=>	$$self{id},
-			'payor_id'		=>	$$self{company_id},
-			'recipient_id'	=>	$self->supplier_id(),
-			'amount'		=>	$self->owing(),
-			'method'		=>	'Manual',
-			'currency_id'	=>	$$self{currency_id},
-			'memo'			=>	'Order marked paid',
-			'received_on'	=>	'NOW()',
+			order_id		=>	$$self{id},
+			payor_id		=>	$$self{company_id},
+			recipient_id	=>	$self->supplier_id(),
+			amount		=>	$self->owing(),
+			method		=>	'Manual',
+			currency_id	=>	$$self{currency_id},
+			memo			=>	'Order marked paid',
+			received_on	=>	'NOW()',
 			});
 	if ( ! $error ) {
 		$self->add_log("Paid.");
 		$self->update_status();
+		$error .= $self->save();
 	} # end if
 	return $error;
 } # end sub pay
