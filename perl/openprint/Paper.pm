@@ -109,6 +109,7 @@ $serial	= 'paper_id_seq';
 );
 
 %defaults = (
+	created_on	=>	q`'NOW()'`,
 	basis_width	=>	undef,
 	basis_height	=>	undef,
 	basis_mweight	=>	undef,
