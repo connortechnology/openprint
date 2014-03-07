@@ -614,7 +614,7 @@ sub allocate {
 			'paper_id',		$paper_id,
 			'quantity',		1*$quantity,
 			'units',		$units,
-			( $Project ? ( docket => $Project->docket() : () ) ),
+			( $Project ? ( docket => $Project->docket() ): () ),
 			'operator_id',	$session{'user_id'},
 			);
 	if ( $Project ) {
