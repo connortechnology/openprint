@@ -97,7 +97,7 @@ $serial	= 'paper_id_seq';
 		'quality'	=>	'(SELECT name FROM stockqualities WHERE stockqualities.id=papers.quality_id)',
 		'size'		=>	q`width || '" x ' || height || '"'`,
 		'sheetsize'		=>	q`width || '" x ' || height || '"'`,
-		'allocated_to_docket'	=>	'(SELECT lngdocketnumber FROM projects WHERE projects.id IN ( SELECT project_id FROM paper_allocations WHERE paper_id = papers.id) )',
+		allocated_to_docket	=>	'(SELECT docket FROM paper_allocations WHERE paper_id = papers.id)',
 		'project_type_name'	=>	'(SELECT name FROM project_types WHERE id IN ( SELECT lngProjectTypeIndex FROM Paper_Recommendations WHERE lngPaperIndex = papers.id ) )',
 		'project_type_id'	=>	'(SELECT lngProjectTypeIndex FROM Paper_Recommendations WHERE lngPaperIndex = papers.id)',
 		'stock_settings_equipment_id'	=>	'(SELECT equipment_id FROM equipment_stock_settings WHERE stock_id=papers.id)',
