@@ -881,7 +881,7 @@ $openprint::log->debug("Templatetype: $$sig_specs{'rdbTemplateType'}") if DEBUG;
 						} # end if
 							
 						my $Fold = $Equipment->Fold({
-							'page_width'		=>	$$sig_specs{txtFinalWidth},
+							page_width		=>	$$sig_specs{txtFinalWidth},
 								type			=>	$$sig_specs{'rdbTemplateType'},
 								gsm				=>	$Paper->gsm(),
 								calliper		=>	$$Paper{'calliper'},
