@@ -256,6 +256,7 @@ sub calc {
 			} # end foreach
 			last if $$specs{'txtCalliper'};
 		} # end foreach
+		$$specs{'txtCalliper'} = Math::Round::nearest( 0.0001, $$specs{'txtCalliper'} );
 	} # end if
 
 # Need to figure out which dimension the spine bisects

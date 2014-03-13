@@ -75,11 +75,30 @@ if ( 0 ) {
 		var form = $('f1');
 	   new Ajax.Updater( 'alert', '/main/project/prin/_signature.html', {
 			parameters: { project_id : form.ProjectIndex.value, action: 'add_group' },
-			onSuccess: function(response){new Insertion.Bottom($('SignatureGroups'), response.responseText);}}
+			onSuccess: function(response){new Insertion.Bottom($('SignatureGroups'), response.responseText);calc('f1');}}
 			//onSuccess: function(response){new Insertion.Bottom($('SignatureGroups'), response.responseText);calc('f1');}}
 			//onSuccess: function(response){new Insertion.Bottom($('SignatureGroups'), response.responseText);}
 		 );
 	}
+	function copy_group( group_id ) {
+		var form = $('f1');
+	   new Ajax.Updater( 'alert', '/main/project/prin/_signature.html', {
+			parameters: { project_id : form.ProjectIndex.value, action: 'copy_group', group_id: group_id },
+			onSuccess: function(response){new Insertion.Bottom($('SignatureGroups'), response.responseText);calc('f1');}}
+			//onSuccess: function(response){new Insertion.Bottom($('SignatureGroups'), response.responseText);calc('f1');}}
+			//onSuccess: function(response){new Insertion.Bottom($('SignatureGroups'), response.responseText);}
+		 );
+	}
+	function remove_group( group_id ) {
+		var form = $('f1');
+	   new Ajax.Updater( 'alert', '/main/project/prin/_signature.html', {
+			parameters: { project_id : form.ProjectIndex.value, action: 'remove_group', group_id: group_id },
+			onSuccess: function(response){$('SignatureGroup'+group_id).remove();calc('f1');}}
+			//onSuccess: function(response){new Insertion.Bottom($('SignatureGroups'), response.responseText);calc('f1');}}
+			//onSuccess: function(response){new Insertion.Bottom($('SignatureGroups'), response.responseText);}
+		 );
+	}
+  
   
 </script>
 <?include('/main/project/prin/_templates.html')?>
@@ -161,13 +180,12 @@ radio('spine', [ map { $_, $_ } 'height', 'width' ], $$variable{spine}, { defaul
 			</div>
 			<div id="OtherSpecifications">
 				<fieldset><legend>Other Specifications</legend>
-					<? include('/includes/main/proj/multipage_printing_type.html') ?>
+					<? echo ( return ''; include('/includes/main/proj/multipage_printing_type.html'); ) ?>
 					<? include('/includes/main/proj/screen_type.html') ?>
 				</fieldset>
 			</div>
 			</div><!--ProjectSpecifications-->
 			<div id="SignatureGroups">
-<? echo ( button( 'AddSignature', { onclick=>'add_group();', text=>'Add Another Group of Signatures' } ); ) ?>
 			<? echo (
 				my @Groups = sql::execute( undef, undef, 'SELECT DISTINCT strvalue FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strname=? ORDER BY strvalue', $$variable{'ProjectIndex'}, 'Group' );
 				my $ServiceType = openprint::ServiceType->find_one( name=>'Signature');

@@ -113,10 +113,6 @@ sub find {
 		push @values, $params{'quantity >='};
 	} # end if
 
-	if ( $params{'quality_id'} ) {
-		$sql .= ' AND id IN (SELECT skid_id FROM skid_contents WHERE quality_id = ?)';
-		push @values, $params{'quality_id'};
-	} # end if
 	if ( $params{'owner_id'} ) {
 		$sql .= ' AND owner_id=?';
 		push @values, $params{'owner_id'};
@@ -269,6 +265,19 @@ sub find {
 			$sql .= ' AND type=?';
 			push @values, $params{'type'};
 		} # end if
+	} elsif ( exists $params{'type !='} ) {
+			$sql .= ' AND (type IS NULL OR type!=?)';
+			push @values, $params{'type !='};
+	} elsif ( exists $params{'type is null or in'} ) {
+		if ( ref $params{'type is null or in'} eq 'ARRAY' ) {
+			$sql .= ' AND ( type IS NULL OR type IN (' . join(',', map {'?'} @{$params{'type is null or in'}}) . '))';
+			push @values, @{$params{'type is null or in'}};
+		} elsif ( $params{'type is null or in'} ) {
+			$sql .= ' AND (type IS NULL OR type = ?)';
+			push @values, $params{'type is null or in'};
+		} else {
+			$sql .= ' AND type IS NULL';
+		} # en dif
 	} # end if
 	if ( exists $params{'location_id'} ) {
 		if ( ref $params{'location_id'} eq 'ARRAY' ) {
@@ -286,7 +295,8 @@ sub find {
 	
 	$sql .= " ORDER BY $params{'order'}" if $params{'order'};
 	if ( @values == 1) {
-		Carp::cluck("Loading all skids?! $sql");
+		$log->warn("Loading all skids!");
+		#Carp::cluck("Loading all skids?! $sql");
 	} # end if
 
 	my $data = $openprint::dbh->selectall_arrayref( $sql, { Slice => {} }, @values );
@@ -295,9 +305,9 @@ sub find {
 	} elsif ( $debug ) {
 		$log->debug("Debug loaded skids ($sql) (@values) # of results: " . @$data );
 	} # end if
-	if ( $data and @$data >= 100 ) {
-		Carp::cluck("Loading a lot of skids?! $sql : #". @$data );
-	} # end if
+	#if ( $data and @$data >= 100 ) {
+		#Carp::cluck("Loading a lot of skids?! $sql : #". @$data );
+	#} # end if
 	return map { new openprint::Skid( $_->{id}, $_ ) } @$data;
 
 } # end sub find
@@ -403,7 +413,6 @@ sub add {
 			( ( $Purpose and $Purpose->id() ) ? ( purpose_id => $Purpose->id() ) : () ),
 			});
 	if ( $_ ) {
-		$log->debug("Bufer");
 		$openprint::log->error("Error adding skidcontent: $_");
 	} # end if
 	return $quantity - $old_quantity;
@@ -505,8 +514,8 @@ sub Contents {
 			$$self{Contents} = $_[0];
 		} else {
 			my %params = @_;
-			$params{'skid_id'} = $$self{'id'};
-			$params{'deleted_in'} = [0,1] if ! exists $params{'deleted in'};
+			$params{skid_id} = $$self{'id'};
+			$params{deleted} = [0,1] if ! exists $params{'deleted in'};
 			return openprint::SkidContent->find( %params );
 		} # end if
 	} elsif ( ! $$self{Contents} ) {
@@ -597,17 +606,19 @@ sub next {
 sub allocate {
 	my ( $self, $paper_id, $project_id, $quantity, $units ) = @_;
 
+	my $Project = new openprint::Project( $project_id ) if $project_id;
+
 	my $ac = sql::start_transaction();
 	sql::insert( undef, undef, 'Paper_Allocations',
 			'skid_ids',		[ $$self{'id'} ],
 			'paper_id',		$paper_id,
 			'quantity',		1*$quantity,
 			'units',		$units,
-			'project_id',	$project_id ? $project_id : undef,
+			( $Project ? ( docket => $Project->docket() ): () ),
 			'operator_id',	$session{'user_id'},
 			);
-	if ( $project_id ) {
-	(new openprint::Project( $project_id ))->add_to_log( @session{'company_id','user_id'}, qq`Allocated $quantity $units on skid <a href="/employee/inventory/skid_details.html?skid_id=$$self{id}">$$self{id}</a>` ) if $project_id;
+	if ( $Project ) {
+	$Project->add_to_log( @session{'company_id','user_id'}, qq`Allocated $quantity $units on skid <a href="/employee/inventory/skid_details.html?skid_id=$$self{id}">$$self{id}</a>` );
 	} # end if
 	sql::end_transaction( undef, $ac );
 } # end sub allocate

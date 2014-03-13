@@ -9,8 +9,8 @@
 		<td><? hecho ( $$variable{'CAR'}->part4_signed_on() ) ?></td>
 	</tr>
 </table>
-<? if ( $$variable{'CAR'}->part4_user_id() == $openprint::session{'user_id'} ) ?>
-	<p class="buttons">
-		<? echo ( ssi::writeButton( $log, $dbh, 'EditPart4', 'edit.gif', sprintf(q`new Ajax.Updater('Part4', '/employee/iso/_car_edit_part4.html', { method: 'get', parameters: {car_id:%1$d} } );`, $$variable{'CAR'}->id() ), '', 'Edit' ); ) ?>.
-	</p>
-<? endif ( $$variable{'CAR'}->part4_user_id() == $openprint::session{'user_id'} ) ?>
+<? if ( $$variable{'CAR'}->part4_user_id() == $openprint::session{'user_id'} or $session{user_type} eq 'A' or openprint::usergroup::is_user_in( ['Quality Control'], $session{user_id} ) ) ?>
+<p class="buttons">
+	<? echo ( button( 'EditPart4', { onclick=>sprintf(q`new Ajax.Updater('Part4', '/employee/iso/_car_edit_part4.html', { parameters: {car_id:%1$d} } );`, $$variable{'CAR'}->id() ), text=>'Edit' } ); ) ?>.
+</p>
+<? endif ( $$variable{'CAR'}->part4_user_id() == $openprint::session{'user_id'} or $session{user_type} eq 'A' or openprint::usergroup::is_user_in( ['Quality Control'], $session{user_id} ) ) ?>

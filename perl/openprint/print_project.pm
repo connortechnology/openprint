@@ -22,6 +22,7 @@ require openprint::Currency;
 require openprint::User;
 require openprint::logs;
 require openprint::Estimating::MultiPage;
+require Math::Round;
 
 # Projects are like Orders, in that you can have several in here, but only ONE of them may be unfinished.
 
@@ -91,12 +92,6 @@ sub add_service {
 		} # end if
 	} # end foreach
 } # end sub add_service
-
-sub insert_service {
-	my ( $log, $dbh, $project_index, $service_id ) = @_;
-	my $Project = new openprint::Project( $project_index );
-	return $Project->add_service( $service_id );
-} # end sub insert_service
 
 sub create_edit_display {
 	my $project_index = $param{'ProjectIndex'};
@@ -242,6 +237,8 @@ sub continue_project {
 					$service_index = $Project->copy_signature( $src_specs );
 					( $service_index, $redirect ) = choose_service( $log, $dbh, $project_index );
 					last;
+				} else {
+					$log->debug("Multpage status says we ok");
 				} # end if
 			} # end foreach
 		} # end if
@@ -346,17 +343,28 @@ sub summary {
 	} else {
 		Carp::cluck( "No ProjectService in Project $$Project{id}");
 	} # end if
+
+	foreach my $sig_id ( $Project->signatures( { sort => 1 } ) ) {
+		my $Service = $Project->Service( $sig_id );
+		my $Type = $Service->ServiceType();
+		push @services, $sig_id, $Type->name(), $Type->url();
+	} # end foreach signature
+
+	foreach my $ServiceCategory ( openprint::ServiceType_Category->find( order=>'sorting,name') ) {
+		foreach my $ServiceType ( openprint::ServiceType->find( category_id=>$$ServiceCategory{id}, order=>'sorting' ) ) {
+			next if ! $$services{$$ServiceType{name}};
+			next if $ServiceType->name() eq 'Signature';
+			foreach my $s_id ( @{$$services{$$ServiceType{name}}} ) {
+				my $Service = $Project->Service( $s_id );
+				push @services, $s_id, $ServiceType->name(), $ServiceType->url();
+			} # end foreach
+		} # end foreach
+	} # end foreach signature
+	$$variable{SERVICES} = \@services;
 	
-   push @services, sql::execute( $log, $dbh, q{SELECT lngServiceIndex, name, strdetailedurl FROM tbl_Project_Contents, Service_Types WHERE servicetype_id=Service_Types.id AND lngProjectIndex=? AND view_visible=true AND servicetype_id IS NOT NULL ORDER BY sorting,lngServiceIndex}, $project_index );
-
-   while ( @services ) {
-        my ( $service_index, $name, $url ) = splice @services,0,3;
-        push @{$$variable{'SERVICES'}}, $service_index, $name, $url;
-    } # end while
-
-	$$variable{'TOTAL1'} = sprintf( '%.2f', $Project->price1() );
-	$$variable{'TOTAL2'} = sprintf( '%.2f', $Project->price2() );
-	$$variable{'TOTAL3'} = sprintf( '%.2f', $Project->price3() );
+	$$variable{'TOTAL1'} = Math::Round::nearest( 0.01, $Project->price1() );
+	$$variable{'TOTAL2'} = Math::Round::nearest( 0.01, $Project->price2() );
+	$$variable{'TOTAL3'} = Math::Round::nearest( 0.01, $Project->price3() );
 
 	$$variable{'UNITPRICE1'} = $$variable{'txtQuantity1'} ? sprintf( "%.2f", $$variable{'TOTAL1'}/$$variable{'txtQuantity1'} ) : '0.00';
 	$$variable{'UNITPRICE2'} = $$variable{'txtQuantity2'} ? sprintf( "%.2f", $$variable{'TOTAL2'}/$$variable{'txtQuantity2'} ) : '0.00';
@@ -717,27 +725,9 @@ sub del_service {
 
 sub delete_service {
 	my ( $project_index, $service_index ) = @_;
-#$log->debug("DELETING service: " . new openprint::Project_Service({ project_id=>$project_index, service_id=>$service_index})->service_type() );
-	my $ac = sql::start_transaction( $openprint::dbh );
-	sql::execute( undef,undef, q{DELETE FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND lngServiceIndex=?}, $project_index, $service_index );
-	sql::execute( undef,undef, q{DELETE FROM tbl_Project_Contents WHERE lngProjectIndex=? AND lngServiceIndex=?}, $project_index, $service_index );
 	my $Project = new openprint::Project( $project_index );
-	delete $$Project{'Services'};
-	delete $$Project{'signatures'};
-	delete $$Project{'service_types'};
-	foreach my $Job ( openprint::ScheduledJob->find('project_id'=>$Project->id(), 'service_id any'=>$service_index ) ) {
-		$Job->save( { 
-				service_id	=> [ sets::exclude( [ $service_index ], $Job->service_id() ) ],
-				pertains_id	=> [ sets::exclude( [ $service_index ], $Job->pertains_id() ) ],
-				} );
-	} # end foreach Job
-	foreach my $Job ( openprint::ScheduledJob->find('project_id'=>$Project->id(), 'pertains_id any'=>$service_index ) ) {
-		$Job->save( { 
-				pertains_id => [ sets::exclude( [ $service_index ], $Job->pertains_id() ) ],
-				} );
-	} # end foreach Job
-	sql::end_transaction( $dbh, $ac );
-	#openprint::logs::insertLogRecord('10', "Service Index: " . $service_index . " for Project Index: " . $project_index,);
+	my $Service = $Project->Service( $service_index );
+	return $Service->delete();
 } # end sub delete_service
 
 sub display_reuse_project {
@@ -753,51 +743,31 @@ sub display_reuse_project {
 } # end sub
 
 sub reuse_project {
-	my ( $r, $log, $dbh, $cookie, $variable, $project_index ) = @_;
+	my ( $project_index ) = @_;
 
 	my $Project = new openprint::Project( $project_index );
 	if ( ! $Project->id() ) {
-		return misc::error( $log, $dbh, $variable, 'Error', "Source project $project_index could not be found." );
+		$variable{error} .= "Source project $project_index could not be found.";
+		return;
 	} # end if
 	my $NewProject = $Project->copy();
-	if ( exists $param{'quantity1'} ) {
-		$param{'quantity1'} =~ s/\D//g;
-		$NewProject->quantity1( $param{'quantity1'} );
-	} # end if
-	if ( exists $param{'quantity2'} ) {
-		$param{'quantity2'} =~ s/\D//g;
-		$NewProject->quantity2( $param{'quantity2'} );
-	} # end if
-	if ( exists $param{'quantity3'} ) {
-		$param{'quantity3'} =~ s/\D//g;
-		$NewProject->quantity3( $param{'quantity3'} );
-	} # end if
-	if ( exists $param{'reference'} ) {
-		( $param{'reference'} ) = misc::trim( $param{'reference'} );
-		$NewProject->reference( $param{'reference'} );
-	} # end if
-	if ( exists $param{'comments'} ) {
-		( $param{'comments'} ) = misc::trim( $param{'comments'} );
-		$NewProject->comments( $param{'comments'} );
-	} # end if
-	$NewProject->due_date( '' );
-	$NewProject->user_id( $session{'user_id'} );
-	# This allows uncalc->uncalc, everything else to UnOrdered
-	if ( sets::isin( $Project->status(), [ 'Pending Deposit', 'In Prepress', 'Proofs Out', 'Approved', 'Printed', 'Complete','Shipped','Picked Up' ] ) ) {
-		$NewProject->status('Unordered');
-	} else {
-		$NewProject->status('uncalculated');
-	} # end if
-	$NewProject->company_id( $param{'ddmCompany'} ) if $param{'ddmCompany'};
-	$variable{error} .= $NewProject->save();
+	$variable{error} .= $NewProject->save({
+		( map { exists $param{'quantity'.$_} ? ( 'quantity'.$_	=>	$param{'quantity'.$_} ) : ()  } ( 1 .. 3 ) ),
+		( map { exists $param{$_} ? ( $_ => $param{$_} ) : () } ( 'reference', 'comments' ) ),
+		due_date => undef,
+		user_id	=>	$session{user_id},
+		status	=> ( sets::isin( $Project->status(), [ 'Unordered', 'Pending Deposit', 'In Prepress', 'Proofs Out', 'Approved', 'Printed', 'Complete','Shipped','Picked Up' ] ) ? 'Unordered' : 'uncalculated' ),
+		( $param{'ddmCompany'} ? ( company_id => $param{'ddmCompany'} ) : () ),
+	} );
+
 	$session{project_id} = $NewProject->id();
 
-	$NewProject->add_to_log( @session{'company_id','user_id'}, 'Reused from project '.$Project->id() );
 	$Project->add_to_log( @session{'company_id','user_id'}, 'Reused to project '.$NewProject->id() );
 
 	if ( $param{'ddmCompany'} and $param{'ddmCompany'} != $session{'company_id'} ) {
 		openprint::switch_company( new openprint::Company( $param{'ddmCompany'} ) ) if sets::isin( $session{'user_type'}, ['A','E'] );
 	} # end if
+	$NewProject->add_to_log( @session{'company_id','user_id'}, 'Reused from project '.$Project->id() );
 
 	# Make this all one transaction... Don't need locking because a reload would get a different projectindex
 	my $ac = sql::start_transaction( $dbh );
@@ -815,13 +785,13 @@ sub reuse_project {
 	} # end foreach
 	sql::end_transaction( $dbh, $ac );
 
-	if ( $Project->quantity1() != $NewProject->quantity1()
-			or $Project->quantity2() != $NewProject->quantity2()
-			or $Project->quantity3() != $NewProject->quantity3() ) {
-		openprint::Estimating::MultiPage::calculate_signatures( $NewProject );
-		openprint::service::auto_calculate( $NewProject, undef );
+	if ( ( $NewProject->quantity1() and ( $Project->quantity1() != $NewProject->quantity1() ) )
+			or ( $NewProject->quantity2() and ( $Project->quantity2() != $NewProject->quantity2() ) )
+			or ( $NewProject->quantity3() and ( $Project->quantity3() != $NewProject->quantity3() ) )
+			or ( $param{recalculate} == 1 )
+	   ) {
+		$NewProject->recalculate();
 	} # endif
-	$session{'project_id'} = $NewProject->id();
 	return $NewProject->id();
 } # end sub reuse_project
 

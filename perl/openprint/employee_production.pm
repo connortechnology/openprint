@@ -190,17 +190,16 @@ sub print_overview {
 			openprint::print_project::insert_project_type( $r, $log, $dbh, $Project->id(), 'Custom' );
 			my $project_id = $Project->id();
 			my @services;
+			my $Equipment = new openprint::Equipment( $param{'press_id'} );
 			foreach my $signature_count ( 1 .. $param{'forms'} ) {
-				my $service_id = openprint::print_project::insert_service( $log, $dbh, $project_id, 'Signature' );
+				my $service_id = $Project->add_service( 'Signature', { 
+						'txtSignatureType' => 'Signature',
+						'txtServiceDescription' => 'Additional Signature',
+						'SignatureIndex' => $signature_count,
+						'ImpressionQuantity' => $param{'impressions'},
+						'UsePress'  =>$Equipment->strid(),
+						});
 				push @services, $service_id;
-				openprint::service::insert_service_spec( $log, $dbh, $project_id, $service_id, 'txtSignatureType', 'Signature' );
-				openprint::service::insert_service_spec( $log, $dbh, $project_id, $service_id, 'txtServiceDescription', 'Additional Signature' );
-				openprint::service::insert_service_spec( $log, $dbh, $project_id, $service_id, 'SignatureIndex', $signature_count );
-				openprint::service::insert_service_spec( $log, $dbh, $project_id, $service_id, 'ImpressionQuantity', $param{'impressions'} );
-
-				my $Equipment = new openprint::Equipment( $param{'press_id'} );
-				openprint::service::insert_service_spec( $log, $dbh, $project_id, $service_id, 'UsePress', $Equipment->strid() );
-
 				$Project->add_to_log( @session{'company_id','user_id'}, sprintf( 'Added Service: %s', 'Signature' ) );
 			} # end foreach
 			$Job->project_id( $Project->id() );
@@ -1005,6 +1004,7 @@ sub _bump_job {
 sub _pending_approved {
 	my ( $referer ) = $ENV{'HTTP_REFERER'} =~ /^https?:\/\/[^\/:]+([^?]*).*$/;
 	$variable{'referer'} = $referer;
+	ssi::save_params( $referer, ( 'Equipment','scale', 'show_feedback' ) );
 
 	$session{$referer.'?pending_approved'} = $session{$referer.'?pending_approved'} ? 0 : 1;
     @{$variable{'Equipment'}} = ();
@@ -1019,6 +1019,7 @@ sub _pending_approved {
 sub _pending {
 	my ( $referer ) = $ENV{'HTTP_REFERER'} =~ /^https?:\/\/[^\/:]+([^?]*).*$/;
 	$variable{'referer'} = $referer;
+	ssi::save_params( $referer, ( 'Equipment','scale', 'show_feedback' ) );
 	$session{$referer.'?pending'} = $session{$referer.'?pending'} ? 0 : 1;
     @{$variable{'Equipment'}} = ();
 	if ( $session{$referer.'?pending'} ) {

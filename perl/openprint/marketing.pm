@@ -103,7 +103,6 @@ sub email_campaign {
     } elsif ( $param{'btnFunction'} eq 'View Recipients' ) {
 		$variable{'PageContent'} = join('<br/>', map { new openprint::User( $_ )->name() } $Campaign->recipients() );
 	} # end if
-	$Campaign->load_info( \%variable ) if $Campaign;
 	$variable{'Campaign'} = $Campaign;
 } # end sub email_campaign
 

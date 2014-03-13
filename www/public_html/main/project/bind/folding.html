@@ -47,6 +47,10 @@
 
 	} // end function cbFoldingResults
 
+function show_extra_fold( signature, qty_index ) {
+	var f = $('Fold-'+signature+'-'+qty_index+'-'+'2');
+	f.show();
+}
 function Fold_onchange( element, signature, qty_index, index ) {
 	var spec = signature + '-' + qty_index + '-' + index;
 	var next_index = 1+parseInt(index);
@@ -69,10 +73,12 @@ function Fold_onchange( element, signature, qty_index, index ) {
 		// This appears to hide the fold if the qty is empty... but it doesn't seem to work.
 		// and it's bollocks. Basically we the fold we are editing is empty, then hide the next one.  But the next one might be valid.
 //alert('hiding +1');
+if ( 0 ) {
 		var nextfold = $('Fold-'+signature+'-'+qty_index+'-'+next_index );
 		if ( nextfold ) {
 			$('Fold-'+signature+'-'+qty_index+'-'+next_index ).hide();
 		} // end if
+}
 	} else {
 		$('Fold-'+signature+'-'+qty_index+'-'+(1+parseInt(index)) ).show();
 	} // end if
@@ -87,7 +93,8 @@ function Fold_onchange( element, signature, qty_index, index ) {
 			my $html;
 			my $Project = $$variable{Project};
 			my $services = $Project->services();
-			my $fragment = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/main/project/bind/_fold.html' );
+			my $fragment = slurp_content( '/main/project/bind/_fold.html' );
+			@{$$variable{fold_options}} = sort { my ( $pagesa ) = $a =~ /(\d*)/; my ( $pagesb ) = $b =~ /(\d*)/; $pagesa <=> $pagesb; } ( map { $_, $openprint::Estimating::Folding::fold_types{$_} } sql::execute( undef, undef, 'SELECT DISTINCT type FROM folds') );
 
 			foreach my $ss_id ( $$variable{Project}->signatures({sort=>1}) ) {
 				my $sig_specs = openprint::service::get_specs_ref( $$variable{'Project'}, $ss_id );
@@ -127,8 +134,8 @@ function Fold_onchange( element, signature, qty_index, index ) {
 				foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
 					$html .= '<div class="'.$$variable{Columns}.'Columns">';
 					if ( $$sig_specs{"txtImposition$qty_index"} ) {
-						if ( sets::isin( $session{'user_type'}, ['A','E'] ) ) {
-							$html .= sprintf('<input type="checkbox" id="chkOverrideFold-%1$d-%2$d" name="chkOverrideFold-%1$d-%2$d" %3$s value="Y" onclick="if ( ! this.checked ) calc(this.form.name);" /><label class="radio" for="chkOverrideFold-%1$d-%2$d">Override</label><br/>', $$sig_specs{'SignatureIndex'}, $qty_index, $$variable{"chkOverrideFold-$$sig_specs{'SignatureIndex'}-$qty_index"} eq 'Y' ? 'checked="checked"' : '' );
+						if ( sets::isin( $session{user_type}, ['A','E'] ) ) {
+							$html .= sprintf('<input type="checkbox" id="chkOverrideFold-%1$d-%2$d" name="chkOverrideFold-%1$d-%2$d" %3$s value="Y" onclick="if ( ! this.checked ) { calc(this.form.name);}else{show_extra_fold(%1$d,%2$d);};" /><label class="radio" for="chkOverrideFold-%1$d-%2$d">Override Folds</label><br/>', $$sig_specs{'SignatureIndex'}, $qty_index, $$variable{"chkOverrideFold-$$sig_specs{'SignatureIndex'}-$qty_index"} eq 'Y' ? 'checked="checked"' : '' );
 						} elsif ( $$variable{"chkOverrideFold-$$sig_specs{'SignatureIndex'}-$qty_index"} eq 'Y' ) {
 							$html .= sprintf('<input type="hidden" name="chkOverrideFold-%1$d-%2$d" value="Y" /> Overriden<br/>', $$sig_specs{'SignatureIndex'}, $qty_index );
 						} # end if

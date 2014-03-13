@@ -119,7 +119,7 @@ button('Export',{ onclick=>q`var form = $('f1');form.btnFunction.value='Export';
 				</tr>
 				', $rowclass, $Order->id(), $Order->docket(), 
 					format_date( $Order->created_on() ),
-					$Order->Invoice()->link_to(), $Order->po(), 
+					join('<br/>', map { $_->Invoice()->link_to() } $Order->Invoices() ), $Order->po(), 
 					openprint::Currency::format($Order->total()), openprint::Currency::format( $Order->owing() ),
 					$Order->status(),
 					);

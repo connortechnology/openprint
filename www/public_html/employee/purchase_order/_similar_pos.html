@@ -1,16 +1,17 @@
 <? echo (
-	$param{'docket'} =~ s/\D//g;
-	return if ! $param{'docket'};
+	
+	my @dockets = map { $_ ? $_ : () } split(  /\D/, $param{docket} );
+	return if ! @dockets;
 	my $html = '';
 
-	foreach my $Project ( openprint::Project->find(docket=>$param{docket}, order=>'id' ) ) {
+	foreach my $Project ( openprint::Project->find(docket=>\@dockets, order=>'id' ) ) {
 		if ( sets::isin( $Project->status(), [ 'Complete', 'Picked Up', 'Shipped', 'Printed','Waiting For Pickup' ] ) ) {
 			$html .= "Docket $param{docket} appears to be " . $Project->status() . '<br/>';
 		} # end if
 	} # end foreach Project
 
 	my @Contents;
-	foreach my $PO_C ( openprint::PurchaseOrder_Content->find( docket=>$param{docket}, order=>'po_id DESC' ) ) {
+	foreach my $PO_C ( openprint::PurchaseOrder_Content->find( docket=>\@dockets, order=>'po_id DESC' ) ) {
 		next if $PO_C->PurchaseOrder()->deleted();
 		next if $PO_C->po_id() == $param{po_id};
 		push @Contents, $PO_C;
@@ -29,7 +30,7 @@
 		} # end foreach
 		$html .= '</table>';
 	} else {
-		$html .= 'No other POs for docket ' . $param{'docket'} . '<br/>';
+		$html .= 'No other POs for docket ' . join(',', @dockets ) . '<br/>';
 	} # end if
 	return $html;
 ) ?>

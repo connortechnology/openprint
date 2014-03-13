@@ -16,7 +16,7 @@
 
 package openprint::Estimating::Aqueous;
 use strict;
-use warnings;
+#use warnings;
 
 require sql;
 require openprint::service;
@@ -97,9 +97,9 @@ sub get_colours {
     } # end if
 
     foreach my $k ( keys %$specs ) {
-$openprint::log->debug("AQ get_colours $k => $$specs{$k}");
+#$openprint::log->debug("AQ get_colours $k => $$specs{$k}");
         if ( my ( $index ) = $k =~ /^chkColourCoating(\d+)$side/ ) {
-$openprint::log->debug("AQ get_colours $k => $$specs{$k} index is $index");
+#$openprint::log->debug("AQ get_colours $k => $$specs{$k} index is $index");
             next if ! $$specs{"chkColourCoating$index$side"};
 			if ( $$specs{"ColourCoatingType$index$side"} =~ /Aqueous/i ) {
 				push @colours, $$specs{"ColourCoatingType$index$side"};
@@ -135,24 +135,30 @@ sub calc {
 	my ( $log, $dbh, $variable, $project_index, $service_index, $specs ) = @_;
 
 	my $status = 'calculated';
+	$$specs{alert} = '';
 
 	my $Project = new openprint::Project( $project_index );
 
 	@all_equipment = openprint::Equipment->find( Specifications => {'Aqueous Capable'=>['Y','When Printing']}, useinestimating=>1, order=>'lower(strName)') if ! @all_equipment;
 
 	foreach my $qty_index ( $Project->quantity_indexes() ) {
-		$$specs{"Markup$qty_index"} =~ s/[^\d\.\-]//g;
-		$$specs{"txtPrice$qty_index"} =~ s/[^\d\.]//g;
-		$$specs{"txtQuantity$qty_index"} =~ s/[^\d\.]//g;
+		$$specs{"Markup$qty_index"} =~ s/[^\d\.\-]//g if $$specs{"Markup$qty_index"};
+		$$specs{"txtPrice$qty_index"} =~ s/[^\d\.]//g if $$specs{"txtPrice$qty_index"};
+		$$specs{"txtQuantity$qty_index"} =~ s/\D//g if $$specs{"txtQuantity$qty_index"};
 		$$specs{"txtQuantity$qty_index"} = $Project->quantity($qty_index) if ! $$specs{"txtQuantity$qty_index"};
-		if ( ! $$specs{"txtQuantity$qty_index"} > 0 ) {
+		if ( ! ( $$specs{"txtQuantity$qty_index"} > 0 ) ) {
 			next;
 		} # end if
 		$$specs{'hdnBreakdown'.$qty_index} = sprintf('QTY: %d<br/>',$$specs{"txtQuantity$qty_index"} );
 
 		my $qty = $$specs{"txtQuantity$qty_index"};
 		if ( $$specs{'txtPressSheetComboItems'} ) {
-			$qty *= $$specs{'txtPressSheetComboItems'};
+			$$specs{'txtPressSheetComboItems'} =~ s/\D//g;
+			if ( $$specs{'txtPressSheetComboItems'} ) {
+				$qty *= $$specs{'txtPressSheetComboItems'} 
+			} else {
+				$$specs{alert} .= 'Combination items is invalid.';
+			} # end if
 		} # end if
 
 		my %MakeReadies;
@@ -264,7 +270,7 @@ $openprint::log->debug("Makereadies $equipment_id $$MakeReadies{$equipment_id}")
 		} # end if
 	} # end foreach colour
 
-	$openprint::log->debug("Signature : $signature_service_index");
+	$openprint::log->debug("Signature : $signature_service_index") if DEBUG;
 	if ( ! ( @front_aq or @back_aq ) ) {
 $openprint::log->warn("Doing AQ when not needed @front_aq @back_aq");
 		$bestPrice{'Status'} = 'calculated';	
@@ -335,10 +341,10 @@ if ( 1 ) {
 	} else {
 		@impositions = ( $imposition->copy() );
 	} # end if
-	$openprint::log->debug('AQ DOne Cutting :' . @impositions);
+	$openprint::log->debug('AQ DOne Cutting :' . @impositions) if DEBUG;
 
 	foreach my $Equipment ( @equipment ) {
-$openprint::log->debug("AQ Equipment $$Equipment{strid}");
+$openprint::log->debug("AQ Equipment $$Equipment{strid}") if DEBUG;
 		$$specs{'hdnBreakdown'.$qty_index} .= 'Equipment: '.$Equipment->strid().' ' . $Equipment->specification('Aqueous Capable') . ' ' . $$sig_specs{'ddmPress'.$qty_index} . ',<br/>';
 		if ( $Equipment->specification('Aqueous Capable') eq 'When Printing' ) {
 			if ( $$sig_specs{'ddmPress'.$qty_index} ne $Equipment->strid() ) {
@@ -385,7 +391,7 @@ $openprint::log->debug("AQ Equipment $$Equipment{strid}");
 				@types = (@front_aq, @back_aq);
 			} # end if
 			my $area = $imp->layout_area();
-$openprint::log->debug("AQ types @types");
+$openprint::log->debug("AQ types @types") if DEBUG;
 			foreach my $type ( @types ) {
 
 				my %setupPrice;

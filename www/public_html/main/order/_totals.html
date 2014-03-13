@@ -31,12 +31,10 @@
             <? echo ( openprint::Currency::format( $$variable{'DepositDue'} ); ) ?>
         </li>
         <? endif ( $$variable{'DepositDue'} ) ?>
-        <? if ( $$variable{Order}->owing() ) ?>
-        <li>
+        <li class="amount_owing">
             <label>Amount Owing</label>
             <? echo ( openprint::Currency::format( $$variable{Order}->owing() ); ) ?>
         </li>
-        <? endif ( $$variable{Order}->owing() ) ?>
 		<? endif ( $config{'ShowAccountingOnOrder'} ne 'N' or ( $session{user_type} eq 'A' or $session{user_type} eq 'E' ) ) ?>
 	</ul>
 	</div>

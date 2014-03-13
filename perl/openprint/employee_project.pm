@@ -411,7 +411,7 @@ sub view {
 
 		if ( $param{'NewServiceType'} ) {
 			my $ServiceType = new openprint::ServiceType( $param{'NewServiceType'} );
-			my $new_service_index = openprint::print_project::insert_service( $log, $dbh, $project_index, $ServiceType->name() );
+			my $new_service_index = $Project->add_service( $ServiceType );
 
 			if ( $ServiceType->name() eq 'Signature' ) {
 				$_ = q{SELECT MAX(strValue::integer) FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strName='SignatureIndex'};
@@ -780,13 +780,18 @@ sub summary {
 } # end sub summary
 
 sub _stock_checkout {
-	my $Project;
-	if ( $param{project_id} ) {
-		$Project = new openprint::Project( $param{project_id} );
+	my $Order;
+	if ( $param{docket} ) {
+		$Order = openprint::Order->find_one( docket=>$param{docket} );
+		if ( ! $Order ) {
+			$variable{error} .= 'No docket found for ' . $param{docket} . '<br/>';
+			return;
+		} # end if
 	} else {
-		$log->error("NO Project in _stock_checkout");
+		$log->error("NO docket in _stock_checkout");
+		return;
 	} # end if
-	$variable{Project} = $Project;
+	$variable{Order} = $Order;
 
 	if ( $param{action} eq 'Add' ) {
 		$param{skid_id} =~ s/\D//g;
@@ -816,18 +821,18 @@ sub _stock_checkout {
 			if ( @PI ) {
 				$variable{'error'} .= sprintf( '%1$s %2$d has already been checked out', ($PI[0]->Paper()->type() eq 'Roll' ? 'Roll' : 'Skid'), $Skid->id() );
 				if ( $PI[0]->docket() ) {
-					$variable{'error'} .= sprintf(' to docket <a href="/employee/project/view.html?ProjectIndex=%1$d">%2$d</a>', $PI[0]->Project()->id(), $PI[0]->docket() );
+					$variable{'error'} .= sprintf(' to docket <a href="/employee/project/view.html?docket=%1$d">%1$d</a>', $PI[0]->docket() );
 				} # end if
 				$variable{'error'} .= '.<br/>';
 			} # end if
 
 			foreach my $PI ( @PI ) {
 				if ( ! $PI->docket() ) {
-					$PI->save({'docket'=>$Project->docket()});
+					$PI->save({docket=>$Order->docket()});
 					# only update the most recent entry
 					last;
 				} else {
-					if ( $PI->docket() == $Project->docket() ) {
+					if ( $PI->docket() == $Order->docket() ) {
 						$add_entry = 0;
 						last;
 					} # end if	
@@ -841,39 +846,37 @@ sub _stock_checkout {
 				foreach my $C ( $Skid->Contents() ) {
 					my $PI = new openprint::PaperInventory();
 					$PI->save({
-							project_id	=>	$$Project{id},
-							docket		=>	$Project->docket(),
+							docket		=>	$Order->docket(),
 							paper_id	=>	$C->paper_id(),
 							user_id		=>	$session{'user_id'},
 							delta		=>	-1*$C->quantity(),
-							comment		=>	sprintf('Checked out for docket <a href="/employee/project/view.html?ProjectIndex=%1$d">%2$d</a> by %3$s', $Project->id(), $Project->docket(), new openprint::User( $session{'user_id'} )->name() ),
+							comment		=>	sprintf('Checked out for docket <a href="/employee/project/view.html?docket=%1$d">%1$d</a> by %2$s', $Order->docket(), new openprint::User( $session{user_id} )->name() ),
 							skid_id		=>	$Skid->id(),
 							units		=>	$C->units(),
 							});
 					$C->quantity( 0 );
 					$C->save();
 					#Remove any allocations
-					foreach my $PA ( openprint::PaperAllocation->find('skid_id'=>$Skid->id(),'paper_id'=>$C->paper_id(), 'docket'=>$Project->docket() ) ) {
+					foreach my $PA ( openprint::PaperAllocation->find('skid_id'=>$Skid->id(),'paper_id'=>$C->paper_id(), docket=>$Order->docket() ) ) {
 						$PA->save({'skid_ids'=>[ sets::exclude( [ $Skid->id() ], $PA->skid_ids() ) ] });
 						if ( ! $PA->Skids() ) {
 							$PA->delete();
 						} # end if
 					} # end foreach
-					$Project->add_to_log( @session{'company_id','user_id'}, "Checked out " . $C->quantity() . $C->units() . ' of ' . $C->Paper->to_string() );
+					$Order->add_to_log( @session{'company_id','user_id'}, "Checked out " . $C->quantity() . $C->units() . ' of ' . $C->Paper->to_string() );
 				} # end foreach C
 			} else {
 				my $PI = new openprint::PaperInventory();
 				$PI->save({
-						project_id	=>	$$Project{id},
-						docket		=>	$Project->docket(),
+						docket		=>	$Order->docket(),
 						paper_id	=>	undef,,
 						user_id		=>	$session{'user_id'},
 						delta		=>	0,
-						comment		=>	sprintf('Checked out for docket <a href="/employee/project/view.html?ProjectIndex=%1$d">%2$d</a> by %3$s', $Project->id(), $Project->docket(), new openprint::User( $session{'user_id'} )->name() ),
+						comment		=>	sprintf('Checked out for docket <a href="/employee/project/view.html?docket=%1$d">%1$d</a> by %2$s', $Order->docket(), new openprint::User( $session{user_id} )->name() ),
 						skid_id		=>	$Skid->id(),
 						units		=>	undef,
 						});
-				$Project->add_to_log( @session{'company_id','user_id'}, "Checked out something unknown." );
+				$Order->add_to_log( @session{'company_id','user_id'}, "Checked out something unknown." );
 			} # end if skid has contents
 		} # end if add_entry
 	} # end if
@@ -896,7 +899,7 @@ sub _production_feedback {
 	$variable{'service_id'} = $param{'service_id'};
 } # end sub _production_feedback
 sub _stock_allocations {
-	$variable{'Project'} = new openprint::Project( $param{'project_id'} );
+	$variable{Order} = openprint::Order->find_one( docket=>$param{docket} );
 }
 
 sub _signaturecapture {
@@ -1017,6 +1020,7 @@ sub _additional_charge_notifications {
 				my $ON = new openprint::Order_Notification();
 				$ON->save({order_id=>$$Project{order_id}, user_id=>$$U{id}});
 				$Order->AdditionalChargeNotifications( undef );
+				$param{notify_user_id} = ref $param{notify_user_id} eq 'ARRAY' ? [ @{$param{notify_user_id}}, $$U{id} ] : [ $param{notify_user_id}, $$U{id} ];
 			} # end if
 		} # end foreach email
 	} # end if Additional
@@ -1024,7 +1028,6 @@ sub _additional_charge_notifications {
 	if ( $param{action} eq 'Send' ) {
 		my @Notifications = openprint::Order_Notification->find(order_id=>$$Project{order_id}, ( $param{notify_user_id} ? ( user_id => $param{notify_user_id} ) : () ) );
 		$_ = send_additional_charges_notifications( @$Project{'order_id','id'}, $param{additionalchargecomments}, @Notifications );
-$log->debug('back');
 		$variable{'information'} = 'Additional Charges Email sent.' . $_;
 	} # end if action 
 } # end sub _additional_charge_notifications 

@@ -14,26 +14,27 @@
 		<input type="hidden" name="action" />
 		<p class="buttons">
 			<? echo ( join('',
-				ssi::button( 'SubmitTop', { 'onclick'=>"f1.elements['action'].value='submit';f1.submit();", 'text'=>'Submit' } ),
+				button( 'SubmitTop', { 'onclick'=>"f1.elements['action'].value='submit';f1.submit();", 'text'=>'Submit' } ),
 				( $$variable{'Survey'}->can_edit() ? (
-				  ssi::button( 'DeleteTop', { 'href'=>'/survey/view.html?action=delete&amp;survey_id='.$$variable{'Survey'}->id(), 'text'=>'Delete' } ),
-				  ssi::button( 'EditTop', { 'href'=>'/survey/edit.html?survey_id='.$$variable{'Survey'}->id(), 'text'=>'Edit' } ),
-				  ssi::button( 'ResponsesTop', { href=>'/survey/responses.html?survey_id='.$$variable{'Survey'}->id(), text=>'Responses' } ),
+				  button( 'DeleteTop', { 'href'=>'/survey/view.html?action=delete&amp;survey_id='.$$variable{'Survey'}->id(), 'text'=>'Delete' } ),
+				  button( 'EditTop', { 'href'=>'/survey/edit.html?survey_id='.$$variable{'Survey'}->id(), 'text'=>'Edit' } ),
+				  button( 'ResponsesTop', { href=>'/survey/responses.html?survey_id='.$$variable{'Survey'}->id(), text=>'Responses' } ),
 				  ) : () ),
 			); ) ?>
 		</p>
 		<? echo (
 			my $html = '';
-			my @Questions = openprint::Survey_Question->find( 'survey_id'=>$$variable{'Survey'}->id(), 'order'=>'sorting' );
 			my $can_edit = $$variable{'Survey'}->can_edit();
 
-
 			$html .= '<ol class="Questions">';
+			foreach my $Category ( openprint::Survey_Question_Category->find( order=>'sorting' ), new openprint::Survey_Question_Category() ) {
+			my @Questions = openprint::Survey_Question->find( survey_id=>$$variable{Survey}->id(), category_id=>($$Category{id} ? $$Category{id} : undef ), order=>'sorting' );
+
 			foreach my $Question ( @Questions ) {
-				$html .= sprintf('<li class="Question"><div class="text">%s</div>', $Question->text() );
+$html .= sprintf('<li class="Question"><div class="text">%s</div>', $Question->text() );
 				my $Response = undef;
 				my %Responses;
-				my @Responses = openprint::Survey_Response->find('question_id'=>$Question->id());
+				my @Responses = openprint::Survey_Response->find( question_id=>$Question->id() );
 				foreach my $R ( @Responses ) {
 					foreach my $answer_id ( $R->answer_ids() ? @{$R->answer_ids()} :() ) {
 						push @{$Responses{$answer_id}}, $R;
@@ -42,7 +43,7 @@
 						( $R->user_id() == $session{'user_id'} ) and
 						( $R->Answers() or $R->answer() ) ) {
 						# handle when no actual was given, but a response was recorded
-					$Response = $R;
+						$Response = $R;
 					} # end if
 				} # end foreach Response
 
@@ -64,35 +65,41 @@
 					$Response = new openprint::Survey_Response() if ! $Response;
 					$html .= '<div class="answers">';
 					if ( $Question->type() eq 'radio' ) {
-						$html .= ssi::radio( 'answer_id-'.$Question->id(), 
+						$html .= radio( 'answer_id-'.$Question->id(), 
 								[ map { $_->answer_id(), $_->Answer()->text() . ( $Question->alignment() ? '<br/>' : '' ) } $Question->Available_Answers() ], 
 								$Response->answer_ids(),
 								);
 					} elsif ( $Question->type() eq 'checkbox' ) {
-						$html .= ssi::checkboxes( 'answer_id-'.$Question->id(), 
+						$html .= checkboxes( 'answer_id-'.$Question->id(), 
 								[ map { $_->answer_id(), $_->Answer()->text() . ( $Question->alignment() ? '<br/>' : '' ) } $Question->Available_Answers() ], 
 								$Response->answer_ids(),
 								);
 					} elsif ( $Question->type() eq 'select' ) {
 						$html .= sprintf('<select name="answer_id-%1$d" id="answer_id-%1$d">%2$s</select>', $$Question{'id'},
-								ssi::make_drop_down( [ map { $_->answer_id(), $_->Answer()->text() } $Question->Available_Answers() ], $Response->answer_ids() ) );
+								make_drop_down( [ map { $_->answer_id(), $_->Answer()->text() } $Question->Available_Answers() ], $Response->answer_ids() ) );
 					} # end if
-					$html .= sprintf('<textarea name="answer-%1$d" id="answer-%1$d" placeholder="additional comments"></textarea></div>
-					<input type="checkbox" name="public-%1$d" value="1" /> Allow others to see my response
-					</li>', $Question->id() );
+					if ( $$Question{allow_comments} ) {
+						$html .= sprintf('<textarea name="answer-%1$d" id="answer-%1$d" placeholder="additional comments"></textarea>', $$Question{id} );
+					}
+					$html .= '</div>';
+					if ( $$Question{allow_public} ) {
+						$html .= sprintf('<input type="checkbox" name="public-%1$d" value="1" /> Allow others to see my response', $$Question{id} );
+					} # end if
+					$html .= '</li>';	
 				} # end if Response
 			} # end foreach Question
+			} # end foreach Category
 			$html .= '</ol>';
 			return $html;
 		) ?>
 		<br/>
 		<p class="buttons">
 			<? echo ( join('',
-				ssi::button( 'SubmitBottom', { 'onclick'=>"f1.elements['action'].value='submit';f1.submit();", 'text'=>'Submit' } ),
+				button( 'SubmitBottom', { 'onclick'=>"f1.elements['action'].value='submit';f1.submit();", 'text'=>'Submit' } ),
 ( $$variable{'Survey'}->can_edit() ? (
-	ssi::button( 'DeleteBottom', { 'href'=>'/survey/view.html?action=delete&amp;survey_id='.$$variable{'Survey'}->id(), 'text'=>'Delete' } ),
-	ssi::button( 'EditBottom', { 'href'=>'/survey/edit.html?survey_id='.$$variable{'Survey'}->id(), 'text'=>'Edit' } ),
-	ssi::button( 'ResponsesBottom', { 'href'=>'/survey/responses.html?survey_id='.$$variable{'Survey'}->id(), 'text'=>'Responses' } ),
+	button( 'DeleteBottom', { 'href'=>'/survey/view.html?action=delete&amp;survey_id='.$$variable{'Survey'}->id(), 'text'=>'Delete' } ),
+	button( 'EditBottom', { 'href'=>'/survey/edit.html?survey_id='.$$variable{'Survey'}->id(), 'text'=>'Edit' } ),
+	button( 'ResponsesBottom', { 'href'=>'/survey/responses.html?survey_id='.$$variable{'Survey'}->id(), 'text'=>'Responses' } ),
 ) : () ),
 			); ) ?>
 		</p>

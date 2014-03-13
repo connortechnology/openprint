@@ -27,6 +27,7 @@ $serial = 'manifest_content_types_id_seq';
 	item_count			=>	'item_count',
 	type			=>	'type',
 	manufacturers_name	=>	'manufacturers_name',
+	condition_id	=>	'condition_id',
 );
 %find_fields = (
 	total_quantity	=>	'(SELECT SUM(quantity) FROM manifestcontents WHERE manifestcontents.manifest_id=manifest_content_types.manifest_id and type_id=manifest_content_types.id)',
@@ -52,6 +53,7 @@ $serial = 'manifest_content_types_id_seq';
 	type			=>	undef,
 	item_count		=>	undef,
 	manufacturers_name	=>	undef,
+	condition_id	=>	undef,
 );
 
 sub Paper {
@@ -141,6 +143,23 @@ sub Contents {
 	return @{$$self{Contents}} if $$self{Contents};
 	return;
 } # end sub Contents
+
+sub condition_id {
+	if ( @_ > 1 ) {
+		$_[0]{condition_id} = $_[1];
+	} # en dif
+	if ( ! $_[0]{condition_id} ) {
+		require openprint::InventoryCondition;
+		my $New = openprint::InventoryCondition->find_one(name=>'new');
+		$_[0]{condition_id} = $New->id() if $New;
+	} # end if
+	return $_[0]{condition_id};
+} # end sub condition_id
+
+sub Condition {
+	require openprint::InventoryCondition;
+	return new openprint::InventoryCondition($_[0]{condition_id});
+} # end sub Condition
 
 1;
 __END__

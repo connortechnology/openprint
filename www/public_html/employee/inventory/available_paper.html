@@ -1,5 +1,4 @@
 <script type="text/javascript" src="<?hash_link(/javascripts/paper.js)?>"></script>
-<script type="text/javascript" src="<?hash_link(/javascripts/barcode.js)?>"></script>
 <script type="text/javascript">
 	var allocateWin;
 	function allocate_window( paper_id ) {
@@ -82,6 +81,10 @@ Please select a Paper to view/edit.<br>
 
 	my %filters;
 	foreach my $option ( @StockOptions ) {
+		eval { 
+			my @values = ('openprint::Stock'.$option)->find();
+		next if @values == 1;
+ };
 		my ( $lower_option, $option_id ) = ( lc $option, lc $option.'_id' );
 		# Validate the filter
 		$session{'/employee/inventory/available_paper.html?'.$option_id} = undef if ! sets::isin( 
@@ -103,9 +106,9 @@ Please select a Paper to view/edit.<br>
 		$session{'/employee/inventory/available_paper.html?'.$option_id} = $options[0] if ( @options == 2 );
 
 		$html .= sprintf(q`<li><label>%1$s</label>
-				<select name="%2$s_id%3$s" id="%2$s_id%3$s" size="1" onchange="filter_onChange(this,'');">
-				<option value=""> All </option> %4$s </select>
-			</li>`, $option, $lower_option, $$variable{Signature},
+				<select name="%2$s_id" id="%2$s_id" size="1" onchange="filter_onChange(this,'');">
+				<option value=""> All </option> %3$s </select>
+			</li>`, $option, $lower_option, 
 			make_drop_down( \@options, $session{'/employee/inventory/available_paper.html?'.$option_id} ),
 		);
 	} # end foreach option
@@ -168,7 +171,7 @@ Please select a Paper to view/edit.<br>
 					<label>Location</label>
 					<select id="location_id" name="location_id" multiple="multiple" onchange="calc(this.form.name);">
 					<? echo ( 
-						my @options =	('All','All','Unknown','Unknown', map { $_->id(), $_->name() } openprint::Location->find(parent_id=>undef, type=>'place', order=>'lower(name)') );
+						my @options =	('All','All','Unknown','Unknown', map { $_->id(), $_->name() } openprint::Location->find(type=>'place', order=>'parent_id NULLS FIRST,lower(name)') );
 						$session{'/employee/inventory/available_paper.html?location_id'} = undef if ! sets::isin( $session{'/employee/inventory/available_paper.html?location_id'}, \@options );
 						my @selected = split(',', $session{'/employee/inventory/available_paper.html?location_id'} );
 						if ( ! @selected ) {

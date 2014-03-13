@@ -213,8 +213,9 @@ sub RunSpeed {
 	if ( ! exists $$self{runspeed_cache} ) {
 		$$self{runspeed_cache} = {};
 	} # end if
-	if ( ! $gsm ) {
-		$openprint::log->warn("No gsm in Fold->runspeed");
+	if ( ! defined $gsm ) {
+		my ( $caller, undef, $line ) = caller;
+		$openprint::log->warn("No gsm in Fold->RunSpeed from $caller line $line");
 	} # end if
 	if ( ! exists $$self{runspeed_cache}{$gsm} ) {
 		$$self{runspeed_cache}{$gsm} = $self->Specification( $gsm );
@@ -223,8 +224,16 @@ sub RunSpeed {
 } # end sub RunSpeed
 
 sub runspeed {
+	if ( $_[0]{runspeed} ) {
+		return $_[0]{runspeed};
+	} else {
+	if ( ! $_[1] ) {
+		my ( $caller, undef, $line ) = caller;
+		$openprint::log->warn("No gsm in Fold->runspeed from $caller line $line");
+	} # end if
 	my $RunSpeed = $_[0]->RunSpeed($_[1]);
 	return $RunSpeed ? $$RunSpeed{'runspeed'} : undef;
+	} # end if
 } # end sub runspeed
 
 sub Imposition {

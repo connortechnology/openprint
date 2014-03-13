@@ -33,14 +33,16 @@ $serial = 'paper_allocation_id_seq';
 	skid_id			=>	'skid_id',
 	operator_id		=>	'operator_id',
 	created_on		=>	'created_on',
-	project_id		=>	'project_id',
 	units			=>	'units',
+	project_id		=>	'project_id',
 	quantity		=>	'quantity',
 	skid_ids		=>	'skid_ids',
 	condition_id	=>	'condition_id',
+	docket			=>	'docket',
 );
 %find_fields = (
-	docket	=>	'(SELECT lngdocketnumber FROM Projects WHERE id=project_id)',
+	project_id	=>	'(SELECT id FROM Projects WHERE lngdocketnumber=docket)',
+	order_id	=>	'(SELECT id FROM Orders WHERE docket=paper_allocations.docket)',
 );
 
 %transforms = (
@@ -101,9 +103,6 @@ sub User {
 sub Project {
 	return new openprint::Project( $_[0]{'project_id'} );
 } # end sub Project
-sub docket {
-	return $_[0]->Project()->docket();
-} # end sub docket
 
 sub old_Skids {
 	my @old_skids;

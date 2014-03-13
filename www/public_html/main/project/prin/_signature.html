@@ -86,13 +86,6 @@
 
 		return variable_substitution( \$html, $variable );
 	) ?>
-<? eval (
-    if ( $$variable{'Project'}->quantity1() and $$variable{'Project'}->quantity2() and $$variable{'Project'}->quantity3() ) {
-		$$variable{'Columns'} = 'Three';
-    } else {
-		$$variable{'Columns'} = 'Two';
-    } # end if
-) ?>
 <hr class="spacer"/>
 <div class="Quantities">
 	<ul>
@@ -109,5 +102,9 @@
 	</li>
 	</ul>
 </div>
+<? echo ( join("\n",
+			button( 'CopySignature'.$$variable{Signature}, { onclick=>qq`copy_group($$variable{Signature});`, text=>'Copy Signature Group' } ),
+			button( 'DelSignature'.$$variable{Signature}, { onclick=>qq`remove_group($$variable{Signature});`, text=>'Remove Signature Group' } ),
+); ) ?>
 </fieldset>
 <? endif ( $$variable{Signature} ) ?>

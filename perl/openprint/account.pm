@@ -418,7 +418,7 @@ sub user_profile {
 	my $Me = $variable{Me} = new openprint::User( $session{user_id} );
 	my $User;
 # IF it's empty, then we are adding a new user! Otherwise editing one
-	if ( exists $param{ddmUser} ) {
+	if ( ( exists $param{ddmUser} ) and $param{ddmUser} ) {
 		$User = openprint::User->find_one( id=>$param{ddmUser} );
 	} # end if
 	$User = new openprint::User() if ! $User;;
@@ -449,9 +449,6 @@ sub user_profile {
 				} # end foreach required field
 			} else {
 				$error .= 'First Name cannot be blank.<br/>' if ! $param{'firstname'};
-				$error .= 'Last Name cannot be blank.<br/>' if ! $param{'lastname'};
-				$error .= 'Salutation cannot be blank.<br/>' if ! $param{'salutation'};
-				$error .= 'Phone cannot be blank.<br/>' if ! $param{'phone'};
 			} # end if
 			if ( $error ne '' ) {
 				$variable{'error'} = 'Bad Field';

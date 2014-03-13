@@ -29,9 +29,9 @@ No stock has been ordered.
 	require openprint::PaperAllocation;
 
 	my %paper;
-	my @Allocations = openprint::PaperAllocation->find('project_id'=>$param{'project_id'});
+	my @Allocations = openprint::PaperAllocation->find( docket=>$$variable{'Project'}->docket() );
 	foreach my $Allocation ( @Allocations ) {
-		$paper{$Allocation->paper_id()} = 1;
+		push @{$paper{$Allocation->paper_id()}}, $Allocation;
 	} # end foreach Allocation
 	
 	return 'No stock has been allocated.' if ! @Allocations;
@@ -40,9 +40,7 @@ No stock has been ordered.
 	foreach my $paper_id ( keys %paper ) {
 		my $Paper = new openprint::Paper( $paper_id );
 		$html .= '<b>'.$Paper->to_string().'</b><br/>';
-		@Allocations = openprint::PaperAllocation->find('project_id'=>$param{'project_id'},'paper_id'=>$paper_id);
-		
-		foreach my $Allocation ( @Allocations ) {
+		foreach my $Allocation ( @{$paper{$paper_id}} ) {	
 			$html .= 'Quantity: ' . $Allocation->quantity() . $Allocation->units().'<br/>';
 			my @Skids;
 			if ( @Skids = $Allocation->Skids() ) {

@@ -82,7 +82,7 @@ sub calc {
 	} # end if
 
 $openprint::log->debug(" $$printing_specs{txtFinalWidth} and $$printing_specs{txtFinalHeight}");
-	$$specs{'txtItemsPerPackage'} = int($$specs{'txtItemsPerPackage'});
+	$$specs{'txtItemsPerPackage'} = int($$specs{'txtItemsPerPackage'}) if $$specs{'txtItemsPerPackage'};
 	if ( ! $$specs{'txtItemsPerPackage'} ) {	# a zero value is still calculated, just with a zero price.d
 		if ( $ServiceType->name() eq 'Bundling' ) {
 			$$specs{'alert'} .= 'Please enter the # of items in each bundle';
@@ -98,16 +98,17 @@ $openprint::log->debug(" $$printing_specs{txtFinalWidth} and $$printing_specs{tx
         return $$specs{'Status'} = 'uncalculated';
     } # end if
 
-	$$specs{'bands_per_package'} =~ s/[^\d\.]//g;
+	$$specs{'bands_per_package'} =~ s/[^\d\.]//g if $$specs{'bands_per_package'};
 
 	my @Equipment = openprint::Equipment->find( useinestimating=>1, 'servicetype_id any'=>$ServiceType->id() );
+$openprint::log->debug("EQ: " . @Equipment );
 	my $Service = openprint::Service->find_one( name=> $ServiceType->name() );
 
 	foreach my $qty_index ( $Project->quantity_indexes() ) {
 
-		$$specs{"Markup$qty_index"} =~ s/[^\d\.\-]//g;
-		$$specs{"txtPrice$qty_index"} =~ s/[^\d\.]//g;
-		$$specs{"txtQuantity$qty_index"} =~ s/[^\d\.]//g;
+		$$specs{"Markup$qty_index"} =~ s/[^\d\.\-]//g if $$specs{"Markup$qty_index"};
+		$$specs{"txtPrice$qty_index"} =~ s/[^\d\.]//g if $$specs{"txtPrice$qty_index"};
+		$$specs{"txtQuantity$qty_index"} =~ s/[^\d\.]//g if $$specs{"txtQuantity$qty_index"};
 		$$specs{"txtQuantity$qty_index"} = $Project->quantity($qty_index) if ! $$specs{"txtQuantity$qty_index"};
 		my $qty = $$specs{'txtPressSheetComboItems'} ? $$specs{'txtQuantity'.$qty_index} * $$specs{'txtPressSheetComboItems'} : $$specs{'txtQuantity'.$qty_index};
 		next if ! $qty;
@@ -146,8 +147,8 @@ $openprint::log->debug(" $$printing_specs{txtFinalWidth} and $$printing_specs{tx
 					} # end if
 					my $hours = $inches / $Runspeed->value() if $Runspeed->value();
 					$ServicePrice{Total} = $ServicePrice{Price} * $hours;
-					$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Runspeed %d%s, %s*%d = %sinches = %shours<br/>', @$Runspeed{'value','units'}, $length, $package_qty, $inches, $hours );
-					$$specs{'hdnBreakdown'.$qty_index} .= sprintf('ServicePrice %1$.2f%2$s * %4$d = $%3$.2f<br/>', @ServicePrice{'Price','units','Total'}, $hours );
+					$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Runspeed %d%s, %s*%d * %sinches = %shours<br/>', @$Runspeed{'value','units'}, $length, $package_qty, $inches, $hours );
+					$$specs{'hdnBreakdown'.$qty_index} .= sprintf('ServicePrice $%1$.2f%2$s * %4$.2f hours = $%3$.2f<br/>', @ServicePrice{'Price','units','Total'}, $hours );
 				} else {
 					$$specs{'hdnBreakdown'.$qty_index} .= sprintf('No units set for %s (%s)<br/>', $ServiceType->name(), $ServicePrice{'units'} );
 				} # end if
@@ -196,8 +197,14 @@ $openprint::log->debug("Cardboard size: $$printing_specs{txtFinalWidth} * $$prin
 						$MaterialPrice{'Total'} = $MaterialPrice{'Price'} * $$printing_specs{'txtFinalWidth'} * $$printing_specs{'txtFinalHeight'} * $material_qty;
 					$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Material Price: $%1$.2f%2$s * %4$d packages * %5$d per package = $%3$.2f<br/>',@MaterialPrice{'Price','units','Total'}, $package_qty, $$specs{'bands_per_package'} );
 					} elsif ( $MaterialPrice{units} eq 'per foot' ) {
-						$MaterialPrice{'Total'} = $MaterialPrice{'Price'} * $$printing_specs{'txtFinalWidth'} * $$printing_specs{'txtFinalHeight'} * $material_qty / 144;
-					$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Material Price: $%1$.2f%2$s * %4$d packages * %5$d per package = $%3$.2f<br/>',@MaterialPrice{'Price','units','Total'}, $package_qty, $$specs{'bands_per_package'} );
+						my $Roll_Length = $Material->Specification('Length');
+						if ( $Roll_Length ) {
+							$MaterialPrice{Total} = Math::Round::nearest( 0.01, $MaterialPrice{Price} * $inches / 12 );
+							$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Material Price: $%1$.4f%2$s * %4$d feet = $%3$.2f<br/>',@MaterialPrice{'Price','units','Total'}, $inches/12, $$specs{'bands_per_package'} );
+						} else {
+							$MaterialPrice{'Total'} = $MaterialPrice{'Price'} * $$printing_specs{'txtFinalWidth'} * $$printing_specs{'txtFinalHeight'} * $material_qty / 144;
+							$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Material Price: $%1$.2f%2$s * %4$d packages * %5$d per package = $%3$.2f<br/>',@MaterialPrice{'Price','units','Total'}, $package_qty, $$specs{'bands_per_package'} );
+						} # ebnd if
 					} elsif ( $MaterialPrice{units} eq 'per roll' ) {
 						my $Roll_Length = $Material->Specification('Length');
 						if ( ! $Roll_Length ) {
@@ -226,12 +233,14 @@ $openprint::log->debug("Cardboard size: $$printing_specs{txtFinalWidth} * $$prin
 		} # end foreach Equipment
 
 		$$specs{'txtPackageQuantity'.$qty_index} = $package_qty;
-		if ( $$specs{'OverridePrice'.$qty_index} ne 'Y' ) {
-			$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $bestPrice{Total}*(1+$$specs{"Markup$qty_index"}/100)*(1+$Project->markup()/100) );
+		if ( ( ! exists $$specs{'OverridePrice'.$qty_index} ) or ( $$specs{'OverridePrice'.$qty_index} ne 'Y' ) ) {
+			$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $bestPrice{Total}*( 
+				( $$specs{"Markup$qty_index"} ? 1+$$specs{"Markup$qty_index"}/100 : 1 ) *
+				( $Project->markup() ? 1+$Project->markup()/100 : 1 ) ) );
 		} else {
 			$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $$specs{"txtPrice$qty_index"} );
 		} # endif
-		$$specs{"txtUnitPrice$qty_index"} = sprintf( $openprint::config{'UnitPriceFormat'}, ( $bestPrice{Unit}/$qty ) * (1+$Project->markup()/100) );
+		$$specs{"txtUnitPrice$qty_index"} = sprintf( $openprint::config{'UnitPriceFormat'}, ( $bestPrice{Unit}/$qty ) * ( $Project->markup() ? (1+$Project->markup()/100) : 1 ) );
 		$$specs{"ddmEquipment$qty_index"} = $bestPrice{Equipment} ? $bestPrice{Equipment}->id() : '';
 	} # end foreach qty_index
 
@@ -278,8 +287,8 @@ sub save {
 	my $Project = new openprint::Project( $project_index );
 	my $services = $Project->services();
 
-	if ( ($$param{'AccurateCount'} eq 'Y' ) and ! $$services{'Counting'} ) {
-		openprint::print_project::insert_service( $openprint::log, $openprint::dbh, $project_index, 'Counting' );
+	if ( (defined $$param{'AccurateCount'} ) and ( $$param{'AccurateCount'} eq 'Y' ) and ! $$services{'Counting'} ) {
+		$Project->add_service( 'Counting' );
 	} # end if
 } # end sub save
 

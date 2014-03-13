@@ -386,7 +386,7 @@ sub summary {
 		} # end foreach key
 		return \@summaries;
 	} # end if
-	return \@keys;
+	return [ map { $Papers{$_}->message() ? $_ . '<br/><span class="StockMessage">'. ssi::variable_substitution( \$Papers{$_}->message(), { Project => $Project } ) . '</span>' : $_ } @keys ];
 } # end sub summary
 
 sub save {

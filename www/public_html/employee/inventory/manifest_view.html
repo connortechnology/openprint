@@ -125,18 +125,18 @@
 					$html .= '</td>';
 					if ( $Type->type() eq 'Sheet' ) {
 						my $lbs = $C->quantity() * $Paper->width() * $Paper->height() * $Paper->wpsi();
-						$html .= '<td class="qty_lbs">'. Number::Format::format_number($lbs) . '</td>';
-						$html .= '<td class="qty_kgs">'.  Number::Format::format_number(Math::Round::nearest( .1, $lbs/2.2046 )) . '</td>';
+						$html .= '<td class="qty_lbs">'. Number::Format::format_number(Math::Round::nearest( 1,$lbs)) . '</td>';
+						$html .= '<td class="qty_kgs">'.  Number::Format::format_number(Math::Round::nearest( 1, $lbs/2.2046 )) . '</td>';
 						$html .= '<td class="qty_sheets">'.  Number::Format::format_number($$C{quantity}) . '</td>';
 					} else {
-						$html .= '<td class="qty_lbs">'. Number::Format::format_number($$C{quantity}) . '</td>';
-						$html .= '<td class="qty_kgs">'. Number::Format::format_number(Math::Round::nearest( .1, $C->quantity()/2.2046 )). '</td>';
+						$html .= '<td class="qty_lbs">'. Number::Format::format_number(Math::Round::nearest( 1,$$C{quantity} )) . '</td>';
+						$html .= '<td class="qty_kgs">'. Number::Format::format_number(Math::Round::nearest( 1, $C->quantity()/2.2046 )). '</td>';
 						$html .= '<td class="qty_feet">'.
 								( ( $Paper->width() and $Paper->wpsi() ) ? ( Number::Format::format_number( Math::Round::nearest( 1, (($C->quantity()/$Paper->wpsi())/$Paper->width())/12 ) ) ) : () )
 								. '</td>';
 					} # end if
 					if ( $SkidContents and @{$SkidContents} ) {
-						$html .= '<td class="in_stock">'. Number::Format::format_number($$SkidContents[0]->quantity() ) . ' lbs</td>';
+						$html .= '<td class="in_stock">'. Number::Format::format_number( Math::Round::nearest( 1, $$SkidContents[0]->quantity() ) ) . ' '.$Paper->units().'</td>';
 						$html .= '<td class="last_seen">'. $$SkidContents[0]->Skid()->last_seen_days().' days</td>';
 					} else {
 						$html .= '<td colspan="2">&nbsp;</a>';
@@ -151,13 +151,13 @@
 
 				$html .= '<tr class="totals"><td>Totals:</td><td colspan="2">'.scalar @Contents . ' skids/rolls</td>';
 				if ( $Type->type() eq 'Sheet' ) {
-					my $lbs = $total*$Paper->wpsi()*$Paper->width()*$Paper->height();
+					my $lbs = $total*$Paper->wpsi()*$Paper->area();
 					$html .= sprintf('<td class="qty_lbs">%1$s</td><td class="qty_kgs">%2$s</td><td class="qty_sheets">%3$s</td>',
-							Number::Format::format_number($lbs), Number::Format::format_number($lbs/2.2046), Number::Format::format_number($total) );
+							Number::Format::format_number( Math::Round::nearest( 1,$lbs)), Number::Format::format_number(Math::Round::nearest( 1,$lbs/2.2046)), Number::Format::format_number($total) );
 				} else { # A Roll
 					$html .= sprintf('<td class="qty_lbs">%1$s</td><td class="qty_kgs">%2$s</td><td class="qty_feet">%3$s</td>',
-						Number::Format::format_number($total), 
-						Number::Format::format_number($total/2.2046), 
+						Number::Format::format_number( Math::Round::nearest( 1,$total )), 
+						Number::Format::format_number( Math::Round::nearest( 1,$total/2.2046 )), 
 						( ( $Paper->wpsi() and $Paper->width() ) ? Number::Format::format_number( (($total/$Paper->wpsi())/$Paper->width())/12 ) : 0 ) );
 				} #end if
 				$html .= '<td colspan="'.(($Type->type(), [ 'Roll', 'Sheet' ] ) ? '3' : '2' ). '">&nbsp;</td></tr>';

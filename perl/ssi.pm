@@ -156,8 +156,10 @@ my %html_replacements = (
 );
 my $replacement_string = join '', keys %html_replacements;
 sub html_escape {
-	$_[0]=~ s/([\Q$replacement_string\E])/$html_replacements{$1}/g;
-	return $_[0];
+	my $thing = $_[0];
+
+	$thing =~ s/([\Q$replacement_string\E])/$html_replacements{$1}/g;
+	return $thing;
 }
 
 sub escape_quotes {
@@ -831,7 +833,7 @@ sub date_filter {
 	return ( $sql_field, sprintf('%.4d-%.2d-%.2d %.2d:%.2d:%.2d', ( $year, $month, $day, $hour, $minute, $second ) ) );
 } # end sub date_filter
 
-my @input_options = ( 'type','name','id','onblur','onfocus','onkeyup','onkeydown','onchange','class','pattern','ontouch','min','max', 'step', 'placeholder', 'oninput' );
+my @input_options = ( 'type','name','id','onblur','onfocus','onkeyup','onkeydown','onchange','class','pattern','ontouch','min','max', 'step', 'placeholder', 'oninput', 'title' );
 
 sub input {
 	my %options = @_;
@@ -845,6 +847,7 @@ sub input {
 		} # end if
 		$options{filter} = 'cardinalize(this);' if ! $options{filter};
 		$options{onkeyup} = $options{filter}.$options{onkeyup};
+		$options{step} = '1' if ! exists $options{step};
 	} elsif ( $options{type} eq 'integer' ) {
 		if ( $ENV{HTTP_USER_AGENT} =~ /ip(ad|od|hone)/i ) {
 			$options{type} = 'text';

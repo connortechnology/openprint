@@ -5,7 +5,6 @@ require Text::CSV_XS;
 
 require sql;
 require openprint::pricing;
-require openprint::Equipment;
 
 require openprint::pricelist;
 require openprint::material_price;
@@ -20,8 +19,9 @@ use vars qw( $log $dbh %param %variable );
 *variable = \%openprint::variable;
 
 sub edit {
+	require openprint::Equipment;
 
-	my $Material = new openprint::Material( $param{'ddmMaterial'} );
+	my $Material = $variable{Material} = new openprint::Material( $param{'ddmMaterial'} );
 
 	if ( $param{'btnFunction'} eq '<<' ) {
 		$Material = $Material->Previous( 'category_id'=>$param{'ddmSearchCategory'} );
@@ -45,7 +45,8 @@ sub edit {
 				} # end if
 			} # end if
 		} # end if
-		$Material->save( \%param );
+		$variable{error} .= $Material->save( \%param );
+		return if $variable{error};
 		my $ac = sql::start_transaction( $dbh );
 		my @Pricelists = openprint::Pricelist->find( );
 		my @Prices = 	openprint::MaterialPrice->find( material_id=>$Material->id() );
