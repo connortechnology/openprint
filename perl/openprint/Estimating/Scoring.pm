@@ -368,12 +368,21 @@ sub signature_calc {
 	foreach my $Equipment ( @equipment ) {
 		$Results{'Breakdown'} .= "<br/>Equipment: ".$Equipment->name().', ';
 		my $type = $Equipment->specification('Type');
-		if ( ( $type eq 'Folder' ) and ( $Equipment->specification('Scoring Capable') eq 'When Folding' ) and ! ( $$services{'Folding'} and @{$$services{'Folding'}} ) ) {
-			$Results{'Breakdown'} .= 'Not being folded.<br/>';
-			if ( $$specs{"chkOverrideEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} eq 'Y' ) {
-				$Results{alert} .= 'Not being folded.<br/>';;
+		if ( $Equipment->specification('Scoring Capable') eq 'When Folding' ) {
+			if ( ! ( $$services{'Folding'} and @{$$services{'Folding'}} ) ) {
+				$Results{'Breakdown'} .= 'Not being folded.<br/>';
+				if ( $$specs{"chkOverrideEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} eq 'Y' ) {
+					$Results{alert} .= 'Not being folded.<br/>';;
+				} # end if
+				next;
+			} 
+			if ( $$folding_specs{"ddmEquipment-$$sig_specs{SignatureIndex}-$qty_index"} != $Equipment->id() ) {
+				$Results{'Breakdown'} .= 'Not being folded on this.<br/>';
+				if ( $$specs{"chkOverrideEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} eq 'Y' ) {
+					$Results{alert} .= 'Not being folded on this.<br/>';
+				} # end if
+				next;
 			} # end if
-			next;
 		} # end if
 		if ( $type eq 'Stitcher' ) {
 			if ( ! $stitching_service_index ) {
