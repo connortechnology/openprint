@@ -248,7 +248,7 @@ if ( ! defined $ac ) {
 }
 	$d = $dbh if ! $d;
 	if ( $ac ) {
-		$log->debug("Committing");
+		#$log->debug("Committing");
 		$d->commit();
 	} # end if
 	$d->{AutoCommit} = $ac;
