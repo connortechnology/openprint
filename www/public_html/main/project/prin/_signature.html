@@ -102,6 +102,9 @@
 	</li>
 	</ul>
 </div>
-<? echo ( button( 'CopySignature'.$$variable{Signature}, { onclick=>qq`copy_group($$variable{Signature});`, text=>'Copy Signature Group' } ); ) ?>
+<? echo ( join("\n",
+			button( 'CopySignature'.$$variable{Signature}, { onclick=>qq`copy_group($$variable{Signature});`, text=>'Copy Signature Group' } ),
+			button( 'DelSignature'.$$variable{Signature}, { onclick=>qq`remove_group($$variable{Signature});`, text=>'Remove Signature Group' } ),
+); ) ?>
 </fieldset>
 <? endif ( $$variable{Signature} ) ?>
