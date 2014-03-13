@@ -21,6 +21,7 @@ require POSIX;
 require Math::Round;
 require openprint::Project;
 require openprint::service;
+require openprint::Estimating::Perforating;
 
 use vars qw( @folds %fold_types );
 
@@ -757,6 +758,13 @@ if ( 0 ) {
 				$Breakdown .= "Not printing on $$Equipment{name}:<br/>";
 				next;
 			} # end if
+			if ( $$services{Perforating} and @{$$services{Perforating}} ) {
+				if ( openprint::Estimating::Perforating::signature_has_perforation( openprint::service::get_specs_ref( $Project, $$services{Perforating}[0] ), $sig_specs ) ) {
+					$Breakdown .= 'not perforating on this piece of equipment.<br/>';
+					next;
+				} # end if
+			} # end if
+				
 			
 		} # end if
 		if ( $ppt and ( my $pt = $Equipment->specification('PrintingTypes') ) ) {
