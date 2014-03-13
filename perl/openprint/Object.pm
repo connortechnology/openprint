@@ -459,7 +459,7 @@ $log->debug("find_operators: field($field) type($type) op($operator) value($valu
 		return ( $field.$type.' ' . $operator . ' ?', $value );
 	} elsif ( sets::isin( $operator, [ '&&', '<@', '@>' ] ) ) {
 		if ( ref $value eq 'ARRAY' ) {
-			return ( $field.$type.' ' . $operator . ' ?', $value );
+			return ( 'ARRAY('.$field.$type.') ' . $operator . ' ?', $value );
 		} else {
 			return ( $field.$type.' ' . $operator . ' ?', [ $value ] );
 		} # end if
