@@ -365,7 +365,11 @@ sub po_limit {
 	my ( $self, $type_id, $new_value ) = @_;
 
 	if ( ! exists $$self{'po_limits'} ) {
-		%{$$self{'po_limits'}} = sql::execute( undef, undef, 'SELECT type_id, po_limit FROM User_PurchaseOrder_limits WHERE user_id=?', $$self{'id'} );
+		if ( $$self{id} ) {
+		%{$$self{po_limits}} = sql::execute( undef, undef, 'SELECT type_id, po_limit FROM User_PurchaseOrder_limits WHERE user_id=?', $$self{'id'} );
+		} else {
+			$$self{po_limits} = {};
+		} # end if
 	} # end if
 
 	if ( defined $new_value ) {
