@@ -119,6 +119,10 @@ sub calc {
 
 	$$specs{Status} = 'calculated';
 
+	if ( ! $$specs{rdbTemplateType} ) {
+		$$specs{alert} .= 'Please select how this project will be bound.<br/>';
+	} # end if
+
 	if ( $$specs{'rdbTemplateType'} eq 'PerfectBound' and $$specs{'rdbCover'} ne 'Different' ) {
 		$variables{'rdbCover'} = [sets::union('output', @{$variables{'rdbCover'}})];
 		$$specs{'rdbCover'} = 'Different';
