@@ -657,6 +657,24 @@ sub runtime {
 
 sub save {
 } # end sub save
+sub has_overrides {
+    my ( $Project, $service_id, $specs, $qty_index ) = @_;
+    $specs = openprint::service::get_specs_ref( $Project, $service_id ) if ! $specs;
+
+    my @v;
+	if ( ! $qty_index ) {
+		push @v, 'override_glue_id' if $$specs{override_glue_id};
+	} else {
+		foreach my $qty_index ( $Project->quantity_indexes() ) {
+			push @v, "chkOverrideEquipment$qty_index" if $$specs{"chkOverrideEquipment$qty_index"};
+			push @v, "OverrideImposition$qty_index" if $$specs{"OverrideImposition$qty_index"};
+			push @v, "OverridePockets$qty_index" if $$specs{"OverridePockets$qty_index"};
+			push @v, "OverridePrice$qty_index" if $$specs{"OverridePrice$qty_index"};
+		} # end foreach
+	} # end if
+
+    return @v;
+} # end sub has_overrides
 
 1;
 __END__
