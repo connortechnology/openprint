@@ -421,7 +421,7 @@ sub signature_calc {
 			} # end if
 
 			foreach my $Fold ( @Folds ) {
-				$$Fold{impressions} = ( $qty / $SignatureImposition->imposition() ) * ( $parts / ( $Fold->imposition() * $Fold->quantity() ) );
+				$$Fold{impressions} = ( $qty / $SignatureImposition->imposition() ) * ( $parts / ( $Fold->imposition() * $Fold->quantity() ) ) * $Fold->quantity();
 				#$$Fold{impressions} /= $Fold->imposition();
                 my $Price = get_price( $Equipment, $$specs{"txtVerticalQty-$$sig_specs{SignatureIndex}"}, $$specs{"txtHorizontalQty-$$sig_specs{SignatureIndex}"}, $$Fold{impressions}, $Fold );
                 $totalPrice += $$Price{setup} + $$Price{Vertical}{Total} + $$Price{Horizontal}{Total} + $$Price{Service}{Total};
@@ -550,7 +550,7 @@ sub get_price {
 			if ( int($runspeed) ) {
 				my $hours = $qty / $runspeed;
 				$servicePrice{Total} = Math::Round::nearest( 0.01, $servicePrice{'Price'} * $hours );
-				$Results{Breakdown} .= sprintf('Service: $%.2f%s * %d @ %d%s =%.2f<br/>', @servicePrice{'Price','units'}, $qty, $runspeed, 'Per Hour', $servicePrice{Total} );
+				$Results{Breakdown} .= sprintf('Service: $%.2f%s * %d @ %d%s = $%.2f<br/>', @servicePrice{'Price','units'}, $qty, $runspeed, 'Per Hour', $servicePrice{Total} );
 			} else {
 				$openprint::log->error("Bogus runspeed ($runspeed) on $$Equipment{strid}");
 			} # end if
