@@ -92,11 +92,16 @@ sub Paper {
 	return new openprint::Paper( $_[0]{'paper_id'} );
 } # end sub Paper
 sub Skids {
-	if ( $_[0]{'skid_ids'} and @{$_[0]{'skid_ids'}} ) {
-		return map { new openprint::Skid( $_); } @{$_[0]{'skid_ids'}};
+	if ( ! $_[0]{Skids} ) {
+		if ( $_[0]{skid_ids} and @{$_[0]{skid_ids}} ) {
+			$_[0]{Skids} = [ openprint::Skid->find( id=> $_[0]{skid_ids} ) ];
+		} else {
+			$_[0]{Skids} = [];
+		} # end if
 	} # end if
-	return ();
+	return @{$_[0]{Skids}};
 } # end sub Skids
+
 sub User {
 	return new openprint::User( $_[0]{'operator_id'} );
 } # end sub User
