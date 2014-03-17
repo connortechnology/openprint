@@ -110,9 +110,12 @@ function send_notifications( form, project_id ) {
 	<? echo (
 		my $html = '';
 		foreach my $PO_Content ( @{$$variable{PurchaseOrders}} ) {
+			my $description = $PO_Content->item() ? $PO_Content->item() : $PO_Content->description();
+
+			$description =~ s/<\/?p>//g;
 			$html .= sprintf('<tr><td class="po_id"><a href="/employee/purchase_order/view.html?po_id=%1$d">%1$d</a></td><td class="description">%2$s</td><td class="quantity">%3$d%4$s</td></tr>', 
 				$PO_Content->po_id(),
-				$PO_Content->item(),
+				$description,
 				$PO_Content->qty(),
 				$PO_Content->units(),
 				);
