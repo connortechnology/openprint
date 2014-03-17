@@ -440,7 +440,7 @@ sub copy {
 	my $self = shift;
 	my $New = new openprint::PurchaseOrder();
 	@$New{keys %fields} = @$self{keys %fields};
-	foreach ( 'id', 'authorized', 'authorized_by', 'authorized_on', 'delivered_on' ) {
+	foreach ( 'id', 'authorized', 'authorized_by', 'authorized_on', 'delivered_on', 'created_on', 'cancelled' ) {
 		delete $$New{$_};
 	} # end foreach
 	$$New{'created_by'} = $session{'user_id'};
@@ -678,6 +678,10 @@ sub Payments {
 	} # end if
 	return @{$_[0]{Payments}};
 } # end sub Payments
+
+sub link_to {
+	return join( '', '<a href="/employee/purchase_order/view.html?po_id=', $_[0]{id}, '">' , $_[0]{id}, '</a>' );
+} # end sub link_to
 
 1;
 __END__

@@ -1,8 +1,8 @@
 <table class="List">
 	<tr>
-	<th align="left" width="200">User</th>
-	<th align="left" width="150">When</th>
-	<th align="left">Description</th>
+	<th class="User">User</th>
+	<th class="DateTime">When</th>
+	<th class="Description">Description</th>
 	</tr>
 	<? echo ( 
 		my $html;
@@ -11,7 +11,7 @@
 		my $scheduled_end;
 		my $scheduled_start;
 
-		$_ = q{SELECT company_id, user_id, to_char(dtmTimestamp,'HH12:MIpm MM/DD/YYYY'), Description FROM Project_Log WHERE project_id=? ORDER BY dtmTimestamp DESC};
+		$_ = q{SELECT company_id, user_id, dtmTimestamp, Description FROM Project_Log WHERE project_id=? ORDER BY dtmTimestamp DESC};
 		@{$$variable{'ProjectLog'}} = sql::execute( $log, $dbh, $_, $$variable{'Project'}->id() );
 		my $rowclass;
 		while ( my ( $company_id, $user_id, $when, $description ) = splice @{$$variable{'ProjectLog'}},0,4 ) {
@@ -31,8 +31,8 @@
 			if ( $description =~ /^Reused from project (\d+)$/ ) {
 				$description = 'Reused from project <a href="/employee/project/view.html?project_id='.$1.'">'.$1.'</a>';
 			} # end if
-			$html .= sprintf( '<tr%1$s><td>%2$s</td><td>%3$s</td><td>%4$s</td></tr>', 
-				$rowclass, new openprint::User( $user_id )->name(), $when, $description );
+			$html .= sprintf( '<tr%1$s><td class="User">%2$s</td><td class="DateTime">%3$s</td><td class="Description">%4$s</td></tr>', 
+				$rowclass, new openprint::User( $user_id )->name(), format_datetime($when), $description );
 			$rowclass = $rowclass ? '' : ' class="colRow"';
 		} # end while
 		$html .= '<tr class="totals">';

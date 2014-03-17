@@ -64,8 +64,8 @@
 	$$Order{company_id},
 	ssi::html_escape( $Order->Company->name() ),
 	$$Order{'status'},
-	ssi::html_escape( $Order->Invoice()->num() ),
-	ssi::html_escape( $Order->po() ),
+	join('<br/>', map { $_->Invoice()->link_to() } $Order->Invoices() ),
+	html_escape( $Order->po() ),
 	openprint::Currency::format( $Order->total() ),
 	openprint::Currency::format( $Order->owing() ),
 );

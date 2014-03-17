@@ -14,10 +14,12 @@
 Please select a Paper to view/edit.<br>
 <form id="f1" name="f1" method="post" action="paper.html">
 	<fieldset class="filters"><legend>Search Criteria</legend>
-		<p>
+		<ul>
+		<li>
 			<label>Docket</label>
 			<? echo ( input( type=>'cardinal', id=>'Docket', name=>'Docket', value=>$session{'/employee/inventory/paper.html?Docket'}, onkeypress=>'return input_handler(this,event);', onkeydown=>q`if(event.keyCode==13){LoadContent('Results','/employee/inventory/_paper_results.html',$('f1'));}` ); ) ?>
-		</p>
+		</li>
+		</ul>
 	</fieldset>
 	<fieldset class="filters"><legend>Or</legend>
 		<ul>

@@ -5,7 +5,7 @@
 		ssi::date_filter( '/bugs/history.html?created_on_start', 'created_on >=' ),
 		( $session{'/bugs/history.html?company_id'} ? ( 'company_id'	=> $session{'/bugs/history.html?company_id'} ) : () ),
 		( $session{'/bugs/history.html?user_id'} ? ( 'user_id'	=> $session{'/bugs/history.html?user_id'} ) : () ),
-		'order'				=> 'id',
+		'order'				=> 'id desc',
 		) ) {
 		push @{$$variable{'Bugs'}}, $Bug;
 	} # end foreach Bug
@@ -22,18 +22,28 @@
 	<table class="List">
 		<tr> 
 			<th class="EmployeeName">Employee</th>
-			<th align="left">Company</th>
+			<th class="Company">Company</th>
 			<th class="DateTime">Created On</th>
 			<th class="DateTime">Updated On</th>
 		</tr>
-		<? while ( $$variable{'Bug'} = shift @{$$variable{'Bugs'}}; ) ?>
-		<tr title="<? echo ( ssi::html_escape( $$variable{'Bug'}->description() ); ) ?>" <?rowclass?> onmouseover="this.addClassName('highlightOn');" onmouseout="this.removeClassName('highlightOn');"> 
-			<td class="EmployeeName"><a href="/bug/edit.html?bug_id=<? echo ( $$variable{'Bug'}->id(); ) ?>"><? hecho ( $$variable{'Bug'}->User()->name(); ) ?></a></td>
-			<td><a href="/bug/edit.html?bug_id=<? echo ( $$variable{'Bug'}->id(); ) ?>"><? hecho ( $$variable{'Bug'}->Company()->name(); ) ?></a></td>
-			<td align="left"><? echo ( Date::Format::time2str(($$variable{'Bug'}->time_associated() ? $config{'DateTimeFormat'} : $config{'DateFormat'}), Date::Parse::str2time( $$variable{'Bug'}->starting() ) ); ) ?></td>
-			<td align="left"><? echo ( Date::Format::time2str(($$variable{'Bug'}->time_associated() ? $config{'DateTimeFormat'} : $config{'DateFormat'}), Date::Parse::str2time( $$variable{'Bug'}->ending() ) ); ) ?></td>
-		</tr>
-		<? eval ( $$variable{'rowclass'} = $$variable{'rowclass'} ? '' : ' class="colRow"';) ?>
-		<? endwhile ( $$variable{'Bug'} = shift @{$$variable{'Bugs'}}; ) ?>
+		<? echo ( my $html;
+			my $rowclass;
+			foreach my $Bug ( @{$$variable{Bugs}} ) {
+
+				$html .= sprintf( '
+<tr title="%3$s" %1$s>
+	<td class="EmployeeName">%4$s</td>
+	<td class="Company">%5$s</td>
+	<td class="DateTime CreatedOn">%6$s</td>
+	<td align="DateTime UpdatedOn">%7$s</td>
+</tr>',
+					$rowclass, $$Bug{id}, escape_quotes( $Bug->description() ), $Bug->link_to( $Bug->Created_By()->name() ), 
+					$Bug->link_to( $Bug->Company()->name() ), format_datetime( $Bug->created_on() ),
+					format_datetime( $Bug->updated_on() ),
+				);
+				$rowclass = $rowclass ? '' : ' class="colRow"';
+			} # end foreach Bug
+			return $html;
+		) ?>
 	</table>
 <? endif ( @{$$variable{'Bugs'}} == 0 ) ?>

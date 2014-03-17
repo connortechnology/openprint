@@ -18,6 +18,7 @@
 	} # end if
 
 	if ( ! $param{'ServiceType'} ) {
+$log->warn("No servicetype in params in calc");
 		return;
 	} # end if
 

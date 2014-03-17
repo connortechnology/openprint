@@ -55,6 +55,9 @@ sub Company {
 sub User {
 	return new openprint::User( $_[0]{user_id} );
 }
+sub Created_By {
+	return new openprint::User( $_[0]{user_id} );
+}
 
 1;
 __END__

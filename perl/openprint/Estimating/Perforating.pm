@@ -64,6 +64,11 @@ sub no_outputs {
 	return @no_output;
 }
 
+sub signature_has_perforation {
+	my ( $specs, $sig_specs ) = @_;
+	return 1 if $$specs{"txtVerticalQty-$$sig_specs{SignatureIndex}"} or $$specs{"txtHorizontalQty-$$sig_specs{SignatureIndex}"};
+	return 0;
+} # end sub signature_has_perforation
 
 # A function that is smart enough to return true if the project needs perfing, and false if it doesn't.
 sub neccessary {

@@ -17,7 +17,7 @@ require openprint::SkidContent;
 require openprint::InventoryCondition;
 require openprint::PaperAllocation;
 
-$debug = 0;
+$debug = 1;
 
 $table = 'Skids';
 $serial = 'skid_id_seq';
@@ -269,9 +269,12 @@ sub find {
 			$sql .= ' AND (type IS NULL OR type!=?)';
 			push @values, $params{'type !='};
 	} elsif ( exists $params{'type is null or in'} ) {
-		if ( @{$params{'type is null or in'}} ) {
-			$sql .= ' AND type IN (' . join(',', map {'?'} @{$params{'type is null or in'}}) . ')';
+		if ( ref $params{'type is null or in'} eq 'ARRAY' ) {
+			$sql .= ' AND ( type IS NULL OR type IN (' . join(',', map {'?'} @{$params{'type is null or in'}}) . '))';
 			push @values, @{$params{'type is null or in'}};
+		} elsif ( $params{'type is null or in'} ) {
+			$sql .= ' AND (type IS NULL OR type = ?)';
+			push @values, $params{'type is null or in'};
 		} else {
 			$sql .= ' AND type IS NULL';
 		} # en dif
@@ -603,19 +606,22 @@ sub next {
 sub allocate {
 	my ( $self, $paper_id, $project_id, $quantity, $units ) = @_;
 
-	my $ac = sql::start_transaction();
-	sql::insert( undef, undef, 'Paper_Allocations',
-			'skid_ids',		[ $$self{'id'} ],
-			'paper_id',		$paper_id,
-			'quantity',		1*$quantity,
-			'units',		$units,
-			'project_id',	$project_id ? $project_id : undef,
-			'operator_id',	$session{'user_id'},
-			);
-	if ( $project_id ) {
-	(new openprint::Project( $project_id ))->add_to_log( @session{'company_id','user_id'}, qq`Allocated $quantity $units on skid <a href="/employee/inventory/skid_details.html?skid_id=$$self{id}">$$self{id}</a>` ) if $project_id;
+	my $Project = new openprint::Project( $project_id ) if $project_id;
+
+	my $ac = sql::start_transaction( $openprint::dbh );
+	my $PA = new openprint::PaperAllocation();
+	$PA->save({
+			skid_ids	=>	[ $$self{'id'} ],
+			paper_id	=>	$paper_id,
+			quantity	=>	1*$quantity,
+			units	=>	$units,
+			( $Project ? ( docket => $Project->docket() ): () ),
+			operator_id	=>	$session{user_id},
+			} );
+	if ( $Project ) {
+	$Project->add_to_log( @session{'company_id','user_id'}, qq`Allocated $quantity $units on skid <a href="/employee/inventory/skid_details.html?skid_id=$$self{id}">$$self{id}</a>` );
 	} # end if
-	sql::end_transaction( undef, $ac );
+	sql::end_transaction( $openprint::dbh, $ac );
 } # end sub allocate
 
 sub empty {

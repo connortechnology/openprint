@@ -23,7 +23,7 @@ require openprint::Estimating::Printing;
 require openprint::service;
 require sets;
 
-use constant DEBUG => 0;
+use constant DEBUG => 1;
 
 my %variables = (
 	'ddmProjectSize'=>['save','output'],
@@ -54,7 +54,8 @@ sub variables {
 	foreach my $group_id ( @Groups ) {
 		push @v, 'ddmRunStyle'.$group_id;
 		push @v, 'ddmPress'.$group_id;
-		push @v, 'ddmPrintingType'.$group_id;
+		push @v, 'PrintingType'.$group_id;
+		push @v, 'StockType'.$group_id;
 		push @v, 'Pages'.$group_id;
 		push @v, 'OverrideGroupPageQuantity'.$group_id;
 		push @v, 'GroupPageQuantity'.$group_id;
@@ -117,6 +118,10 @@ sub calc {
 	my ( $log, $dbh, $variable, $project_index, $service_index, $specs ) = @_;
 
 	$$specs{Status} = 'calculated';
+
+	if ( ! $$specs{rdbTemplateType} ) {
+		$$specs{alert} .= 'Please select how this project will be bound.<br/>';
+	} # end if
 
 	if ( $$specs{'rdbTemplateType'} eq 'PerfectBound' and $$specs{'rdbCover'} ne 'Different' ) {
 		$variables{'rdbCover'} = [sets::union('output', @{$variables{'rdbCover'}})];
@@ -432,13 +437,13 @@ $openprint::log->debug("Removing impo cuz wrong group") if DEBUG;
 					} # end if
 					
 					my $price = $$Imposition{price};
-$Imposition->display("Saving for $qty_index");
-if ( $specs{"chkOverrideImposition$qty_index"} eq 'Y' and $specs{"txtImposition$qty_index"} != $$Imposition{imposition} ) {
-$status = 'uncalculated';
-} else {
-					$Imposition->save( \%specs, $qty_index );
-					openprint::Estimating::Printing::save_price( $Project, \%specs, $price, $Imposition, $qty_index );
-}
+					$Imposition->display("Saving for $qty_index");
+					if ( $specs{"chkOverrideImposition$qty_index"} eq 'Y' and $specs{"txtImposition$qty_index"} != $$Imposition{imposition} ) {
+						$status = 'uncalculated';
+					} else {
+						$Imposition->save( \%specs, $qty_index );
+						openprint::Estimating::Printing::save_price( $Project, \%specs, $price, $Imposition, $qty_index );
+					}
 					$specs{'hdnBreakdown'.$qty_index} = openprint::Estimating::Printing::breakdown( $price, \%specs );
 					
 				} # end foreach qty_index

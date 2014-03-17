@@ -42,7 +42,7 @@
 	<div class="PO">
 		<div class="Header">
 			<div class="Logo">
-				<? echo ( ssi::include( $config{SkinPath}.'/includes/logo.html'); ) ?>
+				<?include(/includes/logo.html)?>
 				<table class="HeaderText">
 					<tr>
 						<td colspan="2"><? echo ( join(' ', new openprint::User( $session{user_id} )->Company()->get('address1','city','state','postalcode') );) ?></td>
@@ -55,7 +55,7 @@
 			</div>
 			<div class="PageTitle">
 				<h1>PURCHASE ORDER</h1><br/>
-				P.O. # [ <? echo ( $$variable{PurchaseOrder}->id() ) ?> ]
+				P.O. # [ <? echo ( $$variable{PurchaseOrder}->link_to() ) ?> ]
 <? echo ( $$variable{PurchaseOrder}->is_FSC() ? 'FSC' : '' ) ?>
 <? echo ( $$variable{PurchaseOrder}->is_PEFC() ? 'PEFC' : '' ) ?>
 				<br/>
@@ -276,7 +276,9 @@ Manifest: <a href="/employee/inventory/manifest_view.html?manifest_id=<? echo ( 
 				<? echo (
 					my $html = '';
 					foreach my $L ( $$variable{PurchaseOrder}->Logs() ) {
-						$html .= sprintf('<tr><td class="who">%s</td><td class="when">%s</td><td class="description">%s</td></tr>', $L->User()->name(), ssi::format_datetime( $L->created_on() ), $L->reason() );
+						my $reason = $L->reason();
+						$reason =~ s/PO (\d+)/<a href="\/employee\/purchase_order\/view\.html\?po_id=$1">PO $1<\/a>/;
+						$html .= sprintf('<tr><td class="who">%s</td><td class="when">%s</td><td class="description">%s</td></tr>', $L->User()->name(), format_datetime( $L->created_on() ), $reason );
 					} # end foreach
 					return $html;
 				) ?>

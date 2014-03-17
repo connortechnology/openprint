@@ -89,6 +89,16 @@ if ( 0 ) {
 			//onSuccess: function(response){new Insertion.Bottom($('SignatureGroups'), response.responseText);}
 		 );
 	}
+	function remove_group( group_id ) {
+		var form = $('f1');
+	   new Ajax.Updater( 'alert', '/main/project/prin/_signature.html', {
+			parameters: { project_id : form.ProjectIndex.value, action: 'remove_group', group_id: group_id },
+			onSuccess: function(response){$('SignatureGroup'+group_id).remove();calc('f1');}}
+			//onSuccess: function(response){new Insertion.Bottom($('SignatureGroups'), response.responseText);calc('f1');}}
+			//onSuccess: function(response){new Insertion.Bottom($('SignatureGroups'), response.responseText);}
+		 );
+	}
+  
   
 </script>
 <?include('/main/project/prin/_templates.html')?>

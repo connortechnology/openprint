@@ -90,16 +90,16 @@ sub no_outputs {
 }
 
 sub has_overrides {
-    my ( $Project, $service_id, $specs ) = @_;
+    my ( $Project, $service_id, $specs, $qty_index ) = @_;
     $specs = openprint::service::get_specs_ref( $Project, $service_id ) if ! $specs;
 
     my @v;
-	foreach my $qty_index ( $Project->quantity_indexes() ) {
+	if ( $qty_index ) {
 		push @v, "chkOverrideEquipment$qty_index" if $$specs{"chkOverrideEquipment$qty_index"};
 		push @v, "OverrideImposition$qty_index" if $$specs{"OverrideImposition$qty_index"};
 		push @v, "OverridePockets$qty_index" if $$specs{"OverridePockets$qty_index"};
 		push @v, "OverridePrice$qty_index" if $$specs{"OverridePrice$qty_index"};
-	} # end foreach
+	} # end if
 
     return @v;
 
@@ -258,7 +258,7 @@ SIG_FIX_PAGES: while( $total_pages > $sig_pages ) {
 
 		   foreach my $pages ( keys %folds ) {
 # Stitching should never stitch more pages than are printed in a sig, despite what's in folding
-			   $openprint::log->debug("Folding pages: $sig_pages / $pages folding $folds{$pages}") if DEBUG;
+			   $openprint::log->debug("Folding pages: sig_pages: $sig_pages / fold)pages $pages folding fold count $folds{$pages}") if DEBUG;
 			   if ( $sig_pages == $pages ) {
 				   $pages{$pages} += 1;
 				   last;
@@ -371,6 +371,11 @@ $results{'Breakdown'} .= 'Imposition: ' . $imposition . 'out<br/>';
 				} # end if
 			} # end if
 			my $max_spine_length = $Equipment->specification('Maximum Spine Length', $$specs{'Imposition'.$qty_index} );
+			my $max_imp = $Equipment->specification("Maximum $$ServiceType{name} Imposition");
+			if ( $max_imp and ( $max_imp < $imposition ) ) {
+				$results{'Breakdown'} .= sprintf('Imposition too big.  This press only does ' . $max_imp . 'out.<br/>');
+				next;
+			} # end if
 
 			if ( $max_spine_length and ( $$specs{'Height'} > $max_spine_length ) ) {
 				$results{'Breakdown'} .= sprintf('Spine Too big. Spine: %s, Maximum: %s<br/>', $$specs{'Height'}, $max_spine_length );

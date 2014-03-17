@@ -17,7 +17,20 @@ require openprint::service;
 sub _signature {
 
 	my $Project = new openprint::Project( $param{'project_id'} );
-	if ( $param{action} eq 'copy_group' ) {
+	if ( $param{action} eq 'remove_group' ) {
+		my @src_sigs = $Project->signatures( { Group => $param{group_id} } );
+		if ( ! @src_sigs ) {
+			$variable{error} .= 'No signatures found for group ' . $param{group_id} . '<br/>';
+			return;
+		} # end if
+		$Project->lock();
+		foreach my $sig_id ( @src_sigs ) {
+			my $Service = $Project->Service( $sig_id );
+			$Service->delete();
+		} # end foreach 
+		$Project->unlock();
+
+	} elsif ( $param{action} eq 'copy_group' ) {
 		my @src_sigs = $Project->signatures( { Group => $param{group_id} } );
 		if ( ! @src_sigs ) {
 			$variable{error} .= 'No signatures found for group ' . $param{group_id} . '<br/>';

@@ -472,10 +472,10 @@ $log->debug("group $group_id");
 			} # end foreach qty_index
 		} # end foreach spec
 		foreach my $spec ( 'PrintingType','StockType' ) {
-			next if ! exists $$param{$spec.'Override'.$group_id};
+			next if ! exists $$param{$spec.$group_id};
 			foreach my $qty_index ( $Project->quantity_indexes() ) {
-				if ( $$param{$spec.'Override'.$group_id} ) {
-					openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $ss_id, $spec.$qty_index, $$param{$spec.'Override'.$group_id} );
+				if ( $$param{$spec.$group_id} ) {
+					openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $ss_id, $spec.$qty_index, $$param{$spec.$group_id} );
 					openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $ss_id, 'Override'.$spec.$qty_index, 'Y' );
 				} else {
 					openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $ss_id, 'Override'.$spec.$qty_index, '' );

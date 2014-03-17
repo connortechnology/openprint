@@ -70,7 +70,7 @@ if ( $session{'/employee/inventory/manifests.html?type'} ) {
                 if ( sets::isin( 'Unknown', \@types ) ) {
             $search{'type is null or in'}      = [ map { $_ ne 'Unknown' ? $_ : () } @types ];
                 } else {
-            $search{'type any'}      = \@types;
+            $search{'type &&'}      = \@types;
                 } # end if
             } # end if
         }
