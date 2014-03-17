@@ -1,7 +1,7 @@
 <table class="List">
 	<tr><th class="Date">Created</th>
-		<th align="left">Type</th>
-		<th align="left">Reference</th>
+		<th class="Type">Type</th>
+		<th class="Reference">Reference</th>
 		<th class="buttons">&nbsp;</th>
 	</tr>
 <? echo ( 
@@ -9,14 +9,19 @@
 	my $html = '';
 	my @Labels = openprint::Label->find( docket=>$$variable{Order}->docket(), order=>'id');
 	foreach my $Label ( @Labels ) {
-		$html .= sprintf('<tr><td class="Date"><a href="/employee/production/labels/label.html?id=%1$d&amp;project_id=%2$d&amp;docket=%3$d" title="%4$s">%5$s</a></td><td><a href="/employee/production/labels/label.html?id=%1$d&amp;project_id=%2$d&amp;docket=%3$d">%6$s</a></td><td>%7$s</td><td class="buttons">%8$s</td></tr>', 
-			$Label->id(), $$variable{'Project'}->id(), $$variable{Order}->docket(),
+		$html .= sprintf('
+<tr>
+	<td class="Date"><a href="/employee/production/labels/label.html?id=%1$d&amp;project_id=%2$d&amp;docket=%3$d" title="%4$s">%5$s</a></td>
+	<td class="Type"><a href="/employee/production/labels/label.html?id=%1$d&amp;project_id=%2$d&amp;docket=%3$d">%6$s</a></td>
+	<td class="Reference">%7$s</td><td class="buttons">%8$s</td>
+</tr>', 
+			$Label->id(), $$variable{Project}->id(), $$variable{Order}->docket(),
 			format_datetime( $Label->created_on() ), 
 			format_date( $Label->created_on() ), 
 			$Label->Type()->name(), $Label->reference(),
 			join('',
-				button( 'delete'.$Label->id(), { onclick=>qq`new Ajax.Updater('Labels','/employee/production/_labels.html', { parameters:{action:'delete', id: $$Label{id}, project_id: $$variable{'Project'}{id} } } );`, text=>'X', title=>'Delete' } ),
-				button( 'copy'.$Label->id(), { onclick=>qq`new Ajax.Updater('Labels','/employee/production/_labels.html', { parameters:{action:'copy', id: $$Label{id}, project_id: $$variable{'Project'}{id} } } );`, text=>'C', title=>'Copy' } ),
+				button( 'delete'.$Label->id(), { onclick=>qq`new Ajax.Updater('Labels','/employee/production/_labels.html', { parameters:{action:'delete', id: $$Label{id}, project_id: $$variable{Project}{id} } } );`, text=>'X', title=>'Delete' } ),
+				button( 'copy'.$Label->id(), { onclick=>qq`new Ajax.Updater('Labels','/employee/production/_labels.html', { parameters:{action:'copy', id: $$Label{id}, project_id: $$variable{Project}{id} } } );`, text=>'C', title=>'Copy' } ),
 			)
 		 );
 	} # end foreach
