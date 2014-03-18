@@ -194,6 +194,7 @@ $openprint::log->debug("desired paper exists");
 $openprint::log->debug("desired paper does not exists");
 # Change the stock
 		my $checked_out = 0;
+		require openprint::PaperAllocation;
 		foreach my $paper_id ( keys %SkidContents ) {
 			my $SC = $SkidContents{$paper_id};
 			my $Paper = $SC->Paper();
@@ -205,8 +206,7 @@ $openprint::log->debug("desired paper does not exists");
 						comment=>'Changed stock from ' . $Paper->to_string() . ' to ' . $Type->Paper()->to_string()});
 			}
 # Change the type to the new type
-			require openprint::PaperAllocation;
-			foreach my $PA ( openprint::PaperAllocation->find( skid_id=>$SC->skid_id(), paper_id=>$SC->paper_id() ) ) {
+			foreach my $PA ( openprint::PaperAllocation->find( 'skid_ids any'=>$SC->skid_id(), paper_id=>$SC->paper_id() ) ) {
 				$error .= $PA->save({paper_id=>$Type->Paper()->id()});
 			} # end foreach PA
 			{
@@ -458,7 +458,7 @@ $openprint::log->debug("Setting skid_id to $$Skid{id}");
 	} # end if
 	if ( $Project and ! $checked_out ) {
 		require openprint::PaperAllocation;
-		my $PA = openprint::PaperAllocation->find_one( skid_id=>$MC->skid_id() );
+		my $PA = openprint::PaperAllocation->find_one( 'skid_ids any'=>$MC->skid_id() );
 		if ( ! $PA ) {
 			$Paper->allocate( $Skid, $Project->id(), $MC->quantity(), $Paper->units() );
 			$error .= sprintf('Allocated %1$d%2$s to docket <a href="/employee/project/view.html?ProjectIndex=%3$d">%4$d</a>.<br/>', $MC->quantity(), $Paper->units(), $Project->id(), $Project->docket() );
