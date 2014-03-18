@@ -291,9 +291,8 @@ sub company {
 	return new openprint::Company( $$self{'company_id'} );
 } # end sub company
 sub Company {
-	my $self = shift;
-	return new openprint::Company( $$self{'company_id'} );
-} # end sub company
+	return new openprint::Company( $_[0]{company_id} );
+} # end sub Company
 
 sub Contents {
 	if ( ! $_[0]{Contents} ) {
