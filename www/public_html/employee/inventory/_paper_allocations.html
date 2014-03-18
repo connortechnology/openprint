@@ -55,13 +55,11 @@
 	
 				$html .= '<td class="Location">'.join('<br/>',map{ $_->Location()->name() } @Skids ).'</td>';
 				$html .= sprintf( '<td class="DateTime">%s</td>', format_datetime( $PA->created_on() ) );
-				$html .= sprintf('<td class="Docket"><a href="/employee/project/view.html?docket=%d">%s</a></td>
-<td class="Quantity">%s%s</td><td class="Quantity">%s%s</td><td class="Condition">%s</td><td class="buttons">',
-					$PA->docket(),
-					$PA->docket() ? $PA->docket() : 'unknown',
-					Number::Format::format_number($PA->quantity()), $PA->units(),
-					Number::Format::format_number($PA->Paper()->available()),
-					$PA->units(),
+				$html .= sprintf('<td class="Docket"><a href="/employee/project/view.html?docket=%1$d">%1$s</a></td>
+<td class="Quantity">%2$s</td><td class="Quantity">%3$s</td><td class="Condition">%4$s</td><td class="buttons">',
+					( $PA->docket() ? $PA->docket() : 'unknown' ),
+					Number::Format::format_number($PA->quantity()).$PA->units(),
+					Number::Format::format_number($PA->Paper()->available()).$PA->units(),
 					$PA->Condition()->name(),
 					);
 				$html .= button( 'Delete'.$$PA{id}, { onclick=>qq`popup_window('_deallocate_popup.html?allocation_id=$$PA{id}', '', { width: 400 } );`, text=>'Delete' } );
