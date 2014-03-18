@@ -56,7 +56,7 @@ sub outputs {
 sub calc {
 	my ( $log, $dbh, $variable, $project_index, $service_index, $specs ) = @_;
 	
-	$$specs{'Status'} = 'calculated';
+	$$specs{Status} = 'calculated';
 
 	my $Project = new openprint::Project( $project_index );
 	my $services = $Project->services();
@@ -74,8 +74,8 @@ sub calc {
 	} # end if
 
 	if ( $$specs{'txtHoleQty'} eq '' ) {
-		$$specs{'alert'} = 'Please specify the # of holes.';
-		return $$specs{'Status'} = 'uncalculated';
+		$$specs{alert} = 'Please specify the # of holes.';
+		return $$specs{Status} = 'uncalculated';
 	} # end if
 
 	my $printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] ) if $$services{''};
@@ -254,7 +254,6 @@ sub display {
 
 	my $Project = new openprint::Project( $project_index );
 	my $services = $Project->services();
-
 
 	my @capabilities = ( 'Y', 
 		( ( $$services{SaddleStitching} or $$services{LoopStitching} ) ? 'When Stitching' : () ),
