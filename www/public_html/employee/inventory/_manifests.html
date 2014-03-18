@@ -68,9 +68,9 @@ if ( $session{'/employee/inventory/manifests.html?type'} ) {
             my @types = split(',',$session{'/employee/inventory/manifests.html?type'} );
             if ( @types ) {
                 if ( sets::isin( 'Unknown', \@types ) ) {
-            $search{'type is null or in'}      = [ map { $_ ne 'Unknown' ? $_ : () } @types ];
+					$search{'type &&'}      = [ map { $_ ne 'Unknown' ? $_ : undef } @types ];
                 } else {
-            $search{'type &&'}      = \@types;
+					$search{'type &&'}      = \@types;
                 } # end if
             } # end if
         }
