@@ -1261,7 +1261,7 @@ sub send_paper_arrival_notification {
 		my $C = $Skid->Content( $Paper );
 		$info{'Quantity'} = $C ? $C->quantity() : 0;
 		
-		my @To = map { new openprint::User( $_ ); } sets::union( map { $_->Project->Order()->salesrep_id() } openprint::PaperAllocation->find('skid_id'=>$Skid->id(),'paper_id'=>$Paper->id()) );
+		my @To = map { new openprint::User( $_ ); } sets::union( map { $_->Project->Order()->salesrep_id() } openprint::PaperAllocation->find('skid_ids any'=>$Skid->id(),paper_id=>$Paper->id()) );
 
 		if ( @To ) {
 # Send notification to maybe CSR's
@@ -1903,7 +1903,7 @@ sub inventory_log {
 				$Skid->RFIDTag()->id_short(),
 				$Paper->to_string(),
 				$PI->delta,
-				join(',', map { sprintf('%d%s to %d', $_->quantity(),$_->units(),new openprint::Project( $_->project_id() )->docket() ) } openprint::PaperAllocation->find( skid_id=>$PI->skid_id, paper_id=>$PI->paper_id)),
+				join(',', map { sprintf('%d%s to %d', $_->quantity(),$_->units(),new openprint::Project( $_->project_id() )->docket() ) } openprint::PaperAllocation->find( 'skid_ids any'=>$PI->skid_id, paper_id=>$PI->paper_id)),
 				$PI->instock,
 				$Skid->Location()->name(),
 				$PI->comment,

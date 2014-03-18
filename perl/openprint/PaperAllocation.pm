@@ -30,11 +30,9 @@ $serial = 'paper_allocation_id_seq';
 %fields = (
 	id				=>	'id',
 	paper_id		=>	'paper_id',
-	skid_id			=>	'skid_id',
 	operator_id		=>	'operator_id',
 	created_on		=>	'created_on',
 	units			=>	'units',
-	project_id		=>	'project_id',
 	quantity		=>	'quantity',
 	skid_ids		=>	'skid_ids',
 	condition_id	=>	'condition_id',
@@ -50,7 +48,6 @@ $serial = 'paper_allocation_id_seq';
 
 %defaults = (
 	created_on		=>	q`'NOW()'`,
-	project_id		=>	undef,
 	condition_id	=>	undef,
 );
 
