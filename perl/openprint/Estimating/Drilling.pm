@@ -62,15 +62,15 @@ sub calc {
 	my $services = $Project->services();
 
 	if ( $$specs{'chkOverrideFinishedCalliper'} ne 'Y' ) {
-		$$specs{'txtFinishedCalliper'} = openprint::print::get_finished_calliper( $project_index );
+		$$specs{'txtFinishedCalliper'} = $Project->calliper();
 		@outputs = sets::union( 'txtFinishedCalliper', @outputs );
 	} else {
 		@outputs = sets::exclude( ['txtFinishedCalliper'], \@outputs );
 	} # end if
 
-	if ( ! 1*$$specs{txtFinishedCalliper} ) {
-		$$specs{'alert'} = 'Please specify the finished calliper.';
-		return $$specs{'Status'} = 'uncalculated';
+	if ( ! ( 1*$$specs{txtFinishedCalliper} ) ) {
+		$$specs{alert} = 'Please specify the finished calliper.';
+		return $$specs{Status} = 'uncalculated';
 	} # end if
 
 	if ( $$specs{'txtHoleQty'} eq '' ) {
