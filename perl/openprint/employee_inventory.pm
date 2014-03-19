@@ -1453,6 +1453,7 @@ sub save_Manifest {
 		my %data = (
 			docket		=>	$param{'docket-'.$Type->id()},
 			paper_id	=>	$Paper->id(),
+			( ( ! $$Type{type} ) ? ( type		=>	$Paper->type() ) : () ),
 			po_id		=>	$param{'po_id-'.$Type->id()},
 			manufacturers_name	=>	$param{'manufacturers_name-'.$$Type{id}},
 			item_count	=>	$param{'item_count-'.$$Type{id}},
@@ -1857,6 +1858,9 @@ sub _manifests {
 				( map { 'updated_on_end_'.$_ } ( 'year','month','day' ) ),
 				'supplier_id', 'delivery','deleted','has_errors','type',
 				) );
+	if ( ! exists $param{type} ) {
+		delete $session{'/employee/inventory/manifests.html?type'};
+	} # end if
 } # end sub _manifests
 
 sub inventory_log {
