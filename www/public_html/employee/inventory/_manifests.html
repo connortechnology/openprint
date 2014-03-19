@@ -19,7 +19,7 @@
 			) ];
 	} elsif ( $param{po_id} ) {
 		$$variable{Manifests} = [ openprint::Manifest->find( 
-			po_id	=>	$param{po_id},
+			'po_id any'	=>	$param{po_id},
 			order	=>	'received_on DESC',
 			limit	=>	100,
 			( $session{'/employee/inventory/manifests.html?deleted'} ? ( deleted => [ split(',', $session{'/employee/inventory/manifests.html?deleted'} ) ] ) : () ),

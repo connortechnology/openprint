@@ -16,6 +16,7 @@ $debug = 0;
 	condition_id	=>	'condition_id',
 );
 %find_fields = (
+# FIXME
 	allocated	=>	'(SELECT SUM(quantity) FROM Paper_Allocations WHERE Paper_Allocations.skid_id=Skid_Contents.skid_id AND paper_allocations.paper_id=Skid_Contents.paper_id)',
 	deleted		=>	'(SELECT deleted FROM skids where skids.id=skid_id)',
 	condition	=>	'(SELECT name FROM InventoryConditions WHERE id=skid_contents.condition_id)',
@@ -28,6 +29,7 @@ $debug = 0;
 	condition_id	=>	undef,
 );
 %transforms = (
+	id			=>	[ 's/\D//g', '<2147483647' ],
 );
 $table = 'Skid_Contents';
 $serial = 'skid_contents_id_seq';
@@ -67,7 +69,7 @@ sub allocateable {
 } # end sub allocateable
 
 sub allocated {
-	my $PA = openprint::PaperAllocation->find_one('paper_id'=>$_[0]{'paper_id'},'skid_ids any'=>$_[0]{'skid_id'});
+	my $PA = openprint::PaperAllocation->find_one( paper_id=>$_[0]{paper_id},'skid_ids any'=>$_[0]{skid_id});
 	return $PA->quantity() if $PA;
 	return 0;
 } # end sub allocated
@@ -92,7 +94,7 @@ sub condition {
 
 sub Condition {
 	require openprint::InventoryCondition;
-	return new openprint::InventoryCondition( $_[0]{'condition_id'} );
+	return new openprint::InventoryCondition( $_[0]{condition_id} );
 } # end sub Condition
 
 # Looks to find a PO matching this stock and pulls the value from it.
@@ -100,7 +102,7 @@ sub Condition {
 sub cost {
 	my $self = $_[0];
 	if ( ! exists $$self{'cost'} ) {
-require openprint::ManifestContent;
+		require openprint::ManifestContent;
 		my @MCS = openprint::ManifestContent->find('skid_id'=>$$self{'skid_id'});
 		foreach my $MC ( @MCS ) {
 			my $Type = $MC->Type();
@@ -121,11 +123,12 @@ require openprint::ManifestContent;
 	} # end if ! exists cost
     return $$self{'cost'};
 } # end sub cost
+
 # Looks to find a PO matching this stock and pulls the value from it.
 sub value {
 	my $self = $_[0];
 	if ( ! exists $$self{'value'} ) {
-require openprint::ManifestContent;
+		require openprint::ManifestContent;
 		my @MCS = openprint::ManifestContent->find( skid_id=>$$self{'skid_id'});
 		foreach my $MC ( @MCS ) {
 			my $Type = $MC->Type();
