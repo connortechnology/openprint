@@ -7,7 +7,7 @@
 				<label>Finished Calliper</label>
 				<? echo ( input( name=>'txtFinishedCalliper', value=>$$variable{txtFinishedCalliper}, type=>'float', onkeyup=>'calc(this.form.name);' ); ) ?>
 <? if ( sets::isin( $session{'user_type'}, ['E','A'] ) ) ?>
-<? echo ( write_override( 'chkOverrideFinishedCalliper', $$variable{'chkOverrideFinishedCalliper'}, '', 'calc(this.form.name);' );) ?>
+<? echo ( write_override( 'chkOverrideFinishedCalliper', $$variable{'chkOverrideFinishedCalliper'}, '', q`calc('f1');` );) ?>
 <? else ( sets::isin( $session{'user_type'}, ['E','A'] ) ) ?>
 				<input type="hidden" name="chkOverrideFinishedCalliper" value="<? echo ( $$variable{'chkOverrideFinishedCalliper'} ) ?>" />
 <? if ( $$variable{'chkOverrideFinishedCalliper'} eq 'Y' ) ?>
@@ -34,7 +34,7 @@ Overridden
 				<label>Items per lift</label>
 				<? echo ( input( type=>'cardinal', id=>'ItemsPerLift', name=>'ItemsPerLift', value=>$$variable{ItemsPerLift}, onkeyup=>'calc(this.form.name);' ); ) ?>
 				<? if ( sets::isin( $session{'user_type'}, ['A','E'] ) ) ?>
-				<? echo ( write_override( 'OverrideItemsPerLift', $$variable{OverrideItemsPerLift}, '', 'calc(this.form.name);' );) ?>
+				<? echo ( write_override( 'OverrideItemsPerLift', $$variable{OverrideItemsPerLift}, '', q`calc('f1');` );) ?>
 				<? else ( sets::isin( $session{'user_type'}, ['A','E'] ) ) ?>
 				<input type="hidden" name="OverrideItemsPerLift" value="<?OverrideItemsPerLift" />
 				<? if ( $$variable{'OverrideItemsPerLift'} eq 'Y' ) ?>Overridden<? endif ( $$variable{'OverrideItemsPerLift'} eq 'Y' ) ?>
@@ -53,5 +53,6 @@ Overridden
 		<input type="hidden" name="ServiceIndex" value="<?ServiceIndex?>"/>
 		<input type="hidden" name="ServiceType" value="<?ServiceType?>"/>
 		<input type="hidden" name="ContinueProject" value="Y" />
+		<input type="hidden" id="Status" name="Status" />
 	</form>
 </div>

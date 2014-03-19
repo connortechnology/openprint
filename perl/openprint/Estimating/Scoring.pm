@@ -224,8 +224,8 @@ sub calc {
 sub signature_calc {
 	my ( $Project, $service_index, $specs, $signature_service_index, $sig_specs, $qty_index, $SignatureImposition ) = @_;
 	my %Results = (
-		Status => 'calculated',
-		Breakdown	=>	'',
+		Status		=> 'calculated',
+		Breakdown	=> '',
 	);
 	if ( $$specs{"chkOverrideQty-$$sig_specs{'SignatureIndex'}"} ne 'Y' ) {
 		get_scores( $Project, $specs, $sig_specs, $SignatureImposition->Paper() );
@@ -366,14 +366,23 @@ sub signature_calc {
 	} # end if debug
 
 	foreach my $Equipment ( @equipment ) {
-		$Results{'Breakdown'} .= "<br/>Equipment: ".$Equipment->name().', ';
+		$Results{Breakdown} .= "<br/>Equipment: $$Equipment{name}, ";
 		my $type = $Equipment->specification('Type');
-		if ( ( $type eq 'Folder' ) and ( $Equipment->specification('Scoring Capable') eq 'When Folding' ) and ! ( $$services{'Folding'} and @{$$services{'Folding'}} ) ) {
-			$Results{'Breakdown'} .= 'Not being folded.<br/>';
-			if ( $$specs{"chkOverrideEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} eq 'Y' ) {
-				$Results{alert} .= 'Not being folded.<br/>';;
+		if ( $Equipment->specification('Scoring Capable') eq 'When Folding' ) {
+			if ( ! ( $$services{'Folding'} and @{$$services{'Folding'}} ) ) {
+				$Results{'Breakdown'} .= 'Not being folded.<br/>';
+				if ( $$specs{"chkOverrideEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} eq 'Y' ) {
+					$Results{alert} .= 'Not being folded.<br/>';;
+				} # end if
+				next;
+			} 
+			if ( $$folding_specs{"ddmEquipment-$$sig_specs{SignatureIndex}-$qty_index"} != $Equipment->id() ) {
+				$Results{'Breakdown'} .= 'Not being folded on this.<br/>';
+				if ( $$specs{"chkOverrideEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} eq 'Y' ) {
+					$Results{alert} .= 'Not being folded on this.<br/>';
+				} # end if
+				next;
 			} # end if
-			next;
 		} # end if
 		if ( $type eq 'Stitcher' ) {
 			if ( ! $stitching_service_index ) {
@@ -412,8 +421,9 @@ sub signature_calc {
 			} # end if
 
 			foreach my $Fold ( @Folds ) {
-				$$Fold{impressions} = $qty * ( $parts / ( $Fold->imposition() * $Fold->quantity() ) );
-                my $Price = get_price( $Equipment, $$specs{"txtVerticalQty-$$sig_specs{'SignatureIndex'}"}, $$specs{"txtHorizontalQty-$$sig_specs{'SignatureIndex'}"}, $$Fold{impressions}, $Fold );
+				$$Fold{impressions} = ( $qty / $SignatureImposition->imposition() ) * ( $parts / ( $Fold->imposition() * $Fold->quantity() ) ) * $Fold->quantity();
+				#$$Fold{impressions} /= $Fold->imposition();
+                my $Price = get_price( $Equipment, $$specs{"txtVerticalQty-$$sig_specs{SignatureIndex}"}, $$specs{"txtHorizontalQty-$$sig_specs{SignatureIndex}"}, $$Fold{impressions}, $Fold );
                 $totalPrice += $$Price{setup} + $$Price{Vertical}{Total} + $$Price{Horizontal}{Total} + $$Price{Service}{Total};
                 $Results{Breakdown} .= $$Price{Breakdown};
 			} # end foreach my $Fold
@@ -425,10 +435,7 @@ sub signature_calc {
 				$Results{'Equipment'} = $Equipment;
 				$Results{'Runspeed'} = $Equipment->specification('Scoring Runspeed');
 			} # end if
-
 		} else {
-
-
 			foreach my $Set_Of_Impositions ( @All_Impositions ) {
 				my @impositions = @{$Set_Of_Impositions};
 				if ( $type eq 'Press' ) {
@@ -535,15 +542,15 @@ sub get_price {
 	} # end if
 
 	if ( $servicePrice{'units'} eq 'per m' ) {
-		$servicePrice{Total} = Math::Round::nearest( 0.01, $servicePrice{'Price'} * $qty / 1000 );
+		$servicePrice{Total} = Math::Round::nearest( 0.01, $servicePrice{Price} * $qty / 1000 );
 		$Results{'Breakdown'} .= sprintf('Service: $%.2f%s * %d * %d scores=$%.2f<br/>', @servicePrice{'Price','units'}, $qty, $score_qty, $servicePrice{Total} );
-	} elsif ( $servicePrice{'units'} eq 'per hour' ) {
+	} elsif ( $servicePrice{units} eq 'per hour' ) {
 		my $runspeed = $Equipment->specification('PerfScoreRunSpeed');
 		if ( $runspeed ) {
 			if ( int($runspeed) ) {
 				my $hours = $qty / $runspeed;
 				$servicePrice{Total} = Math::Round::nearest( 0.01, $servicePrice{'Price'} * $hours );
-				$Results{'Breakdown'} .= sprintf('Service: $%.2f%s * %d @ %d%s =%.2f', @servicePrice{'Price','units'}, $qty, $runspeed, 'Per Hour', $servicePrice{Total} );
+				$Results{Breakdown} .= sprintf('Service: $%.2f%s * %d @ %d%s = $%.2f<br/>', @servicePrice{'Price','units'}, $qty, $runspeed, 'Per Hour', $servicePrice{Total} );
 			} else {
 				$openprint::log->error("Bogus runspeed ($runspeed) on $$Equipment{strid}");
 			} # end if

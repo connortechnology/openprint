@@ -1,12 +1,12 @@
 <? if ( $$variable{uri} =~ /_paper_allocations/ ) ?>
-<? echo ( include('/includes/error_reporting.html'); ) ?>
+<?include('/includes/error_reporting.html')?>
 <? endif ( $$variable{uri} =~ /_paper_allocations/ ) ?>
 <? eval (
-	return if ! ( $param{'skid_id'} or $variable{Paper} );
+	return if ! ( $param{skid_id} or $variable{Paper} );
 	my %search;
-	$search{'skid_id'} = $param{'skid_id'} if $param{'skid_id'};
+	$search{'skid_ids any'} = $param{'skid_id'} if $param{'skid_id'};
 	$search{paper_id} = $variable{Paper}{id} if $variable{Paper};
-	$search{'order'} = 'created_on';
+	$search{order} = 'created_on';
 	$$variable{Allocations} = [ openprint::PaperAllocation->find(%search) ];
 ) ?>
 <? if ( $$variable{'Allocations'} and @{$$variable{'Allocations'}} ) ?>
@@ -38,7 +38,7 @@
 			
 				my @Skids = $PA->Skids();
 
-				if ( $param{'skid_id'} ) {
+				if ( $param{skid_id} ) {
 					$html .= sprintf('<td class="Skid"><a href="/employee/inventory/paper_details.html?paper_id=%1$d">%2$s</a></td>', $PA->paper_id(), $PA->Paper()->to_string() );
 				} elsif ( @Skids ) {
 					$html .= '<td class="Skid">'.join('<br/>',map{ sprintf('<a href="/employee/inventory/skid_details.html?skid_id=%1$d">%1$d</a>', $_->id() ) } @Skids ).'</td>';
@@ -54,14 +54,12 @@
 				$html .= '<td class="ManufacturersID">'.join('<br/>',map{ sprintf('<a href="/employee/inventory/skid_details.html?skid_id=%d">%s</a>', $_->id(), $_->manufacturers_id() ) } @Skids ).'</td>';
 	
 				$html .= '<td class="Location">'.join('<br/>',map{ $_->Location()->name() } @Skids ).'</td>';
-				$html .= sprintf( '<td class="DateTime">%s</td>', Date::Format::time2str($config{'DateTimeFormat'}, Date::Parse::str2time( $PA->created_on() ) ) );
-				$html .= sprintf('<td class="Docket"><a href="/employee/project/view.html?ProjectIndex=%d">%s</a></td>
-<td class="Quantity">%s%s</td><td class="Quantity">%s%s</td><td class="Condition">%s</td><td class="buttons">',
-					$PA->project_id(),
-					$PA->Project()->docket() ? $PA->Project()->docket() : 'unknown',
-					Number::Format::format_number($PA->quantity()), $PA->units(),
-					Number::Format::format_number($PA->Paper()->available()),
-					$PA->units(),
+				$html .= sprintf( '<td class="DateTime">%s</td>', format_datetime( $PA->created_on() ) );
+				$html .= sprintf('<td class="Docket"><a href="/employee/project/view.html?docket=%1$d">%1$s</a></td>
+<td class="Quantity">%2$s</td><td class="Quantity">%3$s</td><td class="Condition">%4$s</td><td class="buttons">',
+					( $PA->docket() ? $PA->docket() : 'unknown' ),
+					Number::Format::format_number($PA->quantity()).$PA->units(),
+					Number::Format::format_number($PA->Paper()->available()).$PA->units(),
 					$PA->Condition()->name(),
 					);
 				$html .= button( 'Delete'.$$PA{id}, { onclick=>qq`popup_window('_deallocate_popup.html?allocation_id=$$PA{id}', '', { width: 400 } );`, text=>'Delete' } );

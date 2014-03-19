@@ -333,7 +333,11 @@ sub notifications {
 		sql::end_transaction( $dbh, $ac );
 		$$self{notifications} = $notifications_hash;
 	} elsif ( ! exists $$self{notifications} ) {
+		if ( ! $$self{id} ) {
+			$$self{notifications} = {};
+		} else {
 		%{$$self{notifications}} = sql::execute( undef, undef, 'SELECT (SELECT name FROM User_Notification_Types WHERE id=type_id),value FROM User_Notifications WHERE user_id=?', $$self{id} );
+		} # end if
 	} else {
 	$openprint::log->debug("Have notifications");
 	} # end if
@@ -361,7 +365,11 @@ sub po_limit {
 	my ( $self, $type_id, $new_value ) = @_;
 
 	if ( ! exists $$self{'po_limits'} ) {
-		%{$$self{'po_limits'}} = sql::execute( undef, undef, 'SELECT type_id, po_limit FROM User_PurchaseOrder_limits WHERE user_id=?', $$self{'id'} );
+		if ( $$self{id} ) {
+		%{$$self{po_limits}} = sql::execute( undef, undef, 'SELECT type_id, po_limit FROM User_PurchaseOrder_limits WHERE user_id=?', $$self{'id'} );
+		} else {
+			$$self{po_limits} = {};
+		} # end if
 	} # end if
 
 	if ( defined $new_value ) {

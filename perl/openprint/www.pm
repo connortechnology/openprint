@@ -367,11 +367,11 @@ $openprint::log->debug("Getfile");
 					if ( ! $$sig_specs{'UsePress'} ) {
 						openprint::service::insert_service_spec( $log, $dbh, $variable{'ProjectIndex'}, $signature_service_index, 'UsePress', $$sig_specs{'ddmPress'.$variable{'Project'}->ordered_quantity_index()} );
 					} # end if
-					$variable{"UsePress-$signature_service_index"} = $$sig_specs{'UsePress'};
+					$variable{"UsePress-$signature_service_index"} = $$sig_specs{UsePress};
 				} # end foreach signature_service_index
 
 				if ( ! $variable{'ddmDueDate'} ) {
-					$variable{'ddmDueDate'} = $variable{'Project'}->get_due_date();
+					$variable{'ddmDueDate'} = $variable{Project}->get_due_date();
 				} # end if
 				@variable{'duedate_year','duedate_month','duedate_day'} = split('-', $variable{'ddmDueDate'});
 

@@ -493,13 +493,13 @@ sub get_proof_specs {
 			my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
 			my $signature_index = $$sig_specs{'SignatureIndex'};
 			if ( ! $$sig_specs{'txtImposition'.$qty_index} ) {
-$log->warn("No imposition in signature $signature_index");
+				$log->warn("No imposition in signature $signature_index") if DEBUG;
 				next;
 			} # end if
 			my $Imposition = new openprint::Imposition();
-			$Imposition->load( $sig_specs, $qty_index );
-			my $Equipment = openprint::Equipment->find_one( strid=>$$sig_specs{'ddmPress'.$qty_index} ) if $$sig_specs{'ddmPress'.$qty_index};
-$Imposition->display( "For sig $signature_index");
+			$Imposition->load( $sig_specs, $qty_index, $Project );
+			my $Equipment = $Imposition->Press();
+			$Imposition->display( "For sig $signature_index") if DEBUG;
 
 			if ( ( ! sets::isin( 1, $proof_indexes{$signature_index} ) ) and $openprint::config{'Add_Default_Layout_Proof'} eq 'Y') {
 				push @{$proof_indexes{$signature_index}}, 1;

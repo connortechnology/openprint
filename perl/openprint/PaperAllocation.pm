@@ -16,6 +16,7 @@ require misc;
 require openprint::Skid;
 require openprint::User;
 require openprint::Project;
+require openprint::Order;
 require openprint::PaperPrice;
 require openprint::logs;
 require openprint::Manufacturer;
@@ -30,11 +31,9 @@ $serial = 'paper_allocation_id_seq';
 %fields = (
 	id				=>	'id',
 	paper_id		=>	'paper_id',
-	skid_id			=>	'skid_id',
 	operator_id		=>	'operator_id',
 	created_on		=>	'created_on',
 	units			=>	'units',
-	project_id		=>	'project_id',
 	quantity		=>	'quantity',
 	skid_ids		=>	'skid_ids',
 	condition_id	=>	'condition_id',
@@ -50,7 +49,6 @@ $serial = 'paper_allocation_id_seq';
 
 %defaults = (
 	created_on		=>	q`'NOW()'`,
-	project_id		=>	undef,
 	condition_id	=>	undef,
 );
 
@@ -92,17 +90,29 @@ sub Paper {
 	return new openprint::Paper( $_[0]{'paper_id'} );
 } # end sub Paper
 sub Skids {
-	if ( $_[0]{'skid_ids'} and @{$_[0]{'skid_ids'}} ) {
-		return map { new openprint::Skid( $_); } @{$_[0]{'skid_ids'}};
+	if ( ! $_[0]{Skids} ) {
+		if ( $_[0]{skid_ids} and @{$_[0]{skid_ids}} ) {
+			$_[0]{Skids} = [ openprint::Skid->find( id=> $_[0]{skid_ids} ) ];
+		} else {
+			$_[0]{Skids} = [];
+		} # end if
 	} # end if
-	return ();
+	return @{$_[0]{Skids}};
 } # end sub Skids
+
 sub User {
 	return new openprint::User( $_[0]{'operator_id'} );
 } # end sub User
 sub Project {
+$openprint::log->error("PaperAllocation::Project deprecated");
 	return new openprint::Project( $_[0]{'project_id'} );
 } # end sub Project
+
+sub Order {
+	my $Order = openprint::Order->find_one(docket=>$_[0]{docket});
+	$Order = new openprint::Order() if ! $Order;
+	return $Order;
+} # end sub Order
 
 sub old_Skids {
 	my @old_skids;

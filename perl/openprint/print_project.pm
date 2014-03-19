@@ -417,33 +417,15 @@ sub get_service_specifications {
 		$$variable{'ddmRunStyle'} = '';
 		$$variable{'ServiceName'} = '';
 
-		$$variable{'chkVarnishOverallGlossSideOne'} = '';
-		$$variable{'chkVarnishOverallMatteSideOne'} = '';
-		$$variable{'chkVarnishSpotGlossSideOne'} = '';
-		$$variable{'chkVarnishSpotMatteSideOne'} = '';
-		$$variable{'chkVarnishDryTrapSideOne'} = '';
-
-		$$variable{'chkVarnishOverallGlossSideTwo'} = '';
-		$$variable{'chkVarnishOverallMatteSideTwo'} = '';
-		$$variable{'chkVarnishSpotGlossSideTwo'} = '';
-		$$variable{'chkVarnishSpotMatteSideTwo'} = '';
-		$$variable{'chkVarnishDryTrapSideTwo'} = '';
-
-		$$variable{'chkBlackSideOne'} = '';
-		$$variable{'chkBlackSideTwo'} = '';
-		$$variable{'chkProcessColourSideOne'} = '';
-		$$variable{'chkProcessColourSideTwo'} = '';
-		$$variable{'chkSpecialColourSideOne'} = '';
-		$$variable{'chkSpecialColourSideTwo'} = '';
+		my $Project = new openprint::Project( $project_index );
 
 		# Get the Product Index
 		my ( $service_type_id ) = openprint::service::get_specifications( $log, $dbh, $project_index, $service_index, 'ServiceType' );
 
 		if ( ! $service_type_id ) {
 # Maybe it's a project type
-			my $Project = new openprint::Project( $project_index );
 			my $PT = $Project->Type();
-			$$variable{'ServiceTypeID'} = $PT->get('name');
+			$$variable{'ServiceTypeID'} = $PT->name();
 			$$variable{'ServiceTypeName'} = 'Printing';
 		} else {
 			$$variable{'ServiceType'} = openprint::print::get_ServiceType( $project_index, $service_index );	
@@ -452,32 +434,32 @@ sub get_service_specifications {
 
 		# Do Specific Stuff
 		if ( $service_type_id eq 'Perforating' ) {
-			my $specs = openprint::service::get_specs_ref( $project_index, $service_index );
+			my $specs = openprint::service::get_specs_ref( $Project, $service_index );
 			foreach my $name ( keys %$specs ) {
 				$$variable{$name} = $$specs{$name};
 			} # end foreach
 			require openprint::Estimating::Perforating;
 			openprint::Estimating::Perforating::get_specs( $log, $dbh, $variable, $project_index, $service_index );
 		} elsif ( $service_type_id eq 'Scoring' ) {
-			my $specs = openprint::service::get_specs_ref( $project_index, $service_index );
+			my $specs = openprint::service::get_specs_ref( $Project, $service_index );
 			foreach my $name ( keys %$specs ) {
 				$$variable{$name} = $$specs{$name};
 			} # end foreach
 			require openprint::Estimating::Scoring;
 			openprint::Estimating::Scoring::get_specs( $log, $dbh, $variable, $project_index, $service_index );
 		} elsif ( $service_type_id eq 'Proofs' ) {
-			my $specs = openprint::service::get_specs_ref( $project_index, $service_index );
+			my $specs = openprint::service::get_specs_ref( $Project, $service_index );
 			foreach ( keys %$specs ) {
 				$$variable{$_} = $$specs{$_};
 			} # end foreach
 			openprint::Estimating::Proofs::get_proof_specs( $log, $dbh, $variable, $project_index, $service_index );
 		} elsif ( $service_type_id ) {
-			my $specs = openprint::service::get_specs_ref( $project_index, $service_index );
+			my $specs = openprint::service::get_specs_ref( $Project, $service_index );
 			foreach ( keys %$specs ) {
 				$$variable{$_} = $$specs{$_};
 			} # end foreach
 		} else {
-			my $specs = openprint::service::get_specs_ref( $project_index, $service_index );
+			my $specs = openprint::service::get_specs_ref( $Project, $service_index );
 			my $side_one_colours = 0;
 			my $side_two_colours = 0;
 			foreach my $name ( keys %$specs ) {

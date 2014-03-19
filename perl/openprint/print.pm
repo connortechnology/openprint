@@ -675,57 +675,8 @@ $openprint::log->debug("Unable to get sig_weight for signature $$sig_specs{'Sign
 # Finished calliper for books will be calculated from the first qty.  All three should be the same.
 sub get_finished_calliper { 
 	my ( $project_index ) = @_; 
-
 	my $Project = new openprint::Project( $project_index );
-	my $services = $Project->services();
-
-	my $folding_specs;	
-	my $folding_service_index = $$services{'Folding'}[0] if $$services{'Folding'};
-	if ( $folding_service_index ) {
-		$folding_specs = openprint::service::get_specs_ref( $Project, $folding_service_index );
-	} # end if
-
-	my $printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
-
-	my $finished_calliper;
-    foreach my $signature_service_index ( $Project->signatures() ) {
-		my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
-		my $calliper = int($$sig_specs{'txtSpecificStockCalliper'}*10000);
-
-		if ( $Project->Type()->type() eq 'ScratchPads' ) {
-			$finished_calliper += $$printing_specs{'PageQuantity'} * $calliper;
-		} elsif ( $$sig_specs{'ServiceType'} eq 'Signature' ) {
-			foreach my $qty_index ( $Project->quantity_indexes() ) {
-				if ( $$sig_specs{'PageQuantity'.$qty_index} ) {
-					$calliper *= int($$sig_specs{'PageQuantity'.$qty_index}/2);
-					last;
-				} # end if
-			} # end foreach qty_index
-			$finished_calliper += $calliper;
-		} else {
-				my $pages = 1;
-				if ( $$sig_specs{'rdbTemplateType'} eq '2PanelFold' ) {
-					$pages = 2;
-				} elsif ( sets::isin( $$sig_specs{'rdbTemplateType'},['3PanelFold','3PanelZFold'] ) ) {
-					$pages = 3;
-				} elsif ( sets::isin( $$sig_specs{'rdbTemplateType'}, ['4PanelFold', '4PanelZFold'] ) ) {
-					$pages = 4;
-				} elsif ( sets::isin( $$sig_specs{'rdbTemplateType'}, ['5PanelFold', '5PanelZFold'] ) ) {
-					$pages = 5;
-				} elsif ( sets::isin( $$sig_specs{'rdbTemplateType'}, ['6PanelFold', '6PanelZFold'] ) ) {
-					$pages = 6;
-				} elsif ( $$sig_specs{'rdbTemplateType'} eq 'SingleGateFold' ) {
-					$pages = 3;
-				} elsif ( $$sig_specs{'rdbTemplateType'} eq 'DoubleGateFold' ) {
-					$pages = 4;
-				} elsif ( $$sig_specs{'rdbTemplateType'} eq 'DifficultFold' ) {
-					$pages = 6;
-				} #// end if
-				$finished_calliper += $pages * $calliper;
-		} # end if
-	} # end foreach
-	$openprint::log->debug("******************************* FINSIHED CALLIPER is $finished_calliper/1000 *********************************");
-	return sprintf('%.4f', $finished_calliper/10000);
+	return $Project->calliper();
 } # end sub get_finished_calliper
 
 sub get_quantities {

@@ -238,6 +238,26 @@ sub user_profiles {
 		$User = $User->Prev( 'type'=>$param{'ddmUserRole'}, 'company_id'=>$param{'ddmCustomer'} );
 	} elsif ($param{'btnFunction'} eq '>>') {
 		$User = $User->Next( 'type'=>$param{'ddmUserRole'}, 'company_id'=>$param{'ddmCustomer'} );
+    } elsif ( $param{'btnFunction'} eq 'merge' ) {
+		if ( $$User{id} == $openprint::param{merge_user_id} ) {
+			$variable{error} .= 'Choose a different user to merge into.';
+		} else {
+			my $ac = sql::start_transaction( $dbh );
+			foreach my $type ( 'Order','Quote','Project', 'Log','Timetrack' ) {
+				require "openprint/$type.pm";
+				foreach ( "openprint::$type"->find( user_id=>$param{merge_user_id}) ) {
+					$variable{error} .= $_->save({user_id=>$User->id()});
+				} # end foreach
+			} # end foreach type
+			foreach my $type ( 'Claim', 'PurchaseOrder' ) {
+				require "openprint/$type.pm";
+				foreach ( "openprint::$type"->find( contact_id=>$param{merge_user_id}) ) {
+					$variable{error} .= $_->save({contact_id=>$User->id()});
+				} # end foreach
+			} # end foreach type
+			new openprint::User( $param{merge_user_id} )->delete();
+			sql::end_transaction( $dbh, $ac );
+		} # end if
 	} elsif ( $param{'btnFunction'} eq 'Undelete' ) {
 		if ( $_ = $User->undelete() ) {
 			$variable{'error'} .= "Error undeleting user: $_<br/>";

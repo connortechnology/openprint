@@ -56,26 +56,26 @@ sub outputs {
 sub calc {
 	my ( $log, $dbh, $variable, $project_index, $service_index, $specs ) = @_;
 	
-	$$specs{'Status'} = 'calculated';
+	$$specs{Status} = 'calculated';
 
 	my $Project = new openprint::Project( $project_index );
 	my $services = $Project->services();
 
 	if ( $$specs{'chkOverrideFinishedCalliper'} ne 'Y' ) {
-		$$specs{'txtFinishedCalliper'} = openprint::print::get_finished_calliper( $project_index );
+		$$specs{'txtFinishedCalliper'} = $Project->calliper();
 		@outputs = sets::union( 'txtFinishedCalliper', @outputs );
 	} else {
 		@outputs = sets::exclude( ['txtFinishedCalliper'], \@outputs );
 	} # end if
 
-	if ( ! 1*$$specs{txtFinishedCalliper} ) {
-		$$specs{'alert'} = 'Please specify the finished calliper.';
-		return $$specs{'Status'} = 'uncalculated';
+	if ( ! ( 1*$$specs{txtFinishedCalliper} ) ) {
+		$$specs{alert} = 'Please specify the finished calliper.';
+		return $$specs{Status} = 'uncalculated';
 	} # end if
 
 	if ( $$specs{'txtHoleQty'} eq '' ) {
-		$$specs{'alert'} = 'Please specify the # of holes.';
-		return $$specs{'Status'} = 'uncalculated';
+		$$specs{alert} = 'Please specify the # of holes.';
+		return $$specs{Status} = 'uncalculated';
 	} # end if
 
 	my $printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] ) if $$services{''};
@@ -255,7 +255,6 @@ sub display {
 	my $Project = new openprint::Project( $project_index );
 	my $services = $Project->services();
 
-
 	my @capabilities = ( 'Y', 
 		( ( $$services{SaddleStitching} or $$services{LoopStitching} ) ? 'When Stitching' : () ),
 	);
@@ -294,5 +293,22 @@ sub runtime {
 
 sub save {
 } # end sub save
+
+sub has_overrides {
+    my ( $Project, $service_id, $specs, $qty_index ) = @_;
+    $specs = openprint::service::get_specs_ref( $Project, $service_id ) if ! $specs;
+
+    my @v;
+    if ( ! $qty_index ) {
+        push @v, map { $$specs{$_} ? $_ : () } ( 'chkOverrideFinishedCalliper', 'OverrideItemsPerLift' );
+    } else {
+        foreach my $qty_index ( $Project->quantity_indexes() ) {
+			push @v, map { $$specs{$_.$qty_index} ? $_.$qty_index : () } ( 'chkOverrideEquipment' );
+        } # end foreach
+    } # end if
+
+    return @v;
+} # end sub has_overrides
+
 1;
 __END__
