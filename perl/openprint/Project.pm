@@ -1078,13 +1078,15 @@ sub status_change {
 	} elsif ( sets::isin( $new_status, ['Shipped','Picked Up', 'Complete'] ) ) {
 		sql::update( undef, undef, 'tbl_Project_Contents', ["lngProjectIndex=? AND strStatus != ''", $$self{id}], 'strStatus', 'Complete' );
 # Remove jobs from the Schedule when marked complete.
-		foreach my $Job ( openprint::ScheduledJob->find('project_id'=>$$self{'id'}) ) {
+		foreach my $Job ( openprint::ScheduledJob->find( project_id=>$$self{id}) ) {
 			$Job->delete();
 		} # end foreach
 		$self->status($new_status);
-		foreach my $PA ( openprint::PaperAllocation->find('project_id'=>$$self{'id'}) ) {
-			$PA->delete();
-		} # end foreach AP
+		if ( $$self{docket} ) {
+			foreach my $PA ( openprint::PaperAllocation->find(docket=>$$self{docket}) ) {
+				$PA->delete();
+			} # end foreach AP
+		} # end if
 	} # end if
 	$self->save();
 	$self->Order()->update_status() if $self->order_id();
