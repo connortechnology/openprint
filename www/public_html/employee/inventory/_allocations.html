@@ -64,10 +64,10 @@
 						} # end if
 					} # end if
 					if ( $A->Paper()->type() eq 'Roll' ) {
-						$total_rolls += 1 if $A->skid_id();
+						$total_rolls += @{$A->skid_ids()} if $A->skid_ids();
 						$total_weight += $A->quantity;
 					} else {
-						$total_allocations += 1 if $A->skid_id();
+						$total_allocations += @{$A->skid_ids()} if $A->skid_ids();
 						$total_sheets += $A->quantity;
 					} # end if
 				} # end foreach Allocation
@@ -87,10 +87,10 @@ $log->debug("Max end: $max_age_end Max Age $max_age");
 
 				$html .= "<tr$rowclass>";
 				$html .= qq`<td class="checkbox"><input type="checkbox" name="allocations" value="$$Allocation{'id'}"/></td>`;
-				$html .= sprintf( '<td class="Docket"><a href="/employee/project/view.html?docket=%d">%s</a></td>', $$Allocation{docket}, $Allocation->docket() );
-				$html .= sprintf( '<td class="Company"><a href="skid_details.html?skid_id=%d">%s</a></td>', $$Allocation{skid_id}, $Allocation->Project()->Company()->name() );
+				$html .= sprintf( '<td class="Docket"><a href="/employee/project/view.html?docket=%1$d">%1$s</a></td>', $$Allocation{docket} );
+				$html .= sprintf( '<td class="Company"><a href="skid_details.html?skid_id=%d">%s</a></td>', $$Allocation{skid_id}, $Allocation->Order()->Company()->name() );
 				$html .= sprintf( '<td class="Stock"><a href="paper_details.html?paper_id=%d">%s</a></td>', $$Allocation{paper_id}, $Allocation->Paper()->to_string() );
-				$html .= sprintf( '<td class="Quantity"><a href="skid_details.html?skid_id=%d">%s%s</a></td>', $$Allocation{'id'}, Number::Format::format_number($quantity), $Allocation->Paper()->type() eq 'Roll' ? 'lbs' : 'sheets' );
+				$html .= sprintf( '<td class="Quantity"><a href="skid_details.html?skid_id=%d">%s%s</a></td>', $$Allocation{id}, Number::Format::format_number($quantity), $Allocation->Paper()->type() eq 'Roll' ? 'lbs' : 'sheets' );
 				$html .= sprintf( '<td class="Date"><a href="skid_details.html?skid_id=%d">%s</a></td>', $$Allocation{skid_id}, misc::seconds_to_pretty_interval( $max_age ) );
 				$html .= sprintf( '<td class="Date"><a href="skid_details.html?skid_id=%d">%s</a></td>', $$Allocation{skid_id}, Date::Format::time2str('%Y-%m-%d %H:%M', Date::Parse::str2time($Allocation->created_on()) ), );
 				$html .= '</tr>';

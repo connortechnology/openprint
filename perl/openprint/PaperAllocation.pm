@@ -16,6 +16,7 @@ require misc;
 require openprint::Skid;
 require openprint::User;
 require openprint::Project;
+require openprint::Order;
 require openprint::PaperPrice;
 require openprint::logs;
 require openprint::Manufacturer;
@@ -103,8 +104,15 @@ sub User {
 	return new openprint::User( $_[0]{'operator_id'} );
 } # end sub User
 sub Project {
+$openprint::log->error("PaperAllocation::Project deprecated");
 	return new openprint::Project( $_[0]{'project_id'} );
 } # end sub Project
+
+sub Order {
+	my $Order = openprint::Order->find_one(docket=>$_[0]{docket});
+	$Order = new openprint::Order() if ! $Order;
+	return $Order;
+} # end sub Order
 
 sub old_Skids {
 	my @old_skids;
