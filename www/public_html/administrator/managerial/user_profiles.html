@@ -203,16 +203,6 @@ Please select a company or user to obtain login information.<br/>
 							<? echo ( make_drop_down( [ 'C', 'Customer', 'E', 'Employee','A', 'Administrator' ], $$variable{User}->type() ); ) ?>
 						</select>
 					</li>
-					<? eval ( @{$$variable{'QuoteLevels'}} = sql::execute( undef, undef, 'SELECT id, name FROM QuoteLevels ORDER BY lower(name)' ); ) ?>
-					<? if ( @{$$variable{'QuoteLevels'}} > 1 ) ?>
-					<li> 
-						<label>Quote Level</label>
-						<select name="quote_level">
-							<option value=""> select </option>
-							<? echo ( make_drop_down( $$variable{'QuoteLevels'}, $$variable{User}->quote_level() ); ) ?>
-						</select>
-					</li>
-					<? endif ( @{$$variable{'QuoteLevels'}} > 1 ) ?>
 					<? if ( sets::isin( $$variable{User}->type(), ['E','A'] ) ) ?>
 					<li class="commission">
 						<label>Commission Rate</label>
