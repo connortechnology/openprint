@@ -17,18 +17,18 @@
 			</p>
 			<ul>
 			<li>
-				<label>Docket:</label>';
+				<label>Docket</label>';
 				$html .= join("\n",
 							input( type=>'cardinal', name=>'Docket', onkeypress=>'return input_handler(this,event);' ),
 							button( 'clearAllocateDocket', { onclick=>q`allocateform.Docket.value='';`, text=>'C', title=>'Clear' } ),
 							);
-			$html .= '</li><li><label>Project:</label>';
+			$html .= '</li><li><label>Project</label>';
 			$html .= join("\n",
 							input( type=>'cardinal', name=>'Project', onkeypress=>'return input_handler(this,event);' ),
 							button( 'clearAllocateProject', { onclick=>q`allocateform.Project.value='';`, text=>'C', title=>'Clear' } ), 
 							);
 			$html .= '</li><li>
-				<label><a title="Click to allocate specific skids on the floor.">Specific Skids:</label>
+				<label><a title="Click to allocate specific skids on the floor.">Specific Skids</label>
 				<input type="checkbox" name="specific" id="specific" value="1" /><label class="radio" for="specific" title="Click to allocate specific skids on the floor.">Yes</label>
 			</li>
 			</ul>';
@@ -66,13 +66,13 @@
 
 				$html .= sprintf(q` 
 			<ul><li>
-				<label>Quantity:</label>
+				<label>Quantity</label>
 				<input type="hidden" name="available-%2$d" value="%3$d"/>%4$s of
                         <a href="#" onclick="$('quantity-%2$d').value='%3$d';">%3$d %1$s</a>
 			</li></ul>`, $variable{Paper}->units(), $condition_id, $available,
 			join("\n",
-				ssi::input( type=>'integer', id=>'quantity-'.$condition_id, name=>'quantity-'.$condition_id, value=>$available, onkeypress=>'return input_handler(this,event);' ),
-				ssi::button( 'clear'.$condition_id, { onclick=>"\$('quantity-${condition_id}').value='';", text=>'C', title=>'Clear' } ),
+				input( type=>'integer', id=>'quantity-'.$condition_id, name=>'quantity-'.$condition_id, value=>$available, onkeypress=>'return input_handler(this,event);' ),
+				button( 'clear'.$condition_id, { onclick=>"\$('quantity-${condition_id}').value='';", text=>'C', title=>'Clear' } ),
 				) );
 			} # end foreach Good Condition
 
@@ -124,15 +124,15 @@
 			
 			<? if ( $variable{captcha} ) ?>
 				Do you still wish to allocate this stock?
-				<div id="Captcha"><? echo ( ssi::include( $ENV{'DOCUMENT_ROOT'}.'/includes/_captcha.html' ); ) ?></div>
+				<div id="Captcha"><?include(/includes/_captcha.html)?></div>
 			<? endif ( $variable{captcha} ) ?>
 			<hr/>
 			<p class="buttons">
 			<? echo ( 
-				my $html = '';
-				$html .= ssi::button( 'SaveAllocate', { onclick=>'if(check_inputs(allocateform)){document.allocateform.submit();}', text=>'Save' } );
-				$html .= ssi::button( 'CancelAllocate', { onclick=>"allocateWin.destroy();", text=>'Cancel' } ); 
-				return $html;
+				join("\n",
+				button( 'SaveAllocate', { onclick=>'if(check_inputs(allocateform)){document.allocateform.submit();}', text=>'Save' } ),
+				button( 'CancelAllocate', { onclick=>'allocateWin.destroy();', text=>'Cancel' } ),
+				); 
 			) ?>
 			</p>
 		</fieldset>

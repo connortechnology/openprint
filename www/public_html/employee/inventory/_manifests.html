@@ -19,7 +19,7 @@
 			) ];
 	} elsif ( $param{po_id} ) {
 		$$variable{Manifests} = [ openprint::Manifest->find( 
-			po_id	=>	$param{po_id},
+			'po_id any'	=>	$param{po_id},
 			order	=>	'received_on DESC',
 			limit	=>	100,
 			( $session{'/employee/inventory/manifests.html?deleted'} ? ( deleted => [ split(',', $session{'/employee/inventory/manifests.html?deleted'} ) ] ) : () ),
@@ -68,9 +68,9 @@ if ( $session{'/employee/inventory/manifests.html?type'} ) {
             my @types = split(',',$session{'/employee/inventory/manifests.html?type'} );
             if ( @types ) {
                 if ( sets::isin( 'Unknown', \@types ) ) {
-            $search{'type is null or in'}      = [ map { $_ ne 'Unknown' ? $_ : () } @types ];
+					$search{'type &&'}      = [ map { $_ ne 'Unknown' ? $_ : undef } @types ];
                 } else {
-            $search{'type any'}      = \@types;
+					$search{'type &&'}      = \@types;
                 } # end if
             } # end if
         }

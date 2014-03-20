@@ -36,7 +36,7 @@ $serial = 'paperinventory_id_seq';
 	'delta'		=>	[ 's/[^\d\-]//g' ],
 );
 %defaults = (
-	updated_on	=>	'NOW()',
+	updated_on	=>	q`'NOW()'`,
 	docket		=>	undef,
 	project_id	=>	undef,
 	instock		=>	undef,

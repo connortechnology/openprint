@@ -14,47 +14,6 @@
 		return true;
 	}
 
-var allocateWin;
-function allocate_window(paper_id) {
-	if (allocateWin == null) {
-		allocateWin = new Window({maximizable: false, resizable: true, hideEffect:Element.hide, showEffect:Element.show, destroyOnClose: true, classBrand:"alphacube", width: 300} );
-		allocateWin.setHTMLContent('Loading... please wait');
-		allocateWin.showCenter();
-		// Set up a windows observer, check ou debug window to get messages
-		myObserver = {
-onDestroy: function(eventBrand, win) {
-				if (win == allocateWin) {
-					allocateWin = null;
-					Windows.removeObserver(this);
-				}
-			}
-		}
-		Windows.addObserver(myObserver);
-	}
-	allocateWin.setAjaxContent('/employee/inventory/_allocate_popup.html?referer=paper_details.html&paper_id='+paper_id, null , true);
-} // end function bug_report
-
-var checkoutWin;
-function checkout_window(paper_id) {
-	if (checkoutWin == null) {
-		checkoutWin = new Window({maximizable: false, resizable: true, hideEffect:Element.hide, showEffect:Element.show, destroyOnClose: true, classBrand:"alphacube", width: 300} );
-		checkoutWin.setHTMLContent('Loading... please wait');
-		checkoutWin.showCenter();
-		// Set up a windows observer, check ou debug window to get messages
-		myObserver = {
-onDestroy: function(eventBrand, win) {
-				if (win == checkoutWin) {
-					checkoutWin = null;
-					Windows.removeObserver(this);
-				}
-			}
-		}
-		Windows.addObserver(myObserver);
-	}
-	checkoutWin.setAjaxContent('/employee/inventory/_check_out_popup.html?referer=paper_details.html&paper_id='+paper_id, null , true);
-} // end function bug_report
-
-
 function calc_from_basis_weight( form ) {
 	var basis_weight = parseFloat(1*form.elements['basis_weight'].value);
 	var width = parseFloat(1*form.elements['basis_width'].value);
@@ -261,8 +220,8 @@ x
 			<? echo (
 					my $html = '';
 					if ( ( $session{'user_type'} eq 'A' ) or openprint::usergroup::is_user_in( ['Inventory'], $session{'user_id'} ) ) {
-							$html .= button( 'CheckOutButton', { onclick=>sprintf('checkout_window(%d);',$$variable{'Paper'}->id()), text=>'Check Out' } );
-							$html .= button( 'AllocateButton', { onclick=>sprintf('allocate_window(%d);',$$variable{'Paper'}->id()), text=>'Allocate' } );
+							$html .= button( 'CheckOutButton', { onclick=>sprintf(q`popup_window('_check_out_popup.html?referer=paper_details.html&amp;paper_id=%d');`,$$variable{Paper}->id()), text=>'Check Out' } );
+							$html .= button( 'AllocateButton', { onclick=>sprintf(q`popup_window( '_allocate_popup.html?referer=paper_details.html&amp;paper_id=%d');`,$$variable{Paper}->id()), text=>'Allocate' } );
 							$html .= button( 'save', { onclick=>"f1.btnFunction.value='Save';f1.submit();", text=>'Save' } );
 							$html .= button( 'delete', { onclick=>"f1.btnFunction.value='Delete';f1.submit();", text=>'Delete' } ) if ! $$variable{'Paper'}->in_stock();
 							$html .= button( 'reset', { onclick=>'f1.reset();', href=>'', text=>'Reset' } );

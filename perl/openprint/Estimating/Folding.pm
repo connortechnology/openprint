@@ -87,46 +87,46 @@ sub outputs {
 } # end sub outputs
 
 @folds = (
-'2PanelFold',
-'3PanelFold',
-'3PanelZFold',
-'4PanelFold',
-'4PanelZFold',
-'5PanelFold',
-'5PanelZFold',
-'6PanelFold',
-'6PanelZFold',
-'SingleGateFold',
-'DoubleGateFold',
-'4PageFold',
-'6PageFold',
-'8PageFold',
-'10PageFold',
-'12PageFold',
-'16PageFold',
-'18PageFold',
-'20PageFold',
-'24PageFold',
-'28PageFold',
-'30PageFold',
-'32PageFold',
-'36PageFold',
-'40PageFold',
-'42PageFold',
-'44PageFold',
-'48PageFold',
-'56PageFold',
-'60PageFold',
-'64PageFold',
-'72PageFold',
-'PerpendicularSoftFold',
-'ParallelSoftFold',
-'2Panel1Pocket',
-'2Panel2Pocket',
-'2Panel2PocketGusset',
-'3Panel2Pocket',
-'3Panel2PocketGusset',
-'MapFold',
+	'2PanelFold',
+	'3PanelFold',
+	'3PanelZFold',
+	'4PanelFold',
+	'4PanelZFold',
+	'5PanelFold',
+	'5PanelZFold',
+	'6PanelFold',
+	'6PanelZFold',
+	'SingleGateFold',
+	'DoubleGateFold',
+	'4PageFold',
+	'6PageFold',
+	'8PageFold',
+	'10PageFold',
+	'12PageFold',
+	'16PageFold',
+	'18PageFold',
+	'20PageFold',
+	'24PageFold',
+	'28PageFold',
+	'30PageFold',
+	'32PageFold',
+	'36PageFold',
+	'40PageFold',
+	'42PageFold',
+	'44PageFold',
+	'48PageFold',
+	'56PageFold',
+	'60PageFold',
+	'64PageFold',
+	'72PageFold',
+	'PerpendicularSoftFold',
+	'ParallelSoftFold',
+	'2Panel1Pocket',
+	'2Panel2Pocket',
+	'2Panel2PocketGusset',
+	'3Panel2Pocket',
+	'3Panel2PocketGusset',
+	'MapFold',
 );
 
 
@@ -363,8 +363,8 @@ sub impositions {
 sub signature_calc {
 	my ( $Project, $signature_service_index, $sig_specs, $specs, $qty_index, $SignatureImposition, $uv_specs, $aq_specs, $stitching_specs, $Signature_Impositions, $calc_hash ) = @_;
 	if ( ! $SignatureImposition->imposition() ) {
-	Carp::cluck( 'Invalid Imposition');
-				my %results = (
+		Carp::cluck( 'Invalid Imposition');
+		my %results = (
 				'Price'		 => 0,
 				'MPrice'		=> 0,
 				'Equipment'	 => '',
@@ -373,7 +373,6 @@ sub signature_calc {
 				'Breakdown'	 => 'Invalid Signature passed to Folding',
 				);
 		return %results;
-
 	} # end if
 
 	if ( $$sig_specs{'txtSignatureType'} and ( $SignatureImposition->pages() == 2 ) ) {
@@ -802,7 +801,6 @@ $openprint::log->debug("Sets of impos != 1 for $$Equipment{strid}") if DEBUG;
 
 			for ( my $imp_index = 0; $imp_index < @$Set_Of_Impositions; $imp_index += 1 ) {
 				my $Imposition = $$Set_Of_Impositions[$imp_index];
-				my $max_feed_width = $Equipment->specification('Maximum Feed Width', $$Imposition{imposition} );
 
 				if ( DEBUG ) {
 					$Imposition->display('trying ' . $$Imposition{quantity} . 'x ');
@@ -875,10 +873,11 @@ $openprint::log->debug("Sets of impos != 1 for $$Equipment{strid}") if DEBUG;
 						last;
 					} # end if
 				} else { # Not the press
+					my $max_feed_width = $Equipment->specification('Maximum Feed Width', $$Imposition{imposition} );
 # FIgure out the fold.	Because this isn't the press, we have to figure out how it cuts...
 					if ( $$sig_specs{'rdbTemplateType'} and $fold_types{$$sig_specs{'rdbTemplateType'}} ) {
 $openprint::log->debug("Templatetype: $$sig_specs{'rdbTemplateType'}") if DEBUG;
-						my $rc = $Equipment->fits( $Imposition->layout_width(), $Imposition->layout_height(), $$Paper{'calliper'} );
+						my $rc = $Equipment->fits( $Imposition->layout_width(), $Imposition->layout_height(), $$Paper{calliper} );
 						$openprint::log->debug("Trying to fit " . $Imposition->layout_width() . 'x' . $Imposition->layout_height() . ' on ' . $Equipment->strid(). ' (' . $rc.')' ) if DEBUG;
 						if ( $rc ) {
 							if ( @my_equipment == 1 ) {
@@ -889,45 +888,51 @@ $openprint::log->debug("Templatetype: $$sig_specs{'rdbTemplateType'}") if DEBUG;
 						} # end if
 							
 						my $Fold = $Equipment->Fold({
-							page_width		=>	$$sig_specs{txtFinalWidth},
-								type			=>	$$sig_specs{'rdbTemplateType'},
+								page_width		=>	$$sig_specs{txtFinalWidth},
+								type			=>	$$sig_specs{rdbTemplateType},
 								gsm				=>	$Paper->gsm(),
-								calliper		=>	$$Paper{'calliper'},
-								imposition		=>	$$Imposition{'imposition'},
+								calliper		=>	$$Paper{calliper},
+								imposition		=>	$$Imposition{imposition},
 								printing_type	=>	$ppt,
 								});
 						if ( $Fold ) {
 # Need to check feed width
 $openprint::log->debug("Has a fold, doing extra checks") if DEBUG;
 							if ( $max_feed_width ) {
+								# If multiple out, we trim inline otherwise trim first.
+								# If it has been cut, assume cut to layout size
+
+								my $width_size = $$SignatureImposition{columns} != $$Imposition{columns} ? $Imposition->layout_width() : $Imposition->sheet_width();
+								my $height_size = $$SignatureImposition{rows} != $$Imposition{rows} ? $Imposition->layout_height() : $Imposition->sheet_height();
+
 								if ( $orientation ) {
 									if (						
 											( $orientation eq 'Portrait' and $Imposition->layout_width() <= $Imposition->layout_height() ) or
 											( $orientation eq 'Landscape' and $Imposition->layout_width() >= $Imposition->layout_height() ) 
 										) {
-										if ( $Imposition->layout_width() >= $max_feed_width ) {
-											$openprint::log->debug("Fold no good due to max feed width ($max_feed_width) on width ($$sig_specs{txtWidth}).") if DEBUG;
+										if ( $width_size >= $max_feed_width ) {
+											$openprint::log->debug("Fold no good due to max feed width $width_size > $max_feed_width on width ($$sig_specs{txtWidth}).") if DEBUG;
 											$Fold = undef;
 										} # end if
 									} else {
-										if ( $Imposition->layout_height() >= $max_feed_width ) {
+										if ( $height_size >= $max_feed_width ) {
 											$Fold = undef;
-											$openprint::log->debug("Fold no good due to max feed width ($max_feed_width) on height ($$sig_specs{txtHeight}).") if DEBUG;
+											$openprint::log->debug("Fold no good due to max feed width $height_size > $max_feed_width on height ($$sig_specs{txtHeight}).") if DEBUG;
 										} # end if
 									} # end if
 								} else {
 # decide whether it's running portrait or landscape basessd on which way the folds go
-									$openprint::log->debug("Has max feed width width: $width_folds height: $height_folds $$sig_specs{'txtWidth'} $$sig_specs{'txtHeight'} $max_feed_width") if DEBUG;
-									if ( ( $width_folds and ! $height_folds ) or ( $width_folds == $$Fold{'folds'} and $height_folds == $$Fold{'angles'} ) ) {
+									$openprint::log->debug("Has max feed width width folds: $width_folds height folds: $height_folds $$sig_specs{'txtWidth'} $$sig_specs{'txtHeight'} width_size: $width_size height_size: $height_size max_feed_width: $max_feed_width") if DEBUG;
+									if ( ( $width_folds and ! $height_folds ) or ( $width_folds == $$Fold{folds} and $height_folds == $$Fold{angles} ) ) {
 # If folds are on width, we grip on height...
-										if ( $Imposition->layout_width() >= $max_feed_width ) {
-											$openprint::log->debug("Fold no good due to max feed width ($max_feed_width) on width ($$sig_specs{'txtHeight'}).") if DEBUG;
+										if ( $width_size >= $max_feed_width ) {
+											$openprint::log->debug("Fold no good due to max feed width $width_size > $max_feed_width on width ($$sig_specs{'txtHeight'}).") if DEBUG;
 											$Fold = undef;
 										} # end if
 									} elsif ( ( $height_folds and ! $width_folds ) or ( $height_folds == $$Fold{'folds'} and $height_folds == $$Fold{'angles'} ) ) {
-										if ( $Imposition->layout_height() >= $max_feed_width ) {
+										if ( $height_size >= $max_feed_width ) {
 											$Fold = undef;
-											$openprint::log->debug("Fold no good due to max feed width ($max_feed_width) on height ($$sig_specs{txtWidth}.") if DEBUG;
+											$openprint::log->debug("Fold no good due to max feed width $height_size > $max_feed_width on height ($$sig_specs{txtWidth}.") if DEBUG;
 										} # end if
 									} else {
 										$openprint::log->error("No fold match");
@@ -1129,12 +1134,14 @@ $openprint::log->debug(qq`Wrong imposition: $$specs{"FoldImposition-$$sig_specs{
 						my $key = $$specs{"FoldType-$$sig_specs{'SignatureIndex'}-$qty_index-$index"}.'-'.$$specs{"FoldImposition-$$sig_specs{'SignatureIndex'}-$qty_index-$index"}.'out';
 						my ( $pages ) = $$specs{"FoldType-$$sig_specs{'SignatureIndex'}-$qty_index-$index"} =~ /(\d+)Page/;
 						my $Fold = openprint::Fold->find_one( 
-								'min_imposition null_or_<='	=>	$$specs{"FoldImposition-$$sig_specs{'SignatureIndex'}-$qty_index-$index"},
+								(  $$specs{"FoldImposition-$$sig_specs{'SignatureIndex'}-$qty_index-$index"} ? (
+									'min_imposition null_or_<='	=>	$$specs{"FoldImposition-$$sig_specs{'SignatureIndex'}-$qty_index-$index"},
 									'max_imposition null_or_>='	=>	$$specs{"FoldImposition-$$sig_specs{'SignatureIndex'}-$qty_index-$index"},
-									'type'			=>	$$specs{"FoldType-$$sig_specs{'SignatureIndex'}-$qty_index-$index"},
-									'equipment_id'	=>	$Equipment->id(),
-									'pages'			=>	$pages,
-									);
+								) : () ),
+									type			=>	$$specs{"FoldType-$$sig_specs{'SignatureIndex'}-$qty_index-$index"},
+									equipment_id	=>	$Equipment->id(),
+									( $pages ? ( pages			=>	$pages ) : () ),
+									) if $$specs{"FoldType-$$sig_specs{'SignatureIndex'}-$qty_index-$index"};
 						if ( $Fold ) {
 							$openprint::log->debug("found the fold trying generic") if DEBUG;
 						} else {

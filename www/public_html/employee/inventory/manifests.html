@@ -68,13 +68,9 @@ function load_results( ) {
 			</li>
 			<li>
 				<label>Updated On</label>
-				<span class="DateSelectorCT">
 	<? echo ( date_select_session( '/employee/inventory/manifests.html','updated_on_start', { with_today=>1, with_clear=>1 } ); ) ?>
-				</span>
 				to 
-				<span class="DateSelectorCT">
 	<? echo ( date_select_session( '/employee/inventory/manifests.html','updated_on_end', { with_today=>1, with_clear=>1 } ); ) ?>
-				</span>
 			</li>
 			<li>
 				<label>Received On</label>

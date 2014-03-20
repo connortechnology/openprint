@@ -857,13 +857,13 @@ sub _stock_checkout {
 					$C->quantity( 0 );
 					$C->save();
 					#Remove any allocations
-					foreach my $PA ( openprint::PaperAllocation->find('skid_id'=>$Skid->id(),'paper_id'=>$C->paper_id(), docket=>$Order->docket() ) ) {
+					foreach my $PA ( openprint::PaperAllocation->find('skid_ids any'=>$Skid->id(),paper_id=>$C->paper_id(), docket=>$Order->docket() ) ) {
 						$PA->save({'skid_ids'=>[ sets::exclude( [ $Skid->id() ], $PA->skid_ids() ) ] });
 						if ( ! $PA->Skids() ) {
 							$PA->delete();
 						} # end if
 					} # end foreach
-					$Order->add_to_log( @session{'company_id','user_id'}, "Checked out " . $C->quantity() . $C->units() . ' of ' . $C->Paper->to_string() );
+					$Order->add_log( join('', 'Checked out ' , $C->quantity() , $C->units() , ' of ' , $C->Paper->to_string() ) );
 				} # end foreach C
 			} else {
 				my $PI = new openprint::PaperInventory();
@@ -876,7 +876,7 @@ sub _stock_checkout {
 						skid_id		=>	$Skid->id(),
 						units		=>	undef,
 						});
-				$Order->add_to_log( @session{'company_id','user_id'}, "Checked out something unknown." );
+				$Order->add_log( 'Checked out something unknown.' );
 			} # end if skid has contents
 		} # end if add_entry
 	} # end if

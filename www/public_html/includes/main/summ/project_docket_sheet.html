@@ -474,7 +474,7 @@ $log->debug("Binder: @BinderyServiceNames");
 			push @bindery_text, 'Loop Stitch';
 		} # end if
 
-		if ( sets::isin( 'Perforation', @BinderyServiceNames ) ) {
+		if ( sets::isin( 'Perforating', \@BinderyServiceNames ) ) {
 			push @bindery_text, 'Perf';
 		} # end if
 

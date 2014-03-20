@@ -42,13 +42,14 @@
 				my $Paper = $Type->Paper();
 				$html .= sprintf(q`
 			<fieldset>
-				<div class="leftColumn"><ul><li><label>Stock</label><a href="/employee/inventory/paper_details.html?paper_id=%d">%s</a></li></ul></div>
+				<div class="leftColumn"><ul><li><label>Stock</label><a href="/employee/inventory/paper_details.html?paper_id=%1$d">%2$s</a></li></ul></div>
 				<div class="rightColumn">
 					<ul>
-						<li><label>Supplier Invoice#</label>%s</li>
-						<li><label>Docket</label>%s</li>
-						<li><label>Purchase Order</label>%s</li>
-			`, $Paper->id(), $Paper->to_string(), $Type->supplier_invoice(), $Type->docket(), $Type->po_id() );
+						<li><label>Supplier Invoice#</label>%3$s</li>
+						<li><label>Docket</label><a href="/employee/project/view.html?docket=%4$d">%4$s</a></li>
+						<li><label>Purchase Order</label>%5$s</li>
+			`, $Paper->id(), $Paper->to_string(), $Type->supplier_invoice(), $Type->docket(), $Type->PurchaseOrder()->link_to() );
+
 			if ( $$variable{Manifest}->can_see_pricing() ) {
 				$html .= '<li><label>Cost (/CWT)</label>'.($Type->cost()).'</li>';
 			} # end if
@@ -170,5 +171,7 @@
 		) ?>
 		</div><!--Type-->
 	</form>
-<?include(_manifest_log.html)?>
+	<?eval($$variable{Object} = $$variable{Manifest};)?>
+	<?include(/includes/_assets_upload.html)?>
+	<?include(_manifest_log.html)?>
 </div>

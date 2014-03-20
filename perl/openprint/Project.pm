@@ -1051,13 +1051,15 @@ sub status_change {
 		foreach $_ ( $self->signatures() ) {
 			openprint::service::status( $$self{'id'}, $_, 'Complete' );
 		} # end foreach signature
-		foreach my $Job ( openprint::ScheduledJob->find('project_id'=>$$self{'id'}) ) {
+		foreach my $Job ( openprint::ScheduledJob->find( project_id=>$$self{id}) ) {
 			$Job->delete();
 		} # end foreach
-		foreach my $PA ( openprint::PaperAllocation->find('project_id'=>$$self{'id'}) ) {
-			$PA->delete();
-			$self->add_to_log( $company_id, $user_id, 'Freeing allocated paper: ' . $PA->quantity() . $PA->units() );
-		} # end foreach AP
+		if ( $$self{docket} ) {
+			foreach my $PA ( openprint::PaperAllocation->find( docket=>$$self{docket}) ) {
+				$PA->delete();
+				$self->add_to_log( $company_id, $user_id, 'Freeing allocated paper: ' . $PA->quantity() . $PA->units() );
+			} # end foreach AP
+		} # end if
 	} elsif ( sets::isin( $new_status, ['Bindery Complete' ] ) ) {
 		foreach my $s_id ( $self->signatures() ) {
 			openprint::service::status( $$self{'id'}, $s_id, 'Complete' );
@@ -1071,20 +1073,24 @@ sub status_change {
 			$Job->delete();
 		} # end foreach
 		$self->update_status();
-		foreach my $PA ( openprint::PaperAllocation->find('project_id'=>$$self{'id'}) ) {
-			$PA->delete();
-		} # end foreach AP
+		if ( $$self{docket} ) {
+			foreach my $PA ( openprint::PaperAllocation->find( docket=>$$self{docket}) ) {
+				$PA->delete();
+			} # end foreach AP
+		} # end if
 
 	} elsif ( sets::isin( $new_status, ['Shipped','Picked Up', 'Complete'] ) ) {
 		sql::update( undef, undef, 'tbl_Project_Contents', ["lngProjectIndex=? AND strStatus != ''", $$self{id}], 'strStatus', 'Complete' );
 # Remove jobs from the Schedule when marked complete.
-		foreach my $Job ( openprint::ScheduledJob->find('project_id'=>$$self{'id'}) ) {
+		foreach my $Job ( openprint::ScheduledJob->find( project_id=>$$self{id}) ) {
 			$Job->delete();
 		} # end foreach
 		$self->status($new_status);
-		foreach my $PA ( openprint::PaperAllocation->find('project_id'=>$$self{'id'}) ) {
-			$PA->delete();
-		} # end foreach AP
+		if ( $$self{docket} ) {
+			foreach my $PA ( openprint::PaperAllocation->find(docket=>$$self{docket}) ) {
+				$PA->delete();
+			} # end foreach AP
+		} # end if
 	} # end if
 	$self->save();
 	$self->Order()->update_status() if $self->order_id();
@@ -1499,7 +1505,56 @@ sub Project {
 } # end sub Proejct;
 
 sub calliper {
-	return openprint::print::get_finished_calliper($_[0]{id});
+	my $Project = $_[0];
+    my $services = $Project->services();
+
+    my $folding_specs;
+    my $folding_service_index = $$services{'Folding'}[0] if $$services{'Folding'};
+    if ( $folding_service_index ) {
+        $folding_specs = openprint::service::get_specs_ref( $Project, $folding_service_index );
+    } # end if
+
+    my $printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
+
+    my $finished_calliper;
+    foreach my $signature_service_index ( $Project->signatures() ) {
+        my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
+        my $calliper = int($$sig_specs{'txtSpecificStockCalliper'}*10000);
+
+        if ( $Project->Type()->type() eq 'ScratchPads' ) {
+            $finished_calliper += $$printing_specs{'PageQuantity'} * $calliper;
+        } elsif ( $$sig_specs{'ServiceType'} eq 'Signature' ) {
+            foreach my $qty_index ( $Project->quantity_indexes() ) {
+                if ( $$sig_specs{'PageQuantity'.$qty_index} ) {
+                    $calliper *= int($$sig_specs{'PageQuantity'.$qty_index}/2);
+                    last;
+                } # end if
+            } # end foreach qty_index
+            $finished_calliper += $calliper;
+        } else {
+                my $pages = 1;
+                if ( $$sig_specs{'rdbTemplateType'} eq '2PanelFold' ) {
+                    $pages = 2;
+                } elsif ( sets::isin( $$sig_specs{'rdbTemplateType'},['3PanelFold','3PanelZFold'] ) ) {
+                    $pages = 3;
+                } elsif ( sets::isin( $$sig_specs{'rdbTemplateType'}, ['4PanelFold', '4PanelZFold'] ) ) {
+                    $pages = 4;
+                } elsif ( sets::isin( $$sig_specs{'rdbTemplateType'}, ['5PanelFold', '5PanelZFold'] ) ) {
+                    $pages = 5;
+                } elsif ( sets::isin( $$sig_specs{'rdbTemplateType'}, ['6PanelFold', '6PanelZFold'] ) ) {
+                    $pages = 6;
+                } elsif ( $$sig_specs{'rdbTemplateType'} eq 'SingleGateFold' ) {
+                    $pages = 3;
+                } elsif ( $$sig_specs{'rdbTemplateType'} eq 'DoubleGateFold' ) {
+                    $pages = 4;
+                } elsif ( $$sig_specs{'rdbTemplateType'} eq 'DifficultFold' ) {
+                    $pages = 6;
+                } #// end if
+                $finished_calliper += $pages * $calliper;
+        } # end if
+    } # end foreach
+    $openprint::log->debug("******************************* FINSIHED CALLIPER is $finished_calliper/1000 *********************************");
+    return Math::Round::nearest( 0.0001, $finished_calliper/10000);
 } # end sub calliper
 
 sub Currency {

@@ -175,7 +175,7 @@ Please select a Paper to view/edit.<br>
 						$session{'/employee/inventory/available_paper.html?location_id'} = undef if ! sets::isin( $session{'/employee/inventory/available_paper.html?location_id'}, \@options );
 						my @selected = split(',', $session{'/employee/inventory/available_paper.html?location_id'} );
 						if ( ! @selected ) {
-							foreach my $L ( openprint::Location->find('parent_id'=>undef, 'order'=>'lower(name)') ) {
+							foreach my $L ( openprint::Location->find( parent_id=>undef, order=>'lower(name)') ) {
 								next if $L->name() eq 'Missing';
 								push @selected, $L->id();
 							} # end foreach $L
@@ -194,7 +194,7 @@ Please select a Paper to view/edit.<br>
 								'14',	'2 Weeks',
 								'31',	'1 Month',
 							);
-							return ssi::make_drop_down( \@options, $session{'/employee/inventory/available_paper.html?last_seen'} );
+							make_drop_down( \@options, $session{'/employee/inventory/available_paper.html?last_seen'} );
 						) ?>
 					</select>
 				</li>
