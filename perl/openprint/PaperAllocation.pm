@@ -109,7 +109,7 @@ $openprint::log->error("PaperAllocation::Project deprecated");
 } # end sub Project
 
 sub Order {
-	my $Order = openprint::Order->find_one(docket=>$_[0]{docket});
+	my $Order = openprint::Order->find_one(docket=>$_[0]{docket}) if $_[0]{docket};
 	$Order = new openprint::Order() if ! $Order;
 	return $Order;
 } # end sub Order
