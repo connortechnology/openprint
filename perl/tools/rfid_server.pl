@@ -32,10 +32,18 @@ sub Checkout_Skid {
 
 	my $date = Date::Format::time2str('%Y-%m-%d %H:%M', time );
 	#$context->log(1, sprintf('%s : %s : checkout skid with rfid tag %s', $date, $context->{server}->{peeraddr}, $Tag->id() ));
+
+	my $changed ;= 0
 	my $Skid = $Tag->Skid();
-	$Skid->rfidtag_id( $Tag->id() ) if ! $Skid->rfidtag_id();
-	$Skid->location_id( $Scanner->location_id() );
-	my $error = $Skid->save() if ! $Skid->id();
+	if ( ! $Skid->rfidtag_id() ) {
+		$changed = 1;
+		$Skid->rfidtag_id( $Tag->id() );
+	}
+	if ( $Skid->location_id() != $Scanner->location_id() ) {
+		$changed = 1;	
+		$Skid->location_id( $Scanner->location_id() );
+	} # end if
+	my $error = $Skid->save() if ! $changed;
 	if ( $error ) {
 		$context->log(1, sprintf('%s : %s : error saving skid: %s', $date, $context->{server}->{peeraddr}, $error ));
 	} else {
