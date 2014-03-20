@@ -171,5 +171,7 @@
 		) ?>
 		</div><!--Type-->
 	</form>
-<?include(_manifest_log.html)?>
+	<?eval($$variable{Object} = $$variable{Manifest};)?>
+	<?include(/includes/_assets_upload.html)?>
+	<?include(_manifest_log.html)?>
 </div>

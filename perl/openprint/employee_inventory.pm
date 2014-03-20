@@ -1573,23 +1573,17 @@ sub apply_Manifest {
 
 	foreach my $Type ( openprint::Manifest_Content_Type->find( manifest_id=>$Manifest->id()) ) {
 		my $Paper = $Type->Paper();
+		my $Order = $Type->Order();
 			
 		# If there is a change of paper in the type, then go through each skid and update them, nicluding allocations, and add a log entry so we know that it happened.
 		if ( $Type->manufacturers_name() and $Type->paper_id() and ! $Paper->manufacturers_name() ) {
 			$error .= $Paper->save({manufacturers_name=>$Type->manufacturers_name()});
 		} # end if
 
-		my $Project;
-		if ( $param{'docket-'.$Type->id()} ) {
-			if ( ! ( $Project = openprint::Project->find_one( docket=>$param{'docket-'.$Type->id()}) ) ) {
-				$error .= 'Docket ' . $param{'docket-'.$Type->id()} . ' not found.	No allocations made.<br/>';
-			} # end if
-		} # end if
-
 		my $total_qty = 0;
 # Save data for the rest of the contents
 		foreach my $MC ( $Manifest->Contents( type_id => $$Type{id} ) ) {
-			$error .= $MC->apply( $Project );
+			$error .= $MC->apply( $Order );
 
 			$total_qty += $MC->quantity();
 		} # end foreach Manifest_Content for this type
@@ -2387,6 +2381,17 @@ sub manifest_view {
 
 sub _stock {
 }
+
+sub allocation {
+	my $Allocation = $variable{Allocation} = new openprint::PaperAllocation( $param{allocation_id} );
+	if ( $param{action} eq 'Delete' ) {
+		$variable{error} .= $Allocation->delete();
+		if ( ! $variable{error} ) {
+			$variable{ExternalRedirect} = '/employee/inventory/allocations.html';
+		} # end if
+	} # end if
+	
+} # end sub allocation
 
 1;
 __END__

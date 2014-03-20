@@ -288,8 +288,9 @@ sub add_log {
 
 sub company {
 	my $self = shift;
-	return new openprint::Company( $$self{'company_id'} );
+	return new openprint::Company( $$self{company_id} );
 } # end sub company
+
 sub Company {
 	return new openprint::Company( $_[0]{company_id} );
 } # end sub Company
@@ -785,7 +786,7 @@ sub Invoices {
 sub invoiced_on {
 	my @Invoices = $_[0]->Invoices() ;
 	if ( @Invoices ) {
-		return $Invoices[0]->created_on();
+		return $Invoices[0]->Invoice()->created_on();
 	} 
 	return;	
 }  # end sub invoiced_on

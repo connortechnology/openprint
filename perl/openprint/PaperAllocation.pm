@@ -89,6 +89,9 @@ sub Condition {
 sub Paper {
 	return new openprint::Paper( $_[0]{'paper_id'} );
 } # end sub Paper
+sub Stock {
+	return new openprint::Paper( $_[0]{'paper_id'} );
+} # end sub Paper
 sub Skids {
 	if ( ! $_[0]{Skids} ) {
 		if ( $_[0]{skid_ids} and @{$_[0]{skid_ids}} ) {

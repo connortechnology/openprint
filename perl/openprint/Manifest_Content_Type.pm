@@ -161,5 +161,14 @@ sub Condition {
 	return new openprint::InventoryCondition($_[0]{condition_id});
 } # end sub Condition
 
+sub Order {
+	if ( ( ! $_[0]{Order} ) and $_[0]{docket} ) {
+		$_[0]{Order} = openprint::Order->find_one( docket=>$_[0]{docket} );
+	} # end if
+	return $_[0]{Order} if $_[0]{Order};
+	return new openprint::Order();
+		
+} # end sub Order
+
 1;
 __END__

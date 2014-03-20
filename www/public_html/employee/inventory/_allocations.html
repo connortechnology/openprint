@@ -88,11 +88,11 @@ $log->debug("Max end: $max_age_end Max Age $max_age");
 				$html .= "<tr$rowclass>";
 				$html .= qq`<td class="checkbox"><input type="checkbox" name="allocations" value="$$Allocation{'id'}"/></td>`;
 				$html .= sprintf( '<td class="Docket"><a href="/employee/project/view.html?docket=%1$d">%1$s</a></td>', $$Allocation{docket} );
-				$html .= sprintf( '<td class="Company"><a href="skid_details.html?skid_id=%d">%s</a></td>', $$Allocation{skid_id}, $Allocation->Order()->Company()->name() );
+				$html .= sprintf( '<td class="Company"><a href="allocation.html?allocation_id=%d">%s</a></td>', $$Allocation{id}, $Allocation->Order()->Company()->name() );
 				$html .= sprintf( '<td class="Stock"><a href="paper_details.html?paper_id=%d">%s</a></td>', $$Allocation{paper_id}, $Allocation->Paper()->to_string() );
 				$html .= sprintf( '<td class="Quantity"><a href="skid_details.html?skid_id=%d">%s%s</a></td>', $$Allocation{id}, Number::Format::format_number($quantity), $Allocation->Paper()->type() eq 'Roll' ? 'lbs' : 'sheets' );
-				$html .= sprintf( '<td class="Date"><a href="skid_details.html?skid_id=%d">%s</a></td>', $$Allocation{skid_id}, misc::seconds_to_pretty_interval( $max_age ) );
-				$html .= sprintf( '<td class="Date"><a href="skid_details.html?skid_id=%d">%s</a></td>', $$Allocation{skid_id}, Date::Format::time2str('%Y-%m-%d %H:%M', Date::Parse::str2time($Allocation->created_on()) ), );
+				$html .= sprintf( '<td class="Date"><a href="allocation.html?allocation_id=%d">%s</a></td>', $$Allocation{id}, misc::seconds_to_pretty_interval( $max_age ) );
+				$html .= sprintf( '<td class="Date"><a href="allocation.html?allocation_id=%d">%s</a></td>', $$Allocation{id}, format_datetime($Allocation->created_on()) );
 				$html .= '</tr>';
 				$rowclass = $rowclass ? '' : ' class="colRow"';
 			} # end foreach key "docket-paper_id"
