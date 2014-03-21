@@ -66,7 +66,7 @@ $serial = 'lngProjectIndex_seq';
 	production_comments	=>	'production_comments',
 );
 %transforms = (
-	id			=>	[ 's/\D//g' ],
+	id			=>	[ 's/\D//g', '<2147483647' ],
 	markup		=>	[ 's/[^\-\d\.]//g' ],
 	quantity1	=>	[ 's/\D//g' ],
 	quantity2	=>	[ 's/\D//g' ],
