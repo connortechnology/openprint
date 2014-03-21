@@ -774,12 +774,13 @@ if ( 0 ) {
 		} # end if
 
 		my $orientation = $Equipment->specification('Orientation');
+		$orientation = $Equipment->specification('Folding Orientation') if ! $orientation;
 
 		for ( my $set_index = 0; $set_index < @All_Impositions; $set_index += 1 ) {
 			my $Set_Of_Impositions = $All_Impositions[$set_index];
 			if ( $$Equipment{id} == $$Press{id} ) {
 				if ( scalar @$Set_Of_Impositions != 1 ) {
-$openprint::log->debug("Sets of impos != 1 for $$Equipment{strid}") if DEBUG;
+					$openprint::log->debug("Sets of impos != 1 for $$Equipment{strid}") if DEBUG;
 					next;
 				} # end if
 				next if $$Set_Of_Impositions[0]{quantity} != 1;
@@ -845,19 +846,19 @@ $openprint::log->debug("Sets of impos != 1 for $$Equipment{strid}") if DEBUG;
 # Special case because we can't cut it in the middle of printing.	This case is basically for web presses
 
 					my $Fold = $Equipment->Fold( {
-							'pages'				=>	$Imposition->pages(),
-							'page_columns'		=>	$Imposition->page_columns(),
-							'page_rows'			=>	$Imposition->page_rows(),
-							'page_width'		=>	$Imposition->page_width(),
-							'page_height'		=>	$Imposition->page_height(),
-							'spine_direction'	=>	$$Imposition{'image_orientation'},
-							'stitching'			=>	($$services{'SaddleStitching'} or $$services{'LoopStitching'}) ? 1 : 0,
-							'perfectbind'		=>	$$services{'PerfectBound'} ? 1 : 0,
-							'spinepaste'		=>	$$services{'SpinePaste'} ? 1 : 0,
-							'gsm'				=>	$Paper->gsm(),
-							'imposition'		=>	$$Imposition{'imposition'},
-							'calliper'			=>	$$Paper{'calliper'},
-							'printing_type'		=>	$ppt,
+							pages			=>	$Imposition->pages(),
+							page_columns	=>	$Imposition->page_columns(),
+							page_rows		=>	$Imposition->page_rows(),
+							page_width		=>	$Imposition->page_width(),
+							page_height		=>	$Imposition->page_height(),
+							spine_direction	=>	$$Imposition{image_orientation},
+							stitching		=>	($$services{SaddleStitching} or $$services{LoopStitching}) ? 1 : 0,
+							perfectbind		=>	$$services{PerfectBound} ? 1 : 0,
+							spinepaste		=>	$$services{SpinePaste} ? 1 : 0,
+							gsm				=>	$Paper->gsm(),
+							imposition		=>	$$Imposition{imposition},
+							calliper		=>	$$Paper{calliper},
+							printing_type	=>	$ppt,
 							} );
 					if ( $Fold ) {
 						$Fold = $Fold->clone();
