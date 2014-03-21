@@ -799,5 +799,15 @@ sub can_see_pricing {
 	return 0;
 } # end sub can_see_pricing
 
+sub due_date {
+	if ( ! $_[0]{due_date} ) {
+		foreach my $Project( $_[0]->Projects() ) {
+			$_[0]{due_date} = $Project->due_date();
+			last if $_[0]{due_date};
+		} # end foreach Project
+	} # end if
+	return $_[0]{due_date};
+} # end sub due_date
+
 1;
 __END__
