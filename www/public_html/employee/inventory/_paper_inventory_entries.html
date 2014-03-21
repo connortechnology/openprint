@@ -64,7 +64,7 @@
 			) ?>
 			<tr class="totals">
 				<td colspan="5">Totals</td>
-				<td class="last_seen"><? echo ( $$variable{'skid_count'}. ' ' . $$variable{'Paper'}->type() . ( $$variable{'skid_count'} == 1 ? '' : 's' ); ) ?></td>
+				<td class="last_seen"><? echo ( $$variable{'skid_count'}. ' ' . ( $$variable{Paper}->type() eq 'Roll' ? 'Roll' : 'Skid' ) . ( $$variable{'skid_count'} == 1 ? '' : 's' ); ) ?></td>
 				<td class="Quantity"><? echo ( Number::Format::format_number($$variable{'InventoryTotal'}).$$variable{'Paper'}->units(); ) ?></td>
 				<td>&nbsp;</td>
 				<? if ( ( $session{'user_type'} eq 'A' ) or openprint::usergroup::is_user_in( ['Accounting','SalesAdmin','Sales'], $session{'user_id'} ) ) ?>
