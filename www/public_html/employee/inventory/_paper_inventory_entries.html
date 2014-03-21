@@ -77,14 +77,12 @@
 				<td colspan="3">Enter new inventory:</td>
 				<td class="po_id"></td>
 				<td colspan="2">
-					<select id="Location" name="Location">
 						<? echo (
 							ssi::select( openprint::Location->dropdown(type=>'place', order=>'parent_id NULLS FIRST,lower(name)'), undef, { name=>'Location', id=>'Location', prepend=>['','select'] } );
 						) ?>
-					</select>
 				</td>
 				<td class="Quantity"><? echo ( input( type=>'float', id=>'quantity', name=>'quantity' ); ) ?></td>
-				<td class="Condition"><select id="condition_id" name="condition_id"><? echo ( ssi::make_drop_down( openprint::InventoryCondition->dropdown( order=>'lower(name)') ); ) ?></select></td>
+				<td class="Condition"><? echo ( ssi::select( openprint::InventoryCondition->dropdown( order=>'lower(name)'), undef, { id=>'condition_id', name=>'condition_id' } ); ) ?></td>
 				<? if ( ( $session{'user_type'} eq 'A' ) or openprint::usergroup::is_user_in( ['Accounting','SalesAdmin','Sales'], $session{'user_id'} ) ) ?>
 				<td>&nbsp;</td>
 				<td>&nbsp;</td>
