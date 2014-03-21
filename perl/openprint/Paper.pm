@@ -835,7 +835,7 @@ sub SkidContents {
 		$_[0]{SkidContents} = $_[1];
 	} # end if
 	if ( ! $_[0]{SkidContents} ) {
-		$_[0]{SkidContents} = [ openprint::SkidContent->find(deleted=>0,paper_id=>$_[0]{id},'quantity >'=>0,'location not in'=>['Missing']) ];
+		$_[0]{SkidContents} = [ openprint::SkidContent->find(deleted=>0,paper_id=>$_[0]{id},'quantity >'=>0,'location null or not in'=>['Missing']) ];
 	} # end if
 	return @{$_[0]{SkidContents}};
 } # end sub SkidContents
