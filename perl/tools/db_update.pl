@@ -1565,6 +1565,9 @@ if ( ! sets::isin( 'folds', \@tables ) ) {
 			$dbh->do('DROP SEQUENCE fold_id_seq');
 		} # end if
 	} # end if
+	if ( ! exists $$data{comments} ) {
+		$dbh->do('ALTER TABLE folds ADD comments TEXT');
+	} # end if
 } # end if
 if ( ! sets::isin( 'fold_specifications', \@tables ) ) {
 	if ( sets::isin( 'foldspecifications', \@tables ) ) {

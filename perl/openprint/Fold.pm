@@ -48,6 +48,7 @@ $serial= 'folds_id_seq';
 	'folds'					=>	'folds',
 	'angles'				=>	'angles',
 	'printing_type'			=>	'printing_type',
+	comments				=>	'comments',
 );
 %transforms = (
 	'min_width' => [ 's/[^\d\.]//g' ],
