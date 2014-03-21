@@ -90,7 +90,11 @@ $log->debug("Max end: $max_age_end Max Age $max_age");
 				$html .= sprintf( '<td class="Docket"><a href="/employee/project/view.html?docket=%1$d">%1$s</a></td>', $$Allocation{docket} );
 				$html .= sprintf( '<td class="Company"><a href="allocation.html?allocation_id=%d">%s</a></td>', $$Allocation{id}, $Allocation->Order()->Company()->name() );
 				$html .= sprintf( '<td class="Stock"><a href="paper_details.html?paper_id=%d">%s</a></td>', $$Allocation{paper_id}, $Allocation->Paper()->to_string() );
-				$html .= sprintf( '<td class="Quantity"><a href="skid_details.html?skid_id=%d">%s%s</a></td>', $$Allocation{id}, Number::Format::format_number($quantity), $Allocation->Paper()->type() eq 'Roll' ? 'lbs' : 'sheets' );
+				$html .= sprintf( '<td class="Quantity"><a href="skid_details.html?skid_id=%d">%s %s%s</a></td>', $$Allocation{id}, 
+					( $$Allocation{skid_ids} ? 
+						scalar @{$$Allocation{skid_ids}}. ( $Allocation->Paper()->type() eq 'Roll' ? ' roll' : ' skid' ) . ( @{$$Allocation{skid_ids}} == 1 ? '' : 's' )
+ : '' ),
+					Number::Format::format_number($quantity), $Allocation->Paper()->type() eq 'Roll' ? 'lbs' : 'sheets' );
 				$html .= sprintf( '<td class="Date"><a href="allocation.html?allocation_id=%d">%s</a></td>', $$Allocation{id}, misc::seconds_to_pretty_interval( $max_age ) );
 				$html .= sprintf( '<td class="Date"><a href="allocation.html?allocation_id=%d">%s</a></td>', $$Allocation{id}, format_datetime($Allocation->created_on()) );
 				$html .= '</tr>';
