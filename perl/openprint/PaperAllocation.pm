@@ -134,7 +134,7 @@ sub send_notification {
 
 	my %info;
 	$info{Allocation} = $self;
-	my $Project = $info{Project} = $self->Project();
+	my $Order = $info{Order} = $self->Order();
 	my $Paper = $info{Paper} = $self->Paper();
 	my @old_skids = @{$info{'OldSkids'}} = $self->old_Skids();
 
@@ -142,31 +142,33 @@ sub send_notification {
 
     my $offsite = 0;
 	my $nolocation = 0;
-    foreach my $sig_id ( $Project->signatures() ) {
-        my $sig_specs = openprint::service::get_specs_ref( $Project, $sig_id );
-        my $Press;
-        if ( $$sig_specs{'UsePress'} ) {
-            $Press = openprint::Equipment->find_one('strid'=>$$sig_specs{'UsePress'});
-        } else {
-            $Press = openprint::Equipment->find_one('strid'=>$$sig_specs{'ddmPress'.$Project->ordered_quantity_index()});
-        } # endif
-		if ( $Press ) {
-			foreach my $Skid ( $self->Skids() ) {
-				if ( ! $Skid->location_id() ) {
-					$nolocation = 1;
-				} elsif ( $Skid->Location()->Root()->id() != $Press->Location()->Root()->id() ) {
-					$offsite = 1;
-				} # end if
-			} # end foreach PA
-		} # end if
-    } # end foreach sig
+	foreach my $Project ( $Order->Projects() ) {
+		foreach my $sig_id ( $Project->signatures() ) {
+			my $sig_specs = openprint::service::get_specs_ref( $Project, $sig_id );
+			my $Press;
+			if ( $$sig_specs{'UsePress'} ) {
+				$Press = openprint::Equipment->find_one('strid'=>$$sig_specs{'UsePress'});
+			} else {
+				$Press = openprint::Equipment->find_one('strid'=>$$sig_specs{'ddmPress'.$Project->ordered_quantity_index()});
+			} # endif
+			if ( $Press ) {
+				foreach my $Skid ( $self->Skids() ) {
+					if ( ! $Skid->location_id() ) {
+						$nolocation = 1;
+					} elsif ( $Skid->Location()->Root()->id() != $Press->Location()->Root()->id() ) {
+						$offsite = 1;
+					} # end if
+				} # end foreach PA
+			} # end if
+		} # end foreach sig
+	} # end foreach Project
 	$info{'offsite'} = $offsite;
 	$info{'nolocation'} = $nolocation;
 
-	push @recipients, $Project->Company()->CSR() if $offsite or $nolocation or @old_skids;
+	push @recipients, $Order->Company()->CSR() if $offsite or $nolocation or @old_skids;
 	if ( $Paper->available() < 0 ) {
 		my @PAs = openprint::PaperAllocation->find( paper_id=>$Paper->id());
-		@recipients = map { new openprint::User( $_ ) } sets::exclude( [ $session{'user_id'} ], [ sets::union( (map { $_->Project()->Company()->salesrep_id() } @PAs), (map{$_->id()}@recipients) ) ] );
+		@recipients = map { new openprint::User( $_ ) } sets::exclude( [ $session{'user_id'} ], [ sets::union( (map { $_->Order()->Company()->salesrep_id() } @PAs), (map{$_->id()}@recipients) ) ] );
 	} # endif
 
 	$info{'ReplacementText'} = ssi::include( '/email_content/stock_allocation_notification.html', \%info );
