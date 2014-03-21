@@ -177,7 +177,7 @@ sub send_notification {
 	my $Email = new openprint::Email();
 	$Email->send( 
 			TO			=>	\@recipients, 
-			SUBJECT 	=> 'Stock allocated for docket ' . $Project->docket(),
+			SUBJECT 	=> 'Stock allocated for docket ' . $Order->docket(),
 			FROM		=>	$Me,
 			ATTACHMENTS	=>	\@body,
 			);
