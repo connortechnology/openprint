@@ -362,7 +362,7 @@ sub check {
 } # end sub check
 
 sub apply {
-	my ( $MC, $Project ) = @_;
+	my ( $MC, $Order ) = @_;
 
 	my $error;
 	my $Tag = $MC->RFIDTag();
@@ -456,17 +456,21 @@ $openprint::log->debug("Setting skid_id to $$Skid{id}");
 			$openprint::log->debug("No New skidcontent: " );
 		} 
 	} # end if
-	if ( $Project and ! $checked_out ) {
-		require openprint::PaperAllocation;
-		my $PA = openprint::PaperAllocation->find_one( 'skid_ids any'=>$MC->skid_id() );
-		if ( ! $PA ) {
-			$Paper->allocate( $Skid, $Project->id(), $MC->quantity(), $Paper->units() );
-			$error .= sprintf('Allocated %1$d%2$s to docket <a href="/employee/project/view.html?ProjectIndex=%3$d">%4$d</a>.<br/>', $MC->quantity(), $Paper->units(), $Project->id(), $Project->docket() );
-		} elsif ( ! $PA->project_id() ) {
-			$error .= $PA->save({ project_id=>$Project->id()});
-			$error .= sprintf('Updated allocation %1$d%2$s to docket <a href="/employee/project/view.html?ProjectIndex=%3$d">%4$d</a>.<br/>', $MC->quantity(), $Paper->units(), $Project->id(), $Project->docket() );
-		} elsif ( $PA->project_id() != $Project->id() ) {
-			$error .= sprintf('Skid <a href="/employee/inventory/skid_details.html?skid_id=%1$d">%1$d</a> already allocated to docket <a href="/employee/project/view.html?ProjectIndex=%2$d">%3$d</a>.<br/>', $MC->skid_id(), $PA->project_id(), $PA->docket() );
+	if ( $Order and $Order->id() and ! $checked_out ) {
+		if ( sets::isin( $Order->status(), [ 'Complete', 'Cancelled' ] ) ) {
+			$error .= 'Not allocating because docket is ' . $Order->status() . '<br/>';
+		} else {
+			require openprint::PaperAllocation;
+			my $PA = openprint::PaperAllocation->find_one( 'skid_ids any'=>$MC->skid_id() );
+			if ( ! $PA ) {
+				$Paper->allocate( $Skid, $Order->docket(), $MC->quantity(), $Paper->units() );
+				$error .= sprintf('Allocated %1$d%2$s to docket <a href="/employee/project/view.html?docket=%3$d">%3$d</a>.<br/>', $MC->quantity(), $Paper->units(), $Order->docket() );
+			} elsif ( ! $PA->docket() ) {
+				$error .= $PA->save({ docket=>$Order->docket()});
+				$error .= sprintf('Updated allocation %1$d%2$s to docket <a href="/employee/project/view.html?docket=%3$d">%3$d</a>.<br/>', $MC->quantity(), $Paper->units(), $Order->docket() );
+			} elsif ( $PA->docket() != $Order->docket() ) {
+				$error .= sprintf('Skid <a href="/employee/inventory/skid_details.html?skid_id=%1$d">%1$d</a> already allocated to docket <a href="/employee/project/view.html?docket=%2$d">%2$d</a>.<br/>', $MC->skid_id(), $PA->docket() );
+			} # end if
 		} # end if
 	} # end if
 	return $error;

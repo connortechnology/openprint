@@ -288,8 +288,9 @@ sub add_log {
 
 sub company {
 	my $self = shift;
-	return new openprint::Company( $$self{'company_id'} );
+	return new openprint::Company( $$self{company_id} );
 } # end sub company
+
 sub Company {
 	return new openprint::Company( $_[0]{company_id} );
 } # end sub Company
@@ -785,7 +786,7 @@ sub Invoices {
 sub invoiced_on {
 	my @Invoices = $_[0]->Invoices() ;
 	if ( @Invoices ) {
-		return $Invoices[0]->created_on();
+		return $Invoices[0]->Invoice()->created_on();
 	} 
 	return;	
 }  # end sub invoiced_on
@@ -797,6 +798,16 @@ sub can_see_pricing {
 	return 1 if openprint::usergroup::is_user_in( ['Accounting'], $openprint::session{user_id} );
 	return 0;
 } # end sub can_see_pricing
+
+sub due_date {
+	if ( ! $_[0]{due_date} ) {
+		foreach my $Project( $_[0]->Projects() ) {
+			$_[0]{due_date} = $Project->due_date();
+			last if $_[0]{due_date};
+		} # end foreach Project
+	} # end if
+	return $_[0]{due_date};
+} # end sub due_date
 
 1;
 __END__

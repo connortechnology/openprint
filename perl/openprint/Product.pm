@@ -9,9 +9,7 @@ require openprint::Log;
 require sql;
 
 use vars qw( $log $dbh $debug $table $serial %fields %defaults %transforms );
-$debug = 0;
-*log = \$openprint::log;
-*dbh = \$openprint::dbh;
+$debug = 1;
 $table = 'products';
 $serial = 'products_id_seq';
 
@@ -116,17 +114,15 @@ sub get_price {
 	my $list_id = openprint::pricing::get_pricelist_id();
 
 	my %price = openprint::pricing::get_best_price_object( $openprint::session{'company_id'}, $$self{'id'}, $list_id, 'openprint::product_priceset', $qty, undef );
-	if ( ! %price ) {
-$log->debug("Looking for a price $qty");
-		foreach my $Price ( openprint::ProductPrice->find('product_id'=>$$self{'id'},'pricelist_id'=>$list_id,'order'=>'min desc NULLS FIRST') ) {
-$log->debug("Looking at $$Price{min}");
-			next if $$Price{'min'} > $qty;
-			next if ! $$Price{'min'};
-			if ( ! ( $qty % $$Price{'min'} ) ) {
-				$price{'Price'} = $$Price{'price'} * $qty / $$Price{'min'};
-			} # end if
-		} # end foreach Price
-	} # end if
+	#if ( ! %price ) {
+#$log->debug("Looking for a price $qty");
+		##foreach my $Price ( openprint::ProductPrice->find('product_id'=>$$self{'id'},'pricelist_id'=>$list_id,'order'=>'min desc NULLS FIRST') ) {
+#$log->debug("Looking at $$Price{min}");
+			#next if $$Price{min} > $qty;
+			#next if $$Price{max} and ( $$Price{max} < $qty );
+			#ireturn $
+		#} # end foreach Price
+	#} # end if
 	my $Pricelist = new openprint::Pricelist( $list_id );
 	$price{currency_id} = $Pricelist->currency_id();
 	openprint::Currency::convert( \%price );

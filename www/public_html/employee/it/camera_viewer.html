@@ -34,10 +34,10 @@
 </script>
 <div class="ZM_Monitors">
 <div class="Montage">
-	<fieldset><legend onclick="AjaxToggleContent( 'Viewing', '/employee/it/_cameras_viewing.html', null, null );">Streams Viewing</legend>
+	<fieldset><legend onclick="toggleContent( 'Viewing', '/employee/it/_cameras_viewing.html', null, null );">Streams Viewing</legend>
 		<div id="Viewing"><? echo ( include('/employee/it/_cameras_viewing.html'); ) ?></div>
 	</fieldset>
-	<fieldset><legend onclick="AjaxToggleContent( 'Available', '/employee/it/_cameras_available.html', null, null );">Available Streams</legend>
+	<fieldset><legend onclick="toggleContent( 'Available', '/employee/it/_cameras_available.html', null, null );">Available Streams</legend>
 		<div id="Available"><? echo ( include('/employee/it/_cameras_available.html'); ) ?></div>
 	</fieldset>
 </div><!--Montage-->

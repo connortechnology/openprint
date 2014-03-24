@@ -15,14 +15,14 @@ $table = 'manifest_content_types';
 $serial = 'manifest_content_types_id_seq';
 
 %fields = (
-	'id'			=>	'id',
-	'cost'			=>	'cost',
-	'cost_units'	=>	'cost_units',
-	'docket'		=>	'docket',
-	'po_id'			=>	'po_id',
-	'po_content_id'	=>	'po_content_id',
-	'manifest_id'	=>	'manifest_id',
-	'paper_id'		=>	'paper_id',
+	id				=>	'id',
+	cost			=>	'cost',
+	cost_units		=>	'cost_units',
+	docket			=>	'docket',
+	po_id			=>	'po_id',
+	po_content_id	=>	'po_content_id',
+	manifest_id		=>	'manifest_id',
+	paper_id		=>	'paper_id',
 	supplier_invoice	=>	'supplier_invoice',
 	item_count			=>	'item_count',
 	type			=>	'type',
@@ -160,6 +160,15 @@ sub Condition {
 	require openprint::InventoryCondition;
 	return new openprint::InventoryCondition($_[0]{condition_id});
 } # end sub Condition
+
+sub Order {
+	if ( ( ! $_[0]{Order} ) and $_[0]{docket} ) {
+		$_[0]{Order} = openprint::Order->find_one( docket=>$_[0]{docket} );
+	} # end if
+	return $_[0]{Order} if $_[0]{Order};
+	return new openprint::Order();
+		
+} # end sub Order
 
 1;
 __END__

@@ -7,18 +7,23 @@
         } // end if
     } // end function confirm_delete()
 </script>
-<? echo ( include('/includes/error_reporting.html'); ) ?>
+<?include('/includes/error_reporting.html')?>
 <div class="Order"><div class="View">
-	<form name="f1" action="order_details.html?order_id=<?OrderID?>" method="post">
+	<form name="f1" action="order_details.html?order_id=<? echo ( $$variable{Order}->id() )?>" method="post">
 	<p class="buttons">
 		<? echo ( my $html = '';
-			$html .= ssi::button( 'Delete', { onclick=>"f1.btnFunction.value='Delete';f1.submit();", href=>'', text=>'Delete' } );
+			$html .= button( 'Delete', { onclick=>"f1.btnFunction.value='Delete';f1.submit();", href=>'', text=>'Delete' } );
 			if ( $$variable{'Order'}->status() ne 'Cancelled' ) {
-				$html .= ssi::button( 'Cancel', { onclick=>"f1.btnFunction.value='Cancel';f1.submit();", href=>'', text=>'Cancel' } );
-				$html .= ssi::button( 'Resend', { onclick=>"f1.btnFunction.value='Resend';f1.submit();", href=>'', text=>'Resend' } );
+				$html .= button( 'Cancel', { onclick=>"f1.btnFunction.value='Cancel';f1.submit();", href=>'', text=>'Cancel' } );
+				$html .= button( 'Resend', { onclick=>"f1.btnFunction.value='Resend';f1.submit();", href=>'', text=>'Resend' } );
 			} # end if
 			return $html;
 		) ?>
+	<br class="spacer"/>
+	<select name="company_id">
+	<? echo ( openprint::Company::get_dropdown( $$variable{'Order'}->company_id() ); ) ?>
+	</select>
+	<? echo ( button( 'Save', { onclick=>"f1.btnFunction.value='Save';f1.submit();", href=>'', text=>'Change Company' } ); ) ?>
 	</p>
 	<? echo ( include('/includes/order_header.html'); ) ?>
 	<br class="spacer"/>
@@ -33,11 +38,6 @@
 		<? endif ( $$variable{'AdministratorComments'} ) ?>
 	</span>
 	<? echo ( include('/main/order/_totals.html'); ) ?>
-	<br class="spacer"/>
-	<select name="company_id">
-	<? echo ( openprint::Company::get_dropdown( $$variable{'Order'}->company_id() ); ) ?>
-	</select>
-	<? echo ( ssi::button( 'Save', { onclick=>"f1.btnFunction.value='Save';f1.submit();", href=>'', text=>'Change Company' } ); ) ?>
 	<br class="spacer"/>
 	<? echo ( include('/includes/_order_payments.html'); ) ?>
 		<input type="hidden" name="btnFunction"/>

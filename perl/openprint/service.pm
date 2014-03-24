@@ -490,7 +490,7 @@ $openprint::log->error("Doing internal calc without service_index or, not found"
 	} # end if
 	if ( my $function = $package->can('calc') ) {
 		my $status = $function->( $log, $dbh, $variable, $project_index, $service_index, \%specs, $qty_index );
-		$specs{'Status'} = $status;
+		$specs{Status} = $status;
 		my $elapsed = time - $starttime;
 		$log->debug( sprintf( '%s calc: (%s) Elapsed seconds: %d (%s)', $service_type, $status, $elapsed, $specs{'alert'} ) );
 

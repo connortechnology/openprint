@@ -282,6 +282,7 @@ $openprint::log->warn("Doing AQ when not needed @front_aq @back_aq");
 
 	# Should include overs
 	my $impressions = $$sig_specs{"hdnImpressionQuantity$qty_index"} ? $$sig_specs{"hdnImpressionQuantity$qty_index"} : $$specs{"txtQuantity$qty_index"};
+$openprint::log->debug("Impressions: " . $$sig_specs{"hdnImpressionQuantity$qty_index"} . " qty: " . $$specs{"txtQuantity$qty_index"} );
 
 	# Why would it be multiplied by the # of items per sheet? That doesn't make any sense at all.
 	#if ( $$specs{'txtPressSheetComboItems'} ) {
@@ -293,10 +294,16 @@ $openprint::log->warn("Doing AQ when not needed @front_aq @back_aq");
 #$openprint::log->debug("Impressions: $impressions");
 if ( 1 ) {
 	# This just can't be right anymore. Actually it can... if double sided, impressions are doubled...
-	if ( sets::isin( $imposition->runstyle(), ['Perfecting','Sheet Work'] ) and @front_aq and @back_aq ) {
-		#if ( ! ( @front_aq and @back_aq ) ) {
-			$impressions = int($impressions/2);
-		#} # end if
+	if ( $imposition->runstyle() eq 'Perfecting' ) {
+		# We know that it is printing 2 sided, but may be only AQ 1 sided.
+		# Sheets = impressions / 2
+		$impressions = int($impressions/2);
+	} elsif ( $$imposition{runstyle} eq 'Sheet Work' ) {
+		if ( @{$$sig_specs{SideOneColours}} and @{$$sig_specs{SideTwoColours}} ) {
+			if ( ! ( @front_aq and @back_aq ) ) {
+				$impressions = int($impressions/2);
+			} # end if
+		} # end if
 	} # end if
 } # end if
 #$openprint::log->debug("Impressions: $impressions");
@@ -436,9 +443,9 @@ $openprint::log->debug("AQ types @types") if DEBUG;
 					%ServicePrice = $Service->get_price( $impressions, $Equipment );
 					$ServicePrice{'Quantity'} = $impressions;
 					$ServicePrice{'Total'} = $ServicePrice{'Price'} * $impressions / 1000;
-				} elsif ( sets::isin( lc $ServicePrice{'units'}, [ 'per m', 'per 1000' ] ) ) {
-					$ServicePrice{'Quantity'} = $run_qty;
-					$ServicePrice{'Total'} = $ServicePrice{'Price'} * $run_qty / 1000;
+				} elsif ( sets::isin( lc $ServicePrice{units}, [ 'per m', 'per 1000' ] ) ) {
+					$ServicePrice{Quantity} = $run_qty;
+					$ServicePrice{Total} = $ServicePrice{Price} * $run_qty / 1000;
 				} elsif ( lc $ServicePrice{'units'} eq 'per hour' ) {
 					$ServicePrice{'Quantity'} = $run_qty;
 					$ServicePrice{'Total'} = $ServicePrice{'Price'} * $run_qty / $Equipment->specification('AqueousRunSpeed') if $Equipment->specification('AqueousRunSpeed');

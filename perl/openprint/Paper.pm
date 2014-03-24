@@ -104,6 +104,7 @@ $serial	= 'paper_id_seq';
 		);
 
 %transforms = (
+	id			=>	[ 's/\D//g', '<2147483647' ],
 	manufacturers_name => [ 's/^\s+//', 's/\s+$//', 's/\s\s+$/ /g' ],
 	gsm	=>	 [ 's/[^\d\.]//g' ],
 );
@@ -750,7 +751,7 @@ sub add_inventory {
 } # end sub add_inventory
 
 sub allocate {
-	my ( $self, $skid_id, $project_id, $quantity, $units, $condition_id ) = @_;
+	my ( $self, $skid_id, $docket, $quantity, $units, $condition_id ) = @_;
 
 	my $skids;
 	if ( ref $skid_id eq 'openprint::Skid' ) {
@@ -767,14 +768,15 @@ sub allocate {
 			skid_ids		=>	$skids,
 			quantity		=>	$quantity,
 			units			=>	$units ? $units : $self->units(),
-			project_id		=>	$project_id,
-			operator_id		=>	$openprint::session{'user_id'},
+			docket			=>	$docket,
+			operator_id		=>	$openprint::session{user_id},
 			condition_id	=>	$condition_id,
 			} );
-	if ( $project_id ) {
-		new openprint::Project( $project_id )->add_to_log( @openprint::session{'company_id','user_id'}, 
-				qq`Allocated $quantity$$PA{units} of <a href="/employee/inventory/paper_details.html?paper_id=$$self{'id'}">` . $self->to_string().'</a>'
-				);
+	if ( $docket ) {
+		my $Order = openprint::Order->find_one( docket => $docket );
+		if ( $Order ) {
+			$Order->add_log( qq`Allocated $quantity$$PA{units} of <a href="/employee/inventory/paper_details.html?paper_id=$$self{'id'}">` . $self->to_string().'</a>');
+		} # end if
 	} # end if project_id
 
 	$self->save();
@@ -791,12 +793,12 @@ sub back_ordered {
 
 sub allocated {
 	return 0 if ! $_[0]{id};
-	my ( $self, $project_id, $new ) = @_;
+	my ( $self, $docket, $new ) = @_;
 	if ( @_ == 3 ) {
 		$$self{allocated} = $new;
 	} # end if
-	if ( $project_id ) {
-		my $qty = misc::sum( map { $_->quantity() } openprint::PaperAllocation->find(paper_id=>$$self{id}, project_id=>$project_id) );
+	if ( $docket ) {
+		my $qty = misc::sum( map { $_->quantity() } openprint::PaperAllocation->find(paper_id=>$$self{id}, docket=>$docket) );
 		return $qty;
 	} # end if
 	if ( ! defined $$self{allocated} ) {
@@ -833,7 +835,7 @@ sub SkidContents {
 		$_[0]{SkidContents} = $_[1];
 	} # end if
 	if ( ! $_[0]{SkidContents} ) {
-		$_[0]{SkidContents} = [ openprint::SkidContent->find(deleted=>0,paper_id=>$_[0]{id},'quantity >'=>0,'location not in'=>['Missing']) ];
+		$_[0]{SkidContents} = [ openprint::SkidContent->find(deleted=>0,paper_id=>$_[0]{id},'quantity >'=>0,'location null or not in'=>['Missing']) ];
 	} # end if
 	return @{$_[0]{SkidContents}};
 } # end sub SkidContents

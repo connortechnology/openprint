@@ -35,7 +35,7 @@ my %variables = (
 	'ddmPackageType1' => ['save','output'], 'OverridePackageType1'=>['save'],
 	'ddmPackageType2' => ['save','output'], 'OverridePackageType2'=>['save'],
 	'ddmPackageType3' => ['save','output'], 'OverridePackageType3'=>['save'],
-	'txtItemsPerPackage1' => ['save','output'], 'txtItemsPerPackage2' => ['save','output'], 'txtItemsPerPackage3' => ['save','output'], 
+	'items_per_package' => ['save'], 'txtItemsPerPackage1' => ['save','output'], 'txtItemsPerPackage2' => ['save','output'], 'txtItemsPerPackage3' => ['save','output'], 
 	'OverrideItemsPerPackage1'=>['save'], 'OverrideItemsPerPackage2'=>['save'], 'OverrideItemsPerPackage3'=>['save'],
 	'txtPackageWeight1' => ['save','output'], 'txtPackageWeight2' => ['save','output'], 'txtPackageWeight3' => ['save','output'],
 	'totalWeight1' => ['save','output'],'totalWeight2' => ['save','output'],'totalWeight3' => ['save','output'],
@@ -113,7 +113,7 @@ sub calc {
 		return $$specs{'Status'} = 'uncalculated';
 	} # end if
 	if ( $$specs{'chkOverrideFinishedCalliper'} ne 'Y' ) {
-		$$specs{'txtFinishedCalliper'} = openprint::print::get_finished_calliper( $project_index );
+		$$specs{'txtFinishedCalliper'} = $Project->calliper();
 	} # end if
 	if ( ! ( 1*$$specs{'txtFinishedCalliper'} ) ) {
 		$$specs{'alert'} .= 'Unable to calculate the calliper of the project.  Please recalculate printing services.';
@@ -226,6 +226,13 @@ $log->debug("Materials: " . map { $_->name() } @Materials ) if DEBUG;
 					$openprint::log->debug("No signatnures");
 				} # end if
 
+				if ( $$specs{items_per_package} ) {
+					if ( $$specs{items_per_package} > $items_per_package ) {
+						$$specs{alert} .= "Can't fit that many.<br/>";
+						next;
+					} 
+					$items_per_package = $$specs{items_per_package};
+				} # end if
 
 			} else {
 				$items_per_package = int $$specs{'txtItemsPerPackage'.$qty_index};
@@ -252,10 +259,9 @@ $log->debug("Materials: " . map { $_->name() } @Materials ) if DEBUG;
 			$$specs{'hdnBreakdown'.$qty_index} .= sprintf('MakeReady: %.2f, Packing Charge: %.2f: Service Charge: %.2f, Material Charge: %.2f<br/></fieldset>', $makeReady, $packingCharge, $serviceCharge, $material_charge );
 		} # end foreach Material
 
-
 		my $m_qty = 0;
 		if ( $$specs{'txtItemsPerPackage'.$qty_index} ) {
-			$$specs{'txtPackageWeight'.$qty_index} = sprintf('%.2f', $$specs{'txtFinishedWeight'} * $$specs{'txtItemsPerPackage'.$qty_index} );
+			$$specs{'txtPackageWeight'.$qty_index} = Math::Round::nearest( 0.01, $$specs{'txtFinishedWeight'} * $$specs{'txtItemsPerPackage'.$qty_index} );
 			$$specs{"totalWeight$qty_index"} = sprintf('%.2f', (int( $qty/$$specs{'txtItemsPerPackage'.$qty_index} ) * $$specs{"txtPackageWeight$qty_index"}) + (($qty % $$specs{'txtItemsPerPackage'.$qty_index} ) * $$specs{'txtFinishedWeight'}) );
 			$qty = ceil( $qty/$$specs{'txtItemsPerPackage'.$qty_index} );
 			$m_qty = ceil( 1000/$$specs{'txtItemsPerPackage'.$qty_index} );

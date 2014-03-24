@@ -66,7 +66,7 @@ $serial = 'lngProjectIndex_seq';
 	production_comments	=>	'production_comments',
 );
 %transforms = (
-	id			=>	[ 's/\D//g' ],
+	id			=>	[ 's/\D//g', '<2147483647' ],
 	markup		=>	[ 's/[^\-\d\.]//g' ],
 	quantity1	=>	[ 's/\D//g' ],
 	quantity2	=>	[ 's/\D//g' ],
@@ -1051,13 +1051,15 @@ sub status_change {
 		foreach $_ ( $self->signatures() ) {
 			openprint::service::status( $$self{'id'}, $_, 'Complete' );
 		} # end foreach signature
-		foreach my $Job ( openprint::ScheduledJob->find('project_id'=>$$self{'id'}) ) {
+		foreach my $Job ( openprint::ScheduledJob->find( project_id=>$$self{id}) ) {
 			$Job->delete();
 		} # end foreach
-		foreach my $PA ( openprint::PaperAllocation->find('project_id'=>$$self{'id'}) ) {
-			$PA->delete();
-			$self->add_to_log( $company_id, $user_id, 'Freeing allocated paper: ' . $PA->quantity() . $PA->units() );
-		} # end foreach AP
+		if ( $$self{docket} ) {
+			foreach my $PA ( openprint::PaperAllocation->find( docket=>$$self{docket}) ) {
+				$PA->delete();
+				$self->add_to_log( $company_id, $user_id, 'Freeing allocated paper: ' . $PA->quantity() . $PA->units() );
+			} # end foreach AP
+		} # end if
 	} elsif ( sets::isin( $new_status, ['Bindery Complete' ] ) ) {
 		foreach my $s_id ( $self->signatures() ) {
 			openprint::service::status( $$self{'id'}, $s_id, 'Complete' );
@@ -1071,20 +1073,24 @@ sub status_change {
 			$Job->delete();
 		} # end foreach
 		$self->update_status();
-		foreach my $PA ( openprint::PaperAllocation->find('project_id'=>$$self{'id'}) ) {
-			$PA->delete();
-		} # end foreach AP
+		if ( $$self{docket} ) {
+			foreach my $PA ( openprint::PaperAllocation->find( docket=>$$self{docket}) ) {
+				$PA->delete();
+			} # end foreach AP
+		} # end if
 
 	} elsif ( sets::isin( $new_status, ['Shipped','Picked Up', 'Complete'] ) ) {
 		sql::update( undef, undef, 'tbl_Project_Contents', ["lngProjectIndex=? AND strStatus != ''", $$self{id}], 'strStatus', 'Complete' );
 # Remove jobs from the Schedule when marked complete.
-		foreach my $Job ( openprint::ScheduledJob->find('project_id'=>$$self{'id'}) ) {
+		foreach my $Job ( openprint::ScheduledJob->find( project_id=>$$self{id}) ) {
 			$Job->delete();
 		} # end foreach
 		$self->status($new_status);
-		foreach my $PA ( openprint::PaperAllocation->find('project_id'=>$$self{'id'}) ) {
-			$PA->delete();
-		} # end foreach AP
+		if ( $$self{docket} ) {
+			foreach my $PA ( openprint::PaperAllocation->find(docket=>$$self{docket}) ) {
+				$PA->delete();
+			} # end foreach AP
+		} # end if
 	} # end if
 	$self->save();
 	$self->Order()->update_status() if $self->order_id();

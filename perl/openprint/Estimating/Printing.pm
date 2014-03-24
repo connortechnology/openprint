@@ -466,10 +466,10 @@ sub setup_project {
 	} # end if
 $openprint::log->debug("$project{print_sides} : " . @{$project{side_one_colours}} . ',' . @{$project{side_two_colours}} );
 
-	$project{'side_one_colour_names'} = [ map { $$_{'name'} } @{$side_one_colours} ];
-	$project{'side_two_colour_names'} = [ map { $$_{'name'}} @{$side_two_colours} ];
+	$project{'side_one_colour_names'} = [ map { $$_{name} } @{$side_one_colours} ];
+	$project{'side_two_colour_names'} = [ map { $$_{name} } @{$side_two_colours} ];
 	# Don't need to exclude coatings because they have already been cut out.
-	@{$project{non_process_colours}} = sets::exclude( \@process_colours, [ map { $$_{'name'} } ( @{$side_one_colours}, @{$side_two_colours} ) ] );
+	@{$project{non_process_colours}} = sets::exclude( \@process_colours, [ map { $$_{name} } ( @{$side_one_colours}, @{$side_two_colours} ) ] );
 
 	$project{'combined_colours'} = [ @{$project{'side_one_colours'}}, @{$project{'side_two_colours'}} ];
 	$project{'combined_coatings'} = [ @{$project{'side_one_coatings'}}, @{$project{'side_two_coatings'}} ];
@@ -498,9 +498,11 @@ $openprint::log->debug("$project{print_sides} : " . @{$project{side_one_colours}
 	$project{'filtered_colours'} = \@filtered_colours;
 	$project{'filtered_coatings'} = [ filter_colours( $project{'side_one_coatings'}, $project{'side_two_coatings'} ) ];
 
-	foreach my $C ( openprint::Ink->find( 'name in'=>[ ( map { $$_{name} } @{$project{filtered_colours}}) , ( map { $$_{name} } @{$project{filtered_coatings}} ) ] ) ) {
-		push @{$special_colours{$$C{name}}}, $C;
-	} # end foreach C
+	if ( @{$project{filtered_colours}} or @{$project{filtered_coatings}} ) {
+		foreach my $C ( openprint::Ink->find( 'name in'=>[ ( map { $$_{name} } @{$project{filtered_colours}}) , ( map { $$_{name} } @{$project{filtered_coatings}} ) ] ) ) {
+			push @{$special_colours{$$C{name}}}, $C;
+		} # end foreach C
+	} # end if
 	# Make sure all our colours are in the special colours hash
 	my $PMSInkMixService = openprint::Service->find_one(name=>'PMSInkMix');
 	foreach my $real_colour ( @filtered_colours ) {
@@ -4109,6 +4111,7 @@ $openprint::log->debug("Sheet No supplied wight: $supplied_sheets $paper_string 
 				} # end if
 
 # The idea is to only calc these on the last sig
+		#if ( ($$services{'LoopStitching'} or $$services{'SaddleStitching'}) ) {
 		if ( ($$services{'LoopStitching'} or $$services{'SaddleStitching'}) and ($$sig_specs{'txtSignatureType'} ne 'Cover Pages') ) {
 			my $results;
 			my $starttime = gettimeofday() if DEBUG;
@@ -4148,7 +4151,7 @@ $openprint::log->debug("Sheet No supplied wight: $supplied_sheets $paper_string 
 			if ( ! $other_group_cache{$$Press{id}} ) {
 # When doing the cover, need to calc additional sigs as well.
 # Add calculations for other Groups
-				$openprint::log->debug("Calculating Additional Signatures for other group");
+				$openprint::log->debug("Calculating Additional Signatures for other group") if DEBUG;
 				my @sigs = sort $Project->signatures({Group=>2});
 				if ( @sigs ) {
 					my $Service = $Project->Service( $sigs[0] );
@@ -4216,6 +4219,7 @@ $openprint::log->warn("Unable to calculate impositions for additional signatures
 								my $sig_price = get_project_price( $Project, $sigs[0], $new_project, \%subsig_specs, \%subsig_specs, $qty, $qty_index, 
 										\@possible_presses, $printing_specs, $versions, \%PlateCounts, \%PaperCounts, \%washed_colours, \%previous_forms_cache, \@sigs, \%impositions, $other_impositions, {}, 0 );
 								$other_group_cache{$$Press{id}} = $sig_price;
+						
 							} # end if
 						} else {	
 							$$price{'Comparison Cost'} += 1000000;
@@ -4236,9 +4240,10 @@ $openprint::log->warn("Unable to calculate impositions for additional signatures
 				#$openprint::log->debug("Calculating Additional Signatures for other group success");
 				#$openprint::log->error( breakdown( $sig_price ) );
 				$$price{'Comparison Cost'} += $$sig_price{'Comparison Cost'};
+				$$price{'Comparisoin Log'} .= 'Other sig: ' . $$sig_price{'Comparison Cost'} . '<br/>';
 #$$price{'itionalSignature Breakdown'} .= breakdown( $sig_price, $sig_specs );
 			} else {
-				$openprint::log->error("Calculating Additional Signatures for other group failure");
+				$openprint::log->error("Calculating Additional Signatures for other group failure") if DEBUG;
 				$$price{'Breakdown'} .= 'Unable to calculate additional signatures.<br/>';
 				$$price{'Comparison Cost'} += 10000000;
 			} # end if

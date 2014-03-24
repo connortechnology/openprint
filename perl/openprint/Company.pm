@@ -70,6 +70,8 @@ $serial = 'companies_id_seq';
 	marketing_category_id	=>	'(SELECT category_id FROM companies_in_marketing_categories WHERE company_id=companies.id)',
 );
 %transforms = (
+	address1		=>	[ 's/^\s+//', 's/\s+$//' ],
+	address2		=>	[ 's/^\s+//', 's/\s+$//' ],
 	'established'	=> [ 's/[^\d\-]//g' ],
 	'name' => [ 's/[\.\,]//g', 's/^\s+//', 's/\s+$//','s/\///g' ],
 	'discount'	=>	[ 's/[^\d\.\-]//g' ],
@@ -140,46 +142,15 @@ sub destroy {
 } # end sub destroy
 
 sub save {
-    my ($self, $param) = @_;
+    my ($self, $param, $force ) = @_;
 	
+$openprint::log->debug("before require texst::unaccent");
 	require Text::Unaccent;
 	$self->set( $param );
-	my %sql;
-	foreach my $k ( keys %fields ) {
-		$sql{$fields{$k}} = $$self{$k};
-	} # end foreach
-	$sql{'updated_on'} = 'NOW()';
-	$sql{'name'} = Text::Unaccent::unac_string('UTF-8', $sql{'name'} );
-
-    my $ac = sql::start_transaction( $dbh );
-    if ( ! $$self{'id'} ) {
-        @$self{'id'} = sql::execute( undef, undef, q{SELECT nextval('companies_id_seq')} );
-		$sql{id} = $$self{'id'};
-        if ( my $e = sql::insert( undef, undef, 'Companies', \%sql ) ) {
-			$dbh->rollback();
-			sql::end_transaction( $dbh, $ac );
-			delete $$self{'id'};
-			return $e;
-		} # end if
-	} elsif ( $$param{'force_insert'} ) {
-        if ( my $e = sql::insert( undef, undef, 'Company', \%sql ) ) {
-			$dbh->rollback();
-			sql::end_transaction( $dbh, $ac );
-			return $e;
-		} # end if
-    } else {
-		delete $sql{'created_on'};
-        if ( my $e = sql::update( undef, undef, 'Companies', ['id=?', $$self{'id'}], \%sql ) ) {
-			$dbh->rollback();
-    sql::end_transaction( $dbh, $ac );
-			return $e;
-		} # end if
-	} # end if
-
-    sql::end_transaction( $dbh, $ac );
-    $self->load();
-	return;
-
+$openprint::log->debug("fter set");
+	$$self{name} = Text::Unaccent::unac_string('UTF-8', $$self{name} );
+$openprint::log->debug("savin set");
+	return $self->SUPER::save( undef, $force );
 } # end sub save
 
 sub next {
