@@ -109,11 +109,11 @@ sub Category {
 } # end sub Category
 
 sub get_price {
-	my ( $self, $qty ) = @_;
+	my ( $self, $qty, $options ) = @_;
 
-	my $list_id = openprint::pricing::get_pricelist_id();
+	$$options{pricelist_id} = openprint::pricing::get_pricelist_id() if ! $$options{pricelist_id};
 
-	my %price = openprint::pricing::get_best_price_object( $openprint::session{'company_id'}, $$self{'id'}, $list_id, 'openprint::product_priceset', $qty, undef );
+	my %price = openprint::pricing::get_best_price_object( $openprint::session{'company_id'}, $$self{'id'}, $$options{pricelist_id}, 'openprint::product_priceset', $qty, undef );
 	#if ( ! %price ) {
 #$log->debug("Looking for a price $qty");
 		##foreach my $Price ( openprint::ProductPrice->find('product_id'=>$$self{'id'},'pricelist_id'=>$list_id,'order'=>'min desc NULLS FIRST') ) {
@@ -123,7 +123,7 @@ sub get_price {
 			#ireturn $
 		#} # end foreach Price
 	#} # end if
-	my $Pricelist = new openprint::Pricelist( $list_id );
+	my $Pricelist = new openprint::Pricelist( $$options{pricelist_id} );
 	$price{currency_id} = $Pricelist->currency_id();
 	openprint::Currency::convert( \%price );
 	return %price;
