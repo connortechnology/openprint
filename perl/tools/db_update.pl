@@ -978,7 +978,7 @@ if ( ! sets::isin( 'bug_statuses', \@tables ) ) {
 if ( ! sets::isin( 'bugs', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, '../openprint/sql/Bugs.sql' ) ) or die;
 } else {
-	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='manufacturers'", 'column_name');
+	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='bugs'", 'column_name');
 	if ( ! exists $$data{deleted} ) {
 		$dbh->do('ALTER TABLE bugs add deleted BOOLEAN NOT NULL default False');
 	} # end if
@@ -2442,10 +2442,10 @@ if ( ! sets::isin( 'survey_questions', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/Survey_Questions.sql}) ) or die $dbh->errstr();
 } else {
 	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='survey_questions'", 'column_name');
-	if ( $$data{allow_comments} ) {
+	if ( ! exists $$data{allow_comments} ) {
 		$dbh->do('alter table survey_questions add allow_comments BOOLEAN NOT NULL DEFAULT false');
 	}
-	if ( $$data{allow_public} ) {
+	if ( ! exists $$data{allow_public} ) {
 		$dbh->do('alter table survey_questions add allow_public BOOLEAN NOT NULL DEFAULT false');
 	}
 } # end if
