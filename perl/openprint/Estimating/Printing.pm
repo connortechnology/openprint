@@ -2299,8 +2299,9 @@ $log->warn("There are no quantities!");
 			foreach my $qty_index ( $Project->quantity_indexes() ) {
 				if ( $$sig_specs{'chkOverrideSheetSize'.$qty_index} ) {
 					$Overrides{'chkOverrideSheetSize'.$qty_index} = 'Y';
+					# Technically, the dropdown and txtinputs should have values
 					if ( ! $$sig_specs{"ddmStockSheetSize$qty_index"} ) {
-						$openprint::log->error("NO ddm Stock SheetSize!");
+						#$openprint::log->error("NO ddm Stock SheetSize for $qty_index sig $index !");
 					} elsif ( ! $$sig_specs{"OverrideStockWidth$qty_index"} ) {
 
 						if ( @$sig_specs{"OverrideStockWidth$qty_index"} = $$sig_specs{"ddmStockSheetSize$qty_index"} =~ /^([\d\.]+)("? Roll)?\s*$/ ) {
@@ -2797,7 +2798,7 @@ sub calculate_impositions {
 
 	if ( ( $$sig_specs{'chkOverrideSheetSize'.$qty_index} eq 'Y' ) ) {
 		if ( ! $$sig_specs{"ddmStockSheetSize$qty_index"} ) {
-			$openprint::log->error("NO ddm Stock SheetSize!");
+			$openprint::log->error("NO ddm Stock SheetSize for $qty_index!");
 		} elsif ( ! $$sig_specs{"OverrideStockWidth$qty_index"} ) {
 			if ( $$sig_specs{"StockType$qty_index"} eq 'Roll' ) {
 				@$sig_specs{"OverrideStockWidth$qty_index"} = $$sig_specs{"ddmStockSheetSize$qty_index"} =~ /^([\d\.]+)("? Roll)?\s*$/;
@@ -4169,7 +4170,7 @@ $openprint::log->debug("Sheet No supplied wight: $supplied_sheets $paper_string 
 								if ( $$sig_specs{'chkOverrideSheetSize'.$qty_index} ) {
 									$Overrides{'chkOverrideSheetSize'.$qty_index} = 'Y';
 									if ( ! $$sig_specs{"ddmStockSheetSize$qty_index"} ) {
-										$openprint::log->error("NO ddm Stock SheetSize!");
+										$openprint::log->error("NO ddm Stock SheetSize for $qty_index in calc_other_groups!");
 									} elsif ( ! $$sig_specs{"OverrideStockWidth$qty_index"} ) {
 										if ( $$sig_specs{"StockType$qty_index"} eq 'Roll' ) {
 											@$sig_specs{"OverrideStockWidth$qty_index"} = $$sig_specs{"ddmStockSheetSize$qty_index"} =~ /^([\d\.]+)("? Roll)?\s*$/;
