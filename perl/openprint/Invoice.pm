@@ -376,5 +376,9 @@ sub link_to {
 	return '';
 } # end sub link_to
 
+sub Pricelist {
+	return $_[0]->Invoicee()->Pricelist();
+} # end sub Pricelist
+
 1;
 __END__

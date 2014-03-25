@@ -97,6 +97,7 @@ sub colorize_string($) {
 	
 	return if $_[0] =~ /^\[debug\] mod_headers/;
 	return if $_[0] =~ /^\[debug\] mod_deflate/;
+	return if $_[0] =~ /^\[debug\] mod_auth/;
 	return if $_[0] =~ /^\[authz_core:debug\] mod_authz_core/;
 
 	if ($_[0] =~ m/$errors/) {

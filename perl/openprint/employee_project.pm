@@ -164,7 +164,7 @@ sub view {
 				if ( $complete ) {
 					sql::update( $log, $dbh, 'tbl_Project_Contents', ['lngProjectIndex=? AND lngServiceIndex=?', $project_index, $$services{''}[0]], 'strStatus', 'Complete' );	
 					$Project->add_to_log( @session{'company_id','user_id'}, 'All signatures complete - marking printing complete.' );
-					foreach my $PA ( openprint::PaperAllocation->find('project_id'=>$project_index) ) {
+					foreach my $PA ( openprint::PaperAllocation->find(docket=>$Project->docket() ) ) {
 						next if $PA->Paper()->type() ne 'Roll';
 						$PA->delete();
 						$Project->add_to_log( @session{'company_id','user_id'}, 'Freeing allocated paper: ' . $PA->quantity() . $PA->units() );
