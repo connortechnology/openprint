@@ -115,7 +115,7 @@
 						) ?>
 				</select>
 				<? echo ( join('',
-				button( 'Map', { onclick=>"open_window('/maps/index.html?parent&amp;location_id='+get_ddm_value(f1.ddmLocation)+'&amp;selected_id='+get_ddm_value(f1.ddmLocation)+'&amp;skid_id=$$variable{Skid}{id}','Location','width=400,height=400,scrollbars=yes');" } ),
+				button( 'Map', { onclick=>"popup_window('/maps/_popup.html?parent&amp;location_id='+get_ddm_value(f1.ddmLocation)+'&amp;selected_id='+get_ddm_value(f1.ddmLocation)+'&amp;skid_id=$$variable{Skid}{id}');" } ),
 				); ) ?>
 			</li>
 <? if ( $$variable{'Skid'}->id() ) ?>

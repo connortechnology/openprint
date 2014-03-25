@@ -32,18 +32,18 @@ sub edit {
 			$param{$_} = openprint::Location->transform('name',$param{$_});
 		}	
 		my $parent_id;
-		if ( $param{'country'} ) {
+		if ( $param{country} ) {
 			my $Country = openprint::Location->find_one('name lc'=> lc $param{'country'}, 'type'=>'country' );
 			if ( ! $Country ) {
 				$Country = new openprint::Location();
 				$variable{'error'} .= $Country->save({'name'=>$param{'country'}, 'type'=>'country'});
 			} # end if
-			$parent_id = $param{'country_id'} = $Country->id();
+			$parent_id = $param{country_id} = $Country->id();
 		} # end if
-		if ( $param{'country_id'} ) {
-			my $Country = new openprint::Location($param{'country_id'});
+		if ( $param{country_id} ) {
+			my $Country = new openprint::Location($param{country_id});
 			if ( $Country->id() ) {
-				$parent_id = $param{'country_id'};
+				$parent_id = $param{country_id};
 			} else {
 				$log->error('Country specified, but not found!?');
 			} # end if
@@ -91,7 +91,11 @@ sub edit {
 		if ( ( $_ = openprint::Location->find_one(
 			( $param{'location_id'} ? ( 'id !='=>$param{'location_id'} ) : () ),
 			'name lc'=> lc $param{location}, 
+<<<<<<< HEAD
+			( $param{location_type_id} ? ( type_id=>$param{location_type_id} ) : () ),
+=======
 			( $param{'location_type_id'} ? ( type_id=>$param{location_type_id} ) : () ),
+>>>>>>> 388ad28075791a56c6859da6f9e2cfd7e9eeb144
 			) ) ) {
 			$variable{'error'} .= 'A location with that name at that place already exists.';
 		} else {
@@ -109,7 +113,7 @@ sub edit {
 					'url'			=>	$param{'url'},
 					'latitude'		=>	$param{'latitude'},
 					'longitude'		=>	$param{'longitude'},
-					( $param{'type_id'} ? ( 'type_id' => $param{'type_id'} ) : ( 'type'	=>	'place' ) ),
+					( $param{'location_type_id'} ? ( 'type_id' => $param{'location_type_id'} ) : ( 'type'	=>	'place' ) ),
 					});
 			(new openprint::Log())->save({'action'=>($param{'location_id'} ? 'Update Location' : 'Create Location'), 'object'=>'Location','object_id'=>$Location->id()});
 		} # end if

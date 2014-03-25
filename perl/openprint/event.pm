@@ -66,9 +66,18 @@ sub search {
 	if ( ! ( $Location and $Location->id() ) ) {
 		$Location = openprint::Location::from_ip( $ENV{REMOTE_ADDR} );
 	} # end if
-	if ( 0 and $Location and $Location->id() ) {
-		my $Country = $Location->ancestor('type'=>'country');
-		my $State = $Location->ancestor('type'=>'state');
+$log->debug("Got location : " . $Location->to_string() );
+	if ( 1 and $Location and $Location->id() ) {
+		my ( $Country, $State );
+		if ( $Location->type() eq 'country' ) {
+			$Country = $Location;
+		} elsif ( $Location->type() eq 'state' ) {
+			$Country = $Location->ancestor('type'=>'country');
+			$State = $Location;
+		} else {
+			$Country = $Location->ancestor('type'=>'country');
+			$State = $Location->ancestor('type'=>'state');
+		} # en dif
 
 		$session{'/event/search.html?country_id'} = $Country->id() if $Country and ! exists $session{'/event/search.html?country_id'};
 		$session{'/event/search.html?state_id'} = $State->id() if $State and ! exists $session{'/event/search.html?state_id'};

@@ -172,8 +172,8 @@
 					<label for="grade">Grade</label>
 					<select id="grade" name="grade" size="1">
 					<? echo (
-						my @options = ( '', 'select one', %openprint::Paper::grades );
-						make_drop_down( \@options, $$variable{'Stock'}->grade() );
+						my @options = ( '', 'select one', map { $_, $openprint::Paper::grades{$_} } ( sort { $a <=> $b } ( keys %openprint::Paper::grades ) ) );
+						make_drop_down( \@options, $$variable{Stock}->grade() );
 					) ?>
 					</select>
 				</p>

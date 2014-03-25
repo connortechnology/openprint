@@ -84,6 +84,7 @@ Please select a Paper to view/edit.<br>
 
 	foreach my $option ( @StockOptions ) {
 		next if ! $filters{$option};
+		my ( $lower_option, $option_id ) = ( lc $option, lc $option.'_id' );
 		my @options = map { $filters{$option}{$_}, $_ } ( sort keys %{$filters{$option}} );
 
 		# Don't do this because even if there is only 1 entry, papers can be unassigned.
@@ -92,8 +93,8 @@ Please select a Paper to view/edit.<br>
 		$html .= sprintf(q`<li><label>%1$s</label>
 				<select name="%2$s_id%3$s" id="%2$s_id%3$s" size="1" onchange="filter_onChange(this,'');">
 				<option value=""> All </option> %4$s </select>
-			</li>`, $option, lc $option, $$variable{'Signature'},
-			make_drop_down( \@options, $session{'/employee/inventory/paper.html?'.$option} ),
+			</li>`, $option, $lower_option, $$variable{'Signature'},
+			make_drop_down( \@options, $session{'/employee/inventory/paper.html?'.$option_id} ),
 		);
 	} # end foreach option
 	$$variable{Paper} = \@Papers;

@@ -21,7 +21,7 @@ use vars qw( $r %session %config $log $dbh );
 *dbh = \$openprint::dbh;
 *r = \$openprint::r;
 
-use constant DEBUG => 0;
+use constant DEBUG => 1;
 
 sub cleanup {
     if ( $dbh ) {
@@ -61,6 +61,7 @@ sub handler {
 		# Do it up here cuz if the browser kills the connection, we will die during sending and won't do this line
 		$session{'lastupdated'} = time if ! $session{'lastupdated'};
 
+$log->debug("hello") if DEBUG;
 		# The asset filename form is id_title.extension, path is either assets or thumbnails
 		my ( $path, $id, $filename ) = $r->uri() =~ /^\/(.*)\/(\d+)_(.+)$/;
 		$path =~ s/^assets\///;
@@ -76,11 +77,14 @@ sub handler {
 						} # end if
 					} # end foreach Album
 					if ( $can_view ) {
+					$log->debug("OK") if DEBUG;
 						return Apache2::Const::OK;
 					} else {
+					$log->debug("UNATH") if DEBUG;
 						return Apache2::Const::HTTP_UNAUTHORIZED;
 					} # end if
 				} else {
+					$log->debug("OK") if DEBUG;
 					return Apache2::Const::OK;
 				} # end if
 			} else {
