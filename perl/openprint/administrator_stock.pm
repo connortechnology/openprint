@@ -27,7 +27,7 @@ use vars qw( %variable %session %param %config $log $dbh $r );
 
 sub _stocks {
 	if ( %param and ! $param{'btnFunction'} ) {
-		ssi::save_params('/administrator/stock/list.html', 'group_id','owner_id','manufacturer_id','brand_id','finish_id','colour_id','weight_id','fsc_code','material_id', 'Types', 'recommendations','grain_direction', 'digital' );
+		ssi::save_params('/administrator/stock/list.html', 'group_id','owner_id','manufacturer_id','brand_id','finish_id','colour_id','weight_id','fsc_code','material_id', 'Types', 'recommendations','grain_direction', 'digital', 'width','height' );
 	} # end if
 } # end sub _stocks
 
@@ -242,6 +242,7 @@ sub stock {
 		$Paper->sheets_per_package( $param{'sheets_per_package'} );
 		$Paper->full_packages( $param{'full_packages'} );
 		$Paper->minimum_order( $param{'minimum_order'} );
+		$Paper->available_to_order( $param{available_to_order} );
 		$Paper->cuttable( $param{'cuttable'} );
 		$Paper->doublesided( $param{'doublesided'} );
 		$Paper->multipart( $param{'multipart'} );
@@ -278,15 +279,15 @@ sub stock {
 					or ( $Price->discountable() ne $param{"discountable-$$Price{id}"} )
 					or ( $Price->equipment_id() ne $param{"equipment_id-$$Price{id}"} )
 			   ) {
-			$variable{'error'} .= $Price->save({
-					'equipment_id'	=>	$param{"equipment_id-$$Price{id}"},
-					'min'			=> $param{"min-$$Price{id}"},
-					'max'			=> $param{"max-$$Price{id}"},
-					'units'			=> $param{"units-$$Price{id}"},
-					'cost'			=> $param{"cost-$$Price{id}"},
-					'markup'		=> $param{"markup-$$Price{id}"},
-					'price'			=> $param{"price-$$Price{id}"},
-					'discountable'	=> $param{"discountable-$$Price{id}"},
+			$variable{error} .= $Price->save({
+					equipment_id	=> $param{"equipment_id-$$Price{id}"},
+					min				=> $param{"min-$$Price{id}"},
+					max				=> $param{"max-$$Price{id}"},
+					units			=> $param{"units-$$Price{id}"},
+					cost			=> $param{"cost-$$Price{id}"},
+					markup			=> $param{"markup-$$Price{id}"},
+					price			=> $param{"price-$$Price{id}"},
+					discountable	=> $param{"discountable-$$Price{id}"},
 					});
 			} # end if Price has changed
 		} # end foreach Price

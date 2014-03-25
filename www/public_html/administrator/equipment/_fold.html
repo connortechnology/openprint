@@ -4,9 +4,9 @@
 	} else {
 		$$variable{'Equipment'} = new openprint::Equipment( $param{'equipment_id'} );
 		if ( $param{'type'} eq 'all' ) {
-			@{$$variable{'Folds'}} = openprint::Fold->find( 'equipment_id'=>$param{'equipment_id'},'order'=>'lower(name)' );
+			@{$$variable{'Folds'}} = openprint::Fold->find( equipment_id=>$param{equipment_id},order=>'lower(name)' );
 		} else {
-			@{$$variable{'Folds'}} = openprint::Fold->find( 'equipment_id'=>$param{'equipment_id'}, 'type'=>$param{'type'},'order'=>'lower(name)' );
+			@{$$variable{'Folds'}} = openprint::Fold->find( equipment_id=>$param{equipment_id}, type=>$param{type},order=>'lower(name)' );
 		} # end if
 	} # end if
 ) ?>
@@ -97,17 +97,22 @@
 		<p class="buttons">	
 <? echo ( 
 	return join("\n",
-		ssi::button( 'SaveFold'.$$variable{Fold}->id(), { onclick=>"new Ajax.Request('/administrator/equipment/_fold.html?action=save&id=". $$variable{Fold}->id() ."&equipment_id=".$$variable{Fold}->equipment_id()."&' + Form.serialize('Fold".$$variable{Fold}->id()."'),
+		button( 'SaveFold'.$$variable{Fold}->id(), { onclick=>"new Ajax.Request('/administrator/equipment/_fold.html?action=save&id=". $$variable{Fold}->id() ."&equipment_id=".$$variable{Fold}->equipment_id()."&' + Form.serialize('Fold".$$variable{Fold}->id()."'),
 			{ onSuccess: function(response){\$('Fold". $$variable{Fold}->id()."').removeClassName('changed');} } );",text=>'Save' } ),
-		ssi::button( 'CopyFold'.$$variable{Fold}->id(), { onclick=>"new Ajax.Request('/administrator/equipment/_fold.html?action=copy&id=". $$variable{Fold}->id() ."',
+		button( 'CopyFold'.$$variable{Fold}->id(), { onclick=>"new Ajax.Request('/administrator/equipment/_fold.html?action=copy&id=". $$variable{Fold}->id() ."',
 			{ onSuccess: function(response){new Insertion.After(\$('Fold".$$variable{Fold}->id()."'), response.responseText);} } );",text=>'Copy' } ),
-		ssi::button( 'DeleteFold'.$$variable{Fold}->id(), { onclick=>"new Ajax.Request('/administrator/equipment/_fold.html?action=delete&amp;id=".$$variable{Fold}->id()."', { onSuccess: function(){var f = \$('Fold".$$variable{Fold}->id()."'); f.remove();} } );",text=>'Delete' } ),
+		button( 'DeleteFold'.$$variable{Fold}->id(), { onclick=>"new Ajax.Request('/administrator/equipment/_fold.html?action=delete&amp;id=".$$variable{Fold}->id()."', { onSuccess: function(){var f = \$('Fold".$$variable{Fold}->id()."'); f.remove();} } );",text=>'Delete' } ),
 );
  ) ?>
 		</p>
 		</fieldset>
 	</div>
 	<div class="rightColumn">
+		<fieldset>
+		<p><label>Comments</label>
+			<textarea name="comments" id="comments-<? echo ( $$variable{Fold}->id() ) ?>" rows="<?echo(count_lines($$variable{Fold}->comments());)?>"><? echo ( $$variable{Fold}->comments() ) ?></textarea>
+		</p>
+		</fieldset>
 		<fieldset><legend>Binding Options</legend>
 		<p>
 			<label>Inline Cutting</label>
@@ -118,7 +123,7 @@
 		</p>
 		<p>
 			<label>Stitching</label>
-			<? echo ( ssi::radio( 'stitching', [1,'Yes',0,'No'], $$variable{Fold}->stitching(), { onclick=>qq`\$('Fold$$variable{Fold}{'id'}').addClassName('changed');`, id=>$$variable{Fold}->id() } ); ) ?>
+			<? echo ( radio( 'stitching', [1,'Yes',0,'No'], $$variable{Fold}->stitching(), { onclick=>qq`\$('Fold$$variable{Fold}{'id'}').addClassName('changed');`, id=>$$variable{Fold}->id() } ); ) ?>
 		</p>
 		<p>
 			<label>Perfect Bind</label>
@@ -151,14 +156,14 @@
 			<? echo (
 				my $html = '';
 				my @specs = $$variable{Fold}->Specifications();
-				while ( $$variable{'Specification'} = shift @specs ) {
-					$html .= ssi::include( $ENV{'DOCUMENT_ROOT'}.'/administrator/equipment/_fold_specification.html', $variable );
+				while ( $$variable{Specification} = shift @specs ) {
+					$html .= include( '/administrator/equipment/_fold_specification.html', $variable );
 				} # end while
 				return $html;
 			) ?>
 			</tbody>
 		</table>
-<? echo ( ssi::writeButton( $log, $dbh, 'AddFoldSpec'.$$variable{Fold}->id(), 'add.gif',"new Ajax.Request('/administrator/equipment/_fold_specification.html?action=add&fold_id=". $$variable{Fold}->id() ."', { method: 'get', onSuccess: function(response){new Insertion.Bottom(\$('FoldSpecifications".$$variable{Fold}->id()."'), response.responseText);SortableTable.load();} } );",'','Add' ); ) ?>
+<? echo ( button( 'AddFoldSpec'.$$variable{Fold}->id(), { onclick=>"new Ajax.Request('/administrator/equipment/_fold_specification.html?action=add&fold_id=". $$variable{Fold}->id() ."', { onSuccess: function(response){new Insertion.Bottom(\$('FoldSpecifications".$$variable{Fold}->id()."'), response.responseText);SortableTable.load();} } );" text=>'Add' } ); ) ?>
 		</fieldset>
 	</div>
 	<br class="spacer"/>

@@ -37,5 +37,9 @@ $log->debug("selected $param{selected_id} $param{located_id} " . $variable{'Loca
 
 } # end sub index
 
+sub _popup {
+	openprint::maps::index();
+} # end sub _popup
+
 1;
 __END__

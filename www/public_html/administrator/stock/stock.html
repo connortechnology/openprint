@@ -172,8 +172,8 @@
 					<label for="grade">Grade</label>
 					<select id="grade" name="grade" size="1">
 					<? echo (
-						my @options = ( '', 'select one', %openprint::Paper::grades );
-						make_drop_down( \@options, $$variable{'Stock'}->grade() );
+						my @options = ( '', 'select one', map { $_, $openprint::Paper::grades{$_} } ( sort { $a <=> $b } ( keys %openprint::Paper::grades ) ) );
+						make_drop_down( \@options, $$variable{Stock}->grade() );
 					) ?>
 					</select>
 				</p>
@@ -235,7 +235,7 @@
 				</p>
 				<p>
 					<label>Quantity Per Package (<span id="QuantityPerPackageUnits"><? echo ( $$variable{'Stock'}->units() ) ?></span>)</label>
-					<input type="number" name="sheets_per_package" value="<? echo ( $$variable{'Stock'}->sheets_per_package(); ) ?>" />
+					<? echo ( input( type=>'cardinal', name=>'sheets_per_package', value=>$$variable{Stock}->sheets_per_package() ); ) ?>
 				</p>
 			</div><!--left-->
 			<div class="rightColumn">
@@ -248,7 +248,11 @@
 				</p>
 				<p class="minimum_order">
 					<label>Minimum Order (<span id="MinimumOrderUnits"><? echo ( $$variable{'Stock'}->type() eq 'Roll' ? 'lbs' : 'sheets' ) ?></span>)</label>
-					<input type="number" id="minimum_order" name="minimum_order" value="<? echo ( $$variable{'Stock'}->minimum_order(); ) ?>" />
+					<? echo ( input( type=>'cardinal', id=>'minimum_order', name=>'minimum_order', value=>$$variable{Stock}->minimum_order() ); ) ?>
+				</p>
+				<p class="available_to_order">
+					<label>Available to Order (<span id="MinimumOrderUnits"><? echo ( $$variable{Stock}->type() eq 'Roll' ? 'lbs' : 'sheets' ) ?></span>)</label>
+					<? echo ( input( type=>'cardinal', id=>'available_to_order', name=>'available_to_order', value=>$$variable{Stock}->available_to_order() ); ) ?>
 				</p>
 				<p class="fsc_code">
 					<label>FSC Code</label>
