@@ -67,6 +67,7 @@
 				<select name="country" onchange="Country_onchange(this, this.form.state);">
 					<option value=""> Select </option>
 					<? echo ( 
+						require countries;
 						make_drop_down( \@countries::countries, $$variable{'country'} );
 					) ?> 
 				</select>
