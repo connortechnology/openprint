@@ -79,6 +79,10 @@ $serial = 'orders_id_seq';
 	status		=>	'(SELECT name FROM Order_Statuses WHERE order_statuses.id=status_id)',
 );
 
+%defaults = (
+	updated_on	=>	q`'NOW()'`,
+);
+
 sub save {
 	my ( $self, $params ) = @_;
 
