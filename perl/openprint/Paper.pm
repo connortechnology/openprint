@@ -1247,7 +1247,7 @@ sub load_from_signature {
 		$Paper->full_packages( $$specs{'full_packages'} );
 		$Paper->cuttable( exists $$specs{'cuttable'} ? $$specs{'cuttable'} : 1 );
 		$Paper->digital(1);
-		$Paper->perfecting($$specs{'perfecting'});
+		$Paper->perfecting($$specs{'perfecting'} eq 'Y' ? 1 : 0 );
 
 		$Paper->doublesided($$specs{'CustomSheetDoubleSided'});
 		$Paper->grade( $$specs{'StockGrade'});
