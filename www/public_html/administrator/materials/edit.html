@@ -1,12 +1,13 @@
-<script type="text/javascript" src="/javascripts/pricing.js"></script>
-<form name="f1" method="post" enctype="multipart/form-data" action="edit.html">
+<?include(/includes/error_reporting.html)?>
+<script type="text/javascript" src="<?hash_link(/javascripts/pricing.js)?>"></script>
+<form name="f1" id="f1" method="post" enctype="multipart/form-data" action="edit.html">
 	<fieldset class="filters"><legend>Search</legend>
 		<ul>
 		<li> 
 			<label>Category</label>
 			<select name="ddmSearchCategory" onchange="form.btnFunction.value='';f1.submit();">
 				<option value="">All Categories</option>
-				<? echo ( make_drop_down( [ map { $_->id(), $_->name() } openprint::MaterialCategory->find('order'=>'lower(name)') ], $param{'ddmSearchCategory'} ); ) ?>
+				<? echo ( make_drop_down( openprint::MaterialCategory->dropdown( order=>'lower(name)'), $param{ddmSearchCategory} ); ) ?>
 			</select>
 		</li>
 		<li>

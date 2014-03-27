@@ -20,6 +20,7 @@ $table = 'license_hosts';
 %defaults = (
 	license_id	=>	undef,
 	host_id		=>	undef,
+	created_on	=>	q`NOW()`,
 );
 
 sub Host {

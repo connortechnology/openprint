@@ -489,7 +489,7 @@ $log->debug("find_operators: field($field) type($type) op($operator) value($valu
 		return '('.$field.$type.' IS NULL OR '.$field.$type.' < ?)', $value;
 	} elsif ( $operator eq 'null_or_=' or $operator eq 'is null or =' ) {
 		return '('.$field.$type.' IS NULL OR '.$field.$type.' = ?)', $value;
-	} elsif ( $operator eq 'null or in' ) {
+	} elsif ( $operator eq 'null or in' or $operator eq 'is null or in' ) {
 		return '('.$field.$type.' IS NULL OR '.$field.$type.' IN ('.join(',', map { '?' } @{$value} ) . '))', @{$value};
 	} elsif ( $operator eq 'null or not in' ) {
 		return '('.$field.$type.' IS NULL OR '.$field.$type.' NOT IN ('.join(',', map { '?' } @{$value} ) . '))', @{$value};

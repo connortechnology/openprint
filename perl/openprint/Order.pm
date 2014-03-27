@@ -39,6 +39,7 @@ $serial = 'orders_id_seq';
 	cod_percent				=>	'cod_percent',
 	downpayment_percent		=>	'downpayment_percent',
 	created_on				=> 'created_on',
+	updated_on				=>	'updated_on',
 	company_name			=> 'company_name',
 	salutation				=> 'salutation',
 	firstname				=> 'firstname',
@@ -76,6 +77,10 @@ $serial = 'orders_id_seq';
 %find_fields = (
 	project_id	=>	'(SELECT lngprojectindex FROM Order_Contents WHERE OrderIndex=Orders.id)',
 	status		=>	'(SELECT name FROM Order_Statuses WHERE order_statuses.id=status_id)',
+);
+
+%defaults = (
+	updated_on	=>	q`'NOW()'`,
 );
 
 sub save {

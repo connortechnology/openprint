@@ -161,14 +161,14 @@ sub _specification {
 } # end sub _specification
 
 sub _fold {
-	my $Fold = new openprint::Fold( $param{'id'} );
-	if ( $param{'action'} eq 'add' ) {
+	my $Fold = new openprint::Fold( $param{id} );
+	if ( $param{action} eq 'add' ) {
 		foreach my $k ( 'equipment_id' ) {
 			$$Fold{$k} = $param{$k};
 		} # end foreach
 		$Fold->save();
-		$variable{'Fold'} = $Fold;
-	} elsif ( $param{'action'} eq 'copy' ) {
+		$variable{Fold} = $Fold;
+	} elsif ( $param{action} eq 'copy' ) {
 		my $NewFold = $Fold->copy();
 		delete $param{id};
 		$NewFold->save(\%param);
@@ -177,10 +177,10 @@ sub _fold {
 			$Spec->fold_id( $NewFold->id() );
 			$Spec->save();
 		} # end foreach Spec
-		$variable{'Fold'} = $NewFold;
-		$param{'id'} = $NewFold->id();
+		$variable{Fold} = $NewFold;
+		$param{id} = $NewFold->id();
 		
-	} elsif ( $param{'action'} eq 'save' ) {
+	} elsif ( $param{action} eq 'save' ) {
 		$Fold->save(\%param);
 		$variable{'Fold'} = $Fold;
 	} elsif ( $param{'action'} eq 'delete' ) {

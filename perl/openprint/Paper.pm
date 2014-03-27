@@ -85,6 +85,7 @@ $serial	= 'paper_id_seq';
 		'material_id'			=>	'material_id',
 		'user_type'				=>	'user_type',
 		manufacturers_name		=>	'manufacturers_name',
+		available_to_order		=>	'available_to_order',
 		);
 %find_fields = (
 		'manufacturer'	=>	'(SELECT name FROM manufacturers WHERE manufacturers.id=papers.manufacturer_id)',
@@ -131,6 +132,7 @@ $serial	= 'paper_id_seq';
 	type				=>	q`''`,
 	manufacturer_id		=>	undef,
 	group_id			=>	undef,
+	available_to_order	=>	undef,
 );
 
 %grades = (
@@ -178,12 +180,15 @@ sub save {
 	$self->set($hash);
 	
 	if ( $$self{'group'} and ! $$self{'group_id'} ) {
-		my $Group = openprint::StockGroup->find_one('name lc'=>lc openprint::StockGroup->transform( 'name', $$self{'group'} ) );
+		my $Group = openprint::StockGroup->find_one('name lc'=>lc openprint::StockGroup->transform( 'name', $$self{group} ) );
 		if ( ! $Group ) {
-			my $Group = new openprint::StockGroup();
-			if ( $_ = $Group->save( {'name'=>$$self{'group'}} ) ) {
+			$Group = new openprint::StockGroup();
+			if ( $_ = $Group->save( { name=>$$self{group} } ) ) {
 				return $_;
 			} # end if
+		} # end if
+		if ( ! $Group ) {
+			return "Something odd happened saving the group. $$self{group}<br/>";
 		} # end if
 		@$self{'group_id','group'} = @$Group{'id','name'};
 	} # end if group_id
@@ -446,7 +451,7 @@ sub group {
 			@$self{'group_id','group'} = ( undef, $group );
 		} # end if
 	} elsif ( $$self{'group_id'} and ! $$self{'group'} ) {
-		$$self{'group'} = new openprint::StockGroup( $$self{'group_id'} )->name();
+		$$self{group} = new openprint::StockGroup( $$self{group_id} )->name();
 	} # end if
 	return $$self{'group'};
 } # end sub group
@@ -753,6 +758,14 @@ sub add_inventory {
 sub allocate {
 	my ( $self, $skid_id, $docket, $quantity, $units, $condition_id ) = @_;
 
+	my $Order;
+	if ( ref $docket eq 'openprint::Order' ) {
+		$Order = $docket;
+		$docket = $$Order{docket};
+	} elsif ( $docket ) {
+		$Order = openprint::Order->find_one( docket => $docket );
+	} # end i
+
 	my $skids;
 	if ( ref $skid_id eq 'openprint::Skid' ) {
 		$skids = [ $skid_id->id() ];
@@ -772,13 +785,12 @@ sub allocate {
 			operator_id		=>	$openprint::session{user_id},
 			condition_id	=>	$condition_id,
 			} );
-	if ( $docket ) {
-		my $Order = openprint::Order->find_one( docket => $docket );
-		if ( $Order ) {
-			$Order->add_log( qq`Allocated $quantity$$PA{units} of <a href="/employee/inventory/paper_details.html?paper_id=$$self{'id'}">` . $self->to_string().'</a>');
-		} # end if
-	} # end if project_id
-
+	if ( $Order ) {
+		$Order->add_log( qq`Allocated $quantity$$PA{units} of <a href="/employee/inventory/paper_details.html?paper_id=$$self{'id'}">` . $self->to_string().'</a>');
+	} # end if
+	if ( $$self{available_to_order} > 1 ) {
+		$$self{available_to_order} -= $quantity;
+	} # end if		
 	$self->save();
 	delete $$self{available};
 	return $PA;

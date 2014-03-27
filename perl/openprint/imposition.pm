@@ -462,10 +462,20 @@ $openprint::log->debug("Not Pretrimming on $$Press{strid}") if DEBUG;
 	if ( $$specs{'Maximum Image Area Length'} and ( ( $adjusted_paper_height <= 0 ) or ( $adjusted_paper_height > $$specs{'Maximum Image Area Length'} ) ) ) {
 		$openprint::log->debug("*** Using Max Image Length1: Before: $adjusted_paper_height After: $$specs{'Maximum Image Area Length'}***") if DEBUG;
 		$adjusted_paper_height = $$specs{'Maximum Image Area Length'};
+		$adjusted_paper_height += ( $bleed_size - $$specs{'CropMarkSpace'} ) if $bleed_locations{Top}; # Can bleed outside the image area
+		$adjusted_paper_height += ( $bleed_size - $$specs{'CropMarkSpace'} ) if $bleed_locations{Bottom}; # Can bleed outside the image area
 	} # end if
 
 	if ( $$specs{'Colour Bar Orientation'} ne 'Length' ) {
-		$adjusted_paper_height -= $$setup1{colour_bar_size};
+
+		# if colour bar is at bottom, 
+		my $colour_bar = $$setup1{colour_bar_size};
+		$colour_bar -= $bleed_size  if $bleed_locations{Top};
+		$colour_bar -= $bleed_size  if $bleed_locations{Bottom};
+		$colour_bar = 0 if $colour_bar < 0;
+		
+		
+		$adjusted_paper_height -= $colour_bar;
 	} # end if
 
 	if ( $Paper->cuttable() ) {
