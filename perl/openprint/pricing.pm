@@ -1,6 +1,6 @@
 use strict;
 package openprint::pricing;
-use Memoize;
+#use Memoize;
 
 require openprint::pricelist;
 require openprint::priceset;
@@ -10,7 +10,7 @@ use vars qw( $log $dbh );
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
 
-use constant DEBUG => 1;
+use constant DEBUG => 0;
 
 my %price_cache;
 

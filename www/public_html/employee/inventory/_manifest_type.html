@@ -65,7 +65,7 @@
 			<input style="display: none;" type="text" id="txtManufacturer-<?type_id?>" name="txtManufacturer-<?type_id?>" />
 		</p>
 		<p id="Brand-<?type_id?>_div">
-			<label for="txtBrand-<?type_id?>" onclick="$('Brand-<?type_id?>');$('txtBrand-<?type_id?>').toggle();">Brand</label>
+			<label for="txtBrand-<?type_id?>" onclick="$('Brand-<?type_id?>').toggle();$('txtBrand-<?type_id?>').toggle();">Brand</label>
 			<select id="Brand-<?type_id?>" name="Brand-<?type_id?>" size="1" onchange="Brand_onChange(this,'-<?type_id?>');">
 				<option value="">select</option>
 			<? echo (
@@ -81,7 +81,7 @@
 					make_drop_down( openprint::StockFinish->dropdown('order'=>'lower(name)'), $param{'Finish-'.$$variable{'type_id'}} );
 				) ?>
 			</select>
-			<input style="display: none;" type="text" id="txtFinish-<?type_id?>" name="txtFinish-<?type_id?>" />
+			<input style="display: none;" type="text" id="txtFinish-<?type_id?>" name="txtFinish-<?type_id?>" onkeyup="$('Finish-<?type_id?>').selectedIndex=0;"/>
 		</p><p id="Colour-<?type_id?>_div">
 			<label for="txtColour-<?type_id?>" onclick="$('Colour-<?type_id?>').toggle();$('txtColour-<?type_id?>').toggle();">Colour</label>
 			<select id="Colour-<?type_id?>" name="Colour-<?type_id?>" size="1" onchange="Colour_onChange(this,'-<?type_id?>');">

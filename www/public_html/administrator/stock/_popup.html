@@ -14,11 +14,11 @@
 					<th class="Markup">Mark up</th>
 					<th class="Price">Price CWT</th>
 					<th class="Discount">Discount?</th>
-					<th>
-<? echo ( ssi::writeButton( $log, $dbh, 'add', 'add.gif',"\$('num_prices').value=1+parseInt(\$('num_prices').value);new Ajax.Request('_popup_price.html?pricelist_id=$$variable{Pricelist}{id}&id='+\$('num_prices').value, { method: 'get', onSuccess: function(response){new Insertion.Bottom(\$('Prices'), response.responseText);} } );",'','Add' ); ) ?>
+					<th class="buttons">
+<? echo ( button( 'add', { onclick=>"\$('num_prices').value=1+parseInt(\$('num_prices').value);new Ajax.Request('_popup_price.html?pricelist_id=$$variable{Pricelist}{id}&id='+\$('num_prices').value, { onSuccess: function(response){new Insertion.Bottom(\$('Prices'), response.responseText);} } );", text=>'Add' } ); ) ?>
 					</th>
 				</tr>
-				<? echo ( $param{'id'} = 1; $param{'pricelist_id'}=$$variable{'Pricelist'}->id(); return ssi::include( $ENV{'DOCUMENT_ROOT'}.'/administrator/paper/_popup_price.html', $variable ); ) ?>
+				<? echo ( $param{id} = 1; $param{pricelist_id}=$$variable{Pricelist}->id(); return include( '/administrator/stock/_popup_price.html' ); ) ?>
 			</table>
 		</p>
 		<? endwhile ( $$variable{'Pricelist'} = shift @{$$variable{'Pricelists'}}; ) ?>
@@ -28,16 +28,16 @@
 			To add, put a + in front.  To subtract, put a - in front.  To set, don't put anything in front.
 			<table>
 				<tr>
-					<td>Add Amount</td><td>$<input id="amount" type="text" name="amount" onkeyup="this.value=this.value.replace(/[^\.\d\+\-]/,'');$('modemodify').checked=true;" /></td>
-					<td>Markup</td><td><input id="markup" type="text" name="markup" onkeyup="this.value=this.value.replace(/[^\.\d\+\-]/,'');$('modemodify').checked=true;" />%</td>
+					<td>Add Amount</td><td>$<? echo ( input( id=>'amount', type=>'float', name=>'amount', onkeyup=>q`$('modemodify').checked=true;` ) ) ?></td>
+					<td>Markup</td><td><? echo ( input( id=>'markup', type=>'float', name=>'markup', onkeyup=>q`$('modemodify').checked=true;` ) ) ?>%</td>
 				</tr>
 			</table>
 		</p>
 	</fieldset>
 	<p class="buttons">
 		<? echo ( join('',
-			ssi::writeButton( $log, $dbh, 'apply', 'apply.gif', q`$('f1').submit();`, '', 'Apply' ),
-			ssi::writeButton( $log, $dbh, 'cancel', 'cancel.gif', 'popupWin.destroy();', '', 'Cancel' ),
+			button( 'apply', { onclick=>q`$('f1').submit();`, text=>'Apply' } ),
+			button( 'cancel', { onclick=>'popupWin.destroy();', text=>'Cancel' } ),
 		); ) ?>
 	</p>
 </form>

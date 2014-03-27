@@ -189,6 +189,7 @@ sub signature_calc {
 	} # end if
 
 	# Start with 2 and try to figure it out
+	my @printed_impositions;
 	my $imposition = 2;
 	$$specs{"txtPockets$qty_index"} = 0;
 	my $Folding_Equipment = new openprint::Equipment( $$folding_specs{"ddmEquipment-$$sig_specs{SignatureIndex}-$qty_index"} );
@@ -206,6 +207,7 @@ $I->display('In Stitching:') if DEBUG;
 			}
 			next;
 		}
+		push @printed_impositions, $I->imposition();
 		my %pages;
 		my $sig_pages = $I->pages();
 		if ( $folding_specs ) {
@@ -334,6 +336,7 @@ $openprint::log->debug("Ignoring folding due to override");
 	} # end if
 $results{'Breakdown'} .= 'Imposition: ' . $imposition . 'out<br/>';
 
+	@printed_impositions = sets::union( @printed_impositions );
 	my %error;
 	my @equipment = ();
 
@@ -370,13 +373,24 @@ $results{'Breakdown'} .= 'Imposition: ' . $imposition . 'out<br/>';
 					next;
 				} # end if
 			} # end if
-			my $max_spine_length = $Equipment->specification('Maximum Spine Length', $$specs{'Imposition'.$qty_index} );
+
+			my $type = $Equipment->specification('Type');
+			$openprint::log->debug("Printed impo: @printed_impositions, sitched: $imposition type: $type $$Equipment{strid}");
+			if ( $type eq 'Press' and @printed_impositions > 1 ) {
+				$results{'Breakdown'} .= sprintf('Printed and stitched imposition must match.<br/>');
+				next;
+			} # end if
 			my $max_imp = $Equipment->specification("Maximum $$ServiceType{name} Imposition");
 			if ( $max_imp and ( $max_imp < $imposition ) ) {
 				$results{'Breakdown'} .= sprintf('Imposition too big.  This press only does ' . $max_imp . 'out.<br/>');
+				if ( $Equipment->specification('Type') eq 'Press' ) {
+					last;
+				} else {
 				next;
+				} # end if
 			} # end if
 
+			my $max_spine_length = $Equipment->specification('Maximum Spine Length', $$specs{'Imposition'.$qty_index} );
 			if ( $max_spine_length and ( $$specs{'Height'} > $max_spine_length ) ) {
 				$results{'Breakdown'} .= sprintf('Spine Too big. Spine: %s, Maximum: %s<br/>', $$specs{'Height'}, $max_spine_length );
 				next;
