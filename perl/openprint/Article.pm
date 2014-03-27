@@ -10,7 +10,7 @@ use vars qw( $debug $table $serial %fields %defaults %transforms %config $log $d
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
 
-$debug = 0;
+$debug = 1;
 
 $table = 'articles';
 $serial = 'articles_id_seq';
@@ -181,21 +181,21 @@ sub html {
 	my @Assets = $Article->Assets();
 	my $html = sprintf(q`
 			<div class="Article">
-			<div class="Assets">%8$s</div>
+			<div class="Assets">%3$s</div>
 			<h1><a href="/article/view.html?article_id=%1$d">%2$s</a></h1>
-			%6$s
-			Posted on %7$s by %5$s<br/>
-			<div class="source_content">%3$s</div>
-			<div class="summary">%4$s</div>
-			`, $Article->id(),
-			ssi::escape_quotes($Article->title()),
+			%4$s
+			posted on %5$s`, $Article->id(), ssi::escape_quotes($Article->title()), join('',map { $_->thumbnail_html() } ( @Assets ? $Assets[0] : () ) ),
+			($Article->anonymous() ? '' : $Article->Author()->thumbnail_html() ),
+			ssi::format_datetime( $Article->published_on() ),
+			);
+			if ( $Article->anonymous() ) {
+				$html .= ' by an Anonymous Contributor';
+			} elsif ( $Article->author_id() ) {
+				$html .= ' by ' . $Article->Author()->link();
+			} # end if
+	$html .= sprintf(q`<br/><div class="source_content">%1$s</div><div class="summary">%2$s</div>`,
 			$Article->source_content(),
 			($Article->summary() ? $Article->summary() : $Article->body() ),
-			($Article->anonymous() ? 'Anonymous Sexy Contributor' : $Article->Author()->link() ),
-			($Article->anonymous() ? '' : $Article->Author()->thumbnail_html() ),
-			( $Article->published() ? Date::Format::time2str($openprint::config{'DateTimeFormat'}, Date::Parse::str2time( $Article->published_on() ) ) : '' ),
-			join('',map { $_->thumbnail_html() } ( @Assets ? $Assets[0] : () ) ),
-
                 );
 	if ( $Article->source() ) {
 		$html .= sprintf('<a class="source" href="%1$s" target="_blank" title="Original Article">%1$s</a>', $Article->source() );

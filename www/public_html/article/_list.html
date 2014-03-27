@@ -23,7 +23,7 @@
 			( $session{'/article/list.html?category'} ? ( category =>	$session{'/article/list.html?category'} ) : () ),
 			order	=> 'published_on DESC',
 			limit	=>	$session{'/article/list.html?paging_per_page'}+1,
-			offset	=>	$session{'/article/list.html?paging_per_page'} * $session{'/article/list.html?paging_page'},
+			( $param{paging_page} ? ( offset	=>	$session{'/article/list.html?paging_per_page'} * $param{'paging_page'} ) : () ),
 			) ) {
 			push @Articles, $Article;
 		} # end foreach Article
@@ -44,7 +44,7 @@
 	} # end foreach Article
 
 	if ( $Extra ) {
-		$html .= button( 'More', { 'onclick'=>q`$('ButtonMore').remove();new Ajax.Updater( 'Articles','_list.html', { parameters: { paging_page: `.($session{'/article/list.html?paging_page'}+1).' }, insertion: Insertion.Bottom } );' } );
+		$html .= button( 'More', { 'onclick'=>q`$('ButtonMore').remove();new Ajax.Updater( 'Articles','_list.html', { parameters: { paging_page: `.($param{paging_page}+1).' }, insertion: Insertion.Bottom } );' } );
 	} # end if
 	return $html;
 ) ?>
