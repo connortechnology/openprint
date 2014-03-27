@@ -758,6 +758,14 @@ sub add_inventory {
 sub allocate {
 	my ( $self, $skid_id, $docket, $quantity, $units, $condition_id ) = @_;
 
+	my $Order;
+	if ( ref $docket eq 'openprint::Order' ) {
+		$Order = $docket;
+		$docket = $$Order{docket};
+	} elsif ( $docket ) {
+		$Order = openprint::Order->find_one( docket => $docket );
+	} # end i
+
 	my $skids;
 	if ( ref $skid_id eq 'openprint::Skid' ) {
 		$skids = [ $skid_id->id() ];
@@ -777,13 +785,12 @@ sub allocate {
 			operator_id		=>	$openprint::session{user_id},
 			condition_id	=>	$condition_id,
 			} );
-	if ( $docket ) {
-		my $Order = openprint::Order->find_one( docket => $docket );
-		if ( $Order ) {
-			$Order->add_log( qq`Allocated $quantity$$PA{units} of <a href="/employee/inventory/paper_details.html?paper_id=$$self{'id'}">` . $self->to_string().'</a>');
-		} # end if
-	} # end if project_id
-
+	if ( $Order ) {
+		$Order->add_log( qq`Allocated $quantity$$PA{units} of <a href="/employee/inventory/paper_details.html?paper_id=$$self{'id'}">` . $self->to_string().'</a>');
+	} # end if
+	if ( $$self{available_to_order} > 1 ) {
+		$$self{available_to_order} -= $quantity;
+	} # end if		
 	$self->save();
 	delete $$self{available};
 	return $PA;

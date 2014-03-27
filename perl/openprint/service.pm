@@ -283,21 +283,24 @@ require openprint::Estimating::Stitching;
 	require openprint::Estimating::Tipping;
 	if ( openprint::Estimating::Tipping::neccessary( $Project ) ) {
 		if ( ! $$services{'Tipping'} ) {
-			push @{$$services{'Tipping'}}, $Project->add_service( 'Tipping' );
+			$_ = $Project->add_service( 'Tipping' );
+			push @{$$services{'Tipping'}}, $_ if $_;
 		} # end if
 	} # end if
 
 	require openprint::Estimating::Blowing;
 	if ( openprint::Estimating::Blowing::neccessary( $Project ) ) {
 		if ( ! $$services{'Blowing'} ) {
-			push @{$$services{'Blowing'}}, $Project->add_service( 'Blowing' );
+			$_ = $Project->add_service( 'Blowing' );
+			push @{$$services{'Blowing'}}, $_ if $_;
 		} # end if
 	} # end if
 
 	require openprint::Estimating::Collating;
 	if ( openprint::Estimating::Collating::neccessary( $Project ) ) {
 		if ( ! $$services{'Collating'} ) {
-			push @{$$services{'Collating'}}, $Project->add_service( 'Collating' );
+			$_ = $Project->add_service( 'Collating' );
+			push @{$$services{'Collating'}}, $_ if $_;
 		} # end if
 	} else {
 		if ( $$services{'Collating'} ) {

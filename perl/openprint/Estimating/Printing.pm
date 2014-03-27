@@ -1282,11 +1282,11 @@ sub get_impositions($$$$$$$$) {
 				next;
 			} # end if
 
-			if ( $$Paper{'type'} eq 'Roll' ) {
+			if ( $$Paper{type} eq 'Roll' ) {
 				
-				$$project{'Runstyles'} = $runstyles_roll;
-				next if $$Paper{'width'} > $maximum_sheet_width;
-				next if $maximum_roll_width and ( $$Paper{'width'} > $maximum_roll_width );
+				$$project{Runstyles} = $runstyles_roll;
+				next if $$Paper{width} > $maximum_sheet_width;
+				next if $maximum_roll_width and ( $$Paper{width} > $maximum_roll_width );
 #$openprint::log->debug('blah'.$Paper->to_string());
 				if ( $roll2sheet_minimum_weight and $feeds{'Sheet'} ) {
 					if ( $$roll2sheet_minimum_weight{'units'} eq 'gsm' and $$roll2sheet_minimum_weight{'value'} > $Paper->gsm() ) {
@@ -1304,13 +1304,14 @@ sub get_impositions($$$$$$$$) {
 						$$project{'Cut Off'} = $cut_off;
 						foreach my $i ( openprint::imposition::get_imposition( $project, $do_work_turn, $do_perfecting, $$specs{'Versions'}, $P, $Press ) ) {
 #$i->display('doig');
-							my $key = join( ',', @$i{'imposition','runstyle','grain_direction'} );
+							my $key = join( ',', @$i{'imposition','columns','runstyle','grain_direction'} );
 							if ( ! $paper_impositions{$key} ) {
 								push @{$paper_impositions{$key}}, $i;
 							} else {
 								my $add = 1;
 								if ( ! $do_initial_filtering ) {
 								} elsif ( ( defined $$specs{'OverrideCutOff'.$qty_index} ) and ( $$P{height} == $$specs{"CutOff$qty_index"} ) and ( $$specs{'OverrideCutOff'.$qty_index} eq 'Y' ) ) {
+									# Shouldn't really do this here.
 								} else {
 								
 									my $iarea = $i->Paper()->area();
@@ -1320,16 +1321,20 @@ sub get_impositions($$$$$$$$) {
 										next if ( (defined $$specs{'OverrideCutOff'.$qty_index} ) and ( $$specs{'OverrideCutOff'.$qty_index} eq 'Y' ) and ( $$B{height} == $$specs{"CutOff$qty_index"} ) );
 										my $jarea = $j->Paper()->area();
 										if ( $iarea < $jarea ) {
-	#$j->display('1 dumping');
-	#$i->display('1 for');
+if ( DEBUG_INITIAL_FILTERING ) {
+	$j->display('1 dumping');
+	$i->display('1 for');
+}
 											splice @{$paper_impositions{$key}}, $imp_index, 1;
 											$imp_index -= 1;
 	#$i->display('1 for');
 										} elsif ( $jarea < $iarea ) {
+if ( DEBUG_INITIAL_FILTERING ) {
+	$i->display('2 dumping');
+	$j->display('2 for');
+}
 											$add = 0;
 											last;
-	#$i->display('2 dumping');
-	#$j->display('2 for');
 										} # end if
 									} # end for
 								} # end if
@@ -1436,6 +1441,9 @@ sub get_impositions($$$$$$$$) {
 					my $key = join(',',@$i{'imposition','runstyle','image_orientation'});
 					if ( ! $imps{$key} ) {
 						$imps{$key} = [ $i ];
+if ( DEBUG_INITIAL_FILTERING ) {
+$i->display("STARTING");
+}
 						next;
 					} # end if
 					my $add = 1;
@@ -1446,9 +1454,15 @@ sub get_impositions($$$$$$$$) {
 							my $B = $imps{$key}[$imp_index];
 							my $Barea = $B->Paper()->area();
 							if ( $Aarea < $Barea ) {
+if ( DEBUG_INITIAL_FILTERING ) {
+$B->display("DROPPING");
+}
 								splice @{$imps{$key}}, $imp_index, 1;
 								$imp_index -= 1;
 							} elsif ( $Aarea > $Barea ) {
+if ( DEBUG_INITIAL_FILTERING ) {
+$i->display("NOT ADDING");
+}
 								$add = 0;
 								last;
 							} # end if
@@ -1565,7 +1579,8 @@ $imp->display('Comparing A QTY $' . $$imp{PaperPrice}{'100lb Price'}. " for $a_s
 
                     if ( $$Overrides{'chkOverrideSheetSize'.$qty_index} and 
 							sets::isin( $$B{width}, $$Overrides{"OverrideStockWidth$qty_index"}) and 
-							sets::isin( $$B{height}, $$Overrides{"OverrideStockHeight$qty_index"} )) {
+							( $B->type() eq 'Roll' or sets::isin( $$B{height}, $$Overrides{"OverrideStockHeight$qty_index"} ) ) 
+					   ) {
                         last;
                     } elsif ( ( $$Overrides{'OverrideCutOff'.$qty_index} eq 'Y' ) and sets::isin( $$B{height}, $$Overrides{"CutOff$qty_index"} ) ) {
                         last;

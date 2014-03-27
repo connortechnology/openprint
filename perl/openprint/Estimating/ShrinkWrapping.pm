@@ -262,11 +262,11 @@ sub summary {
         } # end if
     } elsif ( $$specs{txtItemsPerPackage} ) {
         $text .= $$specs{txtItemsPerPackage} . ' items';
-        if ( $$specs{'ServiceType'} =~ /Wrap/i ) {
+        if ( $$specs{ServiceType} =~ /Wrap/i ) {
             $text .= ' per wrap';
-        } elsif ( $$specs{'ServiceType'} =~ /Bundling/i ) {
+        } elsif ( $$specs{ServiceType} =~ /Bundling/i ) {
             $text .= ' per bundle';
-        } elsif ( $$specs{'ServiceType'} =~ /Banding/i ) {
+        } elsif ( $$specs{ServiceType} =~ /Banding/i ) {
             $text .= ' per band';
 			$text .= sprintf(' %d bands each', $$specs{'bands_per_package'} ) if $$specs{'bands_per_package'};
         } # end if
