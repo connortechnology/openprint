@@ -39,6 +39,7 @@ $serial = 'orders_id_seq';
 	cod_percent				=>	'cod_percent',
 	downpayment_percent		=>	'downpayment_percent',
 	created_on				=> 'created_on',
+	updated_on				=>	'updated_on',
 	company_name			=> 'company_name',
 	salutation				=> 'salutation',
 	firstname				=> 'firstname',
