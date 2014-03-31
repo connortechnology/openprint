@@ -708,7 +708,7 @@ $log->debug("Undefing $object_type $cache_field $$params{$cache_field}") if DEBU
 	if ( $$params{'order'} ) {
 		$sql .= " ORDER BY $$params{'order'}";
 	} # end if
-	if ( $$params{'group'} ) {
+	if ( $$params{'group by'} ) {
 		$sql .= " GROUP BY $$params{'group'}";
 	} # end if
 	if ( exists $$params{'limit'} ) {
