@@ -739,7 +739,7 @@ if ( ! sets::isin( 'orders', \@tables ) ) {
 		$dbh->do('ALTER TABLE orders rename column index to id');
 	} # end if
 	$dbh->do('ALTER TABLE Orders ADD paid NUMERIC(10,2)') if ( ! exists $$data{'paid'} );
-	$dbh->do('UPDATE Orders set paid=(SELECT SUM(amount) From Invoices_Payments WHERE order_id=orders.id)');
+	$dbh->do('UPDATE Orders set paid=(SELECT SUM(amount) From Payments WHERE order_id=orders.id)');
 	$dbh->do('ALTER TABLE Orders ADD owing NUMERIC(10,2)') if ( ! exists $$data{'owing'} );
 	$dbh->do('UPDATE orders SET owing=total-paid');
 	if ( ! exists $$data{terms_accepted} ) {
