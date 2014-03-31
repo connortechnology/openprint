@@ -81,7 +81,24 @@ my @no_outputs = (
 );
 
 sub no_outputs {
-return @no_outputs;
+	my ( $p_id, $s_id, $outgoing_specs, $incoming_specs ) = @_;
+	my @v = @no_outputs;
+
+	my $Project = new openprint::Project( $p_id );
+    foreach my $s_s_id ( $Project->signatures() ) {
+        my $sig_specs = openprint::service::get_specs_ref( $Project, $s_s_id );
+		foreach my $qty_index ( $Project->quantity_indexes() ) {
+			if ( $$outgoing_specs{"chkOverrideFold-$$sig_specs{'SignatureIndex'}-$qty_index"} eq 'Y' ) {
+				foreach my $fold_index ( 1 .. 4 ) {
+					
+					if ( $$incoming_specs{"FoldRunspeed-$$sig_specs{'SignatureIndex'}-$qty_index-$fold_index"} ) {
+						push @v, "FoldRunspeed-$$sig_specs{'SignatureIndex'}-$qty_index-$fold_index";
+					} # end if
+				} # end foraech fold
+			} # end if override
+		} # end foreach qty
+	} # end foreach sig
+	return @v;
 } # end sub outputs
 sub outputs {
 } # end sub outputs
@@ -1315,13 +1332,13 @@ $openprint::log->debug("Folds: $set_index : $key " . $impo_qty );
 				} # end if
 
 # In hours
-				my $runspeed = $Fold->runspeed($$Paper{'gsm'});
+				my $runspeed = int($Fold->runspeed($$Paper{gsm}));
 				my $runTime; 
 				if ( ! $runspeed ) {
 					$Breakdown .= "No runspeed for $fold_type(".$$Fold{name}.") on " . $$Equipment{name} .' Setting to 1/Hr.<br/>';
 					$runspeed = 1;
 				} else {
-					$runTime = Math::Round::nearest( 0.0001, $run_qty / $runspeed ); # in hours
+					$runTime = Math::Round::nearest( 0.0001, $run_qty / $runspeed ) if $runspeed; # in hours
 					$Breakdown .= sprintf('Runspeed: %d @ %d/HR = %d:%d:%d<br/>', $run_qty, $runspeed, misc::seconds_to_interval( int( 3600*$runTime ) ) );
 				} # end if
 $openprint::log->debug("Runspeed: $fold_type(".$Fold->name().") : " . $Equipment->name() . ' ' . $runspeed .' ' . $Paper->gsm() ) if DEBUG;
