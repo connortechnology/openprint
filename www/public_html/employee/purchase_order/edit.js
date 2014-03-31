@@ -43,7 +43,8 @@ function calc_price( element ) {
 	var matches = re.exec( element.name );
 	if ( matches ) {
 		var index = matches[2];
-		$('price-'+index).value = $('price-'+index).value.replace(/[^\d\-\.]/g, '' );
+		floatize( $('price-'+index) );
+		//$('price-'+index).value = $('price-'+index).value.replace(/[^\d\-\.]/g, '' );
 		re =  /^\s*(\+|-)?((\d+(\.\d+)?)|(\.\d+))\s*$/;
 		if ( ! re.test($('price-'+index).value) ) { $('price-'+index+'-alert').innerHTML = 'Not a valid price!';
 		} else { $('price-'+index+'-alert').innerHTML = ''; }

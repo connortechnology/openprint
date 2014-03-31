@@ -78,7 +78,7 @@
 				input( type=>'float', class=>'SheetMWeight', name=>'mweight-'.$$C{id}, id=>'mweight-'.$$C{id}, value=>$mweight, onkeyup=>"calc_price(this);set_item('$$C{id}');filter_items($$C{id},$$C{type_id},this);if(this.value!=this.defaultValue){\$('line-$$C{id}').addClassName('changed');}else{\$('line-$$C{id}').removeClassName('changed');}"),
 			escape_quotes($name), CGI::escapeHTML( $C->description() ), make_drop_down( [ '', 'Normal','FSC', 'FSC','PEFC/SFI', 'PEFC/SFI' ], $type ),
 			$C->docket(), $C->po_id(),
-		input( type=>'float', class=>'StockCost', name=>'price-'.$C->id(),id=>'price-'.$C->id(), value=>$C->price(),onkeyup=>"calc_price(this);if(this.value!=this.defaultValue){\$('line-$$C{id}').addClassName('changed');}", onkeydown=>'this.lastValue = this.value;return check_decimal(this,event);' ),
+		input( type=>'float', class=>'StockCost', name=>'price-'.$C->id(),id=>'price-'.$C->id(), value=>$C->price(),onkeyup=>"calc_price(this);if(this.value!=this.defaultValue){\$('line-$$C{id}').addClassName('changed');}", onkeydown=>'this.lastValue = this.value;return check_decimal(this,event);', step=>'0.01' ),
 		input( type=>'float', class=>'StockCost', name=>'mprice-'.$C->id(),id=>'mprice-'.$C->id(), value=>$C->mprice(),onkeyup=>"calc_price(this);if(this.value!=this.defaultValue){\$('line-$$C{id}').addClassName('changed');}", onkeydown=>'this.lastValue = this.value;return check_decimal(this,event);' ),
 		input( type=>'float', name=>'total-'.$C->id(),id=>'total-'.$C->id(), value=>$C->total(),onkeyup=>"calc_price(this);", onkeydown=>'this.lastValue=this.value;return check_decimal(this,event);' ),
 			make_drop_down( [ 
