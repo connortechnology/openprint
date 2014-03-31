@@ -181,16 +181,16 @@ Please select a company or user to obtain login information.<br/>
 						<? echo ( radio( 'ftp_active', [ '1', 'Yes', '0', 'No' ], $$variable{User}->ftp_active() ); ) ?>
 					</li>
 					<li class="ftp_root">
-						<label>Limit FTP access to this folder:</label>
+						<label>Limit FTP access to this folder</label>
 						<? echo ( input( type=>'text', name=>'ftp_root', id=>'ftp_root', value=>$$variable{User}->ftp_root() ); ) ?>
 					</li>
 					<li> 
 						<label>Custom Greeting</label>
-						<textarea id="greeting" name="greeting" rows="<? echo ( ssi::count_lines( $$variable{User}->greeting() ); ) ?>" onkeyup="textarea_resize(this);"><? echo ( $$variable{User}->greeting() ) ?></textarea>
+						<textarea id="greeting" name="greeting" rows="<? echo ( count_lines( $$variable{User}->greeting() ); ) ?>" onkeyup="textarea_resize(this);"><? echo ( $$variable{User}->greeting() ) ?></textarea>
 					</li>
 					<li>
 						<label>Notes</label>
-						<textarea id="notes" name="notes" rows="<? echo ( ssi::count_lines( $$variable{User}->notes() ); ) ?>" onkeyup="textarea_resize(this);"><? echo ( $$variable{User}->notes() ) ?></textarea>
+						<textarea id="notes" name="notes" rows="<? echo ( count_lines( $$variable{User}->notes() ); ) ?>" onkeyup="textarea_resize(this);"><? echo ( $$variable{User}->notes() ) ?></textarea>
 					</li>
 					<li><label>Created</label>
 						<? echo ( format_datetime( $$variable{User}->created_on() ); ) ?>
@@ -280,7 +280,7 @@ Please select a company or user to obtain login information.<br/>
 				my $html;
 				my @UserGroups = map { $_->id() } $$variable{User}->Groups();
 				foreach my $Group ( openprint::UserGroup->find( 'order'=>'lower(name)' ) ) {
-					$html .= sprintf('<li><input type="checkbox" id="UserGroups%1$d" name="UserGroups" value="%1$d" %3$s /><label for="UserGroups%1$d">%2$s</label></li>', $Group->id(), $Group->name(), ssi::checked( sets::isin( $Group->id(), \@UserGroups ) ) );
+					$html .= sprintf('<li><input type="checkbox" id="UserGroups%1$d" name="UserGroups" value="%1$d" %3$s /><label for="UserGroups%1$d">%2$s</label></li>', $Group->id(), $Group->name(), checked( sets::isin( $Group->id(), \@UserGroups ) ) );
 				} # end foreach
 				return $html;
 			) ?>
@@ -353,9 +353,9 @@ Please select a company or user to obtain login information.<br/>
 					</li>
 					<li> 
 						<label>User must change password on next login?</label>
-						<input type="radio" id="change_passwordY" name="change_password" <? echo ( ssi::checked( $$variable{User}->change_password() eq 'Y' ); ) ?> value="Y"/>
+						<input type="radio" id="change_passwordY" name="change_password" <? echo ( checked( $$variable{User}->change_password() eq 'Y' ); ) ?> value="Y"/>
 						<label for="change_passwordY" class="radio">Yes</label>
-						<input type="radio" id="change_passwordN" name="change_password" <? echo ( ssi::checked( $$variable{User}->change_password() ne 'Y' ); ) ?> value="N"/>
+						<input type="radio" id="change_passwordN" name="change_password" <? echo ( checked( $$variable{User}->change_password() ne 'Y' ); ) ?> value="N"/>
 						<label for="change_passwordN" class="radio">No</label>
 					</li>
 				</ul>
