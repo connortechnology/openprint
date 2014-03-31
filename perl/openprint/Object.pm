@@ -483,9 +483,9 @@ $log->debug("find_operators: field($field) type($type) op($operator) value($valu
 		return '('.$field.$type.' IS NULL OR '.$field.$type.' <= ?)', $value;
 	} elsif ( $operator eq 'null_or_>=' ) {
 		return '('.$field.$type.' IS NULL OR '.$field.$type.' >= ?)', $value;
-	} elsif ( $operator eq 'null_or_>' ) {
+	} elsif ( $operator eq 'null_or_>' or $operator eq 'is null or >' ) {
 		return '('.$field.$type.' IS NULL OR '.$field.$type.' > ?)', $value;
-	} elsif ( $operator eq 'null_or_<' ) {
+	} elsif ( $operator eq 'null_or_<' or $operator eq 'is null or <' ) {
 		return '('.$field.$type.' IS NULL OR '.$field.$type.' < ?)', $value;
 	} elsif ( $operator eq 'null_or_=' or $operator eq 'is null or =' ) {
 		return '('.$field.$type.' IS NULL OR '.$field.$type.' = ?)', $value;
