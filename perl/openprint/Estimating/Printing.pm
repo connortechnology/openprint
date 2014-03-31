@@ -195,8 +195,10 @@ my %variables = (
 	'BleedLeft' => ['save'], 'BleedRight' => ['save'], 'BleedTop' => ['save'], 'BleedBottom' => ['save'],
 	'rdbColourBar' => ['save','output'], 'txtCropMarkSpace' => ['save'],
 	'ddmStockQuality'	=>	['save'],
-	'ddmStockBrand' => ['save'], 'txtSpecificStockBrand' => ['save'], 'ddmStockFinish' => ['save'], 'txtSpecificStockFinish' => ['save'], 'ddmStockColour' => ['save'], 'txtSpecificStockColour' => ['save'],
-
+	'ddmStockGroup'	=>	['save'],
+	'ddmStockBrand' => ['save'], 'txtSpecificStockBrand' => ['save'], 
+	'ddmStockFinish' => ['save'], 'txtSpecificStockFinish' => ['save'], 
+	'ddmStockColour' => ['save'], 'txtSpecificStockColour' => ['save'],
 	'ddmStockWeight' => ['save'], 'txtSpecificStockWeight'=>['save'],
 	'txtSpecificStockCalliper' => ['save','output'], 'txtSpecificStockWidth' => ['save'], 'txtSpecificStockHeight' => ['save'], 'CustomSheetDoubleSided' => ['save'], 'CustomStockPrice' => ['save'],'txtCustomMWeight' => ['save'],'txtStockGSM' => ['save','output'],
 	'perfecting'=>['save'],
@@ -860,6 +862,7 @@ sub get_Stocks {
 			@$specs{'ddmStockWidth','ddmStockHeight'} = $$specs{'ddmStockSize'} =~ /^([\d\.]+)"?\s*x?\s*([\d\.]+)?"?\s*$/;
 		}
 		@Papers = openprint::Paper->find( 
+				( exists $$specs{'ddmStockGroup'} ? ( group=> $$specs{'ddmStockGroup'} ) : () ),
 				( exists $$specs{'ddmStockBrand'} ? ( 'brand'=> $$specs{'ddmStockBrand'} ) : () ),
 				( exists $$specs{'ddmStockFinish'} ? ( 'finish'=>$$specs{'ddmStockFinish'} ) : () ),
 				( exists $$specs{'ddmStockColour'} ? ( 'colour'=>$$specs{'ddmStockColour'} ) : () ),
@@ -4050,6 +4053,12 @@ $openprint::log->debug("Sheet No supplied wight: $supplied_sheets $paper_string 
 
 					$$paper_price{'Total'} = Math::Round::nearest( 0.01, $$paper_price{'100lb Price'} * $supplied_weight / 100 );
 					$$price{'Comparison Cost'} += $$paper_price{'Total'};
+					if ( $$Paper{available_to_order} > 1 ) {
+						if ( $$Paper{available_to_order} < ( $$Paper{type} eq 'Sheet' ? $supplied_sheets : $supplied_weight ) ) {
+							$$price{'Paper Breakdown'} .= $Supplied->to_string() . ' does not have enough available. Only ' . $$Paper{available_to_order} . $Paper->units() . ' left.<br/>';
+							$$price{'Comparison Cost'} += 1000000;
+						} # end if
+					} # end if
 					$$price{'Stock Total'} += $$paper_price{'Total'};
 					$openprint::log->error('No factor') if ! $Paper->factor();
 					$openprint::log->error('No width' . $Paper->to_string() ) if ! $Paper->width();
