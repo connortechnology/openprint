@@ -5,8 +5,16 @@ require openprint::Order;
 require openprint::order;
 require openprint::Payment;
 
+use vars qw( $r $log $dbh %variable %param %session %config );
+*r = \$openprint::r;
+*log = \$openprint::log;
+*dbh = \$openprint::dbh;
+*variable = \%openprint::variable;
+*session = \%openprint::session;
+*param = \%openprint::param;
+*config = \%openprint::config;
+
 sub view {
-	my ( $r, $log, $dbh, $variable ) = @_;
 
 	my $order_id = $openprint::param{'order_id'};
 	my $Order = new openprint::Order( $order_id );
@@ -16,7 +24,7 @@ sub view {
 	} elsif ( $openprint::param{'btnFunction'} eq 'Save Payment' ) {
 
 		if ( ( ! $openprint::param{'Amount'} ) or $openprint::param{'Amount'} =~ /[^-\$\d\.]/ ) {
-			return misc::error( $log, $dbh, $variable, 'Invalid Amount', 'Please enter a valid monetary amount.' );
+			return misc::error( $log, $dbh, \%variable, 'Invalid Amount', 'Please enter a valid monetary amount.' );
 		} # end if
 
 		my $Payment = new openprint::Payment();
@@ -30,12 +38,12 @@ sub view {
 				'completed'		=> 1,
 				} );
 		if ( $error ) {
-			return misc::error( $log, $dbh, $variable, 'Error Saving Payment', $error );
+			return misc::error( $log, $dbh, \%variable, 'Error Saving Payment', $error );
 		} # end if
 
-		openprint::order::get_misc( $variable, $Order );
+		openprint::order::get_misc( \%variable, $Order );
 
-		if ( $$variable{'DepositDue'} > 0 ) {
+		if ( $variable{'DepositDue'} > 0 ) {
 			foreach my $Project ( $Order->Projects() ) {
 				$Project->status('Pending Deposit');
 			} # end foreach Project
@@ -45,7 +53,7 @@ sub view {
 				$Project->status('In Production');
 			} # end foreach Project
 
-			if ( $$variable{'AmountPaid'} >= $$variable{'TOTAL'} ) {
+			if ( $variable{'AmountPaid'} >= $variable{'TOTAL'} ) {
 				$Order->status('Paid') if $Order->status() eq 'Complete';
 			} # end if
 			$Order->save();
@@ -64,11 +72,9 @@ sub view {
 	} elsif ( $openprint::param{'btnFunction'} eq 'Cancel' ) {
 		openprint::order::cancel_order( $order_id );
     } # end if
-	$$variable{'Order'} = $Order;
+	$variable{'Order'} = $Order;
     openprint::order::display_order( $order_id );
 } # end sub view
 
 1;
-
 __END__
-
