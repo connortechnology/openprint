@@ -53,7 +53,7 @@ $serial	= 'paper_id_seq';
 		'taxexempt1'	=>	'taxexempt1',
 		'taxexempt2'	=>	'taxexempt2',
 		'cuttable'		=>	'cuttable', 
-		'multipart'		=>	'mulipart', 
+		'multipart'		=>	'multipart', 
 		'doublesided'	=>	'doublesided', 
 		'perfecting'	=>	'perfecting', 
 		'score_required'	=>	'score_required',
@@ -85,6 +85,7 @@ $serial	= 'paper_id_seq';
 		'material_id'			=>	'material_id',
 		'user_type'				=>	'user_type',
 		manufacturers_name		=>	'manufacturers_name',
+		available_to_order		=>	'available_to_order',
 		);
 %find_fields = (
 		'manufacturer'	=>	'(SELECT name FROM manufacturers WHERE manufacturers.id=papers.manufacturer_id)',
@@ -97,17 +98,28 @@ $serial	= 'paper_id_seq';
 		'quality'	=>	'(SELECT name FROM stockqualities WHERE stockqualities.id=papers.quality_id)',
 		'size'		=>	q`width || '" x ' || height || '"'`,
 		'sheetsize'		=>	q`width || '" x ' || height || '"'`,
-		'allocated_to_docket'	=>	'(SELECT lngdocketnumber FROM projects WHERE projects.id IN ( SELECT project_id FROM paper_allocations WHERE paper_id = papers.id) )',
+		allocated_to_docket	=>	'(SELECT docket FROM paper_allocations WHERE paper_id = papers.id)',
 		'project_type_name'	=>	'(SELECT name FROM project_types WHERE id IN ( SELECT lngProjectTypeIndex FROM Paper_Recommendations WHERE lngPaperIndex = papers.id ) )',
 		'project_type_id'	=>	'(SELECT lngProjectTypeIndex FROM Paper_Recommendations WHERE lngPaperIndex = papers.id)',
 		'stock_settings_equipment_id'	=>	'(SELECT equipment_id FROM equipment_stock_settings WHERE stock_id=papers.id)',
 		);
 
 %transforms = (
+	id			=>	[ 's/\D//g', '<2147483647' ],
 	manufacturers_name => [ 's/^\s+//', 's/\s+$//', 's/\s\s+$/ /g' ],
+	gsm	=>	 [ 's/[^\d\.]//g' ],
 );
 
 %defaults = (
+	created_on	=>	q`'NOW()'`,
+	basis_width	=>	undef,
+	basis_height	=>	undef,
+	basis_mweight	=>	undef,
+	width		=>	undef,
+	height		=>	undef,
+	gsm			=>	undef,	
+	grade		=>	undef,
+	calliper	=>	undef,
 	allocated	=>	q`'0'`,
 	in_stock	=>	q`'0'`,
 	user_type	=>	q`''`,
@@ -115,6 +127,12 @@ $serial	= 'paper_id_seq';
 	die_score_required	=>	'0',
 	supplied		=>	undef,
 	multipart	=>	0,
+	sheets_per_package	=>	undef,
+	wpsi				=>	undef,
+	type				=>	q`''`,
+	manufacturer_id		=>	undef,
+	group_id			=>	undef,
+	available_to_order	=>	undef,
 );
 
 %grades = (
@@ -162,12 +180,15 @@ sub save {
 	$self->set($hash);
 	
 	if ( $$self{'group'} and ! $$self{'group_id'} ) {
-		my $Group = openprint::StockGroup->find_one('name lc'=>lc openprint::StockGroup->transform( 'name', $$self{'group'} ) );
+		my $Group = openprint::StockGroup->find_one('name lc'=>lc openprint::StockGroup->transform( 'name', $$self{group} ) );
 		if ( ! $Group ) {
-			my $Group = new openprint::StockGroup();
-			if ( $_ = $Group->save( {'name'=>$$self{'group'}} ) ) {
+			$Group = new openprint::StockGroup();
+			if ( $_ = $Group->save( { name=>$$self{group} } ) ) {
 				return $_;
 			} # end if
+		} # end if
+		if ( ! $Group ) {
+			return "Something odd happened saving the group. $$self{group}<br/>";
 		} # end if
 		@$self{'group_id','group'} = @$Group{'id','name'};
 	} # end if group_id
@@ -252,49 +273,17 @@ sub save {
 	
 	my $error;
 	$error .= 'An owner must be selected.<br/>' if ! $$self{'owner_id'};
-	$error .= 'A manufacturer must be selected.<br/>' if ! $$self{'manufacturer_id'};
+	# Why?
+	#$error .= 'A manufacturer must be selected.<br/>' if ! $$self{'manufacturer_id'};
 
 	return $error if $error;
 
-	my %sql = map { $_, $$self{$_} } keys %fields;
-	delete $sql{'created_on'};
-	
 	my $ac = sql::start_transaction( $openprint::dbh );
-	if ( ! $$self{'id'} ) {
-		@$self{'id'} = sql::execute( undef, undef, q{SELECT nextval('paper_id_seq')} );
-		$sql{'id'} = $$self{'id'};
-
-		$error = sql::insert( undef, undef, 'Papers', \%sql );
-
-		(new openprint::Log())->save({'action'=>'New Stock', 'note'=>'Paper ID: ' . $$self{'id'}});
-
-		if ( ! $error ) {
-
-			$variable{'Paper'} = $self;
-			if ( my $email_template = misc::load_file( $openprint::log, $config{'SkinPath'} . '/email_template.html' ) ) {
-				$variable{'ReplacementText'} = ssi::include( '/email_content/new_paper_notification.html', \%variable );
-				my $body = ssi::variable_substitution( \$email_template, \%variable );
-				my %mail = (
-						SMTP	=> $openprint::config{'Mail Server'},
-						FROM	=> $openprint::config{'InventoryEmail'},
-						TO	  => $openprint::config{'InventoryEmail'},
-						SUBJECT => 'A new paper has been added to inventory',
-						);
-				#misc::send_email_with_attachment( $openprint::log, \%mail, ( '', encode_qp($body), 'text/html', 'quoted-printable' ) );
-			} # end if
-		} else {
-			$$self{'id'} = undef;
-			sql::end_transaction( $openprint::dbh, $ac );
-			return $error;
-		} # end if
-
-	} else {
-		if ( $error = sql::update( undef, undef, 'Papers', ['id=?',$$self{'id'}], \%sql ) ) {
-			sql::end_transaction( $openprint::dbh, $ac );
-			return $error;
-		} # end if
-		# Add record to audit log - action "Update Paper".
-		(new openprint::Log())->save({'action'=>'Update Stock', 'note'=>'Paper ID: ' . $$self{'id'}});
+	$error = $self->SUPER::save();
+	if ( $error ) {
+		$openprint::dbh->rollback();
+		sql::end_transaction( $openprint::dbh, $ac );
+		return $error;
 	} # end if
 	sql::execute( undef, undef, q{DELETE FROM StockBrands WHERE id NOT IN (SELECT DISTINCT brand_id FROM Papers)} );
 	sql::execute( undef, undef, q{DELETE FROM StockFinishes WHERE id NOT IN (SELECT DISTINCT finish_id FROM Papers)} );
@@ -332,6 +321,7 @@ sub merge {
 	sql::update( undef, undef, 'paper_recommendations', [ 'lngpaperindex=?', $Duplicate->id() ], 'lngpaperindex', $self->id() );
 	sql::update( undef, undef, 'manifest_content_types', [ 'paper_id=?', $Duplicate->id() ], 'paper_id', $self->id() );
 	$Duplicate->delete();
+	$self->save({in_stock=>undef});
 	sql::end_transaction( $openprint::dbh, $ac );
 } # end sub merge
 
@@ -369,7 +359,7 @@ sub delete {
 	sql::execute( undef, undef, q{DELETE FROM StockMaterials WHERE id NOT IN (SELECT DISTINCT material_id FROM Papers)} );
 	
 	# Add record to audit log - action "Delete Paper".
-	openprint::logs::insertLogRecord('15', "Paper ID: " . $$self{'id'},);
+	new openprint::Log()->save({action=>'Delete Paper', note=>'Stock ID: '.$$self{'id'} });
 	sql::end_transaction( undef, $ac );
 	
 } # end sub delete
@@ -419,7 +409,7 @@ sub to_string {
 			} # end if
 			#$string .= $self->mweight().'M ' if $self->mweight();
 		} # end if
-		$string .= sprintf('%.1fPT ', 1000*$self->calliper()) if $self->calliper();
+		$string .= sprintf('%.1fPT ', 1000*$self->calliper()) if $self->calliper() and ! $self->weight() =~ /PT/;
 		$string .= $self->gsm().'gsm ' if $self->gsm();
 		$string .= 'FSC:' . $$self{'fsc_code'} if $$self{'fsc_code'};
 		#$string .= 'Minimum: ' . $$self{'minimum_order'} if $$self{'minimum_order'};
@@ -461,7 +451,7 @@ sub group {
 			@$self{'group_id','group'} = ( undef, $group );
 		} # end if
 	} elsif ( $$self{'group_id'} and ! $$self{'group'} ) {
-		$$self{'group'} = new openprint::StockGroup( $$self{'group_id'} )->name();
+		$$self{group} = new openprint::StockGroup( $$self{group_id} )->name();
 	} # end if
 	return $$self{'group'};
 } # end sub group
@@ -766,7 +756,15 @@ sub add_inventory {
 } # end sub add_inventory
 
 sub allocate {
-	my ( $self, $skid_id, $project_id, $quantity, $units, $condition_id ) = @_;
+	my ( $self, $skid_id, $docket, $quantity, $units, $condition_id ) = @_;
+
+	my $Order;
+	if ( ref $docket eq 'openprint::Order' ) {
+		$Order = $docket;
+		$docket = $$Order{docket};
+	} elsif ( $docket ) {
+		$Order = openprint::Order->find_one( docket => $docket );
+	} # end i
 
 	my $skids;
 	if ( ref $skid_id eq 'openprint::Skid' ) {
@@ -783,16 +781,16 @@ sub allocate {
 			skid_ids		=>	$skids,
 			quantity		=>	$quantity,
 			units			=>	$units ? $units : $self->units(),
-			project_id		=>	$project_id,
-			operator_id		=>	$openprint::session{'user_id'},
+			docket			=>	$docket,
+			operator_id		=>	$openprint::session{user_id},
 			condition_id	=>	$condition_id,
 			} );
-	if ( $project_id ) {
-		new openprint::Project( $project_id )->add_to_log( @openprint::session{'company_id','user_id'}, 
-				qq`Allocated $quantity$$PA{units} of <a href="/employee/inventory/paper_details.html?paper_id=$$self{'id'}">` . $self->to_string().'</a>'
-				);
-	} # end if project_id
-
+	if ( $Order ) {
+		$Order->add_log( qq`Allocated $quantity$$PA{units} of <a href="/employee/inventory/paper_details.html?paper_id=$$self{'id'}">` . $self->to_string().'</a>');
+	} # end if
+	if ( $$self{available_to_order} > 1 ) {
+		$$self{available_to_order} -= $quantity;
+	} # end if		
 	$self->save();
 	delete $$self{available};
 	return $PA;
@@ -807,12 +805,12 @@ sub back_ordered {
 
 sub allocated {
 	return 0 if ! $_[0]{id};
-	my ( $self, $project_id, $new ) = @_;
+	my ( $self, $docket, $new ) = @_;
 	if ( @_ == 3 ) {
 		$$self{allocated} = $new;
 	} # end if
-	if ( $project_id ) {
-		my $qty = misc::sum( map { $_->quantity() } openprint::PaperAllocation->find(paper_id=>$$self{id}, project_id=>$project_id) );
+	if ( $docket ) {
+		my $qty = misc::sum( map { $_->quantity() } openprint::PaperAllocation->find(paper_id=>$$self{id}, docket=>$docket) );
 		return $qty;
 	} # end if
 	if ( ! defined $$self{allocated} ) {
@@ -822,26 +820,26 @@ sub allocated {
 } # end sub allocated
 
 sub in_stock {
-	return 0 if ! $_[0]{'id'};
+	return 0 if ! $_[0]{id};
 
 	if ( @_ > 1 ) {
-		if ( ref $_[1] eq 'openprint::StockQuality' ) {
+		if ( ref $_[1] eq 'openprint::InventoryCondition' ) {
 			my $in_stock = 0;
-			foreach my $C ( openprint::SkidContent->find(deleted=>0,paper_id=>$_[0]{id}, quality_id=>$_[0]->id() ) ) {
+			foreach my $C ( openprint::SkidContent->find(deleted=>0,paper_id=>$_[0]{id}, condition_id=>$_[1]->id() ) ) {
 				$in_stock += $C->quantity();
 			} # end foreach C
 			return $in_stock;
 		} else {
-			$_[0]{'in_stock'} = $_[1];
+			$_[0]{in_stock} = $_[1];
 		} # end if
 	} # end if
 
-	if ( ! defined $_[0]{'in_stock'} ) {
+	if ( ! defined $_[0]{in_stock} ) {
 		foreach my $SkidContent ( $_[0]->SkidContents() ) {
-			$_[0]{'in_stock'} += $SkidContent->quantity();
+			$_[0]{in_stock} += $SkidContent->quantity();
 		} # end foreach SkidContent
 	} # end if
-	return $_[0]{'in_stock'};
+	return $_[0]{in_stock};
 } # end sub in_stock
 
 sub SkidContents {
@@ -849,7 +847,7 @@ sub SkidContents {
 		$_[0]{SkidContents} = $_[1];
 	} # end if
 	if ( ! $_[0]{SkidContents} ) {
-		$_[0]{SkidContents} = [ openprint::SkidContent->find(deleted=>0,paper_id=>$_[0]{id},'quantity >'=>0,'location not in'=>['Missing']) ];
+		$_[0]{SkidContents} = [ openprint::SkidContent->find(deleted=>0,paper_id=>$_[0]{id},'quantity >'=>0,'location null or not in'=>['Missing']) ];
 	} # end if
 	return @{$_[0]{SkidContents}};
 } # end sub SkidContents
@@ -898,9 +896,9 @@ sub previous {
 } # end sub previous
 sub next {
 	my $self = shift;
-	my @papers = openprint::Paper->find( 
-'columns'   =>  '*,(select name from stockbrands where id=brand_id) AS brand, (select name from stockfinishes where id=finish_id) AS finish, (select name from stockcolours where id=colour_id) AS colour, (select name from stockweights where id=weight_id) AS weight',
-'order'=>'brand,finish,colour,weight,width,height' );
+	my @papers = openprint::Paper->find_one( 
+			columns   =>  '*,(select name from stockbrands where id=brand_id) AS brand, (select name from stockfinishes where id=finish_id) AS finish, (select name from stockcolours where id=colour_id) AS colour, (select name from stockweights where id=weight_id) AS weight',
+'order'=>'brand,finish,colour,weight,width,height', 'brand >=' => $self->brand(), 'id !=' => $$self{id} );
 	for ( my $i = 0; $i < @papers; $i += 1 ) {
 		return $papers[$i+1] if ($papers[$i] == $self )and ($i < @papers);
 	} # end if
@@ -1027,7 +1025,7 @@ sub get_price {
 		} # end if
 		$$price{'100lb Total'} = $$price{'100lb Price'} * $qty/100;
 	} # end if
-$openprint::log->debug("Costs: ($$price{Cost}) ($$price{'100lb Price'})/100lb ($$price{'100lb Cost'}) ($$price{'Price'}) T($$price{'100lb Total'})") if $debug;
+$openprint::log->debug("Costs: cost($$price{cost}) Price($$price{'100lb Price'})/100lb cost($$price{'100lb Cost'})/cwt Price($$price{'Price'}) qty($qty) Total($$price{'100lb Total'})") if $debug;
 	return $price;
 } # end sub get_price
 
@@ -1100,7 +1098,7 @@ sub gsm {
 			$$self{'gsm'} = sprintf('%.2f', $$self{'wpsi'} * 703064.5 );
 		} else { 
 			$$self{'gsm'} = 'unknown';
-			$openprint::log->warn("Can't calculate gsm for " . $self->to_string() );
+			$openprint::log->warn("Can't calculate gsm for " . $self->to_string() ) if $$self{brand};
 		} # end if
 	} # end if
 	return $$self{'gsm'};
@@ -1249,7 +1247,7 @@ sub load_from_signature {
 		$Paper->full_packages( $$specs{'full_packages'} );
 		$Paper->cuttable( exists $$specs{'cuttable'} ? $$specs{'cuttable'} : 1 );
 		$Paper->digital(1);
-		$Paper->perfecting($$specs{'perfecting'});
+		$Paper->perfecting($$specs{'perfecting'} eq 'Y' ? 1 : 0 );
 
 		$Paper->doublesided($$specs{'CustomSheetDoubleSided'});
 		$Paper->grade( $$specs{'StockGrade'});
@@ -1258,10 +1256,10 @@ sub load_from_signature {
 		$$Paper{Units} = $$specs{'CustomStockPriceUnits'};
 		$Paper->basis_width( $$specs{'basis_width'} );
 		$Paper->basis_height( $$specs{'basis_height'} );
-		$Paper->basis_mweight( $$specs{'basis_mweight'} );
+		$Paper->basis_mweight( $$specs{'basis_mweight'} ) if $$specs{'basis_mweight'};
 		$Paper->score_required( $Paper->calliper() > 0.008 );
 		#if ( $$specs{'StockType'} ne 'Roll' ) {
-			$Paper->mweight( $$specs{'txtCustomMWeight'} );
+			$Paper->mweight( $$specs{'txtCustomMWeight'} ) if ! $Paper->gsm();
 		#} # end if
 		$Paper->supplied( $$specs{'rdbSuppliedStock'} eq 'Y' ? 1 : 0 );
 	} else {
@@ -1318,8 +1316,8 @@ $log->debug("Didn't find specific paper $params{'width'} x $params{'height'}");
 
 				$Paper->grade( $$specs{'StockGrade'});
 
-				$Paper->Price( $$specs{'CustomStockPrice'} );
-				$Paper->units( $$specs{'CustomStockPriceUnits'} );
+				$$Paper{Price} = $$specs{'CustomStockPrice'};
+				$$Paper{Units} = $$specs{'CustomStockPriceUnits'};
 				$Paper->basis_width( $$specs{'basis_width'} );
 				$Paper->basis_height( $$specs{'basis_height'} );
 				$Paper->basis_mweight( $$specs{'basis_mweight'} );
@@ -1335,7 +1333,7 @@ $log->debug("Didn't find specific paper $params{'width'} x $params{'height'}");
 						$$specs{'StockQuantity'.$qty_index} = $$specs{'txtPressSheetQty'.$qty_index};
 						$$specs{'StockQuantity'.$qty_index} =~ s/\D//g;
 					} # end if
-					if ( $$specs{'StockQuantity'.$qty_index} < $P->minimum_order() ) {
+					if ( $$specs{'StockQuantity'.$qty_index} and ( $$specs{'StockQuantity'.$qty_index} < $P->minimum_order() ) ) {
 						$openprint::log->debug("Paper no good due to minimum order. Need " . $$specs{'StockQuantity'.$qty_index} . ' have ' . $P->minimum_order() ) if $debug;
 						next;
 					} # end if
@@ -1368,7 +1366,11 @@ $log->debug($P->id_string());
 	$Paper = $Paper->clone();
 #$openprint::log->debug($Paper->to_string() );
 	if ( $qty_index ) {
-		if ( ( $Paper->width() != $$specs{'StockWidth'.$qty_index} ) or ($Paper->type() eq 'Sheet' and $Paper->height() != $$specs{'StockHeight'.$qty_index} ) ) {
+		if ( 
+			( ( $Paper->width() != $$specs{'StockWidth'.$qty_index} ) or ($Paper->type() eq 'Sheet' and $Paper->height() != $$specs{'StockHeight'.$qty_index} ) )
+			and
+			( ( $Paper->height() != $$specs{'StockWidth'.$qty_index} ) or ($Paper->type() eq 'Sheet' and $Paper->width() != $$specs{'StockHeight'.$qty_index} ) )
+) {
 #Carp::cluck("Custom size $$specs{'StockWidth'.$qty_index}x$$specs{'StockHeight'.$qty_index}");
 #$openprint::log->debug("Custom size $$Paper{width}x$$Paper{height} => $$specs{'StockWidth'.$qty_index}x$$specs{'StockHeight'.$qty_index}");
 			if ( ! $Paper->start_width() ) {
@@ -1378,7 +1380,7 @@ $log->debug($P->id_string());
 			} elsif ( $Paper->width() >= $$specs{'StockWidth'.$qty_index} ) {
 				$Paper->width( $$specs{'StockWidth'.$qty_index} );
 			} else {
-				$log->warn("Unsuitable Stock");
+				$log->warn("Unsuitable Stock" . $Paper->to_string() . ' desired: ' . $$specs{'StockWidth'.$qty_index} . 'x' . $$specs{'StockHeight'.$qty_index});
 				return new openprint::Paper();
 			} # end if
 
@@ -1573,6 +1575,10 @@ sub init_cache {
     openprint::StockQuality->find();
     openprint::StockMaterial->find();
 }
+
+sub link_to {
+	return sprintf('<a href="/employee/inventory/paper_details.html?paper_id=%1$d">%2$s</a>', $_[0]{id}, $_[0]->to_string() );
+} # end sub link_to
 
 1;
 __END__

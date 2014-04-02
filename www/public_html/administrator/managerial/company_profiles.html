@@ -95,7 +95,7 @@
 					foreach my $C ( @Companies ) {
 						next if $C->id() == $$variable{'Company'}->id();	
 						$html .= sprintf(q`<p><a href="/administrator/managerial/company_profiles.html?ddmCustomer=%1$d">%1$d : %2$s</a><br/>
-%3$s<br/>%4$d Users %5$d Projects %6$d Quotes %7$d Orders<br/>%8$s</p>`, $C->id(), $C->name(), join(' ', $C->get('address1','address2','city','state','country','postalcost')),
+%3$s<br/>%4$d Users %5$d Projects %6$d Quotes %7$d Orders<br/>%8$s</p>`, $C->id(), $C->name(), join(' ', $C->get('address1','address2','city','state','country','postalcode')),
 scalar openprint::User->find( company_id=>$C->id()),
 scalar openprint::Project->find( company_id=>$C->id()),
 scalar openprint::Quote->find( company_id=>$C->id()),
@@ -190,7 +190,7 @@ button( 'merge'.$C->id(), { href=>'/administrator/managerial/company_profiles.ht
 			<label>Notes</label>
 			<textarea id="notes" name="notes" rows="<? echo ( count_lines( $$variable{notes} ); ) ?>" onkeyup="textarea_resize(this);"><?notes?></textarea>
 		</li>
-		<? if ( $$variable{'CustomerIndex'} ) ?>
+		<? if ( $$variable{Company}->id() ) ?>
 			<? eval (
 				@{$$variable{'Orders'}} = openprint::Order->find('company_id'=>$$variable{'CustomerIndex'},'order'=>'id DESC');
 			) ?>
@@ -213,7 +213,7 @@ button( 'merge'.$C->id(), { href=>'/administrator/managerial/company_profiles.ht
 				<label>Accounting Contacts</label>
 				<span id="AccountingContacts"><? echo ( include('_company_accounting_contacts.html'); ) ?></span>
 			</li>
-		<? endif ( $$variable{'CustomerIndex'} ) ?>
+		<? endif ( $$variable{Company}->id() ) ?>
 			</ul>
 		</div>
 	</fieldset>
@@ -228,7 +228,7 @@ button( 'merge'.$C->id(), { href=>'/administrator/managerial/company_profiles.ht
 			<li><label>Company Category</label>
 				<select name="category_id" id="category_id">
 					<option value="">select</option>
-				<? echo ( ssi::make_drop_down( openprint::Company_Category->dropdown('order'=>'lower(name)'), $$variable{'Company'}->category_id() ); ) ?>
+				<? echo ( make_drop_down( openprint::Company_Category->dropdown( order=>'lower(name)'), $$variable{Company}->category_id() ); ) ?>
 				</select>
 			</li>
 			<li> 

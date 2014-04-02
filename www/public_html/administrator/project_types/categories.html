@@ -1,4 +1,4 @@
-<? echo ( include('/includes/error_reporting.html'); ) ?>
+<?include('/includes/error_reporting.html')?>
 <table class="List">
 	<tr>
 		<th class="name">Name</th>
@@ -11,7 +11,7 @@
 	foreach my $Category ( openprint::ProjectTypeCategory->find( order => 'sort,lower(name)' ) ) {
 		$html .= sprintf(q`
 <tr%1$s>
-	<td class="name"><a href="edit.html?category_id=%2$d">%3$s</a></td>
+	<td class="name"><a href="category.html?category_id=%2$d">%3$s</a></td>
 	<td class="description">%4$s</td>
 	<td class="num_project_types">%5$d</td>
 </tr>
@@ -23,4 +23,4 @@
 ) ?>
 </table>
 <? eval ( delete $param{'category_id'}; ) ?>
-<? echo ( include('edit.html'); ) ?>
+<?include('category.html')?>

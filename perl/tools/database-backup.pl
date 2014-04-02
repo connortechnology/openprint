@@ -65,7 +65,7 @@ foreach my $db ( @dbs ) {
 	} # end if
 	
 	if ( ! sets::isin( 'database_info', $tables ) ) {
-		print "No database_info table in $db $tables\n";
+		print "No database_info table in $db @$tables\n";
 		print 'Tables: ' . join(',', @$tables);
 		next;
 	} # end if

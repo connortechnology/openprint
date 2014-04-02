@@ -29,37 +29,41 @@
 	} // end function
 </script>
 <script type="text/javascript" src="/javascripts/barcode.js"></script>
+<div id="Login">
 <form name="LoginForm" method="post" action="/employee/account/login_confirmation.html">
 	<fieldset><legend>Please Login</legend>
 		Please enter your e-mail address and password.<br/>
-		<p>
+		<ul>
+		<li>
 			<label for="UserID">UserID</label>
-			<? echo ( ssi::input( type=>'cardinal', id=>'UserID', name=>'UserID', onkeypress=>'return input_handler(this,event);', onchange=>'select_user(this);', onkeyup=>'select_user(this);' ); ) ?>
-		</p>
-		<p>
+			<? echo ( input( type=>'cardinal', id=>'UserID', name=>'UserID', onkeypress=>'return input_handler(this,event);', onchange=>'select_user(this);', onkeyup=>'select_user(this);' ); ) ?>
+		</li>
+		<li>
 			<label for="email">E-mail</label>
 			<input type="email" id="email" name="email" onkeydown="if(event.keyCode == 13){checkLoginData( this, LoginForm.password );}" onkeyup="update_userid(this);" /><br/>
 			<span id="missingLoginMessage" style="display: none;"><img src="/images/smallCurvedArrow.gif" alt="" width="12" height="8" /> Please enter your email address.</span>
-		</p>
-		<p> 
+		</li>
+		<li> 
 			<label for="password">Password</label>
 			<input type="password" id="password" name="password" onkeydown="if(event.keyCode == 13){checkLoginData(LoginForm.email, this);}" /><br/>
 				<span id="missingPasswordMessage" style="display: none;"><img src="/images/smallCurvedArrow.gif" alt="" width="12" height="8" /> Please enter your password.</span>
-		</p>
-		<p>
+		</li>
+		<li>
 			<label>Remember me</label>
 			<input type="radio" id="rdbRememberMeY" name="rdbRememberMe" value="Y" />
 			<label class="radio" for="rdbRememberMeY">Yes</label>
 			<input type="radio" id="rdbRememberMeN" name="rdbRememberMe" value="N" checked="checked" />
 			<label class="radio" for="rdbRememberMeN">No</label>
-		</p>
+		</li>
+		</ul>
 		<p class="buttons">
 			<? echo ( join('',
-				ssi::button( 'Login', { onclick=>"LoginForm.btnFunction.value='Login';LoginForm.submit();", text=>'Login' } ),
-				ssi::button( 'Forgot', { onclick=>"LoginForm.btnFunction.value='Forgotten Password';LoginForm.submit();", text=>'Forgot Password' } ),
+				button( 'Login', { onclick=>"LoginForm.btnFunction.value='Login';LoginForm.submit();", text=>'Login' } ),
+				button( 'Forgot', { onclick=>"LoginForm.btnFunction.value='Forgotten Password';LoginForm.submit();", text=>'Forgot Password' } ),
 			); ) ?>
 		</p>
 	</fieldset>
 	<input type="hidden" name="btnFunction" value="Login" />
 </form>
+</div>
 <script type="text/javascript">document.LoginForm.email.focus();</script>

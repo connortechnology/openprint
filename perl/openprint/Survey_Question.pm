@@ -10,28 +10,32 @@ $table = 'survey_questions';
 $serial = 'survey_questions_id_seq';
 
 %fields = (
-	'id'		=>	'id',
-	'text'		=>	'text',
-	'type'		=>	'type',
-	'survey_id'	=>	'survey_id',
-	'category_id'	=>	'category_id',
-	'alignment'	=>	'alignment',
+	id				=>	'id',
+	text			=>	'text',
+	type			=>	'type',
+	survey_id		=>	'survey_id',
+	category_id		=>	'category_id',
+	alignment		=>	'alignment',
+	allow_comments	=>	'allow_comments',
+	allow_public	=>	'allow_public',
 );
 
 %find_fields = (
-	user_id	=>	'(SELECT user_id FROM Survey_Responses WHERE question_id=survey_questions.id)',
+		user_id	=>	'(SELECT user_id FROM Survey_Responses WHERE question_id=survey_questions.id)',
 );
 
 %transforms = (
-    'text' => [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
+		text	=> [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
 );
 %defaults = (
-	'alignment'	=>	1,
+	alignment	=>	1,
+	allow_comments	=>	0,
+	allow_public	=>	0,
 );
 
 sub Available_Answers {
 	return () if ! $_[0]{'id'};
-	return openprint::Survey_Question_Available_Answer->find('question_id'=>$_[0]{'id'});
+	return openprint::Survey_Question_Available_Answer->find(question_id=>$_[0]{id}, order=>'sorting' );
 } # end sub Available_Answers
 
 sub delete {
@@ -75,8 +79,13 @@ sub html {
 		$html .= sprintf('<select name="answer_id-%1$d" id="answer_id-%1$d">%2$s</select>', $$Question{'id'},
 				ssi::make_drop_down( [ map { $_->answer_id(), $_->Answer()->text() } $Question->Available_Answers() ], $Response->answer_ids() ) );
 	} # end if
-	$html .= sprintf('<textarea name="answer-%1$d" id="answer-%1$d" placeholder="additional comments"></textarea></div>
-			<input type="checkbox" name="public-%1$d" value="1" /> Others can see my response<br/>', $Question->id() );
+	if ( $$Question{allow_comments} ) {
+		$html .= sprintf('<textarea name="answer-%1$d" id="answer-%1$d" placeholder="additional comments"></textarea>', $$Question{id} );
+	} # end if
+	$html .= '</div>';
+	if ( $$Question{allow_public} ) {
+		$html .= sprintf('<input type="checkbox" name="public-%1$d" value="1" /> Others can see my response<br/>', $Question->id() );
+	} # end if
 	if ( ! $openprint::session{user_id} ) {
 		$html .= 'You will be asked to login in order to save your answer.';
 	} # end if

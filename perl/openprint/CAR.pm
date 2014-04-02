@@ -87,14 +87,14 @@ $serial = 'car_id_seq';
 sub send_notifications {
 	my ( $self ) = @_;
 
-	my @Users = openprint::User->find('type'=>['E','A'], 'usergroup @>'=>'Quality Control Notifications');
+	my @Users = openprint::User->find( type=>['E','A'], 'usergroup any'=>'Quality Control Notifications');
 
 	if ( @Users ) {
 		my $email_template = misc::load_file( $log, $config{'SkinPath'}.'/email_template.html' );
 		my %info = (
 			'CAR'	=>	$self,
-			'ReplacementText' => '<!--#include virtual="/email_content/iso_car_notification.html"-->',
 		);
+		$info{ReplacementText} = ssi::include('/email_content/iso_car_notification.html', \%info );
 		my $Email = new openprint::Email();
 		$Email->send(
 				FROM    => new openprint::User( $session{'user_id'} ),
@@ -120,8 +120,8 @@ sub send_assignee_notification {
 				'CAR'	=>	$self,
 				'To'    =>  $To,
 				'From'  =>  $From,
-				'ReplacementText' => '<!--#include virtual="/email_content/iso_car_assignee_notification.html"-->',
 				);
+		$info{ReplacementText} = ssi::include('/email_content/iso_car_assignee_notification.html', \%info );
 		my $Email = new openprint::Email();
 		$Email->send(
 				FROM    => $From,
@@ -140,17 +140,18 @@ sub send_reprint_request_notification {
 	my %info = (
 			'CAR'   =>  $self,
 			'From'  =>  $From,
-			'ReplacementText' => "<!--#include virtual=\"/email_content/iso_car_reprint_request.html\"-->",
 			);
+	$info{ReplacementText} = ssi::include('/email_content/iso_car_reprint_request.html', \%info );
 
 	my $Email = new openprint::Email();
 	$Email->send(
 			FROM    => $From,
-			TO      => [ openprint::User->find( 'type'=>['E','A'], 'usergroup @>'=>['Reprint Approvals']) ],
+			TO      => [ openprint::User->find( type=>['E','A'], 'usergroup any'=>'Reprint Approvals') ],
 			SUBJECT => 'CAR Reprint Request',
 			ATTACHMENTS => ['', MIME::QuotedPrint::encode_qp( ssi::variable_substitution( \$email_template, \%info ) ), 'text/html', 'quoted-printable' ],
 			);
 } # end sub send_reprint_request_notification
+
 sub send_reprint_approval_notification {
 	my ($self) = @_;
 
@@ -165,8 +166,8 @@ sub send_reprint_approval_notification {
 				'CAR'   =>  $self,
 				'To'    =>  $To,
 				'From'  =>  $From,
-				'ReplacementText' => "<!--#include virtual=\"/email_content/iso_car_reprint_approval.html\"-->",
 				);
+		$info{ReplacementText} = ssi::include('/email_content/iso_car_reprint_approval.html,', \%info );
 		my $Email = new openprint::Email();
 		$Email->send(
 				FROM    => $From,
@@ -186,12 +187,12 @@ sub send_changed_notification {
 	my %info = (
 			'CAR'   =>  $self,
 			'From'  =>  $From,
-			'ReplacementText' => "<!--#include virtual=\"/email_content/iso_car_changed_notification.html\"-->",
 			);
+	$info{ReplacementText} = ssi::include('/email_content/iso_car_changed_notification.html', \%info );
 	my $Email = new openprint::Email();
 	$Email->send(
 			FROM    => $From,
-			TO      => [ new openprint::User( $$self{'issued_by_id'} ), openprint::User->find( 'type'=>['E','A'], 'usergroup @>'=>['Quality Control Notifications']) ],
+			TO      => [ new openprint::User( $$self{'issued_by_id'} ), openprint::User->find( 'type'=>['E','A'], 'usergroup any'=>['Quality Control Notifications']) ],
 			SUBJECT => 'CAR ' . $$self{id} . ' has been changed.',
 			ATTACHMENTS => ['', MIME::QuotedPrint::encode_qp( ssi::variable_substitution( \$email_template, \%info ) ), 'text/html', 'quoted-printable' ],
 			);

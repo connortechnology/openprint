@@ -72,8 +72,8 @@ sub signature_needs {
 	my ( $Project, $sig_specs ) = @_;
 	my $services = $Project->services();
 	return 0 if $$services{'NoPrinting'};
-	return 1 if $$sig_specs{'rdbSuppliedStock'} ne 'Y';
-	return 0;
+	#return 1 if $$sig_specs{'rdbSuppliedStock'} ne 'Y';
+	return 1;
 } # end sub
 
 sub neccessary {
@@ -124,6 +124,7 @@ sub calc {
 		$$specs{alert} .= 'Stocks not found.<br/>';
 		return $$specs{Status} = 'uncalculated';
 	} # end if
+	$$specs{Status} = 'calculated';
 
 	my @stocks = sort keys %papers;
 	foreach my $stock_index ( 1 .. scalar @stocks ) {
@@ -210,6 +211,15 @@ $openprint::log->debug("QTY $qty_index ($paper_string) => " . $totals{$paper_str
 				} # end if
 			} # end foreach qty_index
 		} # end if
+		if ( $$Paper{available_to_order} > 0 ) {
+			foreach my $qty_index ( $Project->quantity_indexes() ) {
+				next if ! $totals{$paper_string}{"qty_$qty_index"};
+				if ( $$Paper{available_to_order} < $totals{$paper_string}{"qty_$qty_index"} ) {
+					$$specs{alert}  .= $Paper->to_string() . ' has only ' . $$Paper{available_to_order} . " available. This does not satisfy quantity $qty_index<br/>";
+					$$specs{Status} = 'uncalculated';
+				} # end if
+			} # end foreach
+		} # end if
 	} # end foreach
 
 if ( 0 ) {
@@ -279,7 +289,7 @@ $openprint::log->error("2No stock index for $paper_id");
 $openprint::log->debug("Price $qty_index " . $$specs{"txtPrice$qty_index"} ) if DEBUG;
 	} # end foreach qty_index
 
-	return $$specs{'Status'} = 'calculated';
+	return $$specs{Status};
 } # end sub calc
 
 sub display {
@@ -363,7 +373,7 @@ sub summary {
 				if ( $Paper->type() eq 'Sheet' ) {
 					$html .= $$specs{"sheets-$stock_id-$qty_index"}.'sheets ';
 				} # end if
-				$html .= $$specs{"qty-$stock_id-$qty_index"}.'lbs';
+				$html .= Number::Format::format_number( Math::Round::nearest(1, $$specs{"qty-$stock_id-$qty_index"} ) ).' lbs';
 				my $Price = $Paper->get_price( 'weight'=>$$specs{"qty-$stock_id-$qty_index"},'service'=>'Material' );
 				if ( $$Price{'units'} eq 'per square foot' ) {
 					$html .= ' ' . Math::Round::nearest( 1, ( $$specs{"qty-$stock_id-$qty_index"} / $Paper->wpsi() ) / 144 ).' sq feet';
@@ -386,11 +396,48 @@ sub summary {
 		} # end foreach key
 		return \@summaries;
 	} # end if
-	return \@keys;
+	return [ map { $Papers{$_}->message() ? $_ . '<br/><span class="StockMessage">'. ssi::variable_substitution( \$Papers{$_}->message(), { Project => $Project } ) . '</span>' : $_ } @keys ];
 } # end sub summary
 
 sub save {
 } # end sub save
+
+sub get_stocks_and_quantities {
+    my ( $Project, $service_id, $specs, $qty_index ) = @_;
+
+    $specs = openprint::service::get_specs_ref( $Project, $service_id ) if ! $specs;
+
+    my %Papers;
+    foreach my $ss_id ( $Project->signatures() ) {
+        my $sig_specs = openprint::service::get_specs_ref( $Project, $ss_id );
+        foreach my $q_index ( $Project->quantity_indexes() ) {
+            next if ! $$sig_specs{'txtImposition'.$q_index};
+            my $Paper = openprint::Paper::load_from_signature( $Project, $sig_specs, $q_index )->Supplied();
+            next if ! ( $Paper->id() or $$Paper{custom} );
+            $Papers{$Paper->id_string()} = $Paper;
+        } # end foreach qty_index
+    } # end foreach
+
+    my @keys = sort keys %Papers;
+
+	my %quantities;
+
+	my $stock_id = 1;
+	foreach my $key ( @keys ) {
+		my $Paper = $Papers{$key};
+#$openprint::log->warn("Stock QTY $stock_id $qty_index " . $$specs{"qty-$stock_id-$qty_index"} );
+		if ( $$specs{"qty-$stock_id-$qty_index"} ) {
+			if ( $Paper->type() eq 'Sheet' ) {
+				$quantities{$Paper} += $$specs{"sheets-$stock_id-$qty_index"};
+			} else {
+				$quantities{$Paper} += $$specs{"qty-$stock_id-$qty_index"};
+			} # end if
+		} # end if
+		$stock_id += 1;
+	} # end foreach key
+	return \%quantities;
+
+} # end sub get_stocks_and_quantities
 
 1;
 __END__

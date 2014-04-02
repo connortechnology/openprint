@@ -13,6 +13,7 @@ use vars qw( %variable %session %param %config $log $dbh $r );
 
 require openprint::Host;
 require openprint::RADIUS_Check;
+require openprint::RADIUS_Reply;
 require openprint::User_Type;
 require openprint::Session;
 require openprint::License;
@@ -220,14 +221,15 @@ sub _radius_mac_line {
 	} # end if
 	if ( $param{'action'} eq 'add' ) {
 		if ( $param{'username'} =~ /^([[:xdigit:]]{2})[\:\-]?([[:xdigit:]]{2})[\:\-]?([[:xdigit:]]{2})[\:\-]?([[:xdigit:]]{2})[\:\-]?([[:xdigit:]]{2})[\:\-]?([[:xdigit:]]{2})$/ ) {
+			# Convert from alternate mac formats
 			$param{'username'} = "$1-$2-$3-$4-$5-$6";
 		} else {
 			$log->warn("Re didn't match $param{'username'}");
 		} # end if
-		if ( ! $param{'value'} ) {
-			if ( $param{'attribute'} eq 'Cleartext-Password' ) {
-				$param{'value'} = $param{'username'};
-			} elsif ( $param{'attribute'} eq 'Framed-IP-Address' ) {
+		if ( ! $param{value} ) {
+			if ( $param{attribute} eq 'Cleartext-Password' ) {
+				$param{value} = $param{'username'};
+			} elsif ( $param{attribute} eq 'Framed-IP-Address' ) {
 				my $Host = openprint::Host->find_one('mac any'=>$param{'username'});
 				if ( $Host ) {
 					$param{'value'} = $Host->ip();
@@ -235,11 +237,11 @@ sub _radius_mac_line {
 			} # end if
 		} # end if
 		my $Check = new openprint::RADIUS_Check();
-		$variable{'error'} .= $Check->save({
-			'username'	=>	$param{'username'},
-			'value'		=>	$param{'value'},
-			'op'		=>	':=',
-			'attribute'	=>	$param{'attribute'},
+		$variable{error} .= $Check->save({
+			username	=>	$param{username},
+			value		=>	$param{value},
+			op			=>	':=',
+			attribute	=>	$param{attribute},
 		});
 	} elsif ( $param{'action'} eq 'remove' ) {
 		my $Check = openprint::RADIUS_Check->find_one( 'username'=>$param{'username'}, 'attribute'=>$param{'attribute'} );

@@ -139,8 +139,8 @@
 			'project_type_id any'	=>	$$variable{'ProjectType'}->id(),
 			'supplied is null or ='	=>	$$variable{'rdbSuppliedStock'.$$variable{Signature}} eq 'Y' ? 1 : 0,
 			'type'					=>	\@types,
-			#'user_type is null or ='=>	\@user_types,
-			#user_type	=>	\@user_types,
+			'user_type null or in'=>	\@user_types,
+			'available_to_order is null or >'	=>	0,
 	);
 
 	my @StockOptions = split( ',', $config{$$variable{ProjectType}->name().'StockOptions'} );
@@ -150,17 +150,17 @@
 	foreach my $option ( @StockOptions ) {
 		next if ! $option;
 		my $lc_option = lc $option;
-		my %cache = map { $_->name(), $_ } ('openprint::Stock'.$option)->find() if $option ne 'Size';
+		my %cache = map { $option.$_->name(), $_ } ('openprint::Stock'.$option)->find() if $option ne 'Size';
 
 		my @Papers = openprint::Paper->find( %find );
-		my @options = map { $_, $_ } ( sort ( sets::union( map { $_->$lc_option() } @Papers ) ) );
+		my @options = map { $_, $_ } ( sort ( sets::union( map { $_->$lc_option() ? $_->$lc_option() : () } @Papers ) ) );
 		if ( ! @options ) {
 			$log->debug("No paper options for $lc_option %find");
 		} # end if
 		$$variable{'ddmStock'.$option.$$variable{Signature}} = $options[0] if @options == 2;
 
-		if ( $$variable{'ddmStock'.$option.$$variable{Signature}} and $cache{$$variable{'ddmStock'.$option.$$variable{Signature}}} ) {
-			$find{$lc_option.'_id'} = $cache{$$variable{'ddmStock'.$option.$$variable{Signature}}}->id() 
+		if ( $$variable{'ddmStock'.$option.$$variable{Signature}} and $cache{$option.$$variable{'ddmStock'.$option.$$variable{Signature}}} ) {
+			$find{$lc_option.'_id'} = $cache{$option.$$variable{'ddmStock'.$option.$$variable{Signature}}}->id() 
 		} # end if
 		$html .= sprintf(q`<li><label>Stock %1$s</label>
 				<select name="ddmStock%1$s%2$s" size="1" onchange="Stock_onchange( this, '%2$s' );">

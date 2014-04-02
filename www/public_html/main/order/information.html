@@ -80,8 +80,9 @@
 						my $html;
 						foreach my $Project ( @{$$variable{'Projects'}} ) {
 							$$variable{'Project'} = $Project;
-							$html .= '<div class="Project"><h3 class="project_id"><a href="/main/project/view.html?ProjectIndex='.$Project->id().'">Project '.$Project->id().'</a></h3><p class="buttons">';
-							$html .= ssi::button( 'Remove'.$$Project{id}, { href=>"information.html?order_id=$$variable{order_id}&amp;action=remove&amp;project_id=$$Project{id}", text=>'Remove' } );
+							$html .= '<div class="Project"><h3 class="project_id">'.$Project->link_to('Project '.$Project->id() ).'</h3><p class="buttons">';
+							$html .= button( 'Edit'.$$Project{id}, { href=>$Project->url_to(), text=>'Edit' } );
+							$html .= button( 'Remove'.$$Project{id}, { href=>"information.html?order_id=$$variable{order_id}&amp;action=remove&amp;project_id=$$Project{id}", text=>'Remove' } );
 							$html .= '</p><br class="spacer"/>';
 							$html .= include( '/main/order/_project_information.html' );
 							$html .= '</div>';
@@ -96,7 +97,7 @@
 							$$variable{'Product'} = $Product;
 							my $Project = $$variable{'Project'} = $Product->Project();
 							$html .= '<div class="Project"><p class="buttons">';
-							$html .= ssi::button( 'Remove'.$$Project{'id'}, { 'href'=>"information.html?order_id=$$variable{'order_id'}&amp;action=remove&amp;product_id=$$Product{id}", 'text' => 'Remove' } );
+							$html .= button( 'Remove'.$$Project{'id'}, { 'href'=>"information.html?order_id=$$variable{'order_id'}&amp;action=remove&amp;product_id=$$Product{id}", 'text' => 'Remove' } );
 							$html .= '</p><br class="spacer"/>';
 							$html .= include( '/main/order/_product_information.html' );
 							$html .= '</div>';

@@ -206,24 +206,19 @@ $openprint::log->debug("Scratch Pads : save");
 		if ( $k =~ /txtSignatureType(\d*)/ ) {
 			my $group_id = $1;
 
-			if ( $$param{'GroupPageQuantity'.$group_id} and ! $Project->signatures({'Group'=>$group_id}) ) {
-				my $ac = sql::start_transaction( $dbh );
-				$dbh->do( "LOCK TABLE tbl_Service_Specifications IN SHARE ROW EXCLUSIVE MODE" ) or $log->error( DBI->errstr );
-				my ($print_service_index) = openprint::print_project::insert_service( $log, $dbh, $p_id, 'Signature' );
-				if ( $group_id ) {
-					openprint::service::insert_service_spec( $log, $dbh, $p_id, $print_service_index, 'txtSignatureType', 'Cover Pages' );
-					openprint::service::insert_service_spec( $log, $dbh, $p_id, $print_service_index, 'txtServiceDescription', 'Backing' );
-				} else {
-					openprint::service::insert_service_spec( $log, $dbh, $p_id, $print_service_index, 'txtSignatureType', 'Interior Pages' );
-					openprint::service::insert_service_spec( $log, $dbh, $p_id, $print_service_index, 'txtServiceDescription', 'Padding Pages' );
-				} # end if
-				openprint::service::insert_service_spec( $log, $dbh, $p_id, $print_service_index, 'Group', $group_id );
-				$_ = q{SELECT MAX(strValue::integer) FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strName='SignatureIndex'};
-				my ( $signature_count ) = sql::execute( $log, $dbh, $_, $p_id );
-				openprint::service::insert_service_spec( $log, $dbh, $p_id, $print_service_index, 'SignatureIndex', ++$signature_count );
-				openprint::service::insert_service_spec( $log, $dbh, $p_id, $print_service_index, 'PrintingType', $$param{'PrintingType'} );
-				openprint::service::insert_service_spec( $log, $dbh, $p_id, $print_service_index, 'txtSpreadSize', 1 );
-				sql::end_transaction( $dbh, $ac );
+			if ( $$param{'GroupPageQuantity'.$group_id} and ! $Project->signatures({Group=>$group_id}) ) {
+				my $print_service_index = $Project->add_signature( undef, 'uncalculated', {
+						( $group_id ? (
+									   txtSignatureType			=> 'Cover Pages',
+									   txtServiceDescription	=> 'Backing',
+									  ) : (
+										  txtSignatureType	=> 'Interior Pages',
+										  txtServiceDescription	=> 'Padding Pages',
+										  ) ),
+						Group			=> $group_id,
+						PrintingType	=> $$param{'PrintingType'},
+						txtSpreadSize	=> 1,
+						} );
 			} # end if
 
 			$specified_pages{$$param{$k}} += $$param{'GroupPageQuantity'.$group_id};
@@ -237,20 +232,15 @@ $openprint::log->debug("Scratch Pads : save");
 # now add a cover spread if we need one.
 # First, see if we have one.
 		if ( ! $Project->signatures({'type'=>'Cover Pages'}) ) {
-			my $ac = sql::start_transaction( $dbh );
-			$dbh->do( "LOCK TABLE tbl_Service_Specifications IN SHARE ROW EXCLUSIVE MODE" ) or $log->error( DBI->errstr );
-			my ($cover_index) = openprint::print_project::insert_service( $log, $dbh, $p_id, 'Signature' );
-			openprint::service::insert_service_spec( $log, $dbh, $p_id, $cover_index, 'txtSignatureType', 'Cover Pages');
-			openprint::service::insert_service_spec( $log, $dbh, $p_id, $cover_index, 'txtServiceDescription', 'Backing');
-			openprint::service::insert_service_spec( $log, $dbh, $p_id, $cover_index, 'Group', 1 );
+			my $cover_index = $Project->add_signature( undef, 'uncalculated', {
+					txtSignatureType	=> 'Cover Pages',
+					txtServiceDescription	=> 'Backing',
+					Group	=> 1,
 # Used to give each signature a # for reference in proofs, etc.
-			$_ = q{SELECT MAX(strValue::integer) FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strName='SignatureIndex'};
-			my ( $signature_count ) = sql::execute( $log, $dbh, $_, $p_id );
-			openprint::service::insert_service_spec( $log, $dbh, $p_id, $cover_index, 'SignatureIndex', ++$signature_count );
-			openprint::service::insert_service_spec( $log, $dbh, $p_id, $cover_index, 'PrintingType', $$param{'PrintingType'} );
-			openprint::service::insert_service_spec( $log, $dbh, $p_id, $cover_index, 'txtSpreadSize', 1 );
+					PrintingType		=> $$param{'PrintingType'}
+					txtSpreadSize		=> 1,
+					} );
 # Width and Height will be added on auto-calc
-			sql::end_transaction( $dbh, $ac );
 		} # end if
 
 # Prime this for saving later
@@ -266,18 +256,13 @@ $openprint::log->debug("Scratch Pads : save");
 
 	if ( ! $Project->signatures({'type'=>'Interior Pages'}) ) {
 # Must have at least 1 interioer signature
-		my $ac = sql::start_transaction( $dbh );
-		$dbh->do( "LOCK TABLE tbl_Service_Specifications IN SHARE ROW EXCLUSIVE MODE" ) or $log->error( DBI->errstr );
-		my ($print_service_index) = openprint::print_project::insert_service( $log, $dbh, $p_id, 'Signature' );
-		openprint::service::insert_service_spec( $log, $dbh, $p_id, $print_service_index, 'txtSignatureType', 'Interior Pages' );
-		openprint::service::insert_service_spec( $log, $dbh, $p_id, $print_service_index, 'txtServiceDescription', 'Padding Pages' );
-		openprint::service::insert_service_spec( $log, $dbh, $p_id, $print_service_index, 'Group', 2 );
-		$_ = q{SELECT MAX(strValue::integer) FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strName='SignatureIndex'};
-		my ( $signature_count ) = sql::execute( $log, $dbh, $_, $p_id );
-		openprint::service::insert_service_spec( $log, $dbh, $p_id, $print_service_index, 'SignatureIndex', ++$signature_count );
-		openprint::service::insert_service_spec( $log, $dbh, $p_id, $print_service_index, 'PrintingType', $$param{'PrintingType'} );
-		openprint::service::insert_service_spec( $log, $dbh, $p_id, $print_service_index, 'txtSpreadSize', 1 );
-		sql::end_transaction( $dbh, $ac );
+		my $print_service_index = $Project->add_signature( undef, 'uncalculated', {
+				txtSignatureType	=>  'Interior Pages',
+				txtServiceDescription	=> 'Padding Pages',
+				Group	=> 2,
+				PrintingType	=> $$param{'PrintingType'},
+				txtSpreadSize	=> 1,
+				} );
 	} # end if
 	if ( ( ! $$param{'GroupPageQuantity2'} ) and ( $$param{'OverrideGroupPageQuantity2'} ne 'Y' ) ) {
 		$$param{'GroupPageQuantity2'} = $needed_pages{'Interior Pages'};
@@ -333,20 +318,15 @@ $openprint::log->debug("Scratch Pads : save");
 
 	if ( misc::sum( values %specified_pages ) < $$param{'PageQuantity'} ) {
 # Must have at least 1 interioer signature
-		my $ac = sql::start_transaction( $dbh );
-		$dbh->do( "LOCK TABLE tbl_Service_Specifications IN SHARE ROW EXCLUSIVE MODE" ) or $log->error( DBI->errstr );
-		my ($print_service_index) = openprint::print_project::insert_service( $log, $dbh, $p_id, 'Signature' );
-		openprint::service::insert_service_spec( $log, $dbh, $p_id, $print_service_index, 'txtSignatureType', 'Interior Pages' );
-		openprint::service::insert_service_spec( $log, $dbh, $p_id, $print_service_index, 'txtServiceDescription', 'Pad Pages' );
-		openprint::service::insert_service_spec( $log, $dbh, $p_id, $print_service_index, 'Group', $max_group + 1 );
-		openprint::service::insert_service_spec( $log, $dbh, $p_id, $print_service_index, 'GroupPageQuantity', $needed_pages{'Interior Pages'} - $specified_pages{'Interior Pages'} );
-		$_ = q{SELECT MAX(strValue) FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strName='SignatureIndex'};
-		my ( $signature_count ) = sql::execute( $log, $dbh, $_, $p_id );
-		$signature_count += 1;
-		openprint::service::insert_service_spec( $log, $dbh, $p_id, $print_service_index, 'SignatureIndex', $signature_count );
-		openprint::service::insert_service_spec( $log, $dbh, $p_id, $print_service_index, 'PrintingType', $$param{'PrintingType'} );
-		openprint::service::insert_service_spec( $log, $dbh, $p_id, $print_service_index, 'txtSpreadSize', $$param{'txtSpreadSize'} );
-		sql::end_transaction( $dbh, $ac );
+		my $print_service_index = $Project->add_signature( undef, 'uncalculated', { 
+				'txtSignatureType' => 'Interior Pages',
+				'txtServiceDescription' => 'Pad Pages',
+				'Group' => $max_group + 1,
+				'GroupPageQuantity' => $needed_pages{'Interior Pages'} - $specified_pages{'Interior Pages'},
+				'PrintingType' => $$param{'PrintingType'},
+				'txtSpreadSize' => $$param{'txtSpreadSize'},
+				} );
+
 		$variable{'Redirect'} = '/main/project/prin/ScratchPads.html';
 		return;
 	} # end if

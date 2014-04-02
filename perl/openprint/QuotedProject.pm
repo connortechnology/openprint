@@ -6,8 +6,9 @@ use openprint ();
 use vars qw( $debug $table $serial %fields %transforms %defaults );
 
 require openprint::QuoteLevel;
+require Math::Round;
 
-$debug = 0;
+$debug = 1;
 
 $table = 'tbl_quote_details';
 $serial = 'tbl_quote_details_id_seq';
@@ -78,7 +79,7 @@ sub price {
 		$$self{'price'.$qty_index} = $new_value;
 	} # end if
 	if ( ! (1*$$self{'price'.$qty_index}) ) {
-		$$self{'price'.$qty_index} = sprintf('%.2f', $self->Project()->price($qty_index) * ( 1 + $$self{'markup'.$qty_index}/100 ) );
+		$$self{'price'.$qty_index} = Math::Round::nearest( 0.01, $self->Project()->price($qty_index) * ( 1 + $$self{'markup'.$qty_index}/100 ) );
 	} # end if
 	return $$self{'price'.$qty_index};
 } # end sub total
@@ -89,6 +90,16 @@ sub quantity {
 	} # end if
 	return $$self{'quantity'.$qty_index};
 } # end sub total
+sub quantity_indexes {
+	my ( $self ) = @_;
+	if ( ! exists $$self{'quantity_indexes'} ) {
+		@{$$self{'quantity_indexes'}} = ();
+		foreach my $qty_index ( 1 .. 3 ) {
+			push @{$$self{'quantity_indexes'}}, $qty_index if $$self{"quantity$qty_index"};
+		} # end foreach qty_index
+	} # end if
+	return @{$$self{'quantity_indexes'}};
+} # end sub quantity_indexes
 
 1;
 __END__

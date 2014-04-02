@@ -4,8 +4,8 @@
 			<ul>
 				<li class="docket"><label>Docket #</label>
 				<? echo ( join('',
-							input( type=>'cardinal', name=>'Docket', id=>'Docket', onchange=>'change_handler(this);', onkeypress=>'return input_handler(this,event);', onkeydown=>'if(event.keyCode==13){f2.submit();}', onkeyup=>q`$('project_id').value='';`, value=>$param{Docket}),
-							button( 'Go1', { onclick=>'f2.submit();', text=>'Go' } ),
+							input( type=>'cardinal', name=>'Docket', id=>'Docket', onchange=>'change_handler(this);', onkeypress=>'return input_handler(this,event);', onkeydown=>q`if(event.keyCode==13){window.location='view.html?Docket='+this.value;};`, onkeyup=>q`$('project_id').value='';`, value=>$param{Docket}),
+							button( 'Go1', { onclick=>q`window.location='view.html?Docket='+$('Docket').value;`, text=>'Go' } ),
 				); ) ?>
 				</li>
 				<li class="project_id"><label>Project #</label>
@@ -44,7 +44,7 @@ function add_to_notifications( form, project_id ) {
 	var div = $('AdditionalChargeActions'+project_id);
 	if ( div ) {
 		div.innerHTML = 'Adding...';
-		new Ajax.Updater( div, '_additional_charge_notifications.html', { parameters: inputs } );
+		new Ajax.Updater( div, '/employee/project/_additional_charge_notifications.html', { parameters: inputs } );
 	} 
 }
 function send_notifications( form, project_id ) {
@@ -56,7 +56,9 @@ function send_notifications( form, project_id ) {
 	var div = $('AdditionalChargeActions'+project_id);
 	if ( div ) {
 		div.innerHTML = 'Sending...';
-		new Ajax.Updater( div, '_additional_charge_notifications.html', { parameters: inputs } );
+		new Ajax.Updater( div, '/employee/project/_additional_charge_notifications.html', { parameters: inputs } );
+	} else {
+		alert('Unable to send notifications.');
 	} 
 }
 </script>
@@ -84,11 +86,19 @@ function send_notifications( form, project_id ) {
 				$html .= '<div class="warning">This Project has not been ordered.</div>';
 			}
 			$html .= '<div class="Project">'.include('_view.html').'</div>';
+		} else {
+			$html .= '<div class="error">There do not appear to be any projects in this order.</div>';
 		} # end if
 		return $html;
 	) ?>
 	<br/>
 	<? if ( $$variable{Order}->docket() ) ?>
+<br class="spacer"/>
+<fieldset><legend onclick="toggleContent('StockAllocations','_stock_allocations.html?docket=<? echo ( $$variable{Order}->docket() ) ?>', null, null );">Allocated</legend>
+<div id="StockAllocations" class="StockAllocated"><?include(/employee/project/_stock_allocations.html)?></div>
+</fieldset>
+<br/>
+<div id="StockCheckout" class="StockCheckout"><?include(/employee/project/_stock_checkout.html)?></div>
 	<div class="leftColumn">
 	<? eval (
 		$$variable{PurchaseOrders} = [ openprint::PurchaseOrder_Content->find( docket=>$$variable{Order}->docket() ) ];
@@ -100,9 +110,12 @@ function send_notifications( form, project_id ) {
 	<? echo (
 		my $html = '';
 		foreach my $PO_Content ( @{$$variable{PurchaseOrders}} ) {
+			my $description = $PO_Content->item() ? $PO_Content->item() : $PO_Content->description();
+
+			$description =~ s/<\/?p>//g;
 			$html .= sprintf('<tr><td class="po_id"><a href="/employee/purchase_order/view.html?po_id=%1$d">%1$d</a></td><td class="description">%2$s</td><td class="quantity">%3$d%4$s</td></tr>', 
 				$PO_Content->po_id(),
-				$PO_Content->item(),
+				$description,
 				$PO_Content->qty(),
 				$PO_Content->units(),
 				);

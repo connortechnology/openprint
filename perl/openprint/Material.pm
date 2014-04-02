@@ -1,6 +1,7 @@
 use strict;
 package openprint::Material;
 our @ISA = qw( openprint::Object );
+use Memoize;
 
 require sql;
 require openprint::Object;
@@ -19,28 +20,28 @@ $table = 'materials';
 $serial = 'materialindex_seq';
 
 %fields = (
-		'id'				=>	'id',
-		'name'				=>	'name',
-		'description'		=>	'description',
-		'supplier_id'		=>	'supplier_id',
-		'category_id'		=>	'category_id',
-		'taxexempt1'		=>	'taxexempt1',
-		'taxexempt2'		=>	'taxexempt2',
-		activity_code		=>	'activity_code',
+		id				=>	'id',
+		name			=>	'name',
+		description		=>	'description',
+		supplier_id		=>	'supplier_id',
+		category_id		=>	'category_id',
+		taxexempt1		=>	'taxexempt1',
+		taxexempt2		=>	'taxexempt2',
+		activity_code	=>	'activity_code',
 		);	
 %find_fields = (
-		'category'	=>	'(SELECT name FROM Material_Categories WHERE id=category_id)',
-		'equipment_id'	=> '(SELECT lngequipmentindex FROM tbl_material_prices WHERE lngmaterialindex=materials.id)',
+		category		=>	'(SELECT name FROM Material_Categories WHERE id=category_id)',
+		equipment_id	=>	'(SELECT lngequipmentindex FROM tbl_material_prices WHERE lngmaterialindex=materials.id)',
 );
 
 %transforms = (
 		);
 
 %defaults = (
-		'supplier_id'	=>	undef,
-		'category_id'	=>	undef,
-		'taxexempt1'	=>	'N',
-		'taxexempt2'	=>	'N',
+		supplier_id	=>	undef,
+		category_id	=>	undef,
+		taxexempt1	=>	q`'N'`,
+		taxexempt2	=>	q`'N'`,
 		);
 
 $cache_field = 'name';
@@ -134,6 +135,7 @@ sub Specifications {
 	return openprint::MaterialSpecification->find( 'material_id'=>$$self{'id'}, 'order'=>'name,min NULLS FIRST' );
 } # end sub Specifications
 
+memoize('get_price');
 sub get_price {
 	return if ! $_[0]{id};
 	my ( $self, $quantity, $Equipment ) = @_;

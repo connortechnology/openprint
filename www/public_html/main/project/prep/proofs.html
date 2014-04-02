@@ -51,14 +51,14 @@
 							<tr>
 								<td class="quantity">%4$s</td>
 								<td class="dimensions">%5$s x %6$s</td>
-								<td class="type"><select name="ddmProofType-%1$d-%3$d-%2$d" onchange="calc(this.form.name);"><option value="">select one</option>%7$s</select></td>
+								<td class="type"><select name="ddmProofType-%1$s-%3$d-%2$d" onchange="calc(this.form.name);"><option value="">select one</option>%7$s</select></td>
 								<td class="Price">%8$s</td>
 								<td class="Price">%9$s</td>
 								<td class="Units">
 									<span id="ServiceUnits-%1$d-%3$d-%2$d"></span>
 								</td>
-								<td class="Price"><input type="number" name="txtProofUnitPrice-%1$d-%3$d-%2$s" readonly="readonly" onfocus="this.blur();" /></td>
-								<td class="Override"> %10$s <input type="hidden" name="txtProofIndex-%1$d-%3$d-%2$d" value="%3$d"/>
+								<td class="Price"><input type="number" name="txtProofUnitPrice-%1$s-%3$d-%2$s" readonly="readonly" onfocus="this.blur();" /></td>
+								<td class="Override"> %10$s <input type="hidden" name="txtProofIndex-%1$s-%3$d-%2$d" value="%3$d"/>
 								</td>
 							</tr>
 							`, $signature_index, $qty_index, $proof_index,
@@ -77,10 +77,10 @@
 						<tr class="additional">
 							<td colspan="4">Additional proofs?</td>
 							<td class="Price" colspan="3">
-								<input type="radio" id="rdbAdditional-%1$d-%2$dY" name="rdbAdditional-%1$d-%2$d" value="Yes" />
-								<label class="radio" for="rdbAdditional-%1$d-%2$dY">Yes</label>
-								<input type="radio" id="rdbAdditional-%1$d-%2$dN" name="rdbAdditional-%1$d-%2$d" value="No" checked="checked" />
-								<label class="radio" for="rdbAdditional-%1$d-%2$dN">No</label>
+								<input type="radio" id="rdbAdditional-%1$s-%2$dY" name="rdbAdditional-%1$d-%2$d" value="Yes" />
+								<label class="radio" for="rdbAdditional-%1$s-%2$dY">Yes</label>
+								<input type="radio" id="rdbAdditional-%1$s-%2$dN" name="rdbAdditional-%1$d-%2$d" value="No" checked="checked" />
+								<label class="radio" for="rdbAdditional-%1$s-%2$dN">No</label>
 							</td>
 							<td class="Override">&nbsp;</td>
 						</tr>

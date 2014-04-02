@@ -1,10 +1,10 @@
-package openprint::CAR_Area;
-@ISA = qw(openprint::Object);
-
 use strict;
+package openprint::CAR_Area;
+our @ISA = qw(openprint::Object);
+
 use vars qw( $debug $table $serial %fields %defaults %transforms );
 
-$debug = 0;
+$debug = 1;
 $table = 'car_areas';
 $serial = 'car_areas_id_seq';
 

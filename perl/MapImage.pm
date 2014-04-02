@@ -25,7 +25,7 @@ sub create_image {
 
 	my $image = new Image::Magick;
 	if ( ! -e join('/', $path, $Location->Parent()->name().'.gif') ) {
-		$r->log->debug("No template at " . join('/', $path, $Location->parent()->name().'.gif') );
+		$r->log->debug("No template at " . join('/', $path, $Location->Parent()->name().'.gif') );
 		return;
 	} # en dif
 	$image->Read(join('/', $path, $Location->Parent()->name().'.gif'));
@@ -40,7 +40,7 @@ sub create_image {
 	}
 	$r->log->debug("Drawing location");
 	$image->Draw(stroke=>'red', primitive=>'rectangle', points=>join(',',map{$_-1} split(',',$Location->coordinates())));
-	my $e = $image->Write( join('/', $path, $Location->parent()->name(),$Location->name().'.gif' ) );
+	my $e = $image->Write( join('/', $path, $Location->Parent()->name(),$Location->name().'.gif' ) );
 	$r->log->error($e) if $e;
 	undef $image;
 } # end sub create_image

@@ -68,6 +68,14 @@
 	</tr>
 </table>
 <br/>
+<? eval (
+	my $services = $$variable{Project}->services();
+	my $printing_specs = openprint::service::get_specs_ref( $$variable{Project}, $$services{''}[0] ) if $$services{''};
+	if ( ! ( $$printing_specs{txtWidth} and $$printing_specs{txtHeight} and $$printing_specs{txtFinalWidth} and $$printing_specs{txtFinalHeight} ) ) {
+		$printing_specs = openprint::service::get_specs_ref( $$variable{Project}, $$services{'Signature'}[0] ) if $$services{'Signature'};
+	} # end if
+	@$variable{'txtWidth','txtHeight','txtFinalWidth','txtFinalHeight'} = @$printing_specs{'txtWidth','txtHeight','txtFinalWidth','txtFinalHeight'};
+) ?>
 <table width="100%" border="1" cellspacing="0" cellpadding="0">
 	<tr> 
 		<td class="headerText" width="25%"><b>Flat Size</b>&nbsp;<?txtWidth?>&quot; x <?txtHeight?>&quot;</td>
@@ -123,7 +131,6 @@
 			my $sig_specs = $Service->specs();
 
 			my $Paper = openprint::Paper::load_from_signature( $Project, $sig_specs, $qty_index );
-$log->debug("Paper: " . $Paper->id_string() );
 			my $Imposition = new openprint::Imposition();
 			$Imposition->load( $sig_specs, $qty_index );
 
@@ -375,95 +382,45 @@ $log->debug("Paper: " . $Paper->id_string() );
 	<tr> 
 		<td colspan="3" class="headerText"><b>Proofs</b></td>
 	</tr>
-<? eval ( 
+<? echo ( 
 	openprint::print_project::get_service_specifications( $r, $log, $dbh, $variable, $$variable{'ProjectIndex'}, $$variable{'ProofServiceIndex'} );
 	openprint::Estimating::Proofs::get_proof_specs( $log, $dbh, $variable, @$variable{'ProjectIndex','ProofServiceIndex'} );
- ) ?>
-<? while ( @{$$variable{'SignatureGroups'}} ) ?>
-	<tr>
-		<td class="headerText">
-<? if ( @$variable{'SignatureIndex','Reference','SignatureQuantity'} = splice @{$$variable{'SignatureGroups'}},0,2; ) ?>
-<? if ( $$variable{'Reference'} ) ?><b>For <?Reference?></b><br/><? endif ( $$variable{'Reference'} ) ?>
-	<table>
-		<tr>
-			<td class="headerText"><b>Quantity</b></td>
-			<td class="headerText"><b>Size</b></td>
-			<td class="headerText"><b>Type</b></td>
-		</tr>
-		<? while ( @$variable{'ProofIndex','ProofQuantity','ProofWidth','ProofHeight','ProofType','ddmProofType'} = splice @{$$variable{'Proofs-'.$$variable{'SignatureIndex'}.'-'.$$variable{'Project'}->ordered_quantity_index()}},0,6; ) ?>
-		<? if ( $$variable{'ProofQuantity'} ) ?>
-		<tr>
-			<td class="docketText"><?ProofQuantity?>&nbsp;</td>
-			<td class="docketText"><?ProofWidth?>&quot;&nbsp;x&nbsp;<?ProofHeight?>&quot;</td>
-			<td class="docketText">
-			<? if ( $$variable{'ProofType'} eq 'DigitalDylux' ) ?>Digital Dylux<? endif ( $$variable{'ProofType'} eq 'DigitalDylux' ) ?>
-			<? if ( $$variable{'ProofType'} eq 'EpsonProof' ) ?>Epson Proof<? endif ( $$variable{'ProofType'} eq 'EpsonProof' ) ?>
-			<? if ( $$variable{'ProofType'} eq 'CanonProof' ) ?>Canon Proof<? endif ( $$variable{'ProofType'} eq 'CanonProof' ) ?>
-			<? if ( $$variable{'ProofType'} eq 'FujiFinalProof' ) ?>Fuji Proof<? endif ( $$variable{'ProofType'} eq 'FujiFinalProof' ) ?>
-			<? if ( $$variable{'ProofType'} eq 'PDFProof' ) ?>PDF Proof<? endif ( $$variable{'ProofType'} eq 'PDFProof' ) ?>
-			</td>
-		</tr>
-		<? endif ( $$variable{'ProofQuantity'} ) ?>
-		<? endwhile ( @$variable{'ProofIndex','ProofQuantity','ProofWidth','ProofHeight','ProofType','ddmProofType'} = splice @{$$variable{'Proofs-'.$$variable{'SignatureIndex'}.'-'.$$variable{'Project'}->ordered_quantity_index()}},0,6; ) ?>
-	</table>
-<? endif ( @$variable{'SignatureIndex','Reference','SignatureQuantity'} = splice @{$$variable{'SignatureGroups'}},0,2; ) ?>
-</td>
-		<td class="docketText">
-<? if ( @$variable{'SignatureIndex','Reference','SignatureQuantity'} = splice @{$$variable{'SignatureGroups'}},0,2; ) ?>
-<? if ( $$variable{'Reference'} ) ?><b>For <?Reference?></b><br/><? endif ( $$variable{'Reference'} ) ?>
-	<table>
-		<tr>
-			<td class="headerText"><b>Quantity</b></td>
-			<td class="headerText"><b>Size</b></td>
-			<td class="headerText"><b>Type</b></td>
-		</tr>
-		<? while ( @$variable{'ProofIndex','ProofQuantity','ProofWidth','ProofHeight','ProofType','ddmProofType'} = splice @{$$variable{'Proofs-'.$$variable{'SignatureIndex'}.'-'.$$variable{'Project'}->ordered_quantity_index()}},0,6; ) ?>
-		<? if ( $$variable{'ProofQuantity'} ) ?>
-		<tr>
-			<td class="docketText"><?ProofQuantity?>&nbsp;</td>
-			<td class="docketText"><?ProofWidth?>&quot;&nbsp;x&nbsp;<?ProofHeight?>&quot;</td>
-			<td class="docketText">
-			<? if ( $$variable{'ProofType'} eq 'DigitalDylux' ) ?>Digital Dylux<? endif ( $$variable{'ProofType'} eq 'DigitalDylux' ) ?>
-			<? if ( $$variable{'ProofType'} eq 'EpsonProof' ) ?>Epson Proof<? endif ( $$variable{'ProofType'} eq 'EpsonProof' ) ?>
-			<? if ( $$variable{'ProofType'} eq 'CanonProof' ) ?>Canon Proof<? endif ( $$variable{'ProofType'} eq 'CanonProof' ) ?>
-			<? if ( $$variable{'ProofType'} eq 'FujiFinalProof' ) ?>Fuji Proof<? endif ( $$variable{'ProofType'} eq 'FujiFinalProof' ) ?>
-			<? if ( $$variable{'ProofType'} eq 'PDFProof' ) ?>PDF Proof<? endif ( $$variable{'ProofType'} eq 'PDFProof' ) ?>
-			</td>
-		</tr>
-		<? endif ( $$variable{'ProofQuantity'} ) ?>
-		<? endwhile ( @$variable{'ProofIndex','ProofQuantity','ProofWidth','ProofHeight','ProofType','ddmProofType'} = splice @{$$variable{'Proofs-'.$$variable{'SignatureIndex'}.'-'.$$variable{'Project'}->ordered_quantity_index()}},0,6; ) ?>
-	</table>
-<? endif ( @$variable{'SignatureIndex','Reference','SignatureQuantity'} = splice @{$$variable{'SignatureGroups'}},0,2; ) ?>
-		</td>
-		<td class="docketText">
-<? if ( @$variable{'SignatureIndex','Reference','SignatureQuantity'} = splice @{$$variable{'SignatureGroups'}},0,2; ) ?>
-<? if ( $$variable{'Reference'} ) ?><b>For <?Reference?></b><br/><? endif ( $$variable{'Reference'} ) ?>
-	<table>
-		<tr>
-			<td class="headerText"><b>Quantity</b></td>
-			<td class="headerText"><b>Size</b></td>
-			<td class="headerText"><b>Type</b></td>
-		</tr>
-		<? while ( @$variable{'ProofIndex','ProofQuantity','ProofWidth','ProofHeight','ProofType','ddmProofType'} = splice @{$$variable{'Proofs-'.$$variable{'SignatureIndex'}.'-'.$$variable{'Project'}->ordered_quantity_index()}},0,6; ) ?>
-		<? if ( $$variable{'ProofQuantity'} ) ?>
-		<tr>
-			<td class="docketText"><?ProofQuantity?>&nbsp;</td>
-			<td class="docketText"><?ProofWidth?>&quot;&nbsp;x&nbsp;<?ProofHeight?>&quot;</td>
-			<td class="docketText">
-			<? if ( $$variable{'ProofType'} eq 'DigitalDylux' ) ?>Digital Dylux<? endif ( $$variable{'ProofType'} eq 'DigitalDylux' ) ?>
-			<? if ( $$variable{'ProofType'} eq 'EpsonProof' ) ?>Epson Proof<? endif ( $$variable{'ProofType'} eq 'EpsonProof' ) ?>
-			<? if ( $$variable{'ProofType'} eq 'CanonProof' ) ?>Canon Proof<? endif ( $$variable{'ProofType'} eq 'CanonProof' ) ?>
-			<? if ( $$variable{'ProofType'} eq 'FujiFinalProof' ) ?>Fuji Proof<? endif ( $$variable{'ProofType'} eq 'FujiFinalProof' ) ?>
-			<? if ( $$variable{'ProofType'} eq 'PDFProof' ) ?>PDF Proof<? endif ( $$variable{'ProofType'} eq 'PDFProof' ) ?>
-			</td>
-		</tr>
-		<? endif ( $$variable{'ProofQuantity'} ) ?>
-		<? endwhile ( @$variable{'ProofIndex','ProofQuantity','ProofWidth','ProofHeight','ProofType','ddmProofType'} = splice @{$$variable{'Proofs-'.$$variable{'SignatureIndex'}.'-'.$$variable{'Project'}->ordered_quantity_index()}},0,6; ) ?>
-	</table>
-<? endif ( @$variable{'SignatureIndex','Reference','SignatureQuantity'} = splice @{$$variable{'SignatureGroups'}},0,2; ) ?>
-		</td>
-	</tr>
-<? endwhile ( @{$$variable{'SignatureGroups'}} ) ?>
+	my $html;
+	my $qty_index = $$variable{Project}->ordered_quantity_index();
+
+	my %Proof_Types = (
+		DigitalDylux	=>	'Digital Dylux',
+		EpsonProof		=>	'Epson Proof',
+		CanonProof		=>	'Canon Proof',
+		FujiFinalProof	=>	'Fuji Proof',
+		PDFProof		=>	'PDF Proof',
+	);
+
+	while ( @{$$variable{SignatureGroups}} ) {
+		$html .= '<tr>';
+		foreach ( 1 .. 3 ) {
+			$html .= '<td class="docketText">';
+			if ( @$variable{'SignatureIndex','Reference'} = splice @{$$variable{'SignatureGroups'}},0,2 ) {
+				$html .= '<b>For '.$$variable{Reference}.'</b><br/>' if $$variable{Reference};
+				my $proofs_string = join('-', 'Proofs',$$variable{SignatureIndex},$qty_index);
+
+				next if ! ( $$variable{$proofs_string} and @{$$variable{$proofs_string}} );
+
+				$html .= '<table><tr><td class="headerText"><b>Quantity</b></td><td class="headerText"><b>Size</b></td><td class="headerText"><b>Type</b></td></tr>';
+				while ( @$variable{'ProofIndex','ProofQuantity','ProofWidth','ProofHeight','ProofType','ddmProofType'} = splice @{$$variable{$proofs_string}},0,6 ) {
+					next if ! $$variable{ProofQuantity};
+					$html .= sprintf('<tr><td class="docketText">%d</td><td class="docketText">%s&quot; x %s&quot;</td><td class="docketText">%s</td></tr>', 
+							@$variable{'ProofQuantity','ProofWidth','ProofHeight'},$Proof_Types{$$variable{ProofType}} );
+				} # end while
+				$html .= '</table>';
+			} # end if
+			$html .= '</td>';
+		} # end foreach 1 .. 3
+		$html .= '</tr>';
+
+	} # end while SignatureGgroups
+	return $html;
+) ?>
 		<tr>
             <td colspan="3" class="headerText"><b>Special Prepress Instructions</b>
 			<b><? echo ( 'FM SCREENING' if $$variable{'ScreenType'} eq 'FM' ) ?></b>
@@ -517,7 +474,7 @@ $log->debug("Binder: @BinderyServiceNames");
 			push @bindery_text, 'Loop Stitch';
 		} # end if
 
-		if ( sets::isin( 'Perforation', @BinderyServiceNames ) ) {
+		if ( sets::isin( 'Perforating', \@BinderyServiceNames ) ) {
 			push @bindery_text, 'Perf';
 		} # end if
 

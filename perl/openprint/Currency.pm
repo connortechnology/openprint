@@ -108,7 +108,7 @@ sub convert_to {
 # The price has a currency_id
 # if $$price{'currency_id'} is not the Session's Currency, then convert it , and return
 sub convert {
-	my $Price = shift;
+	my $Price = $_[0];
 
 	# Get display_currency
 	my $DST_Currency = get_current();

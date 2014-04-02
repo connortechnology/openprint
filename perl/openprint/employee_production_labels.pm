@@ -39,16 +39,16 @@ sub _label {
 sub label {
 	my $Label = $variable{'Label'} = new openprint::Label( $param{'id'} );
 	if ( $param{'function'} eq 'Send' ) {
-		my $email_template = misc::load_file( $log, $config{'SkinPath'} . '/email_template.html' );
+		my $email_template = ssi::slurp_content( '/email_template.html' );
 		my @attachments;
 		my %info;
-		$info{'ReplacementText'} = $param{'body'};
+		$info{'ReplacementText'} = $param{body};
 		$info{'Label'} = $Label;
 
 		$_ = MIME::QuotedPrint::encode_qp( Encode::encode('utf-8', ssi::variable_substitution( \$email_template, \%info ) ) );
 		push @attachments, ('', $_, 'text/html', 'quoted-printable');
 
-		my $content = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/email_content/label.html' );
+		my $content = ssi::slurp_content( '/email_content/label.html' );
 		push @attachments, $Label->Type()->name(). ' for docket ' . $Label->docket().'.html', 
 			 MIME::QuotedPrint::encode_qp( Encode::encode('utf-8',
 						 ssi::variable_substitution( \$content, \%info ) ) ), 'text/html', 'quoted-printable';

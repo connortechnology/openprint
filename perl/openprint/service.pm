@@ -57,12 +57,15 @@ sub save_service {
 	if ( ! $service_type ) {
 		$service_type = $Project->Type()->type();
 	} # end if
-	eval ( 'require openprint::Estimating::'.$service_type.';' );
-	my @variables = eval( 'openprint::Estimating::'.$service_type.'::variables( $project_index, $service_index, $specs, \%openprint::param )');
+	my $module = 'openprint::Estimating::'.$service_type;
+
+	eval ( 'require '.$module.';' );
+	my @variables = eval( $module.'::variables( $project_index, $service_index, $specs, \%openprint::param )');
 	$log->error($@) if $@;
 $log->debug("variables: @variables");
-	# make this fast by doing it in one transaction
-	my $ac = sql::start_transaction( $dbh );
+# We cannot locak tbl_service_specifications or tbl_project_contents.  Just too nasty.  So use tbl_Projects as the contention point.
+	# make this fast by doing it in one transaction, locking does the tranasaction for us
+	$Project->lock();
 	foreach my $key (@variables) {
 #$log->debug("Key: $key ($openprint::param{$key}) ( $$specs{$key})");
 		if ( ref $openprint::param{$key} eq 'ARRAY' ) {
@@ -70,16 +73,18 @@ $log->debug("variables: @variables");
 		} elsif ( ! exists $openprint::param{$key} ) {
 			delete_service_spec( $project_index, $service_index, $key );
 		} else {
+			s/^\s+//, s/\s+$// for $openprint::param{$key};
 			insert_service_spec( $log, $dbh, $project_index, $service_index, $key, $openprint::param{$key}, 0 );
 		} # end if
 	} # end foreach
-	sql::end_transaction( $dbh, $ac );
-	eval( 'openprint::Estimating::'.$service_type.'::save( $project_index, $service_index, \%openprint::param )');
-	$log->error($@) if $@;
+	$Project->unlock();
+	if ( my $function = $module->can('save') ) {
+		$function->( $project_index, $service_index, \%openprint::param );
+	} # end if
 
 	# FIXME: should clean this up
 	if ( $openprint::param{'Additional'} eq 'Y' or $openprint::param{'additional_service'} eq 'Y' ) {
-		openprint::print_project::insert_service( $log, $dbh, $project_index, $service_type );
+		$Project->add_service( $service_type );
 	} # end if
 
 	$log->debug("***** END  OF  save_service ************");
@@ -228,10 +233,11 @@ sub auto_calculate {
 			while ( my $si = shift @{$$services{'Folding'}} ) {
 				openprint::print_project::delete_service( $$Project{'id'}, $si );
 			} # end while
+			delete $$services{Folding};
 		} # end if
 	} else {
-		if ( ! $$services{'Folding'} ) {
-			push @{$$services{'Folding'}}, $Project->add_service( 'Folding' );
+		if ( ! $$services{Folding} ) {
+			push @{$$services{Folding}}, $Project->add_service( 'Folding' );
 		} # end if
 	} # end if
 
@@ -257,6 +263,7 @@ require openprint::Estimating::PerfectBound;
 		while ( my $si = shift @{$$services{'PerfectBound'}} ) {
 			openprint::print_project::delete_service( $$Project{'id'}, $si );
 		} # end while
+		delete $$services{'PerfectBound'};
 	} # end if
 
 require openprint::Estimating::Stitching;
@@ -276,27 +283,31 @@ require openprint::Estimating::Stitching;
 	require openprint::Estimating::Tipping;
 	if ( openprint::Estimating::Tipping::neccessary( $Project ) ) {
 		if ( ! $$services{'Tipping'} ) {
-			push @{$$services{'Tipping'}}, $Project->add_service( 'Tipping' );
+			$_ = $Project->add_service( 'Tipping' );
+			push @{$$services{'Tipping'}}, $_ if $_;
 		} # end if
 	} # end if
 
 	require openprint::Estimating::Blowing;
 	if ( openprint::Estimating::Blowing::neccessary( $Project ) ) {
 		if ( ! $$services{'Blowing'} ) {
-			push @{$$services{'Blowing'}}, $Project->add_service( 'Blowing' );
+			$_ = $Project->add_service( 'Blowing' );
+			push @{$$services{'Blowing'}}, $_ if $_;
 		} # end if
 	} # end if
 
 	require openprint::Estimating::Collating;
 	if ( openprint::Estimating::Collating::neccessary( $Project ) ) {
 		if ( ! $$services{'Collating'} ) {
-			push @{$$services{'Collating'}}, $Project->add_service( 'Collating' );
+			$_ = $Project->add_service( 'Collating' );
+			push @{$$services{'Collating'}}, $_ if $_;
 		} # end if
 	} else {
 		if ( $$services{'Collating'} ) {
 			foreach my $si ( @{$$services{'Collating'}} ) {
 				openprint::print_project::delete_service( $$Project{'id'}, $si );
 			} # end foreach
+			delete $$services{'Collating'};
 		} # end if
 	} # end if
 
@@ -330,8 +341,9 @@ require openprint::Estimating::Stitching;
 		my $neccessary = eval 'openprint::Estimating::'.$service_name.'::neccessary( $Project )';
 		$openprint::log->error("Error opepnrint::Estimating::$service_name::neccessary $@") if $@;
 
-		if ( $neccessary ) {
-			push @{$$services{$service_name}}, $Project->add_service($service_name) if ! $$services{$service_name};
+		if ( $neccessary and ! $$services{$service_name} ) {
+			$_ = $Project->add_service($service_name);
+			push @{$$services{$service_name}}, $_ if $_;
 		} # end if
 	} # end foreach service_name;
 
@@ -447,11 +459,11 @@ sub get_type {
 sub internal_calc {
 	my ( $log, $dbh, $variable, $project_index, $service_index, $service_type, $qty_index ) = @_;
 
-	my $ac = sql::start_transaction( $dbh );
 	my $Project = new openprint::Project( $project_index );
-    $log->debug("LOCKING Projects for project $$Project{id}");
-    $dbh->do( "SELECT * FROM Projects WHERE id=".$$Project{id}. ' FOR UPDATE' );
+	$Project->lock();
+	$Project->save({status=>'uncalculated'}) if $Project->status() ne 'uncalculated';
 	my $Service = $Project->Service($service_index) if $service_index;
+	$Service->save({status=>'uncalculated'}) if $Service->status() ne 'uncalculated';
 	my $specs;
 	if ( ! $Service ) {
 $openprint::log->error("Doing internal calc without service_index or, not found");
@@ -474,9 +486,14 @@ $openprint::log->error("Doing internal calc without service_index or, not found"
 	# We are doing this in an eval because we don't actually want to die.
 	eval 'require openprint::Estimating::'.$service_type;
 	$log->error("Error in requiring $package $@") if $@;
+	if ( DEBUG ) {
+		foreach my $key ( eval( 'openprint::Estimating::'.$service_type.'::variables( $project_index, $service_index, \%specs )') ) {
+			$log->debug("Internal Calc:: before calc $key $specs{$key} :". $specs_cache{$service_index}{$key});
+		} # end foreach
+	} # end if
 	if ( my $function = $package->can('calc') ) {
 		my $status = $function->( $log, $dbh, $variable, $project_index, $service_index, \%specs, $qty_index );
-		$specs{'Status'} = $status;
+		$specs{Status} = $status;
 		my $elapsed = time - $starttime;
 		$log->debug( sprintf( '%s calc: (%s) Elapsed seconds: %d (%s)', $service_type, $status, $elapsed, $specs{'alert'} ) );
 
@@ -489,7 +506,7 @@ $openprint::log->error("Doing internal calc without service_index or, not found"
 	} else {
 		$log->error($package . ' cant calc');
 	} # end if
-	sql::end_transaction( $dbh, $ac );
+	$Project->unlock();
 	return \%specs;
 } # end sub internal_calc
 
@@ -508,6 +525,8 @@ sub summary {
 
 	$Project = new openprint::Project( $Project ) if ref $Project ne 'openprint::Project';
 	my $services = $Project->services();
+	my $ServiceType = $Project->ServiceType( $service_id );
+	return '' if ! $ServiceType->summary_visible();
 
 	my $specs = get_specs_ref( $Project, $service_id );
 	if ( $$specs{'ServiceType'} eq 'Signature' or ( $$specs{'ServiceType'} eq '' and ! $$specs{'txtTotalPageQuantity'}  ) ) {
@@ -520,7 +539,6 @@ sub summary {
 		require openprint::Estimating::Stitching;
 		return openprint::Estimating::Stitching::summary($Project, $service_id, $specs, $qty_index );
 	} else {
-		my $ServiceType = $Project->ServiceType( $service_id );
 		my $ServiceTypeType = $ServiceType->type();
 		return if ! $ServiceTypeType;
 		

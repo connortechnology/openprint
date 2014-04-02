@@ -11,6 +11,8 @@ use vars qw( %variable %session %param %config $log $dbh $r );
 *r = \$openprint::r;
 
 require openprint::CAR;
+require openprint::CAR_Reason;
+require openprint::CAR_Area;
 require openprint::PAR;
 
 use strict;

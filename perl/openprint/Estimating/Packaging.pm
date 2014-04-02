@@ -62,6 +62,22 @@ sub calc {
 	my $ServiceType = $Project->ServiceType( $service_index );
 	my $status = 'calculated';
 	my $printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
+	if ( ! ( $$printing_specs{txtFinalWidth} and $$printing_specs{txtFinalHeight} ) ) {
+		my @sigs = $Project->signatures();
+		if ( ! @sigs ) {
+			$$specs{alert} .= 'There are no signatures... cannot determine size.<br/>';
+			return $$specs{'Status'} = 'uncalculated';
+		} # end if
+		foreach my $sig_id ( @sigs ) {
+		$printing_specs = openprint::service::get_specs_ref( $Project, $sigs[0] );
+			last if $$printing_specs{txtFinalWidth} and $$printing_specs{txtFinalHeight};
+		} # end foreach
+	} # end if
+	if ( ! ( $$printing_specs{txtFinalWidth} and $$printing_specs{txtFinalHeight} ) ) {
+		$openprint::log->error('Unable to determine dimensions.<br/>');
+		$$specs{alert} .= 'Unable to determine dimensions.<br/>';
+		return $$specs{'Status'} = 'uncalculated';
+	} # end if
 
 	$$specs{'txtItemsPerPackage'} = int($$specs{'txtItemsPerPackage'});
 	if ( ! $$specs{'txtItemsPerPackage'} ) {	# a zero value is still calculated, just with a zero price.d
@@ -224,7 +240,7 @@ sub save {
 	my $services = $Project->services();
 
 	if ( ($$param{'AccurateCount'} eq 'Y' ) and ! $$services{'Counting'} ) {
-		openprint::print_project::insert_service( $openprint::log, $openprint::dbh, $project_index, 'Counting' );
+		$Project->add_service( 'Counting' );
 	} # end if
 } # end sub save
 

@@ -73,5 +73,9 @@ sub edit {
 	} # end if
 } # end sub edit
 
+sub view {
+	$variable{'Bug'} = new openprint::Bug( $param{'bug_id'} );
+} # end sub view
+
 1;
 __END__

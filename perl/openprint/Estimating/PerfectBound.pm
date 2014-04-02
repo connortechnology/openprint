@@ -145,6 +145,11 @@ $openprint::log->debug("Override PerfectBind to " . $$specs{"ddmEquipment$qty_in
 	
 #$$specs{'hdnBreakdown'.$qty_index} = 'Imposition: ' . $$specs{'Imposition'.$qty_index} .'<br/>';
 	foreach my $Equipment ( @equipment ) {
+		if ( ( $_ = $Equipment->specification('PerfectBind Maximum Quantity') ) and ( $_ < $$specs{"txtQuantity$qty_index"} ) ) {
+			$$specs{'hdnBreakdown'.$qty_index} .= $Equipment->name() . ' has a maximum quantity of ' . $_ . '.<br/>';
+			next;
+		} # end if
+
 		if ( $Equipment->specification('Maximum Spine Length') and ( $$specs{'Height'} > $Equipment->specification('Maximum Spine Length', $$specs{'Imposition'.$qty_index} ) ) ) {
 			$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Spine Too big. Spine: %s, Maximum: %s<br/>', $$specs{'Height'}, $Equipment->specification('Maximum Spine Length') );
 			next;
@@ -256,6 +261,7 @@ sub calc {
 			} # end foreach
 			last if $$specs{'txtCalliper'};
 		} # end foreach
+		$$specs{'txtCalliper'} = Math::Round::nearest( 0.0001, $$specs{'txtCalliper'} );
 	} # end if
 
 # Need to figure out which dimension the spine bisects
@@ -374,28 +380,31 @@ sub calc {
 			my $Imposition = new openprint::Imposition();
 			$Imposition->load( $sig_specs, $qty_index, $Project );
 			push @Impositions, $Imposition;
-		} # end foreach
+		} # end foreach signature_service_index
 
-	my $error;
-	my @Equipment = get_equipment( $specs, \$error, \@Impositions );
-	if ( ! @Equipment ) {
-		$$specs{'alert'} .= 'We are unable to automatically provide a price for Perfect Binding.  You may enter your own price in the price fields, or contact your CSR for a quote.';
-		foreach my $qty_index ( $Project->quantity_indexes() ) {
-			$$specs{'hdnBreakdown'.$qty_index} .= $error;
-			$$specs{"txtQuantity$qty_index"} = $Project->quantity($qty_index) if ! $$specs{"txtQuantity$qty_index"};
-			my $qty = $$specs{'txtQuantity'.$qty_index};
-#$openprint::log->debug("QTY: $qty " . $$specs{'txtPrice'.$qty_index});
-			if ( $qty and ! (1*$$specs{'txtPrice'.$qty_index}) ) {
-#$openprint::log->debug("uncalc");
-				return $$specs{'Status'} = 'uncalculated';
-			} # end if
-		} # end foreach
-#$openprint::log->debug("calc");
-		return $$specs{'Status'} = 'calculated';
-	} # end if
-	
+		my $error;
+		my @Equipment = get_equipment( $specs, \$error, \@Impositions );
+		if ( ! @Equipment ) {
+			$$specs{'alert'} .= 'We are unable to automatically provide a price for Perfect Binding.  You may enter your own price in the price fields, or contact your CSR for a quote.';
+			foreach my $qty_index ( $Project->quantity_indexes() ) {
+				$$specs{'hdnBreakdown'.$qty_index} .= $error;
+				$$specs{"txtQuantity$qty_index"} = $Project->quantity($qty_index) if ! $$specs{"txtQuantity$qty_index"};
+				my $qty = $$specs{'txtQuantity'.$qty_index};
+	#$openprint::log->debug("QTY: $qty " . $$specs{'txtPrice'.$qty_index});
+				if ( $qty and ! (1*$$specs{'txtPrice'.$qty_index}) ) {
+	#$openprint::log->debug("uncalc");
+					return $$specs{'Status'} = 'uncalculated';
+				} # end if
+			} # end foreach
+	#$openprint::log->debug("calc");
+			return $$specs{'Status'} = 'calculated';
+		} # end if ! @Equipment
 
 		foreach my $Equipment ( @Equipment ) {
+			if ( ( $_ = $Equipment->specification('PerfectBind Maximum Quantity') ) and ( $_ < $qty ) ) {
+				$$specs{'hdnBreakdown'.$qty_index} .= $Equipment->name() . ' has a maximum quantity of ' . $_ . '.<br/>';
+				next;
+			} # end if
 			my $Price = get_price( $Equipment, $specs, $qty_index );
 			if ( ( ! defined $bestPrice ) or ( $$bestPrice{'Price'} > $$Price{'Price'} ) ) {
 				$bestPrice = $Price;
@@ -656,6 +665,24 @@ sub runtime {
 
 sub save {
 } # end sub save
+sub has_overrides {
+    my ( $Project, $service_id, $specs, $qty_index ) = @_;
+    $specs = openprint::service::get_specs_ref( $Project, $service_id ) if ! $specs;
+
+    my @v;
+	if ( ! $qty_index ) {
+		push @v, 'override_glue_id' if $$specs{override_glue_id};
+	} else {
+		foreach my $qty_index ( $Project->quantity_indexes() ) {
+			push @v, "chkOverrideEquipment$qty_index" if $$specs{"chkOverrideEquipment$qty_index"};
+			push @v, "OverrideImposition$qty_index" if $$specs{"OverrideImposition$qty_index"};
+			push @v, "OverridePockets$qty_index" if $$specs{"OverridePockets$qty_index"};
+			push @v, "OverridePrice$qty_index" if $$specs{"OverridePrice$qty_index"};
+		} # end foreach
+	} # end if
+
+    return @v;
+} # end sub has_overrides
 
 1;
 __END__

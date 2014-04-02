@@ -33,7 +33,7 @@
 	<td colspan="4">%11$s</td>
 </tr>
 `,
-			$rowclass, $Project->id(), $Project->User()->name(), ssi::htmlize($Project->Company()->name()), ssi::htmlize($Project->reference()),
+			$rowclass, $Project->id(), $Project->User()->name(), ssi::htmlize($Project->Company()->name()), $Project->reference(),
 			Date::Format::time2str($config{'DateTimeFormat'}, Date::Parse::str2time($Project->created_on())),
 			$Project->status(),
 			openprint::Currency::format(1*$Project->price1()),

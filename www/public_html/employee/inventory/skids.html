@@ -68,27 +68,27 @@ Please select a Skid to view/edit.<br/>
 	<ul>
 		<li>
 			<label>Received On</label>
-<? echo ( ssi::date_select_session( '/employee/inventory/skids.html', 'received_on_start', { with_today=>1, with_clear=>1 } ); ) ?>
+<? echo ( date_select_session( '/employee/inventory/skids.html', 'received_on_start', { with_today=>1, with_clear=>1 } ); ) ?>
 			to 
-<? echo ( ssi::date_select_session( '/employee/inventory/skids.html', 'received_on_end', { with_today=>1, with_clear=>1 } ); ) ?>
+<? echo ( date_select_session( '/employee/inventory/skids.html', 'received_on_end', { with_today=>1, with_clear=>1 } ); ) ?>
 		</li>
 		<li>
 			<label>Date Entered</label>
-<? echo ( ssi::date_select_session( '/employee/inventory/skids.html', 'created_on_start', { with_today=>1, with_clear=>1 } ); ) ?>
+<? echo ( date_select_session( '/employee/inventory/skids.html', 'created_on_start', { with_today=>1, with_clear=>1 } ); ) ?>
 			to 
-<? echo ( ssi::date_select_session( '/employee/inventory/skids.html', 'created_on_end', { with_today=>1, with_clear=>1 } ); ) ?>
+<? echo ( date_select_session( '/employee/inventory/skids.html', 'created_on_end', { with_today=>1, with_clear=>1 } ); ) ?>
 		</li>
 		<li>
 			<label>Last Updated</label>
-<? echo ( ssi::date_select_session( '/employee/inventory/skids.html', 'updated_on_start', { with_today=>1, with_clear=>1 } ); ) ?>
+<? echo ( date_select_session( '/employee/inventory/skids.html', 'updated_on_start', { with_today=>1, with_clear=>1 } ); ) ?>
 			to 
-<? echo ( ssi::date_select_session( '/employee/inventory/skids.html', 'updated_on_end', { with_today=>1, with_clear=>1 } ); ) ?>
+<? echo ( date_select_session( '/employee/inventory/skids.html', 'updated_on_end', { with_today=>1, with_clear=>1 } ); ) ?>
 		</li>
 		<li>
 			<label>Last Seen (RFID)</label>
-<? echo ( ssi::date_select_session( '/employee/inventory/skids.html', 'last_seen_start', { with_today=>1, with_clear=>1 } ); ) ?>
+<? echo ( date_select_session( '/employee/inventory/skids.html', 'last_seen_start', { with_today=>1, with_clear=>1 } ); ) ?>
 			to 
-<? echo ( ssi::date_select_session( '/employee/inventory/skids.html', 'last_seen_end', { with_today=>1, with_clear=>1 } ); ) ?>
+<? echo ( date_select_session( '/employee/inventory/skids.html', 'last_seen_end', { with_today=>1, with_clear=>1 } ); ) ?>
 		</li>
 		<li>
 			<label>Purpose</label>
@@ -136,13 +136,13 @@ Please select a Skid to view/edit.<br/>
 			<? echo ( radio( 'rfid_valid', ['Y', 'Yes', 'N', 'No', '', 'All' ], $session{'/employee/inventory/skids.html?rfid_valid'}, { onclick=>'calc();' } ); ) ?>
 		</li>
 		<li><label>Type</label>
-			<? echo ( radio( 'Type', ['Sheet','Sheet', 'Roll', 'Roll', '', 'Both'], $session{'/employee/inventory/skids.html?Type'}, { onclick=>'calc();' } ); ) ?>
+			<? echo ( checkboxes( 'type', [ 'Sheet','Sheet','Roll','Roll','Unknown','Unknown' ], [ split(',', $session{'/employee/inventory/skids.html?type'} ) ], { onclick=>'calc();' } ); ) ?>
         </li>
 		<li><label>Location</label>
 			<select name="location_id" onchange="calc();">
 				<? echo ( 
 					my @options = ('','All', 'None', 'None',  map { $_->id(), $_->name() } openprint::Location->find(type=>'place','order'=>'parent_id NULLS FIRST,lower(name)') );
-					ssi::make_drop_down( \@options, $session{'/employee/inventory/skids.html?location_id'} );
+					make_drop_down( \@options, $session{'/employee/inventory/skids.html?location_id'} );
 				) ?>
 			</select>
 		</li>
@@ -150,7 +150,7 @@ Please select a Skid to view/edit.<br/>
 			<select name="condition_id" onchange="calc();">
 				<? echo ( 
 					my @options = ('','All', map { $_->id(), $_->name() } openprint::InventoryCondition->find( order=>'lower(name)') );
-					ssi::make_drop_down( \@options, $session{'/employee/inventory/skids.html?condition_id'} );
+					make_drop_down( \@options, $session{'/employee/inventory/skids.html?condition_id'} );
 				) ?>
 			</select>
 		</li>

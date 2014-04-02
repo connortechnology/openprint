@@ -1,30 +1,16 @@
-<script type="text/javascript" src="/javascripts/service.js"></script>
-<? eval (
-	if ( $$variable{'Project'}->quantity1() and $$variable{'Project'}->quantity2() and $$variable{'Project'}->quantity3() ) {
-	$$variable{'Columns'} = 'Three';
-	} else {
-	$$variable{'Columns'} = 'Two';
-	} # end if
-) ?>
+<script type="text/javascript" src="<?hash_link(/javascripts/service.js)?>"></script>
 <div class="Service">
 	<form id="f1" name="f1" method="post" action="/main/project/view.html">
 		<fieldset><legend>Aqueous Coating</legend>
-		<? eval ( @{$$variable{'Signatures'}} = $$variable{'Project'}->signatures() ) ?>
+		<? eval ( @{$$variable{'Signatures'}} = $$variable{'Project'}->signatures( { sort => 1 } );) ?>
 		<? while ( $$variable{'SignatureServiceIndex'} = shift @{$$variable{'Signatures'}} ) ?>
 			<? eval ( 
 				$$variable{'sig_specs'} = openprint::service::get_specs_ref( @$variable{'Project','SignatureServiceIndex'} ); 
 				$$variable{'Reference'} = openprint::service::summary( $$variable{'Project'}->id(), $$variable{'SignatureServiceIndex'} );
 				$$variable{'SignatureIndex'} = $$variable{'sig_specs'}{'SignatureIndex'};
-				$$variable{'FrontCoatings'} = $$variable{'BackCoatings'} = '';
-				foreach my $colour ( openprint::Estimating::Printing::get_colours( $$variable{'sig_specs'}, 'SideOne' ) ) {
-					next if ! ( $$colour{'name'} =~ /Aqueous/i );
-					$$variable{'FrontCoatings'} .= $$colour{'name'} . '<br/>';
-				} # end foreach
+				$$variable{'FrontCoatings'} = join(',', openprint::Estimating::Aqueous::get_colours( $$variable{'sig_specs'}, 'SideOne' ) );
 				$$variable{'FrontCoatings'} = 'None' if $$variable{'FrontCoatings'} eq '';
-				foreach my $colour ( openprint::Estimating::Printing::get_colours( $$variable{'sig_specs'}, 'SideTwo' ) ) {
-					next if ! ( $$colour{'name'} =~ /Aqueous/i );
-					$$variable{'BackCoatings'} .= $$colour{'name'} . '<br/>';
-				} # end foreach
+				$$variable{'BackCoatings'} = join(',', openprint::Estimating::Aqueous::get_colours( $$variable{'sig_specs'}, 'SideTwo' ) );
 				$$variable{'BackCoatings'} = 'None' if ! $$variable{'BackCoatings'};
 			) ?>
 			<? if ( $$variable{'FrontCoatings'} ne 'None' or $$variable{'BackCoatings'} ne 'None' ) ?>
@@ -45,13 +31,24 @@
 				<br class="spacer"/>
 				<div id="Results-<?SignatureIndex?>" >
 					<ul>
+					<li><label>Printed</label><? echo ( 
+						my $html;
+						foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
+							$html .= '<span class="'.$$variable{Columns}.'Columns">';
+							my $Imposition = new openprint::Imposition(); 
+							$Imposition->load( $$variable{sig_specs}, $qty_index );
+							$html .= $Imposition->to_string();
+							$html .= '</span>';
+						} # end foreach
+						return $html;
+					) ?>
 <? if ( sets::isin( $session{'user_type'}, ['A','E'] ) ) ?>
 					<li class="MakeReadyPrice"><label>Make Ready (<?CurrencySymbol?>)</label>
 					<? echo ( my $html;
 						foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
 							$html .= '<span class="'.$$variable{Columns}.'Columns">';
-							$html .= ssi::input( type=>"number", name=>"MakeReadyPrice-$$variable{SignatureIndex}-$qty_index", value=> $$variable{"MakeReadyPrice-$$variable{SignatureIndex}-$qty_index"}, onkeyup=>"floatize(this);calc(this.form.name);" );
-							$html .= ssi::write_override( "OverrideMakeReadyPrice-$$variable{SignatureIndex}-$qty_index", $$variable{"OverrideMakeReadyPrice-$$variable{SignatureIndex}-$qty_index"}, '', q`calc('f1')` );
+							$html .= input( type=>'float', name=>"MakeReadyPrice-$$variable{SignatureIndex}-$qty_index", value=> $$variable{"MakeReadyPrice-$$variable{SignatureIndex}-$qty_index"}, onkeyup=>'calc(this.form.name);' );
+							$html .= write_override( "OverrideMakeReadyPrice-$$variable{SignatureIndex}-$qty_index", $$variable{"OverrideMakeReadyPrice-$$variable{SignatureIndex}-$qty_index"}, '', q`calc('f1')` );
 							$html .= '</span>';
 						} # end foreach qty_index
 						return $html;
@@ -61,8 +58,8 @@
 					<? echo ( my $html;
 						foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
 							$html .= '<span class="'.$$variable{Columns}.'Columns">';
-							$html .= ssi::input( type=>"number", name=>"BlanketPrice-$$variable{SignatureIndex}-$qty_index", value=> $$variable{"BlanketPrice-$$variable{SignatureIndex}-$qty_index"}, onkeyup=>"floatize(this);calc(this.form.name);" );
-							$html .= ssi::write_override( "OverrideBlanketPrice-$$variable{SignatureIndex}-$qty_index", $$variable{"OverrideBlanketPrice-$$variable{SignatureIndex}-$qty_index"}, '', q`calc('f1')` );
+							$html .= input( type=>'float', name=>"BlanketPrice-$$variable{SignatureIndex}-$qty_index", value=> $$variable{"BlanketPrice-$$variable{SignatureIndex}-$qty_index"}, onkeyup=>'calc(this.form.name);' );
+							$html .= write_override( "OverrideBlanketPrice-$$variable{SignatureIndex}-$qty_index", $$variable{"OverrideBlanketPrice-$$variable{SignatureIndex}-$qty_index"}, '', q`calc('f1')` );
 							$html .= '</span>';
 						} # end foreach qty_index
 						return $html;
@@ -72,8 +69,8 @@
 					<? echo ( my $html;
 						foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
 							$html .= '<span class="'.$$variable{Columns}.'Columns">';
-							$html .= ssi::input( type=>"number", name=>"ServicePrice-$$variable{SignatureIndex}-$qty_index", value=> $$variable{"ServicePrice-$$variable{SignatureIndex}-$qty_index"}, onkeyup=>"floatize(this);calc(this.form.name);" );
-							$html .= ssi::write_override( "OverrideServicePrice-$$variable{SignatureIndex}-$qty_index", $$variable{"OverrideServicePrice-$$variable{SignatureIndex}-$qty_index"}, '', q`calc('f1')` );
+							$html .= input( type=>'float', name=>"ServicePrice-$$variable{SignatureIndex}-$qty_index", value=> $$variable{"ServicePrice-$$variable{SignatureIndex}-$qty_index"}, onkeyup=>'calc(this.form.name);' );
+							$html .= write_override( "OverrideServicePrice-$$variable{SignatureIndex}-$qty_index", $$variable{"OverrideServicePrice-$$variable{SignatureIndex}-$qty_index"}, '', q`calc('f1')` );
 							$html .= '</span>';
 						} # end foreach qty_index
 						return $html;
@@ -87,8 +84,8 @@
 					<? echo ( my $html;
 						foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
 							$html .= '<span class="'.$$variable{Columns}.'Columns">';
-							$html .= ssi::input( type=>"number", name=>"MaterialPrice-$$variable{SignatureIndex}-$qty_index", value=> $$variable{"MaterialPrice-$$variable{SignatureIndex}-$qty_index"}, onkeyup=>"floatize(this);calc(this.form.name);" );
-							$html .= ssi::write_override( "OverrideMaterialPrice-$$variable{SignatureIndex}-$qty_index", $$variable{"OverrideMaterialPrice-$$variable{SignatureIndex}-$qty_index"}, '', q`calc('f1')` );
+							$html .= input( type=>'float', name=>"MaterialPrice-$$variable{SignatureIndex}-$qty_index", value=> $$variable{"MaterialPrice-$$variable{SignatureIndex}-$qty_index"}, onkeyup=>'calc(this.form.name);' );
+							$html .= write_override( "OverrideMaterialPrice-$$variable{SignatureIndex}-$qty_index", $$variable{"OverrideMaterialPrice-$$variable{SignatureIndex}-$qty_index"}, '', q`calc('f1')` );
 							$html .= '</span>';
 						} # end foreach qty_index
 						return $html;
@@ -98,16 +95,16 @@
 					<? echo ( my $html;
 						foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
 							$html .= '<span class="'.$$variable{Columns}.'Columns">';
-							$html .= ssi::input( type=>"number", name=>"SignaturePrice-$$variable{SignatureIndex}-$qty_index", value=> $$variable{"SignaturePrice-$$variable{SignatureIndex}-$qty_index"}, onkeyup=>"floatize(this);calc(this.form.name);" );
-							$html .= ssi::write_override( "OverrideSignaturePrice-$$variable{SignatureIndex}-$qty_index", $$variable{"OverrideSignaturePrice-$$variable{SignatureIndex}-$qty_index"}, '', q`calc('f1')` );
+							$html .= input( type=>'float', name=>"SignaturePrice-$$variable{SignatureIndex}-$qty_index", value=> $$variable{"SignaturePrice-$$variable{SignatureIndex}-$qty_index"}, onkeyup=>'calc(this.form.name);' );
+							$html .= write_override( "OverrideSignaturePrice-$$variable{SignatureIndex}-$qty_index", $$variable{"OverrideSignaturePrice-$$variable{SignatureIndex}-$qty_index"}, '', q`calc('f1')` );
 							$html .= '</span>';
 						} # end foreach qty_index
 						return $html;
 					) ?>
 					</li>
 <? endif ( sets::isin( $session{'user_type'}, ['A','E'] ) ) ?>
-					<? echo ( include('/includes/main/proj/signature_imposition_with_override.html'); ) ?>
-					<? echo ( include('/includes/main/proj/signature_equipment.html'); ) ?>
+					<?include(/includes/main/proj/signature_imposition_with_override.html)?>
+					<?include(/includes/main/proj/signature_equipment.html)?>
 					</ul>
 				</div>
 				<br class="spacer"/>
@@ -117,15 +114,15 @@
 		</fieldset>
 		<fieldset><legend>Results</legend>
 			<ul>
-			<? echo ( include('/includes/main/proj/quantities_prices.html'); ) ?>
+			<?include(/includes/main/proj/quantities_prices.html)?>
 			</ul>
 		</fieldset>
 		<hr/>
-		<? echo ( include('/includes/main/proj/add_to_project.html'); ) ?>
+		<?include(/includes/main/proj/add_to_project.html)?>
         <input type="hidden" name="btnFunction" value="Save Service"/>
         <input type="hidden" name="ProjectIndex" value="<?ProjectIndex?>"/>
         <input type="hidden" name="ServiceIndex" value="<?ServiceIndex?>"/>
-        <input type="hidden" name="ServiceType" value="<?ServiceType?>"/>
+        <input type="hidden" name="ServiceType" value="<?ServiceTypeType?>"/>
         <input type="hidden" name="Status"/>
 		<div id="hdnBreakdown1" style="display: none;"></div>
         <div id="hdnBreakdown2" style="display: none;"></div>

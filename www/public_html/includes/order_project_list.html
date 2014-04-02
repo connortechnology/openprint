@@ -26,9 +26,9 @@
 				<td class="Date">%6$s</td>
 				<td class="quantity">%7$d</td>
 				<td class="Price">
-			`, $rowclass, $Project->id(), ssi::htmlize($Project->reference()), $Project->status(),
-			( $Project->requested_date() ? Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $Project->requested_date() ) ) : '' ),
-			( $Project->due_date() ? Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $Project->due_date() ) )  : '' ),
+			`, $rowclass, $Project->id(), $Project->reference(), $Project->status(),
+			format_date( $Project->requested_date() ),
+			format_date( $Project->due_date() ),
 			$Project->ordered_quantity(),
 			);
 

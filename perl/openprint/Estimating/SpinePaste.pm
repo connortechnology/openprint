@@ -17,6 +17,7 @@
 package openprint::Estimating::SpinePaste;
 use strict;
 
+use constant DEBUG => 1;
 require openprint::service;
 
 my @variables = (
@@ -360,7 +361,7 @@ $openprint::log->debug("Max run speed $MaxRunSpeed");
 		my %TrimmingPrice;
 		if ( %TrimmingPrice = openprint::service::get_price_object( 'SpinePasteTrimming', $qty, $Equipment ) ) {
 			$Price{'TrimmingPrice'} = \%TrimmingPrice;
-$openprint::log->debug("Trimming price: $TrimmingPrice{'Price'} - $ServicePrice{'Price'}");
+$openprint::log->debug("Trimming price: $TrimmingPrice{'Price'} - $ServicePrice{'Price'}") if DEBUG;
 			$TrimmingPrice{'Price'} -= $ServicePrice{'Price'};
 			if ( $TrimmingPrice{'units'} eq 'per m' ) {
 				$TrimmingPrice{'Total'} = $TrimmingPrice{'Price'} * $qty / 1000;

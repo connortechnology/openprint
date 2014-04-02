@@ -9,7 +9,7 @@
 					<li><label>Project #</label><? echo ( $$variable{Project}->id() ) ?></li>
 					<? if ( $$variable{Project}->docket() ) ?>
 					<li><label>Docket Number</label>
-					<a href="/main/order/history_details.html?OrderID=<? echo ( $$variable{Project}->order_id() ) ?>"><? echo ( $$variable{Project}->docket() ) ?></a>
+					<a href="/main/order/history_details.html?order_id=<? echo ( $$variable{Project}->order_id() ) ?>"><? echo ( $$variable{Project}->docket() ) ?></a>
 					</li>
 					<li><label>Ordered Quantity</label><? echo ( $$variable{Project}->ordered_quantity() ) ?></li>
 					<? endif ( $$variable{Project}->docket() ) ?>

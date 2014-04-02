@@ -161,5 +161,11 @@ sub can_view {
 	} # end if
 	return 0;
 } # end sub can_view
+
+sub mprice {
+	return if $_[0]->type() ne 'Sheet Stock';
+	my ( $mweight, $type, $name ) = $_[0]->item() =~ /^([\d\.]+)M *([\w\/]*) *(.*)$/;
+	return Math::Round::nearest(0.01, $_[0]{price} * $mweight / 100 );
+} # end sub mprice
 1;
 __END__

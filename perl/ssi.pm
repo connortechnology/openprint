@@ -32,24 +32,25 @@ my $Lexicon;
 sub slurp_content {
 	my ( $file ) = @_;
 
+#$log->debug("Slurping file $file");
+
 	if ( ! ( $file =~ /^\// ) ) {
 		# Use a path relative to the current page
 		my $path = $variable{uri};
 		$path =~ s/(.*\/).*/$1/;
 		$file = $path . $file;
 	} # end if
-$log->debug("Including $file");
 	my $content = '';
 	if ( -e $config{SkinPath}.$file ) {
-		$content = File::Slurp::read_file($config{SkinPath}.$file );
+		$content = File::Slurp::read_file($config{SkinPath}.$file,err_mode => 'carp' );
 	} elsif ( -e $config{SkinPath}.'/html/'.$file ) {
-		$content = File::Slurp::read_file($config{SkinPath}.'/html/'.$file );
+		$content = File::Slurp::read_file($config{SkinPath}.'/html/'.$file,err_mode => 'carp' );
 	} elsif ( $ENV{DOCUMENT_ROOT} and ( -e ($ENV{DOCUMENT_ROOT}.$file) ) ) {
-		$content = File::Slurp::read_file($ENV{DOCUMENT_ROOT}.$file );
+		$content = File::Slurp::read_file($ENV{DOCUMENT_ROOT}.$file,err_mode => 'carp' );
 	} elsif ( $config{DOCUMENT_ROOT} and ( -e $config{DOCUMENT_ROOT}.$file ) ) {
-		$content = File::Slurp::read_file($config{DOCUMENT_ROOT}.$file );
+		$content = File::Slurp::read_file($config{DOCUMENT_ROOT}.$file,err_mode => 'carp' );
 	} else {
-		$content = File::Slurp::read_file($file );
+		$content = File::Slurp::read_file($file,err_mode => 'carp' );
 	} # end if
 	return $content;
 } # end sub slurp_content
@@ -135,6 +136,8 @@ sub variable_substitution {
 				$result .= checked( eval $1 );
 			} elsif ( $command =~ /^include\s*\(\s*'?([^'\)]*)'?\s*\)/ms ) {
 				$result .= include( $1, $variable );
+			} elsif ( $command =~ /^slurp\s*\(\s*'?([^'\)]*)'?\s*\)/ms ) {
+				$result .= slurp_content( $1 );
 			} else {
 				$result .= $$variable{$command};
 			} # end if
@@ -153,8 +156,10 @@ my %html_replacements = (
 );
 my $replacement_string = join '', keys %html_replacements;
 sub html_escape {
-	$_[0]=~ s/([\Q$replacement_string\E])/$html_replacements{$1}/g;
-	return $_[0];
+	my $thing = $_[0];
+
+	$thing =~ s/([\Q$replacement_string\E])/$html_replacements{$1}/g;
+	return $thing;
 }
 
 sub escape_quotes {
@@ -239,16 +244,18 @@ sub make_drop_down {
 	if ( $$options{prepend} ) {
 		for ( my $n = 0; $n < @{$$options{prepend}}; $n += 2) {
 			$temp .= sprintf('<option value="%s"%s>%s</option>',
-					HTML::Entities::encode_entities(Encode::encode('utf-8',$$options{prepend}[$n])),
+					( $$options{encode} ? HTML::Entities::encode_entities(Encode::encode('utf-8',$$options{prepend}[$n])) : $$options{prepend}[$n] ),
 					( sets::isin( $$options{prepend}[$n], $check_array ) ? ' selected="selected"' : '' ),
-					HTML::Entities::encode_entities( Encode::encode('utf-8',$$options{length} ? substr($$options{prepend}[$n + 1],0, $$options{length}) : $$options{prepend}[$n + 1] ) ) );
+					( $$options{encode} ? HTML::Entities::encode_entities( Encode::encode('utf-8',$$options{length} ? substr($$options{prepend}[$n + 1],0, $$options{length}) : $$options{prepend}[$n + 1] ) ) : $$options{length} ? substr($$options{prepend}[$n + 1],0, $$options{length}) : $$options{prepend}[$n + 1] ),
+					);
 		} # end for
 	} # end if
 	for ( my $n = 0; $n < @{$search_data}; $n += 2) {
 		$temp .= sprintf('<option value="%s"%s>%s</option>',
-			HTML::Entities::encode_entities(Encode::encode('utf-8',$$search_data[$n])),
+			( $$options{encode} ? HTML::Entities::encode_entities(Encode::encode('utf-8',$$search_data[$n])) : $$search_data[$n] ),
 			( sets::isin( $$search_data[$n], $check_array ) ? ' selected="selected"' : '' ),
-			HTML::Entities::encode_entities( Encode::encode('utf-8',$$options{length} ? substr($$search_data[$n + 1],0, $$options{length}) : $$search_data[$n + 1] ) ) );
+			( $$options{encode} ? HTML::Entities::encode_entities( Encode::encode('utf-8',$$options{length} ? substr($$search_data[$n + 1],0, $$options{length}) : $$search_data[$n + 1] ) ) : ( $$options{length} ? substr($$search_data[$n + 1],0, $$options{length}) : $$search_data[$n + 1] ) ),
+		);
 	} # end for
 	return $temp;
 } # sub make_drop_down
@@ -754,11 +761,13 @@ sub radio {
 
 	my $onclick = $$options{'onclick'} if $options;
 	my $html;
-	if ( $$options{default} and ! $selected ) {
+	if ( $$options{default} and ! defined $selected ) {
+$log->debug("Selecting default $$options{default}");
 		$selected = $$options{default};
 	} # end if
 
 	while ( my ( $value, $label ) = splice @{$values}, 0, 2 ) {
+		$html .= $$options{container}[0] if $$options{container};
 		$html .= sprintf(q`
 				<input type="radio" name="%1$s" value="%2$s" id="%1$s%6$s%2$s" %4$s%5$s />
 				<label class="radio" for="%1$s%2$s">%3$s</label>
@@ -766,6 +775,7 @@ sub radio {
 				( $onclick ? ' onclick="'.$onclick.'"' : '' ),
 				$$options{id},
 				);
+		$html .= $$options{container}[1] if $$options{container};
 	} # end foreach value
 	return $html;
 } # end sub radio
@@ -825,7 +835,7 @@ sub date_filter {
 	return ( $sql_field, sprintf('%.4d-%.2d-%.2d %.2d:%.2d:%.2d', ( $year, $month, $day, $hour, $minute, $second ) ) );
 } # end sub date_filter
 
-my @input_options = ( 'type','name','id','onblur','onfocus','onkeyup','onkeydown','onchange','class','pattern','ontouch','min','max', 'step', 'placeholder', 'oninput' );
+my @input_options = ( 'type','name','id','onblur','onfocus','onkeyup','onkeydown','onchange','class','pattern','ontouch','min','max', 'step', 'placeholder', 'oninput', 'title' );
 
 sub input {
 	my %options = @_;
@@ -839,6 +849,7 @@ sub input {
 		} # end if
 		$options{filter} = 'cardinalize(this);' if ! $options{filter};
 		$options{onkeyup} = $options{filter}.$options{onkeyup};
+		$options{step} = '1' if ! exists $options{step};
 	} elsif ( $options{type} eq 'integer' ) {
 		if ( $ENV{HTTP_USER_AGENT} =~ /ip(ad|od|hone)/i ) {
 			$options{type} = 'text';
@@ -996,6 +1007,10 @@ sub format_date {
 sub format_datetime {
 	return $_[0] ? Date::Format::time2str( $config{DateTimeFormat}, Date::Parse::str2time( $_[0] ) ) : '';
 } # end sub format_datetime
+
+sub link {
+	return '<link rel="stylesheet" type="text/css" href="'.hash_link($_[0]).'"/>';
+}
 
 1;
 __END__

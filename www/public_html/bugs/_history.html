@@ -5,7 +5,7 @@
 		ssi::date_filter( '/bugs/history.html?created_on_start', 'created_on >=' ),
 		( $session{'/bugs/history.html?company_id'} ? ( 'company_id'	=> $session{'/bugs/history.html?company_id'} ) : () ),
 		( $session{'/bugs/history.html?user_id'} ? ( 'user_id'	=> $session{'/bugs/history.html?user_id'} ) : () ),
-		'order'				=> 'starting',
+		'order'				=> 'id desc',
 		) ) {
 		push @{$$variable{'Bugs'}}, $Bug;
 	} # end foreach Bug
@@ -22,42 +22,28 @@
 	<table class="List">
 		<tr> 
 			<th class="EmployeeName">Employee</th>
-			<th align="left">Company</th>
+			<th class="Company">Company</th>
 			<th class="DateTime">Created On</th>
 			<th class="DateTime">Updated On</th>
-			<th align="left">Service</th>
-			<th class="Distance">Distance</th>
-			<th class="Rate">Rate</th>
-			<th class="Price">Wage</th>
-			<th class="Price">Billable</th>
 		</tr>
-		<? while ( $$variable{'Bug'} = shift @{$$variable{'Bugs'}}; ) ?>
-		<tr title="<? echo ( ssi::html_escape( $$variable{'Bug'}->description() ); ) ?>" <?rowclass?> onmouseover="this.addClassName('highlightOn');" onmouseout="this.removeClassName('highlightOn');"> 
-			<td class="EmployeeName"><a href="/bug/edit.html?bug_id=<? echo ( $$variable{'Bug'}->id(); ) ?>"><? hecho ( $$variable{'Bug'}->User()->name(); ) ?></a></td>
-			<td><a href="/bug/edit.html?bug_id=<? echo ( $$variable{'Bug'}->id(); ) ?>"><? hecho ( $$variable{'Bug'}->Company()->name(); ) ?></a></td>
-			<td align="left"><? echo ( Date::Format::time2str(($$variable{'Bug'}->time_associated() ? $config{'DateTimeFormat'} : $config{'DateFormat'}), Date::Parse::str2time( $$variable{'Bug'}->starting() ) ); ) ?></td>
-			<td align="left"><? echo ( Date::Format::time2str(($$variable{'Bug'}->time_associated() ? $config{'DateTimeFormat'} : $config{'DateFormat'}), Date::Parse::str2time( $$variable{'Bug'}->ending() ) ); ) ?></td>
-			<td align="right"><? echo ( misc::seconds_to_pretty_interval( $$variable{'Bug'}->elapsed() ); ) ?></td>
-			<td align="center"><? echo ( $$variable{'Bug'}->invoiced() ? 'Y' : 'N'; ) ?></td>
-			<td align="center"><? echo ( $$variable{'Bug'}->paid() ? 'Y' : 'N'; ) ?></td>
-			<td align="left"><? hecho ( $$variable{'Bug'}->Service()->name(); ) ?></td>
-			<td align="right"><? echo ( $$variable{'Bug'}->distance(); ) ?>km</td>
-			<td align="right"><? echo ( join('',$$variable{'Bug'}->get('rate','units' ) ); ) ?></td>
-			<td align="right"><? echo ( openprint::Currency::format( $$variable{'Bug'}->wage() ); ) ?></td>
-			<td align="right"><? echo ( openprint::Currency::format( $$variable{'Bug'}->value() ); ) ?></td>
-		</tr>
-		<? eval ( $$variable{'rowclass'} = $$variable{'rowclass'} ? '' : ' class="colRow"';) ?>
-		<? endwhile ( $$variable{'Bug'} = shift @{$$variable{'Bugs'}}; ) ?>
-		<tr class="totals">
-			<td colspan="4" align="right">Totals</td>
-			<td align="right"><? echo ( misc::seconds_to_pretty_interval( $$variable{'elapsed_total'} ); ) ?></td>
-			<td colspan="3">&nbsp;</td>
-			<td align="right"><? echo ( $$variable{'distance_total'} ) ?>km</td>
-			<td colspan="1">&nbsp;</td>
-			<td align="right"><? echo ( openprint::Currency::format($$variable{'wage_total'}); ) ?></td>
-			<td align="right"><? echo ( openprint::Currency::format($$variable{'value_total'}); ) ?></td>
-		</tr>
+		<? echo ( my $html;
+			my $rowclass;
+			foreach my $Bug ( @{$$variable{Bugs}} ) {
+
+				$html .= sprintf( '
+<tr title="%3$s" %1$s>
+	<td class="EmployeeName">%4$s</td>
+	<td class="Company">%5$s</td>
+	<td class="DateTime CreatedOn">%6$s</td>
+	<td align="DateTime UpdatedOn">%7$s</td>
+</tr>',
+					$rowclass, $$Bug{id}, escape_quotes( $Bug->description() ), $Bug->link_to( $Bug->Created_By()->name() ), 
+					$Bug->link_to( $Bug->Company()->name() ), format_datetime( $Bug->created_on() ),
+					format_datetime( $Bug->updated_on() ),
+				);
+				$rowclass = $rowclass ? '' : ' class="colRow"';
+			} # end foreach Bug
+			return $html;
+		) ?>
 	</table>
-	<span class="Currency">All prices listed in <? hecho ( new openprint::Currency( $session{'Currency_id'} )->name(); ) ?></span>
-	<br class="spacer"/>
 <? endif ( @{$$variable{'Bugs'}} == 0 ) ?>

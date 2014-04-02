@@ -89,10 +89,12 @@ sub stop_vacation {
 
 	my @aliases;
 	( $_ ) = sql::execute( $log, $dbh, q{SELECT goto FROM alias WHERE address=?}, $email );
+	if ( $_ ) {
 	foreach my $alias ( split( ',', $_ ) ) {
 		push @aliases, $alias unless $alias =~ /autoreply/;
 	} # end foreach alias
 	sql::update( $log, $dbh, 'alias', ['address=?', $email], 'goto', join(',', @aliases ), 'modified', 'NOW()' );
+	} # en dif
 	sql::end_transaction( $dbh, $ac );
 
 } # end sub stop_vacation
@@ -103,20 +105,21 @@ sub aliases {
 	my @aliases;
 	my $auto_alias = '';
 	my $me = '';
-	( $_ ) = sql::execute( $log, $dbh, q{SELECT goto FROM alias WHERE address=?}, $email );
-	foreach my $alias ( split( ',', $_ ) ) {
-		$alias =~ s/\n//g;
-		$alias =~ s/\r//g;
-		if ( $alias =~ /autoreply/ ) {
-			$auto_alias = $alias;
-		} elsif ( $alias eq $email ) {
-			$me = $alias;
-		} elsif ( ! $alias ) {
+	if ( ( $_ ) = sql::execute( $log, $dbh, q{SELECT goto FROM alias WHERE address=?}, $email ) ) {
+		foreach my $alias ( split( ',', $_ ) ) {
+			$alias =~ s/\n//g;
+			$alias =~ s/\r//g;
+			if ( $alias =~ /autoreply/ ) {
+				$auto_alias = $alias;
+			} elsif ( $alias eq $email ) {
+				$me = $alias;
+			} elsif ( ! $alias ) {
 
-		} else {
-			push @aliases, $alias;
-		} # end if
-	} # end foreach alias
+			} else {
+				push @aliases, $alias;
+			} # end if
+		} # end foreach alias
+	} # end if
 	if ( @new ) {
 		@aliases = ();
 		foreach my $alias ( @new ) {

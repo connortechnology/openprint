@@ -139,7 +139,7 @@
 	} # end if
 ) ?>
 <? echo ( include('/includes/error_reporting.html'); ) ?>
-<form name="f1" method="post" action="/employee/production/print_overview.html">
+<form id="f1" name="f1" method="post" action="/employee/production/print_overview.html">
 	<input type="hidden" name="btnFunction"/>
 	<input type="hidden" name="ProjectIndex" />
 	<input type="hidden" name="ServiceIndex" />
@@ -152,7 +152,7 @@
 				<select name="category_id" id="category_id" onchange="f1.submit();">
 					<option value="">All</option>
 				<? echo (
-	return ssi::make_drop_down( openprint::Equipment_Category->dropdown('order'=>'lower(name)'), $session{'/employee/production/print_overview.html?category_id'} );
+	make_drop_down( openprint::Equipment_Category->dropdown('order'=>'lower(name)'), $session{'/employee/production/print_overview.html?category_id'} );
 	) ?>
 				</select>
 			</li>
@@ -187,11 +187,11 @@
 			<li>
 				<label>Date Range</label>
 					<? echo ( 
-						ssi::date_select_session( '/employee/production/print_overview.html', 'schedule_start', { 'with_today'=>1, 'onclick'=>'f1.submit();' } );
+						date_select_session( '/employee/production/print_overview.html', 'schedule_start', { with_today=>1, onchange=>q`check_time_starting($('f1'),'schedule_start','schedule_end');` } );
 					) ?>
 				to
 					<? echo ( 
-						ssi::date_select_session( '/employee/production/print_overview.html', 'schedule_end', { 'with_today'=>1, 'onclick'=>'f1.submit();' } );
+						date_select_session( '/employee/production/print_overview.html', 'schedule_end', { with_today=>1, onchange=>q`check_time_starting($('f1'),'schedule_start','schedule_end');` } );
 					) ?>
 			</li>
 			<li>
@@ -205,21 +205,21 @@
 							'30'	=>	'30px / hour',
 							'40'	=>	'40px / hour',
 						);
-						return ssi::make_drop_down( \@options, $session{'/employee/production/print_overview.html?scale'} );
+						return make_drop_down( \@options, $session{'/employee/production/print_overview.html?scale'} );
 					) ?>
 				</select>
 			</li>
 			<li>
 				<label>Views</label>
 				<? echo (
-					my $html = ssi::button( 'Today', { onclick=>'', href=>'/employee/production/print_overview.html?action=Today', text=>'Today' } );
-					$html .= ssi::button( 'twoday', { onclick=>'', href=>'/employee/production/print_overview.html?action=2day', text=>'2day' } );
-					$html .= ssi::button( 'threeday', { onclick=>'', href=>'/employee/production/print_overview.html?action=3day', text=>'3day' } );
-					$html .= ssi::button( '1week', { onclick=>'', href=>'/employee/production/print_overview.html?action=1week', text=>'1week' } );
+					my $html = button( 'Today', { onclick=>'', href=>'/employee/production/print_overview.html?action=Today', text=>'Today' } );
+					$html .= button( 'twoday', { onclick=>'', href=>'/employee/production/print_overview.html?action=2day', text=>'2day' } );
+					$html .= button( 'threeday', { onclick=>'', href=>'/employee/production/print_overview.html?action=3day', text=>'3day' } );
+					$html .= button( '1week', { onclick=>'', href=>'/employee/production/print_overview.html?action=1week', text=>'1week' } );
 				) ?>
 			</li>
 			<li><label>Show Production</label>
-			<? echo ( ssi::radio( 'show_feedback', [ 1, 'Yes', 0, 'No', ], $session{'/employee/production/print_overview.html?show_feedback'} ); ) ?>
+			<? echo ( radio( 'show_feedback', [ 1, 'Yes', 0, 'No', ], $session{'/employee/production/print_overview.html?show_feedback'} ); ) ?>
 			</li>
 			</ul>
 		</div>
@@ -238,14 +238,14 @@
 			</ul>
 		</div>
 		<p class="buttons">
-			<? echo ( ssi::button( 'ShowResults', { onclick=>'f1.submit();', text=>'Show Results' } ); ) ?>
-			<? echo ( ssi::button( 'Reset', { onclick=>"f1.btnFunction.value='Reset';f1.submit();", text=>'Reset' } ); ) ?>
+			<? echo ( button( 'ShowResults', { onclick=>'f1.submit();', text=>'Show Results' } ); ) ?>
+			<? echo ( button( 'Reset', { onclick=>"f1.btnFunction.value='Reset';f1.submit();", text=>'Reset' } ); ) ?>
 <? if ( openprint::usergroup::is_user_in( ['Scheduling'], $session{'user_id'} ) ) ?>
-			<? echo ( ssi::button( 'AddDocket', { onclick=>"popup_window('_add_docket.html', '', { width: 600, height: 400 } );", text=>'Add Docket' } ); ) ?>
-			<? echo ( ssi::button( 'AddMaintenance', { onclick=>"popup_window('_add_maintenance.html', '', { width: 600, height: 400 } );", text=>'Add Maintenance' } ); ) ?>
+			<? echo ( button( 'AddDocket', { onclick=>"popup_window('_add_docket.html', '', { width: 600, height: 400 } );", text=>'Add Docket' } ); ) ?>
+			<? echo ( button( 'AddMaintenance', { onclick=>"popup_window('_add_maintenance.html', '', { width: 600, height: 400 } );", text=>'Add Maintenance' } ); ) ?>
 			<? echo (
 				if ( @{$$variable{'Equipment'}} == 1 and $$variable{'Equipment'}[0]->smartscheduling() ) {
-					return ssi::button( 'ReFlow', { href=>'/employee/production/print_overview.html?Equipment='.$$variable{'Equipment'}[0]->id().'&amp;btnFunction=Reflow', text=>'Reflow Jobs' } );
+					return button( 'ReFlow', { href=>'/employee/production/print_overview.html?Equipment='.$$variable{'Equipment'}[0]->id().'&amp;btnFunction=Reflow', text=>'Reflow Jobs' } );
 				} # end if
 				return;
 			) ?>
@@ -278,7 +278,7 @@
 		foreach my $E ( @{$$variable{'Equipment'}} ) {
 			$html .= '<th class="PressColumn ' . join(' ', $E->categories() ) . '"><a href="/employee/production/print_overview.html?Equipment='.$E->id().'">'.$E->name().'('.$E->strid().')</a>';
 			if ( openprint::usergroup::is_user_in( ['Scheduling'], $session{'user_id'} ) ) {
-				$html .= ssi::button('Edit'.$E->id(), { onclick=>q`popup_window('_equipment_popup.html', 'equipment_id=`.$E->id().q`' );`, text=>'E', title=>'Edit' } );
+				$html .= button('Edit'.$E->id(), { onclick=>q`popup_window('_equipment_popup.html', 'equipment_id=`.$E->id().q`' );`, text=>'E', title=>'Edit' } );
 			} # end if
 			$html .= '<br/><div id="message'.$E->id().'" class="message">';
 			$html .= $E->message();
@@ -320,10 +320,10 @@
 			my $parser = 'DateTime::Format::Pg';
 
 			my @Shifts = openprint::Shift->find( 
-				'equipment_id' 		=>	$E->id(),
-				'starttime >='		=>	$parser->format_datetime( $st ),
+				equipment_id 		=>	$E->id(),
 				'starttime <'		=>	$parser->format_datetime( $et ),
-				'order'				=>	'starttime',
+				'starttime >='		=>	$parser->format_datetime( $st ),
+				order				=>	'starttime',
 				);
 
 			if ( ! @Shifts ) {
@@ -375,10 +375,10 @@
 		} # end foreach press
 		sql::end_transaction( $dbh, $ac );
 		$html .= '</tr></tbody></table>';
-		$html .= q`<div class="unprintable"><hr class="spacer"/><h3 onclick="LoadContent( 'PendingApproved', '/employee/production/_pending_approved.html' );">Pending Approved (click to hide/unhide):</h3><table class="PendingApproved"><tr id="PendingApproved">`;
+		$html .= q`<div class="unprintable"><hr class="spacer"/><h3 onclick="LoadContent( 'PendingApproved', '/employee/production/_pending_approved.html', $('f1') );">Pending Approved (click to hide/unhide):</h3><table class="PendingApproved"><tr id="PendingApproved">`;
 		$html .= include( '/employee/production/_pending_approved.html' );
 		$html .= '</tr></table></div>';
-		$html .= q`<div class="unprintable"><hr class="spacer"/><h3 onclick="LoadContent('Pending','/employee/production/_pending.html');">Pending (click to hide/unhide):</h3><table class="Pending"><tr id="Pending">`;
+		$html .= q`<div class="unprintable"><hr class="spacer"/><h3 onclick="LoadContent('Pending','/employee/production/_pending.html', $('f1'));">Pending (click to hide/unhide):</h3><table class="Pending"><tr id="Pending">`;
 		$html .= include( '/employee/production/_pending.html' );
 		$html .= '</tr></table></div>';
 		return $html;

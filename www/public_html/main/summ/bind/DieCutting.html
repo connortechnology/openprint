@@ -3,8 +3,8 @@
 		my $Service = $$variable{Project}->Service( $sig_id );
 		my $sig_specs = $Service->specs();
 		$$variable{SignatureIndex} = $$sig_specs{SignatureIndex};
-		$html .= ssi::include( '/includes/main/summ/finished_dimensions.html' );
-		$html .= ssi::include( '/includes/main/summ/die_cutting.html' );
+		$html .= include( '/includes/main/summ/finished_dimensions.html', $variable );
+		$html .= include( '/includes/main/summ/die_cutting.html', $variable );
 	} # end foreach
 	return $html;
 ) ?>

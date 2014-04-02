@@ -489,7 +489,7 @@ foreach my $E ( openprint::Equipment->find( Specifications => {'Stitching Capabl
 my $Folder = openprint::Equipment->find_one(strid=>'Folder-1' );
 foreach my $ServicePrice ( openprint::ServicePrice->find(equipment_id=>$$Folder{id}, 'service_name like' => '%PanelFoldMakeReady' ) ) {
 	if ( ! $ServicePrice->min() ) {
-		$ServicePrice->save({units=>'per imposition', min=>1, max=>1 });
+		$ServicePrice->save({units=>'', min=>1, max=>1 });
 		foreach my $i ( 2 .. 6 ) {
 		my $Two = $ServicePrice->copy();
 		$Two->save({min=>$i,max=>$i, markup=>12*($i-1), price=>undef } );

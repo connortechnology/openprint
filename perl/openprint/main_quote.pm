@@ -45,6 +45,7 @@ sub history {
 	} # end if
     ssi::setup_date_select( '/main/quote/history.html', 'created_on_start', -30 );
     ssi::setup_date_select( '/main/quote/history.html', 'created_on_end', 0 );
+	$session{'/main/quote/history.html?company_id'} = $session{company_id} if ! exists $session{'/main/quote/history.html?company_id'};
 	_history();
 } # end sub history
 
@@ -123,8 +124,8 @@ $openprint::log->error( "More than 1 occurrence of a project in a quote." );
 						} ) ) ) {
 $openprint::log->error( $error );
 		} else {
-			$Quote->add_log( 'Added project ' . $project_id );
-			$Project->add_to_log( @openprint::session{'company_id','user_id'}, "Add to quote $quote_id" );
+			$Quote->add_log( 'Added project ' . $project_id . ' prices: ' . join(', ', $Project->prices() ) );
+			$Project->add_to_log( @openprint::session{'company_id','user_id'}, "Add to quote $quote_id prices: " . join(', ', $Project->prices() ) );
 		} # end if
 	} # end if
 	return $quote_id;
@@ -348,7 +349,7 @@ sub submit {
 		$Quote->store_user_for_info( \%for );
 # store fields from recalculate, we only store the markup, the NewPrices will calculate on the fly
 		foreach my $QP ( $Quote->Quoted_Projects() ) {
-			foreach my $qty_index ( $QP->Project()->quantity_indexes() ) {
+			foreach my $qty_index ( $QP->quantity_indexes() ) {
 				$QP->markup( $qty_index, $param{'markup-'.$qty_index.'_'.$QP->project_id()} );
 			} # end foreach
 			$QP->save();
@@ -384,7 +385,7 @@ sub confirmation {
 		my @subtotals;
 
 		foreach my $QP ( $Quote->Quoted_Projects() ) {
-			foreach my $qty_index ( 1 .. 3 ) {
+			foreach my $qty_index ( $QP->quantity_indexes() ) {
 				$QP->quantity( $QP->Project()->quantity() );
 				$QP->price( $qty_index, undef );	
 				$subtotals[$qty_index] += $QP->price( $qty_index );
@@ -474,6 +475,12 @@ sub _products_dropdown {
 
 sub _view_log {
 } # end sub _view_log
+
+sub _user_information {
+} # end sub _user_information
+
+sub _company_information {
+} # end sub _company_information
 
 1;
 

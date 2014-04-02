@@ -20,7 +20,7 @@ function update_taxes( form ) {
   });
 </script>
 <form id="f1" name="f1" action="edit.html?po_id=<? echo ( $$variable{PurchaseOrder}->id() ) ?>" method="post">
-	<? echo ( include('/includes/error_reporting.html'); ) ?>
+	<?include('/includes/error_reporting.html')?>
 	<input type="hidden" name="btnFunction" />
 	<div class="PO">
 		<p class="buttons" id="buttons">
@@ -90,7 +90,7 @@ function update_taxes( form ) {
 			<li><label for="shipto_fax">Fax</label><input type="tel" name="shipto_fax" id="shipto_fax" value="<? echo ( $$variable{'PurchaseOrder'}->shipto_fax() ) ?>" /></li>
 			<li><label for="shipto_sms">SMS</label><input type="tel" name="shipto_sms" id="shipto_sms" value="<? echo ( $$variable{'PurchaseOrder'}->shipto_sms() ) ?>" /></li>
 			<li><label for="shipto_email">Email</label><input type="email" name="shipto_email" id="shipto_email" value="<? echo ( $$variable{'PurchaseOrder'}->shipto_email() ) ?>" /></li>
-<? if ( $$variable{'PurchaseOrder'}->id() ) ?>
+<? if ( $$variable{PurchaseOrder}->id() ) ?>
 			<li><label>Also Notify</label>
 				<div id="notification_div"><?include(_notifications.html)?></div>
 			</li>
@@ -154,7 +154,7 @@ function update_taxes( form ) {
 	</div>
 <? echo ( 
 	my $html = '';
-	my $line = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/employee/purchase_order/_po_content_line.html' );
+	my $line = slurp_content('/employee/purchase_order/_po_content_line.html');
 	foreach my $C ( $$variable{'PurchaseOrder'}->Contents() ) {
 		$$variable{C} = $C;
 		$html .= variable_substitution( \$line, $variable );

@@ -3,6 +3,5 @@
 </style>
 <br/>
 The due date for the following project was changed to <?DueDate?>.<br/><br/>
-<? eval ( openprint::project::get_header( $log, $dbh, $variable, $$variable{'ProjectIndex'} ); ) ?>
-<? echo ( include('/includes/project_header.html'); ) ?>
+<?include('/includes/project_header.html')?>
 <br/>

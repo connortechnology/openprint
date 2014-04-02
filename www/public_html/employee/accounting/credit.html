@@ -1,4 +1,4 @@
-<? echo ( include('/includes/error_reporting.html'); ) ?>
+<?include(/includes/error_reporting.html)?>
 <script type="text/javascript">
 function set_credit(src_id,dst_id) {
 	var form = $('f1');
@@ -118,8 +118,8 @@ button('Export',{ onclick=>q`var form = $('f1');form.btnFunction.value='Export';
 					<td class="checkbox"><input type="checkbox" name="PAID" value="%2$d"/></td>
 				</tr>
 				', $rowclass, $Order->id(), $Order->docket(), 
-					Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $Order->created_on() ) ),
-					$Order->invoice_id(), $Order->ponum(), 
+					format_date( $Order->created_on() ),
+					join('<br/>', map { $_->Invoice()->link_to() } $Order->Invoices() ), $Order->po(), 
 					openprint::Currency::format($Order->total()), openprint::Currency::format( $Order->owing() ),
 					$Order->status(),
 					);

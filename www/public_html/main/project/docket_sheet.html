@@ -1,7 +1,7 @@
 <? echo ( 
 	if ( -e $config{'SkinPath'}.'/docket.html' ) {
-		return ssi::include( $config{'SkinPath'}.'/docket.html' );
+		return include( $config{'SkinPath'}.'/docket.html', $variable );
 	} else {
-		return ssi::include( $ENV{'DOCUMENT_ROOT'}.'/includes/main/summ/project_docket_sheet.html' );
+		return include( $ENV{'DOCUMENT_ROOT'}.'/includes/main/summ/project_docket_sheet.html', $variable );
 	} # end if
 ) ?>

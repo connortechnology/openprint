@@ -122,7 +122,8 @@ echo $NEWDU
 # step 1: delete the oldest snapshot, if it exists:
 if [ -d "$DEST$TYPE.$BACKUPS" ] ; then
 	$CHMOD a+wr -R "$DEST$TYPE.$BACKUPS"
-	$RM -rf "$DEST$TYPE.$BACKUPS" ;
+	$MV "$DEST$TYPE.$BACKUPS" "$DEST$TYPE.$BACKUPS.todelete"
+	$RM -rf "$DEST$TYPE.$BACKUPS.todelete" ;
 else
 	echo "No $DEST$TYPE.$BACKUPS to delete"
 fi ;

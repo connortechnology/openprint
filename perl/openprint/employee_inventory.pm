@@ -1,13 +1,9 @@
 use strict;
 package openprint::employee_inventory;
-require MIME::QuotedPrint;
 use Authen::Captcha ();
 require sql;
 require misc;
 
-require openprint::pricelist;
-require openprint::paper_price;
-require openprint::paper_priceset;
 require openprint::StockPurpose;
 require openprint::PaperInventory;
 require openprint::StockBrand;
@@ -91,7 +87,7 @@ sub skids {
 			foreach my $skid_id ( ref $param{'skids'} eq 'ARRAY' ? @{$param{'skids'}} : $param{'skids'} ) {
 				my $Skid = new openprint::Skid( $skid_id );
 				$Skid->delete();
-				$variable{'information'} .= sprintf('<a href="/employee/inventory/skid_details.html?skid_id=%1$d">Skid %1$d</a> has been deleted.<br/>', $$Skid{id} );
+				$variable{information} .= $Skid->link_to() . ' has been deleted.<br/>';
 				my $PI = new openprint::PaperInventory();
 				$PI->save({skid_id=>$skid_id, user_id=>$session{user_id}, comment=>'Skid Deleted.'});
 			} # end foreach
@@ -110,33 +106,33 @@ sub skids {
 			foreach my $skid_id ( @skid_ids ) {
 				my $Skid = new openprint::Skid( $skid_id );
 				if ( $_ = $Skid->destroy() ) {
-					$variable{'error'} .= $_;
+					$variable{error} .= $_;
 				} else {
-					$variable{'information'} .= "Skid $$Skid{'id'} has been destroyed.<br/>";
+					$variable{information} .= $Skid->link_to() . ' has been destroyed.<br/>';
 				} # end if
 			} # end foreach
 		} elsif ( $param{skids} ) {
 			foreach my $skid_id ( ref $param{skids} eq 'ARRAY' ? @{$param{skids}} : $param{skids} ) {
 				my $Skid = new openprint::Skid( $skid_id );
 				if ( $Skid->deleted() ) {
-					$variable{information} .= sprintf('<a href="/employee/inventory/skid_details.html?skid_id=%1$d">Skid %1$d</a> is already deleted.<br/>', $$Skid{id} );
+					$variable{information} .= $Skid->link_to() . ' is already deleted.<br/>';
 				} else {
 					$_ = $Skid->delete();
 					if ( $_ ) {
 						$variable{error} .= $_;
 					} else {
-						$variable{information} .= sprintf('<a href="/employee/inventory/skid_details.html?skid_id=%1$d">Skid %1$d</a> has been deleted.<br/>', $$Skid{id} );
+						$variable{information} .= $Skid->link_to() . ' has been deleted.<br/>';
 					} # end if
 				} # end if
 			} # end foreach
 		} # end if
 	} elsif ( $param{'btnFunction'} eq 'Allocate' ) {
-		if ( exists $param{'Captcha'} ) {
+		if ( exists $param{Captcha} ) {
 	# Remove spaces, because some people want to put spaces between the characters, etc.
-			$param{'Captcha'} =~ s/\s//g;
-			my $Captcha = new Authen::Captcha('data_folder' => '/tmp', 'output_folder' => $config{'SkinPath'}.'/images/captcha');
+			$param{Captcha} =~ s/\s//g;
+			my $Captcha = new Authen::Captcha( data_folder => '/tmp', output_folder => $config{SkinPath}.'/images/captcha' );
 			if ( 1 != $Captcha->check_code( @param{'Captcha','MD5SUM'} ) ) {
-				$variable{'error'} .= 'Captcha Validation Code incorrect.	Please try again.';
+				$variable{error} .= 'Captcha Validation Code incorrect.	Please try again.';
 				return;
 			} # end if
 		} # end if
@@ -144,14 +140,22 @@ sub skids {
 			$param{skid_id} =~ s/[^\d\,]//g;
 			$param{Project} =~ s/\D//g;
 			$param{Docket} =~ s/\D//g;
-			my $Project = openprint::Project->find_one( 'id'=>$param{Project}, 'docket'=>$param{Docket} ) if $param{Project} or $param{Docket};
-			if ( ! $Project ) {
-				$variable{'error'} .= 'An invalid Docket or Project # was given. No paper allocated.<br/>';
+
+			my $Order = openprint::Order->find_one( docket=>$param{Docket} ) if $param{Docket};
+			if ( ( ! $Order ) and $param{Project} ) {
+				my $Project = openprint::Project->find_one( 
+						( $param{Project} ? ( id=>$param{Project} ) : () ),
+						( $param{Docket} ? ( docket=>$param{Docket} ) : () ),
+						) if $param{Project} or $param{Docket};
+				$Order = $Project->Order() if $Project->order_id();
+			} # end if
+			if ( ! $Order ) {
+				$variable{error} .= 'An invalid Docket or Project # was given. No paper allocated.<br/>';
 				return;
 			} # end if
 			
 			my %stocks;
-			foreach my $skid_id ( split(',', $param{'skid_id'} ) ) {
+			foreach my $skid_id ( split(',', $param{skid_id} ) ) {
 				$skid_id =~ s/\D//g;
 				next if ! $skid_id;
 				my $Skid = new openprint::Skid( $skid_id );
@@ -160,11 +164,11 @@ sub skids {
 				} # end foreach Paper
 			} # end foreach Skid
 			foreach my $paper_id ( keys %stocks ) {
-				my $PA = new openprint::Paper( $paper_id )->allocate( $stocks{$paper_id}, $Project->id() );
+				my $PA = new openprint::Paper( $paper_id )->allocate( $stocks{$paper_id}, $Order->docket() );
 				$PA->send_notifications();
 			} # end foreach
-		} # end if
-	} # end if
+		} # end if skid_id
+	} # end if btnfunction
 
 	$session{'/employee/inventory/skids.html?empty'} = 'N' if ! exists $session{'/employee/inventory/skids.html?empty'};
 	$session{'/employee/inventory/skids.html?contents'} = 'Y' if ! exists $session{'/employee/inventory/skids.html?contents'};
@@ -185,51 +189,58 @@ sub skids {
 	$session{'/employee/inventory/skids.html?rfid'} = '' if ! defined $session{'/employee/inventory/skids.html?rfid'};
 	$session{'/employee/inventory/skids.html?rfid_valid'} = '' if ! defined $session{'/employee/inventory/skids.html?rfid_valid'};
 	$session{'/employee/inventory/skids.html?hasmanifest'} = '' if ! defined $session{'/employee/inventory/skids.html?hasmanifest'};
-	$session{'/employee/inventory/skids.html?Type'} = '' if ! defined $session{'/employee/inventory/skids.html?Type'};
+	$session{'/employee/inventory/skids.html?type'} = '' if ! defined $session{'/employee/inventory/skids.html?type'};
 	$session{'/employee/inventory/skids.html?deleted'} = '0' if ! exists $session{'/employee/inventory/skids.html?deleted'};
  
 } # end sub skids
 
 sub inventory_report {
 	my %param = @_;
-	my @header = ('ID','Owner','Manufacturer','Name','Finish','Colour','Weight','Type','Width','Height','Quality', 'MWeight','GSM','Skid#','RFIDTag #','Received On', 'Date Added','Location', 'In Stock (sheets)','In Stock(lbs)', 'Condition', 'Last Seen', 'Cost', 'Value' );
+	my @header = ('Paper ID','Type','Owner','Manufacturer','Name','Finish','Colour','Weight','Material','Group','Type','Width','Height','Quality', 'MWeight','GSM','Skid#','RFIDTag #','Received On', 'Date Added','Last Updated', 'Location', 'In Stock (sheets)','In Stock(lbs)', 'Condition', 'Last Seen', 'Cost', 'Value' );
 
 	my @data;
 	my $count = 0;
 	my $total_weight = 0;
+	openprint::Location->find();
 	foreach my $Skid ( openprint::Skid->find(
 				ssi::date_filter( 'added_on_start', 'created_on >=', \%param ),
 				ssi::date_filter( 'added_on_end', 'created_on <=', \%param ),
-				'quantity >='=>1,'type'=>'Roll') ) {
+				'quantity >='=>1,'type is null or in'=>$param{type} ) ) {
 		foreach my $C ( $Skid->Contents() ) {
 			next if ! $C;
 			my $Paper = $C->Paper();
 			my $weight = 0;
 			if ( $Paper->type() eq 'Roll' ) {
 				$weight = $C->quantity();
-			} else {
+			} elsif ( $Paper->type() eq 'Sheet' ) {
 				$weight += $Paper->sheet_weight() * $C->quantity();
+			} else {
+				$log->error("Unknown stock type! " . $Paper->to_string() );
 			} # end if
 			$total_weight += $weight;
 			$count += 1;
 			push @data,(
-					$$Paper{'id'},
+					$$Paper{id},
+					$$Skid{type},
 					new openprint::Company($Paper->owner_id())->name(),
 					$Paper->manufacturer(),
 					$Paper->brand(),
 					$Paper->finish(),
 					$Paper->colour(),
 					$Paper->weight(),
+					$Paper->material(),
+					$Paper->group(),
 					$Paper->type(),
 					$Paper->width(),
 					$Paper->height(),
 					$Paper->quality(),
 					$Paper->mweight(),
 					$Paper->gsm(),
-					$$Skid{'id'},
+					$$Skid{id},
 					$Skid->RFIDTag()->id_short(),
 					$$Skid{'received_on'},
 					$$Skid{'created_on'},
+					$$Skid{'updated_on'},
 					$Skid->Location()->name(),
 					$Paper->type() eq 'Sheet' ? $C->quantity() : '',
 					$weight,
@@ -241,7 +252,7 @@ sub inventory_report {
 		} # end foreach C
 	} # end foreach Skid
 	my $date = Date::Format::time2str('%Y-%m-%d %H:%M', time );
-	push @data, ( 'Report generated',$date,'Count:',$count,undef,undef,undef, undef, undef, undef, undef, undef, undef, undef, undef, undef, undef,undef, 'Total Weight (lbs):', $total_weight, undef, undef );
+	push @data, ( 'Report generated',$date,'Count:',$count,undef,undef,undef,undef, undef,undef,undef, undef, undef, undef, undef, undef, undef, undef, undef, undef,undef, 'Total Weight (lbs):', $total_weight, undef, undef );
 	return ( \@header, \@data );
 } # end sub inventory_report
 
@@ -313,13 +324,12 @@ Date::Format::time2str('%Y-%m-%d %H:%M', Date::Parse::str2time($I->updated_on())
 			$variable{'information'} .= "Paper $$Paper{'id'} has been deleted.";
 		} elsif ( $param{'papers'} ) {
 			my $ac = sql::start_transaction( undef );		
-			my @papers = openprint::Paper->find('id'=>$param{'papers'});
-
-			foreach my $Paper ( @papers ) {
+			my @Papers = openprint::Paper->find( id => $param{papers} );
+			foreach my $Paper ( @Papers ) {
 				$Paper->delete();
 			} # end foreach
 			sql::end_transaction( undef, $ac );
-			$variable{'information'} .= @papers . ' Papers have been deleted.';
+			$variable{information} .= @Papers . ' Papers have been deleted.';
 		} # end if
 
 	} elsif ( $param{'btnFunction'} eq 'Save' ) {
@@ -334,14 +344,14 @@ Date::Format::time2str('%Y-%m-%d %H:%M', Date::Parse::str2time($I->updated_on())
 					$delta = $param{$key} - $instock;
 				} # end if
 				if ( $delta != 0 ) {
-					sql::insert($log, $dbh, 'Paper_Inventory', [
-						'PaperIndex',	$paper_index,
-						'InStock',		$instock + $delta,
-						'Delta',		$delta,
-						'UserIndex',	$session{'user_id'},
-						'updated_on',	'NOW()',
-						'Comment',		'Stock Check',
-						] );
+					my $PI = new openprint::Paper_Inventory();
+					$variable{error} .= $PI->save({
+						paper_id	=>	$paper_index,
+						instock		=>	$instock + $delta,
+						delta		=>	$delta,
+						user_id		=>	$session{user_id},
+						comment		=>	'Stock Check',
+						});
 				} # end if
 
 			} # end if
@@ -361,7 +371,7 @@ Date::Format::time2str('%Y-%m-%d %H:%M', Date::Parse::str2time($I->updated_on())
 sub _paper_results {
 	ssi::save_params( '/employee/inventory/paper.html', ( 
 				'manufacturer_id','brand_id','finish_id','colour_id','weight_id','quality_id', 
-				'type','owner_id','material_id','group_id',
+				'type','owner_id','material_id','group_id', 'condition_id',
 				( map { 'added_on_start_'.$_ } ( 'year','month','day' ) ),
 				( map { 'added_on_end_'.$_ } ( 'year','month','day' ) ),
 				'Docket','fsc_code','width','height','OrLarger','instock','owner_id_exclude','allocated',
@@ -492,6 +502,10 @@ $openprint::log->debug("Basis:: " . $Paper->basis_mweight() );
 sub save_Paper {
 	my ( $id ) = @_;
 
+	if ( $param{'calliper'.$id} > 1 ) {
+		$param{'calliper'.$id} /= 1000;
+	} # end if
+
 	my $weight;
 	if ( $param{'txtWeight'.$id} ) {
 		$weight = $param{'txtWeight'.$id};
@@ -504,11 +518,7 @@ sub save_Paper {
 			$weight .= 'lb' if ! ( $param{'weight'.$id} =~ /lb/ );
 		} # end if
 	} elsif ( $param{'calliper'.$id} ) {
-		if ( $param{'calliper'.$id} < 1 ) {
-			$weight = ($param{'calliper'.$id}*1000).'PT';
-		} else {
-			$weight =( 1*$param{'calliper'.$id}) . 'PT';
-		} # end if
+		$weight = ($param{'calliper'.$id}*1000).'PT';
 	} # end if
 
 	my @Papers = openprint::Paper->find(
@@ -524,13 +534,11 @@ sub save_Paper {
 			( $param{'Weight'.$id} ? ( 'weight_id' =>	$param{'Weight'.$id} ) : () ),
 			'weight'	=>	$weight,
 # We might 
-			#'quality_id' =>	$param{'Quality'.$id},
-			#'quality'	=>	$param{'txtQuality'.$id},
 			( $param{'width'.$id} ? ( 'width'		=> $param{'width'.$id} ) : () ),
 			( $param{'height'.$id} ? ( 'height'	=>	$param{'type'.$id} ne 'Roll' ? $param{'height'.$id} : undef ) : () ),
 			( $param{'type'.$id} ? ( 'type'		=>	$param{'type'.$id} ) : () ),
 			( $param{'calliper'.$id} ? ( 'calliper'	=>	$param{'calliper'.$id} ) : () ),
-			( $param{'fsc_code'.$id} ? ( 'fsc_code'	=>	$param{'fsc_code'.$id} ) : () ),
+			( $param{'fsc_code'.$id} ? ( 'fsc_code'	=>	$param{'fsc_code'.$id} ) : ( 'fsc_code is null or =' => $param{'fsc_code'.$id} ) ),
 			);
 	my $Paper;
 
@@ -621,9 +629,7 @@ sub save_Paper {
 sub save_inventory {
 	my ( $Skid, $Paper, $qty, $comment, $Condition, $Purpose ) = @_;
 	my $delta = $Skid->add( $Paper, $qty, $Condition, $Purpose );
-$log->debug("Bufer $delta");
 	$Paper->add_inventory( $Skid, $delta, $param{'Units'}, $comment ) if ( $delta or $comment );
-$log->debug("after");
 #FIXME
 	if ( $delta > 0 ) {
 		$variable{'information'} .= sprintf( 'Added %1$d%2$s to inventory for skid <a href="/employee/inventory/skid_details.html?skid_id=%3$d">%3$d</a>.<br/>', $delta,$Paper->type() eq 'Roll' ? 'lbs' : 'sheets', $Skid->id() );
@@ -733,29 +739,29 @@ sub save_Skid {
 							# Already allocated
 						} # end if
 					} else {
-						$Paper->allocate( $$Skid{'id'}, $Project->id(), $qty, $param{'Units'} );
-						$variable{'information'} .= sprintf('Allocated %1$d%2$s to docket <a href="/employee/project/view.html?ProjectIndex=%3$d">%4$d</a>.<br/>', $qty, $param{'Units'}, $Project->id(), $Project->docket() );
+						$Paper->allocate( $$Skid{'id'}, $Project->docket(), $qty, $param{'Units'} );
+						$variable{'information'} .= sprintf('Allocated %1$d%2$s to docket <a href="/employee/project/view.html?docket=%3$d">%3$d</a>.<br/>', $qty, $param{'Units'}, $Project->docket() );
 					} # end if
 				} # end if
 			} # end if
 		} # end if Paper
-	} elsif ( $param{'Docket'} ) {
-		my @Projects = openprint::Project->find('docket'=>$param{'Docket'} );
+	} elsif ( $param{Docket} ) {
+		my $Order = openprint::Order->find_one( docket=>$param{Docket} );
+		if ( ! $Order ) {
+			$variable{'error'} .= "Docket $param{Docket} not found. No paper allocated.<br/>";
+			return;
+		} # end if
 
-		if ( ! @Projects ) {
-			$variable{'error'} .= "Docket $param{'Docket'} not found. No paper allocated.<br/>";
-		} else {
-			my $Allocation = openprint::PaperAllocation->find_one( 'skid_ids any'=>$$Skid{id} );
-			if ( $Allocation ) {
-				if ( ! sets::isin( $Allocation->project_id(), [ map { $_->id() } @Projects ] ) ) {
-					$variable{error} .= sprintf('Skid is already allocated to project <a href="/employee/project/view.html?project_id=%1$d">%1$d</a>.<br/>',$Allocation->project_id() );
-				} else {
-# Already allocated
-				} # end if
+		my $Allocation = openprint::PaperAllocation->find_one( 'skid_ids any'=>$$Skid{id} );
+		if ( $Allocation ) {
+			if ( $Allocation->docket() != $Order->docket() ) {
+				$variable{error} .= sprintf('Skid is already allocated to docket <a href="/employee/project/view.html?docket=%1$d">%1$d</a>.<br/>',$Allocation->docket() );
 			} else {
-				$Skid->allocate( undef, $Projects[0]->id(), $qty, $param{'Units'} );
-				$variable{'information'} .= sprintf('Allocated %1$d%2$s to docket <a href="/employee/project/view.html?ProjectIndex=%3$d">%4$d</a>.<br/>', $qty, $param{'Units'}, $Projects[0]->id(), $Projects[0]->docket() );
+# Already allocated
 			} # end if
+		} else {
+			$Skid->allocate( undef, $Order->docket(), $qty, $param{Units} );
+			$variable{information} .= sprintf('Allocated %1$d%2$s to docket <a href="/employee/project/view.html?docket=%3$d">%3$d</a>.<br/>', $qty, $param{Units}, $Order->docket() );
 		} # end if
 	} # end if
 } # end sub save_Skid
@@ -776,13 +782,13 @@ sub skid_details {
 
 	if ( ! @skid_ids ) {
 		if ( $param{'rfidtag_id'} ) {
-			my @RFIDTags = openprint::RFIDTag->find( 'id_like' => '%'.$param{'rfidtag_id'}, 'order' => 'id','type'=>'Skid');
+			my @RFIDTags = openprint::RFIDTag->find( 'id like' => '%'.$param{'rfidtag_id'}, 'order' => 'id','type'=>'Skid');
 			if ( @RFIDTags == 1 ) {
 				@skid_ids = ( $RFIDTags[0]->skid_id() );
 				#$param{'skid_id'} = $skid_ids[0];
 			} # end if
 		} elsif ( $param{'rfidtag_hex'} ) {
-			my @RFIDTags = openprint::RFIDTag->find( 'id_like' => '%'.hex($param{'rfidtag_hex'}).'%', 'order' => 'id','type'=>'Skid');
+			my @RFIDTags = openprint::RFIDTag->find( 'id like' => '%'.hex($param{'rfidtag_hex'}).'%', 'order' => 'id','type'=>'Skid');
 			if ( @RFIDTags == 1 ) {
 				@skid_ids = ( $RFIDTags[0]->skid_id() );
 				#$param{'skid_id'} = $skid_ids[0];
@@ -1025,9 +1031,12 @@ sub check_out {
 
 	my $available_qty = $Paper->in_stock();
 	my $units = $Paper->type() eq 'Roll' ? 'lbs' : 'sheets';
-	$project_id =~ s/\D//g;
-	$docket =~ s/\D//g;
-	my @Projects = openprint::Project->find( 'id'=>$project_id, 'docket'=>$docket ) if $project_id or $docket;
+	$project_id = openprint::Project->transform( 'id', $project_id );
+	$docket = openprint::Project->transform( 'docket', $docket );
+	my @Projects = openprint::Project->find( 
+		( $project_id ? ( id=>$project_id ) : () ),
+		( $docket ? ( docket=>$docket ) : () ),
+	) if $project_id or $docket;
 
 	my @skids;
 	if ( $skid_id ) {
@@ -1042,7 +1051,7 @@ sub check_out {
 
 	my $description =	'Checked out';
 	if ( @Projects ) {
-		$description .= sprintf( ' for docket <a href="/employee/project/view.html?ProjectIndex=%1$d">%2$d</a>', $Projects[0]->id(), $Projects[0]->docket() );
+		$description .= sprintf( ' for docket <a href="/employee/project/view.html?docket=%1$d">%1$d</a>', $Projects[0]->docket() );
 	} # end if
 	if ( $reason ) {
 		$description .= ': ' . $reason;
@@ -1060,12 +1069,12 @@ sub check_out {
 			$amount *= -1;
 			$C->save({'quantity'=>0});
 			$Paper->add_inventory( $Skid, $amount, $units, $description, @Projects ? $Projects[0] : () );
-			$Paper->allocate( $Skid->id(), $Projects[0]->id(), $amount ) if @Projects and $Paper->allocated( $Projects[0]->id() );
+			$Paper->allocate( $Skid->id(), $Projects[0]->docket(), $amount ) if @Projects and $Paper->allocated( $Projects[0]->docket() );
 		} else {
 			$C->save({ quantity=>($C->quantity() - $qty)});
 			if ( @Projects ) {
 				$Paper->add_inventory( $Skid, -1*$qty, $units, $description, $Projects[0] );
-				$Paper->allocate( $Skid->id(), $Projects[0]->id(), -1*$qty ) if $Paper->allocated( $Projects[0]->id() );
+				$Paper->allocate( $Skid->id(), $Projects[0]->docket(), -1*$qty ) if $Paper->allocated( $Projects[0]->docket() );
 			} else {
 				$Paper->add_inventory( $Skid, -1*$qty, $units, $description );
 			} # end if
@@ -1076,7 +1085,7 @@ sub check_out {
 	} # end foreach
 
 	if ( @Projects ) {
-		$variable{'information'} .= sprintf('Checked out %1$d%2$s to docket <a href="/employee/project/view.html?ProjectIndex=%3$d">%4$d</a><br/>', $quantity, $units, $Projects[0]->id(), $Projects[0]->docket() );
+		$variable{information} .= sprintf('Checked out %1$d%2$s to docket <a href="/employee/project/view.html?docket=%3$d">%3$d</a><br/>', $quantity, $units, $Projects[0]->docket() );
 	} else {
 		$variable{'information'} .= "Checked out $quantity$units to unknown docket.<br/>";
 	} # end if
@@ -1159,28 +1168,27 @@ sub allocate {
 		return;
 	} # end if
 	my $units = $Paper->units();
-	$project_id =~ s/\D//g;
 	$docket =~ s/\D//g;
 	$quantity =~ s/[^\d\.]//g;
 	$quantity =~ s/(\d+)\..*/$1/g;
-	my @Projects = openprint::Project->find( 'id'=>$project_id, 'docket'=>$docket ) if $project_id or $docket;
 
-	if ( $docket and ! @Projects ) {
-		if ( my @Orders = openprint::Order->find('docket'=>$docket) ) {
-			@Projects = $Orders[0]->Projects();
-		} # end if
+	my $Order = openprint::Order->find_one( docket=>$docket ) if $docket;
+	if ( ( ! $Order ) and $project_id ) {
+		my $Project = new openprint::Project( $project_id );
+		$Order = $Project->Order() if $Project;
 	} # end if
-	if ( ! @Projects ) {
-		$variable{'error'} .= 'An invalid Docket or Project # was given. No paper allocated. This can happen if the order has been left re-opened.<br/>';
+
+	if ( ! $Order ) {
+		$variable{error} .= 'An invalid Docket or Project # was given. No paper allocated.<br/>';
 		return;
 	} # end if
 
 	my @skid_ids = split(',', $skid_ids );
 	if ( $specific and ! @skid_ids ) {
 		if ( $quantity < 0 ) {
-			@skid_ids = map { $_->skid_id() } openprint::PaperAllocation->find(paper_id=>$paper_id, project_id=>$Projects[0]->id(), ( $condition_id ? ( condition_id=>$condition_id ) : () ) );
+			@skid_ids = map { $_->skid_id() } openprint::PaperAllocation->find(paper_id=>$paper_id, docket=>$Order->docket(), ( $condition_id ? ( condition_id=>$condition_id ) : () ) );
 		} else {
-			@skid_ids = map { $_->skid_id() } openprint::SkidContent->find(deleted=>0,paper_id=>$paper_id, project_id=>$Projects[0]->id(), ( $condition_id ? ( condition_id=>$condition_id ) : () ) );
+			@skid_ids = map { $_->skid_id() } openprint::SkidContent->find( deleted=>0, paper_id=>$paper_id, ( $condition_id ? ( condition_id=>$condition_id ) : () ) );
 		} # end if
 	} # end if
 
@@ -1236,10 +1244,10 @@ sub allocate {
 			$variable{warning} .= 'There is not enough available paper to allocate.';
 		} # end if
 	} # end if
-	my $PA = $Paper->allocate( \@allocated_skids, $Projects[0]->id(), $quantity, $units, $condition_id );
+	my $PA = $Paper->allocate( \@allocated_skids, $Order->docket(), $quantity, $units, $condition_id );
 	
 	$PA->send_notification();
-	$variable{'information'} .= sprintf('Allocated %d%s to docket <a href="/employee/project/view.html?ProjectIndex=%d">%d</a><br/>', $quantity, $units, $Projects[0]->id(), $Projects[0]->docket() );
+	$variable{information} .= sprintf('Allocated %d%s to docket <a href="/employee/project/view.html?docket=%1$d">%1$d</a><br/>', $quantity, $units, $Order->docket() );
 } # end sub allocate
 
 
@@ -1249,25 +1257,25 @@ sub send_paper_arrival_notification {
 	$info{'Skid'} = $Skid;
 
 	@papers = map { new openprint::Paper( $_ ) } keys %{$Skid->paper()} if ! @papers;
+	require MIME::QuotedPrint;
 
 	foreach my $Paper ( @papers ) {
 		$info{'Paper'} = $Paper;
 		my $C = $Skid->Content( $Paper );
 		$info{'Quantity'} = $C ? $C->quantity() : 0;
 		
-		my @To = map { new openprint::User( $_ ); } sets::union( map { $_->Project->Order()->salesrep_id() } openprint::PaperAllocation->find('skid_id'=>$Skid->id(),'paper_id'=>$Paper->id()) );
+		my @To = map { new openprint::User( $_ ); } sets::union( map { $_->Project->Order()->salesrep_id() } openprint::PaperAllocation->find('skid_ids any'=>$Skid->id(),paper_id=>$Paper->id()) );
 
 		if ( @To ) {
 # Send notification to maybe CSR's
-			my $email_template = misc::load_file( $log, $config{'SkinPath'} . '/email_template.html' );
+			my $email_template = ssi::slurp_content( '/email_template.html' );
 
-			$info{'ReplacementText'} = "<!--#include virtual=\"/email_content/paper_arrived_notification.html\"-->";
-			$_ = MIME::QuotedPrint::encode_qp( ssi::variable_substitution( \$email_template, \%info ) );
+			$info{'ReplacementText'} = ssi::include( '/email_content/paper_arrived_notification.html', \%info );
 			(new openprint::Email())->send(
 					FROM	=> new openprint::User( $session{'user_id'} ),
 					TO	=> @To,
 					SUBJECT => 'Paper ' . $Paper->to_string() . ' has arrived',
-					ATTACHMENTS=>['', $_, 'text/html', 'quoted-printable'],
+					ATTACHMENTS=>['', MIME::QuotedPrint::encode_qp( ssi::variable_substitution( \$email_template, \%info ) ), 'text/html', 'quoted-printable'],
 					);
 		} # end if to
 	} # end foreach Paper
@@ -1403,7 +1411,7 @@ sub save_Manifest {
 
 	my $error;
 	my $ac = sql::start_transaction( $dbh );
-	$dbh->do( 'LOCK TABLE company IN EXCLUSIVE MODE' ) or $log->error( DBI->errstr );
+	$dbh->do( 'LOCK TABLE companies IN EXCLUSIVE MODE' ) or $log->error( DBI->errstr );
 
 	$Manifest->received_on( join('-', @param{'received_on_year','received_on_month','received_on_day'} ) );
 
@@ -1448,9 +1456,11 @@ sub save_Manifest {
 		my %data = (
 			docket		=>	$param{'docket-'.$Type->id()},
 			paper_id	=>	$Paper->id(),
+			( ( ! $$Type{type} ) ? ( type		=>	$Paper->type() ) : () ),
 			po_id		=>	$param{'po_id-'.$Type->id()},
 			manufacturers_name	=>	$param{'manufacturers_name-'.$$Type{id}},
 			item_count	=>	$param{'item_count-'.$$Type{id}},
+			condition_id	=>	$param{'condition_id-'.$$Type{id}},
 		);
 		$data{cost} = $param{'cost-'.$Type->id()} if exists $param{'cost-'.$Type->id()};
 		$data{supplier_invoice} = $param{'supplier_invoice-'.$Type->id()} if exists $param{'supplier_invoice-'.$Type->id()};
@@ -1563,23 +1573,17 @@ sub apply_Manifest {
 
 	foreach my $Type ( openprint::Manifest_Content_Type->find( manifest_id=>$Manifest->id()) ) {
 		my $Paper = $Type->Paper();
+		my $Order = $Type->Order();
 			
 		# If there is a change of paper in the type, then go through each skid and update them, nicluding allocations, and add a log entry so we know that it happened.
 		if ( $Type->manufacturers_name() and $Type->paper_id() and ! $Paper->manufacturers_name() ) {
 			$error .= $Paper->save({manufacturers_name=>$Type->manufacturers_name()});
 		} # end if
 
-		my $Project;
-		if ( $param{'docket-'.$Type->id()} ) {
-			if ( ! ( $Project = openprint::Project->find_one( docket=>$param{'docket-'.$Type->id()}) ) ) {
-				$error .= 'Docket ' . $param{'docket-'.$Type->id()} . ' not found.	No allocations made.<br/>';
-			} # end if
-		} # end if
-
 		my $total_qty = 0;
 # Save data for the rest of the contents
 		foreach my $MC ( $Manifest->Contents( type_id => $$Type{id} ) ) {
-			$error .= $MC->apply( $Project );
+			$error .= $MC->apply( $Order );
 
 			$total_qty += $MC->quantity();
 		} # end foreach Manifest_Content for this type
@@ -1601,6 +1605,8 @@ sub apply_Manifest {
 			} # end if
 		} # end if po_id
 
+		# Update in_stock
+		$error .= $Paper->save();
 	} # end foreach Type
 	sql::end_transaction( $dbh, $ac );
 	return $error;
@@ -1836,6 +1842,7 @@ sub manifests {
 	ssi::setup_date_select( '/employee/inventory/manifests.html', 'created_on_start', -7 );
 	ssi::setup_date_select( '/employee/inventory/manifests.html', 'created_on_end', '' );
 	$session{'/employee/inventory/manifests.html?deleted'} = '0' if ! exists $session{'/employee/inventory/manifests.html?deleted'};
+	$session{'/employee/inventory/manifests.html?has'} = '' if ! exists $session{'/employee/inventory/manifests.html?has_errors'};
 } # end sub manifests
 
 sub _manifests {
@@ -1846,8 +1853,11 @@ sub _manifests {
 				( map { 'created_on_end_'.$_ } ( 'year','month','day' ) ),
 				( map { 'updated_on_start_'.$_ } ( 'year','month','day' ) ),
 				( map { 'updated_on_end_'.$_ } ( 'year','month','day' ) ),
-				'supplier_id', 'delivery','deleted',
+				'supplier_id', 'delivery','deleted','has_errors','type',
 				) );
+	if ( ! exists $param{type} ) {
+		delete $session{'/employee/inventory/manifests.html?type'};
+	} # end if
 } # end sub _manifests
 
 sub inventory_log {
@@ -1894,7 +1904,7 @@ sub inventory_log {
 				$Skid->RFIDTag()->id_short(),
 				$Paper->to_string(),
 				$PI->delta,
-				join(',', map { sprintf('%d%s to %d', $_->quantity(),$_->units(),new openprint::Project( $_->project_id() )->docket() ) } openprint::PaperAllocation->find( skid_id=>$PI->skid_id, paper_id=>$PI->paper_id)),
+				join(',', map { sprintf('%d%s to %d', $_->quantity(),$_->units(),new openprint::Project( $_->project_id() )->docket() ) } openprint::PaperAllocation->find( 'skid_ids any'=>$PI->skid_id, paper_id=>$PI->paper_id)),
 				$PI->instock,
 				$Skid->Location()->name(),
 				$PI->comment,
@@ -1937,53 +1947,62 @@ sub _inventory_log {
 } # end sub inventory_log
 
 sub _paper_allocations {
-	$param{'paper_id'} =~ s/\D//g;
-	$variable{'Paper'} = new openprint::Paper( $param{'paper_id'} );
-	if ( $param{'action'} eq 'Add' ) {
-		$param{'skid_id'} =~ s/\D//g;
-		$param{'Docket'} =~ s/\D//g;
-		$param{'AllocationQuantity'} =~ s/[^\d\-]//g;
-		my @Projects = openprint::Project->find( 'docket'=>$param{'Docket'} ) if $param{'Docket'};
-		if ( ! @Projects ) {
-			$variable{'error'} .= "Docket $param{'Docket'} not found.";
+	$param{paper_id} = openprint::Paper->transform( 'id', $param{paper_id} );
+	$variable{Paper} = new openprint::Paper( $param{paper_id} );
+	if ( $param{action} eq 'Add' ) {
+		$param{skid_id} = openprint::Skid->transform( 'id', $param{skid_id} );
+		$param{Docket} =~ openprint::Order->transform( 'docket', $param{Docket} );
+		$param{AllocationQuantity} =~ s/[^\d\-]//g;
+		my $Order = openprint::Order->find_one( docket=>$param{Docket} ) if $param{Docket};
+
+		if ( ! $Order ) {
+			$variable{error} .= "Docket $param{Docket} not found.<br/>";
 		} else {
-			$variable{'Paper'}->allocate( $param{'skid_id'}, $Projects[0]->id(), $param{'AllocationQuantity'} );
+			$variable{Paper}->allocate( $param{skid_id}, $Order->docket(), $param{AllocationQuantity} );
 		} # end if
-		delete $param{'skid_id'};
-	} elsif ( $param{'action'} eq 'Delete Allocation' ) {
-		if ( $param{'allocation_id'} ) {
-			my $PA = new openprint::PaperAllocation( $param{'allocation_id'} );
-			$variable{'error'} .= $PA->delete($param{'reason'});
+		delete $param{skid_id};
+	} elsif ( $param{action} eq 'Delete Allocation' ) {
+		if ( $param{allocation_id} ) {
+			my $PA = new openprint::PaperAllocation( $param{allocation_id} );
+			$variable{error} .= $PA->delete($param{reason});
 		} # end if
 	} # end if
 } # end sub _paper_allocations
 
 sub _skid_allocations {
-    if ( $param{'action'} eq 'Add' ) {
-        my $Paper = new openprint::Paper( $param{'paper_id'} );
-        my @Projects = openprint::Project->find( 'id'=>$param{'ProjectID'}, 'docket'=>$param{'Docket'} ) if $param{'ProjectID'} or $param{'Docket'};
-        my $Skid = new openprint::Skid( $param{'skid_id'} );
+	$variable{skid_id} = $param{skid_id};
+	my $Skid = $variable{Skid} = new openprint::Skid( $param{skid_id} );
 
-        if ( ! @Projects ) {
-            $variable{'error'} .= 'Docket not found. No paper allocated.<br/>';
-        } elsif ( $Skid->allocateable() < $param{'AllocationQuantity'} ) {
+    if ( $param{action} eq 'Add' ) {
+		$param{paper_id} = openprint::Paper->transform( 'id', $param{paper_id} );
+		$param{Docket} =~ openprint::Order->transform( 'docket', $param{Docket} );
+        my $Paper = new openprint::Paper( $param{paper_id} );
+		if ( ! $Paper ) {
+			$variable{error} .= "Paper not found.<br/>";
+			return;
+		} # end if
+
+		my $Order = openprint::Order->find_one( docket=>$param{Docket} ) if $param{Docket};
+		if ( ! $Order ) {
+			$variable{error} .= "Docket $param{Docket} not found.<br/>";
+			return;
+		} # end if
+
+        if ( $Skid->allocateable() < $param{'AllocationQuantity'} ) {
             $variable{'error'} .= 'Only ' .  $Skid->allocateable() . ' on this skid. No paper allocated.<br/>';
         } else {
-            my $Project = shift @Projects;
-            $Paper->allocate( $Skid, $Project->id(), @param{'AllocationQuantity','Units'} );
-            $variable{'information'} .= sprintf('Allocated %s%s to docket %d<br/>', @param{'AllocationQuantity','Units'}, $Project->docket() );
+            $Paper->allocate( $Skid, $Order->docket(), @param{'AllocationQuantity','Units'} );
+            $variable{information} .= sprintf('Allocated %s%s to docket %d<br/>', @param{'AllocationQuantity','Units'}, $Order->docket() );
         } # end if
-    } elsif ( $param{'action'} eq 'delete' ) {
-        my $Allocation = new openprint::PaperAllocation( $param{'allocation_id'} );
+    } elsif ( $param{action} eq 'delete' ) {
+        my $Allocation = new openprint::PaperAllocation( $param{allocation_id} );
 		if ( $Allocation->id() ) {
-			$Allocation->Project()->add_to_log( @session{'company_id','user_id'}, 'Paper Allocation for skid ' . $param{'skid_id'} . ' deleted.' );
+			$Allocation->Order()->add_log( 'Paper Allocation for ' . $Skid->link_to() . ' deleted.' );
 			$Allocation->delete();
 		} else {
 			$openprint::log->warn('Non-existent Paper Allocation deleted.');
 		} # end if
 	} # end if
-	$variable{'skid_id'} = $param{'skid_id'};
-	$variable{'Skid'} = new openprint::Skid( $param{'skid_id'} );
 } # end sub _skid_allocations
 
 
@@ -2010,6 +2029,10 @@ sub available_paper {
 	$session{'/employee/inventory/available_paper.html?owner_id_exclude'} = $param{'owner_id_exclude'} if exists $param{'owner_id'};
 	$session{'/employee/inventory/available_paper.html?type'} = 'Roll' if ! $session{'/employee/inventory/available_paper.html?type'};
 	$session{'/employee/inventory/available_paper.html?Owner'} = new openprint::User( $session{'user_id'} )->company_id() if ! exists $session{'/employee/inventory/available_paper.html?Owner'};
+	if ( ! exists $session{'/employee/inventory/available_paper.html?condition_id'} ) {
+		my $New = openprint::InventoryCondition->find_one( name=>'new' );
+		$session{'/employee/inventory/available_paper.html?condition_id'} = $New->id() if $New;
+	} # end if
 } # end sub available_paper
 sub _available_paper {
 	ssi::save_params( '/employee/inventory/available_paper.html', 
@@ -2041,35 +2064,21 @@ sub _manifest_purchase_orders {
 } # end sub _manifest_purchase_orders
 
 sub _rfidtag_log {
+	if ( ! exists $param{start_year} ) {
+		my $Entry = openprint::RFIDTagHistory->find_one( 
+			( $param{rfidtag_id} ? ( rfidtag_id	=>	$param{rfidtag_id} ) : () ),
+			( $param{scanner_id} ? ( scanner_id	=>	$param{scanner_id} ) : () ),
+			order		=>	'updated_on DESC',
+			limit		=>	$param{limit},
+			);
+		if ( $Entry ) {
+			@param{'start_year','start_month','start_day'} = $Entry->updated_on() =~ /^(\d+)-(\d+)-(\d+)/;
+		} # end if
+	} # end if
+
 } # end sub _rfidtag_log
 
 sub _rfidtag_log_entries {
-	@param{'end_year','end_month','end_day'} = Date::Calc::Today() if ! $param{'end_year'};
-	@param{'start_year','start_month','start_day'} =(0,0,0) if ! $param{'start_year'};
-	$param{'limit'} = 10 if ! exists $param{'limit'};
-	$variable{'Entries'} = [ openprint::RFIDTagHistory->find( 
-		rfidtag_id	=>	$param{rfidtag_id},
-		ssi::date_filter( 'start', 'updated_on >=', \%param ),
-		ssi::date_filter( 'end', 'updated_on <=', \%param ),
-		order	 =>	'updated_on DESC',
-		limit	 =>	$param{limit},
-		) ];
-
-	# This is to auto-load the start year
-	if ( ! @{$variable{'Entries'}} ) {
-		$variable{'Entries'} = [ openprint::RFIDTagHistory->find( 
-				rfidtag_id	=>	$param{rfidtag_id},
-				ssi::date_filter( 'start', 'updated_on >=', \%param ),
-				ssi::date_filter( 'end', 'updated_on <=', \%param ),
-				limit	 =>	$param{limit},
-				order	 =>	'updated_on DESC',
-				) ];
-		if ( @{$variable{'Entries'}} ) {
-			@param{'start_year','start_month','start_day'} = $variable{'Entries'}[@{$variable{'Entries'}}-1]->updated_on() =~ /^(\d+)-(\d+)-(\d+)/;
-		} # end if
-	} elsif ( ! $param{'start_year'} ) {
-		@param{'start_year','start_month','start_day'} = $variable{'Entries'}[@{$variable{'Entries'}}-1]->updated_on() =~ /^(\d+)-(\d+)-(\d+)/;
-	} # end if
 } # end sub _rfidtag_log_entries
 
 sub _manifest_type {
@@ -2102,7 +2111,7 @@ sub _allocations {
 sub _deallocate_popup {
 }
 sub _skids_results {
-	ssi::save_params( '/employee/inventory/skids.html', ( 'PaperManufacturer','PaperBrand','PaperFinish','PaperColour','PaperWeight','Type',
+	ssi::save_params( '/employee/inventory/skids.html', ( 'PaperManufacturer','PaperBrand','PaperFinish','PaperColour','PaperWeight','type',
 				( map { 'received_on_start_' . $_ } ( 'year','month','day' ) ),
 				( map { 'received_on_end_' . $_ } ( 'year','month','day' ) ),
 				( map { 'created_on_start_' . $_ } ( 'year','month','day' ) ),
@@ -2369,6 +2378,20 @@ sub manifest_view {
 		$variable{ExternalRedirect} = '/employee/inventory/manifest_view.html?manifest_id='.$Manifest->id();
 	} # end if
 } # end sub manifest_view
+
+sub _stock {
+}
+
+sub allocation {
+	my $Allocation = $variable{Allocation} = new openprint::PaperAllocation( $param{allocation_id} );
+	if ( $param{action} eq 'Delete' ) {
+		$variable{error} .= $Allocation->delete();
+		if ( ! $variable{error} ) {
+			$variable{ExternalRedirect} = '/employee/inventory/allocations.html';
+		} # end if
+	} # end if
+	
+} # end sub allocation
 
 1;
 __END__

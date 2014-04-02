@@ -40,7 +40,7 @@ if ($opts->{help}) {
 $$opts{config} = '/etc/openprint/emailer-scheduler.conf' if ! $$opts{config};
 
 $log = new logger( {level=>'warn'});
-configuration::init( );
+configuration::init();
 configuration::from_file( $$opts{config} );
 configuration::merge( $opts );
 

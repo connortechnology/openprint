@@ -8,7 +8,7 @@ require openprint::Log_Action;
 require openprint::Host;
 
 use vars qw( $debug $table $serial %fields %find_fields %transforms %defaults %types );
-$debug = 0;
+$debug = 1;
 $table = 'logs';
 $serial = 'logs_id_seq';
 %fields = (
@@ -30,6 +30,7 @@ $serial = 'logs_id_seq';
 %find_fields = (
 	action		=>	'(SELECT name FROM log_actions WHERE log_actions.id = logs.action_id)',
 	object_type	=>	'(SELECT name FROM Object_Types WHERE object_types.id=logs.object_type_id)',
+	ip_address	=>	'(SELECT ip FROM Hosts where hosts.id=host_id)',
 );
 %defaults = (
 	'date_time'	=>	"'NOW()'",

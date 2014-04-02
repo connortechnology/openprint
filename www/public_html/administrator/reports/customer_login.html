@@ -4,7 +4,7 @@ Choose report criteria and click show results. You may the download the the resu
 	<fieldset class="filters">
 		<ul>
 		<li>
-			<label>Sales Reps:</label>
+			<label>Sales Reps</label>
 			<select name="ddmEmployees" size="1">
 				<option value="">All Employees</option>
 <? echo (
@@ -13,25 +13,25 @@ Choose report criteria and click show results. You may the download the the resu
 			</select>
 		</li>
 		<li> 
-			<label>Registration Date:</label>
+			<label>Registration Date</label>
 			<? echo ( date_select_session( $r->uri(), 'registered_on_start', { with_today=>1, with_clear=>1 } ); ) ?>
 			to
 			<? echo ( date_select_session( $r->uri(), 'registered_on_end', { with_today=>1, with_clear=>1 } ); ) ?>
 		</li>
 		<li>
-			<label>Last Project:</label>
+			<label>Last Project</label>
 			<? echo ( date_select_session( $r->uri(), 'last_project_start', { with_today=>1, with_clear=>1 } ); ) ?>
 			to
 			<? echo ( date_select_session( $r->uri(), 'last_project_end', { with_today=>1, with_clear=>1 } ); ) ?>
 		</li>
 		<li>
-			<label>Last Order:</label>
+			<label>Last Order</label>
 			<? echo ( date_select_session( $r->uri(), 'last_order_start', { with_today=>1, with_clear=>1 } ); ) ?>
 				to
 			<? echo ( date_select_session( $r->uri(), 'last_order_end', { with_today=>1, with_clear=>1 } ); ) ?>
 		</li>
 		<li>
-			<label>Last Login:</label>
+			<label>Last Login</label>
 			<? echo ( date_select_session( $r->uri(), 'last_login_start', { with_today=>1, with_clear=>1 } ); ) ?>
 			to
 			<? echo ( date_select_session( $r->uri(), 'last_login_end', { with_today=>1, with_clear=>1 } ); ) ?>

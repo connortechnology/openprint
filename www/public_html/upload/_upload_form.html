@@ -54,7 +54,6 @@
 			<hr class="legendUnderline" />
 <? eval (
 	my $Project;
-$log->debug("SEssion: $session{'project_id'} ");
 	if ( $param{'ProjectIndex'} ) {
 		$Project = new openprint::Project( $param{'ProjectIndex'} );
 		$param{'project_id'} = $Project->id();
@@ -63,87 +62,20 @@ $log->debug("SEssion: $session{'project_id'} ");
 	} # end if
 	if ( $Project and ( $Project->status() ne 'uncalculated' ) ) {
 		$$variable{'txtQuoteNumber'} = $Project->id();
-		$$variable{'txtQuotedPrice'} = $Project->price1();
-		my $services = $Project->services();
-
-		if ( $$services{''} ) {
-			my $sig_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
-			$$variable{'Size'} = $$sig_specs{'txtFinalWidth'} . '&quot; x ' . $$sig_specs{'txtFinalHeight'}.'&quot; Finished';
-		} # end if
-
-		my @groups = sql::execute( undef, undef, 'SELECT DISTINCT strvalue FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strName=?', $Project->id(), 'Group' );
-
-		# I believe the point of this is to stick the Printed Web or Sheetfred into the summary.  Nastily executed.
-		# The logic is, each group has to be either all sheetfed, or all web (or digital, etc).  
-		foreach my $group_id ( sort @groups ) {
-			my @sigs = $Project->signatures({'Group'=>$group_id});
-
-			my $sig_specs = openprint::service::get_specs_ref( $Project, $sigs[0] );
-			if ( $sig_specs ) {
-				my $Paper = openprint::Paper::load_from_signature( $Project, $sig_specs, 1 );
-				$$variable{'Stock'} .= $$sig_specs{'txtSignatureType'} . ': ' if $$sig_specs{'txtSignatureType'};
-				$$variable{'Stock'} .= $Paper->to_string() . "\n";
-			} # end if sig_specs
-		} # end foreach sig_group
-
-		$$variable{'Quantity'} = $Project->quantity1();
-		if ( $$services{'Turnaround'} ) {
-			my $turnaround_specs = openprint::service::get_specs_ref( $Project, $$services{'Turnaround'}[0] );
-			@$variable{'duedate_year','duedate_month','duedate_day'} = misc::add_delta_business_days( Date::Calc::Today(), $$turnaround_specs{'TurnaroundDays'} );
-		} # end if
-	} # end if Project and calculated
-	if ( ! Date::Calc::check_date( @$variable{'duedate_year','duedate_month','duedate_day'} ) ) {
-		@$variable{'duedate_year','duedate_month','duedate_day'} = Date::Calc::Today();
 	} # end if
+	$$variable{Project} = $Project;
 ) ?>
 			<p>
 				<label for="txtQuoteNumber">Quote #</label>
 				<? echo ( input( type=>'cardinal', id=>'txtQuoteNumber', name=>'txtQuoteNumber', value=>$$variable{txtQuoteNumber} ); ) ?>
 			</p>
 			<p>
-				<label for="txtQuotedPrice">Quoted Price</label>
-				<? echo ( input( type=>'float', id=>'txtQuotedPrice', name=>'txtQuotedPrice', value=>$$variable{txtQuotedPrice} ); ) ?>
-			</p>
-			<p>
-				<label>Due Date</label>
-				<? echo ( ssi::date_select( 'duedate', [@$variable{'duedate_year','duedate_month','duedate_day'}], { 'onchange'=>"filter_days(document.forms['upload'], 'duedate', { futureonly: true, businessonly: true } );" } ); ) ?>
-			</p>
-			<p>
-				<label>Size</label>
-				<input type="text" id="Size" name="Size" value="<?Size?>" />
-			</p>
-			<p>
-				<label>Qty</label>
-				<? echo ( input( type=>'cardinal', id=>'Quantity', name=>'Quantity', value=>$$variable{Quantity} ); ) ?>
-			</p>
-			<p>
-				<label>Stock</label>
-				<textarea id="Stock" name="Stock" rows="1" cols="" onkeyup="textarea_resize(this);"><?Stock?></textarea>
-			</p>
-			<? if ( $$variable{'txtQuoteNumber'} ) ?>
-				<p><label>Summary</label>
-				<? echo (
-					new openprint::Project( $$variable{'txtQuoteNumber'} )->summary();
-				) ?>
-				</p>
-			<? endif ( $$variable{'txtQuoteNumber'} ) ?>
-			<p>
-				<label for="txtJobDescription">Description</label>
-				<textarea name="txtJobDescription" rows="1" onkeyup="textarea_resize(this);">
 			<? if ( $$variable{'txtQuoteNumber'} ) ?>
 				<? echo (
 					new openprint::Project( $$variable{'txtQuoteNumber'} )->reference();
 				) ?>
 			<? endif ( $$variable{'txtQuoteNumber'} ) ?>
 				</textarea>
-			</p>
-			<p class="proof_type">
-				<label>Proof Required</label>
-				<select name="proof_type">
-				<option value="">please select proof type</option>
-				<option value="No Proof Required">No Proof Required</option>
-				<? echo ( ssi::make_drop_down( [ map { $_->name(), $_->description() } openprint::Service->find('category'=>'Proofs') ], $$variable{'proof_type'} ); ) ?>
-				</select>
 			</p>
 		</fieldset>
 <? endif ( ! ( $param{'docket'} or $param{'project_id'} ) ) ?>
@@ -195,7 +127,7 @@ $log->debug("SEssion: $session{'project_id'} ");
 			</table>
 			<span style="float: right;">
 				<? echo ( 
-					ssi::button( 'Upload', { onclick=>"if ( check_input( upload ) ) { upload.btnFunction.value='Upload Files';startprogress($$variable{serial});document.forms['upload'].submit();}", text=>'Upload Files' } );
+					button( 'Upload', { onclick=>"if ( check_input( upload ) ) { upload.btnFunction.value='Upload Files';startprogress($$variable{serial});document.forms['upload'].submit();}", text=>'Upload Files' } );
 				) ?>					
 			</span>
 			<br class="spacer"/>

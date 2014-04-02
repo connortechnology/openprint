@@ -32,11 +32,11 @@ $serial = 'rfidtags_id_seq';
 );
 
 %defaults = (
-	'created_on'	=>	q`'NOW()'`,
-	'updated_on'	=>	q`'NOW()'`,
-	'location_id'	=>	undef,
-	'type_id'		=>	undef,
-	'valid'			=>	0,
+	created_on	=>	q`'NOW()'`,
+	updated_on	=>	q`'NOW()'`,
+	location_id	=>	undef,
+	type_id		=>	undef,
+	valid		=>	'0',
 );
 
 sub save {
@@ -78,7 +78,7 @@ sub save {
 		} # end if
 	} # end if
 
-	$self->valid( ! $self->is_invalid_id() );
+	$self->valid( $self->is_invalid_id() ? 0 : 1 );
 	
 	my $ac = sql::start_transaction( $dbh );
 
@@ -227,6 +227,10 @@ sub from_id {
 	} # end if
 	return;
 } # end sub from_id
+
+sub link_to {
+	return sprintf('<a href="/employee/inventory/rfidtag_details.html?rfidtag_id=%1$s">%2$s</a>', $_[0]->id(), $_[0]->id_short() );
+} # end sub link_to
 
 1;
 __END__

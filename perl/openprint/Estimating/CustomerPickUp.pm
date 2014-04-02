@@ -30,6 +30,7 @@ my %variables = (
     'chkOverridePackageQuantity'=>['save'],
     'txtTotalWeight1'=>['save','output'], 'txtTotalWeight2'=>['save','output'], 'txtTotalWeight3'=>['save','output'],
     'txtPackageWeight'=>['save','output'],
+	alert	=> ['save','output' ],
 );
 
 sub variables {
@@ -53,6 +54,7 @@ sub calc {
 	my ( $log, $dbh, $variable, $project_index, $service_index, $specs ) = @_;
 
 	my $status = 'calculated';
+	$$specs{alert} = '';
 
 	my $Project = new openprint::Project( $project_index );
 	my $services = $Project->services();

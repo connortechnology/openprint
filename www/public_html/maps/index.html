@@ -4,7 +4,7 @@
 	my $Parent = $$variable{'Location'};
 	do {
 		unshift @path, sprintf('<a href="/maps/index.html?location_id=%d">%s</a>', $$Parent{id}, $Parent->name() );
-	} while ( $Parent = $Parent->parent() );
+	} while ( $Parent = $Parent->Parent() );
 	$html = join("&nbsp;&gt;\n", @path);
 	return $html;
 ) ?>
@@ -48,6 +48,6 @@
 </form>
 <span style="float: right;">
 	<? echo ( join('',
-		ssi::writeButton( $log, $dbh, 'MapClose', 'close.gif', 'window.close();', '', 'Close' ),
+		button( 'MapClose', { onclick=>'window.close();', text=>'Close' } ),
 	); ) ?>
 </span>

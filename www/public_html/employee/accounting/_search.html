@@ -4,8 +4,8 @@
 			id		=>	$param{order_id},
 			order	=> 'created_on',
 			) ];
-	} elsif ( $param{'invoice_id'} ) {
-		s/^\s+//, s/\s+$// for $param{'invoice_id'};
+	} elsif ( $param{invoice_id} ) {
+		s/^\s+//, s/\s+$// for $param{invoice_id};
 		
 		$$variable{Orders} = [ openprint::Order->find(
 			invoice_id	=>	$param{'invoice_id'},
@@ -16,13 +16,13 @@
 		date_filter( '/employee/accounting/search.html?ordered_on_end', 'created_on <=' ),
 		date_filter( '/employee/accounting/search.html?ordered_on_start', 'created_on >=' ),
 		'status not in'	=> [ sets::exclude( [ $session{'/employee/accounting/search.html?ddmStatus'} ], [ 'Incomplete','Cancelled','Deleted' ] ) ],
-		( $session{'/employee/accounting/search.html?ddmStatus'} ? ( 'status'		=> [ split(',',$session{'/employee/accounting/search.html?ddmStatus'} ) ] ) : () ),
-		( $session{'/employee/accounting/search.html?ddmCustomer'} ? ( 'company_id'	=> $session{'/employee/accounting/search.html?ddmCustomer'} ) : () ),
-		( $session{'/employee/accounting/search.html?ddmEmployee'} ? ( 'salesrep_id' => $session{'/employee/accounting/search.html?ddmEmployee'} ) : () ),
+		( $session{'/employee/accounting/search.html?ddmStatus'} ? ( status		=> [ split(',',$session{'/employee/accounting/search.html?ddmStatus'} ) ] ) : () ),
+		( $session{'/employee/accounting/search.html?ddmCustomer'} ? ( company_id	=> $session{'/employee/accounting/search.html?ddmCustomer'} ) : () ),
+		( $session{'/employee/accounting/search.html?ddmEmployee'} ? ( salesrep_id => $session{'/employee/accounting/search.html?ddmEmployee'} ) : () ),
 		( $session{'/employee/accounting/search.html?dblTotal2'} ? ( 'value <='	=> $session{'/employee/accounting/search.html?dblTotal2'} ) : () ),
 		( $session{'/employee/accounting/search.html?dblTotal1'} ? ( 'value >='	=> $session{'/employee/accounting/search.html?dblTotal1'} ) : () ),
 		'owing >'	=>	0,
-		'order'		=> $openprint::Order::fields{'created_on'},
+		order		=> $openprint::Order::fields{created_on},
 		) ];
 	} # end if
 	if ( @{$$variable{'Orders'}} > 10 ) {
@@ -52,19 +52,20 @@
 	<td class="order_id"><a href="/main/order/history_details.html?order_id=%2$d">%2$d</a></td>
 	<td class="Docket"><a href="/main/order/history_details.html?order_id=%2$d">%3$d</a></td>
 	<td class="Date">%4$s</td>
-	<td class="Company">%5$s</td>
-	<td class="status">%6$s</td>
-	<td class="invoice_id">%7$s</td>
-	<td class="po_id">%8$s</td>
-	<td class="Price">%9$s</td>
+	<td class="Company"><a href="/employee/accounting/credit.html?ddmCustomer=%5$d">%6$s</a></td>
+	<td class="status">%7$s</td>
+	<td class="invoice_id">%8$s</td>
+	<td class="po_id">%9$s</td>
 	<td class="Price">%10$s</td>
+	<td class="Price">%11$s</td>
 </tr>`,
 	$rowclass, $$Order{'id'}, $$Order{'docket'}, 
-	Date::Format::time2str($config{'DateFormat'}, Date::Parse::str2time($Order->created_on() ) ),
+	format_date( $Order->created_on() ),
+	$$Order{company_id},
 	ssi::html_escape( $Order->Company->name() ),
 	$$Order{'status'},
-	ssi::html_escape( $$Order{'invoice_id'} ),
-	ssi::html_escape( $Order->po() ),
+	join('<br/>', map { $_->Invoice()->link_to() } $Order->Invoices() ),
+	html_escape( $Order->po() ),
 	openprint::Currency::format( $Order->total() ),
 	openprint::Currency::format( $Order->owing() ),
 );

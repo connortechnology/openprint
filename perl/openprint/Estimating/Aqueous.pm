@@ -25,6 +25,7 @@ require openprint::imposition;
 require openprint::Imposition;
 
 use vars qw( @outputs );
+use constant DEBUG => 0;
 
 # Offline Aqueous
 # Let's assume that each piece of equipment can do 1 coat at a time
@@ -87,50 +88,85 @@ sub neccessary {
 
 	return 0;
 } # end sub neccessary
+
+sub get_colours {
+    my ( $specs, $side ) = @_;
+    my @colours;
+    if ( ( defined $$specs{'sides_the_same'} ) and ( $$specs{'sides_the_same'} eq 'Y' ) and ( $side eq 'SideTwo' ) ) {
+        $side = 'SideOne';
+    } # end if
+
+    foreach my $k ( keys %$specs ) {
+#$openprint::log->debug("AQ get_colours $k => $$specs{$k}");
+        if ( my ( $index ) = $k =~ /^chkColourCoating(\d+)$side/ ) {
+#$openprint::log->debug("AQ get_colours $k => $$specs{$k} index is $index");
+            next if ! $$specs{"chkColourCoating$index$side"};
+			if ( $$specs{"ColourCoatingType$index$side"} =~ /Aqueous/i ) {
+				push @colours, $$specs{"ColourCoatingType$index$side"};
+            } # end if
+        } # end if
+    } # end foreach
+    return @colours;
+} # end sub get_colours
+
 sub signature_needs {
 	my ( $Project, $sig_specs ) = @_;
 
-    $$sig_specs{SideOneColours} = [openprint::Estimating::Printing::get_colours( $sig_specs, 'SideOne' )] if ! $$sig_specs{SideOneColours};
-	foreach ( @{$$sig_specs{SideOneColours}} ) {
-		return 1 if $$_{'name'} =~ /Aqueous/;
-	} # end foreach colour
+	if ( $$sig_specs{SideOneColours} ) {
+		foreach ( @{$$sig_specs{SideOneColours}} ) {
+			return 1 if $$_{'name'} =~ /Aqueous/;
+		} # end foreach colour
+	} else {
+		$$sig_specs{SideOneAQ} = [ get_colours( $sig_specs, 'SideOne' ) ] if ! $$sig_specs{SideOneAQ};
+		return 1 if @{$$sig_specs{SideOneAQ}};
+	} # en dif
 
-    $$sig_specs{SideTwoColours} = [openprint::Estimating::Printing::get_colours( $sig_specs, 'SideTwo' )] if ! $$sig_specs{SideTwoColours};
+	if ( $$sig_specs{SideTwoColours} ) {
 	foreach ( @{$$sig_specs{SideTwoColours}} ) {
 		return 1 if $$_{'name'} =~ /Aqueous/;
 	} # end foreach colour
+	} else {
+		$$sig_specs{SideTwoAQ} = [ get_colours( $sig_specs, 'SideTwo' ) ] if ! $$sig_specs{SideTwoAQ};
+		return 1 if @{$$sig_specs{SideTwoAQ}};
+	} # en dif
 } # end sub signature_needs
 
 sub calc {
 	my ( $log, $dbh, $variable, $project_index, $service_index, $specs ) = @_;
 
 	my $status = 'calculated';
+	$$specs{alert} = '';
 
 	my $Project = new openprint::Project( $project_index );
 
-	@all_equipment = openprint::Equipment->find( 'Specifications' => {'Aqueous Capable'=>['Y','When Printing']}, 'useinestimating'=>1,'order'=>'lower(strName)') if ! @all_equipment;
+	@all_equipment = openprint::Equipment->find( Specifications => {'Aqueous Capable'=>['Y','When Printing']}, useinestimating=>1, order=>'lower(strName)') if ! @all_equipment;
 
 	foreach my $qty_index ( $Project->quantity_indexes() ) {
-		$$specs{"Markup$qty_index"} =~ s/[^\d\.\-]//g;
-		$$specs{"txtPrice$qty_index"} =~ s/[^\d\.]//g;
-		$$specs{"txtQuantity$qty_index"} =~ s/[^\d\.]//g;
+		$$specs{"Markup$qty_index"} =~ s/[^\d\.\-]//g if $$specs{"Markup$qty_index"};
+		$$specs{"txtPrice$qty_index"} =~ s/[^\d\.]//g if $$specs{"txtPrice$qty_index"};
+		$$specs{"txtQuantity$qty_index"} =~ s/\D//g if $$specs{"txtQuantity$qty_index"};
 		$$specs{"txtQuantity$qty_index"} = $Project->quantity($qty_index) if ! $$specs{"txtQuantity$qty_index"};
-		if ( ! $$specs{"txtQuantity$qty_index"} > 0 ) {
+		if ( ! ( $$specs{"txtQuantity$qty_index"} > 0 ) ) {
 			next;
 		} # end if
 		$$specs{'hdnBreakdown'.$qty_index} = sprintf('QTY: %d<br/>',$$specs{"txtQuantity$qty_index"} );
 
 		my $qty = $$specs{"txtQuantity$qty_index"};
 		if ( $$specs{'txtPressSheetComboItems'} ) {
-			$qty *= $$specs{'txtPressSheetComboItems'};
+			$$specs{'txtPressSheetComboItems'} =~ s/\D//g;
+			if ( $$specs{'txtPressSheetComboItems'} ) {
+				$qty *= $$specs{'txtPressSheetComboItems'} 
+			} else {
+				$$specs{alert} .= 'Combination items is invalid.';
+			} # end if
 		} # end if
 
 		my %MakeReadies;
 
 		my $GrandTotal = 0;
-		foreach my $signature_service_index ( $Project->signatures() ) {
+		foreach my $signature_service_index ( $Project->signatures( { sort=>1 } ) ) {
 			my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
-			$$specs{'hdnBreakdown'.$qty_index} .= "Signature: $$sig_specs{'txtServiceDescription'},<br/>" if $$sig_specs{'txtServiceDescription'} ne '';
+			$$specs{'hdnBreakdown'.$qty_index} .= "<br/>Signature: $$sig_specs{'txtServiceDescription'},<br/>" if $$sig_specs{'txtServiceDescription'} ne '';
 # If any of the signatures doesn't have an imposition, then we are in an incomplete state.
 			if ( ! $$sig_specs{'txtImposition'.$qty_index} ) {
 				$$specs{'hdnBreakdown'.$qty_index} .= 'No imposition was found for printing.<br/>';
@@ -206,9 +242,11 @@ sub calc {
 sub signature_calc {
     my ( $Project, $service_index, $specs, $signature_service_index, $sig_specs, $qty_index, $imposition, $MakeReadies ) = @_;
 
-#foreach my $equipment_id ( keys %{$MakeReadies} ) {
-#$openprint::log->debug("Makereadies $equipment_id $$MakeReadies{$equipment_id}");
-#}
+if ( DEBUG ) {
+foreach my $equipment_id ( keys %{$MakeReadies} ) {
+$openprint::log->debug("Makereadies $equipment_id $$MakeReadies{$equipment_id}");
+}
+}
 
 	my %bestPrice;
 	$bestPrice{'Status'} = 'uncalculated';
@@ -216,6 +254,7 @@ sub signature_calc {
 	my @front_aq;
     $$sig_specs{SideOneColours} = [openprint::Estimating::Printing::get_colours( $sig_specs, 'SideOne' )] if ! $$sig_specs{SideOneColours};
 	foreach ( @{$$sig_specs{SideOneColours}} ) {
+#$openprint::log->debug("blah  $$_{name}");
 		if ( $$_{'name'} =~ /Aqueous/ ) {
 			push @front_aq, $$_{'name'};
 			#$openprint::log->debug("Side one Aqueous: $_");
@@ -231,9 +270,9 @@ sub signature_calc {
 		} # end if
 	} # end foreach colour
 
-	#$openprint::log->debug("Signature : $signature_service_index");
+	$openprint::log->debug("Signature : $signature_service_index") if DEBUG;
 	if ( ! ( @front_aq or @back_aq ) ) {
-$openprint::log->warn("Doing AQ when not needed");
+$openprint::log->warn("Doing AQ when not needed @front_aq @back_aq");
 		$bestPrice{'Status'} = 'calculated';	
 		return %bestPrice;
 	} # end if
@@ -243,6 +282,7 @@ $openprint::log->warn("Doing AQ when not needed");
 
 	# Should include overs
 	my $impressions = $$sig_specs{"hdnImpressionQuantity$qty_index"} ? $$sig_specs{"hdnImpressionQuantity$qty_index"} : $$specs{"txtQuantity$qty_index"};
+$openprint::log->debug("Impressions: " . $$sig_specs{"hdnImpressionQuantity$qty_index"} . " qty: " . $$specs{"txtQuantity$qty_index"} );
 
 	# Why would it be multiplied by the # of items per sheet? That doesn't make any sense at all.
 	#if ( $$specs{'txtPressSheetComboItems'} ) {
@@ -254,15 +294,21 @@ $openprint::log->warn("Doing AQ when not needed");
 #$openprint::log->debug("Impressions: $impressions");
 if ( 1 ) {
 	# This just can't be right anymore. Actually it can... if double sided, impressions are doubled...
-	if ( sets::isin( $imposition->runstyle(), ['Perfecting','Sheet Work'] ) and @front_aq and @back_aq ) {
-		#if ( ! ( @front_aq and @back_aq ) ) {
-			$impressions = int($impressions/2);
-		#} # end if
+	if ( $imposition->runstyle() eq 'Perfecting' ) {
+		# We know that it is printing 2 sided, but may be only AQ 1 sided.
+		# Sheets = impressions / 2
+		$impressions = int($impressions/2);
+	} elsif ( $$imposition{runstyle} eq 'Sheet Work' ) {
+		if ( @{$$sig_specs{SideOneColours}} and @{$$sig_specs{SideTwoColours}} ) {
+			if ( ! ( @front_aq and @back_aq ) ) {
+				$impressions = int($impressions/2);
+			} # end if
+		} # end if
 	} # end if
 } # end if
 #$openprint::log->debug("Impressions: $impressions");
 
-	@all_equipment = openprint::Equipment->find( 'Specifications' => {'Aqueous Capable'=>['Y','When Printing']}, 'useinestimating'=>1,'order'=>'lower(strName)') if ! @all_equipment;
+	@all_equipment = openprint::Equipment->find( Specifications => {'Aqueous Capable'=>['Y','When Printing']}, useinestimating=>1,order=>'lower(strName)') if ! @all_equipment;
 	my @equipment;	
 	if ( $$specs{"chkOverrideEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} eq 'Y' ) {
 		@equipment = ( new openprint::Equipment( $$specs{"ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} ) );
@@ -279,12 +325,12 @@ if ( 1 ) {
 
 	my @impositions = ();
 	my $services = $Project->services();
-	if ( $$services{'Cutting'} ) {
-		#$openprint::log->debug('Cutting');
+	if ( 0 and $$services{'Cutting'} ) {
+		$openprint::log->debug('Cutting');
 		my @imps = openprint::imposition::get_all_impositions( $imposition );
-		#$openprint::log->debug('After get all Cutting' . @imps);
+		$openprint::log->debug('After get all Cutting' . @imps);
 		for ( my $i = 0; $i < @imps; $i += 1 ) {
-			#$openprint::log->debug("Imposition: " . $imps[$i]{'imposition'} . 'out' );
+			$openprint::log->debug("Imposition: " . $imps[$i]{'imposition'} . 'out' );
 			if ( ( $$specs{"chkOverrideImposition-$$sig_specs{'SignatureIndex'}-$qty_index"} ne 'Y' )
 					or ( $$specs{"txtImposition-$$sig_specs{'SignatureIndex'}-$qty_index"} == $imps[$i]->imposition() )
 			   ) {
@@ -302,9 +348,10 @@ if ( 1 ) {
 	} else {
 		@impositions = ( $imposition->copy() );
 	} # end if
-	#$openprint::log->debug('DOne Cutting :' . @impositions);
+	$openprint::log->debug('AQ DOne Cutting :' . @impositions) if DEBUG;
 
 	foreach my $Equipment ( @equipment ) {
+$openprint::log->debug("AQ Equipment $$Equipment{strid}") if DEBUG;
 		$$specs{'hdnBreakdown'.$qty_index} .= 'Equipment: '.$Equipment->strid().' ' . $Equipment->specification('Aqueous Capable') . ' ' . $$sig_specs{'ddmPress'.$qty_index} . ',<br/>';
 		if ( $Equipment->specification('Aqueous Capable') eq 'When Printing' ) {
 			if ( $$sig_specs{'ddmPress'.$qty_index} ne $Equipment->strid() ) {
@@ -351,7 +398,7 @@ if ( 1 ) {
 				@types = (@front_aq, @back_aq);
 			} # end if
 			my $area = $imp->layout_area();
-
+$openprint::log->debug("AQ types @types") if DEBUG;
 			foreach my $type ( @types ) {
 
 				my %setupPrice;
@@ -396,9 +443,9 @@ if ( 1 ) {
 					%ServicePrice = $Service->get_price( $impressions, $Equipment );
 					$ServicePrice{'Quantity'} = $impressions;
 					$ServicePrice{'Total'} = $ServicePrice{'Price'} * $impressions / 1000;
-				} elsif ( sets::isin( lc $ServicePrice{'units'}, [ 'per m', 'per 1000' ] ) ) {
-					$ServicePrice{'Quantity'} = $run_qty;
-					$ServicePrice{'Total'} = $ServicePrice{'Price'} * $run_qty / 1000;
+				} elsif ( sets::isin( lc $ServicePrice{units}, [ 'per m', 'per 1000' ] ) ) {
+					$ServicePrice{Quantity} = $run_qty;
+					$ServicePrice{Total} = $ServicePrice{Price} * $run_qty / 1000;
 				} elsif ( lc $ServicePrice{'units'} eq 'per hour' ) {
 					$ServicePrice{'Quantity'} = $run_qty;
 					$ServicePrice{'Total'} = $ServicePrice{'Price'} * $run_qty / $Equipment->specification('AqueousRunSpeed') if $Equipment->specification('AqueousRunSpeed');

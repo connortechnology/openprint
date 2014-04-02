@@ -10,6 +10,11 @@
 			manifest_id	=>	$param{manifest_id}, 
 			company_id	=>	new openprint::User( $session{user_id} )->company_id(),
 			order		=>	'id desc') ];
+	} elsif ( $param{docket} ) {
+		$$variable{PurchaseOrders} = [ openprint::PurchaseOrder->find( 
+			'docket any'		=>	$param{docket},
+			company_id	=>	new openprint::User( $session{user_id} )->company_id(),
+			order		=>	'id desc') ];
 	} else {
 		my %search = (
 			company_id	=>		new openprint::User( $session{'user_id'} )->company_id(),
@@ -103,7 +108,7 @@
 		<th class="DateTime">Date</th>
 		<th class="Company">Supplier</th>
 		<th class="User">Created By</th>
-		<th class="AuthorizedBy">Authorized/Declined By</th>
+		<th class="AuthorizedBy">Authorized / Declined By</th>
 		<th class="Manifest">Manifest</th>
 		<th class="Docket">Docket</th>
 		<th class="Price">Total</th>

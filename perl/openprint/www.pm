@@ -111,6 +111,7 @@ sub handler {
 	# This one has to go here, because it loads data, the others clear data, so they can go after the requires
 	configuration::init( $r->dir_config() );
 	openprint::session_init();
+	openprint::usergroup::init_cache();
 	if ( $dbh ) {
 		if ( ! $page_settings{$config{db_name}} or ! $page_settings{$config{db_name}}{$page} ) {
 $log->debug("loading Page settings for $config{db_name} for $page") if DEBUG;
@@ -156,7 +157,11 @@ $log->debug("No good, need login");
 					$r->print( q`window.location='/error/error_login.html';` );
 					return Apache2::Const::OK;
 				} else {
+					if ( $page =~ /employee/ ) {
+					$page = '/employee/account/login.html';
+					} else {
 					$page = '/error/error_login.html';
+					} # end if
 				} # end if
 				$variable{'Destination'} = misc::get_destination( $r, $r->uri() );
 				#$r->headers_out->set(Location=>'/error/error_login.html');
@@ -270,14 +275,19 @@ $log->debug("PageContent is $variable{PageContent}");
 			} # end while
 			} # end if
 		} # end if _
+	$log->debug( "After finding template: ($page) Elapsed time: " . sprintf('%.4f', tv_interval([$starttime])*1000).' usecs' );
+local $|=1;
 		if ( $template ) {
 			#$log->debug("parsing template! $template");
 			$r->print( ssi::variable_substitution( \$template, \%variable ) );
 		} else {
+
 			#$log->warn("No template!" . $r->content_type());
 			$variable{PageContent} = ssi::variable_substitution( \$variable{'PageContent'}, \%variable ) if $variable{'PageContent'} ne '';
-			$log->warn($variable{PageContent});
+			#$log->warn($variable{PageContent});
+	$log->debug( "Before printing: ($page) Elapsed time: " . sprintf('%.4f', tv_interval([$starttime])*1000).' usecs' . length( $variable{PageContent} ) );
 			$r->print( $variable{PageContent} );
+	#$log->debug( "After printing: ($page) Elapsed time: " . sprintf('%.4f', tv_interval([$starttime])*1000).' usecs' );
 		} # end if
 	} # end if
 
@@ -357,11 +367,11 @@ $openprint::log->debug("Getfile");
 					if ( ! $$sig_specs{'UsePress'} ) {
 						openprint::service::insert_service_spec( $log, $dbh, $variable{'ProjectIndex'}, $signature_service_index, 'UsePress', $$sig_specs{'ddmPress'.$variable{'Project'}->ordered_quantity_index()} );
 					} # end if
-					$variable{"UsePress-$signature_service_index"} = $$sig_specs{'UsePress'};
+					$variable{"UsePress-$signature_service_index"} = $$sig_specs{UsePress};
 				} # end foreach signature_service_index
 
 				if ( ! $variable{'ddmDueDate'} ) {
-					$variable{'ddmDueDate'} = $variable{'Project'}->get_due_date();
+					$variable{'ddmDueDate'} = $variable{Project}->get_due_date();
 				} # end if
 				@variable{'duedate_year','duedate_month','duedate_day'} = split('-', $variable{'ddmDueDate'});
 
@@ -491,7 +501,6 @@ $log->debug("ServiceType: $variable{'ServiceTypeType'}");
 					} # end if
 
 				} elsif ($third eq 'bind') {
-$openprint::log->warn('bind');
 					if ( $filename eq 'folding.html' ) {
 						require openprint::Estimating::Folding;
 						openprint::Estimating::Folding::display( $log, $dbh, \%variable, $project_index, $service_index );

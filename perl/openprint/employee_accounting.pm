@@ -27,18 +27,20 @@ use vars qw( $r $log $dbh %variable %param %session %config);
 
 sub search {
 	if ( $param{'btnFunction'} eq 'Go' ) {
-        if ( $param{'StartDocket'} ) {
-            my @orders = openprint::Order->find('docket'=>$param{'StartDocket'},'id'=>$param{'order_id'}, 'invoice_id'=>$param{'invoice_id'} );
-            if ( @orders == 1 ) {
-                $param{'order_id'} = $orders[0]->id();
-                $variable{'Redirect'} = '/employee/accounting/details.html';
+        if ( $param{StartDocket} or $param{order_id} or $param{invoice_id} ) {
+            my @Orders = openprint::Order->find(
+				( $param{StartDocket} ? ( docket=>$param{StartDocket} ) : () ),
+				( $param{order_id} ? ( id=>$param{order_id} ) : () ),
+				( $param{invoice_id} ? ( invoice_id=>$param{invoice_id} ) : () ),
+				);
+            if ( @Orders == 1 ) {
+                $variable{ExternalRedirect} = '/employee/accounting/details.html?order_id='.$Orders[0]->id();
                 return;
             } # end if
-        } elsif ( $param{'project_id'} ) {
+        } elsif ( $param{project_id} ) {
 			my $Project = new openprint::Project( $param{'project_id'} );
 			if ( $Project->id() and $Project->order_id() ) {
-                $param{'order_id'} = $Project->order_id();
-                $variable{'Redirect'} = '/employee/accounting/details.html';
+                $variable{ExternalRedirect} = '/employee/accounting/details.html?order_id='.$Project->order_id();
                 return;
             } # end if
         } # end if
@@ -48,7 +50,7 @@ sub search {
 	ssi::setup_date_select( '/employee/accounting/search.html', 'ordered_on_start', '' );
 	ssi::setup_date_select( '/employee/accounting/search.html', 'ordered_on_end', '' );
 	if ( ! $session{'/employee/accounting/search.html?ddmStatus'} ) {
-		$session{'/employee/accounting/search.html?ddmStatus'} = join(',', 'Complete','In Production',' Order Submitted', 'Pending Deposit', 'Paid', 'Picked Up','Re-Opened', 'Shipped', 'Waiting For Customer Approval', 'Waiting For Pickup' );
+		$session{'/employee/accounting/search.html?ddmStatus'} = join(',', ( 'Complete','In Production',' Order Submitted', 'Pending Deposit', 'Paid', 'Picked Up','Re-Opened', 'Shipped', 'Waiting For Customer Approval', 'Waiting For Pickup', 'Waiting For QA Approval' ) );
 	} # end if
 } # end sub search
 
@@ -70,16 +72,36 @@ sub details {
 	} elsif ( $param{'btnFunction'} eq 'Delete' ) {
 		my $Payment = new openprint::Payment( $param{payment_id} );
 		if ( $Payment->id() ) {
-			$variable{'error'} .= $Payment->delete();
+			$variable{error} .= $Payment->delete();
+			$variable{error} .= $Order->save() if ! $variable{error};
 		} # end if
-		$variable{'ExternalRedirect'} = '/employee/accounting/details.html?order_id='.$Order->id() if ! $variable{'error'};
+		$variable{'ExternalRedirect'} = '/employee/accounting/details.html?order_id='.$Order->id() if ! $variable{error};
 	} elsif ( $param{'btnFunction'} eq 'Pay' ) {
 		$variable{'error'} .= $Order->pay();
 		$variable{'ExternalRedirect'} = '/employee/accounting/details.html?order_id='.$Order->id() if ! $variable{'error'};
 	} elsif ( $param{'btnFunction'} eq 'Invoice' ) {
-		$Order->invoice_id( $param{'invoice_id'} );
-		$Order->invoiced_on( 'NOW()' );
-		$Order->save();
+		$param{invoice_id} = openprint::Invoice->transform( 'num', $param{invoice_id} );
+		if ( $param{invoice_id} ) {
+			my $Invoice = openprint::Invoice->find_one(num=>$param{invoice_id}, invoicee_id=>$Order->company_id() );
+			if ( ! $Invoice ) {
+				$Invoice = new openprint::Invoice();
+				$variable{error} .= $Invoice->save({
+					invoicer_id=>$config{owner_id},
+					invoicee_id=>$Order->company_id(),
+					num=>$param{invoice_id},
+					currency_id =>  $Order->currency_id(),
+					total		=>	$param{amount},
+					});
+			} # end if ! Invoice
+			my $OI = new openprint::Order_Invoice();
+			$variable{error} .= $OI->save({ order_id=>$$Order{id}, invoice_id=>$$Invoice{id} });
+			#$variable{error} .= $Order->save({ invoice_id=> $Invoice->id() });
+			if ( ! $variable{error} ) {
+				$variable{ExternalRedirect} = '/employee/accounting/details.html?order_id='.$Order->id();
+			} # end if
+		} else {
+			$variable{error} .= 'Please enter an invoice #<br/>';
+        } # end if
 	} elsif ( $param{'btnFunction'} eq 'ChangeSupplier' ) {
 		if ( ! $param{'supplier_id'} ) {
 			$variable{'error'} .= 'No supplier specified.  No change made.<br/>';
@@ -110,22 +132,25 @@ sub details {
 			'memo'				=>	$param{'memo'},
 			'transaction_id'	=>	$param{'transaction_id'},
 		});
+		
 		if ( $error ) {
 			return misc::error( $log, $dbh, \%variable, 'Error Saving Payment', $error );
+		} else {
+			$Order->add_log( "Add payment $$Payment{amount}." );
 		} # end if
 
 		openprint::order::get_misc( \%variable, $Order );
 
 		if ( $variable{'DepositDue'} > 0 ) {
 			foreach my $project_index ( sql::execute( $log, $dbh, 'SELECT lngProjectIndex FROM Order_Contents WHERE OrderIndex=?', $order_id ) ) {
-				sql::update( $log, $dbh, 'Projects', ['Index=? AND strStatus=?', $project_index, 'In Prepress'], 'strStatus', 'Pending Deposit' );
+				sql::update( $log, $dbh, 'Projects', ['id=? AND strStatus=?', $project_index, 'In Prepress'], 'strStatus', 'Pending Deposit' );
 				sql::update( $log, $dbh, 'tbl_Project_Contents', "lngProjectIndex=$project_index AND strStatus='Ordered'", 'strStatus', 'Pending Deposit' );
 			} # end foreach
 		} else {
 			$Order->status('In Production') if $Order->status() eq 'Pending Deposit';
 
 			foreach my $project_index ( sql::execute( $log, $dbh, 'SELECT lngProjectIndex FROM Order_Contents WHERE OrderIndex=?', $order_id ) ) {
-				sql::update( $log, $dbh, 'Projects', ['Index=? AND strStatus=?', $project_index, 'Pending Deposit'], 'strStatus', 'In Prepress' );
+				sql::update( $log, $dbh, 'Projects', ['id=? AND strStatus=?', $project_index, 'Pending Deposit'], 'strStatus', 'In Prepress' );
 				sql::update( $log, $dbh, 'tbl_Project_Contents', ['lngProjectIndex=? AND strStatus=?', $project_index, 'Pending Deposit'], 'strStatus', 'Ordered' );
 			} # end foreach
 			if ( $variable{'AmountPaid'} >= $variable{'TOTAL'} ) {
@@ -144,7 +169,7 @@ sub details {
 	openprint::order::get_misc( \%variable, $Order );
 	$variable{'OrderID'} = $order_id;
 	my $Currency = $Order->Currency();
-	@variable{'CurrencyName','CurrencySymbol'} = ( $Currency->name(), $Currency->symbol() );
+	@variable{'Currency','CurrencyName','CurrencySymbol'} = ( $Currency, $Currency->name(), $Currency->symbol() );
 	$variable{'Order'} = $Order;
 } # end sub details
 
@@ -179,9 +204,9 @@ sub credit {
 			$variable{'error'} .= 'No customer specified.<br/>';
 		} else {
 			my $ac = sql::start_transaction( $dbh );
-			$dbh->do( 'LOCK TABLE Company_Credit IN ACCESS EXCLUSIVE MODE' ) or $log->error( DBI->errstr );
-			foreach my $Supplier ( openprint::Company->find('offers_credit'=>1) ) {
-				my $Credit = new openprint::Company_Credit( {'company_id'=>$company_id, 'supplier_id'=>$Supplier->id() } );
+			$dbh->do( 'LOCK TABLE Company_Credit IN ACCESS EXCLUSIVE MODE' ) or $log->error( $dbh->errstr );
+			foreach my $Supplier ( openprint::Company->find( offers_credit=>1) ) {
+				my $Credit = new openprint::Company_Credit( { company_id=>$company_id, supplier_id=>$Supplier->id() } );
 
                 if (
                         ( $Credit->denydays() != openprint::Company_Credit->transform('denydays', $param{'denydays-'.$$Supplier{id}} ) ) or
@@ -189,12 +214,12 @@ sub credit {
                         ( $Credit->limit() != openprint::Company_Credit->transform('limit', $param{'limit-'.$$Supplier{id}} ) ) or
                         ( $Credit->hold() ne openprint::Company_Credit->transform('hold', $param{'hold-'.$$Supplier{id}} ) ) or
                         ( $Credit->downpayment() != openprint::Company_Credit->transform('downpayment', $param{'downpayment-'.$$Supplier{id}} ) ) or
-                        ( $Credit->cod() != openprint::Company_Credit->transform('cod', $param{'cod-'.$$Supplier{id}} ) ),
-                        ( $Credit->late_payment_amount() != openprint::Company_Credit->transform('late_payment_amount', $param{'late_payment_amount-'.$$Supplier{id}} ) ),
-                        ( $Credit->late_payment_units() ne openprint::Company_Credit->transform('late_payment_units', $param{'late_payment_units-'.$$Supplier{id}} ) ),
-                        ( $Credit->early_payment_amount() != openprint::Company_Credit->transform('early_payment_amount', $param{'early_payment_amount-'.$$Supplier{id}} ) ),
-                        ( $Credit->early_payment_units() ne openprint::Company_Credit->transform('early_payment_units', $param{'early_payment_units-'.$$Supplier{id}} ) ),
-                        ( $Credit->early_payment_days() != openprint::Company_Credit->transform('early_payment_days', $param{'early_payment_days-'.$$Supplier{id}} ) ),
+                        ( $Credit->cod() != openprint::Company_Credit->transform('cod', $param{'cod-'.$$Supplier{id}} ) ) or
+                        ( $Credit->late_payment_amount() != openprint::Company_Credit->transform('late_payment_amount', $param{'late_payment_amount-'.$$Supplier{id}} ) ) or
+                        ( $Credit->late_payment_units() ne openprint::Company_Credit->transform('late_payment_units', $param{'late_payment_units-'.$$Supplier{id}} ) ) or
+                        ( $Credit->early_payment_amount() != openprint::Company_Credit->transform('early_payment_amount', $param{'early_payment_amount-'.$$Supplier{id}} ) ) or
+                        ( $Credit->early_payment_units() ne openprint::Company_Credit->transform('early_payment_units', $param{'early_payment_units-'.$$Supplier{id}} ) ) or
+                        ( $Credit->early_payment_days() != openprint::Company_Credit->transform('early_payment_days', $param{'early_payment_days-'.$$Supplier{id}} ) )
                         ) {
                     my $note = 'Old credit: ' . $Credit->to_string() if $Credit->supplier_id();
 					$variable{'error'} .= $Credit->save( { 'company_id'=>$company_id, 'supplier_id'=>$Supplier->id(), 
@@ -592,6 +617,23 @@ sub credit_application {
 	} # end if
 
 } # end sub credit_application
+
+sub _order_invoices {
+	$variable{Order} = new openprint::Order( $param{order_id} );
+	if ( $param{action} eq 'Delete' ) {
+		my $OI = openprint::Order_Invoice->find_one( { order_id=>$param{order_id}, invoice_id=>$param{invoice_id} } );
+		if ( $OI ) {
+			$OI->Order()->add_log( 'Invoice ' . $OI->Invoice()->link_to() . ' removed. ' . $param{reason} );
+			$OI->delete();
+		} else {
+			$variable{error} = 'Invoice not found.  Not deleted<br/>';
+		} # end if
+	} # end if action
+} # end sub _order_invoices
+
+sub _delete_order_invoice {
+	$variable{OI} = openprint::Order_Invoice->find_one( { order_id=>$param{order_id}, invoice_id=>$param{invoice_id} } );
+} # end sub _delete_order_invoice
 
 1;
 __END__

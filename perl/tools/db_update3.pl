@@ -316,9 +316,6 @@ if ( ! sets::isin( 'logs', \@tables ) ) {
 		$dbh->do('ALTER TABLE Logs add object_id INTEGER');
 	} # end if
 } # end if
-if ( my $Action = openprint::Log_Action->find_one('name'=>'Switch Company') ) {
-	$Action->save({'name'=>'Select Company','description'=>'Select Company'});
-} # end if
 my %config_actions = (
 	'Add Currency'			=>	76,
 	'Update Configuration' => 77,
