@@ -117,6 +117,8 @@ sub send {
 	if ( $params{'TO'} ) {
 		if ( ref $params{'TO'} eq 'ARRAY' ) {
 			@recipients = @{$params{'TO'}};
+		} elsif ( ! ref $params{'TO'} ) {
+			@recipients = split( /,;\s/, $params{'TO'} );
 		} else {
 			@recipients = ( $params{'TO'} );
 		} # end if
@@ -132,7 +134,7 @@ sub send {
 			} # end if
 			
 			my @to;
-			foreach my $email ( split (',',	$recipient->email() ) ) {
+			foreach my $email ( split (/,;\s/,	$recipient->email() ) ) {
 				s/^\s+//, s/\s+$// for $email;
 #$openprint::log->debug("Email: checking vacation for $email");
 				if ( email::get_vacation( $email ) ) {
