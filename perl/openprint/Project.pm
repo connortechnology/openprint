@@ -431,16 +431,16 @@ sub is_printed {
 sub update_status {
 	my ( $self ) = @_;
 
+	# The Pending Deposit to In Prepress trnasition is a manual one.
+	return if $$self{status} eq 'Pending Deposit';
+	return if $$self{status} eq 'Deleted';
+
 	my %services = $self->get_services();
 	my @statuses = sql::execute( $openprint::log, $openprint::dbh, q{SELECT DISTINCT strStatus FROM tbl_Project_Contents WHERE lngProjectIndex=?}, $$self{'id'} );
-	my $new_status = $$self{'status'};
+	my $new_status = $$self{status};
 
-	# The Pending Deposit to In Prepress trnasition is a manual one.
-	return if $$self{'status'} eq 'Pending Deposit';
-	return if $$self{'status'} eq 'Deleted';
-
-	my $Order = new openprint::Order( $$self{'order_id'} );
-	if ( $$self{'order_id'} and $Order->status() ne 'Incomplete' ) {
+	my $Order = new openprint::Order( $$self{order_id} );
+	if ( $$self{order_id} and $Order->status() ne 'Incomplete' ) {
 
 # This fixes the damage caused by re-opening an order
 		if ( sets::isin( 'calculated', \@statuses ) ) {

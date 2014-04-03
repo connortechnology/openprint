@@ -351,7 +351,7 @@ sub confirmation {
 				quantity	=> undef,
 			});
 			my $Project = $OP->Project();
-			$variable{error} .= $Project->check_for_order( $OP ):
+			$variable{error} .= $Project->check_for_order( $OP );
 		} # end foreach Project
 
 		if ( $variable{error} ) {
@@ -380,6 +380,18 @@ sub confirmation {
 		if ( ! $docket_number ) {
 			( $docket_number ) = sql::execute( $log, $dbh, q{SELECT nextval('DocketNumber_seq')} );
 		} # end if
+		# This is messed up.  I think an order should never switch companies unless it doesn't have a company assigned.  I don't see how it could work any other way.
+		$Order->company_id( $session{'company_id'} ) if ! $Order->company_id();
+		$Order->salesrep_id( new openprint::Company( $session{'company_id'} )->salesrep_id() );
+		$Order->downpayment( $downpayment );
+		$Order->status( $status );
+		$Order->administrator_name( $param{'AdministratorName'} );
+		$Order->administrator_comments( $param{'AdministratorComments'} );
+		$Order->docket( $docket_number );
+		$Order->currency_id( $session{'Currency_id'} );
+		$Order->save();
+
+		$Order->add_log( 'Submit Order' );
 
 		foreach my $OP ( $Order->Ordered_Projects() ) {
 			my $Project = $OP->Project();
@@ -404,18 +416,6 @@ sub confirmation {
 			openprint::press_schedule::add_project_to_press_schedule( $Project );
 		} # end foreach Product
 
-		# This is messed up.  I think an order should never switch companies unless it doesn't have a company assigned.  I don't see how it could work any other way.
-		$Order->company_id( $session{'company_id'} ) if ! $Order->company_id();
-		$Order->salesrep_id( new openprint::Company( $session{'company_id'} )->salesrep_id() );
-		$Order->downpayment( $downpayment );
-		$Order->status( $status );
-		$Order->administrator_name( $param{'AdministratorName'} );
-		$Order->administrator_comments( $param{'AdministratorComments'} );
-		$Order->docket( $docket_number );
-		$Order->currency_id( $session{'Currency_id'} );
-		$Order->save();
-
-		$Order->add_log( 'Submit Order' );
 		
 		$variable{'Downpayment'} = $downpayment - $Order->paid();
 		$variable{'Downpayment'} = 0 if $variable{'Downpayment'} < 0;

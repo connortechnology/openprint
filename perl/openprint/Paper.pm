@@ -30,6 +30,7 @@ require openprint::StockGroup;
 require openprint::StockMaterial;
 require openprint::Equipment_Stock_Setting;
 require openprint::PaperAllocation;
+require POSIX;
 
 use Time::HiRes qw{ time gettimeofday tv_interval }; 
 
@@ -774,6 +775,9 @@ sub allocate {
 	} else {
 		$skids = $skid_id;
 	} # end if
+
+	$quantity = POSIX::ceil( $quantity );
+
 
 	my $PA = new openprint::PaperAllocation();
 	$PA->save( {
