@@ -24,8 +24,9 @@ require openprint::Todo;
 require openprint::Bug;
 require openprint::Estimating::MultiPage;
 require openprint::service;
+require openprint::Project_Log;
 
-$debug = 0;
+$debug = 1;
 
 $table = 'projects';
 $serial = 'lngProjectIndex_seq';
@@ -430,16 +431,16 @@ sub is_printed {
 sub update_status {
 	my ( $self ) = @_;
 
+	# The Pending Deposit to In Prepress trnasition is a manual one.
+	return if $$self{status} eq 'Pending Deposit';
+	return if $$self{status} eq 'Deleted';
+
 	my %services = $self->get_services();
 	my @statuses = sql::execute( $openprint::log, $openprint::dbh, q{SELECT DISTINCT strStatus FROM tbl_Project_Contents WHERE lngProjectIndex=?}, $$self{'id'} );
-	my $new_status = $$self{'status'};
+	my $new_status = $$self{status};
 
-	# The Pending Deposit to In Prepress trnasition is a manual one.
-	return if $$self{'status'} eq 'Pending Deposit';
-	return if $$self{'status'} eq 'Deleted';
-
-	my $Order = new openprint::Order( $$self{'order_id'} );
-	if ( $$self{'order_id'} and $Order->status() ne 'Incomplete' ) {
+	my $Order = new openprint::Order( $$self{order_id} );
+	if ( $$self{order_id} and $Order->status() ne 'Incomplete' ) {
 
 # This fixes the damage caused by re-opening an order
 		if ( sets::isin( 'calculated', \@statuses ) ) {
@@ -727,13 +728,13 @@ sub copy {
 
 sub add_to_log {
 	my ( $self, $cust_id, $user_id, $text ) = @_;
-	sql::insert( undef, undef, 'Project_Log',[
-			'project_id',	$$self{'id'},
-			'dtmTimestamp',	'NOW()',
-			'company_id',	$cust_id,
-			'user_id',		$user_id,
-			'description',	$text,
-			] );
+	my $Log = new openprint::Project_Log();
+	$Log->save({ 
+			project_id	=>	$$self{id},
+			company_id	=>	$cust_id,
+			user_id		=>	$user_id,
+			description	=>	$text,
+			});
 } # end sub add_to_log
 
 sub get_services {
@@ -1659,6 +1660,69 @@ sub unlock {
 	} # end if
 } # end sub unlock
 
+sub check_for_order {
+	my ( $Project, $OP ) = @_;
+
+	my $error = '';
+
+	if ( $$Project{status} eq 'uncalculated' ) {
+		$error .= 'Project ' . $$Project{id} . ' is uncalculated.  Please resolve this before continuing your order.<br/>';
+	} # end if
+	my $services = $Project->services();
+	my $stock_index = $$services{Paper} ? $$services{Paper}[0] : 0;
+
+	if ( $stock_index ) {
+		my $Stock_Service = $Project->Service( $stock_index );
+		my @Stock_Quantities = openprint::Estimating::Paper::get_stocks_and_quantities( $Project, $stock_index, $Stock_Service->specs(), $OP->quantity_index() );
+		if ( @Stock_Quantities ) {
+			foreach my $Stock_Qty ( @Stock_Quantities ) {
+				my $Stock = $$Stock_Qty{Stock};
+				$openprint::log->debug("Quantity for " . $Stock->to_string() . ' is ' . $$Stock_Qty{quantity} ) if $debug;
+				if ( defined $Stock->available_to_order() ) {
+					if ( $Stock->available_to_order() < $$Stock_Qty{quantity} ) {
+						$error .= 'There is not enough stock available to satisfy this order.  Please contact your CSR.<br/>';
+					} # end if
+				} # end if
+			} # end foreach Stock   
+		} elsif ( $debug ) {
+			$openprint::log->debug("No stock quantities.");
+		} # end if  
+	} elsif ( $debug ) {
+		$openprint::log->debug("Not Paper service in project $$Project{id}");
+	} # end if Stock Service Index
+ 
+	return $error;
+} # end sub check_for_order
+
+sub allocate_for_order {
+	my ( $Project, $OP ) = @_;
+    my $error = '';
+
+    my $services = $Project->services();
+    my $stock_index = $$services{Paper} ? $$services{Paper}[0] : 0;
+
+    if ( $stock_index ) {
+        my $Stock_Service = $Project->Service( $stock_index );
+        my @Stock_Quantities = openprint::Estimating::Paper::get_stocks_and_quantities( $Project, $stock_index, $Stock_Service->specs(), $OP->quantity_index() );
+        if ( @Stock_Quantities ) {
+            foreach my $Stock_Qty ( @Stock_Quantities ) {
+                my $Stock = $$Stock_Qty{Stock};
+                $openprint::log->debug("Quantity for " . $Stock->to_string() . ' is ' . $$Stock_Qty{quantity} ) if $debug;
+                if ( $Stock->available_to_order() > $$Stock_Qty{quantity} ) {
+					$Stock->allocate( undef, $OP->Order(), $$Stock_Qty{quantity}, undef );
+				} else {
+					$error .= 'Not enough stock available to allocate.<br/>';
+                } # end if
+            } # end foreach Stock   
+        } elsif ( $debug ) {
+            $openprint::log->debug("No stock quantities.");
+        } # end if  
+    } elsif ( $debug ) {
+        $openprint::log->debug("Not Paper service in project $$Project{id}");
+    } # end if Stock Service Index
+
+    return $error;
+} # end sub allocate_for_order
 
 1;
 __END__

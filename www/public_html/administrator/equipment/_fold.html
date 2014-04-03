@@ -149,7 +149,9 @@
 					<th align="left">Units</th>
 					<th align="left">Runspeed</th>
 					<th align="left">Interpolate</th>
-					<th class="buttons">&nbsp;</th>
+					<th class="buttons">
+<? echo ( button( 'AddFoldSpec'.$$variable{Fold}->id(), { onclick=>"new Ajax.Request('/administrator/equipment/_fold_specification.html?action=add&fold_id=". $$variable{Fold}->id() ."', { onSuccess: function(response){new Insertion.Bottom(\$('FoldSpecifications".$$variable{Fold}->id()."'), response.responseText);SortableTable.load();} } );", text=>'Add' } ); ) ?>
+</th>
 				</tr>
 			</thead>
 			<tbody>
@@ -163,7 +165,6 @@
 			) ?>
 			</tbody>
 		</table>
-<? echo ( button( 'AddFoldSpec'.$$variable{Fold}->id(), { onclick=>"new Ajax.Request('/administrator/equipment/_fold_specification.html?action=add&fold_id=". $$variable{Fold}->id() ."', { onSuccess: function(response){new Insertion.Bottom(\$('FoldSpecifications".$$variable{Fold}->id()."'), response.responseText);SortableTable.load();} } );" text=>'Add' } ); ) ?>
 		</fieldset>
 	</div>
 	<br class="spacer"/>

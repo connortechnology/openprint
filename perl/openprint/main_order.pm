@@ -13,7 +13,7 @@ use vars qw( %config %param %variable $log $dbh %session );
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
 
-use constant DEBUG => 0;
+use constant DEBUG => 1;
 
 require sql;
 require openprint::Currency;
@@ -207,10 +207,10 @@ sub submit {
 	my $Order = new openprint::Order( $order_id );
 	$session{'order_id'} = $order_id;
 
-	if ( $param{'btnFunction'} eq 'Continue') { # saving project information
+	if ( $param{btnFunction} eq 'Continue') { # saving project information
 		
 		foreach my $OP ( openprint::OrderedProject->find('order_id'=>$Order->id() ) ) {
-			$variable{'error'} .= openprint::order::save_project_information( $order_id, $OP );
+			$variable{error} .= openprint::order::save_project_information( $order_id, $OP );
 		} # end foreach
 		foreach my $Product ( $Order->Products() ) {
 			if ( exists $param{'ProductQuantity'.$Product->id()} ) {
@@ -329,7 +329,6 @@ sub confirmation {
 	} # end if
 
 	my $Order = new openprint::Order( $order_id );
-$log->debug("Got order $$Order{id}");
 
 	if ( $Order->id() and ( sets::isin( $Order->status(), ['Incomplete','Re-Opened'] ) ) ) {
 		if ( ( $Order->company_id() == $session{'company_id'} ) and ( $session{'company_id'} == new openprint::User( $session{'user_id'})->company_id() ) ) {
@@ -347,11 +346,18 @@ $log->debug("Got order $$Order{id}");
 		# Commit Project Information
 		foreach my $OP ( $Order->Ordered_Projects() ) {
 			$OP->save({
-				'reference'	=> $OP->Project()->reference(),
-				'price'		=> $OP->Project()->Currency()->convert_from( $OP->price(undef) ),
-				'quantity'	=> undef,
+				reference	=> $OP->Project()->reference(),
+				price		=> $OP->Project()->Currency()->convert_from( $OP->price(undef) ),
+				quantity	=> undef,
 			});
+			my $Project = $OP->Project();
+			$variable{error} .= $Project->check_for_order( $OP );
 		} # end foreach Project
+
+		if ( $variable{error} ) {
+			$variable{ExternalRedirect} = '/main/order/submit.html';
+			return;
+		} # end if
 
 		my $sub_total = $Order->subtotal(undef);
 		foreach my $Tax ( $Order->Taxes() ) {
@@ -360,7 +366,7 @@ $log->debug("Got order $$Order{id}");
 		my $total = $Order->total(undef);
 
 		#my $customer_credit = new openprint::customer_credit( $session{'company_id'} );
-		my ( $downpayment );
+		my $downpayment;
 		#my ( $downpayment ) = $customer_credit->get( 'Downpayment' );
 		#if ( $downpayment eq '' ) {
 			#$downpayment = $config{'DefaultDownpayment'};
@@ -370,11 +376,10 @@ $log->debug("Got order $$Order{id}");
 
 		my $status = ( ( $downpayment - $Order->paid() ) > 0 ) ? 'Pending Deposit': 'In Production';
 		# Get Docket #
-		my ( $docket_number ) = $Order->docket();
+		my $docket_number = $Order->docket();
 		if ( ! $docket_number ) {
 			( $docket_number ) = sql::execute( $log, $dbh, q{SELECT nextval('DocketNumber_seq')} );
 		} # end if
-
 		# This is messed up.  I think an order should never switch companies unless it doesn't have a company assigned.  I don't see how it could work any other way.
 		$Order->company_id( $session{'company_id'} ) if ! $Order->company_id();
 		$Order->salesrep_id( new openprint::Company( $session{'company_id'} )->salesrep_id() );
@@ -387,19 +392,16 @@ $log->debug("Got order $$Order{id}");
 		$Order->save();
 
 		$Order->add_log( 'Submit Order' );
-		
-		$variable{'Downpayment'} = $downpayment - $Order->paid();
-		$variable{'Downpayment'} = 0 if $variable{'Downpayment'} < 0;
-		$variable{'Downpayment'} = sprintf( '%.2f', $variable{'Downpayment'} );
 
-		foreach my $Project ( $Order->Projects() ) {
+		foreach my $OP ( $Order->Ordered_Projects() ) {
+			my $Project = $OP->Project();
 			sql::update( $log, $dbh, 'tbl_Project_Contents', ["lngProjectIndex=? AND strStatus NOT IN ( 'Complete', 'Approved', 'Proofs Out', 'Waiting For Customer Approval','Waiting For QA Approval','')", $Project->id()], 'strStatus', 'Ordered' );
 			$Project->docket( $docket_number );
 			$Project->order_id( $Order->id() );
 			$Project->status( $status eq 'Pending Deposit' ? $status : 'In Prepress' );
 			$Project->save();	
 			$Project->update_status();
-
+			$Project->allocate_for_order( $OP );
 			openprint::press_schedule::add_project_to_press_schedule( $Project );
 		} # end foreach Project
 		foreach my $Product ( $Order->Products() ) {
@@ -413,6 +415,12 @@ $log->debug("Got order $$Order{id}");
 
 			openprint::press_schedule::add_project_to_press_schedule( $Project );
 		} # end foreach Product
+
+		
+		$variable{'Downpayment'} = $downpayment - $Order->paid();
+		$variable{'Downpayment'} = 0 if $variable{'Downpayment'} < 0;
+		$variable{'Downpayment'} = Math::Round::nearest( 0.01, $variable{'Downpayment'} );
+
 		$Order->update_status();
 # send out email notifications
 		$Order->send_sales_order( );

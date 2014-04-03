@@ -428,14 +428,14 @@ sub get_stocks_and_quantities {
 #$openprint::log->warn("Stock QTY $stock_id $qty_index " . $$specs{"qty-$stock_id-$qty_index"} );
 		if ( $$specs{"qty-$stock_id-$qty_index"} ) {
 			if ( $Paper->type() eq 'Sheet' ) {
-				$quantities{$Paper} += $$specs{"sheets-$stock_id-$qty_index"};
+				$quantities{$key} += $$specs{"sheets-$stock_id-$qty_index"};
 			} else {
-				$quantities{$Paper} += $$specs{"qty-$stock_id-$qty_index"};
+				$quantities{$key} += $$specs{"qty-$stock_id-$qty_index"};
 			} # end if
 		} # end if
 		$stock_id += 1;
 	} # end foreach key
-	return \%quantities;
+	return map { { Stock => $Papers{$_}, quantity => $quantities{$_} } } @keys;
 
 } # end sub get_stocks_and_quantities
 

@@ -17,6 +17,7 @@ $serial= '';
 %transforms = (
 );
 %defaults = (
+	created_on	=>	q`'NOW()'`,
 );
 
 1;

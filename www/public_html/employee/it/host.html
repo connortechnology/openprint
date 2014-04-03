@@ -101,18 +101,18 @@
 	<? echo ( 
 		return if ! $$variable{Host}->mac();
 		$openprint::RADIUS_Check::dbh = sql::open_sql( $log,
-			'database'  => $config{'RADIUS DB Name'},
-			'driver'	=> $config{'RADIUS DB Driver'},
-			'host'	  => $config{'RADIUS DB Server'},
-			'login'	 => $config{'RADIUS DB Username'},
-			'password'  => $config{'RADIUS DB Password'},
+			database	=> $config{'RADIUS DB Name'},
+			driver		=> $config{'RADIUS DB Driver'},
+			host		=> $config{'RADIUS DB Server'},
+			login		=> $config{'RADIUS DB Username'},
+			password	=> $config{'RADIUS DB Password'},
 			);
 		if ( ! $openprint::RADIUS_Check::dbh ) {
 			return 'Unable to connect to RADIUS DB server.';	
 		} # end if
 
 		my $html = '';
-		my $fragment = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/employee/it/_radius_mac_line.html' );
+		my $fragment = slurp_content( '/employee/it/_radius_mac_line.html' );
 		
 		foreach my $mac ( @{$$variable{Host}->mac()} ) {
 			if ( $mac =~ /^([[:xdigit:]]{2})[\:\-]?([[:xdigit:]]{2})[\:\-]?([[:xdigit:]]{2})[\:\-]?([[:xdigit:]]{2})[\:\-]?([[:xdigit:]]{2})[\:\-]?([[:xdigit:]]{2})$/ ) {

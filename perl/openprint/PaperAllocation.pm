@@ -45,9 +45,11 @@ $serial = 'paper_allocation_id_seq';
 );
 
 %transforms = (
+	quantity	=>	[ 's/\D//g' ],
 );
 
 %defaults = (
+	quantity		=>	undef,
 	created_on		=>	q`'NOW()'`,
 	condition_id	=>	undef,
 );

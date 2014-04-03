@@ -830,6 +830,7 @@ sub get_Stocks {
 			$variables{$k} = [ sets::exclude( ['output'], $variables{$k} ) ];
 		} # end foreach
 		if ( ( ! $$specs{'txtCustomMWeight'} and $Paper->gsm() ) ) {
+$log->debug("Calcing txtCustomMWeight");
 			$variables{'txtCustomMWeight'} = [ sets::union( 'output', @{$variables{'txtCustomMWeight'}} ) ];
 			$$specs{'txtCustomMWeight'} = $Paper->mweight();
 		} # end if

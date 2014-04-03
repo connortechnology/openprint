@@ -921,7 +921,9 @@ $openprint::log->debug("Has a fold, doing extra checks") if DEBUG;
 								# If it has been cut, assume cut to layout size
 
 								my $width_size = $$SignatureImposition{columns} != $$Imposition{columns} ? $Imposition->layout_width() : $Imposition->sheet_width();
+								$width_size = $Imposition->object_width() if $$Imposition{imposition} == 1;
 								my $height_size = $$SignatureImposition{rows} != $$Imposition{rows} ? $Imposition->layout_height() : $Imposition->sheet_height();
+								$height_size = $Imposition->object_height() if $$Imposition{imposition} == 1;
 
 								if ( $orientation ) {
 									if (						
@@ -943,12 +945,12 @@ $openprint::log->debug("Has a fold, doing extra checks") if DEBUG;
 									$openprint::log->debug("Has max feed width width folds: $width_folds height folds: $height_folds $$sig_specs{'txtWidth'} $$sig_specs{'txtHeight'} width_size: $width_size height_size: $height_size max_feed_width: $max_feed_width") if DEBUG;
 									if ( ( $width_folds and ! $height_folds ) or ( $width_folds == $$Fold{folds} and $height_folds == $$Fold{angles} ) ) {
 # If folds are on width, we grip on height...
-										if ( $width_size >= $max_feed_width ) {
+										if ( $width_size > $max_feed_width ) {
 											$openprint::log->debug("Fold no good due to max feed width $width_size > $max_feed_width on width ($$sig_specs{'txtHeight'}).") if DEBUG;
 											$Fold = undef;
 										} # end if
 									} elsif ( ( $height_folds and ! $width_folds ) or ( $height_folds == $$Fold{'folds'} and $height_folds == $$Fold{'angles'} ) ) {
-										if ( $height_size >= $max_feed_width ) {
+										if ( $height_size > $max_feed_width ) {
 											$Fold = undef;
 											$openprint::log->debug("Fold no good due to max feed width $height_size > $max_feed_width on height ($$sig_specs{txtWidth}.") if DEBUG;
 										} # end if
@@ -1619,6 +1621,8 @@ sub calc {
 			$$specs{'hdnBreakdown'.$qty_index} .= "<fieldset><legend>Signature: $$sig_specs{SignatureIndex} $$sig_specs{'txtSignatureType'} Ref: $$sig_specs{'txtServiceDescription'}:</legend>";
 			$$specs{'hdnBreakdown'.$qty_index} .= openprint::service::summary( $Project, $signature_service_index ) . '<br/>';
 			$$specs{'hdnBreakdown'.$qty_index} .= openprint::service::summary( $Project, $signature_service_index, $qty_index ) . '<br/>';
+			my $Paper = openprint::Paper::load_from_signature( $Project, $sig_specs, $qty_index );
+			$$specs{'hdnBreakdown'.$qty_index} .= 'Stock: ' . $Paper->to_string() . '<br/>';
 
 			$$sig_specs{'PreviousImposition'} = $previous_imposition;
 

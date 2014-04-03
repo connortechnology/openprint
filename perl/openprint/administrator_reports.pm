@@ -89,6 +89,12 @@ sub orders {
 		push @data, '', '', '', '', '', 'Total:', openprint::Currency::format( $total ), '';
 
 		misc::export_csv( $r, $log, \%variable, 'order_report.csv', \@header, \@data );
+	} else {
+		ssi::setup_date_select( $r->uri(), 'created_on_start', -30 );
+		ssi::save_params( $r->uri(), (
+					( map { 'created_on_start_'.$_ } ( 'year', 'month', 'day' ) ),
+					( map { 'created_on_end_'.$_ } ( 'year', 'month', 'day' ) ),
+		) );
 	} # end if
 } # end sub orders
 

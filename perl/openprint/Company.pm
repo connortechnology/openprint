@@ -258,7 +258,7 @@ sub dropdown {
 sub get_dropdown {
 	shift @_ if $_[0] eq 'openprint::Company';
 	my $companies = dropdown( $_[1] ? $_[1] : () );
-	return $companies ? ssi::make_drop_down( $companies, $_[0] ) : '';
+	return $companies ? ssi::make_drop_down( $companies, $_[0], { encode=>1 } ) : '';
 } # sub get_dropdown
 
 sub CSR {

@@ -98,5 +98,11 @@ sub Signature {
 	$variable{'ProjectType'} = $Project->Type();
 } # end sub Signature
 
+sub _stock_popup {
+} # end sub _stop_popup
+
+sub _stocks {
+} # end sub _stocks
+
 1;
 __END__

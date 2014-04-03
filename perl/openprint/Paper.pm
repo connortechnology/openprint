@@ -30,12 +30,13 @@ require openprint::StockGroup;
 require openprint::StockMaterial;
 require openprint::Equipment_Stock_Setting;
 require openprint::PaperAllocation;
+require POSIX;
 
 use Time::HiRes qw{ time gettimeofday tv_interval }; 
 
 use vars qw( $debug $table $serial %fields %find_fields %defaults %transforms %grades );
 
-$debug = 0;
+$debug = 1;
 $table = 'papers';
 $serial	= 'paper_id_seq';
 %fields = (
@@ -775,6 +776,9 @@ sub allocate {
 		$skids = $skid_id;
 	} # end if
 
+	$quantity = POSIX::ceil( $quantity );
+
+
 	my $PA = new openprint::PaperAllocation();
 	$PA->save( {
 			paper_id		=>	$$self{'id'},
@@ -791,7 +795,7 @@ sub allocate {
 	if ( $$self{available_to_order} > 1 ) {
 		$$self{available_to_order} -= $quantity;
 	} # end if		
-	$self->save();
+	$_ = $self->save();
 	delete $$self{available};
 	return $PA;
 } # end sub allocate
@@ -1301,10 +1305,13 @@ $log->debug("Didn't find specific paper $params{'width'} x $params{'height'}");
 			if ( ! @Papers ) {
 				$openprint::log->warn("No papers found");
 				$Paper = new openprint::Paper();
-				$Paper->brand( $$specs{'ddmStockBrand'} );
-				$Paper->finish( $$specs{'ddmStockFinish'} );
-				$Paper->colour( $$specs{'ddmStockColour'} );
-				$Paper->weight( $$specs{'ddmStockWeight'} );
+				my @StockOptions = misc::trim(split (',', $openprint::config{$Project->Type()->name().'StockOptions'} )) if $Project;;
+				@StockOptions = misc::trim(split (',', $openprint::config{'StockOptions'} )) if ! @StockOptions;
+				@StockOptions = ( 'Brand','Finish','Colour','Weight' ) if ! @StockOptions;
+				foreach my $option ( @StockOptions ) {
+					my $lc_option = lc $option;
+					$Paper->$lc_option( $$specs{"ddmStock$option"} );
+				} # end foreach
 				$Paper->calliper( $$specs{'txtSpecificStockCalliper'} );
 				$Paper->width( $$specs{'hdnSuppliedStockWidth'} );
 				$Paper->height( $$specs{'hdnSuppliedStockHeight'} );

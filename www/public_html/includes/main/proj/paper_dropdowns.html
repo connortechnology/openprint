@@ -1,4 +1,7 @@
 <div class="Stock">
+<? if ( sets::isin( $session{user_type}, ['A'] ) ) ?>
+	<?echo( button( 'StockList', { onclick=>qq`popup_window('_stock_popup.html', getValues( 'f1', [ 'ProjectIndex', 'ddmStockQuality','ddmStockGroup','ddmStockBrand','ddmStockFinish','ddmStockColour','ddmStockWeight' ] ), { width: 1024 } );`, text=>'List Stocks' } ); ) ?>
+<? endif ( sets::isin( $session{user_type}, ['A','E'] ) ) ?>
 	<fieldset><legend>Stock</legend>
 		<? if ( $$variable{'Mode'} ne 'Easy' ) ?>
 		<ul>
@@ -169,7 +172,7 @@
 				</select>
 			</li>
 			`, $option, $$variable{Signature}, 
-			make_drop_down( \@options, $$variable{'ddmStock'.$option.$$variable{Signature}} ),
+			make_drop_down( \@options, $$variable{'ddmStock'.$option.$$variable{Signature}}, { encode=>1 } ),
 		);
 	} # end foreach option
 	return $html;
