@@ -1,4 +1,5 @@
 <div class="Stock">
+	<?echo ( button( 'MoreStock', { onclick=>q`popup_window('_stock_popup.html', {}, { width: 1024 } );`, text=>'More' } ); ) ?>
 	<fieldset><legend>Stock</legend>
 		<? if ( $$variable{'Mode'} ne 'Easy' ) ?>
 		<ul>

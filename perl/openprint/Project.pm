@@ -1694,5 +1694,35 @@ sub check_for_order {
 	return $error;
 } # end sub check_for_order
 
+sub allocate_for_order {
+	my ( $Project, $OP ) = @_;
+    my $error = '';
+
+    my $services = $Project->services();
+    my $stock_index = $$services{Paper} ? $$services{Paper}[0] : 0;
+
+    if ( $stock_index ) {
+        my $Stock_Service = $Project->Service( $stock_index );
+        my @Stock_Quantities = openprint::Estimating::Paper::get_stocks_and_quantities( $Project, $stock_index, $Stock_Service->specs(), $OP->quantity_index() );
+        if ( @Stock_Quantities ) {
+            foreach my $Stock_Qty ( @Stock_Quantities ) {
+                my $Stock = $$Stock_Qty{Stock};
+                $openprint::log->debug("Quantity for " . $Stock->to_string() . ' is ' . $$Stock_Qty{quantity} ) if $debug;
+                if ( $Stock->available_to_order() > $$Stock_Qty{quantity} ) {
+					$Stock->allocate( undef, $OP->Order(), $$Stock_Qty{quantity}, undef );
+				} else {
+					$error .= 'Not enough stock available to allocate.<br/>';
+                } # end if
+            } # end foreach Stock   
+        } elsif ( $debug ) {
+            $openprint::log->debug("No stock quantities.");
+        } # end if  
+    } elsif ( $debug ) {
+        $openprint::log->debug("Not Paper service in project $$Project{id}");
+    } # end if Stock Service Index
+
+    return $error;
+} # end sub allocate_for_order
+
 1;
 __END__

@@ -351,31 +351,7 @@ sub confirmation {
 				quantity	=> undef,
 			});
 			my $Project = $OP->Project();
-			if ( $$Project{status} eq 'uncalculated' ) {
-				$variable{error} .= 'Project ' . $$Project{id} . ' is uncalculated.  Please resolve this before continuing your order.<br/>';
-			} # end if
-            my $services = $Project->services();
-            my $stock_index = $$services{Paper} ? $$services{Paper}[0] : 0;
-
-            if ( $stock_index ) {
-                my $Stock_Service = $Project->Service( $stock_index );
-                my @Stock_Quantities = openprint::Estimating::Paper::get_stocks_and_quantities( $Project, $stock_index, $Stock_Service->specs(), $OP->quantity_index() );
-                if ( @Stock_Quantities ) {
-                    foreach my $Stock_Qty ( @Stock_Quantities ) {
-						my $Stock = $$Stock_Qty{Stock};
-$log->debug("Quantity for " . $Stock->to_string() . ' is ' . $$Stock_Qty{quantity} );
-                        if ( defined $Stock->available_to_order() ) {
-							if ( $Stock->available_to_order() < $$Stock_Qty{quantity} ) {
-								$variable{error} .= 'There is not enough stock available to satisfy this order.  Please contact your CSR.<br/>';
-							} # end if
-						} # end if
-					} # end foreach Stock	
-				} elsif ( DEBUG ) {
-					$log->debug("No stock quantities.");
-				} # end if	
-			} elsif ( DEBUG ) {
-				$log->debug("Not Paper service in project $$Project{id}");
-			} # end if Stock Service Index
+			$variable{error} .= $Project->check_for_order( $OP ):
 		} # end foreach Project
 
 		if ( $variable{error} ) {
@@ -400,7 +376,7 @@ $log->debug("Quantity for " . $Stock->to_string() . ' is ' . $$Stock_Qty{quantit
 
 		my $status = ( ( $downpayment - $Order->paid() ) > 0 ) ? 'Pending Deposit': 'In Production';
 		# Get Docket #
-		my ( $docket_number ) = $Order->docket();
+		my $docket_number = $Order->docket();
 		if ( ! $docket_number ) {
 			( $docket_number ) = sql::execute( $log, $dbh, q{SELECT nextval('DocketNumber_seq')} );
 		} # end if
@@ -413,24 +389,7 @@ $log->debug("Quantity for " . $Stock->to_string() . ' is ' . $$Stock_Qty{quantit
 			$Project->status( $status eq 'Pending Deposit' ? $status : 'In Prepress' );
 			$Project->save();	
 			$Project->update_status();
-
-			my $services = $Project->services();
-			my $stock_index = $$services{Paper} ? $$services{Paper}[0] : 0;
-
-			if ( $stock_index ) {
-				my $Stock_Service = $Project->Service( $stock_index );
-				my @Stock_Quantities = openprint::Estimating::Paper::get_stocks_and_quantities( $Project, $stock_index, $Stock_Service->specs(), $OP->quantity_index() );
-				if ( @Stock_Quantities ) {
-					foreach my $Stock_Qty ( @Stock_Quantities ) {
-						my $Stock = $$Stock_Qty{Stock};
-						if ( $Stock->available_to_order() ) {
-							# Allocate will update available_to_order
-							$Stock->allocate( undef, $Order, $$Stock_Qty{quantity}, undef );
-						} # end if
-					} # end foreach Stock	
-				} # end if
-			} # end if
-
+			$Project->allocate_for_order( $OP );
 			openprint::press_schedule::add_project_to_press_schedule( $Project );
 		} # end foreach Project
 		foreach my $Product ( $Order->Products() ) {
