@@ -1621,6 +1621,8 @@ sub calc {
 			$$specs{'hdnBreakdown'.$qty_index} .= "<fieldset><legend>Signature: $$sig_specs{SignatureIndex} $$sig_specs{'txtSignatureType'} Ref: $$sig_specs{'txtServiceDescription'}:</legend>";
 			$$specs{'hdnBreakdown'.$qty_index} .= openprint::service::summary( $Project, $signature_service_index ) . '<br/>';
 			$$specs{'hdnBreakdown'.$qty_index} .= openprint::service::summary( $Project, $signature_service_index, $qty_index ) . '<br/>';
+			my $Paper = openprint::Paper::load_from_signature( $Project, $sig_specs, $qty_index );
+			$$specs{'hdnBreakdown'.$qty_index} .= 'Stock: ' . $Paper->to_string() . '<br/>';
 
 			$$sig_specs{'PreviousImposition'} = $previous_imposition;
 

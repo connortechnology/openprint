@@ -513,8 +513,6 @@ sub signature_calc {
 	
 	my $Cutting = openprint::Service->find_one(name=>'Cutting');
 	my $I = $Imposition->copy();
-	my $sheets = ceil( $$sig_specs{'txtQuantity'.$qty_index} / $$I{'imposition'} );
-	$sheets *= $$sig_specs{'PageQuantity'} if $$sig_specs{'PageQuantity'};
 
 		# Take care of cutting before folding
 	if ( @folding_impositions ) {
@@ -543,6 +541,8 @@ sub signature_calc {
 			} # end if
 			foreach my $Equipment ( @FoldingEquipment ) {
 				my $liftDepth = $Equipment->specification( 'Maximum Lift Depth', $calliper );
+	my $sheets = ceil( $$sig_specs{'txtQuantity'.$qty_index} / $$I{'imposition'} );
+	$sheets *= $$sig_specs{'PageQuantity'} if $$sig_specs{'PageQuantity'};
 				my $runs = $liftDepth ? ceil( $sheets*$calliper/$liftDepth ) : $sheets;
 				$results{'Breakdown'} .= '# of pre-folding cuts: ' . $folding_cuts . ' => ' .($folding_cuts * $sheets) . '<br/>';
 				my %ServicePrice = $Cutting->get_price( undef, $Equipment );
@@ -597,6 +597,8 @@ sub signature_calc {
 			next;
 		} # end if
 
+	my $sheets = ceil( $$sig_specs{'txtQuantity'.$qty_index} / $$I{'imposition'} );
+	$sheets *= $$sig_specs{'PageQuantity'} if $$sig_specs{'PageQuantity'};
 		if ( my $Spec = $Equipment->Specification('Cutting Overs') ) {
 			if ( $$Spec{'units'} eq 'Sheets' ) {
 				$sheets += $$Spec{'value'};
