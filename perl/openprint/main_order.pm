@@ -13,7 +13,7 @@ use vars qw( %config %param %variable $log $dbh %session );
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
 
-use constant DEBUG => 0;
+use constant DEBUG => 1;
 
 require sql;
 require openprint::Currency;
@@ -207,10 +207,10 @@ sub submit {
 	my $Order = new openprint::Order( $order_id );
 	$session{'order_id'} = $order_id;
 
-	if ( $param{'btnFunction'} eq 'Continue') { # saving project information
+	if ( $param{btnFunction} eq 'Continue') { # saving project information
 		
 		foreach my $OP ( openprint::OrderedProject->find('order_id'=>$Order->id() ) ) {
-			$variable{'error'} .= openprint::order::save_project_information( $order_id, $OP );
+			$variable{error} .= openprint::order::save_project_information( $order_id, $OP );
 		} # end foreach
 		foreach my $Product ( $Order->Products() ) {
 			if ( exists $param{'ProductQuantity'.$Product->id()} ) {
@@ -329,7 +329,6 @@ sub confirmation {
 	} # end if
 
 	my $Order = new openprint::Order( $order_id );
-$log->debug("Got order $$Order{id}");
 
 	if ( $Order->id() and ( sets::isin( $Order->status(), ['Incomplete','Re-Opened'] ) ) ) {
 		if ( ( $Order->company_id() == $session{'company_id'} ) and ( $session{'company_id'} == new openprint::User( $session{'user_id'})->company_id() ) ) {
@@ -347,11 +346,42 @@ $log->debug("Got order $$Order{id}");
 		# Commit Project Information
 		foreach my $OP ( $Order->Ordered_Projects() ) {
 			$OP->save({
-				'reference'	=> $OP->Project()->reference(),
-				'price'		=> $OP->Project()->Currency()->convert_from( $OP->price(undef) ),
-				'quantity'	=> undef,
+				reference	=> $OP->Project()->reference(),
+				price		=> $OP->Project()->Currency()->convert_from( $OP->price(undef) ),
+				quantity	=> undef,
 			});
+			my $Project = $OP->Project();
+			if ( $$Project{status} eq 'uncalculated' ) {
+				$variable{error} .= 'Project ' . $$Project{id} . ' is uncalculated.  Please resolve this before continuing your order.<br/>';
+			} # end if
+            my $services = $Project->services();
+            my $stock_index = $$services{Paper} ? $$services{Paper}[0] : 0;
+
+            if ( $stock_index ) {
+                my $Stock_Service = $Project->Service( $stock_index );
+                my @Stock_Quantities = openprint::Estimating::Paper::get_stocks_and_quantities( $Project, $stock_index, $Stock_Service->specs(), $OP->quantity_index() );
+                if ( @Stock_Quantities ) {
+                    foreach my $Stock_Qty ( @Stock_Quantities ) {
+						my $Stock = $$Stock_Qty{Stock};
+$log->debug("Quantity for " . $Stock->to_string() . ' is ' . $$Stock_Qty{quantity} );
+                        if ( defined $Stock->available_to_order() ) {
+							if ( $Stock->available_to_order() < $$Stock_Qty{quantity} ) {
+								$variable{error} .= 'There is not enough stock available to satisfy this order.  Please contact your CSR.<br/>';
+							} # end if
+						} # end if
+					} # end foreach Stock	
+				} elsif ( DEBUG ) {
+					$log->debug("No stock quantities.");
+				} # end if	
+			} elsif ( DEBUG ) {
+				$log->debug("Not Paper service in project $$Project{id}");
+			} # end if Stock Service Index
 		} # end foreach Project
+
+		if ( $variable{error} ) {
+			$variable{ExternalRedirect} = '/main/order/submit.html';
+			return;
+		} # end if
 
 		my $sub_total = $Order->subtotal(undef);
 		foreach my $Tax ( $Order->Taxes() ) {
@@ -360,7 +390,7 @@ $log->debug("Got order $$Order{id}");
 		my $total = $Order->total(undef);
 
 		#my $customer_credit = new openprint::customer_credit( $session{'company_id'} );
-		my ( $downpayment );
+		my $downpayment;
 		#my ( $downpayment ) = $customer_credit->get( 'Downpayment' );
 		#if ( $downpayment eq '' ) {
 			#$downpayment = $config{'DefaultDownpayment'};
@@ -374,6 +404,46 @@ $log->debug("Got order $$Order{id}");
 		if ( ! $docket_number ) {
 			( $docket_number ) = sql::execute( $log, $dbh, q{SELECT nextval('DocketNumber_seq')} );
 		} # end if
+
+		foreach my $OP ( $Order->Ordered_Projects() ) {
+			my $Project = $OP->Project();
+			sql::update( $log, $dbh, 'tbl_Project_Contents', ["lngProjectIndex=? AND strStatus NOT IN ( 'Complete', 'Approved', 'Proofs Out', 'Waiting For Customer Approval','Waiting For QA Approval','')", $Project->id()], 'strStatus', 'Ordered' );
+			$Project->docket( $docket_number );
+			$Project->order_id( $Order->id() );
+			$Project->status( $status eq 'Pending Deposit' ? $status : 'In Prepress' );
+			$Project->save();	
+			$Project->update_status();
+
+			my $services = $Project->services();
+			my $stock_index = $$services{Paper} ? $$services{Paper}[0] : 0;
+
+			if ( $stock_index ) {
+				my $Stock_Service = $Project->Service( $stock_index );
+				my @Stock_Quantities = openprint::Estimating::Paper::get_stocks_and_quantities( $Project, $stock_index, $Stock_Service->specs(), $OP->quantity_index() );
+				if ( @Stock_Quantities ) {
+					foreach my $Stock_Qty ( @Stock_Quantities ) {
+						my $Stock = $$Stock_Qty{Stock};
+						if ( $Stock->available_to_order() ) {
+							# Allocate will update available_to_order
+							$Stock->allocate( undef, $Order, $$Stock_Qty{quantity}, undef );
+						} # end if
+					} # end foreach Stock	
+				} # end if
+			} # end if
+
+			openprint::press_schedule::add_project_to_press_schedule( $Project );
+		} # end foreach Project
+		foreach my $Product ( $Order->Products() ) {
+			my $Project = $Product->Project();
+			sql::update( $log, $dbh, 'tbl_Project_Contents', ["lngProjectIndex=? AND strStatus NOT IN ( 'Complete', 'Approved', 'Proofs Out', 'Waiting For Client Approval','Waiting For QA Approval','')", $Project->id()], 'strStatus', 'Ordered' );
+			$Project->docket( $docket_number );
+			$Project->order_id( $Order->id() );
+			$Project->status( $status eq 'Pending Deposit' ? $status : 'In Prepress' );
+			$Project->save();	
+			$Project->update_status();
+
+			openprint::press_schedule::add_project_to_press_schedule( $Project );
+		} # end foreach Product
 
 		# This is messed up.  I think an order should never switch companies unless it doesn't have a company assigned.  I don't see how it could work any other way.
 		$Order->company_id( $session{'company_id'} ) if ! $Order->company_id();
@@ -390,29 +460,8 @@ $log->debug("Got order $$Order{id}");
 		
 		$variable{'Downpayment'} = $downpayment - $Order->paid();
 		$variable{'Downpayment'} = 0 if $variable{'Downpayment'} < 0;
-		$variable{'Downpayment'} = sprintf( '%.2f', $variable{'Downpayment'} );
+		$variable{'Downpayment'} = Math::Round::nearest( 0.01, $variable{'Downpayment'} );
 
-		foreach my $Project ( $Order->Projects() ) {
-			sql::update( $log, $dbh, 'tbl_Project_Contents', ["lngProjectIndex=? AND strStatus NOT IN ( 'Complete', 'Approved', 'Proofs Out', 'Waiting For Customer Approval','Waiting For QA Approval','')", $Project->id()], 'strStatus', 'Ordered' );
-			$Project->docket( $docket_number );
-			$Project->order_id( $Order->id() );
-			$Project->status( $status eq 'Pending Deposit' ? $status : 'In Prepress' );
-			$Project->save();	
-			$Project->update_status();
-
-			openprint::press_schedule::add_project_to_press_schedule( $Project );
-		} # end foreach Project
-		foreach my $Product ( $Order->Products() ) {
-			my $Project = $Product->Project();
-			sql::update( $log, $dbh, 'tbl_Project_Contents', ["lngProjectIndex=? AND strStatus NOT IN ( 'Complete', 'Approved', 'Proofs Out', 'Waiting For Client Approval','Waiting For QA Approval','')", $Project->id()], 'strStatus', 'Ordered' );
-			$Project->docket( $docket_number );
-			$Project->order_id( $Order->id() );
-			$Project->status( $status eq 'Pending Deposit' ? $status : 'In Prepress' );
-			$Project->save();	
-			$Project->update_status();
-
-			openprint::press_schedule::add_project_to_press_schedule( $Project );
-		} # end foreach Product
 		$Order->update_status();
 # send out email notifications
 		$Order->send_sales_order( );
