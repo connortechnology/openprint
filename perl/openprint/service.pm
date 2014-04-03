@@ -461,7 +461,7 @@ sub internal_calc {
 
 	my $Project = new openprint::Project( $project_index );
 	$Project->lock();
-	$Project->save({status=>'uncalculated'}) if $Project->status() ne 'uncalculated';
+	#$Project->save({status=>'uncalculated'}) if $Project->status() ne 'uncalculated';
 	my $Service = $Project->Service($service_index) if $service_index;
 	$Service->save({status=>'uncalculated'}) if $Service->status() ne 'uncalculated';
 	my $specs;
