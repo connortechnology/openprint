@@ -9,6 +9,7 @@ require openprint::PurchaseOrder_Department;
 require openprint::Company_Category;
 require openprint::Object_Asset;
 require openprint::Object_Payment;
+require CGI;
 
 use vars qw( $r $log $dbh %variable %param %session %config );
 *r = \$openprint::r;

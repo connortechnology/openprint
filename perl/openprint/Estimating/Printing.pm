@@ -351,7 +351,7 @@ sub variables {
 } # end sub variables
 
 sub no_outputs {
-	my ( $project_index, $service_index, $specs, $signature ) = @_;
+	my ( $project_index, $service_index, $specs, $new_specs, $signature ) = @_;
 	my @v;
 	$signature = '' if ! $signature;
 	foreach my $k ( keys %variables ) {
@@ -830,6 +830,7 @@ sub get_Stocks {
 			$variables{$k} = [ sets::exclude( ['output'], $variables{$k} ) ];
 		} # end foreach
 		if ( ( ! $$specs{'txtCustomMWeight'} and $Paper->gsm() ) ) {
+$log->debug("Calcing txtCustomMWeight");
 			$variables{'txtCustomMWeight'} = [ sets::union( 'output', @{$variables{'txtCustomMWeight'}} ) ];
 			$$specs{'txtCustomMWeight'} = $Paper->mweight();
 		} # end if

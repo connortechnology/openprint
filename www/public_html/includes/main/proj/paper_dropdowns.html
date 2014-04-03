@@ -1,5 +1,7 @@
 <div class="Stock">
-	<?echo ( button( 'MoreStock', { onclick=>q`popup_window('_stock_popup.html', {}, { width: 1024 } );`, text=>'More' } ); ) ?>
+<? if ( sets::isin( $session{user_type}, ['A','E'] ) ) ?>
+	<?echo( button( 'StockList', { onclick=>qq`popup_window('_stock_popup.html', getValues( 'f1', [ 'ProjectIndex', 'ddmStockQuality','ddmStockGroup','ddmStockBrand','ddmStockFinish','ddmStockColour','ddmStockWeight' ] ), { width: 1024 } );`, text=>'List Stocks' } ); ) ?>
+<? endif ( sets::isin( $session{user_type}, ['A','E'] ) ) ?>
 	<fieldset><legend>Stock</legend>
 		<? if ( $$variable{'Mode'} ne 'Easy' ) ?>
 		<ul>

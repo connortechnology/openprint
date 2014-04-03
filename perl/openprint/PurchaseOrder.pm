@@ -283,9 +283,9 @@ sub send_to_vendor {
 
 	my $L = new openprint::PurchaseOrder_Log();
 	$L->save({
-			'user_id'	=>	$session{'user_id'},
-			'po_id'		=>	$$self{'id'},
-			'reason'	=>	$results,
+			user_id	=>	$session{user_id},
+			po_id	=>	$$self{id},
+			reason	=>	$results,
 			});
 
 	return $results;
