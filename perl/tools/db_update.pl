@@ -1173,6 +1173,9 @@ if ( ! sets::isin( 'papers', \@tables ) ) {
 	if ( ! exists $$data{'allocated'} ) {
 		$dbh->do('alter table papers add allocated integer');
 	} # end if
+	if ( ! exists $$data{available_to_order} ) {
+		$dbh->do('alter table papers add available_to_order integer');
+	} # end if
 	if ( ! exists $$data{manufacturers_name} ) {
 		$dbh->do('ALTER TABLE papers add manufacturers_name TEXT');
 	} # end if
