@@ -1,5 +1,5 @@
 <? echo (
-	use constant DEBUG => 1;
+	use constant DEBUG => 0;
 	my %specs;
 	$specs{'form'} = $param{'form'};
 	$specs{'signature_id'} = $param{'signature_id'};
@@ -16,7 +16,7 @@
 	push @user_types, ('A','E') if $session{'user_type'} eq 'A';
 
 	my %find = (
-		user_type	=>	\@user_types,
+		'user_type null or in' => \@user_types,
 		( $$ProjectType{'id'}?(
 							   'project_type_id any'	=>	$ProjectType->id(),
 							  ):(
@@ -29,7 +29,7 @@
 	$selected_index = 0 if $selected_index < 0;  # not found
 
 # initially, load all stocks available as per projectype, supplied, and size.
-if ( $selected_index ) {
+#if ( $selected_index ) {
 	# I think this is remarked out so that if we get no stocks, we can back up a bit.  Might be better to just reload
 	# This was remarked out because if we return all teh data from the resulting stocks, we will overwrite the selected ddm as well, leaving no options.
 	# We need to just not do that farther down.
@@ -40,7 +40,7 @@ if ( $selected_index ) {
 		} # end if
 		last if $option eq $param{'selected'};
 	} # end foreach option
-}
+#}
 
 	my @Stocks = openprint::Paper->find( %find );
 

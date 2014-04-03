@@ -170,7 +170,7 @@
 				</select>
 			</li>
 			`, $option, $$variable{Signature}, 
-			make_drop_down( \@options, $$variable{'ddmStock'.$option.$$variable{Signature}} ),
+			make_drop_down( \@options, $$variable{'ddmStock'.$option.$$variable{Signature}}, { encode=>1 } ),
 		);
 	} # end foreach option
 	return $html;
