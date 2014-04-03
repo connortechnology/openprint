@@ -791,7 +791,7 @@ sub allocate {
 	if ( $$self{available_to_order} > 1 ) {
 		$$self{available_to_order} -= $quantity;
 	} # end if		
-	$self->save();
+	$_ = $self->save();
 	delete $$self{available};
 	return $PA;
 } # end sub allocate
@@ -1301,10 +1301,13 @@ $log->debug("Didn't find specific paper $params{'width'} x $params{'height'}");
 			if ( ! @Papers ) {
 				$openprint::log->warn("No papers found");
 				$Paper = new openprint::Paper();
-				$Paper->brand( $$specs{'ddmStockBrand'} );
-				$Paper->finish( $$specs{'ddmStockFinish'} );
-				$Paper->colour( $$specs{'ddmStockColour'} );
-				$Paper->weight( $$specs{'ddmStockWeight'} );
+				my @StockOptions = misc::trim(split (',', $openprint::config{$Project->Type()->name().'StockOptions'} )) if $Project;;
+				@StockOptions = misc::trim(split (',', $openprint::config{'StockOptions'} )) if ! @StockOptions;
+				@StockOptions = ( 'Brand','Finish','Colour','Weight' ) if ! @StockOptions;
+				foreach my $option ( @StockOptions ) {
+					my $lc_option = lc $option;
+					$Paper->$lc_option( $$specs{"ddmStock$option"} );
+				} # end foreach
 				$Paper->calliper( $$specs{'txtSpecificStockCalliper'} );
 				$Paper->width( $$specs{'hdnSuppliedStockWidth'} );
 				$Paper->height( $$specs{'hdnSuppliedStockHeight'} );
