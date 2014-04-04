@@ -739,7 +739,7 @@ if ( ! sets::isin( 'orders', \@tables ) ) {
 		$dbh->do('ALTER TABLE orders rename column index to id');
 	} # end if
 	$dbh->do('ALTER TABLE Orders ADD paid NUMERIC(10,2)') if ( ! exists $$data{'paid'} );
-	$dbh->do('UPDATE Orders set paid=(SELECT SUM(amount) From Payments WHERE order_id=orders.id)');
+	$dbh->do('UPDATE Orders SET paid=(SELECT SUM(amount) FROM Payments WHERE order_id=orders.id)');
 	$dbh->do('ALTER TABLE Orders ADD owing NUMERIC(10,2)') if ( ! exists $$data{'owing'} );
 	$dbh->do('UPDATE orders SET owing=total-paid');
 	if ( ! exists $$data{terms_accepted} ) {
@@ -1063,7 +1063,9 @@ if ( ! sets::isin( 'locations', \@tables ) ) {
 		die $dbh->errstr() if $dbh->errstr();
 	} # end if
 	$dbh->do('ALTER TABLE Locations DROP CONSTRAINT IF EXISTS locations_name_key');
-	$dbh->do('CREATE INDEX locations_name_idx on locations (name)');
+	if ( ! sql::execute( undef, undef, q`SELECT * from pg_indexes WHERE indexname=?`, 'locations_name_idx' ) ) {
+		$dbh->do('CREATE INDEX locations_name_idx on locations (name)');
+	} # end if
 	if ( ! exists $$data{'deleted'} ) {
 	$dbh->do('ALTER TABLE Locations add deleted BOOLEAN NOT NULL DEFAULT false');
 	} # end if
@@ -2484,10 +2486,10 @@ if ( ! sets::isin( 'survey_questions', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/Survey_Questions.sql}) ) or die $dbh->errstr();
 } else {
 	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='survey_questions'", 'column_name');
-	if ( $$data{allow_comments} ) {
+	if ( ! exists $$data{allow_comments} ) {
 		$dbh->do('alter table survey_questions add allow_comments BOOLEAN NOT NULL DEFAULT false');
 	}
-	if ( $$data{allow_public} ) {
+	if ( ! exists $$data{allow_public} ) {
 		$dbh->do('alter table survey_questions add allow_public BOOLEAN NOT NULL DEFAULT false');
 	}
 } # end if
