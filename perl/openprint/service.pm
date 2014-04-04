@@ -447,6 +447,7 @@ sub external_calc {
 			} # end if
 		} # end if
 	} # end foreach
+
 	return join( '|', @results );
 } # end sub external_calc
 

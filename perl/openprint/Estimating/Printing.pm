@@ -847,11 +847,16 @@ $log->debug("Calcing txtCustomMWeight");
 		} # end if
 	} else {
 		$variables{'txtStockGSM'} = [ sets::union( 'output', @{$variables{'txtStockGSM'}} ) ];
+
 		my @StockOptions = misc::trim(split (',', $openprint::config{$Project->Type()->name().'StockOptions'} ));
 		@StockOptions = misc::trim(split (',', $openprint::config{'StockOptions'} )) if ! @StockOptions;
 		@StockOptions = ( 'Brand','Finish','Colour','Weight' ) if ! @StockOptions;
 
-		foreach my $option ( @StockOptions ) {
+		my @RequiredStockOptions = misc::trim(split (',', $openprint::config{$Project->Type()->name().'RequiredStockOptions'} ));
+		@RequiredStockOptions = misc::trim(split (',', $openprint::config{'RequiredStockOptions'} )) if ! @RequiredStockOptions;
+		@RequiredStockOptions = @StockOptions if ! @RequiredStockOptions;
+
+		foreach my $option ( @RequiredStockOptions ) {
 			if ( ! $$specs{'ddmStock'.$option} ) {
 				$$specs{'alert'} .= 'Please select a stock ' . lc $option .'.';
 				return @Papers;

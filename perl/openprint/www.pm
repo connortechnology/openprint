@@ -449,7 +449,7 @@ $log->error("Unable to load equipment.	No PPF for you for signature $$PPF{'signa
 				$variable{'Project'} = new openprint::Project( $variable{'ProjectIndex'} );
 				if ( $variable{ServiceIndex} ) {
 					my $Service = $variable{'Project'}->Service( $variable{'ServiceIndex'} );
-					$variable{'ServiceType'} = $Service->ServiceType();
+					$variable{ServiceType} = $Service->ServiceType();
 					@variable{'ServiceTypeID','ServiceTypeName','ServiceTypeType'} = $variable{ServiceType}->get('name','description','type') if $variable{ServiceType};
 $log->debug("ServiceType: $variable{'ServiceTypeType'}");
 				} # end if

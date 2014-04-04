@@ -62,7 +62,7 @@ $log->debug("Deleting key $key in no_outputs ") if $debug;
 			$log->debug("$key => $specs{$key}");
 		} # end foreach
 	} # end if debug
-    foreach my $key ( @vars ) {
+    foreach my $key ( keys %specs ) {
         if ( (exists $param{$key}) and ($specs{$key} eq $param{$key}) ) {
 $log->debug("Deleting $key cuz it's the same $key") if $debug;
 			delete $specs{$key};
