@@ -4257,10 +4257,10 @@ $openprint::log->warn("Unable to calculate impositions for additional signatures
 $openprint::log->warn("Unable to calculate impositions for additional signatures.<br/>");
 						} # end if
 					} else {
-						$openprint::log->error("Unable to find stocks for group 2 alert( $subsig_specs{alert} )");
-						foreach my $k ( keys %subsig_specs ) {
-							$openprint::log->error("$k => $subsig_specs{$k}");
-						} # end if
+						$openprint::log->debug("Unable to find stocks for group 2 alert( $subsig_specs{alert} )");
+						#foreach my $k ( keys %subsig_specs ) {
+							#$openprint::log->error("$k => $subsig_specs{$k}");
+						#} # end if
 					} # end if Has Stocks
 				} else {
 					$openprint::log->debug("No sigs for group 2?");
