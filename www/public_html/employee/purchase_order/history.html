@@ -84,32 +84,17 @@
 			</li>
 			<li>
 				<label>Authorization</label>
-				<input type="radio" name="authorized" id="authorizedY" value="Y" <? echo ( checked( $session{'/employee/purchase_order/history.html?authorized'} eq 'Y' ) ) ?> onclick="LoadContent('Results', '_purchase_orders.html', $('f1') );" />
-				<label class="radio" for="authorizedY">Authorized</label>
-				<input type="radio" name="authorized" id="authorizedN" value="N" <? echo ( checked( $session{'/employee/purchase_order/history.html?authorized'} eq 'N' ) ) ?> onclick="LoadContent('Results', '_purchase_orders.html', $('f1') );" />
-				<label class="radio" for="authorizedN">Declined</label>
-				<input type="radio" name="authorized" id="authorizedU" value="U" <? echo ( checked( $session{'/employee/purchase_order/history.html?authorized'} eq 'U' ) ) ?> onclick="LoadContent('Results', '_purchase_orders.html', $('f1') );" />
-				<label class="radio" for="authorizedU">Unauthorized</label>
-				<input type="radio" name="authorized" id="authorizedAll" value="" <? echo ( checked( $session{'/employee/purchase_order/history.html?authorized'} eq '' ) ) ?> onclick="LoadContent('Results', '_purchase_orders.html', $('f1') );" />
-				<label class="radio" for="authorizedAll">All</label>
+				<? echo ( radio( 'authorized', [ 'Y','Authorized', 'N', 'Declined', 'U', 'Unauthorized', '', 'All' ], $session{'/employee/purchase_order/history.html?authorized'}, { onclick=>q`page_load('Results',$('f1'));`, default=>'' } ); ) ?>
 			</li>
 			<li>
 				<label>Deleted</label>
-				<input type="radio" name="deleted" id="deleted1" value="1" <? echo ( checked( $session{'/employee/purchase_order/history.html?deleted'} ) ) ?> onclick="LoadContent('Results', '_purchase_orders.html', $('f1') );" />
-				<label class="radio" for="deleted1">Yes</label>
-				<input type="radio" name="deleted" id="deleted0" value="0" <? echo ( checked( ! $session{'/employee/purchase_order/history.html?deleted'} ) ) ?> onclick="LoadContent('Results', '_purchase_orders.html', $('f1') );" />
-				<label class="radio" for="deleted0">No</label>
+				<? echo ( radio( 'deleted', [ '1','Yes','0', 'No' ], $session{'/employee/purchase_order/history.html?deleted'}, { onclick=>q`page_load('Results',$('f1'));`, default=>'0' } ); ) ?>
 			</li>
 			<li>
 				<label>Cancelled</label>
-				<input type="radio" name="cancelled" id="cancelled1" value="1" <? echo ( checked( $session{'/employee/purchase_order/history.html?cancelled'} eq '1' ) ) ?> onclick="LoadContent('Results', '_purchase_orders.html', $('f1') );" />
-				<label class="radio" for="cancelled1">Yes</label>
-				<input type="radio" name="cancelled" id="cancelled0" value="0" <? echo ( checked( $session{'/employee/purchase_order/history.html?cancelled'} eq '0' ) ) ?> onclick="LoadContent('Results', '_purchase_orders.html', $('f1') );" />
-				<label class="radio" for="cancelled0">No</label>
-				<input type="radio" name="cancelled" id="cancelled" value="" <? echo ( checked( $session{'/employee/purchase_order/history.html?cancelled'} eq '' ) ) ?> onclick="LoadContent('Results', '_purchase_orders.html', $('f1') );" />
-				<label class="radio" for="cancelled">Both</label>
+				<? echo ( radio( 'cancelled', [ '1','Yes','0', 'No', '', 'Both' ], $session{'/employee/purchase_order/history.html?cancelled'}, { onclick=>q`page_load('Results',$('f1'));`, default=>'' } ); ) ?>
 			</li>
-			<li><label>Department:</label>
+			<li><label>Department</label>
 				<select name="department_id" onchange="page_load('Results',$('f1'));">
 					<option value="">All</option>
 					<? echo ( make_drop_down( openprint::PurchaseOrder_Department->dropdown('order'=>'lower(name)'), $session{'/employee/purchase_order/history.html?department_id'} ); ) ?>

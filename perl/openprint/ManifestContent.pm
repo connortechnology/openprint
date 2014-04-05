@@ -194,6 +194,7 @@ $openprint::log->debug("desired paper exists");
 $openprint::log->debug("desired paper does not exists");
 # Change the stock
 		my $checked_out = 0;
+		require openprint::PaperAllocation;
 		foreach my $paper_id ( keys %SkidContents ) {
 			my $SC = $SkidContents{$paper_id};
 			my $Paper = $SC->Paper();
@@ -205,8 +206,7 @@ $openprint::log->debug("desired paper does not exists");
 						comment=>'Changed stock from ' . $Paper->to_string() . ' to ' . $Type->Paper()->to_string()});
 			}
 # Change the type to the new type
-			require openprint::PaperAllocation;
-			foreach my $PA ( openprint::PaperAllocation->find( skid_id=>$SC->skid_id(), paper_id=>$SC->paper_id() ) ) {
+			foreach my $PA ( openprint::PaperAllocation->find( 'skid_ids any'=>$SC->skid_id(), paper_id=>$SC->paper_id() ) ) {
 				$error .= $PA->save({paper_id=>$Type->Paper()->id()});
 			} # end foreach PA
 			{
@@ -362,7 +362,7 @@ sub check {
 } # end sub check
 
 sub apply {
-	my ( $MC, $Project ) = @_;
+	my ( $MC, $Order ) = @_;
 
 	my $error;
 	my $Tag = $MC->RFIDTag();
@@ -406,6 +406,10 @@ sub apply {
 		$$MC{location_id} = undef;
 		$skid_changes .= 'Changed location to ' . $Skid->Location()->name() . '<br/>';
 	} # end if
+	my $Paper = $MC->Type()->Paper();
+
+	$Skid->type( $Paper->type() ) if ! $Skid->type();
+
 	if ( ! $Skid->id() ) {
 		$skid_changes .= 'Skid Created.<br/>';
 		$$Skid{id} = $$MC{skid_id} if $$MC{skid_id};
@@ -415,7 +419,6 @@ sub apply {
 	} # end if
 	return $error if ! $Skid->id();
 
-	my $Paper = $MC->Type()->Paper();
 	my $Manifest = $MC->Manifest();
 
 	if ( $skid_changes ) {
@@ -446,25 +449,28 @@ $openprint::log->debug("Setting skid_id to $$Skid{id}");
 
 	$openprint::log->debug("Skid qty: $$SkidContent{quantity} != $$MC{quantity} checked_out($checked_out)");
 	if ( ( $$SkidContent{quantity} != $$MC{quantity} ) and ! $checked_out ) {
-		openprint::employee_inventory::save_inventory( $Skid, $Paper, $$MC{quantity}, sprintf('Inventory adjusted by manifest <a href="/employee/inventory/manifest_view.html?manifest_id=%1$d">%2$s</a>.', $Manifest->id(), $Manifest->name() ) );
+		openprint::employee_inventory::save_inventory( $Skid, $Paper, $$MC{quantity}, sprintf('Inventory adjusted by manifest <a href="/employee/inventory/manifest_view.html?manifest_id=%1$d">%2$s</a>.', $Manifest->id(), $Manifest->name() ), $MC->Type()->Condition() );
 		if ( $SkidContent = openprint::SkidContent->find_one( skid_id=>$Skid->id(), paper_id=>$$Paper{id} ) ) {
-	
-		$openprint::log->debug("New skidcontent: " . $SkidContent->to_string() );
+			$openprint::log->debug("New skidcontent: " . $SkidContent->to_string() );
 		} else {
-		$openprint::log->debug("No New skidcontent: " );
+			$openprint::log->debug("No New skidcontent: " );
 		} 
 	} # end if
-	if ( $Project and ! $checked_out ) {
-		require openprint::PaperAllocation;
-		my $PA = openprint::PaperAllocation->find_one( skid_id=>$MC->skid_id() );
-		if ( ! $PA ) {
-			$Paper->allocate( $Skid, $Project->id(), $MC->quantity(), $Paper->units() );
-			$error .= sprintf('Allocated %1$d%2$s to docket <a href="/employee/project/view.html?ProjectIndex=%3$d">%4$d</a>.<br/>', $MC->quantity(), $Paper->units(), $Project->id(), $Project->docket() );
-		} elsif ( ! $PA->project_id() ) {
-			$error .= $PA->save({ project_id=>$Project->id()});
-			$error .= sprintf('Updated allocation %1$d%2$s to docket <a href="/employee/project/view.html?ProjectIndex=%3$d">%4$d</a>.<br/>', $MC->quantity(), $Paper->units(), $Project->id(), $Project->docket() );
-		} elsif ( $PA->project_id() != $Project->id() ) {
-			$error .= sprintf('Skid <a href="/employee/inventory/skid_details.html?skid_id=%1$d">%1$d</a> already allocated to docket <a href="/employee/project/view.html?ProjectIndex=%2$d">%3$d</a>.<br/>', $MC->skid_id(), $PA->project_id(), $PA->docket() );
+	if ( $Order and $Order->id() and ! $checked_out ) {
+		if ( sets::isin( $Order->status(), [ 'Complete', 'Cancelled' ] ) ) {
+			$error .= 'Not allocating because docket is ' . $Order->status() . '<br/>';
+		} else {
+			require openprint::PaperAllocation;
+			my $PA = openprint::PaperAllocation->find_one( 'skid_ids any'=>$MC->skid_id() );
+			if ( ! $PA ) {
+				$Paper->allocate( $Skid, $Order->docket(), $MC->quantity(), $Paper->units() );
+				$error .= sprintf('Allocated %1$d%2$s to docket <a href="/employee/project/view.html?docket=%3$d">%3$d</a>.<br/>', $MC->quantity(), $Paper->units(), $Order->docket() );
+			} elsif ( ! $PA->docket() ) {
+				$error .= $PA->save({ docket=>$Order->docket()});
+				$error .= sprintf('Updated allocation %1$d%2$s to docket <a href="/employee/project/view.html?docket=%3$d">%3$d</a>.<br/>', $MC->quantity(), $Paper->units(), $Order->docket() );
+			} elsif ( $PA->docket() != $Order->docket() ) {
+				$error .= sprintf('Skid <a href="/employee/inventory/skid_details.html?skid_id=%1$d">%1$d</a> already allocated to docket <a href="/employee/project/view.html?docket=%2$d">%2$d</a>.<br/>', $MC->skid_id(), $PA->docket() );
+			} # end if
 		} # end if
 	} # end if
 	return $error;

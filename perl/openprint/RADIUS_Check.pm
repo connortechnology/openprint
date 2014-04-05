@@ -18,8 +18,6 @@ $serial = 'radcheck_id_seq';
 
 %attributes = (
 	'Cleartext-Password'	=>	'Cleartext Password', 
-	'Framed-IP-Address'		=>	'IP Address',
-	'Framed-Route'			=>	'Router',
 );
 
 1;

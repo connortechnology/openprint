@@ -13,6 +13,7 @@
 
 <script type="text/javascript">
 	function calc( formName, force ) {
+//alert("caller is " + arguments.callee.caller.toString());
 		calc_print( formName, force );
 	}
 </script>
@@ -71,7 +72,7 @@
 <? endif ( $$variable{'ProjectType'}->name() eq 'Envelopes' ) ?>
 
 <? echo ( 
-	if ( sets::isin( $$variable{'ProjectType'}->name(), [ 'DoorHangers', 'Brochures', 'GreetingCards','Postcards','Posters','Signs','Banners','RackCards','Labels','NCR' ] ) ) {
+	if ( sets::isin( $$variable{'ProjectType'}->name(), [ 'DoorHangers', 'Brochures', 'GreetingCards','Postcards','Posters','Signs','Banners','RackCards','Labels','NCR','Inserts' ] ) ) {
 		return join("\n",
 			include('/includes/main/proj/templates/generic.html'),
 			include('/includes/main/proj/dimensions.html'),
@@ -154,11 +155,6 @@
 		<?include(/includes/main/proj/templates/maps.html)?>
 		<?include(/includes/main/proj/dimensions.html)?>
 <? endif ( $$variable{'ProjectType'}->name() eq 'Maps' ) ?>
-<? if ( $$variable{'ProjectType'}->name() eq 'Inserts' ) ?>
-		<?include(/includes/main/proj/templates/project_template_select.html)?>
-		<?include(/includes/main/proj/templates/inserts.html)?>
-		<?include(/includes/main/proj/dimensions.html)?>
-<? endif ( $$variable{'ProjectType'}->name() eq 'Inserts' ) ?>
 <? if ( $$variable{'ProjectType'}->name() eq 'Forms' ) ?>
 		<?include(/includes/main/proj/templates/project_template_select.html)?>
 		<?include(/includes/main/proj/templates/forms.html)?>

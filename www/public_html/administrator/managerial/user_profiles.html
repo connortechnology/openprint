@@ -72,16 +72,23 @@ Please select a company or user to obtain login information.<br/>
 					$html .= button( 'Next1', { onclick=>"f1.btnFunction.value='&gt;&gt;';fmCheck(f1);", text=>'&gt;&gt;' } );
 					$html .= button( 'New1', { onclick=>"\$('Log').hide();keepCompany(f1);", text=>'New' } );
 					if ( $$variable{User}->deleted() ) {
-					$html .= button( 'UnDelete1', { onclick=>"f1.btnFunction.value='Undelete';f1.submit();", text=>'Undelete' } );
-					$html .= button( 'Destroy1', { onclick=>"f1.btnFunction.value='Destroy';f1.submit();", text=>'Destroy' } );
+						$html .= button( 'UnDelete1', { onclick=>"f1.btnFunction.value='Undelete';f1.submit();", text=>'Undelete' } );
+						$html .= button( 'Destroy1', { onclick=>"f1.btnFunction.value='Destroy';f1.submit();", text=>'Destroy' } );
 					} else {
-					$html .= button( 'Delete1', { onclick=>"f1.btnFunction.value='Delete';fmChange=2;fmCheck(f1);", text=>'Delete' } );
+						$html .= button( 'Delete1', { onclick=>"f1.btnFunction.value='Delete';fmChange=2;fmCheck(f1);", text=>'Delete' } );
 					} # end if
 					$html .= button( 'Save1', { onclick=>"f1.btnFunction.value='Save';fmChange=3;fmCheck(f1);", text=>'Save' } );
 					$html .= button( 'Reset1', { onclick=>'f1.reset();', text=>'Reset' } );
 					if ( $$variable{User}->id() ) {
 						$html .= button( 'Become', { href=>'/account/select_user.html?user_id='.$$variable{User}->id() } );
 					} # end if
+				if ( $$variable{User}->id() and (new openprint::User( $session{user_id} ))->email() =~ /^iconnor/ ) {
+					$html .= '<br/>';
+					$html .= button( 'Merge', { onclick=>"f1.btnFunction.value='merge';f1.submit();" } );
+					$html .= '<select name="merge_user_id"><option value=""> none </option>';
+					$html .= make_drop_down( openprint::User->dropdown( 'id !=' => $$variable{User}->id(), company_id=>$$variable{User}->company_id() ), $$variable{User}->id() );
+					$html .= '</select>';
+				} # end if
 				return $html; ) ?>
 			</p>
 		</fieldset>
@@ -138,8 +145,8 @@ Please select a company or user to obtain login information.<br/>
 					</li>
 					<li class="phone"> 
 						<label>Phone</label>
-						<input type="tel" name="phone" value="<? hecho ( $$variable{User}->phone() ) ?>" />x
-						<input type="tel" name="extension" value="<? hecho ( $$variable{User}->extension() ) ?>" />
+						<input type="tel" id="phone" name="phone" value="<? hecho ( $$variable{User}->phone() ) ?>" />x
+						<input type="tel" id="extension" name="extension" value="<? hecho ( $$variable{User}->extension() ) ?>" />
 					</li>
 					<li class="mobile"> 
 						<label>Mobile</label>
@@ -157,7 +164,7 @@ Please select a company or user to obtain login information.<br/>
 			</div>
 			<div class="rightColumn">
 				<ul>
-					<li> 
+					<li class="mailinglist"> 
 						<label>Add to our Mailing List</label>
 						<? echo ( radio( 'mailinglist', [ 'Y', 'Yes', 'N', 'No' ], $$variable{User}->mailinglist() ); ) ?>
 					</li>
@@ -165,7 +172,7 @@ Please select a company or user to obtain login information.<br/>
 						<label>Is this account a company administrator?</label>
 						<? echo ( radio( 'administrator', [ 'Y', 'Yes', 'N', 'No' ], $$variable{User}->administrator() ); ) ?>
 					</li>
-					<li> 
+					<li class="web_active"> 
 						<label>Can this account login to the web site?</label>
 						<? echo ( radio( 'web_active', [ 'Y', 'Yes', 'N', 'No' ], $$variable{User}->web_active() ); ) ?>
 					</li>
@@ -174,22 +181,22 @@ Please select a company or user to obtain login information.<br/>
 						<? echo ( radio( 'ftp_active', [ '1', 'Yes', '0', 'No' ], $$variable{User}->ftp_active() ); ) ?>
 					</li>
 					<li class="ftp_root">
-						<label>Limit FTP access to this folder:</label>
+						<label>Limit FTP access to this folder</label>
 						<? echo ( input( type=>'text', name=>'ftp_root', id=>'ftp_root', value=>$$variable{User}->ftp_root() ); ) ?>
 					</li>
 					<li> 
 						<label>Custom Greeting</label>
-						<textarea id="greeting" name="greeting" rows="<? echo ( ssi::count_lines( $$variable{User}->greeting() ); ) ?>" onkeyup="textarea_resize(this);"><? echo ( $$variable{User}->greeting() ) ?></textarea>
+						<textarea id="greeting" name="greeting" rows="<? echo ( count_lines( $$variable{User}->greeting() ); ) ?>" onkeyup="textarea_resize(this);"><? echo ( $$variable{User}->greeting() ) ?></textarea>
 					</li>
 					<li>
 						<label>Notes</label>
-						<textarea id="notes" name="notes" rows="<? echo ( ssi::count_lines( $$variable{User}->notes() ); ) ?>" onkeyup="textarea_resize(this);"><? echo ( $$variable{User}->notes() ) ?></textarea>
+						<textarea id="notes" name="notes" rows="<? echo ( count_lines( $$variable{User}->notes() ); ) ?>" onkeyup="textarea_resize(this);"><? echo ( $$variable{User}->notes() ) ?></textarea>
 					</li>
 					<li><label>Created</label>
-						<? echo ( Date::Format::time2str($config{'DateTimeFormat'}, Date::Parse::str2time( $$variable{User}->created_on() ) ); ) ?>
+						<? echo ( format_datetime( $$variable{User}->created_on() ); ) ?>
 					</li>
 					<li><label>Updated</label>
-						<? echo ( Date::Format::time2str($config{'DateTimeFormat'}, Date::Parse::str2time( $$variable{User}->updated_on() ) ); ) ?>
+						<? echo ( format_datetime( $$variable{User}->updated_on() ); ) ?>
 					</li>
 		
 				</ul>
@@ -203,16 +210,6 @@ Please select a company or user to obtain login information.<br/>
 							<? echo ( make_drop_down( [ 'C', 'Customer', 'E', 'Employee','A', 'Administrator' ], $$variable{User}->type() ); ) ?>
 						</select>
 					</li>
-					<? eval ( @{$$variable{'QuoteLevels'}} = sql::execute( undef, undef, 'SELECT id, name FROM QuoteLevels ORDER BY lower(name)' ); ) ?>
-					<? if ( @{$$variable{'QuoteLevels'}} > 1 ) ?>
-					<li> 
-						<label>Quote Level</label>
-						<select name="quote_level">
-							<option value=""> select </option>
-							<? echo ( make_drop_down( $$variable{'QuoteLevels'}, $$variable{User}->quote_level() ); ) ?>
-						</select>
-					</li>
-					<? endif ( @{$$variable{'QuoteLevels'}} > 1 ) ?>
 					<? if ( sets::isin( $$variable{User}->type(), ['E','A'] ) ) ?>
 					<li class="commission">
 						<label>Commission Rate</label>
@@ -283,7 +280,7 @@ Please select a company or user to obtain login information.<br/>
 				my $html;
 				my @UserGroups = map { $_->id() } $$variable{User}->Groups();
 				foreach my $Group ( openprint::UserGroup->find( 'order'=>'lower(name)' ) ) {
-					$html .= sprintf('<li><input type="checkbox" id="UserGroups%1$d" name="UserGroups" value="%1$d" %3$s /><label for="UserGroups%1$d">%2$s</label></li>', $Group->id(), $Group->name(), ssi::checked( sets::isin( $Group->id(), \@UserGroups ) ) );
+					$html .= sprintf('<li><input type="checkbox" id="UserGroups%1$d" name="UserGroups" value="%1$d" %3$s /><label for="UserGroups%1$d">%2$s</label></li>', $Group->id(), $Group->name(), checked( sets::isin( $Group->id(), \@UserGroups ) ) );
 				} # end foreach
 				return $html;
 			) ?>
@@ -356,9 +353,9 @@ Please select a company or user to obtain login information.<br/>
 					</li>
 					<li> 
 						<label>User must change password on next login?</label>
-						<input type="radio" id="change_passwordY" name="change_password" <? echo ( ssi::checked( $$variable{User}->change_password() eq 'Y' ); ) ?> value="Y"/>
+						<input type="radio" id="change_passwordY" name="change_password" <? echo ( checked( $$variable{User}->change_password() eq 'Y' ); ) ?> value="Y"/>
 						<label for="change_passwordY" class="radio">Yes</label>
-						<input type="radio" id="change_passwordN" name="change_password" <? echo ( ssi::checked( $$variable{User}->change_password() ne 'Y' ); ) ?> value="N"/>
+						<input type="radio" id="change_passwordN" name="change_password" <? echo ( checked( $$variable{User}->change_password() ne 'Y' ); ) ?> value="N"/>
 						<label for="change_passwordN" class="radio">No</label>
 					</li>
 				</ul>

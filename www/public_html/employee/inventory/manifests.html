@@ -30,7 +30,7 @@ function load_results( ) {
 				</li>
 			</ul>
 			</div>
-			<div class="righColumn">
+			<div class="rightColumn">
 				<ul>
 					<li><label>Skid ID</label>
 				<? echo (
@@ -57,7 +57,7 @@ function load_results( ) {
 				<input type="text" onkeyup="filterDDM(this, this.form.supplier_id);" class="filter" />
 				<select name="supplier_id" onchange="load_results();">
 					<option value="">All</option>
-					<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Company->find( 'order'=>'lower(name)', 'supplier'=>'Y') ], $session{'/employee/inventory/manifests.html?supplier_id'} ); ) ?>
+					<? echo ( make_drop_down( [ map { $_->id(), $_->name() } openprint::Company->find( 'order'=>'lower(name)', 'supplier'=>'Y') ], $session{'/employee/inventory/manifests.html?supplier_id'} ); ) ?>
 				</select>
 			</li>
 			<li>
@@ -68,13 +68,9 @@ function load_results( ) {
 			</li>
 			<li>
 				<label>Updated On</label>
-				<span class="DateSelectorCT">
-	<? echo ( ssi::date_select_session( '/employee/inventory/manifests.html','updated_on_start', { with_today=>1, with_clear=>1 } ); ) ?>
-				</span>
+	<? echo ( date_select_session( '/employee/inventory/manifests.html','updated_on_start', { with_today=>1, with_clear=>1 } ); ) ?>
 				to 
-				<span class="DateSelectorCT">
-	<? echo ( ssi::date_select_session( '/employee/inventory/manifests.html','updated_on_end', { with_today=>1, with_clear=>1 } ); ) ?>
-				</span>
+	<? echo ( date_select_session( '/employee/inventory/manifests.html','updated_on_end', { with_today=>1, with_clear=>1 } ); ) ?>
 			</li>
 			<li>
 				<label>Received On</label>
@@ -88,8 +84,15 @@ function load_results( ) {
 			</li>
 			<li>
 				<label>Deleted</label>
-				<? echo ( ssi::radio( 'deleted', ['1','Yes','0','No','1,0','All'], $session{'/employee/inventory/manifests.html?deleted'} ); ) ?>
+				<? echo ( radio( 'deleted', ['1','Yes','0','No','1,0','All'], $session{'/employee/inventory/manifests.html?deleted'} ); ) ?>
 			</li>
+			<li>
+				<label>Has Errors</label>
+				<? echo ( radio( 'has_errors', ['1','Yes','0','No','1,0','All'], $session{'/employee/inventory/manifests.html?has_errors'} ); ) ?>
+			</li>
+		<li><label>Type</label>
+            <? echo ( checkboxes( 'type', [ 'Sheet','Sheet','Roll','Roll','Unknown','Unknown' ], [ split(',', $session{'/employee/inventory/manifests.html?type'} ) ] ); ) ?>
+        </li>
 			</ul>
 			<p class="buttons">
 				<? echo ( join('',

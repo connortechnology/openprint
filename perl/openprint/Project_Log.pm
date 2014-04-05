@@ -6,7 +6,7 @@ use vars qw( $debug $table $serial %fields %transforms %defaults );
 
 $debug = 0;
 $table = 'project_log';
-$serial= 'project_log_id_seq';
+$serial= '';
 %fields = (
 	project_id		=>	'project_id',
 	company_id		=>	'company_id',
@@ -17,6 +17,7 @@ $serial= 'project_log_id_seq';
 %transforms = (
 );
 %defaults = (
+	created_on	=>	q`'NOW()'`,
 );
 
 1;

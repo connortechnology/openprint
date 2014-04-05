@@ -22,9 +22,10 @@
 			<th class="username" onclick="load_records(f1, {order:'username'});">Username</th>
 			<th class="attribute" onclick="load_records(f1, {order:'attribute'});">Attribute</th>
 			<th class="value">Value</th>
+			<th class="buttons"><? echo ( button( 'New', { onclick=>q`new_record();` } ); ) ?>
 		</tr>
 	</thead>
-	<tbody>
+	<tbody id="tbody">
 		<? echo (
 			my $html;
 			my $rowclass;

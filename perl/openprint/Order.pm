@@ -22,7 +22,7 @@ require openprint::Payment;
 require openprint::Tax;
 require openprint::Order_Notification;
 
-$debug = 1;
+$debug = 0;
 
 $table = 'orders';
 $serial = 'orders_id_seq';
@@ -39,6 +39,7 @@ $serial = 'orders_id_seq';
 	cod_percent				=>	'cod_percent',
 	downpayment_percent		=>	'downpayment_percent',
 	created_on				=> 'created_on',
+	updated_on				=>	'updated_on',
 	company_name			=> 'company_name',
 	salutation				=> 'salutation',
 	firstname				=> 'firstname',
@@ -76,6 +77,10 @@ $serial = 'orders_id_seq';
 %find_fields = (
 	project_id	=>	'(SELECT lngprojectindex FROM Order_Contents WHERE OrderIndex=Orders.id)',
 	status		=>	'(SELECT name FROM Order_Statuses WHERE order_statuses.id=status_id)',
+);
+
+%defaults = (
+	updated_on	=>	q`'NOW()'`,
 );
 
 sub save {
@@ -288,12 +293,12 @@ sub add_log {
 
 sub company {
 	my $self = shift;
-	return new openprint::Company( $$self{'company_id'} );
+	return new openprint::Company( $$self{company_id} );
 } # end sub company
+
 sub Company {
-	my $self = shift;
-	return new openprint::Company( $$self{'company_id'} );
-} # end sub company
+	return new openprint::Company( $_[0]{company_id} );
+} # end sub Company
 
 sub Contents {
 	if ( ! $_[0]{Contents} ) {
@@ -358,18 +363,19 @@ sub pay {
 	} # end if
 
 	my $error = (new openprint::Payment())->save({
-			'order_id'		=>	$$self{id},
-			'payor_id'		=>	$$self{company_id},
-			'recipient_id'	=>	$self->supplier_id(),
-			'amount'		=>	$self->owing(),
-			'method'		=>	'Manual',
-			'currency_id'	=>	$$self{currency_id},
-			'memo'			=>	'Order marked paid',
-			'received_on'	=>	'NOW()',
+			order_id		=>	$$self{id},
+			payor_id		=>	$$self{company_id},
+			recipient_id	=>	$self->supplier_id(),
+			amount		=>	$self->owing(),
+			method		=>	'Manual',
+			currency_id	=>	$$self{currency_id},
+			memo			=>	'Order marked paid',
+			received_on	=>	'NOW()',
 			});
 	if ( ! $error ) {
 		$self->add_log("Paid.");
 		$self->update_status();
+		$error .= $self->save();
 	} # end if
 	return $error;
 } # end sub pay
@@ -524,7 +530,7 @@ sub send_sales_order {
 	new openprint::Email()->send(
 		FROM	=> $sales_person_email,
 		TO		=> sprintf('"%s %s" <%s>', $self->get('firstname','lastname','email')),
-		BCC	 =>	'iconnor@point-one.com',
+		#BCC	 =>	'iconnor@point-one.com',
 		SUBJECT => "Order $$self{id}",
 		ATTACHMENTS	=>	[ @body, @sales_order ],
 		);
@@ -774,17 +780,20 @@ $openprint::log->debug("Not employee" );
 } # end sub can_invoice
 
 sub Invoice {
+$openprint::log->error("Deprecated call to Order::Invoice");
 	return new openprint::Invoice( $_[0]{invoice_id} );
 } # end sub Invoice
 
 sub Invoices {
-	return openprint::Order_Invoice->find( order_id=>$_[0]{id} );
+	return openprint::Order_Invoice->find( order_id=>$_[0]{id}, order=>'invoice_id' );
 } # end sub Invoices
 
 sub invoiced_on {
-	if ( $_[0]{invoice_id} ) {
-		return $_[0]->Invoice()->created_on();
-	} # end if		
+	my @Invoices = $_[0]->Invoices() ;
+	if ( @Invoices ) {
+		return $Invoices[0]->Invoice()->created_on();
+	} 
+	return;	
 }  # end sub invoiced_on
 
 sub can_see_pricing {
@@ -794,6 +803,16 @@ sub can_see_pricing {
 	return 1 if openprint::usergroup::is_user_in( ['Accounting'], $openprint::session{user_id} );
 	return 0;
 } # end sub can_see_pricing
+
+sub due_date {
+	if ( ! $_[0]{due_date} ) {
+		foreach my $Project( $_[0]->Projects() ) {
+			$_[0]{due_date} = $Project->due_date();
+			last if $_[0]{due_date};
+		} # end foreach Project
+	} # end if
+	return $_[0]{due_date};
+} # end sub due_date
 
 1;
 __END__

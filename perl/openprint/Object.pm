@@ -55,7 +55,7 @@ sub new {
 
 	my $ref = ref $id;
 	if ( ! $ref ) {
-		if ( $id and (!$data) and $openprint::Object::cache{$config{'db_name'}}{$parent} and $openprint::Object::cache{$config{'db_name'}}{$parent}{$id} ) {
+		if ( $id and (!$data) and $cache{$config{db_name}}{$parent} and $cache{$config{db_name}}{$parent}{$id} ) {
 #$log->debug("Loading from cache $parent $id");
 			# If the object is cached
 			return $openprint::Object::cache{$config{'db_name'}}{$parent}{$id};
@@ -72,8 +72,11 @@ sub new {
 			if ( $id ) {
 				# Using $id instead of $$self{od} means that we cache non existent entries
 			#if ( $$self{'id'} ) {
-				$openprint::Object::cache{$config{'db_name'}}{$parent}{$id} = $self;
+$log->debug("Caching $config{db_name} $parent $id = $self") if $debug;
+				$cache{$config{db_name}}{$parent}{$id} = $self;
 			} # end if
+		} else {
+$log->debug("NOT Caching $config{db_name} $parent $id = $self") if $debug;
 		} # end if
 		return $self;
 	} elsif ( ref $id eq 'HASH' ) {
@@ -91,7 +94,7 @@ sub new {
 		my $self = {};
 		bless $self, $parent;
 #$log->debug("Multi-key Obejct @$id @$data{@$id}" );
-		@$self{@$id} = @$data{@$id};
+		@$self{@$id} = @$data{@$id} if @$id;
 		$self->load( $data );
 #$log->debug( $parent . ': ' .$self->to_string() );
 		return $self;
@@ -122,7 +125,7 @@ sub load {
 			$log->debug('SELECT * FROM ' . $table . ' WHERE ' . join(' AND ', map { $$fields{$_} . '=' . $$self{$_} } @identified_by ) ) if $debug;
 			$data = $d->selectrow_hashref( 'SELECT * FROM ' . $table . ' WHERE ' . join(' AND ', map { $$fields{$_} . '=?' } @identified_by ), {}, @$self{@identified_by} );
 			#$log->debug("Got $type: " . join(',', map { $_ . '=>' . $$data{$_} } keys %$data ) ) if $debug;
-		} else {
+		} elsif ( exists $$fields{id} ) {
 			$log->debug("SELECT * FROM $table WHERE $$fields{id}=$$self{id}" ) if $debug;
 			$data = $d->selectrow_hashref( 'SELECT * FROM ' . $table . " WHERE $$fields{id}=?", {}, $$self{id} );
 		} # end if
@@ -135,8 +138,10 @@ sub load {
 			#$log->debug("Got $type: " . join(',', map { $_ . '=>' . $$data{$_} } keys %$data ) . ' in ' . sprintf('%.4f', tv_interval($starttime)*1000) .' useconds' );
 		} # end if
 	} # end if
-	my @keys = map { (defined $$fields{$_} or exists $$data{$_} ) ? $_ : () } keys %$fields;
-	@$self{@keys} = @$data{@$fields{@keys}};
+	if ( $data and %$data ) {
+		my @keys = map { (defined $$fields{$_} or exists $$data{$_} ) ? $_ : () } keys %$fields;
+		@$self{@keys} = @$data{@$fields{@keys}};
+	} # end if
 } # end sub load
 
 sub save {
@@ -179,18 +184,21 @@ if ( $debug ) {
 		if ( ! %serial ) {
 $log->debug("No serial") if $debug;
 			# No serial columns defined, which means that we will do saving by delete/insert instead of insert/update
-			my $where = join(' AND ', map { $$fields{$_}.'=?' } @identified_by );
-			if ( $debug ) {
-				$log->debug("DELETE FROM $table WHERE $where");
-			} # end if
-			if ( ! ( ( $_ = $local_dbh->prepare("DELETE FROM $table WHERE $where") ) and $_->execute( @$self{@identified_by} ) ) ) {
-				$where =~ s/\?/\%s/g;
-				$log->error("Error deleting: DELETE FROM $table WHERE " .  sprintf($where, map { defined $_ ? $_ : 'undef' } ( @$self{@identified_by}) ).'):' . $local_dbh->errstr);
-				$local_dbh->rollback();
-				sql::end_transaction( $local_dbh, $ac );
-				return $local_dbh->errstr;
-			} elsif ( $debug ) {
-				$log->debug("SQL succesful DELETE FROM $table WHERE $where");
+			if ( @identified_by ) {
+				my $where = join(' AND ', map { $$fields{$_}.'=?' } @identified_by );
+				if ( $debug ) {
+					$log->debug("DELETE FROM $table WHERE $where");
+				} # end if
+				
+				if ( ! ( ( $_ = $local_dbh->prepare("DELETE FROM $table WHERE $where") ) and $_->execute( @$self{@identified_by} ) ) ) {
+					$where =~ s/\?/\%s/g;
+					$log->error("Error deleting: DELETE FROM $table WHERE " .  sprintf($where, map { defined $_ ? $_ : 'undef' } ( @$self{@identified_by}) ).'):' . $local_dbh->errstr);
+					$local_dbh->rollback();
+					sql::end_transaction( $local_dbh, $ac );
+					return $local_dbh->errstr;
+				} elsif ( $debug ) {
+					$log->debug("SQL succesful DELETE FROM $table WHERE $where");
+				} # end if
 			} # end if
 			$insert = 1;
 		} else {
@@ -280,7 +288,12 @@ $log->debug("No serial") if $debug;
 	sql::end_transaction( $local_dbh, $ac );
 	$self->load();
 #$log->debug("Got here");
-	delete $openprint::Object::cache{$config{'db_name'}}{$type}{$$self{id}};
+	if ( $$fields{id} ) {
+		if ( ! $openprint::Object::cache{$config{'db_name'}}{$type}{$$self{id}} ) {
+			$openprint::Object::cache{$config{'db_name'}}{$type}{$$self{id}} = $self;
+		} # end if
+	#delete $openprint::Object::cache{$config{'db_name'}}{$type}{$$self{id}};
+	} # end if
 #$log->debug("after delete");
 	eval 'if ( %'.$type.'::find_cache ) { %'.$type.'::find_cache = (); }';
 #$log->debug("after clear cache");
@@ -451,7 +464,11 @@ $log->debug("find_operators: field($field) type($type) op($operator) value($valu
 		return ( $field.$type.' ' . $operator . ' ?', $value );
 	} elsif ( sets::isin( $operator, [ '&&', '<@', '@>' ] ) ) {
 		if ( ref $value eq 'ARRAY' ) {
-			return ( $field.$type.' ' . $operator . ' ?', $value );
+			if ( $field =~ /^\(/ ) {
+				return ( 'ARRAY('.$field.$type.') ' . $operator . ' ?', $value );
+			} else {
+				return ( $field.$type.' ' . $operator . ' ?', $value );
+			} # emd of
 		} else {
 			return ( $field.$type.' ' . $operator . ' ?', [ $value ] );
 		} # end if
@@ -471,14 +488,16 @@ $log->debug("find_operators: field($field) type($type) op($operator) value($valu
 		return '('.$field.$type.' IS NULL OR '.$field.$type.' <= ?)', $value;
 	} elsif ( $operator eq 'null_or_>=' ) {
 		return '('.$field.$type.' IS NULL OR '.$field.$type.' >= ?)', $value;
-	} elsif ( $operator eq 'null_or_>' ) {
+	} elsif ( $operator eq 'null_or_>' or $operator eq 'is null or >' ) {
 		return '('.$field.$type.' IS NULL OR '.$field.$type.' > ?)', $value;
-	} elsif ( $operator eq 'null_or_<' ) {
+	} elsif ( $operator eq 'null_or_<' or $operator eq 'is null or <' ) {
 		return '('.$field.$type.' IS NULL OR '.$field.$type.' < ?)', $value;
 	} elsif ( $operator eq 'null_or_=' or $operator eq 'is null or =' ) {
 		return '('.$field.$type.' IS NULL OR '.$field.$type.' = ?)', $value;
-	} elsif ( $operator eq 'null or in' ) {
+	} elsif ( $operator eq 'null or in' or $operator eq 'is null or in' ) {
 		return '('.$field.$type.' IS NULL OR '.$field.$type.' IN ('.join(',', map { '?' } @{$value} ) . '))', @{$value};
+	} elsif ( $operator eq 'null or not in' ) {
+		return '('.$field.$type.' IS NULL OR '.$field.$type.' NOT IN ('.join(',', map { '?' } @{$value} ) . '))', @{$value};
 	} elsif ( $operator eq 'exists' ) {
 		return ( $value ? ' EXISTS ' : 'NOT EXISTS ' ).$field;
 	} elsif ( $operator eq 'lc' ) {
@@ -694,7 +713,7 @@ $log->debug("Undefing $object_type $cache_field $$params{$cache_field}") if DEBU
 	if ( $$params{'order'} ) {
 		$sql .= " ORDER BY $$params{'order'}";
 	} # end if
-	if ( $$params{'group'} ) {
+	if ( $$params{'group by'} ) {
 		$sql .= " GROUP BY $$params{'group'}";
 	} # end if
 	if ( exists $$params{'limit'} ) {
@@ -728,7 +747,7 @@ $log->debug("Undefing $object_type $cache_field $$params{$cache_field}") if DEBU
 	} else {
 		my @identified_by = eval '@'.$object_type.'::identified_by';
 		if ( ! @identified_by ) {
-			$log->error("Multi key object $object_type but no identified by");
+			$log->debug("Multi key object $object_type but no identified by") if $debug;
 		} # end if
 		return map { $object_type->new( \@identified_by, $_ ) } @$data;
 #$log->debug("Objs: "  . scalar @objs );

@@ -32,7 +32,7 @@ my $Lexicon;
 sub slurp_content {
 	my ( $file ) = @_;
 
-$log->debug("Slurping file $file");
+#$log->debug("Slurping file $file");
 
 	if ( ! ( $file =~ /^\// ) ) {
 		# Use a path relative to the current page
@@ -156,8 +156,10 @@ my %html_replacements = (
 );
 my $replacement_string = join '', keys %html_replacements;
 sub html_escape {
-	$_[0]=~ s/([\Q$replacement_string\E])/$html_replacements{$1}/g;
-	return $_[0];
+	my $thing = $_[0];
+
+	$thing =~ s/([\Q$replacement_string\E])/$html_replacements{$1}/g;
+	return $thing;
 }
 
 sub escape_quotes {
@@ -765,6 +767,7 @@ $log->debug("Selecting default $$options{default}");
 	} # end if
 
 	while ( my ( $value, $label ) = splice @{$values}, 0, 2 ) {
+		$html .= $$options{container}[0] if $$options{container};
 		$html .= sprintf(q`
 				<input type="radio" name="%1$s" value="%2$s" id="%1$s%6$s%2$s" %4$s%5$s />
 				<label class="radio" for="%1$s%2$s">%3$s</label>
@@ -772,6 +775,7 @@ $log->debug("Selecting default $$options{default}");
 				( $onclick ? ' onclick="'.$onclick.'"' : '' ),
 				$$options{id},
 				);
+		$html .= $$options{container}[1] if $$options{container};
 	} # end foreach value
 	return $html;
 } # end sub radio
@@ -831,7 +835,7 @@ sub date_filter {
 	return ( $sql_field, sprintf('%.4d-%.2d-%.2d %.2d:%.2d:%.2d', ( $year, $month, $day, $hour, $minute, $second ) ) );
 } # end sub date_filter
 
-my @input_options = ( 'type','name','id','onblur','onfocus','onkeyup','onkeydown','onchange','class','pattern','ontouch','min','max', 'step', 'placeholder', 'oninput' );
+my @input_options = ( 'type','name','id','onblur','onfocus','onkeyup','onkeydown','onchange','class','pattern','ontouch','min','max', 'step', 'placeholder', 'oninput', 'title' );
 
 sub input {
 	my %options = @_;
@@ -845,6 +849,7 @@ sub input {
 		} # end if
 		$options{filter} = 'cardinalize(this);' if ! $options{filter};
 		$options{onkeyup} = $options{filter}.$options{onkeyup};
+		$options{step} = '1' if ! exists $options{step};
 	} elsif ( $options{type} eq 'integer' ) {
 		if ( $ENV{HTTP_USER_AGENT} =~ /ip(ad|od|hone)/i ) {
 			$options{type} = 'text';

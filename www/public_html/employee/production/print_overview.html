@@ -375,10 +375,10 @@
 		} # end foreach press
 		sql::end_transaction( $dbh, $ac );
 		$html .= '</tr></tbody></table>';
-		$html .= q`<div class="unprintable"><hr class="spacer"/><h3 onclick="LoadContent( 'PendingApproved', '/employee/production/_pending_approved.html' );">Pending Approved (click to hide/unhide):</h3><table class="PendingApproved"><tr id="PendingApproved">`;
+		$html .= q`<div class="unprintable"><hr class="spacer"/><h3 onclick="LoadContent( 'PendingApproved', '/employee/production/_pending_approved.html', $('f1') );">Pending Approved (click to hide/unhide):</h3><table class="PendingApproved"><tr id="PendingApproved">`;
 		$html .= include( '/employee/production/_pending_approved.html' );
 		$html .= '</tr></table></div>';
-		$html .= q`<div class="unprintable"><hr class="spacer"/><h3 onclick="LoadContent('Pending','/employee/production/_pending.html');">Pending (click to hide/unhide):</h3><table class="Pending"><tr id="Pending">`;
+		$html .= q`<div class="unprintable"><hr class="spacer"/><h3 onclick="LoadContent('Pending','/employee/production/_pending.html', $('f1'));">Pending (click to hide/unhide):</h3><table class="Pending"><tr id="Pending">`;
 		$html .= include( '/employee/production/_pending.html' );
 		$html .= '</tr></table></div>';
 		return $html;

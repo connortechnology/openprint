@@ -18,6 +18,7 @@
 	} # end if
 
 	if ( ! $param{'ServiceType'} ) {
+$log->warn("No servicetype in params in calc");
 		return;
 	} # end if
 
@@ -30,7 +31,6 @@
     # Not sure this is a good idea, but it's neccessary for printing... why is it neccessary?
     $openprint::service::specs_cache{$param{ServiceIndex}} = \%param;
     my %specs = %param;
-$openprint::log->debug("Paper Message 1 " . ( exists $specs{PaperMessage1} ? ' exists ' : 'not exists' ) . ' ' . $specs{PaperMessage1} );
 	if ( my $function = $module->can( $param{method} ) ) {
 		$specs{'Status'} = $function->( $log, $dbh, $variable, @param{'ProjectIndex','ServiceIndex'}, \%specs );
 	} else {
@@ -48,7 +48,7 @@ $openprint::log->debug("Paper Message 1 " . ( exists $specs{PaperMessage1} ? ' e
 		$log->debug("no outputs, so using keys @vars") if $debug;
 	} # end if
 	if ( my $function = $module->can( 'no_outputs' ) ) {
-		my @no_outputs = sort $function->( @param{'ProjectIndex','ServiceIndex'}, \%specs );
+		my @no_outputs = sort $function->( @param{'ProjectIndex','ServiceIndex'}, \%specs , \%param );
 		$log->debug("$module ::no_outputs: @no_outputs)") if $debug;
 		@vars = sets::exclude( \@no_outputs, \@vars );
 
@@ -62,11 +62,13 @@ $log->debug("Deleting key $key in no_outputs ") if $debug;
 			$log->debug("$key => $specs{$key}");
 		} # end foreach
 	} # end if debug
-$openprint::log->debug("Paper Message 1 " . ( exists $specs{PaperMessage1} ? ' exists ' : 'not exists' ) . ' ' . $specs{PaperMessage1} );
-    foreach my $key ( @vars ) {
+    foreach my $key ( keys %specs ) {
         if ( (exists $param{$key}) and ($specs{$key} eq $param{$key}) ) {
 $log->debug("Deleting $key cuz it's the same $key") if $debug;
 			delete $specs{$key};
+       } elsif ( ref $specs{$key} ) {
+$log->error("Got a non-scalar in specs! $key => $specs{$key}");
+            delete $specs{$key};
         } # end if
     } # end foreach
 

@@ -34,7 +34,7 @@ function filter_onChange( element, id, selected ) {
 			} // end if
         } // end if filter exists
     } // end for 
-    new Ajax.Request( '_stock.json', { parameters: h, evalScripts: true } );
+    new Ajax.Request( '/employee/inventory/_stock.json', { parameters: h, evalScripts: true } );
 } // end function Name_onChange()
 
 function cbStockFillResults( results ) {

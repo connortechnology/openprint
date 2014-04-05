@@ -1004,6 +1004,7 @@ sub _bump_job {
 sub _pending_approved {
 	my ( $referer ) = $ENV{'HTTP_REFERER'} =~ /^https?:\/\/[^\/:]+([^?]*).*$/;
 	$variable{'referer'} = $referer;
+	ssi::save_params( $referer, ( 'Equipment','scale', 'show_feedback' ) );
 
 	$session{$referer.'?pending_approved'} = $session{$referer.'?pending_approved'} ? 0 : 1;
     @{$variable{'Equipment'}} = ();
@@ -1018,6 +1019,7 @@ sub _pending_approved {
 sub _pending {
 	my ( $referer ) = $ENV{'HTTP_REFERER'} =~ /^https?:\/\/[^\/:]+([^?]*).*$/;
 	$variable{'referer'} = $referer;
+	ssi::save_params( $referer, ( 'Equipment','scale', 'show_feedback' ) );
 	$session{$referer.'?pending'} = $session{$referer.'?pending'} ? 0 : 1;
     @{$variable{'Equipment'}} = ();
 	if ( $session{$referer.'?pending'} ) {

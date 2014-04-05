@@ -1,10 +1,11 @@
 <? eval (
 	if ( $param{ProjectID} ) {
+		$param{ProjectID} = openprint::Project->transform( 'id', $param{ProjectID} );
 		$$variable{Projects} = [ openprint::Project->find( 
 			company_id		=> $session{company_id},
 			id				=> $param{ProjectID},
 			order			=> 'id DESC',
-		) ];
+		) ] if $param{ProjectID};
 	} else {
 		my %sql = (
 			date_filter( '/main/project/history.html?created_on_end', 'created_on <=' ),
@@ -17,6 +18,7 @@
 			) : ( 
 				company_id		=>  $session{company_id}
 			) ),
+			( $session{'/main/project/history.html?servicetype_id'} ? ( 'servicetype_id	any'=>	$session{'/main/project/history.html?servicetype_id'} ) : () ),
 			order				=> 'id DESC',
 		);
 		$sql{status} = [ split( ',', $session{'/main/project/history.html?ddmStatus'} ) ] if $session{'/main/project/history.html?ddmStatus'};

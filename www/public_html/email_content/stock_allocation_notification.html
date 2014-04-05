@@ -1,4 +1,4 @@
-The following stock has been allocated for docket <b><? echo ( $$variable{'Project'}->docket() ) ?></b><br/>
+The following stock has been allocated for docket <b><? echo ( $$variable{Order}->docket() ) ?></b><br/>
 
 <? if ( $$variable{'OldSkids'} and @{$$variable{'OldSkids'}} ) ?><p>Some of these stocks have not been seen in over 30 days.  Please verify the availability of these stocks.<? endif ( $$variable{'OldSkids'} and @{$$variable{'OldSkids'}} ) ?></p>
 
@@ -24,16 +24,16 @@ The following stock has been allocated for docket <b><? echo ( $$variable{'Proje
     my $html;
     foreach my $PA ( openprint::PaperAllocation->find('paper_id'=>$$variable{'Allocation'}->paper_id(), 'order'=>'created_on') ) {
         $html .= sprintf('<tr>
-                            <td class="Docket"><a href="/employee/project/view.html?project_id=%1$d">%2$d</a></td>
+                            <td class="Docket"><a href="/employee/project/view.html?docket=%1$d">%1$d</a></td>
                             <td class="Date">%3$s</td>
                             <td class="Company">%4$s</td>
                             <td class="CSR">%5$s</td>
                             <td class="Quantity">%6$s</td>
                             </tr>',
-                $PA->project_id(), $PA->Project()->docket(),
-                $PA->Project()->due_date(),
-                $PA->Project()->Company()->name(),
-                $PA->Project()->Company()->CSR()->name(),
+                $PA->docket(),
+                $PA->Order()->due_date(),
+                $PA->Order()->Company()->name(),
+                $PA->Order()->Company()->CSR()->name(),
                 Number::Format::format_number($PA->quantity()).$PA->units(),
             );
     } # end foreach PA
@@ -44,7 +44,7 @@ The following stock has been allocated for docket <b><? echo ( $$variable{'Proje
 <? else ( $$variable{'Paper'}->available() < 0 ) ?>
 <table class="List">
 	<tr>
-		<th align="left">Skid #</th><th align="left">RFID #</th><th align="left">Location</th><th align="right">Last Seen</th><th align="right">Quantity</th>
+		<th class="Skid">Skid #</th><th class="RFID">RFID #</th><th class="Location">Location</th><th class="Date">Last Seen</th><th class="Quantity">Quantity</th>
 	</tr>
 <? echo (
 	my $html;
@@ -53,19 +53,25 @@ The following stock has been allocated for docket <b><? echo ( $$variable{'Proje
 	my @Skids = $$variable{'Allocation'}->Skids();
 	if ( @Skids ) {
 		foreach my $Skid ( @Skids ) {
-			$html .= sprintf('<tr%s>', $rowclass );
+			my $Content = $Skid->Content($$variable{Allocation}->Paper());
+
+			$html .= sprintf('
+<tr%s>
+	<td class="Skid">%s</td>
+	<td class="RFID">%s</td>
+	<td class="Location">%s</td>
+	<td class="Date">%s</td>
+	<td class="Quantity">%s%s</td>
+</tr>
+', $rowclass, $Skid->id(), $Skid->rfidtag_id(), $Skid->Location()->name(), format_date( $Skid->updated_on() ),
+ ($Content ? Number::Format::format_number($Content->quantity()) : 'unknown '), $$variable{Allocation}->units(),
+ );
 			$rowclass = $rowclass ? '' : ' class="colRow"';
-			$html .= sprintf('<td>%s</td>', $Skid->id() );
-			$html .= sprintf('<td>%s</td>', $Skid->rfidtag_id() );
-			$html .= sprintf('<td>%s</td>', $Skid->Location()->name() );
-			$html .= sprintf('<td align="right">%s</td>', Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $Skid->updated_on() ) ));
-			my $Content = $Skid->Content($$variable{'Allocation'}->Paper());
-			$html .= sprintf('<td align="right">%s%s</td>', ($Content ? Number::Format::format_number($Content->quantity()) : 'unknown '), $$variable{'Allocation'}->units() );
 		} # end foreach Skid
 	} # end if
 	$html .= '<tr class="totals">';
-	$html .= '<td colspan="4" style="text-align: right;">Total</td>';
-	$html .= '<td style="text-align: right;">' .Number::Format::format_number($$variable{'Allocation'}->quantity()).$units.'</td>';
+	$html .= '<td colspan="4">Total</td>';
+	$html .= '<td class="Quantity">' .Number::Format::format_number($$variable{'Allocation'}->quantity()).$units.'</td>';
 	$html .= '</tr>';
 	return $html;
 ) ?>

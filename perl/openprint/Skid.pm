@@ -17,7 +17,7 @@ require openprint::SkidContent;
 require openprint::InventoryCondition;
 require openprint::PaperAllocation;
 
-$debug = 1;
+$debug = 0;
 
 $table = 'Skids';
 $serial = 'skid_id_seq';
@@ -222,6 +222,7 @@ sub find {
 		push @values, $params{'updated_on <='};
 	} # end if
 	if ( $params{'allocated_to_docket'} ) {
+# FIXME
 		$sql .= ' AND id IN ( SELECT skid_id FROM paper_allocations WHERE project_id=(SELECT id FROM Projects WHERE lngDocketNumber=?))';
 		push @values, $params{'allocated_to_docket'};
 	} # end if
@@ -265,6 +266,19 @@ sub find {
 			$sql .= ' AND type=?';
 			push @values, $params{'type'};
 		} # end if
+	} elsif ( exists $params{'type !='} ) {
+			$sql .= ' AND (type IS NULL OR type!=?)';
+			push @values, $params{'type !='};
+	} elsif ( exists $params{'type is null or in'} ) {
+		if ( ref $params{'type is null or in'} eq 'ARRAY' ) {
+			$sql .= ' AND ( type IS NULL OR type IN (' . join(',', map {'?'} @{$params{'type is null or in'}}) . '))';
+			push @values, @{$params{'type is null or in'}};
+		} elsif ( $params{'type is null or in'} ) {
+			$sql .= ' AND (type IS NULL OR type = ?)';
+			push @values, $params{'type is null or in'};
+		} else {
+			$sql .= ' AND type IS NULL';
+		} # en dif
 	} # end if
 	if ( exists $params{'location_id'} ) {
 		if ( ref $params{'location_id'} eq 'ARRAY' ) {
@@ -282,7 +296,8 @@ sub find {
 	
 	$sql .= " ORDER BY $params{'order'}" if $params{'order'};
 	if ( @values == 1) {
-		Carp::cluck("Loading all skids?! $sql");
+		$log->warn("Loading all skids!");
+		#Carp::cluck("Loading all skids?! $sql");
 	} # end if
 
 	my $data = $openprint::dbh->selectall_arrayref( $sql, { Slice => {} }, @values );
@@ -291,9 +306,9 @@ sub find {
 	} elsif ( $debug ) {
 		$log->debug("Debug loaded skids ($sql) (@values) # of results: " . @$data );
 	} # end if
-	if ( $data and @$data >= 100 ) {
-		Carp::cluck("Loading a lot of skids?! $sql : #". @$data );
-	} # end if
+	#if ( $data and @$data >= 100 ) {
+		#Carp::cluck("Loading a lot of skids?! $sql : #". @$data );
+	#} # end if
 	return map { new openprint::Skid( $_->{id}, $_ ) } @$data;
 
 } # end sub find
@@ -307,10 +322,10 @@ sub copy {
 
 	foreach my $C ( $self->Contents() ) {
 		$C = $C->copy();
-		$C->save({'skid_id'=>$$new{id}});
+		$C->save({ skid_id=>$$new{id} });
 		$C->Paper()->add_inventory( $new->id(), $C->quantity() );
-		foreach my $PA ( openprint::PaperAllocation->find('skid_id'=>$$self{'id'}, 'paper_id'=>$C->paper_id()) ) {
-			$C->Paper()->allocate( $new, $PA->project_id(), $PA->quantity(), $PA->units(), $PA->reason() );
+		foreach my $PA ( openprint::PaperAllocation->find('skid_ids any'=>$$self{id}, paper_id=>$C->paper_id()) ) {
+			$C->Paper()->allocate( $new, $PA->docket(), $PA->quantity(), $PA->units(), $PA->reason() );
 		} # end while
 	} # end foreach Content
 	return $new;
@@ -399,7 +414,6 @@ sub add {
 			( ( $Purpose and $Purpose->id() ) ? ( purpose_id => $Purpose->id() ) : () ),
 			});
 	if ( $_ ) {
-		$log->debug("Bufer");
 		$openprint::log->error("Error adding skidcontent: $_");
 	} # end if
 	return $quantity - $old_quantity;
@@ -501,8 +515,8 @@ sub Contents {
 			$$self{Contents} = $_[0];
 		} else {
 			my %params = @_;
-			$params{'skid_id'} = $$self{'id'};
-			$params{'deleted_in'} = [0,1] if ! exists $params{'deleted in'};
+			$params{skid_id} = $$self{'id'};
+			$params{deleted} = [0,1] if ! exists $params{'deleted in'};
 			return openprint::SkidContent->find( %params );
 		} # end if
 	} elsif ( ! $$self{Contents} ) {
@@ -514,7 +528,7 @@ sub Contents {
 sub allocation {
 	my ( $self, %options ) = @_;
 	if ( $options{'Paper'} ) {
-		my $allocated = misc::sum( map { $_->quantity() } openprint::PaperAllocation->find('skid_id'=>$$self{'id'},'paper_id'=>$options{'Paper'}->{id}) );
+		my $allocated = misc::sum( map { $_->quantity() } openprint::PaperAllocation->find('skid_ids any'=>$$self{id},paper_id=>$options{Paper}->{id}) );
 		return $allocated;
 	} # end if
 } # end sub allocatiosn
@@ -553,7 +567,7 @@ sub checkout {
 
 	foreach my $C ( @contents ) {
 		if ( ! openprint::PaperInventory->find( skid_id=>$$self{id}, 'comment like'=>'Checked out%' ) ) {
-			my $PA = openprint::PaperAllocation->find_one( skid_id=>$$self{id}, paper_id=>$C->paper_id());
+			my $PA = openprint::PaperAllocation->find_one( 'skid_ids any'=>$$self{id}, paper_id=>$C->paper_id());
 			my $desc = 'Checked out';
 			$desc .= ($PA->project_id() ? ' for docket ' . $PA->Project()->docket() : '') if $PA;
 			my $PI = new openprint::PaperInventory();
@@ -591,21 +605,25 @@ sub next {
 } # end sub next
 
 sub allocate {
-	my ( $self, $paper_id, $project_id, $quantity, $units ) = @_;
+	my ( $self, $paper_id, $docket, $quantity, $units ) = @_;
 
-	my $ac = sql::start_transaction();
-	sql::insert( undef, undef, 'Paper_Allocations',
-			'skid_ids',		[ $$self{'id'} ],
-			'paper_id',		$paper_id,
-			'quantity',		1*$quantity,
-			'units',		$units,
-			'project_id',	$project_id ? $project_id : undef,
-			'operator_id',	$session{'user_id'},
-			);
-	if ( $project_id ) {
-	(new openprint::Project( $project_id ))->add_to_log( @session{'company_id','user_id'}, qq`Allocated $quantity $units on skid <a href="/employee/inventory/skid_details.html?skid_id=$$self{id}">$$self{id}</a>` ) if $project_id;
+	my $Order = openprint::Order->find_one( docket=>$docket ) if $docket;
+
+	my $ac = sql::start_transaction( $openprint::dbh );
+	my $PA = new openprint::PaperAllocation();
+	my $error = $PA->save({
+			skid_ids	=>	[ $$self{id} ],
+			paper_id	=>	$paper_id,
+			quantity	=>	1*$quantity,
+			units	=>	$units,
+			( $Order ? ( docket => $Order->docket() ) : () ),
+			operator_id	=>	$session{user_id},
+			} );
+	if ( $Order ) {
+		$Order->add_log( qq`Allocated $quantity $units on ` . $self->link_to() );
 	} # end if
-	sql::end_transaction( undef, $ac );
+	sql::end_transaction( $openprint::dbh, $ac );
+	return $error;
 } # end sub allocate
 
 sub empty {

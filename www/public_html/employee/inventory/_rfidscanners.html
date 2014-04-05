@@ -4,26 +4,25 @@
 
 	@{$$variable{'RFIDScanners'}} = openprint::RFIDScanner->find( 
 		( $session{'/employee/inventory/rfidscanners.html?Owner'} ? ( owner_id=>$session{'/employee/inventory/rfidscanners.html?Owner'} ) : () ),
-		ssi::date_filter( '/employee/inventory/rfidscanners.html?created_on_end', 'created_on <=' ),
-		ssi::date_filter( '/employee/inventory/rfidscanners.html?created_on_start', 'created_on >=' ),
-		ssi::date_filter( '/employee/inventory/rfidscanners.html?updated_on_end', 'updated_on <=' ),
-		ssi::date_filter( '/employee/inventory/rfidscanners.html?updated_on_start', 'updated_on >=' ),
+		date_filter( '/employee/inventory/rfidscanners.html?created_on_end', 'created_on <=' ),
+		date_filter( '/employee/inventory/rfidscanners.html?created_on_start', 'created_on >=' ),
+		date_filter( '/employee/inventory/rfidscanners.html?updated_on_end', 'updated_on <=' ),
+		date_filter( '/employee/inventory/rfidscanners.html?updated_on_start', 'updated_on >=' ),
 		'order'		=>	'id',
 		);
 ) ?>
 <? if ( @{$$variable{'RFIDScanners'}} ) ?>
 <form id="RFIDScannerResults" name="RFIDScannerResults" action="rfidscanners.html" method="post">
-	<table class="List">
+	<table class="List sortable">
 		<tr>
 			<th class="checkbox"><input type="checkbox" onclick="select_all( this.form, 'rfidscanners', this.checked );"/></th>
-			<th align="left" width="75">ID</th>
-			<th align="left" width="115">Name</th>
-			<th align="left" width="115">IP Address</th>
-			<th align="left" width="115">Date Added</th>
-			<th align="left" width="115">Updated On</th>
-			<th align="left" width="115">Last Seen On</th>
-			<th align="left" width="100">Location</th>
-			<th align="left" width="140">Type</th>
+			<th class="RFIDScanner">Name</th>
+			<th class="ip">IP Address</th>
+			<th class="DateTime">Date Added</th>
+			<th class="DateTime">Updated On</th>
+			<th class="DateTime">Last Seen On</th>
+			<th class="Location">Location</th>
+			<th class="RFIDScannerType">Type</th>
 		</tr>
 		<? echo (
 			my $html;
@@ -32,7 +31,6 @@
 
 				$html .= "<tr$rowclass>";
 				$html .= qq`<td class="checkbox"><input type="checkbox" name="rfidscanners" value="$$RFIDScanner{'id'}"/></td>`;
-				$html .= sprintf( '<td><a href="rfidscanner_details.html?rfidscanner_id=%1$d">%1$d</a></td>', $$RFIDScanner{'id'} );
 				$html .= sprintf( '<td><a href="rfidscanner_details.html?rfidscanner_id=%1$d">%2$s</a></td>', @$RFIDScanner{'id','name'} );
 				$html .= sprintf( '<td><a href="rfidscanner_details.html?rfidscanner_id=%1$d">%2$s</a></td>', @$RFIDScanner{'id','ipaddr'} );
 				$html .= sprintf( '<td><a href="rfidscanner_details.html?rfidscanner_id=%d">%s</a></td>', $$RFIDScanner{'id'}, Date::Format::time2str($config{'DateTimeFormat'}, Date::Parse::str2time($RFIDScanner->created_on()) ) );
@@ -50,7 +48,7 @@
 	<input type="hidden" name="btnFunction"/>
 	<p class="buttons">
 		<? echo ( join('',
-					ssi::button( 'Delete', { 'onclick'=>"RFIDScannerResults.btnFunction.value='Delete';RFIDScannerResults.submit();", 'text'=>'Delete Checked' } ),
+					button( 'Delete', { 'onclick'=>"RFIDScannerResults.btnFunction.value='Delete';RFIDScannerResults.submit();", 'text'=>'Delete Checked' } ),
 			); ) ?>
 	</p>
 </form>

@@ -101,6 +101,7 @@ $log->debug("after continue $$variable{ExternalRedirect}");
 					$recalc = 1;
 				} # end if
 
+				$Project->lock();
 				if ( (!$openprint::param{ServiceType} ) or $recalc ) {
 					multipage_signatures( \%openprint::param, $log, $dbh, $variable, $project_index, $service_index );
 					my $s = openprint::service::internal_calc( $log, $dbh, $variable, $project_index, $service_index, $Project->Type()->type() );
@@ -128,11 +129,12 @@ $log->debug("after continue $$variable{ExternalRedirect}");
 					} # end if
 				} # end if
 				openprint::service::auto_calculate( $Project, $service_index ) if $recalc;
+				$Project->unlock();
 		
 				$Project->summary(undef);
 				$Project->save();
 				openprint::print_project::continue_project( $log, $dbh, $variable, $project_index );
-			return if $$variable{ExternalRedirect};
+				return if $$variable{ExternalRedirect};
 			} elsif ( $r->param('btnFunction') eq 'Modify Project' ) {
 				my $service_name = $openprint::param{'txtServiceName'} ? $openprint::param{'txtServiceName'} : 'Adjustment';
 				my $CurrentCurrency = openprint::Currency::get_current();
@@ -164,17 +166,19 @@ $log->debug("after continue $$variable{ExternalRedirect}");
 				$Project->currency_id( $openprint::session{Currency_id} );
 				$Project->recalculate();
 				openprint::print_project::continue_project( $log, $dbh, $variable, $project_index );
-			return if $$variable{ExternalRedirect};
+				return if $$variable{ExternalRedirect};
 			} elsif ( $openprint::param{'btnFunction'} eq 'Continue Project' ) {
 				$openprint::session{'project_id'} = $project_index;
 				$Project->currency_id( $openprint::session{Currency_id} );
 				$Project->recalculate();
 				openprint::print_project::continue_project( $log, $dbh, $variable, $project_index );
-			return if $$variable{ExternalRedirect};
+				return if $$variable{ExternalRedirect};
 			} elsif ( $openprint::param{'btnFunction'} eq 'Reuse Project' ) {
-				$project_index = openprint::print_project::reuse_project( $r, $log, $dbh, $openprint::session{_session_id}, $variable, $project_index );
+				$project_index = openprint::print_project::reuse_project( $project_index );
+				$Project = new openprint::Project( $project_index );
 			} # end if
 			if ( ! $$variable{Redirect} ) {
+				$Project->update_status();
 				$$variable{ExternalRedirect} = '/main/project/view.html?project_id='.$project_index;
 				return;
 			} # end if
@@ -191,16 +195,21 @@ $log->debug("after continue $$variable{ExternalRedirect}");
 				my $specs = $PS->specs();
 				$Project->add_to_log( @openprint::session{'company_id','user_id'}, $ServiceType->name().' ' . $$specs{'ServiceName'}.' service deleted.' );
 				openprint::print_project::delete_service( $project_index, $s_id );
+				if ( $ServiceType->name() eq 'Signature' ) {
+					openprint::service::internal_calc( $log, $dbh, $variable, $project_index, $$services{''}[0], $Project->Type()->type() );
+				} # end if
 			} # end foreach s_id
 			$openprint::session{'project_id'} = $project_index;
 			$Project->summary(undef);
 			$Project->save();
+			$Project->update_status();
 			$$variable{ExternalRedirect} = '/main/project/view.html?project_id='.$Project->id();
 		} elsif ( ( defined $openprint::param{'calc'} ) and $openprint::param{'calc'} ) {
 			$log->debug("Recalculating $openprint::param{calc}");
 			openprint::service::internal_calc( $log, $dbh, $variable, $project_index, $r->param('calc') );
 			$Project->summary(undef);
 			$Project->save();
+			$Project->update_status();
 			$$variable{ExternalRedirect} = '/main/project/view.html?project_id='.$project_index;
 			return;
 		} # end if
@@ -211,10 +220,9 @@ $log->debug("after continue $$variable{ExternalRedirect}");
 			return if $$variable{ExternalRedirect};
 		} # end if 
 		if ( ! $$variable{'Redirect'} ) {
-			$Project->update_status();
 			openprint::main_project::view( $project_index );
 		} # end if
-	} # end if
+	} # end if can_edit
 
 } # end sub view_services
 
@@ -330,6 +338,7 @@ sub multipage_signatures {
 		if ( $k =~ /^txtSignatureType(\d*)/ ) {
 			my $group_id = $1;
 $log->debug("group $group_id");
+			next if $group_id == 1 and $$param{'rdbCover'} ne 'Different';
 
 			if ( $$param{'GroupPageQuantity'.$group_id} and ! $Project->signatures({'Group'=>$group_id}) ) {
 				$log->debug("adding special group $group_id");
@@ -412,6 +421,7 @@ $log->debug("group $group_id");
 				'rdbSuppliedStock','rdbSpecificStock','StockType',
 				'CustomSheetDoubleSided', 'CustomStockPrice','txtCustomMWeight','txtStockGSM','CustomStockPriceUnits',
 				'basis_width','basis_height','basis_mweight','StockGrade',
+				'minimum_order', 'sheets_per_package', 'full_packages',
 
 				'CyanSpotSideOneCoverage', 'MagentaSpotSideOneCoverage', 'YellowSpotSideOneCoverage', 'BlackSpotSideOneCoverage',
 				'CyanSideOneCoverage', 'MagentaSideOneCoverage', 'YellowSideOneCoverage', 'BlackSideOneCoverage',
@@ -463,10 +473,10 @@ $log->debug("group $group_id");
 			} # end foreach qty_index
 		} # end foreach spec
 		foreach my $spec ( 'PrintingType','StockType' ) {
-			next if ! exists $$param{$spec.'Override'.$group_id};
+			next if ! exists $$param{$spec.$group_id};
 			foreach my $qty_index ( $Project->quantity_indexes() ) {
-				if ( $$param{$spec.'Override'.$group_id} ) {
-					openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $ss_id, $spec.$qty_index, $$param{$spec.'Override'.$group_id} );
+				if ( $$param{$spec.$group_id} ) {
+					openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $ss_id, $spec.$qty_index, $$param{$spec.$group_id} );
 					openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $ss_id, 'Override'.$spec.$qty_index, 'Y' );
 				} else {
 					openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $ss_id, 'Override'.$spec.$qty_index, '' );
@@ -564,8 +574,6 @@ sub publication_pages {
 
 	@{$$variable{'RunStyleOptions'}} = ( 'Sheet Work', 'Sheet Work', 'Work & Turn', 'Work & Turn', 'Work & Tumble', 'Work & Tumble', 'Perfecting','Perfecting','Web','Web');
 	
-	$$variable{'rdbGateFoldNo'} = $$variable{'rdbGateFoldYes'} eq '' ? 'checked' : '';
-
 	my $Project = new openprint::Project( $project_index );
 	foreach my $ss_id ( $Project->signatures() ) {
 		my $sig_specs = openprint::service::get_specs_ref( $Project, $ss_id );
@@ -578,6 +586,7 @@ $log->error("No Group!") if ! $type;
 				'rdbSuppliedStock','rdbSpecificStock','StockType',
 				'CustomSheetDoubleSided', 'CustomStockPrice','txtCustomMWeight','txtStockGSM','CustomStockPriceUnits',
 				'basis_width','basis_height','basis_mweight','StockGrade',
+				'minimum_order', 'sheets_per_package', 'full_packages',
 				'chkCyanSideOne','chkMagentaSideOne','chkYellowSideOne','chkBlackSideOne', 'chkProcessColourSideOne',
 				'chkColourCoating1SideOne', 'ColourCoatingType1SideOne', 'ColourCoatingColour1SideOne','ColourCoatingCoverage1SideOne',
 				'chkColourCoating2SideOne', 'ColourCoatingType2SideOne', 'ColourCoatingColour2SideOne','ColourCoatingCoverage2SideOne',
@@ -603,7 +612,7 @@ $log->error("No Group!") if ! $type;
 				'CyanSpotSideTwoCoverage', 'MagentaSpotSideTwoCoverage', 'YellowSpotSideTwoCoverage', 'BlackSpotSideTwoCoverage',
 				'CyanSideTwoCoverage', 'MagentaSideTwoCoverage', 'YellowSideTwoCoverage', 'BlackSideTwoCoverage',
 				'BleedLeft','BleedRight','BleedTop','BleedBottom','rdbColourBar','txtCropMarkSpace',
-				'GroupPageQuantity','OverrideGroupPageQuantity','txtServiceDescription',
+				'GroupPageQuantity','txtServiceDescription',
 				'txtSignatureType','rdbTemplateType','pages_supplied','supplied_format',
 				'rdbPanels','PocketSize','chkPocketLeft','chkPocketCenter','chkPocketRight',
 				'txtWidth','txtHeight','chkOverrideDimensions','txtQuantity1','txtQuantity2','txtQuantity3',
@@ -667,57 +676,8 @@ $openprint::log->debug("Unable to get sig_weight for signature $$sig_specs{'Sign
 # Finished calliper for books will be calculated from the first qty.  All three should be the same.
 sub get_finished_calliper { 
 	my ( $project_index ) = @_; 
-
 	my $Project = new openprint::Project( $project_index );
-	my $services = $Project->services();
-
-	my $folding_specs;	
-	my $folding_service_index = $$services{'Folding'}[0] if $$services{'Folding'};
-	if ( $folding_service_index ) {
-		$folding_specs = openprint::service::get_specs_ref( $Project, $folding_service_index );
-	} # end if
-
-	my $printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
-
-	my $finished_calliper;
-    foreach my $signature_service_index ( $Project->signatures() ) {
-		my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
-		my $calliper = int($$sig_specs{'txtSpecificStockCalliper'}*10000);
-
-		if ( $Project->Type()->type() eq 'ScratchPads' ) {
-			$finished_calliper += $$printing_specs{'PageQuantity'} * $calliper;
-		} elsif ( $$sig_specs{'ServiceType'} eq 'Signature' ) {
-			foreach my $qty_index ( $Project->quantity_indexes() ) {
-				if ( $$sig_specs{'PageQuantity'.$qty_index} ) {
-					$calliper *= int($$sig_specs{'PageQuantity'.$qty_index}/2);
-					last;
-				} # end if
-			} # end foreach qty_index
-			$finished_calliper += $calliper;
-		} else {
-				my $pages = 1;
-				if ( $$sig_specs{'rdbTemplateType'} eq '2PanelFold' ) {
-					$pages = 2;
-				} elsif ( sets::isin( $$sig_specs{'rdbTemplateType'},['3PanelFold','3PanelZFold'] ) ) {
-					$pages = 3;
-				} elsif ( sets::isin( $$sig_specs{'rdbTemplateType'}, ['4PanelFold', '4PanelZFold'] ) ) {
-					$pages = 4;
-				} elsif ( sets::isin( $$sig_specs{'rdbTemplateType'}, ['5PanelFold', '5PanelZFold'] ) ) {
-					$pages = 5;
-				} elsif ( sets::isin( $$sig_specs{'rdbTemplateType'}, ['6PanelFold', '6PanelZFold'] ) ) {
-					$pages = 6;
-				} elsif ( $$sig_specs{'rdbTemplateType'} eq 'SingleGateFold' ) {
-					$pages = 3;
-				} elsif ( $$sig_specs{'rdbTemplateType'} eq 'DoubleGateFold' ) {
-					$pages = 4;
-				} elsif ( $$sig_specs{'rdbTemplateType'} eq 'DifficultFold' ) {
-					$pages = 6;
-				} #// end if
-				$finished_calliper += $pages * $calliper;
-		} # end if
-	} # end foreach
-	$openprint::log->debug("******************************* FINSIHED CALLIPER is $finished_calliper/1000 *********************************");
-	return sprintf('%.4f', $finished_calliper/10000);
+	return $Project->calliper();
 } # end sub get_finished_calliper
 
 sub get_quantities {

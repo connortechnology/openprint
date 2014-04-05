@@ -1,6 +1,7 @@
 use strict;
 package openprint::upload;
 require handlers::upload;
+require Number::Format;
 
 use openprint ();
 use vars qw( $log $dbh %variable %param %session );

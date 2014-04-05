@@ -30,7 +30,7 @@ require MIME::Base64;
 require openprint::Object_Asset;
 require openprint::Asset;
 
-$debug = 1;
+$debug = 0;
 
 $table = 'purchaseorders';
 $serial = 'purchaseorders_id_seq';
@@ -228,7 +228,7 @@ sub send_to_vendor {
 	my $file_base = $From->Company()->name().'-PO'.$$self{id};
 	if ( File::Slurp::write_file('/tmp/'.$file_base.'.html', { atomic => 1, err_mode=>'carp' }, \$purchase_order ) ) {
 		`wkhtmltopdf "/tmp/$file_base.html" "/tmp/$file_base.pdf"`;
-		my $pdf_purchase_order = File::Slurp::read_file( "/tmp/$file_base.pdf" );
+		my $pdf_purchase_order = File::Slurp::read_file( "/tmp/$file_base.pdf", err_mode => 'carp' );
 		unlink "/tmp/$file_base.html";
 		unlink "/tmp/$file_base.pdf";
 		if ( $pdf_purchase_order ) {
@@ -243,7 +243,7 @@ sub send_to_vendor {
 	} # end if
 	foreach my $OA ( $self->Assets() ) {
 		my $Asset = $OA->Asset();
-		$_ = File::Slurp::read_file( $Asset->on_disk_path() );
+		$_ = File::Slurp::read_file( $Asset->on_disk_path(), err_mode => 'carp' );
 		if ( $_ ) {
 			push @attachments, ( $Asset->filename(), MIME::Base64::encode_base64( $_ ), 'application/octet-stream', 'base64');
 		} else { 
@@ -283,9 +283,9 @@ sub send_to_vendor {
 
 	my $L = new openprint::PurchaseOrder_Log();
 	$L->save({
-			'user_id'	=>	$session{'user_id'},
-			'po_id'		=>	$$self{'id'},
-			'reason'	=>	$results,
+			user_id	=>	$session{user_id},
+			po_id	=>	$$self{id},
+			reason	=>	$results,
 			});
 
 	return $results;
@@ -300,17 +300,16 @@ sub send_to_me {
 			);
 	my @attachments = ();
 
-	my $email_template = misc::load_file( $log, $config{'SkinPath'} . '/email_template.html' );
-	$info{'ReplacementText'} = ssi::include("/email_content/purchase_order_body.html", \%info );
-	$_ = MIME::QuotedPrint::encode_qp( Encode::encode( 'utf-8', ssi::variable_substitution( \$email_template, \%info ) ) );
+	$info{ReplacementText} = ssi::include('/email_content/purchase_order_body.html', \%info );
+	$_ = MIME::QuotedPrint::encode_qp( Encode::encode( 'utf-8', ssi::include( '/email_template.html', \%info ) ) );
 	push @attachments, ('', $_, 'text/html', 'quoted-printable');
 
 	my $purchase_order = Encode::encode( 'utf-8', ssi::include('/email_content/purchase_order.html', \%info ) );
 
 	my $file_base = $From->Company()->name().'-PO'.$_[0]{id};
-	if ( File::Slurp::write_file('/tmp/'.$file_base.'.html', { atomic => 1, err_mode=>'carp' }, \$purchase_order) ) {
+	if ( File::Slurp::write_file('/tmp/'.$file_base.'.html', { atomic => 1, err_mode=>'carp' }, \$purchase_order ) ) {
 		`wkhtmltopdf "/tmp/$file_base.html" "/tmp/$file_base.pdf"`;
-		my $pdf_purchase_order = File::Slurp::read_file( "/tmp/$file_base.pdf" );
+		my $pdf_purchase_order = File::Slurp::read_file( "/tmp/$file_base.pdf", err_mode => 'carp' );
 		#unlink "/tmp/$file_base.html";
 		unlink "/tmp/$file_base.pdf";
 		push @attachments, ($file_base.'.pdf', MIME::Base64::encode_base64($pdf_purchase_order), 'application/octet-stream', 'base64') if $pdf_purchase_order;
@@ -322,7 +321,7 @@ sub send_to_me {
 	} # end if
     foreach my $OA ( $_[0]->Assets() ) {
         my $Asset = $OA->Asset();
-        $_ = File::Slurp::read_file( $Asset->on_disk_path() );
+        $_ = File::Slurp::read_file( $Asset->on_disk_path(), err_mode => 'carp' );
         if ( $_ ) {
             push @attachments, ( $Asset->filename(), MIME::Base64::encode_base64( $_ ), 'application/octet-stream', 'base64');
         } else {
@@ -441,7 +440,7 @@ sub copy {
 	my $self = shift;
 	my $New = new openprint::PurchaseOrder();
 	@$New{keys %fields} = @$self{keys %fields};
-	foreach ( 'id', 'authorized', 'authorized_by', 'authorized_on', 'delivered_on' ) {
+	foreach ( 'id', 'authorized', 'authorized_by', 'authorized_on', 'delivered_on', 'created_on', 'cancelled' ) {
 		delete $$New{$_};
 	} # end foreach
 	$$New{'created_by'} = $session{'user_id'};
@@ -679,6 +678,10 @@ sub Payments {
 	} # end if
 	return @{$_[0]{Payments}};
 } # end sub Payments
+
+sub link_to {
+	return join( '', '<a href="/employee/purchase_order/view.html?po_id=', $_[0]{id}, '">' , $_[0]{id}, '</a>' );
+} # end sub link_to
 
 1;
 __END__

@@ -1,6 +1,6 @@
 use strict;
 package openprint::pricing;
-use Memoize;
+#use Memoize;
 
 require openprint::pricelist;
 require openprint::priceset;
@@ -210,7 +210,7 @@ if ( DEBUG ) {
 	#return $price_cache{$hash_index};
 } # end sub get_best_prices
 
-memoize('get_best_price_object');
+#memoize('get_best_price_object');
 sub get_best_price {
 	my ( $cust_id, $prod_index, $list_id, $pricesetclass, $qty, $equipment, $period ) = @_;
 

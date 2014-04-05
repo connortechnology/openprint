@@ -21,6 +21,7 @@
 			alert("To Delete Projects, click the checkbox beside the project.");
 		} else if ( number_of_deleted_projects == 1 ) {
 			if ( confirm("Are you sure you wish to delete this project from history?\n") ) {
+				form.btnFunction.value='Delete Project';
 				form.submit();
 			} // end if
 		} else {
@@ -89,7 +90,7 @@
 			<li><label>Company</label>
 				<select name="company_id" id="company_id" onchange="load_projects();">
 					<option value="">All</option>
-					<? echo ( sprintf('<option value="%d" selected="selected">%s</option>', $session{'/main/project/history.html?company_id'}, new openprint::Company( $session{'/main/project/history.html?company_id'} )->name() );  ) ?>
+					<? echo ( $session{'/main/project/history.html?company_id'} ? sprintf('<option value="%d" selected="selected">%s</option>', $session{'/main/project/history.html?company_id'}, new openprint::Company( $session{'/main/project/history.html?company_id'} )->name() ) : '';  ) ?>
 					<option value="">Please wait, loading the rest</option>
 				</select>
 			</li>
@@ -106,7 +107,7 @@
 <? endif ( sets::isin( $session{user_type},[ 'E', 'A' ] ) ) ?>
 <? eval ( 
 	$$variable{Users} = [ openprint::User->find(
-		company_id => ( $session{'/main/project/history.html?company_id'} ? $session{'/main/project/history.html?company_id'} : $session{user_id} ),
+		company_id => ( $session{'/main/project/history.html?company_id'} ? $session{'/main/project/history.html?company_id'} : $session{company_id} ),
 		order=>'lower(firstname),lower(lastname)' ) ] ) ?>
 <? if ( @{$$variable{Users}} > 1 ) ?>
 			<li><label>Created By</label>
@@ -118,6 +119,9 @@
 				</select>
 			</li>
 <? endif ( @{$$variable{Users}} > 1 ) ?>
+			<li><label>Contains</label>
+				<? echo ( ssi::select( openprint::ServiceType->dropdown(order=>'lower(name)'), $session{'/main/project/history.html?servicetype_id'}, { name=>'servicetype_id', prepend=>['','All'], onchange=>'load_projects();' } ); ) ?>
+			</li>
 			</ul>
 			</div>
 			</div>
@@ -126,6 +130,7 @@
 					button( 'ShowResults', { onclick=>'f1.submit();', text=>'Show Results' } ),
 					button( 'Create', { href=>'create_edit.html', text=>'Create New' } ),
 					button( 'Reset', { onclick=>q`f1.btnFunction.value='Reset';f1.submit();`, text=>'Reset' } ),
+					button( 'Delete', { onclick=>'delete_confirm(document.f1);' } ),
 				); ) ?>
 			</p>
 		</fieldset>

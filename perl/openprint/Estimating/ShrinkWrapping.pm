@@ -82,7 +82,7 @@ sub calc {
 	} # end if
 
 $openprint::log->debug(" $$printing_specs{txtFinalWidth} and $$printing_specs{txtFinalHeight}");
-	$$specs{'txtItemsPerPackage'} = int($$specs{'txtItemsPerPackage'});
+	$$specs{'txtItemsPerPackage'} = int($$specs{'txtItemsPerPackage'}) if $$specs{'txtItemsPerPackage'};
 	if ( ! $$specs{'txtItemsPerPackage'} ) {	# a zero value is still calculated, just with a zero price.d
 		if ( $ServiceType->name() eq 'Bundling' ) {
 			$$specs{'alert'} .= 'Please enter the # of items in each bundle';
@@ -240,7 +240,7 @@ $openprint::log->debug("Cardboard size: $$printing_specs{txtFinalWidth} * $$prin
 		} else {
 			$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $$specs{"txtPrice$qty_index"} );
 		} # endif
-		$$specs{"txtUnitPrice$qty_index"} = sprintf( $openprint::config{'UnitPriceFormat'}, ( $bestPrice{Unit}/$qty ) * (1+$Project->markup()/100) );
+		$$specs{"txtUnitPrice$qty_index"} = sprintf( $openprint::config{'UnitPriceFormat'}, ( $bestPrice{Unit}/$qty ) * ( $Project->markup() ? (1+$Project->markup()/100) : 1 ) );
 		$$specs{"ddmEquipment$qty_index"} = $bestPrice{Equipment} ? $bestPrice{Equipment}->id() : '';
 	} # end foreach qty_index
 
@@ -260,13 +260,13 @@ sub summary {
         } elsif ( $$specs{'ServiceType'} =~ /Banding/i ) {
             $text .= ' bundle' . ($$specs{'txtPackageQuantity'.$qty_index} > 1 ? 's' : '');
         } # end if
-    } else {
-        $text .= $$specs{'txtItemsPerPackage'} . ' items';
-        if ( $$specs{'ServiceType'} =~ /Wrap/i ) {
+    } elsif ( $$specs{txtItemsPerPackage} ) {
+        $text .= $$specs{txtItemsPerPackage} . ' items';
+        if ( $$specs{ServiceType} =~ /Wrap/i ) {
             $text .= ' per wrap';
-        } elsif ( $$specs{'ServiceType'} =~ /Bundling/i ) {
+        } elsif ( $$specs{ServiceType} =~ /Bundling/i ) {
             $text .= ' per bundle';
-        } elsif ( $$specs{'ServiceType'} =~ /Banding/i ) {
+        } elsif ( $$specs{ServiceType} =~ /Banding/i ) {
             $text .= ' per band';
 			$text .= sprintf(' %d bands each', $$specs{'bands_per_package'} ) if $$specs{'bands_per_package'};
         } # end if
@@ -287,7 +287,7 @@ sub save {
 	my $Project = new openprint::Project( $project_index );
 	my $services = $Project->services();
 
-	if ( ($$param{'AccurateCount'} eq 'Y' ) and ! $$services{'Counting'} ) {
+	if ( (defined $$param{'AccurateCount'} ) and ( $$param{'AccurateCount'} eq 'Y' ) and ! $$services{'Counting'} ) {
 		$Project->add_service( 'Counting' );
 	} # end if
 } # end sub save

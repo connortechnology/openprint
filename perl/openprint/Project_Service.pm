@@ -21,6 +21,7 @@ $debug = 0;
 );
 %find_fields = (
 	'category'	=>	'(SELECT ServiceType_Categories.name FROM ServiceType_Categories,Service_Types WHERE ServiceType_Categories.id=Service_Types.category_id AND Service_Types.id=servicetype_id)',
+	servicetype		=>	'(SELECT name FROM service_types WHERE service_types.id=servicetype_id)',
 );
 %transforms = (
 );
@@ -33,18 +34,22 @@ $serial = 'ContentsServiceIndex_seq';
 @identified_by = ( 'service_id' );
 
 sub Project {
-	return new openprint::Project( $_[0]{'project_id'} );
+	return new openprint::Project( $_[0]{project_id} );
 } # end sub Project
 
 sub Operator {
-	return new openprint::User( $_[0]{'operator_id'} );
+	return new openprint::User( $_[0]{operator_id} );
 } # end sub Operator
 
 sub specs {
-	if ( ! $_[0]{'specs'} ) {
-		$_[0]{'specs'} = openprint::service::get_specs_ref( $_[0]->Project(), $_[0]{'service_id'} );
+	if ( ! $_[0]{specs} ) {
+		if ( $_[0]{service_id} ) {
+			$_[0]{specs} = openprint::service::get_specs_ref( $_[0]->Project(), $_[0]{'service_id'} );
+		} else {
+			$_[0]{specs} = {};
+		} # end if
 	} # end if
-	return $_[0]{'specs'};
+	return $_[0]{specs};
 } # end sub specs
 
 sub ServiceType {
@@ -106,18 +111,18 @@ sub runtime {
 	my $Project = $self->Project();
     my $qty_index = $Project->ordered_quantity_index();
     my $specs = $self->specs();
-#$log->debug("Project Service runtime $$specs{'ServiceType'}");
-    if ( $$specs{'ProjectType'} or ( $$specs{'ServiceType'} eq 'Signature' ) ) {
+#$log->debug("Project Service runtime $$specs{ServiceType}");
+    if ( $$specs{ProjectType} or ( $$specs{ServiceType} eq 'Signature' ) ) {
 		my $time = openprint::Estimating::Printing::runtime( $Project, $specs, $Equipment, $impressions, $speed );
-		return $$time{'Total'} if $time;
+		return $$time{Total} if $time;
 		return 0;
-    } elsif ( $$specs{'ServiceType'} eq 'Cutting' ) {
+    } elsif ( $$specs{ServiceType} eq 'Cutting' ) {
         return openprint::Estimating::Cutting::runtime( $Project, $self, $Equipment, $qty_index, $impressions, $speed, $pertains_to );
-    } elsif ( $$specs{'ServiceType'} eq 'Folding' ) {
+    } elsif ( $$specs{ServiceType} eq 'Folding' ) {
        return openprint::Estimating::Folding::runtime( $Project, $self, $Equipment, $qty_index, $impressions, $speed, $pertains_to );
-    } elsif ( $$specs{'ServiceType'} eq 'Drilling' ) {
+    } elsif ( $$specs{ServiceType} eq 'Drilling' ) {
         return openprint::Estimating::Drilling::runtime( $Project->id(), $$self{'service_id'}, $specs, $qty_index );
-    } elsif ( sets::isin( $$specs{'ServiceType'}, 'SaddleStitching','LoopStitching' ) ) {
+    } elsif ( sets::isin( $$specs{ServiceType}, 'SaddleStitching','LoopStitching' ) ) {
         return openprint::Estimating::Stitching::runtime( $Project, $self, $Equipment, $qty_index, $speed );
     } # end if
 
@@ -125,17 +130,34 @@ sub runtime {
 
 sub delete {
 	my ( $self ) = @_;
+if ( ! $$self{project_id} ) {
+	$openprint::log->error("Attempt to delete a Project Service with no project.");
+	return;
+} # end if
 	my $ac = sql::start_transaction( $openprint::dbh );
+$openprint::log->warn("Deleting " . $self->to_string() );
 	sql::execute( undef, $openprint::dbh, q{DELETE FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND lngServiceIndex=?}, @$self{'project_id','service_id'} );
 	sql::execute( undef, $openprint::dbh, q{DELETE FROM tbl_Project_Contents WHERE lngProjectIndex=? AND lngServiceIndex=?}, @$self{'project_id', 'service_id'} );
 	my $Project = $self->Project();
+$openprint::log->warn("Deleting Service from " . $Project->to_string() );
 	delete $$Project{'Services'};
 	delete $$Project{'signatures'};
+	delete $$Project{'Signature'};
 	delete $$Project{'service_types'};
-	my $Job = openprint::ScheduledJob->find_one('project_id'=>$$self{'project_id'}, 'service_id @>'=>$$self{'service_id'} );
-	$Job->save( { 'service_id' => [ sets::exclude( [ $$self{'service_id'} ], $Job->service_id() ) ] } ) if $Job;
+	foreach my $Job ( openprint::ScheduledJob->find( project_id=>$$self{project_id}, 'service_id any'=>$$self{service_id} ) ) {
+		$Job->save( { 
+				service_id => [ sets::exclude( [ $$self{service_id} ], $Job->service_id() ) ],
+				pertains_id => [ sets::exclude( [ $$self{service_id} ], $Job->pertains_id() ) ],
+				} );
+	} # end foreach Job
+	foreach my $Job ( openprint::ScheduledJob->find( project_id=>$$self{project_id}, 'pertains_id any'=>$$self{service_id} ) ) {
+		$Job->save( {
+				pertains_id => [ sets::exclude( [ $$self{service_id} ], $Job->pertains_id() ) ],
+				} );
+	} # end foreach Job
+
 	my $specs = $self->specs();
-	$self->Project()->add_to_log( @openprint::session{'company_id','user_id'}, "Deleted service $$specs{'ServiceType'} $$specs{'ServiceName'}." );
+	$Project->add_to_log( @openprint::session{'company_id','user_id'}, "Deleted service ".$self->ServiceType()->type() . " $$specs{ServiceName}." );
 	sql::end_transaction( $openprint::dbh, $ac );
 } # end sub delete
 
@@ -146,14 +168,17 @@ sub ordered_price {
 
 sub overrides {
 	my ( $self, $qty_index ) = @_;
-	my $module = 'openprint::Estimating::'.$_[0]->ServiceType()->name();
-	$module = 'openprint::Estimating::Printing' if $module eq 'openprint::Estimating::AdditionalSignature';
+	my $module = 'openprint::Estimating::'.$_[0]->ServiceType()->type();
 	$module = 'openprint::Estimating::Printing' if $module eq 'openprint::Estimating::Signature';
+	$module = 'openprint::Estimating::Printing' if $module eq 'openprint::Estimating::AdditionalSignature';
 	$module = 'openprint::Estimating::Printing' if $module eq 'openprint::Estimating::';
+	eval ( 'require '.$module.';' );
 	if ( my $function = $module->can( 'has_overrides' ) ) {
 		my $specs = $_[0]->specs();
 		my @o = $function->( $self->Project(), $$self{'service_id'}, $specs, $qty_index );
 		return @o;
+	} else {
+		$openprint::log->warn("No has_overrides for " . $_[0]->ServiceType()->name() );
 	} # end if
 	return ();
 } # end sub overrides

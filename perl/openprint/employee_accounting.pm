@@ -204,9 +204,9 @@ sub credit {
 			$variable{'error'} .= 'No customer specified.<br/>';
 		} else {
 			my $ac = sql::start_transaction( $dbh );
-			$dbh->do( 'LOCK TABLE Company_Credit IN ACCESS EXCLUSIVE MODE' ) or $log->error( DBI->errstr );
-			foreach my $Supplier ( openprint::Company->find('offers_credit'=>1) ) {
-				my $Credit = new openprint::Company_Credit( {'company_id'=>$company_id, 'supplier_id'=>$Supplier->id() } );
+			$dbh->do( 'LOCK TABLE Company_Credit IN ACCESS EXCLUSIVE MODE' ) or $log->error( $dbh->errstr );
+			foreach my $Supplier ( openprint::Company->find( offers_credit=>1) ) {
+				my $Credit = new openprint::Company_Credit( { company_id=>$company_id, supplier_id=>$Supplier->id() } );
 
                 if (
                         ( $Credit->denydays() != openprint::Company_Credit->transform('denydays', $param{'denydays-'.$$Supplier{id}} ) ) or
@@ -214,12 +214,12 @@ sub credit {
                         ( $Credit->limit() != openprint::Company_Credit->transform('limit', $param{'limit-'.$$Supplier{id}} ) ) or
                         ( $Credit->hold() ne openprint::Company_Credit->transform('hold', $param{'hold-'.$$Supplier{id}} ) ) or
                         ( $Credit->downpayment() != openprint::Company_Credit->transform('downpayment', $param{'downpayment-'.$$Supplier{id}} ) ) or
-                        ( $Credit->cod() != openprint::Company_Credit->transform('cod', $param{'cod-'.$$Supplier{id}} ) ),
-                        ( $Credit->late_payment_amount() != openprint::Company_Credit->transform('late_payment_amount', $param{'late_payment_amount-'.$$Supplier{id}} ) ),
-                        ( $Credit->late_payment_units() ne openprint::Company_Credit->transform('late_payment_units', $param{'late_payment_units-'.$$Supplier{id}} ) ),
-                        ( $Credit->early_payment_amount() != openprint::Company_Credit->transform('early_payment_amount', $param{'early_payment_amount-'.$$Supplier{id}} ) ),
-                        ( $Credit->early_payment_units() ne openprint::Company_Credit->transform('early_payment_units', $param{'early_payment_units-'.$$Supplier{id}} ) ),
-                        ( $Credit->early_payment_days() != openprint::Company_Credit->transform('early_payment_days', $param{'early_payment_days-'.$$Supplier{id}} ) ),
+                        ( $Credit->cod() != openprint::Company_Credit->transform('cod', $param{'cod-'.$$Supplier{id}} ) ) or
+                        ( $Credit->late_payment_amount() != openprint::Company_Credit->transform('late_payment_amount', $param{'late_payment_amount-'.$$Supplier{id}} ) ) or
+                        ( $Credit->late_payment_units() ne openprint::Company_Credit->transform('late_payment_units', $param{'late_payment_units-'.$$Supplier{id}} ) ) or
+                        ( $Credit->early_payment_amount() != openprint::Company_Credit->transform('early_payment_amount', $param{'early_payment_amount-'.$$Supplier{id}} ) ) or
+                        ( $Credit->early_payment_units() ne openprint::Company_Credit->transform('early_payment_units', $param{'early_payment_units-'.$$Supplier{id}} ) ) or
+                        ( $Credit->early_payment_days() != openprint::Company_Credit->transform('early_payment_days', $param{'early_payment_days-'.$$Supplier{id}} ) )
                         ) {
                     my $note = 'Old credit: ' . $Credit->to_string() if $Credit->supplier_id();
 					$variable{'error'} .= $Credit->save( { 'company_id'=>$company_id, 'supplier_id'=>$Supplier->id(), 

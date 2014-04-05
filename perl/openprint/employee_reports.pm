@@ -142,7 +142,7 @@ sub _project_performance {
 	my %parameters; 
 	if ( $session{user_type} ne 'A' and ! openprint::usergroup::is_user_in( ['Sales Admin','Reporting'], $session{user_id} ) ) {
 		$parameters{salesrep_id} = $session{user_id};
-		$parameters{or} = "Index=(SELECT CompanyIndex FROM Users WHERE Index=$session{user_id})";
+		$parameters{or} = "id=(SELECT company_id FROM Users WHERE id=$session{user_id})";
 	} elsif ( $session{$page.'?CSR'} ) {
 		$parameters{salesrep_id} = $session{$page.'?CSR'};
 	} # end if
@@ -277,7 +277,7 @@ sub _order_history_results {
 	my %companies = map { int($_->id()), $_->name() } @Companies;
 	@{$variable{'Orders'}} = ();
 		foreach my $Order ( openprint::Order->find(
-			'company_id' => ( ($param{'company_id'} and exists $companies{$param{'company_id'}} ) ? $param{'company_id'} : [ keys %companies ] ),
+			'company_id' => ( ($param{'company_id'} and ( ( ! %parameters ) or exists $companies{$param{'company_id'}} ) ) ? $param{'company_id'} : [ keys %companies ] ),
 			'created_on >=' => sprintf('%.4d-%.2d-%.2d 00:00:00', ssi::fix_date( @param{'DateStartYear','DateStartMonth','DateStartDay'} ) ),
 			'created_on <=' => sprintf('%.4d-%.2d-%.2d 23:59:59', ssi::fix_date( @param{'DateEndYear','DateEndMonth','DateEndDay'} ) ),
 			( $param{'status'} ? (

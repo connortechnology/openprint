@@ -89,6 +89,12 @@ sub orders {
 		push @data, '', '', '', '', '', 'Total:', openprint::Currency::format( $total ), '';
 
 		misc::export_csv( $r, $log, \%variable, 'order_report.csv', \@header, \@data );
+	} else {
+		ssi::setup_date_select( $r->uri(), 'created_on_start', -30 );
+		ssi::save_params( $r->uri(), (
+					( map { 'created_on_start_'.$_ } ( 'year', 'month', 'day' ) ),
+					( map { 'created_on_end_'.$_ } ( 'year', 'month', 'day' ) ),
+		) );
 	} # end if
 } # end sub orders
 
@@ -249,24 +255,22 @@ $log->debug("Query: $query");
 } # end sub customer_login
 
 sub CustomerServiceReps {
-	my ( $r, $log, $dbh, $variable ) = @_;
 
-	ssi::get_start_end_dates( $log, $dbh, $variable,
-			$r->param('ddmStartYear'),
-			$r->param('ddmStartMonth'),
-			$r->param('ddmStartDay'),
-			$r->param('ddmEndYear'),
-			$r->param('ddmEndMonth'),
-			$r->param('ddmEndDay') );
+    ssi::setup_date_select( $r->uri(), 'date_start', -30 );
+    ssi::save_params( $r->uri(), (
+        ( map { 'date_start_'.$_ } ( 'year', 'month', 'day' ) ),
+        ( map { 'date_end_'.$_ } ( 'year', 'month', 'day' ) ),
+		) );
+	my $date_start = sprintf('%.4d-%.2d-%.2d', @session{map { $r->uri().'?date_start_'.$_ } ( 'year','month','day' ) } ) if Date::Calc::check_date( @session{map { $r->uri().'?date_start_'.$_ } ( 'year','month','day' ) } );
+	my $date_end = sprintf('%.4d-%.2d-%.2d', @session{map { $r->uri().'?date_end_'.$_ } ( 'year','month','day' ) } ) if Date::Calc::check_date( @session{map { $r->uri().'?date_end_'.$_ } ( 'year','month','day' ) } );;
+ 
+	$variable{Employees} = openprint::User->dropdown(type=>['E','A'],order=>'lower(firstname),lower(lastname)', 'usergroup any'=>'Sales', web_active=>'Y' );
+	$variable{ddmEmployees} = ssi::make_drop_down( $variable{Employees}, $param{'ddmEmployees'} );
 
+	my $estimator = $param{ddmEstimator};
+	$variable{'ddmEstimatorOptions'} = ssi::make_drop_down( $variable{'Employees'}, $param{'ddmEstimator'} );
 
-	@{$$variable{'Employees'}} = map { $_->id(), $_->name() } openprint::User->find('type'=>['E','A'],'order'=>'lower(firstname),lower(lastname)', 'usergroup'=>'Sales', 'id'=>$r->param('ddmEmployees'), 'web_active'=>1 );
-	$$variable{'ddmEmployees'} = ssi::make_drop_down( $$variable{'Employees'}, $r->param('ddmEmployees') );
-
-	my $estimator = $r->param('ddmEstimator');
-	$$variable{'ddmEstimatorOptions'} = ssi::make_drop_down( $$variable{'Employees'}, $r->param('ddmEstimator') );
-
-	@{$$variable{'Currencies'}} = sql::execute( $log, $dbh, "SELECT id, Name, Symbol FROM Currencies ORDER BY lower(name)" );
+	@{$variable{'Currencies'}} = sql::execute( $log, $dbh, "SELECT id, Name, Symbol FROM Currencies ORDER BY lower(name)" );
 
 	my %ordered_projects;
 
@@ -276,26 +280,28 @@ sub CustomerServiceReps {
 	$query .= "(SELECT currency_id FROM Orders WHERE Orders.docket=Projects.lngDocketNumber)";
 
 	$query .= " FROM Projects ";
-	$query .= "WHERE dtmcreationdate BETWEEN '$$variable{'StartDate'} 00:00:00' AND '$$variable{'EndDate'} 23:59:59' ";
+	$query .= "WHERE 1>0 ";
+	$query .= "AND dtmcreationdate >= '$date_start 00:00:00'" if $date_start;
+	$query .= "AND dtmcreationdate <= '$date_end 23:59:59'" if $date_end;
 	$query .= "AND user_id = $estimator\n" if $estimator;
 	my @data = sql::execute( $log, $dbh, $query );
 	while ( my ( $project_id, $status, $employee, $price, $currency_index ) = splice @data,0,5 ) {
-		$$variable{'TotalProjectCount'.$employee} += 1;
-		$$variable{'TotalProjectCount'} += 1;
+		$variable{'TotalProjectCount'.$employee} += 1;
+		$variable{'TotalProjectCount'} += 1;
 		if ( $status eq 'Deleted' ) {
-			$$variable{'DeletedProjectCount'.$employee} += 1;
-			$$variable{'DeletedProjectCount'} += 1;
+			$variable{'DeletedProjectCount'.$employee} += 1;
+			$variable{'DeletedProjectCount'} += 1;
 		} elsif ( $status eq 'uncalculated' ) {
-			$$variable{'UnfinishedProjectCount'.$employee} += 1;
-			$$variable{'UnfinishedProjectCount'} += 1;
+			$variable{'UnfinishedProjectCount'.$employee} += 1;
+			$variable{'UnfinishedProjectCount'} += 1;
 		} elsif ( $status eq 'Unordered' ) {
-			$$variable{'UnorderedProjectCount'.$employee} += 1;
-			$$variable{'UnorderedProjectCount'} += 1;
+			$variable{'UnorderedProjectCount'.$employee} += 1;
+			$variable{'UnorderedProjectCount'} += 1;
 		} else { # ordered
-			$$variable{'OrderedProjectCount'.$employee} += 1;
-			$$variable{'OrderedProjectCount'} += 1;
-			$$variable{"OrderValue-$employee-$currency_index"} += $price;
-			$$variable{"OrderValue-$currency_index"} += $price;
+			$variable{'OrderedProjectCount'.$employee} += 1;
+			$variable{'OrderedProjectCount'} += 1;
+			$variable{"OrderValue-$employee-$currency_index"} += $price;
+			$variable{"OrderValue-$currency_index"} += $price;
 		} # end if
 	} # end while
 
@@ -374,10 +380,10 @@ sub order_details {
 	} elsif ( $param{'btnFunction'} eq 'Cancel' ) {
 		openprint::order::cancel_order( $order_id );
 	} elsif ( $param{'btnFunction'} eq 'Save' ) {
-		$Order->company_id( $param{'company_id'} );
-		$variable{'error'} .= $Order->save();
+		$Order->company_id( $param{company_id} );
+		$variable{error} .= $Order->save();
 	} # end if
-	$variable{'Order'} = $Order;
+	$variable{Order} = $Order;
 	openprint::order::display_order( $order_id );
 } # end sub display_order
 

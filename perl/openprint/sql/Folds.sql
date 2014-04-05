@@ -30,5 +30,6 @@ CREATE TABLE Folds (
 	run_overs	integer,
 	run_overs_units	TEXT,
 	printing_type	TEXT,
+	comments		TEXT,
 	PRIMARY KEY (id)
 );

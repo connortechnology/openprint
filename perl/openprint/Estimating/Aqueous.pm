@@ -97,9 +97,9 @@ sub get_colours {
     } # end if
 
     foreach my $k ( keys %$specs ) {
-$openprint::log->debug("AQ get_colours $k => $$specs{$k}");
+#$openprint::log->debug("AQ get_colours $k => $$specs{$k}");
         if ( my ( $index ) = $k =~ /^chkColourCoating(\d+)$side/ ) {
-$openprint::log->debug("AQ get_colours $k => $$specs{$k} index is $index");
+#$openprint::log->debug("AQ get_colours $k => $$specs{$k} index is $index");
             next if ! $$specs{"chkColourCoating$index$side"};
 			if ( $$specs{"ColourCoatingType$index$side"} =~ /Aqueous/i ) {
 				push @colours, $$specs{"ColourCoatingType$index$side"};
@@ -144,16 +144,21 @@ sub calc {
 	foreach my $qty_index ( $Project->quantity_indexes() ) {
 		$$specs{"Markup$qty_index"} =~ s/[^\d\.\-]//g if $$specs{"Markup$qty_index"};
 		$$specs{"txtPrice$qty_index"} =~ s/[^\d\.]//g if $$specs{"txtPrice$qty_index"};
-		$$specs{"txtQuantity$qty_index"} =~ s/[^\d\.]//g if $$specs{"txtQuantity$qty_index"};
+		$$specs{"txtQuantity$qty_index"} =~ s/\D//g if $$specs{"txtQuantity$qty_index"};
 		$$specs{"txtQuantity$qty_index"} = $Project->quantity($qty_index) if ! $$specs{"txtQuantity$qty_index"};
-		if ( ! $$specs{"txtQuantity$qty_index"} > 0 ) {
+		if ( ! ( $$specs{"txtQuantity$qty_index"} > 0 ) ) {
 			next;
 		} # end if
 		$$specs{'hdnBreakdown'.$qty_index} = sprintf('QTY: %d<br/>',$$specs{"txtQuantity$qty_index"} );
 
 		my $qty = $$specs{"txtQuantity$qty_index"};
 		if ( $$specs{'txtPressSheetComboItems'} ) {
-			$qty *= $$specs{'txtPressSheetComboItems'};
+			$$specs{'txtPressSheetComboItems'} =~ s/\D//g;
+			if ( $$specs{'txtPressSheetComboItems'} ) {
+				$qty *= $$specs{'txtPressSheetComboItems'} 
+			} else {
+				$$specs{alert} .= 'Combination items is invalid.';
+			} # end if
 		} # end if
 
 		my %MakeReadies;
@@ -277,6 +282,7 @@ $openprint::log->warn("Doing AQ when not needed @front_aq @back_aq");
 
 	# Should include overs
 	my $impressions = $$sig_specs{"hdnImpressionQuantity$qty_index"} ? $$sig_specs{"hdnImpressionQuantity$qty_index"} : $$specs{"txtQuantity$qty_index"};
+$openprint::log->debug("Impressions: " . $$sig_specs{"hdnImpressionQuantity$qty_index"} . " qty: " . $$specs{"txtQuantity$qty_index"} );
 
 	# Why would it be multiplied by the # of items per sheet? That doesn't make any sense at all.
 	#if ( $$specs{'txtPressSheetComboItems'} ) {
@@ -288,10 +294,16 @@ $openprint::log->warn("Doing AQ when not needed @front_aq @back_aq");
 #$openprint::log->debug("Impressions: $impressions");
 if ( 1 ) {
 	# This just can't be right anymore. Actually it can... if double sided, impressions are doubled...
-	if ( sets::isin( $imposition->runstyle(), ['Perfecting','Sheet Work'] ) and @front_aq and @back_aq ) {
-		#if ( ! ( @front_aq and @back_aq ) ) {
-			$impressions = int($impressions/2);
-		#} # end if
+	if ( $imposition->runstyle() eq 'Perfecting' ) {
+		# We know that it is printing 2 sided, but may be only AQ 1 sided.
+		# Sheets = impressions / 2
+		$impressions = int($impressions/2);
+	} elsif ( $$imposition{runstyle} eq 'Sheet Work' ) {
+		if ( @{$$sig_specs{SideOneColours}} and @{$$sig_specs{SideTwoColours}} ) {
+			if ( ! ( @front_aq and @back_aq ) ) {
+				$impressions = int($impressions/2);
+			} # end if
+		} # end if
 	} # end if
 } # end if
 #$openprint::log->debug("Impressions: $impressions");
@@ -431,9 +443,9 @@ $openprint::log->debug("AQ types @types") if DEBUG;
 					%ServicePrice = $Service->get_price( $impressions, $Equipment );
 					$ServicePrice{'Quantity'} = $impressions;
 					$ServicePrice{'Total'} = $ServicePrice{'Price'} * $impressions / 1000;
-				} elsif ( sets::isin( lc $ServicePrice{'units'}, [ 'per m', 'per 1000' ] ) ) {
-					$ServicePrice{'Quantity'} = $run_qty;
-					$ServicePrice{'Total'} = $ServicePrice{'Price'} * $run_qty / 1000;
+				} elsif ( sets::isin( lc $ServicePrice{units}, [ 'per m', 'per 1000' ] ) ) {
+					$ServicePrice{Quantity} = $run_qty;
+					$ServicePrice{Total} = $ServicePrice{Price} * $run_qty / 1000;
 				} elsif ( lc $ServicePrice{'units'} eq 'per hour' ) {
 					$ServicePrice{'Quantity'} = $run_qty;
 					$ServicePrice{'Total'} = $ServicePrice{'Price'} * $run_qty / $Equipment->specification('AqueousRunSpeed') if $Equipment->specification('AqueousRunSpeed');

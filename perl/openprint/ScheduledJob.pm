@@ -186,7 +186,7 @@ sub stock {
 		my $Equipment = $self->Equipment();
 		my $Project = new openprint::Project( $$self{'project_id'} );
 		my $Stock;
-		my $PA = openprint::PaperAllocation->find_one( project_id=>$$self{project_id} );
+		my $PA = openprint::PaperAllocation->find_one( docket=>$Project->docket() );
 		if ( $PA ) {
 			$Stock = $PA->Paper();
 		} elsif ( $$self{'service_id'}[0] ) {
@@ -205,7 +205,7 @@ sub stock {
 			} else {
 				$$self{'stock'} .= ' not ordered.';
 			} # end if
-		} else {
+		} elsif ( $Stock ) {
 			if ( $Stock->type() eq 'Roll' ) {
 				$$self{'stock'} .= $Stock->width().'&quot; Roll';
 			} else {

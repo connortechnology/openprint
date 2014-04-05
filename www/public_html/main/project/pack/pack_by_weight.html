@@ -6,6 +6,9 @@
 			<? include(/includes/main/proj/finished_dimensions.html)?>
 			<? include(/includes/main/proj/finished_calliper.html)?>
 			<? include(/includes/main/proj/finished_weight.html)?>
+				<li><label>Items per package (leave empty for auto)</label>
+					<? echo ( input( type=>'cardinal', name=>'items_per_package', value=>$$variable{items_per_package}, onkeyup=>'calc(this.form.name);' ); ) ?>
+				</li>
 			</ul>
 		</fieldset>
 		<fieldset><legend>Results</legend>

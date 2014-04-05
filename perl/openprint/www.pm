@@ -111,6 +111,7 @@ sub handler {
 	# This one has to go here, because it loads data, the others clear data, so they can go after the requires
 	configuration::init( $r->dir_config() );
 	openprint::session_init();
+	openprint::usergroup::init_cache();
 	if ( $dbh ) {
 		if ( ! $page_settings{$config{db_name}} or ! $page_settings{$config{db_name}}{$page} ) {
 $log->debug("loading Page settings for $config{db_name} for $page") if DEBUG;
@@ -283,10 +284,10 @@ local $|=1;
 
 			#$log->warn("No template!" . $r->content_type());
 			$variable{PageContent} = ssi::variable_substitution( \$variable{'PageContent'}, \%variable ) if $variable{'PageContent'} ne '';
-			$log->warn($variable{PageContent});
+			#$log->warn($variable{PageContent});
 	$log->debug( "Before printing: ($page) Elapsed time: " . sprintf('%.4f', tv_interval([$starttime])*1000).' usecs' . length( $variable{PageContent} ) );
 			$r->print( $variable{PageContent} );
-	$log->debug( "After printing: ($page) Elapsed time: " . sprintf('%.4f', tv_interval([$starttime])*1000).' usecs' );
+	#$log->debug( "After printing: ($page) Elapsed time: " . sprintf('%.4f', tv_interval([$starttime])*1000).' usecs' );
 		} # end if
 	} # end if
 
@@ -366,11 +367,11 @@ $openprint::log->debug("Getfile");
 					if ( ! $$sig_specs{'UsePress'} ) {
 						openprint::service::insert_service_spec( $log, $dbh, $variable{'ProjectIndex'}, $signature_service_index, 'UsePress', $$sig_specs{'ddmPress'.$variable{'Project'}->ordered_quantity_index()} );
 					} # end if
-					$variable{"UsePress-$signature_service_index"} = $$sig_specs{'UsePress'};
+					$variable{"UsePress-$signature_service_index"} = $$sig_specs{UsePress};
 				} # end foreach signature_service_index
 
 				if ( ! $variable{'ddmDueDate'} ) {
-					$variable{'ddmDueDate'} = $variable{'Project'}->get_due_date();
+					$variable{'ddmDueDate'} = $variable{Project}->get_due_date();
 				} # end if
 				@variable{'duedate_year','duedate_month','duedate_day'} = split('-', $variable{'ddmDueDate'});
 
@@ -448,7 +449,7 @@ $log->error("Unable to load equipment.	No PPF for you for signature $$PPF{'signa
 				$variable{'Project'} = new openprint::Project( $variable{'ProjectIndex'} );
 				if ( $variable{ServiceIndex} ) {
 					my $Service = $variable{'Project'}->Service( $variable{'ServiceIndex'} );
-					$variable{'ServiceType'} = $Service->ServiceType();
+					$variable{ServiceType} = $Service->ServiceType();
 					@variable{'ServiceTypeID','ServiceTypeName','ServiceTypeType'} = $variable{ServiceType}->get('name','description','type') if $variable{ServiceType};
 $log->debug("ServiceType: $variable{'ServiceTypeType'}");
 				} # end if

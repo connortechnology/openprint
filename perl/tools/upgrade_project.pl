@@ -9,6 +9,8 @@ require openprint::Project;
 require openprint::service;
 
 use openprint ();
+use configuration ();
+
 use vars qw( $log $dbh );
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
@@ -23,9 +25,13 @@ $sql_server{'login'} = $sql_server{'database'} if ! $sql_server{'login'};
 $sql_server{'password'} = $ARGV[2];
 $sql_server{'password'} = $sql_server{'login'} if ! $sql_server{'password'};
 
+$openprint::Object::config{"db_name"} = $sql_server{'database'};
+
 $openprint::Object::no_cache = 1;
-my $projects_count = 10000;
+my $projects_count = 0;
 my $project_id = $ARGV[3];
+die if ! $project_id;
+
 #
 #my $project_id = 407192;
 my $company_id = 0;
@@ -33,191 +39,9 @@ my $company_id = 0;
 $dbh = sql::open_sql( $log, %sql_server );
 my @projects;
 
-if ( 0 ) {
-$log->warn("Updating $projects_count projects for $company_id or just $project_id");
-foreach my $Project ( openprint::Project->find( order=>'id desc',
-	( $project_id ? ( id=>$project_id) : 
-	( $company_id ? (company_id=>$company_id) : () ),
-	),
-	offset=>$projects_count ) ) {
-#$log->warn("Updating rpoject $$Project{id}");
-	my $services = $Project->services();
-
-	if ( $$services{''} ) {
-		my $printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
-#if ( ! $Project->signatures() ) {
-#$log->warn("Not signatures $$Project{id}");
-#} # end if
-
-		foreach my $sig_id ( $Project->signatures() ? $Project->signatures() : $$services{''}[0] ) {
-			next if ! $sig_id;
-			my $sig_specs = openprint::service::get_specs_ref( $Project, $sig_id );
-			if ( $$sig_specs{'ServiceType'} eq 'AdditionalSignature' ) {
-				$log->debug("Changing ServiceType to Signatuer");
-# Don't need to delete, becaeuse insert does a delete by default
-				openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'ServiceType', 'Signature' );
-			} # end if
-
-			if ( $$sig_specs{'SignatureIndex'} eq '' ) {
-				$log->warn("Updating sig $sig_id of project $$Project{'id'} adding SignatureIndex");
-				$_ = q{SELECT MAX(strValue::integer) FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strName='SignatureIndex'};
-				my ( $sig_index ) = sql::execute( undef, undef, $_, $Project->id() );
-				$sig_index += 1;
-				openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'SignatureIndex', $sig_index );
-			} # end if
-			foreach my $bleed ( 'Left','Right','Top','Bottom' ) {
-				if ( $$sig_specs{'chkBleed'.$bleed} ) {
-					openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'Bleed'.$bleed, $$sig_specs{'chkBleed'.$bleed} );
-					openprint::service::delete_service_spec( $Project->id(), $sig_id, 'chkBleed'.$bleed );
-#openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'chkBleed'.$bleed, '' );
-				} # end if
-			} # end foreach
-#if ( ! exists $$sig_specs{'Group'} ) {
-			if ( $$sig_specs{'txtSignatureType'} ) {
-				if ( ! $$sig_specs{txtFinalWidth} ) {
-					openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'txtFinalWidth', $$sig_specs{txtWidth} );
-				} # end if
-				if ( ! $$sig_specs{txtFinalHeight} ) {
-					openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'txtFinalHeight', $$sig_specs{txtHeight} );
-				} # end if
-
-				if ( $$sig_specs{'txtSignatureType'} eq 'Cover Spreads' or $$sig_specs{'txtSignatureType'} eq 'Cover Pages' ) {
-					openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'txtSignatureType', 'Cover Pages' );
-					openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'Group', '1' );
-					openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'GroupPageQuantity', '4' );
-
-				} elsif ( $$sig_specs{'txtSignatureType'} eq 'Interior Spreads' or $$sig_specs{'txtSignatureType'} eq 'Interior Pages' ) {
-					openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'txtSignatureType', 'Interior Pages' );
-					openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'Group', '2' );
-					openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'GroupPageQuantity', $$printing_specs{'txtTotalPageQuantity'} - ( $$printing_specs{'rdbCover'} eq 'Self' ? 0 : 4 ) );
-					foreach my $qty_index ( $Project->quantity_indexes() ) {
-						openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'MatchGrain'.$qty_index, 'Y' );
-					} # end foreach
-				} else {
-		# Gate Fold?
-					openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'Group', '3' );
-					openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'GroupPageQuantity', '4' );
-				} # end if
-			} # end if
-
-			foreach my $qty_index ( $Project->quantity_indexes() ) {
-				if ( $$sig_specs{'chkOverridePrintingType'.$qty_index} eq 'Y' ) {
-					openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'OverridePrintingType'.$qty_index, 'Y' );
-					openprint::service::delete_service_spec( $Project->id(), $sig_id,'chkOverridePrintingType'.$qty_index);
-				} # end if
-				if ( $$sig_specs{'chkOverrideSignatureSpreadQuantity'.$qty_index} eq 'Y' and $$sig_specs{'chkOverridePageQuantity'.$qty_index} ne 'Y' ) {
-					openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'chkOverridePageQuantity'.$qty_index, 'Y' );
-					if ( ! $$sig_specs{'PageQuantity'.$qty_index} ) {
-						openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'PageQuantity'.$qty_index, $$sig_specs{'txtSignatureSpreadQuantity'.$qty_index} * $$sig_specs{'txtSpreadSize'} );
-					} # end if
-					openprint::service::delete_service_spec( $Project->id(), $sig_id, 'chkOverrideSignatureSpreadQuantity'.$qty_index );
-				} # end if
-				openprint::service::delete_service_spec( $Project->id(), $sig_id, 'txtSignatureSpreadQuantity'.$qty_index );
-
-			} # end foreach qty_index
-		#} # end if
-			foreach my $side ( 'SideOne','SideTwo' ) {
-				my $index;
-				foreach $index ( 1 .. 8 ) {
-					last if ! $$sig_specs{'ColourCoatingColour'.$index.$side};
-				} # end foreach
-				$index += 1;
-				$index = 1 if $index >= 8;
-				foreach my $colour_index ( 1 .. 8 ) {
-					if ( $$sig_specs{"chkSpecial${side}Colour$colour_index"} eq 'Y' ) {
-						openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'chkColourCoating'.$index.$side, 'Y' );
-						openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'ColourCoatingType'.$index.$side, 'PMS' );
-						openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'ColourCoatingColour'.$index.$side,  $$sig_specs{"txtSpecial${side}Colour$colour_index"} );
-						openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'ColourCoatingCoverage'.$index.$side,  $$sig_specs{"txtSpecial${side}ColourInkPercent$colour_index"} );
-						$index += 1;
-					} # end if
-				} # end foreach index
-				if ( sets::isin( $$sig_specs{'rdbAqueous'.$side}, ['Gloss','Matte','Satin','SoftTouch'] ) ) {
-					openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'chkColourCoating'.$index.$side, 'Y' );
-					openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'ColourCoatingType'.$index.$side, 'Aqueous '.$$sig_specs{'rdbAqueous'.$side} );
-					$index += 1;
-				} # end if
-				if ( $$sig_specs{'chkVarnishOverallGloss'.$side} ) {
-					openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'chkColourCoating'.$index.$side, 'Y' );
-					openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'ColourCoatingType'.$index.$side, 'Varnish Gloss Overall' );
-					$index += 1;
-				} # end if	
-				if ( $$sig_specs{'chkVarnishSpotGloss'.$side} ) {
-					openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'chkColourCoating'.$index.$side, 'Y' );
-					openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'ColourCoatingType'.$index.$side, 'Varnish Gloss Spot' );
-					$index += 1;
-				} # end if	
-				if ( $$sig_specs{'chkVarnishOverallMatte'.$side} ) {
-					openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'chkColourCoating'.$index.$side, 'Y' );
-					openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'ColourCoatingType'.$index.$side, 'Varnish Matte Overall' );
-					$index += 1;
-				} # end if	
-				if ( $$sig_specs{'chkVarnishSpotMatte'.$side} ) {
-					openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'chkColourCoating'.$index.$side, 'Y' );
-					openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'ColourCoatingType'.$index.$side, 'Varnish Matte Spot' );
-					$index += 1;
-				} # end if	
-			} # end foreach side
-
-			if ( $$services{'Scoring'} ) {
-				foreach my $scoring_service_id ( @{$$services{'Scoring'}} ) {
-					my $scoring_specs = openprint::service::get_specs_ref( $Project, $scoring_service_id );
-					foreach my $sig_id ( $Project->signatures() ? $Project->signatures() : $$services{''}[0] ) {
-						my $sig_specs = openprint::service::get_specs_ref( $Project, $sig_id );
-						foreach my $qty_index ( $Project->quantity_indexes() ) {
-							next if ! $$scoring_specs{"ddmEquipment-$$sig_specs{SignatureIndex}-$qty_index"};
-							next if ! ( $$scoring_specs{"ddmEquipment-$$sig_specs{SignatureIndex}-$qty_index"} =~ /\D/ );
-							my $Equipment = openprint::Equipment->find_one( 'strid'=>$$scoring_specs{"ddmEquipment-$$sig_specs{SignatureIndex}-$qty_index"}, deleted=>[0,1,undef] );
-							if ( ! $Equipment ) {
-								$log->error( 'No equipment found for ' . $$scoring_specs{"ddmEquipment-$$sig_specs{SignatureIndex}-$qty_index"} );
-								next;
-							} 
-							openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $scoring_service_id, "ddmEquipment-$$sig_specs{SignatureIndex}-$qty_index", $Equipment->id() );
-						} # end foreach
-					} # end foreach sig
-
-				} # end foreach service_id in Scoring
-			} # end if Scoring
-
-		} # end foreach sig_id
-	} # end if
-	foreach my $service ( 'BulkSkids', 'PlainCartons' ) {
-		if ( $$services{$service} ) {
-			foreach my $ss_id ( @{$$services{$service}} ) {
-				my $specs = openprint::service::get_specs_ref( $Project, $ss_id );
-				foreach my $qty_index ( $Project->quantity_indexes() ) {
-					openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $ss_id, 'ddmPackageType'.$qty_index, $$specs{'ddmPackageType'} );
-					if ( $$specs{'ddmPackageType'.$qty_index} =~ /\D/ ) {
-						if ( my $Material = openprint::Material->find_one( 'name'=>$$specs{'ddmPackageType'.$qty_index} ) ) {
-							openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $ss_id, 'ddmPackageType'.$qty_index, $Material->id() );
-						} # end if
-					} # end if
-					if ( $$specs{'chkOverrideItemsPerPackage'} ) {
-						openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $ss_id, 'OverrideItemsPerPackage'.$qty_index, $$specs{'chkOverrideItemsPerPackage'} );
-					} # end if
-					if ( $$specs{'txtItemsPerPackage'} ) {
-						openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $ss_id, 'txtItemsPerPackage'.$qty_index, $$specs{'txtItemsPerPackage'} );
-					} # end if
-				} # end foreach
-			} # end foreach
-		} # end if
-	} # end foreach service
-	foreach my $service ( 'Padding' ) {
-		if ( $$services{$service} ) {
-			foreach my $ss_id ( @{$$services{$service}} ) {
-				my $specs = openprint::service::get_specs_ref( $Project, $ss_id );
-				openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $ss_id, 'rdbCardboardBacking', $$specs{'rdbCardboardBacking'} eq 'Y' ? 'Cardboard' : 'None' );
-			} # end foreach ssid
-		} # end if
-	} # end foreach
-	my $summary = $Project->summary();
-	sql::update( undef, undef, 'Projects', ['id=?', $Project->id()], 'summary', $summary );
-	openprint::service::init_cache();
-
-} # end foreach Project
-openprint::Object::init_cache();
-}
 foreach my $Project ( openprint::Project->find( 'order'=>'id desc',
+			'type !='	=>	'MultiPage',
+			#'status not in'	=>	['uncalculated','Deleted'],
 			( $project_id ? ( 'id'=>$project_id) : () ),
 			( $company_id ? ( 'company_id'=>$company_id ) : () ),
 			limit=>$projects_count  ) ) {
@@ -226,22 +50,55 @@ foreach my $Project ( openprint::Project->find( 'order'=>'id desc',
 	my $services = $Project->services();
 	next if ! $$services{''};
 	next if ! $$services{''}[0];
-	my $print_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
-	my @sigs = $Project->signatures();
 
-	if ( @sigs == 1 ) {
-		my $PService = $Project->Service( $sigs[0] );
-		my $sig_specs = $Project->specs();
-		if ( 1 or ! ( $$sig_specs{txtWidth} and $$sig_specs{txtHeight} ) ) {
+	my @sigs = $Project->signatures();
+	my $dead = 0;
+	foreach my $sig ( @sigs ) {
+		my $PService = $Project->Service( $sig );
+		my $sig_specs = $PService->specs();
+		if ( ! ( $$sig_specs{txtWidth} or $$sig_specs{txtHeight} or $$sig_specs{txtFinalWidth} or $$sig_specs{txtFinalHeight} ) ) {
+			$dead += 1;
+
+		} # end if
+	} # end foreach sig
+	next if $dead != @sigs;
+
+	print $Project->id() . " hit enter to do it\n";
+	my $input = <STDIN>;
+	last if $input eq 'q';
+	next if $input eq 'n';
+
+	my $ac = sql::start_transaction( $dbh );
+	my $print_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
+	$log->debug("Sigs: @sigs ");
+	foreach my $sig ( @sigs ) {
+		my $PService = $Project->Service( $sig );
+		my $sig_specs = $PService->specs();
+		if ( ! ( $$sig_specs{txtWidth} or $$sig_specs{txtHeight} or $$sig_specs{txtFinalWidth} or $$sig_specs{txtFinalHeight} ) ) {
 			$PService->delete();
-			my $new_signature = $Project->copy_signature( $print_specs, {}, openprint::service::status( $Project->id(), $$services{''}[0] ) );
-			foreach my $qty_index ( $Project->quantity_indexes() ) {
-				openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $$services{''}[0], 'txtPrice'.$qty_index, undef );
-			} # end foreach
+		} # end if
+	} # end foreach sig
+	@sigs = $Project->signatures();
+	$log->debug("Sigs after deleting: @sigs ");
+	if ( ! @sigs ) {
+		my $new_signature = $Project->copy_signature( $print_specs, {}, openprint::service::status( $Project->id(), $$services{''}[0] ) );
+		foreach my $qty_index ( $Project->quantity_indexes() ) {
+			openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $$services{''}[0], 'txtPrice'.$qty_index, undef );
+		} # end foreach
+	} elsif ( @sigs == 1 ) {
+		my $PService = $Project->Service( $sigs[0] );
+		my $sig_specs = $PService->specs();
+		if ( ! ( $$sig_specs{txtWidth} and $$sig_specs{txtHeight} ) ) {
+			$PService->delete();
 		} else {
 			$log->debug("Not changing $$Project{id}");
 		} # end if
 	} # end if
+	if ( $_ = $dbh->errstr() ) {
+		$dbh->rollback();
+		die $_;
+	} # end if
+	sql::end_transaction( $dbh, $ac );
 
 } # end foreach Project
 

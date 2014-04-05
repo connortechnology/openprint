@@ -1,5 +1,4 @@
 
-DROP TABLE IF EXISTS Project_Types;
 CREATE TABLE Project_Types (
 	id		SERIAL NOT NULL,
 	name			TEXT,

@@ -32,11 +32,11 @@ $serial = 'rfidtags_id_seq';
 );
 
 %defaults = (
-	'created_on'	=>	q`'NOW()'`,
-	'updated_on'	=>	q`'NOW()'`,
-	'location_id'	=>	undef,
-	'type_id'		=>	undef,
-	'valid'			=>	0,
+	created_on	=>	q`'NOW()'`,
+	updated_on	=>	q`'NOW()'`,
+	location_id	=>	undef,
+	type_id		=>	undef,
+	valid		=>	'0',
 );
 
 sub save {
@@ -78,7 +78,7 @@ sub save {
 		} # end if
 	} # end if
 
-	$self->valid( ! $self->is_invalid_id() );
+	$self->valid( $self->is_invalid_id() ? 0 : 1 );
 	
 	my $ac = sql::start_transaction( $dbh );
 
