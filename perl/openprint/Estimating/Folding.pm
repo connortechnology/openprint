@@ -219,7 +219,8 @@ sub signature_needs {
 		return 0;
 	} # end if
 
-	if ( $$services{''} ) {
+	if ( 0 and $$services{''} ) {
+		# Turn this off... Unbound defaults to a spreadsize of 4, so unbound should still mean folding
 		my $printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
 		if ( $$printing_specs{rdbTemplateType} eq 'Unbound' ) {
 			$openprint::log->debug("Folding::signature_needs: Unbound") if DEBUG_NEEDS;
@@ -233,7 +234,6 @@ sub signature_needs {
 	} else {
 		$openprint::log->warn("FOLDING NEEDED $$specs{'rdbTemplateType'} $fold_types{$$specs{'rdbTemplateType'}}!") if DEBUG_NEEDS;
 	} # end if
-
 
 	if ( $$specs{'txtSignatureType'} ) {
 		if ( $$specs{'txtSpreadSize'} == 1 ) {
