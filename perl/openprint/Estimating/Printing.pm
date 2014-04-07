@@ -25,7 +25,7 @@ my $threading = 0;
 use constant DEBUG => 0;
 use constant DEBUG_PLATES => 0;
 use constant DEBUG_VERSIONS => 0;
-use constant DEBUG_FILTERING => 0;
+use constant DEBUG_FILTERING => 1;
 use constant DEBUG_INITIAL_FILTERING => 0;
 use constant DEBUG_PRICE_DECISIONS => 1;
 use constant DEBUG_INKS => 0;
@@ -109,6 +109,8 @@ my %variables = (
 	'Markup1' => ['save'], 'Markup2' => ['save'], 'Markup3' => ['save'],
 	'OverridePrice1' => ['save'], 'OverridePrice2' => ['save'], 'OverridePrice3' => ['save'],
 	'MPrice1' => ['save','output'], 'MPrice2' => ['save','output'], 'MPrice3' => ['save','output'],
+	SideOneColours		=>	 [],
+	SideTwoColours		=>	 [],
 	'chkCyanSideOne' => ['save'],
 	'chkMagentaSideOne' => ['save'],
 	'chkYellowSideOne'	=> ['save'],
@@ -428,16 +430,16 @@ sub setup_project {
 	my ( $Project, $service_index, $services, $specs, $side_one_colours, $side_two_colours, $inkCoverage, $Paper ) = @_;
 
 	my %project = (
-			'txtSpreadSize',	$$specs{'txtSpreadSize'},
-			'ComboItems',		$$specs{'txtPressSheetComboItems'},
-			'Add Grip Width',	$$specs{'GripWidth'},
-			'Add Grip Height',	$$specs{'GripHeight'},
-			'Add Colour Bar',	$$specs{'rdbColourBar'},
-			'image_width',		$$specs{'txtWidth'},
-			'image_height',		$$specs{'txtHeight'},
-			'BleedLocations',	join(',', @$specs{'BleedBottom','BleedTop','BleedLeft','BleedRight'}),
-			'Calliper',			$$specs{'txtSpecificStockCalliper'},
-			'CropMarkSpace',	$$specs{'txtCropMarkSpace'},
+			txtSpreadSize	=>	$$specs{'txtSpreadSize'},
+			ComboItems		=>	$$specs{'txtPressSheetComboItems'},
+			'Add Grip Width'=>	$$specs{'GripWidth'},
+			'Add Grip Height'=>	$$specs{'GripHeight'},
+			'Add Colour Bar'=>	$$specs{'rdbColourBar'},
+			'image_width'=>		$$specs{'txtWidth'},
+			'image_height'=>		$$specs{'txtHeight'},
+			'BleedLocations'=>	join(',', @$specs{'BleedBottom','BleedTop','BleedLeft','BleedRight'}),
+			'Calliper'=>			$$specs{'txtSpecificStockCalliper'},
+			'CropMarkSpace'=>	$$specs{'txtCropMarkSpace'},
 			);
 
     my $CoatingsCategory = openprint::ServiceCategory->find_one( name => 'Coating' );
@@ -2730,10 +2732,10 @@ sub calculate_impositions {
 			$$project{'txtSpreadSize'} = 4;
 		} # end if
 		if ( $$sig_specs{'chkOverridePageQuantity'.$qty_index} eq 'Y' ) {
-			$SpreadLayout = $$sig_specs{'PageQuantity'.$qty_index} / $$project{'txtSpreadSize'};
+			$SpreadLayout = int( $$sig_specs{'PageQuantity'.$qty_index} / $$project{'txtSpreadSize'} );
 			$log->debug("Calcing SpreadLayout as overriden upq: $$sig_specs{'PageQuantity'.$qty_index} / spreadsize:$$project{'txtSpreadSize'} = layout$SpreadLayout");
 		} else {
-			$SpreadLayout = $$sig_specs{'txtUnspecifiedPageQuantity'.$qty_index} / $$project{'txtSpreadSize'};
+			$SpreadLayout = int( $$sig_specs{'txtUnspecifiedPageQuantity'.$qty_index} / $$project{txtSpreadSize} );
 			$log->debug("Calcing SpreadLayout as upq: $$sig_specs{'txtUnspecifiedPageQuantity'.$qty_index} / spreadsize:$$project{'txtSpreadSize'} = layout$SpreadLayout") if DEBUG_FILTERING;
 		} # end if
 	} # end if
@@ -3824,7 +3826,7 @@ $$new_specs{"OverrideStockHeight$qty_index"} = $Paper->height();
 						} else {
 							my $price_cache_key = join(',', keys %PaperCounts, $qty_index, $$Press{strid}, $$price{upq}, $$imp{runstyle}, $$Paper{type}, $$Paper{width} );
 							#my $price_cache_key = join(',', keys %PaperCounts, $qty_index, $$Press{strid}, $$price{upq}, $$imp{runstyle}, $$Paper{type}, $$Paper{width},$$Paper{height} );
-
+$imp->display("Recursing");
 							if ( ! $price_cache{$price_cache_key} ) {
 								my @new_possible_presses;
 								foreach my $p ( @$possible_presses ) {
