@@ -509,7 +509,7 @@ $openprint::log->debug("$project{print_sides} : " . @{$project{side_one_colours}
 	} # end if
 	# Make sure all our colours are in the special colours hash
 	my $PMSInkMixService = openprint::Service->find_one(name=>'PMSInkMix');
-	foreach my $real_colour ( @filtered_colours ) {
+	foreach my $real_colour ( sort { $$a{name} cmp $$b{name} } @filtered_colours ) {
 		my $colour;
 		if ( $$real_colour{type} eq 'PMS' ) {
 			# Name is supposed to be the PMS #, so strip everything out.  casual quotes will use PMS 1,2,3 which are not actual PMS numbers
@@ -5638,14 +5638,14 @@ sub get_run_price {
 				$run_price{'units'} = $RunPrice{'units'};
 				$running_price = $RunPrice{'Price'} * $full_runs;
 			} # end if
-#$log->debug("**** RUN PRICE 2 : $running_price **") if DEBUG;
+$log->debug("**** RUN PRICE 2 : $running_price ** side1 colours: $side_one_colours") if DEBUG;
 
 			my $mod_colours = $side_one_colours % $max_colours;
 			if ( $mod_colours ) {
 				my %RunPrice = openprint::service::get_price_object( $mod_colours.$impression_service, $impressions, $Press );
 				$running_price += $RunPrice{'Price'};
 				$run_price{'units'} = $RunPrice{'units'} if ! $run_price{'units'};
-#$log->debug("**** RUN PRICE 3 : $running_price **") if DEBUG;
+$log->debug("**** RUN PRICE 3 : $running_price **") if DEBUG;
 			} # end if
 		} # end if
 #$log->debug(" ** SIDE ONE RUNNING PRICE $running_price **");
