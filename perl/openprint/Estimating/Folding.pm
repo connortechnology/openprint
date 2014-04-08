@@ -284,7 +284,8 @@ sub neccessary {
 		$openprint::log->debug(" ** Project is marked as No bindery, Folding not needed ! ** ");
 		return 0;
 	} # end if
-	if ( $$services{''} ) {
+	if ( 0 and $$services{''} ) {
+		# Turn this off... Unbound defaults to a spreadsize of 4, so unbound should still mean folding
 		my $printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
 		return 0 if $$printing_specs{rdbTemplateType} eq 'Unbound';
 	} # end if
