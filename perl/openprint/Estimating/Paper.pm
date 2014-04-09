@@ -161,7 +161,7 @@ $openprint::log->debug("Supplied: " . $SuppliedStock->id_string() );
 					# convert to supplied count
 					$sheets = ceil( $sheets / ( $PressSheet->start_area()/$PressSheet->area() ) );
 					} # end if
-					$$specs{"qty-$ss_id-$stock_index-$qty_index"} = ceil( $sheets * $PressSheet->start_sheet_weight() );
+					$$specs{"qty-$ss_id-$stock_index-$qty_index"} = Math::Round::nearest( 0.1, ( $sheets * $PressSheet->start_sheet_weight() ) );
 					$$specs{"sheets-$ss_id-$stock_index-$qty_index"} = $sheets;
 				} else {
 					$$specs{"qty-$ss_id-$stock_index-$qty_index"} = $$sig_specs{'StockQuantity'.$qty_index};
@@ -195,7 +195,7 @@ $openprint::log->debug("QTY $qty_index ($paper_string) => " . $totals{$paper_str
 				foreach my $qty_index ( $Project->quantity_indexes() ) {
 					next if ! $totals{$paper_string}{"qty_$qty_index"};
 					if ( $Paper->type() eq 'Sheet' ) {
-						$totals{$paper_string}{"qty_$qty_index"} = $sheets_per_package * ceil( $totals{$paper_string}{"qty_$qty_index"} / $sheets_per_package );
+						$totals{$paper_string}{"qty_$qty_index"} = $sheets_per_package * Math::Round::nearest(0.1,( $totals{$paper_string}{"qty_$qty_index"} / $sheets_per_package ) );
 					} elsif ( $Paper->type() eq 'Roll' ) {
 						$totals{$paper_string}{"qty_$qty_index"} = $sheets_per_package * ($totals{$paper_string}{"qty_$qty_index"}/$sheets_per_package);
 					} # end if
@@ -248,9 +248,9 @@ $openprint::log->error("2No stock index for $paper_id");
 			if ( $$specs{"overridecost-$ss_id-$stock_index-$qty_index"} ne 'Y' ) {
 				my $price;
 				if ( $Paper->type() eq 'Sheet' ) {
-					$price = $Paper->get_price( sheets=>$totals{$paper_id}{"qty_$qty_index"},'service'=>'Material' );
+					$price = $Paper->get_price( sheets=>$totals{$paper_id}{"qty_$qty_index"},service=>'Material' );
 				} else {
-					$price = $Paper->get_price( 'weight'=>$totals{$paper_id}{"qty_$qty_index"},'service'=>'Material' );
+					$price = $Paper->get_price( weight=>$totals{$paper_id}{"qty_$qty_index"},service=>'Material' );
 				} # end if
 				$$specs{"cost-$ss_id-$stock_index-$qty_index"} = $$price{'100lb Price'};
 #$openprint::log->warn("Getting prices for $stock_index $paper_id (".$totals{$paper_id}{"qty_$qty_index"}.'sheets) => $' . $price{'100lb Price'}.'/100lb');
@@ -275,7 +275,7 @@ $openprint::log->error("2No stock index for $paper_id");
 				}
 			} # end if
 			if ( $Paper->type() eq 'Sheet' ) {
-				$$specs{"qty-$stock_index-$qty_index"} = ceil( $totals{$paper_id}{"qty_$qty_index"} * $Paper->sheet_weight() );
+				$$specs{"qty-$stock_index-$qty_index"} = Math::Round::nearest( 0.1, ( $totals{$paper_id}{"qty_$qty_index"} * $Paper->sheet_weight() ) );
 				$$specs{"sheets-$stock_index-$qty_index"} = $totals{$paper_id}{"qty_$qty_index"};
 			} else {
 				$$specs{"qty-$stock_index-$qty_index"} = $totals{$paper_id}{"qty_$qty_index"};

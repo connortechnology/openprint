@@ -375,7 +375,7 @@ $results{'Breakdown'} .= 'Imposition: ' . $imposition . 'out<br/>';
 			} # end if
 
 			my $type = $Equipment->specification('Type');
-			$openprint::log->debug("Printed impo: @printed_impositions, sitched: $imposition type: $type $$Equipment{strid}");
+			$openprint::log->debug("Printed impo: @printed_impositions, sitched: $imposition type: $type $$Equipment{strid}") if DEBUG;
 			if ( $type eq 'Press' and @printed_impositions > 1 ) {
 				$results{'Breakdown'} .= sprintf('Printed and stitched imposition must match.<br/>');
 				next;

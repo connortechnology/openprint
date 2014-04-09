@@ -23,7 +23,7 @@ require openprint::Estimating::Printing;
 require openprint::service;
 require sets;
 
-use constant DEBUG => 1;
+use constant DEBUG => 0;
 
 my %variables = (
 	'ddmProjectSize'=>['save','output'],
