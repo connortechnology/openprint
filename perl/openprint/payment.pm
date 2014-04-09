@@ -52,6 +52,8 @@ sub edit {
 		if ( $param{payment_id} ) {
 			$variable{ExternalRedirect} = '/payment/history.html';
 		} # end if
+	} elsif ( $param{'btnFunction'} eq 'Send Receipt' ) {
+		$variable{error} .= $Payment->send_receipt();
 	} elsif ( $param{btnFunction} eq 'Delete' ) {
 		$variable{error} .= $Payment->delete();
 		$variable{ExternalRedirect} = '/payment/history.html' if ! $variable{error};
