@@ -173,9 +173,10 @@ sub insert_service_spec {
 		%{$specs_cache{$service_index}} = sql::execute( $log, $dbh, 
 				'SELECT strName, strValue FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND lngServiceIndex=?', $project_index, $service_index );
 	} # end if
-	if ( $specs_cache{$service_index}{$name} eq $value ) {
+	if ( defined $specs_cache{$service_index}{$name} and defined $value and $specs_cache{$service_index}{$name} eq $value ) {
 		$log->debug("insert_service_spec: return because no change in value: ($name)($value)") if DEBUG;
 		return;
+
 	} # end if
 
 	#if ( exists $specs_cache{$service_index}{$name} ) {
@@ -447,6 +448,7 @@ sub external_calc {
 			} # end if
 		} # end if
 	} # end foreach
+
 	return join( '|', @results );
 } # end sub external_calc
 
@@ -461,7 +463,7 @@ sub internal_calc {
 
 	my $Project = new openprint::Project( $project_index );
 	$Project->lock();
-	$Project->save({status=>'uncalculated'}) if $Project->status() ne 'uncalculated';
+	#$Project->save({status=>'uncalculated'}) if $Project->status() ne 'uncalculated';
 	my $Service = $Project->Service($service_index) if $service_index;
 	$Service->save({status=>'uncalculated'}) if $Service->status() ne 'uncalculated';
 	my $specs;

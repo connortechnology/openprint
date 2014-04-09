@@ -48,7 +48,7 @@ $log->warn("No servicetype in params in calc");
 		$log->debug("no outputs, so using keys @vars") if $debug;
 	} # end if
 	if ( my $function = $module->can( 'no_outputs' ) ) {
-		my @no_outputs = sort $function->( @param{'ProjectIndex','ServiceIndex'}, \%specs );
+		my @no_outputs = sort $function->( @param{'ProjectIndex','ServiceIndex'}, \%specs , \%param );
 		$log->debug("$module ::no_outputs: @no_outputs)") if $debug;
 		@vars = sets::exclude( \@no_outputs, \@vars );
 
@@ -62,7 +62,7 @@ $log->debug("Deleting key $key in no_outputs ") if $debug;
 			$log->debug("$key => $specs{$key}");
 		} # end foreach
 	} # end if debug
-    foreach my $key ( @vars ) {
+    foreach my $key ( keys %specs ) {
         if ( (exists $param{$key}) and ($specs{$key} eq $param{$key}) ) {
 $log->debug("Deleting $key cuz it's the same $key") if $debug;
 			delete $specs{$key};

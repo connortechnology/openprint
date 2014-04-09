@@ -125,7 +125,7 @@ sub load {
 			$log->debug('SELECT * FROM ' . $table . ' WHERE ' . join(' AND ', map { $$fields{$_} . '=' . $$self{$_} } @identified_by ) ) if $debug;
 			$data = $d->selectrow_hashref( 'SELECT * FROM ' . $table . ' WHERE ' . join(' AND ', map { $$fields{$_} . '=?' } @identified_by ), {}, @$self{@identified_by} );
 			#$log->debug("Got $type: " . join(',', map { $_ . '=>' . $$data{$_} } keys %$data ) ) if $debug;
-		} else {
+		} elsif ( exists $$fields{id} ) {
 			$log->debug("SELECT * FROM $table WHERE $$fields{id}=$$self{id}" ) if $debug;
 			$data = $d->selectrow_hashref( 'SELECT * FROM ' . $table . " WHERE $$fields{id}=?", {}, $$self{id} );
 		} # end if
@@ -138,8 +138,10 @@ sub load {
 			#$log->debug("Got $type: " . join(',', map { $_ . '=>' . $$data{$_} } keys %$data ) . ' in ' . sprintf('%.4f', tv_interval($starttime)*1000) .' useconds' );
 		} # end if
 	} # end if
-	my @keys = map { (defined $$fields{$_} or exists $$data{$_} ) ? $_ : () } keys %$fields;
-	@$self{@keys} = @$data{@$fields{@keys}};
+	if ( $data and %$data ) {
+		my @keys = map { (defined $$fields{$_} or exists $$data{$_} ) ? $_ : () } keys %$fields;
+		@$self{@keys} = @$data{@$fields{@keys}};
+	} # end if
 } # end sub load
 
 sub save {
@@ -182,18 +184,21 @@ if ( $debug ) {
 		if ( ! %serial ) {
 $log->debug("No serial") if $debug;
 			# No serial columns defined, which means that we will do saving by delete/insert instead of insert/update
-			my $where = join(' AND ', map { $$fields{$_}.'=?' } @identified_by );
-			if ( $debug ) {
-				$log->debug("DELETE FROM $table WHERE $where");
-			} # end if
-			if ( ! ( ( $_ = $local_dbh->prepare("DELETE FROM $table WHERE $where") ) and $_->execute( @$self{@identified_by} ) ) ) {
-				$where =~ s/\?/\%s/g;
-				$log->error("Error deleting: DELETE FROM $table WHERE " .  sprintf($where, map { defined $_ ? $_ : 'undef' } ( @$self{@identified_by}) ).'):' . $local_dbh->errstr);
-				$local_dbh->rollback();
-				sql::end_transaction( $local_dbh, $ac );
-				return $local_dbh->errstr;
-			} elsif ( $debug ) {
-				$log->debug("SQL succesful DELETE FROM $table WHERE $where");
+			if ( @identified_by ) {
+				my $where = join(' AND ', map { $$fields{$_}.'=?' } @identified_by );
+				if ( $debug ) {
+					$log->debug("DELETE FROM $table WHERE $where");
+				} # end if
+				
+				if ( ! ( ( $_ = $local_dbh->prepare("DELETE FROM $table WHERE $where") ) and $_->execute( @$self{@identified_by} ) ) ) {
+					$where =~ s/\?/\%s/g;
+					$log->error("Error deleting: DELETE FROM $table WHERE " .  sprintf($where, map { defined $_ ? $_ : 'undef' } ( @$self{@identified_by}) ).'):' . $local_dbh->errstr);
+					$local_dbh->rollback();
+					sql::end_transaction( $local_dbh, $ac );
+					return $local_dbh->errstr;
+				} elsif ( $debug ) {
+					$log->debug("SQL succesful DELETE FROM $table WHERE $where");
+				} # end if
 			} # end if
 			$insert = 1;
 		} else {
@@ -483,9 +488,9 @@ $log->debug("find_operators: field($field) type($type) op($operator) value($valu
 		return '('.$field.$type.' IS NULL OR '.$field.$type.' <= ?)', $value;
 	} elsif ( $operator eq 'null_or_>=' ) {
 		return '('.$field.$type.' IS NULL OR '.$field.$type.' >= ?)', $value;
-	} elsif ( $operator eq 'null_or_>' ) {
+	} elsif ( $operator eq 'null_or_>' or $operator eq 'is null or >' ) {
 		return '('.$field.$type.' IS NULL OR '.$field.$type.' > ?)', $value;
-	} elsif ( $operator eq 'null_or_<' ) {
+	} elsif ( $operator eq 'null_or_<' or $operator eq 'is null or <' ) {
 		return '('.$field.$type.' IS NULL OR '.$field.$type.' < ?)', $value;
 	} elsif ( $operator eq 'null_or_=' or $operator eq 'is null or =' ) {
 		return '('.$field.$type.' IS NULL OR '.$field.$type.' = ?)', $value;
@@ -708,7 +713,7 @@ $log->debug("Undefing $object_type $cache_field $$params{$cache_field}") if DEBU
 	if ( $$params{'order'} ) {
 		$sql .= " ORDER BY $$params{'order'}";
 	} # end if
-	if ( $$params{'group'} ) {
+	if ( $$params{'group by'} ) {
 		$sql .= " GROUP BY $$params{'group'}";
 	} # end if
 	if ( exists $$params{'limit'} ) {

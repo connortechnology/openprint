@@ -13,7 +13,7 @@
 ) ?>
 <? if ( @{$$variable{'RFIDScanners'}} ) ?>
 <form id="RFIDScannerResults" name="RFIDScannerResults" action="rfidscanners.html" method="post">
-	<table class="List">
+	<table class="List sortable">
 		<tr>
 			<th class="checkbox"><input type="checkbox" onclick="select_all( this.form, 'rfidscanners', this.checked );"/></th>
 			<th class="RFIDScanner">Name</th>

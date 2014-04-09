@@ -25,9 +25,9 @@ my $threading = 0;
 use constant DEBUG => 0;
 use constant DEBUG_PLATES => 0;
 use constant DEBUG_VERSIONS => 0;
-use constant DEBUG_FILTERING => 0;
+use constant DEBUG_FILTERING => 1;
 use constant DEBUG_INITIAL_FILTERING => 0;
-use constant DEBUG_PRICE_DECISIONS => 0;
+use constant DEBUG_PRICE_DECISIONS => 1;
 use constant DEBUG_INKS => 0;
 use constant DEBUG_STOCK => 0;
 use constant COMPARISON_LOG => 0;
@@ -109,6 +109,8 @@ my %variables = (
 	'Markup1' => ['save'], 'Markup2' => ['save'], 'Markup3' => ['save'],
 	'OverridePrice1' => ['save'], 'OverridePrice2' => ['save'], 'OverridePrice3' => ['save'],
 	'MPrice1' => ['save','output'], 'MPrice2' => ['save','output'], 'MPrice3' => ['save','output'],
+	SideOneColours		=>	 [],
+	SideTwoColours		=>	 [],
 	'chkCyanSideOne' => ['save'],
 	'chkMagentaSideOne' => ['save'],
 	'chkYellowSideOne'	=> ['save'],
@@ -195,8 +197,10 @@ my %variables = (
 	'BleedLeft' => ['save'], 'BleedRight' => ['save'], 'BleedTop' => ['save'], 'BleedBottom' => ['save'],
 	'rdbColourBar' => ['save','output'], 'txtCropMarkSpace' => ['save'],
 	'ddmStockQuality'	=>	['save'],
-	'ddmStockBrand' => ['save'], 'txtSpecificStockBrand' => ['save'], 'ddmStockFinish' => ['save'], 'txtSpecificStockFinish' => ['save'], 'ddmStockColour' => ['save'], 'txtSpecificStockColour' => ['save'],
-
+	'ddmStockGroup'	=>	['save'],
+	'ddmStockBrand' => ['save'], 'txtSpecificStockBrand' => ['save'], 
+	'ddmStockFinish' => ['save'], 'txtSpecificStockFinish' => ['save'], 
+	'ddmStockColour' => ['save'], 'txtSpecificStockColour' => ['save'],
 	'ddmStockWeight' => ['save'], 'txtSpecificStockWeight'=>['save'],
 	'txtSpecificStockCalliper' => ['save','output'], 'txtSpecificStockWidth' => ['save'], 'txtSpecificStockHeight' => ['save'], 'CustomSheetDoubleSided' => ['save'], 'CustomStockPrice' => ['save'],'txtCustomMWeight' => ['save'],'txtStockGSM' => ['save','output'],
 	'perfecting'=>['save'],
@@ -349,7 +353,7 @@ sub variables {
 } # end sub variables
 
 sub no_outputs {
-	my ( $project_index, $service_index, $specs, $signature ) = @_;
+	my ( $project_index, $service_index, $specs, $new_specs, $signature ) = @_;
 	my @v;
 	$signature = '' if ! $signature;
 	foreach my $k ( keys %variables ) {
@@ -426,16 +430,16 @@ sub setup_project {
 	my ( $Project, $service_index, $services, $specs, $side_one_colours, $side_two_colours, $inkCoverage, $Paper ) = @_;
 
 	my %project = (
-			'txtSpreadSize',	$$specs{'txtSpreadSize'},
-			'ComboItems',		$$specs{'txtPressSheetComboItems'},
-			'Add Grip Width',	$$specs{'GripWidth'},
-			'Add Grip Height',	$$specs{'GripHeight'},
-			'Add Colour Bar',	$$specs{'rdbColourBar'},
-			'image_width',		$$specs{'txtWidth'},
-			'image_height',		$$specs{'txtHeight'},
-			'BleedLocations',	join(',', @$specs{'BleedBottom','BleedTop','BleedLeft','BleedRight'}),
-			'Calliper',			$$specs{'txtSpecificStockCalliper'},
-			'CropMarkSpace',	$$specs{'txtCropMarkSpace'},
+			txtSpreadSize	=>	$$specs{'txtSpreadSize'},
+			ComboItems		=>	$$specs{'txtPressSheetComboItems'},
+			'Add Grip Width'=>	$$specs{'GripWidth'},
+			'Add Grip Height'=>	$$specs{'GripHeight'},
+			'Add Colour Bar'=>	$$specs{'rdbColourBar'},
+			'image_width'=>		$$specs{'txtWidth'},
+			'image_height'=>		$$specs{'txtHeight'},
+			'BleedLocations'=>	join(',', @$specs{'BleedBottom','BleedTop','BleedLeft','BleedRight'}),
+			'Calliper'=>			$$specs{'txtSpecificStockCalliper'},
+			'CropMarkSpace'=>	$$specs{'txtCropMarkSpace'},
 			);
 
     my $CoatingsCategory = openprint::ServiceCategory->find_one( name => 'Coating' );
@@ -505,7 +509,7 @@ $openprint::log->debug("$project{print_sides} : " . @{$project{side_one_colours}
 	} # end if
 	# Make sure all our colours are in the special colours hash
 	my $PMSInkMixService = openprint::Service->find_one(name=>'PMSInkMix');
-	foreach my $real_colour ( @filtered_colours ) {
+	foreach my $real_colour ( sort { $$a{name} cmp $$b{name} } @filtered_colours ) {
 		my $colour;
 		if ( $$real_colour{type} eq 'PMS' ) {
 			# Name is supposed to be the PMS #, so strip everything out.  casual quotes will use PMS 1,2,3 which are not actual PMS numbers
@@ -828,6 +832,7 @@ sub get_Stocks {
 			$variables{$k} = [ sets::exclude( ['output'], $variables{$k} ) ];
 		} # end foreach
 		if ( ( ! $$specs{'txtCustomMWeight'} and $Paper->gsm() ) ) {
+$log->debug("Calcing txtCustomMWeight");
 			$variables{'txtCustomMWeight'} = [ sets::union( 'output', @{$variables{'txtCustomMWeight'}} ) ];
 			$$specs{'txtCustomMWeight'} = $Paper->mweight();
 		} # end if
@@ -844,11 +849,16 @@ sub get_Stocks {
 		} # end if
 	} else {
 		$variables{'txtStockGSM'} = [ sets::union( 'output', @{$variables{'txtStockGSM'}} ) ];
+
 		my @StockOptions = misc::trim(split (',', $openprint::config{$Project->Type()->name().'StockOptions'} ));
 		@StockOptions = misc::trim(split (',', $openprint::config{'StockOptions'} )) if ! @StockOptions;
 		@StockOptions = ( 'Brand','Finish','Colour','Weight' ) if ! @StockOptions;
 
-		foreach my $option ( @StockOptions ) {
+		my @RequiredStockOptions = misc::trim(split (',', $openprint::config{$Project->Type()->name().'RequiredStockOptions'} ));
+		@RequiredStockOptions = misc::trim(split (',', $openprint::config{'RequiredStockOptions'} )) if ! @RequiredStockOptions;
+		@RequiredStockOptions = @StockOptions if ! @RequiredStockOptions;
+
+		foreach my $option ( @RequiredStockOptions ) {
 			if ( ! $$specs{'ddmStock'.$option} ) {
 				$$specs{'alert'} .= 'Please select a stock ' . lc $option .'.';
 				return @Papers;
@@ -860,6 +870,7 @@ sub get_Stocks {
 			@$specs{'ddmStockWidth','ddmStockHeight'} = $$specs{'ddmStockSize'} =~ /^([\d\.]+)"?\s*x?\s*([\d\.]+)?"?\s*$/;
 		}
 		@Papers = openprint::Paper->find( 
+				( exists $$specs{'ddmStockGroup'} ? ( group=> $$specs{'ddmStockGroup'} ) : () ),
 				( exists $$specs{'ddmStockBrand'} ? ( 'brand'=> $$specs{'ddmStockBrand'} ) : () ),
 				( exists $$specs{'ddmStockFinish'} ? ( 'finish'=>$$specs{'ddmStockFinish'} ) : () ),
 				( exists $$specs{'ddmStockColour'} ? ( 'colour'=>$$specs{'ddmStockColour'} ) : () ),
@@ -2721,10 +2732,10 @@ sub calculate_impositions {
 			$$project{'txtSpreadSize'} = 4;
 		} # end if
 		if ( $$sig_specs{'chkOverridePageQuantity'.$qty_index} eq 'Y' ) {
-			$SpreadLayout = $$sig_specs{'PageQuantity'.$qty_index} / $$project{'txtSpreadSize'};
+			$SpreadLayout = int( $$sig_specs{'PageQuantity'.$qty_index} / $$project{'txtSpreadSize'} );
 			$log->debug("Calcing SpreadLayout as overriden upq: $$sig_specs{'PageQuantity'.$qty_index} / spreadsize:$$project{'txtSpreadSize'} = layout$SpreadLayout");
 		} else {
-			$SpreadLayout = $$sig_specs{'txtUnspecifiedPageQuantity'.$qty_index} / $$project{'txtSpreadSize'};
+			$SpreadLayout = int( $$sig_specs{'txtUnspecifiedPageQuantity'.$qty_index} / $$project{txtSpreadSize} );
 			$log->debug("Calcing SpreadLayout as upq: $$sig_specs{'txtUnspecifiedPageQuantity'.$qty_index} / spreadsize:$$project{'txtSpreadSize'} = layout$SpreadLayout") if DEBUG_FILTERING;
 		} # end if
 	} # end if
@@ -3815,7 +3826,7 @@ $$new_specs{"OverrideStockHeight$qty_index"} = $Paper->height();
 						} else {
 							my $price_cache_key = join(',', keys %PaperCounts, $qty_index, $$Press{strid}, $$price{upq}, $$imp{runstyle}, $$Paper{type}, $$Paper{width} );
 							#my $price_cache_key = join(',', keys %PaperCounts, $qty_index, $$Press{strid}, $$price{upq}, $$imp{runstyle}, $$Paper{type}, $$Paper{width},$$Paper{height} );
-
+$imp->display("Recursing");
 							if ( ! $price_cache{$price_cache_key} ) {
 								my @new_possible_presses;
 								foreach my $p ( @$possible_presses ) {
@@ -4050,6 +4061,12 @@ $openprint::log->debug("Sheet No supplied wight: $supplied_sheets $paper_string 
 
 					$$paper_price{'Total'} = Math::Round::nearest( 0.01, $$paper_price{'100lb Price'} * $supplied_weight / 100 );
 					$$price{'Comparison Cost'} += $$paper_price{'Total'};
+					if ( $$Paper{available_to_order} > 1 ) {
+						if ( $$Paper{available_to_order} < ( $$Paper{type} eq 'Sheet' ? $supplied_sheets : $supplied_weight ) ) {
+							$$price{'Paper Breakdown'} .= $Supplied->to_string() . ' does not have enough available. Only ' . $$Paper{available_to_order} . $Paper->units() . ' left.<br/>';
+							$$price{'Comparison Cost'} += 1000000;
+						} # end if
+					} # end if
 					$$price{'Stock Total'} += $$paper_price{'Total'};
 					$openprint::log->error('No factor') if ! $Paper->factor();
 					$openprint::log->error('No width' . $Paper->to_string() ) if ! $Paper->width();
@@ -4242,10 +4259,10 @@ $openprint::log->warn("Unable to calculate impositions for additional signatures
 $openprint::log->warn("Unable to calculate impositions for additional signatures.<br/>");
 						} # end if
 					} else {
-						$openprint::log->error("Unable to find stocks for group 2 alert( $subsig_specs{alert} )");
-						foreach my $k ( keys %subsig_specs ) {
-							$openprint::log->error("$k => $subsig_specs{$k}");
-						} # end if
+						$openprint::log->debug("Unable to find stocks for group 2 alert( $subsig_specs{alert} )");
+						#foreach my $k ( keys %subsig_specs ) {
+							#$openprint::log->error("$k => $subsig_specs{$k}");
+						#} # end if
 					} # end if Has Stocks
 				} else {
 					$openprint::log->debug("No sigs for group 2?");
@@ -5621,14 +5638,14 @@ sub get_run_price {
 				$run_price{'units'} = $RunPrice{'units'};
 				$running_price = $RunPrice{'Price'} * $full_runs;
 			} # end if
-#$log->debug("**** RUN PRICE 2 : $running_price **") if DEBUG;
+$log->debug("**** RUN PRICE 2 : $running_price ** side1 colours: $side_one_colours") if DEBUG;
 
 			my $mod_colours = $side_one_colours % $max_colours;
 			if ( $mod_colours ) {
 				my %RunPrice = openprint::service::get_price_object( $mod_colours.$impression_service, $impressions, $Press );
 				$running_price += $RunPrice{'Price'};
 				$run_price{'units'} = $RunPrice{'units'} if ! $run_price{'units'};
-#$log->debug("**** RUN PRICE 3 : $running_price **") if DEBUG;
+$log->debug("**** RUN PRICE 3 : $running_price **") if DEBUG;
 			} # end if
 		} # end if
 #$log->debug(" ** SIDE ONE RUNNING PRICE $running_price **");

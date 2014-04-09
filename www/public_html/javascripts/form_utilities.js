@@ -1452,8 +1452,9 @@ function integerize(e) {
 	return e.value;
 }
 function floatize(e) {
-	if ( e.value.match(/[^\d\-\.%\*]/) )
+	if ( e.value.match(/[^\d\-\.%\*]/) ) {
 		e.value = parseFloat(e.value.replace(/[^\d\-\.%\*]/g,''));
+	} 
 	if ( e.value == 'NaN' )
 		e.value = '';
 	return e.value;

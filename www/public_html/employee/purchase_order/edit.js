@@ -43,11 +43,13 @@ function calc_price( element ) {
 	var matches = re.exec( element.name );
 	if ( matches ) {
 		var index = matches[2];
-		$('price-'+index).value = $('price-'+index).value.replace(/[^\d\-\.]/g, '' );
+		floatize( $('price-'+index) );
+		//$('price-'+index).value = $('price-'+index).value.replace(/[^\d\-\.]/g, '' );
 		re =  /^\s*(\+|-)?((\d+(\.\d+)?)|(\.\d+))\s*$/;
 		if ( ! re.test($('price-'+index).value) ) { $('price-'+index+'-alert').innerHTML = 'Not a valid price!';
 		} else { $('price-'+index+'-alert').innerHTML = ''; }
-		$('qty-'+index).value = $('qty-'+index).value.replace(/[^\d\-\.]/g, '' );
+	
+		floatize( $('qty-'+index) );
 		var cost = parseFloat( $('price-'+index).value );
 		var qty = parseFloat( $('qty-'+index).value );
 		var type = get_value( $('type-'+index) );
@@ -56,13 +58,14 @@ function calc_price( element ) {
 		} else if ( type == 'Sheet Stock' ) {
 			var mweight = parseFloat( $('mweight-'+index).value.replace(/[^\d\-\.]/g, '' ) );
 			var sheets_in_100lbs = 1000 / ( mweight / 100 );
-			$('mprice-'+index).value = do_decimals( cost * ( 1000 / sheets_in_100lbs ), 2 );
+			$('mprice-'+index).value = do_decimals( cost * mweight / 100 );
+//( 1000 / sheets_in_100lbs ), 2 );
 			qty = qty * mweight / 100000;
 		} // end if
-		var mprice_element = $('mprice-'+index);
-		if ( mprice_element ) {
-			mprice_element.value = do_decimals( 1000 * cost / qty, 2 );
-		} // end if
+		//var mprice_element = $('mprice-'+index);
+		//if ( mprice_element ) {
+			//mprice_element.value = do_decimals( 1000 * cost / qty, 2 );
+		//} // end if
 		$('total-'+index).value = do_decimals( cost * qty, 2 );
 	} // end if
 	update_totals( element.form );

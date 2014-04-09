@@ -81,7 +81,24 @@ my @no_outputs = (
 );
 
 sub no_outputs {
-return @no_outputs;
+	my ( $p_id, $s_id, $outgoing_specs, $incoming_specs ) = @_;
+	my @v = @no_outputs;
+
+	my $Project = new openprint::Project( $p_id );
+    foreach my $s_s_id ( $Project->signatures() ) {
+        my $sig_specs = openprint::service::get_specs_ref( $Project, $s_s_id );
+		foreach my $qty_index ( $Project->quantity_indexes() ) {
+			if ( $$outgoing_specs{"chkOverrideFold-$$sig_specs{'SignatureIndex'}-$qty_index"} eq 'Y' ) {
+				foreach my $fold_index ( 1 .. 4 ) {
+					
+					if ( $$incoming_specs{"FoldRunspeed-$$sig_specs{'SignatureIndex'}-$qty_index-$fold_index"} ) {
+						push @v, "FoldRunspeed-$$sig_specs{'SignatureIndex'}-$qty_index-$fold_index";
+					} # end if
+				} # end foraech fold
+			} # end if override
+		} # end foreach qty
+	} # end foreach sig
+	return @v;
 } # end sub outputs
 sub outputs {
 } # end sub outputs
@@ -96,6 +113,10 @@ sub outputs {
 	'5PanelZFold',
 	'6PanelFold',
 	'6PanelZFold',
+	'7PanelFold',
+	'7PanelZFold',
+	'8PanelFold',
+	'8PanelZFold',
 	'SingleGateFold',
 	'DoubleGateFold',
 	'4PageFold',
@@ -140,6 +161,10 @@ sub outputs {
 	'5PanelZFold', '5 Panel Z Fold',
 	'6PanelFold', '6 Panel Fold',
 	'6PanelZFold', '6 Panel Z Fold',
+	'7PanelFold', '7 Panel Fold',
+	'7PanelZFold', '7 Panel Z Fold',
+	'8PanelFold', '8 Panel Fold',
+	'8PanelZFold', '8 Panel Z Fold',
 	'SingleGateFold', 'Single Gate Fold',
 	'DoubleGateFold', 'Double Gate Fold',
 	'4PageFold', '4 Page Fold',
@@ -202,7 +227,8 @@ sub signature_needs {
 		return 0;
 	} # end if
 
-	if ( $$services{''} ) {
+	if ( 0 and $$services{''} ) {
+		# Turn this off... Unbound defaults to a spreadsize of 4, so unbound should still mean folding
 		my $printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
 		if ( $$printing_specs{rdbTemplateType} eq 'Unbound' ) {
 			$openprint::log->debug("Folding::signature_needs: Unbound") if DEBUG_NEEDS;
@@ -216,7 +242,6 @@ sub signature_needs {
 	} else {
 		$openprint::log->warn("FOLDING NEEDED $$specs{'rdbTemplateType'} $fold_types{$$specs{'rdbTemplateType'}}!") if DEBUG_NEEDS;
 	} # end if
-
 
 	if ( $$specs{'txtSignatureType'} ) {
 		if ( $$specs{'txtSpreadSize'} == 1 ) {
@@ -267,7 +292,8 @@ sub neccessary {
 		$openprint::log->debug(" ** Project is marked as No bindery, Folding not needed ! ** ");
 		return 0;
 	} # end if
-	if ( $$services{''} ) {
+	if ( 0 and $$services{''} ) {
+		# Turn this off... Unbound defaults to a spreadsize of 4, so unbound should still mean folding
 		my $printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
 		return 0 if $$printing_specs{rdbTemplateType} eq 'Unbound';
 	} # end if
@@ -904,7 +930,9 @@ $openprint::log->debug("Has a fold, doing extra checks") if DEBUG;
 								# If it has been cut, assume cut to layout size
 
 								my $width_size = $$SignatureImposition{columns} != $$Imposition{columns} ? $Imposition->layout_width() : $Imposition->sheet_width();
+								$width_size = $Imposition->object_width() if $$Imposition{imposition} == 1;
 								my $height_size = $$SignatureImposition{rows} != $$Imposition{rows} ? $Imposition->layout_height() : $Imposition->sheet_height();
+								$height_size = $Imposition->object_height() if $$Imposition{imposition} == 1;
 
 								if ( $orientation ) {
 									if (						
@@ -926,12 +954,12 @@ $openprint::log->debug("Has a fold, doing extra checks") if DEBUG;
 									$openprint::log->debug("Has max feed width width folds: $width_folds height folds: $height_folds $$sig_specs{'txtWidth'} $$sig_specs{'txtHeight'} width_size: $width_size height_size: $height_size max_feed_width: $max_feed_width") if DEBUG;
 									if ( ( $width_folds and ! $height_folds ) or ( $width_folds == $$Fold{folds} and $height_folds == $$Fold{angles} ) ) {
 # If folds are on width, we grip on height...
-										if ( $width_size >= $max_feed_width ) {
+										if ( $width_size > $max_feed_width ) {
 											$openprint::log->debug("Fold no good due to max feed width $width_size > $max_feed_width on width ($$sig_specs{'txtHeight'}).") if DEBUG;
 											$Fold = undef;
 										} # end if
 									} elsif ( ( $height_folds and ! $width_folds ) or ( $height_folds == $$Fold{'folds'} and $height_folds == $$Fold{'angles'} ) ) {
-										if ( $height_size >= $max_feed_width ) {
+										if ( $height_size > $max_feed_width ) {
 											$Fold = undef;
 											$openprint::log->debug("Fold no good due to max feed width $height_size > $max_feed_width on height ($$sig_specs{txtWidth}.") if DEBUG;
 										} # end if
@@ -1034,7 +1062,7 @@ $openprint::log->debug("No Fold") if DEBUG;
 								$Fold = $Fold->clone();
 								$Fold->Imposition( $Imposition );
 
-								push @{$folds{$Fold->pages().'PageFold-'.$$Imposition{imposition}.'out'}}, $Fold;
+								push @{$folds{$Fold->type().'-'.$$Imposition{imposition}.'out'}}, $Fold;
 								$openprint::log->debug(sprintf('Found: %dx%d %s,%dout', $Imposition->page_columns(), $Imposition->page_rows(),$Imposition->image_orientation(), $Imposition->imposition()) ) if DEBUG;
 								next;
 							} elsif( @my_equipment == 1 ) {
@@ -1315,13 +1343,13 @@ $openprint::log->debug("Folds: $set_index : $key " . $impo_qty );
 				} # end if
 
 # In hours
-				my $runspeed = $Fold->runspeed($$Paper{'gsm'});
+				my $runspeed = int($Fold->runspeed($$Paper{gsm}));
 				my $runTime; 
 				if ( ! $runspeed ) {
 					$Breakdown .= "No runspeed for $fold_type(".$$Fold{name}.") on " . $$Equipment{name} .' Setting to 1/Hr.<br/>';
 					$runspeed = 1;
 				} else {
-					$runTime = Math::Round::nearest( 0.0001, $run_qty / $runspeed ); # in hours
+					$runTime = Math::Round::nearest( 0.0001, $run_qty / $runspeed ) if $runspeed; # in hours
 					$Breakdown .= sprintf('Runspeed: %d @ %d/HR = %d:%d:%d<br/>', $run_qty, $runspeed, misc::seconds_to_interval( int( 3600*$runTime ) ) );
 				} # end if
 $openprint::log->debug("Runspeed: $fold_type(".$Fold->name().") : " . $Equipment->name() . ' ' . $runspeed .' ' . $Paper->gsm() ) if DEBUG;
@@ -1602,6 +1630,8 @@ sub calc {
 			$$specs{'hdnBreakdown'.$qty_index} .= "<fieldset><legend>Signature: $$sig_specs{SignatureIndex} $$sig_specs{'txtSignatureType'} Ref: $$sig_specs{'txtServiceDescription'}:</legend>";
 			$$specs{'hdnBreakdown'.$qty_index} .= openprint::service::summary( $Project, $signature_service_index ) . '<br/>';
 			$$specs{'hdnBreakdown'.$qty_index} .= openprint::service::summary( $Project, $signature_service_index, $qty_index ) . '<br/>';
+			my $Paper = openprint::Paper::load_from_signature( $Project, $sig_specs, $qty_index );
+			$$specs{'hdnBreakdown'.$qty_index} .= 'Stock: ' . $Paper->to_string() . '<br/>';
 
 			$$sig_specs{'PreviousImposition'} = $previous_imposition;
 

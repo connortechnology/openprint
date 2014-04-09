@@ -175,6 +175,7 @@ $log->debug("after continue $$variable{ExternalRedirect}");
 				return if $$variable{ExternalRedirect};
 			} elsif ( $openprint::param{'btnFunction'} eq 'Reuse Project' ) {
 				$project_index = openprint::print_project::reuse_project( $project_index );
+				$Project = new openprint::Project( $project_index );
 			} # end if
 			if ( ! $$variable{Redirect} ) {
 				$Project->update_status();

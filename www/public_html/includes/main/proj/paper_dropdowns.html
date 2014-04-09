@@ -1,4 +1,7 @@
 <div class="Stock">
+<? if ( sets::isin( $session{user_type}, ['A'] ) ) ?>
+	<?echo( button( 'StockList', { onclick=>qq`popup_window('_stock_popup.html', getValues( 'f1', [ 'ProjectIndex', 'ddmStockQuality','ddmStockGroup','ddmStockBrand','ddmStockFinish','ddmStockColour','ddmStockWeight' ] ), { width: 1024 } );`, text=>'List Stocks' } ); ) ?>
+<? endif ( sets::isin( $session{user_type}, ['A'] ) ) ?>
 	<fieldset><legend>Stock</legend>
 		<? if ( $$variable{'Mode'} ne 'Easy' ) ?>
 		<ul>
@@ -159,8 +162,20 @@
 		} # end if
 		$$variable{'ddmStock'.$option.$$variable{Signature}} = $options[0] if @options == 2;
 
+		my $Service = $$variable{Project}->Service( $$variable{ServiceIndex} );
+		my $ServiceType = $Service->ServiceType();
+
+		if ( $$variable{'ddmStock'.$option.$$variable{Signature}} eq '' ) {
+			# This sets a default when the default is new and the project is old
+			if ( my $Default =  openprint::ServiceType_Default->find_one( projecttype_id=>$$variable{ProjectType}->id(), servicetype_id=>$ServiceType->id(), name=>'ddmStock'.$option ) ) {
+				$$variable{'ddmStock'.$option.$$variable{Signature}} = $Default->value();
+			} elsif ( my $Default =  openprint::ServiceType_Default->find_one( projecttype_id=>undef, servicetype_id=>$ServiceType->id(), name=>'ddmStock'.$option ) ) {
+				$$variable{'ddmStock'.$option.$$variable{Signature}} = $Default->value();
+			} # end if
+		} # end if
+
 		if ( $$variable{'ddmStock'.$option.$$variable{Signature}} and $cache{$option.$$variable{'ddmStock'.$option.$$variable{Signature}}} ) {
-			$find{$lc_option.'_id'} = $cache{$option.$$variable{'ddmStock'.$option.$$variable{Signature}}}->id() 
+			$find{$lc_option.'_id'} = $cache{$option.$$variable{'ddmStock'.$option.$$variable{Signature}}}->id();
 		} # end if
 		$html .= sprintf(q`<li><label>Stock %1$s</label>
 				<select name="ddmStock%1$s%2$s" size="1" onchange="Stock_onchange( this, '%2$s' );">
@@ -169,7 +184,7 @@
 				</select>
 			</li>
 			`, $option, $$variable{Signature}, 
-			make_drop_down( \@options, $$variable{'ddmStock'.$option.$$variable{Signature}} ),
+			make_drop_down( \@options, $$variable{'ddmStock'.$option.$$variable{Signature}}, { encode=>1 } ),
 		);
 	} # end foreach option
 	return $html;
