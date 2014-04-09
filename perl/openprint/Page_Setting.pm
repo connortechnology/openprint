@@ -4,7 +4,7 @@ our @ISA = qw(openprint::Object);
 
 use vars qw( $debug $serial $table %fields %transforms %defaults );
 
-$debug = 0;
+$debug = 1;
 $table = 'page_settings';
 $serial = 'page_settings_id_seq';
 %fields = (
@@ -26,6 +26,7 @@ $serial = 'page_settings_id_seq';
 );
 
 sub can_view {
+	return 1 if $_[0]{user_ids} and sets::isin( $openprint::session{user_id}, $_[0]{user_ids} );
 	if ( $openprint::session{user_type} eq 'A' ) {
 		return 1;
 	} elsif ( $openprint::session{user_type} eq 'E' ) {
@@ -35,7 +36,6 @@ sub can_view {
 		return 0 if $_[0]{user_level} eq 'A' or $_[0]{user_level} eq 'E';
 		return 1;
 	} 
-	return 1 if $_[0]{user_ids} and sets::isin( $openprint::session{user_id}, $_[0]{user_ids} );
 	return 0 if $_[0]{user_level};
 	return 1; 
 } # end sub can_view
