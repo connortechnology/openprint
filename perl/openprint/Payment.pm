@@ -91,16 +91,16 @@ sub send_receipt {
 	$data{Payment} = $self;
 	$data{uri} = 'payment';
 	$data{User} = new openprint::User($openprint::session{user_id});
-	my $email_template = misc::load_file( $openprint::log, $openprint::config{'SkinPath'}.'/email_template.html' );
+	my $email_template = ssi::slurp_content( '/email_template.html' );
 	my @attachments;
 	$data{'ReplacementText'} = ssi::include( '/email_content/payment_receipt.html', \%data );
 
 	my $Email = new openprint::Email();
 	$Email->html_body( ssi::variable_substitution( \$email_template, \%data ) );
 	my $results = $Email->send(
-		#BCC			=>	new openprint::User( $openprint::session{'user_id'} ),
-		TO			=>	new openprint::User( $openprint::session{'user_id'} ),
-		#TO			=>	[map { $_->User() } $self->Payor()->AccountingContacts()],
+		#TO			=>	new openprint::User( $openprint::session{'user_id'} ),
+		TO			=>	[map { $_->User() } $self->Payor()->AccountingContacts()],
+		BCC			=>	new openprint::User( $openprint::session{'user_id'} ),
 		FROM		=>	$data{User},
 		#'ATTACHMENTS'	=>	\@attachments,
 		SUBJECT		=>	'Thank you for your payment!',
@@ -118,6 +118,13 @@ sub save {
 	} # end if
 	return $error;
 } # end sub save
+
+sub Invoices {
+	if ( ! exists $_[0]{Invoices} ) {
+		$_[0]{Invoices} = [ openprint::Invoice_Payment->find( payment_id=>$_[0]{id}, order=>'invoice_id' ) ];
+	} # end if
+	return @{$_[0]{Invoices}};
+} # end sub Invoices
 
 1;
 __END__
