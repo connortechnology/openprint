@@ -14,13 +14,15 @@ $serial = 'page_settings_id_seq';
 	cacheable	=>	'cacheable',
 	keywords	=>	'keywords',
 	description	=>	'description',
+	user_ids	=>	'user_ids',
 );
 %transforms = (
 	url	=>	[ 's/\/+$//g' ],
 );
 %defaults = (
 	user_level	=>	undef,
-	cacheable		=>	undef,
+	cacheable	=>	undef,
+	user_ids	=>	'[]',
 );
 
 sub can_view {
@@ -33,9 +35,19 @@ sub can_view {
 		return 0 if $_[0]{user_level} eq 'A' or $_[0]{user_level} eq 'E';
 		return 1;
 	} 
+	return 1 if $_[0]{user_ids} and sets::isin( $openprint::session{user_id}, $_[0]{user_ids} );
 	return 0 if $_[0]{user_level};
 	return 1; 
 } # end sub can_view
+
+sub Users {
+	if ( ! exists $_[0]{Users} ) {
+	require openprint::User;
+		$_[0]{Users} = [ openprint::User->find( id=>$_[0]{user_ids}, order=>'lower(firstname),lower(lastname)' ) ] if $_[0]{user_ids} and @{$_[0]{user_ids}};
+	} 
+	return @{$_[0]{Users}} if $_[0]{Users};
+	return ();
+} 
 
 1;
 __END__

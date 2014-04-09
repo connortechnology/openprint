@@ -532,18 +532,6 @@ if ( ! sets::isin( 'bookmarks', \@tables ) ) {
 if ( ! $config{'public_URIs'} ) {
 $dbh->do(q`insert into Configuration values ('public_URIs', '/,/index.html,/account/login.html,/account/registration.html', 'text', 'Comma separated list of pages on the site that can be read without logging in','Miscellaneous Settings' );` );
 } # end if
-if ( ! sets::isin( 'page_settings', \@tables ) ) {
-    $dbh->do( misc::load_file( $log, '../openprint/sql/Page_Settings.sql' ) );
-    die $dbh->errstr() if $dbh->errstr();
-} else {
-	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='page_settings'", 'column_name');
-	if ( ! exists $$data{'keywords'} ) {
-		$dbh->do('ALTER TABLE page_settings add keywords TEXT');
-	} # end if
-	if ( ! exists $$data{'description'} ) {
-		$dbh->do('ALTER TABLE page_settings add description TEXT');
-	} # end if
-}
 
 if ( ! sets::isin( 'opinion_types', \@tables ) ) {
     $dbh->do( misc::load_file( $log, '../openprint/sql/Opinion_Types.sql' ) );

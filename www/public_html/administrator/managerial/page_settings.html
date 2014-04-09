@@ -6,6 +6,7 @@
 				<th class="url">URL</th>
 				<th class="cacheable">Cacheable</th>
 				<th class="user_level">User Level</th>
+				<th class="users">Users</th>
 			</tr>
 		<? echo ( 
 			my $html;
@@ -17,6 +18,7 @@
 						<td class="url"><input type="text" name="url-%2$s" value="%3$s"/></td>
 						<td class="cacheable"><select name="cacheable-%2$s">%4$s</select></td>
 						<td class="user_level"><select name="user_level-%2$s">%5$s</select></td>
+						<td class="users" rowspan="3">%8$s</td>
 					</tr><tr%1$s>
 						<td colspan="3" class="keywords">Keywords:<input type="text" name="keywords-%2$s" value="%6$s"/></td>
 					</tr><tr%1$s>
@@ -28,6 +30,7 @@
 					make_drop_down( \@user_types, $PS->user_level() ),
 					html_escape( $PS->keywords() ),
 					html_escape( $PS->description() ),
+					join('<br/>', map { $_->name() } $PS->Users() ),
 				);
 				$rowclass = $rowclass ? '' : ' class="colRow"';
 			} # end foreach
