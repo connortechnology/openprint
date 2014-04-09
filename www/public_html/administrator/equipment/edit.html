@@ -275,6 +275,7 @@ function filter_onChange( element, id, selected ) {
 				<option value="">select</option>
 				<option value="all">All</option>
 <? echo ( 
+	return make_drop_down( [ map { $_, $openprint::Estimating::Folding::fold_types{$_} } sort keys %openprint::Estimating::Folding::fold_types ] );
 	my %types;
 	foreach ( openprint::Fold->find( equipment_id=>$$variable{Equipment}->id()) ) {
 		$types{$_->type()} = $openprint::Estimating::Folding::fold_types{$_->type()};

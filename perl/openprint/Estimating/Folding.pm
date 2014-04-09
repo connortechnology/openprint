@@ -113,6 +113,10 @@ sub outputs {
 	'5PanelZFold',
 	'6PanelFold',
 	'6PanelZFold',
+	'7PanelFold',
+	'7PanelZFold',
+	'8PanelFold',
+	'8PanelZFold',
 	'SingleGateFold',
 	'DoubleGateFold',
 	'4PageFold',
@@ -157,6 +161,10 @@ sub outputs {
 	'5PanelZFold', '5 Panel Z Fold',
 	'6PanelFold', '6 Panel Fold',
 	'6PanelZFold', '6 Panel Z Fold',
+	'7PanelFold', '7 Panel Fold',
+	'7PanelZFold', '7 Panel Z Fold',
+	'8PanelFold', '8 Panel Fold',
+	'8PanelZFold', '8 Panel Z Fold',
 	'SingleGateFold', 'Single Gate Fold',
 	'DoubleGateFold', 'Double Gate Fold',
 	'4PageFold', '4 Page Fold',
@@ -284,7 +292,8 @@ sub neccessary {
 		$openprint::log->debug(" ** Project is marked as No bindery, Folding not needed ! ** ");
 		return 0;
 	} # end if
-	if ( $$services{''} ) {
+	if ( 0 and $$services{''} ) {
+		# Turn this off... Unbound defaults to a spreadsize of 4, so unbound should still mean folding
 		my $printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
 		return 0 if $$printing_specs{rdbTemplateType} eq 'Unbound';
 	} # end if
@@ -1053,7 +1062,7 @@ $openprint::log->debug("No Fold") if DEBUG;
 								$Fold = $Fold->clone();
 								$Fold->Imposition( $Imposition );
 
-								push @{$folds{$Fold->pages().'PageFold-'.$$Imposition{imposition}.'out'}}, $Fold;
+								push @{$folds{$Fold->type().'-'.$$Imposition{imposition}.'out'}}, $Fold;
 								$openprint::log->debug(sprintf('Found: %dx%d %s,%dout', $Imposition->page_columns(), $Imposition->page_rows(),$Imposition->image_orientation(), $Imposition->imposition()) ) if DEBUG;
 								next;
 							} elsif( @my_equipment == 1 ) {
