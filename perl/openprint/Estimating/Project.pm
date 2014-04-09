@@ -123,11 +123,11 @@ $openprint::log->debug("In Project::calc");
 			openprint::service::insert_service_spec( $log, $dbh, $$Project{'id'}, $sid, 'colour', $$specs{'colour'} );
 			openprint::service::insert_service_spec( $log, $dbh, $$Project{'id'}, $sid, 'SetsOfNumbers', $$specs{'SetsOfNumbers'} );
 		} # end foreach
-	} else {
-		foreach ( @{$$services{'Numbering'}} ) {
-			openprint::print_project::delete_service( $$Project{'id'}, $_ );
+	} elsif ( $$services{Numbering} ) {
+		foreach ( @{$$services{Numbering}} ) {
+			openprint::print_project::delete_service( $$Project{id}, $_ );
 		} # end foreach
-		delete $$services{'Numbering'};
+		delete $$services{Numbering};
 	} # end if
 	if ( $$specs{'hemmed'} eq 'Y' ) {
 		if ( ! $$services{'Sewing'} ) {
@@ -141,9 +141,9 @@ $openprint::log->debug("In Project::calc");
 			openprint::service::insert_service_spec( $log, $dbh, $$Project{'id'}, $sid, 'EdgeTop', $$specs{'EdgeTop'} );
 			openprint::service::insert_service_spec( $log, $dbh, $$Project{'id'}, $sid, 'EdgeBottom', $$specs{'EdgeBottom'} );
 		} # end foreach
-	} else {
-		map { openprint::print_project::delete_service( $$Project{'id'}, $_ ); } @{$$services{'Sewing'}};
-		delete $$services{'Sewing'};
+	} elsif ( $$services{Sewing} ) {
+		map { openprint::print_project::delete_service( $$Project{id}, $_ ); } @{$$services{Sewing}};
+		delete $$services{Sewing};
 	} # end if
 
 	if ( ! sets::isin( $$specs{'Dimensions'}, ['', 'Custom'] ) ) {
@@ -744,7 +744,7 @@ $log->debug("Presentation folder sizes $$specs{'chkPocketLeft'} $$specs{'chkPock
 			push @{$$services{'ShrinkWrap'}}, $Project->add_service( 'ShrinkWrap' );
 		} # end if
 		openprint::service::insert_service_spec( $log, $dbh, $$Project{'id'}, $$services{'ShrinkWrap'}[0], 'txtItemsPerPackage', $$specs{'txtItemsPerShrinkWrap'} );
-	} else {
+	} elsif ( $$services{'ShrinkWrap'} ) {
 		foreach ( @{$$services{'ShrinkWrap'}} ) {
 			openprint::print_project::delete_service( $$Project{'id'}, $_ );
 		} # end foreach
@@ -755,10 +755,11 @@ $log->debug("Presentation folder sizes $$specs{'chkPocketLeft'} $$specs{'chkPock
 			push @{$$services{'Bundling'}}, $Project->add_service( 'Bundling' );
 		} # end if
 		openprint::service::insert_service_spec( $log, $dbh, $$Project{'id'}, $$services{'Bundling'}[0], 'txtItemsPerPackage', $$specs{'txtItemsPerBundle'} );
-	} else {
-		foreach ( @{$$services{'Bundling'}} ) {
-			openprint::print_project::delete_service( $$Project{'id'}, $_ );
+	} elsif ( $$services{Bundling} ) {
+		foreach ( @{$$services{Bundling}} ) {
+			openprint::print_project::delete_service( $$Project{id}, $_ );
 		} # end foreach
+		delete $$services{Bundling};
 	} # end if
 
 	if ( $$specs{'LaminationType'} or $$specs{LaminationTypeFront} or $$specs{LaminationTypeBack} ) {
