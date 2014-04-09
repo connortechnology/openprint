@@ -26,7 +26,7 @@ require openprint::Estimating::MultiPage;
 require openprint::service;
 require openprint::Project_Log;
 
-$debug = 1;
+$debug = 0;
 
 $table = 'projects';
 $serial = 'lngProjectIndex_seq';
@@ -600,7 +600,7 @@ sub save {
 	# I'm not sure we should be doing this.
 	if ( (!$rc) and $$self{'order_id'} ) {
 		my $OP = $self->Ordered_Project();
-		if ( ! $OP ) {
+		if ( ! $$OP{order_id} ) {
 			$log->error("Project $$self{id} has order_id $$self{order_id} but no OrderedProject");
 		} else {
 			$OP->save();
@@ -1134,7 +1134,7 @@ sub copy_signature {
 	my $new_specs = openprint::service::get_specs_ref( $self, $new_service_index );
 
 	my $ac = sql::start_transaction( $dbh );
-	foreach my $key ( openprint::Estimating::Printing::variables( $$self{'id'} ) ) {
+	foreach my $key ( openprint::Estimating::Printing::variables( $$self{id}, $new_service_index, $new_specs, $sig_specs ) ) {
 		next if $key eq 'SignatureIndex';
 		if ( exists $$data{$key} ) {
 			openprint::service::insert_service_spec( $log, $dbh, $self->id(), $new_service_index, $key, $$data{$key}, ! exists $$new_specs{$key} );
@@ -1632,7 +1632,7 @@ sub link_to {
 } # end sub link_to
 
 sub lock {
-		my ( $caller, undef, $line ) = caller;
+	my ( $caller, undef, $line ) = caller;
 	if ( $_[0]{ac} ) {
 		#already locked
 		$openprint::log->debug("ALREADY LOCKED Projects for project $_[0]{id} ac: $_[0]{ac} caller: $caller line: $line project ref:" . $_[0]);
@@ -1649,6 +1649,9 @@ sub lock {
 sub unlock {
 	my ( $caller, undef, $line ) = caller;
 	$openprint::log->debug("UNLOCKING Projects for project $_[0]{id} ac: $_[0]{ac} caller: $caller line: $line" . $_[0]);
+	if ( ! exists $_[0]{ac} ) {
+		$_[0]{ac} = $openprint::dbh->{AutoCommit};
+	} # end if
 	if ( ! $_[0]{ac} ) {
 		$openprint::log->debug("unlock with no AC!");
 		return;

@@ -173,9 +173,10 @@ sub insert_service_spec {
 		%{$specs_cache{$service_index}} = sql::execute( $log, $dbh, 
 				'SELECT strName, strValue FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND lngServiceIndex=?', $project_index, $service_index );
 	} # end if
-	if ( $specs_cache{$service_index}{$name} eq $value ) {
+	if ( defined $specs_cache{$service_index}{$name} and defined $value and $specs_cache{$service_index}{$name} eq $value ) {
 		$log->debug("insert_service_spec: return because no change in value: ($name)($value)") if DEBUG;
 		return;
+
 	} # end if
 
 	#if ( exists $specs_cache{$service_index}{$name} ) {
