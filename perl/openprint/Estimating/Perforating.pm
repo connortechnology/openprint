@@ -310,6 +310,8 @@ sub signature_calc {
 
 	foreach my $Equipment ( @equipment ) {
 		$Results{'Breakdown'} .= sprintf('Equipment: %s, ', $Equipment->name() );
+		my $Horizontal_Material = $Rule;
+		my $Vertical_Material = $Wheel;
 
 		my $type = $Equipment->specification('Type');
 		my $max_feed_width = $Equipment->specification('Maximum Feed Width');
@@ -318,6 +320,7 @@ sub signature_calc {
 
 		my @impositions = ();
 		if ( $Equipment->specification('Type') eq 'Press' ) {
+			$Vertical_Material = $Rule;
 			@impositions = ($imposition);
 			if ( ( $Equipment->specification('WTPerforation') ne 'Y' ) and sets::isin( $$sig_specs{'ddmRunStyle'.$qty_index}, ['Work & Turn','Work & Tumble'] ) ) {
 				$Results{'Breakdown'} .= 'Cant do an inline perf when W&T.<br/>';
@@ -484,12 +487,12 @@ sub signature_calc {
 			} # end if
 		#$openprint::log->debug("Horizontal: $horizontal_rule");	
 			if ( $horizontal_rules ) {
-				if ( $Rule ) {
-					my $Package_Qty = $Rule->Specification( 'Package Quantity' );
+				if ( $Horizontal_Material ) {
+					my $Package_Qty = $Horizontal_Material->Specification( 'Package Quantity' );
 					if ( $Package_Qty ) {
 						$Results{'Breakdown'} .= 'Package Quantity: ' . $$Package_Qty{value}.$$Package_Qty{units}.'<br/>';
 					} # end if
-					%horizontal_price = $Rule->get_price( $horizontal_rules, $Equipment );
+					%horizontal_price = $Horizontal_Material->get_price( $horizontal_rules, $Equipment );
 					if ( sets::isin( lc $horizontal_price{'units'}, ['per rule','each'] ) ) {
 						$horizontal_price{'Total'} = $horizontal_price{'Price'} * $horizontal_rules;
 						$Results{'Breakdown'} .= sprintf('Rule: $%1$.2f%2$s * %4$d rules=$%3$.2f<br/>', @horizontal_price{'Price','units','Total'}, $horizontal_rules );
@@ -549,12 +552,12 @@ sub signature_calc {
 
 		#$openprint::log->debug("Vertical: $vertical_rule");	
 			if ( $vertical_rules ) {
-				if ( $Wheel ) {
-					my $Package_Qty = $Wheel->Specification( 'Package Quantity' );
+				if ( $Vertical_Material ) {
+					my $Package_Qty = $Vertical_Material->Specification( 'Package Quantity' );
 					if ( $Package_Qty ) {
 						$Results{'Breakdown'} .= 'Package Quantity: ' . $$Package_Qty{value}.$$Package_Qty{units}.' per package<br/>';
 					} # end if
-					%vertical_price = $Wheel->get_price( $vertical_rules, $Equipment );
+					%vertical_price = $Vertical_Material->get_price( $vertical_rules, $Equipment );
 					if ( sets::isin( lc $vertical_price{'units'},['per rule','each'] ) ) {
 						$vertical_price{'Total'} = $vertical_price{Price} * $vertical_rules;
 						$Results{'Breakdown'} .= sprintf('Wheel: $%1$.2f%2$s * %4$d wheels=$%3$.2f<br/>', @vertical_price{'Price','units','Total'}, $vertical_rules );
