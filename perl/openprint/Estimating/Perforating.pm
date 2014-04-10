@@ -57,11 +57,31 @@ sub variables {
 } # end sub variables
 
 my @no_output = (
-	
+	'Markup1', 'Markup2', 'Markup3',	
 );
 
 sub no_outputs {
-	return @no_output;
+	my ( $p_id, $s_id, $specs, $new_specs ) = @_;
+	my $Project = new openprint::Project( $p_id );
+
+	my @v = @no_output;
+
+	foreach my $signature_service_index ( $Project->signatures() ) {
+		my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
+
+		foreach my $qty_index ( $Project->quantity_indexes() ) {
+
+		push @v, (
+				"txtVerticalQty-$$sig_specs{SignatureIndex}", "VerticalTeeth-$$sig_specs{SignatureIndex}",
+				"txtHorizontalQty-$$sig_specs{SignatureIndex}", "HorizontalTeeth-$$sig_specs{SignatureIndex}",
+				"chkOverrideEquipment-$$sig_specs{SignatureIndex}-$qty_index",
+				( $$new_specs{"chkOverrideEquipment-$$sig_specs{SignatureIndex}-$qty_index"} eq 'Y' ? "ddmEquipment-$$sig_specs{SignatureIndex}-$qty_index" : () ),
+				"chkOverrideImposition-$$sig_specs{SignatureIndex}-$qty_index",
+				( $$new_specs{"chkOverrideImposition-$$sig_specs{SignatureIndex}-$qty_index"} eq 'Y' ? "txtImposition-$$sig_specs{SignatureIndex}-$qty_index" : () ),
+					);
+		} # end foreach qty_index
+	} # end foreach signature
+	return @v;
 }
 
 sub signature_has_perforation {
@@ -117,14 +137,6 @@ sub calc {
 
 		foreach my $signature_service_index ( $Project->signatures() ) {
             my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
-
-			@no_output = sets::union( @no_output,
-					"txtVerticalQty-$$sig_specs{'SignatureIndex'}", 
-					"txtHorizontalQty-$$sig_specs{'SignatureIndex'}", 
-					"chkOverrideEquipment-$$sig_specs{'SignatureIndex'}-$qty_index",
-					"chkOverrideImposition-$$sig_specs{'SignatureIndex'}-$qty_index",
-					( $$specs{"chkOverrideImposition-$$sig_specs{'SignatureIndex'}-$qty_index"} eq 'Y' ? "txtImposition-$$sig_specs{'SignatureIndex'}-$qty_index" : () ),
-					);
 
 # If any of the signatures doesn't have an imposition, then we are in an incomplete state.
 			if ( ! $$sig_specs{'txtImposition'.$qty_index} ) {
@@ -309,7 +321,7 @@ sub signature_calc {
 	$Wheel = $Rule if ! $Wheel;
 
 	foreach my $Equipment ( @equipment ) {
-		$Results{'Breakdown'} .= sprintf('Equipment: %s, ', $Equipment->name() );
+		$Results{'Breakdown'} .= sprintf('<br/>Equipment: %s, ', $Equipment->name() );
 		my $Horizontal_Material = $Rule;
 		my $Vertical_Material = $Wheel;
 
@@ -363,8 +375,8 @@ sub signature_calc {
 		$Results{'Breakdown'} .= join( '', 'Cylinder Count: ', $CylinderCount, '<br/>' );
 
 		foreach my $I ( @impositions ) {
-			$Results{'Breakdown'} .= "Imposition: " . $I->imposition() .': ';
-
+			$Results{'Breakdown'} .= "Imposition: " . $I->columns().'x'.$I->rows().($I->dutch_columns()?'+'.$I->dutch_columns().'x'.$I->dutch_rows():'').'='.$I->imposition() .'out: ' .$I->image_orientation(). ' '. $I->layout_width().'x'.$I->layout_height().'<br/>';
+ 
             if ( $max_feed_width ) {
                 if ( $orientation ) {
                     $Results{'Breakdown'} .= "Has orientation setting.<br/>";
@@ -469,8 +481,6 @@ sub signature_calc {
 			my $horizontal_length = 0;
 			my %horizontal_price;
 			my $remaining_inches = 0;
-
-			$Results{Breakdown} .= 'Image orientation: ' . $I->image_orientation() .'<br/>';
 
 			if ( $I->image_orientation() eq 'Vertical' and $$specs{"txtHorizontalQty-$$sig_specs{SignatureIndex}"} ) {
 				$horizontal_rules = $$specs{"txtHorizontalQty-$$sig_specs{'SignatureIndex'}"} * $$I{rows};
