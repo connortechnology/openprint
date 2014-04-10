@@ -57,18 +57,24 @@ $log->debug("Deleting key $key in no_outputs ") if $debug;
 			delete $specs{$key};
 		} # end foreach
 	} # end if
+		foreach my $key ( 'method', 'ContinueProject' ) {
+$log->debug("Deleting key $key in standard no_outputs ") if $debug;
+			delete $specs{$key};
+		} # end foreach
 	if ( $debug ) {
 		foreach my $key ( sort keys %specs ) {
 			$log->debug("$key => $specs{$key}");
 		} # end foreach
 	} # end if debug
     foreach my $key ( keys %specs ) {
-        if ( (exists $param{$key}) and ($specs{$key} eq $param{$key}) ) {
-$log->debug("Deleting $key cuz it's the same $key") if $debug;
+		if ( (exists $param{$key}) and ($specs{$key} eq $param{$key}) ) {
+			$log->debug("Deleting $key cuz it's the same $key") if $debug;
 			delete $specs{$key};
-       } elsif ( ref $specs{$key} ) {
-$log->error("Got a non-scalar in specs! $key => $specs{$key}");
+		} elsif ( ref $specs{$key} ) {
+		   $log->error("Got a non-scalar in specs! $key => $specs{$key}");
             delete $specs{$key};
+		} elsif ( $debug ) {
+			$log->debug("Outputting $key") if $debug;
         } # end if
     } # end foreach
 
