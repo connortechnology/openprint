@@ -1,7 +1,7 @@
 <? eval (
 	@{$$variable{'Stocks'}} = ();
 	foreach my $Stock ( openprint::Paper->find( 
-			'columns'	=>	'*,(select name from stockbrands where id=brand_id) AS brand, (select name from stockfinishes where id=finish_id) AS finish, (select name from stockcolours where id=colour_id) AS colour, (select name from stockweights where id=weight_id) AS weight',
+			columns	=>	'*,(select name from stockbrands where id=brand_id) AS brand, (select name from stockfinishes where id=finish_id) AS finish, (select name from stockcolours where id=colour_id) AS colour, (select name from stockweights where id=weight_id) AS weight',
 			( $session{'/administrator/stock/list.html?group_id'} ? ( 'group_id'		=> $session{'/administrator/stock/list.html?group_id'} ) : () ),
 			( $session{'/administrator/stock/list.html?owner_id'} ? ( 'owner_id'		=> $session{'/administrator/stock/list.html?owner_id'} ) : () ),
 			( $session{'/administrator/stock/list.html?manufacturer_id'} ? ( 'manufacturer_id'		=> $session{'/administrator/stock/list.html?manufacturer_id'} ) : () ),
@@ -75,7 +75,7 @@
 		<td class="quality"><a href="stock.html?stock_id=<? echo ( $$variable{Stock}{'id'} ) ?>"><? echo ( $$variable{Stock}->quality() ) ?></a></td>
 		<td class="size"><a href="stock.html?stock_id=<? echo ( $$variable{Stock}{'id'} ) ?>"><? echo ( $$variable{Stock}->size() ) ?></a></td>
 		<td class="calliper"><a href="stock.html?stock_id=<? echo ( $$variable{Stock}{'id'} ) ?>"><? echo ( $$variable{Stock}->calliper() ) ?></a></td>
-		<td class="mweight"><a href="stock.html?stock_id=<? echo ( $$variable{Stock}{'id'} ) ?>"><? echo ( sprintf('%.2f', $$variable{Stock}->mweight() ); ) ?></a></td>
+		<td class="mweight"><a href="stock.html?stock_id=<? echo ( $$variable{Stock}{'id'} ) ?>"><? echo ( sprintf('%.2f', Math::Round::nearest(0.01, $$variable{Stock}->type() eq 'Roll' ? $$variable{Stock}->basis_mweight() : $$variable{Stock}->mweight() ) ); ) ?></a></td>
 		<td class="gsm"><a href="stock.html?stock_id=<? echo ( $$variable{Stock}{'id'} ) ?>"><? echo ( sprintf('%.2f', $$variable{Stock}->gsm() ); ) ?></a></td>
 		<td class="spp_min"><a href="stock.html?stock_id=<? echo ( $$variable{Stock}{'id'} ) ?>"><? echo ( $$variable{Stock}->sheets_per_package().'/'.$$variable{Stock}->minimum_order() ) ?></a></td>
 		<td class="pricing"><a href="stock.html?stock_id=<? echo ( $$variable{Stock}{'id'} ) ?>">

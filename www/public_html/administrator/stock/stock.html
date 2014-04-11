@@ -65,19 +65,19 @@
 	
 	}
 </script>
-<? echo ( include('/includes/error_reporting.html'); ) ?>
+<?include('/includes/error_reporting.html')?>
 <div class="Stock">
 <form id="f1" name="f1" method="post" action="stock.html?stock_id=<? echo ( $$variable{'Stock'}->id(); ) ?>">
 	<p class="buttons">
 		<? echo ( join('',
-		button( 'Prev1', { onclick=>"f1.btnFunction.value='Prev';f1.submit();", href=>'', text=>'&lt;&lt;' } ),
-		button( 'Next1', { onclick=>"f1.btnFunction.value='Next';f1.submit();", href=>'', text=>'&gt;&gt;' } ),
-		#button( 'Next1', { onclick=>"f1.btnFunction.value='Next';fmChange=1;fmCheck(f1);", href=>'', text=>'&gt;&gt;' } ),
-		button( 'Add1', { onclick=>"f1.action='stock.html';f1.btnFunction.value='';f1.submit();", href=>'', text=>'Add New' } ),
-		button( 'Delete1', { onclick=>"f1.btnFunction.value='Delete';fmChange=2;fmCheck(f1);", href=>'', text=>'Delete' } ),
-		button( 'Copy1', { onclick=>"f1.btnFunction.value='Copy';f1.submit();", href=>'', text=>'Copy' } ),
-		button( 'Save1', { onclick=>"f1.btnFunction.value='Save';fmChange=3;fmCheck(f1);", href=>'', text=>'Save' } ),
-		button( 'Reset1', { onclick=>'f1.reset();', href=>'', text=>'Reset' } ),
+		button( 'Prev1', { onclick=>"f1.btnFunction.value='Prev';f1.submit();", text=>'&lt;&lt;' } ),
+		button( 'Next1', { onclick=>"f1.btnFunction.value='Next';f1.submit();", text=>'&gt;&gt;' } ),
+		#button( 'Next1', { onclick=>"f1.btnFunction.value='Next';fmChange=1;fmCheck(f1);", text=>'&gt;&gt;' } ),
+		button( 'Add1', { onclick=>"f1.action='stock.html';f1.btnFunction.value='';f1.submit();", text=>'Add New' } ),
+		button( 'Delete1', { onclick=>"f1.btnFunction.value='Delete';fmChange=2;fmCheck(f1);", text=>'Delete' } ),
+		button( 'Copy1', { onclick=>"f1.btnFunction.value='Copy';f1.submit();", text=>'Copy' } ),
+		button( 'Save1', { onclick=>"f1.btnFunction.value='Save';fmChange=3;fmCheck(f1);", text=>'Save' } ),
+		button( 'Reset1', { onclick=>'f1.reset();', text=>'Reset' } ),
 ); ) ?>
 	</p>
 	<br class="spacer"/>
@@ -347,11 +347,19 @@
 				</p>
 				<p>
 					<label>In Stock</label>
-					<? echo ( $$variable{'Stock'}->in_stock(); ) ?>
+					<? echo ( $$variable{Stock}->in_stock() . $$variable{Stock}->units(); ) ?>
+				</p>
+				<p>
+					<label>Allocated</label>
+					<? echo ( $$variable{Stock}->allocated() . $$variable{Stock}->units(); ) ?>
+				</p>
+				<p>
+					<label>Available</label>
+					<? echo ( $$variable{Stock}->available() . $$variable{Stock}->units(); ) ?>
 				</p>
 				<p>
 					<label>Ordered</label>
-					<? echo ( $$variable{'Stock'}->back_ordered(); ) ?>
+					<? echo ( $$variable{Stock}->back_ordered() . $$variable{Stock}->units(); ) ?>
 				</p>
 			</div><!-- right-->
 		</fieldset>
