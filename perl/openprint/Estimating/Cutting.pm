@@ -245,6 +245,11 @@ sub signature_calc_stock_cutting {
 	my $mprice = 0;
 	my $bestEquipment;
 	my $services = $Project->services();
+
+	my $Cutting = openprint::Service->find_one(name=>'Cutting');
+	my $CuttingMakeReady = openprint::Service->find_one(name=>'CuttingMakeReady');
+	my $BladeCleaning = openprint::Service->find_one(name=>'Blade Cleaning');
+
 # Has to happen on normal cutters
 	foreach my $Equipment ( @my_equipment ) {
 		$results{'Breakdown'} .= 'Equipment: '.$Equipment->name().':';
@@ -273,7 +278,7 @@ sub signature_calc_stock_cutting {
 #$openprint::log->debug( $$specs{"txtSuppliedStockWidth-$signature_index-$qty_index"} . '/' . $sheet_width );
 #$openprint::log->debug( $$specs{"txtSuppliedStockHeight-$signature_index-$qty_index"} . '/' . $sheet_height );
 #$openprint::log->debug( "$sheets = $width_cuts $height_cuts" );
-		my %ServicePrice = openprint::service::get_price_object( 'Cutting', $sheets, $Equipment );
+		my %ServicePrice = $Cutting->get_price( $sheets, $Equipment ) if $Cutting;
 		my $price = 0;
 		foreach my $cuts ( $width_cuts -1, $height_cuts-1 ) {
 			next if ! $cuts;
@@ -283,17 +288,17 @@ $openprint::log->warn("Negative CUTS!") if $cuts < 1;
 			$results{'Breakdown'} .= sprintf('Cutting %d sheets into %d sheets in %d runs: %.2f<br/>', $sheets, $sheets*($cuts+1), $runs, $price );
 			$sheets *= $cuts+1;
 		} # end foreach
-		my $setupCost = openprint::service::get_price( 'CuttingMakeReady', undef, $Equipment );
-		$results{'Breakdown'} .= sprintf('MakeReady: %.2f<br/>', $setupCost );
-		my $totalPrice = $setupCost + $price;
+		my %setupCost = $CuttingMakeReady->get_price( undef, $Equipment );
+		$results{'Breakdown'} .= sprintf('MakeReady: %.2f<br/>', $setupCost{Price} );
+		my $totalPrice = $setupCost{Price} + $price;
 		my %cleaning;
-		if ( $Paper->bladecleaning() ) {
-			%cleaning = openprint::service::get_price_object( 'Blade Cleaning', undef, $Equipment );
-			$results{'Breakdown'} .= sprintf('Blade Cleaning: %.2f<br/>', $cleaning{'Price'} );
-			$totalPrice += $cleaning{'Price'};
+		if ( $Paper->bladecleaning() and $BladeCleaning ) {
+			%cleaning = $BladeCleaning->get_price( undef, $Equipment );
+			$results{'Breakdown'} .= sprintf('Blade Cleaning: %.2f<br/>', $cleaning{Price} );
+			$totalPrice += $cleaning{Price};
 		} # end if
 		if ( ( ! defined $bestPrice ) or ( $bestPrice > $totalPrice ) ) {
-			$mprice = $price + $cleaning{'Price'};
+			$mprice = $price + $cleaning{Price};
 			$bestPrice = $totalPrice;
 			$bestEquipment = $Equipment;
 		} # end if
@@ -490,7 +495,8 @@ sub signature_calc {
 	my $Folder;
 	if ( $$services{Folding} and @{$$services{Folding}} ) {
 		$folding_specs = openprint::service::get_specs_ref( $Project, $$services{'Folding'}[0] ) if ! $folding_specs;
-		$Folder = openprint::Equipment->find_one( id=>$$folding_specs{"ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} );
+		$Folder = new openprint::Equipment( $$folding_specs{"ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} ) if $$folding_specs{"ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"};
+		$Folder = undef if $Folder and ! $Folder->id();
 		foreach my $fold_index ( 1 .. 4 ) {
 			next if ! $$folding_specs{"FoldQty-$$sig_specs{SignatureIndex}-$qty_index-$fold_index"};
 			next if ! $$folding_specs{"FoldType-$$sig_specs{SignatureIndex}-$qty_index-$fold_index"};
