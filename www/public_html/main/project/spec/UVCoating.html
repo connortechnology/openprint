@@ -9,7 +9,7 @@
 <div class="Service">
 	<form name="f1" method="post" action="/main/project/view.html">
 		<fieldset><legend>Ultra Violet Coating</legend>
-		<? eval ( @{$$variable{'Signatures'}} = $$variable{'Project'}->signatures() ) ?>
+		<? eval ( @{$$variable{'Signatures'}} = $$variable{'Project'}->signatures({sort=>1}) ) ?>
 		<? while ( $$variable{'SignatureServiceIndex'} = shift @{$$variable{'Signatures'}} ) ?>
 			<? eval ( 
 				$$variable{'sig_specs'} = openprint::service::get_specs_ref( @$variable{'Project','SignatureServiceIndex'} ); 
@@ -113,7 +113,9 @@
 		<? endwhile ( $$variable{'SignatureServiceIndex'} = shift @{$$variable{'Signatures'}} ) ?>
 		</fieldset>
 		<fieldset><legend>Results</legend>
-			<? echo ( include('/includes/main/proj/quantities_prices.html'); ) ?>
+			<ul>
+			<?include('/includes/main/proj/quantities_prices.html') ?>
+			</ul>
 		</fieldset>
 		<hr/>
 		<? echo ( include('/includes/main/proj/add_to_project.html'); ) ?>

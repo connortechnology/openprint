@@ -288,7 +288,7 @@ $openprint::log->warn("Negative CUTS!") if $cuts < 1;
 			$results{'Breakdown'} .= sprintf('Cutting %d sheets into %d sheets in %d runs: %.2f<br/>', $sheets, $sheets*($cuts+1), $runs, $price );
 			$sheets *= $cuts+1;
 		} # end foreach
-		my %setupCost = $CuttingMakeReady->get_price( undef, $Equipment );
+		my %setupCost = $CuttingMakeReady->get_price( undef, $Equipment ) if $CuttingMakeReady;
 		$results{'Breakdown'} .= sprintf('MakeReady: %.2f<br/>', $setupCost{Price} );
 		my $totalPrice = $setupCost{Price} + $price;
 		my %cleaning;
@@ -521,6 +521,7 @@ sub signature_calc {
 	my $output_format = $Press->specification('OutputFormat');
 	
 	my $Cutting = openprint::Service->find_one(name=>'Cutting');
+	my $CuttingMakeReady = openprint::Service->find_one(name=>'CuttingMakeReady');
 	my $I = $Imposition->copy();
 
 		# Take care of cutting before folding
@@ -900,9 +901,11 @@ sub signature_calc {
 		$mprice = $totalPrice;
 
 		if ( $cuts ) {
-			my $setup = openprint::service::get_price( 'CuttingMakeReady', undef, $Equipment );
-			$results{'Breakdown'} .= sprintf('Make Ready: $%.2f<br/>', $setup );
-			$totalPrice += $setup;
+			if ( $CuttingMakeReady ) {
+				my %setup = $CuttingMakeReady->get_price( undef, $Equipment );
+				$results{'Breakdown'} .= sprintf('Make Ready: $%.2f<br/>', $setup{Price} );
+				$totalPrice += $setup{Price};
+			} # end if
 			if ( $Paper->bladecleaning() ) {
 				my %cleaning = openprint::service::get_price_object( 'Blade Cleaning', undef, $Equipment );
 				$results{'Breakdown'} .= sprintf('Blade Cleaning: $%.2f<br/>', $cleaning{'Price'} );
