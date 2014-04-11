@@ -3,12 +3,12 @@
 	my @Prices = openprint::ServicePrice->find(
 		service_id		=>	$$variable{Service}->id(),
 		pricelist_id	=>	$$variable{Pricelist}->id(),
-		( $$variable{Equipment}->id() ? ( equipment_id=>$$variable{Equipment}->id() ) : () ),
+		equipment_id=>$$variable{Equipment}->id(),
 		order=>'min NULLS FIRST,max NULLS FIRST,period_start NULLS FIRST, period_end NULLS FIRST' );
 
 	my $NewPrice = new openprint::ServicePrice( undef, { service_id=>$$variable{Service}->id(), pricelist_id=>$$variable{Pricelist}->id() } );
 
-	my $price_html = misc::load_file( $log, $ENV{DOCUMENT_ROOT}.'/administrator/services/_price.html' );
+	my $price_html = slurp_content( '/administrator/services/_price.html' );
 
 	foreach my $Price ( @Prices ) {
 		$$variable{Price} = $Price;
