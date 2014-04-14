@@ -57,11 +57,31 @@ sub variables {
 } # end sub variables
 
 my @no_output = (
-	
+	'Markup1', 'Markup2', 'Markup3',	
 );
 
 sub no_outputs {
-	return @no_output;
+	my ( $p_id, $s_id, $specs, $new_specs ) = @_;
+	my $Project = new openprint::Project( $p_id );
+
+	my @v = @no_output;
+
+	foreach my $signature_service_index ( $Project->signatures() ) {
+		my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
+
+		foreach my $qty_index ( $Project->quantity_indexes() ) {
+
+		push @v, (
+				"txtVerticalQty-$$sig_specs{SignatureIndex}", "VerticalTeeth-$$sig_specs{SignatureIndex}",
+				"txtHorizontalQty-$$sig_specs{SignatureIndex}", "HorizontalTeeth-$$sig_specs{SignatureIndex}",
+				"chkOverrideEquipment-$$sig_specs{SignatureIndex}-$qty_index",
+				( $$new_specs{"chkOverrideEquipment-$$sig_specs{SignatureIndex}-$qty_index"} eq 'Y' ? "ddmEquipment-$$sig_specs{SignatureIndex}-$qty_index" : () ),
+				"chkOverrideImposition-$$sig_specs{SignatureIndex}-$qty_index",
+				( $$new_specs{"chkOverrideImposition-$$sig_specs{SignatureIndex}-$qty_index"} eq 'Y' ? "txtImposition-$$sig_specs{SignatureIndex}-$qty_index" : () ),
+					);
+		} # end foreach qty_index
+	} # end foreach signature
+	return @v;
 }
 
 sub signature_has_perforation {
@@ -117,14 +137,6 @@ sub calc {
 
 		foreach my $signature_service_index ( $Project->signatures() ) {
             my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
-
-			@no_output = sets::union( @no_output,
-					"txtVerticalQty-$$sig_specs{'SignatureIndex'}", 
-					"txtHorizontalQty-$$sig_specs{'SignatureIndex'}", 
-					"chkOverrideEquipment-$$sig_specs{'SignatureIndex'}-$qty_index",
-					"chkOverrideImposition-$$sig_specs{'SignatureIndex'}-$qty_index",
-					( $$specs{"chkOverrideImposition-$$sig_specs{'SignatureIndex'}-$qty_index"} eq 'Y' ? "txtImposition-$$sig_specs{'SignatureIndex'}-$qty_index" : () ),
-					);
 
 # If any of the signatures doesn't have an imposition, then we are in an incomplete state.
 			if ( ! $$sig_specs{'txtImposition'.$qty_index} ) {
@@ -309,7 +321,9 @@ sub signature_calc {
 	$Wheel = $Rule if ! $Wheel;
 
 	foreach my $Equipment ( @equipment ) {
-		$Results{'Breakdown'} .= sprintf('Equipment: %s, ', $Equipment->name() );
+		$Results{'Breakdown'} .= sprintf('<br/>Equipment: %s, ', $Equipment->name() );
+		my $Horizontal_Material = $Rule;
+		my $Vertical_Material = $Wheel;
 
 		my $type = $Equipment->specification('Type');
 		my $max_feed_width = $Equipment->specification('Maximum Feed Width');
@@ -317,8 +331,7 @@ sub signature_calc {
 		my $orientation = $Equipment->specification('Orientation');
 
 		my @impositions = ();
-		if ( $Equipment->specification('Type') eq 'Press' ) {
-			@impositions = ($imposition);
+		if ( $type eq 'Press' ) {
 			if ( ( $Equipment->specification('WTPerforation') ne 'Y' ) and sets::isin( $$sig_specs{'ddmRunStyle'.$qty_index}, ['Work & Turn','Work & Tumble'] ) ) {
 				$Results{'Breakdown'} .= 'Cant do an inline perf when W&T.<br/>';
 				if ( $$specs{"chkOverrideEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} eq 'Y' ) {
@@ -329,6 +342,8 @@ sub signature_calc {
 				} # end if
 				next;
 			} # end if
+			$Vertical_Material = $Rule;
+			@impositions = ($imposition);
 		} elsif ( ( $Equipment->specification('Cross Perforating / Scoring') eq 'N' ) and $$specs{"txtHorizontalQty-$$sig_specs{'SignatureIndex'}"} and $$specs{"txtVerticalQty-$$sig_specs{'SignatureIndex'}"} ) {
 			if ( $$specs{"chkOverrideEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} eq 'Y' ) {
 				$$specs{'alert'} = 'Doesnt support cross Perfing<br/>';
@@ -360,8 +375,8 @@ sub signature_calc {
 		$Results{'Breakdown'} .= join( '', 'Cylinder Count: ', $CylinderCount, '<br/>' );
 
 		foreach my $I ( @impositions ) {
-			$Results{'Breakdown'} .= "Imposition: " . $I->imposition() .': ';
-
+			$Results{'Breakdown'} .= "Imposition: " . $I->columns().'x'.$I->rows().($I->dutch_columns()?'+'.$I->dutch_columns().'x'.$I->dutch_rows():'').'='.$I->imposition() .'out: ' .$I->image_orientation(). ' '. $I->layout_width().'x'.$I->layout_height().'<br/>';
+ 
             if ( $max_feed_width ) {
                 if ( $orientation ) {
                     $Results{'Breakdown'} .= "Has orientation setting.<br/>";
@@ -417,7 +432,7 @@ sub signature_calc {
 			my $height = $I->layout_height();
 
 # If it's a press, then we can assume that it fits.
-			if ( $Equipment->specification('Type') ne 'Press' and $_ = $Equipment->fits( $width, $height, $$sig_specs{'txtSpecificStockCalliper'} ) ) {
+			if ( $type ne 'Press' and $_ = $Equipment->fits( $width, $height, $$sig_specs{'txtSpecificStockCalliper'} ) ) {
 				$Results{'Breakdown'} .= "$_<br/>";
 				next;
 			} # end if
@@ -467,8 +482,6 @@ sub signature_calc {
 			my %horizontal_price;
 			my $remaining_inches = 0;
 
-			$Results{Breakdown} .= 'Image orientation: ' . $I->image_orientation() .'<br/>';
-
 			if ( $I->image_orientation() eq 'Vertical' and $$specs{"txtHorizontalQty-$$sig_specs{SignatureIndex}"} ) {
 				$horizontal_rules = $$specs{"txtHorizontalQty-$$sig_specs{'SignatureIndex'}"} * $$I{rows};
 				$horizontal_length = $horizontal_rules * $width;
@@ -480,25 +493,25 @@ sub signature_calc {
 				$horizontal_rules = $$specs{"txtVerticalQty-$$sig_specs{SignatureIndex}"} * $$I{rows};
 				$horizontal_length = $horizontal_rules * $width;
 				$horizontal_length *= $CylinderCount if $CylinderCount;
-				$Results{Breakdown} .= $$specs{"txtVerticalQty-$$sig_specs{SignatureIndex}"} . ' x ' . $$I{rows} . ' rows = ' . $horizontal_rules . ' horizontal rules * ' . $width . ' = ' . $horizontal_length . 'inches of rule.<br/>';
+				$Results{Breakdown} .= $$specs{"txtVerticalQty-$$sig_specs{SignatureIndex}"} . ' x ' . $$I{rows} . ' rows = ' . $horizontal_rules . ' horizontal rules * ' . $width . 'inches = ' . $horizontal_length . 'inches of rule.<br/>';
 			} # end if
 		#$openprint::log->debug("Horizontal: $horizontal_rule");	
 			if ( $horizontal_rules ) {
-				if ( $Rule ) {
-					my $Package_Qty = $Rule->Specification( 'Package Quantity' );
+				if ( $Horizontal_Material ) {
+					my $Package_Qty = $Horizontal_Material->Specification( 'Package Quantity' );
 					if ( $Package_Qty ) {
 						$Results{'Breakdown'} .= 'Package Quantity: ' . $$Package_Qty{value}.$$Package_Qty{units}.'<br/>';
 					} # end if
-					%horizontal_price = $Rule->get_price( $horizontal_rules, $Equipment );
+					%horizontal_price = $Horizontal_Material->get_price( $horizontal_rules, $Equipment );
 					if ( sets::isin( lc $horizontal_price{'units'}, ['per rule','each'] ) ) {
 						$horizontal_price{'Total'} = $horizontal_price{'Price'} * $horizontal_rules;
-						$Results{'Breakdown'} .= sprintf('Rule: $%1$.2f%2$s * %4$d rules=$%3$.2f<br/>', @horizontal_price{'Price','units','Total'}, $horizontal_rules );
+						$Results{'Breakdown'} .= $Horizontal_Material->name().sprintf(': $%1$.2f%2$s * %4$d rules=$%3$.2f<br/>', @horizontal_price{'Price','units','Total'}, $horizontal_rules );
 					} elsif ( lc $horizontal_price{'units'} eq 'per inch' ) {
 						$horizontal_price{'Total'} = $horizontal_price{'Price'} * $horizontal_length;
-						$Results{'Breakdown'} .= sprintf('Rule: $%1$.2f%2$s * %4$.2finches=$%3$.2f<br/>', @horizontal_price{'Price','units','Total'}, $horizontal_length );
+						$Results{'Breakdown'} .= $Horizontal_Material->name().sprintf(': $%1$.2f%2$s * %4$.2finches=$%3$.2f<br/>', @horizontal_price{'Price','units','Total'}, $horizontal_length );
 					} elsif ( lc $horizontal_price{'units'} eq 'per foot' ) {
 						$horizontal_price{Total} = $horizontal_price{'Price'} * ($horizontal_length/12);
-						$Results{'Breakdown'} .= sprintf('Rule: $%1$.2f%2$s * %4$.2ffeet=$%3$.2f<br/>', @horizontal_price{'Price','units','Total'}, $horizontal_length/12 );
+						$Results{'Breakdown'} .= $Horizontal_Material->name().sprintf('Rule: $%1$.2f%2$s * %4$.2ffeet=$%3$.2f<br/>', @horizontal_price{'Price','units','Total'}, $horizontal_length/12 );
 						if ( $Package_Qty ) {
 							if ( $$Package_Qty{units} eq 'feet' ) {
 								$Results{Breakdown} .= POSIX::ceil(($horizontal_length/12) / $$Package_Qty{value} ) . 'packages<br/>';
@@ -521,7 +534,7 @@ sub signature_calc {
 						} # end if
 	
 						$horizontal_price{Total} = Math::Round::nearest( 0.01, $horizontal_price{Price} * $package_qty );
-						$Results{'Breakdown'} .= sprintf('Wheel: $%1$.2f%2$s * %4$d packages = $%3$.2f<br/>', @horizontal_price{'Price','units','Total'}, $package_qty );
+						$Results{'Breakdown'} .= $Horizontal_Material->name().sprintf(': $%1$.2f%2$s * %4$d packages = $%3$.2f<br/>', @horizontal_price{'Price','units','Total'}, $package_qty );
 					} else {
 						$Results{'Breakdown'} .= "Unknown units set on rule price ($horizontal_price{'units'})<br/>";
 					} # end if
@@ -539,28 +552,28 @@ sub signature_calc {
 				$vertical_rules = $$specs{"txtVerticalQty-$$sig_specs{'SignatureIndex'}"} * $I->columns();
 				$vertical_length = $vertical_rules * $height;
 				$vertical_length *= $CylinderCount if $CylinderCount;
-				$Results{Breakdown} .= $$specs{"txtVerticalQty-$$sig_specs{SignatureIndex}"} . ' x ' . $$I{columns} . ' columns = ' . $vertical_rules . ' vertical rules * ' . $height . ' = ' . $vertical_length . 'inches of rule.<br/>';
+				$Results{Breakdown} .= $$specs{"txtVerticalQty-$$sig_specs{SignatureIndex}"} . ' x ' . $$I{columns} . ' columns = ' . $vertical_rules . ' vertical rules * ' . $height . 'inches = ' . $vertical_length . 'inches of rule.<br/>';
 			} elsif ( $I->image_orientation() eq 'Horizontal' and $$specs{"txtHorizontalQty-$$sig_specs{SignatureIndex}"} ) {
 				$vertical_rules = $$specs{"txtHorizontalQty-$$sig_specs{'SignatureIndex'}"} * $I->columns();
 				$vertical_length = $vertical_rules * $height;
 				$vertical_length *= $CylinderCount if $CylinderCount;
-				$Results{Breakdown} .= $$specs{"txtHorizontalQty-$$sig_specs{SignatureIndex}"} . ' x ' . $$I{columns} . ' columns = ' . $vertical_rules . ' vertical rules * ' . $height . ' = ' . $vertical_length . 'inches of rule.<br/>';
+				$Results{Breakdown} .= $$specs{"txtHorizontalQty-$$sig_specs{SignatureIndex}"} . ' x ' . $$I{columns} . ' columns = ' . $vertical_rules . ' vertical rules * ' . $height . 'inches = ' . $vertical_length . 'inches of rule.<br/>';
 			} # end if
 
 		#$openprint::log->debug("Vertical: $vertical_rule");	
 			if ( $vertical_rules ) {
-				if ( $Wheel ) {
-					my $Package_Qty = $Wheel->Specification( 'Package Quantity' );
+				if ( $Vertical_Material ) {
+					my $Package_Qty = $Vertical_Material->Specification( 'Package Quantity' );
 					if ( $Package_Qty ) {
 						$Results{'Breakdown'} .= 'Package Quantity: ' . $$Package_Qty{value}.$$Package_Qty{units}.' per package<br/>';
 					} # end if
-					%vertical_price = $Wheel->get_price( $vertical_rules, $Equipment );
+					%vertical_price = $Vertical_Material->get_price( $vertical_rules, $Equipment );
 					if ( sets::isin( lc $vertical_price{'units'},['per rule','each'] ) ) {
 						$vertical_price{'Total'} = $vertical_price{Price} * $vertical_rules;
-						$Results{'Breakdown'} .= sprintf('Wheel: $%1$.2f%2$s * %4$d wheels=$%3$.2f<br/>', @vertical_price{'Price','units','Total'}, $vertical_rules );
+						$Results{Breakdown} .= $Vertical_Material->name().sprintf(': $%1$.2f%2$s * %4$d wheels=$%3$.2f<br/>', @vertical_price{'Price','units','Total'}, $vertical_rules );
 					} elsif ( lc $vertical_price{'units'} eq 'per inch' ) {
 						$vertical_price{Total} = Math::Round::nearest( $vertical_price{'Price'} * $vertical_length );
-						$Results{Breakdown} .= sprintf('Wheel: $%1$.2f%2$s * %4$.2finches=$%3$.2f<br/>', @vertical_price{'Price','units','Total'}, $vertical_length );
+						$Results{Breakdown} .= $Vertical_Material->name().sprintf(': $%1$.2f%2$s * %4$.2finches=$%3$.2f<br/>', @vertical_price{'Price','units','Total'}, $vertical_length );
 						if ( $Package_Qty ) {
 							if ( $$Package_Qty{units} eq 'feet' ) {
 								$Results{Breakdown} .= POSIX::ceil(($vertical_length/12) / $$Package_Qty{value} ) . 'packages<br/>';
@@ -573,7 +586,7 @@ sub signature_calc {
 						} # end if
 					} elsif ( lc $vertical_price{'units'} eq 'per foot' ) {
 						$vertical_price{Total} = Math::Round::nearest( 0.01, $vertical_price{'Price'} * ( $vertical_length/12 ) );
-						$Results{'Breakdown'} .= sprintf('Wheel: $%1$.2f%2$s * %4$.2ffeet=$%3$.2f<br/>', @vertical_price{'Price','units','Total'}, $vertical_length/12 );
+						$Results{'Breakdown'} .= $Vertical_Material->name().sprintf(': $%1$.2f%2$s * %4$.2ffeet=$%3$.2f<br/>', @vertical_price{'Price','units','Total'}, $vertical_length/12 );
 						if ( $Package_Qty ) {
 							if ( $$Package_Qty{units} eq 'feet' ) {
 								$Results{Breakdown} .= POSIX::ceil(($vertical_length/12) / $$Package_Qty{value} ) . 'packages<br/>';
@@ -602,7 +615,7 @@ sub signature_calc {
 						} # end if
 	
 						$vertical_price{Total} = Math::Round::nearest( 0.01, $vertical_price{Price} * $package_qty );
-						$Results{'Breakdown'} .= sprintf('Wheel: $%1$.2f%2$s * %4$d packages = $%3$.2f<br/>', @vertical_price{'Price','units','Total'}, $package_qty );
+						$Results{'Breakdown'} .= $Vertical_Material->name().sprintf(': $%1$.2f%2$s * %4$d packages = $%3$.2f<br/>', @vertical_price{'Price','units','Total'}, $package_qty );
 					} else {
 						$Results{'Breakdown'} .= "Unknown units set on wheel price ($vertical_price{units})<br/>";
 					} # end if

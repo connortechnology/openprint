@@ -142,7 +142,7 @@ $log->debug("loading Page settings for $config{db_name} for $page") if DEBUG;
 		} # end if Page Settings not found
 
 		# if not logged in, determine if they are allowed to see this page or not.
-		if ( $page_settings{$config{db_name}}{$page}->user_level() ) {
+		if ( ( !$page_settings{$config{db_name}}{$page}->can_view() )and $page_settings{$config{db_name}}{$page}->user_level() ) {
 $log->debug("Checking user level, need : " . $page_settings{$config{db_name}}{$page}->user_level() . ' session is: ' . $session{'user_type'} );
 			if ( 
 					( $page_settings{$config{db_name}}{$page}->user_level() eq 'C' and ! sets::isin( $session{'user_type'}, ['C','E','A'] ) ) 
@@ -237,8 +237,8 @@ $log->debug("No good, need login");
 				if ( ! $content ) {
 					$log->error("Found no content at $path");
 				} # end if
-			} elsif ( -e ( my $path = join('/', $config{'SkinPath'}, $page )) ) {
-$log->error("Deprecated SkinPath layout! $config{SkinPath}");
+			} elsif ( -e ( my $path = join('/', $config{SkinPath}, $page )) ) {
+$log->error("Deprecated SkinPath layout! $path");
 				$content = misc::load_file( $log, $path );
 				if ( ! $content ) {
 					$log->error("Found no content at $path");

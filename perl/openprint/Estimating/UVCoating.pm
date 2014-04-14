@@ -464,8 +464,10 @@ if ( ! $setupPrice ) {
 					} # end if
 					if ( lc $ServicePrice{'units'} eq 'per m' ) {
 						$ServicePrice{'Total'} = $ServicePrice{'Price'}*$run_qty/1000;
-					} elsif ( lc $ServicePrice{'units'} eq 'per hour' ) {
-						$ServicePrice{'Total'} = $ServicePrice{'Price'}*$run_qty/$Equipment->specification('UVCoatingRunSpeed') if $Equipment->specification('UVCoatingRunSpeed');
+					} elsif ( $ServicePrice{'units'} eq 'per hour' or $ServicePrice{'units'} eq '/Hr' ) {
+						my $runspeed = $Equipment->specification('UVCoatingRunSpeed', $Stock->gsm() );
+						
+						$ServicePrice{'Total'} = $ServicePrice{'Price'}*$run_qty/$runspeed if $runspeed;
 					} # end if
 # Div by imposition, but run_qty is already div by impo
 					#$ServicePrice{'Total'} /= $imp->imposition();
@@ -476,11 +478,14 @@ if ( ! $setupPrice ) {
 					my $material_name = $type;
 					$material_name =~ s/ ?Spot ?//;
 					$material_name =~ s/ ?Overall ?//;
-					if ( my @Materials = openprint::Material->find('name'=>$material_name) ) {
-						%MaterialPrice = $Materials[0]->get_price( $run_qty, $Equipment );
+					if ( my $Material = openprint::Material->find_one( name=>$material_name) ) {
+						%MaterialPrice = $Material->get_price( $run_qty, $Equipment );
 						if ( lc $MaterialPrice{'units'} eq 'per square inch' ) {
 							my $area = $imp->object_area() * $run_qty * ($inkCoverage{$type}/100);
 							$MaterialPrice{'Total'} = $MaterialPrice{'Price'} * $run_qty * $area;
+						} elsif ( lc $MaterialPrice{'units'} eq 'per square foot' ) {
+							my $area = $imp->object_area() * $run_qty * ($inkCoverage{$type}/100) /144;
+							$MaterialPrice{'Total'} = $MaterialPrice{'Price'} * $area;
 						} elsif ( lc $MaterialPrice{'units'} eq 'per m' ) {
 							$MaterialPrice{'Total'} = $MaterialPrice{'Price'} * $run_qty / 1000;
 						} else {

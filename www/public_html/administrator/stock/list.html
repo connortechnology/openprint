@@ -148,7 +148,7 @@
 			<ul>
 		<li> 
 			<label>Type</label>
-			<? echo ( checkboxes( 'Types', ['Sheet','Sheet','Roll','Roll'], [ split(',', $session{'/administrator/stock/list.html?Types'} ) ], { onclick=>'calc(this.form.name);' ); ) ?>
+			<? echo ( checkboxes( 'Types', ['Sheet','Sheet','Roll','Roll'], [ split(',', $session{'/administrator/stock/list.html?Types'} ) ], { onclick=>'calc(this.form.name);' } ); ) ?>
 		</li>
 		<li>
 			<label>Size</label>
