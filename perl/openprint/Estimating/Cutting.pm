@@ -476,17 +476,19 @@ sub signature_calc {
 	} # end if
 
 	my $stitching_imposition;
+	my $stitching_specs;
+
 	if ( $$services{'SaddleStitching'} ) {
-		my $stitching_specs = openprint::service::get_specs_ref( $Project, $$services{'SaddleStitching'}[0] );
+		$stitching_specs = openprint::service::get_specs_ref( $Project, $$services{'SaddleStitching'}[0] );
 		$stitching_imposition = $$stitching_specs{'Imposition'.$qty_index};
 	} elsif ( $$services{'LoopStitching'} ) {
-		my $stitching_specs = openprint::service::get_specs_ref( $Project, $$services{'LoopStitching'}[0] );
+		$stitching_specs = openprint::service::get_specs_ref( $Project, $$services{'LoopStitching'}[0] );
 		$stitching_imposition = $$stitching_specs{'Imposition'.$qty_index};
 	} elsif ( $$services{'PerfectBound'} ) {
-		my $stitching_specs = openprint::service::get_specs_ref( $Project, $$services{'PerfectBound'}[0] );
+		$stitching_specs = openprint::service::get_specs_ref( $Project, $$services{'PerfectBound'}[0] );
 		$stitching_imposition = $$stitching_specs{'Imposition'.$qty_index};
 	} elsif ( $$services{'CornerStitching'} ) {
-		my $stitching_specs = openprint::service::get_specs_ref( $Project, $$services{'CornerStitching'}[0] );
+		$stitching_specs = openprint::service::get_specs_ref( $Project, $$services{'CornerStitching'}[0] );
 		$stitching_imposition = $$stitching_specs{'Imposition'.$qty_index};
 	} # end if
 
@@ -605,6 +607,9 @@ sub signature_calc {
 		} elsif ( ( $cutting_capable eq 'When Printing' ) and ( $$sig_specs{'ddmPress'.$qty_index} ne $Equipment->strid() ) ) {
 			$results{'Breakdown'} .= 'Not printing on ' . $Equipment->strid();
 			next;
+		} elsif ( ( $cutting_capable eq 'When Stitching' ) and ( $$stitching_specs{'ddmEquipment'.$qty_index} != $Equipment->id() ) ) {
+			$results{'Breakdown'} .= 'Not stitching on ' . $Equipment->strid();
+			next;
 		} # end if
 
 		my $sheets = ceil( $$sig_specs{'txtQuantity'.$qty_index} / $$I{'imposition'} );
@@ -663,7 +668,7 @@ sub signature_calc {
 	# but if we are cutting into smaller signatures, then we need more cutting
 	#$openprint::log->debug("Sitching $stitching_imposition to $$sig_specs{'txtImposition'.$qty_index}");
 	#$openprint::log->debug("have signaturetype $$sig_specs{'txtSignatureType'} ");
-				if ( $I->pages() and ( ! $folding_specs ) or ( ! ( $Folder and $Folder->specification('Cutting Capable') ) ) ) {
+				if ( $I->pages() and ( ( ! $folding_specs ) or ( ! ( $Folder and $Folder->specification('Cutting Capable') ) ) ) ) {
 	# Have to cut the pages out
 					$vertical_cuts += int ( ($I->page_columns()-1)*$I->columns()*2 ) + 2;
 					$horizontal_cuts += int( ($I->page_rows()-1)*$I->rows() * 2 ) + 2;
@@ -1070,6 +1075,7 @@ sub display {
 	} # end if
 
 	$$variable{EquipmentArray} = [ map { $_->id(), $_->name() } openprint::Equipment->find( 'Specifications' => {'Cutting Capable'=>\@capabilities}, 'useinestimating'=>1,'order'=>'lower(strName)') ];
+	$$variable{PreFoldingEquipmentArray} = [ map { $_->id(), $_->name() } openprint::Equipment->find( Specifications => {'Cutting Capable'=>['Y','When Printing']}, 'useinestimating'=>1,'order'=>'lower(strName)') ];
 
 
 	@{$$variable{'CuttingGroups'}} = ();
