@@ -1808,31 +1808,31 @@ if ( ! sets::isin( 'user_purchaseorder_limits', \@tables ) ) {
 } # end if
 
 
-foreach my $Type ( openprint::ServiceType->find('name'=>'BulkSkids') ) {
+foreach my $Type ( openprint::ServiceType->find('name'=>'BulkSkids', type=>undef ) ) {
     $Type->type( 'Skids' );
     $Type->save();
 }
-foreach my $Type ( openprint::ServiceType->find('name'=>'PlainCartons') ) {
+foreach my $Type ( openprint::ServiceType->find('name'=>'PlainCartons', type=>undef ) ) {
     $Type->type( 'Skids' );
     $Type->save();
 }
-foreach my $Type ( openprint::ServiceType->find('name'=>'Bundling') ) {
+foreach my $Type ( openprint::ServiceType->find('name'=>'Bundling', type=>undef ) ) {
     $Type->type( 'Packaging' );
     $Type->save();
 }
-foreach my $Type ( openprint::ServiceType->find('name'=>'ShrinkWrap') ) {
+foreach my $Type ( openprint::ServiceType->find('name'=>'ShrinkWrap', type=>undef ) ) {
     $Type->type( 'Packaging' );
     $Type->save();
 }
-foreach my $Type ( openprint::ServiceType->find('name'=>'KraftWrap') ) {
+foreach my $Type ( openprint::ServiceType->find('name'=>'KraftWrap', type=>undef ) ) {
     $Type->type( 'Packaging' );
     $Type->save();
 }
-foreach my $Type ( openprint::ServiceType->find('name'=>'ColourCorrection') ) {
+foreach my $Type ( openprint::ServiceType->find('name'=>'ColourCorrection', type=>undef ) ) {
     $Type->type( 'Prepress' );
     $Type->save();
 }
-foreach my $Type ( openprint::ServiceType->find('name'=>'CDBurning') ) {
+foreach my $Type ( openprint::ServiceType->find('name'=>'CDBurning', type=>undef ) ) {
     $Type->type( 'Prepress' );
     $Type->save();
 }
