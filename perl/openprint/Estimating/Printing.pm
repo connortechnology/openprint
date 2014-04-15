@@ -3095,27 +3095,27 @@ $log->warn("Getting all impos results: " . @results );
 #$imp->display('Filtering:');
 
 # My thoughts here:  have to base it purely on this sig. Need to look up price by total, but compare based just on this sig.
-		#if ( ! $$imp{stock_qty} ) {
+		if ( ! $$imp{stock_qty} ) {
 			my $stock_qty = int( $qty/$$imp{imposition} ) * $Paper->factor();
-	$openprint::log->debug("Before  stockqty: $stock_qty upq ". $$sig_specs{"txtUnspecifiedPageQuantity$qty_index"} ."pages $$imp{pages} spread: $SpreadLayout ");
+	#$openprint::log->debug("Before  stockqty: $stock_qty upq ". $$sig_specs{"txtUnspecifiedPageQuantity$qty_index"} ."pages $$imp{pages} spread: $SpreadLayout ");
 			if ( $SpreadLayout > 0 and $$sig_specs{"txtUnspecifiedPageQuantity$qty_index"} > $$imp{pages} ) {
 				$stock_qty *= int( $$sig_specs{"txtUnspecifiedPageQuantity$qty_index"} / $$imp{pages} );
 			} # end if
 			my $lookup_stock_qty = $stock_qty;
-	$openprint::log->debug("Lookup impressioions: $lookup_stock_qty");
+	#$openprint::log->debug("Lookup impressioions: $lookup_stock_qty");
 
 			if ( $$Paper{'type'} eq 'Roll' ) {
 	# Convert to weight
 				$stock_qty = int( $stock_qty * $Paper->area() * $Paper->wpsi() );
 				$lookup_stock_qty = $stock_qty + $$PaperCounts{$Paper->id_string()};
-	$openprint::log->debug("Roll stock_weight $stock_qty Lookup impressioions: $lookup_stock_qty");
-$imp->display(" qty in paper counts. " . $$PaperCounts{$Paper->id_string()} );
-if ( ! $$PaperCounts{$Paper->id_string()} ) {
-	$openprint::log->debug("This: " . $Paper->id_string() );
-	foreach my $k ( keys %{$PaperCounts} ) {
-$openprint::log->debug("Paper Counts: $k => $$PaperCounts{$k}");
-	} # end 
-}
+	#$openprint::log->debug("Roll stock_weight $stock_qty Lookup impressioions: $lookup_stock_qty");
+#$imp->display(" qty in paper counts. " . $$PaperCounts{$Paper->id_string()} );
+#if ( ! $$PaperCounts{$Paper->id_string()} ) {
+	#$openprint::log->debug("This: " . $Paper->id_string() );
+	#foreach my $k ( keys %{$PaperCounts} ) {
+#$openprint::log->debug("Paper Counts: $k => $$PaperCounts{$k}");
+	#} # end 
+#}
 			} else {
 				$lookup_stock_qty += $$PaperCounts{$Paper->id_string()} * $Paper->factor();
 	#$openprint::log->debug("Sheets $stock_qty Lookup impressioions: $lookup_stock_qty");
@@ -3129,9 +3129,9 @@ $openprint::log->debug("Paper Counts: $k => $$PaperCounts{$k}");
 			if ( $$imp{lookup_stock_qty} < $Paper->minimum_order_weight() ) {
 				$$imp{stock_qty} = $$imp{lookup_stock_qty} = $Paper->minimum_order_weight();
 			} # end if
-		#} else {
-			#$openprint::log->debug("not loading paper price");
-		#} # end if
+		} else {
+			$openprint::log->debug("not loading paper price");
+		} # end if
 
 
 #foreach my $k ( keys %{$PaperCounts} ) {
