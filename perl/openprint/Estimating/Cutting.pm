@@ -544,17 +544,17 @@ sub signature_calc {
 		} # end if
 
 		if ( $folding_cuts ) {
-			my @FoldingEquipment = openprint::Equipment->find( Specifications=>{'Cutting Capable'=>'Y'}, useinestimating=>1,order=>'lower(strName)');
+			my @PreFoldingEquipment = openprint::Equipment->find( Specifications=>{'Cutting Capable'=>'Y'}, useinestimating=>1,order=>'lower(strName)');
 			if ( ( defined $$specs{"OverrideFoldingEquipment-$$sig_specs{SignatureIndex}-$qty_index"} ) and ( $$specs{"OverrideFoldingEquipment-$$sig_specs{SignatureIndex}-$qty_index"} eq 'Y' ) ) {
-				if ( ! sets::isin( $$specs{"OverrideFoldingEquipment-$$sig_specs{SignatureIndex}-$qty_index"}, [ map { $_->id() } @FoldingEquipment ] ) ) {
+				if ( ! sets::isin( $$specs{"OverrideFoldingEquipment-$$sig_specs{SignatureIndex}-$qty_index"}, [ map { $_->id() } @PreFoldingEquipment ] ) ) {
 					$results{alert} .= 'Overriden Equipment is not suitable for cutting before folding.<br/>';
 				} # end if
-				@FoldingEquipment = ( new openprint::Equipment( $$specs{"FoldingEquipment-$$sig_specs{SignatureIndex}-$qty_index"} ) );
+				@PreFoldingEquipment = ( new openprint::Equipment( $$specs{"FoldingEquipment-$$sig_specs{SignatureIndex}-$qty_index"} ) );
 			} # end if
-			foreach my $Equipment ( @FoldingEquipment ) {
+			foreach my $Equipment ( @PreFoldingEquipment ) {
 				my $liftDepth = $Equipment->specification( 'Maximum Lift Depth', $calliper );
-	my $sheets = ceil( $$sig_specs{'txtQuantity'.$qty_index} / $$I{'imposition'} );
-	$sheets *= $$sig_specs{'PageQuantity'} if $$sig_specs{'PageQuantity'};
+				my $sheets = ceil( $$sig_specs{'txtQuantity'.$qty_index} / $$I{'imposition'} );
+				$sheets *= $$sig_specs{'PageQuantity'} if $$sig_specs{'PageQuantity'};
 				my $runs = $liftDepth ? ceil( $sheets*$calliper/$liftDepth ) : $sheets;
 				$results{'Breakdown'} .= '# of pre-folding cuts: ' . $folding_cuts . ' => ' .($folding_cuts * $sheets) . '<br/>';
 				my %ServicePrice = $Cutting->get_price( undef, $Equipment );
