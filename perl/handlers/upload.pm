@@ -152,14 +152,7 @@ $log->debug("Doing standrad upload");
 			upload_files();
 			my $page = '/upload/_upload_complete.html';
 			my @page_path = split('/', $page );
-			my $content;
-			if (-e $r->dir_config('SkinPath') . $page) {
-				$page = $r->dir_config('SkinPath') . $page;
-			} else {
-				$page = $ENV{'DOCUMENT_ROOT'} . $page;
-			} # end if
-			my $content = misc::load_file( $log, $page );
-			$variable{'PageContent'} = ssi::variable_substitution( \$content, \%variable );
+			$variable{'PageContent'} = ssi::include( $page );
 			my $filename = pop @page_path;
 			my $template;
 
@@ -321,9 +314,9 @@ $log->error("No destdir");
 					push @to, $Company->CSR();
 				} # end if
 			} # end if
-			push @to, map { $_->User() } openprint::User_Notification->find('type'=>'Client File Uploads','value'=>'Yes');
+			push @to, map { $_->User() } openprint::User_Notification->find('type'=>'Client File Uploads','value'=>'Yes',company_id=>[ $config{Owner}, $Company->id() ]);
 			if ( ! @to ) {
-				push @to, $config{'OrderingEmail'};
+				push @to, $config{OrderingEmail};
 			} # end if
 			if ( @to ) {
 
@@ -331,7 +324,7 @@ $log->error("No destdir");
 						FROM    => $from,
 						TO		=> \@to,
 #BCC		=>	'iconnor@penultima.org',
-						SUBJECT => $param{'docket'} ? "Files uploaded for docket: $param{'docket'}" : 'Files Uploaded',
+						SUBJECT => $param{docket} ? "Files uploaded for docket: $param{docket}" : 'Files Uploaded',
 						ATTACHMENTS	=>	[ '', MIME::QuotedPrint::encode_qp(Encode::encode('utf-8',$body)), 'text/html', 'quoted-printable' ],
 						);
 
