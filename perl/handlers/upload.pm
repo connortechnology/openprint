@@ -308,13 +308,14 @@ $log->error("No destdir");
 					$from = $config{'OrderingEmail'};
 				} # end if
 			} # end if
+			my $Company;
 			if ( $session{'company_id'} ) {
 				my $Company = new openprint::Company( $session{'company_id'} );
 				if ( $Company->salesrep_id() and ( $Company->CSR()->notification('CSR Client File Uploads') ne 'No' ) ) {
 					push @to, $Company->CSR();
 				} # end if
 			} # end if
-			push @to, map { $_->User() } openprint::User_Notification->find('type'=>'Client File Uploads','value'=>'Yes',company_id=>[ $config{Owner}, $Company->id() ]);
+			push @to, map { $_->User() } openprint::User_Notification->find('type'=>'Client File Uploads','value'=>'Yes',company_id=>[ $config{Owner}, ( $Company?$Company->id():()) ]);
 			if ( ! @to ) {
 				push @to, $config{OrderingEmail};
 			} # end if
