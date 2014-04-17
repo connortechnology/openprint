@@ -3,7 +3,7 @@
 	my @Prices = openprint::ServicePrice->find(
 		service_id		=>	$$variable{Service}->id(),
 		pricelist_id	=>	$$variable{Pricelist}->id(),
-		equipment_id=>$$variable{Equipment}->id(),
+		equipment_id	=>	( $$variable{Equipment}->id() ? $$variable{Equipment}->id() : undef ),
 		order=>'min NULLS FIRST,max NULLS FIRST,period_start NULLS FIRST, period_end NULLS FIRST' );
 
 	my $NewPrice = new openprint::ServicePrice( undef, { service_id=>$$variable{Service}->id(), pricelist_id=>$$variable{Pricelist}->id() } );
