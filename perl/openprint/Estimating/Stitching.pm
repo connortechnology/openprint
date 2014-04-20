@@ -192,7 +192,7 @@ sub signature_calc {
 	my @printed_impositions;
 	my $imposition = 2;
 	$$specs{"txtPockets$qty_index"} = 0;
-	my $Folding_Equipment = new openprint::Equipment( $$folding_specs{"ddmEquipment-$$sig_specs{SignatureIndex}-$qty_index"} );
+	my $Folding_Equipment = new openprint::Equipment( $$folding_specs{"ddmEquipment-$$sig_specs{SignatureIndex}-$qty_index"} ) if $$folding_specs{"ddmEquipment-$$sig_specs{SignatureIndex}-$qty_index"};
 
 	foreach my $I ( @$Impositions ) {
 $I->display('In Stitching:') if DEBUG;
@@ -1147,7 +1147,7 @@ sub runtime {
 			$openprint::log->error("No equipment in estimate");
 			return 0;
 		} # end if
-		$Equipment = openprint::Equipment->find_one('id'=>$$specs{'ddmEquipment'.$qty_index});
+		$Equipment = openprint::Equipment->find_one(id=>$$specs{'ddmEquipment'.$qty_index});
 		if ( ! $Equipment ) {
 			$openprint::log->error("No equipment found for quoted Equipment ");
 			return 0;

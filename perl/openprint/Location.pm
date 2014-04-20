@@ -20,7 +20,7 @@ use constant PI => atan2(1,1)*4;
 # 3.14159265358979;
 
 use vars qw( $debug $table $serial %fields %find_fields %transforms %defaults );
-$debug = 1;
+$debug = 0;
 $table = 'locations';
 $serial = 'locations_id_seq';
 %fields = (

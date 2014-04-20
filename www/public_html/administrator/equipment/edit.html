@@ -294,7 +294,7 @@ function filter_onChange( element, id, selected ) {
 <form id="stock_settings_form" name="stock_settings_form" action="">
 	<input type="hidden" id="equipment_id" name="equipment_id" value="<? echo ( $$variable{'Equipment'}->id() ) ?>" />
 	<fieldset><legend>Specific Stock Settings</legend>
-		<div id="StockSettings"><? echo ( include('_stock_settings.html'); ) ?></div>
+		<div id="StockSettings"><?include('_stock_settings.html')?></div>
 		<p class="buttons">
 			<? echo ( button( 'addstocksetting', { onclick=>"popup_window('_stock_setting_popup.html','equipment_id=$$variable{Equipment}{id}', { width: '800px', height: '500px' } );", text=>'Add' } ); ) ?>
 			<? echo ( button( 'savestocksetting', { onclick=>"new Ajax.Updater('StockSettings','_stock_settings.html?action=save', { parameters: stock_settings_form.serialize() } );", text=>'Save' } ); ) ?>
