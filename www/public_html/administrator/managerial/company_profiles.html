@@ -159,7 +159,7 @@ button( 'merge'.$C->id(), { href=>'/administrator/managerial/company_profiles.ht
 				<label>Sales Person</label>
 				<select name="salesrep_id">
 					<option value="">select</option>
-					<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User->find('type'=>['E','A'], 'order'=>'lower(firstname),lower(lastname)', 'web_active'=>'Y') ], $$variable{'Company'}->salesrep_id() ); ) ?>
+					<? echo ( make_drop_down( openprint::User->dropdown( type=>['E','A'], order=>'lower(firstname),lower(lastname)', web_active=>'Y'), $$variable{Company}->salesrep_id() ); ) ?>
 				</select>
 			</li>
 		</ul>
@@ -284,7 +284,7 @@ button( 'merge'.$C->id(), { href=>'/administrator/managerial/company_profiles.ht
 		</ul>
 	</fieldset>
 </div>
-<? echo ( include('/account/_company_profile_edit.html'); ) ?>
+<?include('/account/_company_profile_edit.html')?>
 <div class="BusinessInformation">
 	<fieldset><legend>Business Information</legend>
 		<ul>

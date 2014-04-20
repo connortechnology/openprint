@@ -8,6 +8,10 @@ require misc;
 require MIME::QuotedPrint;
 require Encode;
 
+require countries;
+require states;
+require provinces;
+
 require openprint::usergroup;
 require openprint::logs;
 require openprint::MarketingCategory;

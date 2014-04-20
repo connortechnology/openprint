@@ -855,7 +855,7 @@ $openprint::log->debug(" fold qty * pages($pages) == sig_pages($sig_pages) foldQ
 				$bestPrice = $price;
 			} # end if
 			$$specs{'hdnBreakdown'.$qty_index} .= 'Quantity: ' . $$specs{"txtQuantity$qty_index"} .  ", Equipment: ".$Equipment->strid() ."<br/>";
-			$$specs{'hdnBreakdown'.$qty_index} .= 'Estimated Run Time: '. sprintf('%.1f', $$price{'RunTime'} ) . ",<br/>";
+			$$specs{'hdnBreakdown'.$qty_index} .= 'Estimated Run Time: @'.$$price{Runspeed}.'/Hr = '. sprintf('%.1f', $$price{'RunTime'} ) . ",<br/>";
 			$$specs{'hdnBreakdown'.$qty_index} .= 'Number of Passes: '. sprintf('%.1f', $$price{'Passes'} ) . ",<br/>";
 			$$specs{'hdnBreakdown'.$qty_index} .= 'Imposition: '. sprintf('%dout', $$price{'Imposition'} ) . ",<br/>";
 			$$specs{'hdnBreakdown'.$qty_index} .= 'Run Discount' . $$price{'RunCost Discount'}.'%<br/>' if $$price{'RunCost Discount'};
@@ -868,7 +868,7 @@ $openprint::log->debug(" fold qty * pages($pages) == sig_pages($sig_pages) foldQ
 			} # end if
 			my $servicePrice = $$price{'LastServicePrice'};
 			$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Service: 1 pass at $%.2f%s=$%.2f<br/>', @$servicePrice{'Price','units','Total'});
-			$$specs{'hdnBreakdown'.$qty_index} .= 'Total: $'. sprintf('%.2f', int($$price{'txtPrice'})).'<br/><br/>';
+			$$specs{'hdnBreakdown'.$qty_index} .= 'Total: $'. sprintf('%.2f', Math::Round::nearest(1,$$price{'txtPrice'})).'<br/><br/>';
 		} # end foreach
 		if ( ! $bestEquipment ) {
 $openprint::log->error("No best equipment in Stitching");
@@ -1005,6 +1005,7 @@ $openprint::log->debug("Need more pockets $maxPockets") if DEBUG;
 		$price{'ServicePrice'} = \%servicePrice;
 		
 		$unitsPerHour = $Equipment->specification( 'Units Per Hour', $maxPockets );
+		$price{Runspeed} = $unitsPerHour;
 		my $runtime = $unitsPerHour ? $qty/$unitsPerHour : 0; # in seconds
 			$price{'RunTime'} += $runtime * 360;
 		my $loopbreak_pockets = $neededPockets;
@@ -1147,8 +1148,8 @@ sub runtime {
 			$openprint::log->error("No equipment in estimate");
 			return 0;
 		} # end if
-		$Equipment = openprint::Equipment->find_one(id=>$$specs{'ddmEquipment'.$qty_index});
-		if ( ! $Equipment ) {
+		$Equipment = new openprint::Equipment($$specs{'ddmEquipment'.$qty_index});
+		if ( ! $Equipment->id() ) {
 			$openprint::log->error("No equipment found for quoted Equipment ");
 			return 0;
 		} # end if

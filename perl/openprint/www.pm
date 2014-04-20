@@ -237,8 +237,8 @@ $log->debug("No good, need login");
 				if ( ! $content ) {
 					$log->error("Found no content at $path");
 				} # end if
-			} elsif ( -e ( my $path = join('/', $config{'SkinPath'}, $page )) ) {
-$log->error("Deprecated SkinPath layout! $config{SkinPath}");
+			} elsif ( -e ( my $path = join('/', $config{SkinPath}, $page )) ) {
+$log->error("Deprecated SkinPath layout! $path");
 				$content = misc::load_file( $log, $path );
 				if ( ! $content ) {
 					$log->error("Found no content at $path");

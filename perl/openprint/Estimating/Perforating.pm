@@ -23,7 +23,7 @@ require openprint::Material;
 require openprint::imposition;
 require openprint::Imposition;
 
-use constant DEBUG => 1;
+use constant DEBUG => 0;
 
 my @all_equipment;
 my @stitchers;
