@@ -85,7 +85,7 @@ function calc_from_price( element, precision ) {
 
 function add_price ( form, pricelist_id, equipment_id ) {
 	$('prices-'+pricelist_id+'-'+equipment_id).innerHTML = 'Please wait...loading.';
-	new Ajax.Updater( 'prices-'+pricelist_id+'-'+equipment_id, '_prices_table_body.html?action=add&price_id='+price_id, { method: 'post', parameters:form.serialize() } );
+	new Ajax.Updater( 'prices-'+pricelist_id+'-'+equipment_id, '_prices_table_body.html?action=add&pricelist_id='+pricelist_id, { method: 'post', parameters:form.serialize() } );
 } /* end function del_price() */
 
 function del_price ( form, pricelist_id, equipment_id, price_id ) {
