@@ -503,9 +503,9 @@ sub signature_calc {
 			next if ! $$folding_specs{"FoldQty-$$sig_specs{SignatureIndex}-$qty_index-$fold_index"};
 			next if ! $$folding_specs{"FoldType-$$sig_specs{SignatureIndex}-$qty_index-$fold_index"};
 			my $folding_imposition = new openprint::Imposition();
-			$folding_imposition->columns( $$folding_specs{"FoldColumns-$$sig_specs{'SignatureIndex'}-$qty_index-$fold_index"} );
-			$folding_imposition->rows( $$folding_specs{"FoldRows-$$sig_specs{'SignatureIndex'}-$qty_index-$fold_index"} );
-			$folding_imposition->quantity( $$folding_specs{"FoldQty-$$sig_specs{'SignatureIndex'}-$qty_index-$fold_index"} );
+			$folding_imposition->columns( $$folding_specs{"FoldColumns-$$sig_specs{SignatureIndex}-$qty_index-$fold_index"} );
+			$folding_imposition->rows( $$folding_specs{"FoldRows-$$sig_specs{SignatureIndex}-$qty_index-$fold_index"} );
+			$folding_imposition->quantity( $$folding_specs{"FoldQty-$$sig_specs{SignatureIndex}-$qty_index-$fold_index"} );
 			push @folding_impositions, $folding_imposition;
 			$folding_imposition->display('Fold ' . $$folding_specs{"FoldType-$$sig_specs{SignatureIndex}-$qty_index-$fold_index"} ) if DEBUG;
 		} # end foreach fold_index
@@ -529,11 +529,13 @@ sub signature_calc {
 		# Take care of cutting before folding
 	if ( @folding_impositions ) {
 
+$openprint::log->debug("Folding impositions: " . @folding_impositions );
+
 		my $folding_cuts = 0;
 		if ( ( defined $$specs{"OverrideFoldingCuts-$$sig_specs{SignatureIndex}-$qty_index"} ) and ( $$specs{"OverrideFoldingCuts-$$sig_specs{SignatureIndex}-$qty_index"} eq 'Y' ) ) {
 			$folding_cuts = $$specs{"FoldingCuts-$$sig_specs{SignatureIndex}-$qty_index"};
 		} else {
-			if ( @folding_impositions == 1 and $folding_impositions[0]->imposition() == 1 and ( ! $stitching_imposition ) ) {
+			if ( ( @folding_impositions == 1 ) and ( $folding_impositions[0]->imposition() == 1 ) and ( ! $stitching_imposition ) and ( $folding_impositions[0]->quantity() == 1 ) ) {
 			} else {
 				$openprint::log->debug("Folds: " .@folding_impositions ) if DEBUG;
 				foreach my $folding_imposition ( @folding_impositions ) {
