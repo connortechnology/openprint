@@ -192,7 +192,7 @@ sub signature_calc {
 	my @printed_impositions;
 	my $imposition = 2;
 	$$specs{"txtPockets$qty_index"} = 0;
-	my $Folding_Equipment = new openprint::Equipment( $$folding_specs{"ddmEquipment-$$sig_specs{SignatureIndex}-$qty_index"} );
+	my $Folding_Equipment = new openprint::Equipment( $$folding_specs{"ddmEquipment-$$sig_specs{SignatureIndex}-$qty_index"} ) if $$folding_specs{"ddmEquipment-$$sig_specs{SignatureIndex}-$qty_index"};
 
 	foreach my $I ( @$Impositions ) {
 $I->display('In Stitching:') if DEBUG;
@@ -431,7 +431,7 @@ $results{'Breakdown'} .= 'Imposition: ' . $imposition . 'out<br/>';
 					} # end if
 				} # end if
 			} # end if
-			if ( ( $_ = $Folding_Equipment->specification('Folding Capable') ) and ( $_ eq 'When Stitching' ) ) {
+			if ( $Folding_Equipment and ( $_ = $Folding_Equipment->specification('Folding Capable') ) and ( $_ eq 'When Stitching' ) ) {
 				if ( $Folding_Equipment->id() != $Equipment->id() ) {
 					$results{Breakdown} .= $Equipment->strid() . ' is not the folding equipment<br/>';
 					next;
