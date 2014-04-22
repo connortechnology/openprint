@@ -17,7 +17,7 @@
 		$$variable{Skids} = [ openprint::Skid->find( 
 			( $session{'/employee/inventory/skids.html?rfid_id'} =~ /%/ ? 
 			( 'rfidtag_id ilike'	=>	$session{'/employee/inventory/skids.html?rfid_id'} ) :
-			( rfidtag_id	=>	$session{'/employee/inventory/skids.html?rfid_id'} ) ),
+			( 'rfidtag_id ilike'	=>	'%'.$session{'/employee/inventory/skids.html?rfid_id'} ) ),
 			order	=>	'id',
 			( $session{'/employee/inventory/skids.html?deleted'} ? ( deleted => [ split(',', $session{'/employee/inventory/skids.html?deleted'} ) ] ) : () ),
 			) ];

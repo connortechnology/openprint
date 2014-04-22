@@ -51,6 +51,16 @@ function calc_from_gsm( form ) {
 			</p>
 <? if ( openprint::usergroup::is_user_in( ['Inventory'], $session{'user_id'} ) ) ?>
 			<p>
+				<label for="txtGroup" onclick="f1.Group.toggle();f1.txtGroup.toggle();">Group</label>
+				<select id="Group" name="Group" size="1">
+					<option value="">select</option>
+				<? echo (
+						make_drop_down( openprint::StockGroup->dropdown( order=>'lower(name)'), $$variable{Paper}->group_id() );
+						) ?>
+				</select>
+				<input style="display: none;" type="text" id="txtGroup" name="txtGroup" />
+			</p>
+			<p>
 				<label for="txtManufacturer" onclick="f1.Manufacturer.toggle();f1.txtManufacturer.toggle();">Manufacturer</label>
 				<select id="Manufacturer" name="Manufacturer" size="1">
 					<option value="">select</option>

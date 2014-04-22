@@ -431,7 +431,7 @@ $results{'Breakdown'} .= 'Imposition: ' . $imposition . 'out<br/>';
 					} # end if
 				} # end if
 			} # end if
-			if ( ( $_ = $Folding_Equipment->specification('Folding Capable') ) and ( $_ eq 'When Stitching' ) ) {
+			if ( $Folding_Equipment and ( $_ = $Folding_Equipment->specification('Folding Capable') ) and ( $_ eq 'When Stitching' ) ) {
 				if ( $Folding_Equipment->id() != $Equipment->id() ) {
 					$results{Breakdown} .= $Equipment->strid() . ' is not the folding equipment<br/>';
 					next;

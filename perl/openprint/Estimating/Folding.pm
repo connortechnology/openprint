@@ -784,7 +784,9 @@ if ( 0 ) {
 				next;
 			} # end if
 			if ( $$services{Perforating} and @{$$services{Perforating}} ) {
-				if ( openprint::Estimating::Perforating::signature_has_perforation( openprint::service::get_specs_ref( $Project, $$services{Perforating}[0] ), $sig_specs ) ) {
+				my $perfing_specs = openprint::service::get_specs_ref( $Project, $$services{Perforating}[0] );
+				my $perforating = openprint::Estimating::Perforating::signature_has_perforation( $perfing_specs, $sig_specs );
+				if ( $perforating ) {
 					$Breakdown .= 'not perforating on this piece of equipment.<br/>';
 					next;
 				} # end if
