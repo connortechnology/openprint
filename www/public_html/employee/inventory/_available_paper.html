@@ -16,7 +16,7 @@
 			( $session{'/employee/inventory/available_paper.html?height'} ? ( 'height >='=>$session{'/employee/inventory/available_paper.html?height'} ) : () ),
 	) ),
 	);
-	foreach my $filter ( 'owner_id','manufacturer_id','brand_id','finish_id','colour_id','weight_id','quality_id', 'material_id' ) {
+	foreach my $filter ( 'owner_id','manufacturer_id','brand_id','finish_id','colour_id','weight_id','quality_id', 'material_id', 'group_id' ) {
 		if ( $session{'/employee/inventory/available_paper.html?'.$filter} ) {
 			if ( $session{'/employee/inventory/available_paper.html?'.$filter.'_exclude'} ) {
 				$sql{$filter.' !='} = $session{'/employee/inventory/available_paper.html?'.$filter};
