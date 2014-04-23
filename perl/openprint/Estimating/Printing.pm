@@ -6198,6 +6198,7 @@ if ( 0 ) {
 				$string .= ' ' . ($$specs{txtSpecificStockCalliper} * 1000).'PT';
 				} # end if
 			} # end if
+			$string .= ' ' . $$specs{txtStockGSM}.'gsm';
 		} # end if
 		if ( ( defined $$specs{'pages_supplied'} ) and ( $$specs{'pages_supplied'} eq 'Y' ) ) {
 			$string .= ' pages supplied by customer as ';

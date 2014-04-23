@@ -25,7 +25,7 @@ require openprint::Estimating::Perforating;
 
 use vars qw( @folds %fold_types );
 
-use constant DEBUG => 0;
+use constant DEBUG => 1;
 use constant DEBUG_NEEDS => 0;
 
 my @equipment;
@@ -966,7 +966,7 @@ $openprint::log->debug("Has a fold, doing extra checks") if DEBUG;
 											$openprint::log->debug("Fold no good due to max feed width $height_size > $max_feed_width on height ($$sig_specs{txtWidth}.") if DEBUG;
 										} # end if
 									} else {
-										$openprint::log->error("No fold match");
+										$openprint::log->warn("No fold match");
 									} # end if
 								} # end if has an orientation
 							} # end if has max_feed_width
@@ -1054,7 +1054,7 @@ $openprint::log->debug("No Fold") if DEBUG;
 											} # end if
                                         } # end if
                                     } else {
-                                        $openprint::log->error("No fold match");
+                                        $openprint::log->warn("No fold match");
                                     } # end if
                                 } # end if has an orientation
 								$openprint::log->debug($fits) if $fits and DEBUG;
@@ -1069,7 +1069,7 @@ $openprint::log->debug("No Fold") if DEBUG;
 								next;
 							} elsif( @my_equipment == 1 ) {
 								$Imposition->display('Didnt find:' ) if DEBUG;
-								$Breakdown .= sprintf('Didnt find: %dx%d %s,%dout<br/>', $Imposition->page_columns(), $Imposition->page_rows(), $Imposition->image_orientation(), $Imposition->imposition() );
+								$Breakdown .= sprintf('Didnt find: %dx%d=%dpages %s,%dout<br/>', $Imposition->page_columns(), $Imposition->page_rows(), $Imposition->pages(), $Imposition->image_orientation(), $Imposition->imposition() );
 							} elsif ( DEBUG ) {
 								$Imposition->display('Didnt find fold:' ) if DEBUG;
 							} # end if
@@ -1609,6 +1609,7 @@ sub calc {
 			my $i = new openprint::Imposition();
 			$i->load( $sig_specs, $qty_index );
 			push @Signature_Impositions, $i;
+$i->display();
 			$Impositions{$sig_id} = $i;
 			$$i{service_id} = $sig_id;
 
@@ -1632,8 +1633,6 @@ sub calc {
 			$$specs{'hdnBreakdown'.$qty_index} .= "<fieldset><legend>Signature: $$sig_specs{SignatureIndex} $$sig_specs{'txtSignatureType'} Ref: $$sig_specs{'txtServiceDescription'}:</legend>";
 			$$specs{'hdnBreakdown'.$qty_index} .= openprint::service::summary( $Project, $signature_service_index ) . '<br/>';
 			$$specs{'hdnBreakdown'.$qty_index} .= openprint::service::summary( $Project, $signature_service_index, $qty_index ) . '<br/>';
-			my $Paper = openprint::Paper::load_from_signature( $Project, $sig_specs, $qty_index );
-			$$specs{'hdnBreakdown'.$qty_index} .= 'Stock: ' . $Paper->to_string() . '<br/>';
 
 			$$sig_specs{'PreviousImposition'} = $previous_imposition;
 
@@ -1648,7 +1647,6 @@ sub calc {
 			} # end if
 
 			my $Imposition = $Impositions{$signature_service_index};
-			$$specs{'hdnBreakdown'.$qty_index} .= $Imposition->Paper()->to_string() . '<br/>';
 
 			if ( ( ! exists $$sig_specs{'PageQuantity'.$qty_index} ) or $$sig_specs{'PageQuantity'.$qty_index} ) {
 				my %results = signature_calc( $Project, $signature_service_index, $sig_specs, $specs, $qty_index, $Imposition, $uv_specs, $aq_specs, {}, \@Signature_Impositions, $calc_hash );

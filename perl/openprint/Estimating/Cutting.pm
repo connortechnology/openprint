@@ -525,6 +525,7 @@ sub signature_calc {
 	my $Cutting = openprint::Service->find_one(name=>'Cutting');
 	my $CuttingMakeReady = openprint::Service->find_one(name=>'CuttingMakeReady');
 	my $I = $Imposition->copy();
+	my $trim_before_folding = 0;
 
 		# Take care of cutting before folding
 	if ( @folding_impositions ) {
@@ -536,6 +537,7 @@ $openprint::log->debug("Folding impositions: " . @folding_impositions );
 			$folding_cuts = $$specs{"FoldingCuts-$$sig_specs{SignatureIndex}-$qty_index"};
 		} else {
 			if ( ( @folding_impositions == 1 ) and ( $folding_impositions[0]->imposition() == 1 ) and ( ! $stitching_imposition ) and ( $folding_impositions[0]->quantity() == 1 ) ) {
+				$trim_before_folding = 1;
 			} else {
 				$openprint::log->debug("Folds: " .@folding_impositions ) if DEBUG;
 				foreach my $folding_imposition ( @folding_impositions ) {
@@ -600,6 +602,10 @@ $openprint::log->debug("Folding impositions: " . @folding_impositions );
 				$results{'Breakdown'} .= 'Not folding<br/>';
 				next;
 			} # end if
+			if ( $trim_before_folding ) {
+				$results{'Breakdown'} .= 'is 1out, so trim before folding.<br/>';
+				next;
+			} # end 
 
 			if( $$folding_specs{"ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} ne $Equipment->id() ) {
 				my $Folder = new openprint::Equipment( $$folding_specs{"ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} );
