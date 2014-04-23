@@ -966,7 +966,7 @@ $openprint::log->debug("Has a fold, doing extra checks") if DEBUG;
 											$openprint::log->debug("Fold no good due to max feed width $height_size > $max_feed_width on height ($$sig_specs{txtWidth}.") if DEBUG;
 										} # end if
 									} else {
-										$openprint::log->error("No fold match");
+										$openprint::log->warn("No fold match");
 									} # end if
 								} # end if has an orientation
 							} # end if has max_feed_width
@@ -1054,7 +1054,7 @@ $openprint::log->debug("No Fold") if DEBUG;
 											} # end if
                                         } # end if
                                     } else {
-                                        $openprint::log->error("No fold match");
+                                        $openprint::log->warn("No fold match");
                                     } # end if
                                 } # end if has an orientation
 								$openprint::log->debug($fits) if $fits and DEBUG;
