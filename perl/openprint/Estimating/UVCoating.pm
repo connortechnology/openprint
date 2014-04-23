@@ -31,7 +31,7 @@ use vars qw( $log $dbh %config @outputs );
 # Let's assume that each piece of equipment can do 1 coat at a time
 # This service doesn't store it's own data, other than price.  It gets the info from the printing service.
 #
-my $debug = 0;
+use constant DEBUG => 0;
 
 my @variables = (
 	'txtQuantity1','txtQuantity2','txtQuantity3',
@@ -130,7 +130,7 @@ sub calc {
 		my %MakeReadies;
 
 		my $GrandTotal = 0;
-		foreach my $signature_service_index ( $Project->signatures() ) {
+		foreach my $signature_service_index ( $Project->signatures( { sort=>1 } ) ) {
 			my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
 			$$specs{'hdnBreakdown'.$qty_index} .= 'Signature ' . $$sig_specs{'SignatureIndex'} . 'Printed: ' .openprint::service::summary( $Project, $signature_service_index, $qty_index ).'<br/>';
 # If any of the signatures doesn't have an imposition, then we are in an incomplete state.
@@ -345,9 +345,11 @@ sub signature_calc {
 	my $services = $Project->services();
 	my $Stock = $Imposition->Paper();
 
+	my $MinimumCharge = openprint::Service->find_one(name=>'UVCoatingMinimumCharge');
+
 	foreach my $Equipment ( @equipment ) {
 		my %BestPricePerImposition;
-		my %minimum = openprint::service::get_price_object( 'UVCoatingMinimumCharge', undef, $Equipment );
+		my %minimum = $MinimumCharge->get_price( undef, $Equipment ) if $MinimumCharge;
 
 		for ( my $set_index = 0; $set_index < @Sets_Of_Impositions; $set_index += 1 ) {
 			my $impositions = $Sets_Of_Impositions[$set_index];
@@ -367,8 +369,9 @@ sub signature_calc {
 			for ( my $imp_index = 0; $imp_index < @$impositions; $imp_index += 1 ) {
 				my $imp = $$impositions[$imp_index];
 
-				$breakdown .= sprintf( '%dx%d+%dx%d=%dout on %sx%s<br/>',$imp->get('columns','rows','dutch_columns','dutch_rows','imposition'), $Stock->width(), $Stock->height() );
-$openprint::log->debug('Trying: ' . $breakdown ) if $debug;
+				#$breakdown .= sprintf( '%dx%d+%dx%d=%dout on %sx%s<br/>',$imp->get('columns','rows','dutch_columns','dutch_rows','imposition'), $Stock->width(), $Stock->height() );
+				$breakdown = $imp->to_string().'<br/>';
+$openprint::log->debug('Trying: ' . $breakdown ) if DEBUG;
 
 				if ( ! ( $imp->rows() * $imp->columns() ) ) {
 					$openprint::log->error("Invalid Imposition in UVCoating");
@@ -379,19 +382,24 @@ $openprint::log->debug('Trying: ' . $breakdown ) if $debug;
 
 				if ( (sets::intersection( @front_uv, @back_uv ) != sets::union( @front_uv, @back_uv ) ) and sets::isin($imp->runstyle(),['Work & Turn','Work & Tumble']) and ($Equipment->specification('WT UVCoating') ne 'Y') ) {
 					$breakdown .= 'Does not support WT UV Coating<br/>';
-					if ( $$services{'Cutting'} and ($set_index+1 == @Sets_Of_Impositions) ) {
-						my @new_imps = @$impositions;
-						splice @new_imps, $imp_index, 1, cut_imposition( $new_imps[$imp_index] );		
-						push @Sets_Of_Impositions, \@new_imps;
+					if ( $$services{Cutting} ) {
+						# If we are the last set
+						if ($set_index+1 == @Sets_Of_Impositions) {
+							my @new_imps = @$impositions;
+							splice @new_imps, $imp_index, 1, cut_imposition( $new_imps[$imp_index] );		
+							push @Sets_Of_Impositions, \@new_imps;
+						} # end if
+					} else {
+						$breakdown .= 'Cant cut down W&T because no cutting.  Please add cutting.<br/>';
 					} # end if
-$openprint::log->debug('W&T: ' . $breakdown ) if $debug;
+$openprint::log->debug('W&T: ' . $breakdown ) if DEBUG;
 					$complete = 0;
 					last;
 				} # end if
 
 				if ( $_ = $Equipment->fits( $Stock->width(), $Stock->height(), $Stock->calliper() ) ) {
 					$breakdown .= "Doesn't fit. $_<br/>";
-$openprint::log->debug('DOESNT: ' . $breakdown ) if $debug;
+$openprint::log->debug('DOESNT: ' . $breakdown ) if DEBUG;
 					$complete = 0;
 					if ( ! ( $_ =~ /Too small/ ) ) {
 						if ( $$services{'Cutting'} and ( $$imp{'imposition'} > 1 ) and ( $set_index+1 == @Sets_Of_Impositions ) ) {
@@ -501,16 +509,21 @@ if ( ! $setupPrice ) {
 				#$totalPrice += $ImpositionPrice{'Total'} + $ImpositionPrice{'Cutting'};
 			} # end foreach imposition
 		
-			next if ! $complete;
+			if ( ! $complete ) {
+$log->debug("Complete: $breakdown");
+				$BestPricePerImposition{Breakdown} = $breakdown;
+				next;
+			} #
 			$ImpositionPrice{'Total'} += misc::sum( @ImpositionPrice{'MakeReady','Service','Material','Blanket','Cutting'} );
 			$breakdown .= "Total: $ImpositionPrice{'Total'}<br/>";
 
 			if ( $ImpositionPrice{'Total'} < $BestPricePerImposition{'Total'} or ( ! defined $BestPricePerImposition{'Total'} ) ) {
 				%BestPricePerImposition = %ImpositionPrice;
-				$BestPricePerImposition{'Breakdown'} = $breakdown;
+				$BestPricePerImposition{Breakdown} = $breakdown;
 			} # end if
 		} # end foreach set of impositions
 		if ( ! defined $BestPricePerImposition{'Total'} ) {
+			$BestPrice{Breakdown} = 'Equipment: ' . $Equipment->name() . '<br/>' . $BestPricePerImposition{Breakdown};
 			$openprint::log->debug("Can't calculate price for $$Equipment{name}");
 			next;
 		} # end if
@@ -529,9 +542,9 @@ if ( ! $setupPrice ) {
 		} # end if
 		$BestPricePerImposition{'Total'} = misc::sum( @BestPricePerImposition{'MakeReady','Service','Material','Blanket','Cutting'} );
 
-		if ( %minimum and ( $BestPricePerImposition{'Total'} < $minimum{Price} ) ) {
-			$BestPricePerImposition{'Breakdown'} .= sprintf('Minimum: $%.2f<br/>', $minimum{'Price'});
-			$BestPricePerImposition{'Total'} = $minimum{Price};
+		if ( %minimum and ( $BestPricePerImposition{Total} < $minimum{Price} ) ) {
+			$BestPricePerImposition{Breakdown} .= sprintf('Minimum: $%.2f<br/>', $minimum{Price});
+			$BestPricePerImposition{Total} = $minimum{Price};
 		} # end if
 
 		if ( $BestPricePerImposition{'Total'} < $BestPrice{'Total'} or ( ! defined $BestPrice{'Total'} ) ) {
@@ -541,7 +554,7 @@ if ( ! $setupPrice ) {
 			$BestPrice{'Material'} = $BestPricePerImposition{'Material'};
 			$BestPrice{'Blanket'} = $BestPricePerImposition{'Blanket'};
 			$BestPrice{'Equipment'} = $Equipment;
-			$BestPrice{'Breakdown'} = 'Equipment: ' . $Equipment->name() . '<br/>' . $BestPricePerImposition{'Breakdown'};
+			$BestPrice{Breakdown} = 'Equipment: ' . $Equipment->name() . '<br/>' . $BestPricePerImposition{Breakdown};
 			$BestPrice{'Status'} = 'calculated';
 			$BestPrice{'Overs'} = $BestPricePerImposition{'Overs'};
 		} # endif
