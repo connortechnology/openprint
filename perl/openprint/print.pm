@@ -510,37 +510,21 @@ $log->debug("group $group_id");
 		delete $$services{$old_bindery_type};
 	} # end if
 
-	if ( $$param{'rdbTemplateType'} eq 'NoBindery' ) {
-		my %bindery_services = openprint::print_project::get_services_in_category( $log, $dbh, $project_index, 'Bindery' );
-		foreach my $service_id ( keys %bindery_services ) { 
-			my $ServiceType = new openprint::ServiceType( $bindery_services{$service_id} );
-			if ( $ServiceType->name() ne 'NoBindery' ) {
-				openprint::print_project::delete_service( $project_index, $service_id );
-				@{$$services{$_}} = sets::exclude( [ $service_id ], $$services{$service_id} );
+	if ( ! $$services{NoBindery} ) {
+$log->debug("No Nobindery");
+		if ( $$param{'rdbTemplateType'} ) {
+# Insert the desired Bindery Type
+			if ( ( ! $$services{$$param{'rdbTemplateType'}} ) and openprint::ServiceType->find_one( name=> $$param{'rdbTemplateType'} ) ) {
+				next if $$services{$$param{'rdbTemplateType'}};
+				push @{$$services{$$param{'rdbTemplateType'}}}, $Project->add_service( $$param{'rdbTemplateType'} );
 			} # end if
-		} # end foreach
-		
-		push @{$$services{'NoBindery'}}, $Project->add_service( 'NoBindery' ) if ! $$services{'NoBindery'};
-	} elsif ( $$param{'rdbTemplateType'} ) {
-		# Delete No Bindery Service
-		if ( $$services{'NoBindery'} ) {
-			foreach ( @{$$services{'NoBindery'}} ) {
-				openprint::print_project::delete_service( $project_index, $_ );
-			} # end foreach
-			delete $$services{'NoBindery'};
-		} # end if
 
-		# Insert the desired Bindery Type
-		if ( ( ! $$services{$$param{'rdbTemplateType'}} ) and openprint::ServiceType->find_one( name=> $$param{'rdbTemplateType'} ) ) {
-			next if $$services{$$param{'rdbTemplateType'}};
-			push @{$$services{$$param{'rdbTemplateType'}}}, $Project->add_service( $$param{'rdbTemplateType'} );
+			if ( sets::isin( $$param{'rdbTemplateType'}, ('SaddleStitching','LoopStitching','PerfectBound','Unbound') ) ) {
+# Saddle and Loop Stitching requires Folding
+				push @{$$services{'Folding'}}, $Project->add_service( 'Folding' ) if ! $$services{Folding};
+				push @{$$services{'Cutting'}}, $Project->add_service( 'Cutting' ) if ! $$services{Cutting};
+			} # end if
 		} # end if
-	} # end if
-
-	if ( sets::isin( $$param{'rdbTemplateType'}, ('SaddleStitching','LoopStitching','PerfectBound','Unbound') ) ) {
-		# Saddle and Loop Stitching requires Folding
-		push @{$$services{'Folding'}}, $Project->add_service( 'Folding' ) if ! $$services{'Folding'};
-		push @{$$services{'Cutting'}}, $Project->add_service( 'Cutting' ) if ! $$services{'Cutting'};
 	} # end if
 	sql::end_transaction( $dbh, $ac );
 } # end sub multipage_signatures
@@ -551,7 +535,7 @@ sub get_book_type {
 	my $services = $Project->services();
 
 # the way we cut down the book depends on how it is being bound, so we need this for the signature information.
-	foreach my $service ( 'SaddleStitching', 'LoopStitching', 'PerfectBound','SpinePaste','Spiral','MetalCoil','PlasticCoil','DoubleLoopWire','Cerlox','NoBindery' ) {
+	foreach my $service ( 'SaddleStitching', 'LoopStitching', 'PerfectBound','SpinePaste','Spiral','MetalCoil','PlasticCoil','DoubleLoopWire','Cerlox','Unbound' ) {
 		
 		if ( $$services{$service} ) {
 			return $service;
