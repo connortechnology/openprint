@@ -493,7 +493,7 @@ sub equals {
 
 sub to_string {
 	if ( ! $_[0]{'to_string'} ) {
-		$_[0]{'to_string'} = sprintf('%s %dx%d+%dx%d=%dout %dx%d=%dp %sx%s %s', ( $_[0]{Press} ? $_[0]->Press()->strid() : 'unknown equipment' ), $_[0]->get('columns','rows','dutch_columns','dutch_rows','imposition','page_columns','page_rows','pages', 'sheet_width','sheet_height', 'image_orientation') );
+		$_[0]{'to_string'} = sprintf('%s %dx%d+%dx%d=%dout %s %dx%d=%dpages on %sx%s %s', ( $_[0]{Press} ? $_[0]->Press()->strid() : 'unknown equipment' ), $_[0]->get('columns','rows','dutch_columns','dutch_rows','imposition','runstyle','page_columns','page_rows','pages', 'sheet_width','sheet_height', 'image_orientation') );
 	}
 	return $_[0]{'to_string'};
 } # end sub to_string
