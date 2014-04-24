@@ -83,7 +83,7 @@ same as front?
 					$colour, $$variable{'Signature'}, 
 					$$variable{'CyanSpotSideTwoCoverage'.$$variable{'Signature'}}, 
 					( $$variable{'chk'.$colour.'SideTwo'.$$variable{'Signature'}} eq $colour ? '':' style="display:none;"'),
-					ssi::input(
+					input(
 						type	=>	'cardinal',
 						id		=>	$colour.'SpotSideTwoCoverage'.$$variable{'Signature'},
 						name	=>	$colour.'SpotSideTwoCoverage'.$$variable{'Signature'},
@@ -104,7 +104,7 @@ same as front?
 	my $html = '';
 	foreach my $colour ( 'Cyan','Magenta','Yellow','Black' ) {
 		$html .= sprintf(q`<label for="%1$sSideTwoCoverage%3$s">%2$s</label>`, $colour, ($colour eq 'Black' ? 'K' : substr($colour,0,1) ), $$variable{'Signature'} );
-		$html .= ssi::input( 'type'=>'cardinal', 
+		$html .= input( type=>'cardinal', 
 			id		=>	$colour.'SideTwoCoverage'.$$variable{'Signature'},
 			name	=>	$colour.'SideTwoCoverage'.$$variable{'Signature'},
 			value	=>	$$variable{$colour.'SideTwoCoverage'.$$variable{'Signature'}}, 
