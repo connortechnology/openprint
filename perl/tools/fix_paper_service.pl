@@ -44,7 +44,7 @@ die 'No paper service' if ! $PaperService;
 
 my $ac = sql::start_transaction( $dbh );
 PROJECT: foreach my $Project ( openprint::Project->find( order=>'id', 
-			servicetype_id	=>	$PaperService->id(),
+			'servicetype_id any'	=>	$PaperService->id(),
 			( $project_id_end ? ( 'id <='=>$project_id_end) : () ),
 			( $project_id_start ? ( 'id >='=>$project_id_start) : () ),
 			( $company_id ? ( company_id=>$company_id ) : () ),
@@ -60,15 +60,19 @@ PROJECT: foreach my $Project ( openprint::Project->find( order=>'id',
 		my $form = $$sig_specs{SignatureIndex};
 	
 		foreach my $field ( 'qty','sheets','overrideqty','cost','overridecost','price' ) {
-			my $old_field = join('-', $field, $ss_id, $stock_index, $qty_index );
-			my $new_field = join('-', $field, $form, $stock_index, $qty_index );
-			if ( $$paper_specs{$old_field} ) {
-				if ( $$paper_specs{$new_field} ) {
-					print "Already upgraded project $$Project{id}\n";
-					next PROJECT;
-				} # end if
-				openprint::service::insert_service_spec( $log, $dbh, $$Project{id}, $$services{Paper}[0], $new_field, $$paper_specs{$old_field} );
-			} #ne dif
+			foreach my $stock_index ( 1 .. 4 ) {
+				foreach my $qty_index ( $Project->quantity_indexes() ) {
+					my $old_field = join('-', $field, $ss_id, $stock_index, $qty_index );
+					my $new_field = join('-', $field, $form, $stock_index, $qty_index );
+					if ( $$paper_specs{$old_field} ) {
+						if ( $$paper_specs{$new_field} ) {
+							print "Already upgraded project $$Project{id}\n";
+							next PROJECT;
+						} # end if
+						openprint::service::insert_service_spec( $log, $dbh, $$Project{id}, $$services{Paper}[0], $new_field, $$paper_specs{$old_field} );
+					} #ne dif
+				} # end foreach qty_index
+			} # end foreach stock_index
 		} # end foreach field	
 	} # end foreach ss_id
 
