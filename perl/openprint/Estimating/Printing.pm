@@ -1893,6 +1893,8 @@ sub set_size {
 						$$specs{txtSpreadSize} = 4;
 					} elsif ( $openprint::config{$$printing_specs{'rdbTemplateType'}.'SpreadSize'} ) {
 						$$specs{'txtSpreadSize'} = $openprint::config{$$printing_specs{'rdbTemplateType'}.'SpreadSize'};
+					} elsif ( $$printing_specs{'rdbTemplateType'} eq 'Unbound' ) {
+						$$specs{'txtSpreadSize'} = 2;
 					} elsif ( $$printing_specs{'rdbTemplateType'} eq 'PerfectBound' ) {
 						if ( $openprint::config{PerfectBindSpreadSize} ) {
 							$$specs{'txtSpreadSize'} = $openprint::config{PerfectBindSpreadSize};
@@ -1909,6 +1911,7 @@ sub set_size {
 				} # end if
 				$variables{txtSpreadSize} = [ sets::union( 'output', @{$variables{txtSpreadSize}} ) ];
 			} # end if
+$openprint::log->debug("Spread size: $$specs{'txtSpreadSize'}");
 
 			if ( ( ! defined $$specs{chkOverrideDimensions} ) or ( $$specs{chkOverrideDimensions} ne 'Y' ) ) {
 				if ( $$specs{txtSpreadSize} == 4 ) {
