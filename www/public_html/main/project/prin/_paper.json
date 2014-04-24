@@ -17,12 +17,12 @@
 
 	my %find = (
 		'user_type null or in' => \@user_types,
-		( $$ProjectType{'id'}?(
+		( $$ProjectType{id}?(
 							   'project_type_id any'	=>	$ProjectType->id(),
 							  ):(
 							   'width is null' => 0,
 							   )),
-		( exists $param{'Supplied'} ? ( 'supplied is null or ='			=>	$param{'Supplied'} ) : () ),
+		( exists $param{Supplied} ? ( 'supplied is null or ='			=>	$param{Supplied} ) : () ),
 		);
 	$param{selected} =~ s/^ddmStock(\w+)$param{signature_id}/$1/;
 	my $selected_index = sets::index( $param{selected}, @options );
@@ -65,7 +65,7 @@ if ( 0 ) {
 		# i should only be 0 when selected is rdbSupplied
 		# So if selected is Finish, $i will be 2?
 		if ( $i and $param{$options[$i-1]} ) {
-$log->debug(" filtering by $options[$i-1] ");
+#$log->debug(" filtering by $options[$i-1] ");
 			for ( my $stock_index = 0; $stock_index < @Stocks; $stock_index += 1 ) {
 				# This ensure that the stock matches the previous option.  
 				my ( $value ) = $Stocks[$stock_index]->get($lc_options[$i-1]);
@@ -83,7 +83,7 @@ $log->debug(" filtering by $options[$i-1] ");
 		} # end if $i and $param{$options[$i-1]} 
 
 		if ( ! @Stocks ) {
-$log->warn("No stocks, adding them back for $i $options[$i-1]");
+#$log->warn("No stocks, adding them back for $i $options[$i-1]");
 			# If we have removed all stocks, then drop the filter, so we get some results.
 
 			# Tetll mem again, why we do this?

@@ -861,7 +861,7 @@ sub input {
 	} elsif ( $options{type} eq 'float' ) {
 		if ( $ENV{HTTP_USER_AGENT} =~ /ip(ad|od|hone)/i ) {
 			$options{type} = 'text';
-			$options{'pattern'} = '[0-9]*' if ! $options{'pattern'};
+			$options{'pattern'} = '[.0-9]*' if ! $options{'pattern'};
 		} else {
 			$options{type} = 'number';
 		} # end if

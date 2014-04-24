@@ -656,7 +656,6 @@ $openprint::log->debug("Unable to get sig_weight for signature $$sig_specs{'Sign
 	return $project_weight * (1+$openprint::config{'WeightMarkup'}/100);
 } # end sub get_finished_weight
 
-
 # Finished calliper for books will be calculated from the first qty.  All three should be the same.
 sub get_finished_calliper { 
 	my ( $project_index ) = @_; 
@@ -669,7 +668,7 @@ sub get_quantities {
 	if ( ! $$variable{'QUANTITIES'} ) {
 		my $Project = new openprint::Project( $project_index );
 		my @qtys = $Project->quantities();
-		my $columns;
+		my $columns = 0;
 		for ( my $index = 0; $index < @qtys; $index += 1 ) {
 			$$variable{'QUANTITIES'} .= " quantities[$index] = '$qtys[$index]'; \n";
 			$$variable{'QUANTITY'.($index+1)} = $qtys[$index];
@@ -683,5 +682,4 @@ sub get_quantities {
 } # end sub get_quantities
 
 1;
-
 __END__
