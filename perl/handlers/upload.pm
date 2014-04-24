@@ -57,16 +57,17 @@ sub handler {
 	my $rsize;
 
 	if ( $request->method eq 'POST' ) {
-	my $table = $request->headers_in;
+		my $table = $request->headers_in;
 
-foreach my $key (keys %{$table}) {
-      $log->debug( "$key = $table->{$key}" );
-  }
+		foreach my $key (keys %{$table}) {
+			$log->debug( "$key = $table->{$key}" );
+		}
 		$uploaded = 0;
 		($serial) = $request->args() =~ /serial=(\d*)/;
 		my ($company) = $request->args() =~ /txtCompanyName=([.^&]*)/;
 		( $rsize ) = $request->args() =~ /qqtotalfilesize=(\d+)/;
 		$rsize=$request->headers_in->{'Content-Length'} if ! $rsize;
+		
 		if ( $serial ) {
 			sql::execute( undef, undef, q{DELETE FROM Uploads WHERE id=?}, $serial );
 		} else {

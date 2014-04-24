@@ -1072,6 +1072,40 @@ sub View {
 } # end sub View
 sub DESTROY {
 }
+sub lock {
+	my ( $caller, undef, $line ) = caller;
+
+	my $type = ref $_[0];
+	if ( $_[0]{ac} ) {
+		#already locked
+		$openprint::log->debug("ALREADY LOCKED $type for $_[0]{id} ac: $_[0]{ac} caller: $caller line: $line project ref:" . $_[0]);
+		$_[0]{ac} += 1;
+	} else {
+		$_[0]{ac} = sql::start_transaction( $openprint::dbh );
+		$openprint::log->debug("LOCKING Projects for project $_[0]{id} ac: $_[0]{ac} caller: $caller line: $line project ref:" . $_[0]);
+		my $table = ${$type.'::table'};
+		$dbh->do( "LOCK TABLE $table IN EXCLUSIVE MODE" ) or $log->error( DBI->errstr );
+	} # end if
+
+} # end sub lock
+
+sub unlock {
+	my ( $caller, undef, $line ) = caller;
+	my $type = ref $_[0];
+	$openprint::log->debug("UNLOCKING $type for $_[0]{id} ac: $_[0]{ac} caller: $caller line: $line" . $_[0]);
+	if ( ! exists $_[0]{ac} ) {
+		$_[0]{ac} = $openprint::dbh->{AutoCommit};
+	} # end if
+	if ( ! $_[0]{ac} ) {
+		$openprint::log->debug("unlock with no AC!");
+		return;
+	} # end if
+	if ( $_[0]{ac} == 1 ) {
+		sql::end_transaction( $openprint::dbh, $_[0]{ac} );
+	} else {
+		$_[0]{ac} -= 1;
+	} # end if
+} # end sub unlock
 
 1;
 __END__
