@@ -133,6 +133,7 @@ $serial	= 'paper_id_seq';
 	type				=>	q`''`,
 	manufacturer_id		=>	undef,
 	group_id			=>	undef,
+	quality_id			=>	undef,
 	available_to_order	=>	undef,
 );
 

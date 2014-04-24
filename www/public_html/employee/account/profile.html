@@ -154,7 +154,8 @@
         <ul>
     <? echo ( 
 		require openprint::RADIUS_Check;
-        $openprint::RADIUS_Check::dbh = sql::open_sql( $log,
+		require openprint::RADIUS_Reply;
+        $openprint::RADIUS_Reply::dbh = $openprint::RADIUS_Check::dbh = sql::open_sql( $log,
             'database'  => $config{'RADIUS DB Name'},
             'driver'    => $config{'RADIUS DB Driver'},
             'host'      => $config{'RADIUS DB Server'},
@@ -165,11 +166,10 @@
             return 'Unable to connect to RADIUS DB server.';
         } # end if
 
-        my $html = '';
-        my $fragment = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/employee/it/_radius_mac_line.html' );
 		$$variable{'username'} = $$variable{'User'}->email();
+        my $html = '';
 		$html .= qq`<li id="mac_$$variable{username}">`;
-		$html .= variable_substitution( \$fragment, $variable );
+		$html .= include( '/employee/it/_radius_mac_line.html' );
 		$html .= '</li>';
         return $html;
     ) ?>

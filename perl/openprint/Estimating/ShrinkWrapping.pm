@@ -14,13 +14,15 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 
+use constant DEBUG => 1;
+
 use strict;
 package openprint::Estimating::ShrinkWrapping;
 use POSIX qw(ceil);
 use warnings;
 
 require openprint::service;
-require sql;
+require openprint::Project;
 
 my @variables = (
 	'txtItemsPerPackage','AccurateCount','bands_per_package',
@@ -58,8 +60,8 @@ sub calc {
 	my $Project = new openprint::Project( $project_index );
 	my $services = $Project->services();
 	if ( ! $$services{''} ) {
-		$$specs{'alert'} .= 'Unable to find project service.<br/>';
-		return $$specs{'Status'} = 'uncalculated';
+		$$specs{alert} .= 'Unable to find project service.<br/>';
+		return $$specs{Status} = 'uncalculated';
 	} # end if
 	my $ServiceType = $Project->ServiceType( $service_index );
 	my $status = 'calculated';
@@ -68,34 +70,33 @@ sub calc {
 		my @sigs = $Project->signatures();
 		if ( ! @sigs ) {
 			$$specs{alert} .= 'There are no signatures... cannot determine size.<br/>';
-			return $$specs{'Status'} = 'uncalculated';
+			return $$specs{Status} = 'uncalculated';
 		} # end if
 		foreach my $sig_id ( @sigs ) {
-		$printing_specs = openprint::service::get_specs_ref( $Project, $sigs[0] );
+			$printing_specs = openprint::service::get_specs_ref( $Project, $sigs[0] );
 			last if $$printing_specs{txtFinalWidth} and $$printing_specs{txtFinalHeight};
 		} # end foreach
 	} # end if
 	if ( ! ( $$printing_specs{txtFinalWidth} and $$printing_specs{txtFinalHeight} ) ) {
 		$openprint::log->error('Unable to determine dimensions.<br/>');
 		$$specs{alert} .= 'Unable to determine dimensions.<br/>';
-		return $$specs{'Status'} = 'uncalculated';
+		return $$specs{Status} = 'uncalculated';
 	} # end if
 
-$openprint::log->debug(" $$printing_specs{txtFinalWidth} and $$printing_specs{txtFinalHeight}");
-	$$specs{'txtItemsPerPackage'} = int($$specs{'txtItemsPerPackage'}) if $$specs{'txtItemsPerPackage'};
-	if ( ! $$specs{'txtItemsPerPackage'} ) {	# a zero value is still calculated, just with a zero price.d
+	$$specs{txtItemsPerPackage} = int($$specs{txtItemsPerPackage}) if $$specs{txtItemsPerPackage};
+	if ( ! $$specs{txtItemsPerPackage} ) {	# a zero value is still calculated, just with a zero price.d
 		if ( $ServiceType->name() eq 'Bundling' ) {
-			$$specs{'alert'} .= 'Please enter the # of items in each bundle';
+			$$specs{alert} .= 'Please enter the # of items in each bundle';
 		} elsif ( $ServiceType->name() eq 'ShrinkWrap' ) {
-			$$specs{'alert'} .= 'Please enter the # of items in each wrap';
+			$$specs{alert} .= 'Please enter the # of items in each wrap';
 		} else {
-			$$specs{'alert'} .= 'Please enter the # of items in each ' . $ServiceType->name();
+			$$specs{alert} .= 'Please enter the # of items in each ' . $ServiceType->name();
 		} # end if
-        return $$specs{'Status'} = 'uncalculated';
+        return $$specs{Status} = 'uncalculated';
 	} # end if
-	if ( ! $$specs{'rdbCardboardBacking'} ) {
-        $$specs{'alert'} = 'Please select whether you need cardboard backing.';
-        return $$specs{'Status'} = 'uncalculated';
+	if ( ! $$specs{rdbCardboardBacking} ) {
+        $$specs{alert} = 'Please select whether you need cardboard backing.';
+        return $$specs{Status} = 'uncalculated';
     } # end if
 
 	$$specs{'bands_per_package'} =~ s/[^\d\.]//g if $$specs{'bands_per_package'};
@@ -130,8 +131,8 @@ $openprint::log->debug("EQ: " . @Equipment );
 			my $unitPrice = 0;
 			my %ServicePrice = $Service->get_price( $qty, $Equipment );
 			if ( %ServicePrice ) {
-				if ( $ServicePrice{'units'} eq 'per m' ) {
-					$ServicePrice{'Total'} = $ServicePrice{'Price'} * $qty / 1000;
+				if ( $ServicePrice{units} eq 'per m' ) {
+					$ServicePrice{Total} = $ServicePrice{'Price'} * $qty / 1000;
 					$$specs{'hdnBreakdown'.$qty_index} .= sprintf('ServicePrice %1$.2f%2$s * %4$d = $%3$.2f<br/>', @ServicePrice{'Price','units','Total'}, $qty );
 				} elsif ( $ServicePrice{'units'} eq 'each' ) {
 					$ServicePrice{'Total'} = $ServicePrice{'Price'} * $qty;
@@ -145,9 +146,9 @@ $openprint::log->debug("EQ: " . @Equipment );
 						$$specs{'hdnBreakdown'.$qty_index} .= 'No runspeed specified.<br/>';
 						next;
 					} # end if
-					my $hours = $inches / $Runspeed->value() if $Runspeed->value();
+					my $hours = Math::Round::nearest(0.01, $inches / $Runspeed->value() ) if $Runspeed->value();
 					$ServicePrice{Total} = $ServicePrice{Price} * $hours;
-					$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Runspeed %d%s, %s*%d * %sinches = %shours<br/>', @$Runspeed{'value','units'}, $length, $package_qty, $inches, $hours );
+					$$specs{'hdnBreakdown'.$qty_index} .= sprintf('%3$s inches * %4$d = %5$sinches, @ %1$d%2$s = %6$shours<br/>', @$Runspeed{'value','units'}, $length, $package_qty, $inches, $hours );
 					$$specs{'hdnBreakdown'.$qty_index} .= sprintf('ServicePrice $%1$.2f%2$s * %4$.2f hours = $%3$.2f<br/>', @ServicePrice{'Price','units','Total'}, $hours );
 				} else {
 					$$specs{'hdnBreakdown'.$qty_index} .= sprintf('No units set for %s (%s)<br/>', $ServiceType->name(), $ServicePrice{'units'} );
@@ -173,7 +174,7 @@ $openprint::log->debug("Cardboard size: $$printing_specs{txtFinalWidth} * $$prin
 				} # end if
 			} # end if
 			if ( my @Materials = openprint::Material->find( category=>$ServiceType->name()) ) {
-				$$specs{'hdnBreakdown'.$qty_index} .= 'Dimension used for amount of film calculation: ' . $length . ' total length of film used: ' . $inches. '<br/>';
+				$$specs{'hdnBreakdown'.$qty_index} .= 'Dimension used for amount of film calculation: ' . $length . ' total length of film used: ' . $inches. 'inches<br/>';
 				if ( scalar @Materials == 1 ) {
 					$$specs{'type_id'} = $Materials[0]->id();
 				} # end if

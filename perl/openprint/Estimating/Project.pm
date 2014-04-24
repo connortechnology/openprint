@@ -778,6 +778,7 @@ $log->debug("Presentation folder sizes $$specs{'chkPocketLeft'} $$specs{'chkPock
 		foreach ( @{$$services{'Lamination'}} ) {
 			openprint::print_project::delete_service( $$Project{'id'}, $_ );
 		} # end foreach
+		delete $$services{Lamination};
 	} # end if LaminationType
 
 	foreach my $sid ( @{$$services{'Turnaround'}} ) {
@@ -795,6 +796,7 @@ $log->debug("Presentation folder sizes $$specs{'chkPocketLeft'} $$specs{'chkPock
 			foreach ( @{$$services{$service_name}} ) {
 				openprint::print_project::delete_service( $log, $dbh, $$Project{id}, $_ );
 			} # end foreach
+			delete $$services{$service_name};
 		} # end if
 	}  # end foreach service_name
 

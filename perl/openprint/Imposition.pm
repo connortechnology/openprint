@@ -97,8 +97,8 @@ sub display {
 	#$openprint::log->debug(sprintf('Imp %s: %dx%dout %dx%d+%dx%d:%dout spreads:%dx%d=%d pages:%dx%d=%d %s on: %sx%s %.3fx%.3f %s I: %.3fx%.3f L:%.3fx%.3f %s %s minimum: %s', $prefix,
 	#@$self{'quantity','start_imposition','columns','rows','dutch_columns','dutch_rows','imposition','spread_columns','spread_rows','spreads'},$self->page_columns(), $self->page_rows(), $self->pages(), $$self{'runstyle'}, $$self{paper}->{start_width},$$self{paper}->{start_height},$self->{paper}->{width},$self->{paper}->{height},$$self{Press}->{strid}, @$self{'image_width','image_height','layout_width','layout_height','image_orientation'},$self->grain_direction(), $$self{paper}->minimum_order() ) );
 my ( $caller, undef, $line ) = caller;
-	$openprint::log->debug(sprintf('Imp %s: %dx%d+%dx%d:%dout%s pages:%dx%d=%d %s on: %sx%s->%sx%s=%dsq min: %s %s %s versions: %d specs: %s from %s:%d', $prefix,
-	@$self{'columns','rows','dutch_columns','dutch_rows','imposition','image_orientation'},$self->page_columns(), $self->page_rows(), $self->pages(), $$self{'runstyle'}, @$Paper{'start_width','start_height','width','height'}, $Paper->area(),$$Paper{'minimum_order'}, $$self{Press}->{strid}, ( $$self{'Price'} ? $$self{'Price'} : '' ), $$self{versions}, $$self{specs}, $caller, $line ) );
+	$openprint::log->debug(sprintf('Imp %s: %d %dx%d+%dx%d:%dout%s pages:%dx%d=%d %s on: %sx%s->%sx%s=%dsq min: %s %s %s versions: %d specs: %s from %s:%d', $prefix,
+	@$self{'quantity','columns','rows','dutch_columns','dutch_rows','imposition','image_orientation'},$self->page_columns(), $self->page_rows(), $self->pages(), $$self{'runstyle'}, @$Paper{'start_width','start_height','width','height'}, $Paper->area(),$$Paper{'minimum_order'}, $$self{Press}->{strid}, ( $$self{'Price'} ? $$self{'Price'} : '' ), $$self{versions}, $$self{specs}, $caller, $line ) );
 } # end sub display
 
 sub get {
@@ -493,7 +493,7 @@ sub equals {
 
 sub to_string {
 	if ( ! $_[0]{'to_string'} ) {
-		$_[0]{'to_string'} = sprintf('%s %dx%d+%dx%d=%dout %dx%d=%dp %sx%s %s', ( $_[0]{Press} ? $_[0]->Press()->strid() : 'unknown equipment' ), $_[0]->get('columns','rows','dutch_columns','dutch_rows','imposition','page_columns','page_rows','pages', 'sheet_width','sheet_height', 'image_orientation') );
+		$_[0]{'to_string'} = sprintf('%s %dx%d+%dx%d=%dout %s %dx%d=%dpages on %sx%s %s', ( $_[0]{Press} ? $_[0]->Press()->strid() : 'unknown equipment' ), $_[0]->get('columns','rows','dutch_columns','dutch_rows','imposition','runstyle','page_columns','page_rows','pages', 'sheet_width','sheet_height', 'image_orientation') );
 	}
 	return $_[0]{'to_string'};
 } # end sub to_string

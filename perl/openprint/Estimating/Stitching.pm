@@ -192,7 +192,7 @@ sub signature_calc {
 	my @printed_impositions;
 	my $imposition = 2;
 	$$specs{"txtPockets$qty_index"} = 0;
-	my $Folding_Equipment = new openprint::Equipment( $$folding_specs{"ddmEquipment-$$sig_specs{SignatureIndex}-$qty_index"} );
+	my $Folding_Equipment = new openprint::Equipment( $$folding_specs{"ddmEquipment-$$sig_specs{SignatureIndex}-$qty_index"} ) if $$folding_specs{"ddmEquipment-$$sig_specs{SignatureIndex}-$qty_index"};
 
 	foreach my $I ( @$Impositions ) {
 $I->display('In Stitching:') if DEBUG;
@@ -431,7 +431,7 @@ $results{'Breakdown'} .= 'Imposition: ' . $imposition . 'out<br/>';
 					} # end if
 				} # end if
 			} # end if
-			if ( ( $_ = $Folding_Equipment->specification('Folding Capable') ) and ( $_ eq 'When Stitching' ) ) {
+			if ( $Folding_Equipment and ( $_ = $Folding_Equipment->specification('Folding Capable') ) and ( $_ eq 'When Stitching' ) ) {
 				if ( $Folding_Equipment->id() != $Equipment->id() ) {
 					$results{Breakdown} .= $Equipment->strid() . ' is not the folding equipment<br/>';
 					next;
@@ -855,7 +855,7 @@ $openprint::log->debug(" fold qty * pages($pages) == sig_pages($sig_pages) foldQ
 				$bestPrice = $price;
 			} # end if
 			$$specs{'hdnBreakdown'.$qty_index} .= 'Quantity: ' . $$specs{"txtQuantity$qty_index"} .  ", Equipment: ".$Equipment->strid() ."<br/>";
-			$$specs{'hdnBreakdown'.$qty_index} .= 'Estimated Run Time: '. sprintf('%.1f', $$price{'RunTime'} ) . ",<br/>";
+			$$specs{'hdnBreakdown'.$qty_index} .= 'Estimated Run Time: @'.$$price{Runspeed}.'/Hr = '. sprintf('%.1f', $$price{'RunTime'} ) . ",<br/>";
 			$$specs{'hdnBreakdown'.$qty_index} .= 'Number of Passes: '. sprintf('%.1f', $$price{'Passes'} ) . ",<br/>";
 			$$specs{'hdnBreakdown'.$qty_index} .= 'Imposition: '. sprintf('%dout', $$price{'Imposition'} ) . ",<br/>";
 			$$specs{'hdnBreakdown'.$qty_index} .= 'Run Discount' . $$price{'RunCost Discount'}.'%<br/>' if $$price{'RunCost Discount'};
@@ -868,7 +868,7 @@ $openprint::log->debug(" fold qty * pages($pages) == sig_pages($sig_pages) foldQ
 			} # end if
 			my $servicePrice = $$price{'LastServicePrice'};
 			$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Service: 1 pass at $%.2f%s=$%.2f<br/>', @$servicePrice{'Price','units','Total'});
-			$$specs{'hdnBreakdown'.$qty_index} .= 'Total: $'. sprintf('%.2f', int($$price{'txtPrice'})).'<br/><br/>';
+			$$specs{'hdnBreakdown'.$qty_index} .= 'Total: $'. sprintf('%.2f', Math::Round::nearest(1,$$price{'txtPrice'})).'<br/><br/>';
 		} # end foreach
 		if ( ! $bestEquipment ) {
 $openprint::log->error("No best equipment in Stitching");
@@ -1005,6 +1005,7 @@ $openprint::log->debug("Need more pockets $maxPockets") if DEBUG;
 		$price{'ServicePrice'} = \%servicePrice;
 		
 		$unitsPerHour = $Equipment->specification( 'Units Per Hour', $maxPockets );
+		$price{Runspeed} = $unitsPerHour;
 		my $runtime = $unitsPerHour ? $qty/$unitsPerHour : 0; # in seconds
 			$price{'RunTime'} += $runtime * 360;
 		my $loopbreak_pockets = $neededPockets;

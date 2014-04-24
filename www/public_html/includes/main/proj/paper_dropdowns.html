@@ -40,21 +40,12 @@
 				<? echo ( input( type=>'float', name=>'txtSpecificStockCalliper'.$$variable{Signature}, value=>$$variable{'txtSpecificStockCalliper'.$$variable{Signature}}, onchange=>'calc(this.form.name);' ); ) ?>
 				inches
 			</li>
-<? eval (
-	@{$$variable{'PaperTypes'}} = ();
-	push @{$$variable{'PaperTypes'}}, 'Sheet' if openprint::Paper->find_one(type=>'Sheet');
-	push @{$$variable{'PaperTypes'}}, 'Roll' if openprint::Paper->find_one(type=>'Roll');
-) ?>
-<? if ( @{$$variable{'PaperTypes'}} > 1 ) ?>
 			<li><label>Format</label>
 				<input type="radio" id="StockType<?Signature?>Sheet" name="StockType<?Signature?>" value="Sheet" <? echo ( checked( $$variable{'StockType'.$$variable{Signature}} eq 'Sheet' ); ) ?> onclick="if ( this.checked ) { $('SpecificStockHeight<?Signature?>').show();$('BasisSize<?Signature?>').hide();$('MWeight<?Signature?>').show();$('PricePerM<?Signature?>').show();gsm_to_mweight(this.form,'<?Signature?>');$('minimum_order_units<?Signature?>').innerHTML='sheets';$('sheets_per_package<?Signature?>').innerHTML='sheets';} calc(this.form.name);" />
 				<label class="radio" for="StockType<?Signature?>Sheet">Sheet</label>
 				<input type="radio" id="StockType<?Signature?>Roll" name="StockType<?Signature?>" value="Roll" <? echo ( checked( $$variable{'StockType'.$$variable{Signature}} eq 'Roll' ); ) ?> onclick="if ( this.checked ) { f1.elements['txtSpecificStockHeight<?Signature?>'].value='';$('SpecificStockHeight<?Signature?>').hide();$('BasisSize<?Signature?>').show();$('MWeight<?Signature?>').hide();$('PricePerM<?Signature?>').hide();gsm_to_mweight(this.form,'<?Signature?>');paper_price_calc(this,'<?Signature?>');$('minimum_order_units<?Signature?>').innerHTML='lbs';$('sheets_per_package<?Signature?>').innerHTML='lbs';}calc(this.form.name);" />
 				<label class="radio" for="StockType<?Signature?>Roll">Roll</label>
 			</li>
-<? else ( @{$$variable{'PaperTypes'}} > 1 ) ?>
-	<input type="hidden" name="StockType<?Signature?>" value="<? echo ( if ( $$variable{'StockType'.$$variable{Signature}} ) { return $$variable{'StockType'.$$variable{Signature}}; } else { return $$variable{'PaperTypes'}[0] } ) ?>" />
-<? endif ( @{$$variable{'PaperTypes'}} > 1 ) ?>
 			<li id="SpecificStockSize<?Signature?>">
 				<label>Size</label>
 				<? echo ( input( type=>'float', name=>'txtSpecificStockWidth'.$$variable{Signature}, value=>$$variable{'txtSpecificStockWidth'.$$variable{Signature}}, onkeyup=>"Stock_onchange(this,'$$variable{Signature}');gsm_to_mweight(this.form,'$$variable{Signature}');paper_price_calc(this,'$$variable{Signature}');" ); ) ?>
@@ -131,7 +122,6 @@
 			<ul>
 <? echo (
 	my $html;
-	my @types = @{$$variable{'PaperTypes'}};
 
 	my @user_types = (undef, '');
 	push @user_types, 'C' if $session{'user_id'};
@@ -141,7 +131,6 @@
 	my %find = (
 			'project_type_id any'	=>	$$variable{'ProjectType'}->id(),
 			'supplied is null or ='	=>	$$variable{'rdbSuppliedStock'.$$variable{Signature}} eq 'Y' ? 1 : 0,
-			'type'					=>	\@types,
 			'user_type null or in'=>	\@user_types,
 			'available_to_order is null or >'	=>	0,
 	);

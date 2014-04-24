@@ -299,11 +299,11 @@ $log->debug("Trying to match ( $regexp in $file, got $company_name");
 	my $dbh_count = 1;
 	while ( ! ( $openprint::dbh and $openprint::dbh->ping() ) ) {
 		$openprint::dbh = sql::open_sql( $log, 
-			'host'		=> $config{'db_host'},
-			'database'	=> $config{'db_name'},
-			'driver'	=> 'Pg',
-			'login'		=> $config{'db_user'},
-			'password'	=> $config{'db_pass'},
+			host		=> $config{'db_host'},
+			database	=> $config{'db_name'},
+			driver		=> 'Pg',
+			login		=> $config{'db_user'},
+			password	=> $config{'db_pass'},
 		);
 		$log->error("Unable to connect to database, try $dbh_count. sleeping.");
 		$dbh_count += 1;
@@ -313,17 +313,17 @@ $log->debug("Trying to match ( $regexp in $file, got $company_name");
 	my $Company;
 	my $User;
 
-	if ( $$upload{'company_name'} ) {
+	if ( $$upload{company_name} ) {
 # Try to figure out the company
-		if ( ! ( $Company = openprint::Company->find_one('name'=>$$upload{'company_name'} ) ) ) {
-$log->debug("Didn't Found company $$upload{'company_name'}");
+		if ( ! ( $Company = openprint::Company->find_one( name=>$$upload{company_name} ) ) ) {
+$log->debug("Didn't Found company $$upload{company_name}");
 		} else {
 $log->debug("Found company $$upload{'company_name'}");
 		} # end if
 	} # end if
 	if ( $Company ) {
 		# If we hae the company, then narrow the user search
-		if ( $User = openprint::User->find_one('company_id'=>$Company->id(), 'email'=>lc $upload->{user}) ) {
+		if ( $User = openprint::User->find_one( company_id=>$Company->id(), email=>lc $upload->{user}) ) {
 $log->debug("Found user $$upload{user} with company");
 		} # end if
 	} # end if

@@ -388,18 +388,16 @@ sub paper_details {
 		$Paper = $Paper->next();
 	} elsif ( $param{'btnFunction'} eq 'Save' ) {
 		$Paper->owner_id( $param{'Owner'} );
-		$Paper->manufacturer( $param{'txtManufacturer'} ) if $param{'txtManufacturer'};
-		$Paper->manufacturer_id( $param{'Manufacturer'} ) if $param{'Manufacturer'};
-		$Paper->brand( $param{'txtBrand'} ) if $param{'txtBrand'};
-		$Paper->brand_id( $param{'Brand'} ) if $param{'Brand'};
-		$Paper->finish( $param{'txtFinish'} ) if $param{'txtFinish'};
-		$Paper->finish_id( $param{'Finish'} ) if $param{'Finish'};
-		$Paper->colour( $param{'txtColour'} ) if $param{'txtColour'};
-		$Paper->colour_id( $param{'Colour'} ) if $param{'Colour'};
-		$Paper->weight( $param{'txtWeight'} ) if $param{'txtWeight'};
-		$Paper->weight_id( $param{'Weight'} ) if $param{'Weight'};
-		$Paper->quality( $param{'txtQuality'} ) if $param{'txtQuality'};
-		$Paper->quality_id( $param{'Quality'} ) if $param{'Quality'};
+		foreach my $option ( 'Manufacturer', 'Group', 'Brand','Finish','Colour','Weight','Quality' ) {
+			my $option_lc = lc $option;
+			my $option_id = $option_lc.'_id';
+			if ( $param{'txt'.$option} ) {
+				$Paper->$option_lc( $param{'txt'.$option} );
+			} elsif ( $param{$option} ) {
+				$Paper->$option_id( $param{$option} );
+			} # end if
+		} # end foreach
+			
 		$Paper->type( $param{'type'} );
 		if ( $param{'type'} eq 'Roll' ) {
 			$Paper->width( $param{'width'} );
@@ -523,6 +521,8 @@ sub save_Paper {
 
 	my @Papers = openprint::Paper->find(
 			( $param{'Owner'.$id} ? ( 'owner_id'	=>	$param{'Owner'.$id} ) : () ),
+			( $param{'Group'.$id} ? ( group_id	=>	$param{'Group'.$id} ) : () ),
+			( $param{'txtGroup'.$id} ? ( group		=>	$param{'txtGroup'.$id} ) : () ),
 			( $param{'Manufacturer'.$id} ? ( 'manufacturer_id'	=>	$param{'Manufacturer'.$id} ) : () ),
 			( $param{'txtManufacturer'.$id} ? ( 'manufacturer'		=>	$param{'txtManufacturer'.$id} ) : () ),
 			( $param{'Brand'.$id} ? ( 'brand_id'	=>	$param{'Brand'.$id} ) : () ),
@@ -546,6 +546,8 @@ sub save_Paper {
 	if ( 0 == @Papers ) {
 		$Paper = new openprint::Paper( );
 		$Paper->owner_id( $param{'Owner'.$id} );
+		$Paper->group( $param{'txtGroup'.$id} ) if $param{'txtGroup'.$id};
+		$Paper->group_id( $param{'Group'.$id} ) if $param{'Group'.$id};
 		$Paper->manufacturer( $param{'txtManufacturer'.$id} ) if $param{'txtManufacturer'.$id};
 		$Paper->manufacturer_id( $param{'Manufacturer'.$id} ) if $param{'Manufacturer'.$id};
 		$Paper->brand( $param{'txtBrand'.$id} ) if $param{'txtBrand'.$id};
@@ -610,15 +612,21 @@ sub save_Paper {
 			$Paper->fsc_code( $param{'fsc_code'.$id} );
 			$changed = 1;
 		} # end if
-		if ( $param{'Quality'} ) {
-			if ( $param{'Quality'} != $Paper->quality_id() ) {
-				$Paper->quality_id( $param{'Quality'} );
+		foreach my $option ( 'Quality', 'Group' ) {
+			
+			my $option_lc = lc $option;
+			if ( $param{$option} ) {
+				my $option_id = $option_lc . '_id';
+$log->debug("Option $option $param{$option} : " . $Paper->$option_id() );
+				if ( $param{$option} != $Paper->$option_id() ) {
+					$Paper->$option_id( $param{$option} );
+					$changed = 1;
+				} # end if
+			} elsif ( $param{'txt'.$option} ) {
+				$Paper->$option_lc($param{'txt'.$option});
 				$changed = 1;
 			} # end if
-		} elsif ( $param{'txtQuality'} ) {
-			$Paper->quality($param{'txtQuality'});
-			$changed = 1;
-		} # end if
+		} # end foreach option
 		if ( $changed ) {
 			$Paper->save();
 		} # end if

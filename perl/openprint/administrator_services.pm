@@ -101,7 +101,11 @@ sub _prices_table_body {
 	$variable{Pricelist} = $Price->Pricelist();
 	$variable{Service} = $Price->Service();
 	$variable{company_ids} = [ map { $_->id(), $_->name() } openprint::Company->find( supplier=>'Y', order=>'lower(name)' ) ];
-	if ( $param{action} eq 'copy' ) {
+	if ( $param{action} eq 'add' ) {
+		my $Service = $variable{Service} = new openprint::Service( $param{ddmService} );
+		my $Price = $variable{Price} = new openprint::ServicePrice();
+		$variable{error} .= $Price->save({ equipment_id=>$param{equipment_id}, pricelist_id=>$param{pricelist_id}, service_id=>$$Service{id} });
+	} elsif ( $param{action} eq 'copy' ) {
 		$Price = $Price->copy();
 		$variable{error} .= $Price->save();
 	} elsif ( $param{action} eq 'delete' ) {

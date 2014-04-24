@@ -13,7 +13,6 @@
 
 <script type="text/javascript">
 	function calc( formName, force ) {
-//alert("caller is " + arguments.callee.caller.toString());
 		calc_print( formName, force );
 	}
 </script>
@@ -161,8 +160,7 @@
 		<?include(/includes/main/proj/dimensions.html)?>
 <? endif ( $$variable{'ProjectType'}->name() eq 'Forms' ) ?>
 <? if ( $$variable{'ProjectType'}->name() eq 'Covers' ) ?>
-		<?include(/includes/main/proj/templates/project_template_select.html)?>
-		<?include(/includes/main/proj/templates/covers.html)?>
+		<?include(/includes/main/proj/templates/signatures.html)?>
 		<?include(/includes/main/proj/dimensions.html)?>
 <? endif ( $$variable{'ProjectType'}->name() eq 'Covers' ) ?>
 <? if ( ! $$variable{'NoPrinting'} ) ?>

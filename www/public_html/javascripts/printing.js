@@ -180,7 +180,6 @@ function get_impositions( form ) {
 
 function calc_print( formName, force, options ) {
 
-
 	var form = getFormObj( formName );
 
 	if ( gettingNewPrice && ! force ) {
@@ -192,8 +191,10 @@ function calc_print( formName, force, options ) {
 		} // end if
 		return;
 	} // end if
-	if ( timeout ) clearTimeout( timeout );
+	if ( timeout ) {
+		clearTimeout( timeout );
 	//timeout = null;
+	}
 
 	clear_price_data(form);
 	var AlertDiv = $('AlertDiv');
@@ -207,7 +208,8 @@ function calc_print( formName, force, options ) {
 		div.show();
 	} // end if
 	gettingNewPrice = true;
-	var h = $H(form.serialize(true));
+	var blah = Form.serialize( form, true );
+	var h = $H(blah);
 	h.each(function(pair) {
 		if ( pair.value == '' ) 
 			h.unset(pair.key);

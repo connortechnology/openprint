@@ -291,7 +291,7 @@ $openprint::log->debug("Impressions: " . $$sig_specs{"hdnImpressionQuantity$qty_
 	#if ( $$sig_specs{'Versions'} ) {
 		#$impressions *= $$sig_specs{'Versions'};
 	#} # end if
-#$openprint::log->debug("Impressions: $impressions");
+$openprint::log->debug("Impressions: $impressions");
 if ( 1 ) {
 	# This just can't be right anymore. Actually it can... if double sided, impressions are doubled...
 	if ( $imposition->runstyle() eq 'Perfecting' ) {
@@ -300,13 +300,14 @@ if ( 1 ) {
 		$impressions = int($impressions/2);
 	} elsif ( $$imposition{runstyle} eq 'Sheet Work' ) {
 		if ( @{$$sig_specs{SideOneColours}} and @{$$sig_specs{SideTwoColours}} ) {
-			if ( ! ( @front_aq and @back_aq ) ) {
+# 20140417 : so... since the AQs are added together, done in sequence, we do front first, then back, using the impression count... so it should always be halved
+			#if ( ! ( @front_aq and @back_aq ) ) {
 				$impressions = int($impressions/2);
-			} # end if
+			#} # end if
 		} # end if
 	} # end if
 } # end if
-#$openprint::log->debug("Impressions: $impressions");
+$openprint::log->debug("Impressions: $impressions");
 
 	@all_equipment = openprint::Equipment->find( Specifications => {'Aqueous Capable'=>['Y','When Printing']}, useinestimating=>1,order=>'lower(strName)') if ! @all_equipment;
 	my @equipment;	
