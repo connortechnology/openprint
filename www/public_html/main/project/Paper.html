@@ -34,13 +34,12 @@
 	my @stock_ids = sort keys %Supplied_Stocks;
 	foreach my $stock_index ( 1 .. @stock_ids ) {
 		$indexes{$stock_ids[$stock_index-1]} = $stock_index;
-		$log->debug("Supplied Stocks: " . $stock_ids[$stock_index-1] );
 	} # end foreach
 
 	foreach my $ss_id ( sort $Project->signatures() ) {
-		$$variable{'ss_id'} = $ss_id;
 		my $sig_specs = openprint::service::get_specs_ref( $Project, $ss_id );
-		$html .= '<fieldset><legend>Stock for Signature ' . $$sig_specs{'SignatureIndex'} . '</legend><ul>';
+		my $form = $$variable{form} = $$sig_specs{SignatureIndex};
+		$html .= '<fieldset><legend>Stock for Signature ' . $form . '</legend><ul>';
 
 		my %sig_papers;
 		# What we do is load each stock for the signature, and assign it a stock_index, 1 .. 4, then deal with them in order.
@@ -49,9 +48,6 @@
 			$Paper = $Paper->Supplied();
 			$sig_papers{$Paper->id_string()} = $Paper;
 		} # end foreach
-		#foreach my $id ( keys %sig_papers ) {
-			#$log->debug("Sig Papers $id");
-		#}
 
 		# We use @stock_ids to put things in the same order for each sig.
 		foreach my $stock_string ( @stock_ids ) {
@@ -59,8 +55,8 @@
 				next;
 			} # end if
 
-			$$variable{'stock_index'} = $indexes{$stock_string};
-			$$variable{'Stock'} = $sig_papers{$stock_string};
+			$$variable{stock_index} = $indexes{$stock_string};
+			$$variable{Stock} = $sig_papers{$stock_string};
 			$html .= include('/main/project/_stock_line.html');
 		} # end foreach stock_index
 		$html .= "</ul></fieldset>\n";
