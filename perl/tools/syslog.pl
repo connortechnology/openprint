@@ -263,6 +263,7 @@ while(1) {
 			foreach my $ip ( sort keys %host_counts ) {
 				next if ! $host_counts{$ip}{update};
 				next if $host_counts{$ip}{whitelist};
+				last if ! ( $dbh and $dbh->ping() );
 				if ( $host_counts{$ip}{count} > 20 ) {
 					$host_counts{$ip}{blacklist} = 1;
 				} # end if
@@ -277,6 +278,7 @@ while(1) {
 		} elsif ( $config{debug} ) {
 			$log->debug("No changes for $line");
 		} # end if
+		last if ! ( $dbh and $dbh->ping() );
 	} # end while recv
 
 } # end while
