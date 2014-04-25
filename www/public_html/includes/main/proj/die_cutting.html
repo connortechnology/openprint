@@ -12,7 +12,7 @@
 		return 'You';
 ) ?></label>
 	<input type="radio" id="rdbSuppliedDie-<?SignatureIndex?>N" name="rdbSuppliedDie-<?SignatureIndex?>" value="N" onclick="if ( this.checked ) { $('CustomDie<?SignatureIndex?>').show(); } calc(this.form.name);" <? echo ( ssi::checked( (exists $$variable{'rdbSuppliedDie-'.$$variable{'SignatureIndex'}} ) and ($$variable{'rdbSuppliedDie-'.$$variable{'SignatureIndex'}} ne 'Y' ) ); ) ?> />
-	<label class="radio" for="rdbSuppliedDie-<?SignatureIndex?>N"><? echo ( new openprint::Company($config{Owner})->name() ) ?></label>
+	<label class="radio" for="rdbSuppliedDie-<?SignatureIndex?>N"><? echo ( new openprint::Company($config{owner_id})->name() ) ?></label>
 </li>
 </ul>
 <ul id="CustomDie<?SignatureIndex?>" style="<? echo ( 'display: none;' if $$variable{'rdbSuppliedDie-'.$$variable{SignatureIndex}} eq 'Y' ) ?>" >
