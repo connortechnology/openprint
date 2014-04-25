@@ -123,11 +123,16 @@ if ( ( exists $config{'RFID'} ) and $config{'RFID'} ) {
 
 if ( 1 ) {
 # Resolve any unresolved IP's
-my @Hosts = openprint::Host->find('hostname is null'=>1);
+my @Hosts = openprint::Host->find(
+		'hostname is null'=>1, 
+		'resolved_on null_or_<='	=>	sprintf('%.4d-%.2d-%.2d', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -30 ) ),
+);
 $log->debug("# of hosts needing resolving: " . @Hosts );
 foreach my $Host ( @Hosts ) {
 	$Host->resolve() if $Host->ip();
-	$Host->save() if $Host->hostname();
+	$Host->save({
+		resolved_on	=> 'NOW()',
+	});
 } # end foreach
 }
 

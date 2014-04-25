@@ -1,15 +1,8 @@
-<script type="text/javascript" src="<? echo ( hash_link('/javascripts/service.js') ) ?>"></script>
-<? eval (
-    if ( $$variable{'Project'}->quantity1() and $$variable{'Project'}->quantity2() and $$variable{'Project'}->quantity3() ) {
-    $$variable{'Columns'} = 'Three';
-    } else {
-    $$variable{'Columns'} = 'Two';
-    } # end if
-) ?>
+<script type="text/javascript" src="<?hash_link('/javascripts/service.js')?>"></script>
 <div class="Service">
 	<form id="f1" name="f1" method="post" action="/main/project/view.html">
 		<fieldset><legend>Die Cutting</legend>
-		<? eval ( @{$$variable{'SignatureGroups'}} = $$variable{'Project'}->signatures(); ) ?>
+		<? eval ( @{$$variable{'SignatureGroups'}} = $$variable{'Project'}->signatures({sort=>1}); ) ?>
 		<? while ( $$variable{'SignatureServiceIndex'} = shift @{$$variable{'SignatureGroups'}}; ) ?>
 			<? eval ( 
 					my $sig_specs = openprint::service::get_specs_ref( @$variable{'Project','SignatureServiceIndex'} );
@@ -20,19 +13,16 @@
 				<legend><?Reference?></legend><p><? echo ( openprint::service::summary( @$variable{'ProjectIndex','SignatureServiceIndex'} ); ) ?></p>
 				<? endif ( $$variable{'Reference'} ) ?>
 				<ul>
-				<li>
-					<label>Die Cutting Needed</label>
-					<input type="radio" name="Needed-<?SignatureIndex?>" id="Needed-<?SignatureIndex?>Y" value="Y" <? echo ( ssi::checked( $$variable{'Needed-'.$$variable{'SignatureIndex'}} eq 'Y' ); ) ?> onchange="$('DieCutting-<?SignatureIndex?>').show();calc(this.form.name);" />
-					<label class="radio" for="Needed-<?SignatureIndex?>Y">Yes</label>
-					<input type="radio" name="Needed-<?SignatureIndex?>" id="Needed-<?SignatureIndex?>N" value="N" <? echo ( ssi::checked( $$variable{'Needed-'.$$variable{'SignatureIndex'}} eq 'N' ); ) ?> onchange="$('DieCutting-<?SignatureIndex?>').hide();calc(this.form.name);" />
-					<label class="radio" for="Needed-<?SignatureIndex?>N">No</label>
-				</li>
+					<li>
+						<label>Die Cutting Needed</label>
+						<? echo ( radio( 'Needed-'.$$variable{SignatureIndex}, [ 'Y', 'Yes', 'N', 'No' ], $$variable{'Needed-'.$$variable{SignatureIndex}}, { onchange=>qq`\$('DieCutting-$$variable{SignatureIndex}').show();calc(this.form.name);` } ); ) ?>
+					</li>
 				</ul>
 				<div id="DieCutting-<?SignatureIndex?>" <? echo ( $$variable{'Needed-'.$$variable{'SignatureIndex'}} ne 'Y' ? 'style="display:none;"' : '' ) ?>>
 				<ul>
-				<? echo ( include('/includes/main/proj/die_cutting.html'); ) ?>
-				<? echo ( include('/includes/main/proj/signature_imposition_with_override.html'); ) ?>
-				<? echo ( include('/includes/main/proj/signature_equipment.html'); ) ?>
+				<?include('/includes/main/proj/die_cutting.html')?>
+				<?include('/includes/main/proj/signature_imposition_with_override.html')?>
+				<?include('/includes/main/proj/signature_equipment.html')?>
 				</ul>
 				</div>
 				</fieldset>

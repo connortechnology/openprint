@@ -17,6 +17,7 @@
 package openprint::Estimating::DieCutting;
 use strict;
 use POSIX qw( ceil );
+use constant DEBUG => 1;
 
 require openprint::Equipment;
 require openprint::service;
@@ -24,8 +25,6 @@ use openprint;
 use vars qw( $log $dbh );
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
-
-require sql;
 
 my @variables = (
 	'txtQuantity1','txtQuantity2','txtQuantity3',
@@ -192,9 +191,9 @@ sub calc_price {
 #} # end fi
 
 	if ( $$specs{'txtHoleClearingHoles-'.$$sig_specs{'SignatureIndex'}} > 0 ) {
-		my $hole_qty = $$specs{'txtHoleClearingHoles-'.$$sig_specs{'SignatureIndex'}} * $imposition;
-		my %HoleClearingPrice = openprint::service::get_price_object( 'HoleClearing', $$specs{'txtHoleClearingHoles-'.$$sig_specs{'SignatureIndex'}} * $$specs{"txtQuantity$qty_index"}, undef ); 
-		$HoleClearingPrice{'Total'} = $impressions * $HoleClearingPrice{'Price'} * $hole_qty;
+		my $hole_qty = $$specs{'txtHoleClearingHoles-'.$$sig_specs{SignatureIndex}} * $imposition;
+		my %HoleClearingPrice = openprint::service::get_price_object( 'HoleClearing', $$specs{'txtHoleClearingHoles-'.$$sig_specs{'SignatureIndex'}} * $$specs{"txtQuantity$qty_index"}, $Equipment ); 
+		$HoleClearingPrice{Total} = $impressions * $HoleClearingPrice{'Price'} * $hole_qty;
 		if ( lc $HoleClearingPrice{'units'} eq 'per m' ) {
 			$HoleClearingPrice{'Total'} /= 1000;
 		} # end if
@@ -216,7 +215,9 @@ sub calc {
 	my $status = 'calculated';
 	my $Project = new openprint::Project( $project_index );
 
-	foreach my $signature_service_index ( $Project->signatures() ) {
+	my @signatures_needing = ();
+
+	foreach my $signature_service_index ( $Project->signatures( { sort=>1 }) ) {
 		my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
 	
 		if ( ! $$specs{"Needed-$$sig_specs{SignatureIndex}"} ) {
@@ -235,6 +236,7 @@ sub calc {
 		} elsif ( $$specs{"Needed-$$sig_specs{SignatureIndex}"} eq 'N' ) {
 			next;
 		} # end if
+		push @signatures_needing, $signature_service_index;
 
 		if ( exists $$specs{'rdbSuppliedDie'} and ! exists $$specs{'rdbSuppliedDie-'.$$sig_specs{'SignatureIndex'}} ) {
 			$$specs{'rdbSuppliedDie-'.$$sig_specs{'SignatureIndex'}} = $$specs{'rdbSuppliedDie'};
@@ -289,11 +291,8 @@ sub calc {
 		my $totalDiePrice = 0;
 		my $totalStrippingPrice = 0;
 
-		foreach my $signature_service_index ( $Project->signatures() ) {
+		foreach my $signature_service_index ( @signatures_needing ) {
 			my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
-			if ( $$specs{"Needed-$$sig_specs{SignatureIndex}"} ne 'Y' ) {
-				next;
-			} # end if
 			next if ! $$sig_specs{'txtImposition'.$qty_index};
 
 			$$specs{'hdnBreakdown'.$qty_index} .= "Signature: $$sig_specs{'txtServiceDescription'}, " if $$sig_specs{'txtServiceDescription'} ne '';
@@ -323,7 +322,7 @@ sub calc {
 				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('&nbsp;&nbsp;MakeReady: $%.2f<br/>', $results{'Price'}{'MakeReady'}{'Price'});
 				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('&nbsp;&nbsp;DiePrice: $%.2f<br/>', $results{'Price'}{'DiePrice'}{'Price'});
 				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('&nbsp;&nbsp;Service: $%1$.2f%2$s * %4$d impressions = $%3$.2f<br/>', @{$results{'Price'}{'ServicePrice'}}{'Price','units','Total'}, $results{'Price'}{'Impressions'} );
-				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('&nbsp;&nbsp;Hole Clearing: $%1$.2f%2$s * %5$d holes * %4$d impressions = $%3$.2f<br/>', @{$results{'Price'}{'HoleClearingPrice'}}{'Price','units','Total'}, $results{'Price'}{'Impressions'}, $$specs{"txtHoleClearingHoles-$$sig_specs{'SignatureIndex'}"} ) if exists $results{'Price'}{'HoleClearingPrice'};
+				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('&nbsp;&nbsp;Hole Clearing: $%1$.2f%2$s * %5$d holes * %6$dout * %4$d impressions = $%3$.2f<br/>', @{$results{'Price'}{'HoleClearingPrice'}}{'Price','units','Total'}, $results{'Price'}{'Impressions'}, $$specs{"txtHoleClearingHoles-$$sig_specs{'SignatureIndex'}"}, $results{Imposition}->imposition() ) if exists $results{'Price'}{'HoleClearingPrice'};
 
 				if ( $$specs{'OverrideStrippingPrice'.$qty_index} ne 'Y' ) {
 					$$specs{'hdnBreakdown'.$qty_index} .= sprintf('&nbsp;&nbsp;Stripping: $%1$.2f%2$s * %4$d impressions = $%3$.2f<br/>', @{$results{'Price'}{'Stripping'}}{'Price','units','Total'}, $results{'Price'}{'Impressions'} );
@@ -390,7 +389,7 @@ sub signature_calc {
 		$log->debug("Overriding Equipment!");
 		@equipment = ( new openprint::Equipment( $$specs{"ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} ) );
 	} else {
-		@equipment = openprint::Equipment->find( 'useinestimating'=>1, 'Specifications'=>{'Die Cutting Capable'=>'Y'} );
+		@equipment = openprint::Equipment->find( useinestimating=>1, Specifications=>{'Die Cutting Capable'=>'Y'} );
 	} # end if
 
 	if ( $$specs{"chkOverrideImposition-$$sig_specs{'SignatureIndex'}-$qty_index"} eq 'Y' ) {
@@ -404,6 +403,7 @@ sub signature_calc {
 	my $services = $Project->services();
 	if ( $$services{'Cutting'} ) {
 		my @imps = openprint::imposition::get_all_impositions( $Imposition );
+$log->debug("# of imps to consider: " . @imps ) if DEBUG;
 		for ( my $i = 0; $i < @imps; $i += 1 ) {
 			if (
 					( $$specs{"chkOverrideImposition-$$sig_specs{'SignatureIndex'}-$qty_index"} ne 'Y' )
@@ -453,7 +453,7 @@ sub signature_calc {
 sub display {
 	my ( $log, $dbh, $variable, $project_index, $service_index ) = @_;	
 
-	@{$$variable{'Equipment'}} = openprint::Equipment->find('order'=>'lower(strname)', 'useinestimating'=>1,'Specifications'=>{'Die Cutting Capable'=>'Y'} );
+	@{$$variable{'Equipment'}} = openprint::Equipment->find(order=>'lower(strname)', 'useinestimating'=>1,'Specifications'=>{'Die Cutting Capable'=>'Y'} );
 
 	if ( $$variable{'rdbTemplateTypePresentationFolderStandard1Pocket'} ne '' or $$variable{'rdbTemplateTypePresentationFolderStandard2Pocket'} ne '' ) {
 		$$variable{'ShowPresentationFolderDieCutting'} = 'Y';
@@ -467,7 +467,7 @@ sub summary {
 			return '';
 	} else {
 		my $summary;
-		my $Owner = new openprint::Company( $openprint::config{Owner} );
+		my $Owner = new openprint::Company( $openprint::config{owner_id} );
 		my @signatures = $Project->signatures();
 
 		foreach my $signature ( @signatures ) {

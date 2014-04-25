@@ -272,7 +272,7 @@ sub calc {
 			$$specs{'hdnBreakdown'.$qty_index} .= sprintf('<br/>Using minimum charge: $%.2f<br/>', $MinimumCharge{Price} );
 			$bestPrice{'Price'} = $MinimumCharge{Price};
 		} # end if
-		$$specs{"ddmEquipment$qty_index"} = $bestPrice{'Equipment'}->strid();
+		$$specs{"ddmEquipment$qty_index"} = $bestPrice{Equipment}->strid() if $bestPrice{Equipment};
 		if ( $$specs{"OverridePrice$qty_index"} ne 'Y' ) {
 			if ( $$specs{"Markup$qty_index"} ) {
 				$bestPrice{'Price'} *= 1+$$specs{"Markup$qty_index"}/100;
@@ -284,7 +284,6 @@ sub calc {
 			} 
 			$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $bestPrice{Price} );
 		} else {
-$openprint::log->debug("Price: " . $$specs{"txtPrice$qty_index"} );
 			$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $$specs{"txtPrice$qty_index"} );
 		} # en dif
 		$$specs{"txtUnitPrice$qty_index"} = sprintf( $openprint::config{'UnitPriceFormat'}, ( $bestPrice{'Price'}/$qty ) * (1+$Project->markup()/100) );
