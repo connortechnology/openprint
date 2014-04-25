@@ -93,7 +93,8 @@ function calc( formName, force, options ) {
 			} // end if
 			gettingNewPrice = true;
 			clear_price_data( form );
-			var h = $H(form.serialize(true));
+			var data = Form.serialize(form,true);
+			var h = $H(data);
 			h.each(function(pair) {
 			if ( options ) {
 				h.merge( options );

@@ -38,7 +38,7 @@
 								<th class="quantity">Quantity</th>
 								<th class="dimensions">Dimensions</th>
 								<th class="type">Type</th>
-								<th class="Price">MR (%1$s)</th>
+								<th class="Price MR">MR (%1$s)</th>
 								<th class="Price">Service (%1$s)</th>
 								<th class="Units">&nbsp;</th>
 								<th class="Price">Total (%1$s)</th>
@@ -54,17 +54,15 @@
 								<td class="type"><select name="ddmProofType-%1$s-%3$d-%2$d" onchange="calc(this.form.name);"><option value="">select one</option>%7$s</select></td>
 								<td class="Price">%8$s</td>
 								<td class="Price">%9$s</td>
-								<td class="Units">
-									<span id="ServiceUnits-%1$d-%3$d-%2$d"></span>
-								</td>
+								<td class="Units"><span id="ServiceUnits-%1$d-%3$d-%2$d"></span></td>
 								<td class="Price"><input type="number" name="txtProofUnitPrice-%1$s-%3$d-%2$s" readonly="readonly" onfocus="this.blur();" /></td>
 								<td class="Override"> %10$s <input type="hidden" name="txtProofIndex-%1$s-%3$d-%2$d" value="%3$d"/>
 								</td>
 							</tr>
 							`, $signature_index, $qty_index, $proof_index,
 								input( type=>'cardinal', name=>"txtProofQuantity-$signature_index-$proof_index-$qty_index", value=>$proof_quantity, onkeyup=>'calc(this.form.name);' ),
-								input( type=>'float', name=>"txtProofWidth-$signature_index-$proof_index-$qty_index", value=>$proof_width, onkeyup=>'calc(this.form.name);' ),
-								input( type=>'float', name=>"txtProofHeight-$signature_index-$proof_index-$qty_index", value=>$proof_height, onkeyup=>'calc(this.form.name);' ),
+								input( type=>'float', name=>"txtProofWidth-$signature_index-$proof_index-$qty_index", value=>$proof_width, onkeyup=>'calc(this.form.name);', step=>'0.0001' ),
+								input( type=>'float', name=>"txtProofHeight-$signature_index-$proof_index-$qty_index", value=>$proof_height, onkeyup=>'calc(this.form.name);', step=>'0.0001' ),
  $ddmProofType,
 								input( type=>'float', name=>"MRPrice-$signature_index-$proof_index-$qty_index", readonly=>'readonly', onfocus=>'this.blur();' ),
 								input( type=>'float', name=>"ServicePrice-${signature_index}-$proof_index-$qty_index", readonly=>'readonly', onfocus=>'this.blur();' ),

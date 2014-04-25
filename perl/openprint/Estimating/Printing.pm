@@ -25,7 +25,7 @@ my $threading = 0;
 use constant DEBUG => 0;
 use constant DEBUG_PLATES => 0;
 use constant DEBUG_VERSIONS => 0;
-use constant DEBUG_FILTERING => 1;
+use constant DEBUG_FILTERING => 0;
 use constant DEBUG_INITIAL_FILTERING => 0;
 use constant DEBUG_PRICE_DECISIONS => 0;
 use constant DEBUG_INKS => 0;
@@ -2391,6 +2391,10 @@ $openprint::log->debug(Data::Dumper::Dumper( \%Overrides ) );
 			$I->display("Iniital other_impositions Group $$specs{'Group'}");
 		}
 		} 
+
+		# For caching
+		openprint::Service->find();
+		openprint::Material->find();
 
 		%stitching_cache = ();
 		%price_cache = ();
