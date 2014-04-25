@@ -2965,7 +2965,7 @@ if ( ! sets::isin( 'companies_accountingcontacts', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/Companies_AccountingContacts.sql}) );
 } # end if
 
-if ( my $PaddingServiceType = openprint::ServiceType->find_one('name'=>'Padding') ) {
+if ( 0 and my $PaddingServiceType = openprint::ServiceType->find_one('name'=>'Padding') ) {
 	sql::update( undef, undef, 'tbl_service_defaults', ['lngservicetypeindex=? AND strfieldname=? AND strdefaultvalue=?',
 			$PaddingServiceType->id(), 'rdbCardboardBacking','Y'], [ 'strfieldname', 'Backing', 'strdefaultvalue', 'Cardboard' ] );
 	sql::update( undef, undef, 'tbl_service_defaults', ['lngservicetypeindex=? AND strfieldname=? AND strdefaultvalue=?',
