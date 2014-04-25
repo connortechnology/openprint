@@ -74,7 +74,7 @@ my @re = (
 		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: pam_\w+\(sshd:auth\): authentication failure; logname= uid=0 euid=0 tty=ssh ruser= rhost=([\._a-zA-Z0-9\-]+)\s*$',
 		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: pam_\w+\(sshd:auth\): authentication failure; logname= uid=0 euid=0 tty=ssh ruser= rhost=([\._a-zA-Z0-9\-]+)\s+user\=\w+$',
 		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: Failed password for [\._a-zA-Z0-9\-]+ from ([\._a-zA-Z0-9\-]+) port [0-9]+ ssh2$',
-		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: Failed password for illegal user [\._a-zA-Z0-9\-]+ from ([\._a-zA-Z0-9\-]+) port [0-9]+ ssh2$',
+		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: Failed password for (invalid|illegal) user [\._a-zA-Z0-9\-]+ from ([\._a-zA-Z0-9\-]+) port [0-9]+ ssh2$',
 		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: error: PAM: Authentication failure for illegal user root from ([\._a-zA-Z0-9\-]+)$',
 		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: error: PAM: Authentication failure for [\._a-zA-Z0-9\-]+ from ([\._a-zA-Z0-9\-]+)$',
 		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: error: PAM: 1 more authentication failure; logname= uid=0 euid=0 tty=ssh ruser= rhost=([\._a-zA-Z0-9\-]+)\s+user\=\w+$',
@@ -263,6 +263,7 @@ while(1) {
 			foreach my $ip ( sort keys %host_counts ) {
 				next if ! $host_counts{$ip}{update};
 				next if $host_counts{$ip}{whitelist};
+				last if ! ( $dbh and $dbh->ping() );
 				if ( $host_counts{$ip}{count} > 20 ) {
 					$host_counts{$ip}{blacklist} = 1;
 				} # end if
@@ -277,6 +278,7 @@ while(1) {
 		} elsif ( $config{debug} ) {
 			$log->debug("No changes for $line");
 		} # end if
+		last if ! ( $dbh and $dbh->ping() );
 	} # end while recv
 
 } # end while
