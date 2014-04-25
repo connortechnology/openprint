@@ -3040,6 +3040,9 @@ if ( ! sets::isin( 'hosts', \@tables ) ) {
 		$dbh->do('ALTER TABLE hosts add location_id INTEGER');
 		$dbh->do('ALTER TABLE hosts add FOREIGN KEY (location_id) REFERENCES Locations (id)');
 	} # end if
+	if ( ! exists $$data{resolved_on} ) {
+		$dbh->do('ALTER TABLE hosts ADD resolved_on TIMESTAMP WITH TIME ZONE');
+	} # end if
 }
 
 if ( ! sets::isin( 'host_info', \@tables ) ) {

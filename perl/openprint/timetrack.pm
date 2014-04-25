@@ -15,12 +15,32 @@ require Date::Format;
 require openprint::Timetrack;
 require openprint::Currency;
 require ssi;
+require DateTime::Format::Pg;
+require DateTime::TimeZone;
+
 
 sub history {
 	if ( $param{'func'} eq 'Save' ) {
 		$param{'owner_id'} = $session{'company_id'} if ! $param{'owner_id'};
-		$param{'starting'} = sprintf('%.4d-%.2d-%.2d %.2d:%.2d:00', @param{'starting_year','starting_month','starting_day','starting_hour','starting_minute'} );
-		$param{'ending'} = sprintf('%.4d-%.2d-%.2d %.2d:%.2d:00', @param{'ending_year','ending_month','ending_day','ending_hour','ending_minute'} );
+
+		my $TZ = DateTime::TimeZone->new( name => $openprint::config{Timezone} );
+        my $start_datetime = DateTime->new( time_zone => $TZ,
+				( map { $_ => $param{'starting_'.$_ } } ( 'year', 'month', 'day', 'hour','minute' ) ),
+                );
+
+        my $end_datetime = DateTime->new( time_zone => $TZ,
+				( map { $_ => $param{'ending_'.$_ } } ( 'year', 'month', 'day', 'hour','minute' ) ),
+                );
+
+        if ( $start_datetime > $end_datetime ) {
+            $variable{error} .= 'Invalid end time. The end of the shift must occur after the start of the shift.  No changes made.<br/>';
+            return;
+        } # end if
+
+        my $parser = 'DateTime::Format::Pg';
+
+		$param{starting} = $parser->format_datetime( $start_datetime );
+		$param{ending} = $parser->format_datetime( $end_datetime );
 		if ( ! $param{'timetrack_id'} ) {
 			if ( openprint::Timetrack->find_one(
 						owner_id=>$param{owner_id},
@@ -81,7 +101,6 @@ sub history {
 		} # end foreach Timetrack
 		push @data, '','','','Totals:',misc::seconds_to_pretty_interval($total_hours),'','','',openprint::Currency::format($total_value);
 		misc::export_csv( $r, $log, \%variable, 'timetracks.csv', \@header, \@data );
-$log->debug("Exported");
 
 	} elsif ( $param{'func'} eq 'reset' ) {
 		foreach ( 'starting_start_year','starting_start_month','starting_start_day','starting_end_year','starting_end_month','starting_end_day','invoiced','paid','user_id','company_id', 'service_id', 'lastupdated', 'billable' ) {

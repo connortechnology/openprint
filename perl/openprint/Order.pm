@@ -62,7 +62,7 @@ $serial = 'orders_id_seq';
 	administrator_name		=> 'administrator_name',
 	administrator_comments	=> 'administrator_comments',
 	salesrep_id				=>	'salesrep_id',
-	invoice_id				=>	'invoice_id',
+	#invoice_id				=>	'invoice_id',
 	# deprecated, look up invioce and use it's created_on time instead
 	#'invoiced_on'				=>	'invoiced_on',
 	terms_accepted			=>	'terms_accepted',
