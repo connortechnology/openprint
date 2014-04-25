@@ -2392,6 +2392,10 @@ $openprint::log->debug(Data::Dumper::Dumper( \%Overrides ) );
 		}
 		} 
 
+		# For caching
+		openprint::Service->find();
+		openprint::Material->find();
+
 		%stitching_cache = ();
 		%price_cache = ();
 		my @versions = get_versions( $specs, $qty_index );
