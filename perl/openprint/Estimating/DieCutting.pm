@@ -453,7 +453,7 @@ sub signature_calc {
 sub display {
 	my ( $log, $dbh, $variable, $project_index, $service_index ) = @_;	
 
-	@{$$variable{'Equipment'}} = openprint::Equipment->find('order'=>'lower(strname)', 'useinestimating'=>1,'Specifications'=>{'Die Cutting Capable'=>'Y'} );
+	@{$$variable{'Equipment'}} = openprint::Equipment->find(order=>'lower(strname)', 'useinestimating'=>1,'Specifications'=>{'Die Cutting Capable'=>'Y'} );
 
 	if ( $$variable{'rdbTemplateTypePresentationFolderStandard1Pocket'} ne '' or $$variable{'rdbTemplateTypePresentationFolderStandard2Pocket'} ne '' ) {
 		$$variable{'ShowPresentationFolderDieCutting'} = 'Y';
@@ -467,7 +467,7 @@ sub summary {
 			return '';
 	} else {
 		my $summary;
-		my $Owner = new openprint::Company( $openprint::config{Owner} );
+		my $Owner = new openprint::Company( $openprint::config{owner_id} );
 		my @signatures = $Project->signatures();
 
 		foreach my $signature ( @signatures ) {
