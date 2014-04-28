@@ -6,7 +6,7 @@ function calc( formName ){
 	} // end if
 
 	gettingNewPrice = true;
-	var h = form.serialize(true);
+	var h = Form.serialize(form,true);
 	h.service_type = 'Spiral';
 	new Ajax.Request( '/main/project/_calc.json', { method: 'post', parameters: h, evalScripts: true } );
 } // end calc()

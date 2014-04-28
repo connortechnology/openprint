@@ -6,12 +6,12 @@
 			if ( openprint::usergroup::is_user_in( ['Price Overrides'], $session{'user_id'} ) ) {
 				$html .= input( type=>'float', name=>"txtPrice$qty_index",
 					value=>$$variable{'txtPrice'.$qty_index}, 
-					onkeyup=>q`calc(this.form.name);` );
+					onkeyup=>q`calc(this.form.name);`, step=>'0.01' );
 				$html .= write_override( 'OverridePrice'.$qty_index, $$variable{'OverridePrice'.$qty_index},'',"calc('f1');" );
 			} else {
 				$html .= input( type=>'float', name=>"txtPrice$qty_index",
 					value=>$$variable{'txtPrice'.$qty_index}, 
-					onfocus=>'this.blur();', );
+					onfocus=>'this.blur();', step=>'0.01');
 				if ( $$variable{'OverridePrice'.$qty_index} eq 'Y' ) {
 					$html .= input( type=>'hidden', name=>"OverridePrice$qty_index", value=>'Y', );
 					$html .= 'Overridden';

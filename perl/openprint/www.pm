@@ -494,6 +494,7 @@ $log->debug("ServiceType: $variable{'ServiceTypeType'}");
 				} elsif ($third eq 'prep') {
 
 					if ( $filename eq 'scanning.html' ) {
+						require openprint::Estimating::Scanning;
 						openprint::Estimating::Scanning::display( $log, $dbh, \%variable, $project_index, $service_index );
 					} elsif ( $filename eq 'proofs.html' ) {
 						require openprint::Estimating::Proofs;

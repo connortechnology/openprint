@@ -46,7 +46,7 @@ function calc( formName, force ) {
 	} // end if
 	timeout = null;
 	gettingNewPrice = true;
-	var h = $H(form.serialize(true));
+	var h = $H(Form.serialize(form,true));
 	h.set( 'ServiceType', 'Project' );
 	h.set( 'callback', 'cbCalc' );
 	new Ajax.Request( '/main/project/_calc.json', { method: 'post', parameters: h, evalScripts: true } );
