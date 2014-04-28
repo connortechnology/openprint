@@ -1,14 +1,4 @@
 <script type="text/javascript" src="<?hash_link(/javascripts/service.js)?>"></script>
-<? eval (
-	my @qtys = $$variable{'Project'}->quantity_indexes();
-	if ( @qtys == 3 ) {
-	$$variable{'Columns'} = 'Three';
-	} elsif ( @qtys == 2 ) {
-	$$variable{'Columns'} = 'Two';
-	} else {
-	$$variable{'Columns'} = 'One';
-	} # end if
-) ?>
 <div class="Service <?ServiceTypeID?>">
 	<form id="f1" name="f1" method="post" action="/main/project/view.html">
 		<fieldset><legend><?ServiceTypeName?></legend>

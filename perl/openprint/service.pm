@@ -39,12 +39,8 @@ sub save_service {
 	my ( $r, $log, $dbh, $project_index, $service_index ) = @_;
 
 	$log->debug("***** START OF  save_service ************");
-	if ( ! exists $specs_cache{$service_index} ) {
-		%{$specs_cache{$service_index}} = sql::execute( $log, $dbh, 
-				'SELECT strName, strValue FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND lngServiceIndex=?', $project_index, $service_index );
-	} # end if
 	my $Project = new openprint::Project( $project_index );
-	my $specs = $specs_cache{$service_index};
+	my $specs = get_specs_ref( $Project, $service_index );
 
 	my $service_type = $openprint::param{'ServiceType'};
 	if ( ! $service_type ) {
@@ -97,17 +93,8 @@ sub get_specifications {
 		return;
 	} # end if
 
-	if ( ! exists $specs_cache{$service_index} ) {
-		%{$specs_cache{$service_index}} = sql::execute( $log, $dbh, 
-				'SELECT strName, strValue FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND lngServiceIndex=?', $project_index, $service_index );
-	} # end if
-
-	my @return_array = ();
-	foreach my $spec ( @specs ) {
-		push @return_array, $specs_cache{$service_index}{$spec};
-	} # end foreach
-
-	return @return_array;
+	my $specs = get_specs_ref( $project_index, $service_index );
+	return @$specs{@specs};
 } # end sub get_specifications
 
 sub get_specifications_pairs {
@@ -118,17 +105,13 @@ sub get_specifications_pairs {
 		return;
 	} # end if
 
-	if ( ! exists $specs_cache{$service_index} ) {
-		%{$specs_cache{$service_index}} = sql::execute( $log, $dbh, 
-				'SELECT strName, strValue FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND lngServiceIndex=?', $project_index, $service_index );
-	} # end if
+	my $specs = get_specs_ref( $project_index, $service_index );
 
 	if ( @specs ) {
-		my %results;
-		@results{@specs} = @{$specs_cache{$service_index}}{@specs};
+		my %results = map { $_, $$specs{$_} } @specs;
 		return %results;
 	} # end if
-	return %{$specs_cache{$service_index}};
+	return %{$specs};
 } # end sub get_specifications_pairs
 
 sub get_specs_ref {

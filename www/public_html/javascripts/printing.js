@@ -1,5 +1,5 @@
 function versions_onkeyup( e ) {
-	new Ajax.Updater( 'Version_Descriptions', '_version_descriptions.html', { method: 'get', parameters: e.form.serialize() } );
+	new Ajax.Updater( 'Version_Descriptions', '_version_descriptions.html', { parameters: Form.serialize(e.form, true) } );
 }
 
 function filter_colours( side, signature ) {
@@ -168,7 +168,7 @@ function validate_data(formName) {
 
 function get_impositions( form ) {
 	form = $(form);
-	var h = $H(form.serialize(true));
+	var h = $H(Form.serialize(form,true));
 	h.each(function(pair) {
 		if ( pair.value == '' ) 
 			h.unset(pair.key);
@@ -367,7 +367,7 @@ function selectProjectTemplate( formName ) {
 				if ( options[TemplateType][0].message ) {
 					alert(options[TemplateType][0].message);
 				}
-				for ( var x = 0; x < options[TemplateType].length; x += 1 ) {
+				for ( var x = 0, len=options[TemplateType].length; x < len; x += 1 ) {
 					var value = options[TemplateType][x].value;
 					var text = options[TemplateType][x].text;
 					add_option( ddm, options[TemplateType][x].text, options[TemplateType][x].value );
