@@ -1,4 +1,3 @@
-<script type="text/javascript" src="<?hash_link(/javascripts/barcode.js)?>"></script>
 <script type="text/javascript">
 	var timer;
 	function loadImage( ImageID, file ) {
@@ -26,7 +25,7 @@
 		<ul>
 		<li>
 			<label for="rfidscanner_id">Scanner ID #</label>
-			<? echo ( input( type=>'cardinal', id=>'rfidscanner_id', name=>'rfidscanner_id', value=>$param{rfidscanner_id}, onchange=>'change_handler(this);', onkeypress=>'return input_handler(this,event);' ); ) ?>
+			<? echo ( input( type=>'cardinal', name=>'rfidscanner_id', value=>$param{rfidscanner_id}, onchange=>'change_handler(this);', onkeypress=>'return input_handler(this,event);' ); ) ?>
 			<? echo ( join('',
 				button( 'Go', { onclick=>"if(!jump.rfidscanner_id.value){jump.rfidscanner_id.focus();} else {jump.btnFunction.value='Go';jump.submit();}", text=>'Go' } ),
 				button( 'Previous', { onclick=>q`if(!jump.rfidscanner_id.value){jump.rfidscanner_id.focus();} else {jump.btnFunction.value='Previous';jump.submit();}`,text=>'&lt;&lt;' } ),
@@ -51,7 +50,6 @@
 		<div class="leftColumn">
 			<ul>
 		<? if ( $$variable{'RFIDScanner'}->id() ) ?>
-			<input type="hidden" name="rfidscanner_id" value="<? echo ( $$variable{'RFIDScanner'}->id() ) ?>" />
 			<li>
 				<label>Created</label>
 				<? echo ( format_datetime( $$variable{RFIDScanner}->created_on() ); ) ?> 
@@ -95,7 +93,7 @@
 				</select>
 			</li>
 			<li>
-				<label>Monitor:</label>
+				<label>Monitor</label>
 				<input type="radio" id="monitor1" name="monitor" value="1" <? echo ( checked( $$variable{'RFIDScanner'}->monitor() ) ) ?> />
 				<label class="radio" for="monitor1">Yes</label>
 				<input type="radio" id="monitor0" name="monitor" value="0" <? echo ( checked( ! $$variable{'RFIDScanner'}->monitor() ) ) ?> />
