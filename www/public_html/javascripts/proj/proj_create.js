@@ -218,5 +218,5 @@ function calc( formName, force ) {
 	h.set('ServiceType', 'Project' );
 	h.set('callback', 'cbFillResults' );
 	h.set('method', 'create_calc' );
-	//new Ajax.Request( '/main/project/_calc.json', { method: 'post', parameters: h, evalScripts: true } );
+	new Ajax.Request( '/main/project/_calc.json', { method: 'post', parameters: h, evalScripts: true } );
 } // end function calc(form)
