@@ -148,7 +148,7 @@ $openprint::log->debug("before require texst::unaccent");
 	require Text::Unaccent;
 	$self->set( $param );
 $openprint::log->debug("fter set");
-	$$self{name} = Text::Unaccent::unac_string('UTF-8', $$self{name} );
+	#$$self{name} = Text::Unaccent::unac_string('UTF-8', $$self{name} );
 $openprint::log->debug("savin set");
 	return $self->SUPER::save( undef, $force );
 } # end sub save
