@@ -6,17 +6,17 @@
 			my $html;
 			foreach my $colour ( 'Cyan','Magenta','Yellow','Black' ) {
 				$html .= sprintf('<span id="%1$sSpotColourSideOne%2$s" class="SpotColour %1$s">', $colour, $$variable{Signature} );
-				$html .= sprintf(q`<input type="checkbox" id="chk%1$sSideOne%2$s" name="chk%1$sSideOne%2$s" value="%1$s" onclick="if ( this.checked ) { $('%1$sSpotSideOneCoverages%2$s').show() } else { $('%1$sSpotSideOneCoverages%2$s').hide() } calc(this.form.name);" %3$s />`, $colour, $$variable{'Signature'}, checked( $$variable{'chk'.$colour.'SideOne'.$$variable{'Signature'}} eq $colour ) );
-				$html .= sprintf('<label for="chk%1$sSideOne%2$s">', $colour, $$variable{'Signature'} ) . writeTip($colour) . '</label>';
+				$html .= sprintf(q`<input type="checkbox" id="chk%1$sSideOne%2$s" name="chk%1$sSideOne%2$s" value="%1$s" onclick="if ( this.checked ) { $('%1$sSpotSideOneCoverages%2$s').show() } else { $('%1$sSpotSideOneCoverages%2$s').hide() } calc(this.form.name);" %3$s />`, $colour, $$variable{Signature}, checked( $$variable{'chk'.$colour.'SideOne'.$$variable{Signature}} eq $colour ) );
+				$html .= sprintf('<label for="chk%1$sSideOne%2$s">', $colour, $$variable{Signature} ) . writeTip($colour) . '</label>';
 				$html .= sprintf('<span id="%1$sSpotSideOneCoverages%2$s"%4$s>%5$s%</span>', 
 					$colour, $$variable{Signature}, 
-					$$variable{$colour.'SpotSideOneCoverage'.$$variable{'Signature'}}, 
-					( $$variable{'chk'.$colour.'SideOne'.$$variable{'Signature'}} eq $colour ? '' : ' style="display:none;"'),
+					$$variable{$colour.'SpotSideOneCoverage'.$$variable{Signature}}, 
+					( $$variable{'chk'.$colour.'SideOne'.$$variable{Signature}} eq $colour ? '' : ' style="display:none;"'),
 					input(
 						type	=>	'cardinal',
-						id		=>	$colour.'SpotSideOneCoverage'.$$variable{'Signature'},
-						name	=>	$colour.'SpotSideOneCoverage'.$$variable{'Signature'},
-						value	=>	$$variable{$colour.'SpotSideOneCoverage'.$$variable{'Signature'}},
+						id		=>	$colour.'SpotSideOneCoverage'.$$variable{Signature},
+						name	=>	$colour.'SpotSideOneCoverage'.$$variable{Signature},
+						value	=>	$$variable{$colour.'SpotSideOneCoverage'.$$variable{Signature}},
 						onkeyup	=>	'calc(this.form.name);',
 						),
 					);
@@ -28,7 +28,7 @@
 		</div>
 		<div class="ProcessColours">
 		<input type="checkbox" id="chkProcessColourSideOne<?Signature?>" name="chkProcessColourSideOne<?Signature?>" <? echo ( checked( $$variable{'chkProcessColourSideOne'.$$variable{'Signature'}} eq 'ProcessColour' ); ) ?> value="ProcessColour" onclick="if ( this.checked ) { $('ProcessCoveragesSideOne<?Signature?>').show() } else { $('ProcessCoveragesSideOne<?Signature?>').hide() } calc(this.form.name);" /> 
-		<label class="radio" for="chkProcessColourSideOne<?Signature?>"><? echo ( ssi::writeTip( '4 Colour Process' ); ) ?></label>
+		<label class="radio" for="chkProcessColourSideOne<?Signature?>"><? echo ( writeTip( '4 Colour Process' ); ) ?></label>
 		<span id="ProcessCoveragesSideOne<?Signature?>" class="Coverages" <? echo ( 'style="display:none;"' if $$variable{'chkProcessColourSideOne'.$$variable{'Signature'}} ne 'ProcessColour' ) ?> >
 <? echo (
 	my $html = '';

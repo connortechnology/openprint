@@ -1,11 +1,4 @@
 <script type="text/javascript" src="<?hash_link(/javascripts/service.js)?>"></script>
-<? eval (
-    if ( $$variable{'Project'}->quantity1() and $$variable{'Project'}->quantity2() and $$variable{'Project'}->quantity3() ) {
-    $$variable{'Columns'} = 'Three';
-    } else {
-    $$variable{'Columns'} = 'Two';
-    } # end if
-) ?>
 <div class="Service <?ServiceTypeID?>">
 	<form id="f1" name="f1" method="post" action="/main/project/view.html">
         <fieldset><legend><?ServiceTypeName?></legend>
@@ -18,8 +11,9 @@
 					my $signature_index = $$sig_specs{SignatureIndex};
 					
 					$html .= '<div class="Signature">';
-					$html .= 'Information for ' . $$sig_specs{'txtServiceDescription'} .':' if $$sig_specs{'txtServiceDescription'};
-					$html .= '<p><label>Perforation Quantity</label>Vertical:';
+					$html .= 'Information for ' . $$sig_specs{txtServiceDescription} .':' if $$sig_specs{txtServiceDescription};
+					$html .= '<ul><li><label>Perforation Quantity</label>';
+					$html .= '<div class="Vertical">Vertical:';
 					$html .= input( 
 						id		=> "txtVerticalQty-$signature_index",
 						name	=> "txtVerticalQty-$signature_index",
@@ -31,8 +25,7 @@
 					$html .= qq`<select name="VerticalTeeth-$signature_index" onchange="calc(this.form.name);">
 							<option value="">select</option>`;
 					$html .= make_drop_down( \@tooth_options, $$variable{'VerticalTeeth-'.$signature_index} );
-					$html .= q`</select>
-						Horizontal:`;
+					$html .= '</select></div><div class="Horizontal">Horizontal:';
 					$html .= input( 
 						id		=> "txtHorizontalQty-$signature_index",
 						name	=> "txtHorizontalQty-$signature_index",
@@ -44,14 +37,14 @@
 					$html .= qq`<select name="HorizontalTeeth-$signature_index" onchange="calc(this.form.name);">
 							<option value="">select</option>`;
 					$html .= make_drop_down( \@tooth_options, $$variable{'HorizontalTeeth-'.$signature_index} );
-					$html .= '</select></p></div>';
+					$html .= '</select></div></li></ul></div>';
 				} # end foreach signature
 				return $html;
 			) ?>
 		</fieldset>
 		<fieldset><legend>Results</legend>
-			<ul>
 			<?include(/includes/main/proj/scoring_results.html) ?>
+			<ul>
 			<?include(/includes/main/proj/quantities_prices.html) ?>
 			</ul>
 		</fieldset>

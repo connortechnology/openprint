@@ -5,7 +5,7 @@
 			<ul>
 			<li>
 				<label>Finished Calliper</label>
-				<? echo ( input( name=>'txtFinishedCalliper', value=>$$variable{txtFinishedCalliper}, type=>'float', onkeyup=>'calc(this.form.name);' ); ) ?>
+				<? echo ( input( name=>'txtFinishedCalliper', value=>$$variable{txtFinishedCalliper}, type=>'float', onkeyup=>'calc(this.form.name);', step=>'0.0001' ); ) ?>
 <? if ( sets::isin( $session{'user_type'}, ['E','A'] ) ) ?>
 <? echo ( write_override( 'chkOverrideFinishedCalliper', $$variable{'chkOverrideFinishedCalliper'}, '', q`calc('f1');` );) ?>
 <? else ( sets::isin( $session{'user_type'}, ['E','A'] ) ) ?>
