@@ -15,16 +15,20 @@
 				write_override( 'OverrideGroupPageQuantity'.$$variable{Signature}, $$variable{'OverrideGroupPageQuantity'.$$variable{Signature}}, '', q`calc('f1');` ),
 			); ) ?>
 		</li>
-		<li>
+		<li class="Description">
 			<label>Description</label>
 			<input type="text" name="txtServiceDescription<?Signature?>" value="<? echo ( $$variable{'txtServiceDescription'.$$variable{'Signature'}} ) ?>" />
 		</li>
-		<li>
-			<label>Size</label>
-			<? echo ( return join("\n",
-				input( 'type'=>'float', id=>'txtFinalWidth'.$$variable{Signature}, name=>'txtFinalWidth'.$$variable{Signature}, value=>$$variable{'txtFinalWidth'.$$variable{Signature}}, onkeyup=>'calc(this.form.name);' ),
-				' x ',
-				input( 'type'=>'float', id=>'txtFinalHeight'.$$variable{Signature}, name=>'txtFinalHeight'.$$variable{Signature}, value=>$$variable{'txtFinalHeight'.$$variable{Signature}}, onkeyup=>'calc(this.form.name);' ),
+		<li class="Dimensions">
+			<label>Flat => Final Size</label>
+			<? echo ( return join('',
+				input( type=>'float', id=>'txtWidth'.$$variable{Signature}, name=>'txtWidth'.$$variable{Signature}, value=>$$variable{'txtWidth'.$$variable{Signature}}, onkeyup=>'calc(this.form.name);' ),
+				'x',
+				input( type=>'float', id=>'txtHeight'.$$variable{Signature}, name=>'txtHeight'.$$variable{Signature}, value=>$$variable{'txtHeight'.$$variable{Signature}}, onkeyup=>'calc(this.form.name);' ),
+				'=>',
+				input( type=>'float', id=>'txtFinalWidth'.$$variable{Signature}, name=>'txtFinalWidth'.$$variable{Signature}, value=>$$variable{'txtFinalWidth'.$$variable{Signature}}, onkeyup=>'calc(this.form.name);' ),
+				'x',
+				input( type=>'float', id=>'txtFinalHeight'.$$variable{Signature}, name=>'txtFinalHeight'.$$variable{Signature}, value=>$$variable{'txtFinalHeight'.$$variable{Signature}}, onkeyup=>'calc(this.form.name);' ),
 				write_override( 'chkOverrideDimensions'.$$variable{Signature}, $$variable{'chkOverrideDimensions'.$$variable{Signature}}, '', q`calc('f1');` ),
 			); ) ?>
 		</li>

@@ -58,7 +58,6 @@
 			my $html;
 			my $rowclass;
 			foreach my $Project ( @{$$variable{'Projects'}} ) {
-$log->debug("listing project $$Project{id} ");
 				$html .= sprintf(q`
 <tr%1$s> 
 	<td class="project_id"><a href="/main/project/view.html?ProjectIndex=%2$d">%2$d</a></td>
