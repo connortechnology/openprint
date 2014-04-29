@@ -103,6 +103,7 @@ BEGIN {
 
 	use countries;
 	use provinces;
+	use Text::Unidecode;
 
 }
 
