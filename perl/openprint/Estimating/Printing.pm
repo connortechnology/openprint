@@ -1890,7 +1890,7 @@ sub set_size {
 					$$specs{'txtSpreadSize'} = 1;
 				} else {
 					if ( sets::isin( $$printing_specs{rdbTemplateType}, ['SaddleStitching', 'LoopStitching'] ) ) {
-						$$specs{txtSpreadSize} = 4;
+						$$specs{'txtSpreadSize'} = ( $$specs{'GroupPageQuantity'} > 6 ? 4 : $$specs{'GroupPageQuantity'} );
 					} elsif ( $openprint::config{$$printing_specs{'rdbTemplateType'}.'SpreadSize'} ) {
 						$$specs{'txtSpreadSize'} = $openprint::config{$$printing_specs{'rdbTemplateType'}.'SpreadSize'};
 					} elsif ( $$printing_specs{'rdbTemplateType'} eq 'Unbound' ) {

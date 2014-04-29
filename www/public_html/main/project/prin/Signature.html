@@ -30,7 +30,7 @@
 <? if ( $$variable{'txtSignatureType'} ) ?>
             <div class="<? echo ( my $type = $$variable{txtSignatureType}; $type =~ s/\s//g; return $type; ) ?>">
 				<ul>
-                <li><label>Description</label><input type="text" name="txtServiceDescription" value="<?txtServiceDescription?>" /></li>
+                <li class="Description"><label>Description</label><input type="text" name="txtServiceDescription" value="<?txtServiceDescription?>" /></li>
                 <li class="Dimensions">
                     <label>Spread dimensions</label>
 					<? echo (

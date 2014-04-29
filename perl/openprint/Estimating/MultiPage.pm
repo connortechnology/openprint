@@ -59,6 +59,11 @@ sub variables {
 		push @v, 'Pages'.$group_id;
 		push @v, 'OverrideGroupPageQuantity'.$group_id;
 		push @v, 'GroupPageQuantity'.$group_id;
+		push @v, 'txtSignatureType'.$group_id;
+		push @v, 'txtFinalHeight'.$group_id;
+		push @v, 'txtFinalWidth'.$group_id;
+		push @v, 'txtHeight'.$group_id;
+		push @v, 'txtWidth'.$group_id;
 	} # end foreach
 	return @v;
 } # end sub variables
@@ -500,7 +505,7 @@ sub status {
 	foreach my $ssid ( $Project->signatures() ) {
 		my $sig_specs = openprint::service::get_specs_ref( $Project, $ssid );
 		$specified_pages{$$sig_specs{'Group'}} += $$sig_specs{"PageQuantity$qty_index"};
-		$needed_pages{$$sig_specs{'Group'}} = $$sig_specs{'GroupPageQuantity'.$qty_index};
+		$needed_pages{$$sig_specs{'Group'}} = $$sig_specs{'GroupPageQuantity'};
 	} # end foreach
 	my @Groups = sql::execute( undef, undef, 'SELECT DISTINCT strvalue FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strName=?', $project_index, 'Group' );
 	foreach my $Group ( @Groups ) {
@@ -555,6 +560,31 @@ $openprint::log->debug("Not Saving $v") if DEBUG;
 		} # end foreach v
 	}  # end foreach signature
 } # end sub save
+
+sub check {
+	my ( $Project, $Service, $qty_index ) = @_;
+
+	my $error;
+	my $specs = $Service->specs();
+
+	my $total_pages = $$specs{'txtTotalPageQuantity'};
+    my %specified_pages;
+    my %needed_pages;
+    foreach my $ssid ( $Project->signatures({ sort=>1}) ) {
+        my $sig_specs = openprint::service::get_specs_ref( $Project, $ssid );
+        $specified_pages{$$sig_specs{Group}} += $$sig_specs{"PageQuantity$qty_index"};
+        $needed_pages{$$sig_specs{Group}} = $$specs{'GroupPageQuantity'.$$sig_specs{Group}};
+    } # end foreach
+    foreach my $Group ( sort keys %needed_pages ) {
+        if ( $needed_pages{$Group} > $specified_pages{$Group} ) {
+            $error .= 'Group ' . $Group . ' ' . $$specs{'txtSignatureType'.$Group} . ' needs another ' . ( $needed_pages{$Group} - $specified_pages{$Group} ) . ' pages.<br/>';
+		} elsif ( $needed_pages{$Group} < $specified_pages{$Group} ) {
+            $error .= 'Group ' . $Group . ' ' . $$specs{'txtSignatureType'.$Group} . ' has ' . ( $specified_pages{$Group} - $needed_pages{$Group} ) . ' too many pages.<br/>';
+        } # end if
+    } # end foreach
+	openprint::service::insert_service_spec( $openprint::log, $openprint::dbh, $Project->id(), $Service->service_id(), 'alert', $error ) if $error;
+    return $error;
+} # end sub check
 
 1;
 __END__

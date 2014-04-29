@@ -568,6 +568,12 @@ sub update_status {
 					$new_status = 'uncalculated';
 					last;
 				} # end if
+				my $ProjectService = $self->Service( $services{''}[0] );
+				if ( openprint::Estimating::MultiPage::check( $self, $ProjectService, $qty_index ) ) {
+					$ProjectService->status('uncalculated');
+					$new_status = 'uncalculated';
+					last;
+				} # end if
 			} # end foreach
 		} # end if
 	} # end if
