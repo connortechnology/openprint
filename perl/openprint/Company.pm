@@ -144,11 +144,9 @@ sub destroy {
 sub save {
     my ($self, $param, $force ) = @_;
 	
-$openprint::log->debug("before require texst::unaccent");
-	require Text::Unaccent;
 	$self->set( $param );
-$openprint::log->debug("fter set");
-	#$$self{name} = Text::Unaccent::unac_string('UTF-8', $$self{name} );
+	require Text::Unidecode;
+	$$self{name} = Text::Unidecode::unidecode( $$self{name} );
 $openprint::log->debug("savin set");
 	return $self->SUPER::save( undef, $force );
 } # end sub save
