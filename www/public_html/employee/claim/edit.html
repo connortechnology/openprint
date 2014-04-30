@@ -181,7 +181,7 @@ function validate( form ) {
 		alert('Please enter the filed on date.');
 		return false;
 	}
-	if ( form.send_to_accounts.checked && ! ( get_ddm_value( form.sent_to_accounts_on_year ) && get_ddm_value( form.sent_to_accounts_on_month ) && get_ddm_value( form.sent_to_accounts_on_day ) ) ) {
+	if ( form.sent_to_accounts.checked && ! ( get_ddm_value( form.sent_to_accounts_on_year ) && get_ddm_value( form.sent_to_accounts_on_month ) && get_ddm_value( form.sent_to_accounts_on_day ) ) ) {
 		alert('Please enter the sent to accounts on date.');
 		return false;
 	}
