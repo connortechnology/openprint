@@ -1,7 +1,7 @@
 function calc( formName ) {
 	gettingNewPrice = true;
     var form = getFormObj(formName);
-	var h = form.serialize(true);
+	var h = Form.serialize(form,true);
 	h.ServiceType = 'Prepress';
 	new Ajax.Request( '/main/project/_calc.json', { method: 'post', parameters: h, evalScripts: true } );
 } // end calc_prepress()

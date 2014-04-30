@@ -503,7 +503,7 @@ sub create_edit_process {
 	$error .= "Invalid Quantity 2.<br/>" if $param{'txtQuantity2'} and ! int $param{'txtQuantity2'};
 	$error .= "Invalid Quantity 3.<br/>" if $param{'txtQuantity3'} and ! int $param{'txtQuantity3'};
 	if ( ! $error ) {
-		$Project = new openprint::Project( int $param{'ProjectIndex'} );
+		$Project = new openprint::Project( int $param{ProjectIndex} );
 		$error .= $Project->save() if ! $Project->id();
     } # end if
 	if ( $error ne '' ) {
@@ -516,12 +516,13 @@ sub create_edit_process {
 		return;
 	} # end if
 	my $recalculate;
-	my $project_index = $session{'project_id'} = $Project->id();
+	my $project_index = $session{project_id} = $Project->id();
+	$Project->lock();
 
-	my %services = $Project->get_services();
-	my @service_ids = map { $services{$_} ? @{$services{$_}} : () } keys %services;
+	my $services = $Project->services();
+	my @service_ids = map { $$services{$_} ? @{$$services{$_}} : () } keys %$services;
 
-	if ( $param{'txtQuantity1'} != $Project->quantity1() ) {
+	if ( $param{txtQuantity1} != $Project->quantity1() ) {
 		$recalculate = 1;
 		if ( ! $Project->quantity1() ) {
 			if ( $Project->quantity2() ) {
@@ -545,7 +546,7 @@ sub create_edit_process {
 					} # end foreach
 				} # end if
 			} # end if Project 2 or 3
-		} elsif ( ! $param{'txtQuantity1'} ) { # Project has a quantity, we are deleting it
+		} elsif ( ! $param{txtQuantity1} ) { # Project has a quantity, we are deleting it
 			foreach my $service_id ( @service_ids ) {
 				foreach my $spec ( 'txtPrice1','txtUnitPrice1','txtQuantity1' ) {
 					openprint::service::delete_service_spec( $project_index, $service_id, $spec );
@@ -653,35 +654,35 @@ sub create_edit_process {
 
 	# take care of the Graphic Design service
 	if ( $param{'rdbGraphicDesign'} eq 'Y' ) {
-		push @{$services{'GraphicDesign'}}, $Project->add_service('GraphicDesign') if ! $services{'GraphicDesign'};
+		push @{$$services{'GraphicDesign'}}, $Project->add_service('GraphicDesign') if ! $$services{'GraphicDesign'};
 	} # end if
 
 	my %statuses = sql::execute( $log, $dbh, 'SELECT lngserviceindex, strstatus FROM tbl_Project_Contents WHERE lngprojectindex=?', $project_index );
 
-	foreach my $ServiceType ( openprint::ServiceType->find( 'create_visible'=>'Y') ) {
+	foreach my $ServiceType ( openprint::ServiceType->find( create_visible=>'Y') ) {
 		if ( $ServiceType->type() eq 'CustomService' ) {
 			$log->error("CustomService is visible in project create.");
 			next;
 		} # end if
 		if ( $param{'chkServices'.$ServiceType->name()} eq $ServiceType->name() ) {
-			if ( ! $services{$ServiceType->name()} ) {	
-				push @{$services{$ServiceType->name()}}, $Project->add_service($ServiceType->name());
+			if ( ! $$services{$ServiceType->name()} ) {	
+				push @{$$services{$ServiceType->name()}}, $Project->add_service($ServiceType->name());
 				$recalculate = 1;
 			} # end if
 		} else {
-			if ( $services{$ServiceType->name()} ) {
-				foreach my $s_id ( @{$services{$ServiceType->name()}} ) {
+			if ( $$services{$ServiceType->name()} ) {
+				foreach my $s_id ( @{$$services{$ServiceType->name()}} ) {
 					if ( $statuses{$s_id} ne 'Completed' ) {
 						delete_service( $Project->id(), $s_id );
 					} # end if
 				} # end foreach
-				delete $services{$ServiceType->name()};
+				delete $$services{$ServiceType->name()};
 				$recalculate = 1;
 			} # end if
 		} # end if
 	} # end foreach
-	if ( ! ( $services{'Proofs'} or $services{'NoPrinting'} ) ) {
-		push @{$services{'Proofs'}}, $Project->add_service('Proofs');
+	if ( ! ( $$services{Proofs} or $$services{NoPrinting} ) ) {
+		push @{$$services{Proofs}}, $Project->add_service('Proofs');
 		$recalculate = 1;
 	} # end if
 
@@ -689,6 +690,7 @@ sub create_edit_process {
 	if ( $recalculate ) {
 		$Project->recalculate();
 	} # end if
+	$Project->unlock();
 
 	return $Project->id();
 } # end sub create_edit_process

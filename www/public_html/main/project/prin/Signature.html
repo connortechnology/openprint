@@ -28,9 +28,9 @@
         <? endif ( $$variable{'txtSignatureType'} eq 'Cover Pages' or $$variable{'txtSignatureType'} eq 'Gate Folded Pages' ) ?>
 		<fieldset><legend><? echo ( $$variable{'Project'}->Type()->name() ) ?> <?txtSignatureType?></legend>
 <? if ( $$variable{'txtSignatureType'} ) ?>
-            <div class="<? echo ( my $type = $$variable{'txtSignatureType'}; $type =~ s/\s//g; return $type; ) ?>">
+            <div class="<? echo ( my $type = $$variable{txtSignatureType}; $type =~ s/\s//g; return $type; ) ?>">
 				<ul>
-                <li><label>Description</label><input type="text" name="txtServiceDescription" value="<?txtServiceDescription?>" /></li>
+                <li class="Description"><label>Description</label><input type="text" name="txtServiceDescription" value="<?txtServiceDescription?>" /></li>
                 <li class="Dimensions">
                     <label>Spread dimensions</label>
 					<? echo (
@@ -168,7 +168,6 @@
 	<div id="OtherSpecifications">
 		<fieldset><legend>Other Specifications</legend>
 			<ul>
-			<?include(/includes/main/proj/printing_type.html)?>
 			<?include(/includes/main/proj/screen_type.html)?>
 			</ul>
 		</fieldset>

@@ -564,9 +564,17 @@ sub update_status {
 		} elsif ( sets::isin( 'calculated', \@statuses ) ) { # This works because we have already checked for uncalculated
 			$new_status = 'Unordered';
 			foreach my $qty_index ( $self->quantity_indexes() ) {
-				if ( openprint::Estimating::MultiPage::status( $$self{'id'}, undef, $qty_index ) ) {
-					$new_status = 'uncalculated';
-					last;
+				if ( $self->Type()->type() eq 'MultiPage' ) {
+					if ( openprint::Estimating::MultiPage::status( $$self{'id'}, undef, $qty_index ) ) {
+						$new_status = 'uncalculated';
+						last;
+					} # end if
+					my $ProjectService = $self->Service( $services{''}[0] );
+					if ( openprint::Estimating::MultiPage::check( $self, $ProjectService, $qty_index ) ) {
+						$ProjectService->status('uncalculated');
+						$new_status = 'uncalculated';
+						last;
+					} # end if
 				} # end if
 			} # end foreach
 		} # end if
@@ -672,6 +680,16 @@ sub quantity3 {
 	return $$self{'quantity3'};
 } # end sub quantity2
 
+my @dont_copy = (
+		'ServiceIndex','ProjectIndex','TemplateType',
+		'txtEmployeeComments','rdbComplete','rdbApproved','ddmApprovalDateMonth','ddmApprovalDateDay','ddmApprovalDateYear',
+		'ddmCompletionDate.*','txtRunHours','txtDowntimeHours',
+		'ddmPressCompletionDate.*', 'UsePress.*', 'rdbPressComplete.*',
+		'UsedPaper.*',
+		'txtMakeReadySetupHours', 'txtStartQuantity','txtFinalQuantity','txtWasteQuantity','txtEmployeeName',
+		'.*Used',
+		);
+
 sub copy {
 	my $self = shift;
 	my $new = new openprint::Project();
@@ -681,19 +699,9 @@ sub copy {
 	delete $$new{'Services'};
 	$new->save({'id'=>undef, 'created_on'=>undef,'production_comments'=>undef, order_id=>undef, docket=>undef} );
 
-	my @dont_copy = (
-			'ServiceIndex','ProjectIndex','TemplateType',
-			'txtEmployeeComments','rdbComplete','rdbApproved','ddmApprovalDateMonth','ddmApprovalDateDay','ddmApprovalDateYear',
-			'ddmCompletionDate.*','txtRunHours','txtDowntimeHours',
-			'ddmPressCompletionDate.*', 'UsePress.*', 'rdbPressComplete.*',
-			'UsedPaper.*',
-			'txtMakeReadySetupHours', 'txtStartQuantity','txtFinalQuantity','txtWasteQuantity','txtEmployeeName',
-			'.*Used',
-			);
-
 # Make this all one transaction... Don't need locking because a reload would get a different projectindex
 	my $ac = sql::start_transaction( $openprint::dbh );
-	my @contents = sql::execute( undef, undef, q{SELECT lngServiceIndex, servicetype_id, strStatus FROM tbl_Project_Contents WHERE lngProjectIndex=?}, $$self{'id'} );
+	my @contents = sql::execute( undef, undef, q{SELECT lngServiceIndex, servicetype_id, strStatus FROM tbl_Project_Contents WHERE lngProjectIndex=?}, $$self{id} );
 
 	while ( @contents ) {
 		my ( $service_index, $servicetype_id, $status ) = splice @contents, 0, 3;

@@ -98,7 +98,7 @@ sub display {
 	#@$self{'quantity','start_imposition','columns','rows','dutch_columns','dutch_rows','imposition','spread_columns','spread_rows','spreads'},$self->page_columns(), $self->page_rows(), $self->pages(), $$self{'runstyle'}, $$self{paper}->{start_width},$$self{paper}->{start_height},$self->{paper}->{width},$self->{paper}->{height},$$self{Press}->{strid}, @$self{'image_width','image_height','layout_width','layout_height','image_orientation'},$self->grain_direction(), $$self{paper}->minimum_order() ) );
 my ( $caller, undef, $line ) = caller;
 	$openprint::log->debug(sprintf('Imp %s: %d %dx%d+%dx%d:%dout%s pages:%dx%d=%d %s on: %sx%s->%sx%s=%dsq min: %s %s %s versions: %d specs: %s from %s:%d', $prefix,
-	@$self{'quantity','columns','rows','dutch_columns','dutch_rows','imposition','image_orientation'},$self->page_columns(), $self->page_rows(), $self->pages(), $$self{'runstyle'}, @$Paper{'start_width','start_height','width','height'}, $Paper->area(),$$Paper{'minimum_order'}, $$self{Press}->{strid}, ( $$self{'Price'} ? $$self{'Price'} : '' ), $$self{versions}, $$self{specs}, $caller, $line ) );
+	@$self{'quantity','columns','rows','dutch_columns','dutch_rows','imposition','image_orientation'},$self->page_columns(), $self->page_rows(), $self->pages(), $$self{'runstyle'}, @$Paper{'start_width','start_height'}, $self->sheet_width(), $self->sheet_height(), $Paper->area(),$$Paper{'minimum_order'}, $$self{Press}->{strid}, ( $$self{'Price'} ? $$self{'Price'} : '' ), $$self{versions}, $$self{specs}, $caller, $line ) );
 } # end sub display
 
 sub get {
@@ -402,14 +402,14 @@ sub sheet_width {
 	if ( $$self{'rotate_sheet'} ) {
 		$$self{'paper'}->height( @_ ) if @_;
 		if ( $$self{'start_columns'} and $$self{'columns'} and $$self{'start_columns'} != $$self{'columns'} ) {
-		return $self->Paper()->height() / ( $$self{'start_columns'} / $$self{'columns'} );
+			return $self->Paper()->height() / ( $$self{'start_columns'} / $$self{'columns'} );
 		} else {
 			return $self->Paper()->height();
 		} # end if
 	} else {
 		$$self{'paper'}->width( @_ ) if @_;
 		if ( $$self{'start_columns'} and $$self{'columns'} and $$self{'start_columns'} != $$self{'columns'} ) {
-		return $self->Paper()->width() / ( $$self{'start_columns'} / $$self{'columns'} );
+			return $self->Paper()->width() / ( $$self{'start_columns'} / $$self{'columns'} );
 		} else {
 			return $self->Paper()->width();
 		} # end if

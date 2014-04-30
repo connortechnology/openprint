@@ -1808,31 +1808,31 @@ if ( ! sets::isin( 'user_purchaseorder_limits', \@tables ) ) {
 } # end if
 
 
-foreach my $Type ( openprint::ServiceType->find('name'=>'BulkSkids') ) {
+foreach my $Type ( openprint::ServiceType->find('name'=>'BulkSkids', type=>undef ) ) {
     $Type->type( 'Skids' );
     $Type->save();
 }
-foreach my $Type ( openprint::ServiceType->find('name'=>'PlainCartons') ) {
+foreach my $Type ( openprint::ServiceType->find('name'=>'PlainCartons', type=>undef ) ) {
     $Type->type( 'Skids' );
     $Type->save();
 }
-foreach my $Type ( openprint::ServiceType->find('name'=>'Bundling') ) {
+foreach my $Type ( openprint::ServiceType->find('name'=>'Bundling', type=>undef ) ) {
     $Type->type( 'Packaging' );
     $Type->save();
 }
-foreach my $Type ( openprint::ServiceType->find('name'=>'ShrinkWrap') ) {
+foreach my $Type ( openprint::ServiceType->find('name'=>'ShrinkWrap', type=>undef ) ) {
     $Type->type( 'Packaging' );
     $Type->save();
 }
-foreach my $Type ( openprint::ServiceType->find('name'=>'KraftWrap') ) {
+foreach my $Type ( openprint::ServiceType->find('name'=>'KraftWrap', type=>undef ) ) {
     $Type->type( 'Packaging' );
     $Type->save();
 }
-foreach my $Type ( openprint::ServiceType->find('name'=>'ColourCorrection') ) {
+foreach my $Type ( openprint::ServiceType->find('name'=>'ColourCorrection', type=>undef ) ) {
     $Type->type( 'Prepress' );
     $Type->save();
 }
-foreach my $Type ( openprint::ServiceType->find('name'=>'CDBurning') ) {
+foreach my $Type ( openprint::ServiceType->find('name'=>'CDBurning', type=>undef ) ) {
     $Type->type( 'Prepress' );
     $Type->save();
 }
@@ -2965,7 +2965,7 @@ if ( ! sets::isin( 'companies_accountingcontacts', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/Companies_AccountingContacts.sql}) );
 } # end if
 
-if ( my $PaddingServiceType = openprint::ServiceType->find_one('name'=>'Padding') ) {
+if ( 0 and my $PaddingServiceType = openprint::ServiceType->find_one('name'=>'Padding') ) {
 	sql::update( undef, undef, 'tbl_service_defaults', ['lngservicetypeindex=? AND strfieldname=? AND strdefaultvalue=?',
 			$PaddingServiceType->id(), 'rdbCardboardBacking','Y'], [ 'strfieldname', 'Backing', 'strdefaultvalue', 'Cardboard' ] );
 	sql::update( undef, undef, 'tbl_service_defaults', ['lngservicetypeindex=? AND strfieldname=? AND strdefaultvalue=?',

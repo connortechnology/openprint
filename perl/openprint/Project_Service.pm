@@ -11,23 +11,23 @@ use vars qw( $debug %fields %find_fields %transforms %defaults $table $serial @i
 
 $debug = 0;
 %fields = (
-	'service_id'	=>	'lngserviceindex',
-	'project_id'	=>	'lngprojectindex',
-	'operator_id'	=>	'operator_id',
-	'status'		=>	'strstatus',
-	'servicetype_id'	=>	'servicetype_id',
+	service_id	=>	'lngserviceindex',
+	project_id	=>	'lngprojectindex',
+	operator_id	=>	'operator_id',
+	status		=>	'strstatus',
+	servicetype_id	=>	'servicetype_id',
 	service_type	=>	undef,
-	'created_on'	=>	'dtmlastmodified',
+	created_on		=>	'dtmlastmodified',
 );
 %find_fields = (
-	'category'	=>	'(SELECT ServiceType_Categories.name FROM ServiceType_Categories,Service_Types WHERE ServiceType_Categories.id=Service_Types.category_id AND Service_Types.id=servicetype_id)',
+	category	=>	'(SELECT ServiceType_Categories.name FROM ServiceType_Categories,Service_Types WHERE ServiceType_Categories.id=Service_Types.category_id AND Service_Types.id=servicetype_id)',
 	servicetype		=>	'(SELECT name FROM service_types WHERE service_types.id=servicetype_id)',
 );
 %transforms = (
 );
 %defaults = (
-	'operator_id'	=>	undef,
-	'created_on'	=>	q`'NOW()'`,
+	operator_id	=>	undef,
+	created_on	=>	q`'NOW()'`,
 );
 $table = 'tbl_project_contents';
 $serial = 'ContentsServiceIndex_seq';
@@ -44,7 +44,7 @@ sub Operator {
 sub specs {
 	if ( ! $_[0]{specs} ) {
 		if ( $_[0]{service_id} ) {
-			$_[0]{specs} = openprint::service::get_specs_ref( $_[0]->Project(), $_[0]{'service_id'} );
+			$_[0]{specs} = openprint::service::get_specs_ref( $_[0]->Project(), $_[0]{service_id} );
 		} else {
 			$_[0]{specs} = {};
 		} # end if
