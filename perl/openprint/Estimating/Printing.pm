@@ -870,15 +870,15 @@ $log->debug("Calcing txtCustomMWeight");
 			@$specs{'ddmStockWidth','ddmStockHeight'} = $$specs{'ddmStockSize'} =~ /^([\d\.]+)"?\s*x?\s*([\d\.]+)?"?\s*$/;
 		}
 		@Papers = openprint::Paper->find( 
-				( exists $$specs{'ddmStockGroup'} ? ( group=> $$specs{'ddmStockGroup'} ) : () ),
+				( $$specs{'ddmStockGroup'} ? ( group=> $$specs{'ddmStockGroup'} ) : () ),
 				( exists $$specs{'ddmStockBrand'} ? ( 'brand'=> $$specs{'ddmStockBrand'} ) : () ),
 				( exists $$specs{'ddmStockFinish'} ? ( 'finish'=>$$specs{'ddmStockFinish'} ) : () ),
 				( exists $$specs{'ddmStockColour'} ? ( 'colour'=>$$specs{'ddmStockColour'} ) : () ),
 				( exists $$specs{'ddmStockWeight'} ? ( 'weight'=>$$specs{'ddmStockWeight'} ) : () ),
-				( exists $$specs{'ddmStockQuality'} ? ( 'quality'=>$$specs{'ddmStockQuality'} ) : () ),
+				( $$specs{'ddmStockQuality'} ? ( 'quality'=>$$specs{'ddmStockQuality'} ) : () ),
 				( exists $$specs{'ddmStockWidth'} ? ( 'width'=>$$specs{'ddmStockWidth'} ) : () ),
 				( exists $$specs{'ddmStockHeight'} ? ( 'height'=>$$specs{'ddmStockHeight'} ) : () ),
-				'project_type_id any'=>$Project->Type()->id(),
+				'project_type_id any'=>$Project->type_id(),
 				);
 
 		if ( ! @Papers ) {
@@ -1513,7 +1513,7 @@ if ( 1 ) {
 
         foreach my $imp ( @impositions ) {
             if ( $$imp{'imposition'} < $max_imposition ) {
-$imp->display(" Less than $max_imposition");
+$imp->display(" Less than $max_imposition") if DEBUG_INITIAL_FILTERING;
                 next;
             } # end if
             my $A = $imp->Paper();
@@ -1533,7 +1533,7 @@ $$imp{stock_lbs} = $a_stock_lbs;
 							foreach my $I ( @{$imps{$str}} ) {
 								if ( $I->Paper()->area() <= $A->area() ) {
 									$add = 0;
-	$imp->display("Foudn non-dutch");
+	$imp->display("Foudn non-dutch") if DEBUG_INITIAL_FILTERING;
 								} # end if
 							} # end foreach
 						} # end if
@@ -1549,7 +1549,7 @@ $$imp{stock_lbs} = $a_stock_lbs;
                 for ( my $dutch_index = 0; $dutch_index < @{$dutches{$$imp{'imposition'}}}; $dutch_index += 1 ) {
                     my $dutch_imp = $dutches{$$imp{'imposition'}}[$dutch_index];
                     if ( $dutch_imp->Paper()->area() >= $A->area() ) {
-                        $dutch_imp->display('kicking out dutch');
+                        $dutch_imp->display('kicking out dutch') if DEBUG_INITIAL_FILTERING;
                         my $str = join(',', @$dutch_imp{'columns','rows','dutch_columns','dutch_rows','runstyle','image_orientation','bleed_size', $dutch_imp->Paper()->digital() } );
                         #my $str = sprintf('%dx%d+%dx%d-%s-%s-%s-%s', @$dutch_imp{'columns','rows','dutch_columns','dutch_rows','runstyle','image_orientation','bleed_size', $dutch_imp->Paper()->digital() } );
                         if ( $imps{$str} ) {
@@ -1558,7 +1558,7 @@ $$imp{stock_lbs} = $a_stock_lbs;
                                 $index -= 1;
                             } # end foreach
 						} else {
-							$openprint::log->debug("No other duteches to remove");
+							$openprint::log->debug("No other duteches to remove") if DEBUG_INITIAL_FILTERING;
                         } # end if
                         splice @{$dutches{$$imp{'imposition'}}}, $dutch_index, 1;
                         $dutch_index -= 1;
@@ -2633,7 +2633,7 @@ sub save_price( $$$$$ ) {
 			#$openprint::log->debug(
 		#} # end if
 		$$specs{'txtUnspecifiedPageQuantity'.$qty_index} -= $$specs{'PageQuantity'.$qty_index};
-	} else {
+	} elsif ( DEBUG ) {
 		$openprint::log->debug("No txtSignatureType");
 	} # end if
 } # end sub save_price

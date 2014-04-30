@@ -282,7 +282,7 @@ $openprint::log->warn("Doing AQ when not needed @front_aq @back_aq");
 
 	# Should include overs
 	my $impressions = $$sig_specs{"hdnImpressionQuantity$qty_index"} ? $$sig_specs{"hdnImpressionQuantity$qty_index"} : $$specs{"txtQuantity$qty_index"};
-$openprint::log->debug("Impressions: " . $$sig_specs{"hdnImpressionQuantity$qty_index"} . " qty: " . $$specs{"txtQuantity$qty_index"} );
+$openprint::log->debug("Impressions: " . $$sig_specs{"hdnImpressionQuantity$qty_index"} . " qty: " . $$specs{"txtQuantity$qty_index"} ) if DEBUG;
 
 	# Why would it be multiplied by the # of items per sheet? That doesn't make any sense at all.
 	#if ( $$specs{'txtPressSheetComboItems'} ) {
@@ -291,7 +291,7 @@ $openprint::log->debug("Impressions: " . $$sig_specs{"hdnImpressionQuantity$qty_
 	#if ( $$sig_specs{'Versions'} ) {
 		#$impressions *= $$sig_specs{'Versions'};
 	#} # end if
-$openprint::log->debug("Impressions: $impressions");
+$openprint::log->debug("Impressions: $impressions") if DEBUG;
 if ( 1 ) {
 	# This just can't be right anymore. Actually it can... if double sided, impressions are doubled...
 	if ( $imposition->runstyle() eq 'Perfecting' ) {
@@ -307,7 +307,7 @@ if ( 1 ) {
 		} # end if
 	} # end if
 } # end if
-$openprint::log->debug("Impressions: $impressions");
+$openprint::log->debug("Impressions: $impressions") if DEBUG;
 
 	@all_equipment = openprint::Equipment->find( Specifications => {'Aqueous Capable'=>['Y','When Printing']}, useinestimating=>1,order=>'lower(strName)') if ! @all_equipment;
 	my @equipment;	

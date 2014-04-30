@@ -221,13 +221,10 @@ $log->debug("Presentation folder sizes $$specs{'chkPocketLeft'} $$specs{'chkPock
 	@StockOptions = misc::trim(split (',', $openprint::config{'StockOptions'} )) if ! @StockOptions;
 	@StockOptions = ( 'Brand','Finish','Colour','Weight' ) if ! @StockOptions;
 
-	my $ac = sql::start_transaction( $dbh );
-	# This is kinda neccessary, because clicking the recalc button skips over the javascript mutex,  so we need a real one... this seems as good a place as any.
-	$log->debug("LOCKING tbl_Projects for project $$Project{id}");
-	$dbh->do( "SELECT * FROM Projects WHERE id=".$$Project{'id'}. ' FOR UPDATE' );
+	$Project->lock();
 	if ( $dbh->errstr() ) {
 		$log->error( $dbh->errstr() );
-		sql::end_transaction( $dbh, $ac );
+		$Project->unlock();
 		$$specs{'alert'} .= 'Database error<br/>';
 		return $$specs{'Status'} = 'uncalculated';
 	} # end if
@@ -236,14 +233,14 @@ $log->debug("Presentation folder sizes $$specs{'chkPocketLeft'} $$specs{'chkPock
 # It's a multi-page publication
 		if ( ! $$specs{'txtTotalPageQuantity'} ) {
 			$$specs{'alert'} .= 'Please enter the number of pages.<br/>';
-			sql::end_transaction( $dbh, $ac );
+			$Project->unlock();
 			return $$specs{'Status'} = 'uncalculated';
 		} # end if
 		if ( $$specs{'rdbCover'} eq 'Different' ) {
 			foreach my $option ( @StockOptions ) {
 				if ( ! $$specs{'ddmStock'.$option.'1'} ) {
 					$$specs{'alert'} .= 'Please select a cover stock ' . lc $option .'.';
-					sql::end_transaction( $dbh, $ac );
+					$Project->unlock();
 					return $$specs{'Status'} = 'uncalculated';
 				} # end if
 			} # end foreach option
@@ -251,18 +248,18 @@ $log->debug("Presentation folder sizes $$specs{'chkPocketLeft'} $$specs{'chkPock
 		foreach my $option ( @StockOptions ) {
 			if ( ! $$specs{'ddmStock'.$option.'2'} ) {
 				$$specs{'alert'} .= 'Please select an interior stock ' . lc $option .'.';
-				sql::end_transaction( $dbh, $ac );
+				$Project->unlock();
 				return $$specs{'Status'} = 'uncalculated';
 			} # end if
 		} # end foreach option
 
 		if ( $$specs{'rdbTemplateType'} eq 'SaddleStitching' and $$specs{'txtTotalPageQuantity'} % 4 ) {
 			$$specs{'alert'} .= '# of pages should be a multiple of 4<br/>';
-			sql::end_transaction( $dbh, $ac );
+			$Project->unlock();
 			return $$specs{'Status'} = 'uncalculated';
 		} elsif ( $$specs{'rdbTemplateType'} eq 'PerfectBound' and $$specs{'txtTotalPageQuantity'} % 2 ) {
 			$$specs{'alert'} .= '# of pages should be a multiple of 2<br/>';
-			sql::end_transaction( $dbh, $ac );
+			$Project->unlock();
 			return $$specs{'Status'} = 'uncalculated';
 		} # end if
 
@@ -438,7 +435,7 @@ $log->debug("Presentation folder sizes $$specs{'chkPocketLeft'} $$specs{'chkPock
 			foreach my $option ( @StockOptions ) {
 				if ( ! $$specs{'ddmStock'.$option} ) {
 					$$specs{'alert'} .= 'Please select stock ' . lc $option .'.';
-					sql::end_transaction( $dbh, $ac );
+					$Project->unlock();
 					return $$specs{'Status'} = 'uncalculated';
 				} # end if
 			} # end foreach option
@@ -540,16 +537,14 @@ $log->debug("Presentation folder sizes $$specs{'chkPocketLeft'} $$specs{'chkPock
 
 	if ( ! $$specs{'txtQuantity1'} ) {
 		$$specs{'alert'} .= 'Please enter the quantity.';
-		$log->debug("DROPPING LOCK");
-		sql::end_transaction( $dbh, $ac );
+		$Project->unlock();
 		return $$specs{'Status'} = 'uncalculated';
 	} # end if
 
 	if ( $$specs{'Status'} eq 'uncalculated' ) {
 		delete $$specs{'txtPrice1'};
 		$$specs{'alert'} .= 'Problem calculating printing';
-		$log->debug("DROPPING LOCK");
-		sql::end_transaction( $dbh, $ac );
+		$Project->unlock();
 		return $$specs{'Status'};
 	} # end if
 
@@ -648,7 +643,6 @@ $log->debug("Presentation folder sizes $$specs{'chkPocketLeft'} $$specs{'chkPock
 
 	if ( $$specs{'HoleDrilling'} eq 'Y' ) {
 		push @{$$services{'Drilling'}}, $Project->add_service( 'Drilling' ) if ! $$services{'Drilling'};
-		my $ac = sql::start_transaction( $dbh );
 		foreach my $sid ( @{$$services{'Drilling'}} ) {
 			foreach my $spec ( 'txtHoleQty','txtHoleSize' ) {
 				if ( $$specs{$spec} ne '' ) {
@@ -658,7 +652,6 @@ $log->debug("Presentation folder sizes $$specs{'chkPocketLeft'} $$specs{'chkPock
 				} # end if
 			} # end foreach
 		} # end foreach
-		sql::end_transaction( $dbh, $ac );
 	} elsif ( $$services{'Drilling'} ) {
 		foreach ( @{$$services{'Drilling'}} ) {
 			openprint::print_project::delete_service( $$Project{'id'}, $_ );
@@ -723,13 +716,11 @@ $log->debug("Presentation folder sizes $$specs{'chkPocketLeft'} $$specs{'chkPock
 	push @{$$services{'PlainCartons'}}, $Project->add_service( 'PlainCartons' ) if ! $$services{'PlainCartons'};
 	if ( $$specs{'UPSShipping'} eq 'Y' ) {
 		push @{$$services{'UPS'}}, $Project->add_service( 'UPS' ) if ! $$services{'UPS'};
-		my $ac = sql::start_transaction( $dbh );
 		foreach my $sid ( @{$$services{'UPS'}} ) {
 			foreach my $spec ( 'ToPostalCode','ToCountry','ddmServiceType','ddmPickupType' ) {
 				openprint::service::insert_service_spec( $log, $dbh, $$Project{'id'}, $sid, $spec, $$specs{$spec} );
 			} # end foreach
 		} # end foreach
-		sql::end_transaction( $dbh, $ac );
 	} else {
 		foreach my $sid ( @{$$services{'UPS'}} ) {
 			openprint::print_project::delete_service( $$Project{'id'}, $sid );
@@ -748,6 +739,7 @@ $log->debug("Presentation folder sizes $$specs{'chkPocketLeft'} $$specs{'chkPock
 		foreach ( @{$$services{'ShrinkWrap'}} ) {
 			openprint::print_project::delete_service( $$Project{'id'}, $_ );
 		} # end foreach
+		delete $$services{'ShrinkWrap'};
 	} # end if
 
 	if ( $$specs{'Bundling'} eq 'Y' ) {
@@ -896,7 +888,7 @@ $log->warn("unitprice: $$specs{'txtUnitPrice1'}");
 		} # end if
 	} # end if
 	delete $$variable{'Redirect'};
-	sql::end_transaction( $dbh, $ac );
+	$Project->unlock();
 	return $$specs{'Status'};
 } # end sub calc
 
