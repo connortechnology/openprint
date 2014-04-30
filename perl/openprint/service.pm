@@ -448,13 +448,13 @@ sub internal_calc {
 	$Project->lock();
 	#$Project->save({status=>'uncalculated'}) if $Project->status() ne 'uncalculated';
 	my $Service = $Project->Service($service_index) if $service_index;
-	$Service->save({status=>'uncalculated'}) if $Service->status() ne 'uncalculated';
 	my $specs;
 	if ( ! $Service ) {
 $openprint::log->error("Doing internal calc without service_index or, not found");
 		$Service = new openprint::Project_Service();
 		$Service->set({ project_id=>$project_index, service_id=>$service_index, service_type=>$service_type });
 	} else {
+		$Service->save({status=>'uncalculated'}) if $Service->status() ne 'uncalculated';
 		$specs = $Service->specs();
 	} # end if	
 	my %specs = %{$specs} if $specs;

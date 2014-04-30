@@ -250,7 +250,7 @@ $openprint::log->error("2No stock index for $paper_id");
 			} # end if
 			next if $Paper->supplied();
 
-			if ( $$specs{"overridecost-$ss_id-$stock_index-$qty_index"} ne 'Y' ) {
+			if ( $$specs{"overridecost-$form-$stock_index-$qty_index"} ne 'Y' ) {
 				my $price;
 				if ( $Paper->type() eq 'Sheet' ) {
 					$price = $Paper->get_price( sheets=>$totals{$paper_id}{"qty_$qty_index"},service=>'Material' );

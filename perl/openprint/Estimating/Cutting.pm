@@ -530,7 +530,7 @@ sub signature_calc {
 		# Take care of cutting before folding
 	if ( @folding_impositions ) {
 
-$openprint::log->debug("Folding impositions: " . @folding_impositions );
+$openprint::log->debug("Folding impositions: " . @folding_impositions ) if DEBUG;
 
 		my $folding_cuts = 0;
 		if ( ( defined $$specs{"OverrideFoldingCuts-$$sig_specs{SignatureIndex}-$qty_index"} ) and ( $$specs{"OverrideFoldingCuts-$$sig_specs{SignatureIndex}-$qty_index"} eq 'Y' ) ) {

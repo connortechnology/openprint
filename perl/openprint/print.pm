@@ -564,7 +564,7 @@ sub publication_pages {
 		my $type = $$sig_specs{'Group'};
 $log->error("No Group!") if ! $type;
 		foreach my $spec ( 
-				'ddmStockBrand','ddmStockFinish','ddmStockColour','ddmStockWeight',
+				'ddmStockBrand','ddmStockFinish','ddmStockColour','ddmStockWeight','ddmStockGroup','ddmStockQuality',
 				'txtSpecificStockBrand','txtSpecificStockFinish','txtSpecificStockColour','txtSpecificStockWeight',
 				'txtSpecificStockWidth','txtSpecificStockHeight','txtSpecificStockCalliper',
 				'rdbSuppliedStock','rdbSpecificStock','StockType',

@@ -1,7 +1,6 @@
 <? echo (
 	openprint::StockWeight->find();
 	my $html;
-	my @types = ('Sheet', 'Roll' );
 
 	my @user_types = ('');
 	push @user_types, 'C' if $session{'user_id'};
@@ -11,7 +10,6 @@
 	my %find = (
 			'project_type_id any'	=>	$$variable{'ProjectType'}->id(),
 			'supplied is null or ='			=>	$$variable{'rdbSuppliedStock'.$$variable{'Signature'}} eq 'Y' ? 1 : 0,
-			'type'				=>	\@types,
 			'user_type'			=>	\@user_types,
 	);
 
