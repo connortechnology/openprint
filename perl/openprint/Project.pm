@@ -1504,6 +1504,7 @@ $openprint::log->debug("Calculate_Sigs: status: $status");
 			openprint::service::auto_calculate( $self, $$services{''}[0] ) if $status eq 'calculated';
 		} # end if
 	} # end if
+	$self->add_to_log( @openprint::session{'company_id','user_id'}, 'Recalculated. Prices: '.join(',', $self->prices() ) );
 	$self->update_status();
 	$self->summary(undef);
 	return $self->save();
@@ -1666,9 +1667,8 @@ sub unlock {
 	} # end if
 	if ( $_[0]{ac} == 1 ) {
 		sql::end_transaction( $openprint::dbh, $_[0]{ac} );
-	} else {
-		$_[0]{ac} -= 1;
 	} # end if
+	$_[0]{ac} -= 1;
 } # end sub unlock
 
 sub check_for_order {

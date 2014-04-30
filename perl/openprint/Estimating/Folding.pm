@@ -1741,7 +1741,7 @@ sub signature_summary {
 	$sig_specs = openprint::service::get_specs_ref( $Project, $s_id ) if ! $sig_specs;
 	if ( $qty_index ) {
 		my @folds;
-		if ( ( defined $$specs{"chkOverrideEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} ) and ( $$specs{"chkOverrideEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} eq 'Y' ) and ! $$specs{"ddmOverrideEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} ) {
+		if ( ( defined $$specs{"chkOverrideEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} ) and ( $$specs{"chkOverrideEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} eq 'Y' ) and ! $$specs{"ddmEquipment-$$sig_specs{SignatureIndex}-$qty_index"} ) {
 			return 'not folded';
 		} else {
 		my $Equipment = new openprint::Equipment( $$specs{"ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} );
