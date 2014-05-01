@@ -25,9 +25,9 @@ my $threading = 0;
 use constant DEBUG => 0;
 use constant DEBUG_PLATES => 0;
 use constant DEBUG_VERSIONS => 0;
-use constant DEBUG_FILTERING => 1;
-use constant DEBUG_INITIAL_FILTERING => 1;
-use constant DEBUG_PRICE_DECISIONS => 1;
+use constant DEBUG_FILTERING => 0;
+use constant DEBUG_INITIAL_FILTERING => 0;
+use constant DEBUG_PRICE_DECISIONS => 0;
 use constant DEBUG_INKS => 0;
 use constant DEBUG_STOCK => 0;
 use constant COMPARISON_LOG => 0;
@@ -1445,51 +1445,53 @@ if ( DEBUG_INITIAL_FILTERING ) {
 				} # end while cutting it
 			} # end if Web or Sheet
 
-			if ( $do_initial_filtering ) {
+			if ( @imps ) {
+				if ( $do_initial_filtering ) {
 
-				foreach my $i ( @imps ) {
-					my $key = join(',',@$i{'imposition','runstyle','image_orientation'});
-					if ( ! $imps{$key} ) {
-						$imps{$key} = [ $i ];
-if ( DEBUG_INITIAL_FILTERING ) {
-$i->display("STARTING");
-}
-						next;
-					} # end if
-					my $add = 1;
-					my $Aarea = $i->Paper()->area();
-					if ( $$Overrides{"chkOverrideSheetSize$qty_index"} or $$Overrides{"OverrideCutOff$qty_index"} ) {
-					} else {
-						for ( my $imp_index = 0; $imp_index < @{$imps{$key}}; $imp_index += 1 ) {
-							my $B = $imps{$key}[$imp_index];
-							my $Barea = $B->Paper()->area();
-							if ( $Aarea < $Barea ) {
-if ( DEBUG_INITIAL_FILTERING ) {
-$B->display("DROPPING");
-}
-								splice @{$imps{$key}}, $imp_index, 1;
-								$imp_index -= 1;
-							} elsif ( $Aarea > $Barea ) {
-if ( DEBUG_INITIAL_FILTERING ) {
-$i->display("NOT ADDING");
-}
-								$add = 0;
-								last;
-							} # end if
-						} # end foreach B
-					} # end if
-					if ( $add ) {
-						push @{$imps{$key}}, $i;
-					} # end if
-				} # end foreach i
+					foreach my $i ( @imps ) {
+						my $key = join(',',@$i{'imposition','runstyle','image_orientation'});
+						if ( ! $imps{$key} ) {
+							$imps{$key} = [ $i ];
+	if ( DEBUG_INITIAL_FILTERING ) {
+	$i->display("STARTING");
+	}
+							next;
+						} # end if
+						my $add = 1;
+						my $Aarea = $i->Paper()->area();
+						if ( $$Overrides{"chkOverrideSheetSize$qty_index"} or $$Overrides{"OverrideCutOff$qty_index"} ) {
+						} else {
+							for ( my $imp_index = 0; $imp_index < @{$imps{$key}}; $imp_index += 1 ) {
+								my $B = $imps{$key}[$imp_index];
+								my $Barea = $B->Paper()->area();
+								if ( $Aarea < $Barea ) {
+	if ( DEBUG_INITIAL_FILTERING ) {
+	$B->display("DROPPING");
+	}
+									splice @{$imps{$key}}, $imp_index, 1;
+									$imp_index -= 1;
+								} elsif ( $Aarea > $Barea ) {
+	if ( DEBUG_INITIAL_FILTERING ) {
+	$i->display("NOT ADDING");
+	}
+									$add = 0;
+									last;
+								} # end if
+							} # end foreach B
+						} # end if
+						if ( $add ) {
+							push @{$imps{$key}}, $i;
+						} # end if
+					} # end foreach i
 
-				my @b = map { @{$_} } values %imps;
-				$openprint::log->warn("1st imps: " . @imps . ' down to ' . @b) if DEBUG_INITIAL_FILTERING;
-				push @impositions, @b;
-				%imps = ();
-			} else {
-				push @impositions, @imps;
-			} # end if
+					my @b = map { @{$_} } values %imps;
+					$openprint::log->warn("1st imps: " . @imps . ' down to ' . @b) if DEBUG_INITIAL_FILTERING;
+					push @impositions, @b;
+					%imps = ();
+				} else {
+					push @impositions, @imps;
+				} # end if
+			} # end if @imps
 
 		} # end foreach Paper
 
@@ -3780,6 +3782,8 @@ sub get_project_price {
 						$$price{'Comparison Cost'} += $sig_count * $Results{'Total'};
 						$$price{'Comparison Log'} .= 'proofs for ' . $sig_count . 'sigs. '. $sig_count * $Results{Total} . 'total: ' . $$price{'Comparison Cost'} . '<br/>' if COMPARISON_LOG;
 						$$price{'Proofs Breakdown'} .= $Results{'Breakdown'};
+					} else {
+$openprint::log->error("No proofs>!");
 					} # end if
 
 #$imp->display("Actually calculating this imp count $$price{'sig_count'} \$$$price{'Comparison Cost'} Proofs: $$results{'Price'}") if ! $recursion_depth;
@@ -4338,7 +4342,7 @@ $openprint::log->warn("Unable to calculate impositions for additional signatures
         ( defined $best_price{'Comparison Log'} ? sprintf('Comparison Log: %s total: %s<br/>', @best_price{'Comparison Log','Comparison Cost'}) : '' ),
         );
 
-				$openprint::log->debug( 'this: ' . $breakdown );
+				$openprint::log->debug( 'best: ' . $breakdown );
 				foreach my $I ( @{ $best_price{'Impositions'} } ) {
 					$I->display( $recursion_depth . "OLD BEST:" );
 				} # end while
@@ -4418,15 +4422,15 @@ sub plate_cost {
 		%plate_price = $Material->get_price( $$PlateCounts{$$plate_costs{'Plate ID'}}, undef );
 		$$price{'Plate Cost'} = $plate_price{'Price'};
 		$$price{'Plate Price'} = $plate_price{'Price'} * $$plate_costs{'Plate Count'};
-		$results{'Price'} = $plate_price{'Price'} * $$plate_costs{'Plate Count'};
+		$results{'Price'} = Math::Round::nearest(0.01, $plate_price{'Price'} * $$plate_costs{'Plate Count'} );
 	} # end if
 
 	if ( $$plate_costs{'Blank Plates'} ) {
 		$$price{'txtBlankPlateQuantity'} = $$plate_costs{'Blank Plates'};
-		if ( my $Blank = openprint::Material->find_one( 'name'=>'Blank'.$$plate_costs{'Plate ID'} ) ) {
+		if ( my $Blank = openprint::Material->find_one( name=>'Blank'.$$plate_costs{'Plate ID'} ) ) {
 			my %blank_plate_price = $Blank->get_price( $$PlateCounts{'Blank'.$$plate_costs{'Plate ID'}}, undef );
 			$$plate_costs{'Blank Price'} = $blank_plate_price{'Price'};
-			$$price{'Blank Plate Price'} = $$plate_costs{'Blank Plates'} * $$plate_costs{'Blank Price'};
+			$$price{'Blank Plate Price'} = Math::Round::nearest(0.01, $$plate_costs{'Blank Plates'} * $$plate_costs{'Blank Price'} );
 			$results{'Price'} += $$price{'Blank Plate Price'};
 		} # end if
 	} # end if

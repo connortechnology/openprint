@@ -215,7 +215,7 @@ sub signature_calc {
 	my ( $Project, $specs, $sig_specs, $qty_index, $indexes, $totals, $Equipment, $Imposition ) = @_;
 
 	my %Results;
-	return %Results if ! $$sig_specs{'txtImposition'.$qty_index};
+	#return %Results if ! $$sig_specs{'txtImposition'.$qty_index};
 
 	my $signature_index = $$sig_specs{'SignatureIndex'};
 	if ( ! $Equipment ) {
