@@ -112,7 +112,6 @@ sub get_Price {
     return \%price;
 } # end sub get_Price
 
-memoize('get_price');
 sub get_price {
     my ( $self, $quantity, $Equipment, $Pricelist, $period ) = @_;
 

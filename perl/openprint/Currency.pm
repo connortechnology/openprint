@@ -12,7 +12,7 @@ use vars qw( $log $dbh $debug $table $serial %fields %transforms %defaults $cach
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
 
-$debug = 0;
+$debug = 1;
 $table = 'Currencies';
 $serial = 'currencies_id_seq';
 %fields = (
@@ -79,8 +79,9 @@ sub convert_from {
 	my $DST_Currency = get_current();
 	if ( $DST_Currency and ( $DST_Currency->id() != $$self{'id'} ) ) {
 		my $rate = $self->conversions( $DST_Currency->id() );
-		$log->debug("Converting $value in $$self{'name'} to $$DST_Currency{'name'}") if $debug;
-		$value *= $rate;
+		my $new = $value * $rate;
+		$log->debug("Converting $value in $$self{'name'} to $$DST_Currency{'name'} using rate $rate $new") if $debug;
+		return $new;
 	} # end if
 	return $value;
 } # end sub convert_from
