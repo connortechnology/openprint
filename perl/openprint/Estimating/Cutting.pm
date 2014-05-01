@@ -503,6 +503,7 @@ sub signature_calc {
 			next if ! $$folding_specs{"FoldQty-$$sig_specs{SignatureIndex}-$qty_index-$fold_index"};
 			next if ! $$folding_specs{"FoldType-$$sig_specs{SignatureIndex}-$qty_index-$fold_index"};
 			my $folding_imposition = new openprint::Imposition();
+			$folding_imposition->Paper( $Paper );
 			$folding_imposition->columns( $$folding_specs{"FoldColumns-$$sig_specs{SignatureIndex}-$qty_index-$fold_index"} );
 			$folding_imposition->rows( $$folding_specs{"FoldRows-$$sig_specs{SignatureIndex}-$qty_index-$fold_index"} );
 			$folding_imposition->quantity( $$folding_specs{"FoldQty-$$sig_specs{SignatureIndex}-$qty_index-$fold_index"} );
@@ -674,9 +675,10 @@ $openprint::log->debug("Folding impositions: " . @folding_impositions ) if DEBUG
 # interior vertical cuts = $sig_specs{'hdnImpositionColumns'}-1
 			if ( $$sig_specs{'txtSignatureType'} ) {
 	# but if we are cutting into smaller signatures, then we need more cutting
-	#$openprint::log->debug("Sitching $stitching_imposition to $$sig_specs{'txtImposition'.$qty_index}");
+	#$openprint::log->debug("Sitching $stitching_imposition out printing $$sig_specs{'txtImposition'.$qty_index}out");
 	#$openprint::log->debug("have signaturetype $$sig_specs{'txtSignatureType'} ");
 				if ( $I->pages() and ( ( ! $folding_specs ) or ( ! ( $Folder and $Folder->specification('Cutting Capable') ) ) ) ) {
+#$openprint::log->debug("Cutting because not folding or can't cut on folder $folding_specs $$Folder{strid} " . $Folder->specification('Cutting Capable') );
 	# Have to cut the pages out
 					$vertical_cuts += int ( ($I->page_columns()-1)*$I->columns()*2 ) + 2;
 					$horizontal_cuts += int( ($I->page_rows()-1)*$I->rows() * 2 ) + 2;
@@ -737,6 +739,7 @@ $openprint::log->debug("Folding impositions: " . @folding_impositions ) if DEBUG
 	#$vertical_cuts += ($$I{'columns'} / $$folding_imposition{'columns'})-1;
 	#} # end if
 			} else {
+$openprint::log->debug("Not a book") if DEBUG;
 				my $columns =  $$I{'columns'};
 				$vertical_cuts += 1+$columns;# = 2+$$I{'columns'}-1
 				if (
@@ -981,7 +984,7 @@ sub calc {
 		foreach my $signature_service_index ( @signatures ) {
 			my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
 			my $signature_index = $$sig_specs{SignatureIndex};
-			$$specs{'hdnBreakdown'.$qty_index} .= "Signature: $signature_index<br/>";
+			$$specs{'hdnBreakdown'.$qty_index} .= "Signature: $signature_index $$sig_specs{txtSignatureType}<br/>";
 			if ( ! $$sig_specs{'txtImposition'.$qty_index} ) {
 				$$specs{'hdnBreakdown'.$qty_index} .= 'no imposition.';
 				next;
@@ -990,6 +993,7 @@ sub calc {
 			$Imposition->load( $sig_specs, $qty_index );
 			next if ! $Imposition->imposition();
 			my $Paper = $Imposition->Paper();
+$openprint::log->debug("Paper: " . $Paper->to_string() );
 
 			if ( ( $$sig_specs{'StockType'.$qty_index} ne 'Roll' ) and ( $$sig_specs{"hdnSuppliedStockWidth$qty_index"} != $$sig_specs{'StockWidth'.$qty_index} or $$sig_specs{"hdnSuppliedStockHeight$qty_index"} != $$sig_specs{'StockHeight'.$qty_index} ) ) {
 				my %results = signature_calc_stock_cutting( $Project, $sig_specs, $specs, $qty_index, $Paper, $calc_hash );

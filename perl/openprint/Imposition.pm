@@ -93,6 +93,11 @@ sub AUTOLOAD {
 
 sub display {
 	my ( $self, $prefix ) = @_;
+if ( ! $$self{paper} ) {
+my ( $caller, undef, $line ) = caller;
+	$openprint::log->error("No paper in Imposition::sheet_width $caller: $line");
+	return 0;
+}
 	my $Paper = $$self{'paper'} ? $$self{paper} : new openprint::Paper();
 	#$openprint::log->debug(sprintf('Imp %s: %dx%dout %dx%d+%dx%d:%dout spreads:%dx%d=%d pages:%dx%d=%d %s on: %sx%s %.3fx%.3f %s I: %.3fx%.3f L:%.3fx%.3f %s %s minimum: %s', $prefix,
 	#@$self{'quantity','start_imposition','columns','rows','dutch_columns','dutch_rows','imposition','spread_columns','spread_rows','spreads'},$self->page_columns(), $self->page_rows(), $self->pages(), $$self{'runstyle'}, $$self{paper}->{start_width},$$self{paper}->{start_height},$self->{paper}->{width},$self->{paper}->{height},$$self{Press}->{strid}, @$self{'image_width','image_height','layout_width','layout_height','image_orientation'},$self->grain_direction(), $$self{paper}->minimum_order() ) );
@@ -153,9 +158,9 @@ sub copy {
 
 sub Paper {
 	if ( @_ > 1 ) {
-		$_[0]{'paper'} = $_[1];
+		$_[0]{paper} = $_[1];
 	} 
-	return $_[0]{'paper'};
+	return $_[0]{paper};
 } # end sub Paper
 
 sub load_used {
@@ -399,19 +404,25 @@ sub sheet_width {
 	my $self = shift;
 	$$self{'start_columns'} = $$self{'columns'} if ! $$self{'start_columns'};
 	$$self{'start_rows'} = $$self{'rows'} if ! $$self{'start_rows'};
+if ( ! $$self{paper} ) {
+my ( $caller, undef, $line ) = caller;
+	$openprint::log->error("No paper in Imposition::sheet_width $caller: $line");
+	return 0;
+}
+
 	if ( $$self{'rotate_sheet'} ) {
-		$$self{'paper'}->height( @_ ) if @_;
+		$$self{paper}->height( @_ ) if @_;
 		if ( $$self{'start_columns'} and $$self{'columns'} and $$self{'start_columns'} != $$self{'columns'} ) {
-			return $self->Paper()->height() / ( $$self{'start_columns'} / $$self{'columns'} );
+			return $$self{paper}->height() / ( $$self{'start_columns'} / $$self{'columns'} );
 		} else {
-			return $self->Paper()->height();
+			return $$self{paper}->height();
 		} # end if
 	} else {
-		$$self{'paper'}->width( @_ ) if @_;
+		$$self{paper}->width( @_ ) if @_;
 		if ( $$self{'start_columns'} and $$self{'columns'} and $$self{'start_columns'} != $$self{'columns'} ) {
-			return $self->Paper()->width() / ( $$self{'start_columns'} / $$self{'columns'} );
+			return $$self{paper}->width() / ( $$self{'start_columns'} / $$self{'columns'} );
 		} else {
-			return $self->Paper()->width();
+			return $$self{paper}->width();
 		} # end if
 
 	} # end if
@@ -421,6 +432,11 @@ sub sheet_height {
 	my $self = shift;
 	$$self{'start_columns'} = $$self{'columns'} if ! $$self{'start_columns'};
 	$$self{'start_rows'} = $$self{'rows'} if ! $$self{'start_rows'};
+if ( ! $$self{paper} ) {
+my ( $caller, undef, $line ) = caller;
+	$openprint::log->error("No paper in Imposition::sheet_height from $caller:$line");
+	return 0;
+}
 	if ( $$self{'rotate_sheet'} ) {
 		$$self{'paper'}->width( @_ ) if @_;
 			if ( $$self{'start_rows'} and $$self{'rows'} and $$self{'start_rows'} != $$self{'rows'} ) {
