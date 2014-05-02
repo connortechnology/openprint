@@ -7,13 +7,17 @@
 			<li><label>Order ID</label><? echo ( $$variable{'Order'}->id() ) ?></li>
 		<? if ( $$variable{'Order'}->docket() ) ?>
 			<li><label>Docket</label><? echo ( $$variable{'Order'}->docket(); ) ?></li>
-<? echo ( my $html;
-    foreach my $OI ( $$variable{Order}->Invoices() ) {
+<? echo ( 
+	my @Invoices = $$variable{Order}->Invoices();
+	return '' if ! @Invoices;
+	my $html = '<li class="invoices"><label>Invoices</label>';
+
+    foreach my $OI ( @Invoices() ) {
         my $Invoice = $OI->Invoice();
         $html .= $$Invoice{num} . ' on ' . format_date( $Invoice->created_on() );
 		$html .= '<br/>';
     } # end foreach
-    return $html;
+    return $html . '</li>';
 ) ?>
 		<? endif ( $$variable{'Order'}->docket() ) ?>
 			<li><label>Created</label><? echo ( Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $$variable{'Order'}->created_on() ) ); ) ?></li>

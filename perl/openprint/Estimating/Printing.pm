@@ -27,10 +27,10 @@ use constant DEBUG_PLATES => 0;
 use constant DEBUG_VERSIONS => 0;
 use constant DEBUG_FILTERING => 0;
 use constant DEBUG_INITIAL_FILTERING => 0;
-use constant DEBUG_PRICE_DECISIONS => 0;
+use constant DEBUG_PRICE_DECISIONS => 1;
 use constant DEBUG_INKS => 0;
 use constant DEBUG_STOCK => 0;
-use constant COMPARISON_LOG => 0;
+use constant COMPARISON_LOG => 1;
 use constant USE_SUBSIG => 0;
 use constant USE_PRICE_CACHE => 1;
 
@@ -47,7 +47,7 @@ my %converted_imposition_cache;
 my $use_converted_imposition_cache = 0;
 my %filtered_imposition_cache;
 my $use_filtered_imposition_cache = 0;
-my $calc_other_groups = 1;
+my $calc_other_groups = 0;
 my $third_level_filtering = 1;
 
 my %stitching_cache;
@@ -2399,6 +2399,7 @@ $openprint::log->debug(Data::Dumper::Dumper( \%Overrides ) );
 
 		%stitching_cache = ();
 		%price_cache = ();
+		%other_group_cache = ();
 		my @versions = get_versions( $specs, $qty_index );
 #$openprint::log->debug("versions: @versions");
 # Only thread qtys 2 and 3
@@ -3497,7 +3498,7 @@ sub get_project_price {
 #return {};
 #} # e
 	my @Is = openprint::imposition::sort( calculate_impositions( $Project, $sig_specs, $qty_index, $qty, $PaperCounts, $versions, $project, $impositions ) );
-	if ( DEBUG ) {
+	if ( DEBUG or 1 ) {
 		foreach my $I ( @Is ) {
 			$I->display( "Before calculation:" . @Is );
 		} # end while
@@ -4025,7 +4026,7 @@ if ( DEBUG_PLATES ) {
 # I don't think this is appropriate anymore
 #$$price{'Comparison Cost'} += $$price{'sig_count'} * $$results{'Price'};
 
-				my @paper_strings = keys %PaperCounts;
+				my @paper_strings = sort { $a cmp $b } keys %PaperCounts;
 				if ( ( 1 == @paper_strings ) and ( $Paper->id_string() ne $paper_strings[0] ) ) {
 					$openprint::log->error("Different paper in count versus imposition: $paper_strings[0] ne " . $imp->Paper()->id_string() );
 				} elsif ( DEBUG ) {
@@ -4046,8 +4047,8 @@ if ( DEBUG_PLATES ) {
 					} # end if
 
 					if ( $Paper->full_packages() ) {
-						if ( my $sheets_per_package = $Paper->sheets_per_package() ) {
-							$PaperCounts{$paper_string} = $sheets_per_package * ceil( $PaperCounts{$paper_string}/$sheets_per_package );
+						if ( my $qty_per_package = $Paper->sheets_per_package() ) {
+							$PaperCounts{$paper_string} = $qty_per_package * ceil( $PaperCounts{$paper_string}/$qty_per_package );
 						} # end if
 					} # end if
 
@@ -4065,7 +4066,7 @@ if ( DEBUG_PLATES ) {
 
 					if ( $$Paper{type} eq 'Sheet' ) {
 						$supplied_sheets = ceil($PaperCounts{$paper_string}/$Paper->factor());
-						$supplied_weight = ceil( $supplied_sheets * $Supplied->sheet_weight() );
+						$supplied_weight = Math::Round::nearest( 0.1, $supplied_sheets * $Supplied->sheet_weight() );
 if ( ! $supplied_weight ) {
 $openprint::log->debug("Sheet No supplied wight: $supplied_sheets $paper_string factor: " . $Paper->factor() . ' sheet weight: ' . $Supplied->sheet_weight() );
 } # end if

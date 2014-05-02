@@ -1058,8 +1058,10 @@ sub sort {
 	return sort {
 		if ( $$a{runstyle} ne $$b{runstyle} ) {
 			return $$a{runstyle} cmp $$b{runstyle};
+		} elsif ( $$a{pages} != $$b{pages} ) {
+			return $$a{pages} <=> $$b{pages};
 		} elsif ( $$a{imposition} != $$b{imposition} ) {
-			return $$a{imposition} <=> $$b{impositon};
+			return $$b{imposition} <=> $$a{imposition};
 		} elsif ( $$a{columns} != $$b{columns} ) {
 			return $$a{columns} <=> $$b{columns};
 		} # end if
