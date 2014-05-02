@@ -59,15 +59,22 @@
 		$html .= '<li><label>'.$Paper->to_string()."</label>\n";
 
 		foreach my $qty_index ( $Project->quantity_indexes() ) {
-			my $blah = $stock_id.'-'.$qty_index;
+			my $key = $stock_id.'-'.$qty_index;
 			$html .= '<span class="'.$$variable{'Columns'}.'Columns">';
-			$html .= input( type=>'float', id=>'qty-'.$blah, name=>'qty-'.$blah, value=>$totals{$stock}[$qty_index], onkeyup=>q`calc(this.form.name);` );
+			$html .= input( type=>'float', id=>'qty-'.$key, name=>'qty-'.$key, value=>$totals{$stock}[$qty_index], onkeyup=>q`calc(this.form.name);` );
 			$html .= 'lbs';
 			if ( $Paper->type() ne 'Roll' ) {
-				$html .= '<br/>'. input( type=>'cardinal', id=>'sheets-'.$blah, name=>'sheets-'.$blah, value=>$sheets{$stock}[$qty_index], onkeyup=>q`calc(this.form.name);` );
+				$html .= '<br/>'. input( type=>'cardinal', id=>'sheets-'.$key, name=>'sheets-'.$key, value=>$sheets{$stock}[$qty_index], onkeyup=>q`calc(this.form.name);` );
 				$html .= 'sheets';
 			} # end if
-			$html .= "</span>\n";
+
+			$html .= '<span class="pricing"> @ '.$$variable{Currency}->symbol();
+			$html .= input( type=>'float', id=>"cost-$key", name=>"cost-$key", value=>$$variable{"cost-$key"}, onkeyup=>'calc(this.form.name);' );
+			$html .= write_override( "overridecost-$key", $$variable{"overridecost-$key"}, '', "calc('f1')" );
+			$html .= '/100lb';
+			$html .= ' = '. $$variable{Currency}->symbol();
+			$html .= input( type=>'float', id=>"price-$key", name=>"price-$key", value=>$$variable{"price-$key"}, onkeyup=>'calc(this.form.name);' );
+			$html .= '</span></span>';
 		} # end foreach qty_index
 		$html .= "</li>\n";
 		$stock_id += 1;

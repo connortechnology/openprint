@@ -17,14 +17,8 @@
 			$html .= 'sheets ';
 		} # end if
 		$html .= write_override( "overrideqty$key", $$variable{"overrideqty$key"}, '', "calc('f1')" );
+		$html .= '</span>';
 
-		$html .= '</span><span class="pricing"> @ '.$$variable{Currency}->symbol();
-		$html .= input( type=>'float', id=>"cost$key", name=>"cost$key", value=>$$variable{"cost$key"}, onkeyup=>'calc(this.form.name);' );
-		$html .= write_override( "overridecost$key", $$variable{"overridecost$key"}, '', "calc('f1')" );
-		$html .= '/100lb';
-		$html .= ' = '. $$variable{Currency}->symbol();
-		$html .= input( type=>'float', id=>"price$key", name=>"price$key", value=>$$variable{"price$key"}, onkeyup=>'calc(this.form.name);' );
-		$html .= '</span></span>';
 	} # end foreach qty_index
 	$html .= '</li>';
 	return $html;
