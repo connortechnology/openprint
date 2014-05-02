@@ -118,6 +118,7 @@ sub convert {
 			my $SRC_Currency = new openprint::Currency( $$Price{'currency_id'} );
 			my $rate = $SRC_Currency->conversions( $DST_Currency->id() );
 			$$Price{'Price'} *= $rate if $rate;
+			$$Price{'price'} *= $rate if $rate;
 #$log->debug("Converting $$Price{'Price'} in $$SRC_Currency{'name'} to $$DST_Currency{'name'}") if $debug;
 			$$Price{'currency_id'} = $DST_Currency->id();
 		} # end if
