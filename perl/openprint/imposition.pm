@@ -417,14 +417,18 @@ $openprint::log->debug("Not Pretrimming on $$Press{strid}") if DEBUG;
 	if ( $bleed_locations{Left} ) {
 		$gutters -= $bleed_size;
 	} # end if
-#$openprint::log->debug("Gutters: $$specs{'Gutter'}, bindery: $bindery_gutters, minus bleeds: $gutters");
-#$openprint::log->debug("Bindery Gutters: $gutters <? $bindery_gutters");
+$openprint::log->debug("Gutters: $$specs{'Gutter'}, bindery: $bindery_gutters, minus bleeds: $gutters");
+$openprint::log->debug("Bindery Gutters: $gutters <? $bindery_gutters");
 
 	$gutters = 0 if $gutters < 0;
 
 	$$specs{'Grip Size'} = $$specs{'Grip'} - $bindery_head;
 # doube grip for a perfecting or Work & Tumble.
-	$$specs{'Grip Size'} *= 2 if sets::isin( $run_style, [ 'Work & Tumble', 'Perfecting' ] ); 
+		$openprint::log->debug("Grip  $$specs{'Grip Size'}");
+	if ( $run_style eq 'Work & Tumble' or $run_style eq 'Perfecting' ) {
+		$$specs{'Grip Size'} *= 2;
+		$openprint::log->debug("Grip  $$specs{'Grip Size'}");
+	} # emd 
 	if ( ( $run_style eq 'Work & Tumble' ) and ( $$specs{'Colour Bar Orientation'} ne 'Length' ) ) {
 		# For Work & TUmble, the grip happens on the head and tail, but we can print on the backside of the grip so to speak.  So we can tuck the colour bar into the second grip space.
 		$$specs{'Grip Size'} -= $$specs{'colour_bar_size'};
