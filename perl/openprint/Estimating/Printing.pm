@@ -27,10 +27,10 @@ use constant DEBUG_PLATES => 0;
 use constant DEBUG_VERSIONS => 0;
 use constant DEBUG_FILTERING => 0;
 use constant DEBUG_INITIAL_FILTERING => 0;
-use constant DEBUG_PRICE_DECISIONS => 1;
+use constant DEBUG_PRICE_DECISIONS => 0;
 use constant DEBUG_INKS => 0;
 use constant DEBUG_STOCK => 0;
-use constant COMPARISON_LOG => 1;
+use constant COMPARISON_LOG => 0;
 use constant USE_SUBSIG => 0;
 use constant USE_PRICE_CACHE => 1;
 
@@ -47,7 +47,7 @@ my %converted_imposition_cache;
 my $use_converted_imposition_cache = 0;
 my %filtered_imposition_cache;
 my $use_filtered_imposition_cache = 0;
-my $calc_other_groups = 0;
+my $calc_other_groups = 1;
 my $third_level_filtering = 1;
 
 my %stitching_cache;
