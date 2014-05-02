@@ -76,15 +76,19 @@ PROJECT: foreach my $Project ( openprint::Project->find( order=>'id',
 		} # end foreach field	
 
 		foreach my $field ( 'cost', 'overridecost', 'price' ) {
-			my $old_field = join('-', $field, $ss_id, $stock_index, $qty_index );
-			my $new_field = join('-', $field, $stock_index, $qty_index );
-			if ( $$paper_specs{$old_field} ) {
-				if ( $$paper_specs{$new_field} ) {
-					print "Already upgraded project $$Project{id}\n";
-					openprint::service::delete_service_spec( $$Project{id}, $$services{Paper}[0], $old_field );
-				} # end if
-				openprint::service::insert_service_spec( $log, $dbh, $$Project{id}, $$services{Paper}[0], $new_field, $$paper_specs{$old_field} );
-			} # end if
+			foreach my $stock_index ( 1 .. 4 ) {
+				foreach my $qty_index ( $Project->quantity_indexes() ) {
+					my $old_field = join('-', $field, $ss_id, $stock_index, $qty_index );
+					my $new_field = join('-', $field, $stock_index, $qty_index );
+					if ( $$paper_specs{$old_field} ) {
+						if ( $$paper_specs{$new_field} ) {
+							print "Already upgraded project $$Project{id}\n";
+							#openprint::service::delete_service_spec( $$Project{id}, $$services{Paper}[0], $old_field );
+						} # end if
+						openprint::service::insert_service_spec( $log, $dbh, $$Project{id}, $$services{Paper}[0], $new_field, $$paper_specs{$old_field} );
+					} # end if
+				} # end foreach qty_index
+			} # end foreach stock_index
 		} # end foreach field
 	} # end foreach ss_id
 
