@@ -49,8 +49,8 @@ PROJECT: foreach my $Project ( openprint::Project->find( order=>'id',
 			( $project_id_start ? ( 'id >='=>$project_id_start) : () ),
 			( $company_id ? ( company_id=>$company_id ) : () ),
 			limit=>$projects_count ) ) {
-# Skip multipage projects
 	
+	$log->debug("Project $$Project{id}");
 	my $services = $Project->services();
 	my $paper_specs = openprint::service::get_specs_ref( $Project, $$services{Paper}[0] );
 
