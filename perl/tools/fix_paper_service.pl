@@ -80,8 +80,8 @@ PROJECT: foreach my $Project ( openprint::Project->find( order=>'id',
 			my $new_field = join('-', $field, $stock_index, $qty_index );
 			if ( $$paper_specs{$old_field} ) {
 				if ( $$paper_specs{$new_field} ) {
-					print "Already upgraded project $$Project{id}\n";
-					openprint::service::delete_service_spec( $$Project{id}, $$services{Paper}[0], $old_field );
+					print "Already upgraded project $$Project{id} have $new_field => $$paper_specs{$new_field}\n";
+					#openprint::service::delete_service_spec( $$Project{id}, $$services{Paper}[0], $old_field );
 				} # end if
 				openprint::service::insert_service_spec( $log, $dbh, $$Project{id}, $$services{Paper}[0], $new_field, $$paper_specs{$old_field} );
 			} # end if
