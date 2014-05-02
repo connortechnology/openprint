@@ -272,6 +272,7 @@ my %variables = (
 	'StockHeight'=>['save'],'StockHeight1' => ['save','output'], 'StockHeight2' => ['save','output'], 'StockHeight3' => ['save','output'],
 	'OverrideStockWidth1' => ['save'], 'OverrideStockWidth2' => ['save'], 'OverrideStockWidth3' => ['save'],
 	'OverrideStockHeight1' => ['save'], 'OverrideStockHeight2' => ['save'], 'OverrideStockHeight3' => ['save'],
+	'RotateSheet1' => ['save'], 'RotateSheet3' => ['save'], 'RotateSheet2' => ['save'],
 	'CutOff1' => ['save','output'], 'CutOff2' => ['save','output'], 'CutOff3' => ['save','output'],
 	'OverrideCutOff1' => ['save'], 'OverrideCutOff2' => ['save'], 'OverrideCutOff3' => ['save'],
 	'StockType' => ['save','output'],'StockType1' => ['save','output'], 'StockType2' => ['save','output'], 'StockType3' => ['save','output'],
@@ -582,19 +583,23 @@ $openprint::log->debug("Adding special colour for $colour");
 	$project{'NeedAqueous'} = openprint::Estimating::Aqueous::signature_needs( $Project, $specs );
 	@$specs{'NeedFolding','NeedScoring'} = @project{'NeedFolding','NeedScoring'};
 
-	if ( $project{'NeedUVCoating'} ) {
-		if ( ! $$services{'UVCoating'} ) {
-			push @{$$services{'UVCoating'}}, $Project->add_service( 'UVCoating' );
+	# These aer questionable: Should not modify a project in calculation
+	if ( $project{NeedUVCoating} ) {
+		if ( ! $$services{UVCoating} ) {
+			push @{$$services{UVCoating}}, $Project->add_service( 'UVCoating' );
 		} # end if	
-		$project{'HasUVCoating'} = $$services{'UVCoating'}[0];
+		$project{HasUVCoating} = $$services{UVCoating}[0];
+		%{$project{UVCoatingSpecs}} = %{openprint::service::get_specs_ref( $Project, $$services{UVCoating}[0] )};
 	} # end if	
-	if ( $project{'NeedAqueous'} ) {
-		if ( ! $$services{'Aqueous'} ) {
-			push @{$$services{'Aqueous'}}, $Project->add_service( 'Aqueous' );
+	if ( $project{NeedAqueous} ) {
+		if ( ! $$services{Aqueous} ) {
+			push @{$$services{Aqueous}}, $Project->add_service( 'Aqueous' );
 		} # end if	
-		$project{'HasAqueous'} = $$services{'Aqueous'}[0];
-	} elsif ( $$services{'Aqueous'} and @{$$services{'Aqueous'}} ) {
-		$project{'HasAqueous'} = $$services{'Aqueous'}[0];
+		$project{HasAqueous} = $$services{Aqueous}[0];
+		%{$project{AqueousSpecs}} = %{openprint::service::get_specs_ref( $Project, $$services{'Aqueous'}[0] )};
+	} elsif ( $$services{Aqueous} and @{$$services{Aqueous}} ) {
+		$project{HasAqueous} = $$services{Aqueous}[0];
+		%{$project{AqueousSpecs}} = %{openprint::service::get_specs_ref( $Project, $$services{'Aqueous'}[0] )};
 	} # end if	
 
 	if ( $$services{'SaddleStitching'} ) {
@@ -612,8 +617,6 @@ $openprint::log->debug("Adding special colour for $colour");
 		$project{'PerfectBindCoverGutter'} = $config{'PerfectBindCoverGutter'} if $$specs{'Group'} == 1;
 	} # end if
 
-	%{$project{'UVCoatingSpecs'}} = %{openprint::service::get_specs_ref( $Project, $$services{'UVCoating'}[0] )} if $$services{'UVCoating'};
-	%{$project{'AqueousSpecs'}} = %{openprint::service::get_specs_ref( $Project, $$services{'Aqueous'}[0] )} if $$services{'Aqueous'};
 	return \%project;
 } # end sub setup_project
 
@@ -3498,7 +3501,7 @@ sub get_project_price {
 #return {};
 #} # e
 	my @Is = openprint::imposition::sort( calculate_impositions( $Project, $sig_specs, $qty_index, $qty, $PaperCounts, $versions, $project, $impositions ) );
-	if ( DEBUG or 1 ) {
+	if ( DEBUG ) {
 		foreach my $I ( @Is ) {
 			$I->display( "Before calculation:" . @Is );
 		} # end while

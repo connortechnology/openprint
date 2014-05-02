@@ -927,6 +927,7 @@ $openprint::log->debug("Templatetype: $$sig_specs{'rdbTemplateType'}") if DEBUG;
 						if ( $Fold ) {
 # Need to check feed width
 $openprint::log->debug("Has a fold, doing extra checks") if DEBUG;
+							my $failure_reason;
 							if ( $max_feed_width ) {
 								# If multiple out, we trim inline otherwise trim first.
 								# If it has been cut, assume cut to layout size
@@ -936,19 +937,20 @@ $openprint::log->debug("Has a fold, doing extra checks") if DEBUG;
 								my $height_size = $$SignatureImposition{rows} != $$Imposition{rows} ? $Imposition->layout_height() : $Imposition->sheet_height();
 								$height_size = $Imposition->object_height() if $$Imposition{imposition} == 1;
 
+
 								if ( $orientation ) {
 									if (						
 											( $orientation eq 'Portrait' and $Imposition->layout_width() <= $Imposition->layout_height() ) or
 											( $orientation eq 'Landscape' and $Imposition->layout_width() >= $Imposition->layout_height() ) 
 										) {
 										if ( $width_size >= $max_feed_width ) {
-											$openprint::log->debug("Fold no good due to max feed width $width_size > $max_feed_width on width ($$sig_specs{txtWidth}).") if DEBUG;
+											$failure_reason = "Fold no good due to max feed width $width_size > $max_feed_width on width ($$sig_specs{txtWidth}) $orientation.";
 											$Fold = undef;
 										} # end if
 									} else {
 										if ( $height_size >= $max_feed_width ) {
 											$Fold = undef;
-											$openprint::log->debug("Fold no good due to max feed width $height_size > $max_feed_width on height ($$sig_specs{txtHeight}).") if DEBUG;
+											$failure_reason = "Fold no good due to max feed width $height_size > $max_feed_width on height ($$sig_specs{txtHeight}) $orientation.";
 										} # end if
 									} # end if
 								} else {
@@ -957,13 +959,13 @@ $openprint::log->debug("Has a fold, doing extra checks") if DEBUG;
 									if ( ( $width_folds and ! $height_folds ) or ( $width_folds == $$Fold{folds} and $height_folds == $$Fold{angles} ) ) {
 # If folds are on width, we grip on height...
 										if ( $width_size > $max_feed_width ) {
-											$openprint::log->debug("Fold no good due to max feed width $width_size > $max_feed_width on width ($$sig_specs{'txtHeight'}).") if DEBUG;
+											$failure_reason = "Fold no good due to max feed width $width_size > $max_feed_width on width ($$sig_specs{'txtHeight'}).";
 											$Fold = undef;
 										} # end if
 									} elsif ( ( $height_folds and ! $width_folds ) or ( $height_folds == $$Fold{'folds'} and $height_folds == $$Fold{'angles'} ) ) {
 										if ( $height_size > $max_feed_width ) {
 											$Fold = undef;
-											$openprint::log->debug("Fold no good due to max feed width $height_size > $max_feed_width on height ($$sig_specs{txtWidth}.") if DEBUG;
+											$failure_reason = "Fold no good due to max feed width $height_size > $max_feed_width on height ($$sig_specs{txtWidth}.";
 										} # end if
 									} else {
 										$openprint::log->warn("No fold match");
@@ -978,8 +980,9 @@ $openprint::log->debug("Got Fold: " . $Fold->to_string() ) if DEBUG;
 								push @{$folds{$$sig_specs{'rdbTemplateType'}.'-'.$$Imposition{'imposition'}.'out'}}, $Fold;
 								next;
 							} elsif ( @my_equipment == 1 ) {
-								$Breakdown .= "Can't fold that:<br/>
-									type			=>	$$sig_specs{'rdbTemplateType'}<br/>
+
+								$Breakdown .= sprintf( '%s: %d*%dout %s layout: %sx%s StockWeight %.2fgsm calliper:%.4f<br/>', $$sig_specs{'rdbTemplateType'}, $Imposition->quantity(), $Imposition->get('imposition','image_orientation','layout_width', 'layout_height'), $Paper->gsm(), $Paper->calliper() );
+								$Breakdown .= "Can't fold that , $failure_reason:<br/>
 									gsm				=>	".$Paper->gsm()."<br/>
 									calliper		=>	".$$Paper{'calliper'}."<br/>
 									imposition		=>	$$Imposition{'imposition'}<br/>";
@@ -1305,7 +1308,7 @@ $openprint::log->debug("Folds: $set_index : $key " . $impo_qty );
 					} # end if
 				} # end if
 
-				$Breakdown .= sprintf( '%s: %d*%dout layout: %sx%s qty: %d StockWeight %.2fgsm calliper:%.4f<br/>', $Fold->name(), $impo_qty, $imposition, $Imposition->get('layout_width', 'layout_height'), $run_qty, $Paper->gsm(), $Paper->calliper() );
+				$Breakdown .= sprintf( '%s: %d*%dout %s layout: %sx%s qty: %d StockWeight %.2fgsm calliper:%.4f<br/>', $Fold->name(), $impo_qty, $imposition, $Imposition->get('image_orientation','layout_width', 'layout_height'), $run_qty, $Paper->gsm(), $Paper->calliper() );
 
 				my %setupPrice = openprint::service::get_price_object( $Fold->type().'MakeReady', $imposition, $Equipment );
 				if ( ! %setupPrice ) {
@@ -1751,7 +1754,7 @@ sub signature_summary {
 					"FoldImposition-$$sig_specs{'SignatureIndex'}-$qty_index-$fold_index",
 					"FoldType-$$sig_specs{'SignatureIndex'}-$qty_index-$fold_index"} );
 		} # end foreach
-		return join(', ', @folds).' on ' . $Equipment->name();
+		return join(', ', sort { $a cmp $b } @folds).' on ' . $Equipment->name();
 		} # end if
 	} # end if
 } # end sub signature_summary
