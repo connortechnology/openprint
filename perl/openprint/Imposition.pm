@@ -238,8 +238,7 @@ sub load {
 	$$self{'dutch_columns'} = $$specs{'hdnImpositionDutchColumns'.$qty_index};
 	$$self{'dutch_orientation'} = $$specs{'hdnImageOrientation'.$qty_index} eq 'Vertical' ? 'Horizontal' : 'Vertical';
 	$$self{'cut_off'} = $$specs{'CutOff'.$qty_index};
-	$$self{'stock_width'} = $$self{'paper'}->width();
-	$$self{'stock_height'} = $$self{'cut_off'} ? $$self{'cut_off'} : $$self{'paper'}->height();
+
 
 	#'layout_width','layout_height',
 #,'rotate_sheet',
@@ -312,7 +311,18 @@ sub load {
 		} # end if
 		$$self{pages} = $$self{'spreads'} * $$self{'spread_size'};
 	} # end if
-	return $self;
+	$$self{'stock_width'} = $$self{'paper'}->width();
+	$$self{'stock_height'} = $$self{'cut_off'} ? $$self{'cut_off'} : $$self{'paper'}->height();
+	if ( ! exists $$specs{"RotateSheet$qty_index"} ) {
+		if ( $$self{layout_width} > $$self{paper}->width() or $$self{layout_height} > $$self{paper}->height() ) {
+			$$self{rotate_sheet} = 1;
+		} else {
+			$$self{rotate_sheet} = 0;
+		} # end if
+	} else {
+		$$self{rotate_sheet} = $$specs{"RotateSheet$qty_index"};
+	} # end if
+return $self;
 } # end sub load
 
 sub save {
@@ -341,6 +351,7 @@ sub save {
 	} else {
 		$$specs{'CutOff'.$qty_index} = '';
 	} # end if
+	$$specs{'RotateSheet'.$qty_index} = $$self{rotate_sheet};
 } # end sub Save
 
 sub used_width {
@@ -409,7 +420,6 @@ my ( $caller, undef, $line ) = caller;
 	$openprint::log->error("No paper in Imposition::sheet_width $caller: $line");
 	return 0;
 }
-
 	if ( $$self{'rotate_sheet'} ) {
 		$$self{paper}->height( @_ ) if @_;
 		if ( $$self{'start_columns'} and $$self{'columns'} and $$self{'start_columns'} != $$self{'columns'} ) {

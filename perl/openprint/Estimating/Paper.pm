@@ -161,8 +161,8 @@ $openprint::log->debug("Supplied: " . $SuppliedStock->id_string() );
 					if ( ! ( $PressSheet->area() and $PressSheet->start_area() ) ) {
 						Carp::cluck("No sheet area");
 					} else {
-					# convert to supplied count
-					$sheets = ceil( $sheets / ( $PressSheet->start_area()/$PressSheet->area() ) );
+						# convert to supplied count
+						$sheets = ceil( $sheets / ( $PressSheet->start_area()/$PressSheet->area() ) );
 					} # end if
 					$$specs{"qty-$form-$stock_index-$qty_index"} = Math::Round::nearest( 0.1, ( $sheets * $PressSheet->start_sheet_weight() ) );
 					$$specs{"sheets-$form-$stock_index-$qty_index"} = $sheets;
@@ -192,15 +192,16 @@ $openprint::log->debug("QTY $qty_index ($paper_string) => " . $totals{$paper_str
 	# Enforce minimum orders and full packages
 	foreach my $paper_string ( keys %papers ) {
 		my $Paper = $papers{$paper_string};
+$openprint::log->debug($Paper->id_string() . ' full packages ' . $Paper->full_packages() . ' per ' . $Paper->sheets_per_package() ) if DEBUG;
 		if ( $Paper->full_packages() ) {
-			my $sheets_per_package = $Paper->sheets_per_package();
-			if ( $sheets_per_package ) {
+			my $qty_per_package = $Paper->sheets_per_package();
+			if ( $qty_per_package ) {
 				foreach my $qty_index ( $Project->quantity_indexes() ) {
 					next if ! $totals{$paper_string}{"qty_$qty_index"};
 					if ( $Paper->type() eq 'Sheet' ) {
-						$totals{$paper_string}{"qty_$qty_index"} = $sheets_per_package * Math::Round::nearest(0.1,( $totals{$paper_string}{"qty_$qty_index"} / $sheets_per_package ) );
+						$totals{$paper_string}{"qty_$qty_index"} = $qty_per_package * ceil( $totals{$paper_string}{"qty_$qty_index"} / $qty_per_package );
 					} elsif ( $Paper->type() eq 'Roll' ) {
-						$totals{$paper_string}{"qty_$qty_index"} = $sheets_per_package * ($totals{$paper_string}{"qty_$qty_index"}/$sheets_per_package);
+						$totals{$paper_string}{"qty_$qty_index"} = $qty_per_package * ($totals{$paper_string}{"qty_$qty_index"}/$qty_per_package);
 					} # end if
 				} # end foreah qty_index
 			} # end if sheets_per_package

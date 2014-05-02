@@ -272,6 +272,7 @@ my %variables = (
 	'StockHeight'=>['save'],'StockHeight1' => ['save','output'], 'StockHeight2' => ['save','output'], 'StockHeight3' => ['save','output'],
 	'OverrideStockWidth1' => ['save'], 'OverrideStockWidth2' => ['save'], 'OverrideStockWidth3' => ['save'],
 	'OverrideStockHeight1' => ['save'], 'OverrideStockHeight2' => ['save'], 'OverrideStockHeight3' => ['save'],
+	'RotateSheet1' => ['save'], 'RotateSheet3' => ['save'], 'RotateSheet2' => ['save'],
 	'CutOff1' => ['save','output'], 'CutOff2' => ['save','output'], 'CutOff3' => ['save','output'],
 	'OverrideCutOff1' => ['save'], 'OverrideCutOff2' => ['save'], 'OverrideCutOff3' => ['save'],
 	'StockType' => ['save','output'],'StockType1' => ['save','output'], 'StockType2' => ['save','output'], 'StockType3' => ['save','output'],
@@ -582,19 +583,23 @@ $openprint::log->debug("Adding special colour for $colour");
 	$project{'NeedAqueous'} = openprint::Estimating::Aqueous::signature_needs( $Project, $specs );
 	@$specs{'NeedFolding','NeedScoring'} = @project{'NeedFolding','NeedScoring'};
 
-	if ( $project{'NeedUVCoating'} ) {
-		if ( ! $$services{'UVCoating'} ) {
-			push @{$$services{'UVCoating'}}, $Project->add_service( 'UVCoating' );
+	# These aer questionable: Should not modify a project in calculation
+	if ( $project{NeedUVCoating} ) {
+		if ( ! $$services{UVCoating} ) {
+			push @{$$services{UVCoating}}, $Project->add_service( 'UVCoating' );
 		} # end if	
-		$project{'HasUVCoating'} = $$services{'UVCoating'}[0];
+		$project{HasUVCoating} = $$services{UVCoating}[0];
+		%{$project{UVCoatingSpecs}} = %{openprint::service::get_specs_ref( $Project, $$services{UVCoating}[0] )};
 	} # end if	
-	if ( $project{'NeedAqueous'} ) {
-		if ( ! $$services{'Aqueous'} ) {
-			push @{$$services{'Aqueous'}}, $Project->add_service( 'Aqueous' );
+	if ( $project{NeedAqueous} ) {
+		if ( ! $$services{Aqueous} ) {
+			push @{$$services{Aqueous}}, $Project->add_service( 'Aqueous' );
 		} # end if	
-		$project{'HasAqueous'} = $$services{'Aqueous'}[0];
-	} elsif ( $$services{'Aqueous'} and @{$$services{'Aqueous'}} ) {
-		$project{'HasAqueous'} = $$services{'Aqueous'}[0];
+		$project{HasAqueous} = $$services{Aqueous}[0];
+		%{$project{AqueousSpecs}} = %{openprint::service::get_specs_ref( $Project, $$services{'Aqueous'}[0] )};
+	} elsif ( $$services{Aqueous} and @{$$services{Aqueous}} ) {
+		$project{HasAqueous} = $$services{Aqueous}[0];
+		%{$project{AqueousSpecs}} = %{openprint::service::get_specs_ref( $Project, $$services{'Aqueous'}[0] )};
 	} # end if	
 
 	if ( $$services{'SaddleStitching'} ) {
@@ -612,8 +617,6 @@ $openprint::log->debug("Adding special colour for $colour");
 		$project{'PerfectBindCoverGutter'} = $config{'PerfectBindCoverGutter'} if $$specs{'Group'} == 1;
 	} # end if
 
-	%{$project{'UVCoatingSpecs'}} = %{openprint::service::get_specs_ref( $Project, $$services{'UVCoating'}[0] )} if $$services{'UVCoating'};
-	%{$project{'AqueousSpecs'}} = %{openprint::service::get_specs_ref( $Project, $$services{'Aqueous'}[0] )} if $$services{'Aqueous'};
 	return \%project;
 } # end sub setup_project
 
@@ -2399,6 +2402,7 @@ $openprint::log->debug(Data::Dumper::Dumper( \%Overrides ) );
 
 		%stitching_cache = ();
 		%price_cache = ();
+		%other_group_cache = ();
 		my @versions = get_versions( $specs, $qty_index );
 #$openprint::log->debug("versions: @versions");
 # Only thread qtys 2 and 3
@@ -4025,7 +4029,7 @@ if ( DEBUG_PLATES ) {
 # I don't think this is appropriate anymore
 #$$price{'Comparison Cost'} += $$price{'sig_count'} * $$results{'Price'};
 
-				my @paper_strings = keys %PaperCounts;
+				my @paper_strings = sort { $a cmp $b } keys %PaperCounts;
 				if ( ( 1 == @paper_strings ) and ( $Paper->id_string() ne $paper_strings[0] ) ) {
 					$openprint::log->error("Different paper in count versus imposition: $paper_strings[0] ne " . $imp->Paper()->id_string() );
 				} elsif ( DEBUG ) {
@@ -4046,8 +4050,8 @@ if ( DEBUG_PLATES ) {
 					} # end if
 
 					if ( $Paper->full_packages() ) {
-						if ( my $sheets_per_package = $Paper->sheets_per_package() ) {
-							$PaperCounts{$paper_string} = $sheets_per_package * ceil( $PaperCounts{$paper_string}/$sheets_per_package );
+						if ( my $qty_per_package = $Paper->sheets_per_package() ) {
+							$PaperCounts{$paper_string} = $qty_per_package * ceil( $PaperCounts{$paper_string}/$qty_per_package );
 						} # end if
 					} # end if
 
@@ -4065,7 +4069,7 @@ if ( DEBUG_PLATES ) {
 
 					if ( $$Paper{type} eq 'Sheet' ) {
 						$supplied_sheets = ceil($PaperCounts{$paper_string}/$Paper->factor());
-						$supplied_weight = ceil( $supplied_sheets * $Supplied->sheet_weight() );
+						$supplied_weight = Math::Round::nearest( 0.1, $supplied_sheets * $Supplied->sheet_weight() );
 if ( ! $supplied_weight ) {
 $openprint::log->debug("Sheet No supplied wight: $supplied_sheets $paper_string factor: " . $Paper->factor() . ' sheet weight: ' . $Supplied->sheet_weight() );
 } # end if

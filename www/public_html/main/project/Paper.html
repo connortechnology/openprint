@@ -26,7 +26,7 @@
 		$indexes{$stock_ids[$stock_index-1]} = $stock_index;
 	} # end foreach
 
-	foreach my $ss_id ( sort $Project->signatures() ) {
+	foreach my $ss_id ( $Project->signatures( { sort=>1 } ) ) {
 		my $sig_specs = openprint::service::get_specs_ref( $Project, $ss_id );
 		my $form = $$variable{form} = $$sig_specs{SignatureIndex};
 		$html .= '<fieldset><legend>Stock for Signature ' . $form . '</legend><ul>';
