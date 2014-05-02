@@ -49,9 +49,7 @@ sub variables {
 				push @v, "qty-$form-$stock_index-$qty_index";
 				push @v, "sheets-$form-$stock_index-$qty_index";
 				push @v, "overrideqty-$form-$stock_index-$qty_index";
-				push @v, "cost-$form-$stock_index-$qty_index";
-				push @v, "overridecost-$form-$stock_index-$qty_index";
-				push @v, "price-$form-$stock_index-$qty_index";
+
 			} # end foreach qty_index
 		} # end foreach stock_index
 	} # end foreach ss_id
@@ -59,6 +57,9 @@ sub variables {
 		foreach my $qty_index ( $Project->quantity_indexes() ) {
 			push @v, "qty-$stock_index-$qty_index";
 			push @v, "sheets-$stock_index-$qty_index";
+			push @v, "cost-$stock_index-$qty_index";
+			push @v, "overridecost-$stock_index-$qty_index";
+			push @v, "price-$stock_index-$qty_index";
 		} # end foreach qty_index
 	} # end foreach stock_index
 #$openprint::log->debug( "Variables: @v");
@@ -226,60 +227,27 @@ $openprint::log->debug($Paper->id_string() . ' full packages ' . $Paper->full_pa
 		} # end if
 	} # end foreach
 
-if ( 0 ) {
+if ( DEBUG ) {
 	foreach my $paper_string ( keys %papers ) {
 		my $Paper = $papers{$paper_string};
 		foreach my $qty_index ( $Project->quantity_indexes() ) {
-#$openprint::log->debug("After minimum: QTY $qty_index $paper_string  => " . $totals{$paper_string}[$qty_index] );
+$openprint::log->debug("After minimum: QTY $qty_index $paper_string  => " . $totals{$paper_string}[$qty_index] );
 		} # end foreach
 	} # end if
 }
 
-	foreach my $ss_id ( $Project->signatures() ) {
-		my $sig_specs = openprint::service::get_specs_ref( $Project, $ss_id );
-		my $form = $$sig_specs{SignatureIndex};
-
+	foreach my $paper_string ( keys %papers ) {
+		my $Paper = $papers{$paper_string};
+		next if $Paper->supplied();
 		foreach my $qty_index ( $Project->quantity_indexes() ) {
-			next if ! $$sig_specs{'txtImposition'.$qty_index};
 			# We are doing this because we calculate on the parent sheet, but if the parent sheet is a generic... then it all goes for shit.
-			my $RunPaper = openprint::Paper::load_from_signature( $Project, $sig_specs, $qty_index );
-			my $Paper = $RunPaper->Supplied();
 			my $paper_id = $Paper->id_string();
 			my $stock_index = $indexes{$paper_id};
 			if ( ! $stock_index ) {
 $openprint::log->error("2No stock index for $paper_id");
 			} # end if
-			next if $Paper->supplied();
 
-			if ( $$specs{"overridecost-$form-$stock_index-$qty_index"} ne 'Y' ) {
-				my $price;
-				if ( $Paper->type() eq 'Sheet' ) {
-					$price = $Paper->get_price( sheets=>$totals{$paper_id}{"qty_$qty_index"},service=>'Material' );
-				} else {
-					$price = $Paper->get_price( weight=>$totals{$paper_id}{"qty_$qty_index"},service=>'Material' );
-				} # end if
-				$$specs{"cost-$form-$stock_index-$qty_index"} = $$price{'100lb Price'};
-#$openprint::log->warn("Getting prices for $stock_index $paper_id (".$totals{$paper_id}{"qty_$qty_index"}.'sheets) => $' . $price{'100lb Price'}.'/100lb');
-			} # end if
-			$$specs{"price-$form-$stock_index-$qty_index"} = Math::Round::nearest( 0.01, $$specs{"cost-$form-$stock_index-$qty_index"} * $$specs{"qty-$form-$stock_index-$qty_index"} / 100 );
-			$totals{$paper_id}{'Cost'}[$qty_index] = $$specs{"cost-$form-$stock_index-$qty_index"};
-			$$specs{"MPrice$qty_index"} += $$specs{"cost-$form-$stock_index-$qty_index"} * ceil( (1000/$$sig_specs{'txtImposition'.$qty_index}) * $RunPaper->sheet_weight() )/ 100;
-		} # end foreach qty_index
-	} # end foreach signature
-
-	foreach my $qty_index ( $Project->quantity_indexes() ) {
-		my $stock_index = 1;
-		$$specs{"txtPrice$qty_index"} = 0;
-		foreach my $paper_id ( sort keys %papers ) {
-			my $Paper = $papers{$paper_id};
-			if ( DEBUG ) {
-				$openprint::log->debug($paper_id . ' => totals: ' . $totals{$paper_id}{"qty_$qty_index"} );
-				if ( ! $totals{$paper_id}{"qty_$qty_index"} ) {
-					foreach my $k ( keys %totals ) {
-						$openprint::log->debug("Totals: $k => ".$totals{$k}{"qty_$qty_index"} );
-					}
-				}
-			} # end if
+			# Normalize and output qtys
 			if ( $Paper->type() eq 'Sheet' ) {
 				$$specs{"qty-$stock_index-$qty_index"} = Math::Round::nearest( 0.1, ( $totals{$paper_id}{"qty_$qty_index"} * $Paper->sheet_weight() ) );
 				$$specs{"sheets-$stock_index-$qty_index"} = $totals{$paper_id}{"qty_$qty_index"};
@@ -287,8 +255,28 @@ $openprint::log->error("2No stock index for $paper_id");
 				$$specs{"qty-$stock_index-$qty_index"} = $totals{$paper_id}{"qty_$qty_index"};
 				$$specs{"sheets-$stock_index-$qty_index"} = ceil( $totals{$paper_id}{"qty_$qty_index"} / $Paper->start_sheet_weight() ) if $Paper->start_sheet_weight();
 			} # end if
-			$$specs{"txtPrice$qty_index"} += $$specs{"qty-$stock_index-$qty_index"} * $totals{$paper_id}{"Cost"}[$qty_index] / 100;
-			$stock_index += 1;
+
+			if ( $$specs{"overridecost-$stock_index-$qty_index"} ne 'Y' ) {
+				my $price;
+				if ( $Paper->type() eq 'Sheet' ) {
+					$price = $Paper->get_price( sheets=>$totals{$paper_id}{"qty_$qty_index"},service=>'Material' );
+				} else {
+					$price = $Paper->get_price( weight=>$totals{$paper_id}{"qty_$qty_index"},service=>'Material' );
+				} # end if
+				$$specs{"cost-$stock_index-$qty_index"} = $$price{'100lb Price'};
+#$openprint::log->warn("Getting prices for $stock_index $paper_id (".$totals{$paper_id}{"qty_$qty_index"}.'sheets) => $' . $price{'100lb Price'}.'/100lb');
+			} # end if
+			$$specs{"price-$stock_index-$qty_index"} = Math::Round::nearest( 0.01, $$specs{"cost-$stock_index-$qty_index"} * $$specs{"qty-$stock_index-$qty_index"} / 100 );
+			$totals{$paper_id}{Cost}[$qty_index] = $$specs{"cost-$stock_index-$qty_index"};
+			#$$specs{"MPrice$qty_index"} += $$specs{"cost-$stock_index-$qty_index"} * ceil( (1000/$$sig_specs{'txtImposition'.$qty_index}) * $RunPaper->sheet_weight() )/ 100;
+		} # end foreach qty_index
+	} # end foreach Stock
+
+	foreach my $qty_index ( $Project->quantity_indexes() ) {
+		$$specs{"txtPrice$qty_index"} = 0;
+		foreach my $paper_id ( sort keys %papers ) {
+			my $stock_index = $indexes{$paper_id};
+			$$specs{"txtPrice$qty_index"} += $$specs{"price-$stock_index-$qty_index"};
 		} # end foreach Stock
 		$$specs{"MPrice$qty_index"} = sprintf($openprint::config{'UnitPriceFormat'}, $$specs{"MPrice$qty_index"} * (1+$Project->markup()/100) );
 		$$specs{"txtPrice$qty_index"} = sprintf($openprint::config{'ProjectMoneyFormat'}, $$specs{"txtPrice$qty_index"} * (1+$Project->markup()/100) );
