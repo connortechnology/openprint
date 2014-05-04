@@ -5,7 +5,7 @@ use POSIX qw{ ceil };
 
 require openprint::Imposition;
 
-use constant DEBUG => 0;
+use constant DEBUG => 1;
 
 # The various way we can group spreads
 use vars qw( %blocks );
@@ -542,6 +542,8 @@ $openprint::log->debug("Height: $paper_height - CB $$specs{'colour_bar_size'} - 
 			if ( ( $$specs{'dutch'} ne 'N' ) and ( $run_style ne 'Perfecting' or ( $Paper->perfecting() eq 'Y' ) ) ) {
 				# Too hard to figure space for rollers
 				push @results, calc_dutch( $setup1, $adjusted_paper_width, $adjusted_paper_height, $specs );
+			} else {
+$openprint::log->debug("Not doing dutch because $$specs{'dutch'} or $run_style");
 			} # end if
 			if ( ! $setup1->paper()->width() ) {
 				$setup1->paper()->width( $setup1->used_width() );
