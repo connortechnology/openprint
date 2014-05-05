@@ -61,6 +61,7 @@
 		foreach my $qty_index ( $Project->quantity_indexes() ) {
 			my $key = $stock_id.'-'.$qty_index;
 			$html .= '<span class="'.$$variable{'Columns'}.'Columns">';
+			$html .= '<span class="quantity">';
 			$html .= input( type=>'float', id=>'qty-'.$key, name=>'qty-'.$key, value=>$totals{$stock}[$qty_index], onkeyup=>q`calc(this.form.name);` );
 			$html .= 'lbs';
 			if ( $Paper->type() ne 'Roll' ) {
@@ -68,13 +69,17 @@
 				$html .= 'sheets';
 			} # end if
 
-			$html .= '<span class="pricing"> @ '.$$variable{Currency}->symbol();
-			$html .= input( type=>'float', id=>"cost-$key", name=>"cost-$key", value=>$$variable{"cost-$key"}, onkeyup=>'calc(this.form.name);' );
-			$html .= write_override( "overridecost-$key", $$variable{"overridecost-$key"}, '', "calc('f1')" );
-			$html .= '/100lb';
-			$html .= ' = '. $$variable{Currency}->symbol();
-			$html .= input( type=>'float', id=>"price-$key", name=>"price-$key", value=>$$variable{"price-$key"}, onkeyup=>'calc(this.form.name);' );
-			$html .= '</span></span>';
+			$html .= '</span>';
+			if ( ! $Paper->supplied() ) {
+				$html .= '<span class="pricing"> @ '.$$variable{Currency}->symbol();
+				$html .= input( type=>'float', id=>"cost-$key", name=>"cost-$key", value=>$$variable{"cost-$key"}, onkeyup=>'calc(this.form.name);' );
+				$html .= write_override( "overridecost-$key", $$variable{"overridecost-$key"}, '', "calc('f1')" );
+				$html .= '/100lb';
+				$html .= ' = '. $$variable{Currency}->symbol();
+				$html .= input( type=>'float', id=>"price-$key", name=>"price-$key", value=>$$variable{"price-$key"}, onkeyup=>'calc(this.form.name);' );
+				$html .= '</span>';
+			} # end if
+			$html .= '</span>';
 		} # end foreach qty_index
 		$html .= "</li>\n";
 		$stock_id += 1;

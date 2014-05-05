@@ -238,7 +238,6 @@ $openprint::log->debug("After minimum: QTY $qty_index $paper_string  => " . $tot
 
 	foreach my $paper_string ( keys %papers ) {
 		my $Paper = $papers{$paper_string};
-		next if $Paper->supplied();
 		foreach my $qty_index ( $Project->quantity_indexes() ) {
 			# We are doing this because we calculate on the parent sheet, but if the parent sheet is a generic... then it all goes for shit.
 			my $paper_id = $Paper->id_string();
@@ -256,17 +255,19 @@ $openprint::log->error("2No stock index for $paper_id");
 				$$specs{"sheets-$stock_index-$qty_index"} = ceil( $totals{$paper_id}{"qty_$qty_index"} / $Paper->start_sheet_weight() ) if $Paper->start_sheet_weight();
 			} # end if
 
-			if ( $$specs{"overridecost-$stock_index-$qty_index"} ne 'Y' ) {
-				my $price;
-				if ( $Paper->type() eq 'Sheet' ) {
-					$price = $Paper->get_price( sheets=>$totals{$paper_id}{"qty_$qty_index"},service=>'Material' );
-				} else {
-					$price = $Paper->get_price( weight=>$totals{$paper_id}{"qty_$qty_index"},service=>'Material' );
-				} # end if
-				$$specs{"cost-$stock_index-$qty_index"} = $$price{'100lb Price'};
+			if ( ! $Paper->supplied() ) {
+				if ( $$specs{"overridecost-$stock_index-$qty_index"} ne 'Y' ) {
+					my $price;
+					if ( $Paper->type() eq 'Sheet' ) {
+						$price = $Paper->get_price( sheets=>$totals{$paper_id}{"qty_$qty_index"},service=>'Material' );
+					} else {
+						$price = $Paper->get_price( weight=>$totals{$paper_id}{"qty_$qty_index"},service=>'Material' );
+					} # end if
+					$$specs{"cost-$stock_index-$qty_index"} = $$price{'100lb Price'};
 #$openprint::log->warn("Getting prices for $stock_index $paper_id (".$totals{$paper_id}{"qty_$qty_index"}.'sheets) => $' . $price{'100lb Price'}.'/100lb');
+				} # end if
+				$$specs{"price-$stock_index-$qty_index"} = Math::Round::nearest( 0.01, $$specs{"cost-$stock_index-$qty_index"} * $$specs{"qty-$stock_index-$qty_index"} / 100 );
 			} # end if
-			$$specs{"price-$stock_index-$qty_index"} = Math::Round::nearest( 0.01, $$specs{"cost-$stock_index-$qty_index"} * $$specs{"qty-$stock_index-$qty_index"} / 100 );
 			$totals{$paper_id}{Cost}[$qty_index] = $$specs{"cost-$stock_index-$qty_index"};
 			#$$specs{"MPrice$qty_index"} += $$specs{"cost-$stock_index-$qty_index"} * ceil( (1000/$$sig_specs{'txtImposition'.$qty_index}) * $RunPaper->sheet_weight() )/ 100;
 		} # end foreach qty_index
