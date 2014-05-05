@@ -2964,7 +2964,7 @@ $openprint::log->debug( " second set: " . @lesser_imps );
 					push @lesser_imps, map { $$_{imposition} >= $$sig_specs{'chkOverrideImposition'.$qty_index} ? $_ : () } openprint::imposition::decrease_imposition( $I );
 				} # end if
 
-$openprint::log->debug( " during set: " . @lesser_imps );
+#$openprint::log->debug( " during set: " . @lesser_imps );
 			} # end while
 	
 if ( 0 ) {
