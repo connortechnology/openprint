@@ -933,6 +933,7 @@ sub get_price {
 	my $lookup_qty = $params{'lookup_weight'} ? $params{'lookup_weight'} : $qty;
 	if ( ($params{'service'} eq 'Material') and ! $lookup_qty ) {
 		Carp::cluck("Paper qty lookup with no qty");
+		$openprint::log->error("Paper qty lookup with no qty");
 	} #end if
 
 	if ( $$self{'Price'} and ($params{'service'} eq 'Material') ) {
