@@ -66,8 +66,8 @@
 		</li>
 		<li class="calliper">
 			<label>Calliper</label>
-			Min: <? echo ( input( type=>'float', id=>'fold-'.$$variable{Fold}->id().'-min_calliper', name=>'min_calliper', value=>$$variable{Fold}->min_calliper(), onkeyup=>"if(this.value!=this.defaultValue){\$('Fold$$variable{Fold}{id}').addClassName('changed');}" ); ) ?>inches
-			Max: <? echo ( input( type=>'float', id=>'fold-'.$$variable{Fold}->id().'-max_calliper', name=>'max_calliper', value=>$$variable{Fold}->max_calliper(), onkeyup=>"if(this.value!=this.defaultValue){\$('Fold$$variable{Fold}{id}').addClassName('changed');}" ); ) ?>inches
+			Min: <? echo ( input( type=>'float', id=>'fold-'.$$variable{Fold}->id().'-min_calliper', name=>'min_calliper', value=>$$variable{Fold}->min_calliper(), onkeyup=>"if(this.value!=this.defaultValue){\$('Fold$$variable{Fold}{id}').addClassName('changed');}", step=>'0.0001', min=>'0.0000' ); ) ?>inches
+			Max: <? echo ( input( type=>'float', id=>'fold-'.$$variable{Fold}->id().'-max_calliper', name=>'max_calliper', value=>$$variable{Fold}->max_calliper(), onkeyup=>"if(this.value!=this.defaultValue){\$('Fold$$variable{Fold}{id}').addClassName('changed');}", step=>'0.0001', min=>'0.0000' ); ) ?>inches
 		</li>
 		<li class="printing_type">
 			<label>Printing Type</label>
