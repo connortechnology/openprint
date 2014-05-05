@@ -859,7 +859,11 @@ sub input {
 		} # end if
 		$options{'onkeyup'} = 'integerize(this);'.$options{'onkeyup'};
 	} elsif ( $options{type} eq 'float' ) {
+$log->debug("USer agent: $ENV{HTTP_USER_AGENT}");
 		if ( $ENV{HTTP_USER_AGENT} =~ /ip(ad|od|hone)/i ) {
+			$options{type} = 'text';
+			$options{'pattern'} = '[.0-9]*' if ! $options{'pattern'};
+		} elsif ( $ENV{HTTP_USER_AGENT} =~ /Firefox\/29.0/ ) {
 			$options{type} = 'text';
 			$options{'pattern'} = '[.0-9]*' if ! $options{'pattern'};
 		} else {
