@@ -203,7 +203,7 @@ $log->debug("Couldn't find maximum") if $debug;
     } elsif ( $$x{interpolate} ) {
         my $S = $x->copy();
         $$S{min_weight} = $$S{max_weight} = $range;
-        $$S{runspeed} = $$x{runspeed} + ($range - $$x{min_weight})*($$y{runspeed}-$$x{runspeed})/($$y{min_weight}-$$x{min_weight});
+        $$S{runspeed} = int( $$x{runspeed} + ($range - $$x{min_weight})*($$y{runspeed}-$$x{runspeed})/($$y{min_weight}-$$x{min_weight}) );
         return $S;
     } # end if
 

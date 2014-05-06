@@ -44,7 +44,7 @@ my %Papers;
 my $do_initial_filtering = 1;
 my $max_recursion_depth = 3;
 my %converted_imposition_cache;
-my $use_converted_imposition_cache = 0;
+my $use_converted_imposition_cache = 1;
 my %filtered_imposition_cache;
 my $use_filtered_imposition_cache = 0;
 my $calc_other_groups = 1;
@@ -3282,6 +3282,7 @@ $imp->display("qty: $qty unspec ". $$sig_specs{"txtUnspecifiedPageQuantity$qty_i
 			$I->display("After filtering by paper");
 		}
 	}
+	if ( ! $$project{NeedAqueous} ) {
 	%imps = ();
 	my $bump_count = 0;
 	foreach my $I ( @results ) {
@@ -3310,6 +3311,7 @@ $imp->display("qty: $qty unspec ". $$sig_specs{"txtUnspecifiedPageQuantity$qty_i
 		} # end if
 	} # end foreach I
 	$openprint::log->debug("Bumped $bump_count for Ppppreeccting vs Sheet Work") if DEBUG_FILTERING;
+	} # end if
 
 	if ( $third_level_filtering and $$sig_specs{"chkOverrideImposition$qty_index"} ne 'Y' ) {
 		@results = map {@{$_}} values %imps;
