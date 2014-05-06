@@ -1316,6 +1316,8 @@ sub get_impositions($$$$$$$$) {
 					foreach my $cut_off ( @cut_offs ) {
 						$$project{'Cut Off'} = $cut_off;
 						foreach my $i ( openprint::imposition::get_imposition( $project, $do_work_turn, $do_perfecting, $$specs{'Versions'}, $P, $Press ) ) {
+							my $AP = $i->Paper();
+							next if $maximum_roll_width and ( $$AP{width} > $maximum_roll_width );
 #$i->display('doig');
 							my $key = join( ',', @$i{'imposition','columns','runstyle','grain_direction'} );
 							if ( ! $paper_impositions{$key} ) {
@@ -6295,33 +6297,15 @@ $openprint::log->debug("No group");
 
 sub get_colour_description {
 	my ( $specs ) = @_;
-	my $front_colours = 0;
-	my $front_coatings = '';
+
+	my @front_coatings = ();
 	my $front_pms = 0;
-	my $front_process = 0;
-	my $back_colours = 0;
-	my $back_coatings = '';
+
+	my @back_coatings = ();
 	my $coatings = '';
 	my $back_pms = 0;
-	my $back_process = 0;
-
-	my $colorsideone = '';
-	my $colorsidetwo = '';
 
 	my $side = 'SideOne';
-	foreach my $colour ( 'Cyan','Magenta','Yellow','Black' ) {
-		if ( $$specs{'chk'.$colour.$side} ) {
-			$front_colours += 1;
-			if ( $colorsideone ){
-				$colorsideone .= ' ';
-			}
-			$colorsideone .= $colour;
-		} # end if
-	} # end foreach
-
-	if ( $$specs{'chkProcessColour'.$side} ) {
-		$front_colours += 4;
-	} # end if
 
 	foreach my $k ( keys %$specs ) {
 		if ( my ( $index ) = $k =~ /^chkColourCoating(\d+)$side/ ) {
@@ -6331,38 +6315,28 @@ sub get_colour_description {
 			next if ! $type;
 			next if $$specs{"chkColourCoatingColour$index$side"} eq 'None';
 			if ( $type =~ /Aqueous/ or $type =~ /Varnish/ or $type =~ /UV/ ) {
-				$front_coatings .= '+'.$$specs{"ColourCoatingType$index$side"};
+				
+				push @front_coatings , $$specs{"ColourCoatingType$index$side"};
 			} elsif ( $type =~ /PMS/i ) {
 				$front_pms += 1;
-			} elsif ( $type =~ /Metallic/i ) {
-				$front_coatings .= '+Metallic' if ! ($front_coatings =~ /Metallic/);
 			} else {
-				$front_coatings .= '+'.$$specs{"ColourCoatingType$index$side"}; 	#line added to show other types june-18-2008
-					$front_colours += 1;
+				push @front_coatings, $$specs{"ColourCoatingType$index$side"}; 	#line added to show other types june-18-2008
 			} # end if
 		} # end if
 	} # end foreach
+		if ( $front_pms ) {
+			unshift @front_coatings, $front_pms.'PMS';
+		} # end if
+		unshift @front_coatings, map { $$specs{'chk'.$_.$side} ? $_ : () } ( 'Cyan','Magenta','Yellow','Black' );
+		unshift @front_coatings, '4C' if $$specs{'chkProcessColour'.$side};
+
 	if ( (defined $$specs{'sides_the_same'}) and ( $$specs{'sides_the_same'} eq 'Y' ) ) {
-		$back_colours = $front_colours;
-		$back_coatings = $front_coatings;
+		@back_coatings = @front_coatings;
 		$back_pms = $front_pms;
 		$coatings .= ' back the same as front';
-		$colorsidetwo = $colorsideone;
 	} else {
 		$side = 'SideTwo';
-		foreach my $colour ( 'Cyan','Magenta','Yellow','Black' ) {
-			if ( $$specs{'chk'.$colour.$side} ) {
-				$back_colours += 1;
-				if ( $colorsidetwo ){
-					$colorsidetwo .= ' ';
-				}
-				$colorsidetwo .= $colour;
-			} # end if
-		} # end foreach
 
-		if ( $$specs{'chkProcessColour'.$side} ) {
-			$back_colours += 4;
-		} # end if
 		foreach my $k ( keys %$specs ) {
 			if ( my ( $index ) = $k =~ /^chkColourCoating(\d+)$side/ ) {
 				next if ! $$specs{"chkColourCoating$index$side"};
@@ -6373,29 +6347,21 @@ sub get_colour_description {
 				if ( $type =~ /Aqueous/ or $type =~ /Varnish/ or $type =~ /UV/ ) {
 #Changes made on june-19-2008
 #						$back_coatings .= '+'.$$specs{"ColourCoatingColour$index$side"};
-					$back_coatings .= '+'.$$specs{"ColourCoatingType$index$side"};
+					push @back_coatings, $$specs{"ColourCoatingType$index$side"};
 				} elsif ( $type =~ /PMS/i ) {
 					$back_pms += 1;
-				} elsif ( $type =~ /Metallic/i ) {
-					$back_coatings .= '+Metallic' if ! ($back_coatings =~ /Metallic/);
 				} else {
-					$back_coatings .= '+'.$$specs{"ColourCoatingType$index$side"};		#line added to show other types june-18-2008
-						$back_colours += 1;
+					push @back_coatings, $$specs{"ColourCoatingType$index$side"};
 				} # end if
 			} # end if
 		} # end foreach
+		if ( $back_pms ) {
+			unshift @back_coatings, $back_pms.'PMS';
+		} # end if
+		unshift @back_coatings, map { $$specs{'chk'.$_.$side} ? $_ : () } ( 'Cyan','Magenta','Yellow','Black' );
+		unshift @back_coatings, '4C' if $$specs{'chkProcessColour'.$side};
 	} # end if
-	return sprintf( '%s%s%s%s/%s%s%s%s %s',
-			($front_colours ? $front_colours : '0'),
-			$colorsideone,
-			($front_pms ? '+'.$front_pms.'PMS' : ''),
-			$front_coatings,
-			( $back_colours ? $back_colours : '0' ),
-			$colorsidetwo,
-			($back_pms ? '+'.$back_pms.'PMS' : ''),
-			$back_coatings,
-			$coatings,
-			);
+	return join('+', @front_coatings).'/'.join('+',@back_coatings).' ' . $coatings;
 
 } # end sub get_colour_description
 sub filter_coatings_from_colours {
