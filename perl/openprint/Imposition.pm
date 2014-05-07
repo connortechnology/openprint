@@ -542,6 +542,10 @@ sub sides {
 } # end sub sides
 sub Press { 
 	$_[0]{Press} = $_[1] if @_ > 1;
+	if ( ! $_[0]{Press} ) {
+		$openprint::log->error("No Press in Imposition:Press");
+		$_[0]{Press} = new openprint::Equipment();
+	} # end if
 	return $_[0]{Press};
 } # end sub Press
 
