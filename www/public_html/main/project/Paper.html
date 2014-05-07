@@ -29,7 +29,7 @@
 	foreach my $ss_id ( $Project->signatures( { sort=>1 } ) ) {
 		my $sig_specs = openprint::service::get_specs_ref( $Project, $ss_id );
 		my $form = $$variable{form} = $$sig_specs{SignatureIndex};
-		$html .= '<fieldset><legend>Stock for Signature ' . $form . '</legend><ul>';
+		$html .= '<fieldset><legend>Stock for Signature ' . $form . ' ' . $$sig_specs{txtServiceDescription} . '</legend><ul>';
 
 		my %sig_papers;
 		# What we do is load each stock for the signature, and assign it a stock_index, 1 .. 4, then deal with them in order.
@@ -60,12 +60,12 @@
 
 		foreach my $qty_index ( $Project->quantity_indexes() ) {
 			my $key = $stock_id.'-'.$qty_index;
-			$html .= '<span class="'.$$variable{'Columns'}.'Columns">';
+			$html .= '<span class="'.$$variable{Columns}.'Columns">';
 			$html .= '<span class="quantity">';
 			$html .= input( type=>'float', id=>'qty-'.$key, name=>'qty-'.$key, value=>$totals{$stock}[$qty_index], onkeyup=>q`calc(this.form.name);` );
 			$html .= 'lbs';
 			if ( $Paper->type() ne 'Roll' ) {
-				$html .= '<br/>'. input( type=>'cardinal', id=>'sheets-'.$key, name=>'sheets-'.$key, value=>$sheets{$stock}[$qty_index], onkeyup=>q`calc(this.form.name);` );
+				$html .= ' ' . input( type=>'cardinal', id=>'sheets-'.$key, name=>'sheets-'.$key, value=>$sheets{$stock}[$qty_index], onkeyup=>q`calc(this.form.name);` );
 				$html .= 'sheets';
 			} # end if
 
@@ -85,10 +85,10 @@
 		$stock_id += 1;
 	} # end foreach stock
 	$html .= include( '/includes/main/proj/_service_price.html' );
-	if ( sets::isin( $session{'user_type'}, ['A','E'] ) ) {
+	if ( sets::isin( $session{user_type}, ['A','E'] ) ) {
 		$html .= '<li>';
 		foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
-			$html .= sprintf('<span class="%sColumns">', $$variable{'Columns'} );
+			$html .= sprintf('<span class="%sColumns">', $$variable{Columns} );
 			$html .= button( 'Breakdown'.$qty_index, { onclick=>"show_breakdown($qty_index);", text=>'Breakdown' } );
 			$html .= '</span>';
 		} # end foreach qty_index

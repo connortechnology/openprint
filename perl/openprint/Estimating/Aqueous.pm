@@ -112,9 +112,12 @@ sub get_colours {
 sub signature_needs {
 	my ( $Project, $sig_specs ) = @_;
 
+	return 1 if ( $$sig_specs{SideOneAQ} and @{$$sig_specs{SideOneAQ}} ) or ( $$sig_specs{SideTwoAQ} and @{$$sig_specs{SideTwoAQ}} );
+
 	if ( $$sig_specs{SideOneColours} ) {
+$openprint::log->debug("AQ:Sig_needs getting from SideOneColour");
 		foreach ( @{$$sig_specs{SideOneColours}} ) {
-			return 1 if $$_{'name'} =~ /Aqueous/;
+			return 1 if $$_{name} =~ /Aqueous/;
 		} # end foreach colour
 	} else {
 		$$sig_specs{SideOneAQ} = [ get_colours( $sig_specs, 'SideOne' ) ] if ! $$sig_specs{SideOneAQ};
@@ -122,9 +125,10 @@ sub signature_needs {
 	} # en dif
 
 	if ( $$sig_specs{SideTwoColours} ) {
-	foreach ( @{$$sig_specs{SideTwoColours}} ) {
-		return 1 if $$_{'name'} =~ /Aqueous/;
-	} # end foreach colour
+$openprint::log->debug("AQ:Sig_needs getting from SideTwoColour");
+		foreach ( @{$$sig_specs{SideTwoColours}} ) {
+			return 1 if $$_{name} =~ /Aqueous/;
+		} # end foreach colour
 	} else {
 		$$sig_specs{SideTwoAQ} = [ get_colours( $sig_specs, 'SideTwo' ) ] if ! $$sig_specs{SideTwoAQ};
 		return 1 if @{$$sig_specs{SideTwoAQ}};
@@ -543,6 +547,31 @@ sub save {
 sub summary {
 	return '';
 } # end sub summary
+
+sub has_overrides {
+    my ( $Project, $service_id, $specs, $qty_index ) = @_;
+    $specs = openprint::service::get_specs_ref( $Project, $service_id ) if ! $specs;
+
+    my @v;
+    if ( $qty_index ) {
+		foreach my $s_s_id ( $Project->signatures() ) {
+			my $sig_specs = openprint::service::get_specs_ref( $Project, $s_s_id );
+			my $form = $$sig_specs{SignatureIndex};
+			push @v, map { $$specs{$_} ? $_ : () } (
+					"chkOverrideEquipment-$form-$qty_index",
+					"chkOverrideImposition-$form-$qty_index",
+					"OverrideMakeReadyPrice-$form-$qty_index",
+					"OverrideBlanketPrice-$form-$qty_index",
+					"OverrideServicePrice-$form-$qty_index",
+					"OverrideMaterialPrice-$form-$qty_index",
+					"OverrideSignaturePrice-$form-$qty_index",
+					);
+		} # end foreach sig
+    } # end if
+
+    return @v;
+
+} # end sub has_overrides
 
 
 1;

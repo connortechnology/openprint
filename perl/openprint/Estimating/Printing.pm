@@ -4213,6 +4213,7 @@ $openprint::log->debug("Sheet No supplied wight: $supplied_sheets $paper_string 
 				if ( @sigs ) {
 					my $Service = $Project->Service( $sigs[0] );
 					my %subsig_specs = %{$Service->specs()};
+					set_size( $Project, \%subsig_specs, $printing_specs );
 
 					my @side_one_colours = get_colours( \%subsig_specs, 'SideOne' );
 					my @side_two_colours = get_colours( \%subsig_specs, 'SideTwo' );
