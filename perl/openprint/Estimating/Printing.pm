@@ -1998,6 +1998,7 @@ $openprint::log->debug("Spread size: $$specs{'txtSpreadSize'}");
 sub calc {
 	my ( $log, $dbh, $variable, $project_index, $service_index, $specs ) = @_;
 
+$openprint::log->debug("AC " . $openprint::dbh->{AutoCommit} );
 	# Must clear these
 	%converted_imposition_cache = ();
 	%filtered_imposition_cache = ();
@@ -4435,28 +4436,30 @@ sub plate_cost {
 	$results{'Price'} = 0;
 
 	my %plate_price;
-	my $Material = openprint::Material->find_one( name=>$$plate_costs{'Plate ID'} );
-	if ( $Material ) {
-		%plate_price = $Material->get_price( $$PlateCounts{$$plate_costs{'Plate ID'}}, undef );
-		$$price{'Plate Cost'} = $plate_price{'Price'};
-		$$price{'Plate Price'} = $plate_price{'Price'} * $$plate_costs{'Plate Count'};
-		$results{'Price'} = Math::Round::nearest(0.01, $plate_price{'Price'} * $$plate_costs{'Plate Count'} );
-	} # end if
-
-	if ( $$plate_costs{'Blank Plates'} ) {
-		$$price{'txtBlankPlateQuantity'} = $$plate_costs{'Blank Plates'};
-		if ( my $Blank = openprint::Material->find_one( name=>'Blank'.$$plate_costs{'Plate ID'} ) ) {
-			my %blank_plate_price = $Blank->get_price( $$PlateCounts{'Blank'.$$plate_costs{'Plate ID'}}, undef );
-			$$plate_costs{'Blank Price'} = $blank_plate_price{'Price'};
-			$$price{'Blank Plate Price'} = Math::Round::nearest(0.01, $$plate_costs{'Blank Plates'} * $$plate_costs{'Blank Price'} );
-			$results{'Price'} += $$price{'Blank Plate Price'};
+	if ( $$plate_costs{'Plate ID'} ) {
+		my $Material = openprint::Material->find_one( name=>$$plate_costs{'Plate ID'} );
+		if ( $Material ) {
+			%plate_price = $Material->get_price( $$PlateCounts{$$plate_costs{'Plate ID'}}, undef );
+			$$price{'Plate Cost'} = $plate_price{'Price'};
+			$$price{'Plate Price'} = $plate_price{'Price'} * $$plate_costs{'Plate Count'};
+			$results{'Price'} = Math::Round::nearest(0.01, $plate_price{'Price'} * $$plate_costs{'Plate Count'} );
 		} # end if
-	} # end if
-	if ( $$plate_costs{'Plate Type'} eq 'Conventional' ) {
-		my $area = $Material->specification('area');
-		my $qty = $area * $$PlateCounts{$$plate_costs{'Plate ID'}};
-		$$price{'Film Cost'} = openprint::service::get_price( 'Film', $qty ) * $qty;
-		$results{'Price'} += $$price{'Film Cost'};
+
+		if ( $$plate_costs{'Blank Plates'} ) {
+			$$price{'txtBlankPlateQuantity'} = $$plate_costs{'Blank Plates'};
+			if ( my $Blank = openprint::Material->find_one( name=>'Blank'.$$plate_costs{'Plate ID'} ) ) {
+				my %blank_plate_price = $Blank->get_price( $$PlateCounts{'Blank'.$$plate_costs{'Plate ID'}}, undef );
+				$$plate_costs{'Blank Price'} = $blank_plate_price{'Price'};
+				$$price{'Blank Plate Price'} = Math::Round::nearest(0.01, $$plate_costs{'Blank Plates'} * $$plate_costs{'Blank Price'} );
+				$results{'Price'} += $$price{'Blank Plate Price'};
+			} # end if
+		} # end if
+		if ( $$plate_costs{'Plate Type'} eq 'Conventional' ) {
+			my $area = $Material->specification('area');
+			my $qty = $area * $$PlateCounts{$$plate_costs{'Plate ID'}};
+			$$price{'Film Cost'} = openprint::service::get_price( 'Film', $qty ) * $qty;
+			$results{'Price'} += $$price{'Film Cost'};
+		} # end if
 	} # end if
 	return \%results;
 } # end sub plate_cost
@@ -4901,7 +4904,7 @@ $$project{'FoldingSpecs'}{"FoldQty-$$specs{'SignatureIndex'}-$qty_index-$index"}
 	if ( $max_impressions ) { $max_impressions = int($max_impressions); } else { $max_impressions = 250000; }
 	my $plate_runs = ceil($impressions/$max_impressions);
 	my $plate_id = $plate_size . '-' . $plate_type . 'Plate';
-	my %plate_setup = ( 'Plate Type', $plate_type, 'Plate ID', $plate_id, 'Plate Runs', $plate_runs,);
+	my %plate_setup = ( 'Plate Type', $plate_type, 'Plate ID', $plate_id, 'Plate Runs', $plate_runs ) if $plate_size and $plate_type;
 	
 	foreach my $Colour ( filter_coatings_from_colours(\@colours) ) {
 		my $real_colour = $$Colour{name};

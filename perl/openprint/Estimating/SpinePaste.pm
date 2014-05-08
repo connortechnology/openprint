@@ -48,7 +48,7 @@ sub neccessary {
         return 0;
     } # end if
 
-	my $printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
+	my $printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] ) if $$services{''} and $$services{''}[0];
 
     if ( $$printing_specs{'rdbTemplateType'} eq 'SpinePaste' ) {
         return 1;

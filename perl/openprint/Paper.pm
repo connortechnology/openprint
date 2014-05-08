@@ -1269,7 +1269,6 @@ sub load_from_signature {
 		#} # end if
 		$Paper->supplied( $$specs{'rdbSuppliedStock'} eq 'Y' ? 1 : 0 );
 	} else {
-		my $Press = openprint::Equipment->find_one(strid=>$$specs{"ddmPress$qty_index"}) if $qty_index;
 
 		if ( $qty_index and $$specs{'paper_id'.$qty_index} ) {
 			$Paper = new openprint::Paper( $$specs{'paper_id'.$qty_index} );
@@ -1334,6 +1333,7 @@ $log->debug("Didn't find specific paper $params{'width'} x $params{'height'}");
 				$Paper->mweight( $$specs{'txtMWeight'.$qty_index} );
 				@Papers = ( $Paper );
 			} else {
+				my $Press = openprint::Equipment->find_one(strid=>$$specs{"ddmPress$qty_index"}) if $qty_index and $$specs{"ddmPress$qty_index"};
 				foreach my $P ( @Papers ) {
 					if ( $Press and ( my $Stock_Setting = $Press->Stock_Setting( $P ) ) ) {
 						next if $Stock_Setting->grain() eq 'Dont Use';

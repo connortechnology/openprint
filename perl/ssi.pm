@@ -1,7 +1,9 @@
 use strict;
 package ssi;
 
-use Date::Calc qw(Days_in_Month Month_to_Text);
+use constant DEBUG => 1;
+
+require Date::Calc;
 
 # For Hash stuff
 use File::Basename;
@@ -336,8 +338,8 @@ sub getmonths {
 sub getdays {
 	my ( $selected, $year, $month ) = @_;
 	my $maxdays = 31;
-	if ( $year and $month and ( $maxdays > Days_in_Month( $year, $month ) ) ) {
-		$maxdays = Days_in_Month( $year, $month );
+	if ( $year and $month and ( $maxdays > Date::Calc::Days_in_Month( $year, $month ) ) ) {
+		$maxdays = Date::Calc::Days_in_Month( $year, $month );
 	} # en dif
 	my @days = map { $_, $_ } ( 1 .. $maxdays );
 	$selected = int($selected);
@@ -406,8 +408,8 @@ sub fix_date {
 	$month = int $month;
 	$month = 12 if ( $month > 12 );
 	$month = 1 if $month < 0;
-	if ( $year and $month and $day > Days_in_Month( $year, $month ) ) {
-		$day = Days_in_Month( $year, $month );
+	if ( $year and $month and $day > Date::Calc::Days_in_Month( $year, $month ) ) {
+		$day = Date::Calc::Days_in_Month( $year, $month );
 	} # end if
 	return ( $year, $month, $day );
 } # end sub fix_date
@@ -442,11 +444,11 @@ sub get_start_end_dates {
 	$endYear = $endYear ? $endYear : (localtime(time))[5]+1900;
 	$endMonth = $endMonth ? $endMonth : (localtime(time))[4]+1;
 
-	if ( $startDay > Days_in_Month( $startYear, $startMonth ) ) {
-		$startDay = Days_in_Month( $startYear, $startMonth );
+	if ( $startDay > Date::Calc::Days_in_Month( $startYear, $startMonth ) ) {
+		$startDay = Date::Calc::Days_in_Month( $startYear, $startMonth );
 	} # end if
-	if ( $endDay > Days_in_Month( $endYear, $endMonth ) ) {
-		$endDay = Days_in_Month( $endYear, $endMonth );
+	if ( $endDay > Date::Calc::Days_in_Month( $endYear, $endMonth ) ) {
+		$endDay = Date::Calc::Days_in_Month( $endYear, $endMonth );
 	} # end if
 
 	$$variable{'ddmStartYear'} = $$variable{'startyears'} = getyears( $start, (localtime(time))[5]-100, $startYear );
@@ -465,7 +467,29 @@ sub button {
 	my ( $name, $options ) = @_;
 
 	if ( $$options{href} ) {
-		my $PageSetting = openprint::Page_Setting->find_one(url=>$$options{href});
+		my ( $href ) = $$options{href} =~ /^([^\?]+)/;
+		if ( ! ( $href =~ /^\// ) ) {
+# Use a path relative to the current page
+			my $path = $variable{uri};
+			$path =~ s/(.*\/).*/$1/;
+			$href = $path . $href;
+		} # end if
+		my $PageSetting;
+
+		my @chunks = split('/', $href );
+		while ( @chunks ) {
+
+# Because there is a / at the beginning of the url, the first entry in chunks is '', so we don't need to prepend a /
+			my $chunk = join('/', @chunks);
+			$chunk = '/' if ! $chunk; # neccessary to deal with the empty string
+
+			$log->debug("Looking for page setting for $chunk") if DEBUG;
+			if ( $PageSetting = openprint::Page_Setting->find_one(url=>$chunk) ) {
+				last;
+			} # end if
+			pop @chunks;
+		} # end while chunks
+
 		return if $PageSetting and ! $PageSetting->can_view();
 	} else {
 		$$options{href} = '#';

@@ -2,7 +2,7 @@ use strict;
 package openprint::Page_Setting;
 our @ISA = qw(openprint::Object);
 
-use vars qw( $debug $serial $table %fields %transforms %defaults );
+use vars qw( $debug $serial $table %fields %transforms %defaults $cache_field );
 
 $debug = 1;
 $table = 'page_settings';
@@ -24,6 +24,10 @@ $serial = 'page_settings_id_seq';
 	cacheable	=>	undef,
 	user_ids	=>	'[]',
 );
+$cache_field = 'url';
+sub cache_field {
+    return $cache_field;
+}
 
 sub can_view {
 	return 1 if $_[0]{user_ids} and sets::isin( $openprint::session{user_id}, $_[0]{user_ids} );

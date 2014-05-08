@@ -724,9 +724,12 @@ sub signature_summary {
 	$sig_specs = openprint::service::get_specs_ref( $Project, $s_id ) if ! $sig_specs;
 	if ( $qty_index ) {
 		my @folds;
-		my $Equipment = new openprint::Equipment( $$specs{"ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} );
-		return ' on ' . $Equipment->name();
+		if ( $$specs{"ddmEquipment-$$sig_specs{SignatureIndex}-$qty_index"} ) {
+			my $Equipment = new openprint::Equipment( $$specs{"ddmEquipment-$$sig_specs{SignatureIndex}-$qty_index"} );
+			return ' on ' . $Equipment->name();
+		} # end if
 	} # end if
+	return;
 } # end sub signature_summary
 
 sub summary {

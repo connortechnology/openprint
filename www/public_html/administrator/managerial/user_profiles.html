@@ -368,7 +368,6 @@ Please select a company or user to obtain login information.<br/>
 				my $html;
 				my $n = $$variable{User}->notifications();
 				foreach my $Type ( openprint::User_Notification_Type->find( order=>'sort,lower(name)' ) ) {
-$log->debug("$$Type{name} => $$n{$$Type{name}}");
 					$html .= '<li><label>'.$Type->name().'</label>';
 					#$html .= radio( 'notification_'.$Type->id(), [ 'Yes', 'On', '', 'Off' ], $$n{$Type->name()} );
 					$html .= input( type=>'text', name=>'notification_'.$Type->id(), value=>$$n{$Type->name()} );

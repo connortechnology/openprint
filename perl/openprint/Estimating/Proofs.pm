@@ -135,7 +135,6 @@ sub calc {
 			my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
 
 			my $signature_index = $$sig_specs{'SignatureIndex'};
-			my $Equipment = openprint::Equipment->find_one( strid=>$$sig_specs{'ddmPress'.$qty_index} );
 
 			$$specs{'hdnBreakdown'.$qty_index} .= "Signature $signature_index<br/>";
 			if ( ! $$sig_specs{'txtImposition'.$qty_index} ) {
@@ -145,6 +144,7 @@ sub calc {
 			} # end if
 			my $Imposition = new openprint::Imposition();
 			$Imposition->load( $sig_specs, $qty_index );
+			my $Equipment = $Imposition->Press();
 			$$specs{'hdnBreakdown'.$qty_index} .= $Imposition->to_string().'</br>';
 
 			if ( ( ! sets::isin( 1, $proof_indexes{$signature_index} ) ) and $openprint::config{'Add_Default_Layout_Proof'} eq 'Y' ) {
@@ -192,9 +192,9 @@ sub calc {
 				$$specs{'hdnBreakdown'.$qty_index} .= 'No proofs needed because there is no imposition';
 				next;
 			} # end if
-			my $Equipment = openprint::Equipment->find_one( strid=>$$sig_specs{'ddmPress'.$qty_index});
 			my $Imposition = new openprint::Imposition();
 			$Imposition->load( $sig_specs, $qty_index );
+			my $Equipment = $Imposition->Equipment();
 			my %Results = signature_calc( $Project, $specs, $sig_specs, $qty_index, \%proof_indexes, \%proof_totals, $Equipment, $Imposition );
 			$totalPrice += $Results{Total};
 			$$specs{"hdnBreakdown$qty_index"} .= $Results{'Breakdown'};
@@ -414,9 +414,12 @@ sub insert_layout_proof {
 #$openprint::log->debug("Called insert_layout_proof from $caller : $line");
 #$Imposition->display('insert_layout_proof');
 	my $Equipment = $Imposition->Press();
+	if ( ! $Equipment ) {
+		$openprint::log->error("No equipment in insert_layout_proof");
+	} # end if
 	$Equipment = openprint::Equipment->find_one( strid=>$$sig_specs{'ddmPress'.$qty_index} ) if ! $Equipment;
 	if ( ! $Equipment ) {
-		$openprint::log->warn("No equipment in insert_layout_proof");
+		$openprint::log->error("No equipment in insert_layout_proof");
 	} # end if
 
 	my $quantity = 0;
@@ -630,6 +633,8 @@ sub summary {
 			my $signature_index = $$sig_specs{'SignatureIndex'};
 			foreach my $key ( keys %{$specs} ) {
 				if ( my ($proof_index) = $key =~ /^txtProofIndex\-$signature_index\-(\d+)\-$qty_index$/ ) {
+					next if ! $$specs{"ddmProofType-$signature_index-$proof_index-$qty_index"};
+
 					if ( my $Service = openprint::Service->find_one( name=>$$specs{"ddmProofType-$signature_index-$proof_index-$qty_index"}) ) {
 						if ( sets::isin( $$specs{"ddmProofType-$signature_index-$proof_index-$qty_index"}, [ 'PressProof', 'PDFProof' ] ) ) {
 							my $desc = sprintf('</td><td class="type">%s', $Service->description() );
