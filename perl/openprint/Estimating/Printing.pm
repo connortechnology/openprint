@@ -1273,6 +1273,11 @@ sub get_impositions($$$$$$$$) {
 				} # end foreach P
 			} # end if DEBUG
 		} # end if
+			if ( DEBUG ) {
+				foreach my $P ( @Papers ) {
+					$openprint::log->debug("Stocks: " . $P->to_string() );
+				} # end foreach P
+			} 
         my %imps;
 		foreach my $Paper ( @Papers ) {
 #Paper might have different calliperso# Is this needed anymore
@@ -1298,11 +1303,18 @@ sub get_impositions($$$$$$$$) {
 			if ( $$Paper{type} eq 'Roll' ) {
 				
 				$$project{Runstyles} = $runstyles_roll;
-				next if $$Paper{width} > $maximum_sheet_width;
-				next if $maximum_roll_width and ( $$Paper{width} > $maximum_roll_width );
+				if ( $$Paper{width} > $maximum_sheet_width ) {
+					$openprint::log->debug("Stock width $$Paper{width} > max sheet width $maximum_sheet_width") if DEBUG;
+					next;
+				} # end if
+				if ( $maximum_roll_width and ( $$Paper{width} > $maximum_roll_width ) ) {
+					$openprint::log->debug("Stock width $$Paper{width} > max roll width $maximum_roll_width") if DEBUG;
+					next;
+				} # end if
 #$openprint::log->debug('blah'.$Paper->to_string());
 				if ( $roll2sheet_minimum_weight and $feeds{'Sheet'} ) {
 					if ( $$roll2sheet_minimum_weight{'units'} eq 'gsm' and $$roll2sheet_minimum_weight{'value'} > $Paper->gsm() ) {
+						$openprint::log->debug("Stock gsm $$Paper{gsm} < min roll2sheet weight $$roll2sheet_minimum_weight{'value'}") if DEBUG;
 						next;
 					} # end if
 				} # end if
