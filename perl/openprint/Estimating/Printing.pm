@@ -3155,10 +3155,7 @@ $log->warn("Getting all impos results: " . @results );
 			if ( $$imp{lookup_stock_qty} < $Paper->minimum_order_weight() ) {
 				$$imp{stock_qty} = $$imp{lookup_stock_qty} = $Paper->minimum_order_weight();
 			} # end if
-		} else {
-			$openprint::log->debug("not loading paper price");
-		} # end if
-
+		} # end if ! stock_qty
 
 #foreach my $k ( keys %{$PaperCounts} ) {
 #$openprint::log->debug("Whats in papercounts: $k $$PaperCounts{$k}");

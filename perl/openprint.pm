@@ -2,6 +2,7 @@ use strict;
 package openprint;
 use vars qw( $r %variable %session %param %config $log $dbh );
 
+
 sub session_init {
 	require Apache2::Cookie;
 	require Apache::Session::Postgres;
@@ -133,10 +134,11 @@ sub switch_company {
 		$_ = openprint::Currency->find_one('short'=>'CAD');
 		$session{'Currency_id'} = $_->id() if $_;
 	} # end if
-	my @keys = sets::exclude( [ 'Currency_id', '_session_id','user_id','company_id','user_type','Country' ], [ keys %session ] );
-	foreach my $Order->find(session_id=>$session{_session_id} ) {
+	require openprint::Order;
+	foreach my $Order ( openprint::Order->find(session_id=>$session{_session_id} ) ) {
 		$Order->save({session_id => undef });
 	} # end foreach Order
+	my @keys = sets::exclude( [ 'Currency_id', '_session_id','user_id','company_id','user_type','Country' ], [ keys %session ] );
 	delete @session{@keys};
 } # end sub switch_company
 
