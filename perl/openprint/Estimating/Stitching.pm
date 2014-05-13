@@ -187,6 +187,7 @@ sub signature_calc {
 		@$specs{'Width','Height'} = @$printing_specs{'txtFinalWidth','txtFinalHeight'};
 		$$specs{'alert'} .= 'Unable to determine spine direction. Calculations may be invalid.';
 	} # end if
+	$$specs{txtCalliper} = $Project->calliper() if ! $$specs{txtCalliper};
 
 	# Start with 2 and try to figure it out
 	my @printed_impositions;

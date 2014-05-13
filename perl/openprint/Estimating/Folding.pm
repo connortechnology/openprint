@@ -1993,15 +1993,14 @@ sub cut_spreads {
 	my ( $I ) = @_;
 	if ( $I->layout_height() > $I->layout_width() ) {
 	#if ( $I->spread_rows() > $I->spread_columns() ) {
+		
 		if ( ( $I->spread_rows() > 1 ) and ( $I->spread_rows() % 2 ) ) {
 			my $i1 = $I->copy();
-			my $i2 = $I->copy();
 			$i1->spread_rows(1);
+			$i1->quantity( $i1->quantity() * $I->spread_rows() );
 			$i1->image_height( $I->image_height()/$I->spread_rows() );
-			$i2->spread_rows( $i2->spread_rows() - 1 );
-			$i2->image_height( ($i2->image_height()/($i2->spread_rows()+1))*$i2->spread_rows() );
-	$openprint::log->debug(sprintf('Cutting pages down from %d to %d and %d', $I->pages(), $i1->pages(), $i2->pages() ) ) if DEBUG;
-			return ( $i1, $i2 );
+	$openprint::log->debug(sprintf('Cutting pages down from %d to %d', $I->pages(), $i1->pages() ) ) if DEBUG;
+			return ( $i1 );
 		} else {
 			my $i1 = $I->copy();
 			$i1->spread_rows( $i1->spread_rows()/2 );
@@ -2013,13 +2012,11 @@ sub cut_spreads {
 	} else {
 		if ( ( $I->spread_columns() > 1 ) and ( $I->spread_columns() % 2 ) ) {
 			my $i1 = $I->copy();
-			my $i2 = $I->copy();
 			$i1->spread_columns(1);
+			$i1->quantity( $i1->quantity() * $I->spread_columns() );
 			$i1->image_width( $I->image_width()/$I->spread_columns() );
-			$i2->spread_columns( $I->spread_columns() - 1 );
-			$i2->image_width( ($I->image_width()/($I->spread_columns()+1))*$I->spread_columns() );
-	$openprint::log->debug(sprintf('Cutting pages down from %d to %d and %d', $I->pages(), $i1->pages(), $i2->pages() ) ) if DEBUG;
-			return ( $i1, $i2 );
+	$openprint::log->debug(sprintf('Cutting pages down from %d to %d', $I->pages(), $i1->pages() ) ) if DEBUG;
+			return ( $i1 );
 		} else {
 			my $i1 = $I->copy();
 			$i1->spread_columns( $i1->spread_columns()/2 );
