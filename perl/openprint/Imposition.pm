@@ -25,7 +25,7 @@ my @fields = (
 	'colour_bar_size',
 	'colour_bar_orientation',
 	'cropmark_top','cropmark_bottom','cropmark_left','cropmark_right',
-	'stock_width','stock_height',
+	'sheet_width','sheet_height',
 	'quantity','width_folds','height_folds',
 	'bleed_size',
 	'specs',
@@ -311,10 +311,10 @@ sub load {
 		} # end if
 		$$self{pages} = $$self{'spreads'} * $$self{'spread_size'};
 	} # end if
-	$$self{'stock_width'} = $$self{'paper'}->width();
-	$$self{'stock_height'} = $$self{'cut_off'} ? $$self{'cut_off'} : $$self{'paper'}->height();
+	$$self{'sheet_width'} = $$self{'paper'}->width();
+	$$self{'sheet_height'} = $$self{'cut_off'} ? $$self{'cut_off'} : $$self{'paper'}->height();
 	if ( ! exists $$specs{"RotateSheet$qty_index"} ) {
-		if ( $$self{layout_width} > $$self{paper}->width() or $$self{layout_height} > $$self{paper}->height() ) {
+		if ( $$self{layout_width} > $$self{paper}->width() or $$self{layout_height} > $$self{sheet_height} ) {
 			$$self{rotate_sheet} = 1;
 		} else {
 			$$self{rotate_sheet} = 0;
@@ -322,7 +322,7 @@ sub load {
 	} else {
 		$$self{rotate_sheet} = $$specs{"RotateSheet$qty_index"};
 	} # end if
-return $self;
+	return $self;
 } # end sub load
 
 sub save {

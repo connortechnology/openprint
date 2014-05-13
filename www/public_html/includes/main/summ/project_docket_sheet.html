@@ -132,6 +132,7 @@
 
 			my $Paper = openprint::Paper::load_from_signature( $Project, $sig_specs, $qty_index );
 			my $Imposition = new openprint::Imposition();
+			$$Imposition{paper} = $Paper;
 			$Imposition->load( $sig_specs, $qty_index );
 
 			my $signatures = 1;
@@ -203,7 +204,7 @@
 					$html .= sprintf(' %s&quot; Cut Off', $$sig_specs{'StockHeight'.$qty_index} );
 				} # end if
 				if ( $$sig_specs{'OverrideCutOff'.$qty_index} eq 'Y'  ) {
-					$html .= 'Cut Off Overriden';
+					$html .= ' Cut Off Overriden';
 				} # end if
 			} else {
 				$html .= sprintf('&nbsp;%s&quot; x %s&quot; %.0fM', @$sig_specs{'StockWidth'.$qty_index, 'StockHeight'.$qty_index}, $Paper->mweight() );

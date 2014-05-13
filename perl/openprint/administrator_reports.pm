@@ -192,7 +192,7 @@ sub customer_login {
 		} # end if
 		if ( $param{'ddmEmployees'} ) {
 			if ( $param{'ddmEmployees'} eq 'None' ) {
-				$query .= " AND salesrep_id IS NULL OR salesrep_id NOT IN ( SELECT id FROM Users WHERE type='E' AND strEmployeeType='Sales')";
+				$query .= " AND salesrep_id IS NULL OR salesrep_id NOT IN ( SELECT id FROM Users WHERE type='E' OR type ='A' )";
 			} else {
 				$query .= " AND salesrep_id=" . $param{'ddmEmployees'};
 			} # end if

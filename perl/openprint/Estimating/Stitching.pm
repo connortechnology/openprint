@@ -212,7 +212,7 @@ $I->display('In Stitching:') if DEBUG;
 		my %pages;
 		my $sig_pages = $I->pages();
 		if ( $folding_specs ) {
-			if ( $$folding_specs{"chkOverrideEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} ne 'Y' or $$folding_specs{"ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} ) {
+			if ( ( ! defined $$folding_specs{"chkOverrideEquipment-$$sig_specs{SignatureIndex}-$qty_index"} ) or ( $$folding_specs{"chkOverrideEquipment-$$sig_specs{SignatureIndex}-$qty_index"} ne 'Y' ) or $$folding_specs{"ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} ) {
 
 			my %folds;
 			foreach my $index ( 1 .. 4 ) {
@@ -566,7 +566,7 @@ sub calc {
 		} # end if
 	} # end foreach qty_index
 
-	$$specs{'txtCalliper'} = openprint::print::get_finished_calliper( $project_index );
+	$$specs{'txtCalliper'} = $Project->calliper( );
 	my $plusCover = 0;
 	if ( $$printing_specs{'rdbCover'} eq 'Different' ) {
 		$log->debug("************* We Have Plus Cover *************************");
@@ -878,6 +878,10 @@ $openprint::log->error("No best equipment in Stitching");
 			if ( $$specs{'OverrideImposition'.$qty_index} ne 'Y' ) {
 				$$specs{'Imposition'.$qty_index} = '';
 			} # end if
+		foreach my $press_id ( keys %error ) {
+			my $Equipment = new openprint::Equipment( $press_id );
+			$$specs{'hdnBreakdown'.$qty_index} .= 'For ' . $Equipment->name() . ': ' .  $error{$press_id};
+		} # end foreach
 		} else {
 			$$specs{"ddmEquipment$qty_index"} = $bestEquipment->id();
 			$$specs{'Imposition'.$qty_index} = $$bestPrice{'Imposition'};
