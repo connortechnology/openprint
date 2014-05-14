@@ -349,7 +349,9 @@ sub impositions {
 			'perfectbind'		=>	$$services{'PerfectBound'} ? 1 : 0,
 			'spinepaste'		=>	$$services{'SpinePaste'} ? 1 : 0,
 			'gsm'				=>	$Paper->gsm(),
-			'imposition'		=>	$$Imposition{'imposition'},
+			imposition			=>	$$Imposition{'imposition'},
+			columns				=>	$$Imposition{columns},
+			rows				=>	$$Imposition{rows},
 			'calliper'			=>	$$Paper{'calliper'},
 	);
 
@@ -746,6 +748,8 @@ if ( 0 ) {
 		@All_Impositions = reduce_impositions( \@Set_Of_Impositions );
 	} # end if SignatureType
 
+	#$openprint::log->debug("All impositions: " . @All_Impositions );
+
 	# Foreach equipment, figure out which folds are required.
 	foreach my $Equipment ( @my_equipment ) {
 		$Breakdown .= '<br/><b>Equipment '.$$Equipment{name}.':</b><br/>';
@@ -838,7 +842,7 @@ if ( 0 ) {
 # Web has dual delivery
 				if ( $$Equipment{id} != $$Press{id} ) {
 					if ( $$Imposition{imposition} > 3 and ( $$Imposition{columns} > 1 and $$Imposition{rows} > 1 ) ) {
-						$openprint::log->debug("Can't do that impo") if DEBUG;
+						$openprint::log->debug("Can't do that impo cuz impo > 3 cols > 1 and rows > 1") if DEBUG;
 						$complete = 0;
 						last;
 					} elsif ( ( $$Imposition{columns} > 1 ) and ( $$Imposition{image_orientation} eq 'Vertical' ) ) {
@@ -885,6 +889,8 @@ if ( 0 ) {
 							spinepaste		=>	$$services{SpinePaste} ? 1 : 0,
 							gsm				=>	$Paper->gsm(),
 							imposition		=>	$$Imposition{imposition},
+							columns		=>	$$Imposition{columns},
+							rows		=>	$$Imposition{rows},
 							calliper		=>	$$Paper{calliper},
 							printing_type	=>	$ppt,
 							} );
@@ -922,6 +928,8 @@ $openprint::log->debug("Templatetype: $$sig_specs{'rdbTemplateType'}") if DEBUG;
 								gsm				=>	$Paper->gsm(),
 								calliper		=>	$$Paper{calliper},
 								imposition		=>	$$Imposition{imposition},
+							columns		=>	$$Imposition{columns},
+							rows		=>	$$Imposition{rows},
 								printing_type	=>	$ppt,
 								});
 						if ( $Fold ) {
@@ -1009,6 +1017,8 @@ $openprint::log->debug("No Fold") if DEBUG;
 									gsm				=>	$Paper->gsm(),
 									calliper		=>	$$Paper{'calliper'},
 									imposition		=>	$$Imposition{'imposition'},
+							columns		=>	$$Imposition{columns},
+							rows		=>	$$Imposition{rows},
 									printing_type	=>	$ppt,
 									});
 							if ( $Fold and $max_feed_width ) {
@@ -1030,7 +1040,7 @@ $openprint::log->debug("No Fold") if DEBUG;
 									} # end if
 								} else {
 # decide whether it's running portrait or landscape basessd on which way the folds go
-									$openprint::log->debug("Has max feed width width: $width_folds height: $height_folds $$sig_specs{'txtWidth'} $$sig_specs{'txtHeight'} $max_feed_width") if DEBUG;
+									$openprint::log->debug("Has max feed width width_folds: $width_folds height_folds: $height_folds final_width $$sig_specs{'txtWidth'} final_heigh $$sig_specs{'txtHeight'} max_feed $max_feed_width") if DEBUG;
 									if ( ( $width_folds and ! $height_folds ) or ( $width_folds == $$Fold{'folds'} and $height_folds == $$Fold{'angles'} ) ) {
 										if ( $$Imposition{image_orientation} eq 'Vertical' ) {
 # If folds are on width, we grip on height...
@@ -1039,7 +1049,7 @@ $openprint::log->debug("No Fold") if DEBUG;
 												$Fold = undef;
 											} # end if
 										} else {
-											if ( $Imposition->layout_width() >= $max_feed_width ) {
+											if ( $Imposition->layout_height() >= $max_feed_width ) {
 												$fits = "Fold no good due to max feed width ($max_feed_width). $width_folds x $height_folds size: ($$Imposition{layout_width}).";
 												$Fold = undef;
 											} # end if
@@ -1108,7 +1118,10 @@ $openprint::log->debug("No Fold") if DEBUG;
 					} # end if 
 				} # end if Press or not
 			} # end foreach Imposition in the set
-			next if ! ($complete and %folds );
+			if ( ! ($complete and %folds ) ) {
+				$openprint::log->debug("Not complete or ! folds") if DEBUG;
+				next;
+			} # end if
 
 			if ( DEBUG ) {
 				foreach my $key ( keys %folds ) {
@@ -1878,12 +1891,27 @@ sub reduce_impositions {
 			for ( my $i = 0; $i < @new; $i += 1 ) {
 				if ( $new[$i]->imposition() == $max_impo ) {
 					my $I2 = $new[$i]->copy();
-					if ( ! ( $I2->columns() % 2 ) ) {
+					my $mod_cols = $I2->columns() % 2;
+					my $mod_rows = $I2->rows() % 2;
+
+					if ( ! ( $mod_cols or $mod_rows ) ) {
+						if ( $$I2{image_orientation} eq 'Horizontal' ) {
+							$I2->rows( $I2->rows()/2 );
+							$I2->quantity( $I2->quantity() * 2 );
+							$extra = 1;
+							splice @new, $i, 1, $I2;
+						} else {
+							$I2->columns( $I2->columns()/2 );
+							$I2->quantity( $I2->quantity() * 2 );
+							$extra = 1;
+							splice @new, $i, 1, $I2;
+						} # end if
+					} elsif ( ! $mod_cols ) {
 						$I2->columns( $I2->columns()/2 );
 						$I2->quantity( $I2->quantity() * 2 );
 						$extra = 1;
 						splice @new, $i, 1, $I2;
-					} elsif ( ! ( $I2->rows() % 2 ) ) {
+					} elsif ( ! $mod_rows ) {
 						$I2->rows( $I2->rows()/2 );
 						$I2->quantity( $I2->quantity() * 2 );
 						$extra = 1;
@@ -1972,21 +2000,26 @@ sub reduce_impositions {
 
 sub cut_imposition {
 	my ( $I ) = @_;
-	my ( $i1, $i2 ) = ( $I->copy(), $I->copy );
 	if ( ( $$I{spread_size} >= 4 ) and ( $$I{image_orientation} eq 'Horizontal' ) and ( $$I{rows} > 1 ) ) {
+	$openprint::log->debug(sprintf("Cutting imposition down from %dx%d=%dout to %d %dx1=%d ", @$I{'columns','rows','imposition'}, @$I{'rows','columns','columns'} ) ) if DEBUG;
 		# For folding purposes, can only fold where spines are aligned
 		return map { my $i = $I->copy(); $i->rows(1); $i; } ( 1 .. $$I{rows} );
 	} elsif ( ( $$I{spread_size} >= 4 ) and ( $$I{image_orientation} eq 'Vertical' ) and ( $$I{columns} > 1 ) ) {
+	$openprint::log->debug(sprintf("Cutting imposition down from %dx%d=%dout to %d 1x%d=%d ", @$I{'columns','rows','imposition'}, @$I{'columns','rows','rows'} ) ) if DEBUG;
 		return map { my $i = $I->copy(); $i->columns(1); $i; } ( 1 .. $$I{columns} );
 	} elsif ( $$I{columns} > $$I{rows} ) {
+	my ( $i1, $i2 ) = ( $I->copy(), $I->copy );
 		$i1->columns(int $$I{columns}/2);
 		$i2->columns( $$I{columns} - $$i1{columns} );
-	} else {
-		$i1->rows(int $$I{rows}/2);
-		$i2->rows( $$I{rows} - $$i1{rows} );
-	} # end if
 	$openprint::log->debug(sprintf("Cutting imposition down from %dx%d=%dout to %dx%d=%d and %dx%d=%d", @$I{'columns','rows','imposition'}, @$i1{'columns','rows','imposition'}, @$i2{'columns','rows','imposition'} ) ) if DEBUG;
 	return ( $i1, $i2 );
+	} else {
+	my ( $i1, $i2 ) = ( $I->copy(), $I->copy );
+		$i1->rows(int $$I{rows}/2);
+		$i2->rows( $$I{rows} - $$i1{rows} );
+	$openprint::log->debug(sprintf("Cutting imposition down from %dx%d=%dout to %dx%d=%d and %dx%d=%d", @$I{'columns','rows','imposition'}, @$i1{'columns','rows','imposition'}, @$i2{'columns','rows','imposition'} ) ) if DEBUG;
+	return ( $i1, $i2 );
+	} # end if
 } # end sub cut_imposition
 
 sub cut_spreads {
