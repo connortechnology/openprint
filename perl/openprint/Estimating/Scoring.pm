@@ -446,7 +446,7 @@ sub signature_calc {
 				my $complete = 1;
 
 				foreach my $I ( @impositions ) {
-					$Results{'Breakdown'} .= $I->to_string().'<br/>';
+					$Results{'Breakdown'} .= '<br/>Imp: '.$I->to_string().'<br/>';
 
 					if ( $_ = fits_on_equipment( $Equipment, $I, $sig_specs, $$specs{"txtVerticalQty-$$sig_specs{'SignatureIndex'}"}, $$specs{"txtHorizontalQty-$$sig_specs{'SignatureIndex'}"} ) ) {
 						$Results{'Breakdown'} .= "Doesn't fit. $_<br/>";

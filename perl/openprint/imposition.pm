@@ -168,7 +168,7 @@ sub check_setup {
 			} # end if
 
 			if ( $setup->dutch_columns() % 2 ) {
-				if ( $setup->layout_width() + $$specs{'Perfecting Double Gutter Size'} - $$specs{'Perfecting Single Gutter Size'}  > $setup->stock_width() ) {
+				if ( $setup->layout_width() + $$specs{'Perfecting Double Gutter Size'} - $$specs{'Perfecting Single Gutter Size'}  > $setup->sheet_width() ) {
 					$setup->rows(0);
 					$setup->columns(0);
 					return 0;
@@ -178,7 +178,7 @@ sub check_setup {
 			if ( $setup->columns() % 2 ) {
 # This uses two rollers, on non-offset paper so need more gutter space, which works out to be 0.25 
 #$setup->display();
-				if ( $setup->layout_width() + $$specs{'Perfecting Double Gutter Size'} - $$specs{'Perfecting Single Gutter Size'} > $setup->stock_width() ) {
+				if ( $setup->layout_width() + $$specs{'Perfecting Double Gutter Size'} - $$specs{'Perfecting Single Gutter Size'} > $setup->sheet_width() ) {
 			#$openprint::log->debug(' CHECK 3 Using Paper ' . $setup->paper()->width() . ' x' . $setup->paper()->height() .' ' . $setup->image_width() . ' x ' . $setup->image_height() . ' Imposition: ' . $setup->imposition(). ":".$setup->columns() . 'x' . $setup->rows(). '+'.$setup->dutch_columns() . 'x'.$setup->dutch_rows() . ' ' . $setup->layout_width() . 'x' . $setup->layout_height() ) if DEBUG;
 					$setup->rows(0);
 					$setup->columns(0);
@@ -337,10 +337,10 @@ $openprint::log->debug("Not Pretrimming on $$Press{strid}") if DEBUG;
 			$paper_height = $Paper->height();
 		} # end if
 	} # end if
-	$setup1->stock_width( $paper_width );
-	$setup1->stock_height( $paper_height );
-	$setup2->stock_width( $paper_width );
-	$setup2->stock_height( $paper_height );
+	$setup1->sheet_width( $paper_width );
+	$setup1->sheet_height( $paper_height );
+	$setup2->sheet_width( $paper_width );
+	$setup2->sheet_height( $paper_height );
 
 	my $bindery_gutters = 0;
 	my $bindery_bleed = 0;
@@ -417,8 +417,8 @@ $openprint::log->debug("Not Pretrimming on $$Press{strid}") if DEBUG;
 	if ( $bleed_locations{Left} ) {
 		$gutters -= $bleed_size;
 	} # end if
-$openprint::log->debug("Gutters: $$specs{'Gutter'}, bindery: $bindery_gutters, minus bleeds: $gutters");
-$openprint::log->debug("Bindery Gutters: $gutters <? $bindery_gutters");
+$openprint::log->debug("Gutters: $$specs{'Gutter'}, bindery: $bindery_gutters, minus bleeds: $gutters") if DEBUG;
+$openprint::log->debug("Bindery Gutters: $gutters <? $bindery_gutters") if DEBUG;
 
 	$gutters = 0 if $gutters < 0;
 
@@ -427,7 +427,7 @@ $openprint::log->debug("Bindery Gutters: $gutters <? $bindery_gutters");
 		$openprint::log->debug("Grip  $$specs{'Grip Size'}");
 	if ( $run_style eq 'Work & Tumble' or $run_style eq 'Perfecting' ) {
 		$$specs{'Grip Size'} *= 2;
-		$openprint::log->debug("Grip  $$specs{'Grip Size'}");
+		$openprint::log->debug("Grip  $$specs{'Grip Size'}") if DEBUG;
 	} # emd 
 	if ( ( $run_style eq 'Work & Tumble' ) and ( $$specs{'Colour Bar Orientation'} ne 'Length' ) ) {
 		# For Work & TUmble, the grip happens on the head and tail, but we can print on the backside of the grip so to speak.  So we can tuck the colour bar into the second grip space.

@@ -450,6 +450,11 @@ sub bindery_overview {
 
 sub projects {
 
+	$param{StartDocket} = openprint::Order->transform( 'docket', $param{StartDocket} );
+	$param{EndDocket} = openprint::Order->transform( 'docket', $param{EndDocket} );
+	$param{Project} = openprint::Project->transform( 'id', $param{Project} );
+	$param{OrderID} = openprint::Order->transform( 'id', $param{OrderID} );
+
 	_project_list();
 	ssi::setup_date_select( '/employee/production/projects.html', 'due_date_start', -7 );
 	ssi::setup_date_select( '/employee/production/projects.html', 'due_date_end', '' );
@@ -461,10 +466,6 @@ sub projects {
 	my $project_index = $param{'Project'};
 	my $order_id = $param{'OrderID'};
 
-	$startdocket =~ s/\D//g;
-	$enddocket =~ s/\D//g;
-	$project_index =~ s/\D//g;
-	$order_id =~ s/\D//g;
 
 	if ( $param{'btnFunction'} eq 'Go' ) {
 		if ( $project_index ) {

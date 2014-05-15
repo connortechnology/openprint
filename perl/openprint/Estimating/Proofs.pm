@@ -366,7 +366,7 @@ sub insert_press_proof($$$$$$) {
 	} else {
 		$quantity += 1 if @{$$sig_specs{SideOneColours}} or @{$$sig_specs{SideTwoColours}};
 	} # end if
-	insert_new_proof( $specs, $proof_index, $$sig_specs{'SignatureIndex'}, $quantity, $Imposition->stock_width(), $Imposition->stock_height(), 'PressProof', $qty_index );
+	insert_new_proof( $specs, $proof_index, $$sig_specs{'SignatureIndex'}, $quantity, $Imposition->sheet_width(), $Imposition->sheet_height(), 'PressProof', $qty_index );
 } # end sub insert_press_proof
 
 sub insert_colour_proof($$$$$) {
@@ -438,7 +438,7 @@ sub insert_layout_proof {
 		} # end if
 	} # end if
 
-	insert_new_proof( $specs, $proof_index, $$sig_specs{'SignatureIndex'}, $quantity, $Imposition->stock_width(), $Imposition->stock_height(), $default_proof_type, $qty_index );
+	insert_new_proof( $specs, $proof_index, $$sig_specs{'SignatureIndex'}, $quantity, $Imposition->sheet_width(), $Imposition->sheet_height(), $default_proof_type, $qty_index );
 
 } # end sub insert_layout_proof
 

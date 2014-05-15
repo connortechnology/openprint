@@ -70,11 +70,11 @@ sub calc {
 
 	my $services = $Project->services();
 	my $project_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] ) if $$services{''};
-	my $finished_calliper = openprint::print::get_finished_calliper( $Project->id() );
+	my $finished_calliper = $Project->calliper( );
 
 	my $status = 'calculated';
 
-	foreach my $qty_index ( 1 .. 3 ) {
+	foreach my $qty_index ( $Project->quantity_indexes() ) {
 		$$specs{'Markup'.$qty_index} =~ s/[^\d\.\-]//g;
 		$$specs{'txtPrice'.$qty_index} =~ s/[^\d\.]//g;
 		$$specs{'txtQuantity'.$qty_index} =~ s/[^\d\.]//g;

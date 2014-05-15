@@ -232,7 +232,7 @@ sub jdf {
 	$Component->setAttribute('Dimensions',join(' ', 
 				72*$$printing_specs{'txtFinalWidth'},
 				72*$$printing_specs{'txtFinalHeight'}, 
-				72*openprint::print::get_finished_calliper( $$self{'id'} )
+				72*$self->calliper(),
 				));
 
 	# Later on, this is accessed the getNode, 1.3 does not list this node in it's examples. This makes no sense without signature data

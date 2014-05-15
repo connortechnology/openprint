@@ -200,30 +200,34 @@
 			my $html = '';
 
 			if ( $$variable{'Type'}->po_content_id() ) {
-				$html .= 'Confirmed: ' . ( $POC->item() ? $POC->item() : $POC->description() );
+				$html .= '<p><label>Confirmed</label>' . ( $POC->item() ? $POC->item() : $POC->description() );
 				$html .= ' ' . Number::Format::format_number($POC->qty()).$POC->units();
 				if ( openprint::usergroup::is_user_in( ['Accounting','InventoryManager'], $session{'user_id'} ) ) {
 					$html .= ' @ ' . openprint::Currency::format( $POC->price() );
 				} # end if
-			} elsif ( my $POC = $$variable{'Type'}->PurchaseOrder_Content() ) {
-				$html .= 'Guessed: ' . ( $POC->item() ? $POC->item() : $POC->description() );
+				$html .= '</p>';
+			} elsif ( $POC and $POC->id() ) {
+				$html .= '<p><label>Guessed</label>' . ( $POC->item() ? $POC->item() : $POC->description() );
 				$html .= ' ' . ( $POC->qty() ? Number::Format::format_number($POC->qty()) : 0 ).$POC->units();
 				if ( openprint::usergroup::is_user_in( ['Accounting','InventoryManager'], $session{'user_id'} ) ) {
 					$html .= ' @ ' . openprint::Currency::format( $POC->price() );
 				} # end if
-				$html .= button('confirm'.$$POC{id}, { onclick=>qq`new Ajax.Request('/employee/accounting/_stock.json', { parameters: { action: 'confirm_po_content', manifest_content_type_id: $$variable{'Type'}{id}, po_content_id: $$POC{id} } } );`, 'text'=>'Confirm' } ) . '<br/>';
+				$html .= button('confirm'.$$POC{id}, { onclick=>qq`new Ajax.Request('/employee/accounting/_stock.json', { parameters: { action: 'confirm_po_content', manifest_content_type_id: $$variable{'Type'}{id}, po_content_id: $$POC{id} } } );`, 'text'=>'Confirm' } ) . '</p>';
 			} else {
-				$html .= 'Select one<br/>';
+				$html .= '<p><label>Select one</label>';
 				foreach my $C ( $PO->Contents() ) {
-					$html .= $POC->item() ? $POC->item() : $POC->description();
-					$html .= ' ' . Number::Format::format_number($POC->qty()).$POC->units();
-					if ( openprint::usergroup::is_user_in( ['Accounting','InventoryManager'], $session{'user_id'} ) ) {
-						$html .= openprint::Currency::format( $POC->price() );
+$log->debug(" C: " . $C->to_string() );
+					$html .= $C->item() ? $C->item() : $C->description();
+					$html .= ' ' . Number::Format::format_number($C->qty()).$C->units();
+					if ( openprint::usergroup::is_user_in( ['Accounting','InventoryManager'], $session{user_id} ) ) {
+						$html .= openprint::Currency::format( $C->price() );
 					} # end if
 					$html .= button('confirm'.$$C{id}, { onclick=>qq`new Ajax.Request('_manifest_po_content.json', { parameters: { action: 'confirm_po_content', manifest_content_type_id: $$variable{'Type'}{id}, po_content_id: $$C{id} } } );`, 'text'=>'Select' } ) . '<br/>';
 
 				} # end foreach C
+				$html .= '</p>';
 			} # end if
+			return $html;
 		) ?>		
 </div>
 		<? if ( openprint::usergroup::is_user_in( ['Accounting','InventoryManager'], $session{'user_id'} ) ) ?>
