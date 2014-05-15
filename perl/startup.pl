@@ -9,8 +9,8 @@ BEGIN {
 	#use Apache::SmallProf;
 	use 5.10.0;
 	use utf8;
-	#use threads;
-	#use threads::shared;
+	use threads;
+	use threads::shared;
 	use Apache2::Request ();
 	use Apache2::RequestRec ();
 	use Apache2::Connection ();

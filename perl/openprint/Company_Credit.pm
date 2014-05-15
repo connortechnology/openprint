@@ -143,5 +143,9 @@ sub to_string {
 		$_[0]{hold}, $_[0]{warndays},$_[0]{denydays},openprint::Currency::format($_[0]{limit}),$_[0]{downpayment},$_[0]{cod} );
 } # end sub to_string
 
+sub code {
+	return sprintf('%d%%Down, %d%%COD', $_[0]{downpayment}, $_[0]{cod} );
+} # end sub to_string
+
 1;
 __END__

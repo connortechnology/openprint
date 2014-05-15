@@ -21,7 +21,7 @@ use strict;
 use Data::Dumper;
 package openprint::Estimating::Printing;
 my $threading = 0;
-#use threads;
+use threads;
 use constant DEBUG => 0;
 use constant DEBUG_PLATES => 0;
 use constant DEBUG_VERSIONS => 0;
@@ -1215,12 +1215,12 @@ sub get_impositions($$$$$$$$) {
 		my $minimum_sheet_length = $Press->specification('Minimum Sheet Length');
 		my $maximum_roll_width = $Press->specification('Maximum Roll Width');
 		my $minimum_roll_width = $Press->specification('Minimum Roll Width');
-		my $roll2sheet_minimum_weight = $Press->Specification('Roll2Sheet Minimum Weight');
 		my $runstyles = $Press->specification('Runstyles');
 		my $runstyles_roll = $Press->specification('RunstylesRoll');
 		$runstyles_roll = $runstyles if ! $runstyles_roll;
 		my $runstyles_sheet = $Press->specification('RunstylesSheet');
 		$runstyles_sheet = $runstyles if ! $runstyles_sheet;
+		my $roll2sheet_minimum_weight = $Press->Specification('Roll2Sheet Minimum Weight');
 
 		my %sheetsizes;
 		my @Papers = @{$Papers};
@@ -4004,7 +4004,7 @@ if ( DEBUG_PLATES ) {
 				if ( $$Paper{type} eq 'Roll' and sets::isin('Sheet', [ split(',', $Press->specification('Feed') ) ] ) ) {
 # Add Roll2SheetSetup
 					if ( ! $$project{'roll2sheetcharged'} ) {
-						if ( $$price{'Roll2SheetMakeReady'} = openprint::service::get_price( 'Roll2SheetMakeReady', undef, $Press ) ) {
+						if ( $$price{'Roll2SheetMakeReady'} = openprint::service::get_price( 'Roll2SheetMakeReady', $Paper->gsm(), $Press ) ) {
 							$$price{'Comparison Cost'} += $$price{'Roll2SheetMakeReady'};
 							$$price{'Comparison Log'} .= 'rol2sheetmr ' . $$price{Roll2SheetMakeReady} . '<br/>' if COMPARISON_LOG;
 							$$price{'Total Cost'} += $$price{'Roll2SheetMakeReady'};

@@ -2,6 +2,8 @@ use strict;
 package openprint::User;
 our @ISA = qw( openprint::Object );
 
+require openprint::Object;
+
 use openprint ();
 use vars qw( $log $dbh %config %variable %param $debug %fields %find_fields %transforms %defaults $table $serial $AUTOLOAD );
 *log = \$openprint::log;
@@ -59,6 +61,7 @@ $debug = 0;
 	'usergroup'		=>	'(SELECT name from usergroups WHERE id IN (SELECT usergroup_id FROM users_in_usergroups WHERE user_id=users.id))',
 	'last_online'	=>	'(SELECT MAX(date_time) FROM logs WHERE user_id=users.id)',
 	'profile_field'	=>	'(SELECT value FROM User_Profiles WHERE user_id=users.id AND field_id=?)',
+	'company_deleted'	=>	'(SELECT deleted FROM Companies WHERE Companies.id=company_id)',
 );
 
 %transforms = (
@@ -580,6 +583,10 @@ sub Location {
 		
 	return $_[0]{'Location'};
 } # end sub Location
+
+sub code {
+	return join('', substr( $_[0]{firstname}, 0, 1), substr( $_[0]{lastname},0,1) );
+} # end sub code
 
 1;
 __END__

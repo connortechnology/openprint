@@ -544,6 +544,9 @@ sub find {
 	my $params;
 	if ( @_ == 1 ) {
 		$params = $_[0];
+	if ( ref $params ne 'HASH' ) {
+		$log->error("params $params was not a has");
+	} # e3nd if
 	} else {
 		$params = { @_ };
 	} # end if

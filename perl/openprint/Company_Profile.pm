@@ -17,7 +17,7 @@ sub new {
 	$$self{'company_id'} = $company_id;
 #$openprint::log->debug("new Company_Profile");
 	if ( $company_id ) {
-		%{$$self{'fields'}} = map { $_->field(), $_ } openprint::Company_Profile_Entry->find('company_id'=>$company_id);
+		%{$$self{'fields'}} = map { $_->field(), $_ } openprint::Company_Profile_Entry->find( company_id=>$company_id);
 	} # end if
 #$openprint::log->debug("new Company_Profile now listing fields and values");
 #foreach my $f ( keys %{$$self{'fields'}} ) {
@@ -44,9 +44,15 @@ sub AUTOLOAD {
 	return undef;
 } # end sub AUTOLOAD
 
+sub default {
+	my $Field = openprint::Company_Profile_Field->find_one( name=>$_[1] );
+$openprint::log->debug("default for $_[1] is $Field $$Field{defaults}");
+	return $Field ? $$Field{defaults} : undef;
+} 
+
 sub value {
-	if ( ! $_[0]{'fields'} ) {
-		%{$_[0]{'fields'}} = map { $_->field(), $_ } openprint::Company_Profile_Entry->find('company_id'=>$_[0]{'company_id'}) if $_[0]{'company_id'};
+	if ( ! $_[0]{fields} ) {
+		%{$_[0]{fields}} = map { $_->field(), $_ } openprint::Company_Profile_Entry->find('company_id'=>$_[0]{'company_id'}) if $_[0]{'company_id'};
 	} # end if
 
 	my ( $Field, $Entry );
@@ -63,7 +69,7 @@ sub value {
 		if ( ! $Entry ) {
 			$openprint::log->debug("No entry for $_[1], creating one") if $debug;
 			$Entry = new openprint::Company_Profile_Entry();
-			$Field = openprint::Company_Profile_Field->find_one('name'=>$_[1]) if ! $Field;
+			$Field = openprint::Company_Profile_Field->find_one( name=>$_[1]) if ! $Field;
 			$_[0]{'fields'}{$_[1]} = $Entry;
 			# We don't set the value, here, so that the next block will make it save
 			$Entry->set({ 'field_id' => $Field->id(), 'company_id' => $_[0]{'company_id'} });

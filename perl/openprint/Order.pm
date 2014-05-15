@@ -13,8 +13,6 @@ use vars qw( $debug %session %config %variable $log $dbh $table $serial %fields 
 require sql;
 require openprint::usergroup;
 require openprint::logs;
-require openprint::OrderedProduct;
-require openprint::OrderedProject;
 require openprint::Order_Tax;
 require openprint::Order_Invoice;
 require openprint::Order_Status;
@@ -302,6 +300,8 @@ sub Company {
 
 sub Contents {
 	if ( ! $_[0]{Contents} ) {
+require openprint::OrderedProject;
+require openprint::OrderedProduct;
 		$_[0]{Contents} = [ 
 			openprint::OrderedProject->find('order_id'=>$_[0]{'id'},'order'=>$openprint::OrderedProject::fields{'project_id'}), 
 			openprint::OrderedProduct->find('order_id'=>$_[0]{'id'},'order'=>$openprint::OrderedProduct::fields{'project_id'}),
@@ -311,11 +311,13 @@ sub Contents {
 } # end sub Contents
 
 sub Ordered_Projects {
+require openprint::OrderedProject;
 	return openprint::OrderedProject->find('order_id'=>$_[0]{'id'},'order'=>$openprint::OrderedProject::fields{'project_id'});
 } # end sub Ordered_Projects
 
 sub Projects {
 	my $self = shift;
+require openprint::OrderedProject;
 	return @{$$self{'Projects'}} if $$self{'Projects'};
 	return () if ! $$self{'id'};
 	$$self{'Projects'} = [ map { $_->Project() } openprint::OrderedProject->find( 'order_id'=>$$self{id} ) ];
@@ -329,6 +331,7 @@ sub Products {
 		$openprint::log->error("openrpint::Order->Products called with no id");
 		return ();
 	} # end if
+require openprint::OrderedProduct;
 	@{$$self{'Products'}} = openprint::OrderedProduct->find( 'order_id'=>$$self{id} );
 	return @{$$self{'Products'}};
 } # end sub Products
