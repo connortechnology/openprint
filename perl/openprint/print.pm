@@ -268,6 +268,7 @@ sub multipage_signatures {
 
 	my $ac = sql::start_transaction( $dbh );
 	my $Project = new openprint::Project( $project_index );
+	$Project->lock();
 	my $services = $Project->services();
 	$service_index = $$services{''}[0] if ! $service_index;
 
@@ -526,6 +527,7 @@ $log->debug("No Nobindery");
 			} # end if
 		} # end if
 	} # end if
+	$Project->unlock();
 	sql::end_transaction( $dbh, $ac );
 } # end sub multipage_signatures
 

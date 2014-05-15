@@ -1419,7 +1419,7 @@ sub save_Manifest {
 
 	my $error;
 	my $ac = sql::start_transaction( $dbh );
-	$dbh->do( 'LOCK TABLE companies IN EXCLUSIVE MODE' ) or $log->error( DBI->errstr );
+	$dbh->do( 'LOCK TABLE companies IN SHARE ROW EXCLUSIVE MODE' ) or $log->error( DBI->errstr );
 
 	$Manifest->received_on( join('-', @param{'received_on_year','received_on_month','received_on_day'} ) );
 
