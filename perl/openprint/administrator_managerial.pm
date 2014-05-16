@@ -942,5 +942,15 @@ sub _authorizations {
 	ssi::save_params( '/administrator/managerial/authorizations.html', ( 'object_type_id' ) );
 } # end sub _authorizations
 
+sub companies {
+	_companies();
+} # end sub companies
+sub _companies {
+	ssi::save_params( '/administrator/managerial/companies.html', ( 'salesrep_id',
+				( map { 'created_on_start_' . $_ } ( 'year','month','day' ) ),
+				) );
+	$session{$r->uri().'?salesrep_id_exclude'} = $param{salesrep_id_exclude};
+} # end sub _companies
+
 1;
 __END__
