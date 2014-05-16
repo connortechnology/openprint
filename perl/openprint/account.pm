@@ -425,7 +425,7 @@ sub user_profile {
 	if ( ( exists $param{ddmUser} ) and $param{ddmUser} ) {
 		$User = openprint::User->find_one( id=>$param{ddmUser} );
 	} # end if
-	$User = new openprint::User() if ! $User;;
+	$User = new openprint::User() if ! $User;
 
 	if ( $User->can_edit() ) {
 		if ( $param{'btnFunction'} eq '<<' ) {
@@ -534,11 +534,11 @@ $log->debug("Sending password change");
 	} # end if can_edit
 
 	if ( (!$User->id()) and ( $session{'company_id'} != $Me->company_id() ) ) {
-		$User = openprint::User->find_one('company_id'=>$session{'company_id'} );
+		#$User = openprint::User->find_one('company_id'=>$session{'company_id'} );
 	} # end if 
-	if ( ! ($User and $User->id()) ) {
-		$User = $Me;
-	} # end if
+	#if ( ! ($User and $User->id()) ) {
+		#$User = $Me;
+	#} # end if
 	$variable{'User'} = $User;
     if ( $config{mail_db_name} ) {
         my @domains = email::domains();
