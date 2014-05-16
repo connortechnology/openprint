@@ -1,0 +1,63 @@
+
+<? eval (
+    my %filters = (
+        'order'=>'id',
+            );
+    $filters{'company_id'}  = $param{'ddmCustomers'} if $param{'ddmCustomers'};
+    $filters{'user_id'} = $param{'ddmEstimator'} if $param{'ddmEstimator'};
+    $filters{'status'}  = $param{'ddmStatus'} if $param{'ddmStatus'};
+    $filters{'csr_id'}  = $param{'ddmEmployees'} if $param{'ddmEmployees'};
+    if ( Date::Calc::check_date( @param{'ddmStartYear','ddmStartMonth','ddmStartDay'} ) ) {
+        $filters{'created_on_start'} = sprintf('%.4d-%.2d-%.2d 00:00:00' , @param{'ddmStartYear','ddmStartMonth','ddmStartDay'} );
+    } # end if
+    if ( Date::Calc::check_date( @param{'ddmEndYear','ddmEndMonth','ddmEndDay'} ) ) {
+        $filters{'created_on_end'} = sprintf('%.4d-%.2d-%.2d 23:59:59' , @param{'ddmEndYear','ddmEndMonth','ddmEndDay'} );
+    } # end if
+    $filters{'type_id'} = $param{'type_id'} if $param{'type_id'};
+
+    @{$$variable{'Projects'}} = openprint::Project->find( %filters );
+) ?>	
+<? if ( @{$$variable{'Projects'}} ) ?>
+	<table class="List">
+		<tr> 
+			<th align="left" width="60">Project #</th>
+			<th align="left" width="120">Company</th>
+			<th align="left">Reference</th>
+			<th class="Date">Created</th>
+			<th class="Status">Status</th>
+			<th class="Price">Price 1</th>
+			<th class="Price">Price 2</th>
+			<th class="Price">Price 3</th>
+		</tr>
+		<? while ( $$variable{'Project'} = shift @{$$variable{'Projects'}}; ) ?>
+		<tr<?rowclass?>> 
+			<td><a href="/main/project/view.html?ProjectIndex=<? echo ( $$variable{'Project'}->id() ) ?>"><? echo ( $$variable{'Project'}->id() ) ?></a></td>
+			<td><a href="/main/project/view.html?ProjectIndex=<? echo ( $$variable{'Project'}->id() ) ?>"><? echo ( $$variable{'Project'}->Company()->name() ) ?></a></td>
+			<td><a href="/main/project/view.html?ProjectIndex=<? echo ( $$variable{'Project'}->id() ) ?>"><? echo ( $$variable{'Project'}->summary() ) ?></a></td>
+			<td class="Date"><? echo ( Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $$variable{'Project'}->created_on() ) ); ) ?></td>
+			<td class="Status"><? echo ( $$variable{'Project'}->status() ) ?></td>
+			<td class="Price"><? echo ( openprint::Currency::format( $$variable{'Project'}->price1() ) ) ?></td>
+			<td class="Price"><? echo ( openprint::Currency::format( $$variable{'Project'}->price2() ) ) ?></td>
+			<td class="Price"><? echo ( openprint::Currency::format( $$variable{'Project'}->price3() ) ) ?></td>
+		</tr>
+		<tr<?rowclass?>> 
+			<td colspan="2">&nbsp;</td>
+			<td colspan="6"><a href="/main/project/view.html?ProjectIndex=<? echo ( $$variable{'Project'}->id() ) ?>"><? echo ( $$variable{'Project'}->reference() ) ?></a></td>
+		</tr>
+		<? eval ( 
+			$$variable{'rowclass'} = $$variable{'rowclass'} ? '' : ' class="colRow"';
+			$$variable{'Total1'} += $$variable{'Project'}->price1();
+			$$variable{'Total2'} += $$variable{'Project'}->price2();
+			$$variable{'Total3'} += $$variable{'Project'}->price3();
+		 ) ?>
+		<? endwhile ( $$variable{'Project'} = shift @{$$variable{'Projects'}}; ) ?>
+		<tr class="totals">
+			<td colspan="5" align="right">Totals</td>
+			<td class="Price"><? echo ( openprint::Currency::format( $$variable{'Total1'} ); ) ?></td>
+			<td class="Price"><? echo ( openprint::Currency::format( $$variable{'Total2'} ); ) ?></td>
+			<td class="Price"><? echo ( openprint::Currency::format( $$variable{'Total3'} ); ) ?></td>
+		</tr>
+	</table>
+	<? else ( @{$$variable{'Projects'}} ) ?>
+	There were no results matching your criteria.<br>
+	<? endif ( @{$$variable{'Projects'}} ) ?>
