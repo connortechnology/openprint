@@ -420,9 +420,8 @@ sub company_profile {
 
 sub user_profile {
 	my $Me = $variable{Me} = new openprint::User( $session{user_id} );
-	my $User;
 # IF it's empty, then we are adding a new user! Otherwise editing one
-	$User = new openprint::User( $param{ddmUser} );
+	my $User = new openprint::User( $param{ddmUser} );
 
 	if ( $User->can_edit() ) {
 		if ( $param{'btnFunction'} eq '<<' ) {
@@ -533,6 +532,7 @@ $log->debug("Sending password change");
 	if ( !$User->id() ) {
 		if ( $session{company_id} != $Me->company_id() ) {
 			$User = openprint::User->find_one( company_id=>$session{company_id}, order=>'lower(firstname),lower(lastname)' );
+			$User = new openprint::User() if ! $User;
 		} else {
 			$User = $Me;
 		} # end if
