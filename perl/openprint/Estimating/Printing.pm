@@ -568,6 +568,7 @@ $openprint::log->debug("Adding special colour for $colour");
 	$project{'Binding'} = openprint::print::get_book_type( $Project );
 	if ( ! $$services{'NoBindery'} ) {
 		$project{'NeedFolding'} = openprint::Estimating::Folding::signature_needs( $Project, $specs );
+		openprint::Estimating::Folding::load_equipment( $Project );
 		if ( $$services{'DieCutting'} ) {
 			require openprint::Estimating::DieCutting;
 			$project{'NeedDieCutting'} = openprint::Estimating::DieCutting::signature_needs( $Project, $project{'DieCuttingSpecs'}, $specs );
@@ -2414,7 +2415,9 @@ $openprint::log->debug(Data::Dumper::Dumper( \%Overrides ) );
 
 		# For caching
 		openprint::Service->find();
+		$openprint::Service::cached = 1;
 		openprint::Material->find();
+		$openprint::Material::cached = 1;
 
 		%stitching_cache = ();
 		%price_cache = ();
@@ -4700,7 +4703,6 @@ sub calc_price {
 				$$Imposition{'Folder'} = $folding_results{'Equipment'};
 #$$Imposition{'FoldingCost'} = $folding_results{'Price'};
 
-
 my $index = 1;
 				foreach my $k ( keys %{$folding_results{'Folds'}} ) {
 					my ( $fold_type, $imposition ) = $k =~ /(.*)-(\d+)out$/;
@@ -4735,7 +4737,6 @@ $$project{'FoldingSpecs'}{"FoldQty-$$specs{'SignatureIndex'}-$qty_index-$index"}
 			$Imposition->display('Slow Folding');
 			$openprint::log->debug( $folding_results{'Breakdown'} );
 		} # end if
-			$openprint::log->debug( $folding_results{'Breakdown'} );
 		$price{'FoldingImposition'} = $folding_results{'Imposition'};
 		$$Imposition{'FoldingImposition'} = $folding_results{'Imposition'};
 #$openprint::log->debug("FOlding IMPOSITION $folding_results{'Imposition'}");
