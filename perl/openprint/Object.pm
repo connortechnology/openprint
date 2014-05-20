@@ -22,7 +22,7 @@ use vars qw( $log $dbh $AUTOLOAD %cache %name_cache %fields %defaults %transform
 *config = \%openprint::config;
 
 my $debug = 0;
-use constant DEBUG_ALL => 0;
+use constant DEBUG_ALL => 1;
 $no_cache = 0;
 
 sub init_cache {
@@ -601,8 +601,12 @@ sub find {
 				return ();
 			} # end if
 		} else {
-#$log->debug("Undefing $object_type $cache_field $$params{$cache_field}") if DEBUG_ALL;
+$log->debug("Undefing $object_type $cache_field $$params{$cache_field}") if DEBUG_ALL;
 			$name_cache{$object_type}{$$params{$cache_field}} = undef;
+		} # end if
+		if ( ${$object_type.'::cached'} ) {
+$log->debug("ALl cached $object_type $cache_field $$params{$cache_field}") if DEBUG_ALL;
+			return ();
 		} # end if
 	} else {
 		$log->debug("Not doing caching using $cache_field with params $$params{$cache_field} ") if DEBUG_ALL;

@@ -952,5 +952,12 @@ sub _companies {
 	$session{$r->uri().'?salesrep_id_exclude'} = $param{salesrep_id_exclude};
 } # end sub _companies
 
+sub folds {
+	_folds();
+} # end sub folds
+
+sub _folds {
+	ssi::save_params( '/administrator/managerial/companies.html', ( 'equipment_id', 'type' ) );
+} # end sub _folds
 1;
 __END__
