@@ -957,7 +957,7 @@ sub folds {
 } # end sub folds
 
 sub _folds {
-	ssi::save_params( '/administrator/managerial/companies.html', ( 'equipment_id', 'type' ) );
+	ssi::save_params( '/administrator/managerial/folds.html', ( 'equipment_id', 'type' ) );
 } # end sub _folds
 1;
 __END__

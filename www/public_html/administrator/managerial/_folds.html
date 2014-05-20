@@ -1,12 +1,9 @@
-
 <? eval (
-
     my %filters = (
 		order	=>	'lower(name)',
-		( $session{$r->uri().'?equipment_id'} ? ( equipment_id => $session{$r->uri().'?equipment_id'} ) : () ),
-		( $session{$r->uri().'?type'} ? ( type => $session{$r->uri().'?type'} ) : () ),
+		( $session{'/administrator/managerial/folds.html?equipment_id'} ? ( equipment_id => $session{'/administrator/managerial/folds.html?equipment_id'} ) : () ),
+		( $session{'/administrator/managerial/folds.html?type'} ? ( type => $session{'/administrator/managerial/folds.html?type'} ) : () ),
 		);
-	} # end if
 
     $$variable{Folds} = [ openprint::Fold->find( %filters ) ];
 ) ?>	
