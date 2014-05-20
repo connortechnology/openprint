@@ -325,6 +325,7 @@ sub signature_calc_folding_cutting {
 
 	my $services = $Project->services();
 	return %results if ! ( $$services{Folding} and @{$$services{Folding}} );
+	return %results if ! $$specs{'txtQuantity'.$qty_index};
 
 #$openprint::log->debug("Loading Paper from signature in signature_calc_folding_cutting");
 	$results{'Status'} = 'uncalculated';

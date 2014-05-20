@@ -2,7 +2,7 @@
 	<label>Who will be supplying the die:</label>
 	<input type="radio" id="rdbSuppliedDie-<?SignatureIndex?>Y" name="rdbSuppliedDie-<?SignatureIndex?>" value="Y" onclick="if ( this.checked ) { $('CustomDie<?SignatureIndex?>' ).hide(); } calc(this.form.name);" <? echo ( ssi::checked( $$variable{'rdbSuppliedDie'} eq 'Y' or $$variable{'rdbSuppliedDie-'.$$variable{'SignatureIndex'}} eq 'Y' ); ) ?> />
 	<label class="radio" for="rdbSuppliedDie-<?SignatureIndex?>Y"><? echo ( 
-		if ( $config{Owner} == $$variable{Project}->company_id() ) {
+		if ( $config{owner_id} == $$variable{Project}->company_id() ) {
 			return 'The client';
 		} 
 		my $Company = new openprint::Company($$variable{Project}->company_id() );

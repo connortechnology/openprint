@@ -22,6 +22,10 @@ use vars qw( $r %variable %session %param %config $log $dbh );
 *dbh = \$openprint::dbh;
 *r = \$openprint::r;
 
+require DateTime::Format::Pg;
+require DateTime::TimeZone;
+my $parser = 'DateTime::Format::Pg';
+
 #Used for resource hashed links
 my %hash_cache;
 
@@ -856,7 +860,12 @@ sub date_filter {
 	} # end if
 #$log->debug("ssi::date_filter: $year-$month-$day $hour:$minute:$second");
 
-	return ( $sql_field, sprintf('%.4d-%.2d-%.2d %.2d:%.2d:%.2d', ( $year, $month, $day, $hour, $minute, $second ) ) );
+	my $TZ = DateTime::TimeZone->new( name => $openprint::config{Timezone} );
+	my $datetime = DateTime->new( time_zone => $TZ,
+			( year => $year, month=>$month, day=>$day, hour=>$hour, minute=>$minute, second=>$second )
+			);
+
+	return ( $sql_field, $parser->format_datetime( $datetime ) );
 } # end sub date_filter
 
 my @input_options = ( 'type','name','id','onblur','onfocus','onkeyup','onkeydown','onchange','class','pattern','ontouch','min','max', 'step', 'placeholder', 'oninput', 'title' );

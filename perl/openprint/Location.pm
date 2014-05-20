@@ -3,16 +3,10 @@ require openprint;
 require openprint::Location_Type;
 require openprint::Asset;
 require openprint::Photo_Album;
-require Geo::Coder::Googlev3;
 require Math::Round;
 #use Geo::IP;
-use Geo::IPfree;
-my $geo = Geo::IPfree->new();
-#$geo->LoadDB( '/usr/share/GeoIP/GeoIP.dat' );
-#'/usr/share/GeoIP/GeoIP.dat');
-#my $geo = $Geo::IP->open( '/usr/share/GeoIP/GeoIP.dat' );
-$geo->Faster();
 
+my $geo;
 package openprint::Location;
 our @ISA = qw( openprint::Object );
 
@@ -203,6 +197,7 @@ sub longitude {
 
 # Does a google lookup on some string and returns a Location object based on what it returns
 sub google {
+require Geo::Coder::Googlev3;
 	my $string = $_[0];
 	$string .= ' ' . $_[1] if @_ > 1;
 	$string =~ s/ /+/g;
@@ -308,6 +303,7 @@ sub google {
 } # end sub google
 
 sub get_latitude_and_longitude {
+require Geo::Coder::Googlev3;
 	my $coder = Geo::Coder::Googlev3->new();
 my $string = join(',',$_[0]->name(),$_[0]->address(), $_[0]->postalcode(), map{$_->name()}$_[0]->Parents()) if $_[0]->name();
 $string =~ s/ /+/g;
@@ -632,6 +628,14 @@ sub googlemap_html {
 } # end sub googlemap_html
 
 sub from_ip {
+require Geo::IPfree;
+if ( ! $geo ) {
+$geo = Geo::IPfree->new();
+#$geo->LoadDB( '/usr/share/GeoIP/GeoIP.dat' );
+#'/usr/share/GeoIP/GeoIP.dat');
+#my $geo = $Geo::IP->open( '/usr/share/GeoIP/GeoIP.dat' );
+$geo->Faster();
+} # end if
 	$openprint::log->debug("from_ip");
 	my $ip = @_ ? $_[0] : $ENV{'REMOTE_ADDR'};
 	if ( ref $geo eq 'Geo:IPfree' ) {

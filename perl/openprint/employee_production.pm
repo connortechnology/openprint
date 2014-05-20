@@ -1074,7 +1074,7 @@ sub _drop {
 	# First step, run through and see if we need to do a popup before actually applying
 
 	my $ac = sql::start_transaction( $dbh );
-	$dbh->do( 'LOCK TABLE Schedule IN ACCESS EXCLUSIVE MODE' ) or $log->error( DBI->errstr );
+	$dbh->do( 'LOCK TABLE Schedule IN SHARE ROW EXCLUSIVE MODE' ) or $log->error( DBI->errstr );
 
 	my $Shift = openprint::Shift::get_from_ul_id( $param{'ul_id'} );
 	my $Equipment = $Shift->Equipment(); # For efficiency
@@ -1256,7 +1256,7 @@ $log->debug("Order after coalesce: @order : " . join(',', map { new openprint::S
 			} # end foreach
 			$log->debug("Old2");
 		} else {
-			$dbh->do( 'LOCK TABLE Shifts IN ACCESS EXCLUSIVE MODE' ) or $log->error( DBI->errstr );
+			$dbh->do( 'LOCK TABLE Shifts IN SHARE ROW EXCLUSIVE MODE' ) or $log->error( DBI->errstr );
 
 			if ( $Shift->starttime() ) {
 				my @final_order;
@@ -1401,7 +1401,7 @@ $log->debug("ES: " . $NextES->name() );
 	my $Shift = shift @Shifts;
 	
 	my $ac = sql::start_transaction( $dbh );
-	$dbh->do( 'LOCK TABLE Schedule IN ACCESS EXCLUSIVE MODE' ) or $log->error( DBI->errstr );
+	$dbh->do( 'LOCK TABLE Schedule IN SHARE ROW EXCLUSIVE MODE' ) or $log->error( DBI->errstr );
 
 	my @fixed_jobs = ();
 	for ( my $i = 0; $i < @order; $i += 1 ) {

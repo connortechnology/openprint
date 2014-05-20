@@ -11,7 +11,7 @@ require sql;
 require openprint::Object;
 require openprint::User;
 
-$debug = 0;
+$debug = 1;
 $table = 'companies';
 $serial = 'companies_id_seq';
 
@@ -330,6 +330,7 @@ sub location {
 } # end sub location
 
 sub can_edit {
+	return 1 if ! $_[0]{id};
 	return 1 if $openprint::session{'user_type'} eq 'A';
 	return 1 if $_[0]->salesrep_id() == $openprint::session{'user_id'};
 	my $Me = new openprint::User( $openprint::session{'user_id'} );
