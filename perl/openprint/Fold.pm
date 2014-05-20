@@ -13,7 +13,7 @@ use vars qw( $debug $table $serial $log $dbh %fields %transforms %defaults );
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
 
-$debug = 0;
+$debug = 1;
 $table = 'folds';
 $serial= 'folds_id_seq';
 
