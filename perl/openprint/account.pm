@@ -422,10 +422,7 @@ sub user_profile {
 	my $Me = $variable{Me} = new openprint::User( $session{user_id} );
 	my $User;
 # IF it's empty, then we are adding a new user! Otherwise editing one
-	if ( ( exists $param{ddmUser} ) and $param{ddmUser} ) {
-		$User = openprint::User->find_one( id=>$param{ddmUser} );
-	} # end if
-	$User = new openprint::User() if ! $User;
+	$User = new openprint::User( $param{ddmUser} );
 
 	if ( $User->can_edit() ) {
 		if ( $param{'btnFunction'} eq '<<' ) {
@@ -533,12 +530,13 @@ $log->debug("Sending password change");
 		} # end if btnFunction
 	} # end if can_edit
 
-	if ( (!$User->id()) and ( $session{'company_id'} != $Me->company_id() ) ) {
-		#$User = openprint::User->find_one('company_id'=>$session{'company_id'} );
+	if ( !$User->id() ) {
+		if ( $session{company_id} != $Me->company_id() ) {
+			$User = openprint::User->find_one( company_id=>$session{company_id}, order=>'lower(firstname),lower(lastname)' );
+		} else {
+			$User = $Me;
+		} # end if
 	} # end if 
-	#if ( ! ($User and $User->id()) ) {
-		#$User = $Me;
-	#} # end if
 	$variable{'User'} = $User;
     if ( $config{mail_db_name} ) {
         my @domains = email::domains();

@@ -470,7 +470,7 @@ $openprint::log->error("No finished width and height, cannot continue $$Project{
 	if ( $$specs{"chkOverrideEquipment-$$sig_specs{SignatureIndex}-$qty_index"} eq 'Y' ) {
 		#$openprint::log->debug("Overriding Folding Equipment for sig $$sig_specs{'SignatureIndex'} to " . $$specs{"ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"});
 		if ( $$specs{"ddmEquipment-$$sig_specs{SignatureIndex}-$qty_index"} ) {
-			push @my_equipment, new openprint::Equipment( $$specs{"ddmEquipment-$$sig_specs{SignatureIndex}-$qty_index"} );
+			@my_equipment = ( new openprint::Equipment( $$specs{"ddmEquipment-$$sig_specs{SignatureIndex}-$qty_index"} ) );
 		} else {
 			my 	%results = (
 					'Price'         => 0,
@@ -490,12 +490,7 @@ $openprint::log->error("No finished width and height, cannot continue $$Project{
 			if ( $$calc_hash{'Folding::signature_calc::equipment'} ) {
 				@my_equipment = @{$$calc_hash{'Folding::signature_calc::equipment'}};
 			} else {
-				my @folding_capable = ('Y');
-				push @folding_capable, 'For Pocket Folders' if $Project->Type()->name() eq 'PresentationFolders';
-				push @folding_capable, 'When PerfectBound' if $$services{'PerfectBound'};
-				push @folding_capable, 'When Stitching' if ( $$services{'SaddleStitching'} or $$services{'LoopStitching'} );
-				@my_equipment = openprint::Equipment->find( useinestimating=>1, Specifications=>{'Folding Capable'=>\@folding_capable} );
-				@{$$calc_hash{'Folding::signature_calc::equipment'}} = @my_equipment;
+				@my_equipment = @equipment;
 			} # end if 
 		} elsif ( DEBUG ) {
 			$openprint::log->debug("No sheeter");
@@ -1563,6 +1558,17 @@ if ( 0 ) {
 	return %results;
 } # end sub signature_calc
 
+sub load_equipment { 
+	my ( $Project ) = @_;
+	my $services = $Project->services();
+
+	my @folding_capable = ('Y');
+	push @folding_capable, 'For Pocket Folders' if $Project->Type()->name() eq 'PresentationFolders';
+	push @folding_capable, 'When PerfectBound' if $$services{'PerfectBound'};
+	push @folding_capable, 'When Stitching' if ( $$services{'SaddleStitching'} or $$services{'LoopStitching'} );
+	@equipment = openprint::Equipment->find( useinestimating=>1, Specifications=>{'Folding Capable'=>\@folding_capable} );
+} # end sub load_equipment
+
 sub calc {
 	my ( $log, $dbh, $variable, $project_index, $service_index, $specs ) = @_;
 
@@ -1587,6 +1593,8 @@ sub calc {
 
 	my $uv_specs = openprint::service::get_specs_ref( $Project, $$services{'UVCoating'}[0] ) if $$services{'UVCoating'};
 	my $aq_specs = openprint::service::get_specs_ref( $Project, $$services{'Aqueous'}[0] ) if $$services{'Aqueous'};
+
+	load_equipment( $Project );
 
 	foreach my $qty_index ( $Project->quantity_indexes() ) {
 		$$specs{"txtPrice$qty_index"} =~ s/[^\d\.]//g if $$specs{"txtPrice$qty_index"};
@@ -1741,13 +1749,8 @@ sub display {
 	my ( $log, $dbh, $variable, $project_index, $service_index ) = @_;
 
 	my $Project = new openprint::Project( $project_index );
-	my $services = $Project->services();
-	my @folding_capable = ('Y','When Printing');
-	push @folding_capable, 'For Pocket Folders' if $Project->Type()->name() eq 'PresentationFolders';
-	push @folding_capable, 'When PerfectBound' if $$services{'PerfectBound'};
-	push @folding_capable, 'When Stitching' if ( $$services{'SaddleStitching'} or $$services{'LoopStitching'} );
 
-	my @equipment = openprint::Equipment->find( 'useinestimating'=>1, 'Specifications'=>{'Folding Capable'=>\@folding_capable}, 'order'=>'lower(strname)' );
+	load_equipment($Project);
 	@{$$variable{'EquipmentArray'}} = map { $_->id(), $_->name() } @equipment;
 } # end sub display
 
