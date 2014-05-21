@@ -25,7 +25,7 @@ require openprint::Estimating::Perforating;
 
 use vars qw( @folds %fold_types );
 
-use constant DEBUG => 0;
+use constant DEBUG => 1;
 use constant DEBUG_NEEDS => 0;
 
 my @equipment;
@@ -923,8 +923,8 @@ $openprint::log->debug("Templatetype: $$sig_specs{'rdbTemplateType'}") if DEBUG;
 								gsm				=>	$Paper->gsm(),
 								calliper		=>	$$Paper{calliper},
 								imposition		=>	$$Imposition{imposition},
-							columns		=>	$$Imposition{columns},
-							rows		=>	$$Imposition{rows},
+								columns			=>	$$Imposition{columns},
+								rows			=>	$$Imposition{rows},
 								printing_type	=>	$ppt,
 								});
 						if ( $Fold ) {
@@ -997,6 +997,7 @@ $openprint::log->debug("No Fold") if DEBUG;
 						#$Imposition->display("Trying: $$Equipment{name}") if DEBUG;
 						$openprint::log->debug(sprintf('Trying %dx%d=%dout spreads: %dx%d=%d %sx%s',$Imposition->get('columns','rows','imposition','spread_columns','spread_rows','spreads','image_width','image_height') ).' on ' . $Equipment->name()) if DEBUG;
 
+$Imposition->display('fitting');
 						# See if it fits
 						$_ = $Equipment->fits( $Imposition->layout_width(), $Imposition->layout_height(), $$Paper{'calliper'} );
 						if ( ! $_ )	{
@@ -2036,7 +2037,7 @@ sub cut_spreads {
 			$i1->spread_rows(1);
 			$i1->quantity( $i1->quantity() * $I->spread_rows() );
 			$i1->image_height( $I->image_height()/$I->spread_rows() );
-	$openprint::log->debug(sprintf('Cutting pages down from %d to %d', $I->pages(), $i1->pages() ) ) if DEBUG;
+	$openprint::log->debug(sprintf('Cutting pages down from %dx%d to %dx%d', $I->quantity(), $I->pages(), $i1->quantity(), $i1->pages() ) ) if DEBUG;
 			return ( $i1 );
 		} else {
 			my $i1 = $I->copy();
@@ -2047,21 +2048,34 @@ sub cut_spreads {
 			return $i1;
 		} # end if
 	} else {
-		if ( ( $I->spread_columns() > 1 ) and ( $I->spread_columns() % 2 ) ) {
-			my $i1 = $I->copy();
-			$i1->spread_columns(1);
-			$i1->quantity( $i1->quantity() * $I->spread_columns() );
-			$i1->image_width( $I->image_width()/$I->spread_columns() );
-	$openprint::log->debug(sprintf('Cutting pages down from %d to %d', $I->pages(), $i1->pages() ) ) if DEBUG;
-			return ( $i1 );
-		} else {
-			my $i1 = $I->copy();
-			$i1->spread_columns( $i1->spread_columns()/2 );
-			$i1->image_width( $i1->image_width()/2 );
-			$i1->quantity( $i1->quantity() * 2 );
-	$openprint::log->debug(sprintf('Cutting pages down from %d to %d', $I->pages(), $i1->pages() ) ) if DEBUG;
-			return $i1;
-		} # end if
+		#if ( $I->image_orientation() eq 'Vertical' ) {
+			# Assume spread columns are multiple of 2
+			#if ( ( $I->spread_columns() > 2 ) and ( $I->spread_columns() % 2 ) ) {
+                #my $i1 = $I->copy();
+                #$i1->spread_columns(1);
+                #$i1->quantity( $i1->quantity() * $I->spread_columns() );
+                #$i1->image_width( $I->image_width()/$I->spread_columns() );
+        #$openprint::log->debug(sprintf('Cutting pages down from %dx%d to %dx%d', $I->quantity(), $I->pages(), $i1->quantity(), $i1->pages() ) ) if DEBUG;
+                #return ( $i1 );
+			#} else {
+			#} # end if
+		#} else {
+			if ( ( $I->spread_columns() > 1 ) and ( $I->spread_columns() % 2 ) ) {
+				my $i1 = $I->copy();
+				$i1->spread_columns(1);
+				$i1->quantity( $i1->quantity() * $I->spread_columns() );
+				$i1->image_width( $I->image_width()/$I->spread_columns() );
+		$openprint::log->debug(sprintf('Cutting pages down from %dx%d to %dx%d', $I->quantity(), $I->pages(), $i1->quantity(), $i1->pages() ) ) if DEBUG;
+				return ( $i1 );
+			} else {
+				my $i1 = $I->copy();
+				$i1->spread_columns( $i1->spread_columns()/2 );
+				$i1->image_width( $i1->image_width()/2 );
+				$i1->quantity( $i1->quantity() * 2 );
+		$openprint::log->debug(sprintf('Cutting pages down from %d to %d', $I->pages(), $i1->pages() ) ) if DEBUG;
+				return $i1;
+			} # end if
+		#} # end if
 	} # end if
 } # end cut_spreads
 
