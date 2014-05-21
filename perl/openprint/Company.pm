@@ -420,15 +420,15 @@ sub AUTOLOAD {
     } else {
         my $Profile = $_[0]->Profile();
 		my $thing = $Profile->value( $name );
-$openprint::log->debug("Profile field $name thing $thing " . ref $thing);
+$openprint::log->debug("Profile field $name thing $thing " . ref $thing) if $debug;
         if ( exists $$Profile{'fields'}{$name} ) {
             if ( @_ > 1 ) {
                 $$Profile{'fields'}{$name} = $_[1];
             } # end if
-$openprint::log->debug("Profile field $name " . ref $$Profile{'fields'}{$name} );
+$openprint::log->debug("Profile field $name " . ref $$Profile{'fields'}{$name} ) if $debug;
             return $$Profile{'fields'}{$name};
         } else {
-            $openprint::log->warn("Unknown field in Company::AUTOLOAD $name");
+            $openprint::log->warn("Unknown field in Company::AUTOLOAD $name") if $debug;
         } # end if
     } # end if
 } # end sub AUTOLOAD

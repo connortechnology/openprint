@@ -424,7 +424,7 @@ $openprint::log->debug("Bindery Gutters: $gutters <? $bindery_gutters") if DEBUG
 
 	$$specs{'Grip Size'} = $$specs{'Grip'} - $bindery_head;
 # doube grip for a perfecting or Work & Tumble.
-		$openprint::log->debug("Grip  $$specs{'Grip Size'}");
+		$openprint::log->debug("Grip  $$specs{'Grip Size'}") if DEBUG;
 	if ( $run_style eq 'Work & Tumble' or $run_style eq 'Perfecting' ) {
 		$$specs{'Grip Size'} *= 2;
 		$openprint::log->debug("Grip  $$specs{'Grip Size'}") if DEBUG;
@@ -543,7 +543,7 @@ $openprint::log->debug("Height: $paper_height - CB $$specs{'colour_bar_size'} - 
 				# Too hard to figure space for rollers
 				push @results, calc_dutch( $setup1, $adjusted_paper_width, $adjusted_paper_height, $specs );
 			} else {
-$openprint::log->debug("Not doing dutch because $$specs{'dutch'} or $run_style");
+$openprint::log->debug("Not doing dutch because $$specs{'dutch'} or $run_style") if DEBUG;
 			} # end if
 			if ( ! $setup1->paper()->width() ) {
 				$setup1->paper()->width( $setup1->used_width() );

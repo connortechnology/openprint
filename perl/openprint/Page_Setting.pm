@@ -2,9 +2,10 @@ use strict;
 package openprint::Page_Setting;
 our @ISA = qw(openprint::Object);
 
-use vars qw( $debug $serial $table %fields %transforms %defaults $cache_field );
+use vars qw( $debug $serial $table %fields %transforms %defaults $cache_field $cached %cache );
 
 $debug = 1;
+$cached = 0;
 $table = 'page_settings';
 $serial = 'page_settings_id_seq';
 %fields = (
@@ -52,6 +53,39 @@ sub Users {
 	return @{$_[0]{Users}} if $_[0]{Users};
 	return ();
 } 
+
+sub get {
+	my ( $page ) = @_;
+
+	if ( ! $cache{$openprint::config{db_name}} or ! $cache{$openprint::config{db_name}}{$page} ) {
+		$openprint::log->debug("loading Page settings for $openprint::config{db_name} for $page") if $debug;
+		$cache{$openprint::config{db_name}} = { map { $_->url(), $_ } openprint::Page_Setting->find() };
+	} # end if
+	if ( ! $cache{$openprint::config{db_name}}{$page} ) {
+# Need to create one.
+		my @chunks = split('/', $page );
+		while ( @chunks ) {
+			pop @chunks;
+			last if ! @chunks;
+
+# Because there is a / at the beginning of the url, the first entry in chunks is '', so we don't need to prepend a /
+			my $chunk = join('/', @chunks);
+			$chunk = '/' if ! $chunk; # neccessary to deal with the empty string
+
+			$openprint::log->debug("Looking for page setting for $chunk") if $debug;
+			if ( $cache{$openprint::config{db_name}}{$chunk} ) {
+# Why stuff up the db with entries, just fill the hash with copies.
+				$cache{$openprint::config{db_name}}{$page} = $cache{$openprint::config{db_name}}{$chunk};
+				last;
+			} # end if
+		} # end while chunks
+		if ( ! $cache{$openprint::config{db_name}}{$page} ) {
+			$cache{$openprint::config{db_name}}{$page} = new openprint::Page_Setting();
+			$cache{$openprint::config{db_name}}{$page}->save({url=>$page}) if $openprint::session{user_type} eq 'A';
+		} # end if
+	} # end if Page Settings not found
+	return $cache{$openprint::config{db_name}}{$page};
+} # end sub get
 
 1;
 __END__
