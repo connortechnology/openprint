@@ -53,8 +53,9 @@ $debug = 0;
 	deleted				=>	'deleted',
 );
 %find_fields = (
-	'Specifications' => '(SELECT strValue FROM tbl_Equipment_Specifications WHERE lngEquipmentIndex=tbl_Equipment.Id AND strName=? LIMIT 1)',
-	'category'		=>	'(SELECT name FROM Equipment_Categories WHERE id=ANY(category_id))',
+	Specifications => '(SELECT strValue FROM tbl_Equipment_Specifications WHERE lngEquipmentIndex=tbl_Equipment.Id AND strName=? LIMIT 1)',
+	category		=>	'(SELECT name FROM Equipment_Categories WHERE id=ANY(category_id))',
+	servicetype		=>	'(SELECT name FROM service_types WHERE id = ANY(servicetype_id))',
 );
 %transforms = (
 );

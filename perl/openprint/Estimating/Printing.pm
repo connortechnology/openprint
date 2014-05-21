@@ -1997,6 +1997,43 @@ $openprint::log->debug("Spread size: $$specs{'txtSpreadSize'}");
 	} # end if
 } # end sub set_size
 
+sub get_overrides {
+	my ( $Project, $specs ) = @_;
+
+	my %Overrides;
+	foreach my $index ( $Project->signatures({'Group'=>$$specs{'Group'}}) ) {
+		my $sig_specs = openprint::service::get_specs_ref( $Project, $index );
+		foreach my $qty_index ( $Project->quantity_indexes() ) {
+			if ( $$sig_specs{'chkOverrideSheetSize'.$qty_index} ) {
+				$Overrides{'chkOverrideSheetSize'.$qty_index} = 'Y';
+# Technically, the dropdown and txtinputs should have values
+				if ( ! $$sig_specs{"ddmStockSheetSize$qty_index"} ) {
+#$openprint::log->error("NO ddm Stock SheetSize for $qty_index sig $index !");
+				} elsif ( ! $$sig_specs{"OverrideStockWidth$qty_index"} ) {
+
+					if ( @$sig_specs{"OverrideStockWidth$qty_index"} = $$sig_specs{"ddmStockSheetSize$qty_index"} =~ /^([\d\.]+)("? Roll)?\s*$/ ) {
+				} elsif (
+						@$sig_specs{"OverrideStockWidth$qty_index","OverrideStockHeight$qty_index"} = $$sig_specs{"ddmStockSheetSize$qty_index"} =~ /^([\d\.]+)"?\s*x\s*([\d\.]+)"?\s*$/ ) {
+				} else {
+					$openprint::log->error( "Failure to parse ".$$sig_specs{"ddmStockSheetSize$qty_index"});
+					$$sig_specs{'chkOverrideSheetSize'.$qty_index} = '';
+				}
+				} # end if
+				push @{$Overrides{"OverrideStockWidth$qty_index"}}, $$sig_specs{"OverrideStockWidth$qty_index"};
+				push @{$Overrides{"OverrideStockHeight$qty_index"}}, $$sig_specs{"OverrideStockHeight$qty_index"};
+			} # end if
+			if ( $$sig_specs{"chkOverrideImposition$qty_index"} ) {
+				push @{$Overrides{"chkOverrideImposition$qty_index"}}, $$sig_specs{"txtImposition$qty_index"};
+			} # end if
+			if ( $$sig_specs{"OverrideCutOff$qty_index"} ) {
+				$Overrides{"OverrideCutOff$qty_index"} = 'Y';
+				push @{$Overrides{"CutOff$qty_index"}}, $$sig_specs{"CutOff$qty_index"};
+			} # end if
+		} # end foreach
+	} # end foreach
+	return %Overrides;
+} # end sub get_overrides
+
 sub calc {
 	my ( $log, $dbh, $variable, $project_index, $service_index, $specs ) = @_;
 
@@ -2343,38 +2380,7 @@ $log->warn("There are no quantities!");
 			next;
 		} # end if
 
-		my %Overrides;
-		foreach my $index ( $Project->signatures({'Group'=>$$specs{'Group'}}) ) {
-			my $sig_specs = openprint::service::get_specs_ref( $Project, $index );
-			foreach my $qty_index ( $Project->quantity_indexes() ) {
-				if ( $$sig_specs{'chkOverrideSheetSize'.$qty_index} ) {
-					$Overrides{'chkOverrideSheetSize'.$qty_index} = 'Y';
-					# Technically, the dropdown and txtinputs should have values
-					if ( ! $$sig_specs{"ddmStockSheetSize$qty_index"} ) {
-						#$openprint::log->error("NO ddm Stock SheetSize for $qty_index sig $index !");
-					} elsif ( ! $$sig_specs{"OverrideStockWidth$qty_index"} ) {
-
-						if ( @$sig_specs{"OverrideStockWidth$qty_index"} = $$sig_specs{"ddmStockSheetSize$qty_index"} =~ /^([\d\.]+)("? Roll)?\s*$/ ) {
-						} elsif ( 
-							@$sig_specs{"OverrideStockWidth$qty_index","OverrideStockHeight$qty_index"} = $$sig_specs{"ddmStockSheetSize$qty_index"} =~ /^([\d\.]+)"?\s*x\s*([\d\.]+)"?\s*$/ ) {
-						} else {
-							$openprint::log->error( "Failure to parse ".$$sig_specs{"ddmStockSheetSize$qty_index"});
-							$$sig_specs{'chkOverrideSheetSize'.$qty_index} = '';
-						}
-					} # end if
-					push @{$Overrides{"OverrideStockWidth$qty_index"}}, $$sig_specs{"OverrideStockWidth$qty_index"};
-					push @{$Overrides{"OverrideStockHeight$qty_index"}}, $$sig_specs{"OverrideStockHeight$qty_index"};
-				} # end if
-				if ( $$sig_specs{"chkOverrideImposition$qty_index"} ) {
-					push @{$Overrides{"chkOverrideImposition$qty_index"}}, $$sig_specs{"txtImposition$qty_index"};
-				} # end if
-				if ( $$sig_specs{"OverrideCutOff$qty_index"} ) {
-					$Overrides{"OverrideCutOff$qty_index"} = 'Y';
-					push @{$Overrides{"CutOff$qty_index"}}, $$sig_specs{"CutOff$qty_index"};
-				} # end if
-			} # end foreach
-		} # end foreach
-
+		my %Overrides = get_overrides( $Project, $specs );
 $openprint::log->debug(Data::Dumper::Dumper( \%Overrides ) );
 
 #$openprint::log->debug("before get_impositions: " . ( sprintf('%.4f', tv_interval( [$master_time])*1000) ) .' usecs' );

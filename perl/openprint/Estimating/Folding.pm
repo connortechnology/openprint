@@ -1566,6 +1566,7 @@ sub load_equipment {
 	push @folding_capable, 'For Pocket Folders' if $Project->Type()->name() eq 'PresentationFolders';
 	push @folding_capable, 'When PerfectBound' if $$services{'PerfectBound'};
 	push @folding_capable, 'When Stitching' if ( $$services{'SaddleStitching'} or $$services{'LoopStitching'} );
+	push @folding_capable, 'When Printing';
 	@equipment = openprint::Equipment->find( useinestimating=>1, Specifications=>{'Folding Capable'=>\@folding_capable} );
 } # end sub load_equipment
 

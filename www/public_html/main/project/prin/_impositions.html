@@ -1,8 +1,33 @@
 <? echo (
+	require openprint::Estimating::Printing;
 	my $html;
 
-	my $Project = new openprint::Project( $param{project_id} );
-	my $specs = openprint::service::get_specs_ref( $Project, $param{service_id} );
+	my $Project = new openprint::Project( $param{ProjectIndex} );
+	my $specs = openprint::service::get_specs_ref( $Project, $param{ServiceIndex} );
+	my $services = $Project->services();
+
+	my @Papers = openprint::Estimating::Printing::get_Stocks( $Project, $specs );
+    my @side_one_colours = openprint::Estimating::Printing::get_colours( $specs, 'SideOne' );
+    my @side_two_colours = openprint::Estimating::Printing::get_colours( $specs, 'SideTwo' );
+	my %inkCoverage = openprint::Estimating::Printing::get_inkcoverage( $Project, $specs );
+
+	my $project = openprint::Estimating::Printing::setup_project( $Project, $param{service_id}, $services, $specs, \@side_one_colours, \@side_two_colours, \%inkCoverage, $Papers[0] );
+	my %presses = openprint::Estimating::Printing::select_presses( $Project, \@Papers, $specs, $project );
+	my @possible_presses;
+	foreach my $press_id ( keys %presses ) {
+	if ( ! $presses{$press_id} ) {
+	push @possible_presses, new openprint::Equipment($press_id);
+	} # end if
+	} # end foreach
+
+
+	my %Overrides = openprint::Estimating::Printing::get_overrides( $Project, $specs );
+	my $qty_index = 1;
+	my %Impositions = openprint::Estimating::Printing::get_impositions( $Project, $specs, $project, $param{txtQuantity1}, $qty_index, \@possible_presses, \@Papers, \%Overrides );
+
+	foreach my $Press ( @possible_presses ) {
+	$html .= join('<br/>', map { $_->to_string() } @{$Impositions{$Press->strid()}} );
+	}
 	return $html;
 ) ?>
 	
