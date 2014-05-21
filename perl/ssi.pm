@@ -478,22 +478,7 @@ sub button {
 			$path =~ s/(.*\/).*/$1/;
 			$href = $path . $href;
 		} # end if
-		my $PageSetting;
-
-		my @chunks = split('/', $href );
-		while ( @chunks ) {
-
-# Because there is a / at the beginning of the url, the first entry in chunks is '', so we don't need to prepend a /
-			my $chunk = join('/', @chunks);
-			$chunk = '/' if ! $chunk; # neccessary to deal with the empty string
-
-			$log->debug("Looking for page setting for $chunk") if DEBUG;
-			if ( $PageSetting = openprint::Page_Setting->find_one(url=>$chunk) ) {
-				last;
-			} # end if
-			pop @chunks;
-		} # end while chunks
-
+		my $PageSetting = openprint::Page_Setting::get( $href );
 		return if $PageSetting and ! $PageSetting->can_view();
 	} else {
 		$$options{href} = '#';
@@ -892,7 +877,7 @@ sub input {
 		} # end if
 		$options{'onkeyup'} = 'integerize(this);'.$options{'onkeyup'};
 	} elsif ( $options{type} eq 'float' ) {
-$log->debug("USer agent: $ENV{HTTP_USER_AGENT}");
+#$log->debug("USer agent: $ENV{HTTP_USER_AGENT}");
 		$options{step} = 'any' if ! exists $options{step};
 		if ( $ENV{HTTP_USER_AGENT} =~ /ip(ad|od|hone)/i ) {
 			$options{type} = 'text';

@@ -1537,15 +1537,15 @@ $imp->display(" Less than $max_imposition") if DEBUG_INITIAL_FILTERING;
                 next;
             } # end if
             my $A = $imp->Paper();
-				my $a_stock_minimum = $$specs{"txtQuantity$qty_index"} / $$imp{imposition};
-				my $a_stock_lbs = $a_stock_minimum * $A->area() * $A->wpsi();
-$$imp{stock_lbs} = $a_stock_lbs;
+			my $a_stock_minimum = $$specs{"txtQuantity$qty_index"} / $$imp{imposition};
+			my $a_stock_lbs = int( $a_stock_minimum * $A->area() * $A->wpsi() );
+			$$imp{stock_lbs} = $a_stock_lbs;
 
             my $add = 1;
-            if ( $$imp{'dutch_columns'} ) {
-                if ( $openprint::imposition::blocks{$$imp{'imposition'}} ) {
+            if ( $$imp{dutch_columns} ) {
+                if ( $openprint::imposition::blocks{$$imp{imposition}} ) {
 					# If we have a similar imposition, without dutch, then do not consider the dutch
-					foreach my $arrangement ( $openprint::imposition::blocks{$$imp{'imposition'}} ) {
+					foreach my $arrangement ( $openprint::imposition::blocks{$$imp{imposition}} ) {
 						my $str = join(',', @$arrangement, '', '', @$imp{'runstyle','image_orientation','bleed_size'}, $$A{digital} );
 						#my $str = ntf('%dx%d+%dx%d-%s-%s-%s', @$arrangement, 0, 0, @$imp{'runstyle','image_orientation','bleed_size'}, $$A{digital} );
 
@@ -1716,7 +1716,7 @@ $openprint::log->debug("Doing nothing, keeping all add:$add") if DEBUG_INITIAL_F
 		} # end if
 
 		if ( ! @impositions ) {
-			if ( ( $$specs{'chkOverridePress'.$qty_index} eq 'Y' ) and ( $$Press{'strid'} eq $$specs{'ddmPress'.$qty_index} ) ) {
+			if ( ( $$specs{'chkOverridePress'.$qty_index} eq 'Y' ) and ( $$Press{strid} eq $$specs{'ddmPress'.$qty_index} ) ) {
 				if ( $Press->specification('Printing Type') eq 'Digital' ) {
 					my $digital = 0;
 					foreach my $P (@$Papers) {
@@ -3180,7 +3180,7 @@ $imp->display("qty: $qty unspec ". $$sig_specs{"txtUnspecifiedPageQuantity$qty_i
 		#if ( $$imp{'PaperPrice'} ) {
 			#$SmallerPrice = $$imp{'PaperPrice'};
 		#} else {
-		$$imp{'PaperPrice'} = $SmallerPrice = $Paper->get_price( weight=>$$imp{stock_qty}, lookup_qty => $$imp{lookup_stock_qty}, service=>'Material' ) if $$imp{old_stock_qty} != $$imp{stock_qty};
+		$$imp{PaperPrice} = $SmallerPrice = $Paper->get_price( weight=>$$imp{stock_qty}, lookup_qty => $$imp{lookup_stock_qty}, service=>'Material' ) if $$imp{old_stock_qty} != $$imp{stock_qty};
 		#} # end if
 
 		if ( $SpreadLayout > 0 ) {
@@ -3305,34 +3305,34 @@ $imp->display("qty: $qty unspec ". $$sig_specs{"txtUnspecifiedPageQuantity$qty_i
 		}
 	}
 	if ( ! $$project{NeedAqueous} ) {
-	%imps = ();
-	my $bump_count = 0;
-	foreach my $I ( @results ) {
-		my $Paper = $I->Paper();
-		my $key = join(',', $Paper->area(), $$I{pages}, $$I{image_orientation}, $$I{imposition}, $$I{runstyle}, $I->Press()->id() );
-		if ( ! ( $imps{$key} and @{$imps{$key}} ) ) {
-			$imps{$key} = [ $I ];
-			next;
-		} # end if
-		my $add = 1;
-		for ( my $i = 0; $i < @{$imps{$key}}; $i += 1 ) {
-			my $B = $imps{$key}[$i];
-			if ( $$I{runstyle} eq 'Perfecting' and sets::isin( $$B{runstyle}, [ 'Sheet Work','Work & Turn', 'Work & Tumble' ] ) ) {
-				splice @{$imps{$key}}, $i, 1;
-				$i -= 1;
-				$bump_count += 1;
-			} elsif ( $$B{runstyle} eq 'Perfecting' and sets::isin( $$I{runstyle}, [ 'Sheet Work','Work & Turn', 'Work & Tumble' ] ) ) {
-				$add = 0;
-				last;
+		%imps = ();
+		my $bump_count = 0;
+		foreach my $I ( @results ) {
+			my $Paper = $I->Paper();
+			my $key = join(',', $Paper->area(), $$I{pages}, $$I{image_orientation}, $$I{imposition}, $$I{runstyle}, $I->Press()->id() );
+			if ( ! ( $imps{$key} and @{$imps{$key}} ) ) {
+				$imps{$key} = [ $I ];
+				next;
 			} # end if
-		} # end for each imp
-		if ( $add ) {
-			push @{$imps{$key}}, $I;
-		} else {
-			$bump_count += 1;
-		} # end if
-	} # end foreach I
-	$openprint::log->debug("Bumped $bump_count for Ppppreeccting vs Sheet Work") if DEBUG_FILTERING;
+			my $add = 1;
+			for ( my $i = 0; $i < @{$imps{$key}}; $i += 1 ) {
+				my $B = $imps{$key}[$i];
+				if ( $$I{runstyle} eq 'Perfecting' and sets::isin( $$B{runstyle}, [ 'Sheet Work','Work & Turn', 'Work & Tumble' ] ) ) {
+					splice @{$imps{$key}}, $i, 1;
+					$i -= 1;
+					$bump_count += 1;
+				} elsif ( $$B{runstyle} eq 'Perfecting' and sets::isin( $$I{runstyle}, [ 'Sheet Work','Work & Turn', 'Work & Tumble' ] ) ) {
+					$add = 0;
+					last;
+				} # end if
+			} # end for each imp
+			if ( $add ) {
+				push @{$imps{$key}}, $I;
+			} else {
+				$bump_count += 1;
+			} # end if
+		} # end foreach I
+		$openprint::log->debug("Bumped $bump_count for Ppppreeccting vs Sheet Work") if DEBUG_FILTERING;
 	} # end if
 
 	if ( $third_level_filtering and $$sig_specs{"chkOverrideImposition$qty_index"} ne 'Y' ) {
