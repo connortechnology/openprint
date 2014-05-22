@@ -16,6 +16,7 @@
 
 package openprint::Estimating::UVCoating;
 use strict;
+#use warnings;
 
 require openprint::service;
 require openprint::Material;
@@ -108,7 +109,7 @@ sub calc {
 
 	my $Project = new openprint::Project( $project_index );
 
-	@all_equipment = openprint::Equipment->find( Specifications => {'UVCoating Capable'=>'Y'}, useinestimating=>1, order=>'lower(strName)');
+	@all_equipment = load_equipment();
 	if ( ! @all_equipment ) {
 		$$specs{alert} = 'We have no equipment for UV Coating.<br/>';
 		return $$specs{Status} = 'uncalculated';
@@ -156,20 +157,20 @@ sub calc {
 			if ( $$specs{"OverrideMakeReadyPrice-$$sig_specs{SignatureIndex}-$qty_index"} ne 'Y' ) {
 				$$specs{"MakeReadyPrice-$$sig_specs{SignatureIndex}-$qty_index"} = sprintf($config{ProjectMoneyFormat}, $results{MakeReady} );
 			} # end if
-			if ( $$specs{"OverrideBlanketPrice-$$sig_specs{SignatureIndex}-$qty_index"} ne 'Y' ) {
+			if ( ( ! defined $$specs{"OverrideBlanketPrice-$$sig_specs{SignatureIndex}-$qty_index"} ) or ( $$specs{"OverrideBlanketPrice-$$sig_specs{SignatureIndex}-$qty_index"} ne 'Y' ) ) {
 				$$specs{"BlanketPrice-$$sig_specs{SignatureIndex}-$qty_index"} = sprintf($config{ProjectMoneyFormat}, $results{Blanket} );
 			} # end if
-			if ( $$specs{"OverrideServicePrice-$$sig_specs{SignatureIndex}-$qty_index"} ne 'Y' ) {
+			if ( ( ! defined $$specs{"OverrideServicePrice-$$sig_specs{SignatureIndex}-$qty_index"} ) or ( $$specs{"OverrideServicePrice-$$sig_specs{SignatureIndex}-$qty_index"} ne 'Y' ) ) {
 				$$specs{"ServicePrice-$$sig_specs{SignatureIndex}-$qty_index"} = sprintf($config{ProjectMoneyFormat}, $results{Service} );
 			} # end if
-			if ( $$specs{"OverrideMaterialPrice-$$sig_specs{SignatureIndex}-$qty_index"} ne 'Y' ) {
+			if ( ( ! defined $$specs{"OverrideMaterialPrice-$$sig_specs{SignatureIndex}-$qty_index"} ) or ( $$specs{"OverrideMaterialPrice-$$sig_specs{SignatureIndex}-$qty_index"} ne 'Y' ) ) {
 				$$specs{"MaterialPrice-$$sig_specs{SignatureIndex}-$qty_index"} = sprintf($config{ProjectMoneyFormat}, $results{Material} );
 			} # end if
-			if ( $$specs{"OverrideSignaturePrice-$$sig_specs{SignatureIndex}-$qty_index"} ne 'Y' ) {
+			if ( ( ! defined $$specs{"OverrideSignaturePrice-$$sig_specs{SignatureIndex}-$qty_index"} ne 'Y' ) or ( $$specs{"OverrideSignaturePrice-$$sig_specs{SignatureIndex}-$qty_index"} ne 'Y' ) ) {
 				$$specs{"SignaturePrice-$$sig_specs{SignatureIndex}-$qty_index"} = sprintf($config{ProjectMoneyFormat}, $results{Total} );
             } # end if
 
-			if ( $$specs{"chkOverrideEquipment-$$sig_specs{SignatureIndex}-$qty_index"} ne 'Y' ) {
+			if ( ( ! defined $$specs{"chkOverrideEquipment-$$sig_specs{SignatureIndex}-$qty_index"} ) or ( $$specs{"chkOverrideEquipment-$$sig_specs{SignatureIndex}-$qty_index"} ne 'Y' ) ) {
 				$$specs{"ddmEquipment-$$sig_specs{SignatureIndex}-$qty_index"} = '';
 			} # end if
 			if ( $results{Status} eq 'uncalculated' ) {
@@ -203,48 +204,35 @@ sub cut_imposition {
 	my ( $I ) = @_;
 	
 	my $i1 = $I->copy();
-	my $i2 = $I->copy();
+	my $i2;
 
 	if ( $I->runstyle() eq 'Work & Turn' ) {
 		$i1->runstyle( 'SheetWork' );
 		$i1->columns( $i1->columns() / 2 );
-		$i1->dutch_columns( $i1->dutch_columns() / 2 );
-		$i1->sheet_width( $i1->sheet_width()/2 );
+		if ( $I->dutch_columns() ) {
+			$i1->dutch_columns( $i1->dutch_columns() / 2 );
+		} # end if
+		$i2 = $i1->copy();
 
-		$i2->runstyle( 'SheetWork' );
-		$i2->columns( $i2->columns() / 2 );
-		$i2->dutch_columns( $i2->dutch_columns() / 2 );
-		$i2->sheet_width( $i2->sheet_width()/2 );
 	} elsif ( $I->runstyle() eq 'Work & Tumble' ) {
 		$i1->runstyle( 'SheetWork' );
 		$i1->rows( $i1->rows() / 2 );
-		$i1->dutch_rows( $i1->dutch_rows() / 2 );
-		$i1->sheet_height( $i1->sheet_height()/2 );
+		$i1->dutch_rows( $i1->dutch_rows() / 2 ) if $I->dutch_rows();
+		$i2 = $i1->copy();
 
-		$i2->runstyle( 'SheetWork' );
-		$i2->rows( $i2->rows() / 2 );
-		$i2->dutch_rows( $i2->dutch_rows() / 2 );
-		$i2->sheet_height( $i2->sheet_height()/2 );
 	} elsif ( $I->dutch_columns() ) {
 		$i1->dutch_rows( 0 );
 		$i1->dutch_columns( 0 );
-		if ( $I->dutch_orientation() eq 'width' ) {
-			$i1->sheet_width( $i1->layout_width() );
-		} else {
-			$i1->sheet_height( $i1->layout_height() );
-		} # end if
+
+		$i2 = $I->copy();
 		$i2->rows( $I->dutch_rows() );
 		$i2->columns( $I->dutch_columns() );
 		$i2->image_orientation( $I->image_orientation() eq 'Vertical' ? 'Horizontal' : 'Vertical' );
 		$i2->dutch_rows( 0 );
 		$i2->dutch_columns( 0 );
-		if ( $I->dutch_orientation() eq 'width' ) {
-			$i2->sheet_width( $i2->layout_width() );
-		} else {
-			$i2->sheet_height( $i2->layout_height() );
-		} # end if
 	} elsif ( $I->layout_width() >= $I->layout_height() and $I->columns() > 1 ) {
 $I->display('B');
+		$i2 = $I->copy();
 		$i1->sheet_width();
 		$i2->sheet_width();
 		$i1->columns( int($I->columns() / 2) );
@@ -253,6 +241,7 @@ $I->display('B');
 		#$i2->sheet_width( $I->sheet_width() - $i1->sheet_width() );
 	} elsif ( $I->layout_width() < $I->layout_height() and $I->rows() > 1 ) {
 $I->display('C');
+		$i2 = $I->copy();
 		$i1->sheet_width();
 		$i2->sheet_width();
 		$i1->rows( int($I->rows() / 2) );
@@ -261,6 +250,7 @@ $I->display('C');
 		#$i2->sheet_height( $I->sheet_height() - $i1->sheet_height() );
 	} elsif ( $I->columns() >= $I->rows() ) {
 $I->display('D');
+		$i2 = $I->copy();
 		$i1->sheet_width();
 		$i2->sheet_width();
 		$i1->columns( int($I->columns() / 2) );
@@ -269,6 +259,7 @@ $I->display('D');
 		#$i2->sheet_width( $I->sheet_width() - $i1->sheet_width() );
 	} else {
 $I->display('E');
+		$i2 = $I->copy();
 		$i1->sheet_width();
 		$i2->sheet_width();
 		$i1->rows( int($I->rows() / 2) );
@@ -345,7 +336,7 @@ sub signature_calc {
 		$qty *= $$sig_specs{Versions};
 	} # end if
 
-	@all_equipment = openprint::Equipment->find( Specifications => {'UVCoating Capable'=>'Y'}, useinestimating=>1, order=>'lower(strName)') if ! @all_equipment;
+	load_equipment() if ! @all_equipment;
 	my @equipment;	
 	if ( $$specs{"chkOverrideEquipment-$$sig_specs{SignatureIndex}-$qty_index"} eq 'Y' ) {
 		@equipment = ( new openprint::Equipment( $$specs{"ddmEquipment-$$sig_specs{SignatureIndex}-$qty_index"} ) );
@@ -363,6 +354,7 @@ sub signature_calc {
 	foreach my $Equipment ( @equipment ) {
 		my %BestPricePerImposition;
 		my %minimum = $MinimumCharge->get_price( undef, $Equipment ) if $MinimumCharge;
+		my $BlanketCutPrice;
 
 		for ( my $set_index = 0; $set_index < @Sets_Of_Impositions; $set_index += 1 ) {
 			my $impositions = $Sets_Of_Impositions[$set_index];
@@ -385,7 +377,7 @@ sub signature_calc {
 
 				#$breakdown .= sprintf( '%dx%d+%dx%d=%dout on %sx%s<br/>',$imp->get('columns','rows','dutch_columns','dutch_rows','imposition'), $Stock->width(), $Stock->height() );
 				$breakdown = $imp->to_string().'<br/>';
-$openprint::log->debug('Trying: ' . $breakdown ) if DEBUG;
+				$openprint::log->debug('Trying: ' . $breakdown ) if DEBUG;
 
 				if ( ! ( $imp->rows() * $imp->columns() ) ) {
 					$openprint::log->error("Invalid Imposition in UVCoating");
@@ -394,11 +386,11 @@ $openprint::log->debug('Trying: ' . $breakdown ) if DEBUG;
 					last;
 				} # end if
 
-				if ( (sets::intersection( @front_uv, @back_uv ) != sets::union( @front_uv, @back_uv ) ) and sets::isin($imp->runstyle(),['Work & Turn','Work & Tumble']) and ($Equipment->specification('WT UVCoating') ne 'Y') ) {
+				if ( (sets::intersection( @front_uv, @back_uv ) != sets::union( @front_uv, @back_uv ) ) and sets::isin($$imp{runstyle},['Work & Turn','Work & Tumble']) and ($Equipment->specification('WT UVCoating') ne 'Y') ) {
 					$breakdown .= 'Does not support WT UV Coating<br/>';
 					if ( $$services{Cutting} ) {
 						# If we are the last set
-						if ($set_index+1 == @Sets_Of_Impositions) {
+						if ( $set_index+1 == @Sets_Of_Impositions ) {
 							my @new_imps = @$impositions;
 							splice @new_imps, $imp_index, 1, cut_imposition( $new_imps[$imp_index] );		
 							push @Sets_Of_Impositions, \@new_imps;
@@ -452,29 +444,35 @@ $openprint::log->debug("Types: @types");
 
 				# Has total price values for all types
 				foreach my $type ( @types ) {
+					my $type_total = 0;
 					my $setupPrice;
 					if ( $MakeReadies{$Equipment->id()} and (
 								(($$sig_specs{'StockWidth'.$qty_index} * $$sig_specs{'StockHeight'.$qty_index} * 1.10 ) > $MakeReadies{$Equipment->id()} ) and
 								(($$sig_specs{'StockWidth'.$qty_index} * $$sig_specs{'StockHeight'.$qty_index} * .90 ) < $MakeReadies{$Equipment->id()} )
 								) ) {
+						$setupPrice = 0;
 					} else {
 						$setupPrice = openprint::service::get_price( $type.'MakeReady', $qty, $Equipment );
 						$setupPrice = openprint::service::get_price( 'UVCoating'.$type.'MakeReady', $qty, $Equipment ) if ! $setupPrice;
 						$setupPrice = openprint::service::get_price( 'UVCoatingMakeReady', $qty, $Equipment ) if ! $setupPrice;
-if ( ! $setupPrice ) {
-	$openprint::log->debug("No setup price for $type");
-}
+						if ( ! $setupPrice ) {
+							$openprint::log->debug("No setup price for $type");
+							$setupPrice = 0;
+						} else {
+							$ImpositionPrice{MakeReady} += $setupPrice;
+							$type_total += $setupPrice;
+						}
 
-						$ImpositionPrice{MakeReady} += $setupPrice;
 						$MakeReadies{$Equipment->id()} = $$sig_specs{'StockWidth'.$qty_index} * $$sig_specs{'StockHeight'.$qty_index};
 					} # end if
 					$breakdown .= sprintf('%s MR: $%.2f', $type, $setupPrice );
 
-					my $BlanketCutPrice = 0;
-					if ( $type =~ /Spot/ ) {
-						$BlanketCutPrice = openprint::service::get_price( 'BlanketCut', undef, $Equipment );
+					if ( $type =~ /Spot/ and $BlanketCutPrice ) {
+						$BlanketCutPrice = openprint::service::get_price( 'BlanketCut', undef, $Equipment ) if ! defined $BlanketCutPrice;
+						$BlanketCutPrice = 0 if ! defined $BlanketCutPrice;
 						$breakdown .= sprintf('+ BC: $%.2f', $BlanketCutPrice );
 						$ImpositionPrice{Blanket} += $BlanketCutPrice;
+						$type_total += $BlanketCutPrice;
 					} # end if type is spot
 
 					my %ServicePrice = openprint::service::get_price_object( $type, $run_qty, $Equipment );
@@ -483,18 +481,19 @@ if ( ! $setupPrice ) {
 					} # end if
 					if ( ! %ServicePrice ) {
 						$openprint::log->debug("No service price for $type");
-					} # end if
-					if ( lc $ServicePrice{units} eq 'per m' ) {
-						$ServicePrice{Total} = $ServicePrice{Price}*$run_qty/1000;
-					} elsif ( $ServicePrice{units} eq 'per hour' or $ServicePrice{units} eq '/Hr' ) {
-						my $runspeed = $Equipment->specification('UVCoatingRunSpeed', $Stock->gsm() );
-						
-						$ServicePrice{Total} = $ServicePrice{Price}*$run_qty/$runspeed if $runspeed;
-					} # end if
+					} else {
+						if ( lc $ServicePrice{units} eq 'per m' ) {
+							$ServicePrice{Total} = $ServicePrice{Price}*$run_qty/1000;
+						} elsif ( $ServicePrice{units} eq 'per hour' or $ServicePrice{units} eq '/Hr' ) {
+							my $runspeed = $Equipment->specification('UVCoatingRunSpeed', $Stock->gsm() );
+
+							$ServicePrice{Total} = $ServicePrice{Price}*$run_qty/$runspeed if $runspeed;
+						} # end if
 # Div by imposition, but run_qty is already div by impo
-					#$ServicePrice{Total} /= $imp->imposition();
-					$ImpositionPrice{Service} += $ServicePrice{Total};
-					$breakdown .= sprintf('+ Service: $%.2f%s=%.2f', @ServicePrice{'Price','units','Total'} );
+#$ServicePrice{Total} /= $imp->imposition();
+						$ImpositionPrice{Service} += $ServicePrice{Total};
+						$breakdown .= sprintf('+ Service: $%.2f%s=%.2f', @ServicePrice{'Price','units','Total'} );
+					} # end if
 
 					my %MaterialPrice;
 					my $material_name = $type;
@@ -515,10 +514,9 @@ if ( ! $setupPrice ) {
 						} # end if
 						$breakdown .= sprintf('+ Material: $%.2f%s ', @MaterialPrice{'Price','units','Total'} );
 						$ImpositionPrice{Material} += $MaterialPrice{Total};
+						$type_total += $MaterialPrice{Total};
 					} # end if
-					$breakdown .= sprintf(' = $%.2f<br/>', 
-						( $setupPrice + $MaterialPrice{Total} + $ServicePrice{Total} + $BlanketCutPrice ) );
-
+					$breakdown .= sprintf(' = $%.2f<br/>', $type_total );
 				} # end foreach type
 				#$totalPrice += $ImpositionPrice{Total} + $ImpositionPrice{Cutting};
 			} # end foreach imposition
@@ -531,7 +529,7 @@ $log->debug("Complete: $breakdown");
 			$ImpositionPrice{Total} += misc::sum( @ImpositionPrice{'MakeReady','Service','Material','Blanket','Cutting'} );
 			$breakdown .= "Total: $ImpositionPrice{Total}<br/>";
 
-			if ( $ImpositionPrice{Total} < $BestPricePerImposition{Total} or ( ! defined $BestPricePerImposition{Total} ) ) {
+			if ( ( ! defined $BestPricePerImposition{Total} ) or ( $ImpositionPrice{Total} < $BestPricePerImposition{Total} ) ) {
 				%BestPricePerImposition = %ImpositionPrice;
 				$BestPricePerImposition{Breakdown} = $breakdown;
 			} # end if
@@ -542,16 +540,16 @@ $log->debug("Complete: $breakdown");
 			next;
 		} # end if
 
-		if ( $$specs{"OverrideMakeReadyPrice-$$sig_specs{SignatureIndex}-$qty_index"} eq 'Y' ) {
+		if ( ( defined $$specs{"OverrideMakeReadyPrice-$$sig_specs{SignatureIndex}-$qty_index"} ) and ( $$specs{"OverrideMakeReadyPrice-$$sig_specs{SignatureIndex}-$qty_index"} eq 'Y' ) ) {
 			$BestPricePerImposition{MakeReady} = $$specs{"MakeReadyPrice-$$sig_specs{SignatureIndex}-$qty_index"};
 		} # end if
-		if ( $$specs{"OverrideBlanketPrice-$$sig_specs{SignatureIndex}-$qty_index"} eq 'Y' ) {
+		if ( ( defined $$specs{"OverrideBlanketPrice-$$sig_specs{SignatureIndex}-$qty_index"} ) and ( $$specs{"OverrideBlanketPrice-$$sig_specs{SignatureIndex}-$qty_index"} eq 'Y' ) ) {
 			$BestPricePerImposition{Blanket} = $$specs{"BlanketPrice-$$sig_specs{SignatureIndex}-$qty_index"};
 		} # end if
-		if ( $$specs{"OverrideServicePrice-$$sig_specs{SignatureIndex}-$qty_index"} eq 'Y' ) {
+		if ( ( defined $$specs{"OverrideServicePrice-$$sig_specs{SignatureIndex}-$qty_index"} ) and ( $$specs{"OverrideServicePrice-$$sig_specs{SignatureIndex}-$qty_index"} eq 'Y' ) ) {
 			$BestPricePerImposition{Service} = $$specs{"ServicePrice-$$sig_specs{SignatureIndex}-$qty_index"};
 		} # end if
-		if ( $$specs{"OverrideMaterialPrice-$$sig_specs{SignatureIndex}-$qty_index"} eq 'Y' ) {
+		if ( ( defined $$specs{"OverrideMaterialPrice-$$sig_specs{SignatureIndex}-$qty_index"} ) and ( $$specs{"OverrideMaterialPrice-$$sig_specs{SignatureIndex}-$qty_index"} eq 'Y' ) ) {
 			$BestPricePerImposition{Material} = $$specs{"MaterialPrice-$$sig_specs{SignatureIndex}-$qty_index"};
 		} # end if
 		$BestPricePerImposition{Total} = misc::sum( @BestPricePerImposition{'MakeReady','Service','Material','Blanket','Cutting'} );
@@ -597,6 +595,10 @@ sub save {
 sub summary {
 	return '';
 } # end sub summary
+
+sub load_equipment {
+	@all_equipment = openprint::Equipment->find( Specifications => {'UVCoating Capable'=>'Y'}, useinestimating=>1, order=>'lower(strName)');
+} # end sub load_equipment
 
 1;
 __END__
