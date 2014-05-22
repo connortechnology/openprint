@@ -760,11 +760,15 @@ sub get_services {
 
 sub servicetype_id {
 	my ( $self, $s_id ) = @_;
-	if ( ! exists $$self{'service_types'} ) {
-		my %results;
-		%{$$self{'service_types'}} = sql::execute( undef, undef, q{SELECT lngserviceindex, servicetype_id FROM tbl_Project_Contents WHERE lngProjectIndex=?}, $$self{'id'} );
+	if ( ! exists $$self{service_types} ) {
+		%{$$self{service_types}} = sql::execute( undef, undef, q{SELECT lngserviceindex, servicetype_id FROM tbl_Project_Contents WHERE lngProjectIndex=?}, $$self{id} );
 	} # end if
-	return $$self{'service_types'}{$s_id};
+	if ( ! $$self{service_types}{$s_id} ) {
+		$openprint::log->error("Request for servicetype_id for $s_id, reloading ");
+		%{$$self{service_types}} = sql::execute( undef, undef, q{SELECT lngserviceindex, servicetype_id FROM tbl_Project_Contents WHERE lngProjectIndex=?}, $$self{id} );
+	} # end if
+
+	return $$self{service_types}{$s_id};
 } # end sub servicetype_id
 
 sub ServiceType {
