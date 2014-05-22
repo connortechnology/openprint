@@ -269,14 +269,16 @@ $log->debug("Proof indexes " . join(',', @{$$indexes{$signature_index}}  ) ) if 
 		} # end if
 		
 		my $ProofService = openprint::Service->find_one( name=>$type );
-		
+
 		my %MakeReady = openprint::service::get_price_object( $type.'MakeReady', $$totals{$type}{Quantity}, undef );
 		$$specs{"MRPrice-$signature_index-$proof_index-$qty_index"} = $MakeReady{'Price'};
 		my %price;
-		if ( $type eq 'PressProof' ) {
-			%price = $ProofService->get_price( $$totals{$type}{Quantity}, $Equipment );
-		} else {
-			%price = $ProofService->get_price( $$totals{$type}{Quantity} );
+		if ( $ProofService ) {
+			if ( $type eq 'PressProof' ) {
+				%price = $ProofService->get_price( $$totals{$type}{Quantity}, $Equipment );
+			} else {
+				%price = $ProofService->get_price( $$totals{$type}{Quantity} );
+			} # end if
 		} # end if
 		$$specs{"ServicePrice-$signature_index-$proof_index-$qty_index"} = $price{Price};
 		$$specs{"ServiceUnits-$signature_index-$proof_index-$qty_index"} = $price{units};
