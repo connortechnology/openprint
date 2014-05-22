@@ -290,10 +290,14 @@ sub load {
 		$$self{spreads} = $$self{pages} / $$self{spread_size} if $$self{spread_size};
 		$$self{'spread_rows'} = $$specs{'SpreadRows'.$qty_index};
 		$$self{'spread_columns'} = $$specs{'SpreadCols'.$qty_index};
-		#$$self{'layout_width'} = $$self{'spread_columns'} * $$self{'layout_width'};
-		#$$self{'layout_height'} = $$self{'spread_rows'} * $$self{'layout_height'};
-		#$$self{'image_width'} = $$self{'spread_columns'} * $$self{'image_width'};
-		#$$self{'image_height'} = $$self{'spread_rows'} * $$self{'image_height'};
+
+
+if ( 0 ) {
+		$$self{'layout_width'} = $$self{'spread_columns'} * $$self{'layout_width'};
+		$$self{'layout_height'} = $$self{'spread_rows'} * $$self{'layout_height'};
+		$$self{'image_width'} = $$self{'spread_columns'} * $$self{'image_width'};
+		$$self{'image_height'} = $$self{'spread_rows'} * $$self{'image_height'};
+}
 
 	} else {
 		$$self{'spread_rows'} = Math::Round::nearest(1,$$specs{'txtWidth'} / $$specs{'txtFinalWidth'}) if $$specs{'txtFinalWidth'};

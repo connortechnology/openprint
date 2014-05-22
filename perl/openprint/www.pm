@@ -29,7 +29,7 @@ require openprint::Currency;
 require openprint::Authorization;
 
 use openprint ();
-use vars qw( $r %variable %session %param %config $log $dbh %page_settings $starttime );
+use vars qw( $r %variable %session %param %config $log $dbh $starttime );
 *variable = \%openprint::variable;
 *session = \%openprint::session;
 *param = \%openprint::param;
@@ -48,6 +48,8 @@ sub cleanup {
 		openprint::pricing::clear_cache();
 		openprint::service::init_cache();
 		openprint::Object::init_cache();
+		openprint::StockBrand->find();
+		openprint::StockFinish->find();
 		$session{lastupdated} = time;
 		untie %session;
 		if ( ! $dbh->{AutoCommit} ) {
@@ -113,43 +115,19 @@ sub handler {
 	openprint::session_init();
 	openprint::usergroup::init_cache();
 	if ( $dbh ) {
-		if ( ! $page_settings{$config{db_name}} or ! $page_settings{$config{db_name}}{$page} ) {
-$log->debug("loading Page settings for $config{db_name} for $page") if DEBUG;
-			$page_settings{$config{db_name}} = { map { $_->url(), $_ } openprint::Page_Setting->find() };
-		} # end if
-		if ( ! $page_settings{$config{db_name}}{$page} ) {
-# Need to create one.
-			my @chunks = split('/', $page );
-			while ( @chunks ) {
-				pop @chunks;
-				last if ! @chunks;
-
-# Because there is a / at the beginning of the url, the first entry in chunks is '', so we don't need to prepend a /
-				my $chunk = join('/', @chunks);
-				$chunk = '/' if ! $chunk; # neccessary to deal with the empty string
-
-				$log->debug("Looking for page setting for $chunk") if DEBUG;
-				if ( $page_settings{$config{db_name}}{$chunk} ) {
-# Why stuff up the db with entries, just fill the hash with copies.
-					$page_settings{$config{db_name}}{$page} = $page_settings{$config{db_name}}{$chunk};
-					last;
-				} # end if
-			} # end while chunks
-			if ( ! $page_settings{$config{db_name}}{$page} ) {
-				$page_settings{$config{db_name}}{$page} = new openprint::Page_Setting();
-				$page_settings{$config{db_name}}{$page}->save({url=>$page}) if $session{user_type} eq 'A';
-			} # end if
-		} # end if Page Settings not found
+		my $PageSetting = openprint::Page_Setting::get( $page );
+		$PageSetting = new openprint::Page_Setting() if ! $PageSetting;
+		$variable{PageSetting} = $PageSetting;
 
 		# if not logged in, determine if they are allowed to see this page or not.
-		if ( ( !$page_settings{$config{db_name}}{$page}->can_view() )and $page_settings{$config{db_name}}{$page}->user_level() ) {
-$log->debug("Checking user level, need : " . $page_settings{$config{db_name}}{$page}->user_level() . ' session is: ' . $session{'user_type'} );
+		if ( ( ! $PageSetting->can_view() ) and $PageSetting->user_level() ) {
+$log->debug("Checking user level, need : " . $PageSetting->user_level() . ' session is: ' . $session{'user_type'} );
 			if ( 
-					( $page_settings{$config{db_name}}{$page}->user_level() eq 'C' and ! sets::isin( $session{'user_type'}, ['C','E','A'] ) ) 
+					( $PageSetting->user_level() eq 'C' and ! sets::isin( $session{'user_type'}, ['C','E','A'] ) ) 
 					or
-					( $page_settings{$config{db_name}}{$page}->user_level() eq 'E' and ! sets::isin( $session{'user_type'}, ['E','A'] ) ) 
+					( $PageSetting->user_level() eq 'E' and ! sets::isin( $session{'user_type'}, ['E','A'] ) ) 
 					or
-					( $page_settings{$config{db_name}}{$page}->user_level() eq 'A' and ! sets::isin( $session{'user_type'}, ['A'] ) ) 
+					( $PageSetting->user_level() eq 'A' and ! sets::isin( $session{'user_type'}, ['A'] ) ) 
 				) {
 $log->debug("No good, need login");
 				if ( $page =~ /^.*\/_/ ) {
@@ -170,7 +148,6 @@ $log->debug("No good, need login");
 		#} else {
 #$log->debug("No pagesetting?");
 		} # end if
-		$variable{'PageSetting'} = $page_settings{$config{db_name}}{$page} ? $page_settings{$config{db_name}}{$page} : new openprint::Page_Setting();
 
 		foreach my $o ( split(',',$config{'Cached Objects'} ) ) {
 			('openprint::'.$o)->init_cache();
@@ -275,8 +252,8 @@ $log->debug("PageContent is $variable{PageContent}");
 			} # end while
 			} # end if
 		} # end if _
-	$log->debug( "After finding template: ($page) Elapsed time: " . sprintf('%.4f', tv_interval([$starttime])*1000).' usecs' );
-local $|=1;
+		$log->debug( "After finding template: ($page) Elapsed time: " . sprintf('%.4f', tv_interval([$starttime])*1000).' usecs' );
+		local $|=1;
 		if ( $template ) {
 			#$log->debug("parsing template! $template");
 			$r->print( ssi::variable_substitution( \$template, \%variable ) );
@@ -285,7 +262,7 @@ local $|=1;
 			#$log->warn("No template!" . $r->content_type());
 			$variable{PageContent} = ssi::variable_substitution( \$variable{'PageContent'}, \%variable ) if $variable{'PageContent'} ne '';
 			#$log->warn($variable{PageContent});
-	$log->debug( "Before printing: ($page) Elapsed time: " . sprintf('%.4f', tv_interval([$starttime])*1000).' usecs' . length( $variable{PageContent} ) );
+			$log->debug( "Before printing: ($page) Elapsed time: " . sprintf('%.4f', tv_interval([$starttime])*1000).' usecs' . length( $variable{PageContent} ) );
 			$r->print( $variable{PageContent} );
 	#$log->debug( "After printing: ($page) Elapsed time: " . sprintf('%.4f', tv_interval([$starttime])*1000).' usecs' );
 		} # end if

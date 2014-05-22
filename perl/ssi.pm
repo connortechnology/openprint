@@ -22,6 +22,10 @@ use vars qw( $r %variable %session %param %config $log $dbh );
 *dbh = \$openprint::dbh;
 *r = \$openprint::r;
 
+require DateTime::Format::Pg;
+require DateTime::TimeZone;
+my $parser = 'DateTime::Format::Pg';
+
 #Used for resource hashed links
 my %hash_cache;
 
@@ -474,22 +478,7 @@ sub button {
 			$path =~ s/(.*\/).*/$1/;
 			$href = $path . $href;
 		} # end if
-		my $PageSetting;
-
-		my @chunks = split('/', $href );
-		while ( @chunks ) {
-
-# Because there is a / at the beginning of the url, the first entry in chunks is '', so we don't need to prepend a /
-			my $chunk = join('/', @chunks);
-			$chunk = '/' if ! $chunk; # neccessary to deal with the empty string
-
-			$log->debug("Looking for page setting for $chunk") if DEBUG;
-			if ( $PageSetting = openprint::Page_Setting->find_one(url=>$chunk) ) {
-				last;
-			} # end if
-			pop @chunks;
-		} # end while chunks
-
+		my $PageSetting = openprint::Page_Setting::get( $href );
 		return if $PageSetting and ! $PageSetting->can_view();
 	} else {
 		$$options{href} = '#';
@@ -856,7 +845,12 @@ sub date_filter {
 	} # end if
 #$log->debug("ssi::date_filter: $year-$month-$day $hour:$minute:$second");
 
-	return ( $sql_field, sprintf('%.4d-%.2d-%.2d %.2d:%.2d:%.2d', ( $year, $month, $day, $hour, $minute, $second ) ) );
+	my $TZ = DateTime::TimeZone->new( name => $openprint::config{Timezone} );
+	my $datetime = DateTime->new( time_zone => $TZ,
+			( year => $year, month=>$month, day=>$day, hour=>$hour, minute=>$minute, second=>$second )
+			);
+
+	return ( $sql_field, $parser->format_datetime( $datetime ) );
 } # end sub date_filter
 
 my @input_options = ( 'type','name','id','onblur','onfocus','onkeyup','onkeydown','onchange','class','pattern','ontouch','min','max', 'step', 'placeholder', 'oninput', 'title' );
@@ -883,7 +877,7 @@ sub input {
 		} # end if
 		$options{'onkeyup'} = 'integerize(this);'.$options{'onkeyup'};
 	} elsif ( $options{type} eq 'float' ) {
-$log->debug("USer agent: $ENV{HTTP_USER_AGENT}");
+#$log->debug("USer agent: $ENV{HTTP_USER_AGENT}");
 		$options{step} = 'any' if ! exists $options{step};
 		if ( $ENV{HTTP_USER_AGENT} =~ /ip(ad|od|hone)/i ) {
 			$options{type} = 'text';

@@ -25,7 +25,7 @@ require openprint::Estimating::Perforating;
 
 use vars qw( @folds %fold_types );
 
-use constant DEBUG => 0;
+use constant DEBUG => 1;
 use constant DEBUG_NEEDS => 0;
 
 my @equipment;
@@ -470,7 +470,7 @@ $openprint::log->error("No finished width and height, cannot continue $$Project{
 	if ( $$specs{"chkOverrideEquipment-$$sig_specs{SignatureIndex}-$qty_index"} eq 'Y' ) {
 		#$openprint::log->debug("Overriding Folding Equipment for sig $$sig_specs{'SignatureIndex'} to " . $$specs{"ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"});
 		if ( $$specs{"ddmEquipment-$$sig_specs{SignatureIndex}-$qty_index"} ) {
-			push @my_equipment, new openprint::Equipment( $$specs{"ddmEquipment-$$sig_specs{SignatureIndex}-$qty_index"} );
+			@my_equipment = ( new openprint::Equipment( $$specs{"ddmEquipment-$$sig_specs{SignatureIndex}-$qty_index"} ) );
 		} else {
 			my 	%results = (
 					'Price'         => 0,
@@ -490,12 +490,7 @@ $openprint::log->error("No finished width and height, cannot continue $$Project{
 			if ( $$calc_hash{'Folding::signature_calc::equipment'} ) {
 				@my_equipment = @{$$calc_hash{'Folding::signature_calc::equipment'}};
 			} else {
-				my @folding_capable = ('Y');
-				push @folding_capable, 'For Pocket Folders' if $Project->Type()->name() eq 'PresentationFolders';
-				push @folding_capable, 'When PerfectBound' if $$services{'PerfectBound'};
-				push @folding_capable, 'When Stitching' if ( $$services{'SaddleStitching'} or $$services{'LoopStitching'} );
-				@my_equipment = openprint::Equipment->find( useinestimating=>1, Specifications=>{'Folding Capable'=>\@folding_capable} );
-				@{$$calc_hash{'Folding::signature_calc::equipment'}} = @my_equipment;
+				@my_equipment = @equipment;
 			} # end if 
 		} elsif ( DEBUG ) {
 			$openprint::log->debug("No sheeter");
@@ -928,8 +923,8 @@ $openprint::log->debug("Templatetype: $$sig_specs{'rdbTemplateType'}") if DEBUG;
 								gsm				=>	$Paper->gsm(),
 								calliper		=>	$$Paper{calliper},
 								imposition		=>	$$Imposition{imposition},
-							columns		=>	$$Imposition{columns},
-							rows		=>	$$Imposition{rows},
+								columns			=>	$$Imposition{columns},
+								rows			=>	$$Imposition{rows},
 								printing_type	=>	$ppt,
 								});
 						if ( $Fold ) {
@@ -1002,6 +997,7 @@ $openprint::log->debug("No Fold") if DEBUG;
 						#$Imposition->display("Trying: $$Equipment{name}") if DEBUG;
 						$openprint::log->debug(sprintf('Trying %dx%d=%dout spreads: %dx%d=%d %sx%s',$Imposition->get('columns','rows','imposition','spread_columns','spread_rows','spreads','image_width','image_height') ).' on ' . $Equipment->name()) if DEBUG;
 
+$Imposition->display('fitting');
 						# See if it fits
 						$_ = $Equipment->fits( $Imposition->layout_width(), $Imposition->layout_height(), $$Paper{'calliper'} );
 						if ( ! $_ )	{
@@ -1563,6 +1559,18 @@ if ( 0 ) {
 	return %results;
 } # end sub signature_calc
 
+sub load_equipment { 
+	my ( $Project ) = @_;
+	my $services = $Project->services();
+
+	my @folding_capable = ('Y');
+	push @folding_capable, 'For Pocket Folders' if $Project->Type()->name() eq 'PresentationFolders';
+	push @folding_capable, 'When PerfectBound' if $$services{'PerfectBound'};
+	push @folding_capable, 'When Stitching' if ( $$services{'SaddleStitching'} or $$services{'LoopStitching'} );
+	push @folding_capable, 'When Printing';
+	@equipment = openprint::Equipment->find( useinestimating=>1, Specifications=>{'Folding Capable'=>\@folding_capable} );
+} # end sub load_equipment
+
 sub calc {
 	my ( $log, $dbh, $variable, $project_index, $service_index, $specs ) = @_;
 
@@ -1587,6 +1595,8 @@ sub calc {
 
 	my $uv_specs = openprint::service::get_specs_ref( $Project, $$services{'UVCoating'}[0] ) if $$services{'UVCoating'};
 	my $aq_specs = openprint::service::get_specs_ref( $Project, $$services{'Aqueous'}[0] ) if $$services{'Aqueous'};
+
+	load_equipment( $Project );
 
 	foreach my $qty_index ( $Project->quantity_indexes() ) {
 		$$specs{"txtPrice$qty_index"} =~ s/[^\d\.]//g if $$specs{"txtPrice$qty_index"};
@@ -1741,13 +1751,8 @@ sub display {
 	my ( $log, $dbh, $variable, $project_index, $service_index ) = @_;
 
 	my $Project = new openprint::Project( $project_index );
-	my $services = $Project->services();
-	my @folding_capable = ('Y','When Printing');
-	push @folding_capable, 'For Pocket Folders' if $Project->Type()->name() eq 'PresentationFolders';
-	push @folding_capable, 'When PerfectBound' if $$services{'PerfectBound'};
-	push @folding_capable, 'When Stitching' if ( $$services{'SaddleStitching'} or $$services{'LoopStitching'} );
 
-	my @equipment = openprint::Equipment->find( 'useinestimating'=>1, 'Specifications'=>{'Folding Capable'=>\@folding_capable}, 'order'=>'lower(strname)' );
+	load_equipment($Project);
 	@{$$variable{'EquipmentArray'}} = map { $_->id(), $_->name() } @equipment;
 } # end sub display
 
@@ -2032,7 +2037,7 @@ sub cut_spreads {
 			$i1->spread_rows(1);
 			$i1->quantity( $i1->quantity() * $I->spread_rows() );
 			$i1->image_height( $I->image_height()/$I->spread_rows() );
-	$openprint::log->debug(sprintf('Cutting pages down from %d to %d', $I->pages(), $i1->pages() ) ) if DEBUG;
+	$openprint::log->debug(sprintf('Cutting pages down from %dx%d to %dx%d', $I->quantity(), $I->pages(), $i1->quantity(), $i1->pages() ) ) if DEBUG;
 			return ( $i1 );
 		} else {
 			my $i1 = $I->copy();
@@ -2043,21 +2048,34 @@ sub cut_spreads {
 			return $i1;
 		} # end if
 	} else {
-		if ( ( $I->spread_columns() > 1 ) and ( $I->spread_columns() % 2 ) ) {
-			my $i1 = $I->copy();
-			$i1->spread_columns(1);
-			$i1->quantity( $i1->quantity() * $I->spread_columns() );
-			$i1->image_width( $I->image_width()/$I->spread_columns() );
-	$openprint::log->debug(sprintf('Cutting pages down from %d to %d', $I->pages(), $i1->pages() ) ) if DEBUG;
-			return ( $i1 );
-		} else {
-			my $i1 = $I->copy();
-			$i1->spread_columns( $i1->spread_columns()/2 );
-			$i1->image_width( $i1->image_width()/2 );
-			$i1->quantity( $i1->quantity() * 2 );
-	$openprint::log->debug(sprintf('Cutting pages down from %d to %d', $I->pages(), $i1->pages() ) ) if DEBUG;
-			return $i1;
-		} # end if
+		#if ( $I->image_orientation() eq 'Vertical' ) {
+			# Assume spread columns are multiple of 2
+			#if ( ( $I->spread_columns() > 2 ) and ( $I->spread_columns() % 2 ) ) {
+                #my $i1 = $I->copy();
+                #$i1->spread_columns(1);
+                #$i1->quantity( $i1->quantity() * $I->spread_columns() );
+                #$i1->image_width( $I->image_width()/$I->spread_columns() );
+        #$openprint::log->debug(sprintf('Cutting pages down from %dx%d to %dx%d', $I->quantity(), $I->pages(), $i1->quantity(), $i1->pages() ) ) if DEBUG;
+                #return ( $i1 );
+			#} else {
+			#} # end if
+		#} else {
+			if ( ( $I->spread_columns() > 1 ) and ( $I->spread_columns() % 2 ) ) {
+				my $i1 = $I->copy();
+				$i1->spread_columns(1);
+				$i1->quantity( $i1->quantity() * $I->spread_columns() );
+				$i1->image_width( $I->image_width()/$I->spread_columns() );
+		$openprint::log->debug(sprintf('Cutting pages down from %dx%d to %dx%d', $I->quantity(), $I->pages(), $i1->quantity(), $i1->pages() ) ) if DEBUG;
+				return ( $i1 );
+			} else {
+				my $i1 = $I->copy();
+				$i1->spread_columns( $i1->spread_columns()/2 );
+				$i1->image_width( $i1->image_width()/2 );
+				$i1->quantity( $i1->quantity() * 2 );
+		$openprint::log->debug(sprintf('Cutting pages down from %d to %d', $I->pages(), $i1->pages() ) ) if DEBUG;
+				return $i1;
+			} # end if
+		#} # end if
 	} # end if
 } # end cut_spreads
 

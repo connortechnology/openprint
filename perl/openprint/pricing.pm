@@ -11,7 +11,7 @@ use vars qw( $log $dbh );
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
 
-use constant DEBUG => 0;
+use constant DEBUG => 1;
 
 my %price_cache;
 

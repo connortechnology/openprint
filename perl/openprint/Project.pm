@@ -26,7 +26,7 @@ require openprint::Estimating::MultiPage;
 require openprint::service;
 require openprint::Project_Log;
 
-$debug = 0;
+$debug = 1;
 
 $table = 'projects';
 $serial = 'lngProjectIndex_seq';
@@ -760,11 +760,15 @@ sub get_services {
 
 sub servicetype_id {
 	my ( $self, $s_id ) = @_;
-	if ( ! exists $$self{'service_types'} ) {
-		my %results;
-		%{$$self{'service_types'}} = sql::execute( undef, undef, q{SELECT lngserviceindex, servicetype_id FROM tbl_Project_Contents WHERE lngProjectIndex=?}, $$self{'id'} );
+	if ( ! exists $$self{service_types} ) {
+		%{$$self{service_types}} = sql::execute( undef, undef, q{SELECT lngserviceindex, servicetype_id FROM tbl_Project_Contents WHERE lngProjectIndex=?}, $$self{id} );
 	} # end if
-	return $$self{'service_types'}{$s_id};
+	if ( ! $$self{service_types}{$s_id} ) {
+		$openprint::log->error("Request for servicetype_id for $s_id, reloading ");
+		%{$$self{service_types}} = sql::execute( undef, undef, q{SELECT lngserviceindex, servicetype_id FROM tbl_Project_Contents WHERE lngProjectIndex=?}, $$self{id} );
+	} # end if
+
+	return $$self{service_types}{$s_id};
 } # end sub servicetype_id
 
 sub ServiceType {
@@ -1515,56 +1519,59 @@ sub Project {
 } # end sub Proejct;
 
 sub calliper {
-	my $Project = $_[0];
-    my $services = $Project->services();
+	if ( ! exists $_[0]{calliper} ) {
+		my $Project = $_[0];
+		my $services = $Project->services();
 
-    my $folding_specs;
-    my $folding_service_index = $$services{'Folding'}[0] if $$services{'Folding'};
-    if ( $folding_service_index ) {
-        $folding_specs = openprint::service::get_specs_ref( $Project, $folding_service_index );
-    } # end if
+		my $folding_specs;
+		my $folding_service_index = $$services{'Folding'}[0] if $$services{'Folding'};
+		if ( $folding_service_index ) {
+			$folding_specs = openprint::service::get_specs_ref( $Project, $folding_service_index );
+		} # end if
 
-    my $printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
+		my $printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
 
-    my $finished_calliper;
-    foreach my $signature_service_index ( $Project->signatures() ) {
-        my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
-        my $calliper = int($$sig_specs{'txtSpecificStockCalliper'}*10000);
+		my $finished_calliper;
+		foreach my $signature_service_index ( $Project->signatures() ) {
+			my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
+			my $calliper = int($$sig_specs{'txtSpecificStockCalliper'}*10000);
 
-        if ( $Project->Type()->type() eq 'ScratchPads' ) {
-            $finished_calliper += $$printing_specs{'PageQuantity'} * $calliper;
-        } elsif ( $$sig_specs{'ServiceType'} eq 'Signature' ) {
-            foreach my $qty_index ( $Project->quantity_indexes() ) {
-                if ( $$sig_specs{'PageQuantity'.$qty_index} ) {
-                    $calliper *= int($$sig_specs{'PageQuantity'.$qty_index}/2);
-                    last;
-                } # end if
-            } # end foreach qty_index
-            $finished_calliper += $calliper;
-        } else {
-                my $pages = 1;
-                if ( $$sig_specs{'rdbTemplateType'} eq '2PanelFold' ) {
-                    $pages = 2;
-                } elsif ( sets::isin( $$sig_specs{'rdbTemplateType'},['3PanelFold','3PanelZFold'] ) ) {
-                    $pages = 3;
-                } elsif ( sets::isin( $$sig_specs{'rdbTemplateType'}, ['4PanelFold', '4PanelZFold'] ) ) {
-                    $pages = 4;
-                } elsif ( sets::isin( $$sig_specs{'rdbTemplateType'}, ['5PanelFold', '5PanelZFold'] ) ) {
-                    $pages = 5;
-                } elsif ( sets::isin( $$sig_specs{'rdbTemplateType'}, ['6PanelFold', '6PanelZFold'] ) ) {
-                    $pages = 6;
-                } elsif ( $$sig_specs{'rdbTemplateType'} eq 'SingleGateFold' ) {
-                    $pages = 3;
-                } elsif ( $$sig_specs{'rdbTemplateType'} eq 'DoubleGateFold' ) {
-                    $pages = 4;
-                } elsif ( $$sig_specs{'rdbTemplateType'} eq 'DifficultFold' ) {
-                    $pages = 6;
-                } #// end if
-                $finished_calliper += $pages * $calliper;
-        } # end if
-    } # end foreach
-    $openprint::log->debug("******************************* FINSIHED CALLIPER is $finished_calliper/1000 *********************************");
-    return Math::Round::nearest( 0.0001, $finished_calliper/10000);
+			if ( $Project->Type()->type() eq 'ScratchPads' ) {
+				$finished_calliper += $$printing_specs{'PageQuantity'} * $calliper;
+			} elsif ( $$sig_specs{'ServiceType'} eq 'Signature' ) {
+				foreach my $qty_index ( $Project->quantity_indexes() ) {
+					if ( $$sig_specs{'PageQuantity'.$qty_index} ) {
+						$calliper *= int($$sig_specs{'PageQuantity'.$qty_index}/2);
+						last;
+					} # end if
+				} # end foreach qty_index
+				$finished_calliper += $calliper;
+			} else {
+				my $pages = 1;
+				if ( $$sig_specs{'rdbTemplateType'} eq '2PanelFold' ) {
+					$pages = 2;
+				} elsif ( sets::isin( $$sig_specs{'rdbTemplateType'},['3PanelFold','3PanelZFold'] ) ) {
+					$pages = 3;
+				} elsif ( sets::isin( $$sig_specs{'rdbTemplateType'}, ['4PanelFold', '4PanelZFold'] ) ) {
+					$pages = 4;
+				} elsif ( sets::isin( $$sig_specs{'rdbTemplateType'}, ['5PanelFold', '5PanelZFold'] ) ) {
+					$pages = 5;
+				} elsif ( sets::isin( $$sig_specs{'rdbTemplateType'}, ['6PanelFold', '6PanelZFold'] ) ) {
+					$pages = 6;
+				} elsif ( $$sig_specs{'rdbTemplateType'} eq 'SingleGateFold' ) {
+					$pages = 3;
+				} elsif ( $$sig_specs{'rdbTemplateType'} eq 'DoubleGateFold' ) {
+					$pages = 4;
+				} elsif ( $$sig_specs{'rdbTemplateType'} eq 'DifficultFold' ) {
+					$pages = 6;
+				} #// end if
+				$finished_calliper += $pages * $calliper;
+			} # end if
+		} # end foreach
+		$openprint::log->debug("******************************* FINSIHED CALLIPER is $finished_calliper/1000 *********************************");
+		$_[0]{calliper} = Math::Round::nearest( 0.0001, $finished_calliper/10000);
+	} # end  if
+	return $_[0]{calliper};
 } # end sub calliper
 
 sub Currency {

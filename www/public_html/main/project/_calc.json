@@ -1,6 +1,6 @@
 <? echo (
 	my $debug = 0;
-	my $Project = new openprint::Project( $param{'ProjectIndex'} );
+	my $Project = new openprint::Project( $param{ProjectIndex} );
 
 	if ( $param{'action'} eq 'add_service' ) {
 		foreach my $service_name ( ref $param{'service_name'} eq 'ARRAY' ? @{$param{'service_name'}} : $param{'service_name'} ) {
@@ -23,7 +23,7 @@ $log->warn("No servicetype in params in calc");
 	} # end if
 
 
-	my $module = 'openprint::Estimating::'.$param{'ServiceType'};
+	my $module = 'openprint::Estimating::'.$param{ServiceType};
 	eval "require $module";
 	$log->error("Error requiring $module: $@") if $@;
 
@@ -78,7 +78,7 @@ $log->debug("Deleting key $key in standard no_outputs ") if $debug;
         } # end if
     } # end foreach
 
-	$param{'callback'} = 'cbFillResults' if ! $param{'callback'};
+	$param{callback} = 'cbFillResults' if ! $param{callback};
 	my $json = JSON->new;
-	return 'var results = new Hash(' . $json->encode( \%specs ) . ");\n$param{'callback'}(results);";
+	return 'var results = new Hash(' . $json->encode( \%specs ) . ");\n$param{callback}(results);";
 ) ?>

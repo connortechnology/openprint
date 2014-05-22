@@ -13,7 +13,7 @@
 "E-Mail-Address","$Object->email()","Text",302,80,381,"Customer Email Address",,,,
 "AR-Tax-Code","$Object->tax_code()","Text",382,10,391,"AR Tax Code","Yes","Yes",,
 "Terms-Code",,"Text",392,20,411,"Terms Code","Yes",,,
-"Sales-agent-id","$Object->salesrep_id() ? $Object->salesrep_id() : 6709","Text",412,8,419,"Salesperson Code","Yes","Yes",,
+"Sales-agent-id","$Object->salesrep_id() ? $Object->CSR()->code() : 'DL'","Text",412,8,419,"Salesperson Code","Yes","Yes",,
 "CSR-ID","$Object->salesrep_id() ? $Object->CSR()->code() : 'DL'","Text",420,3,422,"Customer Service Representative","Yes",,,
 "territory-id",,"Text",423,12,434,"Sales Region ID","Yes",,,
 "Cust-ID-Bill-to",,"Text",435,8,442,"Master Billing Customer Code (see Tip)","Yes",,,"Leave blank if not used. If used, must be a valid customer ID."
@@ -21,7 +21,7 @@
 "Priority",,"Text",455,10,464,"Priority",,,,
 "Estimate-Markup-Pct","$Object->discount()*-1","Text",465,6,470,"Estimating Markup Percentage",,,,
 "Overs-Allowed",,"Text",471,5,475,"Percent Overs Allowed",,,,
-"Date-First-Order","$Object->date_first_order()","Text",476,10,485,"Date of First Order","Yes",,,"Based on date format in company setup (US = mm/dd/yyyy)"
+"Date-First-Order","ssi::format_date( $Object->date_first_order(), '%m/%d/%Y')","Text",476,10,485,"Date of First Order","Yes",,,"Based on date format in company setup (US = mm/dd/yyyy)"
 "PO-Required",,"Text",486,1,486,"Flag for PO Required",,,0,"0=No, 1=Yes"
 "AR-Stmt",,"Text",487,1,487,"Flag for AR Statement",,,0,"0=No, 1=Yes"
 "AR-Stmt-Dunning-Msg",,"Text",488,1,488,"Flag for AR Statement Dunning Messages",,,0,"0=No, 1=Yes"
