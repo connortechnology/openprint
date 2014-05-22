@@ -177,6 +177,7 @@ sub calc {
 			if ( $$specs{'OverrideItemsPerLift'} ne 'Y' ) {
 				if ( $$services{'Scoring'} or $$services{'Perforating'} ) {
 					$items_per_lift = 10;
+					$$specs{'hdnBreakdown'.$qty_index} .= 'Settings items per lift to 10 because the items are scored or perfed<br/>';
 				} elsif ( $Equipment->specification('Maximum Lift Depth') ) {
 					$items_per_lift = int($Equipment->specification('Maximum Lift Depth')/$$specs{txtFinishedCalliper});
 				} else {
