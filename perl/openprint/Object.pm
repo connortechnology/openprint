@@ -604,7 +604,7 @@ sub find {
 $log->debug("Undefing $object_type $cache_field $$params{$cache_field}") if DEBUG_ALL;
 			$name_cache{$object_type}{$$params{$cache_field}} = undef;
 		} # end if
-		if ( ${$object_type.'::cached'} ) {
+		if ( 0 and ${$object_type.'::cached'} ) {
 $log->debug("ALl cached $object_type $cache_field $$params{$cache_field}") if DEBUG_ALL;
 			return ();
 		} # end if
