@@ -288,6 +288,19 @@
 		$html .= '</tr></thead><tbody><tr>';
 		@{$$variable{'drops'}} = ();
 
+		my $TZ = DateTime::TimeZone->new( name => $config{'Timezone'} );
+		my $parser = 'DateTime::Format::Pg';
+
+		my $start_dt = new DateTime( time_zone=>$TZ, map { $_ => $session{'/employee/production/print_overview.html?schedule_start_'.$_} } ( 'year', 'month', 'day' ) );
+		my $end_dt = new DateTime( time_zone=>$TZ, map { $_ => $session{'/employee/production/print_overview.html?schedule_end_'.$_} } ( 'year', 'month', 'day' ) );
+		my @Jobs = openprint::ScheduledJob->find( 
+			equipment_id=>[ map { $_->id() } @{$$variable{'Equipment'}} ],
+			'starttime <='	=> $parser->format_datetime( $end_dt ),
+			'starttime >='	=> $parser->format_datetime( $start_dt ),
+		);
+		my @Projects = openprint::Project->find( id=>[ map { $_->project_id() } @Jobs ] );
+		my @Companies = openprint::Company->find( id=>[ map { $_->company_id() } @Projects ] );
+
 		my $ac = sql::start_transaction( $dbh );
 		$dbh->do( 'LOCK TABLE Schedule IN ACCESS EXCLUSIVE MODE' ) or $log->error( DBI->errstr );
 
@@ -314,10 +327,8 @@
 			# Showing over 100 days makes the browser crawl forever. So limit it.
 			$end = 100 if $end > 100;
 			# Get the shifts on this day.
-			my $TZ = DateTime::TimeZone->new( name => $config{'Timezone'} );
 			my $st = new DateTime( 'year'=>$year, 'month'=>$month, 'day'=>$day, 'time_zone'=>$TZ );
 			my $et = $st + DateTime::Duration->new( 'days'=>$end );
-			my $parser = 'DateTime::Format::Pg';
 
 			my @Shifts = openprint::Shift->find( 
 				equipment_id 		=>	$E->id(),

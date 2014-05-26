@@ -34,6 +34,7 @@ use constant DEBUG_STOCK => 0;
 use constant COMPARISON_LOG => 0;
 use constant USE_SUBSIG => 0;
 use constant USE_PRICE_CACHE => 1;
+use constant DEBUG_IMPOSITIONS => 0;
 
 my $master_time;
 my %special_colours;
@@ -1066,6 +1067,13 @@ sub get_impositions($$$$$$$$) {
 	} # end if
 # add all the impositions for each press
 	foreach my $Press ( @$Presses ) {
+		if ( DEBUG_IMPOSITIONS ) {
+			if ( $$specs{"ddmPress$qty_index"} ne $Press->strid() ) {
+$openprint::log->debug("Skipping cuz no $$Press{strid}");
+				next;
+			} 
+	
+		} # end if
 		my $printing_type = $Press->specification('Printing Type');
 		if ( ( defined $$specs{'OverridePrintingType'.$qty_index} ) and ( $$specs{'OverridePrintingType'.$qty_index} eq 'Y' ) ) {
 			if ( $printing_type ne $$specs{'PrintingType'.$qty_index} ) {
@@ -1287,6 +1295,18 @@ sub get_impositions($$$$$$$$) {
 		foreach my $Paper ( @Papers ) {
 #Paper might have different calliperso# Is this needed anymore
 			#$$project{'Calliper'} = $$Paper{'calliper'};
+		if ( DEBUG_IMPOSITIONS ) {
+			my ( $width, $height ) = split('x', $$specs{"ddmStockSheetSize$qty_index"} );
+$openprint::log->debug("$width x $height");
+			if ( $width != $Paper->width() ) {
+$openprint::log->debug("Skipping cuz not $width");
+				next;
+			} 
+			if ( $height != $Paper->height() ) {
+$openprint::log->debug("Skipping cuz not $height");
+				next;
+			} 
+		} 
 			if ( ( $$specs{'OverrideStockType'.$qty_index} eq 'Y' ) and ( $$Paper{'type'} ne $$specs{'StockType'.$qty_index} ) ) {
 				if ( DEBUG ) {
 					$openprint::log->debug("Not overriden stock stype: " . $Paper->to_string() );

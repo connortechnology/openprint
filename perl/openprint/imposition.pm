@@ -2,10 +2,9 @@ use strict;
 package openprint::imposition;
 use POSIX qw{ ceil };
 
-
 require openprint::Imposition;
 
-use constant DEBUG => 0;
+use constant DEBUG => 1;
 
 # The various way we can group spreads
 use vars qw( %blocks );
@@ -425,8 +424,8 @@ $openprint::log->debug("Bindery Gutters: $gutters <? $bindery_gutters") if DEBUG
 
 	$$specs{'Grip Size'} = $$specs{'Grip'} - $bindery_head;
 # doube grip for a perfecting or Work & Tumble.
-		$openprint::log->debug("Grip  $$specs{'Grip Size'}") if DEBUG;
-	if ( $run_style eq 'Work & Tumble' or $run_style eq 'Perfecting' ) {
+	$openprint::log->debug("Grip  $$specs{'Grip Size'}") if DEBUG;
+	if ( ( $run_style eq 'Work & Tumble' ) or ( $run_style eq 'Perfecting' ) ) {
 		$$specs{'Grip Size'} *= 2;
 		$openprint::log->debug("Grip  $$specs{'Grip Size'}") if DEBUG;
 	} # emd 
@@ -452,7 +451,7 @@ $openprint::log->debug("Bindery Gutters: $gutters <? $bindery_gutters") if DEBUG
 	} # end if
 
 # Calculate Available Printing Space
-	my $adjusted_paper_height;
+	my $adjusted_paper_height = 0;
 	if ( $paper_height ) {
 		$adjusted_paper_height = $paper_height;
 	} elsif ( $$specs{'Cut Off'} ) {
@@ -463,6 +462,7 @@ $openprint::log->debug("Bindery Gutters: $gutters <? $bindery_gutters") if DEBUG
 
 	# Becomes Printable area
 	$adjusted_paper_height -= $$specs{'Grip Size'} if $$specs{'Add Grip Height'} ne 'N';
+$openprint::log->debug("APH: $adjusted_paper_height");
 # On the web press, we have no paper dimensions, only the maximagesize, so this effectively sets the printing area to the max image size. Theoretically Max Image Size = Cutoff-Grip anyways
 	if ( $$specs{'Maximum Image Area Length'} and ( ( $adjusted_paper_height <= 0 ) or ( $adjusted_paper_height > $$specs{'Maximum Image Area Length'} ) ) ) {
 		$openprint::log->debug("*** Using Max Image Length1: Before: $adjusted_paper_height After: $$specs{'Maximum Image Area Length'}***") if DEBUG;
@@ -473,12 +473,20 @@ $openprint::log->debug("Bindery Gutters: $gutters <? $bindery_gutters") if DEBUG
 
 	if ( $$specs{'Colour Bar Orientation'} ne 'Length' ) {
 
-		# if colour bar is at bottom, 
+# if colour bar is at bottom, 
 		my $colour_bar = $$setup1{colour_bar_size};
-		$colour_bar -= $bleed_size  if $bleed_locations{Top};
-		$colour_bar -= $bleed_size  if $bleed_locations{Bottom};
-		$colour_bar = 0 if $colour_bar < 0;
-		
+
+# colour bar is at bottom or top, then can bleed into it.  Or it can go in the middle, in which case you put it in the bleed space. W&Tumble we put it in grip, so don't do this at all. 
+		if ( $run_style eq 'Work & Tumble' ) {
+		} else {
+			#$colour_bar -= $bleed_size if $bleed_locations{Top};
+			#$colour_bar -= $bleed_size if $bleed_locations{Bottom};
+			#$colour_bar = 0 if $colour_bar < 0;
+		#} else { 
+# If impo was x2 then it can go in middle, but we don't know that yet.
+			$colour_bar -= $bleed_size if $bleed_locations{Top} or $bleed_locations{Bottom};
+			$colour_bar = 0 if $colour_bar < 0;
+		}
 		
 		$adjusted_paper_height -= $colour_bar;
 	} # end if
@@ -488,16 +496,16 @@ $openprint::log->debug("Bindery Gutters: $gutters <? $bindery_gutters") if DEBUG
 		$cropmarkspace = $$specs{'CropMarkSpace'};
 		$cropmarkspace -= $bleed_size if $bleed_locations{Top};
 		$cropmarkspace = 0 if $cropmarkspace < 0;
+		$adjusted_paper_height -= $cropmarkspace;
 		$setup1->cropmark_top( $cropmarkspace );
 
 		$cropmarkspace = $$specs{'CropMarkSpace'};
 		$cropmarkspace -= $bleed_size if $bleed_locations{Bottom};
 		$cropmarkspace = 0 if $cropmarkspace < 0;
+		$adjusted_paper_height -= $cropmarkspace;
 		$setup1->cropmark_bottom( $cropmarkspace );
-
-		$adjusted_paper_height -= $setup1->cropmark_top();
-		$adjusted_paper_height -= $setup1->cropmark_bottom();
 	} # end if
+
 	$adjusted_paper_height = 0 if $adjusted_paper_height < 0;
 $openprint::log->debug("Height: $paper_height - CB $$specs{'colour_bar_size'} - Grip $$specs{'Grip Size'} CropTOp: $$setup1{cropmark_top} - CropBottom: $$setup1{cropmark_bottom} = $adjusted_paper_height") if DEBUG;
 

@@ -165,8 +165,8 @@ sub print_overview {
 	$variable{'referer'} = '/employee/production/print_overview.html';
 
 
-	if ( $param{'btnFunction'} eq 'Reflow' ) {
-		my $Equipment = new openprint::Equipment( $param{'Equipment'} );
+	if ( $param{btnFunction} eq 'Reflow' ) {
+		my $Equipment = new openprint::Equipment( $param{Equipment} );
 		if ( $Equipment->smartscheduling() ) {
 			my @Jobs = openprint::ScheduledJob->find( 'starttime is null'=>0, 'equipment_id'=>$param{'Equipment'},'order'=>'starttime' );
 			if ( @Jobs ) {
