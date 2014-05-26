@@ -817,8 +817,8 @@ sub _wall {
 	if ( $param{'message'} ) {
 		my $Wall = new openprint::Wall();
 		$variable{'error'} = $Wall->save({'user_id'=>$param{'user_id'},
-			'author_id'	=>	$session{'user_id'},
-			'message'	=>	$param{'message'},
+			author_id	=>	$session{user_id},
+			message		=>	$param{message},
 			( $param{'reply_to'} ? ('reply_to'=>$param{'reply_to'}) : () ),
 			});
 		if ( $param{'reply_to'} ) {
