@@ -7,6 +7,7 @@
 	if ( ($session{'user_id'} == $$variable{'Asset'}->created_by() ) or ( $session{'user_type'} eq 'A' ) or openprint::usergroup::is_user_in( ['Accounting','SalesAdmin','Sales'], $session{'user_id'} ) or sets::isin( $session{'user_id'}, $$variable{'Asset'}->editor_id() ) ) {
 		$html .= button( 'Edit', { href=> 'edit.html?asset_id='.$$variable{'Asset'}->id() } );
 		if ( $$variable{'Asset'}->deleted() ) {
+			$html .= button( 'Destroy', { onclick=>"f1.btnFunction.value='Destroy';f1.submit();" } );
 			$html .= button( 'Undelete', { onclick=>"f1.btnFunction.value='Undelete';f1.submit();" } );
 		} else {
 			$html .= button( 'Delete', { onclick=>"if(confirm('Are you sure?')){f1.btnFunction.value='Delete';f1.submit();}" } );
