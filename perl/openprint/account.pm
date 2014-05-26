@@ -419,6 +419,7 @@ sub company_profile {
 } # end sub company_profile
 
 sub user_profile {
+	require Lingua::EN::Inflect;
 	my $Me = $variable{Me} = new openprint::User( $session{user_id} );
 # IF it's empty, then we are adding a new user! Otherwise editing one
 	my $User = new openprint::User( $param{ddmUser} );
