@@ -419,6 +419,7 @@ sub company_profile {
 } # end sub company_profile
 
 sub user_profile {
+	require Lingua::EN::Inflect;
 	my $Me = $variable{Me} = new openprint::User( $session{user_id} );
 # IF it's empty, then we are adding a new user! Otherwise editing one
 	my $User = new openprint::User( $param{ddmUser} );
@@ -816,8 +817,8 @@ sub _wall {
 	if ( $param{'message'} ) {
 		my $Wall = new openprint::Wall();
 		$variable{'error'} = $Wall->save({'user_id'=>$param{'user_id'},
-			'author_id'	=>	$session{'user_id'},
-			'message'	=>	$param{'message'},
+			author_id	=>	$session{user_id},
+			message		=>	$param{message},
 			( $param{'reply_to'} ? ('reply_to'=>$param{'reply_to'}) : () ),
 			});
 		if ( $param{'reply_to'} ) {
