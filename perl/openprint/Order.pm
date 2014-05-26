@@ -150,6 +150,7 @@ sub delete {
 	sql::execute( $log, $dbh, q{DELETE FROM Schedule WHERE ProjectIndex IN ( SELECT lngProjectIndex FROM Order_Contents WHERE OrderIndex=?)}, $$self{'id'} );
 	sql::execute( $log, $dbh, q{DELETE FROM Order_Log WHERE order_id=?}, $$self{'id'} );
 	sql::execute( $log, $dbh, q{DELETE FROM Order_Taxes WHERE order_id=?}, $$self{'id'} );
+	sql::execute( $log, $dbh, q{DELETE FROM Order_Invoices WHERE order_id=?}, $$self{'id'} );
 	sql::execute( $log, $dbh, q{DELETE FROM Order_Contents WHERE OrderIndex=?}, $$self{'id'} );
 	sql::execute( $log, $dbh, q{DELETE FROM Ordered_Products WHERE order_id=?}, $$self{'id'} );
 	sql::update( undef, undef, 'Projects', [ 'order_id=?', $$self{'id'}], [ 'order_id', undef ] );
@@ -162,7 +163,7 @@ sub delete {
 } # end sub delete
 
 sub destroy {
-	$_->delete();
+	$_[0]->delete();
 } # end sub destroy 
 
 sub to_string {

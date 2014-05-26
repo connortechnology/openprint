@@ -6,7 +6,7 @@ apt-get -y install libmail-sendmail-perl libjson-perl libjson-xs-perl libdate-ca
 # Also need Barcode-Code128-2.00
 apt-get -y install jpegoptim pngcrush graphicsmagick imagemagick libgeo-ip-perl
 apt-get -y install libav-tools
-apt-get -y install ffmpeg
+apt-get -y install ffmpeg html2ps
 
 # FOr db servers:
 #apt-get -y install postgresql
