@@ -11,6 +11,7 @@ require sql;
 require openprint::Email;
 require openprint::Log;
 require openprint::EmailTemplate;
+require openprint::User;
 
 use vars qw( $debug $table $serial %fields %transforms %defaults );
 $debug = 0;

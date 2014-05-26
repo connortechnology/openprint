@@ -19,6 +19,7 @@ Any actions you perform will be recorded in the selected <? echo ( translate('co
 	<? echo ( 
 		my $html = '';
 
+		my $parser = 'DateTime::Format::Pg';
 		my $TZ = DateTime::TimeZone->new( name => $config{Timezone} );
 		my ( $year, $month, $day ) = Date::Calc::Add_Delta_Days( Date::Calc::Today(), -5 );
 
