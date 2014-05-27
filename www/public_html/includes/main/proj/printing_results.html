@@ -504,7 +504,7 @@ join("\n", map {
 			);
 		} # end foreach qty_index
 	} # end if
-	$html . join('',
+	$html .= join('',
 			include('/includes/main/proj/_unit_price.html'),
 			include('/includes/main/proj/_service_price.html'),
 			);

@@ -1013,8 +1013,8 @@ $Imposition->display('fitting');
 									gsm				=>	$Paper->gsm(),
 									calliper		=>	$$Paper{'calliper'},
 									imposition		=>	$$Imposition{'imposition'},
-							columns		=>	$$Imposition{columns},
-							rows		=>	$$Imposition{rows},
+									columns		=>	$$Imposition{columns},
+									rows		=>	$$Imposition{rows},
 									printing_type	=>	$ppt,
 									});
 							if ( $Fold and $max_feed_width ) {
@@ -1431,12 +1431,6 @@ $openprint::log->debug("Runspeed: $fold_type(".$Fold->name().") : " . $Equipment
 #$openprint::log->debug("Fold $key : totalPrice: $totalPrice");
 				
 				$totalTime += $runTime * 3600;
-if ( 0 ) {
-# This would stop pricing once it's too expensive... but then we wouldn't get the breakdown 
-				if ( ( defined $bestPrice ) and ( $totalPrice > $bestPrice ) ) {
-					last;
-				} # end if
-}
 			} # end foreach fold_type
 			my %cutting_results;
 			if ( $$services{'Cutting'} and @{$$services{'Cutting'}} ) {
@@ -1503,7 +1497,7 @@ if ( 0 ) {
 				} # end if
 			} else {
 				# First max impo should always be the best...
-				# Not neccessarily
+				# Not neccessarily, when is it not?
 				#last;
 			} # end if
 
@@ -1544,7 +1538,7 @@ if ( 0 ) {
 
 		$results{'MakeReadyTime'} += $Fold->makeready_time();
 		if ( $Fold->makeready_overs_units() eq 'Percent' ) {
-			$results{'MakeReadyOvers'} += (($$specs{'txtQuantity'.$qty_index}/$imposition)/$SignatureImposition->imposition()) * $Fold->makeready_overs() /100;
+			$results{'MakeReadyOvers'} += Math::Round::nearest( 0.01, (($$specs{'txtQuantity'.$qty_index}/$imposition)/$SignatureImposition->imposition()) * $Fold->makeready_overs() /100 );
 		} else {
 			$results{'MakeReadyOvers'} += $Fold->makeready_overs();
 		} # end if

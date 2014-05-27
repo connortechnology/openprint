@@ -449,14 +449,14 @@ if ( ! $$self{paper} ) {
 	if ( $$self{rotate_sheet} ) {
 		$$self{paper}->height( @_ ) if @_;
 		if ( $$self{'start_columns'} and $$self{'columns'} and $$self{'start_columns'} != $$self{'columns'} ) {
-			return $$self{paper}->height() / ( $$self{'start_columns'} / $$self{'columns'} );
+			return Math::Round::nearest( 0.0001, $$self{paper}->height() / ( $$self{'start_columns'} / $$self{'columns'} ) );
 		} else {
 			return $$self{paper}->height();
 		} # end if
 	} else {
 		$$self{paper}->width( @_ ) if @_;
 		if ( $$self{'start_columns'} and $$self{'columns'} and $$self{'start_columns'} != $$self{'columns'} ) {
-			return $$self{paper}->width() / ( $$self{'start_columns'} / $$self{'columns'} );
+			return Math::Round::nearest( 0.0001, $$self{paper}->width() / ( $$self{'start_columns'} / $$self{'columns'} ) );
 		} else {
 			return $$self{paper}->width();
 		} # end if
@@ -474,8 +474,8 @@ my ( $caller, undef, $line ) = caller;
 }
 	if ( $$self{'rotate_sheet'} ) {
 		$$self{'paper'}->width( @_ ) if @_;
-			if ( $$self{'start_rows'} and $$self{'rows'} and $$self{'start_rows'} != $$self{'rows'} ) {
-		return $self->Paper()->width() / ( $$self{'start_rows'} / $$self{'rows'} );
+		if ( $$self{'start_rows'} and $$self{'rows'} and $$self{'start_rows'} != $$self{'rows'} ) {
+			return Math::Round::nearest( 0.0001, $self->Paper()->width() / ( $$self{'start_rows'} / $$self{'rows'} ) );
 		} else {
 			return $self->Paper()->width();
 		} # end if
@@ -483,13 +483,13 @@ my ( $caller, undef, $line ) = caller;
 		$$self{'paper'}->height( @_ ) if @_;
 		if ( ! $self->Paper()->height() ) {
 			if ( $$self{'start_rows'} and $$self{'rows'} and $$self{'start_rows'} != $$self{'rows'} ) {
-			return $$self{'cut_off'} / ( $$self{'start_rows'} / $$self{'rows'} );
+			return Math::Round::nearest( 0.0001, $$self{'cut_off'} / ( $$self{'start_rows'} / $$self{'rows'} ) );
 			} else {
 				return $$self{'cut_off'};
 			} # end if
 		} else {
 			if ( $$self{'start_rows'} and $$self{'rows'} and $$self{'start_rows'} != $$self{'rows'} ) {
-			return $self->Paper()->height() / ( $$self{'start_rows'} / $$self{'rows'} );
+				return Math::Round::nearest( 0.0001, $self->Paper()->height() / ( $$self{'start_rows'} / $$self{'rows'} ) );
 			} else {
 			return $self->Paper()->height();
 			} 
