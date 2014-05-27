@@ -466,7 +466,7 @@ $openprint::log->debug("APH: $adjusted_paper_height") if DEBUG;
 # On the web press, we have no paper dimensions, only the maximagesize, so this effectively sets the printing area to the max image size. Theoretically Max Image Size = Cutoff-Grip anyways
 	if ( $$specs{'Maximum Image Area Length'} and ( ( $adjusted_paper_height <= 0 ) or ( $adjusted_paper_height > $$specs{'Maximum Image Area Length'} ) ) ) {
 		my $max_image_height = $$specs{'Maximum Image Area Length'};
-if ( 0 ) {
+if ( 1 ) {
 		$max_image_height += ( $bleed_size - $$specs{'CropMarkSpace'} ) if $bleed_locations{Top}; # Can bleed outside the image area
 		$max_image_height += ( $bleed_size - $$specs{'CropMarkSpace'} ) if $bleed_locations{Bottom}; # Can bleed outside the image area
 }
@@ -495,6 +495,7 @@ if ( 0 ) {
 			#$colour_bar = 0 if $colour_bar < 0;
 		#} else { 
 # If impo was x2 then it can go in middle, but we don't know that yet.
+			$colour_bar -= $bleed_size if $bleed_locations{Top} or $bleed_locations{Bottom};
 			$colour_bar -= $bleed_size if $bleed_locations{Top} or $bleed_locations{Bottom};
 			$colour_bar = 0 if $colour_bar < 0;
 $openprint::log->debug("Colour bar is now $colour_bar") if DEBUG;
@@ -971,7 +972,9 @@ $openprint::log->debug("Considering sig size: $signature_size") if DEBUG;
 				my $newimp = $imp->copy();
 
 				$newimp->rows($rows);
+				$newimp->start_rows($rows);
 				$newimp->columns($cols);
+				$newimp->start_columns($cols);
 				$newimp->imposition($rows * $cols);
 				if ( $newimp->image_orientation() eq 'Vertical' ) {
 					$newimp->image_width( $newimp->image_width() * $col );

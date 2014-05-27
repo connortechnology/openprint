@@ -473,7 +473,9 @@ my ( $caller, undef, $line ) = caller;
 	return 0;
 }
 	if ( $$self{'rotate_sheet'} ) {
+		# I don't like the following line
 		$$self{'paper'}->width( @_ ) if @_;
+
 		if ( $$self{'start_rows'} and $$self{'rows'} and $$self{'start_rows'} != $$self{'rows'} ) {
 			return Math::Round::nearest( 0.0001, $self->Paper()->width() / ( $$self{'start_rows'} / $$self{'rows'} ) );
 		} else {
@@ -544,7 +546,7 @@ sub equals {
 
 sub to_string {
 	if ( ! $_[0]{'to_string'} ) {
-		$_[0]{'to_string'} = sprintf('%s %dx%d+%dx%d=%dout %s %dx%d=%dpages on %sx%s %s', ( $_[0]{Press} ? $_[0]->Press()->strid() : 'unknown equipment' ), $_[0]->get('columns','rows','dutch_columns','dutch_rows','imposition','runstyle','page_columns','page_rows','pages', 'sheet_width','sheet_height', 'image_orientation') );
+		$_[0]{'to_string'} = sprintf('%s %dx%d+%dx%d=%dout %s %dx%d=%dpages on %sx%s%s->%sx%s %s', ( $_[0]{Press} ? $_[0]->Press()->strid() : 'unknown equipment' ), $_[0]->get('columns','rows','dutch_columns','dutch_rows','imposition','runstyle','page_columns','page_rows','pages', 'paper_width','paper_height', 'paper_type','sheet_width','sheet_height', 'image_orientation') );
 	}
 	return $_[0]{'to_string'};
 } # end sub to_string
@@ -573,6 +575,15 @@ sub Press {
 	} # end if
 	return $_[0]{Press};
 } # end sub Press
+sub paper_width {
+	return $_[0]->Paper()->width();
+}
+sub paper_height {
+	return $_[0]->Paper()->height();
+}
+sub paper_type {
+	return $_[0]->Paper()->type();
+}
 
 sub DESTROY {
 }
