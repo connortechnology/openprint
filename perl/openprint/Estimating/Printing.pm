@@ -4803,8 +4803,9 @@ $$project{'FoldingSpecs'}{"FoldQty-$$specs{'SignatureIndex'}-$qty_index-$index"}
 	my %diecutting_results;
 #$openprint::log->debug("Need DieCutting $$project{'NeedDieCutting'}");
 	if ( $$project{'HasDieCutting'} and $$project{'NeedDieCutting'} ) {
-#$openprint::log->debug("Doing DieCutting");
+$openprint::log->debug("Doing DieCutting");
 		%diecutting_results = openprint::Estimating::DieCutting::signature_calc( $Project, $service_index, $specs, $$project{'DieCuttingSpecs'}, $qty_index, $Imposition );
+$openprint::log->debug("Back From DieCutting");
 		if ( $diecutting_results{'Status'} eq 'uncalculated' ) {
 			$price{'DieCutting Breakdown'} .= "DieCutting error: $diecutting_results{'alert'} $diecutting_results{alert} <br/>";
 			$price{'Comparison Cost'} += 1000000; 
