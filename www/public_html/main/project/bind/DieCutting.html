@@ -1,32 +1,90 @@
 <script type="text/javascript" src="<?hash_link('/javascripts/service.js')?>"></script>
+<script type="text/javascript">
+function Fold_onchange( element, signature, qty_index, index ) {
+    var spec = signature + '-' + qty_index + '-' + index;
+    var next_index = 1+parseInt(index);
+    var do_calc = 1;
+
+    if ( element.type == 'select-one' ) {
+        if ( ! element.value ) {
+            $('ImpQty-'+spec).value = '';
+        } else {
+            if ( ! $('ImpQty-'+spec).value ) {
+                $('ImpQty-'+spec).value = 1;
+            } // end if
+        } // end if
+    } else { // must be the qty field
+    } // end if
+
+    if ( ! $('ImpQty-'+spec).value ) {
+    } else {
+        $('Fold-'+signature+'-'+qty_index+'-'+(1+parseInt(index)) ).show();
+    } // end if
+    if ( do_calc ) 
+        calc(element.form.name);
+} // end function
+</script>
 <div class="Service">
 	<form id="f1" name="f1" method="post" action="/main/project/view.html">
 		<fieldset><legend>Die Cutting</legend>
-		<? eval ( @{$$variable{'SignatureGroups'}} = $$variable{'Project'}->signatures({sort=>1}); ) ?>
-		<? while ( $$variable{'SignatureServiceIndex'} = shift @{$$variable{'SignatureGroups'}}; ) ?>
-			<? eval ( 
-					my $sig_specs = openprint::service::get_specs_ref( @$variable{'Project','SignatureServiceIndex'} );
+			<? echo ( 
+				my $html;
+
+				my $fragment = slurp_content( '/main/project/bind/_imposition.html' );
+
+				foreach my $sig_id ( $$variable{'Project'}->signatures({sort=>1}) ) {
+					$$variable{'SignatureServiceIndex'} = $sig_id;
+					
+
+					my $sig_specs = openprint::service::get_specs_ref( $$variable{Project}, $sig_id );
 					@$variable{'SignatureIndex','Reference'} = @$sig_specs{'SignatureIndex','txtServiceDescription'};
-					) ?>
-				<fieldset>
-				<? if ( $$variable{'Reference'} ) ?>
-				<legend><?Reference?></legend><p><? echo ( openprint::service::summary( @$variable{'ProjectIndex','SignatureServiceIndex'} ); ) ?></p>
-				<? endif ( $$variable{'Reference'} ) ?>
-				<ul>
+					my $form = $$sig_specs{SignatureIndex};
+				$html .= '<fieldset>';
+				if ( $$sig_specs{txtServiceDescription} ) {
+					$html .= '<legend>'.$$sig_specs{txtServiceDescription}.'</legend><p>'. openprint::service::summary( $$variable{'ProjectIndex'}, $sig_id ) . '</p>';
+				} # end if
+				$html .= '<ul>
 					<li>
-						<label>Die Cutting Needed</label>
-						<? echo ( radio( 'Needed-'.$$variable{SignatureIndex}, [ 'Y', 'Yes', 'N', 'No' ], $$variable{'Needed-'.$$variable{SignatureIndex}}, { onchange=>qq`\$('DieCutting-$$variable{SignatureIndex}').show();calc(this.form.name);` } ); ) ?>
-					</li>
+						<label>Die Cutting Needed</label>';
+
+				$html .= radio( 'Needed-'.$form, [ 'Y', 'Yes', 'N', 'No' ], $$variable{'Needed-'.$form}, { onchange=>qq`\$('DieCutting-$form').show();calc(this.form.name);` } );
+				$html .= qq`</li>
 				</ul>
-				<div id="DieCutting-<?SignatureIndex?>" <? echo ( $$variable{'Needed-'.$$variable{'SignatureIndex'}} ne 'Y' ? 'style="display:none;"' : '' ) ?>>
-				<ul>
-				<?include('/includes/main/proj/die_cutting.html')?>
-				<?include('/includes/main/proj/signature_imposition_with_override.html')?>
-				<?include('/includes/main/proj/signature_equipment.html')?>
-				</ul>
+				<div id="DieCutting-$form" `. ( $$variable{'Needed-'.$form} ne 'Y' ? 'style="display:none;"' : '' ). '><ul>';
+				$html .= include('/includes/main/proj/die_cutting.html');
+                $html .= '<li><label>Imposition</label>';
+                foreach my $qty_index ( $$variable{Project}->quantity_indexes() ) {
+                    $html .= '<div class="'.$$variable{Columns}.'Columns">';
+                    if ( $$sig_specs{"txtImposition$qty_index"} ) {
+                        if ( sets::isin( $session{user_type}, ['A','E'] ) ) {
+							write_override( "OverrideImposition-$$sig_specs{SignatureIndex}-$qty_index", $$variable{"chkOverrideFold-$$sig_specs{SignatureIndex}-$qty_index"}, , qq`show_extra_imposition($$sig_specs{SignatureIndex},$qty_index);`, q`calc('f1');` );
+
+						} else {
+                            $html .= sprintf('<input type="hidden" name="chkOverrideFold-%1$d-%2$d" value="Y" /> Overriden<br/>', $$sig_specs{SignatureIndex}, $qty_index );
+                        } # end if
+                        $$variable{form} = $$sig_specs{'SignatureIndex'};
+                        $$variable{qty_index} = $qty_index;
+
+                        $html .= '<table><tr><th class="Qty">Qty</th><th class="Imp">Imposition</th></tr>';
+                        foreach my $index ( 1 .. 4 ) {
+                            $$variable{index} = $index;
+                            $html .= variable_substitution( \$fragment, $variable );
+                        } # end foreach
+                        $html .= '</table>';
+                    } else { $html .= '&nbsp;';
+                    } # end if imposition
+
+                    $html .= '</div>';
+
+                } # end foreach qty_index
+                $html .= '</li>';
+				$html .= include('/includes/main/proj/signature_equipment.html');
+				$html .= '</ul>
 				</div>
-				</fieldset>
-		<? endwhile ( $$variable{'SignatureServiceIndex'} = shift @{$$variable{'SignatureGroups'}}; ) ?>
+				</fieldset>';
+			} # end foreach sig_id
+			return $html;
+			) ?>
 		<ul>
 <li id="DiePrice">
 	<label>Die Price (<?CurrencySymbol?>)</label>

@@ -220,6 +220,7 @@ sub load_used {
 sub load {
 	my ( $self, $specs, $qty_index, $Project ) = @_;
 
+	$$self{quantity} = 1;
 	$$self{specs} = $specs;
 	$$self{paper} = openprint::Paper::load_from_signature( $Project, $specs, $qty_index ) if ! $$self{'paper'};
 	if ( ! $$self{'Press'} ) {

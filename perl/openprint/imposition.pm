@@ -1093,5 +1093,65 @@ sub sort {
 	} @_;
 }
 
+sub cut {
+	my ( $I ) = @_;
+	
+	my $i1 = $I->copy();
+	my @Results;
+
+	if ( $I->runstyle() eq 'Work & Turn' ) {
+		$i1->runstyle( 'SheetWork' );
+		$i1->columns( $i1->columns() / 2 );
+		if ( $I->dutch_columns() ) {
+			$i1->dutch_columns( $i1->dutch_columns() / 2 );
+		} # end if
+		$i1->quantity($i1->quantity()*2);
+		push @Results, $i1;
+
+	} elsif ( $I->runstyle() eq 'Work & Tumble' ) {
+		$i1->runstyle( 'SheetWork' );
+		$i1->rows( $i1->rows() / 2 );
+		$i1->dutch_rows( $i1->dutch_rows() / 2 ) if $I->dutch_rows();
+		$i1->quantity($i1->quantity()*2);
+		push @Results, $i1;
+
+	} elsif ( $I->dutch_columns() ) {
+		$i1->dutch_rows( 0 );
+		$i1->dutch_columns( 0 );
+		my $i2 = $I->copy();
+		$i2->rows( $I->dutch_rows() );
+		$i2->columns( $I->dutch_columns() );
+		$i2->image_orientation( $I->image_orientation() eq 'Vertical' ? 'Horizontal' : 'Vertical' );
+		$i2->dutch_rows( 0 );
+		$i2->dutch_columns( 0 );
+		push @Results, $i1, $i2;
+	} elsif ( $I->layout_width() >= $I->layout_height() and $I->columns() > 1 ) {
+		my $i2 = $I->copy();
+		$i1->columns( int($I->columns() / 2) );
+		$i2->columns( $I->columns() - $i1->columns() );
+		push @Results, $i1, $i2;
+	} elsif ( $I->layout_width() < $I->layout_height() and $I->rows() > 1 ) {
+		my $i2 = $I->copy();
+		$i1->rows( int($I->rows() / 2) );
+		$i2->rows( $I->rows() - $i1->rows() );
+		push @Results, $i1, $i2;
+	} elsif ( $I->columns() >= $I->rows() ) {
+		my $i2 = $I->copy();
+		$i1->columns( int($I->columns() / 2) );
+		$i2->columns( $I->columns() - $i1->columns() );
+		push @Results, $i1, $i2;
+	} else {
+		my $i2 = $I->copy();
+		$i1->rows( int($I->rows() / 2) );
+		$i2->rows( $I->rows() - $i1->rows() );
+		push @Results, $i1, $i2;
+	} # end if
+	foreach my $i ( @Results ) {
+$i->display('Cut to ');
+	}
+	return @Results;
+} # end sub cut_imposition
+
+
 1;
 __END__
