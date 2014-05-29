@@ -35,6 +35,7 @@ use constant COMPARISON_LOG => 0;
 use constant USE_SUBSIG => 0;
 use constant USE_PRICE_CACHE => 1;
 use constant DEBUG_IMPOSITIONS => 0;
+use constant USE_CONVERTED_IMPOSITION_CACHE => 1;
 
 my $master_time;
 my %special_colours;
@@ -46,7 +47,6 @@ my %Papers;
 my $do_initial_filtering = 1;
 my $max_recursion_depth = 3;
 my %converted_imposition_cache;
-my $use_converted_imposition_cache = 1;
 my %filtered_imposition_cache;
 my $use_filtered_imposition_cache = 0;
 my $calc_other_groups = 1;
@@ -2823,12 +2823,18 @@ sub calculate_impositions {
 			}
 #$openprint::log->debug("SPread Layout: $SpreadLayout");
 
-			my %dont_do_pages = map { $_,  $) } split(',', $Press->specification('DontDoPages'));
 #$openprint::log->debug("NOTin Cache string: $cache_string");
-			if ( %dont_do_pages ) {
-				@press_impositions = map { $dont_do_pages{$$_{pages}} ? () : $_ } sort { $$b{pages} <=> $$a{pages} } openprint::imposition::convert_impositions( $SpreadLayout, $$project{txtSpreadSize}, $$impositions{$strid} );
-			} elsif ( $SpreadLayout > 1 ) {
-				@press_impositions = openprint::imposition::convert_impositions( $SpreadLayout, $$project{txtSpreadSize}, $$impositions{$strid} );
+			if ( $SpreadLayout > 1 ) {
+			my $k = join(',',$SpreadLayout, $$project{txtSpreadSize},$strid);
+				if ( USE_CONVERTED_IMPOSITION_CACHE and ! $converted_imposition_cache{$k} ) {
+					$converted_imposition_cache{$k} = [
+					openprint::imposition::convert_impositions( $SpreadLayout, $$project{txtSpreadSize}, $$impositions{$strid} ) ];
+				} # end if
+				@press_impositions = @{$converted_imposition_cache{$k}};
+				my %dont_do_pages = map { $_,  $_ } split(',', $Press->specification('DontDoPages'));
+				if ( %dont_do_pages ) {
+					@press_impositions = map { $dont_do_pages{$$_{pages}} ? () : $_ } sort { $$b{pages} <=> $$a{pages} } @press_impositions;
+				} # end if
 			} else {
 				@press_impositions = @{ $$impositions{$strid} } if $$impositions{$strid};
 			} # end if

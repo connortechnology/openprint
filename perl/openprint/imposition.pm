@@ -462,13 +462,24 @@ $openprint::log->debug("Bindery Gutters: $gutters <? $bindery_gutters") if DEBUG
 
 	# Becomes Printable area
 	$adjusted_paper_height -= $$specs{'Grip Size'} if $$specs{'Add Grip Height'} ne 'N';
-$openprint::log->debug("APH: $adjusted_paper_height");
+$openprint::log->debug("APH: $adjusted_paper_height") if DEBUG;
 # On the web press, we have no paper dimensions, only the maximagesize, so this effectively sets the printing area to the max image size. Theoretically Max Image Size = Cutoff-Grip anyways
 	if ( $$specs{'Maximum Image Area Length'} and ( ( $adjusted_paper_height <= 0 ) or ( $adjusted_paper_height > $$specs{'Maximum Image Area Length'} ) ) ) {
-		$openprint::log->debug("*** Using Max Image Length1: Before: $adjusted_paper_height After: $$specs{'Maximum Image Area Length'}***") if DEBUG;
-		$adjusted_paper_height = $$specs{'Maximum Image Area Length'};
+		my $max_image_height = $$specs{'Maximum Image Area Length'};
+if ( 1 ) {
+		$max_image_height += ( $bleed_size - $$specs{'CropMarkSpace'} ) if $bleed_locations{Top}; # Can bleed outside the image area
+		$max_image_height += ( $bleed_size - $$specs{'CropMarkSpace'} ) if $bleed_locations{Bottom}; # Can bleed outside the image area
+}
+		if ( $max_image_height < $adjusted_paper_height ) {
+
+		$openprint::log->debug("*** Using Max Image Length1: Before: $adjusted_paper_height After: $max_image_height***") if DEBUG;
+		$adjusted_paper_height = $max_image_height;
+		} # end if
+		if ( 0 ) {
+			
 		$adjusted_paper_height += ( $bleed_size - $$specs{'CropMarkSpace'} ) if $bleed_locations{Top}; # Can bleed outside the image area
 		$adjusted_paper_height += ( $bleed_size - $$specs{'CropMarkSpace'} ) if $bleed_locations{Bottom}; # Can bleed outside the image area
+		} # end nif
 	} # end if
 
 	if ( $$specs{'Colour Bar Orientation'} ne 'Length' ) {
@@ -485,7 +496,9 @@ $openprint::log->debug("APH: $adjusted_paper_height");
 		#} else { 
 # If impo was x2 then it can go in middle, but we don't know that yet.
 			$colour_bar -= $bleed_size if $bleed_locations{Top} or $bleed_locations{Bottom};
+			$colour_bar -= $bleed_size if $bleed_locations{Top} or $bleed_locations{Bottom};
 			$colour_bar = 0 if $colour_bar < 0;
+$openprint::log->debug("Colour bar is now $colour_bar") if DEBUG;
 		}
 		
 		$adjusted_paper_height -= $colour_bar;
@@ -959,7 +972,9 @@ $openprint::log->debug("Considering sig size: $signature_size") if DEBUG;
 				my $newimp = $imp->copy();
 
 				$newimp->rows($rows);
+				$newimp->start_rows($rows);
 				$newimp->columns($cols);
+				$newimp->start_columns($cols);
 				$newimp->imposition($rows * $cols);
 				if ( $newimp->image_orientation() eq 'Vertical' ) {
 					$newimp->image_width( $newimp->image_width() * $col );
