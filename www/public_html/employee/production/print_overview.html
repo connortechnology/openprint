@@ -26,7 +26,7 @@
 	} // end function job_popup_close
 
 	var dropfunction = function(el){
-		new Ajax.Request( '_drop.json', { method: 'get', parameters: { ul_id: el.id, services: Sortable.serialize(el) }, evalScripts: true } );
+		new Ajax.Request( '_drop.json', { method: 'post', parameters: { ul_id: el.id, services: Sortable.serialize(el) }, evalScripts: true } );
 	}
 
 	var drops = new Array();
