@@ -2196,6 +2196,13 @@ $openprint::log->debug("Type: " . $Project->Type()->name());
 		return $$specs{'Status'} = 'uncalculated';
 	} # end if
 
+	foreach my $qty_index ( $Project->quantity_indexes() ) {
+	if ( $$specs{"chkOverrideImposition$qty_index"} eq 'Y' and ! $$specs{"txtImposition$qty_index"} ) {
+		$$specs{alert} .= "Please enter the desired imposition for quantity $qty_index.<br/>";
+	} # end if
+	} # end foreach
+	return $$specs{'Status'} = 'uncalculated' if $$specs{alert};
+
 	my @side_one_colours = get_colours( $specs, 'SideOne' );
 	my @side_two_colours = get_colours( $specs, 'SideTwo' );
 	$$specs{SideOneColours} = \@side_one_colours;
@@ -3009,9 +3016,9 @@ $openprint::log->debug( " first set: " . @lesser_imps );
 $openprint::log->debug( " second set: " . @lesser_imps );
 			@results2 = map { $$_{imposition} == $$sig_specs{'txtImposition'.$qty_index} ? $_ : () } @lesser_imps;
 $openprint::log->debug( " matching imps: " . @results2 );
-			@results2 = map { $$_{imposition} > $$sig_specs{'txtImposition'.$qty_index} ? $_ : () } @lesser_imps if ! @results2;
+			#@results2 = map { $$_{imposition} > $$sig_specs{'txtImposition'.$qty_index} ? $_ : () } @lesser_imps if ! @results2;
 
-if ( 0 ) {
+if ( 1 ) {
 			while ( (!@results2) and @lesser_imps ) {
 				my $I = shift @lesser_imps;
 				if ( $$I{imposition} == $$sig_specs{'txtImposition'.$qty_index} ) {
