@@ -1,6 +1,60 @@
 <script type="text/javascript" src="<?hash_link('/javascripts/service.js')?>"></script>
 <script type="text/javascript">
-function Fold_onchange( element, signature, qty_index, index ) {
+    function calc( formName, force ) {
+        var form = getFormObj( formName );
+        if ( gettingNewPrice ) {
+            if ( timeout ) {
+                clearTimeout( timeout );
+            } // end if
+            if ( ! force ) {
+                setTimeout( "calc('"+formName+"');", 1000 );
+                return;
+            } // end if
+        } // end if
+        timeout = null;
+        gettingNewPrice = true;
+
+		var blah = Form.serialize( form, true );
+		var h = $H(blah);
+		h.each(function(pair) {
+			if ( pair.value == '' )
+				h.unset(pair.key);
+			if ( pair.key == 'btnFunction' )
+				h.unset(pair.key);
+		});
+		h.set('ServiceType','DieCutting' );
+		h.set('callback', 'cbDieCuttingResults' );
+ 
+        new Ajax.Request( '/main/project/_calc.json', { method: 'post', parameters: h, evalScripts: true } );
+    }
+    function cbDieCuttingResults( results ) {
+        
+        var form = getFormObj('f1');
+
+        var re = /ImpQty-(\d+)-(\d+)-(\d+)/;
+        var keys = results.keys();
+        for ( var index = 0, len = keys.length; index < len; index += 1 ) {
+            var key = keys[index];
+            var value = results.get(keys[index]);
+
+            var matches = re.exec( key );
+            if ( matches ) {
+                var f = $('Imp-'+matches[1]+'-'+matches[2]+'-'+matches[3]);
+                if ( f ) {
+                    if ( matches[3] == 1 || value > 0 ) {
+                        f.show();
+                    } else {
+                        f.hide();
+                    } // end if
+                } else {
+                    alert('debug mesage: No html for imp ' + matches[1]+'-'+matches[2]+'-'+matches[3] );
+                } // end if f
+            } // end if matches
+        } // end foreach pair
+        cbFillResults(results);
+
+	} // end fucntion
+function Imposition_onchange( element, signature, qty_index, index ) {
     var spec = signature + '-' + qty_index + '-' + index;
     var next_index = 1+parseInt(index);
     var do_calc = 1;
@@ -18,7 +72,7 @@ function Fold_onchange( element, signature, qty_index, index ) {
 
     if ( ! $('ImpQty-'+spec).value ) {
     } else {
-        $('Fold-'+signature+'-'+qty_index+'-'+(1+parseInt(index)) ).show();
+        $('Imp-'+signature+'-'+qty_index+'-'+(1+parseInt(index)) ).show();
     } // end if
     if ( do_calc ) 
         calc(element.form.name);

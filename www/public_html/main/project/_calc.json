@@ -1,5 +1,5 @@
 <? echo (
-	my $debug = 0;
+	my $debug = 1;
 	my $Project = new openprint::Project( $param{ProjectIndex} );
 
 	if ( $param{'action'} eq 'add_service' ) {
@@ -68,7 +68,7 @@ $log->debug("Deleting key $key in standard no_outputs ") if $debug;
 	} # end if debug
     foreach my $key ( keys %specs ) {
 		if ( (exists $param{$key}) and ($specs{$key} eq $param{$key}) ) {
-			$log->debug("Deleting $key cuz it's the same $key") if $debug;
+			$log->debug("Deleting $key cuz it's the same $key = $param{$key}") if $debug;
 			delete $specs{$key};
 		} elsif ( ref $specs{$key} ) {
 		   $log->error("Got a non-scalar in specs! $key => $specs{$key}");

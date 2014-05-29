@@ -3003,23 +3003,26 @@ sub calculate_impositions {
 			#} # end if
 		#} # end foreach I
 		if ( ! @results2 ) {
-			my @lesser_imps = map { $$_{imposition} >= $$sig_specs{'chkOverrideImposition'.$qty_index} ? $_ : () } @results;
+			my @lesser_imps = map { $$_{imposition} > $$sig_specs{'chkOverrideImposition'.$qty_index} ? $_ : () } @results;
 $openprint::log->debug( " first set: " . @lesser_imps );
 			@lesser_imps = map { $$_{imposition} >= $$sig_specs{'chkOverrideImposition'.$qty_index} ? $_ : () } openprint::imposition::decrease_imposition( @lesser_imps );
 $openprint::log->debug( " second set: " . @lesser_imps );
 			@results2 = map { $$_{imposition} == $$sig_specs{'txtImposition'.$qty_index} ? $_ : () } @lesser_imps;
+$openprint::log->debug( " matching imps: " . @results2 );
+			@results2 = map { $$_{imposition} > $$sig_specs{'txtImposition'.$qty_index} ? $_ : () } @lesser_imps if ! @results2;
 
-			
+if ( 0 ) {
 			while ( (!@results2) and @lesser_imps ) {
 				my $I = shift @lesser_imps;
-				if ( $$I{imposition} == $$sig_specs{'chkOverrideImposition'.$qty_index} ) {
+				if ( $$I{imposition} == $$sig_specs{'txtImposition'.$qty_index} ) {
 					push @results2, $I;
-				} elsif ( $$I{imposition} > $$sig_specs{'chkOverrideImposition'.$qty_index} ) {
-					push @lesser_imps, map { $$_{imposition} >= $$sig_specs{'chkOverrideImposition'.$qty_index} ? $_ : () } openprint::imposition::decrease_imposition( $I );
+				} elsif ( $$I{imposition} > $$sig_specs{'txtImposition'.$qty_index} ) {
+					push @lesser_imps, map { $$_{imposition} >= $$sig_specs{'txtImposition'.$qty_index} ? $_ : () } openprint::imposition::decrease_imposition( $I );
 				} # end if
 
 #$openprint::log->debug( " during set: " . @lesser_imps );
 			} # end while
+}
 	
 if ( 0 ) {
 			my %cuts;

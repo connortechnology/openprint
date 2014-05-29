@@ -137,7 +137,7 @@ sub calc_price {
 		} # end if rule & bend 
 	} #end if supplied die
 
-	$Total{'DiePrice'} = \%DiePrice;
+	$Total{DiePrice} = \%DiePrice;
 	if ( (defined $$specs{'OverrideDiePrice'.$qty_index}) and ( $$specs{'OverrideDiePrice'.$qty_index} eq 'Y' ) ) {
 		$DiePrice{'Price'} = $$specs{'DiePrice'.$qty_index};
 	} # end if
@@ -319,7 +319,7 @@ sub calc {
 					$$specs{'hdnBreakdown'.$qty_index} .= sprintf('&nbsp;&nbsp;MakeReady: $%.2f<br/>', $$Price{'MakeReady'}{'Price'});
 					$$specs{'hdnBreakdown'.$qty_index} .= sprintf('&nbsp;&nbsp;DiePrice: $%.2f<br/>', $$Price{'DiePrice'}{'Price'});
 					$$specs{'hdnBreakdown'.$qty_index} .= sprintf('&nbsp;&nbsp;Service: $%1$.2f%2$s * %4$d impressions = $%3$.2f<br/>', @{$$Price{'ServicePrice'}}{'Price','units','Total'}, $$Price{'Impressions'} );
-					$$specs{'hdnBreakdown'.$qty_index} .= sprintf('&nbsp;&nbsp;Hole Clearing: $%1$.2f%2$s * %5$d holes * %6$dout * %4$d impressions = $%3$.2f<br/>', @{$$Price{'HoleClearingPrice'}}{'Price','units','Total'}, $$Price{'Impressions'}, $$specs{"txtHoleClearingHoles-$form"}, $results{Imposition}->imposition() ) if exists $$Price{'HoleClearingPrice'};
+					$$specs{'hdnBreakdown'.$qty_index} .= sprintf('&nbsp;&nbsp;Hole Clearing: $%1$.2f%2$s * %5$d holes * %6$dout * %4$d impressions = $%3$.2f<br/>', @{$$Price{'HoleClearingPrice'}}{'Price','units','Total'}, $$Price{'Impressions'}, $$specs{"txtHoleClearingHoles-$form"}, $I->imposition() ) if exists $$Price{'HoleClearingPrice'};
 					$totalUnitPrice += $Price->{UnitPrice};
 					$totalMPrice += $Price->{MPrice};
 					$totalDiePrice += $Price->{'DiePrice'}{'Price'};
@@ -453,7 +453,7 @@ $log->debug("# of imps to consider: " . @imps ) if DEBUG;
 } # end if
 
 	foreach my $Equipment ( @equipment ) {
-		if ( (defined $$specs{"txtHoleClearingHoles-$form"} ) and ( $$specs{"txtHoleClearingHoles-$form"} > 0 ) and ( $_ = $Equipment->specification('HoleClearing Capable') ) and ( $_ ne 'Y') ) {
+		if ( (defined $$specs{"txtHoleClearingHoles-$form"} ) and ( $$specs{"txtHoleClearingHoles-$form"} > 0 ) and ( $Equipment->specification('HoleClearing Capable') ne 'Y') ) {
 			$results{breakdown} .= 'Doesnt do hole clearing.<br/>';
 			next;
 		} # end if
