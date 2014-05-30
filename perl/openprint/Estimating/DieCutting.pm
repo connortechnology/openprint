@@ -57,6 +57,9 @@ sub variables {
 				 "txtImposition-$form-$qty_index", "chkOverrideImposition-$form-$qty_index",
 				 "txtLayoutWidth-$form-$qty_index", "txtLayoutHeight-$form-$qty_index",
 				 );
+			foreach my $imp_index ( 1 .. 4 ) {
+				push @v, map { join('-', $_, $form, $qty_index, $imp_index ) } ( 'ImpOut','ImpColumns','ImpRows','ImpQty' );
+			} # end foreach imp_index
 		} # end foreach qty_index
 	} # end foreach signatures
 	return @v;
@@ -79,7 +82,7 @@ sub no_outputs {
 	return @no_outputs;
 }
 sub calc_price {
-    my ( $specs, $Equipment, $qty_index, $Imposition, $sig_specs ) = @_;
+    my ( $specs, $Equipment, $qty_index, $Imposition, $sig_specs, $Signature_Imposition ) = @_;
 
 	my %Total = ( Imposition => $Imposition );
 	my $form = $$sig_specs{SignatureIndex};
@@ -144,7 +147,8 @@ sub calc_price {
 	$Total{'Total'} += $DiePrice{'Price'} if $DiePrice{'Price'};
 
 	# Why 1.28, overs I assume
-	my $impressions = ceil($$specs{"txtQuantity$qty_index"} / $$Imposition{imposition});
+	my $impressions = ceil( ( $$specs{"txtQuantity$qty_index"} / $$Signature_Imposition{imposition} ) ) * $Imposition->quantity();
+# * $$Imposition{imposition});
 	
 	if ( my $Overs = $Equipment->Specification('DieCutting Overs') ) {
 		my $overs;
@@ -333,6 +337,13 @@ sub calc {
 						$I->get('quantity','imposition','columns','rows');
 					$imp_index += 1;
 				} # end foreach Imposition
+				foreach $imp_index ( $imp_index .. 4 ) {
+					@$specs{
+						"ImpQty-$form-$qty_index-$imp_index",
+						"ImpOut-$form-$qty_index-$imp_index",
+						"ImpColumns-$form-$qty_index-$imp_index",
+						"ImpRows-$form-$qty_index-$imp_index"} = ('','','','');
+				} # end foreach $imp_index
 
 				$totalPrice += $results{Total};
 
@@ -480,7 +491,7 @@ $log->debug("# of imps to consider: " . @imps ) if DEBUG;
 					$complete = 0;
 					last;
 				} # end if
-				my %p = calc_price( $specs, $Equipment, $qty_index, $imposition, $sig_specs );
+				my %p = calc_price( $specs, $Equipment, $qty_index, $imposition, $sig_specs, $Imposition );
 				push @{$price{Prices}}, \%p;
 				$price{Total} += $p{Total};
 			} # end foreach imposition

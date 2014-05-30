@@ -18,7 +18,8 @@ package openprint::Estimating::Paper;
 
 use strict;
 use POSIX qw( ceil );
-use Math::Round qw( nearest );
+require Math::Round;
+require Number::Format;
 
 require openprint::service;
 require openprint::Currency;

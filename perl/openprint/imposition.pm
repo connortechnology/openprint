@@ -1141,15 +1141,25 @@ sub cut {
 		$i2->dutch_columns( 0 );
 		push @Results, $i1, $i2;
 	} elsif ( $I->layout_width() >= $I->layout_height() and $I->columns() > 1 ) {
-		my $i2 = $I->copy();
 		$i1->columns( int($I->columns() / 2) );
-		$i2->columns( $I->columns() - $i1->columns() );
-		push @Results, $i1, $i2;
+		if ( ! ( $I->columns() % 2 ) ) {
+			$i1->quantity( $i1->quantity() * 2 );
+			push @Results, $i1;
+		} else {
+			my $i2 = $I->copy();
+			$i2->columns( $I->columns() - $i1->columns() );
+			push @Results, $i1, $i2;
+		} # end if
 	} elsif ( $I->layout_width() < $I->layout_height() and $I->rows() > 1 ) {
-		my $i2 = $I->copy();
 		$i1->rows( int($I->rows() / 2) );
-		$i2->rows( $I->rows() - $i1->rows() );
-		push @Results, $i1, $i2;
+		if ( ! ( $I->rows() % 2 ) ) {
+			$i1->quantity( $i1->quantity() * 2 );
+			push @Results, $i1;
+		} else {
+			my $i2 = $I->copy();
+			$i2->rows( $I->rows() - $i1->rows() );
+			push @Results, $i1, $i2;
+		} # end if
 	} elsif ( $I->columns() >= $I->rows() ) {
 		my $i2 = $I->copy();
 		$i1->columns( int($I->columns() / 2) );
