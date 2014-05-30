@@ -97,16 +97,16 @@ function Imposition_onchange( element, signature, qty_index, index ) {
 					my $sig_specs = openprint::service::get_specs_ref( $$variable{Project}, $sig_id );
 					@$variable{'SignatureIndex','Reference'} = @$sig_specs{'SignatureIndex','txtServiceDescription'};
 					my $form = $$variable{form} = $$sig_specs{SignatureIndex};
-				$html .= '<fieldset>';
-				if ( $$sig_specs{txtServiceDescription} ) {
-					$html .= '<legend>'.$$sig_specs{txtServiceDescription}.'</legend><p>'. openprint::service::summary( $$variable{ProjectIndex}, $sig_id ) . '</p>';
-				} # end if
-				$html .= '<ul>
-					<li>
-						<label>Die Cutting Needed</label>';
+					$html .= '<fieldset>';
+					if ( $$sig_specs{txtServiceDescription} ) {
+						$html .= '<legend>'.$$sig_specs{txtServiceDescription}.'</legend><p>'. openprint::service::summary( $$variable{ProjectIndex}, $sig_id ) . '</p>';
+					} # end if
+					$html .= '<ul>
+						<li>
+							<label>Die Cutting Needed</label>';
 
-				$html .= radio( 'Needed-'.$form, [ 'Y', 'Yes', 'N', 'No' ], $$variable{'Needed-'.$form}, { onchange=>qq`\$('DieCutting-$form').show();calc(this.form.name);` } );
-				$html .= qq`</li>
+					$html .= radio( 'Needed-'.$form, [ 'Y', 'Yes', 'N', 'No' ], $$variable{'Needed-'.$form}, { onchange=>qq`\$('DieCutting-$form').show();calc(this.form.name);` } );
+					$html .= qq`</li>
 				</ul>
 				<div id="DieCutting-$form" `. ( $$variable{'Needed-'.$form} ne 'Y' ? 'style="display:none;"' : '' ). '><ul>';
 				$html .= include('/includes/main/proj/die_cutting.html');

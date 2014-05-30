@@ -393,7 +393,7 @@ $openprint::log->debug("AQ Equipment $$Equipment{strid}") if DEBUG;
 # need to merge any overalls into spots
 				foreach my $type ( @different_types ) {
 					if ( ! ( sets::isin( $type, \@front_aq ) and sets::isin( $type, \@back_aq ) ) ) {
-						$type =~ s/Overall/Spot/;
+						$type =~ s/Overall/W&T/;
 					} # end if
 					push @types, $type;
 				} # end foreach
@@ -430,6 +430,9 @@ $openprint::log->debug("AQ types @types") if DEBUG;
 				if ( $type =~ /Spot/ ) {
 					%BlanketCutPrice = openprint::service::get_price_object( 'AqueousBlanketCut', undef, $Equipment );
 					%BlanketCutPrice = openprint::service::get_price_object( 'BlanketCut', undef, $Equipment ) if ! %BlanketCutPrice;
+				} elsif ( $type =~ /W&T/ ) {
+					%BlanketCutPrice = openprint::service::get_price_object( 'AqueousBlanketCutW&T', undef, $Equipment );
+					%BlanketCutPrice = openprint::service::get_price_object( 'BlanketCut', undef, $Equipment ) if ! %BlanketCutPrice;
 				} # end if type is spot
 				$Price{'BlanketCut'} += $BlanketCutPrice{'Price'};
 
@@ -454,6 +457,8 @@ $openprint::log->debug("AQ types @types") if DEBUG;
 				} elsif ( lc $ServicePrice{'units'} eq 'per hour' ) {
 					$ServicePrice{'Quantity'} = $run_qty;
 					$ServicePrice{'Total'} = $ServicePrice{'Price'} * $run_qty / $Equipment->specification('AqueousRunSpeed') if $Equipment->specification('AqueousRunSpeed');
+				} else {
+					$$specs{'hdnBreakdown'.$qty_index} = "Unkown units ( $ServicePrice{'units'} ) for $type<br/>";
 				} # end if
 # Div by imposition
 				#$ServicePrice{'Total'} /= $imp->imposition();
@@ -463,6 +468,7 @@ $openprint::log->debug("AQ types @types") if DEBUG;
 				my $material_name = $type;
 				$material_name =~ s/ ?Spot ?//;
 				$material_name =~ s/ ?Overall ?//;
+				$material_name =~ s/ ?W&T ?//;
 				my $Material = openprint::Material->find_one('name'=>$material_name);
 				if ( ! $Material ) {
 					$material_name = 'Aqueous';
