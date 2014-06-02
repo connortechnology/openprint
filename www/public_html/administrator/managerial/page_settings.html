@@ -7,10 +7,13 @@
 				<th class="cacheable">Cacheable</th>
 				<th class="user_level">User Level</th>
 				<th class="users">Users</th>
+				<th class="usergroups">User Groups</th>
 			</tr>
 		<? echo ( 
 			my $html;
 			my $rowclass;
+			my $UserGroups = openprint::UserGroup->dropdown();
+
 			my @user_types = ( '', 'all', map { $_->id(), $_->name() } openprint::User_Type->find() );
 			foreach my $PS ( openprint::Page_Setting->find( order=>'url'), new openprint::Page_Setting() ) {
 				$html .= sprintf(q`
@@ -18,11 +21,14 @@
 						<td class="url"><input type="text" name="url-%2$s" value="%3$s"/></td>
 						<td class="cacheable"><select name="cacheable-%2$s">%4$s</select></td>
 						<td class="user_level"><select name="user_level-%2$s">%5$s</select></td>
-						<td class="users" rowspan="3">%8$s</td>
+						<td class="users" rowspan="4">%8$s</td>
+						<td class="usergroups" rowspan="4">%10$s</td>
 					</tr><tr%1$s>
-						<td colspan="3" class="keywords">Keywords:<input type="text" name="keywords-%2$s" value="%6$s"/></td>
+						<td colspan="3" class="keywords">Keywords<input type="text" name="keywords-%2$s" value="%6$s"/></td>
 					</tr><tr%1$s>
-						<td colspan="3" class="description">Description:<input type="text" name="description-%2$s" value="%7$s"/></td>
+						<td colspan="3" class="description">Description<input type="text" name="description-%2$s" value="%7$s"/></td>
+					</tr><tr%1$s>
+						<td colspan="3" class="message">Message<textarea name="message-%2$s">%9$s</textarea></td>
 					</tr>`,
 					$rowclass,
 					$PS->id(), $PS->url(), 
@@ -31,6 +37,8 @@
 					html_escape( $PS->keywords() ),
 					html_escape( $PS->description() ),
 					join('<br/>', map { $_->name() } $PS->Users() ),
+					$PS->message(),
+					ssi::select( $UserGroups, $PS->usergroup_ids(), { name=>'usergroup_ids-'.$PS->id(), multiple=>1 } ),
 				);
 				$rowclass = $rowclass ? '' : ' class="colRow"';
 			} # end foreach

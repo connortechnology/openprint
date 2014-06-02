@@ -250,8 +250,8 @@ sub load {
 	$$self{'start_rows'} = $$self{'rows'} = $$specs{'hdnImpositionRows'.$qty_index};
 	#$$self{'columns'} = $$self{'imposition'} / $$self{'rows'} if $$self{'rows'} and ! $$self{'columns'};
 	#$$self{'rows'} = $$self{'imposition'} / $$self{'columns'} if $$self{'columns'} and ! $$self{'rows'};
-	$$self{'dutch_rows'} = $$specs{'hdnImpositionDutchRows'.$qty_index};
-	$$self{'dutch_columns'} = $$specs{'hdnImpositionDutchColumns'.$qty_index};
+	$$self{'dutch_rows'} = $$specs{'hdnImpositionDutchRows'.$qty_index} or 0;
+	$$self{'dutch_columns'} = $$specs{'hdnImpositionDutchColumns'.$qty_index} or 0;
 	$$self{'cut_off'} = $$specs{'CutOff'.$qty_index};
 
 

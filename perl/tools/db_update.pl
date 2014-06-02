@@ -3696,6 +3696,12 @@ if ( ! sets::isin( 'page_settings', \@tables ) ) {
 	if ( ! exists $$data{user_ids} ) {
 		$dbh->do('ALTER TABLE page_settings add user_ids INTEGER[]');
 	} # end if
+	if ( ! exists $$data{usergroup_ids} ) {
+		$dbh->do('ALTER TABLE page_settings add usergroup_ids INTEGER[]');
+	} # end if
+	if ( ! exists $$data{message} ) {
+		$dbh->do('ALTER TABLE page_settings ADD message TEXT');
+	} # end if
 }
 print "Finished\n";
 1;

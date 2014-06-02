@@ -9,21 +9,24 @@ $cached = 0;
 $table = 'page_settings';
 $serial = 'page_settings_id_seq';
 %fields = (
-	id	=>	'id',
-	url	=>	'url',
-	user_level	=>	'user_level',
-	cacheable	=>	'cacheable',
-	keywords	=>	'keywords',
-	description	=>	'description',
-	user_ids	=>	'user_ids',
+	id				=>	'id',
+	url				=>	'url',
+	user_level		=>	'user_level',
+	cacheable		=>	'cacheable',
+	keywords		=>	'keywords',
+	description		=>	'description',
+	user_ids		=>	'user_ids',
+	usergroup_ids	=>	'usergroup_ids',
+	message			=>	'message',
 );
 %transforms = (
 	url	=>	[ 's/\/+$//g' ],
 );
 %defaults = (
-	user_level	=>	undef,
-	cacheable	=>	undef,
-	user_ids	=>	'[]',
+	user_level		=>	undef,
+	cacheable		=>	undef,
+	user_ids		=>	'[]',
+	usergroup_ids	=>	'[]',
 );
 $cache_field = 'url';
 sub cache_field {
@@ -31,17 +34,34 @@ sub cache_field {
 }
 
 sub can_view {
-	return 1 if $_[0]{user_ids} and sets::isin( $openprint::session{user_id}, $_[0]{user_ids} );
+	if ( $_[0]{user_ids} and sets::isin( $openprint::session{user_id}, $_[0]{user_ids} ) ) {
+		$openprint::log->debug("User is in user_ids") if $debug;
+		return 1;
+	} # end if
 	if ( $openprint::session{user_type} eq 'A' ) {
+		$openprint::log->debug("User is an admin") if $debug;
 		return 1;
-	} elsif ( $openprint::session{user_type} eq 'E' ) {
-		return 0 if $_[0]{user_level} eq 'A';
-		return 1;
-	} elsif ( $openprint::session{user_type} eq 'C' ) {
-		return 0 if $_[0]{user_level} eq 'A' or $_[0]{user_level} eq 'E';
-		return 1;
+	}
+	
+	if ( $_[0]{user_level} ) {
+		if ( $openprint::session{user_type} eq 'E' ) {
+			return 0 if $_[0]{user_level} eq 'A';
+		} elsif ( $openprint::session{user_type} eq 'C' ) {
+			return 0 if $_[0]{user_level} eq 'A' or $_[0]{user_level} eq 'E';
+		} 
 	} 
-	return 0 if $_[0]{user_level};
+	if ( $_[0]{usergroup_ids} and @{$_[0]{usergroup_ids}} ) {
+$openprint::log->debug("CHecking usergroups " . ( $_[0]{usergroup_ids} ? join(', ', @{ $_[0]{usergroup_ids} } ) : 'none' ) );
+		return 0 if ! $openprint::session{user_id};
+		my $User = new openprint::User( $openprint::session{user_id} );
+$openprint::log->debug( "User in in " . join(',', $User->usergroup_ids()) );
+		my @intersection = sets::intersection( @{$_[0]{usergroup_ids}}, $User->usergroup_ids() );
+$openprint::log->debug( "Inserection: (" . join(',', @intersection ) . ')' . @intersection);
+		return 0 if ! @intersection;
+	} else {
+$openprint::log->debug("Not CHecking usergroups " );
+
+	}
 	return 1; 
 } # end sub can_view
 
