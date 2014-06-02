@@ -504,10 +504,21 @@ join("\n", map {
 			);
 		} # end foreach qty_index
 	} # end if
-	return $html . join('',
+	$html .= join('',
 			include('/includes/main/proj/_unit_price.html'),
 			include('/includes/main/proj/_service_price.html'),
-			include('/includes/main/proj/_breakdown.html'),
-		);
+			);
+	if ( sets::isin( $session{user_type}, ['A','E'] ) ) {
+		$html .= '<li>';
+        foreach my $qty_index ( $$variable{Project}->quantity_indexes() ) {
+            $html .= '<span class="'.$$variable{Columns}.'Columns">';
+            $html .= button( 'Breakdown'.$qty_index, { onclick=>"show_breakdown('$qty_index');", text=>'Breakdown' } );
+			$html .= button( 'Impositions', { onclick=>qq`get_impositions('f1', '$qty_index' );` } );
+            $html .= '</span>';
+            $html .= qq`<div id="hdnBreakdown$qty_index" style="display:none;"></div>`;
+        } # end foreach
+		$html .= '</li>';
+	} # end if
+	return $html;
 ) ?>
 </ul>

@@ -2,7 +2,7 @@ use strict;
 package openprint::Company;
 our @ISA = qw( openprint::Object );
 
-use vars qw( $debug $log $dbh $table $serial %fields %find_fields %defaults %transforms );
+use vars qw( $debug $log $dbh $table $serial %fields %find_fields %defaults %transforms $AUTOLOAD );
 require openprint;
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
@@ -11,7 +11,7 @@ require sql;
 require openprint::Object;
 require openprint::User;
 
-$debug = 0;
+$debug = 1;
 $table = 'companies';
 $serial = 'companies_id_seq';
 
@@ -72,9 +72,9 @@ $serial = 'companies_id_seq';
 %transforms = (
 	address1		=>	[ 's/^\s+//', 's/\s+$//' ],
 	address2		=>	[ 's/^\s+//', 's/\s+$//' ],
-	'established'	=> [ 's/[^\d\-]//g' ],
-	'name' => [ 's/[\.\,]//g', 's/^\s+//', 's/\s+$//','s/\///g' ],
-	'discount'	=>	[ 's/[^\d\.\-]//g' ],
+	established		=>	[ 's/[^\d\-]//g' ],
+	name			=>	[ 's/[\.\,]//g', 's/^\s+//', 's/\s+$//','s/\///g' ],
+	discount		=>	[ 's/[^\d\.\-]//g' ],
 );
 %defaults = (
 	'detail_level'	=>	undef,
@@ -147,7 +147,6 @@ sub save {
 	$self->set( $param );
 	require Text::Unidecode;
 	$$self{name} = Text::Unidecode::unidecode( $$self{name} );
-$openprint::log->debug("savin set");
 	return $self->SUPER::save( undef, $force );
 } # end sub save
 
@@ -323,7 +322,7 @@ sub load_shipping {
 
 sub Profile {
 	require openprint::Company_Profile;
-	return new openprint::Company_Profile( $_[0]{'id'} );
+	return new openprint::Company_Profile( $_[0]{id} );
 }
 
 sub location {
@@ -331,6 +330,7 @@ sub location {
 } # end sub location
 
 sub can_edit {
+	return 1 if ! $_[0]{id};
 	return 1 if $openprint::session{'user_type'} eq 'A';
 	return 1 if $_[0]->salesrep_id() == $openprint::session{'user_id'};
 	my $Me = new openprint::User( $openprint::session{'user_id'} );
@@ -390,5 +390,72 @@ sub can_view {
     return 1 if $_[0]{'id'} == $$Me{'company_id'} and $$Me{'administrator'} eq 'Y';
 } # end sub can_view
 
+sub date_first_order {
+	require openprint::Order;
+	my $Order = openprint::Order->find_one(company_id=>$_[0]{id}, order=>'id' );
+	return $Order->created_on() if $Order;
+	return;
+}
+
+sub category {
+	require openprint::Company_Category;
+	return new openprint::Company_Category( $_[0]{category_id} )->name();
+} # end sub category
+sub Category {
+	require openprint::Company_Category;
+	return new openprint::Company_Category( $_[0]{category_id} );
+} # end sub Category
+
+sub AUTOLOAD {
+	my $name = $AUTOLOAD;
+	$name =~ s/.*://;
+#$openprint::log->debug("AUTOLOAD $name");
+    if ( $fields{$name} ) {
+        if ( @_ > 1 ) {
+#$openprint::log->debug("Autoload $name $_[0]");
+            return $_[0]{$name} = $_[1];
+        } else {
+            return $_[0]{$name};
+        } # end if
+    } else {
+        my $Profile = $_[0]->Profile();
+		my $thing = $Profile->value( $name );
+$openprint::log->debug("Profile field $name thing $thing " . ref $thing) if $debug;
+        if ( exists $$Profile{'fields'}{$name} ) {
+            if ( @_ > 1 ) {
+                $$Profile{'fields'}{$name} = $_[1];
+            } # end if
+$openprint::log->debug("Profile field $name " . ref $$Profile{'fields'}{$name} ) if $debug;
+            return $$Profile{'fields'}{$name};
+        } else {
+            $openprint::log->warn("Unknown field in Company::AUTOLOAD $name") if $debug;
+        } # end if
+    } # end if
+} # end sub AUTOLOAD
+
+sub Profile {
+    if ( ! exists $_[0]{Profile} ) {
+        require openprint::Company_Profile;
+        $_[0]{Profile} = new openprint::Company_Profile( $_[0]{id} );
+    } # end if
+    return $_[0]{Profile};
+} # end sub Profile
+
+sub tax_code {
+	if ( $_[0]{gst_exempt} ) {
+		return '1';
+	} else {
+		require openprint::Tax;
+		if ( $_[0]->country() and $_[0]->state() ) {
+			return join('/', map { $_->name() } openprint::Tax->find(
+						'period_start null_or_<='   =>  'NOW()',
+						'period_end null_or_>='     =>  'NOW()',
+						'country'   =>  $_[0]->country(),
+						'state'     =>  $_[0]->state()
+						) );
+		} 
+	} # end if
+	return 'Unknown';
+} # end if
 1;
 __END__

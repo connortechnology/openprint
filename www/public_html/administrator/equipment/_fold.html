@@ -51,8 +51,18 @@
 		</li>
 		<li class="imposition">
 			<label>Imposition</label>
-			Min: <? echo ( input(type=>'cardinal', id=>'fold-'.$$variable{Fold}->id().'-min_imposition', name=>'min_imposition', value=>$$variable{Fold}->min_imposition(), onkeyup=>"if(this.value!=this.defaultValue){\$('Fold$$variable{Fold}{id}').addClassName('changed');}" ) ) ?>out
-			Max: <? echo ( input( type=>'cardinal', id=>'fold-'.$$variable{Fold}->id().'-max_imposition', name=>'max_imposition', value=>$$variable{Fold}->max_imposition(), onkeyup=>"if(this.value!=this.defaultValue){\$('Fold$$variable{Fold}{id}').addClassName('changed');}" ); ) ?>out
+			Min: <? echo ( input(type=>'cardinal', id=>'fold-'.$$variable{Fold}->id().'-min_imposition', name=>'min_imposition', value=>$$variable{Fold}->min_imposition(), onkeyup=>"if(this.value!=this.defaultValue){\$('Fold$$variable{Fold}{id}').addClassName('changed');}" ) ) ?>
+			Max: <? echo ( input( type=>'cardinal', id=>'fold-'.$$variable{Fold}->id().'-max_imposition', name=>'max_imposition', value=>$$variable{Fold}->max_imposition(), onkeyup=>"if(this.value!=this.defaultValue){\$('Fold$$variable{Fold}{id}').addClassName('changed');}" ); ) ?>
+		</li>
+		<li class="imposition">
+			<label>Imposition Columns</label>
+			Min: <? echo ( input(type=>'cardinal', id=>'fold-'.$$variable{Fold}->id().'-min_imposition_columns', name=>'min_imposition_columns', value=>$$variable{Fold}->min_imposition_columns(), onkeyup=>"if(this.value!=this.defaultValue){\$('Fold$$variable{Fold}{id}').addClassName('changed');}" ) ) ?>
+			Max: <? echo ( input( type=>'cardinal', id=>'fold-'.$$variable{Fold}->id().'-max_imposition_columns', name=>'max_imposition_columns', value=>$$variable{Fold}->max_imposition_columns(), onkeyup=>"if(this.value!=this.defaultValue){\$('Fold$$variable{Fold}{id}').addClassName('changed');}" ); ) ?>
+		</li>
+		<li class="imposition">
+			<label>Imposition Rows</label>
+			Min: <? echo ( input(type=>'cardinal', id=>'fold-'.$$variable{Fold}->id().'-min_imposition_rows', name=>'min_imposition_rows', value=>$$variable{Fold}->min_imposition_rows(), onkeyup=>"if(this.value!=this.defaultValue){\$('Fold$$variable{Fold}{id}').addClassName('changed');}" ) ) ?>
+			Max: <? echo ( input( type=>'cardinal', id=>'fold-'.$$variable{Fold}->id().'-max_imposition_rows', name=>'max_imposition_rows', value=>$$variable{Fold}->max_imposition_rows(), onkeyup=>"if(this.value!=this.defaultValue){\$('Fold$$variable{Fold}{id}').addClassName('changed');}" ); ) ?>
 		</li>
 		<li class="page_width">
 			<label>Page Width</label>
@@ -66,8 +76,8 @@
 		</li>
 		<li class="calliper">
 			<label>Calliper</label>
-			Min: <? echo ( input( type=>'float', id=>'fold-'.$$variable{Fold}->id().'-min_calliper', name=>'min_calliper', value=>$$variable{Fold}->min_calliper(), onkeyup=>"if(this.value!=this.defaultValue){\$('Fold$$variable{Fold}{id}').addClassName('changed');}" ); ) ?>inches
-			Max: <? echo ( input( type=>'float', id=>'fold-'.$$variable{Fold}->id().'-max_calliper', name=>'max_calliper', value=>$$variable{Fold}->max_calliper(), onkeyup=>"if(this.value!=this.defaultValue){\$('Fold$$variable{Fold}{id}').addClassName('changed');}" ); ) ?>inches
+			Min: <? echo ( input( type=>'float', id=>'fold-'.$$variable{Fold}->id().'-min_calliper', name=>'min_calliper', value=>$$variable{Fold}->min_calliper(), onkeyup=>"if(this.value!=this.defaultValue){\$('Fold$$variable{Fold}{id}').addClassName('changed');}", step=>'0.0001', min=>'0.0000' ); ) ?>inches
+			Max: <? echo ( input( type=>'float', id=>'fold-'.$$variable{Fold}->id().'-max_calliper', name=>'max_calliper', value=>$$variable{Fold}->max_calliper(), onkeyup=>"if(this.value!=this.defaultValue){\$('Fold$$variable{Fold}{id}').addClassName('changed');}", step=>'0.0001', min=>'0.0000' ); ) ?>inches
 		</li>
 		<li class="printing_type">
 			<label>Printing Type</label>

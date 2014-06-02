@@ -12,7 +12,7 @@ use vars qw( $log $dbh $debug $table $serial %fields %transforms %defaults $cach
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
 
-$debug = 1;
+$debug = 0;
 $table = 'Currencies';
 $serial = 'currencies_id_seq';
 %fields = (

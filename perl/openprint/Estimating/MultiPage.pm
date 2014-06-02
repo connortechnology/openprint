@@ -52,10 +52,11 @@ sub variables {
 	} # end foreach;
 	my @Groups = sql::execute( undef, undef, 'SELECT DISTINCT strvalue FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strName=?', $project_id, 'Group' );
 	foreach my $group_id ( @Groups ) {
-		push @v, 'ddmRunStyle'.$group_id;
-		push @v, 'ddmPress'.$group_id;
-		push @v, 'PrintingType'.$group_id;
-		push @v, 'StockType'.$group_id;
+		push @v, 'ddmRunStyle-'.$group_id;
+		push @v, 'ddmPress-'.$group_id;
+		push @v, 'PrintingType-'.$group_id;
+		push @v, 'StockType-'.$group_id;
+
 		push @v, 'Pages'.$group_id;
 		push @v, 'OverrideGroupPageQuantity'.$group_id;
 		push @v, 'GroupPageQuantity'.$group_id;
@@ -331,6 +332,7 @@ $openprint::log->debug("********************************************************
 	for ( my $i = 0; $i < @signatures; $i += 1 ) {
 		my $sig_specs = openprint::service::get_specs_ref( $Project, $signatures[$i] );
 
+		# This has been deprecated
 		if ( $$printing_specs{PrintingType} ) {
 			if ( 
 				 ( $Project->quantity1() and $$sig_specs{PrintingType1} and ( $$sig_specs{PrintingType1} ne $$printing_specs{PrintingType} ) )

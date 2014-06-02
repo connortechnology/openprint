@@ -135,7 +135,6 @@ sub calc {
 			my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
 
 			my $signature_index = $$sig_specs{'SignatureIndex'};
-			my $Equipment = openprint::Equipment->find_one( strid=>$$sig_specs{'ddmPress'.$qty_index} );
 
 			$$specs{'hdnBreakdown'.$qty_index} .= "Signature $signature_index<br/>";
 			if ( ! $$sig_specs{'txtImposition'.$qty_index} ) {
@@ -145,6 +144,7 @@ sub calc {
 			} # end if
 			my $Imposition = new openprint::Imposition();
 			$Imposition->load( $sig_specs, $qty_index );
+			my $Equipment = $Imposition->Press();
 			$$specs{'hdnBreakdown'.$qty_index} .= $Imposition->to_string().'</br>';
 
 			if ( ( ! sets::isin( 1, $proof_indexes{$signature_index} ) ) and $openprint::config{'Add_Default_Layout_Proof'} eq 'Y' ) {
@@ -192,12 +192,13 @@ sub calc {
 				$$specs{'hdnBreakdown'.$qty_index} .= 'No proofs needed because there is no imposition';
 				next;
 			} # end if
-			my $Equipment = openprint::Equipment->find_one( strid=>$$sig_specs{'ddmPress'.$qty_index});
 			my $Imposition = new openprint::Imposition();
 			$Imposition->load( $sig_specs, $qty_index );
+			my $Equipment = $Imposition->Equipment();
 			my %Results = signature_calc( $Project, $specs, $sig_specs, $qty_index, \%proof_indexes, \%proof_totals, $Equipment, $Imposition );
 			$totalPrice += $Results{Total};
 			$$specs{"hdnBreakdown$qty_index"} .= $Results{'Breakdown'};
+			$status = $Results{status} if $Results{status};
 		} # end foreach my $signature_service_index
 
 		if ( $minCharge and ( $totalPrice < $minCharge ) and $totalQuantity ) {
@@ -267,27 +268,33 @@ $log->debug("Proof indexes " . join(',', @{$$indexes{$signature_index}}  ) ) if 
 			next;
 		} # end if
 		
+		my $ProofService = openprint::Service->find_one( name=>$type );
+
 		my %MakeReady = openprint::service::get_price_object( $type.'MakeReady', $$totals{$type}{Quantity}, undef );
 		$$specs{"MRPrice-$signature_index-$proof_index-$qty_index"} = $MakeReady{'Price'};
 		my %price;
-		if ( $type eq 'PressProof' ) {
-			%price = openprint::service::get_price_object( $type, $$totals{$type}{Quantity}, $Equipment );
-		} else {
-			%price = openprint::service::get_price_object( $type, $$totals{$type}{Quantity}, undef );
+		if ( $ProofService ) {
+			if ( $type eq 'PressProof' ) {
+				%price = $ProofService->get_price( $$totals{$type}{Quantity}, $Equipment );
+			} else {
+				%price = $ProofService->get_price( $$totals{$type}{Quantity} );
+			} # end if
 		} # end if
-		$$specs{"ServicePrice-$signature_index-$proof_index-$qty_index"} = $price{'Price'};
-		$$specs{"ServiceUnits-$signature_index-$proof_index-$qty_index"} = $price{'units'};
+		$$specs{"ServicePrice-$signature_index-$proof_index-$qty_index"} = $price{Price};
+		$$specs{"ServiceUnits-$signature_index-$proof_index-$qty_index"} = $price{units};
 
 		$Results{'Breakdown'} .= "Proof: $proof_index: Quantity: $quantity, Type: $type ";
 		if ( $price{'units'} eq 'per square inch' ) {
+			$Results{status} = 'uncalculated' if ! $$specs{"txtProofWidth-$signature_index-$proof_index-$qty_index"} * $$specs{"txtProofHeight-$signature_index-$proof_index-$qty_index"};
 			$price{'Total'} = Math::Round::nearest( 0.01,
 					$price{'Price'} * $$specs{"txtProofWidth-$signature_index-$proof_index-$qty_index"} * $$specs{"txtProofHeight-$signature_index-$proof_index-$qty_index"} * $quantity );
 			$Results{'Breakdown'} .= sprintf('MR: %.2f + %d * %sx%s * $%.2f%s=$%.2f<br/>', $MakeReady{Price}, $quantity, $$specs{"txtProofWidth-$signature_index-$proof_index-$qty_index"},$$specs{"txtProofHeight-$signature_index-$proof_index-$qty_index"}, @price{'Price','units','Total'} );
 		} elsif ( $price{'units'} eq 'per square foot' ) {
+			$Results{status} = 'uncalculated' if ! $$specs{"txtProofWidth-$signature_index-$proof_index-$qty_index"} * $$specs{"txtProofHeight-$signature_index-$proof_index-$qty_index"};
 			$price{'Total'} = $price{'Price'} * $$specs{"txtProofWidth-$signature_index-$proof_index-$qty_index"} * $$specs{"txtProofHeight-$signature_index-$proof_index-$qty_index"} / 144 * $quantity;
 			$Results{'Breakdown'} .= sprintf('MR: %.2f + %d * %sx%s * $%.2f%s=$%.2f<br/>', $MakeReady{Price}, $quantity, $$specs{"txtProofWidth-$signature_index-$proof_index-$qty_index"},$$specs{"txtProofHeight-$signature_index-$proof_index-$qty_index"}, @price{'Price','units','Total'} );
 		} else {
-			$price{'Total'} = $price{'Price'} * $quantity;
+			$price{Total} = $price{Price} * $quantity;
 			$Results{'Breakdown'} .= sprintf('MR: %.2f + %d*$%.2f%s=$%.2f<br/>', $MakeReady{Price}, $quantity, @price{'Price','units','Total'} );
 		} # end if
 		$$specs{"txtProofUnitPrice-$signature_index-$proof_index-$qty_index"} = sprintf( $openprint::config{ProjectMoneyFormat}, $price{Total} );
@@ -366,7 +373,7 @@ sub insert_press_proof($$$$$$) {
 	} else {
 		$quantity += 1 if @{$$sig_specs{SideOneColours}} or @{$$sig_specs{SideTwoColours}};
 	} # end if
-	insert_new_proof( $specs, $proof_index, $$sig_specs{'SignatureIndex'}, $quantity, $Imposition->stock_width(), $Imposition->stock_height(), 'PressProof', $qty_index );
+	insert_new_proof( $specs, $proof_index, $$sig_specs{'SignatureIndex'}, $quantity, $Imposition->sheet_width(), $Imposition->sheet_height(), 'PressProof', $qty_index );
 } # end sub insert_press_proof
 
 sub insert_colour_proof($$$$$) {
@@ -414,9 +421,12 @@ sub insert_layout_proof {
 #$openprint::log->debug("Called insert_layout_proof from $caller : $line");
 #$Imposition->display('insert_layout_proof');
 	my $Equipment = $Imposition->Press();
+	if ( ! $Equipment ) {
+		$openprint::log->error("No equipment in insert_layout_proof");
+	} # end if
 	$Equipment = openprint::Equipment->find_one( strid=>$$sig_specs{'ddmPress'.$qty_index} ) if ! $Equipment;
 	if ( ! $Equipment ) {
-		$openprint::log->warn("No equipment in insert_layout_proof");
+		$openprint::log->error("No equipment in insert_layout_proof");
 	} # end if
 
 	my $quantity = 0;
@@ -435,7 +445,7 @@ sub insert_layout_proof {
 		} # end if
 	} # end if
 
-	insert_new_proof( $specs, $proof_index, $$sig_specs{'SignatureIndex'}, $quantity, $Imposition->stock_width(), $Imposition->stock_height(), $default_proof_type, $qty_index );
+	insert_new_proof( $specs, $proof_index, $$sig_specs{'SignatureIndex'}, $quantity, $Imposition->sheet_width(), $Imposition->sheet_height(), $default_proof_type, $qty_index );
 
 } # end sub insert_layout_proof
 
@@ -630,6 +640,8 @@ sub summary {
 			my $signature_index = $$sig_specs{'SignatureIndex'};
 			foreach my $key ( keys %{$specs} ) {
 				if ( my ($proof_index) = $key =~ /^txtProofIndex\-$signature_index\-(\d+)\-$qty_index$/ ) {
+					next if ! $$specs{"ddmProofType-$signature_index-$proof_index-$qty_index"};
+
 					if ( my $Service = openprint::Service->find_one( name=>$$specs{"ddmProofType-$signature_index-$proof_index-$qty_index"}) ) {
 						if ( sets::isin( $$specs{"ddmProofType-$signature_index-$proof_index-$qty_index"}, [ 'PressProof', 'PDFProof' ] ) ) {
 							my $desc = sprintf('</td><td class="type">%s', $Service->description() );

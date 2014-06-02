@@ -7,20 +7,20 @@
 		my $html;
 		my @required_services;
 		my @overrides;
-		my $services = $$variable{'Project'}->services();
+		my $services = $$variable{Project}->services();
 
 		foreach my $ServiceType ( openprint::ServiceType->find() ) {
 			my $module = 'openprint::Estimating::'.$ServiceType->name();
 			if ( ! ( $$services{$ServiceType->name()} and @{$$services{$ServiceType->name()}} ) ) {
 				if ( my $function = $module->can( 'neccessary' ) ) {
-					if ( $function->( $variable{'Project'} ) ) {
+					if ( $function->( $variable{Project} ) ) {
 						push @required_services, $ServiceType->name();	
 					} # end if
 				} # end if
 			} else {
 				if ( my $function = $module->can( 'has_overrides' ) ) {
 					foreach my $s_id ( @{$$services{$ServiceType->name()}} ) {
-						if ( $function->( $variable{'Project'}, $s_id ) ) {
+						if ( $function->( $variable{Project}, $s_id ) ) {
 							push @overrides, $ServiceType->name();	
 						} # end if
 					} # end foreach my $s_id
@@ -44,7 +44,7 @@
 				</li>
 				<li>
 					<label>Additional comments or instructions</label>
-					<textarea name="comments" rows="<? echo ( count_lines( $$variable{Project}->comments() ); ) ?>" onkeyup="textarea_resize(this);"><? echo ( ssi::htmlize( $$variable{'Project'}->comments() ); ) ?></textarea>
+					<textarea name="comments" rows="<? echo ( count_lines( $$variable{Project}->comments() ); ) ?>" onkeyup="textarea_resize(this);"><? echo ( htmlize( $$variable{'Project'}->comments() ); ) ?></textarea>
 				</li>
 			</ul>
 		</fieldset>

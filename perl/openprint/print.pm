@@ -268,6 +268,7 @@ sub multipage_signatures {
 
 	my $ac = sql::start_transaction( $dbh );
 	my $Project = new openprint::Project( $project_index );
+	$Project->lock();
 	my $services = $Project->services();
 	$service_index = $$services{''}[0] if ! $service_index;
 
@@ -462,10 +463,10 @@ $log->debug("group $group_id");
 			openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $ss_id, $spec, $$param{$spec.$group_id} );
 		} # end foreach spec
 		foreach my $spec ( 'Press','RunStyle' ) {
-			next if ! exists $$param{'ddm'.$spec.$group_id};
+			next if ! exists $$param{'ddm'.$spec.'-'.$group_id};
 			foreach my $qty_index ( $Project->quantity_indexes() ) {
-				if ( $$param{'ddm'.$spec.$group_id} ) {
-					openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $ss_id, 'ddm'.$spec.$qty_index, $$param{'ddm'.$spec.$group_id} );
+				if ( $$param{'ddm'.$spec.'-'.$group_id} ) {
+					openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $ss_id, 'ddm'.$spec.$qty_index, $$param{'ddm'.$spec.'-'.$group_id} );
 					openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $ss_id, 'chkOverride'.$spec.$qty_index, 'Y' );
 				} else {
 					openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $ss_id, 'chkOverride'.$spec.$qty_index, '' );
@@ -473,10 +474,10 @@ $log->debug("group $group_id");
 			} # end foreach qty_index
 		} # end foreach spec
 		foreach my $spec ( 'PrintingType','StockType' ) {
-			next if ! exists $$param{$spec.$group_id};
+			next if ! exists $$param{$spec.'-'.$group_id};
 			foreach my $qty_index ( $Project->quantity_indexes() ) {
-				if ( $$param{$spec.$group_id} ) {
-					openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $ss_id, $spec.$qty_index, $$param{$spec.$group_id} );
+				if ( $$param{$spec.'-'.$group_id} ) {
+					openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $ss_id, $spec.$qty_index, $$param{$spec.'-'.$group_id} );
 					openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $ss_id, 'Override'.$spec.$qty_index, 'Y' );
 				} else {
 					openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $ss_id, 'Override'.$spec.$qty_index, '' );
@@ -526,6 +527,7 @@ $log->debug("No Nobindery");
 			} # end if
 		} # end if
 	} # end if
+	$Project->unlock();
 	sql::end_transaction( $dbh, $ac );
 } # end sub multipage_signatures
 

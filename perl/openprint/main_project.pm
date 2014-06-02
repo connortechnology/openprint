@@ -110,8 +110,8 @@ sub view {
 	} # end foreach
 	if ( $save ) {
 		$Project->save();
+	$openprint::log->error("Saving $save");
 	} # end if
-$openprint::log->debug("Saving $save");
 } # end sub view
 
 sub _copy_popup {

@@ -116,11 +116,6 @@
 			my $has_Products = openprint::Product->find_one();
 
 			foreach my $Project ( @{$$variable{'Projects'}} ) {
-$log->debug("listing project $$Project{id} ");
-if ( ! $$Project{summary} ) {
-$log->debug("Redoing summary");
-	sql::update( undef, undef, 'projects', [ 'id=?', $$Project{id} ], [ 'summary', $Project->summary() ] );
-}
 				push @html, sprintf(q`
 <tr%1$s> 
 	<td class="project_id"><a href="/main/project/view.html?ProjectIndex=%2$d">%2$d</a></td>`, $rowclass, $Project->id() );

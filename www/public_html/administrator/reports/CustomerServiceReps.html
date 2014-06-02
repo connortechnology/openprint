@@ -5,7 +5,7 @@
 			<select name="ddmEmployees" size="1">
 				<option value="">All Employees</option>
 <? echo (
-make_drop_down( openprint::User->dropdown( type=>['E','A'], order=>'lower(firstname),lower(lastname)',web_active=>'Y'), $param{ddmEmployees} );
+make_drop_down( openprint::User->dropdown( type=>['E','A'], order=>'lower(firstname),lower(lastname)',web_active=>'Y', 'usergroup any' => 'Sales' ), $param{ddmEmployees} );
 ) ?>
 			</select>
 		</p>

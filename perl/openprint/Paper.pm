@@ -933,13 +933,14 @@ sub get_price {
 	my $lookup_qty = $params{'lookup_weight'} ? $params{'lookup_weight'} : $qty;
 	if ( ($params{'service'} eq 'Material') and ! $lookup_qty ) {
 		Carp::cluck("Paper qty lookup with no qty");
+		$openprint::log->error("Paper qty lookup with no qty");
 	} #end if
 
 	if ( $$self{'Price'} and ($params{'service'} eq 'Material') ) {
 		# If custom paper
 		$price = { 'price' => $$self{'Price'}, 'cost'=>$$self{'Price'}, 'units'=>$$self{'Units'} };
 #$openprint::log->debug("Usnig custom price $$self{'Price'}$$self{'Units'}");
-	} elsif ( $$self{'id'} ) {
+	} elsif ( $$self{id} ) {
 		my @Prices = $self->Prices( );
 		if ( (! $$self{'supplied'} ) and ! @Prices ) {
 			$openprint::log->warn( 'No prices for paper ' );
@@ -960,36 +961,36 @@ sub get_price {
 			} # end if
 		} # end foreach Price
 		if ( ! $price ) {
-			if ( $params{'service'} eq 'Material' or $debug ) {
+			if ( ( ! $$self{supplied} ) and ( $params{service} eq 'Material' or $debug ) ) {
 				$openprint::log->warn("Unable to find price for Stock id:$$self{id} $params{service} equip: $params{equipment_id} : $qty $lookup_qty");
-		foreach my $Price ( @Prices ) {
-			if ( $$Price{'pricelist_id'} != $list_id ) {
-				$openprint::log->debug("Wrong pricelist: " . $Price->to_string() );
-				next;
-			} 
-			if ( $params{'equipment_id'} and $$Price{'equipment_id'} and ( $params{'equipment_id'} != $$Price{'equipment_id'} ) ) {
-				$openprint::log->debug("Wrong equipment: " . $Price->to_string() );
-				next;
-			}
-			if ( $$Price{'service'} ne $params{'service'} ) {
-				$openprint::log->debug("Wrong service: " . $Price->to_string() );
-				next;
-			} 
+				foreach my $Price ( @Prices ) {
+					if ( $$Price{'pricelist_id'} != $list_id ) {
+						$openprint::log->debug("Wrong pricelist: " . $Price->to_string() );
+						next;
+					} 
+					if ( $params{'equipment_id'} and $$Price{'equipment_id'} and ( $params{'equipment_id'} != $$Price{'equipment_id'} ) ) {
+						$openprint::log->debug("Wrong equipment: " . $Price->to_string() );
+						next;
+					}
+					if ( $$Price{'service'} ne $params{'service'} ) {
+						$openprint::log->debug("Wrong service: " . $Price->to_string() );
+						next;
+					} 
 #$openprint::log->warn(sprintf('Price: %s - %s : %s',$Price->min(), $Price->max(), $Price->price() ) );
-			if ( 
-					( (!(1*$Price->min())) or $Price->min() <= $lookup_qty ) and
-					( (!(1*$Price->max())) or $Price->max() >= $lookup_qty )
-				) {
-				$price = $Price->clone();
-				last;
-			} else {
-				$openprint::log->debug("Wrong qty: $lookup_qty" . $Price->to_string() );
-			} # end if
-		} # end foreach Price
+					if ( 
+							( (!(1*$Price->min())) or $Price->min() <= $lookup_qty ) and
+							( (!(1*$Price->max())) or $Price->max() >= $lookup_qty )
+					   ) {
+						$price = $Price->clone();
+						last;
+					} else {
+						$openprint::log->debug("Wrong qty: $lookup_qty" . $Price->to_string() );
+					} # end if
+				} # end foreach Price
 				
 			} # end if
 			return;
-		} # end if
+		} # end if ! price
 		if ( $openprint::config{'ApplyMarkup'} ) {
 		#$openprint::log->debug("Apply Markup: $openprint::config{'ApplyMarkup'}");	
 			my $pricingpercent = $openprint::config{'ApplyMarkup'};
@@ -1268,7 +1269,6 @@ sub load_from_signature {
 		#} # end if
 		$Paper->supplied( $$specs{'rdbSuppliedStock'} eq 'Y' ? 1 : 0 );
 	} else {
-		my $Press = openprint::Equipment->find_one(strid=>$$specs{"ddmPress$qty_index"}) if $qty_index;
 
 		if ( $qty_index and $$specs{'paper_id'.$qty_index} ) {
 			$Paper = new openprint::Paper( $$specs{'paper_id'.$qty_index} );
@@ -1333,6 +1333,7 @@ $log->debug("Didn't find specific paper $params{'width'} x $params{'height'}");
 				$Paper->mweight( $$specs{'txtMWeight'.$qty_index} );
 				@Papers = ( $Paper );
 			} else {
+				my $Press = openprint::Equipment->find_one(strid=>$$specs{"ddmPress$qty_index"}) if $qty_index and $$specs{"ddmPress$qty_index"};
 				foreach my $P ( @Papers ) {
 					if ( $Press and ( my $Stock_Setting = $Press->Stock_Setting( $P ) ) ) {
 						next if $Stock_Setting->grain() eq 'Dont Use';

@@ -165,8 +165,8 @@ sub print_overview {
 	$variable{'referer'} = '/employee/production/print_overview.html';
 
 
-	if ( $param{'btnFunction'} eq 'Reflow' ) {
-		my $Equipment = new openprint::Equipment( $param{'Equipment'} );
+	if ( $param{btnFunction} eq 'Reflow' ) {
+		my $Equipment = new openprint::Equipment( $param{Equipment} );
 		if ( $Equipment->smartscheduling() ) {
 			my @Jobs = openprint::ScheduledJob->find( 'starttime is null'=>0, 'equipment_id'=>$param{'Equipment'},'order'=>'starttime' );
 			if ( @Jobs ) {
@@ -450,6 +450,11 @@ sub bindery_overview {
 
 sub projects {
 
+	$param{StartDocket} = openprint::Order->transform( 'docket', $param{StartDocket} );
+	$param{EndDocket} = openprint::Order->transform( 'docket', $param{EndDocket} );
+	$param{Project} = openprint::Project->transform( 'id', $param{Project} );
+	$param{OrderID} = openprint::Order->transform( 'id', $param{OrderID} );
+
 	_project_list();
 	ssi::setup_date_select( '/employee/production/projects.html', 'due_date_start', -7 );
 	ssi::setup_date_select( '/employee/production/projects.html', 'due_date_end', '' );
@@ -461,10 +466,6 @@ sub projects {
 	my $project_index = $param{'Project'};
 	my $order_id = $param{'OrderID'};
 
-	$startdocket =~ s/\D//g;
-	$enddocket =~ s/\D//g;
-	$project_index =~ s/\D//g;
-	$order_id =~ s/\D//g;
 
 	if ( $param{'btnFunction'} eq 'Go' ) {
 		if ( $project_index ) {
@@ -1073,13 +1074,14 @@ sub _drop {
 	# First step, run through and see if we need to do a popup before actually applying
 
 	my $ac = sql::start_transaction( $dbh );
-	$dbh->do( 'LOCK TABLE Schedule IN ACCESS EXCLUSIVE MODE' ) or $log->error( DBI->errstr );
+	$dbh->do( 'LOCK TABLE Schedule IN SHARE ROW EXCLUSIVE MODE' ) or $log->error( DBI->errstr );
 
 	my $Shift = openprint::Shift::get_from_ul_id( $param{'ul_id'} );
 	my $Equipment = $Shift->Equipment(); # For efficiency
 
 	# Force it to redraw the changed UL, since the runtimes are likely to have changed.
-	@{$variable{'changed'}} = ( $Shift->ul_id() );
+@{$variable{'changed'}} = ( $Shift->ul_id() );
+	# Actually, don't do this
 
 	if ( exists $param{'services'} ) {
 		my $services = $param{'services'};
@@ -1230,6 +1232,9 @@ $log->debug("Order after coalesce: @order : " . join(',', map { new openprint::S
 					$log->debug("drop_project: Job not found");
 					next ;
 				} # end if
+				if ( $Job->Shift()->id() != $$Shift{id} ) {
+					push @{$variable{'changed'}}, $Job->Shift()->ul_id();
+				} # end if
 
 				my %sql;
 				$sql{'operator_id'} = $operator_id if $operator_id != $Job->operator_id();
@@ -1255,7 +1260,7 @@ $log->debug("Order after coalesce: @order : " . join(',', map { new openprint::S
 			} # end foreach
 			$log->debug("Old2");
 		} else {
-			$dbh->do( 'LOCK TABLE Shifts IN ACCESS EXCLUSIVE MODE' ) or $log->error( DBI->errstr );
+			$dbh->do( 'LOCK TABLE Shifts IN SHARE ROW EXCLUSIVE MODE' ) or $log->error( DBI->errstr );
 
 			if ( $Shift->starttime() ) {
 				my @final_order;
@@ -1400,13 +1405,14 @@ $log->debug("ES: " . $NextES->name() );
 	my $Shift = shift @Shifts;
 	
 	my $ac = sql::start_transaction( $dbh );
-	$dbh->do( 'LOCK TABLE Schedule IN ACCESS EXCLUSIVE MODE' ) or $log->error( DBI->errstr );
+	$dbh->do( 'LOCK TABLE Schedule IN SHARE ROW EXCLUSIVE MODE' ) or $log->error( DBI->errstr );
 
 	my @fixed_jobs = ();
 	for ( my $i = 0; $i < @order; $i += 1 ) {
 		if ( $order[$i]{starttime} and $order[$i]{locked} ) {
 			push @fixed_jobs, splice @order, $i, 1;
 			$i -= 1;
+			next;
 		} # end if
 		# Tentative jobs do not affect non-tentative jobs
 		if ( $order[$i]{tentative} ) {

@@ -812,6 +812,11 @@ if ( ! sets::isin( 'company_categories', \@tables ) ) {
 	die if $dbh->errstr();
 	$dbh->do(q`ALTER TABLE Companies add category_id INTEGER`);
 	$dbh->do(q`ALTER TABLE Companies add FOREIGN KEY (category_id) REFERENCES company_categories (id)`);
+} else {
+	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='company_categories'", 'column_name');
+	if ( ! exists $$data{short} ) {
+		$dbh->do('ALTER TABLE company_categories ADD short text');
+	} # end if
 } # endif
 if ( $config{'Owner'} ) {
 	$dbh->do("UPDATE configuration SET name='owner_id' WHERE name='Owner'" );

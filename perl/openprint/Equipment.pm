@@ -53,8 +53,9 @@ $debug = 0;
 	deleted				=>	'deleted',
 );
 %find_fields = (
-	'Specifications' => '(SELECT strValue FROM tbl_Equipment_Specifications WHERE lngEquipmentIndex=tbl_Equipment.Id AND strName=? LIMIT 1)',
-	'category'		=>	'(SELECT name FROM Equipment_Categories WHERE id=ANY(category_id))',
+	Specifications => '(SELECT strValue FROM tbl_Equipment_Specifications WHERE lngEquipmentIndex=tbl_Equipment.Id AND strName=? LIMIT 1)',
+	category		=>	'(SELECT name FROM Equipment_Categories WHERE id=ANY(category_id))',
+	servicetype		=>	'(SELECT name FROM service_types WHERE id = ANY(servicetype_id))',
 );
 %transforms = (
 );
@@ -221,6 +222,22 @@ $openprint::log->debug("Fold for $$params{pages} " . $F->to_string() );
 		} # end if
 		if ( defined $$Fold{'max_imposition'} and $$params{'imposition'} and ($$Fold{'max_imposition'} < $$params{'imposition'}) ) {
 			$openprint::log->debug("Wanted imposition: $$params{'imposition'}, have $$Fold{'min_imposition'} x $$Fold{'max_imposition'}") if $debug;
+			next;
+		} # end if
+		if ( defined $$Fold{'min_imposition_columns'} and $$params{'columns'} and ($$Fold{'min_imposition_columns'} > $$params{'columns'}) ) {
+			$openprint::log->debug("Wanted imposition columns: $$params{'columns'}, have $$Fold{'min_imposition_columns'} x $$Fold{'max_imposition_columns'}") if $debug;
+			next;
+		} # end if
+		if ( defined $$Fold{'max_imposition_columns'} and $$params{columns} and ($$Fold{'max_imposition_columns'} < $$params{'imposition'}) ) {
+			$openprint::log->debug("Wanted imposition: $$params{columns}, have $$Fold{'min_imposition_columns'} x $$Fold{'max_imposition_columns'}") if $debug;
+			next;
+		} # end if
+		if ( defined $$Fold{'min_imposition_rows'} and $$params{rows} and ($$Fold{min_imposition_rows} > $$params{rows}) ) {
+			$openprint::log->debug("Wanted imposition columns: $$params{rows}, have $$Fold{'min_imposition_rows'} x $$Fold{'max_imposition_rows'}") if $debug;
+			next;
+		} # end if
+		if ( defined $$Fold{'max_imposition_rows'} and $$params{rows} and ($$Fold{'max_imposition_rows'} < $$params{rows}) ) {
+			$openprint::log->debug("Wanted imposition: $$params{rows}, have $$Fold{'min_imposition_rows'} x $$Fold{'max_imposition_rows'}") if $debug;
 			next;
 		} # end if
 		if ( $$Fold{'spine_direction'} and $$params{'spine_direction'} and ($$Fold{'spine_direction'} ne $$params{'spine_direction'} ) ) {

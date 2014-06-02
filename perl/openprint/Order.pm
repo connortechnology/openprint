@@ -13,8 +13,6 @@ use vars qw( $debug %session %config %variable $log $dbh $table $serial %fields 
 require sql;
 require openprint::usergroup;
 require openprint::logs;
-require openprint::OrderedProduct;
-require openprint::OrderedProject;
 require openprint::Order_Tax;
 require openprint::Order_Invoice;
 require openprint::Order_Status;
@@ -152,6 +150,7 @@ sub delete {
 	sql::execute( $log, $dbh, q{DELETE FROM Schedule WHERE ProjectIndex IN ( SELECT lngProjectIndex FROM Order_Contents WHERE OrderIndex=?)}, $$self{'id'} );
 	sql::execute( $log, $dbh, q{DELETE FROM Order_Log WHERE order_id=?}, $$self{'id'} );
 	sql::execute( $log, $dbh, q{DELETE FROM Order_Taxes WHERE order_id=?}, $$self{'id'} );
+	sql::execute( $log, $dbh, q{DELETE FROM Order_Invoices WHERE order_id=?}, $$self{'id'} );
 	sql::execute( $log, $dbh, q{DELETE FROM Order_Contents WHERE OrderIndex=?}, $$self{'id'} );
 	sql::execute( $log, $dbh, q{DELETE FROM Ordered_Products WHERE order_id=?}, $$self{'id'} );
 	sql::update( undef, undef, 'Projects', [ 'order_id=?', $$self{'id'}], [ 'order_id', undef ] );
@@ -164,7 +163,7 @@ sub delete {
 } # end sub delete
 
 sub destroy {
-	$_->delete();
+	$_[0]->delete();
 } # end sub destroy 
 
 sub to_string {
@@ -302,6 +301,8 @@ sub Company {
 
 sub Contents {
 	if ( ! $_[0]{Contents} ) {
+require openprint::OrderedProject;
+require openprint::OrderedProduct;
 		$_[0]{Contents} = [ 
 			openprint::OrderedProject->find('order_id'=>$_[0]{'id'},'order'=>$openprint::OrderedProject::fields{'project_id'}), 
 			openprint::OrderedProduct->find('order_id'=>$_[0]{'id'},'order'=>$openprint::OrderedProduct::fields{'project_id'}),
@@ -311,11 +312,13 @@ sub Contents {
 } # end sub Contents
 
 sub Ordered_Projects {
+require openprint::OrderedProject;
 	return openprint::OrderedProject->find('order_id'=>$_[0]{'id'},'order'=>$openprint::OrderedProject::fields{'project_id'});
 } # end sub Ordered_Projects
 
 sub Projects {
 	my $self = shift;
+require openprint::OrderedProject;
 	return @{$$self{'Projects'}} if $$self{'Projects'};
 	return () if ! $$self{'id'};
 	$$self{'Projects'} = [ map { $_->Project() } openprint::OrderedProject->find( 'order_id'=>$$self{id} ) ];
@@ -329,6 +332,7 @@ sub Products {
 		$openprint::log->error("openrpint::Order->Products called with no id");
 		return ();
 	} # end if
+require openprint::OrderedProduct;
 	@{$$self{'Products'}} = openprint::OrderedProduct->find( 'order_id'=>$$self{id} );
 	return @{$$self{'Products'}};
 } # end sub Products
@@ -531,16 +535,14 @@ sub send_sales_order {
 		FROM	=> $sales_person_email,
 		TO		=> sprintf('"%s %s" <%s>', $self->get('firstname','lastname','email')),
 		#BCC	 =>	'iconnor@point-one.com',
-		SUBJECT => "Order $$self{id}",
+		SUBJECT => "Order $$self{id} Docket $$self{docket}",
 		ATTACHMENTS	=>	[ @body, @sales_order ],
 		);
 
-	$order{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/order_admin_body.html' );
-	$order{'ReplacementText'} = ssi::variable_substitution( \$order{'ReplacementText'}, \%order );
+	$order{'ReplacementText'} = ssi::include( '/email_content/order_admin_body.html', \%order );
 	$_ = MIME::QuotedPrint::encode_qp( Encode::encode( 'utf-8', ssi::variable_substitution( \$email_template, \%order ) ) );
 	@body = ('', $_, 'text/html', 'quoted-printable');
-	$order{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/sales_order_for_admin.html' );
-	$order{'ReplacementText'} = ssi::variable_substitution( \$order{'ReplacementText'}, \%order );
+	$order{'ReplacementText'} = ssi::include( '/email_content/sales_order_for_admin.html', \%order );
 	$_ = MIME::QuotedPrint::encode_qp( Encode::encode('utf-8', ssi::variable_substitution( \$email_template, \%order ) ) );
 	@sales_order = ( "Order$$self{id}.html", $_, 'text/html', 'quoted-printable' );
 	my @project_dockets = ();

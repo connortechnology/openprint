@@ -61,7 +61,7 @@
             $html .= '<td class="Price">&nbsp;</td>' if $$variable{canseepricing} or $$variable{canseepaperpricing};
 			$html .= '<td class="status">&nbsp;</td>';
             $html .= "</tr>\n";
-            my @sigs = $Project->signatures();
+            my @sigs = $Project->signatures( { sort=>1 } );
             while (@sigs) {
                 my $ss_id = shift @sigs;
                 next if $ss_id == $$services{''}[0];
@@ -74,7 +74,7 @@
 
                     if ( ( $statuses{$sigs[$i]} eq $statuses{$ss_id} ) and openprint::Estimating::Printing::compare_signatures( $Project, \%sig_specs, $sig_specs2, $qty_index, [ 'txtEmployeeComments' ] ) ) {
                         $sig_qty += 1;
-                        $sig_specs{'txtPrice'.$qty_index} += $ProjectCurrency->convert_from( $$sig_specs2{'txtPrice'.$qty_index} );
+                        $sig_specs{'txtPrice'.$qty_index} += $$sig_specs2{'txtPrice'.$qty_index};
                         $sig_specs{'txtPressSheetQty'.$qty_index} =~ s/\D//g;
                         my $sheet_qty = $$sig_specs2{'txtPressSheetQty'.$qty_index};
                         $sheet_qty =~ s/\D//g;
@@ -119,8 +119,21 @@
 
                     $html .= "<tr$rowclass>\n";
                     $html .= sprintf(q`<td class="checkbox"><input type="checkbox" name="chkDelete-%1$d" /></td>`, $service_id ) if $$variable{checkboxes};
-                    my $summary = openprint::service::summary( $Project->id(), $service_id, $qty_index );
-                    $summary =~ s/\n/<br\/>/g;
+
+                    my @summaries;
+                    my $summary = openprint::service::summary( $Project->id(),$service_id );
+                    if ( ref $summary eq 'ARRAY' ) {
+                        @summaries = @{$summary};
+                        $summary = shift @summaries;
+                    } # end if
+
+					my $qty_summary = openprint::service::summary( $Project->id(), $service_id, $qty_index );
+					if ( ref $qty_summary eq 'ARRAY' ) {
+						$$qty_summary[0] =~ s/\n/<br\/>/g;
+					} else {
+						$summary =~ s/\n/<br\/>/g;
+					} # end if
+
                     $html .= sprintf( (
                                 $ServiceType->url() ?
                                 q`<td class="Service"><a href="/employee/proj/%1$s?ProjectIndex=%2$d&amp;ServiceIndex=%3$d"><b>%4$s</b>%5$s<br/>%6$s<br/>%7$s</a></td>` :
@@ -128,7 +141,6 @@
                             $ServiceType->url(), $Project->id(), $service_id,
                             ( $$specs{'ServiceName'} ? $$specs{'ServiceName'} : $ServiceType->description() ),
                             ( $$specs{'txtServiceDescription'} ? ' - '.$$specs{'txtServiceDescription'} : '' ),
-                            openprint::service::summary( $Project->id(), $service_id ),
                             $summary,
                            );
 					if ( $$variable{canseepricing} ) {
@@ -136,7 +148,8 @@
 						if ( $$specs{'txtQuantity'.$qty_index} and ($$specs{'txtQuantity'.$qty_index} != $Project->quantity($qty_index) ) ) {
 							$html .= '('.$$specs{'txtQuantity'.$qty_index}.') ';
 						} # end if
-                        $html .= '<b>'.openprint::Currency::format($$specs{'txtPrice'.$qty_index}).'</b>';
+                        $html .= '<b>'.openprint::Currency::format($$specs{'txtPrice'.$qty_index}).'</b><br/>';
+						$html .= ref $qty_summary eq 'ARRAY' ? $$qty_summary[0] : $qty_summary;
 						$html .= '</td>';
 					} elsif ( $$variable{canseepaperpricing} ) {
 						$html .= '<td class="Price">&nbsp;</td>';
@@ -151,11 +164,41 @@
         } # end if Printing or else
     } # end foreach ServiceType_Category
 
-    #if ( ! $$services{'Paper'} ) {
-        my %totals;
-        my %sheets;
-        my %prices;
-        my %Stocks;
+	my %totals;
+	my %sheets;
+	my %prices;
+	my %Stocks;
+
+	if ( $$services{Paper} ) {
+
+		my $stock_specs = openprint::service::get_specs_ref( $Project, $$services{Paper}[0] ) if $$services{Paper} and $$services{Paper}[0];
+		my @stocks_and_quantities = openprint::Estimating::Paper::get_stocks_and_quantities( $Project,  $$services{Paper}[0], $stock_specs, $qty_index );
+		my $stock_index = 1;
+		foreach my $SQ ( @stocks_and_quantities ) {
+			my ( $Stock, $qty ) = @$SQ{'Stock','quantity'};
+			next if ! $qty;
+			my $string = $Stock->id_string();
+			
+			if ( $Stock->type() eq 'Sheet' ) {
+				$totals{$string} = Math::Round::nearest(0.1,$qty * $Stock->sheet_weight() );
+				$sheets{$string} = $qty;
+			} else {
+				$totals{$string} = $qty;
+			} # end if
+			$Stocks{$string} = $Stock;
+
+			if ( ! $$stock_specs{"cost-$stock_index-$qty_index"} ) {
+$log->warn("Lookup up stock price, cuz it's not in the paper service: cost-$stock_index-$qty_index");
+				my $price = $Stock->get_price( weight=>$totals{$string}, service=>'Material' );
+				$prices{$string} = sprintf('$%.2f/100lb = $%.2f', @$price{'100lb Price','100lb Total'} );
+			} else {
+				$$stock_specs{"price-$stock_index-$qty_index"} = int( $totals{$string} * $$stock_specs{"cost-$stock_index-$qty_index"} / 100 ) if ! $$stock_specs{"price-$stock_index-$qty_index"};
+				$prices{$string} = sprintf('$%.2f/100lb = $%.2f', @$stock_specs{"cost-$stock_index-$qty_index","price-$stock_index-$qty_index"} );
+			} # en dif
+			$stock_index += 1;
+		} # end while
+
+	} else {
 
         foreach my $ss_id ( $Project->signatures() ) {
             my $sig_specs = openprint::service::get_specs_ref( $Project, $ss_id );
@@ -198,16 +241,19 @@ if ( ! $totals{$string} ) {
 $log->error("NO paper weight for project $$Project{id} " . $Paper->to_string() ) if $$sig_specs{"txtPrice$qty_index"};
 } else {
 				my $price = $Paper->get_price( weight=>$totals{$string}, service=>'Material' );
-				$prices{$string} = sprintf('* $%.2f/100lb = $%.2f', @$price{'100lb Price','100lb Total'} );
+				$prices{$string} = sprintf('$%.2f/100lb = $%.2f', @$price{'100lb Price','100lb Total'} );
 }
             } # endif Supplied
         } # end foreach signature
+	} # end if has Paper Service
 
-        if ( keys %totals ) {
+		my @keys = sort keys %totals;
+
+        if ( @keys ) {
             $html .= '<tr class="totals">';
             $html .= '<td class="checkboxes">&nbsp;</td>' if $$variable{checkboxes};
             $html .= '<td class="Service"><b>Stock</b><br/>';
-            foreach my $string ( sort keys %totals ) {
+            foreach my $string ( @keys ) {
                 $html .= $string . '<br/>';
             } # end foreach string
 

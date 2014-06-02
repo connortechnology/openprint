@@ -10,12 +10,13 @@ require openprint::logs;
 require openprint::MaterialSpecification;
 require openprint::MaterialCategory;
 
-use vars qw{ $debug $log $dbh %session $table $serial %fields %find_fields %transforms %defaults $cache_field };
+use vars qw{ $debug $log $dbh %session $table $serial %fields %find_fields %transforms %defaults $cache_field $cached };
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
 *session = \%openprint::session;
 
 $debug = 0;
+$cached = 0;
 $table = 'materials';
 $serial = 'materialindex_seq';
 

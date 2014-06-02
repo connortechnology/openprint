@@ -137,23 +137,23 @@ button( 'merge'.$C->id(), { href=>'/administrator/managerial/company_profiles.ht
 				<label class="radio" for="resellerN">No</label>
 			</li>
 			<li><label>Offers Credit</label>
-			<? echo ( ssi::radio( 'offers_credit', ['1','Yes','0','No'], $$variable{'Company'}->offers_credit() ); ) ?>
+			<? echo ( radio( 'offers_credit', ['1','Yes','0','No'], $$variable{Company}->offers_credit() ); ) ?>
 			</li><li> 
 				<label>Price List</label>
 				<select name="pricelist_id">
 					<option value="">select</option>
-					<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Pricelist->find('order'=>'lower(name)') ], $$variable{'Company'}->pricelist_id() ); ) ?>
+					<? echo ( make_drop_down( openprint::Pricelist->dropdown( order=>'lower(name)'), $$variable{Company}->pricelist_id() ); ) ?>
 				</select>
 			</li><li> 
 				<label>Preferred Currency</label>
 				<select name="currency_id">
 					<option value=""> select </option>
-					<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Currency->find( 'order'=>'lower(name)' ) ], $$variable{'Company'}->currency_id() ); ) ?>
+					<? echo ( make_drop_down( openprint::Currency->dropdown( order=>'lower(name)' ), $$variable{Company}->currency_id() ); ) ?>
 				</select>
 			</li>
 			<li> 
 				<label>Pricing Discount</label>
-				<input type="text" name="discount" value="<? echo ( $$variable{'Company'}->discount() ) ?>" onkeyup="this.value=this.value.replace(/[^\d\.\-]/, '' );"/>%
+				<? echo ( input( type=>'float', name=>'discount', value=>$$variable{Company}->discount() ); ) ?> %
 			</li>
 			<li> 
 				<label>Sales Person</label>
@@ -169,20 +169,20 @@ button( 'merge'.$C->id(), { href=>'/administrator/managerial/company_profiles.ht
 		<? if ( $$variable{'Company'}->id() ) ?>
 		<li>
 			<label>Created On</label>
-			<? echo ( Date::Format::time2str($config{'DateTimeFormat'}, Date::Parse::str2time($$variable{'Company'}->created_on()) ); ) ?>
+			<? echo ( format_datetime( $$variable{Company}->created_on() ); ) ?>
 		</li>
 		<li>
 			<label>Last Update</label>
-			<? echo ( Date::Format::time2str($config{'DateTimeFormat'}, Date::Parse::str2time($$variable{'Company'}->updated_on()) ); ) ?>
+			<? echo ( format_datetime( $$variable{Company}->updated_on() ); ) ?>
 		</li>
 		<li>
 			<label>Last Login</label>
 			<? echo ( 
-				$_ = openprint::Log->find_one('order'=>'date_time DESC', 'action'=>'Login', 'company_id'=>$$variable{'Company'}->id() );
+				$_ = openprint::Log->find_one( order=>'date_time DESC', action=>'Login', company_id=>$$variable{Company}->id() );
 				if ( ! $_ ) {
 					return 'never';
 				}
-				return Date::Format::time2str($config{'DateTimeFormat'}, Date::Parse::str2time( $_->date_time() ) );
+				return format_datetime( $_->date_time() );
 			 ) ?>
 		</li>
 		<? endif ( $$variable{'Company'}->id() ) ?>
@@ -197,7 +197,7 @@ button( 'merge'.$C->id(), { href=>'/administrator/managerial/company_profiles.ht
 			<li><label># of Orders</label>
 				<a href="/administrator/reports/orders.html?ddmCustomer=<?CustomerIndex?>"><? echo ( @{$$variable{'Orders'}} ) ?></a>
 				<? if ( @{$$variable{'Orders'}} ) ?>
-				Last on:
+				Last on
 				<a href="/administrator/reports/orders.html?ddmCustomer=<?CustomerIndex?>"><? echo ( Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $$variable{'Orders'}[0]->created_on() ) ); ) ?></a>
 				<? endif ( @{$$variable{'Orders'}} ) ?>
 			</li>
@@ -205,13 +205,13 @@ button( 'merge'.$C->id(), { href=>'/administrator/managerial/company_profiles.ht
 			<li><label># of Projects</label>
 				<a href="/administrator/reports/projects.html?ddmCustomer=<?CustomerIndex?>"><? echo ( @{$$variable{'Projects'}} ) ?></a>
 				<? if ( @{$$variable{'Projects'}} ) ?>
-				Last on:
+				Last on
 				<a href="/administrator/reports/projects.html?ddmCustomer=<?CustomerIndex?>"><? echo ( Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $$variable{'Projects'}[0]->created_on() ) ); ) ?></a>
 				<? endif ( @{$$variable{'Projects'}} ) ?>
 			</li>
 			<li>
 				<label>Accounting Contacts</label>
-				<span id="AccountingContacts"><? echo ( include('_company_accounting_contacts.html'); ) ?></span>
+				<span id="AccountingContacts"><?include('_company_accounting_contacts.html')?></span>
 			</li>
 		<? endif ( $$variable{Company}->id() ) ?>
 			</ul>

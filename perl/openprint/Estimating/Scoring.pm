@@ -446,7 +446,7 @@ sub signature_calc {
 				my $complete = 1;
 
 				foreach my $I ( @impositions ) {
-					$Results{'Breakdown'} .= $I->to_string().'<br/>';
+					$Results{'Breakdown'} .= '<br/>Imp: '.$I->to_string().'<br/>';
 
 					if ( $_ = fits_on_equipment( $Equipment, $I, $sig_specs, $$specs{"txtVerticalQty-$$sig_specs{'SignatureIndex'}"}, $$specs{"txtHorizontalQty-$$sig_specs{'SignatureIndex'}"} ) ) {
 						$Results{'Breakdown'} .= "Doesn't fit. $_<br/>";
@@ -724,9 +724,12 @@ sub signature_summary {
 	$sig_specs = openprint::service::get_specs_ref( $Project, $s_id ) if ! $sig_specs;
 	if ( $qty_index ) {
 		my @folds;
-		my $Equipment = new openprint::Equipment( $$specs{"ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} );
-		return ' on ' . $Equipment->name();
+		if ( $$specs{"ddmEquipment-$$sig_specs{SignatureIndex}-$qty_index"} ) {
+			my $Equipment = new openprint::Equipment( $$specs{"ddmEquipment-$$sig_specs{SignatureIndex}-$qty_index"} );
+			return ' on ' . $Equipment->name();
+		} # end if
 	} # end if
+	return;
 } # end sub signature_summary
 
 sub summary {

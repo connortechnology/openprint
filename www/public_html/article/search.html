@@ -27,7 +27,7 @@
 		new Ajax.Updater('ArticleList','_search.html', {parameters:Form.serialize(form)});
 	} // end function
 </script>	 
-<? echo ( include('/includes/error_reporting.html'); ) ?>
+<?include('/includes/error_reporting.html')?>
 <div class="Article"><div class="Search">
 	<form id="f1" name="f1" method="post" action="/article/search.html">
 		<fieldset class="filters unprintable"><legend>Select Search Criteria</legend>
@@ -47,23 +47,23 @@
 			<li><label>Category</label>
 				<select name="category_id" id="category_id" onchange="load_articles();">
 					<option value="">All</option>
-					<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } @{$$variable{'Categories'}} ], $session{'/article/search.html?category_id'} ); ) ?>
+					<? echo ( make_drop_down( [ map { $_->id(), $_->name() } @{$$variable{'Categories'}} ], $session{'/article/search.html?category_id'} ); ) ?>
 				</select>
 			</li>
 <? endif ( @{$$variable{'Categories'}} = openprint::Article_Category->find('order'=>'lower(name)') ) ?>
 <? if ( 0 ) ?>
 			<li>
 				<label>Created</label>
-<? echo ( ssi::date_select_session( '/article/search.html', 'created_on_start', {onchange=>'load_articles();','with_today'=>1,'with_clear'=>1} ); ) ?>
+<? echo ( date_select_session( '/article/search.html', 'created_on_start', {onchange=>'load_articles();','with_today'=>1,'with_clear'=>1} ); ) ?>
 					to 
-<? echo ( ssi::date_select_session( '/article/search.html', 'created_on_end', {onchange=>'load_articles();','with_today'=>1,'with_clear'=>1} ); ) ?>
+<? echo ( date_select_session( '/article/search.html', 'created_on_end', {onchange=>'load_articles();','with_today'=>1,'with_clear'=>1} ); ) ?>
 			</li>
 <? endif ( 0 ) ?>
 			<li>
 				<label>Published</label>
-<? echo ( ssi::date_select_session( '/article/search.html', 'published_on_start', {onchange=>'load_articles();','with_today'=>1,'with_clear'=>1} ); ) ?>
+<? echo ( date_select_session( '/article/search.html', 'published_on_start', {onchange=>'load_articles();','with_today'=>1,'with_clear'=>1} ); ) ?>
 					to 
-<? echo ( ssi::date_select_session( '/article/search.html', 'published_on_end', {onchange=>'load_articles();','with_today'=>1,'with_clear'=>1} ); ) ?>
+<? echo ( date_select_session( '/article/search.html', 'published_on_end', {onchange=>'load_articles();','with_today'=>1,'with_clear'=>1} ); ) ?>
 			</li>
 			</ul>
 			</div>
@@ -71,14 +71,14 @@
 				<ul>
 <? if ( sets::isin($session{'user_type'}, ['E','A'] ) ) ?>
 					<li><label>Published?</label>
-					<? echo ( ssi::radio( 'published', [ '1', 'Yes', '0', 'No', '', 'Both' ], $session{'/article/search.html?published'}, {onclick=>'load_articles();'} ); ) ?>
+					<? echo ( radio( 'published', [ '1', 'Yes', '0', 'No', '', 'Both' ], $session{'/article/search.html?published'}, {onclick=>'load_articles();'} ); ) ?>
 					</li>
 <? endif ( sets::isin($session{'user_type'}, ['E','A'] ) ) ?>
 					<li>
 						<label>Author</label>
 						<select name="author_id" id="author_id" onchange="load_articles();">
 							<option value="">All</option>
-							<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } map { new openprint::User($_) } sql::execute( undef, undef, 'SELECT DISTINCT created_by FROM articles WHERE published=true and deleted=false and anonymous=false') ], $session{'/article/search.html?author_id'} ); ) ?>
+							<? echo ( make_drop_down( [ map { $_->id(), $_->name() } map { new openprint::User($_) } sql::execute( undef, undef, 'SELECT DISTINCT created_by FROM articles WHERE published=true and deleted=false and anonymous=false') ], $session{'/article/search.html?author_id'} ); ) ?>
 						</select>
 					</li>
 					<li><label>Title</label>
@@ -89,21 +89,21 @@
 			</div>
 			<p class="buttons">
 				<? echo ( join('',
-					ssi::button( 'ShowResults', { onclick=>'load_articles();', text=>'Show Results'} ),
-					ssi::button( 'Reset', { href=>'/article/search.html?action=Reset', text=>'Reset'} ),
+					button( 'ShowResults', { onclick=>'load_articles();', text=>'Show Results'} ),
+					button( 'Reset', { href=>'/article/search.html?action=Reset', text=>'Reset'} ),
 					( $session{user_id} ? (
-					ssi::button( 'New', {href=>'/article/edit.html', text=>'New Article'} ),
+					button( 'New', {href=>'/article/edit.html', text=>'New Article'} ),
 					) : () ),
 					); ) ?>
 			</p>
 		</fieldset>
-		<div id="ArticleList"><? echo ( include('_search.html'); ) ?></div>
+		<div id="ArticleList"><?include('_search.html')?></div>
 		<p class="buttons">
 			<? echo ( 
 				if ( $session{user_type} eq 'A' ) {
 					return join("\n",
-						ssi::button('Delete', { onclick=>q`new Ajax.Updater( 'ArticleList', '_search.html', { parameters: { action: 'Delete', article_id: $A($('f1').article_id).map(function(x){if(x.checked) return x.value;}) } } );` } ),
-						ssi::button('Destroy', { onclick=>q`new Ajax.Updater( 'ArticleList', '_search.html', { parameters: { action: 'Destroy', article_id: $A($('f1').article_id).map(function(x){if(x.checked) return x.value;}) } } );` } ),
+						button('Delete', { onclick=>q`new Ajax.Updater( 'ArticleList', '_search.html', { parameters: { action: 'Delete', article_id: $A($('f1').article_id).map(function(x){if(x.checked) return x.value;}) } } );` } ),
+						button('Destroy', { onclick=>q`new Ajax.Updater( 'ArticleList', '_search.html', { parameters: { action: 'Destroy', article_id: $A($('f1').article_id).map(function(x){if(x.checked) return x.value;}) } } );` } ),
 						);
 				} # end if
 				return '';

@@ -1,17 +1,18 @@
 <? eval (
-
-	my $Company = new openprint::Company( $session{'company_id'} );
+	my $Company = new openprint::Company( $session{company_id} );
 	my $company_name = $Company->name();
-	$variable{'company_name'} = $company_name;
+	$variable{company_name} = $company_name;
 
 	# if project_id or docket are specified, then destdir will contain them as well.  
 	require handlers::upload;
 
 	my $destdir = $$variable{destdir} = handlers::upload::get_destdir();
-	my $path = $param{'path'};
+	my $path = $param{path};
+	my @path;
 	if ( $path ) {
 		$path =~ s/\.\.+//g;
 		$path =~ s/\/\/+/\//g;
+		@path = split('/', $path );
 	} # end if
 if ( 0 ) {
 	if ( $param{'docket'} ) {
@@ -35,7 +36,6 @@ if ( 0 ) {
 		# Looks like a docket #
 	}
 	if ( $param{'filename'} eq '..' ) {
-		my @path = split('/', $path);
 		pop @path if @path;
 		$path = join('/', @path );
 	} elsif( $param{'filename'} ) {
@@ -44,7 +44,7 @@ if ( 0 ) {
 		$path .= '/'.$param{'filename'};
 	} # end if
 	
-	$variable{'path'} = $path;
+	$variable{path} = $path;
 
 	my @filenames;
 	if ( opendir DIRHANDLE, $config{'ProjectFilesPath'}.$destdir.$path ) {
@@ -73,10 +73,11 @@ $log->error("Unknown file type $config{'ProjectFilesPath'}$destdir/$path/$file")
 	} # end foreach file
 
 	@{$$variable{'PROJECT_FILES'}} = ();
+	push @{$$variable{PROJECT_FILES}}, $path, '..', '', '', undef if @path;
 	foreach my $file ( sort { $b <=> $a } @dirs ) {
 		if ( $file =~ /\D/ ) {
 			# A dir, but not a docket
-			push @{$$variable{'PROJECT_FILES'}}, $path, $file, '', "", undef;
+			push @{$$variable{PROJECT_FILES}}, $path, $file, '', "", undef;
 		} else {
 			if ( openprint::Order->find_one(company_id=>$session{company_id}, docket=>$file ) ) {
 				push @{$$variable{'PROJECT_FILES'}}, $path, $file, undef, "Files for docket $file", undef;
@@ -84,7 +85,6 @@ $log->error("Unknown file type $config{'ProjectFilesPath'}$destdir/$path/$file")
 				push @{$$variable{'PROJECT_FILES'}}, $path, $file, undef, undef, undef;
 			} # end if
 		} # end if
-
 	} # end foreach dir
 
 	foreach my $file ( sort { $b cmp $a } @files ) {

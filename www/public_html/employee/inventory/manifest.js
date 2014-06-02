@@ -167,8 +167,8 @@ function apply_content( c_id ) {
 
 function manifest_onsubmit(form) {
 
-	var re = /^txtName-(\d+)$/;
-	var fields_to_check = ['Manufacturer','Owner','Name','Finish','Colour'];
+	var re = /^txtBrand-(\d+)$/;
+	var fields_to_check = ['Manufacturer','Owner','Brand','Finish','Colour'];
 	for ( var i = 0, len = form.elements.length; i < len; i += 1 ) {
 		var matches = re.exec( form.elements[i].name );
 		

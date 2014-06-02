@@ -20,7 +20,7 @@ require openprint::Shift;
 require openprint::employee_production;
 require openprint::ProductionFeedback;
 
-$debug = 1;
+$debug = 0;
 $table = 'schedule';
 $serial = 'schedule_id_seq';
 
@@ -216,6 +216,9 @@ sub stock {
 	return $$self{'stock'};
 } # end sub stock
 
+my %printing_service_type_ids;
+my %bindery_service_type_ids;
+
 sub get_li {
 	my ( $self, $ul_id ) = @_;
 
@@ -238,8 +241,8 @@ sub get_li {
 	my $Equipment = $self->Equipment();
 
 	my $colour = '';
-	my %printing_service_type_ids = map { $$_{id}, $$_{id} } openprint::ServiceType->find('category'=>'Printing');
-	my %bindery_service_type_ids = map { $$_{id}, $$_{id} } openprint::ServiceType->find('category'=>'Bindery');
+	%printing_service_type_ids = map { $$_{id}, $$_{id} } openprint::ServiceType->find('category'=>'Printing') if ! %printing_service_type_ids;
+	%bindery_service_type_ids = map { $$_{id}, $$_{id} } openprint::ServiceType->find('category'=>'Bindery') if ! %bindery_service_type_ids;
 
 	my @equipment;
 

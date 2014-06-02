@@ -771,12 +771,13 @@ sub company_profile_fields {
 	if ( $param{action} eq 'Save' ) {
 		foreach my $Field ( openprint::Company_Profile_Field->find() ) {
 			$variable{'error'} .= $Field->save({
-				'name'	=>	$param{'name-'.$Field->id()},
-				'description'	=>	$param{'description-'.$Field->id()},
-				'type'	=>	$param{'type-'.$Field->id()},
-				'values'	=>	[ split(',', $param{'values-'.$Field->id()} ) ],
-				'required'	=>	$param{'required-'.$Field->id()},
-				'searchable'	=>	$param{'searchable-'.$Field->id()},
+				name	=>	$param{'name-'.$Field->id()},
+				description	=>	$param{'description-'.$Field->id()},
+				type	=>	$param{'type-'.$Field->id()},
+				values	=>	[ split(',', $param{'values-'.$Field->id()} ) ],
+				defaults	=>	[ misc::trim( split(',', $param{'defaults-'.$Field->id()} ) ) ],
+				required	=>	$param{'required-'.$Field->id()},
+				searchable	=>	$param{'searchable-'.$Field->id()},
 				search_default	=>	$param{'search_default-'.$Field->id()},
 				match			=>	$param{'match-'.$Field->id()},
 				on_registration	=>	$param{'on_registration-'.$Field->id()},
@@ -941,5 +942,22 @@ sub _authorizations {
 	ssi::save_params( '/administrator/managerial/authorizations.html', ( 'object_type_id' ) );
 } # end sub _authorizations
 
+sub companies {
+	_companies();
+} # end sub companies
+sub _companies {
+	ssi::save_params( '/administrator/managerial/companies.html', ( 'salesrep_id',
+				( map { 'created_on_start_' . $_ } ( 'year','month','day' ) ),
+				) );
+	$session{$r->uri().'?salesrep_id_exclude'} = $param{salesrep_id_exclude};
+} # end sub _companies
+
+sub folds {
+	_folds();
+} # end sub folds
+
+sub _folds {
+	ssi::save_params( '/administrator/managerial/folds.html', ( 'equipment_id', 'type' ) );
+} # end sub _folds
 1;
 __END__

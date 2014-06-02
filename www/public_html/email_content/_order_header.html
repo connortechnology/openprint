@@ -12,7 +12,7 @@
 	return '' if ! @Invoices;
 	my $html = '<li class="invoices"><label>Invoices</label>';
 
-    foreach my $OI ( @Invoices() ) {
+    foreach my $OI ( @Invoices ) {
         my $Invoice = $OI->Invoice();
         $html .= $$Invoice{num} . ' on ' . format_date( $Invoice->created_on() );
 		$html .= '<br/>';
