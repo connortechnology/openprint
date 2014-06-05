@@ -37,6 +37,7 @@ my @variables = (
 	'OverrideDiePrice1', 'OverrideDiePrice2', 'OverrideDiePrice3',
 	'StrippingPrice1','StrippingPrice2','StrippingPrice3', 
 	'OverrideStrippingPrice1', 'OverrideStrippingPrice2', 'OverrideStrippingPrice3',
+	'alert',
 );
 
 sub variables {
@@ -463,6 +464,12 @@ sub signature_calc {
 			$I->display('Override');
 		} # end foreach
 		@Sets_of_Impositions = ( \@override_impos );
+		my $overriden_count = misc::sum( map { $_->quantity() * $_->imposition() } @override_impos );
+		if ( $overriden_count != $Imposition->quantity() * $Imposition->imposition() ) {
+			$results{alert} .= "Overriden imposition count does not match printed imposition count for form $form.<br/>";
+		} else {
+			$openprint::log->debug(" override count: $overriden_count $$Imposition{quantity} * $$Imposition{imposition}");
+		} # end if
 	} else {
 		@Sets_of_Impositions = ( [ $Imposition ] );
 	} # end if Overrides
