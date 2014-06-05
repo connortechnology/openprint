@@ -2132,6 +2132,14 @@ $openprint::log->debug("AC " . $openprint::dbh->{AutoCommit} );
 
 	} # end foreach qty_index
 
+	my @side_one_colours = get_colours( $specs, 'SideOne' );
+	my @side_two_colours = get_colours( $specs, 'SideTwo' );
+	$$specs{SideOneColours} = \@side_one_colours;
+	$$specs{SideTwoColours} = \@side_two_colours;
+
+#$openprint::log->debug("Side one @side_one_colours twp: @side_two_colours");
+	my %inkCoverage = get_inkcoverage( $Project, $specs );
+
 	if ( ($Project->Type()->name() eq 'PresentationFolders') or (($$specs{'Group'} == 1 ) and sets::isin($$specs{'rdbTemplateType'}, ['2Panel1Pocket','2Panel2Pocket','TriFoldDoublePocket'] ) )) {
 		if ( $$specs{'rdbPocketSize'} and ( $$specs{'rdbPocketSize'} ne 'Other' ) ) {
 			$$specs{'PocketSize'} = $$specs{'rdbPocketSize'};	
@@ -2203,13 +2211,6 @@ $openprint::log->debug("Type: " . $Project->Type()->name());
 	} # end foreach
 	return $$specs{'Status'} = 'uncalculated' if $$specs{alert};
 
-	my @side_one_colours = get_colours( $specs, 'SideOne' );
-	my @side_two_colours = get_colours( $specs, 'SideTwo' );
-	$$specs{SideOneColours} = \@side_one_colours;
-	$$specs{SideTwoColours} = \@side_two_colours;
-
-#$openprint::log->debug("Side one @side_one_colours twp: @side_two_colours");
-	my %inkCoverage = get_inkcoverage( $Project, $specs );
 	if ( ! ( $$services{'NoPrinting'} or @side_one_colours or @side_two_colours ) ) {
 		$$specs{'alert'} .= 'Please choose the colours to be printed.<br/>';
 		return $$specs{'Status'} = 'uncalculated';

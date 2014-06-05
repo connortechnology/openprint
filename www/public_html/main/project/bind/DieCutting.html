@@ -115,11 +115,12 @@ function Imposition_onchange( element, signature, qty_index, index ) {
                 foreach my $qty_index ( $$variable{Project}->quantity_indexes() ) {
                     $html .= '<div class="'.$$variable{Columns}.'Columns">';
                     if ( $$sig_specs{"txtImposition$qty_index"} ) {
-if ( 0 ) {
+if ( 1 ) {
                         if ( sets::isin( $session{user_type}, ['A','E'] ) ) {
-							$html .= write_override( "OverrideImposition-$form-$qty_index", $$variable{"chkOverrideFold-$form-$qty_index"}, , qq`show_extra_imposition($form,$qty_index);`, q`calc('f1');` );
+							$html .= write_override( "OverrideImposition-$form-$qty_index", $$variable{"OverrideImposition-$form-$qty_index"}, , qq`show_extra_imposition($form,$qty_index);`, q`calc('f1');` );
+							$html .= 'Override';
 
-						} else {
+						} elsif ( $$variable{"OverrideImposition-$form-$qty_index"} ) {
                             $html .= sprintf('<input type="hidden" name="chkOverrideFold-%1$d-%2$d" value="Y" /> Overriden<br/>', $form, $qty_index );
                         } # end if
 }

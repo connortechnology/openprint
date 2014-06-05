@@ -321,13 +321,15 @@ sub calc {
 
 					$$specs{'hdnBreakdown'.$qty_index} .= $I->to_string() . '<br/>';
 					$$specs{'hdnBreakdown'.$qty_index} .= sprintf('&nbsp;&nbsp;MakeReady: $%.2f<br/>', $$Price{'MakeReady'}{'Price'});
-					$$specs{'hdnBreakdown'.$qty_index} .= sprintf('&nbsp;&nbsp;DiePrice: $%.2f<br/>', $$Price{'DiePrice'}{'Price'});
+					if ( $$Price{DiePrice} ) {
+						$$specs{'hdnBreakdown'.$qty_index} .= sprintf('&nbsp;&nbsp;DiePrice: $%.2f<br/>', $$Price{'DiePrice'}{'Price'});
+						$totalDiePrice += $Price->{DiePrice}{Price};
+					} # end if
 					$$specs{'hdnBreakdown'.$qty_index} .= sprintf('&nbsp;&nbsp;Service: $%1$.2f%2$s * %4$d impressions = $%3$.2f<br/>', @{$$Price{'ServicePrice'}}{'Price','units','Total'}, $$Price{'Impressions'} );
 					$$specs{'hdnBreakdown'.$qty_index} .= sprintf('&nbsp;&nbsp;Hole Clearing: $%1$.2f%2$s * %5$d holes * %6$dout * %4$d impressions = $%3$.2f<br/>', @{$$Price{'HoleClearingPrice'}}{'Price','units','Total'}, $$Price{'Impressions'}, $$specs{"txtHoleClearingHoles-$form"}, $I->imposition() ) if exists $$Price{'HoleClearingPrice'};
 					$totalUnitPrice += $Price->{UnitPrice};
 					$totalMPrice += $Price->{MPrice};
-					$totalDiePrice += $Price->{'DiePrice'}{'Price'};
-					$totalStrippingPrice += $Price->{Stripping}{Total};
+					$totalStrippingPrice += $Price->{Stripping}{Total} if $Price->{Stripping};
 
 					@$specs{
 						"ImpQty-$form-$qty_index-$imp_index",
@@ -347,22 +349,28 @@ sub calc {
 
 				$totalPrice += $results{Total};
 
-				if ( $$specs{'OverrideStrippingPrice'.$qty_index} ne 'Y' ) {
+				if ( (! defined $$specs{'OverrideStrippingPrice'.$qty_index}) or ( $$specs{'OverrideStrippingPrice'.$qty_index} ne 'Y' ) ) {
+					if ( $results{'Price'}{'Stripping'} ) {
 					$$specs{'hdnBreakdown'.$qty_index} .= sprintf('&nbsp;&nbsp;Stripping: $%1$.2f%2$s * %4$d impressions = $%3$.2f<br/>', @{$results{'Price'}{'Stripping'}}{'Price','units','Total'}, $results{'Price'}{'Impressions'} );
+					} # end if
 					@no_outputs = sets::exclude( ["StrippingPrice$qty_index"], \@no_outputs );
 				} else {
 					$$specs{'hdnBreakdown'.$qty_index} .= sprintf('&nbsp;&nbsp;Stripping: $%1$.2f<br/>', $$specs{"StrippingPrice$qty_index"} );
 					@no_outputs = sets::union( @no_outputs, "StrippingPrice$qty_index" );
 				} # end if
 
-				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('&nbsp;&nbsp;Total: $%.2f * %s%% = $%.2f<br/>', $results{Total},$$specs{'Markup'.$qty_index}, $totalPrice*(1+$$specs{'Markup'.$qty_index}/100));
+				if ( $$specs{'Markup'.$qty_index} ) {
+					$$specs{'hdnBreakdown'.$qty_index} .= sprintf('&nbsp;&nbsp;Total: $%.2f * %s%% = $%.2f<br/>', $results{Total},$$specs{'Markup'.$qty_index}, $totalPrice*(1+$$specs{'Markup'.$qty_index}/100));
+				} else {
+					$$specs{'hdnBreakdown'.$qty_index} .= sprintf('&nbsp;&nbsp;Total: $%.2f<br/>', $results{Total} );
+				} # end if
 			} # end if
 		} # end foreach Signature
 	
-		if ( $$specs{'OverrideDiePrice'.$qty_index} ne 'Y' ) {
+		if ( ( !defined $$specs{'OverrideDiePrice'.$qty_index}) or ($$specs{'OverrideDiePrice'.$qty_index} ne 'Y') ) {
 			$$specs{"DiePrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $totalDiePrice );
 		} # end if
-		if ( $$specs{'OverrideStrippingPrice'.$qty_index} ne 'Y' ) {
+		if ( ( !defined $$specs{'OverrideStrippingPrice'.$qty_index}) or ( $$specs{'OverrideStrippingPrice'.$qty_index} ne 'Y' ) ) {
 			$$specs{"StrippingPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $totalStrippingPrice );
 		} else {
 			$$specs{"StrippingPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $$specs{"StrippingPrice$qty_index"} );
@@ -437,31 +445,27 @@ sub signature_calc {
 	} # end if
 
 	my $services = $Project->services();
-	my @Sets_of_Impositions = ( [ $Imposition ] );
+	my @Sets_of_Impositions;
 
-if ( 0 ) {
-	my @impositions = ();
-	if ( $$services{'Cutting'} ) {
-		my @imps = openprint::imposition::get_all_impositions( $Imposition );
-$log->debug("# of imps to consider: " . @imps ) if DEBUG;
-		for ( my $i = 0; $i < @imps; $i += 1 ) {
-			if (
-					( $$specs{"chkOverrideImposition-$form-$qty_index"} ne 'Y' )
-					or ( $$specs{"txtImposition-$form-$qty_index"} == $imps[$i]->imposition() )
-			   ) {
-				push @impositions, $imps[$i];
-			} # end if
-			for ( my $j = $i + 1; $j < @imps; $j += 1 ) {
-				if ( $imps[$i]->imposition() == $imps[$j]->imposition() and $imps[$i]->rows() == $imps[$j]->rows() ) {
-					splice @imps, $j, 1;
-					$j -= 1;
-				} # end if
-			} # end foreach
+	if ( (defined $$specs{"OverrideImposition-$form-$qty_index"}) and ( $$specs{"OverrideImposition-$form-$qty_index"} eq 'Y' ) ) {
+		$openprint::log->debug("Overriding impositions");
+
+		my @override_impos;
+		foreach my $index ( 1 .. 4 ) {
+			next if ! $$specs{"ImpQty-$form-$qty_index-$index"};
+			my $I = $Imposition->copy();
+			$I->quantity( $$specs{"ImpQty-$form-$qty_index-$index"} );
+			$I->imposition( $$specs{"ImpOut-$form-$qty_index-$index"} );
+			$I->columns( $$specs{"ImpColumns-$form-$qty_index-$index"} );
+			$I->rows( $$specs{"ImpRows-$form-$qty_index-$index"} );
+			$I->Paper( $Imposition->Paper() );
+			push @override_impos, $I;
+			$I->display('Override');
 		} # end foreach
+		@Sets_of_Impositions = ( \@override_impos );
 	} else {
-		@impositions = ( $Imposition );
-	} # end if
-} # end if
+		@Sets_of_Impositions = ( [ $Imposition ] );
+	} # end if Overrides
 
 	foreach my $Equipment ( @equipment ) {
 		if ( (defined $$specs{"txtHoleClearingHoles-$form"} ) and ( $$specs{"txtHoleClearingHoles-$form"} > 0 ) and ( $Equipment->specification('HoleClearing Capable') ne 'Y') ) {
@@ -469,9 +473,9 @@ $log->debug("# of imps to consider: " . @imps ) if DEBUG;
 			next;
 		} # end if
 
-		foreach my $Set_of_Impositions ( @Sets_of_Impositions ) {
-
-			my @Impositions = @{$Set_of_Impositions};
+		for ( my $Set_index = 0; $Set_index < @Sets_of_Impositions; $Set_index += 1 ) {
+			my $Set_of_Impositions =  $Sets_of_Impositions[$Set_index];
+			my @Impositions = openprint::imposition::sort( @{$Set_of_Impositions} );
 
 			my %price;
 			my $complete = 1;
@@ -480,11 +484,11 @@ $log->debug("# of imps to consider: " . @imps ) if DEBUG;
 
 				my $width = $imposition->layout_width();
 				my $height = $imposition->layout_height();
-				if ( $_ = $Equipment->fits( $width, $height, $$sig_specs{'txtSpecificStockCalliper'} ) ) {
+				if ( $_ = $Equipment->fits( $width, $height, $$sig_specs{txtSpecificStockCalliper} ) ) {
 					if ( 1 == @equipment ) {
 						$results{'breakdown'} .= "Doesn't fit. $_<br/>";
 					} # end if
-					if ( $$imposition{imposition} > 1 ) {
+					if ( $$imposition{imposition} > 1 and ! $$specs{"OverrideImposition-$form-$qty_index"} ) {
 						splice ( @Impositions, $impo_index, 1, openprint::imposition::cut( $imposition ) );
 						push @Sets_of_Impositions,  \@Impositions;
 					} # end if
