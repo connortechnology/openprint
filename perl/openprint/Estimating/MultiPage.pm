@@ -65,6 +65,7 @@ sub variables {
 		push @v, 'txtFinalWidth'.$group_id;
 		push @v, 'txtHeight'.$group_id;
 		push @v, 'txtWidth'.$group_id;
+		push @v, 'txtPlateChangeQuantity-'.$group_id;
 	} # end foreach
 	return @v;
 } # end sub variables

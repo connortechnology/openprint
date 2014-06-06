@@ -484,6 +484,12 @@ $log->debug("group $group_id");
 				} # end if
 			} # end foreach qty_index
 		} # end foreach spec
+	
+		foreach my $spec ( 'txtPlateChangeQuantity' ) {
+			foreach my $qty_index ( $Project->quantity_indexes() ) {
+				openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $ss_id, $spec.$qty_index, $$param{$spec.'-'.$group_id} );
+			} # end foreach qty_index
+		} # en
 		
 	} # end foreach
 
