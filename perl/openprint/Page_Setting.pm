@@ -4,7 +4,7 @@ our @ISA = qw(openprint::Object);
 
 use vars qw( $debug $serial $table %fields %transforms %defaults $cache_field $cached %cache );
 
-$debug = 1;
+$debug = 0;
 $cached = 0;
 $table = 'page_settings';
 $serial = 'page_settings_id_seq';
@@ -34,20 +34,30 @@ sub cache_field {
 }
 
 sub can_view {
-	if ( $_[0]{user_ids} and sets::isin( $openprint::session{user_id}, $_[0]{user_ids} ) ) {
-		$openprint::log->debug("User is in user_ids") if $debug;
-		return 1;
+
+	if ( $openprint::session{user_id} ) {
+		if ( $_[0]{user_ids} and $openprint::session{user_id} and sets::isin( $openprint::session{user_id}, $_[0]{user_ids} ) ) {
+			$openprint::log->debug("User is in user_ids") if $debug;
+			return 1;
+		} # end if
+		if ( $openprint::session{user_type} eq 'A' ) {
+			$openprint::log->debug("User is an admin") if $debug;
+			return 1;
+		}
 	} # end if
-	if ( $openprint::session{user_type} eq 'A' ) {
-		$openprint::log->debug("User is an admin") if $debug;
-		return 1;
-	}
-	
+		
+	# User level defineds the default response.
 	if ( $_[0]{user_level} ) {
-		if ( $openprint::session{user_type} eq 'E' ) {
-			return 0 if $_[0]{user_level} eq 'A';
-		} elsif ( $openprint::session{user_type} eq 'C' ) {
-			return 0 if $_[0]{user_level} eq 'A' or $_[0]{user_level} eq 'E';
+		if ( $_[0]{user_level} eq 'A' ) {
+			return 0 if $openprint::session{user_type} ne 'A';
+
+		} elsif ( $_[0]{user_level} eq 'E' ) {
+			return 0 if ( $openprint::session{user_type} ne 'A' and $openprint::session{user_type} ne 'E' );
+
+		} elsif ( $_[0]{user_level} eq 'C' ) {
+			return 0 if ( $openprint::session{user_type} ne 'C' and $openprint::session{user_type} ne 'A' and $openprint::session{user_type} ne 'E' );
+		} else {
+			return 0;
 		} 
 	} 
 	if ( $_[0]{usergroup_ids} and @{$_[0]{usergroup_ids}} ) {
@@ -103,8 +113,11 @@ sub get {
 			} # end if
 		} # end while chunks
 		if ( ! $$cache{$page} ) {
+$openprint::log->debug("Didn't find page setting for $page") if $debug;
 			$$cache{$page} = new openprint::Page_Setting();
 			#$$cache{$page}->save({url=>$page}) if $openprint::session{user_type} eq 'A';
+		} elsif ( $debug ) {
+$openprint::log->debug("Found Page settnig " . $$cache{$page}->to_string() ) if $debug;
 		} # end if
 	} # end if Page Settings not found
 	return $$cache{$page};

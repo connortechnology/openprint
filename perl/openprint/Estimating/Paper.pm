@@ -444,6 +444,27 @@ sub summary {
 sub save {
 } # end sub save
 
+sub get_stocks {
+    my ( $Project, $service_id, $specs ) = @_;
+    $specs = openprint::service::get_specs_ref( $Project, $service_id ) if ! $specs;
+    my %Papers;
+    foreach my $ss_id ( $Project->signatures() ) {
+        my $sig_specs = openprint::service::get_specs_ref( $Project, $ss_id );
+        foreach my $q_index ( $Project->quantity_indexes() ) {
+            next if ! $$sig_specs{'txtImposition'.$q_index};
+            my $Paper = openprint::Paper::load_from_signature( $Project, $sig_specs, $q_index )->Supplied();
+            next if ! ( $Paper->id() or $$Paper{custom} );
+            $Papers{$Paper->id_string()} = $Paper;
+        } # end foreach qty_index
+    } # end foreach
+	my @Results;
+	my $stock_id = 1;
+	foreach my $key ( sort { $a cmp $b} keys %Papers ) {
+		push @Results, { Stock=>$Papers{$key}, index=>$stock_id };
+	} # end foreach
+	return @Results;
+} # end sub get_stocks
+
 sub get_stocks_and_quantities {
     my ( $Project, $service_id, $specs, $qty_index ) = @_;
 
@@ -464,6 +485,8 @@ sub get_stocks_and_quantities {
 
 	my %quantities;
 
+	my @Results;
+
 	my $stock_id = 1;
 	foreach my $key ( @keys ) {
 		my $Paper = $Papers{$key};
@@ -475,9 +498,10 @@ sub get_stocks_and_quantities {
 				$quantities{$key} += $$specs{"qty-$stock_id-$qty_index"};
 			} # end if
 		} # end if
+		push @Results, { Stock => $Papers{$key}, quantity => $quantities{$key}, index=>$stock_id };
 		$stock_id += 1;
 	} # end foreach key
-	return map { { Stock => $Papers{$_}, quantity => $quantities{$_} } } @keys;
+	return @Results;
 
 } # end sub get_stocks_and_quantities
 
