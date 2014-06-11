@@ -109,12 +109,13 @@ sub Specification {
 		foreach my $Spec ( openprint::MaterialSpecification->find( 'material_id'=>$$self{'id'}, 'order'=>'min NULLS FIRST' ) ) {
 			push @{$$self{'Specifications'}{$Spec->name()}}, $Spec;
 		} # end foreach
-	} # end if
 
 	if ( ! $$self{'Specifications'} ) {
+		$$self{'Specifications'} = {};
 		#$openprint::log->warn("No specfications for " . $self->name() );
 		return;
 	}
+	} # end if
 	if ( ! $$self{'Specifications'}{$name} ) {
 		#$openprint::log->warn("No specfications for ($name) " . $self->name() );
 		return;
