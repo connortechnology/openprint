@@ -1019,29 +1019,37 @@ sub decrease_imposition {
 			} # end if
 		} else {
 
-			my $imp1 = $imposition->copy();
-			$imp1->rows( int ( $imp1->rows()/2 ) );
-			if ( $imp1->imposition() ) {
-				push @results, $imp1;
+			if ( $imposition->rows() >= 2 ) {
+				my $imp1 = $imposition->copy();
+				$imp1->rows( int ( $imp1->rows()/2 ) );
+				if ( $imp1->imposition() ) {
+					push @results, $imp1;
+				} # end if
+				if ( $imp1->rows() != $imposition->rows() - 1 ) {
+					my $imp4 = $imposition->copy();
+					$imp4->rows( $imp4->rows()-1 );
+					if ( $imp4->imposition() ) {
+						push @results, $imp4;
+					} # end if
+				} # end if
 			} # end if
 
-			my $imp2 = $imposition->copy();
-			$imp2->columns( int ( $imp2->columns()/2 ) );
-			if ( $imp2->imposition() ) {
-				push @results, $imp2;
-			} # end if
+			if ( $imposition->columns() >= 2 ) {
+				my $imp2 = $imposition->copy();
+				$imp2->columns( int ( $imp2->columns()/2 ) );
+				if ( $imp2->imposition() ) {
+					push @results, $imp2;
+				} # end if
 			
-			my $imp3 = $imposition->copy();
-			$imp3->columns( $imp3->columns()-1 );
-			if ( $imp3->imposition() ) {
-				push @results, $imp3;
+				if ( $imp2->columns() != $imposition->columns() - 1 ) {
+					my $imp3 = $imposition->copy();
+					$imp3->columns( $imp3->columns()-1 );
+					if ( $imp3->imposition() ) {
+						push @results, $imp3;
+					} # end if
+				} # end if
 			} # end if
 
-			my $imp4 = $imposition->copy();
-			$imp4->rows( $imp4->rows()-1 );
-			if ( $imp4->imposition() ) {
-				push @results, $imp4;
-			} # end if
 		} # end if
 	} # end foreach
 
@@ -1089,7 +1097,7 @@ sub sort {
 		if ( $$a{runstyle} ne $$b{runstyle} ) {
 			return $$a{runstyle} cmp $$b{runstyle};
 		} elsif ( $$a{pages} != $$b{pages} ) {
-			return $$a{pages} <=> $$b{pages};
+			return $$b{pages} <=> $$a{pages};
 		} elsif ( $$a{imposition} != $$b{imposition} ) {
 			return $$b{imposition} <=> $$a{imposition};
 		} elsif ( $$a{columns} != $$b{columns} ) {
