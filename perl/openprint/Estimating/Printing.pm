@@ -441,11 +441,11 @@ sub setup_project {
 			'Add Grip Width'=>	$$specs{'GripWidth'},
 			'Add Grip Height'=>	$$specs{'GripHeight'},
 			'Add Colour Bar'=>	$$specs{'rdbColourBar'},
-			'image_width'=>		$$specs{'txtWidth'},
-			'image_height'=>		$$specs{'txtHeight'},
-			'BleedLocations'=>	join(',', @$specs{'BleedBottom','BleedTop','BleedLeft','BleedRight'}),
-			'Calliper'=>			$$specs{'txtSpecificStockCalliper'},
-			'CropMarkSpace'=>	$$specs{'txtCropMarkSpace'},
+			image_width		=>		$$specs{'txtWidth'},
+			image_height	=>		$$specs{'txtHeight'},
+			BleedLocations	=>	join(',', @$specs{'BleedBottom','BleedTop','BleedLeft','BleedRight'}),
+			Calliper		=>			$$specs{'txtSpecificStockCalliper'},
+			CropMarkSpace	=>	$$specs{'txtCropMarkSpace'},
 			);
 
     my $CoatingsCategory = openprint::ServiceCategory->find_one( name => 'Coating' );
@@ -621,6 +621,8 @@ $openprint::log->debug("Adding special colour for $colour");
 		%{$project{'PerfectBoundSpecs'}} = %{openprint::service::get_specs_ref( $Project, $$services{'PerfectBound'}[0] )};
 		$project{'PerfectBindCoverGutter'} = $config{'PerfectBindCoverGutter'} if $$specs{'Group'} == 1;
 	} # end if
+
+	$project{ProjectSpecs} = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
 
 	return \%project;
 } # end sub setup_project
@@ -2803,6 +2805,9 @@ sub calculate_impositions {
 		if ( $$sig_specs{'chkOverridePageQuantity'.$qty_index} eq 'Y' ) {
 			$SpreadLayout = int( $$sig_specs{'PageQuantity'.$qty_index} / $$project{'txtSpreadSize'} );
 			$log->debug("Calcing SpreadLayout as overriden upq: $$sig_specs{'PageQuantity'.$qty_index} / spreadsize:$$project{'txtSpreadSize'} = layout$SpreadLayout");
+		} elsif ( $$project{ProjectSpecs}{"PageQuantity-$$sig_specs{Group}"} ) {
+			$SpreadLayout = int( $$project{ProjectSpecs}{"PageQuantity-$$sig_specs{Group}"} / $$project{txtSpreadSize} );
+			$log->debug("Calcing SpreadLayout as overriden upq: ".$$project{ProjectSpecs}{"PageQuantity-$$sig_specs{Group}"}." / spreadsize:$$project{'txtSpreadSize'} = layout$SpreadLayout");
 		} else {
 			$SpreadLayout = int( $$sig_specs{'txtUnspecifiedPageQuantity'.$qty_index} / $$project{txtSpreadSize} );
 			$log->debug("Calcing SpreadLayout as upq: $$sig_specs{'txtUnspecifiedPageQuantity'.$qty_index} / spreadsize:$$project{'txtSpreadSize'} = layout$SpreadLayout") if DEBUG_FILTERING;
