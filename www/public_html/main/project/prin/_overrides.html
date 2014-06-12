@@ -23,6 +23,10 @@
 		<label>Plate Changes</label>
 		<? echo ( input( type=>'cardinal', name=>'txtPlateChangeQuantity-'.$$variable{Signature}, value=>$$variable{'txtPlateChangeQuantity-'.$$variable{Signature}} ); ) ?>
 	</li>
+	<li>
+		<label>Page Quantity</label>
+		<? echo ( input( type=>'cardinal', name=>'PageQuantity-'.$$variable{Signature}, value=>$$variable{'PageQuantity-'.$$variable{Signature}}, onkeyup=>q`calc('f1');` ); ) ?>
+	</li>
 <? echo ( my $html;
 	my @PrintingTypes = sql::execute( undef, undef, q{SELECT DISTINCT strValue FROM tbl_Equipment_Specifications WHERE strName='Printing Type'} );
 	if ( @PrintingTypes > 1 ) {

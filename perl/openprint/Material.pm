@@ -103,27 +103,28 @@ sub New_Specification {
 } # end sub New_Specification
 
 sub Specification {
-	my ( $self, $name, $range ) = @_;
+	#my ( $self, $name, $range ) = @_;
 
-	if ( ! $$self{'Specifications'} ) {
-		foreach my $Spec ( openprint::MaterialSpecification->find( 'material_id'=>$$self{'id'}, 'order'=>'min NULLS FIRST' ) ) {
-			push @{$$self{'Specifications'}{$Spec->name()}}, $Spec;
+	if ( ! $_[0]{Specifications} ) {
+		foreach my $Spec ( openprint::MaterialSpecification->find( material_id=>$_[0]{id}, order=>'min NULLS FIRST' ) ) {
+			push @{$_[0]{Specifications}{$Spec->name()}}, $Spec;
 		} # end foreach
+		if ( ! $_[0]{Specifications} ) {
+#$openprint::log->warn("No specfications for " . $self->name() );
+			$_[0]{Specifications} = {};
+			return;
+		}
 	} # end if
 
-	if ( ! $$self{'Specifications'} ) {
-		#$openprint::log->warn("No specfications for " . $self->name() );
-		return;
-	}
-	if ( ! $$self{'Specifications'}{$name} ) {
+	if ( ! $_[0]{Specifications}{$_[1]} ) {
 		#$openprint::log->warn("No specfications for ($name) " . $self->name() );
 		return;
 	}
 
-	return $$self{'Specifications'}{$name}[0] if ! defined $range;
+	return $_[0]{Specifications}{$_[1]}[0] if ! defined $_[2];
 #$openprint::log->debug("Looking for $name : $range") if $debug;
 
-	return misc::find_entry( $range, $$self{'Specifications'}{$name}, $debug );
+	return misc::find_entry( $_[2], $_[0]{Specifications}{$_[1]}, $_[3] );
 } # end sub Specification
 
 sub specification {
@@ -132,8 +133,7 @@ sub specification {
 } # end sub specification
 
 sub Specifications {
-	my $self = shift;
-	return openprint::MaterialSpecification->find( 'material_id'=>$$self{'id'}, 'order'=>'name,min NULLS FIRST' );
+	return openprint::MaterialSpecification->find( material_id=>$_[0]{id}, order=>'name,min NULLS FIRST' );
 } # end sub Specifications
 
 sub get_price {
