@@ -94,7 +94,7 @@ foreach my $Project ( openprint::Project->find('created_on >'=>sprintf('%.4d-%.2
 } # end foreach Project
 }
 #$dbh->disconnect();
-#`/etc/init.d/postgresql restart`;
+`/etc/init.d/postgresql restart`;
 #`su postgres -c /usr/lib/postgresql/9.1/bin/vacuumdb`;
 0;
 __END__
