@@ -215,7 +215,7 @@
 				</p>
 				<p>
 					<label>WPSI</label>
-					<input type="number" readonly="readonly" name="wpsi" id="wpsi" value="<? echo ( $$variable{'Stock'}->wpsi(); ) ?>" />
+					<? echo ( input( type=>'float', readonly=>"readonly", name=>'wpsi', id=>'wpsi', value=>$$variable{Stock}->wpsi(), step=>'any' ); ) ?>
 				</p>
 				<p>
 					<label>Grain Direction</label>

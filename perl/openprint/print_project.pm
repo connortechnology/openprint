@@ -523,111 +523,118 @@ sub create_edit_process {
 	my @service_ids = map { $$services{$_} ? @{$$services{$_}} : () } keys %$services;
 
 	if ( $param{txtQuantity1} != $Project->quantity1() ) {
-		$recalculate = 1;
-		if ( ! $Project->quantity1() ) {
-			if ( $Project->quantity2() ) {
-				foreach my $service_id ( @service_ids ) {
-					my $specs = openprint::service::get_specs_ref( $Project, $service_id );
-					foreach my $key ( keys %$specs ) {
-						next if $key =~ /^txtQuantity/;
-						if ( $key =~ /(.*)2$/ and ! $key =~ /Special/ ) {
-							openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $service_id, $1.'1', $$specs{$key} );
-						} # end if
-					} # end foreach
-				} # end if
-			} elsif ( $Project->quantity3() ) {
-				foreach my $service_id ( @service_ids ) {
-					my $specs = openprint::service::get_specs_ref( $Project, $service_id );
-					foreach my $key ( keys %$specs ) {
-						next if $key =~ /^txtQuantity/;
-						if ( $key =~ /(.*)3$/ and ! $key =~ /Special/ ) {
-							openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $service_id, $1.'1', $$specs{$key} );
-						} # end if
-					} # end foreach
-				} # end if
-			} # end if Project 2 or 3
-		} elsif ( ! $param{txtQuantity1} ) { # Project has a quantity, we are deleting it
+		if ( ! $param{txtQuantity1} ) { # Project has a quantity, we are deleting it
 			foreach my $service_id ( @service_ids ) {
 				foreach my $spec ( 'txtPrice1','txtUnitPrice1','txtQuantity1' ) {
 					openprint::service::delete_service_spec( $project_index, $service_id, $spec );
 				} # end foreach
 			} # end foreach
-		} # end if
-		foreach my $service_id ( @service_ids ) {
-			openprint::service::insert_service_spec( $log, $dbh, $project_index, $service_id, 'txtQuantity1', int $param{'txtQuantity1'} );
-		} # end foreach
+		} else {
+			$recalculate = 1;
+
+			if ( ! $Project->quantity1() ) {
+				if ( $Project->quantity2() ) {
+					foreach my $service_id ( @service_ids ) {
+						my $specs = openprint::service::get_specs_ref( $Project, $service_id );
+						foreach my $key ( keys %$specs ) {
+							next if $key =~ /^txtQuantity/;
+							if ( $key =~ /(.*)2$/ and ! $key =~ /Special/ ) {
+								openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $service_id, $1.'1', $$specs{$key} );
+							} # end if
+						} # end foreach
+					} # end if
+				} elsif ( $Project->quantity3() ) {
+					foreach my $service_id ( @service_ids ) {
+						my $specs = openprint::service::get_specs_ref( $Project, $service_id );
+						foreach my $key ( keys %$specs ) {
+							next if $key =~ /^txtQuantity/;
+							if ( $key =~ /(.*)3$/ and ! $key =~ /Special/ ) {
+								openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $service_id, $1.'1', $$specs{$key} );
+							} # end if
+						} # end foreach
+					} # end if
+				} # end if Project 2 or 3
+			} # end if
+			foreach my $service_id ( @service_ids ) {
+				openprint::service::insert_service_spec( $log, $dbh, $project_index, $service_id, 'txtQuantity1', int $param{'txtQuantity1'} );
+			} # end foreach
+		} # end nif
 		$Project->quantity1( int $param{'txtQuantity1'} );
 	} # end if
 	if ( $param{'txtQuantity2'} != $Project->quantity2() ) {
-		$recalculate = 1;
-		if ( ! $Project->quantity2() ) {
-			if ( $Project->quantity1() ) {
-				foreach my $service_id ( @service_ids ) {
-					my $specs = openprint::service::get_specs_ref( $Project, $service_id );
-					foreach my $key ( keys %$specs ) {
-						next if $key =~ /^txtQuantity/ or $key =~ /Special/;
-						if ( $key =~ /^(.*)1$/ ) {
-							openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $service_id, $1.'2', $$specs{$key} );
-						} # end if
-					} # end foreach
-				} # end if
-			} elsif ( $Project->quantity3() ) {
-				foreach my $service_id ( @service_ids ) {
-					my $specs = openprint::service::get_specs_ref( $Project, $service_id );
-					foreach my $key ( keys %$specs ) {
-						next if $key =~ /^txtQuantity/ or $key =~ /Special/;
-						if ( $key =~ /^(.*)3$/ ) {
-							openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $service_id, $1.'2', $$specs{$key} );
-						} # end if
-					} # end foreach
-				} # end if
-			} # end if Project 2 or 3
-		} elsif ( ! $param{'txtQuantity2'} ) {
+		if ( ! $param{'txtQuantity2'} ) {
 			foreach my $service_id ( @service_ids ) {
 				foreach my $spec ( 'txtPrice2','txtUnitPrice2','txtQuantity2' ) {
 					openprint::service::delete_service_spec( $project_index, $service_id, $spec );
 				} # end foreach
 			} # end foreach
+		} else {
+			$recalculate = 1;
+			if ( ! $Project->quantity2() ) {
+				if ( $Project->quantity1() ) {
+					foreach my $service_id ( @service_ids ) {
+						my $specs = openprint::service::get_specs_ref( $Project, $service_id );
+						foreach my $key ( keys %$specs ) {
+							next if $key =~ /^txtQuantity/ or $key =~ /Special/;
+							if ( $key =~ /^(.*)1$/ ) {
+								openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $service_id, $1.'2', $$specs{$key} );
+							} # end if
+						} # end foreach
+					} # end if
+				} elsif ( $Project->quantity3() ) {
+					foreach my $service_id ( @service_ids ) {
+						my $specs = openprint::service::get_specs_ref( $Project, $service_id );
+						foreach my $key ( keys %$specs ) {
+							next if $key =~ /^txtQuantity/ or $key =~ /Special/;
+							if ( $key =~ /^(.*)3$/ ) {
+								openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $service_id, $1.'2', $$specs{$key} );
+							} # end if
+						} # end foreach
+					} # end if
+				} # end if Project 2 or 3
+			} # end if
+			foreach my $service_id ( @service_ids ) {
+				openprint::service::insert_service_spec( $log, $dbh, $project_index, $service_id, 'txtQuantity2', int $param{'txtQuantity2'} );
+			} # end foreach
 		} # end if
-		foreach my $service_id ( @service_ids ) {
-			openprint::service::insert_service_spec( $log, $dbh, $project_index, $service_id, 'txtQuantity2', int $param{'txtQuantity2'} );
-		} # end foreach
 		$Project->quantity2( int $param{'txtQuantity2'} );
 	} # end if
 	if ( $param{'txtQuantity3'} != $Project->quantity3() ) {
-		$recalculate = 1;
-		if ( ! $Project->quantity3() ) {
-			if ( $Project->quantity1() ) {
-				foreach my $service_id ( @service_ids ) {
-					my $specs = openprint::service::get_specs_ref( $Project, $service_id );
-					foreach my $key ( keys %$specs ) {
-						next if $key =~ /^txtQuantity/ or $key =~ /Special/;
-						if ( $key =~ /^(.*)1$/ ) {
-							openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $service_id, $1.'3', $$specs{$key} );
-						} # end if
-					} # end foreach
-				} # end if
-			} elsif ( $Project->quantity2() ) {
-				foreach my $service_id ( @service_ids ) {
-					my $specs = openprint::service::get_specs_ref( $Project, $service_id );
-					foreach my $key ( keys %$specs ) {
-						next if $key =~ /^txtQuantity/ or $key =~ /Special/;
-						if ( $key =~ /^(.*)2$/ ) {
-							openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $service_id, $1.'3', $$specs{$key} );
-						} # end if
-					} # end foreach
-				} # end if
-			} # end if Project 2 or 3
-		} elsif ( ! $param{'txtQuantity3'} ) {
+		if ( ! $param{'txtQuantity3'} ) {
 			foreach my $service_id ( @service_ids ) {
 				foreach my $spec ( 'txtPrice3','txtUnitPrice3','txtQuantity3' ) {
 					openprint::service::delete_service_spec( $project_index, $service_id, $spec );
 				} # end foreach
 			} # end foreach
+		} else {
+			$recalculate = 1;
+			if ( ! $Project->quantity3() ) {
+				if ( $Project->quantity1() ) {
+					foreach my $service_id ( @service_ids ) {
+						my $specs = openprint::service::get_specs_ref( $Project, $service_id );
+						foreach my $key ( keys %$specs ) {
+							next if $key =~ /^txtQuantity/ or $key =~ /Special/;
+							if ( $key =~ /^(.*)1$/ ) {
+								openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $service_id, $1.'3', $$specs{$key} );
+							} # end if
+						} # end foreach
+					} # end if
+				} elsif ( $Project->quantity2() ) {
+					foreach my $service_id ( @service_ids ) {
+						my $specs = openprint::service::get_specs_ref( $Project, $service_id );
+						foreach my $key ( keys %$specs ) {
+							next if $key =~ /^txtQuantity/ or $key =~ /Special/;
+							if ( $key =~ /^(.*)2$/ ) {
+								openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $service_id, $1.'3', $$specs{$key} );
+							} # end if
+						} # end foreach
+					} # end if
+				} # end if Project 2 or 3
+			} # end if
+			foreach my $service_id ( @service_ids ) {
+				openprint::service::insert_service_spec( $log, $dbh, $project_index, $service_id, 'txtQuantity3', int $param{'txtQuantity3'} );
+			} # end foreach
 		} # end if
-		foreach my $service_id ( @service_ids ) {
-			openprint::service::insert_service_spec( $log, $dbh, $project_index, $service_id, 'txtQuantity3', int $param{'txtQuantity3'} );
-		} # end foreach
 		$Project->quantity3( int $param{'txtQuantity3'} );
 	} # end if
 

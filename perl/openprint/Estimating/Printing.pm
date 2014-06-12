@@ -27,7 +27,7 @@ use constant DEBUG_PLATES => 0;
 use constant DEBUG_VERSIONS => 0;
 use constant DEBUG_FILTERING => 0;
 use constant DEBUG_INITIAL_FILTERING => 0;
-use constant DEBUG_AFTER_FILTERING => 1;
+use constant DEBUG_AFTER_FILTERING => 0;
 use constant DEBUG_PRICE_DECISIONS => 0;
 use constant DEBUG_INKS => 0;
 use constant DEBUG_STOCK => 0;
@@ -35,7 +35,7 @@ use constant COMPARISON_LOG => 0;
 use constant USE_SUBSIG => 0;
 use constant USE_PRICE_CACHE => 1;
 use constant DEBUG_IMPOSITIONS => 0;
-use constant USE_CONVERTED_IMPOSITION_CACHE => 1;
+use constant USE_CONVERTED_IMPOSITION_CACHE => 0;
 
 my $master_time;
 my %special_colours;
@@ -572,7 +572,6 @@ $openprint::log->debug("Adding special colour for $colour");
 	$project{'Binding'} = openprint::print::get_book_type( $Project );
 	if ( ! $$services{'NoBindery'} ) {
 		$project{'NeedFolding'} = openprint::Estimating::Folding::signature_needs( $Project, $specs );
-		openprint::Estimating::Folding::load_equipment( $Project );
 		if ( $$services{'DieCutting'} ) {
 			require openprint::Estimating::DieCutting;
 			$project{'NeedDieCutting'} = openprint::Estimating::DieCutting::signature_needs( $Project, $project{'DieCuttingSpecs'}, $specs );
@@ -2236,6 +2235,8 @@ $openprint::log->debug("No printing");
 		return $$specs{'Status'} = 'calculated';
 	} # end if
 
+		openprint::Estimating::Folding::load_equipment( $Project );
+		openprint::Estimating::Cutting::load_equipment( $Project );
 	my $project = setup_project( $Project, $service_index, $services, $specs, \@side_one_colours, \@side_two_colours, \%inkCoverage, $Papers[0] );
 $openprint::log->debug("Before select presses: " . ( sprintf('%.4f', tv_interval( [$master_time])*1000) ) .' usecs' );
 	my %presses = select_presses( $Project, \@Papers, $specs, $project );
@@ -2842,8 +2843,11 @@ sub calculate_impositions {
 				if ( USE_CONVERTED_IMPOSITION_CACHE and ! $converted_imposition_cache{$k} ) {
 					$converted_imposition_cache{$k} = [
 					openprint::imposition::convert_impositions( $SpreadLayout, $$project{txtSpreadSize}, $$impositions{$strid} ) ];
-				} # end if
 				@press_impositions = @{$converted_imposition_cache{$k}};
+				} else {
+					@press_impositions = openprint::imposition::convert_impositions( $SpreadLayout, $$project{txtSpreadSize}, $$impositions{$strid} );
+
+				} # end if
 				my %dont_do_pages = map { $_,  $_ } split(',', $Press->specification('DontDoPages'));
 				if ( %dont_do_pages ) {
 					@press_impositions = map { $dont_do_pages{$$_{pages}} ? () : $_ } sort { $$b{pages} <=> $$a{pages} } @press_impositions;
@@ -4106,6 +4110,8 @@ if ( DEBUG_PLATES ) {
 					foreach my $k ( @paper_strings ) { $openprint::log->debug( "$k => $PaperCounts{$k} factor" . $Papers{$k}->factor() ); } # end 
 				}
 
+				my $do_stock_cutting = 0;
+
 				foreach my $paper_string ( @paper_strings ) {
 					my $Paper = $Papers{$paper_string};
 					if ( ! $Paper ) {
@@ -4117,6 +4123,7 @@ if ( DEBUG_PLATES ) {
 					} elsif ( $paper_string ne $Paper->id_string() ) {
 						$openprint::log->error("Different paper in count versus imposition: $paper_string ne " . $Paper->id_string() );
 					} # end if
+	
 
 					if ( $Paper->full_packages() ) {
 						if ( my $qty_per_package = $Paper->sheets_per_package() ) {
@@ -4137,6 +4144,9 @@ if ( DEBUG_PLATES ) {
 					my $paper_price;
 
 					if ( $$Paper{type} eq 'Sheet' ) {
+						if ( $Paper->is_cut() ) {
+							$do_stock_cutting = 1;
+						} # end if
 						$supplied_sheets = ceil($PaperCounts{$paper_string}/$Paper->factor());
 						$supplied_weight = Math::Round::nearest( 0.1, $supplied_sheets * $Supplied->sheet_weight() );
 if ( ! $supplied_weight ) {
@@ -4171,8 +4181,16 @@ $openprint::log->debug("Sheet No supplied wight: $supplied_sheets $paper_string 
 						$$price{'Paper Breakdown'} .= 'No wpsi for stock ' . $Paper->to_string() . '</br>';
 					} # end if
 				} # end foreach Paper in PaperCounts
+
+
 #$openprint::log->debug($$price{'Paper Breakdown'}) if DEBUG;
 #$openprint::log->debug("Comparison: $$price{'Comparison Cost'}");
+if ( $do_stock_cutting and $$project{'HasCutting'} ) {
+	my @Stocks = map { { Stock => $Papers{$_}, quantity=>$PaperCounts{$_} } } keys %PaperCounts;
+	my %cutting_results = openprint::Estimating::Cutting::signature_calc_stock_cutting( $Project, $$project{CuttingSpecs}, $qty_index, \@Stocks );
+	$$price{'Cutting Breakdown'} .= "Stock Cutting Price: \$$cutting_results{'Price'} $cutting_results{'alert'}<br/>$cutting_results{Breakdown}<br/>";
+	$$price{'Comparison Cost'} += $cutting_results{'Price'};
+} # end if
 
 				if ( $$sig_specs{'rdbSuppliedStock'} eq 'Y' ) {
 					if ( my %SuppliedPaperPrice = openprint::service::get_price_object( 'Supplied'.$$Paper{'type'}, undef, undef ) ) {
@@ -4920,7 +4938,7 @@ $openprint::log->debug("Back From DieCutting");
 		} else {
 			$price{'Cutting Breakdown'} .= sprintf('Cutting Price: $%.2f',$cutting_results{'Price'} );
 			$price{'Cutting Breakdown'} .=$cutting_results{Breakdown};
-			$price{'Cutting Breakdown'} .= ' on '. $cutting_results{'Equipment'}->name() if $cutting_results{'Equipment'};
+			#$price{'Cutting Breakdown'} .= ' on '. $cutting_results{'Equipment'}->name() if $cutting_results{'Equipment'};
 			$price{'Cutting Breakdown'} .= '<br/>';
 
 #$price{'Cutting Breakdown'} .= $$project{'CuttingSpecs'}{'hdnBreakdown'.$qty_index}.'<br/>';
@@ -5363,7 +5381,7 @@ $openprint::log->debug("Was mixed") if DEBUG_INKS;
 	$$specs{'hdnImpressionQuantity'.$qty_index} = $impressions;
 	$$specs{'ddmPress'.$qty_index} = $$Press{'strid'};
 
-	if ( $$project{'HasCutting'} ) {
+	if ( 0 and  $$project{'HasCutting'} ) {
 		if ( ($$Paper{'type'} ne 'Roll') and ($$Paper{'start_width'} != $$Paper{'width'} or $$Paper{'start_height'} != $$Paper{'height'} ) ) {
 #my $time = gettimeofday();
 			my %cutting_results = openprint::Estimating::Cutting::signature_calc_stock_cutting( $Project, $specs, $$project{'CuttingSpecs'}, $qty_index, $Paper, $project );
