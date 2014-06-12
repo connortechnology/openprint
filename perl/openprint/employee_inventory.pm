@@ -2036,7 +2036,6 @@ sub available_paper {
 	_available_paper();
 	$session{'/employee/inventory/available_paper.html?owner_id_exclude'} = $param{'owner_id_exclude'} if exists $param{'owner_id'};
 	$session{'/employee/inventory/available_paper.html?type'} = 'Roll' if ! $session{'/employee/inventory/available_paper.html?type'};
-	$session{'/employee/inventory/available_paper.html?Owner'} = new openprint::User( $session{'user_id'} )->company_id() if ! exists $session{'/employee/inventory/available_paper.html?Owner'};
 	if ( ! exists $session{'/employee/inventory/available_paper.html?condition_id'} ) {
 		my $New = openprint::InventoryCondition->find_one( name=>'new' );
 		$session{'/employee/inventory/available_paper.html?condition_id'} = $New->id() if $New;
