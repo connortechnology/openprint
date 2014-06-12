@@ -642,31 +642,36 @@ $log->debug("ALl cached $object_type $cache_field $$params{$cache_field}") if DE
 # This allows mainly for find_fields to reference multiple values, opinion in Project, value
 			foreach my $db_field ( ref $$fields{$field} eq 'ARRAY' ? @{$$fields{$field}} : $$fields{$field} ) {
 				if ( ! $function ) {
+					$db_field .= $type;
 
 					if ( ref $search{$k} eq 'ARRAY' ) {
 						if ( @{$search{$k}} ) {
-							push @where, $db_field . $type .' IN ('.join(',', map {'?'} @{$search{$k}} ) . ')';
+							push @where, $db_field .' IN ('.join(',', map {'?'} @{$search{$k}} ) . ')';
 							push @values, @{$search{$k}};
 						} # end if
 					} elsif ( ref $search{$k} eq 'HASH' ) {
 						foreach my $p_k ( keys %{$search{$k}} ) {
 							my $v = $search{$k}{$p_k};
 							if ( ref $v eq 'ARRAY' ) {
-								push @where, $db_field.$type.' IN ('.join(',', map {'?'} @{$v} ) . ')';
+								push @where, $db_field.' IN ('.join(',', map {'?'} @{$v} ) . ')';
 								push @values, $p_k, @{$v};
 							} else {
-								push @where, $db_field.$type.'=?';
+								push @where, $db_field.'=?';
 								push @values, $p_k, $v;
 							} # end if
 						} # end foreach p_k
 					} elsif ( ! defined $search{$k} ) {
-						push @where, $db_field.$type.' IS NULL';
+						push @where, $db_field.' IS NULL';
 					} else {
-						push @where, $db_field.$type .'=?';
+						if ( ! ( $db_field =~ /\?/ ) ) {
+							push @where, $db_field .'=?';
+						} else {
+							push @where, $db_field;
+						}
 						push @values, $search{$k};
 					} # end if
 					delete $search{$k};
-						push @used_fields, $k;
+					push @used_fields, $k;
 				} else {
 					#my @w = 
 #ref $search{$k} eq 'ARRAY' ? 
