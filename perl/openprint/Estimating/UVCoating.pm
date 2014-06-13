@@ -32,7 +32,7 @@ use vars qw( $log $dbh %config @outputs );
 # Let's assume that each piece of equipment can do 1 coat at a time
 # This service doesn't store it's own data, other than price.  It gets the info from the printing service.
 #
-use constant DEBUG => 0;
+use constant DEBUG => 1;
 
 my @variables = (
 	'txtQuantity1','txtQuantity2','txtQuantity3',
@@ -367,9 +367,9 @@ sub signature_calc {
 			my %ImpositionPrice;
 			if ( @$impositions > 1 ) {
 				# What is the purpose?  Should be to figure out how to cut the impositions out of the sheet, but that is not what this does.
-				my %results = openprint::Estimating::Cutting::signature_calc_stock_cutting( $Project, $sig_specs, {}, $qty_index, $Stock );
-				$ImpositionPrice{Cutting} = $results{Price};
-				$breakdown .= sprintf('Stock cutting cost: %.2f<br/>', $results{Price} );
+				#my %results = openprint::Estimating::Cutting::signature_calc_stock_cutting( $Project, {}, $qty_index, { Stock => $Stock, quantity =>  );
+				#$ImpositionPrice{Cutting} = $results{Price};
+				#$breakdown .= sprintf('Stock cutting cost: %.2f<br/>', $results{Price} );
 			} # end if
 
 			for ( my $imp_index = 0; $imp_index < @$impositions; $imp_index += 1 ) {
