@@ -320,11 +320,6 @@ sub load_shipping {
 	return $address->get( @params );
 } # end sub save_shipping
 
-sub Profile {
-	require openprint::Company_Profile;
-	return new openprint::Company_Profile( $_[0]{id} );
-}
-
 sub location {
 	return misc::build_city_prov_country( $_[0]->get('city','state','country') );
 } # end sub location
