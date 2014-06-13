@@ -1,0 +1,23 @@
+"Field Name","IQ Field","Type","Beg","Size","End","Description","Validated","Required","Default Value","Notes"
+"Job-ID","$Object->docket()","Text",1,8,8,"Job ID","Yes","Yes",,"Verifies that job ID is not already on file; no duplicates allowed."
+"Sub-Job-ID",,"Text",9,4,12,"Sub-Job ID","Yes*",,,"Verifies that the master job is on file, and that the sub-job is not already on file."
+"Job-Description",,"Text",13,254,266,"Job Description",,,,
+"Job-Type",,"Text",267,19,285,"Job Type","Yes","Yes",,"Production or Finished Goods"
+"Item-ID","$Object->id()","Text",286,15,300,"Item ID","Yes*","Yes*",,"Required if Job Type is Finished Goods"
+"Cust-Ordered-By","$Object->company_id()","Text",301,8,308,"Customer Ordered By ID","Yes","Yes",,
+"Cust-Billed-To","$Object->company_id()","Text",309,8,316,"Customer Billed To ID","Yes","Yes",,
+"Sales-Class-ID",,"Text",317,8,324,"Sales Class ID","Yes","Yes",,
+"PO-Number","$Object->Order()->po()","Text",325,20,344,"PO Number",,"Yes*",,"Required if flag is activated in Customer to require PO"
+"Date-Promised","ssi::format_date( $Object->due_date(), 'mm/dd/YYYY' )","Text",345,10,354,"Date Promised","Yes","Yes",,"Based on date format in company setup (US = mm/dd/yyyy)"
+"Ship-Date",,"Text",355,10,364,"Ship Date","Yes",,,"Based on date format in company setup (US = mm/dd/yyyy)"
+"Qty-Ordered","$Object->ordered_quantity()","Text",365,11,375,"Quantity Ordered",,"Yes*",,"Required if Job Type is Finished Goods"
+"Priority",,"Text",376,10,385,"Priority",,,,
+"Contact-Name","$Object->Order()->firstname() . ' ' .$Object->Order()->lastname()","Text",386,30,415,"Contact Name",,,,
+"Expense-Code",,"Text",416,24,439,"Expense Code","Yes","Yes*",,"Required if customer options = Required to Start"
+"Shop-Floor-Active",,"Text",440,1,440,"Shop Floor Active",,,"Yes(1)","0=No, 1=Yes"
+"Form-Number",,"Text",441,20,460,"Form Number",,,,
+"Quotation-Amount","$Object->ordered_quantity()","Text",461,15,475,"Quotation Amount",,,,
+"Unit-of-Measure-ID",,"Text",476,4,479,"Unit of Measure ID",,,,
+"Unit-Price",,"Text",480,16,495,"Unit Price",,,,
+"Job-Title","$Object->reference()","Text",496,50,545,"Job Title",,,,
+"ForestTypeID",,"Text",546,15,"No line","Forest Type ID","Yes","Yes*",,"Required if Job Option for Forest Certified = Required"

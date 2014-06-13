@@ -18,12 +18,12 @@ package openprint::Estimating::Paper;
 
 use strict;
 use POSIX qw( ceil );
+require Math::Round;
+require Number::Format;
 
-require sql;
-require openprint::print;
 require openprint::service;
 require openprint::Currency;
-require openprint::Estimating::Printing;
+require openprint::Paper;
 
 use constant DEBUG => 0;
 
@@ -65,6 +65,32 @@ sub variables {
 #$openprint::log->debug( "Variables: @v");
 	return @v;
 } # end sub variables
+
+sub has_overrides {
+    my ( $Project, $service_id, $specs, $qty_index ) = @_;
+    $specs = openprint::service::get_specs_ref( $Project, $service_id ) if ! $specs;
+
+    my @v;
+    if ( $qty_index ) {
+        foreach my $s_s_id ( $Project->signatures() ) {
+            my $sig_specs = openprint::service::get_specs_ref( $Project, $s_s_id );
+			my $form = $$sig_specs{SignatureIndex};
+			foreach my $stock_index ( 1 .. 4 ) {
+				push @v, map { $$specs{$_} ? $_ : () } (
+					"overrideqty-$form-$stock_index-$qty_index",
+                    );
+			} # end fireach stock_index
+		} # end foreach sig
+		foreach my $stock_index ( 1 .. 4 ) {
+			push @v, map { $$specs{$_} ? $_ : () } (
+					"overridecost-$stock_index-$qty_index",
+					);
+		} # end fireach stock_index
+    } # end if
+
+    return @v;
+
+} # end sub has_overrides
 
 sub outputs {
 }
@@ -141,9 +167,19 @@ $openprint::log->debug("Indexes: $paper_string => $stock_index") if DEBUG;
 		my $form = $$sig_specs{SignatureIndex};
 
 		foreach my $qty_index ( $Project->quantity_indexes() ) {
-			next if ! $$sig_specs{'txtImposition'.$qty_index};
+			if ( ! $$sig_specs{'txtImposition'.$qty_index} ) {
+				foreach my $stock_index ( values %indexes ) {
+					$$specs{"qty-$form-$stock_index-$qty_index"} = '';
+					$$specs{"sheets-$form-$stock_index-$qty_index"} = '';
+				} # end foreach stock_index
+				next;
+			} # end if
 			my $PressSheet = openprint::Paper::load_from_signature( $Project, $sig_specs, $qty_index );
-			next if ! ( $PressSheet->id() or $$PressSheet{custom} );
+#$openprint::log->debug("Sheet for sig $ss_id $form $qty_index" . $PressSheet->to_string() ) if DEBUG;
+			if ( ! ( $PressSheet->id() or $$PressSheet{custom} ) ) {
+				$openprint::log->error("No id or customer....");
+				next;
+			} # end if
 			# This paper is in the printing format, not the supplied
 			# Convert to supplied Stock
 			my $SuppliedStock = $PressSheet->Supplied();
@@ -151,9 +187,15 @@ $openprint::log->debug("Indexes: $paper_string => $stock_index") if DEBUG;
 
 			my $stock_index = $indexes{$paper_string};
 			if ( ! $stock_index ) {
-$openprint::log->error("Estimating::Paper No stock index for $paper_string");
-$openprint::log->debug("Press sheet: " . $PressSheet->id_string() );
-$openprint::log->debug("Supplied: " . $SuppliedStock->id_string() );
+				$openprint::log->error("Estimating::Paper No stock index for $paper_string");
+				$openprint::log->debug("Press sheet: " . $PressSheet->id_string() );
+				$openprint::log->debug("Supplied: " . $SuppliedStock->id_string() );
+			} else {
+				foreach my $stock_id ( values %indexes ) {
+					next if $stock_id == $stock_index;
+					$$specs{"qty-$form-$stock_id-$qty_index"} = '' if $$specs{"qty-$form-$stock_id-$qty_index"};
+					$$specs{"sheets-$form-$stock_id-$qty_index"} = '' if $$specs{"sheets-$form-$stock_id-$qty_index"};
+				} # end foreach stock_index
 			} # end if
 
 			if ( $$specs{"overrideqty-$form-$stock_index-$qty_index"} ne 'Y' ) {
@@ -231,7 +273,12 @@ if ( DEBUG ) {
 	foreach my $paper_string ( keys %papers ) {
 		my $Paper = $papers{$paper_string};
 		foreach my $qty_index ( $Project->quantity_indexes() ) {
-$openprint::log->debug("After minimum: QTY $qty_index $paper_string  => " . $totals{$paper_string}[$qty_index] );
+			if ( ! $totals{$paper_string} ) {
+$openprint::log->debug("After minimum: QTY $qty_index $paper_string  => no totals" );
+
+			} else {
+$openprint::log->debug("After minimum: QTY $qty_index $paper_string  => " . $totals{$paper_string}{"qty_$qty_index"} );
+			}
 		} # end foreach
 	} # end if
 }
@@ -259,11 +306,11 @@ $openprint::log->error("2No stock index for $paper_id");
 				if ( $$specs{"overridecost-$stock_index-$qty_index"} ne 'Y' ) {
 					my $price;
 					if ( $Paper->type() eq 'Sheet' ) {
-						$price = $Paper->get_price( sheets=>$totals{$paper_id}{"qty_$qty_index"},service=>'Material' );
+						$price = $Paper->get_price( sheets=>$totals{$paper_id}{"qty_$qty_index"},service=>'Material' ) if $totals{$paper_id}{"qty_$qty_index"};
 					} else {
-						$price = $Paper->get_price( weight=>$totals{$paper_id}{"qty_$qty_index"},service=>'Material' );
+						$price = $Paper->get_price( weight=>$totals{$paper_id}{"qty_$qty_index"},service=>'Material' ) if $totals{$paper_id}{"qty_$qty_index"};
 					} # end if
-					$$specs{"cost-$stock_index-$qty_index"} = $$price{'100lb Price'};
+					$$specs{"cost-$stock_index-$qty_index"} = sprintf('%.2f', $$price{'100lb Price'} );
 #$openprint::log->warn("Getting prices for $stock_index $paper_id (".$totals{$paper_id}{"qty_$qty_index"}.'sheets) => $' . $price{'100lb Price'}.'/100lb');
 				} # end if
 				$$specs{"price-$stock_index-$qty_index"} = Math::Round::nearest( 0.01, $$specs{"cost-$stock_index-$qty_index"} * $$specs{"qty-$stock_index-$qty_index"} / 100 );
@@ -397,6 +444,27 @@ sub summary {
 sub save {
 } # end sub save
 
+sub get_stocks {
+    my ( $Project, $service_id, $specs ) = @_;
+    $specs = openprint::service::get_specs_ref( $Project, $service_id ) if ! $specs;
+    my %Papers;
+    foreach my $ss_id ( $Project->signatures() ) {
+        my $sig_specs = openprint::service::get_specs_ref( $Project, $ss_id );
+        foreach my $q_index ( $Project->quantity_indexes() ) {
+            next if ! $$sig_specs{'txtImposition'.$q_index};
+            my $Paper = openprint::Paper::load_from_signature( $Project, $sig_specs, $q_index )->Supplied();
+            next if ! ( $Paper->id() or $$Paper{custom} );
+            $Papers{$Paper->id_string()} = $Paper;
+        } # end foreach qty_index
+    } # end foreach
+	my @Results;
+	my $stock_id = 1;
+	foreach my $key ( sort { $a cmp $b} keys %Papers ) {
+		push @Results, { Stock=>$Papers{$key}, index=>$stock_id };
+	} # end foreach
+	return @Results;
+} # end sub get_stocks
+
 sub get_stocks_and_quantities {
     my ( $Project, $service_id, $specs, $qty_index ) = @_;
 
@@ -417,6 +485,8 @@ sub get_stocks_and_quantities {
 
 	my %quantities;
 
+	my @Results;
+
 	my $stock_id = 1;
 	foreach my $key ( @keys ) {
 		my $Paper = $Papers{$key};
@@ -428,9 +498,10 @@ sub get_stocks_and_quantities {
 				$quantities{$key} += $$specs{"qty-$stock_id-$qty_index"};
 			} # end if
 		} # end if
+		push @Results, { Stock => $Papers{$key}, quantity => $quantities{$key}, index=>$stock_id };
 		$stock_id += 1;
 	} # end foreach key
-	return map { { Stock => $Papers{$_}, quantity => $quantities{$_} } } @keys;
+	return @Results;
 
 } # end sub get_stocks_and_quantities
 

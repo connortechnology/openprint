@@ -18,6 +18,8 @@
 			window.location = '/employee/purchase_order/view.html?po_id=' + form.po_id.value;
 		} else if ( form.manifest_name.value ) {
 			window.location = '/employee/inventory/manifests.html?manifest_name='+form.manifest_name.value;
+		} else if ( form.invoice_num.value ) {
+			window.location = '/invoice/history.html?invoice_num='+form.invoice_num.value;
 		} else {
 			alert( "Please enter or scan the a docket, order or project number!" );
 		} // end if
@@ -33,7 +35,7 @@ You may use a barcode scanner.  Simply scan the code and click Go.<br/>
 		<li>
 			<label>Docket #</label>
 			<? echo ( join('', 
-						input(type=>'cardinal',name=>'StartDocket', onchange=>'change_handler(this);', onkeypress=>'return input_handler( this, event );', onkeydown=>'if(event.keyCode == 13){submit_handler(f1);}', min=>1),
+						input(type=>'cardinal',name=>'StartDocket', onchange=>'change_handler(this);', onkeypress=>'return input_handler(this,event);', onkeydown=>'if(event.keyCode==13){submit_handler(f1);}', min=>1),
 						button( 'Go1', { onclick=>'submit_handler( f1 );', text=>'Go' } ),
 						); ) ?>
 		</li>
@@ -80,6 +82,12 @@ You may use a barcode scanner.  Simply scan the code and click Go.<br/>
 			<? echo ( join('',
 			input( type=>'text', name=>'manifest_name', onchange=>'change_handler(this);', onkeypress=>'return input_handler( this, event );', onkeydown=>'if(event.keyCode == 13){submit_handler(f1);}' ),
 			button( 'GoManifest', { onclick=>'submit_handler( f1 );', text=>'Go' } ),
+			); ) ?>
+		</li>
+		<li><label>Invoice</label>
+			<? echo ( join('',
+			input( type=>'text', name=>'invoice_num', onchange=>'change_handler(this);', onkeypress=>'return input_handler( this, event );', onkeydown=>'if(event.keyCode == 13){submit_handler(f1);}' ),
+			button( 'GoInvoice', { onclick=>'submit_handler( f1 );', text=>'Go' } ),
 			); ) ?>
 		</li>
 		</ul>

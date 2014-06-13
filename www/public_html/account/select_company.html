@@ -1,17 +1,18 @@
-<? echo ( include('/includes/error_reporting.html'); ) ?>
-<? if ( sets::isin( $session{'user_type'},['E','A'] ) ) ?>
-  <? eval ( $$variable{'Company'} = new openprint::Company( $session{'company_id'} ); ) ?>
-	<? if ( $param{'ddmCompany'} ) ?>
-		Any actions you perform during the course of this login will be stored in <? echo ( $$variable{'Company'}->name() ) ?>'s history.<br/>
+<?include('/includes/error_reporting.html')?>
+<? if ( sets::isin( $session{user_type},['E','A'] ) ) ?>
+	<? eval ( $$variable{Company} = new openprint::Company( $session{company_id} ); ) ?>
+	<? if ( $param{ddmCompany} ) ?>
+		Any actions you perform during the course of this login will be stored in <? echo ( $$variable{Company}->name() ) ?>'s history.<br/>
 		<br/>
-		<? if ( $$variable{'Company'}->salesrep_id() ) ?>
-		The CSR for <? echo ( $$variable{'Company'}->name() ) ?> is <? echo ( $$variable{'Company'}->CSR()->name() ) ?>.<br/>
-		<? else ( $$variable{'Company'}->salesrep_id() ) ?>
-		There is no CSR assigned for <? echo ( $$variable{'Company'}->name() ) ?>.<br/>
-		<? endif ( $$variable{'Company'}->salesrep_id() ) ?>
+		<? if ( $$variable{Company}->salesrep_id() ) ?>
+		The CSR for <? echo ( $$variable{Company}->name() ) ?> is <? echo ( $$variable{Company}->CSR()->name() ) ?>.<br/>
+		<? else ( $$variable{Company}->salesrep_id() ) ?>
+		There is no CSR assigned for <? echo ( $$variable{Company}->name() ) ?>.<br/>
+		<? endif ( $$variable{Company}->salesrep_id() ) ?>
 		<br/>
-		Prices will be displayed in <? echo ( new openprint::Currency( $session{'Currency_id'} )->name() ) ?>.<br/>
+		Prices will be displayed in <? echo ( new openprint::Currency( $session{Currency_id} )->name() ) ?>.<br/>
 		<br/>
+		<div id="LoginLog">
 		<fieldset><legend>Last 10 Login Attempts</legend>
 			<table class="List">
 				<tr>
@@ -34,8 +35,7 @@
 				) ?>
 			</table>
 		</fieldset>
-	<? else ( $param{'ddmCompany'} ) ?>
-	<? echo ( include('_select_company.html'); ) ?>
-	<? endif ( $param{'ddmCompany'} ) ?>
-<? endif ( sets::isin( $session{'user_type'},['E','A'] ) ) ?>
-
+		</div>
+	<? endif ( $param{ddmCompany} ) ?>
+	<?include('_select_company.html')?>
+<? endif ( sets::isin( $session{user_type},['E','A'] ) ) ?>

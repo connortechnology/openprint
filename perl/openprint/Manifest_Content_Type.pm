@@ -71,7 +71,7 @@ sub PurchaseOrder {
 
 sub PurchaseOrder_Content {
 	if ( ! exists $_[0]{'PurchaseOrder_Content'} ) {
-require openprint::PurchaseOrder_Content;
+		require openprint::PurchaseOrder_Content;
 		if ( ! $_[0]{'po_content_id'} ) {
 			my $PO = new openprint::PurchaseOrder( $_[0]{'po_id'} );
 			my $Paper = $_[0]->Paper();

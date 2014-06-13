@@ -12,6 +12,7 @@ You have requested a page that requires greater credentials than you are current
 <? else ( ! $session{user_id} ) ?>
 You have requested a page that requires you to login and authenticate yourself.<br/>
 <? endif ( ! $session{user_id} ) ?>
+<? echo ( $$variable{PageSetting}->message() ) ?>
 <br/>
 Please enter your e-mail address and password to login. <br/>
 <br/>

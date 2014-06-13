@@ -2,7 +2,9 @@ use strict;
 package openprint::Company_Profile_Entry;
 our @ISA = qw( openprint::Object );
 
-use vars qw( $table @identified_by %fields %transforms %defaults );
+use vars qw( $table @identified_by %fields %transforms %defaults $debug );
+$debug = 0;
+
 $table = 'company_profiles';
 @identified_by = ( 'company_id', 'field_id' );
 %fields = (

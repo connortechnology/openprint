@@ -10,12 +10,14 @@ $table = 'company_categories';
 $serial = 'company_categories_id_seq';
 
 %fields = (
-	'id'				=>	'id',
-	'name'				=>	'name',
+	id				=>	'id',
+	name			=>	'name',
+	short			=>	'sort',
 );
 
 %transforms = (
-    'name' => [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
+    name => [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
+    short => [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
 );
 %defaults = (
 );

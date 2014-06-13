@@ -3,7 +3,6 @@ package openprint::Log;
 our @ISA = qw( openprint::Object );
 use openprint ();
 require openprint::Object;
-require openprint::User;
 require openprint::Log_Action;
 require openprint::Host;
 
@@ -43,6 +42,7 @@ $serial = 'logs_id_seq';
 );
 
 sub User {
+	require openprint::User;
 	return new openprint::User( $_[0]{user_id} );
 } # end sub User
 

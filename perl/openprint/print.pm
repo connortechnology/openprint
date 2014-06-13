@@ -268,6 +268,7 @@ sub multipage_signatures {
 
 	my $ac = sql::start_transaction( $dbh );
 	my $Project = new openprint::Project( $project_index );
+	$Project->lock();
 	my $services = $Project->services();
 	$service_index = $$services{''}[0] if ! $service_index;
 
@@ -462,10 +463,10 @@ $log->debug("group $group_id");
 			openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $ss_id, $spec, $$param{$spec.$group_id} );
 		} # end foreach spec
 		foreach my $spec ( 'Press','RunStyle' ) {
-			next if ! exists $$param{'ddm'.$spec.$group_id};
+			next if ! exists $$param{'ddm'.$spec.'-'.$group_id};
 			foreach my $qty_index ( $Project->quantity_indexes() ) {
-				if ( $$param{'ddm'.$spec.$group_id} ) {
-					openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $ss_id, 'ddm'.$spec.$qty_index, $$param{'ddm'.$spec.$group_id} );
+				if ( $$param{'ddm'.$spec.'-'.$group_id} ) {
+					openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $ss_id, 'ddm'.$spec.$qty_index, $$param{'ddm'.$spec.'-'.$group_id} );
 					openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $ss_id, 'chkOverride'.$spec.$qty_index, 'Y' );
 				} else {
 					openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $ss_id, 'chkOverride'.$spec.$qty_index, '' );
@@ -473,34 +474,23 @@ $log->debug("group $group_id");
 			} # end foreach qty_index
 		} # end foreach spec
 		foreach my $spec ( 'PrintingType','StockType' ) {
-			next if ! exists $$param{$spec.$group_id};
+			next if ! exists $$param{$spec.'-'.$group_id};
 			foreach my $qty_index ( $Project->quantity_indexes() ) {
-				if ( $$param{$spec.$group_id} ) {
-					openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $ss_id, $spec.$qty_index, $$param{$spec.$group_id} );
+				if ( $$param{$spec.'-'.$group_id} ) {
+					openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $ss_id, $spec.$qty_index, $$param{$spec.'-'.$group_id} );
 					openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $ss_id, 'Override'.$spec.$qty_index, 'Y' );
 				} else {
 					openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $ss_id, 'Override'.$spec.$qty_index, '' );
 				} # end if
 			} # end foreach qty_index
 		} # end foreach spec
-		
+	
+		foreach my $spec ( 'txtPlateChangeQuantity' ) {
+			foreach my $qty_index ( $Project->quantity_indexes() ) {
+				openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $ss_id, $spec.$qty_index, $$param{$spec.'-'.$group_id} );
+			} # end foreach qty_index
+		} # en
 	} # end foreach
-
-	if ( 0 and misc::sum( values %specified_pages ) < $$param{'txtTotalPageQuantity'} ) {
-# Must have at least 1 interioer signature
-		$dbh->do( "LOCK TABLE tbl_Service_Specifications IN SHARE ROW EXCLUSIVE MODE" ) or $log->error( DBI->errstr );
-		my $print_service_index = $Project->add_service( 'Signature' );
-		openprint::service::insert_service_spec( $log, $dbh, $project_index, $print_service_index, 'txtSignatureType', 'Interior Pages' );
-		openprint::service::insert_service_spec( $log, $dbh, $project_index, $print_service_index, 'txtServiceDescription', 'Interior Pages' );
-		openprint::service::insert_service_spec( $log, $dbh, $project_index, $print_service_index, 'Group', $max_group + 1 );
-		openprint::service::insert_service_spec( $log, $dbh, $project_index, $print_service_index, 'GroupPageQuantity', $needed_pages{'Interior Pages'} - $specified_pages{'Interior Pages'} );
-		$_ = q{SELECT MAX(strValue::integer) FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strName='SignatureIndex'};
-		my ( $signature_count ) = sql::execute( $log, $dbh, $_, $project_index );
-		$signature_count += 1;
-		openprint::service::insert_service_spec( $log, $dbh, $project_index, $print_service_index, 'SignatureIndex', $signature_count );
-		openprint::service::insert_service_spec( $log, $dbh, $project_index, $print_service_index, 'PrintingType', $$param{'PrintingType'} );
-		openprint::service::insert_service_spec( $log, $dbh, $project_index, $print_service_index, 'txtSpreadSize', $$param{'txtSpreadSize'} );
-	} # end if
 
 	my $old_bindery_type = get_book_type( $project_index );
 	if ( $old_bindery_type and ($$param{'rdbTemplateType'} ne $old_bindery_type) and $$services{$old_bindery_type} ) {
@@ -526,6 +516,7 @@ $log->debug("No Nobindery");
 			} # end if
 		} # end if
 	} # end if
+	$Project->unlock();
 	sql::end_transaction( $dbh, $ac );
 } # end sub multipage_signatures
 

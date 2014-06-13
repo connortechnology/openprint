@@ -2,10 +2,9 @@ use strict;
 package openprint::imposition;
 use POSIX qw{ ceil };
 
-
 require openprint::Imposition;
 
-use constant DEBUG => 1;
+use constant DEBUG => 0;
 
 # The various way we can group spreads
 use vars qw( %blocks );
@@ -47,8 +46,9 @@ sub calc_setup {
 # will be useful in other spots.
 	my ( $setup, $object_width, $object_height, $space_width, $space_height ) = @_;
 
-	my $cols = $object_width > 1 ? int(($space_width / $object_width)) : 0;
-	my $rows = $object_height > 1 ? int(($space_height / $object_height)) : 0;
+	# This test used to be for > 1 but we had a labels job that was .75... 
+	my $cols = $object_width > 0 ? int(($space_width / $object_width)) : 0;
+	my $rows = $object_height > 0 ? int(($space_height / $object_height)) : 0;
 
 	$setup->set('imposition'=>$rows * $cols, 'rows'=>$rows, 'columns'=>$cols );
 } # end sub calc_setup
@@ -168,7 +168,7 @@ sub check_setup {
 			} # end if
 
 			if ( $setup->dutch_columns() % 2 ) {
-				if ( $setup->layout_width() + $$specs{'Perfecting Double Gutter Size'} - $$specs{'Perfecting Single Gutter Size'}  > $setup->stock_width() ) {
+				if ( $setup->layout_width() + $$specs{'Perfecting Double Gutter Size'} - $$specs{'Perfecting Single Gutter Size'}  > $setup->sheet_width() ) {
 					$setup->rows(0);
 					$setup->columns(0);
 					return 0;
@@ -178,7 +178,7 @@ sub check_setup {
 			if ( $setup->columns() % 2 ) {
 # This uses two rollers, on non-offset paper so need more gutter space, which works out to be 0.25 
 #$setup->display();
-				if ( $setup->layout_width() + $$specs{'Perfecting Double Gutter Size'} - $$specs{'Perfecting Single Gutter Size'} > $setup->stock_width() ) {
+				if ( $setup->layout_width() + $$specs{'Perfecting Double Gutter Size'} - $$specs{'Perfecting Single Gutter Size'} > $setup->sheet_width() ) {
 			#$openprint::log->debug(' CHECK 3 Using Paper ' . $setup->paper()->width() . ' x' . $setup->paper()->height() .' ' . $setup->image_width() . ' x ' . $setup->image_height() . ' Imposition: ' . $setup->imposition(). ":".$setup->columns() . 'x' . $setup->rows(). '+'.$setup->dutch_columns() . 'x'.$setup->dutch_rows() . ' ' . $setup->layout_width() . 'x' . $setup->layout_height() ) if DEBUG;
 					$setup->rows(0);
 					$setup->columns(0);
@@ -337,10 +337,10 @@ $openprint::log->debug("Not Pretrimming on $$Press{strid}") if DEBUG;
 			$paper_height = $Paper->height();
 		} # end if
 	} # end if
-	$setup1->stock_width( $paper_width );
-	$setup1->stock_height( $paper_height );
-	$setup2->stock_width( $paper_width );
-	$setup2->stock_height( $paper_height );
+	$setup1->sheet_width( $paper_width );
+	$setup1->sheet_height( $paper_height );
+	$setup2->sheet_width( $paper_width );
+	$setup2->sheet_height( $paper_height );
 
 	my $bindery_gutters = 0;
 	my $bindery_bleed = 0;
@@ -417,17 +417,17 @@ $openprint::log->debug("Not Pretrimming on $$Press{strid}") if DEBUG;
 	if ( $bleed_locations{Left} ) {
 		$gutters -= $bleed_size;
 	} # end if
-$openprint::log->debug("Gutters: $$specs{'Gutter'}, bindery: $bindery_gutters, minus bleeds: $gutters");
-$openprint::log->debug("Bindery Gutters: $gutters <? $bindery_gutters");
+$openprint::log->debug("Gutters: $$specs{'Gutter'}, bindery: $bindery_gutters, minus bleeds: $gutters") if DEBUG;
+$openprint::log->debug("Bindery Gutters: $gutters <? $bindery_gutters") if DEBUG;
 
 	$gutters = 0 if $gutters < 0;
 
 	$$specs{'Grip Size'} = $$specs{'Grip'} - $bindery_head;
 # doube grip for a perfecting or Work & Tumble.
-		$openprint::log->debug("Grip  $$specs{'Grip Size'}");
-	if ( $run_style eq 'Work & Tumble' or $run_style eq 'Perfecting' ) {
+	$openprint::log->debug("Grip  $$specs{'Grip Size'}") if DEBUG;
+	if ( ( $run_style eq 'Work & Tumble' ) or ( $run_style eq 'Perfecting' ) ) {
 		$$specs{'Grip Size'} *= 2;
-		$openprint::log->debug("Grip  $$specs{'Grip Size'}");
+		$openprint::log->debug("Grip  $$specs{'Grip Size'}") if DEBUG;
 	} # emd 
 	if ( ( $run_style eq 'Work & Tumble' ) and ( $$specs{'Colour Bar Orientation'} ne 'Length' ) ) {
 		# For Work & TUmble, the grip happens on the head and tail, but we can print on the backside of the grip so to speak.  So we can tuck the colour bar into the second grip space.
@@ -451,7 +451,7 @@ $openprint::log->debug("Bindery Gutters: $gutters <? $bindery_gutters");
 	} # end if
 
 # Calculate Available Printing Space
-	my $adjusted_paper_height;
+	my $adjusted_paper_height = 0;
 	if ( $paper_height ) {
 		$adjusted_paper_height = $paper_height;
 	} elsif ( $$specs{'Cut Off'} ) {
@@ -462,22 +462,44 @@ $openprint::log->debug("Bindery Gutters: $gutters <? $bindery_gutters");
 
 	# Becomes Printable area
 	$adjusted_paper_height -= $$specs{'Grip Size'} if $$specs{'Add Grip Height'} ne 'N';
+$openprint::log->debug("APH: $adjusted_paper_height") if DEBUG;
 # On the web press, we have no paper dimensions, only the maximagesize, so this effectively sets the printing area to the max image size. Theoretically Max Image Size = Cutoff-Grip anyways
 	if ( $$specs{'Maximum Image Area Length'} and ( ( $adjusted_paper_height <= 0 ) or ( $adjusted_paper_height > $$specs{'Maximum Image Area Length'} ) ) ) {
-		$openprint::log->debug("*** Using Max Image Length1: Before: $adjusted_paper_height After: $$specs{'Maximum Image Area Length'}***") if DEBUG;
-		$adjusted_paper_height = $$specs{'Maximum Image Area Length'};
+		my $max_image_height = $$specs{'Maximum Image Area Length'};
+if ( 1 ) {
+		$max_image_height += ( $bleed_size - $$specs{'CropMarkSpace'} ) if $bleed_locations{Top}; # Can bleed outside the image area
+		$max_image_height += ( $bleed_size - $$specs{'CropMarkSpace'} ) if $bleed_locations{Bottom}; # Can bleed outside the image area
+}
+		if ( $max_image_height < $adjusted_paper_height ) {
+
+		$openprint::log->debug("*** Using Max Image Length1: Before: $adjusted_paper_height After: $max_image_height***") if DEBUG;
+		$adjusted_paper_height = $max_image_height;
+		} # end if
+		if ( 0 ) {
+			
 		$adjusted_paper_height += ( $bleed_size - $$specs{'CropMarkSpace'} ) if $bleed_locations{Top}; # Can bleed outside the image area
 		$adjusted_paper_height += ( $bleed_size - $$specs{'CropMarkSpace'} ) if $bleed_locations{Bottom}; # Can bleed outside the image area
+		} # end nif
 	} # end if
 
 	if ( $$specs{'Colour Bar Orientation'} ne 'Length' ) {
 
-		# if colour bar is at bottom, 
+# if colour bar is at bottom, 
 		my $colour_bar = $$setup1{colour_bar_size};
-		$colour_bar -= $bleed_size  if $bleed_locations{Top};
-		$colour_bar -= $bleed_size  if $bleed_locations{Bottom};
-		$colour_bar = 0 if $colour_bar < 0;
-		
+
+# colour bar is at bottom or top, then can bleed into it.  Or it can go in the middle, in which case you put it in the bleed space. W&Tumble we put it in grip, so don't do this at all. 
+		if ( $run_style eq 'Work & Tumble' ) {
+		} else {
+			#$colour_bar -= $bleed_size if $bleed_locations{Top};
+			#$colour_bar -= $bleed_size if $bleed_locations{Bottom};
+			#$colour_bar = 0 if $colour_bar < 0;
+		#} else { 
+# If impo was x2 then it can go in middle, but we don't know that yet.
+			$colour_bar -= $bleed_size if $bleed_locations{Top} or $bleed_locations{Bottom};
+			$colour_bar -= $bleed_size if $bleed_locations{Top} or $bleed_locations{Bottom};
+			$colour_bar = 0 if $colour_bar < 0;
+$openprint::log->debug("Colour bar is now $colour_bar") if DEBUG;
+		}
 		
 		$adjusted_paper_height -= $colour_bar;
 	} # end if
@@ -487,16 +509,16 @@ $openprint::log->debug("Bindery Gutters: $gutters <? $bindery_gutters");
 		$cropmarkspace = $$specs{'CropMarkSpace'};
 		$cropmarkspace -= $bleed_size if $bleed_locations{Top};
 		$cropmarkspace = 0 if $cropmarkspace < 0;
+		$adjusted_paper_height -= $cropmarkspace;
 		$setup1->cropmark_top( $cropmarkspace );
 
 		$cropmarkspace = $$specs{'CropMarkSpace'};
 		$cropmarkspace -= $bleed_size if $bleed_locations{Bottom};
 		$cropmarkspace = 0 if $cropmarkspace < 0;
+		$adjusted_paper_height -= $cropmarkspace;
 		$setup1->cropmark_bottom( $cropmarkspace );
-
-		$adjusted_paper_height -= $setup1->cropmark_top();
-		$adjusted_paper_height -= $setup1->cropmark_bottom();
 	} # end if
+
 	$adjusted_paper_height = 0 if $adjusted_paper_height < 0;
 $openprint::log->debug("Height: $paper_height - CB $$specs{'colour_bar_size'} - Grip $$specs{'Grip Size'} CropTOp: $$setup1{cropmark_top} - CropBottom: $$setup1{cropmark_bottom} = $adjusted_paper_height") if DEBUG;
 
@@ -543,7 +565,7 @@ $openprint::log->debug("Height: $paper_height - CB $$specs{'colour_bar_size'} - 
 				# Too hard to figure space for rollers
 				push @results, calc_dutch( $setup1, $adjusted_paper_width, $adjusted_paper_height, $specs );
 			} else {
-$openprint::log->debug("Not doing dutch because $$specs{'dutch'} or $run_style");
+$openprint::log->debug("Not doing dutch because $$specs{'dutch'} or $run_style") if DEBUG;
 			} # end if
 			if ( ! $setup1->paper()->width() ) {
 				$setup1->paper()->width( $setup1->used_width() );
@@ -950,7 +972,9 @@ $openprint::log->debug("Considering sig size: $signature_size") if DEBUG;
 				my $newimp = $imp->copy();
 
 				$newimp->rows($rows);
+				$newimp->start_rows($rows);
 				$newimp->columns($cols);
+				$newimp->start_columns($cols);
 				$newimp->imposition($rows * $cols);
 				if ( $newimp->image_orientation() eq 'Vertical' ) {
 					$newimp->image_width( $newimp->image_width() * $col );
@@ -995,29 +1019,37 @@ sub decrease_imposition {
 			} # end if
 		} else {
 
-			my $imp1 = $imposition->copy();
-			$imp1->rows( int ( $imp1->rows()/2 ) );
-			if ( $imp1->imposition() ) {
-				push @results, $imp1;
+			if ( $imposition->rows() >= 2 ) {
+				my $imp1 = $imposition->copy();
+				$imp1->rows( int ( $imp1->rows()/2 ) );
+				if ( $imp1->imposition() ) {
+					push @results, $imp1;
+				} # end if
+				if ( $imp1->rows() != $imposition->rows() - 1 ) {
+					my $imp4 = $imposition->copy();
+					$imp4->rows( $imp4->rows()-1 );
+					if ( $imp4->imposition() ) {
+						push @results, $imp4;
+					} # end if
+				} # end if
 			} # end if
 
-			my $imp2 = $imposition->copy();
-			$imp2->columns( int ( $imp2->columns()/2 ) );
-			if ( $imp2->imposition() ) {
-				push @results, $imp2;
-			} # end if
+			if ( $imposition->columns() >= 2 ) {
+				my $imp2 = $imposition->copy();
+				$imp2->columns( int ( $imp2->columns()/2 ) );
+				if ( $imp2->imposition() ) {
+					push @results, $imp2;
+				} # end if
 			
-			my $imp3 = $imposition->copy();
-			$imp3->columns( $imp3->columns()-1 );
-			if ( $imp3->imposition() ) {
-				push @results, $imp3;
+				if ( $imp2->columns() != $imposition->columns() - 1 ) {
+					my $imp3 = $imposition->copy();
+					$imp3->columns( $imp3->columns()-1 );
+					if ( $imp3->imposition() ) {
+						push @results, $imp3;
+					} # end if
+				} # end if
 			} # end if
 
-			my $imp4 = $imposition->copy();
-			$imp4->rows( $imp4->rows()-1 );
-			if ( $imp4->imposition() ) {
-				push @results, $imp4;
-			} # end if
 		} # end if
 	} # end foreach
 
@@ -1065,7 +1097,7 @@ sub sort {
 		if ( $$a{runstyle} ne $$b{runstyle} ) {
 			return $$a{runstyle} cmp $$b{runstyle};
 		} elsif ( $$a{pages} != $$b{pages} ) {
-			return $$a{pages} <=> $$b{pages};
+			return $$b{pages} <=> $$a{pages};
 		} elsif ( $$a{imposition} != $$b{imposition} ) {
 			return $$b{imposition} <=> $$a{imposition};
 		} elsif ( $$a{columns} != $$b{columns} ) {
@@ -1083,6 +1115,76 @@ sub sort {
 		return $$APress{strid} cmp $$BPress{strid};
 	} @_;
 }
+
+sub cut {
+	my ( $I ) = @_;
+	
+	my $i1 = $I->copy();
+	my @Results;
+
+	if ( $I->runstyle() eq 'Work & Turn' ) {
+		$i1->runstyle( 'SheetWork' );
+		$i1->columns( $i1->columns() / 2 );
+		if ( $I->dutch_columns() ) {
+			$i1->dutch_columns( $i1->dutch_columns() / 2 );
+		} # end if
+		$i1->quantity($i1->quantity()*2);
+		push @Results, $i1;
+
+	} elsif ( $I->runstyle() eq 'Work & Tumble' ) {
+		$i1->runstyle( 'SheetWork' );
+		$i1->rows( $i1->rows() / 2 );
+		$i1->dutch_rows( $i1->dutch_rows() / 2 ) if $I->dutch_rows();
+		$i1->quantity($i1->quantity()*2);
+		push @Results, $i1;
+
+	} elsif ( $I->dutch_columns() ) {
+		$i1->dutch_rows( 0 );
+		$i1->dutch_columns( 0 );
+		my $i2 = $I->copy();
+		$i2->rows( $I->dutch_rows() );
+		$i2->columns( $I->dutch_columns() );
+		$i2->image_orientation( $I->image_orientation() eq 'Vertical' ? 'Horizontal' : 'Vertical' );
+		$i2->dutch_rows( 0 );
+		$i2->dutch_columns( 0 );
+		push @Results, $i1, $i2;
+	} elsif ( $I->layout_width() >= $I->layout_height() and $I->columns() > 1 ) {
+		$i1->columns( int($I->columns() / 2) );
+		if ( ! ( $I->columns() % 2 ) ) {
+			$i1->quantity( $i1->quantity() * 2 );
+			push @Results, $i1;
+		} else {
+			my $i2 = $I->copy();
+			$i2->columns( $I->columns() - $i1->columns() );
+			push @Results, $i1, $i2;
+		} # end if
+	} elsif ( $I->layout_width() < $I->layout_height() and $I->rows() > 1 ) {
+		$i1->rows( int($I->rows() / 2) );
+		if ( ! ( $I->rows() % 2 ) ) {
+			$i1->quantity( $i1->quantity() * 2 );
+			push @Results, $i1;
+		} else {
+			my $i2 = $I->copy();
+			$i2->rows( $I->rows() - $i1->rows() );
+			push @Results, $i1, $i2;
+		} # end if
+	} elsif ( $I->columns() >= $I->rows() ) {
+		my $i2 = $I->copy();
+		$i1->columns( int($I->columns() / 2) );
+		$i2->columns( $I->columns() - $i1->columns() );
+		push @Results, $i1, $i2;
+	} else {
+		my $i2 = $I->copy();
+		$i1->rows( int($I->rows() / 2) );
+		$i2->rows( $I->rows() - $i1->rows() );
+		push @Results, $i1, $i2;
+	} # end if
+	foreach my $i ( @Results ) {
+$i->display('Cut to ');
+	}
+	return @Results;
+} # end sub cut_imposition
+
 
 1;
 __END__

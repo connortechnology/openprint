@@ -176,6 +176,7 @@
 		my $stock_index = 1;
 		foreach my $SQ ( @stocks_and_quantities ) {
 			my ( $Stock, $qty ) = @$SQ{'Stock','quantity'};
+			next if ! $qty;
 			my $string = $Stock->id_string();
 			
 			if ( $Stock->type() eq 'Sheet' ) {

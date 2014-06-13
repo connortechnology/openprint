@@ -166,7 +166,7 @@ function validate_data(formName) {
 	return true;
 } // end function validate_data
 
-function get_impositions( form ) {
+function get_impositions( form, qty_index ) {
 	form = $(form);
 	var h = $H(Form.serialize(form,true));
 	h.each(function(pair) {
@@ -175,7 +175,8 @@ function get_impositions( form ) {
 		if ( pair.key == 'btnFunction' ) 
 			h.unset(pair.key);
 	});
-	popup_window( '/main/project/prin/_impositions.html', h );
+	h.set('qty_index', qty_index);
+	popup_window( '/main/project/prin/_impositions.html', h, { width: 800 } );
 } 
 
 function calc_print( formName, force, options ) {

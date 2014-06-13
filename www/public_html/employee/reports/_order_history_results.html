@@ -31,8 +31,9 @@ The following had one or more signatures that ran on <? echo ( join(': ', new op
 					<td class="status"><a href="/employee/order/view.html?order_id=%2$d">%8$s</a></td>
 					<td class="Price"><a href="/employee/order/view.html?order_id=%2$d">%9$s</a></td>
 				</tr>
-				`, $rowclass, $Order->id(), $Order->docket(), $Order->invoice_id(), ssi::htmlize($Order->company_name() ), join('<br/>', map { $_->reference() } $Order->Projects() ), 
-			Date::Format::time2str($config{'DateTimeFormat'}, Date::Parse::str2time($Order->created_on() ) ), $Order->status(), openprint::Currency::format( $price ),
+				`, $rowclass, $Order->id(), $Order->docket(), join('<br/>', map { $_->Invoice()->num() } $Order->Invoices() ),
+				htmlize($Order->company_name() ), join('<br/>', map { $_->reference() } $Order->Projects() ), 
+				format_datetime( $Order->created_on() ), $Order->status(), openprint::Currency::format( $price ),
 			);
 			$rowclass = $rowclass ? '' : ' class="colRow"';
 			$total += $price;

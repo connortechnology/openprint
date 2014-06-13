@@ -8,7 +8,7 @@ Choose report criteria and click show results. You may the download the the resu
 			<select name="ddmEmployees" size="1">
 				<option value="">All Employees</option>
 <? echo (
-    make_drop_down( [ ( 'None','None' ), map { $_->id(), $_->name() } openprint::User->find( type=>['E','A'], order=>'lower(firstname),lower(lastname)', 'usergroup any'=>'Sales' ) ], $param{ddmEmployees} );
+    make_drop_down( [ ( 'None','Not Assigned' ), map { $_->id(), $_->name() } openprint::User->find( type=>['E','A'], order=>'lower(firstname),lower(lastname)', 'usergroup any'=>'Sales' ) ], $param{ddmEmployees} );
 ) ?>
 			</select>
 		</li>

@@ -65,6 +65,12 @@ sub view {
 			$variable{'ExternalRedirect'} = '/employee/assets/history.html';
 			%param = ();
 		} # end if
+	} elsif ( $param{'btnFunction'} eq 'Destroy' ) {
+		$variable{'error'} .= $Asset->destroy();
+		if ( ! $variable{'error'} ) {
+			$variable{'ExternalRedirect'} = '/employee/assets/history.html';
+			%param = ();
+		} # end if
 	} elsif ( $param{'btnFunction'} eq 'Undelete' ) {
 		$variable{'error'} .= $Asset->undelete();
 	} elsif ( $param{'btnFunction'} eq 'Save' ) {

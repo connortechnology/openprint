@@ -10,7 +10,7 @@ use vars qw( $debug $table $serial %fields %defaults %transforms %config $log $d
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
 
-$debug = 1;
+$debug = 0;
 
 $table = 'articles';
 $serial = 'articles_id_seq';
@@ -190,7 +190,7 @@ sub html {
 			);
 			if ( $Article->anonymous() ) {
 				$html .= ' by an Anonymous Contributor';
-			} elsif ( $Article->author_id() ) {
+			} elsif ( $Article->created_by() ) {
 				$html .= ' by ' . $Article->Author()->link();
 			} # end if
 	$html .= sprintf(q`<br/><div class="source_content">%1$s</div><div class="summary">%2$s</div>`,

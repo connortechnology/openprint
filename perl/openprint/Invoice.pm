@@ -60,6 +60,7 @@ $serial = 'invoices_id_seq';
 );
 
 %transforms = (
+	num			=>	[ 's/^\s+//', 's/\s+$//' ],
 );
 %defaults = (
 	created_on	=> q`'NOW()'`,

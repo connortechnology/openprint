@@ -771,12 +771,13 @@ sub company_profile_fields {
 	if ( $param{action} eq 'Save' ) {
 		foreach my $Field ( openprint::Company_Profile_Field->find() ) {
 			$variable{'error'} .= $Field->save({
-				'name'	=>	$param{'name-'.$Field->id()},
-				'description'	=>	$param{'description-'.$Field->id()},
-				'type'	=>	$param{'type-'.$Field->id()},
-				'values'	=>	[ split(',', $param{'values-'.$Field->id()} ) ],
-				'required'	=>	$param{'required-'.$Field->id()},
-				'searchable'	=>	$param{'searchable-'.$Field->id()},
+				name	=>	$param{'name-'.$Field->id()},
+				description	=>	$param{'description-'.$Field->id()},
+				type	=>	$param{'type-'.$Field->id()},
+				values	=>	[ split(',', $param{'values-'.$Field->id()} ) ],
+				defaults	=>	[ misc::trim( split(',', $param{'defaults-'.$Field->id()} ) ) ],
+				required	=>	$param{'required-'.$Field->id()},
+				searchable	=>	$param{'searchable-'.$Field->id()},
 				search_default	=>	$param{'search_default-'.$Field->id()},
 				match			=>	$param{'match-'.$Field->id()},
 				on_registration	=>	$param{'on_registration-'.$Field->id()},
@@ -822,6 +823,9 @@ sub page_settings {
 	require openprint::Page_Setting;
 	if ( $param{action} eq 'save' ) {
 		foreach my $PS ( openprint::Page_Setting->find(), new openprint::Page_Setting() ) {
+
+			my @usergroup_ids = ref $param{"usergroup_ids-$$PS{id}"} eq 'ARRAY' ? @{$param{"usergroup_ids-$$PS{id}"}} : ( $param{"usergroup_ids-$$PS{id}"} ) if $param{"usergroup_ids-$$PS{id}"};
+
 			if ( defined $PS->id() and ! $param{'url-'.$PS->id()} ) {
 				$PS->delete();
 			} elsif ( 
@@ -829,7 +833,9 @@ sub page_settings {
 					( $PS->cacheable() ne $param{'cacheable-'.$PS->id()} ) or 
 					( $PS->user_level() ne $param{'user_level-'.$PS->id()} ) or
 					( $PS->keywords() ne $param{'keywords-'.$PS->id()} ) or
-					( $PS->description() ne $param{'description-'.$PS->id()} ) 
+					( $PS->description() ne $param{'description-'.$PS->id()} ) or
+					( $PS->message() ne $param{'message-'.$PS->id()} ) or
+					( sets::union( ( $PS->usergroup_ids() ? @{$PS->usergroup_ids()} : () ), @usergroup_ids ) != sets::intersection( ( $PS->usergroup_ids() ? @{$PS->usergroup_ids()} : () ), @usergroup_ids ) ),
 	
 				) {
 				$variable{'error'} .= $PS->save({
@@ -838,6 +844,8 @@ sub page_settings {
 						user_level	=>	$param{'user_level-'.$$PS{id}},
 						keywords	=>	$param{'keywords-'.$$PS{id}},
 						description	=>	$param{'description-'.$$PS{id}},
+						message		=>	$param{'message-'.$$PS{id}},
+						usergroup_ids	=>	\@usergroup_ids,
 						});
 			} # end if need to save
 		} # end foreach PS
@@ -941,5 +949,22 @@ sub _authorizations {
 	ssi::save_params( '/administrator/managerial/authorizations.html', ( 'object_type_id' ) );
 } # end sub _authorizations
 
+sub companies {
+	_companies();
+} # end sub companies
+sub _companies {
+	ssi::save_params( '/administrator/managerial/companies.html', ( 'salesrep_id',
+				( map { 'created_on_start_' . $_ } ( 'year','month','day' ) ),
+				) );
+	$session{$r->uri().'?salesrep_id_exclude'} = $param{salesrep_id_exclude};
+} # end sub _companies
+
+sub folds {
+	_folds();
+} # end sub folds
+
+sub _folds {
+	ssi::save_params( '/administrator/managerial/folds.html', ( 'equipment_id', 'type' ) );
+} # end sub _folds
 1;
 __END__

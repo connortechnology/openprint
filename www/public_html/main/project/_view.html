@@ -203,11 +203,12 @@
 			} # end if $$services{'Signature'}
 
 		} else {
-			foreach my $ServiceType ( openprint::ServiceType->find('category_id'=>$ServiceCategory->id(),'order'=>'sorting', 'view_visible'=>1) ) {
+			foreach my $ServiceType ( openprint::ServiceType->find( category_id=>$ServiceCategory->id(), order=>'sorting', view_visible=>1) ) {
 				next if ! $$services{$ServiceType->name()};
 				foreach my $service_id ( @{$$services{$ServiceType->name()}} ) {
 					my $Service = $Project->Service( $service_id );
 					my $specs = $Service->specs();
+$log->debug(" Service: " . $Service->ServiceType()->name() );
 
 					my @summaries;
 					my $summary = openprint::service::summary( $Project->id(),$service_id );
@@ -310,7 +311,7 @@
 				<td>Unit Prices</td>
 				<? echo ( my $html = '';
 					foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
-						$html .= '<td class="price">'.openprint::Currency::format( $$variable{Project}->Currency()->convert_from( $$variable{'Project'}->unit_price($qty_index))).'</td>';
+						$html .= '<td class="price">'.openprint::Currency::format( $$variable{Project}->Currency()->convert_from( $$variable{'Project'}->unit_price($qty_index)), 4).'</td>';
 					} # end foreach qty_index
 					return $html;
 				) ?>

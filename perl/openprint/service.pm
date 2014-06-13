@@ -343,6 +343,7 @@ require openprint::Estimating::Stitching;
 	} # end while service_type
 
 	foreach my $type ( keys %{$services} ) {
+		next if ! $type;
 		if ( ! @{$$services{$type}} ) {
 			$openprint::log->error("Have $type but no actual service");
 			next;

@@ -36,7 +36,7 @@ use Time::HiRes qw{ time gettimeofday tv_interval };
 
 use vars qw( $debug $table $serial %fields %find_fields %defaults %transforms %grades );
 
-$debug = 0;
+$debug = 1;
 $table = 'papers';
 $serial	= 'paper_id_seq';
 %fields = (
@@ -89,14 +89,22 @@ $serial	= 'paper_id_seq';
 		available_to_order		=>	'available_to_order',
 		);
 %find_fields = (
-		'manufacturer'	=>	'(SELECT name FROM manufacturers WHERE manufacturers.id=papers.manufacturer_id)',
-		'group'	=>	'(SELECT name FROM stockgroups WHERE stockgroups.id=papers.group_id)',
-		'material'	=>	'(SELECT name FROM stockmaterials WHERE stockmaterials.id=papers.material_id)',
-		'brand'	=>	'(SELECT name FROM stockbrands WHERE stockbrands.id=papers.brand_id)',
-		'finish'	=>	'(SELECT name FROM stockfinishes WHERE stockfinishes.id=papers.finish_id)',
-		'colour'	=>	'(SELECT name FROM stockcolours WHERE stockcolours.id=papers.colour_id)',
-		'weight'	=>	'(SELECT name FROM stockweights WHERE stockweights.id=papers.weight_id)',
-		'quality'	=>	'(SELECT name FROM stockqualities WHERE stockqualities.id=papers.quality_id)',
+		#'manufacturer'	=>	'(SELECT name FROM manufacturers WHERE manufacturers.id=papers.manufacturer_id)',
+		manufacturer	=>	'manufacturer_id = (SELECT id FROM manufacturers WHERE name=?)',
+		#'group'	=>	'(SELECT name FROM stockgroups WHERE stockgroups.id=papers.group_id)',
+		group	=>	'group_id = (SELECT id FROM stockgroups WHERE name=?)',
+		#'material'	=>	'(SELECT name FROM stockmaterials WHERE stockmaterials.id=papers.material_id)',
+		material	=>	'material_id = (SELECT id FROM stockmaterials WHERE name=?)',
+		#'brand'	=>	'(SELECT name FROM stockbrands WHERE stockbrands.id=papers.brand_id)',
+		brand	=>	'brand_id = (SELECT id FROM stockbrands WHERE name=?)',
+		#'finish'	=>	'(SELECT name FROM stockfinishes WHERE stockfinishes.id=papers.finish_id)',
+		finish	=>	'finish_id = (SELECT id FROM stockfinishes WHERE name=?)',
+		#'colour'	=>	'(SELECT name FROM stockcolours WHERE stockcolours.id=papers.colour_id)',
+		colour	=>	'colour_id = (SELECT id FROM stockcolours WHERE name=?)',
+		#'weight'	=>	'(SELECT name FROM stockweights WHERE stockweights.id=papers.weight_id)',
+		weight	=>	'weight_id = (SELECT id FROM stockweights WHERE name=?)',
+		#'quality'	=>	'(SELECT name FROM stockqualities WHERE stockqualities.id=papers.quality_id)',
+		quality	=>	'quality_id = (SELECT id FROM stockqualities WHERE name=?)',
 		'size'		=>	q`width || '" x ' || height || '"'`,
 		'sheetsize'		=>	q`width || '" x ' || height || '"'`,
 		allocated_to_docket	=>	'(SELECT docket FROM paper_allocations WHERE paper_id = papers.id)',
@@ -940,7 +948,7 @@ sub get_price {
 		# If custom paper
 		$price = { 'price' => $$self{'Price'}, 'cost'=>$$self{'Price'}, 'units'=>$$self{'Units'} };
 #$openprint::log->debug("Usnig custom price $$self{'Price'}$$self{'Units'}");
-	} elsif ( $$self{'id'} ) {
+	} elsif ( $$self{id} ) {
 		my @Prices = $self->Prices( );
 		if ( (! $$self{'supplied'} ) and ! @Prices ) {
 			$openprint::log->warn( 'No prices for paper ' );
@@ -961,36 +969,36 @@ sub get_price {
 			} # end if
 		} # end foreach Price
 		if ( ! $price ) {
-			if ( $params{'service'} eq 'Material' or $debug ) {
+			if ( ( ! $$self{supplied} ) and ( $params{service} eq 'Material' or $debug ) ) {
 				$openprint::log->warn("Unable to find price for Stock id:$$self{id} $params{service} equip: $params{equipment_id} : $qty $lookup_qty");
-		foreach my $Price ( @Prices ) {
-			if ( $$Price{'pricelist_id'} != $list_id ) {
-				$openprint::log->debug("Wrong pricelist: " . $Price->to_string() );
-				next;
-			} 
-			if ( $params{'equipment_id'} and $$Price{'equipment_id'} and ( $params{'equipment_id'} != $$Price{'equipment_id'} ) ) {
-				$openprint::log->debug("Wrong equipment: " . $Price->to_string() );
-				next;
-			}
-			if ( $$Price{'service'} ne $params{'service'} ) {
-				$openprint::log->debug("Wrong service: " . $Price->to_string() );
-				next;
-			} 
+				foreach my $Price ( @Prices ) {
+					if ( $$Price{'pricelist_id'} != $list_id ) {
+						$openprint::log->debug("Wrong pricelist: " . $Price->to_string() );
+						next;
+					} 
+					if ( $params{'equipment_id'} and $$Price{'equipment_id'} and ( $params{'equipment_id'} != $$Price{'equipment_id'} ) ) {
+						$openprint::log->debug("Wrong equipment: " . $Price->to_string() );
+						next;
+					}
+					if ( $$Price{'service'} ne $params{'service'} ) {
+						$openprint::log->debug("Wrong service: " . $Price->to_string() );
+						next;
+					} 
 #$openprint::log->warn(sprintf('Price: %s - %s : %s',$Price->min(), $Price->max(), $Price->price() ) );
-			if ( 
-					( (!(1*$Price->min())) or $Price->min() <= $lookup_qty ) and
-					( (!(1*$Price->max())) or $Price->max() >= $lookup_qty )
-				) {
-				$price = $Price->clone();
-				last;
-			} else {
-				$openprint::log->debug("Wrong qty: $lookup_qty" . $Price->to_string() );
-			} # end if
-		} # end foreach Price
+					if ( 
+							( (!(1*$Price->min())) or $Price->min() <= $lookup_qty ) and
+							( (!(1*$Price->max())) or $Price->max() >= $lookup_qty )
+					   ) {
+						$price = $Price->clone();
+						last;
+					} else {
+						$openprint::log->debug("Wrong qty: $lookup_qty" . $Price->to_string() );
+					} # end if
+				} # end foreach Price
 				
 			} # end if
 			return;
-		} # end if
+		} # end if ! price
 		if ( $openprint::config{'ApplyMarkup'} ) {
 		#$openprint::log->debug("Apply Markup: $openprint::config{'ApplyMarkup'}");	
 			my $pricingpercent = $openprint::config{'ApplyMarkup'};
@@ -1269,7 +1277,6 @@ sub load_from_signature {
 		#} # end if
 		$Paper->supplied( $$specs{'rdbSuppliedStock'} eq 'Y' ? 1 : 0 );
 	} else {
-		my $Press = openprint::Equipment->find_one(strid=>$$specs{"ddmPress$qty_index"}) if $qty_index;
 
 		if ( $qty_index and $$specs{'paper_id'.$qty_index} ) {
 			$Paper = new openprint::Paper( $$specs{'paper_id'.$qty_index} );
@@ -1334,6 +1341,7 @@ $log->debug("Didn't find specific paper $params{'width'} x $params{'height'}");
 				$Paper->mweight( $$specs{'txtMWeight'.$qty_index} );
 				@Papers = ( $Paper );
 			} else {
+				my $Press = openprint::Equipment->find_one(strid=>$$specs{"ddmPress$qty_index"}) if $qty_index and $$specs{"ddmPress$qty_index"};
 				foreach my $P ( @Papers ) {
 					if ( $Press and ( my $Stock_Setting = $Press->Stock_Setting( $P ) ) ) {
 						next if $Stock_Setting->grain() eq 'Dont Use';
@@ -1372,6 +1380,7 @@ $log->debug($P->id_string());
 		$$Paper{'Price'} = $$specs{'StockPrice'.$qty_index};
 	} # end if
 
+	my $P = $Paper;
 	$Paper = $Paper->clone();
 #$openprint::log->debug($Paper->to_string() );
 	if ( $qty_index ) {
@@ -1382,6 +1391,7 @@ $log->debug($P->id_string());
 ) {
 #Carp::cluck("Custom size $$specs{'StockWidth'.$qty_index}x$$specs{'StockHeight'.$qty_index}");
 #$openprint::log->debug("Custom size $$Paper{width}x$$Paper{height} => $$specs{'StockWidth'.$qty_index}x$$specs{'StockHeight'.$qty_index}");
+			$$Paper{Supplied} = $P;
 			if ( ! $Paper->start_width() ) {
 #$openprint::log->debug("Setting start with");
 				$Paper->start_width( $Paper->width() );
@@ -1544,12 +1554,15 @@ sub types {
 
 sub Supplied {
 	my ( $self ) = @_;
-	my $Supplied = $self->clone();
-	$$Supplied{'width'} = $$self{'start_width'} if $$self{'start_width'};
-	$$Supplied{'height'} = $$self{'start_height'} if $$self{'start_height'};
-	delete $$Supplied{'to_string'};
-	$Supplied->mweight(0); # force recalc
-	return $Supplied;
+	if ( ! $$self{Supplied} ) {
+		my $Supplied = $self->clone();
+		$$Supplied{'width'} = $$self{'start_width'} if $$self{'start_width'};
+		$$Supplied{'height'} = $$self{'start_height'} if $$self{'start_height'};
+		delete $$Supplied{'to_string'};
+		$Supplied->mweight(0); # force recalc
+		$$self{Supplied} = $Supplied;
+	} # end if
+	return $$self{Supplied};
 } # end sub Supplied
 
 sub long {
