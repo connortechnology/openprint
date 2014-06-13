@@ -1561,7 +1561,9 @@ $imp->display(" Less than $max_imposition") if DEBUG_INITIAL_FILTERING;
             } # end if
             my $A = $imp->Paper();
 			my $a_stock_minimum = $$specs{"txtQuantity$qty_index"} / $$imp{imposition};
+$openprint::log->debug("Minimum: $a_stock_minimum");
 			my $a_stock_lbs = int( $a_stock_minimum * $A->area() * $A->wpsi() );
+$openprint::log->debug("lbs: $a_stock_lbs");
 			$$imp{stock_lbs} = $a_stock_lbs;
 
             my $add = 1;
