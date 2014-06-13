@@ -65,6 +65,8 @@ sub variables {
 		push @v, 'txtFinalWidth'.$group_id;
 		push @v, 'txtHeight'.$group_id;
 		push @v, 'txtWidth'.$group_id;
+		push @v, 'txtPlateChangeQuantity-'.$group_id;
+		push @v, 'PageQuantity-'.$group_id;
 	} # end foreach
 	return @v;
 } # end sub variables
@@ -151,6 +153,7 @@ sub calc {
 	if ( $$specs{txtGateFoldedSpreadQuantity} and ! sets::isin( 3, \@Groups ) ) {
 		push @Groups, 3;
 	} # end if
+	@Groups = sort { $a <=> $b } @Groups;
 
 	my $Project = new openprint::Project( $project_index );
 	if ( ! $$Project{id} ) {
@@ -193,6 +196,9 @@ sub calc {
 			#} # end foreach signature
 		} # end if
 		$remaining_pages -= $override_pages{$group_id};
+		if ( $$specs{"PageQuantity-$group_id"} and ( $$specs{"PageQuantity-$group_id"} > $$specs{'GroupPageQuantity'.$group_id} ) ) {
+			$$specs{alert} .= "You have specified to print more pages per signature than are required for group $group_id.<br/>";
+		} # end if
 	} # end foreach group
 
 	# if there is a cover, then force it to be non-zero

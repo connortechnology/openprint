@@ -19,6 +19,14 @@
 			<? echo ( make_drop_down( [ map { $_->strid(), $_->name() } openprint::Equipment->find('category any'=>'Printing',useinestimating=>1, order=>'lower(strname)') ], $$variable{"ddmPress-$$variable{Signature}"} ); ) ?>
 		</select>
 	</li>
+	<li>
+		<label>Plate Changes</label>
+		<? echo ( input( type=>'cardinal', name=>'txtPlateChangeQuantity-'.$$variable{Signature}, value=>$$variable{'txtPlateChangeQuantity-'.$$variable{Signature}} ); ) ?>
+	</li>
+	<li>
+		<label>Page Quantity</label>
+		<? echo ( input( type=>'cardinal', name=>'PageQuantity-'.$$variable{Signature}, value=>$$variable{'PageQuantity-'.$$variable{Signature}}, onkeyup=>q`calc('f1');` ); ) ?>
+	</li>
 <? echo ( my $html;
 	my @PrintingTypes = sql::execute( undef, undef, q{SELECT DISTINCT strValue FROM tbl_Equipment_Specifications WHERE strName='Printing Type'} );
 	if ( @PrintingTypes > 1 ) {
