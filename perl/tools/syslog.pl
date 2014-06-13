@@ -81,7 +81,7 @@ my @re = (
 		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: Invalid user attack from ([0-9.]+)$',
 		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: Invalid user \w+ from ([0-9.]+)$',
 		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: Connection closed by ([0-9.]+):? \[preauth\]$',
-		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: Received disconnect from ([0-9.]+) 11: (Normal Shutdown, Thank you for playing|Goodbye|Bye Bye|PECL/ssh2 \(http://pecl.php.net/packages/ssh2\)) \[preauth\]$',
+		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: Received disconnect from ([0-9.]+) 11: [ .,/:([:alnum:]]+ \[preauth\]$',
 		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: Received disconnect from ([0-9.]+) 10:  \[preauth\]$',
 		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: Received disconnect from ([0-9.]+) 3: com.jcraft.jsch.JSchException: (Auth cancel|reject HostKey: [0-9\.]+) \[preauth\]$',
 		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: User \w+ from ([0-9.]+) not allowed because not listed in AllowUsers$',
