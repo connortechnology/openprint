@@ -104,5 +104,8 @@ sub _stock_popup {
 sub _stocks {
 } # end sub _stocks
 
+sub _impositions {
+} # end sub _impositions
+
 1;
 __END__

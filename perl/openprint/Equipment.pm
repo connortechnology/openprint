@@ -291,12 +291,13 @@ sub Specification {
 		foreach ( openprint::EquipmentSpecification->find( equipment_id=>$$self{id}, order=>'dblmin NULLS FIRST,dblmax NULLS FIRST' ) ) {
 			push @{$$self{Specifications}{$$_{name}}}, $_;
 		} # end foreach
+		if ( ! $$self{Specifications} ) {
+			$$self{Specifications} = {};
+			$openprint::log->debug("Equipment::Specification No specfications for " . $self->to_string() ) if $s_debug;
+			return;
+		} # end if
 	} # end if
 
-	if ( ! $$self{Specifications} ) {
-		$openprint::log->debug("Equipment::Specification No specfications for " . $self->to_string() ) if $s_debug;
-		return;
-	} # end if
 	if ( ! $$self{Specifications}{$name} ) {
 		$openprint::log->warn("No specfications for ($name) " . $self->name() ) if $s_debug;
 		return;

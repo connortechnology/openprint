@@ -4,7 +4,7 @@ use POSIX qw{ ceil };
 
 require openprint::Imposition;
 
-use constant DEBUG => 1;
+use constant DEBUG => 0;
 
 # The various way we can group spreads
 use vars qw( %blocks );
@@ -462,13 +462,24 @@ $openprint::log->debug("Bindery Gutters: $gutters <? $bindery_gutters") if DEBUG
 
 	# Becomes Printable area
 	$adjusted_paper_height -= $$specs{'Grip Size'} if $$specs{'Add Grip Height'} ne 'N';
-$openprint::log->debug("APH: $adjusted_paper_height");
+$openprint::log->debug("APH: $adjusted_paper_height") if DEBUG;
 # On the web press, we have no paper dimensions, only the maximagesize, so this effectively sets the printing area to the max image size. Theoretically Max Image Size = Cutoff-Grip anyways
 	if ( $$specs{'Maximum Image Area Length'} and ( ( $adjusted_paper_height <= 0 ) or ( $adjusted_paper_height > $$specs{'Maximum Image Area Length'} ) ) ) {
-		$openprint::log->debug("*** Using Max Image Length1: Before: $adjusted_paper_height After: $$specs{'Maximum Image Area Length'}***") if DEBUG;
-		$adjusted_paper_height = $$specs{'Maximum Image Area Length'};
+		my $max_image_height = $$specs{'Maximum Image Area Length'};
+if ( 1 ) {
+		$max_image_height += ( $bleed_size - $$specs{'CropMarkSpace'} ) if $bleed_locations{Top}; # Can bleed outside the image area
+		$max_image_height += ( $bleed_size - $$specs{'CropMarkSpace'} ) if $bleed_locations{Bottom}; # Can bleed outside the image area
+}
+		if ( $max_image_height < $adjusted_paper_height ) {
+
+		$openprint::log->debug("*** Using Max Image Length1: Before: $adjusted_paper_height After: $max_image_height***") if DEBUG;
+		$adjusted_paper_height = $max_image_height;
+		} # end if
+		if ( 0 ) {
+			
 		$adjusted_paper_height += ( $bleed_size - $$specs{'CropMarkSpace'} ) if $bleed_locations{Top}; # Can bleed outside the image area
 		$adjusted_paper_height += ( $bleed_size - $$specs{'CropMarkSpace'} ) if $bleed_locations{Bottom}; # Can bleed outside the image area
+		} # end nif
 	} # end if
 
 	if ( $$specs{'Colour Bar Orientation'} ne 'Length' ) {
@@ -485,7 +496,9 @@ $openprint::log->debug("APH: $adjusted_paper_height");
 		#} else { 
 # If impo was x2 then it can go in middle, but we don't know that yet.
 			$colour_bar -= $bleed_size if $bleed_locations{Top} or $bleed_locations{Bottom};
+			$colour_bar -= $bleed_size if $bleed_locations{Top} or $bleed_locations{Bottom};
 			$colour_bar = 0 if $colour_bar < 0;
+$openprint::log->debug("Colour bar is now $colour_bar") if DEBUG;
 		}
 		
 		$adjusted_paper_height -= $colour_bar;
@@ -959,7 +972,9 @@ $openprint::log->debug("Considering sig size: $signature_size") if DEBUG;
 				my $newimp = $imp->copy();
 
 				$newimp->rows($rows);
+				$newimp->start_rows($rows);
 				$newimp->columns($cols);
+				$newimp->start_columns($cols);
 				$newimp->imposition($rows * $cols);
 				if ( $newimp->image_orientation() eq 'Vertical' ) {
 					$newimp->image_width( $newimp->image_width() * $col );
@@ -1004,29 +1019,37 @@ sub decrease_imposition {
 			} # end if
 		} else {
 
-			my $imp1 = $imposition->copy();
-			$imp1->rows( int ( $imp1->rows()/2 ) );
-			if ( $imp1->imposition() ) {
-				push @results, $imp1;
+			if ( $imposition->rows() >= 2 ) {
+				my $imp1 = $imposition->copy();
+				$imp1->rows( int ( $imp1->rows()/2 ) );
+				if ( $imp1->imposition() ) {
+					push @results, $imp1;
+				} # end if
+				if ( $imp1->rows() != $imposition->rows() - 1 ) {
+					my $imp4 = $imposition->copy();
+					$imp4->rows( $imp4->rows()-1 );
+					if ( $imp4->imposition() ) {
+						push @results, $imp4;
+					} # end if
+				} # end if
 			} # end if
 
-			my $imp2 = $imposition->copy();
-			$imp2->columns( int ( $imp2->columns()/2 ) );
-			if ( $imp2->imposition() ) {
-				push @results, $imp2;
-			} # end if
+			if ( $imposition->columns() >= 2 ) {
+				my $imp2 = $imposition->copy();
+				$imp2->columns( int ( $imp2->columns()/2 ) );
+				if ( $imp2->imposition() ) {
+					push @results, $imp2;
+				} # end if
 			
-			my $imp3 = $imposition->copy();
-			$imp3->columns( $imp3->columns()-1 );
-			if ( $imp3->imposition() ) {
-				push @results, $imp3;
+				if ( $imp2->columns() != $imposition->columns() - 1 ) {
+					my $imp3 = $imposition->copy();
+					$imp3->columns( $imp3->columns()-1 );
+					if ( $imp3->imposition() ) {
+						push @results, $imp3;
+					} # end if
+				} # end if
 			} # end if
 
-			my $imp4 = $imposition->copy();
-			$imp4->rows( $imp4->rows()-1 );
-			if ( $imp4->imposition() ) {
-				push @results, $imp4;
-			} # end if
 		} # end if
 	} # end foreach
 
@@ -1074,7 +1097,7 @@ sub sort {
 		if ( $$a{runstyle} ne $$b{runstyle} ) {
 			return $$a{runstyle} cmp $$b{runstyle};
 		} elsif ( $$a{pages} != $$b{pages} ) {
-			return $$a{pages} <=> $$b{pages};
+			return $$b{pages} <=> $$a{pages};
 		} elsif ( $$a{imposition} != $$b{imposition} ) {
 			return $$b{imposition} <=> $$a{imposition};
 		} elsif ( $$a{columns} != $$b{columns} ) {
@@ -1092,6 +1115,76 @@ sub sort {
 		return $$APress{strid} cmp $$BPress{strid};
 	} @_;
 }
+
+sub cut {
+	my ( $I ) = @_;
+	
+	my $i1 = $I->copy();
+	my @Results;
+
+	if ( $I->runstyle() eq 'Work & Turn' ) {
+		$i1->runstyle( 'SheetWork' );
+		$i1->columns( $i1->columns() / 2 );
+		if ( $I->dutch_columns() ) {
+			$i1->dutch_columns( $i1->dutch_columns() / 2 );
+		} # end if
+		$i1->quantity($i1->quantity()*2);
+		push @Results, $i1;
+
+	} elsif ( $I->runstyle() eq 'Work & Tumble' ) {
+		$i1->runstyle( 'SheetWork' );
+		$i1->rows( $i1->rows() / 2 );
+		$i1->dutch_rows( $i1->dutch_rows() / 2 ) if $I->dutch_rows();
+		$i1->quantity($i1->quantity()*2);
+		push @Results, $i1;
+
+	} elsif ( $I->dutch_columns() ) {
+		$i1->dutch_rows( 0 );
+		$i1->dutch_columns( 0 );
+		my $i2 = $I->copy();
+		$i2->rows( $I->dutch_rows() );
+		$i2->columns( $I->dutch_columns() );
+		$i2->image_orientation( $I->image_orientation() eq 'Vertical' ? 'Horizontal' : 'Vertical' );
+		$i2->dutch_rows( 0 );
+		$i2->dutch_columns( 0 );
+		push @Results, $i1, $i2;
+	} elsif ( $I->layout_width() >= $I->layout_height() and $I->columns() > 1 ) {
+		$i1->columns( int($I->columns() / 2) );
+		if ( ! ( $I->columns() % 2 ) ) {
+			$i1->quantity( $i1->quantity() * 2 );
+			push @Results, $i1;
+		} else {
+			my $i2 = $I->copy();
+			$i2->columns( $I->columns() - $i1->columns() );
+			push @Results, $i1, $i2;
+		} # end if
+	} elsif ( $I->layout_width() < $I->layout_height() and $I->rows() > 1 ) {
+		$i1->rows( int($I->rows() / 2) );
+		if ( ! ( $I->rows() % 2 ) ) {
+			$i1->quantity( $i1->quantity() * 2 );
+			push @Results, $i1;
+		} else {
+			my $i2 = $I->copy();
+			$i2->rows( $I->rows() - $i1->rows() );
+			push @Results, $i1, $i2;
+		} # end if
+	} elsif ( $I->columns() >= $I->rows() ) {
+		my $i2 = $I->copy();
+		$i1->columns( int($I->columns() / 2) );
+		$i2->columns( $I->columns() - $i1->columns() );
+		push @Results, $i1, $i2;
+	} else {
+		my $i2 = $I->copy();
+		$i1->rows( int($I->rows() / 2) );
+		$i2->rows( $I->rows() - $i1->rows() );
+		push @Results, $i1, $i2;
+	} # end if
+	foreach my $i ( @Results ) {
+$i->display('Cut to ');
+	}
+	return @Results;
+} # end sub cut_imposition
+
 
 1;
 __END__

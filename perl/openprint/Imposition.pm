@@ -220,6 +220,7 @@ sub load_used {
 sub load {
 	my ( $self, $specs, $qty_index, $Project ) = @_;
 
+	$$self{quantity} = 1;
 	$$self{specs} = $specs;
 	$$self{paper} = openprint::Paper::load_from_signature( $Project, $specs, $qty_index ) if ! $$self{'paper'};
 	if ( ! $$self{'Press'} ) {
@@ -249,8 +250,8 @@ sub load {
 	$$self{'start_rows'} = $$self{'rows'} = $$specs{'hdnImpositionRows'.$qty_index};
 	#$$self{'columns'} = $$self{'imposition'} / $$self{'rows'} if $$self{'rows'} and ! $$self{'columns'};
 	#$$self{'rows'} = $$self{'imposition'} / $$self{'columns'} if $$self{'columns'} and ! $$self{'rows'};
-	$$self{'dutch_rows'} = $$specs{'hdnImpositionDutchRows'.$qty_index};
-	$$self{'dutch_columns'} = $$specs{'hdnImpositionDutchColumns'.$qty_index};
+	$$self{'dutch_rows'} = $$specs{'hdnImpositionDutchRows'.$qty_index} or 0;
+	$$self{'dutch_columns'} = $$specs{'hdnImpositionDutchColumns'.$qty_index} or 0;
 	$$self{'cut_off'} = $$specs{'CutOff'.$qty_index};
 
 
@@ -449,14 +450,14 @@ if ( ! $$self{paper} ) {
 	if ( $$self{rotate_sheet} ) {
 		$$self{paper}->height( @_ ) if @_;
 		if ( $$self{'start_columns'} and $$self{'columns'} and $$self{'start_columns'} != $$self{'columns'} ) {
-			return $$self{paper}->height() / ( $$self{'start_columns'} / $$self{'columns'} );
+			return Math::Round::nearest( 0.0001, $$self{paper}->height() / ( $$self{'start_columns'} / $$self{'columns'} ) );
 		} else {
 			return $$self{paper}->height();
 		} # end if
 	} else {
 		$$self{paper}->width( @_ ) if @_;
 		if ( $$self{'start_columns'} and $$self{'columns'} and $$self{'start_columns'} != $$self{'columns'} ) {
-			return $$self{paper}->width() / ( $$self{'start_columns'} / $$self{'columns'} );
+			return Math::Round::nearest( 0.0001, $$self{paper}->width() / ( $$self{'start_columns'} / $$self{'columns'} ) );
 		} else {
 			return $$self{paper}->width();
 		} # end if
@@ -473,9 +474,11 @@ my ( $caller, undef, $line ) = caller;
 	return 0;
 }
 	if ( $$self{'rotate_sheet'} ) {
+		# I don't like the following line
 		$$self{'paper'}->width( @_ ) if @_;
-			if ( $$self{'start_rows'} and $$self{'rows'} and $$self{'start_rows'} != $$self{'rows'} ) {
-		return $self->Paper()->width() / ( $$self{'start_rows'} / $$self{'rows'} );
+
+		if ( $$self{'start_rows'} and $$self{'rows'} and $$self{'start_rows'} != $$self{'rows'} ) {
+			return Math::Round::nearest( 0.0001, $self->Paper()->width() / ( $$self{'start_rows'} / $$self{'rows'} ) );
 		} else {
 			return $self->Paper()->width();
 		} # end if
@@ -483,13 +486,13 @@ my ( $caller, undef, $line ) = caller;
 		$$self{'paper'}->height( @_ ) if @_;
 		if ( ! $self->Paper()->height() ) {
 			if ( $$self{'start_rows'} and $$self{'rows'} and $$self{'start_rows'} != $$self{'rows'} ) {
-			return $$self{'cut_off'} / ( $$self{'start_rows'} / $$self{'rows'} );
+			return Math::Round::nearest( 0.0001, $$self{'cut_off'} / ( $$self{'start_rows'} / $$self{'rows'} ) );
 			} else {
 				return $$self{'cut_off'};
 			} # end if
 		} else {
 			if ( $$self{'start_rows'} and $$self{'rows'} and $$self{'start_rows'} != $$self{'rows'} ) {
-			return $self->Paper()->height() / ( $$self{'start_rows'} / $$self{'rows'} );
+				return Math::Round::nearest( 0.0001, $self->Paper()->height() / ( $$self{'start_rows'} / $$self{'rows'} ) );
 			} else {
 			return $self->Paper()->height();
 			} 
@@ -544,7 +547,7 @@ sub equals {
 
 sub to_string {
 	if ( ! $_[0]{'to_string'} ) {
-		$_[0]{'to_string'} = sprintf('%s %dx%d+%dx%d=%dout %s %dx%d=%dpages on %sx%s %s', ( $_[0]{Press} ? $_[0]->Press()->strid() : 'unknown equipment' ), $_[0]->get('columns','rows','dutch_columns','dutch_rows','imposition','runstyle','page_columns','page_rows','pages', 'sheet_width','sheet_height', 'image_orientation') );
+		$_[0]{'to_string'} = sprintf('%s %dx%d+%dx%d=%dout %s %dx%d=%dpages on %sx%s%s->%sx%s %s', ( $_[0]{Press} ? $_[0]->Press()->strid() : 'unknown equipment' ), $_[0]->get('columns','rows','dutch_columns','dutch_rows','imposition','runstyle','page_columns','page_rows','pages', 'paper_width','paper_height', 'paper_type','sheet_width','sheet_height', 'image_orientation') );
 	}
 	return $_[0]{'to_string'};
 } # end sub to_string
@@ -573,6 +576,15 @@ sub Press {
 	} # end if
 	return $_[0]{Press};
 } # end sub Press
+sub paper_width {
+	return $_[0]->Paper()->width();
+}
+sub paper_height {
+	return $_[0]->Paper()->height();
+}
+sub paper_type {
+	return $_[0]->Paper()->type();
+}
 
 sub DESTROY {
 }

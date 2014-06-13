@@ -36,7 +36,7 @@ use Time::HiRes qw{ time gettimeofday tv_interval };
 
 use vars qw( $debug $table $serial %fields %find_fields %defaults %transforms %grades );
 
-$debug = 0;
+$debug = 1;
 $table = 'papers';
 $serial	= 'paper_id_seq';
 %fields = (
@@ -89,14 +89,22 @@ $serial	= 'paper_id_seq';
 		available_to_order		=>	'available_to_order',
 		);
 %find_fields = (
-		'manufacturer'	=>	'(SELECT name FROM manufacturers WHERE manufacturers.id=papers.manufacturer_id)',
-		'group'	=>	'(SELECT name FROM stockgroups WHERE stockgroups.id=papers.group_id)',
-		'material'	=>	'(SELECT name FROM stockmaterials WHERE stockmaterials.id=papers.material_id)',
-		'brand'	=>	'(SELECT name FROM stockbrands WHERE stockbrands.id=papers.brand_id)',
-		'finish'	=>	'(SELECT name FROM stockfinishes WHERE stockfinishes.id=papers.finish_id)',
-		'colour'	=>	'(SELECT name FROM stockcolours WHERE stockcolours.id=papers.colour_id)',
-		'weight'	=>	'(SELECT name FROM stockweights WHERE stockweights.id=papers.weight_id)',
-		'quality'	=>	'(SELECT name FROM stockqualities WHERE stockqualities.id=papers.quality_id)',
+		#'manufacturer'	=>	'(SELECT name FROM manufacturers WHERE manufacturers.id=papers.manufacturer_id)',
+		manufacturer	=>	'manufacturer_id = (SELECT id FROM manufacturers WHERE name=?)',
+		#'group'	=>	'(SELECT name FROM stockgroups WHERE stockgroups.id=papers.group_id)',
+		group	=>	'group_id = (SELECT id FROM stockgroups WHERE name=?)',
+		#'material'	=>	'(SELECT name FROM stockmaterials WHERE stockmaterials.id=papers.material_id)',
+		material	=>	'material_id = (SELECT id FROM stockmaterials WHERE name=?)',
+		#'brand'	=>	'(SELECT name FROM stockbrands WHERE stockbrands.id=papers.brand_id)',
+		brand	=>	'brand_id = (SELECT id FROM stockbrands WHERE name=?)',
+		#'finish'	=>	'(SELECT name FROM stockfinishes WHERE stockfinishes.id=papers.finish_id)',
+		finish	=>	'finish_id = (SELECT id FROM stockfinishes WHERE name=?)',
+		#'colour'	=>	'(SELECT name FROM stockcolours WHERE stockcolours.id=papers.colour_id)',
+		colour	=>	'colour_id = (SELECT id FROM stockcolours WHERE name=?)',
+		#'weight'	=>	'(SELECT name FROM stockweights WHERE stockweights.id=papers.weight_id)',
+		weight	=>	'weight_id = (SELECT id FROM stockweights WHERE name=?)',
+		#'quality'	=>	'(SELECT name FROM stockqualities WHERE stockqualities.id=papers.quality_id)',
+		quality	=>	'quality_id = (SELECT id FROM stockqualities WHERE name=?)',
 		'size'		=>	q`width || '" x ' || height || '"'`,
 		'sheetsize'		=>	q`width || '" x ' || height || '"'`,
 		allocated_to_docket	=>	'(SELECT docket FROM paper_allocations WHERE paper_id = papers.id)',
@@ -1372,6 +1380,7 @@ $log->debug($P->id_string());
 		$$Paper{'Price'} = $$specs{'StockPrice'.$qty_index};
 	} # end if
 
+	my $P = $Paper;
 	$Paper = $Paper->clone();
 #$openprint::log->debug($Paper->to_string() );
 	if ( $qty_index ) {
@@ -1382,6 +1391,7 @@ $log->debug($P->id_string());
 ) {
 #Carp::cluck("Custom size $$specs{'StockWidth'.$qty_index}x$$specs{'StockHeight'.$qty_index}");
 #$openprint::log->debug("Custom size $$Paper{width}x$$Paper{height} => $$specs{'StockWidth'.$qty_index}x$$specs{'StockHeight'.$qty_index}");
+			$$Paper{Supplied} = $P;
 			if ( ! $Paper->start_width() ) {
 #$openprint::log->debug("Setting start with");
 				$Paper->start_width( $Paper->width() );
@@ -1544,12 +1554,15 @@ sub types {
 
 sub Supplied {
 	my ( $self ) = @_;
-	my $Supplied = $self->clone();
-	$$Supplied{'width'} = $$self{'start_width'} if $$self{'start_width'};
-	$$Supplied{'height'} = $$self{'start_height'} if $$self{'start_height'};
-	delete $$Supplied{'to_string'};
-	$Supplied->mweight(0); # force recalc
-	return $Supplied;
+	if ( ! $$self{Supplied} ) {
+		my $Supplied = $self->clone();
+		$$Supplied{'width'} = $$self{'start_width'} if $$self{'start_width'};
+		$$Supplied{'height'} = $$self{'start_height'} if $$self{'start_height'};
+		delete $$Supplied{'to_string'};
+		$Supplied->mweight(0); # force recalc
+		$$self{Supplied} = $Supplied;
+	} # end if
+	return $$self{Supplied};
 } # end sub Supplied
 
 sub long {

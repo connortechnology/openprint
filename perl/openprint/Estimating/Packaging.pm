@@ -100,8 +100,12 @@ sub calc {
 	my $minCharge = openprint::service::get_price( $ServiceType->name().'Minimum', undef, undef );
 	if ( ! $minCharge ) {
 		$log->error("No minimum chargem let's do debug $$specs{ServiceType} " . $ServiceType->to_string() );
-		my $Service = openprint::Service->find_one( $ServiceType->name().'Minimum' );
-		$log->error( "Service: " . $Service->to_string() );
+		my $Service = openprint::Service->find_one( name=>$ServiceType->name().'Minimum' );
+		if ( $Service ) {
+			$log->error( "Service: " . $Service->to_string() );
+		} else {
+			$log->error("No ServiceMinimum ");
+		} # end if
 	}
 		
 

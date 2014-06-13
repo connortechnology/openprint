@@ -33,71 +33,88 @@
 <form id="f1" name="f1" method="post" action="/invoice/history.html">
 	<input type="hidden" name="btnFunction"/>
 	<fieldset class="filters unprintable">
-		<p>
+		<ul>
+		<li>
+			<label>Invoice Num</label>
+			<? echo ( join('',
+			input(  type=>'text', name=>'invoice_num', id=>'invoice_num', value=>$param{invoice_num}, onkeydown=>"if(event.keyCode==13){load_invoices( this.form );}" ),
+			button( 'Go1', { onclick=>"load_invoices( \$('f1') );", text => 'Go' } ),
+			); ) ?>
+		</li>
+		<li>
 			<label>Go to ID</label>
-			<input type="text" name="invoice_id" id="invoice_id" onkeyup="this.value=this.value.replace(/\D/,'');" onkeydown="if(event.keyCode == 13){load_invoices( this.form );}"/>
-			<? echo ( ssi::button( 'Go1', { 'onclick' => "load_invoices( \$('f1') );", 'text' => 'Go' } ); ) ?>
-		</p>
-		<p>
+			<? echo ( join('',
+			input(  type=>'cardinal', name=>'invoice_id', id=>'invoice_id', onkeydown=>"if(event.keyCode==13){load_invoices( this.form );}" ),
+			button( 'Go2', { onclick=>"load_invoices( \$('f1') );", text => 'Go' } ),
+			); ) ?>
+		</li>
+		<li>
 			<label>PO</label>
-			<input type="text" name="po" id="po" onkeyup="this.value=this.value.replace(/\D/,'');" onkeydown="if(event.keyCode == 13){load_invoices( this.form );}"/>
-			<? echo ( ssi::button( 'Go2', { 'onclick' => "load_invoices( \$('f1') );", 'text' => 'Go' } ); ) ?>
-		</p>
+			<? echo ( join('',
+			input(  type=>'cardinal', name=>'po_id', id=>'po_id', onkeydown=>"if(event.keyCode==13){load_invoices( this.form );}" ),
+			button( 'Go3', { onclick=>"load_invoices( \$('f1') );", text => 'Go' } ),
+			); ) ?>
+		</li>
+		</ul>
 	</fieldset>
 	<fieldset class="filters unprintable"><legend>Select Search Criteria</legend>
 		<div class="leftColumn">
-			<p>
+			<ul>
+			<li>
 				<label>Company</label>
 				<select name="company_id" id="company_id" onchange="load_invoices(this.form);">
 					<option value="">All</option>
 					<? echo ( openprint::Company::get_dropdown( $session{'/invoice/history.html?company_id'} ); ) ?>
 				</select>
-			</p>
-			<p>
+			</li>
+			<li>
 				<label>Created</label>
-<? echo ( ssi::date_select_session( '/invoice/history.html', 'created_on_start', { 'onchange'=>q`load_invoices($('f1'));`, 'with_today'=>1,'with_clear'=>1 } ); ) ?>
+<? echo ( date_select_session( '/invoice/history.html', 'created_on_start', { 'onchange'=>q`load_invoices($('f1'));`, 'with_today'=>1,'with_clear'=>1 } ); ) ?>
 					to 
-<? echo ( ssi::date_select_session( '/invoice/history.html', 'created_on_end', { 'onchange'=>q`load_invoices($('f1'));`, 'with_today'=>1,'with_clear'=>1 } ); ) ?>
-			</p>
-			<p>
+<? echo ( date_select_session( '/invoice/history.html', 'created_on_end', { 'onchange'=>q`load_invoices($('f1'));`, 'with_today'=>1,'with_clear'=>1 } ); ) ?>
+			</li>
+			<li>
 				<label>Due</label>
-<? echo ( ssi::date_select_session( '/invoice/history.html', 'due_on_start', { 'onchange'=>q`load_invoices($('f1'));`, 'with_today'=>1,'with_clear'=>1 } ); ) ?>
+<? echo ( date_select_session( '/invoice/history.html', 'due_on_start', { 'onchange'=>q`load_invoices($('f1'));`, 'with_today'=>1,'with_clear'=>1 } ); ) ?>
 					to 
-<? echo ( ssi::date_select_session( '/invoice/history.html', 'due_on_end', { 'onchange'=>q`load_invoices($('f1'));`, 'with_today'=>1,'with_clear'=>1 } ); ) ?>
-			</p>
+<? echo ( date_select_session( '/invoice/history.html', 'due_on_end', { 'onchange'=>q`load_invoices($('f1'));`, 'with_today'=>1,'with_clear'=>1 } ); ) ?>
+			</li>
+			</ul>
 		</div>
 		<div class="rightColumn">
-			<p><label>Paid?</label>
-				<input type="radio" id="paid_1" name="paid" value="1" <? echo ( ssi::checked( $session{'/invoice/history.html?paid'} eq '1' ); ) ?> onclick="load_invoices(this.form);" />
+			<ul>
+			<li><label>Paid?</label>
+				<input type="radio" id="paid_1" name="paid" value="1" <? echo ( checked( $session{'/invoice/history.html?paid'} eq '1' ); ) ?> onclick="load_invoices(this.form);" />
 				<label class="radio" for="paid_1">Yes</label>
-				<input type="radio" id="paid_0" name="paid" value="0" <? echo ( ssi::checked( $session{'/invoice/history.html?paid'} eq '0' ); ) ?> onclick="load_invoices(this.form);" />
+				<input type="radio" id="paid_0" name="paid" value="0" <? echo ( checked( $session{'/invoice/history.html?paid'} eq '0' ); ) ?> onclick="load_invoices(this.form);" />
 				<label class="radio" for="paid_0">No</label>
-				<input type="radio" id="paid_2" name="paid" value="2" <? echo ( ssi::checked( $session{'/invoice/history.html?paid'} eq '2' ); ) ?> onclick="load_invoices(this.form);" />
+				<input type="radio" id="paid_2" name="paid" value="2" <? echo ( checked( $session{'/invoice/history.html?paid'} eq '2' ); ) ?> onclick="load_invoices(this.form);" />
 				<label class="radio" for="paid_2">Both</label>
-			</p>
-			<p><label>Bad Debt?</label>
-				<input type="radio" id="bad_debt_1" name="bad_debt" value="1" <? echo ( ssi::checked( $session{'/invoice/history.html?bad_debt'} eq '1' ); ) ?> onclick="load_invoices(this.form);" />
+			</li>
+			<li><label>Bad Debt?</label>
+				<input type="radio" id="bad_debt_1" name="bad_debt" value="1" <? echo ( checked( $session{'/invoice/history.html?bad_debt'} eq '1' ); ) ?> onclick="load_invoices(this.form);" />
 				<label class="radio" for="bad_debt_1">Yes</label>
-				<input type="radio" id="bad_debt_0" name="bad_debt" value="0" <? echo ( ssi::checked( $session{'/invoice/history.html?bad_debt'} eq '0' ); ) ?> onclick="load_invoices(this.form);" />
+				<input type="radio" id="bad_debt_0" name="bad_debt" value="0" <? echo ( checked( $session{'/invoice/history.html?bad_debt'} eq '0' ); ) ?> onclick="load_invoices(this.form);" />
 				<label class="radio" for="bad_debt_0">No</label>
-				<input type="radio" id="bad_debt_2" name="bad_debt" value="2" <? echo ( ssi::checked( $session{'/invoice/history.html?bad_debt'} eq '2' ); ) ?> onclick="load_invoices(this.form);" />
+				<input type="radio" id="bad_debt_2" name="bad_debt" value="2" <? echo ( checked( $session{'/invoice/history.html?bad_debt'} eq '2' ); ) ?> onclick="load_invoices(this.form);" />
 				<label class="radio" for="bad_debt_2">Both</label>
-			</p>
+			</li>
+			</ul>
 		</div>
 		<br class="spacer"/>
 		<p class="buttons">
 			<? echo (
 				my $html = '';
-				$html .= ssi::button( 'ShowResults', { onclick=>"f1.invoice_id.value='';load_invoices(f1);", text=>'Show Results' } );
-				$html .= ssi::button( 'Download', { onclick=>"f1.btnFunction.value='Download';f1.submit();", text=>'Download' } );
-				$html .= ssi::button( 'Reset', { onclick=>'f1.reset();', text=>'Reset' } );
-				$html .= ssi::button( 'New', { href=>'edit.html', text=>'New Invoice' } );
-				$html .= ssi::button( 'AccountStatement', { onclick=>"if(!\$('company_id').value){alert('Please select a company');} else {f1.btnFunction.value='Account Statement';f1.submit();}", text=>'Account Statement' } );
+				$html .= button( 'ShowResults', { onclick=>"f1.invoice_id.value='';load_invoices(f1);", text=>'Show Results' } );
+				$html .= button( 'Download', { onclick=>"f1.btnFunction.value='Download';f1.submit();", text=>'Download' } );
+				$html .= button( 'Reset', { onclick=>'f1.reset();', text=>'Reset' } );
+				$html .= button( 'New', { href=>'edit.html', text=>'New Invoice' } );
+				$html .= button( 'AccountStatement', { onclick=>"if(!\$('company_id').value){alert('Please select a company');} else {f1.btnFunction.value='Account Statement';f1.submit();}", text=>'Account Statement' } );
 				return $html;
 			) ?>
 		</p>
 	</fieldset>
-	<div id="InvoiceList"><? echo ( include('_history.html'); ) ?></div>
+	<div id="InvoiceList"><?include('_history.html')?></div>
 </form>
 <? else ( $session{'user_id'} ) ?>
 	Only logged in users have an invoice history.

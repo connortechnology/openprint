@@ -271,6 +271,7 @@ sub signature_calc {
 	my @cut_impositions = ();
 	if ( $cutting_service_index ) {
 		my @imps = openprint::imposition::get_all_impositions( $imposition );
+$openprint::log->debug("How many impositions do we get? " . @imps );
 		for ( my $i = 0; $i < @imps; $i += 1 ) {
 			if ( ( $$specs{"chkOverrideImposition-$$sig_specs{'SignatureIndex'}-$qty_index"} ne 'Y' )
 					or ( $$specs{"txtImposition-$$sig_specs{'SignatureIndex'}-$qty_index"} == $imps[$i]->imposition() )

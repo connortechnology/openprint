@@ -3,6 +3,7 @@ package openprint::User;
 our @ISA = qw( openprint::Object );
 
 require openprint::Object;
+require openprint::User_in_UserGroup;
 
 use openprint ();
 use vars qw( $log $dbh %config %variable %param $debug %fields %find_fields %transforms %defaults $table $serial $AUTOLOAD );
@@ -587,6 +588,10 @@ sub Location {
 sub code {
 	return join('', substr( $_[0]{firstname}, 0, 1), substr( $_[0]{lastname},0,1) );
 } # end sub code
+
+sub usergroup_ids {
+	return map { $_->usergroup_id() } openprint::User_in_UserGroup->find(user_id=>$_[0]{id});
+} # end sub usergroup_ids
 
 1;
 __END__

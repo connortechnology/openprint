@@ -1080,7 +1080,8 @@ sub _drop {
 	my $Equipment = $Shift->Equipment(); # For efficiency
 
 	# Force it to redraw the changed UL, since the runtimes are likely to have changed.
-	@{$variable{'changed'}} = ( $Shift->ul_id() );
+@{$variable{'changed'}} = ( $Shift->ul_id() );
+	# Actually, don't do this
 
 	if ( exists $param{'services'} ) {
 		my $services = $param{'services'};
@@ -1230,6 +1231,9 @@ $log->debug("Order after coalesce: @order : " . join(',', map { new openprint::S
 # due to coalescing, a job could be deleted
 					$log->debug("drop_project: Job not found");
 					next ;
+				} # end if
+				if ( $Job->Shift()->id() != $$Shift{id} ) {
+					push @{$variable{'changed'}}, $Job->Shift()->ul_id();
 				} # end if
 
 				my %sql;
@@ -1408,6 +1412,7 @@ $log->debug("ES: " . $NextES->name() );
 		if ( $order[$i]{starttime} and $order[$i]{locked} ) {
 			push @fixed_jobs, splice @order, $i, 1;
 			$i -= 1;
+			next;
 		} # end if
 		# Tentative jobs do not affect non-tentative jobs
 		if ( $order[$i]{tentative} ) {

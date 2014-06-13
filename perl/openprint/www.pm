@@ -120,33 +120,22 @@ sub handler {
 		$variable{PageSetting} = $PageSetting;
 
 		# if not logged in, determine if they are allowed to see this page or not.
-		if ( ( ! $PageSetting->can_view() ) and $PageSetting->user_level() ) {
-$log->debug("Checking user level, need : " . $PageSetting->user_level() . ' session is: ' . $session{'user_type'} );
-			if ( 
-					( $PageSetting->user_level() eq 'C' and ! sets::isin( $session{'user_type'}, ['C','E','A'] ) ) 
-					or
-					( $PageSetting->user_level() eq 'E' and ! sets::isin( $session{'user_type'}, ['E','A'] ) ) 
-					or
-					( $PageSetting->user_level() eq 'A' and ! sets::isin( $session{'user_type'}, ['A'] ) ) 
-				) {
-$log->debug("No good, need login");
-				if ( $page =~ /^.*\/_/ ) {
-					$r->content_type(q{text/javascript; charset=utf-8});
-					$r->print( q`window.location='/error/error_login.html';` );
-					return Apache2::Const::OK;
+		if ( ! $PageSetting->can_view() ) {
+			$log->debug("No good, need login");
+			if ( $page =~ /^.*\/_/ ) {
+				$r->content_type(q{text/javascript; charset=utf-8});
+				$r->print( q`window.location='/error/error_login.html';` );
+				return Apache2::Const::OK;
+			} else {
+				if ( $page =~ /employee/ ) {
+				$page = '/employee/account/login.html';
 				} else {
-					if ( $page =~ /employee/ ) {
-					$page = '/employee/account/login.html';
-					} else {
-					$page = '/error/error_login.html';
-					} # end if
+				$page = '/error/error_login.html';
 				} # end if
-				$variable{'Destination'} = misc::get_destination( $r, $r->uri() );
+			} # end if
+			$variable{'Destination'} = misc::get_destination( $r, $r->uri() );
 				#$r->headers_out->set(Location=>'/error/error_login.html');
 				#$r->status(Apache2::Const::REDIRECT);
-			} # end if
-		#} else {
-#$log->debug("No pagesetting?");
 		} # end if
 
 		foreach my $o ( split(',',$config{'Cached Objects'} ) ) {

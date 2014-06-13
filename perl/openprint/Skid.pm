@@ -547,7 +547,7 @@ sub allocateable {
 sub checkout {
 	my ( $self, $c ) = @_;
 	require openprint::PaperInventory;
-	my @contents = openprint::SkidContent->find( skid_id=>$$self{id});
+	my @contents = openprint::SkidContent->find( skid_id=>$$self{id} );
 	if ( ! @contents ) {
 		if ( ! openprint::PaperInventory->find( skid_id=>$$self{id}, 'comment like'=>'Checked out%' ) ) {
 			my $PI = new openprint::PaperInventory();

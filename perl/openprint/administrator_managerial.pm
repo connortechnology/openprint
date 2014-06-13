@@ -823,6 +823,9 @@ sub page_settings {
 	require openprint::Page_Setting;
 	if ( $param{action} eq 'save' ) {
 		foreach my $PS ( openprint::Page_Setting->find(), new openprint::Page_Setting() ) {
+
+			my @usergroup_ids = ref $param{"usergroup_ids-$$PS{id}"} eq 'ARRAY' ? @{$param{"usergroup_ids-$$PS{id}"}} : ( $param{"usergroup_ids-$$PS{id}"} ) if $param{"usergroup_ids-$$PS{id}"};
+
 			if ( defined $PS->id() and ! $param{'url-'.$PS->id()} ) {
 				$PS->delete();
 			} elsif ( 
@@ -830,7 +833,9 @@ sub page_settings {
 					( $PS->cacheable() ne $param{'cacheable-'.$PS->id()} ) or 
 					( $PS->user_level() ne $param{'user_level-'.$PS->id()} ) or
 					( $PS->keywords() ne $param{'keywords-'.$PS->id()} ) or
-					( $PS->description() ne $param{'description-'.$PS->id()} ) 
+					( $PS->description() ne $param{'description-'.$PS->id()} ) or
+					( $PS->message() ne $param{'message-'.$PS->id()} ) or
+					( sets::union( ( $PS->usergroup_ids() ? @{$PS->usergroup_ids()} : () ), @usergroup_ids ) != sets::intersection( ( $PS->usergroup_ids() ? @{$PS->usergroup_ids()} : () ), @usergroup_ids ) ),
 	
 				) {
 				$variable{'error'} .= $PS->save({
@@ -839,6 +844,8 @@ sub page_settings {
 						user_level	=>	$param{'user_level-'.$$PS{id}},
 						keywords	=>	$param{'keywords-'.$$PS{id}},
 						description	=>	$param{'description-'.$$PS{id}},
+						message		=>	$param{'message-'.$$PS{id}},
+						usergroup_ids	=>	\@usergroup_ids,
 						});
 			} # end if need to save
 		} # end foreach PS
