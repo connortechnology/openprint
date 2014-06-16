@@ -1602,5 +1602,20 @@ sub link_to {
 	return sprintf('<a href="/employee/inventory/paper_details.html?paper_id=%1$d">%2$s</a>', $_[0]{id}, $_[0]->to_string() );
 } # end sub link_to
 
+sub Unit_Of_Measure_Purchase {
+	if ( $_[0]{type} eq 'Sheet' ) {
+		return 'M';
+	} else {
+		return 'CWT';
+	} # end if
+} # end sub  Unit_Of_Measure_Purchase
+sub Unit_Of_Measure_Costing {
+	if ( $_[0]{type} eq 'Sheet' ) {
+		return 'M';
+	} else {
+		return 'CWT';
+	} # end if
+} # end sub  Unit_Of_Measure_Costing
+
 1;
 __END__

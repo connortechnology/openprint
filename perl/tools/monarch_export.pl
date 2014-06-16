@@ -18,7 +18,7 @@ $log->{level} = 'debug';
 use Getopt::Long;
 use File::Basename qw(basename);
 
-my @tables = ( 'Customer', 'Supplier', 'Employee', 'Cust_Contacts', 'Job' );
+my @tables = ( 'Customer', 'Supplier', 'Employee', 'Cust_Contacts', 'Job', 'Items' );
 
 my $program = basename($0);
 
@@ -71,6 +71,8 @@ my %tables = (
 'Employee'	=>	{ object => 'User', find=>[ order=>'firstname,lastname', ( $$opts{limit} ? ( limit => $$opts{limit} ) : () ), 'type in'=>['E','A'] ] },
 'Cust_Contacts'	=>	{ object => 'User', find=>[ order=>'firstname,lastname', ( $$opts{limit} ? ( limit => $$opts{limit} ) : () ), type=>'C', email_valid=>1 ] },
 'Job'		=>	{ object => 'Project', find=>[ order=>'id', ( $$opts{limit} ? ( limit => $$opts{limit} ) : () ), 'order_id is null'=>0 ] },
+'Items-Paper'		=>	{ object => 'Paper', find=>[ order=>'id', ( $$opts{limit} ? ( limit => $$opts{limit} ) : () ), 'in_stock >'=>0 ] },
+'Items-Materials'	=>	{ object => 'Materials', find=>[ order=>'id', ( $$opts{limit} ? ( limit => $$opts{limit} ) : () ) ] },
 );
 foreach my $table ( $$opts{table} ? split(',',$$opts{table} ) : @tables ) {
 	my %fields;
