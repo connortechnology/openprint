@@ -45,14 +45,15 @@ sub list {
 			$Paper->delete();
 		} # end foreach
 	} elsif ( $param{'btnFunction'} eq 'Export' ) {
-		my @header = ( 'ID', 'Owner','Manufacturer','Group','Brand', 'Finish', 'Colour', 'Weight', 'Quality', 'MWeight', 'gsm','Calliper', 'Type','Width', 'Height', 'Basis Width','Basis Height', 'Grain Direction','Supplier','DoubleSided?','Cuttable?','Multiple Parts?','Perfecting','Scoring Required?','Blade Cleaning Required?','Grade','Sheets Per Package','Supplied', 'Digital','Full Packages','Minimum Order','Inventory #','Material Type','Message', 'Recommendations');
+		my @header = ( 'ID', 'Owner','Manufacturer','Supplier','Group','Brand', 'Finish', 'Colour', 'Weight', 'Quality', 'MWeight', 'gsm','Calliper', 'Type','Width', 'Height', 'Basis Width','Basis Height', 'Grain Direction','Supplier','DoubleSided?','Cuttable?','Multiple Parts?','Perfecting','Scoring Required?','Blade Cleaning Required?','Grade','Sheets Per Package','Supplied', 'Digital','Full Packages','Minimum Order','Inventory #','Material Type','Message', 'Recommendations');
 		my @data;
 
-		foreach my $Stock ( openprint::Paper->find( 'order'=>'brand,finish,colour,weight,width,height', 
+		foreach my $Stock ( openprint::Paper->find( order=>'brand,finish,colour,weight,width,height', 
 					columns=>'*,(SELECT name FROM StockBrands WHERE Stockbrands.id=brand_id) AS brand,(SELECT name FROM StockFinishes WHERE StockFinishes.id=finish_id) AS finish,(SELECT name FROM StockColours WHERE StockColours.id=colour_id) AS colour,(SELECT name FROM StockWeights WHERE StockWeights.id=weight_id) AS weight ',
 					( $param{group_id} ? ( group_id => $param{group_id} ) : () ),
 					( $param{owner_id} ? ( owner_id => $param{owner_id} ) : () ),
 					( $param{manufacturer_id} ? ( manufacturer_id => $param{manufacturer_id} ) : () ),
+					( $param{supplier_id} ? ( suopplier_id => $param{supplier_id} ) : () ),
 					( $param{brand_id} ? ( 'brand_id'    => $param{brand_id} ) : () ),
 					( $param{finish_id} ? ( 'finish_id'  => $param{'finish_id'} ) : () ),
 					( $param{colour_id} ? ( 'colour_id'  => $param{'colour_id'} ) : () ),
@@ -74,7 +75,7 @@ sub list {
 			} elsif ( $param{setup_prices} eq '0' ) {
 				next if openprint::PaperPrice->find_one(paper_id=>$$Stock{id}, service=>'Setup');
 			} # end if
-			push @data, $Stock->id(), $Stock->owner(), $Stock->manufacturer(), $Stock->group(), $Stock->brand(), $Stock->finish(), $Stock->colour(), $Stock->weight(), $Stock->quality(), 
+			push @data, $Stock->id(), $Stock->owner(), $Stock->manufacturer(), $Stock->Supplier()->name(), $Stock->group(), $Stock->brand(), $Stock->finish(), $Stock->colour(), $Stock->weight(), $Stock->quality(), 
 				 $Stock->mweight(), $Stock->gsm(), $Stock->calliper(), $Stock->type(), $Stock->width(), $Stock->height(), $Stock->basis_width(), $Stock->basis_height(), $Stock->grain_direction(), '', $Stock->doublesided(), $Stock->cuttable(), $Stock->multipart(), $Stock->perfecting(), $Stock->score_required(), $Stock->bladecleaning(), $openprint::Paper::grades{$Stock->grade()}, $Stock->sheets_per_package(), $Stock->supplied(), $Stock->digital(), $Stock->full_packages(), $Stock->minimum_order(), $Stock->inventory_number(), $Stock->material(), $Stock->message();
 			push @data, join(',', map { new openprint::ProjectType($_)->name() } $Stock->recommendations());
 		} # end foreach
@@ -88,6 +89,7 @@ sub list {
                     ( $param{group_id} ? ( group_id => $param{group_id} ) : () ),
                     ( $param{owner_id} ? ( owner_id => $param{owner_id} ) : () ),
                     ( $param{manufacturer_id} ? ( manufacturer_id => $param{manufacturer_id} ) : () ),
+                    ( $param{supplier_id} ? ( supplier_id => $param{supplier_id} ) : () ),
                     ( $param{brand_id} ? ( 'brand_id'    => $param{brand_id} ) : () ),
                     ( $param{finish_id} ? ( 'finish_id'  => $param{'finish_id'} ) : () ),
                     ( $param{colour_id} ? ( 'colour_id'  => $param{'colour_id'} ) : () ),
@@ -210,6 +212,8 @@ sub stock {
 		$Paper->owner_id( $param{'ddmOwner'} );
 		$Paper->manufacturer( $param{'txtManufacturer'} ) if $param{'txtManufacturer'};
 		$Paper->manufacturer_id( $param{'ddmManufacturer'} ) if ! $param{'txtManufacturer'};
+		$param{ddmSupplier} = openprint::Supplier::get_or_create( $param{txtSupplier} ) if $param{txtSupplier} and ! $param{ddmSupplier};
+		$Paper->supplier_id( $param{'ddmSupplier'} );
 		$Paper->group( $param{'txtGroup'} ) if $param{'txtGroup'};
 		$Paper->group_id( $param{'Group'} ) if ! $param{'txtGroup'};
 		$Paper->brand( $param{'txtBrand'} ) if $param{'txtBrand'};
