@@ -97,6 +97,15 @@
 			</select>
 		</li>
 		<li>
+			<label>Supplier</label>
+			<select id="supplier_id" name="supplier_id" size="1" onchange="calc(this.form.name);">
+				<option value="">select</option>
+				<? echo (
+					make_drop_down( openprint::Company->dropdown( order=>'lower(name)', supplier=>'Y'), $session{'/administrator/stock/list.html?supplier_id'} );
+					) ?>
+			</select>
+		</li>
+		<li>
 			<label>Brand</label>
 			<select id="brand_id" name="brand_id" onchange="filter_onChange(this,'');">
 				<option value="">select</option>

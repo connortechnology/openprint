@@ -15,12 +15,11 @@ require sql;
 require ssi;
 require misc;
 require configuration;
-require openprint::Skid;
-require openprint::PaperPrice;
 require openprint::logs;
 require openprint::Manufacturer;
+require openprint::PaperPrice;
+require openprint::Skid;
 require openprint::SkidContent;
-require openprint::Manufacturer;
 require openprint::StockBrand;
 require openprint::StockFinish;
 require openprint::StockColour;
@@ -44,6 +43,7 @@ $serial	= 'paper_id_seq';
 		'created_on'	=>	'created_on',
 		'group_id'		=>	'group_id',
 		'owner_id'		=>	'owner_id',
+		'supplier_id'	=>	'supplier_id',
 		'manufacturer_id'	=>	'manufacturer_id',
 		'brand_id'		=>	'brand_id',
 		'colour_id'		=>	'colour_id',
