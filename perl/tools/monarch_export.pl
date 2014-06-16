@@ -2,8 +2,6 @@
 use strict;
 use lib '/var/www/testing/perl';
 
-my $limit = 100;
-
 require sql;
 require misc;
 require logger;
@@ -19,6 +17,8 @@ $log->{level} = 'debug';
 
 use Getopt::Long;
 use File::Basename qw(basename);
+
+my @tables = ( 'Customer', 'Supplier', 'Employee', 'Cust_Contacts', 'Job' );
 
 my $program = basename($0);
 
@@ -65,13 +65,12 @@ die 'Error opening db' if ! $dbh;
 require openprint::Company;
 require openprint::User;
 require openprint::Project;
-my @tables = ( 'Customer', 'Supplier', 'Employee', 'Cust_Contacts', 'Job' );
 my %tables = (
-'Customer'	=>	{ object => 'Company', find=>[ order=>'name', ( $limit ? ( limit => $limit ) : () ), supplier=>'N' ] },
-'Supplier'	=>	{ object => 'Company', find=>[ order=>'name', ( $limit ? ( limit => $limit ) : () ), supplier=>'Y' ] },
-'Employee'	=>	{ object => 'User', find=>[ order=>'firstname,lastname', ( $limit ? ( limit => $limit ) : () ), 'type in'=>['E','A'] ] },
-'Cust_Contacts'	=>	{ object => 'User', find=>[ order=>'firstname,lastname', ( $limit ? ( limit => $limit ) : () ), type=>'C', email_valid=>1 ] },
-'Job'		=>	{ object => 'Project', find=>[ order=>'id', ( $limit ? ( limit => $limit ) : () ), 'order_id is null'=>0 ] },
+'Customer'	=>	{ object => 'Company', find=>[ order=>'name', ( $$opts{limit} ? ( limit => $$opts{limit} ) : () ), supplier=>'N' ] },
+'Supplier'	=>	{ object => 'Company', find=>[ order=>'name', ( $$opts{limit} ? ( limit => $$opts{limit} ) : () ), supplier=>'Y' ] },
+'Employee'	=>	{ object => 'User', find=>[ order=>'firstname,lastname', ( $$opts{limit} ? ( limit => $$opts{limit} ) : () ), 'type in'=>['E','A'] ] },
+'Cust_Contacts'	=>	{ object => 'User', find=>[ order=>'firstname,lastname', ( $$opts{limit} ? ( limit => $$opts{limit} ) : () ), type=>'C', email_valid=>1 ] },
+'Job'		=>	{ object => 'Project', find=>[ order=>'id', ( $$opts{limit} ? ( limit => $$opts{limit} ) : () ), 'order_id is null'=>0 ] },
 );
 foreach my $table ( $$opts{table} ? split(',',$$opts{table} ) : @tables ) {
 	my %fields;
@@ -118,6 +117,14 @@ The purpose of this script is to output the text files for importing into Hagen 
 Command-line options:
 
 	--help		Displays this message.
+    --db_name	
+	--db_host
+	--db_user
+	--db_pass
+	--table	One of @tables,
+	--debug
+	--version
+	--limit		# of results
 
 EOH
 } # end sub usage
