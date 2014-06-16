@@ -1562,7 +1562,7 @@ $imp->display(" Less than $max_imposition") if DEBUG_INITIAL_FILTERING;
             } # end if
             my $A = $imp->Paper();
 			my $a_stock_minimum = $$specs{"txtQuantity$qty_index"} / $$imp{imposition};
-			my $a_stock_lbs = int( $a_stock_minimum * $A->area() * $A->wpsi() );
+			my $a_stock_lbs = Math::Round::nearest(0.01, $a_stock_minimum * $A->area() * $A->wpsi() );
 			$$imp{stock_lbs} = $a_stock_lbs;
 
             my $add = 1;

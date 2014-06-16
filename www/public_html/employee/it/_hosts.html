@@ -136,5 +136,5 @@ $log->debug("Enable mac search for $mac_search");
 	</tbody>
 </table>
 <p class="buttons">
-<? echo ( button( 'delete', { onclick=>"new Ajax.Updater( 'Results','/employee/it/_hosts.html?action=Delete', { parameters: { host_id: \$F('host_id') } } );", text=>'Delete Checked' } ); ) ?>
+<? echo ( button( 'delete', { onclick=>q`new Ajax.Updater( 'Results','/employee/it/_hosts.html?action=Delete', { parameters: { host_id: get_value( $('f1').host_id ) } } );`, text=>'Delete Checked' } ); ) ?>
 </p>

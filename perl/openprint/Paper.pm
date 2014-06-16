@@ -36,7 +36,7 @@ use Time::HiRes qw{ time gettimeofday tv_interval };
 
 use vars qw( $debug $table $serial %fields %find_fields %defaults %transforms %grades );
 
-$debug = 1;
+$debug = 0;
 $table = 'papers';
 $serial	= 'paper_id_seq';
 %fields = (
@@ -1601,6 +1601,21 @@ sub init_cache {
 sub link_to {
 	return sprintf('<a href="/employee/inventory/paper_details.html?paper_id=%1$d">%2$s</a>', $_[0]{id}, $_[0]->to_string() );
 } # end sub link_to
+
+sub Unit_Of_Measure_Purchase {
+	if ( $_[0]{type} eq 'Sheet' ) {
+		return 'M';
+	} else {
+		return 'CWT';
+	} # end if
+} # end sub  Unit_Of_Measure_Purchase
+sub Unit_Of_Measure_Costing {
+	if ( $_[0]{type} eq 'Sheet' ) {
+		return 'M';
+	} else {
+		return 'CWT';
+	} # end if
+} # end sub  Unit_Of_Measure_Costing
 
 1;
 __END__

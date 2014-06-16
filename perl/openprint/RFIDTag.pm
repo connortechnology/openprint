@@ -24,7 +24,7 @@ $serial = 'rfidtags_id_seq';
 );
 %find_fields = (
 	skid_id	=>	'(SELECT skid_id FROM skids WHERE skids.rfidtag_id=rfidtags.id)',
-	type		=>	'(SELECT name FROM RFIDTagTypes WHERE RFIDTagTypes.id=type_id)',
+	type		=>	'type_id=(SELECT id FROM RFIDTagTypes WHERE RFIDTagTypes.name=?)',
 );
 
 %transforms = (
