@@ -101,7 +101,8 @@
 			<select id="supplier_id" name="supplier_id" size="1" onchange="calc(this.form.name);">
 				<option value="">select</option>
 				<? echo (
-					make_drop_down( openprint::Company->dropdown( order=>'lower(name)', supplier=>'Y'), $session{'/administrator/stock/list.html?supplier_id'} );
+					my @stock_supplier_ids = sql::execute( undef, undef, 'SELECT DISTINCT supplier_id FROM Papers WHERE supplier_id IS NOT NULL' );
+					make_drop_down( openprint::Company->dropdown( id=> \@stock_supplier_ids, order=>'lower(name)', supplier=>'Y'), $session{'/administrator/stock/list.html?supplier_id'} );
 					) ?>
 			</select>
 		</li>

@@ -1617,5 +1617,9 @@ sub Unit_Of_Measure_Costing {
 	} # end if
 } # end sub  Unit_Of_Measure_Costing
 
+sub Supplier {
+	return new openprint::Company( $_[0]{supplier_id} );
+}
+
 1;
 __END__
