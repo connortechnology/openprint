@@ -14,6 +14,7 @@ require openprint::StockColour;
 require openprint::StockWeight;
 require openprint::Manufacturer;
 require openprint::PaperPrice;
+require openprint::Supplier;
 
 use openprint ();
 use vars qw( %variable %session %param %config $log $dbh $r );
