@@ -143,6 +143,7 @@ $serial	= 'paper_id_seq';
 	group_id			=>	undef,
 	quality_id			=>	undef,
 	available_to_order	=>	undef,
+	supplier_id			=>	undef,
 );
 
 %grades = (

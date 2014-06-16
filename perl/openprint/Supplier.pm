@@ -10,6 +10,7 @@ sub get_or_create {
 
    my $ac = sql::start_transaction( $openprint::dbh );
     $openprint::dbh->do( 'LOCK TABLE companies IN SHARE ROW EXCLUSIVE MODE' ) or $openprint::log->error( DBI->errstr );
+	my $error;
 
     if ( $name ) {
         my @Companies = openprint::Company->find( name=>$name );
@@ -18,8 +19,8 @@ sub get_or_create {
             my $C = new openprint::Company();
             $error .= $C->save({
                     supplier        => 'Y',
-                    name            => $param{supplier},
-                    business_name   => $param{supplier},
+                    name            => $name,
+                    business_name   => $name,
                     } );
 			return $C->id();
         } elsif ( @Companies == 1 ) {
@@ -32,7 +33,7 @@ sub get_or_create {
             return $Companies[0]->id();
         } # end if
     } # end if supplier and ! supplier_id
-    sql::end_transaction( $dbh, $ac );
+    sql::end_transaction( $openprint::dbh, $ac );
 } # end get_or_create
 
 1;
