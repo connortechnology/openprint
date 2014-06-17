@@ -33,7 +33,7 @@ sub Checkout_Skid {
 	my $date = Date::Format::time2str('%Y-%m-%d %H:%M', time );
 	#$context->log(1, sprintf('%s : %s : checkout skid with rfid tag %s', $date, $context->{server}->{peeraddr}, $Tag->id() ));
 
-	my $changed ;= 0
+	my $changed = 0;
 	my $Skid = $Tag->Skid();
 	if ( ! $Skid->rfidtag_id() ) {
 		$changed = 1;
