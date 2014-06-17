@@ -208,80 +208,86 @@ $I->display('In Stitching:') if DEBUG;
 			}
 			next;
 		}
+		my $form = $$sig_specs{SignatureIndex};
 		push @printed_impositions, $I->imposition();
 		my %pages;
 		my $sig_pages = $I->pages();
 		if ( $folding_specs ) {
-			if ( ( ! defined $$folding_specs{"chkOverrideEquipment-$$sig_specs{SignatureIndex}-$qty_index"} ) or ( $$folding_specs{"chkOverrideEquipment-$$sig_specs{SignatureIndex}-$qty_index"} ne 'Y' ) or $$folding_specs{"ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} ) {
 
-			my %folds;
-			foreach my $index ( 1 .. 4 ) {
-if ( ! ( $$sig_specs{SignatureIndex} and $qty_index and $index ) ) {
-$openprint::log->debug("Somethign not right: $$sig_specs{SignatureIndex} and $qty_index and $index ");
-}
-				my $fold_qty = $$folding_specs{"FoldQty-$$sig_specs{SignatureIndex}-$qty_index-$index"};
-				next if ! $fold_qty;
-				my $type = $$folding_specs{"FoldType-$$sig_specs{SignatureIndex}-$qty_index-$index"};
-				next if ! $type;
-				if ( $$folding_specs{"FoldImposition-$$sig_specs{SignatureIndex}-$qty_index-$index"} < $imposition ) {
-					$imposition = $$folding_specs{"FoldImposition-$$sig_specs{SignatureIndex}-$qty_index-$index"};
-				} # en dif
+			# This doesn't really make sense.  If we are doing printing estimation, then the folding probably isn't going to match.  
 
-				my ( $pages ) = $type =~ /(\d+)PageFold/;
-				if ( ! $pages ) {
-					if ( $type eq 'SingleGateFold' ) {
-						$pages = 6;
-					} elsif ( $type eq 'DoubleGateFold' ) {
-						$pages = 8;
-					} # end if
+			if ( ( ! defined $$folding_specs{"chkOverrideEquipment-$form-$qty_index"} ) or ( $$folding_specs{"chkOverrideEquipment-$form-$qty_index"} ne 'Y' ) or $$folding_specs{"ddmEquipment-$form-$qty_index"} ) {
+
+				my %folds;
+				foreach my $index ( 1 .. 4 ) {
+					my $fold_qty = $$folding_specs{"FoldQty-$form-$qty_index-$index"};
+					next if ! $fold_qty;
+					my $type = $$folding_specs{"FoldType-$form-$qty_index-$index"};
+					next if ! $type;
+					if ( $$folding_specs{"FoldImposition-$$sig_specs{SignatureIndex}-$qty_index-$index"} < $imposition ) {
+						$imposition = $$folding_specs{"FoldImposition-$$sig_specs{SignatureIndex}-$qty_index-$index"};
+					} # en dif
+
+					my ( $pages ) = $type =~ /(\d+)PageFold/;
 					if ( ! $pages ) {
-						$openprint::log->error(" No pages in fold $type.");
-						next;
-					}
-				} # end if
-				$folds{$pages} += $fold_qty;
-			} # end foreach fold index
-			my $total_pages = misc::sum( map { $_ * $folds{$_} } keys %folds );
-SIG_FIX_PAGES: while( $total_pages > $sig_pages ) {
-			   if ( $folds{$total_pages-$sig_pages} and ( $folds{$total_pages-$sig_pages} > 1 ) ) {
-				   $folds{$total_pages-$sig_pages} -= 1;
-				   $total_pages -= ( $total_pages-$sig_pages );
-				   next;
-			   }
-			   foreach my $pages ( keys %folds ) {
-				   if ( $folds{$pages} > 1 ) {
-					   $folds{$pages} -= 1;
-					   $total_pages -= $pages;
-					   next SIG_FIX_PAGES;
-				   } # end if
-			   } # end foreach
-			   $openprint::log->warn("Unable to figure out pages $total_pages $sig_pages.");
-			   last;
-		   } # end while
+						if ( $type eq 'SingleGateFold' ) {
+							$pages = 6;
+						} elsif ( $type eq 'DoubleGateFold' ) {
+							$pages = 8;
+						} # end if
+						if ( ! $pages ) {
+							$openprint::log->error(" No pages in fold $type.");
+							next;
+						}
+					} # end if
+					$folds{$pages} += $fold_qty;
+				} # end foreach fold index
+				my $total_pages = misc::sum( map { $_ * $folds{$_} } keys %folds );
 
-		   foreach my $pages ( keys %folds ) {
-# Stitching should never stitch more pages than are printed in a sig, despite what's in folding
-			   $openprint::log->debug("Folding pages: sig_pages: $sig_pages / fold)pages $pages folding fold count $folds{$pages}") if DEBUG;
-			   if ( $sig_pages == $pages ) {
-				   $pages{$pages} += 1;
+				$openprint::log->warn("Folded pages folded: $total_pages printed: $sig_pages.");
+				# I Think this is designed to auto-correct when there are more pages folded than printed
+SIG_FIX_PAGES:	while( $total_pages > $sig_pages ) {
+				   $openprint::log->warn("Too many folded pages folded: $total_pages printed: $sig_pages.");
+				   if ( $folds{$total_pages-$sig_pages} and ( $folds{$total_pages-$sig_pages} > 1 ) ) {
+					   $folds{$total_pages-$sig_pages} -= 1;
+					   $total_pages -= ( $total_pages-$sig_pages );
+					   next;
+				   }
+				   foreach my $pages ( keys %folds ) {
+					   if ( $folds{$pages} > 1 ) {
+						   $folds{$pages} -= 1;
+						   $total_pages -= $pages;
+						   next SIG_FIX_PAGES;
+					   } # end if
+				   } # end foreach
+				   $openprint::log->warn("Unable to adjust too many folded pages folded: $total_pages printed: $sig_pages.");
+				   $I->display();
 				   last;
-			   } else{
-				   $openprint::log->debug(" fold qty * pages($pages) == sig_pages($sig_pages) foldQty: " . $folds{$pages}) if DEBUG;
-				   $pages{$pages} += $folds{$pages};
-			   } # end if
-		   } # end foreach index
+			   } # end while
 
-# If not all pages have been folde, then revert to just pull from the sig.
-			if ( misc::sum( map { $_ * $pages{$_} } keys %pages ) < $sig_pages ) {
-				$$specs{"txtPockets$qty_index"} += 1;
-				$$specs{'txtSignatureQty'.$sig_pages.'Page-'.$qty_index} += 1;
-			} else {
-				foreach my $page ( keys %pages ) {
-	# The -1 is because the signature has already been counted in the pocket calc.
-					$$specs{"txtPockets$qty_index"} += $pages{$page};
-					$$specs{'txtSignatureQty'.$page.'Page-'.$qty_index} += $pages{$page};
-				} # end foreach
-			} # end if
+			   foreach my $pages ( keys %folds ) {
+	# Stitching should never stitch more pages than are printed in a sig, despite what's in folding
+				   $openprint::log->debug("Folding pages: sig_pages: $sig_pages / fold)pages $pages folding fold count $folds{$pages}") if DEBUG;
+				   if ( $sig_pages == $pages ) {
+					   $pages{$pages} += 1;
+					   last;
+				   } else{
+					   $openprint::log->debug(" fold qty * pages($pages) == sig_pages($sig_pages) foldQty: " . $folds{$pages}) if DEBUG;
+					   $pages{$pages} += $folds{$pages};
+				   } # end if
+			   } # end foreach page
+
+	# If not all pages have been folde, then revert to just pull from the sig.
+				if ( misc::sum( map { $_ * $pages{$_} } keys %pages ) < $sig_pages ) {
+					$$specs{"txtPockets$qty_index"} += 1;
+					$$specs{'txtSignatureQty'.$sig_pages.'Page-'.$qty_index} += 1;
+				} else {
+					foreach my $page ( keys %pages ) {
+		# The -1 is because the signature has already been counted in the pocket calc.
+						$$specs{"txtPockets$qty_index"} += $pages{$page};
+						$$specs{'txtSignatureQty'.$page.'Page-'.$qty_index} += $pages{$page};
+					} # end foreach
+				} # end if
 			} else {
 $openprint::log->debug("Ignoring folding due to override");
 			} # end if has folding for this sig

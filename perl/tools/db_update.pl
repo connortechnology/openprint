@@ -1187,6 +1187,11 @@ if ( ! sets::isin( 'papers', \@tables ) ) {
 	if ( ! exists $$data{'user_type'} ) {
 		$dbh->do(q`ALTER TABLE papers add user_type char(1) NOT NULL default ''`);
 	} # end nif
+	if ( ! exists $$data{supplier_id} ) {
+		print "Adding supplier_id to Papers\n";
+		$dbh->do(q`ALTER TABLE papers add supplier_id INTEGER`);
+		$dbh->do(q`ALTER TABLE papers add FOREIGN KEY (supplier_id) REFERENCES companies (id)`);
+	} # end nif
 } # end if
 
 if ( ! sets::isin( 'paper_recommendations', \@tables ) ) {

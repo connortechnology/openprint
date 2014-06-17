@@ -4186,7 +4186,7 @@ $openprint::log->debug("Sheet No supplied wight: $supplied_sheets $paper_string 
 #$openprint::log->debug($$price{'Paper Breakdown'}) if DEBUG;
 #$openprint::log->debug("Comparison: $$price{'Comparison Cost'}");
 if ( $do_stock_cutting and $$project{'HasCutting'} ) {
-	my @Stocks = map { { Stock => $Papers{$_}, quantity=>$PaperCounts{$_} } } keys %PaperCounts;
+	my @Stocks = map { ( $Papers{$_} and $Papers{$_}->is_cut() ) ? { Stock => $Papers{$_}, quantity=>$PaperCounts{$_} } : () } keys %PaperCounts;
 	my %cutting_results = openprint::Estimating::Cutting::signature_calc_stock_cutting( $Project, $$project{CuttingSpecs}, $qty_index, \@Stocks );
 	$$price{'Cutting Breakdown'} .= "Stock Cutting Price: \$$cutting_results{'Price'} $cutting_results{'alert'}<br/>$cutting_results{Breakdown}<br/>";
 	$$price{'Comparison Cost'} += $cutting_results{'Price'};
@@ -5380,20 +5380,6 @@ $openprint::log->debug("Was mixed") if DEBUG_INKS;
 	} # end if
 	$$specs{'hdnImpressionQuantity'.$qty_index} = $impressions;
 	$$specs{'ddmPress'.$qty_index} = $$Press{'strid'};
-
-	if ( 0 and  $$project{'HasCutting'} ) {
-		if ( ($$Paper{'type'} ne 'Roll') and ($$Paper{'start_width'} != $$Paper{'width'} or $$Paper{'start_height'} != $$Paper{'height'} ) ) {
-#my $time = gettimeofday();
-			my %cutting_results = openprint::Estimating::Cutting::signature_calc_stock_cutting( $Project, $specs, $$project{'CuttingSpecs'}, $qty_index, $Paper, $project );
-#$openprint::log->debug("Done cutting");
-#foreach my $k ( keys %cutting_results ) {
-#$openprint::log->debug("Cutting: $k => $cutting_results{$k}");
-#}
-			$price{'Cutting Breakdown'} .= "Stock Cutting Price: \$$cutting_results{'Price'} $cutting_results{'alert'}<br/>";
-			$price{'Comparison Cost'} += $cutting_results{'Price'};
-#$openprint::log->debug("Elapsed stock cutting time:" . ( sprintf('%.4f', tv_interval( [$time])*1000) ) .' usecs' );
-		} # end if
-	} # end if
 
 	# Used to be hasAQ.. but that doesn't make any sense.  Must be NeedAQ.
 	if ( $$project{'NeedAqueous'} ) {
