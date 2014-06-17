@@ -8,7 +8,9 @@
 	my $html;
 	if ( ! $$variable{Article}->anonymous() ) {
 		my $User = $$variable{'Article'}->Author();
-		$html .= '<div class="By">'.$User->thumbnail_html() . sprintf('<a href="/account/view.html?user_id=%d">%s</a></div>',$User->id(),$User->alias() );
+		if ( $$User{id} ) {
+			$html .= '<div class="By">'.$User->thumbnail_html() . sprintf('<a href="/account/view.html?user_id=%d">%s</a></div>',$User->id(),$User->alias() );
+		} # end if
 	} else {
 		$html .= '<div class="By">Anonymous Contributor</div>';
 	} # end if

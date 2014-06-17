@@ -1,18 +1,18 @@
-<? echo ( include('/includes/error_reporting.html'); ) ?>
+<?include(/includes/error_reporting.html)?>
 <form id="checkout_form" name="checkout_form">
 	<input type="hidden" name="docket" value="<? echo ( $$variable{'Project'}->docket() ) ?>" />
 	<input type="hidden" name="project_id" value="<? echo ( $$variable{'Project'}->id() ) ?>" />
 	<input type="hidden" name="action" value="Add" />
 	<fieldset><legend>Checked Out Stock</legend>
-		<table class="List" style="table-layout: auto;">
-			<tr><th align="left">Skid</th><th align="left">RFID Tag</th><th align="left">Quantity</th></tr>
+		<table class="List">
+			<tr><th class="Skid">Skid</th><th class="RFID">RFID Tag</th><th class="Quantity">Quantity</th></tr>
 			<tr>
-				<td>
-					<input type="text" id="skid_id" name="skid_id" size="10" onkeypress="return input_handler( this, event);" onkeydown="if(event.keyCode == 13){new Ajax.Updater( 'List', '_update_inventory.html', {method: 'get', parameters: $('f1').serialize(), evalScripts: true} );}" onkeyup="if(this.value){new Ajax.Request( '/employee/production/_check_for_skid.json', {parameters: {skid_id: this.value}, evalScripts: true } );}" />
+				<td class="Skid">
+					<input type="text" id="skid_id" name="skid_id" onkeypress="return input_handler( this, event);" onkeydown="if(event.keyCode == 13){new Ajax.Updater( 'List', '_update_inventory.html', { parameters: $('f1').serialize(), evalScripts: true} );}" onkeyup="if(this.value){new Ajax.Request( '/employee/production/_check_for_skid.json', {parameters: {skid_id: this.value}, evalScripts: true } );}" />
 				</td><td>
-					<input type="text" id="rfidtag_id" name="rfidtag_id" size="20" onkeypress="return input_handler( this, event);" onkeydown="if(event.keyCode == 13){new Ajax.Updater( 'List', '_update_inventory.html', {method: 'get', parameters: $('f1').serialize(), evalScripts: true} );}" onkeyup="if(this.value){new Ajax.Request( '/employee/production/_check_for_skid.json', {parameters: {rfidtag_id: this.value}, evalScripts: true } );}" />
+					<input type="text" id="rfidtag_id" name="rfidtag_id" onkeypress="return input_handler( this, event);" onkeydown="if(event.keyCode == 13){new Ajax.Updater( 'List', '_update_inventory.html', {parameters: $('f1').serialize(), evalScripts: true} );}" onkeyup="if(this.value){new Ajax.Request( '/employee/production/_check_for_skid.json', {parameters: {rfidtag_id: this.value}, evalScripts: true } );}" />
 				</td><td>
-					<? echo ( ssi::writeButton( $log, $dbh, 'Submit', 'submit.gif', q`new Ajax.Updater('StockCheckout','_stock_checkout.html', { method: 'get', parameters: checkout_form.serialize() } );`,'','Submit' ); ) ?>
+					<? echo ( button( 'Submit', { onclick=> q`new Ajax.Updater('StockCheckout','_stock_checkout.html', { parameters: checkout_form.serialize() } );` } ); ) ?>
 				</td>
 			</tr>
 			<? echo ( 
@@ -35,4 +35,3 @@
 	</fieldset>
 </form>
 <script type="text/javascript">document.forms['checkout_form'].skid_id.focus();</script>
-

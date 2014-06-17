@@ -8,6 +8,10 @@ require misc;
 require MIME::QuotedPrint;
 require Encode;
 
+require countries;
+require states;
+require provinces;
+
 require openprint::usergroup;
 require openprint::logs;
 require openprint::MarketingCategory;
@@ -415,13 +419,10 @@ sub company_profile {
 } # end sub company_profile
 
 sub user_profile {
+	require Lingua::EN::Inflect;
 	my $Me = $variable{Me} = new openprint::User( $session{user_id} );
-	my $User;
 # IF it's empty, then we are adding a new user! Otherwise editing one
-	if ( exists $param{ddmUser} ) {
-		$User = openprint::User->find_one( id=>$param{ddmUser} );
-	} # end if
-	$User = new openprint::User() if ! $User;;
+	my $User = new openprint::User( $param{ddmUser} );
 
 	if ( $User->can_edit() ) {
 		if ( $param{'btnFunction'} eq '<<' ) {
@@ -449,9 +450,6 @@ sub user_profile {
 				} # end foreach required field
 			} else {
 				$error .= 'First Name cannot be blank.<br/>' if ! $param{'firstname'};
-				$error .= 'Last Name cannot be blank.<br/>' if ! $param{'lastname'};
-				$error .= 'Salutation cannot be blank.<br/>' if ! $param{'salutation'};
-				$error .= 'Phone cannot be blank.<br/>' if ! $param{'phone'};
 			} # end if
 			if ( $error ne '' ) {
 				$variable{'error'} = 'Bad Field';
@@ -532,12 +530,14 @@ $log->debug("Sending password change");
 		} # end if btnFunction
 	} # end if can_edit
 
-	if ( (!$User->id()) and ( $session{'company_id'} != $Me->company_id() ) ) {
-		$User = openprint::User->find_one('company_id'=>$session{'company_id'} );
+	if ( !$User->id() ) {
+		if ( $session{company_id} != $Me->company_id() ) {
+			$User = openprint::User->find_one( company_id=>$session{company_id}, order=>'lower(firstname),lower(lastname)' );
+			$User = new openprint::User() if ! $User;
+		} else {
+			$User = $Me;
+		} # end if
 	} # end if 
-	if ( ! ($User and $User->id()) ) {
-		$User = $Me;
-	} # end if
 	$variable{'User'} = $User;
     if ( $config{mail_db_name} ) {
         my @domains = email::domains();
@@ -817,8 +817,8 @@ sub _wall {
 	if ( $param{'message'} ) {
 		my $Wall = new openprint::Wall();
 		$variable{'error'} = $Wall->save({'user_id'=>$param{'user_id'},
-			'author_id'	=>	$session{'user_id'},
-			'message'	=>	$param{'message'},
+			author_id	=>	$session{user_id},
+			message		=>	$param{message},
 			( $param{'reply_to'} ? ('reply_to'=>$param{'reply_to'}) : () ),
 			});
 		if ( $param{'reply_to'} ) {

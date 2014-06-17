@@ -31,7 +31,7 @@ Choose criteria and click show results. You may the download the results in CSV 
 		<p>
 			<label>Project ID</label>
 			<? echo ( join(' ',
-			input( type=>'cardinal', name=>'project_id', value=>$param{'project_id'}, onkeypress=>q`$('StartDocket').value='';$('EndDocket').value='';$('order_id').value='';$('invoice_id').value='';return input_handler(this,event);`, onkeydown=>q`if(event.keyCode==13){f1.btnFunction.value='Go';f1.submit();};` ),
+			input( type=>'cardinal', id=>'project_id', name=>'project_id', value=>$param{'project_id'}, onkeypress=>q`$('StartDocket').value='';$('EndDocket').value='';$('order_id').value='';$('invoice_id').value='';return input_handler(this,event);`, onkeydown=>q`if(event.keyCode==13){f1.btnFunction.value='Go';f1.submit();};` ),
 			button( 'ProjectGo', { 'onclick'=>"f1.btnFunction.value='Go';f1.submit();", 'text'=>'Go' } ), ); ) ?>
 		</p>
 </div>

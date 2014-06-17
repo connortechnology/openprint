@@ -9,6 +9,7 @@ require openprint::PurchaseOrder_Department;
 require openprint::Company_Category;
 require openprint::Object_Asset;
 require openprint::Object_Payment;
+require CGI;
 
 use vars qw( $r $log $dbh %variable %param %session %config );
 *r = \$openprint::r;
@@ -23,9 +24,9 @@ sub save_supplier {
 	my ( $p ) = @_;
 
 	my $Company;
-
 	my $ac = sql::start_transaction( $dbh );
-	$dbh->do( 'LOCK TABLE Company IN EXCLUSIVE MODE' ) or $log->error( DBI->errstr );
+$openprint::log->error("Already in transaction") if $ac;
+	$dbh->do( 'LOCK TABLE Companies IN EXCLUSIVE MODE' ) or $log->error( DBI->errstr );
 
 	my @Companies = openprint::Company->find( 'name lc'=> lc openprint::Company->transform('name', $$p{vendor_name} ) );
 	if ( ! @Companies ) {

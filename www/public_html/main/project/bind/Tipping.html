@@ -1,9 +1,9 @@
-<script type="text/javascript" src="<? echo ( hash_link('/javascripts/service.js') ) ?>"></script>
+<script type="text/javascript" src="<?hash_link('/javascripts/service.js')?>"></script>
 <? eval (
     if ( $$variable{'Project'}->quantity1() and $$variable{'Project'}->quantity2() and $$variable{'Project'}->quantity3() ) {
-    $$variable{'Columns'} = 'Three';
+		$$variable{'Columns'} = 'Three';
     } else {
-    $$variable{'Columns'} = 'Two';
+		$$variable{'Columns'} = 'Two';
     } # end if
 ) ?>
 <div class="Service">
@@ -11,13 +11,13 @@
 		<fieldset><legend><?ServiceTypeName?></legend>
 			<ul>
 			<li><label>Tip ins</label>
-				<? echo ( input( type=>'cardinal', id=>'Quantity', name=>'Quantity', value=$$variable{Quantity}, onkeyup=>'calc(this.form.name);' ); ) ?>
+				<? echo ( input( type=>'cardinal', id=>'Quantity', name=>'Quantity', value=>$$variable{Quantity}, onkeyup=>'calc(this.form.name);' ); ) ?>
 			</li>
-			<? echo ( include('/includes/main/proj/quantities_equipment_prices.html'); ) ?>
+			<?include('/includes/main/proj/quantities_equipment_prices.html')?>
 			</ul>
 		</fieldset>
 		<hr/>
-		<? echo ( include('/includes/main/proj/add_to_project.html'); ) ?>
+		<?include('/includes/main/proj/add_to_project.html')?>
 		<input type="hidden" name="btnFunction" value="Save Service"/>
 		<input type="hidden" name="ProjectIndex" value="<?ProjectIndex?>">
 		<input type="hidden" name="ServiceIndex" value="<?ServiceIndex?>">

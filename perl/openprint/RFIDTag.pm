@@ -24,7 +24,7 @@ $serial = 'rfidtags_id_seq';
 );
 %find_fields = (
 	skid_id	=>	'(SELECT skid_id FROM skids WHERE skids.rfidtag_id=rfidtags.id)',
-	type		=>	'(SELECT name FROM RFIDTagTypes WHERE RFIDTagTypes.id=type_id)',
+	type		=>	'type_id=(SELECT id FROM RFIDTagTypes WHERE RFIDTagTypes.name=?)',
 );
 
 %transforms = (
@@ -32,11 +32,11 @@ $serial = 'rfidtags_id_seq';
 );
 
 %defaults = (
-	'created_on'	=>	q`'NOW()'`,
-	'updated_on'	=>	q`'NOW()'`,
-	'location_id'	=>	undef,
-	'type_id'		=>	undef,
-	'valid'			=>	0,
+	created_on	=>	q`'NOW()'`,
+	updated_on	=>	q`'NOW()'`,
+	location_id	=>	undef,
+	type_id		=>	undef,
+	valid		=>	'0',
 );
 
 sub save {
@@ -78,7 +78,7 @@ sub save {
 		} # end if
 	} # end if
 
-	$self->valid( ! $self->is_invalid_id() );
+	$self->valid( $self->is_invalid_id() ? 0 : 1 );
 	
 	my $ac = sql::start_transaction( $dbh );
 

@@ -139,6 +139,7 @@ function textarea_init () {
 textarea_init();
 
 function add_content(form) {
+	form = $(form);
 	if ( form.type_id.selectedIndex < 1 ) {
 		alert('Please select the type of line to add.');
 		return;
@@ -153,6 +154,7 @@ function add_content(form) {
 	);
 } // end function add_Content(form)
 function del_content(form, content_id ) {
+	form = $(form);
 	tinyMCE.triggerSave();
 	new Ajax.Updater( 'Contents','_contents.html?action=Delete&claim_id=<? echo ( $$variable{Claim}->id() ) ?>&amp;content_id='+content_id, {
 			parameters: form.serialize(),
@@ -173,13 +175,33 @@ function set_description(index) {
     } // end if
     desc.value += $('name-'+index).value;
 }
+function validate( form ) {
+	form = $(form);
+	if ( form.filed.checked && ! ( get_ddm_value( form.filed_on_year ) && get_ddm_value( form.filed_on_month ) && get_ddm_value( form.filed_on_day ) ) ) {
+		alert('Please enter the filed on date.');
+		return false;
+	}
+	if ( form.sent_to_accounts.checked && ! ( get_ddm_value( form.sent_to_accounts_on_year ) && get_ddm_value( form.sent_to_accounts_on_month ) && get_ddm_value( form.sent_to_accounts_on_day ) ) ) {
+		alert('Please enter the sent to accounts on date.');
+		return false;
+	}
+	if ( form.cancelled.checked && ! ( get_ddm_value( form.cancelled_on_year ) && get_ddm_value( form.cancelled_on_month ) && get_ddm_value( form.cancelled_on_day ) ) ) {
+		alert('Please enter the cancelled on date.');
+		return false;
+	}
+	if ( form.paid.checked && ! ( get_ddm_value( form.paid_on_year ) && get_ddm_value( form.paid_on_month ) && get_ddm_value( form.paid_on_day ) ) ) {
+		alert('Please enter the cancelled on date.');
+		return false;
+	}
+	return true;	
+} 
 </script>
 <form id="f1" name="f1" action="<? echo ( $$variable{Claim}->id() ? 'view' : 'edit' ) ?>.html?claim_id=<? echo ( $$variable{Claim}->id() ) ?>" method="post">
 	<?include(/includes/error_reporting.html)?>
 	<p class="buttons" id="buttons">
 <? echo ( 
 	my $html = '';
-	$html .= button( 'Save', { onclick=>q`$('buttons').innerHTML='Please wait. Saving...';f1.btnFunction.value='Save';f1.submit();`, 
+	$html .= button( 'Save', { onclick=>q`if(validate('f1')){$('buttons').innerHTML='Please wait. Saving...';f1.btnFunction.value='Save';f1.submit();}`, 
 		text => $$variable{Claim}->id() ? 'Save' : 'Create Claim' } );
 	if ( $$variable{Claim}->id() ) {
 		$html .= button( 'Delete', { onclick=>"\$('buttons').innerHTML='Please wait. Deleting...';f1.btnFunction.value='Delete';f1.submit();", text=>'Delete' } );
@@ -194,39 +216,41 @@ function set_description(index) {
 		<?include(_vendor.html)?>
 		<div class="rightColumn">
 			<fieldset>
-				<p><label>Filed to vendor:
+				<ul>
+				<li><label>Filed to vendor
 					<input type="checkbox" name="filed" id="filed" onclick="if(this.checked){$('filed_on_span').show();} else {$('filed_on_span').hide();}" <? echo ( ssi::checked( $$variable{Claim}->filed_on() ); ) ?> />
 					</label>
-					<span id="filed_on_span" <? echo ( $$variable{Claim}->filed_on() ? '' : 'style="display:none;"' ) ?>><? echo ( ssi::date_select( 'filed_on', $$variable{Claim}->filed_on() ); ) ?></span>
-				</p>
-				<p><label>Sent to accounts:
-					<input type="checkbox" name="sent_to_accounts" id="sent_to_accounts" onclick="if(this.checked){$('sent_to_accounts_on_span').show();} else {$('sent_to_accounts_on_span').hide();}" <? echo ( ssi::checked( $$variable{Claim}->sent_to_accounts_on() ); ) ?> />
+					<span id="filed_on_span" <? echo ( $$variable{Claim}->filed_on() ? '' : 'style="display:none;"' ) ?>><? echo ( date_select( 'filed_on', $$variable{Claim}->filed_on() ); ) ?></span>
+				</li>
+				<li><label>Sent to accounts
+					<input type="checkbox" name="sent_to_accounts" id="sent_to_accounts" onclick="if(this.checked){$('sent_to_accounts_on_span').show();} else {$('sent_to_accounts_on_span').hide();}" <? echo ( checked( $$variable{Claim}->sent_to_accounts_on() ); ) ?> />
 </label>
-					<span id="sent_to_accounts_on_span" <? echo ( $$variable{Claim}->sent_to_accounts_on() ? '' : 'style="display:none;"' ) ?>><? echo ( ssi::date_select( 'sent_to_accounts_on', $$variable{Claim}->sent_to_accounts_on() ); ) ?></span>
-				</p>
-				<p><label>Invoiced On:
+					<span id="sent_to_accounts_on_span" <? echo ( $$variable{Claim}->sent_to_accounts_on() ? '' : 'style="display:none;"' ) ?>><? echo ( date_select( 'sent_to_accounts_on', $$variable{Claim}->sent_to_accounts_on() ); ) ?></span>
+				</li>
+				<li><label>Invoiced On
 					<input type="checkbox" name="invoiced" id="invoiced" onclick="if(this.checked){$('invoiced_on_span').show();$('invoice_id_span').show();} else {$('invoiced_on_span').hide();$('invoice_id_span').hide();}" <? echo ( ssi::checked( $$variable{Claim}->invoiced_on() ); ) ?> />
 </label>
 					<span id="invoiced_on_span" <? echo ( $$variable{Claim}->invoiced_on() ? '' : 'style="display:none;"' ) ?>>
-					<? echo ( ssi::date_select( 'invoiced_on', $$variable{Claim}->invoiced_on() ); ) ?>
+					<? echo ( date_select( 'invoiced_on', $$variable{Claim}->invoiced_on() ); ) ?>
 					</span>
-				</p>
-				<p id="invoice_id_span" <? echo ( $$variable{Claim}->invoiced_on() ? '' : 'style="display:none;"' ) ?>><label>Invoice #</label>
+				</li>
+				<li id="invoice_id_span" <? echo ( $$variable{Claim}->invoiced_on() ? '' : 'style="display:none;"' ) ?>><label>Invoice #</label>
 					<input type="text" name="invoice_id" id="invoice_id" value="<? echo ( $$variable{Claim}->invoice_id() ) ?>" />
-				</p>
-				<p><label>Cancelled On:
+				</li>
+				<li><label>Cancelled On
 					<input type="checkbox" name="cancelled" id="cancelled" onclick="if(this.checked){$('cancelled_on_span').show();} else {$('cancelled_on_span').hide();}" <? echo ( checked( $$variable{Claim}->cancelled_on() ); ) ?> />
 </label>
 					<span id="cancelled_on_span" <? echo ( $$variable{Claim}->cancelled_on() ? '' : 'style="display:none;"' ) ?>><? echo ( date_select( 'cancelled_on', $$variable{Claim}->cancelled_on() ); ) ?></span>
-				</p>
-				<p><label>Paid On:
+				</li>
+				<li><label>Paid On
 					<input type="checkbox" name="paid" id="paid" onclick="if(this.checked){$('paid_on_span').show();} else {$('paid_on_span').hide();}" <? echo ( checked( $$variable{Claim}->paid_on() ); ) ?> />
 </label>
 					<span id="paid_on_span" class="DateSelector" <? echo ( $$variable{Claim}->paid_on() ? '' : 'style="display:none;"' ) ?>><? echo ( date_select( 'paid_on', $$variable{Claim}->paid_on() ); ) ?></span>
-				</p>
-				<p><label>Docket</label><input type="text" name="docket" id="docket" value="<? echo ( join(',',$$variable{Claim}->docket() ? @{$$variable{Claim}->docket()} : ()) ) ?>" onkeyup="this.value=this.value.replace(/[^,\d]/g,'');" /></p>
-				<p><label>Editors</label><span id="editors"><? echo ( include('_editors.html'); ) ?></span></p>
-				<p><label>Also Notify</label><span id="also_notify"><? echo ( include('_also_notify.html'); ) ?></span></p>
+				</li>
+				<li><label>Docket</label><input type="text" name="docket" id="docket" value="<? echo ( join(',',$$variable{Claim}->docket() ? @{$$variable{Claim}->docket()} : ()) ) ?>" onkeyup="this.value=this.value.replace(/[^,\d]/g,'');" /></li>
+				<li><label>Editors</label><span id="editors"><?include('_editors.html')?></span></li>
+				<li><label>Also Notify</label><span id="also_notify"><?include('_also_notify.html')?></span></li>
+				</ul>
 			</fieldset>
 		</div>
 		<br class="spacer"/>

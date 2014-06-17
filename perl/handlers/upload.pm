@@ -57,16 +57,17 @@ sub handler {
 	my $rsize;
 
 	if ( $request->method eq 'POST' ) {
-	my $table = $request->headers_in;
+		my $table = $request->headers_in;
 
-foreach my $key (keys %{$table}) {
-      $log->debug( "$key = $table->{$key}" );
-  }
+		foreach my $key (keys %{$table}) {
+			$log->debug( "$key = $table->{$key}" );
+		}
 		$uploaded = 0;
 		($serial) = $request->args() =~ /serial=(\d*)/;
 		my ($company) = $request->args() =~ /txtCompanyName=([.^&]*)/;
 		( $rsize ) = $request->args() =~ /qqtotalfilesize=(\d+)/;
 		$rsize=$request->headers_in->{'Content-Length'} if ! $rsize;
+		
 		if ( $serial ) {
 			sql::execute( undef, undef, q{DELETE FROM Uploads WHERE id=?}, $serial );
 		} else {
@@ -152,14 +153,7 @@ $log->debug("Doing standrad upload");
 			upload_files();
 			my $page = '/upload/_upload_complete.html';
 			my @page_path = split('/', $page );
-			my $content;
-			if (-e $r->dir_config('SkinPath') . $page) {
-				$page = $r->dir_config('SkinPath') . $page;
-			} else {
-				$page = $ENV{'DOCUMENT_ROOT'} . $page;
-			} # end if
-			my $content = misc::load_file( $log, $page );
-			$variable{'PageContent'} = ssi::variable_substitution( \$content, \%variable );
+			$variable{'PageContent'} = ssi::include( $page );
 			my $filename = pop @page_path;
 			my $template;
 
@@ -315,15 +309,16 @@ $log->error("No destdir");
 					$from = $config{'OrderingEmail'};
 				} # end if
 			} # end if
+			my $Company;
 			if ( $session{'company_id'} ) {
 				my $Company = new openprint::Company( $session{'company_id'} );
 				if ( $Company->salesrep_id() and ( $Company->CSR()->notification('CSR Client File Uploads') ne 'No' ) ) {
 					push @to, $Company->CSR();
 				} # end if
 			} # end if
-			push @to, map { $_->User() } openprint::User_Notification->find('type'=>'Client File Uploads','value'=>'Yes');
+			push @to, map { $_->User() } openprint::User_Notification->find('type'=>'Client File Uploads','value'=>'Yes',company_id=>[ $config{Owner}, ( $Company?$Company->id():()) ]);
 			if ( ! @to ) {
-				push @to, $config{'OrderingEmail'};
+				push @to, $config{OrderingEmail};
 			} # end if
 			if ( @to ) {
 
@@ -331,7 +326,7 @@ $log->error("No destdir");
 						FROM    => $from,
 						TO		=> \@to,
 #BCC		=>	'iconnor@penultima.org',
-						SUBJECT => $param{'docket'} ? "Files uploaded for docket: $param{'docket'}" : 'Files Uploaded',
+						SUBJECT => $param{docket} ? "Files uploaded for docket: $param{docket}" : 'Files Uploaded',
 						ATTACHMENTS	=>	[ '', MIME::QuotedPrint::encode_qp(Encode::encode('utf-8',$body)), 'text/html', 'quoted-printable' ],
 						);
 

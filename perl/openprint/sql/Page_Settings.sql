@@ -5,6 +5,8 @@ CREATE TABLE Page_Settings (
 	url	TEXT UNIQUE,
 	cacheable	TEXT,
 	user_level	CHAR(1),
+	description	TEXT,
+	keywords	TEXT,
 	PRIMARY KEY (id)
 );
 

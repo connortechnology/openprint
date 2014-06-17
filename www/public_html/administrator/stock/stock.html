@@ -65,19 +65,19 @@
 	
 	}
 </script>
-<? echo ( include('/includes/error_reporting.html'); ) ?>
+<?include('/includes/error_reporting.html')?>
 <div class="Stock">
 <form id="f1" name="f1" method="post" action="stock.html?stock_id=<? echo ( $$variable{'Stock'}->id(); ) ?>">
 	<p class="buttons">
 		<? echo ( join('',
-		button( 'Prev1', { onclick=>"f1.btnFunction.value='Prev';f1.submit();", href=>'', text=>'&lt;&lt;' } ),
-		button( 'Next1', { onclick=>"f1.btnFunction.value='Next';f1.submit();", href=>'', text=>'&gt;&gt;' } ),
-		#button( 'Next1', { onclick=>"f1.btnFunction.value='Next';fmChange=1;fmCheck(f1);", href=>'', text=>'&gt;&gt;' } ),
-		button( 'Add1', { onclick=>"f1.action='stock.html';f1.btnFunction.value='';f1.submit();", href=>'', text=>'Add New' } ),
-		button( 'Delete1', { onclick=>"f1.btnFunction.value='Delete';fmChange=2;fmCheck(f1);", href=>'', text=>'Delete' } ),
-		button( 'Copy1', { onclick=>"f1.btnFunction.value='Copy';f1.submit();", href=>'', text=>'Copy' } ),
-		button( 'Save1', { onclick=>"f1.btnFunction.value='Save';fmChange=3;fmCheck(f1);", href=>'', text=>'Save' } ),
-		button( 'Reset1', { onclick=>'f1.reset();', href=>'', text=>'Reset' } ),
+		button( 'Prev1', { onclick=>"f1.btnFunction.value='Prev';f1.submit();", text=>'&lt;&lt;' } ),
+		button( 'Next1', { onclick=>"f1.btnFunction.value='Next';f1.submit();", text=>'&gt;&gt;' } ),
+		#button( 'Next1', { onclick=>"f1.btnFunction.value='Next';fmChange=1;fmCheck(f1);", text=>'&gt;&gt;' } ),
+		button( 'Add1', { onclick=>"f1.action='stock.html';f1.btnFunction.value='';f1.submit();", text=>'Add New' } ),
+		button( 'Delete1', { onclick=>"f1.btnFunction.value='Delete';fmChange=2;fmCheck(f1);", text=>'Delete' } ),
+		button( 'Copy1', { onclick=>"f1.btnFunction.value='Copy';f1.submit();", text=>'Copy' } ),
+		button( 'Save1', { onclick=>"f1.btnFunction.value='Save';fmChange=3;fmCheck(f1);", text=>'Save' } ),
+		button( 'Reset1', { onclick=>'f1.reset();', text=>'Reset' } ),
 ); ) ?>
 	</p>
 	<br class="spacer"/>
@@ -107,6 +107,16 @@
 							) ?>
 					</select>
 					<input style="display: none;" type="text" id="txtManufacturer" name="txtManufacturer" onfocus="if(!this.value){this.value=get_ddm_text(f1.ddmManufacturer);}ddm_select_by_index( f1.ddmManufacturer, 0 );" />
+				</p>
+				<p>
+					<label for="txtSupplier" onclick="$('ddmSupplier').toggle();$('txtSupplier').toggle();">Supplier</label>
+					<select id="ddmSupplier" name="ddmSupplier" size="1">
+						<option value="">select</option>
+					<? echo (
+							make_drop_down( openprint::Company->dropdown(order=>'lower(name)', supplier=>'Y'), $$variable{Stock}->supplier_id() );
+							) ?>
+					</select>
+					<input style="display: none;" type="text" id="txtSupplier" name="txtSupplier" onfocus="if(!this.value){this.value=get_ddm_text(f1.ddmSupplier);}ddm_select_by_index( f1.ddmSupplier, 0 );" />
 				</p>
 				<p>
 					<label for="txtBrand" onclick="$('txtBrand').toggle();$('ddmBrand').toggle();">Brand</label>
@@ -172,8 +182,8 @@
 					<label for="grade">Grade</label>
 					<select id="grade" name="grade" size="1">
 					<? echo (
-						my @options = ( '', 'select one', %openprint::Paper::grades );
-						make_drop_down( \@options, $$variable{'Stock'}->grade() );
+						my @options = ( '', 'select one', map { $_, $openprint::Paper::grades{$_} } ( sort { $a <=> $b } ( keys %openprint::Paper::grades ) ) );
+						make_drop_down( \@options, $$variable{Stock}->grade() );
 					) ?>
 					</select>
 				</p>
@@ -215,7 +225,7 @@
 				</p>
 				<p>
 					<label>WPSI</label>
-					<input type="number" readonly="readonly" name="wpsi" id="wpsi" value="<? echo ( $$variable{'Stock'}->wpsi(); ) ?>" />
+					<? echo ( input( type=>'float', readonly=>"readonly", name=>'wpsi', id=>'wpsi', value=>$$variable{Stock}->wpsi(), step=>'any' ); ) ?>
 				</p>
 				<p>
 					<label>Grain Direction</label>
@@ -235,7 +245,7 @@
 				</p>
 				<p>
 					<label>Quantity Per Package (<span id="QuantityPerPackageUnits"><? echo ( $$variable{'Stock'}->units() ) ?></span>)</label>
-					<input type="number" name="sheets_per_package" value="<? echo ( $$variable{'Stock'}->sheets_per_package(); ) ?>" />
+					<? echo ( input( type=>'cardinal', name=>'sheets_per_package', value=>$$variable{Stock}->sheets_per_package() ); ) ?>
 				</p>
 			</div><!--left-->
 			<div class="rightColumn">
@@ -248,7 +258,11 @@
 				</p>
 				<p class="minimum_order">
 					<label>Minimum Order (<span id="MinimumOrderUnits"><? echo ( $$variable{'Stock'}->type() eq 'Roll' ? 'lbs' : 'sheets' ) ?></span>)</label>
-					<input type="number" id="minimum_order" name="minimum_order" value="<? echo ( $$variable{'Stock'}->minimum_order(); ) ?>" />
+					<? echo ( input( type=>'cardinal', id=>'minimum_order', name=>'minimum_order', value=>$$variable{Stock}->minimum_order() ); ) ?>
+				</p>
+				<p class="available_to_order">
+					<label>Available to Order (<span id="MinimumOrderUnits"><? echo ( $$variable{Stock}->type() eq 'Roll' ? 'lbs' : 'sheets' ) ?></span>)</label>
+					<? echo ( input( type=>'cardinal', id=>'available_to_order', name=>'available_to_order', value=>$$variable{Stock}->available_to_order() ); ) ?>
 				</p>
 				<p class="fsc_code">
 					<label>FSC Code</label>
@@ -260,7 +274,7 @@
 				</p>
 				<p class="message">
 					<label>Message</label>
-					<textarea id="message" name="message" rows="2" onkeyup="textarea_resize( this );"><? echo ( $$variable{'Stock'}->message(); ) ?></textarea>
+					<textarea id="message" name="message" rows="<? echo ( count_lines($$variable{Stock}->message())) ?>" onkeyup="textarea_resize(this);"><? echo ( $$variable{Stock}->message() ) ?></textarea>
 				</p>
 				<p class="cuttable">
 					<label>Can this stock be cut?</label>
@@ -320,7 +334,7 @@
 					<label class="radio" for="bladecleaningN">No</label>
 				</p>
 				<p class="user_type">
-					<label>Required User Type:</label>
+					<label>Required User Type</label>
 					<select name="user_type" id="user_type">
 					<? echo	( make_drop_down( [ '', 'All', 'C', 'Customer', 'E', 'Employee', 'A', 'Administrator' ], $$variable{'Stock'}->user_type() ); ) ?>
 					</select>
@@ -343,11 +357,19 @@
 				</p>
 				<p>
 					<label>In Stock</label>
-					<? echo ( $$variable{'Stock'}->in_stock(); ) ?>
+					<? echo ( $$variable{Stock}->in_stock() . $$variable{Stock}->units(); ) ?>
+				</p>
+				<p>
+					<label>Allocated</label>
+					<? echo ( $$variable{Stock}->allocated() . $$variable{Stock}->units(); ) ?>
+				</p>
+				<p>
+					<label>Available</label>
+					<? echo ( $$variable{Stock}->available() . $$variable{Stock}->units(); ) ?>
 				</p>
 				<p>
 					<label>Ordered</label>
-					<? echo ( $$variable{'Stock'}->back_ordered(); ) ?>
+					<? echo ( $$variable{Stock}->back_ordered() . $$variable{Stock}->units(); ) ?>
 				</p>
 			</div><!-- right-->
 		</fieldset>

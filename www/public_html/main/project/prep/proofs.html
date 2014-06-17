@@ -38,7 +38,7 @@
 								<th class="quantity">Quantity</th>
 								<th class="dimensions">Dimensions</th>
 								<th class="type">Type</th>
-								<th class="Price">MR (%1$s)</th>
+								<th class="Price MR">MR (%1$s)</th>
 								<th class="Price">Service (%1$s)</th>
 								<th class="Units">&nbsp;</th>
 								<th class="Price">Total (%1$s)</th>
@@ -51,23 +51,22 @@
 							<tr>
 								<td class="quantity">%4$s</td>
 								<td class="dimensions">%5$s x %6$s</td>
-								<td class="type"><select name="ddmProofType-%1$d-%3$d-%2$d" onchange="calc(this.form.name);"><option value="">select one</option>%7$s</select></td>
-								<td class="Price">%8$s</td>
+								<td class="type"><select name="ddmProofType-%1$s-%3$d-%2$d" onchange="calc(this.form.name);"><option value="">select one</option>%7$s</select></td>
+								<td class="Price MR">%8$s</td>
 								<td class="Price">%9$s</td>
-								<td class="Units">
-									<span id="ServiceUnits-%1$d-%3$d-%2$d"></span>
-								</td>
-								<td class="Price"><input type="number" name="txtProofUnitPrice-%1$d-%3$d-%2$s" readonly="readonly" onfocus="this.blur();" /></td>
-								<td class="Override"> %10$s <input type="hidden" name="txtProofIndex-%1$d-%3$d-%2$d" value="%3$d"/>
+								<td class="Units"><span id="ServiceUnits-%1$d-%3$d-%2$d"></span></td>
+								<td class="Price">%10$s</td>
+								<td class="Override"> %11$s <input type="hidden" name="txtProofIndex-%1$s-%3$d-%2$d" value="%3$d"/>
 								</td>
 							</tr>
 							`, $signature_index, $qty_index, $proof_index,
 								input( type=>'cardinal', name=>"txtProofQuantity-$signature_index-$proof_index-$qty_index", value=>$proof_quantity, onkeyup=>'calc(this.form.name);' ),
-								input( type=>'float', name=>"txtProofWidth-$signature_index-$proof_index-$qty_index", value=>$proof_width, onkeyup=>'calc(this.form.name);' ),
-								input( type=>'float', name=>"txtProofHeight-$signature_index-$proof_index-$qty_index", value=>$proof_height, onkeyup=>'calc(this.form.name);' ),
+								input( type=>'float', name=>"txtProofWidth-$signature_index-$proof_index-$qty_index", value=>$proof_width, onkeyup=>'calc(this.form.name);', step=>'0.0001' ),
+								input( type=>'float', name=>"txtProofHeight-$signature_index-$proof_index-$qty_index", value=>$proof_height, onkeyup=>'calc(this.form.name);', step=>'0.0001' ),
  $ddmProofType,
 								input( type=>'float', name=>"MRPrice-$signature_index-$proof_index-$qty_index", readonly=>'readonly', onfocus=>'this.blur();' ),
-								input( type=>'float', name=>"ServicePrice-${signature_index}-$proof_index-$qty_index", readonly=>'readonly', onfocus=>'this.blur();' ),
+								input( type=>'float', name=>"ServicePrice-${signature_index}-$proof_index-$qty_index", readonly=>'readonly', onfocus=>'this.blur();', step=>'0.01' ),
+								input( type=>'float', name=>"txtProofUnitPrice-${signature_index}-$proof_index-$qty_index", readonly=>'readonly', onfocus=>'this.blur();', step=>'0.01' ),
 								write_override( 'chkOverride-'.$signature_index.'-'.$proof_index.'-'.$qty_index, 
 									$$variable{'chkOverride-'.$signature_index.'-'.$proof_index.'-'.$qty_index},
 									'', "calc('f1');" ),
@@ -77,10 +76,10 @@
 						<tr class="additional">
 							<td colspan="4">Additional proofs?</td>
 							<td class="Price" colspan="3">
-								<input type="radio" id="rdbAdditional-%1$d-%2$dY" name="rdbAdditional-%1$d-%2$d" value="Yes" />
-								<label class="radio" for="rdbAdditional-%1$d-%2$dY">Yes</label>
-								<input type="radio" id="rdbAdditional-%1$d-%2$dN" name="rdbAdditional-%1$d-%2$d" value="No" checked="checked" />
-								<label class="radio" for="rdbAdditional-%1$d-%2$dN">No</label>
+								<input type="radio" id="rdbAdditional-%1$s-%2$dY" name="rdbAdditional-%1$d-%2$d" value="Yes" />
+								<label class="radio" for="rdbAdditional-%1$s-%2$dY">Yes</label>
+								<input type="radio" id="rdbAdditional-%1$s-%2$dN" name="rdbAdditional-%1$d-%2$d" value="No" checked="checked" />
+								<label class="radio" for="rdbAdditional-%1$s-%2$dN">No</label>
 							</td>
 							<td class="Override">&nbsp;</td>
 						</tr>
@@ -92,7 +91,7 @@
 					<table>
 						<tr class="totals">
 							<td>Total Service Price (%2$s)</td>
-							<td class="Price"><input type="number" name="txtPrice%1$d" readonly="readonly" onfocus="this.blur();" /></td>
+							<td class="Price">%1$s</td>
 							<td class="Override">&nbsp;</td>
 						</tr>
 						<tr class="breakdown">
@@ -100,9 +99,12 @@
 							<td class="Override">&nbsp;</td>
 						</tr>
 					</table>
-					<input type="hidden" name="txtQuantity%1$d" value="%3$d"/>
+					%3$s
 				</fieldset>
-					`, $qty_index, @$variable{'CurrencySymbol','txtQuantity'.$qty_index}, 
+					`, 
+					input( type=>'float', name=>"txtPrice$qty_index", value=>$$variable{"txtPrice$qty_index"}, readonly=>'readonly', step=>'0.01' ),
+					$$variable{CurrencySymbol},
+					input( type=>'hidden', name=>'txtQuantity'.$qty_index, value=>$$variable{"txtQuantity$qty_index"} ), 
 					sets::isin($session{'user_type'}, ['A','E'] ) ? 
 					button( 'Breakdown'.$qty_index, { onclick=>"show_breakdown('$qty_index');", text=>'Breakdown' } ) : ''
 					

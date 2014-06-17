@@ -1,37 +1,33 @@
-<script type="text/javascript" src="<? echo ( hash_link('/javascripts/service.js') ) ?>"></script>
-<? eval (
-	if ( $$variable{'Project'}->quantity1() and $$variable{'Project'}->quantity2() and $$variable{'Project'}->quantity3() ) {
-	$$variable{'Columns'} = 'Three';
-	} else {
-	$$variable{'Columns'} = 'Two';
-	} # end if
-) ?>
-<div class="Service">
+<script type="text/javascript" src="<?hash_link(/javascripts/service.js)?>"></script>
+<div class="Service <?ServiceType?>">
 	<form id="f1" name="f1" method="post" action="/main/project/view.html">
 		<fieldset><legend><?ServiceTypeName?></legend>
-			<? eval ( @{$$variable{'tempSignatureGroups'}} = @{$$variable{'SignatureGroups'}} ) ?>
-			<? while ( @$variable{'SignatureIndex','Reference'} = splice @{$$variable{'tempSignatureGroups'}},0,2; ) ?>
-				<div class="PerforationSignature">
-					Information for form <?SignatureIndex?> (<?Reference?>):
+			<? echo ( my $html;
+				foreach my $signature_id ( $$variable{Project}->signatures({sort=>1}) ) {
+					my $sig_specs = openprint::service::get_specs_ref( $$variable{Project}, $signature_id );
+
+					$html .= qq`<div class="Signature">Information for form $$sig_specs{SignatureIndex} ($$sig_specs{txtServiceDescription}):
 					<ul>
-					<li><label>Score Quantity</label>
-						<? echo ( input( name=>'txtVerticalQty-'.$$variable{SignatureIndex}, value=>$$variable{"txtVerticalQty-$$variable{SignatureIndex}"}, type=>'cardinal', onkeyup=>'calc(this.form.name);' ); ) ?>
-						Vertical +
-						<? echo ( input( name=>'txtHorizontalQty-'.$$variable{SignatureIndex}, value=>$$variable{"txtHorizontalQty-$$variable{SignatureIndex}"}, type=>'cardinal', onkeyup=>'calc(this.form.name);' ); ) ?>
-						Horizontal
-						<? echo ( write_override( 'chkOverrideQty-'.$$variable{SignatureIndex}, $$variable{'chkOverrideQty-'.$$variable{SignatureIndex}}, '', "calc('f1');" ); ) ?>
-					</li>
+					<li><label>Score Quantity</label>`;
+					$html .= input( name=>'txtVerticalQty-'.$$sig_specs{SignatureIndex}, value=>$$variable{"txtVerticalQty-$$sig_specs{SignatureIndex}"}, type=>'cardinal', onkeyup=>'calc(this.form.name);' );
+					$html .= ' Vertical + ';
+					$html .= input( name=>'txtHorizontalQty-'.$$sig_specs{SignatureIndex}, value=>$$variable{"txtHorizontalQty-$$sig_specs{SignatureIndex}"}, type=>'cardinal', onkeyup=>'calc(this.form.name);' );
+					$html .= ' Horizontal ';
+					$html .= write_override( 'chkOverrideQty-'.$$sig_specs{SignatureIndex}, $$variable{'chkOverrideQty-'.$$sig_specs{SignatureIndex}}, '', "calc('f1');" );
+					$html .= '</li>
 					</ul>
-				</div>
-			<? endwhile ( @$variable{'SignatureIndex','Reference'} = splice @{$$variable{'tempSignatureGroups'}},0,2; ) ?>
+				</div>';
+			} # end foreach signature;
+			return $html;
+			) ?>
 		</fieldset>
 		<fieldset><legend>Results</legend>
+			<?include('/includes/main/proj/scoring_results.html')?>
 			<ul>
-			<? echo ( include('/includes/main/proj/scoring_results.html'); ) ?>
-			<? echo ( include('/includes/main/proj/quantities_prices.html'); ) ?>
+			<?include('/includes/main/proj/quantities_prices.html')?>
 			</ul>
 		</fieldset>
-		<? echo ( include('/includes/main/proj/add_to_project.html'); ) ?>
+		<?include('/includes/main/proj/add_to_project.html')?>
 		<input type="hidden" name="btnFunction" value="Save Service"/>
 		<input type="hidden" name="ProjectIndex" value="<?ProjectIndex?>"/>
 		<input type="hidden" name="ServiceIndex" value="<?ServiceIndex?>"/>

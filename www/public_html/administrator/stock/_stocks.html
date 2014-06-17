@@ -1,10 +1,11 @@
 <? eval (
 	@{$$variable{'Stocks'}} = ();
 	foreach my $Stock ( openprint::Paper->find( 
-			'columns'	=>	'*,(select name from stockbrands where id=brand_id) AS brand, (select name from stockfinishes where id=finish_id) AS finish, (select name from stockcolours where id=colour_id) AS colour, (select name from stockweights where id=weight_id) AS weight',
+			columns	=>	'*,(select name from stockbrands where id=brand_id) AS brand, (select name from stockfinishes where id=finish_id) AS finish, (select name from stockcolours where id=colour_id) AS colour, (select name from stockweights where id=weight_id) AS weight',
 			( $session{'/administrator/stock/list.html?group_id'} ? ( 'group_id'		=> $session{'/administrator/stock/list.html?group_id'} ) : () ),
 			( $session{'/administrator/stock/list.html?owner_id'} ? ( 'owner_id'		=> $session{'/administrator/stock/list.html?owner_id'} ) : () ),
 			( $session{'/administrator/stock/list.html?manufacturer_id'} ? ( 'manufacturer_id'		=> $session{'/administrator/stock/list.html?manufacturer_id'} ) : () ),
+			( $session{'/administrator/stock/list.html?supplier_id'} ? ( supplier_id		=> $session{'/administrator/stock/list.html?supplier_id'} ) : () ),
 			( $session{'/administrator/stock/list.html?brand_id'} ? ( 'brand_id'	=> $session{'/administrator/stock/list.html?brand_id'} ) : () ),
 			( $session{'/administrator/stock/list.html?finish_id'} ? ( 'finish_id'	=> $session{'/administrator/stock/list.html?finish_id'} ) : () ),
 			( $session{'/administrator/stock/list.html?colour_id'} ? ( 'colour_id'	=> $session{'/administrator/stock/list.html?colour_id'} ) : () ),
@@ -13,7 +14,8 @@
 			( $session{'/administrator/stock/list.html?material_id'} ? ( 'material_id'	=> $session{'/administrator/stock/list.html?material_id'} ) : () ),
 			( $session{'/administrator/stock/list.html?Types'} ? ( 'type'		=> [ split(',', $session{'/administrator/stock/list.html?Types'} ) ] ) : () ),
 			( $session{'/administrator/stock/list.html?fsc_code'} ? ( 'fsc_code'	=> $session{'/administrator/stock/list.html?fsc_code'} ) : () ),
-			( $session{'/administrator/stock/list.html?width'} ? ( 'width'=>$session{'/administrator/stock/list.html?width'} ) : () ),
+			( $session{'/administrator/stock/list.html?width'} ? ( 
+				$session{'/administrator/stock/list.html?OrLarger'} ? ( 'width >=' => $session{'/administrator/stock/list.html?width'} ) : ( width => $session{'/administrator/stock/list.html?width'} ) ) : () ),
 			( $session{'/administrator/stock/list.html?height'} ? ( 'height'=>$session{'/administrator/stock/list.html?height'} ) : () ),
 			( $session{'/administrator/stock/list.html?grain_direction'} ? ( 'grain_direction' => $session{'/administrator/stock/list.html?grain_direction'} ) : () ),
 			( $session{'/administrator/stock/list.html?digital'} ne '' ? ( digital=>$session{'/administrator/stock/list.html?digital'} ) : () ),
@@ -43,6 +45,9 @@
 				<th class="group">Group</th>
 				<? endif ( @{$$variable{'Groups'}} ) ?>
 				<th class="manufacturer">Manufacturer</th>
+<? if ( ! $session{'/administrator/stock/list.html?supplier_id'} ) ?>
+				<th class="supplier">Supplier</th>
+<? endif ( ! $session{'/administrator/stock/list.html?supplier_id'} ) ?>
 				<th class="brand">Brand</th>
 				<th class="finish">Finish</th>
 				<th class="colour">Colour</th>
@@ -67,6 +72,9 @@
 		<td class="group"><a href="stock.html?stock_id=<? echo ( $$variable{Stock}{'id'} ) ?>"><? echo ( $$variable{Stock}->group() ) ?></a></td>
 		<? endif ( @{$$variable{'Groups'}} ) ?>
 		<td class="manufacturer"><a href="stock.html?stock_id=<? echo ( $$variable{Stock}{'id'} ) ?>"><? echo ( $$variable{Stock}->manufacturer() ) ?></a></td>
+<? if ( ! $session{'/administrator/stock/list.html?supplier_id'} ) ?>
+		<td class="brand"><a href="stock.html?stock_id=<? echo ( $$variable{Stock}{'id'} ) ?>"><? echo ( $$variable{Stock}->Supplier()->name() ) ?></a></td>
+<? endif ( ! $session{'/administrator/stock/list.html?supplier_id'} ) ?>
 		<td class="brand"><a href="stock.html?stock_id=<? echo ( $$variable{Stock}{'id'} ) ?>"><? echo ( $$variable{Stock}->brand() ) ?></a></td>
 		<td class="finish"><a href="stock.html?stock_id=<? echo ( $$variable{Stock}{'id'} ) ?>"><? echo ( $$variable{Stock}->finish() ) ?></a></td>
 		<td class="colour"><a href="stock.html?stock_id=<? echo ( $$variable{Stock}{'id'} ) ?>"><? echo ( $$variable{Stock}->colour() ) ?></a></td>
@@ -74,7 +82,7 @@
 		<td class="quality"><a href="stock.html?stock_id=<? echo ( $$variable{Stock}{'id'} ) ?>"><? echo ( $$variable{Stock}->quality() ) ?></a></td>
 		<td class="size"><a href="stock.html?stock_id=<? echo ( $$variable{Stock}{'id'} ) ?>"><? echo ( $$variable{Stock}->size() ) ?></a></td>
 		<td class="calliper"><a href="stock.html?stock_id=<? echo ( $$variable{Stock}{'id'} ) ?>"><? echo ( $$variable{Stock}->calliper() ) ?></a></td>
-		<td class="mweight"><a href="stock.html?stock_id=<? echo ( $$variable{Stock}{'id'} ) ?>"><? echo ( sprintf('%.2f', $$variable{Stock}->mweight() ); ) ?></a></td>
+		<td class="mweight"><a href="stock.html?stock_id=<? echo ( $$variable{Stock}{'id'} ) ?>"><? echo ( sprintf('%.2f', Math::Round::nearest(0.01, $$variable{Stock}->type() eq 'Roll' ? $$variable{Stock}->basis_mweight() : $$variable{Stock}->mweight() ) ); ) ?></a></td>
 		<td class="gsm"><a href="stock.html?stock_id=<? echo ( $$variable{Stock}{'id'} ) ?>"><? echo ( sprintf('%.2f', $$variable{Stock}->gsm() ); ) ?></a></td>
 		<td class="spp_min"><a href="stock.html?stock_id=<? echo ( $$variable{Stock}{'id'} ) ?>"><? echo ( $$variable{Stock}->sheets_per_package().'/'.$$variable{Stock}->minimum_order() ) ?></a></td>
 		<td class="pricing"><a href="stock.html?stock_id=<? echo ( $$variable{Stock}{'id'} ) ?>">

@@ -1,0 +1,52 @@
+This feature is under development.<br/>
+<br/>
+<? echo (
+	require openprint::Estimating::Printing;
+	my $html;
+
+	my $Project = new openprint::Project( $param{ProjectIndex} );
+	my $service_id = $param{ServiceIndex};
+
+	my $specs = openprint::service::get_specs_ref( $Project, $service_id );
+	my $services = $Project->services();
+	my $printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
+
+	my @Papers = openprint::Estimating::Printing::get_Stocks( $Project, $specs );
+    my @side_one_colours = openprint::Estimating::Printing::get_colours( $specs, 'SideOne' );
+    my @side_two_colours = openprint::Estimating::Printing::get_colours( $specs, 'SideTwo' );
+	my %inkCoverage = openprint::Estimating::Printing::get_inkcoverage( $Project, $specs );
+
+	my $project = openprint::Estimating::Printing::setup_project( $Project, $service_id, $services, $specs, \@side_one_colours, \@side_two_colours, \%inkCoverage, $Papers[0] );
+	my %presses = openprint::Estimating::Printing::select_presses( $Project, \@Papers, $specs, $project );
+	my @possible_presses;
+	foreach my $press_id ( keys %presses ) {
+		if ( ! $presses{$press_id} ) {
+			push @possible_presses, new openprint::Equipment($press_id);
+		} # end if
+	} # end foreach
+
+	my %Overrides = openprint::Estimating::Printing::get_overrides( $Project, $specs );
+	my $qty_index = $param{qty_index};
+	if ( ! $qty_index ) {
+		return 'No qty index given.';
+	} 
+	my %Impositions = openprint::Estimating::Printing::get_impositions( $Project, $specs, $project, $param{"txtQuantity$qty_index"}, $qty_index, \@possible_presses, \@Papers, \%Overrides );
+	my @Impositions = map { @{$Impositions{$_}} } keys %Impositions;
+	#$html .= join('<br/>', map { $_->to_string() } openprint::imposition::sort( @Impositions ) );
+
+	$html .= '<br/><br/>These are the impositions that will be considered after filtering. There are ' . @Impositions .'<br/>';
+
+	if ( $$specs{'txtSignatureType'} ) {
+		$$specs{'txtUnspecifiedPageQuantity'.$qty_index} = openprint::Estimating::Printing::get_unspecified_pages( $Project, $service_id, $printing_specs, $specs, $qty_index );
+		$$specs{'txtUnspecifiedPageQuantity'.$qty_index} = 0 if $$specs{'txtUnspecifiedPageQuantity'.$qty_index} < 0;
+	} elsif ( $$specs{Versions} ) {
+		$$specs{'UnspecifiedVersions'.$qty_index} = get_unspecified_versions( $Project, $service_id, $printing_specs, $specs, $qty_index );
+		$$specs{'UnspecifiedVersions'.$qty_index} = 0 if $$specs{'UnspecifiedVersions'.$qty_index} < 0;
+	} # end if
+
+	@Impositions = openprint::Estimating::Printing::calculate_impositions( $Project, $specs, $qty_index, $param{"txtQuantity$qty_index"}, {}, {}, $project, \%Impositions );
+	$html .= join('<br/>', map { $_->to_string() } openprint::imposition::sort( @Impositions ) );
+
+	return $html;
+) ?>
+	

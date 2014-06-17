@@ -1,5 +1,5 @@
 function versions_onkeyup( e ) {
-	new Ajax.Updater( 'Version_Descriptions', '_version_descriptions.html', { method: 'get', parameters: e.form.serialize() } );
+	new Ajax.Updater( 'Version_Descriptions', '_version_descriptions.html', { parameters: Form.serialize(e.form, true) } );
 }
 
 function filter_colours( side, signature ) {
@@ -166,6 +166,19 @@ function validate_data(formName) {
 	return true;
 } // end function validate_data
 
+function get_impositions( form, qty_index ) {
+	form = $(form);
+	var h = $H(Form.serialize(form,true));
+	h.each(function(pair) {
+		if ( pair.value == '' ) 
+			h.unset(pair.key);
+		if ( pair.key == 'btnFunction' ) 
+			h.unset(pair.key);
+	});
+	h.set('qty_index', qty_index);
+	popup_window( '/main/project/prin/_impositions.html', h, { width: 800 } );
+} 
+
 function calc_print( formName, force, options ) {
 
 	var form = getFormObj( formName );
@@ -179,17 +192,25 @@ function calc_print( formName, force, options ) {
 		} // end if
 		return;
 	} // end if
-	if ( timeout ) clearTimeout( timeout );
+	if ( timeout ) {
+		clearTimeout( timeout );
 	//timeout = null;
+	}
 
 	clear_price_data(form);
+	var AlertDiv = $('AlertDiv');
+	if ( AlertDiv ) {
+		AlertDiv.innerHTML = '';
+		AlertDiv.hide();
+	} // end if
 	var div = $('InformationDiv');
 	if ( div ) {
 		div.innerHTML = 'Calculating....';
 		div.show();
 	} // end if
 	gettingNewPrice = true;
-	var h = $H(form.serialize(true));
+	var blah = Form.serialize( form, true );
+	var h = $H(blah);
 	h.each(function(pair) {
 		if ( pair.value == '' ) 
 			h.unset(pair.key);
@@ -347,7 +368,7 @@ function selectProjectTemplate( formName ) {
 				if ( options[TemplateType][0].message ) {
 					alert(options[TemplateType][0].message);
 				}
-				for ( var x = 0; x < options[TemplateType].length; x += 1 ) {
+				for ( var x = 0, len=options[TemplateType].length; x < len; x += 1 ) {
 					var value = options[TemplateType][x].value;
 					var text = options[TemplateType][x].text;
 					add_option( ddm, options[TemplateType][x].text, options[TemplateType][x].value );

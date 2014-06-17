@@ -1,21 +1,12 @@
-package openprint::Invoiced_Product;
-@ISA = qw(openprint::Object);
-
-use vars qw( %config $log $dbh %session );
-*session = \%openprint::session;
-*config = \%openprint::config;
-*log = \$openprint::log;
-*dbh = \$openprint::dbh;
-
-my $debug = 0;
-
 use strict;
-use vars qw( $table $serial %fields %defaults %transforms %find_cache );
+package openprint::Invoiced_Product;
+our @ISA = qw(openprint::Object);
 
+use vars qw( $debug $table $serial %fields %defaults %transforms %find_cache );
+
+$debug = 1;
 $table = 'invoiced_products';
 $serial = 'invoiced_products_id_seq';
-
-require sql;
 
 %fields = (
 	'id'				=>	'id',
@@ -50,19 +41,20 @@ sub name {
 
 sub total {
 	my ( $self ) = @_;
-	return $$self{'quantity'} * $self->price();
+	return $$self{quantity} * $self->price();
 } # end sub total
 
 sub price {
 	my $self = $_[0];
 	if ( @_ == 2 ) {
-		$$self{'price'} = $_[1];
+		$$self{price} = $_[1];
 	} # end if
-	if ( ( ! defined $$self{'price'} ) and $$self{'product_id'} ) {
-		my %Price = $self->Product()->get_price( $$self{'quantity'} );
-		$$self{'price'} = $Price{'Price'};
+	if ( ( ! defined $$self{price} ) and $$self{product_id} ) {
+		my %Price = $self->Product()->get_price( $$self{quantity}, { pricelist_id=>$self->Invoice()->Pricelist()->id() } );
+$openprint::log->debug("Got price: %Price: " . join(',', map { $_.'=>'.$Price{$_} } keys %Price ) );
+		$$self{price} = $Price{Price};
 	} # end if
-	return $$self{'price'};
+	return $$self{price};
 } # end sub price
 
 sub description {

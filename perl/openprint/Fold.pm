@@ -6,12 +6,14 @@ require openprint::Equipment;
 require openprint::FoldSpecification;
 require sql;
 
+use Memoize;
+memoize('Specification');
 
 use vars qw( $debug $table $serial $log $dbh %fields %transforms %defaults );
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
 
-$debug = 1;
+$debug = 0;
 $table = 'folds';
 $serial= 'folds_id_seq';
 
@@ -32,7 +34,11 @@ $serial= 'folds_id_seq';
 	'page_columns'			=>	'page_columns',
 	'page_rows'				=>	'page_rows',
 	'min_imposition'		=>	'min_imposition',
+	'min_imposition_columns'	=>	'min_imposition_columns',
+	'min_imposition_rows'		=>	'min_imposition_rows',
 	'max_imposition'		=>	'max_imposition',
+	'max_imposition_columns'	=>	'max_imposition_columns',
+	'max_imposition_rows'		=>	'max_imposition_rows',
 	'cutting'				=>	'cutting',
 	'stitching'				=>	'stitching',
 	'perfectbind'			=>	'perfectbind',
@@ -46,6 +52,7 @@ $serial= 'folds_id_seq';
 	'folds'					=>	'folds',
 	'angles'				=>	'angles',
 	'printing_type'			=>	'printing_type',
+	comments				=>	'comments',
 );
 %transforms = (
 	'min_width' => [ 's/[^\d\.]//g' ],
@@ -56,6 +63,10 @@ $serial= 'folds_id_seq';
 	'max_calliper' => [ 's/[^\d\.]//g' ],
 	'min_imposition' => [ 's/\D//g' ],
 	'max_imposition' => [ 's/\D//g' ],
+	'min_imposition_columns' => [ 's/\D//g' ],
+	'min_imposition_rows' => [ 's/\D//g' ],
+	'max_imposition_columns' => [ 's/\D//g' ],
+	'max_imposition_rows' => [ 's/\D//g' ],
 	'pages' => [ 's/\D//g' ],
 	'page_columns' => [ 's/\D//g' ],
 	'page_rows' => [ 's/\D//g' ],
@@ -74,6 +85,11 @@ $serial= 'folds_id_seq';
 	'max_calliper'		=>	undef,
 	'min_imposition'	=>	undef,
 	'max_imposition'	=>	undef,
+	'min_imposition_columns'	=>	undef,
+	'min_imposition_rows'	=>	undef,
+	'max_imposition'	=>	undef,
+	'max_imposition_columns'	=>	undef,
+	'max_imposition_rows'	=>	undef,
 	'pages'		=>	undef,
 	'page_columns'		=>	undef,
 	'page_rows'			=>	undef,
@@ -200,7 +216,7 @@ $log->debug("Couldn't find maximum") if $debug;
     } elsif ( $$x{interpolate} ) {
         my $S = $x->copy();
         $$S{min_weight} = $$S{max_weight} = $range;
-        $$S{runspeed} = $$x{runspeed} + ($range - $$x{min_weight})*($$y{runspeed}-$$x{runspeed})/($$y{min_weight}-$$x{min_weight});
+        $$S{runspeed} = int( $$x{runspeed} + ($range - $$x{min_weight})*($$y{runspeed}-$$x{runspeed})/($$y{min_weight}-$$x{min_weight}) );
         return $S;
     } # end if
 
@@ -211,8 +227,9 @@ sub RunSpeed {
 	if ( ! exists $$self{runspeed_cache} ) {
 		$$self{runspeed_cache} = {};
 	} # end if
-	if ( ! $gsm ) {
-		$openprint::log->error("No gsm in Fold->runspeed");
+	if ( ! defined $gsm ) {
+		my ( $caller, undef, $line ) = caller;
+		$openprint::log->warn("No gsm in Fold->RunSpeed from $caller line $line");
 	} # end if
 	if ( ! exists $$self{runspeed_cache}{$gsm} ) {
 		$$self{runspeed_cache}{$gsm} = $self->Specification( $gsm );
@@ -221,8 +238,16 @@ sub RunSpeed {
 } # end sub RunSpeed
 
 sub runspeed {
+	if ( $_[0]{runspeed} ) {
+		return $_[0]{runspeed};
+	} else {
+	if ( ! $_[1] ) {
+		my ( $caller, undef, $line ) = caller;
+		$openprint::log->warn("No gsm in Fold->runspeed from $caller line $line");
+	} # end if
 	my $RunSpeed = $_[0]->RunSpeed($_[1]);
 	return $RunSpeed ? $$RunSpeed{'runspeed'} : undef;
+	} # end if
 } # end sub runspeed
 
 sub Imposition {

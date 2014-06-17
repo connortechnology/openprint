@@ -11,7 +11,7 @@ require sql;
 
 use Memoize;
 memoize('fits');
-memoize('specification');
+#memoize('Specification');
 
 use vars qw( $debug $log $dbh $table $serial %fields %find_fields %transforms %defaults $cache_field );
 *log = \$openprint::log;
@@ -22,6 +22,7 @@ $cache_field = 'strid';
 sub cache_field {
     return $cache_field;
 }
+my %Specification_cache;
 
 $debug = 0;
 %fields = (
@@ -52,8 +53,9 @@ $debug = 0;
 	deleted				=>	'deleted',
 );
 %find_fields = (
-	'Specifications' => '(SELECT strValue FROM tbl_Equipment_Specifications WHERE lngEquipmentIndex=tbl_Equipment.Id AND strName=? LIMIT 1)',
-	'category'		=>	'(SELECT name FROM Equipment_Categories WHERE id=ANY(category_id))',
+	Specifications => '(SELECT strValue FROM tbl_Equipment_Specifications WHERE lngEquipmentIndex=tbl_Equipment.Id AND strName=? LIMIT 1)',
+	category		=>	'(SELECT name FROM Equipment_Categories WHERE id=ANY(category_id))',
+	servicetype		=>	'(SELECT name FROM service_types WHERE id = ANY(servicetype_id))',
 );
 %transforms = (
 );
@@ -222,6 +224,22 @@ $openprint::log->debug("Fold for $$params{pages} " . $F->to_string() );
 			$openprint::log->debug("Wanted imposition: $$params{'imposition'}, have $$Fold{'min_imposition'} x $$Fold{'max_imposition'}") if $debug;
 			next;
 		} # end if
+		if ( defined $$Fold{'min_imposition_columns'} and $$params{'columns'} and ($$Fold{'min_imposition_columns'} > $$params{'columns'}) ) {
+			$openprint::log->debug("Wanted imposition columns: $$params{'columns'}, have $$Fold{'min_imposition_columns'} x $$Fold{'max_imposition_columns'}") if $debug;
+			next;
+		} # end if
+		if ( defined $$Fold{'max_imposition_columns'} and $$params{columns} and ($$Fold{'max_imposition_columns'} < $$params{'imposition'}) ) {
+			$openprint::log->debug("Wanted imposition: $$params{columns}, have $$Fold{'min_imposition_columns'} x $$Fold{'max_imposition_columns'}") if $debug;
+			next;
+		} # end if
+		if ( defined $$Fold{'min_imposition_rows'} and $$params{rows} and ($$Fold{min_imposition_rows} > $$params{rows}) ) {
+			$openprint::log->debug("Wanted imposition columns: $$params{rows}, have $$Fold{'min_imposition_rows'} x $$Fold{'max_imposition_rows'}") if $debug;
+			next;
+		} # end if
+		if ( defined $$Fold{'max_imposition_rows'} and $$params{rows} and ($$Fold{'max_imposition_rows'} < $$params{rows}) ) {
+			$openprint::log->debug("Wanted imposition: $$params{rows}, have $$Fold{'min_imposition_rows'} x $$Fold{'max_imposition_rows'}") if $debug;
+			next;
+		} # end if
 		if ( $$Fold{'spine_direction'} and $$params{'spine_direction'} and ($$Fold{'spine_direction'} ne $$params{'spine_direction'} ) ) {
 			$openprint::log->debug("Wanted spinedirection: $$params{'spine_direction'}, have $$Fold{'spine_direction'}") if $debug;
 			next;
@@ -250,7 +268,7 @@ $openprint::log->debug("Didn't find runspeed for $$params{gsm}gsm(" . openprint:
 
 sub Specifications {
 	my $self = shift;
-	return openprint::EquipmentSpecification->find( 'equipment_id'=>$$self{'id'}, 'order'=>'strname, dblmin NULLS FIRST', @_ );
+	return openprint::EquipmentSpecification->find( equipment_id=>$$self{id}, order=>'strname, dblmin NULLS FIRST', @_ );
 } # end sub Specifications
 
 sub specification {
@@ -258,29 +276,35 @@ sub specification {
 	if ( ! $Specification ) {
 		return;
 	} # end if
-	return $$Specification{'value'};
+	return $$Specification{value};
 } # end sub specification
 
 sub Specification {
-	my ( $self, $name, $range, $debug ) = @_;
+	my ( $self, $name, $range, $s_debug ) = @_;
+
+	if ( $Specification_cache{$$self{id}.$name.$range} ) {
+		return $Specification_cache{$$self{id}.$name.$range};
+	} # end if
 
 	if ( ! $$self{Specifications} ) {
 		return if ! $$self{id};
 		foreach ( openprint::EquipmentSpecification->find( equipment_id=>$$self{id}, order=>'dblmin NULLS FIRST,dblmax NULLS FIRST' ) ) {
-			push @{$$self{Specifications}{$_->name()}}, $_;
+			push @{$$self{Specifications}{$$_{name}}}, $_;
 		} # end foreach
+		if ( ! $$self{Specifications} ) {
+			$$self{Specifications} = {};
+			$openprint::log->debug("Equipment::Specification No specfications for " . $self->to_string() ) if $s_debug;
+			return;
+		} # end if
 	} # end if
 
-	if ( ! $$self{Specifications} ) {
-		$openprint::log->debug("Equipment::Specification No specfications for " . $self->to_string() ) if $debug;
-		return;
-	} # end if
 	if ( ! $$self{Specifications}{$name} ) {
-		$openprint::log->warn("No specfications for ($name) " . $self->name() ) if $debug;
+		$openprint::log->warn("No specfications for ($name) " . $self->name() ) if $s_debug;
 		return;
 	} # end if
-
-	return misc::find_entry( $range, $$self{Specifications}{$name}, $debug );
+	my $Spec = misc::find_entry( $range, $$self{Specifications}{$name}, $s_debug );
+	$Specification_cache{$$self{id}.$name.$range} = $Spec;
+	return $Spec;
 } # end sub specification
 
 sub copy {

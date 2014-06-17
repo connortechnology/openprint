@@ -153,13 +153,10 @@ if ( 0 and $inotify and $inotify->watch( $source_path, IN_CREATE ) ) {
 							} # end if
 						} # end foreach sig
 						if ( ! $found ) {
-							my $ac = sql::start_transaction( $dbh );
-							$dbh->do( 'LOCK TABLE tbl_Service_Specifications IN SHARE ROW EXCLUSIVE MODE' ) or $log->error( $dbh->errstr() );
-							my ($print_service_index) = openprint::print_project::insert_service( $log, $dbh, $Project->id(), 'Signature' );
-							openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $print_service_index, 'txtSignatureType', 'Interior Pages' );
-							openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $print_service_index, 'txtServiceDescription', 'Interior Pages' );
-							openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $print_service_index, 'SignatureIndex', $sig );
-							sql::end_transaction( $dbh, $ac );
+							$Project->add_signature( $sig, 'uncalculated', {  
+									txtSignatureType => 'Interior Pages',
+									txtServiceDescription	=> 'Interior Pages',
+									} );
 						} # end if
 					} # end foreach Project
 					my $PPF = new openprint::CIP3_PPF();
@@ -182,5 +179,3 @@ if ( 0 and $inotify and $inotify->watch( $source_path, IN_CREATE ) ) {
 } # end if inotify
 1;
 __END__
-
-

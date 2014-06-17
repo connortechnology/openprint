@@ -62,26 +62,52 @@ sub calc {
 	my $ServiceType = $Project->ServiceType( $service_index );
 	my $status = 'calculated';
 	my $printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
-
-	$$specs{'txtItemsPerPackage'} = int($$specs{'txtItemsPerPackage'});
-	if ( ! $$specs{'txtItemsPerPackage'} ) {	# a zero value is still calculated, just with a zero price.d
-		if ( $ServiceType->name() eq 'Bundling' ) {
-			$$specs{'alert'} .= 'Please enter the # of items in each bundle';
-		} elsif ( $ServiceType->name() eq 'ShrinkWrap' ) {
-			$$specs{'alert'} .= 'Please enter the # of items in each wrap';
-		} else {
-			$$specs{'alert'} .= 'Please enter the # of items in each ' . $ServiceType->name();
+	if ( ! ( $$printing_specs{txtFinalWidth} and $$printing_specs{txtFinalHeight} ) ) {
+		my @sigs = $Project->signatures();
+		if ( ! @sigs ) {
+			$$specs{alert} .= 'There are no signatures... cannot determine size.<br/>';
+			return $$specs{'Status'} = 'uncalculated';
 		} # end if
-        return $$specs{'Status'} = 'uncalculated';
+		foreach my $sig_id ( @sigs ) {
+			$printing_specs = openprint::service::get_specs_ref( $Project, $sigs[0] );
+			last if $$printing_specs{txtFinalWidth} and $$printing_specs{txtFinalHeight};
+		} # end foreach
 	} # end if
-	if ( ! $$specs{'rdbCardboardBacking'} ) {
-        $$specs{'alert'} = 'Please select whether you need cardboard backing.';
-        return $$specs{'Status'} = 'uncalculated';
+	if ( ! ( $$printing_specs{txtFinalWidth} and $$printing_specs{txtFinalHeight} ) ) {
+		$openprint::log->error('Unable to determine dimensions.<br/>');
+		$$specs{alert} .= 'Unable to determine dimensions.<br/>';
+		return $$specs{Status} = 'uncalculated';
+	} # end if
+
+	$$specs{txtItemsPerPackage} = int($$specs{txtItemsPerPackage});
+	if ( ! $$specs{txtItemsPerPackage} ) {	# a zero value is still calculated, just with a zero price.d
+		if ( $ServiceType->name() eq 'Bundling' ) {
+			$$specs{alert} .= 'Please enter the # of items in each bundle';
+		} elsif ( $ServiceType->name() eq 'ShrinkWrap' ) {
+			$$specs{alert} .= 'Please enter the # of items in each wrap';
+		} else {
+			$$specs{alert} .= 'Please enter the # of items in each ' . $ServiceType->name();
+		} # end if
+        return $$specs{Status} = 'uncalculated';
+	} # end if
+	if ( ! $$specs{rdbCardboardBacking} ) {
+        $$specs{alert} = 'Please select whether you need cardboard backing.';
+        return $$specs{Status} = 'uncalculated';
     } # end if
 
 	$$specs{'bands_per_package'} =~ s/[^\d\.]//g;
 	my $makeReady = openprint::service::get_price( $ServiceType->name().'MakeReady', undef, undef );
 	my $minCharge = openprint::service::get_price( $ServiceType->name().'Minimum', undef, undef );
+	if ( ! $minCharge ) {
+		$log->error("No minimum chargem let's do debug $$specs{ServiceType} " . $ServiceType->to_string() );
+		my $Service = openprint::Service->find_one( name=>$ServiceType->name().'Minimum' );
+		if ( $Service ) {
+			$log->error( "Service: " . $Service->to_string() );
+		} else {
+			$log->error("No ServiceMinimum ");
+		} # end if
+	}
+		
 
 	foreach my $qty_index ( $Project->quantity_indexes() ) {
 
@@ -102,12 +128,12 @@ $openprint::log->debug("Per package due to versions: $qty / $$sig_specs{Versions
 				} # end if
 			} else {
 				# No versions?
-			$openprint::log->debug("No versions");
+				$openprint::log->debug("No versions");
 			} # end if
 		} else {
 			$openprint::log->debug("No signatnures");
 		} # end if
-		my $package_qty = $$specs{'txtItemsPerPackage'} ? ceil( $qty/$$specs{'txtItemsPerPackage'}) : 0;
+		my $package_qty = $$specs{txtItemsPerPackage} ? ceil( $qty/$$specs{txtItemsPerPackage} ) : 0;
 
 		$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Minimum Charge: $%.2f<br/>', $minCharge );
 		$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Makeready: $%.2f<br/>', $makeReady );
@@ -224,9 +250,23 @@ sub save {
 	my $services = $Project->services();
 
 	if ( ($$param{'AccurateCount'} eq 'Y' ) and ! $$services{'Counting'} ) {
-		openprint::print_project::insert_service( $openprint::log, $openprint::dbh, $project_index, 'Counting' );
+		$Project->add_service( 'Counting' );
 	} # end if
 } # end sub save
 
+sub has_overrides {
+    my ( $Project, $service_id, $specs, $qty_index ) = @_;
+    $specs = openprint::service::get_specs_ref( $Project, $service_id ) if ! $specs;
+
+    my @v;
+    if ( $qty_index ) {
+            push @v, map { $$specs{$_.$qty_index} ? $_ : () } (
+					'OverridePrice',
+                    );
+    } # end if
+
+    return @v;
+
+} # end sub has_overrides
 1;
 __END__

@@ -1,5 +1,5 @@
 <? echo (
-	use constant DEBUG => 1;
+	use constant DEBUG => 0;
 	my %specs;
 	$specs{'form'} = $param{'form'};
 	$specs{'signature_id'} = $param{'signature_id'};
@@ -16,20 +16,23 @@
 	push @user_types, ('A','E') if $session{'user_type'} eq 'A';
 
 	my %find = (
-		user_type	=>	\@user_types,
-		( $$ProjectType{'id'}?(
+		'user_type null or in' => \@user_types,
+		( $$ProjectType{id}?(
 							   'project_type_id any'	=>	$ProjectType->id(),
 							  ):(
 							   'width is null' => 0,
 							   )),
-		( exists $param{'Supplied'} ? ( 'supplied is null or ='			=>	$param{'Supplied'} ) : () ),
+		( exists $param{Supplied} ? ( 'supplied is null or ='			=>	$param{Supplied} ) : () ),
 		);
-	$param{selected} =~ s/^ddmStock//;
+	$param{selected} =~ s/^ddmStock(\w+)$param{signature_id}/$1/;
 	my $selected_index = sets::index( $param{selected}, @options );
+	$selected_index = 0 if $selected_index < 0;  # not found
 
 # initially, load all stocks available as per projectype, supplied, and size.
-if ( 0 ) {
+#if ( $selected_index ) {
 	# I think this is remarked out so that if we get no stocks, we can back up a bit.  Might be better to just reload
+	# This was remarked out because if we return all teh data from the resulting stocks, we will overwrite the selected ddm as well, leaving no options.
+	# We need to just not do that farther down.
 	foreach my $option ( @options ) {
 		next if ( $option eq $options[0] and $param{'selected'} eq 'rdbSuppliedStock' );
 		if ( $param{$option} ) {
@@ -37,12 +40,13 @@ if ( 0 ) {
 		} # end if
 		last if $option eq $param{'selected'};
 	} # end foreach option
-}
+#}
 
 	my @Stocks = openprint::Paper->find( %find );
 
 	# Find the index of the selected option
-	my $option_index = 0;
+	my $option_index = $selected_index;
+$log->debug("Selected index $selected_index");
 
 if ( 0 ) {
 	if ( $param{'selected'} ne 'rdbSuppliedStock' ) {
@@ -61,7 +65,7 @@ if ( 0 ) {
 		# i should only be 0 when selected is rdbSupplied
 		# So if selected is Finish, $i will be 2?
 		if ( $i and $param{$options[$i-1]} ) {
-$log->debug(" filtering by $options[$i-1] ");
+#$log->debug(" filtering by $options[$i-1] ");
 			for ( my $stock_index = 0; $stock_index < @Stocks; $stock_index += 1 ) {
 				# This ensure that the stock matches the previous option.  
 				my ( $value ) = $Stocks[$stock_index]->get($lc_options[$i-1]);
@@ -79,7 +83,7 @@ $log->debug(" filtering by $options[$i-1] ");
 		} # end if $i and $param{$options[$i-1]} 
 
 		if ( ! @Stocks ) {
-$log->warn("No stocks, adding them back for $i $options[$i-1]");
+#$log->warn("No stocks, adding them back for $i $options[$i-1]");
 			# If we have removed all stocks, then drop the filter, so we get some results.
 
 			# Tetll mem again, why we do this?
@@ -91,6 +95,7 @@ $log->warn("No stocks, adding them back for $i $options[$i-1]");
 			}
 		} # end if
 
+		next if $options[$i] eq $param{selected};
 		@{$specs{$options[$i]}} = ();
 		my %data = map { $_->get(lc($options[$i]), lc($options[$i]).'_id' ) } @Stocks;
 		if ( $options[$i] =~ /Size/ ) {

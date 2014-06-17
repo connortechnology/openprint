@@ -25,6 +25,7 @@ $debug = 0;
 	'updated_on'	=>	'updated_on',
 	'lastseen_on'	=>	'lastseen_on',
 	'other'			=>	'other',
+	'monitor'		=>	'monitor',
 );
 
 %transforms = (

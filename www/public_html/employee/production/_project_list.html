@@ -1,4 +1,5 @@
 <? eval (
+	$$variable{Projects} = [];
 	if ( $param{'StartDocket'} and $param{'EndDocket'}) {
 		$$variable{Projects} = [ openprint::Project->find(
 			'docket <='	=> $param{EndDocket},
@@ -20,7 +21,8 @@
 		} # end if
 	} elsif ( $param{OrderID} ) {
 		my $Order = openprint::Order->find_one( id => $param{OrderID} );
-		push $$variable{Projects} = [ $Order->Projects() ] if $Order;
+		$$variable{Projects} = [ $Order->Projects() ] if $Order;
+		
 	} else {
 		my %filters = (
 				( $session{'/employee/production/projects.html?ddmPress'} ? (	'used_press_name in'	=> $session{'/employee/production/projects.html?ddmPress'} ) : () ),
@@ -67,7 +69,7 @@
 						<td class="docket"><a href="/employee/project/view.html?project_id=%1$d">%2$d</a>&nbsp;</td>
 						<td class="Company"><a href="/employee/project/view.html?project_id=%1$d">%3$s</a>&nbsp;</td>
 						<td class="reference"><a href="/employee/project/view.html?project_id=%1$d">%4$s</a>&nbsp;</td>
-			`, $Project->id(), $Project->docket(), $Project->Company()->name(), ssi::htmlize($Project->reference()),
+			`, $Project->id(), $Project->docket(), $Project->Company()->name(), $Project->reference(),
  );
 
 				if ( ! $param{'ddmEmployee'} ) {

@@ -25,25 +25,21 @@ $version = "2.1.0";
 function check_session ()
 {
    session_start ();
-   if (!session_is_registered ("sessid"))
-   {
+   if (! $_SESSION['username'] ) {
       header ("Location: login.php");
       exit;
    }
-   $SESSID_USERNAME = $_SESSION['sessid']['username'];
-   return $SESSID_USERNAME;
+   return $_SESSION['username'];
 }
 
 function check_user_session ()
 {
    session_start ();
-   if (!session_is_registered ("userid"))
-   {
+   if (!$_SESSION['username']) {
       header ("Location: login.php");
       exit;
    }
-   $USERID_USERNAME = $_SESSION['userid']['username'];
-   return $USERID_USERNAME;
+   return $_SESSION['username'];
 }
 
 

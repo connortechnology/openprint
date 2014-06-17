@@ -5,7 +5,7 @@ use openprint ();
 use strict;
 use vars qw( $debug $table $serial %fields %defaults %transforms );
 
-$debug = 0;
+$debug = 1;
 $table = 'invoice_interests';
 $serial = 'invoice_interests_id_seq';
 

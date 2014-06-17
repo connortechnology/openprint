@@ -6,17 +6,17 @@
 			my $html;
 			foreach my $colour ( 'Cyan','Magenta','Yellow','Black' ) {
 				$html .= sprintf('<span id="%1$sSpotColourSideOne%2$s" class="SpotColour %1$s">', $colour, $$variable{Signature} );
-				$html .= sprintf(q`<input type="checkbox" id="chk%1$sSideOne%2$s" name="chk%1$sSideOne%2$s" value="%1$s" onclick="if ( this.checked ) { $('%1$sSpotSideOneCoverages%2$s').show() } else { $('%1$sSpotSideOneCoverages%2$s').hide() } calc(this.form.name);" %3$s />`, $colour, $$variable{'Signature'}, checked( $$variable{'chk'.$colour.'SideOne'.$$variable{'Signature'}} eq $colour ) );
-				$html .= sprintf('<label for="chk%1$sSideOne%2$s">', $colour, $$variable{'Signature'} ) . writeTip($colour) . '</label>';
+				$html .= sprintf(q`<input type="checkbox" id="chk%1$sSideOne%2$s" name="chk%1$sSideOne%2$s" value="%1$s" onclick="if ( this.checked ) { $('%1$sSpotSideOneCoverages%2$s').show() } else { $('%1$sSpotSideOneCoverages%2$s').hide() } calc(this.form.name);" %3$s />`, $colour, $$variable{Signature}, checked( $$variable{'chk'.$colour.'SideOne'.$$variable{Signature}} eq $colour ) );
+				$html .= sprintf('<label for="chk%1$sSideOne%2$s">', $colour, $$variable{Signature} ) . writeTip($colour) . '</label>';
 				$html .= sprintf('<span id="%1$sSpotSideOneCoverages%2$s"%4$s>%5$s%</span>', 
 					$colour, $$variable{Signature}, 
-					$$variable{$colour.'SpotSideOneCoverage'.$$variable{'Signature'}}, 
-					( $$variable{'chk'.$colour.'SideOne'.$$variable{'Signature'}} eq $colour ? '' : ' style="display:none;"'),
+					$$variable{$colour.'SpotSideOneCoverage'.$$variable{Signature}}, 
+					( $$variable{'chk'.$colour.'SideOne'.$$variable{Signature}} eq $colour ? '' : ' style="display:none;"'),
 					input(
 						type	=>	'cardinal',
-						id		=>	$colour.'SpotSideOneCoverage'.$$variable{'Signature'},
-						name	=>	$colour.'SpotSideOneCoverage'.$$variable{'Signature'},
-						value	=>	$$variable{$colour.'SpotSideOneCoverage'.$$variable{'Signature'}},
+						id		=>	$colour.'SpotSideOneCoverage'.$$variable{Signature},
+						name	=>	$colour.'SpotSideOneCoverage'.$$variable{Signature},
+						value	=>	$$variable{$colour.'SpotSideOneCoverage'.$$variable{Signature}},
 						onkeyup	=>	'calc(this.form.name);',
 						),
 					);
@@ -28,7 +28,7 @@
 		</div>
 		<div class="ProcessColours">
 		<input type="checkbox" id="chkProcessColourSideOne<?Signature?>" name="chkProcessColourSideOne<?Signature?>" <? echo ( checked( $$variable{'chkProcessColourSideOne'.$$variable{'Signature'}} eq 'ProcessColour' ); ) ?> value="ProcessColour" onclick="if ( this.checked ) { $('ProcessCoveragesSideOne<?Signature?>').show() } else { $('ProcessCoveragesSideOne<?Signature?>').hide() } calc(this.form.name);" /> 
-		<label class="radio" for="chkProcessColourSideOne<?Signature?>"><? echo ( ssi::writeTip( '4 Colour Process' ); ) ?></label>
+		<label class="radio" for="chkProcessColourSideOne<?Signature?>"><? echo ( writeTip( '4 Colour Process' ); ) ?></label>
 		<span id="ProcessCoveragesSideOne<?Signature?>" class="Coverages" <? echo ( 'style="display:none;"' if $$variable{'chkProcessColourSideOne'.$$variable{'Signature'}} ne 'ProcessColour' ) ?> >
 <? echo (
 	my $html = '';
@@ -50,7 +50,7 @@
 			<? echo ( 
 				my $html;
 				$$variable{'Side'} = 'SideOne';
-				my $fragment = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/includes/main/proj/_additional_colour_coating.html' );
+				my $fragment = slurp_content( '/includes/main/proj/_additional_colour_coating.html' );
 				$$variable{index} = 0;
 				foreach my $index ( 1 .. $config{'SpecialColourQuantity'} ) {
 					next if ! $$variable{"chkColourCoating$index$$variable{Side}$$variable{Signature}"};
@@ -83,7 +83,7 @@ same as front?
 					$colour, $$variable{'Signature'}, 
 					$$variable{'CyanSpotSideTwoCoverage'.$$variable{'Signature'}}, 
 					( $$variable{'chk'.$colour.'SideTwo'.$$variable{'Signature'}} eq $colour ? '':' style="display:none;"'),
-					ssi::input(
+					input(
 						type	=>	'cardinal',
 						id		=>	$colour.'SpotSideTwoCoverage'.$$variable{'Signature'},
 						name	=>	$colour.'SpotSideTwoCoverage'.$$variable{'Signature'},
@@ -104,7 +104,7 @@ same as front?
 	my $html = '';
 	foreach my $colour ( 'Cyan','Magenta','Yellow','Black' ) {
 		$html .= sprintf(q`<label for="%1$sSideTwoCoverage%3$s">%2$s</label>`, $colour, ($colour eq 'Black' ? 'K' : substr($colour,0,1) ), $$variable{'Signature'} );
-		$html .= ssi::input( 'type'=>'cardinal', 
+		$html .= input( type=>'cardinal', 
 			id		=>	$colour.'SideTwoCoverage'.$$variable{'Signature'},
 			name	=>	$colour.'SideTwoCoverage'.$$variable{'Signature'},
 			value	=>	$$variable{$colour.'SideTwoCoverage'.$$variable{'Signature'}}, 
@@ -119,7 +119,7 @@ same as front?
 		<div id="SpecialColoursSideTwo<?Signature?>" <? if ( $$variable{'PrintingType'} eq 'Digital' ) ?>style="display:none"<? endif ( $$variable{'PrintingType'} eq 'Digital' ) ?>>
 			<? echo ( 
 				my $html;
-				my $fragment = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/includes/main/proj/_additional_colour_coating.html' );
+				my $fragment = slurp_content( '/includes/main/proj/_additional_colour_coating.html' );
 				$$variable{'Side'} = 'SideTwo';
 				$$variable{index} = 0;
 				foreach my $index ( 1 .. $config{'SpecialColourQuantity'} ) {

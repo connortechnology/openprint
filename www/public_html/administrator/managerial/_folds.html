@@ -1,0 +1,50 @@
+<? eval (
+    my %filters = (
+		order	=>	'lower(name)',
+		( $session{'/administrator/managerial/folds.html?equipment_id'} ? ( equipment_id => $session{'/administrator/managerial/folds.html?equipment_id'} ) : () ),
+		( $session{'/administrator/managerial/folds.html?type'} ? ( type => $session{'/administrator/managerial/folds.html?type'} ) : () ),
+		);
+
+    $$variable{Folds} = [ openprint::Fold->find( %filters ) ];
+) ?>	
+<? if ( @{$$variable{Folds}} ) ?>
+	<table class="List">
+		<tr> 
+			<th class="Equipment">Equipment</th>
+			<th class="Fold">Name</th>
+			<th class="Type">Type</th>
+			<th class="Pages">Pages</th>
+			<th class="Folds">Folds</th>
+			<th class="Angles">Angles</th>
+			<th class="MinImposition">Min Imposition</th>
+			<th class="MaxImposition">Max Imposition</th>
+		</tr>
+<? echo (
+	my $html;
+	my $rowclass;
+	foreach my $Fold ( @{$$variable{Folds}} ) {
+		$html .= sprintf(q`
+<tr%1$s onclick="popup_window('%2$s');"> 
+	<td class="Equipment">%3$s</td>
+	<td class="Fold">%4$s</td>
+	<td class="Type">%5$s</td>
+	<td class="Pages">%6$s</td>
+	<td class="Folds">%7$s</td>
+	<td class="Angles">%8$s</td>
+	<td class="MinImposition">%9$sx%10$s=%11$s</td>
+	<td class="MaxImposition">%12$sx%13$s=%14$s</td>
+</tr>
+`, $rowclass, '/administrator/equipment/_fold.html?fold_id='.$$Fold{id}, $Fold->Equipment()->name(), $$Fold{name}, 
+$Fold->type(), $Fold->pages(), $Fold->folds(), $Fold->angles(),
+$Fold->min_columns(), $Fold->min_rows(), $Fold->min_imposition(),
+$Fold->max_columns(), $Fold->max_rows(), $Fold->max_imposition(),
+);
+
+		$rowclass = $rowclass ? '' : ' class="colRow"';
+	} # end foreach
+	return $html;
+) ?>
+</table>
+<? else ( @{$$variable{Folds}} ) ?>
+There were no results matching your criteria.<br>
+<? endif ( @{$$variable{Folds}} ) ?>

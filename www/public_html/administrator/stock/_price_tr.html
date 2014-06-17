@@ -1,10 +1,10 @@
 <? echo (
-	return $variable{'error'} if $variable{'error'};
-	return if ! $$variable{'Price'}->id();
+	return $variable{error} if $variable{error};
+	return if ! $$variable{Price}->id();
 	my $html = '';
 	my $Pricelist = $$variable{Pricelist};
-	my $service = $$variable{'service'};
-	my $Price = $$variable{'Price'};
+	my $service = $$variable{service};
+	my $Price = $$variable{Price};
 
 	if ( $Price->service() ne 'Material' ) {
 		$html .= sprintf(q`<tr id="paperprice-%1$d" class="%9$s">
@@ -22,7 +22,7 @@
 			input( type=>'float', name=>'cost-'.$Price->id(), value=>$Price->cost(), onkeyup=>'calc_price(this);check_price(this);' ),
 			input( type=>'float', name=>'markup-'.$Price->id(), value=>$Price->markup(), onkeyup=>'calc_price(this);check_price(this);' ),
 			input( type=>'float', name=>'price-'.$Price->id(), value=>$Price->price(), onkeyup=>'calc_price(this);check_price(this);' ),
-			make_drop_down( [ map { $_->id(), $_->name() } @{$$variable{'Equipment'}} ], $Price->equipment_id() ),
+			make_drop_down( [ map { $_->id(), $_->name() } @{$$variable{Equipment}} ], $Price->equipment_id() ),
 			$Price->service(),
 		);
 	} else {
@@ -55,7 +55,7 @@
 				input( type=>'float', name=>'price-'.$Price->id(), value=>$Price->price(), onkeyup=>'calc_price(this);check_price(this);' ),
 			);
 
-		if ( $$variable{'Stock'}->type() ne 'Roll' ) {
+		if ( $$variable{Stock}->type() ne 'Roll' ) {
 			$html .= '<td class="Price">'.
 				input( type=>'float', name=>'priceperm-'.$Price->id(), value=>$Price->priceperm(), onkeyup=>'calc_price(this);check_price(this);' ).
 				'</td>';
@@ -77,7 +77,7 @@
 			$Price->id(), 
 			( $Price->discountable() eq 'Y' ? ( 'checked="checked"', '' ) : ( '', 'checked="checked"' ) ),
 			join('', 
-				button( 'x'.$Price->id(), { onclick=>qq`delPrice( $$Price{id} );`, text=>'X' }),
+				button( 'x'.$Price->id(), { onclick=>qq`delPrice( $$Price{id} );`, text=>'X' } ),
 				button( 'c'.$Price->id(), { onclick=>qq`copyPrice( $$Price{id} );`, text=>'C' } ),
 				),
 		);

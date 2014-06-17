@@ -1,6 +1,6 @@
 <? echo (
 	my $debug = 0;
-	my $Project = new openprint::Project( $param{'ProjectIndex'} );
+	my $Project = new openprint::Project( $param{ProjectIndex} );
 
 	if ( $param{'action'} eq 'add_service' ) {
 		foreach my $service_name ( ref $param{'service_name'} eq 'ARRAY' ? @{$param{'service_name'}} : $param{'service_name'} ) {
@@ -18,11 +18,12 @@
 	} # end if
 
 	if ( ! $param{'ServiceType'} ) {
+$log->warn("No servicetype in params in calc");
 		return;
 	} # end if
 
 
-	my $module = 'openprint::Estimating::'.$param{'ServiceType'};
+	my $module = 'openprint::Estimating::'.$param{ServiceType};
 	eval "require $module";
 	$log->error("Error requiring $module: $@") if $@;
 
@@ -47,7 +48,7 @@
 		$log->debug("no outputs, so using keys @vars") if $debug;
 	} # end if
 	if ( my $function = $module->can( 'no_outputs' ) ) {
-		my @no_outputs = sort $function->( @param{'ProjectIndex','ServiceIndex'}, \%specs );
+		my @no_outputs = sort $function->( @param{'ProjectIndex','ServiceIndex'}, \%specs , \%param );
 		$log->debug("$module ::no_outputs: @no_outputs)") if $debug;
 		@vars = sets::exclude( \@no_outputs, \@vars );
 
@@ -56,19 +57,28 @@ $log->debug("Deleting key $key in no_outputs ") if $debug;
 			delete $specs{$key};
 		} # end foreach
 	} # end if
+		foreach my $key ( 'method', 'ContinueProject' ) {
+$log->debug("Deleting key $key in standard no_outputs ") if $debug;
+			delete $specs{$key};
+		} # end foreach
 	if ( $debug ) {
 		foreach my $key ( sort keys %specs ) {
 			$log->debug("$key => $specs{$key}");
 		} # end foreach
 	} # end if debug
-    foreach my $key ( @vars ) {
-        if ( (exists $specs{$key}) and ($specs{$key} eq $param{$key}) ) {
-$log->debug("Deleting $key cuz it's the same $key") if $debug;
+    foreach my $key ( keys %specs ) {
+		if ( (exists $param{$key}) and ($specs{$key} eq $param{$key}) ) {
+			$log->debug("Deleting $key cuz it's the same $key = $param{$key}") if $debug;
 			delete $specs{$key};
+		} elsif ( ref $specs{$key} ) {
+		   $log->error("Got a non-scalar in specs! $key => $specs{$key}");
+            delete $specs{$key};
+		} elsif ( $debug ) {
+			$log->debug("Outputting $key") if $debug;
         } # end if
     } # end foreach
 
-	$param{'callback'} = 'cbFillResults' if ! $param{'callback'};
+	$param{callback} = 'cbFillResults' if ! $param{callback};
 	my $json = JSON->new;
-	return 'var results = new Hash(' . $json->encode( \%specs ) . ");\n$param{'callback'}(results);";
+	return 'var results = new Hash(' . $json->encode( \%specs ) . ");\n$param{callback}(results);";
 ) ?>

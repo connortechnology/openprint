@@ -18,7 +18,12 @@
 		);
 		my @label_options = ('PMS');
 		
-		my @Services = openprint::Service->find( category=>'Coating', order=>'lower(name)');
+		my @Services;
+		if ( $$variable{Coatings} ) {
+			@Services = @{$$variable{Coatings}};
+		} else {
+			@Services = @{$$variable{Coatings}} = openprint::Service->find( category=>'Coating', order=>'lower(name)' );
+		} # end if
 		foreach my $S ( @Services ) {
 			if ( $S->name() =~ /Aqueous/i ) {
 				push @label_options, 'AQ';

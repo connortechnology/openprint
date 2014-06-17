@@ -8,7 +8,7 @@
 			my $sig_specs = openprint::service::get_specs_ref( $$variable{'Project'}, $ss_id );
 			$$variable{'SignatureIndex'} = $$sig_specs{'SignatureIndex'};
 			$$variable{'ServiceIndex'} = $$variable{'service_id'} = $ss_id;
-			$html .= ssi::include('/employee/proj/prin/_signature.html');
+			$html .= include('/employee/proj/prin/_signature.html');
 		} # end foreach
 		return $html;
 	) ?>

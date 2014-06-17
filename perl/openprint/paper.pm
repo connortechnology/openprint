@@ -7,7 +7,7 @@ use strict;
 require sql;
 require openprint::Equipment;
 require openprint::Paper;
-require openprint::StockName;
+require openprint::StockBrand;
 
 sub get_paper {
 	my ( $r, $log, $dbh, $variable, $selected, $id, %specs ) = @_;
@@ -15,7 +15,7 @@ sub get_paper {
 	my @types = ('Sheet');
 	push @types, 'Roll';
 
-	openprint::StockName->find();
+	openprint::StockBrand->find();
 	openprint::StockFinish->find();
 	openprint::StockColour->find();
 	openprint::StockWeight->find();

@@ -13,22 +13,22 @@
 		<select name="equipment_id" onchange="new Ajax.Updater( 'other_servicetypes', '_bump_job_popup_servicetypes.html', { parameters: { equipment_id: this.getValue(), schedule_id: this.form.schedule_id.value} } );">
 			<option value="">Unknown</option>
 			<? echo ( 
-				return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Equipment->find(
+				make_drop_down( openprint::Equipment->dropdown(
 						'useinscheduling'	=>	1,
-						'servicetype_id any'	=>	$$variable{'Job'}->servicetype_id(),
-						'order'				=>	'lower(strname)'
-					) ], $$variable{'Job'}->equipment_id() );
+						( $$variable{Job}->servicetype_id() ? ( 'servicetype_id any'	=>	$$variable{'Job'}->servicetype_id() ) : () ),
+						order				=>	'lower(strid)'
+					), $$variable{'Job'}->equipment_id() );
 			) ?>
 		</select>
 	</p>
 	<br/>
-	<div id="other_servicetypes"><? echo ( include('_bump_job_popup_servicetypes.html'); ) ?></div>
+	<div id="other_servicetypes"><?include('_bump_job_popup_servicetypes.html')?></div>
 	<br/>
 	<p class="buttons">
 	<? echo ( 
 		my $html = '';
-		$html .= ssi::button( 'BumpOk', { onclick=>"new Ajax.Request( '_li_change.json', {parameters: \$('bump_form').serialize(), evalScripts: true } );popupWin.destroy();", href=>'', text=>'Ok' } );
-		$html .= ssi::button( 'BumpCancel', { onclick=>"popupWin.destroy();", href=>'', text=>'Cancel' } );
+		$html .= button( 'BumpOk', { onclick=>"new Ajax.Request( '_li_change.json', {parameters: \$('bump_form').serialize(), evalScripts: true } );popupWin.destroy();", text=>'Ok' } );
+		$html .= button( 'BumpCancel', { onclick=>"popupWin.destroy();", text=>'Cancel' } );
 		return $html;
 	) ?>
 	</p>

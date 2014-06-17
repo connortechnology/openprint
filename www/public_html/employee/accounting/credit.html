@@ -1,4 +1,4 @@
-<? echo ( include('/includes/error_reporting.html'); ) ?>
+<?include(/includes/error_reporting.html)?>
 <script type="text/javascript">
 function set_credit(src_id,dst_id) {
 	var form = $('f1');
@@ -45,13 +45,13 @@ function swap_credit(src_id,dst_id) {
 	<fieldset class="filters"><legend>Select Company</legend>
 		<ul>
 		<li>
-			<label>Account #:</label>
+			<label>Account #</label>
 			<input type="text" name="txtSearchAccountNum" />
 			<? echo ( button( 'Go1', { onclick=>"f1.btnFunction.value='Go';fmCheck(f1);", text=>'Go' } ); ) ?>
 		</li>
 		<li>
-			<label>Customer:&nbsp;</label>
-            <input type="text" onkeyup="filterDDM(this, f1.ddmCustomer);" size="4"/>
+			<label>Customer</label>
+            <input type="text" onkeyup="filterDDM(this, f1.ddmCustomer);" class="filter"/>
 			<select name="ddmCustomer" onchange="if(this.options[this.selectedIndex].value != '') { f1.btnFunction.value='Go'; f1.submit();}">
             <option value="">Select a Customer</option>
 			<? echo ( openprint::Company::get_dropdown( $param{'ddmCustomer'} ); ) ?>
@@ -68,6 +68,7 @@ button('Export',{ onclick=>q`var form = $('f1');form.btnFunction.value='Export';
 		</p>
 	</fieldset>
 <? if ( $$variable{'CompanyIndex'} ) ?>
+	<?include(/account/_sales_view.html)?>
 	<fieldset><?include(/includes/_credit_edit.html)?>
 	<p class="buttons">
 		<? echo ( join('',
@@ -81,7 +82,7 @@ button('Export',{ onclick=>q`var form = $('f1');form.btnFunction.value='Export';
 	$$variable{UnpaidOrders} = [ openprint::Order->find(
 		company_id	=> $param{'ddmCustomer'},
 		'status not in'	=>	[ 'Cancelled','Deleted','Incomplete' ],
-		'owing >'	=>	0,
+		'owing null_or_>'	=>	0,
 		order		=> $openprint::Order::fields{'created_on'},
 		) ];
 
@@ -104,7 +105,9 @@ button('Export',{ onclick=>q`var form = $('f1');form.btnFunction.value='Export';
 			my $balance_total = 0;
 			my $total_total = 0;
 			my $html;
-			foreach my $Order ( @{$$variable{'UnpaidOrders'}} ) {
+
+			my $ac = sql::start_transaction( $dbh );
+			foreach my $Order ( @{$$variable{UnpaidOrders}} ) {
 				$html .= sprintf( '
 				<tr%1$s> 
 					<td class="order_id"><a href="/employee/accounting/details.html?order_id=%2$d">%2$d</a></td>
@@ -118,24 +121,25 @@ button('Export',{ onclick=>q`var form = $('f1');form.btnFunction.value='Export';
 					<td class="checkbox"><input type="checkbox" name="PAID" value="%2$d"/></td>
 				</tr>
 				', $rowclass, $Order->id(), $Order->docket(), 
-					Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $Order->created_on() ) ),
-					$Order->invoice_id(), $Order->po(), 
+					format_date( $Order->created_on() ),
+					join('<br/>', map { $_->Invoice()->link_to() } $Order->Invoices() ), $Order->po(), 
 					openprint::Currency::format($Order->total()), openprint::Currency::format( $Order->owing() ),
 					$Order->status(),
 					);
 					$rowclass = $rowclass ? '' : ' class="colRow"';
 					$balance_total += $Order->owing();
 					$total_total += $Order->total();
-				} # end foreach Order
-				$html .= sprintf('<tr class="totals">
-					<td colspan="2">%d Orders</td>
-					<td colspan="4">Totals</td>
-					<td class="Price">%s</td>
-					<td class="Price">%s</td>
-					<td>%s</td>
-				</tr>', scalar @{$$variable{'UnpaidOrders'}}, openprint::Currency::format( $total_total ), openprint::Currency::format( $balance_total ),
-				button( 'Pay', { onclick=>"f1.btnFunction.value='Pay';f1.submit();" } ),
-				);
+			} # end foreach Order
+			sql::end_transaction( $dbh, $ac );
+			$html .= sprintf('<tr class="totals">
+				<td colspan="2">%d Orders</td>
+				<td colspan="4">Totals</td>
+				<td class="Price">%s</td>
+				<td class="Price">%s</td>
+				<td>%s</td>
+			</tr>', scalar @{$$variable{'UnpaidOrders'}}, openprint::Currency::format( $total_total ), openprint::Currency::format( $balance_total ),
+			button( 'Pay', { onclick=>"f1.btnFunction.value='Pay';f1.submit();" } ),
+			);
 			return $html;
 		) ?>
 	</table>
@@ -149,7 +153,7 @@ There are no unpaid orders.
 <? echo ( my $html;
 	foreach my $Log ( openprint::Log->find('action_id'=>[104,105], object_id=>$$variable{CompanyIndex}, order=>'id desc','limit'=>5 ) ) {
 		$html .= sprintf(q`<tr><td class="DateTime">%s</td><td class="User">%s</td><td class="note">%s</td></tr>`,
-			 Date::Format::time2str($config{DateTimeFormat}, Date::Parse::str2time( $Log->date_time() ) ),
+			 format_datetime( $Log->date_time() ),
 			$Log->User()->name(), $Log->note(),
 		);
 	} # end foreach Log

@@ -23,7 +23,7 @@ require openprint::Estimating::Printing;
 require openprint::service;
 require sets;
 
-use constant DEBUG => 0;
+use constant DEBUG => 1;
 
 my %variables = (
 	'ddmProjectSize'=>['save','output'],
@@ -41,13 +41,33 @@ my %variables = (
 	'ProjectIndex'=>[], 'ServiceIndex'=>[], 'ServiceType'=>[], 'NewBook'=>[],
 	'remaining_pages'=>['output'],'next_group_id'=>['output'],'groups'=>['output'],
 	spine	=>	 ['save'],
+
 );
 
 sub variables {
+	my ( $project_id, $service_id, $specs, $incoming_specs ) = @_;
 	my @v;
 	foreach my $k ( keys %variables ) {
 		push @v, $k if sets::isin( 'save', $variables{$k} );
 	} # end foreach;
+	my @Groups = sql::execute( undef, undef, 'SELECT DISTINCT strvalue FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strName=?', $project_id, 'Group' );
+	foreach my $group_id ( @Groups ) {
+		push @v, 'ddmRunStyle-'.$group_id;
+		push @v, 'ddmPress-'.$group_id;
+		push @v, 'PrintingType-'.$group_id;
+		push @v, 'StockType-'.$group_id;
+
+		push @v, 'Pages'.$group_id;
+		push @v, 'OverrideGroupPageQuantity'.$group_id;
+		push @v, 'GroupPageQuantity'.$group_id;
+		push @v, 'txtSignatureType'.$group_id;
+		push @v, 'txtFinalHeight'.$group_id;
+		push @v, 'txtFinalWidth'.$group_id;
+		push @v, 'txtHeight'.$group_id;
+		push @v, 'txtWidth'.$group_id;
+		push @v, 'txtPlateChangeQuantity-'.$group_id;
+		push @v, 'PageQuantity-'.$group_id;
+	} # end foreach
 	return @v;
 } # end sub variables
 
@@ -86,7 +106,7 @@ sub outputs {
 sub groups {
 	my ( $project_index, $specs ) = @_;
 	my @Groups = sql::execute( undef, undef, 'SELECT DISTINCT strvalue FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strName=?', $project_index, 'Group' );
-	if ( $$specs{'rdbCover'} eq 'Different' ) {
+	if ( $$specs{rdbCover} eq 'Different' ) {
         if ( ! sets::isin( 1, \@Groups ) ) {
             push @Groups, 1;
         } # end if
@@ -107,16 +127,20 @@ sub calc {
 
 	$$specs{Status} = 'calculated';
 
-	if ( $$specs{'rdbTemplateType'} eq 'PerfectBound' and $$specs{'rdbCover'} ne 'Different' ) {
-		$variables{'rdbCover'} = [sets::union('output', @{$variables{'rdbCover'}})];
-		$$specs{'rdbCover'} = 'Different';
-	} elsif ( $$specs{'rdbTemplateType'} eq 'SpinePaste' and $$specs{'rdbCover'} ne 'Self' ) {
-		$variables{'rdbCover'} = [sets::union('output', @{$variables{'rdbCover'}})];
-		$$specs{'rdbCover'} = 'Self';
+	if ( ! $$specs{rdbTemplateType} ) {
+		$$specs{alert} .= 'Please select how this project will be bound.<br/>';
+	} # end if
+
+	if ( $$specs{rdbTemplateType} eq 'PerfectBound' and $$specs{rdbCover} ne 'Different' ) {
+		$variables{rdbCover} = [sets::union('output', @{$variables{rdbCover}})];
+		$$specs{rdbCover} = 'Different';
+	} elsif ( $$specs{rdbTemplateType} eq 'SpinePaste' and $$specs{rdbCover} ne 'Self' ) {
+		$variables{rdbCover} = [sets::union('output', @{$variables{rdbCover}})];
+		$$specs{rdbCover} = 'Self';
 	} # end if
 
 	my @Groups = sql::execute( undef, undef, 'SELECT DISTINCT strvalue FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strName=?', $project_index, 'Group' );
-	if ( $$specs{'rdbCover'} eq 'Different' ) {
+	if ( $$specs{rdbCover} eq 'Different' ) {
 		if ( ! sets::isin( 1, \@Groups ) ) {
 			push @Groups, 1;
 		} # end if
@@ -129,14 +153,22 @@ sub calc {
 	if ( $$specs{txtGateFoldedSpreadQuantity} and ! sets::isin( 3, \@Groups ) ) {
 		push @Groups, 3;
 	} # end if
+	@Groups = sort { $a <=> $b } @Groups;
 
 	my $Project = new openprint::Project( $project_index );
+	if ( ! $$Project{id} ) {
+		$$specs{alert} = 'Project not found.';
+		return $$specs{Status} = 'uncalculated';
+	} # end if
 
-	my $remaining_pages = $$specs{'txtTotalPageQuantity'};
+	my $remaining_pages = $$specs{txtTotalPageQuantity};
 	my %override_pages;
 	foreach my $group_id ( @Groups ) {
 		if ( exists $$specs{'OverrideGroupPageQuantity'.$group_id} ) {
-			$override_pages{$group_id} = $$specs{'GroupPageQuantity'.$group_id} if $$specs{'OverrideGroupPageQuantity'.$group_id} eq 'Y';
+			if ( $$specs{'OverrideGroupPageQuantity'.$group_id} eq 'Y' ) {
+				$override_pages{$group_id} = $$specs{'GroupPageQuantity'.$group_id};
+				$log->debug("Setting override pages for group $group_id to " . $$specs{'GroupPageQuantity'.$group_id} );
+			} # end if
 		} elsif ( $$specs{'txtSignatureType'.$group_id} eq 'PerfReplyCard' ) {
 			$override_pages{$group_id} = 2;
 			if ( $$specs{'txtServiceDescription'.$group_id} eq 'Interior Pages' ) {
@@ -146,7 +178,7 @@ sub calc {
 			if ( ! $group_id ) {
 				$log->warn("NO GROUP ID $group_id");
 			}
-			my @g_signatures = $Project->signatures({'Group'=>$group_id});
+			my @g_signatures = $Project->signatures({Group=>$group_id});
 			if ( ! @g_signatures ) {
 
 				# calc shouldn't really alter the project.
@@ -157,29 +189,33 @@ sub calc {
 						( $group_id == 3 ? ( 'txtSignatureType'=>'Gate Folded Pages', 'txtServiceDescription'=>'Gate Folded Pages' ) : () ),
 						} );
 			} # end if
-			foreach my $sig_id ( $Project->signatures({'Group'=>$group_id}) ) {
-				my $sig_specs = openprint::service::get_specs_ref( $Project, $sig_id );
-				$override_pages{$group_id} = $$sig_specs{'GroupPageQuantity'} if $$sig_specs{'OverrideGroupPageQuantity'} eq 'Y';
-				last if $override_pages{$group_id};
-			} # end foreach signature
+			#foreach my $sig_id ( $Project->signatures({'Group'=>$group_id}) ) {
+				#my $sig_specs = openprint::service::get_specs_ref( $Project, $sig_id );
+				#$override_pages{$group_id} = $$sig_specs{GroupPageQuantity} if $$sig_specs{OverrideGroupPageQuantity} eq 'Y';
+				#last if $override_pages{$group_id};
+			#} # end foreach signature
 		} # end if
 		$remaining_pages -= $override_pages{$group_id};
+		if ( $$specs{"PageQuantity-$group_id"} and ( $$specs{"PageQuantity-$group_id"} > $$specs{'GroupPageQuantity'.$group_id} ) ) {
+			$$specs{alert} .= "You have specified to print more pages per signature than are required for group $group_id.<br/>";
+		} # end if
 	} # end foreach group
 
 	# if there is a cover, then force it to be non-zero
-	if ( (! $override_pages{1} ) and ($$specs{'OverrideGroupPageQuantity1'} ne 'Y' ) and ($$specs{'rdbCover'} eq 'Different') ) {
+	if ( (! $override_pages{1} ) and ($$specs{OverrideGroupPageQuantity1} ne 'Y' ) and ($$specs{rdbCover} eq 'Different') ) {
 if ( 0 ) {
 		# Ithink the idea here is to give the cover either 4 or 6 pages... depending on the total # of pages.
-		my $new_remaining = int(($remaining_pages-4) / $$specs{'txtSpreadSize'} ) * $$specs{'txtSpreadSize'};
+		my $new_remaining = int(($remaining_pages-4) / $$specs{txtSpreadSize} ) * $$specs{txtSpreadSize};
 		$override_pages{1} = $remaining_pages - $new_remaining;
 		$remaining_pages = $new_remaining;
 } else {
 		$override_pages{1} = 4;
 		
-		$remaining_pages -= $override_pages{1} = 4;
-$openprint::log->error("FIXM E");
+		$remaining_pages -= $override_pages{1};
+$openprint::log->warn("FIXM E");
 } # end if
 	} # end if
+	$remaining_pages = 0 if $remaining_pages < 0;
 
 	foreach my $group_id ( @Groups ) {
 		$openprint::log->debug("Group: $group_id, remaining: $remaining_pages, override: $override_pages{$group_id}") if DEBUG;
@@ -196,13 +232,13 @@ $openprint::log->error("FIXM E");
 			$variables{'GroupPageQuantity'.$group_id} = [sets::union('output', @{$variables{'GroupPageQuantity'.$group_id}})];
 		} # end if
 		if ( $$specs{'chkOverrideDimensions'.$group_id} ne 'Y' ) {
-			$$specs{'txtFinalWidth'.$group_id} = $$specs{'txtFinalWidth'};
-			$$specs{'txtFinalHeight'.$group_id} = $$specs{'txtFinalHeight'};
+			$$specs{'txtFinalWidth'.$group_id} = $$specs{txtFinalWidth};
+			$$specs{'txtFinalHeight'.$group_id} = $$specs{txtFinalHeight};
 		} # end if
 		$openprint::log->debug("Group: $group_id, remaining: $remaining_pages, $override_pages{$group_id}") if DEBUG;
 	} # end foreach group_id
 
-	if ( $$specs{'remaining_pages'} = $remaining_pages ) {
+	if ( $$specs{remaining_pages} = $remaining_pages ) {
 		my $max_group = 0;
 		foreach my $g_id ( @Groups ) {
 			if ( $g_id > $max_group ) {
@@ -212,11 +248,12 @@ $openprint::log->error("FIXM E");
 		$max_group += 1;
 		push @Groups, $max_group;
 		$$specs{'GroupPageQuantity'.$max_group} = $remaining_pages;
+		$$specs{'GroupPageQuantity'.$max_group} = '' if $$specs{'GroupPageQuantity'.$max_group} < 0;
 	} # end if
-	$$specs{'groups'} = join(',', @Groups );
+	$$specs{groups} = join(',', @Groups );
 
-	if ( ! ( $$specs{'txtFinalWidth'} or $$specs{'txtFinalHeight'} ) ) {
-		$$specs{'alert'} = 'Please select the dimensions.';
+	if ( ! ( $$specs{txtFinalWidth} or $$specs{txtFinalHeight} ) ) {
+		$$specs{alert} = 'Please select the dimensions.';
 		return $$specs{Status} = 'uncalculated';
 	} # end if
 	if ( ! $$specs{spine} ) {
@@ -224,40 +261,45 @@ $openprint::log->error("FIXM E");
 		$variables{spine} = ['save','output'];
 	} # end if
 	if ( $$specs{spine} eq 'width' ) {
-		@$specs{'txtWidth','txtHeight'} = ( $$specs{'txtFinalWidth'}, 2*$$specs{'txtFinalHeight'} );
+		@$specs{'txtWidth','txtHeight'} = ( $$specs{txtFinalWidth}, 2*$$specs{txtFinalHeight} );
 	} else {
-		@$specs{'txtWidth','txtHeight'} = ( 2*$$specs{'txtFinalWidth'},$$specs{'txtFinalHeight'} );
+		@$specs{'txtWidth','txtHeight'} = ( 2*$$specs{txtFinalWidth},$$specs{txtFinalHeight} );
 	} # end if
 
-	if ( ! $$specs{'txtTotalPageQuantity'} ) {
+	if ( ! $$specs{txtTotalPageQuantity} ) {
 		$$specs{alert} = 'Please enter the # of pages';
-		return $$specs{'Status'} = 'uncalculated';
-	} elsif ( $$specs{'txtTotalPageQuantity'} > 500 ) {
-		$$specs{alert} .= 'The maximum # of pages is 500.<br/>';
+		return $$specs{Status} = 'uncalculated';
+	} elsif ( $$specs{txtTotalPageQuantity} > 2000 ) {
+		$$specs{alert} .= 'The maximum # of pages is 2000.<br/>';
 		$$specs{Status} = 'uncalculated';
 	} # end if
 
-	if ( ! $$specs{'rdbCover'} ) {
-		$$specs{alert} = 'Please select the cover type.';
-		return $$specs{'Status'} = 'uncalculated';
+	if ( $$specs{remaining_pages} ) {
+		$$specs{alert} .= 'There are ' . $$specs{remaining_pages} . ' unspecified pages.';
+		$$specs{Status} = 'uncalculated';
 	} # end if
 
-	if ( $$specs{'rdbCover'} eq 'Different') {
-		if ( sets::isin($$specs{'rdbTemplateType1'}, ['2Panel1Pocket','2Panel2Pocket','TriFoldDoublePocket'] ) ) {
-			if ( $$specs{'rdbPocketSize1'} and ( $$specs{'rdbPocketSize1'} ne 'Other' ) ) {
-				$$specs{'PocketSize1'} = $$specs{'rdbPocketSize1'};	
+	if ( ! $$specs{rdbCover} ) {
+		$$specs{alert} = 'Please select the cover type.';
+		return $$specs{Status} = 'uncalculated';
+	} # end if
+
+	if ( $$specs{rdbCover} eq 'Different') {
+		if ( sets::isin($$specs{rdbTemplateType1}, ['2Panel1Pocket','2Panel2Pocket','TriFoldDoublePocket'] ) ) {
+			if ( $$specs{rdbPocketSize1} and ( $$specs{rdbPocketSize1} ne 'Other' ) ) {
+				$$specs{PocketSize1} = $$specs{rdbPocketSize1};	
 			} else {
-				delete $$specs{'PocketSize1'};
+				delete $$specs{PocketSize1};
 			} # end if
-			if ( ! $$specs{'rdbPanels1'} ) {
-				$$specs{'alert'} .= 'Please select the number of panels.';
-				return $$specs{'Status'} = 'uncalculated';
-			} elsif ( ! $$specs{'rdbPocketSize1'} ) {
-				$$specs{'alert'} .= 'Please select the size of the pockets.';
-				return $$specs{'Status'} = 'uncalculated';
-			} elsif ( ! ( $$specs{'chkPocketCenter1'} or $$specs{'chkPocketLeft1'} or $$specs{'chkPocketRight1'} ) ) {
-				$$specs{'alert'} .= 'Please select where you would like the pockets.';
-				return $$specs{'Status'} = 'uncalculated';
+			if ( ! $$specs{rdbPanels1} ) {
+				$$specs{alert} .= 'Please select the number of panels.';
+				return $$specs{Status} = 'uncalculated';
+			} elsif ( ! $$specs{rdbPocketSize1} ) {
+				$$specs{alert} .= 'Please select the size of the pockets.';
+				return $$specs{Status} = 'uncalculated';
+			} elsif ( ! ( $$specs{chkPocketCenter1} or $$specs{chkPocketLeft1} or $$specs{chkPocketRight1} ) ) {
+				$$specs{alert} .= 'Please select where you would like the pockets.';
+				return $$specs{Status} = 'uncalculated';
 			} # end if
 		} # end if
 	} # end if
@@ -296,11 +338,12 @@ $openprint::log->debug("********************************************************
 	for ( my $i = 0; $i < @signatures; $i += 1 ) {
 		my $sig_specs = openprint::service::get_specs_ref( $Project, $signatures[$i] );
 
-		if ( $$printing_specs{'PrintingType'} ) {
+		# This has been deprecated
+		if ( $$printing_specs{PrintingType} ) {
 			if ( 
-				 ( $Project->quantity1() and $$sig_specs{'PrintingType1'} and ( $$sig_specs{'PrintingType1'} ne $$printing_specs{'PrintingType'} ) )
-				 or ( $Project->quantity2() and $$sig_specs{'PrintingType2'} and ( $$sig_specs{'PrintingType2'} ne $$printing_specs{'PrintingType'} ) )
-					or ( $Project->quantity3() and $$sig_specs{'PrintingType3'} and ( $$sig_specs{'PrintingType3'} ne $$printing_specs{'PrintingType'}  ) )
+				 ( $Project->quantity1() and $$sig_specs{PrintingType1} and ( $$sig_specs{PrintingType1} ne $$printing_specs{PrintingType} ) )
+				 or ( $Project->quantity2() and $$sig_specs{PrintingType2} and ( $$sig_specs{PrintingType2} ne $$printing_specs{PrintingType} ) )
+					or ( $Project->quantity3() and $$sig_specs{PrintingType3} and ( $$sig_specs{PrintingType3} ne $$printing_specs{PrintingType}  ) )
 ) {
 # delete any similar signs
 				#$log->debug("Getting rid of extra sigs");
@@ -308,7 +351,7 @@ $openprint::log->debug("********************************************************
 					my $specs2 = openprint::service::get_specs_ref( $Project, $signatures[$j] );
 					if ( openprint::Estimating::Printing::compare_signatures( $Project, $sig_specs, $specs2 ) ) {
 #$openprint::log->warn('Deleting due to incorrect printing type');
-						openprint::print_project::delete_service( $$Project{'id'}, $signatures[$j] );
+						openprint::print_project::delete_service( $$Project{id}, $signatures[$j] );
 						splice @signatures, $j, 1;
 						$j-=1;
 					} # end if
@@ -317,24 +360,23 @@ $openprint::log->debug("********************************************************
 		} # end if
 	} # end for
 
-	my @groups = sort( sql::execute(undef, undef, 'SELECT DISTINCT strvalue FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strname=?', $$Project{'id'}, 'Group' ) );
+	my @groups = sort( sql::execute(undef, undef, 'SELECT DISTINCT strvalue FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strname=?', $$Project{id}, 'Group' ) );
 	@groups = ( undef ) if ! @groups;
 
-	my @printing_types = sql::execute( undef, undef, q{SELECT DISTINCT strValue FROM tbl_Equipment_Specifications WHERE strName='Printing Type'} );
 	foreach my $group ( @groups ) {
 		my @sigs = sort( $Project->signatures( $group ? { Group=>$group } : () ) );
 		$openprint::log->debug( "Sigs in group $group : @sigs " );
 		next if ! @sigs;
 		my $ss_id = shift @sigs;
 		$openprint::log->debug("Calcing $ss_id");
-		my $sig_specs = openprint::service::internal_calc( $openprint::log, $openprint::dbh, \%openprint::variable, $$Project{'id'}, $ss_id, 'Printing' );
-		$openprint::log->debug("Done Calcing $ss_id $$sig_specs{'Status'}");
+		my $sig_specs = openprint::service::internal_calc( $openprint::log, $openprint::dbh, \%openprint::variable, $$Project{id}, $ss_id, 'Printing' );
+		$openprint::log->debug("Done Calcing $ss_id $$sig_specs{Status}");
 		
-		if ( $$sig_specs{'Status'} eq 'calculated' ) {
-			$status = $$sig_specs{'Status'};
+		if ( $$sig_specs{Status} eq 'calculated' ) {
+			$status = $$sig_specs{Status};
 # Successfully calculated the first sig
 # In sig_specs should be an array of Impositions to apply to other signatures, so let's add/delete/apply
-			$openprint::log->debug("MultiPage::calculate_signatures $status $$sig_specs{'Additional Impositions1'} $$sig_specs{'Additional Impositions2'} $$sig_specs{'Additional Impositions3'} ");
+			$openprint::log->debug("MultiPage::calculate_signatures $status $$sig_specs{'Additional Impositions1'} $$sig_specs{'Additional Impositions2'} $$sig_specs{'Additional Impositions3'} ") if DEBUG;
 
 			# Remove Impos for other groups
 			foreach my $qty_index ( $Project->quantity_indexes() ) {
@@ -342,6 +384,7 @@ $openprint::log->debug("********************************************************
                     my $Imposition = $$sig_specs{'Additional Impositions'.$qty_index}[0];
 					my $specs = $Imposition->specs();
 					if ( $$specs{Group} and ( $$specs{Group} != $group ) ) {
+$openprint::log->debug("Removing impo cuz wrong group") if DEBUG;
 						shift @{$$sig_specs{'Additional Impositions'.$qty_index}};
 					} # end if
 				} # end if
@@ -351,8 +394,6 @@ $openprint::log->debug("********************************************************
 					( $$sig_specs{'Additional Impositions1'} and @{$$sig_specs{'Additional Impositions1'}} ) or
 					( $$sig_specs{'Additional Impositions2'} and @{$$sig_specs{'Additional Impositions2'}} ) or
 					( $$sig_specs{'Additional Impositions3'} and @{$$sig_specs{'Additional Impositions3'}} ) ) {
-
-
 
 				if ( ! @sigs ) {
 
@@ -395,9 +436,9 @@ $openprint::log->debug("********************************************************
 						$specs{'hdnNetSheetCount'.$qty_index} = 0;
 						$specs{'StockQuantity'.$qty_index} = 0;
 						if ( $specs{'OverridePrice'.$qty_index} ne 'Y' ) {
-							$specs{'txtPrice'.$qty_index} = sprintf($openprint::config{'ProjectMoneyFormat'}, 0 );
+							$specs{'txtPrice'.$qty_index} = sprintf($openprint::config{ProjectMoneyFormat}, 0 );
 						} # end if
-						$specs{'txtUnitPrice'.$qty_index} = sprintf($openprint::config{'UnitPriceFormat'}, 0 );
+						$specs{'txtUnitPrice'.$qty_index} = sprintf($openprint::config{UnitPriceFormat}, 0 );
 			#$$openprint::log->debug("no additional impos for qty $qty_index");
 						$Imposition = new openprint::Imposition();
 						$$Imposition{paper} = new openprint::Paper();
@@ -411,12 +452,13 @@ $openprint::log->debug("********************************************************
 					} # end if
 					
 					my $price = $$Imposition{price};
-$Imposition->display("Saving for $qty_index");
-					$Imposition->save( \%specs, $qty_index );
-					openprint::Estimating::Printing::save_price( $Project, \%specs, $price, $Imposition, $qty_index );
-#foreach my $k ( keys %{$price} ) {
-	#$openprint::log->debug("Price: $k $$price{$k}");
-#}
+					$Imposition->display("Saving for $qty_index");
+					if ( $specs{"chkOverrideImposition$qty_index"} eq 'Y' and $specs{"txtImposition$qty_index"} != $$Imposition{imposition} ) {
+						$status = 'uncalculated';
+					} else {
+						$Imposition->save( \%specs, $qty_index );
+						openprint::Estimating::Printing::save_price( $Project, \%specs, $price, $Imposition, $qty_index );
+					}
 					$specs{'hdnBreakdown'.$qty_index} = openprint::Estimating::Printing::breakdown( $price, \%specs );
 					
 				} # end foreach qty_index
@@ -427,23 +469,24 @@ $Imposition->display("Saving for $qty_index");
 				
 				#openprint::Estimating::Printing::calc_from_imposition( $Project, $a_ss_id, \%specs, $sig_specs );
 				my $ac = sql::start_transaction( $openprint::dbh );
-				sql::update( undef, undef, 'tbl_Project_Contents', ['lngProjectIndex=? AND lngServiceIndex=?', $$Project{'id'}, $a_ss_id], 'strStatus', $status );
+				sql::update( undef, undef, 'tbl_Project_Contents', ['lngProjectIndex=? AND lngServiceIndex=?', $$Project{id}, $a_ss_id], 'strStatus', $status );
 
-				foreach my $key ( sort { $a cmp $b } ( openprint::Estimating::Printing::variables( $$Project{'id'}, $a_ss_id, $new_sig_specs, \%specs ) ) ) {
-					openprint::service::insert_service_spec( $openprint::log, undef, $$Project{'id'}, $a_ss_id, $key, $specs{$key} );
+				foreach my $key ( sort { $a cmp $b } ( openprint::Estimating::Printing::variables( $$Project{id}, $a_ss_id, $new_sig_specs, \%specs ) ) ) {
+					openprint::service::insert_service_spec( $openprint::log, undef, $$Project{id}, $a_ss_id, $key, $specs{$key} );
 				} # end foreach
 				sql::end_transaction( $openprint::dbh, $ac );
 
 			} # end while Additional Imposition
 
 # Clean up any leftovers XXX Could be written better, such a small gain though
-			$openprint::log->debug("Remaining sigs " . @sigs);
+			$openprint::log->debug("Remaining sigs " . @sigs . " @sigs");
 			while ( @sigs and ( my $ss_id = shift @sigs ) ) {
-				openprint::print_project::delete_service( $$Project{id}, $ss_id );
+				my $Service = $Project->Service( $ss_id );
+				$Service->delete();
 				@signatures = sets::exclude( [ $ss_id ], \@signatures );
 			} # end while sigs
 		} else {
-			$openprint::log->warn("uncomplete status: $$sig_specs{'Status'} alert: $$sig_specs{'alert'}");
+			$openprint::log->warn("uncomplete status: $$sig_specs{Status} alert: $$sig_specs{alert}");
 			return 'uncalculated';
 		} # end if
 	} # end foreach group
@@ -466,13 +509,13 @@ sub status {
 		return if ! $printing_specs;
 	} # end if
 
-    my $total_pages = $$printing_specs{'txtTotalPageQuantity'};
+    my $total_pages = $$printing_specs{txtTotalPageQuantity};
 	my %specified_pages;
 	my %needed_pages;
 	foreach my $ssid ( $Project->signatures() ) {
 		my $sig_specs = openprint::service::get_specs_ref( $Project, $ssid );
-		$specified_pages{$$sig_specs{'Group'}} += $$sig_specs{"PageQuantity$qty_index"};
-		$needed_pages{$$sig_specs{'Group'}} = $$sig_specs{'GroupPageQuantity'.$qty_index};
+		$specified_pages{$$sig_specs{Group}} += $$sig_specs{"PageQuantity$qty_index"};
+		$needed_pages{$$sig_specs{Group}} = $$sig_specs{GroupPageQuantity};
 	} # end foreach
 	my @Groups = sql::execute( undef, undef, 'SELECT DISTINCT strvalue FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strName=?', $project_index, 'Group' );
 	foreach my $Group ( @Groups ) {
@@ -498,7 +541,7 @@ sub save {
                         txtSignatureType		=> 'Cover Pages',
                         txtServiceDescription	=> 'Cover',
                         Group					=>  1,
-                        PrintingType			=> $$param{'PrintingType'},
+                        PrintingType			=> $$param{PrintingType},
                         txtSpreadSize			=>  4,
                         } );
         } # end if
@@ -519,12 +562,39 @@ sub save {
 #$openprint::log->debug("Spreadsize for sig $$sig_specs{SignatureIndex} orig: $new_specs{txtSpreadSize} new: $$sig_specs{txtSpreadSize}");
 		foreach my $v ( openprint::Estimating::Printing::variables() ) {
 			if ( $new_specs{$v} ne $$sig_specs{$v} ) {
-#$openprint::log->debug("Saving $v");
+$openprint::log->debug("Saving $v") if DEBUG;
 				openprint::service::insert_service_spec( $openprint::log, $openprint::dbh, $Project->id(), $ssid, $v, $new_specs{$v} );
+			} else {
+$openprint::log->debug("Not Saving $v") if DEBUG;
 			} # end if
 		} # end foreach v
 	}  # end foreach signature
 } # end sub save
+
+sub check {
+	my ( $Project, $Service, $qty_index ) = @_;
+
+	my $error;
+	my $specs = $Service->specs();
+
+	my $total_pages = $$specs{txtTotalPageQuantity};
+    my %specified_pages;
+    my %needed_pages;
+    foreach my $ssid ( $Project->signatures({ sort=>1}) ) {
+        my $sig_specs = openprint::service::get_specs_ref( $Project, $ssid );
+        $specified_pages{$$sig_specs{Group}} += $$sig_specs{"PageQuantity$qty_index"};
+        $needed_pages{$$sig_specs{Group}} = $$specs{'GroupPageQuantity'.$$sig_specs{Group}};
+    } # end foreach
+    foreach my $Group ( sort keys %needed_pages ) {
+        if ( $needed_pages{$Group} > $specified_pages{$Group} ) {
+            $error .= 'Group ' . $Group . ' ' . $$specs{'txtSignatureType'.$Group} . ' needs another ' . ( $needed_pages{$Group} - $specified_pages{$Group} ) . ' pages.<br/>';
+		} elsif ( $needed_pages{$Group} < $specified_pages{$Group} ) {
+            $error .= 'Group ' . $Group . ' ' . $$specs{'txtSignatureType'.$Group} . ' has ' . ( $specified_pages{$Group} - $needed_pages{$Group} ) . ' too many pages.<br/>';
+        } # end if
+    } # end foreach
+	openprint::service::insert_service_spec( $openprint::log, $openprint::dbh, $Project->id(), $Service->service_id(), 'alert', $error ) if $error;
+    return $error;
+} # end sub check
 
 1;
 __END__

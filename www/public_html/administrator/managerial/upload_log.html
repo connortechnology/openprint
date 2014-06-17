@@ -68,7 +68,7 @@
 					<td class="Size">%s / %s</td>
 					<td class="Status">%s</td></tr>',
 					$rowclass,
-					Date::Format::time2str( $config{'DateTimeFormat'}, Date::Parse::str2time($Upload->start()) ),
+					format_datetime( $Upload->start() ),
 					$company_name,
 					$Upload->user_id() ? $Upload->User()->name() : '',
 					join('<br/>', map { qq`<a href="/project_files/$company_name/$_">$_</a>` } @files ),

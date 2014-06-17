@@ -2,6 +2,9 @@ use strict;
 package openprint::User;
 our @ISA = qw( openprint::Object );
 
+require openprint::Object;
+require openprint::User_in_UserGroup;
+
 use openprint ();
 use vars qw( $log $dbh %config %variable %param $debug %fields %find_fields %transforms %defaults $table $serial $AUTOLOAD );
 *log = \$openprint::log;
@@ -59,6 +62,7 @@ $debug = 0;
 	'usergroup'		=>	'(SELECT name from usergroups WHERE id IN (SELECT usergroup_id FROM users_in_usergroups WHERE user_id=users.id))',
 	'last_online'	=>	'(SELECT MAX(date_time) FROM logs WHERE user_id=users.id)',
 	'profile_field'	=>	'(SELECT value FROM User_Profiles WHERE user_id=users.id AND field_id=?)',
+	'company_deleted'	=>	'(SELECT deleted FROM Companies WHERE Companies.id=company_id)',
 );
 
 %transforms = (
@@ -323,19 +327,26 @@ sub notifications {
 	
 	require openprint::User_Notification;
 	if ( $notifications_hash ) {
-		my %types = sql::execute( undef, undef, 'SELECT id, name FROM User_Notification_types' );
 		my $ac = sql::start_transaction( $dbh );
+		my %types = sql::execute( undef, undef, 'SELECT id, name FROM User_Notification_types' );
+		$dbh->do( 'LOCK TABLE User_Notifications IN ACCESS EXCLUSIVE MODE' );
 		sql::execute( undef, undef, 'DELETE FROM User_Notifications WHERE user_id=?', $$self{'id'} );
 		foreach my $k ( keys %types ) {
-			sql::insert( undef, undef, 'User_Notifications', { 'user_id'=>$$self{'id'},'type_id'=>$k, 'value'=>$$notifications_hash{$types{$k}} } ) if $$notifications_hash{$types{$k}};
+			sql::insert( undef, undef, 'User_Notifications', { user_id=>$$self{id},type_id=>$k, value=>$$notifications_hash{$types{$k}} } ) if $$notifications_hash{$types{$k}};
 		} # end foreach k
 		sql::end_transaction( $dbh, $ac );
-		$$self{'notifications'} = $notifications_hash;
-	} elsif ( ! exists $$self{'notifications'} ) {
-		%{$$self{'notifications'}} = sql::execute( undef, undef, 'SELECT (SELECT name FROM User_Notification_Types WHERE id=type_id),value FROM User_Notifications WHERE user_id=?', $$self{'id'} );
+		$$self{notifications} = $notifications_hash;
+	} elsif ( ! exists $$self{notifications} ) {
+		if ( ! $$self{id} ) {
+			$$self{notifications} = {};
+		} else {
+		%{$$self{notifications}} = sql::execute( undef, undef, 'SELECT (SELECT name FROM User_Notification_Types WHERE id=type_id),value FROM User_Notifications WHERE user_id=?', $$self{id} );
+		} # end if
+	} else {
+	$openprint::log->debug("Have notifications");
 	} # end if
 	
-	return $$self{'notifications'};
+	return $$self{notifications};
 } # end sub notifications
 
 sub notification {
@@ -358,7 +369,11 @@ sub po_limit {
 	my ( $self, $type_id, $new_value ) = @_;
 
 	if ( ! exists $$self{'po_limits'} ) {
-		%{$$self{'po_limits'}} = sql::execute( undef, undef, 'SELECT type_id, po_limit FROM User_PurchaseOrder_limits WHERE user_id=?', $$self{'id'} );
+		if ( $$self{id} ) {
+		%{$$self{po_limits}} = sql::execute( undef, undef, 'SELECT type_id, po_limit FROM User_PurchaseOrder_limits WHERE user_id=?', $$self{'id'} );
+		} else {
+			$$self{po_limits} = {};
+		} # end if
 	} # end if
 
 	if ( defined $new_value ) {
@@ -569,6 +584,14 @@ sub Location {
 		
 	return $_[0]{'Location'};
 } # end sub Location
+
+sub code {
+	return join('', substr( $_[0]{firstname}, 0, 1), substr( $_[0]{lastname},0,1) );
+} # end sub code
+
+sub usergroup_ids {
+	return map { $_->usergroup_id() } openprint::User_in_UserGroup->find(user_id=>$_[0]{id});
+} # end sub usergroup_ids
 
 1;
 __END__

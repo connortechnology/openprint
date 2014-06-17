@@ -11,15 +11,12 @@ use vars qw(%variable $log $dbh %config %session $debug $table $serial %fields %
 *config = \%openprint::config;
 *session = \%openprint::session;
 
-require sql;
-require ssi;
-require misc;
 require Date::Parse;
 require openprint::Equipment_Shift;
 require openprint::User;
 require openprint::ScheduledJob;
 
-$debug = 0;
+$debug = 1;
 
 $table = 'shifts';
 $serial = 'shifts_id_seq';
@@ -195,7 +192,7 @@ sub get_from_ul_id {
 		return if ! $Shift;
 	} else {
 		$Shift = new openprint::Shift();
-		$Shift->set({ 'equipment_id'  =>  $equipment_id, });
+		$Shift->set({ 'equipment_id'	=>	$equipment_id, });
 		$Shift->name( $shift_name );
 	} # end if Shift
 	return $Shift;
@@ -208,6 +205,7 @@ sub get_ul {
 	my $total_impressions;
 
 	my @Jobs = $Shift->Schedule();
+	openprint::Project->find(id=>[ map { $$_{project_id} } @Jobs ]) if @Jobs;
 	foreach my $Job ( @Jobs ) {
 		if ( $filters ) {
 			if ( $$filters{Status} ) {
@@ -271,9 +269,9 @@ sub Next {
 		$log->debug( 'Next: ' . $Next->to_string() );
 		if ( ! $Next ) {
 			my $ES = openprint::Equipment_Shift->find_one(
-					'equipment_id'	  =>  $$self{'equipment_id'},
-					'starttime_seconds >='   =>  $self->Shift()->Equipment_Shift()->endtime_seconds(),
-					'order'			 =>  'starttime_seconds',
+					'equipment_id'		=>	$$self{'equipment_id'},
+					'starttime_seconds >='	=>	$self->Shift()->Equipment_Shift()->endtime_seconds(),
+					'order'			 =>	'starttime_seconds',
 					);
 			$Next = $ES->emanantise( $self->endtime_seconds() );
 		} # end if
@@ -285,7 +283,7 @@ sub Next {
 sub delete {
 	my ( $self ) = @_;
 	if ( ( ! $self->Equipment()->smartscheduling() ) and $self->Schedule() ) {
-		return 'Cannot delete a shift with jobs in it.  Please move the jobs to another shift first.';	
+		return 'Cannot delete a shift with jobs in it.	Please move the jobs to another shift first.';	
 	} # end if
 	return $self->SUPER::delete();
 } # end sub delete
@@ -308,9 +306,9 @@ sub get_Shifts {
 
 	# Case #1 Shift before
 	if ( my $LastShift = openprint::Shift->find_one(
-			'equipment_id'      =>  $Equipment->id(),
-			'starttime <'       =>  $parser->format_datetime( $start_dt ),
-			'order'             =>  'starttime DESC',
+			equipment_id	=>	$Equipment->id(),
+			'starttime <'	=>	$parser->format_datetime( $start_dt ),
+			order			=>	'starttime DESC',
 			) ) {
 		my $last_time = $LastShift->starttime_seconds()+1;
 		while ( $last_time < $end_dt->epoch() ) {
@@ -319,9 +317,9 @@ sub get_Shifts {
 			push @Shifts, $Shift if $Shift->starttime_seconds() > $start_dt->epoch();
 		} # end while
 	} elsif ( my $NextShift = openprint::Shift->find_one(
-		   'equipment_id'      =>  $Equipment->id(),
-			'starttime >'       => $parser->format_datetime( $start_dt ),
-			'order'             =>  'starttime',
+			equipment_id	=>	$Equipment->id(),
+			'starttime >'	=> $parser->format_datetime( $start_dt ),
+			order			=>	'starttime',
 			) ) {
 		my $next_time = $NextShift->starttime_seconds();
 		while ( $NextShift->starttime_seconds() > $start_dt->epoch() ) {

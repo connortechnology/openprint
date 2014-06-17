@@ -1,36 +1,41 @@
 <div class="Overrides">
 <fieldset><legend>Overrides</legend>
-	<p>
+	<ul>
+	<li>
 		<label>Stock Format</label>
-		<input type="radio" id="StockTypeOverride<?Signature?>Auto" name="StockTypeOverride<?Signature?>" value="" <? echo ( ssi::checked( $$variable{'StockType'.$$variable{'Signature'}} eq '' ); ) ?> />
-		<label class="radio" for="StockTypeOverride<?Signature?>Auto">Auto</label>
-		<input type="radio" id="StockTypeOverride<?Signature?>Sheet" name="StockTypeOverride<?Signature?>" value="Sheet" <? echo ( ssi::checked( $$variable{'StockType'.$$variable{'Signature'}} eq 'Sheet' ); ) ?> />
-		<label class="radio" for="StockTypeOverride<?Signature?>Sheet">Sheet</label>
-		<input type="radio" id="StockTypeOverride<?Signature?>Roll" name="StockTypeOverride<?Signature?>" value="Roll" <? echo ( ssi::checked( $$variable{'StockType'.$$variable{'Signature'}} eq 'Roll' ); ) ?> />
-		<label class="radio" for="StockTypeOverride<?Signature?>Roll">Roll</label>
-	</p>
-	<p>
+		<? echo ( radio( 'StockType-'.$$variable{Signature}, [ '', 'Auto', 'Roll', 'Roll', 'Sheet','Sheet' ], $$variable{'StockType-'.$$variable{'Signature'}} ); ) ?>
+	</li>
+	<li>
 		<label>Runstyle</label>
-		<select name="ddmRunStyle<?Signature?>" size="1">
+		<select name="ddmRunStyle-<?Signature?>" size="1">
 			<option value="">Auto</option>
-			<? echo ( ssi::make_drop_down( $$variable{'RunStyleOptions'}, $$variable{"ddmRunStyle$$variable{Signature}"} ); ) ?>
+			<? echo ( make_drop_down( $$variable{'RunStyleOptions'}, $$variable{"ddmRunStyle-$$variable{Signature}"} ); ) ?>
 		</select>
-	</p>
-	<p>
+	</li>
+	<li>
 		<label>Press</label>
-		<select name="ddmPress<?Signature?>" size="1">
+		<select name="ddmPress-<?Signature?>" size="1">
 			<option value="">Auto</option>
-			<? echo ( ssi::make_drop_down( [ map { $_->strid(), $_->name() } openprint::Equipment->find('category any'=>'Printing','useinestimating'=>1, 'order'=>'lower(strname)') ], $$variable{"ddmPress$$variable{Signature}"} ); ) ?>
+			<? echo ( make_drop_down( [ map { $_->strid(), $_->name() } openprint::Equipment->find('category any'=>'Printing',useinestimating=>1, order=>'lower(strname)') ], $$variable{"ddmPress-$$variable{Signature}"} ); ) ?>
 		</select>
-	</p>
+	</li>
+	<li>
+		<label>Plate Changes</label>
+		<? echo ( input( type=>'cardinal', name=>'txtPlateChangeQuantity-'.$$variable{Signature}, value=>$$variable{'txtPlateChangeQuantity-'.$$variable{Signature}} ); ) ?>
+	</li>
+	<li>
+		<label>Page Quantity</label>
+		<? echo ( input( type=>'cardinal', name=>'PageQuantity-'.$$variable{Signature}, value=>$$variable{'PageQuantity-'.$$variable{Signature}}, onkeyup=>q`calc('f1');` ); ) ?>
+	</li>
 <? echo ( my $html;
 	my @PrintingTypes = sql::execute( undef, undef, q{SELECT DISTINCT strValue FROM tbl_Equipment_Specifications WHERE strName='Printing Type'} );
 	if ( @PrintingTypes > 1 ) {
-		$html .= '<p><label>Printing type</label>';
-		$html .= ssi::select( [ '', 'Auto', map { $_, $_ } @PrintingTypes ], $$variable{"PrintingType$$variable{Signature}"}, { name=>"PrintingType$$variable{Signature}", size=>1 } );
-		$html .= '</p>';
+		$html .= '<li><label>Printing type</label>';
+		$html .= ssi::select( [ '', 'Auto', map { $_, $_ } @PrintingTypes ], $$variable{"PrintingType-$$variable{Signature}"}, { name=>"PrintingType-$$variable{Signature}", size=>1 } );
+		$html .= '</li>';
 	} # end if
 	return $html;
 ) ?>
+	</ul>
 </fieldset>
 </div>

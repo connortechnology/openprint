@@ -15,18 +15,19 @@ $table = 'manifest_content_types';
 $serial = 'manifest_content_types_id_seq';
 
 %fields = (
-	'id'			=>	'id',
-	'cost'			=>	'cost',
-	'cost_units'	=>	'cost_units',
-	'docket'		=>	'docket',
-	'po_id'			=>	'po_id',
-	'po_content_id'	=>	'po_content_id',
-	'manifest_id'	=>	'manifest_id',
-	'paper_id'		=>	'paper_id',
+	id				=>	'id',
+	cost			=>	'cost',
+	cost_units		=>	'cost_units',
+	docket			=>	'docket',
+	po_id			=>	'po_id',
+	po_content_id	=>	'po_content_id',
+	manifest_id		=>	'manifest_id',
+	paper_id		=>	'paper_id',
 	supplier_invoice	=>	'supplier_invoice',
 	item_count			=>	'item_count',
 	type			=>	'type',
 	manufacturers_name	=>	'manufacturers_name',
+	condition_id	=>	'condition_id',
 );
 %find_fields = (
 	total_quantity	=>	'(SELECT SUM(quantity) FROM manifestcontents WHERE manifestcontents.manifest_id=manifest_content_types.manifest_id and type_id=manifest_content_types.id)',
@@ -52,6 +53,7 @@ $serial = 'manifest_content_types_id_seq';
 	type			=>	undef,
 	item_count		=>	undef,
 	manufacturers_name	=>	undef,
+	condition_id	=>	undef,
 );
 
 sub Paper {
@@ -69,7 +71,7 @@ sub PurchaseOrder {
 
 sub PurchaseOrder_Content {
 	if ( ! exists $_[0]{'PurchaseOrder_Content'} ) {
-require openprint::PurchaseOrder_Content;
+		require openprint::PurchaseOrder_Content;
 		if ( ! $_[0]{'po_content_id'} ) {
 			my $PO = new openprint::PurchaseOrder( $_[0]{'po_id'} );
 			my $Paper = $_[0]->Paper();
@@ -141,6 +143,32 @@ sub Contents {
 	return @{$$self{Contents}} if $$self{Contents};
 	return;
 } # end sub Contents
+
+sub condition_id {
+	if ( @_ > 1 ) {
+		$_[0]{condition_id} = $_[1];
+	} # en dif
+	if ( ! $_[0]{condition_id} ) {
+		require openprint::InventoryCondition;
+		my $New = openprint::InventoryCondition->find_one(name=>'new');
+		$_[0]{condition_id} = $New->id() if $New;
+	} # end if
+	return $_[0]{condition_id};
+} # end sub condition_id
+
+sub Condition {
+	require openprint::InventoryCondition;
+	return new openprint::InventoryCondition($_[0]{condition_id});
+} # end sub Condition
+
+sub Order {
+	if ( ( ! $_[0]{Order} ) and $_[0]{docket} ) {
+		$_[0]{Order} = openprint::Order->find_one( docket=>$_[0]{docket} );
+	} # end if
+	return $_[0]{Order} if $_[0]{Order};
+	return new openprint::Order();
+		
+} # end sub Order
 
 1;
 __END__

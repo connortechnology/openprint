@@ -28,15 +28,16 @@
 		camera_li.setStyle({width: size_array[0]+'px'});
 		var stream = $('stream_'+camera_id);
 		stream.setStyle({width: size_array[0]+'px', height: size_array[1]+'px'});
+		// sets the session variable to keep the size across reloads
 		new Ajax.Request('/employee/it/_camera.json', { parameters: { monitor_id: camera_id, width: size_array[0], height: size_array[1] } } );
 	} // end function resize_image
 </script>
 <div class="ZM_Monitors">
 <div class="Montage">
-	<fieldset><legend onclick="AjaxToggleContent( 'Viewing', '/employee/it/_cameras_viewing.html', null, null );">Streams Viewing</legend>
+	<fieldset><legend onclick="toggleContent( 'Viewing', '/employee/it/_cameras_viewing.html', null, null );">Streams Viewing</legend>
 		<div id="Viewing"><? echo ( include('/employee/it/_cameras_viewing.html'); ) ?></div>
 	</fieldset>
-	<fieldset><legend onclick="AjaxToggleContent( 'Available', '/employee/it/_cameras_available.html', null, null );">Available Streams</legend>
+	<fieldset><legend onclick="toggleContent( 'Available', '/employee/it/_cameras_available.html', null, null );">Available Streams</legend>
 		<div id="Available"><? echo ( include('/employee/it/_cameras_available.html'); ) ?></div>
 	</fieldset>
 </div><!--Montage-->

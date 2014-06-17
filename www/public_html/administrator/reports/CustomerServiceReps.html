@@ -1,124 +1,90 @@
-<style>
-	.tableheader {
-		width: 100%;
-		clear: both;
-		font-weight: bold;
-	}
-	@media screen {
-		.Type {
-			float: left;
-			margin-left: 40px;
-		}
-		.Value {
-			float: right;
-		}
-	}
-	@media print {
-		.Type {
-			float: left;
-			margin-left: 40px;
-		}
-		.Value {
-			float: right;
-		}
-	}
-
-	.dark {
-		background-color: #E3E4F0;
-	}
-
-</style>
-	<form name="f1" method="post" action="CustomerServiceReps.html">
-		<fieldset class="filters"><legend>Choose report criteria and click show results.</legend>
-			<p>
-				<label>Sales Rep</label>
-				<select name="ddmEmployees" size="1">
-					<option value="">All Employees</option>
+<form name="f1" method="post" action="CustomerServiceReps.html">
+	<fieldset class="filters"><legend>Choose report criteria and click show results.</legend>
+		<p>
+			<label>Sales Rep</label>
+			<select name="ddmEmployees" size="1">
+				<option value="">All Employees</option>
 <? echo (
-return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User->find( 'type'=>['E','A'], 'order'=>'lower(firstname),lower(lastname)','web_active'=>1) ] , $param{'ddmEmployees'} );
+make_drop_down( openprint::User->dropdown( type=>['E','A'], order=>'lower(firstname),lower(lastname)',web_active=>'Y', 'usergroup any' => 'Sales' ), $param{ddmEmployees} );
 ) ?>
-				</select>
-			</p>
-			<p>
-				<label>Estimator</label>
-				<select name="ddmEstimator" size="1">
-					<option value="">All Estimators</option>
+			</select>
+		</p>
+		<p>
+			<label>Estimator</label>
+			<select name="ddmEstimator" size="1">
+				<option value="">All Estimators</option>
 <? echo (
-return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User->find( 'type'=>['E','A'], 'order'=>'lower(firstname),lower(lastname)','web_active'=>1) ] , $param{'ddmEmployees'} );
+make_drop_down( openprint::User->dropdown( type=>['E','A'], order=>'lower(firstname),lower(lastname)',web_active=>'Y'), $param{ddmEstimator} );
 ) ?>
-				</select>
-			</p>
-			<p>
-				<label>Start Date</label>
-					<select name="ddmStartYear"><?ddmStartYear?></select>
-					<select name="ddmStartMonth"><?ddmStartMonth?></select>
-					<select name="ddmStartDay"><?ddmStartDay?></select>
-					to
-					<select name="ddmEndYear"><?ddmEndYear?></select>
-					<select name="ddmEndMonth"><?ddmEndMonth?></select>
-					<select name="ddmEndDay"><?ddmEndDay?></select>
-			</p>
-			<p class="buttons">
-				<? echo ( join('',
-						ssi::writeButton( $log, $dbh, 'ShowResults', 'showResults.gif', 'f1.submit();', '', 'Show Results' ),
-						ssi::writeButton( $log, $dbh, 'Reset', 'reset.gif', 'f1.reset();', '', 'Reset' ),
-						); ) ?>
-			</p>
-			<br style="clear: both;"/>
-		</fieldset>
+			</select>
+		</p>
+		<p>
+			<label>Start Date</label>
+			<? echo ( date_select_session( $r->uri(), 'date_start', { with_today=>1, with_clear=>1 } ); ) ?>
+			to
+			<? echo ( date_select_session( $r->uri(), 'date_end', { with_today=>1, with_clear=>1 } ); ) ?>
+		</p>
+		<p class="buttons">
+			<? echo ( join('',
+					button( 'ShowResults', { onclick=>'f1.submit();', text=>'Show Results' } ),
+					button( 'Reset', { onclick=>'f1.reset();', text=>'Reset' } ),
+					); ) ?>
+		</p>
+		<br style="clear: both;"/>
+	</fieldset>
+	<hr/>
+	<br/><b>Totals</b><br/><br/>
+	<div>
+		<span class="Type">Deleted Projects</span>
+		<span class="Value"><? echo ( $$variable{'DeletedProjectCount'}; ) ?></span>
+		<br/>
+		<span class="Type">Unfinished Projects</span>
+		<span class="Value"><? echo ( $$variable{'UnfinishedProjectCount'}; ) ?></span>
+		<br/>
+		<span class="Type">Unordered Projects</span>
+		<span class="Value"><? echo ( $$variable{'UnorderedProjectCount'}; ) ?></span>
+		<br/>
+		<span class="Type">Ordered Projects</span>
+		<span class="Value"><? echo ( $$variable{'OrderedProjectCount'}; ) ?></span>
+		<br/>
+		<span class="Type">Total Projects</span>
+		<span class="Value"><? echo ( $$variable{'TotalProjectCount'}; ) ?></span>
+		<br/>
+		<? eval ( @{$$variable{'CurrenciesTemp'}} = @{$$variable{'Currencies'}} ) ?>
+		<? while ( @$variable{'CurrencyIndex','CurrencyName','CurrencySymbol'} = splice @{$$variable{'CurrenciesTemp'}},0,3; ) ?>
+		<span class="Type">Order Value (<?CurrencyName?>)</span>
+		<span class="Value"><?CurrencySymbol?><? echo ( sprintf('%.2f', $$variable{'OrderValue-'.$$variable{'CurrencyIndex'}} ); ) ?></span>
+		<br/>
+		<? endwhile ( @$variable{'CurrencyIndex','CurrencyName','CurrencySymbol'} = splice @{$$variable{'CurrenciesTemp'}},0,3; ) ?>
 		<hr/>
-		<br/><b>Totals</b><br/><br/>
-		<div>
-			<span class="Type">Deleted Projects</span>
-			<span class="Value"><? echo ( $$variable{'DeletedProjectCount'}; ) ?></span>
-			<br/>
-			<span class="Type">Unfinished Projects</span>
-			<span class="Value"><? echo ( $$variable{'UnfinishedProjectCount'}; ) ?></span>
-			<br/>
-			<span class="Type">Unordered Projects</span>
-			<span class="Value"><? echo ( $$variable{'UnorderedProjectCount'}; ) ?></span>
-			<br/>
-			<span class="Type">Ordered Projects</span>
-			<span class="Value"><? echo ( $$variable{'OrderedProjectCount'}; ) ?></span>
-			<br/>
-			<span class="Type">Total Projects</span>
-			<span class="Value"><? echo ( $$variable{'TotalProjectCount'}; ) ?></span>
-			<br/>
-			<? eval ( @{$$variable{'CurrenciesTemp'}} = @{$$variable{'Currencies'}} ) ?>
-			<? while ( @$variable{'CurrencyIndex','CurrencyName','CurrencySymbol'} = splice @{$$variable{'CurrenciesTemp'}},0,3; ) ?>
-			<span class="Type">Order Value (<?CurrencyName?>)</span>
-			<span class="Value"><?CurrencySymbol?><? echo ( sprintf('%.2f', $$variable{'OrderValue-'.$$variable{'CurrencyIndex'}} ); ) ?></span>
-			<br/>
-			<? endwhile ( @$variable{'CurrencyIndex','CurrencyName','CurrencySymbol'} = splice @{$$variable{'CurrenciesTemp'}},0,3; ) ?>
-			<hr/>
-		</div>
-		<br/><b>Breakdown</b><br/><br/>
-		<? while ( @$variable{'EmployeeIndex','EmployeeName'} = splice @{$$variable{'Employees'}},0,2; ) ?>
-		<div>
-			<span class="CSR">Sales Rep: <?EmployeeName?><br/>
-			<span class="Type">Deleted Projects</span>
-			<span class="Value"><? echo ( $$variable{'DeletedProjectCount'.$$variable{'EmployeeIndex'}}; ) ?></span>
-			<br/>
-			<span class="Type">Unfinished Projects</span>
-			<span class="Value"><? echo ( $$variable{'UnfinishedProjectCount'.$$variable{'EmployeeIndex'}}; ) ?></span>
-			<br/>
-			<span class="Type">Unordered Projects</span>
-			<span class="Value"><? echo ( $$variable{'UnorderedProjectCount'.$$variable{'EmployeeIndex'}}; ) ?></span>
-			<br/>
-			<span class="Type">Ordered Projects</span>
-			<span class="Value"><? echo ( $$variable{'OrderedProjectCount'.$$variable{'EmployeeIndex'}}; ) ?></span>
-			<br/>
-			<span class="Type">Total Projects</span>
-			<span class="Value"><? echo ( $$variable{'TotalProjectCount'.$$variable{'EmployeeIndex'}}; ) ?></span>
-			<br/>
-			<? eval ( @{$$variable{'CurrenciesTemp'}} = @{$$variable{'Currencies'}} ) ?>
-			<? while ( @$variable{'CurrencyIndex','CurrencyName','CurrencySymbol'} = splice @{$$variable{'CurrenciesTemp'}},0,3; ) ?>
-			<span class="Type">Order Value (<?CurrencyName?>)</span>
-			<span class="Value"><?CurrencySymbol?><? echo ( sprintf('%.2f', $$variable{'OrderValue-'.$$variable{'EmployeeIndex'}.'-'.$$variable{'CurrencyIndex'}} ); ) ?></span>
-			<br/>
-			<? endwhile ( @$variable{'CurrencyIndex','CurrencyName','CurrencySymbol'} = splice @{$$variable{'CurrenciesTemp'}},0,3; ) ?>
-			<hr/>
-		</div>
-		<? endwhile ( @$variable{'EmployeeIndex','EmployeeName'} = splice @{$$variable{'Employees'}},0,2; ) ?>
-		<input type="hidden" name="btnFunction"/>
-	</form>
+	</div>
+	<br/><b>Breakdown</b><br/><br/>
+	<? while ( @$variable{'EmployeeIndex','EmployeeName'} = splice @{$$variable{'Employees'}},0,2; ) ?>
+	<div>
+		<span class="CSR">Sales Rep: <?EmployeeName?><br/>
+		<span class="Type">Deleted Projects</span>
+		<span class="Value"><? echo ( $$variable{'DeletedProjectCount'.$$variable{'EmployeeIndex'}}; ) ?></span>
+		<br/>
+		<span class="Type">Unfinished Projects</span>
+		<span class="Value"><? echo ( $$variable{'UnfinishedProjectCount'.$$variable{'EmployeeIndex'}}; ) ?></span>
+		<br/>
+		<span class="Type">Unordered Projects</span>
+		<span class="Value"><? echo ( $$variable{'UnorderedProjectCount'.$$variable{'EmployeeIndex'}}; ) ?></span>
+		<br/>
+		<span class="Type">Ordered Projects</span>
+		<span class="Value"><? echo ( $$variable{'OrderedProjectCount'.$$variable{'EmployeeIndex'}}; ) ?></span>
+		<br/>
+		<span class="Type">Total Projects</span>
+		<span class="Value"><? echo ( $$variable{'TotalProjectCount'.$$variable{'EmployeeIndex'}}; ) ?></span>
+		<br/>
+		<? eval ( @{$$variable{'CurrenciesTemp'}} = @{$$variable{'Currencies'}} ) ?>
+		<? while ( @$variable{'CurrencyIndex','CurrencyName','CurrencySymbol'} = splice @{$$variable{'CurrenciesTemp'}},0,3; ) ?>
+		<span class="Type">Order Value (<?CurrencyName?>)</span>
+		<span class="Value"><?CurrencySymbol?><? echo ( sprintf('%.2f', $$variable{'OrderValue-'.$$variable{'EmployeeIndex'}.'-'.$$variable{'CurrencyIndex'}} ); ) ?></span>
+		<br/>
+		<? endwhile ( @$variable{'CurrencyIndex','CurrencyName','CurrencySymbol'} = splice @{$$variable{'CurrenciesTemp'}},0,3; ) ?>
+		<hr/>
+	</div>
+	<? endwhile ( @$variable{'EmployeeIndex','EmployeeName'} = splice @{$$variable{'Employees'}},0,2; ) ?>
+	<input type="hidden" name="btnFunction"/>
+</form>

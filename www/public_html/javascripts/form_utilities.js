@@ -616,22 +616,24 @@ window.open(summaryPage,'pop','newWin,left=140,width=640,top=50,height=400,resiz
 }
 
 function checkLoginData( usernameInput, passwordInput ) {
+	var div = $( 'missingLoginMessage' );
 	if( usernameInput && ! usernameInput.value ) {
 		// Display login name error.
-		$( 'missingLoginMessage' ).show();
+		if ( div ) div.show();
 		usernameInput.focus();
 		return false;
-	} else {
-		$( 'missingLoginMessage' ).hide();
+	} else if ( div ) {
+		div.hide();
 	}
 
+	div = $( 'missingPasswordMessage' );
 	if( passwordInput && ! passwordInput.value ) {
 		// Display login password error.
-		$( 'missingPasswordMessage' ).show();
+		if ( div ) div.show();
 		passwordInput.focus();
 		return false;
-	} else {
-		$( 'missingPasswordMessage' ).hide();
+	} else if ( div ) {
+		div.hide();
 	}
 
 	usernameInput.form.submit();
@@ -721,18 +723,19 @@ function Country_onchange( country_ddm, state ) {
 	var country = get_ddm_value( country_ddm );
 	var state_label = $(country_ddm.name + '_state');
 	var postal_label = $(country_ddm.name + '_postal');
+	var onchange = state.getAttribute('onchange');
 	if ( country == 'US' ) {
-		$(state.name+'_container').innerHTML = '<select name="' + state.name + '" id="' + state.id + '" />';
-		new Ajax.Updater( state.name, '/includes/_states.html' );
+		$(state.name+'_container').innerHTML = '<select name="' + state.name + '" id="' + state.id + '"' + ( onchange ? ' onchange="' + onchange + '"' : '' ) + '/>';
+		new Ajax.Updater( state.id, '/includes/_states.html' );
 		if ( state_label ) state_label.innerHTML='State';
 		if ( postal_label ) postal_label.innerHTML='ZIP Code';
 	} else if ( country == 'CA' ) {
-		$(state.name+'_container').innerHTML = '<select name="' + state.name + '" id="' + state.id + '" />';
-		new Ajax.Updater( state.name, '/includes/_provinces.html' );
+		$(state.name+'_container').innerHTML = '<select name="' + state.name + '" id="' + state.id + '"' + ( onchange ? ' onchange="' + onchange + '"' : '' ) + '/>';
+		new Ajax.Updater( state.id, '/includes/_provinces.html' );
 		if ( state_label ) state_label.innerHTML='Province';
 		if ( postal_label ) postal_label.innerHTML='Postal Code';
 	} else {
-		$(state.name+'_container').innerHTML = '<input type="text" name="' + state.name + '" id="' + state.id + '" />';
+		$(state.name+'_container').innerHTML = '<input type="text" name="' + state.name + '" id="' + state.id + '" '+ ( onchange ? ' onchange="' + onchange + '"' : '' ) + '/>';
 		if ( state_label ) state_label.innerHTML='State/Province';
 		if ( postal_label ) postal_label.innerHTML='Postal Code';
 	} // end if
@@ -1259,9 +1262,9 @@ function LoadContent( divID, page, parameters, message ) {
 		if ( p )
 			parameters = $H(p).toQueryString();
 	} else if ( typeof parameters == 'object' ) {
-		var p = parameters.serialize(true);
-		if ( p )
-			parameters = $H(p).toQueryString();
+		//var p = parameters.serialize(true);
+		//if ( p )
+			parameters = $H(parameters).toQueryString();
 	} 
 	if ( parameters.length > 8190 ) 
 		method = 'post';
@@ -1320,6 +1323,13 @@ onDestroy: function(eventName, win) {
 		popupWin.setHTMLContent( options.content );
 	} else {
 		if ( parameters ) {
+			if ( parameters == '[object HTMLFormElement]' ) {
+				var p = parameters.serialize(true);
+				if ( p )
+					parameters = $H(p).toQueryString();
+			} else if ( typeof parameters == 'object' ) {
+				parameters = $H(parameters).toQueryString();
+			}
 			url += '?' + parameters;
 		}
 		popupWin.setAjaxContent(url, null , true);
@@ -1442,8 +1452,9 @@ function integerize(e) {
 	return e.value;
 }
 function floatize(e) {
-	if ( e.value.match(/[^\d\-\.%\*]/) )
+	if ( e.value.match(/[^\d\-\.%\*]/) ) {
 		e.value = parseFloat(e.value.replace(/[^\d\-\.%\*]/g,''));
+	} 
 	if ( e.value == 'NaN' )
 		e.value = '';
 	return e.value;

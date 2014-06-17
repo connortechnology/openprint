@@ -1,5 +1,9 @@
 <? eval (
-	$$variable{'Project'} = new openprint::Project( $param{'ProjectIndex'} ) if ! $$variable{'Project'};
+	if ( ! $$variable{'Project'} ) {
+	$$variable{'Project'} = new openprint::Project( $param{'ProjectIndex'} ) if $$variable{'ProjectIndex'};
+	} elsif ( $param{docket} ) {
+		$$variable{Project} = openprint::Project->find_one(docket=>$param{docket});
+	}
 	$$variable{'Company'} = $$variable{'Project'}->Company();
 	my $services = $$variable{'Project'}->services();
 	my $Service = $$variable{'Project'}->Service( $$services{'Proofs'} ? $$services{'Proofs'}[0] : $$services{'FilmStripping'}[0] );

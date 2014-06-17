@@ -62,17 +62,20 @@ sub calc {
 
 
 sub display {
-	my ( $log, $dbh, $variable, $project_index, $service_index ) = @_;
+	#my ( $log, $dbh, $variable, $project_index, $service_index ) = @_;
 
 } # end sub display
 
 sub summary {
-	my ( $Project, $service_id, $specs, $qty_index ) = @_;
-	$specs = openprint::service::get_specs_ref( $Project, $service_id );
-	if ( ! $qty_index ) {
-		return $$specs{'ServiceName'};
-	} # end if
+	#my ( $Project, $service_id, $specs, $qty_index ) = @_;
+	#$specs = openprint::service::get_specs_ref( $Project, $service_id );
+	#if ( ! $qty_index ) {
+		#return $$specs{'ServiceName'};
+	#} # end if
 	return '';
+}
+sub has_overrides {
+	return ();
 }
 
 1;

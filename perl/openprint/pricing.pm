@@ -1,6 +1,7 @@
 use strict;
 package openprint::pricing;
 use Memoize;
+use Carp qw( cluck );
 
 require openprint::pricelist;
 require openprint::priceset;
@@ -142,7 +143,7 @@ sub split_by_equipment {
 	return %lists;
 } # end sub split_by_equipment
 
-#memoize('get_best_prices');
+memoize('get_best_prices');
 sub get_best_prices {
 	my ( $cust_id, $prod_index, $list_id, $pricesetclass, $equipment, $qty, $period ) = @_;
 
@@ -151,6 +152,8 @@ sub get_best_prices {
 	#if ( ! defined $price_cache{$hash_index} ) {
 
 		if ( ! $list_id ) {
+$log->error("Not specifying pricelist to get_best_prices is deprecated");
+Carp::cluck("Not specifying pricelist to get_best_prices is deprecated");
 # figure out which price list we select from, because the caller didn't specify.
 			$list_id = get_pricelist_id();
 		} # end if
@@ -168,14 +171,14 @@ if ( DEBUG ) {
 			my $Company = new openprint::Company( $cust_id );
 
 			my $pricingpercent = $Company->discount();
-			if ( 1*$pricingpercent ) {
-				$pricingpercent = $pricingpercent/100;
+			if ( $pricingpercent ) {
+				$pricingpercent = 1 - ($pricingpercent/100);
 				for ( my $index = 0; $index < @pricing; $index += 1 ) {
 					if ( $pricing[$index]->{Discountable} ne 'N' ) {
 
 # the if here is to preserve empty pricing.	if pricei s empty, we display call, instead of 0.00.
 						if ( $pricing[$index]->{Price} ne '' ) {
-							$pricing[$index]->{Price} *= ( 1 - $pricingpercent );
+							$pricing[$index]->{Price} *= $pricingpercent;
 						} # end if
 					} # end if
 				} # end for
@@ -186,10 +189,11 @@ if ( DEBUG ) {
 			my $pricingpercent = $openprint::config{'ApplyMarkup'};
 			$pricingpercent =~ s/[^\d\.\-]//g;
 			$pricingpercent /= 100;
+			$pricingpercent += 1;
 			for ( my $index = 0; $index < @pricing; $index += 1 ) {
 # the if here is to preserve empty pricing.	if pricei s empty, we display call, instead of 0.00.
 				if ( $pricing[$index]->{Price} ne '' ) {
-					$pricing[$index]->{Price} *= ( 1 + $pricingpercent );
+					$pricing[$index]->{Price} *= $pricingpercent;
 				} # end if
 			} # end for
 		} # end if
@@ -210,6 +214,7 @@ if ( DEBUG ) {
 	#return $price_cache{$hash_index};
 } # end sub get_best_prices
 
+#memoize('get_best_price_object');
 sub get_best_price {
 	my ( $cust_id, $prod_index, $list_id, $pricesetclass, $qty, $equipment, $period ) = @_;
 
@@ -257,6 +262,4 @@ sub adjust_price {
 } # end sub adjust_price
 
 1;
-
 __END__
-~		

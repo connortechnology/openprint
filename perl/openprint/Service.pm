@@ -1,19 +1,21 @@
 use strict;
 package openprint::Service;
 our @ISA = qw( openprint::Object );
-use vars qw($debug $table $serial %fields %find_fields %transforms %defaults %session $log $dbh $cache_field );
+use vars qw($debug $table $serial %fields %find_fields %transforms %defaults %session $log $dbh $cache_field $cached );
 
 require sql;
 require openprint::Object;
 require openprint::pricing;
 require openprint::logs;
 
+use Memoize;
 use openprint ();
 *session = \%openprint::session;
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
 
 $debug = 0;
+$cached = 0;
 
 $table = 'services';
 $serial = 'services_id_seq';

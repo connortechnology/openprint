@@ -7,20 +7,20 @@
 		my $html;
 		my @required_services;
 		my @overrides;
-		my $services = $$variable{'Project'}->services();
+		my $services = $$variable{Project}->services();
 
 		foreach my $ServiceType ( openprint::ServiceType->find() ) {
 			my $module = 'openprint::Estimating::'.$ServiceType->name();
 			if ( ! ( $$services{$ServiceType->name()} and @{$$services{$ServiceType->name()}} ) ) {
 				if ( my $function = $module->can( 'neccessary' ) ) {
-					if ( $function->( $variable{'Project'} ) ) {
+					if ( $function->( $variable{Project} ) ) {
 						push @required_services, $ServiceType->name();	
 					} # end if
 				} # end if
 			} else {
 				if ( my $function = $module->can( 'has_overrides' ) ) {
 					foreach my $s_id ( @{$$services{$ServiceType->name()}} ) {
-						if ( $function->( $variable{'Project'}, $s_id ) ) {
+						if ( $function->( $variable{Project}, $s_id ) ) {
 							push @overrides, $ServiceType->name();	
 						} # end if
 					} # end foreach my $s_id
@@ -40,11 +40,11 @@
 			<ul>
 				<li> 
 					<label>Please provide a reference</label>
-					<textarea name="reference" rows="<? echo ( count_lines( $$variable{Project}->reference() ) ) ?>" onkeyup="textarea_resize(this);"><? echo ( $$variable{'Project'}->reference(); ) ?></textarea>
+					<textarea name="reference" rows="<? echo ( count_lines( $$variable{Project}->reference() ) ) ?>" onkeyup="textarea_resize(this);"><? echo ( unhtmlize( $$variable{'Project'}->reference() ); ) ?></textarea>
 				</li>
 				<li>
 					<label>Additional comments or instructions</label>
-					<textarea name="comments" rows="<? echo ( count_lines( $$variable{Project}->comments() ); ) ?>" onkeyup="textarea_resize(this);"><? echo ( ssi::htmlize( $$variable{'Project'}->comments() ); ) ?></textarea>
+					<textarea name="comments" rows="<? echo ( count_lines( $$variable{Project}->comments() ); ) ?>" onkeyup="textarea_resize(this);"><? echo ( htmlize( $$variable{'Project'}->comments() ); ) ?></textarea>
 				</li>
 			</ul>
 		</fieldset>
@@ -74,9 +74,17 @@
 			<li>
 				<label>Company</label>
 				<input type="text" onkeyup="filterDDM(this, this.form.ddmCompany);" class="filter" />
-				<select name="ddmCompany">
+				<select id="ddmCompany" name="ddmCompany">
 					<option value="">Select a Customer</option>
-					<? echo ( openprint::Company::get_dropdown( $session{'company_id'} ); ) ?>
+					<? echo (
+							my $html ='<option value="'.$session{company_id}.'" selected="selected">'.new openprint::Company( $session{company_id} )->name() .'</option>';
+							my $User = new openprint::User($session{user_id} );
+							if ( $session{company_id} != $User->company_id() ) {
+								$html .= '<option value="'.$User->company_id().'">'.$User->Company()->name().'</option>';
+							}
+							return $html;
+							) ?>
+					<option value="">Please wait, loading the rest</option>
 				</select>
 			</li>
 		</ul>
@@ -94,3 +102,6 @@
 	</form>
 </div>
 </div>
+		<? if ( sets::isin( $session{'user_type'}, [ 'E', 'A'] ) ) ?>
+<script type="text/javascript">new Ajax.Updater( 'ddmCompany', '/includes/_company_ddm.html', { parameters: { selected_id: <?echo($session{company_id})?> } } );</script>
+		<? endif ( sets::isin( $session{'user_type'}, [ 'E', 'A'] ) ) ?>

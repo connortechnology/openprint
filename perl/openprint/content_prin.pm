@@ -98,6 +98,9 @@ sub envelopes {
 sub presentationfolders {
 	load_simple();
 } # end sub presentationfolders
+sub no_printing_required {
+	load_simple();
+} # end sub no_printing_required
 
 sub banners {
 	load_simple();

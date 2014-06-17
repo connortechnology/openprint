@@ -52,9 +52,10 @@ sub history {
 		} elsif ( $param{'ProjectIndex'} ) {
 			$variable{'error'} .= openprint::print_project::try_to_delete_project( $log, $dbh, \%variable, $param{'ProjectIndex'} );
 		} # end if
+		$variable{ExternalRedirect} = '/main/project/history.html';
 	} elsif ( $param{'btnFunction'} eq 'Reuse Project' ) {
 		foreach my $project_id ( ref $param{'project_id'} eq 'ARRAY' ? @{$param{'project_id'}} : $param{'project_id'} ) {
-			openprint::print_project::reuse_project( $r, $log, $dbh, $session{_session_id}, \%variable, $project_id );
+			openprint::print_project::reuse_project( $project_id );
 		} # end if
 	} elsif ( $param{btnFunction} eq 'Reset' ) {
 $log->debug("Reset");
@@ -84,7 +85,7 @@ $log->debug("Reset $k");
 
 sub _history {
 	ssi::save_params( '/main/project/history.html', 
-			'ddmStatus', 'type_id', 'predefined', 'company_id', 'user_id',
+			'ddmStatus', 'type_id', 'predefined', 'company_id', 'user_id', 'servicetype_id',
 			'created_on_start_year', 'created_on_start_month','created_on_start_day', 
 			'created_on_end_year', 'created_on_end_month','created_on_end_day', 
 			'updated_on_start_year', 'updated_on_start_month','updated_on_start_day', 
@@ -109,8 +110,8 @@ sub view {
 	} # end foreach
 	if ( $save ) {
 		$Project->save();
+	$openprint::log->error("Saving $save");
 	} # end if
-$openprint::log->debug("Saving $save");
 } # end sub view
 
 sub _copy_popup {

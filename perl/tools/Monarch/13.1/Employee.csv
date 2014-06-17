@@ -1,0 +1,23 @@
+"Field Name",,"Type","Beg","Size","End","Description","Validated","Required","Default Value","Notes"
+"Employee-ID","$Object->id()","Text",1,12,12,"Employee ID ","Yes","Yes",,"No duplicates."
+"Employee-Name","$Object->name()","Text",13,40,52,"Employee Name ",,,,
+"Addr-1",,"Text",53,40,92,"Employee Address Line 1",,,,
+"Addr-2",,"Text",93,40,132,"Employee Address Line 2",,,,
+"Addr-3",,"Text",133,40,172,"Employee Address Line 3",,,,
+"City",,"Text",173,40,212,"Employee City",,,,
+"State-ID",,"Text",213,3,215,"Employee State",,,,
+"Zip",,"Text",216,10,225,"Employee Zip Code",,,,
+"Country",,"Text",226,40,265,"Employee Country",,,,
+"Dept-ID","return ""999""","Text",266,3,268,"Employee Department","Yes","Yes",,"Required and validated."
+"Work-Phone","$Object->phone()","Text",269,20,288,"Employee Work Phone",,,,
+"Work-Phone-Ext","$Object->extension()","Text",289,5,293,"Employee Work Phone Extension",,,,
+"Phone","$Object->mobile()","Text",294,20,313,"Employee Home Phone",,,,
+"Social-Security-Num",,"Text",314,20,333,"Employee Social Security Number",,,,"99-999-9999"
+"Employee-Image",,"Text",334,120,453,"Path to Employee Image File",,,,
+"Birth-Date",,"Text",454,10,463,"Employee Birth Date","Yes",,,"Based on date format in company setup (US = mm/dd/yyyy)"
+"Employment-Date",,"Text",464,10,473,"Employee Hire Date","Yes",,,"Based on date format in company setup (US = mm/dd/yyyy)"
+"Date-Terminated",,"Text",474,10,483,"Employee Termination Date","Yes",,,"Based on date format in company setup (US = mm/dd/yyyy)"
+"Contract-Worker-Flag",,"Text",484,1,484,"Flag for Contract Worker",,,0,"0=No, 1=Yes"
+"Record-Active","$Object->deleted()","Text",485,1,485,"Flag for Record Active ",,,1,"0=No, 1=Yes"
+"Prograph-Employee",,"Text",486,1,486,"Flag for Planner Employee",,,0,"0=No, 1=Yes"
+"Prograph-Employee-Type",,"Text",487,2,"No line","Flag for Planner Employee Type",,,1,"1=Prepress, 2=Inserts, 3=Plate/Cylinder Preparation 4=Press, 5=Post Press, 6=Bindery, 7=Mailing, 8=Distribution, 9=SubContracting"

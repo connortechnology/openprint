@@ -1,25 +1,41 @@
 <? eval (
-	$$variable{'Currency'} = openprint::Currency::get_current();
+	$$variable{Currency} = openprint::Currency::get_current();
 	@$variable{'CurrencyName','CurrencySymbol','CurrencyShort'} = $$variable{'Currency'}->get('name','symbol','short');
-	if ( $param{'order_id'} ) {
-		@{$$variable{'Orders'}} = openprint::Order->find('id'=>$param{'order_id'},'company_id'=>$session{'company_id'}, );
-		if ( sets::isin( $session{'user_type'}, ['A','E'] ) and ! @{$$variable{'Orders'}} ) {
-			@{$$variable{'Orders'}} = openprint::Order->find('id'=>$param{'order_id'} );
+	if ( $param{order_id} ) {
+		$param{order_id} = openprint::Order->transform( 'id', $param{order_id} );
+		if ( $param{order_id} ) {
+			$$variable{Orders} = [ openprint::Order->find( id=>$param{order_id}, company_id=>$session{company_id} ) ];
+			if ( sets::isin( $session{user_type}, ['A','E'] ) and ! @{$$variable{Orders}} ) {
+				$$variable{Orders} = [ openprint::Order->find( id=>$param{order_id} ) ];
+			} # end if
 		} # end if
-	} elsif ( $param{'Docket'} ) {
-		@{$$variable{'Orders'}} = openprint::Order->find('docket'=>$param{'Docket'},'company_id'=>$session{'company_id'}, );
-		if ( sets::isin( $session{'user_type'}, ['A','E'] ) and ! @{$$variable{'Orders'}} ) {
-			@{$$variable{'Orders'}} = openprint::Order->find('docket'=>$param{'Docket'} );
+	} elsif ( $param{Docket} ) {
+		$param{Docket} = openprint::Order->transform( 'docket', $param{Docket} );
+		if ( $param{Docket} ) {
+			$$variable{Orders} = [ openprint::Order->find( docket=>$param{Docket}, company_id=>$session{company_id} ) ];
+			if ( sets::isin( $session{user_type}, ['A','E'] ) and ! @{$$variable{Orders}} ) {
+				$$variable{Orders} = [ openprint::Order->find( docket=>$param{Docket} ) ];
+			} # end if
 		} # end if
+	} elsif ( $param{invoice} ) {
+		$param{invoice} = openprint::Invoice->transform( 'num', $param{invoice} );
+		my @Invoices = openprint::Invoice->find(
+			'num ilike'	=>	( $param{invoice} =~ /%/ ? $param{invoice} : '%'.$param{invoice}.'%' ),
+			invoicee_id	=>	$session{company_id},
+		);
+		if ( @Invoices ) {	
+			$$variable{Orders} = [ openprint::Order->find( 'invoice_id &&' => [ map { $_->id() } @Invoices ] ) ];
+		} else {
+			$$variable{Orders} = [];
+		} # end if	
 	} else {
-
-		@{$$variable{'Orders'}} = openprint::Order->find(
-			ssi::date_filter( '/main/order/history.html?created_on_end', 'created_on <=' ),
-			ssi::date_filter( '/main/order/history.html?created_on_start', 'created_on >=' ),
-				company_id		=>	$session{'company_id'},
-				( $session{'/main/order/history.html?ddmOrderedBy'} ? ( 'user_id'			=>	$session{'/main/order/history.html?ddmOrderedBy'} ) : () ),
-				order				=>	$openprint::Order::fields{'id'}.' DESC',
-				);
+		@{$$variable{Orders}} = openprint::Order->find(
+			date_filter( '/main/order/history.html?created_on_end', 'created_on <=' ),
+			date_filter( '/main/order/history.html?created_on_start', 'created_on >=' ),
+			company_id		=>	$session{'company_id'},
+			( $session{'/main/order/history.html?ddmOrderedBy'} ? ( 'user_id'			=>	$session{'/main/order/history.html?ddmOrderedBy'} ) : () ),
+			order				=>	'id DESC',
+		);
 	} # end if
 
 ) ?>
@@ -38,6 +54,7 @@
 			<tr> 
 				<th class="order_id">Order ID</th>
 				<th class="docket">Docket</th>
+				<th class="invoices">Invoices</th>
 				<th class="User">Ordered By</th>
 				<th class="Date">Date</th>
 				<th class="Status">Status</th>
@@ -49,12 +66,12 @@
 			my $html; my $rowclass;
 
 			foreach my $Order (  @{$$variable{Orders}} ) {
-				$$variable{'total'} = $Order->total();
-				$$variable{'balance'} = $Order->balance();
-				if ( $$variable{'Currency'}->id() != $Order->currency_id() ) {
+				$$variable{total} = $Order->total();
+				$$variable{balance} = $Order->balance();
+				if ( $$variable{Currency}->id() != $Order->currency_id() ) {
 					if ( my $rate = $Order->Currency()->conversions( $session{Currency_id} ) ) {
-						$$variable{'total'} = $$variable{'total'} * $rate;
-						$$variable{'balance'} = $$variable{'balance'} * $rate;
+						$$variable{total} = $$variable{total} * $rate;
+						$$variable{balance} = $$variable{balance} * $rate;
 					} # end if
 				} # end if
 				if ( $Order->status() ne 'Cancelled' ) {
@@ -68,27 +85,28 @@
 <tr%1$s> 
 	<td class="order_id"><a href="history_details.html?order_id=%2$d">%2$d</a></td>
 	<td class="docket"><a href="history_details.html?order_id=%2$d">%3$s</a></td>
-	<td align="left"><a href="history_details.html?order_id=%2$d">%4$s</a></td>
-	<td class="Date"><a href="history_details.html?order_id=%2$d">%5$s</a></td>
-	<td class="Status"><a href="history_details.html?order_id=%2$d">%6$s</a></td>
-	<td class="Price"><a href="history_details.html?order_id=%2$d">%7$s</a></td>
+	<td class="invoices"><a href="history_details.html?order_id=%2$d">%4$s</a></td>
+	<td align="left"><a href="history_details.html?order_id=%2$d">%5$s</a></td>
+	<td class="Date"><a href="history_details.html?order_id=%2$d">%6$s</a></td>
+	<td class="Status"><a href="history_details.html?order_id=%2$d">%7$s</a></td>
 	<td class="Price"><a href="history_details.html?order_id=%2$d">%8$s</a></td>
+	<td class="Price"><a href="history_details.html?order_id=%2$d">%9$s</a></td>
 </tr>
 <tr%1$s>
-	<td colspan="2">&nbsp;</td>
-	<td colspan="5">%9$s</td>
-</tr>`, $rowclass, $Order->id(), $Order->docket(), $Order->name(), ssi::format_date( $Order->created_on() ),
+	<td colspan="3">&nbsp;</td>
+	<td colspan="5">%10$s</td>
+</tr>`, $rowclass, $Order->id(), $Order->docket(), join('<br/>', map { $_->Invoice()->num() } $Order->Invoices() ), $Order->name(), format_date( $Order->created_on() ),
 $Order->status(), 
 openprint::Currency::format( $$variable{total} ),
 openprint::Currency::format( $$variable{balance} ),
-ssi::html_escape( join('<br/>', map { $_->reference() ? $_->reference() : $_->summary() } $Order->Projects() ) ),
+join('<br/>', map { $_->reference() ? $_->reference() : $_->summary() } $Order->Projects() ),
 );
 		$rowclass = $rowclass ? '' : ' class="colRow"';
 		} # end foreach Order
 		return $html;
 	) ?>
 		<tr class="totals">
-			<td colspan="5" align="right"><b>Report Totals</b></td>
+			<td colspan="6" align="right"><b>Report Totals</b></td>
 			<td class="Price"><? echo ( openprint::Currency::format( $$variable{'ReportTotal'} ); ) ?></td>
 			<td class="Price"><? echo ( openprint::Currency::format( $$variable{'ReportBalance'} ); ) ?></td>
 		</tr>

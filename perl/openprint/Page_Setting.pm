@@ -2,40 +2,126 @@ use strict;
 package openprint::Page_Setting;
 our @ISA = qw(openprint::Object);
 
-use vars qw( $debug $serial $table %fields %transforms %defaults );
+use vars qw( $debug $serial $table %fields %transforms %defaults $cache_field $cached %cache );
 
 $debug = 0;
+$cached = 0;
 $table = 'page_settings';
 $serial = 'page_settings_id_seq';
 %fields = (
-	id	=>	'id',
-	url	=>	'url',
-	user_level	=>	'user_level',
-	cacheable	=>	'cacheable',
-	keywords	=>	'keywords',
-	description	=>	'description',
+	id				=>	'id',
+	url				=>	'url',
+	user_level		=>	'user_level',
+	cacheable		=>	'cacheable',
+	keywords		=>	'keywords',
+	description		=>	'description',
+	user_ids		=>	'user_ids',
+	usergroup_ids	=>	'usergroup_ids',
+	message			=>	'message',
 );
 %transforms = (
 	url	=>	[ 's/\/+$//g' ],
 );
 %defaults = (
-	user_level	=>	undef,
+	user_level		=>	undef,
 	cacheable		=>	undef,
+	user_ids		=>	'[]',
+	usergroup_ids	=>	'[]',
 );
+$cache_field = 'url';
+sub cache_field {
+    return $cache_field;
+}
 
 sub can_view {
-	if ( $openprint::session{user_type} eq 'A' ) {
-		return 1;
-	} elsif ( $openprint::session{user_type} eq 'E' ) {
-		return 0 if $_[0]{user_level} eq 'A';
-		return 1;
-	} elsif ( $openprint::session{user_type} eq 'C' ) {
-		return 0 if $_[0]{user_level} eq 'A' or $_[0]{user_level} eq 'E';
-		return 1;
+
+	if ( $openprint::session{user_id} ) {
+		if ( $_[0]{user_ids} and $openprint::session{user_id} and sets::isin( $openprint::session{user_id}, $_[0]{user_ids} ) ) {
+			$openprint::log->debug("User is in user_ids") if $debug;
+			return 1;
+		} # end if
+		if ( $openprint::session{user_type} eq 'A' ) {
+			$openprint::log->debug("User is an admin") if $debug;
+			return 1;
+		}
+	} # end if
+		
+	# User level defineds the default response.
+	if ( $_[0]{user_level} ) {
+		if ( $_[0]{user_level} eq 'A' ) {
+			return 0 if $openprint::session{user_type} ne 'A';
+
+		} elsif ( $_[0]{user_level} eq 'E' ) {
+			return 0 if ( $openprint::session{user_type} ne 'A' and $openprint::session{user_type} ne 'E' );
+
+		} elsif ( $_[0]{user_level} eq 'C' ) {
+			return 0 if ( $openprint::session{user_type} ne 'C' and $openprint::session{user_type} ne 'A' and $openprint::session{user_type} ne 'E' );
+		} else {
+			return 0;
+		} 
 	} 
-	return 0 if $_[0]{user_level};
+	if ( $_[0]{usergroup_ids} and @{$_[0]{usergroup_ids}} ) {
+$openprint::log->debug("CHecking usergroups " . ( $_[0]{usergroup_ids} ? join(', ', @{ $_[0]{usergroup_ids} } ) : 'none' ) );
+		return 0 if ! $openprint::session{user_id};
+		my $User = new openprint::User( $openprint::session{user_id} );
+$openprint::log->debug( "User in in " . join(',', $User->usergroup_ids()) );
+		my @intersection = sets::intersection( @{$_[0]{usergroup_ids}}, $User->usergroup_ids() );
+$openprint::log->debug( "Inserection: (" . join(',', @intersection ) . ')' . @intersection);
+		return 0 if ! @intersection;
+	} else {
+$openprint::log->debug("Not CHecking usergroups " );
+
+	}
 	return 1; 
 } # end sub can_view
+
+sub Users {
+	if ( ! exists $_[0]{Users} ) {
+	require openprint::User;
+		$_[0]{Users} = [ openprint::User->find( id=>$_[0]{user_ids}, order=>'lower(firstname),lower(lastname)' ) ] if $_[0]{user_ids} and @{$_[0]{user_ids}};
+	} 
+	return @{$_[0]{Users}} if $_[0]{Users};
+	return ();
+} 
+
+sub get {
+	my ( $page ) = @_;
+
+	if ( ! $cache{$openprint::config{db_name}} ) {
+		$openprint::log->debug("loading Page settings for $openprint::config{db_name}") if $debug;
+		$cache{$openprint::config{db_name}} = { map { $_->url(), $_ } openprint::Page_Setting->find() };
+	} # end if
+
+	my $cache = $cache{$openprint::config{db_name}};
+
+	if ( ! $$cache{$page} ) {
+# Need to create one.
+		my @chunks = split('/', $page );
+		while ( @chunks ) {
+			pop @chunks;
+			last if ! @chunks;
+
+# Because there is a / at the beginning of the url, the first entry in chunks is '', so we don't need to prepend a /
+			my $chunk = join('/', @chunks);
+			$chunk = '/' if ! $chunk; # neccessary to deal with the empty string
+
+			$openprint::log->debug("Looking for page setting for $chunk") if $debug;
+			if ( $$cache{$chunk} ) {
+# Why stuff up the db with entries, just fill the hash with copies.
+				$$cache{$page} = $$cache{$chunk};
+				last;
+			} # end if
+		} # end while chunks
+		if ( ! $$cache{$page} ) {
+$openprint::log->debug("Didn't find page setting for $page") if $debug;
+			$$cache{$page} = new openprint::Page_Setting();
+			#$$cache{$page}->save({url=>$page}) if $openprint::session{user_type} eq 'A';
+		} elsif ( $debug ) {
+$openprint::log->debug("Found Page settnig " . $$cache{$page}->to_string() ) if $debug;
+		} # end if
+	} # end if Page Settings not found
+	return $$cache{$page};
+} # end sub get
 
 1;
 __END__

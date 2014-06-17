@@ -26,7 +26,7 @@
 	} // end function job_popup_close
 
 	var dropfunction = function(el){
-		new Ajax.Request( '_drop.json', { method: 'get', parameters: { ul_id: el.id, services: Sortable.serialize(el) }, evalScripts: true } );
+		new Ajax.Request( '_drop.json', { method: 'post', parameters: { ul_id: el.id, services: Sortable.serialize(el) }, evalScripts: true } );
 	}
 
 	var drops = new Array();
@@ -288,6 +288,19 @@
 		$html .= '</tr></thead><tbody><tr>';
 		@{$$variable{'drops'}} = ();
 
+		my $TZ = DateTime::TimeZone->new( name => $config{'Timezone'} );
+		my $parser = 'DateTime::Format::Pg';
+
+		my $start_dt = new DateTime( time_zone=>$TZ, map { $_ => $session{'/employee/production/print_overview.html?schedule_start_'.$_} } ( 'year', 'month', 'day' ) );
+		my $end_dt = new DateTime( time_zone=>$TZ, map { $_ => $session{'/employee/production/print_overview.html?schedule_end_'.$_} } ( 'year', 'month', 'day' ) );
+		my @Jobs = openprint::ScheduledJob->find( 
+			equipment_id=>[ map { $_->id() } @{$$variable{'Equipment'}} ],
+			'starttime <='	=> $parser->format_datetime( $end_dt ),
+			'starttime >='	=> $parser->format_datetime( $start_dt ),
+		);
+		my @Projects = openprint::Project->find( id=>[ map { $_->project_id() } @Jobs ] );
+		my @Companies = openprint::Company->find( id=>[ map { $_->company_id() } @Projects ] );
+
 		my $ac = sql::start_transaction( $dbh );
 		$dbh->do( 'LOCK TABLE Schedule IN ACCESS EXCLUSIVE MODE' ) or $log->error( DBI->errstr );
 
@@ -314,16 +327,14 @@
 			# Showing over 100 days makes the browser crawl forever. So limit it.
 			$end = 100 if $end > 100;
 			# Get the shifts on this day.
-			my $TZ = DateTime::TimeZone->new( name => $config{'Timezone'} );
 			my $st = new DateTime( 'year'=>$year, 'month'=>$month, 'day'=>$day, 'time_zone'=>$TZ );
 			my $et = $st + DateTime::Duration->new( 'days'=>$end );
-			my $parser = 'DateTime::Format::Pg';
 
 			my @Shifts = openprint::Shift->find( 
-				'equipment_id' 		=>	$E->id(),
-				'starttime >='		=>	$parser->format_datetime( $st ),
+				equipment_id 		=>	$E->id(),
 				'starttime <'		=>	$parser->format_datetime( $et ),
-				'order'				=>	'starttime',
+				'starttime >='		=>	$parser->format_datetime( $st ),
+				order				=>	'starttime',
 				);
 
 			if ( ! @Shifts ) {
@@ -375,10 +386,10 @@
 		} # end foreach press
 		sql::end_transaction( $dbh, $ac );
 		$html .= '</tr></tbody></table>';
-		$html .= q`<div class="unprintable"><hr class="spacer"/><h3 onclick="LoadContent( 'PendingApproved', '/employee/production/_pending_approved.html' );">Pending Approved (click to hide/unhide):</h3><table class="PendingApproved"><tr id="PendingApproved">`;
+		$html .= q`<div class="unprintable"><hr class="spacer"/><h3 onclick="LoadContent( 'PendingApproved', '/employee/production/_pending_approved.html', $('f1') );">Pending Approved (click to hide/unhide):</h3><table class="PendingApproved"><tr id="PendingApproved">`;
 		$html .= include( '/employee/production/_pending_approved.html' );
 		$html .= '</tr></table></div>';
-		$html .= q`<div class="unprintable"><hr class="spacer"/><h3 onclick="LoadContent('Pending','/employee/production/_pending.html');">Pending (click to hide/unhide):</h3><table class="Pending"><tr id="Pending">`;
+		$html .= q`<div class="unprintable"><hr class="spacer"/><h3 onclick="LoadContent('Pending','/employee/production/_pending.html', $('f1'));">Pending (click to hide/unhide):</h3><table class="Pending"><tr id="Pending">`;
 		$html .= include( '/employee/production/_pending.html' );
 		$html .= '</tr></table></div>';
 		return $html;

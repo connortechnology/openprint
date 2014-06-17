@@ -17,7 +17,7 @@
 		$$variable{Skids} = [ openprint::Skid->find( 
 			( $session{'/employee/inventory/skids.html?rfid_id'} =~ /%/ ? 
 			( 'rfidtag_id ilike'	=>	$session{'/employee/inventory/skids.html?rfid_id'} ) :
-			( rfidtag_id	=>	$session{'/employee/inventory/skids.html?rfid_id'} ) ),
+			( 'rfidtag_id ilike'	=>	'%'.$session{'/employee/inventory/skids.html?rfid_id'} ) ),
 			order	=>	'id',
 			( $session{'/employee/inventory/skids.html?deleted'} ? ( deleted => [ split(',', $session{'/employee/inventory/skids.html?deleted'} ) ] ) : () ),
 			) ];
@@ -59,8 +59,15 @@
 			$sql{'has manufacturers_id'} = 1;
 		}
 		
-		if ( $session{'/employee/inventory/skids.html?Type'} ) {
-			$sql{'type'}		= $session{'/employee/inventory/skids.html?Type'};
+		if ( $session{'/employee/inventory/skids.html?type'} ) {
+			my @types = split(',',$session{'/employee/inventory/skids.html?type'} );
+			if ( @types ) {
+				if ( sets::isin( 'Unknown', \@types ) ) {
+			$sql{'type is null or in'}		= [ map { $_ ne 'Unknown' ? $_ : () } @types ];
+				} else {
+			$sql{type}		= \@types;
+				} # end if
+			} # end if
 		}
 		$sql{'condition_id'} = $session{'/employee/inventory/skids.html?condition_id'} if $session{'/employee/inventory/skids.html?condition_id'};
 
@@ -113,6 +120,7 @@
 			my %Allocations;
 			
 			# I think this is ok, because there are never that many allocations at any given time
+			# This is because skids_ids is an array type... need to make this better.
 			foreach my $Allocation ( openprint::PaperAllocation->find() ) {
 				foreach my $Skid ( $Allocation->Skids() ) {
 					push @{$Allocations{$$Skid{id}}}, $Allocation;
@@ -120,11 +128,9 @@
 			} # end foreach
 			my @skid_ids = map { $$_{id} } @{$$variable{'Skids'}};
 			my %SkidContents;
+			my %empty;
 			foreach my $SC ( openprint::SkidContent->find( skid_id => \@skid_ids ) ) {
 				push @{$SkidContents{$$SC{skid_id}}}, $SC;
-			} # end foreach SC
-			my %empty;
-			foreach my $SC ( openprint::SkidContent->find( skid_id => \@skid_ids, 'quantity >=' => 1 ) ) {
 				$empty{$$SC{skid_id}} += $$SC{quantity};
 			} # end foreach SC
 
@@ -132,10 +138,10 @@
 				$Skid->Contents( $SkidContents{$$Skid{id}} ? $SkidContents{$$Skid{id}} : [] );
 				my $empty = $empty{$$Skid{id}};
 				if ( $session{'/employee/inventory/skids.html?empty'} eq 'Y' ) {
-                    next if ! $empty;
+                    next if $empty;
                 } # end if
                 if ( $session{'/employee/inventory/skids.html?empty'} eq 'N' ) {
-                    next if $empty;
+                    next if ! $empty;
                 } # end if
 				if ( $session{'/employee/inventory/skids.html?contents'} eq 'Y' ) {
                     next if ! $Skid->Contents();
@@ -213,11 +219,14 @@ $RFIDTag->id(),
 				$html .= "<tr$rowclass>";
 				
 				$html .= '<td class="checkbox">&nbsp;</td><td colspan="8">';
-			
-				foreach my $C ( $Skid->Contents() ) {
+				my @C = $Skid->Contents();
+				if ( @C != 1 ) {
+					$html .= '<span class="warning">';	
+				} # end if
+				foreach my $C ( @C ) {
 					my $Paper = $C->Paper();
-					$html .= sprintf( '<a href="/employee/inventory/skid_details.html?skid_id=%d">%s - %d%s %s</a><br/>',
-						$$Skid{'id'},
+					$html .= sprintf( '<a href="/employee/inventory/skid_details.html?skid_id=%d">%s : %s %d%s %s</a><br/>',
+						$$Skid{id},
 						$Paper->to_string(),
 						( $$C{purpose_id} ? new openprint::StockPurpose( $C->purpose_id() )->name() : '' ),
 						$C->quantity(),
@@ -232,8 +241,10 @@ $RFIDTag->id(),
 						$total_sheets += $C->quantity();
 					} # end if	
 				} # end foreach
-				$html .= '</td>';
-				$html .= '</tr>';
+				if ( @C != 1 ) {
+					$html .= '</span>';	
+				} # end if
+				$html .= '</td></tr>';
 				$rowclass = $rowclass ? '' : ' class="colRow"';
 			} # end foreach Skid
 			$html .= '<tr class="totals"><td class="checkbox"></td><td colspan="5">Totals</td><td>';

@@ -13,7 +13,7 @@
 		<div class="PO">
 			<div class="Header">
 				<div class="Logo">
-					<? echo ( ssi::include( $config{SkinPath}.'/includes/logo.html' ); ) ?>
+					<?include(/includes/logo.html)?>
 					<table class="HeaderText">
 						<tr>
 							<td colspan="2">
@@ -72,7 +72,7 @@
             <p><label>NOTIFY:</label>
             <? echo (
                 my $html = '';
-                foreach my $U ( openprint::User->find( id=>[$$variable{PurchaseOrder}->notifications()], order=>'lower(strfirstName),lower(strlastname)' ) ) {
+                foreach my $U ( openprint::User->find( id=>[$$variable{PurchaseOrder}->notifications()], order=>'lower(firstname),lower(lastname)' ) ) {
                     $html .= sprintf( q{<a href="mailto:%1$s">%2$s &lt;%1$s&gt;</a><br/>}, $U->email(), $U->name() );
                 } # end foreach
                 return $html;
@@ -107,7 +107,7 @@
 			<div class="items">
 				<div class="header">
 					<div class="quantity">QTY</div>
-					<div class="product">ITEM</div>
+					<div class="product">PRODUCT#</div>
 					<div class="description">ITEM / DESCRIPTION</div>
 					<div class="docket">DOCKET</div>
 					<div class="price">UNIT PRICE</div>
@@ -120,12 +120,20 @@
 				<div class="product">%2$s</div>
 				<div class="description">%3$s</div>
 				<div class="docket">%4$s</div>
-				<div class="price">%5$s</div>
-				<div class="line_total">%6$s</div>
-			</div>', $C->qty(), $C->item(), $C->description(), $C->docket(), openprint::Currency::format($C->price(),4), openprint::Currency::format($C->total()) );
+				', $C->qty(), $C->item(), $C->description(), $C->docket() );
+
+			if ( $C->type() eq 'Roll Stock' ) {
+				$html .= openprint::Currency::format($C->price(),2) . '/100lb';
+			} elsif ( $C->type() eq 'Sheet Stock' ) {
+				$html .= openprint::Currency::format($C->price(),2) . '/100lb<br/>';
+				$html .= openprint::Currency::format($C->mprice(),2) . '/1000';
+			} else {
+				$html .= openprint::Currency::format($C->price(),4);
+			} # end if
+			$html .= join('', '<div class="line_total">', openprint::Currency::format($C->total()), '</div></div>' );
 		} # end foreach C
 		return $html;
-		) ?>
+	) ?>
 </div>
 <div class="totals">	
 		<div class="subtotal">
@@ -196,7 +204,7 @@ foreach my $Asset ( @Assets ) {
         </tr>
         ', $Asset->on_disk_filename(), $Asset->name(), $Asset->filename(),
         format_datetime( $Asset->created_on() ),
-        $Asset->thumbnail_url(),
+        $Asset->sized_url('small'),
         );
 } # end foreach Asset
 	$html .='

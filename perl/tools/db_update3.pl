@@ -316,9 +316,6 @@ if ( ! sets::isin( 'logs', \@tables ) ) {
 		$dbh->do('ALTER TABLE Logs add object_id INTEGER');
 	} # end if
 } # end if
-if ( my $Action = openprint::Log_Action->find_one('name'=>'Switch Company') ) {
-	$Action->save({'name'=>'Select Company','description'=>'Select Company'});
-} # end if
 my %config_actions = (
 	'Add Currency'			=>	76,
 	'Update Configuration' => 77,
@@ -535,18 +532,6 @@ if ( ! sets::isin( 'bookmarks', \@tables ) ) {
 if ( ! $config{'public_URIs'} ) {
 $dbh->do(q`insert into Configuration values ('public_URIs', '/,/index.html,/account/login.html,/account/registration.html', 'text', 'Comma separated list of pages on the site that can be read without logging in','Miscellaneous Settings' );` );
 } # end if
-if ( ! sets::isin( 'page_settings', \@tables ) ) {
-    $dbh->do( misc::load_file( $log, '../openprint/sql/Page_Settings.sql' ) );
-    die $dbh->errstr() if $dbh->errstr();
-} else {
-	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='page_settings'", 'column_name');
-	if ( ! exists $$data{'keywords'} ) {
-		$dbh->do('ALTER TABLE page_settings add keywords TEXT');
-	} # end if
-	if ( ! exists $$data{'description'} ) {
-		$dbh->do('ALTER TABLE page_settings add description TEXT');
-	} # end if
-}
 
 if ( ! sets::isin( 'opinion_types', \@tables ) ) {
     $dbh->do( misc::load_file( $log, '../openprint/sql/Opinion_Types.sql' ) );
@@ -827,6 +812,11 @@ if ( ! sets::isin( 'company_categories', \@tables ) ) {
 	die if $dbh->errstr();
 	$dbh->do(q`ALTER TABLE Companies add category_id INTEGER`);
 	$dbh->do(q`ALTER TABLE Companies add FOREIGN KEY (category_id) REFERENCES company_categories (id)`);
+} else {
+	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='company_categories'", 'column_name');
+	if ( ! exists $$data{short} ) {
+		$dbh->do('ALTER TABLE company_categories ADD short text');
+	} # end if
 } # endif
 if ( $config{'Owner'} ) {
 	$dbh->do("UPDATE configuration SET name='owner_id' WHERE name='Owner'" );

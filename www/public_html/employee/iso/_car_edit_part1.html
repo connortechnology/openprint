@@ -84,9 +84,7 @@
 @$variable{'printed_on_year','printed_on_month','printed_on_day'} = split('-',$$variable{'CAR'}->printed_on() );
 } # end if
 ) ?>
-            <select id="printed_on_year" name="printed_on_year" onchange="setDaysDropDown(this.value,this.form.printed_on_month.value,this.form.printed_on_day,this.form.printed_on_day.value);"><option value="">select</option><? echo ( ssi::return_years( undef, undef, $$variable{'printed_on_year'} ? $$variable{'printed_on_year'} : '' ); ) ?></select>
-            <select id="printed_on_month" name="printed_on_month" onchange="setDaysDropDown(this.form.printed_on.value,this.value,this.form.printed_on_day,this.form.printed_on_day.value);"><option value="">select</option><? echo ( ssi::getmonths( $$variable{'printed_on_month'} ? $$variable{'printed_on_month'} : '' ); ) ?></select>
-            <select id="printed_on_day" name="printed_on_day"><option value="">select</option><? echo ( ssi::getdays( $$variable{'printed_on_day'} ? $$variable{'printed_on_day'} : '' ); ) ?></select>
+<? echo ( date_select( 'printed_on', $$variable{'CAR'}->printed_on() ); ) ?>
 	</tr>
 	<tr><td colspan="10">PROBLEM/NONCONFORMANCE DESCRIPTION</td></tr>
 	<tr>
@@ -95,8 +93,7 @@
 			<select name="area_id" onchange="area_id_onchange(this);">
 				<option value="">select</option>
 				<? echo (
-					require openprint::CAR_Area;
-					return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::CAR_Area->find('order'=>'sorting,lower(name)') ], $$variable{'CAR'}->area_id() );
+					make_drop_down( openprint::CAR_Area->dropdown( order=>'sorting,lower(name)'), $$variable{CAR}->area_id() );
 				) ?>
 			</select>
 		</td>
@@ -105,7 +102,7 @@
 			<select name="reason_id">
 				<option value="">select</option>
 				<? echo (
-					return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::CAR_Reason->find('order'=>'sorting,lower(name)') ], $$variable{'CAR'}->reason_id() );
+					make_drop_down( openprint::CAR_Reason->dropdown( order=>'sorting,lower(name)'), $$variable{CAR}->reason_id() );
 				) ?>
 			</select>
 		</td>
@@ -115,7 +112,7 @@
 <? echo ( 
 	my $html = '';
 	my @presses = split(',', $$variable{'CAR'}->presses());
-	foreach my $Press ( openprint::Equipment->find('category'=>'Printing','useinscheduling'=>1) ) {
+	foreach my $Press ( openprint::Equipment->find('category any'=>'Printing','useinscheduling'=>1) ) {
 		$html .= sprintf('<input type="checkbox" id="presses%1$d" name="presses" value="%1$d" %3$s/><label for="presses%1$d">%2$s</label>', $Press->id(), $Press->name(), sets::isin( $Press->id(), @presses ) ? 'checked="checked"' : '' );
 	} # end foreach
 	return $html;
@@ -195,9 +192,9 @@ if ( $$variable{'CAR'}->reprint_on() ) {
 	<tr>
 		<td>Approved by</td>
 		<td>
-			<select name="approved_by_id"><? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User->find('type'=>['E','A'],'usergroup'=>'Reprint Approvals','order'=>'lower(firstname),lower(lastname)') ], $session{user_id} ); ) ?></select>
+			<select name="approved_by_id"><option value="">select</option><? echo ( make_drop_down( openprint::User->dropdown( type=>['E','A'],'usergroup any'=>'Reprint Approvals',order=>'lower(firstname),lower(lastname)'), $session{user_id} ); ) ?></select>
 		</td>
-		<td>Approved on:</td>
+		<td>Approved on</td>
 		<td>
 <? eval (
 	if ( $$variable{'CAR'}->approved_on() ) {
@@ -225,7 +222,7 @@ if ( $$variable{'CAR'}->reprint_on() ) {
 </form>
 <p class="buttons">
 	<? echo ( join('',
-		ssi::button( 'Save', { onclick=>"if(check_part1(\$('part1form'))){new Ajax.Updater('Part1','/employee/iso/_car_view_part1.html',
+		button( 'Save', { onclick=>"if(check_part1(\$('part1form'))){new Ajax.Updater('Part1','/employee/iso/_car_view_part1.html',
 		{
 			parameters: \$('part1form').serialize(),
 			evalScripts: true,

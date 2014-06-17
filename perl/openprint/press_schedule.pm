@@ -97,7 +97,7 @@ sub find {
 sub remove {
 	my ( $p_id, $s_id ) = @_;
 	my $error;
-	foreach my $Job ( openprint::ScheduledJob->find(project_id=>$p_id, ( $s_id ? ('service_id any'=>$s_id) : () ) ) ) {
+	foreach my $Job ( openprint::ScheduledJob->find(project_id=>$p_id, ( $s_id ? ('service_id @>'=>$s_id) : () ) ) ) {
 		if ( $s_id and ( $Job->service_id() > 1 ) ) {
 			$error .= $Job->save({'service_id'=>[ sets::exclude( [ $s_id ], $Job->service_id() ) ]});
 		} else {
@@ -120,7 +120,7 @@ sub add_project_to_press_schedule {
 
 	my @sigs_not_on_schedule;
 	foreach my $s_s_id ( sets::union(@sigs) ) {
-		next if openprint::ScheduledJob->find_one(project_id=>$$Project{id}, 'service_id any'=>$s_s_id );
+		next if openprint::ScheduledJob->find_one(project_id=>$$Project{id}, 'service_id @>'=>$s_s_id );
 		push @sigs_not_on_schedule, $s_s_id;
 	} # end foreach sig
 

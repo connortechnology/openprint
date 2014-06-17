@@ -2,6 +2,7 @@ use strict;
 package openprint;
 use vars qw( $r %variable %session %param %config $log $dbh );
 
+
 sub session_init {
 	require Apache2::Cookie;
 	require Apache::Session::Postgres;
@@ -15,15 +16,17 @@ sub session_init {
 		$cookie = $cookie->value if $cookie;
 	} else {
 		if ( $r->param('_session_id') ) {
+$log->error("Since when is session_id in the params");
 			$cookie = $r->param('_session_id');
 		} # end if
 	} # end if
 
 	if ( $dbh ) {
+		# If we have no cookie, then... shouldn't try to load it...
 		if ( ! eval q`tie %session, 'Apache::Session::Postgres', $cookie, { Handle => $dbh, Commit => 0, IDLength => 8 }` ) {
-			$log->debug("Error fetching Session: $cookie: $@");
+			$log->error("Error fetching Session: $cookie: $@");
 			if ( ! eval q`tie %session, 'Apache::Session::Postgres', undef, { Handle		=> $dbh, Commit		=> 0, IDLength	=> 8, };` ) {
-				$log->debug("Error creating Session: ");
+				$log->error("Error creating Session: ");
 			} # end if
 			if ( $r->param('_session_id') ) {
 				if ( $session{ip} ne $ENV{REMOTE_ADDR} ) {
@@ -56,7 +59,7 @@ sub session_init {
 	} # end if
 	$session{'ip'} = $ENV{'REMOTE_ADDR'} if $ENV{'REMOTE_ADDR'} and ! $session{'ip'};
 
-# Now set some defaults right away, if we can
+# Now set some defaults right away, if we can, FIXME namespace colision
 	if ( $r->param('Country') ) {
 		$session{'Country'} = $r->param('Country');
 	} elsif ( ! $session{'Country'} ) {
@@ -131,8 +134,11 @@ sub switch_company {
 		$_ = openprint::Currency->find_one('short'=>'CAD');
 		$session{'Currency_id'} = $_->id() if $_;
 	} # end if
+	require openprint::Order;
+	foreach my $Order ( openprint::Order->find(session_id=>$session{_session_id} ) ) {
+		$Order->save({session_id => undef });
+	} # end foreach Order
 	my @keys = sets::exclude( [ 'Currency_id', '_session_id','user_id','company_id','user_type','Country' ], [ keys %session ] );
-	sql::update( undef, undef, 'orders', [ 'strsessionid=?', $session{_session_id} ], 'strsessionid', undef );
 	delete @session{@keys};
 } # end sub switch_company
 

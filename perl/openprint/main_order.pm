@@ -1,9 +1,9 @@
+use strict;
 package openprint::main_order;
 
 require Email::Valid;
 use Date::Calc qw(Add_Delta_Days check_date);
 
-use strict;
 use openprint ();
 use vars qw( %config %param %variable $log $dbh %session );
 *variable = \%openprint::variable;
@@ -13,7 +13,7 @@ use vars qw( %config %param %variable $log $dbh %session );
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
 
-use constant DEBUG => 0;
+use constant DEBUG => 1;
 
 require sql;
 require openprint::Currency;
@@ -63,12 +63,13 @@ sub information {
 		$order_id = openprint::order::make_order_from_order( $order_id );
 		return if ! $order_id;
 	} elsif ( $param{'btnFunction'} eq 'ReOpen' ) {
-		openprint::order::delete_unfinished_orders();
-		if ( $order_id = $param{'order_id'} ) {
+		if ( $order_id ) {
+			openprint::order::delete_unfinished_orders();
 			my $Order = new openprint::Order( $order_id );
 			$Order->save({'status'=>'Re-Opened','session_id'=>$session{'_session_id'}});
 			foreach my $OP ( $Order->Ordered_Projects() ) {
 				$variable{'error'} .= $OP->save({'price'=>undef});
+				
 			} # end foreach
 			$Order->add_log( 'Re-Opened' );
 		} else {
@@ -206,10 +207,10 @@ sub submit {
 	my $Order = new openprint::Order( $order_id );
 	$session{'order_id'} = $order_id;
 
-	if ( $param{'btnFunction'} eq 'Continue') { # saving project information
+	if ( $param{btnFunction} eq 'Continue') { # saving project information
 		
 		foreach my $OP ( openprint::OrderedProject->find('order_id'=>$Order->id() ) ) {
-			$variable{'error'} .= openprint::order::save_project_information( $order_id, $OP );
+			$variable{error} .= openprint::order::save_project_information( $order_id, $OP );
 		} # end foreach
 		foreach my $Product ( $Order->Products() ) {
 			if ( exists $param{'ProductQuantity'.$Product->id()} ) {
@@ -345,11 +346,18 @@ sub confirmation {
 		# Commit Project Information
 		foreach my $OP ( $Order->Ordered_Projects() ) {
 			$OP->save({
-				'reference'	=> $OP->Project()->reference(),
-				'price'		=> $OP->Project()->Currency()->convert_from( $OP->price(undef) ),
-				'quantity'	=> undef,
+				reference	=> $OP->Project()->reference(),
+				price		=> $OP->Project()->Currency()->convert_from( $OP->price(undef) ),
+				quantity	=> undef,
 			});
+			my $Project = $OP->Project();
+			$variable{error} .= $Project->check_for_order( $OP );
 		} # end foreach Project
+
+		if ( $variable{error} ) {
+			$variable{ExternalRedirect} = '/main/order/submit.html';
+			return;
+		} # end if
 
 		my $sub_total = $Order->subtotal(undef);
 		foreach my $Tax ( $Order->Taxes() ) {
@@ -358,7 +366,7 @@ sub confirmation {
 		my $total = $Order->total(undef);
 
 		#my $customer_credit = new openprint::customer_credit( $session{'company_id'} );
-		my ( $downpayment );
+		my $downpayment;
 		#my ( $downpayment ) = $customer_credit->get( 'Downpayment' );
 		#if ( $downpayment eq '' ) {
 			#$downpayment = $config{'DefaultDownpayment'};
@@ -368,11 +376,10 @@ sub confirmation {
 
 		my $status = ( ( $downpayment - $Order->paid() ) > 0 ) ? 'Pending Deposit': 'In Production';
 		# Get Docket #
-		my ( $docket_number ) = $Order->docket();
+		my $docket_number = $Order->docket();
 		if ( ! $docket_number ) {
 			( $docket_number ) = sql::execute( $log, $dbh, q{SELECT nextval('DocketNumber_seq')} );
 		} # end if
-
 		# This is messed up.  I think an order should never switch companies unless it doesn't have a company assigned.  I don't see how it could work any other way.
 		$Order->company_id( $session{'company_id'} ) if ! $Order->company_id();
 		$Order->salesrep_id( new openprint::Company( $session{'company_id'} )->salesrep_id() );
@@ -385,19 +392,16 @@ sub confirmation {
 		$Order->save();
 
 		$Order->add_log( 'Submit Order' );
-		
-		$variable{'Downpayment'} = $downpayment - $Order->paid();
-		$variable{'Downpayment'} = 0 if $variable{'Downpayment'} < 0;
-		$variable{'Downpayment'} = sprintf( '%.2f', $variable{'Downpayment'} );
 
-		foreach my $Project ( $Order->Projects() ) {
+		foreach my $OP ( $Order->Ordered_Projects() ) {
+			my $Project = $OP->Project();
 			sql::update( $log, $dbh, 'tbl_Project_Contents', ["lngProjectIndex=? AND strStatus NOT IN ( 'Complete', 'Approved', 'Proofs Out', 'Waiting For Customer Approval','Waiting For QA Approval','')", $Project->id()], 'strStatus', 'Ordered' );
 			$Project->docket( $docket_number );
 			$Project->order_id( $Order->id() );
 			$Project->status( $status eq 'Pending Deposit' ? $status : 'In Prepress' );
 			$Project->save();	
 			$Project->update_status();
-
+			$Project->allocate_for_order( $OP );
 			openprint::press_schedule::add_project_to_press_schedule( $Project );
 		} # end foreach Project
 		foreach my $Product ( $Order->Products() ) {
@@ -411,6 +415,12 @@ sub confirmation {
 
 			openprint::press_schedule::add_project_to_press_schedule( $Project );
 		} # end foreach Product
+
+		
+		$variable{'Downpayment'} = $downpayment - $Order->paid();
+		$variable{'Downpayment'} = 0 if $variable{'Downpayment'} < 0;
+		$variable{'Downpayment'} = Math::Round::nearest( 0.01, $variable{'Downpayment'} );
+
 		$Order->update_status();
 # send out email notifications
 		$Order->send_sales_order( );
@@ -419,6 +429,8 @@ sub confirmation {
 		if ( $variable{'Downpayment'} > 0 ) {
 		#	send_invoice( $r, $log, $dbh, $order_id );
 		} # end if
+	} else {
+		$log->debug("Already complete");
 	} # end if
 
 	$variable{'order_id'} = $order_id;
@@ -528,9 +540,33 @@ sub history_details {
 			} # end if
 		} # end if
    } elsif ( $param{'btnFunction'} eq 'Invoice' ) {
-	   $Order->invoice_id( $param{'invoice_id'} );
-	   $Order->invoiced_on( 'NOW()' );
-	   $Order->save();
+	   require openprint::Invoice;
+	   require openprint::Order_Invoice;
+		$param{invoice_id} = openprint::Invoice->transform('num', $param{invoice_id} );
+		if ( ! $param{invoice_id} ) {
+			$variable{error} .= 'Empty or invalid Invoice #.<br/>';
+		} elsif ( ! $param{order_id} ) {
+			$variable{error} .= 'Empty or invalid Order #.<br/>';
+		} else {
+			my $Invoice = openprint::Invoice->find_one(num=>$param{invoice_id});
+			if ( ! $Invoice ) {
+				$Invoice = new openprint::Invoice();
+				$variable{error} .= $Invoice->save({ 
+					invoicer_id=>$config{owner_id},
+					invoicee_id=>$Order->company_id(),
+					total=>$param{amount},
+					num=>$param{invoice_id},
+					currency_id	=>	$Order->currency_id(),
+					});
+			} # end if ! Invoice
+			my $OI = new openprint::Order_Invoice();
+			$variable{error} .= $OI->save({ order_id=>$$Order{id}, invoice_id=>$$Invoice{id} });
+			$Order->add_log('Invoiced # ' . $Invoice->link_to());
+		} # end if
+		#$variable{error} .= $Order->save({ invoice_id=> $Invoice->id() });
+		if ( ! $variable{error} ) {
+			$variable{ExternalRedirect} = '/main/order/history_details.html?order_id='.$Order->id();
+		} # end if
 	} elsif ( $param{'btnFunction'} eq 'Resend') {
 		$Order->send_sales_order( );
 		$variable{'information'} .= "Order emails sent.<br/>";
@@ -563,5 +599,8 @@ sub _order {
 		} # end if
 	} # end if
 } # end sub _order
+
+sub _user_info {
+} # end sbu _user_info
 1;
 __END__

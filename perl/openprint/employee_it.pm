@@ -13,6 +13,7 @@ use vars qw( %variable %session %param %config $log $dbh $r );
 
 require openprint::Host;
 require openprint::RADIUS_Check;
+require openprint::RADIUS_Reply;
 require openprint::User_Type;
 require openprint::Session;
 require openprint::License;
@@ -69,7 +70,7 @@ sub _hosts {
 			'radius_auth', 'order',
 			);
 	if ( $config{'RADIUS Support'} eq 'Y' ) {
-		$openprint::RADIUS_Check::dbh = sql::open_sql( $log,
+		$openprint::RADIUS_Reply::dbh = $openprint::RADIUS_Check::dbh = sql::open_sql( $log,
 				'database'  => $config{'RADIUS DB Name'},
 				'driver'    => $config{'RADIUS DB Driver'},
 				'host'      => $config{'RADIUS DB Server'},
@@ -174,6 +175,20 @@ sub host {
 	} # end if
 	ssi::setup_date_select( '/employee/it/host.html', 'log_created_on_start', 0 );
 	ssi::setup_date_select( '/employee/it/host.html', 'log_created_on_end', '' );
+	if ( $config{'RADIUS Support'} eq 'Y' ) {
+		$openprint::RADIUS_Reply::dbh = $openprint::RADIUS_Check::dbh = sql::open_sql( $log,
+				'database'  => $config{'RADIUS DB Name'},
+				'driver'    => $config{'RADIUS DB Driver'},
+				'host'      => $config{'RADIUS DB Server'},
+				'login'     => $config{'RADIUS DB Username'},
+				'password'  => $config{'RADIUS DB Password'},
+				);
+		if ( ! $openprint::RADIUS_Check::dbh ) {
+			$variable{'error'} .= 'Unable to connect to RADIUS DB server.';
+			return;
+		} # end if
+    } # end if
+
 } # end sub view_host
 
 sub camera {
@@ -207,7 +222,7 @@ sub _radius_mac_line {
 		$variable{'error'} .= 'RADIUS Support is not enabled.';
 		return;
 	} # end if
-	$openprint::RADIUS_Check::dbh = sql::open_sql( $log,
+	$openprint::RADIUS_Reply::dbh = $openprint::RADIUS_Check::dbh = sql::open_sql( $log,
 			'database'  => $config{'RADIUS DB Name'},
 			'driver'    => $config{'RADIUS DB Driver'},
 			'host'      => $config{'RADIUS DB Server'},
@@ -219,34 +234,54 @@ sub _radius_mac_line {
 		return;
 	} # end if
 	if ( $param{'action'} eq 'add' ) {
-		if ( $param{'username'} =~ /^([[:xdigit:]]{2})[\:\-]?([[:xdigit:]]{2})[\:\-]?([[:xdigit:]]{2})[\:\-]?([[:xdigit:]]{2})[\:\-]?([[:xdigit:]]{2})[\:\-]?([[:xdigit:]]{2})$/ ) {
-			$param{'username'} = "$1-$2-$3-$4-$5-$6";
+		if ( $param{username} =~ /^([[:xdigit:]]{2})[\:\-]?([[:xdigit:]]{2})[\:\-]?([[:xdigit:]]{2})[\:\-]?([[:xdigit:]]{2})[\:\-]?([[:xdigit:]]{2})[\:\-]?([[:xdigit:]]{2})$/ ) {
+			# Convert from alternate mac formats
+			$param{username} = "$1-$2-$3-$4-$5-$6";
 		} else {
 			$log->warn("Re didn't match $param{'username'}");
 		} # end if
-		if ( ! $param{'value'} ) {
-			if ( $param{'attribute'} eq 'Cleartext-Password' ) {
-				$param{'value'} = $param{'username'};
-			} elsif ( $param{'attribute'} eq 'Framed-IP-Address' ) {
+		if ( ! $param{value} ) {
+			if ( $param{attribute} eq 'Cleartext-Password' ) {
+				$param{value} = $param{'username'};
+			} elsif ( $param{attribute} eq 'Framed-IP-Address' ) {
 				my $Host = openprint::Host->find_one('mac any'=>$param{'username'});
 				if ( $Host ) {
 					$param{'value'} = $Host->ip();
 				} # end if
 			} # end if
 		} # end if
-		my $Check = new openprint::RADIUS_Check();
-		$variable{'error'} .= $Check->save({
-			'username'	=>	$param{'username'},
-			'value'		=>	$param{'value'},
-			'op'		=>	':=',
-			'attribute'	=>	$param{'attribute'},
+
+		my $Radius;
+		if ( $openprint::RADIUS_Check::attributes{$param{attribute}} ) {
+			$Radius = new openprint::RADIUS_Check();
+		} elsif ( $openprint::RADIUS_Reply::attributes{$param{attribute}} ) {
+			$Radius = new openprint::RADIUS_Reply();
+		} else {
+			$log->error("Unknown RADIUS Attribute: $param{attribute}");
+			$variable{error} .= "Unknown RADIUS Attribute: $param{attribute}<br/>";
+			return;
+		} # end if
+		$variable{error} .= $Radius->save({
+			username	=>	$param{username},
+			value		=>	$param{value},
+			op			=>	':=',
+			attribute	=>	$param{attribute},
 		});
 	} elsif ( $param{'action'} eq 'remove' ) {
-		my $Check = openprint::RADIUS_Check->find_one( 'username'=>$param{'username'}, 'attribute'=>$param{'attribute'} );
-		$variable{'error'} .= $Check->delete() if $Check->id();
+		my $Radius;
+		if ( $openprint::RADIUS_Check::attributes{$param{attribute}} ) {
+			$Radius = openprint::RADIUS_Check->find_one( username=>$param{username}, attribute=>$param{attribute} );
+		} elsif ( $openprint::RADIUS_Reply::attributes{$param{attribute}} ) {
+			$Radius = openprint::RADIUS_Reply->find_one( username=>$param{username}, attribute=>$param{attribute} );
+		} else {
+			$log->error("Unknown RADIUS Attribute: $param{attribute}");
+			$variable{error} .= "Unknown RADIUS Attribute: $param{attribute}<br/>";
+			return;
+		} # end if
+		$variable{error} .= $Radius->delete() if $Radius->id();
 	} # end if
-	$variable{'username'} = $param{'username'};
-	$variable{'username'} =~ s/[^[[:xdigit:]]]//g;
+	$variable{username} = $param{username};
+	$variable{username} =~ s/[^[[:xdigit:]]]//g;
 } # end sub _radius_mac_line
 
 sub radius {
@@ -255,7 +290,7 @@ sub radius {
 
 sub _radius {
 	if ( $config{'RADIUS Support'} eq 'Y' and ( ! $openprint::RADIUS_Check::dbh ) ) {
-		$openprint::RADIUS_Check::dbh = sql::open_sql( $log,
+		$openprint::RADIUS_Reply::dbh = $openprint::RADIUS_Check::dbh = sql::open_sql( $log,
 				'database'  => $config{'RADIUS DB Name'},
 				'driver'    => $config{'RADIUS DB Driver'},
 				'host'      => $config{'RADIUS DB Server'},

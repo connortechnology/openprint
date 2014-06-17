@@ -1,14 +1,14 @@
 <? eval (
 	if ( $session{'/employee/inventory/allocations.html?Docket'} ) {
 		@{$$variable{'Allocations'}} = openprint::PaperAllocation->find( 
-			'docket'	=>	$session{'/employee/inventory/allocations.html?Docket'},
-			'order'		=>	'id',
+			docket	=>	$session{'/employee/inventory/allocations.html?Docket'},
+			order	=>	'id',
 			);
 	} else {
 		$$variable{'Allocations'} = [ openprint::PaperAllocation->find( 
 			date_filter( '/employee/inventory/allocations.html?created_on_end', 'created_on <=' ),
 			date_filter( '/employee/inventory/allocations.html?created_on_start', 'created_on >=' ),
-			'order'		=>	'id',
+			order		=>	'id',
 			) ];
 	} # end if
 ) ?>
@@ -48,11 +48,13 @@
 				
 				foreach my $A ( @{$allocations{$key}} ) {	
 					$quantity += $A->quantity();
-					if ( $A->skid_id() ) {
-						my $age = time - Date::Parse::str2time( $A->Skid()->created_on() );
-						if ( $age > $max_age ) {
-							$max_age = $age;
-						} # end if
+					if ( $_ = $A->skid_ids() and @{$_} ) {
+						foreach my $Skid ( openprint::Skid->find( id=>$A->skid_ids() ) ) {
+							my $age = time - Date::Parse::str2time( $Skid->created_on() );
+							if ( $age > $max_age ) {
+								$max_age = $age;
+							} # end if
+						} # end foreach Skid
 					} else {
 						foreach my $SkidContent ( openprint::SkidContent->find('paper_id'=>$A->paper_id(),'quantity >'=>0) ) {
 							my $age = time - Date::Parse::str2time( $SkidContent->Skid()->created_on() );
@@ -62,10 +64,10 @@
 						} # end if
 					} # end if
 					if ( $A->Paper()->type() eq 'Roll' ) {
-						$total_rolls += 1 if $A->skid_id();
+						$total_rolls += @{$A->skid_ids()} if $A->skid_ids();
 						$total_weight += $A->quantity;
 					} else {
-						$total_allocations += 1 if $A->skid_id();
+						$total_allocations += @{$A->skid_ids()} if $A->skid_ids();
 						$total_sheets += $A->quantity;
 					} # end if
 				} # end foreach Allocation
@@ -85,12 +87,16 @@ $log->debug("Max end: $max_age_end Max Age $max_age");
 
 				$html .= "<tr$rowclass>";
 				$html .= qq`<td class="checkbox"><input type="checkbox" name="allocations" value="$$Allocation{'id'}"/></td>`;
-				$html .= sprintf( '<td class="Docket"><a href="skid_details.html?skid_id=%d">%s</a></td>', $$Allocation{'id'}, $Allocation->docket() );
-				$html .= sprintf( '<td class="Company"><a href="skid_details.html?skid_id=%d">%s</a></td>', $$Allocation{'id'}, $Allocation->Project()->Company()->name() );
-				$html .= sprintf( '<td class="Stock"><a href="skid_details.html?skid_id=%d">%s</a></td>', $$Allocation{'id'}, $Allocation->Paper()->to_string() );
-				$html .= sprintf( '<td class="Quantity"><a href="skid_details.html?skid_id=%d">%s%s</a></td>', $$Allocation{'id'}, Number::Format::format_number($quantity), $Allocation->Paper()->type() eq 'Roll' ? 'lbs' : 'sheets' );
-				$html .= sprintf( '<td class="Date"><a href="skid_details.html?skid_id=%d">%s</a></td>', $$Allocation{'id'}, misc::seconds_to_pretty_interval( $max_age ) );
-				$html .= sprintf( '<td class="Date"><a href="skid_details.html?skid_id=%d">%s</a></td>', $$Allocation{'id'}, Date::Format::time2str('%Y-%m-%d %H:%M', Date::Parse::str2time($Allocation->created_on()) ), );
+				$html .= sprintf( '<td class="Docket"><a href="/employee/project/view.html?docket=%1$d">%1$s</a></td>', $$Allocation{docket} );
+				$html .= sprintf( '<td class="Company"><a href="allocation.html?allocation_id=%d">%s</a></td>', $$Allocation{id}, $Allocation->Order()->Company()->name() );
+				$html .= sprintf( '<td class="Stock"><a href="paper_details.html?paper_id=%d">%s</a></td>', $$Allocation{paper_id}, $Allocation->Paper()->to_string() );
+				$html .= sprintf( '<td class="Quantity"><a href="skid_details.html?skid_id=%d">%s %s%s</a></td>', $$Allocation{id}, 
+					( $$Allocation{skid_ids} ? 
+						scalar @{$$Allocation{skid_ids}}. ( $Allocation->Paper()->type() eq 'Roll' ? ' roll' : ' skid' ) . ( @{$$Allocation{skid_ids}} == 1 ? '' : 's' )
+ : '' ),
+					Number::Format::format_number($quantity), $Allocation->Paper()->type() eq 'Roll' ? 'lbs' : 'sheets' );
+				$html .= sprintf( '<td class="Date"><a href="allocation.html?allocation_id=%d">%s</a></td>', $$Allocation{id}, misc::seconds_to_pretty_interval( $max_age ) );
+				$html .= sprintf( '<td class="Date"><a href="allocation.html?allocation_id=%d">%s</a></td>', $$Allocation{id}, format_datetime($Allocation->created_on()) );
 				$html .= '</tr>';
 				$rowclass = $rowclass ? '' : ' class="colRow"';
 			} # end foreach key "docket-paper_id"

@@ -10,7 +10,7 @@
 			<fieldset class="filters">
 			<? if ( $$variable{User}->Company()->can_edit() ) ?>
 			<? echo (
-				my @Users = @{$$variable{Users}} = openprint::User->find('company_id'=>$$variable{User}->company_id(), 'order'=>'lower(firstname),lower(lastname)' );
+				my @Users = @{$$variable{Users}} = openprint::User->find('company_id'=>$$variable{User}->company_id()?$$variable{User}->company_id():$session{company_id}, order=>'lower(firstname),lower(lastname)' );
 				if ( @Users == 1 ) {
 					return sprintf('<input type="hidden" name="ddmUser" value="%d"/>', $Users[0]->id() );
 				} elsif ( @Users ) {
@@ -24,6 +24,7 @@
 					</select>
 				</li></ul>';
 				} 	
+				return;
 			) ?>
 			<? else ( $$variable{User}->Company()->can_edit() ) ?>
 					<input type="hidden" name="ddmUser" value="<? echo ( $session{user_id} ) ?>"/>
@@ -100,7 +101,7 @@
 					<input type="radio" id="MailingListN" name="mailinglist" <? echo ( checked( $$variable{User}->mailinglist() ne 'Y' ); ) ?> value="N" />
 					<label class="radio" for="MailingListN">No</label>
    				</li>
-			<? if ( $$variable{'Me'}->administrator() eq 'Y' ) ?>
+			<? if ( $$variable{'Me'}->administrator() eq 'Y' or $$variable{User}->Company()->can_edit() ) ?>
    				<li class="web_active notrequired">
    					<label>Can login to the web site?</label>
    					<input type="radio" id="web_activeY" name="web_active" <? echo ( checked( $$variable{User}->web_active() eq 'Y' ); ) ?> value="Y" />
@@ -139,7 +140,7 @@
 					</select>
    				</li>
 <? endif ( @{$$variable{'QuoteLevels'}} > 1 ) ?>
-			<? endif ( $$variable{'Me'}->administrator() eq 'Y' ) ?>
+			<? endif ( $$variable{'Me'}->administrator() eq 'Y' or $$variable{User}->Company()->can_edit() ) ?>
 				</ul>
 				</div>
    			</fieldset>
@@ -181,6 +182,7 @@
 			<?include(_user_login_log.html)?>
 <? else ( $$variable{User}->can_edit() ) ?>
 You cannot edit this user.
+<? eval ( $log->debug( $$variable{User}->to_string() ); ) ?>
 <? endif ( $$variable{User}->can_edit() ) ?>
 		</div><!--UserProfile-->
 </div>

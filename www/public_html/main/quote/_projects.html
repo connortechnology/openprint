@@ -5,10 +5,10 @@
 		<tr> 
 			<th class="description">Projects</th>
 			<th class="weight">Weight</th>
-			<th class="markup">Markup</th>
+			<!--<th class="markup">Markup</th>-->
 			<th class="quantity">Qty</th>
-			<th class="price">Price</th>
-			<th class="newprice">New Price</th>
+			<!--<th class="price">Price</th>-->
+			<th class="newprice">Price</th>
 		</tr>
 	</thead>
 	<tbody>
@@ -23,15 +23,15 @@
 		
 			$html .= sprintf(q`<tr%1$s> 
 				<td class="description"><a href="/main/project/view.html?ProjectIndex=%2$d">%3$s%4$s</a></td>
-				<td colspan="5">
+				<td colspan="3">
 				<table>`, $rowclass, $Project->id(), 
-				( $Project->reference() ? htmlize( $Project->reference() ) . '<br/>' : '' ),
+				( $Project->reference() ? $Project->reference() . '<br/>' : '' ),
 				$Project->summary(),
 				);
 
 			my $services = $Project->services();
 
-			foreach my $qty_index ( $Project->quantity_indexes() ) {
+			foreach my $qty_index ( $QP->quantity_indexes() ) {
 				$html .= '<tr><td class="weight">';
 				my $weight;
 
@@ -50,12 +50,19 @@
 				} else {
 					$html .= sprintf( '%.0flb%s (%.0fg)', $weight, ($weight>1?'s':''),$g );
 				} # end if
+if ( 0 ) {
 				$html .= sprintf('</td><td class="markup">%1$s%</td><td class="quantity">%2$s</td><td class="price">%3$s</td><td class="newprice">%4$s</td></tr>', 
 						$QP->markup($qty_index), 
 						$Project->quantity($qty_index), 
 						openprint::Currency::format( $Project->price($qty_index) ), 
 						openprint::Currency::format( $QP->price($qty_index) )
 						);
+} else {
+				$html .= sprintf('</td><td class="quantity">%1$s</td><td class="newprice">%2$s</td></tr>', 
+						$Project->quantity($qty_index), 
+						openprint::Currency::format( $QP->price($qty_index) )
+						);
+}
 				$subtotal += $Project->price($qty_index);
 				$newsubtotal += $QP->price($qty_index);
 				
@@ -63,12 +70,20 @@
 			$html .= "</table>\n</td>\n</tr>\n";
 			$rowclass = $rowclass ? '' : ' class="colRow"';
 		} # end foreach QP
+if ( 0 ) {
 		$html .= join( '', '<tr class="totals"><td colspan="4">Subtotal</td><td class="price">',
 				openprint::Currency::format( $subtotal ),
 				'</td><td class="newprice">', 
 				openprint::Currency::format( $newsubtotal ),
 				'</td></tr>',
 				);
+} else {
+		$html .= join( '', '<tr class="totals"><td colspan="3">Subtotal</td>',
+				'<td class="newprice">', 
+				openprint::Currency::format( $newsubtotal ),
+				'</td></tr>',
+				);
+}
 		return $html
 	) ?>
 	</tbody>
@@ -99,7 +114,7 @@
 				);
 			my $services = $Project->services();
 
-			foreach my $qty_index ( $Project->quantity_indexes() ) {
+			foreach my $qty_index ( $QP->quantity_indexes() ) {
 				$html .= '<tr><td class="weight">';
 				my $weight;
 
@@ -129,10 +144,8 @@
 			$html .= "</table>\n</td>\n</tr>\n";
 		} # end foreach Project
 
-		$html .= join('', '<tr class="totals"><td colspan="3">Subtotal</td><td class="price">', 
-			openprint::Currency::format( $subtotal ), '</td></tr>' );
+		$html .= join('', '<tr class="totals"><td colspan="3">Subtotal</td><td class="price">', openprint::Currency::format( $subtotal ), '</td></tr>' );
 		$rowclass = $rowclass ? '' : ' class="colRow"';
-$log->debug($html);
 		return $html;
 	) ?>
 </table>

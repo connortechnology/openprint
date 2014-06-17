@@ -13,7 +13,10 @@
 <h2>Viewing Order <?order_id?></h2>
 </div>
 <?include(/includes/error_reporting.html)?>
-<form name="f1" method="post" action="history_details.html">
+	<? if ( $$variable{Order}->company_id() != $session{company_id} ) ?>
+	<div class="warning unprintable">Warning: You are logged in as <? echo ( new openprint::Company( $session{company_id} )->name() ) ?> but this order belongs to <a href="history_details.html?order_id=<?echo($$variable{Order}->id())?>&amp;btnFunction=SelectCompany&amp;ddmCompany=<?echo($$variable{Order}->company_id())?>"><? echo ( $$variable{Order}->Company()->name() ) ?></a>!</div>
+	<? endif ( $$variable{Order}->company_id() != $session{company_id} ) ?>
+<form name="f1" id="f1" method="post" action="history_details.html">
 	<input type="hidden" name="btnFunction" value=""/>
 	<input type="hidden" name="order_id" value="<?order_id?>"/>
 	<p class="buttons">
@@ -29,7 +32,7 @@
 				$html .= button( 'UploadCenter', { href=>'/upload/upload_center.html?docket='.$$variable{'Order'}->docket(), text=>'Upload Files' } ) if $$variable{'Order'}->status() ne 'Cancelled';
 				$html .= button( 'reOrder', { onclick=>"f1.action='information.html';f1.btnFunction.value='New Order';f1.submit();", text=>'ReOrder' } ); 
 				$html .= button( 'Resend', { href=>"/main/order/history_details.html?order_id=$$variable{order_id}&amp;btnFunction=Resend", text=>'Resend' } ) if $$variable{'Order'}->status() ne 'Cancelled'; 
-				if ( ( ! $$variable{Order}->invoice_id() ) and $$variable{Order}->can_invoice() ) {
+				if ( $$variable{Order}->can_invoice() ) {
 					$html .= button( 'Invoice', { href=>'/invoice/edit.html?order_id='.$$variable{Order}->id(), text=>'Create Invoice' } );
 				} # end if
 				if ( sets::isin( $session{'user_type'}, ['A', 'E'] ) or ( $$variable{'Order'}->status() eq 'Pending Deposit' ) ) {

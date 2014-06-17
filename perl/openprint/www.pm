@@ -29,7 +29,7 @@ require openprint::Currency;
 require openprint::Authorization;
 
 use openprint ();
-use vars qw( $r %variable %session %param %config $log $dbh %page_settings $starttime );
+use vars qw( $r %variable %session %param %config $log $dbh $starttime );
 *variable = \%openprint::variable;
 *session = \%openprint::session;
 *param = \%openprint::param;
@@ -48,6 +48,8 @@ sub cleanup {
 		openprint::pricing::clear_cache();
 		openprint::service::init_cache();
 		openprint::Object::init_cache();
+		openprint::StockBrand->find();
+		openprint::StockFinish->find();
 		$session{lastupdated} = time;
 		untie %session;
 		if ( ! $dbh->{AutoCommit} ) {
@@ -111,61 +113,30 @@ sub handler {
 	# This one has to go here, because it loads data, the others clear data, so they can go after the requires
 	configuration::init( $r->dir_config() );
 	openprint::session_init();
+	openprint::usergroup::init_cache();
 	if ( $dbh ) {
-		if ( ! $page_settings{$config{db_name}} or ! $page_settings{$config{db_name}}{$page} ) {
-$log->debug("loading Page settings for $config{db_name} for $page") if DEBUG;
-			$page_settings{$config{db_name}} = { map { $_->url(), $_ } openprint::Page_Setting->find() };
-		} # end if
-		if ( ! $page_settings{$config{db_name}}{$page} ) {
-# Need to create one.
-			my @chunks = split('/', $page );
-			while ( @chunks ) {
-				pop @chunks;
-				last if ! @chunks;
-
-# Because there is a / at the beginning of the url, the first entry in chunks is '', so we don't need to prepend a /
-				my $chunk = join('/', @chunks);
-				$chunk = '/' if ! $chunk; # neccessary to deal with the empty string
-
-				$log->debug("Looking for page setting for $chunk") if DEBUG;
-				if ( $page_settings{$config{db_name}}{$chunk} ) {
-# Why stuff up the db with entries, just fill the hash with copies.
-					$page_settings{$config{db_name}}{$page} = $page_settings{$config{db_name}}{$chunk};
-					last;
-				} # end if
-			} # end while chunks
-			if ( ! $page_settings{$config{db_name}}{$page} ) {
-				$page_settings{$config{db_name}}{$page} = new openprint::Page_Setting();
-				$page_settings{$config{db_name}}{$page}->save({url=>$page}) if $session{user_type} eq 'A';
-			} # end if
-		} # end if Page Settings not found
+		my $PageSetting = openprint::Page_Setting::get( $page );
+		$PageSetting = new openprint::Page_Setting() if ! $PageSetting;
+		$variable{PageSetting} = $PageSetting;
 
 		# if not logged in, determine if they are allowed to see this page or not.
-		if ( $page_settings{$config{db_name}}{$page}->user_level() ) {
-$log->debug("Checking user level, need : " . $page_settings{$config{db_name}}{$page}->user_level() . ' session is: ' . $session{'user_type'} );
-			if ( 
-					( $page_settings{$config{db_name}}{$page}->user_level() eq 'C' and ! sets::isin( $session{'user_type'}, ['C','E','A'] ) ) 
-					or
-					( $page_settings{$config{db_name}}{$page}->user_level() eq 'E' and ! sets::isin( $session{'user_type'}, ['E','A'] ) ) 
-					or
-					( $page_settings{$config{db_name}}{$page}->user_level() eq 'A' and ! sets::isin( $session{'user_type'}, ['A'] ) ) 
-				) {
-$log->debug("No good, need login");
-				if ( $page =~ /^.*\/_/ ) {
-					$r->content_type(q{text/javascript; charset=utf-8});
-					$r->print( q`window.location='/error/error_login.html';` );
-					return Apache2::Const::OK;
+		if ( ! $PageSetting->can_view() ) {
+			$log->debug("No good, need login");
+			if ( $page =~ /^.*\/_/ ) {
+				$r->content_type(q{text/javascript; charset=utf-8});
+				$r->print( q`window.location='/error/error_login.html';` );
+				return Apache2::Const::OK;
+			} else {
+				if ( $page =~ /employee/ ) {
+				$page = '/employee/account/login.html';
 				} else {
-					$page = '/error/error_login.html';
+				$page = '/error/error_login.html';
 				} # end if
-				$variable{'Destination'} = misc::get_destination( $r, $r->uri() );
+			} # end if
+			$variable{'Destination'} = misc::get_destination( $r, $r->uri() );
 				#$r->headers_out->set(Location=>'/error/error_login.html');
 				#$r->status(Apache2::Const::REDIRECT);
-			} # end if
-		#} else {
-#$log->debug("No pagesetting?");
 		} # end if
-		$variable{'PageSetting'} = $page_settings{$config{db_name}}{$page} ? $page_settings{$config{db_name}}{$page} : new openprint::Page_Setting();
 
 		foreach my $o ( split(',',$config{'Cached Objects'} ) ) {
 			('openprint::'.$o)->init_cache();
@@ -232,8 +203,8 @@ $log->debug("No good, need login");
 				if ( ! $content ) {
 					$log->error("Found no content at $path");
 				} # end if
-			} elsif ( -e ( my $path = join('/', $config{'SkinPath'}, $page )) ) {
-$log->error("Deprecated SkinPath layout! $config{SkinPath}");
+			} elsif ( -e ( my $path = join('/', $config{SkinPath}, $page )) ) {
+$log->error("Deprecated SkinPath layout! $path");
 				$content = misc::load_file( $log, $path );
 				if ( ! $content ) {
 					$log->error("Found no content at $path");
@@ -270,14 +241,19 @@ $log->debug("PageContent is $variable{PageContent}");
 			} # end while
 			} # end if
 		} # end if _
+		$log->debug( "After finding template: ($page) Elapsed time: " . sprintf('%.4f', tv_interval([$starttime])*1000).' usecs' );
+		local $|=1;
 		if ( $template ) {
 			#$log->debug("parsing template! $template");
 			$r->print( ssi::variable_substitution( \$template, \%variable ) );
 		} else {
+
 			#$log->warn("No template!" . $r->content_type());
 			$variable{PageContent} = ssi::variable_substitution( \$variable{'PageContent'}, \%variable ) if $variable{'PageContent'} ne '';
-			$log->warn($variable{PageContent});
+			#$log->warn($variable{PageContent});
+			$log->debug( "Before printing: ($page) Elapsed time: " . sprintf('%.4f', tv_interval([$starttime])*1000).' usecs' . length( $variable{PageContent} ) );
 			$r->print( $variable{PageContent} );
+	#$log->debug( "After printing: ($page) Elapsed time: " . sprintf('%.4f', tv_interval([$starttime])*1000).' usecs' );
 		} # end if
 	} # end if
 
@@ -357,11 +333,11 @@ $openprint::log->debug("Getfile");
 					if ( ! $$sig_specs{'UsePress'} ) {
 						openprint::service::insert_service_spec( $log, $dbh, $variable{'ProjectIndex'}, $signature_service_index, 'UsePress', $$sig_specs{'ddmPress'.$variable{'Project'}->ordered_quantity_index()} );
 					} # end if
-					$variable{"UsePress-$signature_service_index"} = $$sig_specs{'UsePress'};
+					$variable{"UsePress-$signature_service_index"} = $$sig_specs{UsePress};
 				} # end foreach signature_service_index
 
 				if ( ! $variable{'ddmDueDate'} ) {
-					$variable{'ddmDueDate'} = $variable{'Project'}->get_due_date();
+					$variable{'ddmDueDate'} = $variable{Project}->get_due_date();
 				} # end if
 				@variable{'duedate_year','duedate_month','duedate_day'} = split('-', $variable{'ddmDueDate'});
 
@@ -439,7 +415,7 @@ $log->error("Unable to load equipment.	No PPF for you for signature $$PPF{'signa
 				$variable{'Project'} = new openprint::Project( $variable{'ProjectIndex'} );
 				if ( $variable{ServiceIndex} ) {
 					my $Service = $variable{'Project'}->Service( $variable{'ServiceIndex'} );
-					$variable{'ServiceType'} = $Service->ServiceType();
+					$variable{ServiceType} = $Service->ServiceType();
 					@variable{'ServiceTypeID','ServiceTypeName','ServiceTypeType'} = $variable{ServiceType}->get('name','description','type') if $variable{ServiceType};
 $log->debug("ServiceType: $variable{'ServiceTypeType'}");
 				} # end if
@@ -484,6 +460,7 @@ $log->debug("ServiceType: $variable{'ServiceTypeType'}");
 				} elsif ($third eq 'prep') {
 
 					if ( $filename eq 'scanning.html' ) {
+						require openprint::Estimating::Scanning;
 						openprint::Estimating::Scanning::display( $log, $dbh, \%variable, $project_index, $service_index );
 					} elsif ( $filename eq 'proofs.html' ) {
 						require openprint::Estimating::Proofs;
@@ -491,7 +468,6 @@ $log->debug("ServiceType: $variable{'ServiceTypeType'}");
 					} # end if
 
 				} elsif ($third eq 'bind') {
-$openprint::log->warn('bind');
 					if ( $filename eq 'folding.html' ) {
 						require openprint::Estimating::Folding;
 						openprint::Estimating::Folding::display( $log, $dbh, \%variable, $project_index, $service_index );

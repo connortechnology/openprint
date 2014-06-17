@@ -5,19 +5,19 @@
 			my $html;
 			my $rowclass;
 			#my $quantity = 0;
-			foreach my $PF ( openprint::ProductionFeedback->find('order'=>'id desc', 
-				'limit'=>$session{'/employee/production/datacollection.html?limit'},
+			foreach my $PF ( openprint::ProductionFeedback->find( order=>'id desc', 
+				( $session{'/employee/production/datacollection.html?limit'} ? ( limit=>$session{'/employee/production/datacollection.html?limit'} ) : () ),
 				( $session{'/employee/production/datacollection.html?equipment_id'} ? ( equipment_id=>$session{'/employee/production/datacollection.html?equipment_id'} ) : () ),
 				( $session{'/employee/production/datacollection.html?employee_id'} ? ( employee_id=>$session{'/employee/production/datacollection.html?employee_id'} ) : () ),
 				( $session{'/employee/production/datacollection.html?company_id'} ? ( company_id=>$session{'/employee/production/datacollection.html?company_id'} ) : () ),
 				( $session{'/employee/production/datacollection.html?quantity_start'} ? ( 'quantity >=' => $session{'/employee/production/datacollection.html?quantity_start'} ) : () ),
 				( $session{'/employee/production/datacollection.html?quantity_end'} ? ( 'quantity <=' => $session{'/employee/production/datacollection.html?quantity_end'} ) : () ),
-				ssi::date_filter( '/employee/production/datacollection.html?when_start', 'starting_on >=' ),
-				ssi::date_filter( '/employee/production/datacollection.html?when_end', 'starting_on <=' ),
+				date_filter( '/employee/production/datacollection.html?when_end', 'starting_on <=' ),
+				date_filter( '/employee/production/datacollection.html?when_start', 'starting_on >=' ),
 					) ) {
 		
 				my $Project = $PF->Project();
-				my $Service = $Project->Service($PF->service_id()) if $PF->service_id();;
+				my $Service = $Project->Service($PF->service_id()) if $PF->service_id();
 				my $specs = $Service->specs() if $Service;
 
 				$html .= sprintf(q`
@@ -32,7 +32,7 @@
 <td%12$s class="Signature" onclick="sig_popup('%10$d');">%11$s</td>
 </tr>
 `, $rowclass, 
-Date::Format::time2str($config{DateTimeFormat}, Date::Parse::str2time($PF->starting_on())),
+format_datetime( $PF->starting_on() ),
 $$Project{id}, $Project->docket(), $Project->Company()->name(), 
 ($specs ? $$specs{SignatureIndex} : 'All'), $PF->version(), 
 Number::Format::format_number(1*$PF->quantity()), $PF->Equipment()->strid(),

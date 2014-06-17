@@ -79,8 +79,9 @@ sub convert_from {
 	my $DST_Currency = get_current();
 	if ( $DST_Currency and ( $DST_Currency->id() != $$self{'id'} ) ) {
 		my $rate = $self->conversions( $DST_Currency->id() );
-		$log->debug("Converting $value in $$self{'name'} to $$DST_Currency{'name'}") if $debug;
-		$value *= $rate;
+		my $new = $value * $rate;
+		$log->debug("Converting $value in $$self{'name'} to $$DST_Currency{'name'} using rate $rate $new") if $debug;
+		return $new;
 	} # end if
 	return $value;
 } # end sub convert_from
@@ -108,7 +109,7 @@ sub convert_to {
 # The price has a currency_id
 # if $$price{'currency_id'} is not the Session's Currency, then convert it , and return
 sub convert {
-	my $Price = shift;
+	my $Price = $_[0];
 
 	# Get display_currency
 	my $DST_Currency = get_current();
@@ -117,6 +118,7 @@ sub convert {
 			my $SRC_Currency = new openprint::Currency( $$Price{'currency_id'} );
 			my $rate = $SRC_Currency->conversions( $DST_Currency->id() );
 			$$Price{'Price'} *= $rate if $rate;
+			$$Price{'price'} *= $rate if $rate;
 #$log->debug("Converting $$Price{'Price'} in $$SRC_Currency{'name'} to $$DST_Currency{'name'}") if $debug;
 			$$Price{'currency_id'} = $DST_Currency->id();
 		} # end if

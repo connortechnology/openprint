@@ -1,5 +1,4 @@
-<form name="f1" id="f1" action="list.html" method="post">
-	<input type="hidden" name="category_id" value="<? echo ( $$variable{'ProjectTypeCategory'}->id(); ) ?>" />
+<form name="f1" id="f1" action="category.html?category_id=<? echo ( $$variable{'ProjectTypeCategory'}->id(); ) ?>" method="post">
 	<fieldset>
 		<legend>
 		<? echo (
@@ -18,14 +17,14 @@
 		</li>
 		<li>
 			<label>Sort</label>
-			<input type="number" id="sort" name="sort" value="<? hecho ( $$variable{'ProjectTypeCategory'}->sort(); ) ?>" onkeyup="this.value=this.value.replace(/\D/,'');" />
+			<? echo ( input( type=>"integer", id=>"sort", name=>"sort", value=>$$variable{ProjectTypeCategory}->sort() ); ) ?>
 		</li>
 		</ul>
 		<p class="buttons">
 			<? echo ( join('',
-			ssi::writeButton( $log, $dbh, 'Delete', 'delete.gif', "f1.btnFunction.value='Delete';f1.submit();", '', 'Delete' ),
-			ssi::writeButton( $log, $dbh, 'Save', 'save.gif', "f1.btnFunction.value='Save';f1.submit();", '', 'Save' ),
-			ssi::writeButton( $log, $dbh, 'Reset', 'reset.gif', "f1.reset();", '', 'Reset' ),
+			button( 'Delete', { onclick=>"f1.btnFunction.value='Delete';f1.submit();" } ),
+			button( 'Save', { onclick=>"f1.btnFunction.value='Save';f1.submit();" } ),
+			button( 'Reset', { onclick=>'f1.reset();' } ),
 			); ) ?>
 		</p>
 		</div>

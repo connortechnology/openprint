@@ -1,8 +1,8 @@
 <li> 
-	<label>Who will be supplying the die:</label>
-	<input type="radio" id="rdbSuppliedDie-<?SignatureIndex?>Y" name="rdbSuppliedDie-<?SignatureIndex?>" value="Y" onclick="if ( this.checked ) { $('CustomDie<?SignatureIndex?>' ).hide(); } calc(this.form.name);" <? echo ( ssi::checked( $$variable{'rdbSuppliedDie'} eq 'Y' or $$variable{'rdbSuppliedDie-'.$$variable{'SignatureIndex'}} eq 'Y' ); ) ?> />
+	<label>Who supplies the die</label>
+	<input type="radio" id="rdbSuppliedDie-<?SignatureIndex?>Y" name="rdbSuppliedDie-<?SignatureIndex?>" value="Y" onclick="if ( this.checked ) { $('CustomDie<?SignatureIndex?>' ).hide(); } calc(this.form.name);" <? echo ( checked( $$variable{'rdbSuppliedDie'} eq 'Y' or $$variable{'rdbSuppliedDie-'.$$variable{'SignatureIndex'}} eq 'Y' ); ) ?> />
 	<label class="radio" for="rdbSuppliedDie-<?SignatureIndex?>Y"><? echo ( 
-		if ( $config{Owner} == $$variable{Project}->company_id() ) {
+		if ( $config{owner_id} == $$variable{Project}->company_id() ) {
 			return 'The client';
 		} 
 		my $Company = new openprint::Company($$variable{Project}->company_id() );
@@ -12,26 +12,21 @@
 		return 'You';
 ) ?></label>
 	<input type="radio" id="rdbSuppliedDie-<?SignatureIndex?>N" name="rdbSuppliedDie-<?SignatureIndex?>" value="N" onclick="if ( this.checked ) { $('CustomDie<?SignatureIndex?>').show(); } calc(this.form.name);" <? echo ( ssi::checked( (exists $$variable{'rdbSuppliedDie-'.$$variable{'SignatureIndex'}} ) and ($$variable{'rdbSuppliedDie-'.$$variable{'SignatureIndex'}} ne 'Y' ) ); ) ?> />
-	<label class="radio" for="rdbSuppliedDie-<?SignatureIndex?>N"><? echo ( new openprint::Company($config{Owner})->name() ) ?></label>
+	<label class="radio" for="rdbSuppliedDie-<?SignatureIndex?>N"><? echo ( new openprint::Company($config{owner_id})->name() ) ?></label>
 </li>
 </ul>
 <ul id="CustomDie<?SignatureIndex?>" style="<? echo ( 'display: none;' if $$variable{'rdbSuppliedDie-'.$$variable{SignatureIndex}} eq 'Y' ) ?>" >
 	<li> 
 		<label>Die image size? (WxH In Inches)</label>
-		<input name="txtDieWidth-<?SignatureIndex?>" size="9" value="<?txtDieWidth?>" onkeyup="calc(this.form.name);" /> x <input name="txtDieHeight-<?SignatureIndex?>" size="9" value="<?txtDieHeight?>" onkeyup="calc(this.form.name);" />
-		<input type="checkbox" id="chkOverrideDimensions" name="chkOverrideDimensions" value="Y" <? echo ( 'checked="checked"' if $$variable{"chkOverrideDimensions"} eq 'Y' ) ?> />
+		<input name="txtDieWidth-<?SignatureIndex?>" value="<?txtDieWidth?>" onkeyup="calc(this.form.name);" /> x <input name="txtDieHeight-<?SignatureIndex?>" value="<?txtDieHeight?>" onkeyup="calc(this.form.name);" />
+		<input type="checkbox" id="chkOverrideDimensions" name="chkOverrideDimensions" value="Y" <? echo ( checked( $$variable{"chkOverrideDimensions"} eq 'Y' ) ) ?> />
 		<label class="radio" for="chkOverrideDimensions">Override</label>
 	</li>
 	<li> 
 		<label>Die Type</label>
-		<input type="radio" id="rdbDieCutting-<?SignatureIndex?>Simple" name="rdbDieCutting-<?SignatureIndex?>" value="Simple" onclick="calc(this.form.name);" <? echo ( $$variable{'rdbDieCutting-'.$$variable{'SignatureIndex'}} eq 'Simple' ? 'checked="checked"' : '' ) ?> />
-		<label class="radio" for="rdbDieCutting-<?SignatureIndex?>Simple">Simple</label>
-		<input type="radio" id="rdbDieCutting-<?SignatureIndex?>Average" name="rdbDieCutting-<?SignatureIndex?>" value="Average" onclick="calc(this.form.name);" <? echo ( 'checked' if $$variable{'rdbDieCutting'.$$variable{'SignatureIndex'}} eq 'Average' ? 'checked="checked"' : '' ) ?> />
-		<label class="radio" for="rdbDieCutting-<?SignatureIndex?>Average">Average</label>
-		<input type="radio" id="rdbDieCutting-<?SignatureIndex?>Complex" name="rdbDieCutting-<?SignatureIndex?>" value="Complex" onclick="calc(this.form.name);" <? echo ( 'checked' if $$variable{'rdbDieCutting'.$$variable{'SignatureIndex'}} eq 'Complex' ? 'checked="checked"' : '' ) ?> />
-		<label class="radio" for="rdbDieCutting-<?SignatureIndex?>Complex">Complex</label>
+		<? echo ( radio( 'rdbDieCutting-'.$$variable{SignatureIndex}, [ map { $_, $_ } ( 'Simple','Average','Complex' ) ], $$variable{'rdbDieCutting-'.$$variable{SignatureIndex}}, { onclick=>'calc(this.form.name);' } ); ) ?>
 		<br/>
-		<input name="txtSteelRuleLength-<?SignatureIndex?>" size="9" value="<? echo ( $$variable{'txtSteelRuleLength-'.$$variable{'SignatureIndex'}} ) ?>"  onkeyup="calc(this.form.name);" /> 
+		<input name="txtSteelRuleLength-<?SignatureIndex?>" value="<? echo ( $$variable{'txtSteelRuleLength-'.$$variable{'SignatureIndex'}} ) ?>" onkeyup="calc(this.form.name);" /> 
 		Linear Inches
 	</li>
 <!--
@@ -58,5 +53,5 @@
 <ul>
 <li> 
 	<label># of holes to clear</label>
-	<input name="txtHoleClearingHoles-<?SignatureIndex?>" size="4" value="<? echo ( $$variable{'txtHoleClearingHoles-'.$$variable{'SignatureIndex'}} ) ?>" onkeyup="calc(this.form.name);" />
+	<input name="txtHoleClearingHoles-<?SignatureIndex?>" value="<? echo ( $$variable{'txtHoleClearingHoles-'.$$variable{'SignatureIndex'}} ) ?>" onkeyup="calc(this.form.name);" />
 </li>

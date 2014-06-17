@@ -78,9 +78,9 @@ sub view {
 				} # end if
 			} # end if
 			$variable{'error'} .= $C->save( {
-					'quantity'		=>	sprintf('%d', $param{"quantity-$$C{id}"}),
+					'quantity'		=>	int( $param{"quantity-$$C{id}"} ),
 					'quantity_units'	=>	$param{"quantity_units-$$C{id}"},
-					'weight'		=>	$param{"weight-$$C{id}"} ? sprintf('%d', $param{"weight-$$C{id}"}) : undef,
+					'weight'		=>	$param{"weight-$$C{id}"} ? int($param{"weight-$$C{id}"}) : undef,
 					'weight_units'	=>	$param{"weight_units-$$C{id}"},
 					'cost'			=>	$param{"cost-$$C{id}"},
 					'cost_units'	=>	$param{"cost_units-$$C{id}"},
@@ -95,7 +95,7 @@ sub view {
 			$Tax->amount(undef);
 			$Tax->save();
 		} # end foreach Tax
-		$Claim->filed_on( $param{'filed'} ? join('-', @param{'filed_on_year','filed_on_month','filed_on_day'} ) : undef );
+		$Claim->filed_on( $param{filed} ? join('-', @param{'filed_on_year','filed_on_month','filed_on_day'} ) : undef );
 		$Claim->sent_to_accounts_on( $param{'sent_to_accounts'} ? join('-', @param{'sent_to_accounts_on_year','sent_to_accounts_on_month','sent_to_accounts_on_day'} ) : undef );
 		$Claim->invoiced_on( $param{'invoiced'} ? join('-', @param{'invoiced_on_year','invoiced_on_month','invoiced_on_day'} ) : undef );
 		$Claim->cancelled_on( $param{'cancelled'} ? join('-', @param{'cancelled_on_year','cancelled_on_month','cancelled_on_day'} ) : undef );
@@ -196,7 +196,7 @@ sub _contents {
 		$variable{'error'} .= $C->delete();
 	} elsif ( $param{'action'} eq 'Add' ) {
 		my $C = new openprint::Claim_Content();
-		$variable{'error'} .= $C->save( { 'claim_id'	=>	$Claim->id(), 'type_id'=>$param{'type_id'} } );
+		$variable{error} .= $C->save( { claim_id	=>	$Claim->id(), type_id=>$param{type_id} } );
 	} # end if
 } # end sub _contents
 

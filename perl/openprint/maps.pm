@@ -25,8 +25,8 @@ sub index {
     } else {
         $variable{'Location'} = new openprint::Location( 1 );
     } # end if
-    if ( defined $param{'parent'} and $variable{'Location'}->parent() ) {
-        $variable{'Location'} = $variable{'Location'}->parent();
+    if ( defined $param{'parent'} and $variable{'Location'}->Parent() ) {
+        $variable{'Location'} = $variable{'Location'}->Parent();
     } # end if
 	if ( $variable{'Selected'} and ( $variable{'Selected'}->id() != $variable{'Location'}->id() ) ) {
 $log->debug("selected $param{selected_id} $param{located_id} " . $variable{'Location'}->name() . ' -> ' . $variable{'Selected'}->name() );
@@ -36,6 +36,10 @@ $log->debug("selected $param{selected_id} $param{located_id} " . $variable{'Loca
 	} # end if
 
 } # end sub index
+
+sub _popup {
+	openprint::maps::index();
+} # end sub _popup
 
 1;
 __END__

@@ -21,6 +21,13 @@
 					button( 'Go2', { onclick=>"LoadContent('Results','/main/order/_history.html',f1);", text=>'Go' } ),
 				); ) ?>
 			</li>
+			<li>
+				<label>Invoice</label>
+				<? echo ( join("\n",
+					input( type=>'text', id=>'invoice', name=>'invoice', onkeydown=>'if(event.keyCode == 13){f1.submit();}' ),
+					button( 'Go3', { onclick=>"LoadContent('Results','/main/order/_history.html',f1);", text=>'Go' } ),
+				); ) ?>
+			</li>
 			</ul>
 		</fieldset>
 		<fieldset id="Filter" class="filters unprintable"><legend>or Select Search Criteria</legend>
@@ -28,7 +35,7 @@
 			<li>
 				<label>Ordered by</label>
 				<select id="ddmOrderedBy" name="ddmOrderedBy" size="1" onchange="LoadContent('Results','/main/order/_history.html',this.form);">
-					<option value="">Ordered By</option>
+					<option value="">All</option>
 					<? echo ( 
 						make_drop_down( openprint::User->dropdown( company_id => $session{company_id}, order=>'lower(firstname),lower(lastname)' ), $session{'/main/order/history.html?ddmOrderedBy'} );
 					) ?>

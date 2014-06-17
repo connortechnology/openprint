@@ -1,10 +1,3 @@
-<? eval (
-	if ( $$variable{'Project'}->quantity1() and $$variable{'Project'}->quantity2() and $$variable{'Project'}->quantity3() ) {
-	$$variable{'Columns'} = 'Three';
-	} else {
-	$$variable{'Columns'} = 'Two';
-	} # end if
-) ?>
 <li>
 	<label>Sheet Size</label>
 		<input type="text" name="StockWidth" value="<?StockWidth?>" size="9" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');" /> x

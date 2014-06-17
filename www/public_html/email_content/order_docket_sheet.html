@@ -15,9 +15,9 @@
 	<? if ( $$variable{'Project'}->order_id() ) ?>
 <? echo ( 
 	if ( -e $config{'SkinPath'}.'/docket.html' ) {
-		return ssi::include( $config{'SkinPath'}.'/docket.html' );
+		return ssi::include( $config{'SkinPath'}.'/docket.html', $variable );
 	} else {
-		return ssi::include( $ENV{'DOCUMENT_ROOT'}.'/includes/main/summ/project_docket_sheet.html' );
+		return ssi::include( $ENV{'DOCUMENT_ROOT'}.'/includes/main/summ/project_docket_sheet.html', $variable );
 	} # end if
 ) ?>
 	<? else ( $$variable{'Project'}->order_id() ) ?>

@@ -19,29 +19,30 @@
 <? if ( $$variable{Job}->Equipment()->smartscheduling() or ! $$variable{Job}->project_id() ) ?>
 		<li>
 			<label>Locked</label>
-			<? echo ( ssi::radio( 'locked', [ '1', 'Yes', '0', 'No' ], $$variable{Job}{locked}, { onclick=>q`$('StartTime').toggle();` } ); ) ?>
+			<? echo (
+ radio( 'locked', [ '1', 'Yes', '0', 'No' ], $$variable{Job}{locked}, { onclick=>q`$('StartTime').toggle();`, default=>'0' } ); ) ?>
 		</li>
 		<li id="StartTime">
 			<label>Start Time</label>
 			<span class="DateTimeSelector">
 			<? echo ( 
-				ssi::datetime_select( 'starttime', ( $$variable{Job}{'starttime'} ? $$variable{Job}{'starttime'} : ''), { onchange=>q`set_rdb_value($('JobForm').locked, 1 );`, with_today=>1 } );
+				datetime_select( 'starttime', ( $$variable{Job}{'starttime'} ? $$variable{Job}{'starttime'} : ''), { onchange=>q`set_rdb_value($('JobForm').locked, 1 );`, with_today=>1 } );
 			) ?>
 			</span>
 		</li>
 <? endif ( $$variable{Job}->Equipment()->smartscheduling() or ! $$variable{Job}->project_id() ) ?>
 		<li>
 			<label>Tentative</label>
-			<? echo ( ssi::radio( 'tentative', [ '1', 'Yes', '0', 'No' ], $$variable{Job}{tentative} ); ) ?>
+			<? echo ( radio( 'tentative', [ '1', 'Yes', '0', 'No' ], $$variable{Job}{tentative}, { default=>'0' } ); ) ?>
 		</li>
 <? if ( $$variable{Job}->project_id() ) ?>
 		<li>
 			<label>Impressions</label>
-			<? echo ( ssi::input( type=>'cardinal', name=>'impressions', value=>$$variable{Job}->impressions() ); ) ?>
+			<? echo ( input( type=>'cardinal', name=>'impressions', value=>$$variable{Job}->impressions() ); ) ?>
 		</li>
 		<li>
 			<label>Speed</label>
-			<? echo ( ssi::input( type=>'cardinal', name=>'speed', value=>$$variable{Job}->speed() ); ) ?>
+			<? echo ( input( type=>'cardinal', name=>'speed', value=>$$variable{Job}->speed() ); ) ?>
 		</li>
 <? endif ( $$variable{Job}->project_id() ) ?>
 		<li>
@@ -51,21 +52,21 @@
 <? if ( $$variable{Job}->project_id() ) ?>
 		<li>
 			<label>Forms</label>
-			<? echo ( ssi::input( type=>'cardinal', name=>'forms', value=>$$variable{Job}->forms() ); ) ?>
+			<? echo ( input( type=>'cardinal', name=>'forms', value=>$$variable{Job}->forms() ); ) ?>
 		</li>
 <? endif ( $$variable{Job}->project_id() ) ?>
 <? if ( $$variable{Job}->Equipment()->specification('DoStockVerification') eq 'Y' ) ?>
 		<li>
 			<label>Stock Verified</label>
-			<? echo ( ssi::radio( 'stock_verified', [ '1', 'Yes', '0', 'No' ], $$variable{Job}{'stock_verified'} ); ) ?>
+			<? echo ( radio( 'stock_verified', [ '1', 'Yes', '0', 'No' ], $$variable{Job}{'stock_verified'}, { default=>'0' } ); ) ?>
 		</li>
 <? endif ( $$variable{Job}->Equipment()->specification('DoStockVerification') eq 'Y' ) ?>
 		</ul>
 	</fieldset>
 		<p class="buttons">
 			<? echo ( join('',
-				ssi::button( 'SaveStartTime', { onclick=>q`tinyMCE.triggerSave();new Ajax.Request('_li_change.json',{parameters:$('JobForm').serialize(), onSuccess:function(){popupWin.close();}});`, text=>'Save' } ),
-				ssi::button( 'CancelStartTime', { onclick=>'popupWin.close();', text=> 'Cancel' } ) 
+				button( 'SaveStartTime', { onclick=>q`tinyMCE.triggerSave();new Ajax.Request('_li_change.json',{parameters:$('JobForm').serialize(), onSuccess:function(){popupWin.close();}});`, text=>'Save' } ),
+				button( 'CancelStartTime', { onclick=>'popupWin.close();', text=> 'Cancel' } ) 
 			); ) ?>
 		</p>
 	<input type="hidden" name="action" value="SaveJob" />

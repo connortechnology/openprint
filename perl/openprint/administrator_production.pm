@@ -297,6 +297,7 @@ sub _service_id_ddm {
 
 
 sub pricelists {
+	require openprint::ProductPrice;
 	$param{'ddmPriceList'} =~ s/\D//g;
 	my $Pricelist = new openprint::Pricelist( $param{'ddmPriceList'} );
 	if ( ! ( $Pricelist and $Pricelist->id() ) ) {

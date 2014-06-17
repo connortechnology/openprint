@@ -50,7 +50,7 @@
 						);
 					if ( ( $session{'user_type'} eq 'A' ) or openprint::usergroup::is_user_in( ['Accounting','SalesAdmin','Sales'], $session{'user_id'} ) ) {
 						$html .= '<td class="Price">'.openprint::Currency::format( defined $C->cost() ? $C->cost() : 0 ) . '/100lb</td>';
-						$html .= '<td class="Price">'.openprint::Currency::format( defined $C->value() ? $C->Value() : 0 ).'</td>';
+						$html .= '<td class="Price">'.openprint::Currency::format( defined $C->value() ? $C->value() : 0 ).'</td>';
 						$$variable{'value_total'} += $C->value();
 					} # end if
 					$html .= '<td class="buttons">';
@@ -64,7 +64,7 @@
 			) ?>
 			<tr class="totals">
 				<td colspan="5">Totals</td>
-				<td class="last_seen"><? echo ( $$variable{'skid_count'}. ' ' . $$variable{'Paper'}->type() . ( $$variable{'skid_count'} == 1 ? '' : 's' ); ) ?></td>
+				<td class="last_seen"><? echo ( $$variable{skid_count}. ' ' . ( $$variable{Paper}->type() eq 'Roll' ? 'roll' : 'skid' ) . ( $$variable{skid_count} == 1 ? '' : 's' ); ) ?></td>
 				<td class="Quantity"><? echo ( Number::Format::format_number($$variable{'InventoryTotal'}).$$variable{'Paper'}->units(); ) ?></td>
 				<td>&nbsp;</td>
 				<? if ( ( $session{'user_type'} eq 'A' ) or openprint::usergroup::is_user_in( ['Accounting','SalesAdmin','Sales'], $session{'user_id'} ) ) ?>
@@ -77,20 +77,17 @@
 				<td colspan="3">Enter new inventory:</td>
 				<td class="po_id"></td>
 				<td colspan="2">
-					<select id="Location" name="Location">
 						<? echo (
-							my @data = ( '', 'select', map { $_->id(), $_->name() } openprint::Location->find('order'=>'parent_id NULLS FIRST,lower(name)') );
-							return ssi::make_drop_down( \@data );
+							ssi::select( openprint::Location->dropdown(type=>'place', order=>'parent_id NULLS FIRST,lower(name)'), undef, { name=>'Location', id=>'Location', prepend=>['','select'] } );
 						) ?>
-					</select>
 				</td>
 				<td class="Quantity"><? echo ( input( type=>'float', id=>'quantity', name=>'quantity' ); ) ?></td>
-				<td class="Condition"><select id="condition_id" name="condition_id"><? echo ( ssi::make_drop_down( openprint::InventoryCondition->dropdown( order=>'lower(name)') ); ) ?></select></td>
+				<td class="Condition"><? echo ( ssi::select( openprint::InventoryCondition->dropdown( order=>'lower(name)'), undef, { id=>'condition_id', name=>'condition_id' } ); ) ?></td>
 				<? if ( ( $session{'user_type'} eq 'A' ) or openprint::usergroup::is_user_in( ['Accounting','SalesAdmin','Sales'], $session{'user_id'} ) ) ?>
 				<td>&nbsp;</td>
 				<td>&nbsp;</td>
 				<? endif ( ( $session{'user_type'} eq 'A' ) or openprint::usergroup::is_user_in( ['Accounting','SalesAdmin','Sales'], $session{'user_id'} ) ) ?>
-				<td class="buttons"><? echo ( ssi::button( 'AddInventory', { onclick=>"LoadContent( 'CurrentInventory', '/employee/inventory/_paper_inventory_entries.html', $('f2') );", text=>'Add' } ); ) ?></td>
+				<td class="buttons"><? echo ( button( 'AddInventory', { onclick=>"LoadContent( 'CurrentInventory', '/employee/inventory/_paper_inventory_entries.html', $('f2') );", text=>'Add' } ); ) ?></td>
 			</tr>
 		</table>
 	<input type="hidden" name="paper_id" value="<? echo ( $$variable{'Paper'}->id() ) ?>" />

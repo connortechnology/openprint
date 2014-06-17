@@ -50,7 +50,7 @@ if ( ! $path ) {
 	print "Create db...";
 	`su postgres -c "createdb -E UTF8 $dst_db"`;
 	print "done\n";
-	print "Loading db... directly";
+	print "Loading db... from $path";
 	`su postgres -c "bunzip2 < $path | pg_restore -Fc -d $dst_db"`;
 	#if ( $src_host ) {
 		#`su postgres -c "ssh $path pg_dump point-one | psql $dst_db"`;
@@ -64,23 +64,23 @@ if ( ! $path ) {
 `chmod +x $lib_path/tools/db_update.pl`;
 print "upgrading structures 1...\n";
 `$lib_path/tools/db_update.pl $dst_db point-one point-one ` or $log->error($!);
-print "upgrading folding...\n";
-`$lib_path/tools/fold_update.pl $dst_db point-one point-one ` or $log->error($!);
-print "upgrading structures 2...\n";
-`$lib_path/tools/db_update2.pl $dst_db point-one point-one ` or $log->error($!);
-print "upgrading structures 3...\n";
-`$lib_path/tools/db_update3.pl $dst_db point-one point-one ` or $log->error($!);
-print "upgrading signatures...";
-`$lib_path/tools/update_p1_signatures.pl $dst_db point-one point-one ` or $log->error($!);
-`$lib_path/tools/do_p1_upgrade.pl $dst_db point-one point-one ` or $log->error($!);
+#print "upgrading folding...\n";
+#`$lib_path/tools/fold_update.pl $dst_db point-one point-one ` or $log->error($!);
+#print "upgrading structures 2...\n";
+#`$lib_path/tools/db_update2.pl $dst_db point-one point-one ` or $log->error($!);
+#print "upgrading structures 3...\n";
+#`$lib_path/tools/db_update3.pl $dst_db point-one point-one ` or $log->error($!);
+#print "upgrading signatures...";
+#`$lib_path/tools/update_p1_signatures.pl $dst_db point-one point-one ` or $log->error($!);
+#`$lib_path/tools/do_p1_upgrade.pl $dst_db point-one point-one ` or $log->error($!);
 print "done\n";
-print 'Turning off backups...';
-$dbh = sql::open_sql( $log, ('database'=>$dst_db, 'driver'=>'Pg','login'=>'point-one', 'password'=>'point-one') );
-configuration::init( $log, $dbh );
-my ( $version, $updated_on, $backup ) = sql::execute( undef, undef, q{SELECT version,updated_on, backup FROM database_info ORDER BY updated_on DESC LIMIT 1} );
-sql::insert( undef, undef, 'database_info', 'version', $version+1, 'backup', 'false' );
-print "done\n";
-map { $_->save({type=>'place'}) } openprint::Location->find(name=>['POGI','Metro','Missing','Trigistrix', 'On Order']);
+#print 'Turning off backups...';
+#$dbh = sql::open_sql( $log, ('database'=>$dst_db, 'driver'=>'Pg','login'=>'point-one', 'password'=>'point-one') );
+#configuration::init( $log, $dbh );
+#my ( $version, $updated_on, $backup ) = sql::execute( undef, undef, q{SELECT version,updated_on, backup FROM database_info ORDER BY updated_on DESC LIMIT 1} );
+#sql::insert( undef, undef, 'database_info', 'version', $version+1, 'backup', 'false' );
+#print "done\n";
+#map { $_->save({type=>'place'}) } openprint::Location->find(name=>['POGI','Metro','Missing','Trigistrix', 'On Order']);
 
 if ( 0 ) {
 foreach my $Project ( openprint::Project->find('created_on >'=>sprintf('%.4d-%.2d-%.2d 00:00:00', Date::Calc::Add_Delta_Days( Date::Calc::Today(), '7 days') ) ) ) {
@@ -93,7 +93,7 @@ foreach my $Project ( openprint::Project->find('created_on >'=>sprintf('%.4d-%.2
 	} # end foreach qty_index
 } # end foreach Project
 }
-$dbh->disconnect();
+$dbh->disconnect() if $dbh;
 `/etc/init.d/postgresql restart`;
 #`su postgres -c /usr/lib/postgresql/9.1/bin/vacuumdb`;
 0;

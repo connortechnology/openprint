@@ -56,26 +56,26 @@ sub outputs {
 sub calc {
 	my ( $log, $dbh, $variable, $project_index, $service_index, $specs ) = @_;
 	
-	$$specs{'Status'} = 'calculated';
+	$$specs{Status} = 'calculated';
 
 	my $Project = new openprint::Project( $project_index );
 	my $services = $Project->services();
 
 	if ( $$specs{'chkOverrideFinishedCalliper'} ne 'Y' ) {
-		$$specs{'txtFinishedCalliper'} = openprint::print::get_finished_calliper( $project_index );
+		$$specs{'txtFinishedCalliper'} = $Project->calliper();
 		@outputs = sets::union( 'txtFinishedCalliper', @outputs );
 	} else {
 		@outputs = sets::exclude( ['txtFinishedCalliper'], \@outputs );
 	} # end if
 
-	if ( ! $$specs{'txtFinishedCalliper'} ) {
-		$$specs{'alert'} = 'Please specify the finished calliper.';
-		return $$specs{'Status'} = 'uncalculated';
+	if ( ! ( 1*$$specs{txtFinishedCalliper} ) ) {
+		$$specs{alert} = 'Please specify the finished calliper.';
+		return $$specs{Status} = 'uncalculated';
 	} # end if
 
 	if ( $$specs{'txtHoleQty'} eq '' ) {
-		$$specs{'alert'} = 'Please specify the # of holes.';
-		return $$specs{'Status'} = 'uncalculated';
+		$$specs{alert} = 'Please specify the # of holes.';
+		return $$specs{Status} = 'uncalculated';
 	} # end if
 
 	my $printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] ) if $$services{''};
@@ -101,7 +101,7 @@ sub calc {
 		$$specs{'txtPrice'.$qty_index} =~ s/[^\d\.]//g;
 		my %BestPrice;
 		$$specs{'hdnBreakdown'.$qty_index} = "QTY $qty_index ($qty):<br/>";
-		$$specs{'hdnBreakdown'.$qty_index} .= 'Finished Calliper: ' . $$specs{'txtFinishedCalliper'}.'<br/>';
+		$$specs{'hdnBreakdown'.$qty_index} .= 'Finished Calliper: ' . $$specs{txtFinishedCalliper}.'<br/>';
 		if ( $$specs{'txtPressSheetComboItems'} > 1 ) {
 			$qty *= $$specs{'txtPressSheetComboItems'};
 		} # end if
@@ -158,7 +158,7 @@ sub calc {
 				$$specs{'hdnBreakdown'.$qty_index} .= " Doesn't support $$specs{'txtHoleSize'}\" holes.\n";
 				next;
 			} # end if
-			if ( $Equipment->specification('Maximum Lift Depth') and $Equipment->specification('Maximum Lift Depth') < $$specs{'txtFinishedCalliper'} ) {
+			if ( $Equipment->specification('Maximum Lift Depth') and $Equipment->specification('Maximum Lift Depth') < $$specs{txtFinishedCalliper} ) {
 				$$specs{'hdnBreakdown'.$qty_index} .= " Too thick.\n";
 				next;
 			} # end if
@@ -175,10 +175,11 @@ sub calc {
 
 			my $items_per_lift;
 			if ( $$specs{'OverrideItemsPerLift'} ne 'Y' ) {
-				if ( $$services{'Scoring'} or $$services{'Perforating'} ) {
-					$items_per_lift = 10;
+				if ( ( $$services{'Scoring'} or $$services{'Perforating'} ) and $Equipment->specification('PerfScoreDrillingItemsPerLift') ) {
+					$items_per_lift = $Equipment->specification('PerfScoreDrillingItemsPerLift');
+					$$specs{'hdnBreakdown'.$qty_index} .= 'Settings items per lift to 10 because the items are scored or perfed<br/>';
 				} elsif ( $Equipment->specification('Maximum Lift Depth') ) {
-					$items_per_lift = int($Equipment->specification('Maximum Lift Depth')/$$specs{'txtFinishedCalliper'});
+					$items_per_lift = int($Equipment->specification('Maximum Lift Depth')/$$specs{txtFinishedCalliper});
 				} else {
 					$items_per_lift = 1;
 				} # end if
@@ -255,7 +256,6 @@ sub display {
 	my $Project = new openprint::Project( $project_index );
 	my $services = $Project->services();
 
-
 	my @capabilities = ( 'Y', 
 		( ( $$services{SaddleStitching} or $$services{LoopStitching} ) ? 'When Stitching' : () ),
 	);
@@ -294,5 +294,22 @@ sub runtime {
 
 sub save {
 } # end sub save
+
+sub has_overrides {
+    my ( $Project, $service_id, $specs, $qty_index ) = @_;
+    $specs = openprint::service::get_specs_ref( $Project, $service_id ) if ! $specs;
+
+    my @v;
+    if ( ! $qty_index ) {
+        push @v, map { $$specs{$_} ? $_ : () } ( 'chkOverrideFinishedCalliper', 'OverrideItemsPerLift' );
+    } else {
+        foreach my $qty_index ( $Project->quantity_indexes() ) {
+			push @v, map { $$specs{$_.$qty_index} ? $_.$qty_index : () } ( 'chkOverrideEquipment' );
+        } # end foreach
+    } # end if
+
+    return @v;
+} # end sub has_overrides
+
 1;
 __END__

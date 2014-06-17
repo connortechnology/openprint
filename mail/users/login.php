@@ -59,8 +59,7 @@ if ($_SERVER['REQUEST_METHOD'] == "POST")
    if ($error != 1)
    {
       session_start();
-      session_register("userid");
-      $_SESSION['userid']['username'] = $fUsername;
+      $_SESSION['username'] = $fUsername;
 
       header("Location: main.php");
       exit;

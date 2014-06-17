@@ -1,17 +1,27 @@
 <? eval (         
-	if ( $param{'QuoteID'} ) {
+	if ( $param{QuoteID} ) {
 		$$variable{Quotes} = [ openprint::Quote->find( 
-			( sets::isin($session{user_type}, ['E','A'] ) ? () : ( company_id	=>	$session{'company_id'} ) ),
-			'id like'			=>	'%'.$param{'QuoteID'}.'%',
+			( sets::isin($session{user_type}, ['E','A'] ) ? () : ( company_id	=>	$session{company_id} ) ),
+			'id like'	=>	'%'.$param{QuoteID}.'%',
 		) ];
 	} else {
 		$$variable{Quotes} = [ openprint::Quote->find( 
-			( sets::isin($session{'user_type'}, ['E','A'] ) ? ('company_id'=>$session{'/main/quote/history.html?company_id'}) : ( 'company_id'		=>	$session{'company_id'} ) ),
-( $session{'/main/quote/history.html?QuotedFor'} ? ( 'for_name ilike'			=> '%'.$session{'/main/quote/history.html?QuotedFor'}.'%' ) : () ),
+			( sets::isin($session{user_type}, ['E','A'] ) ? (company_id=>$session{'/main/quote/history.html?company_id'}) : ( company_id =>	$session{company_id} ) ),
+			( $session{'/main/quote/history.html?QuotedFor'} ? ( 'for_name ilike'			=> '%'.$session{'/main/quote/history.html?QuotedFor'}.'%' ) : () ),
 			date_filter( '/main/quote/history.html?created_on_end', 'created_on <=' ),
 			date_filter( '/main/quote/history.html?created_on_start', 'created_on >=' ),
 			order				=> $openprint::Quote::fields{'created_on'}.' DESC',
 			) ];
+	} # end if
+
+	if ( @{$$variable{Quotes}} >= 20 ) {
+		my %Projects;
+		foreach my $QP ( openprint::QuotedProject->find( quote_id=>[ map { $$_{id} } @{$$variable{Quotes}} ] ) ) {
+			push @{$Projects{$$QP{quote_id}}}, $QP;
+		} # end foreach QP
+		foreach my $Quote ( @{$$variable{Quotes}} ) {
+			$Quote->Quoted_Projects( $Projects{$$Quote{id}} );
+		} # end foreach
 	} # end if
 	$$variable{Currency} = new openprint::Currency( $session{Currency_id} );
 ) ?>

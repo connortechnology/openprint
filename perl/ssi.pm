@@ -1,7 +1,9 @@
 use strict;
 package ssi;
 
-use Date::Calc qw(Days_in_Month Month_to_Text);
+use constant DEBUG => 1;
+
+require Date::Calc;
 
 # For Hash stuff
 use File::Basename;
@@ -20,6 +22,10 @@ use vars qw( $r %variable %session %param %config $log $dbh );
 *dbh = \$openprint::dbh;
 *r = \$openprint::r;
 
+require DateTime::Format::Pg;
+require DateTime::TimeZone;
+my $parser = 'DateTime::Format::Pg';
+
 #Used for resource hashed links
 my %hash_cache;
 
@@ -32,24 +38,25 @@ my $Lexicon;
 sub slurp_content {
 	my ( $file ) = @_;
 
+#$log->debug("Slurping file $file");
+
 	if ( ! ( $file =~ /^\// ) ) {
 		# Use a path relative to the current page
 		my $path = $variable{uri};
 		$path =~ s/(.*\/).*/$1/;
 		$file = $path . $file;
 	} # end if
-$log->debug("Including $file");
 	my $content = '';
 	if ( -e $config{SkinPath}.$file ) {
-		$content = File::Slurp::read_file($config{SkinPath}.$file );
+		$content = File::Slurp::read_file($config{SkinPath}.$file,err_mode => 'carp' );
 	} elsif ( -e $config{SkinPath}.'/html/'.$file ) {
-		$content = File::Slurp::read_file($config{SkinPath}.'/html/'.$file );
+		$content = File::Slurp::read_file($config{SkinPath}.'/html/'.$file,err_mode => 'carp' );
 	} elsif ( $ENV{DOCUMENT_ROOT} and ( -e ($ENV{DOCUMENT_ROOT}.$file) ) ) {
-		$content = File::Slurp::read_file($ENV{DOCUMENT_ROOT}.$file );
+		$content = File::Slurp::read_file($ENV{DOCUMENT_ROOT}.$file,err_mode => 'carp' );
 	} elsif ( $config{DOCUMENT_ROOT} and ( -e $config{DOCUMENT_ROOT}.$file ) ) {
-		$content = File::Slurp::read_file($config{DOCUMENT_ROOT}.$file );
+		$content = File::Slurp::read_file($config{DOCUMENT_ROOT}.$file,err_mode => 'carp' );
 	} else {
-		$content = File::Slurp::read_file($file );
+		$content = File::Slurp::read_file($file,err_mode => 'carp' );
 	} # end if
 	return $content;
 } # end sub slurp_content
@@ -135,6 +142,8 @@ sub variable_substitution {
 				$result .= checked( eval $1 );
 			} elsif ( $command =~ /^include\s*\(\s*'?([^'\)]*)'?\s*\)/ms ) {
 				$result .= include( $1, $variable );
+			} elsif ( $command =~ /^slurp\s*\(\s*'?([^'\)]*)'?\s*\)/ms ) {
+				$result .= slurp_content( $1 );
 			} else {
 				$result .= $$variable{$command};
 			} # end if
@@ -153,8 +162,10 @@ my %html_replacements = (
 );
 my $replacement_string = join '', keys %html_replacements;
 sub html_escape {
-	$_[0]=~ s/([\Q$replacement_string\E])/$html_replacements{$1}/g;
-	return $_[0];
+	my $thing = $_[0];
+
+	$thing =~ s/([\Q$replacement_string\E])/$html_replacements{$1}/g;
+	return $thing;
 }
 
 sub escape_quotes {
@@ -239,16 +250,18 @@ sub make_drop_down {
 	if ( $$options{prepend} ) {
 		for ( my $n = 0; $n < @{$$options{prepend}}; $n += 2) {
 			$temp .= sprintf('<option value="%s"%s>%s</option>',
-					HTML::Entities::encode_entities(Encode::encode('utf-8',$$options{prepend}[$n])),
+					( $$options{encode} ? HTML::Entities::encode_entities(Encode::encode('utf-8',$$options{prepend}[$n])) : $$options{prepend}[$n] ),
 					( sets::isin( $$options{prepend}[$n], $check_array ) ? ' selected="selected"' : '' ),
-					HTML::Entities::encode_entities( Encode::encode('utf-8',$$options{length} ? substr($$options{prepend}[$n + 1],0, $$options{length}) : $$options{prepend}[$n + 1] ) ) );
+					( $$options{encode} ? HTML::Entities::encode_entities( Encode::encode('utf-8',$$options{length} ? substr($$options{prepend}[$n + 1],0, $$options{length}) : $$options{prepend}[$n + 1] ) ) : $$options{length} ? substr($$options{prepend}[$n + 1],0, $$options{length}) : $$options{prepend}[$n + 1] ),
+					);
 		} # end for
 	} # end if
 	for ( my $n = 0; $n < @{$search_data}; $n += 2) {
 		$temp .= sprintf('<option value="%s"%s>%s</option>',
-			HTML::Entities::encode_entities(Encode::encode('utf-8',$$search_data[$n])),
+			( $$options{encode} ? HTML::Entities::encode_entities(Encode::encode('utf-8',$$search_data[$n])) : $$search_data[$n] ),
 			( sets::isin( $$search_data[$n], $check_array ) ? ' selected="selected"' : '' ),
-			HTML::Entities::encode_entities( Encode::encode('utf-8',$$options{length} ? substr($$search_data[$n + 1],0, $$options{length}) : $$search_data[$n + 1] ) ) );
+			( $$options{encode} ? HTML::Entities::encode_entities( Encode::encode('utf-8',$$options{length} ? substr($$search_data[$n + 1],0, $$options{length}) : $$search_data[$n + 1] ) ) : ( $$options{length} ? substr($$search_data[$n + 1],0, $$options{length}) : $$search_data[$n + 1] ) ),
+		);
 	} # end for
 	return $temp;
 } # sub make_drop_down
@@ -329,8 +342,8 @@ sub getmonths {
 sub getdays {
 	my ( $selected, $year, $month ) = @_;
 	my $maxdays = 31;
-	if ( $year and $month and ( $maxdays > Days_in_Month( $year, $month ) ) ) {
-		$maxdays = Days_in_Month( $year, $month );
+	if ( $year and $month and ( $maxdays > Date::Calc::Days_in_Month( $year, $month ) ) ) {
+		$maxdays = Date::Calc::Days_in_Month( $year, $month );
 	} # en dif
 	my @days = map { $_, $_ } ( 1 .. $maxdays );
 	$selected = int($selected);
@@ -399,8 +412,8 @@ sub fix_date {
 	$month = int $month;
 	$month = 12 if ( $month > 12 );
 	$month = 1 if $month < 0;
-	if ( $year and $month and $day > Days_in_Month( $year, $month ) ) {
-		$day = Days_in_Month( $year, $month );
+	if ( $year and $month and $day > Date::Calc::Days_in_Month( $year, $month ) ) {
+		$day = Date::Calc::Days_in_Month( $year, $month );
 	} # end if
 	return ( $year, $month, $day );
 } # end sub fix_date
@@ -435,11 +448,11 @@ sub get_start_end_dates {
 	$endYear = $endYear ? $endYear : (localtime(time))[5]+1900;
 	$endMonth = $endMonth ? $endMonth : (localtime(time))[4]+1;
 
-	if ( $startDay > Days_in_Month( $startYear, $startMonth ) ) {
-		$startDay = Days_in_Month( $startYear, $startMonth );
+	if ( $startDay > Date::Calc::Days_in_Month( $startYear, $startMonth ) ) {
+		$startDay = Date::Calc::Days_in_Month( $startYear, $startMonth );
 	} # end if
-	if ( $endDay > Days_in_Month( $endYear, $endMonth ) ) {
-		$endDay = Days_in_Month( $endYear, $endMonth );
+	if ( $endDay > Date::Calc::Days_in_Month( $endYear, $endMonth ) ) {
+		$endDay = Date::Calc::Days_in_Month( $endYear, $endMonth );
 	} # end if
 
 	$$variable{'ddmStartYear'} = $$variable{'startyears'} = getyears( $start, (localtime(time))[5]-100, $startYear );
@@ -458,7 +471,14 @@ sub button {
 	my ( $name, $options ) = @_;
 
 	if ( $$options{href} ) {
-		my $PageSetting = openprint::Page_Setting->find_one(url=>$$options{href});
+		my ( $href ) = $$options{href} =~ /^([^\?]+)/;
+		if ( ! ( $href =~ /^\// ) ) {
+# Use a path relative to the current page
+			my $path = $variable{uri};
+			$path =~ s/(.*\/).*/$1/;
+			$href = $path . $href;
+		} # end if
+		my $PageSetting = openprint::Page_Setting::get( $href );
 		return if $PageSetting and ! $PageSetting->can_view();
 	} else {
 		$$options{href} = '#';
@@ -754,11 +774,13 @@ sub radio {
 
 	my $onclick = $$options{'onclick'} if $options;
 	my $html;
-	if ( $$options{default} and ! $selected ) {
+	if ( $$options{default} and ! defined $selected ) {
+$log->debug("Selecting default $$options{default}");
 		$selected = $$options{default};
 	} # end if
 
 	while ( my ( $value, $label ) = splice @{$values}, 0, 2 ) {
+		$html .= $$options{container}[0] if $$options{container};
 		$html .= sprintf(q`
 				<input type="radio" name="%1$s" value="%2$s" id="%1$s%6$s%2$s" %4$s%5$s />
 				<label class="radio" for="%1$s%2$s">%3$s</label>
@@ -766,6 +788,7 @@ sub radio {
 				( $onclick ? ' onclick="'.$onclick.'"' : '' ),
 				$$options{id},
 				);
+		$html .= $$options{container}[1] if $$options{container};
 	} # end foreach value
 	return $html;
 } # end sub radio
@@ -822,10 +845,15 @@ sub date_filter {
 	} # end if
 #$log->debug("ssi::date_filter: $year-$month-$day $hour:$minute:$second");
 
-	return ( $sql_field, sprintf('%.4d-%.2d-%.2d %.2d:%.2d:%.2d', ( $year, $month, $day, $hour, $minute, $second ) ) );
+	my $TZ = DateTime::TimeZone->new( name => $openprint::config{Timezone} );
+	my $datetime = DateTime->new( time_zone => $TZ,
+			( year => $year, month=>$month, day=>$day, hour=>$hour, minute=>$minute, second=>$second )
+			);
+
+	return ( $sql_field, $parser->format_datetime( $datetime ) );
 } # end sub date_filter
 
-my @input_options = ( 'type','name','id','onblur','onfocus','onkeyup','onkeydown','onchange','class','pattern','ontouch','min','max', 'step', 'placeholder', 'oninput' );
+my @input_options = ( 'type','name','id','onblur','onfocus','onkeyup','onkeydown','onchange','class','pattern','ontouch','min','max', 'step', 'placeholder', 'oninput', 'title' );
 
 sub input {
 	my %options = @_;
@@ -839,6 +867,7 @@ sub input {
 		} # end if
 		$options{filter} = 'cardinalize(this);' if ! $options{filter};
 		$options{onkeyup} = $options{filter}.$options{onkeyup};
+		$options{step} = '1' if ! exists $options{step};
 	} elsif ( $options{type} eq 'integer' ) {
 		if ( $ENV{HTTP_USER_AGENT} =~ /ip(ad|od|hone)/i ) {
 			$options{type} = 'text';
@@ -848,13 +877,18 @@ sub input {
 		} # end if
 		$options{'onkeyup'} = 'integerize(this);'.$options{'onkeyup'};
 	} elsif ( $options{type} eq 'float' ) {
+#$log->debug("USer agent: $ENV{HTTP_USER_AGENT}");
+		$options{step} = 'any' if ! exists $options{step};
 		if ( $ENV{HTTP_USER_AGENT} =~ /ip(ad|od|hone)/i ) {
 			$options{type} = 'text';
-			$options{'pattern'} = '[0-9]*' if ! $options{'pattern'};
+			$options{'pattern'} = '[.0-9]*' if ! $options{'pattern'};
+		} elsif ( $ENV{HTTP_USER_AGENT} =~ /Firefox\/29.0/ ) {
+			$options{type} = 'text';
+			$options{'pattern'} = '[.0-9]*' if ! $options{'pattern'};
+			delete $options{step};
 		} else {
 			$options{type} = 'number';
 		} # end if
-		$options{step} = 'any' if ! exists $options{step};
 		$options{'onkeyup'} = 'floatize(this);'.$options{'onkeyup'};
 	} elsif ( $options{type} eq 'float_calculator' ) {
 		if ( $ENV{HTTP_USER_AGENT} =~ /ip(ad|od|hone)/i ) {
@@ -991,11 +1025,15 @@ sub hash_link {
 } # end sub hash_link
 
 sub format_date {
-	return $_[0] ? Date::Format::time2str( $config{DateFormat}, Date::Parse::str2time( $_[0] ) ) : '';
+	return $_[0] ? Date::Format::time2str( $_[1] ? $_[1] : $config{DateFormat}, Date::Parse::str2time( $_[0] ) ) : '';
 } # end sub format_date
 sub format_datetime {
 	return $_[0] ? Date::Format::time2str( $config{DateTimeFormat}, Date::Parse::str2time( $_[0] ) ) : '';
 } # end sub format_datetime
+
+sub link {
+	return '<link rel="stylesheet" type="text/css" href="'.hash_link($_[0]).'"/>';
+}
 
 1;
 __END__
