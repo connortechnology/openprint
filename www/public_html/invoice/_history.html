@@ -95,11 +95,11 @@
 			my $rowclass;
 			foreach my $Invoice ( @{$$variable{Invoices}} ) {
 				$html .= sprintf(q`<tr%1$s title="%4$s"> 
-					<td class="invoice_id"><a href="/invoice/%3$s.html?invoice_id=%2$d">%2$d</a></td>
-					<td class="invoice_num"><a href="/invoice/%3$s.html?invoice_id=%2$d">%3$s</a></td>
-					<td class="Date"><a href="/invoice/%3$s.html?invoice_id=%2$d">%5$s</a></td>
+					<td class="invoice_id"><a href="/invoice/view.html?invoice_id=%2$d">%2$d</a></td>
+					<td class="invoice_num"><a href="/invoice/view.html?invoice_id=%2$d">%3$s</a></td>
+					<td class="Date"><a href="/invoice/view.html?invoice_id=%2$d">%5$s</a></td>
 					<td class="Date"><a href="/invoice/%3$s.html?invoice_id=%2$d">%6$s</a></td>
-					<td class="Company"><a href="/invoice/%3$s.html?invoice_id=%2$d">%7$s</a></td>
+					<td class="Company"><a href="/invoice/view.html?invoice_id=%2$d">%7$s</a></td>
 					<td class="Price">%8$s</td>
 					%9$s
 					<td class="Price">%10$s</td>

@@ -97,6 +97,16 @@
 			</select>
 		</li>
 		<li>
+			<label>Supplier</label>
+			<select id="supplier_id" name="supplier_id" size="1" onchange="calc(this.form.name);">
+				<option value="">select</option>
+				<? echo (
+					my @stock_supplier_ids = sql::execute( undef, undef, 'SELECT DISTINCT supplier_id FROM Papers WHERE supplier_id IS NOT NULL' );
+					make_drop_down( openprint::Company->dropdown( id=> \@stock_supplier_ids, order=>'lower(name)', supplier=>'Y'), $session{'/administrator/stock/list.html?supplier_id'} );
+					) ?>
+			</select>
+		</li>
+		<li>
 			<label>Brand</label>
 			<select id="brand_id" name="brand_id" onchange="filter_onChange(this,'');">
 				<option value="">select</option>
