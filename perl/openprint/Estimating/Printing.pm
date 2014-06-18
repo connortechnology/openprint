@@ -879,12 +879,12 @@ $log->debug("Calcing txtCustomMWeight");
 			@$specs{'ddmStockWidth','ddmStockHeight'} = $$specs{'ddmStockSize'} =~ /^([\d\.]+)"?\s*x?\s*([\d\.]+)?"?\s*$/;
 		}
 		@Papers = openprint::Paper->find( 
-				( $$specs{'ddmStockGroup'} ? ( group=> $$specs{'ddmStockGroup'} ) : () ),
-				( exists $$specs{'ddmStockBrand'} ? ( 'brand'=> $$specs{'ddmStockBrand'} ) : () ),
-				( exists $$specs{'ddmStockFinish'} ? ( 'finish'=>$$specs{'ddmStockFinish'} ) : () ),
-				( exists $$specs{'ddmStockColour'} ? ( 'colour'=>$$specs{'ddmStockColour'} ) : () ),
-				( exists $$specs{'ddmStockWeight'} ? ( 'weight'=>$$specs{'ddmStockWeight'} ) : () ),
-				( $$specs{'ddmStockQuality'} ? ( 'quality'=>$$specs{'ddmStockQuality'} ) : () ),
+				( $$specs{ddmStockGroup} ? ( group=> $$specs{ddmStockGroup} ) : () ),
+				( $$specs{ddmStockBrand} ? ( brand=> $$specs{ddmStockBrand} ) : () ),
+				( $$specs{ddmStockFinish} ? ( finish=>$$specs{ddmStockFinish} ) : () ),
+				( $$specs{ddmStockColour} ? ( colour=>$$specs{ddmStockColour} ) : () ),
+				( $$specs{ddmStockWeight} ? ( weight=>$$specs{ddmStockWeight} ) : () ),
+				( $$specs{ddmStockQuality} ? ( quality=>$$specs{ddmStockQuality} ) : () ),
 				( exists $$specs{'ddmStockWidth'} ? ( 'width'=>$$specs{'ddmStockWidth'} ) : () ),
 				( exists $$specs{'ddmStockHeight'} ? ( 'height'=>$$specs{'ddmStockHeight'} ) : () ),
 				'project_type_id any'=>$Project->type_id(),
@@ -1988,7 +1988,13 @@ $openprint::log->debug("Spread size: $$specs{'txtSpreadSize'}");
 			} elsif ( $$specs{'ddmStockSize'} ) {
 				@$specs{'txtWidth','txtHeight'} = $$specs{'ddmStockSize'} =~ /^([\d\.]+)"?\s*x?\s*([\d\.]+)?"?\s*$/;
 			} else {
-				my @Papers = openprint::Paper->find( 'brand'=> $$specs{'ddmStockBrand'}, 'finish'=>$$specs{'ddmStockFinish'}, 'colour'=>$$specs{'ddmStockColour'}, 'weight'=>$$specs{'ddmStockWeight'},
+				my @Papers = openprint::Paper->find(
+						( $$specs{ddmStockGroup} ? ( group=> $$specs{ddmStockGroup} ) : () ),
+						( $$specs{ddmStockBrand} ? ( brand=> $$specs{ddmStockBrand} ) : () ),
+						( $$specs{ddmStockFinish} ? ( finish=>$$specs{ddmStockFinish} ) : () ),
+						( $$specs{ddmStockColour} ? ( colour=>$$specs{ddmStockColour} ) : () ),
+						( $$specs{ddmStockWeight} ? ( weight=>$$specs{ddmStockWeight} ) : () ),
+						( $$specs{ddmStockQuality} ? ( quality=>$$specs{ddmStockQuality} ) : () ),
 						'project_type_id any'=>$Project->type_id(),
 						);
 	#$log->debug("# of papers: " . @Papers );
