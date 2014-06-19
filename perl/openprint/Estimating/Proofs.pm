@@ -31,6 +31,7 @@ my @variables = (
 		'txtPrice',
 		'CustomProofSpecs',
 		'RequireColourProofs',
+		'alert',
 		);
 
 sub variables {
@@ -660,7 +661,7 @@ sub summary {
 			return '';
 		} # end if
 		my $summary = '<table class="ProofsSummary">';
-		foreach my $k ( keys %proof_totals ) {
+		foreach my $k ( sort keys %proof_totals ) {
 			next if ! $proof_totals{$k};
 			$summary .= '<tr><td class="quantity">'.$proof_totals{$k}.'</td><td class="size">'.$k.'</td></tr>';
 		} # end foreach
