@@ -3601,6 +3601,14 @@ sub get_project_price {
 		$previous_forms_cache{$hash_key} += 1;
 
 		my %PlateCounts = %$PlateCounts;
+if ( 1 ) {
+	foreach my $k ( keys %PlateCounts ) {
+		$openprint::log->debug("Start PLATES: $k=> $PlateCounts{$k}");
+	} # end foreach
+	foreach my $k ( keys %PlateCounts ) {
+		$openprint::log->debug("Original PLATES: $k=> $$PlateCounts{$k}");
+	} # end foreach
+} # end if
 		my %washed_colours = %$washed_colours;
 		my %PaperCounts = %$PaperCounts;
 		my $Paper = $imp->Paper();
@@ -3630,6 +3638,9 @@ sub get_project_price {
 
 		$PlateCounts{$$price{'Plate Costs'}{'Plate ID'}} += $$price{'Plate Costs'}{'Plate Count'};
 		$PlateCounts{'Blank'.$$price{'Plate Costs'}{'Plate ID'}} += $$price{'Plate Costs'}{'Blank Plates'};
+	foreach my $k ( keys %PlateCounts ) {
+		$openprint::log->debug("after clac PLATES: $k=> $PlateCounts{$k}");
+	} # end foreach
 		$PaperCounts{$Paper->id_string()} += $$price{'Stock Qty'};
 # Gets done later on, why do it here?  Maybe to fuill in plate costs... or to use them in best_price calcs...
 # I put this back on Sept 17th because for a 16+8, it didn't have the plate costs. Technically it should be done later when all plates are accounted for
@@ -3908,14 +3919,14 @@ $$new_specs{"OverrideStockHeight$qty_index"} = $Paper->height();
 #$openprint::log->debug("Doing full calc when UPQ:$upq >= Pages:" . $$imp{'pages'} . ' PageQuantity:' . $$new_specs{'PageQuantity'.$qty_index} ) if $upq >= $$imp{'pages'} or 0;
 
 						$$new_specs{'PrintingTypes'} = [ $Press->specification('Printing Type') ];
-						$$new_specs{'PreviousStockType'} = $$Paper{'type'};
-						$$new_specs{'PreviousStockWIdth'} = $$Paper{width};
+						$$new_specs{'PreviousStockType'} = $$Paper{type};
+						$$new_specs{'PreviousStockWidth'} = $$Paper{width};
 						$$new_specs{'PreviousGrainDirection'} = $imp->grain_direction();
-						if ( $$imp{'Folder'} and ( $$Press{'id'} == $$imp{'Folder'}->id() ) ) {
+						if ( $$imp{'Folder'} and ( $$Press{'id'} == $$imp{Folder}->id() ) ) {
 #This is used in Folding to tell it not to mix impositions when inline folded
 							$$new_specs{'PreviousImposition'} = $$price{'FoldingImposition'};
 						} # end if	
-						$$new_specs{'Impositions'} = $$price{'Impositions'};
+						$$new_specs{Impositions} = $$price{Impositions};
 
 						my $sig_price = {};
 						if ( $recursion_depth >= $max_recursion_depth ) {
@@ -3923,6 +3934,11 @@ $$new_specs{"OverrideStockHeight$qty_index"} = $Paper->height();
 							$$sig_price{alert} .= 'Too deep ' . $recursion_depth;
 							$$sig_price{'complete'} = 0;
 						} else {
+if ( DEBUG_PLATES ) {
+	foreach my $k ( keys %PlateCounts ) {
+		$openprint::log->debug("PLATES beforerecursion: $k=> $PlateCounts{$k}");
+	} # end foreach
+} # end if
 							my $price_cache_key = join(',', keys %PaperCounts, $qty_index, $$Press{strid}, $$price{upq}, $$imp{runstyle}, $$Paper{type}, $$Paper{width} );
 							#my $price_cache_key = join(',', keys %PaperCounts, $qty_index, $$Press{strid}, $$price{upq}, $$imp{runstyle}, $$Paper{type}, $$Paper{width},$$Paper{height} );
 $imp->display("Recursing");
@@ -3936,7 +3952,8 @@ $imp->display("Recursing");
 								$price_cache{$price_cache_key} = 
 									get_project_price( $Project, $$new_specs{ServiceIndex}, $project, $service_specs, $new_specs, $qty, $qty_index, \@new_possible_presses, $printing_specs, $versions, \%PlateCounts, \%PaperCounts, \%washed_colours, \%previous_forms_cache, \@signatures, $impositions, $other_impositions, undef, $recursion_depth + 1 );
 							} # end if
-							$sig_price = $price_cache{$price_cache_key};
+							%{$sig_price} = %{$price_cache{$price_cache_key}};
+$openprint::log->debug("Prices: $sig_price $price_cache{$price_cache_key}");
 							$price_cache{$price_cache_key} = undef if ! USE_PRICE_CACHE;
 							#$imp->display($recursion_depth . " After recurse: $$price{'Comparison Cost'} + $$sig_price{'Comparison Cost'} " );
 							#foreach my $i ( @{$$sig_price{Impositions}} ) {
@@ -3984,6 +4001,7 @@ $imp->display('[warn]');
 # Don't add stock weight because we likely have a different stock anyways.
 							$PaperCounts{$$sig_price{'Imposition'}->Paper()->id_string()} += $$sig_price{'Stock Qty'};
 							$PlateCounts{$$sig_price{'Plate Costs'}{'Plate ID'}} += $$sig_price{'Plate Costs'}{'Plate Count'};
+$openprint::log->debug("Adding $$sig_price{'Plate Costs'}{'Plate ID'} $$sig_price{'Plate Costs'}{'Plate Count'}" );
 							$PlateCounts{'Blank'.$$sig_price{'Plate Costs'}{'Plate ID'}} += $$sig_price{'Plate Costs'}{'Blank Plates'};
 							$$price{'Comparison Cost'} += $$sig_price{'Comparison Cost'};
 						$$price{'Comparison Log'} .= 'signature ' . $$sig_price{'Comparison Cost'} . '<br/>' if COMPARISON_LOG;
@@ -4521,7 +4539,7 @@ sub plate_cost {
 			%plate_price = $Material->get_price( $$PlateCounts{$$plate_costs{'Plate ID'}}, undef );
 			$$price{'Plate Cost'} = $plate_price{'Price'};
 			$$price{'Plate Price'} = $plate_price{'Price'} * $$plate_costs{'Plate Count'};
-			$results{'Price'} = Math::Round::nearest(0.01, $plate_price{'Price'} * $$plate_costs{'Plate Count'} );
+			$results{Price} = Math::Round::nearest(0.01, $plate_price{'Price'} * $$plate_costs{'Plate Count'} );
 		} # end if
 
 		if ( $$plate_costs{'Blank Plates'} ) {
