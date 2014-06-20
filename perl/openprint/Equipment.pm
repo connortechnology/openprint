@@ -24,7 +24,7 @@ sub cache_field {
 }
 my %Specification_cache;
 
-$debug = 0;
+$debug = 1;
 %fields = (
 	'id'	=>	'id',
 	'strid'	=>	'strid',

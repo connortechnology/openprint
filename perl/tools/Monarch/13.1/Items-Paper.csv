@@ -7,13 +7,13 @@
 "Owned-by","'Company'","Text",290,8,297,"Owned By","Yes","Yes",,"Company, Customer or Supplier"
 "Cust-ID","$$Object{owner_id}","Text",298,8,305,"Customer ID ","Yes","Yes*",,"Required if owned by Customer and/or Finished Goods type.  Do not enter an ID if the item type is Charge Only or Expense."
 "Cust-Item-ID",,"Text",306,30,335,"Customer Item ID",,,,"Optional for Customer Owned items only"
-"Supplier-ID",,"Text",336,8,343,"Supplier ID","Yes","Yes*",,"Required if owned by Supplier, otherwise optional."
+"Supplier-ID","$Object->supplier_id() ? $Object->supplier_id() : 'Unknown'","Text",336,8,343,"Supplier ID","Yes","Yes*",,"Required if owned by Supplier, otherwise optional."
 "Supplier-Item-ID",,"Text",344,24,367,"Supplier Item ID",,,,"Optional for Supplier Owned items only"
-"Warehouse-ID","","Text",368,3,370,"Default Warehouse ID",,,,
+"Warehouse-ID",,"Text",368,3,370,"Default Warehouse ID",,,,
 "Bin-Location",,"Text",371,10,380,"Default Bin Location",,,,
 "Unit-Of-Measure-Purchase","$Object->Unit_Of_Measure_Purchase()","Text",381,4,384,"Purchasing Unit of Measure","Yes","Yes*",,"Required if Item type = Inventory, Expense or Finished Goods."
 "Unit-Of-Measure-Costing","$Object->Unit_Of_Measure_Costing()","Text",385,4,388,"Costing Unit of Measure","Yes","Yes*",,"Required if Item type = Inventory, Charge Only or Finished Goods.  Must equal Purchasing U/M if Convert is set to No (0)."
-"Convert-Flag",,"Text",389,1,389,"Flag - Conversion Required",,,"No (0)","0=No, 1=Yes (Set to Yes if purch & costing U/M are different.)"
+"Convert-Flag","'0'","Text",389,1,389,"Flag - Conversion Required",,,"No (0)","0=No, 1=Yes (Set to Yes if purch & costing U/M are different.)"
 "M-Weight","$Object->mweight()","Text",390,9,398,"M Weight",,"Yes*",,"Used for items purchased by CWT & costed by M."
 "Conversion-Factor",,"Text",399,12,410,"Conversion Factor",,"Yes*",,"M Weight or Factor are required if Conversion Flag is set to Yes.  Both Factor and M-Weight cannot have a factor if Convert Flag is set to Yes (1)."
 "GL-Account",,"Text",411,38,448,"G/L Account","Yes",,,"Optional for Expense item types only."
