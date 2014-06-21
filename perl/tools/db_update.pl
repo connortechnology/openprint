@@ -1614,6 +1614,18 @@ if ( ! sets::isin( 'folds', \@tables ) ) {
 	if ( ! exists $$data{comments} ) {
 		$dbh->do('ALTER TABLE folds ADD comments TEXT');
 	} # end if
+	if ( ! exists $$data{min_imposition_rows} ) {
+		$dbh->do('ALTER TABLE folds ADD min_imposition_rows INTEGER');
+	} # end if
+	if ( ! exists $$data{max_imposition_rows} ) {
+		$dbh->do('ALTER TABLE folds ADD max_imposition_rows INTEGER');
+	} # end if
+	if ( ! exists $$data{min_imposition_columns} ) {
+		$dbh->do('ALTER TABLE folds ADD min_imposition_columns INTEGER');
+	} # end if
+	if ( ! exists $$data{max_imposition_columns} ) {
+		$dbh->do('ALTER TABLE folds ADD max_imposition_columns INTEGER');
+	} # end if
 } # end if
 if ( ! sets::isin( 'fold_specifications', \@tables ) ) {
 	if ( sets::isin( 'foldspecifications', \@tables ) ) {
