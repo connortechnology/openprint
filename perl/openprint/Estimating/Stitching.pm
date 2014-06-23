@@ -244,7 +244,7 @@ $I->display('In Stitching:') if DEBUG;
 				} # end foreach fold index
 				my $total_pages = misc::sum( map { $_ * $folds{$_} } keys %folds );
 
-				$openprint::log->warn("Folded pages folded: $total_pages printed: $sig_pages.");
+				$openprint::log->debug("Folded pages folded: $total_pages printed: $sig_pages.") if DEBUG;
 				# I Think this is designed to auto-correct when there are more pages folded than printed
 SIG_FIX_PAGES:	while( $total_pages > $sig_pages ) {
 				   $openprint::log->warn("Too many folded pages folded: $total_pages printed: $sig_pages.");

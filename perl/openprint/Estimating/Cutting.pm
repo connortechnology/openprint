@@ -1040,7 +1040,7 @@ sub calc {
 					$Cut_Stocks{ $Paper->id_string() } = { Stock=>$Paper, quantity=>$$sig_specs{"StockQuantity$qty_index"} };
 				} # end if
 			} # end if
-$openprint::log->debug("Paper: " . $Paper->to_string() );
+$openprint::log->debug("Paper: " . $Paper->to_string() ) if DEBUG;
 
 			# Folding
 			if ( 0 and $$services{'Folding'} and @{$$services{'Folding'}} ) {
