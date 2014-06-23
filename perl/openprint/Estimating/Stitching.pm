@@ -25,6 +25,16 @@ require openprint::service;
 
 use Time::HiRes qw{ time gettimeofday tv_interval }; 
 
+my %specifications = (
+	'Maximum Calliper'	=> {},
+	'Units Per Hour'	=>	{},
+	'Maximum Pieces'	=>	{},
+	'Maximum Finished Width'	=>	{},
+	'Maximum Finished Height'	=>	{},
+	'Minimum Finished Width'	=>	{},
+	'Minimum Finished Height'	=>	{},
+);
+
 # This is an array of all the variables that need to be saved to the database for this service.
 my %variables = (
         'ProjectIndex'=>[],'ServiceIndex'=>[],
@@ -775,6 +785,14 @@ $openprint::log->debug(" fold qty * pages($pages) == sig_pages($sig_pages) foldQ
 					next;
 				} # end if
 			} # end if
+			if ( $_ = $Equipment->specification('Maximum Pieces') and ( $$specs{"txtQuantity$qty_index"} > $_ ) ) {
+				$$specs{'hdnBreakdown'.$qty_index} .= "Too many.<br/>";
+				if ( ( defined $$specs{"chkOverrideEquipment$qty_index"} ) and ( $$specs{"chkOverrideEquipment$qty_index"} eq 'Y' ) ) {
+					$$specs{alert} .= $Equipment->name() . ' only does up to '  . $_ . ' pieces.</br>';
+				} # end if
+				next;
+            } # end if
+
 
 			my $max_imp = $Equipment->specification("Maximum $$ServiceType{name} Imposition");
 			if ( $max_imp and ( $max_imp < $$specs{"Imposition$qty_index"} ) ) {
@@ -922,7 +940,7 @@ $openprint::log->error("No best equipment in Stitching");
 sub display {
 	my ( $log, $dbh, $variable, $project_index, $service_index ) = @_;
 
-	@{$$variable{'Equipment'}} = openprint::Equipment->find( Specifications => {'Stitching Capable'=>['Y','When Printing','When Digital']}, useinestimating=>1,order=>'lower(strName)');
+	@{$$variable{'Equipment'}} = openprint::Equipment->find( Specifications => {'Stitching Capable'=>['Y','When Printing','When Digital','When Folding']}, useinestimating=>1,order=>'lower(strName)');
 
 	#my $Project = new openprint::Project( $project_index );
 	#my $ProjectType = $Project->Type();
@@ -934,7 +952,7 @@ sub get_equipment {
 	my ( $specs, $error ) = @_;
 
 	my @possible_equipment;
-	my @all_equipment = openprint::Equipment->find( Specifications => {'Stitching Capable'=>['Y','When Printing','When Digital']}, useinestimating=>1,order=>'strName');
+	my @all_equipment = openprint::Equipment->find( Specifications => {'Stitching Capable'=>['Y','When Printing','When Digital','When Folding']}, useinestimating=>1,order=>'strName');
 
 	foreach my $Equipment ( @all_equipment ) {
 		if ( $_ = $Equipment->fits( $$specs{Width}, $$specs{Height}, undef, 'Stitching' ) ) {
@@ -949,12 +967,28 @@ sub get_equipment {
 			$$error{$$Equipment{id}} .= ': spread too small.<br/>';
 			next;
 		} # end if
-		if ( $$specs{'txtCalliper'} ) {
-			if ( $_ = $Equipment->specification('Maximum Calliper') and ( $$specs{'txtCalliper'} > $_ ) ) {
+		if ( $_ = $Equipment->specification('Maximum Finished Width') and ( $$specs{Width} > $_ ) ) {
+			$$error{$$Equipment{id}} .= ': finished width too big.<br/>';
+			next;
+		} # end if
+		if ( $_ = $Equipment->specification('Minimum Finished Width') and ( $$specs{Width} < $_ ) ) {
+			$$error{$$Equipment{id}} .= ': finished width too small.<br/>';
+			next;
+		} # end if
+		if ( $_ = $Equipment->specification('Maximum Finished Height') and ( $$specs{Height} > $_ ) ) {
+			$$error{$$Equipment{id}} .= ': finished height too big.<br/>';
+			next;
+		} # end if
+		if ( $_ = $Equipment->specification('Minimum Finished Height') and ( $$specs{Height} < $_ ) ) {
+			$$error{$$Equipment{id}} .= ': finished height too small.<br/>';
+			next;
+		} # end if
+		if ( $$specs{txtCalliper} ) {
+			if ( $_ = $Equipment->specification('Maximum Calliper') and ( $$specs{txtCalliper} > $_ ) ) {
 				$$error{$$Equipment{id}} .= ': Too Thick.<br/>';
 				next;
 			} # end if
-			if ( $_ = $Equipment->specification('Minimum Calliper') and ( $$specs{'txtCalliper'} < $_ ) ) {
+			if ( $_ = $Equipment->specification('Minimum Calliper') and ( $$specs{txtCalliper} < $_ ) ) {
 				$$error{$$Equipment{id}} .= ': Too Thick.<br/>';
 				next;
 			} # end if
@@ -970,14 +1004,14 @@ sub get_price {
 	my ( $Project, $ServiceType, $Equipment, $specs, $plusCover, $qty_index ) = @_;
 
 	my %price = (
-		'MakeReady' => 0,
-		'Service'	=> 0,
-		'Insert'	=> 0,
-		'txtPrice'	=> 0,
-		'RunTime'	=> 0,
-		'Passes'	=> 0,
-		'Imposition' => $$specs{'Imposition'.$qty_index},
-		'MPrice'	=> 0,
+		MakeReady => 0,
+		Service	=> 0,
+		Insert	=> 0,
+		txtPrice	=> 0,
+		RunTime	=> 0,
+		Passes	=> 0,
+		Imposition => $$specs{'Imposition'.$qty_index},
+		MPrice	=> 0,
 	);
 
 	my $qty = $$specs{'txtQuantity'.$qty_index} ? $$specs{'txtQuantity'.$qty_index} : $Project->quantity($qty_index);

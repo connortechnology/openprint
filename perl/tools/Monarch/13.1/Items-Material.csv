@@ -1,27 +1,27 @@
 "Field Name","IQ Field","Type","Beg","Size","End","Description","Validated","Required","Default Value","Notes"
 "Item-ID","$$Object{id}","Text",1,15,15,"Inventory Item ID","Yes","Yes",,"No duplicates."
-"Item-Desc","$Object->to_string()","Text",16,254,269,"Item Description",,,,
-"Item-Type","'Inventory'","Text",270,14,283,"Item Type","Yes","Yes",,"Inventory, Expense, Charge Only or Finished Goods"
-"Dept-ID","$Object->type() eq 'Roll' ? '601' : '501'","Text",284,3,286,"Material or OSP Department ID","Yes","Yes",,
-"Category-ID","$Object->type() eq 'Roll' ? '800' : '700'","Text",287,3,289,"Category ID","Yes","Yes*",,"Required if system option is activated, validated."
+"Item-Desc","$Object->name()","Text",16,254,269,"Item Description",,,,
+"Item-Type","'ChargeOnly'","Text",270,14,283,"Item Type","Yes","Yes",,"Inventory, Expense, Charge Only or Finished Goods"
+"Dept-ID",,"Text",284,3,286,"Material or OSP Department ID","Yes","Yes",,
+"Category-ID",,"Text",287,3,289,"Category ID","Yes","Yes*",,"Required if system option is activated, validated."
 "Owned-by","'Company'","Text",290,8,297,"Owned By","Yes","Yes",,"Company, Customer or Supplier"
 "Cust-ID","$$Object{owner_id}","Text",298,8,305,"Customer ID ","Yes","Yes*",,"Required if owned by Customer and/or Finished Goods type.  Do not enter an ID if the item type is Charge Only or Expense."
 "Cust-Item-ID",,"Text",306,30,335,"Customer Item ID",,,,"Optional for Customer Owned items only"
-"Supplier-ID",,"Text",336,8,343,"Supplier ID","Yes","Yes*",,"Required if owned by Supplier, otherwise optional."
+"Supplier-ID","$Object->supplier_id() ? $Object->supplier_id() : 'Unknown'-9[+[","Text",336,8,343,"Supplier ID","Yes","Yes*",,"Required if owned by Supplier, otherwise optional."
 "Supplier-Item-ID",,"Text",344,24,367,"Supplier Item ID",,,,"Optional for Supplier Owned items only"
-"Warehouse-ID","","Text",368,3,370,"Default Warehouse ID",,,,
+"Warehouse-ID",,"Text",368,3,370,"Default Warehouse ID",,,,
 "Bin-Location",,"Text",371,10,380,"Default Bin Location",,,,
 "Unit-Of-Measure-Purchase","$Object->Unit_Of_Measure_Purchase()","Text",381,4,384,"Purchasing Unit of Measure","Yes","Yes*",,"Required if Item type = Inventory, Expense or Finished Goods."
 "Unit-Of-Measure-Costing","$Object->Unit_Of_Measure_Costing()","Text",385,4,388,"Costing Unit of Measure","Yes","Yes*",,"Required if Item type = Inventory, Charge Only or Finished Goods.  Must equal Purchasing U/M if Convert is set to No (0)."
 "Convert-Flag",,"Text",389,1,389,"Flag - Conversion Required",,,"No (0)","0=No, 1=Yes (Set to Yes if purch & costing U/M are different.)"
-"M-Weight","$Object->mweight()","Text",390,9,398,"M Weight",,"Yes*",,"Used for items purchased by CWT & costed by M."
+"M-Weight",,"Text",390,9,398,"M Weight",,"Yes*",,"Used for items purchased by CWT & costed by M."
 "Conversion-Factor",,"Text",399,12,410,"Conversion Factor",,"Yes*",,"M Weight or Factor are required if Conversion Flag is set to Yes.  Both Factor and M-Weight cannot have a factor if Convert Flag is set to Yes (1)."
 "GL-Account",,"Text",411,38,448,"G/L Account","Yes",,,"Optional for Expense item types only."
 "Record-Active",,"Text",449,1,449,"Flag - Record Active",,,"Yes (1)","0=No, 1=Yes"
 "Require-Lot-Count",,"Text",450,1,450,"Flag - Require Lot Count",,,"No (0)","0=No, 1=Yes"
 "Direct-Post-Job-Receipts",,"Text",451,1,451,"Flag - Direct Post Job Receipts",,,"No (0)","0=No, 1=Yes"
 "Require-Work-Center",,"Text",452,1,452,"Flag - Require Work Center",,,"No (0)","0=No, 1=Yes"
-"Roll-Stock","$Object->type() eq 'Roll' ? 1 : 0","Text",453,1,453,"Flag - Roll Stock",,,"No (0)","0=No, 1=Yes"
+"Roll-Stock",0,"Text",453,1,453,"Flag - Roll Stock",,,"No (0)","0=No, 1=Yes"
 "Allow-Matl-Trans",,"Text",454,1,454,"Flag - Allow Material Transactions",,"Yes*","No (0)","0=No, 1=Yes (Required if used as a Planner item)"
 "Allow-FG-Orders-Flag",,"Text",455,1,455,"Flag - Allow FG Orders",,,"No (0)","0=No, 1=Yes  Finished Goods item types only"
 "Taxable-Flag",,"Text",456,1,456,"Flag - Taxable Item",,,"No (0)","0=No, 1=Yes  Finished Goods item types only"
@@ -45,8 +45,8 @@
 "Allow-Partial-Pkg-Flag",,"Text",519,1,519,"Flag - Allow Partial Packages",,,"Yes (1)","0=No, 1=Yes  Finished Goods item types only"
 "Allow-Partial-Ctn-Flag",,"Text",520,1,520,"Flag - Allow Partial Cartons",,,"Yes (1)","0=No, 1=Yes  Finished Goods item types only"
 "Allow-Partial-Skid-Flag",,"Text",521,1,521,"Flag - Allow Partial Skids",,,"Yes (1)","0=No, 1=Yes  Finished Goods item types only"
-"Default-PO-Unit-Cost","my %p = $Object->get_price( service=>'Material', weight=>1 ); return $p{'100lb Cost'};","Text",522,16,537,"Default PO Unit Cost",,,,"Maximum 4 decimal places; Format = ZZ,ZZZ,ZZZ,ZZ9.9999"
-"Standard-Unit-Cost","my %p = $Object->get_price( service=>'Material', weight=>1 ); return $p{'100lb Cost'};","Text",538,16,553,"Standard Unit Cost",,,,"Maximum 4 decimal places; Format = ZZ,ZZZ,ZZZ,ZZ9.9999"
+"Default-PO-Unit-Cost","my %p = $Object->get_price( 1 ); return $p{Cost};","Text",522,16,537,"Default PO Unit Cost",,,,"Maximum 4 decimal places; Format = ZZ,ZZZ,ZZZ,ZZ9.9999"
+"Standard-Unit-Cost","my %p = $Object->get_price( 1 ); return $p{Cost};","Text",538,16,553,"Standard Unit Cost",,,,"Maximum 4 decimal places; Format = ZZ,ZZZ,ZZZ,ZZ9.9999"
 "Standard-Cost-Flag",,"Text",554,1,554,"Flag - Use Standard Unit Cost",,,"No (0)","0=No, 1=Yes"
 "OH-Fixed-%",,"Text",555,7,561,"Fixed Overhead %",,,,
 "OH-Fixed-Cost-Per-Unit",,"Text",562,16,577,"Fixed Overhead Cost Per Unit",,,,
