@@ -84,7 +84,7 @@
 "Type",,"Text",1029,30,1058,"Type",,,,
 "Material-Color","$Object->colour()","Text",1059,30,1088,"Color",,,,
 "Finish","$Object->finish()","Text",1089,30,1118,"Finish",,,,
-"Brand-ID","$Object->brand()","Text",1119,5,1123,"Brand ID","Yes",,,"Only applicable if Material Type is Paper"
+"Brand-ID",,"Text",1119,5,1123,"Brand ID","Yes",,,"Only applicable if Material Type is Paper"
 "Basis-Weight","$Object->basis_mweight()","Text",1124,19,1142,"Basis Weight",,,,"Format = >,>>>,>>>,>>9.99999999"
 "Sheet-Stock","$Object->type() eq 'Sheet' ? 1 : 0","Text",1143,1,1143,"Flag - Sheet Stock",,,0,"0=No, 1=Yes"
 "Gauge",,"Text",1144,19,1162,"Gauge",,,,"Format = >,>>>,>>>,>>9.99999999"
@@ -113,7 +113,7 @@
 "Varnish",,"Text",1496,1,1496,"Flag - Varnish",,,0,"0=No, 1=Yes"
 "Coating",,"Text",1497,1,1497,"Flag - Coating",,,0,"0=No, 1=Yes"
 "Opacity",,"Text",1498,19,1516,"Opacity",,,,"Format = >,>>>,>>>,>>9.99999999"
-"Grain-Direction","$Object->grain_direction()","Text",1517,14,1530,"Grain Direction","Yes",,"Length","Not Applicable, Width, or Length"
+"Grain-Direction","$Object->grain_direction() eq 'height' ? 'Length' : 'Width'","Text",1517,14,1530,"Grain Direction","Yes",,"Length","Not Applicable, Width, or Length"
 "Qty-Sheets-Per-Carton",,"Text",1531,9,1539,"Quantity of Sheets per Carton",,,,"Format = >>>,>>>,>>9"
 "Qty-Sheets-Per-Skid",,"Text",1540,9,1548,"Quantity of Sheets per Skid",,,,"Format = >>>,>>>,>>9"
 "Core-Weight",,"Text",1549,19,1567,"Core Weight",,,,"Format = >,>>>,>>>,>>9.99999999"
