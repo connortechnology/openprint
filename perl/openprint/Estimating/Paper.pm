@@ -142,10 +142,10 @@ sub calc {
         foreach my $qty_index ( $Project->quantity_indexes() ) {
 			next if ! $$sig_specs{'txtImposition'.$qty_index};
             my $Paper = openprint::Paper::load_from_signature( $Project, $sig_specs, $qty_index );
-			next if ! ( $Paper->id() or $$Paper{custom} );
-#$openprint::log->debug("Got Press Sheet for sig $$sig_specs{'SignatureIndex'} qty $qty_index " . $Paper->to_string() );
+			#next if ! ( $Paper->id() or $$Paper{custom} );
+$openprint::log->debug("Got Press Sheet for sig $$sig_specs{'SignatureIndex'} qty $qty_index " . $Paper->to_string() ) if DEBUG;
 			my $Supplied = $Paper->Supplied();
-#$openprint::log->debug("Got Stock Sheet for sig $$sig_specs{'SignatureIndex'} qty $qty_index " . $Supplied->to_string() );
+$openprint::log->debug("Got Stock Sheet for sig $$sig_specs{'SignatureIndex'} qty $qty_index " . $Supplied->to_string() ) if DEBUG;
             $papers{$Supplied->id_string()} = $Supplied;
         } # end foreach
 	} # end foreach signature
@@ -176,10 +176,10 @@ $openprint::log->debug("Indexes: $paper_string => $stock_index") if DEBUG;
 			} # end if
 			my $PressSheet = openprint::Paper::load_from_signature( $Project, $sig_specs, $qty_index );
 #$openprint::log->debug("Sheet for sig $ss_id $form $qty_index" . $PressSheet->to_string() ) if DEBUG;
-			if ( ! ( $PressSheet->id() or $$PressSheet{custom} ) ) {
-				$openprint::log->error("No id or customer....");
-				next;
-			} # end if
+			#if ( ! ( $PressSheet->id() ) or $$PressSheet{custom} ) {
+				#$openprint::log->error("No id or custom....");
+				#next;
+			#} # end if
 			# This paper is in the printing format, not the supplied
 			# Convert to supplied Stock
 			my $SuppliedStock = $PressSheet->Supplied();
@@ -314,6 +314,8 @@ $openprint::log->error("2No stock index for $paper_id");
 #$openprint::log->warn("Getting prices for $stock_index $paper_id (".$totals{$paper_id}{"qty_$qty_index"}.'sheets) => $' . $price{'100lb Price'}.'/100lb');
 				} # end if
 				$$specs{"price-$stock_index-$qty_index"} = Math::Round::nearest( 0.01, $$specs{"cost-$stock_index-$qty_index"} * $$specs{"qty-$stock_index-$qty_index"} / 100 );
+			} else {
+				$$specs{"cost-$stock_index-$qty_index"} = $$specs{"price-$stock_index-$qty_index"} = 0;
 			} # end if
 			$totals{$paper_id}{Cost}[$qty_index] = $$specs{"cost-$stock_index-$qty_index"};
 			#$$specs{"MPrice$qty_index"} += $$specs{"cost-$stock_index-$qty_index"} * ceil( (1000/$$sig_specs{'txtImposition'.$qty_index}) * $RunPaper->sheet_weight() )/ 100;
@@ -397,7 +399,7 @@ sub summary {
 		foreach my $q_index ( $Project->quantity_indexes() ) {
 			next if ! $$sig_specs{'txtImposition'.$q_index};
 			my $Paper = openprint::Paper::load_from_signature( $Project, $sig_specs, $q_index )->Supplied();
-			next if ! ( $Paper->id() or $$Paper{custom} );
+			#next if ! ( $Paper->id() or $$Paper{custom} );
 			$Papers{$Paper->id_string()} = $Paper;
         } # end foreach qty_index
     } # end foreach
@@ -453,7 +455,7 @@ sub get_stocks {
         foreach my $q_index ( $Project->quantity_indexes() ) {
             next if ! $$sig_specs{'txtImposition'.$q_index};
             my $Paper = openprint::Paper::load_from_signature( $Project, $sig_specs, $q_index )->Supplied();
-            next if ! ( $Paper->id() or $$Paper{custom} );
+            #next if ! ( $Paper->id() or $$Paper{custom} );
             $Papers{$Paper->id_string()} = $Paper;
         } # end foreach qty_index
     } # end foreach
@@ -476,7 +478,7 @@ sub get_stocks_and_quantities {
         foreach my $q_index ( $Project->quantity_indexes() ) {
             next if ! $$sig_specs{'txtImposition'.$q_index};
             my $Paper = openprint::Paper::load_from_signature( $Project, $sig_specs, $q_index )->Supplied();
-            next if ! ( $Paper->id() or $$Paper{custom} );
+            #next if ! ( $Paper->id() or $$Paper{custom} );
             $Papers{$Paper->id_string()} = $Paper;
         } # end foreach qty_index
     } # end foreach
