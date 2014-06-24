@@ -1132,6 +1132,7 @@ sub add_signature {
 		$sig_index += 1;
 	} # end if
 	openprint::service::insert_service_spec( $log, $dbh, $self->id(), $print_service_index, 'SignatureIndex', $sig_index );
+	delete $$self{calliper};
 	$self->unlock();
 	return $print_service_index;
 } # end sub add_signature
@@ -1519,7 +1520,7 @@ sub Project {
 } # end sub Proejct;
 
 sub calliper {
-	if ( ! exists $_[0]{calliper} ) {
+	if ( ! $_[0]{calliper} ) {
 		my $Project = $_[0];
 		my $services = $Project->services();
 
