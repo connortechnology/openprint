@@ -1101,21 +1101,27 @@ $openprint::log->debug("Skipping cuz no $$Press{strid}");
 			next;
 		} # end if
 
+		my @side_one_colours = @{$$project{'side_one_colours'}};
+		my @side_two_colours = @{$$project{'side_two_colours'}};
 		# If we need a varnish, varnish can be done inline if the press has enough units, or in a second pass.  
 		# The second pass requires washes for all other units as a second pass, so that tends to be not likely.
+		my @side_one_varnishes = map { ( $$_{name} =~ /Varnish/ ) ? $$_{name} : () } ( @{$$project{'side_one_coatings'}}, @{$$project{'side_one_colours'}} );
+		my @side_two_varnishes = map { ( $$_{name} =~ /Varnish/ ) ? $$_{name} : () } ( @{$$project{'side_two_coatings'}}, @{$$project{'side_two_colours'}} );
+
 		my $varnish_capable = $Press->specification('Varnish Capable');
-		my @side_one_colours = @{$$project{'side_one_colours'}};
-		foreach my $c ( @{$$project{'side_one_coatings'}} ) {
-			if ( ( $$c{name} =~ /Varnish/ ) and ( $varnish_capable eq 'Y' ) ) {
-				push @side_one_colours, $$c{name};
-			} # end if
-		} # end foreach c
-		my @side_two_colours = @{$$project{'side_two_colours'}};
-		foreach my $c ( @{$$project{'side_two_coatings'}} ) {
-			if ( ( $$c{name} =~ /Varnish/ ) and ( $varnish_capable eq 'Y' ) ) {
-				push @side_two_colours, $$c{name};
-			} # end if
-		} # end foreach c
+if ( 0 ) {
+		if ( $varnish_capable eq 'Y' ) {
+			push @side_one_colours, @side_one_varnishes;
+			push @side_two_colours, @side_two_varnishes;
+		} elsif ( $varnish_capable eq '1 Side' ) {
+			push @side_one_colours, @side_one_varnishes;
+			push @side_two_colours, @side_two_varnishes;
+		} # end if
+$openprint::log->debug("$$Press{strid} Side One varnihses @side_one_varnishes");
+$openprint::log->debug("$$Press{strid} Side Two varnihses @side_two_varnishes");
+$openprint::log->debug("$$Press{strid} Side One colours @side_one_colours");
+$openprint::log->debug("$$Press{strid} Side Two colours @side_two_colours");
+		} # end if
 		my $number_of_colours = $Press->specification('Number of Colours');
 		$$project{'Runstyles'} = $Press->specification('Runstyles');
 # This perfecting stuff: default to on, turn off if press can't do it, or the job is single sided.
@@ -1127,8 +1133,17 @@ $openprint::log->debug("Skipping cuz no $$Press{strid}");
 			$openprint::log->debug("** $$Press{strid} Can't Perfect - Perfecting not in runstyles ***") if DEBUG;
 			$do_perfecting = 0;
 		} elsif ( @side_one_colours > int($number_of_colours/2) or @side_two_colours > int($number_of_colours/2) ) {
-			$openprint::log->debug("** Too many colours to  Perfect  ***") if DEBUG;
-			$do_perfecting = 0;
+			if ( ( $varnish_capable eq '1 Side' ) and (
+				( ( @side_one_colours - @side_one_varnishes ) <= int($number_of_colours/2) ) and 
+				( ( @side_two_colours - @side_two_varnishes ) <= int($number_of_colours/2) ) ) 
+			) {
+				$openprint::log->debug("** Can do 1 sided varnish perfecting ***");
+			} else {
+				#$openprint::log->debug(( @side_one_colours - @side_one_varnishes ) . ' <= ' . int($number_of_colours/2)) if DEBUG;
+				#$openprint::log->debug(( @side_two_colours - @side_two_varnishes ) . ' <= ' . int($number_of_colours/2)) if DEBUG;
+				$openprint::log->debug("** Too many colours to  Perfect  ***") if DEBUG;
+				$do_perfecting = 0;
+			} 
 		} elsif ( ( $_ = $Press->specification('Maximum Calliper Perfecting') ) and ( $$specs{'txtSpecificStockCalliper'} > $_ ) ) {
 			$do_perfecting = 0;
 			$openprint::log->debug("** Too thick to:  Perfect  ***") if DEBUG;
@@ -2951,6 +2966,18 @@ sub calculate_impositions {
 				next;
 			} # end if
 		}  # end if
+
+		if ( $$sig_specs{PreviousStockWidth} and $$Paper{width} > $$sig_specs{PreviousStockWidth} ) {
+			$imp->display("PreviousStockWidth: $$sig_specs{'PreviousStockWidth'} < " . $Paper->to_string() ) if DEBUG_FILTERING;
+			next;
+		} # end if
+
+		if ( $$sig_specs{'PreviousStockType'} and ( $$Paper{'type'} ne $$sig_specs{'PreviousStockType'} ) ) {
+			$imp->display("PreviousStockType: $$sig_specs{'PreviousStockType'} ne " . $Paper->to_string() ) if DEBUG_FILTERING;
+			next;
+		} # end if
+
+
 		if ( $$sig_specs{'chkOverrideGrainDirection'.$qty_index} eq 'Y' ) {
 			if ( $imp->dutch_columns() ) {
 				$imp->display("Has Dutch") if DEBUG_FILTERING;
@@ -2985,15 +3012,6 @@ sub calculate_impositions {
 			next;
 		} # end if
 
-		if ( $$sig_specs{'PreviousStockType'} and ( $$Paper{'type'} ne $$sig_specs{'PreviousStockType'} ) ) {
-			$imp->display("PreviousStockType: $$sig_specs{'PreviousStockType'} ne " . $Paper->to_string() ) if DEBUG_FILTERING;
-			next;
-		} # end if
-
-		if ( $$sig_specs{PreviousStockWidth} and $$Paper{width} > $$sig_specs{PreviousStockWidth} ) {
-			$imp->display("PreviousStockWidth: $$sig_specs{'PreviousStockWidth'} < " . $Paper->to_string() ) if DEBUG_FILTERING;
-			next;
-		} # end if
 
 		if ( $SpreadLayout > 0 ) {
 			if ( $$sig_specs{'PreviousImposition'} and ( $$sig_specs{'PreviousImposition'} > $$imp{'imposition'} ) ) {
@@ -3601,7 +3619,7 @@ sub get_project_price {
 		$previous_forms_cache{$hash_key} += 1;
 
 		my %PlateCounts = %$PlateCounts;
-if ( 1 ) {
+if ( 0 ) {
 	foreach my $k ( keys %PlateCounts ) {
 		$openprint::log->debug("Start PLATES: $k=> $PlateCounts{$k}");
 	} # end foreach
@@ -3638,9 +3656,11 @@ if ( 1 ) {
 
 		$PlateCounts{$$price{'Plate Costs'}{'Plate ID'}} += $$price{'Plate Costs'}{'Plate Count'};
 		$PlateCounts{'Blank'.$$price{'Plate Costs'}{'Plate ID'}} += $$price{'Plate Costs'}{'Blank Plates'};
+if ( 0 ) {
 	foreach my $k ( keys %PlateCounts ) {
 		$openprint::log->debug("after clac PLATES: $k=> $PlateCounts{$k}");
 	} # end foreach
+}
 		$PaperCounts{$Paper->id_string()} += $$price{'Stock Qty'};
 # Gets done later on, why do it here?  Maybe to fuill in plate costs... or to use them in best_price calcs...
 # I put this back on Sept 17th because for a 16+8, it didn't have the plate costs. Technically it should be done later when all plates are accounted for
