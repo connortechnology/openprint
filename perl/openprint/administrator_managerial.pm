@@ -524,7 +524,7 @@ sub company_profiles {
 			} # end foreach  Payment
 			foreach my $Stock ( openprint::Paper->find(supplier_id=>$param{merge_company_id}) ) {
 				$Stock->save({supplier_id=>$Company->id()});
- if $_->supplier_id() == $Company->id();
+ #if $_->supplier_id() == $Company->id();
 			} # end foreach  Stock
 			new openprint::Company( $param{'merge_company_id'} )->delete();
 			sql::end_transaction( $dbh, $ac );
