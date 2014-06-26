@@ -1395,6 +1395,12 @@ $log->debug($P->id_string());
 #Carp::cluck("Custom size $$specs{'StockWidth'.$qty_index}x$$specs{'StockHeight'.$qty_index}");
 #$openprint::log->debug("Custom size $$Paper{width}x$$Paper{height} => $$specs{'StockWidth'.$qty_index}x$$specs{'StockHeight'.$qty_index}");
 			$$Paper{Supplied} = $P;
+			if ( ! $P->start_width() ) {
+#$openprint::log->debug("Setting start with");
+				$P->width( $$specs{'StockWidth'.$qty_index} );
+				$P->start_width( $P->width() );
+			} 
+
 			if ( ! $Paper->start_width() ) {
 #$openprint::log->debug("Setting start with");
 				$Paper->start_width( $Paper->width() );
@@ -1559,8 +1565,8 @@ sub Supplied {
 	my ( $self ) = @_;
 	if ( ! $$self{Supplied} ) {
 		my $Supplied = $self->clone();
-		$$Supplied{'width'} = $$self{'start_width'} if $$self{'start_width'};
-		$$Supplied{'height'} = $$self{'start_height'} if $$self{'start_height'};
+		$$Supplied{width} = $$self{start_width} ? $$self{start_width} : $$self{width};
+		$$Supplied{height} = $$self{start_height} ? $$self{start_height} : $$self{height};
 		delete $$Supplied{'to_string'};
 		$Supplied->mweight(0); # force recalc
 		$$self{Supplied} = $Supplied;
