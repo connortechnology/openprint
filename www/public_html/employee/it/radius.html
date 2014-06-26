@@ -47,7 +47,7 @@ Please select a host to view/edit.<br>
 			<? echo ( join('',
 				button( 'ShowResults', { onclick=>"load_records( \$('f1') );", text=>'Show Results' } ),
 				button( 'Reset', { onclick=>'f1.reset();' } ),
-				button( 'Add', { onclick=>q`window.location='host.html?'+$('f1').serialize();`, text=>'Add New RADIUS' } ),
+				button( 'Add', { onclick=>'new_record();', text=>'Add New RADIUS' } ),
 				); ) ?>
 		</p>
 	</fieldset>

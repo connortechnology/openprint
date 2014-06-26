@@ -460,8 +460,10 @@ sub find_operators {
 	my ( $field, $type, $operator, $value ) = @_;
 $log->debug("find_operators: field($field) type($type) op($operator) value($value)") if DEBUG_ALL;
 
+my $add_placeholder = ( ! ( $field =~ /\?/ ) ) ?  1 : 0;
+
 	if ( sets::isin( $operator, [ '=', '!=', '<', '>', '<=', '>=', '<<=' ] ) ) {
-		return ( $field.$type.' ' . $operator . ' ?', $value );
+		return ( $field.$type.' ' . $operator . ( $add_placeholder ? ' ?' : '' ), $value );
 	} elsif ( sets::isin( $operator, [ '&&', '<@', '@>' ] ) ) {
 		if ( ref $value eq 'ARRAY' ) {
 			if ( $field =~ /^\(/ ) {

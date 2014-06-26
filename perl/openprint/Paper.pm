@@ -15,12 +15,11 @@ require sql;
 require ssi;
 require misc;
 require configuration;
-require openprint::Skid;
-require openprint::PaperPrice;
 require openprint::logs;
 require openprint::Manufacturer;
+require openprint::PaperPrice;
+require openprint::Skid;
 require openprint::SkidContent;
-require openprint::Manufacturer;
 require openprint::StockBrand;
 require openprint::StockFinish;
 require openprint::StockColour;
@@ -36,7 +35,7 @@ use Time::HiRes qw{ time gettimeofday tv_interval };
 
 use vars qw( $debug $table $serial %fields %find_fields %defaults %transforms %grades );
 
-$debug = 1;
+$debug = 0;
 $table = 'papers';
 $serial	= 'paper_id_seq';
 %fields = (
@@ -44,6 +43,7 @@ $serial	= 'paper_id_seq';
 		'created_on'	=>	'created_on',
 		'group_id'		=>	'group_id',
 		'owner_id'		=>	'owner_id',
+		'supplier_id'	=>	'supplier_id',
 		'manufacturer_id'	=>	'manufacturer_id',
 		'brand_id'		=>	'brand_id',
 		'colour_id'		=>	'colour_id',
@@ -143,6 +143,7 @@ $serial	= 'paper_id_seq';
 	group_id			=>	undef,
 	quality_id			=>	undef,
 	available_to_order	=>	undef,
+	supplier_id			=>	undef,
 );
 
 %grades = (
@@ -907,11 +908,13 @@ sub previous {
 	} # end if
 	return $self;
 } # end sub previous
+
 sub next {
 	my $self = shift;
+	
 	my @papers = openprint::Paper->find_one( 
 			columns   =>  '*,(select name from stockbrands where id=brand_id) AS brand, (select name from stockfinishes where id=finish_id) AS finish, (select name from stockcolours where id=colour_id) AS colour, (select name from stockweights where id=weight_id) AS weight',
-'order'=>'brand,finish,colour,weight,width,height', 'brand >=' => $self->brand(), 'id !=' => $$self{id} );
+'order'=>'brand,finish,colour,weight,width,height' );
 	for ( my $i = 0; $i < @papers; $i += 1 ) {
 		return $papers[$i+1] if ($papers[$i] == $self )and ($i < @papers);
 	} # end if
@@ -1238,7 +1241,7 @@ sub load_from_signature {
 	my $Paper;
 	if ( $$specs{'rdbSpecificStock'} eq 'Y' ) {
 		$Paper = new openprint::Paper();
-		$$Paper{'custom'} = 1;
+		$$Paper{custom} = 1;
 		$Paper->brand( $$specs{'txtSpecificStockBrand'} );
 		$Paper->finish( $$specs{'txtSpecificStockFinish'} );
 		$Paper->colour( $$specs{'txtSpecificStockColour'} );
@@ -1392,6 +1395,12 @@ $log->debug($P->id_string());
 #Carp::cluck("Custom size $$specs{'StockWidth'.$qty_index}x$$specs{'StockHeight'.$qty_index}");
 #$openprint::log->debug("Custom size $$Paper{width}x$$Paper{height} => $$specs{'StockWidth'.$qty_index}x$$specs{'StockHeight'.$qty_index}");
 			$$Paper{Supplied} = $P;
+			if ( ! $P->start_width() ) {
+#$openprint::log->debug("Setting start with");
+				$P->width( $$specs{'StockWidth'.$qty_index} );
+				$P->start_width( $P->width() );
+			} 
+
 			if ( ! $Paper->start_width() ) {
 #$openprint::log->debug("Setting start with");
 				$Paper->start_width( $Paper->width() );
@@ -1556,8 +1565,8 @@ sub Supplied {
 	my ( $self ) = @_;
 	if ( ! $$self{Supplied} ) {
 		my $Supplied = $self->clone();
-		$$Supplied{'width'} = $$self{'start_width'} if $$self{'start_width'};
-		$$Supplied{'height'} = $$self{'start_height'} if $$self{'start_height'};
+		$$Supplied{width} = $$self{start_width} ? $$self{start_width} : $$self{width};
+		$$Supplied{height} = $$self{start_height} ? $$self{start_height} : $$self{height};
 		delete $$Supplied{'to_string'};
 		$Supplied->mweight(0); # force recalc
 		$$self{Supplied} = $Supplied;
@@ -1612,7 +1621,25 @@ sub sort {
 		} # end foreach option
 		
 	} @_;
-}
+} # end sub sort
+sub Unit_Of_Measure_Purchase {
+	if ( $_[0]{type} eq 'Sheet' ) {
+		return 'M';
+	} else {
+		return 'CWT';
+	} # end if
+} # end sub  Unit_Of_Measure_Purchase
+sub Unit_Of_Measure_Costing {
+	if ( $_[0]{type} eq 'Sheet' ) {
+		return 'M';
+	} else {
+		return 'CWT';
+	} # end if
+} # end sub  Unit_Of_Measure_Costing
+
+sub Supplier {
+	return new openprint::Company( $_[0]{supplier_id} );
+} # end sub Supplier
 
 1;
 __END__

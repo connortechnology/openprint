@@ -109,6 +109,16 @@
 					<input style="display: none;" type="text" id="txtManufacturer" name="txtManufacturer" onfocus="if(!this.value){this.value=get_ddm_text(f1.ddmManufacturer);}ddm_select_by_index( f1.ddmManufacturer, 0 );" />
 				</p>
 				<p>
+					<label for="txtSupplier" onclick="$('ddmSupplier').toggle();$('txtSupplier').toggle();">Supplier</label>
+					<select id="ddmSupplier" name="ddmSupplier" size="1">
+						<option value="">select</option>
+					<? echo (
+							make_drop_down( openprint::Company->dropdown(order=>'lower(name)', supplier=>'Y'), $$variable{Stock}->supplier_id() );
+							) ?>
+					</select>
+					<input style="display: none;" type="text" id="txtSupplier" name="txtSupplier" onfocus="if(!this.value){this.value=get_ddm_text(f1.ddmSupplier);}ddm_select_by_index( f1.ddmSupplier, 0 );" />
+				</p>
+				<p>
 					<label for="txtBrand" onclick="$('txtBrand').toggle();$('ddmBrand').toggle();">Brand</label>
 					<select id="ddmBrand" name="ddmBrand" size="1" onchange="f1.txtBrand.value='';">
 						<option value="">select</option>

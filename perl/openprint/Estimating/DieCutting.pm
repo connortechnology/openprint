@@ -16,7 +16,7 @@
 
 package openprint::Estimating::DieCutting;
 use strict;
-use warnings;
+#use warnings;
 use POSIX qw( ceil );
 use constant DEBUG => 1;
 
@@ -145,7 +145,7 @@ sub calc_price {
 	if ( (defined $$specs{'OverrideDiePrice'.$qty_index}) and ( $$specs{'OverrideDiePrice'.$qty_index} eq 'Y' ) ) {
 		$DiePrice{'Price'} = $$specs{'DiePrice'.$qty_index};
 	} # end if
-	$Total{'Total'} += $DiePrice{'Price'} if $DiePrice{'Price'};
+	$Total{Total} += $DiePrice{Price} if $DiePrice{Price};
 
 	# Why 1.28, overs I assume
 	my $impressions = ceil( ( $$specs{"txtQuantity$qty_index"} / $$Signature_Imposition{imposition} ) ) * $Imposition->quantity();
@@ -545,7 +545,7 @@ sub summary {
 			my $sig_specs = $Service->specs();
 			my $form = $$sig_specs{SignatureIndex};
 
-			if ( $$specs{'rdbSuppliedDie-'.$form} eq 'Y' ) {
+			if ( (defined $$specs{'rdbSuppliedDie-'.$form} ) and ( $$specs{'rdbSuppliedDie-'.$form} eq 'Y' ) ) {
 				$summary .= 'Customer supplies die' . ( @signatures > 1 ? ' for form '.$form : '' ).'<br/>';
 			} else {
 				$summary .= $Owner->name() . ' supplies die'.( @signatures > 1 ? ' for form '.$form : '' ).'<br/>';
