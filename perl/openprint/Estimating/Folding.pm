@@ -519,7 +519,10 @@ $openprint::log->debug("Not adding because previousimposition != sigImposition")
 				} # end if
 			} # end if
 			if ( $add ) {
-				unshift @my_equipment, $Press;
+				@my_equipment = ( $Press, map { $$_{id} == $$Press{id} ? () : $_ } @my_equipment );
+			} else {
+				# Can't do inline when UV or AQ
+				@my_equipment = map { $$_{id} == $$Press{id} ? () : $_ } @my_equipment;
 			} # end if
 		} # end if
 	} # end if override or lookup equipment
