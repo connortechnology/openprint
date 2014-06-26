@@ -5,6 +5,7 @@
 			( $session{'/administrator/stock/list.html?group_id'} ? ( 'group_id'		=> $session{'/administrator/stock/list.html?group_id'} ) : () ),
 			( $session{'/administrator/stock/list.html?owner_id'} ? ( 'owner_id'		=> $session{'/administrator/stock/list.html?owner_id'} ) : () ),
 			( $session{'/administrator/stock/list.html?manufacturer_id'} ? ( 'manufacturer_id'		=> $session{'/administrator/stock/list.html?manufacturer_id'} ) : () ),
+			( $session{'/administrator/stock/list.html?supplier_id'} ? ( supplier_id		=> $session{'/administrator/stock/list.html?supplier_id'} ) : () ),
 			( $session{'/administrator/stock/list.html?brand_id'} ? ( 'brand_id'	=> $session{'/administrator/stock/list.html?brand_id'} ) : () ),
 			( $session{'/administrator/stock/list.html?finish_id'} ? ( 'finish_id'	=> $session{'/administrator/stock/list.html?finish_id'} ) : () ),
 			( $session{'/administrator/stock/list.html?colour_id'} ? ( 'colour_id'	=> $session{'/administrator/stock/list.html?colour_id'} ) : () ),
@@ -44,6 +45,9 @@
 				<th class="group">Group</th>
 				<? endif ( @{$$variable{'Groups'}} ) ?>
 				<th class="manufacturer">Manufacturer</th>
+<? if ( ! $session{'/administrator/stock/list.html?supplier_id'} ) ?>
+				<th class="supplier">Supplier</th>
+<? endif ( ! $session{'/administrator/stock/list.html?supplier_id'} ) ?>
 				<th class="brand">Brand</th>
 				<th class="finish">Finish</th>
 				<th class="colour">Colour</th>
@@ -68,6 +72,9 @@
 		<td class="group"><a href="stock.html?stock_id=<? echo ( $$variable{Stock}{'id'} ) ?>"><? echo ( $$variable{Stock}->group() ) ?></a></td>
 		<? endif ( @{$$variable{'Groups'}} ) ?>
 		<td class="manufacturer"><a href="stock.html?stock_id=<? echo ( $$variable{Stock}{'id'} ) ?>"><? echo ( $$variable{Stock}->manufacturer() ) ?></a></td>
+<? if ( ! $session{'/administrator/stock/list.html?supplier_id'} ) ?>
+		<td class="brand"><a href="stock.html?stock_id=<? echo ( $$variable{Stock}{'id'} ) ?>"><? echo ( $$variable{Stock}->Supplier()->name() ) ?></a></td>
+<? endif ( ! $session{'/administrator/stock/list.html?supplier_id'} ) ?>
 		<td class="brand"><a href="stock.html?stock_id=<? echo ( $$variable{Stock}{'id'} ) ?>"><? echo ( $$variable{Stock}->brand() ) ?></a></td>
 		<td class="finish"><a href="stock.html?stock_id=<? echo ( $$variable{Stock}{'id'} ) ?>"><? echo ( $$variable{Stock}->finish() ) ?></a></td>
 		<td class="colour"><a href="stock.html?stock_id=<? echo ( $$variable{Stock}{'id'} ) ?>"><? echo ( $$variable{Stock}->colour() ) ?></a></td>

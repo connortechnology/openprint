@@ -1418,10 +1418,10 @@ sub save_Manifest {
 	my ( $Manifest ) = @_;
 
 	my $error;
+	$Manifest->received_on( join('-', @param{'received_on_year','received_on_month','received_on_day'} ) );
+
 	my $ac = sql::start_transaction( $dbh );
 	$dbh->do( 'LOCK TABLE companies IN SHARE ROW EXCLUSIVE MODE' ) or $log->error( DBI->errstr );
-
-	$Manifest->received_on( join('-', @param{'received_on_year','received_on_month','received_on_day'} ) );
 
 	if ( $param{supplier} and ! $param{supplier_id} ) {
 		my @Companies = openprint::Company->find( name=>$param{supplier} );

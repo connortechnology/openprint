@@ -183,6 +183,7 @@ if ( 0 ) {
 }
 	$log->debug("load_equipment");
 	@equipment = openprint::Equipment->find( Specifications => {'Cutting Capable'=>\@capabilities}, useinestimating=>1, order=>'lower(strName)');
+	@PreFoldingEquipment = openprint::Equipment->find( Specifications => {'Cutting Capable'=>['Y','When Printing']}, 'useinestimating'=>1,'order'=>'lower(strName)');
 } # end sub load_equipment
 
 sub signature_calc_stock_cutting {
@@ -576,7 +577,7 @@ $openprint::log->debug("Folding impositions: " . @folding_impositions ) if DEBUG
 		} # end if
 
 		if ( $folding_cuts ) {
-			load_equipment( $Project) if ! @PreFoldingEquipment;
+			load_equipment( $Project ) if ! @PreFoldingEquipment;
 			my @PreFoldEquipment = @PreFoldingEquipment;
 			if ( ( defined $$specs{"OverrideFoldingEquipment-$$sig_specs{SignatureIndex}-$qty_index"} ) and ( $$specs{"OverrideFoldingEquipment-$$sig_specs{SignatureIndex}-$qty_index"} eq 'Y' ) ) {
 				if ( ! sets::isin( $$specs{"OverrideFoldingEquipment-$$sig_specs{SignatureIndex}-$qty_index"}, [ map { $_->id() } @PreFoldingEquipment ] ) ) {
@@ -609,6 +610,8 @@ $openprint::log->debug("Folding impositions: " . @folding_impositions ) if DEBUG
 					$results{FoldingEquipment} = $Equipment;
 				} # end if
 			} # end foreach Equipmenet
+		} else {
+			$results{Breakdown} .= 'No pre-folding cuts:<br/>';
 		} # end if folding_cuts
 		$results{FoldingCuts} = $folding_cuts;
 	} # end if @folding
@@ -1037,7 +1040,7 @@ sub calc {
 					$Cut_Stocks{ $Paper->id_string() } = { Stock=>$Paper, quantity=>$$sig_specs{"StockQuantity$qty_index"} };
 				} # end if
 			} # end if
-$openprint::log->debug("Paper: " . $Paper->to_string() );
+$openprint::log->debug("Paper: " . $Paper->to_string() ) if DEBUG;
 
 			# Folding
 			if ( 0 and $$services{'Folding'} and @{$$services{'Folding'}} ) {
@@ -1063,10 +1066,10 @@ $openprint::log->debug("Paper: " . $Paper->to_string() );
 			$$specs{"FoldingCuts-$form-$qty_index"} = $results{FoldingCuts};
 
 			if ( my $minCharge = openprint::service::get_price( 'CuttingSignatureChargeMinimum', undef, $results{'Equipment'} ) ) {
-				$results{Price} = $minCharge if $results{Price} and ($results{'Price'} < $minCharge);
+				$results{Price} = $minCharge if $results{Price} and ($results{Price} < $minCharge);
 			} # end if
 
-			$price += $results{'Price'};
+			$price += $results{Price};
 			$price += $results{FoldingPrice} if $results{FoldingPrice};
 
 			$mprice += $results{'MPrice'};
@@ -1102,7 +1105,7 @@ $openprint::log->debug("Paper: " . $Paper->to_string() );
 		if ( (defined $$specs{"OverridePrice$qty_index"} ) and ( $$specs{"OverridePrice$qty_index"} eq 'Y' ) ) {
 			$$specs{"txtPrice$qty_index"} = sprintf( $config{'ProjectMoneyFormat'}, $$specs{"txtPrice$qty_index"} );
 		} else {
-			$$specs{"txtPrice$qty_index"} = sprintf( $config{'ProjectMoneyFormat'}, $price );
+			$$specs{"txtPrice$qty_index"} = sprintf( $config{'ProjectMoneyFormat'}, Math::Round::nearest( 1, $price ) );
 		} # end if
 		$$specs{"MPrice$qty_index"} = sprintf( $config{UnitPriceFormat}, $mprice );
 		$$specs{"txtUnitPrice$qty_index"} = sprintf( $config{UnitPriceFormat}, $price/$$specs{"txtQuantity$qty_index"});

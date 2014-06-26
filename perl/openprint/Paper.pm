@@ -15,12 +15,11 @@ require sql;
 require ssi;
 require misc;
 require configuration;
-require openprint::Skid;
-require openprint::PaperPrice;
 require openprint::logs;
 require openprint::Manufacturer;
+require openprint::PaperPrice;
+require openprint::Skid;
 require openprint::SkidContent;
-require openprint::Manufacturer;
 require openprint::StockBrand;
 require openprint::StockFinish;
 require openprint::StockColour;
@@ -44,6 +43,7 @@ $serial	= 'paper_id_seq';
 		'created_on'	=>	'created_on',
 		'group_id'		=>	'group_id',
 		'owner_id'		=>	'owner_id',
+		'supplier_id'	=>	'supplier_id',
 		'manufacturer_id'	=>	'manufacturer_id',
 		'brand_id'		=>	'brand_id',
 		'colour_id'		=>	'colour_id',
@@ -143,6 +143,7 @@ $serial	= 'paper_id_seq';
 	group_id			=>	undef,
 	quality_id			=>	undef,
 	available_to_order	=>	undef,
+	supplier_id			=>	undef,
 );
 
 %grades = (
@@ -907,11 +908,13 @@ sub previous {
 	} # end if
 	return $self;
 } # end sub previous
+
 sub next {
 	my $self = shift;
+	
 	my @papers = openprint::Paper->find_one( 
 			columns   =>  '*,(select name from stockbrands where id=brand_id) AS brand, (select name from stockfinishes where id=finish_id) AS finish, (select name from stockcolours where id=colour_id) AS colour, (select name from stockweights where id=weight_id) AS weight',
-'order'=>'brand,finish,colour,weight,width,height', 'brand >=' => $self->brand(), 'id !=' => $$self{id} );
+'order'=>'brand,finish,colour,weight,width,height' );
 	for ( my $i = 0; $i < @papers; $i += 1 ) {
 		return $papers[$i+1] if ($papers[$i] == $self )and ($i < @papers);
 	} # end if
@@ -1238,7 +1241,7 @@ sub load_from_signature {
 	my $Paper;
 	if ( $$specs{'rdbSpecificStock'} eq 'Y' ) {
 		$Paper = new openprint::Paper();
-		$$Paper{'custom'} = 1;
+		$$Paper{custom} = 1;
 		$Paper->brand( $$specs{'txtSpecificStockBrand'} );
 		$Paper->finish( $$specs{'txtSpecificStockFinish'} );
 		$Paper->colour( $$specs{'txtSpecificStockColour'} );
@@ -1601,6 +1604,25 @@ sub init_cache {
 sub link_to {
 	return sprintf('<a href="/employee/inventory/paper_details.html?paper_id=%1$d">%2$s</a>', $_[0]{id}, $_[0]->to_string() );
 } # end sub link_to
+
+sub Unit_Of_Measure_Purchase {
+	if ( $_[0]{type} eq 'Sheet' ) {
+		return 'M';
+	} else {
+		return 'CWT';
+	} # end if
+} # end sub  Unit_Of_Measure_Purchase
+sub Unit_Of_Measure_Costing {
+	if ( $_[0]{type} eq 'Sheet' ) {
+		return 'M';
+	} else {
+		return 'CWT';
+	} # end if
+} # end sub  Unit_Of_Measure_Costing
+
+sub Supplier {
+	return new openprint::Company( $_[0]{supplier_id} );
+}
 
 1;
 __END__

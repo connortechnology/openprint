@@ -879,12 +879,12 @@ $log->debug("Calcing txtCustomMWeight");
 			@$specs{'ddmStockWidth','ddmStockHeight'} = $$specs{'ddmStockSize'} =~ /^([\d\.]+)"?\s*x?\s*([\d\.]+)?"?\s*$/;
 		}
 		@Papers = openprint::Paper->find( 
-				( $$specs{'ddmStockGroup'} ? ( group=> $$specs{'ddmStockGroup'} ) : () ),
-				( exists $$specs{'ddmStockBrand'} ? ( 'brand'=> $$specs{'ddmStockBrand'} ) : () ),
-				( exists $$specs{'ddmStockFinish'} ? ( 'finish'=>$$specs{'ddmStockFinish'} ) : () ),
-				( exists $$specs{'ddmStockColour'} ? ( 'colour'=>$$specs{'ddmStockColour'} ) : () ),
-				( exists $$specs{'ddmStockWeight'} ? ( 'weight'=>$$specs{'ddmStockWeight'} ) : () ),
-				( $$specs{'ddmStockQuality'} ? ( 'quality'=>$$specs{'ddmStockQuality'} ) : () ),
+				( $$specs{ddmStockGroup} ? ( group=> $$specs{ddmStockGroup} ) : () ),
+				( $$specs{ddmStockBrand} ? ( brand=> $$specs{ddmStockBrand} ) : () ),
+				( $$specs{ddmStockFinish} ? ( finish=>$$specs{ddmStockFinish} ) : () ),
+				( $$specs{ddmStockColour} ? ( colour=>$$specs{ddmStockColour} ) : () ),
+				( $$specs{ddmStockWeight} ? ( weight=>$$specs{ddmStockWeight} ) : () ),
+				( $$specs{ddmStockQuality} ? ( quality=>$$specs{ddmStockQuality} ) : () ),
 				( exists $$specs{'ddmStockWidth'} ? ( 'width'=>$$specs{'ddmStockWidth'} ) : () ),
 				( exists $$specs{'ddmStockHeight'} ? ( 'height'=>$$specs{'ddmStockHeight'} ) : () ),
 				'project_type_id any'=>$Project->type_id(),
@@ -1101,21 +1101,27 @@ $openprint::log->debug("Skipping cuz no $$Press{strid}");
 			next;
 		} # end if
 
+		my @side_one_colours = @{$$project{'side_one_colours'}};
+		my @side_two_colours = @{$$project{'side_two_colours'}};
 		# If we need a varnish, varnish can be done inline if the press has enough units, or in a second pass.  
 		# The second pass requires washes for all other units as a second pass, so that tends to be not likely.
+		my @side_one_varnishes = map { ( $$_{name} =~ /Varnish/ ) ? $$_{name} : () } ( @{$$project{'side_one_coatings'}}, @{$$project{'side_one_colours'}} );
+		my @side_two_varnishes = map { ( $$_{name} =~ /Varnish/ ) ? $$_{name} : () } ( @{$$project{'side_two_coatings'}}, @{$$project{'side_two_colours'}} );
+
 		my $varnish_capable = $Press->specification('Varnish Capable');
-		my @side_one_colours = @{$$project{'side_one_colours'}};
-		foreach my $c ( @{$$project{'side_one_coatings'}} ) {
-			if ( ( $$c{name} =~ /Varnish/ ) and ( $varnish_capable eq 'Y' ) ) {
-				push @side_one_colours, $$c{name};
-			} # end if
-		} # end foreach c
-		my @side_two_colours = @{$$project{'side_two_colours'}};
-		foreach my $c ( @{$$project{'side_two_coatings'}} ) {
-			if ( ( $$c{name} =~ /Varnish/ ) and ( $varnish_capable eq 'Y' ) ) {
-				push @side_two_colours, $$c{name};
-			} # end if
-		} # end foreach c
+if ( 0 ) {
+		if ( $varnish_capable eq 'Y' ) {
+			push @side_one_colours, @side_one_varnishes;
+			push @side_two_colours, @side_two_varnishes;
+		} elsif ( $varnish_capable eq '1 Side' ) {
+			push @side_one_colours, @side_one_varnishes;
+			push @side_two_colours, @side_two_varnishes;
+		} # end if
+$openprint::log->debug("$$Press{strid} Side One varnihses @side_one_varnishes");
+$openprint::log->debug("$$Press{strid} Side Two varnihses @side_two_varnishes");
+$openprint::log->debug("$$Press{strid} Side One colours @side_one_colours");
+$openprint::log->debug("$$Press{strid} Side Two colours @side_two_colours");
+		} # end if
 		my $number_of_colours = $Press->specification('Number of Colours');
 		$$project{'Runstyles'} = $Press->specification('Runstyles');
 # This perfecting stuff: default to on, turn off if press can't do it, or the job is single sided.
@@ -1127,8 +1133,17 @@ $openprint::log->debug("Skipping cuz no $$Press{strid}");
 			$openprint::log->debug("** $$Press{strid} Can't Perfect - Perfecting not in runstyles ***") if DEBUG;
 			$do_perfecting = 0;
 		} elsif ( @side_one_colours > int($number_of_colours/2) or @side_two_colours > int($number_of_colours/2) ) {
-			$openprint::log->debug("** Too many colours to  Perfect  ***") if DEBUG;
-			$do_perfecting = 0;
+			if ( ( $varnish_capable eq '1 Side' ) and (
+				( ( @side_one_colours - @side_one_varnishes ) <= int($number_of_colours/2) ) and 
+				( ( @side_two_colours - @side_two_varnishes ) <= int($number_of_colours/2) ) ) 
+			) {
+				$openprint::log->debug("** Can do 1 sided varnish perfecting ***");
+			} else {
+				#$openprint::log->debug(( @side_one_colours - @side_one_varnishes ) . ' <= ' . int($number_of_colours/2)) if DEBUG;
+				#$openprint::log->debug(( @side_two_colours - @side_two_varnishes ) . ' <= ' . int($number_of_colours/2)) if DEBUG;
+				$openprint::log->debug("** Too many colours to  Perfect  ***") if DEBUG;
+				$do_perfecting = 0;
+			} 
 		} elsif ( ( $_ = $Press->specification('Maximum Calliper Perfecting') ) and ( $$specs{'txtSpecificStockCalliper'} > $_ ) ) {
 			$do_perfecting = 0;
 			$openprint::log->debug("** Too thick to:  Perfect  ***") if DEBUG;
@@ -1988,7 +2003,13 @@ $openprint::log->debug("Spread size: $$specs{'txtSpreadSize'}");
 			} elsif ( $$specs{'ddmStockSize'} ) {
 				@$specs{'txtWidth','txtHeight'} = $$specs{'ddmStockSize'} =~ /^([\d\.]+)"?\s*x?\s*([\d\.]+)?"?\s*$/;
 			} else {
-				my @Papers = openprint::Paper->find( 'brand'=> $$specs{'ddmStockBrand'}, 'finish'=>$$specs{'ddmStockFinish'}, 'colour'=>$$specs{'ddmStockColour'}, 'weight'=>$$specs{'ddmStockWeight'},
+				my @Papers = openprint::Paper->find(
+						( $$specs{ddmStockGroup} ? ( group=> $$specs{ddmStockGroup} ) : () ),
+						( $$specs{ddmStockBrand} ? ( brand=> $$specs{ddmStockBrand} ) : () ),
+						( $$specs{ddmStockFinish} ? ( finish=>$$specs{ddmStockFinish} ) : () ),
+						( $$specs{ddmStockColour} ? ( colour=>$$specs{ddmStockColour} ) : () ),
+						( $$specs{ddmStockWeight} ? ( weight=>$$specs{ddmStockWeight} ) : () ),
+						( $$specs{ddmStockQuality} ? ( quality=>$$specs{ddmStockQuality} ) : () ),
 						'project_type_id any'=>$Project->type_id(),
 						);
 	#$log->debug("# of papers: " . @Papers );
@@ -2945,6 +2966,18 @@ sub calculate_impositions {
 				next;
 			} # end if
 		}  # end if
+
+		if ( $$sig_specs{PreviousStockWidth} and $$Paper{width} > $$sig_specs{PreviousStockWidth} ) {
+			$imp->display("PreviousStockWidth: $$sig_specs{'PreviousStockWidth'} < " . $Paper->to_string() ) if DEBUG_FILTERING;
+			next;
+		} # end if
+
+		if ( $$sig_specs{'PreviousStockType'} and ( $$Paper{'type'} ne $$sig_specs{'PreviousStockType'} ) ) {
+			$imp->display("PreviousStockType: $$sig_specs{'PreviousStockType'} ne " . $Paper->to_string() ) if DEBUG_FILTERING;
+			next;
+		} # end if
+
+
 		if ( $$sig_specs{'chkOverrideGrainDirection'.$qty_index} eq 'Y' ) {
 			if ( $imp->dutch_columns() ) {
 				$imp->display("Has Dutch") if DEBUG_FILTERING;
@@ -2979,15 +3012,6 @@ sub calculate_impositions {
 			next;
 		} # end if
 
-		if ( $$sig_specs{'PreviousStockType'} and ( $$Paper{'type'} ne $$sig_specs{'PreviousStockType'} ) ) {
-			$imp->display("PreviousStockType: $$sig_specs{'PreviousStockType'} ne " . $Paper->to_string() ) if DEBUG_FILTERING;
-			next;
-		} # end if
-
-		if ( $$sig_specs{PreviousStockWidth} and $$Paper{width} > $$sig_specs{PreviousStockWidth} ) {
-			$imp->display("PreviousStockWidth: $$sig_specs{'PreviousStockWidth'} < " . $Paper->to_string() ) if DEBUG_FILTERING;
-			next;
-		} # end if
 
 		if ( $SpreadLayout > 0 ) {
 			if ( $$sig_specs{'PreviousImposition'} and ( $$sig_specs{'PreviousImposition'} > $$imp{'imposition'} ) ) {
@@ -3595,6 +3619,14 @@ sub get_project_price {
 		$previous_forms_cache{$hash_key} += 1;
 
 		my %PlateCounts = %$PlateCounts;
+if ( 0 ) {
+	foreach my $k ( keys %PlateCounts ) {
+		$openprint::log->debug("Start PLATES: $k=> $PlateCounts{$k}");
+	} # end foreach
+	foreach my $k ( keys %PlateCounts ) {
+		$openprint::log->debug("Original PLATES: $k=> $$PlateCounts{$k}");
+	} # end foreach
+} # end if
 		my %washed_colours = %$washed_colours;
 		my %PaperCounts = %$PaperCounts;
 		my $Paper = $imp->Paper();
@@ -3624,6 +3656,11 @@ sub get_project_price {
 
 		$PlateCounts{$$price{'Plate Costs'}{'Plate ID'}} += $$price{'Plate Costs'}{'Plate Count'};
 		$PlateCounts{'Blank'.$$price{'Plate Costs'}{'Plate ID'}} += $$price{'Plate Costs'}{'Blank Plates'};
+if ( 0 ) {
+	foreach my $k ( keys %PlateCounts ) {
+		$openprint::log->debug("after clac PLATES: $k=> $PlateCounts{$k}");
+	} # end foreach
+}
 		$PaperCounts{$Paper->id_string()} += $$price{'Stock Qty'};
 # Gets done later on, why do it here?  Maybe to fuill in plate costs... or to use them in best_price calcs...
 # I put this back on Sept 17th because for a 16+8, it didn't have the plate costs. Technically it should be done later when all plates are accounted for
@@ -3902,14 +3939,14 @@ $$new_specs{"OverrideStockHeight$qty_index"} = $Paper->height();
 #$openprint::log->debug("Doing full calc when UPQ:$upq >= Pages:" . $$imp{'pages'} . ' PageQuantity:' . $$new_specs{'PageQuantity'.$qty_index} ) if $upq >= $$imp{'pages'} or 0;
 
 						$$new_specs{'PrintingTypes'} = [ $Press->specification('Printing Type') ];
-						$$new_specs{'PreviousStockType'} = $$Paper{'type'};
-						$$new_specs{'PreviousStockWIdth'} = $$Paper{width};
+						$$new_specs{'PreviousStockType'} = $$Paper{type};
+						$$new_specs{'PreviousStockWidth'} = $$Paper{width};
 						$$new_specs{'PreviousGrainDirection'} = $imp->grain_direction();
-						if ( $$imp{'Folder'} and ( $$Press{'id'} == $$imp{'Folder'}->id() ) ) {
+						if ( $$imp{'Folder'} and ( $$Press{'id'} == $$imp{Folder}->id() ) ) {
 #This is used in Folding to tell it not to mix impositions when inline folded
 							$$new_specs{'PreviousImposition'} = $$price{'FoldingImposition'};
 						} # end if	
-						$$new_specs{'Impositions'} = $$price{'Impositions'};
+						$$new_specs{Impositions} = $$price{Impositions};
 
 						my $sig_price = {};
 						if ( $recursion_depth >= $max_recursion_depth ) {
@@ -3917,6 +3954,11 @@ $$new_specs{"OverrideStockHeight$qty_index"} = $Paper->height();
 							$$sig_price{alert} .= 'Too deep ' . $recursion_depth;
 							$$sig_price{'complete'} = 0;
 						} else {
+if ( DEBUG_PLATES ) {
+	foreach my $k ( keys %PlateCounts ) {
+		$openprint::log->debug("PLATES beforerecursion: $k=> $PlateCounts{$k}");
+	} # end foreach
+} # end if
 							my $price_cache_key = join(',', keys %PaperCounts, $qty_index, $$Press{strid}, $$price{upq}, $$imp{runstyle}, $$Paper{type}, $$Paper{width} );
 							#my $price_cache_key = join(',', keys %PaperCounts, $qty_index, $$Press{strid}, $$price{upq}, $$imp{runstyle}, $$Paper{type}, $$Paper{width},$$Paper{height} );
 $imp->display("Recursing");
@@ -3930,7 +3972,8 @@ $imp->display("Recursing");
 								$price_cache{$price_cache_key} = 
 									get_project_price( $Project, $$new_specs{ServiceIndex}, $project, $service_specs, $new_specs, $qty, $qty_index, \@new_possible_presses, $printing_specs, $versions, \%PlateCounts, \%PaperCounts, \%washed_colours, \%previous_forms_cache, \@signatures, $impositions, $other_impositions, undef, $recursion_depth + 1 );
 							} # end if
-							$sig_price = $price_cache{$price_cache_key};
+							%{$sig_price} = %{$price_cache{$price_cache_key}};
+$openprint::log->debug("Prices: $sig_price $price_cache{$price_cache_key}");
 							$price_cache{$price_cache_key} = undef if ! USE_PRICE_CACHE;
 							#$imp->display($recursion_depth . " After recurse: $$price{'Comparison Cost'} + $$sig_price{'Comparison Cost'} " );
 							#foreach my $i ( @{$$sig_price{Impositions}} ) {
@@ -3978,6 +4021,7 @@ $imp->display('[warn]');
 # Don't add stock weight because we likely have a different stock anyways.
 							$PaperCounts{$$sig_price{'Imposition'}->Paper()->id_string()} += $$sig_price{'Stock Qty'};
 							$PlateCounts{$$sig_price{'Plate Costs'}{'Plate ID'}} += $$sig_price{'Plate Costs'}{'Plate Count'};
+$openprint::log->debug("Adding $$sig_price{'Plate Costs'}{'Plate ID'} $$sig_price{'Plate Costs'}{'Plate Count'}" );
 							$PlateCounts{'Blank'.$$sig_price{'Plate Costs'}{'Plate ID'}} += $$sig_price{'Plate Costs'}{'Blank Plates'};
 							$$price{'Comparison Cost'} += $$sig_price{'Comparison Cost'};
 						$$price{'Comparison Log'} .= 'signature ' . $$sig_price{'Comparison Cost'} . '<br/>' if COMPARISON_LOG;
@@ -4186,7 +4230,7 @@ $openprint::log->debug("Sheet No supplied wight: $supplied_sheets $paper_string 
 #$openprint::log->debug($$price{'Paper Breakdown'}) if DEBUG;
 #$openprint::log->debug("Comparison: $$price{'Comparison Cost'}");
 if ( $do_stock_cutting and $$project{'HasCutting'} ) {
-	my @Stocks = map { { Stock => $Papers{$_}, quantity=>$PaperCounts{$_} } } keys %PaperCounts;
+	my @Stocks = map { ( $Papers{$_} and $Papers{$_}->is_cut() ) ? { Stock => $Papers{$_}, quantity=>$PaperCounts{$_} } : () } keys %PaperCounts;
 	my %cutting_results = openprint::Estimating::Cutting::signature_calc_stock_cutting( $Project, $$project{CuttingSpecs}, $qty_index, \@Stocks );
 	$$price{'Cutting Breakdown'} .= "Stock Cutting Price: \$$cutting_results{'Price'} $cutting_results{'alert'}<br/>$cutting_results{Breakdown}<br/>";
 	$$price{'Comparison Cost'} += $cutting_results{'Price'};
@@ -4515,7 +4559,7 @@ sub plate_cost {
 			%plate_price = $Material->get_price( $$PlateCounts{$$plate_costs{'Plate ID'}}, undef );
 			$$price{'Plate Cost'} = $plate_price{'Price'};
 			$$price{'Plate Price'} = $plate_price{'Price'} * $$plate_costs{'Plate Count'};
-			$results{'Price'} = Math::Round::nearest(0.01, $plate_price{'Price'} * $$plate_costs{'Plate Count'} );
+			$results{Price} = Math::Round::nearest(0.01, $plate_price{'Price'} * $$plate_costs{'Plate Count'} );
 		} # end if
 
 		if ( $$plate_costs{'Blank Plates'} ) {
@@ -5380,20 +5424,6 @@ $openprint::log->debug("Was mixed") if DEBUG_INKS;
 	} # end if
 	$$specs{'hdnImpressionQuantity'.$qty_index} = $impressions;
 	$$specs{'ddmPress'.$qty_index} = $$Press{'strid'};
-
-	if ( 0 and  $$project{'HasCutting'} ) {
-		if ( ($$Paper{'type'} ne 'Roll') and ($$Paper{'start_width'} != $$Paper{'width'} or $$Paper{'start_height'} != $$Paper{'height'} ) ) {
-#my $time = gettimeofday();
-			my %cutting_results = openprint::Estimating::Cutting::signature_calc_stock_cutting( $Project, $specs, $$project{'CuttingSpecs'}, $qty_index, $Paper, $project );
-#$openprint::log->debug("Done cutting");
-#foreach my $k ( keys %cutting_results ) {
-#$openprint::log->debug("Cutting: $k => $cutting_results{$k}");
-#}
-			$price{'Cutting Breakdown'} .= "Stock Cutting Price: \$$cutting_results{'Price'} $cutting_results{'alert'}<br/>";
-			$price{'Comparison Cost'} += $cutting_results{'Price'};
-#$openprint::log->debug("Elapsed stock cutting time:" . ( sprintf('%.4f', tv_interval( [$time])*1000) ) .' usecs' );
-		} # end if
-	} # end if
 
 	# Used to be hasAQ.. but that doesn't make any sense.  Must be NeedAQ.
 	if ( $$project{'NeedAqueous'} ) {

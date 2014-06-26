@@ -25,11 +25,13 @@ $src_host = 'www2.topknotch.com' if ! $src_host;
 if ( $year ) {
 	( $year, $month, $day ) = Date::Calc::Add_Delta_Days( Date::Calc::Today(), -1 ) if ! $month;
 
-	if ( ! -e "/tmp/$src_db-$month-$day-$year.sql.bz2" ) {
+my $path = "/tmp/$src_db-$month-$day-$year.sql.bz2";
+
+	if ( ! -e $path ) {
 		print "Getting db backup $month-$day-$year\n";
-		`su postgres -c "scp $src_host:/media/Backups/Database/$src_db/$year-$month-$day.sql.bz2 /tmp/$src_db-$month-$day-$year.sql.bz2 "`;
+		`su postgres -c "scp $src_host:/media/Backups/Database/$src_db/$year-$month-$day.sql.bz2 $path "`;
 	} # end if
-	if ( ! -e "/tmp/$src_db-$month-$day-$year.sql.bz2" ) {
+	if ( ! -e $path ) {
 		die "No db dum[";
 	}
 	print "Dropping db...";
@@ -39,7 +41,7 @@ if ( $year ) {
 	`su postgres -c "createdb -E UTF8 $dst_db"`;
 	print "done\n";
 	print "Loading db...";
-	`su postgres -c "bunzip2 < /tmp/$src_db-$month-$day-$year.sql.bz2 | psql $dst_db"`;
+	`su postgres -c "bunzip2 < $path | pg_restore -Fc -d $dst_db"`;
 	print "done\n";
 } else {
 #grab direclty
