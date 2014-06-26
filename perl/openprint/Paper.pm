@@ -1614,14 +1614,15 @@ sub link_to {
 sub sort {
 	sort { 
 		foreach my $option ( 'brand', 'finish', 'colour','weight' ) {
-			return $a->option() cmp $b->$option() if $a->$option() ne $b->$option();
+			return $a->$option() cmp $b->$option() if $a->$option() ne $b->$option();
 		} # end foreach option
 		foreach my $option ( 'width', 'height' ) {
-			return $a->option() <=> $b->$option() if $a->$option() != $b->$option();
+			return $a->$option() <=> $b->$option() if $a->$option() != $b->$option();
 		} # end foreach option
 		
 	} @_;
 } # end sub sort
+
 sub Unit_Of_Measure_Purchase {
 	if ( $_[0]{type} eq 'Sheet' ) {
 		return 'M';
