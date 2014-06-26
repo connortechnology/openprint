@@ -425,7 +425,11 @@ sub summary {
 					$html .= ' ' . Math::Round::nearest( 1, $$specs{"qty-$stock_id-$qty_index"} / $Paper->wpsi() ). ' sq inches';
 				} elsif ( $$Price{'units'} eq 'per 100lbs' ) {
 				if ( ( $Paper->type() eq 'Roll' ) and ( $$specs{"qty-$stock_id-$qty_index"} > 100 ) ) {
-					$html .= ' ' . int( ( ( $$specs{"qty-$stock_id-$qty_index"} / $Paper->wpsi() ) / $Paper->width() ) / 12 ) . ' feet';
+					if ( ! $Paper->width() ) {
+						$html .= ' Unable to calculate feet due to stock not having a width.<br/>';
+					} else {
+						$html .= ' ' . int( ( ( $$specs{"qty-$stock_id-$qty_index"} / $Paper->wpsi() ) / $Paper->width() ) / 12 ) . ' feet';
+					}
 				} # end if
 				} elsif ( $$Price{'units'} ) {
 					$html .= 'unknown units: ' . $$Price{'units'};

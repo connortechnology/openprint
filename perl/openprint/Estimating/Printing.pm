@@ -4215,12 +4215,16 @@ $openprint::log->debug("Sheet No supplied wight: $supplied_sheets $paper_string 
 					$openprint::log->error('No width' . $Paper->to_string() ) if ! $Paper->width();
 
 					if ( $Supplied->wpsi() ) {
+						if ( $Supplied->width() ) {
 						$$price{'Paper Breakdown'} .= sprintf('Stock: %s %s %s %s, %slbs * %.2f/100lbs = $%.2f<br/>', 
 								( $$Paper{type} eq 'Sheet' ? $supplied_sheets.'sheets' : ( $supplied_weight.'lbs '. Math::Round::nearest(0.01, ($supplied_weight / $Supplied->wpsi() ) / $Supplied->width() ) . ' linear feet' ) ), 
 								$Paper->id_string(),
 								( $Supplied->sheets_per_package() ? 'SPP:'.$Supplied->sheets_per_package() : '' ),
 								( $Supplied->minimum_order() ? 'minimum:'.$Supplied->minimum_order() : '' ),
 								$supplied_weight, @$paper_price{'100lb Price','Total'} );
+						} else {
+							$$price{'Paper Breakdown'} .= 'Stock has no width...<br/>';
+						} # end if
 					} else {
 						$$price{'Paper Breakdown'} .= 'No wpsi for stock ' . $Paper->to_string() . '</br>';
 					} # end if
