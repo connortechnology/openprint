@@ -1602,5 +1602,17 @@ sub link_to {
 	return sprintf('<a href="/employee/inventory/paper_details.html?paper_id=%1$d">%2$s</a>', $_[0]{id}, $_[0]->to_string() );
 } # end sub link_to
 
+sub sort {
+	sort { 
+		foreach my $option ( 'brand', 'finish', 'colour','weight' ) {
+			return $a->option() cmp $b->$option() if $a->$option() ne $b->$option();
+		} # end foreach option
+		foreach my $option ( 'width', 'height' ) {
+			return $a->option() <=> $b->$option() if $a->$option() != $b->$option();
+		} # end foreach option
+		
+	} @_;
+}
+
 1;
 __END__
