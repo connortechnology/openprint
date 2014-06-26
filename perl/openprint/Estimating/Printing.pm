@@ -724,24 +724,25 @@ sub get_inkcoverage {
 			if ( my ( $index ) = $k =~ /^chkColourCoating(\d+)$side$signature/ ) {
 				next if ! $$specs{"chkColourCoating$index$side$signature"};
 				my $type = $$specs{"ColourCoatingType$index$side$signature"};
+				next if ! $type;
 				if ( $type =~ /Overall/ ) {
 # Nothing cuz coverage is 100%
 					$$specs{'ColourCoatingCoverage'.$index.$side.$signature} = 100;
 #$openprint::log->warn("Oeral for $index $side $signature " . $$specs{'ColourCoatingCoverage'.$index.$side.$signature} .' ' . int($$specs{'ColourCoatingCoverage'.$index.$side.$signature}) );
 				} elsif ( ! int($$specs{'ColourCoatingCoverage'.$index.$side.$signature}) ) {
-$openprint::log->warn("Coverage for $index $side $signature $type" . $$specs{'ColourCoatingCoverage'.$index.$side.$signature} .' ' . int($$specs{'ColourCoatingCoverage'.$index.$side.$signature}) );
-$type =~ s/ /_/g;
-my $coverage;
-if ( $openprint::config{"Default${type}Coverage$ProjectTypeName"} ) {
-$openprint::log->debug(" Got default for $type ProjectTypeName");
-$coverage = $openprint::config{"Default${type}Coverage$ProjectTypeName"};
-} elsif ( $openprint::config{"Default${type}Coverage"} ) {
-$openprint::log->debug(" Got default for $type ");
-	$coverage = $openprint::config{"Default${type}Coverage"};
-} else {
-$openprint::log->debug(" Suing regualr default instead of $type ");
-$coverage = $DefaultInkCoverage;
-}
+					$openprint::log->warn("Coverage for $index $side $signature $type" . $$specs{'ColourCoatingCoverage'.$index.$side.$signature} .' ' . int($$specs{'ColourCoatingCoverage'.$index.$side.$signature}) );
+					$type =~ s/ /_/g;
+					my $coverage;
+					if ( $openprint::config{"Default${type}Coverage$ProjectTypeName"} ) {
+						$openprint::log->debug(" Got default for $type ProjectTypeName");
+						$coverage = $openprint::config{"Default${type}Coverage$ProjectTypeName"};
+					} elsif ( $openprint::config{"Default${type}Coverage"} ) {
+						$openprint::log->debug(" Got default for $type ");
+						$coverage = $openprint::config{"Default${type}Coverage"};
+					} else {
+						$openprint::log->debug(" Suing regualr default instead of $type ");
+						$coverage = $DefaultInkCoverage;
+					}
 					$$specs{'ColourCoatingCoverage'.$index.$side.$signature} = $coverage;
 					$$v{'ColourCoatingCoverage'.$index.$side.$signature} = [ sets::union( 'output', @{$$v{'ColourCoatingCoverage'.$index.$side.$signature}} ) ];
 				} else {
