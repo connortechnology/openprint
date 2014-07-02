@@ -28,7 +28,7 @@ use constant DEBUG_VERSIONS => 0;
 use constant DEBUG_FILTERING => 0;
 use constant DEBUG_INITIAL_FILTERING => 0;
 use constant DEBUG_AFTER_FILTERING => 0;
-use constant DEBUG_PRICE_DECISIONS => 0;
+use constant DEBUG_PRICE_DECISIONS => 1;
 use constant DEBUG_INKS => 0;
 use constant DEBUG_STOCK => 0;
 use constant COMPARISON_LOG => 0;
@@ -474,7 +474,7 @@ sub setup_project {
 	if ( ( @{$project{side_one_colours}} > 0 ) and ( @{$project{side_two_colours}} > 0 ) ) {
 		$project{print_sides} = 2;
 	} # end if
-$openprint::log->debug("$project{print_sides} : " . @{$project{side_one_colours}} . ',' . @{$project{side_two_colours}} );
+#$openprint::log->debug("SIdes: $project{print_sides} : " . @{$project{side_one_colours}} . ',' . @{$project{side_two_colours}} );
 
 	$project{'side_one_colour_names'} = [ map { $$_{name} } @{$side_one_colours} ];
 	$project{'side_two_colour_names'} = [ map { $$_{name} } @{$side_two_colours} ];
@@ -1071,7 +1071,7 @@ sub get_impositions($$$$$$$$) {
 	foreach my $Press ( @$Presses ) {
 		if ( DEBUG_IMPOSITIONS ) {
 			if ( $$specs{"ddmPress$qty_index"} ne $Press->strid() ) {
-$openprint::log->debug("Skipping cuz no $$Press{strid}");
+$openprint::log->debug("Skipping cuz ddmPress$qty_index ne $$Press{strid}");
 				next;
 			} 
 	
@@ -1315,11 +1315,11 @@ $openprint::log->debug("$$Press{strid} Side Two colours @side_two_colours");
 		if ( DEBUG_IMPOSITIONS ) {
 			my ( $width, $height ) = split('x', $$specs{"ddmStockSheetSize$qty_index"} );
 $openprint::log->debug("$width x $height");
-			if ( $width != $Paper->width() ) {
+			if ( $width and ( $width != $Paper->width() ) ) {
 $openprint::log->debug("Skipping cuz not $width");
 				next;
 			} 
-			if ( $height != $Paper->height() ) {
+			if ( $height and ( $height != $Paper->height() ) ) {
 $openprint::log->debug("Skipping cuz not $height");
 				next;
 			} 
@@ -4316,6 +4316,7 @@ if ( $do_stock_cutting and $$project{'HasCutting'} ) {
 		$openprint::log->debug("After Stitching $$price{'Comparison Cost'} $$price{'Stitching Cost'} uncalculated") if DEBUG or 1;
 			} else {
 				$$price{'Stitching Breakdown'} .= sprintf('Stitching (%s) (%s) Price: $%.2f<br/>', @$results{'Status','alert','Price'} );
+$$price{'Stitching Breakdown'} .= $$results{Breakdown};
 				$$price{'Stitching Cost'} = $$results{'Price'};
 				$$price{'Comparison Cost'} += $$results{'Price'};
 		#$stitching_cache{scalar @all_impositions} = $results;
@@ -4813,41 +4814,22 @@ sub calc_price {
 				$$project{'FoldingSpecs'}{"ddmEquipment-$$specs{'SignatureIndex'}-$qty_index"} = '';
 			} # end if
 		} else {
-			if ( $folding_results{'Equipment'} ) {
-				if ( $folding_results{'Equipment'}->id() == $Press->id() ) {
+			if ( $folding_results{Equipment} ) {
+				if ( $folding_results{Equipment}->id() == $Press->id() ) {
+					my $FI = $folding_results{FoldedImpositions}[0];
 #$openprint::log->debug("Runspeed: $folding_results{'RunSpeed'}");
-					$$specs{Runspeed} = $price{Runspeed} = $folding_results{'RunSpeed'} if $folding_results{'RunSpeed'};
+					$$specs{Runspeed} = $price{Runspeed} = $$FI{runspeed} if $$FI{runspeed};
 				} # end if
-				$$Imposition{'Folder'} = $folding_results{'Equipment'};
+				$$Imposition{Folder} = $folding_results{Equipment};
 #$$Imposition{'FoldingCost'} = $folding_results{'Price'};
 
-my $index = 1;
-				foreach my $k ( keys %{$folding_results{'Folds'}} ) {
-					my ( $fold_type, $imposition ) = $k =~ /(.*)-(\d+)out$/;
-					my $fold_qty = 0;
-					foreach my $Fold ( @{$folding_results{'Folds'}{$k}} ) {
-						my $Fold_Imposition = $Fold->Imposition();
-						$fold_qty += $$Fold_Imposition{'quantity'};
-                        $$project{'FoldingSpecs'}{"FoldQty-$$specs{'SignatureIndex'}-$qty_index-$index"} = $fold_qty;
-                        $$project{'FoldingSpecs'}{"FoldImposition-$$specs{'SignatureIndex'}-$qty_index-$index"} = $Fold->Imposition()->imposition();
-                        $$project{'FoldingSpecs'}{"FoldColumns-$$specs{'SignatureIndex'}-$qty_index-$index"} = $Fold->Imposition()->columns();
-                        $$project{'FoldingSpecs'}{"FoldRows-$$specs{'SignatureIndex'}-$qty_index-$index"} = $Fold->Imposition()->rows();
-						$$project{'FoldingSpecs'}{"FoldFolds-$$specs{'SignatureIndex'}-$qty_index-$index"} = $Fold->folds();
-                        $$project{'FoldingSpecs'}{"FoldAngles-$$specs{'SignatureIndex'}-$qty_index-$index"} = $Fold->angles();
-                        $$project{'FoldingSpecs'}{"FoldRunspeed-$$specs{'SignatureIndex'}-$qty_index-$index"} = $Fold->runspeed($Imposition->Paper()->gsm());
-                        $$project{'FoldingSpecs'}{"FoldType-$$specs{'SignatureIndex'}-$qty_index-$index"} = $fold_type;
-                        $index += 1;
-					} # end foreach
-					$price{'Folding Breakdown'} .= sprintf('Folding %d %s (%d out) %d/hr Price: $%.2f on %s', $fold_qty, $folding_results{'Folds'}{$k}[0]->name(), $imposition, @folding_results{'RunSpeed','Price'}, $folding_results{'Equipment'}->name() ) .'<br/>' if $folding_results{'Equipment'};
+				$$Imposition{Folds} = $folding_results{FoldedImpositions};
+				foreach my $FI ( @{$folding_results{FoldedImpositions}} ) {
+					my $Fold = $FI->Fold();
+					$price{'Folding Breakdown'} .= sprintf('Folding %d %s (%d out) %d/hr Price: $%.2f on %s<br/>', $FI->quantity(), $Fold->name(), @$FI{'imposition','runspeed','price'}, $Fold->Equipment()->name() );
 				} # end foreach
-				if ( $index < 5 ) {
-					foreach $index ( $index .. 4 ) {
-$$project{'FoldingSpecs'}{"FoldQty-$$specs{'SignatureIndex'}-$qty_index-$index"} = 0;
-					} 
-					} # end ifo
-				if ( $$project{'FoldingSpecs'}{"chkOverrideEquipment-$$specs{'SignatureIndex'}-$qty_index"} ne 'Y' ) {
-					$$project{'FoldingSpecs'}{"ddmEquipment-$$specs{'SignatureIndex'}-$qty_index"} = $folding_results{'Equipment'}->id();
-				} # end if
+				$price{'Folding Breakdown'} .= sprintf('Folding total: $%.2f<br/>', $folding_results{Price} ) if @{$folding_results{FoldedImpositions}} > 1;
+				#$price{'Folding Breakdown'} .= $folding_results{Breakdown};
 			} # end if
 		} # end if
 		if ( DEBUG and tv_interval([$time])*1000 > 10 ) {
