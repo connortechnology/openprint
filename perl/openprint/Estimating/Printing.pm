@@ -4756,8 +4756,13 @@ sub calc_price {
 		$setup_overs += $fm_overs;
 	} # end if
 	my $additional_overs = 0;
+	if ( $$project{ProjectSpecs}{txtPlateChangeQuantity} ) {
+		$additional_overs += ( $$project{ProjectSpecs}{txtPlateChangeQuantity} * $Press->specification('Additional Plate Overs') );
+	} # end if
 	if ( $$specs{'txtPlateChangeQuantity'.$qty_index} ) {
 		$additional_overs = ( $$specs{'txtPlateChangeQuantity'.$qty_index} * $Press->specification('Additional Plate Overs') );
+	} # end if
+	if ( $additional_overs ) {
 		my $minimum = $Press->specification('Additional Plate Overs Minimum');
 		$additional_overs = $minimum if $minimum > $additional_overs;
 	} # end if
@@ -5023,8 +5028,13 @@ $openprint::log->debug("Back From DieCutting");
 	
 	$plate_setup{'Setup Plate Count'} = $plate_count;
 
+	my $plate_changes = 0;
+	$plate_changes += $$project{ProjectSpecs}{"txtPlateChangeQuantity-$$specs{Group}"} if $$project{ProjectSpecs}{"txtPlateChangeQuantity-$$specs{Group}"};
+	$plate_changes += $$specs{'txtPlateChangeQuantity'.$qty_index} if $$specs{'txtPlateChangeQuantity'.$qty_index};
+
+
 	$plate_count *= $plate_runs;
-	$plate_count += $$specs{'txtPlateChangeQuantity'.$qty_index} if $$specs{'txtPlateChangeQuantity'.$qty_index};
+	$plate_count += $plate_changes;
 	my $blanks_needed = 0;
 	my $require_blank_plates = $Press->specification('Require Blank Plates');
 	if ( defined $require_blank_plates ) {
@@ -5055,7 +5065,7 @@ $openprint::log->debug("Back From DieCutting");
 
 	if ( $$Imposition{runstyle} eq 'Sheet Work' ) {
 		if ( @{$$project{side_one_colours}} and @{$$project{side_two_colours}} ) {
-			my $press_setup_front = press_setup_cost( $$specs{'txtPlateChangeQuantity'.$qty_index}, $plate_setup{'Plate Runs'}, $$project{side_one_colours}, $$Paper{calliper}, $qty_index, $Imposition, $other_impositions );
+			my $press_setup_front = press_setup_cost( $plate_changes, $plate_setup{'Plate Runs'}, $$project{side_one_colours}, $$Paper{calliper}, $qty_index, $Imposition, $other_impositions );
 			$press_setup += $press_setup_front->{'Total'};
 			$price{'Setup Breakdown'} .= sprintf('%d units * $%.2f%s = $%.2f<br/>', @$press_setup_front{'Unit Count','Price','units','Total'} );
 			$price{'Plate Total'} += $$press_setup_front{'Plate Total'};
@@ -5068,26 +5078,26 @@ $openprint::log->debug("Back From DieCutting");
 				$price{'Plate Setup Count'} += $$back_press_setup{'Plate Count'};
 			} # end if
 		} elsif ( @{$$project{side_one_colours}} ) {
-			my $press_setup_front = press_setup_cost( $$specs{'txtPlateChangeQuantity'.$qty_index}, $plate_setup{'Plate Runs'}, $$project{side_one_colours}, $$Paper{calliper}, $qty_index, $Imposition, $other_impositions );
+			my $press_setup_front = press_setup_cost( $plate_changes, $plate_setup{'Plate Runs'}, $$project{side_one_colours}, $$Paper{calliper}, $qty_index, $Imposition, $other_impositions );
 			$press_setup += $$press_setup_front{'Total'};
 			$price{'Setup Breakdown'} .= sprintf('%d units * $%.2f%s = $%.2f<br/>', @$press_setup_front{'Unit Count','Price','units','Total'} );
 			$price{'Plate Total'} += $$press_setup_front{'Plate Total'};
 			@price{'Plate Setup Price','Plate Setup Count','Plate Setup Units'} = @$press_setup_front{'Plate Price','Plate Count','Plate Units'};
 		} elsif ( @{$$project{side_two_colours}} ) {
-			my $press_setup_back = press_setup_cost( $$specs{'txtPlateChangeQuantity'.$qty_index}, $plate_setup{'Plate Runs'}, $$project{side_two_colours}, $$Paper{calliper}, $qty_index, $Imposition, $other_impositions );
+			my $press_setup_back = press_setup_cost( $plate_changes, $plate_setup{'Plate Runs'}, $$project{side_two_colours}, $$Paper{calliper}, $qty_index, $Imposition, $other_impositions );
 			$press_setup += $$press_setup_back{'Total'};
 			$price{'Setup Breakdown'} .= sprintf('%d units * $%.2f%s = $%.2f<br/>', @$press_setup_back{'Unit Count','Price','units','Total'} );
 			$price{'Plate Total'} += $$press_setup_back{'Plate Total'};
 			@price{'Plate Setup Price','Plate Setup Count','Plate Setup Units'} = @$press_setup_back{'Plate Price','Plate Count','Plate Units'};
 		} # end if
 	} elsif ( sets::isin( $$Imposition{runstyle}, ['Web','Perfecting'] ) ) {
-		my $press_setup_cost = press_setup_cost( $$specs{'txtPlateChangeQuantity'.$qty_index}, $plate_setup{'Plate Runs'}, $$project{combined_colours}, $$Paper{calliper}, $qty_index, $Imposition, $other_impositions );
+		my $press_setup_cost = press_setup_cost( $plate_changes, $plate_setup{'Plate Runs'}, $$project{combined_colours}, $$Paper{calliper}, $qty_index, $Imposition, $other_impositions );
 		$press_setup += $$press_setup_cost{'Total'};
 		$price{'Setup Breakdown'} .= sprintf('%d units * $%.2f%s = $%.2f<br/>', @$press_setup_cost{'Unit Count','Price','units','Total'} );
 		@price{'Plate Setup Price','Plate Setup Count','Plate Setup Units'} = @$press_setup_cost{'Plate Price','Plate Count','Plate Units'};
 		$price{'Plate Total'} += $$press_setup_cost{'Plate Total'};
 	} else {
-		my $press_setup_cost = press_setup_cost( $$specs{'txtPlateChangeQuantity'.$qty_index}, $plate_setup{'Plate Runs'}, $$project{filtered_colours}, $$Paper{calliper}, $qty_index, $Imposition, $other_impositions );
+		my $press_setup_cost = press_setup_cost( $plate_changes, $plate_setup{'Plate Runs'}, $$project{filtered_colours}, $$Paper{calliper}, $qty_index, $Imposition, $other_impositions );
 		$press_setup += $$press_setup_cost{'Total'};
 		$price{'Setup Breakdown'} .= sprintf('%d units * $%.2f%s = $%.2f<br/>', @$press_setup_cost{'Unit Count','Price','units','Total'} );
 		$price{'Plate Total'} += $$press_setup_cost{'Plate Total'};
@@ -6247,7 +6257,9 @@ sub summary {
 		$html .= ' ' . $$specs{"Versions$qty_index"}.' versions' if $$specs{Versions};
 		#$html .= sprintf(qq{ on %s\n}, $$specs{'ddmPress'.$qty_index} ) if ! $$services{'NoPrinting'};
 
-		$html .= sprintf(' with %d plate changes = %d plates', @$specs{'txtPlateChangeQuantity'.$qty_index,'txtPlateQuantity'.$qty_index} ) if $$specs{'txtPlateChangeQuantity'.$qty_index};
+		my $plate_changes += $$printing_specs{"txtPlateChangeQuantity-$$specs{Group}"} if $$printing_specs{"txtPlateChangeQuantity-$$specs{Group}"};
+		$plate_changes += $$specs{'txtPlateChangeQuantity'.$qty_index} if $$specs{'txtPlateChangeQuantity'.$qty_index};
+		$html .= sprintf(' with %d plate changes = %d plates', $plate_changes, $$specs{'txtPlateQuantity'.$qty_index} ) if $plate_changes;
 
 #if ( 1 ) {
 # Have Stock summary line now
