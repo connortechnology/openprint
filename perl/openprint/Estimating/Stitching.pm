@@ -1189,12 +1189,20 @@ $openprint::log->debug($price{'Imposition'} . 'out on ' .$Equipment->name() . ' 
 sub summary {
 	my ( $Project, $service_id, $specs, $qty_index ) = @_;
 
+	my $summary = '';
 	if ( $qty_index ) {
 		if ( $$specs{'Imposition'.$qty_index} and $$specs{'ddmEquipment'.$qty_index} ) {
 			return $$specs{'Imposition'.$qty_index} .'out on ' . new openprint::Equipment( $$specs{'ddmEquipment'.$qty_index} )->name();
 		} # en dif
+	} else {
+		if ( $$specs{rdbGateFoldFit} ) {
+			$summary .= 'Gate Fold Fit = ' . $$specs{rdbGateFoldFit} . '<br/>';
+		} # end if
+		if ( $$specs{CoverFit} ) {
+			$summary .= 'Cover Fit = ' . $$specs{CoverFit} . '<br/>';
+		} # end if
 	} # end if
-	return '';
+	return $summary;
 } # end sub summary
 
 sub runtime {
