@@ -4755,14 +4755,13 @@ sub calc_price {
 		$fm_overs = $Press->specification( 'FM Screening Additional Overs', undef );
 		$setup_overs += $fm_overs;
 	} # end if
+	my $plate_changes = 0;
+	$plate_changes += $$project{ProjectSpecs}{"txtPlateChangeQuantity-$$specs{Group}"} if $$project{ProjectSpecs}{"txtPlateChangeQuantity-$$specs{Group}"};
+	$plate_changes += $$specs{'txtPlateChangeQuantity'.$qty_index} if $$specs{'txtPlateChangeQuantity'.$qty_index};
+
 	my $additional_overs = 0;
-	if ( $$project{ProjectSpecs}{txtPlateChangeQuantity} ) {
-		$additional_overs += ( $$project{ProjectSpecs}{txtPlateChangeQuantity} * $Press->specification('Additional Plate Overs') );
-	} # end if
-	if ( $$specs{'txtPlateChangeQuantity'.$qty_index} ) {
-		$additional_overs = ( $$specs{'txtPlateChangeQuantity'.$qty_index} * $Press->specification('Additional Plate Overs') );
-	} # end if
-	if ( $additional_overs ) {
+	if ( $plate_changes ) {
+		$additional_overs += ( $plate_changes * $Press->specification('Additional Plate Overs') );
 		my $minimum = $Press->specification('Additional Plate Overs Minimum');
 		$additional_overs = $minimum if $minimum > $additional_overs;
 	} # end if
@@ -5027,11 +5026,6 @@ $openprint::log->debug("Back From DieCutting");
 
 	
 	$plate_setup{'Setup Plate Count'} = $plate_count;
-
-	my $plate_changes = 0;
-	$plate_changes += $$project{ProjectSpecs}{"txtPlateChangeQuantity-$$specs{Group}"} if $$project{ProjectSpecs}{"txtPlateChangeQuantity-$$specs{Group}"};
-	$plate_changes += $$specs{'txtPlateChangeQuantity'.$qty_index} if $$specs{'txtPlateChangeQuantity'.$qty_index};
-
 
 	$plate_count *= $plate_runs;
 	$plate_count += $plate_changes;
@@ -6257,7 +6251,8 @@ sub summary {
 		$html .= ' ' . $$specs{"Versions$qty_index"}.' versions' if $$specs{Versions};
 		#$html .= sprintf(qq{ on %s\n}, $$specs{'ddmPress'.$qty_index} ) if ! $$services{'NoPrinting'};
 
-		my $plate_changes += $$printing_specs{"txtPlateChangeQuantity-$$specs{Group}"} if $$printing_specs{"txtPlateChangeQuantity-$$specs{Group}"};
+		my $plate_changes = 0;
+		$plate_changes += $$printing_specs{"txtPlateChangeQuantity-$$specs{Group}"} if $$printing_specs{"txtPlateChangeQuantity-$$specs{Group}"};
 		$plate_changes += $$specs{'txtPlateChangeQuantity'.$qty_index} if $$specs{'txtPlateChangeQuantity'.$qty_index};
 		$html .= sprintf(' with %d plate changes = %d plates', $plate_changes, $$specs{'txtPlateQuantity'.$qty_index} ) if $plate_changes;
 
