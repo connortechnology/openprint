@@ -1106,10 +1106,12 @@ $openprint::log->debug("No Fold") if DEBUG;
 							@new_impositions = compact_impositions( @new_impositions );
 							push @All_Impositions, \@new_impositions;
 						} elsif ( $Imposition->spreads() > 1 ) {
-							my @new_impositions = @$Set_Of_Impositions;
-							splice @new_impositions, $imp_index, 1, cut_spreads( $Imposition );
-							@new_impositions = compact_impositions( @new_impositions ) if @new_impositions > 2;
-							push @All_Impositions, \@new_impositions;
+							foreach my $cuts ( cut_spreads( $Imposition ) ) {
+								my @new_impositions = @$Set_Of_Impositions;
+								splice @new_impositions, $imp_index, 1, @$cuts;
+								@new_impositions = compact_impositions( @new_impositions ) if @new_impositions > 2;
+								push @All_Impositions, \@new_impositions;
+							} # end foreach cuts
 						} # end if
 					} # end if template or book
 
@@ -1993,24 +1995,42 @@ sub cut_imposition {
 
 sub cut_spreads {
 	my ( $I ) = @_;
-	if ( $I->layout_height() > $I->layout_width() ) {
+
+	my @results;
+
+	if ( ( $I->layout_height() > $I->layout_width() ) and ( $I->spread_rows() > 1 ) ) {
 	#if ( $I->spread_rows() > $I->spread_columns() ) {
 		
-		if ( ( $I->spread_rows() > 1 ) and ( $I->spread_rows() % 2 ) ) {
-			my $i1 = $I->copy();
-			$i1->spread_rows(1);
-			$i1->quantity( $i1->quantity() * $I->spread_rows() );
-			$i1->image_height( $I->image_height()/$I->spread_rows() );
-	$openprint::log->debug(sprintf('Cutting pages down from %dx%d to %dx%d', $I->quantity(), $I->pages(), $i1->quantity(), $i1->pages() ) ) if DEBUG;
-			return ( $i1 );
-		} else {
-			my $i1 = $I->copy();
-			$i1->spread_rows( $i1->spread_rows()/2 );
-			$i1->image_height( $i1->image_height()/2 );
-			$i1->quantity( $i1->quantity() * 2 );
-	$openprint::log->debug(sprintf('Cutting pages down from %d to %d', $I->pages(), $i1->pages() ) ) if DEBUG;
-			return $i1;
-		} # end if
+			if ( $I->spread_rows() % 2 ) {
+				my $i1 = $I->copy();
+				$i1->spread_rows(1);
+				$i1->quantity( $i1->quantity() * $I->spread_rows() );
+				$i1->image_height( $I->image_height()/$I->spread_rows() );
+				$openprint::log->debug(sprintf('Cutting pages down from q%d x %d pages to q%d x %d pages', $I->quantity(), $I->pages(), $i1->quantity(), $i1->pages() ) ) if DEBUG;
+				push @results, [ $i1 ];
+
+				my $i2 = $I->copy();
+				$i2->spread_rows( int($i2->spread_rows() / 2) );
+				my $i2_quantity = int($I->spread_rows()/$i2->spread_rows());
+				$i2->quantity( $I->quantity() * $i2_quantity );
+				$i2->image_height( $I->image_height()*$i2->spread_rows()/$I->spread_rows() );
+				$openprint::log->debug(sprintf('Cutting pages down from q%d x %d pages to q%d x %d pages', $I->quantity(), $I->pages(), $i2->quantity(), $i2->pages() ) ) if DEBUG;
+				my $i3 = $I->copy();
+				$i3->spread_rows( $I->spread_rows() - ( $i2->spread_rows() * $i2_quantity ) );
+				#$i3->quantity( $I->quantity() * int($I->spread_rows()/$i2->spread_rows()) );
+				$i3->image_height( $I->image_height()*$i3->spread_rows() );
+				$openprint::log->debug(sprintf('Cutting pages down from q%d x %d pages to q%d x %d pages', $I->quantity(), $I->pages(), $i3->quantity(), $i3->pages() ) ) if DEBUG;
+				push @results, [ $i2, $i3 ];
+
+
+			} else {
+				my $i1 = $I->copy();
+				$i1->spread_rows( $i1->spread_rows()/2 );
+				$i1->image_height( $i1->image_height()/2 );
+				$i1->quantity( $i1->quantity() * 2 );
+				$openprint::log->debug(sprintf('Cutting pages down from %d to %d', $I->pages(), $i1->pages() ) ) if DEBUG;
+				push @results, [ $i1 ];
+			} # end if
 	} else {
 		#if ( $I->image_orientation() eq 'Vertical' ) {
 			# Assume spread columns are multiple of 2
@@ -2030,17 +2050,30 @@ sub cut_spreads {
 				$i1->quantity( $i1->quantity() * $I->spread_columns() );
 				$i1->image_width( $I->image_width()/$I->spread_columns() );
 		$openprint::log->debug(sprintf('Cutting pages down from %dx%d to %dx%d', $I->quantity(), $I->pages(), $i1->quantity(), $i1->pages() ) ) if DEBUG;
-				return ( $i1 );
+				push @results, [ $i1 ];
+
+				my $i2 = $I->copy();
+				$i2->spread_columns( int($i2->spread_columns() / 2) );
+				my $i2_quantity = int($I->spread_columns()/$i2->spread_columns());
+				$i2->quantity( $I->quantity() * $i2_quantity );
+				$i2->image_width( $I->image_width()*$i2->spread_columns()/$I->spread_columns() );
+				$openprint::log->debug(sprintf('Cutting pages down from q%d x %d pages to q%d x %d pages', $I->quantity(), $I->pages(), $i2->quantity(), $i2->pages() ) ) if DEBUG;
+				my $i3 = $I->copy();
+				$i3->spread_columns( $I->spread_columns() - ( $i2->spread_columns() * $i2_quantity ) );
+				$i3->image_width( $I->image_width()*$i3->spread_columns() );
+				$openprint::log->debug(sprintf('Cutting pages down from q%d x %d pages to q%d x %d pages', $I->quantity(), $I->pages(), $i3->quantity(), $i3->pages() ) ) if DEBUG;
+				push @results, [ $i2, $i3 ];
 			} else {
 				my $i1 = $I->copy();
 				$i1->spread_columns( $i1->spread_columns()/2 );
 				$i1->image_width( $i1->image_width()/2 );
 				$i1->quantity( $i1->quantity() * 2 );
 		$openprint::log->debug(sprintf('Cutting pages down from %d to %d', $I->pages(), $i1->pages() ) ) if DEBUG;
-				return $i1;
+				push @results, [ $i1 ];
 			} # end if
 		#} # end if
 	} # end if
+	@results;
 } # end cut_spreads
 
 # Takes an array of impositions(Folds) and merges duplicates. 
