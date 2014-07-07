@@ -2005,22 +2005,33 @@ sub cut_spreads {
 				my $i1 = $I->copy();
 				$i1->spread_rows(1);
 				$i1->quantity( $i1->quantity() * $I->spread_rows() );
-				$i1->image_height( $I->image_height()/$I->spread_rows() );
+				if ( $I->image_orientation() eq 'Vertical' ) {
+					$i1->image_height( $I->image_height()/$I->spread_rows() );
+				} else {
+					$i1->image_width( $I->image_width()/$I->spread_rows() );
+				} # endif
 				$openprint::log->debug(sprintf('Cutting pages down from q%d x %d pages to q%d x %d pages', $I->quantity(), $I->pages(), $i1->quantity(), $i1->pages() ) ) if DEBUG;
 				push @results, [ $i1 ];
 
 				my $i2 = $I->copy();
 				$i2->spread_rows( int($i2->spread_rows() / 2) );
-				my $i2_quantity = int($I->spread_rows()/$i2->spread_rows());
-				$i2->quantity( $I->quantity() * $i2_quantity );
-				$i2->image_height( $I->image_height()*$i2->spread_rows()/$I->spread_rows() );
-				$openprint::log->debug(sprintf('Cutting pages down from q%d x %d pages to q%d x %d pages', $I->quantity(), $I->pages(), $i2->quantity(), $i2->pages() ) ) if DEBUG;
-				my $i3 = $I->copy();
-				$i3->spread_rows( $I->spread_rows() - ( $i2->spread_rows() * $i2_quantity ) );
-				#$i3->quantity( $I->quantity() * int($I->spread_rows()/$i2->spread_rows()) );
-				$i3->image_height( $I->image_height()*$i3->spread_rows() );
-				$openprint::log->debug(sprintf('Cutting pages down from q%d x %d pages to q%d x %d pages', $I->quantity(), $I->pages(), $i3->quantity(), $i3->pages() ) ) if DEBUG;
-				push @results, [ $i2, $i3 ];
+				if ( $i2->spread_rows() > 1 ) {
+					my $i2_quantity = int($I->spread_rows()/$i2->spread_rows());
+					$i2->quantity( $I->quantity() * $i2_quantity );
+					my $i3 = $I->copy();
+					$i3->spread_rows( $I->spread_rows() - ( $i2->spread_rows() * $i2_quantity ) );
+					#$i3->quantity( $I->quantity() * int($I->spread_rows()/$i2->spread_rows()) );
+				if ( $I->image_orientation() eq 'Vertical' ) {
+					$i2->image_height( $I->image_height()*$i2->spread_rows()/$I->spread_rows() );
+					$i3->image_height( $I->image_height()*$i3->spread_rows() );
+				} else {
+					$i2->image_width( $I->image_width()*$i2->spread_rows()/$I->spread_rows() );
+					$i3->image_width( $I->image_width()*$i3->spread_rows() );
+				} # endif
+					$openprint::log->debug(sprintf('Cutting pages down from q%d x %d pages to q%d x %d pages', $I->quantity(), $I->pages(), $i2->quantity(), $i2->pages() ) ) if DEBUG;
+					$openprint::log->debug(sprintf('Cutting pages down from q%d x %d pages to q%d x %d pages', $I->quantity(), $I->pages(), $i3->quantity(), $i3->pages() ) ) if DEBUG;
+					push @results, [ $i2, $i3 ];
+				} # end if
 
 
 			} else {
@@ -2048,21 +2059,33 @@ sub cut_spreads {
 				my $i1 = $I->copy();
 				$i1->spread_columns(1);
 				$i1->quantity( $i1->quantity() * $I->spread_columns() );
-				$i1->image_width( $I->image_width()/$I->spread_columns() );
+				if ( $I->image_orientation() eq 'Vertical' ) {
+					$i1->image_width( $I->image_width()/$I->spread_columns() );
+				} else {
+					$i1->image_height( $I->image_height()/$I->spread_columns() );
+				}
 		$openprint::log->debug(sprintf('Cutting pages down from %dx%d to %dx%d', $I->quantity(), $I->pages(), $i1->quantity(), $i1->pages() ) ) if DEBUG;
 				push @results, [ $i1 ];
 
 				my $i2 = $I->copy();
 				$i2->spread_columns( int($i2->spread_columns() / 2) );
-				my $i2_quantity = int($I->spread_columns()/$i2->spread_columns());
-				$i2->quantity( $I->quantity() * $i2_quantity );
-				$i2->image_width( $I->image_width()*$i2->spread_columns()/$I->spread_columns() );
-				$openprint::log->debug(sprintf('Cutting pages down from q%d x %d pages to q%d x %d pages', $I->quantity(), $I->pages(), $i2->quantity(), $i2->pages() ) ) if DEBUG;
-				my $i3 = $I->copy();
-				$i3->spread_columns( $I->spread_columns() - ( $i2->spread_columns() * $i2_quantity ) );
-				$i3->image_width( $I->image_width()*$i3->spread_columns() );
-				$openprint::log->debug(sprintf('Cutting pages down from q%d x %d pages to q%d x %d pages', $I->quantity(), $I->pages(), $i3->quantity(), $i3->pages() ) ) if DEBUG;
-				push @results, [ $i2, $i3 ];
+				if ( $i2->spread_columns() > 1 ) {
+					# Just duplicating the singleton case
+					my $i2_quantity = int($I->spread_columns()/$i2->spread_columns());
+					$i2->quantity( $I->quantity() * $i2_quantity );
+					$openprint::log->debug(sprintf('Cutting pages down from q%d x %d pages to q%d x %d pages', $I->quantity(), $I->pages(), $i2->quantity(), $i2->pages() ) ) if DEBUG;
+					my $i3 = $I->copy();
+					$i3->spread_columns( $I->spread_columns() - ( $i2->spread_columns() * $i2_quantity ) );
+					$openprint::log->debug(sprintf('Cutting pages down from q%d x %d pages to q%d x %d pages', $I->quantity(), $I->pages(), $i3->quantity(), $i3->pages() ) ) if DEBUG;
+				if ( $I->image_orientation() eq 'Vertical' ) {
+					$i2->image_width( $I->image_width()*$i2->spread_columns()/$I->spread_columns() );
+					$i3->image_width( $I->image_width()*$i3->spread_columns() );
+				} else {
+					$i2->image_height( $I->image_height()*$i2->spread_columns()/$I->spread_columns() );
+					$i3->image_height( $I->image_height()*$i3->spread_columns() );
+				} # end if
+					push @results, [ $i2, $i3 ];
+				} # end if
 			} else {
 				my $i1 = $I->copy();
 				$i1->spread_columns( $i1->spread_columns()/2 );

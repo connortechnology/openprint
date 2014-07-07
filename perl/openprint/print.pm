@@ -77,6 +77,11 @@ $log->debug("after continue $$variable{ExternalRedirect}");
 				$log->debug("** Save Service in View Services Function **");
 
 				my $service_index = $openprint::param{'ServiceIndex'};
+				if ( ! sets::isin( $service_index, $$services{$openprint::param{ServiceType}} ) ) {
+					$$variable{error} .= $openprint::param{ServiceType} . ' service ' . $service_index . ' is no longer in project.<br/>';
+					$$variable{ExternalRedirect} = '/main/project/view.html?project_id='.$project_index;
+					return;
+				} # end if
 				my $recalc = 0;	
 				my $Service = $Project->Service( $service_index );
 				my $ServiceType = $Service->ServiceType();
