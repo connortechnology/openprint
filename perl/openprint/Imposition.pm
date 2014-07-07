@@ -35,6 +35,8 @@ my @fields = (
 	'sides',
 	'Project',
 	'printing_type',
+	'Folds', 'Fold',
+	'runspeed',
 );
 
 sub new {

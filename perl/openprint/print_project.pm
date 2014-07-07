@@ -776,10 +776,12 @@ sub reuse_project {
 	} # end foreach
 	sql::end_transaction( $dbh, $ac );
 
+
 	if ( ( $NewProject->quantity1() and ( $Project->quantity1() != $NewProject->quantity1() ) )
 			or ( $NewProject->quantity2() and ( $Project->quantity2() != $NewProject->quantity2() ) )
 			or ( $NewProject->quantity3() and ( $Project->quantity3() != $NewProject->quantity3() ) )
 			or ( $param{recalculate} == 1 )
+			or ( ( time - Date::Parse::str2time( $Project->updated_on() ) ) > 24*60*60 )
 	   ) {
 		$NewProject->recalculate();
 	} # endif

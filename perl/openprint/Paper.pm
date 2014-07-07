@@ -1074,6 +1074,7 @@ sub minimum_order {
 	} # end if
 
 #$openprint::log->debug("SPP: $$self{'start_width'} / $$self{'width'} ) * int( $$self{'start_height'} / $$self{'height'} * spp $$self{'sheets_per_package'} * $factor;");
+	return 0 if ! $$self{'minimum_order'};
 	return $$self{'minimum_order'} * $self->factor();
 } # end minimum_order 
 
@@ -1378,7 +1379,7 @@ $log->debug($P->id_string());
 			$Paper->supplied(1);
 		} # end if
 	} # end if
-	if ( $qty_index and ( $$specs{'OverrideStockPrice'.$qty_index} eq 'Y' ) ) {
+	if ( $qty_index and (defined $$specs{'OverrideStockPrice'.$qty_index} ) and ( $$specs{'OverrideStockPrice'.$qty_index} eq 'Y' ) ) {
 		$openprint::log->warn("Override price: " . $$specs{'StockPrice'.$qty_index} );
 		$$Paper{'Price'} = $$specs{'StockPrice'.$qty_index};
 	} # end if

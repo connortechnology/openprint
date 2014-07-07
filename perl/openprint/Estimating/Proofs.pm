@@ -648,7 +648,7 @@ sub summary {
 							my $desc = sprintf('</td><td class="type">%s', $Service->description() );
 							$proof_totals{$desc} += $$specs{"txtProofQuantity-$signature_index-$proof_index-$qty_index"};
 						} else {
-							my $desc = sprintf('%s&quot; x %s&quot;</td><td class="type">%s', @$specs{
+							my $desc = sprintf('%s&quot;x%s&quot;</td><td class="type">%s', @$specs{
 									"txtProofWidth-$signature_index-$proof_index-$qty_index",
 									"txtProofHeight-$signature_index-$proof_index-$qty_index"}, $Service->description() );
 							$proof_totals{$desc} += $$specs{"txtProofQuantity-$signature_index-$proof_index-$qty_index"};
@@ -687,7 +687,7 @@ sub signature_summary {
 						my $desc = sprintf('</td><td class="type">%s', $Service->description() );
 						$proof_totals{$desc} += $$specs{"txtProofQuantity-$signature_index-$proof_index-$qty_index"};
 					} else {
-						my $desc = sprintf('%s&quot; x %s&quot;</td><td class="type">%s', @$specs{
+						my $desc = sprintf('%s&quot;x%s&quot;</td><td class="type">%s', @$specs{
 								"txtProofWidth-$signature_index-$proof_index-$qty_index",
 								"txtProofHeight-$signature_index-$proof_index-$qty_index"}, $Service->description() );
 						$proof_totals{$desc} += $$specs{"txtProofQuantity-$signature_index-$proof_index-$qty_index"};
