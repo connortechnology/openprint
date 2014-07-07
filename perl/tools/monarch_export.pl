@@ -7,6 +7,7 @@ require misc;
 require logger;
 
 use Text::CSV_XS;
+use Data::Dumper;
 
 use vars qw( $log $dbh %config);
 *log = \$openprint::log;
@@ -87,6 +88,8 @@ foreach my $table ( $$opts{table} ? split(',',$$opts{table} ) : @tables ) {
 		push @fields, $field;
 	} # end while
 	close (FH);
+#print Dumper(\%fields);
+#die;
 
 	open( FH, ">$table.txt" ) or die "Can't open $table.txt $!";
 	foreach my $Object ( ('openprint::'.$tables{$table}{object})->find( @{$tables{$table}{find}} ) ) {

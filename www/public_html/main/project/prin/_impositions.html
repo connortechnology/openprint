@@ -32,7 +32,7 @@ This feature is under development.<br/>
 	} 
 	my %Impositions = openprint::Estimating::Printing::get_impositions( $Project, $specs, $project, $param{"txtQuantity$qty_index"}, $qty_index, \@possible_presses, \@Papers, \%Overrides );
 	my @Impositions = map { @{$Impositions{$_}} } keys %Impositions;
-	#$html .= join('<br/>', map { $_->to_string() } openprint::imposition::sort( @Impositions ) );
+	$html .= join('<br/>', map { $_->to_string() } openprint::imposition::sort( @Impositions ) );
 
 	$html .= '<br/><br/>These are the impositions that will be considered after filtering. There are ' . @Impositions .'<br/>';
 

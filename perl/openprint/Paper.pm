@@ -908,11 +908,13 @@ sub previous {
 	} # end if
 	return $self;
 } # end sub previous
+
 sub next {
 	my $self = shift;
+	
 	my @papers = openprint::Paper->find_one( 
 			columns   =>  '*,(select name from stockbrands where id=brand_id) AS brand, (select name from stockfinishes where id=finish_id) AS finish, (select name from stockcolours where id=colour_id) AS colour, (select name from stockweights where id=weight_id) AS weight',
-'order'=>'brand,finish,colour,weight,width,height', 'brand >=' => $self->brand(), 'id !=' => $$self{id} );
+'order'=>'brand,finish,colour,weight,width,height' );
 	for ( my $i = 0; $i < @papers; $i += 1 ) {
 		return $papers[$i+1] if ($papers[$i] == $self )and ($i < @papers);
 	} # end if
@@ -1072,6 +1074,7 @@ sub minimum_order {
 	} # end if
 
 #$openprint::log->debug("SPP: $$self{'start_width'} / $$self{'width'} ) * int( $$self{'start_height'} / $$self{'height'} * spp $$self{'sheets_per_package'} * $factor;");
+	return 0 if ! $$self{'minimum_order'};
 	return $$self{'minimum_order'} * $self->factor();
 } # end minimum_order 
 
@@ -1239,7 +1242,7 @@ sub load_from_signature {
 	my $Paper;
 	if ( $$specs{'rdbSpecificStock'} eq 'Y' ) {
 		$Paper = new openprint::Paper();
-		$$Paper{'custom'} = 1;
+		$$Paper{custom} = 1;
 		$Paper->brand( $$specs{'txtSpecificStockBrand'} );
 		$Paper->finish( $$specs{'txtSpecificStockFinish'} );
 		$Paper->colour( $$specs{'txtSpecificStockColour'} );
@@ -1376,7 +1379,7 @@ $log->debug($P->id_string());
 			$Paper->supplied(1);
 		} # end if
 	} # end if
-	if ( $qty_index and ( $$specs{'OverrideStockPrice'.$qty_index} eq 'Y' ) ) {
+	if ( $qty_index and (defined $$specs{'OverrideStockPrice'.$qty_index} ) and ( $$specs{'OverrideStockPrice'.$qty_index} eq 'Y' ) ) {
 		$openprint::log->warn("Override price: " . $$specs{'StockPrice'.$qty_index} );
 		$$Paper{'Price'} = $$specs{'StockPrice'.$qty_index};
 	} # end if
@@ -1393,6 +1396,12 @@ $log->debug($P->id_string());
 #Carp::cluck("Custom size $$specs{'StockWidth'.$qty_index}x$$specs{'StockHeight'.$qty_index}");
 #$openprint::log->debug("Custom size $$Paper{width}x$$Paper{height} => $$specs{'StockWidth'.$qty_index}x$$specs{'StockHeight'.$qty_index}");
 			$$Paper{Supplied} = $P;
+			if ( ! $P->start_width() ) {
+#$openprint::log->debug("Setting start with");
+				$P->width( $$specs{'StockWidth'.$qty_index} );
+				$P->start_width( $P->width() );
+			} 
+
 			if ( ! $Paper->start_width() ) {
 #$openprint::log->debug("Setting start with");
 				$Paper->start_width( $Paper->width() );
@@ -1557,8 +1566,8 @@ sub Supplied {
 	my ( $self ) = @_;
 	if ( ! $$self{Supplied} ) {
 		my $Supplied = $self->clone();
-		$$Supplied{'width'} = $$self{'start_width'} if $$self{'start_width'};
-		$$Supplied{'height'} = $$self{'start_height'} if $$self{'start_height'};
+		$$Supplied{width} = $$self{start_width} ? $$self{start_width} : $$self{width};
+		$$Supplied{height} = $$self{start_height} ? $$self{start_height} : $$self{height};
 		delete $$Supplied{'to_string'};
 		$Supplied->mweight(0); # force recalc
 		$$self{Supplied} = $Supplied;
@@ -1603,6 +1612,18 @@ sub link_to {
 	return sprintf('<a href="/employee/inventory/paper_details.html?paper_id=%1$d">%2$s</a>', $_[0]{id}, $_[0]->to_string() );
 } # end sub link_to
 
+sub sort {
+	sort { 
+		foreach my $option ( 'brand', 'finish', 'colour','weight' ) {
+			return $a->$option() cmp $b->$option() if $a->$option() ne $b->$option();
+		} # end foreach option
+		foreach my $option ( 'width', 'height' ) {
+			return $a->$option() <=> $b->$option() if $a->$option() != $b->$option();
+		} # end foreach option
+		
+	} @_;
+} # end sub sort
+
 sub Unit_Of_Measure_Purchase {
 	if ( $_[0]{type} eq 'Sheet' ) {
 		return 'M';
@@ -1620,7 +1641,7 @@ sub Unit_Of_Measure_Costing {
 
 sub Supplier {
 	return new openprint::Company( $_[0]{supplier_id} );
-}
+} # end sub Supplier
 
 1;
 __END__

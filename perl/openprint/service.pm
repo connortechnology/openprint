@@ -58,7 +58,7 @@ sub save_service {
 	eval ( 'require '.$module.';' );
 	my @variables = eval( $module.'::variables( $project_index, $service_index, $specs, \%openprint::param )');
 	$log->error($@) if $@;
-$log->debug("variables: @variables");
+#$log->debug("variables: @variables");
 # We cannot locak tbl_service_specifications or tbl_project_contents.  Just too nasty.  So use tbl_Projects as the contention point.
 	# make this fast by doing it in one transaction, locking does the tranasaction for us
 	$Project->lock();
@@ -447,7 +447,7 @@ sub internal_calc {
 
 	my $Project = new openprint::Project( $project_index );
 	$Project->lock();
-	#$Project->save({status=>'uncalculated'}) if $Project->status() ne 'uncalculated';
+	$Project->save({status=>'Calculating'}) if $Project->status() ne 'Calculating';
 	my $Service = $Project->Service($service_index) if $service_index;
 	my $specs;
 	if ( ! $Service ) {

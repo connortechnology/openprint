@@ -220,8 +220,10 @@ $I->display('In Stitching:') if DEBUG;
 		}
 		my $form = $$sig_specs{SignatureIndex};
 		push @printed_impositions, $I->imposition();
+if ( ! $$I{Folds} ) {
 		my %pages;
 		my $sig_pages = $I->pages();
+
 		if ( $folding_specs ) {
 
 			# This doesn't really make sense.  If we are doing printing estimation, then the folding probably isn't going to match.  
@@ -236,6 +238,8 @@ $I->display('In Stitching:') if DEBUG;
 					next if ! $type;
 					if ( $$folding_specs{"FoldImposition-$$sig_specs{SignatureIndex}-$qty_index-$index"} < $imposition ) {
 						$imposition = $$folding_specs{"FoldImposition-$$sig_specs{SignatureIndex}-$qty_index-$index"};
+$results{Breakdown} .= "Setting imposition to 1 due to folding imposition for form $$sig_specs{SignatureIndex} $fold_qty $type $index<br/>";
+
 					} # en dif
 
 					my ( $pages ) = $type =~ /(\d+)PageFold/;
@@ -254,10 +258,10 @@ $I->display('In Stitching:') if DEBUG;
 				} # end foreach fold index
 				my $total_pages = misc::sum( map { $_ * $folds{$_} } keys %folds );
 
-				$openprint::log->warn("Folded pages folded: $total_pages printed: $sig_pages.");
+				$openprint::log->debug("Folded pages folded: $total_pages printed: $sig_pages.") if DEBUG;
 				# I Think this is designed to auto-correct when there are more pages folded than printed
 SIG_FIX_PAGES:	while( $total_pages > $sig_pages ) {
-				   $openprint::log->warn("Too many folded pages folded: $total_pages printed: $sig_pages.");
+				   $openprint::log->warn("Too many folded pages folded: $total_pages printed: $sig_pages.") if DEBUG;
 				   if ( $folds{$total_pages-$sig_pages} and ( $folds{$total_pages-$sig_pages} > 1 ) ) {
 					   $folds{$total_pages-$sig_pages} -= 1;
 					   $total_pages -= ( $total_pages-$sig_pages );
@@ -304,20 +308,30 @@ $openprint::log->debug("Ignoring folding due to override");
 		} else {
 			$$specs{"txtPockets$qty_index"} += 1;
 		} # end if
+} else {
+		foreach my $Fold ( @{$$I{Folds}} ) {
+			$$specs{'txtSignatureQty'.$Fold->pages().'Page-'.$qty_index} += $Fold->quantity();
+			$$specs{"txtPockets$qty_index"} += $Fold->quantity();
+		} # end foreach Fold
+}
 
 		if ( $imposition > 1 ) {
 	
 			if ( ( ( $$folding_specs{"chkOverrideEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} ne 'Y' or $$folding_specs{"ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} ) and $$I{'FoldingImposition'} and $$I{'FoldingImposition'} % 2 ) ) {
 				$imposition = 1;
 				$I->display("Setting imposition to 1 due to foldingositions") if DEBUG;
+$results{Breakdown} .= "Setting imposition to 1 due to foldingositions<br/>";
 			} elsif ($$I{'imposition'} % 2 ) {
 				$I->display("Setting imposition to 1 due to odd impositions") if DEBUG;
+$results{Breakdown} .= "Setting imposition to 1 due to odd impositions<br/>";
 				$imposition = 1;
 			} elsif ($$I{'image_orientation'} eq 'Vertical' and $$I{'rows'} % 2 ) {
 				$I->display("Setting imposition to 1 due to Vertial and odd rows") if DEBUG;
+$results{Breakdown} .= "Setting imposition to 1 due to vertical and odd rows<br/>";
 				$imposition = 1;
 			} elsif ($$I{'image_orientation'} eq 'Horizontal' and $$I{'columns'} % 2 ) {
 				$I->display("Setting imposition to 1 due to Horizal and odd cols") if DEBUG;
+$results{Breakdown} .= "Setting imposition to 1 due to HOrizontal and odd cols<br/>";
 				$imposition = 1;
 			} elsif (sets::isin( $$I{'runstyle'}, ['Work & Turn','Work & Tumble'] ) and ($$I{'imposition'}%4) ) {
 				$I->display("Setting imposition to 1 due to W&T impo not % 4 ") if DEBUG;
@@ -526,6 +540,14 @@ sub calc {
 		$$specs{'alert'} .= 'Unable to determine page quantity<br/>';
 		return $$specs{'Status'} = 'uncalculated';
 	} # end if
+	if ( ! $$specs{CoverFit} ) {
+		foreach my $sig_id ( $Project->signatures( {Group=>1} ) ) {
+			if ( form_needs_fit( $Project, $sig_id ) ) {
+				$$specs{alert} .= 'Your cover is complex.  Please select how to run it.<br/>';
+				return $$specs{'Status'} = 'uncalculated';
+			} # end if
+		} # end foreach
+	} # endif 
 
 	my $calc_hash = {};
 	my $folding_specs = 0;
@@ -774,7 +796,7 @@ $openprint::log->debug(" fold qty * pages($pages) == sig_pages($sig_pages) foldQ
 			@equipment = @possible_equipment;
 		} # end if
 		if ( DEBUG ) {
-			$log->debug("Equipment:f or $qty_index " . join( map { $_->strid() } @possible_equipment ) );
+			$log->debug("Equipment:for qty $qty_index (" . join(',', map { $_->strid() } @possible_equipment ) );
 		} # end if
 
 		foreach my $Equipment ( @equipment ) {
@@ -1042,7 +1064,7 @@ sub get_price {
 # Calculate Full Passes
 	if ( $maxPockets and ( $neededPockets > $maxPockets ) ) {
 # Loaded here, so we don't do it in the loop many times
-$openprint::log->debug("Need more pockets $maxPockets") if DEBUG;
+$openprint::log->debug("Need more pockets $neededPockets > $maxPockets") if DEBUG;
 		my %servicePrice;
 		if ( ! ( %servicePrice = openprint::service::get_price_object( $$ServiceType{'name'}.$maxPockets.'Pockets', $qty, $Equipment ) ) ) {
 			%servicePrice = openprint::service::get_price_object( $$ServiceType{'name'}, $maxPockets, $Equipment );
@@ -1071,7 +1093,7 @@ $openprint::log->debug("Need more pockets $maxPockets") if DEBUG;
 			# The minus 1 is because the result of each pass takes up a pocket
 			$neededPockets -= ( $maxPockets - 1 );
 			last if $neededPockets == $loopbreak_pockets;
-			$price{'Passes'} += 1;
+			$price{Passes} += 1;
 		} # end while
 	} # end if
 
@@ -1107,39 +1129,31 @@ $openprint::log->debug("Need more pockets $maxPockets") if DEBUG;
 	} # end if
 
 	if ( my @sigs = $Project->signatures({'Group'=>1}) ) {
-		my $sig_specs = openprint::service::get_specs_ref( $Project, $sigs[0] );
+		if ( ( $$specs{CoverFit} eq 'Exact' ) and ( form_needs_fit( $Project, $sigs[0] ) ) ) {
+			if ( ! ( %servicePrice = openprint::service::get_price_object( $$ServiceType{'name'}.'1Pockets', $qty, $Equipment ) ) ) {
+				%servicePrice = openprint::service::get_price_object( $$ServiceType{'name'}, 1, $Equipment );
+			} # end if
+			my $slowdown_percent = $Equipment->specification('2ndPass Slowdown');
 
-
-		if ( 
-#( $$sig_specs{'txtWidth'}/2 != $$specs{'Width'} or $$sig_specs{'txtHeight'} != $$specs{'Height'} ) or
-( sets::isin( $$sig_specs{'rdbTemplateType'}, ['2Panel1Pocket','2Panel2Pocket','TriFoldDoublePocket'] ) or $$sig_specs{'PageQuantity'.$qty_index} > 4 ) 
-) {
-			if ( (!$$specs{'CoverFit'}) or ($$specs{'CoverFit'} eq 'Exact') ) {
-				if ( ! ( %servicePrice = openprint::service::get_price_object( $$ServiceType{'name'}.'1Pockets', $qty, $Equipment ) ) ) {
-					%servicePrice = openprint::service::get_price_object( $$ServiceType{'name'}, 1, $Equipment );
-				} # end if
-				my $slowdown_percent = $Equipment->specification('2ndPass Slowdown');
-				
-				my $runtime = $unitsPerHour ? $qty/$unitsPerHour : 0; # in seconds
+			my $runtime = $unitsPerHour ? $qty/$unitsPerHour : 0; # in seconds
 				if ( $slowdown_percent ) {
 					$slowdown_percent =~ s/[^\d\.\-]//g;
 					$runtime *= (1+$slowdown_percent/100);
 				} # end if
-				$price{'RunTime'} += $runtime * 360;
-				if ( $servicePrice{'units'} eq 'per m' ) {
-					$servicePrice{'Total'} = $servicePrice{'Price'} * $qty/1000;
-					$price{'Service'} += $servicePrice{'Total'};
-				} elsif ( $servicePrice{'units'} =~ /per hour/i ) {
-					$servicePrice{'Total'} = $servicePrice{'Price'} * $runtime;
-					$price{'Service'} += $servicePrice{'Total'}
-				} else {
-					$openprint::log->debug("Unknown Unit Type: $servicePrice{'units'} for $$ServiceType{'name'} range($neededPockets) equipment(".$Equipment->strid().")");
-				} # end if
-				$price{'MakeReady'} += $MakeReady{'Price'} + $pocketMakeReady;
-				$price{'Passes'} += 1;
-			} # end if Exact
-		} # end if requires exact or not
-	} # end if
+			$price{'RunTime'} += $runtime * 360;
+			if ( $servicePrice{'units'} eq 'per m' ) {
+				$servicePrice{'Total'} = $servicePrice{'Price'} * $qty/1000;
+				$price{'Service'} += $servicePrice{'Total'};
+			} elsif ( $servicePrice{'units'} =~ /per hour/i ) {
+				$servicePrice{'Total'} = $servicePrice{'Price'} * $runtime;
+				$price{'Service'} += $servicePrice{'Total'}
+			} else {
+				$openprint::log->debug("Unknown Unit Type: $servicePrice{'units'} for $$ServiceType{'name'} range($neededPockets) equipment(".$Equipment->strid().")");
+			} # end if
+			$price{'MakeReady'} += $MakeReady{'Price'} + $pocketMakeReady;
+			$price{'Passes'} += 1;
+		} # end if Exact
+	} # end if requires exact or not
 	if ( $Project->signatures({'type'=>'Gate Folded Pages'}) ) {
 		my $gateFolds = $$specs{'txtSignatureQtySingleGateFolded'.$qty_index} + $$specs{'txtSignatureQtyDoubleGateFolded'.$qty_index};
 		if ( $$specs{'rdbGateFoldFit'} eq 'Exact' and $gateFolds > 0 ) {
@@ -1175,12 +1189,20 @@ $openprint::log->debug($price{'Imposition'} . 'out on ' .$Equipment->name() . ' 
 sub summary {
 	my ( $Project, $service_id, $specs, $qty_index ) = @_;
 
+	my $summary = '';
 	if ( $qty_index ) {
 		if ( $$specs{'Imposition'.$qty_index} and $$specs{'ddmEquipment'.$qty_index} ) {
 			return $$specs{'Imposition'.$qty_index} .'out on ' . new openprint::Equipment( $$specs{'ddmEquipment'.$qty_index} )->name();
 		} # en dif
+	} else {
+		if ( $$specs{rdbGateFoldFit} ) {
+			$summary .= 'Gate Fold Fit = ' . $$specs{rdbGateFoldFit} . '<br/>';
+		} # end if
+		if ( $$specs{CoverFit} ) {
+			$summary .= 'Cover Fit = ' . $$specs{CoverFit} . '<br/>';
+		} # end if
 	} # end if
-	return '';
+	return $summary;
 } # end sub summary
 
 sub runtime {
@@ -1239,6 +1261,21 @@ sub runtime {
 
 sub save {
 } # end sub save
+
+sub form_needs_fit {
+	my ( $Project, $sig_id, $sig_specs, $project_specs ) = @_;
+
+	my $services = $Project->services();
+	$project_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] ) if ! $project_specs;
+	$sig_specs = openprint::service::get_specs_ref( $Project, $sig_id ) if ! $sig_specs;
+	if (
+			( $$sig_specs{txtFinalWidth} != $$project_specs{txtFinalWidth} or $$sig_specs{txtFinalHeight} != $$project_specs{txtFinalHeight} ) or
+			( $$sig_specs{rdbTemplateType} and sets::isin( $$sig_specs{rdbTemplateType}, ['2Panel1Pocket','2Panel2Pocket','TriFoldDoublePocket'] ) ) or 
+			( $$sig_specs{GroupPageQuantity} > 4 ) ) {
+		return 1;
+	} # end if
+	return 0;
+} # end sub form_needs_fitting
 
 1;
 __END__
