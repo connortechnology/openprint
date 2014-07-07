@@ -60,6 +60,7 @@ $log->debug("after continue $$variable{ExternalRedirect}");
 	} # end if
 
 	my $services = $Project->services();
+	my $Service = openprint::Project_Service->find_one( { project_id=>$$Project{id}, service_id=> $openprint::param{ServiceIndex} } );
 
 	$log->debug(" **** STARTING VIEW SERVICES FUNCTION * Project $project_index( $$Project{id} ) *** $openprint::session{'company_id'}");
 
@@ -77,8 +78,8 @@ $log->debug("after continue $$variable{ExternalRedirect}");
 				$log->debug("** Save Service in View Services Function **");
 
 				my $service_index = $openprint::param{'ServiceIndex'};
-				if ( 0 and ! sets::isin( $service_index, $$services{$openprint::param{ServiceType}} ) ) {
-					$$variable{error} .= $openprint::param{ServiceType} . ' service ' . $service_index . ' is no longer in project.<br/>';
+				if ( ! $Service ) {
+					$$variable{error} .= $openprint::param{ServiceType} . ' service ' . $service_index . ' is no longer in project. It may have been removed while you were editing it.  Your changes may not have been saved.<br/>';
 					$$variable{ExternalRedirect} = '/main/project/view.html?project_id='.$project_index;
 					return;
 				} # end if
