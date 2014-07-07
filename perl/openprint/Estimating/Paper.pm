@@ -377,38 +377,27 @@ sub summary {
     my ( $Project, $service_id, $specs, $qty_index ) = @_;
 
     $specs = openprint::service::get_specs_ref( $Project, $service_id ) if ! $specs;
-
-    my %Papers;
-	foreach my $ss_id ( $Project->signatures() ) {
-        my $sig_specs = openprint::service::get_specs_ref( $Project, $ss_id );
-		foreach my $q_index ( $Project->quantity_indexes() ) {
-			next if ! $$sig_specs{'txtImposition'.$q_index};
-			my $Paper = openprint::Paper::load_from_signature( $Project, $sig_specs, $q_index )->Supplied();
-			#next if ! ( $Paper->id() or $$Paper{custom} );
-			$Papers{$Paper->id_string()} = $Paper;
-        } # end foreach qty_index
-    } # end foreach
-
-	my @keys = sort keys %Papers;
+	my @Stocks = get_stocks_and_quantities( $Project, $service_id, $specs, $qty_index );
 
 	if ( $qty_index ) {
 		my @summaries;
-		my $stock_id = 1;
-		foreach my $key ( @keys ) {
+		foreach my $Stock_Entry ( @Stocks ) {
 			my $html = '';
-			my $Paper = $Papers{$key};
+			my $Paper = $$Stock_Entry{Stock};
+			my $stock_id = $$Stock_Entry{index};
+
 #$openprint::log->warn("Stock QTY $stock_id $qty_index " . $$specs{"qty-$stock_id-$qty_index"} );
 			if ( $$specs{"qty-$stock_id-$qty_index"} ) {
 				if ( $Paper->type() eq 'Sheet' ) {
 					$html .= $$specs{"sheets-$stock_id-$qty_index"}.'sheets ';
 				} # end if
 				$html .= Number::Format::format_number( Math::Round::nearest(1, $$specs{"qty-$stock_id-$qty_index"} ) ).' lbs';
-				my $Price = $Paper->get_price( 'weight'=>$$specs{"qty-$stock_id-$qty_index"},'service'=>'Material' );
-				if ( $$Price{'units'} eq 'per square foot' ) {
+				my $Price = $Paper->get_price( weight=>$$specs{"qty-$stock_id-$qty_index"}, service=>'Material' );
+				if ( $$Price{units} eq 'per square foot' ) {
 					$html .= ' ' . Math::Round::nearest( 1, ( $$specs{"qty-$stock_id-$qty_index"} / $Paper->wpsi() ) / 144 ).' sq feet';
-				} elsif ( $$Price{'units'} eq 'per square inch' ) {
+				} elsif ( $$Price{units} eq 'per square inch' ) {
 					$html .= ' ' . Math::Round::nearest( 1, $$specs{"qty-$stock_id-$qty_index"} / $Paper->wpsi() ). ' sq inches';
-				} elsif ( $$Price{'units'} eq 'per 100lbs' ) {
+				} elsif ( $$Price{units} eq 'per 100lbs' ) {
 				if ( ( $Paper->type() eq 'Roll' ) and ( $$specs{"qty-$stock_id-$qty_index"} > 100 ) ) {
 					if ( ! $Paper->width() ) {
 						$html .= ' Unable to calculate feet due to stock not having a width.<br/>';
@@ -416,7 +405,7 @@ sub summary {
 						$html .= ' ' . int( ( ( $$specs{"qty-$stock_id-$qty_index"} / $Paper->wpsi() ) / $Paper->width() ) / 12 ) . ' feet';
 					}
 				} # end if
-				} elsif ( $$Price{'units'} ) {
+				} elsif ( $$Price{units} ) {
 					$html .= 'unknown units: ' . $$Price{'units'};
 				} elsif ( sets::isin( $Project->Type()->name(), [ 'Banners' ] ) ) {
 					$html .= ' ' . Math::Round::nearest(1, ( $$specs{"qty-$stock_id-$qty_index"} / $Paper->wpsi() ) / $Paper->width() ).'inches';
@@ -426,10 +415,10 @@ sub summary {
 			} # end if
 			push @summaries, $html;
 			$stock_id += 1;
-		} # end foreach key
+		} # end foreach STock
 		return \@summaries;
 	} # end if
-	return [ map { $Papers{$_}->message() ? $_ . '<br/><span class="StockMessage">'. ssi::variable_substitution( \$Papers{$_}->message(), { Project => $Project } ) . '</span>' : $_ } @keys ];
+	return [ map { $$_{Stock}->message() ? $$_{Stock}->to_string() . '<br/><span class="StockMessage">'. ssi::variable_substitution( \$_->Stock()->message(), { Project => $Project } ) . '</span>' : $$_{Stock}->to_string() } @Stocks ];
 } # end sub summary
 
 sub save {
