@@ -18,7 +18,7 @@ package openprint::Estimating::Stitching;
 use strict;
 #use warnings;
 
-use constant DEBUG => 0;
+use constant DEBUG => 1;
 
 require openprint::Equipment;
 require openprint::service;
@@ -764,9 +764,16 @@ $openprint::log->debug(" fold qty * pages($pages) == sig_pages($sig_pages) foldQ
 			if ( ! $$specs{"ddmEquipment$qty_index"} ) {
 				$$specs{'alert'} .= 'Please select a piece of equipment to stitch your job.<br/>';
 			} else {
+				if ( ! sets::isin( $$specs{"ddmEquipment$qty_index"}, [ map { $_->id() } @possible_equipment ] ) ) {
+					$$specs{alert} .= join('<br/>',
+							'Your selected equipment is not suitable for the following reason:',
+							$error{$$specs{"ddmEquipment$qty_index"}}, '. Please select another.<br/>'
+);;
+				} else {
 				@equipment = ( new openprint::Equipment( $$specs{"ddmEquipment$qty_index"} ) );
 				if ( ! @equipment ) {
 					$$specs{'alert'} .= 'Your selected equipment was not found. Please select another.<br/>';
+				} # end if
 				} # end if
 			} # end if
 		} else {
@@ -875,7 +882,7 @@ $openprint::log->debug(" fold qty * pages($pages) == sig_pages($sig_pages) foldQ
 				$$price{'ComparisonPrice'} += $folding_cost;
 				$$specs{'hdnBreakdown'.$qty_index} .= "Folding cost: $folding_cost<br/>";
 			} # end if Folding
-			if ( ( ! $bestPrice ) or $$price{'ComparisonPrice'} < $$bestPrice{'ComparisonPrice'} ) {
+			if ( ( ! $bestPrice ) or ( $$price{'ComparisonPrice'} < $$bestPrice{'ComparisonPrice'} ) ) {
 				$bestEquipment = $Equipment;
 				$bestPrice = $price;
 			} # end if
@@ -894,6 +901,7 @@ $openprint::log->debug(" fold qty * pages($pages) == sig_pages($sig_pages) foldQ
 			my $servicePrice = $$price{'LastServicePrice'};
 			$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Service: 1 pass at $%.2f%s=$%.2f<br/>', @$servicePrice{'Price','units','Total'});
 			$$specs{'hdnBreakdown'.$qty_index} .= 'Total: $'. sprintf('%.2f', Math::Round::nearest(1,$$price{'txtPrice'})).'<br/><br/>';
+			$$specs{'hdnBreakdown'.$qty_index} .= 'Comparison: $'. sprintf('%.2f', Math::Round::nearest(1,$$price{'ComparisonPrice'})).'<br/><br/>';
 		} # end foreach
 		if ( ! $bestEquipment ) {
 $openprint::log->error("No best equipment in Stitching");
