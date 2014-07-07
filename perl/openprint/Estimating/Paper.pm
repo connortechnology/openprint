@@ -418,7 +418,7 @@ sub summary {
 		} # end foreach STock
 		return \@summaries;
 	} # end if
-	return [ map { $$_{Stock}->message() ? $$_{Stock}->to_string() . '<br/><span class="StockMessage">'. ssi::variable_substitution( \$_->Stock()->message(), { Project => $Project } ) . '</span>' : $$_{Stock}->to_string() } @Stocks ];
+	return [ map { $$_{Stock}->message() ? $$_{Stock}->to_string() . '<br/><span class="StockMessage">'. ssi::variable_substitution( \$$_{Stock}->message(), { Project => $Project } ) . '</span>' : $$_{Stock}->to_string() } @Stocks ];
 } # end sub summary
 
 sub save {
