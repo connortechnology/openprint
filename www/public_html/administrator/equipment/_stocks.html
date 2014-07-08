@@ -1,17 +1,16 @@
 <? eval (
 	@{$$variable{'Stocks'}} = ();
-	foreach my $Stock ( openprint::Paper->find( 
-			'group_id'		=> $session{'/administrator/equipment/edit.html?Group'},
-			'owner_id'		=> $config{'owner_id'},
-			'manufacturer_id'		=> $session{'/administrator/equipment/edit.html?Manufacturer'},
-			'name_id'	=> $session{'/administrator/equipment/edit.html?Name'},
-			'finish_id'	=> $session{'/administrator/equipment/edit.html?Finish'},
-			'colour_id'	=> $session{'/administrator/equipment/edit.html?Colour'},
-			'weight_id'	=> $session{'/administrator/equipment/edit.html?Weight'}, 
-			'material_id'	=> $session{'/administrator/equipment/edit.html?material_id'}, 
-			'type'		=> [ split(',', $session{'/administrator/equipment/edit.html?Types'} ) ],
-			'order'		=> 'brand,finish,colour,weight, width, height'
-		) ) {
+	foreach my $Stock ( openprint::Paper::sort( openprint::Paper->find( 
+			owner_id		=> $config{owner_id},
+			( $session{'/administrator/equipment/edit.html?Group'} ? ( group_id	=> $session{'/administrator/equipment/edit.html?Group'} ) : () ),
+			( $session{'/administrator/equipment/edit.html?Manufacturer'} ? ( manufacturer_id => $session{'/administrator/equipment/edit.html?Manufacturer'} ) : () ),
+			( $session{'/administrator/equipment/edit.html?Name'} ? ( name_id => $session{'/administrator/equipment/edit.html?Name'} ) : () ),
+			( $session{'/administrator/equipment/edit.html?Finish'} ? ( finish_id => $session{'/administrator/equipment/edit.html?Finish'} ) : () ),
+			( $session{'/administrator/equipment/edit.html?Colour'} ? ( colour_id => $session{'/administrator/equipment/edit.html?Colour'} ) : () ),
+			( $session{'/administrator/equipment/edit.html?Weight'} ? ( weight_id => $session{'/administrator/equipment/edit.html?Weight'} ) : () ), 
+			( $session{'/administrator/equipment/edit.html?material_id'} ? ( material_id => $session{'/administrator/equipment/edit.html?material_id'} ) : () ), 
+			( $session{'/administrator/equipment/edit.html?Types'} ? ( type	=> [ split(',', $session{'/administrator/equipment/edit.html?Types'} ) ] ) : () ),
+		) ) ) {
 		next if ( ! $Stock->recommendations() );
 		next if $$variable{Equipment}->Stock_Setting( $Stock );
 		push @{$$variable{'Stocks'}}, $Stock;

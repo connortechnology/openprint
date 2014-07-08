@@ -204,5 +204,9 @@ sub summary {
 	return '';
 }
 
+sub has_overrides {
+	return ();
+}
+
 1;
 __END__

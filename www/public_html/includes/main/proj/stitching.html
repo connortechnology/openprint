@@ -1,9 +1,9 @@
 <p><label>Finished Calliper</label><span id="txtCalliper"><?txtCalliper?></span>&quot;</p>
 <? if ( $$variable{'Project'}->signatures({'type'=>'GateFolded Spreads'}) ) ?>
 <div id="GateFoldFit">
-		Will your <? echo ( ssi::writeTip('Gate Folded'); ) ?>
+		Will your <? echo ( writeTip('Gate Folded'); ) ?>
 		Page(s) require an exact fit? Choosing short will be more cost-effective, 
-		however the <? echo ( ssi::writeTip('Gate Folded'); ) ?>
+		however the <? echo ( writeTip('Gate Folded'); ) ?>
 		page will be approximately 1/16&quot; short of the finished size.
 	<p>
 		<label>Gate Fold Fit</label>
@@ -15,19 +15,12 @@
 </div>
 <? endif ( $$variable{'Project'}->signatures({'type'=>'GateFolded Spreads'}) ) ?>
 <? eval ( 
-	$$variable{'NeedCoverFit'} = 0;
-	my $services = $$variable{'Project'}->services();
-	if ( my @sigs = $$variable{'Project'}->signatures({'Group'=>1}) ) {
-		my $project_specs = openprint::service::get_specs_ref( $$variable{'Project'}, $$services{''}[0] );
-		my $sig_specs = openprint::service::get_specs_ref( $$variable{'Project'}, $sigs[0] );
-		if ( 
-			( $$sig_specs{'txtWidth'}/2 != $$project_specs{'txtFinalWidth'} or $$sig_specs{'txtHeight'} != $$project_specs{'txtFinalHeight'} ) or
-			sets::isin( $$sig_specs{'rdbTemplateType'}, ['2Panel1Pocket','2Panel2Pocket','TriFoldDoublePocket'] ) or $$sig_specs{'PageQuantity'.$$variable{'QTYIndex'}} > 4 ) {
-			 $$variable{'NeedCoverFit'} = 1;
+	$$variable{NeedCoverFit} = 0;
+	foreach my $sig_id ( $$variable{Project}->signatures({Group=>1}) ) {
+		if ( openprint::Estimating::Stitching::form_needs_fit( $$variable{Project}, $sig_id ) ) {
+			$$variable{NeedCoverFit} = 1;
+			last;
 		} # end if
-	} else {
-
-#$openprint::log->warn("No Have Cover");
 	} # end if
 ) ?>
 <? if ( $$variable{'NeedCoverFit'} ) ?>
@@ -36,10 +29,7 @@
 	however the Cover will be approximately 1/16&quot; short of the finished size.
 	<p>
 		<label>Cover Fit</label>
-		<input type="radio" id="CoverFitExact" name="CoverFit" value="Exact" onclick="calc(this.form.name)" <? echo ( $$variable{'rdbGateFoldFit'} ne 'Short' ? 'checked="checked"' : '' ) ?> />
-		<label class="radio" for="CoverFitExact">Exact</label>
-		<input type="radio" id="CoverFitShort" name="CoverFit" value="Short" onclick="calc(this.form.name)" <? echo ( $$variable{'rdbGateFoldFit'} eq 'Short' ? 'checked="checked"' : '' ) ?> />
-		<label class="radio" for="CoverFitShort">Short</label>
+		<? echo ( radio( 'CoverFit', [ 'Exact', 'Exact', 'Short', 'Short' ], $$variable{rdbGateFoldFit}, { onclick=>'calc(this.form.name);' } ); ) ?>
 	</p>
 </div>
 <? endif ( $$variable{'NeedCoverFit'} ) ?>

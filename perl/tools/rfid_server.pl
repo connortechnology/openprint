@@ -24,7 +24,7 @@ use vars qw( $log $dbh );
 $log = new logger( 'debug' );
 my %CheckedOutSkids;
 my %Scanners;
-my $debug = 0;
+my $debug = 1;
 my $location_cache_size = 10;
 
 sub Checkout_Skid {

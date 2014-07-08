@@ -1,5 +1,6 @@
 <div id="Login">
 	<form id="LoginForm" name="LoginForm" method="post" action="<?SecureSiteURL?>/account/login.html">
+<? if ( ! $session{user_id} ) ?>
 		<div class="Register">
 			<fieldset><legend>Registration</legend>
 				<div class="content">
@@ -16,7 +17,8 @@
 				</p>
 			</fieldset>
 		</div>
-		<? echo ( include('/includes/_login_part.html'); ) ?>
+<? endif ( ! $session{user_id} ) ?>
+		<?include('/includes/_login_part.html')?>
 		<input type="hidden" name="btnFunction" value="Login" />
 	</form>
 </div>

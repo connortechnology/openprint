@@ -5,26 +5,26 @@ our @ISA = qw(openprint::Object);
 require openprint::User;
 
 use vars qw( $debug $table $serial %fields %find_fields %transforms %defaults );
-$debug = 1;
+$debug = 0;
 
 $table = 'usergroups';
 $serial= 'usergroups_id_seq';
 %fields = (
-	'id'		=>	'id',
-	'name'		=>	'name',
-	'duration'	=>	'duration',
-	'asset_id'	=>	'asset_id',
+	id			=>	'id',
+	name		=>	'name',
+	duration	=>	'duration',
+	asset_id	=>	'asset_id',
 );
 %find_fields = (
-	'user_id'	=>	'(SELECT user_id FROM users_in_usergroups WHERE usergroup_id=usergroups.id)',
+	user_id	=>	'(SELECT user_id FROM users_in_usergroups WHERE usergroup_id=usergroups.id)',
 );
 
 %transforms = (
-	'name' => [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
+	name	=> [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
 );
 %defaults = (
-	'duration'	=>	undef,
-	'asset_id'	=>	undef,
+	duration	=>	undef,
+	asset_id	=>	undef,
 );
 
 sub Users {

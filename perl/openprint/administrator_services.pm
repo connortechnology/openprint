@@ -49,10 +49,14 @@ sub edit {
 		$variable{'error'} .= $Service->save( \%openprint::param );
 		if ( ! $variable{'error'} ) {
 
+			# Please note that we don't do any deleting here.  We mayonlyhave the prices for 1 piee of equipment on screen, so just update the ones that are on screen.
+
 			my $ac = sql::start_transaction( $dbh );
 			foreach my $Price ( openprint::ServicePrice->find( service_id=>$$Service{id},
 ($param{equipment_id} ? ( equipment_id=>$param{equipment_id} ) : () ),
 						) ) {
+				next if ! exists $param{"price-$$Price{id}"};
+
 				$variable{error} .= $Price->save( {
 						#equipment_id	=>	$param{"equipment_id-$$Price{id}"},
 						period_start	=>	( Date::Calc::check_date( map { $param{"period_start-$$Price{id}_$_"} } ( 'year','month','day' ) ) ? sprintf('%.4d-%.2d-%.2d 00:00:00', map { $param{"period_start-$$Price{id}_$_"} } ( 'year','month','day' ) ) : undef ),
