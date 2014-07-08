@@ -161,8 +161,9 @@ sub process_request {
 			} # end if
 			$self->log(1, sprintf('%s : %s : dec %s', $date, $ip_addr, $tag_id )) if $debug;
 
-			my $Tag = new openprint::RFIDTag( $tag_id );
-			if ( ! $Tag->id() ) {
+			my $Tag = openprint::RFIDTag->find_One( id=>$tag_id );
+			if ( ! $Tag ) {
+				$Tag = new openprint::RFIDTag();
 				$self->log(1, sprintf('%s : going to allocate ', $ip_addr )) if $debug;
 				if ( $_ = $Tag->save( {id=>$tag_id} ) ) {
 					$self->log(1, sprintf('%s : %s : Error saving tag %s', $date, $ip_addr, $_ ) );
