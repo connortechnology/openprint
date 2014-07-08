@@ -96,8 +96,13 @@ sub _search {
 sub edit {
 	my $Event = $variable{Event} = new openprint::Event( $param{event_id} );
 	if ( $param{btnFunction} eq 'Copy' ) {
-		$variable{Event} = $variable{Event}->copy();
-		$variable{error} .= $variable{Event}->save();
+		if ( $Event->can_create() ) {
+			# Copy does a save
+			$variable{Event} = $variable{Event}->copy();
+			#$variable{error} .= $variable{Event}->save();
+		} else {
+			$variable{error} = 'You cannot copy this event.';
+		} # end if
 	} elsif ( $param{function} eq 'Destroy' ) {
 		if ( $Event->can_edit() ) {
 			$variable{error} .= $Event->destroy();
@@ -247,9 +252,13 @@ sub view {
 		} # end if
 		
 	} elsif ( $param{function} eq 'Copy' ) {
-		my $NewEvent = $variable{Event}->copy();
-		$variable{ExternalRedirect} = '/event/edit.html?event_id='.$$NewEvent{id};
-		return;
+		if ( $Event->can_create() ) {
+			my $NewEvent = $variable{Event}->copy();
+			$variable{ExternalRedirect} = '/event/edit.html?event_id='.$$NewEvent{id};
+			return;
+		} else {
+			$variable{error} = 'You cannot copy this event.';
+		} # end if
 	} elsif ( $param{function} eq 'Send' ) {
 		$variable{error} .= $Event->send_invitations();
 	} # end if function
