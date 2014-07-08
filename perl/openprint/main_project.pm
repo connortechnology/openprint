@@ -53,6 +53,7 @@ sub history {
 			$variable{'error'} .= openprint::print_project::try_to_delete_project( $log, $dbh, \%variable, $param{'ProjectIndex'} );
 		} # end if
 		$variable{ExternalRedirect} = '/main/project/history.html';
+		return;
 	} elsif ( $param{'btnFunction'} eq 'Reuse Project' ) {
 		foreach my $project_id ( ref $param{'project_id'} eq 'ARRAY' ? @{$param{'project_id'}} : $param{'project_id'} ) {
 			openprint::print_project::reuse_project( $project_id );
@@ -74,7 +75,7 @@ $log->debug("Reset $k");
 	ssi::setup_date_select( '/main/project/history.html', 'updated_on_start', -14 );
 	ssi::setup_date_select( '/main/project/history.html', 'updated_on_end', 0 );
 	if ( ! exists $session{'/main/project/history.html?ddmStatus'} ) {
-		$session{'/main/project/history.html?ddmStatus'} = join(',', ( 'uncalculated','Unordered','Pending Deposit','Ordered','In Prepress','Proofs Out','Waiting For Customer Approval','Waiting For QA Approval','Approved','Printed','Complete','Waiting For Pickup','Picked Up','Shipped' ) );
+		$session{'/main/project/history.html?ddmStatus'} = join(',', ( 'uncalculated','Unordered','Pending Deposit','Ordered','In Prepress','Proofs Out','Waiting For Customer Approval','Waiting For QA Approval','Approved','Printed','Complete','Waiting For Pickup','Picked Up','Shipped','Calculating' ) );
 	} # end if
 	if ( ! exists $session{'/main/project/history.html?company_id'} ) {
 		$session{'/main/project/history.html?company_id'} = $session{company_id};

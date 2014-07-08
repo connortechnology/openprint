@@ -13,7 +13,6 @@ require openprint::Location;
 
 $debug = 0;
 $table = 'rfidtags';
-$serial = 'rfidtags_id_seq';
 %fields = (
 	id			=>	'id',
 	location_id	=>	'location_id',
