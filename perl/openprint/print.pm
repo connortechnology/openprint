@@ -60,6 +60,7 @@ $log->debug("after continue $$variable{ExternalRedirect}");
 	} # end if
 
 	my $services = $Project->services();
+	my $Service = openprint::Project_Service->find_one( { project_id=>$$Project{id}, service_id=> $openprint::param{ServiceIndex} } );
 
 	$log->debug(" **** STARTING VIEW SERVICES FUNCTION * Project $project_index( $$Project{id} ) *** $openprint::session{'company_id'}");
 
@@ -77,6 +78,11 @@ $log->debug("after continue $$variable{ExternalRedirect}");
 				$log->debug("** Save Service in View Services Function **");
 
 				my $service_index = $openprint::param{'ServiceIndex'};
+				if ( ! $Service ) {
+					$$variable{error} .= $openprint::param{ServiceType} . ' service ' . $service_index . ' is no longer in project. It may have been removed while you were editing it.  Your changes may not have been saved.<br/>';
+					$$variable{ExternalRedirect} = '/main/project/view.html?project_id='.$project_index;
+					return;
+				} # end if
 				my $recalc = 0;	
 				my $Service = $Project->Service( $service_index );
 				my $ServiceType = $Service->ServiceType();
@@ -485,11 +491,6 @@ $log->debug("group $group_id");
 			} # end foreach qty_index
 		} # end foreach spec
 	
-		foreach my $spec ( 'txtPlateChangeQuantity' ) {
-			foreach my $qty_index ( $Project->quantity_indexes() ) {
-				openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $ss_id, $spec.$qty_index, $$param{$spec.'-'.$group_id} );
-			} # end foreach qty_index
-		} # en
 	} # end foreach
 
 	my $old_bindery_type = get_book_type( $project_index );

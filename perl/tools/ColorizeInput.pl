@@ -11,7 +11,7 @@
 # match of the tokens below. To add an error type match, add the
 # appropriate string to match below.
 #
-my @error_tokens = ('\[error\]');
+my @error_tokens = ('error\]');
 #my @error_tokens = ('error',"Error", "ERROR", "ERR");
 my @warning_tokens = ('warn',"Warning", "WARNING", "WARN");
 
@@ -95,10 +95,10 @@ sub colorize_string($) {
 	$_[0] =~ s/\[client [:\d\.]+\] //;
 	$_[0] =~ s/\[pid [\d\.]+\] //;
 	
-	return if $_[0] =~ /^\[debug\] mod_headers/;
-	return if $_[0] =~ /^\[debug\] mod_deflate/;
-	return if $_[0] =~ /^\[debug\] mod_auth/;
-	return if $_[0] =~ /^\[authz_core:debug\] mod_authz_core/;
+	return if $_[0] =~ /^debug\] mod_headers/;
+	return if $_[0] =~ /^debug\] mod_deflate/;
+	return if $_[0] =~ /^debug\] mod_auth/;
+	return if $_[0] =~ /^debug\] mod_authz_core/;
 
 	if ($_[0] =~ m/$errors/) {
 		return color_message("ERROR: " . $_[0], $error_color);

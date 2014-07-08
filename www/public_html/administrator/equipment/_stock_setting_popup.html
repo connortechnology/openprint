@@ -13,7 +13,7 @@
 			<select id="Group" name="Group" size="1" onchange="calc(this.form.name);">
 				<option value="">select</option>
 				<? echo (
-					return ssi::make_drop_down( [ map { $_->id(), $_->name() } @{$$variable{'Groups'}} ], $session{'/administrator/equipment/edit.html?Group'} );
+					make_drop_down( [ map { $_->id(), $_->name() } @{$$variable{'Groups'}} ], $session{'/administrator/equipment/edit.html?Group'} );
 					) ?>
 			</select>
 		</p>
@@ -23,7 +23,7 @@
 			<select id="Manufacturer" name="Manufacturer" size="1" onchange="calc(this.form.name);">
 				<option value="">select</option>
 				<? echo (
-					return ssi::make_drop_down( openprint::Manufacturer->dropdown('order'=>'lower(name)'), $session{'/administrator/equipment/edit.html?Manufacturer'} );
+					make_drop_down( openprint::Manufacturer->dropdown('order'=>'lower(name)'), $session{'/administrator/equipment/edit.html?Manufacturer'} );
 					) ?>
 			</select>
 		</p>
@@ -32,7 +32,7 @@
 			<select name="Brand" onchange="Brand_onChange(this,'');">
 				<option value="">select</option>
 				<? echo (
-					return ssi::make_drop_down( openprint::StockBrand->dropdown('order'=>'lower(name)'), $session{'/administrator/equipment/edit.html?Name'} );
+					make_drop_down( openprint::StockBrand->dropdown('order'=>'lower(name)'), $session{'/administrator/equipment/edit.html?Name'} );
 					) ?>
 			</select>
 		</p>
@@ -49,7 +49,7 @@
 							) ) {
 						$finishes{$Stock->finish()} = $Stock->finish_id();
 					} # end foreach
-					return ssi::make_drop_down( [map { $finishes{$_}, $_ } sort keys %finishes ], $session{'/administrator/equipment/edit.html?Finish'} );
+					make_drop_down( [map { $finishes{$_}, $_ } sort keys %finishes ], $session{'/administrator/equipment/edit.html?Finish'} );
 				) ?>
 			</select>
 		</p>
@@ -66,7 +66,7 @@
 							) ) {
 						$colours{$Stock->colour()} = $Stock->colour_id();
 					} # end foreach
-					return ssi::make_drop_down( [map { $colours{$_}, $_ } sort keys %colours ], $session{'/administrator/equipment/edit.html?Colour'} );
+					make_drop_down( [map { $colours{$_}, $_ } sort keys %colours ], $session{'/administrator/equipment/edit.html?Colour'} );
 				) ?>
 			</select>
 		</p>
@@ -84,7 +84,7 @@
 							) ) {
 						$colours{$Stock->weight()} = $Stock->weight_id();
 					} # end foreach
-					return ssi::make_drop_down( [map { $colours{$_}, $_ } sort keys %colours ], $session{'/administrator/equipment/edit.html?Colour'} );
+					make_drop_down( [map { $colours{$_}, $_ } sort keys %colours ], $session{'/administrator/equipment/edit.html?Colour'} );
 				) ?>
 			</select>
 		</p>
@@ -103,7 +103,7 @@
 							) ) {
 						$materials{$Stock->material()} = $Stock->material_id();
 					} # end foreach
-					return ssi::make_drop_down( [map { $materials{$_}, $_ } sort keys %materials ], $session{'/administrator/equipment/edit.html?material_id'} );
+					make_drop_down( [map { $materials{$_}, $_ } sort keys %materials ], $session{'/administrator/equipment/edit.html?material_id'} );
 				) ?>
 			</select>
 		</p>
@@ -118,9 +118,9 @@
 		</p>
 	</fieldset>
 	<br/>
-	<div id="Stocks"><? echo ( include('_stocks.html'); ) ?></div>
+	<div id="Stocks"><?include('_stocks.html')?></div>
 	<input type="hidden" name="btnFunction"/>
 </form>
 <p class="buttons">
-<? echo ( ssi::button( 'Close', { 'onclick'=>'popupWin.destroy();' } );) ?>
+<? echo ( button( 'Close', { onclick=>'popupWin.destroy();' } );) ?>
 </p>

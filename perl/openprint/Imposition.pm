@@ -4,6 +4,7 @@ use Carp qw( cluck );
 package openprint::Imposition;
 require Math::Round;
 use vars qw( $AUTOLOAD );
+use constant DEBUG => 0;
 
 my @fields = (
 	'start_imposition','start_columns','start_rows',
@@ -34,6 +35,8 @@ my @fields = (
 	'sides',
 	'Project',
 	'printing_type',
+	'Folds', 'Fold',
+	'runspeed',
 );
 
 sub new {
@@ -348,7 +351,7 @@ if ( 0 ) {
 	} else {
 		$$self{rotate_sheet} = $$specs{"RotateSheet$qty_index"};
 	} # end if
-$self->display('After load');
+$self->display('After load') if DEBUG;
 	return $self;
 } # end sub load
 

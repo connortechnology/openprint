@@ -527,6 +527,9 @@ sub signature_calc {
 		$folding_specs = openprint::service::get_specs_ref( $Project, $$services{'Folding'}[0] ) if ! $folding_specs;
 		$Folder = new openprint::Equipment( $$folding_specs{"ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} ) if $$folding_specs{"ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"};
 		$Folder = undef if $Folder and ! $Folder->id();
+		if ( $$Imposition{Folds} ) {
+			@folding_impositions = @{$$Imposition{Folds}};
+		} else {
 		foreach my $fold_index ( 1 .. 4 ) {
 			next if ! $$folding_specs{"FoldQty-$$sig_specs{SignatureIndex}-$qty_index-$fold_index"};
 			next if ! $$folding_specs{"FoldType-$$sig_specs{SignatureIndex}-$qty_index-$fold_index"};
@@ -537,6 +540,7 @@ sub signature_calc {
 			$folding_imposition->quantity( $$folding_specs{"FoldQty-$$sig_specs{SignatureIndex}-$qty_index-$fold_index"} );
 			push @folding_impositions, $folding_imposition;
 			$folding_imposition->display('Fold ' . $$folding_specs{"FoldType-$$sig_specs{SignatureIndex}-$qty_index-$fold_index"} ) if DEBUG;
+		} # end if
 		} # end foreach fold_index
 	} # end if
 
@@ -1040,7 +1044,7 @@ sub calc {
 					$Cut_Stocks{ $Paper->id_string() } = { Stock=>$Paper, quantity=>$$sig_specs{"StockQuantity$qty_index"} };
 				} # end if
 			} # end if
-$openprint::log->debug("Paper: " . $Paper->to_string() );
+$openprint::log->debug("Paper: " . $Paper->to_string() ) if DEBUG;
 
 			# Folding
 			if ( 0 and $$services{'Folding'} and @{$$services{'Folding'}} ) {

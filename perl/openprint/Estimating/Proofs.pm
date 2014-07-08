@@ -31,6 +31,7 @@ my @variables = (
 		'txtPrice',
 		'CustomProofSpecs',
 		'RequireColourProofs',
+		'alert',
 		);
 
 sub variables {
@@ -647,7 +648,7 @@ sub summary {
 							my $desc = sprintf('</td><td class="type">%s', $Service->description() );
 							$proof_totals{$desc} += $$specs{"txtProofQuantity-$signature_index-$proof_index-$qty_index"};
 						} else {
-							my $desc = sprintf('%s&quot; x %s&quot;</td><td class="type">%s', @$specs{
+							my $desc = sprintf('%s&quot;x%s&quot;</td><td class="type">%s', @$specs{
 									"txtProofWidth-$signature_index-$proof_index-$qty_index",
 									"txtProofHeight-$signature_index-$proof_index-$qty_index"}, $Service->description() );
 							$proof_totals{$desc} += $$specs{"txtProofQuantity-$signature_index-$proof_index-$qty_index"};
@@ -660,7 +661,7 @@ sub summary {
 			return '';
 		} # end if
 		my $summary = '<table class="ProofsSummary">';
-		foreach my $k ( keys %proof_totals ) {
+		foreach my $k ( sort keys %proof_totals ) {
 			next if ! $proof_totals{$k};
 			$summary .= '<tr><td class="quantity">'.$proof_totals{$k}.'</td><td class="size">'.$k.'</td></tr>';
 		} # end foreach
@@ -686,7 +687,7 @@ sub signature_summary {
 						my $desc = sprintf('</td><td class="type">%s', $Service->description() );
 						$proof_totals{$desc} += $$specs{"txtProofQuantity-$signature_index-$proof_index-$qty_index"};
 					} else {
-						my $desc = sprintf('%s&quot; x %s&quot;</td><td class="type">%s', @$specs{
+						my $desc = sprintf('%s&quot;x%s&quot;</td><td class="type">%s', @$specs{
 								"txtProofWidth-$signature_index-$proof_index-$qty_index",
 								"txtProofHeight-$signature_index-$proof_index-$qty_index"}, $Service->description() );
 						$proof_totals{$desc} += $$specs{"txtProofQuantity-$signature_index-$proof_index-$qty_index"};

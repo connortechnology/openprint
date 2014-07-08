@@ -64,9 +64,9 @@
 								input( type=>'float', name=>"txtProofWidth-$signature_index-$proof_index-$qty_index", value=>$proof_width, onkeyup=>'calc(this.form.name);', step=>'0.0001' ),
 								input( type=>'float', name=>"txtProofHeight-$signature_index-$proof_index-$qty_index", value=>$proof_height, onkeyup=>'calc(this.form.name);', step=>'0.0001' ),
  $ddmProofType,
-								input( type=>'float', name=>"MRPrice-$signature_index-$proof_index-$qty_index", readonly=>'readonly', onfocus=>'this.blur();' ),
-								input( type=>'float', name=>"ServicePrice-${signature_index}-$proof_index-$qty_index", readonly=>'readonly', onfocus=>'this.blur();', step=>'0.01' ),
-								input( type=>'float', name=>"txtProofUnitPrice-${signature_index}-$proof_index-$qty_index", readonly=>'readonly', onfocus=>'this.blur();', step=>'0.01' ),
+								input( type=>'float', name=>"MRPrice-$signature_index-$proof_index-$qty_index", readonly=>'readonly', onfocus=>'this.blur();', decimalplaces=>2 ),
+								input( type=>'float', name=>"ServicePrice-${signature_index}-$proof_index-$qty_index", readonly=>'readonly', onfocus=>'this.blur();', step=>'0.01', decimalplaces=>2 ),
+								input( type=>'float', name=>"txtProofUnitPrice-${signature_index}-$proof_index-$qty_index", readonly=>'readonly', onfocus=>'this.blur();', step=>'0.01', decimalplaces=>2 ),
 								write_override( 'chkOverride-'.$signature_index.'-'.$proof_index.'-'.$qty_index, 
 									$$variable{'chkOverride-'.$signature_index.'-'.$proof_index.'-'.$qty_index},
 									'', "calc('f1');" ),
@@ -102,7 +102,7 @@
 					%3$s
 				</fieldset>
 					`, 
-					input( type=>'float', name=>"txtPrice$qty_index", value=>$$variable{"txtPrice$qty_index"}, readonly=>'readonly', step=>'0.01' ),
+					input( type=>'float', name=>"txtPrice$qty_index", value=>$$variable{"txtPrice$qty_index"}, readonly=>'readonly', step=>'0.01', decimalplaces=>2 ),
 					$$variable{CurrencySymbol},
 					input( type=>'hidden', name=>'txtQuantity'.$qty_index, value=>$$variable{"txtQuantity$qty_index"} ), 
 					sets::isin($session{'user_type'}, ['A','E'] ) ? 

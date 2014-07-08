@@ -208,7 +208,7 @@
 				foreach my $service_id ( @{$$services{$ServiceType->name()}} ) {
 					my $Service = $Project->Service( $service_id );
 					my $specs = $Service->specs();
-$log->debug(" Service: " . $Service->ServiceType()->name() );
+#$log->debug(" Service: " . $Service->ServiceType()->name() );
 
 					my @summaries;
 					my $summary = openprint::service::summary( $Project->id(),$service_id );

@@ -288,9 +288,15 @@
 		<label>Plate changes</label>
 		<? echo ( 
 			my $html;
+			my $services = $$variable{Project}->services();
+			my $project_specs = openprint::service::get_specs_ref( $$variable{Project}, $$services{''}[0] );
+			my $group_plate_changes = $$project_specs{"txtPlateChangeQuantity-$$variable{Group}"};
+
 			foreach my $qty_index ( $$variable{Project}->quantity_indexes() ) {
 				$html .= '<span class="'.$$variable{'Columns'}.'Columns">';
+				
 				$html .= input( name=>"txtPlateChangeQuantity$qty_index", value=>$$variable{'txtPlateChangeQuantity'.$qty_index}, type=>'integer', onkeyup=>'calc(this.form.name);' );
+				$html .=  ( $group_plate_changes ? ' + ' . $group_plate_changes : '' );
 				$html .= '</span>';
 			} # end foreach qty_index
 			return $html;

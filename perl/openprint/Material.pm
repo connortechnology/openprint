@@ -190,5 +190,9 @@ sub Category {
 	return new openprint::MaterialCategory( $_[0]{'category_id'} );
 }
 
+sub minimum_order {
+	return undef;
+}
+
 1;
 __END__

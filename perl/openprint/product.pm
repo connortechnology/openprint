@@ -24,11 +24,11 @@ sub view {
 } # end sub view
 
 sub edit {
-	my $Product = new openprint::Product( $param{'product_id'} );
+	my $Product = $variable{Product} = new openprint::Product( $param{'product_id'} );
 
 	if ( $param{'btnFunction'} eq 'Save' ) {
 		if ( (! $param{'product_id'}) and openprint::Product->find( 'name lc' => lc openprint::Product->transform('name',$param{'name'}) ) ) {
-			$variable{'error'} = "A product with name $param{'name'} already exists.  Please choose another name.";
+			$variable{error} = "A product with name $param{'name'} already exists.  Please choose another name.";
 			return;
 		} # end if
 		foreach my $field ( 'category', 'manufacturer' ) {
@@ -150,7 +150,7 @@ $openprint::log->debug( "Product? $name :" . $products{$name} );
 			sql::end_transaction( $dbh, $ac );
 		} # end if
 	} # end if
-	$variable{'Product'} = $Product;
+	$variable{Product} = $Product;
 } # end sub edit
 
 sub categories {
