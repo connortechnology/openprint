@@ -2837,6 +2837,9 @@ sub calculate_impositions {
 	} # end if
 
 	foreach my $strid ( $$sig_specs{"chkOverridePress$qty_index"} eq 'Y' ? ( $$sig_specs{"ddmPress$qty_index"} ) : keys %{$impositions} ) {
+		if ( $$project{"ProjectSpecs-$$sig_specs{Group}"} and ( $$project{"ProjectSpecs-$$sig_specs{Group}"} ne $strid ) ) {
+			next;
+		} # end if
 		my $Press = openprint::Equipment->find_one( strid=>$strid );
 
 		if ( ! $Press ) {

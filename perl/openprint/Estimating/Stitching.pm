@@ -47,8 +47,8 @@ my %variables = (
 		'OverrideImposition1'=>['save'], 'OverrideImposition2'=>['save'], 'OverrideImposition3'=>['save'],
 		'Imposition1'=>['save','output'], 'Imposition2'=>['save','output'], 'Imposition3'=>['save','output'],
 		'ddmEquipment1'=>['save','output'], 'ddmEquipment2'=>['save','output'], 'ddmEquipment3'=>['save','output'],
-		'OverridePockets1'=>['save'], 'OverridePockets2'=>['save'], 'OverridePockets3'=>['save'],
 		'chkOverrideEquipment1'=>['save'], 'chkOverrideEquipment2'=>['save'], 'chkOverrideEquipment3'=>['save'],
+		'OverridePockets1'=>['save'], 'OverridePockets2'=>['save'], 'OverridePockets3'=>['save'],
 		'rdbGateFoldFit'=>['save'], 'CoverFit'=>['save'],
 		'txtUnitPrice1'=>['output'], 'txtUnitPrice2'=>['output'], 'txtUnitPrice3'=>['output'],
 		'OverridePrice1'=>['save'], 'OverridePrice2'=>['save'], 'OverridePrice3'=>['save'],
@@ -92,10 +92,14 @@ sub outputs {
 	return @v;
 }
 sub no_outputs {
+	my ( $p_id, $s_id, $specs, $param ) = @_;
+	my  $Project = new openprint::Project( $p_id );
 	my @v;
 	foreach my $k ( keys %variables ) {
 		push @v, $k, if ! sets::isin( 'output', $variables{$k} );
 	} # end foreach;
+	push @v, map { $$specs{"OverrideImposition$_"} ? $$specs{"Imposition$_"} : () } $Project->quantity_indexes();
+	push @v, map { $$specs{"chkOverrideEquipment$_"} ? $$specs{"ddmEquipment$_"} : () } $Project->quantity_indexes();
 	return @v;
 }
 
