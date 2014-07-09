@@ -61,15 +61,15 @@ sub can_view {
 		} 
 	} 
 	if ( $_[0]{usergroup_ids} and @{$_[0]{usergroup_ids}} ) {
-$openprint::log->debug("CHecking usergroups " . ( $_[0]{usergroup_ids} ? join(', ', @{ $_[0]{usergroup_ids} } ) : 'none' ) );
+#$openprint::log->debug("CHecking usergroups " . ( $_[0]{usergroup_ids} ? join(', ', @{ $_[0]{usergroup_ids} } ) : 'none' ) );
 		return 0 if ! $openprint::session{user_id};
 		my $User = new openprint::User( $openprint::session{user_id} );
-$openprint::log->debug( "User in in " . join(',', $User->usergroup_ids()) );
+#$openprint::log->debug( "User in in " . join(',', $User->usergroup_ids()) );
 		my @intersection = sets::intersection( @{$_[0]{usergroup_ids}}, $User->usergroup_ids() );
-$openprint::log->debug( "Inserection: (" . join(',', @intersection ) . ')' . @intersection);
+#$openprint::log->debug( "Inserection: (" . join(',', @intersection ) . ')' . @intersection);
 		return 0 if ! @intersection;
 	} else {
-$openprint::log->debug("Not CHecking usergroups " );
+#$openprint::log->debug("Not CHecking usergroups " );
 
 	}
 	return 1; 

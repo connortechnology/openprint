@@ -142,6 +142,7 @@ $openprint::log->debug("Looking at $iface. " . $iface->address . ', subnet: ' . 
 
 sub destroy {
 	my $error;
+	require openprint::Log;
 	foreach my $Log ( openprint::Log->find('host_id'=>$_[0]{'id'}) ) {
 		$error .= $Log->destroy();
 		return $error if $error;

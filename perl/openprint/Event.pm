@@ -144,9 +144,12 @@ sub Photos {
 sub Album {
 	return new openprint::Photo_Album( $_[0]{'album_id'} );
 } # end sub Album
+sub can_create {
+	return 0 if ! $_[0]{id};
+} # end sub can_create
 
 sub can_edit {
-	return 1 if  ! $_[0]{id};
+	return 1 if ! $_[0]{id};
 	return 1 if $openprint::session{user_id} == $_[0]{created_by};
 	return 1 if $openprint::session{user_type} eq 'A';
 
