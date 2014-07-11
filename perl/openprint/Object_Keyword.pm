@@ -24,11 +24,5 @@ sub Keyword {
 	return new openprint::Keyword( $_[0]{'keyword_id'} );
 } # end sub Keyword
 
-sub Object {
-	$_ =	$_[0]->object_type()->new( $_[0]{'object_id'} );
-$openprint::log->debug( "Returning object of type " . ref $_ );
-	return $_;
-} # end sub Object
-
 1;
 __END__

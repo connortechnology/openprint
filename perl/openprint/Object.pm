@@ -1135,21 +1135,35 @@ sub Keywords {
 sub keywords {
 	my $object_type = ref $_[0];
 	if ( @_ > 1 and ( $_[1] ne $_[0]->keywords() ) ) {
-		foreach my $word ( split( ' ', $_[1] ) ) {
+		my @OKs = openprint::Object_Keyword->find( object_type=>$object_type, object_id=>$_[0]{id} );
+		my %keywords = map { $_->Keyword()->word(), $_ } @OKs;
+		my @new_keywords = split(/\s/, $_[1]);
+		my %new_keywords = map { $_, $_ } @new_keywords;
+
+		foreach my $word ( @new_keywords ) {
 			$word = openprint::Keyword->transform('word', $word);
-			my $Keyword = openprint::Keyword->find_one('word lc'=>lc $word);
-			if ( ! $Keyword ) {
-				$Keyword = new openprint::Keyword();
-				$Keyword->save({ word=>$word });
-			} # end if ! Keyword
 
-			my $OK = openprint::Object_Keyword->find_one( keyword_id=>$Keyword->id(), object_type=>$object_type, object_id=>$_[0]{id} );
-			if ( ! $OK ) {
-				$OK = new openprint::Object_Keyword();
+			if ( ! $keywords{$word} ) {
+				my $Keyword = openprint::Keyword->find_one('word lc'=>lc $word);
+				if ( ! $Keyword ) {
+					$Keyword = new openprint::Keyword();
+					$Keyword->save({ word=>$word });
+				} # end if ! Keyword
+				my $OK = new openprint::Object_Keyword();
 				$OK->save({ keyword_id=>$Keyword->id(), object_type=>$object_type, object_id=>$_[0]{id} });
-
+				$new_keywords{$word} = $Keyword;
+			} else {
+				$new_keywords{$word} = $keywords{$word}->Keyword();
 			} # end if
 		} # end foreach
+
+		foreach my $OK ( @OKs ) {
+			my $word = $OK->Keyword()->word();
+			if ( ! $new_keywords{$word} ) {
+				$OK->delete();
+			} # end if
+		} # end foreach
+			
 		$_[0]{Keywords} = [ openprint::Object_Keyword->find( object_type=>$object_type, object_id=>$_[0]{id} ) ];
 		$_[0]{keywords} = undef;
 	} # end if
