@@ -6313,6 +6313,9 @@ sub summary {
 				} # end if
 			} # end if
 		} # end if
+		if ( $$specs{'MatchGrain'.$qty_index} ne 'Y' ) {
+			$html .= '<br/>Do not match grain<br/>';
+		} # end if
 
 		return $html;
 	} else { # ! qty_index
