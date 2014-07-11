@@ -47,8 +47,8 @@ my %variables = (
 		'OverrideImposition1'=>['save'], 'OverrideImposition2'=>['save'], 'OverrideImposition3'=>['save'],
 		'Imposition1'=>['save','output'], 'Imposition2'=>['save','output'], 'Imposition3'=>['save','output'],
 		'ddmEquipment1'=>['save','output'], 'ddmEquipment2'=>['save','output'], 'ddmEquipment3'=>['save','output'],
-		'OverridePockets1'=>['save'], 'OverridePockets2'=>['save'], 'OverridePockets3'=>['save'],
 		'chkOverrideEquipment1'=>['save'], 'chkOverrideEquipment2'=>['save'], 'chkOverrideEquipment3'=>['save'],
+		'OverridePockets1'=>['save'], 'OverridePockets2'=>['save'], 'OverridePockets3'=>['save'],
 		'rdbGateFoldFit'=>['save'], 'CoverFit'=>['save'],
 		'txtUnitPrice1'=>['output'], 'txtUnitPrice2'=>['output'], 'txtUnitPrice3'=>['output'],
 		'OverridePrice1'=>['save'], 'OverridePrice2'=>['save'], 'OverridePrice3'=>['save'],
@@ -75,8 +75,8 @@ sub variables {
 	foreach my $k ( keys %variables ) {
 		push @v, $k, if sets::isin( 'save', $variables{$k} );
 	} # end foreach;
-	if ( (defined $$specs{'txtInsertQuantity'} ) and int $$specs{'txtInsertQuantity'} ) {
-		foreach my $insert_id ( 1 .. int $$specs{'txtInsertQuantity'} ) {
+	if ( (defined $$specs{txtInsertQuantity} ) and int $$specs{txtInsertQuantity} ) {
+		foreach my $insert_id ( 1 .. int $$specs{txtInsertQuantity} ) {
 			push @v, 'txtInsertPage1-'.$insert_id, 'txtInsertPage2-'.$insert_id;
 		} # end foreach
 	} # end if
@@ -92,10 +92,14 @@ sub outputs {
 	return @v;
 }
 sub no_outputs {
+	my ( $p_id, $s_id, $specs, $param ) = @_;
+	my $Project = new openprint::Project( $p_id );
 	my @v;
 	foreach my $k ( keys %variables ) {
 		push @v, $k, if ! sets::isin( 'output', $variables{$k} );
 	} # end foreach;
+	push @v, map { $$specs{"OverrideImposition$_"} eq 'Y' ? "Imposition$_" : () } $Project->quantity_indexes();
+	push @v, map { $$specs{"chkOverrideEquipment$_"} eq 'Y' ? "ddmEquipment$_" : () } $Project->quantity_indexes();
 	return @v;
 }
 
@@ -155,6 +159,7 @@ sub get_imposition {
 sub signature_calc {
 	my ( $Project, $service_index, $specs, $qty_index, $folding_specs, $sig_specs, $Impositions, $calc_hash ) = @_;
 
+$openprint::log->debug("# of impositions in Stitching::signature_calc: " . @{$Impositions} );
 	
 	my %results;
 	my $services = $Project->services();
@@ -221,6 +226,8 @@ $I->display('In Stitching:') if DEBUG;
 		my $form = $$sig_specs{SignatureIndex};
 		push @printed_impositions, $I->imposition();
 if ( ! $$I{Folds} ) {
+	$openprint::log->debug("No folds in imposition, generating");
+$I->display("No Folds");
 		my %pages;
 		my $sig_pages = $I->pages();
 
@@ -310,6 +317,10 @@ $openprint::log->debug("Ignoring folding due to override");
 		} # end if
 } else {
 		foreach my $Fold ( @{$$I{Folds}} ) {
+			if ( $Fold->imposition() < $imposition ) {
+				$imposition = $Fold->imposition();
+			}
+
 			$$specs{'txtSignatureQty'.$Fold->pages().'Page-'.$qty_index} += $Fold->quantity();
 			$$specs{"txtPockets$qty_index"} += $Fold->quantity();
 		} # end foreach Fold
@@ -320,18 +331,18 @@ $openprint::log->debug("Ignoring folding due to override");
 			if ( ( ( $$folding_specs{"chkOverrideEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} ne 'Y' or $$folding_specs{"ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} ) and $$I{'FoldingImposition'} and $$I{'FoldingImposition'} % 2 ) ) {
 				$imposition = 1;
 				$I->display("Setting imposition to 1 due to foldingositions") if DEBUG;
-$results{Breakdown} .= "Setting imposition to 1 due to foldingositions<br/>";
-			} elsif ($$I{'imposition'} % 2 ) {
+				$results{Breakdown} .= "Setting imposition to 1 due to foldingositions<br/>";
+			} elsif ($$I{imposition} % 2 ) {
 				$I->display("Setting imposition to 1 due to odd impositions") if DEBUG;
-$results{Breakdown} .= "Setting imposition to 1 due to odd impositions<br/>";
+				$results{Breakdown} .= "Setting imposition to 1 due to odd impositions<br/>";
 				$imposition = 1;
-			} elsif ($$I{'image_orientation'} eq 'Vertical' and $$I{'rows'} % 2 ) {
+			} elsif ($$I{image_orientation} eq 'Vertical' and $$I{'rows'} % 2 ) {
 				$I->display("Setting imposition to 1 due to Vertial and odd rows") if DEBUG;
-$results{Breakdown} .= "Setting imposition to 1 due to vertical and odd rows<br/>";
+				$results{Breakdown} .= "Setting imposition to 1 due to vertical and odd rows<br/>";
 				$imposition = 1;
-			} elsif ($$I{'image_orientation'} eq 'Horizontal' and $$I{'columns'} % 2 ) {
-				$I->display("Setting imposition to 1 due to Horizal and odd cols") if DEBUG;
-$results{Breakdown} .= "Setting imposition to 1 due to HOrizontal and odd cols<br/>";
+			} elsif ( ($$I{image_orientation} eq 'Horizontal' ) and ( $$I{columns} % 2 ) ) {
+				$I->display("Setting imposition to 1 due to Horizal and odd cols") if DEBUG or 1;
+				$results{Breakdown} .= "Setting imposition to 1 due to Horizontal and odd cols<br/>";
 				$imposition = 1;
 			} elsif (sets::isin( $$I{'runstyle'}, ['Work & Turn','Work & Tumble'] ) and ($$I{'imposition'}%4) ) {
 				$I->display("Setting imposition to 1 due to W&T impo not % 4 ") if DEBUG;
@@ -344,7 +355,7 @@ $results{Breakdown} .= "Setting imposition to 1 due to HOrizontal and odd cols<b
 #$openprint::log->debug("Imp: $imposition");
 
 #$openprint::log->debug( "Stitching Impo: " . $imposition ) if DEBUG;
-	if ( ( defined $$specs{'OverrideImposition'.$qty_index} eq 'Y' ) and ( $$specs{'OverrideImposition'.$qty_index} eq 'Y' ) ) {
+	if ( ( defined $$specs{'OverrideImposition'.$qty_index} ) and ( $$specs{'OverrideImposition'.$qty_index} eq 'Y' ) ) {
 		if ( $imposition < $$specs{'Imposition'.$qty_index} ) {
 			$results{'alert'} .= "Can't stitch $$specs{'Imposition'.$qty_index} out";
 			foreach my $I ( @$Impositions ) {
@@ -361,7 +372,7 @@ $results{Breakdown} .= "Setting imposition to 1 due to HOrizontal and odd cols<b
 					$results{'alert'} .= ' horizontal and cols not multiple of 2out<br/>';
 				} # end if
 			} # end foreach
-			$results{'Status'} = 'uncalculated';
+			$results{Status} = 'uncalculated';
 			return \%results;
 		} # end if
 	} # end if
@@ -577,17 +588,17 @@ sub calc {
 #$openprint::log->debug(sprintf('%d %s %s %d %dx%d %s', $imposition, @$sig_specs{'txtSignatureType','ddmRunStyle'.$qty_index,'txtImposition'.$qty_index,'hdnImpositionColumns'.$qty_index,'hdnImpositionRows'.$qty_index,'hdnImageOrientation'.$qty_index} ) ) if DEBUG;
 			# According to Brendan, both cover and interior need to be 2out
 			#next if $$sig_specs{'txtSignatureType'} eq 'Cover Pages';
-			if ( $$sig_specs{'txtImposition'.$qty_index}%2 ) {
-				$openprint::log->warn("Setting imposition to 1 : Imp:" . $$sig_specs{'txtImposition'.$qty_index} . ' imposition'  );
+			if ( $$Imposition{imposition}%2 ) {
+				$Imposition->display( "Setting imposition to 1 : Imp:" . $$sig_specs{'txtImposition'.$qty_index} . ' imposition'  );
 				$imposition = 1 
-			} elsif ($$sig_specs{'hdnImageOrientation'.$qty_index} eq 'Vertical' and $$sig_specs{'hdnImpositionRows'.$qty_index} % 2 ) {
-				$openprint::log->warn("Setting imposition to 1 : Imp:" . $$sig_specs{'txtImposition'.$qty_index} . ' vertical and odd rows' );
+			} elsif ($$Imposition{image_orientation} eq 'Vertical' and ( $$Imposition{rows} % 2 ) ) {
+				$Imposition->display( "Setting imposition to 1 : Imp:" . $$sig_specs{'txtImposition'.$qty_index} . ' vertical and odd rows' );
 				$imposition = 1 
-			} elsif ($$sig_specs{'hdnImageOrientation'.$qty_index} eq 'Horizontal' and $$sig_specs{'hdnImpositionColumns'.$qty_index} % 2 ) {
-				$openprint::log->warn("Setting imposition to 1 : Imp:" . $$sig_specs{'txtImposition'.$qty_index} . ' horizontal and odd rows' );
+			} elsif ($$Imposition{image_orientation} eq 'Horizontal' and ( $$Imposition{columns} % 2 ) ) {
+				$Imposition->display("Setting imposition to 1 : Imp:" . $$sig_specs{'txtImposition'.$qty_index} . ' horizontal and odd columns' );
 				$imposition = 1 
-			} elsif ( $$sig_specs{'txtImposition'.$qty_index} % 4 and sets::isin( $$sig_specs{'ddmRunStyle'.$qty_index}, ['Work & Turn','Work & Tumble'] ) ) {
-				$openprint::log->warn("Setting imposition to 1 : Imp:" . $$sig_specs{'txtImposition'.$qty_index} . ' ' . $$sig_specs{'ddmRunStyle'.$qty_index} );
+			} elsif ( $$Imposition{imposition} % 4 and sets::isin( $$Imposition{runstyle}, ['Work & Turn','Work & Tumble'] ) ) {
+				$Imposition->display("Setting imposition to 1 : Imp:" . $$sig_specs{'txtImposition'.$qty_index} . ' ' . $$Imposition{runstyle} );
 				$imposition = 1 
 			} # end if
 			last if $imposition == 1;
@@ -721,7 +732,6 @@ $openprint::log->debug(" fold qty * pages($pages) == sig_pages($sig_pages) foldQ
 					} # end foreach
 				} # end if
 			} # end foreach signature
-			$$specs{"Imposition$qty_index"} = $$specs{"folding_imposition$qty_index"} if defined $$specs{"folding_imposition$qty_index"} and ( $$specs{"Imposition$qty_index"} > $$specs{"folding_imposition$qty_index"} );
 		} else { # Override Pockets
 			foreach my $pages ( 4, 8, 12, 16, 20, 24, 32, 36, 40, 48, 64, 96 ) {
 				$$specs{"txtPockets$qty_index"} += $$specs{'txtSignatureQty'.$pages.'Page-'.$qty_index} if $$specs{'txtSignatureQty'.$pages.'Page-'.$qty_index};
@@ -768,17 +778,25 @@ $openprint::log->debug(" fold qty * pages($pages) == sig_pages($sig_pages) foldQ
 
 		if ( 1 > $$specs{"txtPockets$qty_index"} ) {
 			$$specs{'Status'} = 'uncalculated';
-			$$specs{'alert'} .= 'We are unable to determine how many pockets your project requires.  Please contact us.<br/>';
+			$$specs{'alert'} .= 'We are unable to determine how many pockets your project requires for qty : ' . $qty_index.'.  Please contact us.<br/>';
 			if ( $$specs{'OverrideImposition'.$qty_index} ne 'Y' ) {
 				$$specs{'Imposition'.$qty_index} = '';
 			} # end if
-			return $$specs{'Status'};
+			next;
 		} # end if
 		$$specs{'hdnBreakdown'.$qty_index} .= qq`# of Pockets needed: $$specs{"txtPockets$qty_index"}<br/>`;
 
 		my $bestEquipment;
 		my $bestPrice;
 
+		if ( ( defined $$specs{"OverrideImposition$qty_index"} ) and ( $$specs{"OverrideImposition$qty_index"} eq 'Y' )) {
+
+			if ( defined $$specs{"folding_imposition$qty_index"} and ( $$specs{"Imposition$qty_index"} > $$specs{"folding_imposition$qty_index"} ) ) {
+				$$specs{alert} .= 'Overriden imposition is larger than the folded imposition: '.$$specs{"folding_imposition$qty_index"}.'<br/>';
+				$$specs{'Status'} = 'uncalculated';
+				next;
+			}
+		} # end if
 
 		my @equipment = ();
 		if ( ( defined $$specs{"chkOverrideEquipment$qty_index"} ) and ( $$specs{"chkOverrideEquipment$qty_index"} eq 'Y' ) ) {
@@ -822,11 +840,16 @@ $openprint::log->debug(" fold qty * pages($pages) == sig_pages($sig_pages) foldQ
 				next;
             } # end if
 
-
 			my $max_imp = $Equipment->specification("Maximum $$ServiceType{name} Imposition");
-			if ( $max_imp and ( $max_imp < $$specs{"Imposition$qty_index"} ) ) {
-				$$specs{"Imposition$qty_index"} = $max_imp;
+			if ( ! defined $$specs{"OverrideImposition$qty_index"} ) {
+				$$specs{"Imposition$qty_index"} = $$specs{"folding_imposition$qty_index"} if defined $$specs{"folding_imposition$qty_index"} and ( $$specs{"Imposition$qty_index"} > $$specs{"folding_imposition$qty_index"} );
+				if ( $max_imp and ( $max_imp < $$specs{"Imposition$qty_index"} ) ) {
+					$$specs{"Imposition$qty_index"} = $max_imp;
+				} # end if
+			} else {
+				next if $max_imp and $max_imp < $$specs{"Imposition$qty_index"};
 			} # end if
+
 				
 			if ( $Equipment->specification('Maximum Spine Length') and ( $$specs{'Height'} > $Equipment->specification('Maximum Spine Length', $$specs{'Imposition'.$qty_index} ) ) ) {
 				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Spine Too big. Spine: %s, Maximum: %s<br/>', $$specs{'Height'}, $Equipment->specification('Maximum Spine Length') );
