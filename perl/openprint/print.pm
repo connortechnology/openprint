@@ -495,7 +495,7 @@ $log->debug("group $group_id");
 	
 	} # end foreach
 
-	my $old_bindery_type = get_book_type( $project_index );
+	my $old_bindery_type = get_book_type( $Project );
 	if ( $old_bindery_type and ($$param{'rdbTemplateType'} ne $old_bindery_type) and $$services{$old_bindery_type} ) {
 		foreach ( @{$$services{$old_bindery_type}} ) {
 			openprint::print_project::delete_service( $project_index, $_ );
