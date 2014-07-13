@@ -1127,7 +1127,11 @@ sub unlock {
 
 sub Keywords {
 	if ( ! $_[0]{Keywords} ) {
-		$_[0]{Keywords} = [ openprint::Object_Keyword->find( object_type=> ref $_[0], object_id=>$_[0]->id() ) ];
+		if ( $$_[0]{id} ) {
+			$_[0]{Keywords} = [ openprint::Object_Keyword->find( object_type=> ref $_[0], object_id=>$_[0]->id() ) ];
+		} else {
+			$_[0]{Keywords} = [];
+		} # end if
 	} # end if
 	return @{$_[0]{Keywords}};
 } # end sub Keywords

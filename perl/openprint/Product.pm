@@ -30,6 +30,8 @@ $serial = 'products_id_seq';
 	album_id		=>	'album_id',
 	manufacturer_id	=>	'manufacturer_id',
 	manufacturer	=>	undef,
+	supplier_id	=>	'supplier_id',
+	supplier	=>	undef,
 );
 
 %transforms = (
@@ -47,7 +49,8 @@ $serial = 'products_id_seq';
 	'deleted'		=>	0,
 	'created_on'	=>	q`'NOW()'`,
 	'album_id'		=>	undef,
-	'manufacturer_id'	=>	undef,
+	manufacturer_id	=>	undef,
+	supplier_id		=>	undef,
 );
 
 sub destroy {
@@ -258,6 +261,9 @@ sub manufacturer {
     return $_[0]{manufacturer};
 } # end sub manufacturer
 
+sub Supplier {
+	return new openprint::Company( $_[0]{supplier_id} );
+} # end sub Supplier
 
 1;
 __END__

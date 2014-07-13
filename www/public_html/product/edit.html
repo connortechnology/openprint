@@ -23,6 +23,15 @@
 								) ?>
 					</select>
 				</li>
+                <li>
+                    <label>Supplier</label>
+                    <select id="search_supplier_id" name="search_supplier_id" size="1">
+                        <option value="">select</option>
+                    <? echo (
+                            make_drop_down( openprint::Company->dropdown(order=>'lower(name)', supplier=>'Y'), $param{search_supplier_id} );
+                            ) ?>
+                    </select>
+                </li>
 				<li> 
 					<label>Product</label>
 					<select name="product_id" onchange="if(this.options[this.selectedIndex].value != ''){form.btnFunction.value='';f1.submit();}">
@@ -92,6 +101,16 @@
 						</select>
 						<input type="text" name="manufacturer" id="manufacturer" style="display:none;"/>
 					</li>
+                <li>
+                    <label for="supplier" onclick="$('supplier_id').toggle();$('supplier').toggle();">Supplier</label>
+                    <select id="supplier_id" name="supplier_id" size="1">
+                        <option value="">select</option>
+                    <? echo (
+                            make_drop_down( openprint::Company->dropdown(order=>'lower(name)', supplier=>'Y'), $$variable{Product}->supplier_id() );
+                            ) ?>
+                    </select>
+                    <input style="display: none;" type="text" id="supplier" name="supplier" onfocus="if(!this.value){this.value=get_ddm_text(f1.supplier_id);}ddm_select_by_index( f1.supplier_id, 0 );" />
+                </li>
 					<li> 
 						<label>Description</label>
 						<input type="text" name="description" value="<? hecho ( $$variable{'Product'}->description(); ) ?>" />
