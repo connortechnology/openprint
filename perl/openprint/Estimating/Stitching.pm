@@ -159,7 +159,7 @@ sub get_imposition {
 sub signature_calc {
 	my ( $Project, $service_index, $specs, $qty_index, $folding_specs, $sig_specs, $Impositions, $calc_hash ) = @_;
 
-$openprint::log->debug("# of impositions in Stitching::signature_calc: " . @{$Impositions} );
+$openprint::log->debug("# of impositions in Stitching::signature_calc: " . @{$Impositions} ) if DEBUG;
 	
 	my %results;
 	my $services = $Project->services();
