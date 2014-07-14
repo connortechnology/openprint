@@ -1972,6 +1972,11 @@ if ( ! sets::isin( 'products', \@tables ) ) {
 	if ( ! exists $$data{weight} ) {
 		$dbh->do('ALTER TABLE products ADD weight float');
 	} # end if
+	if ( ! exists $$data{supplier_id} ) {
+		print "Adding supplier_id to Products\n";
+		$dbh->do('ALTER TABLE Products ADD supplier_id INTEGER');
+		$dbh->do('ALTER TABLE Products ADD FOREIGN KEY (supplier_id) REFERENCES companies (id)');
+	}
 } # end if
 
 if ( ! sets::isin( 'product_specifications', \@tables ) ) {

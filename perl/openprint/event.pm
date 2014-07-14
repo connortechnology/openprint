@@ -220,6 +220,7 @@ sub view {
 
 	if ( ! $param{event_id} ) {
 		$variable{error} .= 'Invalid event specified.';
+		$variable{Event} = new openprint::Event();
 		return;
 	} # end if
 
