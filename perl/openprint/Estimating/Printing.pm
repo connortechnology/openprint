@@ -4838,7 +4838,7 @@ sub calc_price {
 			$$Imposition{'folding_results'} = \%folding_results;
 		} # end if
 
-		delete $$Imposition{'Folder'};
+		delete $$Imposition{Folder};
 		if ( ( $folding_results{'Status'} eq 'uncalculated' ) or ( ( ! $folding_results{'Equipment'} ) and ( $$project{'FoldingSpecs'}{"chkOverrideEquipment-$$specs{'SignatureIndex'}-$qty_index"} ne 'Y' ) ) ) {
 # do not want an invalid fold style to win out unless there are no other valid signatures.
 			$price{'Folding Breakdown'} .= sprintf('Unable to fold<br/>'.$folding_results{'Breakdown'});
@@ -4848,8 +4848,13 @@ sub calc_price {
 			} # end if
 		} else {
 			if ( $folding_results{Equipment} ) {
+				
 				if ( $folding_results{Equipment}->id() == $Press->id() ) {
 					my $FI = $folding_results{FoldedImpositions}[0];
+if ( $$FI{Equipment}->id() != $Press->id() ) {
+$openprint::log->error("WTF");
+} 
+$FI->display( "Runspeed: $$FI{runspeed}");
 #$openprint::log->debug("Runspeed: $folding_results{'RunSpeed'}");
 					$$specs{Runspeed} = $price{Runspeed} = $$FI{runspeed} if $$FI{runspeed};
 				} # end if
