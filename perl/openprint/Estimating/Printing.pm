@@ -2746,7 +2746,7 @@ sub breakdown {
 
 	my $breakdown = '';
 	$breakdown .= openprint::Estimating::Imposition::signature_summary( $Imposition, $$price{'Imposition Price'} ) if $$price{'Imposition Price'} and $ImpositionServiceType;
-	$breakdown .= sprintf('%s Colour Bar %s %s, Bleed: %s<br/>', ( $Press ? $Press->strid() : '' ), $Imposition->colour_bar_size(), $Imposition->colour_bar_orientation(), $$Imposition{'bleed_size'} );
+	$breakdown .= sprintf('%s Colour Bar %s %s, Bleed: %s Orientation: %s<br/>', ( $Press ? $Press->strid() : '' ), $Imposition->colour_bar_size(), $Imposition->colour_bar_orientation(), @$Imposition{'bleed_size','image_orientation'} );
 	$breakdown .= '<b>Setups</b><br/>';
 	$breakdown .= $$price{'Setup Breakdown'};
 	$breakdown .= sprintf('Roll2Sheet Charge: $%.2f<br/>', $$price{'Roll2SheetMakeReady'} ) if $$price{Roll2SheetMakeReady};

@@ -208,7 +208,6 @@ $openprint::log->debug("# of impositions in Stitching::signature_calc: " . @{$Im
 	my @printed_impositions;
 	my $imposition = 2;
 	$$specs{"txtPockets$qty_index"} = 0;
-	my $Folding_Equipment = new openprint::Equipment( $$folding_specs{"ddmEquipment-$$sig_specs{SignatureIndex}-$qty_index"} ) if $$folding_specs{"ddmEquipment-$$sig_specs{SignatureIndex}-$qty_index"};
 
 	foreach my $I ( @$Impositions ) {
 $I->display('In Stitching:') if DEBUG;
@@ -225,10 +224,10 @@ $I->display('In Stitching:') if DEBUG;
 		}
 		my $form = $$sig_specs{SignatureIndex};
 		push @printed_impositions, $I->imposition();
-if ( ! $$I{Folds} ) {
-	$openprint::log->debug("No folds in imposition, generating");
-$I->display("No Folds");
-		my %pages;
+		if ( ! $$I{Folds} ) {
+			$openprint::log->debug("No folds in imposition, generating");
+			$I->display("No Folds");
+			my %pages;
 		my $sig_pages = $I->pages();
 
 		if ( $folding_specs ) {
@@ -236,6 +235,7 @@ $I->display("No Folds");
 			# This doesn't really make sense.  If we are doing printing estimation, then the folding probably isn't going to match.  
 
 			if ( ( ! defined $$folding_specs{"chkOverrideEquipment-$form-$qty_index"} ) or ( $$folding_specs{"chkOverrideEquipment-$form-$qty_index"} ne 'Y' ) or $$folding_specs{"ddmEquipment-$form-$qty_index"} ) {
+				$$I{Folder} = new openprint::Equipment( $$folding_specs{"ddmEquipment-$form-$qty_index"} );
 
 				my %folds;
 				foreach my $index ( 1 .. 4 ) {
@@ -243,9 +243,9 @@ $I->display("No Folds");
 					next if ! $fold_qty;
 					my $type = $$folding_specs{"FoldType-$form-$qty_index-$index"};
 					next if ! $type;
-					if ( $$folding_specs{"FoldImposition-$$sig_specs{SignatureIndex}-$qty_index-$index"} < $imposition ) {
-						$imposition = $$folding_specs{"FoldImposition-$$sig_specs{SignatureIndex}-$qty_index-$index"};
-$results{Breakdown} .= "Setting imposition to 1 due to folding imposition for form $$sig_specs{SignatureIndex} $fold_qty $type $index<br/>";
+					if ( $$folding_specs{"FoldImposition-$form-$qty_index-$index"} < $imposition ) {
+						$imposition = $$folding_specs{"FoldImposition-$form-$qty_index-$index"};
+$results{Breakdown} .= "Setting imposition to 1 due to folding imposition for form $form $fold_qty $type $index<br/>";
 
 					} # en dif
 
@@ -320,6 +320,7 @@ $openprint::log->debug("Ignoring folding due to override");
 			if ( $Fold->imposition() < $imposition ) {
 				$imposition = $Fold->imposition();
 			}
+			$$I{Folder} = $Fold->Equipment() if ! $$I{Folder};
 
 			$$specs{'txtSignatureQty'.$Fold->pages().'Page-'.$qty_index} += $Fold->quantity();
 			$$specs{"txtPockets$qty_index"} += $Fold->quantity();
@@ -328,7 +329,7 @@ $openprint::log->debug("Ignoring folding due to override");
 
 		if ( $imposition > 1 ) {
 	
-			if ( ( ( $$folding_specs{"chkOverrideEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} ne 'Y' or $$folding_specs{"ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} ) and $$I{'FoldingImposition'} and $$I{'FoldingImposition'} % 2 ) ) {
+			if ( ( ( $$folding_specs{"chkOverrideEquipment-$form-$qty_index"} ne 'Y' or $$folding_specs{"ddmEquipment-$form-$qty_index"} ) and $$I{'FoldingImposition'} and $$I{'FoldingImposition'} % 2 ) ) {
 				$imposition = 1;
 				$I->display("Setting imposition to 1 due to foldingositions") if DEBUG;
 				$results{Breakdown} .= "Setting imposition to 1 due to foldingositions<br/>";
@@ -406,6 +407,8 @@ $results{'Breakdown'} .= 'Imposition: ' . $imposition . 'out<br/>';
 #$results{'Breakdown'} = 'Imposition: ' . $$specs{'Imposition'.$qty_index} .'<br/>';
 	my $I = $$Impositions[0];
 	my $Press = $I->Press();
+	my $form = $$sig_specs{SignatureIndex};
+
 	while ( ! $bestPrice and $imposition ) {
 		$$specs{'Imposition'.$qty_index} = $imposition;
 		foreach my $Equipment ( @equipment ) {
@@ -432,14 +435,14 @@ $results{'Breakdown'} .= 'Imposition: ' . $imposition . 'out<br/>';
 				} # end if
 			} # end if
 
-			my $max_spine_length = $Equipment->specification('Maximum Spine Length', $$specs{'Imposition'.$qty_index} );
-			if ( $max_spine_length and ( $$specs{'Height'} > $max_spine_length ) ) {
-				$results{'Breakdown'} .= sprintf('Spine Too big. Spine: %s, Maximum: %s<br/>', $$specs{'Height'}, $max_spine_length );
+			my $max_spine_length = $Equipment->specification('Maximum Spine Length', $imposition );
+			if ( $max_spine_length and ( $$specs{Height} > $max_spine_length ) ) {
+				$results{'Breakdown'} .= sprintf('Spine Too big. Spine: %s, Maximum for %dout: %s<br/>', $$specs{Height}, $imposition, $max_spine_length );
 				next;
 			} # end if
-			my $min_spine_length = $Equipment->specification('Minimum Spine Length', $$specs{'Imposition'.$qty_index} );
+			my $min_spine_length = $Equipment->specification('Minimum Spine Length', $imposition );
 			if ( $min_spine_length and ( $$specs{'Height'} < $min_spine_length ) ) {
-				$results{'Breakdown'} .= sprintf('Spine Too small. Spine: %s, Minimum: %s<br/>', $$specs{'Height'}, $min_spine_length );
+				$results{'Breakdown'} .= sprintf('Spine Too small. Spine: %s, Minimum for %dout: %s<br/>', $$specs{'Height'}, $imposition, $min_spine_length );
 				next;
 			} # end if
 			my $max_face_trim = $Equipment->specification('Maximum Spread Width');
@@ -451,7 +454,6 @@ $results{'Breakdown'} .= 'Imposition: ' . $imposition . 'out<br/>';
 				$results{'Breakdown'} .= sprintf('Not printed digital.<br/>' );
 				next;
 			} # end if
-			$$I{'Folder'} = $Folding_Equipment if ! $$I{'Folder'};
 			if ( $Equipment->specification('Type') eq 'Press' ) {
 #if ( $$specs{'txtPockets'.$qty_index} > 1 ) {
 #$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Too many pockets: %d<br/>', $$specs{'txtPockets'.$qty_index} );
@@ -462,27 +464,27 @@ $results{'Breakdown'} .= 'Imposition: ' . $imposition . 'out<br/>';
 					next;
 				} # end if
 
-				if ( $$I{'Folder'}->id() != $Equipment->id() ) {
-					$results{Breakdown} .= "Folder not the same: " . $$folding_specs{"ddmEquipment-$$sig_specs{SignatureIndex}-$qty_index"}. ' != ' . $Equipment->id() if DEBUG;
+				if ( $$I{Folder}->id() != $Equipment->id() ) {
+					$results{Breakdown} .= "Folder not the same: " . $$I{Folder}{id}. ' != ' . $Equipment->id() if DEBUG;
 					next;
 				} # end if
 				if ( $scoring_specs and openprint::Estimating::Scoring::signature_needs( $Project, $scoring_specs, $sig_specs, $I->Paper() ) ) {
-					if ( $$scoring_specs{"ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} != $Equipment->id() ) {
-						$results{Breakdown} .= "Scoring not the same: " . $$scoring_specs{"ddmEquipment-$$sig_specs{SignatureIndex}-$qty_index"}. ' != ' . $Equipment->id() if DEBUG;
-                    next;
+					if ( $$scoring_specs{"ddmEquipment-$form-$qty_index"} != $Equipment->id() ) {
+						$results{Breakdown} .= "Scoring not the same: " . $$scoring_specs{"ddmEquipment-$form-$qty_index"}. ' != ' . $Equipment->id() if DEBUG;
+						next;
 					} # end if
 				} # end if
 			} # end if
-			if ( $Folding_Equipment and ( $_ = $Folding_Equipment->specification('Folding Capable') ) and ( $_ eq 'When Stitching' ) ) {
-				if ( $Folding_Equipment->id() != $Equipment->id() ) {
+			if ( $$I{Folder} and ( $_ = $$I{Folder}->specification('Folding Capable') ) and ( $_ eq 'When Stitching' ) ) {
+				if ( $$I{Folder}->id() != $Equipment->id() ) {
 					$results{Breakdown} .= $Equipment->strid() . ' is not the folding equipment<br/>';
 					next;
 				} 
 			} # end if
 			my $price = get_price( $Project, $ServiceType, $Equipment, $specs, $plusCover, $qty_index );
-			$$folding_specs{"Price-$$sig_specs{SignatureIndex}-$qty_index"} = 0 if ! defined $$folding_specs{"Price-$$sig_specs{SignatureIndex}-$qty_index"};
-			$$price{ComparisonPrice} = $$price{'txtPrice'} + $$folding_specs{"Price-$$sig_specs{SignatureIndex}-$qty_index"};
-			$results{Breakdown} .= $Equipment->strid() . ' ' . $$price{'txtPrice'} . ' ' . $$folding_specs{"Price-$$sig_specs{SignatureIndex}-$qty_index"};
+			$$folding_specs{"Price-$form-$qty_index"} = 0 if ! defined $$folding_specs{"Price-$form-$qty_index"};
+			$$price{ComparisonPrice} = $$price{'txtPrice'} + $$folding_specs{"Price-$form-$qty_index"};
+			$results{Breakdown} .= $Equipment->strid() . ' ' . $$price{'txtPrice'} . ' ' . $$folding_specs{"Price-$form-$qty_index"};
 			if ( ( ! $bestPrice ) or $$price{'ComparisonPrice'} < $$bestPrice{'ComparisonPrice'} ) {
 				$bestEquipment = $Equipment;
 				$bestPrice = $price;
@@ -648,15 +650,16 @@ sub calc {
 			$$specs{"folding_imposition$qty_index"} = undef;
 			foreach my $signature_service_index ( @signatures ) {
 				my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
+				my $form = $$sig_specs{SignatureIndex};
 
 				if ( ! $$sig_specs{'txtImposition'.$qty_index} ) {
-					$$specs{'hdnBreakdown'.$qty_index} .= "Signature $$sig_specs{SignatureIndex} has no imposition.<br/>";
+					$$specs{'hdnBreakdown'.$qty_index} .= "Signature $form has no imposition.<br/>";
 					next;
 				} elsif ( ! $$sig_specs{'txtSpreadSize'} ) {
-					$$specs{'hdnBreakdown'.$qty_index} .= "Signature $$sig_specs{SignatureIndex} has no spread size.<br/>";
+					$$specs{'hdnBreakdown'.$qty_index} .= "Signature $form has no spread size.<br/>";
 					next;
 				} elsif ( ! $$sig_specs{'PageQuantity'.$qty_index} ) {
-					$$specs{'hdnBreakdown'.$qty_index} .= "Signature $$sig_specs{SignatureIndex} has no pages.<br/>";
+					$$specs{'hdnBreakdown'.$qty_index} .= "Signature $form has no pages.<br/>";
 					next;
 				} # end if
 
@@ -666,12 +669,12 @@ sub calc {
 				if ( $folding_specs ) {
 					my %folds;
 					foreach my $index ( 1 .. 4 ) {
-						my $fold_qty = $$folding_specs{"FoldQty-$$sig_specs{SignatureIndex}-$qty_index-$index"};
+						my $fold_qty = $$folding_specs{"FoldQty-$form-$qty_index-$index"};
 						next if ! $fold_qty;
-						my $type = $$folding_specs{"FoldType-$$sig_specs{SignatureIndex}-$qty_index-$index"};
+						my $type = $$folding_specs{"FoldType-$form-$qty_index-$index"};
 						next if ! $type;
-						if ( (!defined $$specs{"folding_imposition$qty_index"}) or ( $$folding_specs{"FoldImposition-$$sig_specs{SignatureIndex}-$qty_index-$index"} < $$specs{"folding_imposition$qty_index"} ) ) {
-							$$specs{"folding_imposition$qty_index"} = $$folding_specs{"FoldImposition-$$sig_specs{SignatureIndex}-$qty_index-$index"};
+						if ( (!defined $$specs{"folding_imposition$qty_index"}) or ( $$folding_specs{"FoldImposition-$form-$qty_index-$index"} < $$specs{"folding_imposition$qty_index"} ) ) {
+							$$specs{"folding_imposition$qty_index"} = $$folding_specs{"FoldImposition-$form-$qty_index-$index"};
 						} # ebduf
 
 						my ( $pages ) = $type =~ /(\d+)PageFold/;
@@ -850,13 +853,15 @@ $openprint::log->debug(" fold qty * pages($pages) == sig_pages($sig_pages) foldQ
 				next if $max_imp and $max_imp < $$specs{"Imposition$qty_index"};
 			} # end if
 
-				
-			if ( $Equipment->specification('Maximum Spine Length') and ( $$specs{'Height'} > $Equipment->specification('Maximum Spine Length', $$specs{'Imposition'.$qty_index} ) ) ) {
-				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Spine Too big. Spine: %s, Maximum: %s<br/>', $$specs{'Height'}, $Equipment->specification('Maximum Spine Length') );
+			my $max_spine_length = $Equipment->specification( 'Maximum Spine Length', $$specs{"Imposition$qty_index"} );	
+			if ( $max_spine_length and ( $$specs{Height} > $max_spine_length ) ) {
+				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Spine Too big. Spine: %s, Maximum: %s<br/>', $$specs{Height}, $max_spine_length );
 				next;
 			} # end if
-			if ( $Equipment->specification('Minimum Spine Length') and ( $$specs{'Height'} < $Equipment->specification('Minimum Spine Length', $$specs{'Imposition'.$qty_index} ) ) ) {
-				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Spine Too small. Spine: %s, Minimum: %s<br/>', $$specs{'Height'}, $Equipment->specification('Minimum Spine Length') );
+			my $min_spine_length = $Equipment->specification('Minimum Spine Length', $$specs{'Imposition'.$qty_index} );
+
+			if ( $min_spine_length and ( $$specs{Height} < $min_spine_length ) ) {
+				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Spine Too small. Spine: %s, Minimum: %s<br/>', $$specs{Height}, $min_spine_length );
 				next;
 			} # end if
 			if ( ( $Equipment->specification('Stitching Capable') eq 'When Digital' ) and ( $$sig_specs{'PrintingType'.$qty_index} ne 'Digital' ) ) {
