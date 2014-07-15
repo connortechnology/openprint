@@ -936,6 +936,7 @@ sub convert_impositions {
 	my ( $desired_signature_size, $spread_size, $impositions ) = @_;
 	my @good_impositions;
 $openprint::log->debug("Convert Impositions: Desired: $desired_signature_size, Spread size: $spread_size,") if DEBUG;
+	return @$impositions if $desired_signature_size == 1;
 
 	foreach my $imp ( @$impositions ) {
 		my $impo = $$imp{'imposition'};
