@@ -60,7 +60,7 @@ $openprint::log->debug("Got price: %Price: " . join(',', map { $_.'=>'.$Price{$_
 sub description {
 	my ( $self ) = @_;
 	if ( ( ! $$self{'description'} ) and $$self{'product_id'} ) {
-		$$self{'description'} = $self->Product()->name();
+		$$self{'description'} = $self->Product()->description();
 	} # end if
 	return $$self{'description'};
 } # end if
