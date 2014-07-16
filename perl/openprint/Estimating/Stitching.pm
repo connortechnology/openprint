@@ -464,7 +464,7 @@ $results{'Breakdown'} .= 'Imposition: ' . $imposition . 'out<br/>';
 					next;
 				} # end if
 
-				if ( $$I{Folder}and ( $$I{Folder}->id() != $Equipment->id() ) ) {
+				if ( $$I{Folder} and ( $$I{Folder}->id() != $Equipment->id() ) ) {
 					$results{Breakdown} .= "Folder not the same: " . $$I{Folder}{id}. ' != ' . $Equipment->id() if DEBUG;
 					next;
 				} # end if
