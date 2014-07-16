@@ -6272,7 +6272,7 @@ sub get_weight {
 				$openprint::log->error("$k=>$$specs{$k}");
 			} # end foreach
 		} # end if
-		$weight *= $$specs{'PageQuantity'.$qty_index}/($$specs{'txtSpreadSize'}/2);
+		$weight *= $$specs{'PageQuantity'.$qty_index}/($$specs{'txtSpreadSize'});
 	} # end if
 # This is business cards, etc.
 	if ( $$specs{'PageQuantity'} ) {
