@@ -16,7 +16,7 @@
 
 package openprint::Estimating::Stitching;
 use strict;
-use warnings;
+#use warnings;
 
 use constant DEBUG => 0;
 
@@ -328,11 +328,11 @@ $openprint::log->debug("Ignoring folding due to override");
 }
 
 		if ( $imposition > 1 ) {
-			if ( ( ( $$folding_specs{"chkOverrideEquipment-$form-$qty_index"} ne 'Y' or $$folding_specs{"ddmEquipment-$form-$qty_index"} ) and $$I{'FoldingImposition'} and $$I{'FoldingImposition'} % 2 ) ) {
-				$imposition = 1;
-				$I->display("Setting imposition to 1 due to foldingositions") if DEBUG;
-				$results{Breakdown} .= "Setting imposition to 1 due to foldingositions<br/>";
-			} elsif ($$I{imposition} % 2 ) {
+			#if ( ( ( $$folding_specs{"chkOverrideEquipment-$form-$qty_index"} ne 'Y' or $$folding_specs{"ddmEquipment-$form-$qty_index"} ) and $$I{'FoldingImposition'} and $$I{'FoldingImposition'} % 2 ) ) {
+				#$imposition = 1;
+				#$I->display("Setting imposition to 1 due to foldingositions") if DEBUG;
+				#$results{Breakdown} .= "Setting imposition to 1 due to foldingositions<br/>";
+			if ($$I{imposition} % 2 ) {
 				$I->display("Setting imposition to 1 due to odd impositions") if DEBUG;
 				$results{Breakdown} .= "Setting imposition to 1 due to odd impositions<br/>";
 				$imposition = 1;

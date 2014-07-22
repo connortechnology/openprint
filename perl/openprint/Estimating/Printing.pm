@@ -42,6 +42,7 @@ my %special_colours;
 
 my %folding_cache;
 my %Papers;
+my %Presses;
 # indexed by press
 #my %impositions;
 my $do_initial_filtering = 1;
@@ -2261,6 +2262,7 @@ $openprint::log->debug("No printing");
 		openprint::Estimating::Cutting::load_equipment( $Project );
 	my $project = setup_project( $Project, $service_index, $services, $specs, \@side_one_colours, \@side_two_colours, \%inkCoverage, $Papers[0] );
 $openprint::log->debug("Before select presses: " . ( sprintf('%.4f', tv_interval( [$master_time])*1000) ) .' usecs' );
+	%Presses = map { $$_{strid}, $_ } openprint::Equipment->find( 'category any'=>'Printing', 'useinestimating'=>1 );
 	my %presses = select_presses( $Project, \@Papers, $specs, $project );
 	my @possible_presses;
 	foreach my $press_id ( keys %presses ) {
@@ -2845,16 +2847,18 @@ $openprint::log->debug(" $$project{ProjectSpecs} group: $$sig_specs{Group} pageq
 		if ( $$project{ProjectSpecs}{"ddmPress-$$sig_specs{Group}"} and ( $$project{ProjectSpecs}{"ddmPress-$$sig_specs{Group}"} ne $strid ) ) {
 			next;
 		} # end if
-		my $Press = openprint::Equipment->find_one( strid=>$strid );
+		my $Press = $Presses{$strid};
 
 		if ( ! $Press ) {
 			$openprint::log->error("No Pressf or $strid");
 			next;
 		} # end if
 
-		my $printing_type = $Press->specification('Printing Type');
-		if ( $$sig_specs{'PrintingTypes'} and ! sets::isin( $printing_type, $$sig_specs{'PrintingTypes'} ) ) {
-			next;
+		if ( $$sig_specs{PrintingTypes} ) {
+			my $printing_type = $Press->specification('Printing Type');
+			if ( ! sets::isin( $printing_type, $$sig_specs{'PrintingTypes'} ) ) {
+				next;
+			} # end if
 		} # end if
 
 		my @press_impositions;
@@ -5599,7 +5603,7 @@ sub select_presses {
 	#my @side_two_colours = sets::exclude( \@Coatings, $side_one_colours );
 	my $ProjectType = $Project->Type();
 
-	foreach my $Press ( openprint::Equipment->find( 'category any'=>'Printing', 'useinestimating'=>1 ) ) {
+	foreach my $Press ( values %Presses ) {
 		my $press_id = $Press->id();
 
 		my ( $min_object_width, $min_object_length ) = ( $Press->specification( 'Minimum Object Width'), $Press->specification('Minimum Object Length') );
