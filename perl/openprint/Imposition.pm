@@ -369,7 +369,7 @@ sub save {
 	$$specs{'page_rows'.$qty_index} = $self->page_rows();
 	$$specs{'SpreadRows'.$qty_index} = $self->spread_rows();
 	$$specs{'SpreadCols'.$qty_index} = $self->spread_columns();
-	$$specs{txtSpreadSize} = $$self{spread_size};
+	$$specs{txtSpreadSize} = $$self{spread_size} if $$self{spread_size};
 	$$specs{'ddmRunStyle'.$qty_index} = $self->runstyle();
 	$$specs{'txtImageWidth'.$qty_index} = $self->image_width();
 	$$specs{'txtImageHeight'.$qty_index} = $self->image_height();

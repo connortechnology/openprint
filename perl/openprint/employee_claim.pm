@@ -235,25 +235,29 @@ sub _assets {
 sub _payments {
 	my $Claim = $variable{'Claim'} = new openprint::Claim( $param{'claim_id'} );
 	if ( $param{'action'} eq 'addpayment' ) {
-		my $Payment = new openprint::Payment();
-		$variable{'error'} .= $Payment->save({
-				amount		=>	$param{'amount'},
-				memo			=>	$param{'notes'},
-				recipient_id	=>	$Claim->company_id(),
-				payor_id		=>	$Claim->supplier_id(),
-				received_on		=>	sprintf('%.4d-%.2d-%.2d', @param{'payment_when_year','payment_when_month','payment_when_day'}),
-				transaction_id	=>	$param{'transaction_id'},
-				currency_id		=>	$Claim->currency_id(),
-				completed		=>	1,
-				});
-		if ( ! $variable{'error'} ) {
-			my $CP = new openprint::Claim_Payment();
-			$variable{'error'} .= $CP->save({
-					'claim_id'	=>	$Claim->id(),
-					'payment_id'	=>	$Payment->id(),
-					'amount'	=>	$param{'amount'},
+		if ( ! Date::Calc::check_date( @param{'payment_when_year','payment_when_month','payment_when_day'} ) ) {
+			$variable{error} .= 'Invalid date selected.<br/>';
+		} else {
+			my $Payment = new openprint::Payment();
+			$variable{error} .= $Payment->save({
+					amount		=>	$param{amount},
+					memo			=>	$param{notes},
+					recipient_id	=>	$Claim->company_id(),
+					payor_id		=>	$Claim->supplier_id(),
+					received_on		=>	sprintf('%.4d-%.2d-%.2d', @param{'payment_when_year','payment_when_month','payment_when_day'} ),
+					transaction_id	=>	$param{transaction_id},
+					currency_id		=>	$Claim->currency_id(),
+					completed		=>	1,
 					});
-		} # end if no error
+			if ( ! $variable{error} ) {
+				my $CP = new openprint::Claim_Payment();
+				$variable{error} .= $CP->save({
+						claim_id	=>	$Claim->id(),
+						payment_id	=>	$Payment->id(),
+						amount		=>	$param{amount},
+						});
+			} # end if no error
+		} # end if valid date
 	} # end if add payment
 } # end sub _payments
 
