@@ -42,6 +42,7 @@ my %special_colours;
 
 my %folding_cache;
 my %Papers;
+my %Presses;
 # indexed by press
 #my %impositions;
 my $do_initial_filtering = 1;
@@ -1559,7 +1560,7 @@ if ( $do_initial_filtering ) {
         my %dutches;
         if ( DEBUG_INITIAL_FILTERING ) {
             $openprint::log->debug('Impositions before filtering on ' . $$Press{'strid'} . ' ' . @impositions . ' impositions' . ( sprintf('%.4f', tv_interval( [$master_time])*1000) ) .' usecs');
-if ( 1 ) {
+if ( 0 ) {
             foreach my $i ( @impositions ) {
                 $i->display();
             }
@@ -2261,6 +2262,7 @@ $openprint::log->debug("No printing");
 		openprint::Estimating::Cutting::load_equipment( $Project );
 	my $project = setup_project( $Project, $service_index, $services, $specs, \@side_one_colours, \@side_two_colours, \%inkCoverage, $Papers[0] );
 $openprint::log->debug("Before select presses: " . ( sprintf('%.4f', tv_interval( [$master_time])*1000) ) .' usecs' );
+	%Presses = map { $$_{strid}, $_ } openprint::Equipment->find( 'category any'=>'Printing', 'useinestimating'=>1 );
 	my %presses = select_presses( $Project, \@Papers, $specs, $project );
 	my @possible_presses;
 	foreach my $press_id ( keys %presses ) {
@@ -2845,16 +2847,18 @@ $openprint::log->debug(" $$project{ProjectSpecs} group: $$sig_specs{Group} pageq
 		if ( $$project{ProjectSpecs}{"ddmPress-$$sig_specs{Group}"} and ( $$project{ProjectSpecs}{"ddmPress-$$sig_specs{Group}"} ne $strid ) ) {
 			next;
 		} # end if
-		my $Press = openprint::Equipment->find_one( strid=>$strid );
+		my $Press = $Presses{$strid};
 
 		if ( ! $Press ) {
 			$openprint::log->error("No Pressf or $strid");
 			next;
 		} # end if
 
-		my $printing_type = $Press->specification('Printing Type');
-		if ( $$sig_specs{'PrintingTypes'} and ! sets::isin( $printing_type, $$sig_specs{'PrintingTypes'} ) ) {
-			next;
+		if ( $$sig_specs{PrintingTypes} ) {
+			my $printing_type = $Press->specification('Printing Type');
+			if ( ! sets::isin( $printing_type, $$sig_specs{'PrintingTypes'} ) ) {
+				next;
+			} # end if
 		} # end if
 
 		my @press_impositions;
@@ -2893,7 +2897,7 @@ $openprint::log->debug(" $$project{ProjectSpecs} group: $$sig_specs{Group} pageq
 		} else {
 			@press_impositions = @{$$impositions{$strid}} if $$impositions{$strid};
 		} # end if
-		if ( DEBUG_FILTERING or 1 ) {
+		if ( DEBUG_FILTERING ) {
 			$openprint::log->debug("QTY_index: $qty_index before filtering impositions count:" . @press_impositions . ' on press: ' . $Press->strid());
 			foreach my $imp ( openprint::imposition::sort( @press_impositions ) ) {
 				$imp->display();
@@ -3272,7 +3276,7 @@ $imp->display("qty: $qty unspec ". $$sig_specs{"txtUnspecifiedPageQuantity$qty_i
 		#} # end if
 
 		if ( $SpreadLayout > 0 ) {
-			my $str = join(',', $imp->Press()->id(), @$imp{'pages','spread_columns','spread_rows','columns','rows','runstyle','image_orientation','bleed_size'} );
+			my $str = join(',', $imp->Press()->id(), @$imp{'pages','spread_columns','spread_rows','columns','rows','runstyle','image_orientation','bleed_size'}, $Paper->type() );
 			if ( $imps{$str} ) {
 				for ( my $j = 0; $j < @{$imps{$str}}; $j += 1 ) {
 					my $I = $imps{$str}[$j];
@@ -3308,7 +3312,24 @@ $imp->display("qty: $qty unspec ". $$sig_specs{"txtUnspecifiedPageQuantity$qty_i
 						#} # end if DEBUG
 
 					#} elsif ( ( $P->area() >= $Paper->area() )
-					if ( ( $P->area() >= $Paper->area() )
+					if ( $$BiggerPrice{'100lb Total'} > 10 * $$SmallerPrice{'100lb Total'} ) {
+						splice @{$imps{$str}}, $j, 1;
+						$j -= 1;
+						if ( DEBUG_FILTERING ) {
+							$openprint::log->debug( "Dropping B on price $$BiggerPrice{'100lb Total'} " . $I->Paper()->minimum_order_weight() . " $$SmallerPrice{'100lb Total'}" . $Paper->minimum_order_weight() );
+							$I->display();
+							$imp->display();
+						} # end if
+					} elsif ( 10*$$BiggerPrice{'100lb Total'} < $$SmallerPrice{'100lb Total'} ) {
+                            $add = 0;
+							if ( DEBUG_FILTERING ) {
+								$openprint::log->debug( "Dropping A on price $$BiggerPrice{'100lb Total'} " . $I->Paper()->minimum_order_weight() . " $$SmallerPrice{'100lb Total'}" . $Paper->minimum_order_weight() );
+								$I->display();
+								$imp->display();
+							} # end if
+							last;
+
+					} elsif ( ( $P->area() >= $Paper->area() )
 							and ( $P->factor() <= $Paper->factor() )
 							and ( $P->minimum_order_weight() >= $Paper->minimum_order_weight() or $Paper->minimum_order_weight() > $$imp{lookup_stock_qty} )
 							and ( $$BiggerPrice{'100lb Total'} >= $$SmallerPrice{'100lb Total'} )
@@ -3328,11 +3349,11 @@ $imp->display("qty: $qty unspec ". $$sig_specs{"txtUnspecifiedPageQuantity$qty_i
                             and ( ( ! $P->is_cut() ) or ( $Paper->is_cut() ) )
                             ) {
                             $add = 0;
-						if ( DEBUG_FILTERING ) {
-							$openprint::log->debug( "Dropping A $$BiggerPrice{'100lb Total'} " . $I->Paper()->minimum_order_weight() . " $$SmallerPrice{'100lb Total'}" . $Paper->minimum_order_weight() );
-							$I->display();
-							$imp->display();
-						} # end if
+							if ( DEBUG_FILTERING ) {
+								$openprint::log->debug( "Dropping A $$BiggerPrice{'100lb Total'} " . $I->Paper()->minimum_order_weight() . " $$SmallerPrice{'100lb Total'}" . $Paper->minimum_order_weight() );
+								$I->display();
+								$imp->display();
+							} # end if
 							last;
                         } elsif ( DEBUG_FILTERING ) {
                             $openprint::log->debug( "Not Dropping $$BiggerPrice{'100lb Total'} $$SmallerPrice{'100lb Total'}");
@@ -4332,7 +4353,7 @@ $openprint::log->debug("Sheet No supplied wight: $supplied_sheets $paper_string 
 					my $starttime = gettimeofday() if DEBUG;
 
 					$openprint::log->debug("Stitching::signature_calc") if DEBUG;
-					$results = openprint::Estimating::Stitching::signature_calc( $Project, $$project{'HasStitching'}, $$project{'StitchingSpecs'}, $qty_index, $$project{'FoldingSpecs'}, $sig_specs, \@total_impositions, $project );
+					$results = openprint::Estimating::Stitching::signature_calc( $Project, $$project{HasStitching}, $$project{StitchingSpecs}, $qty_index, $$project{FoldingSpecs}, \@total_impositions, $project );
 				#} # end if cached
 					if ( $$results{'Status'} eq 'uncalculated' ) {
 						$$price{'Stitching Breakdown'} .= "Stitching error: $$results{'alert'} <br/>";
@@ -4341,11 +4362,12 @@ $openprint::log->debug("Sheet No supplied wight: $supplied_sheets $paper_string 
 						$$price{'Stitching Cost'} = 10000000;
 						$openprint::log->debug("After Stitching $$price{'Comparison Cost'} $$price{'Stitching Cost'} uncalculated") if DEBUG or 1;
 					} else {
-						$$price{'Stitching Breakdown'} .= sprintf('Stitching (%s) (%s) Price: $%.2f<br/>', @$results{'Status','alert','Price'} );
+						my $Price = $$results{'Price'};
+						$$price{'Stitching Breakdown'} .= sprintf('Stitching (%s) (%s) Price: $%.2f<br/>', @$results{'Status','alert'},$$Price{'Price'} );
 						$$price{'Stitching Breakdown'} .= $$results{Breakdown};
-						$$price{'Stitching Cost'} = $$results{'Price'};
-						$$price{'Comparison Cost'} += $$results{'Price'};
-						$$price{'Comparison Log'} .= 'Stitching: ' .  $$results{'Price'} . '<br/>';
+						$$price{'Stitching Cost'} = $$Price{Price};
+						$$price{'Comparison Cost'} += $$Price{Price};
+						$$price{'Comparison Log'} .= 'Stitching: ' .  $$Price{'Price'} . '<br/>';
 				#$stitching_cache{scalar @all_impositions} = $results;
 						$openprint::log->debug("After Stitching $$price{'Comparison Cost'} $$price{'Stitching Cost'} $$results{Breakdown}") if DEBUG;
 					} # end if
@@ -5581,7 +5603,7 @@ sub select_presses {
 	#my @side_two_colours = sets::exclude( \@Coatings, $side_one_colours );
 	my $ProjectType = $Project->Type();
 
-	foreach my $Press ( openprint::Equipment->find( 'category any'=>'Printing', 'useinestimating'=>1 ) ) {
+	foreach my $Press ( values %Presses ) {
 		my $press_id = $Press->id();
 
 		my ( $min_object_width, $min_object_length ) = ( $Press->specification( 'Minimum Object Width'), $Press->specification('Minimum Object Length') );

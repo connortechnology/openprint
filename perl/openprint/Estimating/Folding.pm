@@ -1164,9 +1164,9 @@ $openprint::log->debug(qq`Wrong imposition: $$specs{"FoldImposition-$form-$qty_i
 						push @new_folded_impositions, $FI;
 
 #$openprint::log->debug("Overriding FOlds and Angles $$F{folds} $$F{angles}");
-							$$Fold{folds} = $$specs{"FoldFolds-$form-$qty_index-$index"};
-							$$Fold{angles} = $$specs{"FoldAngles-$form-$qty_index-$index"};
-							$$Fold{runspeed} = $$specs{"FoldRunspeed-$form-$qty_index-$index"} if $$specs{"FoldRunspeed-$form-$qty_index-$index"};
+						$$Fold{folds} = $$specs{"FoldFolds-$form-$qty_index-$index"};
+						$$Fold{angles} = $$specs{"FoldAngles-$form-$qty_index-$index"};
+						$$Fold{runspeed} = $$specs{"FoldRunspeed-$form-$qty_index-$index"} if $$specs{"FoldRunspeed-$form-$qty_index-$index"};
 					} # end foreach my $k
 					if ( ! $found{$index} ) {
 						if ( DEBUG ) {
@@ -1189,6 +1189,7 @@ $openprint::log->debug(qq`Wrong imposition: $$specs{"FoldImposition-$form-$qty_i
 						} else {
 							$Fold = new openprint::Fold();
 							$$Fold{'type'} = $$specs{"FoldType-$form-$qty_index-$index"};
+							$$Fold{runspeed} = $$specs{"FoldRunspeed-$form-$qty_index-$index"} if $$specs{"FoldRunspeed-$form-$qty_index-$index"};
 						} # end if
 						my $FI = $SignatureImposition->copy();
 						push @new_folded_impositions, $FI;
@@ -1344,10 +1345,9 @@ $openprint::log->debug(qq`Wrong imposition: $$specs{"FoldImposition-$form-$qty_i
 				if ( ! $runspeed ) {
 					$Breakdown .= "No runspeed for $$Fold{type}(".$$Fold{name}.") on " . $$Equipment{name} .' Setting to 1/Hr.<br/>';
 					$runspeed = 1;
-				} else {
-					$runTime = Math::Round::nearest( 0.0001, $run_qty / $runspeed ) if $runspeed; # in hours
-					$Breakdown .= sprintf('Runspeed: %d @ %d/HR = %d:%d:%d<br/>', $run_qty, $runspeed, misc::seconds_to_interval( int( 3600*$runTime ) ) );
 				} # end if
+				$runTime = Math::Round::nearest( 0.0001, $run_qty / $runspeed ) if $runspeed; # in hours
+				$Breakdown .= sprintf('Runspeed: %d @ %d/HR = %d:%d:%d<br/>', $run_qty, $runspeed, misc::seconds_to_interval( int( 3600*$runTime ) ) );
 				$$Imposition{runspeed} = $runspeed;
 $openprint::log->debug("Runspeed: $$Fold{type}(".$Fold->name().") : " . $Equipment->name() . ' ' . $runspeed .' ' . $Paper->gsm() ) if DEBUG;
 				
@@ -1428,7 +1428,7 @@ $openprint::log->debug("Runspeed: $$Fold{type}(".$Fold->name().") : " . $Equipme
 # Add in stitching estimate, based on if the folder is this piece of equipment
 					$fold_specs{"ddmEquipment-$form-$qty_index"} = $Equipment->id();
 					$fold_specs{"Price-$form-$qty_index"} = $totalPrice;
-					my $results = openprint::Estimating::Stitching::signature_calc( $Project, $stitching_service_index, $stitching_specs, $qty_index, \%fold_specs, $sig_specs, [ @$Signature_Impositions, $SignatureImposition ], $calc_hash );
+					my $results = openprint::Estimating::Stitching::signature_calc( $Project, $stitching_service_index, $stitching_specs, $qty_index, \%fold_specs, [ @$Signature_Impositions, $SignatureImposition ], $calc_hash );
 					if ( ! $$results{'Equipment'} ) {
 						$Breakdown .= "unable to determine stitching equipment: $$results{alert} $$stitching_specs{'hdnBreakdown'.$qty_index}<br/>";
 						$openprint::log->warn('unable to determine stitching equipment; ; '.$Breakdown) if DEBUG;
@@ -1441,7 +1441,8 @@ $openprint::log->debug("Runspeed: $$Fold{type}(".$Fold->name().") : " . $Equipme
 						$stitching_part = 1000000;
 						$totalPrice += 1000000;
 					} else {
-						$stitching_part = $$results{'Price'};
+						my $Price = $$results{'Price'};
+						$stitching_part = $$Price{Price};
 						$Breakdown .= "Stitching cost: $stitching_part on " . $$results{'Equipment'}->name() . '<br/>';
 					} # end if
 					#$Breakdown .= $$results{Breakdown}.'<br/>';
