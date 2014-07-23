@@ -32,6 +32,7 @@ my @variables = (
 		'MPrice1','MPrice2','MPrice3',
         'txtQuantity1', 'txtQuantity2', 'txtQuantity3',
 		'hdnBreakdown1','hdnBreakdown2','hdnBreakdown3',
+	'alert',
 );
 
 sub variables {
