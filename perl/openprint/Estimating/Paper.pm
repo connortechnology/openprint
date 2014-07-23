@@ -32,6 +32,7 @@ my @variables = (
 		'MPrice1','MPrice2','MPrice3',
         'txtQuantity1', 'txtQuantity2', 'txtQuantity3',
 		'hdnBreakdown1','hdnBreakdown2','hdnBreakdown3',
+	'alert',
 );
 
 sub variables {
@@ -222,7 +223,7 @@ $openprint::log->debug("QTY $qty_index ($paper_string) => " . $totals{$$Stock_En
 		my $total = $totals{$stock_index};
 
 		my $Stock = $$Stock_Entry{Stock};
-$openprint::log->debug($Stock->id_string() . ' full packages ' . $Stock->full_packages() . ' per ' . $Stock->sheets_per_package() ) if DEBUG;
+$openprint::log->debug($Stock->id_string() . ' full packages ' . $Stock->full_packages() . ' per ' . $Stock->sheets_per_package() . ' available to order: ' . $$Stock{available_to_order} ) if DEBUG;
 		if ( $Stock->full_packages() ) {
 			my $qty_per_package = $Stock->sheets_per_package();
 			if ( $qty_per_package ) {
@@ -245,9 +246,9 @@ $openprint::log->debug($Stock->id_string() . ' full packages ' . $Stock->full_pa
 				} # end if
 			} # end foreach qty_index
 		} # end if
-		if ( $$Stock{available_to_order} > 0 ) {
+		if ( $$Stock{available_to_order} ne '' ) {
 			foreach my $qty_index ( $Project->quantity_indexes() ) {
-				next if ! $totals{"qty_$qty_index"};
+				next if ! $$total{"qty_$qty_index"};
 				if ( $$Stock{available_to_order} < $$total{"qty_$qty_index"} ) {
 					$$specs{alert}  .= $Stock->to_string() . ' has only ' . $$Stock{available_to_order} . " available. This does not satisfy quantity $qty_index<br/>";
 					$$specs{Status} = 'uncalculated';
