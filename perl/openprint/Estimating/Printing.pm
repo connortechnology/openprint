@@ -2398,12 +2398,12 @@ $log->warn("There are no quantities!");
 
 			my $OverridePress = openprint::Equipment->find_one('strid'=>$$specs{'ddmPress'.$qty_index});
 			if (! $OverridePress ) {
-				$$specs{'alert'} = 'Cant find the press that you have chosen.';
+				$$specs{'alert'} .= 'Cant find the press that you have chosen.';
 				return $$specs{'Status'} = 'uncalculated';
 			} # end if
 
 			if ( $presses{$OverridePress->id()} ) {
-				$$specs{'alert'} = 'The press that you have chosen is not appropriate for the following reason: ' .$presses{$OverridePress->id()};
+				$$specs{'alert'} .= 'The press that you have chosen is not appropriate for the following reason: ' .$presses{$OverridePress->id()};
 				return $$specs{'Status'} = 'uncalculated';
 			} # end if
 		} else {
@@ -2540,6 +2540,7 @@ $openprint::log->debug(Data::Dumper::Dumper( \%Overrides ) );
 		if ( $$Imposition{'imposition'} > $qty ) {
 			$$specs{'alert'} .= "It is cheaper to print " . $$Imposition{'imposition'}.'.  You may wish to increase your quantity.<br/>';
 		} # end nif
+		$$specs{alert} .= $$best_price{alert};
 		my $Paper = $Imposition->Paper();
 
 		$$specs{'hdnBreakdown'.$qty_index} = breakdown( $best_price, $specs );
@@ -4255,6 +4256,7 @@ $openprint::log->debug("Sheet No supplied wight: $supplied_sheets $paper_string 
 					if ( $$Paper{available_to_order} > 1 ) {
 						if ( $$Paper{available_to_order} < ( $$Paper{type} eq 'Sheet' ? $supplied_sheets : $supplied_weight ) ) {
 							$$price{'Paper Breakdown'} .= $Supplied->to_string() . ' does not have enough available. Only ' . $$Paper{available_to_order} . $Paper->units() . ' left.<br/>';
+							$$price{alert} .= $Supplied->to_string() . ' does not have enough available. Only ' . $$Paper{available_to_order} . $Paper->units() . ' left.<br/>';
 							$$price{'Comparison Cost'} += 1000000;
 						} # end if
 					} # end if
