@@ -150,12 +150,14 @@ $openprint::log->debug("Override PerfectBind to " . $$specs{"ddmEquipment$qty_in
 			next;
 		} # end if
 
-		if ( $Equipment->specification('Maximum Spine Length') and ( $$specs{'Height'} > $Equipment->specification('Maximum Spine Length', $$specs{'Imposition'.$qty_index} ) ) ) {
-			$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Spine Too big. Spine: %s, Maximum: %s<br/>', $$specs{'Height'}, $Equipment->specification('Maximum Spine Length') );
+		my $max_spine_length = $Equipment->specification('Maximum Spine Length', $imposition );
+		if ( $max_spine_length and ( $$specs{Height} > $max_spine_length ) ) {
+			$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Spine Too big. Spine: %s, Maximum: %s<br/>', $$specs{'Height'}, $max_spine_length );
 			next;
 		} # end if
-		if ( $Equipment->specification('Minimum Spine Length') and ( $$specs{'Height'} < $Equipment->specification('Minimum Spine Length', $$specs{'Imposition'.$qty_index} ) ) ) {
-			$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Spine Too small. Spine: %s, Minimum: %s<br/>', $$specs{'Height'}, $Equipment->specification('Minimum Spine Length') );
+		my $min_spine_length = $Equipment->specification('Minimum Spine Length', $imposition );
+		if ( $min_spine_length and ( $$specs{Height} < $min_spine_length ) ) {
+			$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Spine Too small. Spine: %s, Minimum: %s<br/>', $$specs{'Height'}, $min_spine_length );
 			next;
 		} # end if
 
@@ -256,6 +258,7 @@ sub calc {
 				my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
 				# All but the cover
 				next if $$sig_specs{'Group'} == 1;
+				next if ! $$sig_specs{"txtImposition$qty_index"};
 				my $calliper = $$sig_specs{'PageQuantity'.$qty_index} ? ($$sig_specs{'PageQuantity'.$qty_index}/2) * $$sig_specs{'txtSpecificStockCalliper'} : $$sig_specs{'txtSpecificStockCalliper'};
 				$$specs{'txtCalliper'} += $calliper;
 			} # end foreach
@@ -279,6 +282,7 @@ sub calc {
 
 			my $Paper;
 			foreach my $qty_index ( $Project->quantity_indexes() ) {
+				next if ! $$sig_specs{"txtImposition$qty_index"};
 				$Paper = openprint::Paper::load_from_signature( $Project, $sig_specs, $qty_index );
 				last;
 			} # end foreach
@@ -311,6 +315,7 @@ sub calc {
 			foreach my $signature_service_index ( @signatures ) {
 				my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
 				next if $$sig_specs{'txtSignatureType'} eq 'Cover Pages';
+				next if ! $$sig_specs{"txtImposition$qty_index"};
 				if ( 
 						($$sig_specs{'txtImposition'.$qty_index} % 2) or 
 						($$sig_specs{'hdnImageOrientation'.$qty_index} eq 'Vertical' and $$sig_specs{'hdnImpositionRows'} % 2 ) or 
@@ -377,6 +382,7 @@ sub calc {
 		my @Impositions;
 		foreach my $signature_service_index ( @signatures ) {
 			my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
+			next if ! $$sig_specs{"txtImposition$qty_index"};
 			my $Imposition = new openprint::Imposition();
 			$Imposition->load( $sig_specs, $qty_index, $Project );
 			push @Impositions, $Imposition;

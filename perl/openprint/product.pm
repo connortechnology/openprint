@@ -14,6 +14,8 @@ require openprint::Product;
 require openprint::Product_Category;
 require openprint::logs;
 require sql;
+require openprint::Supplier;
+require openprint::Company;
 
 sub view {
 	$param{product_id} = openprint::Product->transform( 'id', $param{product_id} );
@@ -38,8 +40,10 @@ sub edit {
 				delete $param{$field};
 			} # end if
 		} # end foreach
+		$param{supplier_id} = openprint::Supplier::get_or_create( $param{supplier} ) if $param{supplier} and ! $param{supplier_id};
+		$Product->supplier_id( $param{supplier_id} );
 			
-		$variable{'error'} = $Product->save( \%param );
+		$variable{error} = $Product->save( \%param );
 		if ( $param{'product_id'} ) {
 		# Save the prices
 			_prices() ;

@@ -221,7 +221,7 @@ sub auto_calculate {
 		} # end if
 	} else {
 		if ( ! $$services{Folding} ) {
-			push @{$$services{Folding}}, $Project->add_service( 'Folding' );
+			#push @{$$services{Folding}}, $Project->add_service( 'Folding' );
 		} # end if
 	} # end if
 
@@ -234,7 +234,7 @@ sub auto_calculate {
 	require openprint::Estimating::Cutting;
 	if ( openprint::Estimating::Cutting::neccessary( $Project ) ) {
 		if ( ! $$services{'Cutting'} ) {
-			push @{$$services{'Cutting'}}, $Project->add_service( 'Cutting' );
+			#push @{$$services{'Cutting'}}, $Project->add_service( 'Cutting' );
 		} # end if
 	} # end if
 
@@ -492,6 +492,7 @@ $openprint::log->error("Doing internal calc without service_index or, not found"
 	} else {
 		$log->error($package . ' cant calc');
 	} # end if
+	$Project->update_status();
 	$Project->unlock();
 	return \%specs;
 } # end sub internal_calc

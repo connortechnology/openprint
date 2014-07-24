@@ -1,4 +1,4 @@
-<? echo ( include('/includes/error_reporting.html'); ) ?>
+<? include('/includes/error_reporting.html') ?>
 <div class="Payments">
     <fieldset><legend>Payments</legend>
         <table>
@@ -33,7 +33,7 @@
 			<tr class="new">
 				<td class="ID">New</td>
 				<td><input type="text" id="transaction_id" name="transaction_id"/></td>
-				<td><? echo ( date_select( 'payment_when' ); ) ?></td>
+				<td><? echo ( date_select( 'payment_when', [ Date::Calc::Today() ] ); ) ?></td>
 				<td><input type="text" id="notes" name="notes"/></td>
 				<td><? echo ( input(type=>'float', id=>'amount', name=>'amount', value=>$$variable{Claim}->owing() ); ) ?></td>
 			</tr>

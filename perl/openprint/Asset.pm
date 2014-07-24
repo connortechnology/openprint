@@ -563,36 +563,6 @@ sub upload {
 	return $Asset;
 } # end sub upload
 
-sub Keywords {
-	if ( ! $_[0]{'Keywords'} ) {
-		@{$_[0]{'Keywords'}} = openprint::Object_Keyword->find( 'object_type'=>'Asset', 'object_id'=>$_[0]->id() );
-	} # end if
-	return @{$_[0]{'Keywords'}};
-} # end sub Keywords
-
-sub keywords {
-	if ( @_ > 1 and ( $_[1] ne $_[0]->keywords() ) ) {
-		foreach my $word ( split( ' ', $_[1] ) ) {
-			my $Keyword = openprint::Keyword->find_one('word lc'=>lc openprint::Keyword->transform('word', $word));
-			if ( ! $Keyword ) {
-				$Keyword = new openprint::Keyword();
-				$Keyword->save({ 'word'=>$word });
-			} # end if ! Keyword
-
-			my $OK = openprint::Object_Keyword->find_one( 'keyword_id'=>$Keyword->id(), 'object_type'=>'Asset', 'object_id'=>$_[0]{'id'} );
-			if ( ! $OK ) {
-				$OK = new openprint::Object_Keyword();
-				$OK->save({'keyword_id'=>$Keyword->id(), 'object_type'=>'Asset', 'object_id'=>$_[0]{'id'} });
-			} # end if
-		} # end foreach
-		@{$_[0]{'Keywords'}} = openprint::Object_Keyword->find( 'object_type'=>'Asset', 'object_id'=>$_[0]->id() );
-		$_[0]{'keywords'} = undef;
-	} # end if
-	if ( ! $_[0]{'keywords'} ) {
-		$_[0]{'keywords'} = join(' ', map { $_->word() } $_[0]->Keywords() );
-	} # end if
-	return $_[0]{'keywords'};
-} # end sub keywords
 sub caption {
 	if ( $_[0]{'name'} ) {
 		return $_[0]{'name'};

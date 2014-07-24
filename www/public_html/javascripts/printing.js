@@ -183,6 +183,10 @@ function calc_print( formName, force, options ) {
 
 	var form = getFormObj( formName );
 
+	if ( timeout ) {
+		clearTimeout( timeout );
+		timeout = null;
+	}
 	if ( gettingNewPrice && ! force ) {
 		// This prevents concurrent price getting
 		if ( options ) {
@@ -192,10 +196,6 @@ function calc_print( formName, force, options ) {
 		} // end if
 		return;
 	} // end if
-	if ( timeout ) {
-		clearTimeout( timeout );
-	//timeout = null;
-	}
 
 	clear_price_data(form);
 	var AlertDiv = $('AlertDiv');

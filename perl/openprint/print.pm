@@ -110,6 +110,8 @@ $log->debug("after continue $$variable{ExternalRedirect}");
 				$Project->lock();
 				if ( (!$openprint::param{ServiceType} ) or $recalc ) {
 					multipage_signatures( \%openprint::param, $log, $dbh, $variable, $project_index, $service_index );
+					$Project->unlock();
+					$Project->lock();
 					my $s = openprint::service::internal_calc( $log, $dbh, $variable, $project_index, $service_index, $Project->Type()->type() );
 					if ( $$s{Status} ne 'calculated' ) {
 						$log->error("Error calculting Project service");
@@ -468,7 +470,7 @@ $log->debug("group $group_id");
 		) {
 			openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $ss_id, $spec, $$param{$spec.$group_id} );
 		} # end foreach spec
-		foreach my $spec ( 'Press','RunStyle' ) {
+		foreach my $spec ( 'RunStyle' ) {
 			next if ! exists $$param{'ddm'.$spec.'-'.$group_id};
 			foreach my $qty_index ( $Project->quantity_indexes() ) {
 				if ( $$param{'ddm'.$spec.'-'.$group_id} ) {
@@ -493,7 +495,7 @@ $log->debug("group $group_id");
 	
 	} # end foreach
 
-	my $old_bindery_type = get_book_type( $project_index );
+	my $old_bindery_type = get_book_type( $Project );
 	if ( $old_bindery_type and ($$param{'rdbTemplateType'} ne $old_bindery_type) and $$services{$old_bindery_type} ) {
 		foreach ( @{$$services{$old_bindery_type}} ) {
 			openprint::print_project::delete_service( $project_index, $_ );

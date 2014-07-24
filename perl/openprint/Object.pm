@@ -14,6 +14,8 @@ require openprint::Privacy;
 require openprint::Object_Type;
 require openprint::Opinion_Availability;
 require openprint::Object_Asset;
+require openprint::Keyword;
+require openprint::Object_Keyword;
 use vars qw( $log $dbh $AUTOLOAD %cache %name_cache %fields %defaults %transforms $no_cache %session %config );
 
 *log = \$openprint::log;
@@ -1123,5 +1125,56 @@ sub unlock {
 	} # end if
 } # end sub unlock
 
+sub Keywords {
+	if ( ! $_[0]{Keywords} ) {
+		if ( $_[0]{id} ) {
+			$_[0]{Keywords} = [ openprint::Object_Keyword->find( object_type=> ref $_[0], object_id=>$_[0]->id() ) ];
+		} else {
+			$_[0]{Keywords} = [];
+		} # end if
+	} # end if
+	return @{$_[0]{Keywords}};
+} # end sub Keywords
+
+sub keywords {
+	my $object_type = ref $_[0];
+	if ( @_ > 1 and ( $_[1] ne $_[0]->keywords() ) ) {
+		my @OKs = openprint::Object_Keyword->find( object_type=>$object_type, object_id=>$_[0]{id} );
+		my %keywords = map { $_->Keyword()->word(), $_ } @OKs;
+		my @new_keywords = split(/\s/, $_[1]);
+		my %new_keywords = map { $_, $_ } @new_keywords;
+
+		foreach my $word ( @new_keywords ) {
+			$word = openprint::Keyword->transform('word', $word);
+
+			if ( ! $keywords{$word} ) {
+				my $Keyword = openprint::Keyword->find_one('word lc'=>lc $word);
+				if ( ! $Keyword ) {
+					$Keyword = new openprint::Keyword();
+					$Keyword->save({ word=>$word });
+				} # end if ! Keyword
+				my $OK = new openprint::Object_Keyword();
+				$OK->save({ keyword_id=>$Keyword->id(), object_type=>$object_type, object_id=>$_[0]{id} });
+				$new_keywords{$word} = $Keyword;
+			} else {
+				$new_keywords{$word} = $keywords{$word}->Keyword();
+			} # end if
+		} # end foreach
+
+		foreach my $OK ( @OKs ) {
+			my $word = $OK->Keyword()->word();
+			if ( ! $new_keywords{$word} ) {
+				$OK->delete();
+			} # end if
+		} # end foreach
+			
+		$_[0]{Keywords} = [ openprint::Object_Keyword->find( object_type=>$object_type, object_id=>$_[0]{id} ) ];
+		$_[0]{keywords} = undef;
+	} # end if
+	if ( ! $_[0]{keywords} ) {
+		$_[0]{keywords} = join(' ', map { $_->word() } $_[0]->Keywords() );
+	} # end if
+	return $_[0]{keywords};
+} # end sub keywords
 1;
 __END__

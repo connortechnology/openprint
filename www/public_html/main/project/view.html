@@ -27,7 +27,7 @@
 			<div style="float:left;">
 				<? echo ( my $html;
 
-				if ( sets::isin( $session{'user_type'}, ['E','A'] ) ) {
+				if ( sets::isin( $session{user_type}, ['E','A'] ) ) {
 					$html .= button( 'Summary', { href=>'/main/project/summary.html?ProjectIndex='.$$variable{ProjectIndex} } );
 				} # end if
 				if ( ( ! $$variable{Project}->order_id() ) or ( sets::isin( $$variable{Project}->Order->status(), ['Re-Opened','Incomplete'] ) ) ) {
@@ -47,7 +47,7 @@
 			<div style="float: right;">
 				<? echo (
 					my $html = '';
-					if ( sets::isin( $$variable{Project}->status(), ['Unordered','uncalculated'] ) or $$variable{Project}->Order()->status() eq 'Re-Opened' ) {
+					if ( sets::isin( $$variable{Project}->status(), ['Unordered','uncalculated','Calculating'] ) or $$variable{Project}->Order()->status() eq 'Re-Opened' ) {
 						$html .= button( 'RecalculateProject', { onclick=>"f1.action='/main/project/view.html';f1.btnFunction.value='Recalculate Project';f1.submit();", text=>'Recalculate' } );
 					} # end if
 					if ( $session{'ShowAllSignatures'} ) {
@@ -55,17 +55,12 @@
 					} else {
 						$html .= button( 'ShowAll', { href=>qq`/main/project/view.html?project_id=$$variable{ProjectIndex}&amp;ShowAllSignatures=1`, text=>'Show All Signatures' } );
 					} # end if
-					if ( ( $$variable{Project}->status() ne 'uncalculated' ) and ! $$variable{Project}->order_id() ) {
+					if ( ( ! sets::isin( $$variable{Project}->status(), [ 'uncalculated', 'Calculating' ] ) ) and ! $$variable{Project}->order_id() ) {
 						$html .= button( 'AddToQuote', { onclick=>"f1.action='/main/quote/information.html';f1.btnFunction.value='Process Quote';f1.submit();", href=>'', text=>'Add To Quote' } );
 						$html .= button( 'AddToOrder', { onclick=>"f1.action='/main/order/information.html';f1.btnFunction.value='Process Order';f1.submit();", href=>'', text=>'Add To Order' } );
 						if ( ( $session{'user_type'} eq 'A' ) and ! $$variable{Project}->predefined() ) {
 							$html .= button( 'Predefined', { onclick=>"f1.action='view.html';f1.btnFunction.value='Make Predefined';f1.submit();", text=>'Make into a Product' } );
 						} # end if
-					} # end if
-					if ( $session{'ShowAllSignatures'} ) {
-						$html .=  button( 'HideAllSignatures', { href=>"/main/project/view.html?ProjectIndex=$$variable{Project}{id}&amp;ShowAllSignatures=0", text=>'Hide Similar Signatures' } );
-					} elsif ( exists $session{'ShowAllSignatures'} ) {
-						$html .=  button( 'ShowAllSignatures', { href=>"/main/project/view.html?ProjectIndex=$$variable{Project}{id}&amp;ShowAllSignatures=1", text=>'Show Similar Signatures' } );
 					} # end if
 					if ( $$variable{Project}->order_id() and sets::isin( $$variable{Project}->Order()->status(), ['Incomplete', 'Re-Opened'] ) ) {
 						$html .= button( 'ContinueOrder', { href=>'/main/order/information.html?order_id='.$$variable{Project}->order_id(), text=>'Continue Order' } );

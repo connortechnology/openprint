@@ -62,26 +62,29 @@
 			<li><label>Contains</label>
 				<input type="text" name="contains" value="<? echo ( $session{'/timetrack/history.html?contains'} ) ?>" onkeyup="load_timetracks(this.form);"/>
 			</li>
+			<li><label>Keywords</label>
+				<input type="text" name="keywords" value="<? echo ( $session{'/timetrack/history.html?keywords'} ) ?>" onkeyup="load_timetracks(this.form);"/>
+			</li>
 				</ul>
 			</div>
 			<div class="rightColumn">
 				<ul>
-					<li><label>Billable</label><? echo ( ssi::radio( 'billable', [ 1, 'Yes', 0, 'No', '', 'Both' ], $session{'/timetrack/history.html?billable'}, { onclick=>'load_timetracks(this.form);' } ); ) ?></li>
+					<li><label>Billable</label><? echo ( radio( 'billable', [ 1, 'Yes', 0, 'No', '', 'Both' ], $session{'/timetrack/history.html?billable'}, { onclick=>'load_timetracks(this.form);' } ); ) ?></li>
 					<li><label>Invoiced?</label>
-					<? echo ( ssi::radio( 'invoiced', [ 1, 'Yes', 0, 'No', '0,1', 'Both' ], $session{'/timetrack/history.html?invoiced'}, { onclick=>'load_timetracks(this.form);' } ); ) ?>
+					<? echo ( radio( 'invoiced', [ 1, 'Yes', 0, 'No', '0,1', 'Both' ], $session{'/timetrack/history.html?invoiced'}, { onclick=>'load_timetracks(this.form);' } ); ) ?>
 					</li>
 					<li><label>Paid?</label>
-					<? echo ( ssi::radio( 'paid', [ 1, 'Yes', 0, 'No', '0,1', 'Both' ], $session{'/timetrack/history.html?paid'}, { onclick=>'load_timetracks(this.form);' } ); ) ?>
+					<? echo ( radio( 'paid', [ 1, 'Yes', 0, 'No', '0,1', 'Both' ], $session{'/timetrack/history.html?paid'}, { onclick=>'load_timetracks(this.form);' } ); ) ?>
 			</li>
 					<li><label>Travel Associated</label>
-					<? echo ( ssi::radio( 'travel_associated', [ '1', 'Yes', '0', 'No', '', 'Both' ], $session{'/timetrack/history.html?travel_associated'}, { onclick=>'load_timetracks(this.form);' } ); ) ?>
+					<? echo ( radio( 'travel_associated', [ '1', 'Yes', '0', 'No', '', 'Both' ], $session{'/timetrack/history.html?travel_associated'}, { onclick=>'load_timetracks(this.form);' } ); ) ?>
 			</li>
 <? if ( sets::isin( $session{'user_type'}, ['E','A'] ) ) ?>
 			<li>
 				<label>Employee</label>
 				<select name="user_id" id="user_id" onchange="load_timetracks(this.form);">
 					<option value="">All</option>
-					<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User->find('company_id'=>$session{'company_id'}, 'type'=>['A','E'], 'order'=>'lower(firstname),lower(lastname)') ], $session{'/timetrack/history.html?user_id'} ); ) ?>
+					<? echo ( make_drop_down( openprint::User->dropdown( company_id=>$session{company_id}, type=>['A','E'], order=>'lower(firstname),lower(lastname)'), $session{'/timetrack/history.html?user_id'} ); ) ?>
 				</select>
 			</li>
 <? endif ( sets::isin( $session{'user_type'}, ['E','A'] ) ) ?>
@@ -90,14 +93,14 @@
 			<br class="spacer"/>
 			<p class="buttons">
 				<? echo ( join('',
-					ssi::button( 'ShowResults', { 'onclick'=> "load_timetracks(f1);", 'text'=>'Show Results' } ),
-					ssi::button( 'Reset', { 'href' => '/timetrack/history.html?func=reset' } ),
-					ssi::button( 'New', { 'href' => '/timetrack/edit.html', 'text' => 'New Timetrack' } ),
-					ssi::button( 'Download', { 'onclick'=>q`var form=$('f1');form.action='/timetrack/history.html?func=Download';form.submit();` } ),
+					button( 'ShowResults', { onclick=> "load_timetracks(f1);", text=>'Show Results' } ),
+					button( 'Reset', { href => '/timetrack/history.html?func=reset' } ),
+					button( 'New', { href => '/timetrack/edit.html', text => 'New Timetrack' } ),
+					button( 'Download', { onclick=>q`var form=$('f1');form.action='/timetrack/history.html?func=Download';form.submit();` } ),
 					); ) ?>
 			</p>
 		</fieldset>
-		<div id="TimetrackList"><? echo ( include('_history.html'); ) ?></div>
+		<div id="TimetrackList"><?include('_history.html')?></div>
 	</form>
 	</div>
 </div>

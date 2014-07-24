@@ -266,6 +266,7 @@ sub load {
 	$$self{grain_direction} = $$specs{'rdbGrainDirection'.$qty_index};
 	$$self{bleed_size} = $$specs{'ddmBleedSize'.$qty_index};
 	$$self{rotate_sheet} = $$specs{"RotateSheet$qty_index"};
+	$$self{printing_type} = $$specs{"PrintingType$qty_index"};
 
 	if ( ! $$self{'image_orientation'} ) {
 		# Guess the image orientation
@@ -368,6 +369,7 @@ sub save {
 	$$specs{'page_rows'.$qty_index} = $self->page_rows();
 	$$specs{'SpreadRows'.$qty_index} = $self->spread_rows();
 	$$specs{'SpreadCols'.$qty_index} = $self->spread_columns();
+	$$specs{txtSpreadSize} = $$self{spread_size} if $$self{spread_size};
 	$$specs{'ddmRunStyle'.$qty_index} = $self->runstyle();
 	$$specs{'txtImageWidth'.$qty_index} = $self->image_width();
 	$$specs{'txtImageHeight'.$qty_index} = $self->image_height();
@@ -375,6 +377,7 @@ sub save {
 	$$specs{'txtLayoutHeight'.$qty_index} = $self->layout_height();
 	$$specs{'rdbGrainDirection'.$qty_index} = $self->grain_direction() if ! $$specs{'chkOverrideGrainDirection'.$qty_index};
 	$$specs{'ddmBleedSize'.$qty_index} = $$self{'bleed_size'};
+	$$specs{'PrintingType'.$qty_index} = $$self{printing_type};
 	my $Paper = $self->Paper();
 	if ( $Paper and ($Paper->type() eq 'Roll') and $Paper->height() ) {
 		$$specs{'CutOff'.$qty_index} = $Paper->height();

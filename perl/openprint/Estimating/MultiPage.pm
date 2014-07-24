@@ -586,15 +586,46 @@ sub check {
         $needed_pages{$$sig_specs{Group}} = $$specs{'GroupPageQuantity'.$$sig_specs{Group}};
     } # end foreach
     foreach my $Group ( sort keys %needed_pages ) {
+$openprint::log->debug( "Grouup $Group needed $needed_pages{$Group} specd: $specified_pages{$Group}" );
         if ( $needed_pages{$Group} > $specified_pages{$Group} ) {
             $error .= 'Group ' . $Group . ' ' . $$specs{'txtSignatureType'.$Group} . ' needs another ' . ( $needed_pages{$Group} - $specified_pages{$Group} ) . ' pages.<br/>';
 		} elsif ( $needed_pages{$Group} < $specified_pages{$Group} ) {
             $error .= 'Group ' . $Group . ' ' . $$specs{'txtSignatureType'.$Group} . ' has ' . ( $specified_pages{$Group} - $needed_pages{$Group} ) . ' too many pages.<br/>';
         } # end if
     } # end foreach
-	openprint::service::insert_service_spec( $openprint::log, $openprint::dbh, $Project->id(), $Service->service_id(), 'alert', $error ) if $error;
+	if ( $error ) {
+		if ( $error ne $$specs{alert} ) {
+			openprint::service::insert_service_spec( $openprint::log, $openprint::dbh, $Project->id(), $Service->service_id(), 'alert', $error ) if $error;
+		} # end if
+	} else {
+		if ( $$specs{alert} =~ /^Group/ ) {
+			openprint::service::insert_service_spec( $openprint::log, $openprint::dbh, $Project->id(), $Service->service_id(), 'alert', $error );
+		} # end if
+	} # end if
+	
     return $error;
 } # end sub check
+
+sub summary {
+	my ( $Project, $service_index, $specs, $qty_index ) = @_;
+	my @Groups = groups( $$Project{id}, $specs );
+	my $html;
+	if ( $qty_index ) {
+	} else {
+		foreach my $group_id ( @Groups ) {
+			my $group_html = join(' ',
+					( $$specs{"ddmRunStyle-$group_id"} ? $$specs{"ddmRunStyle-$group_id"} : () ),
+					( $$specs{"ddmPress-$group_id"} ? ' on ' . $$specs{"ddmPress-$group_id"} : () ),
+					($$specs{"PrintingType-$group_id"} ? $$specs{"PrintingType-$group_id"} : () ),
+					( $$specs{"PageQuantity-$group_id"} ? 'as ' . $$specs{"PageQuantity-$group_id"} . 'page signatures.' : () ),
+					);
+			if ( $group_html ) {
+				$html .= 'Group ' . $group_id . ' is overriden to run ' . $group_html;
+			} # end if
+		} # end foreach group
+	} # end if
+	return $html;
+} # end sub summary
 
 1;
 __END__

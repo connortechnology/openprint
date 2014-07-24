@@ -263,7 +263,7 @@ $log->debug("Materials: " . map { $_->name() } @Materials ) if DEBUG;
 			$$specs{'hdnBreakdown'.$qty_index} .= sprintf('# of packages: %d<br/>', $package_qty );
 			
 			my $price;
-			my %MaterialPrice = $Material->get_price( undef, undef );
+			my %MaterialPrice = $Material->get_price( $package_qty, undef );
 			$price = $MaterialPrice{Price};
 			my $compare_price = $package_qty * ( $price + $serviceCharge + $packingCharge );
 			if ( $best_price == 0 or $compare_price < $best_price ) {
