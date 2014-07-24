@@ -24,7 +24,7 @@ use vars qw( $log $dbh );
 $log = new logger( 'debug' );
 my %CheckedOutSkids;
 my %Scanners;
-my $debug = 1;
+my $debug = 0;
 my $location_cache_size = 10;
 
 sub Checkout_Skid {
@@ -161,7 +161,7 @@ sub process_request {
 			} # end if
 			$self->log(1, sprintf('%s : %s : dec %s', $date, $ip_addr, $tag_id )) if $debug;
 
-			my $Tag = openprint::RFIDTag->find_One( id=>$tag_id );
+			my $Tag = openprint::RFIDTag->find_one( id=>$tag_id );
 			if ( ! $Tag ) {
 				$Tag = new openprint::RFIDTag();
 				$self->log(1, sprintf('%s : going to allocate ', $ip_addr )) if $debug;

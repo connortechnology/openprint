@@ -22,7 +22,7 @@ use vars qw( $log $dbh $AUTOLOAD %cache %name_cache %fields %defaults %transform
 *config = \%openprint::config;
 
 my $debug = 0;
-use constant DEBUG_ALL => 1;
+use constant DEBUG_ALL => 0;
 $no_cache = 0;
 
 sub init_cache {
@@ -797,7 +797,7 @@ sub AUTOLOAD {
 				Carp::cluck( "Bad autoload $type $name  = $_[1]" );
 			} # end if
 		} # end if
-#$openprint::log->debug("Autoload $type $name $_[0] $_[1] $self $newvalue");
+$openprint::log->debug("Autoload $type $name $_[0] $_[1] $self $newvalue") if ! $type;
 		return $_[0]{$name} = $_[1];
 	} else {
 		if ( $fields ) {
