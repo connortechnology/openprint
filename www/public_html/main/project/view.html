@@ -58,7 +58,7 @@
 					if ( ( ! sets::isin( $$variable{Project}->status(), [ 'uncalculated', 'Calculating' ] ) ) and ! $$variable{Project}->order_id() ) {
 						my $last_calculated = Date::Parse::str2time( $Project->calculated_on() );
 						if ( ( time - $last_calculated ) > 24*60*60 ) {
-							$html .= 'This quote is too old.  It will have to be recalculated before it can be ordered or quoted again.<br/>';
+							$$variable{error} = 'This quote is too old.  It will have to be recalculated before it can be ordered or quoted again.<br/>';
 						} else {
 							$html .= button( 'AddToQuote', { onclick=>"f1.action='/main/quote/information.html';f1.btnFunction.value='Process Quote';f1.submit();", href=>'', text=>'Add To Quote' } );
 							$html .= button( 'AddToOrder', { onclick=>"f1.action='/main/order/information.html';f1.btnFunction.value='Process Order';f1.submit();", href=>'', text=>'Add To Order' } );
@@ -89,6 +89,7 @@
 		</div>
 	</div>
 	<br class="spacer"/>
+<?include(/includes/error_reporting.html)?>
 	<?include('_view.html')?>
 	<? if ( sets::isin( $session{'user_type'},'A','E') and ( ( ! $$variable{Project}->docket() ) or ( $$variable{Project}->Order()->status() eq 'Re-Opened' ) ) ) ?>
 	<table class="List">
