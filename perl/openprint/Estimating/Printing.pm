@@ -2565,7 +2565,7 @@ $openprint::log->error("No stock breakdown $stock_breakdown for $qty_index");
 
 		$price = $best_price if ! $price;
 
-		my $last_sig_price == $$price{prices}[ @{$$price{prices}} -1 ];
+		my $last_sig_price = $$price{prices}[ @{$$price{prices}} -1 ];
 		$openprint::log->warn("Final Prices:"  . @{$$price{prices}}  );
 
 		$$specs{'hdnBreakdown'.$qty_index} .= join('', 
@@ -4503,10 +4503,10 @@ $openprint::log->debug("Sheet No supplied wight: $supplied_sheets $paper_string 
 					$openprint::log->debug("Resulting price worst than best: $best_price{'Comparison Cost'} <= $$price{'Comparison Cost'}");
 					$imp->display($recursion_depth.'Worst than best');
 					my $breakdown = breakdown( $price, $sig_specs );
-						my $stitching_breakdown == $$price{'Stitching Breakdown'};
-						foreach my $sig_price ( @{$$price{prices}} ) {
-							$stitching_breakdown = $$sig_price{'Stitching Breakdown'} if $$sig_price{'Stitching Breakdown'}; 
-						} # end foreach
+					my $stitching_breakdown = $$price{'Stitching Breakdown'};
+					foreach my $sig_price ( @{$$price{prices}} ) {
+						$stitching_breakdown = $$sig_price{'Stitching Breakdown'} if $$sig_price{'Stitching Breakdown'}; 
+					} # end foreach
 
 					$breakdown .= join('',
 							( defined $$price{'SpinePaste Breakdown'} ? $$price{'SpinePaste Breakdown'} : '' ),
@@ -4517,10 +4517,6 @@ $openprint::log->debug("Sheet No supplied wight: $supplied_sheets $paper_string 
 							);
 					$openprint::log->debug( 'this: ' . $breakdown );
 					$best_price{Imposition}->display($recursion_depth.'best');
-						my $stitching_breakdown == $best_price{'Stitching Breakdown'};
-						foreach my $sig_price ( @{$best_price{prices}} ) {
-							$stitching_breakdown = $$sig_price{'Stitching Breakdown'} if $$sig_price{'Stitching Breakdown'}; 
-						} # end foreach
 					$breakdown = breakdown( \%best_price, $best_price{specs} );
 					$breakdown .= join('',
 							( defined $best_price{'SpinePaste Breakdown'} ? $best_price{'SpinePaste Breakdown'} : '' ),
@@ -4536,7 +4532,7 @@ $openprint::log->debug("Sheet No supplied wight: $supplied_sheets $paper_string 
 				if ( DEBUG_PRICE_DECISIONS ) {
 					$imp->display("$recursion_depth New best price chosen: $best_price{'Comparison Cost'} >= $$price{'Comparison Cost'}");
 					if ( %best_price ) {
-						my $stitching_breakdown == $best_price{'Stitching Breakdown'};
+						my $stitching_breakdown = $best_price{'Stitching Breakdown'};
 						foreach my $sig_price ( @{$best_price{prices}} ) {
 							$stitching_breakdown = $$sig_price{'Stitching Breakdown'} if $$sig_price{'Stitching Breakdown'}; 
 						} # end foreach
@@ -4581,7 +4577,7 @@ $openprint::log->debug("Sheet No supplied wight: $supplied_sheets $paper_string 
 				#} # end if
 				if ( DEBUG_PRICE_DECISIONS ) {
 					my $breakdown = breakdown( \%best_price, $sig_specs );
-					my $stitching_breakdown == $best_price{'Stitching Breakdown'};
+					my $stitching_breakdown = $best_price{'Stitching Breakdown'};
 					foreach my $sig_price ( @{$best_price{prices}} ) {
 						$stitching_breakdown = $$sig_price{'Stitching Breakdown'} if $$sig_price{'Stitching Breakdown'}; 
 					} # end foreach

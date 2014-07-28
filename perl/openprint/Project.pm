@@ -41,6 +41,7 @@ $serial = 'lngProjectIndex_seq';
 	'design'		=>	'strdesign',
 	'created_on'	=>	'dtmcreationdate',
 	'updated_on'	=>	'dtmlastmodified',
+	calculated_on	=>	'calculated_on',
 	'quantity1'		=>	'intquantity1',
 	'quantity2'		=>	'intquantity2',
 	'quantity3'		=>	'intquantity3',
@@ -1512,7 +1513,7 @@ $openprint::log->debug("Calculate_Sigs: status: $status");
 	$self->add_to_log( @openprint::session{'company_id','user_id'}, 'Recalculated. Prices: '.join(',', $self->prices() ) );
 	$self->update_status();
 	$self->summary(undef);
-	return $self->save();
+	return $self->save( {calculated_on=>'NOW()'});
 } # end sub recalculate
 
 sub Project {

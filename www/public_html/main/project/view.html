@@ -56,8 +56,13 @@
 						$html .= button( 'ShowAll', { href=>qq`/main/project/view.html?project_id=$$variable{ProjectIndex}&amp;ShowAllSignatures=1`, text=>'Show All Signatures' } );
 					} # end if
 					if ( ( ! sets::isin( $$variable{Project}->status(), [ 'uncalculated', 'Calculating' ] ) ) and ! $$variable{Project}->order_id() ) {
-						$html .= button( 'AddToQuote', { onclick=>"f1.action='/main/quote/information.html';f1.btnFunction.value='Process Quote';f1.submit();", href=>'', text=>'Add To Quote' } );
-						$html .= button( 'AddToOrder', { onclick=>"f1.action='/main/order/information.html';f1.btnFunction.value='Process Order';f1.submit();", href=>'', text=>'Add To Order' } );
+						my $last_calculated = Date::Parse::str2time( $Project->calculated_on() );
+						if ( ( time - $last_calculated ) > 24*60*60 ) {
+							$html .= 'This quote is too old.  It will have to be recalculated before it can be ordered or quoted again.<br/>';
+						} else {
+							$html .= button( 'AddToQuote', { onclick=>"f1.action='/main/quote/information.html';f1.btnFunction.value='Process Quote';f1.submit();", href=>'', text=>'Add To Quote' } );
+							$html .= button( 'AddToOrder', { onclick=>"f1.action='/main/order/information.html';f1.btnFunction.value='Process Order';f1.submit();", href=>'', text=>'Add To Order' } );
+						} # end if
 						if ( ( $session{'user_type'} eq 'A' ) and ! $$variable{Project}->predefined() ) {
 							$html .= button( 'Predefined', { onclick=>"f1.action='view.html';f1.btnFunction.value='Make Predefined';f1.submit();", text=>'Make into a Product' } );
 						} # end if
