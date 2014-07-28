@@ -56,7 +56,7 @@
 						$html .= button( 'ShowAll', { href=>qq`/main/project/view.html?project_id=$$variable{ProjectIndex}&amp;ShowAllSignatures=1`, text=>'Show All Signatures' } );
 					} # end if
 					if ( ( ! sets::isin( $$variable{Project}->status(), [ 'uncalculated', 'Calculating' ] ) ) and ! $$variable{Project}->order_id() ) {
-						my $last_calculated = Date::Parse::str2time( $Project->calculated_on() );
+						my $last_calculated = Date::Parse::str2time( $$variable{Project}->calculated_on() );
 						if ( ( time - $last_calculated ) > 24*60*60 ) {
 							$$variable{error} = 'This quote is too old.  It will have to be recalculated before it can be ordered or quoted again.<br/>';
 						} else {
