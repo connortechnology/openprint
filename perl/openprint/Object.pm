@@ -799,7 +799,7 @@ sub AUTOLOAD {
 				Carp::cluck( "Bad autoload $type $name  = $_[1]" );
 			} # end if
 		} # end if
-#$openprint::log->debug("Autoload $type $name $_[0] $_[1] $self $newvalue");
+$openprint::log->debug("Autoload $type $name $_[0] $_[1] $self $newvalue") if ! $type;
 		return $_[0]{$name} = $_[1];
 	} else {
 		if ( $fields ) {
