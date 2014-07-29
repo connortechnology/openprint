@@ -79,6 +79,7 @@ $serial = 'lngProjectIndex_seq';
 %defaults = (
 	created_on	=>	q`'NOW()'`,
 	updated_on	=>	q`'NOW()'`,
+	calculated_on	=>	undef,
 	docket		=>	undef,
 	quantity1	=>	undef,
 	quantity2	=>	undef,
