@@ -383,39 +383,7 @@ sub summary {
 	if ( $qty_index ) {
 		my @summaries;
 		foreach my $Stock_Entry ( @Stocks ) {
-			my $html = '';
-			my $Paper = $$Stock_Entry{Stock};
-			my $stock_id = $$Stock_Entry{index};
-
-#$openprint::log->warn("Stock QTY $stock_id $qty_index " . $$specs{"qty-$stock_id-$qty_index"} );
-			if ( $$specs{"qty-$stock_id-$qty_index"} ) {
-				if ( $Paper->type() eq 'Sheet' ) {
-					$html .= $$specs{"sheets-$stock_id-$qty_index"}.'sheets ';
-				} # end if
-				$html .= Number::Format::format_number( Math::Round::nearest(1, $$specs{"qty-$stock_id-$qty_index"} ) ).' lbs';
-				my $Price = $Paper->get_price( weight=>$$specs{"qty-$stock_id-$qty_index"}, service=>'Material' );
-				if ( $$Price{units} eq 'per square foot' ) {
-					$html .= ' ' . Math::Round::nearest( 1, ( $$specs{"qty-$stock_id-$qty_index"} / $Paper->wpsi() ) / 144 ).' sq feet';
-				} elsif ( $$Price{units} eq 'per square inch' ) {
-					$html .= ' ' . Math::Round::nearest( 1, $$specs{"qty-$stock_id-$qty_index"} / $Paper->wpsi() ). ' sq inches';
-				} elsif ( $$Price{units} eq 'per 100lbs' ) {
-				if ( ( $Paper->type() eq 'Roll' ) and ( $$specs{"qty-$stock_id-$qty_index"} > 100 ) ) {
-					if ( ! $Paper->width() ) {
-						$html .= ' Unable to calculate feet due to stock not having a width.<br/>';
-					} else {
-						$html .= ' ' . int( ( ( $$specs{"qty-$stock_id-$qty_index"} / $Paper->wpsi() ) / $Paper->width() ) / 12 ) . ' feet';
-					}
-				} # end if
-				} elsif ( $$Price{units} ) {
-					$html .= 'unknown units: ' . $$Price{'units'};
-				} elsif ( sets::isin( $Project->Type()->name(), [ 'Banners' ] ) ) {
-					$html .= ' ' . Math::Round::nearest(1, ( $$specs{"qty-$stock_id-$qty_index"} / $Paper->wpsi() ) / $Paper->width() ).'inches';
-				} # end if
-			} else {
-				$html .= 'none';
-			} # end if
-			push @summaries, $html;
-			$stock_id += 1;
+			push @summaries, se_quantity_summary( $Stock_Entry, $specs, $qty_index );
 		} # end foreach STock
 		return \@summaries;
 	} # end if
@@ -425,6 +393,52 @@ sub summary {
 sub save {
 } # end sub save
 
+
+sub se_quantity_summary {
+	my ( $Stock_Entry, $specs, $qty_index ) = @_;
+	my $html = '';
+	my $Paper = $$Stock_Entry{Stock};
+	my $stock_id = $$Stock_Entry{index};
+
+#$openprint::log->warn("Stock QTY $stock_id $qty_index " . $$specs{"qty-$stock_id-$qty_index"} );
+	if ( $$specs{"qty-$stock_id-$qty_index"} ) {
+		if ( $Paper->type() eq 'Sheet' ) {
+			$html .= $$specs{"sheets-$stock_id-$qty_index"}.'sheets ';
+		} # end if
+		$html .= Number::Format::format_number( Math::Round::nearest(1, $$specs{"qty-$stock_id-$qty_index"} ) ).' lbs';
+		$$Stock_Entry{"Price$qty_index"} = $Paper->get_price( weight=>$$specs{"qty-$stock_id-$qty_index"}, service=>'Material' ) if ! $$Stock_Entry{"Price$qty_index"};
+		my $Price = $$Stock_Entry{"Price$qty_index"};
+
+		if ( $$Price{units} eq 'per square foot' ) {
+			$html .= ' ' . Number::Format::format_number( Math::Round::nearest( 1, ( $$specs{"qty-$stock_id-$qty_index"} / $Paper->wpsi() ) / 144 ) ).' sq feet';
+		} elsif ( $$Price{units} eq 'per square inch' ) {
+			$html .= ' ' . Number::Format::format_number( Math::Round::nearest( 1, $$specs{"qty-$stock_id-$qty_index"} / $Paper->wpsi() ) ). ' sq inches';
+		} elsif ( $$Price{units} eq 'per 100lbs' ) {
+			if ( ( $Paper->type() eq 'Roll' ) and ( $$specs{"qty-$stock_id-$qty_index"} > 100 ) ) {
+				if ( ! $Paper->width() ) {
+					$html .= ' Unable to calculate feet due to stock not having a width.<br/>';
+				} else {
+					$html .= ' ' . Number::Format::format_number( int( ( ( $$specs{"qty-$stock_id-$qty_index"} / $Paper->wpsi() ) / $Paper->width() ) / 12 ) ). ' feet';
+				}
+			} # end if
+		} elsif ( $$Price{units} ) {
+			$html .= 'unknown units: ' . $$Price{'units'};
+		} elsif ( sets::isin( $$Stock_Entry{Project}->Type()->name(), [ 'Banners' ] ) ) {
+			$html .= ' ' . Math::Round::nearest(1, ( $$specs{"qty-$stock_id-$qty_index"} / $Paper->wpsi() ) / $Paper->width() ).'inches';
+		} # end if
+	} else {
+		$html .= 'none';
+$openprint::log->debug("No qty for index $$Stock_Entry{index} qty $qty_index");
+	} # end if
+	return $html;
+}
+
+sub se_price_summary {
+	my ( $SE, $specs, $qty_index ) = @_;
+	$$SE{"Price$qty_index"} = $$SE{Stock}->get_price( weight=>$$specs{"qty-$$SE{index}-$qty_index"}, service=>'Material' ) if ! $$SE{"Price$qty_index"};
+	my $Price = $$SE{"Price$qty_index"};
+	return '@ $'.$$specs{"cost-$$SE{index}-$qty_index"}.$$Price{units}. ' = $' . $$specs{"price-$$SE{index}-$qty_index"};
+} # end sub se_price_summary
 
 # The order of stocks is important... thing is, it can change if the brand changes for example.
 # So it needs to be inorder of appearance.
@@ -440,7 +454,7 @@ sub get_stocks {
             my $Paper = openprint::Paper::load_from_signature( $Project, $sig_specs, $q_index )->Supplied();
             #next if ! ( $Paper->id() or $$Paper{custom} );
 			if ( !$Papers{$Paper->id_string()} ) {
-				$Papers{$Paper->id_string()} = { Stock=>$Paper, index=>$stock_id, key=>$Paper->id_string() };
+				$Papers{$Paper->id_string()} = { Project => $Project, Stock=>$Paper, index=>$stock_id, key=>$Paper->id_string() };
 				$stock_id += 1;
 			} # end if
         } # end foreach qty_index
@@ -457,26 +471,31 @@ sub get_stocks {
 } # end sub get_stocks
 
 sub get_stocks_and_quantities {
-    my ( $Project, $service_id, $specs, $qty_index ) = @_;
+    my ( $Project, $service_id, $specs, $qty_index, @Stocks ) = @_;
 
     $specs = openprint::service::get_specs_ref( $Project, $service_id ) if ! $specs;
-	my @Stocks = get_stocks( $Project, $service_id, $specs );
+	@Stocks = get_stocks( $Project, $service_id, $specs ) if ! @Stocks;
 
 	foreach my $Stock ( @Stocks ) {
-		my $Paper = $$Stock{Stock};
-		my $stock_id = $$Stock{index};
+		load_stock_entry( $Stock, $specs, $qty_index );
 #$openprint::log->warn("Stock QTY $stock_id $qty_index " . $$specs{"qty-$stock_id-$qty_index"} );
-		if ( $$specs{"qty-$stock_id-$qty_index"} ) {
-			if ( $Paper->type() eq 'Sheet' ) {
-				$$Stock{quantity} = $$specs{"sheets-$stock_id-$qty_index"};
-			} else {
-				$$Stock{quantity} = $$specs{"qty-$stock_id-$qty_index"};
-			} # end if
-		} # end if
 	} # end foreach key
 	return @Stocks;
 
 } # end sub get_stocks_and_quantities
+
+sub load_stock_entry {
+	my ( $SE, $specs, $qty_index ) = @_;
+	if ( $$specs{"qty-$$SE{index}-$qty_index"} ) {
+		if ( $$SE{Stock}->type() eq 'Sheet' ) {
+			$$SE{quantity} = $$specs{"sheets-$$SE{index}-$qty_index"};
+		} else {
+			$$SE{quantity} = $$specs{"qty-$$SE{index}-$qty_index"};
+		} # end if
+	} # end if
+	$$SE{cost} = $$specs{"cost-$$SE{index}-$qty_index"};
+	$$SE{price} = $$specs{"price-$$SE{index}-$qty_index"};
+} # end sub load_stock_entry
 
 1;
 __END__

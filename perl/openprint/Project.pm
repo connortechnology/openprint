@@ -1689,6 +1689,10 @@ sub check_for_order {
 	if ( $$Project{status} eq 'uncalculated' ) {
 		$error .= 'Project ' . $$Project{id} . ' is uncalculated.  Please resolve this before continuing your order.<br/>';
 	} # end if
+	my $last_calculated = Date::Parse::str2time( $Project->calculated_on() );
+	if ( $openprint::config{QuoteValidDays} and ( time - $last_calculated ) > $openprint::config{QuoteValidDays} * 24*60*60 ) {
+		$error .= 'Project ' . $$Project{id} . ' is too old.  Please recalculate it to update pricing before continuing your order.<br/>';
+	} # end if
 	my $services = $Project->services();
 	my $stock_index = $$services{Paper} ? $$services{Paper}[0] : 0;
 

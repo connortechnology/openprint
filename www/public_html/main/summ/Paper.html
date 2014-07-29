@@ -1,25 +1,23 @@
 <p>
 <? echo ( 
 	my $html = '';
-	my @summaries;
-	$_ = openprint::service::summary( $$variable{Project},$$variable{ServiceIndex} );
-	@summaries = ref $_ eq 'ARRAY' ? @{$_} : ( $_ );
-	my @qty_summaries;
-	foreach my $qty_index ( $$variable{Project}->quantity_indexes() ) {
-		$qty_summaries[$qty_index] = openprint::service::summary( $$variable{Project}, $$variable{ServiceIndex}, $qty_index );
-	} # end foreach qty_index
 
-Data::Dumper::Dumper(\@summaries);
-Data::Dumper::Dumper(\@qty_summaries);
+	my $specs = openprint::service::get_specs_ref( $$variable{Project}, $$variable{ServiceIndex} );
 
-	for ( my $i = 0; $i < @summaries; $i += 1 ) {
-		$html .= '<p><label>'.$summaries[$i].'</label>';
+	my @Stocks = openprint::Estimating::Paper::get_stocks( $$variable{Project}, $$variable{ServiceIndex}, $specs );
 
+	foreach my $SE ( @Stocks ) {
+		my $Stock = $$SE{Stock};
+		$html .= '<p><label>'.$Stock->to_string().'</label>';
+		
 		foreach my $qty_index ( $$variable{Project}->quantity_indexes() ) {
-			my @s = ref $qty_summaries[$qty_index] eq 'ARRAY' ? @{$qty_summaries[$qty_index]} : ( $qty_summaries[$qty_index] );
-			$html .= '<span class="value">' . $s[$i] . '</span>';
+			$html .= join("\n",'<span class="value">',
+				openprint::Estimating::Paper::se_quantity_summary( $SE, $specs, $qty_index ),
+				openprint::Estimating::Paper::se_price_summary( $SE, $specs, $qty_index ),
+				'</span>',
+				);
 		} # end foreach qty_index
-	} # end foreach summary
+	} # end foreach SE
 	return $html;
 ) ?>
 </p>

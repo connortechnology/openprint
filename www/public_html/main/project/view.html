@@ -57,7 +57,7 @@
 					} # end if
 					if ( ( ! sets::isin( $$variable{Project}->status(), [ 'uncalculated', 'Calculating' ] ) ) and ! $$variable{Project}->order_id() ) {
 						my $last_calculated = Date::Parse::str2time( $$variable{Project}->calculated_on() );
-						if ( ( time - $last_calculated ) > 24*60*60 ) {
+						if ( $config{QuoteValidDays} and ( time - $last_calculated ) > $config{QuoteValidDays} * 24*60*60 ) {
 							$$variable{error} = 'This quote is too old.  It will have to be recalculated before it can be ordered or quoted again.<br/>';
 						} else {
 							$html .= button( 'AddToQuote', { onclick=>"f1.action='/main/quote/information.html';f1.btnFunction.value='Process Quote';f1.submit();", href=>'', text=>'Add To Quote' } );
