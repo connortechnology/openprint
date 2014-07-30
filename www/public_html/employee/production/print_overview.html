@@ -211,11 +211,12 @@
 			</li>
 			<li>
 				<label>Views</label>
-				<? echo (
-					my $html = button( 'Today', { onclick=>'', href=>'/employee/production/print_overview.html?action=Today', text=>'Today' } );
-					$html .= button( 'twoday', { onclick=>'', href=>'/employee/production/print_overview.html?action=2day', text=>'2day' } );
-					$html .= button( 'threeday', { onclick=>'', href=>'/employee/production/print_overview.html?action=3day', text=>'3day' } );
-					$html .= button( '1week', { onclick=>'', href=>'/employee/production/print_overview.html?action=1week', text=>'1week' } );
+				<? echo ( join("\n",
+					button( 'Today', { href=>'/employee/production/print_overview.html?action=Today', text=>'Today' } ),
+					button( 'twoday', { href=>'/employee/production/print_overview.html?action=2day', text=>'2day' } ),
+					button( 'threeday', { href=>'/employee/production/print_overview.html?action=3day', text=>'3day' } ),
+					button( '1week', { href=>'/employee/production/print_overview.html?action=1week', text=>'1week' } ),
+					);
 				) ?>
 			</li>
 			<li><label>Show Production</label>
@@ -293,15 +294,18 @@
 
 		my $start_dt = new DateTime( time_zone=>$TZ, map { $_ => $session{'/employee/production/print_overview.html?schedule_start_'.$_} } ( 'year', 'month', 'day' ) );
 		my $end_dt = new DateTime( time_zone=>$TZ, map { $_ => $session{'/employee/production/print_overview.html?schedule_end_'.$_} } ( 'year', 'month', 'day' ) );
+
+		my $ac = sql::start_transaction( $dbh );
+
 		my @Jobs = openprint::ScheduledJob->find( 
 			equipment_id=>[ map { $_->id() } @{$$variable{'Equipment'}} ],
 			'starttime <='	=> $parser->format_datetime( $end_dt ),
 			'starttime >='	=> $parser->format_datetime( $start_dt ),
 		);
-		my @Projects = openprint::Project->find( id=>[ map { $_->project_id() } @Jobs ] );
-		my @Companies = openprint::Company->find( id=>[ map { $_->company_id() } @Projects ] );
 
-		my $ac = sql::start_transaction( $dbh );
+		my @Projects = openprint::Project->find( id=>[ sets::union( map { $$_{project_id} ? $$_{project_id} : () } @Jobs ) ] );
+		my @Companies = openprint::Company->find( id=>[ sets::union( map { $$_{company_id} } @Projects ) ] );
+
 		$dbh->do( 'LOCK TABLE Schedule IN ACCESS EXCLUSIVE MODE' ) or $log->error( DBI->errstr );
 
 		foreach my $E ( @{$$variable{'Equipment'}} ) {
