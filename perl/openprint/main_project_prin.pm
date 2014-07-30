@@ -17,6 +17,8 @@ require openprint::service;
 sub _signature {
 
 	my $Project = new openprint::Project( $param{'project_id'} );
+	$variable{ProjectType} = $Project->Type();
+
 	if ( $param{action} eq 'remove_group' ) {
 		my @src_sigs = $Project->signatures( { Group => $param{group_id} } );
 		if ( ! @src_sigs ) {
