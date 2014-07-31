@@ -275,7 +275,7 @@ $log->debug("Materials: " . map { $_->name() } @Materials ) if DEBUG;
 		} # end foreach Material
 
 		my $m_qty = 0;
-		if ( $$specs{'txtItemsPerPackage'.$qty_index} ) {
+		if ( $$specs{'txtItemsPerPackage'.$qty_index} > 0 ) {
 			$$specs{'txtPackageWeight'.$qty_index} = Math::Round::nearest( 0.01, $$specs{'txtFinishedWeight'} * $$specs{'txtItemsPerPackage'.$qty_index} );
 			$$specs{"totalWeight$qty_index"} = sprintf('%.2f', (int( $qty/$$specs{'txtItemsPerPackage'.$qty_index} ) * $$specs{"txtPackageWeight$qty_index"}) + (($qty % $$specs{'txtItemsPerPackage'.$qty_index} ) * $$specs{'txtFinishedWeight'}) );
 			$qty = ceil( $qty/$$specs{'txtItemsPerPackage'.$qty_index} );
