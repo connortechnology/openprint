@@ -487,8 +487,10 @@ $results{'Breakdown'} .= 'Imposition: ' . $imposition . 'out<br/>';
 				} 
 			} # end if
 			my $price = get_price( $Project, $ServiceType, $Equipment, $specs, $plusCover, $qty_index );
-			$$folding_specs{"Price-$form-$qty_index"} = 0 if ! defined $$folding_specs{"Price-$form-$qty_index"};
-			$$price{ComparisonPrice} = $$price{Price} + $$folding_specs{"Price-$form-$qty_index"};
+			$$price{ComparisonPrice} = $$price{Price};
+			if ( $folding_specs and ( defined $$folding_specs{"Price-$form-$qty_index"} ) ) {
+				$$price{ComparisonPrice} = $$price{Price} + $$folding_specs{"Price-$form-$qty_index"};
+			} # end if
 			#$results{Breakdown} .= $Equipment->strid() . ' ' . $$price{Price} . ' ' . $$folding_specs{"Price-$form-$qty_index"};
 			if ( ( ! $bestPrice ) or $$price{'ComparisonPrice'} < $$bestPrice{'ComparisonPrice'} ) {
 				$bestEquipment = $Equipment;
