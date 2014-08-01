@@ -32,7 +32,7 @@
 			#$search{'created_by'} = [ sets::union( $session{'user_id'}, new openprint::User($session{'user_id'})->assistant_ids(), new openprint::User($session{'user_id'})->csr_ids() ) ];
 		} # end if
 		$search{'cancelled'} = $session{'/employee/purchase_order/history.html?cancelled'} if $session{'/employee/purchase_order/history.html?cancelled'} ne '';
-		$search{'item_id in'} = $session{'/employee/purchase_order/history.html?item_id'} if $session{'/employee/purchase_order/history.html?item_id'};
+		$search{'item_id any'} = $session{'/employee/purchase_order/history.html?item_id'} if $session{'/employee/purchase_order/history.html?item_id'};
 
 		@{$$variable{'PurchaseOrders'}} = ();
 		my $ac = sql::start_transaction( $dbh );
