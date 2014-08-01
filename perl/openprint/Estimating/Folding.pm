@@ -2151,32 +2151,34 @@ sub get_Folds {
 	foreach my $fold_index ( 1 .. 4 ) {
 		next if ! $$folding_specs{"FoldQty-$form-$qty_index-$fold_index"};
 		next if ! $$folding_specs{"FoldType-$form-$qty_index-$fold_index"};
-		my $Imposition = new openprint::Imposition();
-		$Imposition->load( $sig_specs, $qty_index );
-		$Imposition->columns( $$folding_specs{"FoldColumns-$form-$qty_index-$fold_index"} );
-		$Imposition->rows( $$folding_specs{"FoldRows-$form-$qty_index-$fold_index"} );
-		$Imposition->quantity( $$folding_specs{"FoldQty-$form-$qty_index-$fold_index"} );
-		my $Folder = new openprint::Equipment( $$folding_specs{"ddmEquipment-$form-$qty_index"} );
-		$Imposition->Press( $Folder );
+		if ( $$folding_specs{"ddmEquipment-$form-$qty_index"} ) {
+			my $Imposition = new openprint::Imposition();
+			$Imposition->load( $sig_specs, $qty_index );
+			$Imposition->columns( $$folding_specs{"FoldColumns-$form-$qty_index-$fold_index"} );
+			$Imposition->rows( $$folding_specs{"FoldRows-$form-$qty_index-$fold_index"} );
+			$Imposition->quantity( $$folding_specs{"FoldQty-$form-$qty_index-$fold_index"} );
+			my $Folder = new openprint::Equipment( $$folding_specs{"ddmEquipment-$form-$qty_index"} );
+			$Imposition->Press( $Folder );
 
-		my $Paper = $Imposition->Paper();
-		my $Fold = $Folder->Fold( {
-							type 			=>	$$folding_specs{"FoldType-$form-$qty_index-$fold_index"},
-							pages			=>	$Imposition->pages(),
-							page_columns	=>	$Imposition->page_columns(),
-							page_rows		=>	$Imposition->page_rows(),
-							page_width		=>	$Imposition->page_width(),
-							page_height		=>	$Imposition->page_height(),
-							spine_direction =>	$$Imposition{image_orientation},
-							gsm				=>	$Paper->gsm(),
-							imposition		=>	$$Imposition{imposition},
-							columns			=>	$$Imposition{columns},
-							rows			=>	$$Imposition{rows},
-							calliper		=>	$$Paper{calliper},
-							#printing_type	=>	$ppt,
-							} );
-		$Imposition->Fold( $Fold );
-		push @folds, $Imposition;
+			my $Paper = $Imposition->Paper();
+			my $Fold = $Folder->Fold( {
+								type 			=>	$$folding_specs{"FoldType-$form-$qty_index-$fold_index"},
+								pages			=>	$Imposition->pages(),
+								page_columns	=>	$Imposition->page_columns(),
+								page_rows		=>	$Imposition->page_rows(),
+								page_width		=>	$Imposition->page_width(),
+								page_height		=>	$Imposition->page_height(),
+								spine_direction =>	$$Imposition{image_orientation},
+								gsm				=>	$Paper->gsm(),
+								imposition		=>	$$Imposition{imposition},
+								columns			=>	$$Imposition{columns},
+								rows			=>	$$Imposition{rows},
+								calliper		=>	$$Paper{calliper},
+								#printing_type	=>	$ppt,
+								} );
+			$Imposition->Fold( $Fold );
+			push @folds, $Imposition;
+		} # end if
 		#$folding_imposition->display('Fold ' . $$folding_specs{"FoldType-$form-$qty_index-$fold_index"} ) if DEBUG;
 	} # end foreach fold_index
 	return @folds;
