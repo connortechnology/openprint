@@ -569,7 +569,7 @@ $openprint::log->debug("Folding impositions: " . @folding_impositions ) if DEBUG
 		if ( ( defined $$specs{"OverrideFoldingCuts-$$sig_specs{SignatureIndex}-$qty_index"} ) and ( $$specs{"OverrideFoldingCuts-$$sig_specs{SignatureIndex}-$qty_index"} eq 'Y' ) ) {
 			$folding_cuts = $$specs{"FoldingCuts-$$sig_specs{SignatureIndex}-$qty_index"};
 		} else {
-			if ( ( @folding_impositions == 1 ) and ( $folding_impositions[0]->imposition() == 1 ) and ( ! $stitching_imposition ) and ( $folding_impositions[0]->quantity() == 1 ) ) {
+			if ( ( @folding_impositions == 1 ) and ( $folding_impositions[0]->imposition() == 1 ) and ( ! $stitching_imposition ) and ( $folding_impositions[0]->quantity() == 1 ) and ( (!$Folder) or ( $Folder->id() != $Press->id() ) ) ) {
 				$trim_before_folding = 1;
 			} else {
 				$openprint::log->debug("Folds: " .@folding_impositions ) if DEBUG;
