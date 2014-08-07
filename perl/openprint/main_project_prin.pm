@@ -31,6 +31,7 @@ sub _signature {
 			$Service->delete();
 		} # end foreach 
 		$Project->unlock();
+		$variable{PageContent} = qq`<script type="text/javascript">alert('hi');\$('SignatureGroup$param{group_id}').remove();calc('f1');</script>`;
 
 	} elsif ( $param{action} eq 'copy_group' ) {
 		my @src_sigs = $Project->signatures( { Group => $param{group_id} } );

@@ -620,7 +620,7 @@ sub summary {
 					( $$specs{"PageQuantity-$group_id"} ? 'as ' . $$specs{"PageQuantity-$group_id"} . 'page signatures.' : () ),
 					);
 			if ( $group_html ) {
-				$html .= 'Group ' . $group_id . ' is overriden to run ' . $group_html;
+				$html .= 'Group ' . $group_id . ' is overriden to run ' . $group_html. '<br/>';
 			} # end if
 		} # end foreach group
 	} # end if
