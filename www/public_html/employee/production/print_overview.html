@@ -304,7 +304,7 @@
 		);
 
 		my @Projects = openprint::Project->find( id=>[ sets::union( map { $$_{project_id} ? $$_{project_id} : () } @Jobs ) ] );
-		my @Companies = openprint::Company->find( id=>[ sets::union( map { $$_{company_id} } @Projects ) ] );
+		my @Companies = openprint::Company->find( id=>[ sets::union( map { $$_{company_id} ? $$_{company_id} : () } @Projects ) ] );
 
 		$dbh->do( 'LOCK TABLE Schedule IN ACCESS EXCLUSIVE MODE' ) or $log->error( DBI->errstr );
 
