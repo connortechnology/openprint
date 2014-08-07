@@ -1606,7 +1606,7 @@ sub calc {
 			$i->load( $sig_specs, $qty_index );
 			$$i{Folds} = [ get_Folds( $specs, $sig_specs, $qty_index ) ];
 			push @Signature_Impositions, $i;
-$i->display();
+$i->display() if DEBUG;
 			$Impositions{$sig_id} = $i;
 			$$i{service_id} = $sig_id;
 
@@ -1647,7 +1647,8 @@ $i->display();
 			my $Imposition = $Impositions{$signature_service_index};
 
 			if ( ( ! exists $$sig_specs{'PageQuantity'.$qty_index} ) or $$sig_specs{'PageQuantity'.$qty_index} ) {
-				my %results = signature_calc( $Project, $signature_service_index, $sig_specs, $specs, $qty_index, $Imposition, $uv_specs, $aq_specs, {}, \@Signature_Impositions, $calc_hash );
+
+				my %results = signature_calc( $Project, $signature_service_index, $sig_specs, $specs, $qty_index, $Imposition, $uv_specs, $aq_specs, {}, [ sets::exclude( [ $Imposition ], \@Signature_Impositions ) ], $calc_hash );
 				$$specs{'hdnBreakdown'.$qty_index} .= $results{'Breakdown'};
 				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('MR Waste: %d, Run Waste: %d<br/>', @results{'MakeReadyOvers','RunOvers'} );
 				$$specs{"Price-$form-$qty_index"} = $results{'Price'};
