@@ -229,6 +229,7 @@ sub load {
 	if ( ! $$self{'Press'} ) {
 		if ( ! $$specs{'ddmPress'.$qty_index} ) {
 			$openprint::log->error("No ddmPress for $qty_index for signature $$specs{SignatureIndex}");
+Carp::cluck("No press in Imposition::load");
 		} else {
 #Carp::cluck("Loading press in Imposition::load");
 			$$self{'Press'} = openprint::Equipment->find_one('strid'=>$$specs{'ddmPress'.$qty_index});
