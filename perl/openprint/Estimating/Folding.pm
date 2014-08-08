@@ -25,7 +25,7 @@ require openprint::Estimating::Perforating;
 
 use vars qw( @folds %fold_types );
 
-use constant DEBUG => 1;
+use constant DEBUG => 0;
 use constant DEBUG_NEEDS => 0;
 
 my @equipment;
@@ -464,6 +464,18 @@ $openprint::log->error("No finished width and height, cannot continue $$Project{
 		$$calc_hash{'cutting_specs'} = openprint::service::get_specs_ref( $Project, $$services{'Cutting'}[0] );
 	} # end if
 
+	my $scoring_service_index;
+	my $scoring_specs;
+	if ( $$services{Scoring} ) {
+		$scoring_service_index = $$services{Scoring}[0];
+		$scoring_specs = openprint::service::get_specs_ref( $Project, $scoring_service_index );
+	} # end if
+	my $perforating = 0;
+	if ( $$services{Perforating} and @{$$services{Perforating}} ) {
+		my $perfing_specs = openprint::service::get_specs_ref( $Project, $$services{Perforating}[0] );
+		$perforating = openprint::Estimating::Perforating::signature_has_perforation( $perfing_specs, $sig_specs );
+	} # end if
+
 	my @my_equipment;
 
 	if ( $$specs{"chkOverrideEquipment-$form-$qty_index"} eq 'Y' ) {
@@ -787,14 +799,10 @@ if ( 0 ) {
 				$Breakdown .= "Not printing on $$Equipment{name}:<br/>";
 				next;
 			} # end if
-			if ( $$services{Perforating} and @{$$services{Perforating}} ) {
-				my $perfing_specs = openprint::service::get_specs_ref( $Project, $$services{Perforating}[0] );
-				my $perforating = openprint::Estimating::Perforating::signature_has_perforation( $perfing_specs, $sig_specs );
 				if ( $perforating ) {
 					$Breakdown .= 'not perforating on this piece of equipment.<br/>';
 					next;
 				} # end if
-			} # end if
 				
 			
 		} # end if
@@ -1461,8 +1469,13 @@ $Breakdown .= '<tr><td>Signatures:'.(@$Signature_Impositions+1).'</td></tr>';
 					$Breakdown .= "<tr><td>Stitching cost on $$specs{StitchingEquipment}{name}</td><td>$stitching_part</td></tr>";
 				} # end if
 			} # end if has sittiching
-
 			$comparison_cost += $totalPrice + $stitching_part + $cutting_results{'Price'};
+			if ( $scoring_specs ) {
+				my %scoring_results = openprint::Estimating::Scoring::signature_calc( $Project, $scoring_service_index, $scoring_specs, $signature_service_index, $sig_specs, $qty_index, $SignatureImposition );
+				$Breakdown .= "<tr><td>Scoring cost on $scoring_results{Equipment}{name}</td><td class=\"Price\">$scoring_results{Price}</a>";
+				$comparison_cost += $scoring_results{Price};	
+			} # end if
+
 			if ( $cutting_results{'Equipment'} ) {
 				$Breakdown .= "<tr><td>Cutting on $cutting_results{Equipment}{name}</td><td>$cutting_results{'Price'}</td></tr>";
 			} else { 
