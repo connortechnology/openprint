@@ -38,6 +38,11 @@ sub handler {
 	$r->log->debug( "Beginning of Request: $ENV{HTTP_USER_AGENT} $ENV{REMOTE_ADDR} Page: " . $r->uri() );
 
 	$log	= $r->log;
+	my $hostname = $r->param('host');
+	if ( ! $hostname ) {
+		$log->warn("No hostname specified.");
+		return Apache2::Const::DECLINED;
+	} # end if
 	$request->push_handlers(PerlCleanupHandler => \&cleanup);
 
 	$dbh = sql::open_sql( $log, 
@@ -53,15 +58,15 @@ sub handler {
 		return Apache2::Const::HTTP_SERVICE_UNAVAILABLE;
 	} # end if
 $openprint::log->debug("Host: " . $r->param('host') );
-	my $hostname = $r->param('host');
 	my $addr = $ENV{REMOTE_ADDR};
 
+	if ( $hostname ) {
     my ( $host, $domain ) = $hostname =~ /^([^\.])+\.(.+)$/;
     #my ( $domain_id, $allow_dyndns ) = sql::execute(undef,undef,'SELECT id, dyndns FROM domains WHERE name=?', $domain );
     my ( $domain_id ) = sql::execute(undef,undef,'SELECT id FROM domains WHERE name=?', $domain ) if $domain;
 
 	if ( ! $domain_id ) {
-		die "No domain_id found for $hostname\n";
+		$log->error( "No domain_id found for $hostname\n" );
 		return Apache2::Const::DECLINED;
 	#} elsif ( ! $allow_dyndns ) {
 		#die "dysndns not allowed for $hostname\n";

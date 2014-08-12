@@ -211,12 +211,18 @@ sub view {
 	} # end if
 
 	# This is for RSVP's Ithink
+	# FIXME How is this upposed to work?!
 	if ( $param{event_id} =~ /^(\d+)\?user_id=(\d+)$/ ) {
 		$param{event_id} = $1;
 		$param{user_id} = $2;
 	} # end if
 	$param{event_id} = openprint::Event->transform('id', $param{event_id} );
 	$param{user_id} = openprint::User->transform('id', $param{user_id} );
+	if ( $param{user_id} ) {
+		$variable{User} = new openprint::User( $param{user_id} );
+	} else {
+		$variable{User} = new openprint::User( $session{user_id} );
+	} # end if
 
 	if ( ! $param{event_id} ) {
 		$variable{error} .= 'Invalid event specified.';
@@ -224,11 +230,6 @@ sub view {
 		return;
 	} # end if
 
-	if ( $param{user_id} ) {
-		$variable{User} = new openprint::User( $param{user_id} );
-	} else {
-		$variable{User} = new openprint::User( $session{user_id} );
-	} # end if
 	my $Event = $variable{Event} = new openprint::Event( $param{event_id} );
 	if ( ! $Event->can_view( $param{user_id} ? $param{user_id} : $session{user_id} ) ) {
 		return misc::error( $log, $dbh, \%variable, 'Access Denied', 'You are not authorized to view this event.' );

@@ -1,6 +1,6 @@
 CREATE TABLE Primes (
-	id		SERIAL,
+	id	SERIAL,
 	prime	TEXT,
-	length	INTEGER,
-	PRIMARY KEY(id)
+	digit_length	INTEGER,
+	PRIMARY KEY (id)
 );
