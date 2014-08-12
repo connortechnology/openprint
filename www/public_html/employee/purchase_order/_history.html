@@ -32,11 +32,24 @@
 			#$search{'created_by'} = [ sets::union( $session{'user_id'}, new openprint::User($session{'user_id'})->assistant_ids(), new openprint::User($session{'user_id'})->csr_ids() ) ];
 		} # end if
 		$search{'cancelled'} = $session{'/employee/purchase_order/history.html?cancelled'} if $session{'/employee/purchase_order/history.html?cancelled'} ne '';
-		$search{'item_id in'} = $session{'/employee/purchase_order/history.html?item_id'} if $session{'/employee/purchase_order/history.html?item_id'};
+		$search{'item_id any'} = $session{'/employee/purchase_order/history.html?item_id'} if $session{'/employee/purchase_order/history.html?item_id'};
 
 		@{$$variable{'PurchaseOrders'}} = ();
 		my $ac = sql::start_transaction( $dbh );
-		foreach my $PO ( openprint::PurchaseOrder->find( %search ) ) {
+		my @POs = openprint::PurchaseOrder->find( %search );
+		my %POs = map { $$_{id}, $_ } @POs;
+
+		my @po_ids = map { $$_{id} } @POs;
+		foreach my $PC ( openprint::PurchaseOrder_Content->find( po_id=>\@po_ids ) ) {
+			my $PO = $POs{$$PC{po_id}};
+			$$PO{Contents} = [] if ! $$PO{Contents};
+			push $$PO{Contents}, $PC;
+		} 
+		foreach my $PO ( @POs ) {
+			$$PO{Contents} = [] if ! $$PO{Contents};
+		}
+
+		foreach my $PO ( @POs ) {
 
 			if ( ( ! $PO->authorized() ) and ( $PO->created_by() == $session{user_id} ) and ( $PO->can_authorize() ) ) {
 				$PO->save({authorized=>1,authorized_on=>'NOW()',authorized_by=>$session{user_id}});
@@ -62,13 +75,13 @@
 				next if $next;
 			} # end if
 
-			if ( $param{'contains'} ) {
+			if ( $param{contains} ) {
 				my $next = 1;
 				foreach my $C ($PO->Contents()) {
-					if ( $C->description() =~ /$param{'contains'}/i ) {
+					if ( $C->description() =~ /$param{contains}/i ) {
 						$next = 0;
 						last;
-					} elsif ( $C->item() =~ /$param{'contains'}/i ) {
+					} elsif ( $C->item() =~ /$param{contains}/i ) {
 						$next = 0;
 						last;
 					} # end if
@@ -87,8 +100,44 @@
 				next if ! sets::isin( $session{'/employee/purchase_order/history.html?department_id'}, [ map { $_->department_id() } $PO->Contents() ] );
 			} # end if
 
-			push @{$$variable{'PurchaseOrders'}}, $PO;
+			push @{$$variable{PurchaseOrders}}, $PO;
+			$POs{$$PO{id}} = $PO;
 		} # end foreach PO
+
+		if ( @{$$variable{PurchaseOrders}} > 100 ) {
+			my @po_ids = map { $$_{id} } @{$$variable{PurchaseOrders}};
+
+			openprint::Company->find( id=>[ sets::union( map { $$_{supplier_id} ? $$_{supplier_id} : () } @{$$variable{PurchaseOrders}} ) ] );
+
+			my %Payments;
+			foreach my $Payment ( openprint::Object_Payment->find( object_type=>'openprint::PurchaseOrder', object_id=>\@po_ids ) ) {
+				$Payments{$$Payment{object_id}} = [] if ! $Payments{$$Payment{object_id}};
+				push @{$Payments{$$Payment{object_id}}}, $Payment;
+			} # end foreach Payment
+
+			foreach my $Tax ( openprint::PurchaseOrder_Tax->find(purchaseorder_id=>\@po_ids) ) {
+				my $PO = $POs{$$Tax{purchaseorder_id}};
+				$$PO{Taxes} = [] if ! $$PO{Taxes};
+				push @{$$PO{Taxes}}, $Tax;
+			} # end foreach Tax
+
+			foreach my $PO ( @{$$variable{PurchaseOrders}} ) {
+				$$PO{Taxes} = [] if ! $$PO{Taxes};
+
+				if ( $Payments{$$PO{id}} ) {
+					$$PO{Payments} = $Payments{$$PO{id}};
+				} else {
+ 					$$PO{Payments} = [];
+				} 
+			} # end foreach PO
+			
+			my @manifest_ids = sets::union( map { $$_{manifest_id} ? $$_{manifest_id} : () } @{$$variable{'PurchaseOrders'}} );
+			if ( @manifest_ids > 1000 ) {
+				openprint::Manifest->find();
+			} else {
+				openprint::Manifest->find(id=>\@manifest_ids);
+			} # end if
+		} # end if
 		sql::end_transaction( $dbh, $ac );
 	} # end if
 ) ?>

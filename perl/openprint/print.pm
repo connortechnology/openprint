@@ -140,7 +140,7 @@ $log->debug("after continue $$variable{ExternalRedirect}");
 				$Project->unlock();
 		
 				$Project->summary(undef);
-				$Project->save();
+				$Project->save( { calculated_on => 'NOW()' } );
 				openprint::print_project::continue_project( $log, $dbh, $variable, $project_index );
 				return if $$variable{ExternalRedirect};
 			} elsif ( $r->param('btnFunction') eq 'Modify Project' ) {

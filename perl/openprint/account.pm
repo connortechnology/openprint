@@ -458,7 +458,7 @@ sub user_profile {
 				return;
 			} # end if
 
-			if ( openprint::User->find_one( 'email lc'=>lc $param{'email'}, 'id !='=>$User->id() ) ) {
+			if ( openprint::User->find_one( 'email lc'=>lc $param{'email'}, ( $User->id() ? ( 'id !='=>$User->id() ) : () ) ) ) {
 				$variable{'error'} = 'User already exists.';
 				$variable{'information'} = $param{'email'} . ' is already a user.';
 				$variable{'User'} = $User;

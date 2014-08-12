@@ -148,6 +148,9 @@
 		my @options = map { $_, $_ } ( sort ( sets::union( map { $_->$lc_option() ? $_->$lc_option() : () } @Papers ) ) );
 		if ( ! @options ) {
 			$log->debug("No paper options for $lc_option %find");
+			foreach ( keys %find ) {
+				$log->debug("$_ => $find{$_}");
+			}
 		} # end if
 		$$variable{'ddmStock'.$option.$$variable{Signature}} = $options[0] if @options == 2;
 

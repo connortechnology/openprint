@@ -532,7 +532,7 @@ sub save_Paper {
 			( $param{'Colour'.$id} ? ( 'colour_id' =>	$param{'Colour'.$id} ) : () ),
 			( $param{'txtColour'.$id} ? ( 'colour'	=>	$param{'txtColour'.$id} ) : () ),
 			( $param{'Weight'.$id} ? ( 'weight_id' =>	$param{'Weight'.$id} ) : () ),
-			'weight'	=>	$weight,
+			( $weight ? ( weight	=>	$weight ) : () ),
 # We might 
 			( $param{'width'.$id} ? ( 'width'		=> $param{'width'.$id} ) : () ),
 			( $param{'height'.$id} ? ( 'height'	=>	$param{'type'.$id} ne 'Roll' ? $param{'height'.$id} : undef ) : () ),

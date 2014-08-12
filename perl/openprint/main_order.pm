@@ -105,55 +105,23 @@ sub information {
 	$session{'order_id'} = $order_id;
 
 	if ( $order_id ) {
-		if ( ! $variable{'error'} ) {
-			# Only check for errors if we don't have any yet
-			my @errors;
-			# If there are any unspecified quantities, keep looping on the selection page.
-			foreach my $Project ( openprint::OrderedProject->find('order_id'=>$Order->id() ) ) {
-				if ( ( ! $Project->quantity_index() ) and ( $Project->Project()->quantity_indexes() > 1 ) ) {
-					push @errors, "Please select the quantity to order for project $$Project{project_id}<br/>";
-				} # end if
-				if ( ! $Project->description() ) {
-					push @errors, "Please give project $$Project{project_id} a reference<br/>";
-				} # end if
-				if ( ! $Project->shippingtype() ) {
-					push @errors, "Please select a shipping type for project $$Project{project_id}<br/>";
-				} # end if
-			} # end foreach Project
-			if ( @errors ) {
-				$variable{'error'} = join('<br/>', @errors );
-				#$openprint::log->error( "Order Error: $variable{'error'}" );
-			} # end if
-		} # end if
-		if ( ! $variable{'error'} ) {
-			# Only check for errors if we don't have any yet
-			my @errors;
-			foreach my $Product ( $Order->Products() ) {
-	$openprint::log->debug("Got product.");
-				if ( ! $Product->shippingtype() ) {
-					push @errors, "Please select a shipping type.<br/>";
-				} # end if
-			} # end foreach Project
-			if ( @errors ) {
-				$variable{'error'} = join('<br/>', @errors );
-			} # end if
-		} # end if
+		$variable{error} = check_for_errors( $Order ) if ! $variable{error};
 
 	# First thing to do is to try to load info directly from the order.
-		 @variable{'company_name',
-		 'salutation',
-		 'firstname',
-		 'lastname',
-		 'address1',
-		 'address2',
-		 'city',
-		 'state',
-		 'postalcode',
-		 'country',
-		 'phone',
-		 'fax',
-		 'email',
-		 'alsonotify',
+		@variable{'company_name',
+			'salutation',
+			'firstname',
+			'lastname',
+			'address1',
+			'address2',
+			'city',
+			'state',
+			'postalcode',
+			'country',
+			'phone',
+			'fax',
+			'email',
+			'alsonotify',
 		} = $Order->get('company_name','salutation','firstname','lastname','address1','address2','city','state','postalcode','country','phone','fax','email','alsonotify');
 
 		if ( $variable{'company_name'} eq '' ) {
@@ -177,19 +145,13 @@ sub information {
 				# WE ARE logged in as someone else
 				if ( $User->company_id() != $session{'company_id'} ) {
 					my @Users = openprint::User->find( 
-							'company_id'=>$param{'company_id'} ? $param{'company_id'} : $session{'company_id'}, 
-							'order'=>'lower(lastname),lower(firstname)'
+							company_id=>$param{company_id} ? $param{company_id} : $session{company_id}, 
+							order=>'lower(lastname),lower(firstname)'
 							);
 					$User = $Users[0] if @Users;
 				} # end if
 			} # end if
-			@variable{'email',
-				'title',
-				'firstname',
-				'lastname',
-				'salutation',
-				'phone',
-				'fax',
+			@variable{'email', 'title', 'firstname', 'lastname', 'salutation', 'phone', 'fax',
 			} = $User->get('email','title','firstname','lastname','salutation','phone','fax');
 
 		} # end if
@@ -248,55 +210,9 @@ $openprint::log->debug("Initial price for " . $Product->quantity() . ' is : ' . 
 		openprint::print::save_service( $openprint::r, $log, $dbh, \%variable, $Project, $param{'ServiceIndex'} );
 	} # end if
 
-	my @errors;
-	foreach my $Project ( $Order->Projects() ) {
-		if ( ! $Project->ordered_quantity() ) {
-			push @errors, "Please select the quantity to order for project $$Project{id}";
-		} # end if
-		if ( ! $Project->shippingtype() ) {
-			push @errors, "Please select a shipping type for project $$Project{id}";
-		} # end if
-		if ( ! $Project->reference() ) {
-			push @errors, "Please give project $$Project{id} a reference";
-		} # end if
-		my $services = $Project->services();
-		my @ServiceTypes = openprint::ServiceType->find('category'=>'Shipping');
-		foreach my $ServiceType ( @ServiceTypes ) {
-			next if ! $$services{$ServiceType->name()};
-			next if sets::isin( $ServiceType->name(), [ 'CustomerPickUp','Turnaround'] );
-		
-			foreach my $service_id ( @{$$services{$ServiceType->name()}} ) {
-				my $specs = openprint::service::get_specs_ref( $Project, $service_id );
-# do error checks
-				push @errors, 'Please enter the Shipping Company Name.' if ! $$specs{'ToCompanyName'};
-				push @errors, 'Please enter the Shipping Address.' if ! $$specs{'ToAddress1'};
-				push @errors, 'Please enter the Shipping City.' if ! $$specs{'ToCity'};
-				push @errors, 'Please enter the Shipping State/Province.' if ! $$specs{'ToStateProvince'};
-				push @errors, 'Please enter the Shipping PostalCode.' if ! $$specs{'ToPostalCode'};
-				push @errors, 'Please enter the Shipping Country.' if ! $$specs{'ToCountry'};
-				push @errors, 'Please enter the Shipping Phone.' if ! $$specs{'ToPhone'};
-				#push @errors, 'Please enter the Shipping Email.' if	! $$specs{'ToEmail'};
-
-				$_ = Email::Valid->address($$specs{'ToEmail'} );
-				if ( ( ! $_ ) or ( $_ ne $$specs{'ToEmail'} ) ) {
-					push @errors, 'Shipping Email is not a valid email address.';
-				} # end if
-	
-				if ( openprint::service::status( $Project->id(), $service_id ) eq 'uncalculated' ) {
-					push @errors, 'Unable to calculate shipping:' . $$specs{'alert'};
-				} # end if
-			} # end foreach service_id
-		} # end foreach ServiceType
-		if ( $Project->order_id() != $order_id ) {
-			$Project->order_id( $order_id );
-			$Project->save();
-		} # end if
-	} # end foreach  Project
-	if ( @errors ) {
-		%param = ();
-		$param{'order_id'} = $order_id;
-		$session{error} .= join('<br/>', @errors );
-		$variable{ExternalRedirect} = '/main/order/information.html';
+	$variable{error} = check_for_errors( $Order );
+	if ( $variable{error} ) {
+		$variable{ExternalRedirect} = '/main/order/information.html?order_id='.$$Order{id};
 		return;
 	} # end if
 	
@@ -353,6 +269,7 @@ sub confirmation {
 			my $Project = $OP->Project();
 			$variable{error} .= $Project->check_for_order( $OP );
 		} # end foreach Project
+		$variable{error} = check_for_errors( $Order ) if ! $variable{error};
 
 		if ( $variable{error} ) {
 			$variable{ExternalRedirect} = '/main/order/submit.html';
@@ -602,5 +519,74 @@ sub _order {
 
 sub _user_info {
 } # end sbu _user_info
+
+sub check_for_errors {
+	my ( $Order ) = @_;
+# Only check for errors if we don't have any yet
+	my @errors;
+# If there are any unspecified quantities, keep looping on the selection page.
+	foreach my $OP ( openprint::OrderedProject->find( order_id=>$Order->id() ) ) {
+		if ( ( ! $OP->quantity_index() ) and ( $OP->Project()->quantity_indexes() > 1 ) ) {
+			push @errors, "Please select the quantity to order for project $$OP{project_id}<br/>";
+		} # end if
+		if ( ! $OP->description() ) {
+			push @errors, "Please give project $$OP{project_id} a reference<br/>";
+		} # end if
+		if ( ! $OP->shippingtype() ) {
+			push @errors, "Please select a shipping type for project $$OP{project_id}<br/>";
+		} # end if
+		my $Project = $OP->Project();
+		push @errors, $Project->check_for_order( $OP );
+
+		if ( ! $Project->reference() ) {
+			push @errors, "Please give project $$Project{id} a reference";
+		} # end if
+		my $services = $Project->services();
+		my @ServiceTypes = openprint::ServiceType->find('category'=>'Shipping');
+		foreach my $ServiceType ( @ServiceTypes ) {
+			next if ! $$services{$ServiceType->name()};
+			next if sets::isin( $ServiceType->name(), [ 'CustomerPickUp','Turnaround'] );
+		
+			foreach my $service_id ( @{$$services{$ServiceType->name()}} ) {
+				my $specs = openprint::service::get_specs_ref( $Project, $service_id );
+# do error checks
+				push @errors, 'Please enter the Shipping Company Name.' if ! $$specs{'ToCompanyName'};
+				push @errors, 'Please enter the Shipping Address.' if ! $$specs{'ToAddress1'};
+				push @errors, 'Please enter the Shipping City.' if ! $$specs{'ToCity'};
+				push @errors, 'Please enter the Shipping State/Province.' if ! $$specs{'ToStateProvince'};
+				push @errors, 'Please enter the Shipping PostalCode.' if ! $$specs{'ToPostalCode'};
+				push @errors, 'Please enter the Shipping Country.' if ! $$specs{'ToCountry'};
+				push @errors, 'Please enter the Shipping Phone.' if ! $$specs{'ToPhone'};
+				#push @errors, 'Please enter the Shipping Email.' if	! $$specs{'ToEmail'};
+
+				$_ = Email::Valid->address($$specs{'ToEmail'} );
+				if ( ( ! $_ ) or ( $_ ne $$specs{'ToEmail'} ) ) {
+					push @errors, 'Shipping Email is not a valid email address.';
+				} # end if
+	
+				if ( openprint::service::status( $Project->id(), $service_id ) eq 'uncalculated' ) {
+					push @errors, 'Unable to calculate shipping:' . $$specs{'alert'};
+				} # end if
+			} # end foreach service_id
+		} # end foreach ServiceType
+		if ( $Project->order_id() != $$Order{id} ) {
+$log->error("Updating project order_id, shouldn't have to do this");
+			$Project->save( { order_id=>$$Order{id} } );
+		} # end if
+	} # end foreach OP
+	if ( @errors ) {
+		return join('<br/>', @errors );
+	} # end if
+# Only check for errors if we don't have any yet
+	foreach my $Product ( $Order->Products() ) {
+		if ( ! $Product->shippingtype() ) {
+			push @errors, "Please select a shipping type.<br/>";
+		} # end if
+	} # end foreach Project
+	if ( @errors ) {
+		return join('<br/>', @errors );
+	} # end if
+	return;
+} # end sub check_for_errors
 1;
 __END__

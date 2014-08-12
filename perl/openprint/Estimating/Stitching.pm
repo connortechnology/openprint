@@ -16,7 +16,7 @@
 
 package openprint::Estimating::Stitching;
 use strict;
-use warnings;
+#use warnings;
 
 use constant DEBUG => 0;
 
@@ -328,11 +328,11 @@ $openprint::log->debug("Ignoring folding due to override");
 }
 
 		if ( $imposition > 1 ) {
-			if ( ( ( $$folding_specs{"chkOverrideEquipment-$form-$qty_index"} ne 'Y' or $$folding_specs{"ddmEquipment-$form-$qty_index"} ) and $$I{'FoldingImposition'} and $$I{'FoldingImposition'} % 2 ) ) {
-				$imposition = 1;
-				$I->display("Setting imposition to 1 due to foldingositions") if DEBUG;
-				$results{Breakdown} .= "Setting imposition to 1 due to foldingositions<br/>";
-			} elsif ($$I{imposition} % 2 ) {
+			#if ( ( ( $$folding_specs{"chkOverrideEquipment-$form-$qty_index"} ne 'Y' or $$folding_specs{"ddmEquipment-$form-$qty_index"} ) and $$I{'FoldingImposition'} and $$I{'FoldingImposition'} % 2 ) ) {
+				#$imposition = 1;
+				#$I->display("Setting imposition to 1 due to foldingositions") if DEBUG;
+				#$results{Breakdown} .= "Setting imposition to 1 due to foldingositions<br/>";
+			if ($$I{imposition} % 2 ) {
 				$I->display("Setting imposition to 1 due to odd impositions") if DEBUG;
 				$results{Breakdown} .= "Setting imposition to 1 due to odd impositions<br/>";
 				$imposition = 1;
@@ -487,8 +487,10 @@ $results{'Breakdown'} .= 'Imposition: ' . $imposition . 'out<br/>';
 				} 
 			} # end if
 			my $price = get_price( $Project, $ServiceType, $Equipment, $specs, $plusCover, $qty_index );
-			$$folding_specs{"Price-$form-$qty_index"} = 0 if ! defined $$folding_specs{"Price-$form-$qty_index"};
-			$$price{ComparisonPrice} = $$price{Price} + $$folding_specs{"Price-$form-$qty_index"};
+			$$price{ComparisonPrice} = $$price{Price};
+			if ( $folding_specs and ( defined $$folding_specs{"Price-$form-$qty_index"} ) ) {
+				$$price{ComparisonPrice} = $$price{Price} + $$folding_specs{"Price-$form-$qty_index"};
+			} # end if
 			#$results{Breakdown} .= $Equipment->strid() . ' ' . $$price{Price} . ' ' . $$folding_specs{"Price-$form-$qty_index"};
 			if ( ( ! $bestPrice ) or $$price{'ComparisonPrice'} < $$bestPrice{'ComparisonPrice'} ) {
 				$bestEquipment = $Equipment;

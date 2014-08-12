@@ -4,5 +4,3 @@ CREATE TABLE Primes (
 	digit_length	INTEGER,
 	PRIMARY KEY (id)
 );
-
-

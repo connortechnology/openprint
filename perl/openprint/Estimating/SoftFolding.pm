@@ -55,7 +55,7 @@ sub calc {
 
 	my $services = $Project->services();
 	my $project_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] ) if $$services{''};
-	my $finished_calliper = openprint::print::get_finished_calliper( $Project->id() );
+	my $finished_calliper = $Project->calliper();
 
 	my $status = 'calculated';
 
@@ -97,9 +97,9 @@ sub calc {
 			if ( ! %ServicePrice ) {
 				$$specs{'hdnBreakdown'.$qty_index} .= 'No Service price.<br/>';
 			} elsif ( lc $ServicePrice{'units'} eq 'per m' ) {
-				$ServicePrice{'Total'} += $ServicePrice{'Price'} * $$specs{'txtQuantity'.$qty_index} / 1000;
+				$ServicePrice{'Total'} += $$specs{Folds} * $ServicePrice{'Price'} * $$specs{'txtQuantity'.$qty_index} / 1000;
 			} else {
-				$ServicePrice{'Total'} += $ServicePrice{'Price'} * $$specs{'txtQuantity'.$qty_index};
+				$ServicePrice{'Total'} += $$specs{Folds} * $ServicePrice{'Price'} * $$specs{'txtQuantity'.$qty_index};
 			} # end if
 			$total += $ServicePrice{'Total'};
 			$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Service Price: $%1$.2f%2$s = $%3$.2f<br/>', @ServicePrice{'Price','units','Total'} );
@@ -138,6 +138,7 @@ sub calc {
 sub summary {
 	my ( $Project, $service_id, $specs, $qty_index ) = @_;
 
+	$specs = openprint::service::get_specs_ref( $Project, $service_id ) if ! $specs;
 	if ( $qty_index ) {
 		if ( $$specs{'ddmEquipment'.$qty_index} ) {
 			my $Equipment = new openprint::Equipment( $$specs{'ddmEquipment'.$qty_index} );
@@ -145,9 +146,8 @@ sub summary {
 		} # end if
 		return '';
 	} # end if
-	$specs = openprint::service::get_specs_ref( $Project, $service_id ) if ! $specs;
 
-	return '';
+	return $$specs{Folds} . ' soft folds';
 } # end sub summary
 
 sub display {

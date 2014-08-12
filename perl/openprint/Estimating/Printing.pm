@@ -42,6 +42,7 @@ my %special_colours;
 
 my %folding_cache;
 my %Papers;
+my %Presses;
 # indexed by press
 #my %impositions;
 my $do_initial_filtering = 1;
@@ -953,6 +954,7 @@ $openprint::log->debug("size: " . $$specs{'ddmStockSheetSize'.$qty_index} . ' wi
 				} elsif ( $$P{'type'} eq 'Sheet' ) {
 # Don't cut sheets into rolls
 					next if ! $$specs{'OverrideStockHeight'.$qty_index};
+					next if ! $$specs{'OverrideStockWidth'.$qty_index};
 if ( 1 ) {
 					my $width_factor2 = $$P{'start_height'} / $$specs{'OverrideStockWidth'.$qty_index};
 					my $height_factor2 = $$P{'start_width'} / $$specs{'OverrideStockHeight'.$qty_index};
@@ -2261,6 +2263,7 @@ $openprint::log->debug("No printing");
 		openprint::Estimating::Cutting::load_equipment( $Project );
 	my $project = setup_project( $Project, $service_index, $services, $specs, \@side_one_colours, \@side_two_colours, \%inkCoverage, $Papers[0] );
 $openprint::log->debug("Before select presses: " . ( sprintf('%.4f', tv_interval( [$master_time])*1000) ) .' usecs' );
+	%Presses = map { $$_{strid}, $_ } openprint::Equipment->find( 'category any'=>'Printing', 'useinestimating'=>1 );
 	my %presses = select_presses( $Project, \@Papers, $specs, $project );
 	my @possible_presses;
 	foreach my $press_id ( keys %presses ) {
@@ -2396,12 +2399,12 @@ $log->warn("There are no quantities!");
 
 			my $OverridePress = openprint::Equipment->find_one('strid'=>$$specs{'ddmPress'.$qty_index});
 			if (! $OverridePress ) {
-				$$specs{'alert'} = 'Cant find the press that you have chosen.';
+				$$specs{'alert'} .= 'Cant find the press that you have chosen.';
 				return $$specs{'Status'} = 'uncalculated';
 			} # end if
 
 			if ( $presses{$OverridePress->id()} ) {
-				$$specs{'alert'} = 'The press that you have chosen is not appropriate for the following reason: ' .$presses{$OverridePress->id()};
+				$$specs{'alert'} .= 'The press that you have chosen is not appropriate for the following reason: ' .$presses{$OverridePress->id()};
 				return $$specs{'Status'} = 'uncalculated';
 			} # end if
 		} else {
@@ -2538,6 +2541,7 @@ $openprint::log->debug(Data::Dumper::Dumper( \%Overrides ) );
 		if ( $$Imposition{'imposition'} > $qty ) {
 			$$specs{'alert'} .= "It is cheaper to print " . $$Imposition{'imposition'}.'.  You may wish to increase your quantity.<br/>';
 		} # end nif
+		$$specs{alert} .= $$best_price{alert};
 		my $Paper = $Imposition->Paper();
 
 		$$specs{'hdnBreakdown'.$qty_index} = breakdown( $best_price, $specs );
@@ -2562,7 +2566,7 @@ $openprint::log->error("No stock breakdown $stock_breakdown for $qty_index");
 
 		$price = $best_price if ! $price;
 
-		my $last_sig_price == $$price{prices}[ @{$$price{prices}} -1 ];
+		my $last_sig_price = $$price{prices}[ @{$$price{prices}} -1 ];
 		$openprint::log->warn("Final Prices:"  . @{$$price{prices}}  );
 
 		$$specs{'hdnBreakdown'.$qty_index} .= join('', 
@@ -2845,16 +2849,18 @@ $openprint::log->debug(" $$project{ProjectSpecs} group: $$sig_specs{Group} pageq
 		if ( $$project{ProjectSpecs}{"ddmPress-$$sig_specs{Group}"} and ( $$project{ProjectSpecs}{"ddmPress-$$sig_specs{Group}"} ne $strid ) ) {
 			next;
 		} # end if
-		my $Press = openprint::Equipment->find_one( strid=>$strid );
+		my $Press = $Presses{$strid};
 
 		if ( ! $Press ) {
 			$openprint::log->error("No Pressf or $strid");
 			next;
 		} # end if
 
-		my $printing_type = $Press->specification('Printing Type');
-		if ( $$sig_specs{'PrintingTypes'} and ! sets::isin( $printing_type, $$sig_specs{'PrintingTypes'} ) ) {
-			next;
+		if ( $$sig_specs{PrintingTypes} ) {
+			my $printing_type = $Press->specification('Printing Type');
+			if ( ! sets::isin( $printing_type, $$sig_specs{'PrintingTypes'} ) ) {
+				next;
+			} # end if
 		} # end if
 
 		my @press_impositions;
@@ -4251,6 +4257,7 @@ $openprint::log->debug("Sheet No supplied wight: $supplied_sheets $paper_string 
 					if ( $$Paper{available_to_order} > 1 ) {
 						if ( $$Paper{available_to_order} < ( $$Paper{type} eq 'Sheet' ? $supplied_sheets : $supplied_weight ) ) {
 							$$price{'Paper Breakdown'} .= $Supplied->to_string() . ' does not have enough available. Only ' . $$Paper{available_to_order} . $Paper->units() . ' left.<br/>';
+							$$price{alert} .= $Supplied->to_string() . ' does not have enough available. Only ' . $$Paper{available_to_order} . $Paper->units() . ' left.<br/>';
 							$$price{'Comparison Cost'} += 1000000;
 						} # end if
 					} # end if
@@ -4497,10 +4504,10 @@ $openprint::log->debug("Sheet No supplied wight: $supplied_sheets $paper_string 
 					$openprint::log->debug("Resulting price worst than best: $best_price{'Comparison Cost'} <= $$price{'Comparison Cost'}");
 					$imp->display($recursion_depth.'Worst than best');
 					my $breakdown = breakdown( $price, $sig_specs );
-						my $stitching_breakdown == $$price{'Stitching Breakdown'};
-						foreach my $sig_price ( @{$$price{prices}} ) {
-							$stitching_breakdown = $$sig_price{'Stitching Breakdown'} if $$sig_price{'Stitching Breakdown'}; 
-						} # end foreach
+					my $stitching_breakdown = $$price{'Stitching Breakdown'};
+					foreach my $sig_price ( @{$$price{prices}} ) {
+						$stitching_breakdown = $$sig_price{'Stitching Breakdown'} if $$sig_price{'Stitching Breakdown'}; 
+					} # end foreach
 
 					$breakdown .= join('',
 							( defined $$price{'SpinePaste Breakdown'} ? $$price{'SpinePaste Breakdown'} : '' ),
@@ -4511,10 +4518,6 @@ $openprint::log->debug("Sheet No supplied wight: $supplied_sheets $paper_string 
 							);
 					$openprint::log->debug( 'this: ' . $breakdown );
 					$best_price{Imposition}->display($recursion_depth.'best');
-						my $stitching_breakdown == $best_price{'Stitching Breakdown'};
-						foreach my $sig_price ( @{$best_price{prices}} ) {
-							$stitching_breakdown = $$sig_price{'Stitching Breakdown'} if $$sig_price{'Stitching Breakdown'}; 
-						} # end foreach
 					$breakdown = breakdown( \%best_price, $best_price{specs} );
 					$breakdown .= join('',
 							( defined $best_price{'SpinePaste Breakdown'} ? $best_price{'SpinePaste Breakdown'} : '' ),
@@ -4530,7 +4533,7 @@ $openprint::log->debug("Sheet No supplied wight: $supplied_sheets $paper_string 
 				if ( DEBUG_PRICE_DECISIONS ) {
 					$imp->display("$recursion_depth New best price chosen: $best_price{'Comparison Cost'} >= $$price{'Comparison Cost'}");
 					if ( %best_price ) {
-						my $stitching_breakdown == $best_price{'Stitching Breakdown'};
+						my $stitching_breakdown = $best_price{'Stitching Breakdown'};
 						foreach my $sig_price ( @{$best_price{prices}} ) {
 							$stitching_breakdown = $$sig_price{'Stitching Breakdown'} if $$sig_price{'Stitching Breakdown'}; 
 						} # end foreach
@@ -4575,7 +4578,7 @@ $openprint::log->debug("Sheet No supplied wight: $supplied_sheets $paper_string 
 				#} # end if
 				if ( DEBUG_PRICE_DECISIONS ) {
 					my $breakdown = breakdown( \%best_price, $sig_specs );
-					my $stitching_breakdown == $best_price{'Stitching Breakdown'};
+					my $stitching_breakdown = $best_price{'Stitching Breakdown'};
 					foreach my $sig_price ( @{$best_price{prices}} ) {
 						$stitching_breakdown = $$sig_price{'Stitching Breakdown'} if $$sig_price{'Stitching Breakdown'}; 
 					} # end foreach
@@ -5599,7 +5602,7 @@ sub select_presses {
 	#my @side_two_colours = sets::exclude( \@Coatings, $side_one_colours );
 	my $ProjectType = $Project->Type();
 
-	foreach my $Press ( openprint::Equipment->find( 'category any'=>'Printing', 'useinestimating'=>1 ) ) {
+	foreach my $Press ( values %Presses ) {
 		my $press_id = $Press->id();
 
 		my ( $min_object_width, $min_object_length ) = ( $Press->specification( 'Minimum Object Width'), $Press->specification('Minimum Object Length') );

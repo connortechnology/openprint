@@ -236,14 +236,14 @@ sub signature_calc {
 	$Results{'Breakdown'} .= "# of Scores: $score_qty<br/>";
 	return %Results if ! $score_qty;
 
-	$Results{'Status'} = 'uncalculated';
+	$Results{Status} = 'uncalculated';
 	my $services = $Project->services();
 	my $qty = $$specs{"txtQuantity$qty_index"};
-	if ( $$specs{'txtPressSheetComboItems'} ) {
-		$qty *= $$specs{'txtPressSheetComboItems'};
+	if ( $$specs{txtPressSheetComboItems} ) {
+		$qty *= $$specs{txtPressSheetComboItems};
 	} # end if
-	if ( $$sig_specs{'Versions'} ) {
-		$qty *= $$sig_specs{'Versions'};
+	if ( $$sig_specs{Versions} ) {
+		$qty *= $$sig_specs{Versions};
 	} # end if
 
 	# Can only use the stitcher for scoring if we are stitching.	There are also thickness constraints
@@ -255,7 +255,9 @@ sub signature_calc {
 	my $cutting_service_index = $$services{'Cutting'} ? $$services{'Cutting'}[0] : undef;
 	$folding_service_index = ( ( $$services{Folding} and @{$$services{Folding}} ) ? $$services{'Folding'}[0] : undef );
 	my ( $folding_specs, @Folds );
-	if ( $folding_service_index ) {
+	if ( $$SignatureImposition{Folds} ) {
+		@Folds = @{$$SignatureImposition{Folds}};
+	} elsif ( $folding_service_index ) {
 		$folding_specs = openprint::service::get_specs_ref( $Project, $folding_service_index );
 		@Folds = openprint::Estimating::Folding::get_Folds( $folding_specs, $sig_specs, $qty_index );
 	} # end if
@@ -431,9 +433,9 @@ sub signature_calc {
 			$Results{'Breakdown'} .= sprintf('Total: $%.2f<br/>', $totalPrice );
 
 			if ( $totalPrice < $Results{'Price'} or ! exists $Results{'Price'} ) {
-				$Results{'Price'} = $totalPrice;
-				$Results{'Equipment'} = $Equipment;
-				$Results{'Runspeed'} = $Equipment->specification('Scoring Runspeed');
+				$Results{Price} = $totalPrice;
+				$Results{Equipment} = $Equipment;
+				$Results{Runspeed} = $Equipment->specification('Scoring Runspeed');
 			} # end if
 		} else {
 			foreach my $Set_Of_Impositions ( @All_Impositions ) {

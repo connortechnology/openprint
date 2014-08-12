@@ -148,9 +148,9 @@ $openprint::log->debug("Updating wpsi (old: $old_wpsi, new: $$Paper{wpsi}) for "
 	} # end if
 } # end foreach my Paper
 
-if ( 0 ) {
+if ( 1 ) {
 my $log_count = 0;
-foreach my $Log ( openprint::Log->find('date_time <='=>sprintf('%.4d-%.2d-%.2d', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -365 ) ) ) ) {
+foreach my $Log ( openprint::Log->find('date_time <='=>sprintf('%.4d-%.2d-%.2d', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -2*365 ) ) ) ) {
 	$Log->delete();
 	$log_count += 1;
 } # end foreach Log

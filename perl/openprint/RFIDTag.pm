@@ -4,7 +4,7 @@ our @ISA = qw(openprint::Object);
 require openprint::Object;
 
 use openprint ();
-use vars qw($debug $dbh %find_fields %fields %transforms %defaults $table $serial );
+use vars qw($debug $dbh %find_fields %fields %transforms %defaults $table $cache_field );
 *dbh = \$openprint::dbh;
 
 require sql;
@@ -37,6 +37,10 @@ $table = 'rfidtags';
 	type_id		=>	undef,
 	valid		=>	'0',
 );
+$cache_field = 'id';
+sub cache_field {
+    return $cache_field;
+}
 
 sub save {
 	my ( $self, $hash ) = @_;

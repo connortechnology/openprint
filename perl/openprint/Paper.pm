@@ -1284,8 +1284,10 @@ sub load_from_signature {
 
 		if ( $qty_index and $$specs{'paper_id'.$qty_index} ) {
 			$Paper = new openprint::Paper( $$specs{'paper_id'.$qty_index} );
-			$Paper = $Paper->id() ? $Paper : undef;
-			$openprint::log->debug("Loading by paper id" . $Paper->to_string() ) if $debug;
+			if ( ! $Paper->id() ) {
+				$Paper = undef;
+				$openprint::log->warn("Loading by paper id but not found: " . $$specs{'paper_id'.$qty_index} );
+			} # end if
 		} elsif ( ! ( $$specs{'ddmStockBrand'} and $$specs{'ddmStockFinish'} and $$specs{'ddmStockColour'} and $$specs{'ddmStockWeight'} ) ) {
 			return new openprint::Paper();
 		} # end if
@@ -1316,7 +1318,7 @@ $log->debug("Didn't find specific paper $params{'width'} x $params{'height'}");
 				@Papers = openprint::Paper->find( %params );
 			} # end if
 			if ( ! @Papers ) {
-				$openprint::log->warn("No papers found");
+				$openprint::log->warn("No papers found for brnad($$specs{'ddmStockBrand'}) finish($$specs{'ddmStockFinish'}) color($$specs{'ddmStockColour'}) weight($$specs{'ddmStockWeight'})");
 				$Paper = new openprint::Paper();
 				my @StockOptions = misc::trim(split (',', $openprint::config{$Project->Type()->name().'StockOptions'} )) if $Project;;
 				@StockOptions = misc::trim(split (',', $openprint::config{'StockOptions'} )) if ! @StockOptions;
