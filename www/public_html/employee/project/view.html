@@ -67,6 +67,9 @@ function send_notifications( form, project_id ) {
 	<? echo ( 
 		$$variable{checkboxes} = ($session{user_type} eq 'A') or openprint::usergroup::is_user_in( ['Sales Admin','Scheduling','PrepressManager'], $session{user_id} );
 		my $html;
+		if ( $$variable{Order}->status() eq 'Re-Opened' ) {
+			$html .= '<div class="warning">This docket has been re-opened. There may be changes being made. Please consult the CSR.</div>';
+		} # end if
 		my @Projects = $$variable{Order}->Projects();
 		if ( @Projects ) {
 			if ( @Projects > 1 ) {
