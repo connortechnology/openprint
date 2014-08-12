@@ -433,7 +433,7 @@ $BestPrice{Breakdown} .= $breakdown;
 					last;
 				} # end if
 
-				my $run_qty = $qty * $Imposition->quantity() / $Imposition->imposition();
+				my $run_qty = $qty * $imp->quantity() / $Imposition->imposition();
 				$breakdown .= 'impressions: ' . $run_qty;
 		
 				if ( my $Overs = $Equipment->Specification('UVCoating Overs', $run_qty ) ) {
