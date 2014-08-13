@@ -545,7 +545,7 @@ $openprint::log->debug("Types: @types") if DEBUG;
 						} else {
 							$MaterialPrice{units} = 'unknown units';
 						} # end if
-						$breakdown .= sprintf(' @ $%.2f%s ', @MaterialPrice{'Price','units'} );
+						$breakdown .= sprintf(' @ $%.5f%s ', @MaterialPrice{'Price','units'} );
 						$ImpositionPrice{Material} += $MaterialPrice{Total};
 						$type_total += $MaterialPrice{Total};
 					} # end if
