@@ -165,6 +165,9 @@ function update_total( form ) {
 					<label>Attention</label>
 					<? echo ( ssi::radio( 'attention', [ '1', 'Yes', '0', 'No' ], $$variable{'Expense'}->attention() ); ) ?>
 				</li>
+				<li><label>Transaction ID</label>
+					<? echo ( input( type=>'text', name=>'transaction_id', value=>$$variable{Expense}->transaction_id() ); ) ?>
+				</li>
 			</ul>
 		</div>
 		<br class="spacer"/>
@@ -172,14 +175,14 @@ function update_total( form ) {
 			<? echo (
 				my $html = '';
 				if ( $$variable{'Expense'}->id() ) {
-					$html .= button( 'Copy', { 'onclick'=>"f1.action='expense.html';f1.btnFunction.value='Copy';f1.submit();" } );
+					$html .= button( 'Copy', { onclick=>"f1.action='expense.html';f1.btnFunction.value='Copy';f1.submit();" } );
 					if ( $$variable{'Expense'}->deleted() ) {
-						$html .= button( 'Destroy', { 'onclick'=>"if(confirm('Are you sure?')){f1.btnFunction.value='Destroy';f1.submit();}" } );
+						$html .= button( 'Destroy', { onclick=>"if(confirm('Are you sure?')){f1.btnFunction.value='Destroy';f1.submit();}" } );
 					} else {
-						$html .= button( 'Delete', { 'onclick'=>"f1.btnFunction.value='Delete';f1.submit();" } );
+						$html .= button( 'Delete', { onclick=>"f1.btnFunction.value='Delete';f1.submit();" } );
 					} # end if
 				} # end if
-				$html .= button( 'Save', { 'onclick'=>"f1.btnFunction.value='Save';f1.submit();" } );
+				$html .= button( 'Save', { onclick=>"f1.btnFunction.value='Save';f1.submit();" } );
 				return $html;
 			) ?>
 		</p>

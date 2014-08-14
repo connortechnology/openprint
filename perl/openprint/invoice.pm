@@ -48,6 +48,8 @@ sub history {
 			if ( $session{'/invoice/history.html?company_id'} and ( $session{'/invoice/history.html?company_id'} != $Invoice->invoicee_id() ) ) {
 				delete $session{'/invoice/history.html?company_id'};
 			} # end if
+			$variable{ExternalRedirect} = '/invoice/history.html';
+			return;
 		} # end if
 	} elsif ( $param{'btnFunction'} eq 'UnPost' ) {
 		my $Invoice = new openprint::Invoice( $param{'invoice_id'} );
@@ -62,6 +64,8 @@ sub history {
 		} else {
 			$variable{error} .= $Invoice->send();
 			$variable{information} .= 'Invoice ' . $Invoice->id() . ' sent.<br/>';
+			$variable{ExternalRedirect} = '/invoice/history.html';
+			return;
 		} # end if
 	} elsif ( $param{'btnFunction'} eq 'Send To Me' ) {
 		my $Invoice = openprint::Invoice->find_one( id=>$param{invoice_id} );
@@ -71,6 +75,8 @@ sub history {
 			$variable{'error'} .= $Invoice->send( new openprint::User( $session{user_id} ) );
 			$variable{'information'} .= 'Invoice ' . $Invoice->id() . ' sent.<br/>';
 		} # end if
+		$variable{ExternalRedirect} = '/invoice/history.html';
+		return;
 	} elsif ( $param{'btnFunction'} eq 'Download' ) {
 		my @Taxes = openprint::Tax->find(
 				( Date::Calc::check_date( @param{'created_on_start_year','created_on_start_month','created_on_start_day'} ) ?
@@ -299,9 +305,13 @@ $log->debug("Total: $total");
 	} elsif ( $param{'btnFunction'} eq 'Send' ) {
 		$variable{error} .= $Invoice->send();
 		$variable{information} .= 'Invoice ' . $Invoice->id() . ' sent.<br/>';
+		$variable{ExternalRedirect} = $Invoice->url_to();
+		return;
 	} elsif ( $param{'btnFunction'} eq 'Send To Me' ) {
 		$variable{'error'} .= $Invoice->send( new openprint::User( $session{user_id} ) );
 		$variable{'information'} .= 'Invoice ' . $Invoice->id() . ' sent.<br/>';
+		$variable{ExternalRedirect} = $Invoice->url_to();
+		return;
 	} # end if
 } # end sub view
 sub _timetracks {

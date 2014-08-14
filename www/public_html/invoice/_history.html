@@ -120,7 +120,7 @@
 			return $html;
 		) ?>
 			<tr class="totals">
-			<td colspan="4">Totals</td>
+			<td colspan="5">Totals</td>
 			<td class="Price"><? echo ( openprint::Currency::format( $$variable{'subtotal'} ); ) ?></td>	
 			<? echo (
 				return join('', map { sprintf('<td class="Price">%s</td>', openprint::Currency::format( $$variable{'tax_totals'}{$_->id()} ) ) } @{$$variable{'Taxes'}} );

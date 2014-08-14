@@ -41,9 +41,11 @@ sub generate {
 	} # end if
 	my $New = openprint::Bitcoin_Address->find_one('object_id is null'=>1);
 	if ( ! $New ) {
+		require Finance::Bitcoin;
 		require Finance::Bitcoin::API;
 		require Finance::Bitcoin::Wallet;
 		my $uri     = "http://$openprint::config{bitcoin_user}:$openprint::config{bitcoin_password}\@$openprint::config{bitcoin_server}:$openprint::config{bitcoin_port}/";
+$openprint::log->debug($uri);
 
 		my $api     = Finance::Bitcoin::API->new( endpoint => $uri );
 

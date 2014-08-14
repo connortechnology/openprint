@@ -954,6 +954,7 @@ $openprint::log->debug("size: " . $$specs{'ddmStockSheetSize'.$qty_index} . ' wi
 				} elsif ( $$P{'type'} eq 'Sheet' ) {
 # Don't cut sheets into rolls
 					next if ! $$specs{'OverrideStockHeight'.$qty_index};
+					next if ! $$specs{'OverrideStockWidth'.$qty_index};
 if ( 1 ) {
 					my $width_factor2 = $$P{'start_height'} / $$specs{'OverrideStockWidth'.$qty_index};
 					my $height_factor2 = $$P{'start_width'} / $$specs{'OverrideStockHeight'.$qty_index};
