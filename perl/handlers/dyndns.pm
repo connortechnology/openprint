@@ -60,7 +60,6 @@ sub handler {
 $openprint::log->debug("Host: " . $r->param('host') );
 	my $addr = $ENV{REMOTE_ADDR};
 
-	if ( $hostname ) {
     my ( $host, $domain ) = $hostname =~ /^([^\.])+\.(.+)$/;
     #my ( $domain_id, $allow_dyndns ) = sql::execute(undef,undef,'SELECT id, dyndns FROM domains WHERE name=?', $domain );
     my ( $domain_id ) = sql::execute(undef,undef,'SELECT id FROM domains WHERE name=?', $domain ) if $domain;
