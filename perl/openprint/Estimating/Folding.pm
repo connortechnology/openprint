@@ -665,6 +665,7 @@ $openprint::log->error("No folds from sigimpo");
 			} # end if
 		} # end if
 
+if ( 0 ) {
 		if ( $$sig_specs{'txtFinalWidth'} and $$sig_specs{'txtFinalHeight'} ) {
 			# Something else entirely
 			my @Impositions = @Set_Of_Impositions;
@@ -705,6 +706,7 @@ $openprint::log->debug("No folds") if DEBUG;
 		} else {
 			$openprint::log->warn("No final width and height!");
 		} # end if finalwidth and height
+}
 		# Now we have a base set of Maximal Impositions.	Now some of the I's in this set may have an imposition > 1.	
 		# Problem is that we apparently also need to price the situation of doing them 1 out, and everything in between.	
 		if ( DEBUG ) {
@@ -1651,7 +1653,7 @@ $i->display() if DEBUG;
 			my $form = $$sig_specs{SignatureIndex};
 			$$specs{'hdnBreakdown'.$qty_index} .= "<fieldset><legend>Signature: $form $$sig_specs{'txtSignatureType'} Ref: $$sig_specs{'txtServiceDescription'}:</legend>";
 			$$specs{'hdnBreakdown'.$qty_index} .= openprint::service::summary( $Project, $signature_service_index ) . '<br/>';
-			$$specs{'hdnBreakdown'.$qty_index} .= openprint::service::summary( $Project, $signature_service_index, $qty_index ) . '<br/>';
+			#$$specs{'hdnBreakdown'.$qty_index} .= openprint::service::summary( $Project, $signature_service_index, $qty_index ) . '<br/>';
 
 			$$sig_specs{'PreviousImposition'} = $previous_imposition;
 
@@ -1666,6 +1668,7 @@ $i->display() if DEBUG;
 			} # end if
 
 			my $Imposition = $Impositions{$signature_service_index};
+			$$specs{'hdnBreakdown'.$qty_index} .= $Imposition->to_string();
 
 			if ( ( ! exists $$sig_specs{'PageQuantity'.$qty_index} ) or $$sig_specs{'PageQuantity'.$qty_index} ) {
 
@@ -1994,24 +1997,24 @@ sub reduce_impositions {
 sub cut_imposition {
 	my ( $I ) = @_;
 	if ( ( $$I{spread_size} >= 4 ) and ( $$I{image_orientation} eq 'Horizontal' ) and ( $$I{rows} > 1 ) ) {
-	$openprint::log->debug(sprintf("Cutting imposition down from %dx%d=%dout to %d %dx1=%d ", @$I{'columns','rows','imposition'}, @$I{'rows','columns','columns'} ) ) if DEBUG;
+		$openprint::log->debug(sprintf("Cutting imposition down from %dx%d=%dout to %d %dx1=%d ", @$I{'columns','rows','imposition'}, @$I{'rows','columns','columns'} ) ) if DEBUG;
 		# For folding purposes, can only fold where spines are aligned
 		return map { my $i = $I->copy(); $i->rows(1); $i; } ( 1 .. $$I{rows} );
 	} elsif ( ( $$I{spread_size} >= 4 ) and ( $$I{image_orientation} eq 'Vertical' ) and ( $$I{columns} > 1 ) ) {
-	$openprint::log->debug(sprintf("Cutting imposition down from %dx%d=%dout to %d 1x%d=%d ", @$I{'columns','rows','imposition'}, @$I{'columns','rows','rows'} ) ) if DEBUG;
+		$openprint::log->debug(sprintf("Cutting imposition down from %dx%d=%dout to %d 1x%d=%d ", @$I{'columns','rows','imposition'}, @$I{'columns','rows','rows'} ) ) if DEBUG;
 		return map { my $i = $I->copy(); $i->columns(1); $i; } ( 1 .. $$I{columns} );
-	} elsif ( $$I{columns} > $$I{rows} ) {
-	my ( $i1, $i2 ) = ( $I->copy(), $I->copy );
+	} elsif ( ( $$I{columns} > $$I{rows} ) or ( ( $$I{columns} == $$I{rows} ) and ( $$I{image_orientation} eq 'Vertical' ) ) ) {
+		my ( $i1, $i2 ) = ( $I->copy(), $I->copy );
 		$i1->columns(int $$I{columns}/2);
 		$i2->columns( $$I{columns} - $$i1{columns} );
-	$openprint::log->debug(sprintf("Cutting imposition down from %dx%d=%dout to %dx%d=%d and %dx%d=%d", @$I{'columns','rows','imposition'}, @$i1{'columns','rows','imposition'}, @$i2{'columns','rows','imposition'} ) ) if DEBUG;
-	return ( $i1, $i2 );
+		$openprint::log->debug(sprintf("Cutting imposition down from %dx%d=%dout to %dx%d=%d and %dx%d=%d", @$I{'columns','rows','imposition'}, @$i1{'columns','rows','imposition'}, @$i2{'columns','rows','imposition'} ) ) if DEBUG;
+		return ( $i1, $i2 );
 	} else {
-	my ( $i1, $i2 ) = ( $I->copy(), $I->copy );
+		my ( $i1, $i2 ) = ( $I->copy(), $I->copy );
 		$i1->rows(int $$I{rows}/2);
 		$i2->rows( $$I{rows} - $$i1{rows} );
-	$openprint::log->debug(sprintf("Cutting imposition down from %dx%d=%dout to %dx%d=%d and %dx%d=%d", @$I{'columns','rows','imposition'}, @$i1{'columns','rows','imposition'}, @$i2{'columns','rows','imposition'} ) ) if DEBUG;
-	return ( $i1, $i2 );
+		$openprint::log->debug(sprintf("Cutting imposition down from %dx%d=%dout to %dx%d=%d and %dx%d=%d", @$I{'columns','rows','imposition'}, @$i1{'columns','rows','imposition'}, @$i2{'columns','rows','imposition'} ) ) if DEBUG;
+		return ( $i1, $i2 );
 	} # end if
 } # end sub cut_imposition
 
