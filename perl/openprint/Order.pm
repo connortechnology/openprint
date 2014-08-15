@@ -816,6 +816,16 @@ sub due_date {
 	} # end if
 	return $_[0]{due_date};
 } # end sub due_date
+sub url_to {
+	return '/main/order/history_details.html?order_id='.$_[0]{id};
+} # end sub url
+sub link_to {
+	if ( $_[0]{id} ) {
+		my $text = $_[1] ? $_[1] : ( $_[0]{id} ? $_[0]{id} : 'id ' . $_[0]{id} );
+		return sprintf('<a href="/main/order/history_details.html?order_id=%d">%s</a>', $_[0]{id}, $text );
+	}
+	return '';
+} # end sub link_to
 
 1;
 __END__
