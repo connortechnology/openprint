@@ -456,34 +456,6 @@ sub history_details {
 				$Order->update_status();
 			} # end if
 		} # end if
-   } elsif ( $param{'btnFunction'} eq 'Invoice' ) {
-	   require openprint::Invoice;
-	   require openprint::Order_Invoice;
-		$param{invoice_id} = openprint::Invoice->transform('num', $param{invoice_id} );
-		if ( ! $param{invoice_id} ) {
-			$variable{error} .= 'Empty or invalid Invoice #.<br/>';
-		} elsif ( ! $param{order_id} ) {
-			$variable{error} .= 'Empty or invalid Order #.<br/>';
-		} else {
-			my $Invoice = openprint::Invoice->find_one(num=>$param{invoice_id});
-			if ( ! $Invoice ) {
-				$Invoice = new openprint::Invoice();
-				$variable{error} .= $Invoice->save({ 
-					invoicer_id=>$config{owner_id},
-					invoicee_id=>$Order->company_id(),
-					total=>$param{amount},
-					num=>$param{invoice_id},
-					currency_id	=>	$Order->currency_id(),
-					});
-			} # end if ! Invoice
-			my $OI = new openprint::Order_Invoice();
-			$variable{error} .= $OI->save({ order_id=>$$Order{id}, invoice_id=>$$Invoice{id} });
-			$Order->add_log('Invoiced # ' . $Invoice->link_to());
-		} # end if
-		#$variable{error} .= $Order->save({ invoice_id=> $Invoice->id() });
-		if ( ! $variable{error} ) {
-			$variable{ExternalRedirect} = '/main/order/history_details.html?order_id='.$Order->id();
-		} # end if
 	} elsif ( $param{'btnFunction'} eq 'Resend') {
 		$Order->send_sales_order( );
 		$variable{'information'} .= "Order emails sent.<br/>";

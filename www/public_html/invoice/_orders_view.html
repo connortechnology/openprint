@@ -32,7 +32,7 @@
 						openprint::Currency::format( $Order->total() ), 
 						openprint::Currency::format( $Order->owing() ),
 						$rowclass,
-						$Order->url(),
+						$Order->url_to(),
 					);
 					$$variable{order_total_total} += $Order->total();
 					$$variable{order_owing_total} += $Order->owing();
