@@ -219,12 +219,12 @@ sub Credit {
 sub dropdown {
 	shift @_ if $_[0] eq 'openprint::Company';
 
-	my $sql = 'SELECT id, name FROM Companies WHERE (deleted=false or deleted IS NULL)';
+	my $sql = 'SELECT id, name FROM Companies WHERE (deleted=false OR deleted IS NULL)';
 	my @values;
 
 	if ( $openprint::session{user_id} and ( $openprint::session{'user_type'} ne 'A' ) and ! openprint::usergroup::is_user_in( ['Estimating','Prepress','Accounting','Shipping','Inventory'], $openprint::session{'user_id'} ) ) {
 		$sql .= ' AND id=(SELECT company_id FROM users WHERE id=?) OR salesrep_id IN ('. join(',', $openprint::session{'user_id'}, new openprint::User( $openprint::session{'user_id'} )->csr_ids() ) .')';
-		push @values, $openprint::session{'user_id'};
+		push @values, $openprint::session{user_id};
 	} # end if
 
 	if ( @_ ) {
@@ -235,6 +235,10 @@ sub dropdown {
 			%params = @{$_[0]};
 		} else {
 			%params = @_;
+		} # end if
+		if ( exists $params{offers_credit} ) {
+			$sql .= ' AND offers_credit=?',
+			push @values, $params{offers_credit};
 		} # end if
 		if ( $params{'id'} ) {
 			if ( ref $params{'id'} eq 'ARRAY' ) {
