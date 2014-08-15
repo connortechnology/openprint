@@ -833,9 +833,6 @@ sub get_Stocks {
 			return @Papers;
 			} # end if
 		} # end if
-		if ( $$specs{'perfecting'} eq '' ) {
-			$$specs{'perfecting'} = sets::isin( $$specs{'StockGrade'},[4,5] ) ? 'Y' : 'N';
-		} # end if
 		my $Paper = openprint::Paper::load_from_signature( $Project, $specs );
 #$openprint::log->debug( $Paper->id_string() );
 		push @Papers, $Paper;

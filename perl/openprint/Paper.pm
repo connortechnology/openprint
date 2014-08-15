@@ -1265,7 +1265,15 @@ sub load_from_signature {
 		$Paper->full_packages( $$specs{'full_packages'} );
 		$Paper->cuttable( exists $$specs{'cuttable'} ? $$specs{'cuttable'} : 1 );
 		$Paper->digital(1);
-		$Paper->perfecting($$specs{'perfecting'} eq 'Y' ? 1 : 0 );
+		if ( $$specs{'perfecting'} eq '' ) {
+			$$Paper{perfecting} = sets::isin( $$specs{StockGrade},[4,5] ) ? 1 : 0;
+		} elsif ( $$specs{perfecting} eq 'Y' ) { 
+			$$Paper{perfecting} = 1;
+		} elsif ( $$specs{perfecting} eq 'N' ) {
+			$$Paper{perfecting} = 0;
+		} else {
+			$$Paper{perfecting} = $$specs{perfecting};
+		} # end if
 
 		$Paper->doublesided($$specs{'CustomSheetDoubleSided'});
 		$Paper->grade( $$specs{'StockGrade'});
