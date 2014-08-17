@@ -448,15 +448,16 @@ sub tax_code {
 	} else {
 		require openprint::Tax;
 		if ( $_[0]->country() and $_[0]->state() ) {
-			return join('/', map { $_->name() } openprint::Tax->find(
+			my @Taxes = openprint::Tax->find(
 						'period_start null_or_<='   =>  'NOW()',
 						'period_end null_or_>='     =>  'NOW()',
 						'country'   =>  $_[0]->country(),
 						'state'     =>  $_[0]->state()
-						) );
-		} 
+						);
+			return join('/', map { $_->name() } @Taxes ) if @Taxes;
+		} # end if country and state
 	} # end if
-	return 'Unknown';
+	return '0';
 } # end if
 1;
 __END__
