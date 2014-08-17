@@ -8,6 +8,7 @@ require logger;
 
 use Text::CSV_XS;
 use Data::Dumper;
+use Email::Valid;
 
 use vars qw( $log $dbh %config);
 *log = \$openprint::log;
