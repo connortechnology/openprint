@@ -1,25 +1,25 @@
-Field Name,IQ Field,Type,Beg,Size,End,Description,Validated,Required,Default Value,Notes
-Cust-code,$User->company_id(),Text,1,8,8,Customer Code,Yes,Yes,,Duplicates OK
-Contact-name,$User->name(),Text,9,40,48,Contact Name,,Yes,,
-Contact-Address1,,Text,49,40,88,Contact Address 1,,,,
-Contact-Address2,,Text,89,40,128,Contact Address 2,,,,
-Contact-Address3,,Text,129,40,168,Contact Address 3,,,,
-Contact-City,,Text,169,40,208,Contact City,,,,
-Contact-State,,Text,209,3,211,Contact State,,,,
-Contact-Zip,,Text,212,10,221,Contact Zip Code,,,,
-Contact-Country,,Text,222,40,261,Contract Country,,,,
-Notes,$User->notes(),Text,262,254,515,Notes concerning contact,,,,
-Contact-AR,$User->administrator() eq 'Y' ? 1 : 0,Text,516,1,516,AR Contact Flag,Yes,,0,"0=No, 1=Yes (Only 1 record per customer can be set as the AR contact)"
-Contact-Phone,$User->phone(),Text,517,20,536,Contact Phone,,,,
-Contact-Phone2,$User->mobile(),Text,537,20,556,Contact Additional Phone,,,,
-Contact-Fax,$User->fax(),Text,557,20,576,Contact Fax,,,,
-Contact-Title,$User->title(),Text,577,20,596,Contact Title,,,,
-Other-Data,,Text,597,20,616,Other Data,,,,
-External-Access-Password,$User->password(),Text,617,16,632,External Access Password ,,,,
-Contact-type,,Text,633,20,652,Contact Type,,,,
-E-Mail-Address,$User->email(),Text,653,80,732,E-Mail Address,,,,
-PSF-User-ID,$User->id(),Text,733,50,782,PrinterSite Fulfillment User ID,,,,
-PSF-Auto-Accept-Orders,,Text,783,1,783,Flag to Auto Accept Orders for a Contact,,,,"0=No, 1=Yes"
-PSE-User-ID,$User->id(),Text,784,32,815,PrinterSite Exchange User ID,,,,
-PSE-Contact,,Text,816,1,816,PrinterSite Exchange Contact Flag,,,,"0=No, 1=Yes"
-PrintStreamContact,,Text,817,1,817,PrintStream Contact,,,0,"0=No, 1=Yes; Available only when PrintStream module is enabled"
+"Field Name","IQ Field","Type","Beg","Size","End","Description","Validated","Required","Default Value","Notes"
+"Cust-code","$User->company_id()","Text",1,8,8,"Customer Code","Yes","Yes",,"Duplicates OK"
+"Contact-name","$User->name()","Text",9,40,48,"Contact Name",,"Yes",,
+"Contact-Address1",,"Text",49,40,88,"Contact Address 1",,,,
+"Contact-Address2",,"Text",89,40,128,"Contact Address 2",,,,
+"Contact-Address3",,"Text",129,40,168,"Contact Address 3",,,,
+"Contact-City",,"Text",169,40,208,"Contact City",,,,
+"Contact-State",,"Text",209,3,211,"Contact State",,,,
+"Contact-Zip",,"Text",212,10,221,"Contact Zip Code",,,,
+"Contact-Country",,"Text",222,40,261,"Contract Country",,,,
+"Notes","$User->notes()","Text",262,254,515,"Notes concerning contact",,,,
+"Contact-AR","$User->administrator() eq 'Y' ? 1 : 0","Text",516,1,516,"AR Contact Flag","Yes",,0,"0=No, 1=Yes (Only 1 record per customer can be set as the AR contact)"
+"Contact-Phone","$User->phone()","Text",517,20,536,"Contact Phone",,,,
+"Contact-Phone2","$User->mobile()","Text",537,20,556,"Contact Additional Phone",,,,
+"Contact-Fax","$User->fax()","Text",557,20,576,"Contact Fax",,,,
+"Contact-Title","$User->title()","Text",577,20,596,"Contact Title",,,,
+"Other-Data",,"Text",597,20,616,"Other Data",,,,
+"External-Access-Password","$User->password()","Text",617,16,632,"External Access Password ",,,,
+"Contact-type",,"Text",633,20,652,"Contact Type",,,,
+"E-Mail-Address","Email::Valid->address($User->email()) ? $User->email()  : ''","Text",653,80,732,"E-Mail Address",,,,
+"PSF-User-ID","$User->id()","Text",733,50,782,"PrinterSite Fulfillment User ID",,,,
+"PSF-Auto-Accept-Orders",,"Text",783,1,783,"Flag to Auto Accept Orders for a Contact",,,,"0=No, 1=Yes"
+"PSE-User-ID","$User->id()","Text",784,32,815,"PrinterSite Exchange User ID",,,,
+"PSE-Contact",,"Text",816,1,816,"PrinterSite Exchange Contact Flag",,,,"0=No, 1=Yes"
+"PrintStreamContact",,"Text",817,1,817,"PrintStream Contact",,,0,"0=No, 1=Yes; Available only when PrintStream module is enabled"
