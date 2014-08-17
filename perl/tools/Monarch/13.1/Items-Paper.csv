@@ -2,8 +2,8 @@
 "Item-ID","$$Object{id}","Text",1,15,15,"Inventory Item ID","Yes","Yes",,"No duplicates."
 "Item-Desc","$Object->to_string()","Text",16,254,269,"Item Description",,,,
 "Item-Type","'Inventory'","Text",270,14,283,"Item Type","Yes","Yes",,"Inventory, Expense, Charge Only or Finished Goods"
-"Dept-ID","$Object->type() eq 'Roll' ? '601' : '501'","Text",284,3,286,"Material or OSP Department ID","Yes","Yes",,
-"Category-ID","$Object->type() eq 'Roll' ? '800' : '700'","Text",287,3,289,"Category ID","Yes","Yes*",,"Required if system option is activated, validated."
+"Dept-ID","$Object->department_id()","Text",284,3,286,"Material or OSP Department ID","Yes","Yes",,
+"Category-ID","$Object->inventory_number()","Text",287,3,289,"Category ID","Yes","Yes*",,"Required if system option is activated, validated."
 "Owned-by","'Company'","Text",290,8,297,"Owned By","Yes","Yes",,"Company, Customer or Supplier"
 "Cust-ID","$$Object{owner_id}","Text",298,8,305,"Customer ID ","Yes","Yes*",,"Required if owned by Customer and/or Finished Goods type.  Do not enter an ID if the item type is Charge Only or Expense."
 "Cust-Item-ID",,"Text",306,30,335,"Customer Item ID",,,,"Optional for Customer Owned items only"
