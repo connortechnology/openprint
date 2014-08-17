@@ -18,8 +18,8 @@
 "External-Access-Password","$Object->password()","Text",617,16,632,"External Access Password ",,,,
 "Contact-type",,"Text",633,20,652,"Contact Type",,,,
 "E-Mail-Address","Email::Valid->address($Object->email()) ? $Object->email()  : ''","Text",653,80,732,"E-Mail Address",,,,
-"PSF-User-ID","$Object->id()","Text",733,50,782,"PrinterSite Fulfillment User ID",,,,
+"PSF-User-ID",,"Text",733,50,782,"PrinterSite Fulfillment User ID",,,,
 "PSF-Auto-Accept-Orders",,"Text",783,1,783,"Flag to Auto Accept Orders for a Contact",,,,"0=No, 1=Yes"
-"PSE-User-ID","$Object->id()","Text",784,32,815,"PrinterSite Exchange User ID",,,,
+"PSE-User-ID",,"Text",784,32,815,"PrinterSite Exchange User ID",,,,
 "PSE-Contact",,"Text",816,1,816,"PrinterSite Exchange Contact Flag",,,,"0=No, 1=Yes"
 "PrintStreamContact",,"Text",817,1,817,"PrintStream Contact",,,0,"0=No, 1=Yes; Available only when PrintStream module is enabled"
