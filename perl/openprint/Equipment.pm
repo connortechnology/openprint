@@ -169,18 +169,27 @@ $openprint::log->debug("Fold for $$params{pages} " . $F->to_string() );
 				$openprint::log->debug("Wanted stitching: $$params{stitching}, have $$Fold{stitching}") if $debug;
 				next;
 			} # end if
-		} else {
-			if ( $$Fold{stitching} ) {
-				$openprint::log->debug("Wanted stitching: $$params{stitching}, have $$Fold{stitching}") if $debug;
-				next;
-			}
+		} elsif ( $$Fold{stitching} ) {
+			$openprint::log->debug("Wanted stitching: $$params{stitching}, have $$Fold{stitching}") if $debug;
+			next;
 		} # end if
 
-		if ( $$params{perfectbind} and defined $$Fold{perfectbind} and $$params{perfectbind} != $$Fold{perfectbind} ) {
+		if ( $$params{perfectbind} ) {
+			if ( defined $$Fold{perfectbind} and ! $$Fold{perfectbind} ) {
+				$openprint::log->debug("Wanted perfectbind: $$params{perfectbind}, have $$Fold{perfectbind}") if $debug;
+				next;
+			} #end if
+		} elsif ( $$Fold{perfectbind} ) {
 			$openprint::log->debug("Wanted perfectbind: $$params{perfectbind}, have $$Fold{perfectbind}") if $debug;
 			next;
 		} # end if
-		if ( $$params{spinepaste} and defined $$Fold{spinepaste} and $$params{spinepaste} != $$Fold{spinepaste} ) {
+
+		if ( $$params{spinepaste} ) {
+			if ( ( defined $$Fold{spinepaste} ) and ! $$Fold{spinepaste} ) {
+				$openprint::log->debug("Wanted spinepaste: $$params{spinepaste}, have $$Fold{spinepaste}") if $debug;
+				next;
+			} # end if
+		} elsif ( $$Fold{spinepaste} ) {
 			$openprint::log->debug("Wanted spinepaste: $$params{spinepaste}, have $$Fold{spinepaste}") if $debug;
 			next;
 		} # end if
