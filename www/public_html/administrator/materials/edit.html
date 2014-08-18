@@ -75,6 +75,16 @@
 		</p>
 	</fieldset>
 	<fieldset class="rightColumn"><legend>Purchasing Information</legend>
+		<p>
+			<label for="txtManufacturer" onclick="$('ddmManufacturer').toggle();$('txtManufacturer').toggle();">Manufacturer</label>
+			<select id="ddmManufacturer" name="ddmManufacturer" size="1">
+				<option value="">select</option>
+			<? echo (
+					make_drop_down( openprint::Manufacturer->dropdown(order=>'lower(name)'), $$variable{Material}->manufacturer_id() );
+					) ?>
+			</select>
+			<input style="display: none;" type="text" id="txtManufacturer" name="txtManufacturer" onfocus="if(!this.value){this.value=get_ddm_text(f1.ddmManufacturer);}ddm_select_by_index( f1.ddmManufacturer, 0 );" />
+		</p>
 		<p> 
 			<label>Supplier</label>
 			<select name="ddmSupplier">
