@@ -62,7 +62,7 @@ $debug = 0;
 	'usergroup'		=>	'(SELECT name from usergroups WHERE id IN (SELECT usergroup_id FROM users_in_usergroups WHERE user_id=users.id))',
 	'last_online'	=>	'(SELECT MAX(date_time) FROM logs WHERE user_id=users.id)',
 	'profile_field'	=>	'(SELECT value FROM User_Profiles WHERE user_id=users.id AND field_id=?)',
-	'company_deleted'	=>	'(SELECT deleted FROM Companies WHERE Companies.id=company_id)',
+	company_deleted	=>	'(SELECT deleted FROM Companies WHERE Companies.id=company_id)',
 );
 
 %transforms = (

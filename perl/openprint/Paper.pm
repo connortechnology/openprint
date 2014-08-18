@@ -87,6 +87,7 @@ $serial	= 'paper_id_seq';
 		'user_type'				=>	'user_type',
 		manufacturers_name		=>	'manufacturers_name',
 		available_to_order		=>	'available_to_order',
+		department_id			=>	'department_id',
 		);
 %find_fields = (
 		#'manufacturer'	=>	'(SELECT name FROM manufacturers WHERE manufacturers.id=papers.manufacturer_id)',
@@ -144,6 +145,8 @@ $serial	= 'paper_id_seq';
 	quality_id			=>	undef,
 	available_to_order	=>	undef,
 	supplier_id			=>	undef,
+	department_id		=>	undef,
+	inventory_number	=>	undef,
 );
 
 %grades = (

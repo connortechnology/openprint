@@ -91,6 +91,7 @@ $serial = 'companies_id_seq';
 	'deleted'		=>	0,
 	'category_id'	=>	undef,
 	'offers_credit'	=>	0,
+	supplier		=>	'N',
 );
 
 sub Currency {
@@ -213,7 +214,7 @@ sub Credit {
 		$_->set({supplier_id=>$supplier});
 		return $_;
 	} # end if
-	return new openprint::Company_Credit( { 'company_id'=>$_[0]{id}, 'supplier_id'=>$supplier } );
+	return new openprint::Company_Credit( { company_id=>$_[0]{id}, supplier_id=>$supplier } );
 } # end sub Credit
 
 sub dropdown {
