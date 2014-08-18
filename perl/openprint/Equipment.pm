@@ -164,9 +164,16 @@ $openprint::log->debug("Fold for $$params{pages} " . $F->to_string() );
 			next;
 		} # end if
 
-		if ( $$params{stitching} and defined $$Fold{stitching} and $$params{stitching} != $$Fold{stitching} ) {
-			$openprint::log->debug("Wanted stitching: $$params{stitching}, have $$Fold{stitching}") if $debug;
-			next;
+		if ( $$params{stitching} ) {
+			if ( ( defined $$Fold{stitching} ) and ! $$Fold{stitching} ) {
+				$openprint::log->debug("Wanted stitching: $$params{stitching}, have $$Fold{stitching}") if $debug;
+				next;
+			} # end if
+		} else {
+			if ( $$Fold{stitching} ) {
+				$openprint::log->debug("Wanted stitching: $$params{stitching}, have $$Fold{stitching}") if $debug;
+				next;
+			}
 		} # end if
 
 		if ( $$params{perfectbind} and defined $$Fold{perfectbind} and $$params{perfectbind} != $$Fold{perfectbind} ) {
