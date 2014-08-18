@@ -68,13 +68,13 @@ require openprint::Company;
 require openprint::User;
 require openprint::Project;
 my %tables = (
-'Customer'	=>	{ object => 'Company', find=>[ order=>'id', ( $$opts{limit} ? ( limit => $$opts{limit} ) : () ), supplier=>'N' ] },
+'Customer'	=>	{ object => 'Company', find=>[ order=>'id', ( $$opts{limit} ? ( limit => $$opts{limit} ) : () ) ] },
 'Supplier'	=>	{ object => 'Company', find=>[ order=>'name', ( $$opts{limit} ? ( limit => $$opts{limit} ) : () ), supplier=>'Y' ] },
 'Employee'	=>	{ object => 'User', find=>[ order=>'firstname,lastname', ( $$opts{limit} ? ( limit => $$opts{limit} ) : () ), 'type in'=>['E','A'] ] },
 'Cust_Contacts'	=>	{ object => 'User', find=>[ order=>'firstname,lastname', ( $$opts{limit} ? ( limit => $$opts{limit} ) : () ), type=>'C', email_valid=>1, company_deleted=>0 ] },
 'Job'		=>	{ object => 'Project', find=>[ order=>'id', ( $$opts{limit} ? ( limit => $$opts{limit} ) : () ), 'order_id is null'=>0 ] },
 'Items-Paper'		=>	{ object => 'Paper', find=>[ order=>'id', ( $$opts{limit} ? ( limit => $$opts{limit} ) : () ), 'in_stock >'=>0 ] },
-'Items-Materials'	=>	{ object => 'Materials', find=>[ order=>'id', ( $$opts{limit} ? ( limit => $$opts{limit} ) : () ) ] },
+'Items-Material'	=>	{ object => 'Material', find=>[ order=>'id', ( $$opts{limit} ? ( limit => $$opts{limit} ) : () ) ] },
 );
 foreach my $table ( $$opts{table} ? split(',',$$opts{table} ) : @tables ) {
 	my %fields;
@@ -94,9 +94,6 @@ foreach my $table ( $$opts{table} ? split(',',$$opts{table} ) : @tables ) {
 
 	open( FH, ">$table.txt" ) or die "Can't open $table.txt $!";
 	foreach my $Object ( ('openprint::'.$tables{$table}{object})->find( @{$tables{$table}{find}} ) ) {
-if ( $$Object{id} == 5252 ) {
-	$log->debug("Got 5252: " . $Object->to_string() );
-}
 		my $format_string = join('', map { '%-'.$fields{$_}{size}.'s' } @fields ) . "\n";
 		my @values;
 		foreach my $field ( @fields ) {
@@ -106,9 +103,6 @@ if ( $$Object{id} == 5252 ) {
 				$log->error( "Eval error $@" ) if $@;
 				$value = substr($value, 0,$fields{$field}{size});
 			} # end if
-if ( $$Object{id} == 5252 ) {
-$log->debug("$field => $value: # of values: " . @values );
-}
 			push @values, $value;
 		}
 
