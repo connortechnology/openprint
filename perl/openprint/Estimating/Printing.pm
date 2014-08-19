@@ -2528,7 +2528,7 @@ $openprint::log->debug(Data::Dumper::Dumper( \%Overrides ) );
 
 		my $Imposition = $$best_price{'Imposition'};
 		if ( ! $Imposition ) {
-			$openprint::log->error("No imposition in best_price for qty $qty_index");
+			#$openprint::log->error("No imposition in best_price for qty $qty_index");
 			$$specs{'alert'} .= "Unable to calculate a price for printing for qty $qty_index.<br/>";
 			$$specs{'Status'} = 'uncalculated';
 			next;
