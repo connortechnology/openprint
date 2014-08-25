@@ -9,6 +9,7 @@ require openprint::Object;
 require openprint::logs;
 require openprint::MaterialSpecification;
 require openprint::MaterialCategory;
+require openprint::Manufacturer;
 
 use vars qw{ $debug $log $dbh %session $table $serial %fields %find_fields %transforms %defaults $cache_field $cached };
 *log = \$openprint::log;
@@ -29,6 +30,7 @@ $serial = 'materialindex_seq';
 		taxexempt1		=>	'taxexempt1',
 		taxexempt2		=>	'taxexempt2',
 		activity_code	=>	'activity_code',
+		manufacturer_id	=>	'manufacturer_id',
 		);	
 %find_fields = (
 		category		=>	'(SELECT name FROM Material_Categories WHERE id=category_id)',
@@ -43,6 +45,7 @@ $serial = 'materialindex_seq';
 		category_id	=>	undef,
 		taxexempt1	=>	q`'N'`,
 		taxexempt2	=>	q`'N'`,
+		manufacturer_id	=>	undef,
 		);
 
 $cache_field = 'name';
@@ -193,6 +196,29 @@ sub Category {
 sub minimum_order {
 	return undef;
 }
+
+sub Manufacturer {
+    return openprint::Manufacturer( $_[0]{'manufacturer_id'} );
+}
+sub manufacturer {
+    if ( defined $_[1] ) {
+        $_[1] = openprint::Manufacturer->transform( 'name', $_[1] );
+        if ( ! $_[0]{'custom'} ) {
+            my $Manufacturer = openprint::Manufacturer->find_one('name lc'=> lc $_[1] );
+            if ( $Manufacturer ) {
+                @{$_[0]}{'manufacturer_id','manufacturer'} = @$Manufacturer{'id','name'};
+            } else {
+                @{$_[0]}{'manufacturer_id','manufacturer'} = ( undef, $_[1] );
+            } # end if
+        } else {
+            $_[0]{'manufacturer'} = $_[1];
+            $_[0]{'manufacturer_id'} = undef;
+        } # end if
+    } elsif ( $_[0]{'manufacturer_id'} and ! $_[0]{'manufacturer'} ) {
+        $_[0]{'manufacturer'} = new openprint::Manufacturer( $_[0]{'manufacturer_id'} )->name();
+    } # end if
+    return $_[0]{'manufacturer'};
+} # end sub manufacturer
 
 1;
 __END__

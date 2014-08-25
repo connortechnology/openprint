@@ -281,15 +281,15 @@ if ( $$variable{'ForCountry'} eq 'US' ) {
 			<tr<?rowclass?>> 
 				<td class="projects" rowspan="<? echo ( scalar $$variable{'Project'}->quantity_indexes() ) ?>"><a href="/main/project/view.html?ProjectIndex=<?project_index?>"><span class="reference"><?reference?></span><? echo ( $$variable{'Project'}->summary(); ) ?></a></td>
 				<td class="markup"> 
-					<? echo ( input( 'type'=>'number', 'name'=>sprintf('markup-%d_%d', @$variable{'index','project_index'} ), 'value'=>$$variable{'markup'}, 'onkeyup'=>q`calc_from_markup(this,2);` ); ) ?> 
+					<? echo ( input( type=>'float', name=>sprintf('markup-%d_%d', @$variable{'index','project_index'} ), 'value'=>$$variable{'markup'}, 'onkeyup'=>q`calc_from_markup(this,2);` ); ) ?> 
 				</td>
 				<td class="quantity"><?qty?></td>
 				<td class="price"> 
 					<input type="hidden" name="cost-<?index?>_<?project_index?>" value="<?stdprice?>" />
-					<? echo ( $$variable{'Quote'}->Currency()->format( $$variable{'stdprice'} ); ) ?>
+					<? echo ( $$variable{'Quote'}->Currency()->format( $$variable{stdprice} ); ) ?>
 				</td>
 				<td class="newprice"><? echo ( $$variable{'Quote'}->Currency()->symbol(); ) ?> 
-					<? echo ( input( 'type'=>'number', 'name'=>sprintf('price-%d_%d', @$variable{'index','project_index'} ), 'value'=>($$variable{'newprice'} ? $$variable{'newprice'} : $$variable{'stdprice'}), 'onkeyup'=>q`calc_from_price(this,2);` ); ) ?> 
+					<? echo ( input( type=>'float', name=>sprintf('price-%d_%d', @$variable{'index','project_index'} ), value=>($$variable{newprice} ? $$variable{newprice} : $$variable{stdprice}), 'onkeyup'=>q`calc_from_price(this,2);` ); ) ?> 
 				</td>
 				<td class="changes"><a href="/main/project/view.html?ProjectIndex=<?project_index?>">Edit</a>/<a href="information.html?quote_id=<? echo ( $$variable{'Quote'}->id() ) ?>&amp;remove=<?project_index?>">Remove</a></td>
 			</tr>

@@ -212,7 +212,7 @@ require MIME::QuotedPrint;
 	my $content = ssi::include( '/email_content/claim.html', \%info );
 	push @attachments, $From->Company()->name().'-CLAIM'.$$self{'id'}.'.html', MIME::QuotedPrint::encode_qp( Encode::encode('utf-8',$content) ), 'text/html', 'quoted-printable';
 
-	if ( $self->include_attachments() ) {
+	if ( 0 and $self->include_attachments() ) {
 		require MIME::Types;
 		my $types = MIME::Types->new;
 		foreach my $Claim_Asset ( $self->Assets() ) {

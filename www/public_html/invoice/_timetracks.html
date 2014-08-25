@@ -1,3 +1,4 @@
+<? if ( openprint::Timetrack->find_one() ) ?>
 <fieldset><legend>Services in this invoice</legend>
 	<table class="List sortable" id="invoicedtimetracks_table">
 		<tr>
@@ -95,3 +96,4 @@ $desc );
 		) ?>
 	</table>
 </fieldset>
+<? endif ( openprint::Timetrack->find_one() ) ?>

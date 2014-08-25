@@ -18,7 +18,7 @@ package openprint::Estimating::Stitching;
 use strict;
 #use warnings;
 
-use constant DEBUG => 1;
+use constant DEBUG => 0;
 
 require openprint::Equipment;
 require openprint::service;
@@ -161,13 +161,19 @@ $openprint::log->debug("# of impositions in Stitching::signature_calc: " . @{$Im
 	
 	my %results = (
 		alert	=>	'',
+		Price	=>	0,
+		Status	=>	'uncalcalated',
 	);
 	my $services = $Project->services();
 	my $printing_specs = $$calc_hash{ProjectSpecs};
 	my $ServiceType = $Project->ServiceType( $service_index );
 	if ( ! $ServiceType->id() ) {
 		$results{alert} .= 'Unable to determine stitching type!<br/>';
-		$results{Status} = 'uncalculated';
+		return \%results;
+	} # end if
+	if ( ! $printing_specs ) {
+		Carp::cluck ('No printing_specs');
+		$results{'alert'} .= 'No books specifications!<br/>';
 		return \%results;
 	} # end if
 
@@ -176,13 +182,6 @@ $openprint::log->debug("# of impositions in Stitching::signature_calc: " . @{$Im
 	if ( ! ( $Impositions and @{$Impositions} ) ) {
 		Carp::cluck ('No Impositions');
 		$results{'alert'} .= 'No impositions to stitch type!<br/>';
-		$results{'Status'} = 'uncalculated';
-		return \%results;
-	} # end if
-	if ( ! $printing_specs ) {
-		Carp::cluck ('No printing_specs');
-		$results{'alert'} .= 'No books specifications!<br/>';
-		$results{'Status'} = 'uncalculated';
 		return \%results;
 	} # end if
 
@@ -200,6 +199,10 @@ $openprint::log->debug("# of impositions in Stitching::signature_calc: " . @{$Im
 	} else {
 		@$specs{'Width','Height'} = @$printing_specs{'txtFinalWidth','txtFinalHeight'};
 		$$specs{'alert'} .= 'Unable to determine spine direction. Calculations may be invalid.';
+	} # end if
+	if ( ! $$specs{Height} ) {
+		$$specs{alert} .= 'Unable to determine spine length.';
+		return \%results;
 	} # end if
 	$$specs{txtCalliper} = $Project->calliper() if ! $$specs{txtCalliper};
 
@@ -229,9 +232,11 @@ $I->display('In Stitching:') if DEBUG;
 			$$I{Folds} = [ openprint::Estimating::Folding::get_Folds( $folding_specs, $sig_specs, $qty_index ) ];
 		} 
 		if ( ! @{$$I{Folds}} ) {
+$openprint::log->warn("No folds, just adding a pocket");
 			$$specs{"txtPockets$qty_index"} += 1;
 		} else {
 			foreach my $Fold ( @{$$I{Folds}} ) {
+$Fold->display('Folded');
 				if ( $Fold->imposition() < $imposition ) {
 					$imposition = $Fold->imposition();
 				}
@@ -288,7 +293,6 @@ $I->display('In Stitching:') if DEBUG;
 					$results{'alert'} .= ' horizontal and cols not multiple of 2out<br/>';
 				} # end if
 			} # end foreach
-			$results{Status} = 'uncalculated';
 			return \%results;
 		} else { 
 			$imposition = $$specs{'Imposition'.$qty_index};
@@ -340,19 +344,21 @@ $results{'Breakdown'} .= 'Imposition: ' . $imposition . 'out<br/>';
 			} # end if
 
 			my $type = $Equipment->specification('Type');
-			$openprint::log->debug("Printed impo: @printed_impositions, sitched: $imposition type: $type $$Equipment{strid}") if DEBUG;
+			$openprint::log->debug("Printed impo: printed impositions: @printed_impositions, sitched: $imposition out type: $type equip: $$Equipment{strid}") if DEBUG;
 			if ( $type eq 'Press' and @printed_impositions > 1 ) {
 				$results{'Breakdown'} .= sprintf('Printed and stitched imposition must match.<br/>');
+$openprint::log->debug($results{'Breakdown'}) if DEBUG;
 				next;
 			} # end if
 			my $max_imp = $Equipment->specification("Maximum $$ServiceType{name} Imposition");
 			if ( $max_imp and ( $max_imp < $imposition ) ) {
 				$results{'Breakdown'} .= sprintf('Imposition too big.  This press only does ' . $max_imp . 'out.<br/>');
-				if ( $Equipment->specification('Type') eq 'Press' ) {
-					last;
-				} else {
+				#if ( $Equipment->specification('Type') eq 'Press' ) {
+					#last;
+# This stops the Equipment foreach no good
+				#} else {
 				next;
-				} # end if
+				#} # end if
 			} # end if
 
 			my $max_spine_length = $Equipment->specification('Maximum Spine Length', $imposition );
@@ -427,8 +433,6 @@ $results{'Breakdown'} .= 'Imposition: ' . $imposition . 'out<br/>';
 		$results{Equipment} = $bestEquipment;
 		$results{Status} = 'calculated';
 		$results{Price} = $bestPrice;
-	} else {
-		$results{Status} = 'uncalculated';
 	} # end if
 	return \%results;
 } # end sub signature_calc

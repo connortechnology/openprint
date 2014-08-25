@@ -1,4 +1,5 @@
 <?include(/includes/error_reporting.html)?>
+<? if ( $$variable{OI} ) ?>
 <form id="OIDeleteForm" name="OIDeleteForm">
 	<input type="hidden" name="order_id" value="<? echo ( $$variable{OI}->order_id() ) ?>" />
 	<input type="hidden" name="invoice_id" value="<? echo ( $$variable{OI}->invoice_id() ) ?>" />
@@ -13,3 +14,11 @@
 	</p>
 	</fieldset>
 </form>
+<? else ( $$variable{OI} ) ?>
+<div class="error">Order not found on invoice.</div>
+<p class="buttons">
+<? echo (  join("\n",
+			button( 'CancelOI', { onclick=>'popupWin.close();', text=>'Cancel' } )
+			); ) ?>
+</p>
+<? endif ( $$variable{OI} ) ?>

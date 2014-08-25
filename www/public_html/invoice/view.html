@@ -98,6 +98,7 @@ $$variable{Timetracks} = [ openprint::Timetrack->find(invoice_id=>$$variable{Inv
 	</fieldset>
 <? endif ( @{$$variable{Timetracks}} ) ?>
 <?include( '/invoice/_products_view.html' ) ?>
+<?include( '/invoice/_orders_view.html' ) ?>
 <div class="Notes">
 	<fieldset><legend>Notes</legend>
         <table class="List">

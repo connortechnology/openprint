@@ -87,6 +87,7 @@ $serial	= 'paper_id_seq';
 		'user_type'				=>	'user_type',
 		manufacturers_name		=>	'manufacturers_name',
 		available_to_order		=>	'available_to_order',
+		department_id			=>	'department_id',
 		);
 %find_fields = (
 		#'manufacturer'	=>	'(SELECT name FROM manufacturers WHERE manufacturers.id=papers.manufacturer_id)',
@@ -144,6 +145,8 @@ $serial	= 'paper_id_seq';
 	quality_id			=>	undef,
 	available_to_order	=>	undef,
 	supplier_id			=>	undef,
+	department_id		=>	undef,
+	inventory_number	=>	undef,
 );
 
 %grades = (
@@ -414,15 +417,15 @@ sub to_string {
 			$string .= ' Roll ';
 		} else {
 			if ( $self->start_width() and ( ( $self->width() != $self->start_width() ) or ( $self->height() != $self->start_height() ) ) ) {
-				$string .= ' ' . $self->start_width().'x'.$self->start_height() . ' => '. $self->width().'x'.$self->height() . ' ';
+				$string .= ' ' . $self->start_width().'x'.$self->start_height() . ' => '. $self->width().'x'.$self->height();
 			} else {
-				$string .= ' ' . $self->width().'x'.$self->height() . ' ';
+				$string .= ' ' . $self->width().'x'.$self->height();
 			} # end if
 			#$string .= $self->mweight().'M ' if $self->mweight();
 		} # end if
-		$string .= sprintf('%.1fPT ', 1000*$self->calliper()) if $self->calliper() and ! $self->weight() =~ /PT/;
-		$string .= $self->gsm().'gsm ' if $self->gsm();
-		$string .= 'FSC:' . $$self{'fsc_code'} if $$self{'fsc_code'};
+		$string .= ' '. Math::Round::nearest( 0.1, 1000*$self->calliper()).'PT' if $self->calliper() and ! ( $self->weight() =~ /PT/ );
+		$string .= ' '. $self->gsm().'gsm' if $self->gsm();
+		$string .= ' FSC:' . $$self{'fsc_code'} if $$self{'fsc_code'};
 		#$string .= 'Minimum: ' . $$self{'minimum_order'} if $$self{'minimum_order'};
 		$$self{'to_string'} = $string;
 	} # end if
@@ -1265,7 +1268,15 @@ sub load_from_signature {
 		$Paper->full_packages( $$specs{'full_packages'} );
 		$Paper->cuttable( exists $$specs{'cuttable'} ? $$specs{'cuttable'} : 1 );
 		$Paper->digital(1);
-		$Paper->perfecting($$specs{'perfecting'} eq 'Y' ? 1 : 0 );
+		if ( $$specs{'perfecting'} eq '' ) {
+			$$Paper{perfecting} = sets::isin( $$specs{StockGrade},[4,5] ) ? 1 : 0;
+		} elsif ( $$specs{perfecting} eq 'Y' ) { 
+			$$Paper{perfecting} = 1;
+		} elsif ( $$specs{perfecting} eq 'N' ) {
+			$$Paper{perfecting} = 0;
+		} else {
+			$$Paper{perfecting} = $$specs{perfecting};
+		} # end if
 
 		$Paper->doublesided($$specs{'CustomSheetDoubleSided'});
 		$Paper->grade( $$specs{'StockGrade'});

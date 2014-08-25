@@ -65,10 +65,6 @@ sub view {
 			sql::execute( $log, $dbh, 'DELETE FROM Payments WHERE id=?', $payment_index );
 		} # end if
 		$Order->update_status();
-	} elsif ( $openprint::param{'btnFunction'} eq 'Invoice' ) {
-		$Order->invoice_id( $openprint::param{'invoice_id'} );
-		$Order->invoiced_on( 'NOW()' );
-		$Order->save();
 	} elsif ( $openprint::param{'btnFunction'} eq 'Cancel' ) {
 		openprint::order::cancel_order( $order_id );
     } # end if

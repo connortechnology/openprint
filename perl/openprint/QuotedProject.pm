@@ -6,6 +6,8 @@ use openprint ();
 use vars qw( $debug $table $serial %fields %transforms %defaults );
 
 require openprint::QuoteLevel;
+require openprint::Quote;
+require openprint::Project;
 require Math::Round;
 
 $debug = 1;
@@ -28,6 +30,9 @@ $serial = 'tbl_quote_details_id_seq';
 		project_id		=>	'project_id',
 		quote_id			=>	'quote_id',
 		description				=>	'strdescription',
+		cost1		=>	undef,
+		cost2		=>	undef,
+		cost3		=>	undef,
 );
 
 %transforms = (
@@ -64,8 +69,12 @@ sub Template {
 } # end sub Template
 
 sub Project {
-	return new openprint::Project( $_[0]{'project_id'} );
+	return new openprint::Project( $_[0]{project_id} );
 } # end sub Project
+sub Quote {
+	return new openprint::Quote( $_[0]{quote_id} );
+} # end sub Quote
+
 sub markup {
 	if ( @_ == 3 ) {
 		$_[0]{'markup'.$_[1]} = $_[2];
@@ -73,16 +82,32 @@ sub markup {
 	} # end if
 	return $_[0]{'markup'.$_[1]};
 } # end sub total
+
+sub cost {
+    my ( $self, $qty_index, $new_value ) = @_;
+    if ( @_ == 3 ) {
+        $$self{'cost'.$qty_index} = $new_value;
+    } # end if
+    if ( ! (1*$$self{'cost'.$qty_index}) ) {
+$openprint::log->debug("Calcing cost");
+        $$self{'cost'.$qty_index} = Math::Round::nearest( 0.01, $self->Project()->Currency()->convert_to( $self->Quote()->Currency(), $self->Project()->price($qty_index) ) );
+	} else {
+$openprint::log->debug("Not Calcing cost");
+    } # end if
+    return $$self{'cost'.$qty_index};
+} # end sub cost
+
 sub price {
 	my ( $self, $qty_index, $new_value ) = @_;
 	if ( @_ == 3 ) {
 		$$self{'price'.$qty_index} = $new_value;
 	} # end if
 	if ( ! (1*$$self{'price'.$qty_index}) ) {
-		$$self{'price'.$qty_index} = Math::Round::nearest( 0.01, $self->Project()->price($qty_index) * ( 1 + $$self{'markup'.$qty_index}/100 ) );
+		$$self{'price'.$qty_index} = Math::Round::nearest( 0.01, $self->Project()->Currency()->convert_to( $self->Quote()->Currency(), $self->Project()->price($qty_index) * ( 1 + $$self{'markup'.$qty_index}/100 ) ) );
 	} # end if
 	return $$self{'price'.$qty_index};
-} # end sub total
+} # end sub price
+
 sub quantity {
 	my ( $self, $qty_index, $new_value ) = @_;
 	if ( defined $new_value ) {

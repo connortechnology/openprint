@@ -7,7 +7,7 @@ use vars qw( $debug $table @identified_by %fields %defaults %transforms );
 require openprint::Order;
 require openprint::Invoice;
 
-$debug = 1;
+$debug = 0;
 
 $table = 'order_invoices';
 @identified_by = ( 'order_id', 'invoice_id' );

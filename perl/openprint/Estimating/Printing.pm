@@ -833,9 +833,6 @@ sub get_Stocks {
 			return @Papers;
 			} # end if
 		} # end if
-		if ( $$specs{'perfecting'} eq '' ) {
-			$$specs{'perfecting'} = sets::isin( $$specs{'StockGrade'},[4,5] ) ? 'Y' : 'N';
-		} # end if
 		my $Paper = openprint::Paper::load_from_signature( $Project, $specs );
 #$openprint::log->debug( $Paper->id_string() );
 		push @Papers, $Paper;
@@ -2531,7 +2528,7 @@ $openprint::log->debug(Data::Dumper::Dumper( \%Overrides ) );
 
 		my $Imposition = $$best_price{'Imposition'};
 		if ( ! $Imposition ) {
-			$openprint::log->error("No imposition in best_price for qty $qty_index");
+			#$openprint::log->error("No imposition in best_price for qty $qty_index");
 			$$specs{'alert'} .= "Unable to calculate a price for printing for qty $qty_index.<br/>";
 			$$specs{'Status'} = 'uncalculated';
 			next;

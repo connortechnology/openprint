@@ -1241,6 +1241,12 @@ if ( ! sets::isin( 'materials', \@tables ) ) {
 	} else {
 		$dbh->do(misc::load_file( $log, '../openprint/sql/Materials.sql') ) or die $dbh->errstr();
 	} # end if
+} else {
+	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='materials'", 'column_name' );
+	if ( ! exists $$data{manufacturer_id} ) {
+		$dbh->do('ALTER TABLE materials add manufacturer_id INTEGER');
+		$dbh->do('ALTER TABLE materials add FOREIGN KEY (manufacturer_id) REFERENCES Manufacturers (id)');
+	} 
 } # end if
 if ( ! sets::isin( 'material_specifications', \@tables ) ) {
 	$dbh->do(misc::load_file( $log, '../openprint/sql/Material_Specifications.sql') );
