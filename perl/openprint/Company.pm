@@ -91,7 +91,7 @@ $serial = 'companies_id_seq';
 	'deleted'		=>	0,
 	'category_id'	=>	undef,
 	'offers_credit'	=>	0,
-	supplier		=>	'N',
+	supplier		=>	q`'N'`,
 );
 
 sub Currency {
