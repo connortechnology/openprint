@@ -85,6 +85,7 @@ sub history_details {
 			my $results = $variable{'Quote'}->send();
 			$variable{'Quote'}->add_log('Resent. Results: ' . $results);
 			$variable{'information'} .= 'Quote resent. Results: '. $results;
+			$variable{ExternalRedirect} = '/main/quote/history_details.html?quote_id='.$variable{Quote}->id();
 		} # end if
 	} # end if
 } # end sub history_details
@@ -145,8 +146,12 @@ sub information {
 			'Currency'	=>	openprint::Currency::get_current(),
 		});
 		$quote_id = $Quote->id();
+		$variable{ExternalRedirect} = '/main/quote/information.html?quote_id='.$quote_id;
+		return;
 	} elsif ( $param{'btnFunction'} eq 'Process Quote' ) {
 		$quote_id = add_project_to_quote( );
+		$variable{ExternalRedirect} = '/main/quote/information.html?quote_id='.$quote_id;
+		return;
 	} elsif ( ($param{'btnFunction'} eq 'Process New Quote') and $param{'quote_id'} ) {
 		my $Quote = new openprint::Quote( $param{'quote_id'} );
 		if ( ! $Quote->id() ) {
@@ -210,10 +215,10 @@ sub information {
 		$NewQuote->add_log( 'Copied from quote ' . $Quote->id() );
 		$Quote->add_log( 'Copied to quote ' . $NewQuote->id() );
 		$quote_id = $NewQuote->id();
+		$variable{ExternalRedirect} = '/main/quote/information.html?quote_id='.$quote_id;
+		return;
 	} elsif ( $param{'btnFunction'} eq 'Continue' ) {
 		$quote_id = $param{'quote_id'};
-	} else {
-		$quote_id = $session{'quote_id'};
 	} # end if
 # this should only happen if there was an error creating the quote
 	$quote_id = $param{quote_id} if ( ! $quote_id ) and $param{quote_id};
