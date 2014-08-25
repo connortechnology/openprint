@@ -26,9 +26,11 @@
 <? echo ( 
 	my $html = '';
 	my $rowclass = '';
-	my $Project = $$variable{'Project'};
+	my $Project = $$variable{Project};
 	my $Project_Type = $Project->Type();
-	my $ProjectCurrency = $Project->Currency();
+	my $ProjectCurrency = $$variable{ProjectCurrency} = $Project->Currency();
+	my $DisplayCurrency = $$variable{DisplayCurrency} = ( $$variable{Quote} ? $$variable{Quote}->Currency() : $Project->Currency() );
+
 	my $services = $Project->services();
 	my %statuses = sql::execute( $log, $dbh, q{SELECT lngServiceIndex, strStatus FROM tbl_Project_Contents WHERE lngProjectIndex=?}, $Project->id() );
     my $printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
@@ -54,7 +56,7 @@
 				my @totals;
 
 				foreach my $qty_index ( $Project->quantity_indexes() ) {
-					$html .= '<td class="price">'.($$printing_specs{"txtPrice$qty_index"} ? $$printing_specs{"txtPrice$qty_index"} : '&nbsp;').'</td>';
+					$html .= '<td class="price">'.($$printing_specs{"txtPrice$qty_index"} ? $ProjectCurrency->convert_to( $DisplayCurrency, $$printing_specs{"txtPrice$qty_index"}) : '&nbsp;').'</td>';
 				} # end foreach
 				if ( ! $$variable{'Quote'} ) {
 					$html .= '<td class="status">'.$statuses{$$services{''}[0]}.'</td>';
@@ -75,7 +77,7 @@
 							if ( ( $statuses{$sigs[$i]} eq $statuses{$ss_id} ) and openprint::Estimating::Printing::compare_signatures( $Project, \%sig_specs, $sig_specs2 ) ) {
 								$sig_qty += 1;
 								foreach my $qty_index ( $Project->quantity_indexes() ) {
-									$sig_specs{'txtPrice'.$qty_index} += $ProjectCurrency->convert_from( $$sig_specs2{'txtPrice'.$qty_index} );
+									$sig_specs{'txtPrice'.$qty_index} += $ProjectCurrency->convert_to( $DisplayCurrency, $$sig_specs2{'txtPrice'.$qty_index} );
 									$sig_specs{'txtPressSheetQty'.$qty_index} =~ s/\D//g;
 									my $sheet_qty = $$sig_specs2{'txtPressSheetQty'.$qty_index};
 									$sheet_qty =~ s/\D//g;
@@ -95,9 +97,13 @@
 						openprint::Estimating::Printing::summary($Project, $ss_id, \%sig_specs ),
 						);
 					foreach my $qty_index ( $Project->quantity_indexes() ) {
-						$html .= sprintf('<td class="price"><b>%s</b><br/>%s', openprint::Currency::format( $ProjectCurrency->convert_from( $sig_specs{'txtPrice'.$qty_index} )),openprint::Estimating::Printing::summary($Project, $ss_id, \%sig_specs, $qty_index ) );
+
+						my $price = $DisplayCurrency->convert_to( $ProjectCurrency, $sig_specs{'txtPrice'.$qty_index} );
+
+						$html .= sprintf('<td class="price"><b>%s</b><br/>%s', openprint::Currency::format($price),
+								openprint::Estimating::Printing::summary($Project, $ss_id, \%sig_specs, $qty_index ) );
 						$html .= '</td>';
-						$totals[$qty_index] += $ProjectCurrency->convert_from( $sig_specs{'txtPrice'.$qty_index} );
+						$totals[$qty_index] += $price;
 					} # end foreach qty_index
 
 					if ( ! $$variable{'Quote'} ) {
@@ -112,11 +118,13 @@
 
 				foreach my $qty_index ( $Project->quantity_indexes() ) {
 					$html .= '<td class="price">';
+					my $price = $DisplayCurrency->convert_to( $ProjectCurrency, $$specs{'txtPrice'.$qty_index} );
+
 					if ( $$specs{'txtQuantity'.$qty_index} and $$specs{'txtQuantity'.$qty_index} != $Project->quantity($qty_index) ) {
 						$html .= '('.$$specs{'txtQuantity'.$qty_index}.') ';
 					} # end if
 					if ( $session{'user_type'} eq 'A' or ! $Project->Ordered_Product() ) {
-						$html .= '<b>'.openprint::Currency::format($$specs{'txtPrice'.$qty_index}).'</b><br/>';
+						$html .= '<b>'.openprint::Currency::format($price).'</b><br/>';
 					} # end if
 					my $summary = openprint::service::summary( $Project->id(), $service_id, $qty_index );
 					$summary =~ s/\n/<br\/>/g;
@@ -129,7 +137,7 @@
 			} # end if $$services{'Signature'}
 
 		} else {
-			foreach my $ServiceType ( openprint::ServiceType->find('category_id'=>$ServiceCategory->id(),'order'=>'sorting', 'view_visible'=>1) ) {
+			foreach my $ServiceType ( openprint::ServiceType->find(category_id=>$ServiceCategory->id(),order=>'sorting', view_visible=>1) ) {
 				next if ! $$services{$ServiceType->name()};
 				foreach my $service_id ( @{$$services{$ServiceType->name()}} ) {
 					my $specs = openprint::service::get_specs_ref( $Project, $service_id );
@@ -150,11 +158,12 @@
 					$html .= '</td>';
 					foreach my $qty_index ( $Project->quantity_indexes() ) {
 						$html .= '<td class="price">';
+						my $price = $DisplayCurrency->convert_to( $ProjectCurrency, $$specs{'txtPrice'.$qty_index} );
 						if ( $$specs{'txtQuantity'.$qty_index} and $$specs{'txtQuantity'.$qty_index} != $Project->quantity($qty_index) ) {
 							$html .= '('.$$specs{'txtQuantity'.$qty_index}.') ';
 						} # end if
 						if ( $session{'user_type'} eq 'A' or ! $Project->Ordered_Product() ) {
-							$html .= '<b>'.openprint::Currency::format($$specs{'txtPrice'.$qty_index}).'</b><br/>';
+							$html .= '<b>'.openprint::Currency::format($price).'</b><br/>';
 						} # end if
 						my $summary = openprint::service::summary( $Project->id(), $service_id, $qty_index );
 						if ( ref $summary eq 'ARRAY' ) {
@@ -194,7 +203,7 @@
 				<td class="description">Unit Prices</td>
 				<? echo ( my $html = '';
 					foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
-						$html .= '<td class="price">'.openprint::Currency::format($$variable{'Project'}->unit_price($qty_index)).'</td>';
+						$html .= '<td class="price">'.openprint::Currency::format( $$variable{ProjectCurrency}->convert_to( $$variable{DisplayCurrency}, $$variable{Project}->unit_price( $qty_index ) )).'</td>';
 					} # end foreach qty_index
 					$html .= '<td class="status">&nbsp;</td>' if ! $$variable{Quote};
 					return $html;
@@ -205,7 +214,7 @@
 				<? echo ( 
 					my $html = '';
 					foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
-						$html .= '<td class="price">'.openprint::Currency::format( $$variable{'Project'}->price( $qty_index )).'</td>';
+						$html .= '<td class="price">'.openprint::Currency::format( $$variable{ProjectCurrency}->convert_to( $$variable{DisplayCurrency}, $$variable{Project}->price( $qty_index ) )).'</td>';
 					} # end foreach
 					$html .= '<td class="status">&nbsp;</td>' if ! $$variable{Quote};
 					return $html;
@@ -215,7 +224,7 @@
 <? if ( $$variable{'Project'}->Ordered_Product() ) ?>
         <tr class="totals">
             <td class="description">Ordered Price</td>
-            <td class="price"><? echo ( openprint::Currency::format( $$variable{'Project'}->Ordered_Product()->price() ); ) ?></td>
+            <td class="price"><? echo ( openprint::Currency::format( $$variable{Project}->Ordered_Product()->price() ); ) ?></td>
 			<? if ( ! $$variable{Quote} ) ?>
             <td class="status">&nbsp;</td>
 			<? endif ( ! $$variable{Quote} ) ?>
@@ -223,9 +232,9 @@
 <? endif ( $$variable{'Project'}->Ordered_Product() ) ?>
 	</table>
 <br/>
-<? if ( $$variable{'Project'}->currency_id() != $session{'Currency_id'} ) ?>
+<? if ( $$variable{Project}->currency_id() != $session{'Currency_id'} ) ?>
 <span class="Currency">Project originally quoted in <? echo ( $$variable{'Project'}->Currency()->name() ) ?>.</span>
-<? endif ( $$variable{'Project'}->currency_id() != $session{'Currency_id'} ) ?>
+<? endif ( $$variable{Project}->currency_id() != $session{'Currency_id'} ) ?>
 <span class="Currency">All prices in <? echo ( openprint::Currency::get_current()->name(); ) ?>.&nbsp;</span>
 </div>
 </div>
