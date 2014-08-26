@@ -1,9 +1,9 @@
-<style type="text/css"><? echo ( misc::load_file( $log, $config{'SkinPath'} . '/css/order.css' ); ) ?></style>
+<style type="text/css"><?include(/css/order.css)?></style>
 <div class="Order">
 <? echo ( join('',
-include('/email_content/sales_order_header.html', $variable ),
-include('/main/order/_contents.html', $variable ),
-include('/main/order/_totals.html', $variable ),
+	include('/email_content/sales_order_header.html', $variable ),
+	include('/email_content/_contents.html', $variable ),
+	include('/main/order/_totals.html', $variable ),
 ); ) ?>
 	<br class="spacer"/>
 	<div class="Disclaimer"><? echo ( $config{'OrderViewDisclaimer'} ) ?></div>

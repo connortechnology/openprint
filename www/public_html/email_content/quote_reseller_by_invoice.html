@@ -58,7 +58,7 @@
 					<td class="price">%4$s</td>
 					<td class="newprice">%5$s</td>
 					</tr>`, $weight, $QP->markup($qty_index),$QP->quantity($qty_index), 
-					openprint::Currency::format( $QP->Project()->price($qty_index) ),
+					openprint::Currency::format( $QP->cost($qty_index) ),
 					openprint::Currency::format( $QP->price($qty_index) ),
 					);
 				} # end foreach

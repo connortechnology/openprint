@@ -54,7 +54,7 @@ sub get_unfinished_quote_contents {
 		$subtotal3 += $QP->price3();
 
 		push @{$$variable{'PROJECTS'}}, $QP->project_id(), $QP->Project()->reference();
-		push @{$$variable{"PROJECT_PRICES_".$QP->project_id()}}, map { $_, $QP->markup($_), $QP->Project()->quantity($_), sprintf( '%.2f',$QP->cost($_) ), $QP->price($_) } ( 1 .. 3 );
+		push @{$$variable{"PROJECT_PRICES_".$QP->project_id()}}, map { $_, $QP->markup($_), $QP->Project()->quantity($_), sprintf('%.2f', $QP->cost($_) ), $QP->price($_) } ( 1 .. 3 );
 
 	} # end while
 	@{$$variable{'TOTALS'}} = ( '1', sprintf( '%.2f',$subtotal1), '2', sprintf( '%.2f',$subtotal2),'3', sprintf( '%.2f',$subtotal3));
