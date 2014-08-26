@@ -1,0 +1,39 @@
+<? eval (
+	foreach my $p ( 'QTYIndex','index','SignatureIndex' ) {
+		if ( ( exists $param{$p} ) and ! $$variable{$p} ) {
+			$$variable{$p} = $param{$p};
+		} # end if
+	} # end foreach
+) ?>
+<tr id="Score-<?SignatureIndex?>-<?QTYIndex?>-<?index?>" <? echo ( ($$variable{'index'} == 1 or $$variable{"ScoreQty-$$variable{SignatureIndex}-$$variable{QTYIndex}-$$variable{index}"})  ? '' : 'style="display:none;"' ) ?>>
+	<td class="Qty">
+<? echo ( 
+	my $blah = join('-',@$variable{'SignatureIndex','QTYIndex','index'});
+	my $onkeyup = "Score_onchange(this, '$$variable{SignatureIndex}', '$$variable{QTYIndex}', '$$variable{index}' );";
+	my $html = input(
+		type	=>	'cardinal',
+		id		=>	'ScoreQty-'.$blah, 
+		name	=>	'ScoreQty-'.$blah,
+		value	=>	$$variable{'ScoreQty-'.$blah},
+		onkeyup	=>	$onkeyup,
+		);
+	$html .= '</td><td class="Imp">';
+	$html .= input(
+		type	=>	'cardinal',
+		id		=>	'ScoreImposition-'.$blah,
+		name	=>	'ScoreImposition-'.$blah,
+		value	=>	$$variable{'ScoreImposition-'.$blah},
+		onkeyup	=>	$onkeyup,
+		);
+	$html .= '</td><td class="Speed">';
+	$html .= input(
+		type	=>	'cardinal',
+		id		=>	'ScoreRunspeed-'.$blah,
+		name	=>	'ScoreRunspeed-'.$blah,
+		value	=>	$$variable{'ScoreRunspeed-'.$blah},
+		onkeyup	=>	$onkeyup,
+	);
+	$html .= '</td>';
+return $html;
+) ?>
+</tr>
