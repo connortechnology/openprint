@@ -1,4 +1,91 @@
 <script type="text/javascript" src="<?hash_link(/javascripts/service.js)?>"></script>
+<script type="text/javascript">
+    function calc( formName, force ) {
+        var form = getFormObj( formName );
+        if ( gettingNewPrice ) {
+            if ( timeout ) {
+                clearTimeout( timeout );
+            } // end if
+            if ( ! force ) {
+                setTimeout( "calc('"+formName+"');", 1000 );
+                return;
+            } // end if
+        } // end if
+        timeout = null;
+        gettingNewPrice = true;
+
+        var h = form.serialize(true);
+        h.ServiceType = 'Scoring';
+        h.callback = 'cbScoringResults';
+        new Ajax.Request( '/main/project/_calc.json', { method: 'post', parameters: h, evalScripts: true } );
+    }
+    function cbScoringResults( results ) {
+        
+        var form = getFormObj('f1');
+
+        var re = /ScoreQty-(\d+)-(\d+)-(\d+)/;
+        var keys = results.keys();
+        for ( var index = 0, len = keys.length; index < len; index += 1 ) {
+            var key = keys[index];
+            var value = results.get(keys[index]);
+
+            var matches = re.exec( key );
+            if ( matches ) {
+                var f = $('Score-'+matches[1]+'-'+matches[2]+'-'+matches[3]);
+                if ( f ) {
+                    if ( matches[3] == 1 || value > 0 ) {
+                        f.show();
+                    } else {
+                        f.hide();
+                    } // end if
+                } else {
+                    alert('debug mesage: No html for score ' + matches[1]+'-'+matches[2]+'-'+matches[3] );
+                } // end if f
+            } // end if matches
+        } // end foreach pair
+        cbFillResults(results);
+
+    } // end function cbScoringResults
+
+function show_extra_score( signature, qty_index ) {
+    var f = $('Score-'+signature+'-'+qty_index+'-'+'2');
+    f.show();
+}
+function Score_onchange( element, signature, qty_index, index ) {
+    var spec = signature + '-' + qty_index + '-' + index;
+    var next_index = 1+parseInt(index);
+    var do_calc = 1;
+
+    if ( element.type == 'select-one' ) {
+        if ( ! element.value ) {
+            $('ScoreQty-'+spec).value = '';
+        } else {
+            $('ScoreScores-'+spec).value = '';
+            $('ScoreAngles-'+spec).value = '';
+            if ( ! $('ScoreQty-'+spec).value ) {
+                $('ScoreQty-'+spec).value = 1;
+            } // end if
+        } // end if
+    } else { // must be the qty field
+    } // end if
+
+    if ( ! $('ScoreQty-'+spec).value ) {
+        // This appears to hide the score if the qty is empty... but it doesn't seem to work.
+        // and it's bollocks. Basically we the score we are editing is empty, then hide the next one.  But the next one might be valid.
+//alert('hiding +1');
+if ( 0 ) {
+        var nextscore = $('Score-'+signature+'-'+qty_index+'-'+next_index );
+        if ( nextscore ) {
+            $('Score-'+signature+'-'+qty_index+'-'+next_index ).hide();
+        } // end if
+}
+    } else {
+        $('Score-'+signature+'-'+qty_index+'-'+(1+parseInt(index)) ).show();
+    } // end if
+    if ( do_calc ) 
+        calc(element.form.name);
+} // end function
+</script>
 <div class="Service <?ServiceType?>">
 	<form id="f1" name="f1" method="post" action="/main/project/view.html">
 		<fieldset><legend><?ServiceTypeName?></legend>
@@ -22,7 +109,49 @@
 			) ?>
 		</fieldset>
 		<fieldset><legend>Results</legend>
-			<?include('/includes/main/proj/scoring_results.html')?>
+<? echo (
+    my $html;
+	my $fragment = slurp_content( '/main/project/bind/_score.html' );
+	my $Project = $$variable{Project};
+
+    foreach my $sig_id ( $Project->signatures( { sort => 1 } ) ) {
+        my $sig_specs = openprint::service::get_specs_ref( $Project, $sig_id );
+        @$variable{'SignatureIndex','Reference'} = @$sig_specs{'SignatureIndex','txtSignatureDescription'};
+        $html .= 'Form ' . $$sig_specs{SignatureIndex} . ( $$sig_specs{txtServiceDescription} ? ' : ' . $$sig_specs{txtServiceDescription} : '' ).'<br/>';
+        $html .= '<ul>';
+        $html .= include('/includes/main/proj/signature_equipment.html');
+
+	   $html .= '<li><label>Impositions</label>';
+		foreach my $qty_index ( $$variable{Project}->quantity_indexes() ) {
+			$html .= '<div class="'.$$variable{Columns}.'Columns">';
+			if ( $$sig_specs{"txtImposition$qty_index"} ) {
+				if ( sets::isin( $session{user_type}, ['A','E'] ) ) {
+					$html .= sprintf('<input type="checkbox" id="OverrideScores-%1$d-%2$d" name="OverrideScores-%1$d-%2$d" %3$s value="Y" onclick="if ( ! this.checked ) { calc(this.form.name);}else{show_extra_scores(%1$d,%2$d);};" /><label class="radio" for="OverrideScores-%1$d-%2$d">Override Scores</label><br/>', $$sig_specs{SignatureIndex}, $qty_index, $$variable{"OverrideScores-$$sig_specs{SignatureIndex}-$qty_index"} eq 'Y' ? 'checked="checked"' : '' );
+				} elsif ( $$variable{"OverrideScores-$$sig_specs{SignatureIndex}-$qty_index"} eq 'Y' ) {
+					$html .= sprintf('<input type="hidden" name="chkOverrideScore-%1$d-%2$d" value="Y" /> Overriden<br/>', $$sig_specs{'SignatureIndex'}, $qty_index );
+				} # end if
+				$$variable{SignatureIndex} = $$sig_specs{SignatureIndex};
+				$$variable{QTYIndex} = $qty_index;
+
+				$html .= '<table><tr><th class="Qty">Qty</th><th class="Imp">Imp</th><th class="Speed">Speed</th></tr>';
+				foreach my $index ( 1 .. 4 ) {
+					$$variable{index} = $index;
+					$html .= variable_substitution( \$fragment, $variable );
+				} # end foreach
+				$html .= '</table>';
+			} else { $html .= '&nbsp;';
+			} # end if imposition
+
+			$html .= '</div>';
+
+		} # end foreach qty_index
+		$html .= '</li>';
+
+
+        $html .= '</ul>';
+    } # end foreach
+    return $html;
+) ?>
 			<ul>
 			<?include('/includes/main/proj/quantities_prices.html')?>
 			</ul>

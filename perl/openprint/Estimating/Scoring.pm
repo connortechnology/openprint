@@ -49,11 +49,17 @@ sub variables {
 		my $specs = openprint::service::get_specs_ref( $Project, $s_s_id );
 		my $form = $$specs{SignatureIndex};
 		foreach my $qty_index ( $Project->quantity_indexes() ) {
-			push @v, "txtWidth-$form", "txtHeight-$form",
+			push @v, ( "txtWidth-$form", "txtHeight-$form",
 				"ddmEquipment-$form-$qty_index", "chkOverrideEquipment-$form-$qty_index",
 				"txtImposition-$form-$qty_index", "chkOverrideImposition-$form-$qty_index",
 				"txtLayoutWidth-$form-$qty_index", "txtLayoutHeight-$form-$qty_index",
 				"txtVerticalQty-$form", "txtHorizontalQty-$form", "chkOverrideQty-$form", 
+			);
+			foreach my $score_index ( 1 .. 4 ) {
+                push @v, "ScoreQty-$form-$qty_index-$score_index";
+                push @v, "ScoreImposition-$form-$qty_index-$score_index";
+                push @v, "ScoreRunspeed-$form-$qty_index-$score_index";
+            } # end foreach
 		} # end foreach
 	} # end foreach
 	return @v;
@@ -173,18 +179,20 @@ sub calc {
 			my $Imposition = new openprint::Imposition();
 			$Imposition->load( $sig_specs, $qty_index );
 
+           if ( $$specs{"OverrideScore-$form-$qty_index"} ne 'Y' ) {
+                foreach my $index ( 1 .. 4 ) {
+                    $$specs{"ScoreQty-$form-$qty_index-$index"} = 0;
+                    $$specs{"ScoreImposition-$form-$qty_index-$index"} = '';
+                    $$specs{"ScoreRunspeed-$form-$qty_index-$index"} = '';
+                } # end for
+            } # end if
+
 			my %Price = signature_calc( $Project, $service_index, $specs, $signature_service_index, $sig_specs, $qty_index, $Imposition );
 			$status = $Price{'Status'} if $Price{'Status'} eq 'uncalculated';
 			if ( $Price{'Equipment'} ) {
 				$$specs{"ddmEquipment-$form-$qty_index"} = $Price{'Equipment'}->id();
-				#$$specs{"txtImposition-$form-$qty_index"} = $Price{'Imposition'}->imposition();
-				#$$specs{"txtLayoutWidth-$form-$qty_index"} = $Price{'Imposition'}->layout_width();
-				#$$specs{"txtLayoutHeight-$form-$qty_index"} = $Price{'Imposition'}->layout_height();
 			} else {
 				$$specs{"ddmEquipment-$form-$qty_index"} = '' if $$specs{"chkOverrideEquipment-$$sig_specs{SignatureIndex}-$qty_index"} ne 'Y';
-				#$$specs{"txtImposition-$form-$qty_index"} = 0;
-				#$$specs{"txtLayoutWidth-$form-$qty_index"} = 0;
-				#$$specs{"txtLayoutHeight-$form-$qty_index"} = 0;
 				if ( $Price{'Status'} eq 'uncalculated' ) {
 					if ( $$specs{"chkOverrideEquipment-$form-$qty_index"} eq 'Y' ) {
 						$$specs{'alert'} = "QTY $qty_index: The selected equipment can not handle your project.	This may be because the stock is too heavy, or too large.";
@@ -193,6 +201,13 @@ sub calc {
 					} # end if
 				} # end if
 			} # end if
+			my $score_index = 1;
+			foreach my $I ( @{$Price{Impositions}} ) {
+				$$specs{"ScoreQty-$form-$qty_index-$score_index"} = $I->quantity();
+				$$specs{"ScoreImposition-$form-$qty_index-$score_index"} = $I->imposition();
+				$$specs{"ScoreRunspeed-$form-$qty_index-$score_index"} = $I->runspeed();
+				$score_index += 1;
+			} # endd
 			$$specs{'hdnBreakdown'.$qty_index} .= $Price{'Breakdown'};
 			$$specs{'alert'} .= $Price{alert};
 
@@ -465,6 +480,7 @@ sub signature_calc {
 				$Results{Price} = $totalPrice;
 				$Results{Equipment} = $Equipment;
 				$Results{Runspeed} = $Equipment->specification('Scoring Runspeed');
+				$Results{Impositions} = \@Folds;
 			} # end if
 		} else {
 			my @My_All_Impositions;
@@ -520,8 +536,6 @@ sub signature_calc {
 				next;
 			} # end if
 
-
-
 			foreach my $Set_Of_Impositions ( @My_All_Impositions ) {
 				my @impositions = @{$Set_Of_Impositions};
 				if ( $type eq 'Press' ) {
@@ -554,6 +568,7 @@ sub signature_calc {
 					$Results{'Price'} = $totalPrice;
 					$Results{'Equipment'} = $Equipment;
 					$Results{'Runspeed'} = $Equipment->specification('Scoring Runspeed');
+					$Results{Impositions} = $Set_Of_Impositions;
 				} # end if
 			} # end foreach imposition I
 		} # end if folding
