@@ -37,6 +37,7 @@ my @fields = (
 	'printing_type',
 	'Folds', 'Fold',
 	'runspeed',
+	'impressions',
 );
 
 sub new {

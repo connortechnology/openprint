@@ -47,12 +47,13 @@ sub variables {
 	my $Project = new openprint::Project( $p_id );
 	foreach my $s_s_id ( $Project->signatures() ) {
 		my $specs = openprint::service::get_specs_ref( $Project, $s_s_id );
+		my $form = $$specs{SignatureIndex};
 		foreach my $qty_index ( $Project->quantity_indexes() ) {
-			push @v, "txtWidth-$$specs{'SignatureIndex'}", "txtHeight-$$specs{'SignatureIndex'}",
-				"ddmEquipment-$$specs{'SignatureIndex'}-$qty_index", "chkOverrideEquipment-$$specs{'SignatureIndex'}-$qty_index",
-				"txtImposition-$$specs{'SignatureIndex'}-$qty_index", "chkOverrideImposition-$$specs{'SignatureIndex'}-$qty_index",
-				"txtLayoutWidth-$$specs{'SignatureIndex'}-$qty_index", "txtLayoutHeight-$$specs{'SignatureIndex'}-$qty_index",
-				"txtVerticalQty-$$specs{'SignatureIndex'}", "txtHorizontalQty-$$specs{'SignatureIndex'}", "chkOverrideQty-$$specs{'SignatureIndex'}", 
+			push @v, "txtWidth-$form", "txtHeight-$form",
+				"ddmEquipment-$form-$qty_index", "chkOverrideEquipment-$form-$qty_index",
+				"txtImposition-$form-$qty_index", "chkOverrideImposition-$form-$qty_index",
+				"txtLayoutWidth-$form-$qty_index", "txtLayoutHeight-$form-$qty_index",
+				"txtVerticalQty-$form", "txtHorizontalQty-$form", "chkOverrideQty-$form", 
 		} # end foreach
 	} # end foreach
 	return @v;
@@ -71,9 +72,10 @@ sub has_overrides {
     my @v;
     foreach my $s_s_id ( $Project->signatures() ) {
         my $sig_specs = openprint::service::get_specs_ref( $Project, $s_s_id );
+		my $form = $$sig_specs{SignatureIndex};
         foreach my $qty_index ( $Project->quantity_indexes() ) {
-            push @v, "chkOverrideEquipment-$$sig_specs{'SignatureIndex'}-$qty_index" if $$specs{"chkOverrideEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"};
-            push @v, "chkOverrideImposition-$$sig_specs{'SignatureIndex'}-$qty_index" if $$specs{"chkOverrideImposition-$$sig_specs{'SignatureIndex'}-$qty_index"};
+            push @v, "chkOverrideEquipment-$form-$qty_index" if $$specs{"chkOverrideEquipment-$form-$qty_index"};
+            push @v, "chkOverrideImposition-$form-$qty_index" if $$specs{"chkOverrideImposition-$form-$qty_index"};
         } # end foreach
     } # end foreach
 
@@ -83,12 +85,12 @@ sub has_overrides {
 sub signature_needs {
 	my ( $Project, $specs, $sig_specs, $Paper ) = @_;
 
-#$openprint::log->debug("Scoring::need $$sig_specs{SignatureIndex} : " .$$specs{"chkOverrideQty-$$sig_specs{'SignatureIndex'}"});
+	my $form = $$sig_specs{SignatureIndex};
+#$openprint::log->debug("Scoring::need $$sig_specs{SignatureIndex} : " .$$specs{"chkOverrideQty-$form"});
 	if ( $specs ) {
 	# This is because for non-books, the specs hash doesn't have the SignatureIndex filledin.
-		my $sig_index = $$sig_specs{"SignatureIndex"} * 1;
-		if ( ( $$specs{"chkOverrideQty-$sig_index"} eq 'Y' ) and
-				( $$specs{"txtVerticalQty-$sig_index"} or $$specs{"txtHorizontalQty-$sig_index"} ) ) {
+		if ( ( $$specs{"chkOverrideQty-$form"} eq 'Y' ) and
+				( $$specs{"txtVerticalQty-$form"} or $$specs{"txtHorizontalQty-$form"} ) ) {
 			return 1;
 		} # end if
 	} # end if
@@ -98,14 +100,14 @@ sub signature_needs {
 #$openprint::log->debug("NeedFolding is not true $$specs{'txtWidth'}x$$specs{'txtHeight'} : $$specs{'txtFinalWidth'}x$$specs{'txtFinalHeight'}");
 		return 0;
 	} # end if
-	if ( ( $$sig_specs{'txtSignatureType'} eq '' ) or ( $$sig_specs{'txtSignatureType'} eq 'Cover Pages' ) or ( $$sig_specs{'txtSignatureType'} and ( $$sig_specs{'SignatureIndex'} == 1 ) ) ) {
+	if ( ( $$sig_specs{'txtSignatureType'} eq '' ) or ( $$sig_specs{'txtSignatureType'} eq 'Cover Pages' ) or ( $$sig_specs{'txtSignatureType'} and ( $form == 1 ) ) ) {
 		$Paper = openprint::Paper::load_from_signature( $Project, $sig_specs ) if ! $Paper;
 #$openprint::log->debug( "Score Required!: " . $Paper->score_required() );
 		if ( $Paper->score_required() ) {
 			return 1;
 		} # end if
 	} # end if
-#$log->debug("Scoringn is not needed! ($$specs{'txtSignatureType'}) ($$specs{'SignatureIndex'})");
+#$log->debug("Scoringn is not needed! ($$specs{'txtSignatureType'}) ($form)");
 	return 0;
 } # end sub signature_needs
 
@@ -158,13 +160,14 @@ sub calc {
 
 		foreach my $signature_service_index ( $Project->signatures() ) {
 			my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
+			my $form = $$sig_specs{SignatureIndex};
 			$qty = $$specs{"txtQuantity$qty_index"};
 			if ( $$sig_specs{'Versions'} ) {
 				$qty *= $$sig_specs{'Versions'};
 			} # end if
 			$$specs{'hdnBreakdown'.$qty_index} .= "Signature: $$sig_specs{'txtServiceDescription'}, " if $$sig_specs{'txtServiceDescription'} ne '';
 			if ( ! $$sig_specs{'txtImposition'.$qty_index} ) {
-				$$specs{'hdnBreakdown'.$qty_index} .= "No imposition for signature $$sig_specs{'SignatureIndex'}";
+				$$specs{'hdnBreakdown'.$qty_index} .= "No imposition for signature $form";
 				next;
 			} # end if
 			my $Imposition = new openprint::Imposition();
@@ -173,17 +176,17 @@ sub calc {
 			my %Price = signature_calc( $Project, $service_index, $specs, $signature_service_index, $sig_specs, $qty_index, $Imposition );
 			$status = $Price{'Status'} if $Price{'Status'} eq 'uncalculated';
 			if ( $Price{'Equipment'} ) {
-				$$specs{"ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} = $Price{'Equipment'}->id();
-				#$$specs{"txtImposition-$$sig_specs{'SignatureIndex'}-$qty_index"} = $Price{'Imposition'}->imposition();
-				#$$specs{"txtLayoutWidth-$$sig_specs{'SignatureIndex'}-$qty_index"} = $Price{'Imposition'}->layout_width();
-				#$$specs{"txtLayoutHeight-$$sig_specs{'SignatureIndex'}-$qty_index"} = $Price{'Imposition'}->layout_height();
+				$$specs{"ddmEquipment-$form-$qty_index"} = $Price{'Equipment'}->id();
+				#$$specs{"txtImposition-$form-$qty_index"} = $Price{'Imposition'}->imposition();
+				#$$specs{"txtLayoutWidth-$form-$qty_index"} = $Price{'Imposition'}->layout_width();
+				#$$specs{"txtLayoutHeight-$form-$qty_index"} = $Price{'Imposition'}->layout_height();
 			} else {
-				$$specs{"ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} = '' if $$specs{"chkOverrideEquipment-$$sig_specs{SignatureIndex}-$qty_index"} ne 'Y';
-				#$$specs{"txtImposition-$$sig_specs{'SignatureIndex'}-$qty_index"} = 0;
-				#$$specs{"txtLayoutWidth-$$sig_specs{'SignatureIndex'}-$qty_index"} = 0;
-				#$$specs{"txtLayoutHeight-$$sig_specs{'SignatureIndex'}-$qty_index"} = 0;
+				$$specs{"ddmEquipment-$form-$qty_index"} = '' if $$specs{"chkOverrideEquipment-$$sig_specs{SignatureIndex}-$qty_index"} ne 'Y';
+				#$$specs{"txtImposition-$form-$qty_index"} = 0;
+				#$$specs{"txtLayoutWidth-$form-$qty_index"} = 0;
+				#$$specs{"txtLayoutHeight-$form-$qty_index"} = 0;
 				if ( $Price{'Status'} eq 'uncalculated' ) {
-					if ( $$specs{"chkOverrideEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} eq 'Y' ) {
+					if ( $$specs{"chkOverrideEquipment-$form-$qty_index"} eq 'Y' ) {
 						$$specs{'alert'} = "QTY $qty_index: The selected equipment can not handle your project.	This may be because the stock is too heavy, or too large.";
 					} else {
 						$$specs{'alert'} = "QTY $qty_index: No suitable equipment could be found for your project.	This may be because the stock is too heavy, or too large.";
@@ -193,10 +196,10 @@ sub calc {
 			$$specs{'hdnBreakdown'.$qty_index} .= $Price{'Breakdown'};
 			$$specs{'alert'} .= $Price{alert};
 
-			$qtyTotal += $$specs{"txtVerticalQty-$$sig_specs{'SignatureIndex'}"};
-			$qtyTotal += $$specs{"txtHorizontalQty-$$sig_specs{'SignatureIndex'}"};
-			if ( $$specs{"txtVerticalQty-$$sig_specs{'SignatureIndex'}"} eq '' and $$specs{"txtHorizontalQty-$$sig_specs{'SignatureIndex'}"} eq '' ) {
-				$$specs{'alert'} .= 'Please specify # of scores for form ' . $$sig_specs{'SignatureIndex'};
+			$qtyTotal += $$specs{"txtVerticalQty-$form"};
+			$qtyTotal += $$specs{"txtHorizontalQty-$form"};
+			if ( $$specs{"txtVerticalQty-$form"} eq '' and $$specs{"txtHorizontalQty-$form"} eq '' ) {
+				$$specs{'alert'} .= 'Please specify # of scores for form ' . $form;
 				$status = 'uncalculated';
 			} # end if
 			$price += $Price{'Price'};
@@ -227,12 +230,13 @@ sub signature_calc {
 		Status		=> 'calculated',
 		Breakdown	=> '',
 	);
-	if ( $$specs{"chkOverrideQty-$$sig_specs{'SignatureIndex'}"} ne 'Y' ) {
+	my $form = $$sig_specs{SignatureIndex};
+	if ( $$specs{"chkOverrideQty-$form"} ne 'Y' ) {
 		get_scores( $Project, $specs, $sig_specs, $SignatureImposition->Paper() );
 	} # end if
 
-	my $score_qty = $$specs{"txtVerticalQty-$$sig_specs{'SignatureIndex'}"} + $$specs{"txtHorizontalQty-$$sig_specs{'SignatureIndex'}"};
-	@$specs{"txtWidth-$$sig_specs{'SignatureIndex'}", "txtHeight-$$sig_specs{'SignatureIndex'}"} = @$sig_specs{'txtWidth','txtHeight'};
+	my $score_qty = $$specs{"txtVerticalQty-$form"} + $$specs{"txtHorizontalQty-$form"};
+	@$specs{"txtWidth-$form", "txtHeight-$form"} = @$sig_specs{'txtWidth','txtHeight'};
 	$Results{'Breakdown'} .= "# of Scores: $score_qty<br/>";
 	return %Results if ! $score_qty;
 
@@ -245,6 +249,7 @@ sub signature_calc {
 	if ( $$sig_specs{Versions} ) {
 		$qty *= $$sig_specs{Versions};
 	} # end if
+
 
 	# Can only use the stitcher for scoring if we are stitching.	There are also thickness constraints
 	my $stitching_service_index = $$services{'SaddleStitching'} ? $$services{'SaddleStitching'}[0] : undef;
@@ -264,9 +269,9 @@ sub signature_calc {
 
 	$Results{'Status'} = 'uncalculated';
 	my @equipment;	
-	if ( $$specs{"chkOverrideEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} eq 'Y' ) {
-		@equipment = openprint::Equipment->find( 'id'=>$$specs{"ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} );
-		$openprint::log->debug("Overriding Equipment to: " . $$specs{"ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} );
+	if ( $$specs{"chkOverrideEquipment-$form-$qty_index"} eq 'Y' ) {
+		@equipment = openprint::Equipment->find( 'id'=>$$specs{"ddmEquipment-$form-$qty_index"} );
+		$openprint::log->debug("Overriding Equipment to: " . $$specs{"ddmEquipment-$form-$qty_index"} );
 	} else {
 		my @capabilities = ('Y','When Printing');
 		push @capabilities, 'For Pocket Folders' if $Project->Type()->name() eq 'PresentationFolders';
@@ -288,8 +293,8 @@ sub signature_calc {
 		return $Results{Status} = 'uncalculated';
 	} # end if
 
-	#if ( $$specs{"chkOverrideImposition-$$sig_specs{'SignatureIndex'}-$qty_index"} eq 'Y' ) {
-		#if ( $$specs{"txtImposition-$$sig_specs{'SignatureIndex'}-$qty_index"} > $imposition->imposition() or $$specs{"txtImposition-$$sig_specs{'SignatureIndex'}-$qty_index"} <= 0 ) {
+	#if ( $$specs{"chkOverrideImposition-$form-$qty_index"} eq 'Y' ) {
+		#if ( $$specs{"txtImposition-$form-$qty_index"} > $imposition->imposition() or $$specs{"txtImposition-$form-$qty_index"} <= 0 ) {
 			#$$specs{'alert'} = "The specified imposition is not possible.";
 			#return %Results;
 		##} # end if
@@ -297,25 +302,27 @@ sub signature_calc {
 
    # What we do is build a set of pieces of the imposition, all of which can be folded. We don't worry about optimality, just possibility.
     my @Set_Of_Impositions;
-    my @All_Impositions;
+
+	$$SignatureImposition{impressions} = $qty / $$SignatureImposition{imposition};
+
     # IF it's a W&T, we have to cut in half first, so just do it.
     if ( $$SignatureImposition{runstyle} eq 'Work & Turn' ) {
         my $i = $SignatureImposition->copy();
         $i->runstyle('Sheet Work');
         $i->start_columns( $i->columns() );
         $i->columns( $i->columns()/2 );
-        $$i{'quantity'} = 2;
+        $$i{quantity} = 2;
         push @Set_Of_Impositions, $i;
     } elsif ( $$SignatureImposition{runstyle} eq 'Work & Tumble' ) {
         my $i = $SignatureImposition->copy();
         $i->runstyle('Sheet Work');
         $i->start_rows( $i->rows() );
         $i->rows( $i->rows()/2 );
-        $$i{'quantity'} = 2;
+        $$i{quantity} = 2;
         push @Set_Of_Impositions, $i;
     } else {
         my $i = $SignatureImposition->copy();
-        $$i{'quantity'} = 1;
+        $$i{quantity} = 1;
         push @Set_Of_Impositions, $i;
     } # end if
 
@@ -355,7 +362,25 @@ sub signature_calc {
 			} # end foreach
 		} # end if
 	} # end if dutch
-	@All_Impositions = openprint::Estimating::Folding::reduce_impositions( \@Set_Of_Impositions );
+
+	my @Initial_Impositions = openprint::Estimating::Folding::reduce_impositions( \@Set_Of_Impositions );
+	my @All_Impositions = @Initial_Impositions;
+
+    for ( my $set_index = 0; $set_index < @All_Impositions; $set_index += 1 ) {
+        my $Set_Of_Impositions = $All_Impositions[$set_index];
+        for ( my $imp_index = 0; $imp_index < @$Set_Of_Impositions; $imp_index += 1 ) {
+            my $Imposition = $$Set_Of_Impositions[$imp_index];
+            if ( $$Imposition{imposition} > 1 ) {
+                foreach my $cuts ( openprint::Estimating::Folding::cut_imposition( $Imposition ) ) {
+                    my @new_impositions = @$Set_Of_Impositions;
+                    splice @new_impositions, $imp_index, 1, @$cuts;
+                    @new_impositions = openprint::Estimating::Folding::compact_impositions( @new_impositions ) if @new_impositions > 1;
+                    push @All_Impositions, \@new_impositions;
+                } # end foreach cuts
+            }
+        } # end foreach Impo
+    } # end foreach Set of
+
 	if ( DEBUG ) {
 		$openprint::log->debug("Sets of Maximum Impositions: " . @All_Impositions);
 		foreach my $Set ( @All_Impositions ) {
@@ -373,14 +398,14 @@ sub signature_calc {
 		if ( $Equipment->specification('Scoring Capable') eq 'When Folding' ) {
 			if ( ! ( $$services{'Folding'} and @{$$services{'Folding'}} ) ) {
 				$Results{'Breakdown'} .= 'Not being folded.<br/>';
-				if ( $$specs{"chkOverrideEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} eq 'Y' ) {
+				if ( $$specs{"chkOverrideEquipment-$form-$qty_index"} eq 'Y' ) {
 					$Results{alert} .= 'Not being folded.<br/>';;
 				} # end if
 				next;
 			} 
 			if ( $$folding_specs{"ddmEquipment-$$sig_specs{SignatureIndex}-$qty_index"} != $Equipment->id() ) {
 				$Results{'Breakdown'} .= 'Not being folded on this.<br/>';
-				if ( $$specs{"chkOverrideEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} eq 'Y' ) {
+				if ( $$specs{"chkOverrideEquipment-$form-$qty_index"} eq 'Y' ) {
 					$Results{alert} .= 'Not being folded on this.<br/>';
 				} # end if
 				next;
@@ -421,9 +446,13 @@ sub signature_calc {
 			foreach my $Fold ( @Folds ) {
 				$parts += $Fold->imposition() * $Fold->quantity();
 			} # end if
+			$Results{Breakdown} .= ' # of parts: ' . $parts . '<br/>';
+			if ( $parts != $SignatureImposition->imposition() ) {
+				$Results{alert} .= 'Folded parts does not match signature imposition.<br/>';
+			} # eneid
 
 			foreach my $Fold ( @Folds ) {
-				$$Fold{impressions} = ( $qty / $SignatureImposition->imposition() ) * ( $parts / ( $Fold->imposition() * $Fold->quantity() ) ) * $Fold->quantity();
+				$$Fold{impressions} = ( $qty / $SignatureImposition->imposition() ) * $$Fold{quantity};
 				#$$Fold{impressions} /= $Fold->imposition();
                 my $Price = get_price( $Equipment, $$specs{"txtVerticalQty-$$sig_specs{SignatureIndex}"}, $$specs{"txtHorizontalQty-$$sig_specs{SignatureIndex}"}, $$Fold{impressions}, $Fold );
                 $totalPrice += $$Price{setup} + $$Price{Vertical}{Total} + $$Price{Horizontal}{Total} + $$Price{Service}{Total};
@@ -438,7 +467,62 @@ sub signature_calc {
 				$Results{Runspeed} = $Equipment->specification('Scoring Runspeed');
 			} # end if
 		} else {
-			foreach my $Set_Of_Impositions ( @All_Impositions ) {
+			my @My_All_Impositions;
+			my $type = $Equipment->specification('Type');
+			if ( $type eq 'Press' ) {
+				@My_All_Impositions = @Initial_Impositions;
+			} elsif ( $type eq 'Folder' ) {
+				@My_All_Impositions = @All_Impositions;
+			} elsif ( $type eq 'Stitcher' ) {
+				@My_All_Impositions = @All_Impositions;
+				my $max_imposition = $Equipment->specification('Maximum Imposition');
+				if ( DEBUG and 0 ) {
+					$openprint::log->debug("Impositions before max comparison: $max_imposition" );
+					for ( my $set_index = 0; $set_index < @My_All_Impositions; $set_index += 1 ) {
+						my $Set_Of_Impositions = $My_All_Impositions[$set_index];
+						$openprint::log->debug("Impositions before max comparison in this set: " . @$Set_Of_Impositions );
+						for ( my $imp_index = 0; $imp_index < @$Set_Of_Impositions; $imp_index += 1 ) {
+							my $Imposition = $$Set_Of_Impositions[$imp_index];
+							$Imposition->display();
+						} #end for
+					} #end for
+				} # end if
+				if ( $max_imposition ) {
+					for ( my $set_index = 0; $set_index < @My_All_Impositions; $set_index += 1 ) {
+						my $Set_Of_Impositions = $My_All_Impositions[$set_index];
+						for ( my $imp_index = 0; $imp_index < @$Set_Of_Impositions; $imp_index += 1 ) {
+							my $Imposition = $$Set_Of_Impositions[$imp_index];
+							if ( $$Imposition{imposition} > $max_imposition ) {
+								splice @My_All_Impositions, $set_index, 1;
+								$set_index -= 1;
+								last;
+							} # end if
+						} # end for
+					} # end foreach set
+				} # end if
+			} # end if equipment type
+			$openprint::log->debug("Impositions sets before filtering: " . @My_All_Impositions );
+
+			# Remove duplicate sets
+			my %sets;
+			for ( my $set_index = 0; $set_index < @My_All_Impositions; $set_index += 1 ) {
+				my $Set_Of_Impositions = $My_All_Impositions[$set_index];
+				my $id = join(',', sort{ $a cmp $b } map { $$_{quantity}.'x'.$$_{imposition}.'='.$$_{columns} } @$Set_Of_Impositions );
+				if ( $sets{$id} ) {
+					splice @My_All_Impositions, $set_index, 1;
+					$set_index -= 1;
+					next;
+				}
+				$sets{$id} = 1;
+			} # end foreach
+			if ( ! @My_All_Impositions ) {
+				$openprint::log->debug("No imposition sets for $$Equipment{strid}");
+				next;
+			} # end if
+
+
+
+			foreach my $Set_Of_Impositions ( @My_All_Impositions ) {
 				my @impositions = @{$Set_Of_Impositions};
 				if ( $type eq 'Press' ) {
 					next if @impositions > 1;
@@ -450,7 +534,7 @@ sub signature_calc {
 				foreach my $I ( @impositions ) {
 					$Results{'Breakdown'} .= '<br/>Imp: '.$I->to_string().'<br/>';
 
-					if ( $_ = fits_on_equipment( $Equipment, $I, $sig_specs, $$specs{"txtVerticalQty-$$sig_specs{'SignatureIndex'}"}, $$specs{"txtHorizontalQty-$$sig_specs{'SignatureIndex'}"} ) ) {
+					if ( $_ = fits_on_equipment( $Equipment, $I, $sig_specs, $$specs{"txtVerticalQty-$form"}, $$specs{"txtHorizontalQty-$form"} ) ) {
 						$Results{'Breakdown'} .= "Doesn't fit. $_<br/>";
 						$complete = 0;
 						last;
@@ -458,7 +542,7 @@ sub signature_calc {
 
 					$Results{'Breakdown'} .= '<br/>';
 
-					my $Price = get_price( $Equipment, $$specs{"txtVerticalQty-$$sig_specs{'SignatureIndex'}"}, $$specs{"txtHorizontalQty-$$sig_specs{'SignatureIndex'}"}, $qty, $I );
+					my $Price = get_price( $Equipment, $$specs{"txtVerticalQty-$form"}, $$specs{"txtHorizontalQty-$form"}, $$I{impressions} * $$I{quantity}, $I );
 
 					$totalPrice += $$Price{setup} + $$Price{Vertical}{Total} + $$Price{Horizontal}{Total} + $$Price{Service}{Total};
 					$Results{Breakdown} .= $$Price{Breakdown};
@@ -525,7 +609,7 @@ sub get_price {
 	} # end if
 
 	$Results{'Breakdown'} .= sprintf( 'MakeReady: for %d scores = $%.2f<br/>', $score_qty, $setupPrice );
-	$Results{'Breakdown'} .= "Imposition: $$I{columns}x$$I{rows}=$$I{'imposition'}: ";
+	$Results{'Breakdown'} .= "Imposition: " . $I->to_string() . '<br/>';
 
 	my $Overs = $Equipment->Specification( 'Scoring Overs', $qty );
 	if ( $$Overs{'units'} eq 'Sheets' ) {
@@ -543,7 +627,7 @@ sub get_price {
 		%servicePrice = openprint::service::get_price_object( 'Scoring', $qty, $Equipment );
 	} # end if
 
-	if ( $servicePrice{'units'} eq 'per m' ) {
+	if ( $servicePrice{units} eq 'per m' ) {
 		$servicePrice{Total} = Math::Round::nearest( 0.01, $servicePrice{Price} * $qty / 1000 );
 		$Results{'Breakdown'} .= sprintf('Service: $%.2f%s * %d * %d scores=$%.2f<br/>', @servicePrice{'Price','units'}, $qty, $score_qty, $servicePrice{Total} );
 	} elsif ( $servicePrice{units} eq 'per hour' ) {
@@ -564,7 +648,7 @@ sub get_price {
 
 #$openprint::log->debug("Horizontal: $horizontal_rule");
 	if ( $horizontal_rule ) {
-		if ( my @Materials = openprint::Material->find('name'=>'ScoringRule') ) {
+		if ( my @Materials = openprint::Material->find(name=>'ScoringRule') ) {
 			%horizontal_price = $Materials[0]->get_price( $horizontal_rule, $Equipment );
 			if ( sets::isin( $horizontal_price{'units'},['per rule','each','per score'] ) ) {
 				$horizontal_price{'Total'} = $horizontal_price{'Price'} * $horizontal_rule;
@@ -615,28 +699,29 @@ sub get_price {
 sub get_scores {
 	my ( $Project, $specs, $sig_specs, $Paper ) = @_;
 
+	my $form = $$sig_specs{SignatureIndex};
 	if ( ! signature_needs( $Project, $specs, $sig_specs, $Paper ) ) {
 # Default to 1 score, because we assume that if we have scoring, then we must want at least 1
-		$$specs{"txtVerticalQty-$$sig_specs{'SignatureIndex'}"} = 0;
-		$$specs{"txtHorizontalQty-$$sig_specs{'SignatureIndex'}"} = 0;
-		$openprint::log->debug("SIgnature $$sig_specs{'SignatureIndex'} doesn't need scoring in get_scores") if DEBUG;
+		$$specs{"txtVerticalQty-$form"} = 0;
+		$$specs{"txtHorizontalQty-$form"} = 0;
+		$openprint::log->debug("SIgnature $form doesn't need scoring in get_scores") if DEBUG;
 		return;
 	} # end if
 	if ( $$sig_specs{'txtSignatureType'} eq 'Cover Pages' ) {
 		if ( openprint::print::get_book_type( $Project ) eq 'PerfectBound' ) {
-			$$specs{"txtVerticalQty-$$sig_specs{'SignatureIndex'}"} = 4;
-			$$specs{"txtHorizontalQty-$$sig_specs{'SignatureIndex'}"} = 0;
+			$$specs{"txtVerticalQty-$form"} = 4;
+			$$specs{"txtHorizontalQty-$form"} = 0;
 		} elsif ( $$sig_specs{txtWidth}/$$sig_specs{txtFinalWidth} != 2 ) {
-			$$specs{"txtVerticalQty-$$sig_specs{'SignatureIndex'}"} = 2;
-			$$specs{"txtHorizontalQty-$$sig_specs{'SignatureIndex'}"} = 0;
+			$$specs{"txtVerticalQty-$form"} = 2;
+			$$specs{"txtHorizontalQty-$form"} = 0;
 		} elsif ( $$sig_specs{txtSpreadSize} > 2 ) {
-			$$specs{"txtVerticalQty-$$sig_specs{'SignatureIndex'}"} = 1;
-			$$specs{"txtHorizontalQty-$$sig_specs{'SignatureIndex'}"} = 0;
+			$$specs{"txtVerticalQty-$form"} = 1;
+			$$specs{"txtHorizontalQty-$form"} = 0;
 		} # end if
 	} elsif ( $$sig_specs{'txtSignatureType'} eq 'Interior Pages' ) {
-		if ( $$sig_specs{'SignatureIndex'} == 1 ) {
-			$$specs{"txtVerticalQty-$$sig_specs{'SignatureIndex'}"} = 1;
-			$$specs{"txtHorizontalQty-$$sig_specs{'SignatureIndex'}"} = 0;
+		if ( $form == 1 ) {
+			$$specs{"txtVerticalQty-$form"} = 1;
+			$$specs{"txtHorizontalQty-$form"} = 0;
 		} # end if
 	} elsif ( $$sig_specs{'txtSignatureType'} eq 'Gate Folded Pages' ) {
 	} else { # normal printing
@@ -646,49 +731,49 @@ sub get_scores {
 		if ( sets::isin( $$sig_specs{'rdbTemplateType'}, 'Portrait', 'Landscape' ) ) {
 # needs no folding
 		} elsif ( sets::isin( $$sig_specs{'rdbTemplateType'}, ['4PageSignatureFold','2PanelFold','BusCardLandscapeFold','BusCardPortraitFold']) ) {
-			$$specs{"txtVerticalQty-$$sig_specs{'SignatureIndex'}"} = 1;
-			$$specs{"txtHorizontalQty-$$sig_specs{'SignatureIndex'}"} = 0;
+			$$specs{"txtVerticalQty-$form"} = 1;
+			$$specs{"txtHorizontalQty-$form"} = 0;
 		} elsif ( sets::isin( $$sig_specs{'rdbTemplateType'}, '3PanelFold', '3PanelZFold' ) ) {
-			$$specs{"txtVerticalQty-$$sig_specs{'SignatureIndex'}"} = $width_folds;
-			$$specs{"txtHorizontalQty-$$sig_specs{'SignatureIndex'}"} = $height_folds;
+			$$specs{"txtVerticalQty-$form"} = $width_folds;
+			$$specs{"txtHorizontalQty-$form"} = $height_folds;
 		} elsif ( sets::isin( $$sig_specs{'rdbTemplateType'}, 'AccordianFold') ) {
-			$$specs{"txtVerticalQty-$$sig_specs{'SignatureIndex'}"} = $width_folds;
-			$$specs{"txtHorizontalQty-$$sig_specs{'SignatureIndex'}"} = $height_folds;
+			$$specs{"txtVerticalQty-$form"} = $width_folds;
+			$$specs{"txtHorizontalQty-$form"} = $height_folds;
 		} elsif ( sets::isin( $$sig_specs{'rdbTemplateType'}, '4PanelFold','4PanelZFold', 'AccordianFold4Panel') ) {
 			if ( $width_folds ) {
-				$$specs{"txtVerticalQty-$$sig_specs{'SignatureIndex'}"} = 3;
+				$$specs{"txtVerticalQty-$form"} = 3;
 			} else {
-				$$specs{"txtHorizontalQty-$$sig_specs{'SignatureIndex'}"} = 3;
+				$$specs{"txtHorizontalQty-$form"} = 3;
 			} # end if
 		} elsif ( sets::isin( $$sig_specs{'rdbTemplateType'}, '5PanelFold', '5PanelZFold') ) {
-			$$specs{"txtVerticalQty-$$sig_specs{'SignatureIndex'}"} = $width_folds;
-			$$specs{"txtHorizontalQty-$$sig_specs{'SignatureIndex'}"} = $height_folds;
+			$$specs{"txtVerticalQty-$form"} = $width_folds;
+			$$specs{"txtHorizontalQty-$form"} = $height_folds;
 		} elsif ( sets::isin( $$sig_specs{'rdbTemplateType'}, '6PanelFold', '6PanelZFold' ) ) {
-			$$specs{"txtVerticalQty-$$sig_specs{'SignatureIndex'}"} = $width_folds;
-			$$specs{"txtHorizontalQty-$$sig_specs{'SignatureIndex'}"} = $height_folds;
+			$$specs{"txtVerticalQty-$form"} = $width_folds;
+			$$specs{"txtHorizontalQty-$form"} = $height_folds;
 		} elsif ( sets::isin( $$sig_specs{'rdbTemplateType'}, 'SingleGateFold' ) ) {
-			$$specs{"txtVerticalQty-$$sig_specs{'SignatureIndex'}"} = 2;
-			$$specs{"txtHorizontalQty-$$sig_specs{'SignatureIndex'}"} = 0;
+			$$specs{"txtVerticalQty-$form"} = 2;
+			$$specs{"txtHorizontalQty-$form"} = 0;
 		} elsif ( sets::isin( $$sig_specs{'rdbTemplateType'}, 'DoubleGateFold' ) ) {
-			$$specs{"txtVerticalQty-$$sig_specs{'SignatureIndex'}"} = 3;
-			$$specs{"txtHorizontalQty-$$sig_specs{'SignatureIndex'}"} = 0;
+			$$specs{"txtVerticalQty-$form"} = 3;
+			$$specs{"txtHorizontalQty-$form"} = 0;
 		} elsif ( sets::isin( $$sig_specs{'rdbTemplateType'}, 'PF1Pocket', 'PF2Pocket' ) ) {
-			$$specs{"txtVerticalQty-$$sig_specs{'SignatureIndex'}"} = 2;
-			$$specs{"txtHorizontalQty-$$sig_specs{'SignatureIndex'}"} = 0;
+			$$specs{"txtVerticalQty-$form"} = 2;
+			$$specs{"txtHorizontalQty-$form"} = 0;
 		} elsif ( sets::isin( $$sig_specs{'rdbTemplateType'}, '2Panel2Pocket', '2Panel1Pocket' ) ) {
-			$$specs{"txtVerticalQty-$$sig_specs{'SignatureIndex'}"} = 1;
-			$$specs{"txtHorizontalQty-$$sig_specs{'SignatureIndex'}"} = 1;
+			$$specs{"txtVerticalQty-$form"} = 1;
+			$$specs{"txtHorizontalQty-$form"} = 1;
 		} else {
 			if ( $$specs{'txtFinalWidth'} ) {
 				my $cols = $$sig_specs{'txtWidth'} / $$specs{'txtFinalWidth'};
 				my $mod_cols = $$sig_specs{'txtWidth'} % $$specs{'txtFinalWidth'};
 				if ( $cols and ! $mod_cols ) {
-					$$specs{"txtVerticalQty-$$sig_specs{'SignatureIndex'}"} = 2;
+					$$specs{"txtVerticalQty-$form"} = 2;
 				} elsif ( $$specs{'txtFinalHeight'} ) {
 					my $rows = $$sig_specs{'txtHeight'} / $$specs{'txtFinalHeight'};
 					my $mod_rows = $$sig_specs{'txtHeight'} % $$specs{'txtFinalHeight'};
 					if ( $rows and ! $mod_rows ) {
-						$$specs{"txtHorizontalQty-$$sig_specs{'SignatureIndex'}"} = 0;
+						$$specs{"txtHorizontalQty-$form"} = 0;
 					} # end if
 				} # end if
 			} # end if
