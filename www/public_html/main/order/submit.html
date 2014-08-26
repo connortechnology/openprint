@@ -20,7 +20,7 @@
 			</li>
 			<li>
 				<label>Comments</label>
-				<textarea name="AdministratorComments" cols="30" rows="<? echo ( ssi::count_lines( $$variable{'AdministratorComments'} ); ) ?>" onkeyup="textarea_resize(this);"><?AdministratorComments?></textarea>
+				<textarea name="AdministratorComments" cols="30" rows="<? echo ( count_lines( $$variable{AdministratorComments} ) ) ?>" onkeyup="textarea_resize(this);"><?AdministratorComments?></textarea>
 			</li>
 		</ul></div>
 		<? endif ( sets::isin( $session{'user_type'}, ['A', 'E'] ) ) ?>
@@ -28,9 +28,9 @@
 		<br class="spacer"/>
 		<div class="Disclaimer">
 	<? echo ( 
-		if ( ( $session{'company_id'} == $$variable{'Order'}->company_id() ) and ( new openprint::User( $session{'user_id'} )->company_id() == $session{'company_id'} ) ) {
+		if ( ( $session{company_id} == $$variable{Order}->company_id() ) and ( new openprint::User( $session{user_id} )->company_id() == $session{company_id} ) ) {
 			my $html;
-			$html .= $config{'OrderViewDisclaimer'};
+			$html .= $config{OrderViewDisclaimer};
 			$html .= '
 			<div class="AcceptTerms">
 				<input type="checkbox" id="accept_terms" name="accept_terms" value="1" />
@@ -44,8 +44,8 @@
 		<p class="buttons">
 		<? echo ( 
 			return join('',
-			ssi::button( 'Back', { 'href'=>'/main/order/information.html', 'class'=>'Back' } ),
-			ssi::button( 'Complete', { 'onclick'=>'f1.submit();', 'text'=>'Complete Order', 'class'=>'Complete' } ),
+				button( 'Back', { href=>'/main/order/information.html?order_id='.$variable{Order}->id(), class=>'Back' } ),
+				button( 'Complete', { onclick=>'f1.submit();', text=>'Complete Order', class=>'Complete' } ),
 			);	
 		) ?>
 		</p>
