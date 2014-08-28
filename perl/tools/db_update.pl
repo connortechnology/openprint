@@ -1241,6 +1241,12 @@ if ( ! sets::isin( 'materials', \@tables ) ) {
 	} else {
 		$dbh->do(misc::load_file( $log, '../openprint/sql/Materials.sql') ) or die $dbh->errstr();
 	} # end if
+} else {
+	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='materials'", 'column_name' );
+	if ( ! exists $$data{manufacturer_id} ) {
+		$dbh->do('ALTER TABLE materials add manufacturer_id INTEGER');
+		$dbh->do('ALTER TABLE materials add FOREIGN KEY (manufacturer_id) REFERENCES Manufacturers (id)');
+	} 
 } # end if
 if ( ! sets::isin( 'material_specifications', \@tables ) ) {
 	$dbh->do(misc::load_file( $log, '../openprint/sql/Material_Specifications.sql') );
@@ -1972,6 +1978,11 @@ if ( ! sets::isin( 'products', \@tables ) ) {
 	if ( ! exists $$data{weight} ) {
 		$dbh->do('ALTER TABLE products ADD weight float');
 	} # end if
+	if ( ! exists $$data{supplier_id} ) {
+		print "Adding supplier_id to Products\n";
+		$dbh->do('ALTER TABLE Products ADD supplier_id INTEGER');
+		$dbh->do('ALTER TABLE Products ADD FOREIGN KEY (supplier_id) REFERENCES companies (id)');
+	}
 } # end if
 
 if ( ! sets::isin( 'product_specifications', \@tables ) ) {
@@ -2337,6 +2348,7 @@ foreach my $S ( openprint::Service->find('name'=>'AqueousMakeReady') ) {
 } # end if
 }
 if ( ! openprint::ServiceType->find('name'=>'Varnish') ) {
+	print  "Adding Varnish ServiceType\n";
 	my $S = new openprint::ServiceType();
 	$S->save({
 		'name'	=>	'Varnish',
@@ -2416,6 +2428,7 @@ foreach my $S ( openprint::Service->find('name'=>'VarnishMakeReady') ) {
 	} # en dif
 
 	if ( ! openprint::Service->find('name'=>'Varnish Gloss Spot MakeReady') ) {
+		print "Converting VarnishMakeReadies To Varnish Gloss Spot MakeReady\n";
 		my $S2 = $S->copy();
 		$S2->name('Varnish Gloss Spot MakeReady');
 		$S2->description('Varnish Gloss Spot MakeReady');
@@ -2429,6 +2442,7 @@ foreach my $S ( openprint::Service->find('name'=>'VarnishMakeReady') ) {
 	} # end if
 
 	if ( ! openprint::Service->find('name'=>'Varnish Matte Overall MakeReady') ) {
+		print "Converting VarnishMakeReadies To Varnish Matte Overall MakeReady\n";
 		my $S2 = $S->copy();
 		$S2->name('Varnish Matte Overall MakeReady');
 		$S2->description('Varnish Matte Overall MakeReady');
@@ -2440,6 +2454,7 @@ foreach my $S ( openprint::Service->find('name'=>'VarnishMakeReady') ) {
 		} # end foreach
 	} # en dif
 	if ( ! openprint::Service->find('name'=>'Varnish Matte Spot MakeReady') ) {
+		print "Converting VarnishMakeReadies To Varnish Matte Spot MakeReady\n";
 		my $S2 = $S->copy();
 		$S2->name('Varnish Matte Spot MakeReady');
 		$S2->description('Varnish Matte Spot MakeReady');

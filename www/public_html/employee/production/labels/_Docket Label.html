@@ -1,5 +1,10 @@
 <? eval (
-	$$variable{Order} = openprint::Order->find_one(docket=>$param{docket}) if $param{docket};
+	if ( $param{id} ) {
+		$$variable{Order} = $$variable{Label}->Order();
+	} else {
+		$$variable{Order} = openprint::Order->find_one(docket=>$param{docket}) if $param{docket};
+	} # end if
+
 	if ( ! $$variable{Order} ) {
 		$variable{error} = 'Docket ' . $param{docket} . ' not found.<br/>';
 	} else {

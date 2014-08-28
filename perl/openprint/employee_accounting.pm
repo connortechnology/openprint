@@ -79,29 +79,6 @@ sub details {
 	} elsif ( $param{'btnFunction'} eq 'Pay' ) {
 		$variable{'error'} .= $Order->pay();
 		$variable{'ExternalRedirect'} = '/employee/accounting/details.html?order_id='.$Order->id() if ! $variable{'error'};
-	} elsif ( $param{'btnFunction'} eq 'Invoice' ) {
-		$param{invoice_id} = openprint::Invoice->transform( 'num', $param{invoice_id} );
-		if ( $param{invoice_id} ) {
-			my $Invoice = openprint::Invoice->find_one(num=>$param{invoice_id}, invoicee_id=>$Order->company_id() );
-			if ( ! $Invoice ) {
-				$Invoice = new openprint::Invoice();
-				$variable{error} .= $Invoice->save({
-					invoicer_id=>$config{owner_id},
-					invoicee_id=>$Order->company_id(),
-					num=>$param{invoice_id},
-					currency_id =>  $Order->currency_id(),
-					total		=>	$param{amount},
-					});
-			} # end if ! Invoice
-			my $OI = new openprint::Order_Invoice();
-			$variable{error} .= $OI->save({ order_id=>$$Order{id}, invoice_id=>$$Invoice{id} });
-			#$variable{error} .= $Order->save({ invoice_id=> $Invoice->id() });
-			if ( ! $variable{error} ) {
-				$variable{ExternalRedirect} = '/employee/accounting/details.html?order_id='.$Order->id();
-			} # end if
-		} else {
-			$variable{error} .= 'Please enter an invoice #<br/>';
-        } # end if
 	} elsif ( $param{'btnFunction'} eq 'ChangeSupplier' ) {
 		if ( ! $param{'supplier_id'} ) {
 			$variable{'error'} .= 'No supplier specified.  No change made.<br/>';
@@ -619,7 +596,7 @@ sub credit_application {
 } # end sub credit_application
 
 sub _order_invoices {
-	$variable{Order} = new openprint::Order( $param{order_id} );
+	my $Order = $variable{Order} = new openprint::Order( $param{order_id} );
 	if ( $param{action} eq 'Delete' ) {
 		my $OI = openprint::Order_Invoice->find_one( { order_id=>$param{order_id}, invoice_id=>$param{invoice_id} } );
 		if ( $OI ) {
@@ -628,6 +605,32 @@ sub _order_invoices {
 		} else {
 			$variable{error} = 'Invoice not found.  Not deleted<br/>';
 		} # end if
+	} elsif ( $param{action} eq 'add' ) {
+		$param{invoice_num} = openprint::Invoice->transform('num', $param{invoice_num} );
+		if ( ! $param{invoice_num} ) {
+			$variable{error} .= 'Empty or invalid Invoice #.<br/>';
+		} elsif ( ! $param{order_id} ) {
+			$variable{error} .= 'Empty or invalid Order #.<br/>';
+		} else {
+			my $Invoice = openprint::Invoice->find_one(num=>$param{invoice_id});
+			if ( ! $Invoice ) {
+				$Invoice = new openprint::Invoice();
+				$variable{error} .= $Invoice->save({
+						invoicer_id	=> $config{owner_id},
+						invoicee_id	=> $Order->company_id(),
+						total		=> $param{amount},
+						num			=> $param{invoice_num},
+						posted_on	=> ( $param{posted_on} ? $param{posted_on} : sprintf('%.4d-%.2d-%.2d', ssi::date( 'posted_on', \%param ) ) ),
+						posted		=> 1,
+						currency_id => $Order->currency_id(),
+						});
+			} # end if ! Invoice
+			if ( ! $variable{error} ) {
+				my $OI = new openprint::Order_Invoice();
+				$variable{error} .= $OI->save({ order_id=>$$Order{id}, invoice_id=>$$Invoice{id} });
+				$Order->add_log('Invoiced # ' . $Invoice->link_to());
+			} # end if
+        } # end if
 	} # end if action
 } # end sub _order_invoices
 

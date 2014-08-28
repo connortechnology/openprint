@@ -204,7 +204,7 @@ sub cut_imposition {
 	my ( $I ) = @_;
 	
 	my $i1 = $I->copy();
-	my $i2;
+	my @results = ( $i1 );
 
 	if ( $I->runstyle() eq 'Work & Turn' ) {
 		$i1->runstyle( 'SheetWork' );
@@ -212,64 +212,79 @@ sub cut_imposition {
 		if ( $I->dutch_columns() ) {
 			$i1->dutch_columns( $i1->dutch_columns() / 2 );
 		} # end if
-		$i2 = $i1->copy();
+		$i1->quantity( $i1->quantity() * 2 );
+$i1->display('Cut to 1');
 
 	} elsif ( $I->runstyle() eq 'Work & Tumble' ) {
 		$i1->runstyle( 'SheetWork' );
 		$i1->rows( $i1->rows() / 2 );
 		$i1->dutch_rows( $i1->dutch_rows() / 2 ) if $I->dutch_rows();
-		$i2 = $i1->copy();
+		$i1->quantity( $i1->quantity() * 2 );
+$i1->display('Cut to 1');
 
 	} elsif ( $I->dutch_columns() ) {
 		$i1->dutch_rows( 0 );
 		$i1->dutch_columns( 0 );
 
-		$i2 = $I->copy();
+		my $i2 = $I->copy();
 		$i2->rows( $I->dutch_rows() );
 		$i2->columns( $I->dutch_columns() );
 		$i2->image_orientation( $I->image_orientation() eq 'Vertical' ? 'Horizontal' : 'Vertical' );
 		$i2->dutch_rows( 0 );
 		$i2->dutch_columns( 0 );
+$i1->display('Cut to 1');
+$i2->display('Cut to 2');
+		push @results, $i2;
 	} elsif ( $I->layout_width() >= $I->layout_height() and $I->columns() > 1 ) {
 $I->display('B');
-		$i2 = $I->copy();
+		my $i2 = $I->copy();
 		$i1->sheet_width();
 		$i2->sheet_width();
 		$i1->columns( int($I->columns() / 2) );
 		$i2->columns( $I->columns() - $i1->columns() );
 		#$i1->sheet_width( Math::Round::nearest( 0.001,$I->sheet_width() / ( $I->columns()/$i1->columns() ) ) );
 		#$i2->sheet_width( $I->sheet_width() - $i1->sheet_width() );
+$i1->display('Cut to 1');
+$i2->display('Cut to 2');
+		push @results, $i2;
 	} elsif ( $I->layout_width() < $I->layout_height() and $I->rows() > 1 ) {
 $I->display('C');
-		$i2 = $I->copy();
+		my $i2 = $I->copy();
 		$i1->sheet_width();
 		$i2->sheet_width();
 		$i1->rows( int($I->rows() / 2) );
 		$i2->rows( $I->rows() - $i1->rows() );
 		#$i1->sheet_height( sprintf( '%.3f', $I->sheet_height() / ( $I->rows()/$i1->rows() ) ) );
 		#$i2->sheet_height( $I->sheet_height() - $i1->sheet_height() );
+$i1->display('Cut to 1');
+$i2->display('Cut to 2');
+		push @results, $i2;
 	} elsif ( $I->columns() >= $I->rows() ) {
 $I->display('D');
-		$i2 = $I->copy();
+		my $i2 = $I->copy();
 		$i1->sheet_width();
 		$i2->sheet_width();
 		$i1->columns( int($I->columns() / 2) );
 		$i2->columns( $I->columns() - $i1->columns() );
 		#$i1->sheet_width( sprintf('%.3f',$I->sheet_width() / ( $I->columns()/$i1->columns() ) ) );
 		#$i2->sheet_width( $I->sheet_width() - $i1->sheet_width() );
+$i1->display('Cut to 1');
+$i2->display('Cut to 2');
+		push @results, $i2;
 	} else {
 $I->display('E');
-		$i2 = $I->copy();
+		my $i2 = $I->copy();
 		$i1->sheet_width();
 		$i2->sheet_width();
 		$i1->rows( int($I->rows() / 2) );
 		$i2->rows( $I->rows() - $i1->rows() );
 		#$i1->sheet_height( sprintf( '%.3f', $I->sheet_height() / ( $I->rows()/$i1->rows() ) ) );
 		#$i2->sheet_height( $I->sheet_height() - $i1->sheet_height() );
-	} # end if
 $i1->display('Cut to 1');
 $i2->display('Cut to 2');
-	return ( $i1, $i2 );
+		push @results, $i2;
+	} # end if
+	return @results;
 } # end sub cut_imposition
 
 sub get_uv_colours {
@@ -365,12 +380,12 @@ sub signature_calc {
 			my $breakdown = '<b>'.$Equipment->name() . '</b><br/>';;
 
 			my %ImpositionPrice;
-			if ( @$impositions > 1 ) {
+			#if ( @$impositions > 1 ) {
 				# What is the purpose?  Should be to figure out how to cut the impositions out of the sheet, but that is not what this does.
 				#my %results = openprint::Estimating::Cutting::signature_calc_stock_cutting( $Project, {}, $qty_index, { Stock => $Stock, quantity =>  );
 				#$ImpositionPrice{Cutting} = $results{Price};
 				#$breakdown .= sprintf('Stock cutting cost: %.2f<br/>', $results{Price} );
-			} # end if
+			#} # end if
 
 			for ( my $imp_index = 0; $imp_index < @$impositions; $imp_index += 1 ) {
 				my $imp = $$impositions[$imp_index];
@@ -418,15 +433,18 @@ $BestPrice{Breakdown} .= $breakdown;
 					last;
 				} # end if
 
-				my $run_qty = $qty / $Imposition->imposition();
+				my $run_qty = $qty * $imp->quantity() / $Imposition->imposition();
+				$breakdown .= 'impressions: ' . $run_qty;
+		
 				if ( my $Overs = $Equipment->Specification('UVCoating Overs', $run_qty ) ) {
 					if ( $$Overs{units} eq 'Sheets' ) {
 						my $overs = $$Overs{value};
 						$run_qty += $overs;
 						$ImpositionPrice{Overs} += $overs;
-						$breakdown .= 'Overs: ' . $overs . '<br/>';
+						$breakdown .= ' Overs: ' . $overs;
 					} # endif
 				} # end if
+				$breakdown .= '<br/><table>';
 				my @types;
 				if ( sets::isin( $imp->runstyle(), ['Work & Turn', 'Work & Tumble'] ) ) {
 # need to merge any overalls into spots
@@ -440,7 +458,7 @@ $BestPrice{Breakdown} .= $breakdown;
 				} else {
 					@types = ( @front_uv, @back_uv );
 				} # end if
-$openprint::log->debug("Types: @types");
+$openprint::log->debug("Types: @types") if DEBUG;
 
 				# Has total price values for all types
 				foreach my $type ( @types ) {
@@ -452,9 +470,9 @@ $openprint::log->debug("Types: @types");
 								) ) {
 						$setupPrice = 0;
 					} else {
-						$setupPrice = openprint::service::get_price( $type.'MakeReady', $qty, $Equipment );
-						$setupPrice = openprint::service::get_price( 'UVCoating'.$type.'MakeReady', $qty, $Equipment ) if ! $setupPrice;
-						$setupPrice = openprint::service::get_price( 'UVCoatingMakeReady', $qty, $Equipment ) if ! $setupPrice;
+						$setupPrice = openprint::service::get_price( $type.'MakeReady', $run_qty, $Equipment );
+						$setupPrice = openprint::service::get_price( 'UVCoating'.$type.'MakeReady', $run_qty, $Equipment ) if ! $setupPrice;
+						$setupPrice = openprint::service::get_price( 'UVCoatingMakeReady', $run_qty, $Equipment ) if ! $setupPrice;
 						if ( ! $setupPrice ) {
 							$openprint::log->debug("No setup price for $type");
 							$setupPrice = 0;
@@ -465,12 +483,12 @@ $openprint::log->debug("Types: @types");
 
 						$MakeReadies{$Equipment->id()} = $$sig_specs{'StockWidth'.$qty_index} * $$sig_specs{'StockHeight'.$qty_index};
 					} # end if
-					$breakdown .= sprintf('%s MR: $%.2f', $type, $setupPrice );
+					$breakdown .= sprintf('<tr><td>%s</td></tr><tr><td>MR:</td><td class="Price">$%.2f</td></tr>', $type, $setupPrice );
 
 					if ( $type =~ /Spot/ and $BlanketCutPrice ) {
 						$BlanketCutPrice = openprint::service::get_price( 'BlanketCut', undef, $Equipment ) if ! defined $BlanketCutPrice;
 						$BlanketCutPrice = 0 if ! defined $BlanketCutPrice;
-						$breakdown .= sprintf('+ BC: $%.2f', $BlanketCutPrice );
+						$breakdown .= sprintf('<tr><td>BC:</td><td class="Price">$%.2f</td></tr>', $BlanketCutPrice );
 						$ImpositionPrice{Blanket} += $BlanketCutPrice;
 						$type_total += $BlanketCutPrice;
 					} # end if type is spot
@@ -486,13 +504,14 @@ $openprint::log->debug("Types: @types");
 							$ServicePrice{Total} = $ServicePrice{Price}*$run_qty/1000;
 						} elsif ( $ServicePrice{units} eq 'per hour' or $ServicePrice{units} eq '/Hr' ) {
 							my $runspeed = $Equipment->specification('UVCoatingRunSpeed', $Stock->gsm() );
+							$breakdown .= sprintf('<tr><td> %d @ %d/Hr = %.1fhours', $run_qty, $runspeed, $run_qty/$runspeed );
 
 							$ServicePrice{Total} = $ServicePrice{Price}*$run_qty/$runspeed if $runspeed;
 						} # end if
 # Div by imposition, but run_qty is already div by impo
 #$ServicePrice{Total} /= $imp->imposition();
 						$ImpositionPrice{Service} += $ServicePrice{Total};
-						$breakdown .= sprintf('+ Service: $%.2f%s=%.2f', @ServicePrice{'Price','units','Total'} );
+						$breakdown .= sprintf('@ $%.2f%s</td><td class="Price">%.2f</td></tr>', @ServicePrice{'Price','units','Total'} );
 					} # end if
 
 					my %MaterialPrice;
@@ -502,21 +521,35 @@ $openprint::log->debug("Types: @types");
 					if ( my $Material = openprint::Material->find_one( name=>$material_name) ) {
 						%MaterialPrice = $Material->get_price( $run_qty, $Equipment );
 						if ( lc $MaterialPrice{units} eq 'per square inch' ) {
-							my $area = $imp->object_area() * $run_qty * ($inkCoverage{$type}/100);
+							my $area;
+							if ( $type =~ /Overall/i ) {
+								$area = $imp->sheet_area() * $run_qty;
+								$breakdown .= sprintf( '<tr><td>%sx%s = %d sq inches = %d total sq inches', $imp->sheet_width(), $imp->sheet_height(), $imp->sheet_area(), $area );
+							} else {
+								$area = $imp->object_area() * $run_qty * ($inkCoverage{$type}/100);
+								$breakdown .= sprintf( '<tr><td>%sx%s = %d sq inches = %d total sq inches', $imp->object_width(), $imp->object_height(), $imp->object_area(), $area );
+							} 
 							$MaterialPrice{Total} = $MaterialPrice{Price} * $run_qty * $area;
 						} elsif ( lc $MaterialPrice{units} eq 'per square foot' ) {
-							my $area = $imp->object_area() * $run_qty * ($inkCoverage{$type}/100) /144;
+							my $area;
+							if ( $type =~ /Overall/i ) {
+								$area = $imp->sheet_area() * $run_qty / 144;
+								$breakdown .= sprintf( '<tr><td>%sx%s = %d sq feet = %d total sq feet', $imp->sheet_width(), $imp->sheet_height(), $imp->sheet_area(), $area );
+							} else {
+								$area = $imp->object_area() * $run_qty * ($inkCoverage{$type}/100) / 144;
+								$breakdown .= sprintf( '<tr><td>%sx%s = %d sq feet = %d total sq feet', $imp->object_width(), $imp->object_height(), $imp->object_area(), $area );
+							} 
 							$MaterialPrice{Total} = $MaterialPrice{Price} * $area;
 						} elsif ( lc $MaterialPrice{units} eq 'per m' ) {
 							$MaterialPrice{Total} = $MaterialPrice{Price} * $run_qty / 1000;
 						} else {
 							$MaterialPrice{units} = 'unknown units';
 						} # end if
-						$breakdown .= sprintf('+ Material: $%.2f%s ', @MaterialPrice{'Price','units','Total'} );
+						$breakdown .= sprintf(' @ $%.5f%s ', @MaterialPrice{'Price','units'} );
 						$ImpositionPrice{Material} += $MaterialPrice{Total};
 						$type_total += $MaterialPrice{Total};
 					} # end if
-					$breakdown .= sprintf(' = $%.2f<br/>', $type_total );
+					$breakdown .= sprintf('=</td><td class="Price">$%.2f</td></tr>>', $MaterialPrice{Total} );
 				} # end foreach type
 				#$totalPrice += $ImpositionPrice{Total} + $ImpositionPrice{Cutting};
 			} # end foreach imposition
@@ -527,7 +560,8 @@ $log->debug("Complete: $breakdown");
 				next;
 			} #
 			$ImpositionPrice{Total} += misc::sum( @ImpositionPrice{'MakeReady','Service','Material','Blanket','Cutting'} );
-			$breakdown .= "Total: $ImpositionPrice{Total}<br/>";
+			$breakdown .= sprintf('<tr class="totals"><td>Total:</td><td class="Price">$%.2f</td></tr></table>',
+Math::Round::nearest(0.01,$ImpositionPrice{Total}) );
 
 			if ( ( ! defined $BestPricePerImposition{Total} ) or ( $ImpositionPrice{Total} < $BestPricePerImposition{Total} ) ) {
 				%BestPricePerImposition = %ImpositionPrice;

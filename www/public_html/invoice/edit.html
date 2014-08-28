@@ -1,100 +1,36 @@
 <script type="text/javascript">
-<? if ( $$variable{'Invoice'}->id() ) ?>
-	function update_totals( ) {
-		var total;
-		var timetrack_total = $('timetrack_total');
-		if ( timetrack_total ) {
-			timetrack_total = parseFloat(timetrack_total.innerHTML.replace(/[^\d\.]/g,'') );
-			total += timetrack_total;
-		} // end if
-		var product_total = $('product_total');
-		if ( product_total ) {
-			product_total = parseFloat(product_total.innerHTML.replace(/[^\d\.]/g,'') );
-			total += produt_total;
-		} // end if
-		if ( $('subtotal') ) {
-			$('subtotal').innerHTML = do_decimals( timetrack_total + product_total, 2 );
-		} else {
-			alert('no subtotal');
-		} // end if
-	} // end function
-	function update_product( product_id ) {
-		$('product-total-'+product_id).innerHTML = do_decimals( parseFloat($('product-price-'+product_id).value) * parseFloat($('product-quantity-'+product_id).value), 2 );
-	} // end function update_product
-    function add_timetrack( timetrack_id ) {
-        new Ajax.Updater( 'Timetracks', '_timetracks.html', {
-                parameters: {
-                    invoice_id: <? echo ( $$variable{'Invoice'}->id() ) ?>,
-                    timetrack_id: timetrack_id,
-					action: 'add'
-                },
-                onComplete: function(transport) {
-					update_totals();
-					TableKit.reload();
-                },
-                onFailure: function(transport) {
-                    alert('failure to include');
-                }
-        } );
-    } // end function add_timetrack( invoice_id)
-    function del_timetrack( timetrack_id ) {
-        new Ajax.Updater( 'Timetracks', '_timetracks.html', {
-                parameters: {
-                    invoice_id: <? echo ( $$variable{'Invoice'}->id() ) ?>,
-                    timetrack_id: timetrack_id,
-					action: 'remove'
-                },
-                onComplete: function(transport) {
-					update_totals();
-					TableKit.reload();
-                },
-                onFailure: function(transport) {
-                    alert('failure to remove timetrack');
-                }
-            } );
-    } // end function del_timetrack(invoice_id)
-<? endif ( $$variable{'Invoice'}->id() ) ?>
-	function invoicee_change(ddm) {
-		new Ajax.Request( '_invoicee_onchange.json', { parameters: { invoice_id: '<? echo ( $$variable{Invoice}->id() ) ?>', invoicee_id: ddm.getValue() } } );
-		if ( '<? echo ( $$variable{Invoice}{id} ) ?>' ) {
-		new Ajax.Updater( 'Timetracks', '_timetracks.html', {
-           parameters: {
-                    invoice_id: '<? echo ( $$variable{Invoice}{id} ) ?>',
-					invoicee_id: ddm.getValue() 
-               },
-                onComplete: function(transport) {
-                    update_totals();
-                    TableKit.reload();
-                },
-                onFailure: function(transport) {
-                    alert('failure to include');
-                }
-        } );
-		} // end if invoice_id
-	} // end function invoicee_change(ddm)
+	var invoice_id = '<? echo ( $$variable{Invoice}->id() ) ?>';
 </script>
+<script type="text/javascript" src="<?hash_link(/invoice/edit.js)?>"></script>
 <?include(/includes/error_reporting.html)?>
 <div class="Invoice"><div class="Edit">
-<form name="f1" id="f1" action="<? echo ( $$variable{'Invoice'}->id() ? 'history.html' : 'edit.html' ) ?>" method="post">
+<form name="f1" id="f1" action="edit.html" method="post">
 	<input type="hidden" name="btnFunction" />
-	<input type="hidden" name="invoice_id" value="<? echo ( $$variable{'Invoice'}->id() ) ?>" />
-	<fieldset><legend><? echo ( $$variable{'Invoice'}->id() ? 'Editing Invoice ' . $$variable{'Invoice'}->id() : 'New Invoice' ) ?></legend>
+	<input type="hidden" name="invoice_id" value="<? echo ( $$variable{Invoice}->id() ) ?>" />
+	<fieldset><legend><? echo ( $$variable{'Invoice'}->num() ? 'Editing Invoice ' . $$variable{Invoice}->num() : 'New Invoice' ) ?></legend>
 		<div class="leftColumn">
 			<ul>
-			<li class="invoicee"><label for="invoicee_id" onclick="$('invoicee_id').toggle();$('invoicee').toggle();">Company</label>
-				<select id="invoicee_id" name="invoicee_id" onchange="$('invoicee').value='';invoicee_change(this);">
-					<option value=""> select </option>
-					<? echo ( openprint::Company::get_dropdown( $$variable{'Invoice'}->invoicee_id() ? $$variable{'Invoice'}->invoicee_id() : $session{'company_id'} ); ) ?>
-				</select>
-				<input type="text" name="invoicee" id="invoicee" style="display: none;"/>
-			</li>
-<!--
-			<p><label>Created On</label>
-			<? echo ( date_select( 'posted_on', $$variable{'Invoice'}->posted_on() ); ) ?>
-			</p>
--->
+				<li class="invoice_num"><label>Number</label><input type="text" name="num" value="<? echo ( $$variable{Invoice}->num() ) ?>" /></li>
+				
+				<li class="invoicer"><label>Prepared By</label>
+						<? echo ( ssi::select( 
+openprint::Company->dropdown( offers_credit=>1 ), 
+( $$variable{Invoice}->invoicer_id() ? $$variable{Invoice}->invoicer_id() : $session{company_id} ), {
+name=>'invoicer_id', prepend=>['','select']
+} ); ) ?>
+				</li>
+				<li class="invoicee"><label for="invoicee_id" onclick="$('invoicee_id').toggle();$('invoicee').toggle();">Prepared For</label>
+					<select id="invoicee_id" name="invoicee_id" onchange="$('invoicee').value='';invoicee_change(this);">
+						<option value=""> select </option>
+						<? echo ( openprint::Company::get_dropdown( $$variable{'Invoice'}->invoicee_id() ? $$variable{'Invoice'}->invoicee_id() : $session{'company_id'} ); ) ?>
+					</select>
+					<input type="text" name="invoicee" id="invoicee" style="display: none;"/>
+				</li>
+				<li class="posted_on"><label>Posted On</label>
+				<? echo ( date_select( 'posted_on', $$variable{Invoice}->posted_on() ); ) ?>
+				</li>
 				<li class="due_on"><label>Due On</label>
-				<? echo ( date_select( 'due_on', $$variable{'Invoice'}->due_on() ); ) ?>
+				<? echo ( date_select( 'due_on', $$variable{Invoice}->due_on() ); ) ?>
 				</li>
 				<li class="monthly_interest"><label for="monthly_interest">Interest Rate</label>
 					<? echo ( input( type=>'float', name=>'monthly_interest', id=>'monthly_interest', value=>($$variable{Invoice}->id() ? $$variable{Invoice}->monthly_interest() : $config{'Default Interest'}) ); ) ?>%
@@ -121,9 +57,9 @@
 			</li>
 			<li>
 				<label>Bad Debt?</label>
-				<input type="radio" id="bad_debt1" name="bad_debt" value="1" <? echo ( ssi::checked( $$variable{'Invoice'}->bad_debt() ) ) ?> />
+				<input type="radio" id="bad_debt1" name="bad_debt" value="1" <? echo ( checked( $$variable{'Invoice'}->bad_debt() ) ) ?> />
 				<label class="radio" for="bad_debt1">Yes</label>
-				<input type="radio" id="bad_debt0" name="bad_debt" value="0" <? echo ( ssi::checked( ! $$variable{'Invoice'}->bad_debt() ) ) ?> />
+				<input type="radio" id="bad_debt0" name="bad_debt" value="0" <? echo ( checked( ! $$variable{'Invoice'}->bad_debt() ) ) ?> />
 				<label class="radio" for="bad_debt0">No</label>
 			</li>
 			</ul>
@@ -150,24 +86,22 @@
 			) ?>
 		</p>
 	</fieldset>
-<? if ( $$variable{'Invoice'}->id() ) ?>
-<div id="Timetracks"><?include(_timetracks.html)?></div>
-<div id="InvoicedProducts"><?include(_invoiced_products.html)?></div>
-<div id="InvoicedProjects"><?include(_invoiced_projects.html)?></div>
-<? echo ( include('_totals.html'); ) ?>
-<div class="leftColumn">
-	<div id="Interests">
-	<? echo ( include('_interests.html'); ) ?>
-	</div>
+	<? if ( $$variable{'Invoice'}->id() ) ?>
+	<div id="Orders"><?include(_invoiced_orders.html)?></div>
+	<div id="Timetracks"><?include(_timetracks.html)?></div>
+	<div id="InvoicedProducts"><?include(_invoiced_products.html)?></div>
+	<?include('_totals.html')?>
+	<div class="leftColumn">
+	<div id="Interests"><?include('_interests.html')?></div>
 	<fieldset><legend>Payments</legend>
 		<table>
-			<tr><th>ID</th><th class="transaction">Transaction ID/Cheque #</th><th class="Date">When</th><th>Notes</th><th class="Price">Amount</th></tr>
+			<tr><th class="payment_id">ID</th><th class="transaction">Transaction ID/Cheque #</th><th class="Date">When</th><th>Notes</th><th class="Price">Amount</th></tr>
 			<? echo ( 
 				my $html = '';
 				$$variable{'payment_total'} = 0;
 				foreach my $P ( $$variable{'Invoice'}->Payments() ) {
 					my $Payment = $P->Payment();
-					$html .= sprintf('<tr><td><a href="/payment/edit.html?payment_id=%1$d">%1$d</a></td>
+					$html .= sprintf('<tr><td class="payment_id"><a href="/payment/edit.html?payment_id=%1$d">%1$d</a></td>
 							<td class="transaction">%2$s</td>
 							<td class="Date">%3$s</td>
 							<td class="notes">%4$s</td>

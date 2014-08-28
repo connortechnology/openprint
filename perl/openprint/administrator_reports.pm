@@ -373,10 +373,6 @@ sub order_details {
 			$Payment->delete();
 		} # end if
 		$Order->update_status();
-	} elsif ( $param{'btnFunction'} eq 'Invoice' ) {
-		$Order->invoice_id( $param{'invoice_id'} );
-		$Order->invoiced_on( 'NOW()' );
-		$Order->save();
 	} elsif ( $param{'btnFunction'} eq 'Cancel' ) {
 		openprint::order::cancel_order( $order_id );
 	} elsif ( $param{'btnFunction'} eq 'Save' ) {

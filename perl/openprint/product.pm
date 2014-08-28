@@ -14,6 +14,8 @@ require openprint::Product;
 require openprint::Product_Category;
 require openprint::logs;
 require sql;
+require openprint::Supplier;
+require openprint::Company;
 
 sub view {
 	$param{product_id} = openprint::Product->transform( 'id', $param{product_id} );
@@ -38,8 +40,10 @@ sub edit {
 				delete $param{$field};
 			} # end if
 		} # end foreach
+		$param{supplier_id} = openprint::Supplier::get_or_create( $param{supplier} ) if $param{supplier} and ! $param{supplier_id};
+		$Product->supplier_id( $param{supplier_id} );
 			
-		$variable{'error'} = $Product->save( \%param );
+		$variable{error} = $Product->save( \%param );
 		if ( $param{'product_id'} ) {
 		# Save the prices
 			_prices() ;
@@ -161,22 +165,22 @@ sub categories {
 } # end sub categories
 
 sub _prices {
-	my $Product = new openprint::Product( $param{'product_id'} );
-	if ( $param{'btnFunction'} eq 'Save' ) {
+	my $Product = new openprint::Product( $param{product_id} );
+	if ( $param{btnFunction} eq 'Save' ) {
+		my $ac = sql::start_transaction( $dbh );
+		$dbh->do( 'LOCK TABLE Product_Prices IN EXCLUSIVE MODE' ) or $log->error( DBI->errstr );
 		foreach my $Pricelist ( openprint::Pricelist->find() ) {
-			my $ac = sql::start_transaction( $dbh );
-			$dbh->do( 'LOCK TABLE Product_Prices IN EXCLUSIVE MODE' ) or $log->error( DBI->errstr );
 			foreach my $Price ( openprint::ProductPrice->find( 
-						'product_id' => $$Product{'id'}, 'pricelist_id' => $$Pricelist{'id'} ) ) {
+						product_id => $$Product{id}, pricelist_id => $$Pricelist{id} ) ) {
 				if ( $param{'chk-'.$Price->id()} ) {
-					$variable{'error'} .= $Price->save({
-							'min'			=>	$param{'min-'.$Price->id()},
-							'max'			=>	$param{'max-'.$Price->id()},
-							'units'			=>	$param{'units-'.$Price->id()},
-							'cost'			=>	$param{'cost-'.$Price->id()},
-							'markup'		=>	$param{'markup-'.$Price->id()},
-							'price'			=>	$param{'price-'.$Price->id()},
-							'discountable'	=>	$param{'discount-'.$Price->id()},
+					$variable{error} .= $Price->save({
+							min				=>	$param{'min-'.$Price->id()},
+							max				=>	$param{'max-'.$Price->id()},
+							units			=>	$param{'units-'.$Price->id()},
+							cost			=>	$param{'cost-'.$Price->id()},
+							markup			=>	$param{'markup-'.$Price->id()},
+							price			=>	$param{'price-'.$Price->id()},
+							discountable	=>	$param{'discount-'.$Price->id()},
 							});
 				} else {
 					$Price->delete();
@@ -196,8 +200,8 @@ sub _prices {
 						'discountable'	=>	$param{'discount-'.$Pricelist->id().'-New'},
 						});
 			} # end if
-			sql::end_transaction( $dbh, $ac );
 		} # end foreach Pricelist
+		sql::end_transaction( $dbh, $ac );
 	} # end if
 } # end sub _prices
 

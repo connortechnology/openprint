@@ -26,7 +26,7 @@ sub save_supplier {
 	my $Company;
 	my $ac = sql::start_transaction( $dbh );
 $openprint::log->error("Already in transaction") if $ac;
-	$dbh->do( 'LOCK TABLE Companies IN EXCLUSIVE MODE' ) or $log->error( DBI->errstr );
+	$dbh->do( 'LOCK TABLE Companies IN SHARE ROW EXCLUSIVE MODE' ) or $log->error( DBI->errstr );
 
 	my @Companies = openprint::Company->find( 'name lc'=> lc openprint::Company->transform('name', $$p{vendor_name} ) );
 	if ( ! @Companies ) {
@@ -65,7 +65,7 @@ sub save_contact {
 	my ( $p ) = @_;
 
 	my $ac = sql::start_transaction( $dbh );
-	$dbh->do( 'LOCK TABLE Users IN EXCLUSIVE MODE' ) or $log->error( DBI->errstr );
+	$dbh->do( 'LOCK TABLE Users IN SHARE ROW EXCLUSIVE MODE' ) or $log->error( DBI->errstr );
 	my $User = openprint::User->find_one( company_id=>$$p{supplier_id}, email => openprint::User->transform('email', $$p{vendor_email} ) );
 	if ( ! $User ) {
 		$User = new openprint::User();

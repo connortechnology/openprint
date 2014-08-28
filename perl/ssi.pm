@@ -885,7 +885,7 @@ sub input {
 		if ( $ENV{HTTP_USER_AGENT} =~ /ip(ad|od|hone)/i ) {
 			$options{type} = 'text';
 			$options{'pattern'} = '[.0-9]*' if ! $options{'pattern'};
-		} elsif ( $ENV{HTTP_USER_AGENT} =~ /Firefox\/29.0/ ) {
+		} elsif ( $ENV{HTTP_USER_AGENT} =~ /Firefox/ ) {
 			$options{type} = 'text';
 			$options{'pattern'} = '[.0-9]*' if ! $options{'pattern'};
 			delete $options{step};

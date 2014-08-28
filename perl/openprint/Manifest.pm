@@ -14,7 +14,7 @@ require openprint::PurchaseOrder;
 $table = 'manifests';
 $serial = 'manifests_id_seq';
 
-$debug = 1;
+$debug = 0;
 
 %fields = (
 	id			=>	'id',

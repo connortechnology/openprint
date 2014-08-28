@@ -35,6 +35,7 @@ $serial = 'timetracks_id_seq';
 	distance			=>	'distance',
 	billable			=>	'billable',
 	po					=>	'po',
+	keywords			=>	undef,
 );
 %find_fields = (
 	paycheque_id		=>	'(SELECT paycheque_id FROM Paycheques_Timetracks WHERE timetrack_id=timetracks.id)',

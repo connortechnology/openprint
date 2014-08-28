@@ -694,6 +694,16 @@ sub create_edit_process {
 	} # end if
 
 	$Project->add_to_log( @session{'company_id','user_id'}, 'Edited' );
+	my $book_type = openprint::print::get_book_type( $Project );
+	if ( $book_type ) {
+		my $project_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
+		if ( $book_type ne $$project_specs{rdbTemplateType} ) {
+			$Project->add_to_log( @session{'company_id','user_id'}, "Changed book type from $$project_specs{rdbTemplateType} to $book_type" );
+			openprint::service::insert_service_spec( $log, $dbh, $project_index, $$services{''}[0], 'rdbTemplateType', $book_type );
+			$recalculate = 1;	
+		} # end if
+	} # end if
+	
 	if ( $recalculate ) {
 		$Project->recalculate();
 	} # end if
@@ -781,7 +791,6 @@ sub reuse_project {
 			or ( $NewProject->quantity2() and ( $Project->quantity2() != $NewProject->quantity2() ) )
 			or ( $NewProject->quantity3() and ( $Project->quantity3() != $NewProject->quantity3() ) )
 			or ( $param{recalculate} == 1 )
-			or ( ( time - Date::Parse::str2time( $Project->updated_on() ) ) > 24*60*60 )
 	   ) {
 		$NewProject->recalculate();
 	} # endif

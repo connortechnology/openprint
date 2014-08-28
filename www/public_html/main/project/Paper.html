@@ -1,4 +1,36 @@
 <script type="text/javascript" src="<?hash_link(/javascripts/service.js)?>"></script>
+<script type="text/javascript">
+function calc_sheets_from_weight(e) {
+    var re = /qty-(.*)/
+    var matches = re.exec( e.name );
+    if ( matches ) {
+        var index = matches[1];
+		if ( $('overrideqty-'+index).value == 'Y' ) {
+			var sheet_weight = parseFloat( floatize( $('sheet_weight-'+index) ) );
+			var sheets = $('sheets-'+index);
+			sheets.value = parseInt( e.value / sheet_weight );
+		} 
+	}
+}
+function calc_weight_from_sheets(e) {
+    var re = /sheets-(.*)/
+    var matches = re.exec( e.name );
+    if ( matches ) {
+        var index = matches[1];
+		var override = $('overrideqty-'+index);
+		if ( ! override ) {
+			alert('no override found');
+			return;
+		} 
+		if ( override.value == 'Y' ) {
+			var sheet_weight = parseFloat( floatize( $('sheet_weight-'+index) ) );
+			var qty = $('qty-'+index);
+			qty.value = do_decimals( e.value * sheet_weight, 1 );
+		}
+	}
+
+}
+</script>
 <div class="Service <?ServiceTypeID?>">
 	<form id="f1" name="f1" method="post" action="/main/project/view.html">
 		<fieldset><legend><?ServiceTypeName?></legend>
@@ -46,10 +78,10 @@
 			my $key = $stock_id.'-'.$qty_index;
 			$html .= '<span class="'.$$variable{Columns}.'Columns">';
 			$html .= '<span class="quantity">';
-			$html .= input( type=>'float', id=>'qty-'.$key, name=>'qty-'.$key, value=>$$variable{'qty-'.$key}, onkeyup=>q`calc(this.form.name);` );
+			$html .= input( type=>'float', id=>'qty-'.$key, name=>'qty-'.$key, value=>$$variable{'qty-'.$key}, onkeyup=>'calc(this.form.name);' );
 			$html .= 'lbs';
 			if ( $Stock->type() ne 'Roll' ) {
-				$html .= ' ' . input( type=>'cardinal', id=>'sheets-'.$key, name=>'sheets-'.$key, value=>$$variable{'sheets-'.$key}, onkeyup=>q`calc(this.form.name);` );
+				$html .= ' ' . input( type=>'cardinal', id=>'sheets-'.$key, name=>'sheets-'.$key, value=>$$variable{'sheets-'.$key}, onkeyup=>q`calc_weight_from_sheets(this);calc(this.form.name);` );
 				$html .= 'sheets';
 			} # end if
 

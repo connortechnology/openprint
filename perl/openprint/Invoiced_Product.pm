@@ -4,7 +4,7 @@ our @ISA = qw(openprint::Object);
 
 use vars qw( $debug $table $serial %fields %defaults %transforms %find_cache );
 
-$debug = 1;
+$debug = 0;
 $table = 'invoiced_products';
 $serial = 'invoiced_products_id_seq';
 
@@ -60,7 +60,7 @@ $openprint::log->debug("Got price: %Price: " . join(',', map { $_.'=>'.$Price{$_
 sub description {
 	my ( $self ) = @_;
 	if ( ( ! $$self{'description'} ) and $$self{'product_id'} ) {
-		$$self{'description'} = $self->Product()->name();
+		$$self{'description'} = $self->Product()->description();
 	} # end if
 	return $$self{'description'};
 } # end if

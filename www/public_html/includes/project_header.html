@@ -43,6 +43,10 @@
 					<span title="<? echo ( format_datetime( $$variable{Project}->updated_on() ); ) ?>">
 					<? echo ( format_date( $$variable{Project}->updated_on() ); ) ?></span>
 					</li>
+					<li><label>Last Calculated</label>
+					<span title="<? echo ( format_datetime( $$variable{Project}->calculated_on() ); ) ?>">
+					<? echo ( format_date( $$variable{Project}->calculated_on() ); ) ?></span>
+					</li>
 					<? if ( sets::isin( $session{'user_type'}, ['A','E'] ) ) ?>
 <? if ( 0 and openprint::usergroup::is_user_in( ['Price Overrides'], $session{'user_id'} ) ) ?>
 					<li><label>Pricing Markup</label>

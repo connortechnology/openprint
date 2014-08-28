@@ -88,7 +88,7 @@ sub value {
 		$openprint::log->debug("Returning Entry " . $Entry->to_string() );
 		return $$Entry{'value'};
 	}
-	$openprint::log->debug("Returning No Entry");
+	$openprint::log->debug("Returning No Entry") if $debug;
 	return undef;
 } # end sub value
 

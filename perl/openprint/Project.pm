@@ -41,6 +41,7 @@ $serial = 'lngProjectIndex_seq';
 	'design'		=>	'strdesign',
 	'created_on'	=>	'dtmcreationdate',
 	'updated_on'	=>	'dtmlastmodified',
+	calculated_on	=>	'calculated_on',
 	'quantity1'		=>	'intquantity1',
 	'quantity2'		=>	'intquantity2',
 	'quantity3'		=>	'intquantity3',
@@ -78,6 +79,7 @@ $serial = 'lngProjectIndex_seq';
 %defaults = (
 	created_on	=>	q`'NOW()'`,
 	updated_on	=>	q`'NOW()'`,
+	calculated_on	=>	undef,
 	docket		=>	undef,
 	quantity1	=>	undef,
 	quantity2	=>	undef,
@@ -559,10 +561,6 @@ sub update_status {
 			sql::update( $openprint::log, $openprint::dbh, 'tbl_Project_Contents', ['lngProjectIndex=? AND strStatus=?', $$self{'id'},'Ordered'], 'strStatus', 'calculated' );
 			@statuses = sql::execute( $openprint::log, $openprint::dbh, q{SELECT DISTINCT strStatus FROM tbl_Project_Contents WHERE lngProjectIndex=?}, $$self{'id'} );
 		} # end if
-		if ( sets::isin( 'uncalculated', \@statuses ) ) {
-			$new_status = 'uncalculated';
-		} elsif ( sets::isin( 'calculated', \@statuses ) ) { # This works because we have already checked for uncalculated
-			$new_status = 'Unordered';
 			foreach my $qty_index ( $self->quantity_indexes() ) {
 				if ( $self->Type()->type() eq 'MultiPage' ) {
 					if ( openprint::Estimating::MultiPage::status( $$self{'id'}, undef, $qty_index ) ) {
@@ -577,6 +575,10 @@ sub update_status {
 					} # end if
 				} # end if
 			} # end foreach
+		if ( sets::isin( 'uncalculated', \@statuses ) ) {
+			$new_status = 'uncalculated';
+		} elsif ( sets::isin( 'calculated', \@statuses ) ) { # This works because we have already checked for uncalculated
+			$new_status = 'Unordered';
 		} # end if
 	} # end if
 
@@ -763,9 +765,12 @@ sub servicetype_id {
 	if ( ! exists $$self{service_types} ) {
 		%{$$self{service_types}} = sql::execute( undef, undef, q{SELECT lngserviceindex, servicetype_id FROM tbl_Project_Contents WHERE lngProjectIndex=?}, $$self{id} );
 	} # end if
-	if ( ! $$self{service_types}{$s_id} ) {
+	if ( ! exists $$self{service_types}{$s_id} ) {
 		$openprint::log->error("Request for servicetype_id for $s_id, reloading ");
 		%{$$self{service_types}} = sql::execute( undef, undef, q{SELECT lngserviceindex, servicetype_id FROM tbl_Project_Contents WHERE lngProjectIndex=?}, $$self{id} );
+		if ( ! $$self{service_types}{$s_id} ) {
+			$openprint::log->error("Request for servicetype_id for $s_id, not found ");
+		}
 	} # end if
 
 	return $$self{service_types}{$s_id};
@@ -1512,7 +1517,7 @@ $openprint::log->debug("Calculate_Sigs: status: $status");
 	$self->add_to_log( @openprint::session{'company_id','user_id'}, 'Recalculated. Prices: '.join(',', $self->prices() ) );
 	$self->update_status();
 	$self->summary(undef);
-	return $self->save();
+	return $self->save( {calculated_on=>'NOW()'});
 } # end sub recalculate
 
 sub Project {
@@ -1687,6 +1692,10 @@ sub check_for_order {
 	if ( $$Project{status} eq 'uncalculated' ) {
 		$error .= 'Project ' . $$Project{id} . ' is uncalculated.  Please resolve this before continuing your order.<br/>';
 	} # end if
+	my $last_calculated = Date::Parse::str2time( $Project->calculated_on() );
+	if ( $openprint::config{QuoteValidDays} and ( time - $last_calculated ) > $openprint::config{QuoteValidDays} * 24*60*60 ) {
+		$error .= 'Project ' . $$Project{id} . ' is too old.  Please recalculate it to update pricing before continuing your order.<br/>';
+	} # end if
 	my $services = $Project->services();
 	my $stock_index = $$services{Paper} ? $$services{Paper}[0] : 0;
 
@@ -1710,7 +1719,7 @@ sub check_for_order {
 		$openprint::log->debug("Not Paper service in project $$Project{id}");
 	} # end if Stock Service Index
  
-	return $error;
+	return $error ? $error : ();
 } # end sub check_for_order
 
 sub allocate_for_order {

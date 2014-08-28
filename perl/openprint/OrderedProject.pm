@@ -34,25 +34,39 @@ sub Project {
 	return new openprint::Project( $_[0]{'project_id'} );
 } # end sub Project
 
+sub cost {
+    my ( $self, $qty_index, $new_value ) = @_;
+    if ( @_ == 3 ) {
+        $$self{'cost'.$qty_index} = $new_value;
+    } # end if
+    if ( ! (1*$$self{'cost'.$qty_index}) ) {
+		my $Project = $self->Project();
+        $$self{'cost'.$qty_index} = Math::Round::nearest( 0.01, $Project->Currency()->convert_to( $self->Order()->Currency(), $Project->price($qty_index) ) );
+    } # end if
+    return $$self{'cost'.$qty_index};
+} # end sub cost
+
+# Price returned should be in the rder's currency
 sub price {
 	if ( @_ > 1 ) {
-		$_[0]{'price'} = $_[1];
+		$_[0]{price} = $_[1];
 	} # end if
 
 	if ( ! $_[0]{price} ) {
-		$_[0]{price} = $_[0]->Project()->price( $_[0]->quantity_index() );
+		my $Project = $_[0]->Project();
+		$_[0]{price} = Math::Round::nearest( 0.01, $Project->Currency()->convert_to( $_[0]->Order()->Currency(), $Project->price( $_[0]->quantity_index() ) ) );
 	} # end if
 	return $_[0]{price};
 } # end sub price
 
 sub quantity {
 	if ( @_ > 1 ) {
-		$_[0]{'quantity'} = $_[1];
+		$_[0]{quantity} = $_[1];
 	} # end if
-	if ( ! $_[0]{'quantity'} ) {
-		$_[0]{'quantity'} = $_[0]->Project()->quantity( $_[0]->quantity_index() );
+	if ( ! $_[0]{quantity} ) {
+		$_[0]{quantity} = $_[0]->Project()->quantity( $_[0]->quantity_index() );
 	} # end if
-	return $_[0]{'quantity'};
+	return $_[0]{quantity};
 } # end sub quantity
 
 sub delete {

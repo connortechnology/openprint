@@ -79,7 +79,6 @@ foreach my $param ( 'db_name','db_user','db_pass' ) {
 		die "$program: missing required --$param parameter";
 	}
 } # end foreach required-param
-if ( 1 ) {
 $openprint::dbh = sql::open_sql( $log, 
 	host		=> $config{'db_host'},
 	database	=> $config{'db_name'},
@@ -88,7 +87,6 @@ $openprint::dbh = sql::open_sql( $log,
 	password	=> $config{'db_pass'},
 );
 die 'Error opening db' if ! $dbh;
-}
 configuration::init();
 configuration::from_file($$opts{config});
 configuration::merge($opts);
@@ -118,8 +116,10 @@ my $company_name = 'iYellow Wine Club';
 
 my $User = openprint::User->find_one(firstname=>$user_name);
 if ( ! $User ) {
+	$log->warn("User $user_name not found... continuing...");
 	my $Company = openprint::Company->find_one(name=>$company_name);
 	if ( ! $Company ) {
+		$log->warn("Company $company_name not found... continuing...");
 		$Company = new openprint::Company();
 		$Company->save({name=>$company_name});
 	} # end if

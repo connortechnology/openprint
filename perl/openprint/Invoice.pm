@@ -20,6 +20,7 @@ require openprint::Invoice_Payment;
 require openprint::Invoice_Tax;
 require openprint::Timetrack;
 require openprint::Object_Asset;
+require openprint::Order_Invoice;
 
 use vars qw( $debug $table $serial %fields %find_fields %defaults %transforms );
 
@@ -293,6 +294,9 @@ sub Products {
 sub Projects {
 	return openprint::Invoiced_Project->find('invoice_id'=>$_[0]{'id'},'order'=>'id');
 } # end sub Projects
+sub Orders {
+	return openprint::Order_Invoice->find(invoice_id=>$_[0]{id}, order=>'order_id');
+} # end sub Orders
 
 sub Interests {
 	my $self = shift;
@@ -368,6 +372,10 @@ sub can_view {
 sub upload {
 	openprint::Object_Asset::upload( @_ );
 } # end sub upload
+
+sub url_to {
+	return '/invoice/view.html?invoice_id='.$_[0]{id};
+}
 
 sub link_to {
 	if ( $_[0]{id} ) {

@@ -53,6 +53,9 @@ PROJECT: foreach my $Project ( openprint::Project->find( order=>'id',
 	$log->debug("Project $$Project{id}");
 	my $services = $Project->services();
 	my $paper_specs = openprint::service::get_specs_ref( $Project, $$services{Paper}[0] );
+	foreach my $k ( sort keys %$paper_specs ) {
+		$log->debug("$k=>$$paper_specs{$k}");
+	}
 
 	my @sigs = $Project->signatures();
 	foreach my $ss_id ( @sigs ) {

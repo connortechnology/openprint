@@ -1,6 +1,8 @@
 #!/usr/bin/perl
 use lib '/var/www/point-one/perl';
 use Net::Server::PreFork;
+use Net::Server::SIG qw(register_sig check_sigs);
+
 
 @ISA = qw(Net::Server::PreFork);
 use strict;
@@ -24,8 +26,9 @@ use vars qw( $log $dbh );
 $log = new logger( 'debug' );
 my %CheckedOutSkids;
 my %Scanners;
-my $debug = 1;
+my $debug = 0;
 my $location_cache_size = 10;
+my %stats;
 
 sub Checkout_Skid {
 	my ( $Scanner, $Tag, $context, $checkout_tags ) = @_;
@@ -93,6 +96,8 @@ sub process_request {
 		$self->log( 1, "Error finding rfid user!" );
 	} # end if
 
+	$stats{$ip_addr} = {};
+
 	eval {
 		local $SIG{'ALRM'} = sub { die "Timed Out!\n" };
 		my $timeout = 120;
@@ -117,15 +122,22 @@ sub process_request {
 			} # end if
 			$tag = $end;
 
-# Make sure our record is up to date, this shouldn't be a big hit, because the db server will cache this
-			if ( $$Scanner{'lastseen_seconds'} < ( time - 600 ) ) {
-				$Scanner->load();
-				$$Scanner{'lastseen_seconds'} = time;
+			my $time = time;
+			if ( $stats{$ip_addr}{last_time} != $time ) {
+				$stats{$ip_addr}{count} = 1;
+			} else {
+				$stats{$ip_addr}{count} += 1;
 			} # end if
 
-			$date = Date::Format::time2str('%Y-%m-%d %H:%M', time );
+# Make sure our record is up to date, this shouldn't be a big hit, because the db server will cache this
+			if ( $$Scanner{'lastseen_seconds'} < ( $time - 600 ) ) {
+				$Scanner->load();
+				$$Scanner{'lastseen_seconds'} = $time;
+			} # end if
+
+			$date = Date::Format::time2str('%Y-%m-%d %H:%M', $time );
 			# if not seen in 10 minutes, then update scanner last seen time
-			if ( (time - Date::Parse::str2time($Scanner->lastseen_on())) > 600 ) {
+			if ( ($time - Date::Parse::str2time($Scanner->lastseen_on())) > 600 ) {
 				if ( my $error = $Scanner->save({'lastseen_on'=>'NOW()'}) ) {
 					$self->log(1, sprintf('%s : %s : error saving scanner: %s', $date, $ip_addr, $error ));
 				} # end if
@@ -161,8 +173,9 @@ sub process_request {
 			} # end if
 			$self->log(1, sprintf('%s : %s : dec %s', $date, $ip_addr, $tag_id )) if $debug;
 
-			my $Tag = new openprint::RFIDTag( $tag_id );
-			if ( ! $Tag->id() ) {
+			my $Tag = openprint::RFIDTag->find_one( id=>$tag_id );
+			if ( ! $Tag ) {
+				$Tag = new openprint::RFIDTag();
 				$self->log(1, sprintf('%s : going to allocate ', $ip_addr )) if $debug;
 				if ( $_ = $Tag->save( {id=>$tag_id} ) ) {
 					$self->log(1, sprintf('%s : %s : Error saving tag %s', $date, $ip_addr, $_ ) );
@@ -256,6 +269,10 @@ sub process_request {
 				$self->log(1, sprintf('%s : %s : unknown scanner type %s', $date, $ip_addr, $Scanner->type() ));
 			} # end if
 			alarm($timeout);
+
+			# this is the handler for safe (fine under unsafe also)
+			if (check_sigs()) {
+			} # end if
 		} # end while
 		alarm($previous_alarm);
 		$self->log(1, sprintf('%s : %s : done while, tag: %s', $date, $ip_addr, $tag )) if $debug;
@@ -271,6 +288,19 @@ sub process_request {
 		$self->log(1, sprintf('%s : %s : other (%s)', $date, $ip_addr, $@ ));
 	} # end if
 } # end sub process_request
+
+sub sig_handler {
+	my $signame = shift;
+	if ( $signame eq 'USR1' ) {
+		$log->info('Got HUP, printing stats');
+		foreach my $ip_addr ( keys %stats ) {
+			print "$ip_addr => " . $stats{$ip_addr}{count} . "/sec\n";
+		}
+	} # end if
+	#die "Somebody sent me a SIG$signame";
+} # end sub sig_handler
+
+register_sig( USR1 => \&sig_handler );
 
 __PACKAGE__->run();
 1;

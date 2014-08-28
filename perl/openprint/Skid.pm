@@ -579,6 +579,7 @@ sub checkout {
 					'comment'   =>  $desc.$c,
 					'skid_id'   =>  $$self{id},
 					'units'     =>  $C->units(),
+					( ($PA and $PA->docket() ) ? ( docket		=>	$PA->docket() ) : () ),
 					} );
 			$C->quantity( 0 );
 			$e .=   $C->save();

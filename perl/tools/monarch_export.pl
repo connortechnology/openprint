@@ -8,6 +8,7 @@ require logger;
 
 use Text::CSV_XS;
 use Data::Dumper;
+use Email::Valid;
 
 use vars qw( $log $dbh %config);
 *log = \$openprint::log;
@@ -67,13 +68,13 @@ require openprint::Company;
 require openprint::User;
 require openprint::Project;
 my %tables = (
-'Customer'	=>	{ object => 'Company', find=>[ order=>'name', ( $$opts{limit} ? ( limit => $$opts{limit} ) : () ), supplier=>'N' ] },
+'Customer'	=>	{ object => 'Company', find=>[ order=>'id', ( $$opts{limit} ? ( limit => $$opts{limit} ) : () ) ] },
 'Supplier'	=>	{ object => 'Company', find=>[ order=>'name', ( $$opts{limit} ? ( limit => $$opts{limit} ) : () ), supplier=>'Y' ] },
 'Employee'	=>	{ object => 'User', find=>[ order=>'firstname,lastname', ( $$opts{limit} ? ( limit => $$opts{limit} ) : () ), 'type in'=>['E','A'] ] },
-'Cust_Contacts'	=>	{ object => 'User', find=>[ order=>'firstname,lastname', ( $$opts{limit} ? ( limit => $$opts{limit} ) : () ), type=>'C', email_valid=>1 ] },
+'Cust_Contacts'	=>	{ object => 'User', find=>[ order=>'firstname,lastname', ( $$opts{limit} ? ( limit => $$opts{limit} ) : () ), type=>'C', email_valid=>1, company_deleted=>0 ] },
 'Job'		=>	{ object => 'Project', find=>[ order=>'id', ( $$opts{limit} ? ( limit => $$opts{limit} ) : () ), 'order_id is null'=>0 ] },
 'Items-Paper'		=>	{ object => 'Paper', find=>[ order=>'id', ( $$opts{limit} ? ( limit => $$opts{limit} ) : () ), 'in_stock >'=>0 ] },
-'Items-Materials'	=>	{ object => 'Materials', find=>[ order=>'id', ( $$opts{limit} ? ( limit => $$opts{limit} ) : () ) ] },
+'Items-Material'	=>	{ object => 'Material', find=>[ order=>'id', ( $$opts{limit} ? ( limit => $$opts{limit} ) : () ) ] },
 );
 foreach my $table ( $$opts{table} ? split(',',$$opts{table} ) : @tables ) {
 	my %fields;

@@ -55,22 +55,22 @@
 					$html .= sprintf('<img src="%s" id="asset-%d" />', $Photo->url(), $Photo->asset_id() );
 					if ( $Photo->can_edit() ) {
 						$html .= '<fieldset><legend>Edit Options</legend>';
-						$html .= ssi::button( 'CCW', { 
+						$html .= button( 'CCW', { 
 								text=>'Rotate CCW',
 								onclick=>qq`new Ajax.Request( '_photo_actions.json', { parameters: { function: 'rotate', degrees: 270, asset_id: $$Photo{asset_id} } } );`,
 								} );
-						$html .= ssi::button( 'CW', {
+						$html .= button( 'CW', {
 								text=>'Rotate CW', 
 								onclick=>qq`new Ajax.Request( '_photo_actions.json', { parameters: { function: 'rotate', degrees: 90, asset_id: $$Photo{asset_id} } } );`,
 								} );
 if ( 0 ) {
 						$html .= sprintf('<input type="text" name="keywords" value="%s"/>', $Photo->keywords() );
-						$html .= ssi::button( 'SaveKeywords', { 'onclick'=>q`var form=$('f1');form.elements['action'].value='Save';form.submit();`, 'text'=>'Save Keywords' } );
+						$html .= button( 'SaveKeywords', { 'onclick'=>q`var form=$('f1');form.elements['action'].value='Save';form.submit();`, 'text'=>'Save Keywords' } );
 }
 
 						$html .= '<fieldset><legend>Available Opinions</legend><div id="OpinionAvailability">';
 						$$variable{'Object'} = $Photo->Asset();
-						$html .= ssi::include( $ENV{'DOCUMENT_ROOT'} . '/includes/_opinion_availability.html' );
+						$html .= include( '/includes/_opinion_availability.html' );
 						$html .= '</div></fieldset>';
 
 

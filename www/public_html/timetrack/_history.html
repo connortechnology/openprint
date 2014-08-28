@@ -4,24 +4,41 @@
 	if ( $session{'/timetrack/history.html?contains'} and ( $session{'/timetrack/history.html?contains'} !~ /%/ ) ) {
 		$session{'/timetrack/history.html?contains'} = '%'.$session{'/timetrack/history.html?contains'}.'%';
 	} # end if
+	my @keywords = split(/\s/, $session{'/timetrack/history.html?keywords'});
 	foreach my $Timetrack ( openprint::Timetrack->find( 
-		ssi::date_filter( '/timetrack/history.html?starting_end', 'starting <=' ),
-		ssi::date_filter( '/timetrack/history.html?starting_start', 'starting >=' ),
+		date_filter( '/timetrack/history.html?starting_end', 'starting <=' ),
+		date_filter( '/timetrack/history.html?starting_start', 'starting >=' ),
 		( $session{'/timetrack/history.html?contains'} ? ( 'description ilike' => $session{'/timetrack/history.html?contains'} ) : () ),
 
 		( sets::isin( $session{'user_type'}, ['E', 'A'] ) ?
 			( $session{'/timetrack/history.html?company_id'} ? ( 'company_id'	=> $session{'/timetrack/history.html?company_id'} ) : () ) :
-			( 'company_id'	=> $session{'company_id'} ) ),
+			( company_id	=> $session{'company_id'} ) ),
 		( $session{'/timetrack/history.html?user_id'} ? ( 'user_id'	=> $session{'/timetrack/history.html?user_id'} ) : () ),
 		( $session{'/timetrack/history.html?service_id'} ? ( 'service_id'	=> $session{'/timetrack/history.html?service_id'} ) : () ),
 		( $session{'/timetrack/history.html?billable'} ne '' ? ( 'billable'=>$session{'/timetrack/history.html?billable'} ) : () ),
 		( $session{'/timetrack/history.html?travel_associated'} ne '' ? ( 'travel_associated'=>$session{'/timetrack/history.html?travel_associated'} ) : () ),
-		'order'				=> 'starting',
+		order				=> 'starting',
 		) ) {
 		next if $Timetrack->paid() and ! sets::isin( 1, split(',', $session{'/timetrack/history.html?paid'} ) );
 		next if ( ! $Timetrack->paid() ) and ! sets::isin( 0, split(',', $session{'/timetrack/history.html?paid'} ) );
 		next if $Timetrack->invoiced() and ! sets::isin( 1, split(',', $session{'/timetrack/history.html?invoiced'} ) );
 		next if ( ! $Timetrack->invoiced() ) and ! sets::isin( 0, split(',', $session{'/timetrack/history.html?invoiced'} ) );
+
+		if ( @keywords ) {
+			my @timetrack_keywords = split( /\s/, $Timetrack->keywords() );
+			my $bad = 0;
+			foreach my $word ( @keywords ) {
+				if ( $word =~ /^\!(.*)$/ ) {
+					$bad = 1 if sets::isin( $1, \@timetrack_keywords );
+				} else {
+					$bad = 1 if ! sets::isin( $word, \@timetrack_keywords );
+				} 
+				last if $bad;
+			}
+					
+			next if $bad;
+		}
+
 		push @{$$variable{'Timetracks'}}, $Timetrack;
 		$$variable{'elapsed_total'} += $Timetrack->elapsed();
 		$$variable{'value_total'} += $Timetrack->value();

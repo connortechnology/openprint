@@ -67,6 +67,7 @@ $serial = 'expenses_id_seq';
 	'business_use_amount'		=>	'business_use_amount',
 	'attention'			=>	'attention',
 	deleted				=>	'deleted',
+	transaction_id		=>	'transaction_id',
 );
 
 %transforms = (

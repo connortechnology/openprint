@@ -88,12 +88,7 @@
 				<label class="radio" for="cuttable<?Signature?>0">No</label>
 			</li>
 			<li><label>Perfecting w/o gutters?</label>
-				<input id="perfecting<?Signature?>Y" name="perfecting<?Signature?>" type="radio" value="Y" onclick="calc(this.form.name);" <? echo ( checked( $$variable{'perfecting'.$$variable{Signature}} eq 'Y' ); ) ?> />
-				<label class="radio" for="perfecting<?Signature?>Y">Yes</label>
-				<input id="perfecting<?Signature?>N" name="perfecting<?Signature?>" type="radio" value="N" onclick="calc(this.form.name);" <? echo ( checked( $$variable{'perfecting'.$$variable{Signature}} eq 'N' ); ) ?> />
-				<label class="radio" for="perfecting<?Signature?>N">No</label>
-				<input id="perfecting<?Signature?>A" name="perfecting<?Signature?>" type="radio" value="" onclick="calc(this.form.name);" <? echo ( checked( $$variable{'perfecting'.$$variable{Signature}} eq '' ); ) ?> />
-				<label class="radio" for="perfecting<?Signature?>A">Auto</label>
+				<? echo ( radio( 'perfecting'.$$variable{Signature}, [ '1','Yes','0', 'No', '', 'Auto' ], $$variable{'perfecting'.$$variable{Signature}}, { onclick=>'calc(this.form.name);', default=>'' } ); ) ?>
 			</li>
 			<li>
 				<label for="StockGrade<?Signature?>">Grade</label>
@@ -148,6 +143,9 @@
 		my @options = map { $_, $_ } ( sort ( sets::union( map { $_->$lc_option() ? $_->$lc_option() : () } @Papers ) ) );
 		if ( ! @options ) {
 			$log->debug("No paper options for $lc_option %find");
+			foreach ( keys %find ) {
+				$log->debug("$_ => $find{$_}");
+			}
 		} # end if
 		$$variable{'ddmStock'.$option.$$variable{Signature}} = $options[0] if @options == 2;
 

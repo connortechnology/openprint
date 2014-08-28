@@ -9,12 +9,16 @@
 		my $key = join('-',$stock_id,$qty_index );
 		$html .= '<span class="'.$$variable{Columns}.'Columns">';
 		$html .= '<span class="quantity">';
-		$html .= input( type=>'float', id=>'qty-'.$key, name=>"qty-$key", value=>$$variable{"qty-$key"}, onkeyup=>'calc(this.form.name);' );
-		$html .= 'lbs ';
 
 		if ( $$variable{Stock}->type() ne 'Roll' ) {
-			$html .= input( type=>'cardinal', id=>"sheets-$key", name=>"sheets-$key", value=> $$variable{"sheets-$key"}, onkeyup=>'calc(this.form.name);' );
+			$html .= input( type=>'float', id=>'qty-'.$key, name=>"qty-$key", value=>$$variable{"qty-$key"}, onkeyup=>'calc_sheets_from_weight(this);calc(this.form.name);' );
+			$html .= 'lbs ';
+			$html .= input( type=>'cardinal', id=>"sheets-$key", name=>"sheets-$key", value=> $$variable{"sheets-$key"}, onkeyup=>'calc_weight_from_sheets(this);calc(this.form.name);' );
 			$html .= 'sheets ';
+			$html .= input( type=>'hidden', id=>'sheet_weight-'.$key, name=>'sheet_weight'.$key, value=>$$variable{Stock}->wpsi() * $$variable{Stock}->area() );
+		} else {
+			$html .= input( type=>'float', id=>'qty-'.$key, name=>"qty-$key", value=>$$variable{"qty-$key"}, onkeyup=>'calc(this.form.name);' );
+			$html .= 'lbs ';
 		} # end if
 		$html .= write_override( "overrideqty-$key", $$variable{"overrideqty-$key"}, '', "calc('f1')" );
 		$html .= '</span>';
