@@ -510,7 +510,12 @@ sub signature_calc {
 
 			if ( (! $results{Total} ) or ( $price{Total} < $results{Total} ) ) {
 				$results{Equipment} = $Equipment;
+				if ( $price{Prices} ) {
 				@{$results{Prices}} = @{$price{Prices}};
+				} else {
+					$openprint::log->error("No prices?");
+					$results{Prices} = [];
+				}
 				$results{'Overs'} = $price{'Overs'};
 				$results{Total} = $price{Total};
 			} # end if
