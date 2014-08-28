@@ -418,7 +418,11 @@ $openprint::log->debug('W&T: ' . $breakdown ) if DEBUG;
 					last;
 				} # end if
 
-				if ( $_ = $Equipment->fits( $imp->layout_width(), $imp->layout_height(), $Stock->calliper() ) ) {
+				if ( 
+						( $_ = $Equipment->fits( $imp->sheet_width(), $imp->sheet_height(), $Stock->calliper() ) )
+						and
+						( $_ = $Equipment->fits( $imp->layout_width(), $imp->layout_height(), $Stock->calliper() ) )
+				   ) {
 					$breakdown .= "Doesn't fit. $_<br/>";
 $openprint::log->debug('DOESNT: ' . $breakdown ) if DEBUG;
 					$complete = 0;
