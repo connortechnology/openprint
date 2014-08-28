@@ -1157,7 +1157,6 @@ sub display {
 # this will display the first group of cutting fields for projects that dont' have a printing service.
 		push @{$$variable{'CuttingGroups'}}, 0;
 	} # end if
-$openprint::log->debug("Cutting Groups: " . @{$$variable{'CuttingGroups'}} );
 
 } # end sub display
 
