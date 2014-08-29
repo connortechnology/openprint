@@ -34,18 +34,18 @@
 				</li>
 				<li>
 					<label>Blacklist</label>
-					<? echo ( ssi::radio( 'blacklist', [ '1','Yes','0','No' ], $$variable{Host}->blacklist() ); ) ?>
+					<? echo ( radio( 'blacklist', [ '1','Yes','0','No' ], $$variable{Host}->blacklist() ); ) ?>
 				</li>
 				<li>
 					<label>Access violation count</label><input type="text" name="count" id="count" value="<? echo ( $$variable{Host}->count() ) ?>" />
 				</li>
 				<li>
 					<label>Whitelist</label>
-					<? echo ( ssi::radio( 'whitelist', [ '1','Yes','0','No' ], $$variable{Host}->whitelist() ); ) ?>
+					<? echo ( radio( 'whitelist', [ '1','Yes','0','No' ], $$variable{Host}->whitelist() ); ) ?>
 				</li>
 				<li>
 					<label>Monitor</label>
-					<? echo ( ssi::radio( 'monitored', [ '1','Yes','0','No' ], $$variable{Host}->monitored(), { 'onclick'=>q`if(this.value==1){$('offline_seconds').show();}else{$('offline_seconds').hide()};`} ); ) ?>
+					<? echo ( radio( 'monitored', [ '1','Yes','0','No' ], $$variable{Host}->monitored(), { onclick=>q`if(this.value==1){$('offline_seconds').show();}else{$('offline_seconds').hide()};`} ); ) ?>
 				</li>
 				<li id="offline_seconds"<? echo ( $$variable{Host}->monitored() ? '' : ' style="display: none;"' ) ?>><label>Seconds offline before notification</label>
 					<input type="number" name="offline_seconds" value="<? echo ( $$variable{Host}->offline_seconds() ) ?>" />
@@ -76,6 +76,7 @@
 				</li>
 			</ul>
 		</div>
+<? if ( $$variable{Host}->id() ) ?>
 		<div class="content rightColumn">
 			<fieldset><legend>Photos</legend>
 				<div id="assets"><? echo ( include('_assets.html'); ) ?></div>
@@ -92,6 +93,9 @@
 			</fieldset>
 			<fieldset><legend>Information</legend>
 				<div id="information"><?include('_information.html')?></div>
+			</fieldset>
+			<fieldset><legend>Licenses</legend>
+				<div id="licenses"><?include('_host_licenses.html')?></div>
 			</fieldset>
 		</div>
 	</fieldset>
@@ -156,5 +160,6 @@
 		</ul>
 		<div id="Logs"><?include('/employee/it/_host_logs.html')?></div>
 	</fieldset>
+<? endif ( $$variable{Host}->id() ) ?>
 </form>
 </div></div>
