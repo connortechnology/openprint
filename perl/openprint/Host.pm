@@ -15,6 +15,11 @@ $table = 'host_interfaces';
 	dhcp			=>	'dhcp',
     host_id         =>  'host_id',
 );
+%defaults	= (
+	dhcp		=>	0,
+	ip			=>	undef,
+	mac			=>	undef,
+);
 
 sub Host {
 	return new openprint::Host( $_[0]{host_id} );
@@ -110,7 +115,6 @@ $serial = 'hosts_id_seq';
 	'whitelist'	=>	0,
 	'monitored'	=>	0,
 	'hostname'	=>	undef,
-	'dhcp'		=>	0,
 	'created_on'	=>	q`'NOW()'`,
 	'updated_on'	=>	q`'NOW()'`,
 	resolved_on		=>	undef,
