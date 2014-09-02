@@ -197,7 +197,7 @@ sub verify_login {
 } # sub verify_login
 
 sub logout {
-	(new openprint::Log())->save({'action'=>'Logout'});
+	(new openprint::Log())->save({action=>'Logout'});
 	foreach my $k ( keys %session ) {
 		next if sets::isin( $k, [ 'Currency_id', '_session_id','Country' ] );
 		delete $session{$k};

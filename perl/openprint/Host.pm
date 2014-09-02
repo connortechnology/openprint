@@ -4,7 +4,7 @@ require openprint::Object;
 package openprint::Host_Interface;
 our @ISA = qw( openprint::Object );
 use vars qw( $debug $table @identified_by %fields %transforms %defaults );
-$debug = 0;
+$debug = 1;
 $table = 'host_interfaces';
 @identified_by = ( 'mac' );
 
@@ -15,6 +15,10 @@ $table = 'host_interfaces';
 	dhcp			=>	'dhcp',
     host_id         =>  'host_id',
 );
+
+sub Host {
+	return new openprint::Host( $_[0]{host_id} );
+} # end sub Host;
 
 package openprint::Host_Notification;
 our @ISA = qw( openprint::Object );
