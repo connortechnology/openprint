@@ -8,7 +8,8 @@
 			$html .= $Check->attribute() . ' := ' . $Check->value();
 			$html .= button( 'RemoveRadius'.$Check->attribute(), { 
 				onclick	=> qq`new Ajax.Updater( 'mac_$$variable{username}', '/employee/it/_radius_mac_line.html', { parameters: { username: '$$variable{username}', attribute: '$$Check{attribute}', action: 'remove' } } );`, 
-				text	=> 'Remove',
+				title	=> 'Remove',
+				text	=>	'X',
 				} );
 			$html .= '<br/>';
 		} # end foreach
