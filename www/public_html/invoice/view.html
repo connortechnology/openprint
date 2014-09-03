@@ -14,7 +14,7 @@
 					$html .= button( 'Destroy', { onclick=>"if(confirm('Are you sure?')){f1.btnFunction.value='Destroy';f1.submit();}" } );
 				} else {
 					if ( Date::Parse::str2time($$variable{'Invoice'}->due_on()) < time ) {
-						$html .= button( 'interest', { onclick=>"f1.action='view.html';f1.btnFunction.value='Calculate Interest';f1.submit();", text=>'Calculate Interest' } );
+						$html .= button( 'interest', { onclick=>"f1.btnFunction.value='Calculate Interest';f1.submit();", text=>'Calculate Interest' } );
 					} # end if
 					$html .= button( 'Delete', { onclick=>q`f1.btnFunction.value='Delete';f1.submit();` } );
 					$html .= button( 'Edit', { href=>'edit.html?invoice_id='.$$variable{Invoice}->id() } );
