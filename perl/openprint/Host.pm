@@ -24,6 +24,16 @@ $table = 'host_interfaces';
 sub Host {
 	return new openprint::Host( $_[0]{host_id} );
 } # end sub Host;
+sub resolve {
+	my ( $self ) = @_;
+	my @h = gethostbyaddr(pack('C4',split('\.',$$self{ip})),2);
+	if ( @h ) {
+		return $h[0];
+	} elsif ( $debug ) {
+		$openprint::log->warn("Unable to reverse DNS $$self{ip}");
+	} # end if
+	return undef;
+} # end sub resolve
 
 package openprint::Host_Notification;
 our @ISA = qw( openprint::Object );
@@ -127,17 +137,6 @@ $serial = 'hosts_id_seq';
 	'notified'=>	0,
 	location_id		=>	undef,
 );
-sub resolve {
-	my ( $self ) = @_;
-	my @h = gethostbyaddr(pack('C4',split('\.',$$self{'ip'})),2);
-	if ( @h ) {
-		return $h[0];
-	} elsif ( $debug ) {
-		$openprint::log->warn("Unable to reverse DNS $$self{'ip'}");
-	} # end if
-	return undef;
-} # end sub resolve
-
 sub get_mac {
 	my ( $self ) = @_;
 

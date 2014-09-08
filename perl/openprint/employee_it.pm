@@ -393,15 +393,6 @@ sub licenses {
 			$variable{error} .= $License->delete();
 		} # end foreach license_id
 		%param = ();
-	} elsif ( $param{action} eq 'Save' ) {
-		my $License = new openprint::License( $param{license_id} );
-		if ( $param{software_id} ) {
-			delete $param{software};
-		} else {
-			delete $param{software_id};
-		} # end if
-		$variable{error} .= $License->save(\%param);
-		%param = ();
 	} # end if
 	_licenses();
 	ssi::setup_date_select( '/employee/it/licenses.html', 'created_on_start', '' );
