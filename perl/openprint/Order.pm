@@ -420,16 +420,7 @@ sub subtotal {
 
 	if ( sets::isin($$self{'status'}, ['Re-Opened','Incomplete'] ) or ! $$self{'subtotal'} ) {
 		$$self{'subtotal'} = 0;
-		foreach my $Project ( $self->Projects() ) {
-			my $price = $Project->ordered_price();
-#$log->debug("subtotal: ordered price: $price");
-			if ( $Project->currency_id() != $$self{'currency_id'} ) {
-				my $rate = $Project->Currency()->conversions( $$self{'currency_id'} );
-				$price *= $rate;
-#$log->debug("subtotal: ordered price converted to: $price");
-			} # end if
-			$$self{'subtotal'} += $price;
-		} # end foreach Project
+		$$self{'subtotal'} += misc::sum( map { $_->price() } $self->Ordered_Projects() );
 		foreach my $Product ( $self->Products() ) {
 			my $price = $Product->price();
 #$log->debug("subtotal: ordered price: $price");

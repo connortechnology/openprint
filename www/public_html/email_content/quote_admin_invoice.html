@@ -60,10 +60,10 @@
 				$html .= sprintf('</td><td class="markup">%1$s</td><td class="quantity">%2$s</td><td class="price">%3$s</td><td class="newprice">%4$s</td></tr>',
                         $Project->markup($qty_index),
                         $Project->quantity($qty_index),
-                        openprint::Currency::format( $Project->price($qty_index) ),
+                        openprint::Currency::format( $QP->cost($qty_index) ),
                         openprint::Currency::format( $QP->price($qty_index) )
                         );
-                $subtotal += $Project->price($qty_index);
+                $subtotal += $QP->cost($qty_index);
                 $newsubtotal += $QP->price($qty_index);
             } # end foreach qty_index
             $html .= "</table>\n</td>\n</tr>\n";

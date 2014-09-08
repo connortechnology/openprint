@@ -54,9 +54,11 @@ $openprint::log->debug($uri);
 
 		my $wallet = Finance::Bitcoin::Wallet->new($api);
 		$_ = Data::Dumper::Dumper($wallet);
-		#$openprint::log->debug($_);
+		$openprint::log->debug($_);
 
 		my $address = $wallet->create_address( $label );
+		$_ = Data::Dumper::Dumper($wallet);
+		$openprint::log->debug($_);
 		if ( $address and $address->address ) {
 
 			$New = new openprint::Bitcoin_Address();

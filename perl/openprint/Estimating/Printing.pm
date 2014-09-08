@@ -2528,7 +2528,7 @@ $openprint::log->debug(Data::Dumper::Dumper( \%Overrides ) );
 
 		my $Imposition = $$best_price{'Imposition'};
 		if ( ! $Imposition ) {
-			$openprint::log->error("No imposition in best_price for qty $qty_index");
+			#$openprint::log->error("No imposition in best_price for qty $qty_index");
 			$$specs{'alert'} .= "Unable to calculate a price for printing for qty $qty_index.<br/>";
 			$$specs{'Status'} = 'uncalculated';
 			next;
@@ -5196,7 +5196,8 @@ $openprint::log->debug("Back From DieCutting");
 	if ( $$specs{'OverrideSetup'.$qty_index} eq 'Y' ) {
 		$setup_overs = $$specs{'OverSetup'.$qty_index};
 	} elsif ( $setup_rate ) {
-		$setup_overs = $initial_setup_overs + $additional_setup_overs;
+		$setup_overs = $initial_setup_overs;
+ #+ $additional_setup_overs;
  	} else {
 		$setup_overs = $Press->specification( 'MakeReady Overs ' . $Paper->material(), $plate_setup{'Plate Count'} );
 		$setup_overs = $Press->specification( 'MakeReady Overs ' . $$Imposition{'runstyle'}, $plate_setup{'Plate Count'} ) if ! $setup_overs;
@@ -5210,7 +5211,7 @@ $openprint::log->debug("Back From DieCutting");
 		$run_overs = ceil( $net_sheets * $over_rate );
 	} # end if
 
-	my $total_overs = $additional_overs;
+	my $total_overs = $additional_setup_overs;
 
 	if ( $_ = $Press->Specification('Overs') and $$_{value} eq 'All' ) {
 		$total_overs += ceil( $run_overs + $setup_overs );

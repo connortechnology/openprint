@@ -5,7 +5,7 @@ our @ISA = qw(openprint::Object);
 require openprint::License_Host;
 require openprint::Software;
 
-use vars qw( $debug $table $serial %fields %transforms %defaults );
+use vars qw( $debug $table $serial %fields %find_fields %transforms %defaults );
 $debug = 0;
 $table = 'licenses';
 $serial='licenses_id_seq';
@@ -21,6 +21,9 @@ $serial='licenses_id_seq';
 		created_on		=>	'created_on',
 		updated_on		=>	'updated_on',
 		);
+%find_fields = (
+	host_id	=>	'id IN (SELECT license_id FROM license_hosts where host_id=?)',
+);
 %transforms = (
 		serialkey	=> [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
 		comment		=> [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],

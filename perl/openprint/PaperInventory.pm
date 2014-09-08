@@ -26,6 +26,7 @@ $serial = 'paperinventory_id_seq';
 	'docket'		=>	'docket',
 	project_id		=>	'project_id',
 );
+# project_id is deprecated
 %transforms = (
 	project_id	=>	 [ 's/\D//g' ],
 	'paper_id'	=>	[ 's/\D//g' ],

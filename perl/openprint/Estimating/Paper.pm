@@ -443,8 +443,7 @@ sub se_price_summary {
 # The order of stocks is important... thing is, it can change if the brand changes for example.
 # So it needs to be inorder of appearance.
 sub get_stocks {
-    my ( $Project, $service_id, $specs ) = @_;
-    $specs = openprint::service::get_specs_ref( $Project, $service_id ) if ! $specs;
+    my ( $Project ) = @_;
     my %Papers;
 	my $stock_id = 1;
     foreach my $ss_id ( $Project->signatures( { sort=> 1 } ) ) {

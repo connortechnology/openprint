@@ -90,7 +90,7 @@ sub information {
 	} elsif ( $param{'btnFunction'} eq 'Continue') { # saving projcet information
 		$order_id = openprint::order::get_unfinished_order( ) if ! $order_id;
 		foreach my $OP ( openprint::OrderedProject->find('order_id'=>$order_id) ) {
-			$variable{'error'} .= openprint::order::save_project_information( $order_id, $OP );
+			$variable{'error'} .= openprint::order::save_project_information( $OP );
 		} # end foreach
 	} elsif ( $param{'Product'} and $param{'Quantity'} ) {
 		( $order_id, $error ) = openprint::order::add_product( $order_id, @param{'Product','Quantity'} );
@@ -161,18 +161,21 @@ sub information {
 
 } # end sub information
 
+# So I guess the idea should be that there shouldn't be any changes after the viewing f submit.  So we should save currency, save prices, save all the data.
 sub submit {
 		
-	my $order_id = $param{'order_id'};
+	my $order_id = $param{order_id};
 	$order_id =~ s/\D//g;
-	$order_id = openprint::order::get_unfinished_order(  ) if ! $order_id;
+	$order_id = openprint::order::get_unfinished_order() if ! $order_id;
 	my $Order = new openprint::Order( $order_id );
-	$session{'order_id'} = $order_id;
+	$session{order_id} = $order_id;
+	my $Currency = openprint::Currency::get_current();
+	$variable{error} .= $Order->save({currency_id=>$Currency->id()}) if $$Order{currency_id} != $$Currency{id};
 
 	if ( $param{btnFunction} eq 'Continue') { # saving project information
 		
-		foreach my $OP ( openprint::OrderedProject->find('order_id'=>$Order->id() ) ) {
-			$variable{error} .= openprint::order::save_project_information( $order_id, $OP );
+		foreach my $OP ( openprint::OrderedProject->find( order_id=>$Order->id() ) ) {
+			$variable{error} .= openprint::order::save_project_information( $OP );
 		} # end foreach
 		foreach my $Product ( $Order->Products() ) {
 			if ( exists $param{'ProductQuantity'.$Product->id()} ) {
@@ -181,7 +184,7 @@ sub submit {
 			} # end if
 			#my %price = $Product->Product()->get_price( $Product->quantity() );
 			#$Product->price( $price{Price} );
-			$variable{'error'} .= openprint::order::save_project_information( $order_id, $Product );
+			$variable{'error'} .= openprint::order::save_project_information( $Product );
 			# Need to update price to include shipping costs
 			my %Price = $Product->Product()->get_price( $Product->quantity() );
 $openprint::log->debug("Initial price for " . $Product->quantity() . ' is : ' . $Price{'Price'} );
@@ -191,16 +194,16 @@ $openprint::log->debug("Initial price for " . $Product->quantity() . ' is : ' . 
 				next if ! $$services{$ShippingType->name()};
 				foreach my $service_id ( @{$$services{$ShippingType->name()}} ) {
 					my $specs =  openprint::service::get_specs_ref( $Project, $service_id );
-					$Price{'Price'} += $$specs{'txtPrice1'};
+					$Price{Price} += $$specs{'txtPrice1'};
 				} # end foreach service_id
 			} # end foreach
-			$Product->price( $Price{'Price'} );
+			$Product->price( $Project->Currency()->convert_to( $Currency, $Price{Price} ) );
 			$Product->requested_for( sprintf('%.4d-%.2d-%.2d', @param{'ddmDueDateYear'.$$Project{'id'},'ddmDueDateMonth'.$$Project{'id'},'ddmDueDateDay'.$$Project{'id'}} ) ) if exists $param{'ddmDueDateYear'.$$Project{'id'}};
 			$Product->save();
 		} # end foreach Product
 
-		$variable{'error'} .= openprint::order::store_order_info( $openprint::r, $log, $dbh, $session{'_session_id'}, \%variable );
-		if ( $variable{'error'} ) {
+		$variable{error} .= openprint::order::store_order_info( $openprint::r, $log, $dbh, $session{'_session_id'}, \%variable );
+		if ( $variable{error} ) {
 			$session{error} = $variable{error};
 			$variable{ExternalRedirect} = '/main/order/information.html';
 			return;
@@ -216,19 +219,17 @@ $openprint::log->debug("Initial price for " . $Product->quantity() . ' is : ' . 
 		return;
 	} # end if
 	
-	my $Currency = openprint::Currency::get_current();
-	@variable{'CurrencyName','CurrencySymbol'} = ( $Currency->name(), $Currency->symbol() );
-	$variable{'Currency'} = $Currency;
+	@variable{'Currency','CurrencyName','CurrencySymbol'} = ( $Currency, $Currency->name(), $Currency->symbol() );
 	$variable{'Order'} = $Order;
 	$Order->subtotal(undef); # Force a reload
 	foreach my $Tax ( $Order->Taxes() ) {
 		$Tax->amount(undef);
 	} # end foreach Tax
 
-	$variable{'order_id'} = $order_id;
+	$variable{order_id} = $order_id;
 
 	@{$variable{'Projects'}} = $Order->Projects();
-	$variable{'Order'} = $Order;
+	$variable{Order} = $Order;
 
 	if ( sets::isin( $session{'user_type'}, ['A','E'] ) ) {
 		$variable{'AdministratorName'} = new openprint::User( $session{'user_id'} )->name();
@@ -248,10 +249,10 @@ sub confirmation {
 
 	if ( $Order->id() and ( sets::isin( $Order->status(), ['Incomplete','Re-Opened'] ) ) ) {
 		if ( ( $Order->company_id() == $session{'company_id'} ) and ( $session{'company_id'} == new openprint::User( $session{'user_id'})->company_id() ) ) {
-			if ( ! $param{'accept_terms'} ) {
-				$variable{'error'} = 'Terms not accepted';
-				$variable{'information'} = 'You must check the box to indicate your acceptance of the terms and conditions.';
-				$variable{'Redirect'} = '/main/order/submit.html';
+			if ( ! $param{accept_terms} ) {
+				$variable{error} = 'Terms not accepted';
+				$variable{information} = 'You must check the box to indicate your acceptance of the terms and conditions.';
+				$variable{ExternalRedirect} = '/main/order/submit.html';
 				return;
 			} else {
 				$Order->add_log( 'User accepted the terms and conditions.' );
@@ -261,9 +262,9 @@ sub confirmation {
 
 		# Commit Project Information
 		foreach my $OP ( $Order->Ordered_Projects() ) {
-			$OP->save({
+			$variable{error} .= $OP->save({
 				reference	=> $OP->Project()->reference(),
-				price		=> $OP->Project()->Currency()->convert_from( $OP->price(undef) ),
+				price		=> undef,
 				quantity	=> undef,
 			});
 			my $Project = $OP->Project();
@@ -305,7 +306,7 @@ sub confirmation {
 		$Order->administrator_name( $param{'AdministratorName'} );
 		$Order->administrator_comments( $param{'AdministratorComments'} );
 		$Order->docket( $docket_number );
-		$Order->currency_id( $session{'Currency_id'} );
+		$Order->currency_id( $session{Currency_id} );
 		$Order->save();
 
 		$Order->add_log( 'Submit Order' );
@@ -459,6 +460,7 @@ sub history_details {
 	} elsif ( $param{'btnFunction'} eq 'Resend') {
 		$Order->send_sales_order( );
 		$variable{'information'} .= "Order emails sent.<br/>";
+		$variable{ExternalRedirect} = '/main/order/history_details.html?order_id='.$Order->id();
 	} # end if
 	openprint::order::display_order( $order_id );
 } # end sub history_details

@@ -466,7 +466,9 @@ $log->debug("group $group_id");
 		} # end foreach spec
 		foreach my $spec ( 
 				'chkCyanSideOne','chkMagentaSideOne','chkYellowSideOne','chkBlackSideOne', 'chkProcessColourSideOne',
+				( map { 'chkColourCoating'.$_.'SideOne' } ( 1 .. 9 ) ),
 				'chkCyanSideTwo','chkMagentaSideTwo','chkYellowSideTwo','chkBlackSideTwo', 'chkProcessColourSideTwo',
+				( map { 'chkColourCoating'.$_.'SideTwo' } ( 1 .. 9 ) ),
 		) {
 			openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $ss_id, $spec, $$param{$spec.$group_id} );
 		} # end foreach spec

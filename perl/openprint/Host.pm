@@ -1,6 +1,30 @@
 use strict;
 require openprint::Object;
 
+package openprint::Host_Interface;
+our @ISA = qw( openprint::Object );
+use vars qw( $debug $table @identified_by %fields %transforms %defaults );
+$debug = 1;
+$table = 'host_interfaces';
+@identified_by = ( 'mac' );
+
+%fields = (
+	mac				=>	'mac',
+	ip				=>	'ip',
+	comment			=>	'comment',
+	dhcp			=>	'dhcp',
+    host_id         =>  'host_id',
+);
+%defaults	= (
+	dhcp		=>	0,
+	ip			=>	undef,
+	mac			=>	undef,
+);
+
+sub Host {
+	return new openprint::Host( $_[0]{host_id} );
+} # end sub Host;
+
 package openprint::Host_Notification;
 our @ISA = qw( openprint::Object );
 use vars qw( $debug $table @identified_by %fields %transforms %defaults );
@@ -30,7 +54,7 @@ $serial = 'host_types_id_seq';
 
 package openprint::Host_Info;
 our @ISA = qw( openprint::Object );
-use vars qw( $debug $table $serial %fields %transforms %defaults %types );
+use vars qw( $debug $table $serial %fields %transforms %defaults %types %find_fields );
 $debug = 0;
 $table = 'host_info';
 $serial = 'host_info_id_seq';
@@ -39,6 +63,8 @@ $serial = 'host_info_id_seq';
 	host_id		=>	'host_id',
 	name		=>	'name',
 	value		=>	'value',
+);
+%find_fields = (
 );
 %transforms = (
 	id		=>	[ 's/\D//g' ],
@@ -50,14 +76,12 @@ package openprint::Host;
 our @ISA = qw( openprint::Object );
 
 use vars qw( $debug $table $serial %fields %find_fields %transforms %defaults %types );
-$debug = 0;
+$debug = 1;
 $table = 'hosts';
 $serial = 'hosts_id_seq';
 %fields = (
 	id			=>	'id',
-	ip			=>	'ip',
 	hostname	=>	'hostname',
-	mac			=>	'mac',	
 	blacklist	=>	'blacklist',
 	whitelist	=>	'whitelist',
 	monitored	=>	'monitored',
@@ -78,6 +102,8 @@ $serial = 'hosts_id_seq';
 );
 %find_fields = (
 	type	=>	'(SELECT name FROM Host_types WHERE host_types.id=type_id)',
+	mac	=>	'(SELECT mac FROM host_interfaces WHERE host_id=hosts.id)',
+	ip	=>	'(SELECT ip FROM host_interfaces WHERE host_id=hosts.id)',
 );
 %transforms = (
 	id			=>	[ 's/\D//g' ],
@@ -88,10 +114,7 @@ $serial = 'hosts_id_seq';
 	'blacklist'	=>	0,
 	'whitelist'	=>	0,
 	'monitored'	=>	0,
-	'mac'		=>	undef,
-	'hostname'	=>	'undef',
-	'ip'		=>	undef,
-	'dhcp'		=>	0,
+	'hostname'	=>	undef,
 	'created_on'	=>	q`'NOW()'`,
 	'updated_on'	=>	q`'NOW()'`,
 	resolved_on		=>	undef,
@@ -147,6 +170,15 @@ sub destroy {
 		$error .= $Log->destroy();
 		return $error if $error;
 	} # end foreach Log
+	foreach my $N ( $_->Notifications() ) {
+		$error .= $N->destroy();
+		return $error if $error;
+	} # end foreach Log
+	foreach my $I ( $_->Interfaces() ) {
+		$error .= $I->destroy();
+		return $error if $error;
+	} # end foreach Log
+
 	$error .= $_[0]->SUPER::destroy();
 	return $error;
 } # end sub destroy
@@ -207,6 +239,15 @@ sub Notifications {
 				#'order' => 'lower(strfirstName),lower(strlastname)' );
 	} # end if
 	return @{$_[0]{'Notifications'}};
+} # end sub Notifications
+sub Interfaces {
+	if ( ! $_[0]{Interfaces} ) {
+		@{$_[0]{Interfaces}} = openprint::Host_Interface->find(
+				host_id	=>	$_[0]{id},
+				order	=>	'mac',
+				);
+	} # end if
+	return @{$_[0]{Interfaces}};
 } # end sub Notifications
 
 sub info {

@@ -1,4 +1,4 @@
-#!/usr/bin/perl -w
+#!/usr/bin/perl
 use utf8;
 use lib '/var/www/testing/perl';
 use strict;
@@ -6,13 +6,14 @@ use LWP;
 
 require configuration;
 require sql;
-require openprint::Host;
+require sets;
 require logger;
+require openprint::Host;
 require openprint::Email;
 require openprint::Log;
 require Net::Ping;
 
-use vars qw( $log $dbh %config);
+use vars qw( $log $dbh %config );
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
 *config = \%openprint::config;
@@ -20,7 +21,6 @@ $log = logger->new({level=>'debug'});
 
 use Getopt::Long;
 use File::Basename qw(basename);
-
 
 my $opts = {};
 GetOptions($opts, 'help', 
@@ -37,9 +37,6 @@ my $program = basename($0);
 $_ = configuration::from_file('/etc/openprint/camera_command.conf');
 $log->error($_) if $_;
 configuration::merge($opts);
-foreach my $k ( keys %config ) {
-$log->debug("COnfig $k=>$config{$k}");
-}
 
 foreach my $param ( 'db_name','db_user','db_pass', 'command' ) {
 	if ( ! $config{$param} ) {
@@ -150,35 +147,6 @@ Command-line options:
 
 EOH
 } # end sub usage
-
-# Read a configuration file
-#   The arg can be a relative or full path, or
-#   it can be a file located somewhere in @INC.
-sub ReadCfg {
-    my $file = $_[0];
-
-    our $err;
-
-    {   # Put config data into a separate namespace
-        package CFG;
-		use vars qw( %Config );
-
-        # Process the contents of the config file
-        my $rc = do($file);
-
-        # Check for errors
-        if ($@) {
-            $::err = "ERROR: Failure compiling '$file' - $@";
-        } elsif (! defined($rc)) {
-            $::err = "ERROR: Failure reading '$file' - $!";
-        } elsif (! $rc) {
-            $::err = "ERROR: Failure processing '$file'";
-        }
-    }
-
-    return ($err);
-}
-
 
 1;
 __END__
