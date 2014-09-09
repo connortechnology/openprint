@@ -554,13 +554,15 @@ sub save {
             openprint::print_project::delete_service( $project_index, $_ );
         } # end foreach
     } # end if Self or Different Cover
+	my @variables = openprint::Estimating::Printing::variables();
+
 	foreach my $ssid ( $Project->signatures() ) {
 		my $sig_specs = openprint::service::get_specs_ref( $Project, $ssid );
 		my %new_specs = %$sig_specs;
 #$openprint::log->debug("Spreadsize for sig $$sig_specs{SignatureIndex} orig: $new_specs{txtSpreadSize} new: $$sig_specs{txtSpreadSize}");
 		openprint::Estimating::Printing::set_size( $Project, \%new_specs, $Service->specs() );
 #$openprint::log->debug("Spreadsize for sig $$sig_specs{SignatureIndex} orig: $new_specs{txtSpreadSize} new: $$sig_specs{txtSpreadSize}");
-		foreach my $v ( openprint::Estimating::Printing::variables() ) {
+		foreach my $v ( @variables ) {
 			if ( $new_specs{$v} ne $$sig_specs{$v} ) {
 $openprint::log->debug("Saving $v") if DEBUG;
 				openprint::service::insert_service_spec( $openprint::log, $openprint::dbh, $Project->id(), $ssid, $v, $new_specs{$v} );

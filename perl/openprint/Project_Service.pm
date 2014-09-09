@@ -24,8 +24,10 @@ $debug = 0;
 	servicetype		=>	'(SELECT name FROM service_types WHERE service_types.id=servicetype_id)',
 );
 %transforms = (
+	
 );
 %defaults = (
+	service_id	=>	undef,
 	operator_id	=>	undef,
 	created_on	=>	q`'NOW()'`,
 );
