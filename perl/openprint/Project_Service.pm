@@ -7,7 +7,7 @@ require openprint::Project;
 require openprint::User;
 require openprint::ServiceType;
 
-use vars qw( $debug %fields %find_fields %transforms %defaults $table $serial @identified_by );
+use vars qw( $debug %fields %find_fields %transforms %defaults $table %serial @identified_by );
 
 $debug = 0;
 %fields = (
@@ -30,7 +30,7 @@ $debug = 0;
 	created_on	=>	q`'NOW()'`,
 );
 $table = 'tbl_project_contents';
-$serial = 'ContentsServiceIndex_seq';
+%serial = ( service_id=>'ContentsServiceIndex_seq' );
 @identified_by = ( 'project_id', 'service_id' );
 
 sub Project {
