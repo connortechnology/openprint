@@ -31,7 +31,7 @@ $debug = 0;
 );
 $table = 'tbl_project_contents';
 $serial = 'ContentsServiceIndex_seq';
-@identified_by = ( 'project_id', 'service_id' );
+@identified_by = ( 'service_id' );
 
 sub Project {
 	return new openprint::Project( $_[0]{project_id} );
