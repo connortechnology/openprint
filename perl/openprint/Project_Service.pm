@@ -7,7 +7,7 @@ require openprint::Project;
 require openprint::User;
 require openprint::ServiceType;
 
-use vars qw( $debug %fields %find_fields %transforms %defaults $table $serial @identified_by );
+use vars qw( $debug %fields %find_fields %transforms %defaults $table %serial @identified_by );
 
 $debug = 0;
 %fields = (
