@@ -35,7 +35,6 @@ sub resolve {
 	return undef;
 } # end sub resolve
 
-
 package openprint::Host_Notification;
 our @ISA = qw( openprint::Object );
 use vars qw( $debug $table @identified_by %fields %transforms %defaults );

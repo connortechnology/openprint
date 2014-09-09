@@ -22,8 +22,8 @@ $serial = 'article_categories_id_seq';
 );
 
 %transforms = (
-	id			=>	[ 's/\D//g' ],
-	album_id	=>	[ 's/\D//g' ],
+	id			=>	[ 's/\D//g', '<2147483647' ],
+	album_id			=>	[ 's/\D//g', '<2147483647' ],
     name		=>	[ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
     description =>	[ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
     summary		=>	[ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
