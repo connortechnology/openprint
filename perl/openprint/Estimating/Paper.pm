@@ -435,9 +435,13 @@ $openprint::log->debug("No qty for index $$Stock_Entry{index} qty $qty_index");
 
 sub se_price_summary {
 	my ( $SE, $specs, $qty_index ) = @_;
+
+	if ( $$specs{"qty-$$SE{index}-$qty_index"} ) {
 	$$SE{"Price$qty_index"} = $$SE{Stock}->get_price( weight=>$$specs{"qty-$$SE{index}-$qty_index"}, service=>'Material' ) if ! $$SE{"Price$qty_index"};
 	my $Price = $$SE{"Price$qty_index"};
 	return '@ $'.$$specs{"cost-$$SE{index}-$qty_index"}.$$Price{units}. ' = $' . $$specs{"price-$$SE{index}-$qty_index"};
+	} 
+	return '';	
 } # end sub se_price_summary
 
 # The order of stocks is important... thing is, it can change if the brand changes for example.

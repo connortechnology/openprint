@@ -127,8 +127,10 @@ sub host {
 			delete $param{type_id};
 		} # end if
 		$variable{error} .= $Host->save(\%param);
-		foreach my $I ( $Host->Interfaces() ) {
+		foreach my $I ( $Host->Interfaces(), new openprint::Host_Interface() ) {
+		
 			$variable{error} .= $I->save({
+				host_id=>$$Host{id},
 				map { $_, $param{"$_-$$I{mac}"} } ( 'mac', 'ip', 'dhcp', 'comment' )
 			});
 		} # end foreach Interface
