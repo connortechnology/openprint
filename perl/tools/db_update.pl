@@ -3077,6 +3077,10 @@ if ( ! sets::isin( 'hosts', \@tables ) ) {
 	} # end if
 }
 
+if ( ! sets::isin( 'host_interfaces', \@tables ) ) {
+	$dbh->do( misc::load_file( $log, q{../openprint/sql/Host_Interfaces.sql}) );
+	$dbh->do( 'SELEC
+}
 if ( ! sets::isin( 'host_info', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/Host_Info.sql}) );
 }
