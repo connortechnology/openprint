@@ -1192,6 +1192,10 @@ if ( ! sets::isin( 'papers', \@tables ) ) {
 		$dbh->do(q`ALTER TABLE papers add supplier_id INTEGER`);
 		$dbh->do(q`ALTER TABLE papers add FOREIGN KEY (supplier_id) REFERENCES companies (id)`);
 	} # end nif
+	if ( ! exists $$data{department_id} ) {
+		print "Adding department_id to Papers\n";
+		$dbh->do(q`ALTER TABLE papers add department_id TEXT`);
+	} # end nif
 } # end if
 
 if ( ! sets::isin( 'paper_recommendations', \@tables ) ) {

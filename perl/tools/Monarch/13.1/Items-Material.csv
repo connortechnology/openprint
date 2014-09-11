@@ -7,7 +7,7 @@
 "Owned-by","'Company'","Text",290,8,297,"Owned By","Yes","Yes",,"Company, Customer or Supplier"
 "Cust-ID","$$Object{owner_id}","Text",298,8,305,"Customer ID ","Yes","Yes*",,"Required if owned by Customer and/or Finished Goods type.  Do not enter an ID if the item type is Charge Only or Expense."
 "Cust-Item-ID",,"Text",306,30,335,"Customer Item ID",,,,"Optional for Customer Owned items only"
-"Supplier-ID","$Object->supplier_id() ? $Object->supplier_id() : 'Unknown'-9[+[","Text",336,8,343,"Supplier ID","Yes","Yes*",,"Required if owned by Supplier, otherwise optional."
+"Supplier-ID","$Object->supplier_id() ? $Object->supplier_id() : 'Unknown'","Text",336,8,343,"Supplier ID","Yes","Yes*",,"Required if owned by Supplier, otherwise optional."
 "Supplier-Item-ID",,"Text",344,24,367,"Supplier Item ID",,,,"Optional for Supplier Owned items only"
 "Warehouse-ID",,"Text",368,3,370,"Default Warehouse ID",,,,
 "Bin-Location",,"Text",371,10,380,"Default Bin Location",,,,
@@ -82,11 +82,11 @@
 "Width","$Object->width()","Text",991,19,1009,"Width",,,,"Format = >,>>>,>>>,>>9.99999999"
 "Length","$Object->height()","Text",1010,19,1028,"Length",,,,"Format = >,>>>,>>>,>>9.99999999"
 "Type",,"Text",1029,30,1058,"Type",,,,
-"Material-Color","$Object->colour()","Text",1059,30,1088,"Color",,,,
-"Finish","$Object->finish()","Text",1089,30,1118,"Finish",,,,
-"Brand-ID","$Object->brand()","Text",1119,5,1123,"Brand ID","Yes",,,"Only applicable if Material Type is Paper"
-"Basis-Weight","$Object->basis_mweight()","Text",1124,19,1142,"Basis Weight",,,,"Format = >,>>>,>>>,>>9.99999999"
-"Sheet-Stock","$Object->type() eq 'Sheet' ? 1 : 0","Text",1143,1,1143,"Flag - Sheet Stock",,,"No (0)","0=No, 1=Yes"
+"Material-Color","$Object->specification('colour')","Text",1059,30,1088,"Color",,,,
+"Finish","$Object->specification('finish')","Text",1089,30,1118,"Finish",,,,
+"Brand-ID","$Object->specification('brand')","Text",1119,5,1123,"Brand ID","Yes",,,"Only applicable if Material Type is Paper"
+"Basis-Weight",,"Text",1124,19,1142,"Basis Weight",,,,"Format = >,>>>,>>>,>>9.99999999"
+"Sheet-Stock",0,"Text",1143,1,1143,"Flag - Sheet Stock",,,"No (0)","0=No, 1=Yes"
 "Gauge",,"Text",1144,19,1162,"Gauge",,,,"Format = >,>>>,>>>,>>9.99999999"
 "Caliper","$Object->calliper()","Text",1163,19,1181,"Caliper",,,,"Format = >,>>>,>>>,>>9.99999999"
 "Max-Height",,"Text",1182,19,1200,"Maximum Height",,"Yes*",,"Format = >,>>>,>>>,>>9.99999999; Requried if Material-Type = Package/Carton"
@@ -108,12 +108,12 @@
 "Window-Position-Left",,"Text",1447,19,1465,"Window Position Left",,,,"Format = >,>>>,>>>,>>9.99999999"
 "Window-Position-Bottom",,"Text",1466,19,1484,"Window Position Bottom",,,,"Format = >,>>>,>>>,>>9.99999999"
 "Security",,"Text",1485,1,1485,"Flag - Security",,,"No (0)","0=No, 1=Yes"
-"Usable-Sides","$Object->doublesided() ? 2 : 1","Text",1486,1,1486,"Usable Sides",,,,
+"Usable-Sides",,"Text",1486,1,1486,"Usable Sides",,,,
 "Maximum-Impressions",,"Text",1487,9,1495,"Maximum Impressions",,,,"Format = >>>,>>>,>>9"
 "Varnish",,"Text",1496,1,1496,"Flag - Varnish",,,"No (0)","0=No, 1=Yes"
 "Coating",,"Text",1497,1,1497,"Flag - Coating",,,"No (0)","0=No, 1=Yes"
 "Opacity",,"Text",1498,19,1516,"Opacity",,,,"Format = >,>>>,>>>,>>9.99999999"
-"Grain-Direction","$Object->grain_direction()","Text",1517,14,1530,"Grain Direction","Yes",,"Length","Not Applicable, Width, or Length"
+"Grain-Direction",,"Text",1517,14,1530,"Grain Direction","Yes",,"Length","Not Applicable, Width, or Length"
 "Qty-Sheets-Per-Carton",,"Text",1531,9,1539,"Quantity of Sheets per Carton",,,,"Format = >>>,>>>,>>9"
 "Qty-Sheets-Per-Skid",,"Text",1540,9,1548,"Quantity of Sheets per Skid",,,,"Format = >>>,>>>,>>9"
 "Core-Weight",,"Text",1549,19,1567,"Core Weight",,,,"Format = >,>>>,>>>,>>9.99999999"
