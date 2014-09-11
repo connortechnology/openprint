@@ -111,7 +111,6 @@ sub view {
 	} # end foreach
 	if ( $save ) {
 		$Project->save();
-	$openprint::log->error("Saving $save");
 	} # end if
 } # end sub view
 

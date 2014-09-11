@@ -2,7 +2,7 @@
 <? echo ( 
 	my $html = '';
 
-	my $specs = openprint::service::get_specs_ref( $$variable{Project}, $$variable{ServiceIndex} );
+	my $specs = $$variable{ServiceSpecifications};
 
 	my @Stocks = openprint::Estimating::Paper::get_stocks( $$variable{Project}, $$variable{ServiceIndex}, $specs );
 

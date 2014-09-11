@@ -69,13 +69,14 @@ if ( $ENV{'CALLING_STATION_ID'} ) {
 		$log->error("Must specify database name in order to look up hosts.\n");
 		exit(1);
 	} # end if
-	my $Host = openprint::Host->find_one('mac any'=>$ENV{'CALLING_STATION_ID'});
-	if ( $Host ) {
-		if ( $Host->dhcp() ) {
-			if ( $Host->ip() ne $ENV{'FRAMED_IP_ADDRESS'} ) {
-				$_ = $Host->save({'ip'=>$ENV{'FRAMED_IP_ADDRESS'}});
+	my $Interface = openprint::Host_Interface->find_one(mac=>$ENV{'CALLING_STATION_ID'});
+	if ( $Interface ) {
+		if ( $Interface->dhcp() ) {
+			if ( $Interface->ip() ne $ENV{'FRAMED_IP_ADDRESS'} ) {
+				$_ = $Interface->save({ip=>$ENV{'FRAMED_IP_ADDRESS'}});
 				$log->error($_) if $_;
 
+				my $Host = $Interface->Host();
 				my $hostname = $Host->hostname();
 				if ( $hostname !~ /.internal.point-one.com$/ ) {
 					$log->debug("TRanforming $hostname into $hostname.internal.point-one.com");
@@ -83,10 +84,10 @@ if ( $ENV{'CALLING_STATION_ID'} ) {
 				}
 
 				if ( open NSUPDATE, "| nsupdate" ) {
-					$log->debug("Updating $hostname to $ENV{'FRAMED_IP_ADDRESS'}");
-					print NSUPDATE "server localhost\n";
+					$log->debug("Updating $hostname to $ENV{FRAMED_IP_ADDRESS}");
+					print NSUPDATE "server 192.168.2.1\n";
 					print NSUPDATE "update delete $hostname. IN A\n";
-					print NSUPDATE "update add $hostname. 86400 IN A $ENV{'FRAMED_IP_ADDRESS'}\n";
+					print NSUPDATE "update add $hostname. 86400 IN A $ENV{FRAMED_IP_ADDRESS}\n";
 					print NSUPDATE "send\n";
 					close NSUPDATE;
 				} else {
@@ -96,7 +97,7 @@ if ( $ENV{'CALLING_STATION_ID'} ) {
 				$log->debug("IP unchanged");
 			} # end if
 		} else {
-			$log->debug("IP not changed because dhcp not set for mac $ENV{'CALLING_STATION_ID'} $$Host{hostname} $ENV{'FRAMED_IP_ADDRESS'}");
+			$log->debug("IP not changed because dhcp not set for mac $ENV{'CALLING_STATION_ID'} $ENV{'FRAMED_IP_ADDRESS'}");
 		} # end if Host->dhcp
 	} else {
 		$log->debug("Host not found for mac $ENV{'CALLING_STATION_ID'}");

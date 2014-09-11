@@ -38,22 +38,26 @@ There is no current project.
 <?include('/includes/project_header.html')?>
 <div class="ProjectSummary">
 	<fieldset><legend>Project Information</legend>
-	<? echo ( include('/includes/main/summ/project_create_edit.html'); ) ?>
+	<?include('/includes/main/summ/project_create_edit.html')?>
 	</fieldset>
 	<? while ( @$variable{'ServiceIndex','ServiceTypeName','prod_url'} = splice @{$$variable{'SERVICES'}},0,3; ) ?>
 		<? eval ( 
 			foreach my $k ( keys %$variable ) {
 				if ( $k =~ /^chk/ ) {
-				delete $$variable{$k};
+					delete $$variable{$k};
 				} # end if
 			} # end foreach
 			openprint::print_project::get_service_specifications( $r, $log, $dbh, $variable, @$variable{'ProjectIndex','ServiceIndex'} );
-			$$variable{'ServiceSpecifications'} = openprint::service::get_specs_ref( @$variable{'Project','ServiceIndex'} );
+			$$variable{ProjectService} = $$variable{Project}->Service( $$variable{ServiceIndex} );
+			$$variable{ServiceSpecifications} = $$variable{ProjectService}->specs();
 		) ?>
 		
 		<fieldset><legend><?ServiceTypeName?> <?txtServiceDescription?><?if($$variable{ServiceTypeName} eq 'Signature')?> Form <?SignatureIndex?><?endif($$variable{ServiceTypeName} eq 'Signature')?></legend>
 			<? if ( $$variable{'prod_url'} ) ?>
-			<? echo ( include('/main/summ/'.$$variable{prod_url}, $variable ); ) ?>
+			<? echo ( 
+$_ = include('/main/summ/'.$$variable{prod_url}, $variable ); 
+return $_;
+) ?>
 			<? endif ( $$variable{'prod_url'} ) ?>
 		</fieldset>
 	<? endwhile ( @$variable{'ServiceIndex','ServiceTypeName','prod_url'} = splice @{$$variable{'SERVICES'}},0,3; ) ?>

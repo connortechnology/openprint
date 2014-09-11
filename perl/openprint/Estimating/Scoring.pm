@@ -14,6 +14,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA	02110-1301, USA
 use strict;
+#use warnings;
 
 package openprint::Estimating::Scoring;
 
@@ -34,6 +35,7 @@ my @variables = (
 	'txtPrice1','txtPrice2','txtPrice3',
 	'OverridePrice1', 'OverridePrice2', 'OverridePrice3',
 	'Markup1', 'Markup2', 'Markup3',
+	'alert',
 );
 
 my @all_equipment;
@@ -95,18 +97,22 @@ sub signature_needs {
 #$openprint::log->debug("Scoring::need $$sig_specs{SignatureIndex} : " .$$specs{"chkOverrideQty-$form"});
 	if ( $specs ) {
 	# This is because for non-books, the specs hash doesn't have the SignatureIndex filledin.
-		if ( ( $$specs{"chkOverrideQty-$form"} eq 'Y' ) and
+		if ( ( (defined $$specs{"chkOverrideQty-$form"} ) and ( $$specs{"chkOverrideQty-$form"} eq 'Y' ) ) and
 				( $$specs{"txtVerticalQty-$form"} or $$specs{"txtHorizontalQty-$form"} ) ) {
 			return 1;
 		} # end if
 	} # end if
 
 # If it's not needing folding, then it doesn't need to be scored!!
-	if ( ! openprint::Estimating::Folding::signature_needs( $Project, $sig_specs) ) {
+	if ( ! openprint::Estimating::Folding::signature_needs( $Project, $sig_specs ) ) {
 #$openprint::log->debug("NeedFolding is not true $$specs{'txtWidth'}x$$specs{'txtHeight'} : $$specs{'txtFinalWidth'}x$$specs{'txtFinalHeight'}");
 		return 0;
 	} # end if
-	if ( ( $$sig_specs{'txtSignatureType'} eq '' ) or ( $$sig_specs{'txtSignatureType'} eq 'Cover Pages' ) or ( $$sig_specs{'txtSignatureType'} and ( $form == 1 ) ) ) {
+	if ( 
+		( $$sig_specs{txtSignatureType} eq '' ) 
+		or ( $$sig_specs{txtSignatureType} eq 'Cover Pages' ) 
+		or ( $$sig_specs{'txtSignatureType'} and ( ! $Project->signatures({type=>'Cover Pages'}) ) and ( $form == 1 ) ) 
+	) {
 		$Paper = openprint::Paper::load_from_signature( $Project, $sig_specs ) if ! $Paper;
 #$openprint::log->debug( "Score Required!: " . $Paper->score_required() );
 		if ( $Paper->score_required() ) {
@@ -146,6 +152,7 @@ sub calc {
 	my ( $log, $dbh, $variable, $project_index, $service_index, $specs ) = @_;
 
 	my $status = 'calculated';
+	$$specs{alert} = '';
 
 	my $Project = new openprint::Project( $project_index );
 
@@ -217,7 +224,7 @@ sub calc {
 				$$specs{'alert'} .= 'Please specify # of scores for form ' . $form;
 				$status = 'uncalculated';
 			} # end if
-			$price += $Price{'Price'};
+			$price += $Price{Price} if $Price{Price};
 			$status = 'uncalculated' if $Price{'Status'} eq 'uncalculated';
 		} # end foreach qty_index
 
@@ -246,7 +253,8 @@ sub signature_calc {
 		Breakdown	=> '',
 	);
 	my $form = $$sig_specs{SignatureIndex};
-	if ( $$specs{"chkOverrideQty-$form"} ne 'Y' ) {
+
+	if ( (!defined $$specs{"chkOverrideQty-$form"}) or ( $$specs{"chkOverrideQty-$form"} ne 'Y' ) ) {
 		get_scores( $Project, $specs, $sig_specs, $SignatureImposition->Paper() );
 	} # end if
 

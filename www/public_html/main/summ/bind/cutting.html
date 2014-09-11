@@ -1,13 +1,11 @@
-<? eval ( 
-	openprint::Estimating::Cutting::display( $log, $dbh, $variable, @$variable{'ProjectIndex','ServiceIndex'} );
-) ?>
 <ul>
 <? echo (
+	openprint::Estimating::Cutting::display( $log, $dbh, $variable, @$variable{'ProjectIndex','ServiceIndex'} );
 	my $html;
 	my $Project = $$variable{Project};
 
     my $services = $Project->services();
-    my $paper_service_id = $$services{Paper} and @{$$services{Paper}} ? $$services{Paper}[0] : 0;
+    my $paper_service_id = ($$services{Paper} and @{$$services{Paper}}) ? $$services{Paper}[0] : 0;
     my $paper_specs = openprint::service::get_specs_ref( $Project, $paper_service_id ) if $paper_service_id;
 
     my @All_Stocks = openprint::Estimating::Paper::get_stocks( $Project );

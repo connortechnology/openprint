@@ -60,7 +60,7 @@ $log->debug("after continue $$variable{ExternalRedirect}");
 	} # end if
 
 	my $services = $Project->services();
-	my $Service = openprint::Project_Service->find_one( { project_id=>$$Project{id}, service_id=> $openprint::param{ServiceIndex} } );
+	my $Service = $Project->Service( $openprint::param{ServiceIndex} ) if $openprint::param{ServiceIndex};
 
 	$log->debug(" **** STARTING VIEW SERVICES FUNCTION * Project $project_index( $$Project{id} ) *** $openprint::session{'company_id'}");
 
@@ -77,14 +77,13 @@ $log->debug("after continue $$variable{ExternalRedirect}");
 				$openprint::session{project_id} = $project_index;
 				$log->debug("** Save Service in View Services Function **");
 
-				my $service_index = $openprint::param{'ServiceIndex'};
+				my $service_index = $openprint::param{ServiceIndex};
 				if ( ! $Service ) {
 					$$variable{error} .= $openprint::param{ServiceType} . ' service ' . $service_index . ' is no longer in project. It may have been removed while you were editing it.  Your changes may not have been saved.<br/>';
 					$$variable{ExternalRedirect} = '/main/project/view.html?project_id='.$project_index;
 					return;
 				} # end if
 				my $recalc = 0;	
-				my $Service = $Project->Service( $service_index );
 				my $ServiceType = $Service->ServiceType();
 
 				if ( $ServiceType and ( $ServiceType->name() eq 'Proofs' ) ) {
@@ -466,7 +465,9 @@ $log->debug("group $group_id");
 		} # end foreach spec
 		foreach my $spec ( 
 				'chkCyanSideOne','chkMagentaSideOne','chkYellowSideOne','chkBlackSideOne', 'chkProcessColourSideOne',
+				( map { 'chkColourCoating'.$_.'SideOne' } ( 1 .. 9 ) ),
 				'chkCyanSideTwo','chkMagentaSideTwo','chkYellowSideTwo','chkBlackSideTwo', 'chkProcessColourSideTwo',
+				( map { 'chkColourCoating'.$_.'SideTwo' } ( 1 .. 9 ) ),
 		) {
 			openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $ss_id, $spec, $$param{$spec.$group_id} );
 		} # end foreach spec
@@ -600,8 +601,8 @@ $log->error("No Group!") if ! $type;
 		} # end foreach spec
 	} # end foreach ss_id
 
-	if ( ! $$variable{'rdbTemplateType'} ) {
-		$$variable{'rdbTemplateType'} = get_book_type( $project_index );
+	if ( ! $$variable{rdbTemplateType} ) {
+		$$variable{rdbTemplateType} = get_book_type( $project_index );
 	} # end if
 
 } # end sub publication_pages
