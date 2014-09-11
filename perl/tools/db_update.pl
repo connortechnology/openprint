@@ -855,6 +855,9 @@ if ( ! sets::isin( 'projects', \@tables ) ) {
 	if ( ! exists $$data{production_comments} ) {
 		$dbh->do(q`ALTER TABLE projects ADD production_comments TEXT`) or $log->error($dbh->errstr());
 	} # end if
+	if ( ! exists $$data{calculated_on} ) {
+		$dbh->do(q`ALTER TABLE projects ADD calculated_on TIMESTAMP WITH TIME ZONE`) or $log->error($dbh->errstr());
+	} # end if
 } # end if
 if ( ! sets::isin( 'servicetype_categories', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/ServiceType_Categories.sql}) );
@@ -3077,6 +3080,10 @@ if ( ! sets::isin( 'hosts', \@tables ) ) {
 	} # end if
 }
 
+if ( ! sets::isin( 'host_interfaces', \@tables ) ) {
+	$dbh->do( misc::load_file( $log, q{../openprint/sql/Host_Interfaces.sql}) );
+	#$dbh->do( 'SELEC
+}
 if ( ! sets::isin( 'host_info', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/Host_Info.sql}) );
 }
