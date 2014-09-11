@@ -306,7 +306,10 @@
 		my @Projects = openprint::Project->find( id=>[ sets::union( map { $$_{project_id} ? $$_{project_id} : () } @Jobs ) ] );
 		my @Companies = openprint::Company->find( id=>[ sets::union( map { $$_{company_id} ? $$_{company_id} : () } @Projects ) ] );
 
-		$dbh->do( 'LOCK TABLE Schedule IN ACCESS EXCLUSIVE MODE' ) or $log->error( DBI->errstr );
+		# WHy does this need to be ACCESS exclusive?  SOmething that changes it should be.... perhaps the idea is that i any canges are in progress, we want to wait for them to finish, but if changes are happening, then any lock we try to get will hol... so this just prevent concurrent views
+		# However, the problem is that this can implement shifts.. perhaps we should wait until we need to implement shifts...
+		# Ok, but we actually only create shifts, not adjust jobs... so only need to lock the shifts	
+		$dbh->do( 'LOCK TABLE Shifts IN ACCESS EXCLUSIVE MODE' ) or $log->error( DBI->errstr );
 
 		foreach my $E ( @{$$variable{'Equipment'}} ) {
 			$html .= '<td class="PressColumn ' . join(' ', $E->categories() ). '">';

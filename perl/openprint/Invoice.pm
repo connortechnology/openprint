@@ -251,15 +251,17 @@ sub send {
 			Currency	=>	$self->Currency(),
 	);
 	my $email_template = ssi::slurp_content('/email_template.html');
+	my $invoice_template = ssi::slurp_content('/invoice_template.html');
 	my @attachments;
 	$data{'ReplacementText'} = ssi::include( '/email_content/invoice_body.html', \%data );
 	push @attachments, '', MIME::QuotedPrint::encode_qp( Encode::encode('utf-8', ssi::variable_substitution( \$email_template, \%data ) ) ), 'text/html', 'quoted-printable';
 	$data{'ReplacementText'} = ssi::include( '/email_content/invoice.html', \%data );
-	my $invoice_html = Encode::encode('utf-8',ssi::variable_substitution( \$email_template, \%data ) );
+	my $invoice_html = Encode::encode('utf-8',ssi::variable_substitution( \$invoice_template, \%data ) );
 
 	my $file_base = 'Invoice'.$$self{id};
+        #push @attachments, ($file_base.'.html', MIME::QuotedPrint::encode_qp($invoice_html), 'text/html', 'quoted-printable');
 	if ( File::Slurp::write_file('/tmp/'.$file_base.'.html', { atomic => 1, err_mode=>'carp' }, \$invoice_html ) ) {
-		`wkhtmltopdf "/tmp/$file_base.html" "/tmp/$file_base.pdf"`;
+		`wkhtmltopdf -s Letter --print-media-type "/tmp/$file_base.html" "/tmp/$file_base.pdf"`;
 		my $invoice_pdf = File::Slurp::read_file( "/tmp/$file_base.pdf" );
 		unlink "/tmp/$file_base.html";
 		unlink "/tmp/$file_base.pdf";

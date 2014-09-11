@@ -65,8 +65,9 @@ Click on line to allocate
 						<td class="mac">%5$s</td>
 						<td class="description">%6$s</td>
 					</tr>
-					`, $rowclass, $Host->id(), $Host->hostname(), $Host->ip(), 
-					($Host->mac() ? join('<br/>', @{$Host->mac()} ) : ''), 
+					`, $rowclass, $Host->id(), $Host->hostname(),
+					join('<br/>', map { $_->ip() } $Host->Interfaces() ), 
+					join('<br/>', map { $_->mac() } $Host->Interfaces() ), 
 					$Host->description(), $$variable{License}->id(),
 					);
 				$rowclass = $rowclass ? '' : ' class="colRow"';

@@ -2,7 +2,6 @@
 	<div class="PageTitle">
 		<h1>Invoice #<? echo ( $$variable{Invoice}->id() ) ?></h1>
 	</div>
-	<br class="spacer"/>
 	<fieldset>
 		<div class="Invoicee">
 			<? echo (
@@ -52,18 +51,18 @@
 					$html .= sprintf( q`<tr %2$s>`, $Timetrack->id(), $rowclass );
 					$html .= sprintf('<td class="Date">%s</td>', ssi::format_date( $Timetrack->starting() ) );
 					$html .= sprintf('<td class="Service">%s</td>', ssi::html_escape( $Timetrack->Service()->name() ) );
-					$html .= '<td class="PO">'.ssi::html_escape( $Timetrack->po() ).'</td>';
+					$html .= '<td class="PO">'.html_escape( $Timetrack->po() ).'</td>';
 					$html .= sprintf('<td class="Interval">%s</td>', misc::seconds_to_pretty_interval( $Timetrack->elapsed() ) ); 
 					my $Price = $Timetrack->Price();
 					$html .= sprintf('<td class="Rate">%s%s</td>', openprint::Currency::format( $$Price{Price} ), $$Price{units} );
 					$html .= sprintf('<td class="Price">%s</td>', openprint::Currency::format( $$Price{Total} ) );
 					$html .= sprintf('</tr><tr %2$s>', $Timetrack->id(), $rowclass );
-					$html .= '<td>&nbsp;</td><td colspan="4">'.$Timetrack->description().'</td><td>&nbsp;</td>';
+					$html .= '<td class="Date">&nbsp;</td><td class="Service" colspan="4">'.$Timetrack->description().'</td><td>&nbsp;</td>';
 					$html .= '</tr>';
 					$$variable{'service_total'} += $$Price{'Total'};
 					$rowclass = $rowclass ? '' : 'class="colRow"';
 					my @desc = split('<p>', $Timetrack->description() );
-					$count += scalar @desc;
+					#$count += scalar @desc;
 				} # end foreach Timetrack
 				if ( @Timetracks ) {
 					$html  .= '</table></fieldset><fieldset><legend>Services Continued</legend>';
@@ -79,14 +78,14 @@
 					while ( my $Timetrack = shift @Timetracks ) {
 						$html .= sprintf( q`<tr %2$s>`, $Timetrack->id(), $rowclass );
 						$html .= sprintf('<td class="Date">%s</td>', Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $Timetrack->starting() ) ) );
-						$html .= sprintf('<td class="Service">%s</td>', ssi::html_escape( $Timetrack->Service()->name() ) );
-						$html .= '<td class="PO">'.ssi::html_escape( $Timetrack->po() ).'</td>';
+						$html .= sprintf('<td class="Service">%s</td>', html_escape( $Timetrack->Service()->name() ) );
+						$html .= '<td class="PO">'.html_escape( $Timetrack->po() ).'</td>';
 						$html .= sprintf('<td class="Interval">%s</td>', misc::seconds_to_pretty_interval( $Timetrack->elapsed() ) ); 
 						my $Price = $Timetrack->Price();
 						$html .= sprintf('<td class="Rate">%s%s</td>', openprint::Currency::format( $$Price{'Price'} ), $$Price{'units'} );
 						$html .= sprintf('<td class="Price">%s</td>', openprint::Currency::format( $$Price{'Total'} ) );
 						$html .= sprintf(q`</tr><tr %2$s>`, $Timetrack->id(), $rowclass );
-						$html .= '<td>&nbsp;</td><td colspan="4">'.$Timetrack->description().'</td><td>&nbsp;</td>';
+						$html .= '<td>&nbsp;</td><td class="Service" colspan="4">'.$Timetrack->description().'</td><td class="Price">&nbsp;</td>';
 						$html .= '</tr>';
 						$$variable{'service_total'} += $$Price{'Total'};
 						$rowclass = $rowclass ? '' : 'class="colRow"';

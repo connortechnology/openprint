@@ -790,7 +790,7 @@ sub services {
 	
 	if ( $$self{'id'} and ! exists $$self{'Services'} ) {
 		my %results;
-		my @data = sql::execute( $openprint::log, $openprint::dbh, q{SELECT (SELECT name FROM Service_Types WHERE id=servicetype_id), lngServiceIndex FROM tbl_Project_Contents WHERE lngProjectIndex=?}, $$self{'id'} );
+		my @data = sql::execute( $openprint::log, $openprint::dbh, q{SELECT (SELECT name FROM Service_Types WHERE id=servicetype_id), lngServiceIndex FROM tbl_Project_Contents WHERE lngProjectIndex=?}, $$self{id} );
 		while ( my ( $id, $index ) = splice @data, 0, 2 ) {
 			$id = '' if ! $id;
 			push @{$results{$id}}, $index;
@@ -1278,7 +1278,12 @@ foreach my $k ( keys %{$$self{Services}} ) {
 		} # end foreach 
 	}
 
-	delete $$self{'Services'};
+	#delete $$self{'Services'};
+	if ( ! $$self{Services}{$ServiceType->name()} ) {
+		$$self{Services}{$ServiceType->name()} = [ $$Service{service_id} ];
+	} else {
+		push @{$$self{Services}{$ServiceType->name()}}, $$Service{service_id};
+	}
 	delete $$self{'service_types'};
 	delete $$self{'signatures'};
 	foreach my $qty_index ( $self->quantity_indexes() ) {
@@ -1478,7 +1483,7 @@ sub used_press_names {
 	my $self = $_[0];
 	my @results;
 	foreach my $service_id ( $self->signatures() ) {
-		my $Service = new openprint::Project_Service( {'project_id'=>$$self{'id'}, 'id'=>$service_id} );
+		my $Service = $self->Service( $service_id );
 		my $sig_specs = $Service->specs();
 		if ( ! $$sig_specs{'UsePress'} ) {
 			push @results, $$sig_specs{'ddmPress'.$self->ordered_quantity_index()};
@@ -1491,7 +1496,7 @@ sub used_press_names {
 
 sub add_Service {
 	my $service_id = $_[0]->add_service( $_[1] );
-	return new openprint::Project_Service( {'project_id'=>$_[0]{'id'},'service_id'=>$service_id} );
+	return $_[0]->Service( $service_id );
 } # end sub add_Service
 
 sub recalculate {
