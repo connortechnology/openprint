@@ -1648,14 +1648,18 @@ $i->display() if DEBUG;
 
 			if ( ( ! exists $$sig_specs{'PageQuantity'.$qty_index} ) or $$sig_specs{'PageQuantity'.$qty_index} ) {
 				if ( $sig_index and openprint::Estimating::Printing::compare_signatures_runstyle( $Project, $sig_specs, openprint::service::get_specs_ref( $Project, $signatures[$sig_index-1] ), $qty_index ) ) {
-					$Signature_Results{$signature_service_index} = $Signature_Results{$signatures[$sig_index-1]};
+					%{$Signature_Results{$signature_service_index}} = %{$Signature_Results{$signatures[$sig_index-1]}};
+					$Signature_Results{$signature_service_index}{form} = $form;
+					$Signature_Results{$signature_service_index}{SigSpecs} = $sig_specs;
 				} else {
 					$Signature_Results{$signature_service_index} = signature_calc( $Project, $signature_service_index, $sig_specs, $specs, $qty_index, $Imposition, [ sets::exclude( [ $Imposition ], \@Signature_Impositions ) ], $calc_hash );
 				} 
 			} # end if
 		} # end foreach Signature
 
+if ( DEBUG ) {
 foreach my $k ( keys %Signature_Results ) {
+	next if ! $Signature_Results{$k}{Options};
 	#$openprint::log->debug( Dumper( $Signature_Results{$k} ) );
 	$openprint::log->debug("#Options: " . @{$Signature_Results{$k}{Options}} );
 	foreach my $o ( @{$Signature_Results{$k}{Options}} ) {
@@ -1665,6 +1669,7 @@ foreach my $k ( keys %Signature_Results ) {
 		} 
 	} # end foreach
 
+}
 }
 
 		my $bestPerm;
