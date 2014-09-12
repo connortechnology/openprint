@@ -1600,13 +1600,13 @@ sub change_ProjectType {
 	if ( $$Project{type_id} ) {
 		if ( $OldProjectType->id() != $ProjectType->id() ) {
 			if ( $$services{''} ) {
-				foreach ( @{$$services{''}} ) { openprint::print_project::delete_service( $$Project{id}, $_ ); };
+				foreach ( @{$$services{''}} ) { openprint::print_project::delete_service( $Project, $_ ); };
 			} # end if
 			delete $$services{''};
 			if ( $OldProjectType->type() ne $ProjectType->type() ) {
 				$log->debug("Removing sigs because project type is different");
 				# Brochure to multipage or nice versa.  Have to remove sigs.
-				foreach ( $Project->signatures() ) { openprint::print_project::delete_service( $$Project{id}, $_ ); }
+				foreach ( $Project->signatures() ) { openprint::print_project::delete_service( $Project, $_ ); }
 				delete $$services{Signature};
 			} else {
 				$openprint::log->debug("Not Removing sigs because project type is same $$OldProjectType{type} == $$ProjectType{type}");
@@ -1627,7 +1627,7 @@ sub change_ProjectType {
 		foreach my $ServiceType ( @oldRequiredServiceTypes ) {
 			if ( ! sets::isin( $ServiceType, \@newRequiredServiceTypes ) ) {
 				foreach my $s_id ( @{$$services{$ServiceType->name()}} ) {
-					openprint::print_project::delete_service( $Project->id(), $s_id );
+					openprint::print_project::delete_service( $Project, $s_id );
 				} # end foreach
 				delete $$services{$ServiceType->name()};
 			} # end if

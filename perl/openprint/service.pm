@@ -215,7 +215,7 @@ sub auto_calculate {
 	if ( ! openprint::Estimating::Folding::neccessary( $Project ) ) {
 		if ( $$services{Folding} ) {
 			while ( my $si = shift @{$$services{'Folding'}} ) {
-				openprint::print_project::delete_service( $$Project{'id'}, $si );
+				openprint::print_project::delete_service( $Project, $si );
 			} # end while
 			delete $$services{Folding};
 		} # end if
@@ -245,7 +245,7 @@ require openprint::Estimating::PerfectBound;
 		} # end if
 	} elsif ( $$services{'PerfectBound'} ) {
 		while ( my $si = shift @{$$services{'PerfectBound'}} ) {
-			openprint::print_project::delete_service( $$Project{'id'}, $si );
+			openprint::print_project::delete_service( $Project, $si );
 		} # end while
 		delete $$services{'PerfectBound'};
 	} # end if
@@ -289,7 +289,7 @@ require openprint::Estimating::Stitching;
 	} else {
 		if ( $$services{'Collating'} ) {
 			foreach my $si ( @{$$services{'Collating'}} ) {
-				openprint::print_project::delete_service( $$Project{'id'}, $si );
+				openprint::print_project::delete_service( $Project, $si );
 			} # end foreach
 			delete $$services{'Collating'};
 		} # end if
