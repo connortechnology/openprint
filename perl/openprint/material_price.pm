@@ -15,14 +15,14 @@ sub save {
 	sql::insert( $self->{log}, $self->{dbh}, 'tbl_Material_Prices',
 		'lngListIndex',			$self->{group}->{list_index},
 		'lngMaterialIndex',		$self->{group}->{product_index},
-		'lngEquipmentIndex',	$self->{equipment_index},
+		'lngEquipmentIndex',	$self->{equipment_id},
 		'lngMin',				( $self->{min} eq '' ? undef : $self->{min} ),
 		'lngMax',				( $self->{max} eq '' ? undef : $self->{max} ),
 		'strUnits',				( $self->{units} eq '' ? undef : $self->{units} ),
-		'dblCost',				( $self->{Cost} eq '' ? undef : $self->{Cost} ),
-		'dblMarkup',			( $self->{Markup} eq '' ? undef : $self->{Markup} ),
-		'dblPrice',				( $self->{Price} eq '' ? undef : $self->{Price} ),
-		'ysnDiscountable',      ( $self->{Discountable} eq '' ? 'Y' : $self->{Discountable} )
+		'dblCost',				( $self->{cost} eq '' ? undef : $self->{cost} ),
+		'dblMarkup',			( $self->{markup} eq '' ? undef : $self->{markup} ),
+		'dblPrice',				( $self->{price} eq '' ? undef : $self->{price} ),
+		'ysnDiscountable',      ( $self->{discountable} eq '' ? 'Y' : $self->{discountable} )
 
 	);
 	

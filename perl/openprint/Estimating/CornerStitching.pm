@@ -135,21 +135,21 @@ sub calc {
 				'RunTime'	=> 0,
 			};
 
-			$price{'MakeReady'} = openprint::service::get_price( $$specs{'ServiceType'}.'MakeReady', undef, $Equipment );
+			$price{MakeReady} = openprint::service::get_price( $$specs{'ServiceType'}.'MakeReady', undef, $Equipment );
 
-			$price{'RunTime'} += $Equipment->specification( 'Make Ready', undef );
+			$price{RunTime} += $Equipment->specification( 'Make Ready', undef );
 
 # Calculate Last Pass
 			my $unitsPerHour = $Equipment->specification( 'Units Per Hour', undef );
 			my $runtime = $$specs{"txtQuantity$qty_index"}/$unitsPerHour; # in seconds
 				$price{'RunTime'} += $runtime * 360;
 			my %servicePrice = openprint::service::get_price_object( $$specs{'ServiceType'}, undef, $Equipment );
-			if ( $servicePrice{'units'} eq 'per m' ) {
-				$price{'Service'} += $servicePrice{'Price'} * $$specs{'txtQuantity'.$qty_index}/1000;
-			} elsif ( $servicePrice{'units'} eq 'per hour' ) {
-				$price{'Service'} += $servicePrice{'Price'} * $runtime;
+			if ( $servicePrice{units} eq 'per m' ) {
+				$price{'Service'} += $servicePrice{price} * $$specs{'txtQuantity'.$qty_index}/1000;
+			} elsif ( $servicePrice{units} eq 'per hour' ) {
+				$price{'Service'} += $servicePrice{price} * $runtime;
 			} else {
-				$log->debug("Unknown Unit Type: $servicePrice{'units'}");
+				$log->debug("Unknown Unit Type: $servicePrice{units}");
 			} # end if
 
 			$price{'txtPrice'} = $price{'MakeReady'} + $price{'Service'};

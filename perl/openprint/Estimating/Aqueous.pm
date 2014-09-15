@@ -427,10 +427,10 @@ $openprint::log->debug("AQ types @types") if DEBUG;
 					} else {
 						%setupPrice = $MRService->get_price( $run_qty, $Equipment );
 					} # end if
-					$Price{'MakeReady'} += $setupPrice{'Price'};
+					$Price{MakeReady} += $setupPrice{price};
 					$MakeReadies{$Equipment->id()} = $area;
 					$Price{washups} = scalar @different_types;
-$colour_total += $setupPrice{'Price'};
+					$colour_total += $setupPrice{price};
 				} # end if
 				
 				my %BlanketCutPrice;
@@ -442,8 +442,8 @@ $colour_total += $setupPrice{'Price'};
 					%BlanketCutPrice = openprint::service::get_price_object( 'BlanketCut', undef, $Equipment ) if ! %BlanketCutPrice;
 				} # end if type is spot
 				if ( %BlanketCutPrice ) {
-					$Price{BlanketCut} += $BlanketCutPrice{Price};
-					$colour_total += $BlanketCutPrice{Price};
+					$Price{BlanketCut} += $BlanketCutPrice{price};
+					$colour_total += $BlanketCutPrice{price};
 				} # end if
 
 				my $Service = openprint::Service->find_one( name=>$type );
@@ -457,23 +457,23 @@ $colour_total += $setupPrice{'Price'};
 					$$specs{'hdnBreakdown'.$qty_index} = 'No Service price for ' . $type . '<br/>';
 					$ServicePrice{'Total'} = 1000000;
 				} # end if
-				if ( sets::isin( lc $ServicePrice{'units'}, [ 'per 1000 impressions' ] ) ) {
+				if ( sets::isin( lc $ServicePrice{units}, [ 'per 1000 impressions' ] ) ) {
 					%ServicePrice = $Service->get_price( $impressions, $Equipment );
 					$ServicePrice{'Quantity'} = $impressions;
-					$ServicePrice{'Total'} = $ServicePrice{'Price'} * $impressions / 1000;
+					$ServicePrice{total} = $ServicePrice{price} * $impressions / 1000;
 				} elsif ( sets::isin( lc $ServicePrice{units}, [ 'per m', 'per 1000' ] ) ) {
 					$ServicePrice{Quantity} = $run_qty;
-					$ServicePrice{Total} = $ServicePrice{Price} * $run_qty / 1000;
-				} elsif ( lc $ServicePrice{'units'} eq 'per hour' ) {
+					$ServicePrice{total} = $ServicePrice{price} * $run_qty / 1000;
+				} elsif ( lc $ServicePrice{units} eq 'per hour' ) {
 					$ServicePrice{'Quantity'} = $run_qty;
-					$ServicePrice{'Total'} = $ServicePrice{'Price'} * $run_qty / $Equipment->specification('AqueousRunSpeed') if $Equipment->specification('AqueousRunSpeed');
+					$ServicePrice{total} = $ServicePrice{price} * $run_qty / $Equipment->specification('AqueousRunSpeed') if $Equipment->specification('AqueousRunSpeed');
 				} else {
-					$$specs{'hdnBreakdown'.$qty_index} = "Unkown units ( $ServicePrice{'units'} ) for $type<br/>";
+					$$specs{'hdnBreakdown'.$qty_index} = "Unkown units ( $ServicePrice{units} ) for $type<br/>";
 				} # end if
 # Div by imposition
 				#$ServicePrice{'Total'} /= $imp->imposition();
-				$Price{Service} += $ServicePrice{Total};
-				$colour_total += $ServicePrice{Total};
+				$Price{Service} += $ServicePrice{total};
+				$colour_total += $ServicePrice{total};
 
 				my %MaterialPrice;
 				my $material_name = $type;
@@ -489,35 +489,35 @@ $colour_total += $setupPrice{'Price'};
 					$$specs{'hdnBreakdown'.$qty_index} .= 'No material for aqueous found.<br/>';
 				} else {
 					%MaterialPrice = $Material->get_price( $run_qty, $Equipment );
-					if ( lc $MaterialPrice{'units'} eq 'per square inch' ) {
+					if ( lc $MaterialPrice{units} eq 'per square inch' ) {
 						my $area = $imp->object_area() * $run_qty * ($inkCoverage{$type}/100);
-						$MaterialPrice{'Total'} = $MaterialPrice{'Price'} * $run_qty * $area;
-					} elsif ( lc $MaterialPrice{'units'} eq 'per square foot' ) {
+						$MaterialPrice{total} = $MaterialPrice{price} * $run_qty * $area;
+					} elsif ( lc $MaterialPrice{units} eq 'per square foot' ) {
 						my $area = $imp->object_area() * $run_qty * ($inkCoverage{$type}/100) /144;
-						$MaterialPrice{'Total'} = $MaterialPrice{'Price'} * $area;
-					} elsif ( lc $MaterialPrice{'units'} eq 'per 1000 square feet' ) {
+						$MaterialPrice{total} = $MaterialPrice{price} * $area;
+					} elsif ( lc $MaterialPrice{units} eq 'per 1000 square feet' ) {
 						my $area = $imp->object_area() * $run_qty * ($inkCoverage{$type}/100) /144;
 # area is # of square feet
-						$MaterialPrice{'Total'} = $MaterialPrice{'Price'} * $area/1000;
-					} elsif ( lc $MaterialPrice{'units'} eq 'per m' ) {
-						$MaterialPrice{'Total'} = $MaterialPrice{'Price'} * $run_qty / 1000;
+						$MaterialPrice{total} = $MaterialPrice{price} * $area/1000;
+					} elsif ( lc $MaterialPrice{units} eq 'per m' ) {
+						$MaterialPrice{total} = $MaterialPrice{price} * $run_qty / 1000;
 					} else {
-						$$specs{'hdnBreakdown'.$qty_index} .= "Unknown units for Material $material_name ($MaterialPrice{'units'})<br/>";
+						$$specs{'hdnBreakdown'.$qty_index} .= "Unknown units for Material $material_name ($MaterialPrice{units})<br/>";
 					} # end if
-					$Price{Material} += $MaterialPrice{Total};
-					$colour_total += $MaterialPrice{Total};
+					$Price{Material} += $MaterialPrice{total};
+					$colour_total += $MaterialPrice{total};
 				} # end if
 
 				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('MR: $%.2f + BC: $%.2f + Service: ($%.2f%s*%d)=$%.2f + Material: $%.2f%s = $%.2f ) = $%.2f<br/>',
-					$setupPrice{'Price'}, $BlanketCutPrice{'Price'}, @ServicePrice{'Price','units','Quantity','Total'}, @MaterialPrice{'Price','units','Total'}, $colour_total );
+					$setupPrice{price}, $BlanketCutPrice{price}, @ServicePrice{'price','units','Quantity','total'}, @MaterialPrice{'price','units','total'}, $colour_total );
 			} # end foreach type
-			$Price{'Total'} = $Price{'MakeReady'} + $Price{'Service'} + $Price{'Material'} + $Price{'BlanketCut'};
-			if ( %minimum and ( $Price{Total} < $minimum{Price} ) ) {
-				$Price{Total} = $minimum{Price};
+			$Price{total} = $Price{MakeReady} + $Price{Service} + $Price{Material} + $Price{BlanketCut};
+			if ( %minimum and ( $Price{total} < $minimum{price} ) ) {
+				$Price{total} = $minimum{price};
 			} # end if
 
-			if ( ( ! defined $bestPrice{Total} ) or ( $Price{Total} < $bestPrice{Total} )) {
-				$bestPrice{'Total'} = $Price{'Total'};
+			if ( ( ! defined $bestPrice{total} ) or ( $Price{total} < $bestPrice{total} )) {
+				$bestPrice{total} = $Price{total};
 				$bestPrice{'MakeReady'} = $Price{'MakeReady'};
 				$bestPrice{'Service'} = $Price{'Service'};
 				$bestPrice{'Material'} = $Price{'Material'};
@@ -529,8 +529,8 @@ $colour_total += $setupPrice{'Price'};
 		} # end foreach equipment
 	} # end foreach imposition
 
-	if ( defined $bestPrice{'Total'} ) {
-		$bestPrice{'Status'} = 'calculated';
+	if ( defined $bestPrice{total} ) {
+		$bestPrice{Status} = 'calculated';
 	} # end if
 
 	if ( ( defined $$specs{"OverrideMakeReadyPrice-$form-$qty_index"} ) and ( $$specs{"OverrideMakeReadyPrice-$form-$qty_index"} eq 'Y' ) ) {
@@ -545,7 +545,7 @@ $colour_total += $setupPrice{'Price'};
 	if ( (defined $$specs{"OverrideMaterialPrice-$form-$qty_index"}) and ( $$specs{"OverrideMaterialPrice-$form-$qty_index"} eq 'Y' ) ) {
 		$bestPrice{'Material'} = $$specs{"MaterialPrice-$form-$qty_index"};
 	} # end if
-	$bestPrice{'Total'} = misc::sum( @bestPrice{'MakeReady','BlanketCut','Service','Material'} );
+	$bestPrice{Total} = misc::sum( @bestPrice{'MakeReady','BlanketCut','Service','Material'} );
 	return %bestPrice;
 } # end sub signature_calc
 

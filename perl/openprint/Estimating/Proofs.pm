@@ -197,7 +197,7 @@ sub calc {
 			$Imposition->load( $sig_specs, $qty_index );
 			my $Equipment = $Imposition->Equipment();
 			my %Results = signature_calc( $Project, $specs, $sig_specs, $qty_index, \%proof_indexes, \%proof_totals, $Equipment, $Imposition );
-			$totalPrice += $Results{Total};
+			$totalPrice += $Results{total};
 			$$specs{"hdnBreakdown$qty_index"} .= $Results{'Breakdown'};
 			$status = $Results{status} if $Results{status};
 		} # end foreach my $signature_service_index
@@ -272,7 +272,7 @@ $log->debug("Proof indexes " . join(',', @{$$indexes{$signature_index}}  ) ) if 
 		my $ProofService = openprint::Service->find_one( name=>$type );
 
 		my %MakeReady = openprint::service::get_price_object( $type.'MakeReady', $$totals{$type}{Quantity}, undef );
-		$$specs{"MRPrice-$signature_index-$proof_index-$qty_index"} = $MakeReady{'Price'};
+		$$specs{"MRPrice-$signature_index-$proof_index-$qty_index"} = $MakeReady{price};
 		my %price;
 		if ( $ProofService ) {
 			if ( $type eq 'PressProof' ) {
@@ -281,27 +281,27 @@ $log->debug("Proof indexes " . join(',', @{$$indexes{$signature_index}}  ) ) if 
 				%price = $ProofService->get_price( $$totals{$type}{Quantity} );
 			} # end if
 		} # end if
-		$$specs{"ServicePrice-$signature_index-$proof_index-$qty_index"} = $price{Price};
+		$$specs{"ServicePrice-$signature_index-$proof_index-$qty_index"} = $price{price};
 		$$specs{"ServiceUnits-$signature_index-$proof_index-$qty_index"} = $price{units};
 
 		$Results{'Breakdown'} .= "Proof: $proof_index: Quantity: $quantity, Type: $type ";
-		if ( $price{'units'} eq 'per square inch' ) {
+		if ( $price{units} eq 'per square inch' ) {
 			$Results{status} = 'uncalculated' if ! $$specs{"txtProofWidth-$signature_index-$proof_index-$qty_index"} * $$specs{"txtProofHeight-$signature_index-$proof_index-$qty_index"};
-			$price{'Total'} = Math::Round::nearest( 0.01,
-					$price{'Price'} * $$specs{"txtProofWidth-$signature_index-$proof_index-$qty_index"} * $$specs{"txtProofHeight-$signature_index-$proof_index-$qty_index"} * $quantity );
-			$Results{'Breakdown'} .= sprintf('MR: %.2f + %d * %sx%s * $%.2f%s=$%.2f<br/>', $MakeReady{Price}, $quantity, $$specs{"txtProofWidth-$signature_index-$proof_index-$qty_index"},$$specs{"txtProofHeight-$signature_index-$proof_index-$qty_index"}, @price{'Price','units','Total'} );
+			$price{total} = Math::Round::nearest( 0.01,
+					$price{price} * $$specs{"txtProofWidth-$signature_index-$proof_index-$qty_index"} * $$specs{"txtProofHeight-$signature_index-$proof_index-$qty_index"} * $quantity );
+			$Results{'Breakdown'} .= sprintf('MR: %.2f + %d * %sx%s * $%.2f%s=$%.2f<br/>', $MakeReady{price}, $quantity, $$specs{"txtProofWidth-$signature_index-$proof_index-$qty_index"},$$specs{"txtProofHeight-$signature_index-$proof_index-$qty_index"}, @price{'price','units','total'} );
 		} elsif ( $price{'units'} eq 'per square foot' ) {
 			$Results{status} = 'uncalculated' if ! $$specs{"txtProofWidth-$signature_index-$proof_index-$qty_index"} * $$specs{"txtProofHeight-$signature_index-$proof_index-$qty_index"};
-			$price{'Total'} = $price{'Price'} * $$specs{"txtProofWidth-$signature_index-$proof_index-$qty_index"} * $$specs{"txtProofHeight-$signature_index-$proof_index-$qty_index"} / 144 * $quantity;
-			$Results{'Breakdown'} .= sprintf('MR: %.2f + %d * %sx%s * $%.2f%s=$%.2f<br/>', $MakeReady{Price}, $quantity, $$specs{"txtProofWidth-$signature_index-$proof_index-$qty_index"},$$specs{"txtProofHeight-$signature_index-$proof_index-$qty_index"}, @price{'Price','units','Total'} );
+			$price{total} = $price{price} * $$specs{"txtProofWidth-$signature_index-$proof_index-$qty_index"} * $$specs{"txtProofHeight-$signature_index-$proof_index-$qty_index"} / 144 * $quantity;
+			$Results{'Breakdown'} .= sprintf('MR: %.2f + %d * %sx%s * $%.2f%s=$%.2f<br/>', $MakeReady{price}, $quantity, $$specs{"txtProofWidth-$signature_index-$proof_index-$qty_index"},$$specs{"txtProofHeight-$signature_index-$proof_index-$qty_index"}, @price{'price','units','total'} );
 		} else {
-			$price{Total} = $price{Price} * $quantity;
-			$Results{'Breakdown'} .= sprintf('MR: %.2f + %d*$%.2f%s=$%.2f<br/>', $MakeReady{Price}, $quantity, @price{'Price','units','Total'} );
+			$price{total} = $price{price} * $quantity;
+			$Results{'Breakdown'} .= sprintf('MR: %.2f + %d*$%.2f%s=$%.2f<br/>', $MakeReady{price}, $quantity, @price{'price','units','total'} );
 		} # end if
-		$$specs{"txtProofUnitPrice-$signature_index-$proof_index-$qty_index"} = sprintf( $openprint::config{ProjectMoneyFormat}, $price{Total} );
-		$Results{'Total'} += $price{Total} + $MakeReady{Price};
+		$$specs{"txtProofUnitPrice-$signature_index-$proof_index-$qty_index"} = sprintf( $openprint::config{ProjectMoneyFormat}, $price{total} );
+		$Results{total} += $price{total} + $MakeReady{price};
 	} # end foreach my $proof_index
-	$Results{Total} = Math::Round::nearest(0.01,$Results{Total});
+	$Results{total} = Math::Round::nearest(0.01,$Results{total});
 	return %Results;
 } # end sub signature_calc
 
@@ -737,7 +737,7 @@ sub breakupsummary {
 							} # end if
 							$proof_tot{$type}{Quantity} += $qty;
 							my %MkReady  = openprint::service::get_price_object( $type.'MakeReady', $proof_tot{$type}{Quantity}, undef );
-							$Totprice{$desc} += ($Uprice*$qty) + $MkReady{Price};
+							$Totprice{$desc} += ($Uprice*$qty) + $MkReady{price};
 						} # end if
 					} # end if
 				} # end if

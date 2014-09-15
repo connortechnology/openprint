@@ -24,9 +24,9 @@ sub save {
 		'lngMin',				( $self->{min} eq '' ? undef : $self->{min} ),
 		'lngMax',				( $self->{max} eq '' ? undef : $self->{max} ),
 		'strUnits',				( $self->{units} eq '' ? undef : $self->{units} ),
-		'dblCost',				( $self->{Cost} eq '' ? undef : $self->{Cost} ),
-		'dblMarkup',			( $self->{Markup} eq '' ? undef : $self->{Markup} ),
-		'dblPrice',				( $self->{Price} eq '' ? undef : $self->{Price} )
+		'dblCost',				( $self->{cost} eq '' ? undef : $self->{cost} ),
+		'dblMarkup',			( $self->{markup} eq '' ? undef : $self->{markup} ),
+		'dblPrice',				( $self->{price} eq '' ? undef : $self->{price} )
 	);
 } # end sub save
 
@@ -45,11 +45,11 @@ sub set {
 
 sub setDiscountable {
 	my $self = shift;
-	$self->{Discountable} = shift;
+	$self->{discountable} = shift;
 }
 sub setEquipment {
 	my $self = shift;
-	$self->{equipment_index} = shift;
+	$self->{equipment_id} = shift;
 }
 
 sub setMin {
@@ -67,31 +67,31 @@ sub setUnits {
 
 sub setCost {
     $_[1] =~ s/([^\d\.])//g;
-    $_[0]{Cost} = $_[1];
+    $_[0]{cost} = $_[1];
 }
 
 sub setMarkup {
     $_[1] =~ s/\%//g;
-    $_[0]{Markup} = $_[1];
+    $_[0]{markup} = $_[1];
 }
 
 sub setPrice {
     $_[1] =~ s/([^\d\.])//g;
-    $_[0]->{Price} = $_[1];
+    $_[0]->{price} = $_[1];
 }
 
 sub copy {
 	my $self = shift;
 	my $src = shift;
 
-	setEquipment( $self, $src->{equipment_index} );
+	setEquipment( $self, $src->{equipment_id} );
 	setMin( $self, $src->{min} );
 	setMax( $self, $src->{max} );
 	setUnits( $self, $src->{units} );
-	setCost( $self, $src->{Cost} );
-	setMarkup( $self, $src->{Markup} );
-	setPrice( $self, $src->{Price} );
-	setDiscountable( $self, $src->{Discountable} );
+	setCost( $self, $src->{cost} );
+	setMarkup( $self, $src->{markup} );
+	setPrice( $self, $src->{price} );
+	setDiscountable( $self, $src->{discountable} );
 } # end sub copy
 
 1;

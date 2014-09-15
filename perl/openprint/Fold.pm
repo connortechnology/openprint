@@ -7,7 +7,7 @@ require openprint::FoldSpecification;
 require sql;
 
 use Memoize;
-memoize('Specification');
+#memoize('Specification');
 
 use vars qw( $debug $table $serial $log $dbh %fields %transforms %defaults );
 *log = \$openprint::log;

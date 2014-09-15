@@ -189,27 +189,27 @@ $openprint::log->debug("Fold $qty_index: " . $Fold_Imp->type() . ' ' . $Fold_Imp
 				} # end if
 			} # end if
 			my %MakeReadyPrice = $CollatingMakeReady->get_price( undef, $Equipment ) if $CollatingMakeReady;
-			$price{MakeReady} = $MakeReadyPrice{Price};
+			$price{MakeReady} = $MakeReadyPrice{price};
 			my %servicePrice = $Collating->get_price( $qty, $Equipment ) if $Collating;
-			if ( sets::isin( $servicePrice{'units'}, 'per m', 'per 1000' )  ) {
-				$price{Service} = $servicePrice{'Price'}/1000; # Service Price for Collating is per 1000
+			if ( sets::isin( $servicePrice{units}, 'per m', 'per 1000' )  ) {
+				$price{Service} = $servicePrice{price}/1000; # Service Price for Collating is per 1000
 			} else {
-				$$specs{'alert'} .= 'Unknown units in service price.<br/>';
+				$$specs{alert} .= 'Unknown units in service price.<br/>';
 			} # end if
-			$price{'Total'} = $price{'MakeReady'} + $qty * $price{'Service'};
+			$price{total} = $price{MakeReady} + $qty * $price{Service};
 
-			if ( ! $bestPrice{'Total'} or $price{'Total'} < $bestPrice{'Total'} ) {
+			if ( ! $bestPrice{total} or $price{total} < $bestPrice{total} ) {
 				%bestPrice = %price;
 			} # end if
-			$$specs{'hdnBreakdown'.$qty_index} .= 'Equipment ' . $price{'Equipment'}->name() . ":<br/>Make Ready: $price{'MakeReady'}, Service: $servicePrice{'Price'} $servicePrice{'units'}<br/>";
+			$$specs{'hdnBreakdown'.$qty_index} .= 'Equipment ' . $price{'Equipment'}->name() . ":<br/>Make Ready: $price{MakeReady}, Service: $servicePrice{price} $servicePrice{units}<br/>";
 		} # end foreach equipment
 
 		if ( ! $bestPrice{'Equipment'} ) {
 			$status = 'uncalculated';
 		} # end if
 		$$specs{"ddmEquipment$qty_index"} = $bestPrice{'Equipment'}->id();
-		$$specs{"txtUnitPrice$qty_index"} = sprintf( $openprint::config{'UnitPriceFormat'}, $bestPrice{'Service'} * (1+$Project->markup()/100) );
-		$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $bestPrice{'Total'} * (1+$Project->markup()/100) );
+		$$specs{"txtUnitPrice$qty_index"} = sprintf( $openprint::config{'UnitPriceFormat'}, $bestPrice{Service} * (1+$Project->markup()/100) );
+		$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $bestPrice{total} * (1+$Project->markup()/100) );
 	} # end foreach qty_index
 
 	$log->debug("COLLATING!!!!!!!!!!!!!!!!!!");

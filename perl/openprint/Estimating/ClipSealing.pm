@@ -83,8 +83,8 @@ sub calc {
 			my $totalPrice = 0;
 			my %MakeReadyPrice = openprint::service::get_price_object( 'ClipSealingMakeReady', $$specs{SealQuantity}, $Equipment );
 			if ( %MakeReadyPrice ) {
-				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('MakeReady Price: $%1$f%2$s<br/>', @MakeReadyPrice{'Price','units'} );
-				$totalPrice += $MakeReadyPrice{'Price'};
+				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('MakeReady Price: $%1$f%2$s<br/>', @MakeReadyPrice{'price','units'} );
+				$totalPrice += $MakeReadyPrice{price};
 			} else {
 				$$specs{'hdnBreakdown'.$qty_index} .= 'No MakeReady Price.<br/>';
 			} # end if
@@ -93,10 +93,10 @@ sub calc {
 			%ServicePrice = openprint::service::get_price_object('ClipSealing', $$specs{'txtQuantity'.$qty_index}, $Equipment ) if ! %ServicePrice;
 			if ( ! %ServicePrice ) {
 				$$specs{'hdnBreakdown'.$qty_index} .= 'No Service Price.<br/>';
-			} elsif ( $ServicePrice{'units'} eq 'per m' ) {
-				$ServicePrice{'Total'} = $ServicePrice{Price} * $$specs{'txtQuantity'.$qty_index} * $runs/ 1000;
-				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Service Price: $%1$f%2$s * %4$d seals * %5$d = $%3$.2f<br/>', @ServicePrice{'Price','units','Total'}, @$specs{'SealQuantity','txtQuantity'.$qty_index} );
-				$totalPrice += $ServicePrice{'Total'};
+			} elsif ( $ServicePrice{units} eq 'per m' ) {
+				$ServicePrice{total} = $ServicePrice{price} * $$specs{'txtQuantity'.$qty_index} * $runs/ 1000;
+				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Service Price: $%1$f%2$s * %4$d seals * %5$d = $%3$.2f<br/>', @ServicePrice{'price','units','total'}, @$specs{'SealQuantity','txtQuantity'.$qty_index} );
+				$totalPrice += $ServicePrice{total};
 			} else {
 				$$specs{'hdnBreakdown'.$qty_index} .= 'Unknown units for Service Price<br/>';
 			} # end if
@@ -109,13 +109,13 @@ sub calc {
 				if ( ! %MaterialPrice ) {
 					$$specs{'hdnBreakdown'.$qty_index} .= 'No Material Price.<br/>';
 				} elsif ( $MaterialPrice{'units'} eq 'per m' ) {
-					$MaterialPrice{'Total'} = $MaterialPrice{'Price'} * $$specs{'txtQuantity'.$qty_index} * $$specs{'SealQuantity'} /1000;
-					$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Material Price: $%1$f%2$s * %4$d seals * %5$d = $%3$.2f<br/>', @MaterialPrice{'Price','units','Total'}, @$specs{'SealQuantity','txtQuantity'.$qty_index} );
-					$totalPrice += $MaterialPrice{'Total'};
+					$MaterialPrice{total} = $MaterialPrice{price} * $$specs{'txtQuantity'.$qty_index} * $$specs{'SealQuantity'} /1000;
+					$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Material Price: $%1$f%2$s * %4$d seals * %5$d = $%3$.2f<br/>', @MaterialPrice{'price','units','total'}, @$specs{'SealQuantity','txtQuantity'.$qty_index} );
+					$totalPrice += $MaterialPrice{total};
 				} elsif ( $MaterialPrice{'units'} eq 'per seal' ) {
-					$MaterialPrice{'Total'} = $MaterialPrice{'Price'} * $$specs{'txtQuantity'.$qty_index} * $$specs{'SealQuantity'};
-					$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Material Price: $%1$f%2$s * %4$d seals * %5$d = $%3$.2f<br/>', @MaterialPrice{'Price','units','Total'}, @$specs{'SealQuantity','txtQuantity'.$qty_index} );
-					$totalPrice += $MaterialPrice{'Total'};
+					$MaterialPrice{total} = $MaterialPrice{price} * $$specs{'txtQuantity'.$qty_index} * $$specs{'SealQuantity'};
+					$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Material Price: $%1$f%2$s * %4$d seals * %5$d = $%3$.2f<br/>', @MaterialPrice{'price','units','total'}, @$specs{'SealQuantity','txtQuantity'.$qty_index} );
+					$totalPrice += $MaterialPrice{total};
 				} else {
 					$$specs{'hdnBreakdown'.$qty_index} .= 'Unknown units for Material Price<br/>';
 				} # end if
@@ -126,8 +126,8 @@ sub calc {
 				$totalPrice = $min_price if $totalPrice < $min_price;
 			} # end if
 
-			if ( (!defined $BestPrice{Total}) or $totalPrice < $BestPrice{Total} ) {
-				$BestPrice{'Total'} = $totalPrice;
+			if ( (!defined $BestPrice{total}) or $totalPrice < $BestPrice{total} ) {
+				$BestPrice{total} = $totalPrice;
 				$BestPrice{'Equipment'} = $Equipment;
 				$BestPrice{'ServicePrice'} = \%ServicePrice;
 				$BestPrice{'MaterialPrice'} = \%MaterialPrice
@@ -135,22 +135,22 @@ sub calc {
 			$$specs{'hdnBreakdown'.$qty_index} .= '</fieldset>';
 		} # end foreach Equipment
 
-		if ( ! defined $BestPrice{'Total'} ) {
-			$$specs{'alert'} .= 'Unable to calculate a price for quantity ' . $qty_index . '.<br/>';
+		if ( ! defined $BestPrice{total} ) {
+			$$specs{alert} .= 'Unable to calculate a price for quantity ' . $qty_index . '.<br/>';
 			$status = 'uncalculated';
 		} else {
-			$$specs{'ddmEquipment'.$qty_index} = $BestPrice{'Equipment'}->id();
+			$$specs{'ddmEquipment'.$qty_index} = $BestPrice{Equipment}->id();
 		} # end if
 
         $$specs{"txtUnitPrice$qty_index"} = sprintf($openprint::config{'UnitPriceFormat'},
-				( ( $BestPrice{'ServicePrice'}{'Total'} + $BestPrice{'MaterialPrice'}{'Total'} ) / $$specs{'txtQuantity'.$qty_index} ) * (1+$Project->markup()/100)
+				( ( $BestPrice{ServicePrice}{total} + $BestPrice{MaterialPrice}{Total} ) / $$specs{'txtQuantity'.$qty_index} ) * (1+$Project->markup()/100)
 				);
-        $$specs{"MPrice$qty_index"} = sprintf($openprint::config{'UnitPriceFormat'}, (($BestPrice{'ServicePrice'}{'Total'} + $BestPrice{'MaterialPrice'}{'Total'} ) / $$specs{'txtQuantity'.$qty_index} ) * 1000 );
+        $$specs{"MPrice$qty_index"} = sprintf($openprint::config{'UnitPriceFormat'}, (($BestPrice{ServicePrice}{Total} + $BestPrice{MaterialPrice}{Total} ) / $$specs{'txtQuantity'.$qty_index} ) * 1000 );
 		if ( $$specs{'OverridePrice'.$qty_index} ne 'Y' ) {
 			$$specs{'txtPrice'.$qty_index} = sprintf( $openprint::config{'ProjectMoneyFormat'}, 
-					$BestPrice{'Total'} * (1+$$specs{'Markup'.$qty_index}/100) * (1+$Project->markup()/100) );
+					$BestPrice{Total} * (1+$$specs{'Markup'.$qty_index}/100) * (1+$Project->markup()/100) );
 		} else {
-			$$specs{'txtPrice'.$qty_index} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $$specs{'txtPrice'.$qty_index} );
+			$$specs{'txtPrice'.$qty_index} = sprintf( $openprint::config{ProjectMoneyFormat}, $$specs{'txtPrice'.$qty_index} );
 		} # end if
     } # end foreach qty_index
     

@@ -82,15 +82,15 @@ sub calc {
 
 		my %ServicePrice = openprint::service::get_price_object( 'Counting', $qty, undef );
 		if ( sets::isin( lc $ServicePrice{'units'}, ['per m', 'per 1000'] ) ) {
-			$ServicePrice{'Total'} = $ServicePrice{'Price'} * $qty / 1000;
-			$$specs{'hdnBreakdown'.$qty_index} .= sprintf('ServiceCharge: $%.2f%s * %d=$%.2f<br/>' , @ServicePrice{'Price','units'}, $qty, $ServicePrice{'Total'} );
+			$ServicePrice{total} = $ServicePrice{price} * $qty / 1000;
+			$$specs{'hdnBreakdown'.$qty_index} .= sprintf('ServiceCharge: $%.2f%s * %d=$%.2f<br/>' , @ServicePrice{'price','units'}, $qty, $ServicePrice{total} );
 		} elsif ( sets::isin( lc $ServicePrice{'units'}, ['each'] ) ) {
-			$ServicePrice{'Total'} = $ServicePrice{'Price'} * $qty;
-			$$specs{'hdnBreakdown'.$qty_index} .= sprintf('ServiceCharge: $%.2f%s * %d=$%.2f<br/>' , @ServicePrice{'Price','units'}, $qty, $ServicePrice{'Total'} );
+			$ServicePrice{total} = $ServicePrice{price} * $qty;
+			$$specs{'hdnBreakdown'.$qty_index} .= sprintf('ServiceCharge: $%.2f%s * %d=$%.2f<br/>' , @ServicePrice{'price','units'}, $qty, $ServicePrice{total} );
 		} else {
-			$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Unknown units for Counting service price $%.2f%s<br/>', @ServicePrice{'Price','units'} );
+			$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Unknown units for Counting service price $%.2f%s<br/>', @ServicePrice{'price','units'} );
 		} # end if
-		my $price = $makeReadyPrice + $ServicePrice{'Total'};
+		my $price = $makeReadyPrice + $ServicePrice{total};
 		if ( $minimumCharge > 0 and $price < $minimumCharge ) {
 			$price = $minimumCharge;
 		} # end if

@@ -62,7 +62,7 @@ sub signature_calc {
 
 	$price{MakeReady} = \%ImpositionMakeReady;
 
-	$price{Total} = $ImpositionMakeReady{Price};
+	$price{total} = $ImpositionMakeReady{price};
 
 	my %ImpositionCharge;
 	$service = 'Imposition'.$Project->Type()->name();
@@ -73,16 +73,16 @@ sub signature_calc {
 	} # end if
 	if ( $ImpositionCharge{'units'} eq 'per page' ) {
 		%ImpositionCharge = openprint::service::get_price_object( $service,$Imposition->pages(),$Press);
-		$price{Total} += $ImpositionCharge{Price} * $Imposition->pages();
+		$price{total} += $ImpositionCharge{price} * $Imposition->pages();
 	} elsif ( $ImpositionCharge{'units'} eq 'per square inch of object' ) {
 		%ImpositionCharge = openprint::service::get_price_object( $service,$Imposition->layout_area(),$Press);
-		$price{Total} += $ImpositionCharge{Price} * $Imposition->object_width() * $Imposition->object_height();
+		$price{total} += $ImpositionCharge{price} * $Imposition->object_width() * $Imposition->object_height();
 	} elsif ( $ImpositionCharge{'units'} eq 'per square inch of layout' ) {
 		%ImpositionCharge = openprint::service::get_price_object( $service,$Imposition->layout_area(),$Press);
-		$price{Total} += $ImpositionCharge{Price} * $Imposition->layout_area();
+		$price{total} += $ImpositionCharge{price} * $Imposition->layout_area();
 	} else {
 		%ImpositionCharge = openprint::service::get_price_object( $service,$Imposition->imposition(),$Press);
-		$price{Total} += $ImpositionCharge{Price} * $Imposition->imposition();
+		$price{total} += $ImpositionCharge{price} * $Imposition->imposition();
 	} # end if
 	$price{Price} = \%ImpositionCharge;
 
@@ -91,9 +91,9 @@ sub signature_calc {
 		%SteppingCharge = openprint::service::get_price_object( 'Stepping Charge', undef, $Press);
 	} # end if
 	if ( %SteppingCharge ) {
-		$SteppingCharge{Total} = $SteppingCharge{Price} * $Imposition->imposition();
+		$SteppingCharge{total} = $SteppingCharge{price} * $Imposition->imposition();
 		$price{'Stepping Charge'} = \%SteppingCharge;
-		$price{Total} += $SteppingCharge{Total};
+		$price{total} += $SteppingCharge{total};
 	} # end if
 
    if ( $Imposition->pages() ) {
@@ -103,12 +103,12 @@ sub signature_calc {
 		} # end if
 		if ( %PageCharge ) {
 			if ( $PageCharge{units} eq 'per page' ) {
-				$PageCharge{Total} = $PageCharge{Price} * $Imposition->pages();
+				$PageCharge{total} = $PageCharge{price} * $Imposition->pages();
 			} else {
 $openprint::log->error("Bad units for Page Page $PageCharge{units}");
 			} # end if
 			$price{'Page Charge'} = \%PageCharge;
-			$price{Total} += $PageCharge{Total};
+			$price{total} += $PageCharge{total};
 		} # end if Page Charge
 	} # end if pages
 
@@ -150,7 +150,7 @@ $openprint::log->debug("Signtures: @signatures");
 			$Imposition->load( $sig_specs, $qty_index );
 $Imposition->display("Signature calc for $sig_id");
 			my $price = signature_calc( $Project, $Imposition, scalar @Previous_Signatures, $qty_index );
-			$total += $$price{Total};
+			$total += $$price{total};
 
 			$$specs{'hdnBreakdown'.$qty_index} = '';
 			#$$specs{'hdnBreakdown'.$qty_index}  .= 'MinimumCharge: ' . sprintf( '%.2f', $minimumCharge ) . '<br/>';
@@ -178,20 +178,20 @@ sub signature_summary {
     my $Service = $$Price{Price};
 
     if ( $$Service{units} eq 'per page' ) {
-        $breakdown .= sprintf('Imposition Charge: $%1$.2f + $%2$.2f*%4$d pages = $%3$.2f<br/>', $$MakeReady{Price}, $$Service{Price}, $$Price{'Total'}, $Imposition->pages() );
+        $breakdown .= sprintf('Imposition Charge: $%1$.2f + $%2$.2f*%4$d pages = $%3$.2f<br/>', $$MakeReady{price}, $$Service{price}, $$Price{total}, $Imposition->pages() );
     } elsif ( $$Service{units} eq 'per square inch of object' ) {
-        $breakdown .= sprintf('Imposition Charge: $%1$.2f + $%2$.2f*%4$s x %5$s = $%3$.2f<br/>', $$MakeReady{Price}, $$Service{Price}, $$Price{'Total'}, $Imposition->object_width(), $Imposition->object_height() );
+        $breakdown .= sprintf('Imposition Charge: $%1$.2f + $%2$.2f*%4$s x %5$s = $%3$.2f<br/>', $$MakeReady{price}, $$Service{price}, $$Price{total}, $Imposition->object_width(), $Imposition->object_height() );
     } elsif ( $$Service{units} eq 'per square inch of layout' ) {
-        $breakdown .= sprintf('Imposition Charge: $%1$.2f + $%2$.2f*%4$s x %5$s = $%3$.2f<br/>', $$MakeReady{Price}, $$Service{Price}, @$Price{'Total'}, $Imposition->layout_width(), $Imposition->layout_height() );
-    } elsif ( $$Service{Price} ) {
-        $breakdown .= sprintf('Imposition Charge: $%1$.2f + $%2$.2f*%4$d out = $%3$.2f<br/>', $$MakeReady{Price}, $$Service{Price}, @$Price{'Total'}, $Imposition->imposition() );
+        $breakdown .= sprintf('Imposition Charge: $%1$.2f + $%2$.2f*%4$s x %5$s = $%3$.2f<br/>', $$MakeReady{price}, $$Service{price}, $$Price{total}, $Imposition->layout_width(), $Imposition->layout_height() );
+    } elsif ( $$Service{price} ) {
+        $breakdown .= sprintf('Imposition Charge: $%1$.2f + $%2$.2f*%4$d out = $%3$.2f<br/>', $$MakeReady{price}, $$Service{price}, $$Price{total}, $Imposition->imposition() );
     } # end if
 
     if ( my $PageCharge = $$Price{'page charge'} ) {
-        $breakdown .= sprintf('Page Charge: $%1$.2f%2$s * %4$d pages = $%3$.2f<br/>', @$PageCharge{'Price','units','Total'}, $Imposition->pages() );
+        $breakdown .= sprintf('Page Charge: $%1$.2f%2$s * %4$d pages = $%3$.2f<br/>', @$PageCharge{'price','units','total'}, $Imposition->pages() );
     } # end if
     if ( my $SteppingCharge = $$Price{'stepping charge'} ) {
-        $breakdown .= sprintf('Stepping Charge: $%1$.2f%2$s * %4$dout  = $%3$.2f<br/>', @$SteppingCharge{'Price','units','Total'}, $Imposition->imposition() );
+        $breakdown .= sprintf('Stepping Charge: $%1$.2f%2$s * %4$dout  = $%3$.2f<br/>', @$SteppingCharge{'price','units','total'}, $Imposition->imposition() );
     } # end if
 	return $breakdown;
 } # end sub signature_summary
