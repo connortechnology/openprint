@@ -27,9 +27,9 @@ my %variables = (
 	'txtPackageQuantity3' => ['save','output'],
 	'txtPrice1'=>['save'], 'txtPrice2'=>['save'], 'txtPrice3'=>['save'],
 	'txtQuantity1'=>['save','output'], 'txtQuantity2'=>['save','output'], 'txtQuantity3'=>['save','output'],
-    'chkOverridePackageQuantity'=>['save'],
-    'txtTotalWeight1'=>['save','output'], 'txtTotalWeight2'=>['save','output'], 'txtTotalWeight3'=>['save','output'],
-    'txtPackageWeight'=>['save','output'],
+	'chkOverridePackageQuantity'=>['save'],
+	'txtTotalWeight1'=>['save','output'], 'txtTotalWeight2'=>['save','output'], 'txtTotalWeight3'=>['save','output'],
+	'txtPackageWeight'=>['save','output'],
 	alert	=> ['save','output' ],
 );
 
@@ -114,7 +114,6 @@ sub calc {
 			my $service_specs = openprint::service::get_specs_ref( $Project, $sid );
 			$other_shipped_quantity += $$service_specs{'txtQuantity'.$qty_index};
 		} # end foreach sid
-$openprint::log->debug($other_shipped_quantity);
 
 		if ( $$specs{'txtQuantity'.$qty_index} == $Project->quantity($qty_index) or ! $$specs{'txtQuantity'.$qty_index} ) {
 			$$specs{'txtQuantity'.$qty_index} = $Project->quantity($qty_index) - $other_shipped_quantity;

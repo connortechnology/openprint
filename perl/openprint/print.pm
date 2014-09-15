@@ -136,6 +136,7 @@ $log->debug("after continue $$variable{ExternalRedirect}");
 					} # end if
 				} # end if
 				openprint::service::auto_calculate( $Project, $service_index ) if $recalc;
+				$Project->update_status();
 				$Project->unlock();
 		
 				$Project->summary(undef);
