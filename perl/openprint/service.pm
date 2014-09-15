@@ -492,7 +492,9 @@ $openprint::log->error("Doing internal calc without service_index or, not found"
 	} else {
 		$log->error($package . ' cant calc');
 	} # end if
-	$Project->update_status();
+
+	# This is too heavy
+	#$Project->update_status();
 	$Project->unlock();
 	return \%specs;
 } # end sub internal_calc
