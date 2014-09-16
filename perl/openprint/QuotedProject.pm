@@ -89,10 +89,7 @@ sub cost {
         $$self{'cost'.$qty_index} = $new_value;
     } # end if
     if ( ! (1*$$self{'cost'.$qty_index}) ) {
-$openprint::log->debug("Calcing cost");
         $$self{'cost'.$qty_index} = Math::Round::nearest( 0.01, $self->Project()->Currency()->convert_to( $self->Quote()->Currency(), $self->Project()->price($qty_index) ) );
-	} else {
-$openprint::log->debug("Not Calcing cost");
     } # end if
     return $$self{'cost'.$qty_index};
 } # end sub cost
