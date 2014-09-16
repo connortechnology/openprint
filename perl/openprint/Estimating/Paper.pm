@@ -428,10 +428,9 @@ sub se_quantity_summary {
 		} # end if
 	} else {
 		$html .= 'none';
-$openprint::log->debug("No qty for index $$Stock_Entry{index} qty $qty_index");
 	} # end if
 	return $html;
-}
+} # end sub se_quantity_summary
 
 sub se_price_summary {
 	my ( $SE, $specs, $qty_index ) = @_;

@@ -351,7 +351,7 @@ $openprint::log->debug("********************************************************
 					my $specs2 = openprint::service::get_specs_ref( $Project, $signatures[$j] );
 					if ( openprint::Estimating::Printing::compare_signatures( $Project, $sig_specs, $specs2 ) ) {
 #$openprint::log->warn('Deleting due to incorrect printing type');
-						openprint::print_project::delete_service( $$Project{id}, $signatures[$j] );
+						openprint::print_project::delete_service( $Project, $signatures[$j] );
 						splice @signatures, $j, 1;
 						$j-=1;
 					} # end if
@@ -548,10 +548,10 @@ sub save {
     } else {
 # Don't need a cover, so get rid of it
         foreach ( $Project->signatures({'type'=>'Cover Pages'}) ) {
-            openprint::print_project::delete_service( $project_index, $_ );
+            openprint::print_project::delete_service( $Project, $_ );
         } # end foreach
         foreach ( $Project->signatures({'Group'=>1}) ) {
-            openprint::print_project::delete_service( $project_index, $_ );
+            openprint::print_project::delete_service( $Project, $_ );
         } # end foreach
     } # end if Self or Different Cover
 	my @variables = openprint::Estimating::Printing::variables();
