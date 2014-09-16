@@ -595,6 +595,7 @@ sub save {
 	my ( $self, $hash ) = @_;
 
 	$self->set( $hash );
+	$self->services(undef);
 	foreach my $qty_index ( $self->quantity_indexes() ) {
 		$self->price( $qty_index, undef );
 	} # end foreach
@@ -992,6 +993,7 @@ sub price {
 				foreach ( @{$$services{$k}} ) {
 					my $specs = openprint::service::get_specs_ref( $self, $_ );
 					$$self{'price'.$qty_index} += $$specs{'txtPrice'.$qty_index};
+					$openprint::log->debug("Getting " . $$specs{'txtPrice'.$qty_index} . " from $k $_");
 				} # end foreach
 			} # end foreach
 		} # end if
