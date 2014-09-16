@@ -115,7 +115,6 @@ sub signature_needs {
 	return 1 if ( $$sig_specs{SideOneAQ} and @{$$sig_specs{SideOneAQ}} ) or ( $$sig_specs{SideTwoAQ} and @{$$sig_specs{SideTwoAQ}} );
 
 	if ( $$sig_specs{SideOneColours} ) {
-$openprint::log->debug("AQ:Sig_needs getting from SideOneColour");
 		foreach ( @{$$sig_specs{SideOneColours}} ) {
 			return 1 if $$_{name} =~ /Aqueous/;
 		} # end foreach colour
@@ -125,7 +124,6 @@ $openprint::log->debug("AQ:Sig_needs getting from SideOneColour");
 	} # en dif
 
 	if ( $$sig_specs{SideTwoColours} ) {
-$openprint::log->debug("AQ:Sig_needs getting from SideTwoColour");
 		foreach ( @{$$sig_specs{SideTwoColours}} ) {
 			return 1 if $$_{name} =~ /Aqueous/;
 		} # end foreach colour
