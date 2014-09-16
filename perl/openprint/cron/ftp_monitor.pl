@@ -696,7 +696,8 @@ sub take_evasive_action {
 							host_id		=> $$Host{id},
 							user_id		=> $$User{id},
 							company_id	=> $$User{company_id},
-				} );
+							} );
+				} # end foreach  Interface
 			} else {
 				my $Host = new openprint::Host();
 				$Host->save({} );
