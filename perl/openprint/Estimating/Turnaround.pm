@@ -40,12 +40,12 @@ sub calc {
 	my $Project = new openprint::Project( $project_index );
 	my $ProjectType = $Project->Type();
 
-	if ( $$specs{'TurnaroundDays'} eq '' ) {
-		$$specs{'alert'} = 'Please select the turnaround time.<br/>';
-		return $$specs{'Status'} = 'uncalculated';
+	if ( $$specs{TurnaroundDays} eq '' ) {
+		$$specs{alert} = 'Please select the turnaround time.<br/>';
+		return $$specs{Status} = 'uncalculated';
 	} # end if
 
-	my ( $min, $max ) = split('-', $$specs{'TurnaroundDays'} );
+	my ( $min, $max ) = split('-', $$specs{TurnaroundDays} );
 $log->debug("Min: $min Max: $max");
 
 $log->debug("Looking up basic pricing for $min for " . $ProjectType->name() );
@@ -56,16 +56,16 @@ $log->debug("Looking up basic pricing for $min");
 	} # end if
 	
 	foreach my $qty_index ( $Project->quantity_indexes() ) {
-		if ( $Price{'units'} eq 'percent' ) {
+		if ( $Price{units} eq 'percent' ) {
 			my ( $price ) = misc::sum( sql::execute( $log, $dbh, qq{SELECT strValue FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND lngServiceIndex != ? and strName='txtPrice$qty_index'}, $project_index, $service_index ) );
-			$$specs{"txtPrice$qty_index"} = $price * $Price{'Price'}/100;
-$log->debug("Price: $price * $Price{Price}/100 = " . $$specs{"txtPrice$qty_index"} );
+			$$specs{"txtPrice$qty_index"} = $price * $Price{price}/100;
+$log->debug("Price: $price * $Price{price}/100 = " . $$specs{"txtPrice$qty_index"} );
 		} else {
-			$$specs{"txtPrice$qty_index"} = $Price{'Price'};
+			$$specs{"txtPrice$qty_index"} = $Price{price};
 		} # end if
-		$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $$specs{"txtPrice$qty_index"} );
+		$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{ProjectMoneyFormat}, $$specs{"txtPrice$qty_index"} );
 	} # end foreach
-	return $$specs{'Status'} = 'calculated';
+	return $$specs{Status} = 'calculated';
 } # end sub calc_prepress
 sub summary {
 	my ( $Project, $service_id, $specs, $qty_index ) = @_;
@@ -73,11 +73,11 @@ sub summary {
 	if ( $qty_index ) {
 		return '';
 	} # end if
-	return sprintf('%s day%s.',$$specs{'TurnaroundDays'}, $$specs{'TurnaroundDays'} == 1 ? '' : 's' );
+	return sprintf('%s day%s.',$$specs{TurnaroundDays}, $$specs{TurnaroundDays} == 1 ? '' : 's' );
 } # end sub summary
 sub project_summary {
 	my ( $Project, $service_id, $specs ) = @_;
-	return sprintf(' in %s day%s.',$$specs{'TurnaroundDays'}, $$specs{'TurnaroundDays'} == 1 ? '' : 's' );
+	return sprintf(' in %s day%s.',$$specs{TurnaroundDays}, $$specs{TurnaroundDays} == 1 ? '' : 's' );
 } # end sub project_summary
 
 sub save {

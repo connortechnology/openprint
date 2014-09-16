@@ -36,18 +36,18 @@ sub calc {
 
 	my $Project = new openprint::Project( $pid );
 
-	$$specs{'RoundedCorners'} =~ s/\D//g;
-	if ( ! $$specs{'RoundedCorners'} ) {
-		$$specs{'alert'} = 'Please enter the number of corners to round.<br/>';
-		return $$specs{'Status'} = 'uncalculated';
+	$$specs{RoundedCorners} =~ s/\D//g;
+	if ( ! $$specs{RoundedCorners} ) {
+		$$specs{alert} = 'Please enter the number of corners to round.<br/>';
+		return $$specs{Status} = 'uncalculated';
 	} # end if
 
 	my $calliper = openprint::print::get_finished_calliper( $pid );
 
 	my @Equipment = openprint::Equipment->find('Specifications'=>{'RoundCornering Capable'=>'Y'},'useinestimating'=>1);
 	if ( ! @Equipment ) {
-		$$specs{'alert'} = 'We have no round cornering equipment.';
-		return $$specs{'Status'} = 'uncalculated';
+		$$specs{alert} = 'We have no round cornering equipment.';
+		return $$specs{Status} = 'uncalculated';
 	} # end if
 
 	my $status = 'calculated';
@@ -60,8 +60,8 @@ sub calc {
 		$$specs{"txtPrice$qty_index"} =~ s/[^\d\.]//g;
 		$$specs{'txtQuantity'.$qty_index} = $Project->quantity( $qty_index ) if ! $$specs{'txtQuantity'.$qty_index};
 		my $qty = $$specs{'txtQuantity'.$qty_index};
-		if ( $$sig_specs{'Versions'} ) {
-			$qty *= $$sig_specs{'Versions'};
+		if ( $$sig_specs{Versions} ) {
+			$qty *= $$sig_specs{Versions};
 		} # end if
 
 		my %BestPrice;
@@ -81,24 +81,24 @@ sub calc {
 			$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Lift Depth: %.2f&quot;<br/>',$lift);
 
 			my $runs = ceil( $qty * $calliper / $lift );
-			$runs *= ceil( $$specs{'RoundedCorners'} / $corners );
+			$runs *= ceil( $$specs{RoundedCorners} / $corners );
 			my $total = 0;
 
 			my %MakeReady = openprint::service::get_price_object('RoundCorneringMakeReady', undef, $Equipment );
 			if ( ! %MakeReady ) {
 				$$specs{'hdnBreakdown'.$qty_index} .= 'No MakeReady price.<br/>';
 			} else {
-				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('MakeReady Price: $%1$.2f%2$s<br/>', @MakeReady{'Price','units'} );
-				$total += $MakeReady{'Price'};
+				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('MakeReady Price: $%1$.2f%2$s<br/>', @MakeReady{'price','units'} );
+				$total += $MakeReady{price};
 			} # end if
 
 			my %ServicePrice = openprint::service::get_price_object('RoundCornering', undef, $Equipment ); 
 			if ( ! %ServicePrice ) {
 				$$specs{'hdnBreakdown'.$qty_index} .= 'No Service price.<br/>';
 			} else {
-				$ServicePrice{'Total'} += $ServicePrice{'Price'} * $runs;
-				$total += $ServicePrice{'Total'};
-				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Service Price: $%1$.2f%2$s * %4$d lifts = $%3$.2f<br/>', @ServicePrice{'Price','units','Total'}, $runs );
+				$ServicePrice{total} += $ServicePrice{price} * $runs;
+				$total += $ServicePrice{total};
+				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Service Price: $%1$.2f%2$s * %4$d lifts = $%3$.2f<br/>', @ServicePrice{'price','units','total'}, $runs );
 			} # end if
 
 			if ( my $minimumcharge = openprint::service::get_price('RoundCorneringMinimumCharge', undef, $Equipment ) ) {
@@ -106,28 +106,28 @@ sub calc {
 			} # end if
 			$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Total: $%.2f<br/>', $total );
 			
-			if ( ( ! defined $BestPrice{'Total'} ) or $total < $BestPrice{'Total'} ) {
-				$BestPrice{'Total'} = $total;
-				$BestPrice{'Equipment'} = $Equipment;
-				$BestPrice{'ServicePrice'} = \%ServicePrice;
+			if ( ( ! defined $BestPrice{total} ) or $total < $BestPrice{total} ) {
+				$BestPrice{total} = $total;
+				$BestPrice{Equipment} = $Equipment;
+				$BestPrice{ServicePrice} = \%ServicePrice;
 			} # end if
 			$$specs{'hdnBreakdown'.$qty_index} .= '</fieldset>';
         } # end foreach Equipment
 
-		if ( ! defined $BestPrice{'Total'} ) {
+		if ( ! defined $BestPrice{total} ) {
 			$status = 'uncalculated';
 		} else {
-			$$specs{'ddmEquipment'.$qty_index} = $BestPrice{'Equipment'}->id();
+			$$specs{'ddmEquipment'.$qty_index} = $BestPrice{Equipment}->id();
 		} # end if
 
-        $$specs{'txtUnitPrice'.$qty_index} = sprintf($openprint::config{'UnitPriceFormat'}, 
-				( $BestPrice{'ServicePrice'}{'Total'} / $qty ) * (1+$Project->markup()/100) );
-        $$specs{'MPrice'.$qty_index} = sprintf($openprint::config{'UnitPriceFormat'}, (1+$Project->markup()/100) *
-				(1+$$specs{"Markup$qty_index"}/100) * (($BestPrice{'ServicePrice'}{'Total'} / $qty) * 1000) );
+        $$specs{'txtUnitPrice'.$qty_index} = sprintf($openprint::config{UnitPriceFormat}, 
+				( $BestPrice{ServicePrice}{Total} / $qty ) * (1+$Project->markup()/100) );
+        $$specs{'MPrice'.$qty_index} = sprintf($openprint::config{UnitPriceFormat}, (1+$Project->markup()/100) *
+				(1+$$specs{"Markup$qty_index"}/100) * (($BestPrice{ServicePrice}{total} / $qty) * 1000) );
 		if ( $$specs{"OverridePrice$qty_index"} ne 'Y' ) {
-			$$specs{'txtPrice'.$qty_index} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $BestPrice{'Total'}*(1+$$specs{"Markup$qty_index"}/100)*(1+$Project->markup()/100) );
+			$$specs{'txtPrice'.$qty_index} = sprintf( $openprint::config{ProjectMoneyFormat}, $BestPrice{total}*(1+$$specs{"Markup$qty_index"}/100)*(1+$Project->markup()/100) );
 		} else {
-			$$specs{'txtPrice'.$qty_index} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $$specs{"txtPrice$qty_index"} );
+			$$specs{'txtPrice'.$qty_index} = sprintf( $openprint::config{ProjectMoneyFormat}, $$specs{"txtPrice$qty_index"} );
 		} # end if
 
     } # end foreach qty_index
@@ -146,7 +146,7 @@ sub summary {
 		return '';
 	} # end if
 
-	return sprintf( '%d rounded corners', $$specs{'RoundedCorners'} );;
+	return sprintf( '%d rounded corners', $$specs{RoundedCorners} );;
 } # end sub summary
 
 sub display {
@@ -154,7 +154,7 @@ sub display {
 
 	my @possible_equipment = openprint::Equipment->find( 'Specifications' => {'RoundCornering Capable'=>'Y'}, 'useinestimating'=>1,'order'=>'lower(strName)');
 	#my @possible_equipment = openprint::Equipment->find( 'Specifications' => {'ClipSealing Capable'=>'Y'}, 'useinestimating'=>1,'order'=>'lower(strName)');
-	@{$$variable{'Equipment'}} = @possible_equipment;
+	@{$$variable{Equipment}} = @possible_equipment;
 } # end sub display
 
 sub save {

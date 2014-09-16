@@ -142,7 +142,7 @@ if ( ! $$self{project_id} ) {
 $openprint::log->warn("Deleting " . $self->to_string() );
 	sql::execute( undef, $openprint::dbh, q{DELETE FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND lngServiceIndex=?}, @$self{'project_id','service_id'} );
 	sql::execute( undef, $openprint::dbh, q{DELETE FROM tbl_Project_Contents WHERE lngProjectIndex=? AND lngServiceIndex=?}, @$self{'project_id', 'service_id'} );
-$openprint::log->warn("Deleting Service from " . $Project->to_string() );
+$openprint::log->warn("Deleting Service from $Project " . $Project->to_string() );
 	delete $$Project{'Services'};
 	delete $$Project{'signatures'};
 	delete $$Project{'Signature'};

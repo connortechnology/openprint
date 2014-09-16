@@ -20,7 +20,7 @@ sub get_price {
 	my ( $service, $range, $Equipment ) = @_;
 
 	my %price = get_price_object( $service, $range, $Equipment );
-	return $price{'Price'};
+	return $price{price};
 } # end sub get_price
 
 sub get_price_object {

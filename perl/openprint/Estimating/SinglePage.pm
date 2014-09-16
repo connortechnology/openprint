@@ -86,11 +86,11 @@ $openprint::log->debug( "Signature: @signatures");
 	for ( my $i = 0; $i < @signatures; $i += 1 ) {
 		my $sig_specs = openprint::service::get_specs_ref( $Project, $signatures[$i] );
 
-		if ( $$printing_specs{'PrintingType'} ) {
+		if ( $$printing_specs{PrintingType} ) {
 			if ( 
-				 ( $Project->quantity1() and ( $$sig_specs{'PrintingType1'} ne $$printing_specs{'PrintingType'} ) )
-				 or ( $Project->quantity2() and ( $$sig_specs{'PrintingType2'} ne $$printing_specs{'PrintingType'} ) )
-					or ( $Project->quantity3() and ( $$sig_specs{'PrintingType3'} ne $$printing_specs{'PrintingType'}  ) )
+				 ( $Project->quantity1() and ( $$sig_specs{PrintingType1} ne $$printing_specs{PrintingType} ) )
+				 or ( $Project->quantity2() and ( $$sig_specs{PrintingType2} ne $$printing_specs{PrintingType} ) )
+					or ( $Project->quantity3() and ( $$sig_specs{PrintingType3} ne $$printing_specs{PrintingType}  ) )
 ) {
 # delete any similar signs
 				#$log->debug("Getting rid of extra sigs");
@@ -111,10 +111,10 @@ $openprint::log->debug( "Signature: @signatures");
 	my @sigs = sort $Project->signatures( );
 	my $ss_id = shift @sigs;
 
-	my $sig_specs = openprint::service::internal_calc( $openprint::log, $openprint::dbh, \%openprint::variable, $$Project{'id'}, $ss_id, 'Printing' );
+	my $sig_specs = openprint::service::internal_calc( $openprint::log, $openprint::dbh, \%openprint::variable, $$Project{id}, $ss_id, 'Printing' );
 # If we couldn't calculate, then delete all the other printing types and retry.
-	if ( $$sig_specs{'Status'} eq 'calculated' ) {
-		$status = $$sig_specs{'Status'};
+	if ( $$sig_specs{Status} eq 'calculated' ) {
+		$status = $$sig_specs{Status};
 		# Successfully calculated the first sig
 		# In sig_specs should be an array of Impositions to apply to other signatures, so let's add/delete/apply
 
@@ -163,9 +163,9 @@ $openprint::log->debug( "Signature: @signatures");
 					$specs{'hdnNetSheetCount'.$qty_index} = 0;
 					$specs{'StockQuantity'.$qty_index} = 0;
 					if ( $specs{'OverridePrice'.$qty_index} ne 'Y' ) {
-						$specs{'txtPrice'.$qty_index} = sprintf($openprint::config{'ProjectMoneyFormat'}, 0 );
+						$specs{'txtPrice'.$qty_index} = sprintf($openprint::config{ProjectMoneyFormat}, 0 );
 					} # end if
-					$specs{'txtUnitPrice'.$qty_index} = sprintf($openprint::config{'UnitPriceFormat'}, 0 );
+					$specs{'txtUnitPrice'.$qty_index} = sprintf($openprint::config{UnitPriceFormat}, 0 );
 					$Imposition = new openprint::Imposition();
 					$$Imposition{paper} = new openprint::Paper();
 				} else {
@@ -187,10 +187,10 @@ $openprint::log->debug( "Signature: @signatures");
 			} # end foreach qty_index
 
 			my $ac = sql::start_transaction( $openprint::dbh );
-			sql::update( undef, undef, 'tbl_Project_Contents', ['lngProjectIndex=? AND lngServiceIndex=?', $$Project{'id'}, $a_ss_id], 'strStatus', $status );
+			sql::update( undef, undef, 'tbl_Project_Contents', ['lngProjectIndex=? AND lngServiceIndex=?', $$Project{id}, $a_ss_id], 'strStatus', $status );
 
-			foreach my $key ( openprint::Estimating::Printing::variables( $$Project{'id'}, $a_ss_id, $new_sig_specs, \%specs ) ) {
-				openprint::service::insert_service_spec( undef, undef, $$Project{'id'}, $a_ss_id, $key, $specs{$key} );
+			foreach my $key ( openprint::Estimating::Printing::variables( $$Project{id}, $a_ss_id, $new_sig_specs, \%specs ) ) {
+				openprint::service::insert_service_spec( undef, undef, $$Project{id}, $a_ss_id, $key, $specs{$key} );
 			} # end foreach
 			sql::end_transaction( $openprint::dbh, $ac );
 
@@ -204,8 +204,8 @@ $openprint::log->debug( "Signature: @signatures");
 		} # end while sigs
 
 	} else {
-		$openprint::log->debug("unknown status: $$sig_specs{'Status'} alert: $$sig_specs{'alert'}");
-		$status = $$sig_specs{'Status'};
+		$openprint::log->debug("unknown status: $$sig_specs{Status} alert: $$sig_specs{alert}");
+		$status = $$sig_specs{Status};
 	} # end if
 
 	return 'calculated';

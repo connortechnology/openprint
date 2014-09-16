@@ -42,8 +42,8 @@ sub neccessary {
 	$Project = new openprint::Project( $Project ) if ref $Project ne 'openprint::Project';
 	my $services = $Project->services();
 
-	return 1 if ! $$services{'PlasticCoil'};
-	return 1 if ! $$services{'MetalCoil'};
+	return 1 if ! $$services{PlasticCoil};
+	return 1 if ! $$services{MetalCoil};
 
 	return 0;
 } # end sub neccessary
@@ -60,18 +60,18 @@ $log->debug("SPIRAL!!!!!!!!!!!!!!!!!!");
 	my $ServiceType = $Project->ServiceType( $service_index );
 	my $printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
 
-	if ( $$specs{'chkOverrideFinalHeight'} ne 'Y' ) {
-		@$specs{'txtFinalHeight'} = $$printing_specs{'txtFinalHeight'};
+	if ( $$specs{chkOverrideFinalHeight} ne 'Y' ) {
+		@$specs{txtFinalHeight} = $$printing_specs{txtFinalHeight};
 	} # end if
 
 	my $makeReadyPrice = openprint::service::get_price( $ServiceType->name().'PunchingMakeReady', undef, undef );
 	my $minimumCharge = openprint::service::get_price( $ServiceType->name().'PunchingMinimumCharge', undef, undef );
 	my $ProjectType = $Project->Type();
 
-	if ( $$specs{'chkOverrideFinishedCalliper'} ne 'Y' ) {
-		$$specs{'txtFinishedCalliper'} = openprint::print::get_finished_calliper( $project_index );
+	if ( $$specs{chkOverrideFinishedCalliper} ne 'Y' ) {
+		$$specs{txtFinishedCalliper} = openprint::print::get_finished_calliper( $project_index );
 	} else {
-		$$specs{'txtFinishedCalliper'} =~ s/[^\d\.]//g;
+		$$specs{txtFinishedCalliper} =~ s/[^\d\.]//g;
 	} # end if
 
 	my $PunchingService = openprint::Service->find_one( name => $ServiceType->name().'Punching');
@@ -98,44 +98,44 @@ $log->debug("SPIRAL!!!!!!!!!!!!!!!!!!");
 			if ( $PunchingService ) {
 				%PunchingPrice = $PunchingService->get_price( $qty, undef );
 				if ( $PunchingPrice{units} eq 'per m' ) {
-					$PunchingPrice{Total} = Math::Round::nearest( 0.01, $PunchingPrice{Price} * $qty / 1000 );
+					$PunchingPrice{total} = Math::Round::nearest( 0.01, $PunchingPrice{price} * $qty / 1000 );
 				} else {
-					$PunchingPrice{Total} = Math::Round::nearest( 0.01, $PunchingPrice{Price} * $qty );
+					$PunchingPrice{total} = Math::Round::nearest( 0.01, $PunchingPrice{price} * $qty );
 				} # end if
-				$$specs{'hdnBreakdown'.$qty_index} .= 'Punching: ' . sprintf( '%.4f%s = %.2f<br/>', @PunchingPrice{'Price','units','Total'} );
+				$$specs{'hdnBreakdown'.$qty_index} .= 'Punching: ' . sprintf( '%.4f%s = %.2f<br/>', @PunchingPrice{'price','units','total'} );
 			} # end if
 
 			my %CoilingPrice;
 			if ( $CoilingService ) {
 				%CoilingPrice = $CoilingService->get_price( $qty, undef );
 				if ( $CoilingPrice{units} eq 'per m' ) {
-					$CoilingPrice{Total} = Math::Round::nearest( 0.01, $CoilingPrice{Price} * $qty / 1000 );
+					$CoilingPrice{total} = Math::Round::nearest( 0.01, $CoilingPrice{price} * $qty / 1000 );
 				} else {
 					$openprint::log->error("Unknown units for coiling");
 				} # end if
-				$$specs{'hdnBreakdown'.$qty_index} .= 'Coiling: ' . sprintf( '%.4f%s = %.2f<br/>', @CoilingPrice{'Price','units','Total'} );
+				$$specs{'hdnBreakdown'.$qty_index} .= 'Coiling: ' . sprintf( '%.4f%s = %.2f<br/>', @CoilingPrice{'price','units','total'} );
 			} # end if CoilingService
 
-			if ( $$specs{'chkOverrideMaterialLength'} ne 'Y' ) {
-				$$specs{'txtMaterialLength'} = $$specs{txtFinalHeight} * $$specs{"txtQuantity$qty_index"};
+			if ( $$specs{chkOverrideMaterialLength} ne 'Y' ) {
+				$$specs{txtMaterialLength} = $$specs{txtFinalHeight} * $$specs{"txtQuantity$qty_index"};
 			} # end if
 
-			$price = $makeReadyPrice + $PunchingPrice{Total} + $CoilingPrice{Total};
+			$price = $makeReadyPrice + $PunchingPrice{total} + $CoilingPrice{total};
 
 			if ( $Material ) {
 				my %MaterialPrice = $Material->get_price( $$specs{txtFinishedCalliper}, undef );
-				if ( $MaterialPrice{'units'} eq 'project calliper-per 36 inches' ) {
-					$MaterialPrice{'Total'} = Math::Round::nearest( 0.01, ( $MaterialPrice{Price} /36 ) * $$specs{txtMaterialLength} );
-				} elsif ( $MaterialPrice{'units'} eq 'project calliper-per inch' ) {
-					$MaterialPrice{'Total'} = Math::Round::nearest( 0.01, $MaterialPrice{'Price'} * $$specs{'txtMaterialLength'} );
-				} elsif ( $MaterialPrice{'units'} eq 'per inch' ) {
-					$MaterialPrice{'Total'} = Math::Round::nearest( 0.01, $MaterialPrice{'Price'} * $$specs{'txtMaterialLength'} );
+				if ( $MaterialPrice{units} eq 'project calliper-per 36 inches' ) {
+					$MaterialPrice{total} = Math::Round::nearest( 0.01, ( $MaterialPrice{price} /36 ) * $$specs{txtMaterialLength} );
+				} elsif ( $MaterialPrice{units} eq 'project calliper-per inch' ) {
+					$MaterialPrice{total} = Math::Round::nearest( 0.01, $MaterialPrice{price} * $$specs{txtMaterialLength} );
+				} elsif ( $MaterialPrice{units} eq 'per inch' ) {
+					$MaterialPrice{total} = Math::Round::nearest( 0.01, $MaterialPrice{price} * $$specs{txtMaterialLength} );
 				} else {
 					$$specs{'hdnBreakdown'.$qty_index} .= "Unknown units for material";
 				} # end if
-				$$specs{'hdnBreakdown'.$qty_index} .= "Material: " . sprintf( '%.2f', $MaterialPrice{'Price'} ) . " " . $MaterialPrice{'units'} . "=$MaterialPrice{'Total'}<br/>";
-				$price += $MaterialPrice{'Total'};
-				$mprice += $MaterialPrice{'Total'};
+				$$specs{'hdnBreakdown'.$qty_index} .= "Material: " . sprintf( '%.2f', $MaterialPrice{price} ) . " " . $MaterialPrice{units} . "=$MaterialPrice{total}<br/>";
+				$price += $MaterialPrice{total};
+				$mprice += $MaterialPrice{total};
 			} else {
 				$$specs{'hdnBreakdown'.$qty_index} .= 'No material found';
 			} # end if
@@ -144,16 +144,16 @@ $log->debug("SPIRAL!!!!!!!!!!!!!!!!!!");
 				$price = $minimumCharge;
 			} # end if
 			$unitPrice = $price / $qty;
-			$mprice += $PunchingPrice{'Total'} + $CoilingPrice{'Total'};
+			$mprice += $PunchingPrice{total} + $CoilingPrice{total};
 			$mprice = ( $mprice / $qty ) * 1000;
 			$$specs{'hdnBreakdown'.$qty_index} .= "Qty: " . $$specs{"txtQuantity$qty_index"} . ": Price: $price<br/>";
 		} # end if
-		$$specs{"txtUnitPrice$qty_index"} = sprintf( $openprint::config{'UnitPriceFormat'}, $unitPrice * (1+$Project->markup()/100) );
-		$$specs{"MPrice$qty_index"} = sprintf( $openprint::config{'UnitPriceFormat'}, $mprice *(1+$$specs{"Markup$qty_index"}/100)*(1+$Project->markup()/100) );
+		$$specs{"txtUnitPrice$qty_index"} = sprintf( $openprint::config{UnitPriceFormat}, $unitPrice * (1+$Project->markup()/100) );
+		$$specs{"MPrice$qty_index"} = sprintf( $openprint::config{UnitPriceFormat}, $mprice *(1+$$specs{"Markup$qty_index"}/100)*(1+$Project->markup()/100) );
 		if ( $$specs{"OverridePrice$qty_index"} ne 'Y' ) {
-			$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $price*(1+$$specs{"Markup$qty_index"}/100)*(1+$Project->markup()/100) );
+			$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{ProjectMoneyFormat}, $price*(1+$$specs{"Markup$qty_index"}/100)*(1+$Project->markup()/100) );
 		} else {
-			$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $$specs{"txtPrice$qty_index"} );
+			$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{ProjectMoneyFormat}, $$specs{"txtPrice$qty_index"} );
 		} # end if
 	} # end foreach qty_index
 

@@ -50,25 +50,25 @@ sub calc {
 	my $Project = new openprint::Project( $project_index );
 	my $ServiceType = $Project->ServiceType( $service_index );
 
-	if ( $$specs{'txtQuantity'} eq '' ) {	# a zero value is still calculated, just with a zero price.
+	if ( $$specs{txtQuantity} eq '' ) {	# a zero value is still calculated, just with a zero price.
 		$status = 'uncalculated';
-	} elsif ( $$specs{'txtQuantity'} < 0.25 and $$specs{'txtQuantity'} > 0 ) {
-		$$specs{'txtQuantity'} = 0.25;
+	} elsif ( $$specs{txtQuantity} < 0.25 and $$specs{txtQuantity} > 0 ) {
+		$$specs{txtQuantity} = 0.25;
 	} # end if
-	my $price = openprint::service::get_price( $ServiceType->name(), $$specs{'txtQuantity'}, undef );
-	$$specs{"txtUnitPrice"} = sprintf( $openprint::config{'UnitPriceFormat'}, $price* (1+$Project->markup()/100) );
+	my $price = openprint::service::get_price( $ServiceType->name(), $$specs{txtQuantity}, undef );
+	$$specs{"txtUnitPrice"} = sprintf( $openprint::config{UnitPriceFormat}, $price* (1+$Project->markup()/100) );
 
-	$price *= $$specs{'txtQuantity'};
-	$$specs{"txtPrice"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $price * (1+$Project->markup()/100) );
+	$price *= $$specs{txtQuantity};
+	$$specs{"txtPrice"} = sprintf( $openprint::config{ProjectMoneyFormat}, $price * (1+$Project->markup()/100) );
 	foreach my $qty_index ( $Project->quantity_indexes() ) {
 		$$specs{"txtUnitPrice$qty_index"} = $$specs{"txtUnitPrice"};
 		if ( $$specs{"OverridePrice$qty_index"} ne 'Y' ) {
-			$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $$specs{"txtPrice"} * (1+$$specs{"Markup$qty_index"}/100) );
+			$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{ProjectMoneyFormat}, $$specs{"txtPrice"} * (1+$$specs{"Markup$qty_index"}/100) );
 		} else {
-			$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $$specs{"txtPrice$qty_index"} );
+			$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{ProjectMoneyFormat}, $$specs{"txtPrice$qty_index"} );
 		} # end if
 	} # end foreach
-	return $$specs{'Status'} = $status;
+	return $$specs{Status} = $status;
 } # end sub calc
 
 sub summary {
@@ -77,12 +77,12 @@ sub summary {
 	$specs = openprint::service::get_specs_ref( $Project, $service_id ) if ! $specs;
 	if ( $qty_index ) {
 	} else {
-		if ( $$specs{'ServiceType'} eq 'CDBurning' ) {
-			return 1*$$specs{'txtQuantity'}.' cd' . ( $$specs{'txtQuantity'} == 1 ? '' : 's' );
-		} elsif ( $$specs{'ServiceType'} eq 'RetrieveFile' ) {
-			return 1*$$specs{'txtQuantity'}.' file' . ( $$specs{'txtQuantity'} == 1 ? '' : 's' );
+		if ( $$specs{ServiceType} eq 'CDBurning' ) {
+			return 1*$$specs{txtQuantity}.' cd' . ( $$specs{txtQuantity} == 1 ? '' : 's' );
+		} elsif ( $$specs{ServiceType} eq 'RetrieveFile' ) {
+			return 1*$$specs{txtQuantity}.' file' . ( $$specs{txtQuantity} == 1 ? '' : 's' );
 		} else {
-			return 1*$$specs{'txtQuantity'}.' hour' . ( $$specs{'txtQuantity'} == 1 ? '' : 's');
+			return 1*$$specs{txtQuantity}.' hour' . ( $$specs{txtQuantity} == 1 ? '' : 's');
 		} # end if
 	} # end if
 	return '';

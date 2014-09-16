@@ -63,7 +63,7 @@ sub calc {
 
 	my $printing_specs = openprint::service::get_specs_ref( $project_index, $sigs[0] );
 	
-	if ( $$specs{'chkOverrideDimensions'} ne 'Y' ) {
+	if ( $$specs{chkOverrideDimensions} ne 'Y' ) {
 		@$specs{'txtFinalWidth','txtFinalHeight'} = @$printing_specs{'txtFinalWidth','txtFinalHeight'};
 	} # end if
 
@@ -72,10 +72,10 @@ sub calc {
 	} # end if
 
 	$$specs{alert} = '';
-	$$specs{alert} .= 'Please select lamination type for front.<br/>' if ! $$specs{'TypeFront'};
-	$$specs{alert} .= 'Please select lamination type for back.<br/>' if ! $$specs{'TypeBack'};
-	$$specs{alert} .= 'Please enter object width.<br/>' if ! $$specs{'txtFinalWidth'};
-	$$specs{alert} .= 'Please enter object height.<br/>' if ! $$specs{'txtFinalHeight'};
+	$$specs{alert} .= 'Please select lamination type for front.<br/>' if ! $$specs{TypeFront};
+	$$specs{alert} .= 'Please select lamination type for back.<br/>' if ! $$specs{TypeBack};
+	$$specs{alert} .= 'Please enter object width.<br/>' if ! $$specs{txtFinalWidth};
+	$$specs{alert} .= 'Please enter object height.<br/>' if ! $$specs{txtFinalHeight};
 
 	if ( $$specs{alert} ) {
 		foreach my $qty_index ( $Project->quantity_indexes() ) {
@@ -83,23 +83,23 @@ sub calc {
 			$$specs{'MPrice'.$qty_index} = '';
 			$$specs{'txtUnitPrice'.$qty_index} = '';
 		} # end foreach qty_index
-		return $$specs{'Status'} = 'uncalculated';
+		return $$specs{Status} = 'uncalculated';
 	} # end if
 
-	my %MinimumCharge = openprint::service::get_price_object( $$specs{'ServiceType'}.'MinimumCharge', undef, undef );
+	my %MinimumCharge = openprint::service::get_price_object( $$specs{ServiceType}.'MinimumCharge', undef, undef );
 
    my @possible_equipment;
-   my @all_equipment = openprint::Equipment->find( 'Specifications' => {'Laminating Capable'=>'Y'}, 'useinestimating'=>1,'order'=>'lower(strName)');
+   my @all_equipment = openprint::Equipment->find( Specifications => {'Laminating Capable'=>'Y'}, useinestimating=>1, order=>'lower(strName)');
 
     if ( ! @all_equipment ) {
-      	$$specs{'alert'} = 'We have no laminating equipment.';
-		return $$specs{'Status'} = 'uncalculated';
+      	$$specs{alert} = 'We have no laminating equipment.';
+		return $$specs{Status} = 'uncalculated';
     } # end if
     my $error = '';
     foreach my $Equipment ( @all_equipment ) {
         if ( 
-			(my $reason1 = $Equipment->fits( $$specs{'txtFinalWidth'} ) ) and
-			(my $reason2 = $Equipment->fits( $$specs{'txtFinalHeight'} ) ) 
+			(my $reason1 = $Equipment->fits( $$specs{txtFinalWidth} ) ) and
+			(my $reason2 = $Equipment->fits( $$specs{txtFinalHeight} ) ) 
 		   ) {
             $error .= 'For ' . $Equipment->name() . ': '. $reason1  . '<br/>' . $reason2;
         } else {
@@ -108,13 +108,13 @@ sub calc {
     } # end foreach
 
 	if ( ! @possible_equipment ) {
-		$$specs{'alert'} = "Our equipment cannot run this project, for the following reasons:\n$error\n Please only print flat sheets and contact another bindery.";
-		return $$specs{'Status'} = 'uncalculated';
+		$$specs{alert} = "Our equipment cannot run this project, for the following reasons:\n$error\n Please only print flat sheets and contact another bindery.";
+		return $$specs{Status} = 'uncalculated';
 	} # end if
 
 	# So we can do multiple items at once, as many as will fit in the wiwdth of the laminator.  We need a certain amount of space between the items.  I suspect that this should be an input, not a fixed value, but for now we will make it fixed.
-	my $item_width = $$specs{'txtFinalWidth'};
-	my $item_height = $$specs{'txtFinalHeight'};
+	my $item_width = $$specs{txtFinalWidth};
+	my $item_height = $$specs{txtFinalHeight};
 
 	my $MakeReady = openprint::Service->find_one( name=>$$specs{ServiceType}.'MakeReady' );
 	my $Service = openprint::Service->find_one( name=>$$specs{ServiceType} );
@@ -129,7 +129,7 @@ sub calc {
 		my %bestPrice;
 		my @equipment = ();
 		if ( $$specs{"chkOverrideEquipment$qty_index"} eq 'Y' ) {
-			@equipment = openprint::Equipment->find( 'strid'=> $$specs{"ddmEquipment$qty_index"} );
+			@equipment = openprint::Equipment->find( strid=> $$specs{"ddmEquipment$qty_index"} );
 		} else {
 			@equipment = @possible_equipment;
 		} # end if
@@ -162,7 +162,7 @@ sub calc {
 			my $area;
 
 			my $length;
-			if ( $$imposition{'ImageOrientation'} eq 'Vertical' ) {
+			if ( $$imposition{ImageOrientation} eq 'Vertical' ) {
 				$length = $item_height * $imposition->rows();
 			} else {
 				$length = $item_width * $imposition->rows();
@@ -175,17 +175,17 @@ sub calc {
 			} # end if
 			$$specs{'hdnBreakdown'.$qty_index} .= sprintf( 'Items across: ( %s x %s ) %d<br/>', $item_width, $item_height, $imposition->columns() );
 			my %SetupPrice = $MakeReady->get_price( undef, $Equipment ) if $MakeReady;
-			my $price = $SetupPrice{'Price'};
-			$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Setup: $%.2f<br/>', $SetupPrice{'Price'});
+			my $price = $SetupPrice{price};
+			$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Setup: $%.2f<br/>', $SetupPrice{price});
 
 			my $MPrice = 0;
 
 			my %ServicePrice = $Service->get_price( undef, $Equipment ) if $Service;
 			if ( %ServicePrice ) {
-				if ( $ServicePrice{'units'} eq 'per m' ) {
-					my $serviceprice = ($ServicePrice{'Price'} * $qty)/1000;
+				if ( $ServicePrice{units} eq 'per m' ) {
+					my $serviceprice = ($ServicePrice{price} * $qty)/1000;
 					$price += $serviceprice;
-					$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Service: $%.2f %s * %f = $%.2f<br/>', @ServicePrice{'Price','units'}, $qty, $serviceprice );
+					$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Service: $%.2f %s * %f = $%.2f<br/>', @ServicePrice{'price','units'}, $qty, $serviceprice );
 					$MPrice += $serviceprice;
 				} elsif ( $ServicePrice{units} eq '/Hr' ) {
 					my $inches_per_hour;
@@ -203,19 +203,19 @@ sub calc {
 					} # end if
 					my $hours = Math::Round::nearest( 0.01, $length * ( $qty / $$imposition{imposition} ) / $inches_per_hour );
 						
-					my $serviceprice = $ServicePrice{Total} = Math::Round::nearest( 0.01, $ServicePrice{Price} * $hours );
+					my $serviceprice = $ServicePrice{total} = Math::Round::nearest( 0.01, $ServicePrice{price} * $hours );
 					$price += $serviceprice;
-					$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Service: $%.2f %s * %.2fhours = $%.2f<br/>', @ServicePrice{'Price','units'}, $hours, $serviceprice );
-					$MPrice += Math::Round::nearest( 0.01, $ServicePrice{Price} * ( $length * ( 1000 / $$imposition{imposition} ) ) / $inches_per_hour );
+					$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Service: $%.2f %s * %.2fhours = $%.2f<br/>', @ServicePrice{'price','units'}, $hours, $serviceprice );
+					$MPrice += Math::Round::nearest( 0.01, $ServicePrice{price} * ( $length * ( 1000 / $$imposition{imposition} ) ) / $inches_per_hour );
 				} else {
-					$$specs{'hdnBreakdown'.$qty_index} .= "Unknown units ($ServicePrice{'units'}) for $$specs{'ServiceType'}<br/>";
+					$$specs{'hdnBreakdown'.$qty_index} .= "Unknown units ($ServicePrice{units}) for $$specs{ServiceType}<br/>";
 				} # end if
 			} else {
-				$$specs{'hdnBreakdown'.$qty_index} .= "No Service price for $$specs{'ServiceType'}<br/>";
+				$$specs{'hdnBreakdown'.$qty_index} .= "No Service price for $$specs{ServiceType}<br/>";
 			} # end if
 			if ( $$specs{TypeFront} ne 'None' ) {
 				my %FrontMaterialPrice;
-				if ( my $FrontMaterial = openprint::Material->find_one( 'name'=>$$specs{TypeFront} ) ) {
+				if ( my $FrontMaterial = openprint::Material->find_one( name=>$$specs{TypeFront} ) ) {
 					%FrontMaterialPrice = $FrontMaterial->get_price( $area, $Equipment );
 					if ( ! %FrontMaterialPrice ) {
 						if ( $$specs{"chkOverrideEquipment$qty_index"} eq 'Y' ) {
@@ -225,10 +225,10 @@ sub calc {
 						next;
 					} # end if
 					if ( $FrontMaterialPrice{units} eq 'per square foot' ) {
-						$FrontMaterialPrice{Total} = $FrontMaterialPrice{Price} * $area / 144;
-						$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Material on Front: $%1$.2f %2$s * %4$.2f square feet = $%3$.2f<br/>', @FrontMaterialPrice{'Price','units','Total'}, $area/144 );
-						$price += $FrontMaterialPrice{Total};
-						$MPrice += ( 1000 / $imposition->imposition() ) * $FrontMaterialPrice{Total};
+						$FrontMaterialPrice{total} = $FrontMaterialPrice{price} * $area / 144;
+						$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Material on Front: $%1$.2f %2$s * %4$.2f square feet = $%3$.2f<br/>', @FrontMaterialPrice{'price','units','total'}, $area/144 );
+						$price += $FrontMaterialPrice{total};
+						$MPrice += ( 1000 / $imposition->imposition() ) * $FrontMaterialPrice{total};
 					} else {
 						$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Material on Front: unknown units: (%s)<br/>', $FrontMaterialPrice{units} );
 					} # end if
@@ -238,7 +238,7 @@ sub calc {
 			} # end if TypeFront
 			if ( $$specs{TypeBack} ne 'None' ) {
 				my %BackMaterialPrice;
-				if ( my $BackMaterial = openprint::Material->find_one( 'name'=>$$specs{TypeBack} ) ) {
+				if ( my $BackMaterial = openprint::Material->find_one( name=>$$specs{TypeBack} ) ) {
 					%BackMaterialPrice = $BackMaterial->get_price( $area, $Equipment );
 					if ( ! %BackMaterialPrice ) {
 						if ( $$specs{"chkOverrideEquipment$qty_index"} eq 'Y' ) {
@@ -247,10 +247,10 @@ sub calc {
 						next;
 					} # end if
 					if ( $BackMaterialPrice{units} eq 'per square foot' ) {
-						$BackMaterialPrice{Total} = $BackMaterialPrice{Price} * $area / 144;
-						$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Material on Back: $%1$.2f %2$s * %4$.2f square feet = $%3$.2f<br/>', @BackMaterialPrice{'Price','units','Total'}, $area/144 );
-						$price += $BackMaterialPrice{Total};
-						$MPrice += ( 1000 / $imposition->imposition() ) * $BackMaterialPrice{Total};
+						$BackMaterialPrice{total} = $BackMaterialPrice{price} * $area / 144;
+						$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Material on Back: $%1$.2f %2$s * %4$.2f square feet = $%3$.2f<br/>', @BackMaterialPrice{'price','units','total'}, $area/144 );
+						$price += $BackMaterialPrice{total};
+						$MPrice += ( 1000 / $imposition->imposition() ) * $BackMaterialPrice{total};
 					} else {
 						$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Material on Front: unknown units: (%s)<br/>', $BackMaterialPrice{units} );
 					} # end if
@@ -261,35 +261,35 @@ sub calc {
 
 			$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Total: %.2f<br/><br/>', $price );
 
-			if ( ( ! $bestPrice{'Price'} ) or $bestPrice{'Price'} > $price ) {
-				$bestPrice{'Price'} = $price;
-				$bestPrice{'MPrice'} = $MPrice;
-				$bestPrice{'Equipment'} = $Equipment;
+			if ( ( ! $bestPrice{price} ) or $bestPrice{price} > $price ) {
+				$bestPrice{price} = $price;
+				$bestPrice{MPrice} = $MPrice;
+				$bestPrice{Equipment} = $Equipment;
 			} # end if
 		} # end foreach equipment
 
-		if ( $bestPrice{'Price'} < $MinimumCharge{Price} ) {
-			$$specs{'hdnBreakdown'.$qty_index} .= sprintf('<br/>Using minimum charge: $%.2f<br/>', $MinimumCharge{Price} );
-			$bestPrice{'Price'} = $MinimumCharge{Price};
+		if ( $bestPrice{price} < $MinimumCharge{price} ) {
+			$$specs{'hdnBreakdown'.$qty_index} .= sprintf('<br/>Using minimum charge: $%.2f<br/>', $MinimumCharge{price} );
+			$bestPrice{price} = $MinimumCharge{price};
 		} # end if
 		$$specs{"ddmEquipment$qty_index"} = $bestPrice{Equipment}->strid() if $bestPrice{Equipment};
 		if ( $$specs{"OverridePrice$qty_index"} ne 'Y' ) {
 			if ( $$specs{"Markup$qty_index"} ) {
-				$bestPrice{'Price'} *= 1+$$specs{"Markup$qty_index"}/100;
-				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Using %s% markup = $%.2f<br/>', $$specs{"Markup$qty_index"}, $bestPrice{Price} );
+				$bestPrice{price} *= 1+$$specs{"Markup$qty_index"}/100;
+				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Using %s% markup = $%.2f<br/>', $$specs{"Markup$qty_index"}, $bestPrice{price} );
 			}
 			if ( $Project->markup() ) {
-				$bestPrice{'Price'} *= 1+$Project->markup()/100;
-				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Using %s% project markup = $%.2f<br/>', $Project->markup(), $bestPrice{Price} );
+				$bestPrice{price} *= 1+$Project->markup()/100;
+				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Using %s% project markup = $%.2f<br/>', $Project->markup(), $bestPrice{price} );
 			} 
-			$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $bestPrice{Price} );
+			$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{ProjectMoneyFormat}, $bestPrice{price} );
 		} else {
-			$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $$specs{"txtPrice$qty_index"} );
+			$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{ProjectMoneyFormat}, $$specs{"txtPrice$qty_index"} );
 		} # en dif
-		$$specs{"txtUnitPrice$qty_index"} = sprintf( $openprint::config{'UnitPriceFormat'}, ( $bestPrice{'Price'}/$qty ) * (1+$Project->markup()/100) );
-		$$specs{"MPrice$qty_index"} = sprintf( $openprint::config{'UnitPriceFormat'}, $bestPrice{'MPrice'} * (1+$Project->markup()/100) );
+		$$specs{"txtUnitPrice$qty_index"} = sprintf( $openprint::config{UnitPriceFormat}, ( $bestPrice{price}/$qty ) * (1+$Project->markup()/100) );
+		$$specs{"MPrice$qty_index"} = sprintf( $openprint::config{UnitPriceFormat}, $bestPrice{MPrice} * (1+$Project->markup()/100) );
 	} # end foreach qty_index
-	return $$specs{'Status'} = 'calculated';
+	return $$specs{Status} = 'calculated';
 } # end sub calc
 
 sub display {

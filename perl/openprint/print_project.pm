@@ -522,6 +522,63 @@ sub create_edit_process {
 	my $services = $Project->services();
 	my @service_ids = map { $$services{$_} ? @{$$services{$_}} : () } keys %$services;
 
+
+	$Project->reference( $param{'txtProjectReference'} );
+	$Project->comments( $param{'txtComments'} );
+	$Project->mode( $param{'rdbMode'} );
+	$Project->design( $param{'ddmDesign'} );
+	$Project->programs( $param{'chkPrograms'} );
+	$Project->other_programs( $param{'txtOtherPrograms'} );
+	$Project->currency_id( $session{'Currency_id'} ) if ! $Project->currency_id();
+	$Project->reprint( $openprint::param{'reprint'} );
+	$Project->reprint_reason( $openprint::param{'reprint_reason'} );
+
+	# This will likely never happen, because the act of cilcking on the different project type changes it.
+	my $ProjectType = openprint::ProjectType->find_one( name => $param{rdbProjectType} );
+	my $OldProjectType = $Project->Type();
+# Handle ProjectType
+	if ( $OldProjectType->id() != $ProjectType->id() ) {
+		$recalculate = 1;
+		$error .= $Project->change_ProjectType( $ProjectType );
+	} else {
+		$error .= $Project->save();
+	} # end if
+
+	# take care of the Graphic Design service
+	if ( $param{'rdbGraphicDesign'} eq 'Y' ) {
+		push @{$$services{'GraphicDesign'}}, $Project->add_service('GraphicDesign') if ! $$services{'GraphicDesign'};
+	} # end if
+
+	my %statuses = sql::execute( $log, $dbh, 'SELECT lngserviceindex, strstatus FROM tbl_Project_Contents WHERE lngprojectindex=?', $project_index );
+
+	foreach my $ServiceType ( openprint::ServiceType->find( create_visible=>'Y') ) {
+		if ( $ServiceType->type() eq 'CustomService' ) {
+			$log->error("CustomService is visible in project create.");
+			next;
+		} # end if
+		if ( $param{'chkServices'.$ServiceType->name()} eq $ServiceType->name() ) {
+			if ( ! $$services{$ServiceType->name()} ) {	
+				push @{$$services{$ServiceType->name()}}, $Project->add_service($ServiceType->name());
+				$recalculate = 1;
+			} # end if
+		} else {
+			if ( $$services{$ServiceType->name()} ) {
+				foreach my $s_id ( @{$$services{$ServiceType->name()}} ) {
+					if ( $statuses{$s_id} ne 'Completed' ) {
+						delete_service( $Project, $s_id );
+						$Project->add_to_log( @session{'company_id','user_id'}, 'Removed ' . $ServiceType->name() );
+					} # end if
+				} # end foreach
+				delete $$services{$ServiceType->name()};
+				$recalculate = 1;
+			} # end if
+		} # end if
+	} # end foreach
+	if ( ! ( $$services{Proofs} or $$services{NoPrinting} ) ) {
+		push @{$$services{Proofs}}, $Project->add_service('Proofs');
+		$recalculate = 1;
+	} # end if
+
 	if ( $param{txtQuantity1} != $Project->quantity1() ) {
 		if ( ! $param{txtQuantity1} ) { # Project has a quantity, we are deleting it
 			foreach my $service_id ( @service_ids ) {
@@ -636,61 +693,6 @@ sub create_edit_process {
 			} # end foreach
 		} # end if
 		$Project->quantity3( int $param{'txtQuantity3'} );
-	} # end if
-
-	$Project->reference( $param{'txtProjectReference'} );
-	$Project->comments( $param{'txtComments'} );
-	$Project->mode( $param{'rdbMode'} );
-	$Project->design( $param{'ddmDesign'} );
-	$Project->programs( $param{'chkPrograms'} );
-	$Project->other_programs( $param{'txtOtherPrograms'} );
-	$Project->currency_id( $session{'Currency_id'} ) if ! $Project->currency_id();
-	$Project->reprint( $openprint::param{'reprint'} );
-	$Project->reprint_reason( $openprint::param{'reprint_reason'} );
-
-	# This will likely never happen, because the act of cilcking on the different project type changes it.
-	my $ProjectType = openprint::ProjectType->find_one( name => $param{rdbProjectType} );
-	my $OldProjectType = $Project->Type();
-# Handle ProjectType
-	if ( $OldProjectType->id() != $ProjectType->id() ) {
-		$recalculate = 1;
-		$error .= $Project->change_ProjectType( $ProjectType );
-	} else {
-		$error .= $Project->save();
-	} # end if
-
-	# take care of the Graphic Design service
-	if ( $param{'rdbGraphicDesign'} eq 'Y' ) {
-		push @{$$services{'GraphicDesign'}}, $Project->add_service('GraphicDesign') if ! $$services{'GraphicDesign'};
-	} # end if
-
-	my %statuses = sql::execute( $log, $dbh, 'SELECT lngserviceindex, strstatus FROM tbl_Project_Contents WHERE lngprojectindex=?', $project_index );
-
-	foreach my $ServiceType ( openprint::ServiceType->find( create_visible=>'Y') ) {
-		if ( $ServiceType->type() eq 'CustomService' ) {
-			$log->error("CustomService is visible in project create.");
-			next;
-		} # end if
-		if ( $param{'chkServices'.$ServiceType->name()} eq $ServiceType->name() ) {
-			if ( ! $$services{$ServiceType->name()} ) {	
-				push @{$$services{$ServiceType->name()}}, $Project->add_service($ServiceType->name());
-				$recalculate = 1;
-			} # end if
-		} else {
-			if ( $$services{$ServiceType->name()} ) {
-				foreach my $s_id ( @{$$services{$ServiceType->name()}} ) {
-					if ( $statuses{$s_id} ne 'Completed' ) {
-						delete_service( $Project, $s_id );
-					} # end if
-				} # end foreach
-				delete $$services{$ServiceType->name()};
-				$recalculate = 1;
-			} # end if
-		} # end if
-	} # end foreach
-	if ( ! ( $$services{Proofs} or $$services{NoPrinting} ) ) {
-		push @{$$services{Proofs}}, $Project->add_service('Proofs');
-		$recalculate = 1;
 	} # end if
 
 	$Project->add_to_log( @session{'company_id','user_id'}, 'Edited' );

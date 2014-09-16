@@ -39,17 +39,17 @@ sub calc {
 
 	my $Project = new openprint::Project( $project_index );
 
-	if ( $$specs{'Inserts'} eq '' ) {
-		$$specs{'alert'} .= 'Please specify how many additional items are to be placed in each bag.';
-		return $$specs{'Status'} = 'uncalculated';
+	if ( $$specs{Inserts} eq '' ) {
+		$$specs{alert} .= 'Please specify how many additional items are to be placed in each bag.';
+		return $$specs{Status} = 'uncalculated';
 	} # end if
 
-	my $pockets = 1 + $$specs{'Inserts'};
+	my $pockets = 1 + $$specs{Inserts};
 
 	my @Equipment = openprint::Equipment->find('strid'=>'PolyBagger');
 	if ( ! @Equipment ) {
-		$$specs{'alert'} .= 'No PolyBagger in equipment list.';
-		return $$specs{'Status'} = 'uncalculated';
+		$$specs{alert} .= 'No PolyBagger in equipment list.';
+		return $$specs{Status} = 'uncalculated';
 	} # end if
 	my $Equipment = $Equipment[0];
 
@@ -57,8 +57,8 @@ sub calc {
 	foreach my $qty_index ( $Project->quantity_indexes() ) {
 		my $qty = $Project->quantity($qty_index) + $Equipment->specification( 'Make Ready Waste', $pockets );
 		my $RunWaste = $Equipment->Specification( 'Run Waste', $pockets );
-		if ( $$RunWaste{'units'} eq 'Percent' ) {
-			$qty += $qty * $$RunWaste{'value'}/100;
+		if ( $$RunWaste{units} eq 'Percent' ) {
+			$qty += $qty * $$RunWaste{value}/100;
 		} # end if
 		$$specs{'hdnBreakdown'.$qty_index} .= 'Pockets: '. $pockets .'<br/>';
 		$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Qty: %d + MR Waste %d + Run Waste %d%s = %d<br/>', 
@@ -69,23 +69,23 @@ sub calc {
 
 		my %Price = openprint::service::get_price_object( 'PolyBagging'.$pockets.'Pocket', $qty );
 		if ( ! %Price ) {
-			$$specs{'alert'} .= 'No price for PolyBagging'.$pockets.'Pocket.<br/>';
+			$$specs{alert} .= 'No price for PolyBagging'.$pockets.'Pocket.<br/>';
 			next;
 		} # end if
-		if ( $Price{'units'} eq 'per m' ) {
-			$Price{'Total'} = $Price{'Price'} * $qty/1000;
-			$$specs{"txtUnitPrice$qty_index"} = sprintf( $openprint::config{'UnitPriceFormat'}, $Price{'Price'}/1000 );
-			$$specs{'hdnBreakdown'.$qty_index} .= sprintf('$%.2fMR + $%.2f%s * %d = $%.2f<br/>', $MRPrice{'Price'}, @Price{'Price','units'}, $qty, $MRPrice{'Price'} + $Price{'Total'} ); 
+		if ( $Price{units} eq 'per m' ) {
+			$Price{total} = $Price{price} * $qty/1000;
+			$$specs{"txtUnitPrice$qty_index"} = sprintf( $openprint::config{UnitPriceFormat}, $Price{price}/1000 );
+			$$specs{'hdnBreakdown'.$qty_index} .= sprintf('$%.2fMR + $%.2f%s * %d = $%.2f<br/>', $MRPrice{price}, @Price{'price','units'}, $qty, $MRPrice{price} + $Price{total} ); 
 		} else {
-			$$specs{'alert'} .= 'Unknown units ('.$Price{'units'}.') on service price.<br/>';
+			$$specs{alert} .= 'Unknown units ('.$Price{units}.') on service price.<br/>';
 		} # end if
 		if ( $$specs{"OverridePrice$qty_index"} ne 'Y' ) {
-			$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, ($MRPrice{'Price'} + $Price{'Total'})*(1+$$specs{"Markup$qty_index"}/100)*(1+$Project->markup()/100) );
+			$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{ProjectMoneyFormat}, ($MRPrice{price} + $Price{total})*(1+$$specs{"Markup$qty_index"}/100)*(1+$Project->markup()/100) );
 		} else {
-			$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $$specs{"txtPrice$qty_index"} );
+			$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{ProjectMoneyFormat}, $$specs{"txtPrice$qty_index"} );
 		} # end if
 	} # end foreach
-	return $$specs{'Status'} = 'calculated';
+	return $$specs{Status} = 'calculated';
 } # end sub calc
 
 sub summary {

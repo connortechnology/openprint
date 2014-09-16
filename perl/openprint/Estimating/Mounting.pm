@@ -56,36 +56,36 @@ sub calc {
 	my $Project = new openprint::Project( $project_index );
 	my %services = $Project->get_services();
 	if ( ! $services{''} ) {
-		$$specs{'alert'} .= 'No Project Service!<br/>';
-		return $$specs{'Status'} = 'uncalculated';
+		$$specs{alert} .= 'No Project Service!<br/>';
+		return $$specs{Status} = 'uncalculated';
 	} # end if
 
 	my $printing_specs = openprint::service::get_specs_ref( $project_index, $services{''}[0] );
-	if ( $$specs{'chkOverrideDimensions'} ne 'Y' ) {
+	if ( $$specs{chkOverrideDimensions} ne 'Y' ) {
 		@$specs{'txtFinalWidth','txtFinalHeight'} = @$printing_specs{'txtFinalWidth','txtFinalHeight'};
 	} # end if
 
 	if ( ! 
-			( $$specs{'MountingType'} and $$specs{'txtFinalWidth'} and $$specs{'txtFinalHeight'} )
+			( $$specs{MountingType} and $$specs{txtFinalWidth} and $$specs{txtFinalHeight} )
 	   ) {
-		$$specs{'txtPrice1'} = '';
-		$$specs{'txtPrice2'} = '';
-		$$specs{'txtPrice3'} = '';
-		$$specs{'txtUnitPrice1'} = '';
-		$$specs{'txtUnitPrice2'} = '';
-		$$specs{'txtUnitPrice3'} = '';
-		return $$specs{'Status'} = 'uncalculated';
+		$$specs{txtPrice1} = '';
+		$$specs{txtPrice2} = '';
+		$$specs{txtPrice3} = '';
+		$$specs{txtUnitPrice1} = '';
+		$$specs{txtUnitPrice2} = '';
+		$$specs{txtUnitPrice3} = '';
+		return $$specs{Status} = 'uncalculated';
 	} # end if
 
-	my %MinimumCharge = openprint::service::get_price_object( $$specs{'ServiceType'}.'MinimumCharge', undef, undef );
+	my %MinimumCharge = openprint::service::get_price_object( $$specs{ServiceType}.'MinimumCharge', undef, undef );
 	my %MaterialPrice;
-	if ( my $Material = openprint::Material->find_one('name'=>$$specs{'MountingType'}) ) {
+	if ( my $Material = openprint::Material->find_one('name'=>$$specs{MountingType}) ) {
 		%MaterialPrice = $Material->get_price( undef, undef );
 	} # end if
 
 	# So we can do multiple items at once, as many as will fit in the wiwdth of the laminator.  We need a certain amount of space between the items.  I suspect that this should be an input, not a fixed value, but for now we will make it fixed.
-	my $item_width = $$specs{'txtFinalWidth'};
-	my $item_height = $$specs{'txtFinalHeight'};
+	my $item_width = $$specs{txtFinalWidth};
+	my $item_height = $$specs{txtFinalHeight};
 
 	foreach my $qty_index ( $Project->quantity_indexes() ) {
 		$$specs{"txtQuantity$qty_index"} = $Project->quantity($qty_index) if ! $$specs{"txtQuantity$qty_index"};
@@ -94,43 +94,43 @@ sub calc {
 
 		my %bestPrice;
 
-		my %ServicePrice = openprint::service::get_price_object( $$specs{'ServiceType'}, undef, undef );
-		my %SetupPrice = openprint::service::get_price_object( $$specs{'ServiceType'}.'MakeReady', undef, undef );
+		my %ServicePrice = openprint::service::get_price_object( $$specs{ServiceType}, undef, undef );
+		my %SetupPrice = openprint::service::get_price_object( $$specs{ServiceType}.'MakeReady', undef, undef );
 
-		my $price = $SetupPrice{'Price'};
-		$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Setup: $ %.2f<br/>', $SetupPrice{'Price'});
-		if ( $ServicePrice{'units'} eq 'per m' ) {
-			my $serviceprice = ($ServicePrice{Price} * $qty)/1000;
+		my $price = $SetupPrice{price};
+		$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Setup: $ %.2f<br/>', $SetupPrice{price});
+		if ( $ServicePrice{units} eq 'per m' ) {
+			my $serviceprice = ($ServicePrice{price} * $qty)/1000;
 			$price += $serviceprice;
-			$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Service: $ %.2f %s * %f = $ %.2f<br/>', @ServicePrice{'Price','units'}, $qty, $serviceprice );
+			$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Service: $ %.2f %s * %f = $ %.2f<br/>', @ServicePrice{'price','units'}, $qty, $serviceprice );
 		} # end if
-		if ( $MaterialPrice{'units'} eq 'per square foot' ) {
-			my $area = $$specs{'txtFinalWidth'} * $$specs{'txtFinalHeight'};
+		if ( $MaterialPrice{units} eq 'per square foot' ) {
+			my $area = $$specs{txtFinalWidth} * $$specs{txtFinalHeight};
 
 # have to reload price to get one with quantity discounts
-			if ( my $Material = openprint::Material->find_one('name'=>$$specs{'MountingType'}) ) {
+			if ( my $Material = openprint::Material->find_one( name=>$$specs{MountingType}) ) {
 				%MaterialPrice = $Material->get_price( $area, undef );
 			} # end if
-			my $materialprice = $MaterialPrice{Price} * $area;
-			$$specs{'hdnBreakdown'.$qty_index} .= sprintf("\tMaterial: \$ %.2f \%s * \%.2f square feet = \$ %.2f\n", @MaterialPrice{'Price','units'}, $area, $materialprice );
+			my $materialprice = $MaterialPrice{price} * $area;
+			$$specs{'hdnBreakdown'.$qty_index} .= sprintf("\tMaterial: \$ %.2f \%s * \%.2f square feet = \$ %.2f\n", @MaterialPrice{'price','units'}, $area, $materialprice );
 			$price += $materialprice;
 		} else {
-			$$specs{'hdnBreakdown'.$qty_index} .= sprintf("\tMaterial: unknown units: \%s\n", $MaterialPrice{'units'} );
+			$$specs{'hdnBreakdown'.$qty_index} .= sprintf("\tMaterial: unknown units: \%s\n", $MaterialPrice{units} );
 		} # end if
-		if ( ( ! $bestPrice{'Price'} ) or $bestPrice{'Price'} > $price ) {
-			$bestPrice{'Price'} = $price;
+		if ( ( ! $bestPrice{price} ) or $bestPrice{price} > $price ) {
+			$bestPrice{price} = $price;
 		} # end if
-		$bestPrice{'Price'} = $MinimumCharge{Price} if $bestPrice{'Price'} < $MinimumCharge{Price};
+		$bestPrice{price} = $MinimumCharge{price} if $bestPrice{price} < $MinimumCharge{price};
 
 		if ( $$specs{"OverridePrice$qty_index"} ne 'Y' ) {
-			$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, 
-					$bestPrice{'Price'}*(1+$$specs{"Markup$qty_index"}/100) * (1+$Project->markup()/100) );
+			$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{ProjectMoneyFormat}, 
+					$bestPrice{price}*(1+$$specs{"Markup$qty_index"}/100) * (1+$Project->markup()/100) );
 		} else {
-			$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $$specs{"txtPrice$qty_index"} );
+			$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{ProjectMoneyFormat}, $$specs{"txtPrice$qty_index"} );
 		} # end if
-		$$specs{"txtUnitPrice$qty_index"} = sprintf( $openprint::config{'UnitPriceFormat'}, ( $bestPrice{'Price'}/$qty ) * (1+$Project->markup()/100) );
+		$$specs{"txtUnitPrice$qty_index"} = sprintf( $openprint::config{UnitPriceFormat}, ( $bestPrice{price}/$qty ) * (1+$Project->markup()/100) );
 	} # end foreach qty_index
-	return $$specs{'Status'} = 'calculated';
+	return $$specs{Status} = 'calculated';
 } # end sub calc
 
 1;

@@ -36,7 +36,7 @@ sub variables {
 	my $Project = new openprint::Project( $p_id );
 	foreach my $ss_id ( $Project->signatures() ) {
 		my $sig_specs = openprint::service::get_specs_ref( $Project, $ss_id );
-		push @v, ( "txtArea-$$sig_specs{'SignatureIndex'}","chkOverrideArea-$$sig_specs{'SignatureIndex'}", );
+		push @v, ( "txtArea-$$sig_specs{SignatureIndex}","chkOverrideArea-$$sig_specs{SignatureIndex}", );
 	} # end foreach signature
 	return @v;
 } # end sub variables
@@ -65,7 +65,7 @@ sub no_outputs {
 	my $Project = new openprint::Project( $p_id );
 	foreach my $ss_id ( $Project->signatures() ) {
 		my $sig_specs = openprint::service::get_specs_ref( $Project, $ss_id );
-		push @o, ( "chkOverrideArea-$$sig_specs{'SignatureIndex'}", );
+		push @o, ( "chkOverrideArea-$$sig_specs{SignatureIndex}", );
 	} # end foreach signature
 	return @o;
 };
@@ -76,7 +76,7 @@ sub neccessary {
 	my $Project = new openprint::Project( $project_index );
     my $services = $Project->services();
 
-    if ( $$services{'NoBindery'} ) {
+    if ( $$services{NoBindery} ) {
         $log->debug(" ** Project is marked as No bindery, Cutting not needed ! ** ");
         return 0;
     } # end if
@@ -86,7 +86,7 @@ sub neccessary {
     } # end if
 	foreach my $ss_id ( $Project->signatures() ) {
 		my $sig_specs = openprint::service::get_specs_ref( $Project, $ss_id );
-		if ( sets::isin( $$sig_specs{'rdbTemplateType'}, ['2Panel1Pocket','2Panel2Pocket','TriFoldDoublePocket'] ) ) {
+		if ( sets::isin( $$sig_specs{rdbTemplateType}, ['2Panel1Pocket','2Panel2Pocket','TriFoldDoublePocket'] ) ) {
 			return 1;
 		} # end if
 	} # end foreach signature
@@ -118,12 +118,12 @@ $log->debug("GLUING!!!!!!!!!!!!!!!!!!");
 		if ( $$specs{"chkOverrideArea-$$sig_specs{SignatureIndex}"} ne 'Y' ) {
 			$$specs{"txtArea-$$sig_specs{SignatureIndex}"} = 0;
 # Figure out square area of gluing
-			if ( sets::isin( $$sig_specs{'rdbTemplateType'}, ['2Panel1Pocket','2Panel2Pocket','TriFoldDoublePocket'] ) ) {
-				if ( $$sig_specs{'chkPocketLeft'} eq 'Left' ) {
-					$$specs{"txtArea-$$sig_specs{SignatureIndex}"} += .5 * $$sig_specs{'PocketSize'};
+			if ( sets::isin( $$sig_specs{rdbTemplateType}, ['2Panel1Pocket','2Panel2Pocket','TriFoldDoublePocket'] ) ) {
+				if ( $$sig_specs{chkPocketLeft} eq 'Left' ) {
+					$$specs{"txtArea-$$sig_specs{SignatureIndex}"} += .5 * $$sig_specs{PocketSize};
 				} # end if
-				if ( $$sig_specs{'chkPocketRight'} eq 'Right' ) {
-					$$specs{"txtArea-$$sig_specs{SignatureIndex}"} += .5 * $$sig_specs{'PocketSize'};
+				if ( $$sig_specs{chkPocketRight} eq 'Right' ) {
+					$$specs{"txtArea-$$sig_specs{SignatureIndex}"} += .5 * $$sig_specs{PocketSize};
 				} # end if
 			} elsif ( $Project->Type()->name() eq 'ScratchPads' ) {
 				$$specs{"txtArea-$$sig_specs{SignatureIndex}"} = $$sig_specs{txtWidth} * $calliper;
@@ -131,7 +131,7 @@ $log->debug("GLUING!!!!!!!!!!!!!!!!!!");
 		} # end if
 
 		if ( $$specs{"txtArea-$$sig_specs{SignatureIndex}"} eq '' ) {
-			$$specs{'help'} = 'Please enter the area in square inches to be covered in glue.';
+			$$specs{help} = 'Please enter the area in square inches to be covered in glue.';
 			return 'uncalculated';
 		} # end if
 
@@ -150,20 +150,20 @@ $log->debug("GLUING!!!!!!!!!!!!!!!!!!");
 
 			my $qty = $$specs{"txtQuantity$qty_index"};
 			my %servicePrice = openprint::service::get_price_object( 'Gluing', $qty, undef );
-			if ( sets::isin( $servicePrice{'units'}, ['', 'per m', 'per 1000'] ) ) {
-				$servicePrice{'Total'} = $qty * $servicePrice{'Price'} / 1000;
-				$$specs{'hdnBreakdown'.$qty_index} .= sprintf( 'Service: $%.2f %s = $%.2f<br/>', @servicePrice{'Price','units','Total'} );
+			if ( sets::isin( $servicePrice{units}, ['', 'per m', 'per 1000'] ) ) {
+				$servicePrice{total} = $qty * $servicePrice{price} / 1000;
+				$$specs{'hdnBreakdown'.$qty_index} .= sprintf( 'Service: $%.2f %s = $%.2f<br/>', @servicePrice{'price','units','total'} );
 			} # end if
-			$price = $makeReadyPrice + $servicePrice{'Total'};
-			if ( my $Material = openprint::Material->find_one('name'=>'Glue') ) {
+			$price = $makeReadyPrice + $servicePrice{total};
+			if ( my $Material = openprint::Material->find_one( name=>'Glue') ) {
 				my %materialPrice = $Material->get_price( $$specs{"txtArea-$$sig_specs{SignatureIndex}"}, undef );
 				if ( %materialPrice ) {
-					$materialPrice{'Total'} = $materialPrice{'Price'} * $$specs{"txtArea-$$sig_specs{SignatureIndex}"} * $qty;
-					$$specs{'hdnBreakdown'.$qty_index} .= sprintf( 'Material: $%.2f %s * %.2f square inches * %d = $%.2f<br/>', @materialPrice{'Price','units'}, $$specs{"txtArea-$$sig_specs{SignatureIndex}"}, $qty, $materialPrice{'Total'} );
+					$materialPrice{total} = $materialPrice{price} * $$specs{"txtArea-$$sig_specs{SignatureIndex}"} * $qty;
+					$$specs{'hdnBreakdown'.$qty_index} .= sprintf( 'Material: $%.2f %s * %.2f square inches * %d = $%.2f<br/>', @materialPrice{'price','units'}, $$specs{"txtArea-$$sig_specs{SignatureIndex}"}, $qty, $materialPrice{total} );
 				} else {
 					$$specs{'hdnBreakdown'.$qty_index} .= "No Material Price.<br/>";
 				} # end if
-				$price += $materialPrice{'Total'};
+				$price += $materialPrice{total};
 			} else {
 				$$specs{'hdnBreakdown'.$qty_index} .= "No Material.<br/>";
 			} # end if
@@ -172,11 +172,11 @@ $log->debug("GLUING!!!!!!!!!!!!!!!!!!");
 				$price = $minimumCharge;
 			} # end if
 			$unitPrice = $price / $qty;
-			$$specs{"txtUnitPrice$qty_index"} = sprintf( $openprint::config{'UnitPriceFormat'}, $unitPrice * (1+$Project->markup()/100) );
+			$$specs{"txtUnitPrice$qty_index"} = sprintf( $openprint::config{UnitPriceFormat}, $unitPrice * (1+$Project->markup()/100) );
 			if ( $$specs{"OverridePrice$qty_index"} ne 'Y' ) {
-				$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $price*(1+$$specs{"Markup$qty_index"}/100)*(1+$Project->markup()/100) );
+				$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{ProjectMoneyFormat}, $price*(1+$$specs{"Markup$qty_index"}/100)*(1+$Project->markup()/100) );
 			} else {
-				$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $$specs{"txtPrice$qty_index"} );
+				$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{ProjectMoneyFormat}, $$specs{"txtPrice$qty_index"} );
 			} # end if
 		} # end foreach qty_index
 	} # end foreach signature

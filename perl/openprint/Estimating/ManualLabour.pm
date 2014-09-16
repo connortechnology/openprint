@@ -49,34 +49,34 @@ sub calc {
 
 	my $Project = new openprint::Project( $project_index );
 
-	if ( ! $$specs{'Units'} ) {
-		$$specs{'alert'} .= 'Please specify the units for the prices.';
-		return $$specs{'Status'} = 'uncalculated';
+	if ( ! $$specs{Units} ) {
+		$$specs{alert} .= 'Please specify the units for the prices.';
+		return $$specs{Status} = 'uncalculated';
 	} # end if
-	if ( $$specs{'Units'} ne 'Flat' and ! $$specs{'BasePrice'} ) {
-		$$specs{'alert'} .= 'Please specify the base price ' . $$specs{'Units'};
-		return $$specs{'Status'} = 'uncalculated';
+	if ( $$specs{Units} ne 'Flat' and ! $$specs{BasePrice} ) {
+		$$specs{alert} .= 'Please specify the base price ' . $$specs{Units};
+		return $$specs{Status} = 'uncalculated';
 	} # end if
 
 	foreach my $qty_index ( $Project->quantity_indexes() ) {
 
 		my $price;
-		if ( lc $$specs{'Units'} eq 'flat' ) {
+		if ( lc $$specs{Units} eq 'flat' ) {
 			$price = $$specs{'Price'.$qty_index};
-		} elsif ( lc $$specs{'Units'} eq 'per item' ) {
-			$price = $$specs{'BasePrice'} * $Project->quantity($qty_index);
-		} elsif ( lc $$specs{'Units'} eq 'per m' ) {
-			$price = $$specs{'BasePrice'} * $Project->quantity($qty_index)/1000;
+		} elsif ( lc $$specs{Units} eq 'per item' ) {
+			$price = $$specs{BasePrice} * $Project->quantity($qty_index);
+		} elsif ( lc $$specs{Units} eq 'per m' ) {
+			$price = $$specs{BasePrice} * $Project->quantity($qty_index)/1000;
 		} # end if
 		if ( $$specs{"OverridePrice$qty_index"} ne 'Y' ) {
-			$$specs{'txtPrice'.$qty_index} = sprintf($openprint::config{'ProjectMoneyFormat'}, $price*(1+$$specs{"Markup$qty_index"}/100) * (1+$Project->markup()/100) );
+			$$specs{'txtPrice'.$qty_index} = sprintf($openprint::config{ProjectMoneyFormat}, $price*(1+$$specs{"Markup$qty_index"}/100) * (1+$Project->markup()/100) );
 		} else {
-			$$specs{'txtPrice'.$qty_index} = sprintf($openprint::config{'ProjectMoneyFormat'}, $$specs{"txtPrice$qty_index"} );
+			$$specs{'txtPrice'.$qty_index} = sprintf($openprint::config{ProjectMoneyFormat}, $$specs{"txtPrice$qty_index"} );
 		} # end if
-		$$specs{'MPrice'.$qty_index} = sprintf($openprint::config{'UnitPriceFormat'}, $$specs{"MPrice$qty_index"} * (1+$$specs{"Markup$qty_index"}/100) * (1+$Project->markup()/100));
+		$$specs{'MPrice'.$qty_index} = sprintf($openprint::config{UnitPriceFormat}, $$specs{"MPrice$qty_index"} * (1+$$specs{"Markup$qty_index"}/100) * (1+$Project->markup()/100));
 	} # end foreach
 
-	return $$specs{'Status'} = 'calculated';
+	return $$specs{Status} = 'calculated';
 } # end sub calc
 
 
@@ -90,7 +90,7 @@ sub summary {
 	if ( $qty_index ) {
 		return '';
 	} # end if
-	if ( $$specs{'Units'} ne 'Flat' ) {
+	if ( $$specs{Units} ne 'Flat' ) {
 		return sprintf('$%.2f%s',@$specs{'BasePrice','Units'});
 	} # end if
 	return '';

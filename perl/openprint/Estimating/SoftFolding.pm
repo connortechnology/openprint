@@ -37,20 +37,20 @@ sub calc {
 	my $Project = new openprint::Project( $pid );
 
 	if ( $Project->Type()->name() ne 'MultiPage' ) {
-		$$specs{'alert'} = 'Soft Folding is only relevant for multi-page publications.';
-		return $$specs{'Status'} = 'uncalculated';
+		$$specs{alert} = 'Soft Folding is only relevant for multi-page publications.';
+		return $$specs{Status} = 'uncalculated';
 	} # end if
 
-	$$specs{'Folds'} =~ s/\D//g;
-	#if ( ! $$specs{'Folds'} ) {
-		#$$specs{'alert'} = 'Please enter the # of folds.';
-		#return $$specs{'Status'} = 'uncalculated';
+	$$specs{Folds} =~ s/\D//g;
+	#if ( ! $$specs{Folds} ) {
+		#$$specs{alert} = 'Please enter the # of folds.';
+		#return $$specs{Status} = 'uncalculated';
 	#} # end if
 
 	my @Equipment = openprint::Equipment->find('Specifications'=>{'SoftFolding Capable'=>'Y'},'useinestimating'=>1);
 	if ( ! @Equipment ) {
-		$$specs{'alert'} = 'We have no soft folding equipment.';
-		return $$specs{'Status'} = 'uncalculated';
+		$$specs{alert} = 'We have no soft folding equipment.';
+		return $$specs{Status} = 'uncalculated';
 	} # end if
 
 	my $services = $Project->services();
@@ -67,7 +67,7 @@ sub calc {
 		next if ! $$specs{'txtQuantity'.$qty_index};
 
 		my %BestPrice;
-		$$specs{'hdnBreakdown'.$qty_index} = sprintf( '%d pages, %.3f"<br/>', $$project_specs{'txtTotalPageQuantity'}, $finished_calliper );
+		$$specs{'hdnBreakdown'.$qty_index} = sprintf( '%d pages, %.3f"<br/>', $$project_specs{txtTotalPageQuantity}, $finished_calliper );
 
 		foreach my $Equipment ( @Equipment ) {
 			$$specs{'hdnBreakdown'.$qty_index} .= '<fieldset><legend>'.$Equipment->name().'</legend>';
@@ -75,7 +75,7 @@ sub calc {
 			if ( $_ = $Equipment->fits( @$project_specs{'txtFinalWidth','txtFinalHeight'}, $finished_calliper, 'SoftFolding' ) ) {
 				$$specs{'hdnBreakdown'.$qty_index} .= $_;
 				if ( @Equipment == 1 ) {
-					$$specs{'alert'} .= $_;
+					$$specs{alert} .= $_;
 				} # end if
 				next;
 			} # end if
@@ -87,48 +87,48 @@ sub calc {
 				$$specs{'hdnBreakdown'.$qty_index} .= 'No MakeReady price.<br/>';
 			} else {
 				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('MakeReady Price: $%1$.2f%2$s<br/>', @MakeReady{'Price','units'} );
-				$total += $MakeReady{'Price'};
+				$total += $MakeReady{price};
 			} # end if
 
-			my %ServicePrice = openprint::service::get_price_object( 'SoftFolding'.$$project_specs{'txtTotalPageQuantity'}.'Page', $finished_calliper, $Equipment ); 
+			my %ServicePrice = openprint::service::get_price_object( 'SoftFolding'.$$project_specs{txtTotalPageQuantity}.'Page', $finished_calliper, $Equipment ); 
 			if ( ! %ServicePrice ) {
 				%ServicePrice = openprint::service::get_price_object( 'SoftFolding', $finished_calliper, $Equipment ); 
 			} # end if
 			if ( ! %ServicePrice ) {
 				$$specs{'hdnBreakdown'.$qty_index} .= 'No Service price.<br/>';
-			} elsif ( lc $ServicePrice{'units'} eq 'per m' ) {
-				$ServicePrice{'Total'} += $$specs{Folds} * $ServicePrice{'Price'} * $$specs{'txtQuantity'.$qty_index} / 1000;
+			} elsif ( lc $ServicePrice{units} eq 'per m' ) {
+				$ServicePrice{total} += $$specs{Folds} * $ServicePrice{price} * $$specs{'txtQuantity'.$qty_index} / 1000;
 			} else {
-				$ServicePrice{'Total'} += $$specs{Folds} * $ServicePrice{'Price'} * $$specs{'txtQuantity'.$qty_index};
+				$ServicePrice{total} += $$specs{Folds} * $ServicePrice{price} * $$specs{'txtQuantity'.$qty_index};
 			} # end if
-			$total += $ServicePrice{'Total'};
-			$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Service Price: $%1$.2f%2$s = $%3$.2f<br/>', @ServicePrice{'Price','units','Total'} );
+			$total += $ServicePrice{total};
+			$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Service Price: $%1$.2f%2$s = $%3$.2f<br/>', @ServicePrice{'price','units','total'} );
 
 			if ( my $minimumcharge = openprint::service::get_price('SoftFoldingMinimumCharge', undef, $Equipment ) ) {
 				$total = $minimumcharge if $total < $minimumcharge;
 			} # end if
 			$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Total: $%.2f<br/>', $total );
 			
-			if ( ( ! defined $BestPrice{'Total'} ) or $total < $BestPrice{'Total'} ) {
-				$BestPrice{'Total'} = $total;
-				$BestPrice{'Equipment'} = $Equipment;
-				$BestPrice{'ServicePrice'} = \%ServicePrice;
+			if ( ( ! defined $BestPrice{total} ) or $total < $BestPrice{total} ) {
+				$BestPrice{total} = $total;
+				$BestPrice{Equipment} = $Equipment;
+				$BestPrice{ServicePrice} = \%ServicePrice;
 			} # end if
 			$$specs{'hdnBreakdown'.$qty_index} .= '</fieldset>';
         } # end foreach Equipment
 
-		if ( ! defined $BestPrice{'Total'} ) {
+		if ( ! defined $BestPrice{total} ) {
 			$status = 'uncalculated';
 		} else {
-			$$specs{'ddmEquipment'.$qty_index} = $BestPrice{'Equipment'}->id();
+			$$specs{'ddmEquipment'.$qty_index} = $BestPrice{Equipment}->id();
 		} # end if
 
-        $$specs{'txtUnitPrice'.$qty_index} = sprintf($openprint::config{'UnitPriceFormat'}, 
-				( ($BestPrice{'ServicePrice'}{'Total'} + $BestPrice{'LastServicePrice'}{'Total'} ) / $$specs{'txtQuantity'.$qty_index} ) * (1+$Project->markup()/100) );
+        $$specs{'txtUnitPrice'.$qty_index} = sprintf($openprint::config{UnitPriceFormat}, 
+				( ($BestPrice{ServicePrice}{total} + $BestPrice{LastServicePrice}{total} ) / $$specs{'txtQuantity'.$qty_index} ) * (1+$Project->markup()/100) );
 		if ( $$specs{'OverridePrice'.$qty_index} ne 'Y' ) {
-			$$specs{'txtPrice'.$qty_index} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $BestPrice{'Total'}*(1+$$specs{"Markup$qty_index"}/100)*(1+$Project->markup()/100) );
+			$$specs{'txtPrice'.$qty_index} = sprintf( $openprint::config{ProjectMoneyFormat}, $BestPrice{total}*(1+$$specs{"Markup$qty_index"}/100)*(1+$Project->markup()/100) );
 		} else {
-			$$specs{'txtPrice'.$qty_index} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $$specs{'txtPrice'.$qty_index} );
+			$$specs{'txtPrice'.$qty_index} = sprintf( $openprint::config{ProjectMoneyFormat}, $$specs{'txtPrice'.$qty_index} );
 		} # end if
 
     } # end foreach qty_index
@@ -153,12 +153,12 @@ sub summary {
 sub display {
 	my ( $log, $dbh, $variable, $project_index, $service_index ) = @_;
 
-	@{$$variable{'Equipment'}} = openprint::Equipment->find( 
+	@{$$variable{Equipment}} = openprint::Equipment->find( 
 			'Specifications'	=>	{'SoftFolding Capable'=>'Y'},
 			'useinestimating'	=>	1,
 			'order'				=>	'lower(strName)'
 			);
-$openprint::log->warn("SoftFolding Equipment: " . @{$$variable{'Equipment'}} );
+$openprint::log->warn("SoftFolding Equipment: " . @{$$variable{Equipment}} );
 } # end sub display
 
 1;

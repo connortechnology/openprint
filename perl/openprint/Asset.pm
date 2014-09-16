@@ -377,8 +377,11 @@ sub destroy {
 	foreach ( openprint::Object_Asset->find( asset_id=>$_[0]{id}) ) {
 		$_->destroy();
 	} # end foreach Claim_Asset
-	unlink $_[0]->on_disk_thumbnail_path();
-	unlink $_[0]->on_disk_path();
+	foreach my $path ( $_[0]->thumbnail_path(), $_[0]->on_disk_path() ) {
+		if ( -e $path ) {
+			unlink $path;
+		}
+	} # end foreach path
 	sql::execute( undef, undef, 'DELETE FROM Assets WHERE id=?', $_[0]{'id'} );
 } # end sub destroy
 
