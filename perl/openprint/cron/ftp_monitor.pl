@@ -682,22 +682,27 @@ sub take_evasive_action {
 			$ip = $client;
 		} # end if
 		if ( $ip ) {
-			my $Host = openprint::Host->find_one(ip=>$ip);
-			if ( ! $Host ) {
-				$Host = new openprint::Host();
-				$Host->set({ip=>$ip});
-			} # end if
-			if ( ! ( $Host->blacklist() or $Host->whitelist() ) ) {
-				$_ = $Host->save({blacklist=>1});
-				$log->error($_) if $_;
-			} # end if
-			(new openprint::Log())->save({
-				action	=> 'Intrusion', 
-				note		=> "FTP violation. User account $username",
-				host_id		=> $$Host{id},
-				user_id		=> $$User{id},
-				company_id	=> $$User{company_id},
+			my @Interfaces = openprint::Host_Interfaces->find(ip=>$ip);
+			if ( @Interfaces ) {
+				foreach my $Interface ( @Interfaces ) {
+					my $Host = $Interface->Host();	
+					if ( ! ( $Host->blacklist() or $Host->whitelist() ) ) {
+						$_ = $Host->save({blacklist=>1});
+						$log->error($_) if $_;
+					} # end if
+					(new openprint::Log())->save({
+							action	=> 'Intrusion', 
+							note		=> "FTP violation. User account $username",
+							host_id		=> $$Host{id},
+							user_id		=> $$User{id},
+							company_id	=> $$User{company_id},
 				} );
+			} else {
+				my $Host = new openprint::Host();
+				$Host->save({} );
+				my $Interface = new openprint::Host_Interface();
+				$Interface->save({ ip=>$ip, host_id=>$$Host{id} });
+			} # end if
 		} # end if
 	} else {
 		$log->warn("No client to blacklist.");
