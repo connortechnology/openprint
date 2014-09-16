@@ -788,7 +788,7 @@ sub services {
 		delete $$self{'Services'};
 	} # end if
 	
-	if ( $$self{'id'} and ! exists $$self{'Services'} ) {
+	if ( $$self{'id'} and ! $$self{'Services'} ) {
 		my %results;
 		my @data = sql::execute( $openprint::log, $openprint::dbh, q{SELECT (SELECT name FROM Service_Types WHERE id=servicetype_id), lngServiceIndex FROM tbl_Project_Contents WHERE lngProjectIndex=?}, $$self{id} );
 		while ( my ( $id, $index ) = splice @data, 0, 2 ) {
