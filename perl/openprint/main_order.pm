@@ -66,7 +66,7 @@ sub information {
 		if ( $order_id ) {
 			openprint::order::delete_unfinished_orders();
 			my $Order = new openprint::Order( $order_id );
-			$Order->save({'status'=>'Re-Opened','session_id'=>$session{'_session_id'}});
+			$Order->save({'status'=>'Re-Opened','session_id'=>$session{'_session_id'}, total=>undef});
 			foreach my $OP ( $Order->Ordered_Projects() ) {
 				$variable{'error'} .= $OP->save({'price'=>undef});
 				

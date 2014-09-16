@@ -250,7 +250,7 @@ $openprint::log->debug("Scratch Pads : save");
 	} else {
 # Don't need a cover, so get rid of it
 		foreach ( $Project->signatures({'type'=>'Cover Pages'}) ) {
-			openprint::print_project::delete_service( $p_id, $_ );
+			openprint::print_project::delete_service( $Project, $_ );
 		} # end foreach
 	} # end if Self or Different Cover
 

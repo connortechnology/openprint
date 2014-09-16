@@ -136,6 +136,7 @@ $log->debug("after continue $$variable{ExternalRedirect}");
 					} # end if
 				} # end if
 				openprint::service::auto_calculate( $Project, $service_index ) if $recalc;
+				$Project->update_status();
 				$Project->unlock();
 		
 				$Project->summary(undef);
@@ -161,7 +162,7 @@ $log->debug("after continue $$variable{ExternalRedirect}");
 
 			} elsif ( $openprint::param{'btnFunction'} eq 'Delete Services' ) {
 				foreach my $service_id ( ref $openprint::param{'service_id'} eq 'ARRAY' ? @$openprint::param{'service_id'} : ( $openprint::param{'service_id'} ) ) {
-					openprint::print_project::delete_service( $project_index, $service_id );
+					openprint::print_project::delete_service( $Project, $service_id );
 				} # end if
 			} elsif ( $openprint::param{'btnFunction'} eq 'Recalculate Project' ) {
 				if ( exists $openprint::param{'markup'} ) {
@@ -201,7 +202,7 @@ $log->debug("after continue $$variable{ExternalRedirect}");
 				} # end if
 				my $specs = $PS->specs();
 				$Project->add_to_log( @openprint::session{'company_id','user_id'}, $ServiceType->name().' ' . $$specs{'ServiceName'}.' service deleted.' );
-				openprint::print_project::delete_service( $project_index, $s_id );
+				openprint::print_project::delete_service( $Project, $s_id );
 				if ( $ServiceType->name() eq 'Signature' ) {
 					openprint::service::internal_calc( $log, $dbh, $variable, $project_index, $$services{''}[0], $Project->Type()->type() );
 				} # end if
@@ -334,10 +335,10 @@ sub multipage_signatures {
 	} else {
 # Don't need a cover, so get rid of it
 		foreach ( $Project->signatures({'type'=>'Cover Pages'}) ) {
-			openprint::print_project::delete_service( $project_index, $_ );
+			openprint::print_project::delete_service( $Project, $_ );
 		} # end foreach
 		foreach ( $Project->signatures({'Group'=>1}) ) {
-			openprint::print_project::delete_service( $project_index, $_ );
+			openprint::print_project::delete_service( $Project, $_ );
 		} # end foreach
 	} # end if Self or Different Cover
 
@@ -423,7 +424,7 @@ $log->debug("group $group_id");
 		# We have to do this for simple printing.  Simple printing calls here, but doesn't have these fields, so it clears out the defaults!
 		foreach my $spec ( 
 				'txtSignatureType','pages_supplied','supplied_format',
-				'ddmStockBrand','ddmStockFinish','ddmStockColour','ddmStockWeight',
+				'ddmStockBrand','ddmStockFinish','ddmStockColour','ddmStockWeight','ddmStockQuality','ddmStockGroup',
 				'txtSpecificStockBrand','txtSpecificStockFinish','txtSpecificStockColour','txtSpecificStockWeight',
 				'txtSpecificStockWidth','txtSpecificStockHeight','txtSpecificStockCalliper',
 				'rdbSuppliedStock','rdbSpecificStock','StockType',
@@ -499,7 +500,7 @@ $log->debug("group $group_id");
 	my $old_bindery_type = get_book_type( $Project );
 	if ( $old_bindery_type and ($$param{'rdbTemplateType'} ne $old_bindery_type) and $$services{$old_bindery_type} ) {
 		foreach ( @{$$services{$old_bindery_type}} ) {
-			openprint::print_project::delete_service( $project_index, $_ );
+			openprint::print_project::delete_service( $Project, $_ );
 		} # end foreach
 		delete $$services{$old_bindery_type};
 	} # end if

@@ -248,6 +248,9 @@ $openprint::log->debug("Setting status to $_[1]");
 # Adding Waiting For Pickup, Shipped, Picked Up
 sub update_status {
 	my $self = shift;
+	if ( $self->status() eq 'Re-Opened' ) {
+		return $$self{status};
+	}
 
 	$_ = q{SELECT DISTINCT(strStatus) FROM Projects WHERE id IN (SELECT lngProjectIndex FROM Order_Contents WHERE OrderIndex=?)};
 	my @statuses = sql::execute( $log, $dbh, $_, $$self{id} );
@@ -440,7 +443,7 @@ sub total {
 	if ( @_ ) {
 		$$self{'total'} = shift;
 	} # emd of
-	if ( sets::isin( $$self{'status'}, ['Re-Opened','Incomplete'] ) or ! $$self{'total'} ) {
+	if ( (!$$self{total}) or sets::isin( $$self{'status'}, ['Re-Opened','Incomplete'] ) ) {
 		$$self{'total'} = $self->subtotal();
 		foreach my $Tax ( $self->Taxes() ) {
 			$$self{'total'} += $Tax->amount();
