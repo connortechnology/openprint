@@ -117,7 +117,7 @@
 
 	my $radius_fragment = slurp_content( '/employee/it/_radius_mac_line.html' );
 
-	foreach my $Interface ( $$variable{Host}->Interfaces() ) {
+	foreach my $Interface ( $$variable{Host}->Interfaces(), new openprint::Host_Interface() ) {
 		my $mac = $Interface->mac();
 		$html .= sprintf(q`
 <tr>

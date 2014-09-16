@@ -85,15 +85,15 @@ sub _hosts {
 
 sub host {
 	my $Host = $variable{Host} = new openprint::Host( $param{host_id} );
-	if ( $param{'action'} eq 'Resolve' ) {
-		if ( ! $Host->ip() ) {
-			$variable{'error'} .= 'No ip.  Cant resolve without an ip.';
-		} else {
-		$variable{'error'} .= $Host->save({
-				'hostname'	=> $Host->resolve(),
-				'mac'		=> $Host->get_mac(),
-				});
-		} # end if
+	if ( $param{action} eq 'Resolve' ) {
+		foreach my $I ( $Host->Interfaces() ) {
+			if ( ! $I->ip() ) {
+				$variable{error} .= 'For ' . $I->mac() . ': No ip.  Cant resolve without an ip.';
+			} else {
+				$variable{error} .= $Host->save({ hostname	=> $Host->resolve() });
+				$variable{error} .= $I->save({ mac		=> $I->get_mac(), });
+			} # end if
+		} # end foreach
 	} elsif ( $param{action} eq 'Delete' ) {
 		$variable{error} .= $Host->delete();
 		if ( ! $variable{error} ) {
@@ -102,29 +102,38 @@ sub host {
 		} # end if
 		%param = ();
 	} elsif ( $param{action} eq 'Wake' ) {
-		foreach my $mac ( @{ $Host->mac() } ) {
-			`wakeonlan $mac`;
+		foreach my $I ( $Host->Interfaces() ) {
+			next if ! $I->mac();
+			`wakeonlan $$I{mac}`;
 		} # end foraech
 	} elsif ( $param{action} eq 'GEOLookup' ) {
-		if ( ! $Host->ip() ) {
-			$variable{error} .= 'Host does not have an ip.<br/>';
-		} else {
-			my $Location = openprint::Location::from_ip( $Host->ip() );
-			if ( ! $Location ) {
-				$variable{error} .= 'No Location found from ip.';
+		foreach my $I ( $Host->interfaces() ) {
+			if ( ! $I->ip() ) {
+				$variable{error} .= "Interface $$I{mac} does not have an ip.<br/>";
 			} else {
-				$$Host{location_id} = $Location->id();
+				my $Location = openprint::Location::from_ip( $I->ip() );
+				if ( ! $Location ) {
+					$variable{error} .= 'No Location found from ip.';
+				} else {
+					$$Host{location_id} = $Location->id();
+				} # end if
 			} # end if
-		} # end if
+		} # end foreach I
 		
 	} elsif ( $param{action} eq 'Save' ) {
-		$param{mac} = [ map { split( ',', $_ ) } split("\n", $param{mac}) ];
 		if ( $param{type_id} ) {
 			delete $param{type};
 		} else {
 			delete $param{type_id};
 		} # end if
 		$variable{error} .= $Host->save(\%param);
+		foreach my $I ( $Host->Interfaces(), new openprint::Host_Interface() ) {
+		
+			$variable{error} .= $I->save({
+				host_id=>$$Host{id},
+				map { $_, $param{"$_-$$I{mac}"} } ( 'mac', 'ip', 'dhcp', 'comment' )
+			});
+		} # end foreach Interface
 		if ( ! $variable{error} ) {
 			$variable{ExternalRedirect} = '/employee/it/hosts.html';
 			return;
@@ -385,15 +394,6 @@ sub licenses {
 			my $License = new openprint::License( $license_id );
 			$variable{error} .= $License->delete();
 		} # end foreach license_id
-		%param = ();
-	} elsif ( $param{action} eq 'Save' ) {
-		my $License = new openprint::License( $param{license_id} );
-		if ( $param{software_id} ) {
-			delete $param{software};
-		} else {
-			delete $param{software_id};
-		} # end if
-		$variable{error} .= $License->save(\%param);
 		%param = ();
 	} # end if
 	_licenses();

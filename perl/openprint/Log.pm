@@ -29,7 +29,7 @@ $serial = 'logs_id_seq';
 %find_fields = (
 	action		=>	'(SELECT name FROM log_actions WHERE log_actions.id = logs.action_id)',
 	object_type	=>	'(SELECT name FROM Object_Types WHERE object_types.id=logs.object_type_id)',
-	ip_address	=>	'(SELECT ip FROM Hosts where hosts.id=host_id)',
+	ip_address	=>	'(SELECT ip FROM Host_Interfaces where host_interfaces.host_id=host_id)',
 );
 %defaults = (
 	'date_time'	=>	"'NOW()'",
@@ -78,6 +78,8 @@ sub ip_address {
 			$Host->save();
 			$Interface = new openprint::Host_Interface();
 			$Interface->save({host_id=>$$Host{id}, ip=>$_[1] });
+		} else {
+			$Host = $Interface->Host();
 		} # end if
 		$_[0]{host_id} = $Host->id();
 	} # end if

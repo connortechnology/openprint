@@ -4,7 +4,7 @@ require openprint::Object;
 package openprint::Host_Interface;
 our @ISA = qw( openprint::Object );
 use vars qw( $debug $table @identified_by %fields %transforms %defaults );
-$debug = 1;
+$debug = 0;
 $table = 'host_interfaces';
 @identified_by = ( 'mac' );
 
@@ -15,10 +15,26 @@ $table = 'host_interfaces';
 	dhcp			=>	'dhcp',
     host_id         =>  'host_id',
 );
+%defaults	= (
+	dhcp		=>	0,
+	ip			=>	undef,
+	mac			=>	undef,
+);
 
 sub Host {
 	return new openprint::Host( $_[0]{host_id} );
 } # end sub Host;
+
+sub resolve {
+	my ( $self ) = @_;
+	my @h = gethostbyaddr(pack('C4',split('\.',$$self{ip})),2);
+	if ( @h ) {
+		return $h[0];
+	} elsif ( $debug ) {
+		$openprint::log->warn("Unable to reverse DNS $$self{ip}");
+	} # end if
+	return undef;
+} # end sub resolve
 
 package openprint::Host_Notification;
 our @ISA = qw( openprint::Object );
@@ -110,7 +126,6 @@ $serial = 'hosts_id_seq';
 	'whitelist'	=>	0,
 	'monitored'	=>	0,
 	'hostname'	=>	undef,
-	'dhcp'		=>	0,
 	'created_on'	=>	q`'NOW()'`,
 	'updated_on'	=>	q`'NOW()'`,
 	resolved_on		=>	undef,
@@ -123,17 +138,6 @@ $serial = 'hosts_id_seq';
 	'notified'=>	0,
 	location_id		=>	undef,
 );
-sub resolve {
-	my ( $self ) = @_;
-	my @h = gethostbyaddr(pack('C4',split('\.',$$self{'ip'})),2);
-	if ( @h ) {
-		return $h[0];
-	} elsif ( $debug ) {
-		$openprint::log->warn("Unable to reverse DNS $$self{'ip'}");
-	} # end if
-	return undef;
-} # end sub resolve
-
 sub get_mac {
 	my ( $self ) = @_;
 
@@ -267,6 +271,14 @@ sub Location {
 	require openprint::Location;
 	return new openprint::Location( $_[0]{location_id} );
 } # end sub Location
+
+sub resolve {
+	foreach my $Interface (  $_[0]->Interfaces() ) {
+		my $hostname = $Interface->resolve();
+		return $hostname if $hostname;
+	} # end foreach Interface
+	return undef;
+} # end sub resolve
 
 1;
 __END__

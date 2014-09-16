@@ -17,9 +17,11 @@
 <td class="hostname"><a href="host.html?host_id=%2$s">%3$s</a></td>
 <td class="ip"><a href="host.html?host_id=%2$s">%4$s</a></td>
 <td class="mac"><a href="host.html?host_id=%2$s">%5$s</a></td>
-<td class="assigned_on"><a href="host.html?host_id=%2$s">%6$s</a></td>
+<td class="Date assigned_on"><a href="host.html?host_id=%2$s">%6$s</a></td>
 <td class="comment"><a href="host.html?host_id=%2$s">%7$s</a></td>
-</tr>`, $rowclass, $LH->host_id(), $Host->hostname(), $Host->ip(), join('<br/>', ( $Host->mac() ? @{$Host->mac()} : () ) ), 
+</tr>`, $rowclass, $LH->host_id(), $Host->hostname(), 
+join('<br/>', map { $_->ip() } $Host->Interfaces() ), 
+join('<br/>', map { $_->mac() } $Host->Interfaces() ), 
 format_date( $LH->created_on() ), $LH->comment() );
 		$rowclass = $rowclass ? '' : ' class="colRow"';
 	} # end foreach $LH

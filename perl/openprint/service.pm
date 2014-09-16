@@ -215,7 +215,7 @@ sub auto_calculate {
 	if ( ! openprint::Estimating::Folding::neccessary( $Project ) ) {
 		if ( $$services{Folding} ) {
 			while ( my $si = shift @{$$services{'Folding'}} ) {
-				openprint::print_project::delete_service( $$Project{'id'}, $si );
+				openprint::print_project::delete_service( $Project, $si );
 			} # end while
 			delete $$services{Folding};
 		} # end if
@@ -227,7 +227,10 @@ sub auto_calculate {
 
 	if ( openprint::Estimating::Paper::neccessary( $Project ) ) {
 		if ( ! $$services{'Paper'} ) {
-			push @{$$services{'Paper'}}, $Project->add_service( 'Paper' );
+			$_ = $Project->add_service( 'Paper' );
+			if ( ! $$services{'Paper'} ) {
+				push @{$$services{'Paper'}}, $_;
+			} # end if	
 		} # end if
 	} # end if
 
@@ -241,11 +244,12 @@ sub auto_calculate {
 require openprint::Estimating::PerfectBound;
 	if ( openprint::Estimating::PerfectBound::neccessary( $Project ) ) {
 		if ( ! $$services{'PerfectBound'} ) {
-			push @{$$services{'PerfectBound'}}, $Project->add_service( 'PerfectBound' );
+			$_ = $Project->add_service( 'PerfectBound' );
+			push @{$$services{'PerfectBound'}}, $_ if ! $$services{PerfectBound};
 		} # end if
 	} elsif ( $$services{'PerfectBound'} ) {
 		while ( my $si = shift @{$$services{'PerfectBound'}} ) {
-			openprint::print_project::delete_service( $$Project{'id'}, $si );
+			openprint::print_project::delete_service( $Project, $si );
 		} # end while
 		delete $$services{'PerfectBound'};
 	} # end if
@@ -289,7 +293,7 @@ require openprint::Estimating::Stitching;
 	} else {
 		if ( $$services{'Collating'} ) {
 			foreach my $si ( @{$$services{'Collating'}} ) {
-				openprint::print_project::delete_service( $$Project{'id'}, $si );
+				openprint::print_project::delete_service( $Project, $si );
 			} # end foreach
 			delete $$services{'Collating'};
 		} # end if
@@ -327,7 +331,7 @@ require openprint::Estimating::Stitching;
 
 		if ( $neccessary and ! $$services{$service_name} ) {
 			$_ = $Project->add_service($service_name);
-			push @{$$services{$service_name}}, $_ if $_;
+			push @{$$services{$service_name}}, $_ if $_ and !$$services{$service_name};
 		} # end if
 	} # end foreach service_name;
 
@@ -492,7 +496,9 @@ $openprint::log->error("Doing internal calc without service_index or, not found"
 	} else {
 		$log->error($package . ' cant calc');
 	} # end if
-	$Project->update_status();
+
+	# This is too heavy
+	#$Project->update_status();
 	$Project->unlock();
 	return \%specs;
 } # end sub internal_calc

@@ -129,11 +129,15 @@ my @Hosts = openprint::Host->find(
 );
 $log->debug("# of hosts needing resolving: " . @Hosts );
 foreach my $Host ( @Hosts ) {
-	$Host->resolve() if $Host->ip();
-	$Host->save({
-		resolved_on	=> 'NOW()',
-	});
-} # end foreach
+		my $host = $Host->resolve();
+		if ( $host ) {
+			$Host->save({
+				hostname	=>	$host,
+				resolved_on	=> 'NOW()',
+			});
+			last;
+		}
+} # end foreach Host
 }
 
 # Paper maintenance
