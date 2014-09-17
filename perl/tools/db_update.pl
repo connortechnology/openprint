@@ -3086,7 +3086,11 @@ if ( ! sets::isin( 'hosts', \@tables ) ) {
 
 if ( ! sets::isin( 'host_interfaces', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/Host_Interfaces.sql}) );
-	#$dbh->do( 'SELEC
+	$dbh->do( 'INSERT INTO host_interfaces (host_id, mac,ip) SELECT id,unnest(mac),ip FROM hosts');
+	$dbh->do('insert into host_interfaces (host_id, mac,ip) SELECT id,NULL,ip from hosts where mac IS NULL');
+	$dbh->do('ALTER TABLE Hosts drop mac');
+	$dbh->do('ALTER TABLE Hosts drop ip');
+
 }
 if ( ! sets::isin( 'host_info', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/Host_Info.sql}) );
