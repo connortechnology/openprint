@@ -358,6 +358,8 @@ $openprint::log->debug("Impressions: $impressions") if DEBUG;
 	} # end if
 	$openprint::log->debug('AQ DOne Cutting :' . @impositions) if DEBUG;
 
+	my $AllAqueousMakeReady = openprint::Service->find_one( name=>'AqueousMakeReady');
+
 	foreach my $Equipment ( @equipment ) {
 $openprint::log->debug("AQ Equipment $$Equipment{strid}") if DEBUG;
 		$$specs{'hdnBreakdown'.$qty_index} .= 'Equipment: '.$Equipment->strid().' ' . $Equipment->specification('Aqueous Capable') . ' ' . $$sig_specs{'ddmPress'.$qty_index} . ',<br/>';
@@ -420,14 +422,14 @@ $openprint::log->debug("AQ types @types") if DEBUG;
 							) ) {
 #$openprint::log->debug("In Makereadies: $$Equipment{id} $area");
 				} else {
-					my $MRService = openprint::Service->find_one('name'=>$type.' MakeReady');
-					$MRService = openprint::Service->find_one('name'=>'AqueousMakeReady') if ! $MRService;
+					my $MRService = openprint::Service->find_one( name=>$type.' MakeReady');
+					$MRService = $AllAqueousMakeReady if ! $MRService;
 					if ( ! $MRService ) {
 						$$specs{'hdnBreakdown'.$qty_index} = 'No Make Ready Service for ' . $type . '<br/>';
 					} else {
 						%setupPrice = $MRService->get_price( $run_qty, $Equipment );
 					} # end if
-					$Price{'MakeReady'} += $setupPrice{'Price'};
+					$Price{MakeReady} += $setupPrice{Price};
 					$MakeReadies{$Equipment->id()} = $area;
 					$Price{washups} = scalar @different_types;
 $colour_total += $setupPrice{'Price'};

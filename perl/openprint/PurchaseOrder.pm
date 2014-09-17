@@ -128,8 +128,11 @@ sub save {
 
 	# Taxes
 	foreach my $T ( $self->Taxes() ) {
-		$error .= $T->save({'purchaseorder_id'=>$$self{'id'}, 'PurchaseOrder'=>$self});
+		$error .= $T->save({purchaseorder_id=>$$self{id}, PurchaseOrder=>$self});
 	} # end foreach
+	foreach my $T ( $self->old_Taxes() ) {
+		$T->delete();
+	} # end foreach T
 	sql::end_transaction( $openprint::dbh, $ac );
 
 	return $error;
@@ -470,9 +473,9 @@ sub Taxes {
 				) ) {
 			my $T = new openprint::PurchaseOrder_Tax();
 			$T->set({
-				'PurchaseOrder'		=>	$self,
-				'tax_id'			=>	$$Tax{'id'},
-				'rate'				=>	$$Tax{'rate'},
+				PurchaseOrder	=>	$self,
+				tax_id			=>	$$Tax{id},
+				rate			=>	$$Tax{rate},
 			});
 			#if ( $$self{'id'} ) {
 				#$T->save({'purchaseorder_id'	=>	$$self{'id'}});
@@ -487,11 +490,12 @@ sub Taxes {
 				country	=>	$country,
 				state	=>	$state,
 			);
+		my %new_tax_ids = map { $_->id(), $_->id() } @new_taxes;
 
 		# Clear out any no longer valid taxes
 		for ( my $i = 0; $i < @{$$self{Taxes}}; $i += 1 ) {
 			my $Tax = $$self{Taxes}[$i];
-			if ( ! sets::isin( $Tax->tax_id(), [ map { $_->id() } @new_taxes ] ) ) {
+			if ( ! $new_tax_ids{$Tax->tax_id()} ) {
 				#$Tax->delete();
 				splice @{$$self{Taxes}}, $i, 1; $i -= 1;
 			} # end if
@@ -514,6 +518,20 @@ sub Taxes {
 	} # end if recalculate
 	return $$self{'Taxes'} ? @{$$self{'Taxes'}} : ();
 } # end sub Taxes
+
+sub old_Taxes {
+	my ( $self ) = @_;
+	my @old_Taxes;
+	my @new_Taxes = $self->Taxes(1);
+	my %new_tax_ids = map { $_->tax_id(), $_->tax_id() } @new_Taxes;
+	
+	foreach my $old_Tax ( openprint::PurchaseOrder_Tax->find(purchaseorder_id=>$$self{id}) ) {
+		if ( ! $new_tax_ids{$old_Tax->tax_id()} ) {
+			push @old_Taxes, $old_Tax;
+		} # end if
+	} # end foreach old_Tax;
+	return @old_Taxes;
+} # end sub old_Taxes
 
 sub Tax {
     my $result = openprint::PurchaseOrder_Tax->find_one('purchaseorder_id'=>$_[0]{'id'}, 'tax_id'=>$_[1]->id() ) if $_[0]{'id'};

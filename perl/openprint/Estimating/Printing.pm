@@ -1087,8 +1087,11 @@ $openprint::log->debug("Skipping cuz ddmPress$qty_index ne $$Press{strid}");
 			if ( $$specs{'PrintingTypes'} and ! sets::isin( $printing_type, $$specs{'PrintingTypes'} ) ) {
 				if ( $$specs{'chkOverridePress'.$qty_index} eq 'Y' and $$specs{'ddmPress'.$qty_index} eq $$Press{'strid'} ) {
 					$$specs{'alert'} .= 'Press ' . $$Press{'strid'} . " Printing Type ($printing_type) is not in PrintingTypes  ". join(',', @{$$specs{'PrintingTypes'}} ) . '<br/>';
+				} elsif ( $$specs{'OverridePrintingType'.$qty_index} eq 'Y' and $printing_type eq $$specs{'PrintingType'.$qty_index} ) {
+					$$specs{'alert'} .= 'Press ' . $$Press{'strid'} . " Printing Type ($printing_type) is not in PrintingTypes  ". join(',', @{$$specs{'PrintingTypes'}} ) . '<br/>';
+				} else {
+					next;
 				} # end if
-				next;
 			} # end if
 		} # end if
 # If we have a plate type override, then make sure that this press can do it.
@@ -2853,7 +2856,10 @@ $openprint::log->debug(" $$project{ProjectSpecs} group: $$sig_specs{Group} pageq
 			next;
 		} # end if
 
-		if ( $$sig_specs{PrintingTypes} ) {
+		if ( $$sig_specs{PrintingTypes} 
+			and ( $$sig_specs{"chkOverridePress$qty_index"} ne 'Y' ) 
+			and ( $$sig_specs{"OverridePrintingType$qty_index"} ne 'Y' ) 
+) {
 			my $printing_type = $Press->specification('Printing Type');
 			if ( ! sets::isin( $printing_type, $$sig_specs{'PrintingTypes'} ) ) {
 				next;
