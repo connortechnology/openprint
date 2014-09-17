@@ -1037,7 +1037,7 @@ sub Views {
 
 	if ( ! defined $_[0]{Views} ) {
 		if ( $_[0]{id} ) {
-			$_[0]{Views}} = [ openprint::View->find({object_type=>ref $_[0], object_id=>$_[0]{id}, order=>'created_on'}) ];
+			$_[0]{Views} = [ openprint::View->find({object_type=>ref $_[0], object_id=>$_[0]{id}, order=>'created_on'}) ];
 		} else {
 			$_[0]{Views} = [];
 		} # end if
