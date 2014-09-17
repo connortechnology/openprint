@@ -402,14 +402,14 @@ button( 'merge'.$C->id(), { href=>'/administrator/managerial/company_profiles.ht
 				<label>Country</label>
 				<select name="ddmShippingCountry" onchange="Country_onchange(this, this.form.ddmShippingStateProvince );">
 					<option value=""> Select </option>
-					<? echo ( ssi::return_countries($variable{'ddmShippingCountry'}); ) ?>
+					<? echo ( return_countries($variable{'ddmShippingCountry'}); ) ?>
 				</select>
 			</li>
 			<li> 
 				<label><span id="ddmShippingCountry_state">Province/State</span></label>
 				<select name="ddmShippingStateProvince">
 					<option value=""> Select </option>
-					<? echo ( ssi::return_states_and_provinces($variable{'ddmShippingStateProvince'}); ) ?>
+					<? echo ( return_states_and_provinces($variable{'ddmShippingStateProvince'}); ) ?>
 				</select>
 			</li>
 			<li> 

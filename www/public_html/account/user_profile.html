@@ -10,7 +10,7 @@
 			<fieldset class="filters">
 			<? if ( $$variable{User}->Company()->can_edit() ) ?>
 			<? echo (
-				my @Users = @{$$variable{Users}} = openprint::User->find('company_id'=>$$variable{User}->company_id()?$$variable{User}->company_id():$session{company_id}, order=>'lower(firstname),lower(lastname)' );
+				my @Users = @{$$variable{Users}} = openprint::User->find( company_id=>$$variable{User}->company_id()?$$variable{User}->company_id():$session{company_id}, order=>'lower(firstname),lower(lastname)' );
 				if ( @Users == 1 ) {
 					return sprintf('<input type="hidden" name="ddmUser" value="%d"/>', $Users[0]->id() );
 				} elsif ( @Users ) {
@@ -53,7 +53,7 @@
 				No profile picture set.
 				<? endif ( $$variable{User}->Asset()->id() ) ?>
 				</div>
-				<? echo ( include('_statistics.html'); ) ?>
+				<?include('_statistics.html')?>
 			</div>
 			<div id="UserInformation">
    			<fieldset><legend>User Information</legend>
@@ -146,7 +146,7 @@
 				</div>
    			</fieldset>
 			</div>
-			<? echo ( include('_user_profile_edit.html'); ) ?>
+			<?include('_user_profile_edit.html')?>
 			<div id="LoginInformation">
    			<fieldset><legend>Login Information</legend>
 				<div class="content">

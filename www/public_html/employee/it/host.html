@@ -116,8 +116,8 @@
 	} # end if RADIUS
 
 	my $radius_fragment = slurp_content( '/employee/it/_radius_mac_line.html' );
-
-	foreach my $Interface ( $$variable{Host}->Interfaces(), new openprint::Host_Interface() ) {
+my @macs = map { $_->mac() ? () : '' } $$variable{Host}->Interfaces();
+	foreach my $Interface ( $$variable{Host}->Interfaces(), ( @macs ? () : new openprint::Host_Interface() ) ) {
 		my $mac = $Interface->mac();
 		$html .= sprintf(q`
 <tr>
@@ -141,7 +141,7 @@ checkboxes( 'dhcp-'.$mac, [ 1, '' ], $Interface->dhcp() ),
 			$html .= '<td class="radius" id="mac-'.$mac.'">';
 
 				$$variable{username} = $mac;
-				$html .= variable_substitution( \$radius_fragment, $variable );
+				$html .= variable_substitution( \$radius_fragment, $variable ) if $mac;
 				$html .= '</td>';
 		} # end if RADIUS
 	} # end foreach Interface

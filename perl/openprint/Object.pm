@@ -1035,10 +1035,14 @@ sub Views {
 		return openprint::View->find($_[1]);
 	} # end if
 
-	if ( ! defined $_[0]{'Views'} ) {
-		@{$_[0]{'Views'}} = openprint::View->find({'object_type'=>ref $_[0], 'object_id'=>$_[0]{'id'}, 'order'=>'created_on'});
+	if ( ! defined $_[0]{Views} ) {
+		if ( $_[0]{id} ) {
+			$_[0]{Views}} = [ openprint::View->find({object_type=>ref $_[0], object_id=>$_[0]{id}, order=>'created_on'}) ];
+		} else {
+			$_[0]{Views} = [];
+		} # end if
 	} # end if
-	return @{$_[0]{'Views'}};
+	return @{$_[0]{Views}};
 } # end sub Views
 
 sub Comments {

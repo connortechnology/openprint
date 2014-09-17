@@ -997,7 +997,7 @@ sub price {
 		} # end if
 	} # end if
 #$openprint::log->debug("Price $qty_index " . $$self{'price'.$qty_index} );
-	return sprintf( $config{'ProjectMoneyFormat'}, $$self{'price'.$qty_index} );
+	return $config{ProjectMoneyFormat} ? sprintf( $config{'ProjectMoneyFormat'}, $$self{'price'.$qty_index} ) : $$self{'price'.$qty_index};
 } # end sub price
 sub unit_price {
 	my ( $self, $qty_index ) = @_;
