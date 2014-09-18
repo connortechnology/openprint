@@ -780,7 +780,6 @@ $openprint::log->debug("Folding impositions: " . @folding_impositions ) if DEBUG
 					$horizontal_cuts += $$I{rows}-1;
 				} # end if
 				foreach my $side ( keys %pretrim_sides ) {
-$log->debug("Adding $side trim");
 					# What I am thinking here, is that if it was 2 out, the in between head trim would already have been done, so there is just 1 to do
 					if ( $$I{image_orientation} eq 'Vertical' ) {
 						$horizontal_cuts += 1;
