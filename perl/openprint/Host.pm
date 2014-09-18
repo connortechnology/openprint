@@ -1,6 +1,65 @@
 use strict;
 require openprint::Object;
 
+package openprint::Host_Interface;
+our @ISA = qw( openprint::Object );
+use vars qw( $debug $table @identified_by %fields %transforms %defaults );
+$debug = 0;
+$table = 'host_interfaces';
+@identified_by = ( 'mac' );
+
+%fields = (
+	mac				=>	'mac',
+	ip				=>	'ip',
+	comment			=>	'comment',
+	dhcp			=>	'dhcp',
+    host_id         =>  'host_id',
+);
+%defaults	= (
+	dhcp		=>	0,
+	ip			=>	undef,
+	mac			=>	undef,
+);
+
+sub Host {
+	return new openprint::Host( $_[0]{host_id} );
+} # end sub Host;
+
+sub resolve {
+	my ( $self ) = @_;
+	my @h = gethostbyaddr(pack('C4',split('\.',$$self{ip})),2);
+	if ( @h ) {
+		return $h[0];
+	} elsif ( $debug ) {
+		$openprint::log->warn("Unable to reverse DNS $$self{ip}");
+	} # end if
+	return undef;
+} # end sub resolve
+
+sub get_mac {
+	my ( $self ) = @_;
+
+	my ( $subnet ) = $$self{'ip'} =~ /^(\d+\.\d+\.\d+)\.\d+$/;
+
+	my $use_iface;
+
+	require IO::Interface::Simple;
+	foreach my $iface ( IO::Interface::Simple->interfaces ) {
+$openprint::log->debug("Looking at $iface. " . $iface->address . ', subnet: ' . $subnet );
+		if ( $iface->address =~ /^$subnet\.\d+$/ ) {
+			$use_iface = $iface;
+		} # end if
+	}
+
+	if ( $use_iface ) {
+		require Net::ARP;
+		my $mac = Net::ARP::arp_lookup( $use_iface, $$self{'ip'} );
+		$openprint::log->debug("Mac: $mac");
+		return $mac;
+	} else {
+		$openprint::log->debug("Unable to determine interface");
+	} # end if
+} # end sub get_mac
 package openprint::Host_Notification;
 our @ISA = qw( openprint::Object );
 use vars qw( $debug $table @identified_by %fields %transforms %defaults );
@@ -30,7 +89,7 @@ $serial = 'host_types_id_seq';
 
 package openprint::Host_Info;
 our @ISA = qw( openprint::Object );
-use vars qw( $debug $table $serial %fields %transforms %defaults %types );
+use vars qw( $debug $table $serial %fields %transforms %defaults %types %find_fields );
 $debug = 0;
 $table = 'host_info';
 $serial = 'host_info_id_seq';
@@ -39,6 +98,8 @@ $serial = 'host_info_id_seq';
 	host_id		=>	'host_id',
 	name		=>	'name',
 	value		=>	'value',
+);
+%find_fields = (
 );
 %transforms = (
 	id		=>	[ 's/\D//g' ],
@@ -50,14 +111,12 @@ package openprint::Host;
 our @ISA = qw( openprint::Object );
 
 use vars qw( $debug $table $serial %fields %find_fields %transforms %defaults %types );
-$debug = 0;
+$debug = 1;
 $table = 'hosts';
 $serial = 'hosts_id_seq';
 %fields = (
 	id			=>	'id',
-	ip			=>	'ip',
 	hostname	=>	'hostname',
-	mac			=>	'mac',	
 	blacklist	=>	'blacklist',
 	whitelist	=>	'whitelist',
 	monitored	=>	'monitored',
@@ -78,6 +137,8 @@ $serial = 'hosts_id_seq';
 );
 %find_fields = (
 	type	=>	'(SELECT name FROM Host_types WHERE host_types.id=type_id)',
+	mac	=>	'(SELECT mac FROM host_interfaces WHERE host_id=hosts.id)',
+	ip	=>	'(SELECT ip FROM host_interfaces WHERE host_id=hosts.id)',
 );
 %transforms = (
 	id			=>	[ 's/\D//g' ],
@@ -88,10 +149,7 @@ $serial = 'hosts_id_seq';
 	'blacklist'	=>	0,
 	'whitelist'	=>	0,
 	'monitored'	=>	0,
-	'mac'		=>	undef,
-	'hostname'	=>	'undef',
-	'ip'		=>	undef,
-	'dhcp'		=>	0,
+	'hostname'	=>	undef,
 	'created_on'	=>	q`'NOW()'`,
 	'updated_on'	=>	q`'NOW()'`,
 	resolved_on		=>	undef,
@@ -104,41 +162,6 @@ $serial = 'hosts_id_seq';
 	'notified'=>	0,
 	location_id		=>	undef,
 );
-sub resolve {
-	my ( $self ) = @_;
-	my @h = gethostbyaddr(pack('C4',split('\.',$$self{'ip'})),2);
-	if ( @h ) {
-		return $h[0];
-	} elsif ( $debug ) {
-		$openprint::log->warn("Unable to reverse DNS $$self{'ip'}");
-	} # end if
-	return undef;
-} # end sub resolve
-
-sub get_mac {
-	my ( $self ) = @_;
-
-	my ( $subnet ) = $$self{'ip'} =~ /^(\d+\.\d+\.\d+)\.\d+$/;
-
-	my $use_iface;
-
-	require IO::Interface::Simple;
-	foreach my $iface ( IO::Interface::Simple->interfaces ) {
-$openprint::log->debug("Looking at $iface. " . $iface->address . ', subnet: ' . $subnet );
-		if ( $iface->address =~ /^$subnet\.\d+$/ ) {
-			$use_iface = $iface;
-		} # end if
-	}
-
-	if ( $use_iface ) {
-		require Net::ARP;
-		my $mac = Net::ARP::arp_lookup( $use_iface, $$self{'ip'} );
-		$openprint::log->debug("Mac: $mac");
-		return $mac;
-	} else {
-		$openprint::log->debug("Unable to determine interface");
-	} # end if
-} # end sub get_mac
 
 sub destroy {
 	my $error;
@@ -147,6 +170,15 @@ sub destroy {
 		$error .= $Log->destroy();
 		return $error if $error;
 	} # end foreach Log
+	foreach my $N ( $_->Notifications() ) {
+		$error .= $N->destroy();
+		return $error if $error;
+	} # end foreach Log
+	foreach my $I ( $_->Interfaces() ) {
+		$error .= $I->destroy();
+		return $error if $error;
+	} # end foreach Log
+
 	$error .= $_[0]->SUPER::destroy();
 	return $error;
 } # end sub destroy
@@ -208,6 +240,15 @@ sub Notifications {
 	} # end if
 	return @{$_[0]{'Notifications'}};
 } # end sub Notifications
+sub Interfaces {
+	if ( ! $_[0]{Interfaces} ) {
+		@{$_[0]{Interfaces}} = openprint::Host_Interface->find(
+				host_id	=>	$_[0]{id},
+				order	=>	'mac',
+				);
+	} # end if
+	return @{$_[0]{Interfaces}};
+} # end sub Notifications
 
 sub info {
 	if ( ! $_[0]{Info} ) {
@@ -230,6 +271,14 @@ sub Location {
 	require openprint::Location;
 	return new openprint::Location( $_[0]{location_id} );
 } # end sub Location
+
+sub resolve {
+	foreach my $Interface (  $_[0]->Interfaces() ) {
+		my $hostname = $Interface->resolve();
+		return $hostname if $hostname;
+	} # end foreach Interface
+	return undef;
+} # end sub resolve
 
 1;
 __END__

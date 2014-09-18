@@ -220,5 +220,13 @@ sub manufacturer {
     return $_[0]{'manufacturer'};
 } # end sub manufacturer
 
+sub Unit_Of_Measure_Purchase {
+	'';
+} # end sub  Unit_Of_Measure_Purchase
+sub Unit_Of_Measure_Costing {
+	'';
+} # end sub  Unit_Of_Measure_Costing
+
+
 1;
 __END__

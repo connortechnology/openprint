@@ -59,7 +59,7 @@
 			<? echo ( 
 				my $html;
 				foreach my $Upload ( @{$$variable{'Uploads'}} ) {
-					$html .= sprintf('<tr><td nowrap="nowrap">%s</td><td align="right">%s</td></tr>', $$Upload{'proper_file_path'}, misc::format_bytes($$Upload{'size'}) ); 
+					$html .= sprintf('<tr><td nowrap="nowrap">%s</td><td align="right">%s</td></tr>', $$Upload{proper_file_path}, misc::format_bytes($$Upload{size}) ); 
 				} # end foreach Upload
 				return $html;
 			) ?>

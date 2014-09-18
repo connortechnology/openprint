@@ -35,6 +35,7 @@ my @variables = (
 	'txtPrice1','txtPrice2','txtPrice3',
 	'OverridePrice1', 'OverridePrice2', 'OverridePrice3',
 	'Markup1', 'Markup2', 'Markup3',
+	'alert',
 );
 
 my @all_equipment;
@@ -84,10 +85,10 @@ sub has_overrides {
 sub signature_needs {
 	my ( $Project, $specs, $sig_specs, $Paper ) = @_;
 
+	my $form = $$sig_specs{SignatureIndex} * 1;
 	if ( $specs ) {
 	# This is because for non-books, the specs hash doesn't have the SignatureIndex filledin.
 # WHAT?S!  ARE YOU SMOKING?
-		my $form = $$sig_specs{SignatureIndex} * 1;
 #$openprint::log->debug("Scoring::need $form : " .$$specs{"chkOverrideQty-$form"}) if DEBUG;
 		if ( ( (defined $$specs{"chkOverrideQty-$form"} ) and ( $$specs{"chkOverrideQty-$form"} eq 'Y' ) ) and
 				( $$specs{"txtVerticalQty-$form"} or $$specs{"txtHorizontalQty-$form"} ) ) {
@@ -103,7 +104,7 @@ sub signature_needs {
 	if ( 
 		( $$sig_specs{txtSignatureType} eq '' ) 
 		or ( $$sig_specs{txtSignatureType} eq 'Cover Pages' ) 
-		or ( $$sig_specs{'txtSignatureType'} and ( ! $Project->signatures({type=>'Cover Pages'}) ) and ( $$sig_specs{'SignatureIndex'} == 1 ) ) 
+		or ( $$sig_specs{'txtSignatureType'} and ( ! $Project->signatures({type=>'Cover Pages'}) ) and ( $form == 1 ) ) 
 	) {
 		$Paper = openprint::Paper::load_from_signature( $Project, $sig_specs ) if ! $Paper;
 #$openprint::log->debug( "Score Required!: " . $Paper->score_required() );
@@ -144,6 +145,7 @@ sub calc {
 	my ( $log, $dbh, $variable, $project_index, $service_index, $specs ) = @_;
 
 	my $status = 'calculated';
+	$$specs{alert} = '';
 
 	my $Project = new openprint::Project( $project_index );
 
@@ -235,7 +237,7 @@ sub signature_calc {
 	);
 	my $form = $$sig_specs{SignatureIndex};
 
-	if ( (defined $$specs{"chkOverrideQty-$form"}) and ( $$specs{"chkOverrideQty-$form"} ne 'Y' ) ) {
+	if ( (!defined $$specs{"chkOverrideQty-$form"}) or ( $$specs{"chkOverrideQty-$form"} ne 'Y' ) ) {
 		get_scores( $Project, $specs, $sig_specs, $SignatureImposition->Paper() );
 	} # end if
 

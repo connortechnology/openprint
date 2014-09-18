@@ -595,6 +595,7 @@ sub save {
 	my ( $self, $hash ) = @_;
 
 	$self->set( $hash );
+	$self->services(undef);
 	foreach my $qty_index ( $self->quantity_indexes() ) {
 		$self->price( $qty_index, undef );
 	} # end foreach
@@ -788,9 +789,9 @@ sub services {
 		delete $$self{'Services'};
 	} # end if
 	
-	if ( $$self{'id'} and ! exists $$self{'Services'} ) {
+	if ( $$self{'id'} and ! $$self{'Services'} ) {
 		my %results;
-		my @data = sql::execute( $openprint::log, $openprint::dbh, q{SELECT (SELECT name FROM Service_Types WHERE id=servicetype_id), lngServiceIndex FROM tbl_Project_Contents WHERE lngProjectIndex=?}, $$self{'id'} );
+		my @data = sql::execute( $openprint::log, $openprint::dbh, q{SELECT (SELECT name FROM Service_Types WHERE id=servicetype_id), lngServiceIndex FROM tbl_Project_Contents WHERE lngProjectIndex=?}, $$self{id} );
 		while ( my ( $id, $index ) = splice @data, 0, 2 ) {
 			$id = '' if ! $id;
 			push @{$results{$id}}, $index;
@@ -992,12 +993,13 @@ sub price {
 				foreach ( @{$$services{$k}} ) {
 					my $specs = openprint::service::get_specs_ref( $self, $_ );
 					$$self{'price'.$qty_index} += $$specs{'txtPrice'.$qty_index};
+					$openprint::log->debug("Getting " . $$specs{'txtPrice'.$qty_index} . " from $k $_");
 				} # end foreach
 			} # end foreach
 		} # end if
 	} # end if
 #$openprint::log->debug("Price $qty_index " . $$self{'price'.$qty_index} );
-	return sprintf( $config{'ProjectMoneyFormat'}, $$self{'price'.$qty_index} );
+	return $config{ProjectMoneyFormat} ? sprintf( $config{'ProjectMoneyFormat'}, $$self{'price'.$qty_index} ) : $$self{'price'.$qty_index};
 } # end sub price
 sub unit_price {
 	my ( $self, $qty_index ) = @_;
@@ -1278,7 +1280,12 @@ foreach my $k ( keys %{$$self{Services}} ) {
 		} # end foreach 
 	}
 
-	delete $$self{'Services'};
+	#delete $$self{'Services'};
+	if ( ! $$self{Services}{$ServiceType->name()} ) {
+		$$self{Services}{$ServiceType->name()} = [ $$Service{service_id} ];
+	} else {
+		push @{$$self{Services}{$ServiceType->name()}}, $$Service{service_id};
+	}
 	delete $$self{'service_types'};
 	delete $$self{'signatures'};
 	foreach my $qty_index ( $self->quantity_indexes() ) {
@@ -1478,7 +1485,7 @@ sub used_press_names {
 	my $self = $_[0];
 	my @results;
 	foreach my $service_id ( $self->signatures() ) {
-		my $Service = new openprint::Project_Service( {'project_id'=>$$self{'id'}, 'id'=>$service_id} );
+		my $Service = $self->Service( $service_id );
 		my $sig_specs = $Service->specs();
 		if ( ! $$sig_specs{'UsePress'} ) {
 			push @results, $$sig_specs{'ddmPress'.$self->ordered_quantity_index()};
@@ -1491,7 +1498,7 @@ sub used_press_names {
 
 sub add_Service {
 	my $service_id = $_[0]->add_service( $_[1] );
-	return new openprint::Project_Service( {'project_id'=>$_[0]{'id'},'service_id'=>$service_id} );
+	return $_[0]->Service( $service_id );
 } # end sub add_Service
 
 sub recalculate {
@@ -1595,13 +1602,13 @@ sub change_ProjectType {
 	if ( $$Project{type_id} ) {
 		if ( $OldProjectType->id() != $ProjectType->id() ) {
 			if ( $$services{''} ) {
-				foreach ( @{$$services{''}} ) { openprint::print_project::delete_service( $$Project{id}, $_ ); };
+				foreach ( @{$$services{''}} ) { openprint::print_project::delete_service( $Project, $_ ); };
 			} # end if
 			delete $$services{''};
 			if ( $OldProjectType->type() ne $ProjectType->type() ) {
 				$log->debug("Removing sigs because project type is different");
 				# Brochure to multipage or nice versa.  Have to remove sigs.
-				foreach ( $Project->signatures() ) { openprint::print_project::delete_service( $$Project{id}, $_ ); }
+				foreach ( $Project->signatures() ) { openprint::print_project::delete_service( $Project, $_ ); }
 				delete $$services{Signature};
 			} else {
 				$openprint::log->debug("Not Removing sigs because project type is same $$OldProjectType{type} == $$ProjectType{type}");
@@ -1622,7 +1629,7 @@ sub change_ProjectType {
 		foreach my $ServiceType ( @oldRequiredServiceTypes ) {
 			if ( ! sets::isin( $ServiceType, \@newRequiredServiceTypes ) ) {
 				foreach my $s_id ( @{$$services{$ServiceType->name()}} ) {
-					openprint::print_project::delete_service( $Project->id(), $s_id );
+					openprint::print_project::delete_service( $Project, $s_id );
 				} # end foreach
 				delete $$services{$ServiceType->name()};
 			} # end if
@@ -1657,11 +1664,11 @@ sub lock {
 	my ( $caller, undef, $line ) = caller;
 	if ( $_[0]{ac} ) {
 		#already locked
-		$openprint::log->debug("ALREADY LOCKED Projects for project $_[0]{id} ac: $_[0]{ac} caller: $caller line: $line project ref:" . $_[0]);
+		$openprint::log->debug("ALREADY LOCKED Projects for project $_[0]{id} ac: $_[0]{ac} caller: $caller line: $line project ref:" . $_[0]) if $debug;
 		$_[0]{ac} += 1;
 	} else {
 		$_[0]{ac} = sql::start_transaction( $openprint::dbh );
-		$openprint::log->debug("LOCKING Projects for project $_[0]{id} ac: $_[0]{ac} caller: $caller line: $line project ref:" . $_[0]);
+		$openprint::log->debug("LOCKING Projects for project $_[0]{id} ac: $_[0]{ac} caller: $caller line: $line project ref:" . $_[0]) if $debug;
 		$openprint::dbh->do( "SELECT * FROM Projects WHERE id=".$_[0]{id}. ' FOR UPDATE' );
 		#$openprint::dbh->do( 'SET CONSTRAINTS ALL DEFERRED' );
 	} # end if
@@ -1670,7 +1677,7 @@ sub lock {
 
 sub unlock {
 	my ( $caller, undef, $line ) = caller;
-	$openprint::log->debug("UNLOCKING Projects for project $_[0]{id} ac: $_[0]{ac} caller: $caller line: $line" . $_[0]);
+	$openprint::log->debug("UNLOCKING Projects for project $_[0]{id} ac: $_[0]{ac} caller: $caller line: $line" . $_[0]) if $debug;
 	if ( ! exists $_[0]{ac} ) {
 		$_[0]{ac} = $openprint::dbh->{AutoCommit};
 	} # end if
@@ -1707,7 +1714,9 @@ sub check_for_order {
 				my $Stock = $$Stock_Qty{Stock};
 				$openprint::log->debug("Quantity for " . $Stock->to_string() . ' is ' . $$Stock_Qty{quantity} ) if $debug;
 				if ( defined $Stock->available_to_order() ) {
-					if ( $Stock->available_to_order() < $$Stock_Qty{quantity} ) {
+					my $allocated = misc::sum( map { $_->quantity() } openprint::PaperAllocation->find(docket=>$Project->docket(), paper_id=>$$Stock{id}) );
+
+					if ( $Stock->available_to_order()+$allocated < $$Stock_Qty{quantity} ) {
 						$error .= 'There is not enough stock available to satisfy this order.  Please contact your CSR.<br/>';
 					} # end if
 				} # end if

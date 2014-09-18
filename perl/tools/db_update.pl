@@ -1195,6 +1195,10 @@ if ( ! sets::isin( 'papers', \@tables ) ) {
 		$dbh->do(q`ALTER TABLE papers add supplier_id INTEGER`);
 		$dbh->do(q`ALTER TABLE papers add FOREIGN KEY (supplier_id) REFERENCES companies (id)`);
 	} # end nif
+	if ( ! exists $$data{department_id} ) {
+		print "Adding department_id to Papers\n";
+		$dbh->do(q`ALTER TABLE papers add department_id TEXT`);
+	} # end nif
 } # end if
 
 if ( ! sets::isin( 'paper_recommendations', \@tables ) ) {
@@ -3080,6 +3084,14 @@ if ( ! sets::isin( 'hosts', \@tables ) ) {
 	} # end if
 }
 
+if ( ! sets::isin( 'host_interfaces', \@tables ) ) {
+	$dbh->do( misc::load_file( $log, q{../openprint/sql/Host_Interfaces.sql}) );
+	$dbh->do( 'INSERT INTO host_interfaces (host_id, mac,ip) SELECT id,unnest(mac),ip FROM hosts');
+	$dbh->do('insert into host_interfaces (host_id, mac,ip) SELECT id,NULL,ip from hosts where mac IS NULL');
+	$dbh->do('ALTER TABLE Hosts drop mac');
+	$dbh->do('ALTER TABLE Hosts drop ip');
+
+}
 if ( ! sets::isin( 'host_info', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/Host_Info.sql}) );
 }

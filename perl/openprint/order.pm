@@ -415,7 +415,7 @@ sub save_project_information {
 			} elsif ( $$services{$ShippingType->name()} ) {
 				# Thismight delete bindery shipping 
 				foreach ( @{$$services{$ShippingType->name()}} ) {
-					openprint::print_project::delete_service( $project_index, $_ );
+					openprint::print_project::delete_service( $Project, $_ );
 				} # end foreach
 				delete $$services{$ShippingType->name()};
 			} # end if

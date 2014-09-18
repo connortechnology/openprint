@@ -30,9 +30,9 @@
 
 			( sets::isin( $session{'user_type'}, ['E','A'] ) ? (
 				( $session{'/invoice/history.html?company_id'} ? ( 'invoicee_id' => $session{'/invoice/history.html?company_id'} ) : () ),
-				'invoicer_id'		=> $session{'company_id'},
+				invoicer_id		=> $session{'company_id'},
 			) : (
-				( 'invoicee_id'	=>	$session{'company_id'} ),
+				( invoicee_id	=>	$session{'company_id'} ),
 			) ),
 			order				=> 'num,id',
 			) ) {

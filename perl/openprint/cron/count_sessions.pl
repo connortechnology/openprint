@@ -64,8 +64,9 @@ foreach my $session_id ( @$session_ids ) {
         $session{'lastupdated'} = time;
         untie %session;
     } elsif ( time - $session{'lastupdated'} < ( 60*60 ) ) {
-		my $Host = openprint::Host->find_one( ip => $session{ip} ) if $session{ip};
-		next if ! $Host;
+		my $I = openprint::Host_Interface->find_one( ip => $session{ip} ) if $session{ip};
+		next if ! $I;
+		my $Host = $I->Host();
 		if ( $Host->hostname() ) {
 		next if $Host->hostname() =~ /googlebot/;
 		next if $Host->hostname() =~ /baidu/;

@@ -195,7 +195,7 @@ sub handler {
 		$variable{'siteURL'} = $config{'siteURL'};
 		$variable{'PageTitle'} = $config{'SiteTitle'} .' - ' . $page;
 
-	$log->debug( "Before loading content: ($page) Elapsed time: " . sprintf('%.4f', tv_interval([$starttime])*1000).' usecs' );
+	#$log->debug( "Before loading content: ($page) Elapsed time: " . sprintf('%.4f', tv_interval([$starttime])*1000).' usecs' );
 		if ( ! exists $variable{'PageContent'} ) {
 			my $content;
 			if ( -e ( my $path = join('/', $config{'SkinPath'}, 'html', $page )) ) {
@@ -241,7 +241,7 @@ $log->debug("PageContent is $variable{PageContent}");
 			} # end while
 			} # end if
 		} # end if _
-		$log->debug( "After finding template: ($page) Elapsed time: " . sprintf('%.4f', tv_interval([$starttime])*1000).' usecs' );
+		#$log->debug( "After finding template: ($page) Elapsed time: " . sprintf('%.4f', tv_interval([$starttime])*1000).' usecs' );
 		local $|=1;
 		if ( $template ) {
 			#$log->debug("parsing template! $template");
@@ -251,7 +251,7 @@ $log->debug("PageContent is $variable{PageContent}");
 			#$log->warn("No template!" . $r->content_type());
 			$variable{PageContent} = ssi::variable_substitution( \$variable{'PageContent'}, \%variable ) if $variable{'PageContent'} ne '';
 			#$log->warn($variable{PageContent});
-			$log->debug( "Before printing: ($page) Elapsed time: " . sprintf('%.4f', tv_interval([$starttime])*1000).' usecs' . length( $variable{PageContent} ) );
+			#$log->debug( "Before printing: ($page) Elapsed time: " . sprintf('%.4f', tv_interval([$starttime])*1000).' usecs' . length( $variable{PageContent} ) );
 			$r->print( $variable{PageContent} );
 	#$log->debug( "After printing: ($page) Elapsed time: " . sprintf('%.4f', tv_interval([$starttime])*1000).' usecs' );
 		} # end if
@@ -413,12 +413,6 @@ $log->error("Unable to load equipment.	No PPF for you for signature $$PPF{'signa
 				$variable{'ProjectIndex'} = $openprint::param{'ProjectIndex'} if ! $variable{'ProjectIndex'};
 				$variable{'ProjectIndex'} = $openprint::session{'project_id'} if ! $variable{'ProjectIndex'};
 				$variable{'Project'} = new openprint::Project( $variable{'ProjectIndex'} );
-				if ( $variable{ServiceIndex} ) {
-					my $Service = $variable{'Project'}->Service( $variable{'ServiceIndex'} );
-					$variable{ServiceType} = $Service->ServiceType();
-					@variable{'ServiceTypeID','ServiceTypeName','ServiceTypeType'} = $variable{ServiceType}->get('name','description','type') if $variable{ServiceType};
-$log->debug("ServiceType: $variable{'ServiceTypeType'}");
-				} # end if
 				my $Currency = openprint::Currency::get_current();
 				@variable{'CurrencyName','CurrencySymbol'} = ( $Currency->name(), $Currency->symbol() );
 				my $project_index = $variable{'ProjectIndex'};
@@ -427,12 +421,17 @@ $log->debug("ServiceType: $variable{'ServiceTypeType'}");
 				# Things like UPS SHipping might not actually have a service
 				openprint::print::get_quantities( \%variable, $project_index );
 				if ( $project_index and $service_index ) {
-					my $specs = openprint::service::get_specs_ref( $variable{'Project'}, $service_index );
+					my $Service = $variable{Project}->Service( $service_index );
+					$variable{ServiceType} = $Service->ServiceType();
+					@variable{'ServiceTypeID','ServiceTypeName','ServiceTypeType'} = $variable{ServiceType}->get('name','description','type') if $variable{ServiceType};
+$log->debug("ServiceType: $variable{'ServiceTypeType'}");
+					my $specs = $Service->specs();
 					@variable{keys %$specs} = values %$specs;
 				} # end if
 				$variable{'ProjectType'} = $variable{'Project'}->Type();
-				if ( ! $variable{'ServiceIndex'} ) {
-					$variable{'ServiceIndex'} = $service_index;
+				# THis couud happen if the ServiceSpecs clobbered it
+				if ( ! $variable{ServiceIndex} ) {
+					$variable{ServiceIndex} = $service_index;
 				} # end if
 
 				if ( $third eq 'prin' ) {

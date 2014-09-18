@@ -15,10 +15,10 @@
 			);
 		} else {
 			@Hosts = openprint::Host->find(
-				'order' => $session{'/employee/it/licenses.html?order'},
-				( $session{'/employee/it/licenses.html?ip'} ? ( ( $session{'/employee/it/licenses.html?ip'} =~ /\// ) ? ( 'ip <<=' => $session{'/employee/it/licenses.html?ip'} ) : ( 'ip'=> $session{'/employee/it/licenses.html?ip'} ) ) : () ),
-				( $session{'/employee/it/licenses.html?hostname'} ? ( 'hostname_ilike' => ( $session{'/employee/it/licenses.html?hostname'} =~ /%/ ? $session{'/employee/it/licenses.html?hostname'} : $session{'/employee/it/licenses.html?hostname'}.'%' ) ) : () ),
-				'limit'	=>	1000,
+				order => $session{'/employee/it/licenses.html?order'},
+				( $session{'/employee/it/licenses.html?ip'} ? ( ( $session{'/employee/it/licenses.html?ip'} =~ /\// ) ? ( 'ip <<=' => $session{'/employee/it/licenses.html?ip'} ) : ( ip=> $session{'/employee/it/licenses.html?ip'} ) ) : () ),
+				( $session{'/employee/it/licenses.html?hostname'} ? ( 'hostname ilike' => ( $session{'/employee/it/licenses.html?hostname'} =~ /%/ ? $session{'/employee/it/licenses.html?hostname'} : $session{'/employee/it/licenses.html?hostname'}.'%' ) ) : () ),
+				limit	=>	1000,
 				);
 		} # end if
 
@@ -26,7 +26,6 @@
 		if ( $session{'/employee/it/licenses.html?mac'} and $session{'/employee/it/licenses.html?mac'} =~ /%/ ) {
 			$mac_search = lc $session{'/employee/it/licenses.html?mac'};
 			$mac_search =~ s/%/\.\*/g;
-	$log->debug("Enable mac search for $mac_search");
 			my @Filtered_Hosts;
 			foreach my $Host ( @Hosts ) {
 				next if ! $Host->mac();
@@ -55,6 +54,7 @@
 				date_filter( '/employee/it/licenses.html?purchased_on_start', 'purchased_on >=' ),
 				date_filter( '/employee/it/licenses.html?expires_on_end', 'expires_on <=' ),
 				date_filter( '/employee/it/licenses.html?expires_on_start', 'expires_on >=' ),
+				#( @Hosts ? ( host_id => [ map { $_->id() } @Hosts ] ) : () ),
 				( $session{'/employee/it/licenses.html?software_id'} ? ( software_id=>$session{'/employee/it/licenses.html?software_id'} ) : () ),
 			
 		)];

@@ -64,9 +64,9 @@
 					"f1.OverrideStockWidth$qty_index.value='';f1.OverrideStockHeight$qty_index.value='';\$('OverrideStockSize$qty_index').hide();calc('f1');" );
 			$html .= sprintf(q`<br/><span id="OverrideStockSize%1$d">`, $qty_index );
 			$html .= join("\n",
-					input( type=>'float', name=>"OverrideStockWidth$qty_index", value=>$$variable{'OverrideStockWidth'.$qty_index}, onkeyup=>"this.form.ddmStockSheetSize$qty_index.selectedIndex=0;calc(this.form.name);" ),
+					input( type=>'float', name=>"OverrideStockWidth$qty_index", value=>$$variable{'OverrideStockWidth'.$qty_index}, onkeyup=>"this.form.ddmStockSheetSize$qty_index.selectedIndex=0;calc(this.form.name);", oninput=>'this.onkeyup();' ),
 					' x ',
-					input( type=>'float', name=>"OverrideStockHeight$qty_index", value=>$$variable{'OverrideStockHeight'.$qty_index}, onkeyup=>"this.form.ddmStockSheetSize$qty_index.selectedIndex=0;calc(this.form.name);" ),
+					input( type=>'float', name=>"OverrideStockHeight$qty_index", value=>$$variable{'OverrideStockHeight'.$qty_index}, onkeyup=>"this.form.ddmStockSheetSize$qty_index.selectedIndex=0;calc(this.form.name);", oninput=>'this.onkeyup();' ),
 			);
 			$html .= '</span>';
 		} else {

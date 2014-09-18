@@ -29,7 +29,7 @@ $serial = 'logs_id_seq';
 %find_fields = (
 	action		=>	'(SELECT name FROM log_actions WHERE log_actions.id = logs.action_id)',
 	object_type	=>	'(SELECT name FROM Object_Types WHERE object_types.id=logs.object_type_id)',
-	ip_address	=>	'(SELECT ip FROM Hosts where hosts.id=host_id)',
+	ip_address	=>	'(SELECT ip FROM Host_Interfaces where host_interfaces.host_id=host_id)',
 );
 %defaults = (
 	'date_time'	=>	"'NOW()'",
@@ -72,28 +72,38 @@ sub ip_address {
 		if ( ! defined $_[1] ) {
 			$_[1] = $ENV{'REMOTE_ADDR'};
 		} # end if
-		$Host = openprint::Host->find_one( 'ip'=>$_[1] );
-		if ( ! $Host ) {
+		my $Interface = openprint::Host_Interface->find_one( ip=>$_[1] );
+		if ( ! $Interface ) {
 			$Host = new openprint::Host();
-			$Host->save({'ip'=>$_[1]});
+			$Host->save();
+			$Interface = new openprint::Host_Interface();
+			$Interface->save({host_id=>$$Host{id}, ip=>$_[1] });
+		} else {
+			$Host = $Interface->Host();
 		} # end if
-		$_[0]{'host_id'} = $Host->id();
+		$_[0]{host_id} = $Host->id();
 	} # end if
-	return $Host->ip();
+	return join('<br/>', map { $_->ip() } $Host->Interfaces() );
 } # end sub ip_address
 
 sub Host {
-	if ( ( ! $_[0]{'host_id'} ) and ( $_[0]{'ip_address'} ) ) {
-		my $Host = openprint::Host->find_one('ip'=>$_[0]{'ip_address'});
-		if ( ! $Host ) {
+	if ( ( ! $_[0]{host_id} ) and ( $_[0]{ip_address} ) ) {
+		my $Interface = openprint::Host_Interface->find_one( ip=>$_[0]{ip_address} );
+		my $Host;
+		if ( ! $Interface ) {
 			$Host = new openprint::Host();
-			$Host->save({'ip'=>$_[0]{'ip_address'}});
-		} # endif	
-		$_ = $_[0]->save({'host_id'=>$Host->id()});
+			$Host->save();
+			$Interface = new openprint::Host_Interface();
+			$Interface->save({host_id=>$$Host{id}, ip=>$_[0]{ip_address} });
+		} else {
+			$Host = $Interface->Host();
+		} 
+			
+		$_ = $_[0]->save({host_id=>$Host->id()});
 		$openprint::log->error( $_ ) if $_;
 	} # end if
 		
-	return new openprint::Host( $_[0]{'host_id'} );
+	return new openprint::Host( $_[0]{host_id} );
 } # end sub Host
 
 sub action {
