@@ -89,7 +89,7 @@ q`^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ named\[[0-9]+\]: client ([0-9.]+)#[0-9]
 my $ac = sql::start_transaction( $dbh );
 #$dbh->do( 'LOCK TABLE Hosts IN ACCESS EXCLUSIVE MODE' ) or $log->error( DBI->errstr );
 my %host_counts;
-my @whitelist = map{ $_->ip() } openprint::Host->find('whitelist'=>1,'ip is null'=>0);
+my @whitelist = map{ $_->ip() } openprint::Host_Interface->find('whitelist'=>1,'ip is null'=>0);
 
 foreach my $log_file ( @log_files ) {
 	if ( open( FH, "<$log_file" ) ) {
