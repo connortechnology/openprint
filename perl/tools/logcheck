@@ -135,6 +135,7 @@ print "Trying $re against $line\n" if $opts->{debug};
 						} else {
 							$Host = $HI->Host();
 						} # end if	
+						$host_counts{$ip} = $Host;
 					} # end if
 					my $last_seen = Date::Parse::str2time( $host_counts{$ip}{updated_on} ) if $host_counts{$ip} and $host_counts{$ip}{updated_on};;
 					my $occurrence = Date::Parse::str2time( $when );
