@@ -3,7 +3,7 @@ require openprint::Object;
 
 package openprint::Host_Interface;
 our @ISA = qw( openprint::Object );
-use vars qw( $debug $table @identified_by %fields %transforms %defaults );
+use vars qw( $debug $table @identified_by %find_fields %fields %transforms %defaults );
 $debug = 0;
 $table = 'host_interfaces';
 @identified_by = ( 'mac' );
@@ -14,6 +14,9 @@ $table = 'host_interfaces';
 	comment			=>	'comment',
 	dhcp			=>	'dhcp',
     host_id         =>  'host_id',
+);
+%find_fields = (
+	whitelist	=>	'(SELECT whitelist FROM Hosts WHERE Hosts.id=host_id)',
 );
 %defaults	= (
 	dhcp		=>	0,
@@ -111,7 +114,7 @@ package openprint::Host;
 our @ISA = qw( openprint::Object );
 
 use vars qw( $debug $table $serial %fields %find_fields %transforms %defaults %types );
-$debug = 1;
+$debug = 0;
 $table = 'hosts';
 $serial = 'hosts_id_seq';
 %fields = (
