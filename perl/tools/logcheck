@@ -193,8 +193,8 @@ if ( $opts->{'blacklist'} ) {
 				my $mac = $I->mac();
 				$mac =~ s/:/\-/g;
 				`/sbin/shorewall drop ~$mac`;
-			} elsif ( $Host->ip() ) {
-				`/sbin/shorewall drop $$Host{ip}`;
+			} elsif ( $I->ip() ) {
+				`/sbin/shorewall drop $$I{ip}`;
 			} # end if
 		} # end foreach Host
 	} # end foreach Host
