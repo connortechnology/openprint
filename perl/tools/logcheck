@@ -3,7 +3,6 @@ use lib '/var/www/testing/perl';
 use strict;
 
 require sql;
-require sets;
 require logger;
 require configuration;
 
@@ -11,7 +10,6 @@ use Date::Parse ();
 use Date::Calc ();
 use Socket ();
 require openprint::Host;
-
 
 use vars qw( $log $dbh %config);
 *log = \$openprint::log;
@@ -89,7 +87,7 @@ q`^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ named\[[0-9]+\]: client ([0-9.]+)#[0-9]
 my $ac = sql::start_transaction( $dbh );
 #$dbh->do( 'LOCK TABLE Hosts IN ACCESS EXCLUSIVE MODE' ) or $log->error( DBI->errstr );
 my %host_counts;
-my @whitelist = map{ $_->ip() } openprint::Host->find('whitelist'=>1,'ip is null'=>0);
+my %whitelist = map{ $_->ip(),$_ } openprint::Host_Interface->find('whitelist'=>1,'ip is null'=>0);
 
 foreach my $log_file ( @log_files ) {
 	if ( open( FH, "<$log_file" ) ) {
@@ -116,24 +114,28 @@ print "Trying $re against $line\n" if $opts->{debug};
 
 					next if $ip eq '127.0.0.1';
 					
-					if ( $ip and @whitelist and sets::isin( $ip, \@whitelist ) ) {
-						print "$ip is whitelisted\n" if $opts->{debug};
-						next;
-					} # end if
 					if ( ! $ip ) {
 						print "No ip for $source\n" if $opts->{debug};
 						next;
 					} # end if
 
+					if ( $whitelist{$ip} ) {
+						print "$ip is whitelisted\n" if $opts->{debug};
+						next;
+					} # end if
+
 					if ( ! $host_counts{$ip} ) {
-						my $Host = openprint::Host->find_one(ip=>$ip);
-						if ( $Host ) {
-							$host_counts{$$Host{ip}} = $Host;
+						my $Host;
+						my $HI = openprint::Host_Interface->find_one(ip=>$ip);
+						if ( ! $HI ) {
+							$HI = new openprint::Host_Interface();
+							$Host = new openprint::Host();
+							$Host->save({hostname=>$hostname});
+							$HI->save({host_id=>$$Host{id}, ip=>$ip});
 						} else {
-							$host_counts{$ip} = new openprint::Host();
-							$host_counts{$ip}->ip( $ip );
-							$host_counts{$ip}->hostname( $hostname );
-						} # end if
+							$Host = $HI->Host();
+						} # end if	
+						$host_counts{$ip} = $Host;
 					} # end if
 					my $last_seen = Date::Parse::str2time( $host_counts{$ip}{updated_on} ) if $host_counts{$ip} and $host_counts{$ip}{updated_on};;
 					my $occurrence = Date::Parse::str2time( $when );
@@ -170,31 +172,31 @@ if ( $opts->{'blacklist'} ) {
 	if ( ! open( FH, '>'.$opts->{'blacklist'} ) ) {
 		die 'Unable to open blacklist: ' . $opts->{'blacklist'} . "\n";
 	} else {
-		foreach my $Host ( openprint::Host->find('blacklist'=>1,'order'=>'ip') ) {
-			my $macs = $Host->mac();
-			if ( $macs and @{$macs} ) {
-				foreach my $mac ( @{$macs} ) {
+		foreach my $Host ( openprint::Host->find(blacklist=>1) ) {
+			foreach my $I ( $Host->Interfaces() ) {
+				if ( $I->mac() ) {
+					my $mac = $I->mac();
 					$mac =~ s/:/\-/g;
 					print FH "~$mac\n";
-				} # end foreach mac
-			} elsif ( $Host->ip() ) {
-				print FH $Host->ip()."\n";
-			} # end if
+				} elsif ( $I->ip() ) {
+					print FH $I->ip()."\n";
+				} # end if
+			} # end foreach I
 		} # end foreach Host
 		close(FH);
 	} # end if
 	`/etc/init.d/shorewall restart`;
 } else {
-	foreach my $Host ( openprint::Host->find('blacklist'=>1,'order'=>'ip') ) {
-		my $macs = $Host->mac();
-		if ( $macs and @{$macs} ) {
-			foreach my $mac ( @{$macs} ) {
+	foreach my $Host ( openprint::Host->find(blacklist=>1) ) {
+		foreach my $I ( $Host->Interfaces() ) {
+			if ( $I->mac() ) {
+				my $mac = $I->mac();
 				$mac =~ s/:/\-/g;
 				`/sbin/shorewall drop ~$mac`;
-			} # end foreach mac
-		} elsif ( $Host->ip() ) {
-			`/sbin/shorewall drop $$Host{ip}`;
-		} # end if
+			} elsif ( $I->ip() ) {
+				`/sbin/shorewall drop $$I{ip}`;
+			} # end if
+		} # end foreach Host
 	} # end foreach Host
 } # end if
 
@@ -203,9 +205,9 @@ sub usage {
 
 usage: logcheck [--help] 
 
-The purpose of this script is to monitor the AuthLog looking for attacks.
+		   The purpose of this script is to monitor the AuthLog looking for attacks.
 
-Command-line options:
+		   Command-line options:
 
 	--help		Displays this message.
 
