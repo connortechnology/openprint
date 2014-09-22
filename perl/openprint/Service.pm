@@ -87,6 +87,17 @@ sub delete {
 sub prices {
 	return openprint::ServicePrice->find( service_id=>$_[0]{id} );
 } # end sub prices
+sub Prices {
+	if ( @_ > 1 ) {
+		$_[0]{Prices} = $_[1];
+	}
+
+	if ( ! $_[0]{Prices} ) {
+		$_[0]{Prices} = [ openprint::ServicePrice->find( service_id=>$_[0]{id}, 'period_end null'=>1, order=>'min NULLS FIRST, max NULLS FIRST' ) ];
+	}
+
+	return @{$_[0]{Prices}};
+} # end sub prices
 
 sub get_Price {
     my ( $self, $quantity, $Equipment, $Pricelist, $period ) = @_;
@@ -98,44 +109,28 @@ sub get_Price {
         } # end if
     } # end if
 
-    $Pricelist = openprint::Pricelist::get_current() if ! $Pricelist;
-    my %price = openprint::pricing::get_best_price_object( $openprint::session{company_id}, $$self{id}, $$Pricelist{id}, 'openprint::service_priceset', $quantity, $$Equipment{id}, $period );
+	$Pricelist = openprint::Pricelist::get_current() if ! $Pricelist;
 
-    if ( ! %price ) {
-        $log->debug("No price returned for $$self{name} $$Equipment{strid} $quantity $period") if $debug;
-        return ;
-    } # end if
+	my $Price = openprint::pricing::get_Price( $self, $Pricelist, $quantity, $Equipment, $period );
 
-    $price{'currency_id'} = $Pricelist->currency_id();
-    $price{'ServiceName'} = $$self{'name'};
-    $price{'Service'} = $self;
-    openprint::Currency::convert( \%price );
-    return \%price;
+	if ( ! $Price ) {
+		$log->debug("No price returned for $$self{name} $$Equipment{strid} $quantity $period") if $debug;
+		return;
+	} # end if
+
+	$$Price{'currency_id'} = $Pricelist->currency_id();
+	$$Price{'ServiceName'} = $$self{'name'};
+	$$Price{Service} = $self;
+	openprint::Currency::convert( $Price );
+    return $Price;
 } # end sub get_Price
 
 sub get_price {
     my ( $self, $quantity, $Equipment, $Pricelist, $period ) = @_;
 
-	if ( ! $period ) {
-		$period = 'NOW()';
-		if ( $debug ) {
-			$log->debug("No period specified defaulting to $period");
-		} # end if
-	} # end if
-
-	$Pricelist = openprint::Pricelist::get_current() if ! $Pricelist;
-    my %price = openprint::pricing::get_best_price_object( $openprint::session{company_id}, $$self{id}, $$Pricelist{id}, 'openprint::service_priceset', $quantity, $$Equipment{id}, $period );
-
-	if ( ! %price ) {
-		$log->debug("No price returned for $$self{name} $$Equipment{strid} $quantity $period") if $debug;
-		return ;
-	} # end if
-
-	$price{'currency_id'} = $Pricelist->currency_id();
-	$price{'ServiceName'} = $$self{'name'};
-	$price{'Service'} = $self;
-	openprint::Currency::convert( \%price );
-    return %price;
+	my $Price = get_Price( @_ );
+	return %{$Price} if $Price;
+	return;
 } # end sub get_price
 
 sub next {

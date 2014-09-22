@@ -170,12 +170,13 @@ sub host {
         } # end if
 	} # end if
 	if ( ( ! $Host->id() ) and ( $param{'ip'} or $param{'mac'} or $param{'hostname'} ) ) {
-		$Host->ip( $param{'ip'} );
-		$Host->mac( [ $param{'mac'} ] ) if $param{'mac'};
+		my $I = new openprint::Host_Interface();
+		$I->set({ ip=>$param{ip}, mac=>$param{mac} });
+		$Host->Interfaces( [ $I ] );
 		$Host->hostname( $param{'hostname'} );
-		if ( $Host->ip() ) {
-			if ( ! $Host->mac() ) {
-				$Host->mac( [ $Host->get_mac() ] );
+		if ( $I->ip() ) {
+			if ( ! $I->mac() ) {
+				$I->mac( [ $I->get_mac() ] );
 			} # end if
 			if ( ! $Host->hostname() ) {
 				$Host->hostname( $Host->resolve() );

@@ -21,7 +21,7 @@ use threads;
 
 package openprint::Estimating::Printing;
 my $threading = 0;
-use constant DEBUG => 1;
+use constant DEBUG => 0;
 use constant DEBUG_PLATES => 0;
 use constant DEBUG_VERSIONS => 0;
 use constant DEBUG_FILTERING => 0;
@@ -46,6 +46,8 @@ my %special_colours;
 my %folding_cache;
 my %Papers;
 my %Presses;
+my %Services;
+my %Materials;
 # indexed by press
 #my %impositions;
 my $do_initial_filtering = 1;
@@ -518,7 +520,7 @@ sub setup_project {
 		} # end foreach C
 	} # end if
 	# Make sure all our colours are in the special colours hash
-	my $PMSInkMixService = openprint::Service->find_one(name=>'PMSInkMix');
+	my $PMSInkMixService = $Services{PMSInkMix};
 	foreach my $real_colour ( sort { $$a{name} cmp $$b{name} } @filtered_colours ) {
 		my $colour;
 		if ( $$real_colour{type} eq 'PMS' ) {
@@ -548,8 +550,8 @@ $openprint::log->debug("Adding special colour for $colour");
 					$$Ink{mix_service_id} = $PMSInkMixService->id() if $PMSInkMixService;
 					$$Ink{mix} = 1;
 					$$Ink{washups} = 1;
-					my $Material = openprint::Material->find_one(name=>$colour.'Ink');
-					$Material = openprint::Material->find_one(name=>'PMSInk') if ! $Material and $$real_colour{type} eq 'PMS';
+					my $Material = $Materials{$colour.'Ink'};
+					$Material = $Materials{PMSInk} if ! $Material and $$real_colour{type} eq 'PMS';
 					$$Ink{material_id} = $Material->id() if $Material;
 				} # end if
 			} # end if foudn Ink
@@ -1090,8 +1092,11 @@ $openprint::log->debug("Skipping cuz ddmPress$qty_index ne $$Press{strid}");
 			if ( $$specs{'PrintingTypes'} and ! sets::isin( $printing_type, $$specs{'PrintingTypes'} ) ) {
 				if ( $$specs{'chkOverridePress'.$qty_index} eq 'Y' and $$specs{'ddmPress'.$qty_index} eq $$Press{'strid'} ) {
 					$$specs{'alert'} .= 'Press ' . $$Press{'strid'} . " Printing Type ($printing_type) is not in PrintingTypes  ". join(',', @{$$specs{'PrintingTypes'}} ) . '<br/>';
+				} elsif ( $$specs{'OverridePrintingType'.$qty_index} eq 'Y' and $printing_type eq $$specs{'PrintingType'.$qty_index} ) {
+					$$specs{'alert'} .= 'Press ' . $$Press{'strid'} . " Printing Type ($printing_type) is not in PrintingTypes  ". join(',', @{$$specs{'PrintingTypes'}} ) . '<br/>';
+				} else {
+					next;
 				} # end if
-				next;
 			} # end if
 		} # end if
 # If we have a plate type override, then make sure that this press can do it.
@@ -2479,10 +2484,11 @@ $openprint::log->debug(Data::Dumper::Dumper( \%Overrides ) );
 		} 
 
 		# For caching
-		openprint::Service->find();
+		%Services = map { $$_{name}, $_ } openprint::Service->find();
 		$openprint::Service::cached = 1;
-		openprint::Material->find();
+		%Materials = map { $$_{name}, $_ } openprint::Material->find();
 		$openprint::Material::cached = 1;
+		openprint::pricing::init_cache();
 
 		%stitching_cache = ();
 		%price_cache = ();
@@ -2861,7 +2867,10 @@ $openprint::log->debug(" $$project{ProjectSpecs} group: $$sig_specs{Group} pageq
 			next;
 		} # end if
 
-		if ( $$sig_specs{PrintingTypes} ) {
+		if ( $$sig_specs{PrintingTypes} 
+			and ( $$sig_specs{"chkOverridePress$qty_index"} ne 'Y' ) 
+			and ( $$sig_specs{"OverridePrintingType$qty_index"} ne 'Y' ) 
+) {
 			my $printing_type = $Press->specification('Printing Type');
 			if ( ! sets::isin( $printing_type, $$sig_specs{'PrintingTypes'} ) ) {
 				next;
@@ -3982,9 +3991,9 @@ $openprint::log->warn("Override subsig values $$imp{pages}pg $$price{upq} upq");
 								$$new_specs{'ddmPress'.$qty_index} = $Press->strid();
                                 $$new_specs{'chkOverrideRunStyle'.$qty_index} = 'Y';
 								$$new_specs{'ddmRunStyle'.$qty_index} = $$imp{runstyle};
-$$new_specs{'chkOverrideSheetSize'.$qty_index} = 'Y';
-$$new_specs{"OverrideStockWidth$qty_index"} = $Paper->width();
-$$new_specs{"OverrideStockHeight$qty_index"} = $Paper->height();
+								$$new_specs{'chkOverrideSheetSize'.$qty_index} = 'Y';
+								$$new_specs{"OverrideStockWidth$qty_index"} = $Paper->width();
+								$$new_specs{"OverrideStockHeight$qty_index"} = $Paper->height();
 						} # end if
 
 						$do_final_pricing = 0;
@@ -4631,7 +4640,7 @@ sub plate_cost {
 
 	my %plate_price;
 	if ( $$plate_costs{'Plate ID'} ) {
-		my $Material = openprint::Material->find_one( name=>$$plate_costs{'Plate ID'} );
+		my $Material = $Materials{$$plate_costs{'Plate ID'}};
 		if ( $Material ) {
 			%plate_price = $Material->get_price( $$PlateCounts{$$plate_costs{'Plate ID'}}, undef );
 			$$price{'Plate Cost'} = $plate_price{price};
@@ -4641,14 +4650,14 @@ sub plate_cost {
 
 		if ( $$plate_costs{'Blank Plates'} ) {
 			$$price{'txtBlankPlateQuantity'} = $$plate_costs{'Blank Plates'};
-			if ( my $Blank = openprint::Material->find_one( name=>'Blank'.$$plate_costs{'Plate ID'} ) ) {
+			if ( my $Blank = $Materials{'Blank'.$$plate_costs{'Plate ID'}} ) {
 				my %blank_plate_price = $Blank->get_price( $$PlateCounts{'Blank'.$$plate_costs{'Plate ID'}}, undef );
 				$$plate_costs{'Blank Price'} = $blank_plate_price{price};
 				$$price{'Blank Plate Price'} = Math::Round::nearest(0.01, $$plate_costs{'Blank Plates'} * $$plate_costs{'Blank Price'} );
 				$results{'Price'} += $$price{'Blank Plate Price'};
 			} # end if
 		} # end if
-		if ( $$plate_costs{'Plate Type'} eq 'Conventional' ) {
+		if ( $Material and $$plate_costs{'Plate Type'} eq 'Conventional' ) {
 			my $area = $Material->specification('area');
 			my $qty = $area * $$PlateCounts{$$plate_costs{'Plate ID'}};
 			$$price{'Film Cost'} = openprint::service::get_price( 'Film', $qty ) * $qty;
@@ -5316,8 +5325,8 @@ $openprint::log->debug("Colour: $real_colour impressions $colour_impressions $$I
 $openprint::log->debug("Varnish $real_colour") if DEBUG_INKS;
 			if ( $real_colour =~ /Spot/ ) {
 				# Add Blanket Cut
-				my $BlanketCutService = openprint::Service->find_one(name=>$real_colour.' BlanketCut');
-				$BlanketCutService = openprint::Service->find_one(name=>$real_colour) if ! $BlanketCutService;
+				my $BlanketCutService = $Services{$real_colour.' BlanketCut'};
+				$BlanketCutService = $Services{$real_colour} if ! $BlanketCutService;
 				if ( $BlanketCutService ) {
 					my %BlanketCut = $BlanketCutService->get_price( undef, $Press );
 					%BlanketCut = openprint::service::get_price_object( 'BlanketCut', undef, $Press ) if ! %BlanketCut;
@@ -5977,75 +5986,73 @@ sub press_setup_cost {
 	my $setup_count = @$colours;
 
 	my %Price;
-	$Price{'Setup Count'} = $setup_count + ( $plate_change_qty ? $plate_change_qty : 0 );
-	if ( ! ( %Price = openprint::service::get_price_object( 'PressUnitMakeReady'.$$Imposition{runstyle}, undef, $Press ) ) ) {
-		%Price = openprint::service::get_price_object( 'PressUnitMakeReady', undef, $Press );
+	if ( $Services{'PressUnitMakeReady'.$$Imposition{runstyle}} ) {
+		%Price = $Services{'PressUnitMakeReady'.$$Imposition{runstyle}}->get_price( undef, $Press );
+	}
+	if ( ( ! %Price ) and $Services{PressUnitMakeReady} ) {
+		%Price = $Services{PressUnitMakeReady}->get_price( undef, $Press );
 	} # end if
-	if ( $Price{'units'} eq 'stock calliper - per plate' ) {
-		%Price = openprint::service::get_price_object( 'PressUnitMakeReady', $calliper, $Press );
-		$Price{total} = $Price{price} * $setup_count;
-	} elsif ( $Price{'units'} eq 'per job' ) {
-		my $specs = $$Imposition{specs};
-		my $charge = 1;
-		if ( $$specs{Group} != 1 ) {
-			foreach my $Imp ( @$other_impositions ) {
-				if ( $Imp->Press()->id() == $Press->id() ) {
-					$charge = 0;
-					my $sig_specs = $Imp->specs();
-			#$openprint::log->warn("Turning off setup because imp for $$sig_specs{SignatureIndex} has it. My index is $$specs{SignatureIndex}");
-					last;
-				} # end if
-			} # end foreach
-		} # end if
-		if ( $charge ) {
-			my $Project = $Imposition->Project();
-			if ( $Project ) {
-				my @signatures = $Project->signatures();
-				foreach my $sig_id ( sort @signatures ) {
-					my $sig_specs = openprint::service::get_specs_ref( $Project, $sig_id );
-					if ( $$sig_specs{SignatureIndex} == $$specs{SignatureIndex} ) {
-						last;
-					} elsif ( $$sig_specs{"ddmPress$qty_index"} eq $Press->strid() ) {
-						$openprint::log->warn("Turning off setup because $$sig_specs{SignatureIndex} has it. My index is $$specs{SignatureIndex}");
+	if ( %Price ) {
+		if ( $Price{units} eq 'stock calliper - per plate' ) {
+			%Price = $Price{Service}->get_price( $calliper, $Press );
+			$Price{total} = $Price{price} * $setup_count;
+		} elsif ( $Price{units} eq 'per job' ) {
+			my $specs = $$Imposition{specs};
+			my $charge = 1;
+			if ( $$specs{Group} != 1 ) {
+				foreach my $Imp ( @$other_impositions ) {
+					if ( $Imp->Press()->id() == $Press->id() ) {
 						$charge = 0;
+						my $sig_specs = $Imp->specs();
+				#$openprint::log->warn("Turning off setup because imp for $$sig_specs{SignatureIndex} has it. My index is $$specs{SignatureIndex}");
 						last;
 					} # end if
 				} # end foreach
-			} else {
-				$openprint::log->error("No Project in iimposition");
 			} # end if
 			if ( $charge ) {
-				#$openprint::log->warn("Charging $Price{Price} setup for $$specs{SignatureIndex}");
-				$Price{total} = $Price{price};
-			} # end if
-		} # end if charge
-	} elsif ( $Price{'units'} eq 'per form' ) {
-		my $specs = $$Imposition{specs};
-#$openprint::log->debug("PressMakeRady per form: previous forms: " . ( $$specs{'PreviousForms'.$qty_index} + 1 ) );
-		%Price = openprint::service::get_price_object( 'PressUnitMakeReady', $$specs{'PreviousForms'.$qty_index} + 1, $Press);
-		$Price{total} = $Price{price};
-	} elsif ( $Price{units} eq 'total' ) {
-		if ( ! ( %Price = openprint::service::get_price_object( 'PressUnitMakeReady'.$$Imposition{'runstyle'}, $setup_count, $Press ) ) ) {
-			%Price = openprint::service::get_price_object( 'PressUnitMakeReady', $setup_count, $Press );
+				my $Project = $Imposition->Project();
+				if ( $Project ) {
+					my @signatures = $Project->signatures();
+					foreach my $sig_id ( sort @signatures ) {
+						my $sig_specs = openprint::service::get_specs_ref( $Project, $sig_id );
+						if ( $$sig_specs{SignatureIndex} == $$specs{SignatureIndex} ) {
+							last;
+						} elsif ( $$sig_specs{"ddmPress$qty_index"} eq $Press->strid() ) {
+							$openprint::log->warn("Turning off setup because $$sig_specs{SignatureIndex} has it. My index is $$specs{SignatureIndex}");
+							$charge = 0;
+							last;
+						} # end if
+					} # end foreach
+				} else {
+					$openprint::log->error("No Project in iimposition");
+				} # end if
+				if ( $charge ) {
+					#$openprint::log->warn("Charging $Price{Price} setup for $$specs{SignatureIndex}");
+					$Price{total} = $Price{price};
+				} # end if
+			} # end if charge
+		} elsif ( $Price{'units'} eq 'per form' ) {
+			my $specs = $$Imposition{specs};
+	#$openprint::log->debug("PressMakeRady per form: previous forms: " . ( $$specs{'PreviousForms'.$qty_index} + 1 ) );
+			%Price = $Price{Service}->get_price( $$specs{'PreviousForms'.$qty_index} + 1, $Press);
+			$Price{total} = $Price{price};
+		} elsif ( $Price{units} eq 'total' ) {
+			%Price = $Price{Service}->get_price( $setup_count, $Press );
+			$Price{total} = $Price{price};
+		} elsif ( $Price{units} eq 'per side' ) {
+			%Price = $Price{Service}->get_price( $setup_count, $Press );
+		} else { # Per Unit
+			%Price = $Price{Service}->get_price( $setup_count, $Press );
+			$Price{total} = $Price{price} * $setup_count;
 		} # end if
 		
-		$Price{total} = $Price{price};
-	} elsif ( $Price{units} eq 'per side' ) {
-		if ( ! ( %Price = openprint::service::get_price_object( 'PressUnitMakeReady'.$$Imposition{'runstyle'}, $setup_count, $Press ) ) ) {
-			%Price = openprint::service::get_price_object( 'PressUnitMakeReady', $setup_count, $Press );
+		if ( $Price{units} =~ /per run/i ) {
+			$Price{total} *= $plate_runs if $plate_runs;
+			#$Price{'Total'} *= $plate_change_qty if $plate_change_qty;
 		} # end if
-		
-	} else { # Per Unit
-		if ( ! ( %Price = openprint::service::get_price_object( 'PressUnitMakeReady'.$$Imposition{'runstyle'}, $setup_count, $Press ) ) ) {
-			%Price = openprint::service::get_price_object( 'PressUnitMakeReady', $setup_count, $Press );
-		} # end if
-		$Price{total} = $Price{price} * $setup_count;
-	} # end if
-	if ( $Price{units} =~ /per run/i ) {
-		$Price{total} *= $plate_runs if $plate_runs;
-		#$Price{'Total'} *= $plate_change_qty if $plate_change_qty;
-	} # end if
-	$Price{'Press Setup'} = $Price{total};
+		$Price{'Press Setup'} = $Price{total};
+	} # end if found setup price
+	$Price{'Setup Count'} = $setup_count + ( $plate_change_qty ? $plate_change_qty : 0 );
 	my %PlateSetupPrice = openprint::service::get_price_object( 'PlateMakeReady'.$$Imposition{'runstyle'}.$$Imposition{'sides'}.'Sided', undef, $Press );
 	%PlateSetupPrice = openprint::service::get_price_object( 'PlateMakeReady'.$$Imposition{'runstyle'}, undef, $Press ) if ! %PlateSetupPrice;
 	%PlateSetupPrice = openprint::service::get_price_object( 'PlateMakeReady', undef, $Press ) if ! %PlateSetupPrice;
@@ -6093,7 +6100,19 @@ sub filter_colours {
 sub compare_signatures_runstyle {
 	my ( $Project, $sig1, $sig2, $qty_index, $exclude ) = @_;
 	foreach my $q_i ( $qty_index ? ( $qty_index ) : ( $Project->quantity_indexes() ) ) {
-		foreach my $key ( 'ddmRunStyle', 'ddmPress','PageQuantity','txtImposition','ddmBleedSize','txtPlateChangeQuantity', 'Versions' ) {
+		foreach my $key ( 'ddmRunStyle', 'ddmPress','PageQuantity','txtImposition','ddmBleedSize','txtPlateChangeQuantity', 'Versions',
+               'chkOverrideBleedSize',
+                'chkOverridePageQuantity',
+                'chkOverrideImposition',
+                'chkOverrideRunStyle',
+                'OverrideCutOff',
+                'chkOverrideSheetSize',
+                'chkOverridePress',
+                'OverridePrintingType',
+                'chkOverrideGrainDirection',
+                'OverrideVersions',
+) {
+
 			if ( $$sig1{$key.$q_i} ne $$sig2{$key.$q_i} ) {
 #$openprint::log->debug("Not the same $key $$sig1{ServiceIndex} $$sig2{ServiceIndex} $$sig1{$key.$q_i} $$sig2{$key.$q_i} $$sig1{SignatureIndex} $$sig2{SignatureIndex}");
 				return 0;

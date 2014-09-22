@@ -47,7 +47,7 @@ if ($CFG::Config{help}) {
     exit 0;
 }
 
-if ( 0 ) {
+if ( 1 ) {
 if ( $CFG::Config{'log_level'} eq 'debug' ) {
 foreach my $k ( keys %ENV ) {
 $log->debug("Environment: $k => $ENV{$k}");
@@ -78,20 +78,23 @@ if ( $ENV{'CALLING_STATION_ID'} ) {
 
 				my $Host = $Interface->Host();
 				my $hostname = $Host->hostname();
-				if ( $hostname !~ /.internal.point-one.com$/ ) {
-					$log->debug("TRanforming $hostname into $hostname.internal.point-one.com");
-					$hostname .= '.internal.point-one.com';
-				}
+				if ( $hostname ) {
+					if ( $hostname !~ /.internal.point-one.com$/ ) {
+						$log->debug("TRanforming $hostname into $hostname.internal.point-one.com");
+						$hostname .= '.internal.point-one.com';
+					}
 
-				if ( open NSUPDATE, "| nsupdate" ) {
-					$log->debug("Updating $hostname to $ENV{FRAMED_IP_ADDRESS}");
-					print NSUPDATE "server 192.168.2.1\n";
-					print NSUPDATE "update delete $hostname. IN A\n";
-					print NSUPDATE "update add $hostname. 86400 IN A $ENV{FRAMED_IP_ADDRESS}\n";
-					print NSUPDATE "send\n";
-					close NSUPDATE;
-				} else {
-					$log->error("Unable to open NSUPDATE $!");
+				
+					if ( open NSUPDATE, "| nsupdate" ) {
+						$log->debug("Updating $hostname to $ENV{FRAMED_IP_ADDRESS}");
+						print NSUPDATE "server 192.168.2.1\n";
+						print NSUPDATE "update delete $hostname. IN A\n";
+						print NSUPDATE "update add $hostname. 86400 IN A $ENV{FRAMED_IP_ADDRESS}\n";
+						print NSUPDATE "send\n";
+						close NSUPDATE;
+					} else {
+						$log->error("Unable to open NSUPDATE $!");
+					} # end if 
 				} # end if 
 			} else {
 				$log->debug("IP unchanged");

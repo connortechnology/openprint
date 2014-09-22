@@ -227,7 +227,10 @@ sub auto_calculate {
 
 	if ( openprint::Estimating::Paper::neccessary( $Project ) ) {
 		if ( ! $$services{'Paper'} ) {
-			push @{$$services{'Paper'}}, $Project->add_service( 'Paper' );
+			$_ = $Project->add_service( 'Paper' );
+			if ( ! $$services{'Paper'} ) {
+				push @{$$services{'Paper'}}, $_;
+			} # end if	
 		} # end if
 	} # end if
 
@@ -241,7 +244,8 @@ sub auto_calculate {
 require openprint::Estimating::PerfectBound;
 	if ( openprint::Estimating::PerfectBound::neccessary( $Project ) ) {
 		if ( ! $$services{'PerfectBound'} ) {
-			push @{$$services{'PerfectBound'}}, $Project->add_service( 'PerfectBound' );
+			$_ = $Project->add_service( 'PerfectBound' );
+			push @{$$services{'PerfectBound'}}, $_ if ! $$services{PerfectBound};
 		} # end if
 	} elsif ( $$services{'PerfectBound'} ) {
 		while ( my $si = shift @{$$services{'PerfectBound'}} ) {
@@ -327,7 +331,7 @@ require openprint::Estimating::Stitching;
 
 		if ( $neccessary and ! $$services{$service_name} ) {
 			$_ = $Project->add_service($service_name);
-			push @{$$services{$service_name}}, $_ if $_;
+			push @{$$services{$service_name}}, $_ if $_ and !$$services{$service_name};
 		} # end if
 	} # end foreach service_name;
 

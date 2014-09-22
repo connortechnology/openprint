@@ -169,10 +169,10 @@
 	my %prices;
 	my %Stocks;
 
-	if ( $$services{Paper} ) {
+	if ( $$services{Paper} and $$services{Paper}[0] ) {
 
-		my $stock_specs = openprint::service::get_specs_ref( $Project, $$services{Paper}[0] ) if $$services{Paper} and $$services{Paper}[0];
-		my @stocks_and_quantities = openprint::Estimating::Paper::get_stocks_and_quantities( $Project,  $$services{Paper}[0], $stock_specs, $qty_index );
+		my $stock_specs = openprint::service::get_specs_ref( $Project, $$services{Paper}[0] );
+		my @stocks_and_quantities = openprint::Estimating::Paper::get_stocks_and_quantities( $Project, $$services{Paper}[0], $stock_specs, $qty_index );
 		my $stock_index = 1;
 		foreach my $SQ ( @stocks_and_quantities ) {
 			my ( $Stock, $qty ) = @$SQ{'Stock','quantity'};
@@ -253,10 +253,7 @@ $log->error("NO paper weight for project $$Project{id} " . $Paper->to_string() )
             $html .= '<tr class="totals">';
             $html .= '<td class="checkboxes">&nbsp;</td>' if $$variable{checkboxes};
             $html .= '<td class="Service"><b>Stock</b><br/>';
-            foreach my $string ( @keys ) {
-                $html .= $string . '<br/>';
-            } # end foreach string
-
+			$html .= join('<br/>', map { $Stocks{$_}->to_string() } @keys );
             $html .= '</td>';
 if($$variable{canseepaperpricing}){
 			$html .= '<td class="Price"><br/>'.join('<br/>', map { $_ ? $_ : () } @prices{sort keys %totals} ).'</td>';

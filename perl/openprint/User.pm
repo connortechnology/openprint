@@ -499,9 +499,9 @@ sub html {
 } # end sub html
 
 sub last_logged_in {
-	if ( ! $_[0]{'last_logged_on'} ) {
+	if ( (! $_[0]{last_logged_on} ) and $_[0]{id} ) {
 		# Almost any entry means we were logged in.  
-		my $Log = openprint::Log->find_one('user_id'=>$_[0]{'id'},'order'=>'date_time DESC');
+		my $Log = openprint::Log->find_one(user_id=>$_[0]{id},'order'=>'date_time DESC');
 		if ( $Log ) {
 #$openprint::log->debug("last_Logged_in: " . $Log->to_string() );
 			$_[0]{'last_logged_on'} = $$Log{date_time};

@@ -9,6 +9,7 @@ require openprint::Object;
 require openprint::logs;
 require openprint::MaterialSpecification;
 require openprint::MaterialCategory;
+require openprint::MaterialPrice;
 require openprint::Manufacturer;
 
 use vars qw{ $debug $log $dbh %session $table $serial %fields %find_fields %transforms %defaults $cache_field $cached };
@@ -139,18 +140,47 @@ sub Specifications {
 	return openprint::MaterialSpecification->find( material_id=>$_[0]{id}, order=>'name,min NULLS FIRST' );
 } # end sub Specifications
 
+sub Prices {
+	if ( @_ > 1 ) {
+		$_[0]{Prices} = $_[1];
+	}
+	if ( ! $_[0]{Prices} ) {
+		$_[0]{Prices} = [ openprint::MaterialPrice->find( material_id=>$_[0]{id}, order=>'lngmin NULLS FIRST, lngmax NULLS FIRST' ) ];
+#'period_end null'=>0, 
+	}
+
+	return @{$_[0]{Prices}};
+} # end sub prices
+
+sub get_Price {
+    my ( $self, $quantity, $Equipment, $Pricelist, $period ) = @_;
+
+    if ( ! $period ) {
+        $period = 'NOW()';
+        if ( $debug ) {
+            $log->debug("No period specified defaulting to $period");
+        } # end if
+    } # end if
+
+	$Pricelist = openprint::Pricelist::get_current() if ! $Pricelist;
+    my $Price = openprint::pricing::get_Price( $self, $Pricelist, $quantity, $Equipment, $period );
+
+    if ( ! $Price ) {
+        $log->debug("No price returned for $$self{name} $$Equipment{strid} $quantity $period") if $debug;
+        return ;
+    } # end if
+
+    $$Price{'currency_id'} = $Pricelist->currency_id();
+    $$Price{Material} = $self;
+    openprint::Currency::convert( $Price );
+    return $Price;
+} # end sub get_Price
+
 sub get_price {
 	return if ! $_[0]{id};
-	my ( $self, $quantity, $Equipment ) = @_;
-
-	my $Pricelist = openprint::Pricelist::get_current();
-	my %price = openprint::pricing::get_best_price_object( $session{'company_id'}, $$self{id}, $$Pricelist{id}, 'openprint::material_priceset', $quantity, $$Equipment{'id'} );
-	return if ! %price;
-
-	$price{'currency_id'} = $Pricelist->currency_id();
-	openprint::Currency::convert( \%price );
-
-	return %price;
+	my $Price = get_Price( @_ );
+	return %$Price if $Price;
+	return;
 } # end sub get_price
 
 sub next {

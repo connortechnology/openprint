@@ -22,6 +22,7 @@ $serial = 'currencies_id_seq';
 	symbol	=>	'symbol',
 );
 %transforms = (
+	id			=>	[ 's/\D//g', '<2147483647' ],
     name => [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
     short => [ 's/\s+//' ],
 );
