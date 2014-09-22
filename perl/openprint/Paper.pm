@@ -1005,7 +1005,7 @@ sub get_price {
 			} # end if
 			return;
 		} # end if ! price
-		if ( $openprint::config{'ApplyMarkup'} ) {
+		if ( (!$$self{custom}) and $openprint::config{'ApplyMarkup'} ) {
 		#$openprint::log->debug("Apply Markup: $openprint::config{'ApplyMarkup'}");	
 			my $pricingpercent = $openprint::config{'ApplyMarkup'};
 			#$pricingpercent =~ s/[^\d\.\-]//g;
@@ -1020,9 +1020,11 @@ sub get_price {
 		Carp::cluck("No custom price, and no paper::id for service: $params{service}" . $self->to_string()) if $debug;
 	} # end if
 
-	my $Company = new openprint::Company( $openprint::session{company_id} );
-	if ( $Company->discount() ) {
-		$$price{'price'} *= 1 - ( $Company->discount()/100 );
+	if ( ! $$self{custom} ) {
+		my $Company = new openprint::Company( $openprint::session{company_id} );
+		if ( $Company->discount() ) {
+			$$price{price} *= 1 - ( $Company->discount()/100 );
+		} # end if
 	} # end if
 
 	if ( $params{'service'} eq 'Material' ) {
