@@ -613,6 +613,7 @@ sub calc {
 
 		foreach my $signature_service_index ( @signatures ) {
 			my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
+			next if ! $$sig_specs{"txtImposition$qty_index"};
 			if ( $folding_specs and $$folding_specs{"chkOverrideEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} eq 'Y' and ! $$folding_specs{"ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} ) {
 				$openprint::log->debug("Overrode folding to nothing.");
 			} # end if

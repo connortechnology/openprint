@@ -3980,9 +3980,9 @@ $openprint::log->warn("Override subsig values $$imp{pages}pg $$price{upq} upq");
 								$$new_specs{'ddmPress'.$qty_index} = $Press->strid();
                                 $$new_specs{'chkOverrideRunStyle'.$qty_index} = 'Y';
 								$$new_specs{'ddmRunStyle'.$qty_index} = $$imp{runstyle};
-$$new_specs{'chkOverrideSheetSize'.$qty_index} = 'Y';
-$$new_specs{"OverrideStockWidth$qty_index"} = $Paper->width();
-$$new_specs{"OverrideStockHeight$qty_index"} = $Paper->height();
+								$$new_specs{'chkOverrideSheetSize'.$qty_index} = 'Y';
+								$$new_specs{"OverrideStockWidth$qty_index"} = $Paper->width();
+								$$new_specs{"OverrideStockHeight$qty_index"} = $Paper->height();
 						} # end if
 
 						$do_final_pricing = 0;
@@ -6091,7 +6091,19 @@ sub filter_colours {
 sub compare_signatures_runstyle {
 	my ( $Project, $sig1, $sig2, $qty_index, $exclude ) = @_;
 	foreach my $q_i ( $qty_index ? ( $qty_index ) : ( $Project->quantity_indexes() ) ) {
-		foreach my $key ( 'ddmRunStyle', 'ddmPress','PageQuantity','txtImposition','ddmBleedSize','txtPlateChangeQuantity', 'Versions' ) {
+		foreach my $key ( 'ddmRunStyle', 'ddmPress','PageQuantity','txtImposition','ddmBleedSize','txtPlateChangeQuantity', 'Versions',
+               'chkOverrideBleedSize',
+                'chkOverridePageQuantity',
+                'chkOverrideImposition',
+                'chkOverrideRunStyle',
+                'OverrideCutOff',
+                'chkOverrideSheetSize',
+                'chkOverridePress',
+                'OverridePrintingType',
+                'chkOverrideGrainDirection',
+                'OverrideVersions',
+) {
+
 			if ( $$sig1{$key.$q_i} ne $$sig2{$key.$q_i} ) {
 #$openprint::log->debug("Not the same $key $$sig1{ServiceIndex} $$sig2{ServiceIndex} $$sig1{$key.$q_i} $$sig2{$key.$q_i} $$sig1{SignatureIndex} $$sig2{SignatureIndex}");
 				return 0;
