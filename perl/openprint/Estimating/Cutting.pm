@@ -522,12 +522,14 @@ sub signature_calc {
 	} # end if
 	my %pretrim_sides;
 	my $Stitcher;
-	if ( $stitching_specs ) {
-		$Stitcher = new openprint::Equipment( $$stitching_specs{"ddmEquipment$qty_index"} ) if $stitching_specs;
+	if ( $stitching_specs and $$stitching_specs{"ddmEquipment$qty_index"} ) {
+		$Stitcher = new openprint::Equipment( $$stitching_specs{"ddmEquipment$qty_index"} );
 		my $pretrim_sides = $Stitcher->specification('Pre-trimmed Edges '.$$sig_specs{txtSignatureType});
 		$pretrim_sides = $Stitcher->specification('Pre-trimmed Edges') if ! $pretrim_sides;
 		%pretrim_sides = map { $_, $_ } split(',',$pretrim_sides) if $pretrim_sides;
-	} 
+		$stitching_imposition = 1 if ! defined $stitching_imposition;
+	}
+	
 	my $has_uv = $$services{UVCoating} and openprint::Estimating::UVCoating::signature_needs( $Project, $sig_specs );
 
 	my @folding_impositions;
