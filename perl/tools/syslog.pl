@@ -151,7 +151,7 @@ while(1) {
 		$last_update = time;
 
 		%whitelist = map{ $_->ip(),$_ } openprint::Host_Interface->find( whitelist=>1,'ip is null'=>0);
-		$openprint::log->debug(join("\n", map { 'whitelist: ' . $_ } keys %witelist ) ) if $config{debug};
+		$openprint::log->debug(join("\n", map { 'whitelist: ' . $_ } keys %whitelist ) ) if $config{debug};
 
 		# If a blacklist is specified, update it on start
 		if ( $opts->{blacklist} ) {
@@ -165,7 +165,7 @@ while(1) {
 							$mac =~ s/:/\-/g;
 							print FH "~$mac\n";
 						} elsif ( $Interface->ip() ) {
-							print FH $INterface->ip()."\n";
+							print FH $Interface->ip()."\n";
 						} # end if
 					} # end foreach mac
 				} # end foreach Host
