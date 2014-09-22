@@ -1020,12 +1020,12 @@ sub get_price {
 		Carp::cluck("No custom price, and no paper::id for service: $params{service}" . $self->to_string()) if $debug;
 	} # end if
 
-	if ( ! $$self{custom} ) {
+	#if ( ! $$self{custom} ) {
 		my $Company = new openprint::Company( $openprint::session{company_id} );
 		if ( $Company->discount() ) {
 			$$price{price} *= 1 - ( $Company->discount()/100 );
 		} # end if
-	} # end if
+	#} # end if
 
 	if ( $params{'service'} eq 'Material' ) {
 	# Don't need to cut it because the mweight has already byeen cut
