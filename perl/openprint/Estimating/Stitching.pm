@@ -16,7 +16,7 @@
 
 package openprint::Estimating::Stitching;
 use strict;
-use warnings;
+#use warnings;
 
 use constant DEBUG => 0;
 
@@ -867,32 +867,34 @@ $openprint::log->debug("Need more pockets $neededPockets > $maxPockets") if DEBU
 	} # end if
 
 	# FIXME
-	if ( my @sigs = $Project->signatures({'Group'=>1}) ) {
-		if ( ( $$specs{CoverFit} eq 'Exact' ) and ( form_needs_fit( $Project, $sigs[0] ) ) ) {
-			if ( ! ( %servicePrice = openprint::service::get_price_object( $$ServiceType{name}.'1Pockets', $qty, $Equipment ) ) ) {
-				%servicePrice = openprint::service::get_price_object( $$ServiceType{name}, 1, $Equipment );
-			} # end if
-			my $slowdown_percent = $Equipment->specification('2ndPass Slowdown');
-
-			my $runtime = $unitsPerHour ? $qty/$unitsPerHour : 0; # in seconds
-				if ( $slowdown_percent ) {
-					$slowdown_percent =~ s/[^\d\.\-]//g;
-					$runtime *= (1+$slowdown_percent/100);
+	if ( $$specs{CoverFit} and $$specs{CoverFit} eq 'Exact' ) {
+		if ( my @sigs = $Project->signatures({'Group'=>1}) ) {
+			if ( form_needs_fit( $Project, $sigs[0] ) ) {
+				if ( ! ( %servicePrice = openprint::service::get_price_object( $$ServiceType{name}.'1Pockets', $qty, $Equipment ) ) ) {
+					%servicePrice = openprint::service::get_price_object( $$ServiceType{name}, 1, $Equipment );
 				} # end if
-			$price{RunTime} += $runtime * 360;
-			if ( $servicePrice{units} eq 'per m' ) {
-				$servicePrice{total} = $servicePrice{price} * $qty/1000;
-				$price{service} += $servicePrice{total};
-			} elsif ( $servicePrice{units} =~ /per hour/i ) {
-				$servicePrice{total} = $servicePrice{price} * $runtime;
-				$price{service} += $servicePrice{total}
-			} else {
-				$openprint::log->debug("Unknown Unit Type: $servicePrice{units} for $$ServiceType{name} range($neededPockets) equipment(".$Equipment->strid().")");
-			} # end if
-			$price{makeready} += $MakeReady{price} + $pocketMakeReady;
-			$price{Passes} += 1;
-		} # end if Exact
-	} # end if requires exact or not
+				my $slowdown_percent = $Equipment->specification('2ndPass Slowdown');
+
+				my $runtime = $unitsPerHour ? $qty/$unitsPerHour : 0; # in seconds
+					if ( $slowdown_percent ) {
+						$slowdown_percent =~ s/[^\d\.\-]//g;
+						$runtime *= (1+$slowdown_percent/100);
+					} # end if
+				$price{RunTime} += $runtime * 360;
+				if ( $servicePrice{units} eq 'per m' ) {
+					$servicePrice{total} = $servicePrice{price} * $qty/1000;
+					$price{service} += $servicePrice{total};
+				} elsif ( $servicePrice{units} =~ /per hour/i ) {
+					$servicePrice{total} = $servicePrice{price} * $runtime;
+					$price{service} += $servicePrice{total}
+				} else {
+					$openprint::log->debug("Unknown Unit Type: $servicePrice{units} for $$ServiceType{name} range($neededPockets) equipment(".$Equipment->strid().")");
+				} # end if
+				$price{makeready} += $MakeReady{price} + $pocketMakeReady;
+				$price{Passes} += 1;
+			} # end if Exact
+		} # end if requires exact or not
+	} # end if
 	#FIXME
 	if ( $Project->signatures({'type'=>'Gate Folded Pages'}) ) {
 		my $gateFolds = $$specs{'txtSignatureQtySingleGateFolded'.$qty_index} + $$specs{'txtSignatureQtyDoubleGateFolded'.$qty_index};
