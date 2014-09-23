@@ -274,7 +274,7 @@ require openprint::Estimating::PerfectBound;
 		} # end if
 	} # end foreach
 
-	foreach my $service_type ( 'Collating', 'Aqueous' ) {
+	foreach my $service_type ( 'Collating', 'Aqueous', 'UVCoating' ) {
 		my $module = 'openprint::Estimating::'.$service_type;
 		eval ( 'require '.$module.';' );
 		$openprint::log->error("Error requiring opepnrint::Estimating::$service_type: $@") if $@;

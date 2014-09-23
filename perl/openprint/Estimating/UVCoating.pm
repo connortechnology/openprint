@@ -85,8 +85,15 @@ my @all_equipment;
 
 # A function that is smart enough to return true if the project needs perfing/UVCoating, and false if it doesn't.
 sub neccessary {
-	my ( $log, $dbh, $project_index ) = @_;
+	my ( $Project ) = @_;
 
+	foreach my $sig_id ( $Project->signatures() ) {
+		my $Service = $Project->Service();
+
+		if ( signature_needs( $Project, $Service->specs() ) ) {
+			return 1;
+		}
+	} # end foreach sig_id
 	return 0;
 } # end sub neccessary
 
