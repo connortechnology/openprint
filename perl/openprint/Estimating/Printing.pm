@@ -2946,7 +2946,7 @@ $openprint::log->debug(" $$project{ProjectSpecs} group: $$sig_specs{Group} pageq
 
 	if ( ( $$sig_specs{'chkOverrideSheetSize'.$qty_index} eq 'Y' ) ) {
 		if ( ! $$sig_specs{"ddmStockSheetSize$qty_index"} ) {
-			$openprint::log->error("NO ddm Stock SheetSize for $qty_index!");
+			$openprint::log->debug("NO ddm Stock SheetSize for $qty_index!") if DEBUG_FILTERING;
 		} elsif ( ! $$sig_specs{"OverrideStockWidth$qty_index"} ) {
 			if ( $$sig_specs{"StockType$qty_index"} eq 'Roll' ) {
 				@$sig_specs{"OverrideStockWidth$qty_index"} = $$sig_specs{"ddmStockSheetSize$qty_index"} =~ /^([\d\.]+)("? Roll)?\s*$/;
