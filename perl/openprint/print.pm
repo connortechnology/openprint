@@ -162,7 +162,13 @@ $log->debug("after continue $$variable{ExternalRedirect}");
 
 			} elsif ( $openprint::param{'btnFunction'} eq 'Delete Services' ) {
 				foreach my $service_id ( ref $openprint::param{'service_id'} eq 'ARRAY' ? @$openprint::param{'service_id'} : ( $openprint::param{'service_id'} ) ) {
-					openprint::print_project::delete_service( $Project, $service_id );
+					my $Service = $Project->Service( $service_id );
+					$$variable{error} .= $Service->delete();
+					if ( $Service->Type()->name() eq 'Cutting' ) {
+						if ( $$services{UVCoating} ) {
+							openprint::service::internal_calc( $log, $dbh, $variable, $project_index, $$services{'UVCoating'}[0], 'UVCoating' );
+						} # end if
+					} # end if
 				} # end if
 			} elsif ( $openprint::param{'btnFunction'} eq 'Recalculate Project' ) {
 				if ( exists $openprint::param{'markup'} ) {
@@ -202,9 +208,13 @@ $log->debug("after continue $$variable{ExternalRedirect}");
 				} # end if
 				my $specs = $PS->specs();
 				$Project->add_to_log( @openprint::session{'company_id','user_id'}, $ServiceType->name().' ' . $$specs{'ServiceName'}.' service deleted.' );
-				openprint::print_project::delete_service( $Project, $s_id );
+				$$variable{error} .= $PS->delete();
 				if ( $ServiceType->name() eq 'Signature' ) {
 					openprint::service::internal_calc( $log, $dbh, $variable, $project_index, $$services{''}[0], $Project->Type()->type() );
+				} elsif ( $ServiceType->name() eq 'Cutting' ) {
+					if ( $$services{UVCoating} ) {
+						openprint::service::internal_calc( $log, $dbh, $variable, $project_index, $$services{'UVCoating'}[0], 'UVCoating' );
+					} # end if
 				} # end if
 			} # end foreach s_id
 			$openprint::session{'project_id'} = $project_index;

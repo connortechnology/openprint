@@ -370,6 +370,7 @@ sub signature_calc {
 		my %BestPricePerImposition;
 		my %minimum = $MinimumCharge->get_price( undef, $Equipment ) if $MinimumCharge;
 		my $BlanketCutPrice;
+		my $runspeed = $Equipment->specification('UVCoatingRunSpeed', $Stock->gsm() );
 
 		for ( my $set_index = 0; $set_index < @Sets_Of_Impositions; $set_index += 1 ) {
 			my $impositions = $Sets_Of_Impositions[$set_index];
@@ -507,10 +508,13 @@ $openprint::log->debug("Types: @types") if DEBUG;
 						if ( lc $ServicePrice{units} eq 'per m' ) {
 							$ServicePrice{Total} = $ServicePrice{Price}*$run_qty/1000;
 						} elsif ( $ServicePrice{units} eq 'per hour' or $ServicePrice{units} eq '/Hr' ) {
-							my $runspeed = $Equipment->specification('UVCoatingRunSpeed', $Stock->gsm() );
-							$breakdown .= sprintf('<tr><td> %d @ %d/Hr = %.1fhours', $run_qty, $runspeed, $run_qty/$runspeed );
-
-							$ServicePrice{Total} = $ServicePrice{Price}*$run_qty/$runspeed if $runspeed;
+							if ( $runspeed ) {
+								$breakdown .= sprintf('<tr><td> %d @ %d/Hr = %.1fhours', $run_qty, $runspeed, $run_qty/$runspeed );
+								$ServicePrice{Total} = $ServicePrice{Price}*$run_qty/$runspeed if $runspeed;
+							} else {
+								$breakdown .= sprintf('<tr><td>No runspeed for %dgsm. Cant use this price.</td></tr>', $Stock->gsm() );
+								$ServicePrice{Total} = 1000000;
+							} # end if
 						} # end if
 # Div by imposition, but run_qty is already div by impo
 #$ServicePrice{Total} /= $imp->imposition();
@@ -565,7 +569,7 @@ $log->debug("Complete: $breakdown");
 			} #
 			$ImpositionPrice{Total} += misc::sum( @ImpositionPrice{'MakeReady','Service','Material','Blanket','Cutting'} );
 			$breakdown .= sprintf('<tr class="totals"><td>Total:</td><td class="Price">$%.2f</td></tr></table>',
-Math::Round::nearest(0.01,$ImpositionPrice{Total}) );
+					Math::Round::nearest(0.01,$ImpositionPrice{Total}) );
 
 			if ( ( ! defined $BestPricePerImposition{Total} ) or ( $ImpositionPrice{Total} < $BestPricePerImposition{Total} ) ) {
 				%BestPricePerImposition = %ImpositionPrice;
