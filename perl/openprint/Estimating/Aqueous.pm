@@ -84,8 +84,15 @@ my @all_equipment;
 
 # A function that is smart enough to return true if the project needs perfing/Aqueous, and false if it doesn't.
 sub neccessary {
-	my ( $log, $dbh, $project_index ) = @_;
+	my ( $Project ) = @_;
 
+	foreach my $sig_id ( $Project->signatures() ) {
+		my $Service = $Project->Service();
+
+		if ( signature_needs( $Project, $Service->specs() ) ) {
+			return 1;
+		}
+	} # end foreach sig_id
 	return 0;
 } # end sub neccessary
 
@@ -131,6 +138,7 @@ sub signature_needs {
 		$$sig_specs{SideTwoAQ} = [ get_colours( $sig_specs, 'SideTwo' ) ] if ! $$sig_specs{SideTwoAQ};
 		return 1 if @{$$sig_specs{SideTwoAQ}};
 	} # en dif
+	return 0;
 } # end sub signature_needs
 
 sub calc {
