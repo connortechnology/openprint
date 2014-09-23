@@ -4397,6 +4397,8 @@ $openprint::log->debug("Sheet No supplied wight: $supplied_sheets $paper_string 
 				} elsif ( DEBUG ) {
 					$openprint::log->debug("NO Stitching or PerfectBinding");
 				} # end if PerfectBound
+			} # end if 
+			if ( $do_final_pricing ) {
 
 				if ( $calc_other_groups and $$service_specs{'Group'} == 1 ) {
 					# Layout can affect stitching
