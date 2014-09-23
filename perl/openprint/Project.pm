@@ -849,34 +849,22 @@ sub summary {
 # I believe the point of this is to stick the Printed Web or Sheetfred into the summary.	Nastily executed.
 # The logic is, each group has to be either all sheetfed, or all web (or digital, etc).	
 			foreach my $group_id ( sort @groups ) {
-				my @sigs = $self->signatures({'Group'=>$group_id});
+				my @sigs = $self->signatures({Group=>$group_id});
 				if ( ! @sigs ) {
 					$openprint::log->error( "No sigs for Group $group_id, but there pretty much to be since we have this group index.  Signatures must be out of date");
 					$self->services(undef);
-					@sigs = $self->signatures({'Group'=>$group_id});
+					@sigs = $self->signatures({Group=>$group_id});
 					if ( ! @sigs ) {
 						$openprint::log->error( "Still No sigs for Group $group_id, after reloading" );
 						next;
 					} # end if
-
 				} # end if
 
 				my $sig_specs = openprint::service::get_specs_ref( $self, $sigs[0] );
 				$summary .= openprint::Estimating::Printing::summary( $self, $sigs[0], $sig_specs );
-				foreach my $k ( keys %$sig_specs ) {
-					if ( $k =~ /^PrintingType/i ) {
-						if ( $$sig_specs{'Group'} eq $group_id ) {
-							if ( $$sig_specs{$k} eq 'Web' ) { 
-								$summary .= ', <span class="Web">Printed Web</span>,<br/>';
-							} elsif ( $$sig_specs{$k} eq 'Digital' ) { 
-								$summary .= ', '. '<span class="Digital">Printed Digital</span>,<br/>';
-							} else {
-								$summary .= ', '. '<span class="Sheetfed">Printed Sheetfed</span>,<br/>';
-							} #endif Web
-							last;
-						} # end if group_id
-					} # end if $prn
-				} # end foreach $prn	
+				if ( $$printing_specs{"PrintingType-$group_id"} ) { 
+					$summary .= ', '. '<span class="Sheetfed">Printed '.$$printing_specs{"PrintingType-$group_id"}.'</span>,<br/>';
+				} #endif Web
 			} # end foreach Group
 		} # end if
 
