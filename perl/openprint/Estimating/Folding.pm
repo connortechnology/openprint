@@ -622,7 +622,7 @@ $openprint::log->error("No folds from sigimpo");
 		push @Set_Of_Impositions, $i;
 	} else {
 		my $i = $SignatureImposition->copy();
-		$$i{'quantity'} = 1;
+		$$i{quantity} = 1;
 		push @Set_Of_Impositions, $i;
 	} # end if
 
@@ -1923,18 +1923,9 @@ sub reduce_impositions {
 		} else {
 			for ( my $i = 0; $i < @new; $i += 1 ) {
 				if ( $new[$i]->imposition() == $max_impo ) {
-					my $I2 = $new[$i]->copy();
-					my $I3 = $new[$i]->copy();
-					if ( $I2->columns() > 1 ) {
-						$I2->columns( int($I2->columns()/2) );
-						$I3->columns( $I3->columns() - $I2->columns() );
-					} else {
-						$I2->rows( int($I2->rows()/2) );
-						$I3->rows( $I3->rows() - $I2->rows() );
-					} # end if
-
-					splice @new, $i, 1, ( $I2, $I3 );
-					$i += 1;
+					my @cut = cut_imposition( $new[$i] );
+					splice @new, $i, 1, @cut;
+					$i += @cut-1;
 					$extra = 1;
 				} # end if
 			} # end foreach I
@@ -1945,8 +1936,10 @@ sub reduce_impositions {
 			} # end if
 		} # end if
 
+if ( 0 ) {
 		my @new = @$impositions;
-		# SOmething like a 3x2 will be cut into a 1x2+2x2 but never a 2 3x1's... so do this
+		# SOmething like a 3x2 will be cut into a 1x2+2x2 but never a 2 3x1's... so do this: 
+		# Is this still the case?
 		for ( my $i = 0; $i < @new; $i += 1 ) {
 			if ( $new[$i]->imposition() == $max_impo ) {
 				if ( $new[$i]->rows() > 1 and $new[$i]->columns() > 1 ) {
@@ -1989,6 +1982,7 @@ sub reduce_impositions {
 			@new = compact_impositions( @new );
 			push @results, reduce_impositions( \@new );
 		} # end if
+}
 	} # end if
 	return @results;
 	
@@ -2005,7 +1999,7 @@ sub cut_imposition {
 		return map { my $i = $I->copy(); $i->columns(1); $i; } ( 1 .. $$I{columns} );
 	} elsif ( ( $$I{columns} > $$I{rows} ) or ( ( $$I{columns} == $$I{rows} ) and ( $$I{image_orientation} eq 'Vertical' ) ) ) {
 		my ( $i1, $i2 ) = ( $I->copy(), $I->copy );
-		$i1->columns(int $$I{columns}/2);
+		$i1->columns(int($$I{columns}/2 ));
 		$i2->columns( $$I{columns} - $$i1{columns} );
 		$openprint::log->debug(sprintf("Cutting imposition down from %dx%d=%dout to %dx%d=%d and %dx%d=%d", @$I{'columns','rows','imposition'}, @$i1{'columns','rows','imposition'}, @$i2{'columns','rows','imposition'} ) ) if DEBUG;
 		return ( $i1, $i2 );
@@ -2022,7 +2016,6 @@ sub cut_spreads {
 	my ( $I ) = @_;
 
 	my @results;
-
 	if ( ( $I->layout_height() > $I->layout_width() ) and ( $I->spread_rows() > 1 ) ) {
 	#if ( $I->spread_rows() > $I->spread_columns() ) {
 		
@@ -2134,7 +2127,7 @@ sub compact_impositions {
 
 		for ( my $index = 0; $index < @_; $index += 1 ) {
 			if ( $Imposition->imposition() == $_[$index]->imposition() and $Imposition->spreads() == $_[$index]->spreads() ) {
-				$$Imposition{'quantity'} += $_[$index]->quantity();
+				$$Imposition{quantity} += $_[$index]->quantity();
 				splice @_, $index, 1;
 				$index -= 1;
 			} # end if

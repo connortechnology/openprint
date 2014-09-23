@@ -558,10 +558,12 @@ sub signature_calc {
 
 #$openprint::log->debug("Folding impos " . @folding_impositions  . ' eq ' . @my_equipment );
 
-	if ( $$Imposition{image_orientation} eq 'Horizontal' ) {
-		$stitching_imposition = $$Imposition{columns} if $stitching_imposition > $$Imposition{columns};
-	} else {
-		$stitching_imposition = $$Imposition{rows} if $stitching_imposition > $$Imposition{rows};
+	if ( $stitching_specs ) {
+		if ( $$Imposition{image_orientation} eq 'Horizontal' ) {
+			$stitching_imposition = $$Imposition{columns} if $stitching_imposition > $$Imposition{columns};
+		} else {
+			$stitching_imposition = $$Imposition{rows} if $stitching_imposition > $$Imposition{rows};
+		} # end if
 	} # end if
 
 	my $Press = $Imposition->Press();
