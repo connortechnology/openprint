@@ -88,7 +88,7 @@ sub neccessary {
 	my ( $Project ) = @_;
 
 	foreach my $sig_id ( $Project->signatures() ) {
-		my $Service = $Project->Service();
+		my $Service = $Project->Service( $sig_id );
 
 		if ( signature_needs( $Project, $Service->specs() ) ) {
 			return 1;
