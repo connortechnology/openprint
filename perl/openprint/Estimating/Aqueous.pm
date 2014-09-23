@@ -87,7 +87,7 @@ sub neccessary {
 	my ( $Project ) = @_;
 
 	foreach my $sig_id ( $Project->signatures() ) {
-		my $Service = $Project->Service();
+		my $Service = $Project->Service( $sig_id );
 
 		if ( signature_needs( $Project, $Service->specs() ) ) {
 			return 1;
@@ -106,7 +106,6 @@ sub get_colours {
     foreach my $k ( keys %$specs ) {
 #$openprint::log->debug("AQ get_colours $k => $$specs{$k}");
         if ( my ( $index ) = $k =~ /^chkColourCoating(\d+)$side/ ) {
-#$openprint::log->debug("AQ get_colours $k => $$specs{$k} index is $index");
             next if ! $$specs{"chkColourCoating$index$side"};
 			if ( $$specs{"ColourCoatingType$index$side"} =~ /Aqueous/i ) {
 				push @colours, $$specs{"ColourCoatingType$index$side"};
