@@ -43,6 +43,8 @@ my %special_colours;
 my %folding_cache;
 my %Papers;
 my %Presses;
+my %Services;
+my %Materials;
 # indexed by press
 #my %impositions;
 my $do_initial_filtering = 1;
@@ -2479,9 +2481,9 @@ $openprint::log->debug(Data::Dumper::Dumper( \%Overrides ) );
 		} 
 
 		# For caching
-		openprint::Service->find();
+		%Services = map { $$_{name}, $_ } openprint::Service->find();
 		$openprint::Service::cached = 1;
-		openprint::Material->find();
+		%Materials = map { $$_{name}, $_ } openprint::Material->find();
 		$openprint::Material::cached = 1;
 
 		%stitching_cache = ();
@@ -4629,28 +4631,29 @@ sub plate_cost {
 
 	my %plate_price;
 	if ( $$plate_costs{'Plate ID'} ) {
-		my $Material = openprint::Material->find_one( name=>$$plate_costs{'Plate ID'} );
+		my $Material = $Materials{$$plate_costs{'Plate ID'}};
 		if ( $Material ) {
 			%plate_price = $Material->get_price( $$PlateCounts{$$plate_costs{'Plate ID'}}, undef );
 			$$price{'Plate Cost'} = $plate_price{'Price'};
 			$$price{'Plate Price'} = $plate_price{'Price'} * $$plate_costs{'Plate Count'};
 			$results{Price} = Math::Round::nearest(0.01, $plate_price{'Price'} * $$plate_costs{'Plate Count'} );
+
+			if ( $$plate_costs{'Plate Type'} eq 'Conventional' ) {
+				my $area = $Material->specification('area');
+				my $qty = $area * $$PlateCounts{$$plate_costs{'Plate ID'}};
+				$$price{'Film Cost'} = openprint::service::get_price( 'Film', $qty ) * $qty;
+				$results{'Price'} += $$price{'Film Cost'};
+			} # end if
 		} # end if
 
 		if ( $$plate_costs{'Blank Plates'} ) {
 			$$price{'txtBlankPlateQuantity'} = $$plate_costs{'Blank Plates'};
-			if ( my $Blank = openprint::Material->find_one( name=>'Blank'.$$plate_costs{'Plate ID'} ) ) {
+			if ( my $Blank = $Materials{'Blank'.$$plate_costs{'Plate ID'}} ) {
 				my %blank_plate_price = $Blank->get_price( $$PlateCounts{'Blank'.$$plate_costs{'Plate ID'}}, undef );
 				$$plate_costs{'Blank Price'} = $blank_plate_price{'Price'};
 				$$price{'Blank Plate Price'} = Math::Round::nearest(0.01, $$plate_costs{'Blank Plates'} * $$plate_costs{'Blank Price'} );
 				$results{'Price'} += $$price{'Blank Plate Price'};
 			} # end if
-		} # end if
-		if ( $$plate_costs{'Plate Type'} eq 'Conventional' ) {
-			my $area = $Material->specification('area');
-			my $qty = $area * $$PlateCounts{$$plate_costs{'Plate ID'}};
-			$$price{'Film Cost'} = openprint::service::get_price( 'Film', $qty ) * $qty;
-			$results{'Price'} += $$price{'Film Cost'};
 		} # end if
 	} # end if
 	return \%results;
@@ -5314,8 +5317,8 @@ $openprint::log->debug("Colour: $real_colour impressions $colour_impressions $$I
 $openprint::log->debug("Varnish $real_colour") if DEBUG_INKS;
 			if ( $real_colour =~ /Spot/ ) {
 				# Add Blanket Cut
-				my $BlanketCutService = openprint::Service->find_one(name=>$real_colour.' BlanketCut');
-				$BlanketCutService = openprint::Service->find_one(name=>$real_colour) if ! $BlanketCutService;
+				my $BlanketCutService = $Services{$real_colour.' BlanketCut'};
+				$BlanketCutService = $Services{$real_colour} if ! $BlanketCutService;
 				if ( $BlanketCutService ) {
 					my %BlanketCut = $BlanketCutService->get_price( undef, $Press );
 					%BlanketCut = openprint::service::get_price_object( 'BlanketCut', undef, $Press ) if ! %BlanketCut;
