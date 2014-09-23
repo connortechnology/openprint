@@ -1,7 +1,7 @@
 use strict;
-use warnings;
+#use warnings;
 package openprint::pricing;
-use Memoize;
+#use Memoize;
 use Carp qw( cluck );
 
 require openprint::pricelist;
@@ -284,7 +284,7 @@ sub get_Price {
 			$Price = $Prices[0];
 		} else {	
 			foreach my $P ( @Prices ) {
-				$log->debug("Need $qty, min: $$P{min} max: $$P{max} ");
+				#$log->debug("Need $qty, equipment: $$P{equipment_id} $$Object{name} min: $$P{min} max: $$P{max} ");
 				if ( 
 						( ( ! defined $P->{min} ) or $P->{min} <= $qty ) and 
 						( ( ! defined $P->{max} ) or $P->{max} >= $qty )

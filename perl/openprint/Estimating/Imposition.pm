@@ -72,16 +72,16 @@ sub signature_calc {
 		%ImpositionCharge = openprint::service::get_price_object( $service, undef, $Press);
 	} # end if
 	if ( $ImpositionCharge{'units'} eq 'per page' ) {
-		%ImpositionCharge = openprint::service::get_price_object( $service,$Imposition->pages(),$Press);
+		%ImpositionCharge = $ImpositionCharge{Service}->get_price( $Imposition->pages(),$Press);
 		$price{total} += $ImpositionCharge{price} * $Imposition->pages();
 	} elsif ( $ImpositionCharge{'units'} eq 'per square inch of object' ) {
-		%ImpositionCharge = openprint::service::get_price_object( $service,$Imposition->layout_area(),$Press);
+		%ImpositionCharge = $ImpositionCharge{Service}->get_price( $Imposition->layout_area(),$Press);
 		$price{total} += $ImpositionCharge{price} * $Imposition->object_width() * $Imposition->object_height();
 	} elsif ( $ImpositionCharge{'units'} eq 'per square inch of layout' ) {
-		%ImpositionCharge = openprint::service::get_price_object( $service,$Imposition->layout_area(),$Press);
+		%ImpositionCharge = $ImpositionCharge{Service}->get_price( $Imposition->layout_area(),$Press);
 		$price{total} += $ImpositionCharge{price} * $Imposition->layout_area();
 	} else {
-		%ImpositionCharge = openprint::service::get_price_object( $service,$Imposition->imposition(),$Press);
+		%ImpositionCharge = $ImpositionCharge{Service}->get_price( $Imposition->imposition(),$Press);
 		$price{total} += $ImpositionCharge{price} * $Imposition->imposition();
 	} # end if
 	$price{Price} = \%ImpositionCharge;
