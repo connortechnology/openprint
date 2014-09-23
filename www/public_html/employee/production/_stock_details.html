@@ -1,5 +1,5 @@
-<h3>Stock information for Docket <? echo ( $$variable{'Project'}->docket() ) ?></h3>
-<div id="StockCheckout"><? echo ( include('_stock_checkout.html'); ) ?></div>
+<h3>Stock information for Docket <? echo ( $$variable{Project}->docket() ) ?></h3>
+<div id="StockCheckout"><?include('_stock_checkout.html')?></div>
 <? eval (
 	@{$$variable{'PurchaseOrders'}} = $$variable{'Project'}->docket() ? openprint::PurchaseOrder_Content->find( 'docket'=>$$variable{'Project'}->docket() ) : ();
 ) ?>
@@ -13,7 +13,7 @@
 		next if ! sets::isin( $PO_Content->Type()->name(), [ 'Sheet Stock', 'Roll Stock' ] );
 		$html .= sprintf('<tr><td><a href="/employee/purchase_order/view.html?po_id=%1$d">%1$d</a></td><td>%2$s</td><td>%3$d%4$s</td></tr>', 
 			$PO_Content->po_id(),
-			$PO_Content->description(),
+			$PO_Content->item() . '<br/>', $PO_Content->description(),
 			$PO_Content->qty(),
 			$PO_Content->units(),
 			);
