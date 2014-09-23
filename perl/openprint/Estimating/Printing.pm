@@ -2834,10 +2834,10 @@ sub calculate_impositions {
 			$log->error("No spread size in calculate_impositions.");
 			$$project{'txtSpreadSize'} = 4;
 		} # end if
-$openprint::log->debug(" $$project{ProjectSpecs} group: $$sig_specs{Group} pageq: " . $$project{ProjectSpecs}{"PageQuantity-$$sig_specs{Group}"} );
+#$openprint::log->debug(" $$project{ProjectSpecs} group: $$sig_specs{Group} pageq: " . $$project{ProjectSpecs}{"PageQuantity-$$sig_specs{Group}"} );
 		if ( $$sig_specs{'chkOverridePageQuantity'.$qty_index} eq 'Y' ) {
 			$SpreadLayout = int( $$sig_specs{'PageQuantity'.$qty_index} / $$project{'txtSpreadSize'} );
-			$log->debug("Calcing SpreadLayout as overriden upq: $$sig_specs{'PageQuantity'.$qty_index} / spreadsize:$$project{'txtSpreadSize'} = layout$SpreadLayout");
+			$log->debug("Calcing SpreadLayout as overriden upq: $$sig_specs{'PageQuantity'.$qty_index} / spreadsize:$$project{'txtSpreadSize'} = layout$SpreadLayout") if DEBUG;
 		} elsif ( $$project{ProjectSpecs}{"PageQuantity-$$sig_specs{Group}"} and ( $$project{ProjectSpecs}{"PageQuantity-$$sig_specs{Group}"} <= $$sig_specs{'txtUnspecifiedPageQuantity'.$qty_index} ) ) {
 			$SpreadLayout = int( $$project{ProjectSpecs}{"PageQuantity-$$sig_specs{Group}"} / $$project{txtSpreadSize} );
 			$log->debug("Calcing SpreadLayout as overriden upq: ".$$project{ProjectSpecs}{"PageQuantity-$$sig_specs{Group}"}." / spreadsize:$$project{'txtSpreadSize'} = layout$SpreadLayout");
@@ -3678,9 +3678,8 @@ if ( 0 ) {
 
 		my @total_impositions = @$other_impositions;
 
-		# This is suspect
+		# This is suspect is it?  other_impos doesn't get modified. sig_specs{mpositions} gets populated before recurse
 		push @total_impositions, @{$$sig_specs{Impositions}} if $$sig_specs{Impositions};
-
 
 		my $do_final_pricing = 1;
 
@@ -3697,9 +3696,6 @@ if ( 0 ) {
 #$openprint::log->debug("Main Calc Price time: " . ( sprintf('%.4f', tv_interval( [$time])*1000) ) .' usecs' );
 #$openprint::log->debug( breakdown( $price, $sig_specs ) );
 
-		$$price{sig_count} = 1;
-		$$price{Imposition} = $imp;
-		$$price{upq} = $txtUnspecifiedPageQuantity - $$imp{pages} if $txtUnspecifiedPageQuantity;
 
 		$PlateCounts{$$price{'Plate Costs'}{'Plate ID'}} += $$price{'Plate Costs'}{'Plate Count'};
 		$PlateCounts{'Blank'.$$price{'Plate Costs'}{'Plate ID'}} += $$price{'Plate Costs'}{'Blank Plates'};
@@ -3742,6 +3738,9 @@ if ( 0 ) {
 		} # end if
 
 # This price hash only contains the calculating imps.  Non-group imps are in other_impositions
+		$$price{sig_count} = 1;
+		$$price{Imposition} = $imp;
+		$$price{upq} = $txtUnspecifiedPageQuantity ? $txtUnspecifiedPageQuantity - $$imp{pages} : 0;
 			$$price{Impositions} = [ $imp ];
 			push @total_impositions, $imp;
 
@@ -3841,7 +3840,8 @@ if ( 0 ) {
 					} # end if
 				} # end while versions
 
-			} elsif ( $txtUnspecifiedPageQuantity ) {
+			#} elsif ( $txtUnspecifiedPageQuantity ) {
+			} elsif ( $$price{upq} ) {
 				$imp->display( $recursion_depth . ' UPQ: ' . $txtUnspecifiedPageQuantity . ' real upq ' . $$price{upq}) if DEBUG;
 
 				my $new_specs;
@@ -3958,7 +3958,6 @@ $openprint::log->error("No proofs>!");
 							next;
 						}
 							
-					
 						if ( ! $new_specs ) {
 # new_specs is notnull when we encountered an unmatching ovveride
 							$imp = $base_imp->copy();
@@ -3988,36 +3987,37 @@ $openprint::log->warn("Override subsig values $$imp{pages}pg $$price{upq} upq");
 						} # end if
 
 						$do_final_pricing = 0;
-
-# Not identical, so clear this so we get charged setups, etc
-						$$new_specs{'PreviousForms'.$qty_index} = 0;
-#$openprint::log->debug("Doing full calc when UPQ:$upq >= Pages:" . $$imp{'pages'} . ' PageQuantity:' . $$new_specs{'PageQuantity'.$qty_index} ) if $upq >= $$imp{'pages'} or 0;
-
-						$$new_specs{'PrintingTypes'} = [ $Press->specification('Printing Type') ];
-						$$new_specs{'PreviousStockType'} = $$Paper{type};
-						$$new_specs{'PreviousStockWidth'} = $$Paper{width};
-						$$new_specs{'PreviousGrainDirection'} = $imp->grain_direction();
-						if ( $$imp{'Folder'} and ( $$Press{'id'} == $$imp{Folder}->id() ) ) {
-#This is used in Folding to tell it not to mix impositions when inline folded
-							$$new_specs{'PreviousImposition'} = $$price{'FoldingImposition'};
-						} # end if	
-						$$new_specs{Impositions} = $$price{Impositions};
-
 						my $sig_price = {};
 						if ( $recursion_depth >= $max_recursion_depth ) {
 							$imp->display('Recursion Depth :' . $recursion_depth ) if DEBUG;
 							$$sig_price{alert} .= 'Too deep ' . $recursion_depth;
-							$$sig_price{'complete'} = 0;
+							$$sig_price{complete} = 0;
 						} else {
-if ( DEBUG_PLATES ) {
-	foreach my $k ( keys %PlateCounts ) {
-		$openprint::log->debug("PLATES beforerecursion: $k=> $PlateCounts{$k}");
-	} # end foreach
-} # end if
+
 							my $price_cache_key = join(',', keys %PaperCounts, $qty_index, $$Press{strid}, $$price{upq}, $$imp{runstyle}, $$Paper{type}, $$Paper{width}, $$imp{imposition}, $$imp{columns} );
 							#my $price_cache_key = join(',', keys %PaperCounts, $qty_index, $$Press{strid}, $$price{upq}, $$imp{runstyle}, $$Paper{type}, $$Paper{width},$$Paper{height} );
-$imp->display("Recursing need $$price{upq} more pages");
+#$imp->display("Recursing need $$price{upq} more pages");
 							if ( ! $price_cache{$price_cache_key} ) {
+#$imp->display("Recursing need $$price{upq} more pages actually");
+# Not identical, so clear this so we get charged setups, etc
+								$$new_specs{'PreviousForms'.$qty_index} = 0;
+#$openprint::log->debug("Doing full calc when UPQ:$upq >= Pages:" . $$imp{'pages'} . ' PageQuantity:' . $$new_specs{'PageQuantity'.$qty_index} ) if $upq >= $$imp{'pages'} or 0;
+
+								$$new_specs{'PrintingTypes'} = [ $Press->specification('Printing Type') ];
+								$$new_specs{'PreviousStockType'} = $$Paper{type};
+								$$new_specs{'PreviousStockWidth'} = $$Paper{width};
+								$$new_specs{'PreviousGrainDirection'} = $imp->grain_direction();
+								if ( $$imp{'Folder'} and ( $$Press{'id'} == $$imp{Folder}->id() ) ) {
+#This is used in Folding to tell it not to mix impositions when inline folded
+									$$new_specs{'PreviousImposition'} = $$price{'FoldingImposition'};
+								} # end if	
+								$$new_specs{Impositions} = [ ( $$sig_specs{Impositions} ? @{$$sig_specs{Impositions}} : () ), @{$$price{Impositions}} ];
+
+								if ( DEBUG_PLATES ) {
+									foreach my $k ( keys %PlateCounts ) {
+										$openprint::log->debug("PLATES beforerecursion: $k=> $PlateCounts{$k}");
+									} # end foreach
+								} # end if
 								my @new_possible_presses;
 								foreach my $p ( @$possible_presses ) {
 									if ( $p->specification('Number of Colours') <= $Press->specification('Number of Colours') ) {	
@@ -4050,7 +4050,7 @@ $imp->display("Recursing need $$price{upq} more pages");
 							if ( ( ! $$sig_price{complete} ) or ( ! $$sig_price{Imposition} ) ) {
 $openprint::log->warn("Unable to calculate additional signatures Complete: $$sig_price{complete}, imp pages: " . $$imp{'pages'} . ' of upq: ' . $$price{upq}. ' alert: ' . $$sig_price{alert} );
 $imp->display('[warn]');
-								$$price{complete} = $$sig_price{complete} = 0;
+								$$price{complete} = 0;
 								$$price{'Comparison Cost'} += 10000000;
 								$$price{Breakdown} .= 'Unable to calculate additional signatures.<br/>';
 							} # end if cache
@@ -4059,9 +4059,9 @@ $imp->display('[warn]');
 # get_project_price is recursive so we are done
 						if ( ( ! $$sig_price{'complete'} ) or ( ! $$sig_price{'Imposition'} ) ) {
 							$openprint::log->debug("Unable to calculate additional signatures Complete: $$sig_price{complete}, imp pages: " . $$imp{'pages'} . ' of upq: ' . $$price{upq} . 'Spread size:' . $$service_specs{txtSpreadSize} . ' alert: ' . $$sig_price{alert}) if DEBUG;
-							$$price{'complete'} = $$sig_price{'complete'} = 0;
+							$$price{complete} = 0;
 							$$price{'Comparison Cost'} += 10000000;
-							$$price{'Breakdown'} .= 'Unable to calculate additional signatures.<br/>';
+							$$price{Breakdown} .= 'Unable to calculate additional signatures.<br/>';
 						} else {
 							if ( $$sig_price{'Impositions'} ) {
 								push @{$$price{'Impositions'}}, @{$$sig_price{'Impositions'}};
@@ -4353,14 +4353,16 @@ $openprint::log->debug("Sheet No supplied wight: $supplied_sheets $paper_string 
 						$$price{'Total Cost'} += $$StockSetupPrice{'price'};
 					} # end if
 				} # end if
+			} # end if do_final_pricing
 
+			if ( $recursion_depth == 0 ) {
 # The idea is to only calc these on the last sig
 		#if ( ($$services{'LoopStitching'} or $$services{'SaddleStitching'}) ) {
 				if ( $$project{HasStitching} and ($$sig_specs{'txtSignatureType'} ne 'Cover Pages') ) {
 					my $results;
 					my $starttime = gettimeofday() if DEBUG;
 
-					$openprint::log->debug("Stitching::signature_calc") if DEBUG;
+					$openprint::log->debug("Stitching::signature_calc: recursion_depth; $recursion_depth do_final_pricing: $do_final_pricing total imps: " . @total_impositions) if DEBUG;
 					$results = openprint::Estimating::Stitching::signature_calc( $Project, $$project{HasStitching}, $$project{StitchingSpecs}, $qty_index, $$project{FoldingSpecs}, \@total_impositions, $project );
 				#} # end if cached
 					if ( $$results{'Status'} eq 'uncalculated' ) {
@@ -4370,12 +4372,12 @@ $openprint::log->debug("Sheet No supplied wight: $supplied_sheets $paper_string 
 						$$price{'Stitching Cost'} = 10000000;
 						$openprint::log->debug("After Stitching $$price{'Comparison Cost'} $$price{'Stitching Cost'} uncalculated") if DEBUG or 1;
 					} else {
-						my $Price = $$results{'Price'};
-						$$price{'Stitching Breakdown'} .= sprintf('Stitching (%s) (%s) Price: $%.2f<br/>', @$results{'Status','alert'},$$Price{'Price'} );
-						$$price{'Stitching Breakdown'} .= $$results{Breakdown};
+						my $Price = $$results{Price};
+						$$price{'Stitching Breakdown'} .= sprintf('Stitching (%s) (%s) %dout on %s Price: $%.2f<br/>', @$results{'Status','alert','Imposition'},$$results{Equipment}{strid}, $$Price{Price} );
+						#$$price{'Stitching Breakdown'} .= $$results{Breakdown};
 						$$price{'Stitching Cost'} = $$Price{Price};
 						$$price{'Comparison Cost'} += $$Price{Price};
-						$$price{'Comparison Log'} .= 'Stitching: ' .  $$Price{'Price'} . '<br/>';
+						$$price{'Comparison Log'} .= 'Stitching: ' .  $$Price{Price} . '<br/>';
 				#$stitching_cache{scalar @all_impositions} = $results;
 						$openprint::log->debug("After Stitching $$price{'Comparison Cost'} $$price{'Stitching Cost'} $$results{Breakdown}") if DEBUG;
 					} # end if
@@ -4895,9 +4897,9 @@ sub calc_price {
 				if ( $folding_results{Equipment}->id() == $Press->id() ) {
 					my $FI = $folding_results{FoldedImpositions}[0];
 if ( $$FI{Equipment}->id() != $Press->id() ) {
-$openprint::log->error("WTF");
+$openprint::log->error("WTF Equipment in Fold is not the press, but the folding results equipment is.");
 } 
-$FI->display( "Runspeed: $$FI{runspeed}");
+$FI->display( "Runspeed: $$FI{runspeed}") if DEBUG;
 #$openprint::log->debug("Runspeed: $folding_results{'RunSpeed'}");
 					$$specs{Runspeed} = $price{Runspeed} = $$FI{runspeed} if $$FI{runspeed};
 				} # end if

@@ -846,7 +846,7 @@ $openprint::log->debug("Not a book") if DEBUG;
 		$$specs{"txtCalculatedCuts-$form-$qty_index"} = $vertical_cuts + $horizontal_cuts + $dutch_vertical_cuts + $dutch_horizontal_cuts;
 
 		my $cuts = $$specs{"txtCalculatedCuts-$form-$qty_index"};
-$log->debug("Cuts: $cuts");
+#$log->debug("Cuts: $cuts");
 
 		my $totalPrice = 0;
 		my $mprice = 0;
@@ -1001,7 +1001,7 @@ $log->debug("Cuts: $cuts");
 		if ( $stitching_specs ) {
 			# Need final trim?
 			my @remaining_sides = sets::exclude( [ keys %pretrim_sides ], [ 'Head','Foot','Face' ] );
-$log->debug("Final trim @remaining_sides");
+			$log->debug("Final trim @remaining_sides") if DEBUG;
 			if ( @remaining_sides ) {
 				
 			}	
