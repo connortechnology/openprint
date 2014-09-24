@@ -135,10 +135,10 @@
 		</p>
 		<p class="size">
 			<label for="width-<?type_id?>">Size</label>
-			<? echo ( input( type=>'float', id=>'width-'.$$variable{type_id}, name=>'width-'.$$variable{type_id}, value=>$param{'width-'.$$variable{type_id}}, onkeyup=>"gsm_to_mweight(this.form,'$$variable{type_id}');" ); ) ?>
+			<? echo ( input( type=>'positivefloat', id=>'width-'.$$variable{type_id}, name=>'width-'.$$variable{type_id}, value=>$param{'width-'.$$variable{type_id}}, onkeyup=>"gsm_to_mweight(this.form,'$$variable{type_id}');" ); ) ?>
 			<span id="PaperHeight-<?type_id?>"<? echo ( ' style="display: none;"' if $param{'type-'.$$variable{'type_id'}} eq 'Roll' ) ?>>
 			&nbsp;x&nbsp;
-			<? echo ( input( type=>'float', id=>'height-'.$$variable{type_id}, name=>'height-'.$$variable{type_id}, value=>$param{'height-'.$$variable{type_id}}, onkeyup=>"gsm_to_mweight(this.form,'$$variable{type_id}');" ); ) ?>
+			<? echo ( input( type=>'positivefloat', id=>'height-'.$$variable{type_id}, name=>'height-'.$$variable{type_id}, value=>$param{'height-'.$$variable{type_id}}, onkeyup=>"gsm_to_mweight(this.form,'$$variable{type_id}');" ); ) ?>
 			</span>
 		</p>
 			<p>

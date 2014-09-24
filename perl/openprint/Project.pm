@@ -779,6 +779,7 @@ sub servicetype_id {
 
 sub ServiceType {
 	my ( $self, $s_id ) = @_;
+$openprint::log->error("No s_id passed to ServiceType") if ! $s_id;
 	return new openprint::ServiceType( $self->servicetype_id( $s_id ) );
 } # end sub ServiceType
 
@@ -1466,6 +1467,7 @@ sub production_cost {
 
 sub Service {
 	my ( $self, $service_id ) = @_;
+	$openprint::log->error("No service_id passed to ServiceType") if ! $service_id;
 	return new openprint::Project_Service( {project_id=>$$self{id}, service_id=>$service_id} );
 } # end sub Service
 

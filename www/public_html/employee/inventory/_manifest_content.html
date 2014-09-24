@@ -64,39 +64,39 @@ if ( tr ) tr.remove();
 		if ( $Type->type() eq 'Sheet' ) {
 			my $lbs = Math::Round::nearest( 0.01, $C->quantity() * $Paper->width() * $Paper->height() * $Paper->wpsi() );
 
-			$html .= '<td class="qty_lbs">'.input( type=>'cardinal', 
+			$html .= '<td class="qty_lbs">'.input( type=>'positivefloat', 
 					id		=>	'qty_lbs-'.$id,
 					name	=>	'qty_lbs-'.$id,
 					value	=>	$lbs,
 					onkeyup	=>	"from_lbs(this,'$$variable{type_id}','$$C{id}');",
 					onchange=>	'this.onkeyup();',
 					) . '</td>';
-			$html .= '<td class="qty_kgs">'.input( type=>'float', 
+			$html .= '<td class="qty_kgs">'.input( type=>'positivefloat', 
 					id		=>	'qty_kgs-'.$id,
 					name	=>	'qty_kgs-'.$id,
 					value	=>	Math::Round::nearest( .1, $lbs/2.2046 ),
 					onkeyup	=>	"from_kg(this,'$$variable{type_id}','$$C{id}');",
 					) . '</td>';
-			$html .= '<td class="qty_sheets">'.input( type=>'float', 
+			$html .= '<td class="qty_sheets">'.input( type=>'positivefloat', 
 				id		=>	'qty_sheets-'.$id,
 				name	=>	'qty_sheets-'.$id,
 				value	=>	$$C{quantity},
 				onkeyup	=>	"from_sheets(this,'$$variable{type_id}','$$C{id}');",
 				) . '</td>';
 		} else {
-			$html .= '<td class="qty_lbs">'.input( type=>'cardinal', 
+			$html .= '<td class="qty_lbs">'.input( type=>'positivefloat', 
 				id		=>	'qty_lbs-'.$id,
 				name	=>	'qty_lbs-'.$id,
 				value	=>	$C->quantity(),
 				onkeyup	=>	"from_lbs(this,'$$variable{type_id}','$$C{id}');",
 				) . '</td>';
-			$html .= '<td class="qty_kgs">'.input( type=>'float', 
+			$html .= '<td class="qty_kgs">'.input( type=>'positivefloat', 
 				id		=>	'qty_kgs-'.$id,
 				name	=>	'qty_kgs-'.$id,
 				value	=>	Math::Round::nearest( .1, $C->quantity()/2.2046 ),
 				onkeyup	=>	"from_kg(this,'$$variable{type_id}','$$C{id}');",
 				) . '</td>';
-			$html .= '<td class="qty_feet">'.input( type=>'float', 
+			$html .= '<td class="qty_feet">'.input( type=>'positivefloat', 
 					id		=>	'qty_feet-'.$id,
 					name	=>	'qty_feet-'.$id,
 					( ( $Paper->width() and $Paper->wpsi() ) ? ( value	=>	Math::Round::nearest( 1, (($C->quantity()/$Paper->wpsi())/$Paper->width())/12 ) ) : () ),
