@@ -1145,6 +1145,7 @@ $openprint::log->debug("No Fold") if DEBUG;
 			my @new_folded_impositions;
 			my @Used_Impositions;
 
+			my $override_pages = 0;
 			my $all_found = 1;
 			if ( $$specs{"chkOverrideFold-$form-$qty_index"} eq 'Y' ) {
 				# Find out if folds satisfies the overrides
@@ -1154,6 +1155,10 @@ $openprint::log->debug("No Fold") if DEBUG;
 					next if ! $$specs{"FoldQty-$form-$qty_index-$index"};
 					next if ! $$specs{"FoldType-$form-$qty_index-$index"};
 					next if ! $$specs{"FoldImposition-$form-$qty_index-$index"};
+					if ( $$sig_specs{txtSignatureType} ) {
+						my ( $pages ) = $$specs{"FoldType-$form-$qty_index-$index"} =~ /(\d+)PageFold/;
+						$override_pages += $$specs{"FoldQty-$form-$qty_index-$index"} * $pages * $$specs{"FoldImposition-$form-$qty_index-$index"};
+					} # end if
 					$found{$index} = 0;
 
 					foreach my $FI ( @$Set_Of_Impositions ) {
@@ -1219,6 +1224,11 @@ $openprint::log->debug(qq`Wrong imposition: $$specs{"FoldImposition-$form-$qty_i
 						
 					} # end if ! found
 				} # end foreach index
+				if ( $override_pages > $SignatureImposition->imposition() * $SignatureImposition->pages() ) {
+					$$specs{alert} .= "You seem to be specifying more pages for folding than were printed for form $form quantity $qty_index<br/>";
+				} elsif ( $override_pages < $SignatureImposition->imposition() * $SignatureImposition->pages() ) {
+					$$specs{alert} .= "You seem to be specifying fewer pages for folding than were printed for form $form quantity $qty_index<br/>";
+				} # end if
 
 				foreach my $k ( keys %folds ) {
 					$all_found = 0 if ! $folds{$k}[0]{found};
@@ -1801,7 +1811,7 @@ sub summary {
 		return $html;
 	} else {
 		if ( $$specs{'alert'} ) {
-			return '<div class="warning">'.$$specs{'alert'}.'</span>';
+			return '<div class="warning">'.$$specs{'alert'}.'</div>';
 		} # end if
 	} # end if
 
