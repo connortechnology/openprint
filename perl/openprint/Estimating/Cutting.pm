@@ -558,7 +558,7 @@ sub signature_calc {
 
 #$openprint::log->debug("Folding impos " . @folding_impositions  . ' eq ' . @my_equipment );
 
-	if ( $stitching_specs ) {
+	if ( $stitching_specs and $stitching_imposition) {
 		if ( $$Imposition{image_orientation} eq 'Horizontal' ) {
 			$stitching_imposition = $$Imposition{columns} if $stitching_imposition > $$Imposition{columns};
 		} else {
@@ -671,6 +671,10 @@ $openprint::log->debug("Folding impositions: " . @folding_impositions ) if DEBUG
 			$results{Breakdown} .= 'Not printing on ' . $Equipment->strid() . '<br/>';
 			next;
 		} elsif ( $cutting_capable eq 'When Stitching' ) {
+			if ( ! $$stitching_specs{'ddmEquipment'.$qty_index} ) {
+				$results{Breakdown} .= 'Stitching not calculated yet.<br/>';
+				next;
+			} # e dn if
 			if ( $$stitching_specs{'ddmEquipment'.$qty_index} != $Equipment->id() ) {
 				$results{Breakdown} .= 'Not stitching on ' . $Equipment->strid() . '<br/>';
 				next;
