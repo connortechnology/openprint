@@ -225,8 +225,10 @@ $I->display('In Stitching:') if DEBUG;
 		my $form = $$sig_specs{SignatureIndex};
 		push @printed_impositions, $I->imposition();
 		if ( ! $$I{Folds} ) {
+	if ( DEBUG ) {
 			$openprint::log->debug("No folds in imposition, generating");
 			$I->display("No Folds");
+}
 			my %pages;
 		my $sig_pages = $I->pages();
 

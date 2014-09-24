@@ -994,10 +994,10 @@ $openprint::log->debug( 'Found stock to cut: ' . $P->id_string() . ' for ' . $$s
 		} # end if found
 
 		if ( ! $found ) {
-$openprint::log->debug("No well cut Stock found how many papers to consider: " . scalar @Papers );
+$openprint::log->debug("No well cut Stock found how many papers to consider: " . scalar @Papers ) if DEBUG;
 			my @cut_Papers;
 			foreach my $P ( @Papers ) {
-$log->debug("Considering: " . $P->id_string() );
+$log->debug("Considering: " . $P->id_string() ) if DEBUG;
 # Don't cut rolls into sheets
 				next if ! $P->cuttable();
 				if ( $$P{'type'} eq 'Roll' ) {
@@ -1030,9 +1030,10 @@ $log->debug("Considering: " . $P->id_string() );
 				$found = 1;
 			} # end foreach paper
 			if ( ! $found ) {
-				$log->error("Never found a stock");
+				# Can happen as you type in the sheet size
+				$log->debug("Never found a stock") if DEBUG;
 			} else {
-				$log->debug("Have a stock");
+				$log->debug("Have a stock") if DEBUG;
 			} # end if
 			push @Papers, @cut_Papers;
 		} # end if found
