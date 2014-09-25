@@ -849,7 +849,7 @@ sub get_Stocks {
 		if ( ( ! $$specs{'basis_mweight'} and $Paper->gsm() ) ) {
 			$$v{basis_mweight} = [ sets::union( 'output', @{$$v{basis_mweight}} ) ];
 			$$specs{'basis_mweight'} = $Paper->basis_mweight();
-		} elsif ( @{$$v{basis_mweight}} > 1 ) {
+		} elsif ( $$v{basis_mweight} and( @{$$v{basis_mweight}} > 1 ) ) {
 			# Always has save
 			$$v{basis_mweight} = [ sets::exclude( ['output'], $$v{basis_mweight} ) ];
 		} # end if
