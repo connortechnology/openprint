@@ -780,7 +780,8 @@ sub get_versions {
 } # end sub get_versions
 
 sub get_Stocks {
-	my ( $Project, $specs ) = @_;
+	my ( $Project, $specs, $v ) = @_;
+	$v = \%variables if ! $v;
 
 	my @Papers;
 	if ( $$specs{'rdbSpecificStock'} eq 'Y' ) {
@@ -803,9 +804,9 @@ sub get_Stocks {
 			} else {
 				$$specs{'StockGrade'} = 3;
 			} # end if
-			$variables{'StockGrade'} = [ sets::union( 'output', @{$variables{'StockGrade'}} ) ];
+			$$v{StockGrade} = [ sets::union( 'output', @{$$v{StockGrade}} ) ];
 		} else {
-			$variables{'StockGrade'} = [ sets::exclude( ['output'], $variables{'StockGrade'} ) ];
+			$$v{StockGrade} = [ sets::exclude( ['output'], $$v{StockGrade} ) ];
 		} # end if
 		if ( ! $$specs{'StockGrade'} ) {
 			$$specs{'alert'} .= 'Please select the grade of stock';
@@ -828,37 +829,36 @@ sub get_Stocks {
 			} # end if
 			if ( ! $$specs{'txtSpecificStockWidth'} ) {
 				$$specs{'alert'} .= 'Please enter the width of the stock';
-			return @Papers;
+				return @Papers;
 			} # end if
 			if ( ! $$specs{'txtSpecificStockHeight'} ) {
 				$$specs{'alert'} .= 'Please enter the height of the stock';
-			return @Papers;
+				return @Papers;
 			} # end if
 		} # end if
 		my $Paper = openprint::Paper::load_from_signature( $Project, $specs );
 #$openprint::log->debug( $Paper->id_string() );
 		push @Papers, $Paper;
 		foreach my $k ( 'txtSpecificStockCalliper', 'txtSpecificStockWidth','txtSpecificStockHeight','txtCustomMWeight','txtCustomStockPrice', 'txtStockGSM','txtSpecificStockBrand','txtSpecificStockFinish','txtSpecificStockColour','txtSpecificStockWeight' ) {
-			$variables{$k} = [ sets::exclude( ['output'], $variables{$k} ) ];
+			$$v{$k} = [ sets::exclude( ['output'], $$v{$k} ) ];
 		} # end foreach
 		if ( ( ! $$specs{'txtCustomMWeight'} and $Paper->gsm() ) ) {
-$log->debug("Calcing txtCustomMWeight");
-			$variables{'txtCustomMWeight'} = [ sets::union( 'output', @{$variables{'txtCustomMWeight'}} ) ];
+			$$v{txtCustomMWeight} = [ sets::union( 'output', @{$$v{txtCustomMWeight}} ) ];
 			$$specs{'txtCustomMWeight'} = $Paper->mweight();
 		} # end if
 		if ( ( ! $$specs{'basis_mweight'} and $Paper->gsm() ) ) {
-			$variables{'basis_mweight'} = [ sets::union( 'output', @{$variables{'basis_mweight'}} ) ];
+			$$v{basis_mweight} = [ sets::union( 'output', @{$$v{basis_mweight}} ) ];
 			$$specs{'basis_mweight'} = $Paper->basis_mweight();
-		} elsif ( @{$variables{'basis_mweight'}} > 1 ) {
+		} elsif ( @{$$v{basis_mweight}} > 1 ) {
 			# Always has save
-			$variables{'basis_mweight'} = [ sets::exclude( ['output'], $variables{'basis_mweight'} ) ];
+			$$v{basis_mweight} = [ sets::exclude( ['output'], $$v{basis_mweight} ) ];
 		} # end if
-		if ( ! $$specs{'txtStockGSM'} ) {
-			$variables{'txtStockGSM'} = [ sets::union( 'output', @{$variables{'txtStockGSM'}} ) ];
-			$$specs{'txtStockGSM'} = $Paper->gsm();
+		if ( ! $$specs{txtStockGSM} ) {
+			$$v{txtStockGSM} = [ sets::union( 'output', @{$$v{txtStockGSM}} ) ];
+			$$specs{txtStockGSM} = $Paper->gsm();
 		} # end if
 	} else {
-		$variables{'txtStockGSM'} = [ sets::union( 'output', @{$variables{'txtStockGSM'}} ) ];
+		$$v{txtStockGSM} = [ sets::union( 'output', @{$$v{txtStockGSM}} ) ];
 
 		my @StockOptions = misc::trim(split (',', $openprint::config{$Project->Type()->name().'StockOptions'} ));
 		@StockOptions = misc::trim(split (',', $openprint::config{'StockOptions'} )) if ! @StockOptions;
@@ -899,19 +899,21 @@ $log->debug("Calcing txtCustomMWeight");
 
 		# Load this here, so that later cloning will copy the prices as well.
 		my %PaperPrices;
-		foreach my $PP ( openprint::PaperPrice->find(paper_id=>[ map { $$_{id} } @Papers ]) ) {
-			push @{$PaperPrices{$$PP{paper_id}}}, $PP;
-		} # end foreach PP
-		
-		foreach my $P ( @Papers ) {
-			$P->Prices( $PaperPrices{$$P{id}} ) if $PaperPrices{$$P{id}};
-		} # end foreach
+		if ( @Papers ) {
+			foreach my $PP ( openprint::PaperPrice->find(paper_id=>[ map { $$_{id} } @Papers ]) ) {
+				push @{$PaperPrices{$$PP{paper_id}}}, $PP;
+			} # end foreach PP
+			
+			foreach my $P ( @Papers ) {
+				$P->Prices( $PaperPrices{$$P{id}} ) if $PaperPrices{$$P{id}};
+			} # end foreach
 
-		@$specs{'txtSpecificStockBrand','txtSpecificStockFinish','txtSpecificStockColour','txtSpecificStockWeight','StockGrade'} = $Papers[0]->get('brand','finish','colour','weight','grade');
-		$$specs{'txtSpecificStockCalliper'} = $Papers[0]->calliper() if @Papers;
+			@$specs{'txtSpecificStockBrand','txtSpecificStockFinish','txtSpecificStockColour','txtSpecificStockWeight','StockGrade','txtSpecificStockCalliper'} = $Papers[0]->get('brand','finish','colour','weight','grade', 'calliper');
+		} # end if Papers
 		foreach my $k ( 'txtSpecificStockCalliper', 'txtSpecificStockWidth','txtSpecificStockHeight','txtCustomMWeight','txtCustomStockPrice', 'txtStockGSM','txtSpecificStockBrand','txtSpecificStockFinish','txtSpecificStockColour','txtSpecificStockWeight','StockGrade' ) {
-			$variables{$k} = [ sets::union( 'output', @{$variables{$k}} ) ];
+			$$v{$k} = [ sets::union( 'output', @{$$v{$k}} ) ];
 		} # end foreach
+		
 	} # end if
 
 	if ( ! @Papers ) {
@@ -3656,9 +3658,9 @@ sub get_project_price {
 		my $imp = $base_imp->copy();
 		my $Press = $imp->Press();
 		$$imp{specs} = $sig_specs;
-		$$sig_specs{'ddmRunStyle'.$qty_index} = $$imp{'runstyle'};
-		$$sig_specs{'ddmPress'.$qty_index} = $$Press{'strid'};
-		$$sig_specs{'PageQuantity'.$qty_index} = $$imp{'pages'};
+		$$sig_specs{'ddmRunStyle'.$qty_index} = $$imp{runstyle};
+		$$sig_specs{'ddmPress'.$qty_index} = $$Press{strid};
+		$$sig_specs{'PageQuantity'.$qty_index} = $$imp{pages};
 		my %previous_forms_cache = %$previous_forms_cache;
 		my $hash_key = join(',', $$Press{'strid'}, $$imp{'runstyle'}, $$imp{'pages'}, $$imp{'imposition'}, $$imp{columns} );
 		$$sig_specs{'PreviousForms'.$qty_index} = $previous_forms_cache{$hash_key};
@@ -3676,6 +3678,7 @@ if ( 0 ) {
 		my %washed_colours = %$washed_colours;
 		my %PaperCounts = %$PaperCounts;
 		my $Paper = $imp->Paper();
+		$$sig_specs{txtSpecificStockCalliper} = $Paper->calliper();
 
 		my @total_impositions = @$other_impositions;
 
