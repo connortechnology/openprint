@@ -193,6 +193,8 @@ sub check_setup {
 sub calc_setup_object {
 	my ( $specs, $image_width, $image_height, $Paper, $run_style, $Press, $bleed_size ) = @_;
 
+	my $min_bleed_size = $Press->specification( 'Minimum Bleed Size' );
+
 	my $press_grain;
 	if ( my $Stock_Setting = $Press->Stock_Setting( $Paper ) ) {
 		$press_grain = $Stock_Setting->grain();
@@ -497,9 +499,15 @@ if ( 1 ) {
 			#$colour_bar = 0 if $colour_bar < 0;
 		#} else { 
 # If impo was x2 then it can go in middle, but we don't know that yet.
-			$colour_bar -= $bleed_size if $bleed_locations{Top} or $bleed_locations{Bottom};
-			$colour_bar -= $bleed_size if $bleed_locations{Top} or $bleed_locations{Bottom};
+			# Apparently you can
+# 2014-09-25: Brendan and Rick say you really can't.  You need a minimum of bleed space.
+# SInce we don't know it rows > 1 yet, let's just only subtract 1
+			if ( $bleed_size ) {
+			$colour_bar -= ( $bleed_size - $min_bleed_size ) if $bleed_locations{Top} or $bleed_locations{Bottom};
+			#$colour_bar -= ( $bleed_size - $min_bleed_size ) if $bleed_locations{Top} and $bleed_locations{Bottom};
+			} # end if
 			$colour_bar = 0 if $colour_bar < 0;
+			$colour_bar = $$setup1{colour_bar_size} if $colour_bar > $$setup1{colour_bar_size};	
 $openprint::log->debug("Colour bar is now $colour_bar") if DEBUG;
 		}
 		
@@ -665,7 +673,10 @@ $openprint::log->debug("Not doing dutch because ($$specs{'dutch'}) or $run_style
 	} # end if
 
 	if ( $$specs{'Colour Bar Orientation'} ne 'Length' ) {
-		$adjusted_paper_height -= $$setup2{colour_bar_size};
+		if ( $run_style ne 'Work & Tumble' ) {
+			# W&Tumble has it in the grip space already.
+			$adjusted_paper_height -= $$setup2{colour_bar_size};
+		} # end if
 	} # end if
 
 	if ( $Paper->cuttable() ) {
