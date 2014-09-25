@@ -17,6 +17,7 @@ require logger;
 require openprint::Upload;
 require openprint;
 require openprint::File;
+require openprint::Log;
 
 use vars qw( $log $dbh %config );
 *log = \$openprint::log;
@@ -249,7 +250,13 @@ sub check_scoreboard {
 	#$log->debug( "Users: @users in scoreboard\n" );
 
 	foreach my $username ( keys %uploads ) {
-		$Users{$username}= openprint::User->find_one('email lc'=>lc $username) if ! exists $Users{$username};
+		if ( ! exists $Users{$username} ) {
+			my $User = openprint::User->find_one('email lc'=>lc $username);
+			if ( $User ) {
+				$Users{$username}= $User;
+				(new openprint::Log())->save({action=>'Login', note=>'Successful FTP Login' } );
+			} # end if
+		} # end if
 
 		if ( ( ! sets::isin( $username, \@users ) ) or ( $config{'max_files'} and ( @{$uploads{$username}} > $config{'max_files'} ) ) ) {
 			$log->debug( "Sending mail for $username\n" );
