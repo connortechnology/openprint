@@ -66,17 +66,34 @@ $log->debug("Deleting key $key in standard no_outputs ") if $debug;
 			$log->debug("$key => $specs{$key}");
 		} # end foreach
 	} # end if debug
-    foreach my $key ( keys %specs ) {
-		if ( (exists $param{$key}) and ($specs{$key} eq $param{$key}) ) {
-			$log->debug("Deleting $key cuz it's the same $key = $param{$key}") if $debug;
-			delete $specs{$key};
-		} elsif ( ref $specs{$key} ) {
-		   $log->error("Got a non-scalar in specs! $key => $specs{$key}");
-            delete $specs{$key};
-		} elsif ( $debug ) {
-			$log->debug("Outputting $key") if $debug;
-        } # end if
-    } # end foreach
+	if ( $debug ) {
+		foreach my $key ( sort { $a cmp $b } keys %specs ) {
+			if ( (exists $param{$key}) and ($specs{$key} eq $param{$key}) ) {
+				$log->debug("Deleting $key cuz it's the same $key = $param{$key}");
+				delete $specs{$key};
+			} elsif ( ( ! exists $param{$key}) and ! $specs{$key} ) {
+				$log->debug("Deleting $key cuz it's not in params and its empty");
+				delete $specs{$key};
+			} elsif ( ref $specs{$key} ) {
+				$log->error("Got a non-scalar in specs! $key => $specs{$key}");
+				delete $specs{$key};
+			} # end if
+		} # end foreach
+		foreach my $key ( sort { $a cmp $b } keys %specs ) {
+			$log->debug("Outputting $key = $specs{$key}");
+		} # end foreach
+	} else {
+		foreach my $key ( keys %specs ) {
+			if ( (exists $param{$key}) and ($specs{$key} eq $param{$key}) ) {
+				delete $specs{$key};
+			} elsif ( ( ! exists $param{$key}) and ! $specs{$key} ) {
+				delete $specs{$key};
+			} elsif ( ref $specs{$key} ) {
+			   $log->error("Got a non-scalar in specs! $key => $specs{$key}");
+				delete $specs{$key};
+			} # end if
+		} # end foreach
+	} # end if debug
 
 	$param{callback} = 'cbFillResults' if ! $param{callback};
 	my $json = JSON->new;
