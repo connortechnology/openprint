@@ -35,7 +35,32 @@
 			order				=>	'id',
 			) ];
 	} else {
+
+		my @Stocks; 
+		my %stock_ids;
+
 		my %sql = (
+				( $session{'/employee/inventory/paper.html?fsc_code'} ? ( fsc_code  =>  $session{'/employee/inventory/paper.html?fsc_code'} ) : () ),
+				( $param{width} ? ( ($param{'OrLarger'} ? 'width >=' : 'width') => $param{'width'} ) : () ),
+				( $param{height} ? ( ($param{'OrLarger'} ? 'height >=' : 'height') => $param{'height'} ) : () ),
+				);  
+
+		foreach my $filter ( 'owner_id', 'manufacturer_id','brand_id','finish_id','colour_id','weight_id','group_id','quality_id','material_id' ) {
+			next if ! $session{'/employee/inventory/skids.html?'.$filter};
+            if ( $session{'/employee/inventory/skids.html?'.$filter.'_id_exclude'} ) {
+                $sql{$filter.' !='} = $session{'/employee/inventory/skids.html?'.$filter};
+            } else {
+                $sql{$filter} = $session{'/employee/inventory/skids.html?'.$filter};
+            } # end if
+        } # end foreach filter
+		if ( %sql ) {
+			@Stocks = openprint::Paper->find(%sql);
+			%stock_ids = map { $_->id(), $_ } @Stocks;
+        } # end if
+
+
+		%sql = (
+			( %stock_ids ? (paper_id => [ keys %stock_ids ] ) : () ),
 			date_filter( '/employee/inventory/skids.html?created_on_end', 'created_on <=' ),
 			date_filter( '/employee/inventory/skids.html?created_on_start', 'created_on >=' ),
 			date_filter( '/employee/inventory/skids.html?updated_on_end', 'updated_on <=' ),
@@ -58,6 +83,7 @@
 		if ( $session{'/employee/inventory/skids.html?hasmanufacturers'} eq 'Y' ) {
 			$sql{'has manufacturers_id'} = 1;
 		}
+
 		
 		if ( $session{'/employee/inventory/skids.html?type'} ) {
 			my @types = split(',',$session{'/employee/inventory/skids.html?type'} );
@@ -69,7 +95,7 @@
 				} # end if
 			} # end if
 		}
-		$sql{'condition_id'} = $session{'/employee/inventory/skids.html?condition_id'} if $session{'/employee/inventory/skids.html?condition_id'};
+		$sql{condition_id} = $session{'/employee/inventory/skids.html?condition_id'} if $session{'/employee/inventory/skids.html?condition_id'};
 
 		if ( $session{'/employee/inventory/skids.html?location_id'} ) {
 			if ( $session{'/employee/inventory/skids.html?location_id'} eq 'None' ) {
@@ -80,6 +106,7 @@
 			} # end if
 		} # end if
 		$$variable{Skids} = [ openprint::Skid->find( %sql ) ];
+
 	} # end if
 	if ( @{$$variable{'Skids'}} > 100 ) {
 		openprint::Location->find();

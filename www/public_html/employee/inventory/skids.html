@@ -65,6 +65,7 @@ Please select a Skid to view/edit.<br/>
 	</div>
 	<br class="spacer"/>
 	<fieldset>
+<div class="leftColumn">
 	<ul>
 		<li>
 			<label>Received On</label>
@@ -135,9 +136,6 @@ Please select a Skid to view/edit.<br/>
             <label>Valid/Invalid RFID?</label>
 			<? echo ( radio( 'rfid_valid', ['Y', 'Yes', 'N', 'No', '', 'All' ], $session{'/employee/inventory/skids.html?rfid_valid'}, { onclick=>'calc();' } ); ) ?>
 		</li>
-		<li><label>Type</label>
-			<? echo ( checkboxes( 'type', [ 'Sheet','Sheet','Roll','Roll','Unknown','Unknown' ], [ split(',', $session{'/employee/inventory/skids.html?type'} ) ], { onclick=>'calc();' } ); ) ?>
-        </li>
 		<li><label>Location</label>
 			<select name="location_id" onchange="calc();">
 				<? echo ( 
@@ -159,6 +157,121 @@ Please select a Skid to view/edit.<br/>
 				<? echo ( radio( 'deleted', ['1','Yes','0','No','1,0','All'], $session{'/employee/inventory/skids.html?deleted'} ); ) ?>
 			</li>
 		</ul>
+</div>
+<div class="rightColumn">
+       <ul>
+            <li>
+                <label>Owner</label>
+                <select id="owner_id" name="owner_id" size="1" onchange="filter_onChange(this,'');">
+                <option value=""> All </option>
+                <? echo ( 
+                    make_drop_down( [ map { $_->id(), $_->name() } openprint::Company->find( id=>[sql::execute(undef, undef, q{SELECT DISTINCT owner_id FROM papers} )], order=>'lower(name)' ) ], $session{'/employee/inventory/skids.html?owner_id'} );
+                ) ?>
+                </select>
+                <input type="checkbox" name="owner_id_exclude" id="owner_id_exclude" value="1" onclick="filter_onChange(this,'');" <? echo ( checked( $session{'/employee/inventory/skids.html?owner_id_exclude'} ); ) ?> />
+                <label class="radio" for="owner_id_exclude">Exclude</label>
+            </li>
+<? echo (
+    my $html;
+
+    my %find = (
+            ( $session{'/employee/inventory/skids.html?type'} ? ( type => [ split( ',', $session{'/employee/inventory/skids.html?type'} ) ] ) : () ),
+    );
+    if ( $session{'/employee/inventory/skids.html?owner_id'} ) {
+        if ( $session{'/employee/inventory/skids.html?owner_id_exclude'} ) {
+            $find{'owner_id !='} = $session{'/employee/inventory/skids.html?owner_id'};
+        } else {
+            $find{owner_id} = $session{'/employee/inventory/skids.html?owner_id'};
+        } # end if
+    } # end if
+
+    my @StockOptions = ( 'Manufacturer','Brand','Finish','Colour','Weight','Quality','Material','Group' );
+
+    openprint::Manufacturer->find();
+    openprint::StockBrand->find();
+    openprint::StockFinish->find();
+    openprint::StockColour->find();
+    openprint::StockWeight->find();
+    openprint::StockQuality->find();
+    openprint::StockMaterial->find();
+    my @Papers = openprint::Paper->find( %find );
+    my %filter_validations;
+
+	# contains a mapping from Brand to PointOne Coated to brand_id for POintONe Coated?
+    my %filters;
+    for ( my $stock_index = 0; $stock_index < @Papers; $stock_index += 1 ) {
+        my $Stock = $Papers[$stock_index];
+
+        foreach my $option ( @StockOptions ) {
+            my ( $lower_option, $option_id ) = ( lc $option, lc $option.'_id' );
+
+            # Load up the filter
+            $filters{$option}{$Stock->$lower_option()} = $$Stock{$option_id} if $$Stock{$option_id};
+            if ( $session{'/employee/inventory/skids.html?'.$option_id} ) {
+                if ( $$Stock{$option_id} eq $session{'/employee/inventory/skids.html?'.$option_id} ) {
+                    $filter_validations{$option} = 1;
+                } else {
+                    splice @Papers, $stock_index, 1;
+                    $stock_index -= 1;
+                    last;
+                } # end if
+            } # end if
+        } # end foreach option
+    } # end foreach $Stock
+
+    foreach my $option ( @StockOptions ) {
+        next if ! $filters{$option}; # This is so that if we have no settings for Quality, we don't even show it.
+
+        my ( $lower_option, $option_id ) = ( lc $option, lc $option.'_id' );
+        my @options = map { $filters{$option}{$_}, $_ } ( sort keys %{$filters{$option}} );
+
+        # Don't do this because even if there is only 1 entry, papers can be unassigned.
+        #$session{'/employee/inventory/skids.html?'.$option} = $options[0] if ( @options == 2 );
+
+        $html .= sprintf(q`<li><label>%1$s</label>
+                <select name="%2$s_id" id="%2$s_id" size="1" onchange="filter_onChange(this,'');">
+                <option value=""> All </option>%3$s</select>
+            </li>`, $option, $lower_option,
+            make_drop_down( \@options, $session{'/employee/inventory/skids.html?'.$option_id} ),
+        );
+    } # end foreach option
+    $$variable{Paper} = \@Papers;
+    return $html;
+) ?>
+		<li><label>Type</label>
+			<? echo ( checkboxes( 'type', [ 'Sheet','Sheet','Roll','Roll','Unknown','Unknown' ], [ split(',', $session{'/employee/inventory/skids.html?type'} ) ], { onclick=>'calc();' } ); ) ?>
+        </li>
+        <li><label>Size</label>
+        <select name="width" size="1" onchange="calc('f1');">
+            <option value="">All</option>
+            <? echo ( 
+                    my %data;
+                    my $found = 0;
+                    foreach my $Stock ( @{$$variable{'Paper'}} ) {
+                        $data{$Stock->width()} = $Stock->width();
+                        $found = 1 if $Stock->width() == $session{'/employee/inventory/skids.html?width'};
+                    } # end foreach
+                    $session{'/employee/inventory/skids.html?width'} = undef if ! $found;
+                    return make_drop_down( [map { $_, $_ } sort keys %data ], $session{'/employee/inventory/skids.html?width'} );
+                ) ?>
+            </select> x
+            <select name="height" size="1" onchange="calc('f1');">
+            <option value="">All</option>
+            <? echo ( 
+                    my %data;
+                    my $found = 0;
+                    foreach my $Stock ( @{$$variable{Paper}} ) {
+                        $data{$Stock->width()} = $Stock->height();
+                        $found = 1 if $Stock->width() == $session{'/employee/inventory/skids.html?height'};
+                    } # end foreach
+                    $session{'/employee/inventory/skids.html?height'} = undef if ! $found;
+                    return make_drop_down( [map { $_, $_ } sort keys %data ], $session{'/employee/inventory/skids.html?height'} );
+                ) ?>
+            </select>
+            <input type="checkbox" id="OrLarger" name="OrLarger" value="Y" <? echo ( checked( $session{'/employee/inventory/skids.html?OrLarger'} ); ) ?> /><label class="radio" for="OrLarger">or larger</label>
+        </li>
+	</ul>
+</div>
 		<p class="buttons">
 			<? echo ( join('',
 				button( 'ShowResults', { onclick=>'calc();', text=>'Show Results' } ),
