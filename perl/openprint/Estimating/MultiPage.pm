@@ -39,10 +39,27 @@ my %variables = (
 	'PrintingType'=>['save'],'rdbTemplateType'=>['save'],
 	'help'=>['output'],'alert'=>['output','save'],
 	'ProjectIndex'=>[], 'ServiceIndex'=>[], 'ServiceType'=>[], 'NewBook'=>[],
-	'remaining_pages'=>['output'],'next_group_id'=>['output'],'groups'=>['output'],
+	'remaining_pages'=>['output'],'next_group_id'=>['output'],'groups'=>['output','save'],
 	spine	=>	 ['save'],
 
-);
+	);
+
+my @signature_variables = (
+		'ddmRunStyle-', 'ddmPress-', 'PrintingType-', 'StockType-', 'txtPlateChangeQuantity-', 'PageQuantity-',
+		'Pages', 'OverrideGroupPageQuantity', 'GroupPageQuantity', 'txtSignatureType',
+		'txtFinalHeight', 'txtFinalWidth', 'txtHeight', 'txtWidth',
+		'rdbSpecificStock', 'rdbSuppliedStock',
+		'ddmStockBrand', 'txtSpecificStockBrand',
+		'ddmStockGroup', 'ddmStockQuality',
+		'ddmStockFinish', 'txtSpecificStockFinish',
+		'ddmStockColour', 'txtSpecificStockColour',
+		'ddmStockWeight', 'txtSpecificStockWeight',
+		'txtSpecificStockCalliper', 'StockType',
+		'txtSpecificStockWidth', 'txtSpecificStockHeight', 
+		'txtCustomMWeight', 'basis_mweight', 'basis_width', 'basis_height', 
+		'CustomStockPrice', 'txtStockGSM','CustomSheetDoubleSided',
+		'cuttable', 'perfecting', 'StockGrade', 'minimum_order','sheets_per_package',
+		);
 
 sub variables {
 	my ( $project_id, $service_id, $specs, $incoming_specs ) = @_;
@@ -52,30 +69,16 @@ sub variables {
 	} # end foreach;
 	my @Groups = sql::execute( undef, undef, 'SELECT DISTINCT strvalue FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strName=?', $project_id, 'Group' );
 	foreach my $group_id ( @Groups ) {
-		push @v, 'ddmRunStyle-'.$group_id;
-		push @v, 'ddmPress-'.$group_id;
-		push @v, 'PrintingType-'.$group_id;
-		push @v, 'StockType-'.$group_id;
-
-		push @v, 'Pages'.$group_id;
-		push @v, 'OverrideGroupPageQuantity'.$group_id;
-		push @v, 'GroupPageQuantity'.$group_id;
-		push @v, 'txtSignatureType'.$group_id;
-		push @v, 'txtFinalHeight'.$group_id;
-		push @v, 'txtFinalWidth'.$group_id;
-		push @v, 'txtHeight'.$group_id;
-		push @v, 'txtWidth'.$group_id;
-		push @v, 'txtPlateChangeQuantity-'.$group_id;
-		push @v, 'PageQuantity-'.$group_id;
-	} # end foreach
+		push @v, map { join('', $_,$group_id) } @signature_variables;
+	} # end foreach group
 	return @v;
 } # end sub variables
 
 sub no_outputs {
 	my ( $project_index, $service_index, $specs ) = @_;
-    my @v;
+	my @v;
 	my @outputs;
-    foreach my $k ( keys %variables ) {
+	foreach my $k ( keys %variables ) {
 		if ( ! sets::isin( 'output', $variables{$k} ) ) {
 			push @v, $k; 
 		} else {
@@ -219,9 +222,14 @@ $openprint::log->warn("FIXM E");
 
 	foreach my $group_id ( @Groups ) {
 		$openprint::log->debug("Group: $group_id, remaining: $remaining_pages, override: $override_pages{$group_id}") if DEBUG;
+		my %sig_specs =  map { $_, $$specs{$_.$group_id } } @signature_variables;
+		
 		openprint::Estimating::Printing::get_colours( $specs, 'SideOne', \%variables, $group_id );
 		openprint::Estimating::Printing::get_colours( $specs, 'SideTwo', \%variables, $group_id );
 		openprint::Estimating::Printing::get_inkcoverage( $Project, $specs, \%variables, $group_id );
+		openprint::Estimating::Printing::get_Stocks( $Project, \%sig_specs, \%variables );
+		$$specs{alert} .= $sig_specs{alert};
+		@$specs{map { $_.$group_id} @signature_variables} = @sig_specs{@signature_variables};
 		if ( ! exists $override_pages{$group_id} ) {
 			$override_pages{$group_id} = $remaining_pages;
 			$remaining_pages = 0;
