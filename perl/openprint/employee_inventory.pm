@@ -202,10 +202,36 @@ sub inventory_report {
 	my $count = 0;
 	my $total_weight = 0;
 	openprint::Location->find();
+
+        my @Stocks;
+        my %stock_ids;
+
+        my %sql = (
+                ( $param{fsc_code} ? ( fsc_code  =>  $param{fsc_code} ) : () ),
+                ( $param{width} ? ( ($param{OrLarger} ? 'width >=' : 'width') => $param{width} ) : () ),
+                ( $param{height} ? ( ($param{OrLarger} ? 'height >=' : 'height') => $param{height} ) : () ),
+                );
+
+        foreach my $filter ( 'owner_id', 'manufacturer_id','brand_id','finish_id','colour_id','weight_id','group_id','quality_id','material_id' ) {
+            next if ! $param{$filter};
+            if ( $param{$filter.'_id_exclude'} ) {
+                $sql{$filter.' !='} = $param{$filter};
+            } else {
+                $sql{$filter} = $param{$filter};
+            } # end if
+        } # end foreach filter
+        if ( %sql ) {
+            @Stocks = openprint::Paper->find(%sql);
+            %stock_ids = map { $_->id(), $_ } @Stocks;
+        } # end if
+
+
 	foreach my $Skid ( openprint::Skid->find(
+				( %stock_ids ? ( paper_id => [ keys %stock_ids ] ) : () ),
 				ssi::date_filter( 'added_on_start', 'created_on >=', \%param ),
 				ssi::date_filter( 'added_on_end', 'created_on <=', \%param ),
-				'quantity >='=>1,'type is null or in'=>$param{type} ) ) {
+				( $param{in_stock} ne '' ? ( $param{in_stock} eq '1' ? ( 'quantity >='=>1 ) : ( quantity=>0 ) ) : () ),
+				'type is null or in'=>$param{type} ) ) {
 		foreach my $C ( $Skid->Contents() ) {
 			next if ! $C;
 			my $Paper = $C->Paper();
