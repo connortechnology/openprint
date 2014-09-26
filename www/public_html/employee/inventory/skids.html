@@ -101,10 +101,6 @@ Please select a Skid to view/edit.<br/>
 			</select>
 		</li>
 		<li>
-			<label>FSC Code</label>
-			<input type="text" name="fsc_code" value="<? echo ( $session{'/employee/inventory/skids.html?fsc_code'} ) ?>" />
-		</li>
-		<li>
             <label>Empty?</label>
 			<? echo ( radio( 'empty', ['Y', 'Yes', 'N', 'No', '', 'All' ], $session{'/employee/inventory/skids.html?empty'}, { onclick=>'calc();' } ); ) ?>
 		</li>
@@ -270,8 +266,13 @@ Please select a Skid to view/edit.<br/>
             </select>
             <input type="checkbox" id="OrLarger" name="OrLarger" value="Y" <? echo ( checked( $session{'/employee/inventory/skids.html?OrLarger'} ); ) ?> /><label class="radio" for="OrLarger">or larger</label>
         </li>
+		<li>
+			<label>FSC Code</label>
+			<input type="text" name="fsc_code" value="<? echo ( $session{'/employee/inventory/skids.html?fsc_code'} ) ?>" />
+		</li>
 	</ul>
 </div>
+<br class="spacer"/>
 		<p class="buttons">
 			<? echo ( join('',
 				button( 'ShowResults', { onclick=>'calc();', text=>'Show Results' } ),

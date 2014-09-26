@@ -234,11 +234,15 @@ sub information {
 
 # store fields from recalculate, we only store the markup, the NewPrices will calculate on the fly
 	foreach my $key ( keys %param ) {
-		if ( $key =~ /^txtMarkup(\d+)_(\d+)$/ ) {
-			sql::update( $log, $dbh, 'tbl_Quote_Details', ['quote_id=? AND project_id=?', $quote_id, $2],
-					'dblMarkup'.$1,         1*$param{$key},
-					);
-		} # end if
+		foreach my $QP ( $Quote->Quoted_Projects() ) {
+			foreach my $qty_index ( $QP->quantity_indexes() ) {
+				$QP->markup( $qty_index, $param{'markup-'.$qty_index.'_'.$QP->project_id()} );
+				$QP->quantity( $QP->Project()->quantity() );
+				$QP->price( $qty_index, undef );	
+				$QP->description( $QP->Project()->reference() );
+			} # end foreach
+			$QP->save();
+		} # end foreach
 	} # end foreach
 
 	# This isn't neccessarily the logged in company
@@ -353,9 +357,13 @@ sub submit {
 		$Quote->store_user_by_info( \%by );
 		$Quote->store_user_for_info( \%for );
 # store fields from recalculate, we only store the markup, the NewPrices will calculate on the fly
+		# On submit, if all is well, we set final costs, nothing should change after this, unless we go back to information
 		foreach my $QP ( $Quote->Quoted_Projects() ) {
 			foreach my $qty_index ( $QP->quantity_indexes() ) {
 				$QP->markup( $qty_index, $param{'markup-'.$qty_index.'_'.$QP->project_id()} );
+				$QP->quantity( $QP->Project()->quantity() );
+				$QP->price( $qty_index, undef );	
+				$QP->description( $QP->Project()->reference() );
 			} # end foreach
 			$QP->save();
 		} # end foreach
@@ -379,8 +387,8 @@ sub submit {
 
 sub confirmation {
 
-    my $quote_id = $param{'quote_id'};
-	$quote_id = $session{'quote_id'} if ! $quote_id;
+    my $quote_id = $param{quote_id};
+	$quote_id = $session{quote_id} if ! $quote_id;
 	my $Quote = new openprint::Quote( $quote_id );
 	$variable{'Quote'} = $Quote;
 	return if ! $quote_id;
@@ -391,11 +399,8 @@ sub confirmation {
 
 		foreach my $QP ( $Quote->Quoted_Projects() ) {
 			foreach my $qty_index ( $QP->quantity_indexes() ) {
-				$QP->quantity( $QP->Project()->quantity() );
-				$QP->price( $qty_index, undef );	
 				$subtotals[$qty_index] += $QP->price( $qty_index );
 			} # end foreach
-			$QP->description( $QP->Project()->reference() );
 			$QP->save();
 		} # end foreach QP
 		foreach my $Product ( $Quote->Products() ) {
