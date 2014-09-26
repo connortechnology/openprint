@@ -849,7 +849,7 @@ sub get_Stocks {
 		if ( ( ! $$specs{'basis_mweight'} and $Paper->gsm() ) ) {
 			$$v{basis_mweight} = [ sets::union( 'output', @{$$v{basis_mweight}} ) ];
 			$$specs{'basis_mweight'} = $Paper->basis_mweight();
-		} elsif ( @{$$v{basis_mweight}} > 1 ) {
+		} elsif ( $$v{basis_mweight} and( @{$$v{basis_mweight}} > 1 ) ) {
 			# Always has save
 			$$v{basis_mweight} = [ sets::exclude( ['output'], $$v{basis_mweight} ) ];
 		} # end if
@@ -2471,7 +2471,7 @@ $openprint::log->debug(Data::Dumper::Dumper( \%Overrides ) );
 			next if ! $$sig_specs{'txtImposition'.$qty_index};
 
 			# Why are we leaving out cover?  Maybe because binders tend to have a special spot for the cover.
-			next if $$sig_specs{'Group'} == 1;
+			#next if $$sig_specs{'Group'} == 1;
 			next if ( ($$sig_specs{'Group'} == $$specs{'Group'}) and ($sig_id >= $service_index) );
 			my $I = new openprint::Imposition();
 			$I->load( $sig_specs, $qty_index );
@@ -5901,7 +5901,8 @@ $log->debug("**** RUN PRICE 3 : $running_price **") if DEBUG;
 
 	# THere should be either a Standard Run Speed
 
-	my $std_speed = $Press->Specification('Standard Run Speed' );
+	my $std_speed = $Press->Specification('Standard Run Speed');
+	my $Paper = $Imposition->Paper();
 	
 	my $speed_mod;
 	if ( $std_speed ) {
@@ -5920,7 +5921,6 @@ $log->debug("**** RUN PRICE 3 : $running_price **") if DEBUG;
 				$openprint::log->warn("Unknown Per setting $unit");
 			} # end if
 		} else {
-			my $Paper = $Imposition->Paper();
 
 	# Only load this if not already specified by some inline bindery service
 			$run_speed = $Press->specification('Run Speed', (lc $$std_speed{'units'} eq 'calliper' ? $$Paper{'calliper'} : $Paper->gsm()) ) if ! $run_speed;
@@ -5928,15 +5928,34 @@ $log->debug("**** RUN PRICE 3 : $running_price **") if DEBUG;
 				$openprint::log->debug("No run sped on $$Press{strid} for $$std_speed{'units'} " . ($$std_speed{'units'} eq 'Calliper' ? $$Paper{'calliper'} : $Paper->gsm() ) ) if DEBUG or 0;
 				$run_speed = $$std_speed{value};
 			
-			} elsif ( $run_speed != $$std_speed{value} ) {
-				$speed_mod = Math::Round::nearest( .001, $$std_speed{'value'} / $run_speed );
-				$openprint::log->debug("1Press ".$$Press{'strid'}." Calliper: $$Paper{calliper} gsm: $$Paper{gsm} ($running_price) ($run_price{'units'}) STD: ($$std_speed{'value'}) RUN ($run_speed), mod: $speed_mod,  std/run: " . ( $speed_mod ? $run_speed/$speed_mod : $std_speed/$run_speed ) ) if DEBUG or 0;
 			} # end if
 		} # end if
 	} else {
 		$run_speed = $Press->specification('Run Speed') if ! $run_speed;
 		$openprint::log->debug("No standard speed on $$Press{strid}") if DEBUG;
 	} # end if
+
+	if ( $$Imposition{runstyle} eq 'Perfecting' and ! $Paper->perfecting() ) {
+		my $Outside_Wheel_Size = $Press->specification( 'Outside Slow Down Wheel Size' );
+$openprint::log->debug("Checking for slowdown wheel size: $Outside_Wheel_Size ");
+		if ( $Outside_Wheel_Size ) {
+			my $Slow_Down = $Press->Specification( 'Outside Wheel Slow Down' );
+$openprint::log->debug("Have slowdown wheel size: $Outside_Wheel_Size layout_wdith: " . $Imposition->layout_width() . ' paper width: ' . $Paper->width() );
+			if ( $Imposition->layout_width() + $Outside_Wheel_Size > $Paper->width() ) {
+				if ( $$Slow_Down{units} eq 'Percent' ) {
+					
+					$run_speed *= 1-($$Slow_Down{value} / 100);
+$openprint::log->debug("Speed_mod has become $speed_mod");
+				} else {
+$openprint::log->error("Unknown units on Outside Wheel Slow Down ($$Slow_Down{units})");
+				} # end if
+			} # end if
+		} # end if
+	} # end if
+	if ( $std_speed and ( $run_speed != $$std_speed{value} ) ) {
+		$speed_mod = Math::Round::nearest( .001, $$std_speed{value} / $run_speed );
+		$openprint::log->debug("1Press ".$$Press{'strid'}." Calliper: $$Paper{calliper} gsm: $$Paper{gsm} ($running_price) ($run_price{'units'}) STD: ($$std_speed{'value'}) RUN ($run_speed), mod: $speed_mod,  std/run: " . ( $speed_mod ? $run_speed/$speed_mod : $std_speed/$run_speed ) ) if DEBUG;
+	}
 	$run_price{run_speed} = $run_speed;
 
 	if ( sets::isin( $run_price{'units'}, ['per m','per 1000 impressions', 'per 1000'] ) ) {

@@ -105,9 +105,14 @@ sub find {
 	if ( $params{'paper_id'} and $params{'quantity >='} ) {
 		$sql .= ' AND id IN (SELECT skid_id FROM skid_contents WHERE paper_id=? AND quantity >= ?)';
 		push @values, $params{'paper_id'}, $params{'quantity >='};
-	} elsif ( $params{'paper_id'} ) {
-		$sql .= ' AND id IN (SELECT skid_id FROM skid_contents WHERE paper_id=?)';
-		push @values, $params{'paper_id'};
+	} elsif ( $params{paper_id} ) {
+		if ( ref $params{paper_id} eq 'ARRAY' ) {
+			$sql .= ' AND id IN (SELECT skid_id FROM skid_contents WHERE paper_id IN (' . join(',', map { '?' } @{$params{paper_id}} ) . ') )';
+			push @values, @{$params{paper_id}};
+		} else {
+			$sql .= ' AND id IN (SELECT skid_id FROM skid_contents WHERE paper_id=?)';
+			push @values, $params{'paper_id'};
+		} # end if
 	} elsif ( $params{'quantity >='} ) {
 		$sql .= ' AND id IN (SELECT skid_id FROM skid_contents WHERE quantity >= ?)';
 		push @values, $params{'quantity >='};

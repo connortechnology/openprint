@@ -154,6 +154,7 @@ sub calc {
 	my ( $log, $dbh, $variable, $project_index, $service_index, $specs ) = @_;
 
 	$$specs{Status} = 'calculated';
+	$$specs{alert} = '';
 
 	if ( ! $$specs{rdbTemplateType} ) {
 		$$specs{alert} .= 'Please select how this project will be bound.<br/>';
