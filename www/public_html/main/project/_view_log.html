@@ -19,7 +19,7 @@
 			} elsif ( $$variable{'Description'} =~ /^Add to Order (\d+)$/ ) {
 				$$variable{'Description'} = "Add to order <a href=\"/main/order/history_details.html?order_id=$1\">$1</a>";
 			} elsif ( $$variable{'Description'} =~ /^Add to quote (\d+) (.+)$/ ) {
-				$$variable{'Description'} = "Add to quote <a href=\"/main/quote/history_details.html?quote_id=$1\">$1</a>$2";
+				$$variable{'Description'} = "Add to quote <a href=\"/main/quote/history_details.html?quote_id=$1\">$1</a> $2";
 			} # end if
 		) ?>
 	<tr<?rowclass?>>

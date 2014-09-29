@@ -161,7 +161,7 @@ sub destroy {
 	sql::execute( undef, undef, 'DELETE FROM Quotes WHERE id=?', $$self{'id'} );
 	sql::end_transaction( $dbh, $ac );
 	openprint::logs::insertLogRecord('11', "Quote Index: " . $$self{'id'},);
-} # end sub delete
+} # end sub destroy
 
 sub status {
 	my ( $self, $new_status ) = @_;
@@ -455,6 +455,46 @@ sub total {
 sub Currency {
 	return new openprint::Currency( $_[0]{'currency_id'} );
 } # end sub Currency
+
+sub can_delete {
+	my $User = $_[1] ? $_[1] : new openprint::User( $openprint::session{user_id} );
+	if ( $$User{type} eq 'A' ) {
+		return 1;
+	} elsif ( $$User{id} == $_[0]{user_id} ) {
+		return 1;
+	} else {
+		my $Company = $_[0]->Company();
+		if ( $$Company{salesrep_id} = $$User{id} ) {
+			return 1;
+		} # end if
+	} # end if
+	return 0;
+} # end sub can_delete
+
+sub can_view {
+	my $User = $_[1] ? $_[1] : new openprint::User( $openprint::session{user_id} );
+	if ( $$User{type} eq 'A' ) {
+		return 1;
+	} elsif ( $$User{id} == $_[0]{user_id} ) {
+		return 1;
+	} elsif ( $$User{company_id} == $_[0]{company_id} ) {
+		return 1;
+	} else {
+		my $Company = $_[0]->Company();
+		if ( sets::isin( $$Company{salesrep_id}, [ $$User{id}, $User->assistant_ids(), $User->csr_ids() ] ) ) {
+			return 1;
+		} # end if
+	} # end if
+	return 0;
+} # end sub can_view
+
+sub can_send {
+	my $User = $_[1] ? $_[1] : new openprint::User( $openprint::session{user_id} );
+	if ( sets::isin( $$User{type}, ['A','E'] ) or ( $_[0]{company_id} == $openprint::session{company_id} ) ) {
+		return 1;
+	} # end if
+	return 0;
+}
 
 1;
 __END__

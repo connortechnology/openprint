@@ -3,6 +3,7 @@
 		$$variable{Quotes} = [ openprint::Quote->find( 
 			( sets::isin($session{user_type}, ['E','A'] ) ? () : ( company_id	=>	$session{company_id} ) ),
 			'id like'	=>	'%'.$param{QuoteID}.'%',
+			deleted=>[0,1],
 		) ];
 	} else {
 		$$variable{Quotes} = [ openprint::Quote->find( 

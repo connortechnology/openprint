@@ -23,8 +23,9 @@ require openprint::quote;
 sub try_to_delete {
 	my $quote_id = shift;
 	my $Quote = new openprint::Quote( $quote_id );
-	if ( ( $session{'user_type'} eq 'A' ) or ( $session{'company_id'} == $Quote->company_id() ) ) {
+	if ( $Quote->can_delete() ) {
 		$Quote->delete();
+		$Quote->add_log('Deleted');
 	} else {
 		return "Quote $quote_id does not belong to you.  Not deleted.<br>";
 	} # end if
@@ -58,36 +59,60 @@ sub _history {
 } # end sub _history
 
 sub history_details {
+	$param{quote_id} = openprint::Quote->transform('id', $param{quote_id} );
+	my $Quote = $variable{Quote} = new openprint::Quote( $param{quote_id} );
+
 	if ( $param{'btnFunction'} eq 'Move To' ) {
-		my $Quote = new openprint::Quote( $param{'quote_id'} );
 		if ( ! $Quote->id() ) {
-			$variable{'error'} .= 'Empty or invalid quote id.<br/>';
-		} elsif ( ! $param{'company_id'} ) {
-			$variable{'error'} = 'You must select a company first.<br/>';
-		} elsif ( $Quote->company_id() == $param{'company_id'} ) {
-			$variable{'error'} = $Quote->Company()->name() .' already owns that quote.  No change made.<br/>';
+			$variable{error} .= 'Empty or invalid quote id.<br/>';
+		} elsif ( ! $param{company_id} ) {
+			$variable{error} = 'You must select a company first.<br/>';
+		} elsif ( $Quote->company_id() == $param{company_id} ) {
+			$variable{error} = $Quote->Company()->name() .' already owns that quote.  No change made.<br/>';
 		} else {
-			$variable{'error'} .= $Quote->save({'company_id'=>$param{'company_id'}});
+			my $OldCompany = $Quote->Company();
+			my $NewCompany = new openprint::Company( $param{company_id} );
+
+			if ( $Quote->can_delete() and ( $session{user_id} eq $$NewCompany{salesrep_id} ) ) {
+				$variable{error} .= $Quote->save({company_id=>$param{company_id}});
+			} else {
+				$variable{error} .= 'You do not have permission to move this quote.<br/>';
+			} # end if
 		} # end if
-		if ( ! $variable{'error'} ) {
+		if ( ! $variable{error} ) {
 			%param = ();
-			$variable{'ExternalRedirect'} = '/main/quote/history.html';
+			$variable{ExternalRedirect} = '/main/quote/history.html';
 			return;
 		} # end if
-	} # end if
-	my $quote_id = $param{'quote_id'};
-	$quote_id =~ s/\D//g;
-	$quote_id = $session{'quote_id'} if ! $quote_id;
-	$variable{'Quote'} = new openprint::Quote( $quote_id );
-	if ( sets::isin( $session{'user_type'}, ['A','E'] ) or ( $variable{'Quote'}->company_id() == $session{'company_id'} ) ) {
-		openprint::quote::get_finished_quote_contents( $log, $dbh, \%variable, $quote_id );
-		if ( $param{'btnFunction'} eq 'Resend' ) {
-			my $results = $variable{'Quote'}->send();
-			$variable{'Quote'}->add_log('Resent. Results: ' . $results);
-			$variable{'information'} .= 'Quote resent. Results: '. $results;
-			$variable{ExternalRedirect} = '/main/quote/history_details.html?quote_id='.$variable{Quote}->id();
+	} elsif ( $param{btnFunction} eq 'Delete' ) {
+		if ( ! $Quote->can_delete() ) {
+			$variable{error} .= 'You do not have permission to delete this quote.<br/>';
+		} else {
+			$variable{error} .= $Quote->delete();
+		} # end if
+		if ( ! $variable{error} ) {
+			$Quote->add_log('Deleted');
+			$variable{ExternalRedirect} = '/main/quote/history.html';
+		} # end if
+	} elsif ( $param{btnFunction} eq 'Undelete' ) {
+		if ( ! $Quote->can_delete() ) {
+			$variable{error} .= 'You do not have permission to undelete this quote.<br/>';
+		} else {
+			$variable{error} .= $Quote->save({deleted=>0});
+			$Quote->add_log('Undeleted');
+		} # end if
+		if ( ! $variable{error} ) {
+			$variable{ExternalRedirect} = '/main/quote/history_details.html?quote_id='.$Quote->id();
+		} # end if
+	} elsif ( $param{btnFunction} eq 'Resend' ) {
+		if ( ! $Quote->can_send( ) ) {
+			my $results = $Quote->send();
+			$Quote->add_log('Resent. Results: ' . $results);
+			$variable{information} .= 'Quote resent. Results: '. $results;
+			$variable{ExternalRedirect} = '/main/quote/history_details.html?quote_id='.$Quote->id();
 		} # end if
 	} # end if
+	openprint::quote::get_finished_quote_contents( $log, $dbh, \%variable, $$Quote{id} ) if $param{quote_id};
 } # end sub history_details
 
 sub add_project_to_quote {
