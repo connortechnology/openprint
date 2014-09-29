@@ -4867,10 +4867,10 @@ sub calc_price {
 	my $std_speed = $Press->Specification('Standard Run Speed');
 	$std_speed = $Press->Specification('Run Speed') if ! $std_speed;
 	if ( lc $$std_speed{'units'} eq 'calliper' ) {
-		$$specs{Runspeed} = $price{Runspeed} = $Press->specification('Run Speed', $$Paper{calliper} );
+		$$specs{"Runspeed$qty_index"} = $$specs{Runspeed} = $price{Runspeed} = $Press->specification('Run Speed', $$Paper{calliper} );
 #$openprint::log->debug("Runspeed by calliper($$Paper{calliper}): $run_speed on $$Press{strid}");
 	} else {
-		$$specs{Runspeed} = $price{Runspeed} = $Press->specification('Run Speed', $Paper->gsm() );
+		$$specs{"Runspeed$qty_index"} = $$specs{Runspeed} = $price{Runspeed} = $Press->specification('Run Speed', $Paper->gsm() );
 	} # end if
 #$run_speed = $$std_speed{value} if ! $run_speed;
 #$openprint::log->debug("Initial Runspeed: $run_speed, standard: $$std_speed{value}$$std_speed{units}");
