@@ -47,6 +47,7 @@ sub history {
     ssi::setup_date_select( '/main/quote/history.html', 'created_on_start', -30 );
     ssi::setup_date_select( '/main/quote/history.html', 'created_on_end', 0 );
 	$session{'/main/quote/history.html?company_id'} = $session{company_id} if ! exists $session{'/main/quote/history.html?company_id'};
+	$session{'/main/quote/history.html?deleted'} = '0' if ! exists $session{'/main/quote/history.html?deleted'};
 	_history();
 } # end sub history
 
@@ -54,7 +55,7 @@ sub _history {
     ssi::save_params( '/main/quote/history.html',
             'created_on_start_year', 'created_on_start_month','created_on_start_day',
             'created_on_end_year', 'created_on_end_month','created_on_end_day',
-			'QuotedFor', 'company_id',
+			'QuotedFor', 'company_id','deleted',
             );
 } # end sub _history
 
