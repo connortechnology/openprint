@@ -283,8 +283,10 @@ SIG_FIX_PAGES:	while( $total_pages > $sig_pages ) {
 							next SIG_FIX_PAGES;
 						} # end if
 					} # end foreach
+					if ( DEBUG ) {
 					$openprint::log->warn("Unable to adjust too many folded pages folded: $total_pages printed: $sig_pages.");
 					$I->display();
+					} # end if
 					last;
 				} # end while
 

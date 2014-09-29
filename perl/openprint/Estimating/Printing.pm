@@ -5940,8 +5940,8 @@ $log->debug("**** RUN PRICE 3 : $running_price **") if DEBUG;
 $openprint::log->debug("Checking for slowdown wheel size: $Outside_Wheel_Size ");
 		if ( $Outside_Wheel_Size ) {
 			my $Slow_Down = $Press->Specification( 'Outside Wheel Slow Down' );
-$openprint::log->debug("Have slowdown wheel size: $Outside_Wheel_Size layout_wdith: " . $Imposition->layout_width() . ' paper width: ' . $Paper->width() );
-			if ( $Imposition->layout_width() + $Outside_Wheel_Size > $Paper->width() ) {
+$openprint::log->debug("Have slowdown wheel size: $Outside_Wheel_Size layout_wdith: " . $Imposition->layout_width() . ' paper width: ' . $Imposition->sheet_width() );
+			if ( $Imposition->layout_width() + $Outside_Wheel_Size > $Imposition->sheet_width() ) {
 				if ( $$Slow_Down{units} eq 'Percent' ) {
 					
 					$run_speed *= 1-($$Slow_Down{value} / 100);
