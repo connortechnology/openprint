@@ -604,6 +604,13 @@ $openprint::log->error("No folds from sigimpo");
 		} # end if
 		$openprint::log->debug("FOlds: $width_folds x $height_folds") if DEBUG;
 	} # end if
+	if ( ( ! $width_folds ) and ( $$sig_specs{txtWidth} != $$sig_specs{txtFinalWidth} ) ) {
+		$width_folds = 1;
+	} 
+	if ( ( ! $height_folds ) and ( $$sig_specs{txtHeight} != $$sig_specs{txtFinalHeight} ) ) {
+		$height_folds = 1;
+	} 
+
 
 # IF it's a W&T, we have to cut in half first, so just do it.
 	if ( $$SignatureImposition{runstyle} eq 'Work & Turn' ) {
