@@ -78,7 +78,7 @@ sub view {
 	my $order_id = $param{OrderID};
 	$order_id = $Project->order_id() if ! $order_id;
 	if ( $project_index and ( ! $order_id ) and $param{'Docket'} ) {
-		( $order_id ) = sql::execute( $log, $dbh, q{SELECT id FROM Orders WHERE id IN ( SELECT DISTINCT OrderIndex FROM Order_Contents WHERE lngProjectIndex=? ) AND lngDocketNumber=?}, $project_index, $param{Docket} );
+		( $order_id ) = sql::execute( $log, $dbh, q{SELECT id FROM Orders WHERE id IN ( SELECT DISTINCT OrderIndex FROM Order_Contents WHERE lngProjectIndex=? ) AND docket=?}, $project_index, $param{Docket} );
 	} # end if
 	$variable{OrderID} = $order_id;
 	$variable{Order} = new openprint::Order( $order_id );
