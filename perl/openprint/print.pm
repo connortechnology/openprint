@@ -101,13 +101,18 @@ $log->debug("after continue $$variable{ExternalRedirect}");
 
 				my $Currency = openprint::Currency::get_current();
 				if ( $Project->currency_id() != $Currency->id() ) {
-					$Project->Currency( $Currency );
+					$Project->add_to_log( @openprint::session{'company_id','user_id'}, 'Currency changed from '.$Project->Currency()->name() . ' to '. $Currency->name() );
+					$Project->currency_id( $Currency->id() );
 					# Change of currency calls for complete recalc
-					$recalc = 1;
+					if ( $openprint::param{'ServiceType'} eq 'Printing' or ! $openprint::param{'ServiceType'} ) {
+					} else {
+						openprint::Estimating::MultiPage::calculate_signatures( $Project );
+						openprint::service::internal_calc( $log, $dbh, $variable, $project_index, $$services{''}[0], $Project->Type()->type() );
+					} # end if
 				} # end if
 
 				$Project->lock();
-				if ( (!$openprint::param{ServiceType} ) or $recalc ) {
+				if ( !$openprint::param{ServiceType} ) {
 					multipage_signatures( \%openprint::param, $log, $dbh, $variable, $project_index, $service_index );
 					$Project->unlock();
 					$Project->lock();
@@ -119,12 +124,12 @@ $log->debug("after continue $$variable{ExternalRedirect}");
 						openprint::Estimating::MultiPage::calculate_signatures( $Project );
 					} # end if
 					$recalc = 1;
-				} elsif ( $openprint::param{'ServiceType'} eq 'Printing' ) {
+				} elsif ( $openprint::param{ServiceType} eq 'Printing' ) {
 					openprint::Estimating::MultiPage::calculate_signatures( $Project );
 					openprint::service::internal_calc( $log, $dbh, $variable, $project_index, $$services{''}[0], $Project->Type()->type() );
 # Might need to test for status of project service
 					$recalc = 1;
-				} elsif (sets::isin(  $r->param('ServiceType'), [ 'Scoring', 'Perforating','SpinePaste','Stitching','Sewing'] ) ) {
+				} elsif (sets::isin(  $openprint::param{ServiceType}, [ 'Scoring', 'Perforating','SpinePaste','Stitching','Sewing'] ) ) {
 					openprint::Estimating::MultiPage::calculate_signatures( $Project );
 					$recalc = 1;
 				} elsif (sets::isin(  $r->param('ServiceType'), [ 'Folding' ] ) ) {

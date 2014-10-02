@@ -202,10 +202,36 @@ sub inventory_report {
 	my $count = 0;
 	my $total_weight = 0;
 	openprint::Location->find();
+
+        my @Stocks;
+        my %stock_ids;
+
+        my %sql = (
+                ( $param{fsc_code} ? ( fsc_code  =>  $param{fsc_code} ) : () ),
+                ( $param{width} ? ( ($param{OrLarger} ? 'width >=' : 'width') => $param{width} ) : () ),
+                ( $param{height} ? ( ($param{OrLarger} ? 'height >=' : 'height') => $param{height} ) : () ),
+                );
+
+        foreach my $filter ( 'owner_id', 'manufacturer_id','brand_id','finish_id','colour_id','weight_id','group_id','quality_id','material_id' ) {
+            next if ! $param{$filter};
+            if ( $param{$filter.'_id_exclude'} ) {
+                $sql{$filter.' !='} = $param{$filter};
+            } else {
+                $sql{$filter} = $param{$filter};
+            } # end if
+        } # end foreach filter
+        if ( %sql ) {
+            @Stocks = openprint::Paper->find(%sql);
+            %stock_ids = map { $_->id(), $_ } @Stocks;
+        } # end if
+
+
 	foreach my $Skid ( openprint::Skid->find(
+				( %stock_ids ? ( paper_id => [ keys %stock_ids ] ) : () ),
 				ssi::date_filter( 'added_on_start', 'created_on >=', \%param ),
 				ssi::date_filter( 'added_on_end', 'created_on <=', \%param ),
-				'quantity >='=>1,'type is null or in'=>$param{type} ) ) {
+				( $param{in_stock} ne '' ? ( $param{in_stock} eq '1' ? ( 'quantity >='=>1 ) : ( quantity=>0 ) ) : () ),
+				'type is null or in'=>$param{type} ) ) {
 		foreach my $C ( $Skid->Contents() ) {
 			next if ! $C;
 			my $Paper = $C->Paper();
@@ -360,7 +386,6 @@ Date::Format::time2str('%Y-%m-%d %H:%M', Date::Parse::str2time($I->updated_on())
 
 	_paper_results();
 	$session{'/employee/inventory/paper.html?owner_id_exclude'} = $param{'owner_id_exclude'} if exists $param{'owner_id'};
-    $session{'/employee/inventory/paper.html?owner_id'} = $session{'company_id'} if ! exists $session{'/employee/inventory/paper.html?owner_id'};
     $session{'/employee/inventory/paper.html?type'} = 'Roll,Sheet' if ! exists $session{'/employee/inventory/paper.html?type'};
 	ssi::setup_date_select( '/employee/inventory/paper.html', 'added_on_start', -7 );
 	ssi::setup_date_select( '/employee/inventory/paper.html', 'added_on_end', '' );
@@ -2118,7 +2143,7 @@ sub _allocations {
 sub _deallocate_popup {
 }
 sub _skids_results {
-	ssi::save_params( '/employee/inventory/skids.html', ( 'PaperManufacturer','PaperBrand','PaperFinish','PaperColour','PaperWeight','type',
+	ssi::save_params( '/employee/inventory/skids.html', ( 
 				( map { 'received_on_start_' . $_ } ( 'year','month','day' ) ),
 				( map { 'received_on_end_' . $_ } ( 'year','month','day' ) ),
 				( map { 'created_on_start_' . $_ } ( 'year','month','day' ) ),
@@ -2127,9 +2152,16 @@ sub _skids_results {
 				( map { 'updated_on_end_' . $_ } ( 'year','month','day' ) ),
 				( map { 'last_seen_start_' . $_ } ( 'year','month','day' ) ),
 				( map { 'last_seen_end_' . $_ } ( 'year','month','day' ) ),
+	
 				'Docket','fsc_code','empty', 'rfid','rfid_valid','location_id','verification_code', 'allocated','contents','hasmanifest',
 				'condition_id', 'skid_id', 'rfid_id', 'manufacturers_id', 'hasmanufacturers','deleted','checked_out',
-				) );
+
+				'manufacturer_id','brand_id','finish_id','colour_id','weight_id','quality_id',
+                'owner_id','material_id','group_id', 'condition_id',
+                'width','height','OrLarger','owner_id_exclude',
+            ) );
+    $session{'/employee/inventory/skids.html?owner_id_exclude'} = $param{'owner_id_exclude'} if exists $param{'owner_id'};
+    $session{'/employee/inventory/skids.html?OrLarger'} = $param{'OrLarger'};
 }
 
 sub _paper_log {

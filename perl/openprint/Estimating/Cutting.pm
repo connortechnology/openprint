@@ -987,8 +987,12 @@ $openprint::log->debug("Not a book") if DEBUG;
 		if ( $cuts ) {
 			if ( $CuttingMakeReady ) {
 				my %setup = $CuttingMakeReady->get_price( undef, $Equipment );
-				$results{Breakdown} .= sprintf('Make Ready: $%.2f<br/>', $setup{Price} );
-				$totalPrice += $setup{Price};
+				if ( ! %setup ) {
+					$log->error("No Cutting Makready for $$Equipment{strid}");
+				} else {
+					$results{Breakdown} .= sprintf('Make Ready: $%.2f<br/>', $setup{Price} );
+					$totalPrice += $setup{Price};
+				} # end if
 			} # end if
 			if ( $Paper->bladecleaning() and $BladeCleaning ) {
 				my %cleaning = $BladeCleaning->get_price( undef, $Equipment );

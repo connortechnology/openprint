@@ -43,12 +43,12 @@ sub _signature {
 		$_ = q{SELECT MAX(strValue::integer) FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strName='Group'};
 		( $variable{Group} ) = sql::execute( $log, $dbh, $_, $Project->id() );
 		$variable{Group} += 1;
-		$variable{'Signature'} = $variable{Group};
+		$variable{Signature} = $variable{Group};
 		my $print_service_index = $Project->copy_signature( openprint::service::get_specs_ref( $Project, $src_sigs[0] ), { Group=>$variable{Group} } );;
 		$Project->unlock();
 		my $sig_specs = openprint::service::get_specs_ref( $Project, $print_service_index );
 		foreach my $k ( keys %$sig_specs ) {
-			$variable{$k.$variable{'Group'}} = $$sig_specs{$k};
+			$variable{$k.$variable{Group}} = $$sig_specs{$k};
 		} # end foreach k
 
 	} elsif ( $param{action} eq 'add_group' ) {

@@ -27,7 +27,7 @@ my @fields = (
 	'colour_bar_orientation',
 	'cropmark_top','cropmark_bottom','cropmark_left','cropmark_right',
 	'sheet_width','sheet_height',
-	'quantity','width_folds','height_folds',
+	'page_quantity','quantity','width_folds','height_folds',
 	'bleed_size',
 	'specs',
 	'pages',
@@ -193,10 +193,10 @@ sub load_used {
 	$$self{'dutch_columns'} = $$specs{'hdnImpositionDutchColumnsUsed'} ? $$specs{'hdnImpositionDutchColumnsUsed'} : $$specs{'hdnImpositionDutchColumns'.$qty_index};
 	$$self{'dutch_orientation'} = $$self{'image_orientation'} eq 'Vertical' ? 'Horizontal' : 'Vertical';
 	$$self{'bleed_size'} = $$specs{'ddmBleedSize'.$qty_index};
-	if ( ! $$self{'Press'} ) {
-		if ( $$specs{'UsePress'} ) {
-			$$self{'Press'} = openprint::Equipment->find_one('strid'=>$$specs{'UsePress'});
-			if ( ! $$self{'Press'} ) {
+	if ( ! $$self{Press} ) {
+		if ( $$specs{UsePress} ) {
+			$$self{Press} = openprint::Equipment->find_one( strid=>$$specs{UsePress} );
+			if ( ! $$self{Press} ) {
 				# This can happen when a press is deleted
 				$openprint::log->debug("No Press found for $qty_index " . $$specs{'UsePress'} );
 			} # end if
@@ -205,8 +205,8 @@ sub load_used {
 			if ( ! $$specs{'ddmPress'.$qty_index} ) {
 				#$openprint::log->error("No ddmPress for $qty_index");
 			} else {
-				$$self{'Press'} = openprint::Equipment->find_one('strid'=>$$specs{'ddmPress'.$qty_index});
-				if ( ! $$self{'Press'} ) {
+				$$self{Press} = openprint::Equipment->find_one( strid=>$$specs{'ddmPress'.$qty_index});
+				if ( ! $$self{Press} ) {
 					$openprint::log->error("No Press found for $qty_index " . $$specs{'ddmPress'.$qty_index} );
 				} # end if
 			} # end if
@@ -223,13 +223,13 @@ sub load_used {
 sub load {
 	my ( $self, $specs, $qty_index, $Project ) = @_;
 
-	$$self{quantity} = 1;
+	$$self{page_quantity} = $$self{quantity} = 1;
 	$$self{specs} = $specs;
 	$$self{paper} = openprint::Paper::load_from_signature( $Project, $specs, $qty_index ) if ! $$self{'paper'};
-	if ( ! $$self{'Press'} ) {
+	if ( ! $$self{Press} ) {
 		if ( ! $$specs{'ddmPress'.$qty_index} ) {
-			$openprint::log->error("No ddmPress for $qty_index for signature $$specs{SignatureIndex}");
-Carp::cluck("No press in Imposition::load");
+			#$openprint::log->error("No ddmPress for $qty_index for signature $$specs{SignatureIndex}");
+#Carp::cluck("No press in Imposition::load");
 		} else {
 #Carp::cluck("Loading press in Imposition::load");
 			$$self{'Press'} = openprint::Equipment->find_one('strid'=>$$specs{'ddmPress'.$qty_index});

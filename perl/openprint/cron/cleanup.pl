@@ -131,12 +131,11 @@ $log->debug("# of hosts needing resolving: " . @Hosts );
 foreach my $Host ( @Hosts ) {
 		my $host = $Host->resolve();
 		if ( $host ) {
+			$Host->hostname( $host );
+		}
 			$Host->save({
-				hostname	=>	$host,
 				resolved_on	=> 'NOW()',
 			});
-			last;
-		}
 } # end foreach Host
 }
 
