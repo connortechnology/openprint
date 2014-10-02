@@ -2195,27 +2195,28 @@ sub get_Folds {
 	my @folds;
 
 	my $form = $$sig_specs{SignatureIndex};
+	my $Source_Imposition = new openprint::Imposition();
+	$Source_Imposition->load( $sig_specs, $qty_index );
 
 	foreach my $fold_index ( 1 .. 4 ) {
 		next if ! $$folding_specs{"FoldQty-$form-$qty_index-$fold_index"};
 		next if ! $$folding_specs{"FoldType-$form-$qty_index-$fold_index"};
 		if ( $$folding_specs{"ddmEquipment-$form-$qty_index"} ) {
-			my $Imposition = new openprint::Imposition();
-			$Imposition->load( $sig_specs, $qty_index );
+			my $Imposition = $Source_Imposition->copy();
 			$Imposition->columns( $$folding_specs{"FoldColumns-$form-$qty_index-$fold_index"} );
 			$Imposition->rows( $$folding_specs{"FoldRows-$form-$qty_index-$fold_index"} );
 			$Imposition->quantity( $$folding_specs{"FoldQty-$form-$qty_index-$fold_index"} );
+			$$Imposition{pages} = $Fold->pages();
 			$Imposition->page_quantity( $$folding_specs{"FoldPageQty-$form-$qty_index-$fold_index"} );
-			$$Imposition{page_quantity} = 1 if ! $$Imposition{page_quantity};
 			my $Folder = new openprint::Equipment( $$folding_specs{"ddmEquipment-$form-$qty_index"} );
 			$Imposition->Press( $Folder );
 
 			my $Paper = $Imposition->Paper();
 			my $Fold = $Folder->Fold( {
 								type 			=>	$$folding_specs{"FoldType-$form-$qty_index-$fold_index"},
-								pages			=>	$Imposition->pages(),
-								page_columns	=>	$Imposition->page_columns(),
-								page_rows		=>	$Imposition->page_rows(),
+								#pages			=>	$Imposition->pages(),
+								#page_columns	=>	$Imposition->page_columns(),
+								#page_rows		=>	$Imposition->page_rows(),
 								page_width		=>	$Imposition->page_width(),
 								page_height		=>	$Imposition->page_height(),
 								spine_direction =>	$$Imposition{image_orientation},
@@ -2226,7 +2227,12 @@ sub get_Folds {
 								calliper		=>	$$Paper{calliper},
 								#printing_type	=>	$ppt,
 								} );
+$openprint::log->debug("Got FOld: " . $Fold->to_string() );
 			$Imposition->Fold( $Fold );
+			if ( ! $$Imposition{page_quantity} ) {
+				$$Imposition{page_quantity} = $Source_Imposition->pages() / $Fold->pages();
+			} # end if
+			
 			push @folds, $Imposition;
 		} # end if
 		#$folding_imposition->display('Fold ' . $$folding_specs{"FoldType-$form-$qty_index-$fold_index"} ) if DEBUG;
