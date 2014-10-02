@@ -16,7 +16,7 @@
 
 package openprint::Estimating::Perforating;
 use strict;
-use warnings;
+#use warnings;
 
 require sql;
 require openprint::service;
