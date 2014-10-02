@@ -4367,7 +4367,7 @@ $openprint::log->debug("Sheet No supplied wight: $supplied_sheets $paper_string 
 					my $starttime = gettimeofday() if DEBUG;
 
 					$openprint::log->debug("Stitching::signature_calc: recursion_depth; $recursion_depth do_final_pricing: $do_final_pricing total imps: " . @total_impositions) if DEBUG;
-					$results = openprint::Estimating::Stitching::signature_calc( $Project, $$project{HasStitching}, $$project{StitchingSpecs}, $qty_index, $$project{FoldingSpecs}, \@total_impositions, $project );
+					$results = openprint::Estimating::Stitching::signature_calc( $Project, $$project{HasStitching}, $$project{StitchingSpecs}, $qty_index, \@total_impositions, $project );
 				#} # end if cached
 					if ( $$results{'Status'} eq 'uncalculated' ) {
 						$$price{'Stitching Breakdown'} .= "Stitching error: $$results{'alert'} <br/>";
@@ -4880,8 +4880,8 @@ sub calc_price {
 # Has to be NEED because they always leave folding out, and it chooses dumb impositions
 	if ( $$project{'NeedFolding'} ) {
 		my $time = gettimeofday() if DEBUG;
-		if ( $$Imposition{'folding_results'} ) {
-			%folding_results = %{$$Imposition{'folding_results'}};
+		if ( $$Imposition{folding_results} ) {
+			%folding_results = %{$$Imposition{folding_results}};
 			#$openprint::log->debug("Using cached folding");
 		} else {
 #my @all_impositions = ( @{$other_impositions}, $Imposition );
@@ -4903,7 +4903,7 @@ sub calc_price {
 				if ( $folding_results{Equipment}->id() == $Press->id() ) {
 					my $FI = $folding_results{FoldedImpositions}[0];
 if ( $$FI{Equipment}->id() != $Press->id() ) {
-$openprint::log->error("WTF Equipment in Fold is not the press, but the folding results equipment is.");
+$openprint::log->error("WTF Equipment in Fold is not the press, but the folding results equipment is. maybe caching issue?");
 } 
 $FI->display( "Runspeed: $$FI{runspeed}") if DEBUG;
 #$openprint::log->debug("Runspeed: $folding_results{'RunSpeed'}");
