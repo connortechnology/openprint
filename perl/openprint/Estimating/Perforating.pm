@@ -16,6 +16,7 @@
 
 package openprint::Estimating::Perforating;
 use strict;
+use warnings;
 
 require sql;
 require openprint::service;
@@ -118,8 +119,8 @@ sub calc {
 	$log->debug("BEGIN PERFING!!!!!!!!!!!!!!!!!!") if DEBUG;
 
 	foreach my $qty_index ( $Project->quantity_indexes() ) {
-		$$specs{"Markup$qty_index"} =~ s/[^\d\.\-]//g;
-		$$specs{"txtPrice$qty_index"} =~ s/[^\d\.]//g;
+		$$specs{"Markup$qty_index"} =~ s/[^\d\.\-]//g if $$specs{"Markup$qty_index"};
+		$$specs{"txtPrice$qty_index"} =~ s/[^\d\.]//g if $$specs{"txtPrice$qty_index"};
 		$$specs{"txtQuantity$qty_index"} = $Project->quantity($qty_index) if ! $$specs{"txtQuantity$qty_index"};
 		if ( ! $$specs{"txtQuantity$qty_index"} > 0 ) {
 			next;
@@ -216,10 +217,10 @@ sub signature_calc {
         'Status' => 'calculated',
 		'Breakdown'	 => "Signature: $form<br/>" . ( $$sig_specs{PageQuantity}  ? ' ' . $$sig_specs{PageQuantity}  . 'pages' : '' ),
     );
-	$Results{Breakdown} .= "Signature: $$sig_specs{txtServiceDescription}, " if $$sig_specs{txtServiceDescription} ne '';
+	$Results{Breakdown} .= "Signature: $$sig_specs{txtServiceDescription}, " if $$sig_specs{txtServiceDescription};
 
 	#@$specs{"txtWidth-$form", "txtHeight-$form"} = @$sig_specs{'txtWidth','txtHeight'};
-	if ( ( $$sig_specs{txtSignatureType} eq 'PerfReplyCard' ) and ! ( $$specs{"txtVerticalQty-$form"} or $$specs{"txtHorizontalQty-$form"} ) ) {
+	if ( $$sig_specs{txtSignatureType} and ( $$sig_specs{txtSignatureType} eq 'PerfReplyCard' ) and ! ( $$specs{"txtVerticalQty-$form"} or $$specs{"txtHorizontalQty-$form"} ) ) {
 		$$specs{"txtVerticalQty-$form"} = 1;
 		@no_output = sets::exclude( [ "txtVerticalQty-$form" ], \@no_output );
 	} # end if
@@ -261,7 +262,7 @@ sub signature_calc {
 	} else {
 		$imposition = $imposition->copy();
 	} # end if
-	if ( $$specs{"chkOverrideImposition-$form-$qty_index"} eq 'Y' ) {
+	if ( (defined $$specs{"chkOverrideImposition-$form-$qty_index"}) and ( $$specs{"chkOverrideImposition-$form-$qty_index"} eq 'Y' ) ) {
 		if ( $$specs{"txtImposition-$form-$qty_index"} > $imposition->imposition() or $$specs{"txtImposition-$form-$qty_index"} <= 0 ) {
 			$$specs{alert} = 'The specified imposition is not possible.';
 			$Results{Status} = 'uncalculated';
@@ -497,54 +498,6 @@ $openprint::log->debug("How many impositions do we get? " . @imps );
 				$horizontal_length *= $CylinderCount if $CylinderCount;
 				$Results{Breakdown} .= $$specs{"txtVerticalQty-$$sig_specs{SignatureIndex}"} . ' x ' . $$I{rows} . ' rows = ' . $horizontal_rules . ' horizontal rules * ' . $width . 'inches = ' . $horizontal_length . 'inches of rule.<br/>';
 			} # end if
-		#$openprint::log->debug("Horizontal: $horizontal_rule");	
-			if ( $horizontal_rules ) {
-				if ( $Horizontal_Material ) {
-					my $Package_Qty = $Horizontal_Material->Specification( 'Package Quantity' );
-					if ( $Package_Qty ) {
-						$Results{Breakdown} .= 'Package Quantity: ' . $$Package_Qty{value}.$$Package_Qty{units}.'<br/>';
-					} # end if
-					%horizontal_price = $Horizontal_Material->get_price( $horizontal_rules, $Equipment );
-					if ( sets::isin( lc $horizontal_price{units}, ['per rule','each'] ) ) {
-						$horizontal_price{Total} = $horizontal_price{Price} * $horizontal_rules;
-						$Results{Breakdown} .= $Horizontal_Material->name().sprintf(': $%1$.2f%2$s * %4$d rules=$%3$.2f<br/>', @horizontal_price{'Price','units','Total'}, $horizontal_rules );
-					} elsif ( lc $horizontal_price{units} eq 'per inch' ) {
-						$horizontal_price{Total} = $horizontal_price{Price} * $horizontal_length;
-						$Results{Breakdown} .= $Horizontal_Material->name().sprintf(': $%1$.2f%2$s * %4$.2finches=$%3$.2f<br/>', @horizontal_price{'Price','units','Total'}, $horizontal_length );
-					} elsif ( lc $horizontal_price{units} eq 'per foot' ) {
-						$horizontal_price{Total} = $horizontal_price{Price} * ($horizontal_length/12);
-						$Results{Breakdown} .= $Horizontal_Material->name().sprintf('Rule: $%1$.2f%2$s * %4$.2ffeet=$%3$.2f<br/>', @horizontal_price{'Price','units','Total'}, $horizontal_length/12 );
-						if ( $Package_Qty ) {
-							if ( $$Package_Qty{units} eq 'feet' ) {
-								$Results{Breakdown} .= POSIX::ceil(($horizontal_length/12) / $$Package_Qty{value} ) . 'packages<br/>';
-							} elsif ( $$Package_Qty{units} eq 'inches' ) {
-								$Results{Breakdown} .= POSIX::ceil(($horizontal_length) / $$Package_Qty{value} ) . 'packages<br/>';
-							} else {
-								$Results{Breakdown} .= 'Unknown units in package qty, ' . $$Package_Qty{units} . '<br/>';
-								$openprint::log->error('Unknown units in package qty, ' . $$Package_Qty{units} . '<br/>');
-							} # end if
-						} # end if
-					} elsif ( $horizontal_price{units} eq 'per package' ) {
-						my $package_qty;
-						if ( $$Package_Qty{units} eq 'feet' ) {
-							$Results{Breakdown} .= sprintf( 'Needed %.2f feet', $horizontal_length / 12  );
-							$package_qty = POSIX::ceil( ( $horizontal_length / 12 ) / $$Package_Qty{value} );
-						} elsif ( $$Package_Qty{units} eq 'inches' ) {
-							$Results{Breakdown} .= sprintf( 'Needed %d inches', POSIX::ceil($horizontal_length) );
-							$package_qty = POSIX::ceil( $horizontal_length / $$Package_Qty{value} );
-							$remaining_inches = ( $$Package_Qty{value} * $package_qty ) - $horizontal_length;
-						} # end if
-	
-						$horizontal_price{Total} = Math::Round::nearest( 0.01, $horizontal_price{Price} * $package_qty );
-						$Results{Breakdown} .= $Horizontal_Material->name().sprintf(': $%1$.2f%2$s * %4$d packages = $%3$.2f<br/>', @horizontal_price{'Price','units','Total'}, $package_qty );
-					} else {
-						$Results{Breakdown} .= "Unknown units set on rule price ($horizontal_price{units})<br/>";
-					} # end if
-				} else {
-					$Results{Breakdown} .= "No price for Perforating Rule";
-				} # end if
-				$totalPrice += $horizontal_price{Total};
-			} # end if
 
 			my $vertical_rules = 0;
 			my $vertical_length = 0;
@@ -562,70 +515,166 @@ $openprint::log->debug("How many impositions do we get? " . @imps );
 				$Results{Breakdown} .= $$specs{"txtHorizontalQty-$$sig_specs{SignatureIndex}"} . ' x ' . $$I{columns} . ' columns = ' . $vertical_rules . ' vertical rules * ' . $height . 'inches = ' . $vertical_length . 'inches of rule.<br/>';
 			} # end if
 
-		#$openprint::log->debug("Vertical: $vertical_rule");	
-			if ( $vertical_rules ) {
-				if ( $Vertical_Material ) {
-					my $Package_Qty = $Vertical_Material->Specification( 'Package Quantity' );
-					if ( $Package_Qty ) {
-						$Results{Breakdown} .= 'Package Quantity: ' . $$Package_Qty{value}.$$Package_Qty{units}.' per package<br/>';
-					} # end if
-					%vertical_price = $Vertical_Material->get_price( $vertical_rules, $Equipment );
-					if ( sets::isin( lc $vertical_price{units},['per rule','each'] ) ) {
-						$vertical_price{Total} = $vertical_price{Price} * $vertical_rules;
-						$Results{Breakdown} .= $Vertical_Material->name().sprintf(': $%1$.2f%2$s * %4$d wheels=$%3$.2f<br/>', @vertical_price{'Price','units','Total'}, $vertical_rules );
-					} elsif ( lc $vertical_price{units} eq 'per inch' ) {
-						$vertical_price{Total} = Math::Round::nearest( $vertical_price{Price} * $vertical_length );
-						$Results{Breakdown} .= $Vertical_Material->name().sprintf(': $%1$.2f%2$s * %4$.2finches=$%3$.2f<br/>', @vertical_price{'Price','units','Total'}, $vertical_length );
-						if ( $Package_Qty ) {
-							if ( $$Package_Qty{units} eq 'feet' ) {
-								$Results{Breakdown} .= POSIX::ceil(($vertical_length/12) / $$Package_Qty{value} ) . 'packages<br/>';
-							} elsif ( $$Package_Qty{units} eq 'inches' ) {
-								$Results{Breakdown} .= POSIX::ceil(($vertical_length) / $$Package_Qty{value} ) . 'packages<br/>';
-							} else {
-								$Results{Breakdown} .= 'Unknown units in package qty, ' . $$Package_Qty{units} . '<br/>';
-								$openprint::log->error('Unknown units in package qty, ' . $$Package_Qty{units} . '<br/>');
-							} # end if
-						} # end if
-					} elsif ( lc $vertical_price{units} eq 'per foot' ) {
-						$vertical_price{Total} = Math::Round::nearest( 0.01, $vertical_price{Price} * ( $vertical_length/12 ) );
-						$Results{Breakdown} .= $Vertical_Material->name().sprintf(': $%1$.2f%2$s * %4$.2ffeet=$%3$.2f<br/>', @vertical_price{'Price','units','Total'}, $vertical_length/12 );
-						if ( $Package_Qty ) {
-							if ( $$Package_Qty{units} eq 'feet' ) {
-								$Results{Breakdown} .= POSIX::ceil(($vertical_length/12) / $$Package_Qty{value} ) . 'packages<br/>';
-							} elsif ( $$Package_Qty{units} eq 'inches' ) {
-								$Results{Breakdown} .= POSIX::ceil(($vertical_length) / $$Package_Qty{value} ) . 'packages<br/>';
-							} else {
-								$Results{Breakdown} .= 'Unknown units in package qty, ' . $$Package_Qty{units} . '<br/>';
-								$openprint::log->error('Unknown units in package qty, ' . $$Package_Qty{units} . '<br/>');
-							} # end if
-						} # end if
-					} elsif ( $vertical_price{units} eq 'per package' ) {
-						my $package_qty;
-							
-						if ( lc $$Package_Qty{units} eq 'feet' ) {
-							$Results{Breakdown} .= sprintf( 'Needed %.2f feet', POSIX::ceil($vertical_length/12) );
-							if ( $$Wheel{id} == $$Rule{id} ) {
-								$vertical_length -= 12 * $remaining_inches;
-							} # end if
-							$package_qty = POSIX::ceil( ( $vertical_length / 12 ) / $$Package_Qty{value} );
-						} elsif ( lc $$Package_Qty{units} eq 'inches' ) {
-							$Results{Breakdown} .= sprintf( 'Needed %d inches', POSIX::ceil($vertical_length) );
-							if ( $$Wheel{id} == $$Rule{id} ) {
-								$vertical_length -= $remaining_inches;
-							} # end if
-							$package_qty = POSIX::ceil( $vertical_length / $$Package_Qty{value} );
-						} # end if
-	
-						$vertical_price{Total} = Math::Round::nearest( 0.01, $vertical_price{Price} * $package_qty );
-						$Results{Breakdown} .= $Vertical_Material->name().sprintf(': $%1$.2f%2$s * %4$d packages = $%3$.2f<br/>', @vertical_price{'Price','units','Total'}, $package_qty );
-					} else {
-						$Results{Breakdown} .= "Unknown units set on wheel price ($vertical_price{units})<br/>";
-					} # end if
-				} else {
-					$Results{Breakdown} .= 'No price set for perfing wheel<br/>';
+			if ( $Horizontal_Material and ( $Horizontal_Material == $Vertical_Material ) ) {
+				my $length = $vertical_length + $horizontal_length;
+				my $rules = $vertical_rules + $horizontal_rules;
+				my $Package_Qty = $Horizontal_Material->Specification( 'Package Quantity' );
+				if ( $Package_Qty ) {
+					$Results{Breakdown} .= 'Package Quantity: ' . $$Package_Qty{value}.$$Package_Qty{units}.'<br/>';
 				} # end if
-				$totalPrice += $vertical_price{Total};
-			} # end if
+				%horizontal_price = $Horizontal_Material->get_price( $rules, $Equipment );
+				if ( sets::isin( lc $horizontal_price{units}, ['per rule','each'] ) ) {
+					$horizontal_price{Total} = $horizontal_price{Price} * $rules;
+					$Results{Breakdown} .= $Horizontal_Material->name().sprintf(': $%1$.2f%2$s * %4$d rules=$%3$.2f<br/>', @horizontal_price{'Price','units','Total'}, $rules );
+				} elsif ( lc $horizontal_price{units} eq 'per inch' ) {
+					$horizontal_price{Total} = $horizontal_price{Price} * $length;
+					$Results{Breakdown} .= $Horizontal_Material->name().sprintf(': $%1$.2f%2$s * %4$.2finches=$%3$.2f<br/>', @horizontal_price{'Price','units','Total'}, $length );
+				} elsif ( lc $horizontal_price{units} eq 'per foot' ) {
+					$horizontal_price{Total} = $horizontal_price{Price} * ($length/12);
+					$Results{Breakdown} .= $Horizontal_Material->name().sprintf('Rule: $%1$.2f%2$s * %4$.2ffeet=$%3$.2f<br/>', @horizontal_price{'Price','units','Total'}, $length/12 );
+					if ( $Package_Qty ) {
+						if ( $$Package_Qty{units} eq 'feet' ) {
+							$Results{Breakdown} .= POSIX::ceil(($length/12) / $$Package_Qty{value} ) . 'packages<br/>';
+						} elsif ( $$Package_Qty{units} eq 'inches' ) {
+							$Results{Breakdown} .= POSIX::ceil(($length) / $$Package_Qty{value} ) . 'packages<br/>';
+						} else {
+							$Results{Breakdown} .= 'Unknown units in package qty, ' . $$Package_Qty{units} . '<br/>';
+							$openprint::log->error('Unknown units in package qty, ' . $$Package_Qty{units} . '<br/>');
+						} # end if
+					} # end if
+				} elsif ( $horizontal_price{units} eq 'per package' ) {
+					my $package_qty;
+					if ( $$Package_Qty{units} eq 'feet' ) {
+						$Results{Breakdown} .= sprintf( 'Needed %.2f feet', $length / 12  );
+						$package_qty = POSIX::ceil( ( $length / 12 ) / $$Package_Qty{value} );
+					} elsif ( $$Package_Qty{units} eq 'inches' ) {
+						$Results{Breakdown} .= sprintf( 'Needed %d inches', POSIX::ceil($length) );
+						$package_qty = POSIX::ceil( $length / $$Package_Qty{value} );
+						$remaining_inches = ( $$Package_Qty{value} * $package_qty ) - $length;
+					} # end if
+
+					$horizontal_price{Total} = Math::Round::nearest( 0.01, $horizontal_price{Price} * $package_qty );
+					$Results{Breakdown} .= $Horizontal_Material->name().sprintf(': $%1$.2f%2$s * %4$d packages = $%3$.2f<br/>', @horizontal_price{'Price','units','Total'}, $package_qty );
+				} else {
+					$Results{Breakdown} .= "Unknown units set on rule price ($horizontal_price{units})<br/>";
+				} # end if
+				$totalPrice += $horizontal_price{Total};
+			} else {
+
+			#$openprint::log->debug("Horizontal: $horizontal_rule");	
+				if ( $horizontal_rules ) {
+					if ( $Horizontal_Material ) {
+						my $Package_Qty = $Horizontal_Material->Specification( 'Package Quantity' );
+						if ( $Package_Qty ) {
+							$Results{Breakdown} .= 'Package Quantity: ' . $$Package_Qty{value}.$$Package_Qty{units}.'<br/>';
+						} # end if
+						%horizontal_price = $Horizontal_Material->get_price( $horizontal_rules, $Equipment );
+						if ( sets::isin( lc $horizontal_price{units}, ['per rule','each'] ) ) {
+							$horizontal_price{Total} = $horizontal_price{Price} * $horizontal_rules;
+							$Results{Breakdown} .= $Horizontal_Material->name().sprintf(': $%1$.2f%2$s * %4$d rules=$%3$.2f<br/>', @horizontal_price{'Price','units','Total'}, $horizontal_rules );
+						} elsif ( lc $horizontal_price{units} eq 'per inch' ) {
+							$horizontal_price{Total} = $horizontal_price{Price} * $horizontal_length;
+							$Results{Breakdown} .= $Horizontal_Material->name().sprintf(': $%1$.2f%2$s * %4$.2finches=$%3$.2f<br/>', @horizontal_price{'Price','units','Total'}, $horizontal_length );
+						} elsif ( lc $horizontal_price{units} eq 'per foot' ) {
+							$horizontal_price{Total} = $horizontal_price{Price} * ($horizontal_length/12);
+							$Results{Breakdown} .= $Horizontal_Material->name().sprintf('Rule: $%1$.2f%2$s * %4$.2ffeet=$%3$.2f<br/>', @horizontal_price{'Price','units','Total'}, $horizontal_length/12 );
+							if ( $Package_Qty ) {
+								if ( $$Package_Qty{units} eq 'feet' ) {
+									$Results{Breakdown} .= POSIX::ceil(($horizontal_length/12) / $$Package_Qty{value} ) . 'packages<br/>';
+								} elsif ( $$Package_Qty{units} eq 'inches' ) {
+									$Results{Breakdown} .= POSIX::ceil(($horizontal_length) / $$Package_Qty{value} ) . 'packages<br/>';
+								} else {
+									$Results{Breakdown} .= 'Unknown units in package qty, ' . $$Package_Qty{units} . '<br/>';
+									$openprint::log->error('Unknown units in package qty, ' . $$Package_Qty{units} . '<br/>');
+								} # end if
+							} # end if
+						} elsif ( $horizontal_price{units} eq 'per package' ) {
+							my $package_qty;
+							if ( $$Package_Qty{units} eq 'feet' ) {
+								$Results{Breakdown} .= sprintf( 'Needed %.2f feet', $horizontal_length / 12  );
+								$package_qty = POSIX::ceil( ( $horizontal_length / 12 ) / $$Package_Qty{value} );
+							} elsif ( $$Package_Qty{units} eq 'inches' ) {
+								$Results{Breakdown} .= sprintf( 'Needed %d inches', POSIX::ceil($horizontal_length) );
+								$package_qty = POSIX::ceil( $horizontal_length / $$Package_Qty{value} );
+								$remaining_inches = ( $$Package_Qty{value} * $package_qty ) - $horizontal_length;
+							} # end if
+		
+							$horizontal_price{Total} = Math::Round::nearest( 0.01, $horizontal_price{Price} * $package_qty );
+							$Results{Breakdown} .= $Horizontal_Material->name().sprintf(': $%1$.2f%2$s * %4$d packages = $%3$.2f<br/>', @horizontal_price{'Price','units','Total'}, $package_qty );
+						} else {
+							$Results{Breakdown} .= "Unknown units set on rule price ($horizontal_price{units})<br/>";
+						} # end if
+					} else {
+						$Results{Breakdown} .= "No price for Perforating Rule";
+					} # end if
+					$totalPrice += $horizontal_price{Total};
+				} # end if
+
+			#$openprint::log->debug("Vertical: $vertical_rule");	
+				if ( $vertical_rules ) {
+					if ( $Vertical_Material ) {
+						my $Package_Qty = $Vertical_Material->Specification( 'Package Quantity' );
+						if ( $Package_Qty ) {
+							$Results{Breakdown} .= 'Package Quantity: ' . $$Package_Qty{value}.$$Package_Qty{units}.' per package<br/>';
+						} # end if
+						%vertical_price = $Vertical_Material->get_price( $vertical_rules, $Equipment );
+						if ( sets::isin( lc $vertical_price{units},['per rule','each'] ) ) {
+							$vertical_price{Total} = $vertical_price{Price} * $vertical_rules;
+							$Results{Breakdown} .= $Vertical_Material->name().sprintf(': $%1$.2f%2$s * %4$d wheels=$%3$.2f<br/>', @vertical_price{'Price','units','Total'}, $vertical_rules );
+						} elsif ( lc $vertical_price{units} eq 'per inch' ) {
+							$vertical_price{Total} = Math::Round::nearest( $vertical_price{Price} * $vertical_length );
+							$Results{Breakdown} .= $Vertical_Material->name().sprintf(': $%1$.2f%2$s * %4$.2finches=$%3$.2f<br/>', @vertical_price{'Price','units','Total'}, $vertical_length );
+							if ( $Package_Qty ) {
+								if ( $$Package_Qty{units} eq 'feet' ) {
+									$Results{Breakdown} .= POSIX::ceil(($vertical_length/12) / $$Package_Qty{value} ) . 'packages<br/>';
+								} elsif ( $$Package_Qty{units} eq 'inches' ) {
+									$Results{Breakdown} .= POSIX::ceil(($vertical_length) / $$Package_Qty{value} ) . 'packages<br/>';
+								} else {
+									$Results{Breakdown} .= 'Unknown units in package qty, ' . $$Package_Qty{units} . '<br/>';
+									$openprint::log->error('Unknown units in package qty, ' . $$Package_Qty{units} . '<br/>');
+								} # end if
+							} # end if
+						} elsif ( lc $vertical_price{units} eq 'per foot' ) {
+							$vertical_price{Total} = Math::Round::nearest( 0.01, $vertical_price{Price} * ( $vertical_length/12 ) );
+							$Results{Breakdown} .= $Vertical_Material->name().sprintf(': $%1$.2f%2$s * %4$.2ffeet=$%3$.2f<br/>', @vertical_price{'Price','units','Total'}, $vertical_length/12 );
+							if ( $Package_Qty ) {
+								if ( $$Package_Qty{units} eq 'feet' ) {
+									$Results{Breakdown} .= POSIX::ceil(($vertical_length/12) / $$Package_Qty{value} ) . 'packages<br/>';
+								} elsif ( $$Package_Qty{units} eq 'inches' ) {
+									$Results{Breakdown} .= POSIX::ceil(($vertical_length) / $$Package_Qty{value} ) . 'packages<br/>';
+								} else {
+									$Results{Breakdown} .= 'Unknown units in package qty, ' . $$Package_Qty{units} . '<br/>';
+									$openprint::log->error('Unknown units in package qty, ' . $$Package_Qty{units} . '<br/>');
+								} # end if
+							} # end if
+						} elsif ( $vertical_price{units} eq 'per package' ) {
+							my $package_qty;
+								
+							if ( lc $$Package_Qty{units} eq 'feet' ) {
+								$Results{Breakdown} .= sprintf( 'Needed %.2f feet', POSIX::ceil($vertical_length/12) );
+								if ( $$Wheel{id} == $$Rule{id} ) {
+									$vertical_length -= 12 * $remaining_inches;
+								} # end if
+								$package_qty = POSIX::ceil( ( $vertical_length / 12 ) / $$Package_Qty{value} );
+							} elsif ( lc $$Package_Qty{units} eq 'inches' ) {
+								$Results{Breakdown} .= sprintf( 'Needed %d inches', POSIX::ceil($vertical_length) );
+								if ( $$Wheel{id} == $$Rule{id} ) {
+									$vertical_length -= $remaining_inches;
+								} # end if
+								$package_qty = POSIX::ceil( $vertical_length / $$Package_Qty{value} );
+							} # end if
+		
+							$vertical_price{Total} = Math::Round::nearest( 0.01, $vertical_price{Price} * $package_qty );
+							$Results{Breakdown} .= $Vertical_Material->name().sprintf(': $%1$.2f%2$s * %4$d packages = $%3$.2f<br/>', @vertical_price{'Price','units','Total'}, $package_qty );
+						} else {
+							$Results{Breakdown} .= "Unknown units set on wheel price ($vertical_price{units})<br/>";
+						} # end if
+					} else {
+						$Results{Breakdown} .= 'No price set for perfing wheel<br/>';
+					} # end if
+					$totalPrice += $vertical_price{Total};
+				} # end if
+			} # end if Vertcail_Material == $Horizontal_Matirla
 
 			$totalPrice = int($totalPrice);
 			$Results{Breakdown} .= sprintf('Total: $%.2f<br/>', $totalPrice );
