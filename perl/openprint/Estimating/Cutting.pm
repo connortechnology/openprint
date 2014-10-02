@@ -973,11 +973,11 @@ $openprint::log->debug("Not a book") if DEBUG;
 			$$specs{"txtAdditionalCuts$form"} = $$sig_specs{txtPressSheetComboItems};
 		} # end if
 
-		if ( $$specs{"txtAdditionalCuts$form"} ) {
+		if ( $$specs{"txtAdditionalCuts$form"} and %ServicePrice ) {
 			$sheets = ceil( $$sig_specs{'txtQuantity'.$qty_index} / $$I{imposition} );
 			my $runs = $liftDepth ? ceil( $sheets*$calliper/$liftDepth ) : $sheets;
 			my $price = ( $runs * $$specs{"txtAdditionalCuts$form"} * $ServicePrice{Price} );
-			$results{Breakdown} .= 'Additional cuts:<br/>';
+			$results{Breakdown} .= 'Additional cuts: ';
 			$results{Breakdown} .= sprintf('%d cuts on %d sheets: $%.2f<br/>', $$specs{"txtAdditionalCuts$form"}, $sheets, $price );
 			$totalPrice += $price;
 		} # end if
