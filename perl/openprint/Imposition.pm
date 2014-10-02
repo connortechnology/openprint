@@ -512,7 +512,10 @@ sub sheet_area {
 } # end sub sheet_area
 
 sub pages {
-	return $_[0]{'pages'};
+	if ( @_ > 1 ) {
+		$_[0]{pages} = $_[1];
+	} # end if
+	return $_[0]{pages};
 	#return $_[0]{'pages'} ? $_[0]{'pages'} : $_[0]{'spreads'} * $_[0]{'spread_size'};
 }
 

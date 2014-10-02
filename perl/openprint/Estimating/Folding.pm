@@ -2194,9 +2194,15 @@ sub get_Folds {
 	my ( $folding_specs, $sig_specs, $qty_index ) = @_;
 	my @folds;
 
+	my $Source_Imposition;
+	if ( ref $sig_specs eq 'openprint::Imposition' ) {
+		$Source_Imposition = $sig_specs;
+		$sig_specs = $Source_Imposition->specs();
+	} else {
+		$Source_Imposition = new openprint::Imposition();
+		$Source_Imposition->load( $sig_specs, $qty_index );
+	} # end if
 	my $form = $$sig_specs{SignatureIndex};
-	my $Source_Imposition = new openprint::Imposition();
-	$Source_Imposition->load( $sig_specs, $qty_index );
 
 	foreach my $fold_index ( 1 .. 4 ) {
 		next if ! $$folding_specs{"FoldQty-$form-$qty_index-$fold_index"};
@@ -2206,7 +2212,6 @@ sub get_Folds {
 			$Imposition->columns( $$folding_specs{"FoldColumns-$form-$qty_index-$fold_index"} );
 			$Imposition->rows( $$folding_specs{"FoldRows-$form-$qty_index-$fold_index"} );
 			$Imposition->quantity( $$folding_specs{"FoldQty-$form-$qty_index-$fold_index"} );
-			$$Imposition{pages} = $Fold->pages();
 			$Imposition->page_quantity( $$folding_specs{"FoldPageQty-$form-$qty_index-$fold_index"} );
 			my $Folder = new openprint::Equipment( $$folding_specs{"ddmEquipment-$form-$qty_index"} );
 			$Imposition->Press( $Folder );
@@ -2229,6 +2234,7 @@ sub get_Folds {
 								} );
 $openprint::log->debug("Got FOld: " . $Fold->to_string() );
 			$Imposition->Fold( $Fold );
+			$$Imposition{pages} = $Fold->pages();
 			if ( ! $$Imposition{page_quantity} ) {
 				$$Imposition{page_quantity} = $Source_Imposition->pages() / $Fold->pages();
 			} # end if
