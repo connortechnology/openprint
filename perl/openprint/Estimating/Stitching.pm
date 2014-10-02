@@ -495,7 +495,7 @@ sub calc {
 	my $calc_hash = {};
 	my $folding_specs = 0;
 	if ( $$services{Folding} ) {
-		$folding_specs = $$calc_hash{folding_specs} = openprint::service::get_specs_ref( $Project, $$services{Folding}[0] );
+		$folding_specs = $$calc_hash{FoldingSpecs} = openprint::service::get_specs_ref( $Project, $$services{Folding}[0] );
 	} # end if
 	$$specs{txtCalliper} = $Project->calliper();
 	my $scoring_specs = openprint::service::get_specs_ref( $Project, $$services{Scoring}[0] ) if $$services{Scoring} and @{$$services{Scoring}};

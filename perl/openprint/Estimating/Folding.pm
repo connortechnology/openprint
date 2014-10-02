@@ -1557,6 +1557,7 @@ $Breakdown .= '<tr><td>Signatures:'.(@$Signature_Impositions+1).'</td></tr>';
 
 	foreach my $FI ( @{$bestImpositions} ) {
 		my $Fold = $FI->Fold;
+		$$Fold{equipment_id} = $$bestEquipment{id} if ! $$Fold{equipment_id};
 		$FI->Equipment( $Fold->Equipment() );
 		my $printed_sheets = (($$specs{'txtQuantity'.$qty_index}/$FI->imposition())/$SignatureImposition->imposition());
 
@@ -1649,7 +1650,7 @@ sub calc {
 			} # end if
 			my $i = new openprint::Imposition();
 			$i->load( $sig_specs, $qty_index );
-			$$i{Folds} = [ get_Folds( $specs, $sig_specs, $qty_index ) ];
+			$$i{Folds} = [ get_Folds( $specs, $i, $qty_index ) ];
 			push @Signature_Impositions, $i;
 $i->display() if DEBUG;
 			$Impositions{$sig_id} = $i;
@@ -2244,6 +2245,9 @@ $openprint::log->debug("Got FOld: " . $Fold->to_string() );
 		} # end if
 		#$folding_imposition->display('Fold ' . $$folding_specs{"FoldType-$form-$qty_index-$fold_index"} ) if DEBUG;
 	} # end foreach fold_index
+if ( ! @folds ) {
+	$openprint::log->debug("Got no folds for sig $form : " . $Source_Imposition->to_string() );
+}
 	return @folds;
 } # end sub get_Folds
 
