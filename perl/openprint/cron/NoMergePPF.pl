@@ -96,7 +96,7 @@ if ( 0 and $inotify and $inotify->watch( $source_path, IN_CREATE ) ) {
 						'driver'    => 'Pg',
 						'login'     => $db_user,
 						'password'  => $db_pass,
-						);
+						) if ! ( $dbh and $dbh->ping() );
 				die 'Error opening db' if ! $dbh;
 
 				configuration::init_cache( $log, $dbh );
