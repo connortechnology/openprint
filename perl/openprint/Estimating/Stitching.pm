@@ -155,7 +155,7 @@ sub get_imposition {
 # Calculates the cost of stitching a signature... which is not realistic, but will hopefully help when deciding between 1up or 2up stitching
 # includes teh cost of folding...
 sub signature_calc {
-	my ( $Project, $service_index, $specs, $qty_index, $folding_specs, $Impositions, $calc_hash ) = @_;
+	my ( $Project, $service_index, $specs, $qty_index, $Impositions, $calc_hash ) = @_;
 
 	$openprint::log->debug("# of impositions in Stitching::signature_calc: " . @{$Impositions} ) if DEBUG;
 
@@ -164,6 +164,7 @@ sub signature_calc {
 			);
 	my $services = $Project->services();
 	my $printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
+	my $folding_specs = $$calc_hash{FoldingSpecs};
 	my $ServiceType = $Project->ServiceType( $service_index );
 	if ( ! $ServiceType->id() ) {
 		$results{alert} .= 'Unable to determine stitching type!<br/>';
@@ -227,7 +228,7 @@ $I->display('In Stitching:') if DEBUG;
         if ( ! $$I{Folds} ) {
             $openprint::log->debug("No folds in imposition, generating");
             $I->display("No Folds");
-            $$I{Folds} = [ openprint::Estimating::Folding::get_Folds( $folding_specs, $sig_specs, $qty_index ) ] if $folding_specs;
+            $$I{Folds} = [ openprint::Estimating::Folding::get_Folds( $folding_specs, $I, $qty_index ) ] if $folding_specs;
         } # end if
 
 		if ( ! $$I{Folds} ) {
@@ -348,9 +349,28 @@ EQUIPMENT:foreach my $Equipment ( @equipment ) {
 
 			my $type = $Equipment->specification('Type');
 			$openprint::log->debug("Printed impo: @printed_impositions, sitched: $imposition type: $type $$Equipment{strid}") if DEBUG;
-			if ( $type eq 'Press' and @printed_impositions > 1 ) {
-				$results{Breakdown} .= sprintf('Printed and stitched imposition must match.<br/>');
-				next;
+			if ( $type eq 'Press' ) {
+				if ( @printed_impositions > 1 ) {
+					$results{Breakdown} .= sprintf('Printed and stitched imposition must match.<br/>');
+					next;
+				} # end if
+				if ( $Press->id() != $Equipment->id() ) {
+					$results{Breakdown} .= "Press not the same: " . $I->Press()->id() . ' != ' . $Equipment->id() if DEBUG;
+					next;
+				} # end if
+
+				if ( $$I{Folder} and ( $$I{Folder}->id() != $Equipment->id() ) ) {
+					$results{Breakdown} .= "Folder not the same: " . $$I{Folder}{id}. ' != ' . $Equipment->id() if DEBUG;
+					next;
+				} # end if
+
+# Need to look at all sigs...
+				foreach my $I ( @$Impositions ) {
+					if ( $I->Press()->id() != $Equipment->id() ) {
+						$results{Breakdown} .= "All sigs must be printed on this stitcher.<br/>";
+						next EQUIPMENT;
+					} # end if
+				} # end foreach I
 			} # end if
 			my $max_imp = $Equipment->specification("Maximum $$ServiceType{name} Imposition");
 			if ( $max_imp and ( $max_imp < $imposition ) ) {
@@ -380,35 +400,6 @@ EQUIPMENT:foreach my $Equipment ( @equipment ) {
 			if ( $Equipment->specification('Stitching Capable') eq 'When Digital' and $Press->specification('Printing Type') ne 'Digital' ) {
 				$results{Breakdown} .= sprintf('Not printed digital.<br/>' );
 				next;
-			} # end if
-			if ( $type eq 'Press' ) {
-#if ( $$specs{'txtPockets'.$qty_index} > 1 ) {
-#$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Too many pockets: %d<br/>', $$specs{'txtPockets'.$qty_index} );
-#next;
-#} # end if
-				if ( $Press->id() != $Equipment->id() ) {
-					$results{Breakdown} .= "Press not the same: " . $I->Press()->id() . ' != ' . $Equipment->id() if DEBUG;
-					next;
-				} # end if
-
-				if ( $$I{Folder} and ( $$I{Folder}->id() != $Equipment->id() ) ) {
-					$results{Breakdown} .= "Folder not the same: " . $$I{Folder}{id}. ' != ' . $Equipment->id() if DEBUG;
-					next;
-				} # end if
-
-# Need to look at all sigs...
-				foreach my $I ( @$Impositions ) {
-					if ( $I->Press()->id() != $Equipment->id() ) {
-						$results{Breakdown} .= "All sigs must be printed on this stitcher.<br/>";
-						next EQUIPMENT;
-					} # end if
-				} # end foreach I
-#if ( $scoring_specs and openprint::Estimating::Scoring::signature_needs( $Project, $scoring_specs, $sig_specs, $I->Paper() ) ) {
-#if ( $$scoring_specs{"ddmEquipment-$form-$qty_index"} != $Equipment->id() ) {
-#$results{Breakdown} .= "Scoring not the same: " . $$scoring_specs{"ddmEquipment-$form-$qty_index"}. ' != ' . $Equipment->id() if DEBUG;
-#next;
-#} # end if
-#} # end if
 			} # end if
 			if ( $$I{Folder} and ( $_ = $$I{Folder}->specification('Folding Capable') ) and ( $_ eq 'When Stitching' ) ) {
 				if ( $$I{Folder}->id() != $Equipment->id() ) {
@@ -453,24 +444,24 @@ EQUIPMENT:foreach my $Equipment ( @equipment ) {
 		$results{Status} = 'uncalculated';
 	} # end if
 	return \%results;
-	} # end sub signature_calc
+} # end sub signature_calc
 
-	sub calc {
-		my ( $log, $dbh, $variable, $project_index, $service_index, $specs ) = @_;
+sub calc {
+	my ( $log, $dbh, $variable, $project_index, $service_index, $specs ) = @_;
 
-		$$specs{alert} = '';
-		$$specs{Status} = 'calculated';
-		my $Project = new openprint::Project( $project_index );
-		my $ServiceType = $Project->ServiceType( $service_index );
-		if ( ! $ServiceType->id() ) {
-			$$specs{alert} .= 'Unable to determine stitching type!<br/>';
-			return $$specs{Status} = 'uncalculated';
-		} # end if
+	$$specs{alert} = '';
+	$$specs{Status} = 'calculated';
+	my $Project = new openprint::Project( $project_index );
+	my $ServiceType = $Project->ServiceType( $service_index );
+	if ( ! $ServiceType->id() ) {
+		$$specs{alert} .= 'Unable to determine stitching type!<br/>';
+		return $$specs{Status} = 'uncalculated';
+	} # end if
 
-		my $services = $Project->services();
-		if ( ! $$services{''} ) {
-			$$specs{alert} .= 'Unable to find project service.<br/>';
-			return $$specs{Status} = 'uncalculated';
+	my $services = $Project->services();
+	if ( ! $$services{''} ) {
+		$$specs{alert} .= 'Unable to find project service.<br/>';
+		return $$specs{Status} = 'uncalculated';
 	} # end if
 	my @signatures = $Project->signatures();
 	if ( ! @signatures ) {
@@ -576,7 +567,7 @@ EQUIPMENT:foreach my $Equipment ( @equipment ) {
 			} # end foreach
 		} # end if
 		$$calc_hash{'Stitching::signature_calc::equipment'} = \@possible_equipment;
-		my %results = %{signature_calc( $Project, $service_index, $specs, $qty_index, $folding_specs, \@Impositions, $calc_hash )};
+		my %results = %{signature_calc( $Project, $service_index, $specs, $qty_index, \@Impositions, $calc_hash )};
 		$$specs{Status} = $results{Status};
 		$$specs{'hdnBreakdown'.$qty_index} .= $results{Breakdown};
 		$$specs{alert} .= $results{alert};

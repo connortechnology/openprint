@@ -4388,7 +4388,7 @@ $openprint::log->debug("Sheet No supplied wight: $supplied_sheets $paper_string 
 					$openprint::log->debug( 'Stitching Calc: ' . sprintf('%.4f', tv_interval( [$starttime])*1000) ) if DEBUG;
 
 				} elsif ( $$services{'PerfectBound'} and $$sig_specs{'txtSignatureType'} ne 'Cover Pages') {
-					my $results = openprint::Estimating::PerfectBound::signature_calc( $Project, $$project{'HasPerfectBound'}, $$project{'PerfectBoundSpecs'}, $qty_index, $$project{'FoldingSpecs'}, $service_index, @total_impositions );
+					my $results = openprint::Estimating::PerfectBound::signature_calc( $Project, $$project{HasPerfectBound}, $$project{PerfectBoundSpecs}, $qty_index, \@total_impositions, $project );
 					if ( $$results{'Status'} eq 'uncalculated' ) {
 						$$price{'PerfectBound Breakdown'} .= "PerfectBound error: $$results{'alert'}<br/>";
 						$$price{'Comparison Cost'} += 1000000;

@@ -24,6 +24,7 @@ DU=/usr/bin/du;
 AWK=/usr/bin/awk;
 DATE=/bin/date;
 STAT=/usr/bin/stat;
+FIND=/usr/bin/find;
 BACKUPS=3;
 
 USAGE="Usage: `/usr/bin/basename $0` [-hv] [-n int] [-c arg] [-t type] [-T] args"
@@ -139,3 +140,4 @@ while (( "$BACKUPS" > "0" )) ; do
 done
 
 $MV "$DEST$TYPE.new" "$DEST$TYPE.0";
+$FIND "$DEST$TYPE.0" -type d -executable -exec chmod u+wx {} \;
