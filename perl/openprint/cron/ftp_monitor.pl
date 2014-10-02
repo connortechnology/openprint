@@ -237,6 +237,7 @@ if (open($fifoh, "< $config{fifo}")) {
 	} # end while <input>
 
 	close($fifoh);
+	$dbh->disconnect() if $dbh and $dbh->ping();
 } else {
 	die "$program: unable to read FIFO '$config{fifo}': $!\n";
 }
