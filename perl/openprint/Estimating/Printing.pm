@@ -5212,15 +5212,17 @@ $openprint::log->debug("Back From DieCutting");
 
 	if ( $$specs{'OverrideSetup'.$qty_index} eq 'Y' ) {
 		$setup_overs = $$specs{'OverSetup'.$qty_index};
-	} elsif ( $setup_rate ) {
-		$setup_overs = $initial_setup_overs;
- #+ $additional_setup_overs;
- 	} else {
-		$setup_overs = $Press->specification( 'MakeReady Overs ' . $Paper->material(), $plate_setup{'Plate Count'} );
-		$setup_overs = $Press->specification( 'MakeReady Overs ' . $$Imposition{'runstyle'}, $plate_setup{'Plate Count'} ) if ! $setup_overs;
-		$setup_overs = $Press->specification( 'MakeReady Overs', $plate_setup{'Plate Count'} ) if ! $setup_overs;
- 	} # end if
-	$setup_overs += $fm_overs;
+	} else {
+		if ( $setup_rate ) {
+			$setup_overs = $initial_setup_overs;
+#+ $additional_setup_overs;
+		} else {
+			$setup_overs = $Press->specification( 'MakeReady Overs ' . $Paper->material(), $plate_setup{'Plate Count'} );
+			$setup_overs = $Press->specification( 'MakeReady Overs ' . $$Imposition{'runstyle'}, $plate_setup{'Plate Count'} ) if ! $setup_overs;
+			$setup_overs = $Press->specification( 'MakeReady Overs', $plate_setup{'Plate Count'} ) if ! $setup_overs;
+		} # end if
+		$setup_overs += $fm_overs + $additional_setup_overs;
+	} # en dif
 
 	if ( $$specs{'OverrideRun'.$qty_index} eq 'Y' ) {
 		$run_overs = $$specs{'OverRun'.$qty_index};
@@ -5228,13 +5230,14 @@ $openprint::log->debug("Back From DieCutting");
 		$run_overs = ceil( $net_sheets * $over_rate );
 	} # end if
 
-	my $total_overs = $additional_setup_overs;
+	my $total_overs = 0;
 
 	if ( $_ = $Press->Specification('Overs') and $$_{value} eq 'All' ) {
 		$total_overs += ceil( $run_overs + $setup_overs );
 	} else {
 		$total_overs += ceil( ( $setup_overs > $run_overs ) ? $setup_overs : $run_overs );
 	} # end if
+	$total_overs += $additional_overs;
 	$total_overs += ( $bindery_overs - $total_overs ) if $bindery_overs > $total_overs;
 
 	$min_overs = $Press->specification( 'Overs Minimum ' . $Paper->material(), $plate_setup{'Plate Count'} );
