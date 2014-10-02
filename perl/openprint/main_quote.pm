@@ -123,13 +123,15 @@ sub add_project_to_quote {
 	$quote_id = new openprint::Quote( $quote_id )->id() if $quote_id;
 	my $Quote = new openprint::Quote( $quote_id );
 	$Quote->save() if ! $Quote->id();
-	$session{'quote_id'} = $quote_id = $Quote->id();
+	$Quote->save({deleted=>0}) if $Quote->deleted();
+
+	$session{quote_id} = $quote_id = $Quote->id();
 	return if ! $quote_id;
 
 	$project_id = $param{ProjectIndex} if ! $project_id;
 	$project_id = $session{project_id} if ! $project_id;
 	# check to make sure project isn't already in the quote.
-	my @QuotedProjects = openprint::QuotedProject->find('quote_id'=>$Quote->id(), 'project_id'=>$project_id );
+	my @QuotedProjects = openprint::QuotedProject->find( quote_id=>$Quote->id(), project_id=>$project_id );
 	if ( @QuotedProjects > 1 ) {
 $openprint::log->error( "More than 1 occurrence of a project in a quote." );
 		foreach my $QP ( @QuotedProjects ) {
