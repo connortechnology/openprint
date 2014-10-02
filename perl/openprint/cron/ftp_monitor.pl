@@ -247,7 +247,7 @@ if ( $config{'pid_file'} ) {
 
 sub check_scoreboard {
 	my $scoreboard = get_scoreboard( $config{scoreboard} );
-	my @users = map { $$_{'user'} } @$scoreboard;
+	my @users = map { $$_{user} } @$scoreboard;
 	#$log->debug( "Users: @users in scoreboard\n" );
 
 	foreach my $username ( keys %uploads ) {
@@ -282,10 +282,18 @@ sub send_email {
 # File should be the full path, relative to filesystem root.
 # Problem is, spaces have been replaced by underscores
 		my $file_str = basename($file);
-		$$upload{'file_str'} = $file_str;
-		my $regexp = $config{'file_path'}.'(.*)'.$file_str;
+		$$upload{file_str} = $file_str;
+		my $regexp = $config{file_path}.'/(.+)/'.$file_str;
 		my ( $company_name ) = $file =~ /^$regexp$/;
-$log->debug("Trying to match ( $regexp in $file, got $company_name");
+$log->warn("Trying to match ( $regexp in $file, got $company_name");
+		if ( ! $company_name ) {
+			my $new_file_path = $config{file_path};
+			$new_file_path =~ s/ /_/g;
+			$regexp = $new_file_path.'/(.+)/'.$file_str;
+			( $company_name ) = $file =~ /^$regexp$/;
+			$log->warn("Trying to match ( $regexp in $file, got $company_name");
+		} # end if
+
 		if ( $company_name ) {
 			$company_name =~ s/^\/*//g;
 		   my @parts = split('/', $company_name);
@@ -326,12 +334,12 @@ $log->debug("Trying to match ( $regexp in $file, got $company_name");
 		if ( ! ( $Company = openprint::Company->find_one( name=>$$upload{company_name} ) ) ) {
 $log->debug("Didn't Found company $$upload{company_name}");
 		} else {
-$log->debug("Found company $$upload{'company_name'}");
+$log->debug("Found company $$upload{company_name}");
 		} # end if
 	} # end if
 	if ( $Company ) {
 		# If we hae the company, then narrow the user search
-		if ( $User = openprint::User->find_one( company_id=>$Company->id(), email=>lc $upload->{user}) ) {
+		if ( $User = openprint::User->find_one( company_id=>$Company->id(), email=>lc $$upload{user}) ) {
 $log->debug("Found user $$upload{user} with company");
 		} # end if
 	} # end if
@@ -408,7 +416,7 @@ $log->debug("Found user $$upload{user} with out company.  Company is $$Company{n
 					FROM    => ( $config{AdministratorEmail} ? $config{AdministratorEmail} : $from ),
 					'Reply-To'	=>	$from,
 					TO      => \@to,
-#BCC		=>	'iconnor@penultima.org',
+BCC		=>	'iconnor@point-one.com',
 					SUBJECT => $subject,
 					ATTACHMENTS => [ '', MIME::QuotedPrint::encode_qp(Encode::encode('utf-8',$body)), 'text/html', 'quoted-printable' ]
 				);
