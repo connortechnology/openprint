@@ -4882,7 +4882,7 @@ sub calc_price {
 		my $time = gettimeofday() if DEBUG;
 		if ( $$Imposition{folding_results} ) {
 			%folding_results = %{$$Imposition{folding_results}};
-			#$openprint::log->debug("Using cached folding");
+			$openprint::log->debug("Using cached folding");
 		} else {
 #my @all_impositions = ( @{$other_impositions}, $Imposition );
 			%folding_results = openprint::Estimating::Folding::signature_calc( $Project, $service_index, $specs, $$project{'FoldingSpecs'}, $qty_index, $Imposition, @$project{'UVCoatingSpecs','AqueousSpecs','StitchingSpecs'}, $other_impositions, $project );
@@ -4903,7 +4903,7 @@ sub calc_price {
 				if ( $folding_results{Equipment}->id() == $Press->id() ) {
 					my $FI = $folding_results{FoldedImpositions}[0];
 if ( $$FI{Equipment}->id() != $Press->id() ) {
-$openprint::log->error("WTF Equipment in Fold is not the press, but the folding results equipment is. maybe caching issue?");
+$openprint::log->error("WTF Equipment in Fold is not the press, but the folding results equipment is. maybe caching issue? Fold equipment is " . $$FI{Equipment}->strid() . ' FI: ' . $FI->to_string() );
 } 
 $FI->display( "Runspeed: $$FI{runspeed}") if DEBUG;
 #$openprint::log->debug("Runspeed: $folding_results{'RunSpeed'}");
