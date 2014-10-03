@@ -239,9 +239,9 @@ $I->display('In Stitching:') if DEBUG;
 # This doesn't really make sense.  If we are doing printing estimation, then the folding probably isn't going to match.  
 		} else {
 			foreach my $Fold ( @{$$I{Folds}} ) {
-$openprint::log->debug("Fold pq($$Fold{page_quantity}) pages($$Fold{pages}) ($$Fold{name}) Pockets: $pockets");
+$openprint::log->debug("Fold pq($$Fold{page_quantity}) pages($$Fold{pages}) ($$Fold{name}) Pockets: $pockets") if DEBUG;
 				if ( $Fold->imposition() < $imposition ) {
-$results{Breakdown} .= "Setting stitching imposition to $$Fold{imposition} out because Folding imposition is $$Fold{imposition}out<br/>";
+					$results{Breakdown} .= "Setting stitching imposition to $$Fold{imposition} out because Folding imposition is $$Fold{imposition}out<br/>";
 					$imposition = $Fold->imposition();
 				}
 				$$I{Folder} = $Fold->Equipment() if ! $$I{Folder};
