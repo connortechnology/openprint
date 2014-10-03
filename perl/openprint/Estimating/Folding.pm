@@ -2233,6 +2233,9 @@ sub get_Folds {
 								calliper		=>	$$Paper{calliper},
 								#printing_type	=>	$ppt,
 								} );
+	if ( ! $Fold ) {
+		$openprint::log->error("CAnt get fold! on " . $Folder->to_string() );
+	} else {
 $openprint::log->debug("Got FOld: " . $Fold->to_string() );
 			$Imposition->Fold( $Fold );
 			if ( $Fold->pages() ) {
@@ -2245,6 +2248,7 @@ $openprint::log->debug("Got FOld: " . $Fold->to_string() );
 			
 			push @folds, $Imposition;
 		} # end if
+	} # end if
 		#$folding_imposition->display('Fold ' . $$folding_specs{"FoldType-$form-$qty_index-$fold_index"} ) if DEBUG;
 	} # end foreach fold_index
 if ( ! @folds ) {

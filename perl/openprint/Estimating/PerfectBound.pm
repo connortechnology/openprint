@@ -21,7 +21,7 @@ use strict;
 require openprint::service;
 require openprint::Project;
 
-use constant DEBUG => 1;
+use constant DEBUG => 0;
 my @Equipment;
 
 my %variables = (
@@ -156,8 +156,8 @@ $I->display('In PerfectBi:') if DEBUG;
         my $form = $$sig_specs{SignatureIndex};
         push @printed_impositions, $I->imposition();
         if ( ! $$I{Folds} ) {
-            $openprint::log->debug("No folds in imposition, generating");
-            $I->display("No Folds");
+            $openprint::log->debug("No folds in imposition, generating") if DEBUG;
+            $I->display("No Folds") if DEBUG;
             $$I{Folds} = [ openprint::Estimating::Folding::get_Folds( $folding_specs, $I, $qty_index ) ] if $folding_specs;
         } # end if
 
@@ -170,9 +170,9 @@ $I->display('In PerfectBi:') if DEBUG;
         } else {
             foreach my $FI ( @{$$I{Folds}} ) {
 				my $Fold = $FI->Fold();
-$openprint::log->debug("Fold pq($$FI{page_quantity}) pages($$FI{pages}) ($$Fold{name}) Pockets: $pockets" . $Fold->to_string());
+$openprint::log->debug("Fold pq($$FI{page_quantity}) pages($$FI{pages}) ($$Fold{name}) Pockets: $pockets" . $Fold->to_string()) if DEBUG;
                 if ( $FI->imposition() < $imposition ) {
-$results{Breakdown} .= "Setting stitching imposition to $$FI{imposition} out because Folding imposition is $$FI{imposition}out<br/>";
+					$results{Breakdown} .= "Setting stitching imposition to $$FI{imposition} out because Folding imposition is $$FI{imposition}out<br/>";
                     $imposition = $FI->imposition();
                 }
                 $$I{Folder} = $FI->Equipment() if ! $$I{Folder};
