@@ -2218,7 +2218,7 @@ sub get_Folds {
 			$Imposition->Press( $Folder );
 
 			my $Paper = $Imposition->Paper();
-			my $Fold = $Folder->Fold( {
+			my $find = {
 								type 			=>	$$folding_specs{"FoldType-$form-$qty_index-$fold_index"},
 								#pages			=>	$Imposition->pages(),
 								#page_columns	=>	$Imposition->page_columns(),
@@ -2232,24 +2232,26 @@ sub get_Folds {
 								rows			=>	$$Imposition{rows},
 								calliper		=>	$$Paper{calliper},
 								#printing_type	=>	$ppt,
-								} );
-	if ( ! $Fold ) {
-		$openprint::log->error("CAnt get fold! on " . $Folder->to_string() );
-	} else {
-$openprint::log->debug("Got FOld: " . $Fold->to_string() );
-			$Imposition->Fold( $Fold );
-			if ( $Fold->pages() ) {
-				$$Imposition{pages} = $Fold->pages();
-				$Imposition->page_quantity( $$folding_specs{"FoldPageQty-$form-$qty_index-$fold_index"} );
-				if ( ! $$Imposition{page_quantity} ) {
-					$$Imposition{page_quantity} = $Source_Imposition->pages() / $Fold->pages();
+								};
+			my $Fold = $Folder->Fold( $find );
+			if ( ! $Fold ) {
+				$_ = Data::Dumper::Dumper($find);
+				$openprint::log->error("CAnt get fold! on " . $Folder->to_string() . $_);
+			} else {
+				$openprint::log->debug("Got FOld: " . $Fold->to_string() );
+				$Imposition->Fold( $Fold );
+				if ( $Fold->pages() ) {
+					$$Imposition{pages} = $Fold->pages();
+					$Imposition->page_quantity( $$folding_specs{"FoldPageQty-$form-$qty_index-$fold_index"} );
+					if ( ! $$Imposition{page_quantity} ) {
+						$$Imposition{page_quantity} = $Source_Imposition->pages() / $Fold->pages();
+					} # end if
 				} # end if
+
+				push @folds, $Imposition;
 			} # end if
-			
-			push @folds, $Imposition;
 		} # end if
-	} # end if
-		#$folding_imposition->display('Fold ' . $$folding_specs{"FoldType-$form-$qty_index-$fold_index"} ) if DEBUG;
+#$folding_imposition->display('Fold ' . $$folding_specs{"FoldType-$form-$qty_index-$fold_index"} ) if DEBUG;
 	} # end foreach fold_index
 if ( ! @folds ) {
 	$openprint::log->debug("Got no folds for sig $form : " . $Source_Imposition->to_string() );

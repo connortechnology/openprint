@@ -161,6 +161,7 @@ $openprint::log->warn("Deleting Service from " . $Project->to_string() );
 
 	$Project->add_to_log( @openprint::session{'company_id','user_id'}, "Deleted service ".$self->ServiceType()->type() . " $$specs{ServiceName}." );
 	sql::end_transaction( $openprint::dbh, $ac );
+	return;
 } # end sub delete
 
 sub ordered_price {
