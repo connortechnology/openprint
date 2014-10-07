@@ -487,17 +487,6 @@ $log->debug("group $group_id");
 		) {
 			openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $ss_id, $spec, $$param{$spec.$group_id} );
 		} # end foreach spec
-		foreach my $spec ( 'RunStyle' ) {
-			next if ! exists $$param{'ddm'.$spec.'-'.$group_id};
-			foreach my $qty_index ( $Project->quantity_indexes() ) {
-				if ( $$param{'ddm'.$spec.'-'.$group_id} ) {
-					openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $ss_id, 'ddm'.$spec.$qty_index, $$param{'ddm'.$spec.'-'.$group_id} );
-					openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $ss_id, 'chkOverride'.$spec.$qty_index, 'Y' );
-				} else {
-					openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $ss_id, 'chkOverride'.$spec.$qty_index, '' );
-				} # end if
-			} # end foreach qty_index
-		} # end foreach spec
 		foreach my $spec ( 'PrintingType','StockType' ) {
 			next if ! exists $$param{$spec.'-'.$group_id};
 			foreach my $qty_index ( $Project->quantity_indexes() ) {
