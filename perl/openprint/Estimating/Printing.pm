@@ -857,6 +857,10 @@ sub get_Stocks {
 			$$v{txtStockGSM} = [ sets::union( 'output', @{$$v{txtStockGSM}} ) ];
 			$$specs{txtStockGSM} = $Paper->gsm();
 		} # end if
+		if ( $$specs{txtStockGSM} < 10 ) {
+			$$specs{'alert'} .= 'GSM is too low.';
+			return ();
+		} # end if
 	} else {
 		$$v{txtStockGSM} = [ sets::union( 'output', @{$$v{txtStockGSM}} ) ];
 

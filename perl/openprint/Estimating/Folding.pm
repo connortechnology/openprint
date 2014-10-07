@@ -57,15 +57,9 @@ sub variables {
 					"Price-$form-$qty_index",
 					);
 			foreach my $fold_index ( 1 .. 4 ) {
-				push @v, "FoldPageQty-$form-$qty_index-$fold_index";
-				push @v, "FoldQty-$form-$qty_index-$fold_index";
-				push @v, "FoldImposition-$form-$qty_index-$fold_index";
-				push @v, "FoldColumns-$form-$qty_index-$fold_index";
-				push @v, "FoldRows-$form-$qty_index-$fold_index";
-				push @v, "FoldType-$form-$qty_index-$fold_index";
-				push @v, "FoldFolds-$form-$qty_index-$fold_index";
-				push @v, "FoldAngles-$form-$qty_index-$fold_index";
-				push @v, "FoldRunspeed-$form-$qty_index-$fold_index";
+				push @v, map { join('-', $_, $form, $qty_index, $fold_index ) } ( 
+						'FoldPageQty', 'FoldQty', 'FoldImposition', 'FoldColumns', 'FoldRows', 'FoldType', 'FoldFolds', 'FoldAngles', 'FoldRunspeed',
+				);
 			} # end foreach
 #foreach my $fold_type ( keys %fold_types ) {
 #} # end foreach
@@ -344,20 +338,20 @@ sub impositions {
 	my $Paper = $Imposition->Paper();
 
 	my %find = (
-			'pages'				=>	$Imposition->pages(),
-			'page_columns'		=>	$Imposition->page_columns(),
-			'page_rows'			=>	$Imposition->page_rows(),
-			'page_width'		=>	$Imposition->page_width(),
-			'page_height'		=>	$Imposition->page_height(),
-			'spine_direction'	=>	$$Imposition{'image_orientation'},
-			'stitching'			=>	($$services{'SaddleStitching'} or $$services{'LoopStitching'}) ? 1 : 0,
-			'perfectbind'		=>	$$services{'PerfectBound'} ? 1 : 0,
-			'spinepaste'		=>	$$services{'SpinePaste'} ? 1 : 0,
-			'gsm'				=>	$Paper->gsm(),
-			imposition			=>	$$Imposition{'imposition'},
-			columns				=>	$$Imposition{columns},
-			rows				=>	$$Imposition{rows},
-			'calliper'			=>	$$Paper{'calliper'},
+			pages			=>	$Imposition->pages(),
+			page_column		=>	$Imposition->page_columns(),
+			page_rows		=>	$Imposition->page_rows(),
+			page_width		=>	$Imposition->page_width(),
+			page_height		=>	$Imposition->page_height(),
+			spine_direction	=>	$$Imposition{image_orientation},
+			stitching		=>	($$services{SaddleStitching} or $$services{LoopStitching}) ? 1 : 0,
+			perfectbind		=>	$$services{'PerfectBound'} ? 1 : 0,
+			spinepaste		=>	$$services{'SpinePaste'} ? 1 : 0,
+			gsm				=>	$Paper->gsm(),
+			imposition		=>	$$Imposition{'imposition'},
+			columns			=>	$$Imposition{columns},
+			rows			=>	$$Imposition{rows},
+			calliper		=>	$$Paper{'calliper'},
 	);
 
 	my $Fold = $Imposition->Equipment()->Fold(\%find);
