@@ -17,7 +17,7 @@ require openprint::SkidContent;
 require openprint::InventoryCondition;
 require openprint::PaperAllocation;
 
-$debug = 0;
+$debug = 1;
 
 $table = 'Skids';
 $serial = 'skid_id_seq';
@@ -103,11 +103,22 @@ sub find {
 	} # end if
 
 	if ( $params{'paper_id'} and $params{'quantity >='} ) {
-		$sql .= ' AND id IN (SELECT skid_id FROM skid_contents WHERE paper_id=? AND quantity >= ?)';
-		push @values, $params{'paper_id'}, $params{'quantity >='};
-	} elsif ( $params{'paper_id'} ) {
-		$sql .= ' AND id IN (SELECT skid_id FROM skid_contents WHERE paper_id=?)';
-		push @values, $params{'paper_id'};
+		$sql .= ' AND id IN (SELECT skid_id FROM skid_contents WHERE quantity >= ?';
+		if ( ref $params{paper_id} eq 'ARRAY' ) {
+			$sql .= ' AND paper_id IN (' . join(',', map { '?' } @{$params{paper_id}} ) . ') )';
+			push @values, $params{'quantity >='}, @{$params{paper_id}};
+		} else {
+			$sql .= ' AND paper_id=?)';
+			push @values, $params{'quantity >='}, $params{paper_id};
+		} # en dif
+	} elsif ( $params{paper_id} ) {
+		if ( ref $params{paper_id} eq 'ARRAY' ) {
+			$sql .= ' AND id IN (SELECT skid_id FROM skid_contents WHERE paper_id IN (' . join(',', map { '?' } @{$params{paper_id}} ) . ') )';
+			push @values, @{$params{paper_id}};
+		} else {
+			$sql .= ' AND id IN (SELECT skid_id FROM skid_contents WHERE paper_id=?)';
+			push @values, $params{'paper_id'};
+		} # end if
 	} elsif ( $params{'quantity >='} ) {
 		$sql .= ' AND id IN (SELECT skid_id FROM skid_contents WHERE quantity >= ?)';
 		push @values, $params{'quantity >='};

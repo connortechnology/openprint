@@ -150,42 +150,42 @@ while(1) {
 	if ( $last_update < (time-3600) ) {
 		$last_update = time;
 
-		%whitelist = map{ $_->ip(), $_ } openprint::Host->find( whitelist => 1, 'ip is null' => 0 );
-		$openprint::log->debug(join("\n", map { 'whitelist: ' . $_->ip() } openprint::Host->find( whitelist => 1, 'ip is null' => 0 ) ) ) if $config{debug};
+		%whitelist = map{ $_->ip(),$_ } openprint::Host_Interface->find( whitelist=>1,'ip is null'=>0);
+		$openprint::log->debug(join("\n", map { 'whitelist: ' . $_ } keys %whitelist ) ) if $config{debug};
 
 		# If a blacklist is specified, update it on start
 		if ( $opts->{blacklist} ) {
 			if ( ! open( FH, '>'.$opts->{blacklist} ) ) {
 				$log->error( 'Unable to open blacklist: ' . $opts->{blacklist} );
 			} else {
-				foreach my $Host ( openprint::Host->find( blacklist => 1,'order'=>'ip') ) {
-					my $macs = $Host->mac();
-					if ( $macs and @{$macs} ) {
-						foreach my $mac ( @{$macs} ) {
+				foreach my $Host ( openprint::Host->find( blacklist => 1) ) {
+					foreach my $Interface ( $Host->Interfaces() ) {
+						if ( $Interface->mac() ) {
+							my $mac = $Interface->mac();
 							$mac =~ s/:/\-/g;
 							print FH "~$mac\n";
-						} # end foreach mac
-					} elsif ( $Host->ip() ) {
-						print FH $Host->ip()."\n";
-					} # end if
+						} elsif ( $Interface->ip() ) {
+							print FH $Interface->ip()."\n";
+						} # end if
+					} # end foreach mac
 				} # end foreach Host
 				close(FH);
 				$log->warn("Having blackslist, restarting shorewall");
 				`/etc/init.d/shorewall restart`;
 			} # end if
 		} elsif ( 0 ) {
-			foreach my $Host ( openprint::Host->find( blacklist=>1, order=>'ip', whitelist=>0 ) ) {
-				my $macs = $Host->mac();
-				if ( $macs and @{$macs} ) {
-					foreach my $mac ( @{$macs} ) {
+			foreach my $Host ( openprint::Host->find( blacklist=>1, whitelist=>0 ) ) {
+				foreach my $Interface ( $Host->Interfaces() ) {
+					if ( $Interface->mac() ) {
+						my $mac = $Interface->mac();
 						$mac =~ s/:/\-/g;
 						`shorewall drop ~$mac`;
 						$log->debug("Dropping !~$mac") if $config{debug};
-					} # end foreach mac
-				} elsif ( $Host->ip() ) {
-					`shorewall drop $$Host{ip}`;
-					$log->debug("Dropping $$$Host{ip}") if $config{debug};
-				} # end if
+					} elsif ( $Interface->ip() ) {
+						`shorewall drop $$Interface{ip}`;
+						$log->debug("Dropping $$$Interface{ip}") if $config{debug};
+					} # end if
+				} # end foreach mac
 			} # end foreach Host
 		} # end if
 		$log->debug("Done updating shorewall.") if $config{debug};
@@ -226,25 +226,28 @@ while(1) {
 					} # end if
 				} # end if
 				next if $ip eq '172.0.0.1';
-
-				if ( $ip and $whitelist{$ip} ) {
-					$log->debug( "$ip is whitelisted" ) if $config{debug};
-					last;
-				} # end if
 				if ( ! $ip ) {
 					$log->debug( "No ip for $source" ) if $config{debug};
 					next;
 				} # end if
 
+				if ( $whitelist{$ip} ) {
+					$log->debug( "$ip is whitelisted" ) if $config{debug};
+					last;
+				} # end if
+
 				if ( ! $host_counts{$ip} ) {
-					my $Host = openprint::Host->find_one(ip=>$ip);
-					if ( $Host ) {
-						$host_counts{$$Host{ip}} = $Host;
+					my $Host;
+					my $HI = openprint::Host_Interface->find_one(ip=>$ip);
+					if ( ! $HI ) {
+						$HI = new openprint::Host_Interface();
+						$Host = new openprint::Host();
+						$Host->save({hostname=>$hostname});
+						$HI->save({host_id=>$$Host{id}, ip=>$ip});
 					} else {
-						$host_counts{$ip} = new openprint::Host();
-						$host_counts{$ip}->ip( $ip );
-						$host_counts{$ip}->hostname( $hostname );
-					} # end if
+						$Host = $HI->Host();
+					} # end if      
+					$host_counts{$ip} = $Host;
 				} # end if
 				my $last_seen = Date::Parse::str2time( $host_counts{$ip}{updated_on} ) if $host_counts{$ip}{updated_on};
 				my $occurrence = Date::Parse::str2time( $when );

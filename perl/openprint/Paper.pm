@@ -1005,7 +1005,7 @@ sub get_price {
 			} # end if
 			return;
 		} # end if ! price
-		if ( $openprint::config{'ApplyMarkup'} ) {
+		if ( (!$$self{custom}) and $openprint::config{'ApplyMarkup'} ) {
 		#$openprint::log->debug("Apply Markup: $openprint::config{'ApplyMarkup'}");	
 			my $pricingpercent = $openprint::config{'ApplyMarkup'};
 			#$pricingpercent =~ s/[^\d\.\-]//g;
@@ -1020,10 +1020,12 @@ sub get_price {
 		Carp::cluck("No custom price, and no paper::id for service: $params{service}" . $self->to_string()) if $debug;
 	} # end if
 
-	my $Company = new openprint::Company( $openprint::session{company_id} );
-	if ( $Company->discount() ) {
-		$$price{'price'} *= 1 - ( $Company->discount()/100 );
-	} # end if
+	#if ( ! $$self{custom} ) {
+		my $Company = new openprint::Company( $openprint::session{company_id} );
+		if ( $Company->discount() ) {
+			$$price{price} *= 1 - ( $Company->discount()/100 );
+		} # end if
+	#} # end if
 
 	if ( $params{'service'} eq 'Material' ) {
 	# Don't need to cut it because the mweight has already byeen cut
@@ -1306,13 +1308,14 @@ sub load_from_signature {
 		if ( ! $Paper ) {
 			my %params = (
 					'supplied is null or ='	=> $$specs{'rdbSuppliedStock'},
-					'brand'	 	=> $$specs{'ddmStockBrand'},
-					'finish'	=> $$specs{'ddmStockFinish'},
-					'colour'	=> $$specs{'ddmStockColour'},
-					'weight'	=> $$specs{'ddmStockWeight'},
+					brand	 	=> $$specs{'ddmStockBrand'},
+					finish	=> $$specs{'ddmStockFinish'},
+					colour	=> $$specs{'ddmStockColour'},
+					weight	=> $$specs{'ddmStockWeight'},
 					( $Project ? ( 'project_type_id any'=> $Project->type_id() ) : () ),
+# FIXME
 					( $$specs{'PrintingType'.$qty_index} eq 'Digital' ? ( 'digital'=>1 ) : () ),
-					'order'		=>	'minimum_order',
+					order		=>	'minimum_order',
 					);
 			if ( $qty_index and $$specs{'hdnSuppliedStockWidth'.$qty_index} ) {
 				$params{'width'} = $$specs{'hdnSuppliedStockWidth'.$qty_index};
@@ -1339,10 +1342,15 @@ $log->debug("Didn't find specific paper $params{'width'} x $params{'height'}");
 					$Paper->$lc_option( $$specs{"ddmStock$option"} );
 				} # end foreach
 				$Paper->calliper( $$specs{'txtSpecificStockCalliper'} );
-				$Paper->width( $$specs{'hdnSuppliedStockWidth'} );
-				$Paper->height( $$specs{'hdnSuppliedStockHeight'} );
 				$Paper->start_width( $$specs{'hdnSuppliedStockWidth'} );
 				$Paper->start_height( $$specs{'hdnSuppliedStockHeight'} );
+				if ( $qty_index ) {
+					$Paper->width( $$specs{'StockWidth'.$qty_index} );
+					$Paper->height( $$specs{'StockHeight'.$qty_index} );
+				} else {
+					$Paper->width( $$specs{'hdnSuppliedStockWidth'} );
+					$Paper->height( $$specs{'hdnSuppliedStockHeight'} );
+				} # end if
 				$Paper->doublesided( $$specs{'CustomSheetDoubleSided'} );
 				$Paper->gsm( $$specs{'txtStockGSM'} );
 				$Paper->type( $$specs{'StockType'.$qty_index} );
@@ -1357,7 +1365,7 @@ $log->debug("Didn't find specific paper $params{'width'} x $params{'height'}");
 				$Paper->score_required( $Paper->calliper() > 0.008 );
 				$Paper->mweight( $$specs{'txtMWeight'.$qty_index} );
 				@Papers = ( $Paper );
-			} else {
+			} elsif ( $qty_index ) {
 				my $Press = openprint::Equipment->find_one(strid=>$$specs{"ddmPress$qty_index"}) if $qty_index and $$specs{"ddmPress$qty_index"};
 				foreach my $P ( @Papers ) {
 					if ( $Press and ( my $Stock_Setting = $Press->Stock_Setting( $P ) ) ) {
@@ -1374,6 +1382,8 @@ $log->debug("Didn't find specific paper $params{'width'} x $params{'height'}");
 					$Paper = $P;
 					last;
 				} # end foreach
+			} else {
+				$Paper = $Papers[0];
 			} # end if
 			if ( ( ! $Paper ) and @Papers ) {
 $log->debug("No paper found matching minimum_order want($$specs{'StockQuantity'.$qty_index})");

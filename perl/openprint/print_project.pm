@@ -680,7 +680,7 @@ sub create_edit_process {
 			if ( $$services{$ServiceType->name()} ) {
 				foreach my $s_id ( @{$$services{$ServiceType->name()}} ) {
 					if ( $statuses{$s_id} ne 'Completed' ) {
-						delete_service( $Project->id(), $s_id );
+						delete_service( $Project, $s_id );
 					} # end if
 				} # end foreach
 				delete $$services{$ServiceType->name()};
@@ -716,17 +716,16 @@ sub del_service {
 	# THis is an external wrapper 
 	my ( $r, $log, $dbh, $variable, $project_index, $service_id ) = @_;
 	my $Project = new openprint::Project( $project_index );
-	my %services = $Project->get_services();
-	if ( $services{$service_id} ) {
-		foreach my $service_index ( @{$services{$service_id}} ) {
-			delete_service( $project_index, $service_index );
+	my $services = $Project->services();
+	if ( $$services{$service_id} ) {
+		foreach my $service_index ( @{$$services{$service_id}} ) {
+			delete_service( $Project, $service_index );
 		} # end foreach
 	} # end if
 } # end sub del_service
 
 sub delete_service {
-	my ( $project_index, $service_index ) = @_;
-	my $Project = new openprint::Project( $project_index );
+	my ( $Project, $service_index ) = @_;
 	my $Service = $Project->Service( $service_index );
 	return $Service->delete();
 } # end sub delete_service

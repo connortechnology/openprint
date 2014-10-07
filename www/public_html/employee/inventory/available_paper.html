@@ -54,7 +54,7 @@ Please select a Paper to view/edit.<br>
 					<select id="owner_id" name="owner_id" size="1" onchange="filter_onChange(this,'');">
 					<option value=""> All </option>
 					<? echo ( 
-						make_drop_down( [ map { $_->id(), $_->name() } openprint::Company->find( id=>[sql::execute(undef, undef, q{SELECT DISTINCT owner_id FROM papers} )], order=>'lower(name)' ) ], $session{'/employee/inventory/available_paper.html?Owner'} ? $session{'/employee/inventory/available_paper.html?owner_id'} : $session{company_id} );
+						make_drop_down( [ map { $_->id(), $_->name() } openprint::Company->find( id=>[sql::execute(undef, undef, q{SELECT DISTINCT owner_id FROM papers} )], order=>'lower(name)' ) ], $session{'/employee/inventory/available_paper.html?owner_id'} );
 					) ?>
 					</select>
 					<input type="checkbox" name="owner_id_exclude" id="owner_id_exclude" value="1" onclick="filter_onChange(this,'');" <? echo ( checked( $session{'/employee/inventory/available_paper.html?owner_id_exclude'} ) ) ?> />

@@ -16,6 +16,7 @@
 
 package openprint::Estimating::Folding;
 use strict;
+use Carp;
 #use warnings;
 use Data::Dumper;
 
@@ -249,13 +250,13 @@ sub signature_needs {
 	} # end if
 
 	if ( $$specs{txtSignatureType} ) {
-		my $page_quantity = $$specs{'PageQuantity'.$qty_index};
 
 		if ( $$specs{txtSpreadSize} == 1 ) {
 			$openprint::log->warn("Folding not needed: spreadsize==1: $$specs{txtSpreadSize}") if DEBUG_NEEDS;
 			return 0;
 		} # end if
 		if ( $qty_index ) {
+			my $page_quantity = $$specs{'PageQuantity'.$qty_index};
 			if ( ( $page_quantity == 0 ) or ( $page_quantity == 2 ) ) {
 				$openprint::log->warn("Folding not needed: PageQuantity: $page_quantity") if DEBUG_NEEDS;
 				return 0;
@@ -268,6 +269,7 @@ sub signature_needs {
 			} # end if	
 		} else {
 			foreach my $qty_index ( $Project->quantity_indexes() ) {
+				my $page_quantity = $$specs{'PageQuantity'.$qty_index};
 				if ( $page_quantity == 2 ) {
 					$openprint::log->warn("Folding not needed: PageQuantity: $page_quantity") if DEBUG_NEEDS;
 					return 0;
@@ -567,7 +569,7 @@ $openprint::log->error("No folds from sigimpo");
 	my @Initial_Impositions;
 
 	my $width_folds = Math::Round::nearest( 1, $$sig_specs{txtWidth}/$$sig_specs{txtFinalWidth})-1;
-	my $height_folds = Math::Round::nearest( 1, $$sig_specs{txtHeight}/$$sig_specs{txtFinalHeight}) -1;
+	my $height_folds = Math::Round::nearest( 1, $$sig_specs{txtHeight}/$$sig_specs{txtFinalHeight})-1;
 	@$SignatureImposition{'width_folds','height_folds'} = ( $width_folds, $height_folds );
 	$openprint::log->debug("FOlds: $width_folds x $height_folds") if DEBUG;
 	if ( $$sig_specs{txtSignatureType} and $$sig_specs{txtSpreadSize} == 2 ) {
@@ -578,7 +580,15 @@ $openprint::log->error("No folds from sigimpo");
 		} # end if
 		$openprint::log->debug("FOlds: $width_folds x $height_folds") if DEBUG;
 	} # end if
+	if ( ( ! $width_folds ) and ( $$sig_specs{txtWidth} != $$sig_specs{txtFinalWidth} ) ) {
+		$width_folds = 1;
+	} 
+	if ( ( ! $height_folds ) and ( $$sig_specs{txtHeight} != $$sig_specs{txtFinalHeight} ) ) {
+		$height_folds = 1;
+	} 
 
+
+	$$SignatureImposition{page_quantity} = 1;
 # IF it's a W&T, we have to cut in half first, so just do it.
 	if ( $$SignatureImposition{runstyle} eq 'Work & Turn' ) {
 		my $i = $SignatureImposition->copy();
@@ -598,6 +608,7 @@ $openprint::log->error("No folds from sigimpo");
 		$SignatureImposition = $i;
 	} else {
 		my $i = $SignatureImposition->copy();
+		$$i{quantity} = 1;
 		push @Set_Of_Impositions, $i;
 	} # end if
 
@@ -789,7 +800,7 @@ $openprint::log->debug("Imps in this set: " . @$set );
 				} # end foreach set
 			} # end if
 		} # end if equipment type
-		$openprint::log->debug("Impositions sets before filtering: " . @My_All_Impositions );
+		$openprint::log->debug("Folding: Impositions sets before filtering: " . @My_All_Impositions );
 
 		# Remove duplicate sets
 		my %sets;
@@ -803,8 +814,8 @@ $openprint::log->debug("Imps in this set: " . @$set );
 			} 
 			$sets{$id} = 1;
 		} # end foreach
-if ( 0 ) {
 		$openprint::log->debug("Impositions sets after filtering: " . @My_All_Impositions );
+if ( 0 ) {
 	foreach my $set ( @My_All_Impositions ) {
 $openprint::log->debug("Imps in this set: " . @$set );
 		foreach my $i ( @{$set} ) {
@@ -1129,6 +1140,7 @@ $openprint::log->debug("No Fold") if DEBUG;
 			my @new_folded_impositions;
 			my @Used_Impositions;
 
+			my $override_pages = 0;
 			my $all_found = 1;
 			if ( (defined $$specs{"chkOverrideFold-$form-$qty_index"} ) and ( $$specs{"chkOverrideFold-$form-$qty_index"} eq 'Y' ) ) {
 				# Find out if folds satisfies the overrides
@@ -1138,6 +1150,10 @@ $openprint::log->debug("No Fold") if DEBUG;
 					next if ! $$specs{"FoldQty-$form-$qty_index-$index"};
 					next if ! $$specs{"FoldType-$form-$qty_index-$index"};
 					next if ! $$specs{"FoldImposition-$form-$qty_index-$index"};
+					if ( $$sig_specs{txtSignatureType} ) {
+						my ( $pages ) = $$specs{"FoldType-$form-$qty_index-$index"} =~ /(\d+)PageFold/;
+						$override_pages += $$specs{"FoldQty-$form-$qty_index-$index"} * $pages * $$specs{"FoldImposition-$form-$qty_index-$index"};
+					} # end if
 					$found{$index} = 0;
 
 					foreach my $FI ( @$Set_Of_Impositions ) {
@@ -1203,6 +1219,11 @@ $openprint::log->debug(qq`Wrong imposition: $$specs{"FoldImposition-$form-$qty_i
 						
 					} # end if ! found
 				} # end foreach index
+				if ( $override_pages > $SignatureImposition->imposition() * $SignatureImposition->pages() ) {
+					$$specs{alert} .= "You seem to be specifying more pages for folding than were printed for form $form quantity $qty_index<br/>";
+				} elsif ( $override_pages < $SignatureImposition->imposition() * $SignatureImposition->pages() ) {
+					$$specs{alert} .= "You seem to be specifying fewer pages for folding than were printed for form $form quantity $qty_index<br/>";
+				} # end if
 
 				foreach my $k ( keys %folds ) {
 					$all_found = 0 if ! $folds{$k}[0]{found};
@@ -1248,6 +1269,7 @@ $openprint::log->debug(qq`Wrong imposition: $$specs{"FoldImposition-$form-$qty_i
 
 				$fold_specs{"FoldType-$form-$qty_index-$fold_index"} = $Fold->type();
 				$fold_specs{"FoldQty-$form-$qty_index-$fold_index"} = $Imposition->quantity();
+				$fold_specs{"FoldPageQty-$form-$qty_index-$fold_index"} = $Imposition->page_quantity();
 				$fold_specs{"FoldImposition-$form-$qty_index-$fold_index"} = $Imposition->imposition();
 				$fold_specs{"FoldColumns-$form-$qty_index-$fold_index"} = $Imposition->columns();
 				$fold_specs{"FoldRows-$form-$qty_index-$fold_index"} = $Imposition->rows();
@@ -1592,7 +1614,7 @@ sub calc {
 			} # end if
 			my $i = new openprint::Imposition();
 			$i->load( $sig_specs, $qty_index );
-			$$i{Folds} = [ get_Folds( $specs, $sig_specs, $qty_index ) ];
+			$$i{Folds} = [ get_Folds( $specs, $i, $qty_index ) ];
 			$$i{needs_scoring} = openprint::Estimating::Scoring::signature_needs( $Project, $$calc_hash{ScoringSpecs}, $sig_specs, $i->Paper() ) if $$calc_hash{ScoringSpecs};
 			$$i{has_perforating} = openprint::Estimating::Perforating::signature_has_perforation( $$calc_hash{PerforatingSpecs}, $sig_specs );
 
@@ -1687,7 +1709,7 @@ foreach my $k ( keys %Signature_Results ) {
 					} 
 					$comparison_cost += $$o{Comparison};
 				}
-				my $results = openprint::Estimating::Stitching::signature_calc( $Project, @$calc_hash{'HasStitching','StitchingSpecs'}, $qty_index, $specs, 
+				my $results = openprint::Estimating::Stitching::signature_calc( $Project, @$calc_hash{'HasStitching','StitchingSpecs'}, $qty_index, 
 						[ map { $$_{Imposition} } @{$Perm} ], $calc_hash );
 				if ( $$results{Status} eq 'uncalculated' ) {
 					$comparison_cost += 100000;
@@ -2001,30 +2023,21 @@ sub reduce_impositions {
 		} else {
 			for ( my $i = 0; $i < @new; $i += 1 ) {
 				if ( $new[$i]->imposition() == $max_impo ) {
-					my $I2 = $new[$i]->copy();
-					my $I3 = $new[$i]->copy();
-					if ( $I2->columns() > 1 ) {
-						$I2->columns( int($I2->columns()/2) );
-						$I3->columns( $I3->columns() - $I2->columns() );
-					} else {
-						$I2->rows( int($I2->rows()/2) );
-						$I3->rows( $I3->rows() - $I2->rows() );
-					} # end if
+					foreach my $cuts ( cut_imposition( $new[$i] ) ) {
+                        my @new_impositions = @new;
+                        splice @new_impositions, $i, 1, @$cuts;
+                        @new_impositions = compact_impositions( @new_impositions ) if @new_impositions > 1;
+                        push @results, reduce_impositions( \@new_impositions );
+                    } # end foreach cuts
 
-					splice @new, $i, 1, ( $I2, $I3 );
-					$i += 1;
-					$extra = 1;
 				} # end if
 			} # end foreach I
-			if ( $extra ) {
-				@new = compact_impositions( @new );
-				push @results, reduce_impositions( \@new );
-				$extra = 0;
-			} # end if
 		} # end if
 
+if ( 0 ) {
 		my @new = @$impositions;
-		# SOmething like a 3x2 will be cut into a 1x2+2x2 but never a 2 3x1's... so do this
+		# SOmething like a 3x2 will be cut into a 1x2+2x2 but never a 2 3x1's... so do this: 
+		# Is this still the case?
 		for ( my $i = 0; $i < @new; $i += 1 ) {
 			if ( $new[$i]->imposition() == $max_impo ) {
 				if ( $new[$i]->rows() > 1 and $new[$i]->columns() > 1 ) {
@@ -2067,6 +2080,7 @@ sub reduce_impositions {
 			@new = compact_impositions( @new );
 			push @results, reduce_impositions( \@new );
 		} # end if
+}
 	} # end if
 	return @results;
 	
@@ -2240,6 +2254,9 @@ sub compact_impositions {
 	my @results;
 	while ( @_ ) {
 		my $Imposition = shift @_;
+if ( ref $Imposition ne 'openprint::Imposition' ) {
+Carp::cluck("Bad argument $Imposition passed to compact_impositions");
+}
 		$Imposition = $Imposition->copy();
 		push @results, $Imposition;
 
@@ -2282,14 +2299,21 @@ sub get_Folds {
 	my ( $folding_specs, $sig_specs, $qty_index ) = @_;
 	my @folds;
 
+	my $Source_Imposition;
+	if ( ref $sig_specs eq 'openprint::Imposition' ) {
+		$Source_Imposition = $sig_specs;
+		$sig_specs = $Source_Imposition->specs();
+	} else {
+		$Source_Imposition = new openprint::Imposition();
+		$Source_Imposition->load( $sig_specs, $qty_index );
+	} # end if
 	my $form = $$sig_specs{SignatureIndex};
 
 	foreach my $fold_index ( 1 .. 4 ) {
 		next if ! $$folding_specs{"FoldQty-$form-$qty_index-$fold_index"};
 		next if ! $$folding_specs{"FoldType-$form-$qty_index-$fold_index"};
 		if ( $$folding_specs{"ddmEquipment-$form-$qty_index"} ) {
-			my $Imposition = new openprint::Imposition();
-			$Imposition->load( $sig_specs, $qty_index );
+			my $Imposition = $Source_Imposition->copy();
 			$Imposition->columns( $$folding_specs{"FoldColumns-$form-$qty_index-$fold_index"} );
 			$Imposition->rows( $$folding_specs{"FoldRows-$form-$qty_index-$fold_index"} );
 			$Imposition->quantity( $$folding_specs{"FoldQty-$form-$qty_index-$fold_index"} );
@@ -2297,26 +2321,44 @@ sub get_Folds {
 			$Imposition->Press( $Folder );
 
 			my $Paper = $Imposition->Paper();
-			my $Fold = $Folder->Fold( {
-					type 			=>	$$folding_specs{"FoldType-$form-$qty_index-$fold_index"},
-					pages			=>	$Imposition->pages(),
-					page_columns	=>	$Imposition->page_columns(),
-					page_rows		=>	$Imposition->page_rows(),
-					page_width		=>	$Imposition->page_width(),
-					page_height		=>	$Imposition->page_height(),
-					spine_direction =>	$$Imposition{image_orientation},
-					gsm				=>	$Paper->gsm(),
-					imposition		=>	$$Imposition{imposition},
-					columns			=>	$$Imposition{columns},
-					rows			=>	$$Imposition{rows},
-					calliper		=>	$$Paper{calliper},
-#printing_type	=>	$ppt,
-					} );
-			$Imposition->Fold( $Fold );
-			push @folds, $Imposition;
+			my $find = {
+								type 			=>	$$folding_specs{"FoldType-$form-$qty_index-$fold_index"},
+								#pages			=>	$Imposition->pages(),
+								#page_columns	=>	$Imposition->page_columns(),
+								#page_rows		=>	$Imposition->page_rows(),
+								page_width		=>	$Imposition->page_width(),
+								page_height		=>	$Imposition->page_height(),
+								spine_direction =>	$$Imposition{image_orientation},
+								gsm				=>	$Paper->gsm(),
+								imposition		=>	$$Imposition{imposition},
+								columns			=>	$$Imposition{columns},
+								rows			=>	$$Imposition{rows},
+								calliper		=>	$$Paper{calliper},
+								#printing_type	=>	$ppt,
+								};
+			my $Fold = $Folder->Fold( $find );
+			if ( ! $Fold ) {
+				$_ = Data::Dumper::Dumper($find);
+				$openprint::log->error("CAnt get fold! on " . $Folder->to_string() . $_);
+			} else {
+				$openprint::log->debug("Got FOld: " . $Fold->to_string() );
+				$Imposition->Fold( $Fold );
+				if ( $Fold->pages() ) {
+					$$Imposition{pages} = $Fold->pages();
+					$Imposition->page_quantity( $$folding_specs{"FoldPageQty-$form-$qty_index-$fold_index"} );
+					if ( ! $$Imposition{page_quantity} ) {
+						$$Imposition{page_quantity} = $Source_Imposition->pages() / $Fold->pages();
+					} # end if
+				} # end if
+
+				push @folds, $Imposition;
+			} # end if
 		} # end if
 #$folding_imposition->display('Fold ' . $$folding_specs{"FoldType-$form-$qty_index-$fold_index"} ) if DEBUG;
 	} # end foreach fold_index
+if ( ! @folds ) {
+	$openprint::log->debug("Got no folds for sig $form : " . $Source_Imposition->to_string() );
+}
 	return @folds;
 } # end sub get_Folds
 

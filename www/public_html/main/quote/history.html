@@ -34,14 +34,14 @@
 				<label for="QuoteID">Quote ID</label>
 				<? echo ( input(type=>'cardinal', id=>'QuoteID', name=>'QuoteID', value=>$param{QuoteID}, onkeydown=>q`if(event.keyCode == 13){load_quotes(this.form);};` ); ) ?>
 			</li>
-<? if ( sets::isin( $session{'user_type'}, ['E','A'] ) ) ?>
+<? if ( sets::isin( $session{user_type}, ['E','A'] ) ) ?>
 			<li>
 				<label>Quoted By Company</label>
 				<select name="company_id" id="company_id" onchange="load_quotes(this.form);">
 <? echo ( openprint::Company::get_dropdown($session{'/main/quote/history.html?company_id'} ? $session{'/main/quote/history.html?company_id'} : $session{'company_id'}) ) ?>				
 				</select>
 			</li>
-<? endif ( sets::isin( $session{'user_type'}, ['E','A'] ) ) ?>
+<? endif ( sets::isin( $session{user_type}, ['E','A'] ) ) ?>
 			<li>
 				<label for="QuotedFor">Quoted For</label>
 				<input type="text" name="QuotedFor" id="QuotedFor" onkeyup="if( this.value.length > 1 ){load_quotes(this.form);}" />
@@ -52,6 +52,7 @@
 				to
 	<? echo ( date_select_session( '/main/quote/history.html', 'created_on_end', { onchange=>'load_quotes(this.form);' } ); ) ?>
 			</li>
+			<li><label>Deleted</label><? echo ( radio( 'deleted', ['1','Yes','0','No','','All'], $session{'/main/quote/history.html?deleted'}, { onclick=>'load_quotes(f1);' } ); ) ?></li>
 			<ul>
 			<p class="buttons">
 				<? echo ( join( '',
@@ -62,6 +63,6 @@
 			</p>
 		</fieldset>
 	</form>
-<div id="QuoteList"><?include('_history.html')?></div>
+	<div id="QuoteList"><?include('_history.html')?></div>
 	</div>
 </div>

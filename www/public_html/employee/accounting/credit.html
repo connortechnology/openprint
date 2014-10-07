@@ -79,9 +79,10 @@ button('Export',{ onclick=>q`var form = $('f1');form.btnFunction.value='Export';
 </fieldset>
 <fieldset><legend>Unpaid Orders</legend>
 <? eval (
+	my %Order_Statuses = map { $_->name(), $$_{id} } openprint::Order_Status->find();
 	$$variable{UnpaidOrders} = [ openprint::Order->find(
 		company_id	=> $param{'ddmCustomer'},
-		'status not in'	=>	[ 'Cancelled','Deleted','Incomplete' ],
+		'status_id not in'	=>	[ @Order_Statuses{'Cancelled','Deleted','Incomplete'} ],
 		'owing null_or_>'	=>	0,
 		order		=> $openprint::Order::fields{'created_on'},
 		) ];

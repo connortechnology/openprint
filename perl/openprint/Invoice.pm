@@ -371,6 +371,21 @@ sub can_view {
 	return 1;
 } # end sub can_view
 
+sub can_send {
+	return 1 if ! $_[0]{id};
+	my $User = $_[1] ? $_[1] : new openprint::User( $openprint::session{user_id} );
+
+	if ( $$User{type} eq 'A' ) {
+		$log->debug("$$User{firstname} Is administrator") if $debug;
+		return 1;
+	} # end if
+
+        if ( openprint::usergroup::is_user_in( ['Accounting'], $$User{id} ) )  {
+                $log->debug("$$User{firstname} Is in Accounting'") if $debug;
+                return 1;
+        } # end i
+} # end sub can_send
+
 sub upload {
 	openprint::Object_Asset::upload( @_ );
 } # end sub upload

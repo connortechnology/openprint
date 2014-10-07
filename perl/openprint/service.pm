@@ -215,7 +215,7 @@ sub auto_calculate {
 	if ( ! openprint::Estimating::Folding::neccessary( $Project ) ) {
 		if ( $$services{Folding} ) {
 			while ( my $si = shift @{$$services{'Folding'}} ) {
-				openprint::print_project::delete_service( $$Project{'id'}, $si );
+				openprint::print_project::delete_service( $Project, $si );
 			} # end while
 			delete $$services{Folding};
 		} # end if
@@ -227,7 +227,10 @@ sub auto_calculate {
 
 	if ( openprint::Estimating::Paper::neccessary( $Project ) ) {
 		if ( ! $$services{'Paper'} ) {
-			push @{$$services{'Paper'}}, $Project->add_service( 'Paper' );
+			$_ = $Project->add_service( 'Paper' );
+			if ( ! $$services{'Paper'} ) {
+				push @{$$services{'Paper'}}, $_;
+			} # end if	
 		} # end if
 	} # end if
 
@@ -241,59 +244,55 @@ sub auto_calculate {
 require openprint::Estimating::PerfectBound;
 	if ( openprint::Estimating::PerfectBound::neccessary( $Project ) ) {
 		if ( ! $$services{'PerfectBound'} ) {
-			push @{$$services{'PerfectBound'}}, $Project->add_service( 'PerfectBound' );
+			$_ = $Project->add_service( 'PerfectBound' );
+			push @{$$services{'PerfectBound'}}, $_ if ! $$services{PerfectBound};
 		} # end if
 	} elsif ( $$services{'PerfectBound'} ) {
 		while ( my $si = shift @{$$services{'PerfectBound'}} ) {
-			openprint::print_project::delete_service( $$Project{'id'}, $si );
+			openprint::print_project::delete_service( $Project, $si );
 		} # end while
 		delete $$services{'PerfectBound'};
 	} # end if
 
-require openprint::Estimating::Stitching;
+
+			
+	require openprint::Estimating::Stitching;
 	if ( openprint::Estimating::Stitching::neccessary( $Project ) ) {
 		if ( ! ( $$services{'SaddleStitching'} or $$services{'LoopStitching'} ) ) {
 			push @{$$services{'SaddleStitching'}}, $Project->add_service( 'SaddleStitching' );
 		} # end if
 	} # end if
 
-	require openprint::Estimating::ThreeKnifeTrim;
-	if ( openprint::Estimating::ThreeKnifeTrim::neccessary( $Project ) ) {
-		if ( ! $$services{'ThreeKnifeTrim'} ) {
-			push @{$$services{'ThreeKnifeTrim'}}, $Project->add_service( 'ThreeKnifeTrim' );
+	foreach my $service_type ( 'ThreeKnifeTrim', 'Tipping', 'Blowing' ) {
+		my $module = 'openprint::Estimating::'.$service_type;
+		eval ( 'require '.$module.';' );
+		if ( my $function = $module->can('neccessary') ) {
+			if ( $function->( $Project ) and ! $$services{$service_type} ) {
+				$_ = $Project->add_service( $service_type );
+				push @{$$services{$service_type}}, $_ if $_;
+			} # end if
 		} # end if
-	} # end if
+	} # end foreach
 
-	require openprint::Estimating::Tipping;
-	if ( openprint::Estimating::Tipping::neccessary( $Project ) ) {
-		if ( ! $$services{'Tipping'} ) {
-			$_ = $Project->add_service( 'Tipping' );
-			push @{$$services{'Tipping'}}, $_ if $_;
+	foreach my $service_type ( 'Collating', 'Aqueous', 'UVCoating' ) {
+		my $module = 'openprint::Estimating::'.$service_type;
+		eval ( 'require '.$module.';' );
+		$openprint::log->error("Error requiring opepnrint::Estimating::$service_type: $@") if $@;
+		if ( my $function = $module->can('neccessary') ) {
+			if ( $function->( $Project ) ) {
+				$openprint::log->debug("$service_type is neccessary");
+				if ( ! $$services{$service_type} ) {
+					$_ = $Project->add_service( $service_type );
+					push @{$$services{$service_type}}, $_ if $_;
+				} # end if
+			} elsif ( $$services{$service_type} ) {
+				foreach my $si ( @{$$services{$service_type}} ) {
+					openprint::print_project::delete_service( $Project, $si );
+				} # end foreach
+				delete $$services{$service_type};
+			} # end if
 		} # end if
-	} # end if
-
-	require openprint::Estimating::Blowing;
-	if ( openprint::Estimating::Blowing::neccessary( $Project ) ) {
-		if ( ! $$services{'Blowing'} ) {
-			$_ = $Project->add_service( 'Blowing' );
-			push @{$$services{'Blowing'}}, $_ if $_;
-		} # end if
-	} # end if
-
-	require openprint::Estimating::Collating;
-	if ( openprint::Estimating::Collating::neccessary( $Project ) ) {
-		if ( ! $$services{'Collating'} ) {
-			$_ = $Project->add_service( 'Collating' );
-			push @{$$services{'Collating'}}, $_ if $_;
-		} # end if
-	} else {
-		if ( $$services{'Collating'} ) {
-			foreach my $si ( @{$$services{'Collating'}} ) {
-				openprint::print_project::delete_service( $$Project{'id'}, $si );
-			} # end foreach
-			delete $$services{'Collating'};
-		} # end if
-	} # end if
+	} # end foreach
 
 # Proofs
 	if ( ! ( $$services{'Proofs'} or $$services{'NoPrinting'} ) ) {
@@ -327,7 +326,7 @@ require openprint::Estimating::Stitching;
 
 		if ( $neccessary and ! $$services{$service_name} ) {
 			$_ = $Project->add_service($service_name);
-			push @{$$services{$service_name}}, $_ if $_;
+			push @{$$services{$service_name}}, $_ if $_ and !$$services{$service_name};
 		} # end if
 	} # end foreach service_name;
 
@@ -492,7 +491,9 @@ $openprint::log->error("Doing internal calc without service_index or, not found"
 	} else {
 		$log->error($package . ' cant calc');
 	} # end if
-	$Project->update_status();
+
+	# This is too heavy
+	#$Project->update_status();
 	$Project->unlock();
 	return \%specs;
 } # end sub internal_calc

@@ -107,7 +107,6 @@ sub calc {
 			$log->error("No ServiceMinimum ");
 		} # end if
 	}
-		
 
 	foreach my $qty_index ( $Project->quantity_indexes() ) {
 

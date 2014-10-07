@@ -194,10 +194,10 @@ sub load_used {
 	$$self{'dutch_columns'} = $$specs{'hdnImpositionDutchColumnsUsed'} ? $$specs{'hdnImpositionDutchColumnsUsed'} : $$specs{'hdnImpositionDutchColumns'.$qty_index};
 	$$self{'dutch_orientation'} = $$self{'image_orientation'} eq 'Vertical' ? 'Horizontal' : 'Vertical';
 	$$self{'bleed_size'} = $$specs{'ddmBleedSize'.$qty_index};
-	if ( ! $$self{'Press'} ) {
-		if ( $$specs{'UsePress'} ) {
-			$$self{'Press'} = openprint::Equipment->find_one('strid'=>$$specs{'UsePress'});
-			if ( ! $$self{'Press'} ) {
+	if ( ! $$self{Press} ) {
+		if ( $$specs{UsePress} ) {
+			$$self{Press} = openprint::Equipment->find_one( strid=>$$specs{UsePress} );
+			if ( ! $$self{Press} ) {
 				# This can happen when a press is deleted
 				$openprint::log->debug("No Press found for $qty_index " . $$specs{'UsePress'} );
 			} # end if
@@ -206,8 +206,8 @@ sub load_used {
 			if ( ! $$specs{'ddmPress'.$qty_index} ) {
 				#$openprint::log->error("No ddmPress for $qty_index");
 			} else {
-				$$self{'Press'} = openprint::Equipment->find_one('strid'=>$$specs{'ddmPress'.$qty_index});
-				if ( ! $$self{'Press'} ) {
+				$$self{Press} = openprint::Equipment->find_one( strid=>$$specs{'ddmPress'.$qty_index});
+				if ( ! $$self{Press} ) {
 					$openprint::log->error("No Press found for $qty_index " . $$specs{'ddmPress'.$qty_index} );
 				} # end if
 			} # end if
@@ -227,10 +227,10 @@ sub load {
 	$$self{page_quantity} = $$self{quantity} = 1;
 	$$self{specs} = $specs;
 	$$self{paper} = openprint::Paper::load_from_signature( $Project, $specs, $qty_index ) if ! $$self{'paper'};
-	if ( ! $$self{'Press'} ) {
+	if ( ! $$self{Press} ) {
 		if ( ! $$specs{'ddmPress'.$qty_index} ) {
-			$openprint::log->error("No ddmPress for $qty_index for signature $$specs{SignatureIndex}");
-Carp::cluck("No press in Imposition::load");
+			#$openprint::log->error("No ddmPress for $qty_index for signature $$specs{SignatureIndex}");
+#Carp::cluck("No press in Imposition::load");
 		} else {
 #Carp::cluck("Loading press in Imposition::load");
 			$$self{'Press'} = openprint::Equipment->find_one('strid'=>$$specs{'ddmPress'.$qty_index});
@@ -513,7 +513,10 @@ sub sheet_area {
 } # end sub sheet_area
 
 sub pages {
-	return $_[0]{'pages'};
+	if ( @_ > 1 ) {
+		$_[0]{pages} = $_[1];
+	} # end if
+	return $_[0]{pages};
 	#return $_[0]{'pages'} ? $_[0]{'pages'} : $_[0]{'spreads'} * $_[0]{'spread_size'};
 }
 

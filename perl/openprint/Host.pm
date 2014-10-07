@@ -3,8 +3,8 @@ require openprint::Object;
 
 package openprint::Host_Interface;
 our @ISA = qw( openprint::Object );
-use vars qw( $debug $table @identified_by %fields %transforms %defaults );
-$debug = 1;
+use vars qw( $debug $table @identified_by %find_fields %fields %transforms %defaults );
+$debug = 0;
 $table = 'host_interfaces';
 @identified_by = ( 'mac' );
 
@@ -15,6 +15,9 @@ $table = 'host_interfaces';
 	dhcp			=>	'dhcp',
     host_id         =>  'host_id',
 );
+%find_fields = (
+	whitelist	=>	'(SELECT whitelist FROM Hosts WHERE Hosts.id=host_id)',
+);
 %defaults	= (
 	dhcp		=>	0,
 	ip			=>	undef,
@@ -24,6 +27,7 @@ $table = 'host_interfaces';
 sub Host {
 	return new openprint::Host( $_[0]{host_id} );
 } # end sub Host;
+
 sub resolve {
 	my ( $self ) = @_;
 	my @h = gethostbyaddr(pack('C4',split('\.',$$self{ip})),2);
@@ -35,6 +39,30 @@ sub resolve {
 	return undef;
 } # end sub resolve
 
+sub get_mac {
+	my ( $self ) = @_;
+
+	my ( $subnet ) = $$self{'ip'} =~ /^(\d+\.\d+\.\d+)\.\d+$/;
+
+	my $use_iface;
+
+	require IO::Interface::Simple;
+	foreach my $iface ( IO::Interface::Simple->interfaces ) {
+$openprint::log->debug("Looking at $iface. " . $iface->address . ', subnet: ' . $subnet );
+		if ( $iface->address =~ /^$subnet\.\d+$/ ) {
+			$use_iface = $iface;
+		} # end if
+	}
+
+	if ( $use_iface ) {
+		require Net::ARP;
+		my $mac = Net::ARP::arp_lookup( $use_iface, $$self{'ip'} );
+		$openprint::log->debug("Mac: $mac");
+		return $mac;
+	} else {
+		$openprint::log->debug("Unable to determine interface");
+	} # end if
+} # end sub get_mac
 package openprint::Host_Notification;
 our @ISA = qw( openprint::Object );
 use vars qw( $debug $table @identified_by %fields %transforms %defaults );
@@ -86,7 +114,7 @@ package openprint::Host;
 our @ISA = qw( openprint::Object );
 
 use vars qw( $debug $table $serial %fields %find_fields %transforms %defaults %types );
-$debug = 1;
+$debug = 0;
 $table = 'hosts';
 $serial = 'hosts_id_seq';
 %fields = (
@@ -137,30 +165,6 @@ $serial = 'hosts_id_seq';
 	'notified'=>	0,
 	location_id		=>	undef,
 );
-sub get_mac {
-	my ( $self ) = @_;
-
-	my ( $subnet ) = $$self{'ip'} =~ /^(\d+\.\d+\.\d+)\.\d+$/;
-
-	my $use_iface;
-
-	require IO::Interface::Simple;
-	foreach my $iface ( IO::Interface::Simple->interfaces ) {
-$openprint::log->debug("Looking at $iface. " . $iface->address . ', subnet: ' . $subnet );
-		if ( $iface->address =~ /^$subnet\.\d+$/ ) {
-			$use_iface = $iface;
-		} # end if
-	}
-
-	if ( $use_iface ) {
-		require Net::ARP;
-		my $mac = Net::ARP::arp_lookup( $use_iface, $$self{'ip'} );
-		$openprint::log->debug("Mac: $mac");
-		return $mac;
-	} else {
-		$openprint::log->debug("Unable to determine interface");
-	} # end if
-} # end sub get_mac
 
 sub destroy {
 	my $error;
@@ -270,6 +274,14 @@ sub Location {
 	require openprint::Location;
 	return new openprint::Location( $_[0]{location_id} );
 } # end sub Location
+
+sub resolve {
+	foreach my $Interface (  $_[0]->Interfaces() ) {
+		my $hostname = $Interface->resolve();
+		return $hostname if $hostname;
+	} # end foreach Interface
+	return undef;
+} # end sub resolve
 
 1;
 __END__

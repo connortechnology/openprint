@@ -114,24 +114,30 @@ while (my $buf = <STDIN>) {
 	if ( $last_update < (time-3600) ) {
 		$last_update = time;
 
-		%whitelist = map{ $_->ip(), $_ } openprint::Host->find( whitelist => 1, 'ip is null' => 0 );
-		$openprint::log->debug(join("\n", map { 'whitelist: ' . $_->ip() } openprint::Host->find( whitelist => 1, 'ip is null' => 0 ) ) ) if $$opts{debug};
+		%whitelist = ();
+		foreach my $Host ( openprint::Host->find( whitelist => 1 ) ) {
+			foreach my $I ( $Host->Interfaces() ) {
+				next if ! $I->ip();
+				$whitelist{$I->ip()} = $Host;
+			} # end foreach Interfaces
+		} # end foreach Host
+		$openprint::log->debug(join("\n", map { 'whitelist: ' . $_ } keys %whitelist ) ) if $$opts{debug};
 
 		# If a blacklist is specified, update it on start
 		if ( $opts->{blacklist} ) {
 			if ( ! open( FH, '>'.$opts->{blacklist} ) ) {
 				die 'Unable to open blacklist: ' . $opts->{blacklist} . "\n";
 			} else {
-				foreach my $Host ( openprint::Host->find( blacklist => 1, order =>'ip') ) {
-					my $macs = $Host->mac();
-					if ( $macs and @{$macs} ) {
-						foreach my $mac ( @{$macs} ) {
+				foreach my $Host ( openprint::Host->find( blacklist => 1) ) {
+					foreach my $Interface ( $Host->Interfaces() ) {
+						my $mac = $Interface->mac();
+						if ( $mac ) {
 							$mac =~ s/:/\-/g;
 							print FH "~$mac\n";
-						} # end foreach mac
-					} elsif ( $Host->ip() ) {
-						print FH $Host->ip()."\n";
-					} # end if
+						} elsif ( $Interface->ip() ) {
+							print FH $Interface->ip()."\n";
+						} # end if
+					} # end foreach Interface
 				} # end foreach Host
 				close(FH);
 			} # end if
@@ -196,13 +202,17 @@ print ( $buf);
 	if ( $server_response == 404 ) {
 
 		if ( ! $host_counts{$ip} ) {
-			my $Host = openprint::Host->find_one(ip=>$ip);
-			if ( $Host ) {
-				$host_counts{$$Host{ip}} = $Host;
+			my $Interface = openprint::Host_Interface->find_one(ip=>$ip);
+			if ( $Interface ) {
+				my $Host = $Interface->Host();
+				$host_counts{$$Interface{ip}} = $Host;
 			} else {
-				$host_counts{$ip} = new openprint::Host();
-				$host_counts{$ip}->ip( $ip );
-				$host_counts{$ip}->hostname( $hostname );
+				my $Host = $host_counts{$ip} = new openprint::Host();
+				$Interface = new openprint::Host_Interface();
+				$$Host{Interfaces} = [ $Interface ];
+				$Host->hostname( $hostname );
+				$Host->save();
+				$Interface->save({ ip=>$ip, host_id=>$$Host{id} } );
 			} # end if
 		} # end if
 		$host_counts{$ip}{count} += 1;
