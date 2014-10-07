@@ -487,18 +487,6 @@ $log->debug("group $group_id");
 		) {
 			openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $ss_id, $spec, $$param{$spec.$group_id} );
 		} # end foreach spec
-		foreach my $spec ( 'PrintingType','StockType' ) {
-			next if ! exists $$param{$spec.'-'.$group_id};
-			foreach my $qty_index ( $Project->quantity_indexes() ) {
-				if ( $$param{$spec.'-'.$group_id} ) {
-					openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $ss_id, $spec.$qty_index, $$param{$spec.'-'.$group_id} );
-					openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $ss_id, 'Override'.$spec.$qty_index, 'Y' );
-				} else {
-					openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $ss_id, 'Override'.$spec.$qty_index, '' );
-				} # end if
-			} # end foreach qty_index
-		} # end foreach spec
-	
 	} # end foreach
 
 	my $old_bindery_type = get_book_type( $Project );

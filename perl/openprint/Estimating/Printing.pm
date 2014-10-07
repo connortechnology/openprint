@@ -1081,6 +1081,10 @@ $openprint::log->debug("Skipping cuz ddmPress$qty_index ne $$Press{strid}");
 	
 		} # end if
 		my $printing_type = $Press->specification('Printing Type');
+		if ( ( $$project{ProjectSpecs}{"PrintingType-$$specs{Group}"} ) and ( $$project{ProjectSpecs}{"PrintingType-$$specs{Group}"} ne $printing_type ) ) {
+			$openprint::log->warn("QTY $qty_index Press $$Press{strid} Printing Type ($printing_type) is not the book overriden type " . $$project{ProjectSpecs}{"PrintingType-$$specs{Group}"} ) if DEBUG;
+            next;
+		} # en dif
 		if ( ( defined $$specs{'OverridePrintingType'.$qty_index} ) and ( $$specs{'OverridePrintingType'.$qty_index} eq 'Y' ) ) {
 			if ( $printing_type ne $$specs{'PrintingType'.$qty_index} ) {
 				$openprint::log->warn("QTY $qty_index Press $$Press{strid} Printing Type ($printing_type) is not the overriden type " . $$specs{'PrintingType'.$qty_index} ) if DEBUG;
@@ -1331,6 +1335,13 @@ $openprint::log->debug("Skipping cuz not $height");
 				next;
 			} 
 		} 
+
+			if ( ( $$project{ProjectSpecs}{"StockType-$$specs{Group}"} ) and ( $$project{ProjectSpecs}{"StockType-$$specs{Group}"} ne $$Paper{'type'} )) {
+				if ( DEBUG ) {
+					$openprint::log->debug("Not overriden stock stype: " . $Paper->to_string() );
+				} # end if
+				next;
+			} # end if
 			if ( ( $$specs{'OverrideStockType'.$qty_index} eq 'Y' ) and ( $$Paper{'type'} ne $$specs{'StockType'.$qty_index} ) ) {
 				if ( DEBUG ) {
 					$openprint::log->debug("Not overriden stock stype: " . $Paper->to_string() );
