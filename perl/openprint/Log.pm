@@ -83,7 +83,7 @@ sub ip_address {
 		} # end if
 		$_[0]{host_id} = $Host->id();
 	} # end if
-	return join('<br/>', map { $_->ip() } $Host->Interfaces() );
+	return join('<br/>', map { $_->ip() ? $_->ip() : () } $Host->Interfaces() );
 } # end sub ip_address
 
 sub Host {

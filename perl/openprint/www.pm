@@ -382,11 +382,12 @@ $log->error("Unable to load equipment.	No PPF for you for signature $$PPF{'signa
 			my ( $proc ) = $filename =~ /(.*)\.\w*$/;
 			if ( $proc ) {
 				my $module = join('_',@path);
-				eval {
-					require "openprint/$module.pm";
-					('openprint::'.$module)->$proc( $r, $log, $dbh, \%variable );
-				};
-				$log->error( "Eval error of require $module :: $proc, Reason: " . $@ ) if $@;
+				require "openprint/$module.pm";
+				if ( my $function = ('openprint::'.$module)->can($proc) ) {
+					$function->($r, $log, $dbh, \%variable );
+				} else {
+					$log->error( "Eval error of require $module :: $proc, Reason: " );
+				}
 			} # end if
 		} # end if
 	} elsif ( sets::isin( $first, [ 'content', 'account' ] ) ) { # main
@@ -394,11 +395,11 @@ $log->error("Unable to load equipment.	No PPF for you for signature $$PPF{'signa
 		if ( $proc ) {
 			my $module = join('_',@path);
 			$log->debug("Calling $module :: $proc");
-			eval {
-				require "openprint/$module.pm";
-				('openprint::'.$module)->$proc( $r, $log, $dbh, \%variable );
-			};
-			$log->error( "Eval error of require $module :: $proc, Reason: " . $@ ) if $@;
+			if ( my $function = ('openprint::'.$module)->can($proc) ) {
+				$function->($r, $log, $dbh, \%variable );
+			} else {
+				$log->error( "Eval error of require $module :: $proc, Reason: " );
+			}
 		} # end if
 	} elsif ( $first eq 'main' ) { # main
 		if ( $second eq 'project' ) {
@@ -453,12 +454,15 @@ $log->debug("Service: " . $Service->to_string() );
 						$status = openprint::print::publication_pages( $r, $log, $dbh, \%variable );
 					} elsif ( $filename eq 'ScratchPads.html' ) {
 						$status = openprint::print::publication_pages( $r, $log, $dbh, \%variable );
-					} elsif ( $filename =~ /^_.*\.html$/ ) {
-						eval( 'require openprint::'.join('_', @path ) );
-						$log->warn( "Eval error of require, Reason: " . $@ ) if $@;
-						my ( $proc ) = $filename =~ /(.*)\.\w*$/;
-						eval( 'openprint::'.join('_',@path).'::'.$proc.'( $r, $log, $dbh, \%variable );' );
-						$log->warn( "Eval error of ($proc), Reason: " . $@ ) if $@;
+					} elsif ( $filename =~ /^(_.*)\.html$/ ) {
+						my $proc = $1;
+						my $module = join('_',@path);
+						require 'openprint/'.$module;
+						if ( my $function = ('openprint::'.$module)->can($proc) ) {
+							$function->($r, $log, $dbh, \%variable );
+						} else {
+							$log->error( "Eval error of require $module :: $proc, Reason: " );
+						}
 						$status = openprint::print::print_prices( $r, $log, $dbh, $session{_session_id}, \%variable );
 					} else {
 						$status = openprint::print::print_prices( $r, $log, $dbh, $session{_session_id}, \%variable );
@@ -495,17 +499,25 @@ $log->debug("Service: " . $Service->to_string() );
 						require openprint::Estimating::Collating;
 						openprint::Estimating::Collating::display( $log, $dbh, \%variable, $project_index, $service_index );
 					} elsif ( $filename =~ /^(\w*).html$/ ) {
-#$openprint::log->debug("$1");
-						eval sprintf('require openprint::Estimating::%1$s;
-						openprint::Estimating::%1$s::display( $log, $dbh, \%variable, $project_index, $service_index );', $1 );
-						$log->warn( "Eval error of require, Reason: " . $@ ) if $@;
-					
+						my $proc = $1;
+						my $module = join('_',@path);
+						require "openprint/Estimating/$module.pm";
+						if ( my $function = ('openprint::Estimating/'.$module)->can('display') ) {
+							$function->($log, $dbh, \%variable, $project_index, $service_index );
+						} else {
+							$log->error( "Eval error of require $module :: $proc, Reason: " );
+						}
 					} # end if
 				} elsif ($third eq 'spec') {
 					if ( $filename =~ /^(\w*).html$/ ) {
-						eval sprintf('require openprint::Estimating::%1$s;
-						openprint::Estimating::%1$s::display( $log, $dbh, \%variable, $project_index, $service_index );', $1 );
-						$log->warn( "Eval error of require, Reason: " . $@ ) if $@;
+						my $proc = $1;
+						my $module = join('_',@path);
+						require "openprint/Estimating/$module.pm";
+						if ( my $function = ('openprint::Estimating/'.$module)->can('display') ) {
+							$function->($log, $dbh, \%variable, $project_index, $service_index );
+						} else {
+							$log->error( "Eval error of require $module :: $proc, Reason: " );
+						}
 					} # end if
 				} elsif ($third eq 'pack') {
 					if ( $filename eq 'pack_by_weight.html' ) {
@@ -538,11 +550,12 @@ $log->debug("Service: " . $Service->to_string() );
 			my ( $proc ) = $filename =~ /^(.*)\.(html|json|xml|rss)$/;
 			if ( $proc ) {
 				my $module = join('_', ($first, $second));
-				eval{ 
-					require "openprint/$module.pm"; 
-					('openprint::'.$module)->$proc( $r, $log, $dbh, \%variable );
-				};
-				$log->error( "Eval error of ($module $proc), Reason: " . $@ )	if $@;
+				require "openprint/$module.pm"; 
+				if ( my $function = ('openprint::'.$module)->can($proc) ) {
+					$function->($r, $log, $dbh, \%variable );
+				} else {
+					$log->error( "Eval error of require $module :: $proc, Reason: " );
+				}
 			} # end if
 		} else {
 			$log->debug($ENV{'DOCUMENT_ROOT'}.$uri . ' does not exist.');
@@ -554,11 +567,12 @@ $log->debug("Service: " . $Service->to_string() );
 			if ( $proc ) {
 				my $module = lc $first;
 				$module .= '_'.$second if $second;
-				eval{
-					require "openprint/$module.pm"; 
-					('openprint::'.$module)->$proc( $r, $log, $dbh, \%variable );
-				};
-				$log->warn( "Eval error of ($module $proc), Reason: " . $@ ) if $@;
+				require "openprint/$module.pm"; 
+				if ( my $function = ('openprint::'.$module)->can($proc) ) {
+					$function->($r, $log, $dbh, \%variable );
+				} else {
+					$log->error( "Eval error of require $module :: $proc, Reason: " );
+				}
 			} # end if
 		} else {
 			$log->debug("No firstSo or non-existant $uri");
