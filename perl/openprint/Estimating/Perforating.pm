@@ -145,7 +145,9 @@ sub calc {
 				$status = 'uncalculated';
 				next;
 			} # end if
-			my %Price = signature_calc( $Project, $service_index, $specs, $signature_service_index, $sig_specs, $qty_index );
+			my $Imposition = new openprint::Imposition();
+			$Imposition->load( $sig_specs, $qty_index );
+			my %Price = signature_calc( $Project, $service_index, $specs, $signature_service_index, $sig_specs, $qty_index, $Imposition );
 			if ( ! ( $$specs{"txtVerticalQty-$$sig_specs{SignatureIndex}"} or $$specs{"txtHorizontalQty-$$sig_specs{SignatureIndex}"} ) ) {
 				$$specs{"txtImposition-$$sig_specs{SignatureIndex}-$qty_index"} = 0;
 				$$specs{"txtLayoutWidth-$$sig_specs{SignatureIndex}-$qty_index"} = 0;
@@ -214,8 +216,8 @@ sub signature_calc {
 	my $form = $$sig_specs{SignatureIndex};
 
     my %Results = (
-        'Status' => 'calculated',
-		'Breakdown'	 => "Signature: $form<br/>" . ( $$sig_specs{PageQuantity}  ? ' ' . $$sig_specs{PageQuantity}  . 'pages' : '' ),
+        Status => 'calculated',
+		Breakdown	 => "Signature: $form<br/>" . ( $$sig_specs{PageQuantity}  ? ' ' . $$sig_specs{PageQuantity}  . 'pages' : '' ),
     );
 	$Results{Breakdown} .= "Signature: $$sig_specs{txtServiceDescription}, " if $$sig_specs{txtServiceDescription};
 
@@ -257,10 +259,9 @@ sub signature_calc {
 
 
 	if ( ! $imposition ) {
+$openprint::log->error("Really shouldn't be lading imposition here, too slow");
 		$imposition = new openprint::Imposition();
 		$imposition->load( $sig_specs, $qty_index );
-	} else {
-		$imposition = $imposition->copy();
 	} # end if
 	if ( (defined $$specs{"chkOverrideImposition-$form-$qty_index"}) and ( $$specs{"chkOverrideImposition-$form-$qty_index"} eq 'Y' ) ) {
 		if ( $$specs{"txtImposition-$form-$qty_index"} > $imposition->imposition() or $$specs{"txtImposition-$form-$qty_index"} <= 0 ) {
@@ -273,7 +274,7 @@ sub signature_calc {
 	my @cut_impositions = ();
 	if ( $cutting_service_index ) {
 		my @imps = openprint::imposition::get_all_impositions( $imposition );
-$openprint::log->debug("How many impositions do we get? " . @imps );
+$openprint::log->debug("How many impositions do we get? " . @imps ) if DEBUG;
 		for ( my $i = 0; $i < @imps; $i += 1 ) {
 			if ( ( $$specs{"chkOverrideImposition-$form-$qty_index"} ne 'Y' )
 					or ( $$specs{"txtImposition-$form-$qty_index"} == $imps[$i]->imposition() )
@@ -758,6 +759,7 @@ sub summary {
 			my $Service = $Project->Service( $sig_id );
 			my $sig_specs = $Service->specs();
 			my $form = $$sig_specs{SignatureIndex};
+			next if ! ( $$specs{"txtVerticalQty-$form"} and $$specs{"txtHorizontalQty-$form"} );
 			$html .= 'Form ' . $form;
 			$html .= $$sig_specs{txtServiceDescription} if $$sig_specs{txtServiceDescription};
 			$html .= ': ';
@@ -772,6 +774,23 @@ sub summary {
 
 sub save {
 } # end sub save
+
+sub has_overrides {
+    my ( $Project, $service_id, $specs ) = @_;
+    $specs = openprint::service::get_specs_ref( $Project, $service_id ) if ! $specs;
+
+    my @v;
+    foreach my $s_s_id ( $Project->signatures() ) {
+        my $sig_specs = openprint::service::get_specs_ref( $Project, $s_s_id );
+        foreach my $qty_index ( $Project->quantity_indexes() ) {
+            push @v, "chkOverrideEquipment-$$sig_specs{'SignatureIndex'}-$qty_index" if $$specs{"chkOverrideEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"};
+            push @v, "chkOverrideImposition-$$sig_specs{'SignatureIndex'}-$qty_index" if $$specs{"chkOverrideImposition-$$sig_specs{'SignatureIndex'}-$qty_index"};
+        } # end foreach
+    } # end foreach
+
+    return @v;
+
+} # end sub has_overrides
 
 1;
 __END__
