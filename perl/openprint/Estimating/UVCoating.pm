@@ -649,5 +649,31 @@ sub load_equipment {
 	@all_equipment = openprint::Equipment->find( Specifications => {'UVCoating Capable'=>'Y'}, useinestimating=>1, order=>'lower(strName)');
 } # end sub load_equipment
 
+sub has_overrides {
+    my ( $Project, $service_id, $specs, $qty_index ) = @_;
+    $specs = openprint::service::get_specs_ref( $Project, $service_id ) if ! $specs;
+
+    my @v;
+    if ( $qty_index ) {
+        foreach my $s_s_id ( $Project->signatures() ) {
+            my $sig_specs = openprint::service::get_specs_ref( $Project, $s_s_id );
+            my $form = $$sig_specs{SignatureIndex};
+            push @v, map { $$specs{$_} ? $_ : () } (
+                    "chkOverrideEquipment-$form-$qty_index",
+                    "chkOverrideImposition-$form-$qty_index",
+                    "OverrideMakeReadyPrice-$form-$qty_index",
+                    "OverrideBlanketPrice-$form-$qty_index",
+                    "OverrideServicePrice-$form-$qty_index",
+                    "OverrideMaterialPrice-$form-$qty_index",
+                    "OverrideSignaturePrice-$form-$qty_index",
+                    );
+        } # end foreach sig
+    } # end if
+
+    return @v;
+
+} # end sub has_overrides
+
+
 1;
 __END__
