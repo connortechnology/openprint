@@ -156,15 +156,15 @@ sub save {
 	my $local_dbh = eval '$'.$type.'::dbh';
 	$local_dbh = $openprint::dbh if ! $local_dbh;
 	$self->set( $data ? $data : {} );
-if ( $debug or DEBUG_ALL ) {
-	if ( $data ) {
-	foreach my $k ( keys %$data ) {
-	$log->debug("Object::save after set $k => $$data{$k} $$self{$k}");
+	if ( $debug or DEBUG_ALL ) {
+		if ( $data ) {
+			foreach my $k ( keys %$data ) {
+				$log->debug("Object::save after set $k => $$data{$k} $$self{$k}");
+			}
+		} else {
+			$log->debug("No data after set");
+		}
 	}
-	} else {
-	$log->debug("No data after set");
-	}
-}
 #$debug = 0;
 
 	my $table = eval '$'.$type.'::table';
@@ -219,7 +219,8 @@ $log->debug("No serial") if $debug;
 					$insert = 1;
 				} # end if
 			} # end foreach
-		} # end if
+		} # end if ! %serial
+
 		if ( $insert ) {
 			my @keys = keys %sql;
 			my $command = "INSERT INTO $table (" . join(',', @keys ) . ') VALUES (' . join(',', map { '?' } @sql{@keys} ) . ')';
@@ -238,17 +239,17 @@ $log->debug("No serial") if $debug;
 		} else {
 			my @keys = keys %sql;
 			my $command = "UPDATE $table SET " . join(',', map { $_ . ' = ?' } @keys ) . ' WHERE ' . join(' AND ', map { $_ . ' = ?' } @$fields{@identified_by} );
-			if ( ! ( $_ = $local_dbh->prepare($command) and $_->execute( @sql{@keys,@identified_by} ) ) ) {
+			if ( ! ( $_ = $local_dbh->prepare($command) and $_->execute( @sql{@keys,@$fields{@identified_by}} ) ) ) {
 				my $error = $local_dbh->errstr;
 				$command =~ s/\?/\%s/g;
-				$log->error('SQL failed: ('.sprintf($command, , map { defined $_ ? $_ : 'undef' } ( @sql{@keys, @identified_by}) ).'):' . $local_dbh->errstr);
+				$log->error('SQL failed: ('.sprintf($command, , map { defined $_ ? $_ : 'undef' } ( @sql{@keys, @$fields{@identified_by}}) ).'):' . $local_dbh->errstr);
 				$local_dbh->rollback();
 				sql::end_transaction( $local_dbh, $ac );
 				return $error;
 			} # end if
 			if ( $debug or DEBUG_ALL ) {
 				$command =~ s/\?/\%s/g;
-				$log->debug('SQL DEBUG: ('.sprintf($command, map { defined $_ ? $_ : 'undef' } ( @sql{@keys,@identified_by} ) ).'):' );
+				$log->debug('SQL DEBUG: ('.sprintf($command, map { defined $_ ? $_ : 'undef' } ( @sql{@keys,@$fields{@identified_by}} ) ).'):' );
 			} # end if
 		} # end if
 	} else { # not identified_by

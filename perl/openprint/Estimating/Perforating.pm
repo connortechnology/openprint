@@ -436,7 +436,10 @@ $openprint::log->debug("How many impositions do we get? " . @imps ) if DEBUG;
 			my $height = $I->layout_height();
 
 # If it's a press, then we can assume that it fits.
-			if ( $type ne 'Press' and $_ = $Equipment->fits( $width, $height, $$sig_specs{txtSpecificStockCalliper} ) ) {
+			if ( ( $type ne 'Press' ) and ( 
+				( $_ = $Equipment->fits( $width, $height, $$sig_specs{txtSpecificStockCalliper} ) ) or 
+				( $_ = fits_on_equipment( $Equipment, $width, $height, $$sig_specs{txtSpecificStockCalliper} ) ) 
+				) ) {
 				$Results{Breakdown} .= "$_<br/>";
 				next;
 			} # end if
@@ -716,35 +719,37 @@ sub get_specs {
 } # end sub get_specs
 
 sub fits_on_equipment {
-    my ( $log, $dbh, $equipment_specs, $width, $height, $calliper ) = @_;
+    my ( $Equipment, $width, $height, $calliper ) = @_;
 
-    if ( $$equipment_specs{'Minimum Perforation Size'} and ( 1*$width < 1*$$equipment_specs{'Minimum Perforation Size'} ) ) {
-        $log->debug("Doesn't fit width minimum");
-        return 0;
-    } # end if
+    if ( my $min_perf_size = $Equipment->specification( 'Minimum Perforation Size') ) {
+		if ( $width < $min_perf_size ) {
+			return "Doesn't fit width minimum";
+		} # end if
 
-    if ( $$equipment_specs{'Minimum Perforation Size'} and ( 1*$height < 1*$$equipment_specs{'Minimum Perforation Size'} ) ) {
-        $log->debug("Doesn't fit height minimum");
-        return 0;
-    } # end if
-    if ( $$equipment_specs{'Maximum Perforation Size'} and ( 1*$width > 1*$$equipment_specs{'Maximum Perforation Size'} ) ) {
-        $log->debug("Doesn't fit width maximum");
-        return 0;
-    } # end if
+		if ( $height < $min_perf_size ) {
+			return "Doesn't fit height minimum";
+		} # end if
+	}
+    if ( my $max_perf_size = $Equipment->specification('Maximum Perforation Size') ) {
+		if ( $width > $max_perf_size ) {
+			return "Doesn't fit width maximum";
+		} # end if
 
-    if ( $$equipment_specs{'Maximum Perforation Size'} and ( 1*$height > 1*$$equipment_specs{'Maximum Perforation Size'} ) ) {
-        $log->debug("Doesn't fit height max");
-        return 0;
-    } # end if
-    if ( $$equipment_specs{'Minimum Perforation Calliper'} and 1*$calliper < 1*$$equipment_specs{'Minimum Perforation Calliper'} ) {
-        $log->debug("Calliper too small Calliper: ($calliper), Min: $$equipment_specs{'Minimum Perforation Calliper'}");
-        return 0;
-    } # end if
-    if ( $$equipment_specs{'Maximum Perforation Calliper'} and 1*$calliper > 1*$$equipment_specs{'Maximum Perforation Calliper'} ) {
-        $log->debug("Calliper too big");
-        return 0;
-    } # end if
-    return 1;
+		if ( $height > $max_perf_size ) {
+			return "Doesn't fit height max";
+		} # end if
+	}
+	if ( my $min_perf_calliper = $Equipment->specification( 'Minimum Perforation Calliper') ) {
+		if ( $calliper < $min_perf_calliper ) {
+			return "Calliper too small Calliper: ($calliper), Min: $min_perf_calliper ";
+		} # end if
+	} # end if
+	if ( my $max_perf_calliper = $Equipment->specification('Maximum Perforation Calliper') ) {
+		if ( $calliper > $max_perf_calliper ) {
+			return "Calliper too big Calliper: ($calliper), Min: $max_perf_calliper ";
+		} # end if
+	} # end if
+    return;
 
 } # end sub fits_on_equipment
 
