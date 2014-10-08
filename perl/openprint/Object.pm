@@ -136,6 +136,9 @@ sub load {
 				$log->error( 'Failure to load ' . $type . " $$self{id}: Reason: " . $d->errstr );
 				Carp::cluck( 'Failure to load ' . $type . " $$self{id}: Reason: " . $d->errstr );
 			} # end if
+			if ( @identified_by ) {
+				delete @$self{@identified_by};
+			} # end if
 		#} elsif ( $debug ) {
 			#$log->debug("Got $type: " . join(',', map { $_ . '=>' . $$data{$_} } keys %$data ) . ' in ' . sprintf('%.4f', tv_interval($starttime)*1000) .' useconds' );
 		} # end if
@@ -179,6 +182,7 @@ if ( $debug or DEBUG_ALL ) {
 	} # end if
 	my $serial = eval '$'.$type.'::serial';
 	my @identified_by = eval '@'.$type.'::identified_by';
+
 	my $ac = sql::start_transaction( $local_dbh );
 	if ( ! $serial ) {
 		my $insert = $force_insert;

@@ -93,7 +93,7 @@ sub Prices {
 	}
 
 	if ( ! $_[0]{Prices} ) {
-		$_[0]{Prices} = [ openprint::ServicePrice->find( service_id=>$_[0]{id}, 'period_end null'=>1, order=>'min NULLS FIRST, max NULLS FIRST' ) ];
+		$_[0]{Prices} = [ openprint::ServicePrice->find( service_id=>$_[0]{id}, 'period_end is null'=>1, order=>'min NULLS FIRST, max NULLS FIRST' ) ];
 	}
 
 	return @{$_[0]{Prices}};

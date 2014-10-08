@@ -52,12 +52,11 @@ sub signature_calc {
 		$service = 'ImpositionMakeReady';
 		%ImpositionMakeReady = openprint::service::get_price_object( $service, undef, $Press );
 	} # end if
-	if ( ! %ImpositionMakeReady ) {
-#$openprint::log->debug("$service no price found");
-	} # end if
-	if ( $ImpositionMakeReady{units} eq 'per form' ) {
-#$openprint::log->debug("Make Ready Per Form " . ($$specs{'PreviousForms'.$qty_index}+1) );
-		%ImpositionMakeReady = openprint::service::get_price_object( $service, scalar @{$previous_forms} + 1, $Press );
+	if ( %ImpositionMakeReady ) {
+		if ( $ImpositionMakeReady{units} eq 'per form' ) {
+	#$openprint::log->debug("Make Ready Per Form " . ($$specs{'PreviousForms'.$qty_index}+1) );
+			%ImpositionMakeReady = openprint::service::get_price_object( $service, scalar @{$previous_forms} + 1, $Press );
+		} # end if
 	} # end if
 
 	$price{MakeReady} = \%ImpositionMakeReady;
@@ -71,18 +70,20 @@ sub signature_calc {
 		$service = 'Imposition';
 		%ImpositionCharge = openprint::service::get_price_object( $service, undef, $Press);
 	} # end if
-	if ( $ImpositionCharge{'units'} eq 'per page' ) {
-		%ImpositionCharge = $ImpositionCharge{Service}->get_price( $Imposition->pages(),$Press);
-		$price{total} += $ImpositionCharge{price} * $Imposition->pages();
-	} elsif ( $ImpositionCharge{'units'} eq 'per square inch of object' ) {
-		%ImpositionCharge = $ImpositionCharge{Service}->get_price( $Imposition->layout_area(),$Press);
-		$price{total} += $ImpositionCharge{price} * $Imposition->object_width() * $Imposition->object_height();
-	} elsif ( $ImpositionCharge{'units'} eq 'per square inch of layout' ) {
-		%ImpositionCharge = $ImpositionCharge{Service}->get_price( $Imposition->layout_area(),$Press);
-		$price{total} += $ImpositionCharge{price} * $Imposition->layout_area();
-	} else {
-		%ImpositionCharge = $ImpositionCharge{Service}->get_price( $Imposition->imposition(),$Press);
-		$price{total} += $ImpositionCharge{price} * $Imposition->imposition();
+	if ( %ImpositionCharge ) {
+		if ( $ImpositionCharge{units} eq 'per page' ) {
+			%ImpositionCharge = $ImpositionCharge{Service}->get_price( $Imposition->pages(),$Press);
+			$price{total} += $ImpositionCharge{price} * $Imposition->pages();
+		} elsif ( $ImpositionCharge{units} eq 'per square inch of object' ) {
+			%ImpositionCharge = $ImpositionCharge{Service}->get_price( $Imposition->layout_area(),$Press);
+			$price{total} += $ImpositionCharge{price} * $Imposition->object_width() * $Imposition->object_height();
+		} elsif ( $ImpositionCharge{'units'} eq 'per square inch of layout' ) {
+			%ImpositionCharge = $ImpositionCharge{Service}->get_price( $Imposition->layout_area(),$Press);
+			$price{total} += $ImpositionCharge{price} * $Imposition->layout_area();
+		} else {
+			%ImpositionCharge = $ImpositionCharge{Service}->get_price( $Imposition->imposition(),$Press);
+			$price{total} += $ImpositionCharge{price} * $Imposition->imposition();
+		} # end if
 	} # end if
 	$price{Price} = \%ImpositionCharge;
 

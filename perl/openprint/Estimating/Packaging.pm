@@ -98,16 +98,6 @@ sub calc {
 	$$specs{bands_per_package} =~ s/[^\d\.]//g;
 	my $makeReady = openprint::service::get_price( $ServiceType->name().'MakeReady', undef, undef );
 	my $minCharge = openprint::service::get_price( $ServiceType->name().'Minimum', undef, undef );
-	#if ( 0 and ! $minCharge ) {
-		#$log->error("No minimum chargem let's do debug $$specs{ServiceType} " . $ServiceType->to_string() );
-		#my $Service = openprint::Service->find_one( name=>$ServiceType->name().'Minimum' );
-		#if ( $Service ) {
-			#$log->error( "Service: " . $Service->to_string() );
-		#} else {
-			#$log->error("No ServiceMinimum ");
-		#} # end if
-	#}
-		
 
 	foreach my $qty_index ( $Project->quantity_indexes() ) {
 

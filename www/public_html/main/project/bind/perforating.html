@@ -13,7 +13,7 @@
 					$html .= '<div class="Signature">';
 					$html .= 'Information for ' . $$sig_specs{txtServiceDescription} .':' if $$sig_specs{txtServiceDescription};
 					$html .= '<ul><li><label>Perforation Quantity</label>';
-					$html .= '<div class="Vertical">Vertical:';
+					$html .= '<div class="Vertical"><label>Vertical</label>';
 					$html .= input( 
 						id		=> "txtVerticalQty-$signature_index",
 						name	=> "txtVerticalQty-$signature_index",
@@ -25,7 +25,7 @@
 					$html .= qq`<select name="VerticalTeeth-$signature_index" onchange="calc(this.form.name);">
 							<option value="">select</option>`;
 					$html .= make_drop_down( \@tooth_options, $$variable{'VerticalTeeth-'.$signature_index} );
-					$html .= '</select></div><div class="Horizontal">Horizontal:';
+					$html .= '</select></div><div class="Horizontal"><label>Horizontal</label>';
 					$html .= input( 
 						id		=> "txtHorizontalQty-$signature_index",
 						name	=> "txtHorizontalQty-$signature_index",

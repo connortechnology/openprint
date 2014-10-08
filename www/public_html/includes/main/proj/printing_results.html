@@ -22,7 +22,7 @@
 	<label><? echo ( writeTip( 'Stock size' ); ) ?></label>
 <? echo (
 	my @options = misc::trim( split(',', $config{$$variable{Project}->Type()->name().'StockOptions'} ));
-    @options = misc::trim( split(',', $config{'StockOptions'} )) if ! @options;
+    @options = misc::trim( split(',', $config{StockOptions} )) if ! @options;
     @options = ( 'Brand','Finish','Colour','Weight' ) if ! @options;
 
     my %find = (
@@ -46,11 +46,13 @@
 			return $a_w <=> $b_w;
 			}
 			return $a <=> $b;
- } sets::union( map { $_->width().( $_->height() ? 'x'.$_->height() : '' ) } @Stocks );
+	} sets::union( map { $_->width().( $_->height() ? 'x'.$_->height() : '' ) } @Stocks );
 
 	my $html = '';
 	foreach my $qty_index ( $$variable{Project}->quantity_indexes() ) {
 		$$variable{'ddmStockSheetSize'.$qty_index} =~ s/["\sRol]//g;
+		$$variable{'OverrideStockWidth'.$qty_index} =~ s/[^\d\.]//g;
+		$$variable{'OverrideStockHeight'.$qty_index} =~ s/[^\d\.]//g;
 		$html .= sprintf(q`
 			<span class="%1$sColumns">
 				<select name="ddmStockSheetSize%2$d" size="1" onchange="this.form.OverrideStockWidth%2$d.value='';this.form.OverrideStockHeight%2$d.value='';ddmStockSheetSize_onchange();"><option value="">Please select one</option>%3$s</select>

@@ -558,10 +558,12 @@ sub signature_calc {
 
 #$openprint::log->debug("Folding impos " . @folding_impositions  . ' eq ' . @my_equipment );
 
-	if ( $$Imposition{image_orientation} eq 'Horizontal' ) {
-		$stitching_imposition = $$Imposition{columns} if $stitching_imposition > $$Imposition{columns};
-	} else {
-		$stitching_imposition = $$Imposition{rows} if $stitching_imposition > $$Imposition{rows};
+	if ( $stitching_specs and $stitching_imposition) {
+		if ( $$Imposition{image_orientation} eq 'Horizontal' ) {
+			$stitching_imposition = $$Imposition{columns} if $stitching_imposition > $$Imposition{columns};
+		} else {
+			$stitching_imposition = $$Imposition{rows} if $stitching_imposition > $$Imposition{rows};
+		} # end if
 	} # end if
 
 	my $Press = $Imposition->Press();
@@ -669,6 +671,10 @@ $openprint::log->debug("Folding impositions: " . @folding_impositions ) if DEBUG
 			$results{Breakdown} .= 'Not printing on ' . $Equipment->strid() . '<br/>';
 			next;
 		} elsif ( $cutting_capable eq 'When Stitching' ) {
+			if ( ! $$stitching_specs{'ddmEquipment'.$qty_index} ) {
+				$results{Breakdown} .= 'Stitching not calculated yet.<br/>';
+				next;
+			} # e dn if
 			if ( $$stitching_specs{'ddmEquipment'.$qty_index} != $Equipment->id() ) {
 				$results{Breakdown} .= 'Not stitching on ' . $Equipment->strid() . '<br/>';
 				next;
@@ -723,10 +729,10 @@ $openprint::log->debug("Folding impositions: " . @folding_impositions ) if DEBUG
 		my $dutch_horizontal_cuts = 0;
 
 		if ( (defined $$specs{'chkOverrideCalculatedCuts-'.$form.'-'.$qty_index}) and ( $$specs{'chkOverrideCalculatedCuts-'.$form.'-'.$qty_index} eq 'Y' ) ) {
-			$vertical_cuts = $$specs{"txtVerticalCuts-$form-$qty_index"};
-			$horizontal_cuts = $$specs{"txtHorizontalCuts-$form-$qty_index"};
-			$dutch_vertical_cuts = $$specs{"txtDVerticalCuts-$form-$qty_index"};
-			$dutch_horizontal_cuts = $$specs{"txtDHorizontalCuts-$form-$qty_index"};
+			$vertical_cuts = int($$specs{"txtVerticalCuts-$form-$qty_index"}) if $$specs{"txtVerticalCuts-$form-$qty_index"};
+			$horizontal_cuts = int($$specs{"txtHorizontalCuts-$form-$qty_index"}) if $$specs{"txtHorizontalCuts-$form-$qty_index"};
+			$dutch_vertical_cuts = int($$specs{"txtDVerticalCuts-$form-$qty_index"}) if $$specs{"txtDVerticalCuts-$form-$qty_index"};
+			$dutch_horizontal_cuts = int($$specs{"txtDHorizontalCuts-$form-$qty_index"}) if $$specs{"txtDHorizontalCuts-$form-$qty_index"};
 		} else {
 # Regular book signatures will be trimmed by the stitcher, so we only need 1 cut per imposition
 # Most stitchers do 3knife trim, but some do not. Most need a Head Trim, some need Head & Foot
@@ -966,11 +972,11 @@ $openprint::log->debug("Not a book") if DEBUG;
 			$$specs{"txtAdditionalCuts$form"} = $$sig_specs{txtPressSheetComboItems};
 		} # end if
 
-		if ( $$specs{"txtAdditionalCuts$form"} ) {
+		if ( $$specs{"txtAdditionalCuts$form"} and %ServicePrice ) {
 			$sheets = ceil( $$sig_specs{'txtQuantity'.$qty_index} / $$I{imposition} );
 			my $runs = $liftDepth ? ceil( $sheets*$calliper/$liftDepth ) : $sheets;
 			my $price = ( $runs * $$specs{"txtAdditionalCuts$form"} * $ServicePrice{price} );
-			$results{Breakdown} .= 'Additional cuts:<br/>';
+			$results{Breakdown} .= 'Additional cuts: ';
 			$results{Breakdown} .= sprintf('%d cuts on %d sheets: $%.2f<br/>', $$specs{"txtAdditionalCuts$form"}, $sheets, $price );
 			$totalPrice += $price;
 		} # end if
@@ -980,8 +986,12 @@ $openprint::log->debug("Not a book") if DEBUG;
 		if ( $cuts ) {
 			if ( $CuttingMakeReady ) {
 				my %setup = $CuttingMakeReady->get_price( undef, $Equipment );
-				$results{Breakdown} .= sprintf('Make Ready: $%.2f<br/>', $setup{price} );
-				$totalPrice += $setup{price};
+				if ( ! %setup ) {
+					$log->error("No Cutting Makready for $$Equipment{strid}");
+				} else {
+					$results{Breakdown} .= sprintf('Make Ready: $%.2f<br/>', $setup{price} );
+					$totalPrice += $setup{price};
+				} # end if
 			} # end if
 			if ( $Paper->bladecleaning() and $BladeCleaning ) {
 				my %cleaning = $BladeCleaning->get_price( undef, $Equipment );
@@ -997,14 +1007,15 @@ $openprint::log->debug("Not a book") if DEBUG;
 			$bestEquipment = $Equipment;
 		} # end if
 	} # end for each equipment
-		if ( $stitching_specs ) {
-			# Need final trim?
-			my @remaining_sides = sets::exclude( [ keys %pretrim_sides ], [ 'Head','Foot','Face' ] );
-$log->debug("Final trim @remaining_sides") if DEBUG;
-			if ( @remaining_sides ) {
-				
-			}	
-		} # end if
+
+	if ( $stitching_specs ) {
+# Need final trim?
+		my @remaining_sides = sets::exclude( [ keys %pretrim_sides ], [ 'Head','Foot','Face' ] );
+		$log->debug("Final trim @remaining_sides") if DEBUG;
+		if ( @remaining_sides ) {
+
+		}	
+	} # end if
 
 	$results{Status}	= $bestEquipment ? 'calculated' : 'uncalculated';
 	$results{Price}		= $bestPrice;

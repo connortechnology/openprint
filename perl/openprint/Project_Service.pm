@@ -7,9 +7,9 @@ require openprint::Project;
 require openprint::User;
 require openprint::ServiceType;
 
-use vars qw( $debug %fields %find_fields %transforms %defaults $table $serial @identified_by );
+use vars qw( $debug %fields %find_fields %transforms %defaults $table %serial @identified_by );
 
-$debug = 0;
+$debug = 1;
 %fields = (
 	service_id	=>	'lngserviceindex',
 	project_id	=>	'lngprojectindex',
@@ -32,8 +32,8 @@ $debug = 0;
 	created_on	=>	q`'NOW()'`,
 );
 $table = 'tbl_project_contents';
-$serial = 'ContentsServiceIndex_seq';
-@identified_by = ( 'service_id' );
+%serial = ( service_id=>'ContentsServiceIndex_seq' );
+@identified_by = ( 'project_id', 'service_id' );
 
 sub Project {
 	return new openprint::Project( $_[0]{project_id} );
@@ -161,6 +161,7 @@ $openprint::log->warn("Deleting Service from $Project " . $Project->to_string() 
 
 	$Project->add_to_log( @openprint::session{'company_id','user_id'}, "Deleted service ".$self->ServiceType()->type() . " $$specs{ServiceName}." );
 	sql::end_transaction( $openprint::dbh, $ac );
+	return;
 } # end sub delete
 
 sub ordered_price {

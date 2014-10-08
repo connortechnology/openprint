@@ -85,8 +85,15 @@ my @all_equipment;
 
 # A function that is smart enough to return true if the project needs perfing/UVCoating, and false if it doesn't.
 sub neccessary {
-	my ( $log, $dbh, $project_index ) = @_;
+	my ( $Project ) = @_;
 
+	foreach my $sig_id ( $Project->signatures() ) {
+		my $Service = $Project->Service( $sig_id );
+
+		if ( signature_needs( $Project, $Service->specs() ) ) {
+			return 1;
+		}
+	} # end foreach sig_id
 	return 0;
 } # end sub neccessary
 
@@ -370,6 +377,7 @@ sub signature_calc {
 		my %BestPricePerImposition;
 		my %minimum = $MinimumCharge->get_price( undef, $Equipment ) if $MinimumCharge;
 		my $BlanketCutPrice;
+		my $runspeed = $Equipment->specification('UVCoatingRunSpeed', $Stock->gsm() );
 
 		for ( my $set_index = 0; $set_index < @Sets_Of_Impositions; $set_index += 1 ) {
 			my $impositions = $Sets_Of_Impositions[$set_index];
@@ -507,10 +515,13 @@ $openprint::log->debug("Types: @types") if DEBUG;
 						if ( lc $ServicePrice{units} eq 'per m' ) {
 							$ServicePrice{total} = $ServicePrice{price}*$run_qty/1000;
 						} elsif ( $ServicePrice{units} eq 'per hour' or $ServicePrice{units} eq '/Hr' ) {
-							my $runspeed = $Equipment->specification('UVCoatingRunSpeed', $Stock->gsm() );
-							$breakdown .= sprintf('<tr><td> %d @ %d/Hr = %.1fhours', $run_qty, $runspeed, $run_qty/$runspeed );
-
-							$ServicePrice{total} = $ServicePrice{price}*$run_qty/$runspeed if $runspeed;
+							if ( $runspeed ) {
+								$breakdown .= sprintf('<tr><td> %d @ %d/Hr = %.1fhours', $run_qty, $runspeed, $run_qty/$runspeed );
+								$ServicePrice{total} = $ServicePrice{price}*$run_qty/$runspeed if $runspeed;
+							} else {
+								$breakdown .= sprintf('<tr><td>No runspeed for %dgsm. Cant use this price.</td></tr>', $Stock->gsm() );
+								$ServicePrice{total} = 1000000;
+							} # end if
 						} # end if
 # Div by imposition, but run_qty is already div by impo
 #$ServicePrice{total} /= $imp->imposition();
@@ -565,7 +576,7 @@ $log->debug("Complete: $breakdown");
 			} #
 			$ImpositionPrice{total} += misc::sum( @ImpositionPrice{'MakeReady','Service','Material','Blanket','Cutting'} );
 			$breakdown .= sprintf('<tr class="totals"><td>Total:</td><td class="Price">$%.2f</td></tr></table>',
-Math::Round::nearest(0.01,$ImpositionPrice{total}) );
+					Math::Round::nearest(0.01,$ImpositionPrice{total}) );
 
 			if ( ( ! defined $BestPricePerImposition{total} ) or ( $ImpositionPrice{total} < $BestPricePerImposition{total} ) ) {
 				%BestPricePerImposition = %ImpositionPrice;
@@ -637,6 +648,32 @@ sub summary {
 sub load_equipment {
 	@all_equipment = openprint::Equipment->find( Specifications => {'UVCoating Capable'=>'Y'}, useinestimating=>1, order=>'lower(strName)');
 } # end sub load_equipment
+
+sub has_overrides {
+    my ( $Project, $service_id, $specs, $qty_index ) = @_;
+    $specs = openprint::service::get_specs_ref( $Project, $service_id ) if ! $specs;
+
+    my @v;
+    if ( $qty_index ) {
+        foreach my $s_s_id ( $Project->signatures() ) {
+            my $sig_specs = openprint::service::get_specs_ref( $Project, $s_s_id );
+            my $form = $$sig_specs{SignatureIndex};
+            push @v, map { $$specs{$_} ? $_ : () } (
+                    "chkOverrideEquipment-$form-$qty_index",
+                    "chkOverrideImposition-$form-$qty_index",
+                    "OverrideMakeReadyPrice-$form-$qty_index",
+                    "OverrideBlanketPrice-$form-$qty_index",
+                    "OverrideServicePrice-$form-$qty_index",
+                    "OverrideMaterialPrice-$form-$qty_index",
+                    "OverrideSignaturePrice-$form-$qty_index",
+                    );
+        } # end foreach sig
+    } # end if
+
+    return @v;
+
+} # end sub has_overrides
+
 
 1;
 __END__

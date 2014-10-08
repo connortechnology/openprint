@@ -1459,6 +1459,14 @@ function floatize(e) {
 		e.value = '';
 	return e.value;
 }
+function positive_floatize(e) {
+	if ( e.value.match(/[^\d\.%\*]/) ) {
+		e.value = parseFloat(e.value.replace(/[^\d\.%\*]/g,''));
+	} 
+	if ( e.value == 'NaN' )
+		e.value = '';
+	return e.value;
+}
 function floatize_calculator(e) {
 	if ( e.value.match(/[^\d\-\.\+\*\/]/g) )
 		e.value = parseFloat(e.value.replace(/[^\d\-\.\+\*\/]/g,''));

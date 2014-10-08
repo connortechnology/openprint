@@ -779,6 +779,7 @@ sub servicetype_id {
 
 sub ServiceType {
 	my ( $self, $s_id ) = @_;
+$openprint::log->error("No s_id passed to ServiceType") if ! $s_id;
 	return new openprint::ServiceType( $self->servicetype_id( $s_id ) );
 } # end sub ServiceType
 
@@ -849,34 +850,22 @@ sub summary {
 # I believe the point of this is to stick the Printed Web or Sheetfred into the summary.	Nastily executed.
 # The logic is, each group has to be either all sheetfed, or all web (or digital, etc).	
 			foreach my $group_id ( sort @groups ) {
-				my @sigs = $self->signatures({'Group'=>$group_id});
+				my @sigs = $self->signatures({Group=>$group_id});
 				if ( ! @sigs ) {
 					$openprint::log->error( "No sigs for Group $group_id, but there pretty much to be since we have this group index.  Signatures must be out of date");
 					$self->services(undef);
-					@sigs = $self->signatures({'Group'=>$group_id});
+					@sigs = $self->signatures({Group=>$group_id});
 					if ( ! @sigs ) {
 						$openprint::log->error( "Still No sigs for Group $group_id, after reloading" );
 						next;
 					} # end if
-
 				} # end if
 
 				my $sig_specs = openprint::service::get_specs_ref( $self, $sigs[0] );
 				$summary .= openprint::Estimating::Printing::summary( $self, $sigs[0], $sig_specs );
-				foreach my $k ( keys %$sig_specs ) {
-					if ( $k =~ /^PrintingType/i ) {
-						if ( $$sig_specs{'Group'} eq $group_id ) {
-							if ( $$sig_specs{$k} eq 'Web' ) { 
-								$summary .= ', <span class="Web">Printed Web</span>,<br/>';
-							} elsif ( $$sig_specs{$k} eq 'Digital' ) { 
-								$summary .= ', '. '<span class="Digital">Printed Digital</span>,<br/>';
-							} else {
-								$summary .= ', '. '<span class="Sheetfed">Printed Sheetfed</span>,<br/>';
-							} #endif Web
-							last;
-						} # end if group_id
-					} # end if $prn
-				} # end foreach $prn	
+				if ( $$printing_specs{"PrintingType-$group_id"} ) { 
+					$summary .= ', '. '<span class="Sheetfed">Printed '.$$printing_specs{"PrintingType-$group_id"}.'</span>,<br/>';
+				} #endif Web
 			} # end foreach Group
 		} # end if
 
@@ -993,7 +982,7 @@ sub price {
 				foreach ( @{$$services{$k}} ) {
 					my $specs = openprint::service::get_specs_ref( $self, $_ );
 					$$self{'price'.$qty_index} += $$specs{'txtPrice'.$qty_index};
-					$openprint::log->debug("Getting " . $$specs{'txtPrice'.$qty_index} . " from $k $_");
+					#$openprint::log->debug("Getting " . $$specs{'txtPrice'.$qty_index} . " from $k $_");
 				} # end foreach
 			} # end foreach
 		} # end if
@@ -1478,6 +1467,10 @@ sub production_cost {
 
 sub Service {
 	my ( $self, $service_id ) = @_;
+	if ( ! $service_id ) {
+		$openprint::log->error("No service_id passed to ServiceType");
+		Carp::cluck("No service_id passwrod to ServiceType");
+	} # end if
 	return new openprint::Project_Service( {project_id=>$$self{id}, service_id=>$service_id} );
 } # end sub Service
 
@@ -1535,53 +1528,93 @@ sub calliper {
 	if ( ! $_[0]{calliper} ) {
 		my $Project = $_[0];
 		my $services = $Project->services();
-
-		my $folding_specs;
-		my $folding_service_index = $$services{'Folding'}[0] if $$services{'Folding'};
-		if ( $folding_service_index ) {
-			$folding_specs = openprint::service::get_specs_ref( $Project, $folding_service_index );
-		} # end if
+		my $project_type = $Project->Type()->type();
 
 		my $printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
 
 		my $finished_calliper;
-		foreach my $signature_service_index ( $Project->signatures() ) {
-			my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
-			my $calliper = int($$sig_specs{'txtSpecificStockCalliper'}*10000);
 
-			if ( $Project->Type()->type() eq 'ScratchPads' ) {
-				$finished_calliper += $$printing_specs{'PageQuantity'} * $calliper;
-			} elsif ( $$sig_specs{'ServiceType'} eq 'Signature' ) {
-				foreach my $qty_index ( $Project->quantity_indexes() ) {
-					if ( $$sig_specs{'PageQuantity'.$qty_index} ) {
-						$calliper *= int($$sig_specs{'PageQuantity'.$qty_index}/2);
-						last;
+		my @quantity_indexes = $Project->quantity_indexes() ;
+		if ( $project_type eq 'MultiPage' ) {
+	
+			foreach my $group_id ( $$printing_specs{groups} ? split(',', $$printing_specs{groups} ) : openprint::Estimating::MultiPage::groups( $$Project{id}, $printing_specs ) ) {
+				$finished_calliper += int( 10000 * ($$printing_specs{'GroupPageQuantity'.$group_id}/2) * $$printing_specs{"txtSpecificStockCalliper$group_id"} );
+			} # end foreach group
+			if ( ! $finished_calliper ) {
+				$log->debug("Getting calliper the old way.");
+				foreach my $signature_service_index ( $Project->signatures() ) {
+					my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
+					my $calliper = 0;
+					if ( $$sig_specs{'txtSpecificStockCalliper'} ) {
+						$calliper = int($$sig_specs{'txtSpecificStockCalliper'}*10000);
+					} else {
+						$openprint::log->warn("Loading calliper from stock.  Consider populating sig_specs with calliper for speed.");	
+						my $Paper = openprint::Paper::load_from_signature( $Project, $sig_specs );
+						$$sig_specs{txtSpecificStockCalliper} = $Paper->calliper();
+						$calliper = int( $Paper->calliper() * 10000);
 					} # end if
-				} # end foreach qty_index
-				$finished_calliper += $calliper;
+
+					foreach my $qty_index ( @quantity_indexes ) {
+						if ( $$sig_specs{'PageQuantity'.$qty_index} ) {
+							$calliper *= int($$sig_specs{'PageQuantity'.$qty_index}/2);
+							last;
+						} else {
+							$openprint::log->warn("No PageQuantity in sig $signature_service_index");
+						} # end if
+					} # end foreach qty_index
+					$finished_calliper += $calliper;
+				} # end if
+			} # en dif ! calliper
+		} elsif ( $project_type eq 'ScratchPads' ) {
+            my @signatures = $Project->signatures();
+# Single page item, if there are multiple signatures, it is due to multiple versions
+            my $signature_service_index = $signatures[0];
+            my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
+            my $calliper;
+            if ( $$sig_specs{'txtSpecificStockCalliper'} ) {
+                $calliper = int($$sig_specs{'txtSpecificStockCalliper'}*10000);
+            } else {
+                $openprint::log->warn("Loading calliper from stock.  Consider populating sig_specs with calliper for speed.");
+                my $Paper = openprint::Paper::load_from_signature( $Project, $sig_specs );
+                $$sig_specs{txtSpecificStockCalliper} = $Paper->calliper();
+                $calliper = int( $Paper->calliper() * 10000);
+            } # end if
+			$finished_calliper += $$printing_specs{'PageQuantity'} * $calliper;
+		} else {
+			my @signatures = $Project->signatures();
+# Single page item, if there are multiple signatures, it is due to multiple versions
+			my $signature_service_index = $signatures[0];
+			my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
+			my $calliper;
+			if ( $$sig_specs{'txtSpecificStockCalliper'} ) {
+				$calliper = int($$sig_specs{'txtSpecificStockCalliper'}*10000);
 			} else {
-				my $pages = 1;
-				if ( $$sig_specs{'rdbTemplateType'} eq '2PanelFold' ) {
-					$pages = 2;
-				} elsif ( sets::isin( $$sig_specs{'rdbTemplateType'},['3PanelFold','3PanelZFold'] ) ) {
-					$pages = 3;
-				} elsif ( sets::isin( $$sig_specs{'rdbTemplateType'}, ['4PanelFold', '4PanelZFold'] ) ) {
-					$pages = 4;
-				} elsif ( sets::isin( $$sig_specs{'rdbTemplateType'}, ['5PanelFold', '5PanelZFold'] ) ) {
-					$pages = 5;
-				} elsif ( sets::isin( $$sig_specs{'rdbTemplateType'}, ['6PanelFold', '6PanelZFold'] ) ) {
-					$pages = 6;
-				} elsif ( $$sig_specs{'rdbTemplateType'} eq 'SingleGateFold' ) {
-					$pages = 3;
-				} elsif ( $$sig_specs{'rdbTemplateType'} eq 'DoubleGateFold' ) {
-					$pages = 4;
-				} elsif ( $$sig_specs{'rdbTemplateType'} eq 'DifficultFold' ) {
-					$pages = 6;
-				} #// end if
-				$finished_calliper += $pages * $calliper;
+				$openprint::log->warn("Loading calliper from stock.  Consider populating sig_specs with calliper for speed.");	
+				my $Paper = openprint::Paper::load_from_signature( $Project, $sig_specs );
+				$$sig_specs{txtSpecificStockCalliper} = $Paper->calliper();
+				$calliper = int( $Paper->calliper() * 10000);
 			} # end if
-		} # end foreach
-		$openprint::log->debug("******************************* FINSIHED CALLIPER is $finished_calliper/1000 *********************************");
+			my $pages = 1;
+			if ( $$sig_specs{'rdbTemplateType'} eq '2PanelFold' ) {
+				$pages = 2;
+			} elsif ( sets::isin( $$sig_specs{'rdbTemplateType'},['3PanelFold','3PanelZFold'] ) ) {
+				$pages = 3;
+			} elsif ( sets::isin( $$sig_specs{'rdbTemplateType'}, ['4PanelFold', '4PanelZFold'] ) ) {
+				$pages = 4;
+			} elsif ( sets::isin( $$sig_specs{'rdbTemplateType'}, ['5PanelFold', '5PanelZFold'] ) ) {
+				$pages = 5;
+			} elsif ( sets::isin( $$sig_specs{'rdbTemplateType'}, ['6PanelFold', '6PanelZFold'] ) ) {
+				$pages = 6;
+			} elsif ( $$sig_specs{'rdbTemplateType'} eq 'SingleGateFold' ) {
+				$pages = 3;
+			} elsif ( $$sig_specs{'rdbTemplateType'} eq 'DoubleGateFold' ) {
+				$pages = 4;
+			} elsif ( $$sig_specs{'rdbTemplateType'} eq 'DifficultFold' ) {
+				$pages = 6;
+			} #// end if
+			$finished_calliper += $pages * $calliper;
+		} # end if
+		$openprint::log->debug("******************************* FINISHED CALLIPER is $finished_calliper/1000 *********************************");
 		$_[0]{calliper} = Math::Round::nearest( 0.0001, $finished_calliper/10000);
 	} # end  if
 	return $_[0]{calliper};

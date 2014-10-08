@@ -17,46 +17,46 @@ Please select a host to view/edit.<br/>
 		<ul>
 		<li>
 			<label for="ip">Host IP</label>
-			<input type="text" id="ip" name="ip" value="<? echo ( $session{'/employee/it/hosts.html?ip'} ) ?>" onkeyup="this.value=this.value.replace(/[^\.\d%\/\*]/g,'');" onkeydown="this.form.hostname.value='';this.form.mac.value='';if(event && event.keyCode == 13){load_host($('f1'));}" onchange="this.onkeyup.call(this);this.onkeydown.call(this);"/>
+			<input type="text" id="ip" name="ip" value="<? echo ( $session{'/employee/it/hosts.html?ip'} ) ?>" onkeyup="this.form.hostname.value='';this.form.mac.value='';this.value=this.value.replace(/[^\.\d%\/\*]/g,'');" onkeydown="if(event && event.keyCode == 13){load_host($('f1'));}" oninput="this.onkeyup.call(this);" />
 			Hostname:
-			<input type="text" id="hostname" name="hostname" value="<? echo ( $session{'/employee/it/hosts.html?hostname'} ) ?>" onkeyup="this.value=this.value.replace(/\s/g,'');" onkeydown="this.form.ip.value='';this.form.mac.value='';if(event && event.keyCode == 13){load_host( $('f1') );}" />
+			<input type="text" id="hostname" name="hostname" value="<? echo ( $session{'/employee/it/hosts.html?hostname'} ) ?>" onkeyup="this.value=this.value.replace(/\s/g,'');" onkeydown="this.form.ip.value='';this.form.mac.value='';if(event && event.keyCode == 13){load_host( $('f1') );}" oninput="this.onkeyup.call(this);" />
 			MAC:
-			<input type="text" id="mac" name="mac" value="<? echo ( $session{'/employee/it/hosts.html?mac'} ) ?>" onkeyup="this.value=this.value.replace(/\s/g,'');" onkeydown="this.form.ip.value='';this.form.hostname.value='';if(event && event.keyCode == 13){load_host( $('f1') );}" />
+			<input type="text" id="mac" name="mac" value="<? echo ( $session{'/employee/it/hosts.html?mac'} ) ?>" onkeyup="this.value=this.value.replace(/\s/g,'');" onkeydown="this.form.ip.value='';this.form.hostname.value='';if(event && event.keyCode == 13){load_host( $('f1') );}" oninput="this.onkeyup.call(this);" />
 		</li>
 		<li><label>Type</label>
 			<? echo ( ssi::select( openprint::Host_Type->dropdown(order=>'lower(name)'), $session{'/employee/it/hosts.html?type_id'}, { name=>'type_id', prepend=>['','All'] } ); ) ?>
 		</li>
 		<li>
 			<label>Date Added</label>
-<? echo ( ssi::date_select_session( '/employee/it/hosts.html', 'created_on_start', { 'with_today' => 1, 'with_clear'=>1 } ); ) ?>
+<? echo ( date_select_session( '/employee/it/hosts.html', 'created_on_start', { with_today => 1, with_clear=>1 } ); ) ?>
 			to 
-<? echo ( ssi::date_select_session( '/employee/it/hosts.html', 'created_on_end', { 'with_today' => 1, 'with_clear'=>1 } ); ) ?>
+<? echo ( date_select_session( '/employee/it/hosts.html', 'created_on_end', { with_today => 1, with_clear=>1 } ); ) ?>
 		</li>
 		<li>
 			<label>Last Updated</label>
-<? echo ( ssi::date_select_session( '/employee/it/hosts.html', 'updated_on_start', { 'with_today' => 1, 'with_clear'=>1 } ); ) ?>
+<? echo ( date_select_session( '/employee/it/hosts.html', 'updated_on_start', { with_today => 1, with_clear=>1 } ); ) ?>
 			to 
-<? echo ( ssi::date_select_session( '/employee/it/hosts.html', 'updated_on_end', { 'with_today' => 1, 'with_clear'=>1 } ); ) ?>
+<? echo ( date_select_session( '/employee/it/hosts.html', 'updated_on_end', { with_today => 1, with_clear=>1 } ); ) ?>
 		</li>
 		<li>
 			<label>Blacklisted</label>
-			<? echo ( ssi::radio( 'blacklisted', [ '1','Yes','0','No','','Both' ], $session{'/employee/it/hosts.html?blacklisted'} ); ) ?>
+			<? echo ( radio( 'blacklisted', [ '1','Yes','0','No','','Both' ], $session{'/employee/it/hosts.html?blacklisted'} ); ) ?>
 		</li>
 		<li>
 			<label>Whitelisted</label>
-			<? echo ( ssi::radio( 'whitelisted', [ '1','Yes','0','No','','Both' ], $session{'/employee/it/hosts.html?whitelisted'} ); ) ?>
+			<? echo ( radio( 'whitelisted', [ '1','Yes','0','No','','Both' ], $session{'/employee/it/hosts.html?whitelisted'} ); ) ?>
 		</li>
 		<li>
 			<label>Monitored</label>
-			<? echo ( ssi::radio( 'monitored', [ '1','Yes','0','No','','Both' ], $session{'/employee/it/hosts.html?monitored'} ); ) ?>
+			<? echo ( radio( 'monitored', [ '1','Yes','0','No','','Both' ], $session{'/employee/it/hosts.html?monitored'} ); ) ?>
 		</li>
 		<li>
 			<label>Online</label>
-			<? echo ( ssi::radio( 'online', [ '1','Yes','0','No','','Both' ], $session{'/employee/it/hosts.html?online'} ); ) ?>
+			<? echo ( radio( 'online', [ '1','Yes','0','No','','Both' ], $session{'/employee/it/hosts.html?online'} ); ) ?>
 		</li>
 		<li>
 			<label>Has hostname</label>
-			<? echo ( ssi::radio( 'has_hostname', [ '1','Yes','0','No','','Both' ], $session{'/employee/it/hosts.html?has_hostname'} ); ) ?>
+			<? echo ( radio( 'has_hostname', [ '1','Yes','0','No','','Both' ], $session{'/employee/it/hosts.html?has_hostname'} ); ) ?>
 		</li>
 <!--
 		<li>
@@ -69,15 +69,15 @@ Please select a host to view/edit.<br/>
 -->
 <? if ( $config{'RADIUS Support'} ) ?>
 	<li><label>Has RADIUS Auth</label>
-		<? echo ( ssi::radio( 'radius_auth', [ 1, 'Yes', 0, 'No', '', 'Both' ], $session{'/employee/it/hosts.html?radius_auth'} ); ) ?>
+		<? echo ( radio( 'radius_auth', [ 1, 'Yes', 0, 'No', '', 'Both' ], $session{'/employee/it/hosts.html?radius_auth'} ); ) ?>
 	</li>
 <? endif ( $config{'RADIUS Support'} ) ?>
 		</ul>
 		<p class="buttons">
 			<? echo ( join('',
-				ssi::button( 'ShowResults', { 'onclick'=>"load_host( \$('f1') );", 'text'=>'Show Results' } ),
-				ssi::button( 'Reset', { 'onclick'=>'f1.reset();' } ),
-				ssi::button( 'Add', { 'onclick'=>q`window.location='host.html?'+$('f1').serialize();`, 'text'=>'Add New Host' } ),
+				button( 'ShowResults', { 'onclick'=>"load_host( \$('f1') );", 'text'=>'Show Results' } ),
+				button( 'Reset', { 'onclick'=>'f1.reset();' } ),
+				button( 'Add', { 'onclick'=>q`window.location='host.html?'+$('f1').serialize();`, 'text'=>'Add New Host' } ),
 				); ) ?>
 		</p>
 	</fieldset>

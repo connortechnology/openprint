@@ -117,7 +117,8 @@ sub calc {
 
 		foreach my $Equipment ( @equipment ) {
 			$$specs{'hdnBreakdown'.$qty_index} .= sprintf("<br/>Equipment: %s Lift: %s<br/>", $Equipment->name(), $Equipment->specification('Maximum Lift Depth') );
-			if ( $Equipment->specification('Type') eq 'Stitcher' ) {
+			my $equipment_type = $Equipment->specification('Type');
+			if ( $equipment_type eq 'Stitcher' ) {
 				if ( ! $stitching_service_index ) {
 					$$specs{'hdnBreakdown'.$qty_index} .="Not stitching <br/>";
 					next;
@@ -194,12 +195,15 @@ sub calc {
 				$$specs{'hdnBreakdown'.$qty_index} .= "No Service Price found for this quantity.<br/>";
 				next;
 			} # end if
-				my $heads = $Equipment->specification('Number of Drills');
-				my $runs = $heads ? ceil( $$specs{txtHoleQty} / $heads ) : 1;
+			my $heads = $Equipment->specification('Number of Drills');
+			my $runs = $heads ? ceil( $$specs{txtHoleQty} / $heads ) : 1;
 			if ( sets::isin( $servicePrice{units}, 'per m', 'per 1000' ) ) {
 				%servicePrice = openprint::service::get_price_object( 'Drilling', $runs * $qty, $Equipment);
 				$servicePrice{total} = $runs * $qty * ($servicePrice{price}/1000);
 				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('ServicePrice: %d * %.3f %s = $%.2f<br/>',$qty, $servicePrice{price}/1000, @servicePrice{'units','total'} );
+			} elsif ( $servicePrice{units} eq 'percent' ) {
+				$servicePrice{total} = $$stitching_specs{"MPrice$qty_index"} * ( $qty / 1000 ) * ( $servicePrice{price}/100 );
+				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('ServicePrice: %d * %.3f per M * %s %s = $%.2f<br/>',$qty, $$stitching_specs{"MPrice$qty_index"},@servicePrice{'price','units','total'} );
 			} elsif ( sets::isin( $servicePrice{units}, [ 'per lift', 'per drill' ] ) ) {
 				if ( $items_per_lift ) {
 					$runs *= ceil($qty/$items_per_lift);

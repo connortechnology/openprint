@@ -49,7 +49,7 @@ Choose criteria and click show results. You may the download the results in CSV 
 			<select name="ddmStatus" multiple="multiple">
 				<option value="">All</option>
 				<? echo (
-				       make_drop_down( [ map { $$_{name}, $$_{name} } openprint::Order_Status->find( order=>'lower(name)' ) ], [ split(',',$session{'/employee/accounting/search.html?ddmStatus'})] );
+				       make_drop_down( openprint::Order_Status->dropdown( order=>'lower(name)' ), [ split(',',$session{'/employee/accounting/search.html?ddmStatus'}) ] );
 					   ) ?>
 			</select>
 		</p>
@@ -59,7 +59,7 @@ Choose criteria and click show results. You may the download the results in CSV 
 				<option value="">All Employees</option>
 				<? echo (
 				    make_drop_down( 
-						[ map { $_->id(), $_->name() } openprint::User->find( type=>['E','A'], order=>'lower(firstname),lower(lastname)' ) ],
+						openprint::User->dropdown( type=>['E','A'], order=>'lower(firstname),lower(lastname)' ),
 						$session{'/employee/accounting/search.html?ddmEmployee'} ); 
 					) ?>
 			</select>

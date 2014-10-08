@@ -39,10 +39,52 @@ my %variables = (
 	'PrintingType'=>['save'],'rdbTemplateType'=>['save'],
 	'help'=>['output'],'alert'=>['output','save'],
 	'ProjectIndex'=>[], 'ServiceIndex'=>[], 'ServiceType'=>[], 'NewBook'=>[],
-	'remaining_pages'=>['output'],'next_group_id'=>['output'],'groups'=>['output'],
+	'remaining_pages'=>['output'],'next_group_id'=>['output'],'groups'=>['output','save'],
 	spine	=>	 ['save'],
 
-);
+	);
+
+my @signature_variables = (
+'chkCyanSideOne','chkMagentaSideOne','chkYellowSideOne','chkBlackSideOne', 'chkProcessColourSideOne',
+                'chkColourCoating1SideOne', 'ColourCoatingType1SideOne', 'ColourCoatingColour1SideOne','ColourCoatingCoverage1SideOne',
+                'chkColourCoating2SideOne', 'ColourCoatingType2SideOne', 'ColourCoatingColour2SideOne','ColourCoatingCoverage2SideOne',
+                'chkColourCoating3SideOne', 'ColourCoatingType3SideOne', 'ColourCoatingColour3SideOne','ColourCoatingCoverage3SideOne',
+                'chkColourCoating4SideOne', 'ColourCoatingType4SideOne', 'ColourCoatingColour4SideOne','ColourCoatingCoverage4SideOne',
+                'chkColourCoating5SideOne', 'ColourCoatingType5SideOne', 'ColourCoatingColour5SideOne','ColourCoatingCoverage5SideOne',
+                'chkColourCoating6SideOne', 'ColourCoatingType6SideOne', 'ColourCoatingColour6SideOne','ColourCoatingCoverage6SideOne',
+                'chkColourCoating7SideOne', 'ColourCoatingType7SideOne', 'ColourCoatingColour7SideOne','ColourCoatingCoverage7SideOne',
+                'chkColourCoating8SideOne', 'ColourCoatingType8SideOne', 'ColourCoatingColour8SideOne','ColourCoatingCoverage8SideOne',
+                'chkColourCoating9SideOne', 'ColourCoatingType9SideOne', 'ColourCoatingColour9SideOne','ColourCoatingCoverage9SideOne',
+                'chkCyanSideTwo','chkMagentaSideTwo','chkYellowSideTwo','chkBlackSideTwo', 'chkProcessColourSideTwo',
+                'chkColourCoating1SideTwo', 'ColourCoatingType1SideTwo', 'ColourCoatingColour1SideTwo','ColourCoatingCoverage1SideTwo',
+                'chkColourCoating2SideTwo', 'ColourCoatingType2SideTwo', 'ColourCoatingColour2SideTwo','ColourCoatingCoverage2SideTwo',
+                'chkColourCoating3SideTwo', 'ColourCoatingType3SideTwo', 'ColourCoatingColour3SideTwo','ColourCoatingCoverage3SideTwo',
+                'chkColourCoating4SideTwo', 'ColourCoatingType4SideTwo', 'ColourCoatingColour4SideTwo','ColourCoatingCoverage4SideTwo',
+                'chkColourCoating5SideTwo', 'ColourCoatingType5SideTwo', 'ColourCoatingColour5SideTwo','ColourCoatingCoverage5SideTwo',
+                'chkColourCoating6SideTwo', 'ColourCoatingType6SideTwo', 'ColourCoatingColour6SideTwo','ColourCoatingCoverage6SideTwo',
+                'chkColourCoating7SideTwo', 'ColourCoatingType7SideTwo', 'ColourCoatingColour7SideTwo','ColourCoatingCoverage7SideTwo',
+                'chkColourCoating8SideTwo', 'ColourCoatingType8SideTwo', 'ColourCoatingColour8SideTwo','ColourCoatingCoverage8SideTwo',
+                'chkColourCoating9SideTwo', 'ColourCoatingType9SideTwo', 'ColourCoatingColour9SideTwo','ColourCoatingCoverage9SideTwo',
+                'CyanSpotSideOneCoverage', 'MagentaSpotSideOneCoverage', 'YellowSpotSideOneCoverage', 'BlackSpotSideOneCoverage',
+                'CyanSideOneCoverage', 'MagentaSideOneCoverage', 'YellowSideOneCoverage', 'BlackSideOneCoverage',
+                'CyanSpotSideTwoCoverage', 'MagentaSpotSideTwoCoverage', 'YellowSpotSideTwoCoverage', 'BlackSpotSideTwoCoverage',
+                'CyanSideTwoCoverage', 'MagentaSideTwoCoverage', 'YellowSideTwoCoverage', 'BlackSideTwoCoverage',
+                'BleedLeft','BleedRight','BleedTop','BleedBottom','rdbColourBar','txtCropMarkSpace',
+		'ddmRunStyle-', 'ddmPress-', 'PrintingType-', 'StockType-', 'txtPlateChangeQuantity-', 'PageQuantity-',
+		'Pages', 'OverrideGroupPageQuantity', 'GroupPageQuantity', 'txtSignatureType',
+		'txtFinalHeight', 'txtFinalWidth', 'txtHeight', 'txtWidth',
+		'rdbSpecificStock', 'rdbSuppliedStock',
+		'ddmStockBrand', 'txtSpecificStockBrand',
+		'ddmStockGroup', 'ddmStockQuality',
+		'ddmStockFinish', 'txtSpecificStockFinish',
+		'ddmStockColour', 'txtSpecificStockColour',
+		'ddmStockWeight', 'txtSpecificStockWeight',
+		'txtSpecificStockCalliper', 'StockType',
+		'txtSpecificStockWidth', 'txtSpecificStockHeight', 
+		'txtCustomMWeight', 'basis_mweight', 'basis_width', 'basis_height', 
+		'CustomStockPrice', 'txtStockGSM','CustomSheetDoubleSided',
+		'cuttable', 'perfecting', 'StockGrade', 'minimum_order','sheets_per_package',
+		);
 
 sub variables {
 	my ( $project_id, $service_id, $specs, $incoming_specs ) = @_;
@@ -52,30 +94,16 @@ sub variables {
 	} # end foreach;
 	my @Groups = sql::execute( undef, undef, 'SELECT DISTINCT strvalue FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strName=?', $project_id, 'Group' );
 	foreach my $group_id ( @Groups ) {
-		push @v, 'ddmRunStyle-'.$group_id;
-		push @v, 'ddmPress-'.$group_id;
-		push @v, 'PrintingType-'.$group_id;
-		push @v, 'StockType-'.$group_id;
-
-		push @v, 'Pages'.$group_id;
-		push @v, 'OverrideGroupPageQuantity'.$group_id;
-		push @v, 'GroupPageQuantity'.$group_id;
-		push @v, 'txtSignatureType'.$group_id;
-		push @v, 'txtFinalHeight'.$group_id;
-		push @v, 'txtFinalWidth'.$group_id;
-		push @v, 'txtHeight'.$group_id;
-		push @v, 'txtWidth'.$group_id;
-		push @v, 'txtPlateChangeQuantity-'.$group_id;
-		push @v, 'PageQuantity-'.$group_id;
-	} # end foreach
+		push @v, map { join('', $_,$group_id) } @signature_variables;
+	} # end foreach group
 	return @v;
 } # end sub variables
 
 sub no_outputs {
 	my ( $project_index, $service_index, $specs ) = @_;
-    my @v;
+	my @v;
 	my @outputs;
-    foreach my $k ( keys %variables ) {
+	foreach my $k ( keys %variables ) {
 		if ( ! sets::isin( 'output', $variables{$k} ) ) {
 			push @v, $k; 
 		} else {
@@ -126,6 +154,7 @@ sub calc {
 	my ( $log, $dbh, $variable, $project_index, $service_index, $specs ) = @_;
 
 	$$specs{Status} = 'calculated';
+	$$specs{alert} = '';
 
 	if ( ! $$specs{rdbTemplateType} ) {
 		$$specs{alert} .= 'Please select how this project will be bound.<br/>';
@@ -219,9 +248,14 @@ $openprint::log->warn("FIXM E");
 
 	foreach my $group_id ( @Groups ) {
 		$openprint::log->debug("Group: $group_id, remaining: $remaining_pages, override: $override_pages{$group_id}") if DEBUG;
+		my %sig_specs =  map { $_, $$specs{$_.$group_id } } @signature_variables;
+		
 		openprint::Estimating::Printing::get_colours( $specs, 'SideOne', \%variables, $group_id );
 		openprint::Estimating::Printing::get_colours( $specs, 'SideTwo', \%variables, $group_id );
 		openprint::Estimating::Printing::get_inkcoverage( $Project, $specs, \%variables, $group_id );
+		openprint::Estimating::Printing::get_Stocks( $Project, \%sig_specs, \%variables );
+		$$specs{alert} .= $sig_specs{alert};
+		@$specs{map { $_.$group_id} @signature_variables} = @sig_specs{@signature_variables};
 		if ( ! exists $override_pages{$group_id} ) {
 			$override_pages{$group_id} = $remaining_pages;
 			$remaining_pages = 0;

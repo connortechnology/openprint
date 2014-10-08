@@ -64,7 +64,7 @@
 				my @totals;
 
 				foreach my $qty_index ( $Project->quantity_indexes() ) {
-					$html .= '<td class="price">'.($$printing_specs{"txtPrice$qty_index"} ? $ProjectCurrency->convert_from($$printing_specs{"txtPrice$qty_index"}) : '&nbsp;').'</td>';
+					$html .= '<td class="price"><span class="price">'.($$printing_specs{"txtPrice$qty_index"} ? $ProjectCurrency->convert_from($$printing_specs{"txtPrice$qty_index"}) : '&nbsp;').'</span></td>';
 				} # end foreach
 				$html .= '<td class="status">'.$statuses{$$services{''}[0]}.'</td>';
 				if ( ( ! $Project->docket() ) or ( $Project->Order()->status() eq 'Re-Opened' ) ) {
@@ -132,7 +132,7 @@
 					} # end if
 					foreach my $qty_index ( $Project->quantity_indexes() ) {
 						my $price = $ProjectCurrency->convert_from( $sig_specs{'txtPrice'.$qty_index} );
-						$html .= sprintf('<td class="price"><a href="/main/project/%1$s?ProjectIndex=%2$d&amp;ServiceIndex=%3$d">%6$s%4$s</a><br/>%5$s', 'prin/Signature.html', 
+						$html .= sprintf('<td class="price"><a class="price" href="/main/project/%1$s?ProjectIndex=%2$d&amp;ServiceIndex=%3$d">%6$s%4$s</a><br/>%5$s', 'prin/Signature.html', 
 								$$Project{id}, $ss_id,
 								openprint::Currency::format( $price ),
 								openprint::Estimating::Printing::summary($Project, $ss_id, \%sig_specs, $qty_index ),
@@ -180,7 +180,7 @@
 						$html .= '<span class="Overrides">With Overrides</span> ';
 					} # end if
 					if ( $session{'user_type'} eq 'A' or ! $Project->Ordered_Product() ) {
-						$html .= '<b>'.openprint::Currency::format( $ProjectCurrency->convert_from( $$specs{'txtPrice'.$qty_index} ) ).'</b><br/>';
+						$html .= '<span class="price">'.openprint::Currency::format( $ProjectCurrency->convert_from( $$specs{'txtPrice'.$qty_index} ) ).'</span><br/>';
 					} # end if
 					my $summary = openprint::service::summary( $Project->id(), $service_id, $qty_index );
 					$summary =~ s/\n/<br\/>/g;
@@ -251,7 +251,7 @@
 							$html .= '<span class="Overrides">With Overrides</span> ';
 						} # end if
 						if ( $session{'user_type'} eq 'A' or ! $Project->Ordered_Product() ) {
-							$html .= '<b>'.openprint::Currency::format( $ProjectCurrency->convert_from( $$specs{'txtPrice'.$qty_index} ) ).'</b><br/>';
+							$html .= '<span class="price">'.openprint::Currency::format( $ProjectCurrency->convert_from( $$specs{'txtPrice'.$qty_index} ) ).'</span><br/>';
 						} # end if
 						$html .= '</a>' if $do_link;
 						my $summary = openprint::service::summary( $Project->id(), $service_id, $qty_index );
