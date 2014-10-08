@@ -729,10 +729,10 @@ $openprint::log->debug("Folding impositions: " . @folding_impositions ) if DEBUG
 		my $dutch_horizontal_cuts = 0;
 
 		if ( (defined $$specs{'chkOverrideCalculatedCuts-'.$form.'-'.$qty_index}) and ( $$specs{'chkOverrideCalculatedCuts-'.$form.'-'.$qty_index} eq 'Y' ) ) {
-			$vertical_cuts = $$specs{"txtVerticalCuts-$form-$qty_index"};
-			$horizontal_cuts = $$specs{"txtHorizontalCuts-$form-$qty_index"};
-			$dutch_vertical_cuts = $$specs{"txtDVerticalCuts-$form-$qty_index"};
-			$dutch_horizontal_cuts = $$specs{"txtDHorizontalCuts-$form-$qty_index"};
+			$vertical_cuts = int($$specs{"txtVerticalCuts-$form-$qty_index"}) if $$specs{"txtVerticalCuts-$form-$qty_index"};
+			$horizontal_cuts = int($$specs{"txtHorizontalCuts-$form-$qty_index"}) if $$specs{"txtHorizontalCuts-$form-$qty_index"};
+			$dutch_vertical_cuts = int($$specs{"txtDVerticalCuts-$form-$qty_index"}) if $$specs{"txtDVerticalCuts-$form-$qty_index"};
+			$dutch_horizontal_cuts = int($$specs{"txtDHorizontalCuts-$form-$qty_index"}) if $$specs{"txtDHorizontalCuts-$form-$qty_index"};
 		} else {
 # Regular book signatures will be trimmed by the stitcher, so we only need 1 cut per imposition
 # Most stitchers do 3knife trim, but some do not. Most need a Head Trim, some need Head & Foot
