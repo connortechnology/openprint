@@ -407,7 +407,7 @@ $log->error("Unable to load equipment.	No PPF for you for signature $$PPF{'signa
 			require openprint::print_project;
 			if ( ( defined $third ) or ( $filename eq 'Paper.html' ) ) {
 				if ( $param{'ServiceIndex'} and ! $variable{'ServiceIndex'} ) {
-					my @service_ids = split(',', $openprint::param{'ServiceIndex'} );
+					my @service_ids = split(',', $param{'ServiceIndex'} );
 					$variable{'ServiceIndex'} = $service_ids[0];
 				} # end if
 				$variable{'ProjectIndex'} = $openprint::param{'ProjectIndex'} if ! $variable{'ProjectIndex'};
@@ -422,11 +422,18 @@ $log->error("Unable to load equipment.	No PPF for you for signature $$PPF{'signa
 				openprint::print::get_quantities( \%variable, $project_index );
 				if ( $project_index and $service_index ) {
 					my $Service = $variable{Project}->Service( $service_index );
-					$variable{ServiceType} = $Service->ServiceType();
-					@variable{'ServiceTypeID','ServiceTypeName','ServiceTypeType'} = $variable{ServiceType}->get('name','description','type') if $variable{ServiceType};
-$log->debug("ServiceType: $variable{'ServiceTypeType'}");
-					my $specs = $Service->specs();
-					@variable{keys %$specs} = values %$specs;
+$log->debug("Service: " . $Service->to_string() );
+					if ( ! $Service->service_id() ) {
+						$variable{error} .= "Unable to load data for service. Perhaps it was removed.<br/>";
+						$variable{ExternalRedirect} = '/main/project/view.html?project_id='.$project_index;
+					} else {
+						$variable{ServiceType} = $Service->ServiceType();
+						@variable{'ServiceTypeID','ServiceTypeName','ServiceTypeType'} = $variable{ServiceType}->get('name','description','type') if $variable{ServiceType};
+
+	$log->debug("ServiceType: $variable{'ServiceTypeType'}");
+						my $specs = $Service->specs();
+						@variable{keys %$specs} = values %$specs;
+					} # end if
 				} # end if
 				$variable{'ProjectType'} = $variable{'Project'}->Type();
 				# THis couud happen if the ServiceSpecs clobbered it
