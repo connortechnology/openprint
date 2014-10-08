@@ -98,13 +98,13 @@ sub neccessary {
 } # end sub neccessary
 
 sub signature_needs {
-	my ( $Project, $specs ) = @_;
+	my ( $Project, $sig_specs ) = @_;
 
-	foreach ( get_uv_colours( $specs, 'SideOne' ) ) {
+	foreach ( get_uv_colours( $sig_specs, 'SideOne' ) ) {
 		return 1 if $_ =~ /UV/;
 	} # end foreach colour
 
-	foreach ( get_uv_colours( $specs, 'SideTwo' ) ) {
+	foreach ( get_uv_colours( $sig_specs, 'SideTwo' ) ) {
 		return 1 if $_ =~ /UV/;
 	} # end foreach colour
 } # end sub signature_needs

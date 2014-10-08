@@ -1,7 +1,7 @@
 use strict;
 #use warnings;
 package openprint::pricing;
-#use Memoize;
+use Memoize;
 use Carp qw( cluck );
 
 require openprint::pricelist;
@@ -28,24 +28,24 @@ sub init_cache {
 	my @Pricelists = openprint::Pricelist->find();
 	foreach my $Pricelist ( @Pricelists ) {
 		foreach my $S ( openprint::ServicePrice->find( 'period_end is null'=>1, order=>'min NULLS FIRST, max NULLS FIRST') ) {
-			if ( ! $price_cache{$config{db_name}}{$$Pricelist{id}}{'openprint::Service'}{$S->Service()->name()} ) {
-				$price_cache{$config{db_name}}{$$Pricelist{id}}{'openprint::Service'}{$S->Service()->name()} = [];
+			if ( ! $price_cache{$config{db_name}}{$$Pricelist{id}}{'openprint::Service'}{$S->Service()->id()} ) {
+				$price_cache{$config{db_name}}{$$Pricelist{id}}{'openprint::Service'}{$S->Service()->id()} = [];
 			} # end if
-			push @{$price_cache{$config{db_name}}{$$Pricelist{id}}{'openprint::Service'}{$S->Service()->name()}}, $S;
+			push @{$price_cache{$config{db_name}}{$$Pricelist{id}}{'openprint::Service'}{$S->Service()->id()}}, $S;
 		} # end foreach ServicePrice
 		foreach my $S ( openprint::MaterialPrice->find( order=>'lngmin NULLS FIRST, lngmax NULLS FIRST') ) {
 #'period_end is null'=>0, 
-			if ( ! $price_cache{$config{db_name}}{$$Pricelist{id}}{'openprint::Material'}{$S->Material()->name()} ) {
-				$price_cache{$config{db_name}}{$$Pricelist{id}}{'openprint::Material'}{$S->Material()->name()} = [];
+			if ( ! $price_cache{$config{db_name}}{$$Pricelist{id}}{'openprint::Material'}{$S->Material()->id()} ) {
+				$price_cache{$config{db_name}}{$$Pricelist{id}}{'openprint::Material'}{$S->Material()->id()} = [];
 			} # end if
-			push @{$price_cache{$config{db_name}}{$$Pricelist{id}}{'openprint::Material'}{$S->Material()->name()}}, $S;
+			push @{$price_cache{$config{db_name}}{$$Pricelist{id}}{'openprint::Material'}{$S->Material()->id()}}, $S;
 		} # end foreach ServicePrice
 	} # end foreach Pricelist
 	foreach my $Service ( @Services ) {
-		$Service->Prices( [ map { $price_cache{$config{db_name}}{$$_{id}}{'openprint::Service'}{$$Service{name}} ? $price_cache{$config{db_name}}{$$_{id}}{'openprint::Service'}{$$Service{name}} : () } @Pricelists ] );
+		$Service->Prices( [ map { $price_cache{$config{db_name}}{$$_{id}}{'openprint::Service'}{$$Service{id}} ? $price_cache{$config{db_name}}{$$_{id}}{'openprint::Service'}{$$Service{id}} : () } @Pricelists ] );
 	} # end foreach Service
 	foreach my $Material ( @Materials ) {
-		$Material->Prices( [ map { $price_cache{$config{db_name}}{$$_{id}}{'openprint::Material'}{$$Material{name}} ? $price_cache{$config{db_name}}{$$_{id}}{'openprint::Material'}{$$Material{name}} : () } @Pricelists ] );
+		$Material->Prices( [ map { $price_cache{$config{db_name}}{$$_{id}}{'openprint::Material'}{$$Material{id}} ? $price_cache{$config{db_name}}{$$_{id}}{'openprint::Material'}{$$Material{id}} : () } @Pricelists ] );
 	} # end foreach Service
 }
 
@@ -196,6 +196,7 @@ if ( DEBUG ) {
 	if ( $price_type and $price_cache{$config{db_name}}{$list_id}{$price_type}{$$Object{name}} ) {
 		@pricing = @{$price_cache{$config{db_name}}{$list_id}{$price_type}{$$Object{name}}};
 	} else {
+$log->warn("Request for old style price for $Object");
 		my $priceGroup = $Object->new( $log, $dbh, $list_id, $prod_index, $equipment, $qty, $period );
 		$priceGroup->load();	
 		push @pricing, @{$priceGroup->{prices}};
@@ -264,11 +265,11 @@ sub get_Price {
 	# If we specify a period, then forget about the caching.  Caching will only do current prices.
 	if ( $period ) {
 	}
-	if ( $price_cache{$config{db_name}}{$$Pricelist{id}}{$type}{$Object->name()} ) {
-		@Prices = @{$price_cache{$config{db_name}}{$$Pricelist{id}}{$type}{$Object->name()}};
+	if ( $price_cache{$config{db_name}}{$$Pricelist{id}}{$type}{$$Object{id}} ) {
+		@Prices = @{$price_cache{$config{db_name}}{$$Pricelist{id}}{$type}{$$Object{id}}};
 	} else {
-		$price_cache{$config{db_name}}{$$Pricelist{id}}{$type}{$Object->name()} = [$Object->Prices()];
-		@Prices = @{$price_cache{$config{db_name}}{$$Pricelist{id}}{$type}{$Object->name()}};
+		$price_cache{$config{db_name}}{$$Pricelist{id}}{$type}{$$Object{id}} = [$Object->Prices()];
+		@Prices = @{$price_cache{$config{db_name}}{$$Pricelist{id}}{$type}{$$Object{id}}};
 		$log->error("Prices not cached for $config{db_name} pricelist: $$Pricelist{id} type $type $$Object{name}");
 	}
 	if ( @Prices ) {
