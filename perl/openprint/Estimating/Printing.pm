@@ -4916,6 +4916,7 @@ sub calc_price {
 			if ( $$project{'FoldingSpecs'}{"chkOverrideEquipment-$$specs{'SignatureIndex'}-$qty_index"} ne 'Y' ) {
 				$$project{'FoldingSpecs'}{"ddmEquipment-$$specs{'SignatureIndex'}-$qty_index"} = '';
 			} # end if
+			$price{Folds} = [];
 		} else {
 			if ( $folding_results{Equipment} ) {
 				
