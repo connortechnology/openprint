@@ -161,7 +161,7 @@ $I->display('In PerfectBi:') if DEBUG;
             $$I{Folds} = [ openprint::Estimating::Folding::get_Folds( $folding_specs, $I, $qty_index ) ] if $folding_specs;
         } # end if
 
-        if ( ! $$I{Folds} ) {
+        if ( ! ( $$I{Folds} and @{$$I{Folds}} ) ) {
             $openprint::log->error("No folds in imposition, guess 1");
             $I->display("No Folds");
             $$specs{'txtSignatureQty'.$I->pages().'Page-'.$qty_index} += 1;
