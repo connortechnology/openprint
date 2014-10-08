@@ -7,9 +7,10 @@ require openprint::pricelist;
 require openprint::priceset;
 require openprint::price;
 
-use vars qw( $log $dbh );
+use vars qw( $log $dbh %config );
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
+*config = \%openprint::config;
 
 use constant DEBUG => 0;
 
@@ -173,31 +174,21 @@ sub split_by_equipment {
 
 memoize('get_best_prices');
 sub get_best_prices {
-	my ( $cust_id, $prod_index, $list_id, $pricesetclass, $equipment, $qty, $period ) = @_;
+	my ( $cust_id, $prod_index, $list_id, $Object, $equipment, $qty, $period ) = @_;
 
-	#my $hash_index = "$list_id-$pricesetclass-$cust_id-$prod_index-$equipment-$qty";
-
-	#if ( ! defined $price_cache{$hash_index} ) {
-
-		if ( ! $list_id ) {
-$log->error("Not specifying pricelist to get_best_prices is deprecated");
-Carp::cluck("Not specifying pricelist to get_best_prices is deprecated");
+	if ( ! $list_id ) {
+		$log->error("Not specifying pricelist to get_best_prices is deprecated");
+		Carp::cluck("Not specifying pricelist to get_best_prices is deprecated");
 # figure out which price list we select from, because the caller didn't specify.
-			$list_id = get_pricelist_id();
-		} # end if
+		$list_id = get_pricelist_id();
+	} # end if
 
-		my @pricing = ();
-		my $priceGroup = $pricesetclass->new( $log, $dbh, $list_id, $prod_index, $equipment, $qty, $period );
-		$priceGroup->load();	
-		push @pricing, @{$priceGroup->{prices}};
-if ( DEBUG ) {
-	$openprint::log->debug("Pricing: " . @pricing );
-}
+	my @pricing = ();
 	my $price_type = ref $Object;
 	if ( $price_type and $price_cache{$config{db_name}}{$list_id}{$price_type}{$$Object{id}} ) {
 		@pricing = @{$price_cache{$config{db_name}}{$list_id}{$price_type}{$$Object{id}}};
 	} else {
-$log->warn("Request for old style price for $Object");
+#$log->warn("Request for old style price for $Object");
 		my $priceGroup = $Object->new( $log, $dbh, $list_id, $prod_index, $equipment, $qty, $period );
 		$priceGroup->load();	
 		push @pricing, @{$priceGroup->{prices}};
@@ -207,51 +198,48 @@ $log->warn("Request for old style price for $Object");
 # We should do this later...
 
 # Now if we are a customer, then we have more to do, including special pricing, adding discounts, etc. 
-		if ( $cust_id != 0 ) {
-			my $Company = new openprint::Company( $cust_id );
+	if ( $cust_id != 0 ) {
+		my $Company = new openprint::Company( $cust_id );
 
-			my $pricingpercent = $Company->discount();
-			if ( $pricingpercent ) {
-				$pricingpercent = 1 - ($pricingpercent/100);
-				for ( my $index = 0; $index < @pricing; $index += 1 ) {
-					if ( $pricing[$index]->{Discountable} ne 'N' ) {
-
-# the if here is to preserve empty pricing.	if pricei s empty, we display call, instead of 0.00.
-						if ( $pricing[$index]->{Price} ne '' ) {
-							$pricing[$index]->{Price} *= $pricingpercent;
-						} # end if
-					} # end if
-				} # end for
-			} # end if
-		} # end if
-		if ( $openprint::config{'ApplyMarkup'} ) {
-		#$openprint::log->debug("Apply Markup: $openprint::config{'ApplyMarkup'}");	
-			my $pricingpercent = $openprint::config{'ApplyMarkup'};
-			$pricingpercent =~ s/[^\d\.\-]//g;
-			$pricingpercent /= 100;
-			$pricingpercent += 1;
+		my $pricingpercent = $Company->discount();
+		if ( $pricingpercent ) {
+			$pricingpercent = 1 - ($pricingpercent/100);
 			for ( my $index = 0; $index < @pricing; $index += 1 ) {
+				if ( $pricing[$index]->{Discountable} ne 'N' ) {
+
 # the if here is to preserve empty pricing.	if pricei s empty, we display call, instead of 0.00.
-				if ( $pricing[$index]->{Price} ne '' ) {
-					$pricing[$index]->{Price} *= $pricingpercent;
+					if ( $pricing[$index]->{Price} ne '' ) {
+						$pricing[$index]->{Price} *= $pricingpercent;
+					} # end if
 				} # end if
 			} # end for
 		} # end if
+	} # end if
+	if ( $openprint::config{'ApplyMarkup'} ) {
+#$openprint::log->debug("Apply Markup: $openprint::config{'ApplyMarkup'}");	
+		my $pricingpercent = $openprint::config{'ApplyMarkup'};
+		$pricingpercent =~ s/[^\d\.\-]//g;
+		$pricingpercent /= 100;
+		$pricingpercent += 1;
+		for ( my $index = 0; $index < @pricing; $index += 1 ) {
+# the if here is to preserve empty pricing.	if pricei s empty, we display call, instead of 0.00.
+			if ( $pricing[$index]->{Price} ne '' ) {
+				$pricing[$index]->{Price} *= $pricingpercent;
+			} # end if
+		} # end for
+	} # end if
 
-		my @prices;
-		if ( $equipment ) {
-			@prices = build_lowest_price_list( @pricing );
-		} else {
-			my %lists = split_by_equipment( @pricing );
-			foreach my $key ( keys %lists ) {
-				push @prices, build_lowest_price_list( @{$lists{$key}} );
-			} # end foreach
-		} # end if
-		#$price_cache{$hash_index} = [ @prices ];
-	#} # end if
+	my @prices;
+	if ( $equipment ) {
+		@prices = build_lowest_price_list( @pricing );
+	} else {
+		my %lists = split_by_equipment( @pricing );
+		foreach my $key ( keys %lists ) {
+			push @prices, build_lowest_price_list( @{$lists{$key}} );
+		} # end foreach
+	} # end if
 
 	return \@prices;
-	#return $price_cache{$hash_index};
 } # end sub get_best_prices
 
 sub get_Price {
