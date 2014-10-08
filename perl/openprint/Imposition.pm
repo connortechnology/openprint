@@ -13,6 +13,7 @@ my @fields = (
 	'image_width','image_height', # dimensions + bleed
 	'object_width','object_height', # Flat dimensions
 	'layout_width','layout_height',
+	'perfecting_wheel_space',
 	'cut_off',
 	'runstyle',
 	'spread_rows','spread_columns','spreads','spread_size',
@@ -53,13 +54,13 @@ sub AUTOLOAD {
 
     if ( @_ > 1 ) {
 		$_[0]{$name} = $_[1];
-		if ( sets::isin( $name, ['rows','columns','dutch_rows','dutch_columns','spread_rows','spread_columns','spreads','image_width','image_height','spread_size'] ) ) {
+		if ( sets::isin( $name, ['rows','columns','dutch_rows','dutch_columns','spread_rows','spread_columns','spreads','image_width','image_height','spread_size','object_width','object_height' ] ) ) {
 			$_[0]{'imposition'} = $_[0]{'rows'} * $_[0]{'columns'} + $_[0]{'dutch_rows'} * $_[0]{'dutch_columns'};
 			$_[0]{'spreads'} = $_[0]{'spread_rows'} * $_[0]{'spread_columns'};
 			$_[0]{'pages'} = $_[0]{'spreads'} * $_[0]{'spread_size'};
 
 			if ( $_[0]{'image_orientation'} eq 'Vertical' ) {
-				$_[0]{'layout_width'} = $_[0]{'columns'} * $_[0]{'image_width'};
+				$_[0]{'layout_width'} = $_[0]{'columns'} * $_[0]{'image_width'} + ( $_[0]{perfecting_wheel_space} - $_[0]{bleed_size} );
 				$_[0]{'layout_height'} = $_[0]{'rows'} * $_[0]{'image_height'};
 #$openprint::log->debug("Vertical laytou: $_[0]{'layout_width'}  x $_[0]{'layout_height'} image: $_[0]{'image_width'}x$_[0]{'image_height'}");
 #$_[0]->display();
@@ -82,7 +83,7 @@ sub AUTOLOAD {
 					} # end if
 				} # end if
 			} elsif ( $_[0]{'image_orientation'} eq 'Horizontal' ) {
-				$_[0]{'layout_width'} = $_[0]{'columns'} * $_[0]{'image_height'};
+				$_[0]{'layout_width'} = $_[0]{'columns'} * $_[0]{'image_height'} + ( $_[0]{perfecting_wheel_space} - $_[0]{bleed_size} );
 				$_[0]{'layout_height'} = $_[0]{'rows'} * $_[0]{'image_width'};
 
 				if ( $_[0]{dutch_columns} ) {
@@ -137,7 +138,7 @@ sub set {
 	} # end foreach
 	$self->{'imposition'} = $$self{'rows'} * $$self{'columns'} + $$self{'dutch_rows'} * $$self{'dutch_columns'};
 	if ( $$self{'image_orientation'} eq 'Vertical' ) {
-		$$self{'layout_width'} = $$self{'columns'} * $$self{'image_width'};
+		$$self{'layout_width'} = $$self{'columns'} * $$self{'image_width'} + ( $$self{perfecting_wheel_space} - $$self{bleed_size} );
 		$$self{'layout_height'} = $$self{'rows'} * $$self{'image_height'};
 		if ( $$self{'dutch_orientation'} eq 'width' ) {
 			$$self{'layout_width'} += $$self{'dutch_columns'} * $$self{'image_height'};
@@ -150,7 +151,7 @@ sub set {
 		} # end if
 
 	} elsif ( $$self{'image_orientation'} eq 'Horizontal' ) {
-		$$self{'layout_width'} = $$self{'columns'} * $$self{'image_height'};
+		$$self{'layout_width'} = $$self{'columns'} * $$self{'image_height'} + ( $$self{perfecting_wheel_space} - $$self{bleed_size} );
 		$$self{'layout_height'} = $$self{'rows'} * $$self{'image_width'};
 		if ( $$self{'dutch_orientation'} eq 'width' ) {
 			$$self{'layout_width'} += $$self{'dutch_columns'} * $$self{'image_width'};

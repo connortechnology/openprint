@@ -19,6 +19,34 @@ sub clear_cache {
 	%price_cache = ();
 } # end sub clear_cache
 
+sub init_cache {
+	$price_cache{$config{db_name}} = {};
+	my @Services = openprint::Service->find(); # for cachine	
+	my @Materials = openprint::Material->find(); # for cachine	
+	my @Pricelists = openprint::Pricelist->find();
+	foreach my $Pricelist ( @Pricelists ) {
+		foreach my $S ( openprint::ServicePrice->find( 'period_end is null'=>1, order=>'min NULLS FIRST, max NULLS FIRST') ) {
+			if ( ! $price_cache{$config{db_name}}{$$Pricelist{id}}{'openprint::Service'}{$S->Service()->id()} ) {
+				$price_cache{$config{db_name}}{$$Pricelist{id}}{'openprint::Service'}{$S->Service()->id()} = [];
+			} # end if
+			push @{$price_cache{$config{db_name}}{$$Pricelist{id}}{'openprint::Service'}{$S->Service()->id()}}, $S;
+		} # end foreach ServicePrice
+		foreach my $S ( openprint::MaterialPrice->find( order=>'lngmin NULLS FIRST, lngmax NULLS FIRST') ) {
+#'period_end is null'=>0, 
+			if ( ! $price_cache{$config{db_name}}{$$Pricelist{id}}{'openprint::Material'}{$S->Material()->id()} ) {
+				$price_cache{$config{db_name}}{$$Pricelist{id}}{'openprint::Material'}{$S->Material()->id()} = [];
+			} # end if
+			push @{$price_cache{$config{db_name}}{$$Pricelist{id}}{'openprint::Material'}{$S->Material()->id()}}, $S;
+		} # end foreach ServicePrice
+	} # end foreach Pricelist
+	foreach my $Service ( @Services ) {
+		$Service->Prices( [ map { $price_cache{$config{db_name}}{$$_{id}}{'openprint::Service'}{$$Service{id}} ? $price_cache{$config{db_name}}{$$_{id}}{'openprint::Service'}{$$Service{id}} : () } @Pricelists ] );
+	} # end foreach Service
+	foreach my $Material ( @Materials ) {
+		$Material->Prices( [ map { $price_cache{$config{db_name}}{$$_{id}}{'openprint::Material'}{$$Material{id}} ? $price_cache{$config{db_name}}{$$_{id}}{'openprint::Material'}{$$Material{id}} : () } @Pricelists ] );
+	} # end foreach Service
+}
+
 sub get_pricelist_id {
 
 	if ( $openprint::session{'Pricelist_id'} ) {
@@ -165,6 +193,18 @@ Carp::cluck("Not specifying pricelist to get_best_prices is deprecated");
 if ( DEBUG ) {
 	$openprint::log->debug("Pricing: " . @pricing );
 }
+	my $price_type = ref $Object;
+	if ( $price_type and $price_cache{$config{db_name}}{$list_id}{$price_type}{$$Object{id}} ) {
+		@pricing = @{$price_cache{$config{db_name}}{$list_id}{$price_type}{$$Object{id}}};
+	} else {
+$log->warn("Request for old style price for $Object");
+		my $priceGroup = $Object->new( $log, $dbh, $list_id, $prod_index, $equipment, $qty, $period );
+		$priceGroup->load();	
+		push @pricing, @{$priceGroup->{prices}};
+	}
+
+
+# We should do this later...
 
 # Now if we are a customer, then we have more to do, including special pricing, adding discounts, etc. 
 		if ( $cust_id != 0 ) {
@@ -213,6 +253,75 @@ if ( DEBUG ) {
 	return \@prices;
 	#return $price_cache{$hash_index};
 } # end sub get_best_prices
+
+sub get_Price {
+	my ( $Object, $Pricelist, $qty, $Equipment, $period ) = @_;
+
+	my $type = ref $Object;
+	my @Prices;
+	my $Price;
+
+	# If we specify a period, then forget about the caching.  Caching will only do current prices.
+	if ( $period ) {
+	}
+	if ( $price_cache{$config{db_name}}{$$Pricelist{id}}{$type}{$$Object{id}} ) {
+		@Prices = @{$price_cache{$config{db_name}}{$$Pricelist{id}}{$type}{$$Object{id}}};
+	} else {
+		$price_cache{$config{db_name}}{$$Pricelist{id}}{$type}{$$Object{id}} = [$Object->Prices()];
+		@Prices = @{$price_cache{$config{db_name}}{$$Pricelist{id}}{$type}{$$Object{id}}};
+		$log->error("Prices not cached for $config{db_name} pricelist: $$Pricelist{id} type $type $$Object{name}");
+	}
+	if ( @Prices ) {
+
+		my @Equipment_Prices;
+		if ( $Equipment ) {
+			@Equipment_Prices = map { $$_{equipment_id} == $$Equipment{id} ? $_ : () } @Prices;
+			@Equipment_Prices = map { defined $$_{equipment_id} ? () : $_ } @Prices if ! @Equipment_Prices;
+			@Prices = @Equipment_Prices;
+		} # end if
+
+		if ( ! defined $qty or $qty eq '' ) {
+			$Price = $Prices[0];
+		} else {	
+			foreach my $P ( @Prices ) {
+				#$log->debug("Need $qty, equipment: $$P{equipment_id} $$Object{name} min: $$P{min} max: $$P{max} ");
+				if ( 
+						( ( ! defined $P->{min} ) or $P->{min} <= $qty ) and 
+						( ( ! defined $P->{max} ) or $P->{max} >= $qty )
+				   ) {
+					$Price = $P->clone();
+				} # end if
+			} # end foreach
+		} # end if qty
+	} # end if
+
+	if ( $Price and $$Price{price} ) {
+		if ( $openprint::session{company_id} != 0 ) {
+			my $Company = new openprint::Company( $openprint::session{company_id} );
+
+			my $pricingpercent = $Company->discount();
+			if ( $pricingpercent ) {
+				$pricingpercent = 1 - ($pricingpercent/100);
+				if ( $Price->{discountable} ne 'N' ) {
+
+# the if here is to preserve empty pricing. if pricei s empty, we display call, instead of 0.00.
+					$Price->{price} *= $pricingpercent;
+				} # end if
+			} # end if
+		} # end if
+
+		if ( $openprint::config{'ApplyMarkup'} ) {
+#$openprint::log->debug("Apply Markup: $openprint::config{'ApplyMarkup'}"); 
+			my $pricingpercent = $openprint::config{'ApplyMarkup'};
+			$pricingpercent =~ s/[^\d\.\-]//g;
+			$pricingpercent /= 100;
+			$pricingpercent += 1;
+# the if here is to preserve empty pricing. if pricei s empty, we display call, instead of 0.00.
+			$Price->{price} *= $pricingpercent;
+		} # end if
+	} # end if
+	return $Price;
+}
 
 #memoize('get_best_price_object');
 sub get_best_price {

@@ -226,12 +226,14 @@ $I->display('In Stitching:') if DEBUG;
         my $form = $$sig_specs{SignatureIndex};
         push @printed_impositions, $I->imposition();
         if ( ! $$I{Folds} ) {
+			if ( DEBUG ) {
             $openprint::log->debug("No folds in imposition, generating");
             $I->display("No Folds");
+			}
             $$I{Folds} = [ openprint::Estimating::Folding::get_Folds( $folding_specs, $I, $qty_index ) ] if $folding_specs;
         } # end if
 
-		if ( ! $$I{Folds} ) {
+		if ( ! ( $$I{Folds} and @{$$I{Folds}} ) ) {
 			$openprint::log->error("No folds in imposition, guess 1");
 			$I->display("No Folds");
 			$$specs{'txtSignatureQty'.$I->pages().'Page-'.$qty_index} += 1;
