@@ -628,17 +628,17 @@ sub googlemap_html {
 } # end sub googlemap_html
 
 sub from_ip {
-require Geo::IPfree;
-if ( ! $geo ) {
-$geo = Geo::IPfree->new();
+	require Geo::IPfree;
+	if ( ! $geo ) {
+		$geo = Geo::IPfree->new();
 #$geo->LoadDB( '/usr/share/GeoIP/GeoIP.dat' );
 #'/usr/share/GeoIP/GeoIP.dat');
 #my $geo = $Geo::IP->open( '/usr/share/GeoIP/GeoIP.dat' );
-$geo->Faster();
-} # end if
+		$geo->Faster();
+	} # end if
 	$openprint::log->debug("from_ip");
 	my $ip = @_ ? $_[0] : $ENV{'REMOTE_ADDR'};
-	if ( ref $geo eq 'Geo:IPfree' ) {
+	if ( ref $geo eq 'Geo::IPfree' ) {
 $openprint::log->debug("Doing lookup for $ip");
 		my ( $code1, $name1 ) = $geo->LookUp( $ip );
 $openprint::log->debug("Back from lookup for $ip");
@@ -651,8 +651,11 @@ $openprint::log->debug("Back from lookup for $ip");
 		} # end if
 		sql::end_transaction( $openprint::dbh, $ac );
 		return $Country;
+	} else {
+		$openprint::log->debug("Unknown ref for geo: " . ref $geo);
 	} # end if
-		my $gi = $geo->new('/usr/share/GeoIP/GeoIPCity.dat' );
+	if ( ref $geo eq 'Geo::IP' and -e '/usr/share/GeoIP/GeoIPCity.dat' ) {
+		my $gi = $geo->LoadDB('/usr/share/GeoIP/GeoIPCity.dat' );
 #GeoIPASNum.dat   GeoIPCity.dat    GeoIP.dat        GeoIPv6.dat      GeoLiteCity.dat 
 		if ( ! $gi ) {
 			$openprint::log->error('No Geo::IP');
@@ -688,7 +691,11 @@ $openprint::log->debug("Back from lookup for $ip");
 			$City->save({'name'=>$record->city(),'type'=>'city','parent_id'=>$State->id()});
 		} # end if
 		sql::end_transaction( $openprint::dbh, $ac );
-	return $City;
+		return $City;
+	} else {
+		$openprint::log->error("'/usr/share/GeoIP/GeoIPCity.dat' does not exist.  Perhaps you need to install geoip-database-contrib");
+	} # end if
+	return;
 } # end sub from_ip
 
 sub upload {
@@ -763,8 +770,8 @@ sub html {
 	my $self = $_[0];
 	my $html = sprintf(q`
 			<div class="Location">
-				<div class="Assets"><a class="medium %4$s" href="/event/view.html?event_id=%1$d"><img alt="" src="%5$s"/></a></div>
-				<div class="Name"><a href="/event/view.html?event_id=%1$d">%2$s</a></div>
+				<div class="Assets"><a class="medium %4$s" href="/location/view.html?location_id=%1$d"><img alt="" src="%5$s"/></a></div>
+				<div class="Name"><a href="/location/view.html?location_id=%1$d">%2$s</a></div>
 				<div class="Where">%3$s</div>
 			</div>
 			`, $self->id(), ssi::html_escape($self->name()), 
