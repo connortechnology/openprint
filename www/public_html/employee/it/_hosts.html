@@ -142,6 +142,7 @@
 					);
 				$rowclass = $rowclass ? '' : ' class="colRow"';
 			} # end foreach Host
+			$html .= '<tr class="totals"><td colspan="7"># of hosts: ' . @{$$variable{'Hosts'}} . '</td></tr>';
 			return $html;
 		) ?>
 		<tr>
