@@ -457,7 +457,7 @@ $log->debug("Service: " . $Service->to_string() );
 					} elsif ( $filename =~ /^(_.*)\.html$/ ) {
 						my $proc = $1;
 						my $module = join('_',@path);
-						require 'openprint/'.$module;
+						require 'openprint/'.$module.'.pm';
 						if ( my $function = ('openprint::'.$module)->can($proc) ) {
 							$function->($r, $log, $dbh, \%variable );
 						} else {
