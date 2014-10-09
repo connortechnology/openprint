@@ -34,22 +34,24 @@ sub _signature {
 		$variable{PageContent} = qq`<script type="text/javascript">alert('hi');\$('SignatureGroup$param{group_id}').remove();calc('f1');</script>`;
 
 	} elsif ( $param{action} eq 'copy_group' ) {
+		$Project->lock();
 		my @src_sigs = $Project->signatures( { Group => $param{group_id} } );
 		if ( ! @src_sigs ) {
-			$variable{error} .= 'No signatures found for group ' . $param{group_id} . '<br/>';
-			return;
+			my $print_service_index = $Project->add_service( 'Signature' );
+			openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $print_service_index, 'Group', $param{group_id} );
+			push @src_sigs, $print_service_index;
 		} # end if
-		$Project->lock();
 		$_ = q{SELECT MAX(strValue::integer) FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strName='Group'};
 		( $variable{Group} ) = sql::execute( $log, $dbh, $_, $Project->id() );
 		$variable{Group} += 1;
 		$variable{Signature} = $variable{Group};
-		my $print_service_index = $Project->copy_signature( openprint::service::get_specs_ref( $Project, $src_sigs[0] ), { Group=>$variable{Group} } );;
+		my $sig_service_index = $Project->copy_signature( openprint::service::get_specs_ref( $Project, $src_sigs[0] ), { Group=>$variable{Group} } );;
 		$Project->unlock();
-		my $sig_specs = openprint::service::get_specs_ref( $Project, $print_service_index );
+		my $sig_specs = openprint::service::get_specs_ref( $Project, $sig_service_index );
 		foreach my $k ( keys %$sig_specs ) {
 			$variable{$k.$variable{Group}} = $$sig_specs{$k};
 		} # end foreach k
+		$variable{ServiceIndex} = $sig_service_index;
 
 	} elsif ( $param{action} eq 'add_group' ) {
 		$Project->lock();
