@@ -499,13 +499,12 @@ $log->debug("Service: " . $Service->to_string() );
 						require openprint::Estimating::Collating;
 						openprint::Estimating::Collating::display( $log, $dbh, \%variable, $project_index, $service_index );
 					} elsif ( $filename =~ /^(\w*).html$/ ) {
-						my $proc = $1;
-						my $module = join('_',@path);
+						my $module = $1;
 						require "openprint/Estimating/$module.pm";
 						if ( my $function = ('openprint::Estimating/'.$module)->can('display') ) {
 							$function->($log, $dbh, \%variable, $project_index, $service_index );
 						} else {
-							$log->error( "Eval error of require $module :: $proc, Reason: " );
+							$log->error( "Eval error of require $module :: Reason: " );
 						}
 					} # end if
 				} elsif ($third eq 'spec') {
