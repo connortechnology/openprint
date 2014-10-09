@@ -145,38 +145,44 @@ sub calc {
 				$status = 'uncalculated';
 				next;
 			} # end if
+			my $form = $$sig_specs{SignatureIndex};
+
 			my $Imposition = new openprint::Imposition();
 			$Imposition->load( $sig_specs, $qty_index );
+$$specs{'hdnBreakdown'.$qty_index} .= "Signature: $form " . ( $$sig_specs{txtServiceDescription} ? $$sig_specs{txtServiceDescription} : '' ) . '<br/>';
+$$specs{'hdnBreakdown'.$qty_index} .=  $Imposition->to_string() . '<br/>';
+$$specs{'hdnBreakdown'.$qty_index} .=  $Imposition->Paper()->to_string() . '<br/>';
+
 			my %Price = signature_calc( $Project, $service_index, $specs, $signature_service_index, $sig_specs, $qty_index, $Imposition );
-			if ( ! ( $$specs{"txtVerticalQty-$$sig_specs{SignatureIndex}"} or $$specs{"txtHorizontalQty-$$sig_specs{SignatureIndex}"} ) ) {
-				$$specs{"txtImposition-$$sig_specs{SignatureIndex}-$qty_index"} = 0;
-				$$specs{"txtLayoutWidth-$$sig_specs{SignatureIndex}-$qty_index"} = 0;
-				$$specs{"txtLayoutHeight-$$sig_specs{SignatureIndex}-$qty_index"} = 0;
+			if ( ! ( $$specs{"txtVerticalQty-$form"} or $$specs{"txtHorizontalQty-$form"} ) ) {
+				$$specs{"txtImposition-$form-$qty_index"} = 0;
+				$$specs{"txtLayoutWidth-$form-$qty_index"} = 0;
+				$$specs{"txtLayoutHeight-$form-$qty_index"} = 0;
 				next;
 			} # end if
 			if ( $Price{Equipment} ) {
-				$$specs{"ddmEquipment-$$sig_specs{SignatureIndex}-$qty_index"} = $Price{Equipment}->id();
+				$$specs{"ddmEquipment-$form-$qty_index"} = $Price{Equipment}->id();
 				if ( $Price{Imposition} ) {
-					$$specs{"txtImposition-$$sig_specs{SignatureIndex}-$qty_index"} = $Price{Imposition}->imposition();
-					$$specs{"txtLayoutWidth-$$sig_specs{SignatureIndex}-$qty_index"} = $Price{Imposition}->layout_width();
-					$$specs{"txtLayoutHeight-$$sig_specs{SignatureIndex}-$qty_index"} = $Price{Imposition}->layout_height();
+					$$specs{"txtImposition-$form-$qty_index"} = $Price{Imposition}->imposition();
+					$$specs{"txtLayoutWidth-$form-$qty_index"} = $Price{Imposition}->layout_width();
+					$$specs{"txtLayoutHeight-$form-$qty_index"} = $Price{Imposition}->layout_height();
 				} # end if
 				$status = $Price{Status};
 			} else {
-				$$specs{"ddmEquipment-$$sig_specs{SignatureIndex}-$qty_index"} = '' if $$specs{"chkOverrideEquipment-$$sig_specs{SignatureIndex}-$qty_index"} ne 'Y';
-				$$specs{"txtImposition-$$sig_specs{SignatureIndex}-$qty_index"} = 0;
-				$$specs{"txtLayoutWidth-$$sig_specs{SignatureIndex}-$qty_index"} = 0;
-				$$specs{"txtLayoutHeight-$$sig_specs{SignatureIndex}-$qty_index"} = 0;
+				$$specs{"ddmEquipment-$form-$qty_index"} = '' if $$specs{"chkOverrideEquipment-$form-$qty_index"} ne 'Y';
+				$$specs{"txtImposition-$form-$qty_index"} = 0;
+				$$specs{"txtLayoutWidth-$form-$qty_index"} = 0;
+				$$specs{"txtLayoutHeight-$form-$qty_index"} = 0;
 				$status = 'uncalculated';
-				if ( $$specs{"chkOverrideEquipment-$$sig_specs{SignatureIndex}-$qty_index"} eq 'Y' ) {
+				if ( $$specs{"chkOverrideEquipment-$form-$qty_index"} eq 'Y' ) {
 					$$specs{alert} = "The selected equipment can not handle your project.  This may be because the stock is too heavy, or too large.";
 				} else {
 					$$specs{alert} = "No suitable equipment could be found for your project.  This may be because the stock is too heavy, or too large.";
 				} # end if
 			} # end if
 			$$specs{'hdnBreakdown'.$qty_index} .= $Price{Breakdown};
-			$qtyTotal += $$specs{"txtVerticalQty-$$sig_specs{SignatureIndex}"};
-			$qtyTotal += $$specs{"txtHorizontalQty-$$sig_specs{SignatureIndex}"};
+			$qtyTotal += $$specs{"txtVerticalQty-$form"};
+			$qtyTotal += $$specs{"txtHorizontalQty-$form"};
             $price += $Price{SetupPrice} + $Price{ServicePrice}{Total} + $Price{VerticalPrice}{Total} + $Price{HorizontalPrice}{Total};
 			$mprice += ( ( $Price{ServicePrice}{Total} + $Price{VerticalPrice}{Total} + $Price{HorizontalPrice}{Total} ) / $qty ) * 1000;
 		} # end foreach signature
@@ -217,9 +223,8 @@ sub signature_calc {
 
     my %Results = (
         Status => 'calculated',
-		Breakdown	 => "Signature: $form<br/>" . ( $$sig_specs{PageQuantity}  ? ' ' . $$sig_specs{PageQuantity}  . 'pages' : '' ),
+		Breakdown	 => '',
     );
-	$Results{Breakdown} .= "Signature: $$sig_specs{txtServiceDescription}, " if $$sig_specs{txtServiceDescription};
 
 	#@$specs{"txtWidth-$form", "txtHeight-$form"} = @$sig_specs{'txtWidth','txtHeight'};
 	if ( $$sig_specs{txtSignatureType} and ( $$sig_specs{txtSignatureType} eq 'PerfReplyCard' ) and ! ( $$specs{"txtVerticalQty-$form"} or $$specs{"txtHorizontalQty-$form"} ) ) {
@@ -436,10 +441,10 @@ $openprint::log->debug("How many impositions do we get? " . @imps ) if DEBUG;
 			my $height = $I->layout_height();
 
 # If it's a press, then we can assume that it fits.
-			if ( ( $type ne 'Press' ) and ( 
+			if (  
 				( $_ = $Equipment->fits( $width, $height, $$sig_specs{txtSpecificStockCalliper} ) ) or 
-				( $_ = fits_on_equipment( $Equipment, $width, $height, $$sig_specs{txtSpecificStockCalliper} ) ) 
-				) ) {
+				( $_ = fits_on_equipment( $Equipment, $width, $height, $$sig_specs{txtSpecificStockCalliper} ) )
+				 ) {
 				$Results{Breakdown} .= "$_<br/>";
 				next;
 			} # end if
