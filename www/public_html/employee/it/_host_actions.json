@@ -1,0 +1,19 @@
+<? echo (
+	if ( $param{action} eq 'delete interface' ) {
+		if ( ! $param{interface_id} ) {
+			return qq`alert('No id for interface');`;
+		}
+		my $Host_Interface = new openprint::Host_Interface( $param{interface_id} );
+		if ( ! $Host_Interface->id() ) {
+			return qq`alert('No Interface found');`;
+		}
+		
+		my $error = $Host_Interface->delete();
+		if ( ! $error ) {
+			return qq`
+var line = $('hi-$$Host_Interface{mac}');
+if ( line ) line.remove();
+`;
+		}
+	}
+) ?>

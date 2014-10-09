@@ -3090,7 +3090,12 @@ if ( ! sets::isin( 'host_interfaces', \@tables ) ) {
 	$dbh->do('insert into host_interfaces (host_id, mac,ip) SELECT id,NULL,ip from hosts where mac IS NULL');
 	$dbh->do('ALTER TABLE Hosts drop mac');
 	$dbh->do('ALTER TABLE Hosts drop ip');
-
+} else {
+	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='host_interfaces'", 'column_name');
+	if ( ! exists $$data{id} ) {
+		$dbh->do('ALTER TABLE host_interfaces ADD id serial');
+		$dbh->do('ALTER TABLE host_interfaces ADD PRIMARY KEY (id)');
+	}
 }
 if ( ! sets::isin( 'host_info', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/Host_Info.sql}) );

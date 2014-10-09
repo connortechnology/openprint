@@ -1,4 +1,7 @@
 <script type="text/javascript">
+	function delete_interface( id ) {
+		new Ajax.Request( '_host_actions.json', { parameters: { interface_id: id, action: 'delete interface' } } );
+	}
 	function check_inputs( form ) {
 		return true;
 	} //  end function check_inputs
@@ -99,6 +102,7 @@
 <? if ( $config{'RADIUS Support'} eq 'Y' ) ?>
 	<th class="radius">RADIUS</th>
 <? endif ( $config{'RADIUS Support'} eq 'Y' ) ?>
+			<th class="buttons">&nbsp;</th>
 		</tr>
 <? echo (
 	my $html;
@@ -118,22 +122,21 @@
 	my $radius_fragment = slurp_content( '/employee/it/_radius_mac_line.html' );
 my @macs = map { $_->mac() ? () : '' } $$variable{Host}->Interfaces();
 	foreach my $Interface ( $$variable{Host}->Interfaces(), ( @macs ? () : new openprint::Host_Interface() ) ) {
-		my $mac = $Interface->mac();
 		$html .= sprintf(q`
-<tr>
+<tr id="hi-%1$d">
 	<td class="mac">%2$s</td>
 	<td class="ip">%3$s</td>
 	<td class="dhcp">%4$s</td>
-	<td class="comment"><textarea name="comment-%1$s">%5$s</textarea></td>
+	<td class="comment"><textarea name="comment-%1$d">%5$s</textarea></td>
 `, 
-$mac,
-input( type=>'text', name=>'mac-'.$mac, value=>$mac ),
-input( type=>'text', name=>'ip-'.$mac, value=>$Interface->ip() ),
-checkboxes( 'dhcp-'.$mac, [ 1, '' ], $Interface->dhcp() ),
+$$Interface{id},
+input( type=>'text', name=>'mac-'.$$Interface{id}, value=>$$Interface{mac} ),
+input( type=>'text', name=>'ip-'.$$Interface{id}, value=>$Interface->ip() ),
+checkboxes( 'dhcp-'.$$Interface{id}, [ 1, '' ], $Interface->dhcp() ),
  $Interface->comment() );
 	
 		if ( $openprint::RADIUS_Check::dbh ) {
-		
+			my $mac = $$Interface{mac};	
 			if ( $mac =~ /^([[:xdigit:]]{2})[\:\-]?([[:xdigit:]]{2})[\:\-]?([[:xdigit:]]{2})[\:\-]?([[:xdigit:]]{2})[\:\-]?([[:xdigit:]]{2})[\:\-]?([[:xdigit:]]{2})$/ ) {
 				$mac = "$1-$2-$3-$4-$5-$6";
 			} # end if
@@ -144,6 +147,13 @@ checkboxes( 'dhcp-'.$mac, [ 1, '' ], $Interface->dhcp() ),
 				$html .= variable_substitution( \$radius_fragment, $variable ) if $mac;
 				$html .= '</td>';
 		} # end if RADIUS
+	$html .= '<td class="buttons">';
+	if ( $$Interface{id} ) {
+$html .= join("\n", 
+		button( 'DI'.$Interface->id(), { onclick=>qq`delete_interface('$$Interface{id}');`, text=>'X', title=>'Delete' } ),
+		);
+	} # end if
+		$html .= '</td></tr>';
 	} # end foreach Interface
 	return $html;
 ) ?>

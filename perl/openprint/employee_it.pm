@@ -131,7 +131,7 @@ sub host {
 		
 			$variable{error} .= $I->save({
 				host_id=>$$Host{id},
-				map { $_, $param{"$_-$$I{mac}"} } ( 'mac', 'ip', 'dhcp', 'comment' )
+				map { $_, $param{"$_-$$I{id}"} } ( 'mac', 'ip', 'dhcp', 'comment' )
 			});
 		} # end foreach Interface
 		if ( ! $variable{error} ) {
@@ -507,6 +507,8 @@ sub _information {
 	} # end if
 		
 } # end sub _information
+sub _host_actions {
+} # end sub _host_actions
 
 1;
 __END__
