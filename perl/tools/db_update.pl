@@ -39,7 +39,6 @@ $dbh = sql::open_sql( $log, ('database'=>$ARGV[0], 'driver'=>'Pg','login'=>$ARGV
 my @tables = sql::execute( undef, undef, q`SELECT table_name FROM information_schema.tables where table_schema='public'`);
 my @sequences = sql::execute( undef, undef, q`SELECT sequence_name FROM information_schema.sequences where sequence_schema='public'`);
 
-
 if ( ! sets::isin( 'database_info', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/database_info.sql}) );
 	die $dbh->errstr() if $dbh->errstr();
@@ -53,10 +52,12 @@ if ( ! $data ) {
 } 
 
 if ( ! sets::isin( 'configuration', \@tables ) ) {
+	$log->debug("Adding Configuration table");
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/Configuration.sql}) );
 }
 
 if ( ! sets::isin( 'object_types', \@tables ) ) {
+	$log->debug("Adding object_types table");
     $dbh->do( misc::load_file( $log, '../openprint/sql/Object_Types.sql' ) );
     die $dbh->errstr() if $dbh->errstr();
 	$dbh->do(q`INSERT INTO object_types (name,human) values ('openprint::Comment', 'comment')`);
@@ -698,7 +699,8 @@ if ( ! sets::isin( 'orders', \@tables ) ) {
 			}
 		}
 	} # end foreach
-	if ( ! exists $$data{invoice_id} ) {
+	if ( 0 and ! exists $$data{invoice_id} ) {
+#Deprecated
 		$dbh->do('ALTER TABLE orders ADD invoice_id INTEGER');
 		$dbh->do('ALTER TABLE orders ADD FOREIGN KEY (invoice_id) REFERENCES Invoices (id)');
 		if ( exists $$data{oinvoice} ) {
@@ -1686,23 +1688,20 @@ foreach my $E ( openprint::Equipment->find('category any'=>'Printing') ) {
 	} # end foreach
 } # end foreach
 
-if ( sets::isin( 'skid_verifications', \@tables ) ) {
-	my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM skid_verifications LIMIT 1', {} );
-	if ( ! $data ) {
-		my $ac = sql::start_transaction( $dbh );
-		$dbh->do('DROP TABLE IF EXISTS skid_verifications');
-		$dbh->do('
-				CREATE TABLE skid_verifications (
-					id SERIAL NOT NULL,
-					skid_id INTEGER NOT NULL, FOREIGN KEY (skid_id) REFERENCES skids (id),
-					code    TEXT,
-					created_on  TIMESTAMP WITH TIME ZONE NOT NULL default NOW(),
-					PRIMARY KEY (id)
-					);' );
-		$dbh->do('CREATE INDEX skid_verifications_skid_id_idx ON skid_verifications (skid_id);');
-		$dbh->do('CREATE INDEX skid_verifications_code_idx ON skid_verifications (code);');
-		sql::end_transaction( $dbh, $ac );
-	} # end if
+if ( ! sets::isin( 'skid_verifications', \@tables ) ) {
+	my $ac = sql::start_transaction( $dbh );
+	$dbh->do('DROP TABLE IF EXISTS skid_verifications');
+	$dbh->do('
+			CREATE TABLE skid_verifications (
+				id SERIAL NOT NULL,
+				skid_id INTEGER NOT NULL, FOREIGN KEY (skid_id) REFERENCES skids (id),
+				code    TEXT,
+				created_on  TIMESTAMP WITH TIME ZONE NOT NULL default NOW(),
+				PRIMARY KEY (id)
+				);' );
+	$dbh->do('CREATE INDEX skid_verifications_skid_id_idx ON skid_verifications (skid_id);');
+	$dbh->do('CREATE INDEX skid_verifications_code_idx ON skid_verifications (code);');
+	sql::end_transaction( $dbh, $ac );
 } # end if
 
 if ( ! sets::isin( 'purchaseorders', \@tables ) ) {
