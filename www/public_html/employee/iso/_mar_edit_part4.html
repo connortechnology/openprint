@@ -2,7 +2,7 @@
 <h3>Part 4 (To be complete by Quality System Management Representative)</h3>
 <table>
 	<tr><td colspan="4">VERIFICATION OF CORRECTIVE ACTION EFFECTIVENESS</td></tr>
-	<tr><td colspan="4"><textarea name="effectiveness" rows="<? echo ( count_rows( $$variable{MAR}->effectiveness() ) ) ?>" onkeyup="textarea_resize(this);"><? echo ( $$variable{MAR}->effectiveness(); ) ?></textarea></td></tr>
+	<tr><td colspan="4"><textarea name="effectiveness" rows="<? echo ( count_lines( $$variable{MAR}->effectiveness() ) ) ?>" onkeyup="textarea_resize(this);"><? echo ( $$variable{MAR}->effectiveness(); ) ?></textarea></td></tr>
 	<tr><td width="10%">QS Mgt Rep / Designate</td>
 		<td width="40%">
 <? echo ( ssi::select( openprint::User->dropdown( type=>['E','A'], order=>'lower(firstname),lower(lastname)'), $$variable{MAR}->part4_user_id() ?  $$variable{MAR}->part4_user_id() : $session{user_id}, { name=>'part4_user_id' } ); ) ?>

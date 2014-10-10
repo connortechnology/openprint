@@ -2,7 +2,7 @@
 <h3>Part 3 (To be completed by recipient)</h3>
 <table>
 	<tr><td colspan="4">CORRECTIVE ACTION</td></tr>
-	<tr><td colspan="4"><textarea name="action" rows="5" onkeyup="textarea_resize(this);"><? echo ( $$variable{MAR}->action(); ) ?></textarea></td></tr>
+	<tr><td colspan="4"><textarea name="action" rows="<?echo(count_lines($$variable{MAR}->action());)?>" onkeyup="textarea_resize(this);"><? echo ( $$variable{MAR}->action(); ) ?></textarea></td></tr>
 	<tr>
 		<td width="10%">Recipient</td>
 		<td width="40%">
@@ -21,6 +21,6 @@
 	<? echo ( join("\n",
 		button( 'Part3Save', { onclick=>"new Ajax.Updater('Part3','/employee/iso/_mar_view_part3.html', {parameters: Form.serialize( \$('part3form') ),
 			evalScripts: true,
- } );", text=>'Save' }
+ } );", text=>'Save' } ),
 		); ) ?>
 </p>
