@@ -3659,10 +3659,7 @@ sub get_project_price {
 	my $txtUnspecifiedPageQuantity = $$sig_specs{'txtUnspecifiedPageQuantity'.$qty_index};
 
 	$$sig_specs{'txtUnspecifiedPageQuantity'.$qty_index} = $txtUnspecifiedPageQuantity;
-#if ( ! $$sig_specs{'txtUnspecifiedPageQuantity'.$qty_index} ) {
-#$openprint::log->error("WHat we doin 'ere? $txtUnspecifiedPageQuantity");
-#return {};
-#} # e
+
 	my @Is = openprint::imposition::sort( calculate_impositions( $Project, $sig_specs, $qty_index, $qty, $PaperCounts, $versions, $project, $impositions ) );
 	if ( DEBUG or DEBUG_AFTER_FILTERING ) {
 		foreach my $I ( @Is ) {
@@ -3686,14 +3683,6 @@ sub get_project_price {
 		$previous_forms_cache{$hash_key} += 1;
 
 		my %PlateCounts = %$PlateCounts;
-if ( 0 ) {
-	foreach my $k ( keys %PlateCounts ) {
-		$openprint::log->debug("Start PLATES: $k=> $PlateCounts{$k}");
-	} # end foreach
-	foreach my $k ( keys %PlateCounts ) {
-		$openprint::log->debug("Original PLATES: $k=> $$PlateCounts{$k}");
-	} # end foreach
-} # end if
 		my %washed_colours = %$washed_colours;
 		my %PaperCounts = %$PaperCounts;
 		my $Paper = $imp->Paper();
@@ -3706,7 +3695,6 @@ if ( 0 ) {
 
 		my $do_final_pricing = 1;
 
-#my $time = gettimeofday();
 		my $price = calc_price( $Project, $service_index, $imp, $project, $services, $sig_specs, $qty, $qty_index, \%PlateCounts, \%washed_colours, \@total_impositions );
 		if ( ! $$price{'complete'} ) {
 			if ( DEBUG ) {
@@ -3714,19 +3702,9 @@ if ( 0 ) {
 			} # end if
 			next;
 		} # end if
-#$imp->display("Actually calculating this imp $$price{'Comparison Cost'}") if ! $recursion_depth;
-#$openprint::log->debug( breakdown( $price, $sig_specs ) ) if ! $recursion_depth;
-#$openprint::log->debug("Main Calc Price time: " . ( sprintf('%.4f', tv_interval( [$time])*1000) ) .' usecs' );
-#$openprint::log->debug( breakdown( $price, $sig_specs ) );
-
 
 		$PlateCounts{$$price{'Plate Costs'}{'Plate ID'}} += $$price{'Plate Costs'}{'Plate Count'};
 		$PlateCounts{'Blank'.$$price{'Plate Costs'}{'Plate ID'}} += $$price{'Plate Costs'}{'Blank Plates'};
-if ( 0 ) {
-	foreach my $k ( keys %PlateCounts ) {
-		$openprint::log->debug("after clac PLATES: $k=> $PlateCounts{$k}");
-	} # end foreach
-}
 		$PaperCounts{$Paper->id_string()} += $$price{'Stock Qty'};
 # Gets done later on, why do it here?  Maybe to fuill in plate costs... or to use them in best_price calcs...
 # I put this back on Sept 17th because for a 16+8, it didn't have the plate costs. Technically it should be done later when all plates are accounted for
@@ -3745,7 +3723,6 @@ if ( 0 ) {
 		if ( %best_price and ( $best_price{'Comparison Cost'} <= $$price{'Comparison Cost'} ) ) {
 			if ( DEBUG_PRICE_DECISIONS or $$sig_specs{Group} == 1 ) {
 				$imp->display( "Too expensive $best_price{'Comparison Cost'} <= $$price{'Comparison Cost'}" );
-#$openprint::log->error( Data::Dumper::Dumper( $price ) );
 				if ( $$sig_specs{'Impositions'} ) {
 					foreach my $I ( reverse @{ $$sig_specs{'Impositions'} } ) {
 						$I->display( "THIS" );
@@ -3764,41 +3741,41 @@ if ( 0 ) {
 		$$price{sig_count} = 1;
 		$$price{Imposition} = $imp;
 		$$price{upq} = $txtUnspecifiedPageQuantity ? $txtUnspecifiedPageQuantity - $$imp{pages} : 0;
-			$$price{Impositions} = [ $imp ];
-			push @total_impositions, $imp;
+		$$price{Impositions} = [ $imp ];
+		push @total_impositions, $imp;
 
-			if ( $$sig_specs{"UnspecifiedVersions$qty_index"} > $$imp{versions} ) {
+		if ( $$sig_specs{"UnspecifiedVersions$qty_index"} > $$imp{versions} ) {
 
-				my $versions = $$sig_specs{"UnspecifiedVersions$qty_index"} - $$imp{versions};
-				$imp->display("Need more sigs for $versions versions ");
-				my @signatures = @$signatures;
-				my $newimp = $base_imp->copy();
+			my $versions = $$sig_specs{"UnspecifiedVersions$qty_index"} - $$imp{versions};
+			$imp->display("Need more sigs for $versions versions ");
+			my @signatures = @$signatures;
+			my $newimp = $base_imp->copy();
 
-				while ( $versions >= $$imp{versions} ) {
-					my $new_specs = get_new_specs( $Project, $service_index, $service_specs, \@signatures, $qty_index, undef, \%previous_forms_cache, $hash_key );
-					$$new_specs{"UnspecifiedVersions$qty_index"} = $versions;
-					$$newimp{specs} = $new_specs;
+			while ( $versions >= $$imp{versions} ) {
+				my $new_specs = get_new_specs( $Project, $service_index, $service_specs, \@signatures, $qty_index, undef, \%previous_forms_cache, $hash_key );
+				$$new_specs{"UnspecifiedVersions$qty_index"} = $versions;
+				$$newimp{specs} = $new_specs;
 
-					my $sig_price = calc_price( $Project, $$new_specs{ServiceIndex}, $newimp, $project, $services, $new_specs, $qty, $qty_index, \%PlateCounts, \%washed_colours, \@total_impositions );
-					$$sig_price{sig_count} = 1;
+				my $sig_price = calc_price( $Project, $$new_specs{ServiceIndex}, $newimp, $project, $services, $new_specs, $qty, $qty_index, \%PlateCounts, \%washed_colours, \@total_impositions );
+				$$sig_price{sig_count} = 1;
 #my $sig_price = get_project_price( $Project, $$new_specs{'ServiceIndex'}, $project, $service_specs, $new_specs, $qty, $qty_index, $possible_presses, $printing_specs, $versions, \%PlateCounts, \%PaperCounts, \%washed_colours, \%previous_forms_cache, \@signatures, $impositions, $other_impositions, undef, $recursion_depth + 1 );
 
-					$PaperCounts{$Paper->id_string()} += $$sig_price{'Stock Qty'};
-					$PlateCounts{$$sig_price{'Plate Costs'}{'Plate ID'}} += $$sig_price{'Plate Costs'}{'Plate Count'};
-					$PlateCounts{'Blank'.$$sig_price{'Plate Costs'}{'Plate ID'}} += $$sig_price{'Plate Costs'}{'Blank Plates'};
-					$$price{'Comparison Cost'} += $$sig_price{'Comparison Cost'};
-					$$price{'Comparison Log'} .= 'signature ' . $$sig_price{'Comparison Cost'} . ' total: ' . $$sig_price{'Comparison Cost'} .'<br/>' if COMPARISON_LOG;
+				$PaperCounts{$Paper->id_string()} += $$sig_price{'Stock Qty'};
+				$PlateCounts{$$sig_price{'Plate Costs'}{'Plate ID'}} += $$sig_price{'Plate Costs'}{'Plate Count'};
+				$PlateCounts{'Blank'.$$sig_price{'Plate Costs'}{'Plate ID'}} += $$sig_price{'Plate Costs'}{'Blank Plates'};
+				$$price{'Comparison Cost'} += $$sig_price{'Comparison Cost'};
+				$$price{'Comparison Log'} .= 'signature ' . $$sig_price{'Comparison Cost'} . ' total: ' . $$sig_price{'Comparison Cost'} .'<br/>' if COMPARISON_LOG;
 
-					$$sig_price{Imposition} = $newimp;
-					push @total_impositions, $newimp;
-					push @{$$price{Impositions}}, $newimp;
-					$versions -= $$newimp{versions};
-					push @{$$price{prices}}, $sig_price;
-					if ( ! $$imp{versions} ) {
-						$log->error("Should not get no versions. ".$$service_specs{"UnspecifiedVersions$qty_index"}." $$imp{versions}");
+				$$sig_price{Imposition} = $newimp;
+				push @total_impositions, $newimp;
+				push @{$$price{Impositions}}, $newimp;
+				$versions -= $$newimp{versions};
+				push @{$$price{prices}}, $sig_price;
+				if ( ! $$imp{versions} ) {
+					$log->error("Should not get no versions. ".$$service_specs{"UnspecifiedVersions$qty_index"}." $$imp{versions}");
 #last;
-					} # end if
-				} # end while versions
+				} # end if
+			} # end while versions
 
 				if ( $versions ) {
 					if ( %best_price and ( $best_price{'Comparison Cost'} <= $$price{'Comparison Cost'} ) ) {
@@ -3863,7 +3840,6 @@ if ( 0 ) {
 					} # end if
 				} # end while versions
 
-			#} elsif ( $txtUnspecifiedPageQuantity ) {
 			} elsif ( $$price{upq} ) {
 				$imp->display( $recursion_depth . ' UPQ: ' . $txtUnspecifiedPageQuantity . ' real upq ' . $$price{upq}) if DEBUG;
 
@@ -3920,7 +3896,7 @@ if ( 0 ) {
 
 									$$price{upq} -= $$imp{pages};
 	# Doesn't really matter about upq, because we aren't calculating on these sigs.
-									$imp = $base_imp->copy();
+									$imp = $imp->copy();
 									$new_specs = get_new_specs( $Project, $service_index, $service_specs, \@signatures, $qty_index, $$price{upq}, \%previous_forms_cache, $hash_key );
 									$$imp{specs} = $new_specs;
 								} # end foreach
@@ -3945,7 +3921,9 @@ if ( 0 ) {
 #$openprint::log->debug("New upq: $$price{upq}");
 								$previous_forms_cache{$hash_key} += 1;
 								$sig_count += 1;
-					$imp = $base_imp->copy();
+
+								# Copying the base_imp, means that we lose our folds.
+					$imp = $imp->copy();
 					$new_specs = get_new_specs( $Project, $service_index, $service_specs, \@signatures, $qty_index, $$price{upq}, \%previous_forms_cache, $hash_key );
 					$$imp{specs} = $new_specs;
 							} # end if
@@ -4919,7 +4897,7 @@ sub calc_price {
 		} else {
 #my @all_impositions = ( @{$other_impositions}, $Imposition );
 			%folding_results = openprint::Estimating::Folding::signature_calc( $Project, $service_index, $specs, $$project{'FoldingSpecs'}, $qty_index, $Imposition, @$project{'UVCoatingSpecs','AqueousSpecs','StitchingSpecs'}, $other_impositions, $project );
-			$$Imposition{'folding_results'} = \%folding_results;
+			$$Imposition{folding_results} = \%folding_results;
 		} # end if
 
 		delete $$Imposition{Folder};
@@ -4930,7 +4908,7 @@ sub calc_price {
 			if ( $$project{'FoldingSpecs'}{"chkOverrideEquipment-$$specs{'SignatureIndex'}-$qty_index"} ne 'Y' ) {
 				$$project{'FoldingSpecs'}{"ddmEquipment-$$specs{'SignatureIndex'}-$qty_index"} = '';
 			} # end if
-			$price{Folds} = [];
+			$$Imposition{Folds} = [];
 		} else {
 			if ( $folding_results{Equipment} ) {
 				

@@ -227,7 +227,7 @@ $I->display('In Stitching:') if DEBUG;
         push @printed_impositions, $I->imposition();
         if ( ! $$I{Folds} ) {
 			if ( DEBUG ) {
-            $openprint::log->debug("No folds in imposition, generating");
+            $openprint::log->debug("Sitchign: No folds in imposition, generating") if DEBUG;
             $I->display("No Folds");
 			}
             $$I{Folds} = [ openprint::Estimating::Folding::get_Folds( $folding_specs, $I, $qty_index ) ] if $folding_specs;
