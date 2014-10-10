@@ -120,6 +120,8 @@ if ( $config{'pid_file'} ) {
 } # end if
 
 my $buf;
+my %host_counts;
+
 while(1) {
 	if ( ! ($dbh and $dbh->ping() ) ) {
 		$dbh = sql::open_sql( $log,
@@ -138,14 +140,16 @@ while(1) {
 		configuration::from_file($$opts{config});
 		configuration::merge($opts);
 	} elsif ( $hup ) {
+		$log->hup();
+$log->debug("# of entries in host_counts: " . keys %host_counts);
+$log->debug("# of entries in Object_cache: " . keys %{$openprint::Object::cache{$config{db_name}}} );
+$log->debug("# of entries in Object_name_cache: " . keys %{$openprint::Object::name_cache{$config{db_name}}} );
 		configuration::init( );
 		configuration::from_file($$opts{config});
 		configuration::merge($opts);
-		$log->hup();
 		$hup = 0;
 	} # end if
 	
-	my %host_counts;
 
 	# Every hour, we update and
 	if ( $last_update < (time-3600) ) {
@@ -265,6 +269,7 @@ while(1) {
 		} # end foreach re
 
 		if ( $changed ) {
+			$log->debug( "# of entries in host_counts: " . keys %host_counts ) if $config{debug};
 			foreach my $ip ( sort keys %host_counts ) {
 				next if ! $host_counts{$ip}{update};
 				next if $host_counts{$ip}{whitelist};
