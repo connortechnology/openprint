@@ -3177,6 +3177,11 @@ foreach my $S ( openprint::Service->find('name'=>'Aqueous '.$aq) ) {
 	} # end if
 } # end foreach
 }
+if ( ! sets::isin( 'mars', \@tables ) ) {
+	$dbh->do( misc::load_file( $log, q{../openprint/sql/mars.sql}) );
+	die $dbh->errstr() if $dbh->errstr();
+}
+
 if ( ! sets::isin( 'car', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/CAR.sql}) );
 	die $dbh->errstr() if $dbh->errstr();
