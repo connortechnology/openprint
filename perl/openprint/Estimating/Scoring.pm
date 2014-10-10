@@ -18,7 +18,6 @@ use strict;
 
 package openprint::Estimating::Scoring;
 
-require sql;
 require openprint::service;
 require openprint::Material;
 require openprint::imposition;
@@ -177,6 +176,8 @@ sub calc {
 			} # end if
 			my $Imposition = new openprint::Imposition();
 			$Imposition->load( $sig_specs, $qty_index );
+			$$specs{'hdnBreakdown'.$qty_index} .= $Imposition->to_string() . '<br/>';
+			$$specs{'hdnBreakdown'.$qty_index} .= $Imposition->Paper()->to_string() . '<br/>';
 
 			my %Price = signature_calc( $Project, $service_index, $specs, $signature_service_index, $sig_specs, $qty_index, $Imposition );
 			$status = $Price{'Status'} if $Price{'Status'} eq 'uncalculated';
@@ -241,8 +242,8 @@ sub signature_calc {
 		get_scores( $Project, $specs, $sig_specs, $SignatureImposition->Paper() );
 	} # end if
 
-	my $score_qty = $$specs{"txtVerticalQty-$$sig_specs{'SignatureIndex'}"} + $$specs{"txtHorizontalQty-$$sig_specs{'SignatureIndex'}"};
-	@$specs{"txtWidth-$$sig_specs{'SignatureIndex'}", "txtHeight-$$sig_specs{'SignatureIndex'}"} = @$sig_specs{'txtWidth','txtHeight'};
+	my $score_qty = $$specs{"txtVerticalQty-$form"} + $$specs{"txtHorizontalQty-$form"};
+	@$specs{"txtWidth-$form", "txtHeight-$form"} = @$sig_specs{'txtWidth','txtHeight'};
 	$Results{'Breakdown'} .= "# of Scores: $score_qty<br/>";
 	return %Results if ! $score_qty;
 
@@ -274,9 +275,9 @@ sub signature_calc {
 
 	$Results{'Status'} = 'uncalculated';
 	my @equipment;	
-	if ( $$specs{"chkOverrideEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} eq 'Y' ) {
-		@equipment = openprint::Equipment->find( 'id'=>$$specs{"ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} );
-		$openprint::log->debug("Overriding Equipment to: " . $$specs{"ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} );
+	if ( $$specs{"chkOverrideEquipment-$form-$qty_index"} eq 'Y' ) {
+		@equipment = openprint::Equipment->find( 'id'=>$$specs{"ddmEquipment-$form-$qty_index"} );
+		$openprint::log->debug("Overriding Equipment to: " . $$specs{"ddmEquipment-$form-$qty_index"} );
 	} else {
 		my @capabilities = ('Y','When Printing');
 		push @capabilities, 'For Pocket Folders' if $Project->Type()->name() eq 'PresentationFolders';
@@ -383,14 +384,14 @@ sub signature_calc {
 		if ( $Equipment->specification('Scoring Capable') eq 'When Folding' ) {
 			if ( ! ( $$services{'Folding'} and @{$$services{'Folding'}} ) ) {
 				$Results{'Breakdown'} .= 'Not being folded.<br/>';
-				if ( $$specs{"chkOverrideEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} eq 'Y' ) {
+				if ( $$specs{"chkOverrideEquipment-$form-$qty_index"} eq 'Y' ) {
 					$Results{alert} .= 'Not being folded.<br/>';;
 				} # end if
 				next;
 			} 
-			if ( $$folding_specs{"ddmEquipment-$$sig_specs{SignatureIndex}-$qty_index"} != $Equipment->id() ) {
+			if ( $$folding_specs{"ddmEquipment-$form-$qty_index"} != $Equipment->id() ) {
 				$Results{'Breakdown'} .= 'Not being folded on this.<br/>';
-				if ( $$specs{"chkOverrideEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} eq 'Y' ) {
+				if ( $$specs{"chkOverrideEquipment-$form-$qty_index"} eq 'Y' ) {
 					$Results{alert} .= 'Not being folded on this.<br/>';
 				} # end if
 				next;
@@ -432,10 +433,15 @@ sub signature_calc {
 				$parts += $Fold->imposition() * $Fold->quantity();
 			} # end if
 
+			if ( $_ = fits_on_equipment( $Equipment, $SignatureImposition, $sig_specs, $$specs{"txtVerticalQty-$form"}, $$specs{"txtHorizontalQty-$form"} ) ) {
+				$Results{'Breakdown'} .= "Doesn't fit. $_<br/>";
+				next;
+			} # end if
+
 			foreach my $Fold ( @Folds ) {
 				$$Fold{impressions} = ( $qty / $SignatureImposition->imposition() ) * ( $parts / ( $Fold->imposition() * $Fold->quantity() ) ) * $Fold->quantity();
 				#$$Fold{impressions} /= $Fold->imposition();
-                my $Price = get_price( $Equipment, $$specs{"txtVerticalQty-$$sig_specs{SignatureIndex}"}, $$specs{"txtHorizontalQty-$$sig_specs{SignatureIndex}"}, $$Fold{impressions}, $Fold );
+                my $Price = get_price( $Equipment, $$specs{"txtVerticalQty-$form"}, $$specs{"txtHorizontalQty-$form"}, $$Fold{impressions}, $Fold );
                 $totalPrice += $$Price{setup} + $$Price{Vertical}{Total} + $$Price{Horizontal}{Total} + $$Price{Service}{Total};
                 $Results{Breakdown} .= $$Price{Breakdown};
 			} # end foreach my $Fold
@@ -790,11 +796,15 @@ sub fits_on_equipment {
 		} # end if
 	} # end if
 
-	if ( $Equipment->specification('Minimum Score Calliper') and 1*$calliper < 1*$Equipment->specification('Minimum Score Calliper') ) {
-		return "Calliper too small: ($calliper), Min: " . $Equipment->specification('Minimum Score Calliper');
+	if ( my $min_calliper = $Equipment->specification('Minimum Score Calliper') ) {
+		if ( $calliper < $min_calliper ) {
+			return "Calliper too small: ($calliper), Min: " . $min_calliper;
+		} # end if
 	} # end if
-	if ( $Equipment->specification('Maximum Score Calliper') and 1*$calliper > 1*$Equipment->specification('Maximum Score Calliper') ) {
-		return 'Calliper too big';
+	if ( my $max_calliper = $Equipment->specification('Maximum Score Calliper') ) {
+		if ( $calliper > $max_calliper ) {
+			return 'Calliper too big';
+		} # end if
 	} # end if
 
 	if ( $max_feed_width ) {

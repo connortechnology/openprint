@@ -255,7 +255,7 @@ $openprint::log->debug("Fold pq($$FI{page_quantity}) pages($$FI{pages}) ($$Fold{
 	my $sig_specs = $I->specs();
 	my $Press = $I->Press();
 	my $form = $$sig_specs{SignatureIndex};
-
+$$specs{"txtPockets$qty_index"} = $pockets;
 	
     while ( ! $bestPrice and $imposition ) {
         $$specs{'Imposition'.$qty_index} = $imposition;
@@ -327,6 +327,7 @@ $openprint::log->debug("Fold pq($$FI{page_quantity}) pages($$FI{pages}) ($$Fold{
 		$results{Equipment} = $bestEquipment;
 		$results{Status} = 'calculated';
 		$results{Price} = $bestPrice;
+		$results{total} = $$bestPrice{Price};
 	} else {
 		$results{Status} = 'uncalculated';
 	} # end if
@@ -499,10 +500,15 @@ if ( 0 ) {
             $$specs{'hdnBreakdown'.$qty_index} .= sprintf('Calliper Markup %d%<br/>', $price{'Calliper Markup'} ) if $price{'Calliper Markup'};
             $$specs{'hdnBreakdown'.$qty_index} .= 'MakeReady: $' . Math::Round::nearest( 0.01, $price{MakeReady}).',<br/>';
             if ( my $servicePrice = $price{ServicePrice} ) {
-                $$specs{'hdnBreakdown'.$qty_index} .= sprintf('Service: %d passes at $%.2f%s=$%.2f<br/>', $price{Passes} -1, @$servicePrice{'Price','units','Total'});
+                $$specs{'hdnBreakdown'.$qty_index} .= sprintf('Service: %s %d passes at $%.2f%s=$%.2f<br/>', $$servicePrice{Service}->name(), $price{Passes} -1, @$servicePrice{'Price','units','Total'});
             } # end if
-            my $servicePrice = $price{LastServicePrice};
+            my $servicePrice = $price{LastPassServicePrice};
+			if ( ! $$servicePrice{Service} ) {
+				$openprint::log->error("WHy does LastPass have no service?");
             $$specs{'hdnBreakdown'.$qty_index} .= sprintf('Service: 1 pass at $%.2f%s=$%.2f<br/>', @$servicePrice{'Price','units','Total'});
+			} else {
+            $$specs{'hdnBreakdown'.$qty_index} .= sprintf('Service: %s 1 pass at $%.2f%s=$%.2f<br/>', $$servicePrice{Service}->name(), @$servicePrice{'Price','units','Total'});
+			}
             $$specs{'hdnBreakdown'.$qty_index} .= 'Total: $'. sprintf('%.2f', Math::Round::nearest(0.01,$price{Price})).'<br/><br/>';
             $$specs{'hdnBreakdown'.$qty_index} .= 'Comparison: $'. sprintf('%.2f', Math::Round::nearest(0.01,$price{ComparisonPrice})).'<br/><br/>';
         } else {
@@ -572,7 +578,7 @@ sub get_price {
 	my $maxPockets = $Equipment->specification( 'Number of Pockets' );
 	my $neededPockets = $$specs{"txtPockets$qty_index"};
 	$price{RunTime} += $neededPockets * $Equipment->specification( 'Pocket Make Ready' );
-
+$openprint::log->debug("Needed Pockets: $neededPockets");
 # Calculate Full Passes
 	if ( $maxPockets and ( $neededPockets > $maxPockets ) ) {
 # Loaded here, so we don't do it in the loop many times
@@ -594,7 +600,7 @@ sub get_price {
 				$servicePrice{Total} = $servicePrice{Price} * $runtime;
 				$price{Service} += $servicePrice{Total}
 			} else {
-				$openprint::log->debug("Unknown Unit Type: ($servicePrice{units}) on $$specs{ServiceType}");
+				$openprint::log->error("Unknown Unit Type: ($servicePrice{units}) on $$specs{ServiceType}");
 			} # end if
 			$price{MPrice} += ( $servicePrice{Total} / $qty ) * 1000;
 
@@ -611,20 +617,22 @@ sub get_price {
 		%servicePrice = openprint::service::get_price_object( $$specs{ServiceType}, $neededPockets, $Equipment );
 	} # end if
 	$price{LastPassServicePrice} = \%servicePrice;
-	my $unitsPerHour = $Equipment->specification( 'Units Per Hour', $neededPockets );
-	my $runtime = $unitsPerHour ? $qty/$unitsPerHour : 0; # in seconds
-	$price{RunTime} += $runtime * 360;
-	if ( $servicePrice{units} eq 'per m' ) {
-		$servicePrice{Total} = $servicePrice{Price} * $qty/1000;
-		$price{Service} += $servicePrice{Total};
-	} elsif ( $servicePrice{units} =~ /per hour/i ) {
-		$servicePrice{Total} = $servicePrice{Price} * $runtime;
-		$price{Service} += $servicePrice{Total}
-	} else {
-		$openprint::log->debug("Unknown Unit Type: $servicePrice{units} for $$specs{ServiceType} range($neededPockets) equipment(".$Equipment->strid().")");
+	if ( %servicePrice ) {
+		my $unitsPerHour = $Equipment->specification( 'Units Per Hour', $neededPockets );
+		my $runtime = $unitsPerHour ? $qty/$unitsPerHour : 0; # in seconds
+		$price{RunTime} += $runtime * 360;
+		if ( $servicePrice{units} eq 'per m' ) {
+			$servicePrice{Total} = $servicePrice{Price} * $qty/1000;
+			$price{Service} += $servicePrice{Total};
+		} elsif ( $servicePrice{units} =~ /per hour/i ) {
+			$servicePrice{Total} = $servicePrice{Price} * $runtime;
+			$price{Service} += $servicePrice{Total}
+		} else {
+			$openprint::log->error("Unknown Unit Type: $servicePrice{units} for $$specs{ServiceType} range($neededPockets) equipment(".$Equipment->strid().")");
+		} # end if
+		$price{MPrice} += ( $servicePrice{Total} / $qty ) * 1000;
+		$price{Passes} += 1;
 	} # end if
-	$price{MPrice} += ( $servicePrice{Total} / $qty ) * 1000;
-	$price{Passes} += 1;
 
 	if ( $$specs{glue_id} ) {
 		my $Material = new openprint::Material( $$specs{glue_id} );
@@ -687,7 +695,7 @@ sub get_price {
 sub display {
 	my ( $log, $dbh, $variable, $project_index, $service_index ) = @_;
 
-	@{$$variable{Equipment}} = openprint::Equipment->find( 'Specifications' => {'PerfectBound Capable'=>['Y','When Printing']}, 'useinestimating'=>1,'order'=>'strName');
+	$$variable{Equipment} = [ openprint::Equipment->find( 'Specifications' => {'PerfectBound Capable'=>['Y','When Printing']}, 'useinestimating'=>1,'order'=>'strName') ];
 
 } # end sub display
 

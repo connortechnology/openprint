@@ -458,16 +458,15 @@ sub signature_calc_folding_cutting {
 sub signature_calc {
 	my ( $Project, $sig_specs, $specs, $qty_index, $Paper, $Imposition, $folding_specs, $calc_hash ) = @_;
 
-	if ( ! $Paper->cuttable() ) {
-		$$specs{alert} = $Paper->to_string() . ': Stock is not cuttable.';
-		$$specs{Status} = 'calculated';
-		return;
-	} # end if
 
 	my %results = (
 			Status	=> 'calculated',
 			Breakdown	=>	'<b>Post press:</b><br/>',
 			);
+	if ( ! $Paper->cuttable() ) {
+		$results{alert} = $Paper->to_string() . ': Stock is not cuttable.';
+		return %results;
+	} # end if
 	my $services = $Project->services();
 	my $printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] ) if $$services{''} and @{$$services{''}};
 

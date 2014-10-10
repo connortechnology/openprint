@@ -4165,6 +4165,7 @@ if ( DEBUG_PLATES ) {
 				$$price{'Total Cost'} += $$results{Price};
 				$$price{'Comparison Log'} .= 'plate adj ' . $$results{Price} . ' total: ' . $$price{'Comparison Cost'} . '<br/>' if COMPARISON_LOG;
 				$$price{'Comparison Cost'} += $$results{Price};
+				$$price{'Comparison Log'} .= 'plate adj done total: ' . $$price{'Comparison Cost'} . '<br/>' if COMPARISON_LOG;
 
 				foreach my $p ( @{$$price{prices}} ) {
 					# This should fill in the place costs line of the breakdown
@@ -4213,13 +4214,17 @@ if ( DEBUG_PLATES ) {
 			if ( $do_final_pricing ) {
 				if ( $$price{PlateCost} ) {
 # They may be added into the Comparison cost in one of the sub prices
+				$$price{'Comparison Log'} .= 'plate adj -' . $$price{PlateCost} . ' total: ' . $$price{'Comparison Cost'} . '<br/>' if COMPARISON_LOG;
 					$$price{'Comparison Cost'} -= $$price{PlateCost};
 					$$price{'Total Cost'} -= $$price{PlateCost};
+				$$price{'Comparison Log'} .= 'plate adj done total: ' . $$price{'Comparison Cost'} . '<br/>' if COMPARISON_LOG;
 				}
 				my $results = plate_cost( $price, \%PlateCounts );
 				$$price{PlateCost} = $$results{Price};
 				$$price{'Comparison Cost'} += $$results{Price};
 				$$price{'Total Cost'} += $$price{PlateCost};
+				$$price{'Comparison Log'} .= 'plate adj +' . $$results{Price} . ' total: ' . $$price{'Comparison Cost'} . '<br/>' if COMPARISON_LOG;
+				$$price{'Comparison Log'} .= 'plate adj done total: ' . $$price{'Comparison Cost'} . '<br/>' if COMPARISON_LOG;
 
 # I don't think this is appropriate anymore
 #$$price{'Comparison Cost'} += $$price{'sig_count'} * $$results{'Price'};
@@ -4240,6 +4245,7 @@ if ( DEBUG_PLATES ) {
 						$log->error("No Paper Object for $paper_string");
 						foreach my $paper_string ( keys %Papers ) { $log->error("$paper_string $Papers{$paper_string}"); } 
 						$$price{'Comparison Cost'} += 1000000;
+				$$price{'Comparison Log'} .= 'Bad paper + 1000000 total: ' . $$price{'Comparison Cost'} . '<br/>' if COMPARISON_LOG;
 						$$price{'Paper Breakdown'} .= 'Unable to calculate price for ' . $paper_string.'</br>';
 						next;
 					} elsif ( $paper_string ne $Paper->id_string() ) {
@@ -4282,11 +4288,13 @@ $openprint::log->debug("Sheet No supplied wight: $supplied_sheets $paper_string 
 
 					$$paper_price{'Total'} = Math::Round::nearest( 0.01, $$paper_price{'100lb Price'} * $supplied_weight / 100 );
 					$$price{'Comparison Cost'} += $$paper_price{'Total'};
+				$$price{'Comparison Log'} .= 'Paper Costs +'.$$paper_price{'Total'}.' total: ' . $$price{'Comparison Cost'} . '<br/>' if COMPARISON_LOG;
 					if ( $$Paper{available_to_order} > 1 ) {
 						if ( $$Paper{available_to_order} < ( $$Paper{type} eq 'Sheet' ? $supplied_sheets : $supplied_weight ) ) {
 							$$price{'Paper Breakdown'} .= $Supplied->to_string() . ' does not have enough available. Only ' . $$Paper{available_to_order} . $Paper->units() . ' left.<br/>';
 							$$price{alert} .= $Supplied->to_string() . ' does not have enough available. Only ' . $$Paper{available_to_order} . $Paper->units() . ' left.<br/>';
 							$$price{'Comparison Cost'} += 1000000;
+				$$price{'Comparison Log'} .= 'Paper not available +1000000 total: ' . $$price{'Comparison Cost'} . '<br/>' if COMPARISON_LOG;
 						} # end if
 					} # end if
 					$$price{'Stock Total'} += $$paper_price{'Total'};
@@ -4317,6 +4325,7 @@ $openprint::log->debug("Sheet No supplied wight: $supplied_sheets $paper_string 
 					my %cutting_results = openprint::Estimating::Cutting::signature_calc_stock_cutting( $Project, $$project{CuttingSpecs}, $qty_index, \@Stocks );
 					$$price{'Cutting Breakdown'} .= "Stock Cutting Price: \$$cutting_results{'Price'} $cutting_results{'alert'}<br/>$cutting_results{Breakdown}<br/>";
 					$$price{'Comparison Cost'} += $cutting_results{'Price'};
+				$$price{'Comparison Log'} .= 'cutting: +'.$cutting_results{'Price'}.' total: ' . $$price{'Comparison Cost'} . '<br/>' if COMPARISON_LOG;
 				} # end if
 
 				if ( $$sig_specs{'rdbSuppliedStock'} eq 'Y' ) {
@@ -4411,11 +4420,13 @@ $openprint::log->debug("Sheet No supplied wight: $supplied_sheets $paper_string 
 					if ( $$results{'Status'} eq 'uncalculated' ) {
 						$$price{'PerfectBound Breakdown'} .= "PerfectBound error: $$results{'alert'}<br/>";
 						$$price{'Comparison Cost'} += 1000000;
+						$$price{'Comparison Log'} .= 'PerfectBound: 100000<br/>';
 						$$price{'PerfectBound Cost'} = 1000000;
 					} else {
-						$$price{'PerfectBound Breakdown'} .= sprintf('PerfectBound (%dout) Price: $%.2f<br/>%s<br/>', @$results{'Imposition','Price','alert'} );
-						$$price{'PerfectBound Cost'} = $$results{'Price'};
-						$$price{'Comparison Cost'} += $$results{'Price'};
+						$$price{'PerfectBound Breakdown'} .= sprintf('PerfectBound (%dout) Price: $%.2f<br/>%s<br/>', @$results{'Imposition','total','alert'} );
+						$$price{'PerfectBound Cost'} = $$results{'total'};
+						$$price{'Comparison Cost'} += $$results{'total'};
+						$$price{'Comparison Log'} .= 'PerfectBound: ' . $$results{'total'} . '<br/>';
 					} # end if
 				} elsif ( DEBUG ) {
 					$openprint::log->debug("NO Stitching or PerfectBinding");
@@ -4489,6 +4500,7 @@ $openprint::log->debug("Sheet No supplied wight: $supplied_sheets $paper_string 
 									my %impositions = get_impositions( $Project, \%subsig_specs, $new_project, $qty, $qty_index, \@possible_presses, \@Papers, \%Overrides );
 									if ( ! %impositions ) {
 										$$price{'Breakdown'} .= 'Unable to calculate impositions for additional signatures.<br/>';
+						$$price{'Comparison Log'} .= 'Additiona Sigs: 1000000<br/>' if COMPARISON_LOG;
 										$$price{'Comparison Cost'} += 1000000;
 		$openprint::log->warn("Unable to calculate impositions for additional signatures.<br/>");
 									} else {
@@ -4501,6 +4513,7 @@ $openprint::log->debug("Sheet No supplied wight: $supplied_sheets $paper_string 
 								
 									} # end if
 								} else {	
+						$$price{'Comparison Log'} .= 'Additiona Sigs: 1000000<br/>' if COMPARISON_LOG;
 									$$price{'Comparison Cost'} += 1000000;
 		$openprint::log->warn("Unable to calculate impositions for additional signatures.<br/>");
 								} # end if
@@ -4525,6 +4538,7 @@ $openprint::log->debug("Sheet No supplied wight: $supplied_sheets $paper_string 
 						$openprint::log->error("Calculating Additional Signatures for other group failure") if DEBUG;
 						$$price{'Breakdown'} .= 'Unable to calculate additional signatures.<br/>';
 						$$price{'Comparison Cost'} += 10000000;
+						$$price{'Comparison Log'} .= 'Additiona Sigs: 1000000<br/>' if COMPARISON_LOG;
 					} # end if
 				} # end if Group == 1
 			} #ne if ! upq

@@ -501,7 +501,7 @@ $log->debug("Service: " . $Service->to_string() );
 					} elsif ( $filename =~ /^(\w*).html$/ ) {
 						my $module = $1;
 						require "openprint/Estimating/$module.pm";
-						if ( my $function = ('openprint::Estimating/'.$module)->can('display') ) {
+						if ( my $function = ('openprint::Estimating::'.$module)->can('display') ) {
 							$function->($log, $dbh, \%variable, $project_index, $service_index );
 						} else {
 							$log->error( "Eval error of require $module :: Reason: " );
