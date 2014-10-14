@@ -5,6 +5,7 @@ use strict;
 use Date::Calc ();
 
 use constant DAYS_TO_KEEP_JUNK => 60*60*24*7;
+use constant DAYS_TO_KEEP_TRASH => 60*60*24*365*2;
 use constant DEBUG => 0;
 
 my $domain = $ARGV[0];
@@ -60,7 +61,36 @@ foreach my $user ( @users ) {
 		} # end foreach
 
 	} # end foreach folder
-	
+	foreach my $folder ( '.Trash' ) {
+		if ( ! -e "$spool_path$user/$folder" ) {
+			next;
+		}
+		print "Trash dir $folder exists for $spool_path$user.\n" if DEBUG;
+
+		if ( ! opendir CUR, "$spool_path$user/$folder/cur" ) {
+			print "Unable to open $spool_path$user/$folder/cur\n";
+			next;
+		} # end if
+
+		my @messages = readdir CUR;
+		closedir CUR;
+		@messages = sets::exclude( [ '.', '..' ], \@messages );
+		next if ! @messages;
+
+		print "rm for " . @messages . " messages.\n" if DEBUG;
+		foreach my $message ( @messages ) {
+			my $mtime = ( stat "$spool_path$user/$folder/cur/$message" )[9];
+			if ( ! $mtime ) {
+				print "Unable to stat $spool_path$user/$folder/cur/$message\n";
+				last;
+			} # end if
+			if ( time - $mtime > DAYS_TO_KEEP_TRASH ) {
+				unlink "$spool_path$user/$folder/cur/$message";
+			} # end if
+		} # end foreach
+
+	} # end foreach folder
+
 } # end foreach $user
 
 1;
