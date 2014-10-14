@@ -165,6 +165,7 @@ sub calc {
 
 		foreach my $signature_service_index ( $Project->signatures() ) {
 			my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
+			my $form = $$sig_specs{SignatureIndex};
 			$qty = $$specs{"txtQuantity$qty_index"};
 			if ( $$sig_specs{'Versions'} ) {
 				$qty *= $$sig_specs{'Versions'};
@@ -182,17 +183,17 @@ sub calc {
 			my %Price = signature_calc( $Project, $service_index, $specs, $signature_service_index, $sig_specs, $qty_index, $Imposition );
 			$status = $Price{'Status'} if $Price{'Status'} eq 'uncalculated';
 			if ( $Price{'Equipment'} ) {
-				$$specs{"ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} = $Price{'Equipment'}->id();
+				$$specs{"ddmEquipment-$form-$qty_index"} = $Price{'Equipment'}->id();
 				#$$specs{"txtImposition-$$sig_specs{'SignatureIndex'}-$qty_index"} = $Price{'Imposition'}->imposition();
 				#$$specs{"txtLayoutWidth-$$sig_specs{'SignatureIndex'}-$qty_index"} = $Price{'Imposition'}->layout_width();
 				#$$specs{"txtLayoutHeight-$$sig_specs{'SignatureIndex'}-$qty_index"} = $Price{'Imposition'}->layout_height();
 			} else {
-				$$specs{"ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} = '' if $$specs{"chkOverrideEquipment-$$sig_specs{SignatureIndex}-$qty_index"} ne 'Y';
+				$$specs{"ddmEquipment-$form-$qty_index"} = '' if $$specs{"chkOverrideEquipment-$form-$qty_index"} ne 'Y';
 				#$$specs{"txtImposition-$$sig_specs{'SignatureIndex'}-$qty_index"} = 0;
 				#$$specs{"txtLayoutWidth-$$sig_specs{'SignatureIndex'}-$qty_index"} = 0;
 				#$$specs{"txtLayoutHeight-$$sig_specs{'SignatureIndex'}-$qty_index"} = 0;
 				if ( $Price{'Status'} eq 'uncalculated' ) {
-					if ( $$specs{"chkOverrideEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} eq 'Y' ) {
+					if ( $$specs{"chkOverrideEquipment-$form-$qty_index"} eq 'Y' ) {
 						$$specs{'alert'} = "QTY $qty_index: The selected equipment can not handle your project.	This may be because the stock is too heavy, or too large.";
 					} else {
 						$$specs{'alert'} = "QTY $qty_index: No suitable equipment could be found for your project.	This may be because the stock is too heavy, or too large.";
@@ -202,10 +203,10 @@ sub calc {
 			$$specs{'hdnBreakdown'.$qty_index} .= $Price{'Breakdown'};
 			$$specs{'alert'} .= $Price{alert};
 
-			$qtyTotal += $$specs{"txtVerticalQty-$$sig_specs{'SignatureIndex'}"};
-			$qtyTotal += $$specs{"txtHorizontalQty-$$sig_specs{'SignatureIndex'}"};
-			if ( $$specs{"txtVerticalQty-$$sig_specs{'SignatureIndex'}"} eq '' and $$specs{"txtHorizontalQty-$$sig_specs{'SignatureIndex'}"} eq '' ) {
-				$$specs{'alert'} .= 'Please specify # of scores for form ' . $$sig_specs{'SignatureIndex'};
+			$qtyTotal += $$specs{"txtVerticalQty-$form"};
+			$qtyTotal += $$specs{"txtHorizontalQty-$form"};
+			if ( $$specs{"txtVerticalQty-$form"} eq '' and $$specs{"txtHorizontalQty-$form"} eq '' ) {
+				$$specs{'alert'} .= 'Please specify # of scores for form ' . $form;
 				$status = 'uncalculated';
 			} # end if
 			$price += $Price{Price} if $Price{Price};
@@ -378,7 +379,7 @@ sub signature_calc {
 		$openprint::log->debug(sprintf('Original Sign info: %dx%d*%d,%dout', $SignatureImposition->spread_columns(), $SignatureImposition->spread_rows(), $SignatureImposition->spread_size(), $SignatureImposition->imposition() ) );
 	} # end if debug
 
-	foreach my $Equipment ( @equipment ) {
+	EQUIPMENT: foreach my $Equipment ( @equipment ) {
 		$Results{Breakdown} .= "<br/>Equipment: $$Equipment{name}, ";
 		my $type = $Equipment->specification('Type');
 		if ( $Equipment->specification('Scoring Capable') eq 'When Folding' ) {
@@ -426,16 +427,16 @@ sub signature_calc {
 
 		my $totalPrice;
 
+		# FIXME, needs to be same oflder
 		if ( ( $type eq 'Folder' ) and @Folds ) {
 			my $impressions;
 			my $parts = 0;
 			foreach my $Fold ( @Folds ) {
 				$parts += $Fold->imposition() * $Fold->quantity();
-			} # end if
-
-			if ( $_ = fits_on_equipment( $Equipment, $SignatureImposition, $sig_specs, $$specs{"txtVerticalQty-$form"}, $$specs{"txtHorizontalQty-$form"} ) ) {
-				$Results{'Breakdown'} .= "Doesn't fit. $_<br/>";
-				next;
+				if ( $_ = fits_on_equipment( $Equipment, $Fold, $sig_specs, $$specs{"txtVerticalQty-$form"}, $$specs{"txtHorizontalQty-$form"} ) ) {
+					$Results{'Breakdown'} .= "Doesn't fit. $_<br/>";
+					next EQUIPMENT;
+				} # end if
 			} # end if
 
 			foreach my $Fold ( @Folds ) {
@@ -808,6 +809,8 @@ sub fits_on_equipment {
 	} # end if
 
 	if ( $max_feed_width ) {
+
+
 		if ( $orientation ) {
 			if (
 					( $orientation eq 'Portrait' and $I->layout_width() <= $I->layout_height() ) or
@@ -827,21 +830,21 @@ sub fits_on_equipment {
 			} elsif ( $vertical_scores ) {
 				if ( $I->image_orientation() eq 'Vertical' ) {
 					if ( $height >= $max_feed_width ) {
-						return "Perf no good due to max feed width($max_feed_width) on height (".$height.").<br/>";
+						return "Scoring no good due to max feed width($max_feed_width) on height (".$height.").<br/>";
 					} # end if
 				} else {
 					if ( $width >= $max_feed_width ) {
-						return "Perf no good due to max feed width($max_feed_width) on width (".$width.").<br/>";
+						return "Scoring no good due to max feed width($max_feed_width) on width (".$width.").<br/>";
 					} # end if
 				} # end if
 			} elsif ( $horizontal_scores ) {
 				if ( $I->image_orientation() eq 'Vertical' ) {
 					if ( $width >= $max_feed_width ) {
-						return "Perf no good due to max feed width($max_feed_width) on width (".$width.").<br/>";
+						return "Scoring no good due to max feed width($max_feed_width) on width (".$width.").<br/>";
 					} # end if
 				} else {
 					if ( $height >= $max_feed_width ) {
-						return "Perf no good due to max feed width($max_feed_width) on height (".$height.").<br/>";
+						return "Scoring no good due to max feed width($max_feed_width) on height (".$height.").<br/>";
 					} # end if
 				} # end if
 			} else {
