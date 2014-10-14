@@ -701,5 +701,12 @@ sub link_to {
 	return join( '', '<a href="/employee/purchase_order/view.html?po_id=', $_[0]{id}, '">' , $_[0]{id}, '</a>' );
 } # end sub link_to
 
+sub summary {
+	if ( ! $_[0]{summary} ) {
+		$_[0]{summary} = join('<br/>', map { sprintf('%d %s%s ', $_->qty(), $_->item(), $_->description() ) } $_[0]->Contents() );
+	} 
+	return $_[0]{summary};
+} # end sub summary
+
 1;
 __END__
