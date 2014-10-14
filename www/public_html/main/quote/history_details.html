@@ -5,26 +5,36 @@
 <script type="text/javascript">
 function delete_confirm(form) {
 	if ( confirm("Are you sure you wish to delete this quote from history?\nClicking OK will take you back to the quote history page.") ) {
+		form.btnFunction.value='Delete';
 		form.submit();
 	}
 }
 </script>
 <?include('/includes/error_reporting.html')?>
-	<? if ( $$variable{Quote}->company_id() != $session{company_id} ) ?>
+<? if ( $$variable{Quote}->company_id() != $session{company_id} ) ?>
 	<div class="warning unprintable">Warning: You are logged in as <? echo ( new openprint::Company( $session{company_id} )->name() ) ?> but this order belongs to <a href="history_details.html?quote_id=<?echo($$variable{Quote}->id())?>&amp;btnFunction=SelectCompany&amp;ddmCompany=<?echo($$variable{Quote}->company_id())?>"><? echo ( $$variable{Quote}->Company()->name() ) ?></a>!</div>
-	<? endif ( $$variable{Quote}->company_id() != $session{company_id} ) ?>
-<form name="f1" id="f1" method="post" action="history_details.html">
+<? endif ( $$variable{Quote}->company_id() != $session{company_id} ) ?>
+<? if ( $$variable{Quote}->deleted() ) ?>
+	<div class="warning">This quote has been deleted.</div>
+<? endif ( $$variable{Quote}->deleted() ) ?>
 <form id="f1" name="f1" method="post" action="/main/quote/history_details.html">
 	<p class="buttons">
-		<input type="hidden" name="btnFunction" value="Delete Quote"/>
-		<input type="hidden" name="quote_id" value="<? echo ( $$variable{'Quote'}->id(); ) ?>"/>
-	<? echo ( my $html = '';
-			$html .= button( 'Print', { onclick=>'window.print();', text=>'Print' } );
-			if ( sets::isin( $session{'user_type'}, ['A','E'] ) ) {
-				$html .= button( 'Log', { onclick=>"popup_window('_view_log.html?quote_id=".$$variable{'Quote'}->id()."', '', {width: 800} );", text=> 'View Log' } );
-			} # end if
-			$html .= button( 'Delete', { onclick=>"f1.action='/main/quote/history.html';delete_confirm(f1);", text=>'Delete' } );
-				if ( sets::isin( $session{'user_type'}, [ 'E', 'A' ] ) ) {
+		<input type="hidden" name="btnFunction"/>
+		<input type="hidden" name="quote_id" value="<? echo ( $$variable{'Quote'}->id() ) ?>"/>
+		<? echo ( my $html = '';
+			if ( $$variable{Quote}->can_view() ) {
+				$html .= button( 'Print', { onclick=>'window.print();' } );
+				if ( sets::isin( $session{user_type}, ['A','E'] ) ) {
+					$html .= button( 'Log', { onclick=>"popup_window('_view_log.html?quote_id=".$$variable{Quote}->id()."', '', {width: 800} );", text=> 'View Log' } );
+				} # end if
+				if ( $$variable{Quote}->can_delete() ) {
+					if ( ! $$variable{Quote}->deleted() ) {
+						$html .= button( 'Delete', { onclick=>'delete_confirm(f1);', text=>'Delete' } );
+					} else {
+						$html .= button( 'Undelete', { onclick=>"f1.btnFunction.value='Undelete';f1.submit();", text=>'Undelete' } );
+					} # end if
+				} # end if
+				if ( sets::isin( $session{user_type}, [ 'E', 'A' ] ) ) {
 					$html .= button( 'Reuse', { onclick=>"f1.action='/main/quote/information.html';f1.btnFunction.value='Process New Quote';f1.submit();", text=>'Copy to' } );
 					$html .= button( 'Move', { onclick=>"f1.action='/main/quote/history_details.html';f1.btnFunction.value='Move To';f1.submit();", text=>'Move to' } );
 					$html .= '<select name="company_id" id="company_id">';
@@ -33,13 +43,14 @@ function delete_confirm(form) {
 				} else {
 					$html .= button( 'Reuse', { onclick=>"f1.action='/main/quote/information.html';f1.btnFunction.value='Process New Quote';f1.submit();", text=>'Copy' } );
 				} # end if
-			if ( $$variable{'Quote'}->status() eq 'Complete' ) {
-				$html .= button( 'Resend', { onclick=>"f1.action='/main/quote/history_details.html';f1.btnFunction.value='Resend';f1.submit();", text=>'Resend' } );
-				$html .= button( 'Order', { onclick=>"f1.action='/main/order/information.html';f1.btnFunction.value='Process Order';f1.submit();", text=>'Order' } );
-				$html .= button( 'Edit', { onclick=>"f1.action='/main/quote/information.html';f1.btnFunction.value='Continue';f1.submit();", text=>'Edit' } );
-			} else {
-				$html .= button( 'Continue', { href=>"/main/quote/information.html?quote_id=$$variable{'Quote'}{id}", text=>'Continue' } );
-			} # end if
+				if ( $$variable{'Quote'}->status() eq 'Complete' ) {
+					$html .= button( 'Resend', { onclick=>"f1.action='/main/quote/history_details.html';f1.btnFunction.value='Resend';f1.submit();", text=>'Resend' } );
+					$html .= button( 'Order', { onclick=>"f1.action='/main/order/information.html';f1.btnFunction.value='Process Order';f1.submit();", text=>'Order' } );
+					$html .= button( 'Edit', { onclick=>"f1.action='/main/quote/information.html';f1.btnFunction.value='Continue';f1.submit();", text=>'Edit' } );
+				} else {
+					$html .= button( 'Continue', { href=>"/main/quote/information.html?quote_id=$$variable{'Quote'}{id}", text=>'Continue' } );
+				} # end if
+			} # end if can_view
 			return $html;
 		) ?>
 	</p>
@@ -49,6 +60,7 @@ To save, process a new quote or process an order from this quotation, please cli
 <br/>
 </span>
 <div class="Quote">
+<? if ( $$variable{Quote}->can_view() ) ?>
 	<div class="Header">
 		<?include('/includes/quote_header.html')?>
 		<?include('/includes/quote_information.html')?>
@@ -59,10 +71,10 @@ To save, process a new quote or process an order from this quotation, please cli
 		<tr>
 			<td>
 				<? if ( $$variable{'AdministratorName'} ) ?>
-				<b>Administrator Name</b> <?AdministratorName?><br>
+				<b>Administrator Name</b> <?AdministratorName?><br/>
 				<? endif ( $$variable{'AdministratorName'} ) ?>
 				<? if ( $$variable{'AdministratorComments'} ) ?>
-				<b>Administrator Comments</b> <?AdministratorComments?><br>
+				<b>Administrator Comments</b> <?AdministratorComments?><br/>
 				<? endif ( $$variable{'AdministratorComments'} ) ?>
 			</td>
 		</tr>
@@ -74,8 +86,9 @@ To save, process a new quote or process an order from this quotation, please cli
 		</tr>
 		<tr>
 			<td colspan="3" align="left"><br/>
-			<? echo ( $config{'QuoteViewDisclaimer'} ) ?>
+			<div class="Disclaimer"><? echo ( $config{'QuoteViewDisclaimer'} ) ?></div>
 			</td>
 		</tr>
 	</table>
+<? endif ( $$variable{Quote}->can_view() ) ?>
 </div><!--Quote-->

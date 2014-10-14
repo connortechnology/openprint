@@ -47,7 +47,7 @@
 			) ];
 	} elsif ( $param{docket} ) {
 		$$variable{Manifests} = [ openprint::Manifest->find( 
-			docket	=>	$param{docket},
+			'docket any'	=>	$param{docket},
 			order	=>	'received_on DESC',
 			limit	=>	100,
 			( $session{'/employee/inventory/manifests.html?deleted'} ? ( deleted => [ split(',', $session{'/employee/inventory/manifests.html?deleted'} ) ] ) : () ),

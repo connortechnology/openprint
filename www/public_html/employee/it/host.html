@@ -1,4 +1,7 @@
 <script type="text/javascript">
+	function delete_interface( id ) {
+		new Ajax.Request( '_host_actions.json', { parameters: { interface_id: id, action: 'delete interface' } } );
+	}
 	function check_inputs( form ) {
 		return true;
 	} //  end function check_inputs
@@ -15,16 +18,6 @@
 					<label>Hostname</label>
 					<input type="text" id="hostname" name="hostname" value="<? echo ( $$variable{Host}->hostname() ) ?>" onkeyup="this.value=this.value.replace(/\s/g,'');" onchange="this.onkeyup.call(this);"/>
 				</li>
-				<li>
-					<label>IP Address</label>
-					<input type="text" id="ip" name="ip" value="<? echo ( $$variable{Host}->ip() ) ?>" onkeyup="this.value=this.value.replace(/[^\.\d%\/\*]/g,'');" onchange="this.onkeyup.call(this);" />
-					<input type="checkbox" name="dhcp" id="dhcp" value="1" <? echo ( checked( $$variable{Host}->dhcp() ); ) ?> />
-					<label class="radio" for="dhcp">DHCP?</label>
-				</li>
-				<li>
-					<label>MAC</label>
-					<textarea id="mac" name="mac" rows="<? echo ( $$variable{Host}->mac() ? scalar @{$$variable{Host}->mac()} : 1 ) ?>" cols=""><? echo ( $$variable{Host}->mac() ? join("\n", @{$$variable{Host}->mac()} ) : '' ) ?></textarea>
-				</li>
 				<li><label onclick="toggle_input( $('type_id'), $('type') );">Type</label>
 					<input type="text" id="type" name="type" style="display:none;" onkeyup="ddm_select_by_text( $('type_id'), this.value, 0 );" />
 					<select name="type_id" id="type_id" onchange="$('type').value='';">
@@ -34,18 +27,18 @@
 				</li>
 				<li>
 					<label>Blacklist</label>
-					<? echo ( ssi::radio( 'blacklist', [ '1','Yes','0','No' ], $$variable{Host}->blacklist() ); ) ?>
+					<? echo ( radio( 'blacklist', [ '1','Yes','0','No' ], $$variable{Host}->blacklist() ); ) ?>
 				</li>
 				<li>
 					<label>Access violation count</label><input type="text" name="count" id="count" value="<? echo ( $$variable{Host}->count() ) ?>" />
 				</li>
 				<li>
 					<label>Whitelist</label>
-					<? echo ( ssi::radio( 'whitelist', [ '1','Yes','0','No' ], $$variable{Host}->whitelist() ); ) ?>
+					<? echo ( radio( 'whitelist', [ '1','Yes','0','No' ], $$variable{Host}->whitelist() ); ) ?>
 				</li>
 				<li>
 					<label>Monitor</label>
-					<? echo ( ssi::radio( 'monitored', [ '1','Yes','0','No' ], $$variable{Host}->monitored(), { 'onclick'=>q`if(this.value==1){$('offline_seconds').show();}else{$('offline_seconds').hide()};`} ); ) ?>
+					<? echo ( radio( 'monitored', [ '1','Yes','0','No' ], $$variable{Host}->monitored(), { onclick=>q`if(this.value==1){$('offline_seconds').show();}else{$('offline_seconds').hide()};`} ); ) ?>
 				</li>
 				<li id="offline_seconds"<? echo ( $$variable{Host}->monitored() ? '' : ' style="display: none;"' ) ?>><label>Seconds offline before notification</label>
 					<input type="number" name="offline_seconds" value="<? echo ( $$variable{Host}->offline_seconds() ) ?>" />
@@ -76,6 +69,7 @@
 				</li>
 			</ul>
 		</div>
+<? if ( $$variable{Host}->id() ) ?>
 		<div class="content rightColumn">
 			<fieldset><legend>Photos</legend>
 				<div id="assets"><? echo ( include('_assets.html'); ) ?></div>
@@ -93,43 +87,78 @@
 			<fieldset><legend>Information</legend>
 				<div id="information"><?include('_information.html')?></div>
 			</fieldset>
+			<fieldset><legend>Licenses</legend>
+				<div id="licenses"><?include('_host_licenses.html')?></div>
+			</fieldset>
 		</div>
 	</fieldset>
+<fieldset><legend>Interfaces</legend>
+	<table class="List">
+		<tr>
+			<th class="mac">Mac</th>
+			<th class="ip">IP Address</th>
+			<th class="dhcp">DHCP?</th>
+			<th class="comment">Comment</th>
 <? if ( $config{'RADIUS Support'} eq 'Y' ) ?>
-	<fieldset><legend>RADIUS Auth</legend>
-		<ul>
-	<? echo ( 
-		return if ! $$variable{Host}->mac();
+	<th class="radius">RADIUS</th>
+<? endif ( $config{'RADIUS Support'} eq 'Y' ) ?>
+			<th class="buttons">&nbsp;</th>
+		</tr>
+<? echo (
+	my $html;
+	 if ( $config{'RADIUS Support'} eq 'Y' ) {
 		$openprint::RADIUS_Check::dbh = sql::open_sql( $log,
 			database	=> $config{'RADIUS DB Name'},
 			driver		=> $config{'RADIUS DB Driver'},
 			host		=> $config{'RADIUS DB Server'},
 			login		=> $config{'RADIUS DB Username'},
 			password	=> $config{'RADIUS DB Password'},
-			);
+		);
 		if ( ! $openprint::RADIUS_Check::dbh ) {
-			return 'Unable to connect to RADIUS DB server.';	
+			$html .= 'Unable to connect to RADIUS DB server.';	
 		} # end if
+	} # end if RADIUS
 
-		my $html = '';
-		my $fragment = slurp_content( '/employee/it/_radius_mac_line.html' );
-		
-		foreach my $mac ( @{$$variable{Host}->mac()} ) {
+	my $radius_fragment = slurp_content( '/employee/it/_radius_mac_line.html' );
+my @macs = map { $_->mac() ? () : '' } $$variable{Host}->Interfaces();
+	foreach my $Interface ( $$variable{Host}->Interfaces(), ( @macs ? () : new openprint::Host_Interface() ) ) {
+		$html .= sprintf(q`
+<tr id="hi-%1$d">
+	<td class="mac">%2$s</td>
+	<td class="ip">%3$s</td>
+	<td class="dhcp">%4$s</td>
+	<td class="comment"><textarea name="comment-%1$d">%5$s</textarea></td>
+`, 
+$$Interface{id},
+input( type=>'text', name=>'mac-'.$$Interface{id}, value=>$$Interface{mac} ),
+input( type=>'text', name=>'ip-'.$$Interface{id}, value=>$Interface->ip() ),
+checkboxes( 'dhcp-'.$$Interface{id}, [ 1, '' ], $Interface->dhcp() ),
+ $Interface->comment() );
+	
+		if ( $openprint::RADIUS_Check::dbh ) {
+			my $mac = $$Interface{mac};	
 			if ( $mac =~ /^([[:xdigit:]]{2})[\:\-]?([[:xdigit:]]{2})[\:\-]?([[:xdigit:]]{2})[\:\-]?([[:xdigit:]]{2})[\:\-]?([[:xdigit:]]{2})[\:\-]?([[:xdigit:]]{2})$/ ) {
 				$mac = "$1-$2-$3-$4-$5-$6";
 			} # end if
 			$mac = uc $mac;
+			$html .= '<td class="radius" id="mac-'.$mac.'">';
 
-			$html .= qq`<li id="mac_$mac">`;
-			$$variable{'username'} = $mac;
-			$html .= variable_substitution( \$fragment, $variable );
-			$html .= '</li>';
-		} # end foreach mac
-		return $html;
-	) ?>
-		</ul>
-	</fieldset>
-<? endif ( $config{'RADIUS Support'} eq 'Y' ) ?>
+				$$variable{username} = $mac;
+				$html .= variable_substitution( \$radius_fragment, $variable ) if $mac;
+				$html .= '</td>';
+		} # end if RADIUS
+	$html .= '<td class="buttons">';
+	if ( $$Interface{id} ) {
+$html .= join("\n", 
+		button( 'DI'.$Interface->id(), { onclick=>qq`delete_interface('$$Interface{id}');`, text=>'X', title=>'Delete' } ),
+		);
+	} # end if
+		$html .= '</td></tr>';
+	} # end foreach Interface
+	return $html;
+) ?>
+	</table>
+</fieldset>
             <fieldset><legend>Where</legend>
 <? echo ( 
     $$variable{'Location'} = $$variable{Host}->Location();
@@ -156,5 +185,6 @@
 		</ul>
 		<div id="Logs"><?include('/employee/it/_host_logs.html')?></div>
 	</fieldset>
+<? endif ( $$variable{Host}->id() ) ?>
 </form>
 </div></div>

@@ -134,6 +134,9 @@
 	@StockOptions = split( ',', $config{'StockOptions'} ) if ! @StockOptions;
 	@StockOptions = ( 'Brand','Finish','Colour','Weight' ) if ! @StockOptions;
 
+	my $Service = $$variable{Project}->Service( $$variable{ServiceIndex} );
+	my $ServiceType = $Service->ServiceType();
+
 	foreach my $option ( @StockOptions ) {
 		next if ! $option;
 		my $lc_option = lc $option;
@@ -149,8 +152,6 @@
 		} # end if
 		$$variable{'ddmStock'.$option.$$variable{Signature}} = $options[0] if @options == 2;
 
-		my $Service = $$variable{Project}->Service( $$variable{ServiceIndex} );
-		my $ServiceType = $Service->ServiceType();
 
 		if ( $$variable{'ddmStock'.$option.$$variable{Signature}} eq '' ) {
 			# This sets a default when the default is new and the project is old

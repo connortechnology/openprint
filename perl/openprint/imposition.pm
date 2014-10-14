@@ -29,6 +29,7 @@ use vars qw( %blocks );
 		#22	=>	[ [3,8],[8,3] ],
 		24	=>	[ [6,4],[4,6],[2,12],[12,2],[3,8],[8,3] ],
 		32	=>	[ [8,4],[4,8],[2,16],[16,2] ],
+		36	=>	[ [6,6] ],
 		);
 
 sub fit {
@@ -192,6 +193,8 @@ sub check_setup {
 
 sub calc_setup_object {
 	my ( $specs, $image_width, $image_height, $Paper, $run_style, $Press, $bleed_size ) = @_;
+
+	my $min_bleed_size = $Press->specification( 'Minimum Bleed Size' );
 
 	my $press_grain;
 	if ( my $Stock_Setting = $Press->Stock_Setting( $Paper ) ) {
@@ -464,7 +467,7 @@ $openprint::log->debug("Bindery Gutters: $gutters <? $bindery_gutters") if DEBUG
 
 	# Becomes Printable area
 	$adjusted_paper_height -= $$specs{'Grip Size'} if $$specs{'Add Grip Height'} ne 'N';
-$openprint::log->debug("APH: $adjusted_paper_height") if DEBUG;
+$openprint::log->debug("Adjusted PHeght after grip: $adjusted_paper_height") if DEBUG;
 # On the web press, we have no paper dimensions, only the maximagesize, so this effectively sets the printing area to the max image size. Theoretically Max Image Size = Cutoff-Grip anyways
 	if ( $$specs{'Maximum Image Area Length'} and ( ( $adjusted_paper_height <= 0 ) or ( $adjusted_paper_height > $$specs{'Maximum Image Area Length'} ) ) ) {
 		my $max_image_height = $$specs{'Maximum Image Area Length'};
@@ -497,9 +500,15 @@ if ( 1 ) {
 			#$colour_bar = 0 if $colour_bar < 0;
 		#} else { 
 # If impo was x2 then it can go in middle, but we don't know that yet.
-			$colour_bar -= $bleed_size if $bleed_locations{Top} or $bleed_locations{Bottom};
-			$colour_bar -= $bleed_size if $bleed_locations{Top} or $bleed_locations{Bottom};
+			# Apparently you can
+# 2014-09-25: Brendan and Rick say you really can't.  You need a minimum of bleed space.
+# SInce we don't know it rows > 1 yet, let's just only subtract 1
+			if ( $bleed_size ) {
+			$colour_bar -= ( $bleed_size - $min_bleed_size ) if $bleed_locations{Top} or $bleed_locations{Bottom};
+			#$colour_bar -= ( $bleed_size - $min_bleed_size ) if $bleed_locations{Top} and $bleed_locations{Bottom};
+			} # end if
 			$colour_bar = 0 if $colour_bar < 0;
+			$colour_bar = $$setup1{colour_bar_size} if $colour_bar > $$setup1{colour_bar_size};	
 $openprint::log->debug("Colour bar is now $colour_bar") if DEBUG;
 		}
 		
@@ -561,6 +570,9 @@ $openprint::log->debug("Height: $paper_height - CB $$specs{'colour_bar_size'} - 
 		$openprint::log->debug(" CHECK 1 $run_style Using Paper $paper_width x $paper_height -> $adjusted_paper_width x $adjusted_paper_height Gutter: $gutters, Image: $$setup1{image_width} x $$setup1{image_height} Imposition: " . $setup1->imposition(). ":".$setup1->columns() . 'x' . $setup1->rows(). " $run_style " . $setup1->layout_width() . 'x' . $setup1->layout_height() ) if DEBUG;
 		$setup1->Paper()->height( $setup1->used_height() ) if ! $setup1->Paper()->height();
 		if ( check_setup( $setup1, $specs ) ) {
+			if ( $run_style eq 'Perfecting' ) {
+				$setup1->perfecting_wheel_space( $$setup1{imposition} % 2 ? $$specs{'Perfecting Double Gutter Size'} : $$specs{'Perfecting Single Gutter Size'} );
+			} # end if
 			$openprint::log->debug(" CHECK 1 $run_style Using Paper $paper_width x $paper_height -> $adjusted_paper_width x $adjusted_paper_height Gutter: $gutters, Image: $$setup1{image_width} x $$setup1{image_height} Imposition: " . $setup1->imposition(). ":".$setup1->columns() . 'x' . $setup1->rows(). " $run_style " . $setup1->layout_width() . 'x' . $setup1->layout_height() ) if DEBUG;
 			push @results, $setup1;
 			if ( ( $$specs{'dutch'} ne 'N' ) and ( $run_style ne 'Perfecting' or ( $Paper->perfecting() ) ) ) {
@@ -665,7 +677,10 @@ $openprint::log->debug("Not doing dutch because ($$specs{'dutch'}) or $run_style
 	} # end if
 
 	if ( $$specs{'Colour Bar Orientation'} ne 'Length' ) {
-		$adjusted_paper_height -= $$setup2{colour_bar_size};
+		if ( $run_style ne 'Work & Tumble' ) {
+			# W&Tumble has it in the grip space already.
+			$adjusted_paper_height -= $$setup2{colour_bar_size};
+		} # end if
 	} # end if
 
 	if ( $Paper->cuttable() ) {
@@ -717,6 +732,9 @@ $openprint::log->debug("Not doing dutch because ($$specs{'dutch'}) or $run_style
 		calc_setup( $setup2, $setup2->image_height(), $setup2->image_width(), $adjusted_paper_width, $adjusted_paper_height ? $adjusted_paper_height : $setup2->image_width() );
 		$openprint::log->debug(" CHECK 2 $run_style Using Paper $paper_width x $paper_height -> $adjusted_paper_width x $adjusted_paper_height Gutter: $gutters, Image: $$setup2{image_width} x $$setup2{image_height} Imposition: " . $setup2->imposition(). ":".$setup2->columns() . 'x' . $setup2->rows(). " $run_style") if DEBUG;
 		if ( check_setup( $setup2, $specs ) ) {
+			if ( $run_style eq 'Perfecting' ) {
+				$setup2->perfecting_wheel_space( $$setup1{imposition} % 2 ? $$specs{'Perfecting Double Gutter Size'} : $$specs{'Perfecting Single Gutter Size'} );
+			} # end if
 			$openprint::log->debug(" CHECK 2 $run_style Using Paper $paper_width x $paper_height -> $adjusted_paper_width x $adjusted_paper_height Gutter: $gutters, Image: $$setup2{image_width} x $$setup2{image_height} Imposition: " . $setup2->imposition(). ":".$setup2->columns() . 'x' . $setup2->rows(). " $run_style") if DEBUG;
 
 #	Rotating sheet reverses the grain direction, so grain width + rotated sheet is the same as grain height + non rotated sheet.

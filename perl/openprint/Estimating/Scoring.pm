@@ -14,10 +14,10 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA	02110-1301, USA
 use strict;
+#use warnings;
 
 package openprint::Estimating::Scoring;
 
-require sql;
 require openprint::service;
 require openprint::Material;
 require openprint::imposition;
@@ -34,6 +34,7 @@ my @variables = (
 	'txtPrice1','txtPrice2','txtPrice3',
 	'OverridePrice1', 'OverridePrice2', 'OverridePrice3',
 	'Markup1', 'Markup2', 'Markup3',
+	'alert',
 );
 
 my @all_equipment;
@@ -83,22 +84,27 @@ sub has_overrides {
 sub signature_needs {
 	my ( $Project, $specs, $sig_specs, $Paper ) = @_;
 
-#$openprint::log->debug("Scoring::need $$sig_specs{SignatureIndex} : " .$$specs{"chkOverrideQty-$$sig_specs{'SignatureIndex'}"});
+	my $form = $$sig_specs{SignatureIndex} * 1;
 	if ( $specs ) {
 	# This is because for non-books, the specs hash doesn't have the SignatureIndex filledin.
-		my $sig_index = $$sig_specs{"SignatureIndex"} * 1;
-		if ( ( $$specs{"chkOverrideQty-$sig_index"} eq 'Y' ) and
-				( $$specs{"txtVerticalQty-$sig_index"} or $$specs{"txtHorizontalQty-$sig_index"} ) ) {
+# WHAT?S!  ARE YOU SMOKING?
+#$openprint::log->debug("Scoring::need $form : " .$$specs{"chkOverrideQty-$form"}) if DEBUG;
+		if ( ( (defined $$specs{"chkOverrideQty-$form"} ) and ( $$specs{"chkOverrideQty-$form"} eq 'Y' ) ) and
+				( $$specs{"txtVerticalQty-$form"} or $$specs{"txtHorizontalQty-$form"} ) ) {
 			return 1;
 		} # end if
 	} # end if
 
 # If it's not needing folding, then it doesn't need to be scored!!
-	if ( ! openprint::Estimating::Folding::signature_needs( $Project, $sig_specs) ) {
+	if ( ! openprint::Estimating::Folding::signature_needs( $Project, $sig_specs ) ) {
 #$openprint::log->debug("NeedFolding is not true $$specs{'txtWidth'}x$$specs{'txtHeight'} : $$specs{'txtFinalWidth'}x$$specs{'txtFinalHeight'}");
 		return 0;
 	} # end if
-	if ( ( $$sig_specs{'txtSignatureType'} eq '' ) or ( $$sig_specs{'txtSignatureType'} eq 'Cover Pages' ) or ( $$sig_specs{'txtSignatureType'} and ( $$sig_specs{'SignatureIndex'} == 1 ) ) ) {
+	if ( 
+		( $$sig_specs{txtSignatureType} eq '' ) 
+		or ( $$sig_specs{txtSignatureType} eq 'Cover Pages' ) 
+		or ( $$sig_specs{'txtSignatureType'} and ( ! $Project->signatures({type=>'Cover Pages'}) ) and ( $form == 1 ) ) 
+	) {
 		$Paper = openprint::Paper::load_from_signature( $Project, $sig_specs ) if ! $Paper;
 #$openprint::log->debug( "Score Required!: " . $Paper->score_required() );
 		if ( $Paper->score_required() ) {
@@ -138,6 +144,7 @@ sub calc {
 	my ( $log, $dbh, $variable, $project_index, $service_index, $specs ) = @_;
 
 	my $status = 'calculated';
+	$$specs{alert} = '';
 
 	my $Project = new openprint::Project( $project_index );
 
@@ -169,6 +176,8 @@ sub calc {
 			} # end if
 			my $Imposition = new openprint::Imposition();
 			$Imposition->load( $sig_specs, $qty_index );
+			$$specs{'hdnBreakdown'.$qty_index} .= $Imposition->to_string() . '<br/>';
+			$$specs{'hdnBreakdown'.$qty_index} .= $Imposition->Paper()->to_string() . '<br/>';
 
 			my %Price = signature_calc( $Project, $service_index, $specs, $signature_service_index, $sig_specs, $qty_index, $Imposition );
 			$status = $Price{'Status'} if $Price{'Status'} eq 'uncalculated';
@@ -199,7 +208,7 @@ sub calc {
 				$$specs{'alert'} .= 'Please specify # of scores for form ' . $$sig_specs{'SignatureIndex'};
 				$status = 'uncalculated';
 			} # end if
-			$price += $Price{'Price'};
+			$price += $Price{Price} if $Price{Price};
 			$status = 'uncalculated' if $Price{'Status'} eq 'uncalculated';
 		} # end foreach qty_index
 
@@ -227,12 +236,14 @@ sub signature_calc {
 		Status		=> 'calculated',
 		Breakdown	=> '',
 	);
-	if ( $$specs{"chkOverrideQty-$$sig_specs{'SignatureIndex'}"} ne 'Y' ) {
+	my $form = $$sig_specs{SignatureIndex};
+
+	if ( (!defined $$specs{"chkOverrideQty-$form"}) or ( $$specs{"chkOverrideQty-$form"} ne 'Y' ) ) {
 		get_scores( $Project, $specs, $sig_specs, $SignatureImposition->Paper() );
 	} # end if
 
-	my $score_qty = $$specs{"txtVerticalQty-$$sig_specs{'SignatureIndex'}"} + $$specs{"txtHorizontalQty-$$sig_specs{'SignatureIndex'}"};
-	@$specs{"txtWidth-$$sig_specs{'SignatureIndex'}", "txtHeight-$$sig_specs{'SignatureIndex'}"} = @$sig_specs{'txtWidth','txtHeight'};
+	my $score_qty = $$specs{"txtVerticalQty-$form"} + $$specs{"txtHorizontalQty-$form"};
+	@$specs{"txtWidth-$form", "txtHeight-$form"} = @$sig_specs{'txtWidth','txtHeight'};
 	$Results{'Breakdown'} .= "# of Scores: $score_qty<br/>";
 	return %Results if ! $score_qty;
 
@@ -264,9 +275,9 @@ sub signature_calc {
 
 	$Results{'Status'} = 'uncalculated';
 	my @equipment;	
-	if ( $$specs{"chkOverrideEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} eq 'Y' ) {
-		@equipment = openprint::Equipment->find( 'id'=>$$specs{"ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} );
-		$openprint::log->debug("Overriding Equipment to: " . $$specs{"ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} );
+	if ( $$specs{"chkOverrideEquipment-$form-$qty_index"} eq 'Y' ) {
+		@equipment = openprint::Equipment->find( 'id'=>$$specs{"ddmEquipment-$form-$qty_index"} );
+		$openprint::log->debug("Overriding Equipment to: " . $$specs{"ddmEquipment-$form-$qty_index"} );
 	} else {
 		my @capabilities = ('Y','When Printing');
 		push @capabilities, 'For Pocket Folders' if $Project->Type()->name() eq 'PresentationFolders';
@@ -373,14 +384,14 @@ sub signature_calc {
 		if ( $Equipment->specification('Scoring Capable') eq 'When Folding' ) {
 			if ( ! ( $$services{'Folding'} and @{$$services{'Folding'}} ) ) {
 				$Results{'Breakdown'} .= 'Not being folded.<br/>';
-				if ( $$specs{"chkOverrideEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} eq 'Y' ) {
+				if ( $$specs{"chkOverrideEquipment-$form-$qty_index"} eq 'Y' ) {
 					$Results{alert} .= 'Not being folded.<br/>';;
 				} # end if
 				next;
 			} 
-			if ( $$folding_specs{"ddmEquipment-$$sig_specs{SignatureIndex}-$qty_index"} != $Equipment->id() ) {
+			if ( $$folding_specs{"ddmEquipment-$form-$qty_index"} != $Equipment->id() ) {
 				$Results{'Breakdown'} .= 'Not being folded on this.<br/>';
-				if ( $$specs{"chkOverrideEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} eq 'Y' ) {
+				if ( $$specs{"chkOverrideEquipment-$form-$qty_index"} eq 'Y' ) {
 					$Results{alert} .= 'Not being folded on this.<br/>';
 				} # end if
 				next;
@@ -422,10 +433,15 @@ sub signature_calc {
 				$parts += $Fold->imposition() * $Fold->quantity();
 			} # end if
 
+			if ( $_ = fits_on_equipment( $Equipment, $SignatureImposition, $sig_specs, $$specs{"txtVerticalQty-$form"}, $$specs{"txtHorizontalQty-$form"} ) ) {
+				$Results{'Breakdown'} .= "Doesn't fit. $_<br/>";
+				next;
+			} # end if
+
 			foreach my $Fold ( @Folds ) {
 				$$Fold{impressions} = ( $qty / $SignatureImposition->imposition() ) * ( $parts / ( $Fold->imposition() * $Fold->quantity() ) ) * $Fold->quantity();
 				#$$Fold{impressions} /= $Fold->imposition();
-                my $Price = get_price( $Equipment, $$specs{"txtVerticalQty-$$sig_specs{SignatureIndex}"}, $$specs{"txtHorizontalQty-$$sig_specs{SignatureIndex}"}, $$Fold{impressions}, $Fold );
+                my $Price = get_price( $Equipment, $$specs{"txtVerticalQty-$form"}, $$specs{"txtHorizontalQty-$form"}, $$Fold{impressions}, $Fold );
                 $totalPrice += $$Price{setup} + $$Price{Vertical}{Total} + $$Price{Horizontal}{Total} + $$Price{Service}{Total};
                 $Results{Breakdown} .= $$Price{Breakdown};
 			} # end foreach my $Fold
@@ -780,11 +796,15 @@ sub fits_on_equipment {
 		} # end if
 	} # end if
 
-	if ( $Equipment->specification('Minimum Score Calliper') and 1*$calliper < 1*$Equipment->specification('Minimum Score Calliper') ) {
-		return "Calliper too small: ($calliper), Min: " . $Equipment->specification('Minimum Score Calliper');
+	if ( my $min_calliper = $Equipment->specification('Minimum Score Calliper') ) {
+		if ( $calliper < $min_calliper ) {
+			return "Calliper too small: ($calliper), Min: " . $min_calliper;
+		} # end if
 	} # end if
-	if ( $Equipment->specification('Maximum Score Calliper') and 1*$calliper > 1*$Equipment->specification('Maximum Score Calliper') ) {
-		return 'Calliper too big';
+	if ( my $max_calliper = $Equipment->specification('Maximum Score Calliper') ) {
+		if ( $calliper > $max_calliper ) {
+			return 'Calliper too big';
+		} # end if
 	} # end if
 
 	if ( $max_feed_width ) {

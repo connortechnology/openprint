@@ -1,5 +1,4 @@
 <? echo (
-	$r->content_type('text/javascript');
 	my $Vendor = new openprint::Company( $param{'supplier_id'} );
 	my $html = '';
 	$html .= "

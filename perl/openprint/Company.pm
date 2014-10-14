@@ -91,6 +91,7 @@ $serial = 'companies_id_seq';
 	'deleted'		=>	0,
 	'category_id'	=>	undef,
 	'offers_credit'	=>	0,
+	supplier		=>	q`'N'`,
 );
 
 sub Currency {
@@ -213,7 +214,7 @@ sub Credit {
 		$_->set({supplier_id=>$supplier});
 		return $_;
 	} # end if
-	return new openprint::Company_Credit( { 'company_id'=>$_[0]{id}, 'supplier_id'=>$supplier } );
+	return new openprint::Company_Credit( { company_id=>$_[0]{id}, supplier_id=>$supplier } );
 } # end sub Credit
 
 sub dropdown {
@@ -448,15 +449,16 @@ sub tax_code {
 	} else {
 		require openprint::Tax;
 		if ( $_[0]->country() and $_[0]->state() ) {
-			return join('/', map { $_->name() } openprint::Tax->find(
+			my @Taxes = openprint::Tax->find(
 						'period_start null_or_<='   =>  'NOW()',
 						'period_end null_or_>='     =>  'NOW()',
 						'country'   =>  $_[0]->country(),
 						'state'     =>  $_[0]->state()
-						) );
-		} 
+						);
+			return join('/', map { $_->name() } @Taxes ) if @Taxes;
+		} # end if country and state
 	} # end if
-	return 'Unknown';
+	return '0';
 } # end if
 1;
 __END__

@@ -98,7 +98,7 @@ $openprint::log->debug( "Signature: @signatures");
 					my $specs2 = openprint::service::get_specs_ref( $Project, $signatures[$j] );
 					if ( openprint::Estimating::Printing::compare_signatures( $Project, $sig_specs, $specs2 ) ) {
 #$openprint::log->warn('Deleting due to incorrect printing type');
-						openprint::print_project::delete_service( $$Project{'id'}, $signatures[$j] );
+						openprint::print_project::delete_service( $Project, $signatures[$j] );
 						splice @signatures, $j, 1;
 						$j-=1;
 					} # end if

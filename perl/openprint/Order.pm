@@ -20,7 +20,7 @@ require openprint::Payment;
 require openprint::Tax;
 require openprint::Order_Notification;
 
-$debug = 0;
+$debug = 1;
 
 $table = 'orders';
 $serial = 'orders_id_seq';
@@ -248,6 +248,9 @@ $openprint::log->debug("Setting status to $_[1]");
 # Adding Waiting For Pickup, Shipped, Picked Up
 sub update_status {
 	my $self = shift;
+	if ( $self->status() eq 'Re-Opened' ) {
+		return $$self{status};
+	}
 
 	$_ = q{SELECT DISTINCT(strStatus) FROM Projects WHERE id IN (SELECT lngProjectIndex FROM Order_Contents WHERE OrderIndex=?)};
 	my @statuses = sql::execute( $log, $dbh, $_, $$self{id} );
@@ -420,16 +423,7 @@ sub subtotal {
 
 	if ( sets::isin($$self{'status'}, ['Re-Opened','Incomplete'] ) or ! $$self{'subtotal'} ) {
 		$$self{'subtotal'} = 0;
-		foreach my $Project ( $self->Projects() ) {
-			my $price = $Project->ordered_price();
-#$log->debug("subtotal: ordered price: $price");
-			if ( $Project->currency_id() != $$self{'currency_id'} ) {
-				my $rate = $Project->Currency()->conversions( $$self{'currency_id'} );
-				$price *= $rate;
-#$log->debug("subtotal: ordered price converted to: $price");
-			} # end if
-			$$self{'subtotal'} += $price;
-		} # end foreach Project
+		$$self{'subtotal'} += misc::sum( map { $_->price() } $self->Ordered_Projects() );
 		foreach my $Product ( $self->Products() ) {
 			my $price = $Product->price();
 #$log->debug("subtotal: ordered price: $price");
@@ -449,7 +443,7 @@ sub total {
 	if ( @_ ) {
 		$$self{'total'} = shift;
 	} # emd of
-	if ( sets::isin( $$self{'status'}, ['Re-Opened','Incomplete'] ) or ! $$self{'total'} ) {
+	if ( (!$$self{total}) or sets::isin( $$self{'status'}, ['Re-Opened','Incomplete'] ) ) {
 		$$self{'total'} = $self->subtotal();
 		foreach my $Tax ( $self->Taxes() ) {
 			$$self{'total'} += $Tax->amount();

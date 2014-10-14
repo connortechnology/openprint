@@ -94,25 +94,24 @@ if ( 0 ) {
 			my $Project = $$variable{Project};
 			my $services = $Project->services();
 			my $fragment = slurp_content( '/main/project/bind/_fold.html' );
-			@{$$variable{fold_options}} = sort { my ( $pagesa ) = $a =~ /(\d*)/; my ( $pagesb ) = $b =~ /(\d*)/; $pagesa <=> $pagesb; } ( map { $_, $openprint::Estimating::Folding::fold_types{$_} } sql::execute( undef, undef, 'SELECT DISTINCT type FROM folds') );
 
-			foreach my $ss_id ( $$variable{Project}->signatures({sort=>1}) ) {
-				my $sig_specs = openprint::service::get_specs_ref( $$variable{'Project'}, $ss_id );
+			foreach my $ss_id ( $Project->signatures({sort=>1}) ) {
+				my $sig_specs = openprint::service::get_specs_ref( $Project, $ss_id );
 				$html .= "<fieldset><legend>For Signature $$sig_specs{'SignatureIndex'}:";
-				$html .= openprint::service::summary( $$variable{'Project'}, $ss_id );
+				$html .= openprint::service::summary( $Project, $ss_id );
 				$html .= '</legend><ul><li><label>Printed</label>';
 
-				foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
+				foreach my $qty_index ( $Project->quantity_indexes() ) {
 					$html .= '<div class="'.$$variable{Columns}.'Columns">';
 					if ( $$sig_specs{"txtImposition$qty_index"} ) {
-					$html .= openprint::service::summary( $$variable{Project}, $ss_id, $qty_index );
+					$html .= openprint::service::summary( $Project, $ss_id, $qty_index );
 					} else { $html .= '&nbsp;';
 					} # end if
 					$html .= '</div>';
 				} # end foreach qty_index
 				$html .= '</li>';
 				$html .= '<li><label>Equipment</label>';
-				foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
+				foreach my $qty_index ( $Project->quantity_indexes() ) {
 					$html .= '<span class="'.$$variable{Columns}.'Columns">';
 					if ( $$sig_specs{"txtImposition$qty_index"} ) {
 						$html .= sprintf('<select name="ddmEquipment-%1$d-%2$d" onchange="calc(this.form.name);">', $$sig_specs{'SignatureIndex'}, $qty_index );

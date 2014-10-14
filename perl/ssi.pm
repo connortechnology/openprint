@@ -1,7 +1,7 @@
 use strict;
 package ssi;
 
-use constant DEBUG => 1;
+use constant DEBUG => 0;
 
 require Date::Calc;
 
@@ -737,14 +737,17 @@ sub save_params {
 	my ( $url, @keys ) = @_;
 
 	foreach ( @keys ) {
-#$openprint::log->debug("key $_");
-		next if ! exists $param{$_};
+		$openprint::log->debug("save_params: key $_") if DEBUG;
+		if ( ! exists $param{$_} ) {
+			$openprint::log->debug("save_params: does not exist in param key $_") if DEBUG;
+			next;
+		} 
 		if ( ref $param{$_} eq 'ARRAY' ) {
 			$session{"$url?$_"} = join(',', @{$param{$_}} );
-#$openprint::log->debug("Storing ARRAY ($_) (".$session{"$url?$_"}.")");
+$openprint::log->debug("Storing ARRAY ($_) (".$session{"$url?$_"}.")") if DEBUG;
 		} else {
 			$session{"$url?$_"} = $param{$_};
-#$openprint::log->debug("Storing ($_) (".$session{"$url?$_"}.")");
+$openprint::log->debug("Storing ($_) (".$session{"$url?$_"}.")") if DEBUG;
 		} # end if
 		$session{$url.'?lastupdated'} = time;
 	} # end foreach
@@ -775,7 +778,7 @@ sub radio {
 	my $onclick = $$options{'onclick'} if $options;
 	my $html;
 	if ( $$options{default} and ! defined $selected ) {
-$log->debug("Selecting default $$options{default}");
+$log->debug("Selecting default $$options{default} for radio $name");
 		$selected = $$options{default};
 	} # end if
 
@@ -859,23 +862,33 @@ sub input {
 	my %options = @_;
 	my $html = '<input';
 	if ( $options{type} eq 'cardinal' ) {
+		$options{step} = '1' if ! exists $options{step};
 		if ( $ENV{HTTP_USER_AGENT} =~ /ip(ad|od|hone)/i ) {
 			$options{type} = 'text';
 			$options{pattern} = '[0-9]*' if ! $options{pattern};
+		} elsif ( $ENV{HTTP_USER_AGENT} =~ /Firefox/ ) {
+			$options{type} = 'text';
+			$options{'pattern'} = '[0-9]*' if ! $options{'pattern'};
+			delete $options{step};
 		} else {
 			$options{type} = 'number';
 		} # end if
 		$options{filter} = 'cardinalize(this);' if ! $options{filter};
 		$options{onkeyup} = $options{filter}.$options{onkeyup};
-		$options{step} = '1' if ! exists $options{step};
+		$options{oninput} = 'this.onkeyup.call(this);' if ! $options{oninput};
 	} elsif ( $options{type} eq 'integer' ) {
 		if ( $ENV{HTTP_USER_AGENT} =~ /ip(ad|od|hone)/i ) {
 			$options{type} = 'text';
 			$options{'pattern'} = '[0-9]*' if ! $options{'pattern'};
+		} elsif ( $ENV{HTTP_USER_AGENT} =~ /Firefox/ ) {
+			$options{type} = 'text';
+			$options{'pattern'} = '[0-9]*' if ! $options{'pattern'};
+			delete $options{step};
 		} else {
 			$options{type} = 'number';
 		} # end if
 		$options{'onkeyup'} = 'integerize(this);'.$options{'onkeyup'};
+		$options{oninput} = 'this.onkeyup.call(this);' if ! $options{oninput};
 	} elsif ( $options{type} eq 'float' ) {
 #$log->debug("USer agent: $ENV{HTTP_USER_AGENT}");
 		$options{step} = 'any' if ! exists $options{step};
@@ -890,6 +903,23 @@ sub input {
 			$options{type} = 'number';
 		} # end if
 		$options{'onkeyup'} = 'floatize(this);'.$options{'onkeyup'};
+		$options{oninput} = 'this.onkeyup.call(this);' if ! $options{oninput};
+    } elsif ( $options{type} eq 'positivefloat' ) {
+#$log->debug("USer agent: $ENV{HTTP_USER_AGENT}");
+        $options{step} = 'any' if ! exists $options{step};
+        if ( $ENV{HTTP_USER_AGENT} =~ /ip(ad|od|hone)/i ) {
+            $options{type} = 'text';
+            $options{'pattern'} = '[.0-9]*' if ! $options{'pattern'};
+        } elsif ( $ENV{HTTP_USER_AGENT} =~ /Firefox/ ) {
+            $options{type} = 'text';
+            $options{'pattern'} = '[.0-9]*' if ! $options{'pattern'};
+            delete $options{step};
+        } else {
+            $options{type} = 'number';
+        } # end if
+        $options{'onkeyup'} = 'positive_floatize(this);'.$options{'onkeyup'};
+
+		$options{oninput} = 'this.onkeyup.call(this);' if ! $options{oninput};
 	} elsif ( $options{type} eq 'float_calculator' ) {
 		if ( $ENV{HTTP_USER_AGENT} =~ /ip(ad|od|hone)/i ) {
 			$options{type} = 'text';
@@ -899,6 +929,7 @@ sub input {
 		} # end if
 		$options{step} = 'any' if ! exists $options{step};
 		$options{'onkeyup'} = 'floatize_calculator(this);'.$options{'onkeyup'};
+		$options{oninput} = 'this.onkeyup.call(this);' if ! $options{oninput};
 	} # end if
 	$html .= ' value="'.html_escape($options{value}).'"' if $options{value} ne '';
 

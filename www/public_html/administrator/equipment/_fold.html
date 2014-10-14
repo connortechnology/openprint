@@ -133,21 +133,15 @@
 		</p>
 		<p>
 			<label>Stitching</label>
-			<? echo ( radio( 'stitching', [1,'Yes',0,'No'], $$variable{Fold}->stitching(), { onclick=>qq`\$('Fold$$variable{Fold}{'id'}').addClassName('changed');`, id=>$$variable{Fold}->id() } ); ) ?>
+			<? echo ( radio( 'stitching', ['1','Yes','0','No', '', 'Either'], $$variable{Fold}->stitching(), { onclick=>qq`\$('Fold$$variable{Fold}{id}').addClassName('changed');`, id=>$$variable{Fold}->id() } ); ) ?>
 		</p>
 		<p>
 			<label>Perfect Bind</label>
-			<input type="radio" id="fold-<? echo ( $$variable{Fold}->id() ) ?>-perfectbind1" name="perfectbind" value="1" <? echo ( $$variable{Fold}->perfectbind() ? 'checked="checked"' : '' ) ?> onclick="$('Fold<? echo ( $$variable{Fold}->id() ) ?>').addClassName('changed');" />
-			<label class="radio" for="fold-<? echo ( $$variable{Fold}->id() ) ?>-perfectbind1">Yes</label>
-			<input type="radio" id="fold-<? echo ( $$variable{Fold}->id() ) ?>-perfectbind0" name="perfectbind" value="0" <? echo ( ! $$variable{Fold}->perfectbind() ? 'checked="checked"' : '' ) ?> onclick="$('Fold<? echo ( $$variable{Fold}->id() ) ?>').addClassName('changed');" />
-			<label class="radio" for="fold-<? echo ( $$variable{Fold}->id() ) ?>-perfectbind0">No</label>
+			<? echo ( radio( 'perfectbind', ['1','Yes','0','No', '', 'Either'], $$variable{Fold}->perfectbind(), { onclick=>qq`\$('Fold$$variable{Fold}{'id'}').addClassName('changed');`, id=>$$variable{Fold}->id() } ); ) ?>
 		</p>
 		<p>
 			<label>Spine Paste</label>
-			<input type="radio" id="fold-<? echo ( $$variable{Fold}->id() ) ?>-spinepaste1" name="spinepaste" value="1" <? echo ( $$variable{Fold}->spinepaste() ? 'checked="checked"' : '' ) ?> onclick="$('Fold<? echo ( $$variable{Fold}->id() ) ?>').addClassName('changed');" />
-			<label class="radio" for="fold-<? echo ( $$variable{Fold}->id() ) ?>-spinepaste1">Yes</label>
-			<input type="radio" id="fold-<? echo ( $$variable{Fold}->id() ) ?>-spinepaste0" name="spinepaste" value="0" <? echo ( ! $$variable{Fold}->spinepaste() ? 'checked="checked"' : '' ) ?> onclick="$('Fold<? echo ( $$variable{Fold}->id() ) ?>').addClassName('changed');" />
-			<label class="radio" for="fold-<? echo ( $$variable{Fold}->id() ) ?>-spinepaste0">No</label>
+			<? echo ( radio( 'spinepaste', ['1','Yes','0','No', '', 'Either'], $$variable{Fold}->spinepaste(), { onclick=>qq`\$('Fold$$variable{Fold}{'id'}').addClassName('changed');`, id=>$$variable{Fold}->id() } ); ) ?>
 		</p>
 		</fieldset>
 		<fieldset><legend>Runspeeds</legend>

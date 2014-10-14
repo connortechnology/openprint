@@ -1,7 +1,7 @@
 <script type="text/javascript">
 	var invoice_id = '<? echo ( $$variable{Invoice}->id() ) ?>';
 </script>
-<script type="text/javascript" href="<?hash_link(/invoice/edit.js)?>"></script>
+<script type="text/javascript" src="<?hash_link(/invoice/edit.js)?>"></script>
 <?include(/includes/error_reporting.html)?>
 <div class="Invoice"><div class="Edit">
 <form name="f1" id="f1" action="edit.html" method="post">
@@ -10,7 +10,7 @@
 	<fieldset><legend><? echo ( $$variable{'Invoice'}->num() ? 'Editing Invoice ' . $$variable{Invoice}->num() : 'New Invoice' ) ?></legend>
 		<div class="leftColumn">
 			<ul>
-				<li><label>Number</label><input type="text" name="num" value="<? echo ( $$variable{Invoice}->num() ) ?>" /></li>
+				<li class="invoice_num"><label>Number</label><input type="text" name="num" value="<? echo ( $$variable{Invoice}->num() ) ?>" /></li>
 				
 				<li class="invoicer"><label>Prepared By</label>
 						<? echo ( ssi::select( 

@@ -23,8 +23,9 @@ require openprint::quote;
 sub try_to_delete {
 	my $quote_id = shift;
 	my $Quote = new openprint::Quote( $quote_id );
-	if ( ( $session{'user_type'} eq 'A' ) or ( $session{'company_id'} == $Quote->company_id() ) ) {
+	if ( $Quote->can_delete() ) {
 		$Quote->delete();
+		$Quote->add_log('Deleted');
 	} else {
 		return "Quote $quote_id does not belong to you.  Not deleted.<br>";
 	} # end if
@@ -46,6 +47,7 @@ sub history {
     ssi::setup_date_select( '/main/quote/history.html', 'created_on_start', -30 );
     ssi::setup_date_select( '/main/quote/history.html', 'created_on_end', 0 );
 	$session{'/main/quote/history.html?company_id'} = $session{company_id} if ! exists $session{'/main/quote/history.html?company_id'};
+	$session{'/main/quote/history.html?deleted'} = '0' if ! exists $session{'/main/quote/history.html?deleted'};
 	_history();
 } # end sub history
 
@@ -53,40 +55,65 @@ sub _history {
     ssi::save_params( '/main/quote/history.html',
             'created_on_start_year', 'created_on_start_month','created_on_start_day',
             'created_on_end_year', 'created_on_end_month','created_on_end_day',
-			'QuotedFor', 'company_id',
+			'QuotedFor', 'company_id','deleted',
             );
 } # end sub _history
 
 sub history_details {
+	$param{quote_id} = openprint::Quote->transform('id', $param{quote_id} );
+	my $Quote = $variable{Quote} = new openprint::Quote( $param{quote_id} );
+
 	if ( $param{'btnFunction'} eq 'Move To' ) {
-		my $Quote = new openprint::Quote( $param{'quote_id'} );
 		if ( ! $Quote->id() ) {
-			$variable{'error'} .= 'Empty or invalid quote id.<br/>';
-		} elsif ( ! $param{'company_id'} ) {
-			$variable{'error'} = 'You must select a company first.<br/>';
-		} elsif ( $Quote->company_id() == $param{'company_id'} ) {
-			$variable{'error'} = $Quote->Company()->name() .' already owns that quote.  No change made.<br/>';
+			$variable{error} .= 'Empty or invalid quote id.<br/>';
+		} elsif ( ! $param{company_id} ) {
+			$variable{error} = 'You must select a company first.<br/>';
+		} elsif ( $Quote->company_id() == $param{company_id} ) {
+			$variable{error} = $Quote->Company()->name() .' already owns that quote.  No change made.<br/>';
 		} else {
-			$variable{'error'} .= $Quote->save({'company_id'=>$param{'company_id'}});
+			my $OldCompany = $Quote->Company();
+			my $NewCompany = new openprint::Company( $param{company_id} );
+
+			if ( $Quote->can_delete() and ( $session{user_id} eq $$NewCompany{salesrep_id} ) ) {
+				$variable{error} .= $Quote->save({company_id=>$param{company_id}});
+			} else {
+				$variable{error} .= 'You do not have permission to move this quote.<br/>';
+			} # end if
 		} # end if
-		if ( ! $variable{'error'} ) {
+		if ( ! $variable{error} ) {
 			%param = ();
-			$variable{'ExternalRedirect'} = '/main/quote/history.html';
+			$variable{ExternalRedirect} = '/main/quote/history.html';
 			return;
 		} # end if
-	} # end if
-	my $quote_id = $param{'quote_id'};
-	$quote_id =~ s/\D//g;
-	$quote_id = $session{'quote_id'} if ! $quote_id;
-	$variable{'Quote'} = new openprint::Quote( $quote_id );
-	if ( sets::isin( $session{'user_type'}, ['A','E'] ) or ( $variable{'Quote'}->company_id() == $session{'company_id'} ) ) {
-		openprint::quote::get_finished_quote_contents( $log, $dbh, \%variable, $quote_id );
-		if ( $param{'btnFunction'} eq 'Resend' ) {
-			my $results = $variable{'Quote'}->send();
-			$variable{'Quote'}->add_log('Resent. Results: ' . $results);
-			$variable{'information'} .= 'Quote resent. Results: '. $results;
+	} elsif ( $param{btnFunction} eq 'Delete' ) {
+		if ( ! $Quote->can_delete() ) {
+			$variable{error} .= 'You do not have permission to delete this quote.<br/>';
+		} else {
+			$variable{error} .= $Quote->delete();
+		} # end if
+		if ( ! $variable{error} ) {
+			$Quote->add_log('Deleted');
+			$variable{ExternalRedirect} = '/main/quote/history.html';
+		} # end if
+	} elsif ( $param{btnFunction} eq 'Undelete' ) {
+		if ( ! $Quote->can_delete() ) {
+			$variable{error} .= 'You do not have permission to undelete this quote.<br/>';
+		} else {
+			$variable{error} .= $Quote->save({deleted=>0});
+			$Quote->add_log('Undeleted');
+		} # end if
+		if ( ! $variable{error} ) {
+			$variable{ExternalRedirect} = '/main/quote/history_details.html?quote_id='.$Quote->id();
+		} # end if
+	} elsif ( $param{btnFunction} eq 'Resend' ) {
+		if ( ! $Quote->can_send( ) ) {
+			my $results = $Quote->send();
+			$Quote->add_log('Resent. Results: ' . $results);
+			$variable{information} .= 'Quote resent. Results: '. $results;
+			$variable{ExternalRedirect} = '/main/quote/history_details.html?quote_id='.$Quote->id();
 		} # end if
 	} # end if
+	openprint::quote::get_finished_quote_contents( $log, $dbh, \%variable, $$Quote{id} ) if $param{quote_id};
 } # end sub history_details
 
 sub add_project_to_quote {
@@ -96,13 +123,15 @@ sub add_project_to_quote {
 	$quote_id = new openprint::Quote( $quote_id )->id() if $quote_id;
 	my $Quote = new openprint::Quote( $quote_id );
 	$Quote->save() if ! $Quote->id();
-	$session{'quote_id'} = $quote_id = $Quote->id();
+	$Quote->save({deleted=>0}) if $Quote->deleted();
+
+	$session{quote_id} = $quote_id = $Quote->id();
 	return if ! $quote_id;
 
 	$project_id = $param{ProjectIndex} if ! $project_id;
 	$project_id = $session{project_id} if ! $project_id;
 	# check to make sure project isn't already in the quote.
-	my @QuotedProjects = openprint::QuotedProject->find('quote_id'=>$Quote->id(), 'project_id'=>$project_id );
+	my @QuotedProjects = openprint::QuotedProject->find( quote_id=>$Quote->id(), project_id=>$project_id );
 	if ( @QuotedProjects > 1 ) {
 $openprint::log->error( "More than 1 occurrence of a project in a quote." );
 		foreach my $QP ( @QuotedProjects ) {
@@ -145,8 +174,12 @@ sub information {
 			'Currency'	=>	openprint::Currency::get_current(),
 		});
 		$quote_id = $Quote->id();
+		$variable{ExternalRedirect} = '/main/quote/information.html?quote_id='.$quote_id;
+		return;
 	} elsif ( $param{'btnFunction'} eq 'Process Quote' ) {
 		$quote_id = add_project_to_quote( );
+		$variable{ExternalRedirect} = '/main/quote/information.html?quote_id='.$quote_id;
+		return;
 	} elsif ( ($param{'btnFunction'} eq 'Process New Quote') and $param{'quote_id'} ) {
 		my $Quote = new openprint::Quote( $param{'quote_id'} );
 		if ( ! $Quote->id() ) {
@@ -210,10 +243,10 @@ sub information {
 		$NewQuote->add_log( 'Copied from quote ' . $Quote->id() );
 		$Quote->add_log( 'Copied to quote ' . $NewQuote->id() );
 		$quote_id = $NewQuote->id();
+		$variable{ExternalRedirect} = '/main/quote/information.html?quote_id='.$quote_id;
+		return;
 	} elsif ( $param{'btnFunction'} eq 'Continue' ) {
 		$quote_id = $param{'quote_id'};
-	} else {
-		$quote_id = $session{'quote_id'};
 	} # end if
 # this should only happen if there was an error creating the quote
 	$quote_id = $param{quote_id} if ( ! $quote_id ) and $param{quote_id};
@@ -229,11 +262,15 @@ sub information {
 
 # store fields from recalculate, we only store the markup, the NewPrices will calculate on the fly
 	foreach my $key ( keys %param ) {
-		if ( $key =~ /^txtMarkup(\d+)_(\d+)$/ ) {
-			sql::update( $log, $dbh, 'tbl_Quote_Details', ['quote_id=? AND project_id=?', $quote_id, $2],
-					'dblMarkup'.$1,         1*$param{$key},
-					);
-		} # end if
+		foreach my $QP ( $Quote->Quoted_Projects() ) {
+			foreach my $qty_index ( $QP->quantity_indexes() ) {
+				$QP->markup( $qty_index, $param{'markup-'.$qty_index.'_'.$QP->project_id()} );
+				$QP->quantity( $QP->Project()->quantity() );
+				$QP->price( $qty_index, undef );	
+				$QP->description( $QP->Project()->reference() );
+			} # end foreach
+			$QP->save();
+		} # end foreach
 	} # end foreach
 
 	# This isn't neccessarily the logged in company
@@ -348,9 +385,13 @@ sub submit {
 		$Quote->store_user_by_info( \%by );
 		$Quote->store_user_for_info( \%for );
 # store fields from recalculate, we only store the markup, the NewPrices will calculate on the fly
+		# On submit, if all is well, we set final costs, nothing should change after this, unless we go back to information
 		foreach my $QP ( $Quote->Quoted_Projects() ) {
 			foreach my $qty_index ( $QP->quantity_indexes() ) {
 				$QP->markup( $qty_index, $param{'markup-'.$qty_index.'_'.$QP->project_id()} );
+				$QP->quantity( $QP->Project()->quantity() );
+				$QP->price( $qty_index, undef );	
+				$QP->description( $QP->Project()->reference() );
 			} # end foreach
 			$QP->save();
 		} # end foreach
@@ -374,8 +415,8 @@ sub submit {
 
 sub confirmation {
 
-    my $quote_id = $param{'quote_id'};
-	$quote_id = $session{'quote_id'} if ! $quote_id;
+    my $quote_id = $param{quote_id};
+	$quote_id = $session{quote_id} if ! $quote_id;
 	my $Quote = new openprint::Quote( $quote_id );
 	$variable{'Quote'} = $Quote;
 	return if ! $quote_id;
@@ -386,11 +427,8 @@ sub confirmation {
 
 		foreach my $QP ( $Quote->Quoted_Projects() ) {
 			foreach my $qty_index ( $QP->quantity_indexes() ) {
-				$QP->quantity( $QP->Project()->quantity() );
-				$QP->price( $qty_index, undef );	
 				$subtotals[$qty_index] += $QP->price( $qty_index );
 			} # end foreach
-			$QP->description( $QP->Project()->reference() );
 			$QP->save();
 		} # end foreach QP
 		foreach my $Product ( $Quote->Products() ) {

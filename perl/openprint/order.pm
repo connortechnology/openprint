@@ -371,11 +371,12 @@ sub make_order {
 # Need to document what exactly this should be saving.
 # For projects with multiple quantities, it should save the quantity selection
 sub save_project_information {
-	my ( $order_id, $OP ) = @_;
+	my ( $OP ) = @_;
 
 	my $error;
 	my $Project = $OP->Project();
 	my $project_index = $OP->project_id();
+	my $Order = $OP->Order();
 
 	if ( $param{"rdbQuantity$project_index"} ) {
 		$OP->quantity_index( $param{"rdbQuantity$project_index"} );
@@ -396,12 +397,12 @@ sub save_project_information {
 	} # end if
 
 
-	my $shipping_cost = 0;
 	# If we are specifying the Shipping Type
 	if ( $param{'ShippingType'.$project_index} ) {
 		my $quantity_shipped = $Project->ordered_quantity();
 		my @ServiceTypes = openprint::ServiceType->find('category'=>'Shipping');
 		my $services = $Project->services();
+		my $ProjectCurrency = $Project->Currency();
 		$log->debug("ServiceTypes: " . join(',',map { $_->name() } @ServiceTypes )) if DEBUG;
 		foreach my $ShippingType ( @ServiceTypes ) {
 
@@ -414,7 +415,7 @@ sub save_project_information {
 			} elsif ( $$services{$ShippingType->name()} ) {
 				# Thismight delete bindery shipping 
 				foreach ( @{$$services{$ShippingType->name()}} ) {
-					openprint::print_project::delete_service( $project_index, $_ );
+					openprint::print_project::delete_service( $Project, $_ );
 				} # end foreach
 				delete $$services{$ShippingType->name()};
 			} # end if
@@ -449,11 +450,13 @@ sub save_project_information {
 		foreach my $ShippingType ( @ServiceTypes ) {
 			next if ! $$services{$ShippingType->name()};
 			foreach my $service_id ( @{$$services{$ShippingType->name()}} ) {
+				# Calculations will be in the current Currency.  Current currency will be the same as the Orders, but not neccessarily the same as the projects.
 
 				my $specs = openprint::service::internal_calc( $log, $dbh, \%variable, $project_index, $service_id, $ShippingType->name(), $Project->ordered_quantity_index() );
+
+				# Fix currency
+				openprint::service::insert_service_spec( $log, $dbh, $project_index, $service_id, 'txtPrice'.$OP->quantity_index(), $Order->Currency()->convert_to( $ProjectCurrency, $$specs{'txtPrice'.$OP->quantity_index()} ) );
 				$quantity_shipped -= $$specs{'txtQuantity'.$Project->ordered_quantity_index()};
-				$shipping_cost += $$specs{'txtPrice'.$OP->quantity_index()};
-				$log->warn($$specs{'alert'}) if $$specs{'alert'};
 			} # end foreach service_id
 		} # end foreach ShippingType
 		$OP->shipping_type( join(',', sets::intersection( keys %{$services}, map { $_->name() } @ServiceTypes ) ) );
@@ -465,9 +468,12 @@ sub save_project_information {
 		} # end if
 	} # end if
 
-	$error .= $Project->save({'reference'=> $param{"Reference$project_index"}} ) if $param{"Reference$project_index"} and $param{"Reference$project_index"} ne $Project->reference();
+	$error .= $Project->save({reference=> $param{"Reference$project_index"}} ) if $param{"Reference$project_index"} and $param{"Reference$project_index"} ne $Project->reference();
 	if ( ref $OP eq 'openprint::OrderedProject' ) {
-		$OP->price( $Project->price( $OP->quantity_index(), undef ) );
+		$Project->price( $OP->quantity_index(), undef );
+$openprint::log->debug("Project price " . $Project->price( $OP->quantity_index() ) );
+		$OP->price( undef );
+$openprint::log->debug("OProject price " . $OP->price() );
 		$OP->quantity( $Project->quantity( $OP->quantity_index(), undef ) );
 	} elsif ( ref $OP eq 'openprint::OrderedProduct' ) {
 	#$OP->price( $Project->price( $OP->quantity_index(), undef ) );

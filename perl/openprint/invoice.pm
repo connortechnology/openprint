@@ -20,25 +20,7 @@ require openprint::Bitcoin_Address;
 
 sub history {
 
-	if ( $param{'btnFunction'} eq 'Post' ) {
-		my $Invoice = new openprint::Invoice( $param{'invoice_id'} );
-		if ( ! ( $variable{'error'} .= $Invoice->save({'posted'=>1,'posted_on'=>'NOW()'}) ) ) {
-			$Invoice->add_to_log( 'Invoice posted.' );
-			$variable{'information'} .= 'Invoice posted.<br/>';
-			delete $param{'invoice_id'};
-			if ( $session{'/invoice/history.html?company_id'} and ( $session{'/invoice/history.html?company_id'} != $Invoice->invoicee_id() ) ) {
-				delete $session{'/invoice/history.html?company_id'};
-			} # end if
-			$variable{ExternalRedirect} = '/invoice/history.html';
-			return;
-		} # end if
-	} elsif ( $param{'btnFunction'} eq 'UnPost' ) {
-		my $Invoice = new openprint::Invoice( $param{'invoice_id'} );
-		if ( ! ( $variable{'error'} .= $Invoice->save({'posted'=>0}) ) ) {
-			$Invoice->add_to_log( 'Invoice unposted.' );
-			$variable{'information'} .= 'Invoice unposted.<br/>';
-		} # end if
-	} elsif ( $param{'btnFunction'} eq 'Send' ) {
+	if ( $param{'btnFunction'} eq 'Send' ) {
 		my $Invoice = openprint::Invoice->find_one( 'id'=>$param{'invoice_id'} );
 		if ( ! $Invoice ) {
 			$variable{error} .= "Invoice $param{invoice_id} not found";
@@ -171,7 +153,7 @@ sub _history {
 } # end sub _history
 
 sub edit {
-	my $Invoice = $variable{'Invoice'} = new openprint::Invoice( $param{'invoice_id'} );
+	my $Invoice = $variable{Invoice} = new openprint::Invoice( $param{'invoice_id'} );
 	if ( $param{'btnFunction'} eq 'Save' ) {
 		$param{currency_id} = openprint::Currency::get_current()->id() if ! $param{'currency_id'};
 		my @due_on = ssi::date( 'due_on', \%param );
@@ -201,15 +183,33 @@ sub edit {
 				po			=>	$param{'product-po-'.$Product->id()},
 				});
 		} # end foreach Product
-		if ( ! $variable{error} ) {
+		if ( $param{invoice_id} and ! $variable{error} ) {
 			$variable{information} .= 'Invoice saved.<br/>';
 			$variable{ExternalRedirect} = '/invoice/view.html?invoice_id='.$Invoice->id();
+		} # end if
+	} elsif ( $param{'btnFunction'} eq 'Post' ) {
+		if ( ! ( $variable{error} .= $Invoice->save({posted=>1,posted_on=>'NOW()'}) ) ) {
+			$Invoice->add_to_log( 'Invoice posted.' );
+			$variable{information} .= 'Invoice posted.<br/>';
+			delete $param{invoice_id};
+			if ( $session{'/invoice/history.html?company_id'} and ( $session{'/invoice/history.html?company_id'} != $Invoice->invoicee_id() ) ) {
+				delete $session{'/invoice/history.html?company_id'};
+			} # end if
+			$variable{ExternalRedirect} = '/invoice/view.html?invoice_id='.$Invoice->id();
+			return;
+		} # end if
+	} elsif ( $param{'btnFunction'} eq 'UnPost' ) {
+		if ( ! ( $variable{error} .= $Invoice->save({'posted'=>0}) ) ) {
+			$Invoice->add_to_log( 'Invoice unposted.' );
+			$variable{information} .= 'Invoice unposted.<br/>';
+			$variable{ExternalRedirect} = '/invoice/view.html?invoice_id='.$Invoice->id();
+			return;
 		} # end if
 	} # end if
 	if ( ! $variable{'Invoice'}->id() ) {
 		# Defaults, don't know who the company is yet
-		$variable{'Invoice'}->due_on( join('-', Date::Calc::Add_Delta_Days( Date::Calc::Today(), 15 ) ) );
-		$variable{'Invoice'}->early_payment_date( join('-', Date::Calc::Add_Delta_Days( Date::Calc::Today(), 7 ) ) );
+		$variable{Invoice}->due_on( join('-', Date::Calc::Add_Delta_Days( Date::Calc::Today(), 15 ) ) );
+		$variable{Invoice}->early_payment_date( join('-', Date::Calc::Add_Delta_Days( Date::Calc::Today(), 7 ) ) );
 		if ( $param{order_id} ) {
 			my $Order = new openprint::Order($param{order_id});
 			$$Invoice{invoicee_id} = $Order->company_id();
@@ -224,21 +224,21 @@ sub edit {
 } # end sub edit
 
 sub view {
-	my $Invoice = $variable{'Invoice'} = new openprint::Invoice( $param{'invoice_id'} );
+	my $Invoice = $variable{Invoice} = new openprint::Invoice( $param{invoice_id} );
 	if ( ! $Invoice ) {
-		$variable{'error'} .= "Invoice $param{'invoice_id'} not found";
+		$variable{error} .= "Invoice $param{invoice_id} not found";
 		return;
 	} 
 	if ( $param{'btnFunction'} eq 'Calculate Interest' ) {
-		if ( ! $variable{'Invoice'}->monthly_interest() ) {
+		if ( ! $Invoice->monthly_interest() ) {
 			$variable{error} .= 'Invoice has no monthly interest rate!';
-		} elsif ( ! $variable{Invoice}->due_on() ) {
+		} elsif ( ! $Invoice->due_on() ) {
 			$variable{error} .= 'Invoice has no due date!';
 		} # end if
 
 		my $changed = 0;
 
-		my ( $year, $month, $day ) = $variable{'Invoice'}->due_on() =~ /(\d\d\d\d)-(\d\d)-(\d\d)/;
+		my ( $year, $month, $day ) = $Invoice->due_on() =~ /(\d\d\d\d)-(\d\d)-(\d\d)/;
 		my $last_period;
 		my $paid = 0;
 		#( $year, $month, $day ) = Date::Calc::Add_Delta_Days( $year, $month, $day, Date::Calc::Days_in_Month( $year, $month ) );
@@ -247,33 +247,31 @@ sub view {
 			my $date_string = sprintf('%4d-%.2d-%.2d', $year, $month, $day);
 
 			# The point is to calculate howmuch has beenpaidby this point
-			foreach my $P ( openprint::Invoice_Payment->find('invoice_id'=>$variable{'Invoice'}->id(), 'received_on >'=>$last_period, 'received_on <='=>$date_string )) {
+			foreach my $P ( openprint::Invoice_Payment->find(invoice_id=>$Invoice->id(), 'received_on >'=>$last_period, 'received_on <='=>$date_string )) {
 				$paid += $P->amount();
 			} # end foreach
-$log->debug("Paid: $paid");
 			# Includes tax
-			my $total = $variable{'Invoice'}->total();
-			foreach my $I ( openprint::Invoice_Interest->find('invoice_id'=>$variable{'Invoice'}->id(), 'compounded_on <'=>$date_string )) {
+			my $total = $Invoice->total();
+			foreach my $I ( openprint::Invoice_Interest->find(invoice_id=>$Invoice->id(), 'compounded_on <'=>$date_string )) {
 				$total += $I->amount();
 			} # end foreach InvoiceInterest
-$log->debug("Total: $total");
 
 			if ( $total - $paid > 0 ) {
-				if ( ! openprint::Invoice_Interest->find('invoice_id'=>$variable{'Invoice'}->id(), 'compounded_on'=>$date_string ) ) {
+				if ( ! openprint::Invoice_Interest->find(invoice_id=>$Invoice->id(), 'compounded_on'=>$date_string ) ) {
 					my $I = new openprint::Invoice_Interest();
 					$_ = $I->save({
-							'invoice_id'=>$variable{'Invoice'}->id(),
-							'amount'	=>	Math::Round::nearest( .01, ($total - $paid) * $variable{'Invoice'}->monthly_interest()/100),
-							'compounded_on'	=>	sprintf('%.4d-%.2d-%.2d', $year, $month, $day ),
+							invoice_id		=>	$Invoice->id(),
+							amount			=>	Math::Round::nearest( .01, ($total - $paid) * $Invoice->monthly_interest()/100),
+							compounded_on	=>	sprintf('%.4d-%.2d-%.2d', $year, $month, $day ),
 							});
 					if ( ! $_ ) {
-						$variable{'Invoice'}->add_to_log(sprintf('Added %s%.2f interest for %s', 
-									$variable{'Invoice'}->Currency()->symbol(), 
+						$Invoice->add_to_log(sprintf('Added %s%.2f interest for %s', 
+									$Invoice->Currency()->symbol(), 
 									$I->amount(),
 									$date_string,
 									));
 					} else {
-						$variable{'error'} .= $_;
+						$variable{error} .= $_;
 						last;
 					} # end if
 					$changed = 1;
@@ -286,9 +284,9 @@ $log->debug("Total: $total");
 		} # end while
 
 		if ( $changed ) {
-			delete $variable{'Invoice'}{'interest'};
-			$variable{'Invoice'}->interest();
-			$variable{'Invoice'}->save();
+			delete $$Invoice{interest};
+			$Invoice->interest();
+			$Invoice->save();
 		} # e,nd if
 	} elsif ( $param{'btnFunction'} eq 'Delete' ) {
 		if ( ! ( $variable{'error'} .= $Invoice->delete() ) ) {

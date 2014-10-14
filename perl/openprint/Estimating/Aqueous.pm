@@ -84,8 +84,15 @@ my @all_equipment;
 
 # A function that is smart enough to return true if the project needs perfing/Aqueous, and false if it doesn't.
 sub neccessary {
-	my ( $log, $dbh, $project_index ) = @_;
+	my ( $Project ) = @_;
 
+	foreach my $sig_id ( $Project->signatures() ) {
+		my $Service = $Project->Service( $sig_id );
+
+		if ( signature_needs( $Project, $Service->specs() ) ) {
+			return 1;
+		}
+	} # end foreach sig_id
 	return 0;
 } # end sub neccessary
 
@@ -99,7 +106,6 @@ sub get_colours {
     foreach my $k ( keys %$specs ) {
 #$openprint::log->debug("AQ get_colours $k => $$specs{$k}");
         if ( my ( $index ) = $k =~ /^chkColourCoating(\d+)$side/ ) {
-#$openprint::log->debug("AQ get_colours $k => $$specs{$k} index is $index");
             next if ! $$specs{"chkColourCoating$index$side"};
 			if ( $$specs{"ColourCoatingType$index$side"} =~ /Aqueous/i ) {
 				push @colours, $$specs{"ColourCoatingType$index$side"};
@@ -115,7 +121,6 @@ sub signature_needs {
 	return 1 if ( $$sig_specs{SideOneAQ} and @{$$sig_specs{SideOneAQ}} ) or ( $$sig_specs{SideTwoAQ} and @{$$sig_specs{SideTwoAQ}} );
 
 	if ( $$sig_specs{SideOneColours} ) {
-$openprint::log->debug("AQ:Sig_needs getting from SideOneColour");
 		foreach ( @{$$sig_specs{SideOneColours}} ) {
 			return 1 if $$_{name} =~ /Aqueous/;
 		} # end foreach colour
@@ -125,7 +130,6 @@ $openprint::log->debug("AQ:Sig_needs getting from SideOneColour");
 	} # en dif
 
 	if ( $$sig_specs{SideTwoColours} ) {
-$openprint::log->debug("AQ:Sig_needs getting from SideTwoColour");
 		foreach ( @{$$sig_specs{SideTwoColours}} ) {
 			return 1 if $$_{name} =~ /Aqueous/;
 		} # end foreach colour
@@ -133,6 +137,7 @@ $openprint::log->debug("AQ:Sig_needs getting from SideTwoColour");
 		$$sig_specs{SideTwoAQ} = [ get_colours( $sig_specs, 'SideTwo' ) ] if ! $$sig_specs{SideTwoAQ};
 		return 1 if @{$$sig_specs{SideTwoAQ}};
 	} # en dif
+	return 0;
 } # end sub signature_needs
 
 sub calc {
@@ -360,6 +365,8 @@ $openprint::log->debug("Impressions: $impressions") if DEBUG;
 	} # end if
 	$openprint::log->debug('AQ DOne Cutting :' . @impositions) if DEBUG;
 
+	my $AllAqueousMakeReady = openprint::Service->find_one( name=>'AqueousMakeReady');
+
 	foreach my $Equipment ( @equipment ) {
 $openprint::log->debug("AQ Equipment $$Equipment{strid}") if DEBUG;
 		$$specs{'hdnBreakdown'.$qty_index} .= 'Equipment: '.$Equipment->strid().' ' . $Equipment->specification('Aqueous Capable') . ' ' . $$sig_specs{'ddmPress'.$qty_index} . ',<br/>';
@@ -422,14 +429,14 @@ $openprint::log->debug("AQ types @types") if DEBUG;
 							) ) {
 #$openprint::log->debug("In Makereadies: $$Equipment{id} $area");
 				} else {
-					my $MRService = openprint::Service->find_one('name'=>$type.' MakeReady');
-					$MRService = openprint::Service->find_one('name'=>'AqueousMakeReady') if ! $MRService;
+					my $MRService = openprint::Service->find_one( name=>$type.' MakeReady');
+					$MRService = $AllAqueousMakeReady if ! $MRService;
 					if ( ! $MRService ) {
 						$$specs{'hdnBreakdown'.$qty_index} = 'No Make Ready Service for ' . $type . '<br/>';
 					} else {
 						%setupPrice = $MRService->get_price( $run_qty, $Equipment );
 					} # end if
-					$Price{'MakeReady'} += $setupPrice{'Price'};
+					$Price{MakeReady} += $setupPrice{Price};
 					$MakeReadies{$Equipment->id()} = $area;
 					$Price{washups} = scalar @different_types;
 $colour_total += $setupPrice{'Price'};

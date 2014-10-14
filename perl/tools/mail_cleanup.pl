@@ -8,9 +8,10 @@ use constant DAYS_TO_KEEP_JUNK => 60*60*24*7;
 use constant DAYS_TO_KEEP_TRASH => 60*60*24*365*2;
 use constant DEBUG => 0;
 
-my $domain = $ARGV[0];
+my $domain = $ARGV[0] ? $ARGV[0] : '';
 my @users;
-my $spool_path = '/var/mail/'.$domain.'/';
+my $spool_path = '/var/mail/';
+$spool_path .= $domain.'/' if $domain;
 
 if ( $ARGV[1] ) {
 	@users = ( $ARGV[1] );
@@ -21,6 +22,7 @@ if ( $ARGV[1] ) {
 	print "Cannot open spool dir $spool_path \n";
 	die;
 } # end if
+my $DAYS_TO_KEEP_JUNK = 60*60*24*7 if ! $ARGV[2];
 
 my ( $year, $month, $day ) = Date::Calc::Today();
 
@@ -53,7 +55,7 @@ foreach my $user ( @users ) {
                 print "Unable to stat $spool_path$user/$folder/cur/$message\n";
                 last;
             } # end if
-			if ( time - $mtime > DAYS_TO_KEEP_JUNK ) {
+			if ( time - $mtime > $DAYS_TO_KEEP_JUNK ) {
 				print "/usr/bin/sa-learn --spam $spool_path$user/$folder/cur/$message\n";
 				`/usr/bin/sa-learn --spam $spool_path$user/$folder/cur/$message`;
 				unlink "$spool_path$user/$folder/cur/$message";

@@ -38,7 +38,7 @@
 		value	=>	$$variable{'FoldRows-'.$blah},
 		);
 	$html .= '</td><td class="Type">';
-	@{$$variable{fold_options}} = sort { my ( $pagesa ) = $a =~ /(\d*)/; my ( $pagesb ) = $b =~ /(\d*)/; $pagesa <=> $pagesb; } ( map { $_, $openprint::Estimating::Folding::fold_types{$_} } sql::execute( undef, undef, 'SELECT DISTINCT type FROM folds') ) if ! $$variable{fold_options};
+	@{$$variable{fold_options}} = sort { my ( $pagesa ) = $a =~ /(\d*)/; my ( $pagesb ) = $b =~ /(\d*)/; $pagesa <=> $pagesb; } ( map { $openprint::Estimating::Folding::fold_types{$_} ? ( $_, $openprint::Estimating::Folding::fold_types{$_} ) : () } sql::execute( undef, undef, 'SELECT DISTINCT type FROM folds') ) if ! $$variable{fold_options};
 	$html .= ssi::select(
 			$$variable{fold_options}, $$variable{'FoldType-'.$blah},
 			{

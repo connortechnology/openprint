@@ -1,10 +1,10 @@
 <div class="Project">
 	<div class="View">
-		<? echo ( include('/includes/project_header.html'); ) ?>
+		<? echo ( include('/includes/project_header.html', $variable ); )?>
 		<div class="ProjectServices">
 		<? echo ( 
 			if ( $$variable{'QuotedProject'}->template_id() ) {
-				return ssi::include( $config{'SkinPath'}.'/main/project/view_'.$$variable{'QuotedProject'}->Template()->name().'.html', $variable );
+				return include( '/main/project/view_'.$$variable{'QuotedProject'}->Template()->name().'.html', $variable );
 			} # end if
 			return '';
 		) ?>

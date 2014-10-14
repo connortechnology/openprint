@@ -49,8 +49,9 @@ sub search {
 	_search();
 	ssi::setup_date_select( '/employee/accounting/search.html', 'ordered_on_start', '' );
 	ssi::setup_date_select( '/employee/accounting/search.html', 'ordered_on_end', '' );
-	if ( ! $session{'/employee/accounting/search.html?ddmStatus'} ) {
-		$session{'/employee/accounting/search.html?ddmStatus'} = join(',', ( 'Complete','In Production',' Order Submitted', 'Pending Deposit', 'Paid', 'Picked Up','Re-Opened', 'Shipped', 'Waiting For Customer Approval', 'Waiting For Pickup', 'Waiting For QA Approval' ) );
+	if ( ( ! $session{'/employee/accounting/search.html?ddmStatus'} ) or ( $session{'/employee/accounting/search.html?ddmStatus'} =~ /\w/ ) ) {
+		my  %Statuses = map { $$_{name}, $$_{id} } openprint::Order_Status->find();
+		$session{'/employee/accounting/search.html?ddmStatus'} = join(',', @Statuses{'Complete','In Production',' Order Submitted', 'Pending Deposit', 'Paid', 'Picked Up','Re-Opened', 'Shipped', 'Waiting For Customer Approval', 'Waiting For Pickup', 'Waiting For QA Approval' } );
 	} # end if
 } # end sub search
 

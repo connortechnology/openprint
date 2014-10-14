@@ -36,9 +36,9 @@ sub _stocks {
 sub list {
 	my @Papers;
 	if ( $param{'chkStock'} ) {
-		@Papers = openprint::Paper->find( 'id'=>$param{'chkStock'} );
+		@Papers = openprint::Paper->find( id=>$param{'chkStock'} );
 	} elsif ( $param{'stock_ids'} ) {
-		@Papers = openprint::Paper->find( 'id'=> (ref $param{'stock_ids'} eq 'ARRAY' ? $param{'stock_ids'} : [split(',', $param{'stock_ids'} )] ) );
+		@Papers = openprint::Paper->find( id=> (ref $param{'stock_ids'} eq 'ARRAY' ? $param{'stock_ids'} : [split(',', $param{'stock_ids'} )] ) );
 	} # end if
 		
 	if ( $param{'btnFunction'} eq 'Delete' ) {

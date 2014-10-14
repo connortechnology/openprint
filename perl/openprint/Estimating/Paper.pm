@@ -428,23 +428,25 @@ sub se_quantity_summary {
 		} # end if
 	} else {
 		$html .= 'none';
-$openprint::log->debug("No qty for index $$Stock_Entry{index} qty $qty_index");
 	} # end if
 	return $html;
-}
+} # end sub se_quantity_summary
 
 sub se_price_summary {
 	my ( $SE, $specs, $qty_index ) = @_;
+
+	if ( $$specs{"qty-$$SE{index}-$qty_index"} ) {
 	$$SE{"Price$qty_index"} = $$SE{Stock}->get_price( weight=>$$specs{"qty-$$SE{index}-$qty_index"}, service=>'Material' ) if ! $$SE{"Price$qty_index"};
 	my $Price = $$SE{"Price$qty_index"};
 	return '@ $'.$$specs{"cost-$$SE{index}-$qty_index"}.$$Price{units}. ' = $' . $$specs{"price-$$SE{index}-$qty_index"};
+	} 
+	return '';	
 } # end sub se_price_summary
 
 # The order of stocks is important... thing is, it can change if the brand changes for example.
 # So it needs to be inorder of appearance.
 sub get_stocks {
-    my ( $Project, $service_id, $specs ) = @_;
-    $specs = openprint::service::get_specs_ref( $Project, $service_id ) if ! $specs;
+    my ( $Project ) = @_;
     my %Papers;
 	my $stock_id = 1;
     foreach my $ss_id ( $Project->signatures( { sort=> 1 } ) ) {

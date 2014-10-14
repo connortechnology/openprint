@@ -62,7 +62,7 @@ $debug = 0;
 	'usergroup'		=>	'(SELECT name from usergroups WHERE id IN (SELECT usergroup_id FROM users_in_usergroups WHERE user_id=users.id))',
 	'last_online'	=>	'(SELECT MAX(date_time) FROM logs WHERE user_id=users.id)',
 	'profile_field'	=>	'(SELECT value FROM User_Profiles WHERE user_id=users.id AND field_id=?)',
-	'company_deleted'	=>	'(SELECT deleted FROM Companies WHERE Companies.id=company_id)',
+	company_deleted	=>	'(SELECT deleted FROM Companies WHERE Companies.id=company_id)',
 );
 
 %transforms = (
@@ -499,9 +499,9 @@ sub html {
 } # end sub html
 
 sub last_logged_in {
-	if ( ! $_[0]{'last_logged_on'} ) {
+	if ( (! $_[0]{last_logged_on} ) and $_[0]{id} ) {
 		# Almost any entry means we were logged in.  
-		my $Log = openprint::Log->find_one('user_id'=>$_[0]{'id'},'order'=>'date_time DESC');
+		my $Log = openprint::Log->find_one(user_id=>$_[0]{id},'order'=>'date_time DESC');
 		if ( $Log ) {
 #$openprint::log->debug("last_Logged_in: " . $Log->to_string() );
 			$_[0]{'last_logged_on'} = $$Log{date_time};

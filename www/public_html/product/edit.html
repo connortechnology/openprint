@@ -50,9 +50,11 @@
 						button( 'Prev1', { onclick=>"f1.btnFunction.value='<<';fmCheck(f1);", text=>'&lt;&lt;' } ),
 						button( 'Next1', { onclick=>"f1.btnFunction.value='>>';fmCheck(f1);", text=>'&gt;&gt;' } ),
 						button( 'New1', { onclick=>"addCheck(f1);", text=>'New' } ),
-						button( 'Delete1', { onclick=>"f1.btnFunction.value='Delete';fmChange=2;fmCheck(f1);", text=>'Delete' } ),
 						button( 'Save1', { onclick=>"f1.btnFunction.value='Save';fmChange=3;fmCheck(f1);", text=>'Save' } ),
+					( $$variable{Product}->id() ? (
 						button( 'Copy1', { onclick=>"f1.btnFunction.value='Copy';fmCheck(f1);", text=>'Copy' } ),
+						button( 'Delete1', { onclick=>"f1.btnFunction.value='Delete';fmChange=2;fmCheck(f1);", text=>'Delete' } ),
+					) : () ),
 						button( 'Reset1', { onclick=>'f1.reset();', text=>'Reset' } ),
 					); ) ?>
 			</p>
@@ -167,7 +169,7 @@
 		my $html;
 		my $rowclass;
 		my $Product = $$variable{'Product'};
-		my $template = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/product/_specification.html');
+		my $template = slurp_content('/product/_specification.html');
 		foreach my $Spec ( $Product->Specifications() ) {
 			$html .= variable_substitution( \$template, {
 				Spec		=>	$Spec,
@@ -183,8 +185,10 @@
 			<? endif ( $$variable{'Product'}->id() ) ?>
 			</fieldset>
 		</div>
+		<div class="rightColumn">
     <? eval ( $$variable{'Album'} = $$variable{'Product'};) ?>
     <?include(/photo_albums/_album_upload.html)?>
+		</div>
 		<br class="spacer"/>
 		<fieldset><legend>Prices</legend>
 			<div id="Prices">

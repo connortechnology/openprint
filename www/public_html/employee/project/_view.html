@@ -169,10 +169,10 @@
 	my %prices;
 	my %Stocks;
 
-	if ( $$services{Paper} ) {
+	if ( $$services{Paper} and $$services{Paper}[0] ) {
 
-		my $stock_specs = openprint::service::get_specs_ref( $Project, $$services{Paper}[0] ) if $$services{Paper} and $$services{Paper}[0];
-		my @stocks_and_quantities = openprint::Estimating::Paper::get_stocks_and_quantities( $Project,  $$services{Paper}[0], $stock_specs, $qty_index );
+		my $stock_specs = openprint::service::get_specs_ref( $Project, $$services{Paper}[0] );
+		my @stocks_and_quantities = openprint::Estimating::Paper::get_stocks_and_quantities( $Project, $$services{Paper}[0], $stock_specs, $qty_index );
 		my $stock_index = 1;
 		foreach my $SQ ( @stocks_and_quantities ) {
 			my ( $Stock, $qty ) = @$SQ{'Stock','quantity'};
@@ -216,7 +216,6 @@ $log->warn("Lookup up stock price, cuz it's not in the paper service: cost-$stoc
 
             my $Paper = openprint::Paper::load_from_signature( $Project, $sig_specs, $qty_index );
             my $string = $Paper->id_string();
-            $Stocks{$string} = $Paper;
 
             if ( $Paper->type() eq 'Roll' ) {
                 $Paper->height( $$sig_specs{'CutOff'.$qty_index} );
@@ -227,22 +226,24 @@ $log->warn("Lookup up stock price, cuz it's not in the paper service: cost-$stoc
                     $sheets /= ( $Paper->start_area() / $Paper->area() );
                     $sheets = POSIX::ceil( $sheets );
                     $Paper = $Paper->Supplied();
-                    $string = $Paper->to_string();
+                    $string = $Paper->id_string();
+				
                 } else {
                     $log->debug("No area in project view: " . $Paper->to_string() );
                 } # end if
                 $totals{$string} += POSIX::ceil( $sheets * $Paper->start_area() * $Paper->wpsi() );
                 $sheets{$string} += $sheets;
 			} else {
-$log->error("Unknown stock type for sig $ss_id form $$sig_specs{SignatureIndex} " . $Paper->to_string() ) if $$sig_specs{"txtPrice$qty_index"};
+				$log->error("Unknown stock type for sig $ss_id form $$sig_specs{SignatureIndex} " . $Paper->to_string() ) if $$sig_specs{"txtPrice$qty_index"};
             } # end if
+			$Stocks{$string} = $Paper;
             if ( ( ! $Paper->supplied() ) and $$variable{canseepaperpricing} ) {
-if ( ! $totals{$string} ) {
-$log->error("NO paper weight for project $$Project{id} " . $Paper->to_string() ) if $$sig_specs{"txtPrice$qty_index"};
-} else {
-				my $price = $Paper->get_price( weight=>$totals{$string}, service=>'Material' );
-				$prices{$string} = sprintf('$%.2f/100lb = $%.2f', @$price{'100lb Price','100lb Total'} );
-}
+				if ( ! $totals{$string} ) {
+					$log->error("NO paper weight for project $$Project{id} " . $Paper->to_string() ) if $$sig_specs{"txtPrice$qty_index"};
+				} else {
+					my $price = $Paper->get_price( weight=>$totals{$string}, service=>'Material' );
+					$prices{$string} = sprintf('$%.2f/100lb = $%.2f', @$price{'100lb Price','100lb Total'} );
+				}
             } # endif Supplied
         } # end foreach signature
 	} # end if has Paper Service
@@ -253,10 +254,7 @@ $log->error("NO paper weight for project $$Project{id} " . $Paper->to_string() )
             $html .= '<tr class="totals">';
             $html .= '<td class="checkboxes">&nbsp;</td>' if $$variable{checkboxes};
             $html .= '<td class="Service"><b>Stock</b><br/>';
-            foreach my $string ( @keys ) {
-                $html .= $string . '<br/>';
-            } # end foreach string
-
+			$html .= join('<br/>', map { $Stocks{$_}->to_string() } @keys );
             $html .= '</td>';
 if($$variable{canseepaperpricing}){
 			$html .= '<td class="Price"><br/>'.join('<br/>', map { $_ ? $_ : () } @prices{sort keys %totals} ).'</td>';

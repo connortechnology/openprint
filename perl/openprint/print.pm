@@ -60,7 +60,7 @@ $log->debug("after continue $$variable{ExternalRedirect}");
 	} # end if
 
 	my $services = $Project->services();
-	my $Service = openprint::Project_Service->find_one( { project_id=>$$Project{id}, service_id=> $openprint::param{ServiceIndex} } );
+	my $Service = $Project->Service( $openprint::param{ServiceIndex} ) if $openprint::param{ServiceIndex};
 
 	$log->debug(" **** STARTING VIEW SERVICES FUNCTION * Project $project_index( $$Project{id} ) *** $openprint::session{'company_id'}");
 
@@ -77,14 +77,13 @@ $log->debug("after continue $$variable{ExternalRedirect}");
 				$openprint::session{project_id} = $project_index;
 				$log->debug("** Save Service in View Services Function **");
 
-				my $service_index = $openprint::param{'ServiceIndex'};
+				my $service_index = $openprint::param{ServiceIndex};
 				if ( ! $Service ) {
 					$$variable{error} .= $openprint::param{ServiceType} . ' service ' . $service_index . ' is no longer in project. It may have been removed while you were editing it.  Your changes may not have been saved.<br/>';
 					$$variable{ExternalRedirect} = '/main/project/view.html?project_id='.$project_index;
 					return;
 				} # end if
 				my $recalc = 0;	
-				my $Service = $Project->Service( $service_index );
 				my $ServiceType = $Service->ServiceType();
 
 				if ( $ServiceType and ( $ServiceType->name() eq 'Proofs' ) ) {
@@ -102,13 +101,18 @@ $log->debug("after continue $$variable{ExternalRedirect}");
 
 				my $Currency = openprint::Currency::get_current();
 				if ( $Project->currency_id() != $Currency->id() ) {
-					$Project->Currency( $Currency );
+					$Project->add_to_log( @openprint::session{'company_id','user_id'}, 'Currency changed from '.$Project->Currency()->name() . ' to '. $Currency->name() );
+					$Project->currency_id( $Currency->id() );
 					# Change of currency calls for complete recalc
-					$recalc = 1;
+					if ( $openprint::param{'ServiceType'} eq 'Printing' or ! $openprint::param{'ServiceType'} ) {
+					} else {
+						openprint::Estimating::MultiPage::calculate_signatures( $Project );
+						openprint::service::internal_calc( $log, $dbh, $variable, $project_index, $$services{''}[0], $Project->Type()->type() );
+					} # end if
 				} # end if
 
 				$Project->lock();
-				if ( (!$openprint::param{ServiceType} ) or $recalc ) {
+				if ( !$openprint::param{ServiceType} ) {
 					multipage_signatures( \%openprint::param, $log, $dbh, $variable, $project_index, $service_index );
 					$Project->unlock();
 					$Project->lock();
@@ -120,12 +124,12 @@ $log->debug("after continue $$variable{ExternalRedirect}");
 						openprint::Estimating::MultiPage::calculate_signatures( $Project );
 					} # end if
 					$recalc = 1;
-				} elsif ( $openprint::param{'ServiceType'} eq 'Printing' ) {
+				} elsif ( $openprint::param{ServiceType} eq 'Printing' ) {
 					openprint::Estimating::MultiPage::calculate_signatures( $Project );
 					openprint::service::internal_calc( $log, $dbh, $variable, $project_index, $$services{''}[0], $Project->Type()->type() );
 # Might need to test for status of project service
 					$recalc = 1;
-				} elsif (sets::isin(  $r->param('ServiceType'), [ 'Scoring', 'Perforating','SpinePaste','Stitching','Sewing'] ) ) {
+				} elsif (sets::isin(  $openprint::param{ServiceType}, [ 'Scoring', 'Perforating','SpinePaste','Stitching','Sewing'] ) ) {
 					openprint::Estimating::MultiPage::calculate_signatures( $Project );
 					$recalc = 1;
 				} elsif (sets::isin(  $r->param('ServiceType'), [ 'Folding' ] ) ) {
@@ -137,6 +141,7 @@ $log->debug("after continue $$variable{ExternalRedirect}");
 					} # end if
 				} # end if
 				openprint::service::auto_calculate( $Project, $service_index ) if $recalc;
+				$Project->update_status();
 				$Project->unlock();
 		
 				$Project->summary(undef);
@@ -162,7 +167,13 @@ $log->debug("after continue $$variable{ExternalRedirect}");
 
 			} elsif ( $openprint::param{'btnFunction'} eq 'Delete Services' ) {
 				foreach my $service_id ( ref $openprint::param{'service_id'} eq 'ARRAY' ? @$openprint::param{'service_id'} : ( $openprint::param{'service_id'} ) ) {
-					openprint::print_project::delete_service( $project_index, $service_id );
+					my $Service = $Project->Service( $service_id );
+					$$variable{error} .= $Service->delete();
+					if ( $Service->Type()->name() eq 'Cutting' ) {
+						if ( $$services{UVCoating} ) {
+							openprint::service::internal_calc( $log, $dbh, $variable, $project_index, $$services{'UVCoating'}[0], 'UVCoating' );
+						} # end if
+					} # end if
 				} # end if
 			} elsif ( $openprint::param{'btnFunction'} eq 'Recalculate Project' ) {
 				if ( exists $openprint::param{'markup'} ) {
@@ -202,9 +213,13 @@ $log->debug("after continue $$variable{ExternalRedirect}");
 				} # end if
 				my $specs = $PS->specs();
 				$Project->add_to_log( @openprint::session{'company_id','user_id'}, $ServiceType->name().' ' . $$specs{'ServiceName'}.' service deleted.' );
-				openprint::print_project::delete_service( $project_index, $s_id );
+				$$variable{error} .= $PS->delete();
 				if ( $ServiceType->name() eq 'Signature' ) {
 					openprint::service::internal_calc( $log, $dbh, $variable, $project_index, $$services{''}[0], $Project->Type()->type() );
+				} elsif ( $ServiceType->name() eq 'Cutting' ) {
+					if ( $$services{UVCoating} ) {
+						openprint::service::internal_calc( $log, $dbh, $variable, $project_index, $$services{'UVCoating'}[0], 'UVCoating' );
+					} # end if
 				} # end if
 			} # end foreach s_id
 			$openprint::session{'project_id'} = $project_index;
@@ -335,10 +350,10 @@ sub multipage_signatures {
 	} else {
 # Don't need a cover, so get rid of it
 		foreach ( $Project->signatures({'type'=>'Cover Pages'}) ) {
-			openprint::print_project::delete_service( $project_index, $_ );
+			openprint::print_project::delete_service( $Project, $_ );
 		} # end foreach
 		foreach ( $Project->signatures({'Group'=>1}) ) {
-			openprint::print_project::delete_service( $project_index, $_ );
+			openprint::print_project::delete_service( $Project, $_ );
 		} # end foreach
 	} # end if Self or Different Cover
 
@@ -424,7 +439,7 @@ $log->debug("group $group_id");
 		# We have to do this for simple printing.  Simple printing calls here, but doesn't have these fields, so it clears out the defaults!
 		foreach my $spec ( 
 				'txtSignatureType','pages_supplied','supplied_format',
-				'ddmStockBrand','ddmStockFinish','ddmStockColour','ddmStockWeight',
+				'ddmStockBrand','ddmStockFinish','ddmStockColour','ddmStockWeight','ddmStockQuality','ddmStockGroup',
 				'txtSpecificStockBrand','txtSpecificStockFinish','txtSpecificStockColour','txtSpecificStockWeight',
 				'txtSpecificStockWidth','txtSpecificStockHeight','txtSpecificStockCalliper',
 				'rdbSuppliedStock','rdbSpecificStock','StockType',
@@ -436,25 +451,25 @@ $log->debug("group $group_id");
 				'CyanSideOneCoverage', 'MagentaSideOneCoverage', 'YellowSideOneCoverage', 'BlackSideOneCoverage',
 				'CyanSpotSideTwoCoverage', 'MagentaSpotSideTwoCoverage', 'YellowSpotSideTwoCoverage', 'BlackSpotSideTwoCoverage',
 				'CyanSideTwoCoverage', 'MagentaSideTwoCoverage', 'YellowSideTwoCoverage', 'BlackSideTwoCoverage',
-				'chkColourCoating1SideOne', 'ColourCoatingType1SideOne', 'ColourCoatingColour1SideOne','ColourCoatingCoverage1SideOne',
-				'chkColourCoating2SideOne', 'ColourCoatingType2SideOne', 'ColourCoatingColour2SideOne','ColourCoatingCoverage2SideOne',
-				'chkColourCoating3SideOne', 'ColourCoatingType3SideOne', 'ColourCoatingColour3SideOne','ColourCoatingCoverage3SideOne',
-				'chkColourCoating4SideOne', 'ColourCoatingType4SideOne', 'ColourCoatingColour4SideOne','ColourCoatingCoverage4SideOne',
-				'chkColourCoating5SideOne', 'ColourCoatingType5SideOne', 'ColourCoatingColour5SideOne','ColourCoatingCoverage5SideOne',
-				'chkColourCoating6SideOne', 'ColourCoatingType6SideOne', 'ColourCoatingColour6SideOne','ColourCoatingCoverage6SideOne',
-				'chkColourCoating7SideOne', 'ColourCoatingType7SideOne', 'ColourCoatingColour7SideOne','ColourCoatingCoverage7SideOne',
-				'chkColourCoating8SideOne', 'ColourCoatingType8SideOne', 'ColourCoatingColour8SideOne','ColourCoatingCoverage8SideOne',
-				'chkColourCoating9SideOne', 'ColourCoatingType9SideOne', 'ColourCoatingColour9SideOne','ColourCoatingCoverage9SideOne',
+				'ColourCoatingType1SideOne', 'ColourCoatingColour1SideOne','ColourCoatingCoverage1SideOne',
+				'ColourCoatingType2SideOne', 'ColourCoatingColour2SideOne','ColourCoatingCoverage2SideOne',
+				'ColourCoatingType3SideOne', 'ColourCoatingColour3SideOne','ColourCoatingCoverage3SideOne',
+				'ColourCoatingType4SideOne', 'ColourCoatingColour4SideOne','ColourCoatingCoverage4SideOne',
+				'ColourCoatingType5SideOne', 'ColourCoatingColour5SideOne','ColourCoatingCoverage5SideOne',
+				'ColourCoatingType6SideOne', 'ColourCoatingColour6SideOne','ColourCoatingCoverage6SideOne',
+				'ColourCoatingType7SideOne', 'ColourCoatingColour7SideOne','ColourCoatingCoverage7SideOne',
+				'ColourCoatingType8SideOne', 'ColourCoatingColour8SideOne','ColourCoatingCoverage8SideOne',
+				'ColourCoatingType9SideOne', 'ColourCoatingColour9SideOne','ColourCoatingCoverage9SideOne',
 
-				'chkColourCoating1SideTwo', 'ColourCoatingType1SideTwo', 'ColourCoatingColour1SideTwo','ColourCoatingCoverage1SideTwo',
-				'chkColourCoating2SideTwo', 'ColourCoatingType2SideTwo', 'ColourCoatingColour2SideTwo','ColourCoatingCoverage2SideTwo',
-				'chkColourCoating3SideTwo', 'ColourCoatingType3SideTwo', 'ColourCoatingColour3SideTwo','ColourCoatingCoverage3SideTwo',
-				'chkColourCoating4SideTwo', 'ColourCoatingType4SideTwo', 'ColourCoatingColour4SideTwo','ColourCoatingCoverage4SideTwo',
-				'chkColourCoating5SideTwo', 'ColourCoatingType5SideTwo', 'ColourCoatingColour5SideTwo','ColourCoatingCoverage5SideTwo',
-				'chkColourCoating6SideTwo', 'ColourCoatingType6SideTwo', 'ColourCoatingColour6SideTwo','ColourCoatingCoverage6SideTwo',
-				'chkColourCoating7SideTwo', 'ColourCoatingType7SideTwo', 'ColourCoatingColour7SideTwo','ColourCoatingCoverage7SideTwo',
-				'chkColourCoating8SideTwo', 'ColourCoatingType8SideTwo', 'ColourCoatingColour8SideTwo','ColourCoatingCoverage8SideTwo',
-				'chkColourCoating9SideTwo', 'ColourCoatingType9SideTwo', 'ColourCoatingColour9SideTwo','ColourCoatingCoverage9SideTwo',
+				'ColourCoatingType1SideTwo', 'ColourCoatingColour1SideTwo','ColourCoatingCoverage1SideTwo',
+				'ColourCoatingType2SideTwo', 'ColourCoatingColour2SideTwo','ColourCoatingCoverage2SideTwo',
+				'ColourCoatingType3SideTwo', 'ColourCoatingColour3SideTwo','ColourCoatingCoverage3SideTwo',
+				'ColourCoatingType4SideTwo', 'ColourCoatingColour4SideTwo','ColourCoatingCoverage4SideTwo',
+				'ColourCoatingType5SideTwo', 'ColourCoatingColour5SideTwo','ColourCoatingCoverage5SideTwo',
+				'ColourCoatingType6SideTwo', 'ColourCoatingColour6SideTwo','ColourCoatingCoverage6SideTwo',
+				'ColourCoatingType7SideTwo', 'ColourCoatingColour7SideTwo','ColourCoatingCoverage7SideTwo',
+				'ColourCoatingType8SideTwo', 'ColourCoatingColour8SideTwo','ColourCoatingCoverage8SideTwo',
+				'ColourCoatingType9SideTwo', 'ColourCoatingColour9SideTwo','ColourCoatingCoverage9SideTwo',
 				'BleedLeft','BleedRight','BleedTop','BleedBottom','rdbColourBar','txtCropMarkSpace',
 				'GroupPageQuantity','OverrideGroupPageQuantity','txtServiceDescription','rdbTemplateType',
 				'rdbPanels','PocketSize','chkPocketLeft','chkPocketCenter','chkPocketRight',
@@ -466,39 +481,18 @@ $log->debug("group $group_id");
 		} # end foreach spec
 		foreach my $spec ( 
 				'chkCyanSideOne','chkMagentaSideOne','chkYellowSideOne','chkBlackSideOne', 'chkProcessColourSideOne',
+				( map { 'chkColourCoating'.$_.'SideOne' } ( 1 .. 9 ) ),
 				'chkCyanSideTwo','chkMagentaSideTwo','chkYellowSideTwo','chkBlackSideTwo', 'chkProcessColourSideTwo',
+				( map { 'chkColourCoating'.$_.'SideTwo' } ( 1 .. 9 ) ),
 		) {
 			openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $ss_id, $spec, $$param{$spec.$group_id} );
 		} # end foreach spec
-		foreach my $spec ( 'RunStyle' ) {
-			next if ! exists $$param{'ddm'.$spec.'-'.$group_id};
-			foreach my $qty_index ( $Project->quantity_indexes() ) {
-				if ( $$param{'ddm'.$spec.'-'.$group_id} ) {
-					openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $ss_id, 'ddm'.$spec.$qty_index, $$param{'ddm'.$spec.'-'.$group_id} );
-					openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $ss_id, 'chkOverride'.$spec.$qty_index, 'Y' );
-				} else {
-					openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $ss_id, 'chkOverride'.$spec.$qty_index, '' );
-				} # end if
-			} # end foreach qty_index
-		} # end foreach spec
-		foreach my $spec ( 'PrintingType','StockType' ) {
-			next if ! exists $$param{$spec.'-'.$group_id};
-			foreach my $qty_index ( $Project->quantity_indexes() ) {
-				if ( $$param{$spec.'-'.$group_id} ) {
-					openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $ss_id, $spec.$qty_index, $$param{$spec.'-'.$group_id} );
-					openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $ss_id, 'Override'.$spec.$qty_index, 'Y' );
-				} else {
-					openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $ss_id, 'Override'.$spec.$qty_index, '' );
-				} # end if
-			} # end foreach qty_index
-		} # end foreach spec
-	
-	} # end foreach
+	} # end foreach signature
 
 	my $old_bindery_type = get_book_type( $Project );
 	if ( $old_bindery_type and ($$param{'rdbTemplateType'} ne $old_bindery_type) and $$services{$old_bindery_type} ) {
 		foreach ( @{$$services{$old_bindery_type}} ) {
-			openprint::print_project::delete_service( $project_index, $_ );
+			openprint::print_project::delete_service( $Project, $_ );
 		} # end foreach
 		delete $$services{$old_bindery_type};
 	} # end if
@@ -595,13 +589,13 @@ $log->error("No Group!") if ! $type;
 				'rdbPanels','PocketSize','chkPocketLeft','chkPocketCenter','chkPocketRight',
 				'txtWidth','txtHeight','chkOverrideDimensions','txtQuantity1','txtQuantity2','txtQuantity3',
 				) {
-			$$variable{$spec.$type} = $$sig_specs{$spec};
+			$$variable{$spec.$type} = $$sig_specs{$spec} if $$sig_specs{$spec} and ! $$variable{$spec.$type};
 #$openprint::log->debug("$spec . $type = $$variable{$spec.$type}");
 		} # end foreach spec
 	} # end foreach ss_id
 
-	if ( ! $$variable{'rdbTemplateType'} ) {
-		$$variable{'rdbTemplateType'} = get_book_type( $project_index );
+	if ( ! $$variable{rdbTemplateType} ) {
+		$$variable{rdbTemplateType} = get_book_type( $project_index );
 	} # end if
 
 } # end sub publication_pages
