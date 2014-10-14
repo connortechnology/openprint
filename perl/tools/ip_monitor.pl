@@ -2,6 +2,7 @@
 use utf8;
 use lib '/var/www/testing/perl';
 use strict;
+use warnings;
 
 require configuration;
 require sql;
@@ -112,125 +113,129 @@ while(1) {
 	my @Hosts = openprint::Host->find( monitored=>1 );
 	$log->debug( 'Monitoring ' . @Hosts . ' hosts.' );
 	foreach my $Host ( @Hosts ) {
-		if ( ! $Host->ip() ) {
+		if ( ! $Host->Interfaces() ) {
 			$log->debug( "Monitored host without ip: " . $Host->to_string() );
 			next;
 		} # end if
-		$log->debug( $Host->hostname() . ' is ' . ( $Host->online() ? 'online' : 'offline' ) );
-		my @ping = $p->ping($Host->ip());
-		my $ping = $ping[0];
+		foreach my $HI ( $Host->Interfaces() ) {
+			next if ! $HI->ip();
+		
+			$log->debug( $Host->hostname() . ' is ' . ( $Host->online() ? 'online' : 'offline' ) );
+			my @ping = $p->ping($HI->ip());
+			my $ping = $ping[0];
 #$openprint::log->debug("Ping1: @ping");
-		if ( ! @ping ) {
-			$log->warn("Problem with ping for " . $Host->hostname() );
-			next;
-		} elsif ( $ping and ( $ping[1] > 1 ) ) {
-			(new openprint::Log())->save({'action'=>'reboot', 'ip_address'=>$Host->ip(), 'note'=>sprintf('Response time %s seconds.<a href="/employee/it/host.html?host_id=%d">%s</a>', $ping[1], @$Host{'id','hostname'}) });
-		} # end if
-
-		my $last_changed_on = $$Host{'state_changed_on'};
-		my $since = time-$last_changed_on;
-
-		if ( $Host->online() != $ping ) {
-
-			# Have a change, so it should get logged, only email notifications should use the offline seconds
-			if ( $_ = $Host->save({'online'=>$ping,'state_changed_on'=>time,'notified'=>0}) ) {
-				$log->error($_);
+			if ( ! @ping ) {
+				$log->warn("Problem with ping for " . $Host->hostname() . ' ip: ' . $HI->ip() );
 				next;
-			} # end if	
-			
-			(new openprint::Log())->save({'action_id'=>( $ping ? 100 : 101 ), 'ip_address'=>$Host->ip(), 'note'=>sprintf('<a href="/employee/it/host.html?host_id=%d">%s</a>', @$Host{'id','hostname'}) });
-			$log->debug( $Host->hostname() . ' is now ' . ( $Host->online() ? 'online' : 'offline' ) );
-
-			if ( ( $ping and ($since > $$Host{'offline_seconds'}) ) or ( ! $$Host{'offline_seconds'} ) ) {
-$log->warn("BLAH should be 0 $ping $$Host{'offline_seconds'}");
-				# Do immediate notifications
-				my @To = map { $_->User() } $Host->Notifications();
-				if ( @To and ( @To < 10 ) ) {
-					my $results = (new openprint::Email())->send(
-							'TO'	=>	\@To,
-							'SUBJECT'	=>	'Host has gone ' . ($ping?'online':'offline') . ': ' . $Host->hostname() . ' ' . misc::seconds2hms($since) . ' seconds ago.',
-							'FROM'		=>	$config{'TechSupportEmail'},
-							'BODY'		=>	"
-							IP: $$Host{ip}
-Description: $$Host{'description'}
-
-Please investigate.",
-);
-				} # end if to < 10
-			} # end if immediate notifications
-		} elsif ( $Host->offline_seconds() and ( ! $ping ) and ( ! $$Host{'notified'} ) ) {
-			if ( $since > $$Host{'offline_seconds'} ) {
-$log->warn("$ping $$Host{'offline_seconds'} $$Host{'notified'}");
-				$Host->save({'notified'=>1});
-				my @To = map { $_->User() } $Host->Notifications();
-				if ( @To and ( @To < 10 ) ) {
-					my $results = (new openprint::Email())->send(
-							'TO'	=>	\@To,
-							'SUBJECT'	=>	'Host has gone ' . ($ping?'online':'offline') . ': ' . $Host->hostname(),
-							'FROM'		=>	$config{'TechSupportEmail'},
-							'BODY'		=>	"
-							IP: $$Host{ip}
-Description: $$Host{'description'}
-
-Please investigate.",
-);
-				} # end if @To > 10
-			} # end if offline_seconds
-		} # end if online != ping
-
-		if ( $Host->online() ) {
-			if ( sets::isin( $Host->type(), [ 'AIC500', 'AIC500W', 'AIC777W', 'AIC747W' ] ) ) {
-				require LWP;
-				my $browser = LWP::UserAgent->new();
-				$browser->credentials( $Host->hostname().':80', 'Netcam', $Host->info('username') => $Host->info('password') );
-
-				$log->debug("URL: " . $Host->hostname().'/cgi/jpg/image.cgi' );
-				my $response = $browser->get('http://'.$Host->hostname().'/cgi/jpg/image.cgi');
-				if ( ! $response->is_success ) {
-					if ( $response->status_line() eq '401 Unauthorized' ) {
-$log->debug("Unauthorized with " . $Host->info('username') . ' password: ' . $Host->info('password') );
-						my $header = $response->header('WWW-Authenticate');
-						my ( $realm ) = $header =~ /realm="(.*)"/;
-						if ( $realm and ( $realm ne 'Netcam' ) ) {
-$log->debug("Different REALM $realm");
-							$browser->credentials( $Host->hostname().':80', $realm, $Host->info('username') => $Host->info('password') );
-							$response = $browser->get('http://'.$Host->hostname().'/cgi/jpg/image.cgi');
-						} # end if
-					} # end if
-				} # end if
-				if ( ! $response->is_success ) {
-					if ( $response->status_line() eq '401 Unauthorized' ) {
-						$log->error("Couldn't get content from " . $Host->hostname().'/cgi/jpg/image.cgi unauthorized'. $response->status_line );
-					} else {
-						$log->warn("Couldn't get content from " . $Host->hostname().'/cgi/jpg/image.cgi rebooting' . $response->status_line );
-						my $headers = $response->headers();
-						foreach my $k ( keys %$headers ) {
-							$log->debug("Header $k => $$headers{$k}");
-						}  # end foreach
-						$response = $browser->get('http://'.$Host->hostname().'/admin/reboot.cgi?type=0');
-						$log->debug($response->is_success);
-						(new openprint::Log())->save({ action_id=>102, ip_address=>$Host->ip(), note=>sprintf('<a href="/employee/it/host.html?host_id=%d">%s</a> has been rebooted.', @$Host{'id','hostname'})});
-						my @To = map { $_->User() } $Host->Notifications();
-						if ( @To and ( @To < 10 ) ) {
-							$log->debug("Emailing: " . join(',', map { $_->email() } @To ) );
-							my $results = (new openprint::Email())->send(
-									'TO'	=>	\@To,
-									'SUBJECT'	=>	'Camera rebooted ' . $Host->hostname(),
-									'FROM'		=>	$config{'TechSupportEmail'},
-									'BODY'		=>	"
-	IP: $$Host{ip}
-	Description: $$Host{'description'}
-	",
-									);
-						} # end if
-					} # end if
-				} else {
-					$log->debug("Got content from host. Size: " . $response->content_type );
-				} # end if
-			} elsif ( $Host->type() ) {
-				$log->warn("unsupported type: " . $Host->type() );
+			} elsif ( $ping and ( $ping[1] > 1 ) ) {
+				(new openprint::Log())->save({action=>'Long response time', ip_address=>$HI->ip(), host_id=>$$Host{id}, note=>sprintf('Response time %s seconds.<a href="/employee/it/host.html?host_id=%d">%s</a>', $ping[1], @$Host{'id','hostname'}) });
 			} # end if
-		} # end if online
+
+			my $last_changed_on = $$Host{state_changed_on};
+			my $since = time-$last_changed_on;
+
+			if ( $Host->online() != $ping ) {
+
+# Have a change, so it should get logged, only email notifications should use the offline seconds
+				if ( $_ = $Host->save({online=>$ping,state_changed_on=>time,notified=>0}) ) {
+					$log->error($_);
+					next;
+				} # end if	
+
+				(new openprint::Log())->save({action_id=>( $ping ? 100 : 101 ), ip_address=>$HI->ip(), host_id=>$$Host{id}, note=>sprintf('<a href="/employee/it/host.html?host_id=%d">%s</a>', @$Host{'id','hostname'}) });
+				$log->debug( $Host->hostname() . ' is now ' . ( $Host->online() ? 'online' : 'offline' ) );
+
+				if ( ( $ping and ($since > $$Host{offline_seconds}) ) or ( ! $$Host{offline_seconds} ) ) {
+					$log->warn("BLAH should be 0 $ping $$Host{'offline_seconds'}");
+# Do immediate notifications
+					my @To = map { $_->User() } $Host->Notifications();
+					if ( @To and ( @To < 10 ) ) {
+						my $results = (new openprint::Email())->send(
+								'TO'	=>	\@To,
+								'SUBJECT'	=>	'Host has gone ' . ($ping?'online':'offline') . ': ' . $Host->hostname() . ' ' . misc::seconds2hms($since) . ' seconds ago.',
+								'FROM'		=>	$config{'TechSupportEmail'},
+								'BODY'		=>	"
+								IP: $$HI{ip}
+Description: $$Host{'description'}
+
+Please investigate.",
+);
+					} # end if to < 10
+				} # end if immediate notifications
+			} elsif ( $Host->offline_seconds() and ( ! $ping ) and ( ! $$Host{notified} ) ) {
+				if ( $since > $$Host{offline_seconds} ) {
+					$log->warn("$ping $$Host{offline_seconds} $$Host{notified}");
+					$Host->save({'notified'=>1});
+					my @To = map { $_->User() } $Host->Notifications();
+					if ( @To and ( @To < 10 ) ) {
+						my $results = (new openprint::Email())->send(
+								'TO'	=>	\@To,
+								'SUBJECT'	=>	'Host has gone ' . ($ping?'online':'offline') . ': ' . $Host->hostname(),
+								'FROM'		=>	$config{'TechSupportEmail'},
+								'BODY'		=>	"
+								IP: $$Host{ip}
+Description: $$Host{'description'}
+
+Please investigate.",
+);
+					} # end if @To > 10
+				} # end if offline_seconds
+			} # end if online != ping
+
+			if ( $Host->online() ) {
+				if ( sets::isin( $Host->type(), [ 'AIC500', 'AIC500W', 'AIC777W', 'AIC747W' ] ) ) {
+					require LWP;
+					my $browser = LWP::UserAgent->new();
+					$browser->credentials( $Host->hostname().':80', 'Netcam', $Host->info('username') => $Host->info('password') );
+
+					$log->debug("URL: " . $Host->hostname().'/cgi/jpg/image.cgi' );
+					my $response = $browser->get('http://'.$Host->hostname().'/cgi/jpg/image.cgi');
+					if ( ! $response->is_success ) {
+						if ( $response->status_line() eq '401 Unauthorized' ) {
+							$log->debug("Unauthorized with " . $Host->info('username') . ' password: ' . $Host->info('password') );
+							my $header = $response->header('WWW-Authenticate');
+							my ( $realm ) = $header =~ /realm="(.*)"/;
+							if ( $realm and ( $realm ne 'Netcam' ) ) {
+								$log->debug("Different REALM $realm");
+								$browser->credentials( $Host->hostname().':80', $realm, $Host->info('username') => $Host->info('password') );
+								$response = $browser->get('http://'.$Host->hostname().'/cgi/jpg/image.cgi');
+							} # end if
+						} # end if
+					} # end if
+					if ( ! $response->is_success ) {
+						if ( $response->status_line() eq '401 Unauthorized' ) {
+							$log->error("Couldn't get content from " . $Host->hostname().'/cgi/jpg/image.cgi unauthorized'. $response->status_line );
+						} else {
+							$log->warn("Couldn't get content from " . $Host->hostname().'/cgi/jpg/image.cgi rebooting' . $response->status_line );
+							my $headers = $response->headers();
+							foreach my $k ( keys %$headers ) {
+								$log->debug("Header $k => $$headers{$k}");
+							}  # end foreach
+							$response = $browser->get('http://'.$Host->hostname().'/admin/reboot.cgi?type=0');
+							$log->debug($response->is_success);
+							(new openprint::Log())->save({ action_id=>102, ip_address=>$Host->ip(), note=>sprintf('<a href="/employee/it/host.html?host_id=%d">%s</a> has been rebooted.', @$Host{'id','hostname'})});
+							my @To = map { $_->User() } $Host->Notifications();
+							if ( @To and ( @To < 10 ) ) {
+								$log->debug("Emailing: " . join(',', map { $_->email() } @To ) );
+								my $results = (new openprint::Email())->send(
+										'TO'	=>	\@To,
+										'SUBJECT'	=>	'Camera rebooted ' . $Host->hostname(),
+										'FROM'		=>	$config{'TechSupportEmail'},
+										'BODY'		=>	"
+										IP: $$HI{ip}
+Description: $$Host{'description'}
+",
+);
+							} # end if
+						} # end if
+					} else {
+						$log->debug("Got content from host. Size: " . $response->content_type );
+					} # end if
+				} elsif ( $Host->type() ) {
+					$log->warn("nothing to do for : " . $Host->type()  . ' for host ' . $$Host{hostname} . ' ip ' . $$HI{ip} );
+				} # end if
+			} # end if online
+		} # end oreach Host_Interface
 	} # end foreach $Host
 	sleep $config{'sleep'};
 } # end while
