@@ -58,7 +58,7 @@ sub variables {
 					);
 			foreach my $fold_index ( 1 .. 4 ) {
 				push @v, map { join('-', $_, $form, $qty_index, $fold_index ) } ( 
-						'FoldPageQty', 'FoldQty', 'FoldImposition', 'FoldColumns', 'FoldRows', 'FoldType', 'FoldFolds', 'FoldAngles', 'FoldRunspeed',
+						'FoldPageQty', 'FoldQty', 'FoldImposition', 'FoldColumns', 'FoldRows', 'FoldType', 'FoldFolds', 'FoldAngles', 'FoldRunspeed', 'FoldImpressions',
 				);
 			} # end foreach
 #foreach my $fold_type ( keys %fold_types ) {
@@ -1298,6 +1298,8 @@ $openprint::log->debug(qq`Wrong imposition: $$specs{"FoldImposition-$form-$qty_i
 					$run_qty += $Fold->run_overs_units() eq 'Percent' ? $run_qty * ($Fold->run_overs()/100): $Fold->run_overs();
 					$openprint::log->debug("Run Overs runqty: $run_qty impo qty: $impo_qty mipo: $imposition out qty: ".$$specs{"txtQuantity$qty_index"}." Sig imp: $$SignatureImposition{imposition}out	of fold $$Fold{type} on " . $Equipment->name()) if DEBUG;
 				} # end if
+				$$Imposition{impressions} = $run_qty;
+				$fold_specs{"FoldImpressions-$form-$qty_index-$fold_index"} = $run_qty;
 
 				my $width_folds;
 				my $height_folds;
@@ -1780,7 +1782,7 @@ sub signature_summary {
 					"FoldImposition-$form-$qty_index-$fold_index",
 					"FoldType-$form-$qty_index-$fold_index"} );
 		} # end foreach
-		return join(', ', sort { $a cmp $b } @folds).' on ' . $Equipment->name();
+		return join('<br/>', ( ' on ' . $Equipment->name() ), sort { $a cmp $b } @folds);
 		} # end if
 	} # end if
 } # end sub signature_summary
@@ -1796,7 +1798,7 @@ sub summary {
 		for ( my $sig_index = 0; $sig_index < @signatures; $sig_index += 1 ) {
 			my $s_s_id = $signatures[$sig_index];
 			my $sig_specs = openprint::service::get_specs_ref( $Project, $s_s_id );
-	my $form = $$sig_specs{SignatureIndex};
+			my $form = $$sig_specs{SignatureIndex};
 			my $sig_count = 1;
 
 			if ( $sig_index < @signatures - 1 ) {
@@ -2208,6 +2210,8 @@ sub get_Folds {
 			$Imposition->columns( $$folding_specs{"FoldColumns-$form-$qty_index-$fold_index"} );
 			$Imposition->rows( $$folding_specs{"FoldRows-$form-$qty_index-$fold_index"} );
 			$Imposition->quantity( $$folding_specs{"FoldQty-$form-$qty_index-$fold_index"} );
+			$$Imposition{impressions} = $$folding_specs{"FoldImpressions-$form-$qty_index-$fold_index"};
+			$$Imposition{impressions} = ( $$folding_specs{"txtQuantity$qty_index"} / $Source_Imposition->imposition() ) * ( $Imposition->quantity() ) if ! $$Imposition{impressions};
 			my $Folder = new openprint::Equipment( $$folding_specs{"ddmEquipment-$form-$qty_index"} );
 			$Imposition->Press( $Folder );
 

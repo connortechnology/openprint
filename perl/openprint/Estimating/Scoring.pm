@@ -47,13 +47,17 @@ sub variables {
 
 	my $Project = new openprint::Project( $p_id );
 	foreach my $s_s_id ( $Project->signatures() ) {
-		my $specs = openprint::service::get_specs_ref( $Project, $s_s_id );
+		my $sig_specs = openprint::service::get_specs_ref( $Project, $s_s_id );
+		my $form = $$sig_specs{'SignatureIndex'};
+
 		foreach my $qty_index ( $Project->quantity_indexes() ) {
-			push @v, "txtWidth-$$specs{'SignatureIndex'}", "txtHeight-$$specs{'SignatureIndex'}",
-				"ddmEquipment-$$specs{'SignatureIndex'}-$qty_index", "chkOverrideEquipment-$$specs{'SignatureIndex'}-$qty_index",
-				"txtImposition-$$specs{'SignatureIndex'}-$qty_index", "chkOverrideImposition-$$specs{'SignatureIndex'}-$qty_index",
-				"txtLayoutWidth-$$specs{'SignatureIndex'}-$qty_index", "txtLayoutHeight-$$specs{'SignatureIndex'}-$qty_index",
-				"txtVerticalQty-$$specs{'SignatureIndex'}", "txtHorizontalQty-$$specs{'SignatureIndex'}", "chkOverrideQty-$$specs{'SignatureIndex'}", 
+			push @v, map { join('-', $_, $form ) } ( 'txtWidth', 'txtHeight',
+				'txtVerticalQty', 'txtHorizontalQty', 'chkOverrideQty' );
+			push @v, map { join('-', $_, $form, $qty_index ) } ( 
+				'ddmEquipment', 'chkOverrideEquipment',
+				'txtImposition', 'chkOverrideImposition',
+				'txtLayoutWidth', 'txtLayoutHeight',
+				);
 		} # end foreach
 	} # end foreach
 	return @v;
@@ -440,7 +444,9 @@ sub signature_calc {
 			} # end if
 
 			foreach my $Fold ( @Folds ) {
-				$$Fold{impressions} = ( $qty / $SignatureImposition->imposition() ) * ( $parts / ( $Fold->imposition() * $Fold->quantity() ) ) * $Fold->quantity();
+
+				# $qty / imposition gives us the # of sheets, so * qty gives us the # of impressions
+				$$Fold{impressions} = ( $qty / $SignatureImposition->imposition() ) * ( $Fold->quantity() ) if ! $$Fold{impressions};
 				#$$Fold{impressions} /= $Fold->imposition();
                 my $Price = get_price( $Equipment, $$specs{"txtVerticalQty-$form"}, $$specs{"txtHorizontalQty-$form"}, $$Fold{impressions}, $Fold );
                 $totalPrice += $$Price{setup} + $$Price{Vertical}{Total} + $$Price{Horizontal}{Total} + $$Price{Service}{Total};
@@ -760,7 +766,7 @@ sub summary {
 			my $sig_specs = openprint::service::get_specs_ref( $Project, $s_s_id );
 			my $Paper = openprint::Paper::load_from_signature( $Project, $sig_specs, $qty_index );
 			if ( signature_needs( $Project, $specs, $sig_specs, $Paper ) ) {
-				$html .= 'Form ' . $$sig_specs{SignatureIndex} . ' ' . $$sig_specs{txtServiceDescription} . ' scored ' ."\n".signature_summary( $Project, $service_id, undef, $qty_index, $s_s_id, undef ) . "\n";
+				$html .= 'Form ' . $$sig_specs{SignatureIndex} . ' ' . $$sig_specs{txtServiceDescription} . ' scored ' .signature_summary( $Project, $service_id, undef, $qty_index, $s_s_id, undef ) . "\n";
 			} # end if
 		} # end foreach
 		return $html;
