@@ -570,7 +570,12 @@ sub get_price {
 		$servicePrice{Total} = Math::Round::nearest( 0.01, $servicePrice{Price} * $qty / 1000 );
 		$Results{'Breakdown'} .= sprintf('Service: $%.2f%s * %d * %d scores=$%.2f<br/>', @servicePrice{'Price','units'}, $qty, $score_qty, $servicePrice{Total} );
 	} elsif ( $servicePrice{units} eq 'per hour' ) {
-		my $runspeed = $Equipment->specification('PerfScoreRunSpeed');
+		my $runspeed;
+		if ( $$I{Fold} and $$I{Fold}{equipment_id} == $$Equipment{id} ) {
+			$runspeed = $$I{Fold}->runspeed();
+		} else {
+			$runspeed = $Equipment->specification('PerfScoreRunSpeed');
+		} # end if
 		if ( $runspeed ) {
 			if ( int($runspeed) ) {
 				my $hours = $qty / $runspeed;

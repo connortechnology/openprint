@@ -22,7 +22,7 @@
 					<input type="text" id="type" name="type" style="display:none;" onkeyup="ddm_select_by_text( $('type_id'), this.value, 0 );" />
 					<select name="type_id" id="type_id" onchange="$('type').value='';">
 						<option value="">select</option>
-						<? echo ( ssi::make_drop_down( openprint::Host_Type->dropdown(), $$variable{Host}->type_id() ); ) ?>
+						<? echo ( make_drop_down( openprint::Host_Type->dropdown(order=>'lower(name)'), $$variable{Host}->type_id() ); ) ?>
 					</select>
 				</li>
 				<li>
