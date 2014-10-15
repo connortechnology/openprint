@@ -830,6 +830,11 @@ if ( 0 ) {
 					next;
 				} # end if
 				next if $$Set_Of_Impositions[0]{quantity} != 1;
+			} elsif ( $capable eq 'When Stitching' ) {
+				if ( scalar @$Set_Of_Impositions != 1 ) {
+					$openprint::log->debug("Sets of impos != 1 for $$Equipment{strid}") if DEBUG;
+					next;
+				} # end if
 			} # end if
 			# At this point, we don't modify the Set_Of_Impositions, we modify the equipment-specific copy of it.
 #$openprint::log->debug("Impositions in this set: " . @Impositions );
