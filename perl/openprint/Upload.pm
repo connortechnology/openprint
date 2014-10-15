@@ -21,12 +21,14 @@ $serial = 'uploads_id_seq';
 	file_path	=>	'file_path',
 	company		=>	'company',
 	type		=>	'type',
+	complete	=>	'complete',
 );
 %defaults = (
 	start		=>	q`'NOW()'`,
 	size		=>	undef,
 	total		=>	undef,
 	finished	=>	0,
+	complete	=>	undef,
 );
 
 sub Company {

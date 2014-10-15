@@ -357,24 +357,25 @@ $log->debug("Found user $$upload{user} with out company.  Company is $$Company{n
 	foreach my $upload ( @uploads ) {
 		my $Upload = new openprint::Upload();
 		my $error = $Upload->save({
-			('company_id'	=>	$Company ? $Company->id() : undef),
-			('user_id'		=>	$User ? $User->id() : undef ),
-			'company'		=>	$$upload{'company_name'},
-			'size'			=>	$upload->{size},
-			'total'			=>	$upload->{size},
-			'finished'		=>	$upload->{timestamp},
-			'start'			=>	$upload->{timestamp},
-			'file_path'		=>	$$upload{proper_file_path},
-			'type'			=>	'FTP',
+			(company_id	=>	$Company ? $Company->id() : undef),
+			(user_id		=>	$User ? $User->id() : undef ),
+			company		=>	$$upload{'company_name'},
+			size			=>	$upload->{size},
+			total			=>	$upload->{size},
+			finished		=>	$upload->{timestamp},
+			start			=>	$upload->{timestamp},
+			file_path		=>	$$upload{proper_file_path},
+			type			=>	'FTP',
+			complete		=>	( $$upload{status} eq 'c' ? 1 : 0 ),
 		});
 		if ( $error ) {
 			$log->error( $error );
 		} else {
 			my $File = new openprint::File();
 			$error = $File->save({
-				'size'		=>	$upload->{size},
-				'filename'	=>	$$upload{proper_file_path},
-				'upload_id'	=>	$Upload->id(),
+				size		=>	$upload->{size},
+				filename	=>	$$upload{proper_file_path},
+				upload_id	=>	$Upload->id(),
 			});
 			$log->error( $error ) if $error;
 		} # end if
@@ -397,7 +398,7 @@ $log->debug("Found user $$upload{user} with out company.  Company is $$Company{n
 					@to = ( $Company->CSR() );
 				} # end if
 			} # end if
-			push @to, map { $_->User() } openprint::User_Notification->find('type'=>'Client File Uploads','value'=>'Yes', company_id=>[ $config{Owner}, $Company->id() ] );
+			push @to, map { $_->User() } openprint::User_Notification->find( type=>'Client File Uploads',value=>'Yes', company_id=>[ $config{Owner}, $Company->id() ] );
 		} # end if
 		
 		if ( ! @to ) {
@@ -416,7 +417,7 @@ $log->debug("Found user $$upload{user} with out company.  Company is $$Company{n
 					FROM    => ( $config{AdministratorEmail} ? $config{AdministratorEmail} : $from ),
 					'Reply-To'	=>	$from,
 					TO      => \@to,
-#BCC		=>	'iconnor@point-one.com',
+BCC		=>	'iconnor@point-one.com',
 					SUBJECT => $subject,
 					ATTACHMENTS => [ '', MIME::QuotedPrint::encode_qp(Encode::encode('utf-8',$body)), 'text/html', 'quoted-printable' ]
 				);
