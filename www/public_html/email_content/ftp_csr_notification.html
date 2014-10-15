@@ -62,7 +62,7 @@
 				foreach my $Upload ( @{$$variable{'Uploads'}} ) {
 					$html .= sprintf('<tr><td nowrap="nowrap">%s%s</td><td align="right">%s</td><td align="right">%s</td></tr>', 
 						$$Upload{proper_file_path}, 
-						( -e $$Upload{proper_file_path} ? '' : '<span class="error">File does not exist in FTP area.</span>' ),
+						( -e $config{ProjectFilesPath}.$$Upload{proper_file_path} ? '' : '<br/><span class="error">File does not exist in FTP area.</span>' ),
 						misc::format_bytes($$Upload{size}), 
 						( $$Upload{complete} ? 'Complete' : '<span class="error">Incomplete</span>' ),
 						); 
