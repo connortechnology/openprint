@@ -206,6 +206,7 @@ if (open($fifoh, "< $config{fifo}")) {
 						auth_mode => $access_mode,
 						user => $user_name,
 						status => $completion_status,
+						complete	=> ( $completion_status eq 'c' ? 1 : 0 ),
 					};
 				} # end if send email
 			} else {
@@ -366,8 +367,9 @@ $log->debug("Found user $$upload{user} with out company.  Company is $$Company{n
 			start			=>	$upload->{timestamp},
 			file_path		=>	$$upload{proper_file_path},
 			type			=>	'FTP',
-			complete		=>	( $$upload{status} eq 'c' ? 1 : 0 ),
+			complete		=>	$$upload{complete},
 		});
+		$log->debug("UPload status: ($$upload{status})");
 		if ( $error ) {
 			$log->error( $error );
 		} else {

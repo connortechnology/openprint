@@ -45,7 +45,7 @@
 		</div>
 	</div>
 </fieldset>
-
+<div class="error">Warning: Do not trust what it says below about files not existing or being incomplete. This feature is new and might not be working correctly.</div>
 <fieldset>
 	<legend>File<? echo ( @{$$variable{'Uploads'}} == 1 ? '' : 's' ) ?></legend>
 	<table border="0" cellpadding="1" cellspacing="0" width="100%">
@@ -59,7 +59,7 @@
 		<tbody>
 			<? echo ( 
 				my $html;
-				foreach my $Upload ( @{$$variable{'Uploads'}} ) {
+				foreach my $Upload ( @{$$variable{Uploads}} ) {
 					$html .= sprintf('<tr><td nowrap="nowrap">%s%s</td><td align="right">%s</td><td align="right">%s</td></tr>', 
 						$$Upload{proper_file_path}, 
 						( -e $config{ProjectFilesPath}.$$Upload{proper_file_path} ? '' : '<br/><span class="error">File does not exist in FTP area.</span>' ),
