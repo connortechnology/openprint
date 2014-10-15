@@ -572,7 +572,7 @@ sub get_price {
 	} elsif ( $servicePrice{units} eq 'per hour' ) {
 		my $runspeed;
 		if ( $$I{Fold} and $$I{Fold}{equipment_id} == $$Equipment{id} ) {
-			$runspeed = $$I{Fold}->runspeed();
+			$runspeed = $$I{Fold}->runspeed($I->Paper()->gsm());
 		} else {
 			$runspeed = $Equipment->specification('PerfScoreRunSpeed');
 		} # end if
