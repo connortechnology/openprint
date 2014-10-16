@@ -76,6 +76,7 @@ $serial = 'invoices_id_seq';
 	early_payment_amount	=>	undef,
 	early_payment_units		=>	undef,
 	early_payment_date		=>	undef,
+	num						=>	undef,
 );
 
 sub save {

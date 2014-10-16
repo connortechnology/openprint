@@ -10,7 +10,7 @@
 			<th class="Interval">Interval</th>
 			<th class="Rate">Rate</th>	
 			<th class="Price">Price</th>
-			<th class="buttons">&nbsp;</th>
+			<th class="buttons"><?echo(button('ReloadTimetracks',{onclick=>'reload_timetracks();', text=>'R', title=>'Refresh' });)?></th>
 		</tr>
 	<? echo (
 		my $html = '';

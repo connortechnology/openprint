@@ -217,10 +217,11 @@ sub sized_url {
 					$size = 'full';
 				} # end if
 				if ( ! $width ) {
-					$openprint::log->error("No asset size in config for $size");
+					$openprint::log->error("No asset size in config for video $size");
 				} # end if	
 				$openprint::log->debug("Creating $size at ${width}x $src $dest");
 				if ( ! -d "/tmp/$filename" ) {
+					$openprint::log->debug("Going to create tmp directory at /tmp/$filename/ to hold medium thumbnail:" );
 					if ( ! mkdir "/tmp/$filename" ) {
 						$openprint::log->error("Unable to create tmp directory at /tmp/$filename/ to hold medium thumbnail: $!" );
 						return $fallback;
@@ -229,15 +230,25 @@ sub sized_url {
 					$openprint::log->debug("Strange, tmp dir /tmp/$filename shouldnt already exist, but it does.");
 				} # end if
 
-				$openprint::log->debug("about to mplayer -frames 1 -nosound -quiet -zoom -vf scale=$width:-3 -vo jpeg:outdir=/tmp/$filename/ -ss 60 $src :");
+				$openprint::log->debug("avprobe -show_format  $src");
+				my $probe = `avprobe -show_format  $src`;
+				$openprint::log->debug("Probe: $probe");
+				my ( $length ) = $probe =~ /duration=(\d+)\.\d_/m;
+				$openprint::log->debug("Length of video: $length");
+
+				if ( $length < 60 ) {
+					$length = 5;
+				} # end if
+
+				$openprint::log->debug("about to mplayer -frames 1 -nosound -quiet -zoom -vf scale=$width:-3 -vo jpeg:outdir=/tmp/$filename/ -ss $length $src :");
 				if ( $width ) {
-					$_ = `mplayer -frames 1 -nosound -quiet -zoom -vf scale=$width:-3 -vo jpeg:outdir="/tmp/$filename/" -ss 60 "$src"`;
+					$_ = `mplayer -frames 1 -nosound -quiet -zoom -vf scale=$width:-3 -vo jpeg:outdir="/tmp/$filename/" -ss $length "$src"`;
 				} else {
-					$_ = `mplayer -frames 1 -nosound -quiet -zoom -vo jpeg:outdir="/tmp/$filename/" -ss 60 "$src"`;
+					$_ = `mplayer -frames 1 -nosound -quiet -zoom -vo jpeg:outdir="/tmp/$filename/" -ss $length "$src"`;
 				} # end if
 				#$_ = `ffmpeg  -itsoffset -4  -i $src -vcodec mjpeg -vframes 1 -an -f rawvideo -s 320x240 /tmp/$filename/00000001.jpg`;
 				if ( $! ) {
-					$openprint::log->error("Unable to create medium thumbnail at /tmp/$filename/: $!" );
+					$openprint::log->error("Unable to create $size thumbnail at /tmp/$filename/: $!" );
 					return $fallback;
 				} else {
 					$openprint::log->debug("command was mplayer -frames 1 -nosound -quiet -zoom -vf scale=$width:-3 -vo jpeg:outdir=/tmp/$filename/ -ss 60 $src : $_ ");
