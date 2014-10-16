@@ -171,7 +171,7 @@
 			$html .= sprintf(q`<tr id="tr-%1$d" class="%2$s" title="%3$s">`, 
 				$PO->id(), 
 				( ( ( ! $PO->authorized ) and $PO->can_authorize() ) ? 'unauthorized' : 'authorized' ),
-				$PO->summary(),
+				html_escape( $PO->summary() ),
 				);
 			if ( $session{'user_type'} eq 'A' ) {
 				$html .= '<td class="checkbox"><input type="checkbox" name="po_id" value="'.$PO->id().'"/></td>';
