@@ -234,7 +234,7 @@ $I->display('In Stitching:') if DEBUG;
         } # end if
 
 		if ( ! ( $$I{Folds} and @{$$I{Folds}} ) ) {
-			$openprint::log->error("No folds in imposition, guess 1");
+			$openprint::log->error("No folds in imposition, guess 1") if DEBUG;
 			$I->display("No Folds");
 			$$specs{'txtSignatureQty'.$I->pages().'Page-'.$qty_index} += 1;
 			$$specs{"txtPockets$qty_index"} += 1;
