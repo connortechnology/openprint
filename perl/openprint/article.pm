@@ -532,7 +532,7 @@ sub feed {
 		next if $Article->user_type();
 		$rss->add_item(
 			title	=>	$Article->name(),
-			description	=>	substr($Article->summary(),0,500),
+			description	=> ( $Article->summary() ? substr($Article->summary(),0,500) : '' ),
 			link	=>	'http://www.pleasurablethings.ca/article/view.html?article_id='.$Article->id(),
 			pubDate	=>	$Article->published_on(),
 			guid	=>	$Article->id(),

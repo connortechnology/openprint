@@ -101,6 +101,7 @@ my @re = (
 my %whitelist;
 my $last_update = 0;
 my $hup;
+my %hostname_lookups;
 
 # Variables and Constants
 my $MAXLEN = 1524;
@@ -198,7 +199,7 @@ $log->debug("# of entries in Object_name_cache: " . keys %{$openprint::Object::n
 
 	while( $sock->recv($buf, $MAXLEN) ) {
 		next if ! $buf;
-		my ($port, $ipaddr) = IO::Socket::sockaddr_in($sock->peername);
+		#my ($port, $ipaddr) = IO::Socket::sockaddr_in($sock->peername);
 		#my $hn = gethostbyaddr($ipaddr, Socket::AF_INET);
 		#$log->debug($buf) if $config{debug};
 		# Without the multiline flag, will do one line at a time, nice.
@@ -221,12 +222,16 @@ $log->debug("# of entries in Object_name_cache: " . keys %{$openprint::Object::n
 	# Is an IP
 					$log->debug( "$source is an ip" ) if $config{debug};
 					$ip = $source;
+				} elsif ( $hostname_lookups{$source} ) {
+					$hostname = $source;
+					$ip = $hostname_lookups{$source};
 				} else {
 	# is a hostname
 					$hostname = $source;
 					$ip = gethostbyname($source);
 					if ( defined $ip ) {
 						$ip = Socket::inet_ntoa($ip);
+						$hostname_lookups{$source} = $ip;
 						$log->debug( "Got $ip for $source" ) if $config{debug};
 					} # end if
 				} # end if
@@ -273,13 +278,17 @@ $log->debug("# of entries in Object_name_cache: " . keys %{$openprint::Object::n
 			foreach my $ip ( sort keys %host_counts ) {
 				next if ! $host_counts{$ip}{update};
 				next if $host_counts{$ip}{whitelist};
-				last if ! ( $dbh and $dbh->ping() );
+				if ( ! defined $host_counts{$ip}{count} ) {
+					$host_counts{$ip}{count} = 0;
+				}
 				if ( $host_counts{$ip}{count} > 20 ) {
 					$host_counts{$ip}{blacklist} = 1;
 				} # end if
-				$_ = $host_counts{$ip}->save();
-				if ( $_ ) {
-					$log->error( $_ );
+				if ( $dbh and $dbh->ping() ) {
+					$_ = $host_counts{$ip}->save();
+					if ( $_ ) {
+						$log->error( $_ );
+					} # end if
 				} # end if
 				$log->debug( "$ip $host_counts{$ip}{ip} $host_counts{$ip}{count}" ) if $config{debug};
 				`shorewall drop $ip` if $host_counts{$ip}{blacklist};
