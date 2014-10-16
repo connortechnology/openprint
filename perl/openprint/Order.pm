@@ -20,7 +20,7 @@ require openprint::Payment;
 require openprint::Tax;
 require openprint::Order_Notification;
 
-$debug = 1;
+$debug = 0;
 
 $table = 'orders';
 $serial = 'orders_id_seq';
@@ -529,7 +529,7 @@ sub send_sales_order {
 	new openprint::Email()->send(
 		FROM	=> $sales_person_email,
 		TO		=> sprintf('"%s %s" <%s>', $self->get('firstname','lastname','email')),
-		BCC	 =>	'iconnor@point-one.com',
+		#BCC	 =>	'iconnor@point-one.com',
 		SUBJECT => "Order $$self{id} Docket $$self{docket}",
 		ATTACHMENTS	=>	[ @body, @sales_order ],
 		);
