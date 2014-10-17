@@ -4896,7 +4896,7 @@ sub calc_price {
 			$openprint::log->debug("Using cached folding");
 		} else {
 #my @all_impositions = ( @{$other_impositions}, $Imposition );
-			%folding_results = openprint::Estimating::Folding::signature_calc( $Project, $service_index, $specs, $$project{FoldingSpecs}, $qty_index, $Imposition, @$project{'UVCoatingSpecs','AqueousSpecs','StitchingSpecs'}, $other_impositions, $project );
+			%folding_results = openprint::Estimating::Folding::signature_calc( $Project, $specs, $$project{FoldingSpecs}, $qty_index, $Imposition, @$project{'UVCoatingSpecs','AqueousSpecs','StitchingSpecs'}, $other_impositions, $project );
 			$$Imposition{folding_results} = \%folding_results;
 		} # end if
 
@@ -5009,7 +5009,7 @@ $openprint::log->debug("Back From DieCutting");
 
 	my %scoring_results;
 	if ( $$project{HasScoring} and $$project{NeedScoring} ) {
-		%scoring_results = openprint::Estimating::Scoring::signature_calc( $Project, @$project{'HasScoring','ScoringSpecs'}, $service_index, $specs, $qty_index, $Imposition );
+		%scoring_results = openprint::Estimating::Scoring::signature_calc( $Project, @$project{'HasScoring','ScoringSpecs'}, $specs, $qty_index, $Imposition );
 #foreach my $k ( keys %scoring_results ) {
 #$openprint::log->debug("Scoring: $k => $scoring_results{$k}");
 #}

@@ -184,7 +184,7 @@ sub calc {
 			$$specs{'hdnBreakdown'.$qty_index} .= $Imposition->to_string() . '<br/>';
 			$$specs{'hdnBreakdown'.$qty_index} .= $Imposition->Paper()->to_string() . '<br/>';
 
-			my %Price = signature_calc( $Project, $service_index, $specs, $signature_service_index, $sig_specs, $qty_index, $Imposition );
+			my %Price = signature_calc( $Project, $service_index, $specs, $sig_specs, $qty_index, $Imposition );
 			$status = $Price{'Status'} if $Price{'Status'} eq 'uncalculated';
 			if ( $Price{'Equipment'} ) {
 				$$specs{"ddmEquipment-$form-$qty_index"} = $Price{'Equipment'}->id();
@@ -236,7 +236,7 @@ sub calc {
 } # end sub calc
 
 sub signature_calc {
-	my ( $Project, $service_index, $specs, $signature_service_index, $sig_specs, $qty_index, $SignatureImposition ) = @_;
+	my ( $Project, $service_index, $specs, $sig_specs, $qty_index, $SignatureImposition ) = @_;
 	my %Results = (
 		Status		=> 'calculated',
 		Breakdown	=> '',
