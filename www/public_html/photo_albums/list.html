@@ -1,6 +1,6 @@
 <div class="PhotoAlbums">
 	<div class="List">
-		<? echo ( include('/includes/error_reporting.html'); ) ?>
+		<?include('/includes/error_reporting.html')?>
 		<form name="f1" id="f1" method="post">
 			<fieldset class="filters"><legend>Photo Albums</legend>
 				<div class="content">
@@ -10,7 +10,7 @@
 						<select name="user_id" id="user_id" onchange="new Ajax.Updater('Results','_list.html', { parameters: this.form.serialize() } );">
 							<option value=""> all </option>
 							<? echo ( 
-								ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User->find('order'=>'lower(firstname),lower(lastname)') ], $session{'/photo_albums/list.html?user_id'} );
+								make_drop_down( openprint::User->dropdown( order=>'lower(firstname),lower(lastname)'), $session{'/photo_albums/list.html?user_id'} );
 							) ?>
 						</select>
 					</li>
@@ -19,11 +19,11 @@
 				</div>
 				<p class="buttons">
 				<? echo ( join('',
-					ssi::button( 'New', { 'href'=>'/photo_albums/edit.html', 'text'=>'New Album' } ),
+					button( 'New', { href=>'/photo_albums/edit.html', text=>'New Album' } ),
 					); ) ?>
 				</p>
 			</fieldset>
-			<div id="Results"><? echo ( include('_list.html'); ) ?></div>
+			<div id="Results"><?include('_list.html')?></div>
 		</form>
 	</div>
 </div>

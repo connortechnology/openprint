@@ -289,7 +289,7 @@ sub send_email {
 		$log->error("OH NO! More than one user found for $$upload{user}");
 		$User = $Users[0];
 	} else {
-		$User = $User[0];
+		$User = $Users[0];
 		$Company = $User->Company();
 	}
 	my $company_name;
