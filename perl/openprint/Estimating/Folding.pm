@@ -2240,7 +2240,8 @@ sub get_Folds {
 			if ( ! $Fold ) {
 				$_ = Data::Dumper::Dumper($find);
 				$openprint::log->error("CAnt get fold! on " . $Folder->to_string() . $_);
-Carp::cluck( "CAnt get fold! on " . $Folder->to_string() . $_);
+Carp::cluck( "CAnt get fold! on " . $Folder->to_string() . $_ . join("\n", map { $_ . '=>' . $openprint::param{$_} } keys %openprint::param ));
+
 			} else {
 				$openprint::log->debug("Got FOld: " . $Fold->to_string() ) if DEBUG;
 				$Imposition->Fold( $Fold );
