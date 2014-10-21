@@ -898,8 +898,13 @@ if ( 0 ) {
 
 					my $Fold = $Equipment->Fold( {
 							pages			=>	$Imposition->pages(),
+		( $$Imposition{image_orientation} eq 'Vertical' ? (
 							page_columns	=>	$Imposition->page_columns(),
 							page_rows		=>	$Imposition->page_rows(),
+		) : (
+							page_columns	=>	$Imposition->page_rows(),
+							page_rows		=>	$Imposition->page_columns(),
+		) ),
 							page_width		=>	$Imposition->page_width(),
 							page_height		=>	$Imposition->page_height(),
 							spine_direction	=>	$$Imposition{image_orientation},
@@ -1028,8 +1033,13 @@ $openprint::log->debug("No Fold") if DEBUG;
 							$openprint::log->debug("Fits") if DEBUG;
 							my $Fold = $Equipment->Fold({
 									pages			=>	$Imposition->pages(),
-									page_columns	=>	$Imposition->page_columns(),
-									page_rows		=>	$Imposition->page_rows(),
+		( $$Imposition{image_orientation} eq 'Vertical' ? (
+							page_columns	=>	$Imposition->page_columns(),
+							page_rows		=>	$Imposition->page_rows(),
+		) : (
+							page_columns	=>	$Imposition->page_rows(),
+							page_rows		=>	$Imposition->page_columns(),
+		) ),
 									spine_direction	=>	$$Imposition{'image_orientation'},
 									stitching		=>	(($$services{'SaddleStitching'} or $$services{'LoopStitching'}) ? 1 : 0),
 									perfectbind		=>	($$services{'PerfectBound'} ? 1 : 0),
@@ -2103,6 +2113,8 @@ sub cut_spreads {
 			#} else {
 			#} # end if
 		#} else {
+
+
 			if ( ( $I->spread_columns() > 1 ) and ( $I->spread_columns() % 2 ) ) {
 				my $i1 = $I->copy();
 				$i1->spread_columns(1);
@@ -2113,7 +2125,7 @@ sub cut_spreads {
 				} else {
 					$i1->image_height( $I->image_height()/$I->spread_columns() );
 				}
-		$openprint::log->debug(sprintf('Cutting pages down from %dx%d to %dx%d', $I->quantity(), $I->pages(), $i1->quantity(), $i1->pages() ) ) if DEBUG;
+		$openprint::log->debug(sprintf('Cutting pages down from %d@%dpg to %d@%dpg', $I->quantity(), $I->pages(), $i1->quantity(), $i1->pages() ) ) if DEBUG;
 				push @results, [ $i1 ];
 
 				my $i2 = $I->copy();
@@ -2215,6 +2227,7 @@ sub get_Folds {
 			$Imposition->columns( $$folding_specs{"FoldColumns-$form-$qty_index-$fold_index"} );
 			$Imposition->rows( $$folding_specs{"FoldRows-$form-$qty_index-$fold_index"} );
 			$Imposition->quantity( $$folding_specs{"FoldQty-$form-$qty_index-$fold_index"} );
+			
 			$$Imposition{impressions} = $$folding_specs{"FoldImpressions-$form-$qty_index-$fold_index"};
 			$$Imposition{impressions} = ( $$folding_specs{"txtQuantity$qty_index"} / $Source_Imposition->imposition() ) * ( $Imposition->quantity() ) if ! $$Imposition{impressions};
 			my $Folder = new openprint::Equipment( $$folding_specs{"ddmEquipment-$form-$qty_index"} );
@@ -2245,6 +2258,13 @@ Carp::cluck( "CAnt get fold! on " . $Folder->to_string() . $_ . join("\n", map {
 			} else {
 				$openprint::log->debug("Got FOld: " . $Fold->to_string() ) if DEBUG;
 				$Imposition->Fold( $Fold );
+				if ( $Imposition->image_orientation() eq 'Vertical' ) {
+				$Imposition->page_rows( $Fold->page_rows() );
+				$Imposition->page_columns( $Fold->page_columns() );
+				} else {
+				$Imposition->page_rows( $Fold->page_columns() );
+				$Imposition->page_columns( $Fold->page_rows() );
+				} # end if
 				if ( $Fold->pages() ) {
 					$$Imposition{pages} = $Fold->pages();
 					$Imposition->page_quantity( $$folding_specs{"FoldPageQty-$form-$qty_index-$fold_index"} );
