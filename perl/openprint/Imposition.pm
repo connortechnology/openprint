@@ -55,7 +55,8 @@ sub layout_width {
 	} 
 	if ( ! $_[0]{layout_width} ) {
 		if ( $_[0]{image_orientation} eq 'Vertical' ) {
-			$_[0]{layout_width} = $_[0]{columns} * $_[0]{image_width} + ( $_[0]{perfecting_wheel_space} - $_[0]{bleed_size} );
+			$_[0]{layout_width} = $_[0]{columns} * $_[0]{image_width} + ( $_[0]{perfecting_wheel_space} ? $_[0]{perfecting_wheel_space} - $_[0]{bleed_size} : 0 );
+#$openprint::log->debug("layout_width = $_[0]{columns} * $_[0]{image_width} + ( $_[0]{perfecting_wheel_space} - $_[0]{bleed_size} )");
 			if ( $_[0]{dutch_columns} ) {
 				my $dutch_width = $_[0]{dutch_columns} * $_[0]{image_height};
 
@@ -67,7 +68,7 @@ sub layout_width {
 				} # end if
 			} # end if
 		} elsif ( $_[0]{image_orientation} eq 'Horizontal' ) {
-			$_[0]{layout_width} = $_[0]{columns} * $_[0]{image_height} + ( $_[0]{perfecting_wheel_space} - $_[0]{bleed_size} );
+			$_[0]{layout_width} = $_[0]{columns} * $_[0]{image_height} + ( $_[0]{perfecting_wheel_space} ? $_[0]{perfecting_wheel_space} - $_[0]{bleed_size} : 0 );
 
 			if ( $_[0]{dutch_columns} ) {
 				my $dutch_width = $_[0]{dutch_columns} * $_[0]{image_width};
