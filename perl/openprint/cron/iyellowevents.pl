@@ -102,7 +102,7 @@ my $ua = LWP::UserAgent->new;
 $ua->agent("IQ/0.1 ");
 # Create a request
 my $base_url = 'http://iyellowwineclub.com/';
-my $req = HTTP::Request->new(GET => $base_url.'/events' );
+my $req = HTTP::Request->new(GET => $base_url.'/learn' );
 # Pass request to the user agent and get a response back
 my $res = $ua->request($req);
 # Check the outcome of the response
@@ -138,20 +138,14 @@ use HTML::TreeBuilder;
 my $tree = HTML::TreeBuilder->new;
 $tree->parse_content($content);
 $tree->elementify();
-my $content_div = $tree->look_down( id => 'content' );
+my $content_div = $tree->look_down( id => 'main' );
 if ( ! $content_div ) {
 	$tree->dump();
 	die "No content";
 } # end if
 
-my $posts = $content_div->look_down( class=>'post');
-if ( ! $posts ) {
-	$content_div->dump();
-	die "No posts";
-} # end if
-
-foreach my $post ( $posts->look_down( class=>'clearfloat') ) {
-	my $Title = $post->look_down( class => 'title');
+foreach my $post ( $content_div->look_down( class=>'post') ) {
+	my $Title = $post->look_down( class => 'post-title');
 	if ( ! $Title ) {
 		$log->warn("No Title for ");
 		$post->dump();

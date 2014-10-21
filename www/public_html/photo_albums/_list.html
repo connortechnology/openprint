@@ -4,7 +4,7 @@
 		order=>'lower(name)',
 		( sets::isin( $session{user_type}, [ 'E','A' ] ) ? 
 			( $session{'/photo_albums/list.html?user_id'} ? ( user_id => $session{'/photo_albums/list.html?user_id'} ) : () ) :
-			( user_id => $session{user_id} )
+			( company_id => $session{company_id} )
 		),
 	);
 	my $num_albums = scalar @Albums;

@@ -25,6 +25,8 @@ require sets;
 
 use constant DEBUG => 0;
 
+use vars qw{ @signature_variables };
+
 my %variables = (
 	'ddmProjectSize'=>['save','output'],
 	'txtFinalWidth'=>['save'],'txtFinalHeight'=>['save'], 
@@ -44,7 +46,7 @@ my %variables = (
 
 	);
 
-my @signature_variables = (
+@signature_variables = (
 'chkCyanSideOne','chkMagentaSideOne','chkYellowSideOne','chkBlackSideOne', 'chkProcessColourSideOne',
                 'chkColourCoating1SideOne', 'ColourCoatingType1SideOne', 'ColourCoatingColour1SideOne','ColourCoatingCoverage1SideOne',
                 'chkColourCoating2SideOne', 'ColourCoatingType2SideOne', 'ColourCoatingColour2SideOne','ColourCoatingCoverage2SideOne',

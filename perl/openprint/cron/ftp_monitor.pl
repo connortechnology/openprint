@@ -277,6 +277,29 @@ sub send_email {
 		$log->error("No uploads!");
 		return;
 	} # end if
+	my $upload = $uploads[0];
+	# Try to get User first.  It's going to be the fastest lookup
+	
+	my $Company;
+	my $User;
+	my @Users = openprint::User->find(email=>lc $upload->{user},ftp_active=>1);
+	if ( ! @Users ) {
+		$log->error("OH NO! No user found for $$upload{user}");
+	} elsif ( @Users > 1 ) {
+		$log->error("OH NO! More than one user found for $$upload{user}");
+		$User = $Users[0];
+	} else {
+		$User = $Users[0];
+		$Company = $User->Company();
+	}
+	my $company_name;
+	if ( $Company ) {
+		$company_name = $Company->name();
+		$company_name =~ s/ /_/g;
+	} # end if
+
+	my $project_files_path = $config{file_path};
+	$project_files_path =~ s/ /_/g;
 
 	foreach my $upload ( @uploads ) {
 		my $file = $upload->{file};
@@ -284,26 +307,27 @@ sub send_email {
 # Problem is, spaces have been replaced by underscores
 		my $file_str = basename($file);
 		$$upload{file_str} = $file_str;
-		my $regexp = $config{file_path}.'/(.+)/'.$file_str;
-		my ( $company_name ) = $file =~ /^$regexp$/;
-$log->warn("Trying to match ( $regexp in $file, got $company_name");
-		if ( ! $company_name ) {
-			my $new_file_path = $config{file_path};
-			$new_file_path =~ s/ /_/g;
-			$regexp = $new_file_path.'/(.+)/'.$file_str;
-			( $company_name ) = $file =~ /^$regexp$/;
-			$log->warn("Trying to match ( $regexp in $file, got $company_name");
-		} # end if
+		$$upload{company_name} = $company_name;
 
-		if ( $company_name ) {
-			$company_name =~ s/^\/*//g;
-		   my @parts = split('/', $company_name);
-		   $$upload{'company_name'} = shift @parts if @parts;
-		} # end if
-	   $$upload{'proper_file_path'} = '/'.$$upload{'company_name'}.'/'.$file_str;
+		my $regexp = $project_files_path.'/'.$company_name.'/(.+)';
+		@$upload{proper_file_path} = $file =~ /^$regexp$/;
+
+		#if ( ! $company_name ) {
+			#my $new_file_path = $config{file_path};
+			#$new_file_path =~ s/ /_/g;
+			#$regexp = $new_file_path.'/(.+)/'.$file_str;
+			#( $company_name ) = $file =~ /^$regexp$/;
+			#$log->warn("Trying to match ( $regexp in $file, got $company_name");
+		#} # end if
+
+		#if ( $company_name ) {
+			#$company_name =~ s/^\/*//g;
+		   #my @parts = split('/', $company_name);
+		   #$$upload{'company_name'} = shift @parts if @parts;
+		#} # end if
+	   #$$upload{'proper_file_path'} = '/'.$$upload{'company_name'}.'/'.$file_str;
 	} # end foreach upload
 
-	my $upload = $uploads[0];
 	my $subject;
 	if ($config{subject}) {
 		$subject = $config{subject};
@@ -326,34 +350,6 @@ $log->warn("Trying to match ( $regexp in $file, got $company_name");
 		$dbh_count += 1;
 		sleep(1);
 	} # end while no db connection
-
-	my $Company;
-	my $User;
-
-	if ( $$upload{company_name} ) {
-# Try to figure out the company
-		if ( ! ( $Company = openprint::Company->find_one( name=>$$upload{company_name} ) ) ) {
-$log->debug("Didn't Found company $$upload{company_name}");
-		} else {
-$log->debug("Found company $$upload{company_name}");
-		} # end if
-	} # end if
-	if ( $Company ) {
-		# If we hae the company, then narrow the user search
-		if ( $User = openprint::User->find_one( company_id=>$Company->id(), email=>lc $$upload{user}) ) {
-$log->debug("Found user $$upload{user} with company");
-		} # end if
-	} # end if
-	if ( ! $User ) {
-		if ( $User = openprint::User->find_one('email'=>lc $upload->{user}) ) {
-			$Company = $User->Company();
-			foreach my $upload ( @uploads ) {
-				$$upload{'company_name'} = $Company->name();
-				$$upload{'proper_file_path'} = '/'.$$upload{'company_name'}.'/'.$$upload{'file_str'};
-			} # end foreach upload
-$log->debug("Found user $$upload{user} with out company.  Company is $$Company{name}");
-		} # end if
-	} # end if
 
 	foreach my $upload ( @uploads ) {
 		my $Upload = new openprint::Upload();
