@@ -24,10 +24,17 @@ Choose criteria and click show results. You may the download the results in CSV 
 			); ) ?>
 		</p>
 		<p>
+			<label>Invoice #</label>
+			<input type="text" id="invoice_num" name="invoice_num" value="<? echo ( $param{invoice_num} ) ?>" onkeypress="$('StartDocket').value='';$('EndDocket').value='';$('order_id').value='';$('project_id').value='';return input_handler( this, event);" onkeydown="if(event.keyCode == 13){f1.btnFunction.value='Go';f1.submit();}" />
+			<? echo ( button( 'InvoiceGo', { onclick=>"f1.btnFunction.value='Go';f1.submit();", text=>'Go' } ); ) ?>
+		</p>
+<!--
+		<p>
 			<label>Invoice ID</label>
 			<input type="text" id="invoice_id" name="invoice_id" value="<? echo ( $param{'invoice_id'} ) ?>" onkeypress="$('StartDocket').value='';$('EndDocket').value='';$('order_id').value='';$('project_id').value='';return input_handler( this, event);" onkeydown="if(event.keyCode == 13){f1.btnFunction.value='Go';f1.submit();}" />
 			<? echo ( button( 'InvoiceGo', { 'onclick'=>"f1.btnFunction.value='Go';f1.submit();", 'text'=>'Go' } ); ) ?>
 		</p>
+-->
 		<p>
 			<label>Project ID</label>
 			<? echo ( join(' ',
