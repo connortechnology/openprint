@@ -947,6 +947,13 @@ $openprint::log->debug("Templatetype: $$sig_specs{'rdbTemplateType'}") if DEBUG;
 						} # end if
 							
 						my $Fold = $Equipment->Fold({
+		( $$Imposition{image_orientation} eq 'Vertical' ? (
+							page_columns	=>	$Imposition->page_columns(),
+							page_rows		=>	$Imposition->page_rows(),
+		) : (
+							page_columns	=>	$Imposition->page_rows(),
+							page_rows		=>	$Imposition->page_columns(),
+		) ),
 								page_width		=>	$$sig_specs{txtFinalWidth},
 								type			=>	$$sig_specs{rdbTemplateType},
 								gsm				=>	$Paper->gsm(),
