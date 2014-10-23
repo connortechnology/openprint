@@ -532,11 +532,11 @@ sub page_rows {
 		} else {
 			$$self{spread_rows} = $_[0];
 		}
-		if ( $old_spread_rows and ( $old_spread_rows != $$self{spread_rows} ) ) {
+		if ( int($old_spread_rows) and ( $old_spread_rows != $$self{spread_rows} ) ) {
 			if ( $$self{image_orientation} eq 'Horizontal' ) {
-			$self->image_height( ( $self->image_height() / $old_spread_rows ) * $$self{spread_rows} );
+				$self->image_height( ( $self->image_height() / $old_spread_rows ) * $$self{spread_rows} );
 			} else {
-			$self->image_width( ( $self->image_width() / $old_spread_rows ) * $$self{spread_rows} );
+				$self->image_width( ( $self->image_width() / $old_spread_rows ) * $$self{spread_rows} );
 			}
 		}
 		#$self->layout_width(undef);
