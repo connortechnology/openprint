@@ -504,7 +504,7 @@ sub page_columns {
 		} else {
 			$$self{spread_columns} = $_[0];
 		}
-		if ( $old_spread_columns and ( $old_spread_columns != $$self{spread_columns} ) ) {
+		if ( int($old_spread_columns) and ( $old_spread_columns != $$self{spread_columns} ) ) {
 			# image_* and object_* are not rotated
 			if ( $$self{image_orientation} eq 'Horizontal' ) {
 				$self->image_height( ( $self->image_height() / $old_spread_columns ) * $$self{spread_columns} );
