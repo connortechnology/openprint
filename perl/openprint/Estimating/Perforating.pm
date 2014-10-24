@@ -437,8 +437,8 @@ $openprint::log->debug("How many impositions do we get? " . @imps ) if DEBUG;
 				$Results{Breakdown} .= sprintf('Too many out %d > max imposition (%d)<br/>', $$I{imposition}, $max_impo );
 				next;
 			} # end if
-			my $width = $I->layout_width();
-			my $height = $I->layout_height();
+			my ( $width, $height ) = ( ( $$imposition{imposition} == $$I{imposition} ) ? ( $I->sheet_width(), $I->sheet_height() ) : ( $I->layout_width(), $I->layout_height() ) );
+
 
 # If it's a press, then we can assume that it fits.
 			if (  

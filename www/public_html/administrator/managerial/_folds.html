@@ -36,8 +36,8 @@
 </tr>
 `, $rowclass, '/administrator/equipment/_fold.html?fold_id='.$$Fold{id}, $Fold->Equipment()->name(), $$Fold{name}, 
 $Fold->type(), $Fold->pages(), $Fold->folds(), $Fold->angles(),
-$Fold->min_columns(), $Fold->min_rows(), $Fold->min_imposition(),
-$Fold->max_columns(), $Fold->max_rows(), $Fold->max_imposition(),
+$Fold->min_imposition_columns(), $Fold->min_imposition_rows(), $Fold->min_imposition(),
+$Fold->max_imposition_columns(), $Fold->max_imposition_rows(), $Fold->max_imposition(),
 );
 
 		$rowclass = $rowclass ? '' : ' class="colRow"';
