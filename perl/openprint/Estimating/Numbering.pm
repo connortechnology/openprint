@@ -93,10 +93,17 @@ sub calc {
 				$$specs{Status} = 'uncalculated';
 				last;
 			} # end if
+# FIXME
+			foreach my $Price ( @{$$Results{Prices}} ) {
+				$$Results{UnitPrice} += ($$Price{ServicePrice}{Total} + $$Price{LastServicePrice}{Total} ) / $$specs{'txtQuantity'.$qty_index};
+			} # end foreach Price
 		
 			$$specs{'hdnBreakdown'.$qty_index} .= $$Results{Breakdown};
 			if ( $$Results{Equipment} ) {
 				$$specs{"ddmEquipment-$form-$qty_index"} = $$Results{Equipment}->id();
+$openprint::log->debug("Equipment is : " . $$Results{Equipment}->to_string() );
+			} else {
+				$openprint::log->error("NO Equipment in results!");
 			} # end if Equipment
 			if ( @{$$Results{Impositions}} == 1 ) {
 				$$specs{"txtImposition-$form-$qty_index"} = $Imposition->imposition();
@@ -167,9 +174,9 @@ sub signature_calc {
 	$Results{Status} = 'calculated';
 
 	my @side_one_colours = openprint::Estimating::Printing::get_colours( $sig_specs, 'SideOne' );
-	$openprint::log->debug("@side_one_colours : " . ( sets::intersection( 'Cyan','Magenta','Yellow','Black', @side_one_colours ) ) );
+	$openprint::log->debug("@side_one_colours : " . ( sets::intersection( 'Cyan','Magenta','Yellow','Black', @side_one_colours ) ) ) if DEBUG;
 	my $Press = $Imposition->Press();
-$openprint::log->debug("Got press $Press for " . $$sig_specs{"ddmPress$qty_index"});
+#$openprint::log->debug("Got press $Press for " . $$sig_specs{"ddmPress$qty_index"});
 	if ( ! $Press ) {
 		$Results{alert} .= 'No press.';
 		$Results{Status} = 'uncalculated';
@@ -229,7 +236,7 @@ ImpositionSet: for ( my $set_index = 0; $set_index < @Sets_Of_Impositions; $set_
 # If we are the last set
 							if ( $set_index+1 == @Sets_Of_Impositions ) {
 								my @new_imps = @$Impositions;
-								splice @new_imps, $imp_index, 1, cut_imposition( $new_imps[$imp_index] );
+								splice @new_imps, $imp_index, 1, openprint::imposition::cut( $new_imps[$imp_index] );
 								push @Sets_Of_Impositions, \@new_imps;
 							} # end if
 						} else {
@@ -345,7 +352,6 @@ ImpositionSet: for ( my $set_index = 0; $set_index < @Sets_Of_Impositions; $set_
 		$Results{Equipment} = $Results{Equipment};
 	} # end if
 
-	$Results{UnitPrice} = ($Results{ServicePrice}{Total} + $Results{LastServicePrice}{Total} ) / $$specs{'txtQuantity'.$qty_index};
 
 	return \%Results;
 } # end sub signature_calc
@@ -364,7 +370,7 @@ sub summary {
 sub display {
 	my ( $log, $dbh, $variable, $project_index, $service_index ) = @_;
 
-	my @possible_equipment = openprint::Equipment->find( Specifications => {'Numbering Capable'=>'Y'}, useinestimating=>1, order=>'lower(strName)');
+	my @possible_equipment = openprint::Equipment->find( Specifications => {'Numbering Capable'=>['Y','When Printing']}, useinestimating=>1, order=>'lower(strName)');
 	#my @possible_equipment = openprint::Equipment->find( 'Specifications' => {'ClipSealing Capable'=>'Y'}, 'useinestimating'=>1,'order'=>'lower(strName)');
 	@{$$variable{Equipment}} = @possible_equipment;
 } # end sub display
