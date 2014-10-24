@@ -4991,7 +4991,7 @@ $openprint::log->debug("Back From DieCutting");
 
 	my $numbering_results;
 	if ( $$project{HasNumbering} ) {
-		$numbering_results = openprint::Estimating::Numbering::signature_calc( $Project, @$project{'HasNumbering','NumberingSpecs'}, $specs, $qty_index, $Imposition );
+		$numbering_results = openprint::Estimating::Numbering::signature_calc( $Project, $$project{'NumberingSpecs'}, $specs, $qty_index, $Imposition );
 #foreach my $k ( keys %scoring_results ) {
 #$openprint::log->debug("Scoring: $k => $scoring_results{$k}");
 #}

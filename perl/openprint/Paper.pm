@@ -373,7 +373,7 @@ sub delete {
 	sql::execute( undef, undef, q{DELETE FROM StockMaterials WHERE id NOT IN (SELECT DISTINCT material_id FROM Papers)} );
 	
 	# Add record to audit log - action "Delete Paper".
-	new openprint::Log()->save({action=>'Delete Paper', note=>'Stock ID: '.$$self{'id'} });
+	new openprint::Log()->save({action=>'Delete Paper', note=>'Stock ID: '.$$self{'id'}  . $self->to_string() });
 	sql::end_transaction( undef, $ac );
 	
 } # end sub delete
