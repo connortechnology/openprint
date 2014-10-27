@@ -234,7 +234,7 @@ function filter_onChange( element, id, selected ) {
 					<th class="interpolate">Interpolate</th>
 					<th class="buttons">
 <? echo ( 
-	ssi::writeButton( $log, $dbh, 'Add', 'add.gif',q`new Ajax.Request('/administrator/equipment/_specification.html', { 
+	button( 'Add', { onclick=>q`new Ajax.Request('/administrator/equipment/_specification.html', { 
 		parameters: {
 			action: 'add',
 			equipment_id: $('ddmEquipment').value,
@@ -244,7 +244,7 @@ function filter_onChange( element, id, selected ) {
 			$('specifications_body').insert({top: response.responseText} );
 			SortableTable.load();	
 			} 
-	} );`,'','Add' ); 
+	} );`,text=>'Add' } ); 
 ) ?>
 </th>
 				</tr>
@@ -253,7 +253,7 @@ function filter_onChange( element, id, selected ) {
 			<? echo ( 
 				my $html;
 				@{$$variable{'Specifications'}} = $$variable{'Equipment'}->Specifications();
-				my $specification_html = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/administrator/equipment/_specification.html' );
+				my $specification_html = slurp_content( '/administrator/equipment/_specification.html' );
 				while ( $$variable{'Specification'} = shift @{$$variable{'Specifications'}} ) {
 					$html .= variable_substitution( \$specification_html, $variable );
 					$$variable{rowclass} = $$variable{rowclass} ? '' : ' class="colRow"';

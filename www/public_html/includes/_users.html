@@ -5,5 +5,5 @@
 		( $param{usergroup} ? ( 'usergroup' => $param{'usergroup'} ) : () ),
 		'order'	=>	'lower(firstname),lower(lastname)',
 	);
-	return ssi::make_drop_down( [ '', 'no one', map { $_->id(), $_->name() } @Users ], @Users == 1 ? $Users[0]{'id'} : $param{'selected_id'} );
+	return make_drop_down( [ '', 'no one', map { $_->id(), $_->name() } @Users ], @Users == 1 ? $Users[0]{'id'} : $param{'selected_id'} );
 ) ?>

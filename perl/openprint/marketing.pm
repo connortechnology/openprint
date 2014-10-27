@@ -22,6 +22,7 @@ require openprint::MarketingCategory;
 require openprint::Banner;
 require openprint::Survey;
 require openprint::account;
+require openprint::Sales_Log;
 
 use vars qw( $r $log $dbh %variable %param %session %config );
 *r = \$openprint::r;
@@ -179,6 +180,42 @@ sub subscriptions {
 		} # end if	
 	} # end if	
 } # end sub subscriptions
+
+sub sales_log {
+	ssi::setup_date_select( '/marketing/sales_log.html', 'called_on_start', -30 );
+	ssi::setup_date_select( '/marketing/sales_log.html', 'called_on_end', '' );
+} # end sub sales_log
+
+sub _sales_log {
+	    ssi::save_params( '/marketing/sales_log.html', (
+                ( map { 'called_on_start_' . $_ } ( 'year','month','day' ) ),
+                ( map { 'called_on_end_' . $_ } ( 'year','month','day' ) ),
+				'company_id', 'user_id'
+		) );
+
+} # end sub _sales_log
+
+sub _sales_log_line {
+	 if ( $param{action} eq 'add' ) {
+        my $TZ = DateTime::TimeZone->new( name => $openprint::config{Timezone} );
+        my $called_on_datetime = DateTime->new( time_zone => $TZ,
+                ( map { $_ => int($param{'called_on_'.$_ }) } ( 'year', 'month', 'day', 'hour','minute' ) ),
+                );
+
+        my $parser = 'DateTime::Format::Pg';
+
+        $param{called_on} = $parser->format_datetime( $called_on_datetime );
+
+		my $Log = $variable{Log} = new openprint::Sales_Log();
+		$variable{error} .= $Log->save({
+			salesrep_id	=>	$session{user_id},
+			company_id	=>	$param{company_id},
+			user_id		=>	$param{user_id},	
+			notes		=>	$param{notes},
+			called_on	=>	$param{called_on},	
+			});
+	} # end params{action}
+} # end sub _sales_log_line
 
 1;
 __END__
