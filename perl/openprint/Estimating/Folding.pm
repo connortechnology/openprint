@@ -25,7 +25,7 @@ require openprint::Estimating::Perforating;
 
 use vars qw( @folds %fold_types );
 
-use constant DEBUG => 1;
+use constant DEBUG => 0;
 use constant DEBUG_NEEDS => 0;
 
 my @equipment;
@@ -1936,28 +1936,30 @@ sub reduce_impositions {
 					my $mod_cols = $I2->columns() % 2;
 					my $mod_rows = $I2->rows() % 2;
 
-					if ( ! ( $mod_cols or $mod_rows ) ) {
-						if ( $$I2{image_orientation} eq 'Horizontal' ) {
+					if ( $$I2{image_orientation} eq 'Horizontal' ) {
+						if ( ! $mod_rows ) {	
 							$I2->rows( $I2->rows()/2 );
 							$I2->quantity( $I2->quantity() * 2 );
 							$extra = 1;
 							splice @new, $i, 1, $I2;
-						} else {
+						} elsif ( $I2->rows() > 1 ) {
+							$I2->quantity( $I2->quantity() * $I2->rows() );
+							$I2->rows(1);
+							$extra = 1;
+							splice @new, $i, 1, $I2;
+						} # end if
+					} else {
+						if ( ! $mod_cols ) {
 							$I2->columns( $I2->columns()/2 );
 							$I2->quantity( $I2->quantity() * 2 );
 							$extra = 1;
 							splice @new, $i, 1, $I2;
+						} elsif ( $I2->columns() ) {
+							$I2->quantity( $I2->quantity() * $I2->columns() );
+							$I2->columns(1);
+							$extra = 1;
+							splice @new, $i, 1, $I2;
 						} # end if
-					} elsif ( ! $mod_cols ) {
-						$I2->columns( $I2->columns()/2 );
-						$I2->quantity( $I2->quantity() * 2 );
-						$extra = 1;
-						splice @new, $i, 1, $I2;
-					} elsif ( ! $mod_rows ) {
-						$I2->rows( $I2->rows()/2 );
-						$I2->quantity( $I2->quantity() * 2 );
-						$extra = 1;
-						splice @new, $i, 1, $I2;
 					} # end if
 				} # end if
 			} # end foreach I
@@ -2037,23 +2039,23 @@ if ( 0 ) {
 sub cut_imposition {
 	my ( $I ) = @_;
 	if ( ( $$I{spread_size} >= 4 ) and ( $$I{image_orientation} eq 'Horizontal' ) and ( $$I{rows} > 1 ) ) {
-		$openprint::log->debug(sprintf("Cutting imposition down from %dx%d=%dout to %d %dx1=%d ", @$I{'columns','rows','imposition'}, @$I{'rows','columns','columns'} ) ) if DEBUG;
+		$openprint::log->debug(sprintf("1 Cutting imposition down from %dx%d=%dout to %d %dx1=%d ", @$I{'columns','rows','imposition'}, @$I{'rows','columns','columns'} ) ) if DEBUG;
 		# For folding purposes, can only fold where spines are aligned
 		return map { my $i = $I->copy(); $i->rows(1); $i; } ( 1 .. $$I{rows} );
 	} elsif ( ( $$I{spread_size} >= 4 ) and ( $$I{image_orientation} eq 'Vertical' ) and ( $$I{columns} > 1 ) ) {
-		$openprint::log->debug(sprintf("Cutting imposition down from %dx%d=%dout to %d 1x%d=%d ", @$I{'columns','rows','imposition'}, @$I{'columns','rows','rows'} ) ) if DEBUG;
+		$openprint::log->debug(sprintf("2 Cutting imposition down from %dx%d=%dout to %d 1x%d=%d ", @$I{'columns','rows','imposition'}, @$I{'columns','rows','rows'} ) ) if DEBUG;
 		return map { my $i = $I->copy(); $i->columns(1); $i; } ( 1 .. $$I{columns} );
 	} elsif ( ( $$I{columns} > $$I{rows} ) or ( ( $$I{columns} == $$I{rows} ) and ( $$I{image_orientation} eq 'Vertical' ) ) ) {
 		my ( $i1, $i2 ) = ( $I->copy(), $I->copy );
 		$i1->columns(int($$I{columns}/2 ));
 		$i2->columns( $$I{columns} - $$i1{columns} );
-		$openprint::log->debug(sprintf("Cutting imposition down from %dx%d=%dout to %dx%d=%d and %dx%d=%d", @$I{'columns','rows','imposition'}, @$i1{'columns','rows','imposition'}, @$i2{'columns','rows','imposition'} ) ) if DEBUG;
+		$openprint::log->debug(sprintf("3 Cutting imposition down from %dx%d=%dout to %dx%d=%d and %dx%d=%d", @$I{'columns','rows','imposition'}, @$i1{'columns','rows','imposition'}, @$i2{'columns','rows','imposition'} ) ) if DEBUG;
 		return ( $i1, $i2 );
 	} else {
 		my ( $i1, $i2 ) = ( $I->copy(), $I->copy );
 		$i1->rows(int $$I{rows}/2);
 		$i2->rows( $$I{rows} - $$i1{rows} );
-		$openprint::log->debug(sprintf("Cutting imposition down from %dx%d=%dout to %dx%d=%d and %dx%d=%d", @$I{'columns','rows','imposition'}, @$i1{'columns','rows','imposition'}, @$i2{'columns','rows','imposition'} ) ) if DEBUG;
+		$openprint::log->debug(sprintf("4 Cutting imposition down from %dx%d=%dout to %dx%d=%d and %dx%d=%d", @$I{'columns','rows','imposition'}, @$i1{'columns','rows','imposition'}, @$i2{'columns','rows','imposition'} ) ) if DEBUG;
 		return ( $i1, $i2 );
 	} # end if
 } # end sub cut_imposition
