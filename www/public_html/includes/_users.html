@@ -1,7 +1,7 @@
 <? echo (
 	my @Users = openprint::User->find(
-		( $param{type} ? ( 'type'=>$param{'type'} ) : () ),
-		( $param{'company_id'} ? ( 'company_id'=>$param{'company_id'} ) : () ),
+		( $param{type} ? ( type=>$param{type} ) : () ),
+		( $param{company_id} ? ( company_id=>$param{company_id} ) : () ),
 		( $param{usergroup} ? ( 'usergroup' => $param{'usergroup'} ) : () ),
 		'order'	=>	'lower(firstname),lower(lastname)',
 	);

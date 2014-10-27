@@ -197,14 +197,17 @@ sub _sales_log {
 
 sub _sales_log_line {
 	 if ( $param{action} eq 'add' ) {
-        my $TZ = DateTime::TimeZone->new( name => $openprint::config{Timezone} );
-        my $called_on_datetime = DateTime->new( time_zone => $TZ,
-                ( map { $_ => int($param{'called_on_'.$_ }) } ( 'year', 'month', 'day', 'hour','minute' ) ),
-                );
 
-        my $parser = 'DateTime::Format::Pg';
+		if ( Date::Calc::check_date( @param{ map { 'called_on_'.$_ } ( 'year','month','day' ) } ) ) {
+			my $TZ = DateTime::TimeZone->new( name => $openprint::config{Timezone} );
+			my $called_on_datetime = DateTime->new( time_zone => $TZ,
+					( map { $_ => int($param{'called_on_'.$_ }) } ( 'year', 'month', 'day', 'hour','minute' ) ),
+					);
 
-        $param{called_on} = $parser->format_datetime( $called_on_datetime );
+			my $parser = 'DateTime::Format::Pg';
+
+			$param{called_on} = $parser->format_datetime( $called_on_datetime );
+		} # end if
 
 		my $Log = $variable{Log} = new openprint::Sales_Log();
 		$variable{error} .= $Log->save({
@@ -212,7 +215,7 @@ sub _sales_log_line {
 			company_id	=>	$param{company_id},
 			user_id		=>	$param{user_id},	
 			notes		=>	$param{notes},
-			called_on	=>	$param{called_on},	
+			( $param{called_on} ? ( called_on	=>	$param{called_on} ) : () ),	
 			});
 	} # end params{action}
 } # end sub _sales_log_line

@@ -5,7 +5,7 @@ use openprint ();
 require openprint::Object;
 
 use vars qw( $debug $table $serial %fields %transforms %defaults );
-$debug = 0;
+$debug = 1;
 $table = 'sales_logs';
 $serial = 'sales_logs_id_seq';
 %fields = (
@@ -17,6 +17,8 @@ $serial = 'sales_logs_id_seq';
 	notes		=>	'notes',
 );
 %defaults = (
+	user_id		=>	undef,
+	company_id	=>	undef,
 	date_time	=>	"'NOW()'",
 	salesrep_id	=>	q`$openprint::session{user_id}`,
 );
