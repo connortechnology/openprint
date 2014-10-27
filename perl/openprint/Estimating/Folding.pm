@@ -25,7 +25,7 @@ require openprint::Estimating::Perforating;
 
 use vars qw( @folds %fold_types );
 
-use constant DEBUG => 0;
+use constant DEBUG => 1;
 use constant DEBUG_NEEDS => 0;
 
 my @equipment;
@@ -1250,11 +1250,13 @@ $openprint::log->debug(qq`Wrong imposition: $$specs{"FoldImposition-$form-$qty_i
 						
 					} # end if ! found
 				} # end foreach index
-				if ( $override_pages > $SignatureImposition->imposition() * $SignatureImposition->pages() ) {
-					$$specs{alert} .= "You seem to be specifying more pages for folding than were printed for form $form quantity $qty_index<br/>";
-				} elsif ( $override_pages < $SignatureImposition->imposition() * $SignatureImposition->pages() ) {
-					$$specs{alert} .= "You seem to be specifying fewer pages for folding than were printed for form $form quantity $qty_index<br/>";
-				} # end if
+				if ( $$sig_specs{txtSignatureType} ) {
+					if ( $override_pages > $SignatureImposition->imposition() * $SignatureImposition->pages() ) {
+						$$specs{alert} .= "You seem to be specifying more pages for folding than were printed for form $form quantity $qty_index<br/>";
+					} elsif ( $override_pages < $SignatureImposition->imposition() * $SignatureImposition->pages() ) {
+						$$specs{alert} .= "You seem to be specifying fewer pages for folding than were printed for form $form quantity $qty_index<br/>";
+					} # end if
+				} # endif
 
 				foreach my $k ( keys %folds ) {
 					$all_found = 0 if ! $folds{$k}[0]{found};
