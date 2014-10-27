@@ -959,6 +959,10 @@ if ( ! sets::isin( 'uploads', \@tables ) ) {
 	if ( ! exists $$data{'type'} ) {
 		$dbh->do(q`ALTER TABLE uploads add type text`);
 	} # end if
+	if ( ! exists $$data{complete} ) {
+		$log->debug("Add complete BOOLEAN to uploads");
+		$dbh->do(q`ALTER TABLE uploads add complete BOOLEAN`);
+	} # end if
 }
 if ( ! sets::isin( 'pressactivities', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, '../openprint/sql/PressActivities.sql' ) ) or die;

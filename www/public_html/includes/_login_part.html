@@ -15,18 +15,14 @@
 				</li>
 				<li>
 					<label>Remember me</label>
-					<input type="radio" id="rdbRememberMeY" name="rdbRememberMe" value="Y" <? echo ( ssi::checked( $param{'rdbRememberMe'} eq 'Y' ); ) ?> />
-					<label class="radio" for="rdbRememberMeY">Yes</label>
-					<input type="radio" id="rdbRememberMeN" name="rdbRememberMe" value="N" <? echo ( ssi::checked( $param{'rdbRememberMe'} ne 'Y' ); ) ?> />
-					<label class="radio" for="rdbRememberMeN">No</label>
+					<? echo ( radio( 'rdbRememberMe', ['Y','Yes','N','No'], ( $param{rdbRememberMe} || $config{rdbRememberMe} || 'N' ) ); ) ?>
 				</li>
 			</ul>
 		</div>
 		<p class="buttons">
 			<? echo ( join("\n",
-						ssi::button( 'MainLogin', { onclick=>q`LoginForm.btnFunction.value='Login';checkLoginData(LoginForm.email,LoginForm.password);`, text=>'Login' } ),
-
-						ssi::button( 'MainForgot', { onclick=>q`LoginForm.btnFunction.value='Forgotten Password';checkLoginData(LoginForm.email);`, text=>'Forgotten Password' } ),
+						button( 'MainLogin', { onclick=>q`LoginForm.btnFunction.value='Login';checkLoginData(LoginForm.email,LoginForm.password);`, text=>'Login' } ),
+						button( 'MainForgot', { onclick=>q`LoginForm.btnFunction.value='Forgotten Password';checkLoginData(LoginForm.email);`, text=>'Forgotten Password' } ),
 						); ) ?>
 		</p>
 	</fieldset>

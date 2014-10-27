@@ -779,7 +779,7 @@ sub servicetype_id {
 
 sub ServiceType {
 	my ( $self, $s_id ) = @_;
-$openprint::log->error("No s_id passed to ServiceType") if ! $s_id;
+$openprint::log->error("No s_id passed to ServiceType for project $$self{id}") if ! $s_id;
 	return new openprint::ServiceType( $self->servicetype_id( $s_id ) );
 } # end sub ServiceType
 

@@ -20,7 +20,7 @@ require openprint::Payment;
 require openprint::Tax;
 require openprint::Order_Notification;
 
-$debug = 1;
+$debug = 0;
 
 $table = 'orders';
 $serial = 'orders_id_seq';
@@ -75,7 +75,9 @@ $serial = 'orders_id_seq';
 %find_fields = (
 	project_id	=>	'(SELECT lngprojectindex FROM Order_Contents WHERE OrderIndex=Orders.id)',
 	status		=>	'(SELECT name FROM Order_Statuses WHERE order_statuses.id=status_id)',
-	invoice_id	=>	'(SELECT invoice_id FROM order_invoices WHERE order_id=orders.id)',
+	#invoice_id	=>	'(SELECT invoice_id FROM order_invoices WHERE order_id=orders.id)',
+invoice_id => 'id = (SELECT order_id FROM order_invoices WHERE invoice_id=?)',
+invoice_num => 'id = (SELECT order_id FROM order_invoices WHERE invoice_id=(SELECT invoices.id FROM Invoices WHERE num=?))',
 );
 
 %defaults = (

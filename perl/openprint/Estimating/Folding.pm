@@ -58,7 +58,7 @@ sub variables {
 					);
 			foreach my $fold_index ( 1 .. 4 ) {
 				push @v, map { join('-', $_, $form, $qty_index, $fold_index ) } ( 
-						'FoldPageQty', 'FoldQty', 'FoldImposition', 'FoldColumns', 'FoldRows', 'FoldType', 'FoldFolds', 'FoldAngles', 'FoldRunspeed',
+						'FoldPageQty', 'FoldQty', 'FoldImposition', 'FoldColumns', 'FoldRows', 'FoldType', 'FoldFolds', 'FoldAngles', 'FoldRunspeed', 'FoldImpressions',
 				);
 			} # end foreach
 #foreach my $fold_type ( keys %fold_types ) {
@@ -830,6 +830,11 @@ if ( 0 ) {
 					next;
 				} # end if
 				next if $$Set_Of_Impositions[0]{quantity} != 1;
+			} elsif ( $capable eq 'When Stitching' ) {
+				if ( scalar @$Set_Of_Impositions != 1 ) {
+					$openprint::log->debug("Sets of impos != 1 for $$Equipment{strid}") if DEBUG;
+					next;
+				} # end if
 			} # end if
 			# At this point, we don't modify the Set_Of_Impositions, we modify the equipment-specific copy of it.
 #$openprint::log->debug("Impositions in this set: " . @Impositions );
@@ -893,8 +898,13 @@ if ( 0 ) {
 
 					my $Fold = $Equipment->Fold( {
 							pages			=>	$Imposition->pages(),
+		( $$Imposition{image_orientation} eq 'Vertical' ? (
 							page_columns	=>	$Imposition->page_columns(),
 							page_rows		=>	$Imposition->page_rows(),
+		) : (
+							page_columns	=>	$Imposition->page_rows(),
+							page_rows		=>	$Imposition->page_columns(),
+		) ),
 							page_width		=>	$Imposition->page_width(),
 							page_height		=>	$Imposition->page_height(),
 							spine_direction	=>	$$Imposition{image_orientation},
@@ -937,6 +947,13 @@ $openprint::log->debug("Templatetype: $$sig_specs{'rdbTemplateType'}") if DEBUG;
 						} # end if
 							
 						my $Fold = $Equipment->Fold({
+		( $$Imposition{image_orientation} eq 'Vertical' ? (
+							page_columns	=>	$Imposition->page_columns(),
+							page_rows		=>	$Imposition->page_rows(),
+		) : (
+							page_columns	=>	$Imposition->page_rows(),
+							page_rows		=>	$Imposition->page_columns(),
+		) ),
 								page_width		=>	$$sig_specs{txtFinalWidth},
 								type			=>	$$sig_specs{rdbTemplateType},
 								gsm				=>	$Paper->gsm(),
@@ -1023,8 +1040,13 @@ $openprint::log->debug("No Fold") if DEBUG;
 							$openprint::log->debug("Fits") if DEBUG;
 							my $Fold = $Equipment->Fold({
 									pages			=>	$Imposition->pages(),
-									page_columns	=>	$Imposition->page_columns(),
-									page_rows		=>	$Imposition->page_rows(),
+		( $$Imposition{image_orientation} eq 'Vertical' ? (
+							page_columns	=>	$Imposition->page_columns(),
+							page_rows		=>	$Imposition->page_rows(),
+		) : (
+							page_columns	=>	$Imposition->page_rows(),
+							page_rows		=>	$Imposition->page_columns(),
+		) ),
 									spine_direction	=>	$$Imposition{'image_orientation'},
 									stitching		=>	(($$services{'SaddleStitching'} or $$services{'LoopStitching'}) ? 1 : 0),
 									perfectbind		=>	($$services{'PerfectBound'} ? 1 : 0),
@@ -1298,6 +1320,8 @@ $openprint::log->debug(qq`Wrong imposition: $$specs{"FoldImposition-$form-$qty_i
 					$run_qty += $Fold->run_overs_units() eq 'Percent' ? $run_qty * ($Fold->run_overs()/100): $Fold->run_overs();
 					$openprint::log->debug("Run Overs runqty: $run_qty impo qty: $impo_qty mipo: $imposition out qty: ".$$specs{"txtQuantity$qty_index"}." Sig imp: $$SignatureImposition{imposition}out	of fold $$Fold{type} on " . $Equipment->name()) if DEBUG;
 				} # end if
+				$$Imposition{impressions} = $run_qty;
+				$fold_specs{"FoldImpressions-$form-$qty_index-$fold_index"} = $run_qty;
 
 				my $width_folds;
 				my $height_folds;
@@ -1780,7 +1804,7 @@ sub signature_summary {
 					"FoldImposition-$form-$qty_index-$fold_index",
 					"FoldType-$form-$qty_index-$fold_index"} );
 		} # end foreach
-		return join(', ', sort { $a cmp $b } @folds).' on ' . $Equipment->name();
+		return join('<br/>', ( ' on ' . $Equipment->name() ), sort { $a cmp $b } @folds);
 		} # end if
 	} # end if
 } # end sub signature_summary
@@ -1796,7 +1820,7 @@ sub summary {
 		for ( my $sig_index = 0; $sig_index < @signatures; $sig_index += 1 ) {
 			my $s_s_id = $signatures[$sig_index];
 			my $sig_specs = openprint::service::get_specs_ref( $Project, $s_s_id );
-	my $form = $$sig_specs{SignatureIndex};
+			my $form = $$sig_specs{SignatureIndex};
 			my $sig_count = 1;
 
 			if ( $sig_index < @signatures - 1 ) {
@@ -2096,6 +2120,8 @@ sub cut_spreads {
 			#} else {
 			#} # end if
 		#} else {
+
+
 			if ( ( $I->spread_columns() > 1 ) and ( $I->spread_columns() % 2 ) ) {
 				my $i1 = $I->copy();
 				$i1->spread_columns(1);
@@ -2106,7 +2132,7 @@ sub cut_spreads {
 				} else {
 					$i1->image_height( $I->image_height()/$I->spread_columns() );
 				}
-		$openprint::log->debug(sprintf('Cutting pages down from %dx%d to %dx%d', $I->quantity(), $I->pages(), $i1->quantity(), $i1->pages() ) ) if DEBUG;
+		$openprint::log->debug(sprintf('Cutting pages down from %d@%dpg to %d@%dpg', $I->quantity(), $I->pages(), $i1->quantity(), $i1->pages() ) ) if DEBUG;
 				push @results, [ $i1 ];
 
 				my $i2 = $I->copy();
@@ -2208,6 +2234,9 @@ sub get_Folds {
 			$Imposition->columns( $$folding_specs{"FoldColumns-$form-$qty_index-$fold_index"} );
 			$Imposition->rows( $$folding_specs{"FoldRows-$form-$qty_index-$fold_index"} );
 			$Imposition->quantity( $$folding_specs{"FoldQty-$form-$qty_index-$fold_index"} );
+			
+			$$Imposition{impressions} = $$folding_specs{"FoldImpressions-$form-$qty_index-$fold_index"};
+			$$Imposition{impressions} = ( $$folding_specs{"txtQuantity$qty_index"} / $Source_Imposition->imposition() ) * ( $Imposition->quantity() ) if ! $$Imposition{impressions};
 			my $Folder = new openprint::Equipment( $$folding_specs{"ddmEquipment-$form-$qty_index"} );
 			$Imposition->Press( $Folder );
 
@@ -2231,10 +2260,18 @@ sub get_Folds {
 			if ( ! $Fold ) {
 				$_ = Data::Dumper::Dumper($find);
 				$openprint::log->error("CAnt get fold! on " . $Folder->to_string() . $_);
-Carp::cluck( "CAnt get fold! on " . $Folder->to_string() . $_);
+Carp::cluck( "CAnt get fold! on " . $Folder->to_string() . $_ . join("\n", map { $_ . '=>' . $openprint::param{$_} } keys %openprint::param ));
+
 			} else {
 				$openprint::log->debug("Got FOld: " . $Fold->to_string() ) if DEBUG;
 				$Imposition->Fold( $Fold );
+				if ( $Imposition->image_orientation() eq 'Vertical' ) {
+				$Imposition->page_rows( $Fold->page_rows() );
+				$Imposition->page_columns( $Fold->page_columns() );
+				} else {
+				$Imposition->page_rows( $Fold->page_columns() );
+				$Imposition->page_columns( $Fold->page_rows() );
+				} # end if
 				if ( $Fold->pages() ) {
 					$$Imposition{pages} = $Fold->pages();
 					$Imposition->page_quantity( $$folding_specs{"FoldPageQty-$form-$qty_index-$fold_index"} );

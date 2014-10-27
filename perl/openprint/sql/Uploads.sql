@@ -10,5 +10,6 @@ CREATE TABLE Uploads (
 	user_id		INTEGER, FOREIGN KEY (user_id) REFERENCES Users (id),
 	file_path	TEXT,
 	type		TEXT,
+	complete	BOOLEAN,
 	PRIMARY KEY (id)
 );
