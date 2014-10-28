@@ -1936,25 +1936,25 @@ sub reduce_impositions {
 					my $mod_cols = $I2->columns() % 2;
 					my $mod_rows = $I2->rows() % 2;
 
-					if ( $$I2{image_orientation} eq 'Horizontal' ) {
+					if ( ( ( $$I2{image_orientation} eq 'Horizontal' ) and ( $I2->rows() > 1 ) ) or ( $I2->cols() == 1 ) ) {
 						if ( ! $mod_rows ) {	
 							$I2->rows( $I2->rows()/2 );
 							$I2->quantity( $I2->quantity() * 2 );
 							$extra = 1;
 							splice @new, $i, 1, $I2;
-						} elsif ( $I2->rows() > 1 ) {
+						} else {
 							$I2->quantity( $I2->quantity() * $I2->rows() );
 							$I2->rows(1);
 							$extra = 1;
 							splice @new, $i, 1, $I2;
 						} # end if
-					} else {
+					} elsif ( $I2->cols() > 1 ) {
 						if ( ! $mod_cols ) {
 							$I2->columns( $I2->columns()/2 );
 							$I2->quantity( $I2->quantity() * 2 );
 							$extra = 1;
 							splice @new, $i, 1, $I2;
-						} elsif ( $I2->columns() ) {
+						} else {
 							$I2->quantity( $I2->quantity() * $I2->columns() );
 							$I2->columns(1);
 							$extra = 1;
