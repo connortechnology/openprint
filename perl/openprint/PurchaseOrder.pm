@@ -91,6 +91,7 @@ $serial = 'purchaseorders_id_seq';
 );
 
 %transforms = (
+	id			=>	[ 's/\D//g', '<2147483647' ],
 );
 
 %defaults = (
