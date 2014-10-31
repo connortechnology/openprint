@@ -31,6 +31,7 @@ use MIME::QuotedPrint qw(encode_qp);
 use MIME::Base64 qw(encode_base64);
 use Encode ();
 use Data::Dumper;
+use Date::Parse;
 
 my @banned_files = ( 'ftpchk3.txt' );
 my $program = basename($0);
@@ -261,6 +262,25 @@ sub check_scoreboard {
 		} # end if
 
 		if ( ( ! sets::isin( $username, \@users ) ) or ( $config{max_files} and ( @{$uploads{$username}} > $config{max_files} ) ) ) {
+
+$log->debug("Max_files: $config{max_files}");
+			
+			if ( $config{wait_before_emailing} ) {
+				# Assume the last file is the most recent
+				my $Upload = $uploads{$username}[@{$uploads{$username}}-1];
+				my $timestamp = Date::Parse::str2time($$Upload{timestamp});
+				my $time = time;
+				my $diff = $time - $timestamp;
+				$log->debug("Timestamp: $timestamp < $time diff: $diff" );
+				if ( $diff < $config{wait_before_emailing} ) {
+					$log->debug("waiting before emailing for more uploads");
+					next;
+				} else {
+					$log->debug("Not waiting before emailing for more uploads $config{wait_before_emailing}");
+				} # end if
+			} else {
+				$log->debug("No wait_before_emailing set");
+			} # end if wait_before_emailing
 			$log->debug( "Sending mail for $username\n" );
 # No longer logged in, so we can process and send emails.
 			send_email( @{$uploads{$username}} );
@@ -311,6 +331,7 @@ sub send_email {
 
 		my $regexp = $project_files_path.'/'.$company_name.'/(.+)';
 		@$upload{proper_file_path} = $file =~ /^$regexp$/;
+		$$upload{proper_file_path} = $$upload{file_str} if ! $$upload{proper_file_path};
 
 		#if ( ! $company_name ) {
 			#my $new_file_path = $config{file_path};
