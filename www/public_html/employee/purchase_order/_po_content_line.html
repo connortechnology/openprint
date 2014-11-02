@@ -6,10 +6,6 @@
 	my $html .= sprintf('<div class="item" id="line-%1$d">', $C->id() );
 	$html .= '<div class="buttons">'.button( 'del-'.$C->id(), { onclick=>qq`new Ajax.Request('/employee/purchase_order/_po_content_line.html?action=delete&amp;id=$$C{'id'}', { onSuccess: function(){var tr = \$('line-$$C{id}'); tr.remove();update_totals(\$('f1'));} } );`,text=>'-', title=>'Delete' } );
 	$html .= sprintf(q`<input type="hidden" name="type_id-%1$d" id="type_id-%1$d" value="%3$d"/><input type="hidden" id="type-%1$d" name="type-%1$d" value="%2$s"/></div>`, $C->id(), $C->type(), $C->type_id() );
-	if ( ! $C->type_id() ) {
-		$log->error("PO Content with no type.");
-		next;
-	} # end if
 
 	if ( $C->Type()->type() eq 'Roll Stock' ) {
 		my ( $type, $name );

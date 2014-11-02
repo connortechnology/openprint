@@ -5,7 +5,7 @@ use strict;
 use Date::Calc ();
 
 use constant DAYS_TO_KEEP_JUNK => 60*60*24*7;
-use constant DAYS_TO_KEEP_TRASH => 60*60*24*365*2;
+use constant DAYS_TO_KEEP_TRASH => 60*60*24*365*1;
 use constant DEBUG => 0;
 
 my $domain = $ARGV[0] ? $ARGV[0] : '';
@@ -32,7 +32,7 @@ my $postfix_gid = getgrnam('postfix');
 foreach my $user ( @users ) {
 	next if $user =~ /^\./;
 
-	foreach my $folder ( '.Junk', '.SpamKiller' ) {
+	foreach my $folder ( '.Junk', '.SpamKiller', '.Junk E-mail' ) {
 		if ( ! -e "$spool_path$user/$folder" ) {
 			next;
 		} 
@@ -56,14 +56,14 @@ foreach my $user ( @users ) {
                 last;
             } # end if
 			if ( time - $mtime > $DAYS_TO_KEEP_JUNK ) {
-				print "/usr/bin/sa-learn --spam $spool_path$user/$folder/cur/$message\n";
-				`/usr/bin/sa-learn --spam $spool_path$user/$folder/cur/$message`;
+				print "/usr/bin/sa-learn --spam \"$spool_path$user/$folder/cur/$message\"\n";
+				`/usr/bin/sa-learn --spam "$spool_path$user/$folder/cur/$message"`;
 				unlink "$spool_path$user/$folder/cur/$message";
 			} # end if
 		} # end foreach
 
 	} # end foreach folder
-	foreach my $folder ( '.Trash' ) {
+	foreach my $folder ( '.Trash', '.Deleted Messages' ) {
 		if ( ! -e "$spool_path$user/$folder" ) {
 			next;
 		}
