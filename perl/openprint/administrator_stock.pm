@@ -361,7 +361,7 @@ sub import_export {
 			my $csv = Text::CSV_XS->new();
 			while ( <$io> ) {
 				my $status = $csv->parse($_);
-				my ( $paper_id, $owner, $manufacturer, $group, $brand, $finish, $colour, $weight, $mweight, $gsm, $calliper, $type, $width, $height, $basis_width, $basis_height, $grain_direction, $supplier, $double_sided, $cuttable, $multipart, $perfecting, $scoring, $bladecleaning, $grade, $spp, $supplied, $digital, $full_packages, $minimum_order, $inventory_number, $material, $message, $recommendations ) = misc::trim($csv->fields());
+				my ( $paper_id, $owner, $manufacturer, $group, $brand, $finish, $colour, $weight, $quality, $mweight, $gsm, $calliper, $type, $width, $height, $basis_width, $basis_height, $grain_direction, $supplier, $double_sided, $cuttable, $multipart, $perfecting, $scoring, $bladecleaning, $grade, $spp, $supplied, $digital, $full_packages, $minimum_order, $inventory_number, $material, $message, $recommendations ) = misc::trim($csv->fields());
 
 				next if ! $paper_id;
 
@@ -391,6 +391,7 @@ sub import_export {
 				$Paper->finish( $finish );
 				$Paper->colour( $colour );
 				$Paper->weight( $weight );
+				$Paper->quality( $quality );
 				$Paper->mweight( $mweight );
 				$Paper->gsm( $gsm );
 				$Paper->calliper( $calliper );
