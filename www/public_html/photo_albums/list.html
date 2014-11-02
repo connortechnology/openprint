@@ -5,7 +5,7 @@
 			<fieldset class="filters"><legend>Photo Albums</legend>
 				<div class="content">
 					<ul>
-					<? if ( sets::isin( $session{'user_type'}, [ 'E', 'A' ] ) ) ?>
+					<? if ( sets::isin( $session{user_type}, [ 'E', 'A' ] ) ) ?>
 					<li><label>User</label>
 						<select name="user_id" id="user_id" onchange="new Ajax.Updater('Results','_list.html', { parameters: this.form.serialize() } );">
 							<option value=""> all </option>
@@ -14,7 +14,7 @@
 							) ?>
 						</select>
 					</li>
-					<? endif ( sets::isin( $session{'user_type'}, [ 'E', 'A' ] ) ) ?>
+					<? endif ( sets::isin( $session{user_type}, [ 'E', 'A' ] ) ) ?>
 					</ul>
 				</div>
 				<p class="buttons">

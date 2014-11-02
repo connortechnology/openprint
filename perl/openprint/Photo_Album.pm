@@ -6,7 +6,7 @@ package openprint::Photo_Album;
 our @ISA = qw( openprint::Object );
 
 use vars qw( $debug $table $serial %fields %find_fields %transforms %defaults );
-$debug = 0;
+$debug = 1;
 $serial = 'photo_albums_id_seq';
 $table = 'photo_albums';
 
@@ -22,6 +22,7 @@ $table = 'photo_albums';
 );
 %find_fields = (
 	asset_id	=>	'(SELECT asset_id FROM Photos_in_Albums WHERE album_id=photo_albums.id)',
+	company_id	=>	'(SELECT company_id FROM Users WHERE users.id=user_id)',
 );
 
 %defaults = (

@@ -324,6 +324,13 @@ sub _photo_actions {
 			$variable{'error'} .= $?;
 			$log->error( 'error rotating ' . $? );
 		} # end if
+		# Need to remove all sized versions
+		foreach my $size ( 'small','medium','large' ) {
+			my $path = $Asset->sized_path( $size );
+			if ( -e $path ) {
+				unlink $path;
+			} # end if
+		} # end foreach
 	} # end if function
 } # end sub _photo_actions
 sub photos {
