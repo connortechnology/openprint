@@ -7,7 +7,7 @@
 		foreach my $Check ( @Attributes ) {
 			$html .= $Check->attribute() . ' := ' . $Check->value();
 			$html .= button( 'RemoveRadius'.$Check->attribute(), { 
-				onclick	=> qq`new Ajax.Updater( 'mac_$$variable{username}', '/employee/it/_radius_mac_line.html', { parameters: { username: '$$variable{username}', attribute: '$$Check{attribute}', action: 'remove' } } );`, 
+				onclick	=> qq`new Ajax.Updater( 'mac-$$variable{username}', '/employee/it/_radius_mac_line.html', { parameters: { username: '$$variable{username}', attribute: '$$Check{attribute}', action: 'remove' } } );`, 
 				title	=> 'Remove',
 				text	=>	'X',
 				} );
@@ -26,7 +26,7 @@
 		] )
 		);
 	$html .= button( 'AddRadius', { 
-		onclick	=> qq`new Ajax.Updater( 'mac_$$variable{username}', '/employee/it/_radius_mac_line.html', { parameters: { username: '$$variable{username}', attribute: \$('attribute-$$variable{username}').getValue(), value: \$('value-$$variable{username}').getValue(), action: 'add' } } );`, 
+		onclick	=> qq`new Ajax.Updater( 'mac-$$variable{username}', '/employee/it/_radius_mac_line.html', { parameters: { username: '$$variable{username}', attribute: \$('attribute-$$variable{username}').getValue(), value: \$('value-$$variable{username}').getValue(), action: 'add' } } );`, 
 		text	=> 'Add',
 		} );
 

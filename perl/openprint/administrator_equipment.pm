@@ -6,6 +6,7 @@ require sql;
 require misc;
 
 require openprint::Equipment_Category;
+require openprint::Equipment_Operator;
 require openprint::Equipment;
 require openprint::EquipmentSpecification;
 require openprint::Fold;
@@ -27,7 +28,7 @@ sub import_specs {
 	my %equipment = map { $_->strid(), $_->id() } openprint::Equipment->find();
 
 	my $error = '';
-	if ( $param{'fileSpecifications'} ) {
+	if ( $param{fileSpecifications} ) {
 		my $ac = sql::start_transaction( $dbh );
 
 		sql::execute( undef, undef, 'DELETE FROM tbl_Equipment_Specifications' . ( $Equipment->id()?' WHERE lngEquipmentIndex=' . $Equipment->id():''));
@@ -87,28 +88,28 @@ sub export_specs {
 } # end sub export_specs
 
 sub edit {
-	my $Equipment = new openprint::Equipment( $param{'ddmEquipment'} );
+	my $Equipment = new openprint::Equipment( $param{ddmEquipment} );
 
-	if ( $param{'btnFunction'} eq 'Next' ) {
+	if ( $param{btnFunction} eq 'Next' ) {
 		$Equipment = $Equipment->Next();
-	} elsif ( $param{'btnFunction'} eq 'Previous' ) {
+	} elsif ( $param{btnFunction} eq 'Previous' ) {
 		$Equipment = $Equipment->Previous();
-	} elsif ( $param{'btnFunction'} eq 'Copy' ) {
+	} elsif ( $param{btnFunction} eq 'Copy' ) {
 		$Equipment = $Equipment->copy();
-	} elsif ( $param{'btnFunction'} eq 'Save' ) {
-		$param{'servicetype_id'} = [ $param{'servicetype_id'} ] if ref $param{'servicetype_id'} ne 'ARRAY';
-		$param{'category_id'} = [ $param{'category_id'} ] if ref $param{'category_id'} ne 'ARRAY';
+	} elsif ( $param{btnFunction} eq 'Save' ) {
+		$param{servicetype_id} = [ $param{servicetype_id} ] if ref $param{servicetype_id} ne 'ARRAY';
+		$param{category_id} = [ $param{category_id} ] if ref $param{category_id} ne 'ARRAY';
 		$Equipment->save( \%param );
-	} elsif ( $param{'btnFunction'} eq 'Delete' ) {
+	} elsif ( $param{btnFunction} eq 'Delete' ) {
 		$Equipment->delete();
 		$Equipment = $Equipment->Next();
-	} elsif ( $param{'btnFunction'} eq 'Import Specifications' ) {
+	} elsif ( $param{btnFunction} eq 'Import Specifications' ) {
 		if ( ( my $error = import_specs( $r, $Equipment ) ) ) {
 			return misc::error( $log, $dbh, \%variable, 'The following errors occurred:', $error );
 		} # end if
-	} elsif ( $param{'btnFunction'} eq 'Export Specifications' ) {
+	} elsif ( $param{btnFunction} eq 'Export Specifications' ) {
 		export_specs( $Equipment );
-	} elsif ( $param{'btnFunction'} eq 'Export Folds' ) {
+	} elsif ( $param{btnFunction} eq 'Export Folds' ) {
 		my @header = ( 'Equipment ID', 'Fold Type', 'Description', 'Pages', 'Horizontal Pages', 'Vertical Pages', 'Folds', 'Angles', 'Spine Direction', 'Min Imposition', 'Max Imposition', 'Min Page Width', 'Max Page Width', 'Min Page Height', 'Max Page Height', 'Min Calliper', 'Max Calliper', 'Printing Type', 'Make Ready Time', 'Make Ready Overs', 'Make Ready Units', 'Run Overs', 'Run Overs Units', 'Inline Cutting', 'When Stitching', 'When Perfect Binding', 'Spine Pasting', 'Min Weight', 'Max Weight', 'Units', 'Speed' );
 
 		my @data;
@@ -122,42 +123,42 @@ sub edit {
 		(new openprint::Log())->save({ action=>'Export Fold Definitions' });
 	} # end if
 
-	$variable{'Equipment'} = $Equipment;
+	$variable{Equipment} = $Equipment;
 } # end sub equipment_edit
 
 sub _specification {
-	my $Specification = new openprint::EquipmentSpecification( $param{'id'} );
-	if ( $param{'action'} eq 'add' ) {
-		$variable{'error'} .= $Specification->save({'name'=>'new','equipment_id'=>$param{'equipment_id'}});
-	} elsif ( $param{'action'} eq 'delete' ) {
+	my $Specification = new openprint::EquipmentSpecification( $param{id} );
+	if ( $param{action} eq 'add' ) {
+		$variable{error} .= $Specification->save({'name'=>'new','equipment_id'=>$param{equipment_id}});
+	} elsif ( $param{action} eq 'delete' ) {
 		$Specification->delete();
-		$variable{'PageContent'} = ' ';
-	} elsif ( $param{'action'} eq 'copy' ) {
+		$variable{PageContent} = ' ';
+	} elsif ( $param{action} eq 'copy' ) {
 		$Specification = $Specification->copy();
 		$Specification->save();
-	} elsif ( $param{'action'} eq 'update' ) {
-		if ( $param{'field'} ne 'interpolate' ) {
-			$param{'value'} =~ s/\xc2\xa0//mg;
-			if ( $param{'field'} eq 'name' ) {
+	} elsif ( $param{action} eq 'update' ) {
+		if ( $param{field} ne 'interpolate' ) {
+			$param{value} =~ s/\xc2\xa0//mg;
+			if ( $param{field} eq 'name' ) {
 				$param{value} =~ s/\+/ /g;
-			} elsif ( $param{'field'} eq 'min' ) {
-				$param{'value'} =~ s/[^\d\.]//g;
-			} elsif ( $param{'field'} eq 'max' ) {
-				$param{'value'} =~ s/[^\d\.]//g;
-			} elsif ( $param{'field'} eq 'value' ) {
-				$param{'value'} = ssi::unhtmlize( $param{'value'} );
-			} elsif ( $param{'field'} eq 'units' ) {
+			} elsif ( $param{field} eq 'min' ) {
+				$param{value} =~ s/[^\d\.]//g;
+			} elsif ( $param{field} eq 'max' ) {
+				$param{value} =~ s/[^\d\.]//g;
+			} elsif ( $param{field} eq 'value' ) {
+				$param{value} = ssi::unhtmlize( $param{value} );
+			} elsif ( $param{field} eq 'units' ) {
 			} # end if
-			$variable{'error'} .= $Specification->save({$param{'field'}=>$param{'value'}});
-			$variable{'PageContent'} = $$Specification{$param{'field'}} ne '' ? $$Specification{$param{'field'}} : '&nbsp;';
+			$variable{error} .= $Specification->save({$param{field}=>$param{value}});
+			$variable{PageContent} = $$Specification{$param{field}} ne '' ? $$Specification{$param{field}} : '&nbsp;';
 		} else {
-			$$Specification{'interpolate'} = ! $$Specification{'interpolate'};
-			$$Specification{'interpolate'} = 1 * $$Specification{'interpolate'};
+			$$Specification{interpolate} = ! $$Specification{interpolate};
+			$$Specification{interpolate} = 1 * $$Specification{interpolate};
 			$Specification->save();
-			$variable{'PageContent'} = $$Specification{'interpolate'} ? 'Yes' : 'No';
+			$variable{PageContent} = $$Specification{interpolate} ? 'Yes' : 'No';
 		} # end if
 	} # end if
-	$variable{'Specification'} = $Specification;
+	$variable{Specification} = $Specification;
 } # end sub _specification
 
 sub _fold {
@@ -182,67 +183,76 @@ sub _fold {
 		
 	} elsif ( $param{action} eq 'save' ) {
 		$Fold->save(\%param);
-		$variable{'Fold'} = $Fold;
-	} elsif ( $param{'action'} eq 'delete' ) {
+		$variable{Fold} = $Fold;
+	} elsif ( $param{action} eq 'delete' ) {
 		$Fold->delete();
-		$variable{'PageContent'} = ' ';
+		$variable{PageContent} = ' ';
 	} # end if
 } # end sub _fold
 
 sub _fold_specification {
-	my $FoldSpecification = new openprint::FoldSpecification( $param{'id'} );
-	if ( $param{'action'} eq 'add' ) {
+	my $FoldSpecification = new openprint::FoldSpecification( $param{id} );
+	if ( $param{action} eq 'add' ) {
 		foreach my $k ( 'fold_id' ) {
 			$$FoldSpecification{$k} = $param{$k};
 		} # end foreach
 		$FoldSpecification->save();
-		$variable{'Specification'} = $FoldSpecification;
-	} elsif ( $param{'action'} eq 'delete' ) {
+		$variable{Specification} = $FoldSpecification;
+	} elsif ( $param{action} eq 'delete' ) {
 		$FoldSpecification->delete();
-		$variable{'PageContent'} = ' ';
-	} elsif ( $param{'action'} eq 'update' ) {
-		if ( $param{'field'} ne 'interpolate' ) {
-			$$FoldSpecification{$param{'field'}} = $param{'value'};
+		$variable{PageContent} = ' ';
+	} elsif ( $param{action} eq 'update' ) {
+		if ( $param{field} ne 'interpolate' ) {
+			$$FoldSpecification{$param{field}} = $param{value};
 			$FoldSpecification->save();
-			$variable{'PageContent'} = $$FoldSpecification{$param{'field'}};
+			$variable{PageContent} = $$FoldSpecification{$param{field}};
 		} else {
-			$$FoldSpecification{'interpolate'} = ! $$FoldSpecification{'interpolate'};
-			$$FoldSpecification{'interpolate'} = 1 * $$FoldSpecification{'interpolate'};
+			$$FoldSpecification{interpolate} = ! $$FoldSpecification{interpolate};
+			$$FoldSpecification{interpolate} = 1 * $$FoldSpecification{interpolate};
 			$FoldSpecification->save();
-			$variable{'PageContent'} = $$FoldSpecification{'interpolate'} ? 'Yes' : 'No';
+			$variable{PageContent} = $$FoldSpecification{interpolate} ? 'Yes' : 'No';
 		} # end if
 	} # end if
 } # end sub _fold_specification
 
 sub _stock_setting_popup {
-	$variable{'Equipment'} = new openprint::Equipment( $param{'equipment_id'} );
+	$variable{Equipment} = new openprint::Equipment( $param{equipment_id} );
 } # end sub _stock_settings_popup
 
 sub _stocks {
-	$variable{'Equipment'} = new openprint::Equipment( $param{'equipment_id'} );
-	if ( $param{'action'} eq 'add' ) {
+	$variable{Equipment} = new openprint::Equipment( $param{equipment_id} );
+	if ( $param{action} eq 'add' ) {
 		my $Setting = new openprint::Equipment_Stock_Setting();
-		$variable{'error'} .= $Setting->save(\%param);
+		$variable{error} .= $Setting->save(\%param);
 		%param = ();
 	} # end if
 	ssi::save_params('/administrator/equipment/edit.html', 'Group','Manufacturer','Name','Finish','Colour','Weight','Types', 'material_id' );
 } # end sub _stocks
 
 sub _stock_settings {
-	$variable{'Equipment'} = new openprint::Equipment( $param{'equipment_id'} );
-	if ( $param{'action'} eq 'delete' ) {
-		my $Setting = new openprint::Equipment_Stock_Setting( $param{'id'} );
-		$variable{'error'} .= $Setting->delete();
+	$variable{Equipment} = new openprint::Equipment( $param{equipment_id} );
+	if ( $param{action} eq 'delete' ) {
+		my $Setting = new openprint::Equipment_Stock_Setting( $param{id} );
+		$variable{error} .= $Setting->delete();
 		%param = ();
-	} elsif ( $param{'action'} eq 'save' ) {
-		foreach my $Setting ( $variable{'Equipment'}->Stock_Settings() ) {
-			$variable{'error'} .= $Setting->save({'grain'=>$param{"grain_$$Setting{id}"}});
+	} elsif ( $param{action} eq 'save' ) {
+		foreach my $Setting ( $variable{Equipment}->Stock_Settings() ) {
+			$variable{error} .= $Setting->save({'grain'=>$param{"grain_$$Setting{id}"}});
 		} # end foreach Setting
 		%param = ();
 	} # end if
 } # end sub _stock_settings
 
+sub _operators {
+	my $Equipment = $variable{Equipment} = new openprint::Equipment( $param{equipment_id} );
+	if ( $param{action} eq 'delete' ) {
+		my $EO = new openprint::Equipment_Operator( { equipment_id=>$param{equipment_id}, user_id=>$param{user_id} } );
+		$variable{error} .= $EO->delete();
+	} elsif ( $param{action} eq 'add' ) {
+		my $EO = new openprint::Equipment_Operator();
+		$variable{error} .= $EO->save( { equipment_id=>$param{equipment_id}, user_id=>$param{user_id} } );
+	} # end if
+} # end sub _operators
+
 1;
-
 __END__
-

@@ -31,6 +31,7 @@ use MIME::QuotedPrint qw(encode_qp);
 use MIME::Base64 qw(encode_base64);
 use Encode ();
 use Data::Dumper;
+use Date::Parse;
 
 my @banned_files = ( 'ftpchk3.txt' );
 my $program = basename($0);
@@ -72,19 +73,19 @@ foreach my $param ( 'pid_file', 'db_host', 'log_file', 'log_level', 'sleep', 'sc
 	$config{$param} = $$opts{$param} if exists $$opts{$param};
 } # end foreach non-required param
 
-if ( $config{'site_url'} ) {
-	$config{'siteURL'} = $config{'site_url'};
-	$config{'ExternalSiteURL'} = $config{'site_url'};
+if ( $config{site_url} ) {
+	$config{siteURL} = $config{site_url};
+	$config{ExternalSiteURL} = $config{site_url};
 } # end if
 
-$config{'SiteTitle'} = $config{'site_title'};
-$config{'SkinPath'} = $config{'skin_path'};
-$config{'log_level'} = 'debug' if ! $config{'log_level'};
-$config{'sleep'} = 1.0 if ! $config{'sleep'};
+$config{SiteTitle} = $config{site_title};
+$config{SkinPath} = $config{skin_path};
+$config{log_level} = 'debug' if ! $config{log_level};
+$config{sleep} = 1.0 if ! $config{sleep};
 
-if ( $config{'pid_file'} ) {
+if ( $config{pid_file} ) {
 	my $pidh;
-	if (open($pidh, '> '.$config{'pid_file'} ) ) {
+	if (open($pidh, '> '.$config{pid_file} ) ) {
 		print $pidh $$."\n"; 
 		close($pidh);
 	} else {
@@ -92,7 +93,7 @@ if ( $config{'pid_file'} ) {
 	} # end if
 } # end if
 
-$log = logger->new( {'file'=>$config{'log_file'}, 'level'=>$config{'log_level'}} );
+$log = logger->new( {'file'=>$config{log_file}, 'level'=>$config{log_level}} );
 $log->info("Opening SQL connection");
 $openprint::dbh = sql::open_sql( $log, 
 	host		=> $config{db_host},
@@ -109,7 +110,7 @@ configuration::from_file($$opts{config});
 my %uploads;
 my %Users; # Cache of User Objects keyed by user/email address
 
-#my $scoreboard = get_scoreboard( $config{'scoreboard'} );
+#my $scoreboard = get_scoreboard( $config{scoreboard} );
 my $fifoh;
 if (open($fifoh, "< $config{fifo}")) {
 	while (1) {
@@ -219,7 +220,7 @@ if (open($fifoh, "< $config{fifo}")) {
 			# No input at this time. Sleep for half a second (or less) and check again.
 #$log->debug( "No input\n" );
 			check_scoreboard();
-			sleep($config{'sleep'}?$config{'sleep'}:10);
+			sleep($config{sleep}?$config{sleep}:10);
 		} # End if $line
 
 		if ( ! $dbh->ping() ) {
@@ -242,8 +243,8 @@ if (open($fifoh, "< $config{fifo}")) {
 } else {
 	die "$program: unable to read FIFO '$config{fifo}': $!\n";
 }
-if ( $config{'pid_file'} ) {
-	unlink $config{'pid_file'};
+if ( $config{pid_file} ) {
+	unlink $config{pid_file};
 } # end if
 
 sub check_scoreboard {
@@ -260,7 +261,26 @@ sub check_scoreboard {
 			} # end if
 		} # end if
 
-		if ( ( ! sets::isin( $username, \@users ) ) or ( $config{'max_files'} and ( @{$uploads{$username}} > $config{'max_files'} ) ) ) {
+		if ( ( ! sets::isin( $username, \@users ) ) or ( $config{max_files} and ( @{$uploads{$username}} > $config{max_files} ) ) ) {
+
+$log->debug("Max_files: $config{max_files}");
+			
+			if ( $config{wait_before_emailing} ) {
+				# Assume the last file is the most recent
+				my $Upload = $uploads{$username}[@{$uploads{$username}}-1];
+				my $timestamp = Date::Parse::str2time($$Upload{timestamp});
+				my $time = time;
+				my $diff = $time - $timestamp;
+				$log->debug("Timestamp: $timestamp < $time diff: $diff" );
+				if ( $diff < $config{wait_before_emailing} ) {
+					$log->debug("waiting before emailing for more uploads");
+					next;
+				} else {
+					$log->debug("Not waiting before emailing for more uploads $config{wait_before_emailing}");
+				} # end if
+			} else {
+				$log->debug("No wait_before_emailing set");
+			} # end if wait_before_emailing
 			$log->debug( "Sending mail for $username\n" );
 # No longer logged in, so we can process and send emails.
 			send_email( @{$uploads{$username}} );
@@ -311,6 +331,7 @@ sub send_email {
 
 		my $regexp = $project_files_path.'/'.$company_name.'/(.+)';
 		@$upload{proper_file_path} = $file =~ /^$regexp$/;
+		$$upload{proper_file_path} = $$upload{file_str} if ! $$upload{proper_file_path};
 
 		#if ( ! $company_name ) {
 			#my $new_file_path = $config{file_path};
@@ -323,9 +344,9 @@ sub send_email {
 		#if ( $company_name ) {
 			#$company_name =~ s/^\/*//g;
 		   #my @parts = split('/', $company_name);
-		   #$$upload{'company_name'} = shift @parts if @parts;
+		   #$$upload{company_name} = shift @parts if @parts;
 		#} # end if
-	   #$$upload{'proper_file_path'} = '/'.$$upload{'company_name'}.'/'.$file_str;
+	   #$$upload{proper_file_path} = '/'.$$upload{company_name}.'/'.$file_str;
 	} # end foreach upload
 
 	my $subject;
@@ -340,11 +361,11 @@ sub send_email {
 	my $dbh_count = 1;
 	while ( ! ( $openprint::dbh and $openprint::dbh->ping() ) ) {
 		$openprint::dbh = sql::open_sql( $log, 
-			host		=> $config{'db_host'},
-			database	=> $config{'db_name'},
+			host		=> $config{db_host},
+			database	=> $config{db_name},
 			driver		=> 'Pg',
-			login		=> $config{'db_user'},
-			password	=> $config{'db_pass'},
+			login		=> $config{db_user},
+			password	=> $config{db_pass},
 		);
 		$log->error("Unable to connect to database, try $dbh_count. sleeping.");
 		$dbh_count += 1;
@@ -356,7 +377,7 @@ sub send_email {
 		my $error = $Upload->save({
 			(company_id	=>	$Company ? $Company->id() : undef),
 			(user_id		=>	$User ? $User->id() : undef ),
-			company		=>	$$upload{'company_name'},
+			company		=>	$$upload{company_name},
 			size			=>	$upload->{size},
 			total			=>	$upload->{size},
 			finished		=>	$upload->{timestamp},
@@ -382,7 +403,7 @@ sub send_email {
 	if ( $Company and $User ) {
 		my $from;
 		if ( ! Email::Valid->address( $User->email() ) ) {
-			$from = $config{'OrderingEmail'};
+			$from = $config{OrderingEmail};
 		} else {
 			$from = sprintf('"%s" <%s>', $User->name(), $User->email() );
 		} # end if
@@ -400,15 +421,15 @@ sub send_email {
 		} # end if
 		
 		if ( ! @to ) {
-			@to = ( $config{'OrderingEmail'} );
+			@to = ( $config{OrderingEmail} );
 		} # end if
 		if ( @to ) {
 			my %variable;
-			$variable{'Company'} = $Company;
-			$variable{'User'} = $User;
-			$variable{'Uploads'} = \@uploads;
+			$variable{Company} = $Company;
+			$variable{User} = $User;
+			$variable{Uploads} = \@uploads;
 
-			$variable{'ReplacementText'} = ssi::include( '/email_content/ftp_csr_notification.html', \%variable );
+			$variable{ReplacementText} = ssi::include( '/email_content/ftp_csr_notification.html', \%variable );
 			my $body = ssi::include( '/email_template.html', \%variable );
 			my $Mail = new openprint::Email();
 			$Mail->send(
@@ -446,9 +467,9 @@ Cheers,
 
 EOT
 		my $email_info = {
-			smtp => $config{'smtp_server'},
-			From => $config{'from'},
-			To => $config{'recipient'},
+			smtp => $config{smtp_server},
+			From => $config{from},
+			To => $config{recipient},
 			BCC	=>	'iconnor@point-one.com',
 			Subject => $subject,
 		};
@@ -622,7 +643,7 @@ sub get_scoreboard {
 			@score{'sce_pid','sce_uid','sce_gid','sce_user','sce_server_port','sce_server_addr',
 				'sce_server_label','sce_client_addr','sce_client_name','sce_class','sce_cwd','sce_cmd','sce_cmd_arg','sce_begin_idle','sce_begin_session',
 				'sce_xfer_size','sce_xfer_done','sce_xfer_len','sce_xfer_elapsed'} = unpack($template,$record);
-			if ($score{'sce_pid'} != 0) {
+			if ($score{sce_pid} != 0) {
 				push @scoreboard, \%score;
 			} # end if
 		} # end while
@@ -670,7 +691,7 @@ sub take_evasive_action {
 
 	$variable{ReplacementText} = ssi::include( '/email_content/ftp_account_compromised.html', \%variable );
 	if ( $variable{ReplacementText} ) {
-		my $email_template = misc::load_file( $log, $config{'skin_path'} . '/email_template.html' );
+		my $email_template = misc::load_file( $log, $config{skin_path} . '/email_template.html' );
 		my $body = ssi::variable_substitution( undef, $log, $dbh, \$email_template, \%variable );
 		my $Mail = new openprint::Email();
 		$Mail->send(

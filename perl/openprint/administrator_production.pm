@@ -359,7 +359,8 @@ sub pricelists {
 	
 		my @header = ( 'Paper Brand', 'Finish','Colour','Weight','Width','Height','Service', 'Equipment', 'Min', 'Max', 'Units', 'Cost', 'Markup', 'Price', 'Discountable' );
 		my @data;
-		foreach my $Paper (openprint::Paper->find( 'order'=>'name,finish,colour,weight,width,height' ) ) {
+		foreach my $Paper (openprint::Paper->find( ) ) {
+#order=>'brand,finish,colour,weight,width,height' ) ) {
             foreach my $Price ( openprint::PaperPrice->find( paper_id=>$$Paper{id}, pricelist_id=>$$Pricelist{id}, order=>'lnglistindex, lngmin NULLS FIRST, lngmax NULLS FIRST') ) {
 				push @data, $Paper->brand(), $Paper->finish(),$Paper->colour(), $Paper->weight(), $Paper->width(), $Paper->height();
 				push @data, $Price->service(), $Price->Equipment()->strid(), $Price->min(), $Price->max(), $Price->units(), $Price->cost(), $Price->markup(), $Price->price(), $Price->discountable();

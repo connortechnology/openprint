@@ -18,7 +18,7 @@ package openprint::Estimating::Stitching;
 use strict;
 #use warnings;
 
-use constant DEBUG => 0;
+use constant DEBUG => 1;
 
 require openprint::Equipment;
 require openprint::service;
@@ -237,7 +237,7 @@ $I->display('In Stitching:') if DEBUG;
 			$openprint::log->error("No folds in imposition, guess 1") if DEBUG;
 			$I->display("No Folds");
 			$$specs{'txtSignatureQty'.$I->pages().'Page-'.$qty_index} += 1;
-			$$specs{"txtPockets$qty_index"} += 1;
+			$pockets += 1;
 # This doesn't really make sense.  If we are doing printing estimation, then the folding probably isn't going to match.  
 		} else {
 			foreach my $Fold ( @{$$I{Folds}} ) {
@@ -729,7 +729,7 @@ sub get_price {
 		$unitsPerHour = $Equipment->specification( 'Units Per Hour', $maxPockets );
 		$price{Runspeed} = $unitsPerHour;
 		my $runtime = $unitsPerHour ? $qty/$unitsPerHour : 0; # in seconds
-			$price{RunTime} += $runtime * 360;
+		$price{RunTime} += $runtime * 360;
 		my $loopbreak_pockets = $neededPockets;
 		while ( $neededPockets > $maxPockets ) {
 			if ( $servicePrice{units} eq 'per m' ) {
