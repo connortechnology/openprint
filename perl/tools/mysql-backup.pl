@@ -49,7 +49,6 @@ if ( ! @dbs ) {
 	if ( $$opts{host} and $$opts{host} ne 'local' ) {
 		push @args, "-h $$opts{host}";
 	} 
-	print "/usr/bin/mysql -B -N -e 'show databases' @args |grep -viE '(staging|performance_schema|information_schema)'\n";
 	$_ = `/usr/bin/mysql -B -N -e 'show databases' @args |grep -viE '(staging|performance_schema|information_schema)'`;
 	die "Can't get db list: ($!)" if $?;
 	@dbs = split "\n", $_;
