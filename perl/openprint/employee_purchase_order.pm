@@ -186,12 +186,14 @@ sub view {
 		return;
 	} # end if
 	
-	my $PO = new openprint::PurchaseOrder->find( id=>$param{po_id} );
+	my $PO = openprint::PurchaseOrder->find_one( id=>$param{po_id} );
 	if ( ! $PO ) {
-		$variable{error} .= 'Invalid PO # given: ' . $param{'po_id'}.'<br/>';
+		$variable{error} .= 'PO ' . $param{'po_id'}.' not found.<br/>';
 		$variable{PurchaseOrder} = new openprint::PurchaseOrder();
 		return;
 	} # end if
+	$variable{PurchaseOrder} = $PO;
+
 	if ( $param{'btnFunction'} eq 'Delete' ) {
 		$variable{'error'} .= $PO->delete();
 		if ( ! $variable{'error'} ) {
