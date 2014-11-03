@@ -504,14 +504,14 @@ $log->debug("Service: " . $Service->to_string() );
 						if ( my $function = ('openprint::Estimating::'.$module)->can('display') ) {
 							$function->($log, $dbh, \%variable, $project_index, $service_index );
 						} else {
-							$log->error( "Eval error of require $module :: Reason: " );
+							$log->error( "Eval error of require $module :: Reason: $?" );
 						}
 					} # end if
 				} elsif ($third eq 'spec') {
 					if ( $filename =~ /^(\w*).html$/ ) {
 						my $module = $1;
 						require "openprint/Estimating/$module.pm";
-						if ( my $function = ('openprint::Estimating/'.$module)->can('display') ) {
+						if ( my $function = ('openprint::Estimating::'.$module)->can('display') ) {
 							$function->($log, $dbh, \%variable, $project_index, $service_index );
 						} else {
 							$log->error( "Eval error of require $module :: display, Reason: " );
