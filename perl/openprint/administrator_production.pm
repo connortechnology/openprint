@@ -501,8 +501,8 @@ sub pricelists {
 		return misc::error( $log, $dbh, \%variable, 'No file given.', 'You must select a file to import.') if ! $param{'filePrices'};
 
 		my $error = '';
-		my $pricelist = new openprint::pricelist( $log, $dbh, $Pricelist->id() );
 
+		my $ac = sql::start_transaction( $openprint::dbh );
 		# An import replaces the current pricelist, so delete verything in the current one.
 		sql::execute( $log, $dbh, 'DELETE FROM Paper_Prices WHERE lngListIndex=?', $Pricelist->id() );
 
@@ -515,25 +515,39 @@ sub pricelists {
 
 		while ( <$io> ) {
 			my $status = $csv->parse($_);
-			my ( $name, $finish, $colour, $weight, $width, $height, @data ) = misc::trim( $csv->fields());
-			my @Papers = openprint::Paper->find('name'=>$name, 'finish'=>$finish, 'colour'=>$colour, 'weight'=>$weight, 'width'=>$width, 'height'=>$height );
+			my ( $name, $finish, $colour, $weight, $width, $height, $service, @data ) = misc::trim( $csv->fields());
+			my @Papers = openprint::Paper->find('name'=>$name, 'finish'=>$finish, 'colour'=>$colour, 'weight'=>$weight, 'width'=>$width, 
+			( $height ? ( 'height'=>$height ) : () ) );
 			if ( ! @Papers ) {
 				$error .= "No Paper found for $name, $finish, $colour, $weight, $width, $height<br/>";
 				next;
 			} # end if
 
 			foreach my $Paper ( @Papers ) {
-				my $price_set = $pricelist->getPaperPriceSet( $Paper->id() );
-				my $price = new openprint::paper_price( $log, $dbh, $price_set );
-				$price->set( undef, @data );
-				$price_set->addPrice( $price );
+				for ( my $i = 0; $i < @data; $i += 9 ) {
+					my $Price = new openprint::PaperPrice();
+					$error .= $Price->save({
+						stock_id	=>	$$Paper{id},
+						pricelist_id	=>	$Pricelist->id(),
+						service		=>	$data[$i+0],
+						min			=>	$data[$i+2],
+						max			=>	$data[$i+3],
+						units		=>	$data[$i+4],
+						cost		=>	$data[$i+5],
+						markup		=>	$data[$i+6],
+						price		=>	$data[$i+7],
+						discountable	=>	$data[$i+8],
+					});
+				} # end for
+	
 			} # end foreach Paper
 		} # end foreach CSV line
-		$pricelist->save();
 
 		if ( $error ) {
+			$openprint::dbh->rollback();
 			return misc::error( $log, $dbh, \%variable, 'Import errors.', $error );
 		} # end if
+		sql::end_transaction( $openprint::dbh );
 	} elsif ( $param{'btnFunction'} eq 'Import Product Prices' ) {
 		return misc::error( $log, $dbh, \%variable, 'No pricelist selected.', 'You must select a pricelist before importing.') if ! $Pricelist->id();
 		return misc::error( $log, $dbh, \%variable, 'No file given.', 'You must select a file to import.') if ! $param{'filePrices'};
