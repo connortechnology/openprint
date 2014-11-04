@@ -71,7 +71,7 @@ sub view {
 		} # end if
 	} # end if
 
-	my $Project = $variable{Project} = openprint::Project->find( id=>$project_index ) if $project_index;
+	my $Project = $variable{Project} = openprint::Project->find_one( id=>$project_index ) if $project_index;
 	if ( ! $Project ) {
 		$variable{Project} = new openprint::Project();
 		$variable{Order} = new openprint::Order();
