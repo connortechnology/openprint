@@ -116,7 +116,7 @@
 		<? echo (
 			my $html;
 			my $rowclass;
-			foreach my $Host ( @{$$variable{'Hosts'}} ) {
+			foreach my $Host ( @{$$variable{Hosts}} ) {
 				$html .= sprintf('
 					<tr%7$s>
 						<td class="checkbox"><input type="checkbox" id="host_id" name="host_id" value="%1$d"/></td>
@@ -131,7 +131,7 @@
 					join('<br/>', map { $_->ip() } $Host->Interfaces() ), 
 					join('<br/>', map { $_->mac() } $Host->Interfaces() ), 
 					join(', ', (
-						( $Host->dhcp() ? 'dhcp' : () ),
+						( ( map { $_->dhcp() ? 'dhcp' : () } $Host->interfaces() ) ? 'dhcp' : () ),
 						( $Host->blacklist() ? 'blacklisted: count='.$Host->count() : () ),
 						( $Host->whitelist() ? 'whitelisted' : () ),
 						( $Host->monitored() ? 'monitored' : () ),
@@ -142,7 +142,7 @@
 					);
 				$rowclass = $rowclass ? '' : ' class="colRow"';
 			} # end foreach Host
-			$html .= '<tr class="totals"><td colspan="7"># of hosts: ' . @{$$variable{'Hosts'}} . '</td></tr>';
+			$html .= '<tr class="totals"><td colspan="7"># of hosts: ' . @{$$variable{Hosts}} . '</td></tr>';
 			return $html;
 		) ?>
 		<tr>
