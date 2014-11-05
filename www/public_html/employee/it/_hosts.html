@@ -131,7 +131,7 @@
 					join('<br/>', map { $_->ip() } $Host->Interfaces() ), 
 					join('<br/>', map { $_->mac() } $Host->Interfaces() ), 
 					join(', ', (
-						( ( map { $_->dhcp() ? 'dhcp' : () } $Host->interfaces() ) ? 'dhcp' : () ),
+						( ( map { $_->dhcp() ? 'dhcp' : () } $Host->Interfaces() ) ? 'dhcp' : () ),
 						( $Host->blacklist() ? 'blacklisted: count='.$Host->count() : () ),
 						( $Host->whitelist() ? 'whitelisted' : () ),
 						( $Host->monitored() ? 'monitored' : () ),
