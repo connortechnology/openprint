@@ -178,13 +178,22 @@ sub save_contents {
 
 sub view {
 
-	my $Me = new openprint::User( $session{'user_id'} );
-	my $PO = new openprint::PurchaseOrder( $param{'po_id'} );
-	if ( ! $PO->id() ) {
-		$variable{'error'} .= 'Invalid PO # given: ' . $param{'po_id'}.'<br/>';
-		$variable{'PurchaseOrder'} = $PO;
+	my $Me = new openprint::User( $session{user_id} );
+
+	if ( $param{po_id} ne openprint::PurchaseOrder->transform('id', $param{po_id} ) ) {
+		$variable{error} .= 'Invalid PO # given: ' . $param{po_id}.'<br/>';
+		$variable{PurchaseOrder} = new openprint::PurchaseOrder();
 		return;
 	} # end if
+	
+	my $PO = openprint::PurchaseOrder->find_one( id=>$param{po_id} );
+	if ( ! $PO ) {
+		$variable{error} .= 'PO ' . $param{'po_id'}.' not found.<br/>';
+		$variable{PurchaseOrder} = new openprint::PurchaseOrder();
+		return;
+	} # end if
+	$variable{PurchaseOrder} = $PO;
+
 	if ( $param{'btnFunction'} eq 'Delete' ) {
 		$variable{'error'} .= $PO->delete();
 		if ( ! $variable{'error'} ) {

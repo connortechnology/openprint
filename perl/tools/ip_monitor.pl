@@ -114,7 +114,7 @@ while(1) {
 	$log->debug( 'Monitoring ' . @Hosts . ' hosts.' );
 	foreach my $Host ( @Hosts ) {
 		if ( ! $Host->Interfaces() ) {
-			$log->debug( "Monitored host without ip: " . $Host->to_string() );
+			$log->debug( "Monitored host without Interfaces: " . $Host->to_string() );
 			next;
 		} # end if
 		foreach my $HI ( $Host->Interfaces() ) {

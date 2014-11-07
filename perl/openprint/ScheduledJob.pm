@@ -654,7 +654,7 @@ sub bump {
 			foreach my $Job ( $self->Shift()->Schedule() ) {
 				push @final_order, $Job if $$Job{'id'} != $$self{'id'};
 			} # end foreach job in shift
-my $Next = $self->Shift()->Next();
+			my $Next = $self->Shift()->Next();
 			push @final_order, $Next->Schedule();
 			push @final_order, $self;
 			push @final_order, openprint::ScheduledJob->find( 'equipment_id'=>$self->equipment_id(),'starttime >='=>$Next->endtime(),order=>'starttime' );

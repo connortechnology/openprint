@@ -53,6 +53,7 @@ sub view_services {
 
 	$project_index = $openprint::session{project_id} if ! $project_index;
 	if ( ! $project_index ) {
+		$$variable{Project} = new openprint::Project();
 		return;
 	} # end if
 	my $Project = $$variable{Project} = new openprint::Project( $project_index );

@@ -37,6 +37,7 @@ $debug = 0;
 	'updated_on'	=>	q`'NOW()'`,
 	'lastseen_on'	=>	q`'NOW()'`,
 	'location_id'	=>	undef,
+	monitor			=>	'0',
 );
 
 $table = 'rfidscanners';

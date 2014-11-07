@@ -1573,22 +1573,31 @@ sub _li_change {
 					$sql{service_id} = \@new_service_ids;
 				} # end if
 				$Project->add_to_log(@session{'company_id','user_id'}, 'Removed form ' . join(',', sort map {
-					my $sig_specs = openprint::service::get_specs_ref( $Project, $_ );	
-					$$sig_specs{'SignatureIndex'};
+					my $sig_specs = openprint::service::get_specs_ref( $Project, $_ ) if $_;
+					$$sig_specs{SignatureIndex};
 					} @service_ids ) . ' from press schedule.' );
 			} elsif ( $Job->forms() < $param{forms} ) {
 				if ( $param{forms} > 100 ) {
 					$variable{error} .= 'Cant add that many forms.';
 				} else {
-					my $sig_specs = openprint::service::get_specs_ref( $Project, $service_ids[0] );
-					$Project->add_to_log(@session{'company_id','user_id'}, "Duplicating form $$sig_specs{SignatureIndex} " . ( $param{forms} - @service_ids ).' for press schedule');
-					while ( @service_ids < $param{forms} ) {
-						push @service_ids, $Project->copy_signature( $sig_specs, { 
+					if ( @service_ids ) {
+						my $sig_specs = openprint::service::get_specs_ref( $Project, $service_ids[0] );
+						$Project->add_to_log(@session{'company_id','user_id'}, "Duplicating form $$sig_specs{SignatureIndex} " . ( $param{forms} - @service_ids ).' for press schedule');
+						while ( @service_ids < $param{forms} ) {
+							push @service_ids, $Project->copy_signature( $sig_specs, { 
+									'txtPrice1'  => 0,
+									'txtPrice2'  => 0,
+									'txtPrice3'  => 0,
+									}, 'Ordered' );
+						} # end while
+					} else {
+						$Project->add_to_log(@session{'company_id','user_id'}, "Adding " . $param{forms}.' new forms for press schedule');
+						push @service_ids, $Project->add_signature( undef, 'Ordered', { 
 								'txtPrice1'  => 0,
 								'txtPrice2'  => 0,
 								'txtPrice3'  => 0,
-								}, 'Ordered' );
-					} # end while
+								} );
+					} # end if
 					$sql{pertains_id} = \@service_ids;
 					if ( sets::union( @{$$Job{pertains_id}}, @{$$Job{service_id}} ) == @{$$Job{pertains_id}} ) {
 						# Is a printing service, so service_id==pertains_id, so update service_id as well.
@@ -1648,9 +1657,10 @@ sub _li_change {
 						'equipment_id'		=>	$param{'equipment_id'},
 					});
 				} else {
-					my @Services = openprint::Project_Service->find('project_id'=>$Job->project_id(),'servicetype_id'=>$servicetype_id);
+					my @Services = openprint::Project_Service->find( project_id=>$Job->project_id(), servicetype_id=>$servicetype_id);
 					if ( ! @Services ) {
 						# Add one.
+						$log->debug("Adding $servicetype_id servicetype to $$Job{project_id}");
 						push @Services, $Job->Project()->add_Service( new openprint::ServiceType( $servicetype_id ) );
 					} # end if
 					foreach my $Service ( @Services ) {

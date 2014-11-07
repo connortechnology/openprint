@@ -281,14 +281,20 @@ sub _radius_mac_line {
 		my $Radius;
 		if ( $openprint::RADIUS_Check::attributes{$param{attribute}} ) {
 			$Radius = openprint::RADIUS_Check->find_one( username=>$param{username}, attribute=>$param{attribute} );
+			$Radius = openprint::RADIUS_Reply->find_one( username=>$param{username}, attribute=>$param{attribute} ) if ! $Radius;
 		} elsif ( $openprint::RADIUS_Reply::attributes{$param{attribute}} ) {
 			$Radius = openprint::RADIUS_Reply->find_one( username=>$param{username}, attribute=>$param{attribute} );
+			$Radius = openprint::RADIUS_Check->find_one( username=>$param{username}, attribute=>$param{attribute} ) if ! $Radius;
 		} else {
 			$log->error("Unknown RADIUS Attribute: $param{attribute}");
 			$variable{error} .= "Unknown RADIUS Attribute: $param{attribute}<br/>";
 			return;
 		} # end if
-		$variable{error} .= $Radius->delete() if $Radius->id();
+		if ( ! $Radius ) {
+			$variable{error} .= 'Radius entry for  username=>$param{username}, attribute=>$param{attribute} is not found.<br/>';
+		} else {
+			$variable{error} .= $Radius->delete() if $Radius->id();
+		} # end if
 	} # end if
 	$variable{username} = $param{username};
 	$variable{username} =~ s/[^[[:xdigit:]]]//g;
