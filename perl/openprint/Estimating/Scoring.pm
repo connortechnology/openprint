@@ -277,6 +277,12 @@ sub signature_calc {
 		$folding_specs = openprint::service::get_specs_ref( $Project, $folding_service_index );
 		@Folds = openprint::Estimating::Folding::get_Folds( $folding_specs, $sig_specs, $qty_index );
 	} # end if
+	if ( DEBUG ) {
+		$SignatureImposition->display('Original sig');
+		foreach my $Fold ( @Folds ) {
+			$Fold->display( 'Fold' );
+		} 
+	} # end nif
 
 	$Results{'Status'} = 'uncalculated';
 	my @equipment;	

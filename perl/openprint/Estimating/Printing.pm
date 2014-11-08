@@ -4947,12 +4947,18 @@ sub calc_price {
 				
 				if ( $folding_results{Equipment}->id() == $Press->id() ) {
 					my $FI = $folding_results{FoldedImpositions}[0];
-if ( $$FI{Equipment}->id() != $Press->id() ) {
-$openprint::log->error("WTF Equipment in Fold is not the press, but the folding results equipment is. maybe caching issue? Fold equipment is " . $$FI{Equipment}->strid() . ' FI: ' . $FI->to_string() );
-} 
-$FI->display( "Runspeed: $$FI{runspeed}") if DEBUG;
+					if ( ! $FI ) {
+						$openprint::log->error("WTF FI is empty! maybe caching issue? Fold equipment is FI: " . $FI);
+						
+					} elsif ( ! $$FI{Equipment} ) {
+						$openprint::log->error("WTF Equipment in Fold is empty! maybe caching issue? Fold equipment is " . $$FI{Equipment} . ' FI: ' . $FI->to_string() );
+					} elsif ( $$FI{Equipment}->id() != $Press->id() ) {
+						$openprint::log->error("WTF Equipment in Fold is not the press, but the folding results equipment is. maybe caching issue? Fold equipment is " . $$FI{Equipment}->strid() . ' FI: ' . $FI->to_string() );
+					} else {
+					$FI->display( "Runspeed: $$FI{runspeed}") if DEBUG;
 #$openprint::log->debug("Runspeed: $folding_results{RunSpeed}");
 					$$specs{Runspeed} = $price{Runspeed} = $$FI{runspeed} if $$FI{runspeed};
+					} # end if
 				} # end if
 				$$Imposition{Folder} = $folding_results{Equipment};
 #$$Imposition{FoldingCost} = $folding_results{Price};
@@ -5024,7 +5030,7 @@ $openprint::log->debug("Back From DieCutting");
 
 	my $numbering_results;
 	if ( $$project{HasNumbering} ) {
-		$numbering_results = openprint::Estimating::Numbering::signature_calc( $Project, @$project{'HasNumbering','NumberingSpecs'}, $specs, $qty_index, $Imposition );
+		$numbering_results = openprint::Estimating::Numbering::signature_calc( $Project, $$project{'NumberingSpecs'}, $specs, $qty_index, $Imposition );
 #foreach my $k ( keys %scoring_results ) {
 #$openprint::log->debug("Scoring: $k => $scoring_results{$k}");
 #}
@@ -5035,7 +5041,9 @@ $openprint::log->debug("Back From DieCutting");
 			$price{'Numbering Breakdown'} .= "Numbering error: $$numbering_results{alert} $$numbering_results{Breakdown}".'<br/>';
 			$price{'Comparison Cost'} += 1000000; 
 		} else {
-			$price{'Numbering Breakdown'} .= sprintf('Numbering Price: %dout $%.2f on %s<br/>', $$numbering_results{Imposition}->imposition(), $$numbering_results{Total}, $$numbering_results{Equipment} ? $$numbering_results{Equipment}->name() : '' );
+			foreach my $NumberingImposition ( @{$$numbering_results{Impositions}} ) {
+			$price{'Numbering Breakdown'} .= sprintf('Numbering Price: %dout $%.2f on %s<br/>', $NumberingImposition->imposition(), $$numbering_results{Total}, $$numbering_results{Equipment} ? $$numbering_results{Equipment}->name() : '' );
+			} # end foreach
 			$price{'Comparison Cost'} += $$numbering_results{Total};
 		} # end if
 	} # end if
