@@ -24,10 +24,23 @@
 				<label>Operator</label>
 				<select id="operator_id" name="operator_id" size="1"><option value="">select one</option>
 				<? echo ( 
-					my @Usergroups = openprint::UserGroup->find( name=> [ $$variable{Shift}->Equipment()->categories()] );
-					my @Usersin = openprint::User_in_UserGroup->find( usergroup_id=>[ map { $$_{id} } @Usergroups] );
-					make_drop_down( openprint::User->dropdown(id=>[ map { $$_{user_id} } @Usersin], order=>'lower(firstname),lower(lastname)'), $$variable{Shift}->operator_id() );
+					my $Equipment = $$variable{Shift}->Equipment();
 
+					my @Usergroups = openprint::UserGroup->find( name=> [ $Equipment->categories()] );
+					my @Usersin = openprint::User_in_UserGroup->find( usergroup_id=>[ map { $$_{id} } @Usergroups] );
+
+					my @Operators = $Equipment->Operators();
+					my %Operators = map { $$_{id}, $_ } @Operators;
+
+					my @user_ids = map { $Operators{$$_{user_id}} ? () : $$_{user_id} } @Usersin;
+
+					my $html .= '<optgroup label="Usual Operators">';
+					$html .= make_drop_down( [ @{openprint::User->dropdown(id=>[keys %Operators], order=>'lower(firstname),lower(lastname)')} ], $$variable{Shift}->operator_id() );
+					$html .= '</optgroup>';
+					$html .= '<optgroup label="Others">';
+					$html .= make_drop_down( [ @{openprint::User->dropdown(id=>\@user_ids, order=>'lower(firstname),lower(lastname)')} ], $$variable{Shift}->operator_id() );
+					$html .= '</optgroup>';
+					return $html;
 				   ) ?>
 				</select>
 			</li>

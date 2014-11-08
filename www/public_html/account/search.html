@@ -82,7 +82,7 @@
 ) ?>
 						<li><label>Distance</label>
 							<select name="distance">
-								<? echo ( ssi::make_drop_down( [ '', 'Any', '10', '10km', '25', '25km', '50', '50km', '100', '100km' ], $session{'/account/search.html?distance'} ); ) ?>
+								<? echo ( make_drop_down( [ '', 'Any', '10', '10km', '25', '25km', '50', '50km', '100', '100km' ], $session{'/account/search.html?distance'} ); ) ?>
 							</select>
 						</li>
 					</ul>
@@ -90,8 +90,8 @@
 			</div>
 			<p class="buttons">
 				<? echo ( join('',
-					ssi::button( 'ShowResults', { onclick=>q`LoadContent('Results','_search.html', f1 );`, text=>'Show Results' } ),
-					ssi::button( 'Reset', { 'onclick'=>'f1.reset();' } ),
+					button( 'ShowResults', { onclick=>q`LoadContent('Results','_search.html', f1 );`, text=>'Show Results' } ),
+					button( 'Reset', { 'onclick'=>'f1.reset();' } ),
 					); ) ?>
 			</p>
 			</fieldset>

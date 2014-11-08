@@ -1,16 +1,18 @@
 <?include('/includes/error_reporting.html')?>
 <script type="text/javascript" src="<?hash_link(/javascripts/paper.js)?>"></script>
 <script type="text/javascript">
+var equipment_id='<?echo($$variable{Equipment}->id())?>';
+
 function add_stock_setting( stock_id ) {
 	new Ajax.Updater('Stocks','_stocks.html', {
 			parameters: {
 				action:'add',
-				equipment_id: '<? echo ( $$variable{Equipment}{id} ) ?>', 
+				equipment_id: equipment_id,
 				stock_id: stock_id
 			}, 
 			onLoading:function(){ $('Stocks').innerHTML='Loading...'; }, 
 			onSuccess: function(){ 
-				new Ajax.Updater('StockSettings', '_stock_settings.html', { parameters: { equipment_id: '<? echo ( $$variable{Equipment}{id} ) ?>' } } );
+				new Ajax.Updater('StockSettings', '_stock_settings.html', { parameters: { equipment_id: equipment_id } } );
 			}
 		}
 	);
@@ -42,6 +44,14 @@ function filter_onChange( element, id, selected ) {
 				parameters:Form.serialize($(formName))});
 				//evalScripts:true, 
 	}
+	function del_operator( user_id ) {
+		new Ajax.Updater('Operators','/administrator/equipment/_operators.html', {
+				parameters: { action: 'delete', equipment_id: equipment_id, user_id: user_id } } );
+	} // end function del_operator
+	function add_operator(user_id) {
+		new Ajax.Updater('Operators','/administrator/equipment/_operators.html', {
+				parameters: { action: 'add', equipment_id: equipment_id, user_id: user_id } } );
+	}
 </script>
 <form id="f1" name="f1" method="post" enctype="multipart/form-data" action="edit.html">
 	<fieldset class="filters"><legend>Search Information</legend>
@@ -64,12 +74,12 @@ function filter_onChange( element, id, selected ) {
 		</li>
 		</ul>
 		<p class="buttons">
-		<? echo ( join( '',
+		<? echo ( join( "\n",
 				button( 'PreviousTop', { onclick=>"f1.btnFunction.value='Previous';fmCheck(f1);", text=>'Previous' } ),
 				button( 'NextTop', { onclick=>"f1.btnFunction.value='Next';fmCheck(f1);", text=>'Next' } ),
-				button( 'NewTop', { onclick=>"addCheck(f2);", text=>'New' } ),
+				button( 'NewTop', { onclick=>"addCheck($('f2'));", text=>'New' } ),
 				button( 'DeleteTop', { onclick=>"f1.btnFunction.value='Delete';fmChange=2;fmCheck(f1);", text=>'Delete' } ),
-				button( 'SaveTop', { onclick=>"document.f2.btnFunction.value='Save';fmChange=3;fmCheck(document.f2);", text=>'Save' } ),
+				button( 'SaveTop', { onclick=>q`$('f2').btnFunction.value='Save';fmChange=3;fmCheck($('f2'));`, text=>'Save' } ),
 				button( 'CopyTop', { onclick=>"f1.btnFunction.value='Copy';f1.submit();", text=>'Copy' } ),
 				button( 'ResetTop', { onclick=>'f1.reset();', text=>'Reset' } ),
 				);
@@ -115,6 +125,9 @@ function filter_onChange( element, id, selected ) {
 			<p> 
 				<label>Image</label>
 				<input type="text" name="image" value="<? hecho ( $$variable{Equipment}->image(); ) ?>" />
+			</p>
+			<p><label>Operators</label>
+			<div id="Operators"><?include(_operators.html)?></div>
 			</p>
 		</div>
 		<div class="rightColumn">
@@ -234,7 +247,7 @@ function filter_onChange( element, id, selected ) {
 					<th class="interpolate">Interpolate</th>
 					<th class="buttons">
 <? echo ( 
-	ssi::writeButton( $log, $dbh, 'Add', 'add.gif',q`new Ajax.Request('/administrator/equipment/_specification.html', { 
+	button( 'Add', { onclick=>q`new Ajax.Request('/administrator/equipment/_specification.html', { 
 		parameters: {
 			action: 'add',
 			equipment_id: $('ddmEquipment').value,
@@ -244,7 +257,7 @@ function filter_onChange( element, id, selected ) {
 			$('specifications_body').insert({top: response.responseText} );
 			SortableTable.load();	
 			} 
-	} );`,'','Add' ); 
+	} );`,text=>'Add' } ); 
 ) ?>
 </th>
 				</tr>
@@ -253,7 +266,7 @@ function filter_onChange( element, id, selected ) {
 			<? echo ( 
 				my $html;
 				@{$$variable{'Specifications'}} = $$variable{'Equipment'}->Specifications();
-				my $specification_html = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/administrator/equipment/_specification.html' );
+				my $specification_html = slurp_content( '/administrator/equipment/_specification.html' );
 				while ( $$variable{'Specification'} = shift @{$$variable{'Specifications'}} ) {
 					$html .= variable_substitution( \$specification_html, $variable );
 					$$variable{rowclass} = $$variable{rowclass} ? '' : ' class="colRow"';

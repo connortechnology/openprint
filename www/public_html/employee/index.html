@@ -86,7 +86,7 @@ You may use a barcode scanner.  Simply scan the code and click Go.<br/>
 		</li>
 		<li><label>Invoice</label>
 			<? echo ( join('',
-			input( type=>'text', name=>'invoice_num', onchange=>'change_handler(this);', onkeypress=>'return input_handler( this, event );', onkeydown=>'if(event.keyCode == 13){submit_handler(f1);}' ),
+			input( type=>'text', name=>'invoice_num', onkeydown=>'if(event.keyCode == 13){submit_handler(f1);}' ),
 			button( 'GoInvoice', { onclick=>'submit_handler( f1 );', text=>'Go' } ),
 			); ) ?>
 		</li>

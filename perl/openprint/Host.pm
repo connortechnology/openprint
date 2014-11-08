@@ -125,7 +125,6 @@ $serial = 'hosts_id_seq';
 	whitelist	=>	'whitelist',
 	monitored	=>	'monitored',
 	description	=>	'description',
-	dhcp		=>	'dhcp',
 	created_on	=>	'created_on',
 	updated_on	=>	'updated_on',
 	resolved_on	=>	'resolved_on',

@@ -584,7 +584,13 @@ $openprint::log->debug("Folding impositions: " . @folding_impositions ) if DEBUG
 		if ( ( defined $$specs{"OverrideFoldingCuts-$form-$qty_index"} ) and ( $$specs{"OverrideFoldingCuts-$form-$qty_index"} eq 'Y' ) ) {
 			$folding_cuts = $$specs{"FoldingCuts-$form-$qty_index"};
 		} else {
-			if ( ( @folding_impositions == 1 ) and ( $folding_impositions[0]->imposition() == 1 ) and ( ! $stitching_imposition ) and ( $folding_impositions[0]->quantity() == 1 ) and ( (!$Folder) or ( $Folder->id() != $Press->id() ) ) ) {
+			if ( ( @folding_impositions == 1 ) 
+					and ( $folding_impositions[0]->imposition() == 1 )
+					and ( ! $stitching_imposition )
+
+# Why about the quanitty? Basically if it's 1out, we pre-trim.  Otherwise let the folder do it.  So if er have 2@1out, then we might as well pre-trim
+					#and ( $folding_impositions[0]->quantity() == 1 )
+					and ( (!$Folder) or ( $Folder->id() != $Press->id() ) ) ) {
 				$trim_before_folding = 1;
 			} else {
 				$openprint::log->debug("Folds: " .@folding_impositions ) if DEBUG;

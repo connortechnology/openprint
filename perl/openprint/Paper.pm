@@ -79,7 +79,6 @@ $serial	= 'paper_id_seq';
 		'inventory_number'		=>	'inventory_number',
 		'full_packages'			=>	'full_packages',
 		'message'				=>	'message',
-		'diescoring'			=>	'diescoring',
 		'in_stock'				=>	'in_stock',
 		'allocated'				=>	'allocated',
 		'parts'					=>	'parts',
@@ -106,12 +105,12 @@ $serial	= 'paper_id_seq';
 		weight	=>	'weight_id = (SELECT id FROM stockweights WHERE name=?)',
 		#'quality'	=>	'(SELECT name FROM stockqualities WHERE stockqualities.id=papers.quality_id)',
 		quality	=>	'quality_id = (SELECT id FROM stockqualities WHERE name=?)',
-		'size'		=>	q`width || '" x ' || height || '"'`,
-		'sheetsize'		=>	q`width || '" x ' || height || '"'`,
+		size		=>	q`width || '" x ' || height || '"'`,
+		sheetsize		=>	q`width || '" x ' || height || '"'`,
 		allocated_to_docket	=>	'(SELECT docket FROM paper_allocations WHERE paper_id = papers.id)',
-		'project_type_name'	=>	'(SELECT name FROM project_types WHERE id IN ( SELECT lngProjectTypeIndex FROM Paper_Recommendations WHERE lngPaperIndex = papers.id ) )',
-		'project_type_id'	=>	'(SELECT lngProjectTypeIndex FROM Paper_Recommendations WHERE lngPaperIndex = papers.id)',
-		'stock_settings_equipment_id'	=>	'(SELECT equipment_id FROM equipment_stock_settings WHERE stock_id=papers.id)',
+		project_type_name	=>	'(SELECT name FROM project_types WHERE id IN ( SELECT lngProjectTypeIndex FROM Paper_Recommendations WHERE lngPaperIndex = papers.id ) )',
+		project_type_id		=>	'(SELECT lngProjectTypeIndex FROM Paper_Recommendations WHERE lngPaperIndex = papers.id)',
+		stock_settings_equipment_id	=>	'(SELECT equipment_id FROM equipment_stock_settings WHERE stock_id=papers.id)',
 		);
 
 %transforms = (
@@ -122,31 +121,48 @@ $serial	= 'paper_id_seq';
 
 %defaults = (
 	created_on	=>	q`'NOW()'`,
+	group_id			=>	undef,
+	owner_id			=>	undef,
+	supplier_id			=>	undef,
+	manufacturer_id		=>	undef,
+	brand_id			=>	undef,
+	finish_id			=>	undef,
+	colour_id			=>	undef,
+	weight_id			=>	undef,
+	quality_id			=>	undef,
+	calliper	=>	undef,
+	taxexempt1		=>	q`'0'`,
+	taxexempt2		=>	q`'0'`,
+	cuttable		=>	q`'1'`,
+	multipart	=>	q`'0'`,
+	doublesided		=>	q`'1'`,
+	perfecting		=>	q`'0'`,
+	score_required	=>	q`'0'`,
+	die_score_required	=>	q`'0'`,
+	width		=>	undef,
+	height		=>	undef,
+	mweight		=>	undef,
+
 	basis_width	=>	undef,
 	basis_height	=>	undef,
 	basis_mweight	=>	undef,
-	width		=>	undef,
-	height		=>	undef,
 	gsm			=>	undef,	
 	grade		=>	undef,
-	calliper	=>	undef,
 	allocated	=>	q`'0'`,
 	in_stock	=>	q`'0'`,
+	bladecleaning	=>	q`'0'`,
 	user_type	=>	q`''`,
-	score_required	=>	'0',
-	die_score_required	=>	'0',
 	supplied		=>	undef,
-	multipart	=>	0,
 	sheets_per_package	=>	undef,
 	wpsi				=>	undef,
 	type				=>	q`''`,
-	manufacturer_id		=>	undef,
-	group_id			=>	undef,
-	quality_id			=>	undef,
 	available_to_order	=>	undef,
-	supplier_id			=>	undef,
 	department_id		=>	undef,
 	inventory_number	=>	undef,
+	full_packages		=>	undef,
+	minimum_order		=>	undef,
+	parts				=>	undef,
+	digital				=>	undef,
 );
 
 %grades = (
@@ -373,7 +389,7 @@ sub delete {
 	sql::execute( undef, undef, q{DELETE FROM StockMaterials WHERE id NOT IN (SELECT DISTINCT material_id FROM Papers)} );
 	
 	# Add record to audit log - action "Delete Paper".
-	new openprint::Log()->save({action=>'Delete Paper', note=>'Stock ID: '.$$self{'id'} });
+	new openprint::Log()->save({action=>'Delete Paper', note=>'Stock ID: '.$$self{'id'}  . $self->to_string() });
 	sql::end_transaction( undef, $ac );
 	
 } # end sub delete

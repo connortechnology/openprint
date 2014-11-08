@@ -361,7 +361,7 @@ sub import_export {
 			my $csv = Text::CSV_XS->new();
 			while ( <$io> ) {
 				my $status = $csv->parse($_);
-				my ( $paper_id, $owner, $manufacturer, $group, $name, $finish, $colour, $weight, $mweight, $gsm, $calliper, $type, $width, $height, $basis_width, $basis_height, $grain_direction, $supplier, $double_sided, $cuttable, $multipart, $perfecting, $scoring, $bladecleaning, $grade, $spp, $supplied, $digital, $full_packages, $minimum_order, $inventory_number, $material, $message, $recommendations ) = misc::trim($csv->fields());
+				my ( $paper_id, $owner, $manufacturer, $group, $brand, $finish, $colour, $weight, $quality, $mweight, $gsm, $calliper, $type, $width, $height, $basis_width, $basis_height, $grain_direction, $supplier, $double_sided, $cuttable, $multipart, $perfecting, $scoring, $bladecleaning, $grade, $spp, $supplied, $digital, $full_packages, $minimum_order, $inventory_number, $material, $message, $recommendations ) = misc::trim($csv->fields());
 
 				next if ! $paper_id;
 
@@ -387,10 +387,11 @@ sub import_export {
 				$Paper->owner_id( $owners{$owner} ? $owners{$owner} : $session{'company_id'} );
 				$Paper->manufacturer( $manufacturer );
 				$Paper->group( $group );
-				$Paper->brand( $name );
+				$Paper->brand( $brand );
 				$Paper->finish( $finish );
 				$Paper->colour( $colour );
 				$Paper->weight( $weight );
+				$Paper->quality( $quality );
 				$Paper->mweight( $mweight );
 				$Paper->gsm( $gsm );
 				$Paper->calliper( $calliper );
@@ -410,6 +411,7 @@ sub import_export {
 				$Paper->supplied( $supplied );
 				$Paper->digital( $digital );
 				$Paper->full_packages( $full_packages );
+				$Paper->sheets_per_package( $spp );
 				$Paper->minimum_order( $minimum_order );
 				$Paper->inventory_number( $inventory_number );
 				$Paper->material( $material );

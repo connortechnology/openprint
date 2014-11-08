@@ -460,5 +460,9 @@ sub tax_code {
 	} # end if
 	return '0';
 } # end if
+
+sub link_to {
+	return sprintf('<a href="/account/company_profile.html?ddmCustomer=%d">%s</a>', $_[0]{id}, $_[0]{name} );
+} # end sub link_to
 1;
 __END__
