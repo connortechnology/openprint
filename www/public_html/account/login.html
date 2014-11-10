@@ -21,12 +21,20 @@
 		if ( @csr_ids ) {
 			$html .= join('<br/>',
 					'You are assisting the following CSRs:', 
-					map { $_->link_to() } openprint::User->find(id=>\@csr_ids, order=>'lower(firstname),lower(lastname)') 
+					( map { $_->link_to() } openprint::User->find(id=>\@csr_ids, order=>'lower(firstname),lower(lastname)') ),
+					'',
 				);
 		} 
-		return $html;	
+		my @assistant_ids = $Me->assistant_ids();
+		if ( @assistant_ids ) {
+			$html .= join('<br/>',
+					'The following people are assisting you and have access to your accounts:', 
+					( map { $_->link_to() } openprint::User->find(id=>\@assistant_ids, order=>'lower(firstname),lower(lastname)') ),
+					''
+				);
+		} 
+		return $html;
 	) ?>
-	<br/>
 	<div id="lastLogins">
 	<? include(/includes/login_log.html) ?>
 	</div>
