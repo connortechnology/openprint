@@ -449,6 +449,10 @@ sub link {
 	return sprintf('<a href="/account/view.html?user=%1$d">%2$s</a>', $_[0]{id}, $_[0]->name() );
 } # end sub link
 
+sub link_to { 
+	return $_[0]->link();
+} # end sub link_to
+
 sub html {
 	if ( ! $_[0]{'id'} ) {
 		$log->error("called html on user without id".$_[0]->to_string() );
