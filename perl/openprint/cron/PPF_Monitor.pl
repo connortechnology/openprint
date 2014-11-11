@@ -341,6 +341,7 @@ sub store_PPF {
 						'txtSignatureType'		=>	'Interior Pages',
 						'txtServiceDescription'	=>	'Interior Pages',
 						'ddmRunStyleUsed'		=>	$PPF->runstyle(),
+						( map { 'ddmPress'.$_ => $$Equipment{strid} } ( $Project->quantity_indexes(), 'Used' ) ),
 						} );
 				$Project->add_to_log( undef, undef, "CIP3 Adding new form $sig $side." );
 			} # end if
