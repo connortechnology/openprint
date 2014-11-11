@@ -200,6 +200,7 @@ $log->warn("Lookup up stock price, cuz it's not in the paper service: cost-$stoc
 
 	} else {
 
+
         foreach my $ss_id ( $Project->signatures() ) {
             my $sig_specs = openprint::service::get_specs_ref( $Project, $ss_id );
 
@@ -227,7 +228,6 @@ $log->warn("Lookup up stock price, cuz it's not in the paper service: cost-$stoc
                     $sheets = POSIX::ceil( $sheets );
                     $Paper = $Paper->Supplied();
                     $string = $Paper->id_string();
-				
                 } else {
                     $log->debug("No area in project view: " . $Paper->to_string() );
                 } # end if
