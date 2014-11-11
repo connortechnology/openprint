@@ -966,6 +966,7 @@ $openprint::log->debug("Templatetype: $$sig_specs{'rdbTemplateType'}") if DEBUG;
 								columns			=>	$$Imposition{columns},
 								rows			=>	$$Imposition{rows},
 								printing_type	=>	$ppt,
+								spine_direction	=>	$$Imposition{'image_orientation'},
 								});
 						if ( $Fold ) {
 # Need to check feed width
@@ -1044,15 +1045,15 @@ $openprint::log->debug("No Fold") if DEBUG;
 							$openprint::log->debug("Fits") if DEBUG;
 							my $Fold = $Equipment->Fold({
 									pages			=>	$Imposition->pages(),
-		( $$Imposition{image_orientation} eq 'Vertical' ? (
-							page_columns	=>	$Imposition->page_columns(),
-							page_rows		=>	$Imposition->page_rows(),
-		) : (
-							page_columns	=>	$Imposition->page_rows(),
-							page_rows		=>	$Imposition->page_columns(),
-		) ),
-							page_width		=>	$Imposition->page_width(),
-							page_height		=>	$Imposition->page_height(),
+									( $$Imposition{image_orientation} eq 'Vertical' ? (
+																					page_columns	=>	$Imposition->page_columns(),
+																					page_rows		=>	$Imposition->page_rows(),
+																				) : (
+																					page_columns	=>	$Imposition->page_rows(),
+																					page_rows		=>	$Imposition->page_columns(),
+																				) ),
+									page_width		=>	$Imposition->page_width(),
+									page_height		=>	$Imposition->page_height(),
 									spine_direction	=>	$$Imposition{'image_orientation'},
 									stitching		=>	(($$services{'SaddleStitching'} or $$services{'LoopStitching'}) ? 1 : 0),
 									perfectbind		=>	($$services{'PerfectBound'} ? 1 : 0),
@@ -2254,7 +2255,7 @@ sub get_Folds {
 			if ( ! $Fold ) {
 				$_ = Data::Dumper::Dumper($find);
 				$openprint::log->error("CAnt get fold! on " . $Folder->to_string() . $_);
-Carp::cluck( "CAnt get fold! on " . $Folder->to_string() . $_ . join("\n", map { $_ . '=>' . $openprint::param{$_} } keys %openprint::param ));
+Carp::cluck( "CAnt get fold! on " . $Folder->to_string() ."\n". $_ . join("\n", map { $_ . '=>' . $openprint::param{$_} } sort keys %openprint::param ));
 
 			} else {
 				$openprint::log->debug("Got FOld: " . $Fold->to_string() ) if DEBUG;
