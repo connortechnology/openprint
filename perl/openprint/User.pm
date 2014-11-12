@@ -446,8 +446,12 @@ if ( 0 ) {
 }
 
 sub link {
-	return sprintf('<a href="/account/view.html?user=%1$d">%2$s</a>', $_[0]{id}, $_[0]->name() );
+	return sprintf('<a href="/account/view.html?user_id=%1$d">%2$s</a>', $_[0]{id}, $_[0]->name() );
 } # end sub link
+
+sub link_to {
+    return sprintf('<a href="/account/view.html?user_id=%1$d">%2$s</a>', $_[0]{id}, @_ > 1 ? $_[1] : $_[0]->name() );
+} # end sub link_to
 
 sub html {
 	if ( ! $_[0]{'id'} ) {
