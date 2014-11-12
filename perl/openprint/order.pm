@@ -633,7 +633,9 @@ sub cancel_order {
 
 		# Free up any stock allocated to this project
 		foreach my $PA ( openprint::PaperAllocation->find( docket=>$Order->docket() ) ) {
-			$Order->add_log( qq`De-allocated $$PA{quantity}$$PA{units} of <a href="/employee/inventory/paper_details.html?paper_id=$$PA{paper_id}">` . $PA->Paper()->to_string() . ($PA->skid_id()?qq`</a> on skid <a href="/employee/inventory/skids.html?skid_id=$$PA{skid_id}">$$PA{skid_id}</a>` : '') );
+			my @skid_ids = $PA->skid_ids() ? @{$PA->skid_ids()} : ();
+			$Order->add_log( qq`De-allocated $$PA{quantity}$$PA{units} of <a href="/employee/inventory/paper_details.html?paper_id=$$PA{paper_id}">` . $PA->Paper()->to_string() . '</a>'.
+					( @skid_ids ? ' on skid: ' .  join(',', map { $_->url_to() } openprint::Skid->find(id=>\@skid_ids) ) : '' ) );
 			$PA->delete();
 		} # end foreach PA
 	} # end foreach

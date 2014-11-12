@@ -23,7 +23,7 @@ use Carp qw( cluck );
 use strict;
 use Data::Dumper;
 package openprint::Estimating::Printing;
-my $threading = 1;
+my $threading = 0;
 use threads;
 use constant DEBUG => 0;
 use constant DEBUG_PLATES => 0;
