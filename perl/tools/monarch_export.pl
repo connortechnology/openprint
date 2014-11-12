@@ -105,7 +105,7 @@ foreach my $table ( $$opts{table} ? split(',',$$opts{table} ) : @tables ) {
 			} # end if
 			push @values, $value;
 		}
-
+print sprintf( $format_string, @values );
 		print FH sprintf( $format_string, @values );
 	} # end foreach Cmompany
 	close( FH );
