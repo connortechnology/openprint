@@ -23,7 +23,11 @@
 				if ( $session{user_id} ) {
 					if ( $$variable{User}->can_edit() ) {
 						$html .= button( 'Delete', { href=>'/account/search.html?action=Delete&amp;user_id='.$$variable{User}{id}, text=>'Delete Profile' } );
+						if ( $session{user_type} eq 'A' ) {
+						$html .= button( 'Edit', { href=>'/administrator/managerial/user_profiles.html?ddmUser='.$$variable{User}{id} } );
+						} else {
 						$html .= button( 'Edit', { href=>'/account/user_profile.html?ddmUser='.$$variable{User}{id} } );
+						}
 					} # end if
 					# Can assume if we are viewing this that we are not blocked.
 					if ( $$variable{User}->id() == $session{user_id} ) {

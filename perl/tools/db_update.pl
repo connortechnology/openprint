@@ -1152,6 +1152,11 @@ if ( ! sets::isin( 'tbl_equipment_specifications', \@tables ) ) {
 	} # end if
 } # end if
 
+if ( ! sets::isin( 'equipment_operators', \@tables ) ) {
+	print "Adding Equipment Operators\n";
+	$dbh->do( misc::load_file( $log, '../openprint/sql/Equipment_Operators.sql' ) ) or die $dbh->errstr();
+	die $dbh->errstr() if $dbh->errstr();
+} # end if
 	
 if ( ! sets::isin( 'stockbrands', \@tables ) ) {
 	$dbh->do(misc::load_file( $log, '../openprint/sql/StockBrands.sql') );

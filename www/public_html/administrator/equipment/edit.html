@@ -77,7 +77,7 @@ function filter_onChange( element, id, selected ) {
 		<? echo ( join( "\n",
 				button( 'PreviousTop', { onclick=>"f1.btnFunction.value='Previous';fmCheck(f1);", text=>'Previous' } ),
 				button( 'NextTop', { onclick=>"f1.btnFunction.value='Next';fmCheck(f1);", text=>'Next' } ),
-				button( 'NewTop', { onclick=>"addCheck($('f2'));", text=>'New' } ),
+				button( 'NewTop', { onclick=>"addCheck(\$('f2'));", text=>'New' } ),
 				button( 'DeleteTop', { onclick=>"f1.btnFunction.value='Delete';fmChange=2;fmCheck(f1);", text=>'Delete' } ),
 				button( 'SaveTop', { onclick=>q`$('f2').btnFunction.value='Save';fmChange=3;fmCheck($('f2'));`, text=>'Save' } ),
 				button( 'CopyTop', { onclick=>"f1.btnFunction.value='Copy';f1.submit();", text=>'Copy' } ),
