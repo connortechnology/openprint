@@ -959,6 +959,7 @@ $openprint::log->debug("Templatetype: $$sig_specs{'rdbTemplateType'}") if DEBUG;
 							page_rows		=>	$Imposition->page_columns(),
 		) ),
 								page_width		=>	$$sig_specs{txtFinalWidth},
+								page_height		=>	$$sig_specs{txtFinalHeight},
 								type			=>	$$sig_specs{rdbTemplateType},
 								gsm				=>	$Paper->gsm(),
 								calliper		=>	$$Paper{calliper},
@@ -1040,7 +1041,7 @@ $openprint::log->debug("No Fold") if DEBUG;
 
 #$Imposition->display('fitting');
 						# See if it fits
-						$_ = $Equipment->fits( $Imposition->layout_width(), $Imposition->layout_height(), $$Paper{'calliper'} );
+						$_ = $Equipment->fits( $Imposition->layout_width(), $Imposition->layout_height(), $$Paper{calliper} );
 						if ( ! $_ )	{
 							$openprint::log->debug("Fits") if DEBUG;
 							my $Fold = $Equipment->Fold({

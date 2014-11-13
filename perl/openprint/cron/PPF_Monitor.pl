@@ -218,7 +218,7 @@ if ( $mangle ) {
 				$log->error("No data! $file_base $docket $sig $side");
 				next;
 			} # end if
-			my $PPF = store_PPF( $docket, $name, $sig, $side, $data );
+			my $PPF = store_PPF( $docket, $name, $sig, $side, $Equipment, $data );
 			$PPF->send_ppf( $Equipment ) if ! $$Equipment{'cip3_hold'};
 			unlink $$Equipment{'cip3_in'}.'/'.$file_base.'A.'.$extension;
 			unlink $$Equipment{'cip3_in'}.'/'.$file_base.'B.'.$extension;
@@ -286,7 +286,7 @@ if ( $mangle ) {
 			$log->error("File was not complete! $file_base");
 			next;
 		} # end if
-		my $PPF = store_PPF( $docket, $name, $sig, $side, $data );
+		my $PPF = store_PPF( $docket, $name, $sig, $side, $Equipment, $data );
 		$PPF->send_ppf( $Equipment ) if ! $$Equipment{'cip3_hold'};
 		unlink $$Equipment{'cip3_in'}.'/'.$file;
 	} # end foreach file in input hotfolder
@@ -296,7 +296,7 @@ if ( $mangle ) {
 $dbh->disconnect() if $dbh;
 
 sub store_PPF {
-	my ( $docket, $version, $sig, $side, $data ) = @_;
+	my ( $docket, $version, $sig, $side, $Equipment, $data ) = @_;
 
 	my $compressed_data;
 	if ( $use_compression ) {
