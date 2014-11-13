@@ -2967,7 +2967,7 @@ sub calculate_impositions {
 				push @impositions, $I;
 			} # end foreach 
 		} else {
-			@impositions = @press_impositions;
+			push @impositions, @press_impositions;
 		} # end if needed_pages
 
 	} # end foreach press
