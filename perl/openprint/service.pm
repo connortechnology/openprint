@@ -8,7 +8,7 @@ require openprint::pricing;
 require openprint::logs;
 require openprint::Project_Service;
 
-use constant DEBUG => 0;
+use constant Debug => 0;
 
 use vars qw( %specs_cache );
 
@@ -27,7 +27,7 @@ sub get_price_object {
 	my ( $service, $range, $Equipment ) = @_;
 	my $Service = openprint::Service->find_one( name=>$service );
 	if ( ! $Service ) {
-		if ( DEBUG ) {
+		if ( Debug ) {
 			$openprint::log->debug("No Service for $service");
 		};
 		return;
@@ -160,7 +160,7 @@ sub insert_service_spec {
 				'SELECT strName, strValue FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND lngServiceIndex=?', $project_index, $service_index );
 	} # end if
 	if ( defined $specs_cache{$service_index}{$name} and defined $value and $specs_cache{$service_index}{$name} eq $value ) {
-		$log->debug("insert_service_spec: return because no change in value: ($name)($value)") if DEBUG;
+		$log->debug("insert_service_spec: return because no change in value: ($name)($value)") if Debug;
 		return;
 
 	} # end if
@@ -474,7 +474,7 @@ $openprint::log->error("Doing internal calc without service_index or, not found"
 	# We are doing this in an eval because we don't actually want to die.
 	eval 'require openprint::Estimating::'.$service_type;
 	$log->error("Error in requiring $package $@") if $@;
-	if ( DEBUG ) {
+	if ( Debug ) {
 		foreach my $key ( eval( 'openprint::Estimating::'.$service_type.'::variables( $project_index, $service_index, \%specs )') ) {
 			$log->debug("Internal Calc:: before calc $key $specs{$key} :". $specs_cache{$service_index}{$key});
 		} # end foreach
@@ -488,7 +488,7 @@ $openprint::log->error("Doing internal calc without service_index or, not found"
 		$Service->save({status=>$status}) if $status ne $Service->status();
 
 		foreach my $key ( eval( 'openprint::Estimating::'.$service_type.'::variables( $project_index, $service_index, \%specs )') ) {
-			$log->debug("Internal Calc:: looking at $key $specs{$key} :". $specs_cache{$service_index}{$key}) if DEBUG;
+			$log->debug("Internal Calc:: looking at $key $specs{$key} :". $specs_cache{$service_index}{$key}) if Debug;
 			openprint::service::insert_service_spec( $log, $dbh, $project_index, $service_index, $key, $specs{$key} );
 		} # end foreach
 	} else {

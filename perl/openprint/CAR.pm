@@ -167,7 +167,7 @@ sub send_reprint_approval_notification {
 				'To'    =>  $To,
 				'From'  =>  $From,
 				);
-		$info{ReplacementText} = ssi::include('/email_content/iso_car_reprint_approval.html,', \%info );
+		$info{ReplacementText} = ssi::include('/email_content/iso_car_reprint_approval.html', \%info );
 		my $Email = new openprint::Email();
 		$Email->send(
 				FROM    => $From,

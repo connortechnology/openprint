@@ -36,9 +36,9 @@ $table = 'purchaseorders';
 $serial = 'purchaseorders_id_seq';
 
 %fields = (
-	'id'				=>	'id',
+	id				=>	'id',
 	num					=>	'num',
-	'company_id'		=>	'company_id',
+	company_id		=>	'company_id',
 	contact_id			=>	'contact_id',
 	'currency_id'		=>	'currency_id',
 	'created_on'		=>	'created_on',
@@ -612,6 +612,13 @@ sub num {
 	return $_[0]{id} if ! $_[0]{num};
 	return $_[0]{num};
 } # end sub num
+
+sub can_send {
+	my $User = @_ > 1 ? $_[1] : new openprint::User( $openprint::session{user_id} );
+	return 1 if $$User{id} == $_[0]{created_by};
+	return 0;
+} # end sub can_send
+
 sub can_authorize {
 	my $User = @_ > 1 ? $_[1] : new openprint::User( $openprint::session{user_id} );
 

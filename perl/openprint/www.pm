@@ -1,7 +1,7 @@
 use strict;
 package openprint::www;
 
-use constant DEBUG => 0;
+use constant Debug => 0;
 
 #use Benchmark;
 #use diagnostics;

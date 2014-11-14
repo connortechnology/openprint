@@ -64,7 +64,7 @@
 			order		=>	'received_on DESC',
 			( $session{'/employee/inventory/manifests.html?deleted'} ? ( deleted => [ split(',', $session{'/employee/inventory/manifests.html?deleted'} ) ] ) : () ),
 		);
-if ( $session{'/employee/inventory/manifests.html?type'} ) {
+		if ( $session{'/employee/inventory/manifests.html?type'} ) {
             my @types = split(',',$session{'/employee/inventory/manifests.html?type'} );
             if ( @types ) {
                 if ( sets::isin( 'Unknown', \@types ) ) {
