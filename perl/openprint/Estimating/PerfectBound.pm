@@ -163,7 +163,7 @@ $I->display('In PerfectBi:') if DEBUG;
 
         if ( ! ( $$I{Folds} and @{$$I{Folds}} ) ) {
             $openprint::log->error("No folds in imposition, guess 1") if DEBUG;
-            $I->display("No Folds");
+            $I->display("No Folds") if DEBUG;
             $$specs{'txtSignatureQty'.$I->pages().'Page-'.$qty_index} += 1;
             $$specs{"txtPockets$qty_index"} += 1;
 # This doesn't really make sense.  If we are doing printing estimation, then the folding probably isn't going to match.  
