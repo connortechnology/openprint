@@ -891,10 +891,10 @@ $openprint::log->debug("Not a book") if DEBUG;
 				} # end if
 				if ( $ServicePrice{units} eq 'per inch' ) {
 					$price = ( $runs * $horizontal_cuts *$ServicePrice{Price} * $I->image_width() );
-					$results{Breakdown} .= sprintf("\t\t%d Horizontal cuts on %d sheets in %d runs * %.2f inches: %.2f%s=%.2f<br/>", $horizontal_cuts, $sheets, $runs, $I->image_width(), @ServicePrice{'Price','units'}, $price );
+					$results{Breakdown} .= sprintf("%d Horizontal cuts on %d sheets in %d runs * %.2f inches: %.2f%s=%.2f<br/>", $horizontal_cuts, $sheets, $runs, $I->image_width(), @ServicePrice{'Price','units'}, $price );
 				} else {
 					$price = ( $runs * $horizontal_cuts * $ServicePrice{Price} );
-					$results{Breakdown} .= sprintf("\t\t%d Horizontal cuts on %d sheets in %d runs: %.2f%s=%.2f<br/>", $horizontal_cuts, $sheets, $runs, @ServicePrice{'Price','units'}, $price );
+					$results{Breakdown} .= sprintf("%d Horizontal cuts on %d sheets in %d runs: %.2f%s=%.2f<br/>", $horizontal_cuts, $sheets, $runs, @ServicePrice{'Price','units'}, $price );
 				} # end if
 				$totalPrice += $price;
 			} else {

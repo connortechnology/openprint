@@ -4387,7 +4387,7 @@ $openprint::log->debug("Sheet No supplied wight: $supplied_sheets $paper_string 
 					my $starttime = gettimeofday() if DEBUG;
 
 					$openprint::log->debug("Stitching::signature_calc: recursion_depth; $recursion_depth do_final_pricing: $do_final_pricing total imps: " . @total_impositions) if DEBUG;
-					$results = openprint::Estimating::Stitching::signature_calc( $Project, $$project{HasStitching}, $$project{StitchingSpecs}, $qty_index, \@total_impositions, $project );
+					$results = openprint::Estimating::Stitching::signature_calc( $Project, @$project{'HasStitching','StitchingSpecs'}, $qty_index, \@total_impositions, $project );
 				#} # end if cached
 					if ( $$results{Status} eq 'uncalculated' ) {
 						$$price{'Stitching Breakdown'} .= "Stitching error: $$results{alert} <br/>";
