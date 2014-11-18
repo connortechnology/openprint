@@ -333,14 +333,13 @@ require openprint::OrderedProject;
 
 sub Products {
 	my $self = shift;
-	if ( ! $$self{'id'} ) {
-		Carp::cluck("openrpint::Order->Products called with no id");
-		$openprint::log->error("openrpint::Order->Products called with no id");
+	if ( ! $$self{id} ) {
+		$openprint::log->warn("openrpint::Order->Products called with no id");
 		return ();
 	} # end if
-require openprint::OrderedProduct;
-	@{$$self{'Products'}} = openprint::OrderedProduct->find( 'order_id'=>$$self{id} );
-	return @{$$self{'Products'}};
+	require openprint::OrderedProduct;
+	@{$$self{Products}} = openprint::OrderedProduct->find( order_id=>$$self{id} );
+	return @{$$self{Products}};
 } # end sub Products
 
 sub User {

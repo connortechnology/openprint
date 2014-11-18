@@ -1,4 +1,3 @@
-<script type="text/javascript" src="/javascripts/fileuploader.js?version=1"></script>
 <link type="text/css" rel="/css/fileuploader.css"/>
 <script type="text/javascript" src="/javascripts/dragndrop.js"></script>
 <div class="PhotoAlbum">
@@ -7,7 +6,7 @@
 			<input type="hidden" name="btnFunction" />
 			<p class="buttons">
 				<? echo ( join("\n",
-					ssi::button( 'Save', { onclick=>q`f1.btnFunction.value='Save';f1.submit();` } ),
+					button( 'Save', { onclick=>q`f1.btnFunction.value='Save';f1.submit();` } ),
 				); ) ?>
 			</p>
 			<fieldset><legend>Add Photos</legend>
@@ -19,7 +18,8 @@
 					simply drag and drop them here. Or </span>
 					<span id="formuploadmessage"> click on the Upload button. There is a 1GB file size limit.</span>
 				</div>
-				<? echo ( ssi::button( 'Upload', { class=>'qq-upload-button' } ); ) ?>
+				<? echo ( button( 'Upload', { class=>'qq-upload-button' } ); ) ?>
+				<span class="qq-drop-processing"><span></span><span class="qq-drop-processing-spinner"></span></span>
 				<ul id="upload_list" class="preview qq-upload-list"></ul>
 			</div>
 			<div class="disclaimer"><? echo ( sets::isin( $session{user_type}, ['E','A'] ) ? 'Disclaimer hidden.' : $config{PhotoUploadDisclaimer} ) ?></div>
@@ -58,34 +58,31 @@
         $('formuploadmessage').hide();
     }
 
-	var uploader = new qq.FileUploader({
-		debug: true,
+	var uploader = new qq.FineUploader({
 		element: $('assets'),
-		template: null,
-		droparea: $('assets'),
-		action: '/upload.htm',
-		limit: 5,
-		allowedExtensions: ['jpg', 'jpeg', 'png', 'gif','bmp','pdf'],
-		sizeLimit: 1024*1024*1024,
-		params: {
-			id: '',
-			UploadType: 'Photo_Album'
-		},
-		other_types: [ {
-			type: 'application/x-moz-file-promise-dest-filename',
-			onComplete: function(e,item) {
-				 new Ajax.Updater( 'Photos', '/photo_albums/_album_photos.html', { 
-					parameters: { 
-						album_id: '', 
-						album_type: 'openprint::Photo_Album',
-						filename: e.dataTransfer.getData(item),
-						action: 'add',
-						} } );
-			}
-		} ],
-		onComplete: function(id, fileName){
-			new Ajax.Updater( 'Photos', '/photo_albums/_album_photos.html', { parameters: { album_id: '', album_type: 'openprint::Photo_Album' } } );
-		}
-
+      request: {
+            endpoint: '/upload.htm',
+            paramsInBody: false,
+            params: {
+                id: '',
+                UploadType: 'Photo_Album'
+            }
+        },
+ validation: {
+            allowedExtensions: ['jpg', 'jpeg', 'png', 'gif','bmp','pdf'],
+            sizeLimit: 1024*1024*1024
+        },
+        template: null,
+        callbacks: {
+            onComplete: function(id, fileName){
+                new Ajax.Updater( 'Photos', '/photo_albums/_album_photos.html', { parameters: { album_id: '', album_type: 'openprint::Photo_Album' } } );
+            }
+        },
+        dragAndDrop: {
+            hideDropzones: false
+        },
+        failedUploadTextDisplay: {
+            mode: 'custom',
+        }
 	});
 </script>

@@ -77,15 +77,15 @@ sub send_notifications {
 	my @Users = openprint::User->find('type'=>['E','A'],'usergroup any'=>'Quality Control Notifications');
 
 	if ( @Users ) {
-		my $email_template = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/email_template.html' );
-		my $text = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/email_content/article_notification.html' );
+		my $email_template = misc::load_file( $log, $ENV{DOCUMENT_ROOT} . '/email_content/email_template.html' );
+		my $text = misc::load_file( $log, $ENV{DOCUMENT_ROOT}.'/email_content/article_notification.html' );
 
 		my %info = ( 'Article'	=>	$self );
-		$info{'ReplacementText'} = ssi::variable_substitution( \$text, \%info );
+		$info{ReplacementText} = ssi::variable_substitution( \$text, \%info );
 
 		my $body = ssi::variable_substitution( \$email_template, \%info );
 		new openprint::Email()->send(
-				FROM    => new openprint::User( $session{'user_id'} ),
+				FROM    => new openprint::User( $session{user_id} ),
 				TO      => \@Users,
 				SUBJECT => 'A new Article has been generated.',
 				ATTACHMENTS	=>	[ '', MIME::QuotedPrint::encode_qp($body), 'text/html', 'quoted-printable'],
@@ -94,16 +94,16 @@ sub send_notifications {
 
 } # end sub send_notification
 sub Company {
-	return new openprint::Company( $_[0]{'company_id'} );
+	return new openprint::Company( $_[0]{company_id} );
 } # end sub Company
 sub Author {
-	if ( ! $_[0]{'Author'} ) {
-		$_[0]{'Author'} = new openprint::User( $_[0]{'created_by'} );
+	if ( ! $_[0]{Author} ) {
+		$_[0]{Author} = new openprint::User( $_[0]{created_by} );
 	} # end if
-	if ( ! $_[0]{'Author'}->id() ) {
-		$_[0]{'Author'}->company_id( $_[0]{'company_id'} );
+	if ( ! $_[0]{Author}->id() ) {
+		$_[0]{Author}->company_id( $_[0]{company_id} );
 	} # end if
-	return $_[0]{'Author'};
+	return $_[0]{Author};
 		
 } # end sub Author
 
@@ -115,24 +115,24 @@ sub category {
 				$Category = new openprint::Article_Category();
 				$Category->save({'name'=>$_[1]})
 			} # end if	
-			$_[0]{'category_id'} = $Category->id();
+			$_[0]{category_id} = $Category->id();
 			return $Category->name();
 		} else {
-			$_[0]{'category_id'} = undef;
+			$_[0]{category_id} = undef;
 		} # end if
 	} # end if
-	return new openprint::Article_Category( $_[0]{'category_id'} )->name();
+	return new openprint::Article_Category( $_[0]{category_id} )->name();
 } # end sub category
 
 sub Category {
-	return new openprint::Article_Category( $_[0]{'category_id'} );
+	return new openprint::Article_Category( $_[0]{category_id} );
 } # end sub Category
 
 sub summary {
 	if ( @_ > 1 ) {
-		$_[0]{'summary'} = $_[1];
+		$_[0]{summary} = $_[1];
 	} # end if
-	return $_[0]{'summary'};
+	return $_[0]{summary};
 } # end sub summary
 
 sub can_view {
@@ -155,8 +155,8 @@ sub can_view {
 		} else {
 #$openprint::log->debug("usertype is ($_[0]{user_type})");
 			# Don't have to test for admin, cuz we did it above
-			return 1 if $_[0]{'user_type'} eq 'C' and sets::isin( $$User{type}, ['E','C'] );
-			return 1 if $_[0]{'user_type'} eq 'E' and sets::isin( $$User{type}, ['E'] );
+			return 1 if $_[0]{user_type} eq 'C' and sets::isin( $$User{type}, ['E','C'] );
+			return 1 if $_[0]{user_type} eq 'E' and sets::isin( $$User{type}, ['E'] );
 		} # end if
 	} else {
 		$openprint::log->debug("not published");
@@ -168,10 +168,10 @@ sub can_view {
 	return 0;
 } # end sub can_view
 sub can_edit {
-	return 0 if ! $session{'user_id'};
-	return 1 if ! $_[0]{'id'};
-	return 1 if $session{'user_type'} eq 'A';
-	return 1 if ( $session{'user_id'} == $_[0]{'created_by'} );
+	return 0 if ! $session{user_id};
+	return 1 if ! $_[0]{id};
+	return 1 if $session{user_type} eq 'A';
+	return 1 if ( $session{user_id} == $_[0]{created_by} );
 	return 0;
 } # end sub can_edit
 
@@ -223,7 +223,7 @@ sub summary_html {
 			ssi::escape_quotes($Article->title()),
 			$Article->source_content(),
 			($Article->summary() ? $Article->summary() : $Article->body() ),
-			( $Article->published() ? Date::Format::time2str($openprint::config{'DateTimeFormat'}, Date::Parse::str2time( $Article->published_on() ) ) : '' ),
+			( $Article->published() ? Date::Format::time2str($openprint::config{DateTimeFormat}, Date::Parse::str2time( $Article->published_on() ) ) : '' ),
 			join('',map { $_->thumbnail_html() } ( @Assets ? $Assets[0] : () ) ),
     );
 	if ( $Article->source() ) {
@@ -232,7 +232,7 @@ sub summary_html {
 	if ( $Article->summary() and $Article->summary() ne $Article->body() ) {
 		$html .= sprintf('<a class="readmore" href="/article/view.html?article_id=%1$d">Read more...</a><br/>', $Article->id() );
 	} # end if
-	if ( (!$$options{'show_no_comments'}) and (@Comments == 0) ) {
+	if ( (!$$options{show_no_comments}) and (@Comments == 0) ) {
 	} else {
 		$html .= sprintf(q`<div class="comments">This article has %s.</div>`, ( @Comments == 1 ? '1 comment' : @Comments . ' comments' ) );
 	} # end if
@@ -241,7 +241,7 @@ sub summary_html {
 } # end sub summary_html
 
 sub view_url {
-	return '/article/view.html?article_id='.$_[0]{'id'};	
+	return '/article/view.html?article_id='.$_[0]{id};	
 } # end sub view_url
 
 sub link_to {
@@ -254,10 +254,10 @@ sub Assets {
 } # end sub Assets
 
 sub published_on_string {
-	if ( ! $_[0]{'published_on_string'} ) {
-		$_[0]{'published_on_string'} = misc::smart_time( Date::Parse::str2time( $_[0]{'published_on'} ) );
+	if ( ! $_[0]{published_on_string} ) {
+		$_[0]{published_on_string} = misc::smart_time( Date::Parse::str2time( $_[0]{published_on} ) );
 	} # end if
-	return $_[0]{'published_on_string'};
+	return $_[0]{published_on_string};
 } # end sub published_on_string
 
 sub upload {
@@ -288,14 +288,14 @@ sub destroy {
 } # end sub destroy
 	
 sub Photos {
-    #if ( ! $_[0]{'album_id'} ) {
+    #if ( ! $_[0]{album_id} ) {
         #return ();
     #} # end if
-    return openprint::Article_Asset->find('article_id'=>$_[0]{'id'});
+    return openprint::Article_Asset->find('article_id'=>$_[0]{id});
 } # end sub Photos
 
 sub Album {
-    #return new openprint::Photo_Album( $_[0]{'album_id'} );
+    #return new openprint::Photo_Album( $_[0]{album_id} );
 } # end sub Album
 
 sub body_escaped {

@@ -25,7 +25,7 @@ use Data::Dumper;
 package openprint::Estimating::Printing;
 my $threading = 0;
 use threads;
-use constant DEBUG => 0;
+use constant DEBUG => 1;
 use constant DEBUG_PLATES => 0;
 use constant DEBUG_VERSIONS => 0;
 use constant DEBUG_FILTERING => 0;
@@ -2003,7 +2003,6 @@ sub set_size {
 				} # end if
 				$variables{txtSpreadSize} = [ sets::union( 'output', @{$variables{txtSpreadSize}} ) ];
 			} # end if
-$openprint::log->debug("Spread size: $$specs{txtSpreadSize}");
 
 			if ( ( ! defined $$specs{chkOverrideDimensions} ) or ( $$specs{chkOverrideDimensions} ne 'Y' ) ) {
 				if ( $$specs{txtSpreadSize} == 4 ) {
