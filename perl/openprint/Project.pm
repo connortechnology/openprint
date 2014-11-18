@@ -1468,7 +1468,7 @@ sub production_cost {
 sub Service {
 	my ( $self, $service_id ) = @_;
 	if ( ! $service_id ) {
-		$openprint::log->error("No service_id passed to ServiceType");
+		$openprint::log->error("No service_id passed to ServiceType for project $$self{id}");
 		Carp::cluck("No service_id passwrod to ServiceType");
 	} # end if
 	return new openprint::Project_Service( {project_id=>$$self{id}, service_id=>$service_id} );

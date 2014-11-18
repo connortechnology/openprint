@@ -69,6 +69,7 @@ sub _signature {
 		$signature_count += 1;
 		openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $print_service_index, 'SignatureIndex', $signature_count );
 		$Project->unlock();
+		$variable{ServiceIndex} = $print_service_index;
 
 		my $sig_specs = openprint::service::get_specs_ref( $Project, $print_service_index );
 		foreach my $k ( keys %$sig_specs ) {
