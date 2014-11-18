@@ -417,23 +417,17 @@ $openprint::log->debug("Bindery Gutters: $gutters <? $bindery_gutters") if DEBUG
 	# Becomes Printable area
 	$adjusted_paper_height -= $$specs{'Grip Size'} if $$specs{'Add Grip Height'} ne 'N';
 $openprint::log->debug("Adjusted PHeght after grip: $adjusted_paper_height") if DEBUG;
+
+
 # On the web press, we have no paper dimensions, only the maximagesize, so this effectively sets the printing area to the max image size. Theoretically Max Image Size = Cutoff-Grip anyways
 	if ( $$specs{'Maximum Image Area Length'} and ( ( $adjusted_paper_height <= 0 ) or ( $adjusted_paper_height > $$specs{'Maximum Image Area Length'} ) ) ) {
 		my $max_image_height = $$specs{'Maximum Image Area Length'};
-if ( 1 ) {
 		$max_image_height += ( $bleed_size - $$specs{CropMarkSpace} ) if $bleed_locations{Top}; # Can bleed outside the image area
 		$max_image_height += ( $bleed_size - $$specs{CropMarkSpace} ) if $bleed_locations{Bottom}; # Can bleed outside the image area
-}
 		if ( $max_image_height < $adjusted_paper_height ) {
-
-		$openprint::log->debug("*** Using Max Image Length1: Before: $adjusted_paper_height After: $max_image_height***") if DEBUG;
-		$adjusted_paper_height = $max_image_height;
+			$openprint::log->debug("*** Using Max Image Length1: Before: $adjusted_paper_height After: $max_image_height***") if DEBUG;
+			$adjusted_paper_height = $max_image_height;
 		} # end if
-		if ( 0 ) {
-			
-		$adjusted_paper_height += ( $bleed_size - $$specs{CropMarkSpace} ) if $bleed_locations{Top}; # Can bleed outside the image area
-		$adjusted_paper_height += ( $bleed_size - $$specs{CropMarkSpace} ) if $bleed_locations{Bottom}; # Can bleed outside the image area
-		} # end nif
 	} # end if
 
 	if ( $$specs{'Colour Bar Orientation'} ne 'Length' ) {
@@ -637,12 +631,34 @@ $openprint::log->debug("Not doing dutch because ($$specs{dutch}) or $run_style o
 		$openprint::log->debug("*** NOT Using Max Image Length2: $adjusted_paper_height After: $$specs{'Maximum Image Area Length'}***") if DEBUG;
 	} # end if
 
-	if ( $$specs{'Colour Bar Orientation'} ne 'Length' ) {
-		if ( $run_style ne 'Work & Tumble' ) {
-			# W&Tumble has it in the grip space already.
-			$adjusted_paper_height -= $$setup2{colour_bar_size};
-		} # end if
-	} # end if
+    if ( $$specs{'Colour Bar Orientation'} ne 'Length' ) {
+
+# if colour bar is at bottom, 
+        my $colour_bar = $$setup2{colour_bar_size};
+
+# colour bar is at bottom or top, then can bleed into it.  Or it can go in the middle, in which case you put it in the bleed space. W&Tumble we put it in grip, so don't do this at all. 
+        if ( $run_style eq 'Work & Tumble' ) {
+			# It goes in grip space, don't adjust it to fit in bleed
+        } else {
+            #$colour_bar -= $bleed_size if $bleed_locations{Top};
+            #$colour_bar -= $bleed_size if $bleed_locations{Bottom};
+            #$colour_bar = 0 if $colour_bar < 0;
+        #} else { 
+# If impo was x2 then it can go in middle, but we don't know that yet.
+            # Apparently you can
+# 2014-09-25: Brendan and Rick say you really can't.  You need a minimum of bleed space.
+# SInce we don't know it rows > 1 yet, let's just only subtract 1
+            if ( $bleed_size ) {
+            $colour_bar -= ( $bleed_size - $min_bleed_size ) if $bleed_locations{Top} or $bleed_locations{Bottom};
+            #$colour_bar -= ( $bleed_size - $min_bleed_size ) if $bleed_locations{Top} and $bleed_locations{Bottom};
+            } # end if
+            $colour_bar = 0 if $colour_bar < 0;
+            $colour_bar = $$setup2{colour_bar_size} if $colour_bar > $$setup2{colour_bar_size};
+        }
+
+		$openprint::log->debug("Colour bar is now $colour_bar") if DEBUG;
+        $adjusted_paper_height -= $colour_bar;
+    } # end if
 
 	if ( $Paper->cuttable() ) {
 		$cropmarkspace = $$specs{CropMarkSpace};
