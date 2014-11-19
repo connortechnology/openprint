@@ -706,7 +706,11 @@ sub Payments {
 } # end sub Payments
 
 sub link_to {
+	if ( $_{created_on} ) {
 	return join( '', '<a href="/employee/purchase_order/view.html?po_id=', $_[0]{id}, '">' , $_[0]{id}, '</a>' );
+	} else {
+	return join( '', '<a href="/employee/purchase_order/view.html?po_id=', $_[0]{id}, '"><span class="error">' , $_[0]{id}, ' does not exist</span></a>' );
+	} # end if
 } # end sub link_to
 
 sub summary {
