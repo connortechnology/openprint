@@ -1230,7 +1230,7 @@ $FI->display("Found");
 							$FI->rows(1);
 							$FI->columns( $$specs{"FoldImposition-$form-$qty_index-$index"} );
 						} # end if
-						$$FI{page_quantity} = int($$SignatureImposition{pages}/$$Fold{pages});
+						$$FI{page_quantity} = int($$SignatureImposition{pages}/$$Fold{pages}) if $$Fold{pages};
 						$$FI{quantity} = $$specs{"FoldQty-$form-$qty_index-$index"};
 						$$FI{Fold} = $Fold;
 						$$Fold{undesired} = 1;
