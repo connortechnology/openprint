@@ -190,9 +190,9 @@ function calc_print( formName, force, options ) {
 	if ( gettingNewPrice && ! force ) {
 		// This prevents concurrent price getting
 		if ( options ) {
-			timeout = setTimeout("calc('f1', 0, " + Object.toJSON( options ) + ");", 1000 );	
+			timeout = setTimeout("calc_print('f1', 0, " + Object.toJSON( options ) + ");", 1000 );	
 		} else {
-			timeout = setTimeout("calc('f1' );", 1000 );	
+			timeout = setTimeout("calc_print('f1' );", 1000 );	
 		} // end if
 		return;
 	} // end if

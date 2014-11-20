@@ -79,7 +79,11 @@ function calc( formName, force, options ) {
 	if ( form && form.ServiceType ) {
 		if ( gettingNewPrice && ! force ) {
 			if ( timeout ) clearTimeout( timeout );
-			timeout = setTimeout( "calc('" + formName + "');", 1000 );
+			if ( options ) {
+				timeout = setTimeout("calc_print('"+formName+"', 0, " + Object.toJSON( options ) + ");", 1000 );	
+			} else {
+				timeout = setTimeout( "calc('" + formName + "');", 1000 );
+			}
 		} else {
 			timeout = null;
 			var AlertDiv = $('AlertDiv');
