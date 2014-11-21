@@ -1564,3 +1564,9 @@ function get_date_value( prefix ) {
 	});
 	return date.join('-');
 } //und function get_date_value
+
+function getSelectedLocation(text, li) {
+	if ( li.id ) {
+		new Ajax.Request( '/location/_load_location.json', { parameters: { location_id: li.id } } );
+	} // end if
+}
