@@ -25,7 +25,7 @@ use Data::Dumper;
 package openprint::Estimating::Printing;
 my $threading = 0;
 use threads;
-use constant DEBUG => 0;
+use constant DEBUG => 1;
 use constant DEBUG_PLATES => 0;
 use constant DEBUG_VERSIONS => 0;
 use constant DEBUG_FILTERING => 0;
@@ -578,6 +578,7 @@ $openprint::log->debug("Adding special colour for $colour");
 		} # end if	
 	} # end foreach
 
+	@project{'NoBindery','NoOfflineBindery'} = @$services{'NoBindery','NoOfflineBindery'};
 	$project{Binding} = openprint::print::get_book_type( $Project );
 	if ( ! $$services{NoBindery} ) {
 		$project{NeedFolding} = openprint::Estimating::Folding::signature_needs( $Project, $specs );
@@ -1471,7 +1472,10 @@ if ( DEBUG_INITIAL_FILTERING ) {
 					} # end foreach
 				} # end if start_width or cut for all sizes
 			} else { # Sheet Fed
-				next if ! ( $$Paper{width} and $$Paper{height} );
+				if ( ! ( $$Paper{width} and $$Paper{height} ) ) {
+					$openprint::log->debug($$Press{strid}." : Sheetfed but doesn't have width and height Not using " . $Paper->to_string() ) if DEBUG;
+					next;
+				}
 				if ( (!$use_cut_stocks) and $Paper->is_cut() ) {
 					$openprint::log->debug($$Press{strid}." : Not using " . $Paper->to_string() . " because its cut." . $use_cut_stocks ) if DEBUG;
 					next;
@@ -1484,7 +1488,7 @@ if ( DEBUG_INITIAL_FILTERING ) {
 					$openprint::log->debug("Not using " . $Paper->to_string() . " because not in sheetsizes. for $$Press{strid}" ) if DEBUG;
 					next;
 				} # end if
-				$openprint::log->debug("using " . $Paper->to_string() . " because not in sheetsizes." ) if DEBUG;
+				$openprint::log->debug("using " . $Paper->to_string() . ' must be in sheetsizes.' ) if DEBUG;
 
 				$$project{Runstyles} = $runstyles_sheet;
 
@@ -2871,10 +2875,10 @@ sub breakdown {
 			( defined $$price{'UVCoating Breakdown'} ? $$price{'UVCoating Breakdown'} : '' ),
 			( defined $$price{'Aqueous Breakdown'} ? $$price{'Aqueous Breakdown'} : '' ),
 			( defined $$price{'Cutting Breakdown'} ? $$price{'Cutting Breakdown'} : '' ),
-			( defined $$price{'Scoring Breakdown'} ? $$price{'Scoring Breakdown'} : '' ),
 			( defined  $$price{'Numbering Breakdown'} ? $$price{'Numbering Breakdown'} : '' ),
 			( defined $$price{'DieCutting Breakdown'} ? $$price{'DieCutting Breakdown'}: '' ),
 			$$price{'Folding Breakdown'},
+			( defined $$price{'Scoring Breakdown'} ? $$price{'Scoring Breakdown'} : '' ),
 			( defined $$price{'Perforating Breakdown'} ? $$price{'Perforating Breakdown'} : '' ),
 			);
 
@@ -4946,12 +4950,17 @@ sub calc_price {
 # do not want an invalid fold style to win out unless there are no other valid signatures.
 			$price{'Folding Breakdown'} .= sprintf('Unable to fold<br/>'.$folding_results{Breakdown});
 			$price{'Comparison Cost'} += 10000000; 
+
+			# WHy are we doing this?	
 			if ( $$project{FoldingSpecs}{"chkOverrideEquipment-$$specs{SignatureIndex}-$qty_index"} ne 'Y' ) {
 				$$project{FoldingSpecs}{"ddmEquipment-$$specs{SignatureIndex}-$qty_index"} = '';
 			} # end if
 			$$Imposition{Folds} = [];
 		} else {
 			if ( $folding_results{Equipment} ) {
+
+				# Scoring needs this.
+				$$project{FoldingSpecs}{"ddmEquipment-$$specs{SignatureIndex}-$qty_index"} = $folding_results{Equipment}->id();
 				
 				if ( $folding_results{Equipment}->id() == $Press->id() ) {
 					my $FI = $folding_results{FoldedImpositions}[0];
@@ -5058,12 +5067,12 @@ $openprint::log->debug("Back From DieCutting");
 
 	my %scoring_results;
 	if ( $$project{HasScoring} and $$project{NeedScoring} ) {
-		%scoring_results = openprint::Estimating::Scoring::signature_calc( $Project, @$project{'HasScoring','ScoringSpecs'}, $specs, $qty_index, $Imposition );
+		%scoring_results = openprint::Estimating::Scoring::signature_calc( $Project, $$project{ScoringSpecs}, $specs, $qty_index, $Imposition, $project );
 #foreach my $k ( keys %scoring_results ) {
 #$openprint::log->debug("Scoring: $k => $scoring_results{$k}");
 #}
 		if ( $scoring_results{Status} eq 'uncalculated' ) {
-			$price{'Scoring Breakdown'} .= "Scoring error: $scoring_results{alert} $$project{ScoringSpecs}{alert} " . $$project{ScoringSpecs}{'hdnBreakdown'.$qty_index} . '<br/>';
+			$price{'Scoring Breakdown'} .= "Scoring error: $scoring_results{alert} $scoring_results{Breakdown} <br/>";
 			$price{'Comparison Cost'} += 1000000; 
 		} elsif ( $scoring_results{Imposition} ) {
 			$price{'Scoring Breakdown'} .= sprintf('Scoring Price: %dout $%.2f on %s<br/>', $scoring_results{Imposition}->imposition(), $scoring_results{Price}, $scoring_results{Equipment} ? $scoring_results{Equipment}->name() : '' );
