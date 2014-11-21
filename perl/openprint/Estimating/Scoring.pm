@@ -156,10 +156,10 @@ sub calc {
     my $calc_hash = {};
     if ( $$services{SaddleStitching} ) {
         $$calc_hash{StitchingSpecs} = openprint::service::get_specs_ref( $Project, $$services{SaddleStitching}[0] );
-        $$calc_hash{StitchingSpecs} = $$services{SaddleStitching}[0];
+        $$calc_hash{HasStitching} = $$services{SaddleStitching}[0];
     } elsif ( $$services{LoopStitching} ) {
         $$calc_hash{StitchingSpecs} = openprint::service::get_specs_ref( $Project, $$services{LoopStitching}[0] );
-        $$calc_hash{StitchingSpecs} = $$services{LoopStitching}[0];
+        $$calc_hash{HasStitching} = $$services{LoopStitching}[0];
     } # end if
     foreach my $service ( 'Cutting', 'Folding', 'PerfectBound' ) {
         if ( $$services{$service} and @{$$services{$service}} ) {
