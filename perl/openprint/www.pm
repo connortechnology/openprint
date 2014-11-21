@@ -198,7 +198,7 @@ sub handler {
 	#$log->debug( "Before loading content: ($page) Elapsed time: " . sprintf('%.4f', tv_interval([$starttime])*1000).' usecs' );
 		if ( ! exists $variable{'PageContent'} ) {
 			my $content;
-			if ( -e ( my $path = join('/', $config{'SkinPath'}, 'html', $page )) ) {
+			if ( -e ( my $path = join('/', $config{SkinPath}, 'html', $page )) ) {
 				$content = misc::load_file( $log, $path );
 				if ( ! $content ) {
 					$log->error("Found no content at $path");
@@ -250,7 +250,7 @@ $log->debug("PageContent is $variable{PageContent}");
 
 			#$log->warn("No template!" . $r->content_type());
 			$variable{PageContent} = ssi::variable_substitution( \$variable{'PageContent'}, \%variable ) if $variable{'PageContent'} ne '';
-			#$log->warn($variable{PageContent});
+			$log->warn($variable{PageContent}) if Debug;
 			#$log->debug( "Before printing: ($page) Elapsed time: " . sprintf('%.4f', tv_interval([$starttime])*1000).' usecs' . length( $variable{PageContent} ) );
 			$r->print( $variable{PageContent} );
 	#$log->debug( "After printing: ($page) Elapsed time: " . sprintf('%.4f', tv_interval([$starttime])*1000).' usecs' );

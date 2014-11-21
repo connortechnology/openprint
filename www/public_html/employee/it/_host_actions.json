@@ -11,9 +11,11 @@
 		my $error = $Host_Interface->delete();
 		if ( ! $error ) {
 			return qq`
-var line = $('hi-$$Host_Interface{mac}');
-if ( line ) line.remove();
-`;
-		}
+			var line = \$('hi-$param{interface_id}');
+			if ( line ) line.remove();
+			`;
+		} else {
+			return qq`alert('Error deleting Interface: $error')`;
+		} 
 	}
 ) ?>
