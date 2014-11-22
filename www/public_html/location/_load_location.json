@@ -5,7 +5,7 @@
 	my $State = $Location->ancestor(type=>['state','province']);
 	$State = new openprint::Location() if ! $State;
 	my $Country = $Location->ancestor(type=>'country');
-	$Country = new openprint::LOcation() if ! $Country;
+	$Country = new openprint::Location() if ! $Country;
 
 	return sprintf(q`
 var address_e = $('address');
