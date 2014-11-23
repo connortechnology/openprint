@@ -496,9 +496,17 @@ sub pricelists {
 		} # end if
 	} elsif ( $param{'btnFunction'} eq 'Import Paper Prices' ) {
 
-		return misc::error( $log, $dbh, \%variable, 'No pricelist selected.', 'You must select a pricelist before importing.') if ! $Pricelist->id();
+		if ( ! $Pricelist->id() ) {
+			$variable{error} = 'No pricelist selected';
+			$variable{information} = 'You must select a pricelist before importing.';
+			return;
+		} 
 
-		return misc::error( $log, $dbh, \%variable, 'No file given.', 'You must select a file to import.') if ! $param{'filePrices'};
+		if ( ! $param{'filePrices'} ) {
+			$variable{error} = 'No file given.';
+			$variable{information} = 'You must select a file to import.';
+			return 
+		} # en dif
 
 		my $error = '';
 
@@ -515,32 +523,43 @@ sub pricelists {
 
 		while ( <$io> ) {
 			my $status = $csv->parse($_);
-			my ( $name, $finish, $colour, $weight, $width, $height, $service, @data ) = misc::trim( $csv->fields());
-			my @Papers = openprint::Paper->find('name'=>$name, 'finish'=>$finish, 'colour'=>$colour, 'weight'=>$weight, 'width'=>$width, 
-			( $height ? ( 'height'=>$height ) : () ) );
-			if ( ! @Papers ) {
-				$error .= "No Paper found for $name, $finish, $colour, $weight, $width, $height<br/>";
-				next;
+			my ( $id, $brand, $finish, $colour, $weight, $type, $width, $height, $pricelist, $service, @data ) = misc::trim( $csv->fields());
+			my $Paper;
+			if ( $id ) {
+				$Paper = new openprint::Paper( $id );
+				if ( ! $$Paper{id} ) {
+					$error .= "Paper not found for id $id, trying by details...<br/>";
+				}
+				$Paper = undef;
+			}
+ 			if ( ! $Paper ) {
+				my @Papers = openprint::Paper->find(brand=>$brand, finish=>$finish, colour=>$colour, weight=>$weight, type=>$type, width=>$width, 
+				( $height ? ( height=>$height ) : () ) );
+				if ( ! @Papers ) {
+					$error .= "No Paper found for $brand, $finish, $colour, $weight, $type, $width, $height<br/>";
+					next;
+				} elsif ( @Papers > 1 ) {
+					$error .= "more than 1 stock found for $brand, $finish, $colour, $weight, $type, $width, $height<br/>";
+					next;
+				} # end if
+				$Paper = $Papers[0];
 			} # end if
-
-			foreach my $Paper ( @Papers ) {
-				for ( my $i = 0; $i < @data; $i += 9 ) {
-					my $Price = new openprint::PaperPrice();
-					$error .= $Price->save({
-						stock_id	=>	$$Paper{id},
-						pricelist_id	=>	$Pricelist->id(),
-						service		=>	$data[$i+0],
-						min			=>	$data[$i+2],
-						max			=>	$data[$i+3],
-						units		=>	$data[$i+4],
-						cost		=>	$data[$i+5],
-						markup		=>	$data[$i+6],
-						price		=>	$data[$i+7],
-						discountable	=>	$data[$i+8],
-					});
-				} # end for
-	
-			} # end foreach Paper
+			
+			for ( my $i = 0; $i < @data; $i += 8 ) {
+				my $Price = new openprint::PaperPrice();
+				$error .= $Price->save({
+					stock_id	=>	$$Paper{id},
+					pricelist_id	=>	$Pricelist->id(),
+					service		=>	$service,
+					min			=>	$data[$i+1],
+					max			=>	$data[$i+2],
+					units		=>	$data[$i+3],
+					cost		=>	$data[$i+4],
+					markup		=>	$data[$i+5],
+					price		=>	$data[$i+6],
+					discountable	=>	$data[$i+7],
+				});
+			} # end for
 		} # end foreach CSV line
 
 		if ( $error ) {

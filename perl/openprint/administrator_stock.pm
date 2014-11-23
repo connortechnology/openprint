@@ -1,6 +1,7 @@
 use strict;
 package openprint::administrator_stock;
 use Text::CSV_XS ();
+use Data::Dumper;
 require sql;
 require misc;
 require openprint::Paper;
@@ -353,15 +354,18 @@ sub import_export {
 			$_ = <$io>;
 
 			my $ac = sql::start_transaction( $dbh );
-			my %project_types = map { $_->name(), $_->id() } openprint::ProjectType->find();
+			my %project_types = map { $_->name(), $_ } openprint::ProjectType->find();
 			my %owners = map { $_->name(), $_->id() } openprint::Company->find();
 			my %papers = map { $_->id(), $_ } openprint::Paper->find();
 			my %reverse_grades = reverse %openprint::Paper::grades;
 
 			my $csv = Text::CSV_XS->new();
+			my $line_count = 0;
+			my $import_count =0;
 			while ( <$io> ) {
 				my $status = $csv->parse($_);
-				my ( $paper_id, $owner, $manufacturer, $group, $brand, $finish, $colour, $weight, $quality, $mweight, $gsm, $calliper, $type, $width, $height, $basis_width, $basis_height, $grain_direction, $supplier, $double_sided, $cuttable, $multipart, $perfecting, $scoring, $bladecleaning, $grade, $spp, $supplied, $digital, $full_packages, $minimum_order, $inventory_number, $material, $message, $recommendations ) = misc::trim($csv->fields());
+				my ( $paper_id, $owner, $manufacturer, $supplier, $group, $brand, $finish, $colour, $weight, $quality, $mweight, $gsm, $calliper, $type, $width, $height, $basis_width, $basis_height, $grain_direction, $double_sided, $cuttable, $multipart, $perfecting, $scoring, $bladecleaning, $grade, $spp, $supplied, $digital, $full_packages, $minimum_order, $inventory_number, $material, $message, $recommendations ) = misc::trim($csv->fields());
+				$line_count += 1;
 
 				next if ! $paper_id;
 
@@ -375,10 +379,16 @@ sub import_export {
 				my @recommendations = ();
 				foreach my $ProjectType_name ( split(',',$recommendations ) ) {
 					next if ! $ProjectType_name;
-					my $ProjectType = openprint::ProjectType->find_one('name lc'=>lc openprint::ProjectType->transform('name',$ProjectType_name));
+					my $ProjectType;
+					if ( $project_types{$ProjectType_name} ) {
+						$ProjectType = $project_types{$ProjectType_name};
+					} else {
+						$ProjectType = openprint::ProjectType->find_one('name lc'=>lc openprint::ProjectType->transform('name',$ProjectType_name));
+					} # end if
 					if ( ! $ProjectType ) {
-					$ProjectType = new openprint::ProjectType();
-					$ProjectType->save({'name'=>$ProjectType_name});
+						$ProjectType = new openprint::ProjectType();
+						$ProjectType->save({ name=>$ProjectType_name });
+						$project_types{$ProjectType_name} = $ProjectType;
 					} # end if
 					push @recommendations, $ProjectType->id();
 				} # end foreach
@@ -420,15 +430,19 @@ sub import_export {
 				my $rc = $Paper->save();	
 				if ( $rc ) {
 					$error .= "Error adding Stock: $rc<br>";
+					$error .= Data::Dumper::Dumper( $Paper );
 					next;
 				} # end if
-			} # end foreach
+				$import_count += 1;
+		
+			} # end while io
 			sql::end_transaction( $dbh, $ac );
+			$variable{information} = "$line_count lines processed, $import_count stocks successfully imported.<br/>";
 		} else {
 			$error .= "No file given.<br>";
 		} # end if
 		if ( $error ) {
-			return misc::error( $log, $dbh, \%variable, 'The following errors occured during import:<br>', $error );
+			$variable{error} = $error;
 		} # end if
 	} # end if
 
