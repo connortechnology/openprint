@@ -357,13 +357,13 @@ sub pricelists {
 			return misc::error( $log, $dbh, \%variable, 'No pricelist selected.', 'You must select a pricelist before exporting.');
 		} # end if
 	
-		my @header = ( 'Paper ID', 'Paper Brand', 'Finish','Colour','Weight','Type', 'Width','Height','Service', 'Equipment', 'Min', 'Max', 'Units', 'Cost', 'Markup', 'Price', 'Discountable' );
+		my @header = ( 'Paper ID', 'Paper Brand', 'Finish','Colour','Weight','Type', 'Width','Height','Pricelist', 'Service', 'Equipment', 'Min', 'Max', 'Units', 'Cost', 'Markup', 'Price', 'Discountable' );
 		my @data;
 		foreach my $Paper (openprint::Paper->find( ) ) {
 #order=>'brand,finish,colour,weight,width,height' ) ) {
             foreach my $Price ( openprint::PaperPrice->find( paper_id=>$$Paper{id}, pricelist_id=>$$Pricelist{id}, order=>'lnglistindex, lngmin NULLS FIRST, lngmax NULLS FIRST') ) {
 				push @data, $Paper->id(), $Paper->brand(), $Paper->finish(),$Paper->colour(), $Paper->weight(), $Paper->type(), $Paper->width(), $Paper->height();
-				push @data, $Price->service(), $Price->Equipment()->strid(), $Price->min(), $Price->max(), $Price->units(), $Price->cost(), $Price->markup(), $Price->price(), $Price->discountable();
+				push @data, $$Pricelist{name}, $Price->service(), $Price->Equipment()->strid(), $Price->min(), $Price->max(), $Price->units(), $Price->cost(), $Price->markup(), $Price->price(), $Price->discountable();
 			} # end foreach
 		} # end foreach Paper
 		misc::export_csv( $r, $log, \%variable, $Pricelist->name() . 'PaperPrices.csv', \@header, \@data );
@@ -520,21 +520,27 @@ sub pricelists {
 		$_ = <$io>;
 
 		my $csv = Text::CSV_XS->new();
+		my %Papers = map { $$_{id}, $_ } openprint::Paper->find();
 
 		while ( <$io> ) {
 			my $status = $csv->parse($_);
 			my ( $id, $brand, $finish, $colour, $weight, $type, $width, $height, $pricelist, $service, @data ) = misc::trim( $csv->fields());
 			my $Paper;
 			if ( $id ) {
-				$Paper = new openprint::Paper( $id );
+				if ( $Papers{$id} ) {
+					$Paper = $Papers{$id};
+				} else {
+					$Paper = new openprint::Paper( $id );
+				}
 				if ( ! $$Paper{id} ) {
 					$error .= "Paper not found for id $id, trying by details...<br/>";
 				}
 				$Paper = undef;
 			}
  			if ( ! $Paper ) {
-				my @Papers = openprint::Paper->find(brand=>$brand, finish=>$finish, colour=>$colour, weight=>$weight, type=>$type, width=>$width, 
-				( $height ? ( height=>$height ) : () ) );
+				my @Papers = openprint::Paper->find(brand=>$brand, finish=>$finish, colour=>$colour, weight=>$weight, type=>$type, 
+				( $width ? (width=>$width ) : ( width=>undef) ), 
+				( $height ? ( height=>$height ) : (height=>undef) ) );
 				if ( ! @Papers ) {
 					$error .= "No Paper found for $brand, $finish, $colour, $weight, $type, $width, $height<br/>";
 					next;
@@ -563,10 +569,8 @@ sub pricelists {
 		} # end foreach CSV line
 
 		if ( $error ) {
-			$openprint::dbh->rollback();
-			return misc::error( $log, $dbh, \%variable, 'Import errors.', $error );
+			$variable{error} = $error;
 		} # end if
-		sql::end_transaction( $openprint::dbh );
 	} elsif ( $param{'btnFunction'} eq 'Import Product Prices' ) {
 		return misc::error( $log, $dbh, \%variable, 'No pricelist selected.', 'You must select a pricelist before importing.') if ! $Pricelist->id();
 		return misc::error( $log, $dbh, \%variable, 'No file given.', 'You must select a file to import.') if ! $param{'filePrices'};
