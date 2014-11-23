@@ -357,13 +357,13 @@ sub pricelists {
 			return misc::error( $log, $dbh, \%variable, 'No pricelist selected.', 'You must select a pricelist before exporting.');
 		} # end if
 	
-		my @header = ( 'Paper ID', 'Paper Brand', 'Finish','Colour','Weight','Type', 'Width','Height','Service', 'Equipment', 'Min', 'Max', 'Units', 'Cost', 'Markup', 'Price', 'Discountable' );
+		my @header = ( 'Paper ID', 'Paper Brand', 'Finish','Colour','Weight','Type', 'Width','Height','Pricelist', 'Service', 'Equipment', 'Min', 'Max', 'Units', 'Cost', 'Markup', 'Price', 'Discountable' );
 		my @data;
 		foreach my $Paper (openprint::Paper->find( ) ) {
 #order=>'brand,finish,colour,weight,width,height' ) ) {
             foreach my $Price ( openprint::PaperPrice->find( paper_id=>$$Paper{id}, pricelist_id=>$$Pricelist{id}, order=>'lnglistindex, lngmin NULLS FIRST, lngmax NULLS FIRST') ) {
 				push @data, $Paper->id(), $Paper->brand(), $Paper->finish(),$Paper->colour(), $Paper->weight(), $Paper->type(), $Paper->width(), $Paper->height();
-				push @data, $Price->service(), $Price->Equipment()->strid(), $Price->min(), $Price->max(), $Price->units(), $Price->cost(), $Price->markup(), $Price->price(), $Price->discountable();
+				push @data, $$Pricelist{name}, $Price->service(), $Price->Equipment()->strid(), $Price->min(), $Price->max(), $Price->units(), $Price->cost(), $Price->markup(), $Price->price(), $Price->discountable();
 			} # end foreach
 		} # end foreach Paper
 		misc::export_csv( $r, $log, \%variable, $Pricelist->name() . 'PaperPrices.csv', \@header, \@data );
@@ -515,7 +515,7 @@ sub pricelists {
 
 		while ( <$io> ) {
 			my $status = $csv->parse($_);
-			my ( $name, $finish, $colour, $weight, $width, $height, $service, @data ) = misc::trim( $csv->fields());
+			my ( $name, $finish, $colour, $weight, $width, $height, $pricelist, $service, @data ) = misc::trim( $csv->fields());
 			my @Papers = openprint::Paper->find('name'=>$name, 'finish'=>$finish, 'colour'=>$colour, 'weight'=>$weight, 'width'=>$width, 
 			( $height ? ( 'height'=>$height ) : () ) );
 			if ( ! @Papers ) {
