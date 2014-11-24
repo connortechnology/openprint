@@ -1,13 +1,12 @@
-<script type="text/javascript" src="<? hash_link(/javascripts/location.js) ?>"></script>
 <script type="text/javascript">
 	function submit_handler(form) {
 		form.submit();
 	} // end function
 </script>  
 <div class="Support"><div class="RMA">
-<? echo ( include( $ENV{DOCUMENT_ROOT}.'/includes/error_reporting.html' ); ) ?>
+<?include('/includes/error_reporting.html')?>
 	<form id="f1" name="f1" method="post" action="rma.html">
-		<input type="hidden" name="status_id" value=""/>
+		<input type="hidden" name="status_id"/>
 <p class="buttons">
 <? echo ( join("\n",
 		button('Save', { onclick=>q`f1.elements['action'].value='Save';submit_handler(f1);` } ),
@@ -123,7 +122,7 @@ map {
 						$html .= '<div id="location_fields">';
 						if ( ! ( ( @Addresses == 1 ) or $$variable{RMA}->shipto_address_id() ) ) {
 							$$variable{Location} = $$variable{RMA}->Address()->Location();
-							$html .= ssi::include( $ENV{DOCUMENT_ROOT}.'/location/_location_fields.html' );
+							$html .= ssi::include( '/location/_location_fields.html' );
 						} # end if
 						$html .= '</div>';
 						return $html;
@@ -202,10 +201,10 @@ map {
 		</ul>
 	</fieldset>
 	</div>
-	<div class="Faults" id="Faults"><? echo ( include('_faults.html'); ) ?></div>
-	<div class="Upgrades" id="Upgrades"><? echo ( include('_upgrades.html'); ) ?></div>
-	<div class="Tests" id="Tests"><? echo ( include('_tests.html'); ) ?></div>
-	<div class="Parts" id="Parts"><? echo ( include('_parts.html'); ) ?></div>
+	<div class="Faults" id="Faults"><?include('_faults.html')?></div>
+	<div class="Upgrades" id="Upgrades"><?include('_upgrades.html')?></div>
+	<div class="Tests" id="Tests"><?include('_tests.html')?></div>
+	<div class="Parts" id="Parts"><?include('_parts.html')?></div>
 
 		<input type="hidden" name="rma_id" value="<? echo ( $$variable{RMA}->id() ) ?>"/>
 		<input type="hidden" name="action"/>

@@ -27,7 +27,7 @@ require openprint::Estimating::Perforating;
 
 use vars qw( @folds %fold_types );
 
-use constant DEBUG => 1;
+use constant DEBUG => 0;
 use constant DEBUG_NEEDS => 0;
 
 my @equipment;
@@ -1481,7 +1481,7 @@ $Breakdown .= '<tr><td>Signatures:'.(@$Signature_Impositions+1).'</td></tr>';
 			} # end if has sittiching
 			$comparison_cost += $totalPrice + $stitching_part + $cutting_results{Price};
 			if ( $$calc_hash{ScoringSpecs} ) {
-				my %scoring_results = openprint::Estimating::Scoring::signature_calc( $Project, @$calc_hash{'HasScoring','ScoringSpecs'}, $sig_specs, $qty_index, $SignatureImposition );
+				my %scoring_results = openprint::Estimating::Scoring::signature_calc( $Project, $$calc_hash{ScoringSpecs}, $sig_specs, $qty_index, $SignatureImposition, $calc_hash );
 				$Breakdown .= "<tr><td>Scoring cost on $scoring_results{Equipment}{name}</td><td class=\"Price\">$scoring_results{Price}</a>";
 				$comparison_cost += $scoring_results{Price};	
 			} # end if
@@ -1602,12 +1602,12 @@ sub calc {
 	my $calc_hash = {};
 	if ( $$services{SaddleStitching} ) {
 		$$calc_hash{StitchingSpecs} = openprint::service::get_specs_ref( $Project, $$services{SaddleStitching}[0] );
-		$$calc_hash{StitchingSpecs} = $$services{SaddleStitching}[0];
+		$$calc_hash{HasStitching} = $$services{SaddleStitching}[0];
 	} elsif ( $$services{LoopStitching} ) {
 		$$calc_hash{StitchingSpecs} = openprint::service::get_specs_ref( $Project, $$services{LoopStitching}[0] );
-		$$calc_hash{StitchingSpecs} = $$services{LoopStitching}[0];
+		$$calc_hash{HasStitching} = $$services{LoopStitching}[0];
 	} # end if
-	foreach my $service ( 'UVCoating', 'Aqueous', 'Cutting', 'Scoring' ) {
+	foreach my $service ( 'UVCoating', 'Aqueous', 'Cutting', 'Scoring', 'Folding' ) {
 		if ( $$services{$service} and @{$$services{$service}} ) {
 			$$calc_hash{"Has$service"} = $$services{$service}[0];
 			$$calc_hash{"${service}Specs"} = openprint::service::get_specs_ref( $Project, $$services{$service}[0] );

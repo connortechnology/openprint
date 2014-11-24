@@ -128,11 +128,14 @@ sub host {
 		} # end if
 		$variable{error} .= $Host->save(\%param);
 		foreach my $I ( $Host->Interfaces(), new openprint::Host_Interface() ) {
-		
-			$variable{error} .= $I->save({
-				host_id=>$$Host{id},
-				map { $_, $param{"$_-$$I{id}"} } ( 'mac', 'ip', 'dhcp', 'comment' )
-			});
+			if ( $param{"mac-$$I{id}"} or $param{"ip-$$I{id}"} or $param{"comment-$$I{id}"} ) {
+				$variable{error} .= $I->save({
+					host_id=>$$Host{id},
+					map { $_, $param{"$_-$$I{id}"} } ( 'mac', 'ip', 'dhcp', 'comment' )
+				});
+			} else {
+				$variable{error} .= $I->delete() if $$I{id};
+			} # end if
 		} # end foreach Interface
 		if ( ! $variable{error} ) {
 			$variable{ExternalRedirect} = '/employee/it/hosts.html';
