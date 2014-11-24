@@ -42,8 +42,7 @@ sub calc {
 		return $$specs{'Status'} = 'uncalculated';
 	} # end if
 
-	my $calliper = openprint::print::get_finished_calliper( $pid );
-	
+	my $calliper = $Project->calliper();
 
 	my @Equipment = openprint::Equipment->find('Specifications'=>{'RoundCornering Capable'=>'Y'},'useinestimating'=>1);
 	if ( ! @Equipment ) {

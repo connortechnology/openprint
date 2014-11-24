@@ -247,10 +247,12 @@ function clear_price_data( form ) {
 			} // end if
 			if ( form.elements["txtImageWidth"+qtyNum]) form.elements["txtImageWidth"+qtyNum].value = '';
 			if ( form.elements["txtImageHeight"+qtyNum]) form.elements["txtImageHeight"+qtyNum].value = '';
-			if ( form.elements['hdnImpositionColumns'+qtyNum]) form.elements['hdnImpositionColumns'+qtyNum].value = '';
-			if ( form.elements['hdnImpositionRows'+qtyNum]) form.elements['hdnImpositionRows'+qtyNum].value = '';
-			if ( form.elements['hdnImpositionDutchColumns'+qtyNum]) form.elements['hdnImpositionDutchColumns'+qtyNum].value = '';
-			if ( form.elements['hdnImpositionDutchRows'+qtyNum]) form.elements['hdnImpositionDutchRows'+qtyNum].value = '';
+			if ( ( ! form.elements['OverrideImpositionLayout'+qtyNum] ) || ( ! get_value(form.elements['OverrideImpositionLayout'+qtyNum]) ) ) {
+				if ( form.elements['hdnImpositionColumns'+qtyNum]) form.elements['hdnImpositionColumns'+qtyNum].value = '';
+				if ( form.elements['hdnImpositionRows'+qtyNum]) form.elements['hdnImpositionRows'+qtyNum].value = '';
+				if ( form.elements['hdnImpositionDutchColumns'+qtyNum]) form.elements['hdnImpositionDutchColumns'+qtyNum].value = '';
+				if ( form.elements['hdnImpositionDutchRows'+qtyNum]) form.elements['hdnImpositionDutchRows'+qtyNum].value = '';
+			}
 			//form.elements["txtAdditionalPrice"+qtyNum].value = '0.00';
 			if ( ! ( form.elements['chkOverridePress'+qtyNum] && get_value(form.elements['chkOverridePress'+qtyNum]) ) ) {
 				if ( form.elements['ddmPress'+qtyNum] ) {

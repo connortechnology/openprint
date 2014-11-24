@@ -584,6 +584,7 @@ sub summary {
             } else {
                 $html .= 'Form ' . $form . ' ' . $$sig_specs{txtServiceDescription};
             } # end if
+			$html .= $summary . "\n";
         } # end foreach
         return $html;
 	} else {
