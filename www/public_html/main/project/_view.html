@@ -218,7 +218,7 @@
 					} # end if
 						
 					$html .= qq`<tr$rowclass><td class="description">`;
-					my $do_link = ( ( ! $Project->docket() ) or ( $Project->Order()->status() eq 'Re-Opened' ) ) and $ServiceType->url();
+					my $do_link = ( ( ( ! $Project->docket() ) or ( $Project->Order()->status() eq 'Re-Opened' ) ) and ( $ServiceType->url() ne '' ) );
 
 					if ( $do_link ) {
 						$html .= sprintf(q`<a href="/main/project/%1$s?ProjectIndex=%2$d&amp;ServiceIndex=%3$d"><b>%4$s</b>%5$s<br/>%6$s</a>`, $ServiceType->url(), $Project->id(), $service_id, 
