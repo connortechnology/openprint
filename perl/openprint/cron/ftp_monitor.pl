@@ -62,16 +62,12 @@ $log = new logger(level=>'debug',program=>$program);
 if (my $err = configuration::from_file($$opts{config})) {
     die $err;
 }
-
+configuration::merge( $opts );
 foreach my $param ( 'db_name','db_user','db_pass','fifo','from','recipient','smtp-server' ) {
-	$config{$param} = $$opts{$param} if $$opts{$param};
 	if ( ! $config{$param} ) {
 		die "$program: missing required --$param parameter";
 	}
 } # end foreach required-param
-foreach my $param ( 'pid_file', 'db_host', 'log_file', 'log_level', 'sleep', 'scoreboard', 'file_path','skin_path','document_root','watch-users','ignore-users','site_title','site_url', 'max_files' ) {
-	$config{$param} = $$opts{$param} if exists $$opts{$param};
-} # end foreach non-required param
 
 if ( $config{site_url} ) {
 	$config{siteURL} = $config{site_url};
@@ -93,8 +89,8 @@ if ( $config{pid_file} ) {
 	} # end if
 } # end if
 
-$log = logger->new( {'file'=>$config{log_file}, 'level'=>$config{log_level}} );
-$log->info("Opening SQL connection");
+$log = logger->new( { file=>$config{log_file}, level=>$config{log_level}} );
+$log->info("Opening SQL connection $config{db_host} $config{db_name}");
 $openprint::dbh = sql::open_sql( $log, 
 	host		=> $config{db_host},
 	database	=> $config{db_name},
@@ -112,7 +108,9 @@ my %Users; # Cache of User Objects keyed by user/email address
 
 #my $scoreboard = get_scoreboard( $config{scoreboard} );
 my $fifoh;
+$log->debug("Opening fifo at $config{fifo}");
 if (open($fifoh, "< $config{fifo}")) {
+$log->debug("Opened fifo at $config{fifo}");
 	while (1) {
 		my $line;
 		eval {
@@ -129,6 +127,7 @@ if (open($fifoh, "< $config{fifo}")) {
 		} elsif ($line) {
 			chomp($line);
 
+			#xferlog format
 			if ($line =~ /^(\S+\s+\S+\s+\d+\s+\d+:\d+:\d+\s+\d+)\s+(\d+)\s+(.*?)\s+(\d+)\s+(.*?)\s+(\S+)\s+(\S+)\s+(\S+)\s+(\S+)\s+(.*?)\s+.*?(\S+)$/o) {
 				my $curr_time = $1;
 				my $xfer_nsecs = $2;
@@ -208,6 +207,151 @@ if (open($fifoh, "< $config{fifo}")) {
 						user => $user_name,
 						status => $completion_status,
 						complete	=> ( $completion_status eq 'c' ? 1 : 0 ),
+					};
+				} # end if send email
+			} elsif (0 and $line =~ /^(\S+)\s+(\S+)\s+(\S+)\s+\[([^\]]+)\]\s+"(\S+)\s+([^"]+)"\s+(\d+)\s+(\d+)$/o) {
+
+				my $client = $1;
+				my $remote_user = $2;
+				my $user_name = $3;
+				my $curr_time = $4;
+				my $xfer_type = $5;
+				my $path = $6;
+
+				my $xfer_nsecs = $7;
+				my $nbytes = $8;
+$log->debug("Gotextended line: $line");
+$log->debug("data: $client $remote_user $user_name $curr_time $xfer_type $path $xfer_nsecs $nbytes");
+
+				# Note that any spaces or control characters will be replaced in this
+				# path with underscores.	This can make finding the actual file, as for
+				# attachments, rather difficult; we have to test to find the difference
+				# between a real underscore in the name, and a substituted underscore.
+				#my $action_flag = $7;
+				#my $xfer_direction = $8;
+				#my $access_mode = $9;
+				#my $completion_status = $11;
+
+				my $bad = 0;
+				foreach my $banned_re ( @banned_files ) {
+					if ( $path =~ /$banned_re/ ) {
+						# Detected bad file
+						$bad = 1;	
+						last;
+					} # end if
+				} # end foreach banned_re
+				if ( $bad ) {
+					# Take evasive action
+					take_evasive_action($user_name, $client);
+					next;
+				} # end if
+
+				my $send_email = $xfer_type eq 'STOR' ? 1 : 0;
+
+				if ($send_email) {
+
+					# First, check for any specific --watch-users filter.	If configured,
+					# and if the user name does NOT match the --watch-users filter, then
+					# don't send email.	Otherwise, check for an --ignore-users filter,
+					# and see if the user matches that ignore filter.
+
+					if ($config{'watch-users'}) {
+						if ($user_name !~ /$config{'watch-users'}/) {
+							$send_email = 0;
+						}
+					} elsif ($config{'ignore-users'}) {
+						if ($user_name =~ /$config{'ignore-users'}/) {
+							$send_email = 0;
+						}
+					}
+				} # end if send email
+
+				if ($send_email) {
+					push @{$uploads{$user_name}}, {
+						timestamp => $curr_time,
+						duration => $xfer_nsecs,
+						client => $client,
+						size => $nbytes,
+						file => $path,
+						transfer_type => $xfer_type,
+						#auth_mode => $access_mode,
+						user => $user_name,
+						status => 'c',
+						complete	=> 1,
+					};
+				} # end if send email
+			} elsif ($line =~ /^(\S+)\s+(\S+)\s+(\S+)\s+\[([^\]]+)\]\s+"([^"]+)"\s+(\d+)\s+([\-\d]+)$/o) {
+
+				my $client = $1;
+				my $remote_user = $2;
+				my $user_name = $3;
+				my $curr_time = $4;
+				my $path = $5;
+
+				my $xfer_nsecs = $6;
+				my $nbytes = $7;
+$log->debug("Got IQFormat extended line: $line");
+$log->debug("data: $client $remote_user $user_name $curr_time $path $xfer_nsecs $nbytes");
+if ( $nbytes eq '-' ) {
+$log->debug("Not an upload, ignoring");
+next;
+}
+
+				# Note that any spaces or control characters will be replaced in this
+				# path with underscores.	This can make finding the actual file, as for
+				# attachments, rather difficult; we have to test to find the difference
+				# between a real underscore in the name, and a substituted underscore.
+				#my $action_flag = $7;
+				#my $xfer_direction = $8;
+				#my $access_mode = $9;
+				#my $completion_status = $11;
+
+				my $bad = 0;
+				foreach my $banned_re ( @banned_files ) {
+					if ( $path =~ /$banned_re/ ) {
+						# Detected bad file
+						$bad = 1;	
+						last;
+					} # end if
+				} # end foreach banned_re
+				if ( $bad ) {
+					# Take evasive action
+					take_evasive_action($user_name, $client);
+					next;
+				} # end if
+
+				my $send_email = 1;
+
+				if ($send_email) {
+
+					# First, check for any specific --watch-users filter.	If configured,
+					# and if the user name does NOT match the --watch-users filter, then
+					# don't send email.	Otherwise, check for an --ignore-users filter,
+					# and see if the user matches that ignore filter.
+
+					if ($config{'watch-users'}) {
+						if ($user_name !~ /$config{'watch-users'}/) {
+							$send_email = 0;
+						}
+					} elsif ($config{'ignore-users'}) {
+						if ($user_name =~ /$config{'ignore-users'}/) {
+							$send_email = 0;
+						}
+					}
+				} # end if send email
+
+				if ($send_email) {
+					push @{$uploads{$user_name}}, {
+						timestamp => $curr_time,
+						duration => $xfer_nsecs,
+						client => $client,
+						size => $nbytes,
+						file => $path,
+						transfer_type => 'STOR',
+						#auth_mode => $access_mode,
+						user => $user_name,
+						status => 'c',
+						complete	=> 1,
 					};
 				} # end if send email
 			} else {
@@ -315,21 +459,23 @@ sub send_email {
 	my $company_name;
 	if ( $Company ) {
 		$company_name = $Company->name();
-		$company_name =~ s/ /_/g;
+		#$company_name =~ s/ /_/g;
 	} # end if
 
 	my $project_files_path = $config{file_path};
-	$project_files_path =~ s/ /_/g;
+	#$project_files_path =~ s/ /_/g;
 
 	foreach my $upload ( @uploads ) {
 		my $file = $upload->{file};
 # File should be the full path, relative to filesystem root.
 # Problem is, spaces have been replaced by underscores
+$log->debug("Processing upload $file");
 		my $file_str = basename($file);
 		$$upload{file_str} = $file_str;
 		$$upload{company_name} = $company_name;
 
 		my $regexp = $project_files_path.'/'.$company_name.'/(.+)';
+$log->debug("regexp: $regexp");
 		@$upload{proper_file_path} = $file =~ /^$regexp$/;
 		$$upload{proper_file_path} = $$upload{file_str} if ! $$upload{proper_file_path};
 
@@ -372,6 +518,8 @@ sub send_email {
 		sleep(1);
 	} # end while no db connection
 
+	my @Uploads = ();
+
 	foreach my $upload ( @uploads ) {
 		my $Upload = new openprint::Upload();
 		my $error = $Upload->save({
@@ -390,6 +538,7 @@ sub send_email {
 		if ( $error ) {
 			$log->error( $error );
 		} else {
+		push @Uploads, $Upload;
 			my $File = new openprint::File();
 			$error = $File->save({
 				size		=>	$upload->{size},
@@ -427,7 +576,7 @@ sub send_email {
 			my %variable;
 			$variable{Company} = $Company;
 			$variable{User} = $User;
-			$variable{Uploads} = \@uploads;
+			$variable{Uploads} = \@Uploads;
 
 			$variable{ReplacementText} = ssi::include( '/email_content/ftp_csr_notification.html', \%variable );
 			my $body = ssi::include( '/email_template.html', \%variable );

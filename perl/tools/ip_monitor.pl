@@ -173,7 +173,7 @@ Please investigate.",
 								'SUBJECT'	=>	'Host has gone ' . ($ping?'online':'offline') . ': ' . $Host->hostname(),
 								'FROM'		=>	$config{'TechSupportEmail'},
 								'BODY'		=>	"
-								IP: $$Host{ip}
+								IP: $$HI{ip}
 Description: $$Host{'description'}
 
 Please investigate.",
