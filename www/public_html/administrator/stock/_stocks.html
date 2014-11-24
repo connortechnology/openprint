@@ -28,6 +28,11 @@
 		} elsif ( $session{'/administrator/stock/list.html?setup_prices'} eq '0' ) {
 			next if openprint::PaperPrice->find_one(paper_id=>$$Stock{id}, service=>'Setup');
 		} # end if
+		if ( $session{'/administrator/stock/list.html?material_prices'} eq '1' ) {
+			next if ! openprint::PaperPrice->find_one(paper_id=>$$Stock{id}, service=>'Material');
+		} elsif ( $session{'/administrator/stock/list.html?material_prices'} eq '0' ) {
+			next if openprint::PaperPrice->find_one(paper_id=>$$Stock{id}, service=>'Material');
+		} # end if
 		push @{$$variable{'Stocks'}}, $Stock;
 	} # end foreach
 	@{$$variable{'Groups'}} = openprint::StockGroup->find();

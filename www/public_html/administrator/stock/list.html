@@ -199,6 +199,10 @@ checkboxes( 'OrLarger', [1,'Or Larger'], $session{'/administrator/stock/list.htm
 			<label>Has Setup Prices</label>
 			<? echo ( radio( 'setup_prices', [ '1','Yes','0','No', '', 'All' ], $session{'/administrator/stock/list.html?setup_prices'}, { onclick=>'calc(this.form.name);' } ); ) ?>
 		</li>
+		<li>
+			<label>Has Material Prices</label>
+			<? echo ( radio( 'material_prices', [ '1','Yes','0','No', '', 'All' ], $session{'/administrator/stock/list.html?material_prices'}, { onclick=>'calc(this.form.name);' } ); ) ?>
+		</li>
 		</ul>
 		</div><br class="spacer"/>
 		<p class="buttons">
