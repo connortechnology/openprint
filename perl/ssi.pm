@@ -1,7 +1,7 @@
 use strict;
 package ssi;
 
-use constant DEBUG => 0;
+use constant Debug => 0;
 
 require Date::Calc;
 
@@ -737,17 +737,17 @@ sub save_params {
 	my ( $url, @keys ) = @_;
 
 	foreach ( @keys ) {
-		$openprint::log->debug("save_params: key $_") if DEBUG;
+		$openprint::log->debug("save_params: key $_") if Debug;
 		if ( ! exists $param{$_} ) {
-			$openprint::log->debug("save_params: does not exist in param key $_") if DEBUG;
+			$openprint::log->debug("save_params: does not exist in param key $_") if Debug;
 			next;
 		} 
 		if ( ref $param{$_} eq 'ARRAY' ) {
 			$session{"$url?$_"} = join(',', @{$param{$_}} );
-$openprint::log->debug("Storing ARRAY ($_) (".$session{"$url?$_"}.")") if DEBUG;
+$openprint::log->debug("Storing ARRAY ($_) (".$session{"$url?$_"}.")") if Debug;
 		} else {
 			$session{"$url?$_"} = $param{$_};
-$openprint::log->debug("Storing ($_) (".$session{"$url?$_"}.")") if DEBUG;
+$openprint::log->debug("Storing ($_) (".$session{"$url?$_"}.")") if Debug;
 		} # end if
 		$session{$url.'?lastupdated'} = time;
 	} # end foreach

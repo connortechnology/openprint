@@ -1650,7 +1650,12 @@ sub init_cache {
 }
 
 sub link_to {
+	if ( $openprint::variable{uri} =~ /administrator/ ) {
+
+	return sprintf('<a href="/administrator/stock/stock.html?stock_id=%1$d">%2$s</a>', $_[0]{id}, $_[0]->to_string() );
+	} else {
 	return sprintf('<a href="/employee/inventory/paper_details.html?paper_id=%1$d">%2$s</a>', $_[0]{id}, $_[0]->to_string() );
+	} # end if
 } # end sub link_to
 
 sub sort {
