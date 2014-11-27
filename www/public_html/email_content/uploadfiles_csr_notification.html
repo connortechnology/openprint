@@ -114,9 +114,9 @@ OR:
 		<tbody>
 <? echo (
 	my $html;
-	foreach my $File ( openprint::File->find('upload_id'=>$param{'serial'} ) ) {
+	foreach my $File ( openprint::File->find(upload_id=>$param{serial} ) ) {
 		$html .= sprintf('<tr>
-			<td nowrap="nowrap"><a href="/project_files/%1$s">%1$s</td>
+			<td nowrap="nowrap"><a href="/project_files/%1$s">%1$s</a></td>
 			<td style="width:200px; text-align: left;">%2$s</td>
 			<td style="width:100px; text-align: right;">%3$s</td></tr>', $File->filename(), $File->description(), $File->size_text() );
 	} # end foreach File

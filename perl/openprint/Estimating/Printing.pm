@@ -2233,8 +2233,6 @@ $openprint::log->debug("AC " . $openprint::dbh->{AutoCommit} );
 
 	if ( $Project->Type()->name() eq 'PressSheetCombination' ) {
 		@$specs{'txtFinalWidth','txtFinalHeight'} = @$specs{'txtWidth','txtHeight'};
-	} else {
-$openprint::log->debug("Type: " . $Project->Type()->name());
 	} # end if
 
 	if ( ! $$specs{txtSignatureType} ) {

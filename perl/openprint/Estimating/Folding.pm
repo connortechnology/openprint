@@ -875,13 +875,13 @@ if ( 0 ) {
 
 					my $Fold = $Equipment->Fold( {
 							pages			=>	$Imposition->pages(),
-		( $$Imposition{image_orientation} eq 'Vertical' ? (
-							page_columns	=>	$Imposition->page_columns(),
-							page_rows		=>	$Imposition->page_rows(),
-		) : (
-							page_columns	=>	$Imposition->page_rows(),
-							page_rows		=>	$Imposition->page_columns(),
-		) ),
+							( $$Imposition{image_orientation} eq 'Vertical' ? (
+								   page_columns	=>	$Imposition->page_columns(),
+								   page_rows	=>	$Imposition->page_rows(),
+								  ) : (
+								  page_columns	=>	$Imposition->page_rows(),
+								  page_rows		=>	$Imposition->page_columns(),
+								  ) ),
 							page_width		=>	$Imposition->page_width(),
 							page_height		=>	$Imposition->page_height(),
 							spine_direction	=>	$$Imposition{image_orientation},
@@ -925,13 +925,13 @@ $openprint::log->debug("Templatetype: $$sig_specs{rdbTemplateType}") if DEBUG;
 						} # end if
 							
 						my $Fold = $Equipment->Fold({
-		( $$Imposition{image_orientation} eq 'Vertical' ? (
-							page_columns	=>	$Imposition->page_columns(),
-							page_rows		=>	$Imposition->page_rows(),
-		) : (
-							page_columns	=>	$Imposition->page_rows(),
-							page_rows		=>	$Imposition->page_columns(),
-		) ),
+							( $$Imposition{image_orientation} eq 'Vertical' ? (
+									page_columns	=>	$Imposition->page_columns(),
+									page_rows		=>	$Imposition->page_rows(),
+								) : (
+									page_columns	=>	$Imposition->page_rows(),
+									page_rows		=>	$Imposition->page_columns(),
+								) ),
 								page_width		=>	$$sig_specs{txtFinalWidth},
 								page_height		=>	$$sig_specs{txtFinalHeight},
 								type			=>	$$sig_specs{rdbTemplateType},
@@ -1021,12 +1021,12 @@ $openprint::log->debug("No Fold") if DEBUG;
 							my $Fold = $Equipment->Fold({
 									pages			=>	$Imposition->pages(),
 									( $$Imposition{image_orientation} eq 'Vertical' ? (
-																					page_columns	=>	$Imposition->page_columns(),
-																					page_rows		=>	$Imposition->page_rows(),
-																				) : (
-																					page_columns	=>	$Imposition->page_rows(),
-																					page_rows		=>	$Imposition->page_columns(),
-																				) ),
+									   page_columns	=>	$Imposition->page_columns(),
+									   page_rows	=>	$Imposition->page_rows(),
+									) : (
+										page_columns=>	$Imposition->page_rows(),
+										page_rows	=>	$Imposition->page_columns(),
+									) ),
 									page_width		=>	$Imposition->page_width(),
 									page_height		=>	$Imposition->page_height(),
 									spine_direction	=>	$$Imposition{image_orientation},
@@ -1209,6 +1209,7 @@ $FI->display("Found");
 # Replace with a generic one
 						my ( $pages ) = $$specs{"FoldType-$form-$qty_index-$index"} =~ /(\d+)Page/;
 						my $Fold = openprint::Fold->find_one( 
+									spine_direction	=>	$$SignatureImposition{image_orientation},
 								(	$$specs{"FoldImposition-$form-$qty_index-$index"} ? (
 									'min_imposition null_or_<='	=>	$$specs{"FoldImposition-$form-$qty_index-$index"},
 									'max_imposition null_or_>='	=>	$$specs{"FoldImposition-$form-$qty_index-$index"},
