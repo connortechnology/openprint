@@ -196,6 +196,10 @@ checkboxes( 'OrLarger', [1,'Or Larger'], $session{'/administrator/stock/list.htm
 			<? echo ( radio( 'digital', [ '1','Yes','0','No', '', 'All' ], $session{'/administrator/stock/list.html?digital'}, { onclick=>'calc(this.form.name);' } ); ) ?>
 		</li>
 		<li>
+			<label>Requires Scoring</label>
+			<? echo ( radio( 'scoring', [ '1','Yes','0','No', '', 'All' ], $session{'/administrator/stock/list.html?scoring'}, { onclick=>'calc(this.form.name);' } ); ) ?>
+		</li>
+		<li>
 			<label>Has Setup Prices</label>
 			<? echo ( radio( 'setup_prices', [ '1','Yes','0','No', '', 'All' ], $session{'/administrator/stock/list.html?setup_prices'}, { onclick=>'calc(this.form.name);' } ); ) ?>
 		</li>
