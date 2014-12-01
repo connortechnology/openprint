@@ -262,7 +262,7 @@ sub send {
 	my $file_base = 'Invoice'.$$self{id};
         #push @attachments, ($file_base.'.html', MIME::QuotedPrint::encode_qp($invoice_html), 'text/html', 'quoted-printable');
 	if ( File::Slurp::write_file('/tmp/'.$file_base.'.html', { atomic => 1, err_mode=>'carp' }, \$invoice_html ) ) {
-		`wkhtmltopdf -s Letter --print-media-type "/tmp/$file_base.html" "/tmp/$file_base.pdf"`;
+		`wkhtmltopdf -q -s Letter --print-media-type "/tmp/$file_base.html" "/tmp/$file_base.pdf"`;
 		my $invoice_pdf = File::Slurp::read_file( "/tmp/$file_base.pdf" );
 		unlink "/tmp/$file_base.html";
 		unlink "/tmp/$file_base.pdf";

@@ -53,5 +53,9 @@ sub size_text {
 	return misc::format_bytes( $_[0]{size}, '.1' );
 } #end sub size_text
 
+sub path {
+	return join('/',$openprint::config{ProjectFilesPath}, $_[0]->Company()->name(),$_[0]{file_path} );
+}
+
 1;
 __END__

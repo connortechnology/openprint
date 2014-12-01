@@ -98,7 +98,7 @@ sub from_file {
 # Check for errors
 	if ($@) {
 		$openprint::log->error( "ERROR: Failure compiling '$file' - $@" );
-	return "ERROR: Failure compiling '$file' - $@";;
+		return "ERROR: Failure compiling '$file' - $@";
 	} elsif (! defined($rc)) {
 		$openprint::log->error( "ERROR: Failure reading '$file' - $!" );
 		return "ERROR: Failure reading '$file' - $!";

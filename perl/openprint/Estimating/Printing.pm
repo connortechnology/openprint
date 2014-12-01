@@ -25,7 +25,7 @@ use Data::Dumper;
 package openprint::Estimating::Printing;
 my $threading = 0;
 use threads;
-use constant DEBUG => 1;
+use constant DEBUG => 0;
 use constant DEBUG_PLATES => 0;
 use constant DEBUG_VERSIONS => 0;
 use constant DEBUG_FILTERING => 0;
@@ -257,6 +257,7 @@ my %variables = (
 	'Roll2SheetRunCharge1' => ['save','output'], 'Roll2SheetRunCharge2'   => ['save','output'], 'Roll2SheetRunCharge3'   => ['save','output'],
 	'dutch1'=> ['save'], 'dutch2' => ['save'], 'dutch3' => ['save' ],
 	'chkOverrideImposition1' => ['save'], 'chkOverrideImposition2' => ['save'], 'chkOverrideImposition3' => ['save'],
+	'OverrideImpositionLayout1' => ['save'], 'OverrideImpositionLayout2' => ['save'], 'OverrideImpositionLayout3' => ['save'],
 	'txtImposition'=>['save'],'txtImposition1' => ['save','output'], 'txtImposition2' => ['save','output'], 'txtImposition3' => ['save','output'],
 	'txtImageWidth1' => ['save','output'], 'txtImageWidth2' => ['save','output'], 'txtImageWidth3' => ['save','output'],
 	'txtImageHeight1' => ['save','output'], 'txtImageHeight2' => ['save','output'], 'txtImageHeight3' => ['save','output'],
@@ -1074,6 +1075,8 @@ sub get_impositions($$$$$$$$) {
 	$$project{txtSpreadSize} = $$specs{txtSpreadSize};
 	my $ProjectTypeName = $Project->Type()->name();
 	$$project{Quantity} = $qty;
+
+	# This is interesting
 	if ( sets::isin( $openprint::session{user_type}, [ 'A','E' ] ) ) {
 		if ( $$specs{'chkOverrideRunStyle'.$qty_index} eq 'Y' ) {
 			$$project{OverrideRunStyle} = $$specs{'ddmRunStyle'.$qty_index} 
@@ -1082,6 +1085,7 @@ sub get_impositions($$$$$$$$) {
 			$$project{OverrideImposition} = $$specs{"txtImposition".$qty_index};
 		} # end if
 	} # end if
+
 # add all the impositions for each press
 $openprint::log->debug("get_impositions: Presses to consider: " . join(',', map { $_->strid() } @$Presses)) if DEBUG;
 	foreach my $Press ( @$Presses ) {
@@ -2229,8 +2233,6 @@ $openprint::log->debug("AC " . $openprint::dbh->{AutoCommit} );
 
 	if ( $Project->Type()->name() eq 'PressSheetCombination' ) {
 		@$specs{'txtFinalWidth','txtFinalHeight'} = @$specs{'txtWidth','txtHeight'};
-	} else {
-$openprint::log->debug("Type: " . $Project->Type()->name());
 	} # end if
 
 	if ( ! $$specs{txtSignatureType} ) {
@@ -2262,9 +2264,30 @@ $openprint::log->debug("Type: " . $Project->Type()->name());
 	} # end if
 
 	foreach my $qty_index ( $Project->quantity_indexes() ) {
-	if ( $$specs{"chkOverrideImposition$qty_index"} eq 'Y' and ! $$specs{"txtImposition$qty_index"} ) {
-		$$specs{alert} .= "Please enter the desired imposition for quantity $qty_index.<br/>";
-	} # end if
+		if ( $$specs{"chkOverrideImposition$qty_index"} eq 'Y' and ! $$specs{"txtImposition$qty_index"} ) {
+			$$specs{alert} .= "Please enter the desired imposition for quantity $qty_index.<br/>";
+		} # end if
+		if ( $$specs{"OverrideImpositionLayout$qty_index"} eq 'Y' ) {
+			
+			$variables{"hdnImpositionColumns$qty_index"} = [ sets::exclude( ['output'], $variables{"hdnImpositionColumns$qty_index"} ) ];
+			$variables{"hdnImpositionRows$qty_index"} = [ sets::exclude( ['output'], $variables{"hdnImpositionRows$qty_index"} ) ];
+			$variables{"hdnImpositionDutchColumns$qty_index"} = [ sets::exclude( ['output'], $variables{"hdnImpositionDutchColumns$qty_index"} ) ];
+			$variables{"hdnImpositionDutchRows$qty_index"} = [ sets::exclude( ['output'], $variables{"hdnImpositionDutchRows$qty_index"} ) ];
+			if ( ! ( $$specs{"hdnImpositionColumns$qty_index"} and $$specs{"hdnImpositionRows$qty_index"} ) ) {
+				$$specs{alert} .= "Please enter the desired imposition layout for quantity $qty_index.<br/>";
+			} # end if
+			if ( $$specs{"chkOverrideImposition$qty_index"} eq 'Y' ) {
+				if ( $$specs{"hdnImpositionColumns$qty_index"} * $$specs{"hdnImpositionRows$qty_index"} + $$specs{"hdnImpositionDutchColumns$qty_index"} * $$specs{"hdnImpositionDutchRows$qty_index"} != $$specs{"txtImposition$qty_index"} ) {
+
+					$$specs{alert} .= "Overriden layout must add up to overriden Imposition.<br/>";
+				} # end if
+			} # end if
+		} else {
+			$variables{"hdnImpositionColumns$qty_index"} = [ sets::union( 'output', @{$variables{"hdnImpositionColumns$qty_index"}} ) ];
+			$variables{"hdnImpositionRows$qty_index"} = [ sets::union( 'output', @{$variables{"hdnImpositionRows$qty_index"}} ) ];
+			$variables{"hdnImpositionDutchColumns$qty_index"} = [ sets::union( 'output', @{$variables{"hdnImpositionDutchColumns$qty_index"}} ) ];
+			$variables{"hdnImpositionDutchRows$qty_index"} = [ sets::union( 'output', @{$variables{"hdnImpositionDutchRows$qty_index"}} ) ];
+		} # end if
 	} # end foreach
 	return $$specs{Status} = 'uncalculated' if $$specs{alert};
 
@@ -3112,6 +3135,7 @@ sub calculate_impositions {
 			#} # end if
 		#} # end foreach I
 		if ( ! @results2 ) {
+$openprint::log->debug( " Didn't find the desired imposition, so cutting them down.");
 			my @lesser_imps = map { $$_{imposition} > $$sig_specs{'chkOverrideImposition'.$qty_index} ? $_ : () } @results;
 $openprint::log->debug( " first set: " . @lesser_imps );
 			@lesser_imps = map { $$_{imposition} >= $$sig_specs{'chkOverrideImposition'.$qty_index} ? $_ : () } openprint::imposition::decrease_imposition( @lesser_imps );
@@ -3145,11 +3169,11 @@ $log->warn("Getting all impos results: " . @results );
 				} # end if
 			} # end foreach I
 			@results2 = values %cuts;
-		} # end if
 }
+		} # end if
 		@results = @results2;
 	} else {
-		#$openprint::log->debug("NOT Override Imposition: $qty_index, " . $$sig_specs{'txtImposition'.$qty_index} . ' ' . $$sig_specs{'chkOverrideImposition'.$qty_index} ) if DEBUG_FILTERING;
+		$openprint::log->debug("NOT Override Imposition: $qty_index, " . $$sig_specs{'txtImposition'.$qty_index} . ' ' . $$sig_specs{'chkOverrideImposition'.$qty_index} ) if DEBUG_FILTERING;
 		my $needs_smaller = 1;
 		foreach my $I ( @results ) {
 			if ( $I->imposition() <= $$sig_specs{'txtQuantity'.$qty_index} ) {
@@ -3165,7 +3189,32 @@ $log->warn("Getting all impos results: " . @results );
 			} # end foreach I
 		} # end if
 	} # end if
-
+	if ( $$sig_specs{"OverrideImpositionLayout$qty_index"} eq 'Y' ) {
+		my @filtered_impos = map {(	
+				$$_{columns} == $$sig_specs{"hdnImpositionColumns$qty_index"} and
+				$$_{rows} == $$sig_specs{"hdnImpositionRows$qty_index"} and
+				int($$_{dutch_columns}) == int($$sig_specs{"hdnImpositionDutchColumns$qty_index"}) and
+				int($$_{dutch_rows}) == int($$sig_specs{"hdnImpositionDutchRows$qty_index"}) ) ? $_ : () 
+		} @results;
+		if ( ! @filtered_impos ) {
+			foreach my $i ( @results ) {
+				if ( 
+						$$i{columns} >= $$sig_specs{"hdnImpositionColumns$qty_index"} and
+						$$i{rows} >= $$sig_specs{"hdnImpositionRows$qty_index"} and
+						int($$i{dutch_columns}) >= int($$sig_specs{"hdnImpositionDutchColumns$qty_index"}) and
+						int($$i{dutch_rows}) >= int($$sig_specs{"hdnImpositionDutchRows$qty_index"}) )  {
+					my $i2 = $i->copy();
+					$i2->columns( $$sig_specs{"hdnImpositionColumns$qty_index"} );
+					$i2->rows( $$sig_specs{"hdnImpositionRows$qty_index"} );
+					$i2->dutch_columns( $$sig_specs{"hdnImpositionDutchColumns$qty_index"} );
+					$i2->dutch_rows( $$sig_specs{"hdnImpositionDutchRows$qty_index"} );
+					push @filtered_impos, $i2;
+				} # end if
+			} # end foreach i
+		} # end if
+		@results = @filtered_impos;
+	} # end if $$sig_specs{"OverrideImpositionLayout$qty_index"} eq 'Y'
+			
 	if ( DEBUG_FILTERING ) {
 		foreach my $I ( @results ) {
 			$I->display("After first round of filtering");
@@ -5040,8 +5089,8 @@ $openprint::log->debug("Back From DieCutting");
 			$price{'DieCutting Breakdown'} .= "DieCutting error: $diecutting_results{alert} $diecutting_results{alert} <br/>";
 			$price{'Comparison Cost'} += 1000000; 
 		} else {
-			$price{'DieCutting Breakdown'} .= sprintf('DieCutting Price: $%.2f on %s<br/>', $diecutting_results{Price}{Total}, $diecutting_results{Equipment} ? $diecutting_results{Equipment}->name() : '' );
-			$price{'Comparison Cost'} += $diecutting_results{Price}{Total};
+			$price{'DieCutting Breakdown'} .= sprintf('DieCutting Price: $%.2f on %s<br/>', $diecutting_results{Total}, $diecutting_results{Equipment} ? $diecutting_results{Equipment}->name() : '' );
+			$price{'Comparison Cost'} += $diecutting_results{Total};
 		} # end if
 	} # end if
 

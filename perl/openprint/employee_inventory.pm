@@ -1622,8 +1622,8 @@ sub apply_Manifest {
 		} # end foreach Manifest_Content for this type
 
 		if ( $param{'po_id-'.$Type->id()} ) {
-			my $PO = new openprint::PurchaseOrder( $param{'po_id-'.$Type->id()} );
-			if ( $PO->id() ) {
+			my $PO = openprint::PurchaseOrder->find_one( id=>$param{'po_id-'.$Type->id()} );
+			if ( $PO ) {
 				$error .= $PO->save({manifest_id=>$Manifest->id()}) if $PO->manifest_id() != $Manifest->id();;
 
 # Run through, and warn if the PO is not satisfied

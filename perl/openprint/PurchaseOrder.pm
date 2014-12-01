@@ -231,7 +231,7 @@ sub send_to_vendor {
 
 	my $file_base = $From->Company()->name().'-PO'.$$self{id};
 	if ( File::Slurp::write_file('/tmp/'.$file_base.'.html', { atomic => 1, err_mode=>'carp' }, \$purchase_order ) ) {
-		`wkhtmltopdf "/tmp/$file_base.html" "/tmp/$file_base.pdf"`;
+		`wkhtmltopdf -q "/tmp/$file_base.html" "/tmp/$file_base.pdf"`;
 		my $pdf_purchase_order = File::Slurp::read_file( "/tmp/$file_base.pdf", err_mode => 'carp' );
 		unlink "/tmp/$file_base.html";
 		unlink "/tmp/$file_base.pdf";
@@ -312,7 +312,7 @@ sub send_to_me {
 
 	my $file_base = $From->Company()->name().'-PO'.$_[0]{id};
 	if ( File::Slurp::write_file('/tmp/'.$file_base.'.html', { atomic => 1, err_mode=>'carp' }, \$purchase_order ) ) {
-		`wkhtmltopdf "/tmp/$file_base.html" "/tmp/$file_base.pdf"`;
+		`wkhtmltopdf -q "/tmp/$file_base.html" "/tmp/$file_base.pdf"`;
 		my $pdf_purchase_order = File::Slurp::read_file( "/tmp/$file_base.pdf", err_mode => 'carp' );
 		#unlink "/tmp/$file_base.html";
 		unlink "/tmp/$file_base.pdf";

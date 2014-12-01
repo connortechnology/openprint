@@ -1683,6 +1683,10 @@ sub _li_change {
 		} # end if
 	} elsif ( $param{'action'} eq 'Up' ) {
 		my $Job = new openprint::ScheduledJob( $param{'schedule_id'} );
+		if ( ! $$Job{id} ) {
+			$variable{error} .= 'Job was not found in db. Maybe you should refresh the schedule.';
+			return;
+		} # end if
 		my @Jobs = openprint::ScheduledJob->find( 'starttime is null'=>0, 'equipment_id'=>$$Job{'equipment_id'},'order'=>'starttime' );
 		my $index = 0;
 		for(;$index < @Jobs and $Jobs[$index]{id} != $$Job{id}; $index += 1 ) {};

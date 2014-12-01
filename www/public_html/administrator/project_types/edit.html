@@ -44,15 +44,15 @@
 ); ) ?>
 		</p>
 	</fieldset>
-	<fieldset class="leftColumn"><legend><? echo ( $$variable{'ProjectType'}->id() ? $$variable{'ProjectType'}->description() : 'New Project Type' ) ?></legend>
+	<fieldset class="leftColumn"><legend><? echo ( $$variable{ProjectType}->id() ? $$variable{ProjectType}->description() : 'New Project Type' ) ?></legend>
 		<ul>
 		<li> 
 			<label>Name</label>
-			<input type="text" id="name" name="name" value="<? echo ( $$variable{'ProjectType'}->name(); ) ?>" /> 
+			<input type="text" id="name" name="name" value="<? echo ( $$variable{ProjectType}->name(); ) ?>" /> 
 		</li>
 		<li> 
 			<label>Description</label>
-			<input type="text" id="description" name="description" value="<? echo ( $$variable{'ProjectType'}->description(); ) ?>" /> 
+			<input type="text" id="description" name="description" value="<? echo ( $$variable{ProjectType}->description(); ) ?>" /> 
 		</li>
 		<li>
 			<label>Category</label>
@@ -63,19 +63,19 @@
 			) ?>
 			</select>
 		</li>
-<? if ( new openprint::User( $session{'user_id'} )->email() =~ /iconnor/ ) ?>
+<? if ( new openprint::User( $session{user_id} )->email() =~ /iconnor/ ) ?>
 		<li> 
 			<label>Type</label>
-			<input type="text" name="type" value="<? echo ( $$variable{'ProjectType'}->type() ) ?>" /> 
+			<input type="text" name="type" value="<? echo ( $$variable{ProjectType}->type() ) ?>" /> 
 		</li>
 		<li> 
 			<label>URL</label>
-			<input type="url" id="url" name="url" value="<? echo ( $$variable{'ProjectType'}->url(); ) ?>" />
+			<input type="url" id="url" name="url" value="<? echo ( $$variable{ProjectType}->url(); ) ?>" />
 		</li>
-<? endif ( new openprint::User( $session{'user_id'} )->email() =~ /iconnor/ ) ?>
+<? endif ( new openprint::User( $session{user_id} )->email() =~ /iconnor/ ) ?>
 		<li> 
 			<label>Sort</label>
-			<input type="number" id="sorting" name="sorting" value="<? echo ( $$variable{'ProjectType'}->sorting(); ) ?>" />
+			<input type="number" id="sorting" name="sorting" value="<? echo ( $$variable{ProjectType}->sorting(); ) ?>" />
 		</li>
 		<li> 
 			<label>Show please call</label>
@@ -116,6 +116,8 @@
 <? if ( $$variable{'ProjectType'}->id() ) ?>
 	<div class="PaperRecommendations">
 	<fieldset><legend>Paper Recommendations</legend>
+		<ul><li><? echo ( radio( 'Recommended', [ '1', 'Yes', '0', 'No', '', 'All' ], $param{Recommended}, { onclick=>qq`new Ajax.Updater( 'PaperRecommendations', '_paper_recommendations.html', { parameters: { projecttype_id: $param{ddmProjectType}, recommended: this.value } } );` } ); ) ?></li>
+		</ul>
 		<div id="PaperRecommendations">
 			<?include('_paper_recommendations.html')?>
 		</div>	
