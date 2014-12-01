@@ -15,7 +15,7 @@
 				$$variable{product_total} = 0;
 				foreach my $Product ( $$variable{Invoice}->Products() ) {
 					$html .= qq`<tr id="Product$$Product{id}">`;
-					$html .= sprintf(q`<td class="product"><input type="text" id="product-description-%1$d" name="product-description-%1$d" value="%2$s" /></td>`, $Product->id(), $Product->description() );
+					$html .= sprintf(q`<td class="product"><input type="text" id="product-description-%1$d" name="product-description-%1$d" value="%2$s" /></td>`, $Product->id(), html_escape($Product->description()) );
 					$html .= sprintf(q`<td class="po"><input type="text" id="product-po-%1$d" name="product-po-%1$d" value="%2$s" /></td>`, $Product->id(), $Product->po() );
 
 					$html .= '<td class="Price">'.input( type=>'float', id=>'product-price-'.$$Product{id}, name=>'product-price-'.$$Product{id}, value=>$Product->price(), onkeyup=>"update_product( '$$Product{id}' );" ) . '</td>';
