@@ -50,7 +50,7 @@ $serial = 'payments_id_seq';
 
 sub destroy {
 	my $self = shift;
-    sql::execute( undef, undef, q{DELETE FROM ledgers WHERE payment_id=?}, $$self{'id'} );
+    sql::execute( undef, undef, q{DELETE FROM ledgers WHERE payment_id=?}, $$self{id} );
     return $self->SUPER::destroy();
 } # end sub destroy
 
@@ -75,13 +75,25 @@ sub remaining {
 		$$self{remaining} = $_[0];
 	} # end if
 	if ( ! defined $$self{remaining} ) {
-		$$self{'remaining'} = $$self{'amount'} - misc::sum( map { $_->amount() } openprint::Invoice_Payment->find('payment_id'=>$$self{'id'}) );
+		$$self{remaining} = $$self{amount} - misc::sum( map { $_->amount() } $self->Invoice_Payments() );
 	} # end if
-	return $$self{'remaining'};
+	return $$self{remaining};
 } # end sub remaining
 
+sub Invoice_Payments {
+	if ( @_ > 1 ) {
+		$_[0]{Invoice_Payments} = $_[1];
+	}
+	if ( ( ! $_[0]{Invoice_Payments} ) and ( $_[0]{id} ) ) {
+		$_[0]{Invoice_Payments} = [ openprint::Invoice_Payment->find( payment_id=>$_[0]{id} ) ];
+	} 
+
+	return @{$_[0]{Invoice_Payments}} if $_[0]{Invoice_Payments};
+	return ();
+} # end sub Invoice_Payments
+
 sub Type {
-	return new openprint::PaymentType( $_[0]{'type_id'} );
+	return new openprint::PaymentType( $_[0]{type_id} );
 } # end sub Type
 
 sub send_receipt {
@@ -93,14 +105,14 @@ sub send_receipt {
 	$data{User} = new openprint::User($openprint::session{user_id});
 	my $email_template = ssi::slurp_content( '/email_template.html' );
 	my @attachments;
-	$data{'ReplacementText'} = ssi::include( '/email_content/payment_receipt.html', \%data );
+	$data{ReplacementText} = ssi::include( '/email_content/payment_receipt.html', \%data );
 
 	my $Email = new openprint::Email();
 	$Email->html_body( ssi::variable_substitution( \$email_template, \%data ) );
 	my $results = $Email->send(
-		#TO			=>	new openprint::User( $openprint::session{'user_id'} ),
+		#TO			=>	new openprint::User( $openprint::session{user_id} ),
 		TO			=>	[map { $_->User() } $self->Payor()->AccountingContacts()],
-		BCC			=>	new openprint::User( $openprint::session{'user_id'} ),
+		BCC			=>	new openprint::User( $openprint::session{user_id} ),
 		FROM		=>	$data{User},
 		#'ATTACHMENTS'	=>	\@attachments,
 		SUBJECT		=>	'Thank you for your payment!',
