@@ -72,9 +72,9 @@ sub Order {
 sub remaining {
 	my $self = shift;
 	if ( @_ ) {
-		$$self{'remaining'} = $_[0];
+		$$self{remaining} = $_[0];
 	} # end if
-	if ( ! defined $$self{'remaining'} ) {
+	if ( ! defined $$self{remaining} ) {
 		$$self{'remaining'} = $$self{'amount'} - misc::sum( map { $_->amount() } openprint::Invoice_Payment->find('payment_id'=>$$self{'id'}) );
 	} # end if
 	return $$self{'remaining'};

@@ -2,7 +2,7 @@
 use utf8;
 use lib '/var/www/testing/perl';
 use strict;
-use warnings;
+#use warnings;
 
 require configuration;
 require sql;
