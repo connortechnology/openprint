@@ -76,18 +76,15 @@ my @re = (
 		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: pam_\w+\(sshd:auth\): authentication failure; logname= uid=0 euid=0 tty=ssh ruser= rhost=(?<IP>[\._a-zA-Z0-9\-]+)\s+user\=\w+$',
 		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: Failed password for [\._a-zA-Z0-9\-]+ from (?<IP>[\._a-zA-Z0-9\-]+) port [0-9]+ ssh2$',
 		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: Failed password for (invalid|illegal) user [\._a-zA-Z0-9\-]+ from (?<IP>[\._a-zA-Z0-9\-]+) port [0-9]+ ssh2$',
-		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: error: PAM: Authentication failure for illegal user root from (?<IP>[\._a-zA-Z0-9\-]+)$',
-		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: error: PAM: Authentication failure for [\._a-zA-Z0-9\-]+ from (?<IP>[\._a-zA-Z0-9\-]+)$',
+		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: error: PAM: Authentication failure for (illegal user root|[\._a-zA-Z0-9\-]+) from (?<IP>[\._a-zA-Z0-9\-]+)$',
 		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: error: PAM: 1 more authentication failure; logname= uid=0 euid=0 tty=ssh ruser= rhost=(?<IP>[\._a-zA-Z0-9\-]+)\s+user\=\w+$',
 		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: Disconnecting: Too many authentication failures for (invalid user )?[^[:space:]]* from (?<IP>[.[:digit:]]+) port [[:digit:]]+ ssh2 \[preauth\]$',
-		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: Invalid user attack from (?<IP>[0-9.]+)$',
 		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: Invalid user \w+ from (?<IP>[0-9.]+)$',
 		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: Connection closed by (?<IP>[0-9.]+):? \[preauth\]$',
 		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: Received disconnect from (?<IP>[0-9.]+) 11: [ .,/:([:alnum:]]+ \[preauth\]$',
 		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: Received disconnect from (?<IP>[0-9.]+) 10:  \[preauth\]$',
 		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: Received disconnect from (?<IP>[0-9.]+) 3: com.jcraft.jsch.JSchException: (Auth cancel|reject HostKey: [0-9\.]+) \[preauth\]$',
-		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: User \w+ from (?<IP>[0-9.]+) not allowed because not listed in AllowUsers$',
-		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: User \w+ from (?<IP>[0-9.]+) not allowed because account is locked$',
+		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: User \w+ from (?<IP>[0-9.]+) not allowed because (account is locked|not listed in AllowUsers)$',
 		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ proftpd\[[0-9]+\]: [\.\-A-Za-z0-9]+ \([\.\-A-Za-z0-9]+\[(?<IP>[.:a-zA-Z0-9]+)\]\) \- Maximum login attempts \([0-9]+\) exceeded, connection refused$',
 		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ proftpd\[[0-9]+\]: [\.\-A-Za-z0-9]+ \([\.\-A-Za-z0-9]+\[(?<IP>[.:a-zA-Z0-9]+)\]\) \- USER [\.\-A-Za-z0-9]+: no such user found from [0-9.]+\[[0-9.]+\] to [.:a-zA-Z0-9]+$',
 		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: Failed keyboard-interactive/pam for invalid user [\.\-A-Za-z0-9]+ from (?<IP>[.:a-zA-Z0-9]+) port [0-9]+ ssh2$',
@@ -260,7 +257,10 @@ $log->debug("# of entries in Object_name_cache: " . keys %{$openprint::Object::n
 					} # end if      
 					$host_counts{$ip} = $Host;
 				} # end if
-				my $last_seen = Date::Parse::str2time( $host_counts{$ip}{updated_on} ) if $host_counts{$ip}{updated_on};
+				if ( $host_counts{$ip}{updated_on} and ! $host_counts{$ip}{updated_on_seconds} ) {
+					$host_counts{$ip}{updated_on_seconds} = Date::Parse::str2time( $host_counts{$ip}{updated_on} );
+				}
+				my $last_seen = $host_counts{$ip}{updated_on_seconds};
 				my $occurrence = Date::Parse::str2time( $when );
 	#$log->warn("Last: $host_counts{$ip}{updated_on} => $last_seen, $when => $occurrence") if $host_counts{$ip};
 				if ( (!$last_seen) or ($last_seen < $occurrence) ) {
@@ -290,6 +290,7 @@ $log->debug("# of entries in Object_name_cache: " . keys %{$openprint::Object::n
 					if ( $_ ) {
 						$log->error( $_ );
 					} # end if
+					$host_counts{$ip}{updated_on_seconds} = time;
 				} # end if
 				$log->debug( "$ip $host_counts{$ip}{ip} $host_counts{$ip}{count}" ) if $config{debug};
 				`shorewall drop $ip` if $host_counts{$ip}{blacklist};

@@ -1,18 +1,21 @@
 <fieldset><legend>Unpaid Invoices</legend>
 	<table class="List sortable">
 		<tr>
-			<th>Invoice</th>
+			<th class="Invoice">Invoice</th>
+			<th class="Date">Early Payment Date</th>
+			<th class="Price">Early Total</th>
+			<th class="Date">Due Date</th>
 			<th class="Price">Total</th>
 			<th class="Price">Remaining</th>
 			<th class="buttons">&nbsp;</th>
 		</tr>
 		<? echo (
 			my $html = '';
-			$$variable{'Currency'} = openprint::Currency::get_current() if ! $$variable{'Currency'};
+			$$variable{Currency} = openprint::Currency::get_current() if ! $$variable{Currency};
 			my @Invoices;
 			foreach my $I ( openprint::Invoice->find(
-				'invoicer_id'=>$session{'company_id'},
-				'invoicee_id'=>$$variable{'Payment'}->payor_id(),
+				'invoicer_id'=>$session{company_id},
+				'invoicee_id'=>$$variable{Payment}->payor_id(),
 				'order'=>'id',
 			) ) {
 				push @Invoices, $I if $I->owing() > 0;
@@ -24,14 +27,25 @@
 				$total_total += $total;
 				$owing_total += $owing;
 		
-				$html .= '<tr>';
-				$html .= sprintf('<td><a href="/invoice/edit.html?invoice_id=%1$d">%1$d</a></td>', $I->id() );
-				$html .= sprintf('<td class="Price">%1$s</td>', openprint::Currency::format( $total ) );
-				$html .= sprintf('<td class="Price">%1$s</td>', openprint::Currency::format( $owing ) );
-				$html .= sprintf('<td class="buttons">%s</td>', ssi::writeButton( $log, $dbh, 'add'.$I->id(), '', 'pay_invoice('.$I->id().');', '', '+' ) );
-				$html .= '</tr>';
+				$html .= sprintf(q`<tr>
+<td class="Invoice">%1$s</td>
+<td class="Date">%2$s</td>
+<td class="Price">%3$s</td>
+<td class="Date">%4$s</td>
+<td class="Price">%5$s</td>
+<td class="Price">%6$s</td>
+<td class="buttons">%7$s</td>
+</tr>`, 
+	$I->link_to(),
+	format_date( $I->early_payment_date() ),
+	openprint::Currency::format( $I->owing_early() ),
+	format_date( $I->due_on() ),
+	openprint::Currency::format( $total ),
+	openprint::Currency::format( $owing ),
+	button( 'add'.$I->id(), { onclick=>'pay_invoice('.$I->id().');', text=>'+', title=>'Add to Payment' } ),
+);
 			} # end foreach $I
-			$html .= sprintf('<tr class="totals"><td>Totals</td><td class="Price">%s</td><td class="Price">%s</td><td>&nbsp;</td></tr>',
+			$html .= sprintf('<tr class="totals"><td colspan="4">Totals</td><td class="Price">%s</td><td class="Price">%s</td><td>&nbsp;</td></tr>',
 				openprint::Currency::format($total_total),
 				openprint::Currency::format($owing_total),
 				);

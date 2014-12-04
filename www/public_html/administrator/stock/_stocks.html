@@ -29,7 +29,9 @@
 			next if openprint::PaperPrice->find_one(paper_id=>$$Stock{id}, service=>'Setup');
 		} # end if
 		if ( $session{'/administrator/stock/list.html?material_prices'} eq '1' ) {
-			next if ! openprint::PaperPrice->find_one(paper_id=>$$Stock{id}, service=>'Material');
+			$_ = openprint::PaperPrice->find_one(paper_id=>$$Stock{id}, service=>'Material');
+			$log->debug("Got $_");
+			next if ! $_;
 		} elsif ( $session{'/administrator/stock/list.html?material_prices'} eq '0' ) {
 			next if openprint::PaperPrice->find_one(paper_id=>$$Stock{id}, service=>'Material');
 		} # end if

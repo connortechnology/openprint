@@ -421,8 +421,14 @@ sub expense {
 			return;	
 		} # end if
 	} elsif ( $param{'btnFunction'} eq 'Save' ) {
-		if ( $param{amount} =~ /[=\+\-\*\/]/ ) {
-			$param{amount} = eval $param{amount};
+		if ( $param{amount} =~ /[\=\+\-\*\/]/ ) {
+$log->debug("Calcing amount: $param{amount}");
+			if ( $param{amount} =~ /\=/ ) {	
+				eval('$param{amount} ' . "$param{amount};" );
+			} else {
+				eval('$param{amount} = ' . "$param{amount};" );
+			} # end if
+$log->debug("Calcing amount: $param{amount}");
 		} # end if
 		$param{'owner_id'} = $session{'company_id'} if ! $param{'owner_id'};
 		$param{'due_on'} = sprintf('%.4d-%.2d-%.2d', @param{'due_on_year','due_on_month','due_on_day'} );
