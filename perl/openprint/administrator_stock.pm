@@ -581,6 +581,10 @@ sub _price_tr {
 
 sub _stock { 
 } # end sub _stock
+sub _popup {
+} # end sub _popup
+sub _popup_price {
+} # end sub _popup_price
 
 1;
 __END__

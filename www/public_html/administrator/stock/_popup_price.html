@@ -1,16 +1,15 @@
 <tr id="Price-<? echo ( $param{'pricelist_id'} ) ?>-<? echo ( $param{'id'} ) ?>">
 	<td class="Range">
-		<input class="text" type="text" name="min-<? echo ( $param{'pricelist_id'} ) ?>-<? echo ( $param{'id'} ) ?>" value="" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');" />
-		<input class="text" type="text" name="max-<? echo ( $param{'pricelist_id'} ) ?>-<? echo ( $param{'id'} ) ?>" value="" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');" />
+		<? echo ( join( ' to ',
+		input( type=>'cardinal', name=>'min-'.$param{pricelist_id}.'-'.$param{id} ),
+		input( type=>'cardinal', name=>'max-'.$param{pricelist_id}.'-'.$param{id} ),
+		) ) ?>
 	</td>
-	<td class="Cost"><input class="text" type="text" name="costcwt-<? echo ( $param{'pricelist_id'} ) ?>-<? echo ( $param{'id'} ) ?>" value="" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');calc_price(this);"/></td>
-	<td class="Markup"><input class="text" type="text" name="markup-<? echo ( $param{'pricelist_id'} ) ?>-<? echo ( $param{'id'} ) ?>" value="" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');calc_price(this);"/></td>
-	<td class="Price"><input class="text" type="text" name="pricecwt-<? echo ( $param{'pricelist_id'} ) ?>-<? echo ( $param{'id'} ) ?>" value="" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');calc_price(this);"/></td>
+	<td class="Cost"><? echo ( input( type=>'float', name=>join('-','costcwt',$param{pricelist_id},$param{id} ), onkeyup=>'calc_price(this);' ); ) ?></td>
+	<td class="Markup"><? echo ( input( type=>'float', name=>join('-','markup',$param{pricelist_id},$param{id} ), onkeyup=>'calc_price(this);' ); ) ?></td>
+	<td class="Price"><? echo ( input( type=>'float', name=>join('-', 'pricecwt',$param{pricelist_id},$param{id} ), onkeyup=>'calc_price(this);' ); ) ?></td>
 	<td class="Discount">
-		<input class="radio" type="radio" id="discount-<? echo ( $param{'pricelist_id'} ) ?>-<? echo ( $param{'id'} ) ?>Y" name="discount-<? echo ( $param{'pricelist_id'} ) ?>-<? echo ( $param{'id'} ) ?>" value="Y" checked="checked"/>
-		<label for="discount-<? echo ( $param{'pricelist_id'} ) ?>-<? echo ( $param{'id'} ) ?>Y">Yes</label>
-		<input class="radio" type="radio" id="discount-<? echo ( $param{'pricelist_id'} ) ?>-<? echo ( $param{'id'} ) ?>N" name="discount-<? echo ( $param{'pricelist_id'} ) ?>-<? echo ( $param{'id'} ) ?>" value="N" />
-		<label for="discount-<? echo ( $param{'pricelist_id'} ) ?>-<? echo ( $param{'id'} ) ?>N">No</label>
+		<? echo ( radio( join('-', 'discount', $param{pricelist_id},$param{id} ), ['Y','Yes','N','No' ], 'Y' ); ) ?>
 	</td>
 	<td>&nbsp;</td>
 </tr>
