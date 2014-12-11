@@ -1835,7 +1835,7 @@ sub summary {
 			} else {
 				$html .= 'Form ' . $form . ' ' . $$sig_specs{txtServiceDescription};
 			} # end if
-			$html .= ' ' . ( $summary eq 'not folded' ? $summary : 'folded ' . $summary ) . "\n";
+			$html .= ' ' . ( $summary eq 'not folded' ? $summary : ' ' . $summary ) . "\n";
 		} # end foreach
 		return $html;
 	} else {
