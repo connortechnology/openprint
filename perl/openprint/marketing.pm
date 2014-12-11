@@ -190,7 +190,7 @@ sub _sales_log {
 	    ssi::save_params( '/marketing/sales_log.html', (
                 ( map { 'called_on_start_' . $_ } ( 'year','month','day' ) ),
                 ( map { 'called_on_end_' . $_ } ( 'year','month','day' ) ),
-				'company_id', 'user_id'
+				'company_id', 'user_id', 'employee_id',
 		) );
 
 } # end sub _sales_log
