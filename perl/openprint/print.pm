@@ -210,7 +210,6 @@ sub view_services {
 					next;
 				} # end if
 				my $specs = $PS->specs();
-				$Project->add_to_log( @openprint::session{'company_id','user_id'}, $ServiceType->name().' ' . $$specs{ServiceName}.' service deleted.' );
 				$$variable{error} .= $PS->delete();
 				if ( $ServiceType->name() eq 'Signature' ) {
 					openprint::service::internal_calc( $log, $dbh, $variable, $project_index, $$services{''}[0], $Project->Type()->type() );
