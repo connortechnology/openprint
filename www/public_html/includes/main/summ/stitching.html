@@ -1,58 +1,36 @@
 <p> 
 	<label>Signature style and quantity</label>
-<? eval ( $$variable{'QTYIndex'} = 1 ) ?>
-<? while ( $$variable{'QTYIndex'} <= 3 ) ?>
-<? if ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>
+<? echo (
+	my $html;
+	foreach my $qty_index ( $$variable{Project}->quantity_indexes() ) {
 
-	<span class="value">
-	<? if ( $$variable{"txtSignatureQty4Page-$$variable{'QTYIndex'}"} ) ?>
-	<? echo ( $$variable{"txtSignatureQty4Page-$$variable{'QTYIndex'}"} ) ?> - 4 Page Signature<? if ( $$variable{"txtSignatureQty4Page-$$variable{'QTYIndex'}"} > 1 ) ?>s<? endif ( $$variable{"txtSignatureQty4Page-$$variable{'QTYIndex'}"} > 1 ) ?><br/>
-	<? endif ( $$variable{"txtSignatureQty4Page-$$variable{'QTYIndex'}"} ) ?>
-	<? if ( $$variable{"txtSignatureQty8Page-$$variable{'QTYIndex'}"} ) ?>
-	<? echo ( $$variable{"txtSignatureQty8Page-$$variable{'QTYIndex'}"} ) ?> - 8 Page Signature<? if ( $$variable{"txtSignatureQty8Page-$$variable{'QTYIndex'}"} > 1 ) ?>s<? endif ( $$variable{"txtSignatureQty8Page-$$variable{'QTYIndex'}"} > 1 ) ?><br/>
-	<? endif ( $$variable{"txtSignatureQty8Page-$$variable{'QTYIndex'}"} ) ?>
+		$html .= '<span class="value">';
+		foreach my $page ( 4, 8, 12, 16, 20,24,28,32,,36,40,44,48, 'GateFolded' ) {
+			if ( $$variable{"txtSignatureQty${page}Page-$qty_index"} ) {
+				$html .= $$variable{"txtSignatureQty${page}Page-$qty_index"} . ' - '. $page .' Page Signature';
+				$html .= 's' if $$variable{"txtSignatureQty${page}Page-$qty_index"} > 1;
+				$html.='<br/>';
+			} # end if
+		} # end foreach page
+	
 
-  <? if ( $$variable{"txtSignatureQty12Page-$$variable{'QTYIndex'}"} ) ?>
-    <? echo ( $$variable{"txtSignatureQty12Page-$$variable{'QTYIndex'}"} ) ?> - 12 Page Signature<? if ( $$variable{"txtSignatureQty12Page-$$variable{'QTYIndex'}"} > 1 ) ?>s<? endif ( $$variable{"txtSignatureQty12Page-$$variable{'QTYIndex'}"} > 1 ) ?><br/>
-    <? endif ( $$variable{"txtSignatureQty12Page-$$variable{'QTYIndex'}"} ) ?>
-
-<? if ( $$variable{"txtSignatureQty16Page-$$variable{'QTYIndex'}"} ) ?>
-    <? echo ( $$variable{"txtSignatureQty16Page-$$variable{'QTYIndex'}"} ) ?> - 16 Page Signature<? if ( $$variable{"txtSignatureQty16Page-$$variable{'QTYIndex'}"} > 1 ) ?>s<? endif ( $$variable{"txtSignatureQty16Page-$$variable{'QTYIndex'}"} > 1 ) ?><br/>
-    <? endif ( $$variable{"txtSignatureQty16Page-$$variable{'QTYIndex'}"} ) ?>
-
-<? if ( $$variable{"txtSignatureQty20Page-$$variable{'QTYIndex'}"} ) ?>
-    <? echo ( $$variable{"txtSignatureQty20Page-$$variable{'QTYIndex'}"} ) ?> - 20 Page Signature<? if ( $$variable{"txtSignatureQty20Page-$$variable{'QTYIndex'}"} > 1 ) ?>s<? endif ( $$variable{"txtSignatureQty20Page-$$variable{'QTYIndex'}"} > 1 ) ?><br/>
-    <? endif ( $$variable{"txtSignatureQty20Page-$$variable{'QTYIndex'}"} ) ?>
-
-<? if ( $$variable{"txtSignatureQty24Page-$$variable{'QTYIndex'}"} ) ?>
-    <? echo ( $$variable{"txtSignatureQty24Page-$$variable{'QTYIndex'}"} ) ?> - 24 Page Signature<? if ( $$variable{"txtSignatureQty24Page-$$variable{'QTYIndex'}"} > 1 ) ?>s<? endif ( $$variable{"txtSignatureQty24Page-$$variable{'QTYIndex'}"} > 1 ) ?><br/>
-    <? endif ( $$variable{"txtSignatureQty24Page-$$variable{'QTYIndex'}"} ) ?>
-
-<? if ( $$variable{"txtSignatureQty32Page-$$variable{'QTYIndex'}"} ) ?>
-    <? echo ( $$variable{"txtSignatureQty32Page-$$variable{'QTYIndex'}"} ) ?> - 32 Page Signature<? if ( $$variable{"txtSignatureQty32Page-$$variable{'QTYIndex'}"} > 1 ) ?>s<? endif ( $$variable{"txtSignatureQty32Page-$$variable{'QTYIndex'}"} > 1 ) ?><br/>
-    <? endif ( $$variable{"txtSignatureQty32Page-$$variable{'QTYIndex'}"} ) ?>
-
-<? if ( $$variable{"txtSignatureQty36Page-$$variable{'QTYIndex'}"} ) ?>
-    <? echo ( $$variable{"txtSignatureQty36Page-$$variable{'QTYIndex'}"} ) ?> - 36 Page Signature<? if ( $$variable{"txtSignatureQty36Page-$$variable{'QTYIndex'}"} > 1 ) ?>s<? endif ( $$variable{"txtSignatureQty36Page-$$variable{'QTYIndex'}"} > 1 ) ?><br/>
-    <? endif ( $$variable{"txtSignatureQty36Page-$$variable{'QTYIndex'}"} ) ?>
-
-<? if ( $$variable{"txtSignatureQty40Page-$$variable{'QTYIndex'}"} ) ?>
-    <? echo ( $$variable{"txtSignatureQty40Page-$$variable{'QTYIndex'}"} ) ?> - 40 Page Signature<? if ( $$variable{"txtSignatureQty40Page-$$variable{'QTYIndex'}"} > 1 ) ?>s<? endif ( $$variable{"txtSignatureQty40Page-$$variable{'QTYIndex'}"} > 1 ) ?><br/>
-    <? endif ( $$variable{"txtSignatureQty40Page-$$variable{'QTYIndex'}"} ) ?>
-
-<? if ( $$variable{"txtSignatureQty48Page-$$variable{'QTYIndex'}"} ) ?>
-    <? echo ( $$variable{"txtSignatureQty48Page-$$variable{'QTYIndex'}"} ) ?> - 48 Page Signature<? if ( $$variable{"txtSignatureQty48Page-$$variable{'QTYIndex'}"} > 1 ) ?>s<? endif ( $$variable{"txtSignatureQty48Page-$$variable{'QTYIndex'}"} > 1 ) ?><br/>
-    <? endif ( $$variable{"txtSignatureQty48Page-$$variable{'QTYIndex'}"} ) ?>
-
-
-	<? if ( $$variable{"txtSignatureQtyGateFolded-$$variable{'QTYIndex'}"} ) ?>
-	<? echo ( $$variable{"txtSignatureQtyGateFolded-$$variable{'QTYIndex'}"} ) ?> - Gate Folded Signature<? if ( $$variable{"txtSignatureQtyGateFolded-$$variable{'QTYIndex'}"} > 1 ) ?>s<? endif ( $$variable{"txtSignatureQtyGateFolded-$$variable{'QTYIndex'}"} > 1 ) ?><br/>
-	<? endif ( $$variable{"txtSignatureQtyGateFolded-$$variable{'QTYIndex'}"} ) ?>
-	</span>
-<? endif ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>
-    <? eval ( $$variable{'QTYIndex'} += 1 ) ?>
-<? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
+	$html .= '</span>';
+	} # end foreach qty_index
+	return $html;
+) ?>
 </p>
+<p><label>Imposition</label>
+<? echo (
+	my $html;
+	foreach my $qty_index ( $$variable{Project}->quantity_indexes() ) {
+
+		$html .= '<span class="value">';
+		$html .= $$variable{"Imposition$qty_index"}.'out';
+	$html .= '</span>';
+	} # end foreach qty_index
+	return $html;
+) ?>
+
 <? if ( $$variable{'txtSignatureQtyGateFolded'} && $$variable{'rdbGateFoldFit'} ) ?>	
 <p>
 	<label>Double Gate folded page style</label>
