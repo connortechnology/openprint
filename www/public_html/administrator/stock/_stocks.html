@@ -1,5 +1,6 @@
 <? eval (
 	@{$$variable{'Stocks'}} = ();
+	my %suppliers;
 	foreach my $Stock ( openprint::Paper->find( 
 			columns	=>	'*,(select name from stockbrands where id=brand_id) AS brand, (select name from stockfinishes where id=finish_id) AS finish, (select name from stockcolours where id=colour_id) AS colour, (select name from stockweights where id=weight_id) AS weight',
 			( $session{'/administrator/stock/list.html?group_id'} ? ( 'group_id'		=> $session{'/administrator/stock/list.html?group_id'} ) : () ),
@@ -35,10 +36,12 @@
 		} elsif ( $session{'/administrator/stock/list.html?material_prices'} eq '0' ) {
 			next if openprint::PaperPrice->find_one(paper_id=>$$Stock{id}, service=>'Material');
 		} # end if
+		$suppliers{$Stock->Supplier()->name()} = 1 if $$Stock{suppier_id};
 		push @{$$variable{'Stocks'}}, $Stock;
 	} # end foreach
 	@{$$variable{'Groups'}} = openprint::StockGroup->find();
 	@{$$variable{'InventoryNumbers'}} = sets::union( map { $_->inventory_number() } @{$$variable{'Stocks'}} );
+	@{$$variable{suppliers}} = keys %suppliers;
 ) ?>
 <? if ( @{$$variable{'Stocks'}} ) ?>
 	<table class="List sortable" style="table-layout: auto;">
@@ -52,9 +55,9 @@
 				<th class="group">Group</th>
 				<? endif ( @{$$variable{'Groups'}} ) ?>
 				<th class="manufacturer">Manufacturer</th>
-<? if ( ! $session{'/administrator/stock/list.html?supplier_id'} ) ?>
+<? if ( @{$$variable{suppliers}} ) ?>
 				<th class="supplier">Supplier</th>
-<? endif ( ! $session{'/administrator/stock/list.html?supplier_id'} ) ?>
+<? endif ( @{$$variable{suppliers}} ) ?>
 				<th class="brand">Brand</th>
 				<th class="finish">Finish</th>
 				<th class="colour">Colour</th>
@@ -79,9 +82,9 @@
 		<td class="group"><a href="stock.html?stock_id=<? echo ( $$variable{Stock}{'id'} ) ?>"><? echo ( $$variable{Stock}->group() ) ?></a></td>
 		<? endif ( @{$$variable{'Groups'}} ) ?>
 		<td class="manufacturer"><a href="stock.html?stock_id=<? echo ( $$variable{Stock}{'id'} ) ?>"><? echo ( $$variable{Stock}->manufacturer() ) ?></a></td>
-<? if ( ! $session{'/administrator/stock/list.html?supplier_id'} ) ?>
-		<td class="brand"><a href="stock.html?stock_id=<? echo ( $$variable{Stock}{'id'} ) ?>"><? echo ( $$variable{Stock}->Supplier()->name() ) ?></a></td>
-<? endif ( ! $session{'/administrator/stock/list.html?supplier_id'} ) ?>
+<? if ( @{$$variable{suppliers}} ) ?>
+		<td class="supplier"><a href="stock.html?stock_id=<? echo ( $$variable{Stock}{'id'} ) ?>"><? echo ( $$variable{Stock}->Supplier()->name() ) ?></a></td>
+<? endif ( @{$$variable{suppliers}} ) ?>
 		<td class="brand"><a href="stock.html?stock_id=<? echo ( $$variable{Stock}{'id'} ) ?>"><? echo ( $$variable{Stock}->brand() ) ?></a></td>
 		<td class="finish"><a href="stock.html?stock_id=<? echo ( $$variable{Stock}{'id'} ) ?>"><? echo ( $$variable{Stock}->finish() ) ?></a></td>
 		<td class="colour"><a href="stock.html?stock_id=<? echo ( $$variable{Stock}{'id'} ) ?>"><? echo ( $$variable{Stock}->colour() ) ?></a></td>

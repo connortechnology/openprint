@@ -186,6 +186,10 @@ $openprint::log->debug("Setting: $param{'amount'} " );
 						delete $$Paper{'Prices'};
 					} # end if
 				} # end foreach param key
+			} elsif ( $param{mode} eq 'recommended' ) {
+				$Paper->recommendations( ref $param{PRF} eq 'ARRAY' ? @{$param{PRF}} : ( $param{PRF} ) );
+				$variable{error} .= $Paper->save();
+				$variable{ExternalRedirect} = '/administrator/stock/list.html';
 			} # end if
 			sql::end_transaction( $dbh, $ac );
 		} # end foreach Paper
@@ -582,6 +586,8 @@ sub _price_tr {
 sub _stock { 
 } # end sub _stock
 sub _popup {
+	@{$variable{Stocks}} = openprint::Paper->find(id=>$param{stock_ids});
+	$variable{Stock} = $variable{Stocks}[0] if @{$variable{Stocks}};
 } # end sub _popup
 sub _popup_price {
 } # end sub _popup_price
