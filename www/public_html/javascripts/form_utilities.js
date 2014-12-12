@@ -635,7 +635,7 @@ function checkLoginData( usernameInput, passwordInput ) {
 	} else if ( div ) {
 		div.hide();
 	}
-
+	usernameInput.form.btnFunction.value='Login';
 	usernameInput.form.submit();
 	return false;
 }
@@ -653,6 +653,7 @@ function checkForgotPasswordData ( emailInput ) {
 
 	 if ( pass ) {
 		 // Passed. Submit the form and it's data.
+		 emailInput.form.btnFunction.value='Forgotten Password';
 		 emailInput.form.submit();
 		 return false;
 	 }
