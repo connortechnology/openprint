@@ -171,7 +171,6 @@ sub signature_calc {
 		$results{Status} = 'uncalculated';
 		return \%results;
 	} # end if
-	my $scoring_specs = openprint::service::get_specs_ref( $Project, $$services{Scoring}[0] ) if $$services{Scoring} and @{$$services{Scoring}};
 
 	my $plusCover = $$printing_specs{rdbCover} eq 'Different' ? 1 : 0;
 
@@ -480,8 +479,9 @@ sub calc {
 		return $$specs{Status} = 'uncalculated';
 	} # end if
 
+	my $calc_hash = {};
 # Figure out whether we need a cover
-	my $printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
+	my $printing_specs = $$calc_hash{ProjectSpecs} = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
 	@$specs{'txtPageQuantity','txtFinalWidth','txtFinalHeight'} = @$printing_specs{'txtTotalPageQuantity','txtFinalWidth','txtFinalHeight'};
 	if ( (defined $$specs{chkOverrideInsertQuantity}) and ( $$specs{chkOverrideInsertQuantity} eq 'Y' ) ) {
 		$variables{txtInsertQuantity} = [ sets::exclude( ['output'], $variables{txtInsertQuantity} ) ];
@@ -503,14 +503,19 @@ sub calc {
 		} # end foreach
 	} # endif 
 
-	my $calc_hash = {};
 	my $folding_specs = 0;
 	if ( $$services{Folding} ) {
-		$folding_specs = $$calc_hash{FoldingSpecs} = openprint::service::get_specs_ref( $Project, $$services{Folding}[0] );
+		%{$$calc_hash{FoldingSpecs}} = %{openprint::service::get_specs_ref( $Project, $$services{Folding}[0] )};
+		$folding_specs = $$calc_hash{FoldingSpecs};
 	} # end if
-	$$specs{txtCalliper} = $Project->calliper();
-	my $scoring_specs = openprint::service::get_specs_ref( $Project, $$services{Scoring}[0] ) if $$services{Scoring} and @{$$services{Scoring}};
+	# Actually need this for when we call folding
+	my $scoring_specs = 0;
+	if ( $$services{Scoring} and @{$$services{Scoring}} ) {
+		$$calc_hash{ScoringSpecs} = openprint::service::get_specs_ref( $Project, $$services{Scoring}[0] );
+		$scoring_specs = $$calc_hash{ScoringSpecs};
+	}
 
+	$$specs{txtCalliper} = $Project->calliper();
 # Need to figure out which dimension the spine bisects
 	if ( $$printing_specs{spine} ) {
 		if ( $$printing_specs{spine} eq 'width' ) {
