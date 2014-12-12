@@ -1,20 +1,20 @@
 <? echo (
-	my $html = ssi::include( $ENV{DOCUMENT_ROOT}.'/includes/error_reporting.html');;
+	my $html = include('/includes/error_reporting.html');
 	my $id = $$variable{Currency}{id};
 
-	foreach my $C ( openprint::Currency_Conversion->find(from_id=>$id,'order'=>'to_id, period_end DESC NULLS FIRST') ) {
+	$html .= '1 ' . $$variable{Currency}->short().' = ';
+	$html .= input( type=>'float', name=>'amount-'.$id, onkeyup=>"calc_rate('$id');" );
+	$html .= ssi::select( openprint::Currency->dropdown('order'=>'lower(name)','id !='=>$id), [], { name=>'to-'.$id } );
+	$html .= button( 'Add'.$id, { onclick=>sprintf('set_conversion( %d );', $id ), text => 'Set Conversion' } );
+	$html .= '</br>';
+
+
+	foreach my $C ( openprint::Currency_Conversion->find(from_id=>$id, order=>'to_id, period_end DESC NULLS FIRST') ) {
 		my $To = new openprint::Currency( $$C{to_id} );
 		$html .= sprintf('1 %s = %s %s %s %s<br/>', $C->From()->name(), $C->amount(), $To->name(),
-			( $$C{period_start} ? 'from '.Date::Format::time2str( $config{DateTimeFormat}, Date::Parse::str2time( $$C{period_start} ) ) : '' ),
-			( $$C{period_end} ? ' until ' . Date::Format::time2str( $config{DateTimeFormat}, Date::Parse::str2time( $$C{period_end} ) ) : '' ),
+			( $$C{period_start} ? 'from '. format_datetime( $$C{period_start} ) : '' ),
+			( $$C{period_end} ? ' until ' . format_datetime( $$C{period_end} ) : '' ),
 		); 
 	} # end foreach
-	$html .= '1 ' . $$variable{Currency}->short().' = ';
-	
-	$html .= ssi::input( type=>'float', name=>'amount-'.$id, onkeyup=>"calc_rate('$id');" );
-	$html .= ssi::select( openprint::Currency->dropdown('order'=>'lower(name)','id !='=>$id), [], { name=>'to-'.$id } );
-	$html .= ssi::button( 'Add'.$id, {
-		onclick=>sprintf(q`new Ajax.Updater( 'Conversions%1$d','/administrator/managerial/_currency_conversions.html', { parameters: { currency_id: %1$d, to_id: get_ddm_value(f1.elements['to-%1$d']), amount: f1.elements['amount-%1$d'].value, btnFunction: 'Add' } });`, $id ), 
-		text => 'Set Conversion' } );
 	return $html;
 ) ?>

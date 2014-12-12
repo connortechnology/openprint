@@ -1249,7 +1249,8 @@ $log->debug("Order after coalesce: @order : " . join(',', map { new openprint::S
 						my $Project = $Job->Project();
 						$Project->save({'due_date'=>$Project->get_due_date()}) if ! $Project->due_date();
 						my @forms = map { my $sig_specs = openprint::service::get_specs_ref( $Job->Project(), $_ ); $$sig_specs{'SignatureIndex'}; } @{$Job->service_id()};
-						$Project->add_to_log( @openprint::session{'company_id','user_id'}, 'Scheduled form' . ( @forms == 1 ? ' ' : 's ' ) . join(',',@forms).' to print on ' . $Shift->Equipment()->strid() . ' ' . ( $start_time ? "at $start_time" : $Shift->name() ) );
+						
+						$Project->add_to_log( @openprint::session{'company_id','user_id'}, 'Scheduled form' . ( @forms == 1 ? ' ' : 's ' ) . join(',',@forms).' for ' . $Job->ServiceType()->type() . ' on ' . $Shift->Equipment()->strid() . ' ' . ( $start_time ? "at $start_time" : $Shift->name() ) );
 					} # end if
 				} # end if
 
@@ -1582,7 +1583,7 @@ sub _li_change {
 				} else {
 					if ( @service_ids ) {
 						my $sig_specs = openprint::service::get_specs_ref( $Project, $service_ids[0] );
-						$Project->add_to_log(@session{'company_id','user_id'}, "Duplicating form $$sig_specs{SignatureIndex} " . ( $param{forms} - @service_ids ).' for press schedule');
+						$Project->add_to_log(@session{'company_id','user_id'}, "Duplicating form $$sig_specs{SignatureIndex} into " . ( $param{forms} - @service_ids ).' form for press schedule');
 						while ( @service_ids < $param{forms} ) {
 							push @service_ids, $Project->copy_signature( $sig_specs, { 
 									'txtPrice1'  => 0,
