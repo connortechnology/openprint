@@ -34,8 +34,10 @@
 			</table>
 		</p>
 	</fieldset>
+	<fieldset><legend><input type="radio" id="moderecommended" name="mode" value="recommended" /> Change Estimating Availability</legend>
+	</fieldset>
 	<p class="buttons">
-		<? echo ( join('',
+		<? echo ( join("\n",
 			button( 'apply', { onclick=>q`$('f1').submit();`, text=>'Apply' } ),
 			button( 'cancel', { onclick=>'popupWin.destroy();', text=>'Cancel' } ),
 		); ) ?>
