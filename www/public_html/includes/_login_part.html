@@ -21,8 +21,8 @@
 		</div>
 		<p class="buttons">
 			<? echo ( join("\n",
-						button( 'MainLogin', { onclick=>q`LoginForm.btnFunction.value='Login';checkLoginData(LoginForm.email,LoginForm.password);`, text=>'Login' } ),
-						button( 'MainForgot', { onclick=>q`LoginForm.btnFunction.value='Forgotten Password';checkLoginData(LoginForm.email);`, text=>'Forgotten Password' } ),
+						button( 'MainLogin', { onclick=>q`checkLoginData(LoginForm.email,LoginForm.password);`, text=>'Login' } ),
+						button( 'MainForgot', { onclick=>q`checkForgotPasswordData(LoginForm.email);`, text=>'Forgotten Password' } ),
 						); ) ?>
 		</p>
 	</fieldset>

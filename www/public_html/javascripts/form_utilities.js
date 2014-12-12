@@ -641,22 +641,23 @@ function checkLoginData( usernameInput, passwordInput ) {
 }
 
 function checkForgotPasswordData ( emailInput ) {
-	 var pass = true;
-	 
-	 if ( !checkInputData( emailInput ) ) {
-		 // Display email error.
-		 document.getElementById('forgotPassword_missingEmailMessage').style.display = 'block';
-		 pass = false;
-	 } else {
-		 document.getElementById('forgotPassword_missingEmailMessage').style.display = 'none';
-	 }
+	var pass = true;
 
-	 if ( pass ) {
-		 // Passed. Submit the form and it's data.
-		 emailInput.form.btnFunction.value='Forgotten Password';
-		 emailInput.form.submit();
-		 return false;
-	 }
+	var div = $( 'missingLoginMessage' );
+	if ( ! emailInput.value ) {
+		// Display email error.
+		div.style.display = 'block';
+		pass = false;
+	} else {
+		div.style.display = 'none';
+	}
+
+	if ( pass ) {
+		// Passed. Submit the form and it's data.
+		emailInput.form.btnFunction.value='Forgotten Password';
+		emailInput.form.submit();
+		return false;
+	}
 }
 
 function toggleMenu( element, a, b ) {
