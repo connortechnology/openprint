@@ -526,8 +526,7 @@ $openprint::log->debug("Not adding because previousimposition != sigImposition")
 	#$openprint::log->debug("Makereadies...");
 	my %makereadies;
 
-	#foreach my $ss_id ( $Project->signatures() ) {
-	# We assume that Signature_Impositions is all impos that come before
+	# We assume that Signature_Impositions is all impos that come before, or maybe after....
 	foreach my $SigImpo ( @{$Signature_Impositions} ) {
 		# Took this out so that we don't need signature_service_index, so we have to ensure that this service is not in the Signature_Impositions
 		#next if $signature_service_index and $$SigImpo{service_id} >= $signature_service_index;
@@ -540,7 +539,8 @@ $openprint::log->debug("Not adding because previousimposition != sigImposition")
 					push @{$makereadies{$$SigImpo{folding_results}{Equipment}->id()}}, $fold_type;
 				} # end foreach
 			} elsif ( DEBUG ) {
-$openprint::log->error("No folds from sigimpo");
+$openprint::log->error("No folds from sigimpo so can't detect makereadies");
+$SigImpo->display();
 			} # end if
 		} else {
 			my $s_specs = $$SigImpo{specs};
@@ -1009,6 +1009,18 @@ $openprint::log->debug("Got Fold: " . $Fold->to_string() ) if DEBUG;
 $openprint::log->debug("No Fold") if DEBUG;
 						} # end if Fold found
 						$complete = 0;
+						if ( $set_index < @All_Impositions-1 ) {
+                            # if we aren't the last set, then do nothing because we assume that this set has already been cut down.
+#$openprint::log->debug("$set_index < " . ( @All_Impositions-1 ) );
+                        } elsif ( $Imposition->spreads() > 1 ) {
+                            foreach my $cuts ( cut_spreads( $Imposition ) ) {
+                                my @new_impositions = @$Set_Of_Impositions;
+                                splice @new_impositions, $imp_index, 1, @$cuts;
+                                @new_impositions = compact_impositions( @new_impositions ) if @new_impositions > 2;
+                                push @All_Impositions, \@new_impositions;
+                            } # end foreach cuts
+                        } # end if
+
 					} else { # No template, might be a book
 						#$Imposition->display("Trying: $$Equipment{name}") if DEBUG;
 						$openprint::log->debug(sprintf('Trying %dx%d=%dout spreads: %dx%d=%d %sx%s',$Imposition->get('columns','rows','imposition','spread_columns','spread_rows','spreads','image_width','image_height') ).' on ' . $Equipment->name()) if DEBUG;
