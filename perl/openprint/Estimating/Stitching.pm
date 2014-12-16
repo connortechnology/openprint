@@ -248,16 +248,23 @@ $I->display('In Stitching:') if DEBUG;
 			$pockets += 1;
 # This doesn't really make sense.  If we are doing printing estimation, then the folding probably isn't going to match.  
 		} else {
-			foreach my $Fold ( @{$$I{Folds}} ) {
-$openprint::log->debug("Fold pq($$Fold{page_quantity}) pages($$Fold{pages}) ($$Fold{name}) Pockets: $pockets") if DEBUG;
-				if ( $Fold->imposition() < $imposition ) {
-					$results{Breakdown} .= "Setting stitching imposition to $$Fold{imposition} out because Folding imposition is $$Fold{imposition}out<br/>";
-					$imposition = $Fold->imposition();
+			foreach my $FI ( @{$$I{Folds}} ) {
+						$FI->display();
+				my $Fold = $FI->Fold();
+$openprint::log->debug("Fold pq($$FI{page_quantity}) pages($$FI{pages}) ($$Fold{name}) Pockets: $pockets") if DEBUG;
+				if ( $FI->imposition() < $imposition ) {
+					$results{Breakdown} .= "Setting stitching imposition to $$FI{imposition} out because Folding imposition is $$FI{imposition}out<br/>";
+					$imposition = $FI->imposition();
 				}
-				$$I{Folder} = $Fold->Equipment() if ! $$I{Folder};
+if ( ! $$I{Folder} ) {
+				$$I{Folder} = $Fold->Equipment();
+$openprint::log->debug("Setting folder to " . $$I{Folder}->strid() );
+} else {
+				$openprint::log->debug('Folder is ' . $$I{Folder}->strid() );
+}
 #$openprint::log->debug("Adding " . $Fold->pages() . 'x'.$Fold->quantity() );
-				$$specs{'txtSignatureQty'.$Fold->pages().'Page-'.$qty_index} += $Fold->page_quantity();
-				$pockets += $Fold->page_quantity();
+				$$specs{'txtSignatureQty'.$Fold->pages().'Page-'.$qty_index} += $FI->page_quantity();
+				$pockets += $FI->page_quantity();
 			} # end foreach Fold
 		}
 
@@ -283,6 +290,13 @@ $openprint::log->debug("Fold pq($$Fold{page_quantity}) pages($$Fold{pages}) ($$F
 				$imposition = 1;
 			} # end if
 		} # end if
+		if ( DEBUG ) {
+			if ( ! $$I{Folder} ) {
+				$openprint::log->warn("No folder!");
+			} else {
+				$openprint::log->debug('Folding is ' . $$I{Folder}->strid() );
+			}
+		}
 	} # end foreach Imposition
 	$results{Breakdown} .= qq`# of Pockets needed: $pockets<br/>`;
 #$results{Breakdown} .= 'Initial pockets: 	' . $$specs{"txtPockets$qty_index"} . '<br/>';
@@ -558,6 +572,14 @@ sub calc {
 			my $Imposition = new openprint::Imposition();
 			$Imposition->load( $sig_specs, $qty_index );
 			push @Impositions, $Imposition;
+			if ( $folding_specs ) {
+				$$Imposition{Folds} = [ openprint::Estimating::Folding::get_Folds( $folding_specs, $Imposition, $qty_index ) ];
+				if ( DEBUG ) {
+					foreach my $F ( @{$$Imposition{Folds}} ) {
+						$F->display('Fold:');
+					} # end foreach F
+				} # end if
+			}
 #$openprint::log->debug(sprintf('%d %s %s %d %dx%d %s', $imposition, @$sig_specs{'txtSignatureType','ddmRunStyle'.$qty_index,'txtImposition'.$qty_index,'hdnImpositionColumns'.$qty_index,'hdnImpositionRows'.$qty_index,'hdnImageOrientation'.$qty_index} ) ) if DEBUG;
 # According to Brendan, both cover and interior need to be 2out
 #next if $$sig_specs{txtSignatureType} eq 'Cover Pages';

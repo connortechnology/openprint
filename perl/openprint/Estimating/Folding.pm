@@ -2252,6 +2252,7 @@ foreach my $k ( sort { $a cmp $b } keys %$folding_specs ) {
 			$$Imposition{impressions} = $$folding_specs{"FoldImpressions-$form-$qty_index-$fold_index"};
 			$$Imposition{impressions} = ( $$folding_specs{"txtQuantity$qty_index"} / $Source_Imposition->imposition() ) * ( $Imposition->quantity() ) if ! $$Imposition{impressions};
 			my $Folder = new openprint::Equipment( $$folding_specs{"ddmEquipment-$form-$qty_index"} );
+			$$Imposition{Folder} = $Folder;
 			$Imposition->Press( $Folder );
 
 			my $Paper = $Imposition->Paper();
@@ -2295,8 +2296,10 @@ Carp::cluck( "CAnt get fold! on " . $Folder->to_string() ."\n". $_ . join("\n", 
 				} # end if
 
 				push @folds, $Imposition;
-			} # end if
-		} # end if
+			} # end if Found fold
+		} else {
+$openprint::log->debug("Has no equipment_id");
+		} # end if has equipment
 #$folding_imposition->display('Fold ' . $$folding_specs{"FoldType-$form-$qty_index-$fold_index"} ) if DEBUG;
 	} # end foreach fold_index
 if ( ! @folds ) {
