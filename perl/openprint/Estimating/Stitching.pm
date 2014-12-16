@@ -258,9 +258,9 @@ $openprint::log->debug("Fold pq($$FI{page_quantity}) pages($$FI{pages}) ($$Fold{
 				}
 if ( ! $$I{Folder} ) {
 				$$I{Folder} = $Fold->Equipment();
-$openprint::log->debug("Setting folder to " . $$I{Folder}->strid() );
-} else {
-				$openprint::log->debug('Folder is ' . $$I{Folder}->strid() );
+#$openprint::log->debug("Setting folder to " . $$I{Folder}->strid() );
+#} else {
+				#$openprint::log->debug('Folder is ' . $$I{Folder}->strid() );
 }
 #$openprint::log->debug("Adding " . $Fold->pages() . 'x'.$Fold->quantity() );
 				$$specs{'txtSignatureQty'.$Fold->pages().'Page-'.$qty_index} += $FI->page_quantity();
@@ -290,13 +290,13 @@ $openprint::log->debug("Setting folder to " . $$I{Folder}->strid() );
 				$imposition = 1;
 			} # end if
 		} # end if
-		if ( DEBUG ) {
-			if ( ! $$I{Folder} ) {
-				$openprint::log->warn("No folder!");
-			} else {
-				$openprint::log->debug('Folding is ' . $$I{Folder}->strid() );
-			}
-		}
+		#if ( DEBUG ) {
+			#if ( ! $$I{Folder} ) {
+				#$openprint::log->warn("No folder!");
+			#} else {
+				#$openprint::log->debug('Folding is ' . $$I{Folder}->strid() );
+			#}
+		#}
 	} # end foreach Imposition
 	$results{Breakdown} .= qq`# of Pockets needed: $pockets<br/>`;
 #$results{Breakdown} .= 'Initial pockets: 	' . $$specs{"txtPockets$qty_index"} . '<br/>';
