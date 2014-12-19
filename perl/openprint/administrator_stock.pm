@@ -29,11 +29,7 @@ use vars qw( %variable %session %param %config $log $dbh $r );
 
 sub _stocks {
 	if ( %param and ! $param{'btnFunction'} ) {
-<<<<<<< HEAD
-		ssi::save_params('/administrator/stock/list.html', 'group_id','owner_id','manufacturer_id','supplier_id', 'brand_id','finish_id','colour_id','weight_id','fsc_code','material_id', 'Types', 'recommendations','grain_direction', 'digital', 'width','height', 'scoring' );
-=======
-		ssi::save_params('/administrator/stock/list.html', 'group_id','owner_id','manufacturer_id','supplier_id', 'brand_id','finish_id','colour_id','weight_id','fsc_code','material_id', 'Types', 'recommendations','grain_direction', 'digital', 'width','height', 'setup_prices', 'material_prices' );
->>>>>>> f380e5f40d67c71945ae9fb6f18c434e0a7759b3
+		ssi::save_params('/administrator/stock/list.html', 'group_id','owner_id','manufacturer_id','supplier_id', 'brand_id','finish_id','colour_id','weight_id','fsc_code','material_id', 'Types', 'recommendations','grain_direction', 'digital', 'width','height', 'scoring', 'setup_prices', 'material_prices' );
 		$session{'/administrator/stock/list.html?OrLarger'} = $param{OrLarger};
 	} # end if
 } # end sub _stocks
