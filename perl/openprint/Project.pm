@@ -864,8 +864,9 @@ sub summary {
 				my $sig_specs = openprint::service::get_specs_ref( $self, $sigs[0] );
 				$summary .= openprint::Estimating::Printing::summary( $self, $sigs[0], $sig_specs );
 				if ( $$printing_specs{"PrintingType-$group_id"} ) { 
-					$summary .= ', '. '<span class="Sheetfed">Printed '.$$printing_specs{"PrintingType-$group_id"}.'</span>,<br/>';
+					$summary .= ', '. '<span class="Sheetfed">Printed '.$$printing_specs{"PrintingType-$group_id"}.'</span>,';
 				} #endif Web
+				$summary .= '</br>';
 			} # end foreach Group
 		} # end if
 
