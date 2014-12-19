@@ -1181,12 +1181,12 @@ $openprint::log->debug("No Fold") if DEBUG;
 						$override_pages += $$specs{"FoldQty-$form-$qty_index-$index"} * $pages * $$specs{"FoldImposition-$form-$qty_index-$index"};
 					} # end if
 					$found{$index} = 0;
-if ( DEBUG ) {
-$openprint::log->debug("LOOKING for overriden fold $index");
-					foreach my $FI ( @$Set_Of_Impositions ) {
-$FI->display("Found? $$FI{found}");
-}
-}
+					if ( DEBUG ) {
+						$openprint::log->debug("LOOKING for overriden fold $index");
+						foreach my $FI ( @$Set_Of_Impositions ) {
+							$FI->display("Found? $$FI{found}");
+						}
+					}
 					foreach my $FI ( @$Set_Of_Impositions ) {
 						next if $$FI{found};
 						my $Fold = $FI->Fold();
@@ -1203,7 +1203,7 @@ $openprint::log->debug(qq`Wrong qty: $$specs{"FoldQty-$form-$qty_index-$index"} 
 $openprint::log->debug(qq`Wrong imposition: $$specs{"FoldImposition-$form-$qty_index-$index"} != $$FI{imposition}`) if DEBUG;
 							next;
 						} # end if
-$FI->display("Found");
+						$FI->display("Found") if DEBUG;
 						$found{$index} = 1;
 						$$FI{found} = $index;
 						push @new_folded_impositions, $FI;
@@ -1729,11 +1729,13 @@ $i->display() if DEBUG;
 					my $index = 1;
 					$$Imposition{Folds} = $results{FoldedImpositions};
 					foreach my $FI ( @{$results{FoldedImpositions}} ) {
-$Imposition->display(" Runspeed: $$Imposition{runspeed}");
 						my $Fold = $FI->Fold();
 						my $fold_type = $Fold->type();
 
-						$openprint::log->debug("Foldtype: $fold_type " . $FI->imposition() . "out $$Fold{name} $$Fold{folds} $$Fold{angles}" ) if DEBUG;
+						if ( DEBUG ) {
+							$openprint::log->debug("Foldtype: $fold_type " . $FI->imposition() . "out $$Fold{name} $$Fold{folds} $$Fold{angles}" );
+							$Imposition->display(" Runspeed: $$Imposition{runspeed}");
+						}
 						$$specs{"FoldType-$form-$qty_index-$index"} = $fold_type;
 						$$specs{"FoldQty-$form-$qty_index-$index"} = $FI->quantity();
 						$$specs{"FoldPageQty-$form-$qty_index-$index"} = $FI->page_quantity();
@@ -2275,6 +2277,9 @@ foreach my $k ( sort { $a cmp $b } keys %$folding_specs ) {
 			if ( ! $Fold ) {
 				$_ = Data::Dumper::Dumper($find);
 				$openprint::log->error("CAnt get fold! on " . $Folder->to_string() . $_);
+if ( $$folding_specs{"chkOverrideFold-$form-$qty_index"} eq 'Y' ) {
+$openprint::log->error("Was overriden");
+}
 Carp::cluck( "CAnt get fold! on " . $Folder->to_string() ."\n". $_ . join("\n", map { $_ . '=>' . $openprint::param{$_} } sort keys %openprint::param ));
 
 			} else {

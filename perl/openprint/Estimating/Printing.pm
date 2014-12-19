@@ -1953,8 +1953,14 @@ sub set_size {
 					} # end if
 					$$specs{txtHeight} = $$printing_specs{txtFinalHeight} + $$specs{PocketSize};
 				} elsif ( $$specs{txtSpreadSize} > 1 ) {
+					if ( $$printing_specs{spine} eq 'height' ) {
 					$$specs{txtWidth} = $$printing_specs{txtFinalWidth}*$$specs{txtSpreadSize}/2;
 					$$specs{txtHeight} = $$printing_specs{txtFinalHeight};
+$log->debug("Using spine ehgiht");
+					} else {
+						$$specs{txtWidth} = $$printing_specs{txtFinalWidth};
+						$$specs{txtHeight} = $$printing_specs{txtFinalHeight} *$$specs{txtSpreadSize}/2;
+					}
 				} else {
 					$$specs{txtWidth} = $$printing_specs{txtFinalWidth};
 					$$specs{txtHeight} = $$printing_specs{txtFinalHeight};
@@ -2014,8 +2020,14 @@ sub set_size {
 
 			if ( ( ! defined $$specs{chkOverrideDimensions} ) or ( $$specs{chkOverrideDimensions} ne 'Y' ) ) {
 				if ( $$specs{txtSpreadSize} == 4 ) {
-					$$specs{txtWidth} = $$printing_specs{txtFinalWidth} * 2;
-					$$specs{txtHeight} = $$printing_specs{txtFinalHeight};
+					if ( $$printing_specs{spine} eq 'height' ) {
+						$$specs{txtWidth} = $$printing_specs{txtFinalWidth} * 2;
+						$$specs{txtHeight} = $$printing_specs{txtFinalHeight};
+$openprint::log->debug("Using spine height");
+					} else {
+						$$specs{txtWidth} = $$printing_specs{txtFinalWidth};
+						$$specs{txtHeight} = $$printing_specs{txtFinalHeight} * 2;
+					} # end if
 				} elsif ( $$specs{txtSpreadSize} == 2 ) {
 					@$specs{'txtWidth','txtHeight'} = @$printing_specs{'txtFinalWidth','txtFinalHeight'};
 				} else {
@@ -4450,7 +4462,7 @@ $openprint::log->debug("Sheet No supplied wight: $supplied_sheets $paper_string 
 						$$price{'Comparison Cost'} += 10000000; # Can't stich this on
 						$$price{'Comparison Log'} .= 'Stitching: +10000000 <br/>' if COMPARISON_LOG;
 						$$price{'Stitching Cost'} = 10000000;
-						$openprint::log->debug("After Stitching $$price{'Comparison Cost'} $$price{'Stitching Cost'} uncalculated") if DEBUG or 1;
+						$openprint::log->debug("After Stitching $$price{'Comparison Cost'} $$price{'Stitching Cost'} uncalculated") if DEBUG;
 					} else {
 						my $Price = $$results{Price};
 						$$price{'Stitching Breakdown'} .= sprintf('Stitching (%s) (%s) %dout on %s Price: $%.2f<br/>', @$results{'Status','alert','Imposition'},$$results{Equipment}{strid}, $$Price{Price} );
@@ -4459,7 +4471,7 @@ $openprint::log->debug("Sheet No supplied wight: $supplied_sheets $paper_string 
 						$$price{'Comparison Cost'} += $$Price{Price};
 						$$price{'Comparison Log'} .= 'Stitching: ' .  $$Price{Price} . '<br/>';
 				#$stitching_cache{scalar @all_impositions} = $results;
-						$openprint::log->debug("After Stitching $$price{'Comparison Cost'} $$price{'Stitching Cost'} $$results{Breakdown}") if DEBUG or 1;
+						$openprint::log->debug("After Stitching $$price{'Comparison Cost'} $$price{'Stitching Cost'} $$results{Breakdown}") if DEBUG;
 					} # end if
 					$openprint::log->debug( 'Stitching Calc: ' . sprintf('%.4f', tv_interval( [$starttime])*1000) ) if DEBUG;
 

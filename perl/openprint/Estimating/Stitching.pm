@@ -249,7 +249,7 @@ $I->display('In Stitching:') if DEBUG;
 # This doesn't really make sense.  If we are doing printing estimation, then the folding probably isn't going to match.  
 		} else {
 			foreach my $FI ( @{$$I{Folds}} ) {
-						$FI->display();
+						$FI->display() if DEBUG;
 				my $Fold = $FI->Fold();
 $openprint::log->debug("Fold pq($$FI{page_quantity}) pages($$FI{pages}) ($$Fold{name}) Pockets: $pockets") if DEBUG;
 				if ( $FI->imposition() < $imposition ) {
