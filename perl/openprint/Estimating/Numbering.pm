@@ -206,6 +206,11 @@ ImpositionSet: for ( my $set_index = 0; $set_index < @Sets_Of_Impositions; $set_
 
             for ( my $imp_index = 0; $imp_index < @$Impositions; $imp_index += 1 ) {
                 my $I = $$Impositions[$imp_index];
+				if ( ! ( $I and $I->imposition() ) ) {
+					$openprint::log->error("No imposition in Numbering.");
+					$I->display();
+					next ImpositionSet;
+				}
 
 				my $Breakdown = '';
 
