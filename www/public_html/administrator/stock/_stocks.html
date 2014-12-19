@@ -20,6 +20,7 @@
 			( $session{'/administrator/stock/list.html?height'} ? ( 'height'=>$session{'/administrator/stock/list.html?height'} ) : () ),
 			( $session{'/administrator/stock/list.html?grain_direction'} ? ( 'grain_direction' => $session{'/administrator/stock/list.html?grain_direction'} ) : () ),
 			( $session{'/administrator/stock/list.html?digital'} ne '' ? ( digital=>$session{'/administrator/stock/list.html?digital'} ) : () ),
+			( $session{'/administrator/stock/list.html?scoring'} ne '' ? ( score_required=>$session{'/administrator/stock/list.html?scoring'} ) : () ),
 			'order'		=> 'brand,finish,colour,weight, width, height'
 		) ) {
 		next if $session{'/administrator/stock/list.html?recommendations'} eq '0' and $Stock->recommendations();
