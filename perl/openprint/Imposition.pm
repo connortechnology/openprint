@@ -3,6 +3,7 @@ use Carp qw( cluck );
 
 package openprint::Imposition;
 require Math::Round;
+require Data::Dumper;
 use vars qw( $AUTOLOAD );
 use constant DEBUG => 0;
 
@@ -55,7 +56,7 @@ sub layout_width {
 	} 
 	if ( ! $_[0]{layout_width} ) {
 		if ( $_[0]{image_orientation} eq 'Vertical' ) {
-			$_[0]{layout_width} = $_[0]{columns} * $_[0]{image_width} + ( $_[0]{perfecting_wheel_space} ? $_[0]{perfecting_wheel_space} - $_[0]{bleed_size} : 0 );
+			$_[0]{layout_width} = $_[0]{columns} * $_[0]{image_width} + $_[0]{perfecting_wheel_space};
 #$openprint::log->debug("layout_width = $_[0]{columns} * $_[0]{image_width} + ( $_[0]{perfecting_wheel_space} - $_[0]{bleed_size} )");
 			if ( $_[0]{dutch_columns} ) {
 				my $dutch_width = $_[0]{dutch_columns} * $_[0]{image_height};
@@ -68,7 +69,7 @@ sub layout_width {
 				} # end if
 			} # end if
 		} elsif ( $_[0]{image_orientation} eq 'Horizontal' ) {
-			$_[0]{layout_width} = $_[0]{columns} * $_[0]{image_height} + ( $_[0]{perfecting_wheel_space} ? $_[0]{perfecting_wheel_space} - $_[0]{bleed_size} : 0 );
+			$_[0]{layout_width} = $_[0]{columns} * $_[0]{image_height} + $_[0]{perfecting_wheel_space};
 
 			if ( $_[0]{dutch_columns} ) {
 				my $dutch_width = $_[0]{dutch_columns} * $_[0]{image_width};
@@ -711,5 +712,8 @@ sub paper_type {
 sub DESTROY {
 }
 
+sub dump {
+	$openprint::log->debug( Data::Dumper::Dumper( $_[0] ) );
+}
 1;
 __END__

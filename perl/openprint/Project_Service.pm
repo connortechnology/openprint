@@ -138,6 +138,7 @@ if ( ! $$self{project_id} ) {
 } # end if
 	my $ac = sql::start_transaction( $openprint::dbh );
 	my $Project = $self->Project();
+	$Project->lock();
 	my $specs = $self->specs();
 $openprint::log->warn("Deleting " . $self->to_string() );
 	sql::execute( undef, $openprint::dbh, q{DELETE FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND lngServiceIndex=?}, @$self{'project_id','service_id'} );
@@ -147,6 +148,7 @@ $openprint::log->warn("Deleting Service from " . $Project->to_string() );
 	delete $$Project{'signatures'};
 	delete $$Project{'Signature'};
 	delete $$Project{'service_types'};
+	$Project->unlock();
 	foreach my $Job ( openprint::ScheduledJob->find( project_id=>$$self{project_id}, 'service_id any'=>$$self{service_id} ) ) {
 		$Job->save( { 
 				service_id => [ sets::exclude( [ $$self{service_id} ], $Job->service_id() ) ],
@@ -159,7 +161,7 @@ $openprint::log->warn("Deleting Service from " . $Project->to_string() );
 				} );
 	} # end foreach Job
 
-	$Project->add_to_log( @openprint::session{'company_id','user_id'}, "Deleted service ".$self->ServiceType()->type() . " $$specs{ServiceName}." );
+	$Project->add_to_log( @openprint::session{'company_id','user_id'}, "Deleted service ".$self->ServiceType()->type() . " $$specs{ServiceName} ($$self{id})." );
 	sql::end_transaction( $openprint::dbh, $ac );
 	return;
 } # end sub delete

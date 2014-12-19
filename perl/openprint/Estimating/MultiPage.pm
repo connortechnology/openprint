@@ -347,6 +347,7 @@ $openprint::log->warn("FIXM E");
 		# I think the idea here is to only update the sizes.... if they change...
 		foreach my $k ( 'txtWidth','txtHeight','txtFinalWidth','txtFinalHeight' ) {
 			openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, $k, $new_specs{$k} );
+			$$specs{"$k$$sig_specs{Group}"} = $new_specs{$k};
 		} # end foreach k
 	} # end foreach
 

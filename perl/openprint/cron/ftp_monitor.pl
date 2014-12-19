@@ -2,7 +2,7 @@
 use utf8;
 use lib '/etc/apache2/lib/perl';
 use strict;
-use warnings;
+#use warnings;
 
 require configuration;
 require sql;

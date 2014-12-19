@@ -399,13 +399,13 @@ sub outputs {
 } # end sub outputs
 
 sub get_unspecified_pages {
-	my ( $Project, $service_index, $printing_specs, $specs, $qty_index ) = @_;
-$openprint::log->debug("Un get_unspecified_pages Project: $Project, service_id: $service_index, $printing_specs, $specs, qty_index: $qty_index") if DEBUG;
+	my ( $Project, $service_index, $specs, $qty_index ) = @_;
+$openprint::log->debug("Un get_unspecified_pages Project: $Project, service_id: $service_index, $specs, qty_index: $qty_index") if DEBUG;
 
 	my $specified_pages = 0;
 	foreach my $ssid ( $Project->signatures( { Group=>$$specs{Group} } ) ) {
 		if ( $service_index and ( $ssid >= $service_index ) ) {
-			#$openprint::log->debug(" $service_index ( $ssid >= $service_index ) next");
+			$openprint::log->debug(" $service_index ( $ssid >= $service_index ) next") if DEBUG;
 			next;
 		} # end if
 		my $sig_specs = openprint::service::get_specs_ref( $Project, $ssid );
@@ -1953,8 +1953,14 @@ sub set_size {
 					} # end if
 					$$specs{txtHeight} = $$printing_specs{txtFinalHeight} + $$specs{PocketSize};
 				} elsif ( $$specs{txtSpreadSize} > 1 ) {
+					if ( $$printing_specs{spine} eq 'height' ) {
 					$$specs{txtWidth} = $$printing_specs{txtFinalWidth}*$$specs{txtSpreadSize}/2;
 					$$specs{txtHeight} = $$printing_specs{txtFinalHeight};
+$log->debug("Using spine ehgiht");
+					} else {
+						$$specs{txtWidth} = $$printing_specs{txtFinalWidth};
+						$$specs{txtHeight} = $$printing_specs{txtFinalHeight} *$$specs{txtSpreadSize}/2;
+					}
 				} else {
 					$$specs{txtWidth} = $$printing_specs{txtFinalWidth};
 					$$specs{txtHeight} = $$printing_specs{txtFinalHeight};
@@ -2014,8 +2020,14 @@ sub set_size {
 
 			if ( ( ! defined $$specs{chkOverrideDimensions} ) or ( $$specs{chkOverrideDimensions} ne 'Y' ) ) {
 				if ( $$specs{txtSpreadSize} == 4 ) {
-					$$specs{txtWidth} = $$printing_specs{txtFinalWidth} * 2;
-					$$specs{txtHeight} = $$printing_specs{txtFinalHeight};
+					if ( $$printing_specs{spine} eq 'height' ) {
+						$$specs{txtWidth} = $$printing_specs{txtFinalWidth} * 2;
+						$$specs{txtHeight} = $$printing_specs{txtFinalHeight};
+$openprint::log->debug("Using spine height");
+					} else {
+						$$specs{txtWidth} = $$printing_specs{txtFinalWidth};
+						$$specs{txtHeight} = $$printing_specs{txtFinalHeight} * 2;
+					} # end if
 				} elsif ( $$specs{txtSpreadSize} == 2 ) {
 					@$specs{'txtWidth','txtHeight'} = @$printing_specs{'txtFinalWidth','txtFinalHeight'};
 				} else {
@@ -2378,7 +2390,7 @@ $log->warn("There are no quantities!");
 # Figure out how many spreads we need!
 		if ( $$specs{txtSignatureType} ) {
 #$openprint::log->debug("Master time before get_unspecified_pages: " . ( sprintf('%.4f', tv_interval( [$master_time])*1000) ) .' usecs' );
-			$$specs{'txtUnspecifiedPageQuantity'.$qty_index} = get_unspecified_pages( $Project, $service_index, $printing_specs, $specs, $qty_index );
+			$$specs{'txtUnspecifiedPageQuantity'.$qty_index} = get_unspecified_pages( $Project, $service_index, $specs, $qty_index );
 #$openprint::log->debug("Master time after get_unspecified_pages: " . ( sprintf('%.4f', tv_interval( [$master_time])*1000) ) .' usecs' );
 			if ( ( $$specs{txtSpreadSize} == 4 and $$specs{'txtUnspecifiedSpreadQuantity'.$qty_index} > 500 ) or ( $$specs{'txtUnspecifiedSpreadQuantity'.$qty_index} > 1000 ) ) {
 				$$specs{alert} .= 'There are far too many pages required. We will not be able to calculate this.<br/>';
@@ -2925,6 +2937,7 @@ sub calculate_impositions {
 			$needed_pages = $$sig_specs{'txtUnspecifiedPageQuantity'.$qty_index};
 		} # end if
 	} # end if
+$openprint::log->debug("Needed pages: $needed_pages");
 
 	foreach my $strid ( $$sig_specs{"chkOverridePress$qty_index"} eq 'Y' ? ( $$sig_specs{"ddmPress$qty_index"} ) : keys %{$impositions} ) {
 		next if ! ( $$impositions{$strid} and @{$$impositions{$strid}} );
@@ -2957,7 +2970,6 @@ sub calculate_impositions {
 					@press_impositions = map { $dont_do_pages{$$_{pages}} ? () : $_ } sort { $$b{pages} <=> $$a{pages} } @press_impositions;
 				} # end if
 			} # end if
-			$openprint::log->debug("Converting Impositions needed_pages: $needed_pages : imps:" . @press_impositions) if DEBUG or DEBUG_FILTERING;
 			if ( ! @press_impositions ) {
 				$openprint::log->debug("Press $$Press{strid} " );
 				$openprint::log->debug("Press $$Press{strid} " . scalar @{$$impositions{$strid}} ) if $$impositions{$strid};
@@ -2968,7 +2980,6 @@ sub calculate_impositions {
 			foreach my $imp ( openprint::imposition::sort( @press_impositions ) ) {
 				$imp->display();
 			} # end foreach
-#$openprint::log->debug("SPread Layout: $SpreadLayout");
 		} # end if
 
 		if ( $needed_pages ) {
@@ -4335,13 +4346,13 @@ $openprint::log->debug("Sheet No supplied wight: $supplied_sheets $paper_string 
 
 					$$paper_price{Total} = Math::Round::nearest( 0.01, $$paper_price{'100lb Price'} * $supplied_weight / 100 );
 					$$price{'Comparison Cost'} += $$paper_price{Total};
-				$$price{'Comparison Log'} .= 'Paper Costs +'.$$paper_price{Total}.' total: ' . $$price{'Comparison Cost'} . '<br/>' if COMPARISON_LOG;
+					$$price{'Comparison Log'} .= 'Paper Costs +'.$$paper_price{Total}.' total: ' . $$price{'Comparison Cost'} . '<br/>' if COMPARISON_LOG;
 					if ( $$Paper{available_to_order} > 1 ) {
 						if ( $$Paper{available_to_order} < ( $$Paper{type} eq 'Sheet' ? $supplied_sheets : $supplied_weight ) ) {
 							$$price{'Paper Breakdown'} .= $Supplied->to_string() . ' does not have enough available. Only ' . $$Paper{available_to_order} . $Paper->units() . ' left.<br/>';
 							$$price{alert} .= $Supplied->to_string() . ' does not have enough available. Only ' . $$Paper{available_to_order} . $Paper->units() . ' left.<br/>';
 							$$price{'Comparison Cost'} += 1000000;
-				$$price{'Comparison Log'} .= 'Paper not available +1000000 total: ' . $$price{'Comparison Cost'} . '<br/>' if COMPARISON_LOG;
+							$$price{'Comparison Log'} .= 'Paper not available +1000000 total: ' . $$price{'Comparison Cost'} . '<br/>' if COMPARISON_LOG;
 						} # end if
 					} # end if
 					$$price{'Stock Total'} += $$paper_price{Total};
@@ -4372,7 +4383,7 @@ $openprint::log->debug("Sheet No supplied wight: $supplied_sheets $paper_string 
 					my %cutting_results = openprint::Estimating::Cutting::signature_calc_stock_cutting( $Project, $$project{CuttingSpecs}, $qty_index, \@Stocks );
 					$$price{'Cutting Breakdown'} .= "Stock Cutting Price: \$$cutting_results{Price} $cutting_results{alert}<br/>$cutting_results{Breakdown}<br/>";
 					$$price{'Comparison Cost'} += $cutting_results{Price};
-				$$price{'Comparison Log'} .= 'cutting: +'.$cutting_results{Price}.' total: ' . $$price{'Comparison Cost'} . '<br/>' if COMPARISON_LOG;
+					$$price{'Comparison Log'} .= 'cutting: +'.$cutting_results{Price}.' total: ' . $$price{'Comparison Cost'} . '<br/>' if COMPARISON_LOG;
 				} # end if
 
 				if ( $$sig_specs{rdbSuppliedStock} eq 'Y' ) {
@@ -4386,6 +4397,7 @@ $openprint::log->debug("Sheet No supplied wight: $supplied_sheets $paper_string 
 						} # end if
 						$$price{SuppliedPaperPrice} = \%SuppliedPaperPrice;
 						$$price{'Comparison Cost'} += $SuppliedPaperPrice{Total};
+						$$price{'Comparison Log'} .= 'SuppliedPaper: +'.$SuppliedPaperPrice{Total} . '<br/>' if COMPARISON_LOG;
 						$$price{'Total Cost'} += $SuppliedPaperPrice{Total};
 					} # end if
 				} elsif ( ! $PaperServiceType ) {
@@ -4448,8 +4460,9 @@ $openprint::log->debug("Sheet No supplied wight: $supplied_sheets $paper_string 
 						$$price{'Stitching Breakdown'} .= "Stitching error: $$results{alert} <br/>";
 				#$price{'Stitching Breakdown'} .= "Stitching error: $$results{alert} <br/>" . $$project{StitchingSpecs}{'hdnBreakdown'.$qty_index};
 						$$price{'Comparison Cost'} += 10000000; # Can't stich this on
+						$$price{'Comparison Log'} .= 'Stitching: +10000000 <br/>' if COMPARISON_LOG;
 						$$price{'Stitching Cost'} = 10000000;
-						$openprint::log->debug("After Stitching $$price{'Comparison Cost'} $$price{'Stitching Cost'} uncalculated") if DEBUG or 1;
+						$openprint::log->debug("After Stitching $$price{'Comparison Cost'} $$price{'Stitching Cost'} uncalculated") if DEBUG;
 					} else {
 						my $Price = $$results{Price};
 						$$price{'Stitching Breakdown'} .= sprintf('Stitching (%s) (%s) %dout on %s Price: $%.2f<br/>', @$results{'Status','alert','Imposition'},$$results{Equipment}{strid}, $$Price{Price} );
@@ -4538,6 +4551,8 @@ $openprint::log->debug("Sheet No supplied wight: $supplied_sheets $paper_string 
 								my %presses = select_presses( $Project, \@Papers, \%subsig_specs, $new_project );
 								my @possible_presses;
 								foreach my $press_id ( keys %presses ) {
+#my $E = new openprint::Equipment( $press_id );
+#$imp->display("Presses for other group: $press_id $$E{strid} $presses{$press_id}");
 									if ( ! $presses{$press_id} ) {
 										push @possible_presses, new openprint::Equipment($press_id);
 									} # end if
@@ -4546,15 +4561,21 @@ $openprint::log->debug("Sheet No supplied wight: $supplied_sheets $paper_string 
 									@possible_presses = sort { $a->strid() <=> $b->strid() } @possible_presses;
 									my @available_printingtypes = sets::union( map { $_->specification('Printing Type') } @possible_presses );
 									$subsig_specs{PrintingTypes} = get_printing_types( $Project, $sigs[0], $printing_specs, \%subsig_specs, $qty_index, \@available_printingtypes, $imp );
+#$imp->display("PrintingTYpes for other group: " . join(',', @{$subsig_specs{PrintingTypes}} ) );
 									my %impositions = get_impositions( $Project, \%subsig_specs, $new_project, $qty, $qty_index, \@possible_presses, \@Papers, \%Overrides );
-									$subsig_specs{'txtUnspecifiedPageQuantity'.$qty_index} = get_unspecified_pages( $Project, $service_index, $printing_specs, \%subsig_specs, $qty_index );
+
+									# Don't need to do get_unspecified_pages, because we area calcing them all...
+									if ( $$project{ProjectSpecs}{"GroupPageQuantity$Group"} ) {
+										$subsig_specs{'txtUnspecifiedPageQuantity'.$qty_index} = $$project{ProjectSpecs}{"GroupPageQuantity$Group"};
+									} else {
+										$subsig_specs{'txtUnspecifiedPageQuantity'.$qty_index} = $subsig_specs{GroupPageQuantity};
+									}
+
+#$openprint::log->debug("other groups: Unspecified [ages:".$subsig_specs{'txtUnspecifiedPageQuantity'.$qty_index} );
 									my $SpreadLayout = 0;
 									if ( $subsig_specs{'chkOverridePageQuantity'.$qty_index} eq 'Y' ) {
 										$SpreadLayout = int( $subsig_specs{'PageQuantity'.$qty_index} / $$project{txtSpreadSize} );
 										$log->debug("Calcing SpreadLayout as overriden upq: $subsig_specs{'PageQuantity'.$qty_index} / spreadsize:$$project{txtSpreadSize} = layout$SpreadLayout") if DEBUG;
-									} elsif ( $$project{ProjectSpecs}{"PageQuantity-$Group"} and ( $$project{ProjectSpecs}{"PageQuantity-$Group"} <= $subsig_specs{'txtUnspecifiedPageQuantity'.$qty_index} ) ) {
-										$SpreadLayout = int( $$project{ProjectSpecs}{"PageQuantity-$Group"} / $$project{txtSpreadSize} );
-										$log->debug("Calcing SpreadLayout as overriden upq: ".$$project{ProjectSpecs}{"PageQuantity-$Group"}." / spreadsize:$$project{txtSpreadSize} = layout$SpreadLayout") if DEBUG;
 									} else {
 										$SpreadLayout = int( $subsig_specs{'txtUnspecifiedPageQuantity'.$qty_index} / $$project{txtSpreadSize} );
 										$log->debug("Calcing SpreadLayout as upq: $subsig_specs{'txtUnspecifiedPageQuantity'.$qty_index} / spreadsize:$$project{txtSpreadSize} = layout$SpreadLayout") if DEBUG;
@@ -4566,24 +4587,29 @@ $openprint::log->debug("Sheet No supplied wight: $supplied_sheets $paper_string 
 										foreach my $press ( keys %impositions ) {
 											$impositions{$press} = [ openprint::imposition::convert_impositions( $SpreadLayout, $$project{txtSpreadSize}, $impositions{$press} ) ];
 										} # end foreach press
+
+										if ( ! %impositions ) {
+											$$price{Breakdown} .= 'Unable to calculate impositions for additional signatures.<br/>';
+											$$price{'Comparison Log'} .= 'Additiona Sigs due to no impositions: 1000000<br/>' if COMPARISON_LOG;
+											$$price{'Comparison Cost'} += 1000000;
+											$openprint::log->warn("Unable to calculate impositions for additional signatures.<br/>");
+										} else {
+											# Don't need to call get_unspecified_pages because we know that we are calculating all of them.
+											$subsig_specs{'txtUnspecifiedPageQuantity'.$qty_index} = $subsig_specs{GroupPageQuantity};
+											my @o_impositions = ( $imp );
+											foreach my $i ( @{$other_impositions} ) {
+												next if $$i{specs}{Group} == $Group;
+												push @o_impositions, $i;
+											}
+
+											my $sig_price = get_project_price( $Project, $sigs[0], $new_project, \%subsig_specs, \%subsig_specs, $qty, $qty_index, 
+													\@possible_presses, $printing_specs, $versions, \%PlateCounts, \%PaperCounts, \%washed_colours, \%previous_forms_cache, \@sigs, \%impositions, \@o_impositions, {}, 0 );
+											$other_group_cache{$other_group_cache_key} = $sig_price;
+									
+										} # end if
 									} # end if spreadylayout
-
-									if ( ! %impositions ) {
-										$$price{Breakdown} .= 'Unable to calculate impositions for additional signatures.<br/>';
-										$$price{'Comparison Log'} .= 'Additiona Sigs: 1000000<br/>' if COMPARISON_LOG;
-										$$price{'Comparison Cost'} += 1000000;
-										$openprint::log->warn("Unable to calculate impositions for additional signatures.<br/>");
-									} else {
-										# Don't need to call get_unspecified_pages because we know that we are calculating all of them.
-										$subsig_specs{'txtUnspecifiedPageQuantity'.$qty_index} = $subsig_specs{GroupPageQuantity};
-
-										my $sig_price = get_project_price( $Project, $sigs[0], $new_project, \%subsig_specs, \%subsig_specs, $qty, $qty_index, 
-												\@possible_presses, $printing_specs, $versions, \%PlateCounts, \%PaperCounts, \%washed_colours, \%previous_forms_cache, \@sigs, \%impositions, $other_impositions, {}, 0 );
-										$other_group_cache{$other_group_cache_key} = $sig_price;
-								
-									} # end if
 								} else {	
-									$$price{'Comparison Log'} .= 'Additiona Sigs: 1000000<br/>' if COMPARISON_LOG;
+									$$price{'Comparison Log'} .= 'Additiona Sigs due to no presses: 1000000<br/>' if COMPARISON_LOG;
 									$$price{'Comparison Cost'} += 1000000;
 									$openprint::log->warn("Unable to calculate impositions for additional signatures.<br/>");
 								} # end if
@@ -4604,7 +4630,8 @@ $openprint::log->debug("Sheet No supplied wight: $supplied_sheets $paper_string 
 						#$openprint::log->debug("Calculating Additional Signatures for other group success CC: $$sig_price{'Comparison Cost'}");
 						#$openprint::log->error( breakdown( $sig_price ) );
 						$$price{'Comparison Cost'} += $$sig_price{'Comparison Cost'};
-						$$price{'Comparisoin Log'} .= 'Other sig: ' . $$sig_price{'Comparison Cost'} . '<br/>';
+						$$price{'Comparison Log'} .= 'Other sig: ' . $$sig_price{'Comparison Cost'} . '<br/>';
+						$$price{'Comparison Log'} .= $$sig_price{'Comparison Log'} . '<br/>';
 		#$$price{'itionalSignature Breakdown'} .= breakdown( $sig_price, $sig_specs );
 					} else {
 						$openprint::log->error("Calculating Additional Signatures for other group failure") if DEBUG;
@@ -4990,6 +5017,11 @@ sub calc_price {
 			$openprint::log->debug("Using cached folding");
 		} else {
 #my @all_impositions = ( @{$other_impositions}, $Imposition );
+$log->debug("About to call Folding::signature_calc $qty_index impositions: " );
+$Imposition->display();
+foreach my $IMP ( @{$other_impositions} ) {
+$IMP->display("other");
+} # end foreach IMP
 			%folding_results = openprint::Estimating::Folding::signature_calc( $Project, $specs, $$project{FoldingSpecs}, $qty_index, $Imposition, $other_impositions, $project );
 			$$Imposition{folding_results} = \%folding_results;
 		} # end if
@@ -5052,7 +5084,8 @@ $openprint::log->warn("No folding equipment");
 		$price{'Comparison Cost'} += $folding_results{Price};
 		$price{'Comparison Log'} .= "Folding: " . $folding_results{Comparison} . ' total: ' . $price{'Comparison Cost'} .'<br/>' if COMPARISON_LOG;
 		#$price{'Comparison Log'} .= "Folding: " . $folding_results{Comparison} . ' total: ' . $price{'Comparison Cost'} .'<br/>' if COMPARISON_LOG;
-	} # end if
+	} # end if NeedFolding
+
 	if ( $$services{SpinePaste} ) {
 		if ( $$Imposition{pages} < $$specs{'txtUnspecifiedPageQuantity'.$qty_index} ) {
 			$price{'SpinePaste Breakdown'} .= 'SpinePaste error: Must be 1 signature<br/>';
@@ -5184,6 +5217,7 @@ $openprint::log->debug("Back From DieCutting");
 
 #$price{'Cutting Breakdown'} .= $$project{CuttingSpecs}{'hdnBreakdown'.$qty_index}.'<br/>';
 			$price{'Comparison Cost'} += $cutting_results{Price};
+			$price{'Comparison Log'} .= "Cutting : $cutting_results{Price} total: $price{'Comparison Cost'}<br/>";
 		} # end if
 		$price{'Cutting Overs'} = $cutting_results{Overs};
 	} else {
@@ -5694,7 +5728,7 @@ $openprint::log->warn("Something wrong in AQ");
 	} # end if
 	$price{'Run Total'} = $run_cost;
 	$price{'Comparison Cost'} += $run_cost;
-	$price{'Comparison Cost'} += $price{'Ink Price'};
+	$price{'Comparison Cost'} += Math::Round::nearest( 0.01, $price{'Ink Price'} );
 #$openprint::log->debug("Comparison Cost: $price{'Comparison Cost'}");
 	$price{'Total Cost'} = $run_cost + $setup_cost + $price{'Ink Price'};
 
@@ -6629,7 +6663,9 @@ $openprint::log->debug("Group $$sig_specs{Group}");
 		if ( $$services{''} and @{$$services{''}} ) {
 			my $project_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
 			foreach my $key ( @openprint::Estimating::MultiPage::signature_variables ) {
-				openprint::service::insert_service_spec( $openprint::log, $openprint::dbh, $$Project{id}, $$services{''}[0], $key.$$sig_specs{Group}, $$param{$key} );
+				if ( exists $$param{$key} ) {
+					openprint::service::insert_service_spec( $openprint::log, $openprint::dbh, $$Project{id}, $$services{''}[0], $key.$$sig_specs{Group}, $$param{$key} );
+				}
 			} # end foreach key
 		} else {
 			$openprint::log->error("No project service in project $$Project{id}");
@@ -6655,6 +6691,10 @@ $openprint::log->debug("Not different");
 				
 				openprint::service::insert_service_spec( $openprint::log, $openprint::dbh, $p_id, $s_id, 'GroupPageQuantity', $pages );
 				openprint::service::insert_service_spec( $openprint::log, $openprint::dbh, $p_id, $s_id, 'OverrideGroupPageQuantity', 'Y' );
+
+				openprint::service::insert_service_spec( $openprint::log, $openprint::dbh, $p_id, $$services{''}[0], 'GroupPageQuantity'.$new_group, $pages );
+				openprint::service::insert_service_spec( $openprint::log, $openprint::dbh, $p_id, $$services{''}[0], 'OverrideGroupPageQuantity'.$new_group, 'Y' );
+			
 				foreach my $sig_id ( @sigs ) {
 					next if $sig_id == $s_id;
 					openprint::service::insert_service_spec( $openprint::log, $openprint::dbh, $p_id, $sig_id, 'GroupPageQuantity', $new_pages );

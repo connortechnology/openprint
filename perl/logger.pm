@@ -109,8 +109,9 @@ sub info {
 	} # end if
 }
 sub debug {
+	my ( $caller, undef, $line ) = caller;
 	if ( $_[0]{level} <= DEBUG ) {
-		$_[0]->print( "[debug] $_[1]\n" );
+		$_[0]->print( "[debug] $caller:$line $_[1]\n" );
 	} # end if
 }
 

@@ -520,13 +520,17 @@ sub pricelists {
 		$_ = <$io>;
 
 		my $csv = Text::CSV_XS->new();
-		my %Papers = map { $$_{id}, $_ } openprint::Paper->find();
+		my %Papers = map { $$_{id}, $_ } openprint::Paper->find() if 0;
+
+		my $line_count = 0;
+		my $import_count = 0;
 
 		while ( <$io> ) {
 			my $status = $csv->parse($_);
 			my ( $id, $brand, $finish, $colour, $weight, $type, $width, $height, $pricelist, $service, @data ) = misc::trim( $csv->fields());
+			$line_count += 1;
 			my $Paper;
-			if ( $id ) {
+			if ( 0 and $id ) {
 				if ( $Papers{$id} ) {
 					$Paper = $Papers{$id};
 				} else {
@@ -541,6 +545,17 @@ sub pricelists {
 				my @Papers = openprint::Paper->find(brand=>$brand, finish=>$finish, colour=>$colour, weight=>$weight, type=>$type, 
 				( $width ? (width=>$width ) : ( width=>undef) ), 
 				( $height ? ( height=>$height ) : (height=>undef) ) );
+				
+				if ( ! @Papers ) {
+					$brand = openprint::StockBrand->transform(name=>$brand);
+					$finish = openprint::StockFinish->transform(name=>$finish);
+					$colour = openprint::StockColour->transform(name=>$colour);
+					$weight = openprint::StockWeight->transform(name=>$weight);
+					@Papers = openprint::Paper->find(brand=>$brand, finish=>$finish, colour=>$colour, weight=>$weight, type=>$type, 
+							( $width ? (width=>$width ) : ( width=>undef) ), 
+							( $height ? ( height=>$height ) : (height=>undef) ) );
+				}
+
 				if ( ! @Papers ) {
 					$error .= "No Paper found for $brand, $finish, $colour, $weight, $type, $width, $height<br/>";
 					next;
@@ -550,7 +565,10 @@ sub pricelists {
 				} # end if
 				$Paper = $Papers[0];
 			} # end if
-			
+			$import_count += 1;	
+			if ( ! @data ) {
+				$error .= 'No pricing data for ' . $Paper->to_string() . '<br/>';
+			}
 			for ( my $i = 0; $i < @data; $i += 8 ) {
 				my $Price = new openprint::PaperPrice();
 				$error .= $Price->save({
@@ -565,12 +583,15 @@ sub pricelists {
 					price		=>	$data[$i+6],
 					discountable	=>	$data[$i+7],
 				});
+				
 			} # end for
 		} # end foreach CSV line
 
 		if ( $error ) {
 			$variable{error} = $error;
 		} # end if
+		$variable{information} .= "$line_count lines processed, $import_count prices imported.";
+		sql::end_transaction( $openprint::dbh, $ac );
 	} elsif ( $param{'btnFunction'} eq 'Import Product Prices' ) {
 		return misc::error( $log, $dbh, \%variable, 'No pricelist selected.', 'You must select a pricelist before importing.') if ! $Pricelist->id();
 		return misc::error( $log, $dbh, \%variable, 'No file given.', 'You must select a file to import.') if ! $param{'filePrices'};

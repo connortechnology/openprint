@@ -90,6 +90,15 @@
     <form id="f1" name="f1" method="post" action="sales_log.html">
         <fieldset class="filters"><legend>Filter</legend>
             <ul>
+<? if ( $session{user_type} eq 'A' ) ?>
+		<li>
+			<label>Employee</label>
+			<select name="employee_id" onchange="load_results();">
+				<option value=""> All </option>
+				<? echo ( make_drop_down( openprint::User->dropdown(type=>['E','A'] ), $param{employee_id} ? $param{employee_id} : $session{user_id} ); ) ?>
+			</select>
+		</li>
+<? endif ( $session{user_type} eq 'A' ) ?>
                 <li>
                     <label>Company</label>
                     <input type="text" onkeyup="filterDDM(this,f1.company_id);" onkeydown="if(event.keyCode==13){f1.user_id.selectedIndex=-1;load_results();}" class="filter" />
