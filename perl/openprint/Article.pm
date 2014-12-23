@@ -179,7 +179,6 @@ sub can_edit {
 
 sub html {
 	my $Article = $_[0];
-	my @Comments = $Article->Comments();
 	my @Assets = $Article->Assets();
 	my $html = sprintf(q`
 			<div class="Article">
@@ -190,11 +189,13 @@ sub html {
 			($Article->anonymous() ? '' : $Article->Author()->thumbnail_html() ),
 			ssi::format_datetime( $Article->published_on() ),
 			);
+if ( 0 ) {
 			if ( $Article->anonymous() ) {
 				$html .= ' by an Anonymous Contributor';
 			} elsif ( $Article->created_by() ) {
 				$html .= ' by ' . $Article->Author()->link();
 			} # end if
+} # end if
 	$html .= sprintf(q`<br/><div class="source_content">%1$s</div><div class="summary">%2$s</div>`,
 			$Article->source_content(),
 			($Article->summary() ? $Article->summary() : $Article->body() ),
@@ -205,7 +206,10 @@ sub html {
 	if ( $Article->summary() and $Article->summary() ne $Article->body() ) {
 		$html .= sprintf('<a class="readmore" href="/article/view.html?article_id=%1$d">Read more...</a><br/>', $Article->id() );
 	} # end if
-	$html .= sprintf(q`<div class="comments">This article has %s.</div>`, ( @Comments == 1 ? '1 comment' : @Comments . ' comments' ) );
+	if ( $Article->commenting() ) {
+		my @Comments = $Article->Comments();
+		$html .= sprintf(q`<div class="comments">This article has %s.</div>`, ( @Comments == 1 ? '1 comment' : @Comments . ' comments' ) );
+	} # end if
 	$html .= '</div>';
 	return $html;
 } # end  sub html

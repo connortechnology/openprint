@@ -56,9 +56,9 @@ Please select a company or user to obtain login information.<br/>
 				<label>
 					<? echo (
 						if ( $$variable{User}->company_id() ) {
-							return button( 'CompanyInfo1', { href=>'company_profiles.html?ddmCustomer='.$$variable{User}->company_id(), text=>'Company Information' } );
+							return button( 'CompanyInfo1', { href=>'company_profiles.html?ddmCustomer='.$$variable{User}->company_id(), text=>'Company' } );
 						} elsif ( $param{ddmCustomer} ) {
-							return button( 'CompanyInfo1', { href=>'company_profiles.html?ddmCustomer='.$param{ddmCustomer}, text=>'Company Information' } );
+							return button( 'CompanyInfo1', { href=>'company_profiles.html?ddmCustomer='.$param{ddmCustomer}, text=>'Company' } );
 						}
 						return;
 					) ?>

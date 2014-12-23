@@ -18,6 +18,8 @@ require openprint::Article;
 require openprint::Article_Category;
 require openprint::Article_Asset;
 require XML::RSS;
+require DateTime::Format::Pg;
+require DateTime::TimeZone;
 
 # recursively fixes %gt; problems.
 sub unescape_substitutions {
@@ -45,7 +47,15 @@ sub save_article {
 	$param{company_id} = $session{company_id} if ! $param{company_id};
 
 	if ( Date::Calc::check_date( @param{'published_on_year','published_on_month','published_on_day'} ) ) {
-		$param{published_on} = sprintf('%.4d-%.2d-%.2d %.2d:%.2d:00', @param{'published_on_year','published_on_month','published_on_day','published_on_hour','published_on_minute'} );
+		my $TZ = DateTime::TimeZone->new( name => $openprint::config{Timezone} );
+        my $published_on_datetime = DateTime->new( time_zone => $TZ,
+                ( map { $_ => int($param{'published_on_'.$_ }) } ( 'year', 'month', 'day', 'hour','minute' ) ),
+                );
+
+        my $parser = 'DateTime::Format::Pg';
+
+        $param{published_on} = $parser->format_datetime( $published_on_datetime );
+
 	} else {
 		delete $param{published_on};
 		$variable{'warning'} = 'Invalid date published_on_date.  Published On Date not changed.';
