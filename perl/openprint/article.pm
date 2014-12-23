@@ -277,11 +277,13 @@ sub edit {
 			$param{'article_id'} = $Article->id();
 			# FIXME, update session filters to include this article
 			my $published_on_date = Date::Parse::str2time($Article->published_on());
-			if ( Date::Calc::check_date( @session{ map { '/article/history.html?published_on_start_'.$_ } ( 'year','month','day' )} ) ) {
-				my $session_published_on_date_start = Date::Calc::Date_to_Time(
-					@session{ map { '/article/history.html?published_on_start_'.$_ } ( 'year','month','day' )}, 0,0,0 );
+			my ( $year, $month, $day ) = @session{ map { '/article/history.html?published_on_start_'.$_ } ( 'year','month','day' )};
+
+			if ( Date::Calc::check_date( $year, $month, $day ) ) {
+$log->debug("published on $year, $month, $day ");
+				my $session_published_on_date_start = Date::Calc::Date_to_Time( $year, $month, $day, 0,0,0 );
 				if ( $session_published_on_date_start > $published_on_date ) {
-					my ($year,$month,$day, undef, undef, undef ) = Date::Calc::Time_to_Date([$published_on_date]);
+					($year,$month,$day, undef, undef, undef ) = Date::Calc::Time_to_Date([$published_on_date]);
 					@session{map { '/article/history.html?published_on_start_'.$_ } ( 'year','month','day' )} = ( $year, $month, $day );
 				} # end if
 			} # end if

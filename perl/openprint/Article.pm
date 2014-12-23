@@ -16,14 +16,14 @@ $table = 'articles';
 $serial = 'articles_id_seq';
 
 %fields = (
-	'id'				=>	'id',
+	id				=>	'id',
 	#'extended'			=>	'extended',
 	#'excerpt'			=>	'exerpt',
 	#'keywords'			=>	'keywords',
-	'created_by'		=>	'created_by',
-	'created_on'		=>	'created_on',
-	'updated_on'		=>	'updated_on',
-	'company_id'		=>	'company_id',
+	created_by		=>	'created_by',
+	created_on		=>	'created_on',
+	updated_on		=>	'updated_on',
+	company_id		=>	'company_id',
 	#'permalink'			=>	'permalink',
 	#'text_filter_id'	=>	'text_filter_id',
 	#'whiteboard'		=>	'whiteboard',
@@ -46,6 +46,7 @@ $serial = 'articles_id_seq';
 	'user_type'			=>	'user_type',
 	'keywords'			=>	'keywords',
 	anonymous			=>	'anonymous',
+	commenting			=>	'commenting',
 );
 %find_fields = (
 	category		=>	'(SELECT name FROM article_categories WHERE id=category_id)',
@@ -65,6 +66,7 @@ $serial = 'articles_id_seq';
 	created_by		=>	undef,
 	anonymous		=>	0,
 	published		=>	0,
+	commenting		=>	0,
 );
 
 sub name {

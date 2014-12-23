@@ -3,22 +3,23 @@
 <h2>Credit Application</h2>
 </div>
 <? if ( $session{'company_id'} == 0 ) ?>
-You must register for a login, and be logged in before you can apply for credit.<br>
-<? echo ( include('/includes/customer_login.html'); ) ?>
+	You must register for a login, and be logged in before you can apply for credit.<br>
+	<?include('/includes/customer_login.html')?>
 <? else ( $session{'company_id'} == 0 ) ?>
 	<? if ( $param{'btnFunction'} eq 'Apply' and ! $$variable{'error'} ) ?>
 Thank you. Your information has been received. Someone will contact you in the immediate future.
 	<? else ( $param{'btnFunction'} eq 'Apply' and ! $$variable{'error'} ) ?>
 	<br/>
-	<? echo ( include('/includes/error_reporting.html'); ) ?>
+	<?include('/includes/error_reporting.html') ?>
 	<p class="required">
 	 denotes required information.<br/><br/>
 	</p>
 	<form id="f1" name="f1" method="post" action="<?SecureSiteURL?>/account/credit_application.html">
 		<div class="CreditApplication">
-			<? echo ( include('/account/_business_information.html'); ) ?>
-			<? echo ( include('/account/_bank_information.html'); ) ?>
-			<? echo ( include('/account/_trade_references.html'); ) ?>
+			<?include('/account/_business_information.html') ?>
+			<?include('/account/_bank_information.html') ?>
+			<?include('/account/_trade_references.html') ?>
+			<br class="spacer"/>
 			<div class="Application">
 			<fieldset><legend>Application</legend>
 				I/We do hereby authorize <? echo ( $openprint::config{SiteTitle} ) ?> to verify all or part of the above listed confidential disclosures, and to verify the credit status of existing lines of credit as listed on this application. Further, I/We agree to pay according to terms printed on any invoices for any purchase(s) including discounts, net price and late charges.<br/>
@@ -39,7 +40,7 @@ Thank you. Your information has been received. Someone will contact you in the i
 				<li>
 					<label>Terms Desired</label>
 					<select id="DesiredTerms" name="DesiredTerms" size="1">
-						<? echo ( ssi::make_drop_down( [ 15,'15 Days', 30, '30 Days', 60, '60 Days', 90, '90 Days' ], $param{'DesiredTerms'} ); ) ?>
+						<? echo ( make_drop_down( [ 15,'15 Days', 30, '30 Days', 60, '60 Days', 90, '90 Days' ], $param{'DesiredTerms'} ); ) ?>
 					</select>
 				</li>
 				<li class="required">
@@ -48,7 +49,7 @@ Thank you. Your information has been received. Someone will contact you in the i
 				</li>
 				<li>
 					<label>Financial Statement Available?</label>
-					<? echo ( ssi::radio( 'FinancialStatementAvailable', ['Y','Yes','N','No'], $param{'FinancialStatementAvailable'} ); ) ?>
+					<? echo ( radio( 'FinancialStatementAvailable', ['Y','Yes','N','No'], $param{'FinancialStatementAvailable'} ); ) ?>
 				</li>
 				</ul>
 				<?SiteTitle?> reserves the right to revoke/cancel credit status at their own discretion without prior notification. By submitting this 
@@ -62,8 +63,8 @@ Thank you. Your information has been received. Someone will contact you in the i
 				</li>
 				</ul>
 				<p class="buttons">
-					<? echo ( ssi::button( 'Submit1', { onclick=>'f1.submit();', text=>'Submit' } ); ) ?>
-					<? echo ( ssi::button( 'Reset1', { onclick=>'f1.reset();', text=>'Reset' } ); ) ?>
+					<? echo ( button( 'Submit1', { onclick=>'f1.submit();', text=>'Submit' } ); ) ?>
+					<? echo ( button( 'Reset1', { onclick=>'f1.reset();', text=>'Reset' } ); ) ?>
 				</p>
 			</fieldset>
 			</div>

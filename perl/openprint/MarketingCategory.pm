@@ -7,7 +7,7 @@ require sql;
 use openprint ();
 
 use vars qw( $debug %fields %find_fields %transforms %defaults $table $serial );
-$debug = 0;
+$debug = 1;
 %fields = (
 	'id'			=>	'id',
 	'name'			=>	'name',
@@ -19,7 +19,7 @@ $debug = 0;
 	'company_id'	=>	'(SELECT company_id FROM companies_in_marketing_categories WHERE category_id=marketing_categories.id)',
 );
 $table = 'marketing_categories';
-$serial = 'marketing_category_id_seq';
+$serial = 'marketing_categories_id_seq';
 
 sub delete {
 	my $self = shift;

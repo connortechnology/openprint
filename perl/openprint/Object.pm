@@ -261,7 +261,12 @@ $log->debug("No serial") if $debug;
 			if ( $need_serial ) {
 				if ( $serial ) {
 					@$self{@identified_by} = @sql{@$fields{@identified_by}} = $local_dbh->selectrow_array( q{SELECT nextval('} . $serial . q{')} );
-					$log->debug("SQL statement execution SELECT nextval('$serial') returned ".join(',',@$self{@identified_by})) if $debug or DEBUG_ALL;
+					if ( $local_dbh->errstr() )  {
+						$log->error("Error getting next id. " . $local_dbh->errstr() );
+						$log->error("SQL statement execution SELECT nextval('$serial') returned ".join(',',@$self{@identified_by}));
+					} elsif ( $debug or DEBUG_ALL ) {
+						$log->debug("SQL statement execution SELECT nextval('$serial') returned ".join(',',@$self{@identified_by}));
+					} # end if
 				} # end if
 			} # end if
 			my @keys = keys %sql;
