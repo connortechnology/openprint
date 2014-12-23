@@ -43,7 +43,7 @@ join('',
 	<? if ( $session{'user_id'} ) ?>
 		<div id="Opinions"><? echo ( $$variable{'Article'}->opinions() ) ?></div>
 <? if ( $$variable{Article}->commenting() ) ?>
-		<div id="comments-<? echo ( $$variable{'Article'}->id() ) ?>" class="Comments"><? echo ( include('_comments.html'); ) ?></div>
+		<div id="comments-<? echo ( $$variable{'Article'}->id() ) ?>" class="Comments"><?include(_comments.html)?></div>
 <? endif ( $$variable{Article}->commenting() ) ?>
 	<? endif ( $session{'user_id'} ) ?>
 <? else ( $$variable{'Article'}->can_view() ) ?>

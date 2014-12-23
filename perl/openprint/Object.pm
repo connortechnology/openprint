@@ -903,6 +903,7 @@ $openprint::log->debug("After $transform: $_[2]") if $debug;
 
 sub opinions {
 	my $type = ref $_[0];
+	return '' if ! openprint::Opinion_Type->find_one();
 	my $html;
 	my @Opinions = openprint::Opinion->find('object_type'=> $type, 'object_id'=>$_[0]->id() );
 	my %Opinions;
