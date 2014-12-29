@@ -2247,6 +2247,8 @@ foreach my $k ( sort { $a cmp $b } keys %$folding_specs ) {
 		next if ! $$folding_specs{"FoldType-$form-$qty_index-$fold_index"};
 		if ( $$folding_specs{"ddmEquipment-$form-$qty_index"} ) {
 			my $Imposition = $Source_Imposition->copy();
+			$Imposition->dutch_columns( 0 ); # CDan't have dutch
+			$Imposition->dutch_rows( 0 ); # CDan't have dutch
 			$Imposition->columns( $$folding_specs{"FoldColumns-$form-$qty_index-$fold_index"} );
 			$Imposition->rows( $$folding_specs{"FoldRows-$form-$qty_index-$fold_index"} );
 			$Imposition->quantity( $$folding_specs{"FoldQty-$form-$qty_index-$fold_index"} );
@@ -2258,6 +2260,7 @@ foreach my $k ( sort { $a cmp $b } keys %$folding_specs ) {
 			$Imposition->Press( $Folder );
 
 			my $Paper = $Imposition->Paper();
+$Imposition->display();
 			my $find = {
 								type 			=>	$$folding_specs{"FoldType-$form-$qty_index-$fold_index"},
 								#pages			=>	$Imposition->pages(),
@@ -2280,7 +2283,7 @@ foreach my $k ( sort { $a cmp $b } keys %$folding_specs ) {
 if ( $$folding_specs{"chkOverrideFold-$form-$qty_index"} eq 'Y' ) {
 $openprint::log->error("Was overriden");
 }
-Carp::cluck( "CAnt get fold! on " . $Folder->to_string() ."\n". $_ . join("\n", map { $_ . '=>' . $openprint::param{$_} } sort keys %openprint::param ));
+Carp::cluck( "CAnt get fold! $form-$qty_index-$fold_index on " . $Folder->to_string() ."\n". $_ . join("\n", map { $_ . '=>' . $openprint::param{$_} } sort keys %openprint::param ));
 
 			} else {
 				$openprint::log->debug("Got FOld: " . $Fold->to_string() ) if DEBUG;

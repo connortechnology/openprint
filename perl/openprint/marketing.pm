@@ -34,63 +34,63 @@ use vars qw( $r $log $dbh %variable %param %session %config );
 *config = \%openprint::config;
 
 sub email_campaigns {
-	my $Campaign = new openprint::EmailCampaign( $param{'campaign_id'} );
-    if ( $param{'btnFunction'} eq 'Delete' ) {
-        $variable{'error'} .= $Campaign->delete();
-    } elsif ( $param{'btnFunction'} eq 'Run' ) {
-        $variable{'information'} = $Campaign->send();
-    } elsif ( $param{'btnFunction'} eq 'Trial' ) {
-        $variable{'information'} = $Campaign->trial( new openprint::User( $openprint::session{'user_id'} )->email() );
+	my $Campaign = new openprint::EmailCampaign( $param{campaign_id} );
+    if ( $param{btnFunction} eq 'Delete' ) {
+        $variable{error} .= $Campaign->delete();
+    } elsif ( $param{btnFunction} eq 'Run' ) {
+        $variable{information} = $Campaign->send();
+    } elsif ( $param{btnFunction} eq 'Trial' ) {
+        $variable{information} = $Campaign->trial( new openprint::User( $openprint::session{user_id} )->email() );
 	} # end if
 
-	$variable{'campaign_id'} = $Campaign->id();
+	$variable{campaign_id} = $Campaign->id();
 } # end sub email_campaigns
 
 sub categories {
 
-	my $Category = new openprint::MarketingCategory( $param{'category_id'} );
+	my $Category = new openprint::MarketingCategory( $param{category_id} );
 
-	if ( $param{'btnFunction'} eq 'View' ) {
-	} elsif ( $param{'btnFunction'} eq '>>' ) {
+	if ( $param{btnFunction} eq 'View' ) {
+	} elsif ( $param{btnFunction} eq '>>' ) {
 		$Category = $Category->next();
-	} elsif ( $param{'btnFunction'} eq '<<' ) {
+	} elsif ( $param{btnFunction} eq '<<' ) {
 		$Category = $Category->previous();
-	} elsif ( $param{'btnFunction'} eq 'Save' ) {
+	} elsif ( $param{btnFunction} eq 'Save' ) {
 		$Category->save( \%openprint::param );
-	} elsif ( $param{'btnFunction'} eq 'Delete' ) {
+	} elsif ( $param{btnFunction} eq 'Delete' ) {
 		$Category->delete();
 		$Category = $Category->next();
-	} elsif ( $param{'btnFunction'} eq 'Add' ) {
-		$Category->add_company( $param{'Company'} );
+	} elsif ( $param{btnFunction} eq 'Add' ) {
+		$Category->add_company( $param{Company} );
 		$Category->save();
-	} elsif ( $param{'btnFunction'} eq 'Remove' ) {
-		$Category->remove_company( $param{'chkDelete'} );
+	} elsif ( $param{btnFunction} eq 'Remove' ) {
+		$Category->remove_company( $param{chkDelete} );
 		$Category->save();
 	} # end if
-	$variable{'Category'} = $Category;
+	$variable{Category} = $Category;
 } # end sub categories
 
 
 sub email_campaign {
 	my $Campaign = new openprint::EmailCampaign( $param{campaign_id}) ;
-	if ( $param{'btnFunction'} eq 'Save' ) {
-		$param{'nextrun'} = sprintf('%.4d-%.2d-%.2d %.2d:%.2d:%.2d', @param{'nextrun_year','nextrun_month','nextrun_day','nextrun_hour','nextrun_minute'}, 0 ) if $param{'nextrun_year'};
+	if ( $param{btnFunction} eq 'Save' ) {
+		$param{nextrun} = sprintf('%.4d-%.2d-%.2d %.2d:%.2d:%.2d', @param{'nextrun_year','nextrun_month','nextrun_day','nextrun_hour','nextrun_minute'}, 0 ) if $param{nextrun_year};
 		$variable{error} .= $Campaign->save( \%param );
 		$variable{ExternalRedirect} = '/marketing/email_campaigns.html' if ! $variable{error};
-    } elsif ( $param{'btnFunction'} eq 'Delete' ) {
+    } elsif ( $param{btnFunction} eq 'Delete' ) {
         $variable{error} .= $Campaign->delete();
 		$variable{ExternalRedirect} = '/marketing/email_campaigns.html' if ! $variable{error};
-	} elsif ( $param{'btnFunction'} eq 'Run' ) {
-		$variable{'Results'} = $Campaign->send();
-	} elsif ( $param{'btnFunction'} eq 'Copy' ) {
+	} elsif ( $param{btnFunction} eq 'Run' ) {
+		$variable{Results} = $Campaign->send();
+	} elsif ( $param{btnFunction} eq 'Copy' ) {
 		$Campaign = $Campaign->copy();
 		$variable{error} .= $Campaign->save({name=>'Copy of '.$$Campaign{name}});
-    } elsif ( $param{'btnFunction'} eq 'Test' ) {
-        $variable{'information'} = $Campaign->test();
-	} elsif ( $param{'btnFunction'} eq 'Save' ) {
-		$param{'nextrun'} = sprintf('%.4d-%.2d-%.2d %.2d:%.2d:%.2d', @param{'nextrun_year','nextrun_month','nextrun_day','nextrun_hour','nextrun_minute'}, 0 );
+    } elsif ( $param{btnFunction} eq 'Test' ) {
+        $variable{information} = $Campaign->test();
+	} elsif ( $param{btnFunction} eq 'Save' ) {
+		$param{nextrun} = sprintf('%.4d-%.2d-%.2d %.2d:%.2d:%.2d', @param{'nextrun_year','nextrun_month','nextrun_day','nextrun_hour','nextrun_minute'}, 0 );
 		$Campaign->save( \%param );
-    } elsif ( $param{'btnFunction'} eq 'Download Recipients' ) {
+    } elsif ( $param{btnFunction} eq 'Download Recipients' ) {
         my @header = ( 'Company','Name','Email','Phone','Last Sent On','Number of Times Sent');
         my @data;
 		foreach my $user_id ( $Campaign->recipients() ) {
@@ -101,28 +101,28 @@ sub email_campaign {
 		} # end foreach
 
         misc::export_csv( $r, $log, \%variable, $Campaign->name().' Recipients.csv', \@header, \@data );
-    } elsif ( $param{'btnFunction'} eq 'View Recipients' ) {
-		$variable{'PageContent'} = join('<br/>', map { new openprint::User( $_ )->name() } $Campaign->recipients() );
+    } elsif ( $param{btnFunction} eq 'View Recipients' ) {
+		$variable{PageContent} = join('<br/>', map { new openprint::User( $_ )->name() } $Campaign->recipients() );
 	} # end if
-	$variable{'Campaign'} = $Campaign;
+	$variable{Campaign} = $Campaign;
 } # end sub email_campaign
 
 sub surveys {
 	require openprint::Survey;
-    $variable{'Survey'} = new openprint::Survey( $param{'survey_id'} );
-    if ( $param{'btnFunction'} eq 'Save' ) {
-        $variable{'error'} = $variable{'Survey'}->save( \%param );
-    } elsif ( $param{'btnFunction'} eq 'Copy' ) {
-        $variable{'Survey'} = $variable{'Survey'}->copy();
-        $variable{'error'} = $variable{'Survey'}->save( );
-    } elsif ( $param{'btnFunction'} eq 'Delete' ) {
-        $variable{'error'} = $variable{'Survey'}->delete( );
+    $variable{Survey} = new openprint::Survey( $param{survey_id} );
+    if ( $param{btnFunction} eq 'Save' ) {
+        $variable{error} = $variable{Survey}->save( \%param );
+    } elsif ( $param{btnFunction} eq 'Copy' ) {
+        $variable{Survey} = $variable{Survey}->copy();
+        $variable{error} = $variable{Survey}->save( );
+    } elsif ( $param{btnFunction} eq 'Delete' ) {
+        $variable{error} = $variable{Survey}->delete( );
     } # end if
 	
 } # end sub surveys 
 
 sub survey_responses {
-    if ( $param{'btnFunction'} eq 'Delete' ) {
+    if ( $param{btnFunction} eq 'Delete' ) {
 		sql::execute( undef, undef, 'DELETE FROM Survey_Responses WHERE survey_id=? and user_id=?', @param{'survey_id','user_id'} );
     } # end if
 } # end sub survey_responses
@@ -130,30 +130,30 @@ sub survey_responses {
 sub email_template {
 	require openprint::EmailTemplate;
 
-	my $Template = new openprint::EmailTemplate( $param{'template_id'}) ;
-	if ( $param{'btnFunction'} eq 'Run' ) {
-		$variable{'Results'} = $Template->send();
-	} elsif ( $param{'btnFunction'} eq 'Copy' ) {
-		$variable{'error'} .= $Template->save( { name => 'Copy of ' . $Template->name() } );
-	} elsif ( $param{'btnFunction'} eq 'Save' ) {
+	my $Template = new openprint::EmailTemplate( $param{template_id}) ;
+	if ( $param{btnFunction} eq 'Run' ) {
+		$variable{Results} = $Template->send();
+	} elsif ( $param{btnFunction} eq 'Copy' ) {
+		$variable{error} .= $Template->save( { name => 'Copy of ' . $Template->name() } );
+	} elsif ( $param{btnFunction} eq 'Save' ) {
 		$Template->save( \%param );
 	} # end if
-	$variable{'Template'} = $Template;
+	$variable{Template} = $Template;
 } # end sub email_campaign
 
 sub email_templates {
 	require openprint::EmailTemplate;
 
-	if ( $param{'btnFunction'} eq 'Copy' ) {
-		my $Template = new openprint::EmailTemplate( $param{'template_id'}) ;
+	if ( $param{btnFunction} eq 'Copy' ) {
+		my $Template = new openprint::EmailTemplate( $param{template_id}) ;
 		$Template = $Template->copy();
-		$variable{'error'} .= $Template->save( );
-	} elsif ( $param{'btnFunction'} eq 'Save' ) {
-		my $Template = new openprint::EmailTemplate( $param{'template_id'}) ;
-		$variable{'error'} .= $Template->save( \%param );
-	} elsif ( $param{'btnFunction'} eq 'Delete' ) {
-		my $Template = new openprint::EmailTemplate( $param{'template_id'}) ;
-		$variable{'error'} .= $Template->delete( );
+		$variable{error} .= $Template->save( );
+	} elsif ( $param{btnFunction} eq 'Save' ) {
+		my $Template = new openprint::EmailTemplate( $param{template_id}) ;
+		$variable{error} .= $Template->save( \%param );
+	} elsif ( $param{btnFunction} eq 'Delete' ) {
+		my $Template = new openprint::EmailTemplate( $param{template_id}) ;
+		$variable{error} .= $Template->delete( );
 	} # end if
 } # end sub email_templates
 
