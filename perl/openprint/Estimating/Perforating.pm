@@ -254,7 +254,12 @@ sub signature_calc {
 	my @equipment;
 
 	if ( $$specs{"chkOverrideEquipment-$form-$qty_index"} eq 'Y' ) {
-		@equipment = openprint::Equipment->find( id=>$$specs{"ddmEquipment-$form-$qty_index"} );
+		if ( $$specs{"ddmEquipment-$form-$qty_index"} ) {
+			@equipment = openprint::Equipment->find( id=>$$specs{"ddmEquipment-$form-$qty_index"} );
+		} else {
+			$Results{alert} .= 'Please select the equipment.<br/>';
+			return %Results;
+		} # end if
 		#$openprint::log->debug("Overriding Equipment to: " . $$specs{"ddmEquipment-$$sig_specs{SignatureIndex}-$qty_index"} ) if DEBUG;
 	} elsif ( ! $stitching_service_index ) {
 		@equipment = sets::exclude( \@stitchers, \@all_equipment );
