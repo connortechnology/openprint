@@ -380,6 +380,10 @@ if ( ! sets::isin('articles',\@tables ) ) {
 	$dbh->do('ALTER TABLE articles ADD anonymous BOOLEAN NOT NULL default false');
 	} # end if
 	$dbh->do('ALTER TABLE articles ALTER company_id DROP NOT NULL');
+	if ( ! exists $$data{commenting} ) {
+	$dbh->do('ALTER TABLE articles ADD commenting BOOLEAN NOT NULL default false');
+	print "Adding commenting to articles\n";
+	} # end if
 } # end if
 if ( sets::isin( 'article_assets', \@tables ) ) {
 	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='article_assets'", 'column_name');

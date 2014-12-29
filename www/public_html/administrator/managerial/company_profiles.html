@@ -62,7 +62,13 @@
 	<input type="hidden" name="company_id" id="company_id" value="<?CustomerIndex?>" />
 	<fieldset id="ButtonsTop">
 		<p> 
-			<label><? if ( $$variable{'CustomerIndex'} ) ?><a href="user_profiles.html?ddmCustomer=<?CustomerIndex?>">Link to Users</a><? endif ( $$variable{'CustomerIndex'} ) ?>&nbsp;</label>
+			<label><? echo ( 
+
+if ( $$variable{CustomerIndex} ) {
+	return button( 'Users', { href=>"user_profiles.html?ddmCustomer=$$variable{CustomerIndex}" } );
+}
+return;
+) ?></label>
 		
 			<? echo (
 				my $html = '';
