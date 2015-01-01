@@ -11,7 +11,7 @@ require openprint::Currency;
 require openprint::Company;
 require openprint::Order;
 
-$debug = 0;
+$debug = 1;
 $table = 'payments';
 $serial = 'payments_id_seq';
 
@@ -46,6 +46,7 @@ $serial = 'payments_id_seq';
 	deleted		=>	0,
 	owner_id	=>	q`$openprint::config{owner_id}`,
 	amount		=>	undef,
+	remaining	=>	undef,
 );
 
 sub destroy {
