@@ -326,6 +326,7 @@ sub save {
 	my @recommendations = $self->recommendations();
 	sql::execute( undef, undef, q{DELETE FROM Paper_Recommendations WHERE lngPaperIndex=?}, $$self{id} );
 	foreach my $rec ( @recommendations ) {
+		next if ! $rec;
 		sql::insert( undef, undef, 'Paper_Recommendations', 'lngPaperIndex', $$self{id},'lngProjectTypeIndex', $rec );
 	} # end foreach
 

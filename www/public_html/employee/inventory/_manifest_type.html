@@ -49,7 +49,7 @@
 			<select id="Owner-<?type_id?>" name="Owner-<?type_id?>"><? echo ( make_drop_down( $$variable{'Owners'}, $param{'Owner-'.$$variable{'type_id'}} ? $param{'Owner-'.$$variable{'type_id'}} : $session{'company_id'} ); ) ?></select>
 		</p>
 		<p id="Manufacturer-<?type_id?>_div">
-			<label for="txtManufacturer-<?type_id?>" onclick="$('Manufacturer-<?type_id?>').toggle();$('txtManufacturer-<?type_id?>').toggle();">Manufacturer</label>
+			<label for="txtManufacturer-<?type_id?>" onclick="var ddm=$('Manufacturer-<?type_id?>');ddm.selectedIndex=0;ddm.toggle();$('txtManufacturer-<?type_id?>').toggle();">Manufacturer</label>
 			<select id="Manufacturer-<?type_id?>" name="Manufacturer-<?type_id?>" size="1" onchange="Manufacturer_onChange(this,'-<?type_id?>');">
 				<option value="">select</option>
 				<? echo (
@@ -65,7 +65,7 @@
 			<input style="display: none;" type="text" id="txtManufacturer-<?type_id?>" name="txtManufacturer-<?type_id?>" />
 		</p>
 		<p id="Brand-<?type_id?>_div">
-			<label for="txtBrand-<?type_id?>" onclick="$('Brand-<?type_id?>').toggle();$('txtBrand-<?type_id?>').toggle();">Brand</label>
+			<label for="txtBrand-<?type_id?>" onclick="var ddm = $('Brand-<?type_id?>');ddm.selectedIndex=0;ddm.toggle();$('txtBrand-<?type_id?>').toggle();">Brand</label>
 			<select id="Brand-<?type_id?>" name="Brand-<?type_id?>" size="1" onchange="Brand_onChange(this,'-<?type_id?>');">
 				<option value="">select</option>
 			<? echo (
@@ -74,7 +74,7 @@
 			</select>
 			<input style="display: none;" type="text" id="txtBrand-<?type_id?>" name="txtBrand-<?type_id?>" />
 		</p><p id="Finish-<?type_id?>_div">
-			<label for="txtFinish-<?type_id?>" onclick="$('Finish-<?type_id?>').toggle();$('txtFinish-<?type_id?>').toggle();">Finish</label>
+			<label for="txtFinish-<?type_id?>" onclick="var ddm=$('Finish-<?type_id?>');ddm.selectedIndex=0;ddm.toggle();$('txtFinish-<?type_id?>').toggle();">Finish</label>
 			<select id="Finish-<?type_id?>" name="Finish-<?type_id?>" size="1" onchange="Finish_onChange(this,'-<?type_id?>');">
 				<option value="">select</option>
 				<? echo (
@@ -83,7 +83,7 @@
 			</select>
 			<input style="display: none;" type="text" id="txtFinish-<?type_id?>" name="txtFinish-<?type_id?>" onkeyup="$('Finish-<?type_id?>').selectedIndex=0;"/>
 		</p><p id="Colour-<?type_id?>_div">
-			<label for="txtColour-<?type_id?>" onclick="$('Colour-<?type_id?>').toggle();$('txtColour-<?type_id?>').toggle();">Colour</label>
+			<label for="txtColour-<?type_id?>" onclick="var ddm=$('Colour-<?type_id?>');ddm.selectedIndex=0;ddm.toggle();$('txtColour-<?type_id?>').toggle();">Colour</label>
 			<select id="Colour-<?type_id?>" name="Colour-<?type_id?>" size="1" onchange="Colour_onChange(this,'-<?type_id?>');">
 				<option value="">select</option>
 			<? echo (

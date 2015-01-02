@@ -500,6 +500,13 @@ sub _license_allocations {
 		
 		my $LH = new openprint::License_Host();
 		$variable{error} .= $LH->save({license_id=>$param{license_id}, host_id=>$param{host_id}});
+	} elsif ( $param{action} eq 'delete' ) {
+		my $LH = openprint::License_Host->find_one( license_id=>$param{license_id}, host_id=>$param{host_id} );
+		if ( ! $LH ) {
+			$variable{error} .= 'Allocation not found.';
+			return;
+		} 
+		$variable{error} .= $LH->delete();
 	} # end if	
 } # end sub _license_alliations
 

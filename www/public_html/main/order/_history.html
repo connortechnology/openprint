@@ -23,8 +23,14 @@
 			'num ilike'	=>	( $param{invoice} =~ /%/ ? $param{invoice} : '%'.$param{invoice}.'%' ),
 			invoicee_id	=>	$session{company_id},
 		);
-		if ( @Invoices ) {	
-			$$variable{Orders} = [ openprint::Order->find( 'invoice_id &&' => [ map { $_->id() } @Invoices ] ) ];
+		if ( ( ! @Invoices ) and ( $session{user_type} eq 'E' or $session{user_type} eq 'A' ) ) {
+			@Invoices = openprint::Invoice->find( 'num ilike' =>  ( $param{invoice} =~ /%/ ? $param{invoice} : '%'.$param{invoice}.'%' ) );
+		} # end if
+
+		if ( @Invoices ) {
+			foreach my $I ( @Invoices ) {
+				push @{$$variable{Orders}}, openprint::Order->find( invoice_id => $$I{id} );
+			}
 		} else {
 			$$variable{Orders} = [];
 		} # end if	

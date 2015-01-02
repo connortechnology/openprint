@@ -29,7 +29,7 @@ use vars qw( %variable %session %param %config $log $dbh $r );
 
 sub _stocks {
 	if ( %param and ! $param{'btnFunction'} ) {
-		ssi::save_params('/administrator/stock/list.html', 'group_id','owner_id','manufacturer_id','supplier_id', 'brand_id','finish_id','colour_id','weight_id','fsc_code','material_id', 'Types', 'recommendations','grain_direction', 'digital', 'width','height', 'setup_prices', 'material_prices' );
+		ssi::save_params('/administrator/stock/list.html', 'group_id','owner_id','manufacturer_id','supplier_id', 'brand_id','finish_id','colour_id','weight_id','fsc_code','material_id', 'Types', 'recommendations','grain_direction', 'digital', 'width','height', 'scoring', 'setup_prices', 'material_prices' );
 		$session{'/administrator/stock/list.html?OrLarger'} = $param{OrLarger};
 	} # end if
 } # end sub _stocks
@@ -186,6 +186,10 @@ $openprint::log->debug("Setting: $param{'amount'} " );
 						delete $$Paper{'Prices'};
 					} # end if
 				} # end foreach param key
+			} elsif ( $param{mode} eq 'recommended' ) {
+				$Paper->recommendations( ref $param{PRF} eq 'ARRAY' ? @{$param{PRF}} : ( $param{PRF} ) );
+				$variable{error} .= $Paper->save();
+				$variable{ExternalRedirect} = '/administrator/stock/list.html';
 			} # end if
 			sql::end_transaction( $dbh, $ac );
 		} # end foreach Paper
@@ -581,6 +585,12 @@ sub _price_tr {
 
 sub _stock { 
 } # end sub _stock
+sub _popup {
+	@{$variable{Stocks}} = openprint::Paper->find(id=>$param{stock_ids});
+	$variable{Stock} = $variable{Stocks}[0] if @{$variable{Stocks}};
+} # end sub _popup
+sub _popup_price {
+} # end sub _popup_price
 
 1;
 __END__
