@@ -2278,22 +2278,22 @@ $Imposition->display();
 								};
 			my $Fold = $Folder->Fold( $find );
 			if ( ! $Fold ) {
-				$_ = Data::Dumper::Dumper($find);
-				$openprint::log->error("CAnt get fold! on " . $Folder->to_string() . $_);
-if ( $$folding_specs{"chkOverrideFold-$form-$qty_index"} eq 'Y' ) {
-$openprint::log->error("Was overriden");
-}
-Carp::cluck( "CAnt get fold! $form-$qty_index-$fold_index on " . $Folder->to_string() ."\n". $_ . join("\n", map { $_ . '=>' . $openprint::param{$_} } sort keys %openprint::param ));
-
+				if ( $$folding_specs{"chkOverrideFold-$form-$qty_index"} eq 'Y' ) {
+					$openprint::log->debug("Was overriden");
+				} else {
+					$_ = Data::Dumper::Dumper($find);
+					$openprint::log->error("CAnt get fold! on " . $Folder->to_string() . $_);
+					Carp::cluck( "CAnt get fold! $form-$qty_index-$fold_index on " . $Folder->to_string() ."\n". $_ . join("\n", map { $_ . '=>' . $openprint::param{$_} } sort keys %openprint::param ));
+				} # end if
 			} else {
 				$openprint::log->debug("Got FOld: " . $Fold->to_string() ) if DEBUG;
 				$Imposition->Fold( $Fold );
 				if ( $Imposition->image_orientation() eq 'Vertical' ) {
-				$Imposition->page_rows( $Fold->page_rows() );
-				$Imposition->page_columns( $Fold->page_columns() );
+					$Imposition->page_rows( $Fold->page_rows() );
+					$Imposition->page_columns( $Fold->page_columns() );
 				} else {
-				$Imposition->page_rows( $Fold->page_columns() );
-				$Imposition->page_columns( $Fold->page_rows() );
+					$Imposition->page_rows( $Fold->page_columns() );
+					$Imposition->page_columns( $Fold->page_rows() );
 				} # end if
 				if ( $Fold->pages() ) {
 					$$Imposition{pages} = $Fold->pages();
