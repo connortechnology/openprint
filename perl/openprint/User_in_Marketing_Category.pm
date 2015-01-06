@@ -3,7 +3,7 @@ package openprint::User_in_Marketing_Category;
 our @ISA = qw(openprint::Object);
 
 require openprint::User;
-require openprint::Marketing_Category;
+require openprint::MarketingCategory;
 
 use vars qw( $debug $table @identified_by %fields %find_fields %transforms %defaults );
 $debug = 0;

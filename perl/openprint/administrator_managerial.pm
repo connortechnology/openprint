@@ -604,6 +604,8 @@ sub company_profiles {
 					} # end if
 				} # end foreach Supplier
 				sql::end_transaction( $dbh, $ac );
+				$variable{ExternalRedirect} = '/administrator/managerial/company_profils.html?ddmCustomer='.$Company->id();
+				return;
 			} # end if $index
 		} # end if input checks
 	} elsif ( $param{'btnFunction'} eq 'Delete' ) {
