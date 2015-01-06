@@ -319,7 +319,7 @@ $log->debug("Setting created_on_start to $year, $month, $day from $created_on_da
 			} # end if
 			( $year, $month, $day ) = @session{ map { '/article/history.html?created_on_end_'.$_ } ( 'year','month','day' )};
 			if ( Date::Calc::check_date( $year,$month,$day ) ) {
-				my $session_created_on_date_end = Date::Calc::Date_to_Time( $year,$month,$day );
+				my $session_created_on_date_end = Date::Calc::Date_to_Time( $year,$month,$day, 0, 0, 0 );
 				if ( $session_created_on_date_end < $created_on_date ) {
 					($year,$month,$day, undef, undef, undef ) = Date::Calc::Time_to_Date([$created_on_date]);
 $log->debug("Setting created_on_end to $year, $month, $day from $created_on_date $$Article{created_on}");
