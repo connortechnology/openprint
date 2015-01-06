@@ -56,7 +56,10 @@ sub categories {
 	} elsif ( $param{btnFunction} eq '<<' ) {
 		$Category = $Category->previous();
 	} elsif ( $param{btnFunction} eq 'Save' ) {
-		$Category->save( \%openprint::param );
+		$variable{error} .= $Category->save( \%openprint::param );
+		if ( ! $variable{error} ) {
+			$variable{Redirect} = '/marketing/categories.html?category_id='.$Category->id();
+		} # end if
 	} elsif ( $param{btnFunction} eq 'Delete' ) {
 		$Category->delete();
 		$Category = $Category->next();
