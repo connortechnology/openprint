@@ -290,10 +290,10 @@ sub edit {
 			my ( $year, $month, $day ) = @session{ map { '/article/history.html?published_on_start_'.$_ } ( 'year','month','day' )};
 
 			if ( Date::Calc::check_date( $year, $month, $day ) ) {
-$log->debug("published on $year, $month, $day ");
+$log->debug("published on start $year, $month, $day $$Article{published_on}");
 				my $session_published_on_date_start = Date::Calc::Date_to_Time( $year, $month, $day, 0,0,0 );
 				if ( $session_published_on_date_start > $published_on_date ) {
-					($year,$month,$day, undef, undef, undef ) = Date::Calc::Time_to_Date([$published_on_date]);
+					($year,$month,$day, undef, undef, undef ) = Date::Calc::Time_to_Date($published_on_date);
 					@session{map { '/article/history.html?published_on_start_'.$_ } ( 'year','month','day' )} = ( $year, $month, $day );
 				} # end if
 			} # end if
@@ -302,7 +302,7 @@ $log->debug(join('-', @session{ map { '/article/history.html?published_on_end_'.
 				my $session_published_on_date_end = Date::Calc::Date_to_Time(
 					@session{ map { '/article/history.html?published_on_end_'.$_ } ( 'year','month','day' )}, 0,0,0 );
 				if ( $session_published_on_date_end < $published_on_date ) {
-					my ($year,$month,$day, undef, undef, undef ) = Date::Calc::Time_to_Date([$published_on_date]);
+					my ($year,$month,$day, undef, undef, undef ) = Date::Calc::Time_to_Date($published_on_date);
 					@session{map { '/article/history.html?published_on_end_'.$_ } ( 'year','month','day' )} = ( $year, $month, $day );
 				} # end if
 			} # end if
@@ -312,7 +312,7 @@ $log->debug(join('-', @session{ map { '/article/history.html?published_on_end_'.
 			if ( Date::Calc::check_date( $year,$month,$day ) ) {
 				my $session_created_on_date_start = Date::Calc::Date_to_Time( $year,$month,$day, 0,0,0 );
 				if ( $session_created_on_date_start > $created_on_date ) {
-					($year,$month,$day, undef, undef, undef ) = Date::Calc::Time_to_Date([$created_on_date]);
+					($year,$month,$day, undef, undef, undef ) = Date::Calc::Time_to_Date($created_on_date);
 					@session{map { '/article/history.html?created_on_start_'.$_ } ( 'year','month','day' )} = ( $year, $month, $day );
 $log->debug("Setting created_on_start to $year, $month, $day from $created_on_date $$Article{created_on}");
 				} # end if
@@ -321,7 +321,7 @@ $log->debug("Setting created_on_start to $year, $month, $day from $created_on_da
 			if ( Date::Calc::check_date( $year,$month,$day ) ) {
 				my $session_created_on_date_end = Date::Calc::Date_to_Time( $year,$month,$day, 0, 0, 0 );
 				if ( $session_created_on_date_end < $created_on_date ) {
-					($year,$month,$day, undef, undef, undef ) = Date::Calc::Time_to_Date([$created_on_date]);
+					($year,$month,$day, undef, undef, undef ) = Date::Calc::Time_to_Date($created_on_date);
 $log->debug("Setting created_on_end to $year, $month, $day from $created_on_date $$Article{created_on}");
 					@session{map { '/article/history.html?created_on_end_'.$_ } ( 'year','month','day' )} = ( $year, $month, $day );
 				} # end if
