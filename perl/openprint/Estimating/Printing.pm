@@ -5017,11 +5017,6 @@ sub calc_price {
 			$openprint::log->debug("Using cached folding");
 		} else {
 #my @all_impositions = ( @{$other_impositions}, $Imposition );
-$log->debug("About to call Folding::signature_calc $qty_index impositions: " );
-$Imposition->display();
-foreach my $IMP ( @{$other_impositions} ) {
-$IMP->display("other");
-} # end foreach IMP
 			%folding_results = openprint::Estimating::Folding::signature_calc( $Project, $specs, $$project{FoldingSpecs}, $qty_index, $Imposition, $other_impositions, $project );
 			$$Imposition{folding_results} = \%folding_results;
 		} # end if
