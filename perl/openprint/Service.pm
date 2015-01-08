@@ -87,6 +87,7 @@ sub delete {
 sub prices {
 	return openprint::ServicePrice->find( service_id=>$_[0]{id} );
 } # end sub prices
+
 sub Prices {
 	if ( @_ > 1 ) {
 		$_[0]{Prices} = $_[1];
@@ -98,6 +99,13 @@ sub Prices {
 
 	return @{$_[0]{Prices}};
 } # end sub prices
+
+sub Prices_For_Pricelist {
+
+    return openprint::ServicePrice->find( service_id=>$_[0]{id}, pricelist_id=>$_[1]{id}, 'period_end is null'=>1, order=>'min NULLS FIRST, max NULLS FIRST' );
+
+} # end sub prices
+
 
 sub get_Price {
     my ( $self, $quantity, $Equipment, $Pricelist, $period ) = @_;
@@ -116,6 +124,8 @@ sub get_Price {
 	if ( ! $Price ) {
 		$log->debug("No price returned for $$self{name} $$Equipment{strid} $quantity $period") if $debug;
 		return;
+	} else {
+		$log->debug("Got for $$Equipment{strid} $$self{name} " . $Price->to_string() );
 	} # end if
 
 	$$Price{'currency_id'} = $Pricelist->currency_id();
@@ -126,7 +136,7 @@ sub get_Price {
 } # end sub get_Price
 
 sub get_price {
-    my ( $self, $quantity, $Equipment, $Pricelist, $period ) = @_;
+    #my ( $self, $quantity, $Equipment, $Pricelist, $period ) = @_;
 
 	my $Price = get_Price( @_ );
 	return %{$Price} if $Price;

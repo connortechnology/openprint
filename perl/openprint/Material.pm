@@ -152,6 +152,13 @@ sub Prices {
 	return @{$_[0]{Prices}};
 } # end sub prices
 
+sub Prices_For_Pricelist {
+
+    return openprint::MaterialPrice->find( material_id=>$_[0]{id}, pricelist_id=>$_[1]{id}, order=>'lngmin NULLS FIRST, lngmax NULLS FIRST' );
+
+} # end sub prices
+
+
 sub get_Price {
     my ( $self, $quantity, $Equipment, $Pricelist, $period ) = @_;
 

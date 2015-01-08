@@ -26,8 +26,11 @@ sub init_cache {
 	my @Services = openprint::Service->find(); # for cachine	
 	my @Materials = openprint::Material->find(); # for cachine	
 	my @Pricelists = openprint::Pricelist->find();
+
+	my @ServicePrices = openprint::ServicePrice->find( 'period_end is null'=>1, order=>'min NULLS FIRST, max NULLS FIRST');
 	foreach my $Pricelist ( @Pricelists ) {
-		foreach my $S ( openprint::ServicePrice->find( 'period_end is null'=>1, order=>'min NULLS FIRST, max NULLS FIRST') ) {
+		foreach my $S ( @ServicePrices ) {
+			next if $$S{pricelist_id} != $$Pricelist{id};
 			if ( ! $price_cache{$config{db_name}}{$$Pricelist{id}}{'openprint::Service'}{$S->Service()->id()} ) {
 				$price_cache{$config{db_name}}{$$Pricelist{id}}{'openprint::Service'}{$S->Service()->id()} = [];
 			} # end if
@@ -256,9 +259,10 @@ sub get_Price {
 	if ( $period ) {
 	}
 	if ( $price_cache{$config{db_name}}{$$Pricelist{id}}{$type}{$$Object{id}} ) {
+$log->debug("Using cache");
 		@Prices = @{$price_cache{$config{db_name}}{$$Pricelist{id}}{$type}{$$Object{id}}};
 	} else {
-		$price_cache{$config{db_name}}{$$Pricelist{id}}{$type}{$$Object{id}} = [$Object->Prices()];
+		$price_cache{$config{db_name}}{$$Pricelist{id}}{$type}{$$Object{id}} = [$Object->Prices_For_Pricelist($Pricelist)];
 		@Prices = @{$price_cache{$config{db_name}}{$$Pricelist{id}}{$type}{$$Object{id}}};
 		$log->error("Prices not cached for $config{db_name} pricelist: $$Pricelist{id} type $type $$Object{name}");
 	}
@@ -268,75 +272,16 @@ sub get_Price {
 		if ( $Equipment ) {
 			@Equipment_Prices = map { $$_{equipment_id} == $$Equipment{id} ? $_ : () } @Prices;
 			@Equipment_Prices = map { defined $$_{equipment_id} ? () : $_ } @Prices if ! @Equipment_Prices;
-			@Prices = @Equipment_Prices;
-		} # end if
-
-		if ( ! defined $qty or $qty eq '' ) {
-			$Price = $Prices[0];
-		} else {	
-			foreach my $P ( @Prices ) {
-				#$log->debug("Need $qty, equipment: $$P{equipment_id} $$Object{name} min: $$P{min} max: $$P{max} ");
-				if ( 
-						( ( ! defined $P->{min} ) or $P->{min} <= $qty ) and 
-						( ( ! defined $P->{max} ) or $P->{max} >= $qty )
-				   ) {
-					$Price = $P->clone();
-				} # end if
-			} # end foreach
-		} # end if qty
-	} # end if
-
-	if ( $Price and $$Price{price} ) {
-		if ( $openprint::session{company_id} != 0 ) {
-			my $Company = new openprint::Company( $openprint::session{company_id} );
-
-			my $pricingpercent = $Company->discount();
-			if ( $pricingpercent ) {
-				$pricingpercent = 1 - ($pricingpercent/100);
-				if ( $Price->{discountable} ne 'N' ) {
-
-# the if here is to preserve empty pricing. if pricei s empty, we display call, instead of 0.00.
-					$Price->{price} *= $pricingpercent;
-				} # end if
-			} # end if
-		} # end if
-
-		if ( $openprint::config{'ApplyMarkup'} ) {
-#$openprint::log->debug("Apply Markup: $openprint::config{'ApplyMarkup'}"); 
-			my $pricingpercent = $openprint::config{'ApplyMarkup'};
-			$pricingpercent =~ s/[^\d\.\-]//g;
-			$pricingpercent /= 100;
-			$pricingpercent += 1;
-# the if here is to preserve empty pricing. if pricei s empty, we display call, instead of 0.00.
-			$Price->{price} *= $pricingpercent;
-		} # end if
-	} # end if
-	return $Price;
+if ( $$Object{id} == 113 ) {
+$log->debug("Filtering by quipmnet for $$Equipment{id}");
+foreach my $P ( @Prices ) {
+$log->debug("Available: " . $P->to_string() );
+}
+foreach my $P ( @Equipment_Prices ) {
+$log->debug("Chose: " . $P->to_string() );
 }
 
-sub get_Price {
-	my ( $Object, $Pricelist, $qty, $Equipment, $period ) = @_;
-
-	my $type = ref $Object;
-	my @Prices;
-	my $Price;
-
-	# If we specify a period, then forget about the caching.  Caching will only do current prices.
-	if ( $period ) {
-	}
-	if ( $price_cache{$config{db_name}}{$$Pricelist{id}}{$type}{$$Object{id}} ) {
-		@Prices = @{$price_cache{$config{db_name}}{$$Pricelist{id}}{$type}{$$Object{id}}};
-	} else {
-		$price_cache{$config{db_name}}{$$Pricelist{id}}{$type}{$$Object{id}} = [$Object->Prices()];
-		@Prices = @{$price_cache{$config{db_name}}{$$Pricelist{id}}{$type}{$$Object{id}}};
-		$log->error("Prices not cached for $config{db_name} pricelist: $$Pricelist{id} type $type $$Object{name}");
-	}
-	if ( @Prices ) {
-
-		my @Equipment_Prices;
-		if ( $Equipment ) {
-			@Equipment_Prices = map { $$_{equipment_id} == $$Equipment{id} ? $_ : () } @Prices;
-			@Equipment_Prices = map { defined $$_{equipment_id} ? () : $_ } @Prices if ! @Equipment_Prices;
+}
 			@Prices = @Equipment_Prices;
 		} # end if
 
