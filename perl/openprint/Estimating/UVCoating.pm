@@ -115,6 +115,7 @@ sub calc {
 	my $status = 'calculated';
 
 	my $Project = new openprint::Project( $project_index );
+	my $services = $Project->services();
 
 	@all_equipment = load_equipment();
 	if ( ! @all_equipment ) {
@@ -186,7 +187,12 @@ sub calc {
 					$$specs{alert} = 'The selected equipment can not handle your project.  This may be because the stock is too heavy, or too large.';
 				} else {
 					$$specs{alert} = $results{alert};
-					$$specs{alert} .= 'No suitable equipment could be found for your project.  This may be because the stock is too heavy, or too large.' if ! $results{alert};
+					if ( ! $$specs{alert} ) {
+						$$specs{alert} .= 'No suitable equipment could be found for your project.  This may be because the stock is too heavy, or too large.';
+						if ( ! $$services{Cutting} ) {
+							$$specs{alert} .= '<br/>You do not have cutting in your project.  Without it, we cannot cut the sheets down to fit on our equipment.';
+						} # end if
+					} # end if
 				} # end if
 			} else {
 				if ( $results{Equipment} ) {

@@ -261,7 +261,7 @@ sub alias {
 	#if ( $_[0]{'company_id'} == $openprint::session{'company_id'} ) {
 		#return $_[0]{'firstname'};
 	#} elsif ( $_[0]->Company()->name() ne ($_[0]{'firstname'} . ' ' . $_[0]{'lastname'}) ) {
-	if ( $_[0]{company_id} and ( $Company->name() ne ($_[0]{'firstname'} . ( $_[0]{lastname} ? ( ' ' . $_[0]{'lastname'} ) : () ) ) ) ) {
+	if ( $_[0]{company_id} and ( $_[0]{company_id} != $openprint::session{company_id} ) and ( $Company->name() ne ($_[0]{'firstname'} . ( $_[0]{lastname} ? ( ' ' . $_[0]{'lastname'} ) : () ) ) ) ) {
 		return $Company->name() . ($_[0]{'firstname'} ? ' (' . $_[0]{'firstname'} . ')' : '' );
 	} elsif ( $_[0]->firstname() or $_[0]->lastname() ) {
 		return $_[0]->name();
@@ -446,8 +446,12 @@ if ( 0 ) {
 }
 
 sub link {
-	return sprintf('<a href="/account/view.html?user=%1$d">%2$s</a>', $_[0]{id}, $_[0]->name() );
+	return sprintf('<a href="/account/view.html?user_id=%1$d">%2$s</a>', $_[0]{id}, $_[0]->name() );
 } # end sub link
+
+sub link_to {
+    return sprintf('<a href="/account/view.html?user_id=%1$d">%2$s</a>', $_[0]{id}, @_ > 1 ? $_[1] : $_[0]->name() );
+} # end sub link_to
 
 sub html {
 	if ( ! $_[0]{'id'} ) {

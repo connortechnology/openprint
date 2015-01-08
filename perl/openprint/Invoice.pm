@@ -76,6 +76,7 @@ $serial = 'invoices_id_seq';
 	early_payment_amount	=>	undef,
 	early_payment_units		=>	undef,
 	early_payment_date		=>	undef,
+	num						=>	undef,
 );
 
 sub save {
@@ -191,16 +192,20 @@ sub paid {
 
 sub add_Payment {
 	my ( $self, $Payment ) = @_;
-	if ( $Payment->remaining() and $self->owing() ) {
+	if ( $Payment->remaining() ) {
+		if ( $self->owing() ) {
 		my $error;
 		my $amount = $Payment->remaining() > $self->owing() ? $self->owing() : $Payment->remaining();	
 		my $IP = new openprint::Invoice_Payment();
-		$error .= $IP->save({'payment_id'=>$Payment->id(),'invoice_id'=>$$self{'id'}, 'amount'=>$amount});
+		$error .= $IP->save({ payment_id=>$Payment->id(), invoice_id=>$$self{id}, amount=>$amount });
 		$Payment->remaining( undef ); # force update
 		$error .= $Payment->save();
 		$self->paid( undef );
 		$error .= $self->save();
 		return $error;
+		} else {
+			return 'Invoice is already paid.';
+		} # end if
 	} elsif ( ! $Payment->remaining() ) {
 		return 'No money left in payment.';
 	} elsif ( ! $self->owing() ) {
@@ -261,7 +266,7 @@ sub send {
 	my $file_base = 'Invoice'.$$self{id};
         #push @attachments, ($file_base.'.html', MIME::QuotedPrint::encode_qp($invoice_html), 'text/html', 'quoted-printable');
 	if ( File::Slurp::write_file('/tmp/'.$file_base.'.html', { atomic => 1, err_mode=>'carp' }, \$invoice_html ) ) {
-		`wkhtmltopdf -s Letter --print-media-type "/tmp/$file_base.html" "/tmp/$file_base.pdf"`;
+		`wkhtmltopdf -q -s Letter --print-media-type "/tmp/$file_base.html" "/tmp/$file_base.pdf"`;
 		my $invoice_pdf = File::Slurp::read_file( "/tmp/$file_base.pdf" );
 		unlink "/tmp/$file_base.html";
 		unlink "/tmp/$file_base.pdf";

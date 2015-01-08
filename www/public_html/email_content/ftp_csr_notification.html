@@ -45,21 +45,28 @@
 		</div>
 	</div>
 </fieldset>
-
+<div class="error">Warning: Do not trust what it says below about files not existing or being incomplete. This feature is new and might not be working correctly.</div>
 <fieldset>
 	<legend>File<? echo ( @{$$variable{'Uploads'}} == 1 ? '' : 's' ) ?></legend>
 	<table border="0" cellpadding="1" cellspacing="0" width="100%">
 		<thead>
 		 <tr>
 			<th align="left">Filename</th>
-			<th align="right">Size</th>
+			<th style="text-align:right; width: 100px;">Size</th>
+			<th style="text-align:right; width: 100px;" class="Status">Status</th>
 		 </tr>
 		</thead>
 		<tbody>
 			<? echo ( 
 				my $html;
-				foreach my $Upload ( @{$$variable{'Uploads'}} ) {
-					$html .= sprintf('<tr><td nowrap="nowrap">%s</td><td align="right">%s</td></tr>', $$Upload{proper_file_path}, misc::format_bytes($$Upload{size}) ); 
+				foreach my $Upload ( @{$$variable{Uploads}} ) {
+$log->debug("Proper filepath: $$Upload{file_path} , project files $config{ProjectFilesPath} path: " . $Upload->path() );
+					$html .= sprintf('<tr><td nowrap="nowrap">%s%s</td><td align="right">%s</td><td align="right">%s</td></tr>', 
+						$$Upload{file_path}, 
+						( -e $Upload->path() ? '' : '<br/><span class="error">File does not exist in FTP area.</span>' ),
+						misc::format_bytes($$Upload{size}), 
+						( $$Upload{complete} ? 'Complete' : '<span class="error">Incomplete</span>' ),
+						); 
 				} # end foreach Upload
 				return $html;
 			) ?>

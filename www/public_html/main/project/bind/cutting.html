@@ -22,7 +22,7 @@
 	my $Project = $$variable{Project};
 	my $services = $Project->services();
 	my $paper_service_id = $$services{Paper}[0] if $$services{Paper};
-	my $paper_specs = openprint::service::get_specs_ref( $Project, $paper_service_id );
+	my $paper_specs = openprint::service::get_specs_ref( $Project, $paper_service_id ) if $paper_service_id;
 
 	my @All_Stocks = openprint::Estimating::Paper::get_stocks( $Project, $paper_service_id, $paper_specs );
 	my @Cut_Stocks = map { {} } ( 1 .. 3 );

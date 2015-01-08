@@ -14,11 +14,13 @@
 	if ( $session{user_type} eq 'A' ) {
 		$html .= button( 'EmailToMe', { onclick=>q`f2.btnFunction.value='Email Me';f2.submit();`, text=>'Send Email to Me' } );
 	} # end if
-	if ( $$variable{PurchaseOrder}->authorized() ) {
-		$html .= button( 'Email', { onclick=>q`f2.btnFunction.value='Email Vendor';f2.submit();`, text=>'Send Email' } );
-	} else {
-		$html .= 'This PO has not yet been approved.';
-		$html .= button( 'AuthRequest', { onclick=>q`f2.btnFunction.value='AuthRequest';f2.submit();`, text=>'Send Authorization Request' } );
+	if ( $$variable{PurchaseOrder}->can_send() ) {
+		if ( $$variable{PurchaseOrder}->authorized() ) {
+			$html .= button( 'Email', { onclick=>q`f2.btnFunction.value='Email Vendor';f2.submit();`, text=>'Send Email' } );
+		} else {
+			$html .= 'This PO has not yet been approved.';
+			$html .= button( 'AuthRequest', { onclick=>q`f2.btnFunction.value='AuthRequest';f2.submit();`, text=>'Send Authorization Request' } );
+		} # end if
 	} # end if
 	if ( $$variable{PurchaseOrder}->can_edit() ) {
 		$html .= button( 'Edit', { href=>'/employee/purchase_order/edit.html?po_id='.$$variable{PurchaseOrder}->id() } );

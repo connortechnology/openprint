@@ -48,21 +48,21 @@
 			<li><label>Category</label>
 				<select name="category_id" id="category_id" onchange="load_articles();">
 					<option value="">All</option>
-					<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } @{$$variable{'Categories'}} ], $session{'/article/history.html?category_id'} ); ) ?>
+					<? echo ( make_drop_down( [ map { $_->id(), $_->name() } @{$$variable{'Categories'}} ], $session{'/article/history.html?category_id'} ); ) ?>
 				</select>
 			</li>
 <? endif ( @{$$variable{'Categories'}} = openprint::Article_Category->find(order=>'lower(name)') ) ?>
 			<li>
 				<label>Created</label>
-<? echo ( ssi::date_select_session( '/article/history.html', 'created_on_start', {onchange=>'load_articles();','with_today'=>1,'with_clear'=>1} ); ) ?>
+<? echo ( date_select_session( '/article/history.html', 'created_on_start', {onchange=>'load_articles();','with_today'=>1,'with_clear'=>1} ); ) ?>
 					to 
-<? echo ( ssi::date_select_session( '/article/history.html', 'created_on_end', {onchange=>'load_articles();','with_today'=>1,'with_clear'=>1} ); ) ?>
+<? echo ( date_select_session( '/article/history.html', 'created_on_end', {onchange=>'load_articles();','with_today'=>1,'with_clear'=>1} ); ) ?>
 			</li>
 			<li>
 				<label>Published</label>
-<? echo ( ssi::date_select_session( '/article/history.html', 'published_on_start', {onchange=>'load_articles();','with_today'=>1,'with_clear'=>1} ); ) ?>
-					to 
-<? echo ( ssi::date_select_session( '/article/history.html', 'published_on_end', {onchange=>'load_articles();','with_today'=>1,'with_clear'=>1} ); ) ?>
+<? echo ( date_select_session( '/article/history.html', 'published_on_start', {onchange=>'load_articles();','with_today'=>1,'with_clear'=>1} ); ) ?>
+				to 
+<? echo ( date_select_session( '/article/history.html', 'published_on_end', {onchange=>'load_articles();','with_today'=>1,'with_clear'=>1} ); ) ?>
 			</li>
 			</ul>
 			</div>
@@ -70,13 +70,13 @@
 			<div class="rightColumn">
 				<ul>
 					<li><label>Published?</label>
-					<? echo ( ssi::radio( 'published', [ '1', 'Yes', '0', 'No', '', 'Both' ], $session{'/article/search.html?published'}, {onclick=>'load_articles();'} ); ) ?>
+					<? echo ( radio( 'published', [ '1', 'Yes', '0', 'No', '', 'Both' ], $session{'/article/search.html?published'}, {onclick=>'load_articles();'} ); ) ?>
 					</li>
 					<li>
 						<label>Author</label>
 						<select name="author_id" id="author_id" onchange="load_articles();">
 							<option value="">All</option>
-							<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User->find('company_id'=>$session{'company_id'}, 'order'=>'lower(firstname),lower(lastname)') ], $session{'/article/history.html?author_id'} ); ) ?>
+							<? echo ( make_drop_down( openprint::User->dropdown( company_id=>$session{company_id}, order=>'lower(firstname),lower(lastname)'), $session{'/article/history.html?author_id'} ); ) ?>
 						</select>
 					</li>
 				</ul>
@@ -84,14 +84,14 @@
 <? endif ( sets::isin($session{'user_type'}, ['E','A'] ) ) ?>
 			</div>
 			<p class="buttons">
-				<? echo ( join('',
+				<? echo ( join("\n",
 					button( 'ShowResults', { onclick=>'load_articles();', text =>'Show Results'} ),
 					button( 'Reset', { onclick=>'f1.reset();', text =>'Reset'} ),
 					button( 'New', {href=>'/article/edit.html', text =>'New Article'} ),
 					); ) ?>
 			</p>
 		</fieldset>
-		<div id="ArticleList"><? include(_history.html) ?></div>
+		<div id="ArticleList"><?include (_history.html)?></div>
 	<p class="buttons">
 		<? echo ( button('Delete', { onclick=>q`new Ajax.Updater( 'ArticleList', '_history.html', { parameters: { func: 'Delete', article_id: $A($('f1').article_id).map(function(x){if(x.checked) return x.value;}) } } );` } ); ) ?>
 		<? echo ( button('Destroy', { onclick=>q`new Ajax.Updater( 'ArticleList', '_history.html', { parameters: { func: 'Destroy', article_id: $A($('f1').article_id).map(function(x){if(x.checked) return x.value;}) } } );` } ); ) ?>

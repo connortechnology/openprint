@@ -20,7 +20,7 @@ require openprint::Payment;
 require openprint::Tax;
 require openprint::Order_Notification;
 
-$debug = 1;
+$debug = 0;
 
 $table = 'orders';
 $serial = 'orders_id_seq';
@@ -75,7 +75,9 @@ $serial = 'orders_id_seq';
 %find_fields = (
 	project_id	=>	'(SELECT lngprojectindex FROM Order_Contents WHERE OrderIndex=Orders.id)',
 	status		=>	'(SELECT name FROM Order_Statuses WHERE order_statuses.id=status_id)',
-	invoice_id	=>	'(SELECT invoice_id FROM order_invoices WHERE order_id=orders.id)',
+	#invoice_id	=>	'(SELECT invoice_id FROM order_invoices WHERE order_id=orders.id)',
+invoice_id => 'id = (SELECT order_id FROM order_invoices WHERE invoice_id=?)',
+invoice_num => 'id = (SELECT order_id FROM order_invoices WHERE invoice_id=(SELECT invoices.id FROM Invoices WHERE num=?))',
 );
 
 %defaults = (
@@ -331,14 +333,13 @@ require openprint::OrderedProject;
 
 sub Products {
 	my $self = shift;
-	if ( ! $$self{'id'} ) {
-		Carp::cluck("openrpint::Order->Products called with no id");
-		$openprint::log->error("openrpint::Order->Products called with no id");
+	if ( ! $$self{id} ) {
+		$openprint::log->warn("openrpint::Order->Products called with no id");
 		return ();
 	} # end if
-require openprint::OrderedProduct;
-	@{$$self{'Products'}} = openprint::OrderedProduct->find( 'order_id'=>$$self{id} );
-	return @{$$self{'Products'}};
+	require openprint::OrderedProduct;
+	@{$$self{Products}} = openprint::OrderedProduct->find( order_id=>$$self{id} );
+	return @{$$self{Products}};
 } # end sub Products
 
 sub User {

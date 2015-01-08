@@ -1,7 +1,7 @@
 use strict;
 package ssi;
 
-use constant DEBUG => 0;
+use constant Debug => 0;
 
 require Date::Calc;
 
@@ -737,17 +737,17 @@ sub save_params {
 	my ( $url, @keys ) = @_;
 
 	foreach ( @keys ) {
-		$openprint::log->debug("save_params: key $_") if DEBUG;
+		$openprint::log->debug("save_params: key $_") if Debug;
 		if ( ! exists $param{$_} ) {
-			$openprint::log->debug("save_params: does not exist in param key $_") if DEBUG;
+			$openprint::log->debug("save_params: does not exist in param key $_") if Debug;
 			next;
 		} 
 		if ( ref $param{$_} eq 'ARRAY' ) {
 			$session{"$url?$_"} = join(',', @{$param{$_}} );
-$openprint::log->debug("Storing ARRAY ($_) (".$session{"$url?$_"}.")") if DEBUG;
+$openprint::log->debug("Storing ARRAY ($_) (".$session{"$url?$_"}.")") if Debug;
 		} else {
 			$session{"$url?$_"} = $param{$_};
-$openprint::log->debug("Storing ($_) (".$session{"$url?$_"}.")") if DEBUG;
+$openprint::log->debug("Storing ($_) (".$session{"$url?$_"}.")") if Debug;
 		} # end if
 		$session{$url.'?lastupdated'} = time;
 	} # end foreach
@@ -924,11 +924,15 @@ sub input {
 		if ( $ENV{HTTP_USER_AGENT} =~ /ip(ad|od|hone)/i ) {
 			$options{type} = 'text';
 			$options{'pattern'} = '[0-9\*\+=\/\.\-]*' if ! $options{'pattern'};
+        } elsif ( $ENV{HTTP_USER_AGENT} =~ /Firefox/ ) {
+            $options{type} = 'text';
+			$options{'pattern'} = '[0-9\*\+=\/\.\-]*' if ! $options{'pattern'};
+            delete $options{step};
 		} else {
 			$options{type} = 'number';
 		} # end if
 		$options{step} = 'any' if ! exists $options{step};
-		$options{'onkeyup'} = 'floatize_calculator(this);'.$options{'onkeyup'};
+		$options{onkeyup} = 'floatize_calculator(this);'.$options{'onkeyup'};
 		$options{oninput} = 'this.onkeyup.call(this);' if ! $options{oninput};
 	} # end if
 	$html .= ' value="'.html_escape($options{value}).'"' if $options{value} ne '';

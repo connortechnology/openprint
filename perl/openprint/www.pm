@@ -1,7 +1,7 @@
 use strict;
 package openprint::www;
 
-use constant DEBUG => 0;
+use constant Debug => 0;
 
 #use Benchmark;
 #use diagnostics;
@@ -48,8 +48,6 @@ sub cleanup {
 		openprint::pricing::clear_cache();
 		openprint::service::init_cache();
 		openprint::Object::init_cache();
-		openprint::StockBrand->find();
-		openprint::StockFinish->find();
 		$session{lastupdated} = time;
 		untie %session;
 		if ( ! $dbh->{AutoCommit} ) {
@@ -198,7 +196,7 @@ sub handler {
 	#$log->debug( "Before loading content: ($page) Elapsed time: " . sprintf('%.4f', tv_interval([$starttime])*1000).' usecs' );
 		if ( ! exists $variable{'PageContent'} ) {
 			my $content;
-			if ( -e ( my $path = join('/', $config{'SkinPath'}, 'html', $page )) ) {
+			if ( -e ( my $path = join('/', $config{SkinPath}, 'html', $page )) ) {
 				$content = misc::load_file( $log, $path );
 				if ( ! $content ) {
 					$log->error("Found no content at $path");
@@ -250,7 +248,7 @@ $log->debug("PageContent is $variable{PageContent}");
 
 			#$log->warn("No template!" . $r->content_type());
 			$variable{PageContent} = ssi::variable_substitution( \$variable{'PageContent'}, \%variable ) if $variable{'PageContent'} ne '';
-			#$log->warn($variable{PageContent});
+			$log->warn($variable{PageContent}) if Debug;
 			#$log->debug( "Before printing: ($page) Elapsed time: " . sprintf('%.4f', tv_interval([$starttime])*1000).' usecs' . length( $variable{PageContent} ) );
 			$r->print( $variable{PageContent} );
 	#$log->debug( "After printing: ($page) Elapsed time: " . sprintf('%.4f', tv_interval([$starttime])*1000).' usecs' );
@@ -457,7 +455,7 @@ $log->debug("Service: " . $Service->to_string() );
 					} elsif ( $filename =~ /^(_.*)\.html$/ ) {
 						my $proc = $1;
 						my $module = join('_',@path);
-						require 'openprint/'.$module;
+						require 'openprint/'.$module.'.pm';
 						if ( my $function = ('openprint::'.$module)->can($proc) ) {
 							$function->($r, $log, $dbh, \%variable );
 						} else {
@@ -504,13 +502,12 @@ $log->debug("Service: " . $Service->to_string() );
 						if ( my $function = ('openprint::Estimating::'.$module)->can('display') ) {
 							$function->($log, $dbh, \%variable, $project_index, $service_index );
 						} else {
-							$log->error( "Eval error of require $module :: display, Reason: " );
+							$log->error( "Eval error of require $module :: display Reason: $?" );
 						}
 					} # end if
 				} elsif ($third eq 'spec') {
 					if ( $filename =~ /^(\w*).html$/ ) {
-						my $proc = $1;
-						my $module = $proc;
+						my $module = $1;
 						require "openprint/Estimating/$module.pm";
 						if ( my $function = ('openprint::Estimating::'.$module)->can('display') ) {
 							$function->($log, $dbh, \%variable, $project_index, $service_index );

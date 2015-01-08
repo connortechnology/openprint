@@ -85,7 +85,10 @@ sub information {
 
 			# Normal Order Creation
 			my $Project = new openprint::Project( $param{ProjectIndex} );
+			# migt be recalculating, wait for it to finish
+			$Project->lock();
 			( $order_id, $error ) = openprint::order::add_project_to_order( $Project, $order_id );
+			$Project->unlock();
 		} # end if
 	} elsif ( $param{'btnFunction'} eq 'Continue') { # saving projcet information
 		$order_id = openprint::order::get_unfinished_order( ) if ! $order_id;

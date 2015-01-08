@@ -36,9 +36,9 @@ $table = 'purchaseorders';
 $serial = 'purchaseorders_id_seq';
 
 %fields = (
-	'id'				=>	'id',
+	id				=>	'id',
 	num					=>	'num',
-	'company_id'		=>	'company_id',
+	company_id		=>	'company_id',
 	contact_id			=>	'contact_id',
 	'currency_id'		=>	'currency_id',
 	'created_on'		=>	'created_on',
@@ -91,6 +91,7 @@ $serial = 'purchaseorders_id_seq';
 );
 
 %transforms = (
+	id			=>	[ 's/\D//g', '<2147483647' ],
 );
 
 %defaults = (
@@ -230,7 +231,7 @@ sub send_to_vendor {
 
 	my $file_base = $From->Company()->name().'-PO'.$$self{id};
 	if ( File::Slurp::write_file('/tmp/'.$file_base.'.html', { atomic => 1, err_mode=>'carp' }, \$purchase_order ) ) {
-		`wkhtmltopdf "/tmp/$file_base.html" "/tmp/$file_base.pdf"`;
+		`wkhtmltopdf -q "/tmp/$file_base.html" "/tmp/$file_base.pdf"`;
 		my $pdf_purchase_order = File::Slurp::read_file( "/tmp/$file_base.pdf", err_mode => 'carp' );
 		unlink "/tmp/$file_base.html";
 		unlink "/tmp/$file_base.pdf";
@@ -311,7 +312,7 @@ sub send_to_me {
 
 	my $file_base = $From->Company()->name().'-PO'.$_[0]{id};
 	if ( File::Slurp::write_file('/tmp/'.$file_base.'.html', { atomic => 1, err_mode=>'carp' }, \$purchase_order ) ) {
-		`wkhtmltopdf "/tmp/$file_base.html" "/tmp/$file_base.pdf"`;
+		`wkhtmltopdf -q "/tmp/$file_base.html" "/tmp/$file_base.pdf"`;
 		my $pdf_purchase_order = File::Slurp::read_file( "/tmp/$file_base.pdf", err_mode => 'carp' );
 		#unlink "/tmp/$file_base.html";
 		unlink "/tmp/$file_base.pdf";
@@ -611,6 +612,13 @@ sub num {
 	return $_[0]{id} if ! $_[0]{num};
 	return $_[0]{num};
 } # end sub num
+
+sub can_send {
+	my $User = @_ > 1 ? $_[1] : new openprint::User( $openprint::session{user_id} );
+	return 1 if $$User{id} == $_[0]{created_by};
+	return 0;
+} # end sub can_send
+
 sub can_authorize {
 	my $User = @_ > 1 ? $_[1] : new openprint::User( $openprint::session{user_id} );
 
@@ -698,8 +706,19 @@ sub Payments {
 } # end sub Payments
 
 sub link_to {
+	if ( $_[0]{created_on} ) {
 	return join( '', '<a href="/employee/purchase_order/view.html?po_id=', $_[0]{id}, '">' , $_[0]{id}, '</a>' );
+	} else {
+	return join( '', '<a href="/employee/purchase_order/view.html?po_id=', $_[0]{id}, '"><span class="error">' , $_[0]{id}, ' does not exist</span></a>' );
+	} # end if
 } # end sub link_to
+
+sub summary {
+	if ( ! $_[0]{summary} ) {
+		$_[0]{summary} = join('<br/>', map { sprintf('%d %s%s ', $_->qty(), $_->item(), $_->description() ) } $_[0]->Contents() );
+	} 
+	return $_[0]{summary};
+} # end sub summary
 
 1;
 __END__

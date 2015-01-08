@@ -534,7 +534,8 @@ $log->debug("Press proof not needed");
 $log->debug("Already had press proof");
 			} # end if
 
-				@{$$variable{'Proofs-'.$signature_index.'-'.$qty_index}} = ();
+			@{$$variable{'Proofs-'.$signature_index.'-'.$qty_index}} = ();
+			next if ! $proof_indexes{$signature_index};
 			foreach my $proof_index ( sort @{$proof_indexes{$signature_index}} ) {
 				my ( $quantity, $width, $height, $type ) = @$specs{
 					"txtProofQuantity-$signature_index-$proof_index-$qty_index",

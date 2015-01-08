@@ -15,7 +15,7 @@
 							<li class="order_id"><label>Order ID</label><? echo ( $$variable{'Order'}->id() ) ?></li>
 							<li class="po_id"> 
 								<label>Purchase Order</label>
-								<input type="text" id="txtPurchaseOrder" name="txtPurchaseOrder" value="<?txtPurchaseOrder?>" />
+								<input type="text" id="txtPurchaseOrder" name="txtPurchaseOrder" value="<? echo ( $$variable{Order}->po() ) ?>" />
 							</li>
 							<? echo (
 								my $html;

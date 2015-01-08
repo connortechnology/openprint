@@ -21,7 +21,10 @@
 	<table class="List">
 		<tr> 
 			<th align="left" width="60">Project #</th>
-			<th align="left" width="120">Company</th>
+			<th class="Company">Company</th>
+<? if ( ! $param{ddmEstimator} ) ?>
+			<th class="User">Estimator</th>
+<? endif ( ! $param{ddmEstimator} ) ?>
 			<th align="left">Reference</th>
 			<th class="Date">Created</th>
 			<th class="Status">Status</th>
@@ -32,7 +35,11 @@
 		<? while ( $$variable{'Project'} = shift @{$$variable{'Projects'}}; ) ?>
 		<tr<?rowclass?>> 
 			<td><a href="/main/project/view.html?ProjectIndex=<? echo ( $$variable{'Project'}->id() ) ?>"><? echo ( $$variable{'Project'}->id() ) ?></a></td>
-			<td><a href="/main/project/view.html?ProjectIndex=<? echo ( $$variable{'Project'}->id() ) ?>"><? echo ( $$variable{'Project'}->Company()->name() ) ?></a></td>
+			<td class="Company"><a href="/main/project/view.html?ProjectIndex=<? echo ( $$variable{'Project'}->id() ) ?>"><? echo ( $$variable{'Project'}->Company()->name() ) ?></a></td>
+<? if ( ! $param{ddmEstimator} ) ?>
+			<td class="User"><a href="/main/project/view.html?ProjectIndex=<? echo ( $$variable{'Project'}->id() ) ?>"><? echo ( $$variable{'Project'}->User()->name() ) ?></a></td>
+
+<? endif ( ! $param{ddmEstimator} ) ?>
 			<td><a href="/main/project/view.html?ProjectIndex=<? echo ( $$variable{'Project'}->id() ) ?>"><? echo ( $$variable{'Project'}->summary() ) ?></a></td>
 			<td class="Date"><? echo ( Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $$variable{'Project'}->created_on() ) ); ) ?></td>
 			<td class="Status"><? echo ( $$variable{'Project'}->status() ) ?></td>
@@ -41,6 +48,9 @@
 			<td class="Price"><? echo ( openprint::Currency::format( $$variable{'Project'}->price3() ) ) ?></td>
 		</tr>
 		<tr<?rowclass?>> 
+<? if ( ! $param{ddmEstimator} ) ?>
+			<td>&nbsp;</td>
+<? endif ( ! $param{ddmEstimator} ) ?>
 			<td colspan="2">&nbsp;</td>
 			<td colspan="6"><a href="/main/project/view.html?ProjectIndex=<? echo ( $$variable{'Project'}->id() ) ?>"><? echo ( $$variable{'Project'}->reference() ) ?></a></td>
 		</tr>

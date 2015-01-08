@@ -29,7 +29,7 @@
 </script>
 <form name="MapForm" id="MapForm">
 	<input type="hidden" name="location_id" value="<? echo ( $$variable{'Location'}{id}; ) ?>" />
-	<img id="MapImage" src="/images/maps/<?MapFile?>.gif" width="320" alt="<? echo ( $$variable{'Location'}->name(); ) ?>." USEMAP="#Map" />
+	<img id="MapImage" src="/images/maps/<?MapFile?>.gif" alt="<? echo ( $$variable{'Location'}->name(); ) ?>." USEMAP="#Map" />
 	<map name="Map">
 	<? echo (
 		my $html;

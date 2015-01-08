@@ -107,7 +107,7 @@
 <? endif ( sets::isin( $session{user_type},[ 'E', 'A' ] ) ) ?>
 <? eval ( 
 	$$variable{Users} = [ openprint::User->find(
-		company_id => ( $session{'/main/project/history.html?company_id'} ? $session{'/main/project/history.html?company_id'} : $session{company_id} ),
+		( $session{'/main/project/history.html?company_id'} ? ( company_id=>$session{'/main/project/history.html?company_id'} ) : () ),
 		order=>'lower(firstname),lower(lastname)' ) ] ) ?>
 <? if ( @{$$variable{Users}} > 1 ) ?>
 			<li><label>Created By</label>

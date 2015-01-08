@@ -654,7 +654,7 @@ sub bump {
 			foreach my $Job ( $self->Shift()->Schedule() ) {
 				push @final_order, $Job if $$Job{'id'} != $$self{'id'};
 			} # end foreach job in shift
-my $Next = $self->Shift()->Next();
+			my $Next = $self->Shift()->Next();
 			push @final_order, $Next->Schedule();
 			push @final_order, $self;
 			push @final_order, openprint::ScheduledJob->find( 'equipment_id'=>$self->equipment_id(),'starttime >='=>$Next->endtime(),order=>'starttime' );
@@ -807,7 +807,7 @@ sub split {
 
 sub to_string {
 	my $self = $_[0];
-	return sprintf('%d %s on %s starting %s', $self->project_id(), join(',', ( $self->service_id() ? @{$self->service_id()} : () ) ), $self->Equipment()->name(), $self->starttime() );
+	return sprintf('%d %s on %s starting %s', $self->Project()->docket(), join(',', ( $self->service_id() ? @{$self->service_id()} : () ) ), $self->Equipment()->name(), $self->starttime() );
 } # end sub to_string
 
 sub pertains_id {

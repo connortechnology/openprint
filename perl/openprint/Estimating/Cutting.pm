@@ -458,16 +458,15 @@ sub signature_calc_folding_cutting {
 sub signature_calc {
 	my ( $Project, $sig_specs, $specs, $qty_index, $Paper, $Imposition, $folding_specs, $calc_hash ) = @_;
 
-	if ( ! $Paper->cuttable() ) {
-		$$specs{alert} = $Paper->to_string() . ': Stock is not cuttable.';
-		$$specs{Status} = 'calculated';
-		return;
-	} # end if
 
 	my %results = (
 			Status	=> 'calculated',
 			Breakdown	=>	'<b>Post press:</b><br/>',
 			);
+	if ( ! $Paper->cuttable() ) {
+		$results{alert} = $Paper->to_string() . ': Stock is not cuttable.';
+		return %results;
+	} # end if
 	my $services = $Project->services();
 	my $printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] ) if $$services{''} and @{$$services{''}};
 
@@ -585,7 +584,13 @@ $openprint::log->debug("Folding impositions: " . @folding_impositions ) if DEBUG
 		if ( ( defined $$specs{"OverrideFoldingCuts-$form-$qty_index"} ) and ( $$specs{"OverrideFoldingCuts-$form-$qty_index"} eq 'Y' ) ) {
 			$folding_cuts = $$specs{"FoldingCuts-$form-$qty_index"};
 		} else {
-			if ( ( @folding_impositions == 1 ) and ( $folding_impositions[0]->imposition() == 1 ) and ( ! $stitching_imposition ) and ( $folding_impositions[0]->quantity() == 1 ) and ( (!$Folder) or ( $Folder->id() != $Press->id() ) ) ) {
+			if ( ( @folding_impositions == 1 ) 
+					and ( $folding_impositions[0]->imposition() == 1 )
+					and ( ! $stitching_imposition )
+
+# Why about the quanitty? Basically if it's 1out, we pre-trim.  Otherwise let the folder do it.  So if er have 2@1out, then we might as well pre-trim
+					#and ( $folding_impositions[0]->quantity() == 1 )
+					and ( (!$Folder) or ( $Folder->id() != $Press->id() ) ) ) {
 				$trim_before_folding = 1;
 			} else {
 				$openprint::log->debug("Folds: " .@folding_impositions ) if DEBUG;
@@ -884,7 +889,7 @@ $openprint::log->debug("Not a book") if DEBUG;
 					$runs = $liftDepth ? ceil( $sheets*$calliper/$liftDepth ) : $sheets;
 				} # end if
 				if ( $ServicePrice{units} eq 'per inch' ) {
-					$price = ( $runs * $horizontal_cuts *$ServicePrice{'price'} * $I->image_width() );
+					$price = ( $runs * $horizontal_cuts *$ServicePrice{price} * $I->image_width() );
 					$results{Breakdown} .= sprintf('%d Horizontal cuts on %d sheets in %d runs * %.2f inches: %.2f%s=%.2f<br/>', $horizontal_cuts, $sheets, $runs, $I->image_width(), @ServicePrice{'price','units'}, $price );
 				} else {
 					$price = ( $runs * $horizontal_cuts * $ServicePrice{price} );

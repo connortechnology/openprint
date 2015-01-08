@@ -102,7 +102,7 @@
 						format_datetime( $Log->date_time() ),
 						$Log->ip_address(), ( $Log->hostname() ? $Log->hostname() : $Log->ip_address() ),
 						$Log->note(),
-						$Log->User()->email(),
+						$Log->User()->link_to( $Log->User()->email() ),
 						$Log->User()->name(),
 						$Log->Company()->name(),
 						join('',

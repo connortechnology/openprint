@@ -58,6 +58,17 @@ function del_timetrack( timetrack_id ) {
 			}
 		} );
 } // end function del_timetrack(invoice_id)
+function reload_timetracks() {
+	new Ajax.Updater( 'Timetracks', '_timetracks.html', {
+			parameters: {
+				invoice_id: invoice_id,
+			},
+			onComplete: function(transport) {
+				update_totals();
+				TableKit.reload();
+			}
+		} );
+} // end function reload_timetracks
 function add_order( order_id ) {
 	new Ajax.Updater( 'Orders', '_invoiced_orders.html', {
 			parameters: {
@@ -95,10 +106,10 @@ function invoicee_change(ddm) {
 	new Ajax.Request( '_invoicee_onchange.json', { parameters: { invoice_id: invoice_id, invoicee_id: ddm.getValue() } } );
 	if ( invoice_id ) {
 		new Ajax.Updater( 'Timetracks', '_timetracks.html', {
-		   parameters: {
+			parameters: {
 					invoice_id: invoice_id,
 					invoicee_id: ddm.getValue() 
-			   },
+				},
 				onComplete: function(transport) {
 					update_totals();
 					TableKit.reload();

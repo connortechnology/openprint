@@ -22,6 +22,7 @@ $table = 'photo_albums';
 );
 %find_fields = (
 	asset_id	=>	'(SELECT asset_id FROM Photos_in_Albums WHERE album_id=photo_albums.id)',
+	company_id	=>	'(SELECT company_id FROM Users WHERE users.id=user_id)',
 );
 
 %defaults = (

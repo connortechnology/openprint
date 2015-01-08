@@ -7,6 +7,9 @@ CREATE TABLE Page_Settings (
 	user_level	CHAR(1),
 	description	TEXT,
 	keywords	TEXT,
+	message	TEXT,
+	user_ids		integer[],
+	usergroup_ids	integer[],
 	PRIMARY KEY (id)
 );
 

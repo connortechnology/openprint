@@ -1,11 +1,11 @@
 <? echo (
 	if ( $session{user_type} eq 'A' ) {
-	my @Companies = openprint::Company->find(
-		( $param{salesrep_id} ? ( 'salesrep_id'=>$param{salesrep_id} ) : () ),
-		order	=>	'lower(name)',
-	);
-	make_drop_down( [ '', 'select', map { $_->id(), $_->name() } @Companies ], @Companies == 1 ? $Companies[0]{id} : $param{selected_id} );
+		my @Companies = openprint::Company->find(
+			( $param{salesrep_id} ? ( salesrep_id=>$param{salesrep_id} ) : () ),
+			order	=>	'lower(name)',
+		);
+		make_drop_down( [ '', 'select', map { $_->id(), $_->name() } @Companies ], @Companies == 1 ? $Companies[0]{id} : $param{selected_id} );
 	} else {
-	openprint::Company->get_dropdown( $param{selected_id} );
+		openprint::Company->get_dropdown( $param{selected_id} );
 	}
 ) ?>

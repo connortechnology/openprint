@@ -191,6 +191,8 @@ sub _currency_conversions {
 					period_start=>$now,
 					period_end	=>	undef,
 					rate=>$param{amount}});
+		} else {
+			$variable{warning} .= 'No change made.';
         } # end if
 
         $Conversion = openprint::Currency_Conversion->find_one(to_id=>$param{currency_id}, from_id=>$param{to_id}, period_end=>undef);
@@ -602,6 +604,8 @@ sub company_profiles {
 					} # end if
 				} # end foreach Supplier
 				sql::end_transaction( $dbh, $ac );
+				$variable{ExternalRedirect} = '/administrator/managerial/company_profiles.html?ddmCustomer='.$Company->id();
+				return;
 			} # end if $index
 		} # end if input checks
 	} elsif ( $param{'btnFunction'} eq 'Delete' ) {

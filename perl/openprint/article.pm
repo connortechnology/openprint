@@ -18,6 +18,8 @@ require openprint::Article;
 require openprint::Article_Category;
 require openprint::Article_Asset;
 require XML::RSS;
+require DateTime::Format::Pg;
+require DateTime::TimeZone;
 
 # recursively fixes %gt; problems.
 sub unescape_substitutions {
@@ -45,7 +47,15 @@ sub save_article {
 	$param{company_id} = $session{company_id} if ! $param{company_id};
 
 	if ( Date::Calc::check_date( @param{'published_on_year','published_on_month','published_on_day'} ) ) {
-		$param{published_on} = sprintf('%.4d-%.2d-%.2d %.2d:%.2d:00', @param{'published_on_year','published_on_month','published_on_day','published_on_hour','published_on_minute'} );
+		my $TZ = DateTime::TimeZone->new( name => $openprint::config{Timezone} );
+        my $published_on_datetime = DateTime->new( time_zone => $TZ,
+                ( map { $_ => int($param{'published_on_'.$_ }) } ( 'year', 'month', 'day', 'hour','minute' ) ),
+                );
+
+        my $parser = 'DateTime::Format::Pg';
+
+        $param{published_on} = $parser->format_datetime( $published_on_datetime );
+
 	} else {
 		delete $param{published_on};
 		$variable{'warning'} = 'Invalid date published_on_date.  Published On Date not changed.';
@@ -277,11 +287,13 @@ sub edit {
 			$param{'article_id'} = $Article->id();
 			# FIXME, update session filters to include this article
 			my $published_on_date = Date::Parse::str2time($Article->published_on());
-			if ( Date::Calc::check_date( @session{ map { '/article/history.html?published_on_start_'.$_ } ( 'year','month','day' )} ) ) {
-				my $session_published_on_date_start = Date::Calc::Date_to_Time(
-					@session{ map { '/article/history.html?published_on_start_'.$_ } ( 'year','month','day' )}, 0,0,0 );
+			my ( $year, $month, $day ) = @session{ map { '/article/history.html?published_on_start_'.$_ } ( 'year','month','day' )};
+
+			if ( Date::Calc::check_date( $year, $month, $day ) ) {
+$log->debug("published on $year, $month, $day ");
+				my $session_published_on_date_start = Date::Calc::Date_to_Time( $year, $month, $day, 0,0,0 );
 				if ( $session_published_on_date_start > $published_on_date ) {
-					my ($year,$month,$day, undef, undef, undef ) = Date::Calc::Time_to_Date([$published_on_date]);
+					($year,$month,$day, undef, undef, undef ) = Date::Calc::Time_to_Date([$published_on_date]);
 					@session{map { '/article/history.html?published_on_start_'.$_ } ( 'year','month','day' )} = ( $year, $month, $day );
 				} # end if
 			} # end if
@@ -532,7 +544,7 @@ sub feed {
 		next if $Article->user_type();
 		$rss->add_item(
 			title	=>	$Article->name(),
-			description	=>	substr($Article->summary(),0,500),
+			description	=> ( $Article->summary() ? substr($Article->summary(),0,500) : '' ),
 			link	=>	'http://www.pleasurablethings.ca/article/view.html?article_id='.$Article->id(),
 			pubDate	=>	$Article->published_on(),
 			guid	=>	$Article->id(),

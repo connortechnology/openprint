@@ -86,7 +86,7 @@ You may use a barcode scanner.  Simply scan the code and click Go.<br/>
 		</li>
 		<li><label>Invoice</label>
 			<? echo ( join('',
-			input( type=>'text', name=>'invoice_num', onchange=>'change_handler(this);', onkeypress=>'return input_handler( this, event );', onkeydown=>'if(event.keyCode == 13){submit_handler(f1);}' ),
+			input( type=>'text', name=>'invoice_num', onkeydown=>'if(event.keyCode == 13){submit_handler(f1);}' ),
 			button( 'GoInvoice', { onclick=>'submit_handler( f1 );', text=>'Go' } ),
 			); ) ?>
 		</li>
@@ -94,6 +94,38 @@ You may use a barcode scanner.  Simply scan the code and click Go.<br/>
 	</div>
 	</fieldset>
 </form>
+<div class="Index">
+<div class="News">
+    <ul>
+    <? echo (
+        # generate a new wall
+        my @user_ids = ( 
+            $session{user_id},
+            map { $_->user_id1() == $session{user_id} ? $_->user_id2() : $_->user_id1() } openprint::User_Relationship->find(
+            { 'custom' => ['(user_id1=? OR user_id2=?)', @session{'user_id','user_id'} ] }
+            ) ) if $session{user_id};
+        my $html;
+        my @Articles = openprint::Article->find( published=>1,
+            'published_on <=' => sprintf('%.4d-%.2d-%.2d 00:00:00', Date::Calc::Add_Delta_Days( Date::Calc::Today(), 30 ) ),
+            'published_on >=' => sprintf('%.4d-%.2d-%.2d 23:59:59', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -30 ) ),
+            'order' =>  'published_on DESC',
+        );
+
+        foreach my $Article ( @Articles ) {
+            next if ! $Article->can_view();
+            my $User = $Article->Created_By();
+            if ( ! $Article->anonymous() ) {
+                $html .= sprintf('<li class="news_item">%s<a href="/account/view.html?user_id=%d">%s</a> has published a new article.<div class="content">%s</div></li>',
+                        $User->icon(), $User->id(), $User->name(), $Article->summary_html() );
+            } else {
+                $html .= sprintf('<li class="news_item">An anonymous contributor has published a new article.<div class="content">%s</div></li>', $Article->summary_html() );
+            } # end if
+        } # end foreach Article
+       return $html;
+    ) ?>
+    </ul>
+</div>
+</div>
 <script type="text/javascript">document.f1.StartDocket.focus();</script>
 <? else ( $session{'user_id'} ) ?>
 <? echo ( include('/employee/account/login.html'); ) ?>

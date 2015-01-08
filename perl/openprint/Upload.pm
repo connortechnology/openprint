@@ -7,7 +7,7 @@ require misc;
 use openprint ();
 use vars qw( $debug $table $serial %fields %transforms %defaults );
 
-$debug = 0;
+$debug = 1;
 $table = 'uploads';
 $serial = 'uploads_id_seq';
 %fields = (
@@ -21,12 +21,14 @@ $serial = 'uploads_id_seq';
 	file_path	=>	'file_path',
 	company		=>	'company',
 	type		=>	'type',
+	complete	=>	'complete',
 );
 %defaults = (
 	start		=>	q`'NOW()'`,
 	size		=>	undef,
 	total		=>	undef,
 	finished	=>	0,
+	complete	=>	undef,
 );
 
 sub Company {
@@ -50,6 +52,10 @@ sub total_text {
 sub size_text {
 	return misc::format_bytes( $_[0]{size}, '.1' );
 } #end sub size_text
+
+sub path {
+	return join('/',$openprint::config{ProjectFilesPath}, $_[0]->Company()->name(),$_[0]{file_path} );
+}
 
 1;
 __END__

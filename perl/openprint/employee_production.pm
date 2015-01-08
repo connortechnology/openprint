@@ -1249,7 +1249,8 @@ $log->debug("Order after coalesce: @order : " . join(',', map { new openprint::S
 						my $Project = $Job->Project();
 						$Project->save({'due_date'=>$Project->get_due_date()}) if ! $Project->due_date();
 						my @forms = map { my $sig_specs = openprint::service::get_specs_ref( $Job->Project(), $_ ); $$sig_specs{'SignatureIndex'}; } @{$Job->service_id()};
-						$Project->add_to_log( @openprint::session{'company_id','user_id'}, 'Scheduled form' . ( @forms == 1 ? ' ' : 's ' ) . join(',',@forms).' to print on ' . $Shift->Equipment()->strid() . ' ' . ( $start_time ? "at $start_time" : $Shift->name() ) );
+						
+						$Project->add_to_log( @openprint::session{'company_id','user_id'}, 'Scheduled form' . ( @forms == 1 ? ' ' : 's ' ) . join(',',@forms).' for ' . $Job->ServiceType()->type() . ' on ' . $Shift->Equipment()->strid() . ' ' . ( $start_time ? "at $start_time" : $Shift->name() ) );
 					} # end if
 				} # end if
 
@@ -1573,22 +1574,31 @@ sub _li_change {
 					$sql{service_id} = \@new_service_ids;
 				} # end if
 				$Project->add_to_log(@session{'company_id','user_id'}, 'Removed form ' . join(',', sort map {
-					my $sig_specs = openprint::service::get_specs_ref( $Project, $_ );	
-					$$sig_specs{'SignatureIndex'};
+					my $sig_specs = openprint::service::get_specs_ref( $Project, $_ ) if $_;
+					$$sig_specs{SignatureIndex};
 					} @service_ids ) . ' from press schedule.' );
 			} elsif ( $Job->forms() < $param{forms} ) {
 				if ( $param{forms} > 100 ) {
 					$variable{error} .= 'Cant add that many forms.';
 				} else {
-					my $sig_specs = openprint::service::get_specs_ref( $Project, $service_ids[0] );
-					$Project->add_to_log(@session{'company_id','user_id'}, "Duplicating form $$sig_specs{SignatureIndex} " . ( $param{forms} - @service_ids ).' for press schedule');
-					while ( @service_ids < $param{forms} ) {
-						push @service_ids, $Project->copy_signature( $sig_specs, { 
+					if ( @service_ids ) {
+						my $sig_specs = openprint::service::get_specs_ref( $Project, $service_ids[0] );
+						$Project->add_to_log(@session{'company_id','user_id'}, "Duplicating form $$sig_specs{SignatureIndex} into " . ( $param{forms} - @service_ids ).' form for press schedule');
+						while ( @service_ids < $param{forms} ) {
+							push @service_ids, $Project->copy_signature( $sig_specs, { 
+									'txtPrice1'  => 0,
+									'txtPrice2'  => 0,
+									'txtPrice3'  => 0,
+									}, 'Ordered' );
+						} # end while
+					} else {
+						$Project->add_to_log(@session{'company_id','user_id'}, "Adding " . $param{forms}.' new forms for press schedule');
+						push @service_ids, $Project->add_signature( undef, 'Ordered', { 
 								'txtPrice1'  => 0,
 								'txtPrice2'  => 0,
 								'txtPrice3'  => 0,
-								}, 'Ordered' );
-					} # end while
+								} );
+					} # end if
 					$sql{pertains_id} = \@service_ids;
 					if ( sets::union( @{$$Job{pertains_id}}, @{$$Job{service_id}} ) == @{$$Job{pertains_id}} ) {
 						# Is a printing service, so service_id==pertains_id, so update service_id as well.
@@ -1648,9 +1658,10 @@ sub _li_change {
 						'equipment_id'		=>	$param{'equipment_id'},
 					});
 				} else {
-					my @Services = openprint::Project_Service->find('project_id'=>$Job->project_id(),'servicetype_id'=>$servicetype_id);
+					my @Services = openprint::Project_Service->find( project_id=>$Job->project_id(), servicetype_id=>$servicetype_id);
 					if ( ! @Services ) {
 						# Add one.
+						$log->debug("Adding $servicetype_id servicetype to $$Job{project_id}");
 						push @Services, $Job->Project()->add_Service( new openprint::ServiceType( $servicetype_id ) );
 					} # end if
 					foreach my $Service ( @Services ) {
@@ -1673,6 +1684,10 @@ sub _li_change {
 		} # end if
 	} elsif ( $param{'action'} eq 'Up' ) {
 		my $Job = new openprint::ScheduledJob( $param{'schedule_id'} );
+		if ( ! $$Job{id} ) {
+			$variable{error} .= 'Job was not found in db. Maybe you should refresh the schedule.';
+			return;
+		} # end if
 		my @Jobs = openprint::ScheduledJob->find( 'starttime is null'=>0, 'equipment_id'=>$$Job{'equipment_id'},'order'=>'starttime' );
 		my $index = 0;
 		for(;$index < @Jobs and $Jobs[$index]{id} != $$Job{id}; $index += 1 ) {};

@@ -1,0 +1,141 @@
+<script type="text/javascript">
+	function add_new( form ) {
+		new Ajax.Request( '/marketing/_sales_log_line.html', { 
+				parameters: Form.serialize( form ),
+				onSuccess: function(response){
+					$('sales_log_body').insert({ top: response.responseText} );
+					SortableTable.load();
+				}
+            } 
+		);
+	}
+	function load_users( user_ddm, company_id ) {
+		if ( ! user_ddm ) {
+			alert("Bad ddm");
+			return;
+		}
+		new Ajax.Updater( user_ddm, '/includes/_users.html', { 
+				parameters: { company_id: company_id },
+				onSuccess: function() {
+					load_results();
+				}
+			}
+		);
+		
+	}
+	function load_results() {
+		var form = $('f1');
+		new Ajax.Updater( 'Results', '_sales_log.html', { parameters: form.serialize() } );
+	}
+	function check_form( form ) {
+/*
+		if ( ! ( 
+					get_ddm_value(form.called_on_year),
+					get_ddm_value(form.called_on_month),
+					get_ddm_value(form.called_on_day),
+					get_ddm_value(form.called_on_hour),
+					get_ddm_value(form.called_on_minute),
+		) ) {
+			alert('
+		}
+*/
+	}
+</script>
+<div class="SalesLog">
+	<form id="add" name="add">
+		<input type="hidden" name="action" value="add"/>
+		<fieldset class="filters"><legend>Add New</legend>
+			<ul>
+				<li>
+                    <label>Company</label>
+                    <input type="text" onkeyup="filterDDM(this,add.company_id);" onkeydown="if(event.keyCode==13){add.user_id.selectedIndex=-1;load_results();}" class="filter" />
+                    <select name="company_id" onchange="load_users( this.form.elements['user_id'], get_ddm_value(this) );">
+                        <option value="">All Companies</option>
+					<? echo ( $session{'/marketing/sales_log.html?company_id'} ? sprintf('<option value="%d" selected="selected">%s</option>', $session{'/marketing.salesrep_logs.html?company_id'}, new openprint::Company( $session{'/marketing/sales_logs.html?company_id'} )->name() ) : '';  ) ?>
+						<option value="">Please wait, loading the rest</option>
+                    </select>
+                </li>
+                <li>
+                    <label>User</label>
+                    <select name="user_id">
+                        <option value="">All</option>
+                        <? echo ( 
+								$$variable{companies} = openprint::Company::dropdown() if ! $$variable{companies};
+                                my %company_ids = @{$$variable{companies}};
+                                make_drop_down( openprint::User->dropdown( 
+                                        ( $session{'/marketing/sales_log.html?company_id'} ? 
+										  ( company_id=>$session{'/marketing/sales_log.html?company_id'} ) : ( company_id=>[keys %company_ids] ) ),
+                                        order=>'lower(firstname),lower(lastname)',
+                            ), $session{'/marketing/sales_log.html?user_id'}  ); ) ?>
+
+                    </select>
+                </li>
+                <li>
+                    <label>Called On (leave clear for now)</label>
+                    <? echo ( datetime_select_session( '/marketing/sales_log.html', 'called_on', { with_today=>1 } ); ) ?>
+				</li>
+				<li><label>Notes</label>
+					<textarea name="notes"></textarea>
+				</li>
+			</ul>
+			<p class="buttons">
+				<? echo (
+					join("\n",
+						button('Add', { onclick=>'add_new(add);'} ),
+					);
+				) ?>
+			</p>
+		</fieldset>
+	</form>
+    <form id="f1" name="f1" method="post" action="sales_log.html">
+        <fieldset class="filters"><legend>Filter</legend>
+            <ul>
+<? if ( $session{user_type} eq 'A' ) ?>
+		<li>
+			<label>Employee</label>
+			<select name="employee_id" onchange="load_results();">
+				<option value=""> All </option>
+				<? echo ( make_drop_down( openprint::User->dropdown(type=>['E','A'] ), $param{employee_id} ? $param{employee_id} : $session{user_id} ); ) ?>
+			</select>
+		</li>
+<? endif ( $session{user_type} eq 'A' ) ?>
+                <li>
+                    <label>Company</label>
+                    <input type="text" onkeyup="filterDDM(this,f1.company_id);" onkeydown="if(event.keyCode==13){f1.user_id.selectedIndex=-1;load_results();}" class="filter" />
+                    <select name="company_id" onchange="load_users(this.form.elements['user_id'], get_ddm_value(this));">
+                        <option value="">All Companies</option>
+					<? echo ( $session{'/marketing/sales_log.html?company_id'} ? sprintf('<option value="%d" selected="selected">%s</option>', $session{'/marketing.salesrep_logs.html?company_id'}, new openprint::Company( $session{'/marketing/sales_logs.html?company_id'} )->name() ) : '';  ) ?>
+						<option value="">Please wait, loading the rest</option>
+                    </select>
+                </li>
+                <li>
+                    <label>User</label>
+                    <select name="user_id" onchange="load_results();">
+                        <option value="">All</option>
+					<? echo ( $session{'/marketing/sales_log.html?user_id'} ? sprintf('<option value="%d" selected="selected">%s</option>', $session{'/marketing.salesrep_logs.html?user_id'}, new openprint::User( $session{'/marketing/sales_logs.html?user_id'} )->name() ) : '';  ) ?>
+						<option value="">Please wait, loading the rest</option>
+                    </select>
+                </li>
+				<li>
+					<label>Called On</label>
+					<? echo ( date_select_session( '/marketing/sales_log.html', 'called_on_start', { with_today=>1, with_clear=>1, onchange=>'load_results();' } ); ) ?>
+					to 
+					<? echo ( date_select_session( '/marketing/sales_log.html', 'called_on_end', { with_today=>1, with_clear=>1, onchange=>'load_results();' } ); ) ?>
+				</li>
+            </ul>
+        </fieldset>
+	</form>
+	<div id="Results"><?include(_sales_log.html)?></div>
+</div>
+<script type="text/javascript">
+	new Ajax.Updater( $('f1').company_id, '/includes/_company_ddm.html', { parameters: { selected_id: '<?echo($session{'/marketing/sales_logs.html?company_id'})?>' } } );
+	new Ajax.Updater( $('add').company_id, '/includes/_company_ddm.html', { parameters: { selected_id: '<?echo($session{'/marketing/sales_logs.html?company_id'})?>' } } );
+	new Ajax.Updater( $('f1').user_id, '/includes/_users.html', { parameters: { 
+			selected_id: '<?echo($session{'/marketing/sales_logs.html?user_id'})?>',
+			company_id: '<?echo($session{'/marketing/sales_logs.html?company_id'})?>',
+ } } );
+	new Ajax.Updater( $('add').user_id, '/includes/_users.html', { parameters: { 
+			selected_id: '<?echo($session{'/marketing/sales_logs.html?user_id'})?>',
+			company_id: '<?echo($session{'/marketing/sales_logs.html?company_id'})?>',
+ } } );
+</script>

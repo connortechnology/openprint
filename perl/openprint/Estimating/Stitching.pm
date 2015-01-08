@@ -171,7 +171,6 @@ sub signature_calc {
 		$results{Status} = 'uncalculated';
 		return \%results;
 	} # end if
-	my $scoring_specs = openprint::service::get_specs_ref( $Project, $$services{Scoring}[0] ) if $$services{Scoring} and @{$$services{Scoring}};
 
 	my $plusCover = $$printing_specs{rdbCover} eq 'Different' ? 1 : 0;
 
@@ -227,29 +226,45 @@ $I->display('In Stitching:') if DEBUG;
         push @printed_impositions, $I->imposition();
         if ( ! $$I{Folds} ) {
 			if ( DEBUG ) {
-            $openprint::log->debug("No folds in imposition, generating");
-            $I->display("No Folds");
+				$openprint::log->debug("Sitchign: No folds in imposition, generating") if DEBUG;
+				$I->display("No Folds");
 			}
-            $$I{Folds} = [ openprint::Estimating::Folding::get_Folds( $folding_specs, $I, $qty_index ) ] if $folding_specs;
-        } # end if
+			if ( $folding_specs ) {
+				$$I{Folds} = [ openprint::Estimating::Folding::get_Folds( $folding_specs, $I, $qty_index ) ];
+				if ( DEBUG ) {
+					foreach my $F ( @{$$I{Folds}} ) {
+						$F->display();
+					} # end foreach F
+				} # end if
+			} # end if
+		} # end if
 
 		if ( ! ( $$I{Folds} and @{$$I{Folds}} ) ) {
-			$openprint::log->error("No folds in imposition, guess 1");
-			$I->display("No Folds");
+			if ( DEBUG ) {
+				$openprint::log->error("No folds in imposition, guess 1");
+				$I->display("No Folds");
+			} # end if
 			$$specs{'txtSignatureQty'.$I->pages().'Page-'.$qty_index} += 1;
-			$$specs{"txtPockets$qty_index"} += 1;
+			$pockets += 1;
 # This doesn't really make sense.  If we are doing printing estimation, then the folding probably isn't going to match.  
 		} else {
-			foreach my $Fold ( @{$$I{Folds}} ) {
-$openprint::log->debug("Fold pq($$Fold{page_quantity}) pages($$Fold{pages}) ($$Fold{name}) Pockets: $pockets") if DEBUG;
-				if ( $Fold->imposition() < $imposition ) {
-					$results{Breakdown} .= "Setting stitching imposition to $$Fold{imposition} out because Folding imposition is $$Fold{imposition}out<br/>";
-					$imposition = $Fold->imposition();
+			foreach my $FI ( @{$$I{Folds}} ) {
+						$FI->display() if DEBUG;
+				my $Fold = $FI->Fold();
+$openprint::log->debug("Fold pq($$FI{page_quantity}) pages($$FI{pages}) ($$Fold{name}) Pockets: $pockets") if DEBUG;
+				if ( $FI->imposition() < $imposition ) {
+					$results{Breakdown} .= "Setting stitching imposition to $$FI{imposition} out because Folding imposition is $$FI{imposition}out<br/>";
+					$imposition = $FI->imposition();
 				}
-				$$I{Folder} = $Fold->Equipment() if ! $$I{Folder};
+if ( ! $$I{Folder} ) {
+				$$I{Folder} = $Fold->Equipment();
+#$openprint::log->debug("Setting folder to " . $$I{Folder}->strid() );
+#} else {
+				#$openprint::log->debug('Folder is ' . $$I{Folder}->strid() );
+}
 #$openprint::log->debug("Adding " . $Fold->pages() . 'x'.$Fold->quantity() );
-				$$specs{'txtSignatureQty'.$Fold->pages().'Page-'.$qty_index} += $Fold->page_quantity();
-				$pockets += $Fold->page_quantity();
+				$$specs{'txtSignatureQty'.$Fold->pages().'Page-'.$qty_index} += $FI->page_quantity();
+				$pockets += $FI->page_quantity();
 			} # end foreach Fold
 		}
 
@@ -271,6 +286,13 @@ $openprint::log->debug("Fold pq($$Fold{page_quantity}) pages($$Fold{pages}) ($$F
 				$imposition = 1;
 			} # end if
 		} # end if
+		#if ( DEBUG ) {
+			#if ( ! $$I{Folder} ) {
+				#$openprint::log->warn("No folder!");
+			#} else {
+				#$openprint::log->debug('Folding is ' . $$I{Folder}->strid() );
+			#}
+		#}
 	} # end foreach Imposition
 	$results{Breakdown} .= qq`# of Pockets needed: $pockets<br/>`;
 #$results{Breakdown} .= 'Initial pockets: 	' . $$specs{"txtPockets$qty_index"} . '<br/>';
@@ -467,8 +489,9 @@ sub calc {
 		return $$specs{Status} = 'uncalculated';
 	} # end if
 
+	my $calc_hash = {};
 # Figure out whether we need a cover
-	my $printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
+	my $printing_specs = $$calc_hash{ProjectSpecs} = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
 	@$specs{'txtPageQuantity','txtFinalWidth','txtFinalHeight'} = @$printing_specs{'txtTotalPageQuantity','txtFinalWidth','txtFinalHeight'};
 	if ( (defined $$specs{chkOverrideInsertQuantity}) and ( $$specs{chkOverrideInsertQuantity} eq 'Y' ) ) {
 		$variables{txtInsertQuantity} = [ sets::exclude( ['output'], $variables{txtInsertQuantity} ) ];
@@ -490,14 +513,19 @@ sub calc {
 		} # end foreach
 	} # endif 
 
-	my $calc_hash = {};
 	my $folding_specs = 0;
 	if ( $$services{Folding} ) {
-		$folding_specs = $$calc_hash{FoldingSpecs} = openprint::service::get_specs_ref( $Project, $$services{Folding}[0] );
+		%{$$calc_hash{FoldingSpecs}} = %{openprint::service::get_specs_ref( $Project, $$services{Folding}[0] )};
+		$folding_specs = $$calc_hash{FoldingSpecs};
 	} # end if
-	$$specs{txtCalliper} = $Project->calliper();
-	my $scoring_specs = openprint::service::get_specs_ref( $Project, $$services{Scoring}[0] ) if $$services{Scoring} and @{$$services{Scoring}};
+	# Actually need this for when we call folding
+	my $scoring_specs = 0;
+	if ( $$services{Scoring} and @{$$services{Scoring}} ) {
+		$$calc_hash{ScoringSpecs} = openprint::service::get_specs_ref( $Project, $$services{Scoring}[0] );
+		$scoring_specs = $$calc_hash{ScoringSpecs};
+	}
 
+	$$specs{txtCalliper} = $Project->calliper();
 # Need to figure out which dimension the spine bisects
 	if ( $$printing_specs{spine} ) {
 		if ( $$printing_specs{spine} eq 'width' ) {
@@ -541,6 +569,14 @@ sub calc {
 			my $Imposition = new openprint::Imposition();
 			$Imposition->load( $sig_specs, $qty_index );
 			push @Impositions, $Imposition;
+			if ( $folding_specs ) {
+				$$Imposition{Folds} = [ openprint::Estimating::Folding::get_Folds( $folding_specs, $Imposition, $qty_index ) ];
+				if ( DEBUG ) {
+					foreach my $F ( @{$$Imposition{Folds}} ) {
+						$F->display('Fold:');
+					} # end foreach F
+				} # end if
+			}
 #$openprint::log->debug(sprintf('%d %s %s %d %dx%d %s', $imposition, @$sig_specs{'txtSignatureType','ddmRunStyle'.$qty_index,'txtImposition'.$qty_index,'hdnImpositionColumns'.$qty_index,'hdnImpositionRows'.$qty_index,'hdnImageOrientation'.$qty_index} ) ) if DEBUG;
 			# According to Brendan, both cover and interior need to be 2out
 			#next if $$sig_specs{txtSignatureType} eq 'Cover Pages';

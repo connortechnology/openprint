@@ -779,7 +779,7 @@ sub servicetype_id {
 
 sub ServiceType {
 	my ( $self, $s_id ) = @_;
-$openprint::log->error("No s_id passed to ServiceType") if ! $s_id;
+$openprint::log->error("No s_id passed to ServiceType for project $$self{id}") if ! $s_id;
 	return new openprint::ServiceType( $self->servicetype_id( $s_id ) );
 } # end sub ServiceType
 
@@ -864,8 +864,9 @@ sub summary {
 				my $sig_specs = openprint::service::get_specs_ref( $self, $sigs[0] );
 				$summary .= openprint::Estimating::Printing::summary( $self, $sigs[0], $sig_specs );
 				if ( $$printing_specs{"PrintingType-$group_id"} ) { 
-					$summary .= ', '. '<span class="Sheetfed">Printed '.$$printing_specs{"PrintingType-$group_id"}.'</span>,<br/>';
+					$summary .= ', '. '<span class="Sheetfed">Printed '.$$printing_specs{"PrintingType-$group_id"}.'</span>,';
 				} #endif Web
+				$summary .= '</br>';
 			} # end foreach Group
 		} # end if
 
@@ -1468,7 +1469,7 @@ sub production_cost {
 sub Service {
 	my ( $self, $service_id ) = @_;
 	if ( ! $service_id ) {
-		$openprint::log->error("No service_id passed to ServiceType");
+		$openprint::log->error("No service_id passed to ServiceType for project $$self{id}");
 		Carp::cluck("No service_id passwrod to ServiceType");
 	} # end if
 	return new openprint::Project_Service( {project_id=>$$self{id}, service_id=>$service_id} );

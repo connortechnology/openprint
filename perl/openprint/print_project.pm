@@ -323,6 +323,7 @@ sub summary {
 	$project_index = $param{'ProjectIndex'} if ! $project_index;
 	if ( ! $project_index ) {
 		$$variable{Project} = new openprint::Project();
+		$$variable{Order} = new openprint::Order();
 		return;
 	} # end if
 

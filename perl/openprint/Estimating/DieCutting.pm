@@ -55,7 +55,7 @@ sub variables {
 		foreach my $qty_index ( $Project->quantity_indexes() ) {
 			push @v,(
 				 "ddmEquipment-$form-$qty_index", "chkOverrideEquipment-$form-$qty_index",
-				 "txtImposition-$form-$qty_index", "chkOverrideImposition-$form-$qty_index",
+				 "txtImposition-$form-$qty_index", "OverrideImposition-$form-$qty_index",
 				 "txtLayoutWidth-$form-$qty_index", "txtLayoutHeight-$form-$qty_index",
 				 );
 			foreach my $imp_index ( 1 .. 4 ) {
@@ -306,9 +306,11 @@ sub calc {
 			next if ! $$sig_specs{'txtImposition'.$qty_index};
 			my $form = $$sig_specs{SignatureIndex};
 
-			$$specs{'hdnBreakdown'.$qty_index} .= "Signature: $$sig_specs{txtServiceDescription}, " if $$sig_specs{txtServiceDescription};
+			$$specs{'hdnBreakdown'.$qty_index} .= "Form $form: $$sig_specs{txtServiceDescription}<br/>";
 			my $Imposition = new openprint::Imposition();
 			$Imposition->load( $sig_specs, $qty_index );
+			$$specs{'hdnBreakdown'.$qty_index} .= $Imposition->to_string() . '<br/>';
+
 			my %results = signature_calc( $Project, $signature_service_index, $sig_specs, $specs, $qty_index, $Imposition );
 			$$specs{'hdnBreakdown'.$qty_index} .= $results{breakdown} if $results{breakdown};
 			$$specs{alert} .= $results{alert} if $results{alert};
@@ -438,13 +440,6 @@ sub signature_calc {
 		@equipment = openprint::Equipment->find( useinestimating=>1, Specifications=>{'Die Cutting Capable'=>'Y'} );
 	} # end if
 
-	if ( (defined $$specs{"chkOverrideImposition-$form-$qty_index"}) and ( $$specs{"chkOverrideImposition-$form-$qty_index"} eq 'Y' ) ) {
-		if ( $$specs{"txtImposition-$form-$qty_index"} > @$sig_specs{'txtImposition'.$qty_index} or $$specs{"txtImposition-$form-$qty_index"} <= 0 ) {
-			$results{alert} = 'The specified imposition is not possible.';
-			last;
-		} # end if
-	} # end if
-
 	my $services = $Project->services();
 	my @Sets_of_Impositions;
 
@@ -535,11 +530,63 @@ sub display {
 	} # end if
 
 } # end sub display
+
+sub signature_summary {
+    my ( $Project, $service_index, $specs, $qty_index, $s_id, $sig_specs ) = @_;
+    $specs = openprint::service::get_specs_ref( $Project, $service_index ) if ! $specs;
+    $sig_specs = openprint::service::get_specs_ref( $Project, $s_id ) if ! $sig_specs;
+    my $form = $$sig_specs{SignatureIndex};
+    if ( $qty_index ) {
+		if ( ! $$sig_specs{"txtImposition$qty_index"} ) {
+			return '';
+		} # end if
+        my @folds;
+        my $Equipment = new openprint::Equipment( $$specs{"ddmEquipment-$form-$qty_index"} );
+        foreach my $imp_index ( 1 .. 4 ) {
+            next if ! $$specs{"ImpQty-$form-$qty_index-$imp_index"};
+            push @folds, sprintf('%1$d @ %2$dout', @$specs{"ImpQty-$form-$qty_index-$imp_index","ImpOut-$form-$qty_index-$imp_index"},
+					);
+        } # end foreach
+        return join('<br/>', ( ' on ' . $Equipment->name() ), sort { $a cmp $b } @folds);
+    } # end if
+} # end sub signature_summary
+
 sub summary {
 	my ( $Project, $service_id, $specs, $qty_index ) = @_;
 	#$specs = openprint::service::get_specs_ref( $Project, $service_id ) if ! $specs;
 	if ( $qty_index ) {
-			return '';
+		my $html;
+        my @signatures = $Project->signatures( { sort=>1 } );
+
+        for ( my $sig_index = 0; $sig_index < @signatures; $sig_index += 1 ) {
+            my $s_s_id = $signatures[$sig_index];
+            my $sig_specs = openprint::service::get_specs_ref( $Project, $s_s_id );
+            my $form = $$sig_specs{SignatureIndex};
+			if ( ! $$sig_specs{"txtImposition$qty_index"} ) {
+				next;
+			} # end if
+            my $sig_count = 1;
+
+            if ( $sig_index < @signatures - 1 ) {
+                for ( my $sig_index2 = $sig_index + 1; $sig_index2 < @signatures; $sig_index2 += 1 ) {
+                    my $sig_specs2 = openprint::service::get_specs_ref( $Project, $signatures[$sig_index2] );
+                    if ( openprint::Estimating::Printing::compare_signatures( $Project, $sig_specs, $sig_specs2, $qty_index ) ) {
+                        $sig_count += 1;
+                    } else {
+                        last;
+                    } # end if
+                } # end for
+                splice @signatures, $sig_index+1,$sig_count-1 if $sig_count > 1;
+            }
+            my $summary = signature_summary( $Project, $service_id, undef, $qty_index, $s_s_id, undef );
+            if ( $sig_count > 1 ) {
+                $html .= ($sig_count) . ' Forms ' . $$sig_specs{txtServiceDescription} ;
+            } else {
+                $html .= 'Form ' . $form . ' ' . $$sig_specs{txtServiceDescription};
+            } # end if
+			$html .= $summary . "\n";
+        } # end foreach
+        return $html;
 	} else {
 		my $summary;
 		my $Owner = new openprint::Company( $openprint::config{owner_id} );

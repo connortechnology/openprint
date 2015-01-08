@@ -24,55 +24,53 @@ sub get_ServiceType {
 # Adds completed/edited services, and then displays the status of the project
 sub view_services {
 	my ( $r, $log, $dbh, $variable ) = @_;
-	my $project_index = $openprint::param{project_id} ? $openprint::param{project_id} : $openprint::param{'ProjectIndex'};
+	my $project_index = $openprint::param{project_id} ? $openprint::param{project_id} : $openprint::param{ProjectIndex};
 
 	# I put these here because the don't need a project index
-	if ( defined $openprint::param{'btnFunction'} ) {
-		if ( $openprint::param{'btnFunction'} eq 'Save Project' ) {
+	if ( defined $openprint::param{btnFunction} ) {
+		if ( $openprint::param{btnFunction} eq 'Save Project' ) {
 			$log->debug("*** Time to Save Project - View Services Function ***");
 			$project_index = openprint::print_project::create_edit_process( $r, $log, $dbh, $variable );
 			return if $$variable{Redirect}; # Redirects on error
 			my $Project = new openprint::Project( $project_index );
 			my $services = $Project->services();
 			my $s = openprint::service::internal_calc( $log, $dbh, $variable, $project_index, $$services{''}[0], $Project->Type()->type() );
-			$log->debug("*** Time to Save Project - View Services Function *** $project_index $openprint::session{'project_id'}");
-# Display any resulting uncalculated services
-$log->debug("before contintue");
+			$log->debug("*** Time to Save Project - View Services Function *** $project_index $openprint::session{project_id}");
+			# Display any resulting uncalculated services
 			openprint::print_project::continue_project( $log, $dbh, $variable, $project_index );
-$log->debug("after continue $$variable{ExternalRedirect}");
 			return if $$variable{ExternalRedirect};
-		} elsif ( $openprint::param{'btnFunction'} eq 'Delete Project' ) {
-			$$variable{'error'} .= openprint::print_project::try_to_delete_project( $openprint::log, $openprint::dbh, \%openprint::variable, $project_index );
+		} elsif ( $openprint::param{btnFunction} eq 'Delete Project' ) {
+			$$variable{error} .= openprint::print_project::try_to_delete_project( $openprint::log, $openprint::dbh, \%openprint::variable, $project_index );
 			if ( ! $$variable{error} ) {
 				$$variable{ExternalRedirect} = '/main/project/history.html';
 				return;
 			} # end if
-		} elsif ( $openprint::param{'btnFunction'} eq 'Undelete Project' ) {
+		} elsif ( $openprint::param{btnFunction} eq 'Undelete Project' ) {
 			my $Project = new openprint::Project( $project_index );
-			$$variable{'error'} .= $Project->undelete();
+			$$variable{error} .= $Project->undelete();
 		} # end if
 	} # end if defined btnFunction
 
-	$project_index = $openprint::session{'project_id'} if ! $project_index;
-	my $Project = $$variable{'Project'} = new openprint::Project( $project_index );
+	$project_index = $openprint::session{project_id} if ! $project_index;
 	if ( ! $project_index ) {
+		$$variable{Project} = new openprint::Project();
 		return;
 	} # end if
-
+	my $Project = $$variable{Project} = new openprint::Project( $project_index );
 	my $services = $Project->services();
 	my $Service = $Project->Service( $openprint::param{ServiceIndex} ) if $openprint::param{ServiceIndex};
 
-	$log->debug(" **** STARTING VIEW SERVICES FUNCTION * Project $project_index( $$Project{id} ) *** $openprint::session{'company_id'}");
+	$log->debug(" **** STARTING VIEW SERVICES FUNCTION * Project $project_index( $$Project{id} ) *** $openprint::session{company_id}");
 
-	if ( ( $Project->company_id() == $openprint::session{'company_id'} ) or sets::isin( $openprint::session{'user_type'}, ['E','A'] ) ) {
+	if ( ( $Project->company_id() == $openprint::session{company_id} ) or sets::isin( $openprint::session{user_type}, ['E','A'] ) ) {
 
-		if ( defined $openprint::param{'btnFunction'} ) {
-			if ( $openprint::param{'btnFunction'} eq 'Export JDF' ) {
+		if ( defined $openprint::param{btnFunction} ) {
+			if ( $openprint::param{btnFunction} eq 'Export JDF' ) {
 				misc::export( $r, $log, $variable, 'Docket-'.$Project->docket().'.jdf', [$Project->jdf()->toString()] );
-			} elsif ( $openprint::param{'btnFunction'} eq 'Make Predefined' ) {
+			} elsif ( $openprint::param{btnFunction} eq 'Make Predefined' ) {
 				$Project->predefined( 1 );
-				$$variable{'error'} .= $Project->save();
-			} elsif ( $openprint::param{'btnFunction'} eq 'Save Service' ) {
+				$$variable{error} .= $Project->save();
+			} elsif ( $openprint::param{btnFunction} eq 'Save Service' ) {
 				# Update the 'current project'
 				$openprint::session{project_id} = $project_index;
 				$log->debug("** Save Service in View Services Function **");
@@ -104,7 +102,7 @@ $log->debug("after continue $$variable{ExternalRedirect}");
 					$Project->add_to_log( @openprint::session{'company_id','user_id'}, 'Currency changed from '.$Project->Currency()->name() . ' to '. $Currency->name() );
 					$Project->currency_id( $Currency->id() );
 					# Change of currency calls for complete recalc
-					if ( $openprint::param{'ServiceType'} eq 'Printing' or ! $openprint::param{'ServiceType'} ) {
+					if ( $openprint::param{ServiceType} eq 'Printing' or ! $openprint::param{ServiceType} ) {
 					} else {
 						openprint::Estimating::MultiPage::calculate_signatures( $Project );
 						openprint::service::internal_calc( $log, $dbh, $variable, $project_index, $$services{''}[0], $Project->Type()->type() );
@@ -129,15 +127,15 @@ $log->debug("after continue $$variable{ExternalRedirect}");
 					openprint::service::internal_calc( $log, $dbh, $variable, $project_index, $$services{''}[0], $Project->Type()->type() );
 # Might need to test for status of project service
 					$recalc = 1;
-				} elsif (sets::isin(  $openprint::param{ServiceType}, [ 'Scoring', 'Perforating','SpinePaste','Stitching','Sewing'] ) ) {
+				} elsif (sets::isin(  $openprint::param{ServiceType}, [ 'Scoring', 'Perforating','SpinePaste','Stitching','Sewing','DieCutting'] ) ) {
 					openprint::Estimating::MultiPage::calculate_signatures( $Project );
 					$recalc = 1;
 				} elsif (sets::isin(  $r->param('ServiceType'), [ 'Folding' ] ) ) {
-					if ( $$services{'Cutting'} and @{$$services{'Cutting'}} ) {	
-						openprint::service::internal_calc( $log, $dbh, $variable, $project_index, $$services{'Cutting'}[0], 'Cutting' );
+					if ( $$services{Cutting} and @{$$services{Cutting}} ) {	
+						openprint::service::internal_calc( $log, $dbh, $variable, $project_index, $$services{Cutting}[0], 'Cutting' );
 					} # end if
-					if ( $$services{'SaddleStitching'} and @{$$services{'SaddleStitching'}} ) {	
-						openprint::service::internal_calc( $log, $dbh, $variable, $project_index, $$services{'SaddleStitching'}[0], 'Stitching' );
+					if ( $$services{SaddleStitching} and @{$$services{SaddleStitching}} ) {	
+						openprint::service::internal_calc( $log, $dbh, $variable, $project_index, $$services{SaddleStitching}[0], 'Stitching' );
 					} # end if
 				} # end if
 				openprint::service::auto_calculate( $Project, $service_index ) if $recalc;
@@ -149,7 +147,7 @@ $log->debug("after continue $$variable{ExternalRedirect}");
 				openprint::print_project::continue_project( $log, $dbh, $variable, $project_index );
 				return if $$variable{ExternalRedirect};
 			} elsif ( $r->param('btnFunction') eq 'Modify Project' ) {
-				my $service_name = $openprint::param{'txtServiceName'} ? $openprint::param{'txtServiceName'} : 'Adjustment';
+				my $service_name = $openprint::param{txtServiceName} ? $openprint::param{txtServiceName} : 'Adjustment';
 				my $CurrentCurrency = openprint::Currency::get_current();
 				my $ProjectCurrency = $Project->Currency();
 				my $conversion_rate = $CurrentCurrency->conversions( $ProjectCurrency->id() );
@@ -165,34 +163,34 @@ $log->debug("after continue $$variable{ExternalRedirect}");
 
 				} # end if has Customer Service type
 
-			} elsif ( $openprint::param{'btnFunction'} eq 'Delete Services' ) {
-				foreach my $service_id ( ref $openprint::param{'service_id'} eq 'ARRAY' ? @$openprint::param{'service_id'} : ( $openprint::param{'service_id'} ) ) {
+			} elsif ( $openprint::param{btnFunction} eq 'Delete Services' ) {
+				foreach my $service_id ( ref $openprint::param{service_id} eq 'ARRAY' ? @$openprint::param{service_id} : ( $openprint::param{service_id} ) ) {
 					my $Service = $Project->Service( $service_id );
 					$$variable{error} .= $Service->delete();
 					if ( $Service->Type()->name() eq 'Cutting' ) {
 						if ( $$services{UVCoating} ) {
-							openprint::service::internal_calc( $log, $dbh, $variable, $project_index, $$services{'UVCoating'}[0], 'UVCoating' );
+							openprint::service::internal_calc( $log, $dbh, $variable, $project_index, $$services{UVCoating}[0], 'UVCoating' );
 						} # end if
 					} # end if
 				} # end if
-			} elsif ( $openprint::param{'btnFunction'} eq 'Recalculate Project' ) {
-				if ( exists $openprint::param{'markup'} ) {
-					$openprint::param{'markup'} =~ s/[^\d\.\-]//mg;
-					$Project->markup( $openprint::param{'markup'} );
+			} elsif ( $openprint::param{btnFunction} eq 'Recalculate Project' ) {
+				if ( exists $openprint::param{markup} ) {
+					$openprint::param{markup} =~ s/[^\d\.\-]//mg;
+					$Project->markup( $openprint::param{markup} );
 					$Project->save();
 				} # end if
-				$openprint::session{'project_id'} = $project_index;
+				$openprint::session{project_id} = $project_index;
 				$Project->currency_id( $openprint::session{Currency_id} );
 				$Project->recalculate();
 				openprint::print_project::continue_project( $log, $dbh, $variable, $project_index );
 				return if $$variable{ExternalRedirect};
-			} elsif ( $openprint::param{'btnFunction'} eq 'Continue Project' ) {
-				$openprint::session{'project_id'} = $project_index;
+			} elsif ( $openprint::param{btnFunction} eq 'Continue Project' ) {
+				$openprint::session{project_id} = $project_index;
 				$Project->currency_id( $openprint::session{Currency_id} );
 				$Project->recalculate();
 				openprint::print_project::continue_project( $log, $dbh, $variable, $project_index );
 				return if $$variable{ExternalRedirect};
-			} elsif ( $openprint::param{'btnFunction'} eq 'Reuse Project' ) {
+			} elsif ( $openprint::param{btnFunction} eq 'Reuse Project' ) {
 				$project_index = openprint::print_project::reuse_project( $project_index );
 				$Project = new openprint::Project( $project_index );
 			} # end if
@@ -202,8 +200,8 @@ $log->debug("after continue $$variable{ExternalRedirect}");
 				return;
 			} # end if
 		} # end if btnFunction defined
-		if ( defined $openprint::param{'remove'} and ( $openprint::param{'remove'} ne '' ) ) {
-			foreach my $s_id ( split(',', $openprint::param{'remove'} ) ) {
+		if ( defined $openprint::param{remove} and ( $openprint::param{remove} ne '' ) ) {
+			foreach my $s_id ( split(',', $openprint::param{remove} ) ) {
 				my $PS = $Project->Service( $s_id );
 				next if ! $PS->service_id();
 				my $ServiceType = $PS->ServiceType();
@@ -212,22 +210,21 @@ $log->debug("after continue $$variable{ExternalRedirect}");
 					next;
 				} # end if
 				my $specs = $PS->specs();
-				$Project->add_to_log( @openprint::session{'company_id','user_id'}, $ServiceType->name().' ' . $$specs{'ServiceName'}.' service deleted.' );
 				$$variable{error} .= $PS->delete();
 				if ( $ServiceType->name() eq 'Signature' ) {
 					openprint::service::internal_calc( $log, $dbh, $variable, $project_index, $$services{''}[0], $Project->Type()->type() );
 				} elsif ( $ServiceType->name() eq 'Cutting' ) {
 					if ( $$services{UVCoating} ) {
-						openprint::service::internal_calc( $log, $dbh, $variable, $project_index, $$services{'UVCoating'}[0], 'UVCoating' );
+						openprint::service::internal_calc( $log, $dbh, $variable, $project_index, $$services{UVCoating}[0], 'UVCoating' );
 					} # end if
 				} # end if
 			} # end foreach s_id
-			$openprint::session{'project_id'} = $project_index;
+			$openprint::session{project_id} = $project_index;
 			$Project->summary(undef);
 			$Project->save();
 			$Project->update_status();
 			$$variable{ExternalRedirect} = '/main/project/view.html?project_id='.$Project->id();
-		} elsif ( ( defined $openprint::param{'calc'} ) and $openprint::param{'calc'} ) {
+		} elsif ( ( defined $openprint::param{calc} ) and $openprint::param{calc} ) {
 			$log->debug("Recalculating $openprint::param{calc}");
 			openprint::service::internal_calc( $log, $dbh, $variable, $project_index, $r->param('calc') );
 			$Project->summary(undef);
@@ -242,7 +239,7 @@ $log->debug("after continue $$variable{ExternalRedirect}");
 			openprint::print_project::continue_project( $log, $dbh, $variable, $project_index );
 			return if $$variable{ExternalRedirect};
 		} # end if 
-		if ( ! $$variable{'Redirect'} ) {
+		if ( ! $$variable{Redirect} ) {
 			openprint::main_project::view( $project_index );
 		} # end if
 	} # end if can_edit
@@ -264,23 +261,23 @@ sub get_project_quantities {
 sub print_prices {
 	my ( $r, $log, $dbh, $cookie, $variable ) = @_;
 
-	my $service_index = $$variable{'ServiceIndex'};
-	$service_index = $openprint::param{'ServiceIndex'} if ! $service_index;
+	my $service_index = $$variable{ServiceIndex};
+	$service_index = $openprint::param{ServiceIndex} if ! $service_index;
 	my @service_ids = split(',', $service_index);
 	$service_index = $service_ids[0];
-	my $project_index = $$variable{'ProjectIndex'};
-	$project_index = $openprint::param{'ProjectIndex'} if ! $project_index;
-	$project_index = $openprint::session{'project_id'} if ! $project_index;
+	my $project_index = $$variable{ProjectIndex};
+	$project_index = $openprint::param{ProjectIndex} if ! $project_index;
+	$project_index = $openprint::session{project_id} if ! $project_index;
 	my $Project = new openprint::Project( $project_index );
 	my $services = $Project->services();
 
-    $$variable{'Cutting'} = $$services{'Cutting'} ? 'YES' : 'NO';
-    $$variable{'Folding'} = $$services{'Folding'} ? 'YES' : 'NO';
-    $$variable{'NoPrinting'} = $$services{'NoPrinting'};
+    $$variable{Cutting} = $$services{Cutting} ? 'YES' : 'NO';
+    $$variable{Folding} = $$services{Folding} ? 'YES' : 'NO';
+    $$variable{NoPrinting} = $$services{NoPrinting};
 
-	$$variable{'Mode'} = $Project->mode();
+	$$variable{Mode} = $Project->mode();
 
-	@{$$variable{'RunStyleOptions'}} = ( 'Sheet Work', 'Sheet Work', 'Work & Turn', 'Work & Turn', 'Work & Tumble', 'Work & Tumble', 'Perfecting','Perfecting','Web','Web');
+	@{$$variable{RunStyleOptions}} = ( 'Sheet Work', 'Sheet Work', 'Work & Turn', 'Work & Turn', 'Work & Tumble', 'Work & Tumble', 'Perfecting','Perfecting','Web','Web');
 } # end sub print_prices
 
 # all this function does is the special code when coming from a book service
@@ -297,55 +294,55 @@ sub multipage_signatures {
 
     $openprint::log->debug(" **** STARTING MULTIPAGE SIGNATURES FUNCTION **** ");
 
-	if ( ! $$param{'txtSpreadSize'} ) {
+	if ( ! $$param{txtSpreadSize} ) {
 		# now we have finished the first step for a new book, and have a basic signature set in place.
-		if ( $$param{'rdbTemplateType'} eq 'PerfectBound' ) {
+		if ( $$param{rdbTemplateType} eq 'PerfectBound' ) {
 			# Insanity code:  Perfect Bound requires different cover.
-			$$param{'rdbCover'} = 'Different';
-			$$param{'txtSpreadSize'} = $openprint::config{PerfectBindSpreadSize} ? $openprint::config{PerfectBindSpreadSize} : 2;
-		} elsif ( $$param{'rdbTemplateType'} eq 'SpinePaste' ) {
+			$$param{rdbCover} = 'Different';
+			$$param{txtSpreadSize} = $openprint::config{PerfectBindSpreadSize} ? $openprint::config{PerfectBindSpreadSize} : 2;
+		} elsif ( $$param{rdbTemplateType} eq 'SpinePaste' ) {
 			# Insanity code:  Perfect Bound requires different cover.
-			$$param{'rdbCover'} = 'Self';
-			$$param{'txtSpreadSize'} = 2;
-		} elsif ( sets::isin( $$param{'rdbTemplateType'}, ['SaddleStitching', 'LoopStitching'] ) ) {
-			$$param{'txtSpreadSize'} = 4;
-		} elsif ( sets::isin( $$param{'rdbTemplateType'}, ['CornerStitching', 'Cerlox', 'PlasticCoil','MetalCoil', 'Unbound'] ) ) {
-			$$param{'txtSpreadSize'} = 2;
+			$$param{rdbCover} = 'Self';
+			$$param{txtSpreadSize} = 2;
+		} elsif ( sets::isin( $$param{rdbTemplateType}, ['SaddleStitching', 'LoopStitching'] ) ) {
+			$$param{txtSpreadSize} = 4;
+		} elsif ( sets::isin( $$param{rdbTemplateType}, ['CornerStitching', 'Cerlox', 'PlasticCoil','MetalCoil', 'Unbound'] ) ) {
+			$$param{txtSpreadSize} = 2;
 		} elsif ( $Project->Type()->name() eq 'MultiPage' ) {
-			$openprint::log->warn("Unknown Bindery Type: $$param{'rdbTemplateType'}" );
-			$$param{'txtSpreadSize'} = 4;
+			$openprint::log->warn("Unknown Bindery Type: $$param{rdbTemplateType}" );
+			$$param{txtSpreadSize} = 4;
 		} else {
-			$openprint::log->warn("Unknown Bindery Type: $$param{'rdbTemplateType'}" );
-			$$param{'txtSpreadSize'} = 2;
+			$openprint::log->warn("Unknown Bindery Type: $$param{rdbTemplateType}" );
+			$$param{txtSpreadSize} = 2;
 		} # end if
-		openprint::service::insert_service_spec( $log, $dbh, $project_index, $service_index, 'txtSpreadSize', $$param{'txtSpreadSize'} );
+		openprint::service::insert_service_spec( $log, $dbh, $project_index, $service_index, 'txtSpreadSize', $$param{txtSpreadSize} );
 	} # end if
 
 	my $max_group;
 	my %needed_pages;
-	$needed_pages{'Cover Pages'} = $$param{'OverrideGroupPageQuantity1'} eq 'Y' ? $$param{'GroupPageQuantity1'} : ($$param{'rdbCover'} eq 'Different' ? 4 : 0);
-	$needed_pages{'Gate Folded Pages'} = $$param{'txtGateFoldedPageQuantity'};
-	$needed_pages{'Interior Pages'} = ( $$param{'txtTotalPageQuantity'} - $needed_pages{'Cover Pages'} ) - $needed_pages{'Gate Folded Pages'};
+	$needed_pages{'Cover Pages'} = $$param{OverrideGroupPageQuantity1} eq 'Y' ? $$param{GroupPageQuantity1} : ($$param{rdbCover} eq 'Different' ? 4 : 0);
+	$needed_pages{'Gate Folded Pages'} = $$param{txtGateFoldedPageQuantity};
+	$needed_pages{'Interior Pages'} = ( $$param{txtTotalPageQuantity} - $needed_pages{'Cover Pages'} ) - $needed_pages{'Gate Folded Pages'};
 
 	my %specified_pages;
 
-	if ( $$param{'rdbCover'} eq 'Different' ) {
+	if ( $$param{rdbCover} eq 'Different' ) {
 # now add a cover spread if we need one.
 # First, see if we have one.
 		if ( ! $Project->signatures({'type'=>'Cover Pages'}) ) {
-			push @{$$services{'Signature'}}, $Project->add_signature( undef, undef, {
+			push @{$$services{Signature}}, $Project->add_signature( undef, undef, {
 						'txtSignatureType'=>'Cover Pages',
 						'txtServiceDescription'=>'Cover',
 						'Group'	=>	1,
-						'PrintingType'=>$$param{'PrintingType'},
+						'PrintingType'=>$$param{PrintingType},
 						'txtSpreadSize'	=>	4,
 						} );
 			$specified_pages{'Cover Pages'} = 4;
 		} # end if
 
 		# Prime this for saving later
-		if ( ( ! $$param{'GroupPageQuantity1'} ) and ( $$param{'OverrideGroupPageQuantity1'} ne 'Y' ) ) {
-			$$param{'GroupPageQuantity1'} = $needed_pages{'Cover Pages'};
+		if ( ( ! $$param{GroupPageQuantity1} ) and ( $$param{OverrideGroupPageQuantity1} ne 'Y' ) ) {
+			$$param{GroupPageQuantity1} = $needed_pages{'Cover Pages'};
 		} # end if
 	} else {
 # Don't need a cover, so get rid of it
@@ -362,7 +359,7 @@ sub multipage_signatures {
 		if ( $k =~ /^txtSignatureType(\d*)/ ) {
 			my $group_id = $1;
 $log->debug("group $group_id");
-			next if $group_id == 1 and $$param{'rdbCover'} ne 'Different';
+			next if $group_id == 1 and $$param{rdbCover} ne 'Different';
 
 			if ( $$param{'GroupPageQuantity'.$group_id} and ! $Project->signatures({'Group'=>$group_id}) ) {
 				$log->debug("adding special group $group_id");
@@ -370,10 +367,10 @@ $log->debug("group $group_id");
 						#'txtSignatureType'=>'Interior Pages',
 						#'txtServiceDescription'=>'Interior Pages',
 						'Group'	=>	$group_id,
-						'PrintingType'=>$$param{'PrintingType'},
-						'txtSpreadSize'	=>	$$param{'txtSpreadSize'},
+						'PrintingType'=>$$param{PrintingType},
+						'txtSpreadSize'	=>	$$param{txtSpreadSize},
 						} );
-				push @{$$services{'Signature'}}, $print_service_index;
+				push @{$$services{Signature}}, $print_service_index;
 			} # end if
 
 			$specified_pages{$$param{$k}} += $$param{'GroupPageQuantity'.$group_id};
@@ -389,13 +386,13 @@ $log->debug("group $group_id");
 
 	# Now, make sure that we have all the gate spreads that we need
 	my @gate_spread_services = $Project->signatures({'type'=>'Gate Folded Pages'});
-	my $need_gate_spreads = int($$param{'txtGateFoldedSpreadQuantity'}) - scalar @gate_spread_services;
+	my $need_gate_spreads = int($$param{txtGateFoldedSpreadQuantity}) - scalar @gate_spread_services;
 	while ( $need_gate_spreads > 0 ) {
-		push @{$$services{'Signature'}}, $Project->add_signature( undef, undef, {
+		push @{$$services{Signature}}, $Project->add_signature( undef, undef, {
 				'txtSignatureType'=>'Gate Folded Pages',
 				'txtServiceDescription'=>'Gate Folded Pages',
 				'Group'	=>	3,
-				'PrintingType'=>$$param{'PrintingType'},
+				'PrintingType'=>$$param{PrintingType},
 				} );
 		$need_gate_spreads -= 1;
 	} # end while need_gate_spreads
@@ -407,13 +404,13 @@ $log->debug("group $group_id");
 				'txtSignatureType'=>'Interior Pages',
 				'txtServiceDescription'=>'Interior Pages',
 				'Group'	=>	2,
-				'PrintingType'=>$$param{'PrintingType'},
-				'txtSpreadSize'	=>	$$param{'txtSpreadSize'},
+				'PrintingType'=>$$param{PrintingType},
+				'txtSpreadSize'	=>	$$param{txtSpreadSize},
 				} );
 		$specified_pages{'Interior Pages'} = $needed_pages{'Interior Pages'};
 	} # end if
-	if ( ( ! $$param{'GroupPageQuantity2'} ) and ( $$param{'OverrideGroupPageQuantity2'} ne 'Y' ) ) {
-		$$param{'GroupPageQuantity2'} = $needed_pages{'Interior Pages'};
+	if ( ( ! $$param{GroupPageQuantity2} ) and ( $$param{OverrideGroupPageQuantity2} ne 'Y' ) ) {
+		$$param{GroupPageQuantity2} = $needed_pages{'Interior Pages'};
 	} # end if
 
 	foreach my $ss_id ( $Project->signatures() ) {
@@ -422,7 +419,7 @@ $log->debug("group $group_id");
 			next;
 		} # end if
 		my $sig_specs = openprint::service::get_specs_ref( $Project, $ss_id );
-		my $group_id = $$sig_specs{'Group'};
+		my $group_id = $$sig_specs{Group};
 		if ( $group_id == 1 ) {
 			# Presentation Folder Cover -> Make sure required services like Die Cutting and Gluing are present
 			if ( sets::isin( $$param{'rdbTemplateType'.$group_id}, ['2Panel1Pocket','2Panel2Pocket','TriFoldDoublePocket'] ) ) {
@@ -490,7 +487,7 @@ $log->debug("group $group_id");
 	} # end foreach signature
 
 	my $old_bindery_type = get_book_type( $Project );
-	if ( $old_bindery_type and ($$param{'rdbTemplateType'} ne $old_bindery_type) and $$services{$old_bindery_type} ) {
+	if ( $old_bindery_type and ($$param{rdbTemplateType} ne $old_bindery_type) and $$services{$old_bindery_type} ) {
 		foreach ( @{$$services{$old_bindery_type}} ) {
 			openprint::print_project::delete_service( $Project, $_ );
 		} # end foreach
@@ -499,17 +496,17 @@ $log->debug("group $group_id");
 
 	if ( ! $$services{NoBindery} ) {
 $log->debug("No Nobindery");
-		if ( $$param{'rdbTemplateType'} ) {
+		if ( $$param{rdbTemplateType} ) {
 # Insert the desired Bindery Type
-			if ( ( ! $$services{$$param{'rdbTemplateType'}} ) and openprint::ServiceType->find_one( name=> $$param{'rdbTemplateType'} ) ) {
-				next if $$services{$$param{'rdbTemplateType'}};
-				push @{$$services{$$param{'rdbTemplateType'}}}, $Project->add_service( $$param{'rdbTemplateType'} );
+			if ( ( ! $$services{$$param{rdbTemplateType}} ) and openprint::ServiceType->find_one( name=> $$param{rdbTemplateType} ) ) {
+				next if $$services{$$param{rdbTemplateType}};
+				push @{$$services{$$param{rdbTemplateType}}}, $Project->add_service( $$param{rdbTemplateType} );
 			} # end if
 
-			if ( sets::isin( $$param{'rdbTemplateType'}, ('SaddleStitching','LoopStitching','PerfectBound','Unbound') ) ) {
+			if ( sets::isin( $$param{rdbTemplateType}, ('SaddleStitching','LoopStitching','PerfectBound','Unbound') ) ) {
 # Saddle and Loop Stitching requires Folding
-				push @{$$services{'Folding'}}, $Project->add_service( 'Folding' ) if ! $$services{Folding};
-				push @{$$services{'Cutting'}}, $Project->add_service( 'Cutting' ) if ! $$services{Cutting};
+				push @{$$services{Folding}}, $Project->add_service( 'Folding' ) if ! $$services{Folding};
+				push @{$$services{Cutting}}, $Project->add_service( 'Cutting' ) if ! $$services{Cutting};
 			} # end if
 		} # end if
 	} # end if
@@ -530,7 +527,7 @@ sub get_book_type {
 		} # end if
 	} # end foreach
 	my $printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
-	if ( $$printing_specs{'rdbTemplateType'} eq 'PerfectBound' ) {
+	if ( $$printing_specs{rdbTemplateType} eq 'PerfectBound' ) {
 		return 'PerfectBound';
 	} # end if
 	return;
@@ -539,17 +536,17 @@ sub get_book_type {
 
 sub publication_pages {
 	my ( $r, $log, $dbh, $variable ) = @_;
-    my $service_index = $openprint::param{'ServiceIndex'};
-    my $project_index = $openprint::param{'ProjectIndex'};
-	$project_index = $openprint::session{'project_id'} if ! $project_index;
+    my $service_index = $openprint::param{ServiceIndex};
+    my $project_index = $openprint::param{ProjectIndex};
+	$project_index = $openprint::session{project_id} if ! $project_index;
 	$log->debug("********************************** STARTING MULTIPAGE PUBLICATION PAGES *******************************");
 
-	@{$$variable{'RunStyleOptions'}} = ( 'Sheet Work', 'Sheet Work', 'Work & Turn', 'Work & Turn', 'Work & Tumble', 'Work & Tumble', 'Perfecting','Perfecting','Web','Web');
+	@{$$variable{RunStyleOptions}} = ( 'Sheet Work', 'Sheet Work', 'Work & Turn', 'Work & Turn', 'Work & Tumble', 'Work & Tumble', 'Perfecting','Perfecting','Web','Web');
 	
 	my $Project = new openprint::Project( $project_index );
 	foreach my $ss_id ( $Project->signatures() ) {
 		my $sig_specs = openprint::service::get_specs_ref( $Project, $ss_id );
-		my $type = $$sig_specs{'Group'};
+		my $type = $$sig_specs{Group};
 $log->error("No Group!") if ! $type;
 		foreach my $spec ( 
 				'ddmStockBrand','ddmStockFinish','ddmStockColour','ddmStockWeight','ddmStockGroup','ddmStockQuality',
@@ -603,14 +600,14 @@ $log->error("No Group!") if ! $type;
 sub get_insert_specs {
 	my ( $log, $dbh, $variable, $project_index, $service_index ) = @_;
 	$log->debug("************************** GETTING INSERT SPECS **************************");
-	if ( $$variable{'txtInsertQuantity'} eq '' ) {
+	if ( $$variable{txtInsertQuantity} eq '' ) {
 		$_ = "SELECT strValue FROM tbl_Service_Specifications WHERE lngProjectIndex='$project_index' AND strName='txtInsertQuantity'";
-		( $$variable{'txtInsertQuantity'} ) = sql::execute( $log, $dbh, $_ );
+		( $$variable{txtInsertQuantity} ) = sql::execute( $log, $dbh, $_ );
 	} # end if
-	for (my $x = 1; $x <= $$variable{'txtInsertQuantity'}; $x += 1 ) {
-		push @{$$variable{'INSERTS'}}, $x, $$variable{"txtInsertPage1$x"}, $$variable{"txtInsertPage2$x"}, $$variable{"txtFinalWidth$x"}, $$variable{"txtFinalHeight$x"};
+	for (my $x = 1; $x <= $$variable{txtInsertQuantity}; $x += 1 ) {
+		push @{$$variable{INSERTS}}, $x, $$variable{"txtInsertPage1$x"}, $$variable{"txtInsertPage2$x"}, $$variable{"txtFinalWidth$x"}, $$variable{"txtFinalHeight$x"};
 	} # end for
-	$$variable{'txtPockets'} = $$variable{'SignatureCount'} + $$variable{'txtInsertQuantity'};
+	$$variable{txtPockets} = $$variable{SignatureCount} + $$variable{txtInsertQuantity};
 
 } # end sub
 
@@ -626,22 +623,22 @@ sub get_finished_weight {
 
 		foreach my $signature_service_index ( $Project->signatures() ) {
 			my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
-			next if $$sig_specs{'txtSignatureType'} and ! $$sig_specs{'PageQuantity'.$qty_index};
+			next if $$sig_specs{txtSignatureType} and ! $$sig_specs{'PageQuantity'.$qty_index};
 			next if ! $$sig_specs{'txtImposition'.$qty_index};
 			my $sig_weight = openprint::Estimating::Printing::get_weight( $Project, $sig_specs, $qty_index );
 			if ( ! $sig_weight ) {
 				# unable to get weight for a sig, must recalc printing service
-$openprint::log->debug("Unable to get sig_weight for signature $$sig_specs{'SignatureIndex'}");
+$openprint::log->debug("Unable to get sig_weight for signature $$sig_specs{SignatureIndex}");
 				return 0;
 			} # end if
 			$project_weight += $sig_weight;
 		} # end foreach signature_service_index
 		last;
 	} # end foreach qty_index
-	#$openprint::log->debug("Project Weight: $project_weight : Marked Up: ". $project_weight * (1+$openprint::config{'WeightMarkup'}/100));
+	#$openprint::log->debug("Project Weight: $project_weight : Marked Up: ". $project_weight * (1+$openprint::config{WeightMarkup}/100));
 	
 	# This 1.1 was actually requested by Amin.  So it was pretty random, but then I thought abotu it, and our weight calculations don't take into account the weight of the ink, etc... so it may actually be not too off.... would love to see some real figures on it.
-	return $project_weight * (1+$openprint::config{'WeightMarkup'}/100);
+	return $project_weight * (1+$openprint::config{WeightMarkup}/100);
 } # end sub get_finished_weight
 
 # Finished calliper for books will be calculated from the first qty.  All three should be the same.
@@ -653,12 +650,12 @@ sub get_finished_calliper {
 
 sub get_quantities {
 	my ( $variable, $project_index) = @_;
-	if ( ! $$variable{'QUANTITIES'} ) {
+	if ( ! $$variable{QUANTITIES} ) {
 		my $Project = new openprint::Project( $project_index );
 		my @qtys = $Project->quantities();
 		my $columns = 0;
 		for ( my $index = 0; $index < @qtys; $index += 1 ) {
-			$$variable{'QUANTITIES'} .= " quantities[$index] = '$qtys[$index]'; \n";
+			$$variable{QUANTITIES} .= " quantities[$index] = '$qtys[$index]'; \n";
 			$$variable{'QUANTITY'.($index+1)} = $qtys[$index];
 			$$variable{'txtQuantity'.($index+1)} = $qtys[$index];
 			$columns += 1 if $qtys[$index];

@@ -138,7 +138,7 @@
 				= $endtime ? split('-', $endtime ) : Date::Calc::Add_Delta_Days( Date::Calc::Today(), 1 );
 	} # end if
 ) ?>
-<? echo ( include('/includes/error_reporting.html'); ) ?>
+<?include('/includes/error_reporting.html')?>
 <form id="f1" name="f1" method="post" action="/employee/production/print_overview.html">
 	<input type="hidden" name="btnFunction"/>
 	<input type="hidden" name="ProjectIndex" />
@@ -302,14 +302,16 @@
 			'starttime <='	=> $parser->format_datetime( $end_dt ),
 			'starttime >='	=> $parser->format_datetime( $start_dt ),
 		);
+$log->debug("# of jobs: " . @Jobs );
 
-		my @Projects = openprint::Project->find( id=>[ sets::union( map { $$_{project_id} ? $$_{project_id} : () } @Jobs ) ] );
-		my @Companies = openprint::Company->find( id=>[ sets::union( map { $$_{company_id} ? $$_{company_id} : () } @Projects ) ] );
+		my @Projects = openprint::Project->find( id=>[ sets::union( map { $$_{project_id} ? $$_{project_id} : () } @Jobs ) ] ) if @Jobs;
+		my @Companies = openprint::Company->find( id=>[ sets::union( map { $$_{company_id} ? $$_{company_id} : () } @Projects ) ] ) if @Projects;
 
 		# WHy does this need to be ACCESS exclusive?  SOmething that changes it should be.... perhaps the idea is that i any canges are in progress, we want to wait for them to finish, but if changes are happening, then any lock we try to get will hol... so this just prevent concurrent views
 		# However, the problem is that this can implement shifts.. perhaps we should wait until we need to implement shifts...
 		# Ok, but we actually only create shifts, not adjust jobs... so only need to lock the shifts	
 		$dbh->do( 'LOCK TABLE Shifts IN ACCESS EXCLUSIVE MODE' ) or $log->error( DBI->errstr );
+$log->debug("Have lock");
 
 		foreach my $E ( @{$$variable{'Equipment'}} ) {
 			$html .= '<td class="PressColumn ' . join(' ', $E->categories() ). '">';
@@ -334,8 +336,8 @@
 			# Showing over 100 days makes the browser crawl forever. So limit it.
 			$end = 100 if $end > 100;
 			# Get the shifts on this day.
-			my $st = new DateTime( 'year'=>$year, 'month'=>$month, 'day'=>$day, 'time_zone'=>$TZ );
-			my $et = $st + DateTime::Duration->new( 'days'=>$end );
+			my $st = new DateTime( year=>$year, month=>$month, day=>$day, time_zone=>$TZ );
+			my $et = $st + DateTime::Duration->new( days=>$end );
 
 			my @Shifts = openprint::Shift->find( 
 				equipment_id 		=>	$E->id(),
@@ -345,8 +347,10 @@
 				);
 
 			if ( ! @Shifts ) {
+$log->debug("Getting shifts");
 				@Shifts = openprint::Shift::get_Shifts( $E, $st, $et, @Equipment_Shifts );
 			} # end if
+$log->debug("# of Shifts: " . @Shifts );
 			if ( ! @Shifts ) {
 				$html .= 'No Shifts defined.</div>';
 				next;
@@ -355,7 +359,7 @@
 			# First, need to find the first Equipment Shift to show.  Easy, will be given by the first shift in our list of shifts
 			my $ES = $Shifts[0]->Equipment_Shift();
 
-			#$log->debug("Setp 2" . $ES->to_string());
+			$log->debug("Setp 2" . $ES->to_string());
 			# Step two: Make sure all the shifts are there. We do this by running through them, comparing the shift_id to the expected ES
 			# We start at 1 because we already looked for 0 and found it.  Micro-optimisation
 			for ( my $shift_index = 1; $shift_index < @Shifts; $shift_index += 1 ) {
