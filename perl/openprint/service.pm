@@ -19,8 +19,16 @@ sub init_cache {
 sub get_price {
 	my ( $service, $range, $Equipment ) = @_;
 
-	my %price = get_price_object( $service, $range, $Equipment );
-	return $price{price};
+	my $Service = openprint::Service->find_one( name=>$service );
+	if ( ! $Service ) {
+		if ( Debug ) {
+			$openprint::log->debug("No Service for $service");
+		};
+		return;
+	}
+	my $Price = $Service->get_Price( $range, $Equipment );
+	return $$Price{price} if $Price;
+	return;
 } # end sub get_price
 
 sub get_price_object {
@@ -32,7 +40,9 @@ sub get_price_object {
 		};
 		return;
 	}
-	return $Service->get_price( $range, $Equipment );
+	my $Price = $Service->get_Price( $range, $Equipment );
+	return %{$Price} if $Price;
+	return;
 } # end sub get_price_object
 
 sub save_service {

@@ -23,11 +23,13 @@ sub clear_cache {
 
 sub init_cache {
 	$price_cache{$config{db_name}} = {};
+if ( 0 ) {
 	my @Services = openprint::Service->find(); # for cachine	
 	my @Materials = openprint::Material->find(); # for cachine	
 	my @Pricelists = openprint::Pricelist->find();
 
 	my @ServicePrices = openprint::ServicePrice->find( 'period_end is null'=>1, order=>'min NULLS FIRST, max NULLS FIRST');
+	my @MaterialPrices = openprint::MaterialPrice->find( order=>'lngmin NULLS FIRST, lngmax NULLS FIRST');
 	foreach my $Pricelist ( @Pricelists ) {
 		foreach my $S ( @ServicePrices ) {
 			next if $$S{pricelist_id} != $$Pricelist{id};
@@ -36,12 +38,13 @@ sub init_cache {
 			} # end if
 			push @{$price_cache{$config{db_name}}{$$Pricelist{id}}{'openprint::Service'}{$S->Service()->id()}}, $S;
 		} # end foreach ServicePrice
-		foreach my $S ( openprint::MaterialPrice->find( order=>'lngmin NULLS FIRST, lngmax NULLS FIRST') ) {
+		foreach my $P ( @MaterialPrices ) {
+			next if $$P{pricelist_id} != $$Pricelist{id};
 #'period_end is null'=>0, 
-			if ( ! $price_cache{$config{db_name}}{$$Pricelist{id}}{'openprint::Material'}{$S->Material()->id()} ) {
-				$price_cache{$config{db_name}}{$$Pricelist{id}}{'openprint::Material'}{$S->Material()->id()} = [];
+			if ( ! $price_cache{$config{db_name}}{$$Pricelist{id}}{'openprint::Material'}{$P->Material()->id()} ) {
+				$price_cache{$config{db_name}}{$$Pricelist{id}}{'openprint::Material'}{$P->Material()->id()} = [];
 			} # end if
-			push @{$price_cache{$config{db_name}}{$$Pricelist{id}}{'openprint::Material'}{$S->Material()->id()}}, $S;
+			push @{$price_cache{$config{db_name}}{$$Pricelist{id}}{'openprint::Material'}{$P->Material()->id()}}, $P;
 		} # end foreach ServicePrice
 	} # end foreach Pricelist
 	foreach my $Service ( @Services ) {
@@ -50,6 +53,7 @@ sub init_cache {
 	foreach my $Material ( @Materials ) {
 		$Material->Prices( [ map { $price_cache{$config{db_name}}{$$_{id}}{'openprint::Material'}{$$Material{id}} ? $price_cache{$config{db_name}}{$$_{id}}{'openprint::Material'}{$$Material{id}} : () } @Pricelists ] );
 	} # end foreach Service
+}
 }
 
 sub get_pricelist_id {
@@ -256,8 +260,8 @@ sub get_Price {
 	my $Price;
 
 	# If we specify a period, then forget about the caching.  Caching will only do current prices.
-	if ( $period ) {
-	}
+	#if ( $period ) {
+	#}
 	if ( $price_cache{$config{db_name}}{$$Pricelist{id}}{$type}{$$Object{id}} ) {
 $log->debug("Using cache");
 		@Prices = @{$price_cache{$config{db_name}}{$$Pricelist{id}}{$type}{$$Object{id}}};
@@ -272,16 +276,6 @@ $log->debug("Using cache");
 		if ( $Equipment ) {
 			@Equipment_Prices = map { $$_{equipment_id} == $$Equipment{id} ? $_ : () } @Prices;
 			@Equipment_Prices = map { defined $$_{equipment_id} ? () : $_ } @Prices if ! @Equipment_Prices;
-if ( $$Object{id} == 113 ) {
-$log->debug("Filtering by quipmnet for $$Equipment{id}");
-foreach my $P ( @Prices ) {
-$log->debug("Available: " . $P->to_string() );
-}
-foreach my $P ( @Equipment_Prices ) {
-$log->debug("Chose: " . $P->to_string() );
-}
-
-}
 			@Prices = @Equipment_Prices;
 		} # end if
 
