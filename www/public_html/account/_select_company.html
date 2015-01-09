@@ -24,7 +24,7 @@ Any actions you perform will be recorded in the selected <? echo ( translate('co
 			<input class="filter" name="CompanyFilter" type="text" onkeyup="filterDDM(this, f1.ddmCompany);" />
 			<select id="ddmCompany" name="ddmCompany" onchange="if(this.options[this.selectedIndex].value != '') f1.submit();">
 				<? echo ( 
-					if ( @{$$variable{company_dropdown}} > 1000 ) {
+					if ( @{$$variable{company_dropdown}} > 2000 ) {
 						return '<option value="">loading...</option>';
 					} else {
 					make_drop_down( $$variable{company_dropdown}, $session{company_id} );
@@ -71,8 +71,8 @@ Any actions you perform will be recorded in the selected <? echo ( translate('co
 </form>
 <script type="text/javascript">
 document.f1.CompanyFilter.focus();
-<? if ( @{$$variable{company_dropdown}} > 100 ) ?>
+<? if ( @{$$variable{company_dropdown}} > 2000 ) ?>
 new Ajax.Updater( 'ddmCompany', '/includes/_company_ddm.html', { parameters: { selected_id: <?echo($session{company_id})?> } } );
-<? endif ( @{$$variable{company_dropdown}} > 100 ) ?>
+<? endif ( @{$$variable{company_dropdown}} > 2000 ) ?>
 </script>
 <? endif ( $$variable{company_dropdown} and ( @{$$variable{company_dropdown}} > 2 ) ) ?>
