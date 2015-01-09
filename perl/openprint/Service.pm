@@ -117,21 +117,21 @@ sub get_Price {
         } # end if
     } # end if
 
-	$Pricelist = openprint::Pricelist::get_current() if ! $Pricelist;
+	$Pricelist = $openprint::Pricelist if ! $Pricelist;
 
 	my $Price = openprint::pricing::get_Price( $self, $Pricelist, $quantity, $Equipment, $period );
 
 	if ( ! $Price ) {
 		$log->debug("No price returned for $$self{name} $$Equipment{strid} $quantity $period") if $debug;
 		return;
-	} else {
-		$log->debug("Got for $$Equipment{strid} $$self{name} " . $Price->to_string() );
+	#} else {
+		#$log->debug("Got for $$Equipment{strid} $$self{name} " . $Price->to_string() );
 	} # end if
 
 	$$Price{'currency_id'} = $Pricelist->currency_id();
 	$$Price{'ServiceName'} = $$self{'name'};
 	$$Price{Service} = $self;
-	openprint::Currency::convert( $Price );
+	openprint::Currency::convert( $Price ) if $openprint::Currency{id} != $$Pricelist{currency_id};
     return $Price;
 } # end sub get_Price
 
