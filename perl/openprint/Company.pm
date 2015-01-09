@@ -252,6 +252,10 @@ sub dropdown {
 			$sql .= ' AND ysnsupplier=?';
 			push @values, $params{supplier};
 		} # end if
+		if ( $params{salesrep_id} ) {
+			$sql .= ' AND salesrep_id=?';
+			push @values, $params{salesrep_id};
+		} # end if
 	} # end if
 	$sql .= ' ORDER BY lower(name)';
 
