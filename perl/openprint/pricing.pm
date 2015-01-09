@@ -23,7 +23,6 @@ sub clear_cache {
 
 sub init_cache {
 	$price_cache{$config{db_name}} = {};
-if ( 1 ) {
 	my @Services = openprint::Service->find(); # for cachine	
 	my @Materials = openprint::Material->find(); # for cachine	
 	my @Pricelists = openprint::Pricelist->find();
@@ -41,19 +40,19 @@ if ( 1 ) {
 		foreach my $P ( @MaterialPrices ) {
 			next if $$P{pricelist_id} != $$Pricelist{id};
 #'period_end is null'=>0, 
-			if ( ! $price_cache{$config{db_name}}{$$Pricelist{id}}{'openprint::Material'}{$P->Material()->id()} ) {
-				$price_cache{$config{db_name}}{$$Pricelist{id}}{'openprint::Material'}{$P->Material()->id()} = [];
+			if ( ! $price_cache{$config{db_name}}{$$Pricelist{id}}{'openprint::Material'}{$P->material_id()} ) {
+				$price_cache{$config{db_name}}{$$Pricelist{id}}{'openprint::Material'}{$P->material_id()} = [];
 			} # end if
-			push @{$price_cache{$config{db_name}}{$$Pricelist{id}}{'openprint::Material'}{$P->Material()->id()}}, $P;
+			push @{$price_cache{$config{db_name}}{$$Pricelist{id}}{'openprint::Material'}{$P->material_id()}}, $P;
 		} # end foreach ServicePrice
 	} # end foreach Pricelist
-	foreach my $Service ( @Services ) {
-		$Service->Prices( [ map { $price_cache{$config{db_name}}{$$_{id}}{'openprint::Service'}{$$Service{id}} ? $price_cache{$config{db_name}}{$$_{id}}{'openprint::Service'}{$$Service{id}} : () } @Pricelists ] );
-	} # end foreach Service
-	foreach my $Material ( @Materials ) {
-		$Material->Prices( [ map { $price_cache{$config{db_name}}{$$_{id}}{'openprint::Material'}{$$Material{id}} ? $price_cache{$config{db_name}}{$$_{id}}{'openprint::Material'}{$$Material{id}} : () } @Pricelists ] );
-	} # end foreach Service
-}
+	#foreach my $Service ( @Services ) {
+		#$Service->Prices( [ map { $price_cache{$config{db_name}}{$$_{id}}{'openprint::Service'}{$$Service{id}} ? $price_cache{$config{db_name}}{$$_{id}}{'openprint::Service'}{$$Service{id}} : () } @Pricelists ] );
+	#} # end foreach Service
+	#foreach my $Material ( @Materials ) {
+		#$Material->Prices( [ map { $price_cache{$config{db_name}}{$$_{id}}{'openprint::Material'}{$$Material{id}} ? $price_cache{$config{db_name}}{$$_{id}}{'openprint::Material'}{$$Material{id}} : () } @Pricelists ] );
+	#} # end foreach Service
+#}
 }
 
 sub get_pricelist_id {
@@ -258,6 +257,8 @@ sub get_Price {
 	my $type = ref $Object;
 	my @Prices;
 	my $Price;
+
+	$Pricelist = $openprint::Pricelist if ! $Pricelist;
 
 	# If we specify a period, then forget about the caching.  Caching will only do current prices.
 	#if ( $period ) {
