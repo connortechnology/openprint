@@ -1,6 +1,6 @@
 use strict;
 package openprint;
-use vars qw( $r %variable %session %param %config $log $dbh );
+use vars qw( $r %variable %session %param %config $log $dbh $Pricelist $Currency );
 
 
 sub session_init {
@@ -103,6 +103,8 @@ $log->error("Since when is session_id in the params");
 		$session{'Currency_id'} = $_->id() if $_;
 	} # end if
 
+	$Currency = new openprint::Currency( $session{Currency_id} );
+
 	if ( $config{Pricelist} ) {
 		if ( ! $session{Pricelist_id} ) {
 			$_ = openprint::Pricelist->find_one( name => $config{Pricelist} );
@@ -120,6 +122,7 @@ $log->error("Since when is session_id in the params");
 			$session{Pricelist_id} = $Pricelist->id() if $Pricelist->id();
 		} # end if
 	} # end if
+	$Pricelist = new openprint::Pricelist( $session{Pricelist_id} );
 
 } # end sub session_init
 
