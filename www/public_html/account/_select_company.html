@@ -1,4 +1,16 @@
-<? eval ( $$variable{company_dropdown} = openprint::Company::dropdown( $session{company_id} ); )?>
+<script type="text/javascript">
+function include_unassigned( e ) {
+	if ( e.checked ) {
+		new Ajax.Updater( 'ddmCompany', '/includes/_company_ddm.html', { parameters: { selected_id: <?echo($session{company_id})?> } } );
+	} else {
+		new Ajax.Updater( 'ddmCompany', '/includes/_company_ddm.html', { parameters: { selected_id: <?echo($session{company_id})?>, salesrep_id: <? echo ( $session{user_id} ) ?> } } );
+	} // end if
+}
+</script>
+<? eval ( 
+	$$variable{company_dropdown} = openprint::Company::dropdown( salesrep_id=>$session{user_id} );
+	$$variable{company_dropdown} = openprint::Company::dropdown( ) if ! @{$$variable{company_dropdown}};
+)?>
 <? if ( $$variable{company_dropdown} and ( @{$$variable{company_dropdown}} > 2 ) ) ?>
 <br/>
 You are currently representing <? echo ( new openprint::Company($session{company_id})->name(); ) ?>.<br/>
@@ -10,9 +22,18 @@ Any actions you perform will be recorded in the selected <? echo ( translate('co
 		<li>
 			<label><? echo ( translate('company') ) ?></label>
 			<input class="filter" name="CompanyFilter" type="text" onkeyup="filterDDM(this, f1.ddmCompany);" />
-			<select name="ddmCompany" onchange="if(this.options[this.selectedIndex].value != '') f1.submit();">
-				<? echo ( make_drop_down( $$variable{company_dropdown}, $session{company_id} ); ) ?>
+			<select id="ddmCompany" name="ddmCompany" onchange="if(this.options[this.selectedIndex].value != '') f1.submit();">
+				<? echo ( 
+					if ( @{$$variable{company_dropdown}} > 1000 ) {
+						return '<option value="">loading...</option>';
+					} else {
+					make_drop_down( $$variable{company_dropdown}, $session{company_id} );
+					}
+				) ?>
 			</select>
+			<? if ( $session{user_type} eq 'A' ) ?>
+			<input id="include_unassigned_radio" type="checkbox" onclick="include_unassigned(this);"/><label class="radio" for="include_unassigned_radio">Include Unassigned?</label>
+			<? endif ( $session{user_type} eq 'A' ) ?>
 			<? echo ( button( 'Submit', { onclick=>'f1.submit();' } ); ) ?>
 		</li>
 		<li><label>Last 10</label>
@@ -48,5 +69,10 @@ Any actions you perform will be recorded in the selected <? echo ( translate('co
 	</fieldset>
 	<input type="hidden" name="btnFunction" value="SelectCompany"/>
 </form>
-<script type="text/javascript">document.f1.CompanyFilter.focus();</script>
+<script type="text/javascript">
+document.f1.CompanyFilter.focus();
+<? if ( @{$$variable{company_dropdown}} > 100 ) ?>
+new Ajax.Updater( 'ddmCompany', '/includes/_company_ddm.html', { parameters: { selected_id: <?echo($session{company_id})?> } } );
+<? endif ( @{$$variable{company_dropdown}} > 100 ) ?>
+</script>
 <? endif ( $$variable{company_dropdown} and ( @{$$variable{company_dropdown}} > 2 ) ) ?>
