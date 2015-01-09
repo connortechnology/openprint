@@ -174,10 +174,10 @@ sub get_Price {
 
     if ( ! $Price ) {
         $log->debug("No price returned for $$self{name} $$Equipment{strid} $quantity $period") if $debug;
-        return ;
+        return;
     } # end if
 
-    $$Price{'currency_id'} = $Pricelist->currency_id();
+    $$Price{currency_id} = $Pricelist->currency_id();
     $$Price{Material} = $self;
     openprint::Currency::convert( $Price );
     return $Price;
