@@ -107,9 +107,9 @@ sub Currency {
 
 sub get_current {
 
-	if ( $openprint::session{'Pricelist_id'} ) {
+	if ( $openprint::session{Pricelist_id} ) {
 		# Validity of session variables is the job of openprint.pm, so it is done once per hit
-		return new openprint::Pricelist( $openprint::session{'Pricelist_id'} );
+		return new openprint::Pricelist( $openprint::session{Pricelist_id} );
 	} # end if
 
 	my $list_id;
