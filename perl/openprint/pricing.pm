@@ -23,29 +23,38 @@ sub clear_cache {
 
 sub init_cache {
 	$price_cache{$config{db_name}} = {};
-	my @Services = openprint::Service->find(); # for cachine	
-	my @Materials = openprint::Material->find(); # for cachine	
-	my @Pricelists = openprint::Pricelist->find();
+	#my @Services = openprint::Service->find(); # for cachine	
+	#my @Materials = openprint::Material->find(); # for cachine	
+	#my @Pricelists = openprint::Pricelist->find();
 
 	my @ServicePrices = openprint::ServicePrice->find( 'period_end is null'=>1, order=>'min NULLS FIRST, max NULLS FIRST');
 	my @MaterialPrices = openprint::MaterialPrice->find( order=>'lngmin NULLS FIRST, lngmax NULLS FIRST');
-	foreach my $Pricelist ( @Pricelists ) {
+	my $Pricelist = $openprint::Pricelist;
+	#foreach my $Pricelist ( @Pricelists ) {
+		$$Pricelist{cache}{'openprint::Service'} = $$Pricelist{cache}{'openprint::Material'} = $$Pricelist{cache} = {};
+		my $cache = $$Pricelist{cache}{'openprint::Service'};
+	
 		foreach my $S ( @ServicePrices ) {
 			next if $$S{pricelist_id} != $$Pricelist{id};
-			if ( ! $price_cache{$config{db_name}}{$$Pricelist{id}}{'openprint::Service'}{$S->service_id()} ) {
-				$price_cache{$config{db_name}}{$$Pricelist{id}}{'openprint::Service'}{$S->service_id()} = [];
-			} # end if
-			push @{$price_cache{$config{db_name}}{$$Pricelist{id}}{'openprint::Service'}{$S->service_id()}}, $S;
+			#if ( ! $price_cache{$config{db_name}}{$$Pricelist{id}}{'openprint::Service'}{$S->service_id()} ) {
+				#$price_cache{$config{db_name}}{$$Pricelist{id}}{'openprint::Service'}{$S->service_id()} = [];
+			#} # end if
+			if ( ! $$cache{$$S{service_id}} ) {
+				$$cache{$$S{service_id}} = [];
+			}
+			#push @{$price_cache{$config{db_name}}{$$Pricelist{id}}{'openprint::Service'}{$S->service_id()}}, $S;
+			push @{$$cache{$$S{service_id}}}, $S;
 		} # end foreach ServicePrice
+		$cache = $$Pricelist{cache}{'openprint::Material'};
 		foreach my $P ( @MaterialPrices ) {
 			next if $$P{pricelist_id} != $$Pricelist{id};
 #'period_end is null'=>0, 
-			if ( ! $price_cache{$config{db_name}}{$$Pricelist{id}}{'openprint::Material'}{$P->material_id()} ) {
-				$price_cache{$config{db_name}}{$$Pricelist{id}}{'openprint::Material'}{$P->material_id()} = [];
+			if ( ! $$cache{$$P{material_id}} ) {
+				$$cache{$$P{material_id}} = [];
 			} # end if
-			push @{$price_cache{$config{db_name}}{$$Pricelist{id}}{'openprint::Material'}{$P->material_id()}}, $P;
+			push @{$$cache{$$P{material_id}}}, $P;
 		} # end foreach ServicePrice
-	} # end foreach Pricelist
+	#} # end foreach Pricelist
 	#foreach my $Service ( @Services ) {
 		#$Service->Prices( [ map { $price_cache{$config{db_name}}{$$_{id}}{'openprint::Service'}{$$Service{id}} ? $price_cache{$config{db_name}}{$$_{id}}{'openprint::Service'}{$$Service{id}} : () } @Pricelists ] );
 	#} # end foreach Service
@@ -263,11 +272,15 @@ sub get_Price {
 	# If we specify a period, then forget about the caching.  Caching will only do current prices.
 	#if ( $period ) {
 	#}
-	if ( $price_cache{$config{db_name}}{$$Pricelist{id}}{$type}{$$Object{id}} ) {
-		@Prices = @{$price_cache{$config{db_name}}{$$Pricelist{id}}{$type}{$$Object{id}}};
+	if ( $$Pricelist{cache}{$type}{$$Object{id}} ) {
+if ( ref $$Pricelist{cache}{$type}{$$Object{id}} eq 'HASH' ) {
+$_ = Data::Dumper::Dumper( $$Pricelist{cache}{$type}{$$Object{id}} );
+$log->debug($_);
+}
+		@Prices = @{$$Pricelist{cache}{$type}{$$Object{id}}};
 	} else {
-		$price_cache{$config{db_name}}{$$Pricelist{id}}{$type}{$$Object{id}} = [$Object->Prices_For_Pricelist($Pricelist)];
-		@Prices = @{$price_cache{$config{db_name}}{$$Pricelist{id}}{$type}{$$Object{id}}};
+		$$Pricelist{cache}{$type}{$$Object{id}} = [$Object->Prices_For_Pricelist($Pricelist)];
+		@Prices = @{$$Pricelist{cache}{$type}{$$Object{id}}};
 		$log->error("Prices not cached for $config{db_name} pricelist: $$Pricelist{id} type $type $$Object{name}");
 	}
 	if ( @Prices ) {
