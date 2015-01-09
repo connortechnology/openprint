@@ -129,6 +129,7 @@ sub outputs {
 	my @outputs = openprint::Estimating::Printing::outputs( $project_index, $service_index, $specs );
 	foreach my $Group ( groups( $project_index, $specs ) ) {
 		push @v, map { $_.$Group } @outputs;
+		push @v, map { $_.$Group } ( 'txtFinalWidth','txtFinalHeight' );
 	} # end foreach Group
     return @v;
 }
@@ -342,11 +343,15 @@ $openprint::log->warn("FIXM E");
 
 	foreach my $sig_id ( $Project->signatures() ) {
 		my $sig_specs = openprint::service::get_specs_ref( $Project, $sig_id );
+
+		# The point of copying is to not modify the real hash.
 		my %new_specs = %{$sig_specs};
 		openprint::Estimating::Printing::set_size( $Project, \%new_specs, $specs );
 		# I think the idea here is to only update the sizes.... if they change...
 		foreach my $k ( 'txtWidth','txtHeight','txtFinalWidth','txtFinalHeight' ) {
-			openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, $k, $new_specs{$k} );
+
+			# WHy are we doing this? It's wrong.
+			#openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, $k, $new_specs{$k} );
 			$$specs{"$k$$sig_specs{Group}"} = $new_specs{$k};
 		} # end foreach k
 	} # end foreach
