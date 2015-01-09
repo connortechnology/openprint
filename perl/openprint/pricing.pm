@@ -23,7 +23,7 @@ sub clear_cache {
 
 sub init_cache {
 	$price_cache{$config{db_name}} = {};
-if ( 0 ) {
+if ( 1 ) {
 	my @Services = openprint::Service->find(); # for cachine	
 	my @Materials = openprint::Material->find(); # for cachine	
 	my @Pricelists = openprint::Pricelist->find();
@@ -33,10 +33,10 @@ if ( 0 ) {
 	foreach my $Pricelist ( @Pricelists ) {
 		foreach my $S ( @ServicePrices ) {
 			next if $$S{pricelist_id} != $$Pricelist{id};
-			if ( ! $price_cache{$config{db_name}}{$$Pricelist{id}}{'openprint::Service'}{$S->Service()->id()} ) {
-				$price_cache{$config{db_name}}{$$Pricelist{id}}{'openprint::Service'}{$S->Service()->id()} = [];
+			if ( ! $price_cache{$config{db_name}}{$$Pricelist{id}}{'openprint::Service'}{$S->service_id()} ) {
+				$price_cache{$config{db_name}}{$$Pricelist{id}}{'openprint::Service'}{$S->service_id()} = [];
 			} # end if
-			push @{$price_cache{$config{db_name}}{$$Pricelist{id}}{'openprint::Service'}{$S->Service()->id()}}, $S;
+			push @{$price_cache{$config{db_name}}{$$Pricelist{id}}{'openprint::Service'}{$S->service_id()}}, $S;
 		} # end foreach ServicePrice
 		foreach my $P ( @MaterialPrices ) {
 			next if $$P{pricelist_id} != $$Pricelist{id};
@@ -263,7 +263,6 @@ sub get_Price {
 	#if ( $period ) {
 	#}
 	if ( $price_cache{$config{db_name}}{$$Pricelist{id}}{$type}{$$Object{id}} ) {
-$log->debug("Using cache");
 		@Prices = @{$price_cache{$config{db_name}}{$$Pricelist{id}}{$type}{$$Object{id}}};
 	} else {
 		$price_cache{$config{db_name}}{$$Pricelist{id}}{$type}{$$Object{id}} = [$Object->Prices_For_Pricelist($Pricelist)];
@@ -288,13 +287,17 @@ $log->debug("Using cache");
 						( ( ! defined $P->{min} ) or $P->{min} <= $qty ) and 
 						( ( ! defined $P->{max} ) or $P->{max} >= $qty )
 				   ) {
-					$Price = $P->clone();
+					$Price = $P;
+#->clone();
 				} # end if
 			} # end foreach
 		} # end if qty
 	} # end if
 
 	if ( $Price and $$Price{price} ) {
+		if ( $openprint::session{company_id} or $openprint::config{'ApplyMarkup'} ) {
+			$Price = $Price->clone();
+		}
 		if ( $openprint::session{company_id} != 0 ) {
 			my $Company = new openprint::Company( $openprint::session{company_id} );
 
