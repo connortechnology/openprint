@@ -223,5 +223,44 @@ sub _sales_log_line {
 	} # end params{action}
 } # end sub _sales_log_line
 
+sub get_clients {
+	if ( $param{action} eq 'get' ) {
+		my $TZ = DateTime::TimeZone->new( name => $openprint::config{Timezone} );
+		my ( $y, $m, $d ) = Date::Calc::Today();
+
+		my $assigned_on_datetime = DateTime->new( time_zone => $TZ, year=>$y, month=>$m, day=>$d, hour=>0, minute=>0 );
+
+		my $parser = 'DateTime::Format::Pg';
+		my @Todays_Assignments = openprint::Log->find( action => 'Get clients', 'date_time >' => $parser->format_datetime(  $assigned_on_datetime ) );
+		my $today_count = 0;
+		foreach my $L ( @Todays_Assignments ) {
+			my ( $count ) = $L->note() =~ /Get (\d+) clients/;
+			$today_count += $count;
+		} # end foreach L	
+		if ( $today_count >= $config{ClientLotteryMax} ) {
+			$variable{error} .= 'You have already grabbed ' . $today_count . ' new clients today.  Try again tomorrow.<br/>';
+			return;
+		} # end if
+		my @Available_Companies = openprint::Company->find( salesrep_id=>undef, order=>'lower(name)' );	
+		my @To_Be_Added;
+		my $count = $config{ClientLotteryChunkSize};
+		while ( $count > @To_Be_Added ) {
+			my @C = splice( @Available_Companies, int(rand(@Available_Companies)), 1 );
+			next if $C[0]->salesrep_id();
+			push @To_Be_Added, @C;
+		} # emd while
+
+		foreach my $C ( @To_Be_Added ) {
+			$variable{error} .= $C->save({ salesrep_id => $session{user_id} });
+			$variable{information} .= $C->name() . ' is now your client.<br/>';
+		} # end foreach C
+		(new openprint::Log())->save({
+			action	=> 'Get clients',
+			note	=> 'Get ' . $config{ClientLotteryChunkSize} . ' clients',
+		});
+		$variable{ExternalRedirect} .= '/marketing/get_clients.html';
+	} # end if
+} # end sub get_clients
+
 1;
 __END__

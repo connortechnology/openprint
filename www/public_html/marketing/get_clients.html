@@ -1,0 +1,13 @@
+<?include(/includes/error_reporting.html)?>
+<? echo (
+	my $html;
+	
+	my @Available_Companies = openprint::Company->find( salesrep_id=>undef, order=>'lower(name)' );
+
+	return 'There are ' . @Available_Companies . ' companies available for assignment.';
+) ?>
+<? echo (
+	join("\n",
+		button('get_clients', { href=>'/marketing/get_clients.html?action=get', text=>'Get ' . $config{ClientLotteryChunkSize} . ' clients' } ),
+	);
+) ?>
