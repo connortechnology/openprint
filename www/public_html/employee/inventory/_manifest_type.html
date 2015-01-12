@@ -1,6 +1,6 @@
 <fieldset>
 	<? eval (
-		$variable{'location_dropdown'} = openprint::Location->dropdown(order=>'parent_id NULLS FIRST, lower(name)') if ! exists $variable{'location_dropdown'};
+		$variable{'location_dropdown'} = openprint::Location->dropdown(order=>'parent_id NULLS FIRST, lower(name)',type=>'place') if ! exists $variable{'location_dropdown'};
 		if ( ! $param{'Brand-'.$$variable{'type_id'}} ) {
 			my $Paper;
 			if ( $$variable{'Type'}->paper_id() ) {
@@ -36,7 +36,7 @@
 		} # end if
 		$$variable{'PO_Content'} = $$variable{'Type'}->PurchaseOrder_Content();
 
-		$$variable{'Owners'} = openprint::Company->dropdown() if ! $$variable{'Owners'};
+		$$variable{'Owners'} = openprint::Company->dropdown( 'last_order exists' => 1 ) if ! $$variable{'Owners'};
 		if ( ! $$variable{Type}->type() ) {
 			$$variable{Type}->type('Sheet');
 		} # end if
