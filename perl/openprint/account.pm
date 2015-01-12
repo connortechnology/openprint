@@ -804,7 +804,7 @@ sub _search {
 				( map { 'field-'.$_->id() } openprint::User_Profile_Field->find( ) ),
 				) );
 	# Special case for checkboxes because they don't get passed if nothing is checked
-	foreach my $F ( openprint::User_Profile_Field->find('type'=>'checkbox' ) ) {
+	foreach my $F ( openprint::User_Profile_Field->find( type =>'checkbox' ) ) {
 		if ( ! $param{'field-'.$F->id()} ) {
 			delete $session{'/account/search.html?field-'.$F->id()};
 		} # end if
