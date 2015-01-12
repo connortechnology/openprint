@@ -795,7 +795,8 @@ $log->debug("ALl cached $object_type $cache_field $$params{$cache_field}") if DE
 			} 
 			return @results;
 		} # end if
-		return map { $object_type->new_scalar_id( $_->{$$fields{id}}, $_ ) } @$data;
+		#return map { $object_type->new_scalar_id( $_->{$$fields{id}}, $_ ) } @$data;
+		return map { $object_type->new( $_->{$$fields{id}}, $_ ) } @$data;
 	} else {
 		my @identified_by = eval '@'.$object_type.'::identified_by';
 		if ( ! @identified_by ) {
