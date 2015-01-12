@@ -226,7 +226,7 @@ sub _sales_log_line {
 sub get_clients {
 	if ( $param{action} eq 'get' ) {
 		my $TZ = DateTime::TimeZone->new( name => $openprint::config{Timezone} );
-		my ( $y, $m, $d ) = Date::Calc::Today();
+		my ( $y, $m, $d ) = Add_Delta_Days( Date::Calc::Today(), -7 );
 
 		my $assigned_on_datetime = DateTime->new( time_zone => $TZ, year=>$y, month=>$m, day=>$d, hour=>0, minute=>0 );
 
