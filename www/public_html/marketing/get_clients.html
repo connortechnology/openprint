@@ -8,7 +8,7 @@
 ) ?>
 <? echo (
 	join("\n",
-		button('get_clients', { href=>'/marketing/get_clients.html?action=get', text=>'Get ' . $config{ClientLotteryChunkSize} . ' clients' } ),
+		( $variable{todays_count} ? '' : button('get_clients', { href=>'/marketing/get_clients.html?action=get', text=>'Get ' . $config{ClientLotteryChunkSize} . ' clients' } ) ),
 	);
 ) ?>
 <p>
