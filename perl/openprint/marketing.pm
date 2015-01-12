@@ -231,7 +231,7 @@ sub get_clients {
 		my $assigned_on_datetime = DateTime->new( time_zone => $TZ, year=>$y, month=>$m, day=>$d, hour=>0, minute=>0 );
 
 		my $parser = 'DateTime::Format::Pg';
-		my @Todays_Assignments = openprint::Log->find( action => 'Get clients', 'date_time >' => $parser->format_datetime(  $assigned_on_datetime ) );
+		my @Todays_Assignments = openprint::Log->find( user_id=>$session{user_id}, action => 'Get clients', 'date_time >' => $parser->format_datetime(  $assigned_on_datetime ) );
 		my $today_count = 0;
 		foreach my $L ( @Todays_Assignments ) {
 			my ( $count ) = $L->note() =~ /Get (\d+) clients/;
