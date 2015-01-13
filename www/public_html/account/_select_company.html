@@ -8,8 +8,12 @@ function include_unassigned( e ) {
 }
 </script>
 <? eval ( 
+	if ( $session{user_type} eq 'A' ) {
 	$$variable{company_dropdown} = openprint::Company::dropdown( salesrep_id=>$session{user_id} );
 	$$variable{company_dropdown} = openprint::Company::dropdown( ) if ! @{$$variable{company_dropdown}};
+	} else {
+	$$variable{company_dropdown} = openprint::Company::dropdown( );
+	}
 )?>
 <? if ( $$variable{company_dropdown} and ( @{$$variable{company_dropdown}} > 2 ) ) ?>
 <br/>
