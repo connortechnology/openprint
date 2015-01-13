@@ -15,6 +15,13 @@
 		if ( ! $param{order} ) {
 			$sql{order} = 'lower(name)';
 		}
+		if ( $param{name} ) {
+			if ( $param{name} =~ /%/ ) {
+				$sql{'name ilike'} = $param{name};
+			} else {
+				$sql{'name ilike'} = '%'.$param{name}.'%';
+			}
+		}
 my $time = time;
 		my @Companies = openprint::Company->find( %sql );
 $log->debug("Loading took: " . ( time - $time ) . ' secs');
