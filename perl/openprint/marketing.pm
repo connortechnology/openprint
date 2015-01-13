@@ -223,5 +223,58 @@ sub _sales_log_line {
 	} # end params{action}
 } # end sub _sales_log_line
 
+sub get_clients {
+		my $TZ = DateTime::TimeZone->new( name => $openprint::config{Timezone} );
+		my ( $y, $m, $d ) = Date::Calc::Today();
+
+		my $assigned_on_datetime = DateTime->new( time_zone => $TZ, year=>$y, month=>$m, day=>$d, hour=>0, minute=>0 );
+
+		my $parser = 'DateTime::Format::Pg';
+		my @Todays_Assignments = openprint::Log->find( user_id=>$session{user_id}, action => 'Get clients', 'date_time >' => $parser->format_datetime(  $assigned_on_datetime ) );
+		my $todays_count = 0;
+		foreach my $L ( @Todays_Assignments ) {
+			my ( $count ) = $L->note() =~ /Get (\d+) clients/;
+			$todays_count += $count;
+		} # end foreach L	
+		if ( $todays_count >= $config{ClientLotteryChunkSize} ) {
+			$variable{todays_count} = $todays_count;
+			$variable{error} .= 'You have already grabbed ' . $todays_count . ' new clients today.  Try again tomorrow.<br/>';
+			return;
+		} # end if
+
+	if ( $param{action} eq 'get' ) {
+
+		( $y, $m, $d ) = Date::Calc::Add_Delta_Days( ($y,$m,$d), -7 );
+		my @Weeks_Assignments = openprint::Log->find( user_id=>$session{user_id}, action => 'Get clients', 'date_time >' => $parser->format_datetime(  $assigned_on_datetime ) );
+		my $weekly_count = 0;
+		foreach my $L ( @Weeks_Assignments ) {
+			my ( $count ) = $L->note() =~ /Get (\d+) clients/;
+			$weekly_count += $count;
+		} # end foreach L	
+		if ( $weekly_count >= $config{ClientLotteryMax} ) {
+			$variable{error} .= 'You have already grabbed ' . $weekly_count . ' new clients this week.  Try again tomorrow.<br/>';
+			return;
+		} # end if
+		my @Available_Companies = openprint::Company->find( salesrep_id=>undef, order=>'lower(name)' );	
+		my @To_Be_Added;
+		my $count = $config{ClientLotteryChunkSize};
+		while ( $count > @To_Be_Added ) {
+			my @C = splice( @Available_Companies, int(rand(@Available_Companies)), 1 );
+			next if $C[0]->salesrep_id();
+			push @To_Be_Added, @C;
+		} # emd while
+
+		foreach my $C ( @To_Be_Added ) {
+			$variable{error} .= $C->save({ salesrep_id => $session{user_id} });
+			$variable{information} .= $C->name() . ' is now your client.<br/>';
+		} # end foreach C
+		(new openprint::Log())->save({
+			action	=> 'Get clients',
+			note	=> 'Get ' . $config{ClientLotteryChunkSize} . ' clients',
+		});
+		$variable{ExternalRedirect} .= '/marketing/get_clients.html';
+	} # end if
+} # end sub get_clients
+
 1;
 __END__

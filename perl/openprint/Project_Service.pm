@@ -161,7 +161,7 @@ $openprint::log->warn("Deleting Service from " . $Project->to_string() );
 				} );
 	} # end foreach Job
 
-	$Project->add_to_log( @openprint::session{'company_id','user_id'}, "Deleted service ".$self->ServiceType()->type() . " $$specs{ServiceName} ($$self{id})." );
+	$Project->add_to_log( @openprint::session{'company_id','user_id'}, "Deleted service ".$self->ServiceType()->type() . " $$specs{ServiceName} ($$self{service_id})." );
 	sql::end_transaction( $openprint::dbh, $ac );
 	return;
 } # end sub delete

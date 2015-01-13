@@ -67,6 +67,7 @@ $serial = 'companies_id_seq';
 		);
 %find_fields = (
 	last_online	=>	'(SELECT MAX(date_time) FROM Logs WHERE company_id=companies.id)',
+	last_order	=>	'(SELECT MAX(created_on) FROM Orders WHERE company_id=companies.id)',
 	marketing_category_id	=>	'(SELECT category_id FROM companies_in_marketing_categories WHERE company_id=companies.id)',
 );
 %transforms = (
@@ -252,6 +253,17 @@ sub dropdown {
 			$sql .= ' AND ysnsupplier=?';
 			push @values, $params{supplier};
 		} # end if
+		if ( $params{salesrep_id} ) {
+			$sql .= ' AND salesrep_id=?';
+			push @values, $params{salesrep_id};
+		} # end if
+		if ( $params{'last_order >='} ) {
+			$sql .= ' AND (SELECT MAX(created_on) FROM Orders WHERE company_id=companies.id) >= ?';
+			push @values, $params{'last_order >='};
+		}
+		if ( $params{'last_order exists'} ) {
+			$sql .= 'AND EXISTS (SELECT MAX(created_on) FROM Orders WHERE company_id=companies.id)';
+		}
 	} # end if
 	$sql .= ' ORDER BY lower(name)';
 

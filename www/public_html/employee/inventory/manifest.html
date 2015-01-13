@@ -44,7 +44,7 @@
 			my $html = '';
 			my $ac = sql::start_transaction( $dbh );
 			my $content = slurp_content('/employee/inventory/_manifest_type.html' );
-			$variable{'location_dropdown'} = openprint::Location->dropdown(order=>'parent_id NULLS FIRST, lower(name)');
+			$variable{'location_dropdown'} = openprint::Location->dropdown(order=>'parent_id NULLS FIRST, lower(name)', type=>'place');
 			
 			foreach my $Type ( $$variable{'Manifest'}->Types() ) {
 				$$variable{Type} = $Type;

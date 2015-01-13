@@ -52,6 +52,25 @@ sub debug {
 	} # end foreach
 } # end sub debug
 
+sub new_scalar_id {
+	my ( $parent, $id, $data ) = @_;
+	my $self = $data;
+	bless $self, $parent;
+
+#$log->debug("loading $parent $id") if $debug or DEBUG_ALL;
+	no strict 'refs';
+	my $fields = \%{$parent.'::fields'};
+		my @keys = map { ( (defined $$fields{$_} or exists $$data{$_} ) and $$fields{$_} ne $_ ) ? $_ : () } keys %$fields;
+		@$self{@keys} = @$self{@$fields{@keys}};
+	if ( ! $no_cache ) {
+		$log->debug("Caching $config{db_name} $parent $id = $self") if $debug;
+		$cache{$config{db_name}}{$parent}{$id} = $self;
+	} else {
+		$log->debug("NOT Caching $config{db_name} $parent $id = $self") if $debug;
+	} # end if
+	return $self;
+}
+
 sub new {
 	my ( $parent, $id, $data ) = @_;
 
@@ -776,6 +795,7 @@ $log->debug("ALl cached $object_type $cache_field $$params{$cache_field}") if DE
 			} 
 			return @results;
 		} # end if
+		#return map { $object_type->new_scalar_id( $_->{$$fields{id}}, $_ ) } @$data;
 		return map { $object_type->new( $_->{$$fields{id}}, $_ ) } @$data;
 	} else {
 		my @identified_by = eval '@'.$object_type.'::identified_by';
