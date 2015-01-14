@@ -261,13 +261,16 @@ sub dropdown {
 			$sql .= ' AND (SELECT MAX(created_on) FROM Orders WHERE company_id=companies.id) >= ?';
 			push @values, $params{'last_order >='};
 		}
+		if ( $params{'last_order is not null'} ) {
+			$sql .= ' AND (SELECT MAX(created_on) FROM Orders WHERE company_id=companies.id) IS NOT NULL';
+		}
 		if ( $params{'last_order exists'} ) {
 			$sql .= 'AND EXISTS (SELECT MAX(created_on) FROM Orders WHERE company_id=companies.id)';
 		}
 	} # end if
 	$sql .= ' ORDER BY lower(name)';
-
 	my $companies = sql::execute_array( undef, undef, $sql, @values );
+$log->debug($sql . ' count: ' . @{$companies});
 	return $companies;
 } # end sub dropdown
 
