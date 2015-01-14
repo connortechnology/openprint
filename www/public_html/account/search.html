@@ -1,4 +1,4 @@
-<? echo ( include('/includes/error_reporting.html'); ) ?>
+<?include(/includes/error_reporting.html)?>
 <script type="text/javascript">
 	function load_results() {
 		$('Results').innerHTML = 'Please wait. Loading...';
@@ -13,28 +13,26 @@
 				<div class="content">
 					<div class="leftColumn">
 					<ul>
-						<li><label>Alias</label>
+						<li><label>Company</label>
 							<input type="text" name="company_name" id="company_name" onkeyup="if(this.value.length > 2){load_results();};" />
 						</li>
 						<li><label>Real Name</label>
 							<input type="text" name="name" id="name" onkeyup="if(this.value.length > 2){load_results();};" />
 						</li>
-<!--
 						<li>
 							<label>Registered</label>
-							<? echo ( ssi::date_select_session( '/account/search.html', 'created_on_start', {onchange=>q`load_results();`,'with_clear'=>1,'with_today'=>1} ); ) ?>
+							<? echo ( date_select_session( '/account/search.html', 'created_on_start', {onchange=>q`load_results();`,with_clear=>1,with_today=>1} ); ) ?>
 								to 
-							<? echo ( ssi::date_select_session( '/account/search.html', 'created_on_end', {onchange=>q`load_results();`,'with_clear'=>1,'with_today'=>1} ); ) ?>
+							<? echo ( date_select_session( '/account/search.html', 'created_on_end', {onchange=>q`load_results();`,with_clear=>1,with_today=>1} ); ) ?>
 						</li>
--->
 						<li>
 							<label>Last Online</label>
-							<? echo ( ssi::date_select_session( '/account/search.html', 'last_online_start', {onchange=>q`load_results();`,'with_clear'=>1,'with_today'=>1} ); ) ?>
+							<? echo ( date_select_session( '/account/search.html', 'last_online_start', {onchange=>q`load_results();`,with_clear=>1,with_today=>1} ); ) ?>
 								to 
-							<? echo ( ssi::date_select_session( '/account/search.html', 'last_online_end', {onchange=>q`load_results();`,'with_clear'=>1,'with_today'=>1} ); ) ?>
+							<? echo ( date_select_session( '/account/search.html', 'last_online_end', {onchange=>q`load_results();`,with_clear=>1,with_today=>1} ); ) ?>
 						</li>
-						<li><label>Photos</label>
-							<? echo ( ssi::radio( 'photos', [ 1, 'with', '0', 'without', '', 'both' ], $session{'/account/search.html?photos'} ); ) ?>
+						<li class="photos"><label>Photos</label>
+							<? echo ( radio( 'photos', [ 1, 'with', '0', 'without', '', 'both' ], $session{'/account/search.html?photos'} ); ) ?>
 						</li>
 					</ul>
 				</div>
@@ -42,9 +40,9 @@
 					<ul>
 						<? echo ( 
 	my $html = '';
-	my $Profile = new openprint::User($session{'user_id'})->Profile();
+	my $Profile = new openprint::User($session{user_id})->Profile();
 	
-	foreach my $Field ( openprint::User_Profile_Field->find('searchable'=>1,'order'=>'sort,name') ) {
+	foreach my $Field ( openprint::User_Profile_Field->find(searchable=>1,order=>'sort,name') ) {
 		$html .= '<li><label>'.$Field->description().'</label><span id="field-'.$Field->id().'_container">';
 	
 		my $value;
@@ -55,32 +53,32 @@
 		} # end if
 
 		if ( $Field->type() eq 'checkbox' ) {
-			$html .= ssi::checkboxes( 'field-'.$$Field{id}, $Field->values(), [split(',',$value)], {onclick=>'load_results()'} );
+			$html .= checkboxes( 'field-'.$$Field{id}, $Field->values(), [split(',',$value)], {onclick=>'load_results()'} );
 		} elsif ( $Field->type() eq 'radio' ) {
-			$html .= ssi::radio( 'field-'.$$Field{id}, $Field->values(), $value, {onclick=>'load_results()'} );
+			$html .= radio( 'field-'.$$Field{id}, $Field->values(), $value, {onclick=>'load_results()'} );
 		} elsif ( $Field->type() eq 'date' ) {
 			my ( $start, $end ) = @{$Field->values()} if $Field->values();
-			$html .= ssi::date_select_session( '/account/search.html', 'field-'.$Field->id().'_start', { 'start'=>$start, 'end'=>$end, onclick=>'load_results()' } );
+			$html .= date_select_session( '/account/search.html', 'field-'.$Field->id().'_start', { 'start'=>$start, 'end'=>$end, onclick=>'load_results()' } );
 			$html .= ' to ';
-			$html .= ssi::date_select_session( '/account/search.html', 'field-'.$Field->id().'_end', { 'start'=>$start, 'end'=>$end, onclick=>'load_results()' } );
+			$html .= date_select_session( '/account/search.html', 'field-'.$Field->id().'_end', { 'start'=>$start, 'end'=>$end, onclick=>'load_results()' } );
 		} elsif ( $$Field{type} eq 'location' ) {
 			$html .= openprint::Location::filters( 'field-'.$$Field{id}.'-', new openprint::Location($value), { onSuccess=>'load_results();'} );
 		} elsif ( sets::isin( $Field->type(), [ 'country', 'state', 'city' ] ) ) {
 			$html .= sprintf(q`<select id="%2$s" name="field-%1$d" onchange="Location_onchange( this, '%2$s', { onSuccess: load_results } );"><option value=""> </option>`, $Field->id(), $Field->type() );
-			$html .= ssi::make_drop_down( openprint::Location->dropdown('type'=>$Field->type(), 'order'=>'lower(name)'), $value ? $value : $Field->search_default() );
+			$html .= make_drop_down( openprint::Location->dropdown('type'=>$Field->type(), 'order'=>'lower(name)'), $value ? $value : $Field->search_default() );
 			$html .= '</select>';
 		} elsif ( $Field->type() eq 'select-one' ) {
 			$html .= sprintf( q`<select name="field-%1$d" id="field-%1$d" onchange="load_results();"><option value=""> </option>`, $Field->id() );
-			$html .= ssi::make_drop_down( [ map { $_, $_ } @{$Field->values()} ], $value ? $value : $Field->search_default() );
+			$html .= make_drop_down( [ map { $_, $_ } @{$Field->values()} ], $value ? $value : $Field->search_default() );
 			$html .= '</select>';
 		} elsif ( sets::isin( $Field->type(), [ 'text','number' ] ) ) {
-			$html .= sprintf( q`<input type="%3$s" name="field-%1$d" id="field-%1$d" value="%2$s" />`, $Field->id(), ''.( $value ? $value : $Field->search_default() ), $$Field{'type'} );
+			$html .= sprintf( q`<input type="%3$s" name="field-%1$d" id="field-%1$d" value="%2$s" />`, $Field->id(), ''.( $value ? $value : $Field->search_default() ), $$Field{type} );
 		} # end if
 		$html .= "</span></li>\n";
 	} # end foreach Field
 	return $html;
 ) ?>
-						<li><label>Distance</label>
+						<li class="distance"><label>Distance</label>
 							<select name="distance">
 								<? echo ( make_drop_down( [ '', 'Any', '10', '10km', '25', '25km', '50', '50km', '100', '100km' ], $session{'/account/search.html?distance'} ); ) ?>
 							</select>
@@ -89,13 +87,13 @@
 				</div>
 			</div>
 			<p class="buttons">
-				<? echo ( join('',
+				<? echo ( join("\n",
 					button( 'ShowResults', { onclick=>q`LoadContent('Results','_search.html', f1 );`, text=>'Show Results' } ),
-					button( 'Reset', { 'onclick'=>'f1.reset();' } ),
+					button( 'Reset', { onclick=>'f1.reset();' } ),
 					); ) ?>
 			</p>
 			</fieldset>
 		</form>
-		<div id="Results"><? echo ( include('/account/_search.html'); ) ?></div>
+		<div id="Results"><?include('/account/_search.html')?></div>
 	</div>
 </div>
