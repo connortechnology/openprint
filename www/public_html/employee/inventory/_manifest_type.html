@@ -38,7 +38,7 @@
 
 		if ( ! $$variable{Owners} ) {
 			my @owner_ids = sql::execute(undef,undef,'SELECT DISTINCT owner_id FROM Papers');
-			$$variable{Owners} = openprint::Company->dropdown( 'last_order exists' => 1, id=>\@owner_ids );
+			$$variable{Owners} = openprint::Company->dropdown( id=>\@owner_ids );
 		} # end if
 		if ( ! $$variable{Type}->type() ) {
 			$$variable{Type}->type('Sheet');
