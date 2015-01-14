@@ -9,10 +9,10 @@ function include_unassigned( e ) {
 </script>
 <? eval ( 
 	if ( $session{user_type} eq 'A' ) {
-	$$variable{company_dropdown} = openprint::Company::dropdown( salesrep_id=>$session{user_id} );
-	$$variable{company_dropdown} = openprint::Company::dropdown( ) if ! @{$$variable{company_dropdown}};
+		$$variable{company_dropdown} = openprint::Company::dropdown( salesrep_id=>$session{user_id} );
+		$$variable{company_dropdown} = openprint::Company::dropdown( ) if ! @{$$variable{company_dropdown}};
 	} else {
-	$$variable{company_dropdown} = openprint::Company::dropdown( );
+		$$variable{company_dropdown} = openprint::Company::dropdown();
 	}
 )?>
 <? if ( $$variable{company_dropdown} and ( @{$$variable{company_dropdown}} > 2 ) ) ?>
@@ -31,7 +31,7 @@ Any actions you perform will be recorded in the selected <? echo ( translate('co
 					if ( @{$$variable{company_dropdown}} > 2000 ) {
 						return '<option value="">loading...</option>';
 					} else {
-					make_drop_down( $$variable{company_dropdown}, $session{company_id} );
+						make_drop_down( $$variable{company_dropdown}, $session{company_id} );
 					}
 				) ?>
 			</select>
