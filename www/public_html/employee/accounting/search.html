@@ -48,7 +48,7 @@ Choose criteria and click show results. You may the download the results in CSV 
 			<input class="filter" type="text" onkeyup="filterDDM(this, f1.ddmCustomer);" />
 			<select id="ddmCustomer" name="ddmCustomer" size="1">
 				<option value="">All Customers</option>
-				<? echo ( openprint::Company::get_dropdown( $session{'/employee/accounting/search.html?ddmCustomer'} ); ) ?>
+				<? echo ( make_drop_down( openprint::Company->dropdown('last_order is not null'=>1), $session{'/employee/accounting/search.html?ddmCustomer'} ); ) ?>
 			</select>
 		</p>
 		<p> 
