@@ -3,7 +3,7 @@
 		<ul>
 			<li><label>Price List</label><? echo ( $$variable{Company}->Pricelist()->name() ) ?></li>
             <li><label>Pricing Discount</label><? echo ( $$variable{Company}->discount() ) ?>%</li>
-            <li><label>Sales Rep</label><? echo ( $$variable{Company}->salrep_id() ? $$variable{Company}->CSR()->name() : 'none assigned') ?></li>
+            <li><label>Sales Rep</label><? echo ( $$variable{Company}->salesrep_id() ? $$variable{Company}->CSR()->name() : 'none assigned') ?></li>
         <? if ( $$variable{Company}->id() ) ?>
             <? eval (
                 @{$$variable{'Orders'}} = openprint::Order->find(company_id=>$$variable{Company}->id(),order=>'id DESC');
