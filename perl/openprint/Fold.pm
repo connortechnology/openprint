@@ -13,7 +13,7 @@ use vars qw( $debug $table $serial $log $dbh %fields %transforms %defaults );
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
 
-$debug = 0;
+$debug = 1;
 $table = 'folds';
 $serial= 'folds_id_seq';
 
@@ -158,7 +158,7 @@ $log->debug("Converting $range gsm to " . openprint::Paper::gsm_to_weight( $rang
 		$range = openprint::Paper::gsm_to_weight( $range );
 	} # end if
 
-	$range = 1*$range;
+	$range = $range;
 	my $i = 0;
 	my $x;
 	my $y;
@@ -167,7 +167,7 @@ $log->debug("Converting $range gsm to " . openprint::Paper::gsm_to_weight( $rang
 $log->debug("Examining: ".$Spec->Fold()->Equipment()->name() . ' ' . $Spec->Fold()->name() . " MIN(" . $Spec->min_weight() .     ') MAX(' . $Spec->max_weight() . $Spec->weight_units(). ') RUNSPEED(' . $Spec->runspeed() .') INTERPOLATE('.$Spec->interpolate() .') for range: ' . $range ) if $debug;
 		#return $Spec if ( 1*$$Spec{min_weight} == $range ) or ( 1*$$Spec{max_weight} == $range );
 
-		return $Spec if ( ( $$Spec{min_weight} <= $range ) and ( $$Spec{max_weight} >= $range ) );
+		return $Spec if ( ( $$Spec{min_weight} <= $range ) and ( $$Spec{max_weight} eq '' or $$Spec{max_weight} >= $range ) );
 		return $Spec if (
 				( ! $$Spec{interpolate} ) and 
 				(( ! $$Spec{min_weight} ) or ($$Spec{min_weight} <= $range)) and
@@ -175,7 +175,7 @@ $log->debug("Examining: ".$Spec->Fold()->Equipment()->name() . ' ' . $Spec->Fold
 				);
 
 # first step, find one less than the min
-		last if 1*$$Spec{min_weight} > $range;
+		last if $$Spec{min_weight} > $range;
 		last if ( $Spec->max_weight() eq '' and ! $Spec->interpolate() );
 	} # end if
 
@@ -184,7 +184,7 @@ $log->debug("Examining: ".$Spec->Fold()->Equipment()->name() . ' ' . $Spec->Fold
         # back up
 		$x = $$self{'Specifications'}[$i];
 $log->debug("Found spec for $range:" . $x->min_weight() . ' ' . $x->max_weight() . ' : ' . $x->runspeed() ) if $debug;
-		return if ( (1*$$x{max_weight}) and ( $$x{max_weight} < $range ) and ! $$x{interpolate} );
+		return if ( $$x{max_weight} and ( $$x{max_weight} < $range ) and ! $$x{interpolate} );
    } else {
 	   $log->debug("Couldn't find monimum for $range ") if $debug;
 	   return;
