@@ -35,10 +35,10 @@
 					my @user_ids = map { $Operators{$$_{user_id}} ? () : $$_{user_id} } @Usersin;
 
 					my $html .= '<optgroup label="Usual Operators">';
-					$html .= make_drop_down( [ @{openprint::User->dropdown(id=>[keys %Operators], order=>'lower(firstname),lower(lastname)')} ], $$variable{Shift}->operator_id() );
+					$html .= make_drop_down( [ @{openprint::User->dropdown( company_id=>$session{company_id}, id=>[keys %Operators], order=>'lower(firstname),lower(lastname)')} ], $$variable{Shift}->operator_id() );
 					$html .= '</optgroup>';
 					$html .= '<optgroup label="Others">';
-					$html .= make_drop_down( [ @{openprint::User->dropdown(id=>\@user_ids, order=>'lower(firstname),lower(lastname)')} ], $$variable{Shift}->operator_id() );
+					$html .= make_drop_down( [ @{openprint::User->dropdown( company_id=>$session{company_id}, id=>\@user_ids, order=>'lower(firstname),lower(lastname)')} ], $$variable{Shift}->operator_id() );
 					$html .= '</optgroup>';
 					return $html;
 				   ) ?>
