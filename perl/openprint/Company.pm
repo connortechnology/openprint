@@ -11,7 +11,7 @@ require sql;
 require openprint::Object;
 require openprint::User;
 
-$debug = 0;
+$debug = 1;
 $table = 'companies';
 $serial = 'companies_id_seq';
 
@@ -68,6 +68,8 @@ $serial = 'companies_id_seq';
 %find_fields = (
 	last_online	=>	'(SELECT MAX(date_time) FROM Logs WHERE company_id=companies.id)',
 	last_order	=>	'(SELECT MAX(created_on) FROM Orders WHERE company_id=companies.id)',
+	last_ordered_on	=>	'(SELECT MAX(created_on) FROM Orders WHERE company_id=companies.id)',
+	last_called_on	=>	'(SELECT MAX(date_time) FROM sales_logs WHERE company_id=companies.id)',
 	marketing_category_id	=>	'(SELECT category_id FROM companies_in_marketing_categories WHERE company_id=companies.id)',
 );
 %transforms = (
@@ -353,6 +355,7 @@ sub can_edit {
 	my $Me = new openprint::User( $openprint::session{'user_id'} );
 	return 1 if sets::isin( $_[0]->salesrep_id(), $Me->csr_ids() );
 	return 1 if $_[0]{'id'} == $$Me{'company_id'} and $$Me{'administrator'} eq 'Y';
+	return 0;
 } # end sub can_edit
 
 sub taxexempt1 {
@@ -404,7 +407,9 @@ sub can_view {
     return 1 if $openprint::session{'user_type'} eq 'A';
     return 1 if $_[0]->salesrep_id() == $openprint::session{'user_id'};
     my $Me = new openprint::User( $openprint::session{'user_id'} );
-    return 1 if $_[0]{'id'} == $$Me{'company_id'} and $$Me{'administrator'} eq 'Y';
+    return 1 if $_[0]{'id'} == $$Me{'company_id'};
+	return 1 if sets::isin( $_[0]->salesrep_id(), $Me->csr_ids() );
+	return 0;
 } # end sub can_view
 
 sub date_first_order {
@@ -479,5 +484,20 @@ sub tax_code {
 sub link_to {
 	return sprintf('<a href="/account/company_profile.html?ddmCustomer=%d">%s</a>', $_[0]{id}, $_[0]{name} );
 } # end sub link_to
+
+sub last_ordered_on {
+	if ( ! exists $_[0]{last_ordered_on} ) {
+		(  $_[0]{last_ordered_on} ) = sql::execute( undef, undef, 'SELECT MAX(created_on) FROM Orders WHERE company_id=?', $_[0]{id} );
+	}
+	return $_[0]{last_ordered_on};
+} # end sub last_ordered_on
+
+sub last_called_on {
+	if ( ! exists $_[0]{last_called_on} ) {
+		(  $_[0]{last_called_on} ) = sql::execute( undef, undef, 'SELECT MAX(date_time) FROM sales_logs WHERE company_id=?', $_[0]{id} );
+	}
+	return $_[0]{last_called_on};
+}  # end sub last_called_on
+
 1;
 __END__
