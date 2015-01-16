@@ -1296,25 +1296,25 @@ $openprint::log->debug("Skipping cuz ddmPress$qty_index ne $$Press{strid}");
 			my @sheets = split(',', $sheets );
 			foreach my $sheet ( @sheets ) {
 				my ( $width, $height ) = split('x', $sheet);
-				$sheetsizes{join('x',$width,$height)} = 1;
+				$sheetsizes{$sheet} = 1;
 				$sheetsizes{join('x',$height,$width)} = 1;
-				if ( ! $available_sheets{join('x',$width,$height)} ) {
+				if ( ! $available_sheets{$sheet} ) {
 					foreach my $Paper ( @Sheets ) {
+						next if ! $Paper->cuttable();
 						next if $Paper->width() < $width;
 						next if $Paper->height() < $height;
-						next if ! $Paper->cuttable();
 						my $P = $Paper->clone();
 						$P->cut( $width, $height );
 						push @extra_sheets, $P;
 						$Papers{$P->id_string()} = $P->clone() if ! $Papers{$P->id_string()};
 					} # end foreach P
-					$available_sheets{join('x',$width,$height)} = 1;
+					$available_sheets{$sheet} = 1;
 				} # end if
 				if ( ! $available_sheets{join('x',$height,$width)} ) {
 					foreach my $Paper ( @Sheets ) {
+						next if ! $Paper->cuttable();
 						next if $Paper->width() < $height;
 						next if $Paper->height() < $width;
-						next if ! $Paper->cuttable();
 						my $P = $Paper->clone();
 						$P->cut( $height, $width );
 						push @extra_sheets, $P;
@@ -1342,7 +1342,7 @@ $openprint::log->debug("Skipping cuz ddmPress$qty_index ne $$Press{strid}");
 		foreach my $Paper ( @Papers ) {
 #Paper might have different calliperso# Is this needed anymore
 			#$$project{Calliper} = $$Paper{calliper};
-		if ( DEBUG_IMPOSITIONS ) {
+		if ( DEBUG_IMPOSITIONS and 0 ) {
 			my ( $width, $height ) = split('x', $$specs{"ddmStockSheetSize$qty_index"} );
 $openprint::log->debug("$width x $height");
 			if ( $width and ( $width != $Paper->width() ) ) {
@@ -1558,6 +1558,9 @@ if ( DEBUG_INITIAL_FILTERING ) {
 						} # end if
 						my $add = 1;
 						my $Aarea = $i->Paper()->area();
+	if ( DEBUG_INITIAL_FILTERING ) {
+	$i->display("STARTING A");
+	}
 						if ( $$Overrides{"chkOverrideSheetSize$qty_index"} or $$Overrides{"OverrideCutOff$qty_index"} ) {
 						} else {
 							for ( my $imp_index = 0; $imp_index < @{$imps{$key}}; $imp_index += 1 ) {
@@ -1565,7 +1568,8 @@ if ( DEBUG_INITIAL_FILTERING ) {
 								my $Barea = $B->Paper()->area();
 								if ( $Aarea < $Barea ) {
 	if ( DEBUG_INITIAL_FILTERING ) {
-	$B->display("DROPPING");
+	$B->display("DROPPING B");
+	$i->display("KEEPPING A");
 	}
 									splice @{$imps{$key}}, $imp_index, 1;
 									$imp_index -= 1;
@@ -1698,7 +1702,7 @@ $imp->display('Comparing A QTY $' . $$imp{PaperPrice}{'100lb Price'}. " for $a_s
                     } # end if
                     $$I{PaperPrice} = $B->get_price( service=>'Material', weight=> $$I{stock_lbs} ) if ! $$I{PaperPrice};
                     my $BPrice = $$I{PaperPrice};
-$I->display('Comparing B QTY $' . $$BPrice{'100lb Price'}) if DEBUG_INITIAL_FILTERING;
+$I->display('Comparing B QTY $' . $$BPrice{'100lb Price'} ) if DEBUG_INITIAL_FILTERING;
 #if ( ! $$I{PaperPrice} ) {
 #$log->error("No price for stock ".$B->to_string() ) if ! ( $B->custom() or $B->supplied() );
 #} elsif ( ( ! $$BPrice{'100lb Price'} ) and ( ! $$B{custom} ) and ( ! $$B{supplied} ) ) {
@@ -1716,8 +1720,10 @@ $I->display('Comparing B QTY $' . $$BPrice{'100lb Price'}) if DEBUG_INITIAL_FILT
                             ( $B->is_cut() or ! $A->is_cut() )
 							and 
 							( ( !$$B{start_width} ) or $$A{start_width} ) # Prefer non custom rolls
+							and 
+							( $B->waste() > $A->waste() )
                        ) {
-$openprint::log->debug('removing B larger') if DEBUG_INITIAL_FILTERING;
+$openprint::log->debug("removing B larger") if DEBUG_INITIAL_FILTERING;
                         splice @{$imps{$str}}, $j, 1;
                         $j -= 1;
                     } elsif (
@@ -1730,6 +1736,8 @@ $openprint::log->debug('removing B larger') if DEBUG_INITIAL_FILTERING;
                             ( ( ! $B->is_cut() ) or $A->is_cut() )
 							and 
 							( ( $$B{start_width} ) or ( ! $$A{start_width} ) ) # Prefer non custom rolls
+							and 
+							( $B->waste() < $A->waste() )
                        ) {
                         $add = 0;
 $openprint::log->debug('removing A larger') if DEBUG_INITIAL_FILTERING;
