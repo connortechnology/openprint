@@ -76,10 +76,18 @@ sub new {
 
 	my $ref = ref $id;
 	if ( ! $ref ) {
-		if ( $id and (!$data) and $cache{$config{db_name}}{$parent} and $cache{$config{db_name}}{$parent}{$id} ) {
+		if ( $id and $cache{$config{db_name}}{$parent} and $cache{$config{db_name}}{$parent}{$id} ) {
+			if ( $data ) {
+if ( 1 ) {
+				my $self = $cache{$config{db_name}}{$parent}{$id};
+				$self->load( $data );
+				return $self;
+}
+			} else {
 #$log->debug("Loading from cache $parent $id");
 			# If the object is cached
 			return $openprint::Object::cache{$config{db_name}}{$parent}{$id};
+			}
 		} # end if
 #$log->debug("Not Loading from cache $parent $id") if $id and ! $data;
 		my $self = {};
