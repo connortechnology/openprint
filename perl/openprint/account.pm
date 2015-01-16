@@ -386,9 +386,24 @@ sub login_password {
 } # login password
 
 sub company_profile {
-	my $Company = $variable{'Company'} = new openprint::Company( $session{'company_id'} );
+	my $Company;
+		$Company = new openprint::Company( $param{company_id} );
+
+	if ( ! $Company->can_view() ) {
+		$variable{error} .= 'You cannot view company ' . $Company->id() . '<br/>';
+		$Company = $variable{Company} = new openprint::Company();
+		return;
+	} # end if
 
 	if ( $param{'btnFunction'} eq 'Save' ) {
+		if ( ! $Company->id() ) {
+			$variable{error} .= 'no company specified.';
+			return;
+		}
+		if ( ! $Company->can_edit() ) {
+			$variable{error} .= 'You cannot edit company ' . $Company->id() . '<br/>';
+			return;
+		} # end if
 		my $error = '';
 		$error .= "Company Name cannot be empty.<br/>" if ! $param{'companyname'};
 		if ( exists $param{'StartYear'} ) {
@@ -413,7 +428,11 @@ sub company_profile {
 		$Company->set( \%param );
 		$variable{'error'} .= $Company->save( );
 		$variable{'error'} .= $Company->save_tradereferences( \%param );
+		$Company->Profile()->save( \%param );
 	} # end if
+	if ( ! $Company->id() ) {
+		$Company = new openprint::Company( $session{company_id} );
+	}
 
 	$variable{'Company'} = $Company;
 } # end sub company_profile
@@ -941,6 +960,29 @@ sub _blocklist_actions {
 		$variable{error} .= $Block->save({unblock=>0});
 	} # end if
 } # end sub _blocklist_actions
+
+sub companies {
+   _companies();
+    ssi::setup_date_select( '/account/companies.html', 'created_on_start', '' );
+    ssi::setup_date_select( '/account/companies.html', 'created_on_end', '' );
+    ssi::setup_date_select( '/account/companies.html', 'last_ordered_start', '' );
+    ssi::setup_date_select( '/account/companies.html', 'last_ordered_end', '' );
+    ssi::setup_date_select( '/account/companies.html', 'last_called_start', '' );
+    ssi::setup_date_select( '/account/companies.html', 'last_called_end', '' );
+} # end sub companies
+
+sub _companies {
+    ssi::save_params( '/account/companies.html', (
+                ( map { 'created_on_start_' . $_ } ( 'year', 'month','day' ) ),
+                ( map { 'created_on_end_' . $_ } ( 'year', 'month','day' ) ),
+                ( map { 'last_ordered_on_start_' . $_ } ( 'year', 'month','day' ) ),
+                ( map { 'last_ordered_on_end_' . $_ } ( 'year', 'month','day' ) ),
+                ( map { 'last_called_on_start_' . $_ } ( 'year', 'month','day' ) ),
+                ( map { 'last_called_on_end_' . $_ } ( 'year', 'month','day' ) ),
+                ( map { 'field-'.$_->id() } openprint::Company_Profile_Field->find(order=>'sort,name') ),
+				'company_name','salesrep_id', 'salesrep_id_exclude', 'marketingcategory_id', 'deleted',
+                ) );
+} # end sub _companies
 
 1;
 __END__
