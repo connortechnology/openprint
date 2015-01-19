@@ -1,6 +1,6 @@
 use strict;
 package openprint;
-use vars qw( $r %variable %session %param %config $log $dbh );
+use vars qw( $r %variable %session %param %config $log $dbh $User $Company );
 
 
 sub session_init {
@@ -58,6 +58,9 @@ $log->error("Since when is session_id in the params");
 		%session = ();
 	} # end if
 	$session{'ip'} = $ENV{'REMOTE_ADDR'} if $ENV{'REMOTE_ADDR'} and ! $session{'ip'};
+
+	$User = new openprint::User( $session{user_id} );
+	$Company = new openprint::Company( $session{company_id} );
 
 # Now set some defaults right away, if we can, FIXME namespace colision
 	if ( $r->param('Country') ) {
@@ -126,6 +129,7 @@ $log->error("Since when is session_id in the params");
 sub switch_company {
 	my ( $Company ) = @_;
 	$session{'company_id'} = $Company->id();
+	$openprint::Company = $Company;
 	(new openprint::Log())->save({'action'=>'Switch Company'});
 
 	if ( $Company->currency_id() ) {
