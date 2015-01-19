@@ -223,7 +223,7 @@ sub Credit {
 sub dropdown {
 	shift @_ if $_[0] eq 'openprint::Company';
 
-	my $sql = 'SELECT id, name FROM Companies WHERE deleted=false)';
+	my $sql = 'SELECT id, name FROM Companies WHERE deleted=false';
 	my @values;
 
 	if ( $openprint::session{user_id} and ( $openprint::session{'user_type'} ne 'A' ) and ! openprint::usergroup::is_user_in( ['Estimating','Prepress','Accounting','Shipping','Inventory'], $openprint::session{'user_id'} ) ) {
