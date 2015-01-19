@@ -1,0 +1,57 @@
+<div class="PageTitle">
+<h2>Companies</h2>
+</div>
+<script type="text/javascript">
+function load_page() {
+	new Ajax.Updater( 'Results', '_companies.html', { parameters: $('f1').serialize() } );
+} 
+</script>
+<form id="f1" name="f1" method="post" action="companies.html">
+	<fieldset class="filters"><legend>Report Criteria</legend>
+		<ul>
+		<li>
+			<label>Name contains</label>
+			<? echo ( input( type=>'text', name=>'company_name', oninput=>q`if(this.value.length>3){load_page();};`, onkeydown=>"load_page();" ); ) ?>
+		</li>
+<? if ( $session{user_type} eq 'A' ) ?>
+		<li>
+			<label>Sales Rep</label>
+			<select name="salesrep_id" size="1" onchange="load_page();"> 
+				<option value="">All</option>
+				<? echo ( make_drop_down( openprint::User->dropdown( type=>['E','A'], order=>'lower(firstname),lower(lastname)', 'usergroup any'=>'Sales' ), $session{$r->uri().'?salesrep_id'} ); ) ?>
+			</select>
+			<? echo ( checkboxes( 'salesrep_id_exclude', [ 1, 'Not in this list' ], $session{$r->uri().'?salesrep_id_exclude'}, { onclick=>'load_page();' } ); ) ?>
+		</li>
+<? endif ( $session{user_type} eq 'A' ) ?>
+		<li> 
+			<label>Created Date</label>
+			<? echo ( date_select_session( $r->uri(), 'created_on_start', { with_today=>1, with_clear=>1, onchange=>'load_page();' } ); ) ?>
+			to
+			<? echo ( date_select_session( $r->uri(), 'created_on_end', { with_today=>1, with_clear=>1, onchange=>'load_page();' } ); ) ?>
+		</li>
+        <li>
+             <label>Last Ordered On</label>
+            <? echo ( date_select_session( $r->uri(), 'last_ordered_on_start', { with_today=>1,with_clear=>1 } ); ) ?>
+            to
+            <? echo ( date_select_session( $r->uri(), 'last_ordered_on_end', { with_today=>1,with_clear=>1 } ); ) ?>
+        </li>
+        <li>
+             <label>Last Called On</label>
+            <? echo ( date_select_session( $r->uri(), 'last_called_on_start', { with_today=>1,with_clear=>1 } ); ) ?>
+            to
+            <? echo ( date_select_session( $r->uri(), 'last_called_on_end', { with_today=>1,with_clear=>1 } ); ) ?>
+        </li>
+		<li><label>Deleted?</label><? echo ( radio( 'deleted', [ '1','Yes', '0', 'No', '', 'Both' ], $session{$r->uri().'?deleted'}, {onclick=>"load_page();"} ); ) ?></li>
+		<li><label>Marketing Category</label><? echo ( ssi::select( openprint::MarketingCategory->dropdown(), $session{$r->uri().'?marketing_category_id'}, { onclick=>'load_page();', name=>'marketing_category_id' } ); ) ?></li>
+		</ul>
+		<p class="buttons">
+			<? echo ( join("\n",
+				button( 'ShowResults', { onclick=>'load_page();', text=>'Show Results' } ),
+				#button( 'DownloadCSV', { onclick=>"f1.action='projects.html?Download';f1.btnFunction.value='Download in CSV format';f1.submit();", href=>'', text=>'Download in CSV Format' } ),
+				button( 'Reset', { onclick=>"f1.reset();", text=>'Reset' } ),
+); ) ?>
+		</p>
+	</fieldset>
+	<div id="Results">Make a selection or Click Show Results</div>
+	<input type="hidden" name="btnFunction"/>
+</form>

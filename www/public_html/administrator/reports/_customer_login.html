@@ -1,0 +1,59 @@
+<? if ( $$variable{Companies} and @{$$variable{Companies}} ) ?>
+<table class="List sortable" style="table-layout: auto;">
+		<tr> 
+			<th class="Company">Company Name</th>
+			<th class="State">State<br />Province</th>
+			<th class="Date">Reg'd Date</th>
+			<th class="User">Account Rep</th>
+			<th class="Projects">Projects</th>
+			<th class="LastProject">Last Project</th>
+			<th class="Orders">Orders</th>
+			<th class="LastOrder">Last Order</th>
+			<th class="Price">Total Value</th>
+		</tr>
+		<? echo ( 
+			my $html = '';
+			my $rowclass;
+
+			my @company_ids = map { $$_{id} } @{$$variable{Companies}};
+
+			#my @Users = openprint::User->find( company_id=> \@company_ids, order=>'id' );
+			my @Projects = openprint::Project->find( company_id=>\@company_ids, order=>'id desc' );
+			my @Orders = openprint::Order->find( company_id=>\@company_ids, order=>'id desc' );
+
+			#my %Users;
+			#foreach my $U ( @Users ) { push @{$Users{$$U{company_id}}}, $U; } 
+
+			my %Projects;
+			foreach my $P ( @Projects ) { push @{$Projects{$$P{company_id}}}, $P; } 
+
+			my %Orders;
+			foreach my $O ( @Orders ) { push @{$Orders{$$O{company_id}}}, $O; } 
+
+			foreach my $Company ( @{$$variable{Companies}} ) {
+				$html .= sprintf( '<tr%1$s> 
+					<td class="Company"><a href="/administrator/managerial/company_profiles.html?ddmCustomer=%2$d">%3$s</a></td>
+					<td class="State">%4$s</td>
+					<td class="Date">%5$s</td>
+					<td class="User">%6$s</td>
+					<td class="Projects">%7$d</td>
+					<td class="LastProject">%8$s</td>
+					<td class="Orders">%9$d</td>
+					<td class="LastOrder">%10$s</td>
+					<td class="Price">%11$s</td>
+				</tr>', $rowclass, $$Company{id}, $Company->name(), $Company->state(), 
+					format_date( $Company->created_on() ),
+					$Company->CSR->name(), 
+					( $Projects{company_id} ? ( scalar @{$Projects{company_id}}, format_date( $Projects{company_id}[0]->created_on() ) ) : ( undef, undef ) ),
+					( $Orders{company_id} ? ( scalar @{$Orders{company_id}}, format_date( $Orders{company_id}[0]->created_on() ) ) : ( undef, undef ) ),
+					openprint::Currency::format( misc::sum( map { $_->total() } @Orders ) ),
+					);
+
+				$rowclass = $rowclass ? '' : ' class="colRow"';
+			} # end while
+			return $html;
+		) ?>
+	</table>
+<? else ( $$variable{Companies} and @{$$variable{Companies}} ) ?>
+	There were no results matching your criteria.<br>
+<? endif ( $$variable{Companies} and @{$$variable{Companies}} ) ?>
