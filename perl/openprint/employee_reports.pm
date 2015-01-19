@@ -654,7 +654,10 @@ sub _customer_performance {
 			'not_ordered_on_end_year','not_ordered_on_end_month','not_ordered_on_end_day', 
 			'salesrep_id','payment_cycle' );
 } # end sub _customer_performance
+
 sub prepress_productivity {
+	ssi::setup_date_select( '/employee/reports/prepress_productivity.html', 'ordered_on_start', -31 );
+	ssi::setup_date_select( '/employee/reports/prepress_productivity.html', 'ordered_on_end', 0 );
 } # end sub prepress_productivity
 
 sub project_log {
