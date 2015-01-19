@@ -13,16 +13,16 @@ function load_page() {
 			<label>Name contains</label>
 			<? echo ( input( type=>'text', name=>'company_name', oninput=>q`if(this.value.length>3){load_page();};`, onkeydown=>"load_page();" ); ) ?>
 		</li>
-<? if ( $session{user_type} eq 'A' ) ?>
+<? if ( $session{user_type} eq 'A' or $openprint::User->csr_ids() ) ?>
 		<li>
 			<label>Sales Rep</label>
 			<select name="salesrep_id" size="1" onchange="load_page();"> 
 				<option value="">All</option>
-				<? echo ( make_drop_down( openprint::User->dropdown( type=>['E','A'], order=>'lower(firstname),lower(lastname)', 'usergroup any'=>'Sales' ), $session{$r->uri().'?salesrep_id'} ); ) ?>
+				<? echo ( make_drop_down( openprint::User->dropdown( type=>['E','A'], ( $session{user_type}eq'A'?():id=>[$session{user_id},$openprint::User->csr_ids()]), order=>'lower(firstname),lower(lastname)', 'usergroup any'=>'Sales' ), $session{$r->uri().'?salesrep_id'} ); ) ?>
 			</select>
 			<? echo ( checkboxes( 'salesrep_id_exclude', [ 1, 'Not in this list' ], $session{$r->uri().'?salesrep_id_exclude'}, { onclick=>'load_page();' } ); ) ?>
 		</li>
-<? endif ( $session{user_type} eq 'A' ) ?>
+<? endif ( $session{user_type} eq 'A' or $openprint::User->csr_ids() ) ?>
 		<li> 
 			<label>Created Date</label>
 			<? echo ( date_select_session( $r->uri(), 'created_on_start', { with_today=>1, with_clear=>1, onchange=>'load_page();' } ); ) ?>

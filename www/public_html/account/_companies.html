@@ -17,7 +17,9 @@
 	if ( $session{user_type} ne 'A' ) {
 		my $Me = new openprint::User( $session{user_id} );
 		my @salesrep_ids = ( $session{user_id}, $Me->csr_ids() );
-		$filters{salesrep_id} = \@salesrep_ids;
+		if ( ( ! $filters{salesrep_id} ) or ! sets::isin( $filters{salesrep_id}, \@salesrep_ids ) ) {
+			$filters{salesrep_id} = \@salesrep_ids;
+		} # end if
 	} # end if
 	if ( $session{$uri.'?salesrep_id_exclude'} ) {
 		my @csr_ids = map { $_->id() } openprint::User->find( 'usergroup any'=>'Sales' );
