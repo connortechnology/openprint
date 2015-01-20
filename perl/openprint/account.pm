@@ -39,6 +39,7 @@ use vars qw( $r $log $dbh %variable %param %session %config);
 # called when a salesperson selects a customer to be
 sub select_company {
 	# Taken care of in openprint.pm
+    ssi::save_params( '/account/select_company.html', ( 'csr_ids' ) );
 } # end sub select_company
 
 sub select_user {
