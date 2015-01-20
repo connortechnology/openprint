@@ -964,7 +964,7 @@ sub _blocklist_actions {
 } # end sub _blocklist_actions
 
 sub companies {
-   _companies();
+	_companies();
     ssi::setup_date_select( '/account/companies.html', 'created_on_start', '' );
     ssi::setup_date_select( '/account/companies.html', 'created_on_end', '' );
     ssi::setup_date_select( '/account/companies.html', 'last_ordered_start', '' );
@@ -976,6 +976,7 @@ sub companies {
 
 sub _companies {
     ssi::save_params( '/account/companies.html', (
+				'company_name', 'salesrep_id', 'salesrep_id_exclude', 'marketingcategory_id', 'deleted', 'country_id',
                 ( map { 'created_on_start_' . $_ } ( 'year', 'month','day' ) ),
                 ( map { 'created_on_end_' . $_ } ( 'year', 'month','day' ) ),
                 ( map { 'last_ordered_on_start_' . $_ } ( 'year', 'month','day' ) ),
@@ -983,7 +984,6 @@ sub _companies {
                 ( map { 'last_called_on_start_' . $_ } ( 'year', 'month','day' ) ),
                 ( map { 'last_called_on_end_' . $_ } ( 'year', 'month','day' ) ),
                 ( map { 'field-'.$_->id() } openprint::Company_Profile_Field->find(order=>'sort,name') ),
-				'company_name','salesrep_id', 'salesrep_id_exclude', 'marketingcategory_id', 'deleted',
                 ) );
 } # end sub _companies
 
