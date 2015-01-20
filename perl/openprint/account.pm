@@ -387,9 +387,10 @@ sub login_password {
 
 sub company_profile {
 	my $Company;
-		$Company = new openprint::Company( $param{company_id} );
+	
+	$Company = new openprint::Company( $param{company_id} );
 
-	if ( ! $Company->can_view() ) {
+	if ( $param{company_id} and ! $Company->can_view() ) {
 		$variable{error} .= 'You cannot view company ' . $Company->id() . '<br/>';
 		$Company = $variable{Company} = new openprint::Company();
 		return;
@@ -969,6 +970,7 @@ sub companies {
     ssi::setup_date_select( '/account/companies.html', 'last_ordered_end', '' );
     ssi::setup_date_select( '/account/companies.html', 'last_called_start', '' );
     ssi::setup_date_select( '/account/companies.html', 'last_called_end', '' );
+	$session{'/account/companies.html?salesrep_id'} = $session{user_id} if ! exists $session{'/account/companies.html?salesrep_id'};
 } # end sub companies
 
 sub _companies {
