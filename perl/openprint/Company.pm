@@ -2,7 +2,7 @@ use strict;
 package openprint::Company;
 our @ISA = qw( openprint::Object );
 
-use vars qw( $debug $log $dbh $table $serial %fields %find_fields %defaults %transforms $AUTOLOAD );
+use vars qw( $debug $log $dbh $table $serial %fields %find_fields %defaults %transforms $AUTOLOAD $default_sort );
 require openprint;
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
@@ -12,6 +12,7 @@ require openprint::Object;
 require openprint::User;
 
 $debug = 1;
+$default_sort = 'lower(name)';
 $table = 'companies';
 $serial = 'companies_id_seq';
 
@@ -223,57 +224,18 @@ sub Credit {
 sub dropdown {
 	shift @_ if $_[0] eq 'openprint::Company';
 
-	my $sql = 'SELECT id, name FROM Companies WHERE deleted=false';
-	my @values;
+	my %sql = @_;
 
-	if ( $openprint::session{user_id} and ( $openprint::session{'user_type'} ne 'A' ) and ! openprint::usergroup::is_user_in( ['Estimating','Prepress','Accounting','Shipping','Inventory'], $openprint::session{'user_id'} ) ) {
-		$sql .= ' AND id=(SELECT company_id FROM users WHERE id=?) OR salesrep_id IN ('. join(',', $openprint::session{'user_id'}, new openprint::User( $openprint::session{'user_id'} )->csr_ids() ) .')';
-		push @values, $openprint::session{user_id};
+	if ( $openprint::session{user_id} and ( $openprint::session{user_type} ne 'A' ) and ! openprint::usergroup::is_user_in( ['Estimating','Prepress','Accounting','Shipping','Inventory'], $openprint::session{user_id} ) ) {
+		if ( (!$sql{salesrep_id}) or ( ! sets::isin( $sql{salesrep_id}, [ $openprint::session{user_id}, $openprint::User->csr_ids() ] ) ) ) {
+			$sql{salesrep_id} = [ $openprint::session{user_id}, $openprint::User->csr_ids() ];
+		}
+		$sql{or} = 'id=' . $$openprint::User{company_id};
+	} else {
+$log->debug("Not adding filter");
 	} # end if
-
-	if ( @_ ) {
-		my %params;
-		if ( ref $_[0] eq 'HASH' ) {
-			%params = %{$_[0]};
-		} elsif ( ref $_[0] eq 'ARRAY' ) {
-			%params = @{$_[0]};
-		} else {
-			%params = @_;
-		} # end if
-		if ( exists $params{offers_credit} ) {
-			$sql .= ' AND offers_credit=?',
-			push @values, $params{offers_credit};
-		} # end if
-		if ( $params{'id'} ) {
-			if ( ref $params{'id'} eq 'ARRAY' ) {
-				return [] if ! @{$params{id}};
-				$sql .= ' AND id IN ( '.join(',', map { '?' } @{$params{id}} ).' )';
-				push @values,  @{$params{id}};
-			} # end if
-		} # end if
-		if ( $params{supplier} ) {
-			$sql .= ' AND ysnsupplier=?';
-			push @values, $params{supplier};
-		} # end if
-		if ( $params{salesrep_id} ) {
-			$sql .= ' AND salesrep_id=?';
-			push @values, $params{salesrep_id};
-		} # end if
-		if ( $params{'last_order >='} ) {
-			$sql .= ' AND (SELECT MAX(created_on) FROM Orders WHERE company_id=companies.id) >= ?';
-			push @values, $params{'last_order >='};
-		}
-		if ( $params{'last_order is not null'} ) {
-			$sql .= ' AND (SELECT MAX(created_on) FROM Orders WHERE company_id=companies.id) IS NOT NULL';
-		}
-		if ( $params{'last_order exists'} ) {
-			$sql .= 'AND EXISTS (SELECT MAX(created_on) FROM Orders WHERE company_id=companies.id)';
-		}
-	} # end if
-	$sql .= ' ORDER BY lower(name)';
-	my $companies = sql::execute_array( undef, undef, $sql, @values );
-$log->debug($sql . ' count: ' . @{$companies});
-	return $companies;
+	
+	return openprint::Company->SUPER::dropdown( %sql );
 } # end sub dropdown
 
 sub get_dropdown {
@@ -499,5 +461,11 @@ sub last_called_on {
 	return $_[0]{last_called_on};
 }  # end sub last_called_on
 
+sub last_online {
+	if ( ! exists $_[0]{last_online} ) {
+		(  $_[0]{last_online} ) = sql::execute( undef, undef, 'SELECT MAX(date_time) FROM logs WHERE company_id=?', $_[0]{id} );
+	}
+	return $_[0]{last_online};
+}  # end sub last_online
 1;
 __END__
