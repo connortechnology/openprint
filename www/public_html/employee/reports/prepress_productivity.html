@@ -1,4 +1,4 @@
-<form name="f1" method="post" action="/employee/reports/prepress_productivity.html">
+<form id="f1" name="f1" method="post" action="/employee/reports/prepress_productivity.html">
 <fieldset class="filters"><legend>Report Criteria</legend>
 	Choose report criteria and click Show Results.<br/><br/>
 	<ul>
@@ -7,20 +7,20 @@
 			<select name="ddmEmployee" size="1">
 				<option value="Prepress">All Prepress Employees</option>
 				<option value="All" <? echo ( 'selected="selected"' if $param{ddmEmployee} eq 'All' ) ?>>All Employees</option>
-				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User->find( type=>['E','A'], order=>'lower(firstname),lower(lastname)') ], $param{ddmEmployee} ); ) ?>
+				<? echo ( make_drop_down( openprint::User->dropdown( type=>['E','A'], 'usergroup any'=>'Prepress' ), $param{ddmEmployee} ); ) ?>
 			</select>
 	</li>
 	<li>
 		<label>Ordered Date</label>
-		<? echo ( ssi::date_select_session( '/employee/reports/prepress_productivity.html', 'ordered_on_start' ); ) ?>
+		<? echo ( date_select_session( '/employee/reports/prepress_productivity.html', 'ordered_on_start' ); ) ?>
 		to
-		<? echo ( ssi::date_select_session( '/employee/reports/prepress_productivity.html', 'ordered_on_end' ); ) ?>
+		<? echo ( date_select_session( '/employee/reports/prepress_productivity.html', 'ordered_on_end' ); ) ?>
 	</li>
 	</ul>
 	<p class="buttons">
-		<? echo ( join('',
-				ssi::button( 'ShowResults', { onclick=>'f1.submit();', text=>'Show Results' } ),
-				ssi::button( 'Reset', { onclick=>'f1.reset();' } ),
+		<? echo ( join("\n",
+				button( 'ShowResults', { onclick=>'f1.submit();', text=>'Show Results' } ),
+				button( 'Reset', { onclick=>'f1.reset();' } ),
 				); ) ?>
 	</p>
 </fieldset>
@@ -33,17 +33,14 @@
 		} # end if
 		@{$$variable{'Results'}} = openprint::User->find( %sql );
 		@{$$variable{'Projects'}} = openprint::Project->find( 
-			ssi::date_filter( 'ordered_on_end', 'ordered_on <=', \%param ),
-			ssi::date_filter( 'ordered_on_start', 'ordered_on >=', \%param ),
+			date_filter( '/employee/reports/prepress_productivity.html?ordered_on_end', 'ordered_on <=',  ),
+			date_filter( '/employee/reports/prepress_productivity.html?ordered_on_start', 'ordered_on >=', ),
 			);
  ) ?>
  <? if ( @{$$variable{'Projects'}} ) ?>
 	Total # of Dockets in the time period: <? echo ( @{$$variable{'Projects'}} ) ?>:
 	<? eval ( 
-		my %employees;
-		foreach my $User ( @{$$variable{'Results'}} ) {
-			$employees{$User->name()} = $User;
-		} # end foreach
+		my %employees = map { $_->name() => $_ } @{$$variable{Results}};
 
 		foreach my $Project ( @{$$variable{'Projects'}} ) {
 			my $services = $Project->services();
@@ -53,9 +50,14 @@
 			my $proofs_specs = openprint::service::get_specs_ref( $Project, $proofs_service_index );
 			my ( $operator_id ) = sql::execute( $log, $dbh, q{SELECT operator_id FROM tbl_project_Contents WHERE lngProjectIndex=? AND lngServiceIndex=?}, $Project->id(), $proofs_service_index );
 			if ( ! $operator_id and $$proofs_specs{'txtEmployeeName'} ) {
-				my $operator = $employees{$$proofs_specs{'txtEmployeeName'}};
-				$operator_id = $operator->id();
-				sql::update( $log, $dbh, 'tbl_Project_Contents', ['lngProjectIndex=? AND lngServiceIndex=?', $Project->id(), $proofs_service_index], 'operator_id', $operator->id() );
+				if ( ! $employees{$$proofs_specs{'txtEmployeeName'}} ) {
+					$log->error("Have proofs operator not in employee list: $$proofs_specs{'txtEmployeeName'}");
+				} else {
+				
+					my $operator = $employees{$$proofs_specs{'txtEmployeeName'}};
+					$operator_id = $operator->id();
+					sql::update( $log, $dbh, 'tbl_Project_Contents', ['lngProjectIndex=? AND lngServiceIndex=?', $Project->id(), $proofs_service_index], 'operator_id', $operator->id() );
+				}
 			} # end if
 			if ( ! $operator_id ) {
 				push @{$$variable{'UnassignedProjects'}}, $Project;
@@ -110,7 +112,7 @@
 <? while ( $$variable{'User'} = shift @{$$variable{'Results'}}; ) ?>
 	<? eval ( $$variable{'rowclass'} = $$variable{'rowclass'} ? '' : ' class="colRow"' ) ?>
 	<tr<?rowclass?>>
-		<td><? echo ( ssi::htmlize( $$variable{'User'}->name() ); ) ?></td>
+		<td><? hecho ( $$variable{'User'}->name() ) ?></td>
 		<td align="right"><? echo ( 1*$$variable{$$variable{'User'}->id()}->{'ProjectCount'} ) ?></td>
 		<td align="right"><? echo ( 1*$$variable{$$variable{'User'}->id()}->{'PlateCount'} ) ?></td>
 		<td align="right"><? echo ( 1*$$variable{$$variable{'User'}->id()}->{'DigitalDyluxCount'} ) ?></td>
@@ -140,7 +142,7 @@
 	<h3>Unassigned Projects</h3>
 <table class="List">
 	<tr>
-		<th valign="top" align="left" width="100">Index</th>
+		<th valign="top" align="left" width="100">Project</th>
 		<th valign="top" align="left">Reference</th>
 		<th valign="top" align="left">Company</th>
 		<th class="Date">Ordered On</th>
@@ -150,7 +152,7 @@
 		<td valign="top"><a href="/employee/project/view.html?project_id=<? echo ( $$variable{'Project'}->id(); ) ?>"><? echo ( $$variable{'Project'}->id(); ) ?></a></td>
 		<td valign="top"><? echo ( $$variable{'Project'}->reference() ) ?></td>
 		<td valign="top"><? echo ( ssi::htmlize( $$variable{'Project'}->Company()->name() ); ) ?></td>
-		<td class="Date"><? echo ( Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $$variable{'Project'}->ordered_on() ) ); ) ?></td>
+		<td class="Date"><? echo ( format_date( $$variable{'Project'}->ordered_on() ); ) ?></td>
 	</tr>
 <? eval ( $$variable{'colrow'} = $$variable{'colrow'} ? '' : ' class="colRow"' ) ?>
 <? endwhile ( $$variable{'Project'} = shift @{$$variable{'UnassignedProjects'}} ) ?>
