@@ -885,7 +885,16 @@ sub to_string {
 
 sub dropdown {
 	my $self = shift;
-	return [ map { $$_{id}, $_->name() } $self->find(@_) ];
+	my %params = @_;
+	if ( ! $params{order} ) {
+		my $type = ref($self);
+		$type = $self if ! $type;
+		my $order = eval '$'.$type.'::default_sort';
+$log->debug("default sort: $self $type :: default_sort = $order");
+		$params{order} = $order if $order;
+	}
+
+	return [ map { $$_{id}, $_->name() } $self->find(%params) ];
 } # end sub dropdown
 
 sub sort_value {
