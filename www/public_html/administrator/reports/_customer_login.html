@@ -2,7 +2,7 @@
 <table class="List sortable" style="table-layout: auto;">
 		<tr> 
 			<th class="Company">Company Name</th>
-			<th class="State">State<br />Province</th>
+			<th class="State">State / Province</th>
 			<th class="Date">Reg'd Date</th>
 			<th class="User">Account Rep</th>
 			<th class="Projects">Projects</th>
@@ -45,8 +45,7 @@
 					format_date( $Company->created_on() ),
 					$Company->CSR->name(), 
 					( $Projects{company_id} ? ( scalar @{$Projects{company_id}}, format_date( $Projects{company_id}[0]->created_on() ) ) : ( undef, undef ) ),
-					( $Orders{company_id} ? ( scalar @{$Orders{company_id}}, format_date( $Orders{company_id}[0]->created_on() ) ) : ( undef, undef ) ),
-					openprint::Currency::format( misc::sum( map { $_->total() } @Orders ) ),
+					( $Orders{company_id} ? ( scalar @{$Orders{company_id}}, format_date( $Orders{company_id}[0]->created_on() ), openprint::Currency::format( misc::sum( map { $_->total() } @{$Orders{company_id}} ) ) ) : ( undef, undef, undef ) ),
 					);
 
 				$rowclass = $rowclass ? '' : ' class="colRow"';
