@@ -14,6 +14,15 @@
 		date_filter( $uri.'?last_called_on_end', 'last_called_on <=' ),
 		date_filter( $uri.'?last_called_on_start', 'last_called_on >=' ),
 		);
+	if ( $session{$uri.'?country_id'} ) {
+$log->debug("Hello");
+		my $Country = new openprint::Location( $session{$uri.'?country_id'} );
+		$filters{country} = $Country->short();
+	} else {
+$log->debug("NOT Hello $uri : " . $session{$uri.'?country_id'} );
+
+	}
+
 	if ( $session{user_type} ne 'A' ) {
 		my $Me = new openprint::User( $session{user_id} );
 		my @salesrep_ids = ( $session{user_id}, $Me->csr_ids() );
@@ -41,6 +50,9 @@
 		if ( ! $session{$uri.'?salesrep_id'} ) {
 			$html .= '<div class="CSR">CSR</div>';
 		}
+		if ( ! $session{$uri.'?country_id'} ) {
+			$html .= '<div class="Country">Country</div>';
+		}
 		$html .= '</div>';
 		my $rowclass;
 		foreach my $Company ( @{$$variable{Companies}} ) {
@@ -59,6 +71,9 @@
 			if ( ! $session{$uri.'?salesrep_id'} ) {
 				$html .= sprintf('<div class="CSR">%s</div>', $Company->CSR()->name() );
 			} 
+			if ( ! $session{$uri.'?country_id'} ) {
+				$html .= sprintf('<div class="Country">%s</div>', $countries::countries{$Company->country()} );
+			}
 			$html .= '</div>';
 
 			$rowclass = $rowclass ? '' : ' colRow';
