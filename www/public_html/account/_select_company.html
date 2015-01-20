@@ -1,4 +1,6 @@
 <script type="text/javascript">
+	var filter_ajax;
+
 function include_unassigned( e ) {
 	if ( e.checked ) {
 		new Ajax.Updater( 'ddmCompany', '/includes/_company_ddm.html', { parameters: { selected_id: <?echo($session{company_id})?> } } );
@@ -6,10 +8,15 @@ function include_unassigned( e ) {
 		new Ajax.Updater( 'ddmCompany', '/includes/_company_ddm.html', { parameters: { selected_id: <?echo($session{company_id})?>, salesrep_id: <? echo ( $session{user_id} ) ?> } } );
 	} // end if
 }
+function filter_companies( p ) {
+	if ( filter_ajax ) { filter_ajax.transport.abort(); }
+		
+	filter_ajax = new Ajax.Updater( 'ddmCompany', '/includes/_company_ddm.html', { parameters: p, onSuccess:function(){filter_ajax = null;} } );
+}
 </script>
 <? eval ( 
 	if ( $session{user_type} eq 'A' ) {
-		$$variable{company_dropdown} = openprint::Company::dropdown( salesrep_id=>$session{user_id} );
+		$$variable{company_dropdown} = openprint::Company::dropdown( salesrep_id=>[ $session{user_id}, $openprint::User->csr_ids() ] );
 		$$variable{company_dropdown} = openprint::Company::dropdown( ) if ! @{$$variable{company_dropdown}};
 	} else {
 		$$variable{company_dropdown} = openprint::Company::dropdown();
@@ -22,10 +29,41 @@ To represent another <? echo ( translate('company') ) ?>, please select it from 
 Any actions you perform will be recorded in the selected <? echo ( translate('company') ) ?>'s history.<br/>
 <form id="f1" name="f1" action="select_company.html" method="post">
 	<fieldset class="SelectCompany">
+<? if ( $session{user_type} eq 'A' or $openprint::User->csr_ids() ) ?>
+<fieldset><legend>Filter dropdown contents</legend>
+		<ul>
+		<li><label>Sales Rep</label>
+			<? echo (
+				my $all = $session{user_type} eq 'A' or openprint::usergroup::is_user_in( ['Estimating','Prepress','Accounting','Shipping','Inventory'] );
+				my @csr_ids = $all ? map { $_->id() } openprint::User->find('usergroup any'=>'Sales') : ( $session{user_id}, $openprint::User->csr_ids() );
+				
+				if ( @csr_ids > 4 ) {
+					return ssi::select( 
+						openprint::User->dropdown(id=>\@csr_ids), 
+						[ split(',', $session{'/account/select_company.html?csr_ids'} ) ], 
+						{ 	
+							name=>'csr_ids',
+							prepend=>['','All', $all ? ( 'Unassigned', 'Unassigned' ) : () ],
+							onchange=>'filter_companies({salesrep_id:get_ddm_value(this)});',
+						} );
+				} else {
+					return radio( 'csr_ids',
+						[ '', 'All', ( $all ? ( 'Unassigned', 'Unassigned' ) : () ), @{openprint::User->dropdown(id=>\@csr_ids)} ],
+						[ split(',', $session{'/account/select_company.html?csr_ids'} ) ],
+						{
+							onclick=>'filter_companies( {salesrep_id:this.value} );',
+						}
+					 );
+				} # end if
+			) ?>
+		</li>
+	</ul>
+</fieldset>
+<? endif ( $session{user_type} eq 'A' or $openprint::User->csr_ids() ) ?>
 		<ul>
 		<li>
 			<label><? echo ( translate('company') ) ?></label>
-			<input class="filter" name="CompanyFilter" type="text" onkeyup="filterDDM(this, f1.ddmCompany);" />
+			<input class="filter" name="CompanyFilter" type="text" onkeyup="if(this.value.length>3){filter_companies({name:this.value});};" />
 			<select id="ddmCompany" name="ddmCompany" onchange="if(this.options[this.selectedIndex].value != '') f1.submit();">
 				<? echo ( 
 					if ( @{$$variable{company_dropdown}} > 2000 ) {
@@ -35,9 +73,6 @@ Any actions you perform will be recorded in the selected <? echo ( translate('co
 					}
 				) ?>
 			</select>
-			<? if ( $session{user_type} eq 'A' ) ?>
-			<input id="include_unassigned_radio" type="checkbox" onclick="include_unassigned(this);"/><label class="radio" for="include_unassigned_radio">Include Unassigned?</label>
-			<? endif ( $session{user_type} eq 'A' ) ?>
 			<? echo ( button( 'Submit', { onclick=>'f1.submit();' } ); ) ?>
 		</li>
 		<li><label>Last 10</label>
