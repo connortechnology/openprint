@@ -5,10 +5,10 @@
 			<th class="State">State / Province</th>
 			<th class="Date">Reg'd Date</th>
 			<th class="User">Account Rep</th>
-			<th class="Projects">Projects</th>
-			<th class="LastProject">Last Project</th>
-			<th class="Orders">Orders</th>
-			<th class="LastOrder">Last Order</th>
+			<th class="projects">Projects</th>
+			<th class="last_project">Last Project</th>
+			<th class="orders">Orders</th>
+			<th class="last_order">Last Order</th>
 			<th class="Price">Total Value</th>
 		</tr>
 		<? echo ( 
@@ -36,12 +36,12 @@
 					<td class="State">%4$s</td>
 					<td class="Date">%5$s</td>
 					<td class="User">%6$s</td>
-					<td class="Projects">%7$d</td>
-					<td class="LastProject">%8$s</td>
-					<td class="Orders">%9$d</td>
-					<td class="LastOrder">%10$s</td>
+					<td class="projects">%7$d</td>
+					<td class="last_project">%8$s</td>
+					<td class="orders">%9$d</td>
+					<td class="last_order">%10$s</td>
 					<td class="Price">%11$s</td>
-				</tr>', $rowclass, $$Company{id}, $Company->name(), $Company->state(), 
+				</tr>', $rowclass, $$Company{id}, $Company->name(), ( $$Company{country} eq 'US' ? $states::states{$Company->state()} : $provinces::provinces{$Company->state()} ), 
 					format_date( $Company->created_on() ),
 					$Company->CSR->name(), 
 					( $Projects{company_id} ? ( scalar @{$Projects{company_id}}, format_date( $Projects{company_id}[0]->created_on() ) ) : ( undef, undef ) ),
