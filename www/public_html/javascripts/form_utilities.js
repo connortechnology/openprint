@@ -1572,3 +1572,10 @@ function getSelectedLocation(text, li) {
 		new Ajax.Request( '/location/_load_location.json', { parameters: { location_id: li.id } } );
 	} // end if
 }
+
+var filter_ajax = null;
+function filter_companies( e, p ) {
+    if ( filter_ajax ) { filter_ajax.transport.abort(); }
+        
+    filter_ajax = new Ajax.Updater( e, '/includes/_company_ddm.html', { parameters: p, onSuccess:function(){filter_ajax = null;} } );
+}
