@@ -4,11 +4,11 @@
 		<ul>
 		<li>
 			<label>Company</label>
-			<input type="text" onkeyup="filterDDM(this, f1.ddmCompany);" class="filter"/>
+			<input type="text" oninput="filter_companies(f1.ddmCompany, {name:this.value} );" class="filter"/>
 			<select name="ddmCompany">
 				<option value=""> All Companies </option>
 				<? echo ( 
-					make_drop_down( openprint::Company->dropdown( order=>'lower(name)' ), $param{ddmCompany} );
+					make_drop_down( openprint::Company->dropdown( 'credit_app_on is null'=>0 ), $param{ddmCompany} );
 	) ?>
 			</select>
 		</li>
