@@ -1690,5 +1690,11 @@ sub Supplier {
 	return new openprint::Company( $_[0]{supplier_id} );
 } # end sub Supplier
 
+sub waste {
+	my $area_factor = $_[0]->start_area() / $_[0]->area();
+	$area_factor =~ s/.*\.//;
+	return $area_factor;
+}
+
 1;
 __END__

@@ -39,6 +39,7 @@ use vars qw( $r $log $dbh %variable %param %session %config);
 # called when a salesperson selects a customer to be
 sub select_company {
 	# Taken care of in openprint.pm
+    ssi::save_params( '/account/select_company.html', ( 'csr_ids' ) );
 } # end sub select_company
 
 sub select_user {
@@ -386,9 +387,25 @@ sub login_password {
 } # login password
 
 sub company_profile {
-	my $Company = $variable{'Company'} = new openprint::Company( $session{'company_id'} );
+	my $Company;
+	
+	$Company = new openprint::Company( $param{company_id} );
+
+	if ( $param{company_id} and ! $Company->can_view() ) {
+		$variable{error} .= 'You cannot view company ' . $Company->id() . '<br/>';
+		$Company = $variable{Company} = new openprint::Company();
+		return;
+	} # end if
 
 	if ( $param{'btnFunction'} eq 'Save' ) {
+		if ( ! $Company->id() ) {
+			$variable{error} .= 'no company specified.';
+			return;
+		}
+		if ( ! $Company->can_edit() ) {
+			$variable{error} .= 'You cannot edit company ' . $Company->id() . '<br/>';
+			return;
+		} # end if
 		my $error = '';
 		$error .= "Company Name cannot be empty.<br/>" if ! $param{'companyname'};
 		if ( exists $param{'StartYear'} ) {
@@ -413,7 +430,11 @@ sub company_profile {
 		$Company->set( \%param );
 		$variable{'error'} .= $Company->save( );
 		$variable{'error'} .= $Company->save_tradereferences( \%param );
+		$Company->Profile()->save( \%param );
 	} # end if
+	if ( ! $Company->id() ) {
+		$Company = new openprint::Company( $session{company_id} );
+	}
 
 	$variable{'Company'} = $Company;
 } # end sub company_profile
@@ -674,6 +695,7 @@ sub credit_application {
 		} # end if 
 		$variable{'error'} .= $Company->save( \%param );
 		$variable{'error'} .= $Company->save_tradereferences( \%param );
+		$Company->Profile()->save( \%param );
 
 		my $App = new openprint::Credit_Application();
 		$variable{'error'} .= $App->save({
@@ -689,6 +711,7 @@ sub credit_application {
 				'accountspayablecontact'    =>  $param{'AccountsPayableContact'},
 				'status'                =>  'Non-Reviewed',
 				});
+		$log->error($variable{'error'}) if $variable{'error'};
 
 		if ( ! $variable{'error'} ) {
 # Now send email notifications
@@ -698,10 +721,8 @@ sub credit_application {
 
 			$info{'CreditAppIndex'} = $App->id();
 
-			$info{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/credit_application_notification.html' );
-			$info{'ReplacementText'} = ssi::variable_substitution( \$info{'ReplacementText'}, \%info );
-			my $email_template = misc::load_file( $log, $config{'SkinPath'}. '/email_template.html' );
-			my $template = ssi::variable_substitution( \$email_template, \%info );
+			$info{'ReplacementText'} = ssi::include( '/email_content/credit_application_notification.html', \%info );
+			my $template = ssi::include( '/email_template.html', \%info );
 
 			new openprint::Email()->send(
 					FROM	=> $config{'CreditApplicationEmail'},
@@ -941,6 +962,30 @@ sub _blocklist_actions {
 		$variable{error} .= $Block->save({unblock=>0});
 	} # end if
 } # end sub _blocklist_actions
+
+sub companies {
+	_companies();
+    ssi::setup_date_select( '/account/companies.html', 'created_on_start', '' );
+    ssi::setup_date_select( '/account/companies.html', 'created_on_end', '' );
+    ssi::setup_date_select( '/account/companies.html', 'last_ordered_start', '' );
+    ssi::setup_date_select( '/account/companies.html', 'last_ordered_end', '' );
+    ssi::setup_date_select( '/account/companies.html', 'last_called_start', '' );
+    ssi::setup_date_select( '/account/companies.html', 'last_called_end', '' );
+	$session{'/account/companies.html?salesrep_id'} = $session{user_id} if ! exists $session{'/account/companies.html?salesrep_id'};
+} # end sub companies
+
+sub _companies {
+    ssi::save_params( '/account/companies.html', (
+				'company_name', 'salesrep_id', 'salesrep_id_exclude', 'marketingcategory_id', 'deleted', 'country_id',
+                ( map { 'created_on_start_' . $_ } ( 'year', 'month','day' ) ),
+                ( map { 'created_on_end_' . $_ } ( 'year', 'month','day' ) ),
+                ( map { 'last_ordered_on_start_' . $_ } ( 'year', 'month','day' ) ),
+                ( map { 'last_ordered_on_end_' . $_ } ( 'year', 'month','day' ) ),
+                ( map { 'last_called_on_start_' . $_ } ( 'year', 'month','day' ) ),
+                ( map { 'last_called_on_end_' . $_ } ( 'year', 'month','day' ) ),
+                ( map { 'field-'.$_->id() } openprint::Company_Profile_Field->find(order=>'sort,name') ),
+                ) );
+} # end sub _companies
 
 1;
 __END__

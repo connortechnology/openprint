@@ -8,7 +8,7 @@
 		new Ajax.Updater('PaymentList','/payment/_history.html', {parameters:Form.serialize(form)});
 	} // end function
 </script>	 
-<? echo ( include('/includes/error_reporting.html'); ) ?>
+<?include('/includes/error_reporting.html')?>
 <form id="f1" name="f1" method="post" action="/payment/history.html">
    <div class="PaymentHistory">
 		<fieldset class="filters unprintable"><legend>Select Search Criteria</legend>
@@ -17,37 +17,37 @@
 				<label>Recipient</label>
 				<select name="recipient_id" id="recipient_id" onchange="load_payments(this.form);">
 					<option value="">All</option>
-					<? echo ( ssi::make_drop_down([ map { $_->id(), $_->name() } openprint::Company->find(supplier=>'Y',order=>'lower(name)') ], $session{'/payment/history.html?recipient_id'} ); ) ?>
+					<? echo ( make_drop_down( openprint::Company->dropdown(supplier=>'Y',order=>'lower(name)'), $session{'/payment/history.html?recipient_id'} ); ) ?>
 				</select>
 			</li>
 			<li>
 				<label>Payor</label>
 				<select name="payor_id" id="payor_id" onchange="load_payments(this.form);">
 					<option value="">All</option>
-					<? echo ( openprint::Company::get_dropdown( $session{'/payment/history.html?company_id'} ); ) ?>
+					<? echo ( make_drop_down( openprint::Company->dropdown( 'last_ordered_on is null'=>0), $session{'/payment/history.html?company_id'} ); ) ?>
 				</select>
 			</li>
 			<li>
-				<label>Received On:</label>
-<? echo ( ssi::date_select_session( '/payment/history.html', 'received_on_start', { onchange=>q`load_payments($('f1'));`, with_today=>1, with_clear=>1} ); ) ?>
+				<label>Received On</label>
+<? echo ( date_select_session( '/payment/history.html', 'received_on_start', { onchange=>q`load_payments($('f1'));`, with_today=>1, with_clear=>1} ); ) ?>
 					to 
-<? echo ( ssi::date_select_session( '/payment/history.html', 'received_on_end', {'onchange'=>q`load_payments($('f1'));`, with_today=>1, with_clear=>1} ); ) ?>
+<? echo ( date_select_session( '/payment/history.html', 'received_on_end', { onchange=>q`load_payments($('f1'));`, with_today=>1, with_clear=>1} ); ) ?>
 			</li>
 			<li>
-				<label>Entered On:</label>
-<? echo ( ssi::date_select_session( '/payment/history.html', 'entered_on_start', {'onchange'=>q`load_payments($('f1'));`, with_today=>1, with_clear=>1} ); ) ?>
+				<label>Entered On</label>
+<? echo ( date_select_session( '/payment/history.html', 'entered_on_start', { onchange=>q`load_payments($('f1'));`, with_today=>1, with_clear=>1} ); ) ?>
 					to 
-<? echo ( ssi::date_select_session( '/payment/history.html', 'entered_on_end', {'onchange'=>q`load_payments($('f1'));`, with_today=>1, with_clear=>1} ); ) ?>
+<? echo ( date_select_session( '/payment/history.html', 'entered_on_end', { onchange=>q`load_payments($('f1'));`, with_today=>1, with_clear=>1} ); ) ?>
 			</li>
 			<li><label>Transaction</label>
 				<? echo ( input(type=>'text', name=>'transaction_id', value=>$session{'/payment/history.html?transaction_id'},onkeydown=>q`if(event.keyCode == 13){load_payments($('f1'));` ); ) ?>
 			</li>
 			</ul>
 			<p class="buttons">
-				<? echo ( join('',
-					ssi::button( 'ShowResults', { onclick=>"load_payments(f1);", text=>'Show Results' } ),
-					ssi::button( 'Reset', { onclick=>'f1.reset();', text=>'Reset' } ),
-					ssi::button( 'New', { onclick=>'', href=>'edit.html', text=>'New Payment' } ),
+				<? echo ( join("\n",
+					button( 'ShowResults', { onclick=>'load_payments(f1);', text=>'Show Results' } ),
+					button( 'Reset', { onclick=>'f1.reset();', text=>'Reset' } ),
+					button( 'New', { href=>'edit.html', text=>'New Payment' } ),
 					); ) ?>
 			</p>
 		</fieldset>

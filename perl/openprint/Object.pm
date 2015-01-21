@@ -76,10 +76,18 @@ sub new {
 
 	my $ref = ref $id;
 	if ( ! $ref ) {
-		if ( $id and (!$data) and $cache{$config{db_name}}{$parent} and $cache{$config{db_name}}{$parent}{$id} ) {
+		if ( $id and $cache{$config{db_name}}{$parent} and $cache{$config{db_name}}{$parent}{$id} ) {
+			if ( $data ) {
+if ( 1 ) {
+				my $self = $cache{$config{db_name}}{$parent}{$id};
+				$self->load( $data );
+				return $self;
+}
+			} else {
 #$log->debug("Loading from cache $parent $id");
 			# If the object is cached
 			return $openprint::Object::cache{$config{db_name}}{$parent}{$id};
+			}
 		} # end if
 #$log->debug("Not Loading from cache $parent $id") if $id and ! $data;
 		my $self = {};
@@ -877,7 +885,16 @@ sub to_string {
 
 sub dropdown {
 	my $self = shift;
-	return [ map { $$_{id}, $_->name() } $self->find(@_) ];
+	my %params = @_;
+	if ( ! $params{order} ) {
+		my $type = ref($self);
+		$type = $self if ! $type;
+		my $order = eval '$'.$type.'::default_sort';
+$log->debug("default sort: $self $type :: default_sort = $order");
+		$params{order} = $order if $order;
+	}
+
+	return [ map { $$_{id}, $_->name() } $self->find(%params) ];
 } # end sub dropdown
 
 sub sort_value {

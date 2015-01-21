@@ -161,7 +161,30 @@ sub custom {
 sub customer_login {
 
 	ssi::setup_date_select( $r->uri(), 'registered_on_start', -30 );
-	ssi::save_params( $r->uri(), ( 
+	_customer_login();
+	if ( $param{'btnFunction'} eq 'Download in CSV format' ) {
+		my @header = ( 'Company Name','Contact Name', 'Phone #', 'Email','City','State','Registration Date','Account Rep','# of Projects','Last Project','# of Orders','Last Order', 'Last Order Value');
+		my @data;
+		foreach my $Company ( @{$variable{Companies}} ) {
+			my $User = openprint::User->find_one( company_id=>$$Company{id}, order=>'id' );
+			my $CSR = $Company->CSR();
+			my @Projects = openprint::Project->find( company_id=>$$Company{id}, order=>'id DESC' );
+			my @Orders = openprint::Order->find( company_id=>$$Company{id}, order=>'id DESC' );
+
+			push @data, $Company->name(), $User->name(), $Company->phone(), $User->email(), $Company->city(), $Company->state(),
+				 ssi::format_date( $Company->created_on() ),
+				 $CSR->name(), scalar @Projects, 
+				 ssi::format_date( $Projects[0]->created_on() ),
+				 scalar @Orders, 
+				 ssi::format_date( $Orders[0]->created_on() ),
+				 misc::sum( map { $_->total() } @Orders );
+		} # end foreach Company
+		misc::export_csv( $r, $log, \%variable, 'customer_login_report.csv', \@header, \@data );
+	} # end if	
+} 
+
+sub _customer_login {
+	ssi::save_params( '/administrator/reports/customer_login.html', ( 
 		( map { 'registered_on_start_'.$_ } ( 'year', 'month', 'day' ) ),
 		( map { 'registered_on_end_'.$_ } ( 'year', 'month', 'day' ) ),
 		( map { 'last_project_start_'.$_ } ( 'year', 'month', 'day' ) ),
@@ -170,89 +193,26 @@ sub customer_login {
 		( map { 'last_order_end_'.$_ } ( 'year', 'month', 'day' ) ),
 		( map { 'last_login_start_'.$_ } ( 'year', 'month', 'day' ) ),
 		( map { 'last_login_end_'.$_ } ( 'year', 'month', 'day' ) ),
+		'activated', 'salesrep_id',
 	) );
+	if ( %param ) {
+		my %sql = (
+				ssi::date_filter( '/administrator/reports/customer_login.html?registered_on_end', 'created_on <=' ), 
+				ssi::date_filter( '/administrator/reports/customer_login.html?registered_on_start', 'created_on >=' ),
+				ssi::date_filter( '/administrator/reports/customer_login.html?last_ordered_on_end', 'last_ordered_on <=' ), 
+				ssi::date_filter( '/administrator/reports/customer_login.html?last_ordered_on_start', 'last_ordered_on >=' ),
+				order   =>  'lower(name)',
+		);
+		if ( $session{'/administrator/reports/customer_login.html?salesrep_id'} eq 'None' ) {
+			$sql{'salesrep_id not in'} = [ map { $_->user_id() } openprint::User->find( type=>['E','A'], 'usergroup any'=>'Sales' ) ];
+		} elsif ( $session{'/administrator/reports/customer_login.html?salesrep_id'} ) {
+			$sql{salesrep_id} = $session{'/administrator/reports/customer_login.html?salesrep_id'};
+		} # en dif
 
-
-	if ( $param{btnFunction} ) {
-		my $query = 'SELECT Companies.id, (SELECT MIN(id) FROM Users WHERE Users.company_id = Companies.id ), Companies.salesrep_id, ';
-		$query .= '(SELECT COUNT(id) FROM Projects WHERE Projects.company_id = companies.id ), ';
-		$query .= '(SELECT MAX(id) as lastproject FROM Projects WHERE Projects.company_id = Companies.id ), ';
-		$query .= '(SELECT COUNT(id) FROM Orders WHERE Orders.company_id = companies.id ), ';
-		$query .= '(SELECT MAX(id) AS lastorder FROM Orders WHERE Orders.company_id = companies.id ), ';
-		$query .= '(SELECT SUM(total) FROM Orders WHERE Orders.company_id = companies.id ) ';
-		$query .=  'FROM Companies ';
-		$query .=  "WHERE companies.deleted != true";
-		if ( $param{registered_on_start_year} and $param{registered_on_start_month} and $param{registered_on_start_day} ) {
-			my $registered_on_start = sprintf('%.4d-%.2d-%.2d', @session{map { $r->uri().'?registered_on_start_'.$_ } ( 'year','month','day' ) } );
-			$query .= " AND (Companies.created_on >= '$registered_on_start 00:00:00')";
-		} # end if
-		if ( $param{registered_on_end_year} and $param{registered_on_end_month} and $param{registered_on_end_day} ) {
-			my $registered_on_end = sprintf('%.4d-%.2d-%.2d', @session{map { $r->uri().'?registered_on_end_'.$_ } ( 'year','month','day' ) } );
-			$query .= " AND (Companies.created_on <= '$registered_on_end 23:59:59')";
-		} # end if
-		if ( $param{'ddmEmployees'} ) {
-			if ( $param{'ddmEmployees'} eq 'None' ) {
-				$query .= " AND salesrep_id IS NULL OR salesrep_id NOT IN ( SELECT id FROM Users WHERE type='E' OR type ='A' )";
-			} else {
-				$query .= " AND salesrep_id=" . $param{'ddmEmployees'};
-			} # end if
-		} # end if
-
-		if ( $param{last_project_start_year} and $param{last_project_start_month} and $param{last_project_start_day} ) {
-			my $last_project_start = sprintf('%.4d-%.2d-%.2d', @session{map { $r->uri().'?last_project_start_'.$_ } ( 'year','month','day' ) } );
-			$query .= " AND (SELECT MAX(dtmCreationDate) as lastprojectdate FROM Projects WHERE Projects.company_id = companies.id ) >= '$last_project_start 00:00:00'";
-		} # end if
-		if ( $param{last_project_end_year} and $param{last_project_end_month} and $param{last_project_end_day} ) {
-			my $last_project_end = sprintf('%.4d-%.2d-%.2d', @session{map { $r->uri().'?last_project_end_'.$_ } ( 'year','month','day' ) } );
-			$query .= " AND (SELECT MAX(dtmCreationDate) AS lastprojectdate FROM Projects WHERE Projects.company_id = companies.id ) <= '$last_project_end 23:59:59'";
-		} # end if
-
-		if ( $param{last_order_start_year} and $param{last_order_start_month} and $param{last_order_start_day} ) {
-			my $last_order_start = sprintf('%.4d-%.2d-%.2d', @session{map { $r->uri().'?last_order_start_'.$_ } ( 'year','month','day' ) } );
-			$query .= " AND (SELECT MAX(created_on) AS lastorder FROM Orders WHERE Orders.company_id = companies.id )  >= '$last_order_start 00:00:00'";
-		} # end if
-
-		if ( $param{last_order_end_year} and $param{last_order_end_month} and $param{last_order_end_day} ) {
-			my $last_order_end = sprintf('%.4d-%.2d-%.2d', @session{map { $r->uri().'?last_order_end_'.$_ } ( 'year','month','day' ) } );
-			$query .= " AND (SELECT MAX(created_on) AS lastorder FROM Orders WHERE Orders.company_id = Companies.id ) <= '$last_order_end 23:59:59'";
-		} # end if
-		if ( $param{'last_login_start_year'} and $param{'last_login_start_month'} and $param{'last_login_start_day'} ) {
-			$query .= sprintf(q` AND (SELECT MAX(date_time) FROM logs WHERE action_id=2 AND company_id=Companies.id) >= '%.4d-%.2d-%.2d 00:00:00'`, @param{'last_login_start_year','last_login_start_month','last_login_start_day'} );
-		} # end if
-		if ( $param{'last_login_end_year'} and $param{'last_login_end_month'} and $param{'last_login_end_day'} ) {
-			$query .= sprintf(q` AND (SELECT MAX(date_time) FROM logs WHERE action_id=2 AND company_id=Companies.id) <= '%.4d-%.2d-%.2d 23:59:59'`, @param{'last_login_end_year','last_login_end_month','last_login_end_day'} );
-		} # end if
-		if ( $param{active} ) {
-			$query .= " AND Companies.ysnAccountActivation = '$param{active}' AND companies.deleted = false";
-		} # end if
-		$query .= ' ORDER BY lower(name)';
-$log->debug("Query: $query");
-		$variable{DATA} = [ sql::execute( $log, $dbh, $query ) ];
-
-	} else {
-		$variable{DATA} = [ ];
-	} # end if
-	if ( $param{'btnFunction'} eq 'Download in CSV format' ) {
-		my @header = ( 'Company Name','Contact Name', 'Phone #', 'Email','City','State','Registration Date','Account Rep','# of Projects','Last Project','# of Orders','Last Order', 'Last Order Value');
-		my @data;
-		while ( my ( $company_id, $user_id, $csr_id, $projects, $last_project, $orders, $last_order, $total ) = splice @{$variable{'DATA'}}, 0, 8 ) {
-			my $Company = new openprint::Company( $company_id );
-			my $User = new openprint::User( $user_id );
-			my $CSR = new openprint::User( $csr_id );
-			my $Project = new openprint::Project( $last_project );
-			my $Order = new openprint::Order( $last_order );
-			push @data, $Company->name(), $User->name(), $Company->phone(), $User->email(), $Company->city(), $Company->state(),
-				ssi::format_date( $Company->created_on() ),
-				$CSR->name(), $projects, 
-				ssi::format_date( $Project->created_on() ),
-				$orders, 
-				ssi::format_date( $Order->created_on() ),
-				$total;
-		} # end while
-		misc::export_csv( $r, $log, \%variable, 'customer_report.csv', \@header, \@data );
+		$variable{Companies} = [ openprint::Company->find( %sql ) ];
 	} # end if	
 
-} # end sub customer_login
+} # end sub _customer_login
 
 sub CustomerServiceReps {
 

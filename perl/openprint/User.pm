@@ -6,16 +6,16 @@ require openprint::Object;
 require openprint::User_in_UserGroup;
 
 use openprint ();
-use vars qw( $log $dbh %config %variable %param $debug %fields %find_fields %transforms %defaults $table $serial $AUTOLOAD );
+use vars qw( $log $dbh %config $debug %fields %find_fields %transforms %defaults $table $serial $AUTOLOAD $default_sort );
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
 *config = \%openprint::config;
-*param = \%openprint::param;
-*variable = \%openprint::variable;
 $table = 'users';
 $serial = 'users_id_seq';
 
 $debug = 0;
+
+$default_sort	=	'lower(firstname),lower(lastname)';
 
 %fields = (
 	'id'				=>	'id',

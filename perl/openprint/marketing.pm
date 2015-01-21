@@ -187,6 +187,7 @@ sub subscriptions {
 sub sales_log {
 	ssi::setup_date_select( '/marketing/sales_log.html', 'called_on_start', -30 );
 	ssi::setup_date_select( '/marketing/sales_log.html', 'called_on_end', '' );
+	$session{'/marketing/sales_log.html?company_id'} = $session{company_id} if ! $session{'/marketing/sales_log.html?company_id'};
 } # end sub sales_log
 
 sub _sales_log {
