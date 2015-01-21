@@ -22,7 +22,7 @@
 					$$variable{'Paper'}->manufacturer_id( $Manufacturers[0]->id() );
 				} # end if
 			} # end if
-			return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Manufacturer->find('order'=>'lower(name)') ], $param{'Manufacturer'} ? $param{'Manufacturer'} : $$variable{'Paper'}->manufacturer_id() );
+			return make_drop_down( openprint::Manufacturer->dropdown( order=>'lower(name)'), $param{Manufacturer} ? $param{Manufacturer} : $$variable{Paper}->manufacturer_id() );
 			) ?>
 	</select>
 	<input style="display: none;" type="text" id="txtManufacturer" name="txtManufacturer" />
@@ -32,7 +32,7 @@
 	<select id="Brand" name="Brand" size="1" onchange="Brand_onChange(this,'');">
 		<option value="">select</option>
 	<? echo (
-			return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::StockBrand->find('order'=>'lower(name)') ], $param{'Brand'} ? $param{'Brand'} : $$variable{'Paper'}->brand_id() );
+			make_drop_down( openprint::StockBrand->dropdown( order=>'lower(name)'), $param{Brand} ? $param{Brand} : $$variable{Paper}->brand_id() );
 			) ?>
 	</select>
 	<input style="display: none;" type="text" id="txtBrand" name="txtBrand" />
@@ -41,7 +41,7 @@
 	<select id="Finish" name="Finish" size="1" onchange="Finish_onChange(this,'');">
 		<option value="">select</option>
 	<? echo (
-			return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::StockFinish->find('order'=>'lower(name)') ], $param{'Finish'} ? $param{'Finish'} : $$variable{'Paper'}->finish_id() );
+			make_drop_down( openprint::StockFinish->dropdown( order=>'lower(name)'), $param{Finish} ? $param{Finish} : $$variable{Paper}->finish_id() );
 			) ?>
 	</select>
 	<input style="display: none;" type="text" id="txtFinish" name="txtFinish" />
@@ -111,9 +111,9 @@ return input( type=>'float', id=>'weight', name=>'weight', value=> $weight );
 			} # end if
 			my @Conditions = openprint::InventoryCondition->find('order'=>'lower(name)');
 			if ( @Conditions == 1 ) {
-				return ssi::make_drop_down( [ map { $_->id(), $_->name() } @Conditions ], $Conditions[0]->id() );
+				return make_drop_down( [ map { $_->id(), $_->name() } @Conditions ], $Conditions[0]->id() );
 			} else {
-				return ssi::make_drop_down( [ map { $_->id(), $_->name() } @Conditions ], $param{'Condition'} ? $param{'Condition'} : $$variable{'C'}->condition_id() );
+				return make_drop_down( [ map { $_->id(), $_->name() } @Conditions ], $param{'Condition'} ? $param{'Condition'} : $$variable{'C'}->condition_id() );
 			} # end if
 		) ?>
 		</select>
@@ -158,9 +158,9 @@ return input( type=>'float', id=>'weight', name=>'weight', value=> $weight );
             } # end if
             my @Purposes = openprint::StockPurpose->find(order=>'lower(name)');
             if ( @Purposes == 1 ) {
-                return ssi::make_drop_down( [ map { $_->id(), $_->name() } @Purposes ], $Purposes[0]->id() );
+                return make_drop_down( [ map { $_->id(), $_->name() } @Purposes ], $Purposes[0]->id() );
             } else {
-                return ssi::make_drop_down( [ map { $_->id(), $_->name() } @Purposes ], $param{Purpose} ? $param{Purpose} : $$variable{C}->purpose_id() );
+                return make_drop_down( [ map { $_->id(), $_->name() } @Purposes ], $param{Purpose} ? $param{Purpose} : $$variable{C}->purpose_id() );
             } # end if
         ) ?>
         </select>
@@ -170,7 +170,7 @@ return input( type=>'float', id=>'weight', name=>'weight', value=> $weight );
 		<label for="Owner">Owner</label>
 		<select id="Owner" name="Owner"><? echo ( 
 			my @owner_ids = sql::execute( undef, undef, 'SELECT DISTINCT owner_id FROM papers' );
-			openprint::Company::get_dropdown( ( $$variable{'Paper'}->owner_id() ? $$variable{'Paper'}->owner_id() : $session{'company_id'} ), { 'id'=>\@owner_ids } ); ) ?></select>
+			make_drop_down( openprint::Company->dropdown( id=>\@owner_ids ), $$variable{Paper}->owner_id() ? $$variable{Paper}->owner_id() : $session{company_id} ); ) ?></select>
 	</li>
 	<li>
 		<label for="Quantity">Quantity</label>
