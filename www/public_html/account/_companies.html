@@ -15,13 +15,27 @@
 		date_filter( $uri.'?last_called_on_start', 'last_called_on >=' ),
 		);
 	if ( $session{$uri.'?country_id'} ) {
-$log->debug("Hello");
 		my $Country = new openprint::Location( $session{$uri.'?country_id'} );
 		$filters{country} = $Country->short();
-	} else {
-$log->debug("NOT Hello $uri : " . $session{$uri.'?country_id'} );
-
 	}
+
+   foreach my $Field ( openprint::Company_Profile_Field->find() ) {
+		if ( $Field->type() eq 'location' ) {
+			# Can use multiple inputs
+		} # end if
+		next if ! $session{'/account/companies.html?field-'.$$Field{id}};
+
+		if ( ! $openprint::Company::find_fields{'profile_field-'.$$Field{id}} ) {
+			$openprint::Company::find_fields{'profile_field-'.$$Field{id}} = '(SELECT value FROM Company_Profiles WHERE company_id=companies.id AND field_id='.$$Field{id}.')';
+		} # end if
+		if ( $Field->match() eq 'exact' ) {
+			if ( sets::isin( $Field->type(), [ 'checkbox', 'radio' ] ) ) {
+				$param{'profile_field-'.$$Field{'id'}} = [ split(',',$session{'/account/companies.html?field-'.$Field->id()} ) ];
+			} else {
+				$param{'profile_field-'.$$Field{'id'}} = $session{'/account/companies.html?field-'.$Field->id()};
+			} # end if
+		} # end if
+	} # end foreach Profile Field
 
 	if ( $session{user_type} ne 'A' ) {
 		my $Me = new openprint::User( $session{user_id} );
