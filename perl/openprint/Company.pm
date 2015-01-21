@@ -50,8 +50,6 @@ $serial = 'companies_id_seq';
 		'president_owner'			=>	'president_owner',
 		'created_on'				=>	'created_on',
 		'updated_on'				=>	'updated_on',
-		'employees'					=>	'employees',
-		'annual_sales'				=>	'annual_sales',
 		'bank_name'					=>	'bank_name',
 		'bank_branch'				=>	'bank_branch',
 		'bank_account'				=>	'bank_account',
@@ -72,6 +70,7 @@ $serial = 'companies_id_seq';
 	last_ordered_on	=>	'(SELECT MAX(created_on) FROM Orders WHERE company_id=companies.id)',
 	last_called_on	=>	'(SELECT MAX(date_time) FROM sales_logs WHERE company_id=companies.id)',
 	marketing_category_id	=>	'(SELECT category_id FROM companies_in_marketing_categories WHERE company_id=companies.id)',
+	profile_field	=>	'(SELECT value FROM Company_Profiles WHERE company_id=companies.id AND field_id=?)',
 );
 %transforms = (
 	address1		=>	[ 's/^\s+//', 's/\s+$//' ],
@@ -89,8 +88,6 @@ $serial = 'companies_id_seq';
 	'pricelist_id'	=>	undef,
 	'activation'	=>	q`'N'`,
 	'mailinglist'	=>	q`'N'`,
-	'annual_sales'	=>	undef,
-	'employees'		=>	undef,
 	'salesrep_id'	=>	undef,
 	'deleted'		=>	0,
 	'category_id'	=>	undef,
