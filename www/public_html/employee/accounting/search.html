@@ -60,18 +60,16 @@ Choose criteria and click show results. You may the download the results in CSV 
 			<label>Status</label>
 			<select name="ddmStatus" multiple="multiple">
 				<option value="">All</option>
-				<? echo (
-				       make_drop_down( openprint::Order_Status->dropdown( order=>'lower(name)' ), [ split(',',$session{'/employee/accounting/search.html?ddmStatus'}) ] );
-					   ) ?>
+				<? echo ( make_drop_down( openprint::Order_Status->dropdown(), [ split(',',$session{'/employee/accounting/search.html?ddmStatus'}) ] );) ?>
 			</select>
 		</li>
 		<li> 
 			<label>Sales Reps</label>
 			<select name="ddmEmployee" size="1">
-				<option value="">All Employees</option>
+				<option value="">All</option>
 				<? echo (
 				    make_drop_down( 
-						openprint::User->dropdown( type=>['E','A'], order=>'lower(firstname),lower(lastname)' ),
+						openprint::User->dropdown( type=>['E','A'], 'usergroup any'=>'Sales' ),
 						$session{'/employee/accounting/search.html?ddmEmployee'} ); 
 					) ?>
 			</select>
