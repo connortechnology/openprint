@@ -68,6 +68,7 @@ $serial = 'companies_id_seq';
 	last_online	=>	'(SELECT MAX(date_time) FROM Logs WHERE company_id=companies.id)',
 	last_order	=>	'(SELECT MAX(created_on) FROM Orders WHERE company_id=companies.id)',
 	last_ordered_on	=>	'(SELECT MAX(created_on) FROM Orders WHERE company_id=companies.id)',
+	last_quoted_on	=>	'(SELECT MAX(dtmquotedate) FROM Quotes WHERE companyindex=companies.id)',
 	last_called_on	=>	'(SELECT MAX(date_time) FROM sales_logs WHERE company_id=companies.id)',
 	last_invoiced_on	=>	'(SELECT MAX(created_on) FROM invoices WHERE invoicee_id=companies.id)',
 	credit_app_on	=>	'(SELECT MAX(dtmcreationdate) FROM creditapplications WHERE company_id=companies.id)',
