@@ -695,6 +695,7 @@ sub credit_application {
 		} # end if 
 		$variable{'error'} .= $Company->save( \%param );
 		$variable{'error'} .= $Company->save_tradereferences( \%param );
+		$Company->Profile()->save( \%param );
 
 		my $App = new openprint::Credit_Application();
 		$variable{'error'} .= $App->save({
@@ -710,6 +711,7 @@ sub credit_application {
 				'accountspayablecontact'    =>  $param{'AccountsPayableContact'},
 				'status'                =>  'Non-Reviewed',
 				});
+		$log->error($variable{'error'}) if $variable{'error'};
 
 		if ( ! $variable{'error'} ) {
 # Now send email notifications
@@ -719,10 +721,8 @@ sub credit_application {
 
 			$info{'CreditAppIndex'} = $App->id();
 
-			$info{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/credit_application_notification.html' );
-			$info{'ReplacementText'} = ssi::variable_substitution( \$info{'ReplacementText'}, \%info );
-			my $email_template = misc::load_file( $log, $config{'SkinPath'}. '/email_template.html' );
-			my $template = ssi::variable_substitution( \$email_template, \%info );
+			$info{'ReplacementText'} = ssi::include( '/email_content/credit_application_notification.html', \%info );
+			my $template = ssi::include( '/email_template.html', \%info );
 
 			new openprint::Email()->send(
 					FROM	=> $config{'CreditApplicationEmail'},
