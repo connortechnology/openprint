@@ -24,7 +24,7 @@
 				<label>Payor</label>
 				<select name="payor_id" id="payor_id" onchange="load_payments(this.form);">
 					<option value="">All</option>
-					<? echo ( make_drop_down( openprint::Company->dropdown( 'last_order is not null'=>1), $session{'/payment/history.html?company_id'} ); ) ?>
+					<? echo ( make_drop_down( openprint::Company->dropdown( 'last_ordered_on is null'=>0), $session{'/payment/history.html?company_id'} ); ) ?>
 				</select>
 			</li>
 			<li>
