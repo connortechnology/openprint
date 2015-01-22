@@ -1,7 +1,7 @@
 <? eval ( 
 	if ( $session{user_type} eq 'A' ) {
-		$$variable{company_dropdown} = openprint::Company::dropdown( salesrep_id=>[ $session{user_id}, $openprint::User->csr_ids() ] );
-		$$variable{company_dropdown} = openprint::Company::dropdown( ) if ! @{$$variable{company_dropdown}};
+		$$variable{company_dropdown} = openprint::Company::dropdown( or=>'company_id='.$openprint::User->company_id(), salesrep_id=>[ $session{user_id}, $openprint::User->csr_ids() ] );
+		$$variable{company_dropdown} = openprint::Company::dropdown( ) if @{$$variable{company_dropdown}} == 1;
 	} else {
 		$$variable{company_dropdown} = openprint::Company::dropdown();
 	}
@@ -14,13 +14,16 @@ Any actions you perform will be recorded in the selected <? echo ( translate('co
 <form id="f1" name="f1" action="select_company.html" method="post">
 	<fieldset class="SelectCompany">
 <? if ( $session{user_type} eq 'A' or $openprint::User->csr_ids() ) ?>
-<fieldset><legend>Filter dropdown contents</legend>
-		<ul>
-		<li><label>Sales Rep</label>
 			<? echo (
 				my $all = $session{user_type} eq 'A' or openprint::usergroup::is_user_in( ['Estimating','Prepress','Accounting','Shipping','Inventory'] );
 				my @csr_ids = $all ? map { $_->id() } openprint::User->find('usergroup any'=>'Sales') : ( $session{user_id}, $openprint::User->csr_ids() );
 				
+	my $html;
+				if ( @csr_ids ) {
+					$html .= '
+<fieldset><legend>Filter dropdown contents</legend>
+		<ul>
+<li><label>Sales Rep</label>';
 				if ( @csr_ids > 4 ) {
 					return ssi::select( 
 						openprint::User->dropdown(id=>\@csr_ids), 
@@ -39,10 +42,13 @@ Any actions you perform will be recorded in the selected <? echo ( translate('co
 						}
 					 );
 				} # end if
-			) ?>
-		</li>
+				$html .= '</li>
 	</ul>
 </fieldset>
+';
+				} # end if
+	return $html;
+			) ?>
 <? endif ( $session{user_type} eq 'A' or $openprint::User->csr_ids() ) ?>
 		<ul>
 		<li>

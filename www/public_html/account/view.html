@@ -24,9 +24,9 @@
 					if ( $$variable{User}->can_edit() ) {
 						$html .= button( 'Delete', { href=>'/account/search.html?action=Delete&amp;user_id='.$$variable{User}{id}, text=>'Delete Profile' } );
 						if ( $session{user_type} eq 'A' ) {
-						$html .= button( 'Edit', { href=>'/administrator/managerial/user_profiles.html?ddmUser='.$$variable{User}{id} } );
+							$html .= button( 'Edit', { href=>'/administrator/managerial/user_profiles.html?ddmUser='.$$variable{User}{id} } );
 						} else {
-						$html .= button( 'Edit', { href=>'/account/user_profile.html?ddmUser='.$$variable{User}{id} } );
+							$html .= button( 'Edit', { href=>'/account/user_profile.html?ddmUser='.$$variable{User}{id} } );
 						}
 					} # end if
 					# Can assume if we are viewing this that we are not blocked.
@@ -83,11 +83,11 @@
 		<div id="PhotoAlbums">
 			<fieldset><legend>Photos/Videos</legend>
 				<? if ( $$variable{User}->can_edit() ) ?>
-				<span class="buttons"><? echo ( button( 'AddPhotoAlbum', { href=>'/photo_albums/edit.html', 'text'=>'Add' } ); ) ?></span>
+				<span class="buttons"><? echo ( button( 'AddPhotoAlbum', { href=>'/photo_albums/edit.html', text=>'Add' } ); ) ?></span>
 				<? endif ( $$variable{User}->can_edit() ) ?>
 				<? echo (
 					my $html = '';
-					my @Albums = openprint::Photo_Album->find( { user_id => $variable{User}->id(), 'order'=>'id' } );
+					my @Albums = openprint::Photo_Album->find( { user_id => $variable{User}->id(), order=>'id' } );
 					return 'no albums' if ! @Albums;
 					foreach my $Album ( @Albums ) {
 						next if ! $Album->can_view();
