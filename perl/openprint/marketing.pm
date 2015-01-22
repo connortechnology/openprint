@@ -203,8 +203,7 @@ sub _sales_log_line {
 	 if ( $param{action} eq 'add' ) {
 
 		if ( Date::Calc::check_date( @param{ map { 'called_on_'.$_ } ( 'year','month','day' ) } ) ) {
-			my $TZ = DateTime::TimeZone->new( name => $openprint::config{Timezone} );
-			my $called_on_datetime = DateTime->new( time_zone => $TZ,
+			my $called_on_datetime = DateTime->new( time_zone => $openprint::TZ,
 					( map { $_ => int($param{'called_on_'.$_ }) } ( 'year', 'month', 'day', 'hour','minute' ) ),
 					);
 
@@ -225,10 +224,9 @@ sub _sales_log_line {
 } # end sub _sales_log_line
 
 sub get_clients {
-		my $TZ = DateTime::TimeZone->new( name => $openprint::config{Timezone} );
 		my ( $y, $m, $d ) = Date::Calc::Today();
 
-		my $assigned_on_datetime = DateTime->new( time_zone => $TZ, year=>$y, month=>$m, day=>$d, hour=>0, minute=>0 );
+		my $assigned_on_datetime = DateTime->new( time_zone => $openprint::TZ, year=>$y, month=>$m, day=>$d, hour=>0, minute=>0 );
 
 		my $parser = 'DateTime::Format::Pg';
 		my @Todays_Assignments = openprint::Log->find( user_id=>$session{user_id}, action => 'Get clients', 'date_time >' => $parser->format_datetime(  $assigned_on_datetime ) );
