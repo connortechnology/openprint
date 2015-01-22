@@ -51,7 +51,7 @@
 					<td class="Title"><a href="/article/view.html?article_id=%1$d">%6$s</a></td>
 				</tr>
 				`, $Article->id(), 
-				($Article->anonymous() ? 'Sexy Anonymous Contributor' : ( $Author->name() ? htmlize( $Author->name() ) : ' ' ) ),
+				($Article->anonymous() ? 'Anonymous Contributor' : ( $Author->name() ? htmlize( $Author->name() ) : ' ' ) ),
 				$Article->Category()->name(),
 				format_datetime( $Article->created_on() ),
 				( $Article->published() ? format_datetime( $Article->published_on() ) : '' ),
