@@ -371,6 +371,7 @@ sub can_view {
     my $Me = new openprint::User( $openprint::session{'user_id'} );
     return 1 if $_[0]{'id'} == $$Me{'company_id'};
 	return 1 if sets::isin( $_[0]->salesrep_id(), $Me->csr_ids() );
+        return 1 if openprint::usergroup::is_user_in( ['Estimating','Prepress','Accounting','Shipping','Inventory'], $openprint::session{'user_id'} );
 	return 0;
 } # end sub can_view
 
