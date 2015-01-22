@@ -280,7 +280,8 @@ $log->debug("data: $client $remote_user $user_name $curr_time $xfer_type $path $
 						complete	=> 1,
 					};
 				} # end if send email
-			} elsif ($line =~ /^(\S+)\s+(\S+)\s+(\S+)\s+\[([^\]]+)\]\s+"([^"]+)"\s+(\d+)\s+([\-\d]+)\s+(\d+)$/o) {
+			} elsif ($line =~ /^(\S+)\s+(\S+)\s+(\S+)\s+\[([^\]]+)\]\s+"([^"]+)"\s+(\d+)\s+([\-\d]+)\s+([\.\d]+)$/o) {
+#LogFormat IQFormat "%h %l %u %t \"%f\" %s %b %T"
 
 				my $client = $1;
 				my $remote_user = $2;
