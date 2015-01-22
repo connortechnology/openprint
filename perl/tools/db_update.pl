@@ -156,7 +156,7 @@ if ( ! sets::isin( 'companies', \@tables ) ) {
 		$dbh->do('ALTER TABLE companies ADD asset_id INTEGER');
 	} # end if
 	foreach my $field ( 'name', 'address1', 'address2', 'city','country','state', 'postalcode', 'gst_number', 'pst_number',
-			'accountnumber','phone','extension','fax','url','greeting','business_type','business_name','business_form','president_owner',
+			'accountnumber','phone','extension','fax','greeting','business_type','business_name','business_form','president_owner',
 			'bank_name','bank_branch','bank_account','bank_manager','bank_phone','bank_fax','bank_email','notes', 'employees','annual_sales' ) {
 		if ( ! $openprint::Company::fields{$field} ) {
 			die "Want to add $field to Company but it's not in fields";
@@ -380,6 +380,10 @@ if ( ! sets::isin('articles',\@tables ) ) {
 	$dbh->do('ALTER TABLE articles ADD anonymous BOOLEAN NOT NULL default false');
 	} # end if
 	$dbh->do('ALTER TABLE articles ALTER company_id DROP NOT NULL');
+	if ( ! exists $$data{commenting} ) {
+	$dbh->do('ALTER TABLE articles ADD commenting BOOLEAN NOT NULL default false');
+	print "Adding commenting to articles\n";
+	} # end if
 } # end if
 if ( sets::isin( 'article_assets', \@tables ) ) {
 	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='article_assets'", 'column_name');

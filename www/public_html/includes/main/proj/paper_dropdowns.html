@@ -7,11 +7,10 @@
 		<ul>
 		<li>
 			<label>Customer supplied</label>
-			<input type="radio" id="SuppliedStock<?Signature?>Y" name="rdbSuppliedStock<?Signature?>" value="Y" <? echo ( checked( $$variable{'rdbSuppliedStock'.$$variable{Signature}} eq 'Y' ); ) ?> onclick="$('SuppliedStockWarning<?Signature?>').show();Stock_onchange(this,'<?Signature?>');" />
+			<input type="radio" id="SuppliedStock<?Signature?>Y" name="rdbSuppliedStock<?Signature?>" value="Y" <? echo ( checked( $$variable{'rdbSuppliedStock'.$$variable{Signature}} eq 'Y' ); ) ?> onclick="Stock_onchange(this,'<?Signature?>');" />
 			<label class="radio" for="SuppliedStock<?Signature?>Y">Yes</label>
-			<input type="radio" id="SuppliedStock<?Signature?>N" name="rdbSuppliedStock<?Signature?>" value="N" <? echo ( checked( $$variable{'rdbSuppliedStock'.$$variable{Signature}} ne 'Y' ); ) ?> onclick="$('SuppliedStockWarning<?Signature?>').hide();Stock_onchange(this,'<?Signature?>');" />
+			<input type="radio" id="SuppliedStock<?Signature?>N" name="rdbSuppliedStock<?Signature?>" value="N" <? echo ( checked( $$variable{'rdbSuppliedStock'.$$variable{Signature}} ne 'Y' ); ) ?> onclick="Stock_onchange(this,'<?Signature?>');" />
 			<label class="radio" for="SuppliedStock<?Signature?>N">No</label><br/>
-			<span id="SuppliedStockWarning<?Signature?>" class="error" <? echo ( 'style="display:none;"' if $$variable{'rdbSuppliedStock'.$$variable{Signature}} ne 'Y' ) ?>>Prices shown will not include the price of the stock.</span>
 		</li>
 		<li>
 			<label>Unlisted stock</label>

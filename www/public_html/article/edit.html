@@ -114,6 +114,7 @@
 	$$variable{Privacy} = $$variable{Article}->Privacy();
 	return ssi::include( '/includes/_privacy_widget.html' );
 ) ?>
+					<li><label>Commenting</label><? echo ( radio( 'commenting', [ '1', 'Yes', '0', 'No' ], $variable{Article}->commenting() ); ) ?></li>
 				</ul>
 			<p class="buttons">
 				<? echo (

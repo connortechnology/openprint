@@ -52,15 +52,42 @@ sub debug {
 	} # end foreach
 } # end sub debug
 
+sub new_scalar_id {
+	my ( $parent, $id, $data ) = @_;
+	my $self = $data;
+	bless $self, $parent;
+
+#$log->debug("loading $parent $id") if $debug or DEBUG_ALL;
+	no strict 'refs';
+	my $fields = \%{$parent.'::fields'};
+		my @keys = map { ( (defined $$fields{$_} or exists $$data{$_} ) and $$fields{$_} ne $_ ) ? $_ : () } keys %$fields;
+		@$self{@keys} = @$self{@$fields{@keys}};
+	if ( ! $no_cache ) {
+		$log->debug("Caching $config{db_name} $parent $id = $self") if $debug;
+		$cache{$config{db_name}}{$parent}{$id} = $self;
+	} else {
+		$log->debug("NOT Caching $config{db_name} $parent $id = $self") if $debug;
+	} # end if
+	return $self;
+}
+
 sub new {
 	my ( $parent, $id, $data ) = @_;
 
 	my $ref = ref $id;
 	if ( ! $ref ) {
-		if ( $id and (!$data) and $cache{$config{db_name}}{$parent} and $cache{$config{db_name}}{$parent}{$id} ) {
+		if ( $id and $cache{$config{db_name}}{$parent} and $cache{$config{db_name}}{$parent}{$id} ) {
+			if ( $data ) {
+if ( 1 ) {
+				my $self = $cache{$config{db_name}}{$parent}{$id};
+				$self->load( $data );
+				return $self;
+}
+			} else {
 #$log->debug("Loading from cache $parent $id");
 			# If the object is cached
 			return $openprint::Object::cache{$config{db_name}}{$parent}{$id};
+			}
 		} # end if
 #$log->debug("Not Loading from cache $parent $id") if $id and ! $data;
 		my $self = {};
@@ -261,7 +288,12 @@ $log->debug("No serial") if $debug;
 			if ( $need_serial ) {
 				if ( $serial ) {
 					@$self{@identified_by} = @sql{@$fields{@identified_by}} = $local_dbh->selectrow_array( q{SELECT nextval('} . $serial . q{')} );
-					$log->debug("SQL statement execution SELECT nextval('$serial') returned ".join(',',@$self{@identified_by})) if $debug or DEBUG_ALL;
+					if ( $local_dbh->errstr() )  {
+						$log->error("Error getting next id. " . $local_dbh->errstr() );
+						$log->error("SQL statement execution SELECT nextval('$serial') returned ".join(',',@$self{@identified_by}));
+					} elsif ( $debug or DEBUG_ALL ) {
+						$log->debug("SQL statement execution SELECT nextval('$serial') returned ".join(',',@$self{@identified_by}));
+					} # end if
 				} # end if
 			} # end if
 			my @keys = keys %sql;
@@ -771,6 +803,7 @@ $log->debug("ALl cached $object_type $cache_field $$params{$cache_field}") if DE
 			} 
 			return @results;
 		} # end if
+		#return map { $object_type->new_scalar_id( $_->{$$fields{id}}, $_ ) } @$data;
 		return map { $object_type->new( $_->{$$fields{id}}, $_ ) } @$data;
 	} else {
 		my @identified_by = eval '@'.$object_type.'::identified_by';
@@ -852,7 +885,16 @@ sub to_string {
 
 sub dropdown {
 	my $self = shift;
-	return [ map { $$_{id}, $_->name() } $self->find(@_) ];
+	my %params = @_;
+	if ( ! $params{order} ) {
+		my $type = ref($self);
+		$type = $self if ! $type;
+		my $order = eval '$'.$type.'::default_sort';
+$log->debug("default sort: $self $type :: default_sort = $order");
+		$params{order} = $order if $order;
+	}
+
+	return [ map { $$_{id}, $_->name() } $self->find(%params) ];
 } # end sub dropdown
 
 sub sort_value {
@@ -898,6 +940,7 @@ $openprint::log->debug("After $transform: $_[2]") if $debug;
 
 sub opinions {
 	my $type = ref $_[0];
+	return '' if ! openprint::Opinion_Type->find_one();
 	my $html;
 	my @Opinions = openprint::Opinion->find('object_type'=> $type, 'object_id'=>$_[0]->id() );
 	my %Opinions;

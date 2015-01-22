@@ -47,7 +47,7 @@ sub search {
     } # end if
 
 	_search();
-	ssi::setup_date_select( '/employee/accounting/search.html', 'ordered_on_start', '' );
+	ssi::setup_date_select( '/employee/accounting/search.html', 'ordered_on_start', -365 );
 	ssi::setup_date_select( '/employee/accounting/search.html', 'ordered_on_end', '' );
 	if ( ( ! $session{'/employee/accounting/search.html?ddmStatus'} ) or ( $session{'/employee/accounting/search.html?ddmStatus'} =~ /\w/ ) ) {
 		my  %Statuses = map { $$_{name}, $$_{id} } openprint::Order_Status->find();
@@ -421,8 +421,14 @@ sub expense {
 			return;	
 		} # end if
 	} elsif ( $param{'btnFunction'} eq 'Save' ) {
-		if ( $param{amount} =~ /[=\+\-\*\/]/ ) {
-			$param{amount} = eval $param{amount};
+		if ( $param{amount} =~ /[\=\+\-\*\/]/ ) {
+$log->debug("Calcing amount: $param{amount}");
+			if ( $param{amount} =~ /\=/ ) {	
+				eval('$param{amount} ' . "$param{amount};" );
+			} else {
+				eval('$param{amount} = ' . "$param{amount};" );
+			} # end if
+$log->debug("Calcing amount: $param{amount}");
 		} # end if
 		$param{'owner_id'} = $session{'company_id'} if ! $param{'owner_id'};
 		$param{'due_on'} = sprintf('%.4d-%.2d-%.2d', @param{'due_on_year','due_on_month','due_on_day'} );

@@ -6,7 +6,7 @@
 		theme : "advanced"
 	});
 </script>
-<? echo ( include('/includes/error_reporting.html'); ) ?>
+<?include(/includes/error_reporting.html)?>
 <div class="ArticleCategory"><div class="Edit">
 <form name="f1" id="f1" action="category.html" method="post" enctype="multipart/form-data">
 	<fieldset class="filters">
@@ -14,44 +14,44 @@
 			<li><label>Category</label>
 				<select name="category_id" id="category_id" onchange="f1.btnFunction='';f1.submit();">
 					<option value="">select</option>
-				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Article_Category->find('order'=>'lower(name)') ], $$variable{'Category'}->id() ); ) ?>
+				<? echo ( make_drop_down( openprint::Article_Category->dropdown( order=>'lower(name)'), $$variable{Category}->id() ); ) ?>
 				</select>
 			</li>
 		</ul>
 	</fieldset>
-	<fieldset><legend><? echo ( $$variable{'Category'}->id() ? 'Edit category ' . $$variable{'Category'}->id() : 'New category' ) ?></legend>
-		<? if ( $$variable{'Category'}->deleted() ) ?>
+	<fieldset><legend><? echo ( $$variable{Category}->id() ? 'Edit category ' . $$variable{Category}->id() : 'New category' ) ?></legend>
+		<? if ( $$variable{Category}->deleted() ) ?>
 		<span class="warning">This category has been deleted</span>
-		<? endif ( $$variable{'Category'}->deleted() ) ?>
+		<? endif ( $$variable{Category}->deleted() ) ?>
 		
 		<div class="leftColumn">
 			<div class="content">
 				<ul>
-					<li><label>ID</label><? echo ( $$variable{'Category'}->id() ) ?></li>
+					<li><label>ID</label><? echo ( $$variable{Category}->id() ) ?></li>
 					<li><label>Name</label>
-						<input type="text" id="name" name="name" value="<? echo ( $$variable{'Category'}->name() ) ?>" />
+						<input type="text" id="name" name="name" value="<? echo ( $$variable{Category}->name() ) ?>" />
 					</li>
 					<li><label>Position</label>
-						<input type="text" id="position" name="position" value="<? echo ( $$variable{'Category'}->position() ) ?>" />
+						<input type="text" id="position" name="position" value="<? echo ( $$variable{Category}->position() ) ?>" />
 					</li>
 					<li>
 						<label for="description">Description</label>
-						<textarea id="description" name="description" rows="<? echo ( ssi::count_lines($$variable{'Category'}->description() ); ) ?>" onkeyup="textarea_resize(this);"><? hecho ( $$variable{'Category'}->description() ) ?></textarea>
+						<textarea id="description" name="description" rows="<? echo ( ssi::count_lines($$variable{Category}->description() ); ) ?>" onkeyup="textarea_resize(this);"><? hecho ( $$variable{Category}->description() ) ?></textarea>
 					</li>
 					<li>
 						<label for="summary">Summary</label>
-						<textarea id="summary" name="summary" rows="<? echo ( ssi::count_lines($$variable{'Category'}->summary() ); ) ?>" onkeyup="textarea_resize(this);"><? hecho ( $$variable{'Category'}->summary() ) ?></textarea>
+						<textarea id="summary" name="summary" rows="<? echo ( ssi::count_lines($$variable{Category}->summary() ); ) ?>" onkeyup="textarea_resize(this);"><? hecho ( $$variable{Category}->summary() ) ?></textarea>
 					</li>
 				</ul>
 			</div>
 		</div>
 		<div class="rightColumn">
-           <fieldset><legend><a href="/photo_albums/view.html?album_id=<? echo ( $$variable{'Category'}->album_id() ) ?>">Photos</a></legend>
-            <? if ( $$variable{'Category'}->id() ) ?>
-                <div id="Photos"><? echo ( include('_category_photos.html'); ) ?></div>
+           <fieldset><legend><a href="/photo_albums/view.html?album_id=<? echo ( $$variable{Category}->album_id() ) ?>">Photos</a></legend>
+            <? if ( $$variable{Category}->id() ) ?>
+                <div id="Photos"><?include(_category_photos.html)?></div>
 				<fieldset><legend>Set by asset id</legend>
 					<input type="number" name="asset_id" id="asset_id" />
-					<? echo ( ssi::button( 'Add', { 'onclick'=>"new Ajax.Updater('Photos','_category_photos.html', {parameters: { category_id: $$variable{Category}{id}, asset_id: \$('asset_id').value, action: 'add' } } );" } ); ) ?>
+					<? echo ( button( 'Add', { onclick=>"new Ajax.Updater('Photos','_category_photos.html', {parameters: { category_id: $$variable{Category}{id}, asset_id: \$('asset_id').value, action: 'add' } } );" } ); ) ?>
 				</fieldset>
 				<fieldset><legend>Upload Asset</legend>
 					<div class="content">
@@ -72,27 +72,27 @@
 							</li>
 						</ul>
 						<p class="buttons">
-							<? echo ( ssi::button( 'Upload', { 'onclick'=>"f1.action='/article/category.html';f1.btnFunction.value='Upload';f1.submit();" } ); ) ?>
+							<? echo ( button( 'Upload', { onclick=>"f1.action='/article/category.html';f1.btnFunction.value='Upload';f1.submit();" } ); ) ?>
 						</p>
 					</div>
 				</fieldset>
-            <? else ( $$variable{'Category'}->id() ) ?>
+            <? else ( $$variable{Category}->id() ) ?>
 			You will be able to add photos once you save the category.
-            <? endif ( $$variable{'Category'}->id() ) ?>
+            <? endif ( $$variable{Category}->id() ) ?>
             </fieldset>
 		</div>
 		<br class="spacer"/>
 		<p class="buttons">
 			<? echo (
 				my $html = '';
-				if ( $$variable{'Category'}->id() ) {
-					if ( $$variable{'Category'}->deleted() ) {
-						$html .= ssi::button( 'Destroy', { 'onclick'=>"if(confirm('Are you sure?')){f1.btnFunction.value='Destroy';f1.submit();}" } );
+				if ( $$variable{Category}->id() ) {
+					if ( $$variable{Category}->deleted() ) {
+						$html .= button( 'Destroy', { 'onclick'=>"if(confirm('Are you sure?')){f1.btnFunction.value='Destroy';f1.submit();}" } );
 					} else {
-						$html .= ssi::button( 'Delete',  { 'onclick'=>"if(confirm('Are you sure?')){f1.btnFunction.value='Delete';f1.submit();}" } );
+						$html .= button( 'Delete',  { 'onclick'=>"if(confirm('Are you sure?')){f1.btnFunction.value='Delete';f1.submit();}" } );
 					} # end if
 				} # end if
-				$html .= ssi::button( 'Save', { 'onclick'=>"f1.btnFunction.value='Save';f1.submit();" } );
+				$html .= button( 'Save', { 'onclick'=>"f1.btnFunction.value='Save';f1.submit();" } );
 				return $html;
 			) ?>
 		</p>

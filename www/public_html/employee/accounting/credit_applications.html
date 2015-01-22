@@ -1,51 +1,53 @@
 <div class="CreditApplications">
 <form id="f1" name="f1" method="post" action="credit_applications.html">
 	<fieldset class="filters"><legend>Search</legend>
-	<p>
-		<label>Company</label>
-			<input type="text" onKeyUp="filterDDM(this, f1.ddmCompany);" />
-		<select name="ddmCompany">
-			<option value=""> All Companies </option>
-			<? echo ( 
-				ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Company->find( 'order'=>'lower(name)' ) ], $param{'ddmCompany'} );
-) ?>
-		</select>
-	</p>
-	<p>
-		<label>Status</label>
-		<select name="ddmStatus">
-			<option value="" /> All </option>
+		<ul>
+		<li>
+			<label>Company</label>
+			<input type="text" oninput="filter_companies(f1.ddmCompany, {name:this.value} );" class="filter"/>
+			<select name="ddmCompany">
+				<option value=""> All Companies </option>
+				<? echo ( 
+					make_drop_down( openprint::Company->dropdown( 'credit_app_on is null'=>0 ), $param{ddmCompany} );
+	) ?>
+			</select>
+		</li>
+		<li>
+			<label>Status</label>
+			<select name="ddmStatus">
+				<option value="" /> All </option>
+				<? echo (
+					make_drop_down( [ map { $_, $_ } ( 'Approved','Declined','Reviewed','Non-Reviewed' ) ], $$variable{'ddmStatus'} );
+				) ?>
+			</select>
+		</li>
+		<li>
+			<label>Application Date</label>
 			<? echo (
-				ssi::make_drop_down( [ map { $_, $_ } ( 'Approved','Declined','Reviewed','Non-Reviewed' ) ], $$variable{'ddmStatus'} );
+				join(' to ',
+					date_select_session('/employee/accounting/credit_applications.html', 'created_on_start', { with_today=>1} ),
+					date_select_session('/employee/accounting/credit_applications.html', 'created_on_end', { with_today=>1} ),
+				);
 			) ?>
-		</select>
-	</p>
-	<p>
-		<label>Application Date</label>
-            <? echo ( 
-                ssi::date_select_session('/employee/accounting/credit_applications.html', 'created_on_start', {'with_today'=>1} );
-                ) ?> to
-            <? echo ( 
-                ssi::date_select_session('/employee/accounting/credit_applications.html', 'created_on_end', {'with_today'=>1} );
-                ) ?>
-	</p>
+	</li>
+	</ul>
 	<p class="buttons">
-		<? echo ( join('',
-				ssi::button( 'ShowResults', { onclick=>"f1.btnFunction.value='Show Results';f1.submit();", text=>'Show Results' } ),
-				ssi::button( 'Reset', { onclick=>"f1.reset();" } ),
-); ) ?>
+		<? echo ( join("\n",
+				button( 'ShowResults', { onclick=>"f1.btnFunction.value='Show Results';f1.submit();", text=>'Show Results' } ),
+				button( 'Reset', { onclick=>"f1.reset();" } ),
+				); ) ?>
 	</p>
 	<input type="hidden" name="btnFunction"/>
 </form>
 <hr/>
 <br/>
 <? eval (
-    @{$variable{'CreditApps'}} = openprint::Credit_Application->find(
-		ssi::date_filter( '/employee/accounting/credit_applications.html?created_on_end', 'created_on <=' ),
-		ssi::date_filter( '/employee/accounting/credit_applications.html?created_on_start', 'created_on >=' ),
-		( $session{'/employee/accounting/credit_applications.html?status'} ? ( 'status'	=>	$session{'/employee/accounting/credit_applications.html?status'} ) : () ),
-		( $param{'ddmCompany'} ? ( 'company_id'	=>	$param{'ddmCompany'} ) : () ),
-		'order'	=>	$openprint::Credit_Application::fields{'created_on'},
+	@{$variable{'CreditApps'}} = openprint::Credit_Application->find(
+		date_filter( '/employee/accounting/credit_applications.html?created_on_end', 'created_on <=' ),
+		date_filter( '/employee/accounting/credit_applications.html?created_on_start', 'created_on >=' ),
+		( $session{'/employee/accounting/credit_applications.html?status'} ? ( status	=>	$session{'/employee/accounting/credit_applications.html?status'} ) : () ),
+		( $param{ddmCompany} ? ( company_id	=>	$param{ddmCompany} ) : () ),
+		order	=>	$openprint::Credit_Application::fields{created_on},
 	);
 ) ?>
 <? if ( @{$$variable{'CreditApps'}} ) ?>
@@ -72,7 +74,7 @@ The following Credit Applications matched your criteria<br>
 	<td class="status"><a href="credit_application.html?credit_index=%2$d">%6$s</a></td>
 </tr>`,
 	$rowclass, $Application->id(), $Application->Company()->name(), $Application->signature(), 
-Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $Application->created_on() ) ),
+format_date( $Application->created_on() ),
 $Application->status(),
 );
 	$rowclass = $rowclass ? '' : ' class="colRow"';

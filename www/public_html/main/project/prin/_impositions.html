@@ -39,7 +39,7 @@ This feature is under development.<br/>
 		$$specs{'txtUnspecifiedPageQuantity'.$qty_index} = openprint::Estimating::Printing::get_unspecified_pages( $Project, $service_id, $printing_specs, $specs, $qty_index );
 		$$specs{'txtUnspecifiedPageQuantity'.$qty_index} = 0 if $$specs{'txtUnspecifiedPageQuantity'.$qty_index} < 0;
 	} elsif ( $$specs{Versions} ) {
-		$$specs{'UnspecifiedVersions'.$qty_index} = get_unspecified_versions( $Project, $service_id, $printing_specs, $specs, $qty_index );
+		$$specs{'UnspecifiedVersions'.$qty_index} = openprint::Estimating::Printing::get_unspecified_versions( $Project, $service_id, $printing_specs, $specs, $qty_index );
 		$$specs{'UnspecifiedVersions'.$qty_index} = 0 if $$specs{'UnspecifiedVersions'.$qty_index} < 0;
 	} # end if
 

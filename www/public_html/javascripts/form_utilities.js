@@ -635,27 +635,29 @@ function checkLoginData( usernameInput, passwordInput ) {
 	} else if ( div ) {
 		div.hide();
 	}
-
+	usernameInput.form.btnFunction.value='Login';
 	usernameInput.form.submit();
 	return false;
 }
 
 function checkForgotPasswordData ( emailInput ) {
-	 var pass = true;
-	 
-	 if ( !checkInputData( emailInput ) ) {
-		 // Display email error.
-		 document.getElementById('forgotPassword_missingEmailMessage').style.display = 'block';
-		 pass = false;
-	 } else {
-		 document.getElementById('forgotPassword_missingEmailMessage').style.display = 'none';
-	 }
+	var pass = true;
 
-	 if ( pass ) {
-		 // Passed. Submit the form and it's data.
-		 emailInput.form.submit();
-		 return false;
-	 }
+	var div = $( 'missingLoginMessage' );
+	if ( ! emailInput.value ) {
+		// Display email error.
+		div.style.display = 'block';
+		pass = false;
+	} else {
+		div.style.display = 'none';
+	}
+
+	if ( pass ) {
+		// Passed. Submit the form and it's data.
+		emailInput.form.btnFunction.value='Forgotten Password';
+		emailInput.form.submit();
+		return false;
+	}
 }
 
 function toggleMenu( element, a, b ) {
@@ -1468,8 +1470,8 @@ function positive_floatize(e) {
 	return e.value;
 }
 function floatize_calculator(e) {
-	if ( e.value.match(/[^\d\-\.\+\*\/]/g) )
-		e.value = parseFloat(e.value.replace(/[^\d\-\.\+\*\/]/g,''));
+	if ( e.value.match(/[^\d\-\.\+\*=\/]/g) )
+		e.value = parseFloat(e.value.replace(/[^\d\-\.=\+\*\/]/g,''));
 	return e.value;
 }
 function hexize(e) {
@@ -1569,4 +1571,11 @@ function getSelectedLocation(text, li) {
 	if ( li.id ) {
 		new Ajax.Request( '/location/_load_location.json', { parameters: { location_id: li.id } } );
 	} // end if
+}
+
+var filter_ajax = null;
+function filter_companies( e, p ) {
+    if ( filter_ajax ) { filter_ajax.transport.abort(); }
+        
+    filter_ajax = new Ajax.Updater( e, '/includes/_company_ddm.html', { parameters: p, onSuccess:function(){filter_ajax = null;} } );
 }

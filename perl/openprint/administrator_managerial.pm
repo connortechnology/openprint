@@ -191,6 +191,8 @@ sub _currency_conversions {
 					period_start=>$now,
 					period_end	=>	undef,
 					rate=>$param{amount}});
+		} else {
+			$variable{warning} .= 'No change made.';
         } # end if
 
         $Conversion = openprint::Currency_Conversion->find_one(to_id=>$param{currency_id}, from_id=>$param{to_id}, period_end=>undef);
@@ -419,6 +421,7 @@ sub user_profiles {
 
 	# load user fields
 
+	$param{ddmCustomer} = $cust_id if ! $param{ddmCustomer};
 	$variable{'UserIndex'} = $User->id();
 	$variable{'User'} = $User;
 	$variable{'NUM_USERS'} = scalar @Users;
@@ -602,6 +605,8 @@ sub company_profiles {
 					} # end if
 				} # end foreach Supplier
 				sql::end_transaction( $dbh, $ac );
+				$variable{ExternalRedirect} = '/administrator/managerial/company_profiles.html?ddmCustomer='.$Company->id();
+				return;
 			} # end if $index
 		} # end if input checks
 	} elsif ( $param{'btnFunction'} eq 'Delete' ) {
@@ -620,6 +625,11 @@ sub company_profiles {
 		$Company = new openprint::Company( $param{'company_id'} );
 		$Company->undelete();
 	} # end if btnFunction
+
+	if ( ! $index ) {
+		$index = $session{company_id};
+		$Company = new openprint::Company($index);
+	} # end if
 
 	my @customers_categories;
 	if ( $index ) {
@@ -959,7 +969,7 @@ sub companies {
 	_companies();
 } # end sub companies
 sub _companies {
-	ssi::save_params( '/administrator/managerial/companies.html', ( 'salesrep_id',
+	ssi::save_params( '/administrator/managerial/companies.html', ( 'salesrep_id', 'marketing_category_id',
 				( map { 'created_on_start_' . $_ } ( 'year','month','day' ) ),
 				) );
 	$session{$r->uri().'?salesrep_id_exclude'} = $param{salesrep_id_exclude};

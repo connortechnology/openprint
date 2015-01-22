@@ -2,7 +2,7 @@
 use utf8;
 use lib '/etc/apache2/lib/perl';
 use strict;
-use warnings;
+#use warnings;
 
 require configuration;
 require sql;
@@ -577,8 +577,12 @@ $log->debug("regexp: $regexp");
 			@to = ( $User );
 		} else {
 			if ( $Company->salesrep_id() ) {
-				if ( $Company->CSR()->notification('CSR Client File Uploads') ne 'No' ) {
-					@to = ( $Company->CSR() );
+				my $CSR = $Company->CSR();
+				if ( $CSR->notification('CSR Client File Uploads') ne 'No' ) {
+					@to = ( $CSR );
+					$log->debug("Adding CSR $$CSR{email}");
+				} else {
+					$log->debug("Not Adding CSR $$CSR{email} : notifications etting:" . $CSR->notification('CSR Client File Uploads') );
 				} # end if
 			} # end if
 			push @to, map { $_->User() } openprint::User_Notification->find( type=>'Client File Uploads',value=>'Yes', company_id=>[ $config{Owner}, $Company->id() ] );

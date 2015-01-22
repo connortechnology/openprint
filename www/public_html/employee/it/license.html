@@ -2,18 +2,21 @@
 	function check_inputs( form ) {
 		return true;
 	} //  end function check_inputs
+	function del_allocation( host_id ) {
+		new Ajax.Updater( 'Allocations', '_license_allocations.html', { parameters: { license_id: $('license_id').value, host_id: host_id, action: 'delete' } } );
+	} // end function del_allocation
 </script>
 <div class="License"><div class="Edit">
 <?include(/includes/error_reporting.html)?>
 <form id="f1" name="f1" method="post" action="/employee/it/license.html" enctype="multipart/form-data">
-	<input type="hidden" id="license_id" name="license_id" value="<? echo ( $$variable{'License'}->id() ) ?>" />
+	<input type="hidden" id="license_id" name="license_id" value="<? echo ( $$variable{License}->id() ) ?>" />
 	<input type="hidden" id="action" name="action" />
-	<fieldset><legend>License <? echo ( $$variable{'License'}->id() ) ?></legend>
+	<fieldset><legend>License <? echo ( $$variable{License}->id() ) ?></legend>
 		<div class="content leftColumn">
 			<ul>
 				<li>
 					<label>Serial/Key</label>
-					<input type="text" id="serialkey" name="serialkey" value="<? echo ( $$variable{'License'}->serialkey() ) ?>" />
+					<input type="text" id="serialkey" name="serialkey" value="<? echo ( $$variable{License}->serialkey() ) ?>" />
 				</li>
 				<li>
 					<label>Max Uses(empty is unlimited)</label>
@@ -27,19 +30,19 @@
 					</select>
 				</li>
 				<li><label>Comment</label>
-					<textarea id="comment" name="comment" rows="<? echo (ssi::count_lines($$variable{License}->comment() ); ) ?>" onkeyup="textarea_resize(this);"><? echo ( $$variable{License}->comment() ) ?></textarea>
+					<textarea id="comment" name="comment" rows="<? echo (count_lines($$variable{License}->comment() ); ) ?>" onkeyup="textarea_resize(this);"><? echo ( $$variable{License}->comment() ) ?></textarea>
 				</li>
-				<li><label>Created On</label><? echo ( Date::Format::time2str( $config{'DateTimeFormat'}, Date::Parse::str2time( $$variable{'License'}->created_on() ) ); ) ?></li>
-				<li><label>Updated On</label><? echo ( Date::Format::time2str( $config{'DateTimeFormat'}, Date::Parse::str2time( $$variable{'License'}->created_on() ) ); ) ?></li>
-				<li><label>Purchased On</label><? echo ( date_select( 'purchased_on', $$variable{'License'}->purchased_on() ); ) ?></li>
+				<li><label>Created On</label><? echo ( format_datetime( $$variable{License}->created_on() ) ) ?></li>
+				<li><label>Updated On</label><? echo ( format_datetime( $$variable{License}->created_on() ) ) ?></li>
+				<li><label>Purchased On</label><? echo ( date_select( 'purchased_on', $$variable{License}->purchased_on() ); ) ?></li>
 				<li><label>Expires On</label><? echo ( date_select( 'expires_on', $$variable{License}->expires_on() ); ) ?></li>
 				<li class="buttons">
 					<? echo ( 
 						my $html;
 						$html .= button( 'Save', { onclick=>"if( check_inputs( f1 ) ){f1.elements['action'].value='Save';f1.submit();}" } );
 						$html .= button( 'Reset', { onclick=>'f1.reset();' } );
-						if ( $$variable{'License'}->id() ) {
-							$html .= button( 'Delete', { onclick=>"if(confirm('Are you sure?')){f1.elements['action'].value='Delete';f1.submit();}" } ) if $$variable{'License'}->id();
+						if ( $$variable{License}->id() ) {
+							$html .= button( 'Delete', { onclick=>"if(confirm('Are you sure?')){f1.elements['action'].value='Delete';f1.submit();}" } ) if $$variable{License}->id();
 						} # end if
 						return $html;
 					) ?>
@@ -49,23 +52,22 @@
 	</fieldset>
 	<fieldset><legend>Allocated To</legend>
 <div id="Allocations"><?include(_license_allocations.html)?></div>
-<? echo ( button('Add', { onclick=>qq`popup_window('_license_host_popup.html?license_id=$$variable{License}{id}');` } ); ) ?>
 	</fieldset>
 	<fieldset><legend>Logs</legend>
 		<ul>
 			<li><label>Date:</label>
-				<? echo (
-						ssi::datetime_select_session( '/employee/it/license.html','log_created_on_start', {
-							'onchange'	=>q`new Ajax.Updater( 'Logs', '/employee/it/_license_logs.html', { parameters: $('f1').serialize() } );`,
-							'with_today'=>1,
-							'with_clear'=>1,
-							} ); ) ?> to
-				<? echo (
-						ssi::datetime_select_session( '/employee/it/license.html','log_created_on_end', {
-							'onchange'	=>q`new Ajax.Updater( 'Logs', '/employee/it/_license_logs.html', { parameters: $('f1').serialize() } );`,
-							'with_today'=>1,
-							'with_clear'=>1,
-							} ); ) ?>
+				<? echo ( join(' to ', 
+						datetime_select_session( '/employee/it/license.html','log_created_on_start', {
+							onchange	=>q`new Ajax.Updater( 'Logs', '/employee/it/_license_logs.html', { parameters: $('f1').serialize() } );`,
+							with_today	=>1,
+							with_clear	=>1,
+							} ),
+						datetime_select_session( '/employee/it/license.html','log_created_on_end', {
+							onchange	=>q`new Ajax.Updater( 'Logs', '/employee/it/_license_logs.html', { parameters: $('f1').serialize() } );`,
+							with_today	=>1,
+							with_clear	=>1,
+							} ),
+						); ) ?>
 			</li>
 		</ul>
 		<div id="Logs"><?include(/employee/it/_license_logs.html)?></div>

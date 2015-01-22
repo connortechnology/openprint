@@ -1,6 +1,6 @@
 use strict;
 package openprint;
-use vars qw( $r %variable %session %param %config $log $dbh );
+use vars qw( $r %variable %session %param %config $log $dbh $User $Company );
 
 
 sub session_init {
@@ -59,6 +59,9 @@ $log->error("Since when is session_id in the params");
 	} # end if
 	$session{'ip'} = $ENV{'REMOTE_ADDR'} if $ENV{'REMOTE_ADDR'} and ! $session{'ip'};
 
+	$User = new openprint::User( $session{user_id} );
+	$Company = new openprint::Company( $session{company_id} );
+
 # Now set some defaults right away, if we can, FIXME namespace colision
 	if ( $r->param('Country') ) {
 		$session{'Country'} = $r->param('Country');
@@ -92,9 +95,12 @@ $log->error("Since when is session_id in the params");
 		$short = substr( $short, 0, 3 );
 		$_ = openprint::Currency->find_one( short => $short );
 		$session{'Currency_id'} = $_->id() if $_;
-	} elsif ( $param{'select_currency_id'} ) {
-		my $Currency = new openprint::Currency( $param{'select_currency_id'} );
-		$session{'Currency_id'} = $Currency->id();
+	} elsif ( $param{select_currency_id} ) {
+		$param{select_currency_id} = openprint::Currency->transform( id=>$param{select_currency_id} );
+		if ( $param{select_currency_id} ) {
+			my $Currency = new openprint::Currency( $param{select_currency_id} );
+			$session{'Currency_id'} = $Currency->id();
+		} # end if
 	} elsif ( ! $session{'Currency_id'} ) {
 		$_ = openprint::Currency->find_one( 'short' => $r->dir_config('Currency') );
 		$session{'Currency_id'} = $_->id() if $_;
@@ -123,6 +129,7 @@ $log->error("Since when is session_id in the params");
 sub switch_company {
 	my ( $Company ) = @_;
 	$session{'company_id'} = $Company->id();
+	$openprint::Company = $Company;
 	(new openprint::Log())->save({'action'=>'Switch Company'});
 
 	if ( $Company->currency_id() ) {

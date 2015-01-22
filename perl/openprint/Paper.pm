@@ -326,6 +326,7 @@ sub save {
 	my @recommendations = $self->recommendations();
 	sql::execute( undef, undef, q{DELETE FROM Paper_Recommendations WHERE lngPaperIndex=?}, $$self{id} );
 	foreach my $rec ( @recommendations ) {
+		next if ! $rec;
 		sql::insert( undef, undef, 'Paper_Recommendations', 'lngPaperIndex', $$self{id},'lngProjectTypeIndex', $rec );
 	} # end foreach
 
@@ -1650,7 +1651,12 @@ sub init_cache {
 }
 
 sub link_to {
+	if ( $openprint::variable{uri} =~ /administrator/ ) {
+
+	return sprintf('<a href="/administrator/stock/stock.html?stock_id=%1$d">%2$s</a>', $_[0]{id}, $_[0]->to_string() );
+	} else {
 	return sprintf('<a href="/employee/inventory/paper_details.html?paper_id=%1$d">%2$s</a>', $_[0]{id}, $_[0]->to_string() );
+	} # end if
 } # end sub link_to
 
 sub sort {
@@ -1683,6 +1689,12 @@ sub Unit_Of_Measure_Costing {
 sub Supplier {
 	return new openprint::Company( $_[0]{supplier_id} );
 } # end sub Supplier
+
+sub waste {
+	my $area_factor = $_[0]->start_area() / $_[0]->area();
+	$area_factor =~ s/.*\.//;
+	return $area_factor;
+}
 
 1;
 __END__

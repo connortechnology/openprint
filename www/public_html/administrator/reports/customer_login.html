@@ -1,3 +1,10 @@
+<script type="text/javascript">
+	function load_results() {
+		var div = $('Results');
+		if ( div ) LoadContent( div, '/administrator/reports/_customer_login.html', $('f1') );
+	} // end function
+</script>
+
 Choose report criteria and click show results. You may the download the the results in CSV (spreadsheet format) to view in a program such as Microsoft Excel.<br/>
 <br/>
 <form id="f1" name="f1" method="post" action="customer_login.html">
@@ -5,10 +12,10 @@ Choose report criteria and click show results. You may the download the the resu
 		<ul>
 		<li>
 			<label>Sales Reps</label>
-			<select name="ddmEmployees" size="1">
+			<select name="salesrep_id" size="1">
 				<option value="">All Employees</option>
 <? echo (
-    make_drop_down( [ ( 'None','Not Assigned' ), map { $_->id(), $_->name() } openprint::User->find( type=>['E','A'], order=>'lower(firstname),lower(lastname)', 'usergroup any'=>'Sales' ) ], $param{ddmEmployees} );
+    make_drop_down( [ ( 'None','Not Assigned' ), map { $_->id(), $_->name() } openprint::User->find( type=>['E','A'], order=>'lower(firstname),lower(lastname)', 'usergroup any'=>'Sales' ) ], $session{'/administrator/reports/customer_login.html?salesrep_id'} );
 ) ?>
 			</select>
 		</li>
@@ -37,67 +44,17 @@ Choose report criteria and click show results. You may the download the the resu
 			<? echo ( date_select_session( $r->uri(), 'last_login_end', { with_today=>1, with_clear=>1 } ); ) ?>
 		</li>
 		<li>
-			<label>Active?</label>
-			<? echo ( radio( 'active', [ 'Y', 'Yes', 'N', 'No', '', 'All' ], $session{$r->uri().'?active'}, { default=>'' } ); ) ?>
+			<label>Activated?</label>
+			<? echo ( radio( 'activated', [ 'Y', 'Yes', 'N', 'No', '', 'All' ], $session{$r->uri().'?activated'}, { default=>'' } ); ) ?>
 		</li>
 		</ul>
 		<p class="buttons">
-			<? echo ( join('',
-				button( 'ShowResults', { onclick=>"f1.action='customer_login.html';f1.btnFunction.value='ShowResults';f1.submit();", text=>'Show Results' } ),
+			<? echo ( join("\n",
+				button( 'ShowResults', { onclick=>q`load_results();`, text=>'Show Results' } ),
 				button( 'DownloadCSV', { onclick=>"f1.action='customer_login.html?Download';f1.btnFunction.value='Download in CSV format';f1.submit();", text=>'Download in CSV Format' } ),
 				button( 'Reset', { onclick=>'f1.reset();' } ),
 	); ) ?>
 		</p>
 	</fieldset>
-	<br class="spacer" />
-	<? if ( @{$$variable{'DATA'}} ) ?>
-<table class="List sortable" style="table-layout: auto;">
-		<tr> 
-			<th class="Company">Company Name</th>
-			<th class="State">State<br />Province</th>
-			<th class="Date">Reg'd Date</th>
-			<th class="User">Account Rep</th>
-			<th class="Projects">Projects</th>
-			<th class="LastProject">Last Project</th>
-			<th class="Orders">Orders</th>
-			<th class="LastOrder">Last Order</th>
-			<th class="Price">Total Value</th>
-		</tr>
-		<? echo ( 
-			my $html = '';
-			my $rowclass;
-			while ( my ( $company_id, $user_id, $csr_id, $projects, $last_project, $orders, $last_order, $total ) = splice @{$$variable{'DATA'}}, 0, 8 ) {
-				my $Company = new openprint::Company( $company_id );
-				my $User = new openprint::User( $user_id );
-				my $CSR = new openprint::User( $csr_id );
-				my $Project = new openprint::Project( $last_project );
-				my $Order = new openprint::Order( $last_order );
-
-				$html .= sprintf('<tr%1$s> 
-					<td class="Company"><a href="/administrator/managerial/company_profiles.html?ddmCustomer=%2$d">%3$s</a></td>
-					<td class="State">%4$s</td>
-					<td class="Date">%5$s</td>
-					<td class="User">%6$s</td>
-					<td class="Projects">%7$d</td>
-					<td class="LastProject">%8$s</td>
-					<td class="Orders">%9$d</td>
-					<td class="LastOrder">%10$s</td>
-					<td class="Price">%11$s</td>
-				</tr>', $rowclass, $company_id, $Company->name(), $Company->state(), 
-					format_date( $Company->created_on() ),
-					$CSR->name(), $projects, 
-					format_date( $Project->created_on() ),
-					$orders,
-					format_date( $Order->created_on() ),
-					openprint::Currency::format($total) );
-
-				$rowclass = $rowclass ? '' : ' class="colRow"';
-			} # end while
-			return $html;
-		) ?>
-	</table>
-	<? else ( @{$$variable{'DATA'}} ) ?>
-	There were no results matching your criteria.<br>
-	<? endif ( @{$$variable{'DATA'}} ) ?>
-	<input type="hidden" name="btnFunction"/>
 </form>
+<div id="Results">Select criteria and click Show Results</div>

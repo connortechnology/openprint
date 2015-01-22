@@ -21,13 +21,17 @@ require openprint::Software;
 require openprint::Location;
 
 sub logs {
-	ssi::setup_date_select( '/employee/it/logs.html', 'date_time_start', -31 );
-	ssi::setup_date_select( '/employee/it/logs.html', 'date_time_end', '' );
-	ssi::save_params( '/employee/it/logs.html', 
-			'date_time_start_year', 'date_time_start_month', 'date_time_start_day', 
-			'date_time_end_year', 'date_time_end_month', 'date_time_end_day', 
-);
+	_logs();
+	ssi::setup_date_select( '/employee/it/logs.html', 'date_time_start', 0 );
+	ssi::setup_date_select( '/employee/it/logs.html', 'date_time_end', 0 );
 } # end sub logs
+
+sub _logs {
+	ssi::save_params( '/employee/it/logs.html', 
+			( map { 'date_time_start_' . $_ } ( 'year','month','day','hour','minute' ) ),
+			( map { 'date_time_end_' . $_ } ( 'year','month','day','hour','minute' ) ),
+	);
+} # end sub _logs
 
 sub hosts {
 	if ( $param{'action'} eq 'Delete' ) {
@@ -101,6 +105,12 @@ sub host {
 			return;
 		} # end if
 		%param = ();
+	} elsif ( $param{action} eq 'reboot' ) {
+		if ( $Host->reboot() ) {
+			$variable{information} .= 'Host successfully rebooted';
+		} else {
+			$variable{error} .= 'Host failed to reboot. Check logs';
+		}
 	} elsif ( $param{action} eq 'Wake' ) {
 		foreach my $I ( $Host->Interfaces() ) {
 			next if ! $I->mac();
@@ -226,9 +236,6 @@ sub _cameras_available {
 sub _camera { # .json 
 	$session{'/employee/it/camera_viewer.html?monitor_size-'.$param{'monitor_id'}} = join('x', @param{'width','height'} );
 }
-
-sub logs {
-} # end sub logs
 
 sub _radius_mac_line {
 	if ( $config{'RADIUS Support'} ne 'Y' ) {
@@ -430,7 +437,7 @@ sub _licenses {
 	( map { 'purchased_on_end_' . $_ } ( 'year', 'month', 'day' ) ),
 	( map { 'expires_on_start_' . $_ } ( 'year', 'month', 'day' ) ),
 	( map { 'expires_on_end_' . $_ } ( 'year', 'month', 'day' ) ),
-			'ip','hostname','mac','software_id','serialkey',
+			'ip', 'hostname', 'mac', 'software_id', 'serialkey',
 			'order',
 			);
 } # end sub _licenses
@@ -493,6 +500,13 @@ sub _license_allocations {
 		
 		my $LH = new openprint::License_Host();
 		$variable{error} .= $LH->save({license_id=>$param{license_id}, host_id=>$param{host_id}});
+	} elsif ( $param{action} eq 'delete' ) {
+		my $LH = openprint::License_Host->find_one( license_id=>$param{license_id}, host_id=>$param{host_id} );
+		if ( ! $LH ) {
+			$variable{error} .= 'Allocation not found.';
+			return;
+		} 
+		$variable{error} .= $LH->delete();
 	} # end if	
 } # end sub _license_alliations
 

@@ -79,24 +79,36 @@ sub send {
 	my @attachments = $params{'ATTACHMENTS'} ? @{$params{'ATTACHMENTS'}} : ();
 	@attachments = ( $$self{'ATTACHMENTS'} ? @{$$self{'ATTACHMENTS'}} : () ) if ! @attachments;
 
-    if ( @attachments ) {
+    if ( @attachments or $params{HTML_BODY} ) {
         my $message = $mail{BODY};
         $mail{BOUNDARY} = "====" . time() . "====" if ! $mail{BOUNDARY};
+
+		if ( @attachments ) {
         $mail{'content-type'} = "multipart/mixed;\r\n  boundary=\"$mail{BOUNDARY}\"\r\n";
+		} else {
+        $mail{'content-type'} = "multipart/alternative;\r\n  boundary=\"$mail{BOUNDARY}\"\r\n";
+		}
 
 # start with the current body
-        $mail{'BODY'} .= "This is a multi-part message in MIME format.\n\n";
+        $mail{'BODY'} = "This is a multi-part message in MIME format.\n\n";
         if ( $message ) {
             $mail{BODY} .= "--$mail{BOUNDARY}\n";
-            $mail{BODY} .= ($mail{'content-type'} ? $mail{'content-type'} : 'Content-Type: text/plain; charset="utf-8"')."\n";
-            $mail{BODY} .= "Content-Transfer-Encoding: 8-bit\n";
-            $mail{BODY} .= "\n$message\n";
-        } else {
+            $mail{BODY} .= ($mail{'content-type'} ? $mail{'content-type'} : 'Content-Type: text/plain; charset="utf-8"; format="fixed"')."\n";
+            $mail{BODY} .= "Content-Transfer-Encoding: quoted-printable\n";
+            $mail{BODY} .= "\n".MIME::QuotedPrint::encode_qp( Encode::encode('utf-8', $message ) ) . "\n";
+        }
+
+		if ( $params{HTML_BODY} ) {
+            $mail{BODY} .= "--$mail{BOUNDARY}\nContent-Type: text/html;\n";
+            $mail{BODY} .= "Content-Transfer-Encoding: quoted-printable\n";
+            $mail{BODY} .= "\n".MIME::QuotedPrint::encode_qp( Encode::encode('utf-8',$params{HTML_BODY}) ) . "\n";
+		} else {
             my ( $name, $text, $type, $encoding ) = splice @attachments,0,4;
             $mail{BODY} .= "--$mail{BOUNDARY}\nContent-Type: $type;\n";
             $mail{BODY} .= "Content-Transfer-Encoding: $encoding\n";
             $mail{BODY} .= "\n$text\n";
         } # end if
+
 
         while ( @attachments ) {
             my ( $name, $text, $type, $encoding ) = splice ( @attachments,0,4 );

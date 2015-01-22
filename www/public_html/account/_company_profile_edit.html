@@ -41,9 +41,13 @@ if ( 0 ) {
 			$html .= make_drop_down( [ map { $_, $_ } @{$Field->values()} ], $value ? $value : $Field->default() );
 			$html .= '</select>';
 		} elsif ( $Field->type() eq 'text' ) {
-			$html .= sprintf( q`<input type="text" name="field-%1$d" id="field-%1$d" value="%2$s" />`, $Field->id(), $value ? $value : $Field->default() );
+			$html .= input( type=>'text', name=>'field-'.$Field->id(), id=>'field-'.$Field->id(), value=>$value ? $value : $Field->default() );
+		} elsif ( $Field->type() eq 'url' ) {
+			$html .= input( type=>'url', name=>'field-'.$Field->id(), id=>'field-'.$Field->id(), value=>$value ? $value : $Field->default() );
 		} elsif ( $Field->type() eq 'radio' ) {
 			$html .= radio( 'field-'.$Field->id(), $Field->values(), $value ? $value : $Field->default() );
+		} else {
+			$log->error("Unknown field type $$Field{type}");
 		} # end if
 		$html .= "</span></li>\n";
 	} # end foreach Field

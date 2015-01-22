@@ -29,7 +29,7 @@ use vars qw( %variable %session %param %config $log $dbh $r );
 
 sub _stocks {
 	if ( %param and ! $param{'btnFunction'} ) {
-		ssi::save_params('/administrator/stock/list.html', 'group_id','owner_id','manufacturer_id','supplier_id', 'brand_id','finish_id','colour_id','weight_id','fsc_code','material_id', 'Types', 'recommendations','grain_direction', 'digital', 'width','height' );
+		ssi::save_params('/administrator/stock/list.html', 'group_id','owner_id','manufacturer_id','supplier_id', 'brand_id','finish_id','colour_id','weight_id','fsc_code','material_id', 'Types', 'recommendations','grain_direction', 'digital', 'width','height', 'scoring', 'setup_prices', 'material_prices' );
 		$session{'/administrator/stock/list.html?OrLarger'} = $param{OrLarger};
 	} # end if
 } # end sub _stocks
@@ -76,6 +76,11 @@ sub list {
 				next if ! openprint::PaperPrice->find_one(paper_id=>$$Stock{id}, service=>'Setup');
 			} elsif ( $param{setup_prices} eq '0' ) {
 				next if openprint::PaperPrice->find_one(paper_id=>$$Stock{id}, service=>'Setup');
+			} # end if
+			if ( $param{material_prices} eq '1' ) {
+				next if ! openprint::PaperPrice->find_one(paper_id=>$$Stock{id}, service=>'Material');
+			} elsif ( $param{material_prices} eq '0' ) {
+				next if openprint::PaperPrice->find_one(paper_id=>$$Stock{id}, service=>'Material');
 			} # end if
 			push @data, $Stock->id(), $Stock->owner(), $Stock->manufacturer(), $Stock->Supplier()->name(), $Stock->group(), $Stock->brand(), $Stock->finish(), $Stock->colour(), $Stock->weight(), $Stock->quality(), 
 				 $Stock->mweight(), $Stock->gsm(), $Stock->calliper(), $Stock->type(), $Stock->width(), $Stock->height(), $Stock->basis_width(), $Stock->basis_height(), $Stock->grain_direction(), '', $Stock->doublesided(), $Stock->cuttable(), $Stock->multipart(), $Stock->perfecting(), $Stock->score_required(), $Stock->bladecleaning(), $openprint::Paper::grades{$Stock->grade()}, $Stock->sheets_per_package(), $Stock->supplied(), $Stock->digital(), $Stock->full_packages(), $Stock->minimum_order(), $Stock->inventory_number(), $Stock->material(), $Stock->message();
@@ -181,6 +186,10 @@ $openprint::log->debug("Setting: $param{'amount'} " );
 						delete $$Paper{'Prices'};
 					} # end if
 				} # end foreach param key
+			} elsif ( $param{mode} eq 'recommended' ) {
+				$Paper->recommendations( ref $param{PRF} eq 'ARRAY' ? @{$param{PRF}} : ( $param{PRF} ) );
+				$variable{error} .= $Paper->save();
+				$variable{ExternalRedirect} = '/administrator/stock/list.html';
 			} # end if
 			sql::end_transaction( $dbh, $ac );
 		} # end foreach Paper
@@ -576,6 +585,12 @@ sub _price_tr {
 
 sub _stock { 
 } # end sub _stock
+sub _popup {
+	@{$variable{Stocks}} = openprint::Paper->find(id=>$param{stock_ids});
+	$variable{Stock} = $variable{Stocks}[0] if @{$variable{Stocks}};
+} # end sub _popup
+sub _popup_price {
+} # end sub _popup_price
 
 1;
 __END__

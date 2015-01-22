@@ -165,6 +165,7 @@ sub format {
 		( $price, $precision ) = @_;
 		$Currency = get_current();
 	} # end if
+	
 
 	$price = 0 if ! $price;
 	$precision = 2 if ! defined $precision;
@@ -172,7 +173,7 @@ sub format {
 	require Number::Format;
     my $Formatter = new Number::Format(
             -decimal_digits     =>  $precision,
-            -int_curr_symbol    =>  $Currency->symbol(),
+            ($Currency->symbol()? (-int_curr_symbol    =>  $Currency->symbol() ) : () ),
             );
 	return $Formatter->format_price( $price, $precision );
 } # end sub format
