@@ -52,7 +52,7 @@ $serial = 'shifts_id_seq';
 sub starttime_seconds {
 	my $parser = 'DateTime::Format::Pg';
 	if ( @_ == 2 ) {
-		$_[0]{'starttime'} = $parser->format_datetime( DateTime->from_epoch( 'epoch'=>$_[1], 'time_zone'=>$_[0]->TZ() ) );
+		$_[0]{'starttime'} = $parser->format_datetime( DateTime->from_epoch( 'epoch'=>$_[1], time_zone=>$openprint::TZ ) );
 	} # end if
 	return $parser->parse_datetime( $_[0]{'starttime'} )->epoch();
 } # endsub
