@@ -96,6 +96,7 @@ my @re = (
 		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ dovecot: pop3-login: Aborted Login \(auth failed, [0-9]+ attempts in [0-9]+ secs\): user=<[a-zA-Z@\.0-9]*>, method=PLAIN, rip=(?<IP>[\.0-9]+), lip=[\.0-9]+, session=<[^>]+$',
 		q`^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ named\[[0-9]+\]: client (?<IP>[0-9.]+)#[0-9]+: (view [A-Za-z0-9]+: )?query \(cache\) '[./[:alnum:]]+' denied$`,
 		q`^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ pam-abl\[[0-9]+\]: Blocking access from (?<IP>[0-9.]+) to service sshd, user root$`,
+		q`^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ postfix\/smtpd\[[0-9]+\]: warning: unknown\[(?<IP>[0-9.]+)\]: SASL LOGIN authentication failed: authentication failure$`,
 );
 
 
