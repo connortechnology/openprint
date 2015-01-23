@@ -549,11 +549,10 @@ sub Shift {
 					#'limit'			=>	1,
 					});
 			if ( ! @Shifts ) {
-				my $TZ = DateTime::TimeZone->new( name => $openprint::config{'Timezone'} );
 
 				@Shifts = openprint::Shift::get_Shifts( $self->Equipment(), 
-					DateTime->from_epoch('epoch'=>$self->starttime_seconds(), 'time_zone'=>$TZ ),
-					DateTime->from_epoch('epoch'=>$self->endtime_seconds(), 'time_zone'=>$TZ ),
+					DateTime->from_epoch( epoch=>$self->starttime_seconds(), time_zone=>$openprint::TZ ),
+					DateTime->from_epoch( epoch=>$self->endtime_seconds(), time_zone=>$openprint::TZ ),
 				);
 			} # end if
 

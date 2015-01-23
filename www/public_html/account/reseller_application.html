@@ -22,18 +22,15 @@ You must register for a login, and be logged in before you can apply to become a
 		<p class="required"> denotes required information.</p>
 		<form name="f1" method="post" action="<?SecureSiteURL?>/account/reseller_application.html">
 			<div class="ResellerApplication">
-				<? if ( new openprint::Company($session{'company_id'})->state() eq 'ON' ) ?>
-				<p> 
-				To become a reseller and for PST exemption you must fill out and fax a tax form.	Please <a href="#" alt="Ontario_PST_Exempt.pdf" onClick="openPDF('/pdfs/Ontario_PST_Exempt.pdf'); return false;">click here</a> to download the form in PDF format..
-				</p>
-				<? endif ( new openprint::Company($session{'company_id'})->state() eq 'ON' ) ?>
-				<? echo ( include('/account/_business_information.html'); ) ?>
-				<? echo ( include('/account/_trade_references.html'); ) ?>
+				<?include('/account/_business_information.html')?>
+				<?include('/account/_trade_references.html')?>
 			</div><!-- Application -->
 			<fieldset>
 				<p class="buttons">
-					<? echo ( ssi::button( 'Submit1', { onclick=>'f1.submit();', href=>'', text=>'Submit' } ); ) ?>
-					<? echo ( ssi::button( 'Reset1', { onclick=>'f1.reset();', href=>'', text=>'Reset' } ); ) ?>
+					<? echo ( join("\n",
+								button( 'Submit1', { onclick=>'f1.submit();', text=>'Submit' } ),
+								button( 'Reset1', { onclick=>'f1.reset();', text=>'Reset' } ),
+							); ) ?>
 				</p>
 			</fieldset>
 			<input type="hidden" name="btnFunction" value="Apply"/>

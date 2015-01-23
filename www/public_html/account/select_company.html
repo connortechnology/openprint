@@ -2,12 +2,12 @@
 <? if ( sets::isin( $session{user_type},['E','A'] ) ) ?>
 	<? eval ( $$variable{Company} = new openprint::Company( $session{company_id} ); ) ?>
 	<? if ( $param{ddmCompany} ) ?>
-		Any actions you perform during the course of this login will be stored in <? echo ( $$variable{Company}->name() ) ?>'s history.<br/>
+		Any actions you perform during the course of this login will be stored in <? echo ( $$variable{Company}->link_to() ) ?>'s history.<br/>
 		<br/>
 		<? if ( $$variable{Company}->salesrep_id() ) ?>
-		The CSR for <? echo ( $$variable{Company}->name() ) ?> is <? echo ( $$variable{Company}->CSR()->name() ) ?>.<br/>
+		The CSR for <? echo ( $$variable{Company}->link_to() ) ?> is <? echo ( $$variable{Company}->CSR()->link_to() ) ?>.<br/>
 		<? else ( $$variable{Company}->salesrep_id() ) ?>
-		There is no CSR assigned for <? echo ( $$variable{Company}->name() ) ?>.<br/>
+		There is no CSR assigned for <? echo ( $$variable{Company}->link_to() ) ?>.<br/>
 		<? endif ( $$variable{Company}->salesrep_id() ) ?>
 		<br/>
 		Prices will be displayed in <? echo ( new openprint::Currency( $session{Currency_id} )->name() ) ?>.<br/>

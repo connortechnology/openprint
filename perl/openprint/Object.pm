@@ -76,10 +76,18 @@ sub new {
 
 	my $ref = ref $id;
 	if ( ! $ref ) {
-		if ( $id and (!$data) and $cache{$config{db_name}}{$parent} and $cache{$config{db_name}}{$parent}{$id} ) {
+		if ( $id and $cache{$config{db_name}}{$parent} and $cache{$config{db_name}}{$parent}{$id} ) {
+			if ( $data ) {
+if ( 1 ) {
+				my $self = $cache{$config{db_name}}{$parent}{$id};
+				$self->load( $data );
+				return $self;
+}
+			} else {
 #$log->debug("Loading from cache $parent $id");
 			# If the object is cached
 			return $openprint::Object::cache{$config{db_name}}{$parent}{$id};
+			}
 		} # end if
 #$log->debug("Not Loading from cache $parent $id") if $id and ! $data;
 		my $self = {};
@@ -795,7 +803,8 @@ $log->debug("ALl cached $object_type $cache_field $$params{$cache_field}") if DE
 			} 
 			return @results;
 		} # end if
-		return map { $object_type->new_scalar_id( $_->{$$fields{id}}, $_ ) } @$data;
+		#return map { $object_type->new_scalar_id( $_->{$$fields{id}}, $_ ) } @$data;
+		return map { $object_type->new( $_->{$$fields{id}}, $_ ) } @$data;
 	} else {
 		my @identified_by = eval '@'.$object_type.'::identified_by';
 		if ( ! @identified_by ) {
@@ -876,7 +885,16 @@ sub to_string {
 
 sub dropdown {
 	my $self = shift;
-	return [ map { $$_{id}, $_->name() } $self->find(@_) ];
+	my %params = @_;
+	if ( ! $params{order} ) {
+		my $type = ref($self);
+		$type = $self if ! $type;
+		my $order = eval '$'.$type.'::default_sort';
+$log->debug("default sort: $self $type :: default_sort = $order");
+		$params{order} = $order if $order;
+	}
+
+	return [ map { $$_{id}, $_->name() } $self->find(%params) ];
 } # end sub dropdown
 
 sub sort_value {
@@ -1136,11 +1154,11 @@ sub lock {
 	my $type = ref $_[0];
 	if ( $_[0]{ac} ) {
 		#already locked
-		$openprint::log->debug("ALREADY LOCKED $type for $_[0]{id} ac: $_[0]{ac} caller: $caller line: $line project ref:" . $_[0]);
+		$openprint::log->debug("ALREADY LOCKED $type for $_[0]{id} ac: $_[0]{ac} caller: $caller line: $line object ref:" . $_[0]);
 		$_[0]{ac} += 1;
 	} else {
 		$_[0]{ac} = sql::start_transaction( $openprint::dbh );
-		$openprint::log->debug("LOCKING Projects for project $_[0]{id} ac: $_[0]{ac} caller: $caller line: $line project ref:" . $_[0]);
+		$openprint::log->debug("LOCKING $type for $_[0]{id} ac: $_[0]{ac} caller: $caller line: $line object ref:" . $_[0]);
 		my $table = ${$type.'::table'};
 		$dbh->do( "LOCK TABLE $table IN EXCLUSIVE MODE" ) or $log->error( DBI->errstr );
 	} # end if

@@ -123,9 +123,9 @@ if ( 0 ) {
 				</p>
 				<p><label>Finished</label>
             <? echo ( join( "\n",
-                input( type=>'float', id=>'txtFinalWidth', name=>'txtFinalWidth', value=>$$variable{txtFinalWidth}, onkeyup=>'dimensions_onChange(this.form);', min=>0, title=>'Final Width in inches' ),
+                input( type=>'float', id=>'txtFinalWidth', name=>'txtFinalWidth', value=>$$variable{txtFinalWidth}, oninput=>'dimensions_onChange(this.form);', min=>0, title=>'Final Width in inches' ),
                 ' x ',
-                input( type=>'float', id=>'txtFinalHeight', name=>'txtFinalHeight', value=>$$variable{txtFinalHeight}, onkeyup=>'dimensions_onChange(this.form);', min=>0, title=>'Final Height in inches' ),
+                input( type=>'float', id=>'txtFinalHeight', name=>'txtFinalHeight', value=>$$variable{txtFinalHeight}, oninput=>'dimensions_onChange(this.form);', min=>0, title=>'Final Height in inches' ),
 				); ) ?>
 				</p>
 				<p><label>Spine</label>
@@ -136,16 +136,16 @@ radio('spine', [ map { $_, $_ } 'height', 'width' ], $$variable{spine}, { defaul
 				<p><label>Spread</label>
                 <? echo ( join( "\n",
 				
-                input( type=>'float', id=>'txtWidth', name=>'txtWidth', value=>$$variable{txtWidth}, onkeyup=>'dimensions_onChange(this.form);', min=>0, title=>'Flat Width in inches' ),
+                input( type=>'float', id=>'txtWidth', name=>'txtWidth', value=>$$variable{txtWidth}, oninput=>'dimensions_onChange(this.form);', min=>0, title=>'Flat Width in inches' ),
                 ' x ',
-                input( type=>'float', id=>'txtHeight', name=>'txtHeight', value=>$$variable{txtHeight}, onkeyup=>'dimensions_onChange(this.form);', min=>0, title=>'Flat Height in inches' ),
+                input( type=>'float', id=>'txtHeight', name=>'txtHeight', value=>$$variable{txtHeight}, oninput=>'dimensions_onChange(this.form);', min=>0, title=>'Flat Height in inches' ),
                 );
             ) ?>
 				</p>
 				<div id="PagesCover">
 				<p>
 					<label>Total pages</label>
-					<? echo ( input( name=>'txtTotalPageQuantity', value=>$$variable{txtTotalPageQuantity},  type=>'cardinal', onkeyup=>'calc(this.form.name);' ); ) ?>
+					<? echo ( input( name=>'txtTotalPageQuantity', value=>$$variable{txtTotalPageQuantity}, type=>'cardinal', oninput=>'calc(this.form.name);' ); ) ?>
 				</p>
 				<p>
 					<label>Cover</label>
@@ -158,7 +158,7 @@ radio('spine', [ map { $_, $_ } 'height', 'width' ], $$variable{spine}, { defaul
 				<div id="GateInsert">
 				<p>
 					<label><? echo ( writeTip( 'Gate Folded' ); ) ?> pages</label>
-					<? echo ( input( name=>'txtGateFoldedSpreadQuantity', value=>$$variable{txtGateFoldedSpreadQuantity},  type=>'cardinal', onkeyup=>'calc(this.form.name);', min=>0 ); ) ?>
+					<? echo ( input( name=>'txtGateFoldedSpreadQuantity', value=>$$variable{txtGateFoldedSpreadQuantity},  type=>'cardinal', oninput=>'calc(this.form.name);', min=>0 ); ) ?>
 				</p>
 				<p>
 					<label>Supplied Inserts</label>

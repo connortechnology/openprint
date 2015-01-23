@@ -2,7 +2,7 @@ use strict;
 package openprint::Company;
 our @ISA = qw( openprint::Object );
 
-use vars qw( $debug $log $dbh $table $serial %fields %find_fields %defaults %transforms $AUTOLOAD );
+use vars qw( $debug $log $dbh $table $serial %fields %find_fields %defaults %transforms $AUTOLOAD $default_sort );
 require openprint;
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
@@ -11,7 +11,8 @@ require sql;
 require openprint::Object;
 require openprint::User;
 
-$debug = 0;
+$debug = 1;
+$default_sort = 'lower(name)';
 $table = 'companies';
 $serial = 'companies_id_seq';
 
@@ -49,8 +50,6 @@ $serial = 'companies_id_seq';
 		'president_owner'			=>	'president_owner',
 		'created_on'				=>	'created_on',
 		'updated_on'				=>	'updated_on',
-		'employees'					=>	'employees',
-		'annual_sales'				=>	'annual_sales',
 		'bank_name'					=>	'bank_name',
 		'bank_branch'				=>	'bank_branch',
 		'bank_account'				=>	'bank_account',
@@ -67,7 +66,14 @@ $serial = 'companies_id_seq';
 		);
 %find_fields = (
 	last_online	=>	'(SELECT MAX(date_time) FROM Logs WHERE company_id=companies.id)',
+	last_order	=>	'(SELECT MAX(created_on) FROM Orders WHERE company_id=companies.id)',
+	last_ordered_on	=>	'(SELECT MAX(created_on) FROM Orders WHERE company_id=companies.id)',
+	last_quoted_on	=>	'(SELECT MAX(dtmquotedate) FROM Quotes WHERE companyindex=companies.id)',
+	last_called_on	=>	'(SELECT MAX(date_time) FROM sales_logs WHERE company_id=companies.id)',
+	last_invoiced_on	=>	'(SELECT MAX(created_on) FROM invoices WHERE invoicee_id=companies.id)',
+	credit_app_on	=>	'(SELECT MAX(dtmcreationdate) FROM creditapplications WHERE company_id=companies.id)',
 	marketing_category_id	=>	'(SELECT category_id FROM companies_in_marketing_categories WHERE company_id=companies.id)',
+	profile_field	=>	'(SELECT value FROM Company_Profiles WHERE company_id=companies.id AND field_id=?)',
 );
 %transforms = (
 	address1		=>	[ 's/^\s+//', 's/\s+$//' ],
@@ -86,8 +92,6 @@ $serial = 'companies_id_seq';
 	'pricelist_id'	=>	undef,
 	'activation'	=>	q`'N'`,
 	'mailinglist'	=>	q`'N'`,
-	'annual_sales'	=>	undef,
-	'employees'		=>	undef,
 	'salesrep_id'	=>	undef,
 	'deleted'		=>	0,
 	'category_id'	=>	undef,
@@ -221,43 +225,18 @@ sub Credit {
 sub dropdown {
 	shift @_ if $_[0] eq 'openprint::Company';
 
-	my $sql = 'SELECT id, name FROM Companies WHERE (deleted=false OR deleted IS NULL)';
-	my @values;
+	my %sql = @_;
 
 	if ( $openprint::session{user_id} and ( $openprint::session{user_type} ne 'A' ) and ! openprint::usergroup::is_user_in( ['Estimating','Prepress','Accounting','Shipping','Inventory'], $openprint::session{user_id} ) ) {
-		$sql .= ' AND id=(SELECT company_id FROM users WHERE id=?) OR salesrep_id IN ('. join(',', $openprint::session{user_id}, new openprint::User( $openprint::session{user_id} )->csr_ids() ) .')';
-		push @values, $openprint::session{user_id};
+		if ( (!$sql{salesrep_id}) or ( ! sets::isin( $sql{salesrep_id}, [ $openprint::session{user_id}, $openprint::User->csr_ids() ] ) ) ) {
+			$sql{salesrep_id} = [ $openprint::session{user_id}, $openprint::User->csr_ids() ];
+		}
+		$sql{or} = 'id=' . $$openprint::User{company_id};
+	} else {
+$log->debug("Not adding filter");
 	} # end if
-
-	if ( @_ ) {
-		my %params;
-		if ( ref $_[0] eq 'HASH' ) {
-			%params = %{$_[0]};
-		} elsif ( ref $_[0] eq 'ARRAY' ) {
-			%params = @{$_[0]};
-		} else {
-			%params = @_;
-		} # end if
-		if ( exists $params{offers_credit} ) {
-			$sql .= ' AND offers_credit=?',
-			push @values, $params{offers_credit};
-		} # end if
-		if ( $params{id} ) {
-			if ( ref $params{id} eq 'ARRAY' ) {
-				return [] if ! @{$params{id}};
-				$sql .= ' AND id IN ( '.join(',', map { '?' } @{$params{id}} ).' )';
-				push @values,  @{$params{id}};
-			} # end if
-		} # end if
-		if ( $params{supplier} ) {
-			$sql .= ' AND ysnsupplier=?';
-			push @values, $params{supplier};
-		} # end if
-	} # end if
-	$sql .= ' ORDER BY lower(name)';
-
-	my $companies = sql::execute_array( undef, undef, $sql, @values );
-	return $companies;
+	
+	return openprint::Company->SUPER::dropdown( %sql );
 } # end sub dropdown
 
 sub get_dropdown {
@@ -336,9 +315,9 @@ sub can_edit {
 	return 1 if ! $_[0]{id};
 	return 1 if $openprint::session{user_type} eq 'A';
 	return 1 if $_[0]->salesrep_id() == $openprint::session{user_id};
-	my $Me = new openprint::User( $openprint::session{user_id} );
-	return 1 if sets::isin( $_[0]->salesrep_id(), $Me->csr_ids() );
-	return 1 if $_[0]{id} == $$Me{company_id} and $$Me{administrator} eq 'Y';
+	return 1 if sets::isin( $_[0]->salesrep_id(), $openprint::User->csr_ids() );
+	return 1 if $_[0]{id} == $$openprint::User{company_id} and $$openprint::User{administrator} eq 'Y';
+	return 0;
 } # end sub can_edit
 
 sub taxexempt1 {
@@ -389,8 +368,10 @@ sub find_filtered {
 sub can_view {
     return 1 if $openprint::session{user_type} eq 'A';
     return 1 if $_[0]->salesrep_id() == $openprint::session{user_id};
-    my $Me = new openprint::User( $openprint::session{user_id} );
-    return 1 if $_[0]{id} == $$Me{company_id} and $$Me{administrator} eq 'Y';
+    return 1 if $_[0]{id} == $$openprint::User{company_id};
+	return 1 if sets::isin( $_[0]->salesrep_id(), $openprint::User->csr_ids() );
+        return 1 if openprint::usergroup::is_user_in( ['Estimating','Prepress','Accounting','Shipping','Inventory'], $openprint::session{user_id} );
+	return 0;
 } # end sub can_view
 
 sub date_first_order {
@@ -471,5 +452,26 @@ sub tax_code {
 sub link_to {
 	return sprintf('<a href="/account/company_profile.html?ddmCustomer=%d">%s</a>', $_[0]{id}, $_[0]{name} );
 } # end sub link_to
+
+sub last_ordered_on {
+	if ( ! exists $_[0]{last_ordered_on} ) {
+		(  $_[0]{last_ordered_on} ) = sql::execute( undef, undef, 'SELECT MAX(created_on) FROM Orders WHERE company_id=?', $_[0]{id} );
+	}
+	return $_[0]{last_ordered_on};
+} # end sub last_ordered_on
+
+sub last_called_on {
+	if ( ! exists $_[0]{last_called_on} ) {
+		(  $_[0]{last_called_on} ) = sql::execute( undef, undef, 'SELECT MAX(date_time) FROM sales_logs WHERE company_id=?', $_[0]{id} );
+	}
+	return $_[0]{last_called_on};
+}  # end sub last_called_on
+
+sub last_online {
+	if ( ! exists $_[0]{last_online} ) {
+		(  $_[0]{last_online} ) = sql::execute( undef, undef, 'SELECT MAX(date_time) FROM logs WHERE company_id=?', $_[0]{id} );
+	}
+	return $_[0]{last_online};
+}  # end sub last_online
 1;
 __END__

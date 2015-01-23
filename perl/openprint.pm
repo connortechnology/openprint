@@ -1,6 +1,6 @@
 use strict;
 package openprint;
-use vars qw( $r %variable %session %param %config $log $dbh );
+use vars qw( $r %variable %session %param %config $log $dbh $User $Company $TZ );
 
 
 sub session_init {
@@ -8,6 +8,13 @@ sub session_init {
 	require Apache::Session::Postgres;
 	require openprint::Pricelist;
 	require openprint::Currency;
+	require DateTime::TimeZone;
+ 
+	if ( ! $openprint::config{Timezone} ) {
+		$log->error("You must configure a time zone.  Defaulting to America/Toronto");
+		$openprint::config{Timezone} = 'America/Toronto';
+	} # end if
+	$TZ = DateTime::TimeZone->new( name => $openprint::config{Timezone} );
 
 	my $cookies = Apache2::Cookie->fetch( $r );
 	my $cookie;
@@ -58,6 +65,9 @@ $log->error("Since when is session_id in the params");
 		%session = ();
 	} # end if
 	$session{'ip'} = $ENV{'REMOTE_ADDR'} if $ENV{'REMOTE_ADDR'} and ! $session{'ip'};
+
+	$User = new openprint::User( $session{user_id} );
+	$Company = new openprint::Company( $session{company_id} );
 
 # Now set some defaults right away, if we can, FIXME namespace colision
 	if ( $r->param('Country') ) {
@@ -126,6 +136,7 @@ $log->error("Since when is session_id in the params");
 sub switch_company {
 	my ( $Company ) = @_;
 	$session{'company_id'} = $Company->id();
+	$openprint::Company = $Company;
 	(new openprint::Log())->save({'action'=>'Switch Company'});
 
 	if ( $Company->currency_id() ) {

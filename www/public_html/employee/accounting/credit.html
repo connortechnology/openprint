@@ -51,10 +51,10 @@ function swap_credit(src_id,dst_id) {
 		</li>
 		<li>
 			<label>Customer</label>
-            <input type="text" onkeyup="filterDDM(this, f1.ddmCustomer);" class="filter"/>
+            <input type="text" onkeyup="if(this.value.length>3){filter_companies(f1.ddmCustomer, { name: this.value } );};" class="filter"/>
 			<select name="ddmCustomer" onchange="if(this.options[this.selectedIndex].value != '') { f1.btnFunction.value='Go'; f1.submit();}">
             <option value="">Select a Customer</option>
-			<? echo ( openprint::Company::get_dropdown( $param{'ddmCustomer'} ); ) ?>
+			<? echo ( make_drop_down( openprint::Company->dropdown( 'last_ordered_on is null'=>0), $param{'ddmCustomer'} ); ) ?>
             </select>
             <? echo ( button( 'Go2', { onclick=>q`f1.btnFunction.value='Go';fmCheck(f1);`, text=>'Go' } ); ) ?>
 		</li>

@@ -688,8 +688,7 @@ sub send_proofs_approved_email {
 	my $Order = new openprint::Order( $order_id );
 	@info{'CustomerFirstName','CustomerLastName','CustomerEmail'} = ( $Order->firstname(), $Order->lastname(), $Order->email() );
 
-	my $Me = new openprint::User( $session{user_id} );
-	@info{'EmployeeFirstName','EmployeeLastName','EmployeeEmail','EmployeeExtension'} = $Me->get(qw(firstname lastname email extension) );
+	@info{'EmployeeFirstName','EmployeeLastName','EmployeeEmail','EmployeeExtension'} = $openprint::User->get(qw(firstname lastname email extension) );
 
 	$info{CompletionDate} = Date::Format::time2str( $config{DateTimeFormat}, time );
 
@@ -700,7 +699,7 @@ sub send_proofs_approved_email {
 
 	my $CSR = new openprint::User( $Order->salesrep_id() );
 	my @Users = map { $_->User() } openprint::User_Notification->find( type =>'Proofs Approval Notifications', value =>'Yes',
-			company_id=>[$Project->company_id(), $Me->company_id(), ( $CSR->id() ? $CSR->company_id() : () ) ] );
+			company_id=>[$Project->company_id(), $openprint::User->company_id(), ( $CSR->id() ? $CSR->company_id() : () ) ] );
 
 	if ( ! sets::isin( $CSR->id(), [ map { $_->id() } @Users ] ) ) {
 		my $Notification = $CSR->notification('Proofs Approval Notifications');
@@ -711,7 +710,7 @@ sub send_proofs_approved_email {
 		next if $User->id() == $session{user_id};
 		
 		$Email->send(
-				FROM    => $Me,
+				FROM    => $openprint::User,
 				TO      => $User,
 				SUBJECT => "Docket $info{DocketNumber} $$Order{company_name} - Proofs Approved",
 				ATTACHMENTS	=>	\@body,

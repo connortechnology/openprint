@@ -5,10 +5,15 @@ Choose report criteria and click submit. <br/>
 		<ul>
 		<li>
 			<label>Company</label>
-			<input type="text" onkeyup="filterDDM(this,f1.company_id);" class="filter" />
-			<select name="company_id" onchange="if(this.options[this.selectedIndex].value != '') f1.submit();">
+			<input type="text" onkeyup="new Ajax.Updater('company_id', '/includes/_company_ddm.html', { parameters: { name: this.value,selected_id: get_ddm_value($('company_id')) } } );" class="filter" />
+			<select id="company_id" name="company_id" onchange="if(this.options[this.selectedIndex].value != '') f1.submit();">
 				<option value=""> Select a Customer</option>
-				<? echo ( openprint::Company::get_dropdown( $session{'/employee/support/helpdesk_search.html?company_id'} ); ) ?>
+				<? echo (
+					if ( $session{'/employee/support/helpdesk_search.html?company_id'} ) {
+						my $Company = new openprint::Company( $session{'/employee/support/helpdesk_search.html?company_id'} );
+						return '<option value="'.$$Company{id}.'" selected="selected">'.$$Company{name}.'</option>';
+					} 
+				) ?>	
 			</select>
 		</li>
 		<li>
@@ -70,3 +75,6 @@ $$variable{HELPDESKENTRIES} = [ openprint::Helpdesk->find(
 There were no results.	Please try another query.
 <? endif ( @{$$variable{HELPDESKENTRIES}} ) ?>
 
+<script type="text/javascript">
+new Ajax.Updater( 'company_id', '/includes/_company_ddm.html', { parameters: { selected_id: '<?echo($session{'/employee/support/helpdesk_search.html?company_id'})?>' } } );
+</script>

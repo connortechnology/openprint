@@ -101,9 +101,8 @@ sub emanantise {
 	my ( $self, $date_seconds ) = @_;
 	#$log->debug("Emanantise: " . $self->to_string() );
 	my $parser = 'DateTime::Format::Pg';
-	my $TZ = DateTime::TimeZone->new( name => $openprint::config{Timezone} );
 
-	my $requested_dt = DateTime->from_epoch( epoch=>$date_seconds, time_zone=>$TZ );
+	my $requested_dt = DateTime->from_epoch( epoch=>$date_seconds, time_zone=>$openprint::TZ );
 	#$log->debug("Emanentise: Date: $date_seconds : " . $parser->format_datetime( $requested_dt ) );
 	# The point is to drop any additional time part, but how can that be right? What we want to do is jump gaps
 
@@ -222,8 +221,7 @@ sub Next {
 sub delete {
 	my $error;
 
-	my $TZ = DateTime::TimeZone->new( name => $openprint::config{'Timezone'} );
-	my $dt = DateTime->from_epoch( 'epoch'=>time, 'time_zone'=>$TZ );
+	my $dt = DateTime->from_epoch( 'epoch'=>time, 'time_zone'=>$openprint::TZ );
 	my $now = DateTime::Format::Pg->format_datetime( $dt );
 
 	my $ac = sql::start_transaction( $openprint::dbh );

@@ -37,8 +37,9 @@
 <? if ( sets::isin( $session{user_type}, ['E','A'] ) ) ?>
 			<li>
 				<label>Quoted By Company</label>
+				<input class="filter" type="text" oninput="filter_companies('company_id', {name:this.value,selected_id:get_ddm_value($('company_id'))});" />
 				<select name="company_id" id="company_id" onchange="load_quotes(this.form);">
-<? echo ( openprint::Company::get_dropdown($session{'/main/quote/history.html?company_id'} ? $session{'/main/quote/history.html?company_id'} : $session{'company_id'}) ) ?>				
+<? echo ( make_drop_down( openprint::Company->dropdown('last_quoted_on is null'=>0), $session{'/main/quote/history.html?company_id'} ? $session{'/main/quote/history.html?company_id'} : $session{'company_id'}) ) ?>				
 				</select>
 			</li>
 <? endif ( sets::isin( $session{user_type}, ['E','A'] ) ) ?>

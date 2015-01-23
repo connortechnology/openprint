@@ -43,6 +43,9 @@ sub profile {
 
 		if ( ($session{'user_type'} eq 'A' ) or ( openprint::usergroup::is_user_in( ['UserManagement'], $session{'user_id'} ) ) ) {
 			$param{'csr_ids'} = '' if ! exists $param{'csr_ids'};
+		} elsif ( $param{csr_ids} ) {
+			# Can only de-select
+			$param{csr_ids} = [ sets::intersection( $User->csr_ids(), ( ref $param{csr_ids} eq 'ARRAY' ? @{$param{csr_ids}} : ( $param{csr_ids} ) ) ) ];
 		} # end if
 		if ( ! $param{password} ) {
             delete $param{password};
@@ -105,7 +108,6 @@ sub profile {
 						$sth->execute( $cat, $User->id() ) or $log->error( DBI->errstr );
 					} # end if
 				} # end foreach
-
 			} # end if
 
 			foreach my $Type ( openprint::PurchaseOrder_ContentType->find() ) {
