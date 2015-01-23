@@ -1,6 +1,6 @@
 <? eval ( 
 	if ( $session{user_type} eq 'A' ) {
-		$$variable{company_dropdown} = openprint::Company::dropdown( or=>'company_id='.$openprint::User->company_id(), salesrep_id=>[ $session{user_id}, $openprint::User->csr_ids() ] );
+		$$variable{company_dropdown} = openprint::Company::dropdown( or=>'id='.$openprint::User->company_id(), salesrep_id=>[ $session{user_id}, $openprint::User->csr_ids() ] );
 		$$variable{company_dropdown} = openprint::Company::dropdown( ) if @{$$variable{company_dropdown}} == 1;
 	} else {
 		$$variable{company_dropdown} = openprint::Company::dropdown();
