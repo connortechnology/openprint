@@ -179,6 +179,7 @@
 
 	</div><!--column-->
 	<br class="spacer"/>
+<? if ( ($session{'user_type'} eq 'A' ) or ( openprint::usergroup::is_user_in( ['UserManagement'], $session{'user_id'} ) ) ) ?>
 	<div class="PurchaseOrderLimits">
 		<fieldset><legend>Purchasing Limits</legend>
 			<ul>
@@ -200,6 +201,7 @@
 			</ul>
 		</fieldset>
 	</div>
+<? endif ( ($session{'user_type'} eq 'A' ) or ( openprint::usergroup::is_user_in( ['UserManagement'], $session{'user_id'} ) ) ) ?>
 	<div class="Notifications">
 	   <fieldset><legend>Notifications</legend>
 		<? echo ( 
@@ -215,6 +217,22 @@
 		</fieldset>
 	</div>
 	<br class="spacer"/>
+	<div class="AssistantTo">
+		<fieldset><legend>Assistant To</legend>
+				<ul>
+				<? echo ( 
+					my @csr_ids = $$variable{User}->csr_ids();
+					if ( $session{'user_type'} eq 'A' or $openprint::User->administrator() eq 'Y' ) {
+						return checkboxes( 'csr_ids', openprint::User->dropdown(type=>['E','A'], 'usergroup any'=>'Sales' ), \@csr_ids, { container=>['<li>','</li>'] } );
+					} elsif ( @csr_ids ) {
+						return checkboxes( 'csr_ids', openprint::User->dropdown(type=>['E','A'], 'usergroup any'=>'Sales', id=>\@csr_ids ), \@csr_ids, { container=>['<li>','</li>'] } );
+					} 
+					return;
+ ) ?>
+				</ul>
+			
+		</fieldset>
+	</div>
 	<div class="AdminOptions">
 		<fieldset>
 			<ul>
@@ -223,12 +241,6 @@
 			<li> 
 				<label>Commission Rate</label>
 				<? echo ( input( type=>'float', name=>'commission', value=>$$variable{User}->commission() ); ) ?>%
-			</li>
-			<li class="assistant_to">
-				<label>Assistant to</label>
-				<ul>
-				<? echo ( checkboxes( 'csr_ids', [ map { $_->id(), $_->name() } openprint::User->find(type=>['E','A'], 'usergroup any'=>'Sales', order=>'lower(firstname),lower(lastname)' ) ], [$$variable{'User'}->csr_ids()], { container=>['<li>','</li>'] } ); ) ?>
-				</ul>
 			</li>
 			<? endif ( sets::isin( $$variable{'User'}->type(), ['E','A'] ) ) ?>
 			<? endif ( ($session{'user_type'} eq 'A' ) or ( openprint::usergroup::is_user_in( ['UserManagement'], $session{'user_id'} ) ) ) ?>

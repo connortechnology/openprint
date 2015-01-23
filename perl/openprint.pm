@@ -1,6 +1,6 @@
 use strict;
 package openprint;
-use vars qw( $r %variable %session %param %config $log $dbh $User $Company );
+use vars qw( $r %variable %session %param %config $log $dbh $User $Company $TZ );
 
 
 sub session_init {
@@ -8,6 +8,13 @@ sub session_init {
 	require Apache::Session::Postgres;
 	require openprint::Pricelist;
 	require openprint::Currency;
+	require DateTime::TimeZone;
+ 
+	if ( ! $openprint::config{Timezone} ) {
+		$log->error("You must configure a time zone.  Defaulting to America/Toronto");
+		$openprint::config{Timezone} = 'America/Toronto';
+	} # end if
+	$TZ = DateTime::TimeZone->new( name => $openprint::config{Timezone} );
 
 	my $cookies = Apache2::Cookie->fetch( $r );
 	my $cookie;

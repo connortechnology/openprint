@@ -47,8 +47,7 @@ sub save_article {
 	$param{company_id} = $session{company_id} if ! $param{company_id};
 
 	if ( Date::Calc::check_date( @param{'published_on_year','published_on_month','published_on_day'} ) ) {
-		my $TZ = DateTime::TimeZone->new( name => $openprint::config{Timezone} );
-        my $published_on_datetime = DateTime->new( time_zone => $TZ,
+        my $published_on_datetime = DateTime->new( time_zone => $openprint::TZ,
                 ( map { $_ => int($param{'published_on_'.$_ }) } ( 'year', 'month', 'day', 'hour','minute' ) ),
                 );
 

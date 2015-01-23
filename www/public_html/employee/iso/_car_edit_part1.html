@@ -65,7 +65,7 @@
 		<td colspan="1">Customer</td>
 		<td colspan="7">
 <select id="company_id" name="company_id">
-<? echo ( make_drop_down( openprint::Company->dropdown( 'last_order is not null'=>1), $$variable{CAR}->company_id() ) ) ?>
+<? echo ( make_drop_down( openprint::Company->dropdown( 'last_ordered_on is null'=>0), $$variable{CAR}->company_id() ) ) ?>
 </select>
 		</td>
 	</tr>
