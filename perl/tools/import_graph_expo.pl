@@ -37,19 +37,12 @@ $$opts{db_user} = 'point-one' if ! $$opts{db_user};
 $$opts{db_pass} = 'point-one' if ! $$opts{db_pass};
 $$opts{db_host} = 'database.internal.point-one.com' if ! $$opts{db_host};
 
-unless ($opts->{db_name}) {
-    print STDERR "$program: missing required --db_name parameter\n";
+foreach my $opt ( 'db_name','db_user','db_pass','file' ) {
+unless ($opts->{$opt}) {
+    print STDERR "$program: missing required --$opt parameter\n";
     exit 1;
 }
-unless ($opts->{db_user}) {
-    print STDERR "$program: missing required --db_user parameter\n";
-    exit 1;
 }
-unless ($opts->{db_pass}) {
-    print STDERR "$program: missing required --db_pass parameter\n";
-    exit 1;
-}
-
 $dbh = sql::open_sql( $log,
     'host'      => $opts->{'db_host'},
     'database'  => $opts->{'db_name'},
@@ -89,6 +82,7 @@ while ( <FH> ) {
 	my ($first, $middle, $last, $company_name, $title, $address, $city, $state, $zip, $country, $phone, $url, $email, $revenue, $employees, $type ) = misc::trim($csv->fields());
 	next if $first eq 'First Name';
 	next if ! $company_name;
+$log->debug("Doing $company_name");
 	my $name = openprint::Company->transform(name=>$company_name);
 
 	my $Company = $Companies{$name};
@@ -132,6 +126,7 @@ $log->warn("Adding company: $name");
 		$_ = $CiMC->save({ company_id=>$Company->id(), category_id=>$Category->id() });
 		die $_ if $_;
 	} else {
+if ( 0 ) {
 		my %updates = (
 				( $Company->address1() ? () : ( address1 => $address )),
 				( $Company->state() ? () : ( state => $state )),
@@ -141,6 +136,7 @@ $log->warn("Adding company: $name");
 				( $Company->phone() ? () : ( phone => $phone )),
 				( $Company->business_type() ? () : ( business_type => $type )),
 				);	
+
 		if ( %updates ) {
 			$_ = $Company->save(\%updates);
 			die $_ if $_;
@@ -148,6 +144,7 @@ $log->warn("Adding company: $name");
 		} else {
 			$log->warn("Not Updating company: $name");
 		} # end if
+}
 
 		my $CiMC = openprint::Company_in_Marketing_Category->find( company_id=>$Company->id(), category_id=>$Category->id() );
 		if ( ! $CiMC ) {
@@ -162,6 +159,13 @@ $log->warn("Adding company: $name");
 		if ( ! $Profile->url() ) { 
 			$Profile->value( url => $url );
 		}
+		if ( ! $Profile->employees() ) {
+			$Profile->value( employees => $employees );
+		} 
+		if ( ! $Profile->annual_sales() ) {
+			$Profile->value( annual_sales => $revenue );
+		} 
+	
 
 	my $User = $Users{$email};
 	if ( ! $User ) {
