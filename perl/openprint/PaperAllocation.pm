@@ -132,8 +132,6 @@ sub old_Skids {
 sub send_notification {
 	my ( $self ) = @_;
 
-	my $Me = new openprint::User( $session{user_id} );
-
 	my %info;
 	$info{Allocation} = $self;
 	my $Order = $info{Order} = $self->Order();
@@ -180,7 +178,7 @@ sub send_notification {
 	$Email->send( 
 			TO			=>	\@recipients, 
 			SUBJECT 	=> 'Stock allocated for docket ' . $Order->docket(),
-			FROM		=>	$Me,
+			FROM		=>	$openprint::User,
 			ATTACHMENTS	=>	\@body,
 			);
 

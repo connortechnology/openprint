@@ -5,7 +5,7 @@ require openprint::Company_Profile_Field;
 require openprint::Location;
 
 use vars qw( $debug $AUTOLOAD );
-$debug = 1;
+$debug = 0;
 
 # Not backed by db, this is an abstract object providing a convenient interface to Company_Profile_Fields and Values
 
@@ -71,15 +71,15 @@ sub value {
 			$Field = openprint::Company_Profile_Field->find_one( name=>$_[1]) if ! $Field;
 			$_[0]{fields}{$_[1]} = $Entry;
 			# We don't set the value, here, so that the next block will make it save
-			$Entry->set({ 'field_id' => $Field->id(), 'company_id' => $_[0]{company_id} });
-			$openprint::log->debug("After set");
+			$Entry->set({ field_id => $Field->id(), company_id => $_[0]{company_id} });
+			$openprint::log->debug("After set $_[1] => $_[2]") if $debug;
 		} # end if
 		my $v = ref $_[2] eq 'ARRAY' ? join(',',@{$_[2]}) : $_[2];
 		if ( $$Entry{value} ne $v ) {
-			$_ = $Entry->save( { 'value' => $v } );
+			$_ = $Entry->save( { value => $v } );
 			$openprint::log->warn("Saving " . $Entry->field() . ': value=' . $v . " error: $_ " );
 		} else {
-			$openprint::log->debug("Not saving: $$Entry{field} value: $$Entry{value} == $v");
+			$openprint::log->debug("Not saving: $$Entry{field_id} $_[1] value: $$Entry{value} == $v");
 		} # end if
 	} # end if 
 		
@@ -87,7 +87,7 @@ sub value {
 		$openprint::log->debug("Returning Entry " . $Entry->to_string() );
 		return $$Entry{value};
 	}
-	$openprint::log->debug("Returning No Entry for $$Field{name}") if $debug;
+	$openprint::log->debug("Returning No Entry for $$Field{name}: params @_") if $debug;
 	return undef;
 } # end sub value
 
