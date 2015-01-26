@@ -34,7 +34,7 @@
 			) : (
 				( invoicee_id	=>	$session{'company_id'} ),
 			) ),
-			order				=> 'num,id',
+			order				=> 'num NULLS FIRST,id',
 			) ) {
 			if ( $session{'/invoice/history.html?paid'} ne '' ) {
 				if ( $Invoice->is_paid() ) {
