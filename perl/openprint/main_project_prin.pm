@@ -20,18 +20,20 @@ sub _signature {
 	$variable{ProjectType} = $Project->Type();
 
 	if ( $param{action} eq 'remove_group' ) {
+$log->debug("Removing group $param{group_id}");
+		$Project->lock();
 		my @src_sigs = $Project->signatures( { Group => $param{group_id} } );
 		if ( ! @src_sigs ) {
-			$variable{error} .= 'No signatures found for group ' . $param{group_id} . '<br/>';
+			$variable{PageContent} .= qq`alert('No signatures found for group $param{group_id}');`;
 			return;
 		} # end if
-		$Project->lock();
 		foreach my $sig_id ( @src_sigs ) {
 			my $Service = $Project->Service( $sig_id );
 			$Service->delete();
 		} # end foreach 
 		$Project->unlock();
-		$variable{PageContent} = qq`<script type="text/javascript">alert('hi');\$('SignatureGroup$param{group_id}').remove();calc('f1');</script>`;
+		$variable{PageContent} = qq`\$('SignatureGroup$param{group_id}').remove();calc('f1');`;
+		#$r->content_type(q{text/javascript; charset=utf-8});
 
 	} elsif ( $param{action} eq 'copy_group' ) {
 		$Project->lock();
