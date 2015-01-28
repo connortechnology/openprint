@@ -107,13 +107,21 @@ sub Signature {
 } # end sub Signature
 
 sub _stock_popup {
+
 } # end sub _stop_popup
+
+sub _stock_popup_results {
+
+}
 
 sub _stocks {
 } # end sub _stocks
 
 sub _impositions {
 } # end sub _impositions
+
+sub paper {
+} # end sub paper
 
 1;
 __END__
