@@ -80,6 +80,7 @@ $serial = 'companies_id_seq';
 	address2		=>	[ 's/^\s+//', 's/\s+$//' ],
 	established		=>	[ 's/[^\d\-]//g' ],
 	name			=>	[ 's/[\.\,]//g', 's/^\s+//', 's/\s+$//','s/\///g' ],
+	business_name	=>	[ 's/^\s+//', 's/\s+$//' ],
 	discount		=>	[ 's/[^\d\.\-]//g' ],
 );
 %defaults = (
@@ -99,46 +100,46 @@ $serial = 'companies_id_seq';
 );
 
 sub Currency {
-	return new openprint::Currency( $_[0]{'currency_id'} );
+	return new openprint::Currency( $_[0]{currency_id} );
 } # end sub CUrrency
 
 sub destroy {
 	my $self = shift;
 	my $ac = sql::start_transaction( $openprint::dbh );
-	sql::execute( undef, undef, 'DELETE FROM Trade_References WHERE Company_id =?', $$self{'id'} );
-	sql::execute( undef, undef, 'DELETE FROM HelpDesk WHERE Company_Id=?', $$self{'id'} );
-	sql::execute( undef, undef, 'DELETE FROM RMA WHERE Company_Id=?', $$self{'id'} );
-	sql::execute( undef, undef, 'DELETE FROM Company_Credit WHERE Company_Id=?', $$self{'id'} );
-	sql::execute( undef, undef, 'DELETE FROM CreditApplications WHERE Company_Id=?', $$self{'id'} );
-	sql::execute( undef, undef, 'DELETE FROM Companies_in_Marketing_Categories WHERE Company_Id=?', $$self{'id'} );
-	sql::execute( undef, undef, 'DELETE FROM tbl_Addresses WHERE company_id=?', $$self{'id'} );
+	sql::execute( undef, undef, 'DELETE FROM Trade_References WHERE Company_id =?', $$self{id} );
+	sql::execute( undef, undef, 'DELETE FROM HelpDesk WHERE Company_Id=?', $$self{id} );
+	sql::execute( undef, undef, 'DELETE FROM RMA WHERE Company_Id=?', $$self{id} );
+	sql::execute( undef, undef, 'DELETE FROM Company_Credit WHERE Company_Id=?', $$self{id} );
+	sql::execute( undef, undef, 'DELETE FROM CreditApplications WHERE Company_Id=?', $$self{id} );
+	sql::execute( undef, undef, 'DELETE FROM Companies_in_Marketing_Categories WHERE Company_Id=?', $$self{id} );
+	sql::execute( undef, undef, 'DELETE FROM tbl_Addresses WHERE company_id=?', $$self{id} );
 	foreach my $Payment ( openprint::Payment->find('recipient_id'=>$$self{id}) ) {
 		$Payment->delete();
 	} # end foreach Payment
-	sql::execute( undef, undef, 'DELETE FROM Complaints WHERE company_id=?', $$self{'id'} );
-	sql::execute( undef, undef, 'DELETE FROM survey_responses WHERE company_id=?', $$self{'id'} );
-	sql::execute( undef, undef, 'DELETE FROM logs WHERE company_id=?', $$self{'id'} );
+	sql::execute( undef, undef, 'DELETE FROM Complaints WHERE company_id=?', $$self{id} );
+	sql::execute( undef, undef, 'DELETE FROM survey_responses WHERE company_id=?', $$self{id} );
+	sql::execute( undef, undef, 'DELETE FROM logs WHERE company_id=?', $$self{id} );
 
-	foreach my $Paper ( openprint::Paper->find('owner_id'=>$$self{'id'} ) ) {
+	foreach my $Paper ( openprint::Paper->find('owner_id'=>$$self{id} ) ) {
 		$Paper->delete();
 	} # end foreach
 
-	foreach my $Quote ( openprint::Quote->find('company_id'=>$$self{'id'} ) ) {
+	foreach my $Quote ( openprint::Quote->find('company_id'=>$$self{id} ) ) {
 		$Quote->delete();	
 	} # end foreach
-	foreach my $Order ( openprint::Order->find('company_id'=>$$self{'id'} ) ) {
+	foreach my $Order ( openprint::Order->find('company_id'=>$$self{id} ) ) {
 		$Order->delete();	
 	} # end foreach
-	sql::execute( undef, undef, 'DELETE FROM Order_log WHERE Company_Id=?', $$self{'id'} );
-	foreach my $Project ( openprint::Project->find('company_id'=>$$self{'id'} ) ) {
+	sql::execute( undef, undef, 'DELETE FROM Order_log WHERE Company_Id=?', $$self{id} );
+	foreach my $Project ( openprint::Project->find('company_id'=>$$self{id} ) ) {
 		$Project->delete();	
 		last if $dbh->errstr();
 	} # end foreach
-	sql::execute( undef, undef, 'DELETE FROM Project_log WHERE Company_Id=?', $$self{'id'} );
-	foreach my $User ( openprint::User->find('company_id'=>$$self{'id'}, 'deleted'=>[0,1] ) ) {
+	sql::execute( undef, undef, 'DELETE FROM Project_log WHERE Company_Id=?', $$self{id} );
+	foreach my $User ( openprint::User->find('company_id'=>$$self{id}, 'deleted'=>[0,1] ) ) {
 		$User->destroy();
 	} # end foreach
-	sql::execute( undef, undef, 'DELETE FROM Companies WHERE id=?',$$self{'id'} );
+	sql::execute( undef, undef, 'DELETE FROM Companies WHERE id=?',$$self{id} );
 
 	sql::end_transaction( $dbh, $ac );
 
@@ -210,7 +211,7 @@ sub save_tradereferences {
 
 sub Credit {
 	
-	my $supplier = $_[1] ? $_[1] : $openprint::config{'owner_id'};;
+	my $supplier = $_[1] ? $_[1] : $openprint::config{owner_id};;
 
 	require openprint::Company_Credit;
 	if ( ! $_[0]{id} ) {
@@ -246,31 +247,31 @@ sub get_dropdown {
 
 sub CSR {
 	my $self = shift;
-	return new openprint::User( $$self{'salesrep_id'} );
+	return new openprint::User( $$self{salesrep_id} );
 }
 
 sub Users {
 	my $self = shift;
 	my %params = @_;
-	$params{'company_id'} = $$self{'id'};
+	$params{company_id} = $$self{id};
 	return openprint::User->find( \%params );
 } # end sub Users
 
 sub Pricelist {
-	if ( $_[0]{'pricelist_id'} ) {
-		return new openprint::Pricelist( $_[0]{'pricelist_id'} );
+	if ( $_[0]{pricelist_id} ) {
+		return new openprint::Pricelist( $_[0]{pricelist_id} );
 	} else {
 		return new openprint::Pricelist( openprint::pricing::get_pricelist_id());
 	} # end if
 } # end sub Pricelist
 
 sub start_month {
-	if ( $_[0]{'established'} =~ /^(\d+)-(\d+)-(\d+)/ ) {
+	if ( $_[0]{established} =~ /^(\d+)-(\d+)-(\d+)/ ) {
 		return $2;
 	} # end if
 } # end sub start_month
 sub start_year {
-	if ( $_[0]{'established'} =~ /^(\d+)-(\d+)-(\d+)/ ) {
+	if ( $_[0]{established} =~ /^(\d+)-(\d+)-(\d+)/ ) {
 		return $1;
 	} # end if
 } # end sub start_year
@@ -312,32 +313,31 @@ sub location {
 
 sub can_edit {
 	return 1 if ! $_[0]{id};
-	return 1 if $openprint::session{'user_type'} eq 'A';
-	return 1 if $_[0]->salesrep_id() == $openprint::session{'user_id'};
-	my $Me = new openprint::User( $openprint::session{'user_id'} );
-	return 1 if sets::isin( $_[0]->salesrep_id(), $Me->csr_ids() );
-	return 1 if $_[0]{'id'} == $$Me{'company_id'} and $$Me{'administrator'} eq 'Y';
+	return 1 if $openprint::session{user_type} eq 'A';
+	return 1 if $_[0]->salesrep_id() == $openprint::session{user_id};
+	return 1 if sets::isin( $_[0]->salesrep_id(), $openprint::User->csr_ids() );
+	return 1 if $_[0]{id} == $$openprint::User{company_id} and $$openprint::User{administrator} eq 'Y';
 	return 0;
 } # end sub can_edit
 
 sub taxexempt1 {
 	if ( @_ > 1 ) {
-		$_[0]{'taxexempt1'} = $_[1];
+		$_[0]{taxexempt1} = $_[1];
 	} # end if
-	if ( ! $_[0]{'taxexempt1'} ) {
-		$_[0]{'taxexempt1'} = $_[0]{'gstnumber'} ? 'Y' : 'N';
+	if ( ! $_[0]{taxexempt1} ) {
+		$_[0]{taxexempt1} = $_[0]{gstnumber} ? 'Y' : 'N';
 	} # end if
-	return $_[0]{'taxexempt1'};
+	return $_[0]{taxexempt1};
 } # end sub taxexempt1
 
 sub taxexempt2 {
 	if ( @_ > 1 ) {
-		$_[0]{'taxexempt2'} = $_[1];
+		$_[0]{taxexempt2} = $_[1];
 	} # end if
-	if ( ! $_[0]{'taxexempt2'} ) {
-		$_[0]{'taxexempt2'} = $_[0]{'pstnumber'} ? 'Y' : 'N';
+	if ( ! $_[0]{taxexempt2} ) {
+		$_[0]{taxexempt2} = $_[0]{pstnumber} ? 'Y' : 'N';
 	} # end if
-	return $_[0]{'taxexempt2'};
+	return $_[0]{taxexempt2};
 } # end sub taxexempt2
 
 sub address {
@@ -346,7 +346,7 @@ return join(', ', map { $_ ? $_ : () } @{$_[0]}{'address1','address2','city','st
 
 sub can_view_all {
 	return 1 if $openprint::session{user_type} eq 'A';
-	return 1 if openprint::usergroup::is_user_in( ['Estimating','Prepress','Accounting','Shipping','Inventory'], $openprint::session{'user_id'} );
+	return 1 if openprint::usergroup::is_user_in( ['Estimating','Prepress','Accounting','Shipping','Inventory'], $openprint::session{user_id} );
 	return 0;
 } # end sub can_view_all
 
@@ -357,7 +357,7 @@ sub find_filtered {
     my $User = new openprint::User( $openprint::session{user_id} );
 
     return openprint::Company->find(
-        ( ! openprint::usergroup::is_user_in( ['Estimating','Prepress','Accounting','Shipping','Inventory'], $openprint::session{'user_id'} ) ? (
+        ( ! openprint::usergroup::is_user_in( ['Estimating','Prepress','Accounting','Shipping','Inventory'], $openprint::session{user_id} ) ? (
         salesrep_id => [ $openprint::session{user_id}, $User->csr_ids() ],
         ) : () ),
         or		=> 'id='.$User->company_id(),
@@ -366,12 +366,11 @@ sub find_filtered {
 } # end sub find_filtered
 
 sub can_view {
-    return 1 if $openprint::session{'user_type'} eq 'A';
-    return 1 if $_[0]->salesrep_id() == $openprint::session{'user_id'};
-    my $Me = new openprint::User( $openprint::session{'user_id'} );
-    return 1 if $_[0]{'id'} == $$Me{'company_id'};
-	return 1 if sets::isin( $_[0]->salesrep_id(), $Me->csr_ids() );
-        return 1 if openprint::usergroup::is_user_in( ['Estimating','Prepress','Accounting','Shipping','Inventory'], $openprint::session{'user_id'} );
+    return 1 if $openprint::session{user_type} eq 'A';
+    return 1 if $_[0]->salesrep_id() == $openprint::session{user_id};
+    return 1 if $_[0]{id} == $$openprint::User{company_id};
+	return 1 if sets::isin( $_[0]->salesrep_id(), $openprint::User->csr_ids() );
+        return 1 if openprint::usergroup::is_user_in( ['Estimating','Prepress','Accounting','Shipping','Inventory'], $openprint::session{user_id} );
 	return 0;
 } # end sub can_view
 
@@ -406,16 +405,22 @@ sub AUTOLOAD {
         my $Profile = $_[0]->Profile();
 		my $thing = $Profile->value( $name );
 $openprint::log->debug("Profile field $name thing $thing " . ref $thing) if $debug;
-        if ( exists $$Profile{'fields'}{$name} ) {
+        if ( exists $$Profile{fields}{$name} ) {
             if ( @_ > 1 ) {
-                $$Profile{'fields'}{$name} = $_[1];
+                $$Profile{fields}{$name} = $_[1];
             } # end if
-$openprint::log->debug("Profile field $name " . ref $$Profile{'fields'}{$name} ) if $debug;
-            return $$Profile{'fields'}{$name};
+$openprint::log->debug("Profile field $name " . ref $$Profile{fields}{$name} ) if $debug;
+            return $$Profile{fields}{$name};
+		} elsif ( openprint::Company_Profile_Field->find_one(name=>$name) ) {
+            if ( @_ > 1 ) {
+                $$Profile{fields}{$name} = $_[1];
+            } # end if
+            return $$Profile{fields}{$name};
         } else {
             $openprint::log->warn("Unknown field in Company::AUTOLOAD $name") if $debug;
         } # end if
     } # end if
+	return;
 } # end sub AUTOLOAD
 
 sub Profile {

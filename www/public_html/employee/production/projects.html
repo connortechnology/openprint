@@ -25,10 +25,10 @@
 	<ul>
 	<li>
 		<label>Company</label>
-		<input type="text" onkeyup="filterDDM(this, f1.ddmCustomer);" class="filter" onkeydown="if(event.keyCode == 13){load_projects();}" />
+		<input type="text" oninput="filter_companies(f1.ddmCustomer, {name:this.value,selected_id:get_ddm_value(f1.ddmCustomer)});" class="filter" onkeydown="if(event.keyCode == 13){load_projects();}" />
 		<select name="ddmCustomer" onchange="load_projects();">
 			<option value="">All Companies</option>
-			<? echo ( openprint::Company::get_dropdown( $session{'/employee/production/projects.html?ddmCustomer'} ); ) ?>
+			<? echo ( make_drop_down( openprint::Company->dropdown('last_ordered_on is null'=>0), $session{'/employee/production/projects.html?ddmCustomer'} ); ) ?>
 		</select>
 		<? echo ( button( 'CompanyGo', { onclick=>'load_projects();', text=>'Go' } ); ) ?>
 	</li>
@@ -37,7 +37,7 @@
 		<select name="ddmEmployee" size="1" onchange="load_projects();">
 			<option value="">All Employees</option>
 <? echo (
-	make_drop_down( [ map { $_->id(), $_->name() } openprint::User->find( order=>'lower(firstname)', 'usergroup any'=>['Prepress'], type=>['E','A'] ) ],
+	make_drop_down( openprint::User->dropdown( 'usergroup any'=>['Prepress'], type=>['E','A'] ),
 	$session{'/employee/production/projects.html?dmEmployee'} );
 )?>
 			</select>

@@ -1,14 +1,14 @@
 <? eval ( 
 	if ( $session{user_type} eq 'A' ) {
-		$$variable{company_dropdown} = openprint::Company::dropdown( or=>'id='.$openprint::User->company_id(), salesrep_id=>[ $session{user_id}, $openprint::User->csr_ids() ] );
-		$$variable{company_dropdown} = openprint::Company::dropdown( ) if @{$$variable{company_dropdown}} == 1;
+		$$variable{company_dropdown} = openprint::Company->dropdown( or=>'id='.$openprint::User->company_id(), salesrep_id=>[ $session{user_id}, $openprint::User->csr_ids() ] );
+$log->debug( @{$$variable{company_dropdown}} );
+		$$variable{company_dropdown} = openprint::Company->dropdown( ) if @{$$variable{company_dropdown}} <= 2;
 	} else {
-		$$variable{company_dropdown} = openprint::Company::dropdown();
+		$$variable{company_dropdown} = openprint::Company->dropdown();
 	}
 )?>
-<? if ( $$variable{company_dropdown} and ( @{$$variable{company_dropdown}} > 2 ) ) ?>
 <br/>
-You are currently representing <? echo ( new openprint::Company($session{company_id})->name(); ) ?>.<br/>
+You are currently representing <? echo ( $openprint::Company->link_to(); ) ?>.<br/>
 To represent another <? echo ( translate('company') ) ?>, please select it from the dropdown and click submit. <br/>
 Any actions you perform will be recorded in the selected <? echo ( translate('company') ) ?>'s history.<br/>
 <form id="f1" name="f1" action="select_company.html" method="post">
@@ -25,7 +25,7 @@ Any actions you perform will be recorded in the selected <? echo ( translate('co
 		<ul>
 <li><label>Sales Rep</label>';
 				if ( @csr_ids > 4 ) {
-					return ssi::select( 
+					$html .= ssi::select( 
 						openprint::User->dropdown(id=>\@csr_ids), 
 						[ split(',', $session{'/account/select_company.html?csr_ids'} ) ], 
 						{ 	
@@ -34,7 +34,7 @@ Any actions you perform will be recorded in the selected <? echo ( translate('co
 							onchange=>q`filter_companies( 'ddmCompany', {salesrep_id:get_ddm_value(this)});`,
 						} );
 				} else {
-					return radio( 'csr_ids',
+					$html .= radio( 'csr_ids',
 						[ '', 'All', ( $all ? ( 'Unassigned', 'Unassigned' ) : () ), @{openprint::User->dropdown(id=>\@csr_ids)} ],
 						[ split(',', $session{'/account/select_company.html?csr_ids'} ) ],
 						{
@@ -104,4 +104,3 @@ document.f1.CompanyFilter.focus();
 new Ajax.Updater( 'ddmCompany', '/includes/_company_ddm.html', { parameters: { selected_id: <?echo($session{company_id})?> } } );
 <? endif ( @{$$variable{company_dropdown}} > 2000 ) ?>
 </script>
-<? endif ( $$variable{company_dropdown} and ( @{$$variable{company_dropdown}} > 2 ) ) ?>

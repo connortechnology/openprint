@@ -441,7 +441,7 @@ sub company_profile {
 
 sub user_profile {
 	require Lingua::EN::Inflect;
-	my $Me = $variable{Me} = new openprint::User( $session{user_id} );
+	$variable{Me} = $openprint::User;
 # IF it's empty, then we are adding a new user! Otherwise editing one
 	my $User = new openprint::User( $param{ddmUser} );
 
@@ -552,11 +552,11 @@ $log->debug("Sending password change");
 	} # end if can_edit
 
 	if ( !$User->id() ) {
-		if ( $session{company_id} != $Me->company_id() ) {
+		if ( $session{company_id} != $openprint::User->company_id() ) {
 			$User = openprint::User->find_one( company_id=>$session{company_id}, order=>'lower(firstname),lower(lastname)' );
 			$User = new openprint::User() if ! $User;
 		} else {
-			$User = $Me;
+			$User = $openprint::User;
 		} # end if
 	} # end if 
 	$variable{'User'} = $User;
