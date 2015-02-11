@@ -539,6 +539,8 @@ $openprint::log->debug("Height: $paper_height - CB $$specs{colour_bar_size} - Gr
 		calc_setup( $setup1, $setup1->image_width(), $setup1->image_height(), $adjusted_paper_width, $adjusted_paper_height ? $adjusted_paper_height : $setup1->image_height()  );
 		$openprint::log->debug(" CHECK 1 $run_style Using Paper $paper_width x $paper_height -> $adjusted_paper_width x $adjusted_paper_height Gutter: $gutters, Image: $$setup1{image_width} x $$setup1{image_height} Imposition: " . $setup1->imposition(). ":".$setup1->columns() . 'x' . $setup1->rows(). " $run_style " . $setup1->layout_width(undef) . 'x' . $setup1->layout_height() ) if DEBUG;
 		$setup1->Paper()->height( $setup1->used_height() ) if ! $setup1->Paper()->height();
+		$setup1->Paper()->width( $setup1->used_width() ) if ! $setup1->Paper()->width();
+$log->debug("Used_width: " . $setup1->used_width() );
 		if ( check_setup( $setup1, $specs ) ) {
 			$openprint::log->debug(" CHECK 1 $run_style Using Paper $paper_width x $paper_height -> $adjusted_paper_width x $adjusted_paper_height Gutter: $gutters, Image: $$setup1{image_width} x $$setup1{image_height} Imposition: " . $setup1->imposition(). ":".$setup1->columns() . 'x' . $setup1->rows(). " $run_style " . $setup1->layout_width() . 'x' . $setup1->layout_height() ) if DEBUG;
 			push @results, $setup1;
@@ -548,10 +550,6 @@ $openprint::log->debug("Height: $paper_height - CB $$specs{colour_bar_size} - Gr
 			} else {
 $openprint::log->debug("Not doing dutch because ($$specs{dutch}) or $run_style or $$Paper{perfecting}") if DEBUG;
 			} # end if
-			if ( ! $setup1->paper()->width() ) {
-				$setup1->paper()->width( $setup1->used_width() );
-			} # end if
-			$setup1->Paper()->height( $setup1->used_height() ) if ! $setup1->Paper()->height();
 		} # end if check_setup
 	} elsif ( $run_style eq 'Work & Turn' ) {
 		calc_setup( $setup1, $setup1->image_width(), $setup1->image_height(), $adjusted_paper_width/2, $adjusted_paper_height );
