@@ -890,7 +890,7 @@ sub dropdown {
 		my $type = ref($self);
 		$type = $self if ! $type;
 		my $order = eval '$'.$type.'::default_sort';
-$log->debug("default sort: $self $type :: default_sort = $order");
+$log->debug("default sort: $self $type :: default_sort = $order") if DEBUG_ALL;
 		$params{order} = $order if $order;
 	}
 
