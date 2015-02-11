@@ -29,7 +29,7 @@ my @args = @ARGV;
 my $opts = {};
 GetOptions($opts, 'help', 'log_file=s', 'log_level=s',
     'db_name=s', 'db_host=s', 'db_user=s', 'db_pass=s',
-	'config=s',
+	'config=s', 'campaign_id=s',
 );
 
 if ($opts->{help}) {
@@ -66,9 +66,11 @@ configuration::merge( $opts );
 $session{company_id} = $config{owner_id};
 $ENV{DOCUMENT_ROOT} = $config{DOCUMENT_ROOT};
 
+openprint::session_init();
+
 # The first query to execute grabs the ids of all of the email campaigns
 # that are currently set to run
-my @campaign_ids = openprint::EmailCampaign->find( active => 'Y', 'nextrun <' => 'NOW()', 'custom'=>['(timeofday IS NULL) OR (timeofday <= CURRENT_TIME)'] );
+my @campaign_ids = openprint::EmailCampaign->find( $$opts{campaign_id} ? ( id=>$$opts{campaign_id} ) : (active => 'Y', 'nextrun <' => 'NOW()', 'custom'=>['(timeofday IS NULL) OR (timeofday <= CURRENT_TIME)'] ) );
 
 $log->info("There are ".@campaign_ids." active campaigns\n");
 
