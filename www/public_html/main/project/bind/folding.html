@@ -169,16 +169,16 @@ if ( 0 ) {
 			) ?>
 			<hr/>
 			<ul>
-<? echo ( include('/includes/main/proj/_quantities.html'); ) ?>
-<? echo ( include('/includes/main/proj/_service_price.html'); ) ?>
-<? echo ( include('/includes/main/proj/_additional_service.html'); ) ?>
+<?include('/includes/main/proj/_quantities.html') ?>
+<?include('/includes/main/proj/_service_price.html') ?>
+<?include('/includes/main/proj/_additional_service.html') ?>
 <? if ( sets::isin( $session{'user_type'}, ['A','E'] ) ) ?>
 			<li>
 <? echo ( 
 	my $html = '';
 	foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
 		$html .= sprintf('<span class="%sColumns">', $$variable{'Columns'} );
-		$html .= ssi::button( 'Breakdown'.$qty_index, { onclick=>"show_breakdown($qty_index);", text=>'Breakdown' } );
+		$html .= button( 'Breakdown'.$qty_index, { onclick=>"show_breakdown($qty_index);", text=>'Breakdown' } );
 		$html .= '</span>';
 	} # end foreach qty_index
 	return $html;
