@@ -41,20 +41,13 @@
 	} // end function
 -->
 </script>
-<? eval (
-    if ( $$variable{'Project'}->quantity1() and $$variable{'Project'}->quantity2() and $$variable{'Project'}->quantity3() ) {
-    $$variable{'Columns'} = 'Three';
-    } else {
-    $$variable{'Columns'} = 'Two';
-    } # end if
-) ?>
 <div class="Service">
 	<form id="f1" name="f1" method="post" action="/main/project/view.html">
 		<fieldset><legend>Shipping Services</legend>
-			<div class="leftColumn">
+			<div class="leftColumn address">
 			<?include(/includes/main/proj/shipping_from_address.html)?>
 			</div>
-			<div class="rightColumn">
+			<div class="rightColumn address">
 			<?include(/includes/main/proj/shipping_to_address.html)?>
 			</div>
 			<br class="spacer"/>
@@ -63,13 +56,13 @@
 				<li><label># of items to ship</label>
 					<? echo (
 						my $html = '';
-						foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
-							$html .= '<span class="'.$$variable{'Columns'}.'Columns">';
+						foreach my $qty_index ( $$variable{Project}->quantity_indexes() ) {
+							$html .= '<span class="'.$$variable{Columns}.'Columns">';
 							$html .= input(
 								name	=>	'txtQuantity'.$qty_index,
 								value	=>	$$variable{"txtQuantity$qty_index"},
 								type	=>	'cardinal',
-								onkeyup	=>	'calc(this.form.name);' );
+								oninput	=>	'calc(this.form.name);' );
 								$html .= '</span>';
 						} # end foreach qty_index
 						return $html;
@@ -77,6 +70,7 @@
 				</li>
 				<?include(/includes/main/proj/shipping_packages.html)?>
 				<?include(/includes/main/proj/_service_price.html)?>
+<?include('/includes/main/proj/_breakdown.html') ?>
 			</ul>
 			</fieldset>
 			<p><label>More Shipping?</label>
