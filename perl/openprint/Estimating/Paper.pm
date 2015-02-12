@@ -186,11 +186,13 @@ if ( 0 ) {
 			if ( $$specs{"overrideqty-$form-$stock_index-$qty_index"} ne 'Y' ) {
 				if ( $PressSheet->type() eq 'Sheet' ) {
 					my $sheets = $$sig_specs{'StockQuantity'.$qty_index};
+$log->debug("StockQuantity: $sheets") if DEBUG;
 					if ( ! ( $PressSheet->area() and $PressSheet->start_area() ) ) {
 						Carp::cluck("No sheet area");
 					} else {
 						# convert to supplied count
-						$sheets = ceil( $sheets / ( $PressSheet->start_area()/$PressSheet->area() ) );
+						$sheets = ceil( $sheets / $PressSheet->factor() );
+$log->debug("converted StockQuantity: $sheets") if DEBUG;
 					} # end if
 					$$specs{"qty-$form-$stock_index-$qty_index"} = Math::Round::nearest( 0.1, ( $sheets * $PressSheet->start_sheet_weight() ) );
 					$$specs{"sheets-$form-$stock_index-$qty_index"} = $sheets;

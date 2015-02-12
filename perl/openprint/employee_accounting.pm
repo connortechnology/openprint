@@ -47,7 +47,7 @@ sub search {
     } # end if
 
 	_search();
-	ssi::setup_date_select( '/employee/accounting/search.html', 'ordered_on_start', '' );
+	ssi::setup_date_select( '/employee/accounting/search.html', 'ordered_on_start', -365 );
 	ssi::setup_date_select( '/employee/accounting/search.html', 'ordered_on_end', '' );
 	if ( ( ! $session{'/employee/accounting/search.html?ddmStatus'} ) or ( $session{'/employee/accounting/search.html?ddmStatus'} =~ /\w/ ) ) {
 		my  %Statuses = map { $$_{name}, $$_{id} } openprint::Order_Status->find();

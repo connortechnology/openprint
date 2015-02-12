@@ -89,12 +89,11 @@ sub edit {
 	if ( $param{'func'} eq 'Save' ) {
 		$param{owner_id} = $session{company_id} if ! $param{owner_id};
 
-		my $TZ = DateTime::TimeZone->new( name => $openprint::config{Timezone} );
-        my $start_datetime = DateTime->new( time_zone => $TZ,
+        my $start_datetime = DateTime->new( time_zone => $openprint::TZ,
 				( map { $_ => int($param{'starting_'.$_ }) } ( 'year', 'month', 'day', 'hour','minute' ) ),
                 );
 
-        my $end_datetime = DateTime->new( time_zone => $TZ,
+        my $end_datetime = DateTime->new( time_zone => $openprint::TZ,
 				( map { $_ => int($param{'ending_'.$_ }) } ( 'year', 'month', 'day', 'hour','minute' ) ),
                 );
 

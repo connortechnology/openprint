@@ -76,8 +76,8 @@ $serial = 'orders_id_seq';
 	project_id	=>	'(SELECT lngprojectindex FROM Order_Contents WHERE OrderIndex=Orders.id)',
 	status		=>	'(SELECT name FROM Order_Statuses WHERE order_statuses.id=status_id)',
 	#invoice_id	=>	'(SELECT invoice_id FROM order_invoices WHERE order_id=orders.id)',
-invoice_id => 'id = (SELECT order_id FROM order_invoices WHERE invoice_id=?)',
-invoice_num => 'id = (SELECT order_id FROM order_invoices WHERE invoice_id=(SELECT invoices.id FROM Invoices WHERE num=?))',
+invoice_id => 'id IN (SELECT order_id FROM order_invoices WHERE invoice_id=?)',
+invoice_num => 'id IN (SELECT order_id FROM order_invoices WHERE invoice_id=(SELECT invoices.id FROM Invoices WHERE num=?))',
 );
 
 %defaults = (

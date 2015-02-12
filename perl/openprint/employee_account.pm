@@ -22,27 +22,30 @@ use vars qw( $r $log $dbh %variable %param %session %config);
 
 sub profile {
 
-	$param{'company_id'} = new openprint::User($session{'user_id'})->company_id() if ! $param{'company_id'};
+	$param{company_id} = $openprint::User->company_id() if ! $param{company_id};
 
-	my $User = new openprint::User( exists $param{'user_id'} ? $param{'user_id'} : $session{'user_id'} );
+	my $User = $variable{User} = new openprint::User( exists $param{user_id} ? $param{user_id} : $session{user_id} );
 
-    if ( $param{'btnFunction'} eq 'Save' ) {
-		if ( $param{'password'} ) {
-			if ( ! $param{'VerifyPassword'} ) {
-				$variable{'warning'} .= 'Verify password left blank, password not changed.<br/>';
-				delete $param{'password'};
+    if ( $param{btnFunction} eq 'Save' ) {
+		if ( $param{password} ) {
+			if ( ! $param{VerifyPassword} ) {
+				$variable{warning} .= 'Verify password left blank, password not changed.<br/>';
+				delete $param{password};
 			} else {
-				$variable{'error'} .= 'Password fields do not match.<br/>' if $param{'password'} ne $param{'VerifyPassword'};
+				$variable{error} .= 'Password fields do not match.<br/>' if $param{password} ne $param{VerifyPassword};
 			} # end if
-			$variable{'warning'} .= 'New Password is the same as your current password.<br/>' if $param{'password'} eq $User->Password();
+			$variable{warning} .= 'New Password is the same as your current password.<br/>' if $param{password} eq $User->Password();
 		} # end if
-        $variable{'error'} .= 'First Name cannot be blank.<br/>' if ! $param{'firstname'};
-        $variable{'error'} .= 'Email Cannot be blank.<br/>' if ! $param{'email'};
+        $variable{error} .= 'First Name cannot be blank.<br/>' if ! $param{firstname};
+        $variable{error} .= 'Email Cannot be blank.<br/>' if ! $param{email};
 
-		return if $variable{'error'};
+		return if $variable{error};
 
-		if ( ($session{'user_type'} eq 'A' ) or ( openprint::usergroup::is_user_in( ['UserManagement'], $session{'user_id'} ) ) ) {
-			$param{'csr_ids'} = '' if ! exists $param{'csr_ids'};
+		if ( ($session{user_type} eq 'A' ) or ( openprint::usergroup::is_user_in( ['UserManagement'], $session{user_id} ) ) ) {
+			$param{csr_ids} = '' if ! exists $param{csr_ids};
+		} elsif ( $param{csr_ids} ) {
+			# Can only de-select
+			$param{csr_ids} = [ sets::intersection( $User->csr_ids(), ( ref $param{csr_ids} eq 'ARRAY' ? @{$param{csr_ids}} : ( $param{csr_ids} ) ) ) ];
 		} # end if
 		if ( ! $param{password} ) {
             delete $param{password};
@@ -60,32 +63,32 @@ sub profile {
             $param{password_changed_on} = 'NOW()';
         } # end if
 
-		delete $param{'VerifyPassword'} if ( ! $param{'VerifyPassword'} );
-		delete $param{'btnFunction'};
-		$variable{'error'} .= $User->save( \%param );
-		return if $variable{'error'};
+		delete $param{VerifyPassword} if ( ! $param{VerifyPassword} );
+		delete $param{btnFunction};
+		$variable{error} .= $User->save( \%param );
+		return if $variable{error};
 
 		if ( $config{mail_db_name} ) {
 			my @domains = email::domains();
 			my ( $user, $domain ) = $User->email() =~ /^([^\@]+)\@(.+)$/;
 			if ( sets::isin( $domain, \@domains ) ) {
 
-				if ( $param{'VacationState'} ) {
+				if ( $param{VacationState} ) {
 					email::start_vacation( @param{'email','VacationSubject','VacationMessage'} );
 				} else {
-					email::stop_vacation( $param{'email'} );
+					email::stop_vacation( $param{email} );
 				} # end if
-				if ( $param{'EmailPassword'} ) {
-					if ( ! $param{'VerifyEmailPassword'} ) {
-						$variable{'warning'} .= 'Verify Email password left blank, password not changed.<br/>';
-					} elsif ( $param{'EmailPassword'} eq $param{'VerifyEmailPassword'} ) {
+				if ( $param{EmailPassword} ) {
+					if ( ! $param{VerifyEmailPassword} ) {
+						$variable{warning} .= 'Verify Email password left blank, password not changed.<br/>';
+					} elsif ( $param{EmailPassword} eq $param{VerifyEmailPassword} ) {
 						email::set_password( @param{'email','EmailPassword'} );
 					} else {
-						$variable{'error'} .= 'Email Password fields do not match.<br/>';
+						$variable{error} .= 'Email Password fields do not match.<br/>';
 					} # end if
 				} # end if
 				my @aliases = ();
-				foreach my $alias ( split "\r\n", $param{'aliases'} ) {
+				foreach my $alias ( split "\r\n", $param{aliases} ) {
 					next if ! $alias;
 					push @aliases, $alias;
 				} # end foreach
@@ -94,18 +97,17 @@ sub profile {
 			} # end if
 		} # end if
 
-		if ( ($session{'user_type'} eq 'A' ) or ( openprint::usergroup::is_user_in( ['UserManagement'], $session{'user_id'} ) ) ) {
+		if ( ($session{user_type} eq 'A' ) or ( openprint::usergroup::is_user_in( ['UserManagement'], $session{user_id} ) ) ) {
 			my @categories = sql::execute( $log, $dbh, 'SELECT id FROM Marketing_Categories' );
 
 			sql::execute( $log, $dbh, 'DELETE FROM Users_in_Marketing_Categories WHERE user_id=?', $User->id() );
-			if ( $param{'marketing_categories'} ) {
+			if ( $param{marketing_categories} ) {
 				my $sth = $dbh->prepare( q{INSERT INTO Users_in_Marketing_Categories (category_id,user_id) VALUES ( ?, ? )} );
-				foreach my $cat ( ref $param{'marketing_categories'} eq 'ARRAY' ? @{$param{'marketing_categories'}} : $param{'marketing_categories'} ) {
+				foreach my $cat ( ref $param{marketing_categories} eq 'ARRAY' ? @{$param{marketing_categories}} : $param{marketing_categories} ) {
 					if ( sets::isin( $cat, \@categories ) ) {
 						$sth->execute( $cat, $User->id() ) or $log->error( DBI->errstr );
 					} # end if
 				} # end foreach
-
 			} # end if
 
 			foreach my $Type ( openprint::PurchaseOrder_ContentType->find() ) {
@@ -113,8 +115,8 @@ sub profile {
 			} # end foreach Type
 
 			sql::execute( $log, $dbh, q{DELETE FROM Users_in_UserGroups WHERE user_id=?}, $User->id() );
-			if ( $param{'UserGroups'} ) {
-				foreach my $group_id ( ref $param{'UserGroups'} eq 'ARRAY' ? @{$param{'UserGroups'}} : $param{'UserGroups'} ) {
+			if ( $param{UserGroups} ) {
+				foreach my $group_id ( ref $param{UserGroups} eq 'ARRAY' ? @{$param{UserGroups}} : $param{UserGroups} ) {
 					sql::insert( $log, $dbh, 'Users_in_UserGroups', ['usergroup_id', $group_id, 'user_id', $User->id() ] );
 				} # end foreach
 			} # end if
@@ -127,16 +129,16 @@ sub profile {
 		} # end foreach
 		$User->notifications( \%notifications );
 
-		$variable{'information'} = 'Record saved successfully.<br/>';
+		$variable{information} = 'Record saved successfully.<br/>';
 	} # end if
-	$variable{'User'} = $User;
+	$variable{User} = $User;
     if ( $config{mail_db_name} ) {
         my @domains = email::domains();
         my ( $user, $domain ) = $User->email() =~ /^([^\@]+)\@(.+)$/;
         if ( sets::isin( $domain, \@domains ) ) {
-            $variable{'DoEmail'} = 1;
+            $variable{DoEmail} = 1;
             @variable{'VacationState','VacationSubject','VacationMessage'} = email::get_vacation( $User->email() );
-            @{$variable{'Aliases'}} = email::aliases( $User->email() );
+            @{$variable{Aliases}} = email::aliases( $User->email() );
         } # end if
     } # end if
 } # end sub profile
@@ -149,9 +151,9 @@ sub logout {
 } # end sub logout
 
 sub login_confirmation {
-	if ( $openprint::param{'btnFunction'} eq 'Forgotten Password' ) {
+	if ( $openprint::param{btnFunction} eq 'Forgotten Password' ) {
 		openprint::login::forgotten_password();
-	} elsif ( $openprint::param{'btnFunction'} eq 'Login' ) {
+	} elsif ( $openprint::param{btnFunction} eq 'Login' ) {
 		openprint::login::verify_login( $r, $log, $dbh, $session{_session_id}, \%variable, 'C' );
 	} # end if
 } # end sub login_confirmation

@@ -52,15 +52,42 @@ sub debug {
 	} # end foreach
 } # end sub debug
 
+sub new_scalar_id {
+	my ( $parent, $id, $data ) = @_;
+	my $self = $data;
+	bless $self, $parent;
+
+#$log->debug("loading $parent $id") if $debug or DEBUG_ALL;
+	no strict 'refs';
+	my $fields = \%{$parent.'::fields'};
+		my @keys = map { ( (defined $$fields{$_} or exists $$data{$_} ) and $$fields{$_} ne $_ ) ? $_ : () } keys %$fields;
+		@$self{@keys} = @$self{@$fields{@keys}};
+	if ( ! $no_cache ) {
+		$log->debug("Caching $config{db_name} $parent $id = $self") if $debug;
+		$cache{$config{db_name}}{$parent}{$id} = $self;
+	} else {
+		$log->debug("NOT Caching $config{db_name} $parent $id = $self") if $debug;
+	} # end if
+	return $self;
+}
+
 sub new {
 	my ( $parent, $id, $data ) = @_;
 
 	my $ref = ref $id;
 	if ( ! $ref ) {
-		if ( $id and (!$data) and $cache{$config{db_name}}{$parent} and $cache{$config{db_name}}{$parent}{$id} ) {
+		if ( $id and $cache{$config{db_name}}{$parent} and $cache{$config{db_name}}{$parent}{$id} ) {
+			if ( $data ) {
+if ( 1 ) {
+				my $self = $cache{$config{db_name}}{$parent}{$id};
+				$self->load( $data );
+				return $self;
+}
+			} else {
 #$log->debug("Loading from cache $parent $id");
 			# If the object is cached
 			return $openprint::Object::cache{$config{db_name}}{$parent}{$id};
+			}
 		} # end if
 #$log->debug("Not Loading from cache $parent $id") if $id and ! $data;
 		my $self = {};
@@ -776,6 +803,7 @@ $log->debug("ALl cached $object_type $cache_field $$params{$cache_field}") if DE
 			} 
 			return @results;
 		} # end if
+		#return map { $object_type->new_scalar_id( $_->{$$fields{id}}, $_ ) } @$data;
 		return map { $object_type->new( $_->{$$fields{id}}, $_ ) } @$data;
 	} else {
 		my @identified_by = eval '@'.$object_type.'::identified_by';
@@ -857,7 +885,16 @@ sub to_string {
 
 sub dropdown {
 	my $self = shift;
-	return [ map { $$_{id}, $_->name() } $self->find(@_) ];
+	my %params = @_;
+	if ( ! $params{order} ) {
+		my $type = ref($self);
+		$type = $self if ! $type;
+		my $order = eval '$'.$type.'::default_sort';
+$log->debug("default sort: $self $type :: default_sort = $order") if DEBUG_ALL;
+		$params{order} = $order if $order;
+	}
+
+	return [ map { $$_{id}, $_->name() } $self->find(%params) ];
 } # end sub dropdown
 
 sub sort_value {
@@ -875,29 +912,31 @@ sub transform {
 	my $type = ref $_[0];
 	$type = $_[0] if ! $type;
 	my $fields = eval '\%'.$type.'::fields';
+	my $value = $_[2];
 
 	if ( defined $$fields{$_[1]} ) {
 		my @transforms = eval('@{$'.$type.'::transforms{$_[1]}}');
 		$openprint::log->debug("Transforms for $_[1] before $_[2]: @transforms") if $debug;
-
-		foreach my $transform ( @transforms ) {
-			if ( $transform =~ /^s\// or $transform =~ /^tr\// ) {
-				eval '$_[2] =~ ' . $transform;
-			} elsif ( $transform =~ /^<(\d+)/ ) {
-				if ( $_[2] > $1 ) {
-					$_[2] = undef;
-				} # end if
-			} else {
-$openprint::log->debug("evalling $_[2] ".$transform . " Now value is $_[2]" );
-				eval '$_[2] '.$transform;
-$openprint::log->error("Eval error $@") if $@;
-			}
-$openprint::log->debug("After $transform: $_[2]") if $debug;
-		} # end foreach
+		if ( @transforms ) {
+			foreach my $transform ( @transforms ) {
+				if ( $transform =~ /^s\// or $transform =~ /^tr\// ) {
+					eval '$value =~ ' . $transform;
+				} elsif ( $transform =~ /^<(\d+)/ ) {
+					if ( $value > $1 ) {
+						$value = undef;
+					} # end if
+				} else {
+	$openprint::log->debug("evalling $value ".$transform . " Now value is $value" );
+					eval '$value '.$transform;
+	$openprint::log->error("Eval error $@") if $@;
+				}
+	$openprint::log->debug("After $transform: $value") if $debug;
+			} # end foreach
+		} # end if 
 	} else {
 		$openprint::log->error("Object::transform ($_[1]) not in fields for $type");
 	} # end if
-	return $_[2];
+	return $value;
 
 } # end sub transform
 
@@ -1117,11 +1156,11 @@ sub lock {
 	my $type = ref $_[0];
 	if ( $_[0]{ac} ) {
 		#already locked
-		$openprint::log->debug("ALREADY LOCKED $type for $_[0]{id} ac: $_[0]{ac} caller: $caller line: $line project ref:" . $_[0]);
+		$openprint::log->debug("ALREADY LOCKED $type for $_[0]{id} ac: $_[0]{ac} caller: $caller line: $line object ref:" . $_[0]);
 		$_[0]{ac} += 1;
 	} else {
 		$_[0]{ac} = sql::start_transaction( $openprint::dbh );
-		$openprint::log->debug("LOCKING Projects for project $_[0]{id} ac: $_[0]{ac} caller: $caller line: $line project ref:" . $_[0]);
+		$openprint::log->debug("LOCKING $type for $_[0]{id} ac: $_[0]{ac} caller: $caller line: $line object ref:" . $_[0]);
 		my $table = ${$type.'::table'};
 		$dbh->do( "LOCK TABLE $table IN EXCLUSIVE MODE" ) or $log->error( DBI->errstr );
 	} # end if

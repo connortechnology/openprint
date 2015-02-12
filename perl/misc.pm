@@ -419,7 +419,7 @@ sub find_entry {
 	for ( ; $i < @{$array}; $i += 1 ) {
 		my $Object = $$array[$i];
 	$openprint::log->debug("Examining: min(" . $Object->min() . 	') max(' . $Object->max() . ') value(' . $Object->value() . ') interpolate('.$Object->interpolate() .')') if $debug;
-		return $Object if ( (1*$$Object{min}) <= $range ) and ( ( $$Object{max} eq '' ) or ( (1*$$Object{max}) >= $range ) );
+		return $Object if ( (1*$$Object{min}) <= $range ) and ( ( $$Object{max} eq '' ) or ( $$Object{max} >= $range ) );
 
 		# first step, find one less than the min
 		last if 1*$$Object{min} > $range;
@@ -431,7 +431,7 @@ sub find_entry {
 		# back up
 		$x = $$array[$i];
 $openprint::log->debug("Found spec for $range:" . $x->min() . ' ' . $x->max() . ' : ' . $x->value() ) if $debug;
-		return if ( (1*$$x{max}) and ( $$x{max} < $range ) and ! $$x{interpolate} );
+		return if ( $$x{max} and ( $$x{max} < $range ) and ! $$x{interpolate} );
 	} else {
 $openprint::log->debug("Couldn't find monimum for $name : $range on " . ( $$array[0]->Equipment() ? $$array[0]->Equipment()->name() : '' ) ) if $debug;
 		return;	

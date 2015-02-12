@@ -549,11 +549,10 @@ sub Shift {
 					#'limit'			=>	1,
 					});
 			if ( ! @Shifts ) {
-				my $TZ = DateTime::TimeZone->new( name => $openprint::config{'Timezone'} );
 
 				@Shifts = openprint::Shift::get_Shifts( $self->Equipment(), 
-					DateTime->from_epoch('epoch'=>$self->starttime_seconds(), 'time_zone'=>$TZ ),
-					DateTime->from_epoch('epoch'=>$self->endtime_seconds(), 'time_zone'=>$TZ ),
+					DateTime->from_epoch( epoch=>$self->starttime_seconds(), time_zone=>$openprint::TZ ),
+					DateTime->from_epoch( epoch=>$self->endtime_seconds(), time_zone=>$openprint::TZ ),
 				);
 			} # end if
 
@@ -807,7 +806,7 @@ sub split {
 
 sub to_string {
 	my $self = $_[0];
-	return sprintf('%d %s on %s starting %s', $self->project_id(), join(',', ( $self->service_id() ? @{$self->service_id()} : () ) ), $self->Equipment()->name(), $self->starttime() );
+	return sprintf('%d %s on %s starting %s', $self->Project()->docket(), join(',', ( $self->service_id() ? @{$self->service_id()} : () ) ), $self->Equipment()->name(), $self->starttime() );
 } # end sub to_string
 
 sub pertains_id {

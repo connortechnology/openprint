@@ -178,8 +178,6 @@ sub save_contents {
 
 sub view {
 
-	my $Me = new openprint::User( $session{user_id} );
-
 	if ( $param{po_id} ne openprint::PurchaseOrder->transform('id', $param{po_id} ) ) {
 		$variable{error} .= 'Invalid PO # given: ' . $param{po_id}.'<br/>';
 		$variable{PurchaseOrder} = new openprint::PurchaseOrder();
@@ -363,12 +361,11 @@ sub view {
 
 sub edit {
 
-	my $Me = new openprint::User( $session{'user_id'} );
 	my $PO = new openprint::PurchaseOrder( $param{'po_id'} );
 
 	if ( $param{'btnFunction'} eq 'New' ) {
 		my $Label = new openprint::Label( $param{'label_id'} );
-		my $C = $Me->Company();
+		my $C = $openprint::User->Company();
 		
 		my $Project = $Label->Project();
 		if ( ! ( $Project and $Project->company_id() ) ) {
@@ -378,11 +375,11 @@ sub edit {
 
 		$variable{'error'} .= $PO->save( {
 				created_by			=>	$session{'user_id'}, 
-				company_id			=>	$Me->company_id(),
+				company_id			=>	$openprint::User->company_id(),
 				supplier_id			=>	$Project->company_id(),
 				currency_id			=>	openprint::Currency::get_current()->id(),
-				created_by			=>	$Me->id(),
-				shipto_contact		=>	$Me->name(),
+				created_by			=>	$openprint::User->id(),
+				shipto_contact		=>	$openprint::User->name(),
 				shipto_name			=>	$C->name(),
 				shipto_address1		=>	$C->address1(),
 				shipto_address2		=>	$C->address2(),
@@ -391,10 +388,10 @@ sub edit {
 				shipto_country		=>	$C->country(),
 				shipto_postalcode	=>	$C->postalcode(),
 				shipto_phone		=>	$C->phone(),
-				shipto_mobile		=>	$Me->mobile(),
+				shipto_mobile		=>	$openprint::User->mobile(),
 				shipto_fax			=>	$C->fax(),
-				shipto_email		=>	$Me->email(),
-				shipto_sms			=>	$Me->sms(),
+				shipto_email		=>	$openprint::User->email(),
+				shipto_sms			=>	$openprint::User->sms(),
 				} );
 $log->debug("Creating PO $$PO{id} from label $variable{error}");
 		
@@ -410,7 +407,7 @@ $log->debug("Creating PO $$PO{id} from label $variable{error}");
 	
 	} elsif ( $param{'btnFunction'} eq 'Save' ) {
 		if ( ! $param{po_id} ) {
-			$variable{error} .= $PO->save( { created_by	=> $session{user_id}, company_id => $Me->company_id() } );
+			$variable{error} .= $PO->save( { created_by	=> $session{user_id}, company_id => $openprint::User->company_id() } );
 		} # end if
 
 		$param{supplier_id} = save_supplier( \%param ) if ( ! $param{supplier_id} ) and $param{vendor_name};
@@ -534,12 +531,12 @@ $log->debug("Creating PO $$PO{id} from label $variable{error}");
 	} # end if btnFunction
 
 	if ( ! $PO->id() ) {
-		my $C = $Me->Company();
+		my $C = $openprint::User->Company();
 		$PO->set( {
 			'currency_id'		=>	openprint::Currency::get_current()->id(),
 			'company_id'		=>	$C->id(),
-			'created_by'		=>	$Me->id(),
-			'shipto_contact'	=>	$Me->name(),
+			'created_by'		=>	$openprint::User->id(),
+			'shipto_contact'	=>	$openprint::User->name(),
 			'shipto_name'		=>	$C->name(),
 			'shipto_address1'	=>	$C->address1(),
 			'shipto_address2'	=>	$C->address2(),
@@ -548,10 +545,10 @@ $log->debug("Creating PO $$PO{id} from label $variable{error}");
 			'shipto_country'	=>	$C->country(),
 			'shipto_postalcode'	=>	$C->postalcode(),
 			'shipto_phone'		=>	$C->phone(),
-			'shipto_mobile'		=>	$Me->mobile(),
+			'shipto_mobile'		=>	$openprint::User->mobile(),
 			'shipto_fax'		=>	$C->fax(),
-			'shipto_email'		=>	$Me->email(),
-			'shipto_sms'		=>	$Me->sms(),
+			'shipto_email'		=>	$openprint::User->email(),
+			'shipto_sms'		=>	$openprint::User->sms(),
 		} );
 	} # end if
 	$variable{'PurchaseOrder'} = $PO;

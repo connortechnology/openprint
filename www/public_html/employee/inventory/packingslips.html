@@ -7,7 +7,7 @@ Please select an allocation to view/edit.<br>
 			<label>Docket</label>
 			<? echo ( join("\n",
 						input( type=>'cardinal', name=>'docket', value=>$session{'/employee/inventory/packingslips.html?docket'}, onchange=>'change_handler(this);', onkeypress=>'return input_handler( this, event );', onkeydown=>q`if(event.keyCode == 13){LoadContent( 'Results', '/employee/inventory/_packingslips.html', $('f1').serialize() );};` ),
-					ssi::button( 'Go2', { onclick=>q`LoadContent( 'Results', '/employee/inventory/_packingslips.html', $('f1') );`,text=>'Go' } ),
+					button( 'Go2', { onclick=>q`LoadContent( 'Results', '/employee/inventory/_packingslips.html', $('f1') );`,text=>'Go' } ),
 			); ) ?>
 		</li>
 		</ul>
@@ -15,29 +15,29 @@ Please select an allocation to view/edit.<br>
 		<ul>
 		<li>
 			<label>Company</label>
-			<input type="text" onkeyup="filterDDM(this,f1.company_id);" class="filter" />
+			<input type="text" oninput="filter_companies( 'company_id', { name: this.value,selected_id: get_ddm_value($('company_id')) } );" class="filter" />
 			<select name="company_id" id="company_id">
 				<option value="">All</option>
-				<? echo ( openprint::Company::get_dropdown( $session{'/employee/inventory/packingslips.html?company_id'} ); ) ?>
+				<? echo ( make_drop_down( openprint::Company->dropdown('last_ordered_on is null'=>0), $session{'/employee/inventory/packingslips.html?company_id'} ); ) ?>
 			</select>
 		</li>
 		<li><label>Type</label>
 			<select name="type_id" id="type_id">
 				<option value="">All</option>
-				<? echo ( ssi::make_drop_down( openprint::LabelType->dropdown( order=>'lower(name)'), $session{'/employee/inventory/packingslips.html?type_id'} ); ) ?>
+				<? echo ( make_drop_down( openprint::LabelType->dropdown( order=>'lower(name)'), $session{'/employee/inventory/packingslips.html?type_id'} ); ) ?>
 			</select>
 		</li>
 		<li>
 			<label>Date Added</label>
-<? echo ( ssi::date_select_session( '/employee/inventory/packingslips.html', 'created_on_start', { with_today =>1, with_clear=>1 } ); ) ?>
+<? echo ( date_select_session( '/employee/inventory/packingslips.html', 'created_on_start', { with_today =>1, with_clear=>1 } ); ) ?>
 			to 
-<? echo ( ssi::date_select_session( '/employee/inventory/packingslips.html', 'created_on_end', { with_today=>1, with_clear=>1 } ); ) ?>
+<? echo ( date_select_session( '/employee/inventory/packingslips.html', 'created_on_end', { with_today=>1, with_clear=>1 } ); ) ?>
 		</li>
 		</ul>
 		<p class="buttons">
-			<? echo ( join('',
-				ssi::button( 'ShowResults', { onclick=>q`LoadContent( 'Results', '/employee/inventory/_packingslips.html', $('f1').serialize() );`, text=>'Show Results' } ),
-				ssi::button( 'Reset', { onclick=>'f1.reset();' } ),
+			<? echo ( join("\n",
+				button( 'ShowResults', { onclick=>q`LoadContent( 'Results', '/employee/inventory/_packingslips.html', $('f1').serialize() );`, text=>'Show Results' } ),
+				button( 'Reset', { onclick=>'f1.reset();' } ),
 				); ) ?>
 		</p>
 	</fieldset>

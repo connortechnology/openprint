@@ -1,3 +1,6 @@
+var pendingCalc;
+
+
 function versions_onkeyup( e ) {
 	new Ajax.Updater( 'Version_Descriptions', '_version_descriptions.html', { parameters: Form.serialize(e.form, true) } );
 }
@@ -188,6 +191,10 @@ function calc_print( formName, force, options ) {
 		timeout = null;
 	}
 	if ( gettingNewPrice && ! force ) {
+		if ( pendingCalc ) {
+			pendingCalc.transport.abort();
+		} else {
+
 		// This prevents concurrent price getting
 		if ( options ) {
 			timeout = setTimeout("calc_print('f1', 0, " + Object.toJSON( options ) + ");", 1000 );	
@@ -195,6 +202,7 @@ function calc_print( formName, force, options ) {
 			timeout = setTimeout("calc_print('f1' );", 1000 );	
 		} // end if
 		return;
+		}
 	} // end if
 
 	clear_price_data(form);
@@ -224,7 +232,7 @@ function calc_print( formName, force, options ) {
 	} // end if options
 	h.set('ServiceType','Printing' );
 	h.set('callback', 'cbFillPrintResults' );
-	new Ajax.Request( '/main/project/_calc.json', { method: 'post', parameters: h, evalScripts: true } );
+	pendingCalc = new Ajax.Request( '/main/project/_calc.json', { method: 'post', parameters: h, evalScripts: true } );
 	return true;
 } // end calc_print
 

@@ -283,7 +283,7 @@ if ( ! $$I{Folder} ) {
 				$imposition = 1;
 			} elsif ( ($$I{image_orientation} eq 'Horizontal' ) and ( $$I{columns} % 2 ) ) {
 				$I->display("Setting imposition to 1 due to Horizal and odd cols") if DEBUG or 1;
-				$results{Breakdown} .= "Setting imposition to 1 due to Horizontal and odd cols<br/>";
+				$results{Breakdown} .= "Setting imposition to 1 due to Horizontal and odd cols on form $form".$I->to_string()."<br/>";
 				$imposition = 1;
 			} elsif (sets::isin( $$I{runstyle}, ['Work & Turn','Work & Tumble'] ) and ($$I{imposition}%4) ) {
 				$I->display("Setting imposition to 1 due to W&T impo not % 4 ") if DEBUG;

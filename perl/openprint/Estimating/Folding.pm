@@ -875,13 +875,13 @@ if ( 0 ) {
 
 					my $Fold = $Equipment->Fold( {
 							pages			=>	$Imposition->pages(),
-							( $$Imposition{image_orientation} eq 'Vertical' ? (
+							#( $$Imposition{image_orientation} eq 'Vertical' ? (
 								   page_columns	=>	$Imposition->page_columns(),
 								   page_rows	=>	$Imposition->page_rows(),
-								  ) : (
-								  page_columns	=>	$Imposition->page_rows(),
-								  page_rows		=>	$Imposition->page_columns(),
-								  ) ),
+								  #) : (
+								  #page_columns	=>	$Imposition->page_rows(),
+								  #page_rows		=>	$Imposition->page_columns(),
+								  #) ),
 							page_width		=>	$Imposition->page_width(),
 							page_height		=>	$Imposition->page_height(),
 							spine_direction	=>	$$Imposition{image_orientation},
@@ -925,13 +925,13 @@ $openprint::log->debug("Templatetype: $$sig_specs{rdbTemplateType}") if DEBUG;
 						} # end if
 							
 						my $Fold = $Equipment->Fold({
-							( $$Imposition{image_orientation} eq 'Vertical' ? (
+							#( $$Imposition{image_orientation} eq 'Vertical' ? (
 									page_columns	=>	$Imposition->page_columns(),
 									page_rows		=>	$Imposition->page_rows(),
-								) : (
-									page_columns	=>	$Imposition->page_rows(),
-									page_rows		=>	$Imposition->page_columns(),
-								) ),
+								#) : (
+									#page_columns	=>	$Imposition->page_rows(),
+									#page_rows		=>	$Imposition->page_columns(),
+								#) ),
 								page_width		=>	$$sig_specs{txtFinalWidth},
 								page_height		=>	$$sig_specs{txtFinalHeight},
 								type			=>	$$sig_specs{rdbTemplateType},
@@ -1032,13 +1032,13 @@ $openprint::log->debug("No Fold") if DEBUG;
 							$openprint::log->debug("Fits") if DEBUG;
 							my $Fold = $Equipment->Fold({
 									pages			=>	$Imposition->pages(),
-									( $$Imposition{image_orientation} eq 'Vertical' ? (
+									#( $$Imposition{image_orientation} eq 'Vertical' ? (
 									   page_columns	=>	$Imposition->page_columns(),
 									   page_rows	=>	$Imposition->page_rows(),
-									) : (
-										page_columns=>	$Imposition->page_rows(),
-										page_rows	=>	$Imposition->page_columns(),
-									) ),
+									#) : (
+										#page_columns=>	$Imposition->page_rows(),
+										#page_rows	=>	$Imposition->page_columns(),
+									#) ),
 									page_width		=>	$Imposition->page_width(),
 									page_height		=>	$Imposition->page_height(),
 									spine_direction	=>	$$Imposition{image_orientation},
@@ -2260,7 +2260,7 @@ foreach my $k ( sort { $a cmp $b } keys %$folding_specs ) {
 			$Imposition->Press( $Folder );
 
 			my $Paper = $Imposition->Paper();
-$Imposition->display();
+#$Imposition->display();
 			my $find = {
 								type 			=>	$$folding_specs{"FoldType-$form-$qty_index-$fold_index"},
 								#pages			=>	$Imposition->pages(),
@@ -2278,22 +2278,24 @@ $Imposition->display();
 								};
 			my $Fold = $Folder->Fold( $find );
 			if ( ! $Fold ) {
-				$_ = Data::Dumper::Dumper($find);
-				$openprint::log->error("CAnt get fold! on " . $Folder->to_string() . $_);
-if ( $$folding_specs{"chkOverrideFold-$form-$qty_index"} eq 'Y' ) {
-$openprint::log->error("Was overriden");
-}
-Carp::cluck( "CAnt get fold! $form-$qty_index-$fold_index on " . $Folder->to_string() ."\n". $_ . join("\n", map { $_ . '=>' . $openprint::param{$_} } sort keys %openprint::param ));
-
+				if ( $$folding_specs{"chkOverrideFold-$form-$qty_index"} eq 'Y' ) {
+					$openprint::log->debug("Was overriden");
+				} else {
+					$_ = Data::Dumper::Dumper($find);
+					$openprint::log->error("CAnt get fold! on " . $Folder->to_string() . $_);
+					$_ = Data::Dumper::Dumper($folding_specs);
+					$openprint::log->error("CAnt get fold! on " . $Folder->to_string() . $_);
+					#Carp::cluck( "CAnt get fold! $form-$qty_index-$fold_index on " . $Folder->to_string() ."\n". $_ . join("\n", map { $_ . '=>' . $openprint::param{$_} } sort keys %openprint::param ));
+				} # end if
 			} else {
 				$openprint::log->debug("Got FOld: " . $Fold->to_string() ) if DEBUG;
 				$Imposition->Fold( $Fold );
 				if ( $Imposition->image_orientation() eq 'Vertical' ) {
-				$Imposition->page_rows( $Fold->page_rows() );
-				$Imposition->page_columns( $Fold->page_columns() );
+					$Imposition->page_rows( $Fold->page_rows() );
+					$Imposition->page_columns( $Fold->page_columns() );
 				} else {
-				$Imposition->page_rows( $Fold->page_columns() );
-				$Imposition->page_columns( $Fold->page_rows() );
+					$Imposition->page_rows( $Fold->page_columns() );
+					$Imposition->page_columns( $Fold->page_rows() );
 				} # end if
 				if ( $Fold->pages() ) {
 					$$Imposition{pages} = $Fold->pages();

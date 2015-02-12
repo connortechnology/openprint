@@ -62,25 +62,25 @@ sub calc {
 	my $status = 'calculated';
 
 	if ( ! $$services{''} ) {
-		$$specs{'alert'} .= 'Unable to find Project Service.<br/>';
+		$$specs{alert} .= 'Unable to find Project Service.<br/>';
 		return 'uncalculated';
 	} # end if
 	# Pull from printing service
 	my $printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
 
-	if ( ! $$specs{'Backing'} ) {
-		$$specs{'Backing'} = $$printing_specs{'Backing'};
+	if ( ! $$specs{Backing} ) {
+		$$specs{Backing} = $$printing_specs{Backing};
 		@no_output = sets::exclude( ['Backing'], \@no_output );
 	} else {
 		@no_output = sets::union(@no_output, 'Backing');
 	} # end if
-	if ( ! $$specs{'Backing'} ) {
-		$$specs{'alert'} = 'Please select your backing type.';
-		return $$specs{'Status'} = 'uncalculated';
+	if ( ! $$specs{Backing} ) {
+		$$specs{alert} = 'Please select your backing type.';
+		return $$specs{Status} = 'uncalculated';
 	} # end if
-	if ( ! $$specs{'PageQuantity'} ) {
-		if ( $$printing_specs{'PageQuantity'} ) {
-			$$specs{'PageQuantity'} = $$printing_specs{'PageQuantity'};
+	if ( ! $$specs{PageQuantity} ) {
+		if ( $$printing_specs{PageQuantity} ) {
+			$$specs{PageQuantity} = $$printing_specs{PageQuantity};
 			@no_output = sets::exclude( ['PageQuantity'], \@no_output );
 		} else {
 			my $Paper = openprint::Paper::load_from_signature( $Project, $printing_specs, 1 );
@@ -93,20 +93,20 @@ sub calc {
 			} # end if
 			
 			if ( $Paper and $Paper->parts() ) {
-				$$specs{'PageQuantity'} = $Paper->parts();
+				$$specs{PageQuantity} = $Paper->parts();
 				@no_output = sets::exclude( ['PageQuantity'], \@no_output );
 			} # end if
 		} # end if
 	} else {
 		@no_output = sets::union(@no_output, 'PageQuantity');
 	} # end if
-	if ( ! $$specs{'PageQuantity'} ) {
-		$$specs{'alert'} = 'Please select how many pages each pad will have.<br/>';
-		return $$specs{'Status'} = 'uncalculated';
+	if ( ! $$specs{PageQuantity} ) {
+		$$specs{alert} = 'Please select how many pages each pad will have.<br/>';
+		return $$specs{Status} = 'uncalculated';
 	} # end if
 	if ( $Project->Type()->name() eq 'ScratchPads' ) {
-		if ( $$specs{'PageQuantity'} < $openprint::config{'MinimumPagesWithoutCounting'} ) {
-			if ( ! $$services{'Counting'} ) {
+		if ( $$specs{PageQuantity} < $openprint::config{MinimumPagesWithoutCounting} ) {
+			if ( ! $$services{Counting} ) {
 				$_ = $Project->add_service( 'Counting' );
 				openprint::service::internal_calc( $log, $dbh, $variable, $project_index, $_, 'Counting' ) if $_;
 			} # end if
@@ -114,7 +114,7 @@ sub calc {
 	} # end if
 
 	my @Materials = openprint::Material->find('category'=>'Padding Glue');
-	if ( $$specs{'override_glue_id'} eq 'Y' ) {
+	if ( $$specs{override_glue_id} eq 'Y' ) {
 	} else {
 		my $Paper;
 		foreach my $qty_index ( $Project->quantity_indexes() ) {
@@ -123,7 +123,7 @@ sub calc {
 		} # end foreach
 		foreach my $Material ( @Materials ) {
 			if ( sets::isin( $Paper->grade(), misc::trim(split(',',$Material->specification('Recommended For Stock Grade'))) ) ) {	
-				$$specs{'glue_id'} = $Material->id();
+				$$specs{glue_id} = $Material->id();
 			} # end if
 		} # end foreach Material
 	} # end if
@@ -140,10 +140,10 @@ sub calc {
 		$$specs{"txtQuantity$qty_index"} = $Project->quantity($qty_index) if ! $$specs{"txtQuantity$qty_index"};
 		next if ! $$specs{"txtQuantity$qty_index"};
 		my $qty = $$specs{"txtQuantity$qty_index"};
-		if ( ( $ProjectType->name() eq 'ScratchPads' ) and ( ! $$printing_specs{'PageQuantity'} ) ) {
-			#$qty /= int( $$specs{'PageQuantity'} );
-		} elsif ( ( $ProjectType->name() eq 'NCR' ) and ( ! $$printing_specs{'PageQuantity'} ) ) {
-			$qty *= int( $$specs{'PageQuantity'} );
+		if ( ( $ProjectType->name() eq 'ScratchPads' ) and ( ! $$printing_specs{PageQuantity} ) ) {
+			#$qty /= int( $$specs{PageQuantity} );
+		} elsif ( ( $ProjectType->name() eq 'NCR' ) and ( ! $$printing_specs{PageQuantity} ) ) {
+			$qty *= int( $$specs{PageQuantity} );
 		} # end if
 		$$specs{'hdnBreakdown'.$qty_index} .= "Minimum Charge: $minimumCharge<br/>";
 		$$specs{'hdnBreakdown'.$qty_index} .= "QTY $qty_index: $qty<br/>";
@@ -155,8 +155,8 @@ sub calc {
 			%MR = openprint::service::get_price_object( 'PaddingMakeReady', $qty, undef );
 		} # end if
 		if ( %MR ) {
-			$MR{'Total'} = $MR{'Price'};
-			$price += $MR{'Total'};
+			$MR{Total} = $MR{Price};
+			$price += $MR{Total};
 			$$specs{'hdnBreakdown'.$qty_index} .= sprintf('MakeReady: $%.2f%s=$%.2f<br/>', @MR{'Price','units','Total'});
 		} # end if
 
@@ -167,63 +167,63 @@ sub calc {
 		if ( ! %ServicePrice ) {
 			$log->debug('No price');
 			$status = 'uncalculated';
-			$$specs{'alert'} = 'We print press sheets only for pads - please ask a trade bindery to estimate the finishing.';
+			$$specs{alert} = 'We print press sheets only for pads - please ask a trade bindery to estimate the finishing.';
 			$$specs{"txtPrice$qty_index"} = sprintf( '%.2f', 0 );
-			$$specs{"txtUnitPrice$qty_index"} = sprintf( $openprint::config{'UnitPriceFormat'}, 0 );
+			$$specs{"txtUnitPrice$qty_index"} = sprintf( $openprint::config{UnitPriceFormat}, 0 );
 			next;
-		} elsif ( sets::isin( lc $ServicePrice{'units'}, [ 'per pad', 'each' ] ) ) {
-			$ServicePrice{'Total'} = $ServicePrice{'Price'} * $qty;
+		} elsif ( sets::isin( lc $ServicePrice{units}, [ 'per pad', 'each' ] ) ) {
+			$ServicePrice{Total} = $ServicePrice{Price} * $qty;
 			$$specs{'hdnBreakdown'.$qty_index} .= sprintf('ServicePrice: $%1$.2f%2$s * %4$d = $%3$.2f<br/>', @ServicePrice{'Price','units','Total'}, $qty );
-		} elsif ( lc $ServicePrice{'units'} eq 'per m' ) {
-			$ServicePrice{'Total'} = $ServicePrice{'Price'} * $qty / 1000;
+		} elsif ( lc $ServicePrice{units} eq 'per m' ) {
+			$ServicePrice{Total} = $ServicePrice{Price} * $qty / 1000;
 			$$specs{'hdnBreakdown'.$qty_index} .= sprintf('ServicePrice: $%1$.2f%2$s * %4$d = $%3$.2f<br/>', @ServicePrice{'Price','units','Total'}, $qty );
 		} else {
 			$$specs{'hdnBreakdown'.$qty_index} .= 'Unknown units for padding service.<br/>';
 		} # end if
-		$price += $ServicePrice{'Total'};
+		$price += $ServicePrice{Total};
 			
-		if ( $$specs{'Backing'} eq 'Cardboard' ) {
+		if ( $$specs{Backing} eq 'Cardboard' ) {
 			if ( my $Material = openprint::Material->find_one('name'=>'CardboardBacking') ) {
 				my %CardboardPrice = $Material->get_price( $qty, undef );
-				if ( $CardboardPrice{'units'} eq 'per square inch' ) {
-					$CardboardPrice{'Total'} = Math::Round::nearest( 0.01, $CardboardPrice{'Price'} * $$printing_specs{'txtFinalWidth'} * $$printing_specs{'txtFinalHeight'} * $$specs{"txtQuantity$qty_index"} );
-				} elsif ( $CardboardPrice{'units'} eq 'per square foot' ) {
-					$CardboardPrice{'Total'} = Math::Round::nearest( 0.01, $CardboardPrice{'Price'} * ($$printing_specs{'txtFinalWidth'} * $$printing_specs{'txtFinalHeight'}/144) * $$specs{"txtQuantity$qty_index"} );
-				} elsif ( $CardboardPrice{'units'} eq 'per pad' ) {
-					$CardboardPrice{'Total'} = $qty * $CardboardPrice{'Price'};
+				if ( $CardboardPrice{units} eq 'per square inch' ) {
+					$CardboardPrice{Total} = Math::Round::nearest( 0.01, $CardboardPrice{Price} * $$printing_specs{txtFinalWidth} * $$printing_specs{txtFinalHeight} * $$specs{"txtQuantity$qty_index"} );
+				} elsif ( $CardboardPrice{units} eq 'per square foot' ) {
+					$CardboardPrice{Total} = Math::Round::nearest( 0.01, $CardboardPrice{Price} * ($$printing_specs{txtFinalWidth} * $$printing_specs{txtFinalHeight}/144) * $$specs{"txtQuantity$qty_index"} );
+				} elsif ( $CardboardPrice{units} eq 'per pad' ) {
+					$CardboardPrice{Total} = $qty * $CardboardPrice{Price};
 				} # end if
 				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Cardboard Price: $%1$.2f%2$s * %4$sx%5$s = $%3$.2f<br/>', @CardboardPrice{'Price','units','Total'}, @$printing_specs{'txtFinalWidth','txtFinalHeight'} );
-				$price += $CardboardPrice{'Total'};
+				$price += $CardboardPrice{Total};
 			} # end if
 		} # end if
-		if ( $$specs{'rdbDTape'} eq 'Y' ) {
+		if ( $$specs{rdbDTape} eq 'Y' ) {
 			if ( my $Material = openprint::Material->find_one('name'=>'DTape') ) {
 				my %DTapePrice = $Material->get_price( $qty, undef );
-				$DTapePrice{'Total'} = $DTapePrice{'Price'} * $$printing_specs{'txtFinalWidth'};
+				$DTapePrice{Total} = $DTapePrice{Price} * $$printing_specs{txtFinalWidth};
 				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('DTape Price: $%1$.2f%2$s = $%3$.2f<br/>', @DTapePrice{'Price','units','Total'} );
-				$price += $DTapePrice{'Total'};
+				$price += $DTapePrice{Total};
 			} # end if
 		} # end if
-		if ( $$specs{'glue_id'} ) {
+		if ( $$specs{glue_id} ) {
 			my $calliper = get_finished_calliper( $Project, $specs );
-			my $Material = new openprint::Material( $$specs{'glue_id'} );
+			my $Material = new openprint::Material( $$specs{glue_id} );
 			my %GluePrice = $Material->get_price( $$specs{"txtQuantity$qty_index"}, undef );
 			if ( $GluePrice{units} eq 'per square inch' ) {
-				$GluePrice{'Total'} = $GluePrice{Price} * $$printing_specs{'txtFinalWidth'} * $calliper * $$specs{"txtQuantity$qty_index"};
-				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('%1$s Price: $%2$.2f%3$s * %5$.2f * %6$.4f =$%4$.2f<br/>', $Material->description(), @GluePrice{'Price','units','Total'}, $$printing_specs{'txtFinalWidth'}, $calliper );
+				$GluePrice{Total} = $GluePrice{Price} * $$printing_specs{txtFinalWidth} * $calliper * $$specs{"txtQuantity$qty_index"};
+				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('%1$s Price: $%2$.2f%3$s * %5$.2f * %6$.4f =$%4$.2f<br/>', $Material->description(), @GluePrice{'Price','units','Total'}, $$printing_specs{txtFinalWidth}, $calliper );
 			} elsif ( $GluePrice{units} eq 'per square foot' ) {
-				$GluePrice{'Total'} = $GluePrice{Price} * $$printing_specs{'txtFinalWidth'} * $calliper * $$specs{"txtQuantity$qty_index"} / 144;
-				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('%1$s Price: $%2$.2f%3$s * %5$.2f * %6$.4f =$%4$.2f<br/>', $Material->description(), @GluePrice{'Price','units','Total'}, $$printing_specs{'txtFinalWidth'}, $calliper );
+				$GluePrice{Total} = $GluePrice{Price} * $$printing_specs{txtFinalWidth} * $calliper * $$specs{"txtQuantity$qty_index"} / 144;
+				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('%1$s Price: $%2$.2f%3$s * %5$.2f * %6$.4f =$%4$.2f<br/>', $Material->description(), @GluePrice{'Price','units','Total'}, $$printing_specs{txtFinalWidth}, $calliper );
 			} # end if
-			$price += $GluePrice{'Total'};
+			$price += $GluePrice{Total};
 		} # end if Glues
 
 		$price = $minimumCharge if $price < $minimumCharge;
-		$$specs{"txtUnitPrice$qty_index"} = sprintf( $openprint::config{'UnitPriceFormat'}, ( $price/$qty ) * (1+$Project->markup()/100) );
+		$$specs{"txtUnitPrice$qty_index"} = sprintf( $openprint::config{UnitPriceFormat}, ( $price/$qty ) * (1+$Project->markup()/100) );
 		if ( $$specs{"OverridePrice$qty_index"} ne 'Y' ) {
-			$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $price*(1+$$specs{"Markup$qty_index"}/100)*(1+$Project->markup()/100) );
+			$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{ProjectMoneyFormat}, $price*(1+$$specs{"Markup$qty_index"}/100)*(1+$Project->markup()/100) );
 		} else {
-			$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $$specs{"txtPrice$qty_index"} );
+			$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{ProjectMoneyFormat}, $$specs{"txtPrice$qty_index"} );
 		} # end if
 	} # end foreach
 	return $$specs{Status} = $status;
@@ -236,15 +236,15 @@ sub summary {
     if ( $qty_index ) {
 		return '';		
 	} # end if
-	$text .= $$specs{'PageQuantity'} . ' pages per pad';
-	my $Material = new openprint::Material( $$specs{'glue_id'} );
+	$text .= $$specs{PageQuantity} . ' pages per pad';
+	my $Material = new openprint::Material( $$specs{glue_id} );
 	$text .= ' using ' . $Material->description();
-	if ( $$specs{'Backing'} ne 'None' ) {
-		$text .= ' +' . $$specs{'Backing'};
+	if ( $$specs{Backing} ne 'None' ) {
+		$text .= ' +' . $$specs{Backing};
 	} else {
 		$text .= ' no backing';
 	} # end if
-	if ( $$specs{'rdbDTape'} eq 'Y' ) {
+	if ( $$specs{rdbDTape} eq 'Y' ) {
 		$text .= ' +DTape';
 	} # end if
 	return $text;
@@ -254,14 +254,21 @@ sub save {
 	my ( $p_id, $s_id, $param ) = @_;
 	my $Project = new openprint::Project( $p_id );
 	my $services = $Project->services();
-	my $project_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
-	if ( ( $$param{'PageQuantity'} != $$project_specs{'PageQuantity'} ) or ( $$param{'Backing'} ne $$project_specs{'Backing'} ) ) {
-		openprint::service::insert_service_spec( $openprint::log, $openprint::dbh, $Project->id(), $$services{''}[0], 'PageQuantity', $$param{'PageQuantity'} );
-		openprint::service::insert_service_spec( $openprint::log, $openprint::dbh, $Project->id(), $$services{''}[0], 'Backing', $$param{'Backing'} );
-		# FOrce recalc of printing
+
+	my $recalc = 0;
+	
+	foreach my $sig_id ( $$services{''}[0], $Project->signatures() ) {
+		my $sig_specs = openprint::service::get_specs_ref( $Project, $sig_id );
+		if ( ( $$param{PageQuantity} != $$sig_specs{PageQuantity} ) or ( $$param{Backing} ne $$sig_specs{Backing} ) ) {
+			openprint::service::insert_service_spec( $openprint::log, $openprint::dbh, $Project->id(), $sig_id, 'PageQuantity', $$param{PageQuantity} );
+			openprint::service::insert_service_spec( $openprint::log, $openprint::dbh, $Project->id(), $sig_id, 'Backing', $$param{Backing} );
+			$recalc = 1;
+		} # end if
+	} # end foreach sig
+	if ( $recalc ) {
 		openprint::Estimating::MultiPage::calculate_signatures( $Project );
 		openprint::service::auto_calculate( $Project );
-	} # end if
+	} # end if recalc
 } # end sub save
 
 sub get_finished_calliper { 
@@ -272,7 +279,7 @@ sub get_finished_calliper {
 	my $finished_calliper;
     foreach my $signature_service_index ( $Project->signatures() ) {
 		my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
-		$finished_calliper += $$specs{'PageQuantity'} * $$sig_specs{'txtSpecificStockCalliper'};
+		$finished_calliper += $$specs{PageQuantity} * $$sig_specs{txtSpecificStockCalliper};
 	} # end foreach
 	return $finished_calliper;
 } # end sub get_finished_calliper

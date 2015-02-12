@@ -19,7 +19,7 @@
 					} # end if
 					$html .= button( 'Delete', { onclick=>q`f1.btnFunction.value='Delete';f1.submit();` } );
 					$html .= button( 'Edit', { href=>'edit.html?invoice_id='.$$variable{Invoice}->id() } );
-					if ( $$variable{Invoice}->can_send() ) {
+					if ( $$variable{Invoice}->posted() and $$variable{Invoice}->can_send() ) {
 						$html .= button( 'Send', { onclick=>q`f1.btnFunction.value='Send';f1.submit();` } );
 						$html .= button( 'SendMe', { onclick=>q`f1.btnFunction.value='Send To Me';f1.submit();`, text=>'Send To Me' } );
 					} # end if

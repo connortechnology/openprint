@@ -452,7 +452,7 @@ $log->debug("Service: " . $Service->to_string() );
 						$status = openprint::print::publication_pages( $r, $log, $dbh, \%variable );
 					} elsif ( $filename eq 'ScratchPads.html' ) {
 						$status = openprint::print::publication_pages( $r, $log, $dbh, \%variable );
-					} elsif ( $filename =~ /^(_.*)\.html$/ ) {
+					} elsif ( $filename =~ /^(_.*)\.(html|json)$/ ) {
 						my $proc = $1;
 						my $module = join('_',@path);
 						require 'openprint/'.$module.'.pm';

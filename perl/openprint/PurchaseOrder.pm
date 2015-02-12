@@ -168,10 +168,9 @@ sub Contents {
 sub send_approval_required_notification {
 	my ( $self ) = @_;
 
-	my $Me = new openprint::User( $session{'user_id'} );
 	my $email_template = misc::load_file( $log, $config{'SkinPath'} . '/email_template.html' );
 	my %info;
-	$info{'From'} = $Me;
+	$info{'From'} = $openprint::User;
 	$info{'PurchaseOrder'} = $self;
 	$info{'ReplacementText'} = ssi::include( '/email_content/purchase_order_notification.html', \%info );
 
@@ -182,7 +181,7 @@ sub send_approval_required_notification {
 
 	my $results;
 	foreach my $U ( map { $_->User() } openprint::User_Notification->find(type=>\@notification_types,'value'=>'Yes' ) ) {
-		if ( $U->id() == $Me->id() ) {
+		if ( $U->id() == $openprint::User->id() ) {
 			$openprint::log->debug( $U->email() . ' Not mailing me.' );
 			next;
 		} # end if
@@ -201,7 +200,7 @@ sub send_approval_required_notification {
 		} # end if
 
 		$results .= $mail->send(
-				FROM		=>	$Me,
+				FROM		=>	$openprint::User,
 				TO			=>	$U,
 				SUBJECT		=>	'Purchase Order requiring approval: ' . $self->id(),
 				ATTACHMENTS	=>	\@body,

@@ -47,6 +47,7 @@
 	</fieldset>
 	<div class="leftColumn">
 	<fieldset><legend>Service Information</legend>
+		<p><label>Id</label><? echo ( $$variable{Service}->id() ) ?></p>
 		<p> 
 			<label>Service Name</label>
 			<input type="text" name="name" value="<? echo ( $$variable{'Service'}->name(); ) ?>" onchange="if(!$('description').value){$('description').value=this.value;}"/>

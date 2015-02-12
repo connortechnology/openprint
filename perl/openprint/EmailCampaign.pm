@@ -93,21 +93,28 @@ __ADMIN_EMAIL__
 sub send_email {
 	my ($self, $replacements) = @_;
 
-	# Load the email template
-	my $email_template = '';
-	if ( $$self{template_id} ) {
-		my $EmailTemplate = $self->Template();
-		$email_template = $EmailTemplate->body();
-	} else {
-		$email_template = ssi::slurp_content( '/email_template.html' );
-	} # end if
 
 	# Do the appropriate variable substitutions
 	# - The first substitution replaces the 'ReplacementText' field
 	# - The seconds substitution replaces the any tags that were
 	#   inserted by the first replacement
 	# NB. Only encode_qp ONCE
-	$email_template = ssi::variable_substitution( \$$self{email_html}, $replacements );
+	my $html_body;
+	my $text_body;
+
+	if ( $$self{email_html} ) {
+		# Load the email template
+		my $email_template = '';
+		if ( $$self{template_id} ) {
+			my $EmailTemplate = $self->Template();
+			$email_template = $EmailTemplate->body();
+		} else {
+			$email_template = ssi::slurp_content( '/email_template.html' );
+		} # end if
+		$$replacements{ReplacementText} = ssi::variable_substitution( \$$self{email_html}, $replacements );
+		$html_body = ssi::variable_substitution( \$email_template, $replacements );
+	}
+	$text_body = ssi::variable_substitution( \$$self{email_text}, $replacements ) if $$self{email_text};
 
 	# Setup the mail message
 	my $Email = new openprint::Email();
@@ -119,8 +126,8 @@ sub send_email {
 			FROM	=> $self->{email_from} ? $self->{email_from} : sprintf('"%s" <%s>', @$replacements{'REPNAME','REPEMAIL'} ),
 			TO		=> ( $$self{email_to} ? $$self{email_to} : $$replacements{User} ),
 			SUBJECT => $$self{email_subject},
-			( $$self{email_text} ? ( BODY => $$self{email_text} ) : () ),
-			( $$self{email_html} ? ( HTML_BODY => $email_template ) : () ),
+			( $text_body ? ( BODY => $text_body ) : () ),
+			( $html_body ? ( HTML_BODY => $html_body ) : () ),
 			( @attachments ? ( ATTACHMENTS =>	\@attachments ) : () ),
 		);
 		
@@ -174,6 +181,9 @@ sub send {
 	# If an email is sent, update the row in emailcampaigsent for this
 	# campaign/user, or add one as necessary
 	#
+	my $email_text = $$self{email_text};
+	my $email_html = $$self{email_html};
+
 	foreach my $user_id ( @mail_user_ids ) {
 		# de we need to send this email?
 
@@ -201,6 +211,8 @@ sub send {
 		$results .= sprintf('Sending Email to: %s %s at %s<br/>',$replacements{User}->get('firstname','lastname','email') );
 		$self->send_email( \%replacements );
 	} # for all mail user ids
+	$$self{email_text} = $email_text;
+	$$self{email_html} = $email_html;
 	return $results;
 } # end sub send
 
