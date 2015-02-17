@@ -138,6 +138,8 @@ sub view_services {
 					if ( $$services{SaddleStitching} and @{$$services{SaddleStitching}} ) {	
 						openprint::service::internal_calc( $log, $dbh, $variable, $project_index, $$services{SaddleStitching}[0], 'Stitching' );
 					} # end if
+				} elsif ( $openprint::param{ServiceType} eq 'Paper' ) {
+					openprint::service::internal_calc( $log, $dbh, $variable, $project_index,  $service_index, 'Paper' );
 				} # end if
 				openprint::service::auto_calculate( $Project, $service_index ) if $recalc;
 				$Project->update_status();
