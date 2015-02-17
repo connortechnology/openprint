@@ -208,20 +208,24 @@ $openprint::log->debug("Other Shipped Quantity: $other_shipped_quantity");
 										$total = $$Price{Price};
 										$$specs{"hdnBreakdown$qty_index"} .= sprintf('<tr><td>MakeReady:</td><td class="Price">$%.2f</td></tr>', $$Price{Price} );
 									} else {
-										$openprint::log->debug("No MR price found for ${service_name}MakeReady");
+										$openprint::log->debug("No MR Service found for ${service_name}MakeReady");
 									} # end if
 									if ( $Service ) {
 										my $Price = $Service->get_Price( $$specs{'txtPackageQuantity'.$qty_index}, $Equipment );
-										if ( $$Price{units} eq 'per package' ) {
-											$$Price{Total} = $$specs{'txtPackageQuantity'.$qty_index} * $$Price{Price};
-											$total += $$Price{Total};
-											$$specs{"hdnBreakdown$qty_index"} .= sprintf('<tr><td>%d %s * $%.2f%s =</td><td class="Price">$%.2f</td></tr>', 
-												$$specs{'txtPackageQuantity'.$qty_index}, $$carton_specs{ServiceType}, @$Price{'Price','units','Total'} );
+										if ( $Price ) {
+											if ( $$Price{units} eq 'per package' ) {
+												$$Price{Total} = $$specs{'txtPackageQuantity'.$qty_index} * $$Price{Price};
+												$total += $$Price{Total};
+												$$specs{"hdnBreakdown$qty_index"} .= sprintf('<tr><td>%d %s * $%.2f%s =</td><td class="Price">$%.2f</td></tr>', 
+														$$specs{'txtPackageQuantity'.$qty_index}, $$carton_specs{ServiceType}, @$Price{'Price','units','Total'} );
+											} else {
+												$log->error("unknown units on $$Service{name} $$Price{units}");
+											} # end if
 										} else {
-											$log->error("unknown units on $$Service{name} $$Price{units}");
+											$openprint::log->debug("No price found for $service_name");
 										} # end if
 									} else {
-										$openprint::log->debug("No price found for $service_name");
+										$openprint::log->debug("No service found for $service_name");
 									} # end if Service
 									$$specs{"hdnBreakdown$qty_index"} .= sprintf('<tr class="totals"><td></td><td class="Price">$%.2f</td></tr>', $total );
 									$$specs{"hdnBreakdown$qty_index"} .= '</table>';
