@@ -187,16 +187,17 @@ sub search {
 		$session{'/location/search.html?country_id'} = $Country->id() if $Country and ! exists $session{'/location/search.html?country_id'};
 	} # end if
 } # end sub search
+
 sub _search {
 	if ( ! $param{btnFunction} ) {
 		ssi::save_params( '/location/search.html', ( 
 				#'starting_on_start_year','starting_on_start_month','starting_on_start_day',
 				#'starting_on_end_year','starting_on_end_month','starting_on_end_day',
-				'type_id', 
-				'user_id', 'category_id', 'country_id', 'state_id', 'city_id' ) );
+				'type_id', 'user_id', 'category_id', 'country_id', 'state_id', 'city_id' ) );
 	} # end if
 	#$session{'/location/search.html?type_id'} = openprint::Location_Type->find_one('name'=>'place')->id() if ! exists $session{'/location/search.html?type_id'};
 } # end sub _search
+
 sub _ddm {
 } # end sub _ddm
 
