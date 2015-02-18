@@ -234,7 +234,7 @@ $log->debug("# of entries in Object_name_cache: " . keys %{$openprint::Object::n
 						$log->debug( "Got $ip for $source" ) if $config{debug};
 					} # end if
 				} # end if
-				if ( $ip eq '172.0.0.1' ) {
+				if ( $ip eq '127.0.0.1' ) {
 					$log->debug("No more testing for localhost");
 					next;
 				} else {
