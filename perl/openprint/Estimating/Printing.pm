@@ -198,6 +198,7 @@ my %variables = (
 	'sides_the_same'	=> ['save'],
 	'ddmBleedSize1' => ['save','output'], 'ddmBleedSize2' => ['save','output'], 'ddmBleedSize3' => ['save','output'],
 	'chkOverrideBleedSize1'=>['save'], 'chkOverrideBleedSize2'=>['save'], 'chkOverrideBleedSize3'=>['save'],
+	'OverrideAddGrip'	=> ['save'],
 
 	'BleedLeft' => ['save'], 'BleedRight' => ['save'], 'BleedTop' => ['save'], 'BleedBottom' => ['save'],
 	'rdbColourBar' => ['save','output'], 'txtCropMarkSpace' => ['save'],
@@ -1196,7 +1197,7 @@ $openprint::log->debug("Skipping cuz ddmPress$qty_index ne $$Press{strid}");
 
 # not all of the presses have a gutter spec so we will continue to use Grip for Width and Height
 		if ( ! sets::isin( $ProjectTypeName, [ 'Envelopes', 'NCR' ] ) ) {
-			$$project{Grip} = $Press->specification('Grip');
+			$$project{Grip} = $Press->specification('Grip') if ! $$specs{OverrideAddGrip};
 			$$project{Gutter} = $Press->specification('Gutter');
 			if ( $$specs{'chkOverrideBleedSize'.$qty_index} eq 'Y' ) {
 				$$project{BleedSize} = $$specs{'ddmBleedSize'.$qty_index};
@@ -5122,9 +5123,7 @@ $openprint::log->warn("No folding equipment");
 	my %diecutting_results;
 #$openprint::log->debug("Need DieCutting $$project{NeedDieCutting}");
 	if ( $$project{HasDieCutting} and $$project{NeedDieCutting} ) {
-$openprint::log->debug("Doing DieCutting");
 		%diecutting_results = openprint::Estimating::DieCutting::signature_calc( $Project, $service_index, $specs, $$project{DieCuttingSpecs}, $qty_index, $Imposition );
-$openprint::log->debug("Back From DieCutting");
 		if ( $diecutting_results{Status} eq 'uncalculated' ) {
 			$price{'DieCutting Breakdown'} .= "DieCutting error: $diecutting_results{alert} $diecutting_results{alert} <br/>";
 			$price{'Comparison Cost'} += 1000000; 
