@@ -234,7 +234,13 @@ $log->debug("# of entries in Object_name_cache: " . keys %{$openprint::Object::n
 						$log->debug( "Got $ip for $source" ) if $config{debug};
 					} # end if
 				} # end if
-				next if $ip eq '172.0.0.1';
+				if ( $ip eq '172.0.0.1' ) {
+					$log->debug("No more testing for localhost");
+					next;
+				} else {
+					$log->debug("IP is $ip");
+				} # end if
+
 				if ( ! $ip ) {
 					$log->debug( "No ip for $source" ) if $config{debug};
 					next;
@@ -280,6 +286,10 @@ $log->debug("# of entries in Object_name_cache: " . keys %{$openprint::Object::n
 			foreach my $ip ( sort keys %host_counts ) {
 				next if ! $host_counts{$ip}{update};
 				next if $host_counts{$ip}{whitelist};
+				if ( $ip eq '127.0.0.1' ) {
+					$log->warn("WTF blacklistint localhost?!");
+					next;
+				} # end if
 				if ( ! defined $host_counts{$ip}{count} ) {
 					$host_counts{$ip}{count} = 0;
 				}
