@@ -16,7 +16,7 @@
 
 package openprint::Estimating::DieCutting;
 use strict;
-use warnings;
+#use warnings;
 use POSIX qw( ceil );
 use constant DEBUG => 1;
 
@@ -189,8 +189,21 @@ sub calc_price {
 			%Stripping = openprint::service::get_price_object( 'DieCuttingStripping' ,undef, $Equipment);
 		} # end if
 		if ( %Stripping ) {
-			if ( lc $Stripping{units} eq 'per m' ) {
-				$Stripping{Total} = $Stripping{Price} * $impressions / 1000;
+			if ( $Stripping{units} eq 'per m' ) {
+				$Stripping{Total} = Math::Round::nearest( 0.01, $Stripping{Price} * $impressions / 1000 );
+			} elsif ( $Stripping{units} eq 'per hour' ) {
+ 				my $Runspeed = $Equipment->Specification( 'StrippingRunspeed' );
+				if ( $Runspeed and $$Runspeed{value} ) {
+					$Total{StrippingRunspeed} = $Runspeed;
+					my $hours = $impressions / $$Runspeed{value};
+					$Stripping{Total} = Math::Round::nearest( 0.01, $Stripping{Price} * $hours );
+				} else {
+					$Total{alert} .= "No stripping speed on $$Equipment{name}<br/>";
+					$Total{Status} = 'uncalculated';
+				}
+			} else {
+				$Total{alert} .= "unknown units in price for Stripping on $$Equipment{name}<br/>";
+				$Total{Status} = 'uncalculated';
 			} # end if
 
 			$Total{Stripping} = \%Stripping;
@@ -375,6 +388,21 @@ sub calc {
 						$$specs{'hdnBreakdown'.$qty_index} .= sprintf('<tr><td>Service: $%1$.2f%2$s * %4$d impressions = </td><td class="Price">$%3$.2f</td></tr>', @{$$Price{ServicePrice}}{'Price','units','Total'}, $$Price{Impressions} );
 					} # en dif
 					$$specs{'hdnBreakdown'.$qty_index} .= sprintf('<tr><td>Hole Clearing: $%1$.2f%2$s * %5$d holes * %6$dout * %4$d impressions = </td><td class="Price">$%3$.2f</td></tr>', @{$$Price{HoleClearingPrice}}{'Price','units','Total'}, $$Price{Impressions}, $$specs{"txtHoleClearingHoles-$form"}, $I->imposition() ) if exists $$Price{HoleClearingPrice};
+
+					if ( (! defined $$specs{'OverrideStrippingPrice'.$qty_index}) or ( $$specs{'OverrideStrippingPrice'.$qty_index} ne 'Y' ) ) {
+						if ( $$Price{Stripping} ) {
+							if ( $$Price{Stripping}{units} eq 'per hour' ) {
+								$$specs{'hdnBreakdown'.$qty_index} .= sprintf('<tr><td>Stripping: $%1$.2f%2$s * (%4$d impressions/%5$d per hour) = </td><td class="Price">$%3$.2f</td></tr>', @{$$Price{Stripping}}{'Price','units','Total'}, $$Price{Impressions}, $$Price{StrippingRunspeed}{value} );
+							} else {
+							$$specs{'hdnBreakdown'.$qty_index} .= sprintf('<tr><td>Stripping: $%1$.2f%2$s * %4$d impressions = </td><td class="Price">$%3$.2f</td></tr>', @{$$Price{Stripping}}{'Price','units','Total'}, $$Price{Impressions} );
+							}
+						} # end if
+						@no_outputs = sets::exclude( ["StrippingPrice$qty_index"], \@no_outputs );
+					} else {
+						$$specs{'hdnBreakdown'.$qty_index} .= sprintf('<tr><td>Stripping: $%1$.2f</td><td class="Price">$%1$.2f</td></tr>', $$specs{"StrippingPrice$qty_index"} );
+						@no_outputs = sets::union( @no_outputs, "StrippingPrice$qty_index" );
+					} # end if
+
 					$totalUnitPrice += $Price->{UnitPrice};
 					$totalMPrice += $Price->{MPrice};
 					$totalStrippingPrice += $Price->{Stripping}{Total} if $Price->{Stripping};
@@ -399,15 +427,6 @@ sub calc {
 
 				$totalPrice += $results{Total};
 
-				if ( (! defined $$specs{'OverrideStrippingPrice'.$qty_index}) or ( $$specs{'OverrideStrippingPrice'.$qty_index} ne 'Y' ) ) {
-					if ( $results{Price}{Stripping} ) {
-					$$specs{'hdnBreakdown'.$qty_index} .= sprintf('<tr><td>Stripping: $%1$.2f%2$s * %4$d impressions = </td><td class="Price">$%3$.2f</td></tr>', @{$results{Price}{Stripping}}{'Price','units','Total'}, $results{Price}{Impressions} );
-					} # end if
-					@no_outputs = sets::exclude( ["StrippingPrice$qty_index"], \@no_outputs );
-				} else {
-					$$specs{'hdnBreakdown'.$qty_index} .= sprintf('<tr><td>Stripping: $%1$.2f</td><td class="Price">$%1$.2f</td></tr>', $$specs{"StrippingPrice$qty_index"} );
-					@no_outputs = sets::union( @no_outputs, "StrippingPrice$qty_index" );
-				} # end if
 
 				if ( $$specs{'Markup'.$qty_index} ) {
 					$$specs{'hdnBreakdown'.$qty_index} .= sprintf('<tr class="totals"><td>Total: $%.2f * %s%% = </td><td class="Price">$%.2f</td></tr>', $results{Total},$$specs{'Markup'.$qty_index}, $totalPrice*(1+$$specs{'Markup'.$qty_index}/100));
