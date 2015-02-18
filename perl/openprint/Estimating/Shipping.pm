@@ -15,6 +15,7 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA	02110-1301, USA
 
 use strict;
+use warnings;
 package openprint::Estimating::Shipping;
 use POSIX qw{ ceil };
 
@@ -59,18 +60,19 @@ sub calc {
 	my ( $log, $dbh, $variable, $project_index, $service_index, $specs, $qty_index ) = @_;
 
 	my $Project = new openprint::Project( $project_index );
+	my $Project_Service = $Project->Service( $service_index );
 	my $services = $Project->services();
-	$$specs{'alert'} = '';
+	$$specs{alert} = '';
 	my $status = 'calculated';
-	my ( $carton_service_index ) = $$services{'PlainCartons'}[0] if $$services{'PlainCartons'}[0];
+	my ( $carton_service_index ) = $$services{PlainCartons}[0] if $$services{PlainCartons}[0];
 	if ( ! $carton_service_index ) {
 if( $openprint::config{NeedCartonsForShipping} ) {
-		$$specs{'alert'} = 'Shipping requires that the project be packed in cartons.';
-		$$specs{'NeedPlainCartons'} = 1;
+		$$specs{alert} = 'Shipping requires that the project be packed in cartons.';
+		$$specs{NeedPlainCartons} = 1;
 		return 'uncalculated';
 }
 	} else {
-		$$specs{'NeedPlainCartons'} = 0;
+		$$specs{NeedPlainCartons} = 0;
 	} # end if
 	if ( $carton_service_index ) {
 		my $carton_status = openprint::service::status( $project_index, $carton_service_index );
@@ -80,17 +82,17 @@ if( $openprint::config{NeedCartonsForShipping} ) {
 	} # end if
 	my $carton_specs = openprint::service::get_specs_ref( $Project, $carton_service_index ) if $carton_service_index;
 
-	if ( ! $$specs{'ToCity'} ) {
-		$$specs{'alert'} .= 'Please enter To city<br/>';
-		#return $$specs{'Status'} = 'uncalculated';
+	if ( ! $$specs{ToCity} ) {
+		$$specs{alert} .= 'Please enter To city<br/>';
+		#return $$specs{Status} = 'uncalculated';
 	} # end if
-	if ( !$$specs{'ToStateProvince'} ) {
-		$$specs{'alert'} .= 'Please enter To State/Province<br/>';
-		#return $$specs{'Status'} = 'uncalculated';
+	if ( !$$specs{ToStateProvince} ) {
+		$$specs{alert} .= 'Please enter To State/Province<br/>';
+		#return $$specs{Status} = 'uncalculated';
 	} # end if
-	if ( ! $$specs{'ToCountry'} ) {
-		$$specs{'alert'} .= 'Please enter To Country<br/>';
-		#return $$specs{'Status'} = 'uncalculated';
+	if ( ! $$specs{ToCountry} ) {
+		$$specs{alert} .= 'Please enter To Country<br/>';
+		#return $$specs{Status} = 'uncalculated';
 	} # end if
 	my @shipping_services;
 	foreach my $ServiceType ( openprint::ServiceType->find('category'=>'Shipping') ) {
@@ -114,10 +116,10 @@ if( $openprint::config{NeedCartonsForShipping} ) {
 		} # end if
 		if ( $carton_service_index and ! $$carton_specs{'txtItemsPerPackage'.$qty_index} ) {
 			# XXX DEPRECATE
-			if ( $$carton_specs{'txtItemsPerPackage'} ) {
-				$$carton_specs{'txtItemsPerPackage'.$qty_index} = $$carton_specs{'txtItemsPerPackage'};
+			if ( $$carton_specs{txtItemsPerPackage} ) {
+				$$carton_specs{'txtItemsPerPackage'.$qty_index} = $$carton_specs{txtItemsPerPackage};
 			} else {
-				$$specs{'alert'} = 'Unable to determine how many items per carton for qty '. $qty_index;
+				$$specs{alert} = 'Unable to determine how many items per carton for qty '. $qty_index;
 			} # end if
 		} # end if
 
@@ -133,27 +135,129 @@ $openprint::log->debug("Other Shipped Quantity: $other_shipped_quantity");
 		} # end if
 
         if ( $other_shipped_quantity + $$specs{'txtQuantity'.$qty_index} > $Project->quantity( $qty_index ) ) {
-            $$specs{'alert'} .= 'There are more items being shipped or picked up than are being produced. Please edit the quantities being shipped or picked up. Recommended amount: ' . ($Project->quantity($qty_index) - $other_shipped_quantity) . '<br/>';
+            $$specs{alert} .= 'There are more items being shipped or picked up than are being produced. Please edit the quantities being shipped or picked up. Recommended amount: ' . ($Project->quantity($qty_index) - $other_shipped_quantity) . '<br/>';
             $status = 'uncalculated';
         } # end if
 
 		if ( $$carton_specs{'txtItemsPerPackage'.$qty_index} ) {
-		if ( $$specs{'chkOverridePackageQuantity'} ne 'Y' ) {
-			$$specs{'txtPackageQuantity'.$qty_index} = ceil( $$specs{'txtQuantity'.$qty_index}/$$carton_specs{'txtItemsPerPackage'.$qty_index} );
+			if ( $$specs{chkOverridePackageQuantity} ne 'Y' ) {
+				$$specs{'txtPackageQuantity'.$qty_index} = ceil( $$specs{'txtQuantity'.$qty_index}/$$carton_specs{'txtItemsPerPackage'.$qty_index} );
+			} # end if
+			$$specs{"txtTotalWeight$qty_index"} = sprintf('%.2f', (int( $$specs{'txtQuantity'.$qty_index}/$$carton_specs{'txtItemsPerPackage'.$qty_index} ) * $$specs{'txtPackageWeight'.$qty_index}) + (($$specs{'txtQuantity'.$qty_index} % $$carton_specs{'txtItemsPerPackage'.$qty_index} ) * $$carton_specs{txtFinishedWeight}) );
 		} # end if
-		$$specs{"txtTotalWeight$qty_index"} = sprintf('%.2f', (int( $$specs{'txtQuantity'.$qty_index}/$$carton_specs{'txtItemsPerPackage'.$qty_index} ) * $$specs{'txtPackageWeight'.$qty_index}) + (($$specs{'txtQuantity'.$qty_index} % $$carton_specs{'txtItemsPerPackage'.$qty_index} ) * $$carton_specs{'txtFinishedWeight'}) );
-		} # end if
+
 		if ( ! $$specs{"OverridePrice$qty_index"} or $$specs{"OverridePrice$qty_index"} ne 'Y' ) {
-		$$specs{"txtPrice$qty_index"} = sprintf('%.2f', $$specs{"txtPrice$qty_index"});
+            $$specs{"txtPrice$qty_index"} = 0;
+        } # end if
+
+		my $FromCountry = openprint::Location->find_one(type=>'country', short=>$$specs{FromCountry});
+		$FromCountry = openprint::Location->find_one(type=>'country', name=>$$specs{FromCountry}) if ! $FromCountry;
+		if ( $FromCountry ) {
+			my $FromState = openprint::Location->find_one(type=>['state','province'], short=>$$specs{FromStateProvince});
+			$FromState = openprint::Location->find_one(type=>['state','province'], name=>$$specs{FromStateProvince}) if ! $FromState;
+			if ( $FromState ) {
+				my $FromCity = openprint::Location->find_one(type=>'city', name=>$$specs{FromCity});
+
+				if ( $FromCity ) {
+					my $ToCountry = openprint::Location->find_one(type=>'country', short=>$$specs{ToCountry});
+					$ToCountry = openprint::Location->find_one(type=>'country', name=>$$specs{ToCountry}) if ! $ToCountry;
+					if ( $ToCountry ) {
+						my $ToState = openprint::Location->find_one(type=>['state','province'], short=>$$specs{ToStateProvince});
+						$ToState = openprint::Location->find_one(type=>['state','province'], name=>$$specs{ToStateProvince}) if ! $ToState;
+						if ( $ToState ) {
+							my $ToCity = openprint::Location->find_one(type=>'city', name=>$$specs{ToCity});
+
+							if ( $ToCity ) {
+								#my $service_name = join('',
+                                            #'ShippingFrom', $FromCountry->name(), $FromState->name(), $FromCity->name(),
+                                            #'To', $ToCountry->name(), $ToState->name(), $ToCity->name());
+								my $service_name = join('',
+                                            'ShippingFrom', $FromCity->name(), $FromState->name(), $FromCountry->name(), 
+                                            'To', $ToCity->name(), $ToState->name(), $ToCountry->name() );
+								$service_name =~ s/\s//g;
+
+								my $MR_Service = openprint::Service->find_one( name=>$service_name.'MakeReady' );
+								#my $MR_Service = openprint::Service->find_one( name=>join('', 'To', $ToCity->name(), $ToState->name(), $ToCountry->name(), 'MakeReady' );
+								my $Service = openprint::Service->find_one( name=>join('', 
+											'ShippingFrom', $FromCountry->name(), $FromState->name(), $FromCity->name(), 
+											'To', $ToCountry->name(), $ToState->name(), $ToCity->name() ) );
+								$Service = openprint::Service->find_one( name=>'Shipping' ) if ! $Service;
+
+								$$specs{"hdnBreakdown$qty_index"} = '<table>';
+								$$specs{"hdnBreakdown$qty_index"} .= '<tr><td colspan="2">'.join(' ', 'From', 
+									join(', ', $FromCity->name(), $FromState->name(), $FromCountry->name() ),
+									'To',
+									join(', ', $ToCity->name(), $ToState->name(), $ToCountry->name() ),
+								) . '</td></tr>';
+
+								my @Equipment = openprint::Equipment->find( 'servicetype_id @>'=> $$Project_Service{servicetype_id} );
+
+								my $bestPrice;
+								foreach my $Equipment ( @Equipment ) {
+
+									my $total;
+									$$specs{"hdnBreakdown$qty_index"} .= '<tr><td colspan="2">On ' . $Equipment->name() . '</td></tr>';	
+									if ( my $MinimumPackages = $Equipment->Specification( 'Minimum Packages' ) ) {
+										if ( $$MinimumPackages{value} > $$specs{'txtPackageQuantity'.$qty_index} ) {
+											$$specs{"hdnBreakdown$qty_index"} .= '<tr><td class="error" colspan="2">Not enough ' . $$carton_specs{ServiceType} . ' minimum ' . $$MinimumPackages{value} . ' > ' . $$specs{'txtPackageQuantity'.$qty_index} . '</td></tr>';
+											next;
+										} # end if
+									} # end if
+									if ( $MR_Service ) {
+										my $Price = $MR_Service->get_Price( undef, $Equipment );
+										$total = $$Price{Price};
+										$$specs{"hdnBreakdown$qty_index"} .= sprintf('<tr><td>MakeReady:</td><td class="Price">$%.2f</td></tr>', $$Price{Price} );
+									} else {
+										$openprint::log->debug("No MR Service found for ${service_name}MakeReady");
+									} # end if
+									if ( $Service ) {
+										my $Price = $Service->get_Price( $$specs{'txtPackageQuantity'.$qty_index}, $Equipment );
+										if ( $Price ) {
+											if ( $$Price{units} eq 'per package' ) {
+												$$Price{Total} = $$specs{'txtPackageQuantity'.$qty_index} * $$Price{Price};
+												$total += $$Price{Total};
+												$$specs{"hdnBreakdown$qty_index"} .= sprintf('<tr><td>%d %s * $%.2f%s =</td><td class="Price">$%.2f</td></tr>', 
+														$$specs{'txtPackageQuantity'.$qty_index}, $$carton_specs{ServiceType}, @$Price{'Price','units','Total'} );
+											} else {
+												$log->error("unknown units on $$Service{name} $$Price{units}");
+											} # end if
+										} else {
+											$openprint::log->debug("No price found for $service_name");
+										} # end if
+									} else {
+										$openprint::log->debug("No service found for $service_name");
+									} # end if Service
+									$$specs{"hdnBreakdown$qty_index"} .= sprintf('<tr class="totals"><td></td><td class="Price">$%.2f</td></tr>', $total );
+									$$specs{"hdnBreakdown$qty_index"} .= '</table>';
+									if ( (!$bestPrice) or ( $$bestPrice{price} > $total ) ) {
+										$$bestPrice{total} = $total;
+										$$bestPrice{Equipment} = $Equipment;
+									} # end if
+								} # end foreach Equipment
+
+								if ( $bestPrice ) {
+									$$specs{"txtPrice$qty_index"} = $$bestPrice{total};
+									$$specs{"Equipment$qty_index"} = $$bestPrice{Equipment}->id();
+								} # end if
+
+							} # end if ToCity
+						} # end if ToState
+					} # end if ToCoutnry
+				} # end if FromCity
+			} # end if FromState
+		} # end if FromCountry
+
+		if ( ! $$specs{"OverridePrice$qty_index"} or $$specs{"OverridePrice$qty_index"} ne 'Y' ) {
+			$$specs{"txtPrice$qty_index"} = sprintf('%.2f', $$specs{"txtPrice$qty_index"});
 		} # end if
 	} # end foreach
-	return $$specs{'Status'} = $status;
+	return $$specs{Status} = $status;
 } # end sub calc
 
 sub display {
 	my ( $r, $log, $dbh, $variable, $project_index, $service_index ) = @_;
 
-	if ( ! ( $$variable{'FromCity'} and $$variable{'FromPostalCode'} and $$variable{'FromStateProvince'} and $$variable{'FromCountry'} ) ) {
+	if ( ! ( $$variable{FromCity} and $$variable{FromPostalCode} and $$variable{FromStateProvince} and $$variable{FromCountry} ) ) {
 		my %shipping_fields = (
 				'FromCompanyName'	=>	'CompanyName',
 				'FromAddress1'		=>	'Address1',
@@ -169,15 +273,15 @@ sub display {
 				);
 
 		
-		my $Company = new openprint::Company( $openprint::config{'owner_id'} );
+		my $Company = new openprint::Company( $openprint::config{owner_id} );
 		my $address = $Company->get_shipping_address();
 		foreach my $k ( keys %shipping_fields ) {
 			$$variable{$k} = $address->get( $shipping_fields{$k} ) if ! $$variable{$k};
 		} # end foreach
 	} # end if
 
-	if ( $openprint::session{'company_id'} and ( ! (
-		$$variable{'ToCity'} and $$variable{'ToPostalCode'} and $$variable{'ToStateProvince'} and $$variable{'ToCountry'} ) ) ) {
+	if ( $openprint::session{company_id} and ( ! (
+		$$variable{ToCity} and $$variable{ToPostalCode} and $$variable{ToStateProvince} and $$variable{ToCountry} ) ) ) {
 		my %shipping_fields = (
 				'ToCompanyName'		=>	'CompanyName',
 				'ToAddress1'		=>	'Address1',
@@ -192,7 +296,7 @@ sub display {
 				'ToEmail'			=>	'Email',
 				);
 
-		my $Company = new openprint::Company( $openprint::session{'company_id'} );
+		my $Company = new openprint::Company( $openprint::session{company_id} );
 		my $address = $Company->get_shipping_address();
 		foreach my $k ( keys %shipping_fields ) {
 			$$variable{$k} = $address->get( $shipping_fields{$k} ) if ! $$variable{$k};
@@ -206,23 +310,23 @@ sub summary {
 	my $services = $Project->services();
 
 	if ( $qty_index eq 'Used' ) {
-		my $packages = $$specs{'txtPackageQuantityUsed'} ? $$specs{'txtPackageQuantityUsed'} : $$specs{'txtPackageQuantity'.$Project->ordered_quantity_index()};
-		if ( $$services{'PlainCartons'} ) {
+		my $packages = $$specs{txtPackageQuantityUsed} ? $$specs{txtPackageQuantityUsed} : $$specs{'txtPackageQuantity'.$Project->ordered_quantity_index()};
+		if ( $$services{PlainCartons} ) {
 			return sprintf( qq{%d items in %d carton%s\nWeighing %.2flbs}, 
-				( $$specs{'txtQuantity'.$qty_index} ? $$specs{'txtQuantityUsed'} : $$specs{'txtQuantity'.$Project->ordered_quantity_index()} ),
+				( $$specs{'txtQuantity'.$qty_index} ? $$specs{txtQuantityUsed} : $$specs{'txtQuantity'.$Project->ordered_quantity_index()} ),
 				$packages, ( $packages==1?'' : 's'), 
-				( $$specs{'txtTotalWeightUsed'} ? $$specs{'txtTotalWeightUsed'} : $$specs{'txtTotalWeight'.$Project->ordered_quantity_index()} ),
+				( $$specs{txtTotalWeightUsed} ? $$specs{txtTotalWeightUsed} : $$specs{'txtTotalWeight'.$Project->ordered_quantity_index()} ),
 				);
 		} else {
 			return sprintf( qq{%d items in %d package%s\nWeighing %.2flbs}, 
-				( $$specs{'txtQuantity'.$qty_index} ? $$specs{'txtQuantityUsed'} : $$specs{'txtQuantity'.$Project->ordered_quantity_index()} ),
+				( $$specs{'txtQuantity'.$qty_index} ? $$specs{txtQuantityUsed} : $$specs{'txtQuantity'.$Project->ordered_quantity_index()} ),
 				$packages, ( $packages==1?'' : 's'), 
-				( $$specs{'txtTotalWeightUsed'} ? $$specs{'txtTotalWeightUsed'} : $$specs{'txtTotalWeight'.$Project->ordered_quantity_index()} ),
+				( $$specs{txtTotalWeightUsed} ? $$specs{txtTotalWeightUsed} : $$specs{'txtTotalWeight'.$Project->ordered_quantity_index()} ),
 				);
 		} # end if
 	}elsif ( $qty_index ) {
 		if ( $$specs{'txtPackageQuantity'.$qty_index} ) {
-			if ( $$services{'PlainCartons'} ) {
+			if ( $$services{PlainCartons} ) {
 				return sprintf( qq{%d items in %d carton%s\nweighing %.2flbs}, @$specs{'txtQuantity'.$qty_index,'txtPackageQuantity'.$qty_index},( $$specs{'txtPackageQuantity'.$qty_index}==1?'' : 's'), $$specs{'txtTotalWeight'.$qty_index} );
 			} else {
 				return sprintf( qq{%d items in %d package%s\nweighing %.2flbs}, @$specs{'txtQuantity'.$qty_index,'txtPackageQuantity'.$qty_index},( $$specs{'txtPackageQuantity'.$qty_index}==1?'' : 's'), $$specs{'txtTotalWeight'.$qty_index} );
@@ -233,10 +337,10 @@ sub summary {
 	} else {
 		my $html = '';
 
-		if ( $$specs{'FromAddress1'} or $$specs{'FromCity'} or $$specs{'FromStateProvince'} or $$specs{'FromCountry'} ) {
+		if ( $$specs{FromAddress1} or $$specs{FromCity} or $$specs{FromStateProvince} or $$specs{FromCountry} ) {
 			$html .= 'From: '.from( $specs ).'<br/>';
 		} # end if
-		if ( $$specs{'ToAddress1'} or $$specs{'ToCity'} or $$specs{'ToStateProvince'} or $$specs{'ToCountry'} ) {
+		if ( $$specs{ToAddress1} or $$specs{ToCity} or $$specs{ToStateProvince} or $$specs{ToCountry} ) {
 			$html .= 'To: ' . to($specs).'<br/>';
 		} # end if
 		if ( ! $html ) {
@@ -249,19 +353,19 @@ sub summary {
 sub from {
 	my ( $specs ) = @_;
 	return join("\n", 
-			join(', ', $$specs{'FromCompanyName'} ) ,
-			join(', ', $$specs{'FromAddress1'} , $$specs{'FromAddress2'},
+			join(', ', $$specs{FromCompanyName} ) ,
+			join(', ', $$specs{FromAddress1} , $$specs{FromAddress2},
 				@$specs{'FromCity','FromStateProvince','FromCountry'},
-				@$specs{'FromPostalCode'} ),
+				@$specs{FromPostalCode} ),
 			);
 } # end sub from
 sub to {
 	my ( $specs ) = @_;
 	return join("\n", 
-			join(', ', $$specs{'ToCompanyName'} ) ,
-			join(', ', $$specs{'ToAddress1'} , $$specs{'ToAddress2'},
+			join(', ', $$specs{ToCompanyName} ) ,
+			join(', ', $$specs{ToAddress1} , $$specs{ToAddress2},
 				@$specs{'ToCity','ToStateProvince','ToCountry'},
-				@$specs{'ToPostalCode'} ),
+				@$specs{ToPostalCode} ),
 			);
 } # end sub to
 

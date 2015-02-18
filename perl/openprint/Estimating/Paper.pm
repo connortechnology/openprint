@@ -291,12 +291,18 @@ $openprint::log->debug("After minimum: QTY $qty_index $$Stock_Entry{key}  => " .
 
 			if ( ! $Stock->supplied() ) {
 				if ( $$specs{"overridecost-$stock_index-$qty_index"} ne 'Y' ) {
+					
 					my $price;
-					if ( $Stock->type() eq 'Sheet' ) {
-						$price = $Stock->get_price( sheets=>$$total{"qty_$qty_index"},service=>'Material' ) if $$total{"qty_$qty_index"};
-					} else {
-						$price = $Stock->get_price( weight=>$$total{"qty_$qty_index"},service=>'Material' ) if $$total{"qty_$qty_index"};
-					} # end if
+					if ( $$total{"qty_$qty_index"} ) {
+						if ( $Stock->type() eq 'Sheet' ) {
+							$price = $Stock->get_price( sheets=>$$total{"qty_$qty_index"},service=>'Material' );
+						} else {
+							$price = $Stock->get_price( weight=>$$total{"qty_$qty_index"},service=>'Material' );
+						} # end if
+						if ( ! $$price{'100lb Price'} ) {
+							$$specs{alert} .= $Stock->to_string() . ' has no price for ' .$$total{"qty_$qty_index"}.( $Stock->type() eq 'Sheet' ? ' sheets' : ' lbs' ) . '<br/>';
+						} # en dif
+					} # end if qty
 					$$specs{"cost-$stock_index-$qty_index"} = sprintf('%.2f', $$price{'100lb Price'} );
 #$openprint::log->warn("Getting prices for $stock_index $paper_id (".$totals{$paper_id}{"qty_$qty_index"}.'sheets) => $' . $price{'100lb Price'}.'/100lb');
 				} # end if

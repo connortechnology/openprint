@@ -85,16 +85,31 @@ sub no_outputs {
 sub calc_price {
     my ( $specs, $Equipment, $qty_index, $Imposition, $sig_specs, $Signature_Imposition ) = @_;
 
-	my %Total = ( Imposition => $Imposition );
+	my %Total = ( Imposition => $Imposition, Status => 'calculated', alert=>'' );
 	my $form = $$sig_specs{SignatureIndex};
 
-	my %MakeReady = openprint::service::get_price_object( 'DieCutting-'.$$specs{'rdbDieCutting-'.$form}.'MakeReady' ,undef, $Equipment );
-	if ( ! %MakeReady ) {
-		%MakeReady = openprint::service::get_price_object( 'DieCuttingMakeReady' ,undef, $Equipment );
-	} # end if
-	$Total{MPrice} = 0;
-	$Total{MakeReady} = \%MakeReady;
-	$Total{Total} += $MakeReady{Price};
+	my $MakeReadyService = openprint::Service->find_one( name => 'DieCutting-'.$$specs{'rdbDieCutting-'.$form}.'MakeReady' ) if $$specs{'rdbDieCutting-'.$form};
+	$MakeReadyService = openprint::Service->find_one( name => 'DieCuttingMakeReady' ) if ! $MakeReadyService;
+
+	if ( $MakeReadyService ) {
+		my $MakeReady = $MakeReadyService->get_Price( undef, $Equipment );
+		if ( $$MakeReady{units} eq 'per hour' ) {
+			my $MRHours = $Equipment->Specification( $$specs{ServiceType}.'MakeReadyTime' );
+			$Total{MakeReadyTime} = $MRHours;
+			if ( $MRHours and $$MRHours{value} ) {
+				$$MakeReady{Total} = Math::Round::nearest( 0.01, $$MakeReady{Price} * $$MRHours{value} );
+			} else {
+				$Total{alert} .= 'No MakeReadyTime set for ' . $$specs{ServiceType} . ' on ' . $Equipment->name() . '<br/>';
+				$openprint::log->error( $Total{alert} );
+				$$MakeReady{Total} = $$MakeReady{Price};
+			} # end if
+		} else {
+			$$MakeReady{Total} = $$MakeReady{Price};
+		}
+		$Total{MPrice} = 0;
+		$Total{MakeReady} = $MakeReady;
+		$Total{Total} += $$MakeReady{Total};
+	} # en dif
 
 	my %DiePrice;
 
@@ -145,7 +160,12 @@ sub calc_price {
 	if ( (defined $$specs{'OverrideDiePrice'.$qty_index}) and ( $$specs{'OverrideDiePrice'.$qty_index} eq 'Y' ) ) {
 		$DiePrice{Price} = $$specs{'DiePrice'.$qty_index};
 	} # end if
-	$Total{Total} += $DiePrice{Price} if $DiePrice{Price};
+	if ( ! $DiePrice{Price} ) {
+		$Total{alert} .= 'Please enter the price of the die.<br/>';
+		$Total{Status} = 'uncalculated';
+	} else {
+		$Total{Total} += $DiePrice{Price};
+	} # end if has die price
 
 	# Why 1.28, overs I assume
 	my $impressions = ceil( ( $$specs{"txtQuantity$qty_index"} / $$Signature_Imposition{imposition} ) ) * $Imposition->quantity();
@@ -169,8 +189,21 @@ sub calc_price {
 			%Stripping = openprint::service::get_price_object( 'DieCuttingStripping' ,undef, $Equipment);
 		} # end if
 		if ( %Stripping ) {
-			if ( lc $Stripping{units} eq 'per m' ) {
-				$Stripping{Total} = $Stripping{Price} * $impressions / 1000;
+			if ( $Stripping{units} eq 'per m' ) {
+				$Stripping{Total} = Math::Round::nearest( 0.01, $Stripping{Price} * $impressions / 1000 );
+			} elsif ( $Stripping{units} eq 'per hour' ) {
+ 				my $Runspeed = $Equipment->Specification( 'StrippingRunspeed' );
+				if ( $Runspeed and $$Runspeed{value} ) {
+					$Total{StrippingRunspeed} = $Runspeed;
+					my $hours = $impressions / $$Runspeed{value};
+					$Stripping{Total} = Math::Round::nearest( 0.01, $Stripping{Price} * $hours );
+				} else {
+					$Total{alert} .= "No stripping speed on $$Equipment{name}<br/>";
+					$Total{Status} = 'uncalculated';
+				}
+			} else {
+				$Total{alert} .= "unknown units in price for Stripping on $$Equipment{name}<br/>";
+				$Total{Status} = 'uncalculated';
 			} # end if
 
 			$Total{Stripping} = \%Stripping;
@@ -189,8 +222,20 @@ sub calc_price {
 	if ( ! %ServicePrice ) {
 		%ServicePrice = openprint::service::get_price_object( 'DieCutting', $impressions, $Equipment );
 	} # end if
+	if ( $ServicePrice{units} eq 'per m' ) {
+		$ServicePrice{Total} = $impressions * $ServicePrice{Price} / 1000;
+	} elsif ( $ServicePrice{units} eq 'per hour' ) {
+		my $Runspeed = $Equipment->Specification('Runspeed', $Imposition->Paper()->calliper());
+		$Total{Runspeed} = $Runspeed;
+		if ( $Runspeed and $$Runspeed{value} ) {
+			my $hours = $impressions / $$Runspeed{value};
+			$ServicePrice{Total} = Math::Round::nearest( 0.01, $hours * $ServicePrice{Price} );
+		} else {
+			$Total{alert} .= 'No runspeed for calliper ' . $Imposition->Paper()->calliper() . ' on '  . $Equipment->name() . '<br/>';
+			$openprint::log->error($$specs{alert});
+		} # end if
+	} # end if
 
-	$ServicePrice{Total} = $impressions * $ServicePrice{Price} / 1000;
 	$Total{ServicePrice} = \%ServicePrice;
 	$Total{Total} += $ServicePrice{Total};
 	$Total{MPrice} += ( $ServicePrice{Total} / $impressions ) * 1000;
@@ -322,14 +367,42 @@ sub calc {
 				foreach my $Price ( @{$results{Prices}} ) {
 					my $I = $$Price{Imposition};
 
-					$$specs{'hdnBreakdown'.$qty_index} .= $I->to_string() . '<br/>';
-					$$specs{'hdnBreakdown'.$qty_index} .= sprintf('&nbsp;&nbsp;MakeReady: $%.2f<br/>', $$Price{MakeReady}{Price});
+					# This should be a different string from above, or maybe the same if it wasn't cut.
+					$$specs{'hdnBreakdown'.$qty_index} .= $I->to_string() . '<br/><table>';
+					if ( $$Price{MakeReady}{units} ) {
+					if ( $$Price{MakeReady}{units} eq 'per hour' ) {
+						$$specs{'hdnBreakdown'.$qty_index} .= sprintf('<tr><td>MakeReady: $%1$.2f%2$s * %4$s%5$s = </td><td class="Price">$%3$.2f</td></tr>', @{$$Price{MakeReady}}{'Price','units','Total'}, @{$$Price{'MakeReadyTime'}}{'value','units'} );
+					} else {
+						$$specs{'hdnBreakdown'.$qty_index} .= sprintf('<tr><td>MakeReady: $%.2f%s = </td><td class="Price">$%.2f</td></tr>', @{$$Price{MakeReady}}{'Price','units','Total'} );
+					}
+					} else {
+						$$specs{'hdnBreakdown'.$qty_index} .= sprintf('<tr><td>MakeReady: </td><td class="Price">$%.2f</td></tr>', $$Price{MakeReady}{Price});
+					} # endif
 					if ( $$Price{DiePrice} ) {
-						$$specs{'hdnBreakdown'.$qty_index} .= sprintf('&nbsp;&nbsp;DiePrice: $%.2f<br/>', $$Price{DiePrice}{Price});
+						$$specs{'hdnBreakdown'.$qty_index} .= sprintf('<tr><td>DiePrice: </td><td class="Price">$%.2f</td></tr>', $$Price{DiePrice}{Price});
 						$totalDiePrice += $Price->{DiePrice}{Price};
 					} # end if
-					$$specs{'hdnBreakdown'.$qty_index} .= sprintf('&nbsp;&nbsp;Service: $%1$.2f%2$s * %4$d impressions = $%3$.2f<br/>', @{$$Price{ServicePrice}}{'Price','units','Total'}, $$Price{Impressions} );
-					$$specs{'hdnBreakdown'.$qty_index} .= sprintf('&nbsp;&nbsp;Hole Clearing: $%1$.2f%2$s * %5$d holes * %6$dout * %4$d impressions = $%3$.2f<br/>', @{$$Price{HoleClearingPrice}}{'Price','units','Total'}, $$Price{Impressions}, $$specs{"txtHoleClearingHoles-$form"}, $I->imposition() ) if exists $$Price{HoleClearingPrice};
+					if ( $$Price{ServicePrice}{units} eq 'per hour' ) {
+					$$specs{'hdnBreakdown'.$qty_index} .= sprintf('<tr><td>Service: $%1$.2f%2$s * (%4$d impressions/%5$d per hour) = </td><td class="Price">$%3$.2f</td></tr>', @{$$Price{ServicePrice}}{'Price','units','Total'}, $$Price{Impressions}, $$Price{Runspeed}{value} );
+					} else {
+						$$specs{'hdnBreakdown'.$qty_index} .= sprintf('<tr><td>Service: $%1$.2f%2$s * %4$d impressions = </td><td class="Price">$%3$.2f</td></tr>', @{$$Price{ServicePrice}}{'Price','units','Total'}, $$Price{Impressions} );
+					} # en dif
+					$$specs{'hdnBreakdown'.$qty_index} .= sprintf('<tr><td>Hole Clearing: $%1$.2f%2$s * %5$d holes * %6$dout * %4$d impressions = </td><td class="Price">$%3$.2f</td></tr>', @{$$Price{HoleClearingPrice}}{'Price','units','Total'}, $$Price{Impressions}, $$specs{"txtHoleClearingHoles-$form"}, $I->imposition() ) if exists $$Price{HoleClearingPrice};
+
+					if ( (! defined $$specs{'OverrideStrippingPrice'.$qty_index}) or ( $$specs{'OverrideStrippingPrice'.$qty_index} ne 'Y' ) ) {
+						if ( $$Price{Stripping} ) {
+							if ( $$Price{Stripping}{units} eq 'per hour' ) {
+								$$specs{'hdnBreakdown'.$qty_index} .= sprintf('<tr><td>Stripping: $%1$.2f%2$s * (%4$d impressions/%5$d per hour) = </td><td class="Price">$%3$.2f</td></tr>', @{$$Price{Stripping}}{'Price','units','Total'}, $$Price{Impressions}, $$Price{StrippingRunspeed}{value} );
+							} else {
+							$$specs{'hdnBreakdown'.$qty_index} .= sprintf('<tr><td>Stripping: $%1$.2f%2$s * %4$d impressions = </td><td class="Price">$%3$.2f</td></tr>', @{$$Price{Stripping}}{'Price','units','Total'}, $$Price{Impressions} );
+							}
+						} # end if
+						@no_outputs = sets::exclude( ["StrippingPrice$qty_index"], \@no_outputs );
+					} else {
+						$$specs{'hdnBreakdown'.$qty_index} .= sprintf('<tr><td>Stripping: $%1$.2f</td><td class="Price">$%1$.2f</td></tr>', $$specs{"StrippingPrice$qty_index"} );
+						@no_outputs = sets::union( @no_outputs, "StrippingPrice$qty_index" );
+					} # end if
+
 					$totalUnitPrice += $Price->{UnitPrice};
 					$totalMPrice += $Price->{MPrice};
 					$totalStrippingPrice += $Price->{Stripping}{Total} if $Price->{Stripping};
@@ -341,6 +414,8 @@ sub calc {
 						"ImpRows-$form-$qty_index-$imp_index"} =
 						$I->get('quantity','imposition','columns','rows');
 					$imp_index += 1;
+					$$specs{alert} .= $$Price{alert};
+					$status = 'uncalculated' if $$Price{Status} eq 'uncalculated';
 				} # end foreach Imposition
 				foreach $imp_index ( $imp_index .. 4 ) {
 					@$specs{
@@ -352,22 +427,14 @@ sub calc {
 
 				$totalPrice += $results{Total};
 
-				if ( (! defined $$specs{'OverrideStrippingPrice'.$qty_index}) or ( $$specs{'OverrideStrippingPrice'.$qty_index} ne 'Y' ) ) {
-					if ( $results{Price}{Stripping} ) {
-					$$specs{'hdnBreakdown'.$qty_index} .= sprintf('&nbsp;&nbsp;Stripping: $%1$.2f%2$s * %4$d impressions = $%3$.2f<br/>', @{$results{Price}{Stripping}}{'Price','units','Total'}, $results{Price}{Impressions} );
-					} # end if
-					@no_outputs = sets::exclude( ["StrippingPrice$qty_index"], \@no_outputs );
-				} else {
-					$$specs{'hdnBreakdown'.$qty_index} .= sprintf('&nbsp;&nbsp;Stripping: $%1$.2f<br/>', $$specs{"StrippingPrice$qty_index"} );
-					@no_outputs = sets::union( @no_outputs, "StrippingPrice$qty_index" );
-				} # end if
 
 				if ( $$specs{'Markup'.$qty_index} ) {
-					$$specs{'hdnBreakdown'.$qty_index} .= sprintf('&nbsp;&nbsp;Total: $%.2f * %s%% = $%.2f<br/>', $results{Total},$$specs{'Markup'.$qty_index}, $totalPrice*(1+$$specs{'Markup'.$qty_index}/100));
+					$$specs{'hdnBreakdown'.$qty_index} .= sprintf('<tr class="totals"><td>Total: $%.2f * %s%% = </td><td class="Price">$%.2f</td></tr>', $results{Total},$$specs{'Markup'.$qty_index}, $totalPrice*(1+$$specs{'Markup'.$qty_index}/100));
 				} else {
-					$$specs{'hdnBreakdown'.$qty_index} .= sprintf('&nbsp;&nbsp;Total: $%.2f<br/>', $results{Total} );
+					$$specs{'hdnBreakdown'.$qty_index} .= sprintf('<tr class="totals"><td>Total:</td><td class="Price">$%.2f</td></tr>', $results{Total} );
 				} # end if
-			} # end if
+				$$specs{'hdnBreakdown'.$qty_index} .= '</table>';
+			} # end if Equipment
 		} # end foreach Signature
 	
 		if ( ( !defined $$specs{'OverrideDiePrice'.$qty_index}) or ($$specs{'OverrideDiePrice'.$qty_index} ne 'Y') ) {
@@ -506,7 +573,7 @@ sub signature_calc {
 			if ( (! $results{Total} ) or ( $price{Total} < $results{Total} ) ) {
 				$results{Equipment} = $Equipment;
 				if ( $price{Prices} ) {
-				@{$results{Prices}} = @{$price{Prices}};
+					@{$results{Prices}} = @{$price{Prices}};
 				} else {
 					$openprint::log->error("No prices?");
 					$results{Prices} = [];
@@ -523,7 +590,7 @@ sub signature_calc {
 sub display {
 	my ( $log, $dbh, $variable, $project_index, $service_index ) = @_;	
 
-	$$variable{Equipment} = [ openprint::Equipment->find(order=>'lower(strname)', 'useinestimating'=>1,'Specifications'=>{'Die Cutting Capable'=>'Y'} ) ];
+	$$variable{Equipment} = [ openprint::Equipment->find(order=>'lower(strname)', useinestimating=>1,Specifications=>{'Die Cutting Capable'=>'Y'} ) ];
 
 	if ( $$variable{rdbTemplateTypePresentationFolderStandard1Pocket} ne '' or $$variable{rdbTemplateTypePresentationFolderStandard2Pocket} ne '' ) {
 		$$variable{ShowPresentationFolderDieCutting} = 'Y';

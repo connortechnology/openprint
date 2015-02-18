@@ -105,6 +105,7 @@ sub view_services {
 					if ( $openprint::param{ServiceType} eq 'Printing' or ! $openprint::param{ServiceType} ) {
 					} else {
 						openprint::Estimating::MultiPage::calculate_signatures( $Project );
+						# Shouldn't we do this befiore that?
 						openprint::service::internal_calc( $log, $dbh, $variable, $project_index, $$services{''}[0], $Project->Type()->type() );
 					} # end if
 				} # end if
@@ -137,6 +138,8 @@ sub view_services {
 					if ( $$services{SaddleStitching} and @{$$services{SaddleStitching}} ) {	
 						openprint::service::internal_calc( $log, $dbh, $variable, $project_index, $$services{SaddleStitching}[0], 'Stitching' );
 					} # end if
+				} elsif ( $openprint::param{ServiceType} eq 'Paper' ) {
+					openprint::service::internal_calc( $log, $dbh, $variable, $project_index,  $service_index, 'Paper' );
 				} # end if
 				openprint::service::auto_calculate( $Project, $service_index ) if $recalc;
 				$Project->update_status();

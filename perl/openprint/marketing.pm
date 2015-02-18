@@ -90,9 +90,6 @@ sub email_campaign {
 		$variable{error} .= $Campaign->save({name=>'Copy of '.$$Campaign{name}});
     } elsif ( $param{btnFunction} eq 'Test' ) {
         $variable{information} = $Campaign->test();
-	} elsif ( $param{btnFunction} eq 'Save' ) {
-		$param{nextrun} = sprintf('%.4d-%.2d-%.2d %.2d:%.2d:%.2d', @param{'nextrun_year','nextrun_month','nextrun_day','nextrun_hour','nextrun_minute'}, 0 );
-		$Campaign->save( \%param );
     } elsif ( $param{btnFunction} eq 'Download Recipients' ) {
         my @header = ( 'Company','Name','Email','Phone','Last Sent On','Number of Times Sent');
         my @data;

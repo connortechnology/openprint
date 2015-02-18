@@ -123,5 +123,8 @@ sub _impositions {
 sub paper {
 } # end sub paper
 
+sub _paper {
+} # end sub _paper
+
 1;
 __END__

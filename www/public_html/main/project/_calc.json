@@ -22,7 +22,7 @@ $log->warn("No servicetype in params in calc");
 		return;
 	} # end if
 
-	my $module = 'openprint::Estimating::'.$param{ServiceType};
+	my $module = 'openprint::Estimating::'.( $param{ServiceTypeType} ? $param{ServiceTypeType} : $param{ServiceType} );
 	eval "require $module";
 	$log->error("Error requiring $module: $@") if $@;
 
