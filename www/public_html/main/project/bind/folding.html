@@ -172,19 +172,7 @@ if ( 0 ) {
 <?include('/includes/main/proj/_quantities.html') ?>
 <?include('/includes/main/proj/_service_price.html') ?>
 <?include('/includes/main/proj/_additional_service.html') ?>
-<? if ( sets::isin( $session{'user_type'}, ['A','E'] ) ) ?>
-			<li>
-<? echo ( 
-	my $html = '';
-	foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
-		$html .= sprintf('<span class="%sColumns">', $$variable{'Columns'} );
-		$html .= button( 'Breakdown'.$qty_index, { onclick=>"show_breakdown($qty_index);", text=>'Breakdown' } );
-		$html .= '</span>';
-	} # end foreach qty_index
-	return $html;
-) ?>
-			</li>
-<? endif ( sets::isin( $session{'user_type'}, ['A','E'] ) ) ?>
+<?include('/includes/main/proj/_breakdown.html') ?>
 			</ul>
 		</fieldset>
 		<br class="spacer"/>
@@ -194,9 +182,6 @@ if ( 0 ) {
 		<input type="hidden" name="ServiceIndex" value="<?ServiceIndex?>"/>
 		<input type="hidden" name="ServiceType" value="<?ServiceTypeID?>"/>
 		<input type="hidden" name="ContinueProject" value="Y" />
-		<div id="hdnBreakdown1" style="display: none;"></div>
-		<div id="hdnBreakdown2" style="display: none;"></div>
-		<div id="hdnBreakdown3" style="display: none;"></div>
 		<input type="hidden" name="Status" value="<?Status?>" />
 	</form>
 </div>

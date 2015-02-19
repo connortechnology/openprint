@@ -4,7 +4,7 @@
 	my $Equipment = $$variable{Equipment};
 
 	$html .= '<fieldset class="Equipment">';
-	$html .= $Equipment->strid() . ': ' . $Equipment->name() . ' ' . $Equipment->description() . '<br/>';
+	$html .= sprintf( '<a href="/administrator/equipment/edit.html?ddmEquipment=%d">%s</a><br/>',$Equipment->id(), $Equipment->strid().': '.$Equipment->name().' '.$Equipment->description() );
 	$html .= '<table class="List"><thead><tr>';
 	$html .= '<th class="Supplier">Supplier</th>' if @{$$variable{company_ids}} > 2;
 	$html .= '

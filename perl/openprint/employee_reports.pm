@@ -178,10 +178,10 @@ sub _project_performance {
 
 sub order_history {
 
+	_order_history_results();
 	$session{$r->uri().'?status'} = join(',', map { $_->id() } openprint::Order_Status->find() ) if ! $session{$r->uri().'?status'};
 	ssi::setup_date_select( $r->uri(), 'created_on_start', -31 );
 	ssi::setup_date_select( $r->uri(), 'created_on_end', '' );
-	_order_history_results();
 
 	if ( $param{'action'} eq 'download' ) {
 		my @Header = ( 'OrderID', 'Docket', 'Invoice', 'Company', 'Project Reference', 'Date Ordered', 'Status', 'Total', 'Quoted Stock Value', 'Stock Amount' );
