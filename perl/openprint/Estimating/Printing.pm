@@ -3496,12 +3496,17 @@ $imp->display("qty: $qty unspec ". $$sig_specs{"txtUnspecifiedPageQuantity$qty_i
 					my $I = $imps{$str}[$j];
 					my $P = $I->Paper();
 
+					my $BiggerPrice = $$I{PaperPrice};
+					if ( DEBUG_FILTERING ) {
+						$imp->display("Comparing A mino weight:" . $Paper->minimum_order_weight() . 'Price: ' . $$SmallerPrice{'100lb Price'} . ' total: ' . $$SmallerPrice{'100lb Total'} . ' cut' . $Paper->is_cut() . ' factor: ' . $Paper->factor() . ' stock_qty: ' . $$imp{stock_qty} . ' lookup_stock_qty' . $$imp{lookup_stock_qty} );
+						$I->display("Comparing B mino weight:". $P->minimum_order_weight() . ' Price: ' . $$BiggerPrice{'100lb Price'} . ' total: ' . $$BiggerPrice{'100lb Total'} .' cut ' . $P->is_cut() . ' factor: ' . $P->factor() . ' stock_qty: ' . $$I{stock_qty}. ' lookup_stock_qty' . $$imp{lookup_stock_qty} );
+					} 
+
 					if ( ($$sig_specs{'chkOverrideSheetSize'.$qty_index} eq 'Y') and ( $P->width() == $$sig_specs{"OverrideStockWidth$qty_index"}) and ( (! $$sig_specs{"OverrideStockHeight$qty_index"} ) or $P->height() == $$sig_specs{"OverrideStockHeight$qty_index"} )) {
 						next;
 					} elsif ( ( $$sig_specs{'OverrideCutOff'.$qty_index} eq 'Y' ) and ( $P->height() == $$sig_specs{"CutOff$qty_index"} ) ) {
 						next;
 					} # end if
-					my $BiggerPrice = $P->get_price('weight'=>$qty/$I->imposition(),'service'=>'Material');
 					if ( ( $P->area() >= $Paper->area() )
 							and ( $P->factor() <= $Paper->factor() )
 							and ( $P->minimum_order_weight() >= $Paper->minimum_order_weight() )
@@ -3509,6 +3514,12 @@ $imp->display("qty: $qty unspec ". $$sig_specs{"txtUnspecifiedPageQuantity$qty_i
 							and ( ! ( ( ! $P->is_cut() ) and $Paper->is_cut() ) )
 					   ) {
 						splice @{$imps{$str}}, $j, 1;
+						if ( DEBUG_FILTERING ) {
+							$openprint::log->debug( "Dropping B $$BiggerPrice{'100lb Total'} $$SmallerPrice{'100lb Total'}");
+							$I->display('B');
+							$imp->display('A');
+						}
+
 						$j -= 1;
 					} elsif ( ( $P->area() < $Paper->area() )
 							and ( $P->factor() >= $Paper->factor() )
@@ -3516,21 +3527,25 @@ $imp->display("qty: $qty unspec ". $$sig_specs{"txtUnspecifiedPageQuantity$qty_i
 							and ( (1*$$BiggerPrice{'100lb Total'}) <= (1*$$SmallerPrice{'100lb Total'}) )
 							and ( ( ! $P->is_cut() ) or ( $Paper->is_cut() ) )
 							) {
-                            $add = 0;
-							last;
-                        } elsif ( DEBUG_FILTERING ) {
-                            $openprint::log->debug( "Not Dropping $$BiggerPrice{'100lb Total'} $$SmallerPrice{'100lb Total'}");
-                            $I->display();
-                            $imp->display();
-                        } # end if
-                    } # end for
-                } # end if overriden or not or cached
-                push @{$imps{$str}}, $imp if $add;
+						if ( DEBUG_FILTERING ) {
+							$openprint::log->debug( "Dropping A $$BiggerPrice{'100lb Total'} $$SmallerPrice{'100lb Total'}");
+							$imp->display();
+						}
+						$add = 0;
+						last;
+					} elsif ( DEBUG_FILTERING ) {
+						$openprint::log->debug( "Not Dropping $$BiggerPrice{'100lb Total'} $$SmallerPrice{'100lb Total'} add: $add");
+						$I->display();
+						$imp->display();
+					} # end if
+				} # end for
+			} # end if overriden or not or cached
+			push @{$imps{$str}}, $imp if $add;
 		} # end if ServerLaoutout
 	} # end foreach imp
 	@results = map {@{$_}} values %imps;
 	if ( DEBUG_FILTERING ) {
-		$openprint::log->debug("Afgter filtering by paper");
+		$openprint::log->debug("Afgter filtering by paper # of results: " . @results );
 		foreach my $I ( @results ) {
 			$I->display("After filtering by paper");
 		}
@@ -6916,6 +6931,7 @@ sub has_overrides {
 				'chkOverrideSheetSize',
 				'chkOverridePress',
 				'OverridePrintingType',
+				'OverrideStockType',
 				'chkOverrideGrainDirection',
 				'OverrideVersions',
 				);
