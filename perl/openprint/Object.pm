@@ -793,7 +793,7 @@ $log->debug("ALl cached $object_type $cache_field $$params{$cache_field}") if DE
 	#} elsif ( ( ! @$data ) and $debug ) {
 		#$log->debug("No $type ($sql) (@values) " );
 	} elsif ( $debug ) {
-		$log->debug("Loading Debug:$debug $object_type ($sql) (@values) # of results:" . @$data . ' in ' . sprintf('%.4f', tv_interval($starttime)*1000) .' useconds' );
+		$log->debug("Loading Debug:$debug $object_type ($sql) (".join(',', map { ref $_ eq 'ARRAY' ? join(',', @{$_}) : $_ } @values).') # of results:' . @$data . ' in ' . sprintf('%.4f', tv_interval($starttime)*1000) .' useconds' );
 	} # end if
 	if ( $$fields{id} ) {
 		if ( $cache_field ) {
@@ -890,7 +890,7 @@ sub dropdown {
 		my $type = ref($self);
 		$type = $self if ! $type;
 		my $order = eval '$'.$type.'::default_sort';
-$log->debug("default sort: $self $type :: default_sort = $order");
+$log->debug("default sort: $self $type :: default_sort = $order") if DEBUG_ALL;
 		$params{order} = $order if $order;
 	}
 
@@ -912,29 +912,31 @@ sub transform {
 	my $type = ref $_[0];
 	$type = $_[0] if ! $type;
 	my $fields = eval '\%'.$type.'::fields';
+	my $value = $_[2];
 
 	if ( defined $$fields{$_[1]} ) {
 		my @transforms = eval('@{$'.$type.'::transforms{$_[1]}}');
 		$openprint::log->debug("Transforms for $_[1] before $_[2]: @transforms") if $debug;
-
-		foreach my $transform ( @transforms ) {
-			if ( $transform =~ /^s\// or $transform =~ /^tr\// ) {
-				eval '$_[2] =~ ' . $transform;
-			} elsif ( $transform =~ /^<(\d+)/ ) {
-				if ( $_[2] > $1 ) {
-					$_[2] = undef;
-				} # end if
-			} else {
-$openprint::log->debug("evalling $_[2] ".$transform . " Now value is $_[2]" );
-				eval '$_[2] '.$transform;
-$openprint::log->error("Eval error $@") if $@;
-			}
-$openprint::log->debug("After $transform: $_[2]") if $debug;
-		} # end foreach
+		if ( @transforms ) {
+			foreach my $transform ( @transforms ) {
+				if ( $transform =~ /^s\// or $transform =~ /^tr\// ) {
+					eval '$value =~ ' . $transform;
+				} elsif ( $transform =~ /^<(\d+)/ ) {
+					if ( $value > $1 ) {
+						$value = undef;
+					} # end if
+				} else {
+	$openprint::log->debug("evalling $value ".$transform . " Now value is $value" );
+					eval '$value '.$transform;
+	$openprint::log->error("Eval error $@") if $@;
+				}
+	$openprint::log->debug("After $transform: $value") if $debug;
+			} # end foreach
+		} # end if 
 	} else {
 		$openprint::log->error("Object::transform ($_[1]) not in fields for $type");
 	} # end if
-	return $_[2];
+	return $value;
 
 } # end sub transform
 

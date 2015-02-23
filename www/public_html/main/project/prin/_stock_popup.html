@@ -28,7 +28,7 @@
 	@StockOptions = split( ',', $config{StockOptions} ) if ! @StockOptions;
 	@StockOptions = ( 'Brand','Finish','Colour','Weight' ) if ! @StockOptions;
 
-	my @Papers = openprint::Paper->find( %find );
+	my @Papers = @{$$variable{Paper}} = openprint::Paper->find( %find );
 
 	foreach my $option ( @StockOptions ) {
 		next if ! $option;
@@ -39,7 +39,11 @@
 		if ( ! @options ) {
 			$log->debug("No paper options for $lc_option %find");
 		} # end if
-		$$variable{'ddmStock'.$option.$$variable{Signature}} = $options[0] if @options == 2;
+		if ( @options == 2 ) {
+			$$variable{'ddmStock'.$option.$$variable{Signature}} = $options[0];
+		} else {
+			$$variable{'ddmStock'.$option.$$variable{Signature}} = $param{"ddmStock$option"};
+		}
 
 		if ( $$variable{'ddmStock'.$option.$$variable{Signature}} ) {
 #and $cache{$option.$$variable{'ddmStock'.$option.$$variable{Signature}}} ) {
@@ -60,7 +64,6 @@
 		</ul>
 </fieldset>
 <fieldset><legend>Stocks</legend>
-	<div id="Results">
-	</div>
+	<div id="StockPopupResults"><?include(_stock_popup_results.html)?></div>
 </fieldset>
 </form>

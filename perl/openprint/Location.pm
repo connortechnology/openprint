@@ -13,8 +13,9 @@ our @ISA = qw( openprint::Object );
 use constant PI => atan2(1,1)*4;
 # 3.14159265358979;
 
-use vars qw( $debug $table $serial %fields %find_fields %transforms %defaults );
+use vars qw( $debug $table $serial %fields %find_fields %transforms %defaults $default_sort );
 $debug = 0;
+$default_sort = 'lower(name)';
 $table = 'locations';
 $serial = 'locations_id_seq';
 %fields = (
@@ -181,6 +182,20 @@ sub child_type {
 		return;
 	} # end if
 } # end sub child_type
+
+sub child_types {
+	return map { 
+	if ( $_ eq 'country' ) {
+		( 'state', 'province' );
+	} elsif ( $_ eq 'state' ) {
+		( 'city' );
+	} elsif ( $_ eq 'city' ) {
+		( 'place' );
+	} else {
+		( );
+	} # end if
+	} @_;
+}
 
 sub latitude {
 	if ( @_ > 1 ) {

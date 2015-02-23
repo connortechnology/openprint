@@ -46,7 +46,7 @@ sub edit {
 			} # end if
 		} # end if
 
-		$variable{'error'} .= $Service->save( \%openprint::param );
+		$variable{'error'} .= $Service->save( \%param );
 		if ( ! $variable{'error'} ) {
 
 			# Please note that we don't do any deleting here.  We mayonlyhave the prices for 1 piee of equipment on screen, so just update the ones that are on screen.
@@ -75,6 +75,9 @@ sub edit {
 		} # end if not error
 		if ( ! $variable{error} ) {
 			$variable{ExternalRedirect} = '/administrator/services/edit.html?ddmService='.$Service->id();
+			if ( $param{ddmServiceCategory} ) {
+				$variable{ExternalRedirect} .= '&ddmServiceCategory='.$param{ddmServiceCategory};
+			}
 			if ( $param{equipment_id} ) {
 				$variable{ExternalRedirect} .= '&equipment_id='.$param{equipment_id};
 			} # end if

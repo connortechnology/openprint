@@ -539,6 +539,7 @@ $openprint::log->debug("Height: $paper_height - CB $$specs{colour_bar_size} - Gr
 		calc_setup( $setup1, $setup1->image_width(), $setup1->image_height(), $adjusted_paper_width, $adjusted_paper_height ? $adjusted_paper_height : $setup1->image_height()  );
 		$openprint::log->debug(" CHECK 1 $run_style Using Paper $paper_width x $paper_height -> $adjusted_paper_width x $adjusted_paper_height Gutter: $gutters, Image: $$setup1{image_width} x $$setup1{image_height} Imposition: " . $setup1->imposition(). ":".$setup1->columns() . 'x' . $setup1->rows(). " $run_style " . $setup1->layout_width(undef) . 'x' . $setup1->layout_height() ) if DEBUG;
 		$setup1->Paper()->height( $setup1->used_height() ) if ! $setup1->Paper()->height();
+		$setup1->Paper()->width( $setup1->used_width() ) if ! $setup1->Paper()->width();
 		if ( check_setup( $setup1, $specs ) ) {
 			$openprint::log->debug(" CHECK 1 $run_style Using Paper $paper_width x $paper_height -> $adjusted_paper_width x $adjusted_paper_height Gutter: $gutters, Image: $$setup1{image_width} x $$setup1{image_height} Imposition: " . $setup1->imposition(). ":".$setup1->columns() . 'x' . $setup1->rows(). " $run_style " . $setup1->layout_width() . 'x' . $setup1->layout_height() ) if DEBUG;
 			push @results, $setup1;
@@ -548,10 +549,6 @@ $openprint::log->debug("Height: $paper_height - CB $$specs{colour_bar_size} - Gr
 			} else {
 $openprint::log->debug("Not doing dutch because ($$specs{dutch}) or $run_style or $$Paper{perfecting}") if DEBUG;
 			} # end if
-			if ( ! $setup1->paper()->width() ) {
-				$setup1->paper()->width( $setup1->used_width() );
-			} # end if
-			$setup1->Paper()->height( $setup1->used_height() ) if ! $setup1->Paper()->height();
 		} # end if check_setup
 	} elsif ( $run_style eq 'Work & Turn' ) {
 		calc_setup( $setup1, $setup1->image_width(), $setup1->image_height(), $adjusted_paper_width/2, $adjusted_paper_height );
@@ -592,7 +589,7 @@ $openprint::log->debug("Not doing dutch because ($$specs{dutch}) or $run_style o
 				} # end foreach
 			} # end if grain_direction
 			$setup1->rows( $setup1->rows() * 2 );
-			$setup1->paper()->width( $setup1->used_width() ) if ! $setup1->paper()->width();
+			$setup1->Paper()->width( $setup1->used_width() ) if ! $setup1->Paper()->width();
 			$setup1->Paper()->height( $setup1->used_height() ) if ! $setup1->Paper()->height();
 			push @results, $setup1 if $setup1->imposition();
 		} # end if imposition
@@ -734,6 +731,8 @@ $openprint::log->debug("Not doing dutch because ($$specs{dutch}) or $run_style o
 	if ( sets::isin( $run_style, ['Perfecting','Sheet Work','Web'] ) ) {
 		calc_setup( $setup2, $setup2->image_height(), $setup2->image_width(), $adjusted_paper_width, $adjusted_paper_height ? $adjusted_paper_height : $setup2->image_width() );
 		$openprint::log->debug(" CHECK 2 $run_style Using Paper $paper_width x $paper_height -> $adjusted_paper_width x $adjusted_paper_height Gutter: $gutters, Image: $$setup2{image_width} x $$setup2{image_height} Imposition: " . $setup2->imposition(). ":".$setup2->columns() . 'x' . $setup2->rows(). " $run_style") if DEBUG;
+		$setup2->Paper()->width( $setup2->used_width() ) if ! $setup2->Paper()->width();
+		$setup2->Paper()->height( $setup2->used_height() ) if ! $setup2->Paper()->height();
 		if ( check_setup( $setup2, $specs ) ) {
 			if ( $run_style eq 'Perfecting' ) {
 				$setup2->perfecting_wheel_space( $$setup1{imposition} % 2 ? $$specs{'Perfecting Double Gutter Size'} : $$specs{'Perfecting Single Gutter Size'} );
@@ -745,8 +744,6 @@ $openprint::log->debug("Not doing dutch because ($$specs{dutch}) or $run_style o
 			if ( ( $$specs{dutch} ne 'N' ) and ( $run_style ne 'Perfecting' or $Paper->perfecting() or ( $$specs{OverrideRunStyle} and $$specs{OverrideImposition}  ) ) ) {
 				push @results, calc_dutch( $setup2, $adjusted_paper_width, $adjusted_paper_height, $specs );
 			} # end if
-			$setup2->Paper()->width( $setup2->used_width() ) if ! $setup2->Paper()->width();
-			$setup2->Paper()->height( $setup2->used_height() ) if ! $setup2->Paper()->height();
 			push @results, $setup2;
 		} elsif ( DEBUG ) {
 			$openprint::log->debug(' failed check_setup');

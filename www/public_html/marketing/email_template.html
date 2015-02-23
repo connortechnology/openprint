@@ -1,15 +1,26 @@
-<form name="f1" action="email_templates.html" method="post">
+<form name="f1" action="/marketing/email_templates.html" method="post">
 	<input type="hidden" name="btnFunction"/>
-	<input type="hidden" name="template_id" value="<? echo ( $$variable{'Template'}->id(); ) ?>"/>
+	<input type="hidden" name="template_id" value="<? echo ( $$variable{Template}->id(); ) ?>"/>
 	<fieldset>
-		<p><label>Name</label><input type="text" name="name" value="<? echo ( $$variable{'Template'}->name() ) ?>" /></p>
-		<p><label>Body</label><textarea name="body" rows="<? echo ( ssi::count_lines( $$variable{'Template'}->body() ); ) ?>" onkeyup="textarea_resize(this);" ><? hecho ( $$variable{'Template'}->body() ) ?></textarea></p>
+		<div class="leftColumn">
+			<fieldset><legend>Template</legend>
+				<ul>
+		<li><label>Name</label><input type="text" name="name" value="<? echo ( $$variable{Template}->name() ) ?>" /></li>
+		<li><label>Body</label><textarea name="body" rows="<? echo ( count_lines( $$variable{Template}->body() ); ) ?>" onkeyup="textarea_resize(this);$('preview').innerHTML=this.value;" ><? hecho ( $$variable{Template}->body() ) ?></textarea></li>
+				</ul>
+			</fieldset>
+		</div>
+		<div class="rightColumn">
+			<fieldset><legend>Preview</legend>
+				<div id="preview"><? echo ( variable_substitution( \$$variable{Template}->body() ); )?></div>
+			</fieldset>
+		</div>
 		<p class="buttons">
-			<? echo ( join('',
-				ssi::button( 'DeleteBottom', { onclick=>"f1.btnFunction.value='Delete';fmChange=2;fmCheck(f1);", text=>'Delete' } ),
-				ssi::button( 'SaveBottom', { onclick=>"f1.btnFunction.value='Save';fmChange=3;fmCheck(f1);", text=>'Save' } ),
-				ssi::button( 'CopyBottom', { onclick=>"f1.action='email_template.html';f1.btnFunction.value='Copy';fmCheck(f1);", text=>'Copy' } ),
-				ssi::button( 'ResetBottom', { onclick=>'f1.reset();', text=>'Reset' } ),
+			<? echo ( join("\n",
+				button( 'DeleteBottom', { onclick=>"f1.btnFunction.value='Delete';fmChange=2;fmCheck(f1);", text=>'Delete' } ),
+				button( 'SaveBottom', { onclick=>"f1.btnFunction.value='Save';fmChange=3;fmCheck(f1);", text=>'Save' } ),
+				button( 'CopyBottom', { onclick=>"f1.action='email_template.html';f1.btnFunction.value='Copy';fmCheck(f1);", text=>'Copy' } ),
+				button( 'ResetBottom', { onclick=>'f1.reset();', text=>'Reset' } ),
 			); ) ?>
 		</p>
 	</fieldset>
