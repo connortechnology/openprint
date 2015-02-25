@@ -976,14 +976,14 @@ $openprint::log->debug("Has a fold, doing extra checks") if DEBUG;
 									$openprint::log->debug("Has max feed width width folds: $width_folds height folds: $height_folds $$sig_specs{txtWidth} $$sig_specs{txtHeight} width_size: $width_size height_size: $height_size max_feed_width: $max_feed_width") if DEBUG;
 									if ( ( $width_folds and ! $height_folds ) or ( $width_folds == $$Fold{folds} and $height_folds == $$Fold{angles} ) ) {
 # If folds are on width, we grip on height...
-										if ( $width_size > $max_feed_width ) {
-											$failure_reason = "Fold no good due to max feed width $width_size > $max_feed_width on width ($$sig_specs{txtHeight}).";
+										if ( $height_size > $max_feed_width ) {
+											$failure_reason = "Fold no good due to max feed height $height_size > $max_feed_width on height ($$sig_specs{txtHeight}).";
 											$Fold = undef;
 										} # end if
 									} elsif ( ( $height_folds and ! $width_folds ) or ( $height_folds == $$Fold{folds} and $height_folds == $$Fold{angles} ) ) {
-										if ( $height_size > $max_feed_width ) {
+										if ( $width_size > $max_feed_width ) {
 											$Fold = undef;
-											$failure_reason = "Fold no good due to max feed width $height_size > $max_feed_width on height ($$sig_specs{txtWidth}.";
+											$failure_reason = "Fold no good due to max feed width $width_size > $max_feed_width on width ($$sig_specs{txtWidth}).";
 										} # end if
 									} else {
 										$openprint::log->warn("No fold match");

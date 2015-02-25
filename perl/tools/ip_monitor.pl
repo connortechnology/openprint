@@ -137,6 +137,8 @@ while(1) {
 			if ( $Host->online() != $ping ) {
 
 # Have a change, so it should get logged, only email notifications should use the offline seconds
+				
+				$Host->load();
 				if ( $_ = $Host->save({online=>$ping,state_changed_on=>time,notified=>0}) ) {
 					$log->error($_);
 					next;
@@ -165,6 +167,7 @@ Please investigate.",
 			} elsif ( $Host->offline_seconds() and ( ! $ping ) and ( ! $$Host{notified} ) ) {
 				if ( $since > $$Host{offline_seconds} ) {
 					$log->warn("$ping $$Host{offline_seconds} $$Host{notified}");
+					$Host->load();
 					$Host->save({'notified'=>1});
 					my @To = map { $_->User() } $Host->Notifications();
 					if ( @To and ( @To < 10 ) ) {
@@ -211,22 +214,7 @@ Please investigate.",
 							foreach my $k ( keys %$headers ) {
 								$log->debug("Header $k => $$headers{$k}");
 							}  # end foreach
-							$response = $browser->get('http://'.$Host->hostname().'/admin/reboot.cgi?type=0');
-							$log->debug($response->is_success);
-							(new openprint::Log())->save({ action_id=>102, ip_address=>$Host->ip(), note=>sprintf('<a href="/employee/it/host.html?host_id=%d">%s</a> has been rebooted.', @$Host{'id','hostname'})});
-							my @To = map { $_->User() } $Host->Notifications();
-							if ( @To and ( @To < 10 ) ) {
-								$log->debug("Emailing: " . join(',', map { $_->email() } @To ) );
-								my $results = (new openprint::Email())->send(
-										'TO'	=>	\@To,
-										'SUBJECT'	=>	'Camera rebooted ' . $Host->hostname(),
-										'FROM'		=>	$config{'TechSupportEmail'},
-										'BODY'		=>	"
-										IP: $$HI{ip}
-Description: $$Host{'description'}
-",
-);
-							} # end if
+							$Host->reboot();
 						} # end if
 					} else {
 						$log->debug("Got content from host. Size: " . $response->content_type );

@@ -396,11 +396,12 @@ $log->error("Unable to load equipment.	No PPF for you for signature $$PPF{'signa
 		my ( $proc ) = $filename =~ /(.*)\.\w*$/;
 		if ( $proc ) {
 			my $module = join('_',@path);
+			require "openprint/$module.pm";
 			$log->debug("Calling $module :: $proc");
 			if ( my $function = ('openprint::'.$module)->can($proc) ) {
 				$function->($r, $log, $dbh, \%variable );
 			} else {
-				$log->error( "Eval error of require $module :: $proc, Reason: " );
+				$log->error( "Eval error: $module cant $proc, Reason: " );
 			}
 		} # end if
 	} elsif ( $first eq 'main' ) { # main

@@ -110,7 +110,7 @@ if( $openprint::config{NeedCartonsForShipping} ) {
 			$log->debug("No qty");
 		} # end if
 
-		if ( $$specs{'chkOverridePackageWeight'.$qty_index} ne 'Y' ) {
+		if ( (!$$specs{'chkOverridePackageWeight'.$qty_index}) or ($$specs{'chkOverridePackageWeight'.$qty_index} ne 'Y') ) {
 	# Load from skids or cartons
 			$$specs{"txtPackageWeight".$qty_index} = $$carton_specs{"txtPackageWeight".$qty_index};
 		} # end if
@@ -140,7 +140,7 @@ $openprint::log->debug("Other Shipped Quantity: $other_shipped_quantity");
         } # end if
 
 		if ( $$carton_specs{'txtItemsPerPackage'.$qty_index} ) {
-			if ( $$specs{chkOverridePackageQuantity} ne 'Y' ) {
+			if ( (!$$specs{chkOverridePackageQuantity}) or ( $$specs{chkOverridePackageQuantity} ne 'Y' ) ) {
 				$$specs{'txtPackageQuantity'.$qty_index} = ceil( $$specs{'txtQuantity'.$qty_index}/$$carton_specs{'txtItemsPerPackage'.$qty_index} );
 			} # end if
 			$$specs{"txtTotalWeight$qty_index"} = sprintf('%.2f', (int( $$specs{'txtQuantity'.$qty_index}/$$carton_specs{'txtItemsPerPackage'.$qty_index} ) * $$specs{'txtPackageWeight'.$qty_index}) + (($$specs{'txtQuantity'.$qty_index} % $$carton_specs{'txtItemsPerPackage'.$qty_index} ) * $$carton_specs{txtFinishedWeight}) );
