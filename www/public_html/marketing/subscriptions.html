@@ -2,50 +2,26 @@
 <div class="subscriptions">
 	<form id="f1" name="f1" method="post" action="/marketing/subscriptions.html">
 		<input type="hidden" name="action"/>
-		<input type="hidden" name="btnFunction"/>
 		<fieldset><legend>Subscriptions</legend>
+		Editing subscriptions for <? echo ( sprintf('%s <%s>', $$variable{User}->name(), $$variable{User}->email() ); ) ?>:<br/>
 			<ul>
 				<li><label>All email communications from <? echo ( $config{SiteTitle} ) ?></label>
 				<? echo ( radio( 'all', [ 'Y', 'Subscribed', 'N', 'Unsubscribed' ], $$variable{User}->mailinglist() ); ) ?>
 				</li>
+	<? if ( ! $session{user_id} ) ?>
+		<div id="Captcha"><?include('/includes/_captcha.html')?></div>
+		<input type="hidden" name="email" value="<?echo($param{email})?>"/>
+		<input type="hidden" name="email_id" value="<?echo($param{email_id})?>"/>
+		<input type="hidden" name="campaign_id" value="<?echo($param{campaign_id})?>"/>
+		<input type="hidden" name="user_id" value="<?echo($param{user_id})?>"/>
+	<? endif ( ! $session{user_id} ) ?>
 			</ul>
-	<? if ( $session{user_id} ) ?>
 			<p class="buttons">
 			<? echo ( join("\n",
 					button( 'Save', { onclick=>q`f1.elements['action'].value='Save';f1.submit();` } ),
 					button( 'Reset', { onclick=>'f1.reset();' } ),
 					); ) ?>
 			</p>
-	<? endif ( $session{user_id} ) ?>
 		</fieldset>
-	<? if ( ! $session{user_id} ) ?>
-		<fieldset><legend>You must login to save your subscriptions</legend>
-
-            <div class="instruction">Please enter your e-mail address and password.<br/><br/></div>
-				<ul>
-					<li>
-						<label for="email">E-mail</label>
-						<input type="email" id="email" name="email" value="<? echo ( $param{'email'} ) ?>" onkeydown="if(event.keyCode == 13){checkLoginData( this, f1.password );}" /><br/>
-						<span id="missingLoginMessage" style="display: none;"><img src="/images/smallCurvedArrow.gif" alt="" width="12" height="8" /> Please enter your email address.</span>
-					</li>
-					<li>
-						<label for="password">Password</label>
-						<input type="password" id="password" name="password" onkeydown="if(event.keyCode == 13){checkLoginData(f1.email, this);}" /><br/>
-						<span id="missingPasswordMessage" style="display: none;"><img src="/images/smallCurvedArrow.gif" alt="" width="12" height="8" /> Please enter your password.</span>
-					</li>
-					<li>
-						<label>Remember me</label>
-						<? echo ( radio('rdbRememberMe', [ 'Y','Yes','N','No' ], $param{'rdbRememberMe'} ); ) ?>
-					</li>
-				</ul>
-			</div>
-			<p class="buttons">
-				<? echo ( join("\n",
-							button( 'Login', { onclick=>"f1.btnFunction.value='Login';checkLoginData(f1.email,f1.password);", text=>'Login' } ),
-							button( 'Forgot', { onclick=>"f1.btnFunction.value='Forgotten Password';checkLoginData(f1.email);", text=>'Forgotten Password' } ),
-				); ) ?>
-			</p>
-		</fieldset>
-	<? endif ( ! $session{user_id} ) ?>
 	</form>
 </div>
