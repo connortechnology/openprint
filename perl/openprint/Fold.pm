@@ -102,6 +102,7 @@ $serial= 'folds_id_seq';
 	'folds'			=> undef,
 	'angles'		=> undef,
 	'printing_type'	=>	undef,
+	'spine_direction'	=>	undef,
 );
 
 sub to_string {
