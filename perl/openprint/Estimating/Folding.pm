@@ -1244,7 +1244,7 @@ $openprint::log->debug(qq`Wrong imposition: $$specs{"FoldImposition-$form-$qty_i
 							$FI->rows(1);
 							$FI->columns( $$specs{"FoldImposition-$form-$qty_index-$index"} );
 						} # end if
-						$$FI{page_quantity} = int($$SignatureImposition{pages}/$$Fold{pages}) if $$Fold{pages};
+						$$FI{page_quantity} = $$specs{"FoldQty-$form-$qty_index-$index"};
 						$$FI{quantity} = $$specs{"FoldQty-$form-$qty_index-$index"};
 						$$FI{Fold} = $Fold;
 						$$Fold{undesired} = 1;
@@ -1256,6 +1256,8 @@ $openprint::log->debug(qq`Wrong imposition: $$specs{"FoldImposition-$form-$qty_i
 						$$specs{alert} .= "You seem to be specifying more pages for folding than were printed for form $form quantity $qty_index<br/>";
 					} elsif ( $override_pages < $SignatureImposition->imposition() * $SignatureImposition->pages() ) {
 						$$specs{alert} .= "You seem to be specifying fewer pages for folding than were printed for form $form quantity $qty_index<br/>";
+					} else {
+						
 					} # end if
 				} # endif
 
