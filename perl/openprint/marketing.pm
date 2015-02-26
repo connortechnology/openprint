@@ -162,22 +162,41 @@ sub banners {
 
 sub subscriptions {
 	my $User = $variable{User} = new openprint::User($param{user_id} ? $param{user_id} : $session{user_id});
-	$User = $variable{User} = new openprint::User($session{user_id}) if ! $$User{id};
-	if ( ( ! $session{user_id} ) and $param{email} ) {
-		openprint::account::login();
-	} # end if
+	
+	$User = $variable{User} = new openprint::User($session{user_id}) if $session{user_id} and ! $$User{id};
+	# Either we are logged in and can edit, or the specified user id and that user's email address match.
 	if ( $session{user_id} ) {
-		if ( ( $param{action} eq 'Save' ) or ( $param{btnFunction} eq 'Login' ) ) {
-			if ( ( $param{all} eq 'N' ) and ( $User->mailinglist() eq 'Y' ) ) {
-				$variable{error} .= $User->save({mailinglist=>$param{all}});
-				$variable{information} .= 'Unsubscribed from all email communications.<br/>' if ! $variable{error};
-			} elsif ( ( $param{all} eq 'Y' ) and ( $User->mailinglist() eq 'N' ) ) {
-				$variable{error} .= $User->save({mailinglist=>'Y'});
-				$variable{information} .= 'Subscribed to all email communications.<br/>' if ! $variable{error};
-			} else {
-				$variable{information} .= ' No changes made.';
+		if ( ! $User->can_edit() ) {
+			$variable{error} .= 'You do not have access to edit this users subscriptions.';
+			return;
+		} # endif
+	} else {
+		if ( $$User{email} ne $param{email} ) {
+			$variable{error} .= "User email ($$User{email}) and provided email address ($param{email}) do not match.<br/>";
+			return;
+		}
+	} # end if
+
+	if ( $param{action} eq 'Save' ) {
+		if ( ! $openprint::session{user_id} ) {
+			require Authen::Captcha;
+			my $Captcha = new Authen::Captcha('data_folder' => '/tmp', 'output_folder' => $config{'SkinPath'}.'/images/captcha');
+	# Remove spaces, because some people want to put spaces between the characters, etc.
+			$param{'Captcha'} =~ s/\s//g;
+			if ( 1 != $Captcha->check_code( @param{'Captcha','MD5SUM'} ) ) {
+				$variable{error} .= 'Captcha validation code incorrect.  Please try again.';
+				return;
 			} # end if
-		} # end if	
+		} # end if not logged in
+		if ( ( $param{all} eq 'N' ) and ( $User->mailinglist() eq 'Y' ) ) {
+			$variable{error} .= $User->save({mailinglist=>$param{all}});
+			$variable{information} .= 'Unsubscribed from all email communications.<br/>' if ! $variable{error};
+		} elsif ( ( $param{all} eq 'Y' ) and ( $User->mailinglist() eq 'N' ) ) {
+			$variable{error} .= $User->save({mailinglist=>'Y'});
+			$variable{information} .= 'Subscribed to all email communications.<br/>' if ! $variable{error};
+		} else {
+			$variable{information} .= ' No changes made.';
+		} # end if
 	} # end if	
 } # end sub subscriptions
 

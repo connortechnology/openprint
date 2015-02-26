@@ -1,5 +1,5 @@
 check process openprint-syslog with pidfile /run/openprint-syslog.pid
-	start program  "/var/www/testing/perl/tools/syslog.pl"
-	stop program "/usr/bin/killall syslog.pl"
-	#if 5 restarts within 5 cycles then alert
+	start program  "/etc/init.d/openprint-syslog start"
+    stop program "/etc/init.d/openprint-syslog stop"
+    if failed port 10514 type udp then restart
 
