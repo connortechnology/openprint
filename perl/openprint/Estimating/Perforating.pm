@@ -286,6 +286,9 @@ $openprint::log->error("Really shouldn't be lading imposition here, too slow");
 		my @imps = openprint::imposition::get_all_impositions( $imposition );
 $openprint::log->debug("How many impositions do we get? " . @imps ) if DEBUG;
 		for ( my $i = 0; $i < @imps; $i += 1 ) {
+			if ( $imposition->imposition() % $imps[$i]->imposition() ) {
+				next;
+			}
 			if ( ( $$specs{"chkOverrideImposition-$form-$qty_index"} ne 'Y' )
 					or ( $$specs{"txtImposition-$form-$qty_index"} == $imps[$i]->imposition() )
 			   ) {
@@ -389,7 +392,7 @@ $openprint::log->debug("How many impositions do we get? " . @imps ) if DEBUG;
 		$Results{Breakdown} .= join( '', 'Cylinder Count: ', $CylinderCount, '<br/>' );
 
 		foreach my $I ( @impositions ) {
-			$Results{Breakdown} .= "Imposition: " . $I->columns().'x'.$I->rows().($I->dutch_columns()?'+'.$I->dutch_columns().'x'.$I->dutch_rows():'').'='.$I->imposition() .'out: ' .$I->image_orientation(). ' '. $I->layout_width().'x'.$I->layout_height().'<br/>';
+			$Results{Breakdown} .= "Imposition: " . $I->to_string() . '<br/>';
  
             if ( $max_feed_width ) {
                 if ( $orientation ) {
@@ -479,15 +482,17 @@ $openprint::log->debug("How many impositions do we get? " . @imps ) if DEBUG;
 			} # end if
 #$openprint::log->debug("Runspeed setting on $$Equipment{strid} $$Runspeed{value}$$Runspeed{units} $runspeed");
 
-			if ( lc $servicePrice{units} eq 'per m' ) {
+			if ( $servicePrice{units} eq 'per m' ) {
 				$servicePrice{Total} = $servicePrice{Price} * ($qty/$I->imposition())/ 1000;
 				$Results{Breakdown} .= sprintf('Service: $%1$.2f%2$s * %4$d = $%3$.2f<br/>', @servicePrice{'Price','units','Total'}, $qty/$I->imposition() );
-			} elsif ( lc $servicePrice{units} eq 'per hour' ) {
+			} elsif ( $servicePrice{units} eq 'per hour' ) {
 				if ( $runspeed ) {
-					my $hours = $qty / $runspeed;
+					my $hours = Math::Round::nearest( 0.01, ( $qty / $I->imposition() ) / $runspeed );
 					$servicePrice{Total} = $servicePrice{Price} * $hours;
+					$Results{Breakdown} .= sprintf('Service: $%1$.2f%2$s @ %4$d%5$s = %6$s hours = $%3$.2f<br/>', @servicePrice{'Price','units','Total'}, $Equipment->specification('PerfScoreRunSpeed'), 'Per Hour', $hours );
+				} else {
+					$Results{Breakdown} .= 'no runspeed';
 				} # end if
-				$Results{Breakdown} .= sprintf('Service: $%1$.2f%2$s @ %4$d%5$s = $%3$.2f<br/>', @servicePrice{'Price','units','Total'}, $Equipment->specification('PerfScoreRunSpeed'), 'Per Hour' );
 			} # end if
 # Div by imposition
 			#$servicePrice /= $imposition->imposition() if $imposition->imposition();
