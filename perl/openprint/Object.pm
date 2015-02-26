@@ -768,8 +768,12 @@ $log->debug("ALl cached $object_type $cache_field $$params{$cache_field}") if DE
 		$sql .= ' WHERE' if ! @where;
 		$sql .= " OR $$params{or}";
 	} # end if
-	if ( $$params{order} ) {
+	if ( exists $$params{order} ) {
 		$sql .= " ORDER BY $$params{order}";
+	} else {
+		my $order = eval '$'.$object_type.'::default_sort';
+$log->debug("default sort: $object_type :: default_sort = $order") if DEBUG_ALL;
+		$sql .= " ORDER BY $order" if $order;
 	} # end if
 	if ( $$params{'group by'} ) {
 		$sql .= " GROUP BY $$params{group}";
