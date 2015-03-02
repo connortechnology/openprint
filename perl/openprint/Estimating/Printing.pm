@@ -198,6 +198,7 @@ my %variables = (
 	'sides_the_same'	=> ['save'],
 	'ddmBleedSize1' => ['save','output'], 'ddmBleedSize2' => ['save','output'], 'ddmBleedSize3' => ['save','output'],
 	'chkOverrideBleedSize1'=>['save'], 'chkOverrideBleedSize2'=>['save'], 'chkOverrideBleedSize3'=>['save'],
+	'OverrideAddGrip'	=> ['save'],
 
 	'BleedLeft' => ['save'], 'BleedRight' => ['save'], 'BleedTop' => ['save'], 'BleedBottom' => ['save'],
 	'rdbColourBar' => ['save','output'], 'txtCropMarkSpace' => ['save'],
@@ -1196,7 +1197,7 @@ $openprint::log->debug("Skipping cuz ddmPress$qty_index ne $$Press{strid}");
 
 # not all of the presses have a gutter spec so we will continue to use Grip for Width and Height
 		if ( ! sets::isin( $ProjectTypeName, [ 'Envelopes', 'NCR' ] ) ) {
-			$$project{Grip} = $Press->specification('Grip');
+			$$project{Grip} = $Press->specification('Grip') if ! $$specs{OverrideAddGrip};
 			$$project{Gutter} = $Press->specification('Gutter');
 			if ( $$specs{'chkOverrideBleedSize'.$qty_index} eq 'Y' ) {
 				$$project{BleedSize} = $$specs{'ddmBleedSize'.$qty_index};
@@ -2451,8 +2452,12 @@ $log->warn("There are no quantities!");
 			$previous_forms_cache{$hash_key} += 1;
 			if ( $$sig_specs{'StockQuantity'.$qty_index} ) {
 				my $Paper = openprint::Paper::load_from_signature( $Project, $sig_specs, $qty_index );
-				$PaperCounts{$Paper->id_string()} += $$sig_specs{'StockQuantity'.$qty_index};
-				$Papers{$Paper->id_string()} = $Paper if ! $Papers{$Paper->id_string()};
+				if ( $Paper->width() and $Paper->height() ) {
+					$PaperCounts{$Paper->id_string()} += $$sig_specs{'StockQuantity'.$qty_index};
+					$Papers{$Paper->id_string()} = $Paper if ! $Papers{$Paper->id_string()};
+				} else {
+					$openprint::log->debug("Loaded paper with no width and height from sig $index " . $Paper->to_string() );
+				}
 			} # end if
 		} # end foreach $index
 		if ( ! $$project{stocksetupcharged} ) {
@@ -3491,12 +3496,17 @@ $imp->display("qty: $qty unspec ". $$sig_specs{"txtUnspecifiedPageQuantity$qty_i
 					my $I = $imps{$str}[$j];
 					my $P = $I->Paper();
 
+					my $BiggerPrice = $$I{PaperPrice};
+					if ( DEBUG_FILTERING ) {
+						$imp->display("Comparing A mino weight:" . $Paper->minimum_order_weight() . 'Price: ' . $$SmallerPrice{'100lb Price'} . ' total: ' . $$SmallerPrice{'100lb Total'} . ' cut' . $Paper->is_cut() . ' factor: ' . $Paper->factor() . ' stock_qty: ' . $$imp{stock_qty} . ' lookup_stock_qty' . $$imp{lookup_stock_qty} );
+						$I->display("Comparing B mino weight:". $P->minimum_order_weight() . ' Price: ' . $$BiggerPrice{'100lb Price'} . ' total: ' . $$BiggerPrice{'100lb Total'} .' cut ' . $P->is_cut() . ' factor: ' . $P->factor() . ' stock_qty: ' . $$I{stock_qty}. ' lookup_stock_qty' . $$imp{lookup_stock_qty} );
+					} 
+
 					if ( ($$sig_specs{'chkOverrideSheetSize'.$qty_index} eq 'Y') and ( $P->width() == $$sig_specs{"OverrideStockWidth$qty_index"}) and ( (! $$sig_specs{"OverrideStockHeight$qty_index"} ) or $P->height() == $$sig_specs{"OverrideStockHeight$qty_index"} )) {
 						next;
 					} elsif ( ( $$sig_specs{'OverrideCutOff'.$qty_index} eq 'Y' ) and ( $P->height() == $$sig_specs{"CutOff$qty_index"} ) ) {
 						next;
 					} # end if
-					my $BiggerPrice = $P->get_price('weight'=>$qty/$I->imposition(),'service'=>'Material');
 					if ( ( $P->area() >= $Paper->area() )
 							and ( $P->factor() <= $Paper->factor() )
 							and ( $P->minimum_order_weight() >= $Paper->minimum_order_weight() )
@@ -3504,6 +3514,12 @@ $imp->display("qty: $qty unspec ". $$sig_specs{"txtUnspecifiedPageQuantity$qty_i
 							and ( ! ( ( ! $P->is_cut() ) and $Paper->is_cut() ) )
 					   ) {
 						splice @{$imps{$str}}, $j, 1;
+						if ( DEBUG_FILTERING ) {
+							$openprint::log->debug( "Dropping B $$BiggerPrice{'100lb Total'} $$SmallerPrice{'100lb Total'}");
+							$I->display('B');
+							$imp->display('A');
+						}
+
 						$j -= 1;
 					} elsif ( ( $P->area() < $Paper->area() )
 							and ( $P->factor() >= $Paper->factor() )
@@ -3511,21 +3527,25 @@ $imp->display("qty: $qty unspec ". $$sig_specs{"txtUnspecifiedPageQuantity$qty_i
 							and ( (1*$$BiggerPrice{'100lb Total'}) <= (1*$$SmallerPrice{'100lb Total'}) )
 							and ( ( ! $P->is_cut() ) or ( $Paper->is_cut() ) )
 							) {
-                            $add = 0;
-							last;
-                        } elsif ( DEBUG_FILTERING ) {
-                            $openprint::log->debug( "Not Dropping $$BiggerPrice{'100lb Total'} $$SmallerPrice{'100lb Total'}");
-                            $I->display();
-                            $imp->display();
-                        } # end if
-                    } # end for
-                } # end if overriden or not or cached
-                push @{$imps{$str}}, $imp if $add;
+						if ( DEBUG_FILTERING ) {
+							$openprint::log->debug( "Dropping A $$BiggerPrice{'100lb Total'} $$SmallerPrice{'100lb Total'}");
+							$imp->display();
+						}
+						$add = 0;
+						last;
+					} elsif ( DEBUG_FILTERING ) {
+						$openprint::log->debug( "Not Dropping $$BiggerPrice{'100lb Total'} $$SmallerPrice{'100lb Total'} add: $add");
+						$I->display();
+						$imp->display();
+					} # end if
+				} # end for
+			} # end if overriden or not or cached
+			push @{$imps{$str}}, $imp if $add;
 		} # end if ServerLaoutout
 	} # end foreach imp
 	@results = map {@{$_}} values %imps;
 	if ( DEBUG_FILTERING ) {
-		$openprint::log->debug("Afgter filtering by paper");
+		$openprint::log->debug("Afgter filtering by paper # of results: " . @results );
 		foreach my $I ( @results ) {
 			$I->display("After filtering by paper");
 		}
@@ -5118,9 +5138,7 @@ $openprint::log->warn("No folding equipment");
 	my %diecutting_results;
 #$openprint::log->debug("Need DieCutting $$project{NeedDieCutting}");
 	if ( $$project{HasDieCutting} and $$project{NeedDieCutting} ) {
-$openprint::log->debug("Doing DieCutting");
 		%diecutting_results = openprint::Estimating::DieCutting::signature_calc( $Project, $service_index, $specs, $$project{DieCuttingSpecs}, $qty_index, $Imposition );
-$openprint::log->debug("Back From DieCutting");
 		if ( $diecutting_results{Status} eq 'uncalculated' ) {
 			$price{'DieCutting Breakdown'} .= "DieCutting error: $diecutting_results{alert} $diecutting_results{alert} <br/>";
 			$price{'Comparison Cost'} += 1000000; 
@@ -6609,10 +6627,13 @@ if ( 0 ) {
 					join(', ', @$specs{'txtSpecificStockBrand','txtSpecificStockFinish','txtSpecificStockColour','txtSpecificStockWeight'} ) :
 					join(', ', @$specs{'ddmStockBrand','ddmStockFinish','ddmStockColour','ddmStockWeight'} ),
 					);
-			if ( ! ( $$specs{ddmStockWeight} =~ /PT/ ) ) {
+			if ( ! ( $$specs{ddmStockWeight} =~ /([\d\.]\s*)PT/ ) ) {
 				if ( $$specs{txtSpecificStockCalliper} ) {
 					$string .= ' ' . ($$specs{txtSpecificStockCalliper} * 1000).'PT';
 				} # end if
+			} elsif ( $1 != $$specs{txtSpecificStockCalliper}*1000 ) {
+$openprint::log->debug("$1 is !- $$specs{txtSpecificStockCalliper} ");
+				$string .= ' (' . ($$specs{txtSpecificStockCalliper} * 1000).'PT)';
 			} # end if
 			$string .= ' ' . $$specs{txtStockGSM}.'gsm';
 		} # end if
@@ -6910,6 +6931,7 @@ sub has_overrides {
 				'chkOverrideSheetSize',
 				'chkOverridePress',
 				'OverridePrintingType',
+				'OverrideStockType',
 				'chkOverrideGrainDirection',
 				'OverrideVersions',
 				);

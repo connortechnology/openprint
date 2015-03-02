@@ -105,6 +105,7 @@ sub view_services {
 					if ( $openprint::param{ServiceType} eq 'Printing' or ! $openprint::param{ServiceType} ) {
 					} else {
 						openprint::Estimating::MultiPage::calculate_signatures( $Project );
+						# Shouldn't we do this befiore that?
 						openprint::service::internal_calc( $log, $dbh, $variable, $project_index, $$services{''}[0], $Project->Type()->type() );
 					} # end if
 				} # end if
@@ -137,6 +138,8 @@ sub view_services {
 					if ( $$services{SaddleStitching} and @{$$services{SaddleStitching}} ) {	
 						openprint::service::internal_calc( $log, $dbh, $variable, $project_index, $$services{SaddleStitching}[0], 'Stitching' );
 					} # end if
+				} elsif ( $openprint::param{ServiceType} eq 'Paper' ) {
+					openprint::service::internal_calc( $log, $dbh, $variable, $project_index,  $service_index, 'Paper' );
 				} # end if
 				openprint::service::auto_calculate( $Project, $service_index ) if $recalc;
 				$Project->update_status();
@@ -467,7 +470,7 @@ $log->debug("group $group_id");
 				'ColourCoatingType7SideTwo', 'ColourCoatingColour7SideTwo','ColourCoatingCoverage7SideTwo',
 				'ColourCoatingType8SideTwo', 'ColourCoatingColour8SideTwo','ColourCoatingCoverage8SideTwo',
 				'ColourCoatingType9SideTwo', 'ColourCoatingColour9SideTwo','ColourCoatingCoverage9SideTwo',
-				'BleedLeft','BleedRight','BleedTop','BleedBottom','rdbColourBar','txtCropMarkSpace',
+				'rdbColourBar','txtCropMarkSpace',
 				'GroupPageQuantity','OverrideGroupPageQuantity','txtServiceDescription','rdbTemplateType',
 				'rdbPanels','PocketSize','chkPocketLeft','chkPocketCenter','chkPocketRight',
 				'txtWidth','txtHeight','txtFinalWidth','txtFinalHeight','chkOverrideDimensions','txtQuantity1','txtQuantity2','txtQuantity3',
@@ -481,6 +484,7 @@ $log->debug("group $group_id");
 				( map { 'chkColourCoating'.$_.'SideOne' } ( 1 .. 9 ) ),
 				'chkCyanSideTwo','chkMagentaSideTwo','chkYellowSideTwo','chkBlackSideTwo', 'chkProcessColourSideTwo',
 				( map { 'chkColourCoating'.$_.'SideTwo' } ( 1 .. 9 ) ),
+				'BleedLeft','BleedRight','BleedTop','BleedBottom',
 		) {
 			openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $ss_id, $spec, $$param{$spec.$group_id} );
 		} # end foreach spec

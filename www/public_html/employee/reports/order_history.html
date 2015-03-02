@@ -87,4 +87,11 @@
 		 </p>
 	</fieldset>
 </form>
-<div id="Results">Select Report Criteria and click Show Results</div>
+<div id="Results">
+<? echo ( if ( %param ) {
+return include('_order_history_results.html');
+} else {
+return 'Select Report Criteria and click Show Results';
+}
+) ?>
+</div>

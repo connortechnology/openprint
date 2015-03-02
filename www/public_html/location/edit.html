@@ -14,26 +14,26 @@
 	});
 </script>
 <div class="Location"><div class="Edit">
-	<? echo ( include('/includes/error_reporting.html'); ) ?>
-	<form name="f1" id="f1" action="/location/edit.html?location_id=<? echo ( $param{'location_id'} ) ?>" method="post" enctype="multipart/form-data">
-		<fieldset><legend>Editing Location<? echo ( $$variable{'Location'}->id() ? '('.$$variable{'Location'}->id().')' : '' ) ?></legend>
-			<? if ( $$variable{'Location'}->deleted() ) ?>
+	<?include('/includes/error_reporting.html')?>
+	<form name="f1" id="f1" action="/location/edit.html?location_id=<? echo ( $param{location_id} ) ?>" method="post" enctype="multipart/form-data">
+		<fieldset><legend>Editing Location<? echo ( $$variable{Location}->id() ? '('.$$variable{Location}->id().')' : '' ) ?></legend>
+			<? if ( $$variable{Location}->deleted() ) ?>
 			<span class="warning">This location has been deleted</span>
-			<? endif ( $$variable{'Location'}->deleted() ) ?>
+			<? endif ( $$variable{Location}->deleted() ) ?>
 			
 			<p class="buttons">
 				<? echo (
 					my $html = '';
 					
-					if ( $$variable{'Location'}->id() ) {
-						if ( $$variable{'Location'}->deleted() ) {
-							$html .= ssi::button( 'UnDelete', { 'onclick'=>"f1.elements['action'].value='Undelete';f1.submit();" } );
-							$html .= ssi::button( 'Destroy', { 'onclick' => "if(confirm('Are you sure?')){f1.elements['action'].value='Destroy';f1.submit();}" } );
+					if ( $$variable{Location}->id() ) {
+						if ( $$variable{Location}->deleted() ) {
+							$html .= button( 'UnDelete', { onclick=>"f1.elements['action'].value='Undelete';f1.submit();" } );
+							$html .= button( 'Destroy', { onclick => "if(confirm('Are you sure?')){f1.elements['action'].value='Destroy';f1.submit();}" } );
 						} else {
-							$html .= ssi::button( 'Delete', { 'onclick'=>"f1.elements['action'].value='Delete';f1.submit();" } );
+							$html .= button( 'Delete', { onclick=>"f1.elements['action'].value='Delete';f1.submit();" } );
 						} # end if
 					} # end if
-					$html .= ssi::button( 'Save', { 'onclick'=>"f1.elements['action'].value='Save';f1.submit();" } );
+					$html .= button( 'Save', { onclick=>"f1.elements['action'].value='Save';f1.submit();" } );
 					return $html;
 				) ?>
 			</p>
@@ -43,16 +43,16 @@
 					<ul>
 						<li>
 							<label for="description">Description</label>
-							<textarea id="description" class="mce" name="description" rows="<? echo ( ssi::count_lines( $$variable{'Location'}->description() ); ) ?>" onkeyup="textarea_resize(this);"><? echo ( ssi::html_escape($$variable{'Location'}->description()); ) ?></textarea>
+							<textarea id="description" class="mce" name="description" rows="<? echo ( ssi::count_lines( $$variable{Location}->description() ); ) ?>" onkeyup="textarea_resize(this);"><? echo ( ssi::html_escape($$variable{Location}->description()); ) ?></textarea>
 						</li>
 						<li><label for="url">URL</label>
-							<input type="url" name="url" id="url" value="<? echo ( $$variable{'Location'}->url() ) ?>" />
+							<input type="url" name="url" id="url" value="<? echo ( $$variable{Location}->url() ) ?>" />
 						</li>
 					</ul>
 				</div>
 			</fieldset>
 			<fieldset><legend>Where</legend>
-<? echo ( include('/location/_location_fields.html'); ) ?>
+<?include('/location/_location_fields.html')?>
 			</fieldset>
 		</fieldset>
 		<input type="hidden" name="action" />

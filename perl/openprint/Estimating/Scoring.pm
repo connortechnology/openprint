@@ -90,6 +90,7 @@ sub signature_needs {
 
 	my $form = $$sig_specs{SignatureIndex} * 1;
 	if ( $specs ) {
+ 
 	# This is because for non-books, the specs hash doesn't have the SignatureIndex filledin.
 # WHAT?S!  ARE YOU SMOKING?
 #$openprint::log->debug("Scoring::need $form : " .$$specs{"chkOverrideQty-$form"}) if DEBUG;
@@ -152,6 +153,11 @@ sub calc {
 
 	my $Project = new openprint::Project( $project_index );
 	my $services = $Project->services();
+
+	if ( $$services{DieCutting} and @{$$services{DieCutting}} ) {
+		$$specs{alert} .= 'Assuming that scoring is done as part of DieCutting. Not calculating. Remove DieCutting to calculate Scoring.<br/>';
+		return $$specs{Status} = 'uncalculated';
+	} # en dif
 
     my $calc_hash = {};
     if ( $$services{SaddleStitching} ) {

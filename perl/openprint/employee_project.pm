@@ -783,12 +783,15 @@ sub summary {
 
 sub _stock_checkout {
 	my $Order;
+	$variable{Project} = new openprint::Project( $param{project_id} ) if $param{project_id};
+
 	if ( $param{docket} ) {
 		$Order = openprint::Order->find_one( docket=>$param{docket} );
 		if ( ! $Order ) {
 			$variable{error} .= 'No docket found for ' . $param{docket} . '<br/>';
 			return;
 		} # end if
+		$variable{Project} = openprint::Project->find_one( docket=>$param{docket} ) if ! $variable{Project};
 	} else {
 		$log->error("NO docket in _stock_checkout");
 		return;
@@ -852,15 +855,15 @@ sub _stock_checkout {
 							paper_id	=>	$C->paper_id(),
 							user_id		=>	$session{user_id},
 							delta		=>	-1*$C->quantity(),
-							comment		=>	sprintf('Checked out for docket <a href="/employee/project/view.html?docket=%1$d">%1$d</a> by %2$s', $Order->docket(), new openprint::User( $session{user_id} )->name() ),
+							comment		=>	sprintf('Checked out for docket <a href="/employee/project/view.html?docket=%1$d">%1$d</a> by %2$s', $Order->docket(), $openprint::User->name() ),
 							skid_id		=>	$Skid->id(),
 							units		=>	$C->units(),
 							});
 					$C->quantity( 0 );
 					$C->save();
 					#Remove any allocations
-					foreach my $PA ( openprint::PaperAllocation->find('skid_ids any'=>$Skid->id(),paper_id=>$C->paper_id(), docket=>$Order->docket() ) ) {
-						$PA->save({'skid_ids'=>[ sets::exclude( [ $Skid->id() ], $PA->skid_ids() ) ] });
+					foreach my $PA ( openprint::PaperAllocation->find('skid_ids any'=>$Skid->id(), paper_id=>$C->paper_id(), docket=>$Order->docket() ) ) {
+						$PA->save({skid_ids=>[ sets::exclude( [ $Skid->id() ], $PA->skid_ids() ) ] });
 						if ( ! $PA->Skids() ) {
 							$PA->delete();
 						} # end if
@@ -874,14 +877,14 @@ sub _stock_checkout {
 						paper_id	=>	undef,,
 						user_id		=>	$session{user_id},
 						delta		=>	0,
-						comment		=>	sprintf('Checked out for docket <a href="/employee/project/view.html?docket=%1$d">%1$d</a> by %2$s', $Order->docket(), new openprint::User( $session{user_id} )->name() ),
+						comment		=>	sprintf('Checked out for docket <a href="/employee/project/view.html?docket=%1$d">%1$d</a> by %2$s', $Order->docket(), $openprint::User->name() ),
 						skid_id		=>	$Skid->id(),
 						units		=>	undef,
 						});
 				$Order->add_log( 'Checked out something unknown.' );
 			} # end if skid has contents
 		} # end if add_entry
-	} # end if
+	} # end if action eq Add
 } # end sub _stock_checkout
 
 sub _production_feedback {

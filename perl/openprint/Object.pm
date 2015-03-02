@@ -768,8 +768,12 @@ $log->debug("ALl cached $object_type $cache_field $$params{$cache_field}") if DE
 		$sql .= ' WHERE' if ! @where;
 		$sql .= " OR $$params{or}";
 	} # end if
-	if ( $$params{order} ) {
+	if ( exists $$params{order} ) {
 		$sql .= " ORDER BY $$params{order}";
+	} else {
+		my $order = eval '$'.$object_type.'::default_sort';
+$log->debug("default sort: $object_type :: default_sort = $order") if DEBUG_ALL;
+		$sql .= " ORDER BY $order" if $order;
 	} # end if
 	if ( $$params{'group by'} ) {
 		$sql .= " GROUP BY $$params{group}";
@@ -793,7 +797,7 @@ $log->debug("ALl cached $object_type $cache_field $$params{$cache_field}") if DE
 	#} elsif ( ( ! @$data ) and $debug ) {
 		#$log->debug("No $type ($sql) (@values) " );
 	} elsif ( $debug ) {
-		$log->debug("Loading Debug:$debug $object_type ($sql) (@values) # of results:" . @$data . ' in ' . sprintf('%.4f', tv_interval($starttime)*1000) .' useconds' );
+		$log->debug("Loading Debug:$debug $object_type ($sql) (".join(',', map { ref $_ eq 'ARRAY' ? join(',', @{$_}) : $_ } @values).') # of results:' . @$data . ' in ' . sprintf('%.4f', tv_interval($starttime)*1000) .' useconds' );
 	} # end if
 	if ( $$fields{id} ) {
 		if ( $cache_field ) {
@@ -890,7 +894,7 @@ sub dropdown {
 		my $type = ref($self);
 		$type = $self if ! $type;
 		my $order = eval '$'.$type.'::default_sort';
-$log->debug("default sort: $self $type :: default_sort = $order");
+$log->debug("default sort: $self $type :: default_sort = $order") if DEBUG_ALL;
 		$params{order} = $order if $order;
 	}
 
