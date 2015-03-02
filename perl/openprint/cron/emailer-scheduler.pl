@@ -66,6 +66,8 @@ configuration::merge( $opts );
 $session{company_id} = $config{owner_id};
 $ENV{DOCUMENT_ROOT} = $config{DOCUMENT_ROOT};
 
+openprint::session_init();
+
 # The first query to execute grabs the ids of all of the email campaigns
 # that are currently set to run
 my @campaign_ids = openprint::EmailCampaign->find( active => 'Y', 'nextrun <' => 'NOW()', 'custom'=>['(timeofday IS NULL) OR (timeofday <= CURRENT_TIME)'] );
