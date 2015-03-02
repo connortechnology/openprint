@@ -414,8 +414,8 @@ sub signature_calc($$$$$$) {
 				next;
 			} 
 			if ( $$calc_hash{FoldingSpecs}{"ddmEquipment-$form-$qty_index"} != $Equipment->id() ) {
-				my $Folder = new openprint::Equipment{ $$calc_hash{FoldingSpecs}{"ddmEquipment-$form-$qty_index"} };
-				$Results{Breakdown} .= "Form $form not being folded on $$Equipment{strid}. Is being folded on $$Folder{strid}.<br/>";
+				my $Folder = new openprint::Equipment( $$calc_hash{FoldingSpecs}{"ddmEquipment-$form-$qty_index"} );
+				$Results{Breakdown} .= "Form $form qty $qty_index not being folded on $$Equipment{strid}. Is being folded on $$Folder{strid}.<br/>";
 				if ( $$specs{"chkOverrideEquipment-$form-$qty_index"} eq 'Y' ) {
 					$Results{alert} .= 'Not being folded on this.<br/>';
 				} # end if
