@@ -135,6 +135,9 @@ sub view_services {
 					if ( $$services{Cutting} and @{$$services{Cutting}} ) {	
 						openprint::service::internal_calc( $log, $dbh, $variable, $project_index, $$services{Cutting}[0], 'Cutting' );
 					} # end if
+					if ( $$services{Scoring} and @{$$services{Scoring}} ) {	
+						openprint::service::internal_calc( $log, $dbh, $variable, $project_index, $$services{Scoring}[0], 'Scoring' );
+					} # end if
 					if ( $$services{SaddleStitching} and @{$$services{SaddleStitching}} ) {	
 						openprint::service::internal_calc( $log, $dbh, $variable, $project_index, $$services{SaddleStitching}[0], 'Stitching' );
 					} # end if
