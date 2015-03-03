@@ -1090,7 +1090,7 @@ sub get_impositions($$$$$$$$) {
 # add all the impositions for each press
 $openprint::log->debug("get_impositions: Presses to consider: " . join(',', map { $_->strid() } @$Presses)) if DEBUG;
 	foreach my $Press ( @$Presses ) {
-		if ( DEBUG_IMPOSITIONS ) {
+		if ( DEBUG_IMPOSITIONS and $$specs{'chkOverridePress'.$qty_index} and $$specs{"ddmPress$qty_index"} ) {
 			if ( $$specs{"ddmPress$qty_index"} ne $Press->strid() ) {
 $openprint::log->debug("Skipping cuz ddmPress$qty_index ne $$Press{strid}");
 				next;
@@ -1343,7 +1343,8 @@ $openprint::log->debug("Skipping cuz ddmPress$qty_index ne $$Press{strid}");
 		foreach my $Paper ( @Papers ) {
 #Paper might have different calliperso# Is this needed anymore
 			#$$project{Calliper} = $$Paper{calliper};
-		if ( DEBUG_IMPOSITIONS and 0 ) {
+		if ( DEBUG_IMPOSITIONS and $$Overrides{"chkOverrideSheetSize$qty_index"} and $$specs{"ddmStockSheetSize$qty_index"} ) {
+
 			my ( $width, $height ) = split('x', $$specs{"ddmStockSheetSize$qty_index"} );
 $openprint::log->debug("$width x $height");
 			if ( $width and ( $width != $Paper->width() ) ) {
