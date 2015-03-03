@@ -729,46 +729,47 @@ sub filters {
 	my $option_string;
 	if ( $$options{onSuccess} ) {
 		$option_string = 'onSuccess: function(){' . $$options{onSuccess}.'}';
-		} # end if
-		if ( $option_string ) {
-			$option_string = ',{'.$option_string.'}';
-			} # end if
+	} # end if
+	if ( $option_string ) {
+		$option_string = ',{'.$option_string.'}';
+	} # end if
 
-			my ( $country_id, $state_id, $city_id );
-			if ( ref $selected eq 'openprint::Location' ) {
-				$_ = $selected->ancestor('country');
-				$country_id = $_->id() if $_;
-				$_ = $selected->ancestor('state');
-				$state_id = $_->id() if $_;
-				$_ = $selected->ancestor('city');
-				$city_id = $_->id() if $_;
-			} elsif ( ref $selected eq 'HASH' ) {
-				( $country_id, $state_id, $city_id ) = @$selected{'country','state','city'};
-			} elsif ( ref $selected eq 'ARRAY' ) {
-				( $country_id, $state_id, $city_id ) = @$selected;
-			} # end if	
-			my $html = '<li><label>Country</label>';
-			my @Countries = openprint::Location->find(order=>'lower(name)',type=>'country');
-			$html .= ssi::select( [ '', 'All', map { $_->id(), $_->name() } @Countries ], $country_id, { name=>'country_id', id=>'country_id', onchange=>qq`Location_onchange( this, 'country'$option_string );` } );
+	my ( $country_id, $state_id, $city_id );
+	if ( ref $selected eq 'openprint::Location' ) {
+		$_ = $selected->ancestor('country');
+		$country_id = $_->id() if $_;
+		$_ = $selected->ancestor('state');
+		$state_id = $_->id() if $_;
+		$_ = $selected->ancestor('city');
+		$city_id = $_->id() if $_;
+	} elsif ( ref $selected eq 'HASH' ) {
+		( $country_id, $state_id, $city_id ) = @$selected{'country','state','city'};
+	} elsif ( ref $selected eq 'ARRAY' ) {
+		( $country_id, $state_id, $city_id ) = @$selected;
+	} # end if	
+$openprint::log->debug("Location::fitlers selected $country_id, $state_id, $city_id");
+	my $html = '<li><label>Country</label>';
+	my @Countries = openprint::Location->find(type=>'country');
+	$html .= ssi::select( [ '', 'All', map { $_->id(), $_->name() } @Countries ], $country_id, { name=>'country_id', id=>'country_id', onchange=>qq`Location_onchange( this, 'country'$option_string );` } );
 
-			$html .= '</li><li><label>';
-			my $Country = new openprint::Location($country_id);
-			if ( $Country->name() eq 'Canada' ) {
-				$html .= 'Province';
-			} elsif ( $Country->name() eq 'United States' ) {
-				$html .= 'State';
-			} else {
-				$html .= 'State/Province';
-			} # end if
-			$html .= '</label>';
-    my @States = openprint::Location->find(order=>'lower(name)',type=>'state',
-			( sets::isin( $country_id, [ map { $_->id() } @Countries ] ) ? ( 'parent_id'=>$country_id ) : () ),
+	$html .= '</li><li><label>';
+	my $Country = new openprint::Location($country_id);
+	if ( $Country->name() eq 'Canada' ) {
+		$html .= 'Province';
+	} elsif ( $Country->name() eq 'United States' ) {
+		$html .= 'State';
+	} else {
+		$html .= 'State/Province';
+	} # end if
+	$html .= '</label>';
+	my @States = openprint::Location->find(type=>[ 'state', 'province'],
+			( sets::isin( $country_id, [ map { $_->id() } @Countries ] ) ? ( parent_id=>$country_id ) : () ),
 			);
-    $html .= ssi::select( [ '', 'All', map { $_->id(), $_->name() } @States ], $state_id, { name=>'state_id', id=>'state_id', onchange=>qq`Location_onchange( this, 'state'$option_string );"` } );
+	$html .= ssi::select( [ '', 'All', map { $_->id(), $_->name() } @States ], $state_id, { name=>'state_id', id=>'state_id', onchange=>qq`Location_onchange( this, 'state'$option_string );"` } );
 
-    $html .= '</li><li><label>City</label>';
-    my @Cities = openprint::Location->find('order'=>'lower(name)','type'=>'city',
-        ( sets::isin( $state_id, [ map { $_->id() } @States ] ) ? ( 'parent_id'=>$state_id ) : () ),
+	$html .= '</li><li><label>City</label>';
+	my @Cities = openprint::Location->find('order'=>'lower(name)','type'=>'city',
+			( sets::isin( $state_id, [ map { $_->id() } @States ] ) ? ( 'parent_id'=>$state_id ) : () ),
     );
     $html .= ssi::select( [ '', 'All', map { $_->id(), $_->name() } @Cities ], $city_id, { name=>'city_id', id=>'city_id', onchange=>qq`Location_onchange( this, 'city'$option_string );` } );
 	$html .= '</li>';
