@@ -618,10 +618,18 @@ $openprint::log->debug("Bindery Gutters 2: $gutters <? $bindery_gutters");
 		$setup2->paper()->height( $$specs{'Cut Off'} );
 		$setup2->stock_height( $$specs{'Cut Off'} );
 	} # end if
-	$adjusted_paper_height -= $bindery_gutters;
+
 
 	# Becomes printable area
-	$adjusted_paper_height -= $$specs{'Grip Size'} if $$specs{'Add Grip Width'} ne 'N';
+	if ( $$specs{'Add Grip Width'} ne 'N' ) {
+	$adjusted_paper_height -= $$specs{'Grip Size'};
+		if ($$specs{'Grip Size'} < $bindery_gutters ) {
+			$adjusted_paper_height -= ( $bindery_gutters - $$specs{'Grip Size'} );
+		}
+	} else {
+	# Don't need folio lip if we have enoguh grip
+	$adjusted_paper_height -= $bindery_gutters;
+	}
 
 	if ( ($adjusted_paper_height<=0) or ( ( $$specs{'Maximum Image Area Length'} > 0 ) and ( $adjusted_paper_height > $$specs{'Maximum Image Area Length'} ) ) ) {
 		$openprint::log->debug("*** Using Max Image Length2: Before: $adjusted_paper_height After: $$specs{'Maximum Image Area Length'}***") if DEBUG;
