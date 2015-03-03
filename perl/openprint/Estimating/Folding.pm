@@ -1278,6 +1278,7 @@ $openprint::log->debug(qq`Wrong imposition: $$specs{"FoldImposition-$form-$qty_i
 
 			# This copying of the specs is bad.  We need to make it unncessary.  Scoring, perfing, stitching, etc all use the Folds array now...
 			my %fold_specs = %$specs;
+			$$calc_hash{FoldingSpecs} = \%fold_specs;
 			# Going to assume that there is at least 1 fold, so we only have to clear the others
 			foreach my $fold_index ( 2 .. 4 ) {
 				$fold_specs{"FoldType-$form-$qty_index-$fold_index"} = '';
@@ -1287,6 +1288,7 @@ $openprint::log->debug(qq`Wrong imposition: $$specs{"FoldImposition-$form-$qty_i
 			# Used as a flag to tell us not to quit early
 			my $undesired = 0;
 
+			$fold_specs{"ddmEquipment-$form-$qty_index"} = $Equipment->id();
 			for ( my $imp_index = 0; $imp_index < @Used_Impositions; $imp_index += 1 ) {
 				my $Imposition = $Used_Impositions[$imp_index];
 				my $Fold = $Imposition->Fold();
@@ -1466,10 +1468,8 @@ $openprint::log->debug("Runspeed: $$Fold{type}(".$Fold->name().") : " . $Equipme
 			if ( $$calc_hash{HasStitching} ) {
 				if ( ! exists $$specs{StitchingCost} ) {
 # Add in stitching estimate, based on if the folder is this piece of equipment
-					$fold_specs{"ddmEquipment-$form-$qty_index"} = $Equipment->id();
 					$fold_specs{"Price-$form-$qty_index"} = $totalPrice;
 $Breakdown .= '<tr><td>Signatures:'.(@$Signature_Impositions+1).'</td></tr>';
-					$$calc_hash{FoldingSpecs} = \%fold_specs;
 					my $results = openprint::Estimating::Stitching::signature_calc( $Project, @$calc_hash{'HasStitching','StitchingSpecs'}, $qty_index, [ @$Signature_Impositions, $SignatureImposition ], $calc_hash );
 					if ( ! $$results{Equipment} ) {
 						$Breakdown .= "unable to determine stitching equipment: $$results{alert} $$results{Breakdown}<br/>";
@@ -1498,19 +1498,20 @@ $Breakdown .= '<tr><td>Signatures:'.(@$Signature_Impositions+1).'</td></tr>';
 			} # end if has sittiching
 			$comparison_cost += $totalPrice + $stitching_part + $cutting_results{Price};
 			if ( $$calc_hash{ScoringSpecs} ) {
+				$$calc_hash{FoldingSpecs} = \%fold_specs;
 				my %scoring_results = openprint::Estimating::Scoring::signature_calc( $Project, $$calc_hash{ScoringSpecs}, $sig_specs, $qty_index, $SignatureImposition, $calc_hash );
-				$Breakdown .= "<tr><td>Scoring cost on $scoring_results{Equipment}{name}</td><td class=\"Price\">$scoring_results{Price}</a>";
+				$Breakdown .= "<tr><td>Scoring cost on $scoring_results{Equipment}{name}</td><td class=\"Price\">\$$scoring_results{Price}</a>";
 				$comparison_cost += $scoring_results{Price};	
 			} # end if
 
 			if ( $cutting_results{Equipment} ) {
-				$Breakdown .= "<tr><td>Cutting on $cutting_results{Equipment}{name}</td><td>$cutting_results{Price}</td></tr>";
+				$Breakdown .= qq`<tr><td>Cutting on $cutting_results{Equipment}{name}</td><td class="Price">$cutting_results{Price}</td></tr>`;
 			} else { 
-				$Breakdown .= "<tr><td>No Cutting: $cutting_results{alert} $cutting_results{Breakdown}</td><td>$cutting_results{Price}</td></tr>";
+				$Breakdown .= qq`<tr><td>No Cutting: $cutting_results{alert} $cutting_results{Breakdown}</td><td class="Price">$cutting_results{Price}</td></tr>`;
 
 			} # end if
 
-			$Breakdown .= '<tr><td>comparison :</td><td>' . $comparison_cost . ' </td></tr>';
+			$Breakdown .= '<tr><td>comparison :</td><td class="Price">' . Math::Round::nearest(0.01,$comparison_cost) . ' </td></tr>';
 			$Breakdown .= '</table>';
 
 			if ( ( $comparison_cost < $bestComparison ) or ( ! defined $bestComparison ) ) {

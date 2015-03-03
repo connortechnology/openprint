@@ -14,9 +14,10 @@ use Memoize;
 memoize('fits');
 #memoize('Specification');
 
-use vars qw( $debug $log $dbh $table $serial %fields %find_fields %transforms %defaults $cache_field );
+use vars qw( $debug $log $dbh $table $serial %fields %find_fields %transforms %defaults $cache_field $default_sort );
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
+$default_sort = 'lower(strid)';
 $table = 'tbl_Equipment';
 $serial = 'Equipment_Index_seq';
 $cache_field = 'strid';

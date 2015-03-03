@@ -154,18 +154,18 @@ sub calc_price {
 #$log->debug(" ** Adding Punch Cost: $punch_price For $$specs{txtDieCutPunches} Punches, MakeReady Total: $make_ready ** ");
 			} # end if punches
 		} # end if rule & bend 
+		if ( (defined $$specs{'OverrideDiePrice'.$qty_index}) and ( $$specs{'OverrideDiePrice'.$qty_index} eq 'Y' ) ) {
+			$DiePrice{Price} = $$specs{'DiePrice'.$qty_index};
+		} # end if
+		if ( ! $DiePrice{Price} ) {
+			$Total{alert} .= 'Please enter the price of the die.<br/>';
+			$Total{Status} = 'uncalculated';
+		} else {
+			$Total{Total} += $DiePrice{Price};
+		} # end if has die price
 	} #end if supplied die
 
 	$Total{DiePrice} = \%DiePrice;
-	if ( (defined $$specs{'OverrideDiePrice'.$qty_index}) and ( $$specs{'OverrideDiePrice'.$qty_index} eq 'Y' ) ) {
-		$DiePrice{Price} = $$specs{'DiePrice'.$qty_index};
-	} # end if
-	if ( ! $DiePrice{Price} ) {
-		$Total{alert} .= 'Please enter the price of the die.<br/>';
-		$Total{Status} = 'uncalculated';
-	} else {
-		$Total{Total} += $DiePrice{Price};
-	} # end if has die price
 
 	# Why 1.28, overs I assume
 	my $impressions = ceil( ( $$specs{"txtQuantity$qty_index"} / $$Signature_Imposition{imposition} ) ) * $Imposition->quantity();
