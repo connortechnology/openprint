@@ -34,7 +34,7 @@
 				my $html = '';
 				$html .= button( 'Prev1', { onclick=>"f1.btnFunction.value='&lt;&lt;';fmCheck(f1);", text=>'&lt;&lt;' } );
 				$html .= button( 'Next1', { onclick=>"f1.btnFunction.value='&gt;&gt;';fmCheck(f1);", text=>'&gt;&gt;' } );
-				$html .= button( 'New1', { onclick=>'addCheck(f1);', text=>'New' } );
+				$html .= button( 'New1', { href=>'/administrator/services/edit.html', text=>'New' } );
 				$html .= button( 'Save1', { onclick=>"f1.btnFunction.value='Save';fmChange=3;fmCheck(f1);", text=>'Save' } );
 				if ( $$variable{'Service'}->id() ) {
 					$html .= button( 'Copy1', { onclick=>"f1.btnFunction.value='Copy';fmCheck(f1);", text=>'Copy' } );
