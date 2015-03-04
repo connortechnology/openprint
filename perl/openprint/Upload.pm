@@ -57,5 +57,26 @@ sub path {
 	return join('/',$openprint::config{ProjectFilesPath}, $_[0]->Company()->name(),$_[0]{file_path} );
 }
 
+sub duration {
+	my $parser = 'DateTime::Format::Pg';
+	my $finished_dt = $parser->parse_datetime( $_[0]{finished} );
+	my $start_dt = $parser->parse_datetime( $_[0]{start} );
+	my $duration = $finished_dt->subtract_datetime_absolute( $start_dt );
+	return $duration;
+}
+
+sub speed {
+	my $duration = $_[0]->duration();
+
+	my $seconds = $duration->in_units('seconds');
+	if ( ! $seconds ) {
+		$openprint::log->debug("no seconds in speed $_[0]{finished} - $_[0]{start}");
+		return 'unknown';
+	} else {
+		my $speed = int( $_[0]->size() / $seconds );
+		return misc::format_bytes( $speed, '.0' ). '/s';
+	} # end if
+}
+
 1;
 __END__
