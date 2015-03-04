@@ -239,6 +239,9 @@ sub sized_url {
 				my ( $length ) = $probe =~ /duration=(\d+)\.\d*/m;
 				$openprint::log->debug("Length of video: $length");
 
+				if ( $length > 10 ) {
+					$length -= 10;
+				} 
 				if ( $length < 60 ) {
 					$length = 5;
 				} # end if
@@ -252,7 +255,7 @@ if ( 0 ) {
 				} # end if
 } else {
 				if ( $width ) {
-					$command = qq`avconv -i "$src" -vf scale=$width:-3 -vframes 1 -ss $length "/tmp/$filename/$size.jpg"`;
+					$command = qq`avconv -i "$src" -vf scale=$width:-1 -vframes 1 -ss $length "/tmp/$filename/$size.jpg"`;
 				} else {
 					$command = qq`avconv -i "$src" -vframes 1 -ss $length "/tmp/$filename/$size.jpg"`;
 				} # end if
