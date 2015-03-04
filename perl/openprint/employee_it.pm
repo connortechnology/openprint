@@ -114,6 +114,9 @@ sub host {
 	} elsif ( $param{action} eq 'Wake' ) {
 		foreach my $I ( $Host->Interfaces() ) {
 			next if ! $I->mac();
+			if ( $I->ip() ) {
+			`wakeonlan -i $$I{ip} $$I{mac}`;
+			}
 			`wakeonlan $$I{mac}`;
 		} # end foraech
 	} elsif ( $param{action} eq 'GEOLookup' ) {
