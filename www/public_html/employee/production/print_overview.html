@@ -332,6 +332,9 @@ $log->debug("Have lock");
 
 			# When its time to add shifts, we add in sets, until we find an already-implemented shift.
 			my @Equipment_Shifts = $E->Equipment_Shifts();
+foreach my $ES ( @Equipment_Shifts ) {
+$log->debug( "Available ES: " . $ES->to_string() );
+}
 
 			# Showing over 100 days makes the browser crawl forever. So limit it.
 			$end = 100 if $end > 100;
@@ -363,9 +366,14 @@ $log->debug("# of Shifts: " . @Shifts );
 			# Step two: Make sure all the shifts are there. We do this by running through them, comparing the shift_id to the expected ES
 			# We start at 1 because we already looked for 0 and found it.  Micro-optimisation
 			for ( my $shift_index = 1; $shift_index < @Shifts; $shift_index += 1 ) {
+$log->debug( $Shifts[$shift_index]->shift_id() . ' == ' . $ES->Next()->id() );
+$log->debug( "This ES: " . $ES->to_string() );
+$log->debug( "Next ES: " . $ES->Next()->to_string() );
 				if ( $Shifts[$shift_index]->shift_id() == $ES->Next()->id() ) {
 	
-				} elsif ( $Shifts[$shift_index]->starttime_seconds() > $Shifts[$shift_index-1]->starttime_seconds() + $ES->distance() ) {
+				} elsif ( $Shifts[$shift_index]->starttime_dt() > ( $Shifts[$shift_index-1]->endtime_dt() + $ES->Duration() ) ) {
+$log->debug("Need another shift");
+				#} elsif ( $Shifts[$shift_index]->starttime_seconds() > $Shifts[$shift_index-1]->starttime_seconds() + $ES->distance() ) {
 					my $NewShift = $ES->Next()->emanantise( $Shifts[$shift_index-1]->starttime_seconds() + 1 );
 					# emanantise may pass back an existing shift... in which case it SHOULD be the one we are looking at!
 					if ( $NewShift->id() == $Shifts[$shift_index]->id() ) {

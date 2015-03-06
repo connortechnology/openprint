@@ -102,8 +102,10 @@ sub emanantise {
 	#$log->debug("Emanantise: " . $self->to_string() );
 	my $parser = 'DateTime::Format::Pg';
 
-	my $requested_dt = DateTime->from_epoch( epoch=>$date_seconds, time_zone=>$openprint::TZ );
-	#$log->debug("Emanentise: Date: $date_seconds : " . $parser->format_datetime( $requested_dt ) );
+	my $requested_dt = DateTime->from_epoch( epoch=>$date_seconds-1, time_zone=>$openprint::TZ );
+	$log->debug("Emanentise: Date: $date_seconds : " . $parser->format_datetime( $requested_dt ) );
+	$requested_dt = DateTime->from_epoch( epoch=>$date_seconds, time_zone=>$openprint::TZ );
+	$log->debug("Emanentise: Date: $date_seconds : " . $parser->format_datetime( $requested_dt ) );
 	# The point is to drop any additional time part, but how can that be right? What we want to do is jump gaps
 
 	my $shift_start_time_dt = DateTime::Duration->new( seconds => $self->starttime_seconds() % DAY );
@@ -281,6 +283,10 @@ sub end_minute {
 	return int( ( $_[0]->endtime_seconds() % HOUR )/60);
 } # end sub end_hour
 
+sub Duration {
+	my $dur = DateTime::Duration->new( seconds => $_[0]{duration_seconds} );
+	return $dur;
+}
 sub duration {
 	if ( @_ > 1 ) {
 		my ( $h, $m, $s ) = split ( ':', $_[1] );
