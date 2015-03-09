@@ -309,6 +309,7 @@ sub stock {
 		} # end foreach Price
 
 		$variable{'error'} .= $Paper->save();
+		new openprint::Log()->save({ object_type=>ref $Paper, object_type=>$$Paper{id}, action=>($param{stock_id}?'Edited stock':'Saved stock') });
 		$variable{'information'} .= 'Stock ' . $Paper->id() . ' has been saved.' if ! $variable{'error'};
 	} elsif ( $param{'btnFunction'} eq 'Prev' ) {
 		$Paper = $Paper->previous();
