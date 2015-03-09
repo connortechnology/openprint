@@ -982,5 +982,14 @@ sub folds {
 sub _folds {
 	ssi::save_params( '/administrator/managerial/folds.html', ( 'equipment_id', 'type' ) );
 } # end sub _folds
+
+sub shipping_rates {
+	require openprint::Shipping_Rate;
+}
+
+sub _merge_popup {
+	$variable{Company} = new openprint::Company( $param{company_id} );
+}
+
 1;
 __END__
