@@ -772,7 +772,7 @@ $log->debug("ALl cached $object_type $cache_field $$params{$cache_field}") if DE
 		$sql .= " ORDER BY $$params{order}";
 	} else {
 		my $order = eval '$'.$object_type.'::default_sort';
-$log->debug("default sort: $object_type :: default_sort = $order") if DEBUG_ALL;
+#$log->debug("default sort: $object_type :: default_sort = $order") if DEBUG_ALL;
 		$sql .= " ORDER BY $order" if $order;
 	} # end if
 	if ( $$params{'group by'} ) {
@@ -894,7 +894,7 @@ sub dropdown {
 		my $type = ref($self);
 		$type = $self if ! $type;
 		my $order = eval '$'.$type.'::default_sort';
-$log->debug("default sort: $self $type :: default_sort = $order") if DEBUG_ALL;
+#$log->debug("default sort: $self $type :: default_sort = $order") if DEBUG_ALL;
 		$params{order} = $order if $order;
 	}
 
