@@ -788,6 +788,8 @@ $log->debug("ALl cached $object_type $cache_field $$params{$cache_field}") if DE
 		$log->error("Extra parameters in $object_type ::find $k => $search{$k}");
 		Carp::cluck("Extra parameters in $object_type ::find $k => $search{$k}");
 	} # end foreach
+
+	$log->debug("Loading Debug:$debug $object_type ($sql) (".join(',', map { ref $_ eq 'ARRAY' ? join(',', @{$_}) : $_ } @values).')' ) if DEBUG_ALL;
 	
 #$log->debug( 'find prepare: ' . sprintf('%.4f', tv_interval($starttime)*1000) ." useconds") if $debug;
 	my $data = $local_dbh->selectall_arrayref( $sql, { Slice => {} }, @values );
