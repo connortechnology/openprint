@@ -3990,14 +3990,13 @@ sub get_project_price {
 								$$sig_price{PlateCost} = $$results{Price} ;
 							}
 
-							if ( int($$sig_price{'Comparison Cost'}) == $last_sig_price ) {
+							if ( ( int($$sig_price{'Comparison Cost'}) == $last_sig_price ) and ( $$sig_specs{'txtPlateChangeQuantity'.$qty_index} == $$new_specs{'txtPlateChangeQuantity'.$qty_index}) ) {
 								my $sigs = int($$price{upq}/$$imp{pages});
-								$$price{'Comparison Cost'} += $$sig_price{'Comparison Cost'} * $sigs;
-								$$price{'Comparison Log'} .= 'signature ' . $$sig_price{'Comparison Cost'} * $sigs . '<br/>' if COMPARISON_LOG;
-								$PaperCounts{$Paper->id_string()} += $sigs * $$sig_price{'Stock Qty'};
-								my $sig;
 #$openprint::log->debug("Sigs: $sigs: signatures( @signatures )");
 								foreach ( 1 .. $sigs ) {
+									$$price{'Comparison Cost'} += $$sig_price{'Comparison Cost'};
+									$$price{'Comparison Log'} .= 'signature ' . $$sig_price{'Comparison Cost'} .'<br/>' if COMPARISON_LOG;
+									$PaperCounts{$Paper->id_string()} += $$sig_price{'Stock Qty'};
 									push @{$$price{Impositions}}, $imp;
 									push @{$$price{prices}}, $sig_price;
 									push @total_impositions, $imp;
@@ -4008,14 +4007,13 @@ sub get_project_price {
 									$imp = $imp->copy();
 									$new_specs = get_new_specs( $Project, $service_index, $service_specs, \@signatures, $qty_index, $$price{upq}, \%previous_forms_cache, $hash_key );
 									$$imp{specs} = $new_specs;
-								} # end foreach
-								foreach ( 2 .. $sigs ) {
+
 									$$sig_price{'Comparison Log'} .= 'plates ' . $$sig_price{PlateCost} . '<br/>' if COMPARISON_LOG;
 									$$sig_price{'Comparison Cost'} += $$sig_price{PlateCost};
 									$PlateCounts{$$sig_price{'Plate Costs'}{'Plate ID'}} += $$sig_price{'Plate Costs'}{'Plate Count'};
-								} # end if
-								$sig_count += $sigs -1;
-								unshift @signatures, $sig if $sig;
+									$sig_count += 1;
+									last if $$sig_specs{'txtPlateChangeQuantity'.$qty_index} != $$new_specs{'txtPlateChangeQuantity'.$qty_index};
+								} # end foreach
 #$openprint::log->debug("New upq: $$price{upq}");
 							} else {
 #$openprint::log->debug("Got diff comparison cost");
@@ -4032,9 +4030,9 @@ sub get_project_price {
 								$sig_count += 1;
 
 								# Copying the base_imp, means that we lose our folds.
-					$imp = $imp->copy();
-					$new_specs = get_new_specs( $Project, $service_index, $service_specs, \@signatures, $qty_index, $$price{upq}, \%previous_forms_cache, $hash_key );
-					$$imp{specs} = $new_specs;
+								$imp = $imp->copy();
+								$new_specs = get_new_specs( $Project, $service_index, $service_specs, \@signatures, $qty_index, $$price{upq}, \%previous_forms_cache, $hash_key );
+								$$imp{specs} = $new_specs;
 							} # end if
 							$imp->display( $recursion_depth . ' UPQ: ' . $$price{upq} . ' after first level calc_price' ) if DEBUG;
 
