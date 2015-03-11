@@ -1289,6 +1289,7 @@ $openprint::log->debug(qq`Wrong imposition: $$specs{"FoldImposition-$form-$qty_i
 			my $undesired = 0;
 
 			$fold_specs{"ddmEquipment-$form-$qty_index"} = $Equipment->id();
+
 			for ( my $imp_index = 0; $imp_index < @Used_Impositions; $imp_index += 1 ) {
 				my $Imposition = $Used_Impositions[$imp_index];
 				my $Fold = $Imposition->Fold();
@@ -1470,7 +1471,17 @@ $openprint::log->debug("Runspeed: $$Fold{type}(".$Fold->name().") : " . $Equipme
 # Add in stitching estimate, based on if the folder is this piece of equipment
 					$fold_specs{"Price-$form-$qty_index"} = $totalPrice;
 $Breakdown .= '<tr><td>Signatures:'.(@$Signature_Impositions+1).'</td></tr>';
-					my $stitching_results = openprint::Estimating::Stitching::signature_calc( $Project, @$calc_hash{'HasStitching','StitchingSpecs'}, $qty_index, [ @$Signature_Impositions, $SignatureImposition ], $calc_hash );
+					my $stitching_specs;
+					if ( $capable eq 'When Stitching' ) {
+						my %stitching_specs = %{$$calc_hash{StitchingSpecs}};
+						$stitching_specs{"chkOverrideEquipment$qty_index"} = 'Y';
+						$stitching_specs{"ddmEquipment$qty_index"} = $Equipment->id();
+						$stitching_specs = \%stitching_specs;
+					} else {
+						$stitching_specs = $$calc_hash{StitchingSpecs};
+					} # end if
+					
+					my $stitching_results = openprint::Estimating::Stitching::signature_calc( $Project, $$calc_hash{'HasStitching'},$stitching_specs, $qty_index, [ @$Signature_Impositions, $SignatureImposition ], $calc_hash );
 					if ( ! $$stitching_results{Equipment} ) {
 						$Breakdown .= "unable to determine stitching equipment: $$stitching_results{alert} $$stitching_results{Breakdown}<br/>";
 						$openprint::log->warn('unable to determine stitching equipment; ; '.$Breakdown) if DEBUG;
