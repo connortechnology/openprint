@@ -1289,6 +1289,7 @@ $openprint::log->debug(qq`Wrong imposition: $$specs{"FoldImposition-$form-$qty_i
 			my $undesired = 0;
 
 			$fold_specs{"ddmEquipment-$form-$qty_index"} = $Equipment->id();
+
 			for ( my $imp_index = 0; $imp_index < @Used_Impositions; $imp_index += 1 ) {
 				my $Imposition = $Used_Impositions[$imp_index];
 				my $Fold = $Imposition->Fold();
@@ -1470,23 +1471,33 @@ $openprint::log->debug("Runspeed: $$Fold{type}(".$Fold->name().") : " . $Equipme
 # Add in stitching estimate, based on if the folder is this piece of equipment
 					$fold_specs{"Price-$form-$qty_index"} = $totalPrice;
 $Breakdown .= '<tr><td>Signatures:'.(@$Signature_Impositions+1).'</td></tr>';
-					my $results = openprint::Estimating::Stitching::signature_calc( $Project, @$calc_hash{'HasStitching','StitchingSpecs'}, $qty_index, [ @$Signature_Impositions, $SignatureImposition ], $calc_hash );
-					if ( ! $$results{Equipment} ) {
-						$Breakdown .= "unable to determine stitching equipment: $$results{alert} $$results{Breakdown}<br/>";
+					my $stitching_specs;
+					if ( $capable eq 'When Stitching' ) {
+						my %stitching_specs = %{$$calc_hash{StitchingSpecs}};
+						$stitching_specs{"chkOverrideEquipment$qty_index"} = 'Y';
+						$stitching_specs{"ddmEquipment$qty_index"} = $Equipment->id();
+						$stitching_specs = \%stitching_specs;
+					} else {
+						$stitching_specs = $$calc_hash{StitchingSpecs};
+					} # end if
+					
+					my $stitching_results = openprint::Estimating::Stitching::signature_calc( $Project, $$calc_hash{'HasStitching'},$stitching_specs, $qty_index, [ @$Signature_Impositions, $SignatureImposition ], $calc_hash );
+					if ( ! $$stitching_results{Equipment} ) {
+						$Breakdown .= "unable to determine stitching equipment: $$stitching_results{alert} $$stitching_results{Breakdown}<br/>";
 						$openprint::log->warn('unable to determine stitching equipment; ; '.$Breakdown) if DEBUG;
 
 						$stitching_part = 1000000;
 						#$totalPrice += 1000000;
-					} elsif ( $$results{Equipment}->id() != $Equipment->id() and $Equipment->specification('Folding Capable') eq 'When Stitching' ) {
-						$Breakdown .= 'Not stitching on ' . $Equipment->strid().' stitching on '.$$results{Equipment}->strid() .'.<br/>';
-						$Breakdown .= $$calc_hash{StitchingSpecs}{"hdnBreakdown$qty_index"};
+					} elsif ( $$stitching_results{Equipment}->id() != $Equipment->id() and $capable eq 'When Stitching' ) {
+						$Breakdown .= 'Not stitching on ' . $Equipment->strid().' stitching on '.$$stitching_results{Equipment}->strid() .'.<br/>';
+						$Breakdown .= $$stitching_results{Breakdown} . '<br/>' . $$stitching_results{alert};
 						$stitching_part = 1000000;
 						$totalPrice += 1000000;
 					} else {
-						my $Price = $$results{Price};
+						my $Price = $$stitching_results{Price};
 						$stitching_part = $$Price{Price};
-						$Breakdown .= '<tr><td>'.$$results{Breakdown}.'</td></tr>' if DEBUG;
-						$Breakdown .= "<tr><td>Stitching cost on $$results{Equipment}{name}</td><td class=\"Price\">$stitching_part</td></tr>";
+						$Breakdown .= '<tr><td>'.$$stitching_results{Breakdown}.'</td></tr>' if DEBUG;
+						$Breakdown .= "<tr><td>Stitching cost on $$stitching_results{Equipment}{name}</td><td class=\"Price\">$stitching_part</td></tr>";
 					} # end if
 					#$Breakdown .= $$results{Breakdown}.'<br/>';
 				} elsif ( $$specs{StitchingEquipment}->id() != $Equipment->id() and $Equipment->specification('Folding Capable') eq 'When Stitching' ) {
@@ -1500,7 +1511,7 @@ $Breakdown .= '<tr><td>Signatures:'.(@$Signature_Impositions+1).'</td></tr>';
 			if ( $$calc_hash{ScoringSpecs} ) {
 				$$calc_hash{FoldingSpecs} = \%fold_specs;
 				my %scoring_results = openprint::Estimating::Scoring::signature_calc( $Project, $$calc_hash{ScoringSpecs}, $sig_specs, $qty_index, $SignatureImposition, $calc_hash );
-				$Breakdown .= "<tr><td>Scoring cost on $scoring_results{Equipment}{name}</td><td class=\"Price\">\$$scoring_results{Price}</a>";
+				$Breakdown .= "<tr><td>Scoring cost on $scoring_results{Equipment}{name}<br/>$scoring_results{Breakdown}</td><td class=\"Price\">\$$scoring_results{Price}</a>";
 				$comparison_cost += $scoring_results{Price};	
 			} # end if
 
