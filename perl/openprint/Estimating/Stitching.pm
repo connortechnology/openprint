@@ -18,7 +18,7 @@ package openprint::Estimating::Stitching;
 use strict;
 #use warnings;
 
-use constant DEBUG => 0;
+use constant DEBUG => 1;
 
 require openprint::Equipment;
 require openprint::service;
@@ -442,7 +442,9 @@ EQUIPMENT:foreach my $Equipment ( @equipment ) {
 				$bestEquipment = $Equipment;
 				$bestPrice = $price;
 			} # end if
-		  } # end foreach Equipment
+			$results{Breakdown} .= $$price{Price} . ' comparison: ' . $$price{ComparisonPrice} . '<br/>' if DEBUG;
+ 		  } # end foreach Equipment
+
 		  if ( $imposition > 1 and ! $bestPrice ) {
 			  if ( ( defined $$specs{'OverrideImposition'.$qty_index} ) and ( $$specs{'OverrideImposition'.$qty_index} eq 'Y' ) ) {
 				  last;
