@@ -2901,7 +2901,7 @@ sub breakdown {
 	} # end if
 
 	if ( $stock_qty ) {
-		$breakdown .= sprintf( 'Overs: Base:%s Initial Setups: %d*%d=%d, Additional Setups: %d*%d=%d Run:%s FM:%s Additional Plate:%s Bindery: %d (FoldMakeReady: %d FoldRun: %d', @$stock_qty{'Net Sheet Count','Initial Setup Rate','Initial Setup Count','Initial Setup Overs','Additional Setup Rate','Additional Setup Count','Additional Setup Overs','Run Overs','FM Overs','Additional Plate Overs', 'BinderyOvers', 'FoldingMakeReadyOvers','FoldingRunOvers'} );
+		$breakdown .= sprintf( 'Overs: Base:%s Initial Setups: %d*%d=%d, Additional Setups: %d*%d=%d Run:%s FM:%s Additional Plate:%d * %d changes = %s Bindery: %d (FoldMakeReady: %d FoldRun: %d', @$stock_qty{'Net Sheet Count','Initial Setup Rate','Initial Setup Count','Initial Setup Overs','Additional Setup Rate','Additional Setup Count','Additional Setup Overs','Run Overs','FM Overs','Additional Plate Overs Rate','Plate Changes','Additional Plate Overs', 'BinderyOvers', 'FoldingMakeReadyOvers','FoldingRunOvers'} );
 		$breakdown .= ' Cutting: ' . $$stock_qty{CuttingOvers} if $$stock_qty{CuttingOvers};
 		$breakdown .= ' Scoring: ' . $$stock_qty{ScoringOvers} if $$stock_qty{ScoringOvers};
 		$breakdown .= ' DieCutting: ' . $$stock_qty{DieCuttingOvers} if $$stock_qty{DieCuttingOvers};
@@ -3990,14 +3990,13 @@ sub get_project_price {
 								$$sig_price{PlateCost} = $$results{Price} ;
 							}
 
-							if ( int($$sig_price{'Comparison Cost'}) == $last_sig_price ) {
+							if ( ( int($$sig_price{'Comparison Cost'}) == $last_sig_price ) and ( $$sig_specs{'txtPlateChangeQuantity'.$qty_index} == $$new_specs{'txtPlateChangeQuantity'.$qty_index}) ) {
 								my $sigs = int($$price{upq}/$$imp{pages});
-								$$price{'Comparison Cost'} += $$sig_price{'Comparison Cost'} * $sigs;
-								$$price{'Comparison Log'} .= 'signature ' . $$sig_price{'Comparison Cost'} * $sigs . '<br/>' if COMPARISON_LOG;
-								$PaperCounts{$Paper->id_string()} += $sigs * $$sig_price{'Stock Qty'};
-								my $sig;
 #$openprint::log->debug("Sigs: $sigs: signatures( @signatures )");
 								foreach ( 1 .. $sigs ) {
+									$$price{'Comparison Cost'} += $$sig_price{'Comparison Cost'};
+									$$price{'Comparison Log'} .= 'signature ' . $$sig_price{'Comparison Cost'} .'<br/>' if COMPARISON_LOG;
+									$PaperCounts{$Paper->id_string()} += $$sig_price{'Stock Qty'};
 									push @{$$price{Impositions}}, $imp;
 									push @{$$price{prices}}, $sig_price;
 									push @total_impositions, $imp;
@@ -4008,14 +4007,13 @@ sub get_project_price {
 									$imp = $imp->copy();
 									$new_specs = get_new_specs( $Project, $service_index, $service_specs, \@signatures, $qty_index, $$price{upq}, \%previous_forms_cache, $hash_key );
 									$$imp{specs} = $new_specs;
-								} # end foreach
-								foreach ( 2 .. $sigs ) {
+
 									$$sig_price{'Comparison Log'} .= 'plates ' . $$sig_price{PlateCost} . '<br/>' if COMPARISON_LOG;
 									$$sig_price{'Comparison Cost'} += $$sig_price{PlateCost};
 									$PlateCounts{$$sig_price{'Plate Costs'}{'Plate ID'}} += $$sig_price{'Plate Costs'}{'Plate Count'};
-								} # end if
-								$sig_count += $sigs -1;
-								unshift @signatures, $sig if $sig;
+									$sig_count += 1;
+									last if $$sig_specs{'txtPlateChangeQuantity'.$qty_index} != $$new_specs{'txtPlateChangeQuantity'.$qty_index};
+								} # end foreach
 #$openprint::log->debug("New upq: $$price{upq}");
 							} else {
 #$openprint::log->debug("Got diff comparison cost");
@@ -4032,9 +4030,9 @@ sub get_project_price {
 								$sig_count += 1;
 
 								# Copying the base_imp, means that we lose our folds.
-					$imp = $imp->copy();
-					$new_specs = get_new_specs( $Project, $service_index, $service_specs, \@signatures, $qty_index, $$price{upq}, \%previous_forms_cache, $hash_key );
-					$$imp{specs} = $new_specs;
+								$imp = $imp->copy();
+								$new_specs = get_new_specs( $Project, $service_index, $service_specs, \@signatures, $qty_index, $$price{upq}, \%previous_forms_cache, $hash_key );
+								$$imp{specs} = $new_specs;
 							} # end if
 							$imp->display( $recursion_depth . ' UPQ: ' . $$price{upq} . ' after first level calc_price' ) if DEBUG;
 
@@ -4999,10 +4997,14 @@ sub calc_price {
 	my $plate_changes = 0;
 	$plate_changes += $$project{ProjectSpecs}{"txtPlateChangeQuantity-$$specs{Group}"} if $$project{ProjectSpecs}{"txtPlateChangeQuantity-$$specs{Group}"};
 	$plate_changes += $$specs{'txtPlateChangeQuantity'.$qty_index} if $$specs{'txtPlateChangeQuantity'.$qty_index};
+	
+	
 
 	my $additional_overs = 0;
+	my $additional_overs_rate = 0;
 	if ( $plate_changes ) {
-		$additional_overs += ( $plate_changes * $Press->specification('Additional Plate Overs') );
+		$additional_overs_rate = $Press->specification('Additional Plate Overs');
+		$additional_overs += ( $plate_changes * $additional_overs_rate );
 		my $minimum = $Press->specification('Additional Plate Overs Minimum');
 		$additional_overs = $minimum if $minimum > $additional_overs;
 	} # end if
@@ -5288,6 +5290,7 @@ $openprint::log->warn("No folding equipment");
 
 	
 	$plate_setup{'Setup Plate Count'} = $plate_count;
+	$plate_setup{'Plate Changes'} = $plate_changes;
 
 	$plate_count *= $plate_runs;
 	$plate_count += $plate_changes;
@@ -5443,6 +5446,7 @@ $openprint::log->warn("No folding equipment");
 			'Additional Setup Overs'	=> $additional_setup_overs,
 			'Run Overs'					=>	$run_overs,
 			'Additional Plate Overs'	=>	$additional_overs,
+			'Additional Plate Overs Rate'	=>	$additional_overs_rate,
 			'Total Overs'				=>	$total_overs,
 			'Weight'					=>	$weight,
 			'FM Overs'					=>	$fm_overs,
@@ -5454,6 +5458,7 @@ $openprint::log->warn("No folding equipment");
 			'BinderyOvers'				=>	$bindery_overs,
 			'CuttingOvers'				=>	$price{'Cutting Overs'},
 			'Minimum Overs'				=>	$min_overs,
+			'Plate Changes'				=>	$plate_changes,
 			);
 	$price{'Stock Quantity'} = \%sheet_qty;
 	$price{'Gross Sheet Count'} = $sheet_qty{'Gross Sheet Count'};

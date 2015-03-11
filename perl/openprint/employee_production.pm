@@ -1080,8 +1080,7 @@ sub _drop {
 	my $Equipment = $Shift->Equipment(); # For efficiency
 
 	# Force it to redraw the changed UL, since the runtimes are likely to have changed.
-@{$variable{changed}} = ( $Shift->ul_id() );
-	# Actually, don't do this
+	@{$variable{changed}} = ( $Shift->ul_id() );
 
 	if ( exists $param{services} ) {
 		my $services = $param{services};
@@ -1130,6 +1129,8 @@ sub _drop {
 		for ( my $i = 0; $i < @order; $i += 1 ) {
 			my $row_id = $order[$i];
 			my $Job = new openprint::ScheduledJob( $row_id );
+
+			# If it's a bindery job but wasn't before, so printing -> bindery
 			if ( $Job->project_id() and sets::isin( 'Bindery', [$Equipment->categories()] ) and ! sets::isin( $Job->servicetype_id(), $Equipment->servicetype_id() ) ) {
 				my @Jobs;
 				my $Project = $Job->Project();

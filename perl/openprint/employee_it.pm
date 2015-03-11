@@ -115,9 +115,19 @@ sub host {
 		foreach my $I ( $Host->Interfaces() ) {
 			next if ! $I->mac();
 			if ( $I->ip() ) {
-			`wakeonlan -i $$I{ip} $$I{mac}`;
+				$_ = `wakeonlan -i $$I{ip} $$I{mac} 2>&1`;
+				if ( defined $_ ) {
+					$variable{information} .= "running wakeonlan -i $$I{ip} $$I{mac}<br/>Output: $_<br/>";
+				} else {
+					$variable{error} .= "Error running wakeonlan -i $$I{ip} $$I{mac}<br/>";
+				}
+			} # end if ip
+			$_ = `wakeonlan $$I{mac} 2>&1`;
+			if ( defined $_ ) {
+				$variable{information} .= "running wakeonlan -i $$I{ip} $$I{mac}<br/>Output: $_<br/>";
+			} else {
+				$variable{error} .= "Error running wakeonlan -i $$I{ip} $$I{mac}<br/>";
 			}
-			`wakeonlan $$I{mac}`;
 		} # end foraech
 	} elsif ( $param{action} eq 'GEOLookup' ) {
 		foreach my $I ( $Host->interfaces() ) {
