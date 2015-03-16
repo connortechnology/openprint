@@ -8,7 +8,7 @@ require openprint::Product;
 require Math::Round;
 
 use vars qw( $debug $table $serial %fields %transforms %defaults );
-$debug = 1;
+$debug = 0;
 $table = 'Product_Prices';
 $serial = 'product_prices_id_seq';
 %fields = (

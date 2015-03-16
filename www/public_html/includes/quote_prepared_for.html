@@ -6,12 +6,12 @@
 	<li><label>Contact</label>
 		<? hecho ( $$variable{Quote}->for_salutation() ) ?>
 		<? hecho ( $$variable{Quote}->for_firstname() ) ?>
-		<? hecho ( $$variable{Quote}->for_lastname() ) ?><br/>
+		<? hecho ( $$variable{Quote}->for_lastname() ) ?>
 	</li>
 <? endif ( $$variable{Quote}->for_firstname() or $$variable{Quote}->for_lastname() ) ?>
 <? if ( $$variable{Quote}->for_companyname(); ) ?>
 	<li><label>Company</label>
-		<? hecho ( $$variable{Quote}->for_companyname().'<br/>'; ) ?>
+		<? hecho ( $$variable{Quote}->for_companyname() ) ?>
 	</li>
 <? endif ( $$variable{Quote}->for_companyname(); ) ?>
 <? if ( $$variable{Quote}->for_address1() or $$variable{Quote}->for_address2() ) ?>
@@ -34,7 +34,7 @@
 	<? endif ( $$variable{Quote}->for_fax() ) ?>
 	<? if ( $$variable{Quote}->for_email() ) ?>
 	<li><label>Email</label>
-		<? hecho ( $$variable{Quote}->for_email().'<br/>' if $$variable{Quote}->for_email(); ) ?>
+		<? echo ( $$variable{Quote}->for_email().'<br/>' if $$variable{Quote}->for_email(); ) ?>
 	</li>
 	<? endif ( $$variable{Quote}->for_email() ) ?>
 			</ul>

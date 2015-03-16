@@ -14,9 +14,10 @@ use Memoize;
 memoize('fits');
 #memoize('Specification');
 
-use vars qw( $debug $log $dbh $table $serial %fields %find_fields %transforms %defaults $cache_field );
+use vars qw( $debug $log $dbh $table $serial %fields %find_fields %transforms %defaults $cache_field $default_sort );
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
+$default_sort = 'lower(strid)';
 $table = 'tbl_Equipment';
 $serial = 'Equipment_Index_seq';
 $cache_field = 'strid';
@@ -515,7 +516,7 @@ sub categories {
 sub Operators {
 	if ( ! $_[0]{Operators} ) {
 		my @user_ids = map { $$_{user_id} } openprint::Equipment_Operator->find( equipment_id=>$_[0]{id} );
-		@{$_[0]{Operators}} = openprint::User->find( id=>\@user_ids, order=>'lower(firstname),lower(lastname)' );
+		@{$_[0]{Operators}} = @user_ids ? openprint::User->find( id=>\@user_ids, order=>'lower(firstname),lower(lastname)' ) : ();
 	} # end if
 	return @{$_[0]{Operators}};
 } # end sub Operators

@@ -976,14 +976,14 @@ $openprint::log->debug("Has a fold, doing extra checks") if DEBUG;
 									$openprint::log->debug("Has max feed width width folds: $width_folds height folds: $height_folds $$sig_specs{txtWidth} $$sig_specs{txtHeight} width_size: $width_size height_size: $height_size max_feed_width: $max_feed_width") if DEBUG;
 									if ( ( $width_folds and ! $height_folds ) or ( $width_folds == $$Fold{folds} and $height_folds == $$Fold{angles} ) ) {
 # If folds are on width, we grip on height...
-										if ( $width_size > $max_feed_width ) {
-											$failure_reason = "Fold no good due to max feed width $width_size > $max_feed_width on width ($$sig_specs{txtHeight}).";
+										if ( $height_size > $max_feed_width ) {
+											$failure_reason = "Fold no good due to max feed height $height_size > $max_feed_width on height ($$sig_specs{txtHeight}).";
 											$Fold = undef;
 										} # end if
 									} elsif ( ( $height_folds and ! $width_folds ) or ( $height_folds == $$Fold{folds} and $height_folds == $$Fold{angles} ) ) {
-										if ( $height_size > $max_feed_width ) {
+										if ( $width_size > $max_feed_width ) {
 											$Fold = undef;
-											$failure_reason = "Fold no good due to max feed width $height_size > $max_feed_width on height ($$sig_specs{txtWidth}.";
+											$failure_reason = "Fold no good due to max feed width $width_size > $max_feed_width on width ($$sig_specs{txtWidth}).";
 										} # end if
 									} else {
 										$openprint::log->warn("No fold match");
@@ -1221,7 +1221,7 @@ $openprint::log->debug(qq`Wrong imposition: $$specs{"FoldImposition-$form-$qty_i
 # Replace with a generic one
 						my ( $pages ) = $$specs{"FoldType-$form-$qty_index-$index"} =~ /(\d+)Page/;
 						my $Fold = openprint::Fold->find_one( 
-									spine_direction	=>	$$SignatureImposition{image_orientation},
+									'spine_direction is null or ='=>	$$SignatureImposition{image_orientation},
 								(	$$specs{"FoldImposition-$form-$qty_index-$index"} ? (
 									'min_imposition null_or_<='	=>	$$specs{"FoldImposition-$form-$qty_index-$index"},
 									'max_imposition null_or_>='	=>	$$specs{"FoldImposition-$form-$qty_index-$index"},
@@ -1234,6 +1234,7 @@ $openprint::log->debug(qq`Wrong imposition: $$specs{"FoldImposition-$form-$qty_i
 							$openprint::log->debug("found the fold trying generic") if DEBUG;
 						} else {
 							$Fold = new openprint::Fold();
+							$$Fold{pages} = $pages if $pages;
 							$$Fold{type} = $$specs{"FoldType-$form-$qty_index-$index"};
 							$$Fold{runspeed} = $$specs{"FoldRunspeed-$form-$qty_index-$index"} if $$specs{"FoldRunspeed-$form-$qty_index-$index"};
 						} # end if
@@ -1243,7 +1244,7 @@ $openprint::log->debug(qq`Wrong imposition: $$specs{"FoldImposition-$form-$qty_i
 							$FI->rows(1);
 							$FI->columns( $$specs{"FoldImposition-$form-$qty_index-$index"} );
 						} # end if
-						$$FI{page_quantity} = int($$SignatureImposition{pages}/$$Fold{pages}) if $$Fold{pages};
+						$$FI{page_quantity} = $$specs{"FoldQty-$form-$qty_index-$index"};
 						$$FI{quantity} = $$specs{"FoldQty-$form-$qty_index-$index"};
 						$$FI{Fold} = $Fold;
 						$$Fold{undesired} = 1;
@@ -1255,6 +1256,8 @@ $openprint::log->debug(qq`Wrong imposition: $$specs{"FoldImposition-$form-$qty_i
 						$$specs{alert} .= "You seem to be specifying more pages for folding than were printed for form $form quantity $qty_index<br/>";
 					} elsif ( $override_pages < $SignatureImposition->imposition() * $SignatureImposition->pages() ) {
 						$$specs{alert} .= "You seem to be specifying fewer pages for folding than were printed for form $form quantity $qty_index<br/>";
+					} else {
+						
 					} # end if
 				} # endif
 
@@ -1275,6 +1278,7 @@ $openprint::log->debug(qq`Wrong imposition: $$specs{"FoldImposition-$form-$qty_i
 
 			# This copying of the specs is bad.  We need to make it unncessary.  Scoring, perfing, stitching, etc all use the Folds array now...
 			my %fold_specs = %$specs;
+			$$calc_hash{FoldingSpecs} = \%fold_specs;
 			# Going to assume that there is at least 1 fold, so we only have to clear the others
 			foreach my $fold_index ( 2 .. 4 ) {
 				$fold_specs{"FoldType-$form-$qty_index-$fold_index"} = '';
@@ -1283,6 +1287,8 @@ $openprint::log->debug(qq`Wrong imposition: $$specs{"FoldImposition-$form-$qty_i
 
 			# Used as a flag to tell us not to quit early
 			my $undesired = 0;
+
+			$fold_specs{"ddmEquipment-$form-$qty_index"} = $Equipment->id();
 
 			for ( my $imp_index = 0; $imp_index < @Used_Impositions; $imp_index += 1 ) {
 				my $Imposition = $Used_Impositions[$imp_index];
@@ -1298,6 +1304,7 @@ $openprint::log->debug(qq`Wrong imposition: $$specs{"FoldImposition-$form-$qty_i
 
 				$fold_specs{"FoldType-$form-$qty_index-$fold_index"} = $Fold->type();
 				$fold_specs{"FoldQty-$form-$qty_index-$fold_index"} = $Imposition->quantity();
+				#$Imposition->page_quantity( int($SignatureImposition->pages()/$Imposition->pages() ) );
 				$fold_specs{"FoldPageQty-$form-$qty_index-$fold_index"} = $Imposition->page_quantity();
 				$fold_specs{"FoldImposition-$form-$qty_index-$fold_index"} = $Imposition->imposition();
 				$fold_specs{"FoldColumns-$form-$qty_index-$fold_index"} = $Imposition->columns();
@@ -1462,27 +1469,35 @@ $openprint::log->debug("Runspeed: $$Fold{type}(".$Fold->name().") : " . $Equipme
 			if ( $$calc_hash{HasStitching} ) {
 				if ( ! exists $$specs{StitchingCost} ) {
 # Add in stitching estimate, based on if the folder is this piece of equipment
-					$fold_specs{"ddmEquipment-$form-$qty_index"} = $Equipment->id();
 					$fold_specs{"Price-$form-$qty_index"} = $totalPrice;
 $Breakdown .= '<tr><td>Signatures:'.(@$Signature_Impositions+1).'</td></tr>';
-					$$calc_hash{FoldingSpecs} = \%fold_specs;
-					my $results = openprint::Estimating::Stitching::signature_calc( $Project, @$calc_hash{'HasStitching','StitchingSpecs'}, $qty_index, [ @$Signature_Impositions, $SignatureImposition ], $calc_hash );
-					if ( ! $$results{Equipment} ) {
-						$Breakdown .= "unable to determine stitching equipment: $$results{alert} $$results{Breakdown}<br/>";
+					my $stitching_specs;
+					if ( $capable eq 'When Stitching' ) {
+						my %stitching_specs = %{$$calc_hash{StitchingSpecs}};
+						$stitching_specs{"chkOverrideEquipment$qty_index"} = 'Y';
+						$stitching_specs{"ddmEquipment$qty_index"} = $Equipment->id();
+						$stitching_specs = \%stitching_specs;
+					} else {
+						$stitching_specs = $$calc_hash{StitchingSpecs};
+					} # end if
+					
+					my $stitching_results = openprint::Estimating::Stitching::signature_calc( $Project, $$calc_hash{'HasStitching'},$stitching_specs, $qty_index, [ @$Signature_Impositions, $SignatureImposition ], $calc_hash );
+					if ( ! $$stitching_results{Equipment} ) {
+						$Breakdown .= "unable to determine stitching equipment: $$stitching_results{alert} $$stitching_results{Breakdown}<br/>";
 						$openprint::log->warn('unable to determine stitching equipment; ; '.$Breakdown) if DEBUG;
 
 						$stitching_part = 1000000;
 						#$totalPrice += 1000000;
-					} elsif ( $$results{Equipment}->id() != $Equipment->id() and $Equipment->specification('Folding Capable') eq 'When Stitching' ) {
-						$Breakdown .= 'Not stitching on ' . $Equipment->strid().' stitching on '.$$results{Equipment}->strid() .'.<br/>';
-						$Breakdown .= $$calc_hash{StitchingSpecs}{"hdnBreakdown$qty_index"};
+					} elsif ( $$stitching_results{Equipment}->id() != $Equipment->id() and $capable eq 'When Stitching' ) {
+						$Breakdown .= 'Not stitching on ' . $Equipment->strid().' stitching on '.$$stitching_results{Equipment}->strid() .'.<br/>';
+						$Breakdown .= $$stitching_results{Breakdown} . '<br/>' . $$stitching_results{alert};
 						$stitching_part = 1000000;
 						$totalPrice += 1000000;
 					} else {
-						my $Price = $$results{Price};
+						my $Price = $$stitching_results{Price};
 						$stitching_part = $$Price{Price};
-						$Breakdown .= '<tr><td>'.$$results{Breakdown}.'</td></tr>' if DEBUG;
-						$Breakdown .= "<tr><td>Stitching cost on $$results{Equipment}{name}</td><td class=\"Price\">$stitching_part</td></tr>";
+						$Breakdown .= '<tr><td>'.$$stitching_results{Breakdown}.'</td></tr>' if DEBUG;
+						$Breakdown .= "<tr><td>Stitching cost on $$stitching_results{Equipment}{name}</td><td class=\"Price\">$stitching_part</td></tr>";
 					} # end if
 					#$Breakdown .= $$results{Breakdown}.'<br/>';
 				} elsif ( $$specs{StitchingEquipment}->id() != $Equipment->id() and $Equipment->specification('Folding Capable') eq 'When Stitching' ) {
@@ -1494,19 +1509,20 @@ $Breakdown .= '<tr><td>Signatures:'.(@$Signature_Impositions+1).'</td></tr>';
 			} # end if has sittiching
 			$comparison_cost += $totalPrice + $stitching_part + $cutting_results{Price};
 			if ( $$calc_hash{ScoringSpecs} ) {
+				$$calc_hash{FoldingSpecs} = \%fold_specs;
 				my %scoring_results = openprint::Estimating::Scoring::signature_calc( $Project, $$calc_hash{ScoringSpecs}, $sig_specs, $qty_index, $SignatureImposition, $calc_hash );
-				$Breakdown .= "<tr><td>Scoring cost on $scoring_results{Equipment}{name}</td><td class=\"Price\">$scoring_results{Price}</a>";
+				$Breakdown .= "<tr><td>Scoring cost on $scoring_results{Equipment}{name}<br/>$scoring_results{Breakdown}</td><td class=\"Price\">\$$scoring_results{Price}</a>";
 				$comparison_cost += $scoring_results{Price};	
 			} # end if
 
 			if ( $cutting_results{Equipment} ) {
-				$Breakdown .= "<tr><td>Cutting on $cutting_results{Equipment}{name}</td><td>$cutting_results{Price}</td></tr>";
+				$Breakdown .= qq`<tr><td>Cutting on $cutting_results{Equipment}{name}</td><td class="Price">$cutting_results{Price}</td></tr>`;
 			} else { 
-				$Breakdown .= "<tr><td>No Cutting: $cutting_results{alert} $cutting_results{Breakdown}</td><td>$cutting_results{Price}</td></tr>";
+				$Breakdown .= qq`<tr><td>No Cutting: $cutting_results{alert} $cutting_results{Breakdown}</td><td class="Price">$cutting_results{Price}</td></tr>`;
 
 			} # end if
 
-			$Breakdown .= '<tr><td>comparison :</td><td>' . $comparison_cost . ' </td></tr>';
+			$Breakdown .= '<tr><td>comparison :</td><td class="Price">' . Math::Round::nearest(0.01,$comparison_cost) . ' </td></tr>';
 			$Breakdown .= '</table>';
 
 			if ( ( $comparison_cost < $bestComparison ) or ( ! defined $bestComparison ) ) {
@@ -2084,7 +2100,7 @@ sub cut_spreads {
 			} else {
 				$i1->image_width( $I->image_width()/$I->spread_rows() );
 			} # endif
-			$openprint::log->debug(sprintf('Cutting pages down from q%d x %d pages to q%d x %d pages', $I->quantity(), $I->pages(), $i1->quantity(), $i1->pages() ) ) if DEBUG;
+			$openprint::log->debug(sprintf('Cutting pages down from q%d x %d pages to q%d x %d pages pq(%d)', $I->quantity(), $I->pages(), $i1->quantity(), $i1->pages(), $I->page_quantity() ) ) if DEBUG;
 			push @results, [ $i1 ];
 
 			my $i2 = $I->copy();

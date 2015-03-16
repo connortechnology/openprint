@@ -29,13 +29,13 @@
 			) ?>
 		</div>
 	</fieldset>
-	<fieldset><legend>Services</legend>
 	<? echo (
-		my $html = '';
+		my @Timetracks = openprint::Timetrack->find('invoice_id'=>$$variable{Invoice}->id(), 'order'=>'starting');
+		return '' if ! @Timetracks;
+		my $html = '<fieldset><legend>Services</legend>';
 		$$variable{'Currency'} = openprint::Currency::get_current() if ! $$variable{'Currency'};
 		$$variable{'service_total'} = 0;
 		my $rowclass = '';
-		my @Timetracks = openprint::Timetrack->find('invoice_id'=>$$variable{Invoice}->id(), 'order'=>'starting');
 
 		my $count = 0;
 		$html .= '<table class="List">
@@ -91,14 +91,15 @@
 						$rowclass = $rowclass ? '' : 'class="colRow"';
 					} # end foreach Timetrack
 				} # end if more Timetracks
-				return $html;
-			) ?>
+				$html .= '
 			<tr class="totals">
 				<td colspan="5">Totals</td>
-				<td class="Price"><? echo ( openprint::Currency::format( $$variable{'service_total'} ); ) ?></td>
+				<td class="Price">'.openprint::Currency::format( $$variable{'service_total'} ).'</td>
 			</tr>
 		</table>
-	</fieldset>
+	</fieldset>';
+				return $html;
+			) ?>
 	<?include(/invoice/_products_view.html)?>
 <div class="Notes">
 	<fieldset><legend>Notes</legend>

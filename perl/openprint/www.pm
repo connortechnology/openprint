@@ -241,17 +241,21 @@ $log->debug("PageContent is $variable{PageContent}");
 		} # end if _
 		#$log->debug( "After finding template: ($page) Elapsed time: " . sprintf('%.4f', tv_interval([$starttime])*1000).' usecs' );
 		local $|=1;
-		if ( $template ) {
-			#$log->debug("parsing template! $template");
-			$r->print( ssi::variable_substitution( \$template, \%variable ) );
-		} else {
+		if ( ! $r->connection()->aborted() ) {
+			if ( $template ) {
+#$log->debug("parsing template! $template");
+				$r->print( ssi::variable_substitution( \$template, \%variable ) );
+			} else {
 
-			#$log->warn("No template!" . $r->content_type());
-			$variable{PageContent} = ssi::variable_substitution( \$variable{'PageContent'}, \%variable ) if $variable{'PageContent'} ne '';
-			$log->warn($variable{PageContent}) if Debug;
-			#$log->debug( "Before printing: ($page) Elapsed time: " . sprintf('%.4f', tv_interval([$starttime])*1000).' usecs' . length( $variable{PageContent} ) );
-			$r->print( $variable{PageContent} );
-	#$log->debug( "After printing: ($page) Elapsed time: " . sprintf('%.4f', tv_interval([$starttime])*1000).' usecs' );
+#$log->warn("No template!" . $r->content_type());
+				$variable{PageContent} = ssi::variable_substitution( \$variable{'PageContent'}, \%variable ) if $variable{'PageContent'} ne '';
+				$log->warn($variable{PageContent}) if Debug;
+#$log->debug( "Before printing: ($page) Elapsed time: " . sprintf('%.4f', tv_interval([$starttime])*1000).' usecs' . length( $variable{PageContent} ) );
+				$r->print( $variable{PageContent} );
+#$log->debug( "After printing: ($page) Elapsed time: " . sprintf('%.4f', tv_interval([$starttime])*1000).' usecs' );
+			} # end if
+		} else {
+			$log->debug("Aborted");
 		} # end if
 	} # end if
 
@@ -392,11 +396,12 @@ $log->error("Unable to load equipment.	No PPF for you for signature $$PPF{'signa
 		my ( $proc ) = $filename =~ /(.*)\.\w*$/;
 		if ( $proc ) {
 			my $module = join('_',@path);
+			require "openprint/$module.pm";
 			$log->debug("Calling $module :: $proc");
 			if ( my $function = ('openprint::'.$module)->can($proc) ) {
 				$function->($r, $log, $dbh, \%variable );
 			} else {
-				$log->error( "Eval error of require $module :: $proc, Reason: " );
+				$log->error( "Eval error: $module cant $proc, Reason: " );
 			}
 		} # end if
 	} elsif ( $first eq 'main' ) { # main

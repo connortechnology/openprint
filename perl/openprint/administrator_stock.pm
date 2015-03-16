@@ -309,7 +309,11 @@ sub stock {
 		} # end foreach Price
 
 		$variable{'error'} .= $Paper->save();
-		$variable{'information'} .= 'Stock ' . $Paper->id() . ' has been saved.' if ! $variable{'error'};
+		(new openprint::Log())->save({ object_type=>(ref $Paper), object_id=>$$Paper{id}, action=>($param{stock_id}?'Edited stock':'Saved stock') });
+		if ( ! $variable{'error'} ) {
+			$variable{'information'} .= 'Stock ' . $Paper->id() . ' has been saved.';
+			$variable{ExternalRedirect} = '/administrator/stock/stock.html?stock_id='.$$Paper{id};
+		} # end if
 	} elsif ( $param{'btnFunction'} eq 'Prev' ) {
 		$Paper = $Paper->previous();
 		$param{'stock_id'} = $Paper->id();

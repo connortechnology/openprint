@@ -38,7 +38,7 @@ use vars qw( $r $log $dbh %variable %param %session %config );
 *param = \%openprint::param;
 *config = \%openprint::config;
 
-use constant DEBUG => 1;
+use constant DEBUG => 0;
 sub skids {
 	if ( $param{'btnFunction'} eq 'move' )	{
 		if ( $param{'skid_id'} ) {

@@ -11,7 +11,7 @@ require openprint::Currency;
 require openprint::Company;
 require openprint::Order;
 
-$debug = 1;
+$debug = 0;
 $table = 'payments';
 $serial = 'payments_id_seq';
 
