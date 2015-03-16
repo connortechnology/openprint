@@ -293,7 +293,7 @@ $log->debug("# of entries in Object_name_cache: " . keys %{$openprint::Object::n
 					} # end if
 					$host_counts{$ip}{updated_on_seconds} = time;
 				} # end if
-				$log->debug( "$ip $host_counts{$ip}{ip} $host_counts{$ip}{count}" ) if $config{debug};
+				#$log->debug( "$ip $host_counts{$ip}{ip} $host_counts{$ip}{count}" ) if $config{debug};
 				`shorewall drop $ip` if $host_counts{$ip}{blacklist};
 			} # end foreach ip
 			$changed = 0;
