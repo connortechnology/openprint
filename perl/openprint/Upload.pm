@@ -7,7 +7,7 @@ require misc;
 use openprint ();
 use vars qw( $debug $table $serial %fields %transforms %defaults );
 
-$debug = 1;
+$debug = 0;
 $table = 'uploads';
 $serial = 'uploads_id_seq';
 %fields = (
