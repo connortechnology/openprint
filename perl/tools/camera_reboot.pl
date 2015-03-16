@@ -25,7 +25,7 @@ my $program = basename($0);
 
 my $opts = {};
 GetOptions($opts, 'help', 
-    'db_name=s', 'db_host=s', 'db_user=s', 'db_pass=s','blacklist=s', 'debug=s',
+    'db_name=s', 'db_host=s', 'db_user=s', 'db_pass=s','blacklist=s', 'debug=s', 'host_id=s',
  );
 
 if ($opts->{help}) {
@@ -95,7 +95,7 @@ configuration::init_cache( $log, $dbh );
 # udp has less network traffic overhead
 my $p = Net::Ping->new('icmp',10);
 
-my @Hosts = openprint::Host->find('monitored'=>1,'type in'=>[ 'AIC500', 'AIC500W', 'AIC777W', 'AIC747W','AIC250','AIC250W' ]);
+my @Hosts = $$opts{host_id} ? openprint::Host->find(id=>$$opts{host_id}) : openprint::Host->find('monitored'=>1,'type in'=>[ 'AIC500', 'AIC500W', 'AIC777W', 'AIC747W','AIC250','AIC250W' ]);
 $log->debug( 'Monitoring ' . @Hosts . ' hosts.' );
 foreach my $Host ( @Hosts ) {
 	if ( ! $Host->ip() ) {
@@ -111,24 +111,7 @@ foreach my $Host ( @Hosts ) {
 	} # end if
 
 	if ( $Host->online() and $ping ) {
-
-		if ( sets::isin( $Host->type(), [ 'AIC500', 'AIC500W', 'AIC777W', 'AIC747W' ] ) ) {
-			$log->debug('Sending reboot to ' . $Host->hostname());
-			my $browser = LWP::UserAgent->new();
-			$browser->credentials( $Host->hostname().':80', 'Netcam', 'admin'=>'p1GraPHic' );
-
-			my $response = $browser->get('http://'.$Host->hostname().'/admin/reboot.cgi?type=0');
-			$log->debug($response->is_success);
-		} elsif ( sets::isin( $Host->type(), [ 'AIC250', 'AIC250W' ] ) ) {
-			$log->debug('Sending reboot to ' . $Host->hostname());
-			my $browser = LWP::UserAgent->new();
-			$browser->credentials( $Host->hostname().':80', 'Netcam', 'admin'=>'p1GraPHi' );
-			my $response = $browser->get('http://'.$Host->hostname().'/Reply.htm?Reset=Yes');
-			$log->debug($response->is_success);
-		
-		} elsif ( $Host->type() ) {
-			$log->warn("unsupported type: " . $Host->type() );
-		} # end if
+		$Host->reboot();
 	} elsif ( $Host->online() ) {
 		$log->debug("No ping for $$Host{hostname}");
 	} else {
