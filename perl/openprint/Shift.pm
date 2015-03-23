@@ -3,6 +3,7 @@ package openprint::Shift;
 our @ISA = qw(openprint::Object);
 require openprint::Object;
 
+use Carp;
 use openprint ();
 use vars qw(%variable $log $dbh %config %session $debug $table $serial %fields %find_fields %transforms %defaults );
 *variable = \%openprint::variable;
@@ -52,7 +53,13 @@ $serial = 'shifts_id_seq';
 my $parser = 'DateTime::Format::Pg';
 
 sub starttime_dt {
-	return $parser->parse_datetime( $_[0]{starttime} );
+	if ( $_[0]{starttime} ) {
+		return $parser->parse_datetime( $_[0]{starttime} );
+	} else {
+		$openprint::log->error("tried to get a dt for " . $_[0]{starttime} );
+Carp::cluck("Loadi?! ");
+		return;
+	}
 }
 sub starttime_seconds {
 	if ( @_ == 2 ) {
@@ -148,10 +155,12 @@ sub Equipment {
 sub to_string {
 	my ( $self ) = @_;
 	if ( ! exists $$self{to_string} ) {
+$openprint::log->debug("Getting to_string");
 		$$self{to_string} = sprintf('%s %s %s to %s op:(%s)', $self->Equipment()->name(), $self->name(), 
-			$parser->format_datetime( $self->starttime_dt ),
-			$parser->format_datetime( $self->endtime_dt ),
+			$self->starttime() ? $parser->format_datetime( $self->starttime_dt ) : '',
+			$self->endtime() ? $parser->format_datetime( $self->endtime_dt ) : '',
 			$self->Operator()->name() );
+$openprint::log->debug("Getting to_string");
 	} # end if
 	return $$self{to_string};
 } # end sub to_string
@@ -162,6 +171,8 @@ sub get_lis {
 	my @Jobs = $Shift->Schedule();
 	if ( ( ! @Jobs ) and ! $Shift->starttime() ) {
 		return 'empty';
+	} elsif ( $debug ) {
+		$openprint::log->debug( @Jobs . " jobs loaded" );
 	} # end if
 	my $html;
 	my $ul_id = $Shift->ul_id();
@@ -196,11 +207,11 @@ sub get_from_ul_id {
 
 	my $Shift;
 	if ( $shift_name and $date ) {
-		$Shift = openprint::Shift->find_one( 'equipment_id'=>$equipment_id, 'name'=>$shift_name, 'startdate'=>$date );
+		$Shift = openprint::Shift->find_one( equipment_id=>$equipment_id, name=>$shift_name, startdate=>$date );
 		return if ! $Shift;
 	} else {
 		$Shift = new openprint::Shift();
-		$Shift->set({ 'equipment_id'	=>	$equipment_id, });
+		$Shift->set({ equipment_id	=>	$equipment_id });
 		$Shift->name( $shift_name );
 	} # end if Shift
 	return $Shift;
