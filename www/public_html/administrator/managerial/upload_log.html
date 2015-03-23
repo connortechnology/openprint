@@ -12,7 +12,7 @@
 				<input type="text" onkeyup="filterDDM(this,this.form.company_id);" onkeydown="if(event.keyCode==13){searchLog.btnFunction.value='Go';searchLog.submit();}" class="filter" />
 				<select name="company_id" id="company_id" onchange="searchLog.submit();" >
 					<option value="">All</option>
-					<? echo ( return openprint::Company::get_dropdown( $param{'company_id'} );) ?>
+					<? echo ( make_drop_down( openprint::Company->dropdown('last_ordered_on is null'=>0), $param{company_id} );) ?>
 				</select>
 			</li>
 			<li><label>Type</label>
@@ -33,6 +33,7 @@
 			<th class="File">File</th>
 			<th class="Type">Type</th>
 			<th class="Size">Received / Size</th>
+			<th class="Speed">Speed</th>
 			<th class="Status">Status</th>
 		</tr>
 		<? echo (
@@ -66,6 +67,7 @@
 					<td class="File">%s</td>
 					<td class="Type">%s</td>
 					<td class="Size">%s / %s</td>
+					<td class="Speed">%s</td>
 					<td class="Status">%s</td></tr>',
 					$rowclass,
 					format_datetime( $Upload->start() ),
@@ -75,12 +77,13 @@
 					$Upload->type(),
 					$Upload->size_text(),
 					$Upload->total_text(),
+					$Upload->speed(),
 					$Upload->finished() ? 'Finished' : 'Incomplete',
 					);
 				$rowclass = $rowclass ? '' : ' class="colRow"';
 				$total += $Upload->size();
 			} # end foreach
-			$html .= '<tr class="totals"><td colspan="5">Totals</td><td class="Size">'.misc::format_bytes($total).'</td><td></td></tr>';
+			$html .= '<tr class="totals"><td colspan="6">Totals</td><td class="Size">'.misc::format_bytes($total).'</td><td></td></tr>';
 			return $html;
 		) ?>
 	</table>

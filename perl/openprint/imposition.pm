@@ -126,6 +126,14 @@ sub check_setup {
 	my ( $setup, $specs ) = @_;
 
 	return 0 if ! $setup->imposition();
+if ( 
+( $setup->columns() == 1 ) and 
+( $setup->runstyle() eq 'Perfecting' ) and 
+$setup->perfecting_wheel_space() ) {
+	$openprint::log->debug("check)setup no good") if DEBUG;
+	return 0;
+}
+
 
 	my $Equipment = $setup->Press();
 	if ( 0 and $Equipment ) {
@@ -473,7 +481,7 @@ $openprint::log->debug("Colour bar is now $colour_bar") if DEBUG;
 	} # end if
 
 	$adjusted_paper_height = 0 if $adjusted_paper_height < 0;
-$openprint::log->debug("Height: $paper_height - CB $$specs{colour_bar_size} - Grip $$specs{'Grip Size'} CropTOp: $$setup1{cropmark_top} - CropBottom: $$setup1{cropmark_bottom} = $adjusted_paper_height") if DEBUG;
+	$openprint::log->debug("Height: $paper_height - CB $$specs{colour_bar_size} - Grip $$specs{'Grip Size'} CropTOp: $$setup1{cropmark_top} - CropBottom: $$setup1{cropmark_bottom} = $adjusted_paper_height") if DEBUG;
 
 	my $adjusted_paper_width = $paper_width; 
 	if ( $Paper->cuttable() ) {
@@ -493,8 +501,9 @@ $openprint::log->debug("Height: $paper_height - CB $$specs{colour_bar_size} - Gr
 	$adjusted_paper_width -= $gutters;
 
 	if ( $run_style eq 'Perfecting' and ! $Paper->perfecting() ) {
+		calc_setup( $setup1, $setup1->image_width(), $setup1->image_height(), $adjusted_paper_width, $adjusted_paper_height ? $adjusted_paper_height : $setup1->image_height()  );
 		my $wheel_space;
-		if ( $$setup1{imposition} % 2 ) {
+		if ( $$setup1{columns} % 2 ) {
 			$wheel_space = $$specs{'Perfecting Double Gutter Size'};
 			$setup1->perfecting_wheel_space( $wheel_space );
 			if ( $bleed_locations{Right} ) {
@@ -503,6 +512,7 @@ $openprint::log->debug("Height: $paper_height - CB $$specs{colour_bar_size} - Gr
 			if ( $bleed_locations{Left} ) {
 				$wheel_space -= 2*$bleed_size;
 			} # end if
+$openprint::log->debug("Using Double wheel space $$specs{'Perfecting Double Gutter Size'} -> $wheel_space") if DEBUG;
 		} else {
 			$wheel_space = $$specs{'Perfecting Single Gutter Size'};
 			$setup1->perfecting_wheel_space( $wheel_space );
@@ -512,9 +522,10 @@ $openprint::log->debug("Height: $paper_height - CB $$specs{colour_bar_size} - Gr
 			if ( $bleed_locations{Left} ) {
 				$wheel_space -= $bleed_size;
 			} # end if
+$openprint::log->debug("Using Single wheel space $$specs{'Perfecting Single Gutter Size'} -> $wheel_space") if DEBUG;
 		} # end if
 		$wheel_space = 0 if $wheel_space < 0;
-		$openprint::log->debug("Adding " . $wheel_space . " to for Perfecting wheel") if DEBUG;
+		$openprint::log->debug("Adding " . $wheel_space . " for Perfecting wheel since columns is $$setup1{columns} ") if DEBUG;
 		$adjusted_paper_width -= $wheel_space;
 	} # end if
 
@@ -605,7 +616,7 @@ $openprint::log->debug("Not doing dutch because ($$specs{dutch}) or $run_style o
 	if ( $bleed_locations{Bottom} ) {
 		$gutters -= $bleed_size;
 	} # end if
-$openprint::log->debug("Bindery Gutters 2: $gutters <? $bindery_gutters");
+#$openprint::log->debug("Bindery Gutters 2: $gutters <? $bindery_gutters");
 
 	$gutters = 0 if $gutters < 0;
 
@@ -622,7 +633,7 @@ $openprint::log->debug("Bindery Gutters 2: $gutters <? $bindery_gutters");
 
 	# Becomes printable area
 	if ( $$specs{'Add Grip Width'} ne 'N' ) {
-	$adjusted_paper_height -= $$specs{'Grip Size'};
+		$adjusted_paper_height -= $$specs{'Grip Size'};
 		if ($$specs{'Grip Size'} < $bindery_gutters ) {
 			$adjusted_paper_height -= ( $bindery_gutters - $$specs{'Grip Size'} );
 		}
@@ -694,37 +705,42 @@ $openprint::log->debug("Bindery Gutters 2: $gutters <? $bindery_gutters");
 		$cropmarkspace -= $bleed_size if $bleed_locations{Bottom};
 		$cropmarkspace = 0 if $cropmarkspace < 0;
 		$setup2->cropmark_right( $cropmarkspace );
-$openprint::log->debug( "Crop marks: $$setup2{cropmark_left} $$setup2{cropmark_right}");
+#$openprint::log->debug( "Crop marks: $$setup2{cropmark_left} $$setup2{cropmark_right}");
 		$gutters -= $cropmarkspace;
 		$gutters = 0 if $gutters < 0;
 	} # end if
 	$setup2->gutters($gutters);
-$openprint::log->debug("Gutters after cropmarks $gutters");
+#$openprint::log->debug("Gutters after cropmarks $gutters");
 	$adjusted_paper_width -= $gutters;
 
 	if ( $run_style eq 'Perfecting' and ! $Paper->perfecting() ) {
+
+		# This will calc an initial imposition.  It will get updated later.
+		calc_setup( $setup2, $setup2->image_height(), $setup2->image_width(), $adjusted_paper_width, $adjusted_paper_height ? $adjusted_paper_height : $setup2->image_width() );
         my $wheel_space;
-        if ( $$setup2{imposition} % 2 ) {
+        if ( $$setup2{columns} % 2 ) {
             $wheel_space = $$specs{'Perfecting Double Gutter Size'};
             $setup2->perfecting_wheel_space( $wheel_space );
-            if ( $bleed_locations{Right} ) {
+            if ( $bleed_locations{Top} ) {
                 $wheel_space -= 2*$bleed_size;
             } # end if
-            if ( $bleed_locations{Left} ) {
+            if ( $bleed_locations{Bottom} ) {
                 $wheel_space -= 2*$bleed_size;
             } # end if
+$openprint::log->debug("Using Single wheel space $$specs{'Perfecting Double Gutter Size'} -> $wheel_space") if DEBUG;
         } else {
             $wheel_space = $$specs{'Perfecting Single Gutter Size'};
             $setup2->perfecting_wheel_space( $wheel_space );
-            if ( $bleed_locations{Right} ) {
+            if ( $bleed_locations{Top} ) {
                 $wheel_space -= $bleed_size;
             } # end if
-            if ( $bleed_locations{Left} ) {
+            if ( $bleed_locations{Bottom} ) {
                 $wheel_space -= $bleed_size;
             } # end if
+$openprint::log->debug("Using Single wheel space $$specs{'Perfecting Single Gutter Size'} -> $wheel_space") if DEBUG;
         } # end if
         $wheel_space = 0 if $wheel_space < 0;
-        $openprint::log->debug("Adding " . $wheel_space . " to for Perfecting wheel") if DEBUG;
+        $openprint::log->debug("Adding " . $wheel_space . " for Perfecting wheel since columns is $$setup1{columns} ") if DEBUG;
         $adjusted_paper_width -= $wheel_space;
     } # end if
 
@@ -744,6 +760,9 @@ $openprint::log->debug("Gutters after cropmarks $gutters");
 
 	if ( sets::isin( $run_style, ['Perfecting','Sheet Work','Web'] ) ) {
 		calc_setup( $setup2, $setup2->image_height(), $setup2->image_width(), $adjusted_paper_width, $adjusted_paper_height ? $adjusted_paper_height : $setup2->image_width() );
+
+
+
 		$openprint::log->debug(" CHECK 2 $run_style Using Paper $paper_width x $paper_height -> $adjusted_paper_width x $adjusted_paper_height Gutter: $gutters, Image: $$setup2{image_width} x $$setup2{image_height} Imposition: " . $setup2->imposition(). ":".$setup2->columns() . 'x' . $setup2->rows(). " $run_style") if DEBUG;
 		$setup2->Paper()->width( $setup2->used_width() ) if ! $setup2->Paper()->width();
 		$setup2->Paper()->height( $setup2->used_height() ) if ! $setup2->Paper()->height();

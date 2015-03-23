@@ -25,6 +25,9 @@ use vars qw( $r $log $dbh %variable %param %session %config);
 *session = \%openprint::session;
 *config = \%openprint::config;
 
+sub _jump {
+}
+
 sub search {
 	if ( $param{'btnFunction'} eq 'Go' ) {
         if ( $param{StartDocket} or $param{order_id} or $param{invoice_id} ) {

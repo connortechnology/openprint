@@ -772,7 +772,7 @@ $log->debug("ALl cached $object_type $cache_field $$params{$cache_field}") if DE
 		$sql .= " ORDER BY $$params{order}";
 	} else {
 		my $order = eval '$'.$object_type.'::default_sort';
-$log->debug("default sort: $object_type :: default_sort = $order") if DEBUG_ALL;
+#$log->debug("default sort: $object_type :: default_sort = $order") if DEBUG_ALL;
 		$sql .= " ORDER BY $order" if $order;
 	} # end if
 	if ( $$params{'group by'} ) {
@@ -788,6 +788,8 @@ $log->debug("default sort: $object_type :: default_sort = $order") if DEBUG_ALL;
 		$log->error("Extra parameters in $object_type ::find $k => $search{$k}");
 		Carp::cluck("Extra parameters in $object_type ::find $k => $search{$k}");
 	} # end foreach
+
+	$log->debug("Loading Debug:$debug $object_type ($sql) (".join(',', map { ref $_ eq 'ARRAY' ? join(',', @{$_}) : $_ } @values).')' ) if DEBUG_ALL;
 	
 #$log->debug( 'find prepare: ' . sprintf('%.4f', tv_interval($starttime)*1000) ." useconds") if $debug;
 	my $data = $local_dbh->selectall_arrayref( $sql, { Slice => {} }, @values );
@@ -894,7 +896,7 @@ sub dropdown {
 		my $type = ref($self);
 		$type = $self if ! $type;
 		my $order = eval '$'.$type.'::default_sort';
-$log->debug("default sort: $self $type :: default_sort = $order") if DEBUG_ALL;
+#$log->debug("default sort: $self $type :: default_sort = $order") if DEBUG_ALL;
 		$params{order} = $order if $order;
 	}
 

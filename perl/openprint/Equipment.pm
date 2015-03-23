@@ -516,7 +516,7 @@ sub categories {
 sub Operators {
 	if ( ! $_[0]{Operators} ) {
 		my @user_ids = map { $$_{user_id} } openprint::Equipment_Operator->find( equipment_id=>$_[0]{id} );
-		@{$_[0]{Operators}} = openprint::User->find( id=>\@user_ids, order=>'lower(firstname),lower(lastname)' );
+		@{$_[0]{Operators}} = @user_ids ? openprint::User->find( id=>\@user_ids, order=>'lower(firstname),lower(lastname)' ) : ();
 	} # end if
 	return @{$_[0]{Operators}};
 } # end sub Operators

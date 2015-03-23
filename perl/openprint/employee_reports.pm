@@ -25,7 +25,7 @@ sub project_history {
 		( map { 'created_on_time_end_'.$_ } ( 'hour','minute' ) ),
 		( map { 'status_on_start_'.$_ } ( 'year','month','day','hour','minute' ) ),
 		( map { 'status_on_end_'.$_ } ( 'year','month','day','hour','minute' ) ),
-		'status', 'previous_status', 'company_id', 'Estimator', 'CSR', 'reprint', 
+		'status', 'previous_status', 'company_id', 'Estimator', 'CSR', 'reprint', 'type_id',
 	);
 	ssi::setup_date_select( $page, 'created_on_start', -31 );
 	ssi::setup_date_select( $page, 'created_on_end', '' );
@@ -39,7 +39,7 @@ sub _project_history_results {
 		( map { 'created_on_time_end_'.$_ } ( 'hour','minute' ) ),
 		( map { 'status_on_start_'.$_ } ( 'year','month','day','hour','minute' ) ),
 		( map { 'status_on_end_'.$_ } ( 'year','month','day','hour','minute' ) ),
-		'status', 'previous_status', 'company_id', 'Estimator', 'CSR', 'reprint', 
+		'status', 'previous_status', 'company_id', 'Estimator', 'CSR', 'reprint', 'type_id',
 	);
 	my %parameters; 
 	if ( ( $session{'user_type'} ne 'A' ) and ! openprint::usergroup::is_user_in( ['Sales Admin','Reporting'], $session{user_id} ) ) {
@@ -57,6 +57,7 @@ sub _project_history_results {
 	my %filters = (
 			ssi::date_filter( $page.'?created_on_start', 'created_on >=' ),
 			ssi::date_filter( $page.'?created_on_end', 'created_on <=' ),
+			( $session{$page.'?type_id'} ? ( type_id => $session{$page.'?type_id'} ) : () ),
 			( 
 			 ( $session{$page.'?created_on_time_start_hour'} or $session{$page.'?created_on_time_start_minute'} ) ? (			
 				 'created_on::time >=' => sprintf('%.2d:%.2d', @session{$page.'?created_on_time_start_hour',$page.'?created_on_time_start_minute'} ) ) : () ),

@@ -22,40 +22,40 @@ use vars qw( $debug %fields %transforms %defaults $table $serial );
 $debug = 0;
 
 %fields = (
-	'id'			=>	'id',
-	'company_id'	=>	'company_id',
-	'created_by'	=>	'created_by',
-	'type_id'		=>	'type_id',
-	'name'			=>	'name',
-	'description'	=>	'description',
-	'filename'		=>	'filename',
-	'data'			=>	'data',
-	'created_on'	=>	'created_on',
-	'updated_on'	=>	'updated_on',
-	'deleted'		=>	'deleted',
-	'md5'			=>	'md5',
-	'attribution'	=>	'attribution',
-	'license'		=>	'license',
-	'keywords'		=>	undef,
-	'optimised'		=>	'optimised',
-	'layout'		=>	'layout',
-	'width'			=>	'width',
-	'height'		=>	'height',
-	source			=>	'source',
+	id			=>	'id',
+	company_id	=>	'company_id',
+	created_by	=>	'created_by',
+	type_id		=>	'type_id',
+	name		=>	'name',
+	description	=>	'description',
+	filename	=>	'filename',
+	data		=>	'data',
+	created_on	=>	'created_on',
+	updated_on	=>	'updated_on',
+	deleted		=>	'deleted',
+	md5			=>	'md5',
+	attribution	=>	'attribution',
+	license		=>	'license',
+	keywords	=>	undef,
+	optimised	=>	'optimised',
+	layout		=>	'layout',
+	width		=>	'width',
+	height		=>	'height',
+	source		=>	'source',
 );
 %defaults = (
-	'data'		=>	undef,
-	'type_id'	=>	undef,
-	'created_on'	=>	q`'NOW()'`,
-	'updated_on'	=>	q`'NOW()'`,
-	'created_by'	=>	q`$openprint::session{'user_id'}`,
-	'company_id'	=>	q`$openprint::session{'company_id'}`,
-	'md5'		=>	undef,
-	'deleted'	=>	0,
-	'optimised'	=>	0,
-	'layout'	=>	'',
-	'width'		=>	undef,
-	'height'	=>	undef,
+	data		=>	undef,
+	type_id		=>	undef,
+	created_on	=>	q`'NOW()'`,
+	updated_on	=>	q`'NOW()'`,
+	created_by	=>	q`$openprint::session{'user_id'}`,
+	company_id	=>	q`$openprint::session{'company_id'}`,
+	md5			=>	undef,
+	deleted		=>	0,
+	optimised	=>	0,
+	layout		=>	'',
+	width		=>	undef,
+	height		=>	undef,
 );
 %transforms = (
 	id			=>	[ 's/\D//g', '<2147483647' ],
@@ -108,7 +108,7 @@ sub is_photo {
 	} else {
 		$extension = $_[0];
 	} # end if
-	return sets::isin( lc $extension, [ 'jpg','jpeg','png','gif','bmp' ] );
+	return sets::isin( lc $extension, [ 'jpg','jpeg','png','gif','bmp','pdf' ] );
 } # end sub is_photo
 
 sub sized_url {
@@ -135,8 +135,9 @@ sub sized_url {
 
 	my ( $blah, $extension ) = $filename =~ /(.+)\.([^\.]+)$/;
 	if ( is_photo( $extension ) ) {
+		my $dest_filename = $blah.'.jpg';
 		if ( $openprint::config{'AssetPath'} ) {
-			my $dest = $path.$filename;
+			my $dest = $path.$dest_filename;
 			if ( ! -e $dest ) {
 				my ( $width, $height );
 				if ( $_[0]->layout() eq 'Landscape' ) {
@@ -179,21 +180,35 @@ sub sized_url {
 				} # end if
 				my ( $stderr, $stdout );
 				require IPC::Run3;
-				IPC::Run3::run3(qq`convert -adaptive-resize ${width}x${height} "$src" "$dest"`, undef, $stdout, $stderr );
+
+				
+				my $command;
+				if ( $extension eq 'pdf' ) {
+					$command  = qq`convert -thumbnail ${width}x${height} -alpha remove "${src}\[0\]" "$dest"`;
+				} else {
+					$command  = qq`convert -adaptive-resize ${width}x${height} "$src" "$dest"`;
+				} # end fi
+
+				IPC::Run3::run3($command, undef, $stdout, $stderr );
 				if ( $? ) {
-					$openprint::log->error("ERror creating sized image. Reason: ($?) stdout($stdout) stderr($stderr)");
+					$openprint::log->error("ERror creating sized image. Reason: ($?) cmd:($command) stdout($stdout) stderr($stderr)");
 					return '/assets/'.$filename;
 				} # end if convert
+				if ( ! -e $dest ) {
+					$openprint::log->error("Unable to create $dest cmd($command) stdout($stdout) stderr($stderr)");
+				} # end if
 				if ( $extension =~ /jpe?g/i ) {
 					IPC::Run3::run3(qq`jpegtran -optimize -copy none -outfile "$dest" "$dest"`, undef, $stdout, $stderr );
 					if ( $? ) {
 						$openprint::log->error("ERror optimising sized image. Reason: ($?) stdout($stdout) stderr($stderr)");
 					} # end if convert
 				} # end if
-			} # end if
-		} # end if
+			} # end if -e dest
+		} else {
+			$openprint::log->error("NO assetpath specified");
+		} # end if Asset Path
 #$openprint::log->debug("Return /thumbnails/$filename");
-		return '/assets/'.$size.'/'.$filename;
+		return '/assets/'.$size.'/'.$dest_filename;
 	} elsif ( is_video( $extension ) ) {
 		my $fallback = '/images/icons/'. lc $extension. '.png';
 		if ( ! -e $openprint::config{SkinPath}.$fallback ) {

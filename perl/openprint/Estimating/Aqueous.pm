@@ -311,7 +311,8 @@ if ( 1 ) {
 	if ( $imposition->runstyle() eq 'Perfecting' ) {
 		# We know that it is printing 2 sided, but may be only AQ 1 sided.
 		# Sheets = impressions / 2
-		$impressions = int($impressions/2);
+		# I'm not sure this is true anymore.
+		#$impressions = int($impressions/2);
 	} elsif ( $$imposition{runstyle} eq 'Sheet Work' ) {
 		if ( @{$$sig_specs{SideOneColours}} and @{$$sig_specs{SideTwoColours}} ) {
 # 20140417 : so... since the AQs are added together, done in sequence, we do front first, then back, using the impression count... so it should always be halved
