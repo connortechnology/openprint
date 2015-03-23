@@ -8,12 +8,12 @@
 	my $html = '<div class="latest_survey"><form id="survey_form" action="/survey/answer_question.html" method="post"><fieldset><legend>Latest Survey</legend><div id="latest_survey"><ul>';
 	$html .= $Question->html();
 	$html .= '</ul>';
-	$html .= ssi::input(type=>'hidden', name=>'question_id', value=>$$Question{id});
+	$html .= input(type=>'hidden', name=>'question_id', value=>$$Question{id});
 	$html .= '<p class="buttons">';
 	if ( $session{user_id} ) {
-		$html .= ssi::button('SubmitLatestSurvey', { onclick=>qq`new Ajax.Updater('latest_survey', '/survey/_latest_survey_question.html', { parameters: \$('survey_form').serialize() } );`, text=>'Submit' } );
+		$html .= button('SubmitLatestSurvey', { onclick=>qq`new Ajax.Updater('latest_survey', '/survey/_latest_survey_question.html', { parameters: \$('survey_form').serialize() } );`, text=>'Submit' } );
 	} else {
-		$html .= ssi::button('SubmitLatestSurvey', { onclick=>q`$('survey_form').submit();`, text=>'Submit' } );
+		$html .= button('SubmitLatestSurvey', { onclick=>q`$('survey_form').submit();`, text=>'Submit' } );
 	} # end if
 	$html .= '</p></div></fieldset></form></div>';
 	return $html;
