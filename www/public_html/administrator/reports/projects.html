@@ -38,7 +38,7 @@
 			<select name="type_id" size="1">
 				<option value="">All</option>
 <? echo ( 
-    ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::ProjectType->find('order'=>'lower(name)') ], $param{'type_id'} );
+    make_drop_down( [ map { $_->id(), $_->name() } openprint::ProjectType->find('order'=>'lower(name)') ], $param{'type_id'} );
 ) ?>
 			</select>
 		</p>
@@ -46,7 +46,7 @@
 			<label>Sales Reps</label>
 			<select name="ddmEmployees" size="1">
 				<option value="">All Employees</option>
-				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User->find('type'=>['E','A'], 'usergroups'=>['Sales'], 'order'=>'lower(firstname),lower(lastname)') ], $$variable{'ddmEmployees'} ); ) ?>
+				<? echo ( make_drop_down( openprint::User->dropdown( type=>['E','A'], 'usergroup any'=>['Sales']), $$variable{'ddmEmployees'} ); ) ?>
 			</select>
 		</p>
 <? eval (
