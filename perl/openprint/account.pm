@@ -146,11 +146,7 @@ $log->warn("registration errors $error");
 	my $agent = $agents[0] if @agents;
 	
 	# No errors, We are in go status
-	my %info;
-	foreach my $key ( keys %param ) {
-		$info{$key} = $param{$key};
-	} # end foreach
-
+	my %info = %param;
 	$info{'date'} = localtime;
 	$info{'CustomerServiceEmail'} = $config{'CustomerServiceEmail'};
 
@@ -233,7 +229,7 @@ $log->warn("registration errors $error");
 		$info{'Company'} = $Company;
 		$info{'User'} = $User;
 
-		my $email_template = misc::load_file( $log, $config{'SkinPath'}. '/email_template.html' );
+		my $email_template = ssi::slurp_content( '/email_template.html' );
 		if ( ! @Users ) {
 			$User->web_active( $config{'NewFirstUserAccountActivation'} );
 			$User->administrator( 'Y' );
@@ -258,12 +254,7 @@ $log->warn("registration errors $error");
 
 			if ( $User->email() ) {
 # Send confirmation
-				if ( -e $config{'SkinPath'} . '/email_content/first_user_login_app_confirmation.html' ) {
-					$info{'ReplacementText'} = misc::load_file( $log, $config{'SkinPath'} . '/email_content/first_user_login_app_confirmation.html' );
-				} else {
-					$info{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/first_user_login_app_confirmation.html' );
-				} # end if
-				$info{'ReplacementText'} = ssi::variable_substitution( \$info{'ReplacementText'}, \%info );
+				$info{'ReplacementText'} = ssi::include( '/email_content/first_user_login_app_confirmation.html', \%info );
 				new openprint::Email()->send(
 						FROM	=> $agent,
 						TO		=> $User,
@@ -274,8 +265,7 @@ $log->warn("registration errors $error");
 
 			if ( ! sets::isin( $session{'user_type'}, ['E','A'] ) ) {
 # send notification
-				$info{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/first_user_login_app_notification.html' );
-				$info{'ReplacementText'} = ssi::variable_substitution( \$info{'ReplacementText'}, \%info );
+				$info{'ReplacementText'} = ssi::include( '/email_content/first_user_login_app_notification.html', \%info );
 				foreach my $to ( split(',', $config{'UserRegistrationEmail'} ) ) {
 					new openprint::Email()->send(
 							FROM	=> $agent,
@@ -310,8 +300,7 @@ $log->warn("registration errors $error");
 				foreach my $Notification ( openprint::User->find( 'company_id'=>$Company->id(), 'administrator'=>'Y' ) ) {
 					@info{'AdminSalutation','AdminFirstName','AdminLastName'} = $Notification->get('salutation','firstname','lastname');
 
-					$info{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/not_first_user_login_app_notification_for_company_admin.html' );
-					$info{'ReplacementText'} = ssi::variable_substitution( \$info{'ReplacementText'}, \%info );
+					$info{'ReplacementText'} = ssi::include( '/email_content/not_first_user_login_app_notification_for_company_admin.html', \%info );
 					(new openprint::Email())->send(
 							FROM	=> $agent,
 							TO		=> $Notification,
@@ -322,8 +311,7 @@ $log->warn("registration errors $error");
 
 				if ( $User->email() ) {
 # Send confirmation to the newly added user
-					$info{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/not_first_user_login_app_confirmation.html' );
-					$info{'ReplacementText'} = ssi::variable_substitution( \$info{'ReplacementText'}, \%info );
+					$info{'ReplacementText'} = ssi::include( '/email_content/not_first_user_login_app_confirmation.html', \%info );
 					(new openprint::Email())->send(
 							FROM	=> $agent,
 							TO		=> $User,
@@ -333,8 +321,7 @@ $log->warn("registration errors $error");
 				} # end if
 			} # end if User not activated
 
-			$info{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/not_first_user_login_app_notification_for_site_admin.html' );
-			$info{'ReplacementText'} = ssi::variable_substitution( \$info{'ReplacementText'}, \%info );
+			$info{'ReplacementText'} = ssi::include( '/email_content/not_first_user_login_app_notification_for_site_admin.html', \%info );
 			foreach my $to ( split(',', $config{'UserRegistrationEmail'} ) ) {
 				new openprint::Email()->send(
 						FROM	=> $agent,
