@@ -256,8 +256,8 @@ sub sized_url {
 
 				if ( $length > 10 ) {
 					$length -= 10;
-				} 
-				if ( $length < 60 ) {
+				}
+				if ( $length > 5 and $length < 60 ) {
 					$length = 5;
 				} # end if
 				my $command;
