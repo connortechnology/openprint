@@ -29,11 +29,13 @@ sub history {
 			%param = ();
 		} # end if
 	} elsif ( $param{btnFunction} eq 'Delete' ) {
-		my $Event = new openprint::Event( openprint::Event->transform('id', $param{event_id} ) );
-		if ( $Event->can_edit() ) {
-			$variable{error} .= $Event->delete();
-			%param = ();
-		} # end if
+		foreach my $event_id ( ref $param{event_id} eq 'ARRAY' ? @{$param{event_id}} : ( $param{event_id} ) ) {
+			my $Event = new openprint::Event( openprint::Event->transform('id', $event_id ) );
+			if ( $Event->can_edit() ) {
+				$variable{error} .= $Event->delete();
+			} # end if
+		} # end foreach event_id
+		%param = ();
 	} # end if
 
 	_history();
@@ -46,13 +48,45 @@ sub history {
 } # end sub history
 
 sub _history {
-	if ( ! $param{btnFunction} ) {
+	if ( ! ( $param{btnFunction} or $param{func} ) ) {
 		ssi::save_params( '/event/history.html', ( 
 				'created_on_start_year','created_on_start_month','created_on_start_day',
 				'created_on_end_year','created_on_end_month','created_on_end_day',
 				'starting_on_start_year','starting_on_start_month','starting_on_start_day',
 				'starting_on_end_year','starting_on_end_month','starting_on_end_day',
-				'employee_id','company_id', 'category_id', 'template' ) );
+				'employee_id','company_id', 'category_id', 'template', 'deleted' ) );
+	} # end if
+	if ( $param{func} eq 'Delete' ) {
+		foreach my $id ( ref $param{event_id} eq 'ARRAY' ? @{$param{event_id}} : $param{event_id} ) {
+			next if ! $id;
+			my $Event = new openprint::Event($id);
+			if ( ! $Event->can_edit() ) {
+				$variable{error} .= 'You do not have rights to delete this event.';
+				next;
+			} # end if
+			$variable{error} .= $Event->delete();
+		} # end foreach id
+	} elsif ( $param{func} eq 'Undelete' ) {
+		foreach my $id ( ref $param{event_id} eq 'ARRAY' ? @{$param{event_id}} : $param{event_id} ) {
+			next if ! $id;
+			my $Event = new openprint::Event($id);
+			if ( ! $Event->can_edit() ) {
+				$variable{error} .= 'You do not have rights to undelete this event.';
+				next;
+			} # end if
+			$variable{error} .= $Event->undelete();
+		} # end foreach id
+	} elsif ( $param{func} eq 'Destroy' ) {
+		foreach my $id ( ref $param{event_id} eq 'ARRAY' ? @{$param{event_id}} : $param{event_id} ) {
+			next if ! $id;
+			my $Event = new openprint::Event($id);
+			if ( ! $Event->can_edit() ) {
+				$variable{error} .= 'You do not have rights to destroy this article.';
+				next;
+			} # end if
+			$variable{error} .= $Event->destroy();
+		} # end foreach id
+		$variable{ExternalRedirect} = '/event/history.html';
 	} # end if
 } # end sub _history
 

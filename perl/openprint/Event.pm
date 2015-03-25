@@ -11,7 +11,7 @@ package openprint::Event;
 our @ISA = qw( openprint::Object );
 
 use vars qw( $debug $table $serial %fields %find_fields %transforms %defaults );
-$debug = 0;
+$debug = 1;
 $table = 'events';
 $serial = 'events_id_seq';
 
@@ -160,13 +160,14 @@ sub can_view {
 #$openprint::log->debug("Event::can_view $_[1]" . ( ref $_[1] eq 'openprint::User' ? $_[1]->to_string() : $_[1] ) );
 	return 1 if ! $_[0]{id};
 	my $User;
-	if ( @_ > 1 ) {
+	if ( @_ > 1 and $_[1] ) {
 		$User = ref $_[1] eq 'openprint::User' ? $_[1] : new openprint::User($_[1]);
+$openprint::log->debug("Using specified user $_[1]");
 	} else {
-		$User = new openprint::User($openprint::session{user_id});
+		$User = $openprint::User;
 	} # end if
 	return 1 if $$User{type} eq 'A';
-#$openprint::log->debug("Event::can_view not an admin");
+$openprint::log->debug("Event::can_view not an admin $$User{email} $$User{type}");
 	return 1 if $_[0]{created_by} == $$User{id};
 #$openprint::log->debug("Event::can_view not creator");
 	return 0 if $_[0]{deleted};

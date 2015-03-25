@@ -6,6 +6,7 @@
 		date_filter( '/article/history.html?published_on_end','published_on <=' ),
 		date_filter( '/article/history.html?published_on_start','published_on >=' ),
 		( $session{'/article/history.html?published'} ne '' ? ( published => $session{'/article/history.html?published'} ) : () ),
+		( $session{'/article/history.html?deleted'} ne '' ? ( deleted => $session{'/article/history.html?deleted'} ) : ( deleted=>[0,1] ) ),
 		( $session{'/article/history.html?company_id'} ? ( company_id	=> $session{'/article/history.html?company_id'} ) : () ),
 		( $session{'/article/history.html?employee_id'} ? ( employee_id => $session{'/article/history.html?employee_id'} ) : () ), 
 		( $session{'/article/history.html?category_id'} ? ( category_id => $session{'/article/history.html?category_id'} ) : () ),

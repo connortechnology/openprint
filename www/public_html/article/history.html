@@ -70,7 +70,10 @@
 			<div class="rightColumn">
 				<ul>
 					<li><label>Published?</label>
-					<? echo ( radio( 'published', [ '1', 'Yes', '0', 'No', '', 'Both' ], $session{'/article/search.html?published'}, {onclick=>'load_articles();'} ); ) ?>
+					<? echo ( radio( 'published', [ '1', 'Yes', '0', 'No', '', 'Both' ], $session{'/article/history.html?published'}, {onclick=>'load_articles();'} ); ) ?>
+					</li>
+					<li><label>Deleted?</label>
+					<? echo ( radio( 'deleted', [ '1', 'Yes', '0', 'No', '', 'Both' ], $session{'/article/history.html?deleted'}, {onclick=>'load_articles();'} ); ) ?>
 					</li>
 					<li>
 						<label>Author</label>
