@@ -63,17 +63,20 @@ $serial = 'companies_id_seq';
 		'deleted'					=>	'deleted',
 		'category_id'				=>	'category_id',
 		'offers_credit'				=>	'offers_credit',
+		'last_project_id'			=>	'last_project_id',
 		);
 %find_fields = (
 	last_online	=>	'(SELECT MAX(date_time) FROM Logs WHERE company_id=companies.id)',
 	last_order	=>	'(SELECT MAX(created_on) FROM Orders WHERE company_id=companies.id)',
 	last_ordered_on	=>	'(SELECT MAX(created_on) FROM Orders WHERE company_id=companies.id)',
+	last_project_on	=>	'(SELECT dtmcreationdate FROM Projects WHERE projects.id=last_project_id)',
 	last_quoted_on	=>	'(SELECT MAX(dtmquotedate) FROM Quotes WHERE companyindex=companies.id)',
 	last_called_on	=>	'(SELECT MAX(date_time) FROM sales_logs WHERE company_id=companies.id)',
 	last_invoiced_on	=>	'(SELECT MAX(created_on) FROM invoices WHERE invoicee_id=companies.id)',
 	credit_app_on	=>	'(SELECT MAX(dtmcreationdate) FROM creditapplications WHERE company_id=companies.id)',
 	marketing_category_id	=>	'(SELECT category_id FROM companies_in_marketing_categories WHERE company_id=companies.id)',
 	profile_field	=>	'(SELECT value FROM Company_Profiles WHERE company_id=companies.id AND field_id=?)',
+	last_article_id	=>	'(SELECT MAX(id) FROM Articles WHERE company_id=companies.id)',
 );
 %transforms = (
 	address1		=>	[ 's/^\s+//', 's/\s+$//' ],
