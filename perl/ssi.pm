@@ -515,7 +515,7 @@ sub button {
 	} else {
 		$html .= '<span class="l"></span><span class="c" id="'.$name.'c"' . ( $$options{title} ? ' title="'.$$options{title}.'"' : '' ) .'>' . $$options{text} .'</span><span class="r"></span>';
 	}
-	$html .= "</a>\n";
+	$html .= "</a>";
 	return $html;
 } # end sub button
 
