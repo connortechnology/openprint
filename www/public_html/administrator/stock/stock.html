@@ -422,7 +422,7 @@
                             with_clear=>1,
                             } ),
 					); ) ?>
-                <? echo ( button( 'LoadLog', { onclick=>q`new Ajax.Updater( 'Logs', '/_stock_logs.html', { parameters: $('f1').serialize() } );`, text=>'Load' } ); ) ?>
+                <? echo ( button( 'LoadLog', { onclick=>q`new Ajax.Updater( 'Logs', '_stock_logs.html', { parameters: $('f1').serialize() } );`, text=>'Load' } ); ) ?>
             </li>
         </ul>
         <div id="Logs"><?include('_stock_logs.html')?></div>
