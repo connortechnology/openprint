@@ -272,7 +272,7 @@ sub load_used {
 	$$self{bleed_size} = $$specs{'ddmBleedSize'.$qty_index};
 	if ( ! $$self{Press} ) {
 		if ( $$specs{UsePress} ) {
-			$$self{Press} = openprint::Equipment->find_one( strid=>$$specs{UsePress} );
+			$$self{Press} = openprint::Equipment->find_one( strid=>$$specs{UsePress}, deleted=>[0,1] );
 			if ( ! $$self{Press} ) {
 				# This can happen when a press is deleted
 				$openprint::log->debug("No Press found for $qty_index " . $$specs{UsePress} );
@@ -282,7 +282,7 @@ sub load_used {
 			if ( ! $$specs{'ddmPress'.$qty_index} ) {
 				#$openprint::log->error("No ddmPress for $qty_index");
 			} else {
-				$$self{Press} = openprint::Equipment->find_one( strid=>$$specs{'ddmPress'.$qty_index});
+				$$self{Press} = openprint::Equipment->find_one( strid=>$$specs{'ddmPress'.$qty_index}, deleted=>[0,1]);
 				if ( ! $$self{Press} ) {
 					$openprint::log->error("No Press found for $qty_index " . $$specs{'ddmPress'.$qty_index} );
 				} # end if
