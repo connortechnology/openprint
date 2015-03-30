@@ -39,7 +39,7 @@
 				<label><? echo ( translate('company') ) ?></label>
 				<select name="company_id" id="company_id" onchange="load_articles();">
 					<option value="">All</option>
-					<? echo ( openprint::Company::get_dropdown( $session{'/article/history.html?company_id'} ); ) ?>
+					<? echo ( make_drop_down( openprint::Company->dropdown('last_article_id is null'=>0 ), $session{'/article/history.html?company_id'} ); ) ?>
 				</select>
 			</li>
 <? endif ( sets::isin($session{user_type}, ['E','A'] ) ) ?>
