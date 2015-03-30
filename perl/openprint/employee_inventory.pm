@@ -673,7 +673,7 @@ sub save_inventory {
 		$variable{'information'} .= sprintf( 'No change was made to inventory for skid <a href="/employee/inventory/skid_details.html?skid_id=%1$d">%1$d</a>.<br/>', $Skid->id() );
 	}# end if
 
-} # end if save_inventory
+} # end sub save_inventory
 
 sub save_Skid {
 	my ( $Skid, $qty ) = @_;
