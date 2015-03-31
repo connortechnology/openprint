@@ -1165,6 +1165,7 @@ $openprint::log->debug("No Fold") if DEBUG;
 			my @new_folded_impositions;
 			my @Used_Impositions;
 
+			my $remaining_pages = $SignatureImposition->pages();
 			my $override_pages = 0;
 			my $all_found = 1;
 			if ( $$specs{"chkOverrideFold-$form-$qty_index"} eq 'Y' ) {
@@ -1176,15 +1177,18 @@ $openprint::log->debug("No Fold") if DEBUG;
 							and $$specs{"FoldType-$form-$qty_index-$index"}
 							and $$specs{"FoldImposition-$form-$qty_index-$index"} );
 
+					my $pages;
+					my $this_pages;
 					if ( $$sig_specs{txtSignatureType} ) {
-						my ( $pages ) = $$specs{"FoldType-$form-$qty_index-$index"} =~ /(\d+)PageFold/;
-						$override_pages += $$specs{"FoldQty-$form-$qty_index-$index"} * $pages * $$specs{"FoldImposition-$form-$qty_index-$index"};
+						( $pages ) = $$specs{"FoldType-$form-$qty_index-$index"} =~ /(\d+)PageFold/;
+						$this_pages = $$specs{"FoldQty-$form-$qty_index-$index"} * $pages * $$specs{"FoldImposition-$form-$qty_index-$index"};
+						$override_pages += $this_pages;
 					} # end if
 					$found{$index} = 0;
 					if ( DEBUG ) {
-						$openprint::log->debug("LOOKING for overriden fold $index");
+						$openprint::log->debug("LOOKING for overriden fold $index, have $override_pages pages");
 						foreach my $FI ( @$Set_Of_Impositions ) {
-							$FI->display("Found? $$FI{found}");
+							$FI->display("FIs $$FI{found}");
 						}
 					}
 					foreach my $FI ( @$Set_Of_Impositions ) {
@@ -1219,7 +1223,6 @@ $openprint::log->debug(qq`Wrong imposition: $$specs{"FoldImposition-$form-$qty_i
 							$openprint::log->debug("Not found trying generic for index $index");
 						}
 # Replace with a generic one
-						my ( $pages ) = $$specs{"FoldType-$form-$qty_index-$index"} =~ /(\d+)Page/;
 						my $Fold = openprint::Fold->find_one( 
 									'spine_direction is null or ='=>	$$SignatureImposition{image_orientation},
 								(	$$specs{"FoldImposition-$form-$qty_index-$index"} ? (
@@ -1244,12 +1247,21 @@ $openprint::log->debug(qq`Wrong imposition: $$specs{"FoldImposition-$form-$qty_i
 							$FI->rows(1);
 							$FI->columns( $$specs{"FoldImposition-$form-$qty_index-$index"} );
 						} # end if
-						$$FI{page_quantity} = $$specs{"FoldQty-$form-$qty_index-$index"};
+
+						#$$FI{page_quantity} = $SignatureImposition->pages * $SignatureImposition->imposition() / $$specs{"FoldQty-$form-$qty_index-$index"} * $pages * $FI->imposition();
 						$$FI{quantity} = $$specs{"FoldQty-$form-$qty_index-$index"};
+						if ( $pages ) {
+							if ( $pages * $$FI{quantity} < $remaining_pages ) {
+								$$FI{page_quantity} = $$FI{quantity};
+							} else {
+								$$FI{page_quantity} = int($remaining_pages / $pages);
+							} # end if
+						} # end if
 						$$FI{Fold} = $Fold;
 						$$Fold{undesired} = 1;
 						$$FI{undesired} = 1;
 					} # end if ! found
+					$remaining_pages -= $this_pages;
 				} # end foreach index
 				if ( $$sig_specs{txtSignatureType} ) {
 					if ( $override_pages > $SignatureImposition->imposition() * $SignatureImposition->pages() ) {
