@@ -33,90 +33,75 @@ if ($opts->{help}) {
     exit 0;
 }
 
-# Get our configuration information
-if (my $err = ReadCfg('/etc/camera_reboot.conf')) {
-    die $err;
-}
+my %defaults = (
+	config	=>	'/etc/openprint/camera_reboot.conf',
+	ping_type	=>	'icmp',
+);
+foreach my $default ( keys %defaults ) {
+	$$opts{$default} = $defaults{$default} if ! $$opts{$default};
+} # end foreach
+$log->debug("Init config");
+configuration::init( );
+configuration::from_file( $$opts{config} );
+configuration::merge( $opts );
 
-foreach my $param ( 'db_name','db_user','db_pass','from','recipient','smtp-server' ) {
-	$CFG::Config{$param} = $$opts{$param} if $$opts{$param};
-	if ( ! $CFG::Config{$param} ) {
+foreach my $param ( 'db_name','db_user','db_pass' ) {
+	if ( ! $config{$param} ) {
 		die "$program: missing required --$param parameter";
 	}
 } # end foreach required-param
 
-foreach my $param ( 'pid_file', 'db_host', 'log_file', 'log_level', 'sleep', 'skin_path','document_root','site_title','site_url' ) {
-	$CFG::Config{$param} = $$opts{$param} if $$opts{$param};
-} # end foreach non-required param
-
-if ( $CFG::Config{'site_url'} ) {
-	$CFG::Config{'siteURL'} = $CFG::Config{'site_url'};
-	$CFG::Config{'ExternalSiteURL'} = $CFG::Config{'site_url'};
+if ( $config{'site_url'} ) {
+	$config{'siteURL'} = $config{'site_url'};
+	$config{'ExternalSiteURL'} = $config{'site_url'};
 } # end if
-$CFG::Config{'SiteTitle'} = $CFG::Config{'site_title'};
-$CFG::Config{'SkinPath'} = $CFG::Config{'skin_path'};
+$config{'SiteTitle'} = $config{'site_title'};
+$config{'SkinPath'} = $config{'skin_path'};
 
-$CFG::Config{'log_level'} = 'debug' if ! $CFG::Config{'log_level'};
-$log = logger->new( {'file'=>$CFG::Config{'log_file'}, 'level'=>$CFG::Config{'log_level'}} );
-
-$CFG::Config{'sleep'} = 1.0 if ! $CFG::Config{'sleep'};
-#$log->debug("Sleep duration $CFG::Config{sleep}");
-
-#$log->debug("Finalised cfg");
-#foreach my $k ( keys %CFG::Config ) {
-	#$log->debug("$k => $CFG::Config{$k}");
-#} # end foreach
-
-if ( $CFG::Config{'pid_file'} ) {
-	#$log->debug("Creating pid file at $CFG::Config{'pid_file'} $$");
-	my $pidh;
-	if (open($pidh, '> '.$CFG::Config{'pid_file'} ) ) {
-		print $pidh $$."\n"; 
-		close($pidh);
-	} else {
-		die 'Unable to open pid file';
-	} # end if
-} # end if
-
+$config{'log_level'} = 'debug' if ! $config{'log_level'};
+$log = logger->new( {'file'=>$config{'log_file'}, 'level'=>$config{'log_level'}} );
 
 $log->debug("Connecting to db");	
 $dbh = sql::open_sql( $log,
-		'host'		=> $CFG::Config{'db_host'},
-		'database'	=> $CFG::Config{'db_name'},
+		'host'		=> $config{'db_host'},
+		'database'	=> $config{'db_name'},
 		'driver'	=> 'Pg',
-		'login'		=> $CFG::Config{'db_user'},
-		'password'	=> $CFG::Config{'db_pass'},
+		'login'		=> $config{'db_user'},
+		'password'	=> $config{'db_pass'},
 		);
 if ( ! $dbh ) {
 	die "Error opening db. $!";
 } # end if
-configuration::init_cache( $log, $dbh );
+$log->debug("Connected to db");
 
+require Net::Ping;
 # udp has less network traffic overhead
 my $p = Net::Ping->new('icmp',10);
 
 my @Hosts = $$opts{host_id} ? openprint::Host->find(id=>$$opts{host_id}) : openprint::Host->find('monitored'=>1,'type in'=>[ 'AIC500', 'AIC500W', 'AIC777W', 'AIC747W','AIC250','AIC250W' ]);
 $log->debug( 'Monitoring ' . @Hosts . ' hosts.' );
 foreach my $Host ( @Hosts ) {
-	if ( ! $Host->ip() ) {
-		$log->debug( "Monitored host without ip: " . $Host->to_string() );
-		next;
-	} # end if
-	my @ping = $p->ping($Host->ip());
-	my $ping = $ping[0];
-#$openprint::log->debug("Ping1: @ping");
-	if ( ! @ping ) {
-		$log->warn("Problem with ping for " . $Host->hostname() );
-		next;
-	} # end if
+	foreach my $HI ( $Host->Interfaces() ) {
+		if ( ! $HI->ip() ) {
+			$log->debug( "Monitored host without ip: " . $Host->to_string() );
+			next;
+		} # end if
+		my @ping = $p->ping($HI->ip());
+		my $ping = $ping[0];
+	#$openprint::log->debug("Ping1: @ping");
+		if ( ! @ping ) {
+			$log->warn("Problem with ping for " . $Host->hostname() );
+			next;
+		} # end if
 
-	if ( $Host->online() and $ping ) {
-		$Host->reboot();
-	} elsif ( $Host->online() ) {
-		$log->debug("No ping for $$Host{hostname}");
-	} else {
-		$log->debug("$$Host{hostname} is offline: ping $ping");
-	} # end if online
+		if ( $Host->online() and $ping ) {
+			$Host->reboot();
+		} elsif ( $Host->online() ) {
+			$log->debug("No ping for $$Host{hostname}");
+		} else {
+			$log->debug("$$Host{hostname} is offline: ping $ping");
+		} # end if online
+	} # end foreach HI
 } # end foreach $Host
 $p->close();
 $dbh->disconnect() if $dbh;
@@ -135,35 +120,6 @@ Command-line options:
 
 EOH
 } # end sub usage
-
-# Read a configuration file
-#   The arg can be a relative or full path, or
-#   it can be a file located somewhere in @INC.
-sub ReadCfg {
-    my $file = $_[0];
-
-    our $err;
-
-    {   # Put config data into a separate namespace
-        package CFG;
-		use vars qw( %Config );
-
-        # Process the contents of the config file
-        my $rc = do($file);
-
-        # Check for errors
-        if ($@) {
-            $::err = "ERROR: Failure compiling '$file' - $@";
-        } elsif (! defined($rc)) {
-            $::err = "ERROR: Failure reading '$file' - $!";
-        } elsif (! $rc) {
-            $::err = "ERROR: Failure processing '$file'";
-        }
-    }
-
-    return ($err);
-}
-
 
 1;
 __END__
