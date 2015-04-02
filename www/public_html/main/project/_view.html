@@ -209,7 +209,6 @@
 				foreach my $service_id ( @{$$services{$ServiceType->name()}} ) {
 					my $Service = $Project->Service( $service_id );
 					my $specs = $Service->specs();
-#$log->debug(" Service: " . $Service->ServiceType()->name() );
 
 					my @summaries;
 					my $summary = openprint::service::summary( $Project->id(),$service_id );
@@ -298,7 +297,12 @@
 						} # end foreach summary
 					} # end if summaries
 					if ( $$specs{alert} ) {
-						$html .= join( $$specs{alert}, qq`<tr$rowclass><td class="error" colspan="`. ( scalar(@quantity_indexes) + 1 ) . '">', '</td></tr>' );
+						$html .= qq`<tr$rowclass><td class="error" colspan="`. ( scalar(@quantity_indexes) + 1 ) . '">' . $$specs{alert}. '</td>';
+						$html .= '<td>&nbsp;</td>';
+						if ( ( ! $Project->docket() ) or ( $Project->Order()->status() eq 'Re-Opened' ) ) {
+							$html .= '<td class="unprintable actions">&nbsp;</td>';
+						}
+						$html .= '</tr>';
 					} # end if
 					$rowclass = $rowclass ? '' : ' class="colRow"';
 				} # end foreach service_id
