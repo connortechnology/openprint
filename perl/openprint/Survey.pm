@@ -31,16 +31,18 @@ $serial = 'survey_id_seq';
 
 sub delete {
 	my $self = shift;
+	my $error;
 	my $ac = sql::start_transaction($openprint::dbh);
 	sql::execute( undef, undef, q{DELETE FROM Survey_Responses WHERE survey_id=?}, $$self{id} );
 	foreach my $Q ( $self->Questions() ) {
 		foreach my $A ( $Q->Available_Answers() ) {
-			$A->delete();
+			$error .= $A->delete();
 		} # end foreach
-		$Q->delete();
+		$error .= $Q->delete();
 	} # end foreach Question
 	sql::execute( undef, undef, q{DELETE FROM Surveys WHERE id=?}, $$self{id} );
 	sql::end_transaction( $openprint::dbh, $ac );
+	return $error;
 } # end sub delete
 
 sub next {

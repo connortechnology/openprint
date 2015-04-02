@@ -93,7 +93,6 @@ function Imposition_onchange( element, signature, qty_index, index ) {
 
 				foreach my $sig_id ( $$variable{Project}->signatures({sort=>1}) ) {
 					$$variable{SignatureServiceIndex} = $sig_id;
-					
 
 					my $sig_specs = openprint::service::get_specs_ref( $$variable{Project}, $sig_id );
 					@$variable{'SignatureIndex','Reference'} = @$sig_specs{'SignatureIndex','txtServiceDescription'};
@@ -104,7 +103,7 @@ function Imposition_onchange( element, signature, qty_index, index ) {
 						<li>
 							<label>Die Cutting Needed</label>';
 
-					$html .= radio( 'Needed-'.$form, [ 'Y', 'Yes', 'N', 'No' ], $$variable{'Needed-'.$form}, { onchange=>qq`\$('DieCutting-$form').show();calc(this.form.name);` } );
+					$html .= radio( 'Needed-'.$form, [ 'Y', 'Yes', 'N', 'No' ], $$variable{'Needed-'.$form}, { onclick=>qq`\$('DieCutting-$form').show();calc(this.form.name);` } );
 					$html .= qq`</li>
 				</ul>
 				<div id="DieCutting-$form" `. ( $$variable{'Needed-'.$form} ne 'Y' ? 'style="display:none;"' : '' ). '><ul>';

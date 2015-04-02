@@ -560,6 +560,8 @@ sub checkout {
 	require openprint::PaperInventory;
 	my @contents = openprint::SkidContent->find( skid_id=>$$self{id} );
 	if ( ! @contents ) {
+		
+		# When there is no content... this basically means the stock is used before it is entered in the system.
 		if ( ! openprint::PaperInventory->find( skid_id=>$$self{id}, 'comment like'=>'Checked out%' ) ) {
 			my $PI = new openprint::PaperInventory();
 			my $e = $PI->save({
@@ -594,6 +596,7 @@ sub checkout {
 					} );
 			$C->quantity( 0 );
 			$e .=   $C->save();
+			$e .= $C->Paper()->save(); # Must update in_stock
 			$log->error( $e ) if $e;
 			return 1;
 		} # end if not already checked out

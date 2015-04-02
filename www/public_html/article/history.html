@@ -39,7 +39,7 @@
 				<label><? echo ( translate('company') ) ?></label>
 				<select name="company_id" id="company_id" onchange="load_articles();">
 					<option value="">All</option>
-					<? echo ( openprint::Company::get_dropdown( $session{'/article/history.html?company_id'} ); ) ?>
+					<? echo ( make_drop_down( openprint::Company->dropdown('last_article_id is null'=>0 ), $session{'/article/history.html?company_id'} ); ) ?>
 				</select>
 			</li>
 <? endif ( sets::isin($session{user_type}, ['E','A'] ) ) ?>
@@ -70,7 +70,10 @@
 			<div class="rightColumn">
 				<ul>
 					<li><label>Published?</label>
-					<? echo ( radio( 'published', [ '1', 'Yes', '0', 'No', '', 'Both' ], $session{'/article/search.html?published'}, {onclick=>'load_articles();'} ); ) ?>
+					<? echo ( radio( 'published', [ '1', 'Yes', '0', 'No', '', 'Both' ], $session{'/article/history.html?published'}, {onclick=>'load_articles();'} ); ) ?>
+					</li>
+					<li><label>Deleted?</label>
+					<? echo ( radio( 'deleted', [ '1', 'Yes', '0', 'No', '', 'Both' ], $session{'/article/history.html?deleted'}, {onclick=>'load_articles();'} ); ) ?>
 					</li>
 					<li>
 						<label>Author</label>

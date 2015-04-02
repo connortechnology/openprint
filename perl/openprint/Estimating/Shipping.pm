@@ -309,31 +309,33 @@ sub summary {
 	my ( $Project, $service_id, $specs, $qty_index ) = @_;
 	my $services = $Project->services();
 
-	if ( $qty_index eq 'Used' ) {
-		my $packages = $$specs{txtPackageQuantityUsed} ? $$specs{txtPackageQuantityUsed} : $$specs{'txtPackageQuantity'.$Project->ordered_quantity_index()};
-		if ( $$services{PlainCartons} ) {
-			return sprintf( qq{%d items in %d carton%s\nWeighing %.2flbs}, 
-				( $$specs{'txtQuantity'.$qty_index} ? $$specs{txtQuantityUsed} : $$specs{'txtQuantity'.$Project->ordered_quantity_index()} ),
-				$packages, ( $packages==1?'' : 's'), 
-				( $$specs{txtTotalWeightUsed} ? $$specs{txtTotalWeightUsed} : $$specs{'txtTotalWeight'.$Project->ordered_quantity_index()} ),
-				);
-		} else {
-			return sprintf( qq{%d items in %d package%s\nWeighing %.2flbs}, 
-				( $$specs{'txtQuantity'.$qty_index} ? $$specs{txtQuantityUsed} : $$specs{'txtQuantity'.$Project->ordered_quantity_index()} ),
-				$packages, ( $packages==1?'' : 's'), 
-				( $$specs{txtTotalWeightUsed} ? $$specs{txtTotalWeightUsed} : $$specs{'txtTotalWeight'.$Project->ordered_quantity_index()} ),
-				);
-		} # end if
-	}elsif ( $qty_index ) {
-		if ( $$specs{'txtPackageQuantity'.$qty_index} ) {
+	if ( $qty_index ) {
+		if ( $qty_index eq 'Used' ) {
+			my $packages = $$specs{txtPackageQuantityUsed} ? $$specs{txtPackageQuantityUsed} : $$specs{'txtPackageQuantity'.$Project->ordered_quantity_index()};
 			if ( $$services{PlainCartons} ) {
-				return sprintf( qq{%d items in %d carton%s\nweighing %.2flbs}, @$specs{'txtQuantity'.$qty_index,'txtPackageQuantity'.$qty_index},( $$specs{'txtPackageQuantity'.$qty_index}==1?'' : 's'), $$specs{'txtTotalWeight'.$qty_index} );
+				return sprintf( qq{%d items in %d carton%s\nWeighing %.2flbs}, 
+					( $$specs{'txtQuantity'.$qty_index} ? $$specs{txtQuantityUsed} : $$specs{'txtQuantity'.$Project->ordered_quantity_index()} ),
+					$packages, ( $packages==1?'' : 's'), 
+					( $$specs{txtTotalWeightUsed} ? $$specs{txtTotalWeightUsed} : $$specs{'txtTotalWeight'.$Project->ordered_quantity_index()} ),
+					);
 			} else {
-				return sprintf( qq{%d items in %d package%s\nweighing %.2flbs}, @$specs{'txtQuantity'.$qty_index,'txtPackageQuantity'.$qty_index},( $$specs{'txtPackageQuantity'.$qty_index}==1?'' : 's'), $$specs{'txtTotalWeight'.$qty_index} );
+				return sprintf( qq{%d items in %d package%s\nWeighing %.2flbs}, 
+					( $$specs{'txtQuantity'.$qty_index} ? $$specs{txtQuantityUsed} : $$specs{'txtQuantity'.$Project->ordered_quantity_index()} ),
+					$packages, ( $packages==1?'' : 's'), 
+					( $$specs{txtTotalWeightUsed} ? $$specs{txtTotalWeightUsed} : $$specs{'txtTotalWeight'.$Project->ordered_quantity_index()} ),
+					);
 			} # end if
 		} else {
-			return sprintf( q{%d items}, $$specs{'txtQuantity'.$qty_index} );
-		} # end if
+			if ( $$specs{'txtPackageQuantity'.$qty_index} ) {
+				if ( $$services{PlainCartons} ) {
+					return sprintf( qq{%d items in %d carton%s\nweighing %.2flbs}, @$specs{'txtQuantity'.$qty_index,'txtPackageQuantity'.$qty_index},( $$specs{'txtPackageQuantity'.$qty_index}==1?'' : 's'), $$specs{'txtTotalWeight'.$qty_index} );
+				} else {
+					return sprintf( qq{%d items in %d package%s\nweighing %.2flbs}, @$specs{'txtQuantity'.$qty_index,'txtPackageQuantity'.$qty_index},( $$specs{'txtPackageQuantity'.$qty_index}==1?'' : 's'), $$specs{'txtTotalWeight'.$qty_index} );
+				} # end if
+			} else {
+				return sprintf( q{%d items}, $$specs{'txtQuantity'.$qty_index} );
+			} # end if
+		} # end if Used or index
 	} else {
 		my $html = '';
 

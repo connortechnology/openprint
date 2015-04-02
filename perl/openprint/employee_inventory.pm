@@ -673,7 +673,7 @@ sub save_inventory {
 		$variable{'information'} .= sprintf( 'No change was made to inventory for skid <a href="/employee/inventory/skid_details.html?skid_id=%1$d">%1$d</a>.<br/>', $Skid->id() );
 	}# end if
 
-} # end if save_inventory
+} # end sub save_inventory
 
 sub save_Skid {
 	my ( $Skid, $qty ) = @_;
@@ -2133,11 +2133,17 @@ sub move_skids_window {
 } # end sub move_skids_window
 
 sub allocations {
-	ssi::save_params( '/employee/inventory/allocations.html', ( 'Type','created_on_start_year','created_on_start_month','created_on_start_day','created_on_end_year','created_on_end_month','created_on_end_day','Docket','stock_age_start_year','stock_age_start_month','stock_age_start_day','stock_age_end_year','stock_age_end_month','stock_age_end_day' ) );
+	_allocations();
 } # end sub allocations
 
 sub _allocations {
-	ssi::save_params( '/employee/inventory/allocations.html', ( 'Type','created_on_start_year','created_on_start_month','created_on_start_day','created_on_end_year','created_on_end_month','created_on_end_day','Docket','stock_age_start_year','stock_age_start_month','stock_age_start_day','stock_age_end_year','stock_age_end_month','stock_age_end_day' ) );
+	ssi::save_params( '/employee/inventory/allocations.html', ( 
+		'Type', 'company_id','salesrep_id',
+( map { 'created_on_start_' . $_ } ( 'year','month','day' ) ),
+( map { 'created_on_end_' . $_ } ( 'year','month','day' ) ),
+( map { 'stock_age_start_' . $_ } ( 'year','month','day' ) ),
+( map { 'stock_age_end_' . $_ } ( 'year','month','day' ) ),
+'Docket', ) );
 } # end sub _allocations
 
 sub _deallocate_popup {

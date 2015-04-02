@@ -45,28 +45,34 @@
 			<li><label>Category</label>
 				<select name="category_id" id="category_id" onchange="load_events(this.form);">
 					<option value="">All</option>
-					<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } @{$$variable{'Categories'}} ], $session{'/event/history.html?category_id'} ); ) ?>
+					<? echo ( make_drop_down( [ map { $_->id(), $_->name() } @{$$variable{'Categories'}} ], $session{'/event/history.html?category_id'} ); ) ?>
 				</select>
 			</li>
 <? endif ( @{$$variable{'Categories'}} = openprint::Event_Category->find('order'=>'lower(name)') ) ?>
 			<li>
 				<label>When</label>
-				<? echo ( ssi::date_select_session( '/event/history.html', 'starting_on_start', {onchange=>'load_events(this.form);'} ); ) ?>
+				<? echo ( date_select_session( '/event/history.html', 'starting_on_start', {onchange=>'load_events(this.form);'} ); ) ?>
 					to 
-				<? echo ( ssi::date_select_session( '/event/history.html', 'starting_on_end', {onchange=>'load_events(this.form);'} ); ) ?>
+				<? echo ( date_select_session( '/event/history.html', 'starting_on_end', {onchange=>'load_events(this.form);'} ); ) ?>
 			</li>
+<? if ( sets::isin($session{user_type}, ['E','A'] ) ) ?>
+					<li><label>Deleted?</label>
+					<? echo ( radio( 'deleted', [ '1', 'Yes', '0', 'No', '', 'Both' ], $session{'/event/history.html?deleted'}, {onclick=>'load_events(this.form);'} ); ) ?>
+					</li>
+<? endif ( sets::isin($session{user_type}, ['E','A'] ) ) ?>
+
 				</ul>
 			</div>
 			<br class="spacer"/>
 			<p class="buttons">
-				<? echo ( join('',
-					ssi::button( 'ShowResults', { 'onclick'=>'load_events(f1);', 'text'=>'Show Results' } ),
+				<? echo ( join("\n",
+					button( 'ShowResults', { 'onclick'=>'load_events(f1);', 'text'=>'Show Results' } ),
 					#ssi::writeButton( $log, $dbh, 'Reset', 'reset.gif', 'f1.reset();', '', 'Reset' ),
-					ssi::button( 'New', { 'href'=> '/event/edit.html', 'text'=> 'New Event' } ),
+					button( 'New', { href=> '/event/edit.html', text=> 'New Event' } ),
 					); ) ?>
 			</p>
 		</fieldset>
-		<div id="EventsList"><? echo ( include('_history.html'); ) ?></div>
+		<div id="EventsList"><?include('_history.html')?></div>
 	</form>
 	</div>
 </div>

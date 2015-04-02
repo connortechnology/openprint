@@ -198,7 +198,7 @@ sub _history {
 		( map { 'created_on_end_'.$_ } ( 'year','month','day' ) ),
 		( map { 'published_on_start_'.$_ } ( 'year','month','day' ) ),
 		( map { 'published_on_end_'.$_ } ( 'year','month','day' ) ),
-				'published','employee_id','company_id', 'category_id', 'author_id' ) );
+				'deleted', 'published','employee_id','company_id', 'category_id', 'author_id' ) );
 	} 
 	if ( $param{func} eq 'Delete' ) {
 		foreach my $id ( ref $param{article_id} eq 'ARRAY' ? @{$param{article_id}} : $param{article_id} ) {
@@ -245,7 +245,7 @@ sub _search {
 		#( map { 'created_on_end_'.$_ } ( 'year','month','day' ) ),
 		( map { 'published_on_start_'.$_ } ( 'year','month','day' ) ),
 		( map { 'published_on_end_'.$_ } ( 'year','month','day' ) ),
-				'published','company_id', 'category_id', 'author_id', 'title' ) );
+				'deleted', 'published','company_id', 'category_id', 'author_id', 'title' ) );
 	} 
 	if ( $param{action} eq 'Delete' ) {
 		foreach my $id ( ref $param{article_id} eq 'ARRAY' ? @{$param{article_id}} : $param{article_id} ) {
