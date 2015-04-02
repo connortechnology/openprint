@@ -103,7 +103,7 @@ function Imposition_onchange( element, signature, qty_index, index ) {
 						<li>
 							<label>Die Cutting Needed</label>';
 
-					$html .= radio( 'Needed-'.$form, [ 'Y', 'Yes', 'N', 'No' ], $$variable{'Needed-'.$form}, { onclick=>qq`\$('DieCutting-$form').show();calc(this.form.name);` } );
+					$html .= radio( 'Needed-'.$form, [ 'Y', 'Yes', 'N', 'No' ], $$variable{'Needed-'.$form}, { onclick=>qq`if(get_rdb_value(f1.elements['Needed-$form']) == 'Y' ) { \$('DieCutting-$form').show();}else{\$('DieCutting-$form').hide();};calc(this.form.name);` } );
 					$html .= qq`</li>
 				</ul>
 				<div id="DieCutting-$form" `. ( $$variable{'Needed-'.$form} ne 'Y' ? 'style="display:none;"' : '' ). '><ul>';
