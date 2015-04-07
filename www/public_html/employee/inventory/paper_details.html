@@ -293,7 +293,7 @@ x
 </form>
 <? if ( $$variable{paper_id} ) ?>
 	<fieldset><legend onclick="toggleContent( 'CurrentInventory', '/employee/inventory/_paper_inventory_entries.html', new Array('paper_id',<?paper_id?>) );">Current Inventory<span class="unprintable"> - click to hide/show</span></legend>
-		<div id="CurrentInventory"><? echo ( include('/employee/inventory/_paper_inventory_entries.html'); ) ?></div>
+		<div id="CurrentInventory"><?return include('/employee/inventory/_paper_inventory_entries.html')?></div>
 	</fieldset>
 	<fieldset><legend onclick="toggleContent( 'Allocations', '/employee/inventory/_paper_allocations.html', new Array('paper_id',<?paper_id?>) );">Allocations<span class="unprintable"> - click to hide/show</span></legend>
 		<div id="Allocations"><? echo ( include('/employee/inventory/_paper_allocations.html'); ) ?></div>

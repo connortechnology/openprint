@@ -463,7 +463,7 @@ $openprint::log->debug("Setting skid_id to $$Skid{id}");
 			require openprint::PaperAllocation;
 			my $PA = openprint::PaperAllocation->find_one( 'skid_ids any'=>$MC->skid_id() );
 			if ( ! $PA ) {
-				$Paper->allocate( $Skid, $Order->docket(), $MC->quantity(), $Paper->units() );
+				$Paper->allocate( $Skid, $Order->docket(), $MC->quantity(), $Paper->units(), $SkidContent->condition_id() );
 				$error .= sprintf('Allocated %1$d%2$s to docket <a href="/employee/project/view.html?docket=%3$d">%3$d</a>.<br/>', $MC->quantity(), $Paper->units(), $Order->docket() );
 			} elsif ( ! $PA->docket() ) {
 				$error .= $PA->save({ docket=>$Order->docket()});
