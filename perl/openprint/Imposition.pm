@@ -275,7 +275,7 @@ sub load_used {
 			$$self{Press} = openprint::Equipment->find_one( strid=>$$specs{UsePress}, deleted=>[0,1] );
 			if ( ! $$self{Press} ) {
 				# This can happen when a press is deleted
-				$openprint::log->debug("No Press found for $qty_index " . $$specs{UsePress} );
+				$openprint::log->debug("No Press found for UsePress $qty_index " . $$specs{UsePress} );
 			} # end if
 		} # end if
 		if ( ! $$self{Press} ) {
@@ -284,7 +284,7 @@ sub load_used {
 			} else {
 				$$self{Press} = openprint::Equipment->find_one( strid=>$$specs{'ddmPress'.$qty_index}, deleted=>[0,1]);
 				if ( ! $$self{Press} ) {
-					$openprint::log->error("No Press found for $qty_index " . $$specs{'ddmPress'.$qty_index} );
+					$openprint::log->error("No Press found for ddmPress$qty_index " . $$specs{'ddmPress'.$qty_index} );
 				} # end if
 			} # end if
 		} # end if
@@ -309,9 +309,9 @@ sub load {
 #Carp::cluck("No press in Imposition::load");
 		} else {
 #Carp::cluck("Loading press in Imposition::load");
-			$$self{Press} = openprint::Equipment->find_one('strid'=>$$specs{'ddmPress'.$qty_index});
+			$$self{Press} = openprint::Equipment->find_one( strid=>$$specs{'ddmPress'.$qty_index}, deleted=>[0,1]);
 			if ( ! $$self{Press} ) {
-				$openprint::log->error("No Press found for $qty_index " . $$specs{'ddmPress'.$qty_index} );
+				$openprint::log->error("load: No Press found for ddmPress$qty_index " . $$specs{'ddmPress'.$qty_index} );
 			} # end if
 		} # end if
 		$$self{Press} = new openprint::Equipment() if ! $$self{Press};
