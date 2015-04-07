@@ -521,5 +521,9 @@ sub has_overrides {
 
 } # end sub has_overrides
 
+sub neccessary {
+	my ( $Project ) = @_;
+} # end sub neccessary
+
 1;
 __END__

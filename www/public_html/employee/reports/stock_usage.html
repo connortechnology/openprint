@@ -85,7 +85,7 @@ function load() {
                 <select name="%2$s_id%3$s" id="%2$s_id%3$s" size="1" onchange="filter_onChange(this,'');">
                 <option value=""> All </option> %4$s </select>
             </li>`, $option, lc $option, $$variable{'Signature'},
-            ssi::make_drop_down( \@options, $session{'/employee/reports/stock_usage.html?'.$option} ),
+            make_drop_down( \@options, $session{'/employee/reports/stock_usage.html?'.$option} ),
         );
     } # end foreach option
 
@@ -141,4 +141,4 @@ function load() {
         </p>
     </fieldset>
 </form>
-<div id="Results"><?include('_stock_usage.html')?></div>
+<div id="Results">Please select your filters and click Show Results.</div>

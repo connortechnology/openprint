@@ -104,7 +104,7 @@ if( $openprint::config{NeedCartonsForShipping} ) {
 
 	foreach $qty_index ( $qty_index ? $qty_index : $Project->quantity_indexes() ) {
 		$$specs{"txtPrice$qty_index"} =~ s/[^\-\.\d]//g;
-		$$specs{"txtQuantity$qty_index"} =~ s/\D//g;
+		$$specs{"txtQuantity$qty_index"} =~ s/\D//g if $$specs{"txtQuantity$qty_index"};
 		$$specs{"txtQuantity$qty_index"} = $Project->quantity($qty_index) if ! $$specs{"txtQuantity$qty_index"};
 		if ( ! $$specs{"txtQuantity$qty_index"} ) {
 			$log->debug("No qty");
@@ -364,10 +364,10 @@ sub from {
 sub to {
 	my ( $specs ) = @_;
 	return join("\n", 
-			join(', ', $$specs{ToCompanyName} ) ,
-			join(', ', $$specs{ToAddress1} , $$specs{ToAddress2},
+			( $$specs{ToCompanyName} ? ( $$specs{ToCompanyName} ) : () ),
+			join(', ', map { $_ ? $_ : () } ( $$specs{ToAddress1}, $$specs{ToAddress2},
 				@$specs{'ToCity','ToStateProvince','ToCountry'},
-				@$specs{ToPostalCode} ),
+				@$specs{ToPostalCode} ) ),
 			);
 } # end sub to
 
