@@ -879,10 +879,10 @@ sub input {
 	} elsif ( $options{type} eq 'integer' ) {
 		if ( $ENV{HTTP_USER_AGENT} =~ /ip(ad|od|hone)/i ) {
 			$options{type} = 'text';
-			$options{pattern} = '[0-9]*' if ! $options{pattern};
+			$options{pattern} = '\-?[0-9]*' if ! $options{pattern};
 		} elsif ( $ENV{HTTP_USER_AGENT} =~ /Firefox/ ) {
 			$options{type} = 'text';
-			$options{pattern} = '[0-9]*' if ! $options{pattern};
+			$options{pattern} = '\-?[0-9]*' if ! $options{pattern};
 			delete $options{step};
 		} else {
 			$options{type} = 'number';
