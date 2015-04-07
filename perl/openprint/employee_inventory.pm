@@ -1202,8 +1202,7 @@ sub allocate {
 	} # end if
 	my $units = $Paper->units();
 	$docket =~ s/\D//g;
-	$quantity =~ s/[^\d\.]//g;
-	$quantity =~ s/(\d+)\..*/$1/g;
+	$quantity =~ s/[^\-\d]//g; # Inputs are all integers, not floats
 
 	my $Order = openprint::Order->find_one( docket=>$docket ) if $docket;
 	if ( ( ! $Order ) and $project_id ) {
@@ -1217,10 +1216,11 @@ sub allocate {
 	} # end if
 
 	my @skid_ids = split(',', $skid_ids );
-	if ( $specific and ! @skid_ids ) {
+	if ( ! @skid_ids ) {
 		if ( $quantity < 0 ) {
-			@skid_ids = map { $_->skid_id() } openprint::PaperAllocation->find(paper_id=>$paper_id, docket=>$Order->docket(), ( $condition_id ? ( condition_id=>$condition_id ) : () ) );
-		} else {
+			@skid_ids = map { $_->skid_ids() ? @{$_->skid_ids()} : () } openprint::PaperAllocation->find(paper_id=>$paper_id, docket=>$Order->docket(), ( $condition_id ? ( condition_id=>$condition_id ) : () ) );
+$log->debug("Got sids from allocations to deallocate: @skid_ids");
+		} elsif ( $specific ) {
 			@skid_ids = map { $_->skid_id() } openprint::SkidContent->find( deleted=>0, paper_id=>$paper_id, ( $condition_id ? ( condition_id=>$condition_id ) : () ) );
 		} # end if
 	} # end if
@@ -1228,25 +1228,92 @@ sub allocate {
 	my $qty = $quantity;
 	my @allocated_skids;
 
-	if ( @skid_ids ) {
-		if ( $qty < 0 ) {
-			foreach my $skid_id ( @skid_ids ) {
-				my $Skid = new openprint::Skid( $skid_id );
-				my $allocateable = $Skid->allocateable( $Paper );
-				next if ! $allocateable;
-
-				if ( $allocateable < -1*$qty ) {
-					push @allocated_skids, $skid_id;
-					#push @allocations, $Paper->allocate( $skid_id, $Projects[0]->id(), -1*$allocateable, $units );
-					$qty += $allocateable;
-				} else {
-					push @allocated_skids, $skid_id;
-					#push @allocations, $Paper->allocate( $skid_id, $Projects[0]->id(), $qty, $units );
-					$qty = 0;
-				} # end if
-				last if ! $qty;
-			} # end foreach
+	if ( $qty < 0 ) {
+		# De-allocation
+		# if specific, look for allocations to delte
+		$qty *= -1;
+		
+		my @PAs;
+		if ( $specific ) {
+			# Prefer specific allocations first.
+			@PAs = openprint::PaperAllocation->find( paper_id=>$paper_id, docket=>$Order->docket(),
+				'skid_ids is null' => 0,
+				( $condition_id ? ( condition_id=>$condition_id ) : () ),
+				order	=>	'id DESC'
+			);
+			@PAs = openprint::PaperAllocation->find( paper_id=>$paper_id, docket=>$Order->docket(),
+				'skid_ids is null' => 0,
+				order	=>	'id DESC'
+			) if ! @PAs;
+			push @PAs, openprint::PaperAllocation->find( paper_id=>$paper_id, docket=>$Order->docket(),
+				'skid_ids is null' => 1,
+				( $condition_id ? ( condition_id=>$condition_id ) : () ),
+				order	=>	'id DESC'
+			);
+			push @PAs, openprint::PaperAllocation->find( paper_id=>$paper_id, docket=>$Order->docket(),
+				'skid_ids is null' => 1,
+				order	=>	'id DESC'
+			) if ! @PAs;
 		} else {
+			@PAs = openprint::PaperAllocation->find( paper_id=>$paper_id, docket=>$Order->docket(),
+				'skid_ids' => '{}',
+				( $condition_id ? ( condition_id=>$condition_id ) : () ),
+				order	=>	'id DESC'
+			);
+			@PAs = openprint::PaperAllocation->find( paper_id=>$paper_id, docket=>$Order->docket(),
+				'skid_ids' => '{}',
+				order	=>	'id DESC'
+			) if ! @PAs;
+			push @PAs, openprint::PaperAllocation->find( paper_id=>$paper_id, docket=>$Order->docket(),
+				'skid_ids !=' => [],
+				( $condition_id ? ( condition_id=>$condition_id ) : () ),
+				order	=>	'id DESC'
+			);
+			push @PAs, openprint::PaperAllocation->find( paper_id=>$paper_id, docket=>$Order->docket(),
+				'skid_ids !=' => [],
+				order	=>	'id DESC'
+			) if ! @PAs;
+		} # end if
+		while ( $qty > 0 and my $PA = shift @PAs ) {
+			if ( $PA->quantity() > $qty ) {
+				$PA->save({quantity=>$PA->quantity() - $qty });
+				$qty = 0;
+			} else {
+				$qty -= $PA->quantity();
+				$PA->delete();
+			} # end if
+		} # end while
+	
+		
+		if ( $qty == -1*$quantity ) {
+			$variable{error} .= 'Failed to deallocate.';
+		} else {
+			$variable{information} .= sprintf('Deallocated %1$d%2$s from docket <a href="/employee/project/view.html?docket=%3$d">%3$d</a><br/>', 
+				Number::Format::format_number($qty ? $qty : -1*$quantity), $units, $Order->docket() );
+		} # end if
+	} else {
+					
+		if ( @skid_ids ) {
+	
+			# I don't understand the point of this.
+			#foreach my $skid_id ( @skid_ids ) {
+				#my $Skid = new openprint::Skid( $skid_id );
+				#my $allocateable = $Skid->allocateable( $Paper );
+				#next if ! $allocateable;
+#
+				#
+				#if ( $allocateable < -1*$qty ) {
+					#push @allocated_skids, $skid_id;
+					##push @allocations, $Paper->allocate( $skid_id, $Projects[0]->id(), -1*$allocateable, $units );
+					#$qty += $allocateable;
+				#} else {
+					#push @allocated_skids, $skid_id;
+					##push @allocations, $Paper->allocate( $skid_id, $Projects[0]->id(), $qty, $units );
+					#$qty = 0;
+				#} # end if
+				#last if ! $qty;
+			#} # end foreach
+		#} else {
 			foreach my $skid_id ( @skid_ids ) {
 				my $Skid = new openprint::Skid( $skid_id );
 				my $allocateable = $Skid->allocateable( $Paper );
@@ -1255,32 +1322,33 @@ sub allocate {
 				$qty -= $allocateable;
 				last if $qty <= 0;
 			} # end foreach
-		} # end if
-		if ( $qty > 0 ) {
-			$variable{warning} .= 'There is not enough available paper to allocate.';
-		} # end if
-	} else {
-		my @SkidContents = openprint::SkidContent->find(
-				condition_id	=>	$condition_id,
-				paper_id		=>	$paper_id,
-				'quantity >'	=>	1,
-				deleted			=>	0,
-				);
-		next if ! @SkidContents;
-		my @Allocations = openprint::PaperAllocation->find(
-				condition_id	=>	$condition_id,
-				paper_id		=>	$paper_id,
-				);
+			if ( $qty > 0 ) {
+				$variable{warning} .= 'There is not enough available paper to allocate.';
+			} # end if
+		} else {
+			my @SkidContents = openprint::SkidContent->find(
+					condition_id	=>	$condition_id,
+					paper_id		=>	$paper_id,
+					'quantity >'	=>	1,
+					deleted			=>	0,
+					);
+			next if ! @SkidContents;
+			my @Allocations = openprint::PaperAllocation->find(
+					condition_id	=>	$condition_id,
+					paper_id		=>	$paper_id,
+					);
 
-		my $available = misc::sum(map { $_->quantity() } @SkidContents) - misc::sum(map { $_->quantity() } @Allocations );
-		if ( $available < $qty ) {
-			$variable{warning} .= 'There is not enough available paper to allocate.';
+			my $available = misc::sum(map { $_->quantity() } @SkidContents) - misc::sum(map { $_->quantity() } @Allocations );
+			if ( $available < $qty ) {
+				$variable{warning} .= 'There is not enough available paper to allocate.';
+			} # end if
 		} # end if
-	} # end if
-	my $PA = $Paper->allocate( \@allocated_skids, $Order->docket(), $quantity, $units, $condition_id );
-	
-	$PA->send_notification();
-	$variable{information} .= sprintf('Allocated %d%s to docket <a href="/employee/project/view.html?docket=%1$d">%1$d</a><br/>', $quantity, $units, $Order->docket() );
+		my $PA = $Paper->allocate( \@allocated_skids, $Order->docket(), $quantity, $units, $condition_id );
+		
+		$PA->send_notification();
+		$variable{information} .= sprintf('Allocated %d%s to docket <a href="/employee/project/view.html?docket=%1$d">%1$d</a><br/>', 
+			Number::Format::format_number($quantity), $units, $Order->docket() );
+	} # end if allocate or deallocate
 } # end sub allocate
 
 
