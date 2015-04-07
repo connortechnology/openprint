@@ -105,10 +105,11 @@ You may use a barcode scanner.  Simply scan the code and click Go.<br/>
             { 'custom' => ['(user_id1=? OR user_id2=?)', @session{'user_id','user_id'} ] }
             ) ) if $session{user_id};
         my $html;
+		require openprint::Article;
         my @Articles = openprint::Article->find( published=>1,
             'published_on <=' => sprintf('%.4d-%.2d-%.2d 00:00:00', Date::Calc::Add_Delta_Days( Date::Calc::Today(), 30 ) ),
-            'published_on >=' => sprintf('%.4d-%.2d-%.2d 23:59:59', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -30 ) ),
-            'order' =>  'published_on DESC',
+			limit	=> 5,
+            order =>  'published_on DESC',
         );
 
         foreach my $Article ( @Articles ) {
