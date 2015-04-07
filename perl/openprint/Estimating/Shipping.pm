@@ -364,10 +364,10 @@ sub from {
 sub to {
 	my ( $specs ) = @_;
 	return join("\n", 
-			join(', ', $$specs{ToCompanyName} ) ,
-			join(', ', $$specs{ToAddress1} , $$specs{ToAddress2},
+			( $$specs{ToCompanyName} ? ( $$specs{ToCompanyName} ) : () ),
+			join(', ', map { $_ ? $_ : () } ( $$specs{ToAddress1}, $$specs{ToAddress2},
 				@$specs{'ToCity','ToStateProvince','ToCountry'},
-				@$specs{ToPostalCode} ),
+				@$specs{ToPostalCode} ) ),
 			);
 } # end sub to
 
