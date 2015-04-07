@@ -39,6 +39,7 @@ my @fields = (
 	'printing_type',
 	'Folds', 'Fold',
 	'runspeed',
+	'impressions',
 );
 
 # spread_cols and spread_rows are oriented identically to the imposition
@@ -670,7 +671,11 @@ sub equals {
 
 sub to_string {
 	if ( ! $_[0]{to_string} ) {
+		if ( $_[0]{paper} ) {
 		$_[0]{to_string} = sprintf('%s %dx%d+%dx%d=%dout %s %dx%d=%dpages on %sx%s%s->%sx%s %s', ( $_[0]{Press} ? $_[0]->Press()->strid() : 'unknown equipment' ), $_[0]->get('columns','rows','dutch_columns','dutch_rows','imposition','runstyle','page_columns','page_rows','pages', 'paper_width','paper_height', 'paper_type','sheet_width','sheet_height', 'image_orientation') );
+		} else {
+			$_[0]{to_string} = sprintf('%s %dx%d+%dx%d=%dout %s %dx%d=%dpages %s', ( $_[0]{Press} ? $_[0]->Press()->strid() : 'unknown equipment' ), $_[0]->get('columns','rows','dutch_columns','dutch_rows','imposition','runstyle','page_columns','page_rows','pages', 'sheet_width','sheet_height', 'image_orientation') );
+		} # end if
 	}
 	return $_[0]{to_string};
 } # end sub to_string

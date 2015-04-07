@@ -426,7 +426,7 @@ sub apply {
 		$error .= $PI->save({
 				paper_id    =>  $$Paper{id},
 				user_id     =>  $openprint::session{user_id},
-				instock     =>  $Paper->in_stock(),
+				instock     =>  $Paper->in_stock(undef),
 				delta       =>  0,
 				comment     =>  'Changes from manifest <a href="/employee/inventory/manifest_view.html?manifest_id=' . $Manifest->id() . '">'. $Manifest->name().'</a>:<br/>'.$skid_changes,
 				skid_id     =>  $$Skid{id},

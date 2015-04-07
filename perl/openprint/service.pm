@@ -320,7 +320,7 @@ require openprint::Estimating::PerfectBound;
 		} # end if
 	} # end if
 
-	foreach my $service_name ( 'Scoring', 'Perforating', 'Counting', 'Grommeting', 'Sewing', 'Imposition' ) {
+	foreach my $service_name ( 'Scoring', 'Perforating', 'Counting', 'Grommeting', 'Sewing', 'Imposition', 'Stripping' ) {
 		next if $$services{$service_name};
 		eval 'require openprint::Estimating::'.$service_name.';';
 		$openprint::log->error("Error requiring opepnrint::Estimating::$service_name: $@") if $@;
