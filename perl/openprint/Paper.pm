@@ -821,6 +821,24 @@ sub allocate {
 			} );
 	if ( $Order ) {
 		$Order->add_log( qq`Allocated $quantity$$PA{units} of <a href="/employee/inventory/paper_details.html?paper_id=$$self{id}">` . $self->to_string().'</a>');
+			my $PI = new openprint::PaperInventory();
+			$PI->save({	
+				paper_id	=>	$$self{id},
+				user_id		=>	$openprint::session{user_id},
+				docket		=>	$Order->docket(),
+				delta		=>	0,
+				comment		=>	qq`Allocated $quantity$$PA{units} to docket $$Order{docket}`,
+				instock		=>	$self->in_stock(),
+			});
+	} else {
+			my $PI = new openprint::PaperInventory();
+			$PI->save({	
+				paper_id	=>	$$self{id},
+				user_id		=>	$openprint::session{user_id},
+				delta		=>	0,
+				comment		=>	qq`Allocated $quantity$$PA{units}`,
+				instock		=>	$self->in_stock(),
+			});
 	} # end if
 	if ( $$self{available_to_order} > 1 ) {
 		$$self{available_to_order} -= $quantity;

@@ -1290,6 +1290,16 @@ $log->debug("Got sids from allocations to deallocate: @skid_ids");
 		} else {
 			$variable{information} .= sprintf('Deallocated %1$d%2$s from docket <a href="/employee/project/view.html?docket=%3$d">%3$d</a><br/>', 
 				Number::Format::format_number($qty ? $qty : -1*$quantity), $units, $Order->docket() );
+			$Order->add_log( 'De-Allocated ' . Number::Format::format_number($qty ? $qty : -1*$quantity).$$Paper{units}.qq` of <a href="/employee/inventory/paper_details.html?paper_id=$paper_id">` . $Paper->to_string().'</a>');
+			my $PI = new openprint::PaperInventory();
+			$PI->save({	
+				paper_id	=>	$paper_id,
+				user_id		=>	$session{user_id},
+				docket		=>	$Order->docket(),
+				delta		=>	0,
+				comment		=>	$variable{information},
+				instock		=>	$Paper->in_stock(),
+			});
 		} # end if
 	} else {
 					
@@ -1346,7 +1356,7 @@ $log->debug("Got sids from allocations to deallocate: @skid_ids");
 		my $PA = $Paper->allocate( \@allocated_skids, $Order->docket(), $quantity, $units, $condition_id );
 		
 		$PA->send_notification();
-		$variable{information} .= sprintf('Allocated %d%s to docket <a href="/employee/project/view.html?docket=%1$d">%1$d</a><br/>', 
+		$variable{information} .= sprintf('Allocated %s%s to docket <a href="/employee/project/view.html?docket=%3$d">%3$d</a><br/>', 
 			Number::Format::format_number($quantity), $units, $Order->docket() );
 	} # end if allocate or deallocate
 } # end sub allocate
