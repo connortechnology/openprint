@@ -402,6 +402,23 @@ sub display {
 
 sub signature_summary {
     my ( $Project, $service_index, $specs, $qty_index, $s_id, $sig_specs ) = @_;
+    $specs = openprint::service::get_specs_ref( $Project, $service_index ) if ! $specs;
+    $sig_specs = openprint::service::get_specs_ref( $Project, $s_id ) if ! $sig_specs;
+    my $form = $$sig_specs{SignatureIndex};
+    if ( $qty_index ) {
+        if ( ! $$sig_specs{"txtImposition$qty_index"} ) {
+            return '';
+        } # end if
+        my @folds;
+        my $Equipment = new openprint::Equipment( $$specs{"ddmEquipment-$form-$qty_index"} );
+        foreach my $imp_index ( 1 .. 4 ) {
+            next if ! $$specs{"ImpQty-$form-$qty_index-$imp_index"};
+            push @folds, sprintf('%1$d @ %2$dout', @$specs{"ImpQty-$form-$qty_index-$imp_index","ImpOut-$form-$qty_index-$imp_index"},
+                    );
+        } # end foreach
+        return join('<br/>', ( ' on ' . $Equipment->name() ), sort { $a cmp $b } @folds);
+    } # end if
+
 	return '';
 } # end sub signature_summary
 
@@ -480,6 +497,29 @@ sub load_Impositions($$$) {
 	} # end if
 	return @impos;
 } # end sub load_Impositions
+
+sub has_overrides {
+    my ( $Project, $service_id, $specs, $qty_index ) = @_;
+    $specs = openprint::service::get_specs_ref( $Project, $service_id ) if ! $specs;
+
+    my @v;
+    if ( $qty_index ) {
+        foreach my $s_s_id ( $Project->signatures() ) {
+            my $sig_specs = openprint::service::get_specs_ref( $Project, $s_s_id );
+            my $form = $$sig_specs{SignatureIndex};
+            push @v, map { $$specs{$_} ? $_ : () } (
+                    "chkOverrideEquipment-$form-$qty_index",
+                    "chkOverrideImposition-$form-$qty_index",
+                    "OverrideMakeReadyPrice-$form-$qty_index",
+                    "OverridePrice-$form-$qty_index",
+                    "OverrideServicePrice-$form-$qty_index",
+                    );
+        } # end foreach sig
+    } # end if
+
+    return @v;
+
+} # end sub has_overrides
 
 1;
 __END__
