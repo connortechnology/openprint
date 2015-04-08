@@ -14,11 +14,10 @@
         timeout = null;
         gettingNewPrice = true;
 
-		var h = form.serialize(true);
-		h.ServiceType = 'Folding';
-		h.callback = 'cbFoldingResults';
+		var h = $H(form.serialize(true));
+		h.set('callback', 'cbFoldingResults' );
+		h.set('ServiceType', 'Folding');
 
-		var h = $H(Form.serialize( form, true ));
 		h.each(function(pair) {
 			if ( pair.value == '' )
 				h.unset(pair.key);
@@ -32,16 +31,17 @@
 		
         var form = getFormObj('f1');
 
-		var re = /FoldQty-(\d+)-(\d+)-(\d+)/;
-		var keys = results.keys();
-		for ( var index = 0, len = keys.length; index < len; index += 1 ) {
-			var key = keys[index];
-			var value = results.get(keys[index]);
+        cbFillResults(results);
+		var re = /FoldQty\-(\d+)\-(\d+)\-(\d+)/;
+		for ( var index = 0, len = form.elements.length; index < len; index += 1 ) {
+			var key = form.elements[index].id;
 
 			var matches = re.exec( key );
 			if ( matches ) {
 				var f = $('Fold-'+matches[1]+'-'+matches[2]+'-'+matches[3]);
 				if ( f ) {
+					var value = form.elements[index].value;
+					// always leave the first or any witha value
 					if ( matches[3] == 1 || value > 0 ) {
 						f.show();
 					} else {
@@ -52,7 +52,6 @@
 				} // end if f
 			} // end if matches
 		} // end foreach pair
-        cbFillResults(results);
 
 	} // end function cbFoldingResults
 
