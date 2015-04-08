@@ -190,6 +190,7 @@ sub copy {
 	$$New{id} = '';
 	$$New{Prices} = [ $_[0]->Prices() ];
 	$$New{recommendations} = [ $_[0]->recommendations() ];
+	delete $$New{created_on};
 	return $New;
 } # end sub copy
 
