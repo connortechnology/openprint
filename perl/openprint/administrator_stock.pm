@@ -285,16 +285,28 @@ sub stock {
 			push @{$$Paper{'recommendations'}}, $Type->id() if $param{'chkPRF'.$Type->id()};
 		} # end foreach
 
+		my $message = '';
 # Save prices
 		foreach my $Price ( $Paper->Prices() ) {
 			if (
 					( $Price->price() != $param{"price-$$Price{id}"} ) 
+					or ( $Price->cost() != $param{"cost-$$Price{id}"} ) 
+					or ( $Price->markup() != $param{"markup-$$Price{id}"} ) 
 					or ( $Price->min() != $param{"min-$$Price{id}"} )
 					or ( $Price->max() != $param{"max-$$Price{id}"} )
 					or ( $Price->units() ne $param{"units-$$Price{id}"} )
 					or ( $Price->discountable() ne $param{"discountable-$$Price{id}"} )
-					or ( $Price->equipment_id() ne $param{"equipment_id-$$Price{id}"} )
+					or ( $Price->equipment_id() != $param{"equipment_id-$$Price{id}"} )
 			   ) {
+			$message .= "Price changed: " . join( ', ', (
+						( $Price->min() != $param{"min-$$Price{id}"} ? 'min: ' . $$Price{min} .' => ' . $param{"min-$$Price{id}"} : () ),
+						( $Price->max() != $param{"max-$$Price{id}"} ? 'max: '. $$Price{max} .' => ' . $param{"max-$$Price{id}"} : () ),
+						( $Price->cost() != $param{"cost-$$Price{id}"} ? 'cost: '. $$Price{cost} . ' => '. $param{"cost-$$Price{id}"} : () ),
+						( $Price->markup() != $param{"markup-$$Price{id}"} ? 'markup: '.$$Price{markup} . ' => '. $param{"markup-$$Price{id}"} : () ),
+						( $Price->price() != $param{"price-$$Price{id}"} ? 'price: '.$$Price{price} . ' => '. $param{"price-$$Price{id}"} : () ),
+						( $Price->units() ne $param{"units-$$Price{id}"} ? 'units: '.$$Price{units} . ' => '. $param{"units-$$Price{id}"} : () ),
+						( $Price->discountable() ne $param{"discountable-$$Price{id}"} ? 'discounted: ' .$$Price{discountable} . ' => '. $param{"discountable-$$Price{id}"} : () ),
+				) );
 			$variable{error} .= $Price->save({
 					equipment_id	=> $param{"equipment_id-$$Price{id}"},
 					min				=> $param{"min-$$Price{id}"},
@@ -309,7 +321,7 @@ sub stock {
 		} # end foreach Price
 
 		$variable{'error'} .= $Paper->save();
-		(new openprint::Log())->save({ object_type=>(ref $Paper), object_id=>$$Paper{id}, action=>($param{stock_id}?'Edited stock':'Saved stock') });
+		(new openprint::Log())->save({ object_type=>(ref $Paper), object_id=>$$Paper{id}, action=>($param{stock_id}?'Edited stock':'Saved stock'), note=>$message });
 		if ( ! $variable{'error'} ) {
 			$variable{'information'} .= 'Stock ' . $Paper->id() . ' has been saved.';
 			$variable{ExternalRedirect} = '/administrator/stock/stock.html?stock_id='.$$Paper{id};
