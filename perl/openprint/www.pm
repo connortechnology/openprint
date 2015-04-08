@@ -507,7 +507,7 @@ $log->debug("Service: " . $Service->to_string() );
 						if ( my $function = ('openprint::Estimating::'.$module)->can('display') ) {
 							$function->($log, $dbh, \%variable, $project_index, $service_index );
 						} else {
-							$log->error( "Eval error of require $module :: Reason: $?" );
+							$log->error( "Eval error of require(bind) openprint::Estimating::$module display() :: Reason: $?" );
 						}
 					} # end if
 				} elsif ($third eq 'spec') {

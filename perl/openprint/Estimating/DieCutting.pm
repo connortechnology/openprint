@@ -575,7 +575,7 @@ sub signature_calc {
 				if ( $price{Prices} ) {
 					@{$results{Prices}} = @{$price{Prices}};
 				} else {
-					$openprint::log->error("No prices?");
+					$openprint::log->error("No prices in DieCutting?");
 					$results{Prices} = [];
 				}
 				$results{Overs} = $price{Overs};
