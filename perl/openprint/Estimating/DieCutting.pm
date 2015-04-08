@@ -648,6 +648,7 @@ sub has_overrides {
 
 sub neccessary {
 	my ( $Project ) = @_;
+	return 0;
 } # end sub neccessary
 
 1;
