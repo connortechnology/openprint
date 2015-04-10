@@ -653,8 +653,9 @@ sub summary {
 			my $group_html = join(' ',
 					( $$specs{"ddmRunStyle-$group_id"} ? $$specs{"ddmRunStyle-$group_id"} : () ),
 					( $$specs{"ddmPress-$group_id"} ? ' on ' . $$specs{"ddmPress-$group_id"} : () ),
-					($$specs{"PrintingType-$group_id"} ? $$specs{"PrintingType-$group_id"} : () ),
-					( $$specs{"PageQuantity-$group_id"} ? 'as ' . $$specs{"PageQuantity-$group_id"} . 'page signatures.' : () ),
+					( $$specs{"PrintingType-$group_id"} ? $$specs{"PrintingType-$group_id"} : () ),
+					( $$specs{"PageQuantity-$group_id"} ? 'as ' . $$specs{"PageQuantity-$group_id"} . 'page signatures' : () ),
+					( $$specs{"StockType-$group_id"} ? 'on ' . $$specs{"StockType-$group_id"} . ' stock' : () ),
 					);
 			if ( $group_html ) {
 				$html .= 'Group ' . $group_id . ' is overriden to run ' . $group_html. '<br/>';

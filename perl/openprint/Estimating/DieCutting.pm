@@ -46,15 +46,15 @@ sub variables {
 	foreach my $ss_id ( $Project->signatures() ) {
 		my $sig_specs = openprint::service::get_specs_ref( $Project, $ss_id );
 		my $form = $$sig_specs{SignatureIndex};
-		push @v, ("txtWidth-$form","txtHeight-$form",
-			 "rdbDieCutting-$form","Needed-$form",
-			 "rdbSuppliedDie-$form","txtDieCutPunches-$form",
-			 "txtSteelRuleLength-$form","txtDieCutBends-$form","txtHoleClearingHoles-$form");
+		push @v, map { "$_-$form" } ( 'txtWidth', 'txtHeight', 
+			 'rdbDieCutting' ,'Needed', 'MakeReadyComplexity',
+			 'rdbSuppliedDie','txtDieCutPunches',
+			 'txtSteelRuleLength', 'txtDieCutBends', 'txtHoleClearingHoles' );
 		foreach my $qty_index ( $Project->quantity_indexes() ) {
-			push @v,(
-				 "ddmEquipment-$form-$qty_index", "chkOverrideEquipment-$form-$qty_index",
-				 "txtImposition-$form-$qty_index", "OverrideImposition-$form-$qty_index",
-				 "txtLayoutWidth-$form-$qty_index", "txtLayoutHeight-$form-$qty_index",
+			push @v,map { "$_-$form-$qty_index" } (
+				 'ddmEquipment', 'chkOverrideEquipment',
+				 'txtImposition', 'OverrideImposition',
+				 'txtLayoutWidth', 'txtLayoutHeight',
 				 );
 			foreach my $imp_index ( 1 .. 4 ) {
 				push @v, map { join('-', $_, $form, $qty_index, $imp_index ) } ( 'ImpOut','ImpColumns','ImpRows','ImpQty' );
@@ -86,13 +86,15 @@ sub calc_price {
 	my %Total = ( Imposition => $Imposition, Status => 'calculated', alert=>'' );
 	my $form = $$sig_specs{SignatureIndex};
 
-	my $MakeReadyService = openprint::Service->find_one( name => 'DieCutting-'.$$specs{'rdbDieCutting-'.$form}.'MakeReady' ) if $$specs{'rdbDieCutting-'.$form};
+	my $MakeReadyService = openprint::Service->find_one( name => 'DieCutting-'.$$specs{'MakeReadyComplexity-'.$form}.'MakeReady' ) if $$specs{'MakeReadyComplexity-'.$form};
+	$MakeReadyService = openprint::Service->find_one( name => 'DieCutting-'.$$specs{'rbDieCutting-'.$form}.'MakeReady' ) if (!$MakeReadyService) and $$specs{'rdbDieCutting-'.$form};
 	$MakeReadyService = openprint::Service->find_one( name => 'DieCuttingMakeReady' ) if ! $MakeReadyService;
 
 	if ( $MakeReadyService ) {
 		my $MakeReady = $MakeReadyService->get_Price( undef, $Equipment );
 		if ( $$MakeReady{units} eq 'per hour' ) {
-			my $MRHours = $Equipment->Specification( $$specs{ServiceType}.'MakeReadyTime' );
+			my $MRHours = $Equipment->Specification( $$specs{ServiceType}.$$specs{'MakeReadyComplexity-'.$form}.'MakeReadyTime' ) if $$specs{'MakeReadyComplexity-'.$form};
+			$MRHours = $Equipment->Specification( $$specs{ServiceType}.'MakeReadyTime' ) if !$MRHours;
 			$Total{MakeReadyTime} = $MRHours;
 			if ( $MRHours and $$MRHours{value} ) {
 				$$MakeReady{Total} = Math::Round::nearest( 0.01, $$MakeReady{Price} * $$MRHours{value} );
@@ -317,7 +319,7 @@ sub calc {
 			$$specs{'hdnBreakdown'.$qty_index} .= "Form $form: $$sig_specs{txtServiceDescription}<br/>";
 			my $Imposition = new openprint::Imposition();
 			$Imposition->load( $sig_specs, $qty_index );
-			$$specs{'hdnBreakdown'.$qty_index} .= $Imposition->to_string() . '<br/>';
+			$$specs{'hdnBreakdown'.$qty_index} .= 'Printed: ' . $Imposition->to_string() . '<br/>';
 
 			my %results = signature_calc( $Project, $signature_service_index, $sig_specs, $specs, $qty_index, $Imposition );
 			$$specs{'hdnBreakdown'.$qty_index} .= $results{breakdown} if $results{breakdown};
@@ -518,7 +520,7 @@ sub signature_calc {
 				if ( $price{Prices} ) {
 					@{$results{Prices}} = @{$price{Prices}};
 				} else {
-					$openprint::log->error("No prices?");
+					$openprint::log->error("No prices in DieCutting?");
 					$results{Prices} = [];
 				}
 				$results{Overs} = $price{Overs};
@@ -648,6 +650,7 @@ sub has_overrides {
 
 sub neccessary {
 	my ( $Project ) = @_;
+	return 0;
 } # end sub neccessary
 
 1;
