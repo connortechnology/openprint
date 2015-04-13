@@ -1407,6 +1407,9 @@ $openprint::log->debug("Skipping cuz not $height");
 					# We need to do some initial filtering here.  
 					my %paper_impositions;
 					foreach my $cut_off ( @cut_offs ) {
+		if ( DEBUG_IMPOSITIONS and $$Overrides{"OverrideCutOff$qty_index"} and $$specs{"CutOff$qty_index"} ) {
+			next if $cut_off != $$specs{"CutOff$qty_index"};
+		}
 						$$project{'Cut Off'} = $cut_off;
 						foreach my $i ( openprint::imposition::get_imposition( $project, $do_work_turn, $do_perfecting, $$specs{Versions}, $P, $Press ) ) {
 							my $AP = $i->Paper();
