@@ -1190,7 +1190,7 @@ sub _drop {
 			} # end if different servicetype
 #$log->debug("Order before coalesce: @order : " . join(',', map { new openprint::ScheduledJob($_)->Project()->docket() } @order ) );
 			if ( $previous and $previous->project_id() and $Job->project_id() and ( $previous->project_id() == $Job->project_id() ) and $$previous{service_id}[0] and $$Job{service_id}[0] ) {
-				my $module = 'openprint::Estimating::'.$Job->ServiceType()->name();
+				my $module = 'openprint::Estimating::'.$Job->ServiceType()->type();
 				if ( my $function = $module->can('compare_signatures') ) {
 					my $JobProject = $Job->Project();
 					my $sig_specs1 = openprint::service::get_specs_ref( $previous->Project(), $$previous{service_id}[0] );
