@@ -64,16 +64,20 @@ sub calc {
 	my $services = $Project->services();
 	$$specs{alert} = '';
 	my $status = 'calculated';
-	my ( $carton_service_index ) = $$services{PlainCartons}[0] if $$services{PlainCartons}[0];
+	my $carton_service_index = $$services{PlainCartons}[0] if $$services{PlainCartons}[0];
 	if ( ! $carton_service_index ) {
-if( $openprint::config{NeedCartonsForShipping} ) {
-		$$specs{alert} = 'Shipping requires that the project be packed in cartons.';
-		$$specs{NeedPlainCartons} = 1;
-		return 'uncalculated';
-}
+		if( $openprint::config{NeedCartonsForShipping} ) {
+			$$specs{alert} = 'Shipping requires that the project be packed in cartons.';
+			$$specs{NeedPlainCartons} = 1;
+			return 'uncalculated';
+		}
+		if ( $$services{BulkSkids} and @{$$services{BulkSkids}} ) {
+			$carton_service_index = $$services{BulkSkids}[0];
+		} # en dif
 	} else {
 		$$specs{NeedPlainCartons} = 0;
 	} # end if
+
 	if ( $carton_service_index ) {
 		my $carton_status = openprint::service::status( $project_index, $carton_service_index );
 		if ( sets::isin( $carton_status,['', 'uncalculated'] ) ) {
@@ -144,6 +148,7 @@ $openprint::log->debug("Other Shipped Quantity: $other_shipped_quantity");
 				$$specs{'txtPackageQuantity'.$qty_index} = ceil( $$specs{'txtQuantity'.$qty_index}/$$carton_specs{'txtItemsPerPackage'.$qty_index} );
 			} # end if
 			$$specs{"txtTotalWeight$qty_index"} = sprintf('%.2f', (int( $$specs{'txtQuantity'.$qty_index}/$$carton_specs{'txtItemsPerPackage'.$qty_index} ) * $$specs{'txtPackageWeight'.$qty_index}) + (($$specs{'txtQuantity'.$qty_index} % $$carton_specs{'txtItemsPerPackage'.$qty_index} ) * $$carton_specs{txtFinishedWeight}) );
+		
 		} # end if
 
 		if ( ! $$specs{"OverridePrice$qty_index"} or $$specs{"OverridePrice$qty_index"} ne 'Y' ) {
@@ -198,7 +203,7 @@ $openprint::log->debug("Other Shipped Quantity: $other_shipped_quantity");
 									my $total;
 									$$specs{"hdnBreakdown$qty_index"} .= '<tr><td colspan="2">On ' . $Equipment->name() . '</td></tr>';	
 									if ( my $MinimumPackages = $Equipment->Specification( 'Minimum Packages' ) ) {
-										if ( $$MinimumPackages{value} > $$specs{'txtPackageQuantity'.$qty_index} ) {
+										if ( (!$$specs{'txtPackageQuantity'.$qty_index}) or ( $$MinimumPackages{value} > $$specs{'txtPackageQuantity'.$qty_index} ) ) {
 											$$specs{"hdnBreakdown$qty_index"} .= '<tr><td class="error" colspan="2">Not enough ' . $$carton_specs{ServiceType} . ' minimum ' . $$MinimumPackages{value} . ' > ' . $$specs{'txtPackageQuantity'.$qty_index} . '</td></tr>';
 											next;
 										} # end if
