@@ -951,10 +951,20 @@ $openprint::log->debug("Has a fold, doing extra checks") if DEBUG;
 								# If multiple out, we trim inline otherwise trim first.
 								# If it has been cut, assume cut to layout size
 
-								my $width_size = $$SignatureImposition{columns} != $$Imposition{columns} ? $Imposition->layout_width() : $Imposition->sheet_width();
-								$width_size = $Imposition->object_width() if $$Imposition{imposition} == 1;
-								my $height_size = $$SignatureImposition{rows} != $$Imposition{rows} ? $Imposition->layout_height() : $Imposition->sheet_height();
-								$height_size = $Imposition->object_height() if $$Imposition{imposition} == 1;
+								# Width_size is the width of the object being fed into the folder, not the Imposition
+								my $width_size;
+								my $height_size;
+								if ( $$Imposition{imposition} == 1 ) {
+									$width_size = $Imposition->object_width();
+									$height_size = $Imposition->object_height();
+	
+								} elsif ( $Imposition->image_orientation() eq 'Vertical' ) {
+									$width_size = $$SignatureImposition{columns} != $$Imposition{columns} ? $Imposition->layout_width() : $Imposition->sheet_width();
+									$height_size = $$SignatureImposition{rows} != $$Imposition{rows} ? $Imposition->layout_height() : $Imposition->sheet_height();
+								} else {
+									$width_size = $$SignatureImposition{rows} != $$Imposition{rows} ? $Imposition->layout_height() : $Imposition->sheet_height();
+									$height_size = $$SignatureImposition{columns} != $$Imposition{columns} ? $Imposition->layout_width() : $Imposition->sheet_width();
+								} # end if
 
 								if ( $orientation ) {
 									if (						
