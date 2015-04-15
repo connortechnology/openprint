@@ -50,6 +50,9 @@
 			);
 			my $total = 0;
 
+			my $average_speed = 0;
+			my $average_upload_count = 0;
+
 			foreach my $Upload ( @Uploads ) {
 
 				my $company_name = $Upload->company_id() ? $Upload->Company()->name() : $Upload->company();
@@ -82,8 +85,14 @@
 					);
 				$rowclass = $rowclass ? '' : ' class="colRow"';
 				$total += $Upload->size();
+				my $duration = $Upload->duration();
+				my $seconds = $duration->in_units('seconds');
+				if ( $seconds ) {
+					$average_speed += int( $Upload->size() / $seconds );
+					$average_upload_count += 1;
+				} # end if
 			} # end foreach
-			$html .= '<tr class="totals"><td colspan="5">Totals</td><td class="Size">'.misc::format_bytes($total).'</td><td></td></tr>';
+			$html .= '<tr class="totals"><td colspan="5">Totals</td><td class="Size">'.misc::format_bytes($total).'</td><td class="Speed">'.misc::format_bytes($average_speed/$average_upload_count).'</td><td></td></tr>';
 			return $html;
 		) ?>
 	</table>
