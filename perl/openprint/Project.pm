@@ -606,7 +606,13 @@ sub save {
 	$$self{'status'} = 'uncalculated' if ! $$self{'status'};
 	$$self{'predefined'} = '0' if $$self{'predefined'} != 1;
 
-	my $rc = $self->SUPER::save( $hash );
+	my $rc;
+	if ( $$self{id} ) {
+		$rc  = $self->SUPER::save( $hash );
+	} else {
+		$rc  = $self->SUPER::save( $hash );
+		$openprint::Company->save({last_project_id=>$$self{id}}) if $openprint::Company and $openprint::Company->id() and $$self{id} and ! $rc;
+	} # end if
 
 	# I'm not sure we should be doing this.
 	if ( (!$rc) and $$self{'order_id'} ) {
