@@ -401,6 +401,9 @@ sub stock_usage {
 
 	ssi::setup_date_select( '/employee/reports/stock_usage.html', 'ordered_on_start', -31 );
 	ssi::setup_date_select( '/employee/reports/stock_usage.html', 'ordered_on_end', '' );
+	if ( ! exists $session{'/employee/reports/stock_usage.html?projects_orders'} ) {
+		$session{'/employee/reports/stock_usage.html?projects_orders'} = 'Orders';
+	} # end if
 } # end sub stock_usage
 
 sub _stock_usage {
@@ -408,7 +411,9 @@ sub _stock_usage {
 			( map { 'ordered_on_start_'.$_ } ( 'year','month','day' ) ),
 			( map { 'ordered_on_end_'.$_ } ( 'year','month','day' ) ),
 			'manufacturer_id', 'brand_id', 'finish_id', 'colour_id', 'weight_id',
-			'type', 'fsc_code', 'width','height','OrLarger', 'basis_weight','mweight' );
+			'type', 'fsc', 'fsc_code', 'width','height','OrLarger', 'basis_weight','mweight',
+			'projects_orders',
+	 );
 } # end sub _stock_usage
 
 sub delivery {
