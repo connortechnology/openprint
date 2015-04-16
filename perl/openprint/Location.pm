@@ -31,6 +31,7 @@ $serial = 'locations_id_seq';
 	'type_id'		=>	'type_id',
 	'type'			=>	undef,
 	'created_by'	=>	'created_by',
+	company_id		=>	'company_id',
 	'postalcode'	=>	'postalcode',
 	'address'		=>	'address',
 	'latitude'		=>	'latitude',
@@ -54,17 +55,18 @@ $serial = 'locations_id_seq';
 	longitude	=>	[ 's/[^\-\d\.]//g' ],
 );
 %defaults = (
-	'created_by'	=>	q`$session{user_id}`,
-	'created_on'	=>	q`'NOW()'`,
-	'updated_on'	=>	q`'NOW()'`,
-	'parent_id'		=>	undef,
-	'type_id'		=>	undef,
-	'latitude'		=>	undef,
-	'longitude'		=>	undef,
-	'asset_id'		=>	undef,
-	'album_id'		=>	undef,
-	'deleted'		=>	'0',
-	'name'			=>	undef,
+	company_id	=>	undef,
+	created_by	=>	q`$session{user_id}`,
+	created_on	=>	q`'NOW()'`,
+	updated_on	=>	q`'NOW()'`,
+	parent_id		=>	undef,
+	type_id		=>	undef,
+	latitude		=>	undef,
+	longitude		=>	undef,
+	asset_id		=>	undef,
+	album_id		=>	undef,
+	deleted		=>	'0',
+	name			=>	undef,
 );
 
 sub children {
