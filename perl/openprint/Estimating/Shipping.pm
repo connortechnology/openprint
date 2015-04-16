@@ -377,6 +377,13 @@ sub to {
 } # end sub to
 
 sub save {
+	my ( $p_id, $s_id, $param ) = @_;
+    my $Project = new openprint::Project( $p_id );
+
+	if ( 1 ) {
+		my $Location = openprint::Location->find_one( company_id=>$Project->company_id() );
+		
+	} # end if
 } # end sub save
 
 1;
