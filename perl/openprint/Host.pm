@@ -356,5 +356,9 @@ Description: $$Host{description}
 	} # end if url
 } # end sub reboot
 
+sub link_to {
+	return sprintf('<a href="/employee/it/host.html?host_id=%d">%s</a>', $_[0]->id(), $_[0]->hostname() );
+}
+
 1;
 __END__
