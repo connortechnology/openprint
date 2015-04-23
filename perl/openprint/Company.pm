@@ -364,7 +364,7 @@ sub find_filtered {
         salesrep_id => [ $openprint::session{user_id}, $User->csr_ids() ],
         ) : () ),
         or		=> 'id='.$User->company_id(),
-        order	=>'lower(strname)',
+        order	=>'lower(name)',
     );
 } # end sub find_filtered
 
