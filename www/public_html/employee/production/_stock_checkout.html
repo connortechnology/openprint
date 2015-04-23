@@ -8,7 +8,14 @@
 			<tr><th class="Skid">Skid</th><th class="RFID">RFID Tag</th><th class="Quantity">Quantity</th></tr>
 			<tr>
 				<td class="Skid">
-					<input type="text" id="skid_id" name="skid_id" onkeypress="return input_handler( this, event);" onkeydown="if(event.keyCode == 13){new Ajax.Updater( 'List', '_update_inventory.html', { parameters: $('f1').serialize(), evalScripts: true} );}" onkeyup="if(this.value){new Ajax.Request( '/employee/production/_check_for_skid.json', {parameters: {skid_id: this.value}, evalScripts: true } );}" />
+					<? echo (
+						input( 
+							type=>'cardinal', id=>'skid_id', name=>'skid_id', 
+							onkeypress=>'return input_handler(this,event);',
+							onkeydown=>"if(event.keyCode==13){new Ajax.Updater('List', '_update_inventory.html', { parameters: $('f1').serialize(), evalScripts: true} );}",
+							onkeyup=>"if(this.value){new Ajax.Request('/employee/production/_check_for_skid.json', {parameters: {skid_id: this.value}, evalScripts: true } );}",
+						);
+					) ?>
 				</td><td>
 					<input type="text" id="rfidtag_id" name="rfidtag_id" onkeypress="return input_handler( this, event);" onkeydown="if(event.keyCode == 13){new Ajax.Updater( 'List', '_update_inventory.html', {parameters: $('f1').serialize(), evalScripts: true} );}" onkeyup="if(this.value){new Ajax.Request( '/employee/production/_check_for_skid.json', {parameters: {rfidtag_id: this.value}, evalScripts: true } );}" />
 				</td><td>

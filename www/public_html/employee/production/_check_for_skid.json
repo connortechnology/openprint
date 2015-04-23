@@ -1,5 +1,4 @@
 <? echo ( 
-	$r->content_type('text/javascript');
 	if ( exists $param{'skid_id'} ) {
 		$param{'skid_id'} =~ s/\D//g;
 		my $Skid = new openprint::Skid( $param{'skid_id'} );
