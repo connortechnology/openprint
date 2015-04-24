@@ -386,5 +386,14 @@ sub save {
 	} # end if
 } # end sub save
 
+sub setup_defaults {
+	my ( $Project, $Service ) = @_;
+	my %defaults;
+
+	$defaults{to_company_id} = $openprint::config{owner};
+	$defaults{from_company_id} = $Project->company_id();
+	return %defaults;
+} # end sub setup_defaults
+
 1;
 __END__
