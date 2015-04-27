@@ -1,4 +1,20 @@
 <?include(/includes/error_reporting.html)?>
+<script type="text/javascript">
+var skid_ajax = null;
+function validate_skid( e, p ) {
+    if ( skid_ajax ) { skid_ajax.transport.abort(); }
+	if(e.value){
+		skid_ajax = new Ajax.Request('/employee/production/_check_for_skid.json', {
+			parameters: p, 
+			evalScripts: true,
+			onSuccess:function(){skid_ajax = null;}
+		} );
+	}
+	function stock_checkout_submit() {
+		new Ajax.Updater('StockCheckout','_stock_checkout.html', { parameters: $('checkout_form').serialize(); } );
+	}
+}
+</script>
 <form id="checkout_form" name="checkout_form">
 	<input type="hidden" name="docket" value="<? echo ( $$variable{Project}->docket() ) ?>" />
 	<input type="hidden" name="project_id" value="<? echo ( $$variable{Project}->id() ) ?>" />
@@ -12,14 +28,20 @@
 						input( 
 							type=>'cardinal', id=>'skid_id', name=>'skid_id', 
 							onkeypress=>'return input_handler(this,event);',
-							onkeydown=>"if(event.keyCode==13){new Ajax.Updater('List', '_update_inventory.html', { parameters: $('f1').serialize(), evalScripts: true} );}",
-							onkeyup=>"if(this.value){new Ajax.Request('/employee/production/_check_for_skid.json', {parameters: {skid_id: this.value}, evalScripts: true } );}",
+							onkeydown=>'if(event.keyCode==13){stock_checkout_submit();}',
+							onkeyup=>'validate_skid(this,{skid_id: this.value});',
 						);
 					) ?>
-				</td><td>
-					<input type="text" id="rfidtag_id" name="rfidtag_id" onkeypress="return input_handler( this, event);" onkeydown="if(event.keyCode == 13){new Ajax.Updater( 'List', '_update_inventory.html', {parameters: $('f1').serialize(), evalScripts: true} );}" onkeyup="if(this.value){new Ajax.Request( '/employee/production/_check_for_skid.json', {parameters: {rfidtag_id: this.value}, evalScripts: true } );}" />
-				</td><td>
-					<? echo ( button( 'Submit', { onclick=> q`new Ajax.Updater('StockCheckout','_stock_checkout.html', { parameters: checkout_form.serialize() } );` } ); ) ?>
+				</td><td class="RFID">
+					<? echo ( input(
+						type=>'text', id=>'rfidtag_id', name=>'rfidtag_id',
+						onkeypress=>'return input_handler(this,event);',
+						onkeydown=>'if(event.keyCode==13){stock_checkout_submit();}',
+						onkeyup=>'validate_skid(this,{rfidtag_id: this.value});',
+					);
+					) ?>
+				</td><td class="Quantity">
+					<? echo ( button( 'Submit', { onclick=> 'stock_checkout_submit();' } ); ) ?>
 				</td>
 			</tr>
 			<? echo ( 
