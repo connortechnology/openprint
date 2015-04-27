@@ -3,7 +3,7 @@
 	my $uri = '/administrator/stock/stock.html';
 	my @Logs = openprint::Log->find(
 		object_type	=>'openprint::Paper',
-		object_id		=>	$$variable{Stock}->id(),
+		object_id		=>	$$variable{Service}->id(),
 		date_filter( $uri.'?log_created_on_end', 'date_time <=' ),
 		date_filter( $uri.'?log_created_on_start', 'date_time >=' ),
 		order =>'date_time DESC',
