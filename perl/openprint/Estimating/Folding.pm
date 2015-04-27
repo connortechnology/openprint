@@ -1264,6 +1264,8 @@ $openprint::log->debug(qq`Wrong imposition: $$specs{"FoldImposition-$form-$qty_i
 							if ( $pages * $$FI{quantity} < $remaining_pages ) {
 								$$FI{page_quantity} = $$FI{quantity};
 							} else {
+								# If overriding to too many pages, this could go negative which screws up stitching
+								$remaining_pages = 0 if $remaining_pages < 0;
 								$$FI{page_quantity} = int($remaining_pages / $pages);
 							} # end if
 						} # end if
