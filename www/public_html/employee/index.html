@@ -68,7 +68,7 @@ You may use a barcode scanner.  Simply scan the code and click Go.<br/>
 		</li>
 		<li><label>RFID #</label>
 			<? echo ( join('',
-			input( type=>'text', pattern=>'[0-9a-zA-Z]*', name=>'rfidtag_id', onchange=>'change_handler(this);', onkeypress=>'return input_handler( this, event );', onkeyup=>'hexize(this);', onkeydown=>'if(event.keyCode == 13){submit_handler(f1);}' ),
+			input( type=>'text', pattern=>'[0-9]*', name=>'rfidtag_id', onchange=>'change_handler(this);', onkeypress=>'return input_handler( this, event );', onkeyup=>'hexize(this);', onkeydown=>'if(event.keyCode == 13){submit_handler(f1);}' ),
 			button( 'Go6', { onclick=>'submit_handler( f1 );', text=>'Go' } ),
 			); ) ?>
 		</li>
