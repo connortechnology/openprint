@@ -1,20 +1,35 @@
 <fieldset><legend>To</legend>
        <ul>
-        <li class="to_company"><label>Supplier</label>
+        <li class="to_company"><label>Company</label>
             <input type="text" onkeyup="filterDDM(this, this.form.company_id);" onkeydown="if(event.keyCode==13){this.form.company_id.onchange();}" class="filter" />
-            <select id="to_company_id" name="company_id" onchange="new Ajax.Request('_select_company.json', { parameters: { to_from: 'to', company_id: this.value } } );">
+            <select id="to_company_id" name="company_id" onchange="new Ajax.Request('_select_company.json', { parameters: { to_from: 'To', company_id: this.value } } );">
                 <option value="">select</option>
-                <? echo ( make_drop_down( openprint::Company->dropdown( supplier=>'Y' ), $$variable{to_company_id} ); ) ?>
+                <? echo (
+					if ( ! exists $$variable{to_company_id} ) {
+                        if ( ! $$variable{ToCompanyName} ) {
+                            $$variable{to_company_id} = $session{company_id};
+                        } else {
+                            my $Company = openprint::Company->find_one( 'name ilike' => $$variable{ToCompanyName} );
+                            if ( $Company ) {
+                                $$variable{to_company_id} = $Company->id();
+                            } # end if
+                        } # end if
+                    } # end if
+					make_drop_down( openprint::Company->dropdown( supplier=>'Y', or => 'id='.$session{company_id} ), $$variable{to_company_id} );
+				) ?>
             </select>
         </li>
 		<li class="to_location"><label>Saved Addresses</label>
-		<? echo ( ssi::select(
-			openprint::Location->dropdown( type=>'place', company_id=> $$variable{to_company_id} ), 
+		<? echo ( 
+			my @Locations = openprint::Location->find( type=>'place', company_id=> $$variable{to_company_id} );
+
+			ssi::select(
+				[ map { $_->id(), $_->name() . ' @ ' . join(', ', $_->address(), map { $_->name() } $_->Parents() ) } @Locations ],
 			$$variable{to_location_id}, 
 			{
 				name	=>	'to_location_id', 
 				prepend	=>	[ '', 'select' ],
-				onchange=>	"new Ajax.Request('_select_location.json', { parameters: { to_from: 'to', location_id: this.value } } );",
+				onchange=>	q`select_location('To',this.value);`,
 			},
 		 ); ) ?>
 		</li>
@@ -24,22 +39,26 @@
 	<ul>
 	<li> 
 		<label>Company</label>
-		<input type="text" name="ToCompanyName" value="<?ToCompanyName?>" oninput="calc(this.form.name);"/> 
+		<input type="text" id="ToCompanyName" name="ToCompanyName" value="<?ToCompanyName?>" oninput="calc(this.form.name);"/> 
+	</li>
+	<li> 
+		<label>Location</label>
+		<input type="text" id="ToLocation" name="ToLocation" value="<?ToLocation?>" oninput="calc(this.form.name);"/> 
 	</li>
 	<li> 
 		<label>Address</label>
-		<input type="text" name="ToAddress1" value="<?ToAddress1?>" oninput="calc(this.form.name);" /><br/>
-		<input type="text" name="ToAddress2" value="<?ToAddress2?>" oninput="calc(this.form.name);" /> 
+		<input type="text" id="ToAddress1" name="ToAddress1" value="<?ToAddress1?>" oninput="calc(this.form.name);" /><br/>
+		<input type="text" id="ToAddress2" name="ToAddress2" value="<?ToAddress2?>" oninput="calc(this.form.name);" /> 
 	</li>
 	<li> 
 		<label>City</label>
-		<input type="text" name="ToCity" value="<?ToCity?>" oninput="calc(this.form.name);"/> 
+		<input type="text" id="ToCity" name="ToCity" value="<?ToCity?>" oninput="calc(this.form.name);"/> 
 	</li>
 	<li> 
 		<label>Country</label>
-		<select name="ToCountry" oninput="Country_oninput(this, this.form.ToStateProvince);calc(this.form.name);">
+		<select id="ToCountry" name="ToCountry" oninput="Country_oninput(this, this.form.ToStateProvince);calc(this.form.name);">
 		<option value=""> Select </option>
-		<? echo ( return_countries( $$variable{'ToCountry'} ); ) ?>
+		<? echo ( return_countries( $$variable{ToCountry} ); ) ?>
 		</select>
 	</li>
 	<li> 
@@ -47,25 +66,25 @@
 		<span id="ToStateProvince_container">
 		<select name="ToStateProvince" id="ToStateProvince" oninput="calc(this.form.name);">
 		<option value=""> Select </option>
-		<? echo ( return_states_and_provinces( $$variable{'ToStateProvince'} ); ) ?>
+		<? echo ( return_states_and_provinces( $$variable{ToStateProvince} ); ) ?>
 		</select>
 		</span>
 	</li>
 	<li> 
 		<label><span id="ToCountry_postal">Zip/Postal Code</span></label>
-		<input type="text" name="ToPostalCode" value="<?ToPostalCode?>" oninput="calc(this.form.name);"/>
+		<input type="text" id="ToPostalCode" name="ToPostalCode" value="<?ToPostalCode?>" oninput="calc(this.form.name);"/>
 	</li>
 	<li> 
 		<label>Phone</label>
-		<input type="tel" name="ToPhone" value="<?ToPhone?>" oninput="calc(this.form.name);"/>
+		<input type="tel" id="ToPhone" name="ToPhone" value="<?ToPhone?>" oninput="calc(this.form.name);"/>
 	</li>
 	<li> 
 		<label>Fax</label>
-		<input type="tel" name="ToFax" value="<?ToFax?>" oninput="calc(this.form.name);"/>
+		<input type="tel" id="ToFax" name="ToFax" value="<?ToFax?>" oninput="calc(this.form.name);"/>
 	</li>
 	<li> 
 		<label>Email</label>
-		<input type="email" name="ToEmail" value="<?ToEmail?>" oninput="calc(this.form.name);"/>
+		<input type="email" id="ToEmail" name="ToEmail" value="<?ToEmail?>" oninput="calc(this.form.name);"/>
 	</li>
 	</ul>
 </fieldset>

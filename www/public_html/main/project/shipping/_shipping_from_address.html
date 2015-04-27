@@ -6,15 +6,40 @@
                 <option value="">select</option>
                 <? echo ( 
 					# Should be the printer, a supplier or somewhere else. Lets assume that the printer is listed as a supplier.
-					make_drop_down( openprint::Company->dropdown( supplier=>'Y' ), $$variable{from_supplier_id} ); ) ?>
+					if ( ! exists $$variable{from_company_id} ) {
+						if ( ! $$variable{FromCompanyName} ) {
+							$$variable{from_company_id} = $config{owner_id};
+						} else {
+							my $Company = openprint::Company->find_one( 'name ilike' => $$variable{FromCompanyName} );
+							if ( $Company ) {
+								$$variable{from_company_id} = $Company->id();
+							} # end if
+						} # end if
+					} # end if
+					make_drop_down( openprint::Company->dropdown( supplier=>'Y' ), $$variable{from_company_id} ); ) ?>
             </select>
         </li>
         <li class="from_location"><label>Saved Addresses</label>
         <? echo ( 
+
+			if ( ! exists $$variable{from_location_id} ) {
+				if ( $$variable{FromPostalCode} ) {
+					my $L = openprint::Location->find_one(postalcode=>$$variable{FromPostalCode});
+					if ( $L ) {
+						$$variable{from_location_id} = $L->id();
+				} # end if
+				} # end if
+			}
+			my @Locations = map { ( $_->Parent() and ( $_->Parent()->type() eq 'city' ) ) ? $_ : () } openprint::Location->find( type=>'place', company_id=> $$variable{from_company_id} );
+			
 			ssi::select( 
-				openprint::Location->dropdown( type=>'place', company_id=> $$variable{from_company_id} ),
+				[ map { $_->id(), $_->name() . ' @ ' . join(', ', $_->address(), map { $_->name() } $_->Parents() ) } @Locations ],
 				$$variable{from_location_id},
-				{ name=>'from_location_id', id=>'from_location_id', onchange=>'_select_location.json(this.value);' },
+				{
+					name=>'from_location_id', id=>'from_location_id',
+					onchange=>	q`select_location('From',this.value);`,
+					prepend=>['','select'],
+				 },
 				);
 		) ?>
         </li>
@@ -24,6 +49,10 @@
 	<li> 
 		<label>Company</label>
 		<input type="text" id="FromCompanyName" name="FromCompanyName" value="<?FromCompanyName?>" oninput="calc(this.form.name);"/> 
+	</li>
+	<li> 
+		<label>Location</label>
+		<input type="text" id="FromLocation" name="FromLocation" value="<?FromLocation?>" title="ie Main Office or HQ" oninput="calc(this.form.name);"/> 
 	</li>
 	<li> 
 		<label>Address</label>

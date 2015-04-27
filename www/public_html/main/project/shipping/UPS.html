@@ -1,31 +1,5 @@
 <script type="text/javascript" src="<?hash_link('/javascripts/service.js')?>"></script>
-<script type="text/javascript">
-function calc( formName, force ) {
-	if ( gettingNewPrice && ! force ) {
-		setTimeout( "calc('" + formName + "');", 1000 );
-	} else {
-		remove_div('AlertDiv');
-		gettingNewPrice = true;
-		var form = getFormObj( formName );
-		var h = $H(form.serialize(true));
-		h.set('callback','cbFillUPSResults');
-		new Ajax.Request( '/main/project/_calc.json', { method: 'post', parameters: h, evalScripts: true } );
-	} // end if
-} // end calc()
-
-function cbFillUPSResults( results ) {
-	cbFillResults( results );
-	var form = getFormObj( 'f1' );
-	if ( ( form.elements['NeedPlainCartons'].value > 0 ) && confirm('Your project must be packed in cartons in order to be shipped.  Would you like to add Plain Cartons to your project?' ) ) {
-		addService( 'f1', 'PlainCartons' );
-	} // end if
-}
-function validate_data(formName) {
-	//var form = getFormObj( formName );
-	var text = '';
-	return true;
-} // end function
-</script>
+<script type="text/javascript" src="<?hash_link('shipping.js')?>"></script>
 <div class="Service">
 	<form name="f1" method="post" action="/main/project/view.html">
 		<fieldset><legend>UPS Shipping Services</legend>
