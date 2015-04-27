@@ -163,10 +163,14 @@ sub calc {
 			@Materials = ( $Material );
 		} else {
 			@Materials = openprint::Material->find('category'=>$ServiceType->name() );
+			$$specs{'ddmPackageType'.$qty_index} = '';
 		} # end if
 $log->debug("Materials: " . map { $_->name() } @Materials ) if DEBUG;
 		if ( ! @Materials ) {
 			$$specs{'hdnBreakdown'.$qty_index} .= "There are no materials for " . $ServiceType->name();
+		} # end if
+		if ( $$specs{'OverrideItemsPerPackage'.$qty_index} ne 'Y'  ) {
+			$$specs{'txtItemsPerPackage'.$qty_index} = '';
 		} # end if
 
 		foreach my $Material ( @Materials ) {
@@ -212,7 +216,7 @@ $log->debug("Materials: " . map { $_->name() } @Materials ) if DEBUG;
 							$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Max Length: %d<br/>', $l );
 							$items_by_size = int($l/$item_width);
 						} else {
-							$$specs{'hdnBreakdown'.$qty_index} .= "Cant Roll<br/>";
+							$$specs{'hdnBreakdown'.$qty_index} .= "Doesn't fit and item can't be rolled<br/>";
 						} # end if
 					} # end if
 
@@ -283,6 +287,7 @@ $log->debug("Materials: " . map { $_->name() } @Materials ) if DEBUG;
 		} else {
 			$qty = 0;
 		} # end if
+
 		if ( ! $qty ) {
 			$status = 'uncalculated';
 		} # end if
@@ -302,7 +307,7 @@ $log->debug("Materials: " . map { $_->name() } @Materials ) if DEBUG;
 		} # end if
 	} # end foreach qty
 	$$specs{txtFinishedWeight} = sprintf( '%.4f', $$specs{txtFinishedWeight} );
-
+$log->debug("Status: $status");
 	return $$specs{Status} = $status;
 } # end sub calc
 
@@ -337,9 +342,7 @@ sub summary {
 					);
 				} # end if
 			} else {
-				if ( $$specs{ServiceType} eq 'Gaylords' ) {
-					$summary .= $$specs{"txtPackageQuantity$qty_index"} . ( $$specs{"txtPackageQuantity$qty_index"} == 1 ? ' gaylord' : ' gaylords' );
-				} else {
+				if ( $$Material{name} ) {
 					$summary .= $$specs{"txtPackageQuantity$qty_index"} . ' ' . $Material->name() . ( $$specs{"txtPackageQuantity$qty_index"} == 1 ? '' : 's' );
 				} # end if
 			} # end if

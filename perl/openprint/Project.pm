@@ -1260,12 +1260,25 @@ foreach my $k ( keys %{$$self{Services}} ) {
 	#while ( my ( $n, $v ) = splice @defaults, 0, 2 ) {
 		my $v = $defaults{$n};
 		if ( $data and exists $$data{$n} ) {
-			openprint::service::insert_service_spec( $log, $dbh, $$self{'id'}, $service_index, $n, $$data{$n}, 1 );
-			delete $$data{$n};
 		} else {
 			openprint::service::insert_service_spec( $log, $dbh, $$self{'id'}, $service_index, $n, $v, 1 );
 		} # end if
 	} # end while
+
+	
+	my $module = 'openprint::Estimating::'.$ServiceType->type();
+	if ( my $function = $module->can( 'setup_defaults' ) ) {
+		%defaults = $function->( $self );
+		foreach my $n ( keys %defaults ) {
+			my $v = $defaults{$n};
+			if ( $data and exists $$data{$n} ) {
+			} else {
+				openprint::service::insert_service_spec( $log, $dbh, $$self{'id'}, $service_index, $n, $v, 1 );
+			} # end if
+		} # end while
+
+	} # end if
+
 	foreach my $qty_index ( $self->quantity_indexes() ) {
 		openprint::service::insert_service_spec( $log, $dbh, $$self{'id'}, $service_index, "txtQuantity$qty_index", 
 		( ( $data and exists $$data{"txtQuantity$qty_index"} ) ? $$data{"txtQuantity$qty_index"} : $self->quantity($qty_index) ), 1 );

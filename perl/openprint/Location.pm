@@ -14,35 +14,35 @@ use constant PI => atan2(1,1)*4;
 # 3.14159265358979;
 
 use vars qw( $debug $table $serial %fields %find_fields %transforms %defaults $default_sort );
-$debug = 0;
+$debug = 1;
 $default_sort = 'lower(name)';
 $table = 'locations';
 $serial = 'locations_id_seq';
 %fields = (
-	'id'			=>	'id',
-	'name'			=>	'name',
-	'description'	=>	'description',
-	'short'			=>	'short',
-	'parent_id'		=>	'parent_id',
-	'coordinates'	=>	'coordinates',
-	'updated_on'	=>	'updated_on',
-	'created_on'	=>	'created_on',
+	id			=>	'id',
+	name		=>	'name',
+	description	=>	'description',
+	short		=>	'short',
+	parent_id	=>	'parent_id',
+	coordinates	=>	'coordinates',
+	updated_on	=>	'updated_on',
+	created_on	=>	'created_on',
 	# type refers to state/country/postalcode, etc... to help search the location db in other ways
-	'type_id'		=>	'type_id',
-	'type'			=>	undef,
-	'created_by'	=>	'created_by',
-	company_id		=>	'company_id',
-	'postalcode'	=>	'postalcode',
-	'address'		=>	'address',
-	'latitude'		=>	'latitude',
-	'longitude'		=>	'longitude',
-	'url'			=>	'url',	
-	'asset_id'		=>	'asset_id',
-	'album_id'		=>	'album_id',
-	'deleted'		=>	'deleted',
+	type_id		=>	'type_id',
+	type		=>	undef,
+	created_by	=>	'created_by',
+	company_id	=>	'company_id',
+	postalcode	=>	'postalcode',
+	address		=>	'address',
+	latitude	=>	'latitude',
+	longitude	=>	'longitude',
+	url			=>	'url',	
+	asset_id	=>	'asset_id',
+	album_id	=>	'album_id',
+	deleted		=>	'deleted',
 );
 %find_fields = (
-	'type'	=>	'(SELECT name FROM Location_Types WHERE location_types.id = locations.type_id)',
+	type		=>	'(SELECT name FROM Location_Types WHERE location_types.id = locations.type_id)',
 );
 %transforms = (
 	id			=>	[ 's/\D//g', '<2147483647' ],
@@ -70,7 +70,7 @@ $serial = 'locations_id_seq';
 );
 
 sub children {
-	return openprint::Location->find( 'parent_id' => $_[0]{id} );
+	return openprint::Location->find( parent_id => $_[0]{id} );
 } # end sub children
 
 sub get_all_children {
