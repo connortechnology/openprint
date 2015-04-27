@@ -21,8 +21,8 @@ function validate_data(formName) {
 <div class="Service">
 	<form name="f1" method="post" action="/main/order/submit.html">
 		<fieldset><legend>UPS Shipping Services</legend>
-		<? echo ( include('/includes/main/proj/shipping_packages.html'); ) ?>
-		<? echo ( include('/includes/main/proj/shipping_address.html'); ) ?>
+		<? echo ( include('/main/project/shipping/_shipping_packages.html'); ) ?>
+		<? echo ( include('/main/project/shipping/_shipping_address.html'); ) ?>
 		<p>
 			<label>Service Type</label>
 			<span id="ServiceTypeDiv">
