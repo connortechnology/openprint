@@ -1,47 +1,68 @@
 <fieldset><legend>From</legend>
+      <ul>
+        <li class="from_company"><label>Company</label>
+            <input type="text" onkeyup="filterDDM(this, this.form.from_company_id);" onkeydown="if(event.keyCode==13){this.form.from_company_id.onchange();}" class="filter" />
+            <select id="from_company_id" name="from_company_id" onchange="new Ajax.Request('_select_company.json', { parameters: { to_from: 'From', company_id: this.value } } );">
+                <option value="">select</option>
+                <? echo ( 
+					# Should be the printer, a supplier or somewhere else. Lets assume that the printer is listed as a supplier.
+					make_drop_down( openprint::Company->dropdown( supplier=>'Y' ), $$variable{from_supplier_id} ); ) ?>
+            </select>
+        </li>
+        <li class="from_location"><label>Saved Addresses</label>
+        <? echo ( 
+			ssi::select( 
+				openprint::Location->dropdown( type=>'place', company_id=> $$variable{from_company_id} ),
+				$$variable{from_location_id},
+				{ name=>'from_location_id', id=>'from_location_id', onchange=>'_select_location.json(this.value);' },
+				);
+		) ?>
+        </li>
+    </ul>
+
 	<ul>
 	<li> 
 		<label>Company</label>
-		<input type="text" name="FromCompanyName" value="<?FromCompanyName?>" oninput="calc(this.form.name);"/> 
+		<input type="text" id="FromCompanyName" name="FromCompanyName" value="<?FromCompanyName?>" oninput="calc(this.form.name);"/> 
 	</li>
 	<li> 
 		<label>Address</label>
-		<input type="text" name="FromAddress1" value="<?FromAddress1?>" oninput="calc(this.form.name);" /><br/>
-		<input type="text" name="FromAddress2" value="<?FromAddress2?>" /> 
+		<input type="text" id="FromAddress1" name="FromAddress1" value="<?FromAddress1?>" oninput="calc(this.form.name);" /><br/>
+		<input type="text" id="FromAddress2" name="FromAddress2" value="<?FromAddress2?>" /> 
 	</li>
 	<li> 
 		<label>City</label>
-		<input type="text" name="FromCity" value="<?FromCity?>" oninput="calc(this.form.name);"/> 
+		<input type="text" id="FromCity" name="FromCity" value="<?FromCity?>" oninput="calc(this.form.name);"/> 
 	</li>
 	<li> 
 		<label>Country</label>
-		<select name="FromCountry" oninput="Country_oninput(this, this.form.FromStateProvince);calc(this.form.name);">
+		<select id="FromCountry" name="FromCountry" oninput="Country_oninput(this, this.form.FromStateProvince);calc(this.form.name);">
 		<option value=""> Select </option>
 		<? echo ( return_countries( $$variable{'FromCountry'} ); ) ?>
 		</select>
 	</li>
 	<li> 
 		<label><span id="FromCountry_state">State/Province</span></label>
-		<select name="FromStateProvince" oninput="calc(this.form.name);">
+		<select id="FromStateProvince" name="FromStateProvince" oninput="calc(this.form.name);">
 		<option value=""> Select </option>
 		<? echo ( return_states_and_provinces( $$variable{'FromStateProvince'} ); ) ?>
 		</select>
 	</li>
 	<li> 
 		<label><span id="FromCountry_postal">Zip/Postal Code</span></label>
-		<input type="text" name="FromPostalCode" value="<?FromPostalCode?>" oninput="calc(this.form.name);"/>
+		<input type="text" id="FromPostalCode" name="FromPostalCode" value="<?FromPostalCode?>" oninput="calc(this.form.name);"/>
 	</li>
 	<li> 
 		<label>Phone</label>
-		<input type="tel" name="FromPhone" value="<?FromPhone?>" oninput="calc(this.form.name);"/>
+		<input type="tel" id="FromPhone" name="FromPhone" value="<?FromPhone?>" oninput="calc(this.form.name);"/>
 	</li>
 	<li> 
 		<label>Fax</label>
-		<input type="tel" name="FromFax" value="<?FromFax?>" oninput="calc(this.form.name);"/>
+		<input type="tel" id="FromFax" name="FromFax" value="<?FromFax?>" oninput="calc(this.form.name);"/>
 	</li>
 	<li> 
 		<label>Email</label>
-		<input type="email" name="FromEmail" value="<?FromEmail?>" oninput="calc(this.form.name);"/>
+		<input type="email" id="FromEmail" name="FromEmail" value="<?FromEmail?>" oninput="calc(this.form.name);"/>
 	</li>
 	</ul>
 </fieldset>
