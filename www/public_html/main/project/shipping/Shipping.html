@@ -45,10 +45,10 @@
 	<form id="f1" name="f1" method="post" action="/main/project/view.html">
 		<fieldset><legend>Shipping Services</legend>
 			<div class="leftColumn address">
-			<?include(/includes/main/proj/shipping_from_address.html)?>
+			<?include(_shipping_from_address.html)?>
 			</div>
 			<div class="rightColumn address">
-			<?include(/includes/main/proj/shipping_to_address.html)?>
+			<?include(_shipping_to_address.html)?>
 			</div>
 			<br class="spacer"/>
 			<fieldset>
@@ -68,7 +68,7 @@
 						return $html;
 					) ?>
 				</li>
-				<?include(/includes/main/proj/shipping_packages.html)?>
+				<?include(_shipping_packages.html)?>
 				<?include(/includes/main/proj/_service_price.html)?>
 <?include('/includes/main/proj/_breakdown.html') ?>
 			</ul>
