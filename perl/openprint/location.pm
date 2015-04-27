@@ -106,14 +106,15 @@ sub edit {
 				} # end if
 			} # end if
 			$variable{error} .= $Location->save({
-					'name'			=>	$param{location}, 
-					'description'	=>	$param{description},
-					'parent_id'		=>	$parent_id, 
-					'address'		=>	$param{address},
-					'postalcode'	=>	$param{postalcode},
-					'url'			=>	$param{url},
-					'latitude'		=>	$param{latitude},
-					'longitude'		=>	$param{longitude},
+					name		=>	$param{location}, 
+					description	=>	$param{description},
+					parent_id	=>	$parent_id, 
+					company_id	=>	$param{company_id},
+					address		=>	$param{address},
+					postalcode	=>	$param{postalcode},
+					url			=>	$param{url},
+					latitude	=>	$param{latitude},
+					longitude	=>	$param{longitude},
 					( $param{location_type_id} ? ( type_id => $param{location_type_id} ) : ( type	=>	'place' ) ),
 					});
 			(new openprint::Log())->save({ action=>($param{location_id} ? 'Update Location' : 'Create Location'), object=>'Location', object_id=>$Location->id()});
