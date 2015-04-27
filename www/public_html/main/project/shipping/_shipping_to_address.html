@@ -1,4 +1,26 @@
 <fieldset><legend>To</legend>
+       <ul>
+        <li class="to_company"><label>Supplier</label>
+            <input type="text" onkeyup="filterDDM(this, this.form.company_id);" onkeydown="if(event.keyCode==13){this.form.company_id.onchange();}" class="filter" />
+            <select id="to_company_id" name="company_id" onchange="new Ajax.Request('_select_company.json', { parameters: { to_from: 'to', company_id: this.value } } );">
+                <option value="">select</option>
+                <? echo ( make_drop_down( openprint::Company->dropdown( supplier=>'Y' ), $$variable{to_company_id} ); ) ?>
+            </select>
+        </li>
+		<li class="to_location"><label>Saved Addresses</label>
+		<? echo ( ssi::select(
+			openprint::Location->dropdown( type=>'place', company_id=> $$variable{to_company_id} ), 
+			$$variable{to_location_id}, 
+			{
+				name	=>	'to_location_id', 
+				prepend	=>	[ '', 'select' ],
+				onchange=>	"new Ajax.Request('_select_location.json', { parameters: { to_from: 'to', location_id: this.value } } );",
+			},
+		 ); ) ?>
+		</li>
+	</ul>
+
+	
 	<ul>
 	<li> 
 		<label>Company</label>
