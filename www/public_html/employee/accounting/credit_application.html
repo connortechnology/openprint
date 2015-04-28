@@ -7,18 +7,18 @@
 		} // end if
 	} // end function status_onclick
 	function approve( form ) {
-		form.denydays.value = '<? echo ( $$variable{'Application'}->desired_terms() ) ?>';
-		form.warndays.value = parseInt('<? echo ( $$variable{'Application'}->desired_terms() ) ?>'/2);
-		form.limit.value = '<? echo ( $$variable{'Application'}->desired_limit() ) ?>';
+		form.denydays.value = '<? echo ( $$variable{Application}->desired_terms() ) ?>';
+		form.warndays.value = parseInt('<? echo ( $$variable{Application}->desired_terms() ) ?>'/2);
+		form.limit.value = '<? echo ( $$variable{Application}->desired_limit() ) ?>';
 		form.downpayment.value = '0';
 		form.cod.value = '0';
 	} // end function approve( form )
 	function decline( form ) {
-		form.denydays.value = '<? echo ( $$variable{'Credit'}->denydays() ) ?>';
-		form.warndays.value = '<? echo ( $$variable{'Credit'}->warndays() ) ?>';
-		form.limit.value = '<? echo ( $$variable{'Credit'}->limit() ) ?>';
-		form.downpayment.value = '<? echo ( $$variable{'Credit'}->downpayment() ) ?>';
-		form.cod.value='<? echo ( $$variable{'Credit'}->cod() ) ?>';
+		form.denydays.value = '<? echo ( $$variable{Credit}->denydays() ) ?>';
+		form.warndays.value = '<? echo ( $$variable{Credit}->warndays() ) ?>';
+		form.limit.value = '<? echo ( $$variable{Credit}->limit() ) ?>';
+		form.downpayment.value = '<? echo ( $$variable{Credit}->downpayment() ) ?>';
+		form.cod.value='<? echo ( $$variable{Credit}->cod() ) ?>';
 	} // end function decline( form )
 	function submit_check( form ) {
 		if ( ! ( form.status[0].checked || form.status[1].checked ) ) {
@@ -28,8 +28,8 @@
 		} // end if
 	} // end function submit_check( form )
 </script>
-<? echo ( include('/includes/error_reporting.html'); ) ?>
-<? if ( $$variable{'Application'}->id() ) ?>
+<?include('/includes/error_reporting.html')?>
+<? if ( $$variable{Application}->id() ) ?>
 	<div class="CreditApplication">
 		<div class="Header">
             <div class="Logo">
@@ -41,11 +41,11 @@
                 </tr></table>
                 <table class="HeaderText">
                     <tr>
-                        <td colspan="2"><? echo ( join(' ', new openprint::User( $session{'user_id'} )->Company()->get('address1','city','state','postalcode') );) ?></td>
+                        <td colspan="2"><? echo ( join(' ', $openprint::User->Company()->get('address1','city','state','postalcode') );) ?></td>
                     </tr>
                     <tr>
-                        <td>Phone<? echo ( new openprint::User( $session{'user_id'} )->Company()->phone() ) ?></td>
-                        <td>Fax<? echo ( new openprint::User( $session{'user_id'} )->Company()->fax() ) ?></td>
+                        <td>Phone<? echo ( $openprint::User->Company()->phone() ) ?></td>
+                        <td>Fax<? echo ( $openprint::User->Company()->fax() ) ?></td>
                     </tr>
                 </table>
             </div><!--Logo-->
@@ -53,7 +53,7 @@
 				<h1>Credit Application</h1>
 			</div>
 		</div><!--Header-->
-		<form id="f1" name="f1" method="post" action="credit_application.html<? echo ( $param{'credit_index'} ? '?credit_index='.$param{'credit_index'} : '' ) ?>">
+		<form id="f1" name="f1" method="post" action="credit_application.html<? echo ( $param{credit_index} ? '?credit_index='.$param{credit_index} : '' ) ?>">
 			<input type="hidden" name="btnFunction"/>
 			<div class="unprintable">
 				<br/>
@@ -63,49 +63,49 @@
 					<fieldset>
 						<ul>
 							<li><label>Status</label>
-								<? echo ( ssi::radio( 'status', [ 'Approved', 'Approved', 'Declined', 'Declined' ], $$variable{'Application'}->status(), { onclick=>'status_onclick(this);' } ); ) ?>
+								<? echo ( radio( 'status', [ 'Approved', 'Approved', 'Declined', 'Declined' ], $$variable{Application}->status(), { onclick=>'status_onclick(this);' } ); ) ?>
 							</li>
 							<li><label>Deny orders after</label>
-								<input type="number" id="denydays" name="denydays" value="<? echo ( $$variable{'Application'}->granted_terms() ) ?>"/> Days </li>
+								<input type="number" id="denydays" name="denydays" value="<? echo ( $$variable{Application}->granted_terms() ) ?>"/> Days </li>
 							<li><label>Warn after</label>
-								<input type="number" id="warndays" name="warndays" value="<? echo ( $$variable{'Application'}->granted_terms()/2 ) ?>"/> Days </li>
+								<input type="number" id="warndays" name="warndays" value="<? echo ( $$variable{Application}->granted_terms()/2 ) ?>"/> Days </li>
 							<li><label>Credit Limit</label>
-								<input type="number" id="limit" name="limit" value="<? echo ( $$variable{'Application'}->granted_limit() ) ?>" /></li>
+								<input type="number" id="limit" name="limit" value="<? echo ( $$variable{Application}->granted_limit() ) ?>" /></li>
 							<li><label>Required Downpayment Amount</label>
-								<input type="number" id="downpayment" name="downpayment" value="<? echo ( $$variable{'Application'}->granted_downpayment() ) ?>"/> %
+								<input type="number" id="downpayment" name="downpayment" value="<? echo ( $$variable{Application}->granted_downpayment() ) ?>"/> %
 							</li>
 							<li><label>COD Amount</label>
-								<input type="number" id="cod" name="cod" value="<? echo ( $$variable{'Application'}->granted_cod() ) ?>"/> %
+								<input type="number" id="cod" name="cod" value="<? echo ( $$variable{Application}->granted_cod() ) ?>"/> %
 							</li>
 						</ul>
 						<p class="buttons">
-						<? echo ( ssi::button( 'Save', { onclick=>"f1.btnFunction.value='Save';submit_check(f1);" } ); ) ?> 
+						<? echo ( button( 'Save', { onclick=>"f1.btnFunction.value='Save';submit_check(f1);" } ); ) ?> 
 						</p>
 					</fieldset>
 				</div><!--Granted-->
 				<div class="Requested">
 					<fieldset><legend>Credit Options Requested</legend>
 						<ul>
-							<li><label>First Order Value</label><? echo ( $$variable{'Application'}->firstordervalue() ) ?></li>
-							<li><label>Annual Purchases</label><? echo ( $$variable{'Application'}->annualpurchases() ) ?></li>
-							<li><label>Accounts Payable Contact</label><? echo ( $$variable{'Application'}->accountspayablecontact() ) ?></li>
-							<li><label>Account Limit</label><? echo ( $$variable{'Application'}->desired_limit() ) ?></li>
-							<li><label>Terms</label><? echo ( $$variable{'Application'}->desired_terms() ) ?></li>
+							<li><label>First Order Value</label><? echo ( $$variable{Application}->firstordervalue() ) ?></li>
+							<li><label>Annual Purchases</label><? echo ( $$variable{Application}->annualpurchases() ) ?></li>
+							<li><label>Accounts Payable Contact</label><? echo ( $$variable{Application}->accountspayablecontact() ) ?></li>
+							<li><label>Account Limit</label><? echo ( $$variable{Application}->desired_limit() ) ?></li>
+							<li><label>Terms</label><? echo ( $$variable{Application}->desired_terms() ) ?></li>
 							<li><label>Financial Statement Available?</label>
-							<? echo ( $variable{'Application'}->financialstatementavailable() eq 'Y' ? 'Yes' : 'No' ) ?></li>
-							<li><label>Signed By</label><? echo ( $$variable{'Application'}->signature() ) ?></li>
-							<li><label>Submitted On</label><? echo ( Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $$variable{'Application'}->created_on() ) ); ) ?></li>
+							<? echo ( $variable{Application}->financialstatementavailable() eq 'Y' ? 'Yes' : 'No' ) ?></li>
+							<li><label>Signed By</label><? echo ( $$variable{Application}->signature() ) ?></li>
+							<li><label>Submitted On</label><? echo ( format_datetime( $$variable{Application}->created_on() ); ) ?></li>
 						</ul>
 					</fieldset>
 				</div>
 				<div class="Current">
 					<fieldset><legend>Current Credit Information</legend>
 						<ul> 
-							<li><label>Deny orders after</label><? echo ( $$variable{'Credit'}->denydays() ne '' ? $$variable{'Credit'}->denydays().'Days' : 'none' ) ?></li>
-							<li><label>Warn after</label><? echo ( $$variable{'Credit'}->warndays() ne '' ? $$variable{'Credit'}->warndays().'Days' : 'none' ) ?></li>
-							<li><label>Credit Limit</label><? echo ( 1*$$variable{'Credit'}->limit() ) ?></li>
-							<li><label>Required Downpayment Amount</label><? echo ( 1*$$variable{'Credit'}->downpayment() ) ?>%</li>
-							<li><label>COD Amount</label><? echo ( 1*$$variable{'Credit'}->cod() ) ?>%</li>
+							<li><label>Deny orders after</label><? echo ( $$variable{Credit}->denydays() ne '' ? $$variable{Credit}->denydays().'Days' : 'none' ) ?></li>
+							<li><label>Warn after</label><? echo ( $$variable{Credit}->warndays() ne '' ? $$variable{Credit}->warndays().'Days' : 'none' ) ?></li>
+							<li><label>Credit Limit</label><? echo ( 1*$$variable{Credit}->limit() ) ?></li>
+							<li><label>Required Downpayment Amount</label><? echo ( 1*$$variable{Credit}->downpayment() ) ?>%</li>
+							<li><label>COD Amount</label><? echo ( 1*$$variable{Credit}->cod() ) ?>%</li>
 						</ul>
 					</fieldset>
 				</div>
@@ -113,17 +113,18 @@
 		</form>
 		<br class="spacer"/>
 		<div class="CompanyInformation">
-			<? echo ( include('/email_content/_company_information.html'); ) ?>
+			<?include('/email_content/_company_information.html') ?>
 		</div>
 		<div class="OwnershipInformation">
-			<? echo ( include('/email_content/_business_information.html'); ) ?>
+			<?include('/email_content/_business_information.html') ?>
 		</div>
+			<?include('/account/_company_profile_view.html') ?>
 		<br class="spacer"/>
 		<div class="TradeReferences">
 			<fieldset><legend>Trade References</legend>
-				<? eval ( @{$$variable{'indices'}} = ( 1 .. 3 ); ) ?>
-				<? while ( $$variable{'index'} = shift @{$$variable{'indices'}} ) ?>
-				<? eval ( $$variable{'Company'}->load_tradereferences( $$variable{'index'}, $variable ); ) ?>
+				<? eval ( @{$$variable{indices}} = ( 1 .. 3 ); ) ?>
+				<? while ( $$variable{index} = shift @{$$variable{indices}} ) ?>
+				<? eval ( $$variable{Company}->load_tradereferences( $$variable{index}, $variable ); ) ?>
 				<div class="TradeReference">
 					<ul>
 						<li class="CompanyName">
@@ -148,14 +149,14 @@
 						</li>
 					</ul>
 				</div>
-				<? endwhile ( $$variable{'index'} = shift @{$$variable{'indices'}} ) ?>
+				<? endwhile ( $$variable{index} = shift @{$$variable{indices}} ) ?>
 		   </fieldset>
 		</div><!--Tradereferences-->
 		<div class="BankInformation">
 			<? echo ( include('/email_content/_bank_information.html'); ) ?>
 		</div>
 		<div class="Disclaimer">
-		<? echo ( $config{'CreditApplicationDisclaimer'} ) ?>
+		<? echo ( $config{CreditApplicationDisclaimer} ) ?>
 		</div>
 		<div class="Signatures">
 			<fieldset><legend>Signatures</legend>
@@ -174,8 +175,8 @@
 			Signature of Owner(s) or Officer(s) is required.  Two Signatories are required for Partnership.
 			</fieldset>
 		</div>
-		<p class="FaxTo">Please fax to: <? echo ( new openprint::Company($config{'owner_id'})->fax(); ) ?></p>
+		<p class="FaxTo">Please fax to: <? echo ( new openprint::Company($config{owner_id})->fax(); ) ?></p>
 	</div>
-<? else ( $$variable{'Application'}->id() ) ?>
+<? else ( $$variable{Application}->id() ) ?>
 	No Credit Application specified.<br/>
-<? endif ( $$variable{'Application'}->id() ) ?>
+<? endif ( $$variable{Application}->id() ) ?>

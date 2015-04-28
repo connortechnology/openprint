@@ -1,15 +1,16 @@
-<? hecho ( $param{'Signature'} ) ?> has submitted a new credit application.  Click <a href="<? echo ( $openprint::config{ExternalSecureSiteURL} ) ?>/employee/accounting/credit_application.html?credit_index=<?CreditAppIndex?>">here</a> to view it.<br>
+<? hecho ( $$variable{Application}->signature() ) ?> has submitted a new credit application.  Click <a href="<? echo ( $config{ExternalSecureSiteURL} ) ?>/employee/accounting/credit_application.html?credit_index=<?CreditAppIndex?>">here</a> to view it.<br>
 		<br/>
-<? echo ( include('/email_content/_company_information.html'); ) ?>
-<? echo ( include('/email_content/_business_information.html'); ) ?>
-<? echo ( include('/email_content/_bank_information.html'); ) ?>
-<? echo ( include('/email_content/_trade_references.html'); ) ?>
+<? echo ( include('/email_content/_company_information.html', $variable ); ) ?>
+<? echo ( include('/email_content/_business_information.html', $variable ); ) ?>
+<? echo ( include('/email_content/_bank_information.html', $variable ); ) ?>
+<? echo ( include('/email_content/_trade_references.html', $variable ); ) ?>
+<?include('/account/_company_profile_view.html') ?>
 <fieldset><legend>Credit Application</legend>
-	<p><label>Date of application</label><? echo ( localtime ) ?></p>
-	<p><label>Value of first order (est)</label><? hecho ( $param{FirstOrderValue} ) ?></p>
-	<p><label>Annual Purchases (est)</label><? hecho ( $param{AnnualPurchases} ) ?></p>
-	<p><label>Credit Limit Desired</label><? hecho ( $param{DesiredCreditLimit} ) ?></p>
-	<p><label>Terms Desired</label><? hecho ( $param{DesiredTerms} ) ?></p>
-	<p><label>Accounts Payable Contact</label><? hecho ( $param{AccountsPayableContact} ) ?></p>
-	<p><label>Financial Statement Available?</label><? echo ( $param{'FinancialStatementAvailable'} eq 'Y' ? 'Yes' : 'No' ) ?></p>
+	<p><label>Date of application</label><? echo ( format_datetime( $$variable{Application}->created_on() ) ) ?></p>
+	<p><label>Value of first order (est)</label><? hecho ( $$variable{Application}->firstordervalue() ) ?></p>
+	<p><label>Annual Purchases (est)</label><? hecho ( $$variable{Application}->annualpurchases() ) ?></p>
+	<p><label>Credit Limit Desired</label><? hecho ( $$variable{Application}->desired_limit() ) ?></p>
+	<p><label>Terms Desired</label><? hecho ( $$variable{Application}->desired_terms() ) ?></p>
+	<p><label>Accounts Payable Contact</label><? hecho ( $$variable{Application}->accountspayablecontact() ) ?></p>
+	<p><label>Financial Statement Available?</label><? echo ( $$variable{Application}->financialstatementavailable() eq 'Y' ? 'Yes' : 'No' ) ?></p>
 </fieldset>

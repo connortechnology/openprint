@@ -27,7 +27,6 @@
 			</li>
 			<li class="fax"><label>Fax</label><? hecho ( $$variable{'User'}->fax() ) ?></li>
 			<li class="email"><label>Email</label><a href="mailto<? echo ( $$variable{'User'}->email() ) ?>"><? hecho ( $$variable{'User'}->email() ) ?></a></li>
-			<li class="website"><label>WebSite</label><a href="<? echo ( $$variable{'Company'}->url() ) ?>"><? hecho ( $$variable{'Company'}->url() ) ?></a></li>
 			<li class="created_on"><label>Registered on</label><? echo ( Date::Format::time2str( $config{'DateTimeFormat'}, Date::Parse::str2time( $$variable{'Company'}->created_on() ) ); ) ?></li>
 		</ul>
 	</fieldset>
