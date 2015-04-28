@@ -69,19 +69,24 @@ sub handler {
 		my $location_id = $r->param('location_id');
 		my $Location = new openprint::Location( $location_id );
 $r->log->debug( "Location: " . $Location->name() . ':' . $Location->coordinates() );
+
+		# Find root and how deep we are.
 		my $l_level = 0;
 		my $P = $Location;
 		while ( $P->parent_id() ) {
-			$P = $P->Parent();
+			my $P2 = $P->Parent();
+			last if $P2->type() ne 'place';
+			$P = $P2;
 			$l_level += 1;
 		} # end while 
+		$r->log->debug("Place Root is $$P{name} l_level is $l_level");
 
 		my $level = $r->param('level');
-		$level = 1 if ! $level;
+		$level = 1 if ! $level; # default to viewing 1 up from the location
 		$level = $l_level if $level > $l_level;
 
 		my $Root = $Location;
-		while ( $level <= $l_level ) {
+		while ( $level < $l_level ) {
 			last if ! $Root->Parent();
 			$Root = $Root->Parent();
 			$level += 1;

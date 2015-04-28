@@ -47,11 +47,11 @@
 				<?include(/includes/logo.html)?>
 				<table class="HeaderText">
 					<tr>
-						<td colspan="2"><? echo ( join(' ', new openprint::User( $session{user_id} )->Company()->get('address1','city','state','postalcode') );) ?></td>
+						<td colspan="2"><? echo ( join(' ', $openprint::User->Company()->get('address1','city','state','postalcode') );) ?></td>
 					</tr>
 					<tr>
-						<td>Phone<? echo ( new openprint::User( $session{'user_id'} )->Company()->phone() ) ?></td>
-						<td>Fax<? echo ( new openprint::User( $session{'user_id'} )->Company()->fax() ) ?></td>
+						<td>Phone<? echo ( $openprint::User->Company()->phone() ) ?></td>
+						<td>Fax<? echo ( $openprint::User->Company()->fax() ) ?></td>
 					</tr>
 				</table>
 			</div>
@@ -61,7 +61,7 @@
 <? echo ( $$variable{PurchaseOrder}->is_FSC() ? 'FSC' : '' ) ?>
 <? echo ( $$variable{PurchaseOrder}->is_PEFC() ? 'PEFC' : '' ) ?>
 				<br/>
-				Date <? echo ( ssi::format_date( $$variable{PurchaseOrder}->created_on() ); ) ?><br/>
+				Date <? echo ( format_date( $$variable{PurchaseOrder}->created_on() ); ) ?><br/>
 <? if ( $$variable{PurchaseOrder}->manifest_id() ) ?>
 Manifest: <a href="/employee/inventory/manifest_view.html?manifest_id=<? echo ( $$variable{PurchaseOrder}->manifest_id() ) ?>"><? echo ( $$variable{PurchaseOrder}->Manifest()->name() ) ?></a><br/>
 <? endif ( $$variable{PurchaseOrder}->manifest_id() ) ?>
@@ -136,7 +136,7 @@ Manifest: <a href="/employee/inventory/manifest_view.html?manifest_id=<? echo ( 
 				<td class="method"><? echo ( $$variable{PurchaseOrder}->shipping_method() ) ?></td>
 				<td class="terms"><? echo ( $$variable{PurchaseOrder}->shipping_terms() ) ?></td>
 				<td class="delivery_date"><? echo ( $$variable{PurchaseOrder}->delivered_on_switch() ne 'DATE' ? $$variable{PurchaseOrder}->delivered_on_switch().'<br/>' : '' ) ?>
-					<? echo ( ssi::format_date( $$variable{PurchaseOrder}->delivered_on() ); ) ?>
+					<? echo ( format_date( $$variable{PurchaseOrder}->delivered_on() ); ) ?>
 				</td>
 			</tr>
 		</table>
@@ -163,11 +163,11 @@ Manifest: <a href="/employee/inventory/manifest_view.html?manifest_id=<? echo ( 
 			
 		$html .= '<div class="item">';
 		if ( $C->Type()->name() eq 'Roll Stock' ) {
-			$html .= sprintf('<div class="quantity">%dlbs</div>', $C->qty() );
+			$html .= sprintf('<div class="quantity">%s lbs</div>', Number::Format::format_number($C->qty()) );
 		} elsif ( $C->Type()->name() eq 'Sheet Stock' ) {
-			$html .= sprintf('<div class="quantity">%dsheets</div>', $C->qty() );
+			$html .= sprintf('<div class="quantity">%s sheets</div>', Number::Format::format_number($C->qty()) );
 		} else {
-			$html .= sprintf('<div class="quantity">%d</div>', $C->qty() );
+			$html .= sprintf('<div class="quantity">%s</div>', Number::Format::format_number($C->qty()) );
 		} # end if
 			
 		$html .= sprintf('
@@ -249,14 +249,14 @@ Manifest: <a href="/employee/inventory/manifest_view.html?manifest_id=<? echo ( 
 		<br class="spacer"/>
 		<hr/>
 			<div class="AuthorizedBy"><i>Authorized <? if ( $$variable{PurchaseOrder}->authorized_by() ) ?>by: <? echo ( $$variable{PurchaseOrder}->Authorized_By()->name() ) ?><? endif ( $$variable{PurchaseOrder}->authorized_by() ) ?></i></div>
-			<div class="AuthorizedOn"><i>Date</i> <? echo ( ssi::format_date( $$variable{PurchaseOrder}->authorized_on() ); ) ?></div>
+			<div class="AuthorizedOn"><i>Date</i> <? echo ( format_date( $$variable{PurchaseOrder}->authorized_on() ); ) ?></div>
 <? endif ( $$variable{PurchaseOrder}->authorized() ) ?>
 <? if ( $$variable{PurchaseOrder}->authorized() eq '0' ) ?>
 		<br/>
 		<br class="spacer"/>
 		<hr/>
 			<div class="leftColumn"><i>Declined by <? echo ( $$variable{PurchaseOrder}->Authorized_By()->name() ) ?></i></div>
-			<div class="rightColumn"><i>Date</i> <? echo ( ssi::format_date( $$variable{PurchaseOrder}->authorized_on() ); ) ?></div>
+			<div class="rightColumn"><i>Date</i> <? echo ( format_date( $$variable{PurchaseOrder}->authorized_on() ); ) ?></div>
 <? endif ( $$variable{PurchaseOrder}->authorized() eq '0' ) ?>
 <? if ( $$variable{PurchaseOrder}->authorized() eq '' ) ?>
 		<br/>

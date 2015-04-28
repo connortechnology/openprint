@@ -39,6 +39,7 @@ my @fields = (
 	'printing_type',
 	'Folds', 'Fold',
 	'runspeed',
+	'impressions',
 );
 
 # spread_cols and spread_rows are oriented identically to the imposition
@@ -272,19 +273,19 @@ sub load_used {
 	$$self{bleed_size} = $$specs{'ddmBleedSize'.$qty_index};
 	if ( ! $$self{Press} ) {
 		if ( $$specs{UsePress} ) {
-			$$self{Press} = openprint::Equipment->find_one( strid=>$$specs{UsePress} );
+			$$self{Press} = openprint::Equipment->find_one( strid=>$$specs{UsePress}, deleted=>[0,1] );
 			if ( ! $$self{Press} ) {
 				# This can happen when a press is deleted
-				$openprint::log->debug("No Press found for $qty_index " . $$specs{UsePress} );
+				$openprint::log->debug("No Press found for UsePress $qty_index " . $$specs{UsePress} );
 			} # end if
 		} # end if
 		if ( ! $$self{Press} ) {
 			if ( ! $$specs{'ddmPress'.$qty_index} ) {
 				#$openprint::log->error("No ddmPress for $qty_index");
 			} else {
-				$$self{Press} = openprint::Equipment->find_one( strid=>$$specs{'ddmPress'.$qty_index});
+				$$self{Press} = openprint::Equipment->find_one( strid=>$$specs{'ddmPress'.$qty_index}, deleted=>[0,1]);
 				if ( ! $$self{Press} ) {
-					$openprint::log->error("No Press found for $qty_index " . $$specs{'ddmPress'.$qty_index} );
+					$openprint::log->error("No Press found for ddmPress$qty_index " . $$specs{'ddmPress'.$qty_index} );
 				} # end if
 			} # end if
 		} # end if
@@ -309,9 +310,9 @@ sub load {
 #Carp::cluck("No press in Imposition::load");
 		} else {
 #Carp::cluck("Loading press in Imposition::load");
-			$$self{Press} = openprint::Equipment->find_one('strid'=>$$specs{'ddmPress'.$qty_index});
+			$$self{Press} = openprint::Equipment->find_one( strid=>$$specs{'ddmPress'.$qty_index}, deleted=>[0,1]);
 			if ( ! $$self{Press} ) {
-				$openprint::log->error("No Press found for $qty_index " . $$specs{'ddmPress'.$qty_index} );
+				$openprint::log->error("load: No Press found for ddmPress$qty_index " . $$specs{'ddmPress'.$qty_index} );
 			} # end if
 		} # end if
 		$$self{Press} = new openprint::Equipment() if ! $$self{Press};
@@ -670,7 +671,11 @@ sub equals {
 
 sub to_string {
 	if ( ! $_[0]{to_string} ) {
+		if ( $_[0]{paper} ) {
 		$_[0]{to_string} = sprintf('%s %dx%d+%dx%d=%dout %s %dx%d=%dpages on %sx%s%s->%sx%s %s', ( $_[0]{Press} ? $_[0]->Press()->strid() : 'unknown equipment' ), $_[0]->get('columns','rows','dutch_columns','dutch_rows','imposition','runstyle','page_columns','page_rows','pages', 'paper_width','paper_height', 'paper_type','sheet_width','sheet_height', 'image_orientation') );
+		} else {
+			$_[0]{to_string} = sprintf('%s %dx%d+%dx%d=%dout %s %dx%d=%dpages %s', ( $_[0]{Press} ? $_[0]->Press()->strid() : 'unknown equipment' ), $_[0]->get('columns','rows','dutch_columns','dutch_rows','imposition','runstyle','page_columns','page_rows','pages', 'sheet_width','sheet_height', 'image_orientation') );
+		} # end if
 	}
 	return $_[0]{to_string};
 } # end sub to_string

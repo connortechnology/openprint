@@ -72,11 +72,11 @@ sub new_scalar_id {
 }
 
 sub new {
-	my ( $parent, $id, $data ) = @_;
+	my ( $parent, $id, $data, $dont_cache ) = @_;
 
 	my $ref = ref $id;
 	if ( ! $ref ) {
-		if ( $id and $cache{$config{db_name}}{$parent} and $cache{$config{db_name}}{$parent}{$id} ) {
+		if ( $id and (!$dont_cache) and $cache{$config{db_name}}{$parent} and $cache{$config{db_name}}{$parent}{$id} ) {
 			if ( $data ) {
 if ( 1 ) {
 				my $self = $cache{$config{db_name}}{$parent}{$id};
@@ -97,7 +97,7 @@ if ( 1 ) {
 #$log->debug("loading $parent $id") if $debug or DEBUG_ALL;
 			$self->load( $data );
 		} # end if
-		if ( ! $no_cache ) {
+		if ( ! ( $no_cache or $dont_cache ) ) {
 			if ( $id ) {
 				# Using $id instead of $$self{od} means that we cache non existent entries
 			#if ( $$self{id} ) {
@@ -600,6 +600,7 @@ sub find {
 	my @where;
 	my $sql = 'SELECT';
 	
+	my $do_cache = 1;
 	if ( exists $$params{distinct} ) {
 		$sql .= ' DISTINCT';
 		delete $$params{distinct};
@@ -607,6 +608,7 @@ sub find {
 	if ( $$params{columns} ) {
 		$sql .= ' ' . $$params{columns};
 		delete $$params{columns};
+		$do_cache = 0;
 	} else {
 		$sql .= ' *';
 	} # end if
@@ -631,10 +633,8 @@ sub find {
 	}
 	delete $$params{dbh};
 
-	my $do_cache = 0;
-	my $cache_field = ${$object_type.'::cache_field'};
+	my $cache_field = ${$object_type.'::cache_field'} if $do_cache;
 	if ( $cache_field and $$params{$cache_field} and ( ( 1 == keys %$params ) or ( 2 == keys %$params and exists $$params{limit} ) ) ) {
-		$do_cache = 1;
 
 #$log->debug("have cache field $cache_field for $$params{$cache_field}") if DEBUG_ALL;
 		if ( exists $name_cache{$object_type} and exists $name_cache{$object_type}{$$params{$cache_field}} ) {
@@ -655,7 +655,8 @@ $log->debug("ALl cached $object_type $cache_field $$params{$cache_field}") if DE
 			return ();
 		} # end if
 	} else {
-		$log->debug("Not doing caching using $cache_field with params $$params{$cache_field} ") if DEBUG_ALL;
+		$do_cache = 0;
+		$log->debug("Not doing caching for $object_type using $cache_field with params $$params{$cache_field} ") if DEBUG_ALL;
 	} # end if
 
 	# no operators, just which fields are being searched on. Mostly just useful for detetion of the deleted field.
@@ -763,10 +764,14 @@ $log->debug("ALl cached $object_type $cache_field $$params{$cache_field}") if DE
 		push @values, 0;
 	} # end if
 
-	$sql .= ' WHERE ' . join(' AND ', @where ) if @where;
 	if ( $$params{or} ) {
-		$sql .= ' WHERE' if ! @where;
-		$sql .= " OR $$params{or}";
+		if ( @where ) {
+			$sql .= ' WHERE ( ' . join(' AND ', @where ) . ' ) OR ( ' . $$params{or} . ')';
+		} else {
+			$sql .= " WHERE $$params{or}";
+		} # end if
+	} else {
+		$sql .= ' WHERE ' . join(' AND ', @where ) if @where;
 	} # end if
 	if ( exists $$params{order} ) {
 		$sql .= " ORDER BY $$params{order}";
@@ -789,7 +794,7 @@ $log->debug("ALl cached $object_type $cache_field $$params{$cache_field}") if DE
 		Carp::cluck("Extra parameters in $object_type ::find $k => $search{$k}");
 	} # end foreach
 
-	$log->debug("Loading Debug:$debug $object_type ($sql) (".join(',', map { ref $_ eq 'ARRAY' ? join(',', @{$_}) : $_ } @values).')' ) if DEBUG_ALL;
+	$log->debug("Loading Debug:$debug $object_type ($sql) (".join(',', map { ref $_ eq 'ARRAY' ? join(',', @{$_}) : $_ } @values).')' ) if $debug;
 	
 #$log->debug( 'find prepare: ' . sprintf('%.4f', tv_interval($starttime)*1000) ." useconds") if $debug;
 	my $data = $local_dbh->selectall_arrayref( $sql, { Slice => {} }, @values );
@@ -810,13 +815,13 @@ $log->debug("ALl cached $object_type $cache_field $$params{$cache_field}") if DE
 			return @results;
 		} # end if
 		#return map { $object_type->new_scalar_id( $_->{$$fields{id}}, $_ ) } @$data;
-		return map { $object_type->new( $_->{$$fields{id}}, $_ ) } @$data;
+		return map { $object_type->new( $_->{$$fields{id}}, $_, !$do_cache ) } @$data;
 	} else {
 		my @identified_by = eval '@'.$object_type.'::identified_by';
 		if ( ! @identified_by ) {
 			$log->debug("Multi key object $object_type but no identified by") if $debug;
 		} # end if
-		return map { $object_type->new( \@identified_by, $_ ) } @$data;
+		return map { $object_type->new( \@identified_by, $_, !$do_cache ) } @$data;
 #$log->debug("Objs: "  . scalar @objs );
 		#return @objs;
 	} # end if
@@ -899,6 +904,11 @@ sub dropdown {
 #$log->debug("default sort: $self $type :: default_sort = $order") if DEBUG_ALL;
 		$params{order} = $order if $order;
 	}
+
+	# User has firstname,lastname
+	#if ( ( ! $params{columns} ) {
+		#$params{columns} = 'id,name';
+	#}
 
 	return [ map { $$_{id}, $_->name() } $self->find(%params) ];
 } # end sub dropdown

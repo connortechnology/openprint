@@ -190,6 +190,7 @@ sub copy {
 	$$New{id} = '';
 	$$New{Prices} = [ $_[0]->Prices() ];
 	$$New{recommendations} = [ $_[0]->recommendations() ];
+	delete $$New{created_on};
 	return $New;
 } # end sub copy
 
@@ -821,6 +822,24 @@ sub allocate {
 			} );
 	if ( $Order ) {
 		$Order->add_log( qq`Allocated $quantity$$PA{units} of <a href="/employee/inventory/paper_details.html?paper_id=$$self{id}">` . $self->to_string().'</a>');
+			my $PI = new openprint::PaperInventory();
+			$PI->save({	
+				paper_id	=>	$$self{id},
+				user_id		=>	$openprint::session{user_id},
+				docket		=>	$Order->docket(),
+				delta		=>	0,
+				comment		=>	qq`Allocated $quantity$$PA{units} to docket $$Order{docket}`,
+				instock		=>	$self->in_stock(),
+			});
+	} else {
+			my $PI = new openprint::PaperInventory();
+			$PI->save({	
+				paper_id	=>	$$self{id},
+				user_id		=>	$openprint::session{user_id},
+				delta		=>	0,
+				comment		=>	qq`Allocated $quantity$$PA{units}`,
+				instock		=>	$self->in_stock(),
+			});
 	} # end if
 	if ( $$self{available_to_order} > 1 ) {
 		$$self{available_to_order} -= $quantity;
@@ -1318,7 +1337,8 @@ sub load_from_signature {
 				$Paper = undef;
 				$openprint::log->warn("Loading by paper id but not found: " . $$specs{'paper_id'.$qty_index} );
 			} # end if
-		} elsif ( ! ( $$specs{ddmStockBrand} and $$specs{ddmStockFinish} and $$specs{ddmStockColour} and $$specs{ddmStockWeight} ) ) {
+		}
+		if ( ! ( $$specs{ddmStockBrand} and $$specs{ddmStockFinish} and $$specs{ddmStockColour} and $$specs{ddmStockWeight} ) ) {
 			return new openprint::Paper();
 		} # end if
 

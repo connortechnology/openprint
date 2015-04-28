@@ -613,13 +613,13 @@ sub num {
 } # end sub num
 
 sub can_send {
-	my $User = @_ > 1 ? $_[1] : new openprint::User( $openprint::session{user_id} );
+	my $User = @_ > 1 ? $_[1] : $openprint::User;
 	return 1 if $$User{id} == $_[0]{created_by};
-	return 0;
+	return $_[0]->can_authorize();
 } # end sub can_send
 
 sub can_authorize {
-	my $User = @_ > 1 ? $_[1] : new openprint::User( $openprint::session{user_id} );
+	my $User = @_ > 1 ? $_[1] : $openprint::User;
 
 	return 1 if ! $_[0]->total();
 	return 1 if $User->purchasing_limit() and ( $_[0]->total() < $User->purchasing_limit() );

@@ -43,7 +43,7 @@ sub User {
 
 sub Files {
 	require openprint::File;
-	return openprint::File->find(upload_id=>$_[0]{id});
+	return openprint::File->find(upload_id=>$_[0]{id}, deleted=>[0,1] );
 } # end sub
 
 sub total_text {

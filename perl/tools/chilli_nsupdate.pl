@@ -69,8 +69,9 @@ if ( $ENV{'CALLING_STATION_ID'} ) {
 		$log->error("Must specify database name in order to look up hosts.\n");
 		exit(1);
 	} # end if
-	my $Interface = openprint::Host_Interface->find_one(mac=>$ENV{'CALLING_STATION_ID'});
-	if ( $Interface ) {
+	my @Interfaces = openprint::Host_Interface->find(mac=>$ENV{'CALLING_STATION_ID'});
+	if ( @Interfaces ) {
+		foreach my $Interface ( @Interfaces ) {
 		if ( $Interface->dhcp() ) {
 			if ( $Interface->ip() ne $ENV{'FRAMED_IP_ADDRESS'} ) {
 				$_ = $Interface->save({ip=>$ENV{'FRAMED_IP_ADDRESS'}});
@@ -102,11 +103,12 @@ if ( $ENV{'CALLING_STATION_ID'} ) {
 		} else {
 			$log->debug("IP not changed because dhcp not set for mac $ENV{'CALLING_STATION_ID'} $ENV{'FRAMED_IP_ADDRESS'}");
 		} # end if Host->dhcp
+		} # end foreach Inteface
 	} else {
 		$log->debug("Host not found for mac $ENV{'CALLING_STATION_ID'}");
 
 	} # end if Hosts
-	$dbh->disconnect();
+	$dbh->disconnect() if $dbh;
 } else {
 	$log->error("No CALLING_STATION_ID");
 } # end if

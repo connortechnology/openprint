@@ -134,14 +134,16 @@ $log->debug("Done preloading");
 						next if ! $keep;
 					} # end if
 
-					my $root_id = $Skid->Location()->Root()->id();
+					my $root_id = $Skid->Location()->Root(type=>'place')->id();
 					if ( @location_ids ) {
-						if ( $root_id ) {
-							if ( ! $location_ids{$root_id} ) {
-	$log->debug("Next because $root_id is not in location_ids (@location_ids)");
-								next;
-							} # end if
-						} elsif( ! $location_ids{'Unknown'} ) {
+						my @parent_ids = sets::union( map { $$_{id} } ( $Skid->Location(), $Skid->Location()->Parents() ) );
+$log->debug("Parents: @parent_ids" );
+ my @intersect = sets::intersection( @location_ids, @parent_ids );
+						if ( ! @intersect ) {
+							$log->debug("Next because @parent_ids is not in location_ids (@location_ids) intersection: ( @intersect )");
+							next;
+						} elsif( ( ! $root_id ) and ! $location_ids{'Unknown'} ) {
+							$log->debug("No unknown");
 							next;
 						} # end if 
 					} # end if 

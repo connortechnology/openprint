@@ -86,6 +86,6 @@
 There are no allocations.
 <? endif ( $$variable{'Allocations'} and @{$$variable{'Allocations'}} ) ?>
 <script type="text/javascript">
-	$('Allocated').innerHTML = '<? echo ( int($$variable{'Paper'}->allocated()). ($$variable{'Paper'}->type() eq 'Roll' ? 'lbs' : 'sheets'); ) ?>';
-	$('Available').innerHTML = '<? echo ( int($$variable{'Paper'}->available()). ($$variable{'Paper'}->type() eq 'Roll' ? 'lbs' : 'sheets'); ) ?>';
+	$('Allocated').innerHTML = '<? echo ( Number::Format::format_number(int($$variable{'Paper'}->allocated())). ($$variable{'Paper'}->type() eq 'Roll' ? 'lbs' : 'sheets'); ) ?>';
+	$('Available').innerHTML = '<? echo ( Number::Format::format_number(int($$variable{'Paper'}->available())). ($$variable{'Paper'}->type() eq 'Roll' ? 'lbs' : 'sheets'); ) ?>';
 </script>

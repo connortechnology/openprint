@@ -892,8 +892,8 @@ sub user_relationships {
 } # end sub user_relationships
 sub upload_log {
 	ssi::save_params( '/administrator/managerial/upload_log.html', ( 
-		( map { 'uploaded_on_start_'.$_ } ( 'year', 'month', 'day' ) ),
-		( map { 'uploaded_on_end_'.$_ } ( 'year', 'month', 'day' ) ),
+		( map { 'uploaded_on_start_'.$_ } ( 'year', 'month', 'day', 'hour','minute' ) ),
+		( map { 'uploaded_on_end_'.$_ } ( 'year', 'month', 'day', 'hour','minute' ) ),
 		'company_id','type',
 	) );
 
