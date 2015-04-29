@@ -99,47 +99,47 @@ sub endtime_seconds {
 # We presume that normally date_seconds is teh starttie + 1 of the previous shift -> why? why not endtime?  I don't kn ow.
 sub emanantise {
 	my ( $self, $date_seconds ) = @_;
-	$log->debug("Emanantise: " . $self->to_string() );
+	#$log->debug("Emanantise: " . $self->to_string() );
 	my $parser = 'DateTime::Format::Pg';
 
 	my $requested_dt = DateTime->from_epoch( epoch=>$date_seconds-1, time_zone=>$openprint::TZ );
-	$log->debug("Emanentise: Date: $date_seconds : " . $parser->format_datetime( $requested_dt ) );
+	#$log->debug("Emanentise: Date: $date_seconds : " . $parser->format_datetime( $requested_dt ) );
 	$requested_dt = DateTime->from_epoch( epoch=>$date_seconds, time_zone=>$openprint::TZ );
-	$log->debug("Emanentise: Date: $date_seconds : " . $parser->format_datetime( $requested_dt ) );
+	#$log->debug("Emanentise: Date: $date_seconds : " . $parser->format_datetime( $requested_dt ) );
 	# The point is to drop any additional time part, but how can that be right? What we want to do is jump gaps
 
 	my $shift_start_time_dt = DateTime::Duration->new( seconds => $self->starttime_seconds() % DAY );
-	$log->debug( 'shift start time: ' . $dtfd->format_duration( $shift_start_time_dt ) );
+	#$log->debug( 'shift start time: ' . $dtfd->format_duration( $shift_start_time_dt ) );
 
 	my $date_part_dt = $requested_dt->clone()->truncate(to=>'day');
 	if ( $requested_dt->is_dst() and ! $date_part_dt->is_dst() ) {
-$log->debug("subtracting an hour for DST");
+#$log->debug("subtracting an hour for DST");
 		$date_part_dt -= DateTime::Duration->new( hours=>1 );
 	} elsif ( $date_part_dt->is_dst() and ! $requested_dt->is_dst() ) {
-$log->debug("adding an hour for DST");
+#$log->debug("adding an hour for DST");
 		$date_part_dt += DateTime::Duration->new( hours=>1 );
 	} # end if
-	$log->debug("Date Part: " . $parser->format_datetime( $date_part_dt ) );
+	#$log->debug("Date Part: " . $parser->format_datetime( $date_part_dt ) );
 
 	my $st = $date_part_dt + $shift_start_time_dt;
-	$log->debug("initial st: " . $parser->format_datetime( $st ) . ' requested: ' . $parser->format_datetime( $requested_dt ) );
+	#$log->debug("initial st: " . $parser->format_datetime( $st ) . ' requested: ' . $parser->format_datetime( $requested_dt ) );
 	if ( $st < $requested_dt ) {
 		# Need to add a day
 		$st += DateTime::Duration->new( days=>1 );
 	} # end if
-	$log->debug("final st: " . $parser->format_datetime( $st ) . ' requested: ' . $parser->format_datetime( $requested_dt ) );
+	#$log->debug("final st: " . $parser->format_datetime( $st ) . ' requested: ' . $parser->format_datetime( $requested_dt ) );
 	my $now = DateTime->now( time_zone => 'UTC' );
 	my $es_duration = DateTime::Duration->new( seconds => $self->duration_seconds() );
 	$_ = $now->clone->add_duration( $es_duration );
 	$es_duration = $_->subtract_datetime_absolute( $now );
 
 	my $et = $st->clone()->add_duration( $es_duration );
-	$log->debug("et: " . $parser->format_datetime( $et ) . " is_dst() ? " . $et->is_dst() . " st_dst? " . $st->is_dst() );
+	#$log->debug("et: " . $parser->format_datetime( $et ) . " is_dst() ? " . $et->is_dst() . " st_dst? " . $st->is_dst() );
 	if ( (!$st->is_dst()) and $et->is_dst() ) {
 		$et -= DateTime::Duration->new( hours=>1 );
-$log->debug("subtracting an hour for DST new et:" . $parser->format_datetime( $et ));
+#$log->debug("subtracting an hour for DST new et:" . $parser->format_datetime( $et ));
 	} elsif ( $st->is_dst() and ! $et->is_dst() ) {
-$log->debug("adding an hour for DST");
+#$log->debug("adding an hour for DST");
 		$et += DateTime::Duration->new( hours=>1 );
 	} # end if
 

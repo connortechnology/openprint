@@ -318,10 +318,14 @@ sub _photo_actions {
 		return;
 	} # end if
 	if ( $param{'function'} eq 'rotate' ) {
+		require IPC::Run3;
 		my $filepath = $Asset->on_disk_path();
-		$_ = system('convert', '-rotate', $param{degrees}, $filepath, $filepath );
-		if ( $_ ) {
-			$variable{'error'} .= $?;
+		my $command = "convert -rotate $param{degrees} $filepath $filepath";
+		my $stdout;
+		my $stderr;
+		IPC::Run3::run3($command, undef, $stdout, $stderr );
+		if ( $? ) {
+			$variable{'error'} .= "Error rotating. command was($command) output is ($stdout) error is ($stderr)<br/>";
 			$log->error( 'error rotating ' . $? );
 		} # end if
 		# Need to remove all sized versions

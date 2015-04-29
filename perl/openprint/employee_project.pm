@@ -992,8 +992,21 @@ sub _status_dropdown {
 } # end sub _status_dropdown
 
 sub _modification_history {
-	my $Project = $variable{Project} = new openprint::Project($param{project_id});
+	if ( $param{project_id} ) {
+		my $Project = $variable{Project} = new openprint::Project($param{project_id});
+	} else {
+		ssi::save_params('/employee/project/modification_log.html', 'project_id', 'operator_id', 'salesrep_id',
+			( map { 'action_date_start_'.$_ } ( 'year', 'month', 'day' ) ),
+			( map { 'action_date_end_'.$_ } ( 'year', 'month', 'day' ) ),
+				);
+	} # end if
 } # end sub _modification_history
+
+sub modification_log {
+} # end sub modification_log
+
+sub production_log {
+} # end sub production_log
 
 sub _production_log {
 	my $Project = $variable{Project} = new openprint::Project($param{project_id});

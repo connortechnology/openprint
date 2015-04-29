@@ -37,6 +37,8 @@ my %variables = (
 	'FromFirstName'=>['save'],'FromLastName'=>['save'],
 	'ToFirstName'=>['save'],'ToLastName'=>['save'],
 	'alert'=>['save','output'],
+	to_company_id	=>	['save'],
+	from_company_id	=>	['save'],
 );
 
 sub variables {
@@ -55,6 +57,25 @@ sub no_outputs {
 	return @v;
 }
 
+sub has_overrides {
+    my ( $Project, $service_id, $specs, $qty_index ) = @_;
+    $specs = openprint::service::get_specs_ref( $Project, $service_id ) if ! $specs;
+
+    my @v;
+    if ( $qty_index ) {
+            push @v, map { $$specs{$_.$qty_index} ? $_ : () } (
+                    'OverridePrice','chkOverridePackageWeight',
+                    );
+	} else {
+            push @v, map { $$specs{$_} ? $_ : () } (
+					'chkOverridePackageQuantity',
+		);
+    } # end if
+
+    return @v;
+
+} # end sub has_overrides
+
 
 sub calc {
 	my ( $log, $dbh, $variable, $project_index, $service_index, $specs, $qty_index ) = @_;
@@ -64,16 +85,20 @@ sub calc {
 	my $services = $Project->services();
 	$$specs{alert} = '';
 	my $status = 'calculated';
-	my ( $carton_service_index ) = $$services{PlainCartons}[0] if $$services{PlainCartons}[0];
+	my $carton_service_index = $$services{PlainCartons}[0] if $$services{PlainCartons}[0];
 	if ( ! $carton_service_index ) {
-if( $openprint::config{NeedCartonsForShipping} ) {
-		$$specs{alert} = 'Shipping requires that the project be packed in cartons.';
-		$$specs{NeedPlainCartons} = 1;
-		return 'uncalculated';
-}
+		if( $openprint::config{NeedCartonsForShipping} ) {
+			$$specs{alert} = 'Shipping requires that the project be packed in cartons.';
+			$$specs{NeedPlainCartons} = 1;
+			return 'uncalculated';
+		}
+		if ( $$services{BulkSkids} and @{$$services{BulkSkids}} ) {
+			$carton_service_index = $$services{BulkSkids}[0];
+		} # en dif
 	} else {
 		$$specs{NeedPlainCartons} = 0;
 	} # end if
+
 	if ( $carton_service_index ) {
 		my $carton_status = openprint::service::status( $project_index, $carton_service_index );
 		if ( sets::isin( $carton_status,['', 'uncalculated'] ) ) {
@@ -144,6 +169,7 @@ $openprint::log->debug("Other Shipped Quantity: $other_shipped_quantity");
 				$$specs{'txtPackageQuantity'.$qty_index} = ceil( $$specs{'txtQuantity'.$qty_index}/$$carton_specs{'txtItemsPerPackage'.$qty_index} );
 			} # end if
 			$$specs{"txtTotalWeight$qty_index"} = sprintf('%.2f', (int( $$specs{'txtQuantity'.$qty_index}/$$carton_specs{'txtItemsPerPackage'.$qty_index} ) * $$specs{'txtPackageWeight'.$qty_index}) + (($$specs{'txtQuantity'.$qty_index} % $$carton_specs{'txtItemsPerPackage'.$qty_index} ) * $$carton_specs{txtFinishedWeight}) );
+		
 		} # end if
 
 		if ( ! $$specs{"OverridePrice$qty_index"} or $$specs{"OverridePrice$qty_index"} ne 'Y' ) {
@@ -198,7 +224,7 @@ $openprint::log->debug("Other Shipped Quantity: $other_shipped_quantity");
 									my $total;
 									$$specs{"hdnBreakdown$qty_index"} .= '<tr><td colspan="2">On ' . $Equipment->name() . '</td></tr>';	
 									if ( my $MinimumPackages = $Equipment->Specification( 'Minimum Packages' ) ) {
-										if ( $$MinimumPackages{value} > $$specs{'txtPackageQuantity'.$qty_index} ) {
+										if ( (!$$specs{'txtPackageQuantity'.$qty_index}) or ( $$MinimumPackages{value} > $$specs{'txtPackageQuantity'.$qty_index} ) ) {
 											$$specs{"hdnBreakdown$qty_index"} .= '<tr><td class="error" colspan="2">Not enough ' . $$carton_specs{ServiceType} . ' minimum ' . $$MinimumPackages{value} . ' > ' . $$specs{'txtPackageQuantity'.$qty_index} . '</td></tr>';
 											next;
 										} # end if
@@ -372,7 +398,23 @@ sub to {
 } # end sub to
 
 sub save {
+	my ( $p_id, $s_id, $param ) = @_;
+    my $Project = new openprint::Project( $p_id );
+
+	if ( 1 ) {
+		my $Location = openprint::Location->find_one( company_id=>$Project->company_id() );
+		
+	} # end if
 } # end sub save
+
+sub setup_defaults {
+	my ( $Project, $Service ) = @_;
+	my %defaults;
+
+	$defaults{to_company_id} = $openprint::config{owner};
+	$defaults{from_company_id} = $Project->company_id();
+	return %defaults;
+} # end sub setup_defaults
 
 1;
 __END__

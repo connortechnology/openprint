@@ -46,7 +46,7 @@ Please select an allocation to view/edit.<br>
             <select name="company_id" id="company_id">
                 <option value="">All</option>
                 <? echo ( make_drop_down( openprint::Company->dropdown( 'last_ordered_on is null'=>0,
-								$session{$r->uri().'?salesrep_id'} ? ( salresrep_id => $session{$r->uri().'?salesrep_id'} ) : () ),
+								( $session{$r->uri().'?salesrep_id'} ? ( salresrep_id => $session{$r->uri().'?salesrep_id'} ) : () ),
 							), $session{$r->uri().'company_id'} ); ) ?>
             </select>
         </li>

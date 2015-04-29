@@ -22,11 +22,14 @@ function load() {
                 </select>
             </li>
             <li>
-                <label>Ordered Date</label>
+                <label>Created Date</label>
 <? echo ( date_select_session( '/employee/reports/stock_usage.html', 'ordered_on_start' ); ) ?>
                     to
 <? echo ( date_select_session( '/employee/reports/stock_usage.html', 'ordered_on_end' ); ) ?>
             </li>
+			<li><label>Projects/Orders</label>
+				<? echo ( radio( 'projects_orders', [ map { $_, $_ } ( 'Projects', 'Orders' ) ], $session{$r->uri().'?projects_orders'} ); ) ?>
+			</li>
 			</ul>
         </div>
         <div class="rightColumn">
@@ -34,7 +37,7 @@ function load() {
             <li><label>Type</label>
     <? echo (
         $session{'/employee/reports/stock_usage.html?Type'} = 'Roll' if ! $session{'/employee/reports/stock_usage.html?Type'};
-		return checkboxes( 'type', [ 'Sheet', 'Sheet', 'Roll', 'Roll' ], [split( ',', $session{'/employee/reports/stock_usage.html?type'} )], { onclick=>'f1.submit();' } );
+		checkboxes( 'type', [ 'Sheet', 'Sheet', 'Roll', 'Roll' ], [split( ',', $session{'/employee/reports/stock_usage.html?type'} )], { onclick=>'f1.submit();' } );
     ) ?>
             </li>
 <? echo (

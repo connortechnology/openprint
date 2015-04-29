@@ -11,7 +11,7 @@ require sql;
 require openprint::Object;
 require openprint::User;
 
-$debug = 0;
+$debug = 1;
 $default_sort = 'lower(name)';
 $table = 'companies';
 $serial = 'companies_id_seq';
@@ -355,7 +355,7 @@ sub can_view_all {
 
 sub find_filtered {
     return if ! $openprint::session{user_id};
-    return openprint::Company->find(order=>'lower(name)') if $openprint::session{user_type} eq 'A';
+    return openprint::Company->find(order=>'lower(name)',@_) if $openprint::session{user_type} eq 'A';
 
     my $User = new openprint::User( $openprint::session{user_id} );
 
@@ -364,7 +364,8 @@ sub find_filtered {
         salesrep_id => [ $openprint::session{user_id}, $User->csr_ids() ],
         ) : () ),
         or		=> 'id='.$User->company_id(),
-        order	=>'lower(strname)',
+        order	=>'lower(name)',
+		@_,
     );
 } # end sub find_filtered
 

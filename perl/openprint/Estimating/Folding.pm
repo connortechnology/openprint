@@ -951,10 +951,20 @@ $openprint::log->debug("Has a fold, doing extra checks") if DEBUG;
 								# If multiple out, we trim inline otherwise trim first.
 								# If it has been cut, assume cut to layout size
 
-								my $width_size = $$SignatureImposition{columns} != $$Imposition{columns} ? $Imposition->layout_width() : $Imposition->sheet_width();
-								$width_size = $Imposition->object_width() if $$Imposition{imposition} == 1;
-								my $height_size = $$SignatureImposition{rows} != $$Imposition{rows} ? $Imposition->layout_height() : $Imposition->sheet_height();
-								$height_size = $Imposition->object_height() if $$Imposition{imposition} == 1;
+								# Width_size is the width of the object being fed into the folder, not the Imposition
+								my $width_size;
+								my $height_size;
+								if ( $$Imposition{imposition} == 1 ) {
+									$width_size = $Imposition->object_width();
+									$height_size = $Imposition->object_height();
+	
+								} elsif ( $Imposition->image_orientation() eq 'Vertical' ) {
+									$width_size = $$SignatureImposition{columns} != $$Imposition{columns} ? $Imposition->layout_width() : $Imposition->sheet_width();
+									$height_size = $$SignatureImposition{rows} != $$Imposition{rows} ? $Imposition->layout_height() : $Imposition->sheet_height();
+								} else {
+									$width_size = $$SignatureImposition{rows} != $$Imposition{rows} ? $Imposition->layout_height() : $Imposition->sheet_height();
+									$height_size = $$SignatureImposition{columns} != $$Imposition{columns} ? $Imposition->layout_width() : $Imposition->sheet_width();
+								} # end if
 
 								if ( $orientation ) {
 									if (						
@@ -1254,6 +1264,8 @@ $openprint::log->debug(qq`Wrong imposition: $$specs{"FoldImposition-$form-$qty_i
 							if ( $pages * $$FI{quantity} < $remaining_pages ) {
 								$$FI{page_quantity} = $$FI{quantity};
 							} else {
+								# If overriding to too many pages, this could go negative which screws up stitching
+								$remaining_pages = 0 if $remaining_pages < 0;
 								$$FI{page_quantity} = int($remaining_pages / $pages);
 							} # end if
 						} # end if

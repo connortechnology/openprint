@@ -1407,6 +1407,9 @@ $openprint::log->debug("Skipping cuz not $height");
 					# We need to do some initial filtering here.  
 					my %paper_impositions;
 					foreach my $cut_off ( @cut_offs ) {
+		if ( DEBUG_IMPOSITIONS and $$Overrides{"OverrideCutOff$qty_index"} and $$specs{"CutOff$qty_index"} ) {
+			next if $cut_off != $$specs{"CutOff$qty_index"};
+		}
 						$$project{'Cut Off'} = $cut_off;
 						foreach my $i ( openprint::imposition::get_imposition( $project, $do_work_turn, $do_perfecting, $$specs{Versions}, $P, $Press ) ) {
 							my $AP = $i->Paper();
@@ -3078,7 +3081,7 @@ $openprint::log->debug("Needed pages: $needed_pages");
 			} # end if
 		}  # end if
 
-		if ( $$sig_specs{PreviousStockWidth} and $$Paper{width} > $$sig_specs{PreviousStockWidth} ) {
+		if ( ( $$sig_specs{'MatchGrain'.$qty_index} eq 'Y' ) and $$sig_specs{PreviousStockWidth} and $$Paper{width} > $$sig_specs{PreviousStockWidth} ) {
 			$imp->display("PreviousStockWidth: $$sig_specs{PreviousStockWidth} < " . $Paper->to_string() ) if DEBUG_FILTERING;
 			next;
 		} # end if
