@@ -975,6 +975,10 @@ function check_time_ending( form, starting_prefix, ending_prefix ) {
 
 function update_duration(form, starting_prefix, ending_prefix, suffix ) {
 	if ( ! suffix ) suffix = '';
+	var override = form.elements['duration_override'+suffix];
+	if ( override && override.value=='Y' ) {
+		return;
+	}
 	var do_time = 0;
 	var unknown_time = 0;
 	if ( form.elements['unknown_time'+suffix] ) {
@@ -1037,11 +1041,10 @@ function update_duration(form, starting_prefix, ending_prefix, suffix ) {
 		} else {
 			var duration = $('duration'+suffix);
 			if ( duration ) {
-				var d = days+'day'+(days==1?'':'s')+' ' + hours+'hour'+(hours==1?'':'s')+' ' + minutes + 'minute'+(minutes==1?'':'s');
 				if ( duration.type == 'text' ) {
-					duration.value = d;
+					duration.value = days+'day'+(days==1?'':'s')+' ' + hours+':'+ minutes;
 				} else {
-					duration.innerHTML = d;
+					duration.innerHTML = days+'day'+(days==1?'':'s')+' ' + hours+'hour'+(hours==1?'':'s')+' ' + minutes + 'minute'+(minutes==1?'':'s');
 				} // end if
 			} // end if
 		} // end if
