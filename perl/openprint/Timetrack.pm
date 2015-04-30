@@ -18,6 +18,8 @@ $serial = 'timetracks_id_seq';
 	id				=> 'id',
 	starting		=>	'starting',
 	ending			=>	'ending',
+	duration		=>	'duration',
+	duration_override	=>	'duration_override',
 	company_id		=>	'company_id',
 	project_id		=>	'project_id',
 	description		=>	'description',
@@ -60,7 +62,18 @@ $serial = 'timetracks_id_seq';
 	travel_associated	=>	0,
 	distance			=>	undef,
 	billable			=>	q`1`,
+	duration_override	=>	0,
 );
+
+sub duration {
+	if ( @_ ) {
+		$_[0]{duration} = $_[1];
+	}
+	if ( ! $_[0]{duration} ) {
+		$_[0]{duration} = misc::seconds2hms( $_[0]->elapsed() );
+	} # end if
+	return $_[0]{duration} ;
+} # end sub duration
 
 sub elapsed {
 	my ( $self ) = @_;
