@@ -547,7 +547,7 @@ sub can_edit {
 
 sub can_view {
 	return 1 if ! $_[0]{id};
-	my $User = $_[1] ? $_[1] : new openprint::User( $openprint::session{user_id} );
+	my $User = $_[1] ? $_[1] : $openprint::User;
 
 	if ( $$User{type} eq 'A' ) {
 		$log->debug("$$User{firstname} Is administrator") if $debug;
