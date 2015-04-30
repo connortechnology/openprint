@@ -705,19 +705,27 @@ sub credit_application {
 # Now send email notifications
 			my %info;
 			$info{Company} = $Company;
-			$info{User} = new openprint::User( $session{user_id} );
+			$info{User} = $openprint::User;
 
 			$info{CreditAppIndex} = $App->id();
 			$info{Application} = $App;
 
 			$info{ReplacementText} = ssi::include( '/email_content/credit_application_notification.html', \%info );
-			my $template = ssi::include( '/email_template.html', \%info );
+			my $body = ssi::include( '/email_template.html', \%info );
+			$info{ReplacementText} = ssi::include( '/email_content/credit_application.html', \%info );
+			my $credit_application = ssi::include( '/email_template.html', \%info );
 
-			new openprint::Email()->send(
+			my $Email = new openprint::Email();
+
+			$Email->add_pdf_attachment_from_html( 'CreditApplication'.$App->id(), $credit_application );
+
+			$Email->send(
 					FROM	=> $config{CreditApplicationEmail},
-					TO	=> $config{CreditApplicationEmail},
+					#TO	=> $config{CreditApplicationEmail},
+					TO	=> 'iconnor@point-one.com',
+					#BCC	=> 'iconnor@point-one.com',
 					SUBJECT => 'New Credit Application',
-					ATTACHMENTS	=> [ '', MIME::QuotedPrint::encode_qp(Encode::encode('utf-8',$template)), 'text/html', 'quoted-printable' ],
+					HTML_BODY	=>	$body,
 					);
 		} # end if
 	} # end if Apply
