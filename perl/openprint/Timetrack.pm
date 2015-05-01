@@ -18,6 +18,8 @@ $serial = 'timetracks_id_seq';
 	id				=> 'id',
 	starting		=>	'starting',
 	ending			=>	'ending',
+	duration		=>	'duration',
+	duration_override	=>	'duration_override',
 	company_id		=>	'company_id',
 	project_id		=>	'project_id',
 	description		=>	'description',
@@ -60,12 +62,26 @@ $serial = 'timetracks_id_seq';
 	travel_associated	=>	0,
 	distance			=>	undef,
 	billable			=>	q`1`,
+	duration_override	=>	0,
 );
+
+sub duration {
+	if ( @_ > 1 ) {
+		$_[0]{duration} = $_[1];
+	}
+	if ( ( ! $_[0]{duration} ) and ( ! $_[0]{duration_override} ) ) {
+		$_[0]{duration} = misc::seconds2hms( $_[0]->elapsed() );
+	} # end if
+	return $_[0]{duration};
+} # end sub duration
 
 sub elapsed {
 	my ( $self ) = @_;
 
-	if ( $$self{time_associated} ) {
+	if ( $$self{duration_override} ) {
+		return misc::hms2time( $_[0]{duration} );
+
+	} elsif ( $$self{time_associated} ) {
 		return Date::Parse::str2time( $$self{ending} ) - Date::Parse::str2time( $$self{starting} );
 	} else {
 		my ($start) = $$self{starting} =~ /(\d\d\d\d-\d\d-\d\d)/;

@@ -57,11 +57,9 @@ name=>'invoicer_id', prepend=>['','select']
 			</li>
 			<li>
 				<label>Bad Debt?</label>
-				<input type="radio" id="bad_debt1" name="bad_debt" value="1" <? echo ( checked( $$variable{'Invoice'}->bad_debt() ) ) ?> />
-				<label class="radio" for="bad_debt1">Yes</label>
-				<input type="radio" id="bad_debt0" name="bad_debt" value="0" <? echo ( checked( ! $$variable{'Invoice'}->bad_debt() ) ) ?> />
-				<label class="radio" for="bad_debt0">No</label>
+				<? echo ( radio( 'bad_debt', ['1','Yes','0','No'], $$variable{'Invoice'}->bad_debt() ); ) ?>
 			</li>
+			<li><label>Currency</label><? echo ( ssi::select( openprint::Currency->dropdown(), $$variable{Invoice}->currency_id() ? $$variable{Invoice}->currency_id() : $session{Currency_id}, { name=>'currency_id', id=>'currency_id', prepend=>['','select'] } ); ) ?></li>
 			</ul>
 		</div>
 		<br class="spacer"/>

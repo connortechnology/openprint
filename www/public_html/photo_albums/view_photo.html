@@ -59,7 +59,7 @@
 				my $Asset = $Photo->Asset();
 
 				if ( $Asset->is_photo() ) {
-					$html .= sprintf('<img src="%s" id="asset-%d" />', $Photo->url(), $Photo->asset_id() );
+					$html .= sprintf('<img src="%s" id="asset-%d" />', $Photo->sized_url('large'), $Photo->asset_id() );
 					if ( $Photo->can_edit() ) {
 						$html .= '<fieldset><legend>Edit Options</legend>';
 						$html .= button( 'CCW', { 
@@ -94,7 +94,7 @@ if ( 0 ) {
 </script>
 `, $Photo->url() );
 				} elsif ( $Asset->is_video() ) {
-					$html .= '<video width="'.$Asset->width().'" height="'.$Asset->height().'" controls>'."\n";
+					$html .= '<video controls>'."\n";
 		if ( $ENV{HTTP_USER_AGENT} =~ /ip(ad|od|hone)/i ) {
 					if ( $_ = $Asset->video_url('mp4') ) {
 						$html .= '<source src="'.$config{siteURL}.$_.'?_session_id='.$session{_session_id}.'" type="video/mp4">'."\n";
