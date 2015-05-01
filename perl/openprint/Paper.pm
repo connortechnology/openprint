@@ -1291,15 +1291,15 @@ sub load_from_signature {
 		$Paper->calliper( $$specs{txtSpecificStockCalliper} );
 		$Paper->start_width( $$specs{txtSpecificStockWidth} );
 		$Paper->start_height( $$specs{txtSpecificStockHeight} );
+		$Paper->type( $$specs{StockType} );
 		if ( $qty_index ) {
 			$Paper->width( $$specs{'StockWidth'.$qty_index} );
-			$Paper->height( $$specs{'StockHeight'.$qty_index} );
+			$Paper->height( $$specs{'StockHeight'.$qty_index} ) if $Paper->type() ne 'Roll';
 		} else {
 			$Paper->width( $$specs{txtSpecificStockWidth} );
-			$Paper->height( $$specs{txtSpecificStockHeight} );
+			$Paper->height( $$specs{txtSpecificStockHeight} ) if $Paper->type() ne 'Roll';
 		} # end if
 		$Paper->gsm( $$specs{txtStockGSM} );
-		$Paper->type( $$specs{StockType} );
 
 		$Paper->minimum_order( $$specs{minimum_order} );
 		$Paper->sheets_per_package( $$specs{sheets_per_package} );
