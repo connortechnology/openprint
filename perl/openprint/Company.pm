@@ -355,15 +355,14 @@ sub can_view_all {
 
 sub find_filtered {
     return if ! $openprint::session{user_id};
+	shift @_ if $_[0] eq 'openprint::Company';
     return openprint::Company->find(order=>'lower(name)',@_) if $openprint::session{user_type} eq 'A';
 
-    my $User = new openprint::User( $openprint::session{user_id} );
-
     return openprint::Company->find(
-        ( ! openprint::usergroup::is_user_in( ['Estimating','Prepress','Accounting','Shipping','Inventory'], $openprint::session{user_id} ) ? (
-        salesrep_id => [ $openprint::session{user_id}, $User->csr_ids() ],
+			( ! openprint::usergroup::is_user_in( ['Estimating','Prepress','Accounting','Shipping','Inventory'], $openprint::session{user_id} ) ? (
+        salesrep_id => [ $openprint::session{user_id}, $openprint::User->csr_ids() ],
         ) : () ),
-        or		=> 'id='.$User->company_id(),
+        (or		=> 'id='.$openprint::User->company_id()),
         order	=>'lower(name)',
 		@_,
     );
