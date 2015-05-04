@@ -117,8 +117,8 @@ $r->log->debug( "Location: " . $Location->name() . ':' . $Location->coordinates(
 			my ( $x1, $y1, $x2, $y2 ) = split(',', $P->coordinates() );
 
 			#$r->log->debug("Scaling ( ($x2-$x1) / $pw ) x ( ($y2-$y1) / $ph )");
-			my $x_ratio = ($x2-$x1)/$pw;
-			my $y_ratio = ($y2-$y1)/$ph;
+			my $x_ratio = $pw ? ($x2-$x1)/$pw : 1;
+			my $y_ratio = $ph ? ($y2-$y1)/$ph : 1;
 			#$r->log->debug("Scaling to ($x1,$py1)x($px2,$py2)->($x1,$y1)x($x2,$y2)");
 
 			$log->debug(sprintf('Scaling box to (%d,%d)->(%d,%d)', $x1, $y1, $x1*$x_ratio, $y1*$y_ratio) );
