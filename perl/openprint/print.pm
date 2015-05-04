@@ -477,6 +477,7 @@ $log->debug("group $group_id");
 				'GroupPageQuantity','OverrideGroupPageQuantity','txtServiceDescription','rdbTemplateType',
 				'rdbPanels','PocketSize','chkPocketLeft','chkPocketCenter','chkPocketRight',
 				'txtWidth','txtHeight','txtFinalWidth','txtFinalHeight','chkOverrideDimensions','txtQuantity1','txtQuantity2','txtQuantity3',
+	'sides_the_same',
 				) {
 #$log->debug("Group $type : $spec " .$$param{$spec.$group_id});
 			
@@ -592,6 +593,7 @@ $log->error("No Group!") if ! $type;
 				'txtSignatureType','rdbTemplateType','pages_supplied','supplied_format',
 				'rdbPanels','PocketSize','chkPocketLeft','chkPocketCenter','chkPocketRight',
 				'txtWidth','txtHeight','chkOverrideDimensions','txtQuantity1','txtQuantity2','txtQuantity3',
+	'sides_the_same',
 				) {
 			$$variable{$spec.$type} = $$sig_specs{$spec} if $$sig_specs{$spec} and ! $$variable{$spec.$type};
 #$openprint::log->debug("$spec . $type = $$variable{$spec.$type}");
