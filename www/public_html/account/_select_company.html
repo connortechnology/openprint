@@ -1,11 +1,10 @@
 <? eval ( 
-	if ( $session{user_type} eq 'A' ) {
+	#if ( $session{user_type} eq 'A' ) {
 		$$variable{company_dropdown} = openprint::Company->dropdown( or=>'id='.$openprint::User->company_id(), salesrep_id=>[ $session{user_id}, $openprint::User->csr_ids() ] );
-$log->debug( @{$$variable{company_dropdown}} );
 		$$variable{company_dropdown} = openprint::Company->dropdown( ) if @{$$variable{company_dropdown}} <= 2;
-	} else {
-		$$variable{company_dropdown} = openprint::Company->dropdown();
-	}
+	#} else {
+		#$$variable{company_dropdown} = openprint::Company->dropdown( salesrep_id=>[ $session{user_id}, $openprint::User->csr_ids() ] );
+	#}
 )?>
 <br/>
 You are currently representing <? echo ( $openprint::Company->link_to(); ) ?>.<br/>
