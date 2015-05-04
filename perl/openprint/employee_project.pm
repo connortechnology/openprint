@@ -1003,6 +1003,9 @@ sub _modification_history {
 } # end sub _modification_history
 
 sub modification_log {
+	_modification_history();
+	ssi::setup_date_select( '/employee/project/modification_log.html', 'action_date_start', -7 );
+	ssi::setup_date_select( '/employee/projcet/modification_log.html', 'action_date_end', '' );
 } # end sub modification_log
 
 sub production_log {
