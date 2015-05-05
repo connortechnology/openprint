@@ -883,6 +883,9 @@ sub _stock_checkout {
 						});
 				$Order->add_log( 'Checked out something unknown.' );
 			} # end if skid has contents
+
+			# Update totals
+			$C->Paper()->save();
 		} # end if add_entry
 	} # end if action eq Add
 } # end sub _stock_checkout
