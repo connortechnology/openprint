@@ -448,7 +448,7 @@ $log->debug("group $group_id");
 				'rdbSuppliedStock','rdbSpecificStock','StockType',
 				'CustomSheetDoubleSided', 'CustomStockPrice','txtCustomMWeight','txtStockGSM','CustomStockPriceUnits',
 				'basis_width','basis_height','basis_mweight','StockGrade',
-				'minimum_order', 'sheets_per_package', 'full_packages',
+				'minimum_order', 'sheets_per_package',
 
 				'CyanSpotSideOneCoverage', 'MagentaSpotSideOneCoverage', 'YellowSpotSideOneCoverage', 'BlackSpotSideOneCoverage',
 				'CyanSideOneCoverage', 'MagentaSideOneCoverage', 'YellowSideOneCoverage', 'BlackSideOneCoverage',
@@ -477,7 +477,6 @@ $log->debug("group $group_id");
 				'GroupPageQuantity','OverrideGroupPageQuantity','txtServiceDescription','rdbTemplateType',
 				'rdbPanels','PocketSize','chkPocketLeft','chkPocketCenter','chkPocketRight',
 				'txtWidth','txtHeight','txtFinalWidth','txtFinalHeight','chkOverrideDimensions','txtQuantity1','txtQuantity2','txtQuantity3',
-	'sides_the_same',
 				) {
 #$log->debug("Group $type : $spec " .$$param{$spec.$group_id});
 			
@@ -489,6 +488,8 @@ $log->debug("group $group_id");
 				'chkCyanSideTwo','chkMagentaSideTwo','chkYellowSideTwo','chkBlackSideTwo', 'chkProcessColourSideTwo',
 				( map { 'chkColourCoating'.$_.'SideTwo' } ( 1 .. 9 ) ),
 				'BleedLeft','BleedRight','BleedTop','BleedBottom',
+				'full_packages',
+				'sides_the_same',
 		) {
 			openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $ss_id, $spec, $$param{$spec.$group_id} );
 		} # end foreach spec
