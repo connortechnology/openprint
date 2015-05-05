@@ -784,6 +784,7 @@ sub add_inventory {
 		project_id	=>	$$Project{id},
 		});
 	# Updates in_stock and allocated
+	delete $$self{SkidContents};
 	$self->save();
 } # end sub add_inventory
 
