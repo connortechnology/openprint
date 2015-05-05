@@ -232,11 +232,7 @@ $openprint::log->debug($Stock->id_string() . ' full packages ' . $Stock->full_pa
 			if ( $qty_per_package ) {
 				foreach my $qty_index ( $Project->quantity_indexes() ) {
 					next if ! $$total{"qty_$qty_index"};
-					if ( $Stock->type() eq 'Sheet' ) {
-						$$total{"qty_$qty_index"} = $qty_per_package * ceil( $$total{"qty_$qty_index"} / $qty_per_package );
-					} elsif ( $Stock->type() eq 'Roll' ) {
-						$$total{"qty_$qty_index"} = $qty_per_package * ($$total{"qty_$qty_index"}/$qty_per_package);
-					} # end if
+					$$total{"qty_$qty_index"} = $qty_per_package * ceil( $$total{"qty_$qty_index"} / $qty_per_package );
 				} # end foreah qty_index
 			} # end if sheets_per_package
 		} # end if full packages
