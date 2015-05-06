@@ -3165,11 +3165,26 @@ $openprint::log->debug("Needed pages: $needed_pages");
 		if ( ! @results2 ) {
 $openprint::log->debug( " Didn't find the desired imposition, so cutting them down.");
 			my @lesser_imps = map { $$_{imposition} > $$sig_specs{'chkOverrideImposition'.$qty_index} ? $_ : () } @results;
+			if ( DEBUG_FILTERING ) {
 $openprint::log->debug( " first set: " . @lesser_imps );
+				foreach ( @lesser_imps ) {
+					$_->display("first set:");
+				}
+			}
 			@lesser_imps = map { $$_{imposition} >= $$sig_specs{'chkOverrideImposition'.$qty_index} ? $_ : () } openprint::imposition::decrease_imposition( @lesser_imps );
+			if ( DEBUG_FILTERING ) {
 $openprint::log->debug( " second set: " . @lesser_imps );
+				foreach ( @lesser_imps ) {
+					$_->display("second set:");
+				}
+			}
 			@results2 = map { $$_{imposition} == $$sig_specs{'txtImposition'.$qty_index} ? $_ : () } @lesser_imps;
-$openprint::log->debug( " matching imps: " . @results2 );
+			if ( DEBUG_FILTERING ) {
+				$openprint::log->debug( " matching imps: " . @results2 );
+				foreach ( @results2 ) {
+					$_->display("After cutting:");
+				}
+			}
 			#@results2 = map { $$_{imposition} > $$sig_specs{'txtImposition'.$qty_index} ? $_ : () } @lesser_imps if ! @results2;
 
 if ( 1 ) {
