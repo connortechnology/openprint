@@ -2,7 +2,14 @@
 	<fieldset><legend>Sales Information</legend>
 		<ul>
 			<li><label>Price List</label><? echo ( $$variable{Company}->Pricelist()->name() ) ?></li>
-            <li><label>Pricing Discount</label><? echo ( $$variable{Company}->discount() ) ?>%</li>
+            <li class="discount"><label>Pricing Discount</label>
+<? echo (
+	if ( $session{user_type} eq 'A' or ( $session{user_id} == $$variable{Company}->salesrep_id() ) ) {
+		return input( type=>'float', name=>'discount', value=>$$variable{Company}->discount() );
+	} else {
+		return $$variable{Company}->discount();
+	}
+) ?>%</li>
             <li><label>Sales Rep</label><? echo ( 
 				if ( $session{user_type} eq 'A' or ( $session{user_id} == $$variable{Company}->salesrep_id() ) ) {
 					my @csr_ids = openprint::User->find( 'usergroup any'=>'Sales', order=>'lower(firstname),lower(lastname)' );
