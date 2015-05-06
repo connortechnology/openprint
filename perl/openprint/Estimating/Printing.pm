@@ -1126,7 +1126,7 @@ $openprint::log->debug("Skipping cuz ddmPress$qty_index ne $$Press{strid}");
 			next;
 		} # end if
 		if ( (! $$project{HasFolding} ) and ($Press->specification('Sheeter') ne 'Y' ) ) {
-			$openprint::log->error("No Sheeter");
+			$openprint::log->error("No Sheeter on $$Press{strid}");
 			next;
 		} # end if
 
