@@ -541,17 +541,7 @@ sub signature_calc {
 		if ( $$Imposition{Folds} ) {
 			@folding_impositions = @{$$Imposition{Folds}};
 		} else {
-			foreach my $fold_index ( 1 .. 4 ) {
-				next if ! $$folding_specs{"FoldQty-$form-$qty_index-$fold_index"};
-				next if ! $$folding_specs{"FoldType-$form-$qty_index-$fold_index"};
-				my $folding_imposition = new openprint::Imposition();
-				$folding_imposition->Paper( $Paper );
-				$folding_imposition->columns( $$folding_specs{"FoldColumns-$form-$qty_index-$fold_index"} );
-				$folding_imposition->rows( $$folding_specs{"FoldRows-$form-$qty_index-$fold_index"} );
-				$folding_imposition->quantity( $$folding_specs{"FoldQty-$form-$qty_index-$fold_index"} );
-				push @folding_impositions, $folding_imposition;
-				$folding_imposition->display('Fold ' . $$folding_specs{"FoldType-$form-$qty_index-$fold_index"} ) if DEBUG;
-			} # end if
+			@folding_impositions = openprint::Estimating::Folding::get_Folds( $folding_specs, $Imposition, $qty_index );
 		} # end foreach fold_index
 	} # end if
 
@@ -576,7 +566,7 @@ sub signature_calc {
 	my $trim_before_folding = 0;
 
 		# Take care of cutting before folding
-	if ( @folding_impositions ) {
+	if ( @folding_impositions and ( $$Folder{id} != $$Press{id} ) ) {
 
 $openprint::log->debug("Folding impositions: " . @folding_impositions ) if DEBUG;
 
@@ -593,11 +583,16 @@ $openprint::log->debug("Folding impositions: " . @folding_impositions ) if DEBUG
 					and ( (!$Folder) or ( $Folder->id() != $Press->id() ) ) ) {
 				$trim_before_folding = 1;
 			} else {
-				$openprint::log->debug("Folds: " .@folding_impositions ) if DEBUG;
-				foreach my $folding_imposition ( @folding_impositions ) {
-					$folding_cuts += $$folding_imposition{quantity}-1 if $$folding_imposition{quantity};
-				} # end foreach
-				$folding_cuts += @folding_impositions - 1;
+
+				if ( @folding_impositions > 1 or $folding_impositions[0]{quantity} > 1 ) {
+					# So according to Brendan, anyone doing the cutting would first make the 4 outer edge trims.  
+					$openprint::log->debug("Folds: " .@folding_impositions ) if DEBUG;
+					$folding_cuts += 4; # outside cuts
+					$folding_cuts += @folding_impositions - 1;
+					foreach my $folding_imposition ( @folding_impositions ) {
+						$folding_cuts += $$folding_imposition{quantity}-1 if $$folding_imposition{quantity};
+					} # end foreach
+				} # end if
 			} # end if
 		} # end if
 
@@ -668,8 +663,7 @@ $openprint::log->debug("Folding impositions: " . @folding_impositions ) if DEBUG
 				$results{Breakdown} .= 'Unknown folding equipment<br/>';
 				next;
 			} elsif( $$folding_specs{"ddmEquipment-$form-$qty_index"} ne $Equipment->id() ) {
-				my $Folder = new openprint::Equipment( $$folding_specs{"ddmEquipment-$form-$qty_index"} );
-				$results{Breakdown} .= 'Not folding on ' . $Equipment->strid(). ' Folder is ' . $Folder->strid() . '<br/>';
+				$results{Breakdown} .= 'Not folding on ' . $Equipment->strid(). ' Folder is ' . $$Folder{strid} . '<br/>';
 				next;
 			} # end if
 		} elsif ( ( $cutting_capable eq 'When Printing' ) and ( $$sig_specs{'ddmPress'.$qty_index} ne $Equipment->strid() ) ) {
@@ -747,15 +741,51 @@ $openprint::log->debug("Folding impositions: " . @folding_impositions ) if DEBUG
 	# but if we are cutting into smaller signatures, then we need more cutting
 	#$openprint::log->debug("Sitching $stitching_imposition out printing $$sig_specs{'txtImposition'.$qty_index}out");
 	#$openprint::log->debug("have signaturetype $$sig_specs{txtSignatureType} ");
-				if ( $I->pages() and ( ( ! $folding_specs ) or ( ! ( $Folder and $Folder->specification('Cutting Capable') ) ) ) ) {
-#$openprint::log->debug("Cutting because not folding or can't cut on folder $folding_specs $$Folder{strid} " . $Folder->specification('Cutting Capable') );
+				if ( ($cutting_capable ne 'When Stitching') and $I->pages() and ( ( ! $folding_specs ) or ( ! ( $Folder and $Folder->specification('Cutting Capable') ) ) ) ) {
+$openprint::log->debug("Cutting because not folding or can't cut on folder $folding_specs $$Folder{strid} " );
 	# Have to cut the pages out
 					$vertical_cuts += int ( ($I->page_columns()-1)*$I->columns()*2 ) + 2;
 					$horizontal_cuts += int( ($I->page_rows()-1)*$I->rows() * 2 ) + 2;
 			
-				} elsif ( $stitching_imposition and ! @folding_impositions ) {
-					$vertical_cuts += int ($$I{columns} / $stitching_imposition)-1;
-					$horizontal_cuts += int ($$I{rows} / $stitching_imposition)-1; 
+											
+				} elsif ( $stitching_imposition ) {
+					if ( ! @folding_impositions ) {
+					# Are stitching but don't have folded impositions... 
+						$vertical_cuts += int ($$I{columns} / $stitching_imposition)-1;
+						$horizontal_cuts += int ($$I{rows} / $stitching_imposition)-1; 
+					} elsif ( $trim_before_folding ) {
+					} elsif ( $cutting_capable eq 'When Stitching' ) {
+						# trimming either happened on the folder or we have to do it.
+						# Going to fold it first.
+						# assumptions: 
+						foreach my $folding_imposition ( @folding_impositions ) {
+							$folding_imposition->display('getting stitching cuts from');
+							if ( $$I{image_orientation} eq 'Vertical' ) {
+								if ( $$folding_imposition{columns} > 1 ) {
+									$openprint::log->error("Can't do that on the stitcher");
+								}
+								$vertical_cuts += 1; # Face trim
+								$horizontal_cuts += 1 + $$folding_imposition{rows};
+								if ( $$sig_specs{'ddmBleedSize'.$qty_index} and  
+											( $$I{image_orientation} eq 'Vertical' ) and ( $$sig_specs{BleedTop} or $$sig_specs{BleedBottom} ) 
+								   ) {
+									$horizontal_cuts += $$folding_imposition{rows}-1;
+								} # end if
+							} elsif ( $$I{image_orientation} eq 'Horizontal' ) {
+								if ( $$folding_imposition{rows} > 1 ) {
+									$openprint::log->error("Can't do that on the stitcher");
+								}
+								$horizontal_cuts += 1; # Face trim
+								$vertical_cuts += 1 + $$folding_imposition{columns};
+
+								if ( $$sig_specs{'ddmBleedSize'.$qty_index} and  
+										( $$I{image_orientation} eq 'Horizontal' ) and ( $$sig_specs{BleedTop} or $$sig_specs{BleedBottom} ) 
+								   ) {
+									$vertical_cuts += $$folding_imposition{columns}-1;
+								} # end if
+							} # end if
+						} # end foreach
+ 					} # end if
 				} elsif ( $$printing_specs{rdbTemplateType} eq 'PlasticCoil' ) {
 					# This is special... something about if it's plasticCoil... you have to cut it into 8's...
 
