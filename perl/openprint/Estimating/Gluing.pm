@@ -193,6 +193,9 @@ sub summary {
 	return '';
 } # end sub summary
 
+sub display {
+} # end sub display
+
 sub save {
 } # end sub save
 1;
