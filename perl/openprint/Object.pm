@@ -349,6 +349,28 @@ sub get {
 	return map { $self->$_() } @_;
 } # end sub get
 
+sub changes {
+	my ( $self, $params ) = @_;
+
+	my $type = ref $self;
+	my $fields = eval ('\%'.$type.'::fields');
+	if ( ! $fields ) {
+$log->warn('Object::set called on an object with no fields');
+		return;
+	} # end if
+	#my %defaults = eval('%'.$type.'::defaults');
+	my @results;
+
+	foreach my $field ( keys %$fields ) {
+		next if ! exists $$params{$field};
+
+		if ( $$self{$field} ne $$params{$field} ) {
+			push @results, "$field changed from $$self{$field} to $$params{$field}";
+		} # end if
+	} # end foreachf ield
+	return @results;
+} # end sub changes
+
 sub set {
 	my ( $self, $params ) = @_;
 	my @set_fields = ();

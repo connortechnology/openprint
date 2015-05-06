@@ -66,10 +66,8 @@
 </div>
 <div class="InksBack">
 	<fieldset><legend>Back
-<? if ( ! $$variable{'txtSignatureType'} ) ?>
 same as front?
 <? echo ( radio( 'sides_the_same'.$$variable{Signature}, [ 'Y','Yes','N','No' ], $$variable{"sides_the_same$$variable{Signature}"}, { default=>'N', onclick=>qq`if(this.value=='Y'){\$('InksOnBackQuestions$$variable{Signature}').hide();}else{\$('InksOnBackQuestions$$variable{Signature}').show();};calc(this.form.name);` } ); ) ?>
-<? endif ( ! $$variable{'txtSignatureType'} ) ?>
 </legend>
 		<div id="InksOnBackQuestions<?Signature?>" <? echo ( $$variable{'sides_the_same'.$$variable{'Signature'}} eq 'Y' ? ' style="display:none;"':'') ?>>
 		<div class="SpotColours">

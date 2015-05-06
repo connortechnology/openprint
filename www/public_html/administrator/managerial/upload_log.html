@@ -92,7 +92,7 @@
 					$average_upload_count += 1;
 				} # end if
 			} # end foreach
-			$html .= '<tr class="totals"><td colspan="5">Totals</td><td class="Size">'.misc::format_bytes($total).'</td><td class="Speed">'.misc::format_bytes($average_speed/$average_upload_count).'</td><td></td></tr>';
+			$html .= '<tr class="totals"><td colspan="5">Totals</td><td class="Size">'.misc::format_bytes($total).'</td><td class="Speed">'.misc::format_bytes($average_upload_count?$average_speed/$average_upload_count:0).'</td><td></td></tr>';
 			return $html;
 		) ?>
 	</table>

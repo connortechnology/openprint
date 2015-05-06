@@ -128,7 +128,7 @@ sub calc {
 	} # end foreach ServiceType
 
 	foreach $qty_index ( $qty_index ? $qty_index : $Project->quantity_indexes() ) {
-		$$specs{"txtPrice$qty_index"} =~ s/[^\-\.\d]//g;
+		$$specs{"txtPrice$qty_index"} =~ s/[^\-\.\d]//g if $$specs{"txtPrice$qty_index"};
 		$$specs{"txtQuantity$qty_index"} =~ s/\D//g if $$specs{"txtQuantity$qty_index"};
 		$$specs{"txtQuantity$qty_index"} = $Project->quantity($qty_index) if ! $$specs{"txtQuantity$qty_index"};
 		if ( ! $$specs{"txtQuantity$qty_index"} ) {
@@ -359,7 +359,7 @@ sub summary {
 					return sprintf( qq{%d items in %d package%s\nweighing %.2flbs}, @$specs{'txtQuantity'.$qty_index,'txtPackageQuantity'.$qty_index},( $$specs{'txtPackageQuantity'.$qty_index}==1?'' : 's'), $$specs{'txtTotalWeight'.$qty_index} );
 				} # end if
 			} else {
-				return sprintf( q{%d items}, $$specs{'txtQuantity'.$qty_index} );
+				return sprintf( q{%d items}, $$specs{'txtQuantity'.$qty_index} ) if $$specs{"txtPrice$qty_index"};
 			} # end if
 		} # end if Used or index
 	} else {
@@ -376,6 +376,7 @@ sub summary {
 		} # end if
 		return $html;
 	} # end if
+	return;
 } # end sub summary
 
 sub from {

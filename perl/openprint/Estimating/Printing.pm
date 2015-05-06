@@ -2954,7 +2954,7 @@ sub calculate_impositions {
 			$needed_pages = $$sig_specs{'txtUnspecifiedPageQuantity'.$qty_index};
 		} # end if
 	} # end if
-$openprint::log->debug("Needed pages: $needed_pages");
+$openprint::log->debug("Needed pages: $needed_pages") if DEBUG;
 
 	foreach my $strid ( $$sig_specs{"chkOverridePress$qty_index"} eq 'Y' ? ( $$sig_specs{"ddmPress$qty_index"} ) : keys %{$impositions} ) {
 		next if ! ( $$impositions{$strid} and @{$$impositions{$strid}} );
@@ -5299,11 +5299,11 @@ $openprint::log->warn("No folding equipment");
 	foreach my $Colour ( filter_coatings_from_colours(\@colours) ) {
 		my $real_colour = $$Colour{name};
 		my $key = $real_colour.'-'.$$Press{strid}.'-'.$qty_index;
-		if ( $real_colour =~ /Varnish/ and $real_colour =~ /Overall/ and $$washed_colours{$key} ) {
+		#if ( $real_colour =~ /Varnish/ and $real_colour =~ /Overall/ and $$washed_colours{$key} ) {
 #$openprint::log->debug("No plate for varnish $real_colour ");
-		} else {
+		#} else {
 			$plate_count += 1;
-		} # end if
+		#} # end if
 	} # end foreach Colour
 
 	

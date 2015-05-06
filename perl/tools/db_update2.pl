@@ -396,6 +396,12 @@ if ( ! sets::isin( 'timetracks', \@tables ) ) {
 	if ( ! exists $$data{po} ) {
 		$dbh->do('ALTER TABLE timetracks ADD po TEXT');
 	} # end if
+	if ( ! exists $$data{duration} ) {
+		$dbh->do('ALTER TABLE timetracks ADD duration INTERVAL');
+	} # end if
+	if ( ! exists $$data{duration_override} ) {
+		$dbh->do('ALTER TABLE timetracks ADD duration_override BOOLEAN NOT NULL DEFAULT FALSE');
+	} # end if
 } # end if
 $dbh->disconnect();
 print "Finished\n";

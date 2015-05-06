@@ -3,15 +3,18 @@
     my %Types = map { $_->name(), $_ } openprint::PaymentType->find();
     my @options;
     my $html;
-    push @options, 'Cash' if $Types{Cash};
-    push @options, 'Cheque' if $Types{Cheque};
-    if ( $Types{Bitcoin} ) {
-        my $Address = openprint::Bitcoin_Address->generate( $$variable{Invoice} );
-        #$Address->save({object_type=>'openprint::Invoice',object_id=>$$variable{Invoice}{id}});
-        if ( $Address ) {
-            push @options, ( 'Bitcoin (' . $$variable{Invoice}->Currency()->convert_to('BTC',$$variable{Invoice}->owing()) . 'BTC) at ' . $Address->address() );
-        } # end if
-    } # end if
+	foreach my $k ( keys %Types ) {
+
+		if ( $k eq 'Bitcoin' ) {
+			my $Address = openprint::Bitcoin_Address->generate( $$variable{Invoice} );
+			#$Address->save({object_type=>'openprint::Invoice',object_id=>$$variable{Invoice}{id}});
+			if ( $Address ) {
+				push @options, ( 'Bitcoin (' . $$variable{Invoice}->Currency()->convert_to('BTC',$$variable{Invoice}->owing()) . 'BTC) at ' . $Address->address() );
+			} # end if
+		} else {
+			push @options, $Types{$k}->description();
+		} # end if
+	} # end foreach 
     return if ! @options;
 
     my $last = pop @options;
