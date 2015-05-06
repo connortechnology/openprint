@@ -1071,6 +1071,14 @@ sub decrease_imposition {
 				if ( $imp1->imposition() ) {
 					push @results, $imp1;
 				} # end if
+				if ( $imposition->rows() % 2 ) {
+					my $imp2 = $imposition->copy();
+					$imp2->rows( $imp2->rows() - $imp1->rows() );
+					if ( $imp2->imposition() ) {
+						push @results, $imp2;
+					} # end if
+				} 
+
 				if ( $imp1->rows() != $imposition->rows() - 1 ) {
 					my $imp4 = $imposition->copy();
 					$imp4->rows( $imp4->rows()-1 );
@@ -1086,6 +1094,13 @@ sub decrease_imposition {
 				if ( $imp2->imposition() ) {
 					push @results, $imp2;
 				} # end if
+				if ( $imposition->columns() % 2 ) {
+					my $imp3 = $imposition->copy();
+					$imp3->columns( $imp3->columns() - $imp2->columns() );
+					if ( $imp3->imposition() ) {
+						push @results, $imp3;
+					} # end if
+				} 
 			
 				if ( $imp2->columns() != $imposition->columns() - 1 ) {
 					my $imp3 = $imposition->copy();
