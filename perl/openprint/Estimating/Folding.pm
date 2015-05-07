@@ -786,8 +786,12 @@ if ( 0 ) {
 				next;
 			} # end if
 			if ( $perforating ) {
-				$Breakdown .= 'not perforating on this piece of equipment.<br/>';
-				next;
+				if ( $$specs{"chkOverrideEquipment-$form-$qty_index"} ) {
+					$$specs{alert} .= "Perforating while folding inline may cause tearing.<br/>";
+				} else {
+					$Breakdown .= 'not perforating on this piece of equipment.<br/>';
+					next;
+				} # end if
 			} # end if
 		} # end if
 		if ( $ppt and ( my $pt = $Equipment->specification('PrintingTypes') ) ) {
