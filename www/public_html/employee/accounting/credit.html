@@ -51,10 +51,10 @@ function swap_credit(src_id,dst_id) {
 		</li>
 		<li>
 			<label>Customer</label>
-            <input type="text" onkeyup="if(this.value.length>3){filter_companies(f1.ddmCustomer, { name: this.value } );};" class="filter"/>
+            <input type="text" oninput="filter_companies(f1.ddmCustomer, { name: this.value } );" class="filter"/>
 			<select name="ddmCustomer" onchange="if(this.options[this.selectedIndex].value != '') { f1.btnFunction.value='Go'; f1.submit();}">
             <option value="">Select a Customer</option>
-			<? echo ( make_drop_down( openprint::Company->dropdown( 'last_ordered_on is null'=>0), $param{'ddmCustomer'} ); ) ?>
+			<? echo ( make_drop_down( openprint::Company->dropdown( 'last_ordered_on is null'=>0), $param{ddmCustomer} ); ) ?>
             </select>
             <? echo ( button( 'Go2', { onclick=>q`f1.btnFunction.value='Go';fmCheck(f1);`, text=>'Go' } ); ) ?>
 		</li>
@@ -68,8 +68,9 @@ button('Export',{ onclick=>q`var form = $('f1');form.btnFunction.value='Export';
 		</p>
 	</fieldset>
 <? if ( $$variable{'CompanyIndex'} ) ?>
-	<?include(/account/_sales_view.html)?>
-	<fieldset><?include(/includes/_credit_edit.html)?>
+	<fieldset>
+	<?include(/account/_sales_edit.html)?>
+	<?include(/includes/_credit_edit.html)?>
 	<p class="buttons">
 		<? echo ( join('',
 			button( 'Save', { onclick=>"if(!f1.ddmCustomer.value){alert('Please select a customer');}else{f1.btnFunction.value='Save';f1.submit();};" } ),
