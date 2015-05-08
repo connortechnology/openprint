@@ -387,10 +387,12 @@ sub company_profile {
 	if ( $param{btnFunction} eq 'Save' ) {
 		if ( ! $Company->id() ) {
 			$variable{error} .= 'no company specified.';
+			$variable{Company} = new openprint::Company();
 			return;
 		}
 		if ( ! $Company->can_edit() ) {
 			$variable{error} .= 'You cannot edit company ' . $Company->id() . '<br/>';
+			$variable{Company} = new openprint::Company();
 			return;
 		} # end if
 		my $error = '';
