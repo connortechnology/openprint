@@ -759,7 +759,7 @@ $openprint::log->debug("Cutting because not folding or can't cut on folder $fold
 						# Going to fold it first.
 						# assumptions: 
 						foreach my $folding_imposition ( @folding_impositions ) {
-							$folding_imposition->display('getting stitching cuts from');
+							$folding_imposition->display('getting stitching cuts from') if DEBUG;
 							if ( $$I{image_orientation} eq 'Vertical' ) {
 								if ( $$folding_imposition{columns} > 1 ) {
 									$openprint::log->error("Can't do that on the stitcher");
