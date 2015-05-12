@@ -533,7 +533,7 @@ sub signature_calc {
 
 	my @folding_impositions;
 
-	my $Folder;
+	my $Folder = undef;
 	if ( $$services{Folding} and @{$$services{Folding}} ) {
 		$folding_specs = openprint::service::get_specs_ref( $Project, $$services{Folding}[0] ) if ! $folding_specs;
 		$Folder = new openprint::Equipment( $$folding_specs{"ddmEquipment-$form-$qty_index"} ) if $$folding_specs{"ddmEquipment-$form-$qty_index"};
@@ -566,7 +566,7 @@ sub signature_calc {
 	my $trim_before_folding = 0;
 
 		# Take care of cutting before folding
-	if ( @folding_impositions and ( $$Folder{id} != $$Press{id} ) ) {
+	if ( @folding_impositions and $Folder and ( $$Folder{id} != $$Press{id} ) ) {
 
 $openprint::log->debug("Folding impositions: " . @folding_impositions ) if DEBUG;
 
@@ -663,7 +663,7 @@ $openprint::log->debug("Folding impositions: " . @folding_impositions ) if DEBUG
 				$results{Breakdown} .= 'Unknown folding equipment<br/>';
 				next;
 			} elsif( $$folding_specs{"ddmEquipment-$form-$qty_index"} ne $Equipment->id() ) {
-				$results{Breakdown} .= 'Not folding on ' . $Equipment->strid(). ' Folder is ' . $$Folder{strid} . '<br/>';
+				$results{Breakdown} .= 'Not folding on ' . $Equipment->strid(). ' Folder is ' . ( $Folder ? $$Folder{strid} : '' ). '<br/>';
 				next;
 			} # end if
 		} elsif ( ( $cutting_capable eq 'When Printing' ) and ( $$sig_specs{'ddmPress'.$qty_index} ne $Equipment->strid() ) ) {
@@ -741,12 +741,12 @@ $openprint::log->debug("Folding impositions: " . @folding_impositions ) if DEBUG
 	# but if we are cutting into smaller signatures, then we need more cutting
 	#$openprint::log->debug("Sitching $stitching_imposition out printing $$sig_specs{'txtImposition'.$qty_index}out");
 	#$openprint::log->debug("have signaturetype $$sig_specs{txtSignatureType} ");
-				if ( ($cutting_capable ne 'When Stitching') and $I->pages() and ( ( ! $folding_specs ) or ( ! ( $Folder and $Folder->specification('Cutting Capable') ) ) ) ) {
-$openprint::log->debug("Cutting because not folding or can't cut on folder $folding_specs $$Folder{strid} " );
+#$openprint::log->debug("What is folder?: ($Folder)" . ($Folder ? join(',', map { $_ . ' => ' . $$Folder{$_} } keys %{$Folder} ) : '' ) );
+				if ( ($cutting_capable ne 'When Stitching') and $I->pages() and ! ( $folding_specs and $Folder and $Folder->specification('Cutting Capable') ) ) {
+$openprint::log->debug("Cutting because not folding or can't cut on folder $folding_specs " . ( $Folder ? $$Folder{strid} : '' ) ) if DEBUG;
 	# Have to cut the pages out
 					$vertical_cuts += int ( ($I->page_columns()-1)*$I->columns()*2 ) + 2;
 					$horizontal_cuts += int( ($I->page_rows()-1)*$I->rows() * 2 ) + 2;
-			
 											
 				} elsif ( $stitching_imposition ) {
 					if ( ! @folding_impositions ) {
@@ -1043,18 +1043,19 @@ $openprint::log->debug("Not a book") if DEBUG;
 			$bestEquipment = $Equipment;
 		} # end if
 	} # end for each equipment
-		if ( $stitching_specs ) {
-			# Need final trim?
-			my @remaining_sides = sets::exclude( [ keys %pretrim_sides ], [ 'Head','Foot','Face' ] );
-			$log->debug("Final trim @remaining_sides") if DEBUG;
-			if ( @remaining_sides ) {
-				
-			}	
-		} # end if
 
-	$results{Status}		= $bestEquipment ? 'calculated' : 'uncalculated';
+	if ( $stitching_specs ) {
+# Need final trim?
+		my @remaining_sides = sets::exclude( [ keys %pretrim_sides ], [ 'Head','Foot','Face' ] );
+		$log->debug("Final trim @remaining_sides") if DEBUG;
+		if ( @remaining_sides ) {
+
+		}	
+	} # end if
+
+	$results{Status}	= $bestEquipment ? 'calculated' : 'uncalculated';
 	$results{Price}		= $bestPrice;
-	$results{MPrice}		= ($bestM/$$specs{'txtQuantity'.$qty_index})*1000;
+	$results{MPrice}	= ($bestM/$$specs{'txtQuantity'.$qty_index})*1000;
 	$results{Equipment}	= $bestEquipment;
 	if ( $bestEquipment and ( my $Spec = $bestEquipment->Specification('Cutting Overs') ) ) {
 		if ( $$Spec{units} eq 'Sheets' ) {
