@@ -85,7 +85,8 @@ my %variables = (
 		'txtSpecificStockWidth', 'txtSpecificStockHeight', 
 		'txtCustomMWeight', 'basis_mweight', 'basis_width', 'basis_height', 
 		'CustomStockPrice', 'txtStockGSM','CustomSheetDoubleSided',
-		'cuttable', 'perfecting', 'StockGrade', 'minimum_order','sheets_per_package',
+		'cuttable', 'perfecting', 'StockGrade', 'minimum_order','sheets_per_package','full_packages',
+		'sides_the_same',
 		);
 
 sub variables {

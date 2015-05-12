@@ -869,12 +869,14 @@ sub _stock_checkout {
 						} # end if
 					} # end foreach
 					$Order->add_log( join('', 'Checked out ' , $C->quantity() , $C->units() , ' of ' , $C->Paper->to_string() ) );
+# Update totals
+					$C->Paper()->save();
 				} # end foreach C
 			} else {
 				my $PI = new openprint::PaperInventory();
 				$PI->save({
 						docket		=>	$Order->docket(),
-						paper_id	=>	undef,,
+						paper_id	=>	undef,
 						user_id		=>	$session{user_id},
 						delta		=>	0,
 						comment		=>	sprintf('Checked out for docket <a href="/employee/project/view.html?docket=%1$d">%1$d</a> by %2$s', $Order->docket(), $openprint::User->name() ),
@@ -883,6 +885,7 @@ sub _stock_checkout {
 						});
 				$Order->add_log( 'Checked out something unknown.' );
 			} # end if skid has contents
+
 		} # end if add_entry
 	} # end if action eq Add
 } # end sub _stock_checkout
@@ -1003,6 +1006,9 @@ sub _modification_history {
 } # end sub _modification_history
 
 sub modification_log {
+	_modification_history();
+	ssi::setup_date_select( '/employee/project/modification_log.html', 'action_date_start', -7 );
+	ssi::setup_date_select( '/employee/projcet/modification_log.html', 'action_date_end', '' );
 } # end sub modification_log
 
 sub production_log {

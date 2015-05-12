@@ -419,7 +419,7 @@ sub copy {
 	my $self = shift;
 	my $New = new openprint::PurchaseOrder();
 	@$New{keys %fields} = @$self{keys %fields};
-	foreach ( 'id', 'authorized', 'authorized_by', 'authorized_on', 'delivered_on', 'created_on', 'cancelled' ) {
+	foreach ( 'id', 'authorized', 'authorized_by', 'authorized_on', 'delivered_on', 'created_on', 'cancelled', 'manifest_id' ) {
 		delete $$New{$_};
 	} # end foreach
 	$$New{created_by} = $session{user_id};

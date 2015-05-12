@@ -113,6 +113,9 @@ sub is_photo {
 
 sub sized_url {
 	my $size = $_[1];
+	if ( ! $_[0]{id} ) {
+		return;
+	} # end if
 
 	my $src = $_[0]->on_disk_path();
 	my $path = $openprint::config{AssetPath}.'/'.$size.'/';

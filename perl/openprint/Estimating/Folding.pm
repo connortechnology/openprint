@@ -786,8 +786,12 @@ if ( 0 ) {
 				next;
 			} # end if
 			if ( $perforating ) {
-				$Breakdown .= 'not perforating on this piece of equipment.<br/>';
-				next;
+				if ( $$specs{"chkOverrideEquipment-$form-$qty_index"} ) {
+					$$specs{alert} .= "Perforating while folding inline may cause tearing.<br/>";
+				} else {
+					$Breakdown .= 'not perforating on this piece of equipment.<br/>';
+					next;
+				} # end if
 			} # end if
 		} # end if
 		if ( $ppt and ( my $pt = $Equipment->specification('PrintingTypes') ) ) {
@@ -1867,15 +1871,17 @@ sub summary {
 			my $s_s_id = $signatures[$sig_index];
 			my $sig_specs = openprint::service::get_specs_ref( $Project, $s_s_id );
 			my $form = $$sig_specs{SignatureIndex};
-	if ( ! $$sig_specs{"txtImposition$qty_index"} ) {
-		next;
-	} # end if
+			if ( ! $$sig_specs{"txtImposition$qty_index"} ) {
+				next;
+			} # end if
 			my $sig_count = 1;
 
 			if ( $sig_index < @signatures - 1 ) {
 				for ( my $sig_index2 = $sig_index + 1; $sig_index2 < @signatures; $sig_index2 += 1 ) {
 					my $sig_specs2 = openprint::service::get_specs_ref( $Project, $signatures[$sig_index2] );
-					if ( openprint::Estimating::Printing::compare_signatures( $Project, $sig_specs, $sig_specs2, $qty_index ) ) {
+					if ( openprint::Estimating::Printing::compare_signatures( $Project, $sig_specs, $sig_specs2, $qty_index ) 
+						and compare_folds( $specs, $sig_specs, $sig_specs2, $qty_index )
+						) {
 						$sig_count += 1;
 					} else {
 						last;
@@ -2357,6 +2363,25 @@ if ( ! @folds ) {
 }
 	return @folds;
 } # end sub get_Folds
+
+sub compare_folds {
+	my ( $specs, $sig_specsA, $sig_specsB, $qty_index ) = @_;
+
+	my @FoldsA = get_Folds( $specs, $sig_specsA, $qty_index );
+	my @FoldsB = get_Folds( $specs, $sig_specsB, $qty_index );
+	if ( @FoldsA != @FoldsB ) {
+	$openprint::log->debug("Fold count different");
+	return 0 
+	}
+		
+	if ( $FoldsA[0]{Folder}{id} != $FoldsB[0]{Folder}{id} ) {
+	$openprint::log->debug("Folder different");
+		return 0 ;
+	} else {
+	$openprint::log->debug("Folder same $FoldsA[0]{Folder}{id} = $FoldsB[0]{Folder}{id}");
+	}
+	return 1;
+}
 
 1;
 __END__

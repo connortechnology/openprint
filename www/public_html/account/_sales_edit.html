@@ -2,8 +2,27 @@
 	<fieldset><legend>Sales Information</legend>
 		<ul>
 			<li><label>Price List</label><? echo ( $$variable{Company}->Pricelist()->name() ) ?></li>
-            <li class="discount"><label>Pricing Discount</label> <? echo ( $$variable{Company}->discount() ) ?>%</li>
-            <li><label>Sales Rep</label><? echo ( $$variable{Company}->salesrep_id() ? $$variable{Company}->CSR()->name() : 'none assigned') ?> </li>
+            <li class="discount"><label>Pricing Discount</label>
+<? echo (
+	if ( $session{user_type} eq 'A' or ( $session{user_id} == $$variable{Company}->salesrep_id() ) ) {
+		return input( type=>'float', name=>'discount', value=>$$variable{Company}->discount() );
+	} else {
+		return $$variable{Company}->discount();
+	}
+) ?>%</li>
+            <li><label>Sales Rep</label><? echo ( 
+				if ( $session{user_type} eq 'A' or ( $session{user_id} == $$variable{Company}->salesrep_id() ) ) {
+					my @csr_ids = openprint::User->find( 'usergroup any'=>'Sales', order=>'lower(firstname),lower(lastname)' );
+					if ( $$variable{Company}->salesrep_id(), and ! sets::isin( $$variable{Company}->salesrep_id(), [ map { $_->id() } @csr_ids ] ) ) {
+						push @csr_ids, new openprint::User( $$variable{Company}->salesrep_id() );
+					} # end if
+
+					return ssi::select( [ map { $_->id(), $_->name() } @csr_ids ], $$variable{Company}->salesrep_id(), { name=>'salesrep_id', prepend=>['','Unassigned'] } );
+				} else {
+					return $$variable{Company}->salesrep_id() ? $$variable{Company}->CSR()->name() : 'none assigned'
+				}
+			) ?>
+			</li>
         <? if ( $$variable{Company}->id() ) ?>
             <? eval (
                 @{$$variable{'Orders'}} = openprint::Order->find(company_id=>$$variable{Company}->id(),order=>'id DESC');
@@ -33,6 +52,7 @@
 </span>
             </li>
         <? endif ( $$variable{Company}->id() ) ?>
+		<li><label>Notes</label><textarea name="notes" rows="<?echo(count_lines($$variable{Company}->notes());)?>"><?echo($$variable{Company}->notes())?></textarea></li>
         </ul>
 	</fieldset>
 </div>

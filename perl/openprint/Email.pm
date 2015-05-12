@@ -236,14 +236,14 @@ sub add_pdf_attachment_from_html {
         my $pdf = File::Slurp::read_file( "/tmp/$name.pdf", err_mode => 'carp' );
         unlink "/tmp/$name.html";
         unlink "/tmp/$name.pdf";
-        if ( $html ) {
-            push @attachments, ($name.'.pdf', MIME::Base64::encode_base64($html), 'application/octet-stream', 'base64');
+        if ( $pdf ) {
+            push @attachments, ($name.'.pdf', MIME::Base64::encode_base64($pdf), 'application/octet-stream', 'base64');
         } else {
             $openprint::log->debug("Error making pdf");
         } # end if has pdf contents
     } # end if successfully wrote html content
 	my $results;
-    if ( scalar @attachments == 4 ) {
+    if ( ! @attachments ) {
         $results .= 'Unable to make a pdf.  Using HTML version.<br/>';
         push @attachments, ($name.'.html', MIME::QuotedPrint::encode_qp($html), 'text/html', 'quoted-printable');
     } # end if

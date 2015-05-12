@@ -1126,7 +1126,7 @@ $openprint::log->debug("Skipping cuz ddmPress$qty_index ne $$Press{strid}");
 			next;
 		} # end if
 		if ( (! $$project{HasFolding} ) and ($Press->specification('Sheeter') ne 'Y' ) ) {
-			$openprint::log->error("No Sheeter");
+			$openprint::log->error("No Sheeter on $$Press{strid}");
 			next;
 		} # end if
 
@@ -2954,7 +2954,7 @@ sub calculate_impositions {
 			$needed_pages = $$sig_specs{'txtUnspecifiedPageQuantity'.$qty_index};
 		} # end if
 	} # end if
-$openprint::log->debug("Needed pages: $needed_pages");
+$openprint::log->debug("Needed pages: $needed_pages") if DEBUG;
 
 	foreach my $strid ( $$sig_specs{"chkOverridePress$qty_index"} eq 'Y' ? ( $$sig_specs{"ddmPress$qty_index"} ) : keys %{$impositions} ) {
 		next if ! ( $$impositions{$strid} and @{$$impositions{$strid}} );
@@ -3165,11 +3165,26 @@ $openprint::log->debug("Needed pages: $needed_pages");
 		if ( ! @results2 ) {
 $openprint::log->debug( " Didn't find the desired imposition, so cutting them down.");
 			my @lesser_imps = map { $$_{imposition} > $$sig_specs{'chkOverrideImposition'.$qty_index} ? $_ : () } @results;
+			if ( DEBUG_FILTERING ) {
 $openprint::log->debug( " first set: " . @lesser_imps );
+				foreach ( @lesser_imps ) {
+					$_->display("first set:");
+				}
+			}
 			@lesser_imps = map { $$_{imposition} >= $$sig_specs{'chkOverrideImposition'.$qty_index} ? $_ : () } openprint::imposition::decrease_imposition( @lesser_imps );
+			if ( DEBUG_FILTERING ) {
 $openprint::log->debug( " second set: " . @lesser_imps );
+				foreach ( @lesser_imps ) {
+					$_->display("second set:");
+				}
+			}
 			@results2 = map { $$_{imposition} == $$sig_specs{'txtImposition'.$qty_index} ? $_ : () } @lesser_imps;
-$openprint::log->debug( " matching imps: " . @results2 );
+			if ( DEBUG_FILTERING ) {
+				$openprint::log->debug( " matching imps: " . @results2 );
+				foreach ( @results2 ) {
+					$_->display("After cutting:");
+				}
+			}
 			#@results2 = map { $$_{imposition} > $$sig_specs{'txtImposition'.$qty_index} ? $_ : () } @lesser_imps if ! @results2;
 
 if ( 1 ) {
@@ -5284,11 +5299,11 @@ $openprint::log->warn("No folding equipment");
 	foreach my $Colour ( filter_coatings_from_colours(\@colours) ) {
 		my $real_colour = $$Colour{name};
 		my $key = $real_colour.'-'.$$Press{strid}.'-'.$qty_index;
-		if ( $real_colour =~ /Varnish/ and $real_colour =~ /Overall/ and $$washed_colours{$key} ) {
+		#if ( $real_colour =~ /Varnish/ and $real_colour =~ /Overall/ and $$washed_colours{$key} ) {
 #$openprint::log->debug("No plate for varnish $real_colour ");
-		} else {
+		#} else {
 			$plate_count += 1;
-		} # end if
+		#} # end if
 	} # end foreach Colour
 
 	
