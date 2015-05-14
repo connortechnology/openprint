@@ -124,7 +124,7 @@ if ( 1 ) {
 }
                         $$variable{qty_index} = $qty_index;
 
-                        $html .= '<table class="Impositions"><tr><th class="Qty">Qty</th><th class="Imp">Imposition</th></tr>';
+                        $html .= '<table class="Impositions"><tr><th class="Qty">Qty</th><th class="Imp">Columns x Rows = Imposition</th></tr>';
                         foreach my $index ( 1 .. 4 ) {
                             $$variable{index} = $index;
                             $html .= variable_substitution( \$fragment, $variable );
