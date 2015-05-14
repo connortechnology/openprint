@@ -2,6 +2,7 @@
 <? if ( $$variable{'Mode'} ne 'Easy' ) ?>
 	<fieldset><legend>Bleeds, Colour Bars, Crop Marks</legend>
 <? endif ( $$variable{'Mode'} ne 'Easy' ) ?>
+<ul>
 <? if ( $$variable{'ProjectType'}->name() eq 'PresentationFolders' ) ?>
 <? else ( $$variable{'ProjectType'}->name() eq 'PresentationFolders' ) ?>
 		<?include('/includes/main/proj/bleed.html')?>
@@ -15,6 +16,7 @@
 <li><label>Add Grip</label>No <input type="hidden" name="OverrideAddGrip" value="N" /></li>
 <? endif ( $$variable{OverrideAddGrip} ) ?>
 <? endif ( sets::isin( $session{user_type}, ['E','A'] ) ) ?>
+</ul>
 <? if ( $$variable{'Mode'} ne 'Easy' ) ?>
 	</fieldset>
 <? endif ( $$variable{'Mode'} ne 'Easy' ) ?>
