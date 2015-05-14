@@ -11,7 +11,7 @@ require sql;
 require openprint::Object;
 require openprint::User;
 
-$debug = 0;
+$debug = 1;
 $default_sort = 'lower(name)';
 $table = 'companies';
 $serial = 'companies_id_seq';
@@ -63,17 +63,20 @@ $serial = 'companies_id_seq';
 		'deleted'					=>	'deleted',
 		'category_id'				=>	'category_id',
 		'offers_credit'				=>	'offers_credit',
+		'last_project_id'			=>	'last_project_id',
 		);
 %find_fields = (
 	last_online	=>	'(SELECT MAX(date_time) FROM Logs WHERE company_id=companies.id)',
 	last_order	=>	'(SELECT MAX(created_on) FROM Orders WHERE company_id=companies.id)',
 	last_ordered_on	=>	'(SELECT MAX(created_on) FROM Orders WHERE company_id=companies.id)',
+	last_project_on	=>	'(SELECT dtmcreationdate FROM Projects WHERE projects.id=last_project_id)',
 	last_quoted_on	=>	'(SELECT MAX(dtmquotedate) FROM Quotes WHERE companyindex=companies.id)',
 	last_called_on	=>	'(SELECT MAX(date_time) FROM sales_logs WHERE company_id=companies.id)',
 	last_invoiced_on	=>	'(SELECT MAX(created_on) FROM invoices WHERE invoicee_id=companies.id)',
 	credit_app_on	=>	'(SELECT MAX(dtmcreationdate) FROM creditapplications WHERE company_id=companies.id)',
 	marketing_category_id	=>	'(SELECT category_id FROM companies_in_marketing_categories WHERE company_id=companies.id)',
 	profile_field	=>	'(SELECT value FROM Company_Profiles WHERE company_id=companies.id AND field_id=?)',
+	last_article_id	=>	'(SELECT MAX(id) FROM Articles WHERE company_id=companies.id)',
 );
 %transforms = (
 	address1		=>	[ 's/^\s+//', 's/\s+$//' ],
@@ -352,16 +355,16 @@ sub can_view_all {
 
 sub find_filtered {
     return if ! $openprint::session{user_id};
-    return openprint::Company->find(order=>'lower(name)') if $openprint::session{user_type} eq 'A';
-
-    my $User = new openprint::User( $openprint::session{user_id} );
+	shift @_ if $_[0] eq 'openprint::Company';
+    return openprint::Company->find(order=>'lower(name)',@_) if $openprint::session{user_type} eq 'A';
 
     return openprint::Company->find(
-        ( ! openprint::usergroup::is_user_in( ['Estimating','Prepress','Accounting','Shipping','Inventory'], $openprint::session{user_id} ) ? (
-        salesrep_id => [ $openprint::session{user_id}, $User->csr_ids() ],
+			( ! openprint::usergroup::is_user_in( ['Estimating','Prepress','Accounting','Shipping','Inventory'], $openprint::session{user_id} ) ? (
+        salesrep_id => [ $openprint::session{user_id}, $openprint::User->csr_ids() ],
         ) : () ),
-        or		=> 'id='.$User->company_id(),
-        order	=>'lower(strname)',
+        (or		=> 'id='.$openprint::User->company_id()),
+        order	=>'lower(name)',
+		@_,
     );
 } # end sub find_filtered
 

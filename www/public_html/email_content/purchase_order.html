@@ -17,12 +17,12 @@
 					<table class="HeaderText">
 						<tr>
 							<td colspan="2">
-					<? echo ( join(' ', new openprint::User( $session{'user_id'} )->Company()->get('address1','city','state','postalcode') );) ?>
+					<? echo ( join(' ', $openprint::User->Company()->get('address1','city','state','postalcode') );) ?>
 							</td>
 						</tr>
 						<tr>
-							<td>Phone<? echo ( new openprint::User( $session{'user_id'} )->Company()->phone() ) ?></td>
-							<td>Fax<? echo ( new openprint::User( $session{'user_id'} )->Company()->fax() ) ?></td>
+							<td>Phone<? echo ( $openprint::User->Company()->phone() ) ?></td>
+							<td>Fax<? echo ( $openprint::User->Company()->fax() ) ?></td>
 						</tr>
 					</table>
 				</div>
@@ -115,13 +115,23 @@
 				</div>
 		<? echo ( my $html = '';
 		foreach my $C ( $$variable{PurchaseOrder}->Contents() ) {
-			$html .= sprintf('<div class="item">
-				<div class="quantity">%1$d</div>
-				<div class="product">%2$s</div>
-				<div class="description">%3$s</div>
-				<div class="docket">%4$s</div>
-				', $C->qty(), $C->item(), $C->description(), $C->docket() );
+			$html .= '<div class="item">';
+			if ( $C->Type()->name() eq 'Roll Stock' ) {
+				$html .= sprintf('<div class="quantity">%s lbs</div>', Number::Format::format_number($C->qty()) );
+			} elsif ( $C->Type()->name() eq 'Sheet Stock' ) {
+				$html .= sprintf('<div class="quantity">%s sheets</div>', Number::Format::format_number($C->qty()) );
+			} else {
+				$html .= sprintf('<div class="quantity">%s</div>', Number::Format::format_number($C->qty()) );
+			} # end if
 
+$html .= sprintf('
+            <div class="product">%1$s</div>
+            <div class="description">%2$s<br/>%3$s</div>
+            <div class="docket">%4$s</div>
+            ', $C->product(), $C->item(), ( $C->item() eq $C->description() ? '' : $C->description() ), $C->docket(),
+            );
+
+			$html .= '<div class="price">';
 			if ( $C->type() eq 'Roll Stock' ) {
 				$html .= openprint::Currency::format($C->price(),2) . '/100lb';
 			} elsif ( $C->type() eq 'Sheet Stock' ) {
@@ -130,6 +140,7 @@
 			} else {
 				$html .= openprint::Currency::format($C->price(),4);
 			} # end if
+			$html .= '</div>';
 			$html .= join('', '<div class="line_total">', openprint::Currency::format($C->total()), '</div></div>' );
 		} # end foreach C
 		return $html;

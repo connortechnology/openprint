@@ -786,8 +786,12 @@ if ( 0 ) {
 				next;
 			} # end if
 			if ( $perforating ) {
-				$Breakdown .= 'not perforating on this piece of equipment.<br/>';
-				next;
+				if ( $$specs{"chkOverrideEquipment-$form-$qty_index"} ) {
+					$$specs{alert} .= "Perforating while folding inline may cause tearing.<br/>";
+				} else {
+					$Breakdown .= 'not perforating on this piece of equipment.<br/>';
+					next;
+				} # end if
 			} # end if
 		} # end if
 		if ( $ppt and ( my $pt = $Equipment->specification('PrintingTypes') ) ) {
@@ -951,10 +955,20 @@ $openprint::log->debug("Has a fold, doing extra checks") if DEBUG;
 								# If multiple out, we trim inline otherwise trim first.
 								# If it has been cut, assume cut to layout size
 
-								my $width_size = $$SignatureImposition{columns} != $$Imposition{columns} ? $Imposition->layout_width() : $Imposition->sheet_width();
-								$width_size = $Imposition->object_width() if $$Imposition{imposition} == 1;
-								my $height_size = $$SignatureImposition{rows} != $$Imposition{rows} ? $Imposition->layout_height() : $Imposition->sheet_height();
-								$height_size = $Imposition->object_height() if $$Imposition{imposition} == 1;
+								# Width_size is the width of the object being fed into the folder, not the Imposition
+								my $width_size;
+								my $height_size;
+								if ( $$Imposition{imposition} == 1 ) {
+									$width_size = $Imposition->object_width();
+									$height_size = $Imposition->object_height();
+	
+								} elsif ( $Imposition->image_orientation() eq 'Vertical' ) {
+									$width_size = $$SignatureImposition{columns} != $$Imposition{columns} ? $Imposition->layout_width() : $Imposition->sheet_width();
+									$height_size = $$SignatureImposition{rows} != $$Imposition{rows} ? $Imposition->layout_height() : $Imposition->sheet_height();
+								} else {
+									$width_size = $$SignatureImposition{rows} != $$Imposition{rows} ? $Imposition->layout_height() : $Imposition->sheet_height();
+									$height_size = $$SignatureImposition{columns} != $$Imposition{columns} ? $Imposition->layout_width() : $Imposition->sheet_width();
+								} # end if
 
 								if ( $orientation ) {
 									if (						
@@ -1165,6 +1179,7 @@ $openprint::log->debug("No Fold") if DEBUG;
 			my @new_folded_impositions;
 			my @Used_Impositions;
 
+			my $remaining_pages = $SignatureImposition->pages();
 			my $override_pages = 0;
 			my $all_found = 1;
 			if ( $$specs{"chkOverrideFold-$form-$qty_index"} eq 'Y' ) {
@@ -1176,15 +1191,18 @@ $openprint::log->debug("No Fold") if DEBUG;
 							and $$specs{"FoldType-$form-$qty_index-$index"}
 							and $$specs{"FoldImposition-$form-$qty_index-$index"} );
 
+					my $pages;
+					my $this_pages;
 					if ( $$sig_specs{txtSignatureType} ) {
-						my ( $pages ) = $$specs{"FoldType-$form-$qty_index-$index"} =~ /(\d+)PageFold/;
-						$override_pages += $$specs{"FoldQty-$form-$qty_index-$index"} * $pages * $$specs{"FoldImposition-$form-$qty_index-$index"};
+						( $pages ) = $$specs{"FoldType-$form-$qty_index-$index"} =~ /(\d+)PageFold/;
+						$this_pages = $$specs{"FoldQty-$form-$qty_index-$index"} * $pages * $$specs{"FoldImposition-$form-$qty_index-$index"};
+						$override_pages += $this_pages;
 					} # end if
 					$found{$index} = 0;
 					if ( DEBUG ) {
-						$openprint::log->debug("LOOKING for overriden fold $index");
+						$openprint::log->debug("LOOKING for overriden fold $index, have $override_pages pages");
 						foreach my $FI ( @$Set_Of_Impositions ) {
-							$FI->display("Found? $$FI{found}");
+							$FI->display("FIs $$FI{found}");
 						}
 					}
 					foreach my $FI ( @$Set_Of_Impositions ) {
@@ -1219,7 +1237,6 @@ $openprint::log->debug(qq`Wrong imposition: $$specs{"FoldImposition-$form-$qty_i
 							$openprint::log->debug("Not found trying generic for index $index");
 						}
 # Replace with a generic one
-						my ( $pages ) = $$specs{"FoldType-$form-$qty_index-$index"} =~ /(\d+)Page/;
 						my $Fold = openprint::Fold->find_one( 
 									'spine_direction is null or ='=>	$$SignatureImposition{image_orientation},
 								(	$$specs{"FoldImposition-$form-$qty_index-$index"} ? (
@@ -1244,12 +1261,23 @@ $openprint::log->debug(qq`Wrong imposition: $$specs{"FoldImposition-$form-$qty_i
 							$FI->rows(1);
 							$FI->columns( $$specs{"FoldImposition-$form-$qty_index-$index"} );
 						} # end if
-						$$FI{page_quantity} = $$specs{"FoldQty-$form-$qty_index-$index"};
+
+						#$$FI{page_quantity} = $SignatureImposition->pages * $SignatureImposition->imposition() / $$specs{"FoldQty-$form-$qty_index-$index"} * $pages * $FI->imposition();
 						$$FI{quantity} = $$specs{"FoldQty-$form-$qty_index-$index"};
+						if ( $pages ) {
+							if ( $pages * $$FI{quantity} < $remaining_pages ) {
+								$$FI{page_quantity} = $$FI{quantity};
+							} else {
+								# If overriding to too many pages, this could go negative which screws up stitching
+								$remaining_pages = 0 if $remaining_pages < 0;
+								$$FI{page_quantity} = int($remaining_pages / $pages);
+							} # end if
+						} # end if
 						$$FI{Fold} = $Fold;
 						$$Fold{undesired} = 1;
 						$$FI{undesired} = 1;
 					} # end if ! found
+					$remaining_pages -= $this_pages;
 				} # end foreach index
 				if ( $$sig_specs{txtSignatureType} ) {
 					if ( $override_pages > $SignatureImposition->imposition() * $SignatureImposition->pages() ) {
@@ -1843,15 +1871,17 @@ sub summary {
 			my $s_s_id = $signatures[$sig_index];
 			my $sig_specs = openprint::service::get_specs_ref( $Project, $s_s_id );
 			my $form = $$sig_specs{SignatureIndex};
-	if ( ! $$sig_specs{"txtImposition$qty_index"} ) {
-		next;
-	} # end if
+			if ( ! $$sig_specs{"txtImposition$qty_index"} ) {
+				next;
+			} # end if
 			my $sig_count = 1;
 
 			if ( $sig_index < @signatures - 1 ) {
 				for ( my $sig_index2 = $sig_index + 1; $sig_index2 < @signatures; $sig_index2 += 1 ) {
 					my $sig_specs2 = openprint::service::get_specs_ref( $Project, $signatures[$sig_index2] );
-					if ( openprint::Estimating::Printing::compare_signatures( $Project, $sig_specs, $sig_specs2, $qty_index ) ) {
+					if ( openprint::Estimating::Printing::compare_signatures( $Project, $sig_specs, $sig_specs2, $qty_index ) 
+						and compare_folds( $specs, $sig_specs, $sig_specs2, $qty_index )
+						) {
 						$sig_count += 1;
 					} else {
 						last;
@@ -2333,6 +2363,25 @@ if ( ! @folds ) {
 }
 	return @folds;
 } # end sub get_Folds
+
+sub compare_folds {
+	my ( $specs, $sig_specsA, $sig_specsB, $qty_index ) = @_;
+
+	my @FoldsA = get_Folds( $specs, $sig_specsA, $qty_index );
+	my @FoldsB = get_Folds( $specs, $sig_specsB, $qty_index );
+	if ( @FoldsA != @FoldsB ) {
+	$openprint::log->debug("Fold count different");
+	return 0 
+	}
+		
+	if ( $FoldsA[0]{Folder}{id} != $FoldsB[0]{Folder}{id} ) {
+	$openprint::log->debug("Folder different");
+		return 0 ;
+	} else {
+	$openprint::log->debug("Folder same $FoldsA[0]{Folder}{id} = $FoldsB[0]{Folder}{id}");
+	}
+	return 1;
+}
 
 1;
 __END__

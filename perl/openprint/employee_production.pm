@@ -1189,22 +1189,29 @@ sub _drop {
 				next;
 			} # end if different servicetype
 #$log->debug("Order before coalesce: @order : " . join(',', map { new openprint::ScheduledJob($_)->Project()->docket() } @order ) );
-			if ( $previous and $previous->project_id() and $Job->project_id() and ( $previous->project_id() == $Job->project_id() ) ) {
-				my $sig_specs1 = openprint::service::get_specs_ref( $previous->Project(), $$previous{service_id}[0] );
-				my $sig_specs2 = openprint::service::get_specs_ref( $Job->Project(), $$Job{service_id}[0] );
-				if ( eval 'openprint::Estimating::'.$Job->ServiceType()->name().'::compare_signatures( $Job->Project(), $sig_specs1, $sig_specs2, $Job->Project()->ordered_quantity_index() )' ) {
-#$log->debug("Sigs are the same, coalescing ");
-					$_ = $previous->save({
-							'runtime'		=>	Date::Format::time2str( '%H:%M:%S', $previous->runtime_seconds() + $Job->runtime_seconds() ),
-							'service_id'	=>	[ @{$$previous{service_id}}, @{$$Job{service_id}} ],	
-							});
-					if ( $_ ) {
-						$log->error($_);
-					} else {
-						$Job->delete();
-						@order = sets::exclude( [ $row_id ], \@order );
-					} # end if
-				} # end if
+			if ( $previous and $previous->project_id() and $Job->project_id() and ( $previous->project_id() == $Job->project_id() ) and $$previous{service_id}[0] and $$Job{service_id}[0] ) {
+				my $module = 'openprint::Estimating::'.$Job->ServiceType()->type();
+				if ( my $function = $module->can('compare_signatures') ) {
+					my $JobProject = $Job->Project();
+					my $sig_specs1 = openprint::service::get_specs_ref( $previous->Project(), $$previous{service_id}[0] );
+					my $sig_specs2 = openprint::service::get_specs_ref( $JobProject, $$Job{service_id}[0] );
+
+					if ( $sig_specs1 and $sig_specs2 and $function->( $JobProject, $sig_specs1, $sig_specs2, $JobProject->ordered_quantity_index() ) ) {
+						#$log->debug("Sigs are the same, coalescing ");
+						$_ = $previous->save({
+								runtime		=>	Date::Format::time2str( '%H:%M:%S', $previous->runtime_seconds() + $Job->runtime_seconds() ),
+								service_id	=>	[ @{$$previous{service_id}}, @{$$Job{service_id}} ],	
+								});
+						if ( $_ ) {
+							$log->error($_);
+						} else {
+							$Job->delete();
+							@order = sets::exclude( [ $row_id ], \@order );
+						} # end if
+					} # end if equal signatures
+				} else {
+					$log->error("No compare_signatures function in $module");
+				} # end if has compare_signatures
 				$previous = undef;
 			} else {
 $log->debug("Sigs are the not same, " . $Job->Project()->ordered_quantity_index() );
@@ -1712,6 +1719,7 @@ sub _li_change {
 			$log->debug("Was first in list.");
 		} elsif ( $index == @Jobs ) {
 			$log->warn("Job not found.");
+			$index = 0;
 		} # end if
 
 		if ( $Job->Equipment()->smartscheduling() ) {
@@ -1734,21 +1742,23 @@ $log->debug("second job can't move");
 			} # end if
 			reorder_jobs( @Jobs );
 		} else {
-			if ( ( @Jobs > 1 ) and $index ) {
-				if ( $Jobs[$index]->Shift()->ul_id() ne $Jobs[$index-1]->Shift()->ul_id() ) {
-					if ( ! $Job->Shift()->Previous()->Jobs() ) {
-						push @{$variable{changed}}, $Job->ul_id();
-						$Job->starttime( $Jobs[$index-1]->Shift()->Next()->starttime() );
+			if ( @Jobs ) {
+				if ( $index > 1 ) {
+					if ( $Jobs[$index]->Shift()->ul_id() ne $Jobs[$index-1]->Shift()->ul_id() ) {
+						if ( ! $Job->Shift()->Previous()->Jobs() ) {
+							push @{$variable{changed}}, $Job->ul_id();
+							$Job->starttime( $Jobs[$index-1]->Shift()->Next()->starttime() );
+						} # end if
 					} # end if
-				} # end if
-				$_ = $Jobs[$index]{starttime};
-				$Jobs[$index]{starttime} = $Jobs[$index-1]{starttime};
-				$Jobs[$index-1]{starttime} = $_;
-				$Jobs[$index]->save();
-				$Jobs[$index-1]->save();
-				push @{$variable{changed}}, $Jobs[$index-1]->Shift()->ul_id();
+					$_ = $Jobs[$index]{starttime};
+					$Jobs[$index]{starttime} = $Jobs[$index-1]{starttime};
+					$Jobs[$index-1]{starttime} = $_;
+					$Jobs[$index]->save();
+					$Jobs[$index-1]->save();
+					push @{$variable{changed}}, $Jobs[$index-1]->Shift()->ul_id();
+				} # end if index
+				push @{$variable{changed}}, $Jobs[$index]->Shift()->ul_id();
 			} # end if can do anyhing
-			push @{$variable{changed}}, $Jobs[$index]->Shift()->ul_id();
 		} # end if
 	} elsif ( $param{action} eq 'RemoveJob' ) {
 		push @{$variable{changed}}, $Job->Shift()->ul_id();

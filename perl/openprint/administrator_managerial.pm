@@ -468,7 +468,7 @@ sub company_profiles {
 # form field to db field mappings
 	my %shipping_fields = (
 			'txtShippingCompanyName'	=>	'CompanyName',
-			'rdbShippingSalutation'	 =>	'Salutation',
+			'rdbShippingSalutation'	 	=>	'Salutation',
 			'txtShippingFirstName'		=>	'FirstName',
 			'txtShippingLastName'		=>	'LastName',
 			'txtShippingAddress1'		=>	'Address1',
@@ -476,7 +476,7 @@ sub company_profiles {
 			'txtShippingCity'			=>	'City',
 			'ddmShippingStateProvince'	=>	'StateProvince',
 			'ddmShippingCountry'		=>	'Country',
-			'txtShippingPostalCode'	=> 'PostalCode',
+			'txtShippingPostalCode'		=> 'PostalCode',
 			'txtShippingPhone'			=>	'Phone',
 			'txtShippingExtension'		=>	'Extension',
 			'txtShippingFax'			=>	'Fax',
@@ -569,7 +569,7 @@ sub company_profiles {
 				} # end foreach
 				$Company->save_shipping( \%params );
 
-				$Company->save_tradereferences( \%params );
+				$Company->save_tradereferences( \%param );
 
 				$dbh->do( 'LOCK TABLE Company_Credit IN ACCESS EXCLUSIVE MODE' ) or $log->error( DBI->errstr );
 
@@ -633,9 +633,6 @@ sub company_profiles {
 
 	my @customers_categories;
 	if ( $index ) {
-		foreach ( 1 .. 3 ) {
-			$Company->load_tradereferences( $_, \%variable );
-		} 
 		my $shipping_address = $Company->get_shipping_address();
 		@variable{ keys %shipping_fields } = ssi::htmlize( $shipping_address->get( @shipping_fields{ keys %shipping_fields } ) );
 		$_ = q{SELECT category_id FROM Companies_in_Marketing_Categories WHERE Company_id =?};
@@ -892,8 +889,8 @@ sub user_relationships {
 } # end sub user_relationships
 sub upload_log {
 	ssi::save_params( '/administrator/managerial/upload_log.html', ( 
-		( map { 'uploaded_on_start_'.$_ } ( 'year', 'month', 'day' ) ),
-		( map { 'uploaded_on_end_'.$_ } ( 'year', 'month', 'day' ) ),
+		( map { 'uploaded_on_start_'.$_ } ( 'year', 'month', 'day', 'hour','minute' ) ),
+		( map { 'uploaded_on_end_'.$_ } ( 'year', 'month', 'day', 'hour','minute' ) ),
 		'company_id','type',
 	) );
 

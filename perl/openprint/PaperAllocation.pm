@@ -42,6 +42,7 @@ $serial = 'paper_allocation_id_seq';
 %find_fields = (
 	project_id	=>	'(SELECT id FROM Projects WHERE lngdocketnumber=docket)',
 	order_id	=>	'(SELECT id FROM Orders WHERE docket=paper_allocations.docket)',
+	company_id	=>	'(SELECT company_id FROM orders WHERE docket=paper_allocations.docket)',
 );
 
 %transforms = (

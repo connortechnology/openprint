@@ -26,6 +26,7 @@ require openprint::Currency;
 require openprint::Paper;
 
 use constant DEBUG => 0;
+use constant MAX_STOCK_INDEX => 10;
 
 my @variables = (
         'txtPrice1', 'txtPrice2', 'txtPrice3',
@@ -43,7 +44,7 @@ sub variables {
 	foreach my $ss_id ( $Project->signatures() ) {
 		my $sig_specs = openprint::service::get_specs_ref( $Project, $ss_id );
 		my $form = $$sig_specs{SignatureIndex};
-		foreach my $stock_index ( 1 .. 4 ) {
+		foreach my $stock_index ( 1 .. MAX_STOCK_INDEX ) {
 			#last if ! exists $$specs{"qty-$ss_id-$stock_index"};
 			#push @v, "id-$ss_id-$stock_index";
 			foreach my $qty_index ( $Project->quantity_indexes() ) {
@@ -54,7 +55,7 @@ sub variables {
 			} # end foreach qty_index
 		} # end foreach stock_index
 	} # end foreach ss_id
-	foreach my $stock_index ( 1 .. 4 ) {
+	foreach my $stock_index ( 1 .. MAX_STOCK_INDEX ) {
 		foreach my $qty_index ( $Project->quantity_indexes() ) {
 			push @v, "qty-$stock_index-$qty_index";
 			push @v, "sheets-$stock_index-$qty_index";
@@ -76,13 +77,13 @@ sub has_overrides {
         foreach my $s_s_id ( $Project->signatures() ) {
             my $sig_specs = openprint::service::get_specs_ref( $Project, $s_s_id );
 			my $form = $$sig_specs{SignatureIndex};
-			foreach my $stock_index ( 1 .. 4 ) {
+			foreach my $stock_index ( 1 .. MAX_STOCK_INDEX ) {
 				push @v, map { $$specs{$_} ? $_ : () } (
 					"overrideqty-$form-$stock_index-$qty_index",
                     );
 			} # end fireach stock_index
 		} # end foreach sig
-		foreach my $stock_index ( 1 .. 4 ) {
+		foreach my $stock_index ( 1 .. MAX_STOCK_INDEX ) {
 			push @v, map { $$specs{$_} ? $_ : () } (
 					"overridecost-$stock_index-$qty_index",
 					);
@@ -231,11 +232,7 @@ $openprint::log->debug($Stock->id_string() . ' full packages ' . $Stock->full_pa
 			if ( $qty_per_package ) {
 				foreach my $qty_index ( $Project->quantity_indexes() ) {
 					next if ! $$total{"qty_$qty_index"};
-					if ( $Stock->type() eq 'Sheet' ) {
-						$$total{"qty_$qty_index"} = $qty_per_package * ceil( $$total{"qty_$qty_index"} / $qty_per_package );
-					} elsif ( $Stock->type() eq 'Roll' ) {
-						$$total{"qty_$qty_index"} = $qty_per_package * ($$total{"qty_$qty_index"}/$qty_per_package);
-					} # end if
+					$$total{"qty_$qty_index"} = $qty_per_package * ceil( $$total{"qty_$qty_index"} / $qty_per_package );
 				} # end foreah qty_index
 			} # end if sheets_per_package
 		} # end if full packages
@@ -408,7 +405,7 @@ sub se_quantity_summary {
 	my $Paper = $$Stock_Entry{Stock};
 	my $stock_id = $$Stock_Entry{index};
 
-#$openprint::log->warn("Stock QTY $stock_id $qty_index " . $$specs{"qty-$stock_id-$qty_index"} );
+#$openprint::log->warn("Stock " . $Paper->to_string() . " QTY $stock_id $qty_index " . $$specs{"qty-$stock_id-$qty_index"} );
 	if ( $$specs{"qty-$stock_id-$qty_index"} ) {
 		if ( $Paper->type() eq 'Sheet' ) {
 			$html .= $$specs{"sheets-$stock_id-$qty_index"}.'sheets ';

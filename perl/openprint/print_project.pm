@@ -758,15 +758,15 @@ sub reuse_project {
 		due_date => undef,
 		user_id	=>	$session{user_id},
 		status	=> ( sets::isin( $Project->status(), [ 'Unordered', 'Pending Deposit', 'In Prepress', 'Proofs Out', 'Approved', 'Printed', 'Complete','Shipped','Picked Up' ] ) ? 'Unordered' : 'uncalculated' ),
-		( $param{'ddmCompany'} ? ( company_id => $param{'ddmCompany'} ) : () ),
+		( $param{company_id} ? ( company_id => $param{company_id} ) : () ),
 	} );
 
 	$session{project_id} = $NewProject->id();
 
 	$Project->add_to_log( @session{'company_id','user_id'}, 'Reused to project '.$NewProject->id() );
 
-	if ( $param{'ddmCompany'} and $param{'ddmCompany'} != $session{'company_id'} ) {
-		openprint::switch_company( new openprint::Company( $param{'ddmCompany'} ) ) if sets::isin( $session{'user_type'}, ['A','E'] );
+	if ( $param{company_id} and $param{company_id} != $session{company_id} ) {
+		openprint::switch_company( new openprint::Company( $param{company_id} ) ) if sets::isin( $session{user_type}, ['A','E'] );
 	} # end if
 	$NewProject->add_to_log( @session{'company_id','user_id'}, 'Reused from project '.$Project->id() );
 

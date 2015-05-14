@@ -426,7 +426,7 @@ sub apply {
 		$error .= $PI->save({
 				paper_id    =>  $$Paper{id},
 				user_id     =>  $openprint::session{user_id},
-				instock     =>  $Paper->in_stock(),
+				instock     =>  $Paper->in_stock(undef),
 				delta       =>  0,
 				comment     =>  'Changes from manifest <a href="/employee/inventory/manifest_view.html?manifest_id=' . $Manifest->id() . '">'. $Manifest->name().'</a>:<br/>'.$skid_changes,
 				skid_id     =>  $$Skid{id},
@@ -463,7 +463,7 @@ $openprint::log->debug("Setting skid_id to $$Skid{id}");
 			require openprint::PaperAllocation;
 			my $PA = openprint::PaperAllocation->find_one( 'skid_ids any'=>$MC->skid_id() );
 			if ( ! $PA ) {
-				$Paper->allocate( $Skid, $Order->docket(), $MC->quantity(), $Paper->units() );
+				$Paper->allocate( $Skid, $Order->docket(), $MC->quantity(), $Paper->units(), $SkidContent->condition_id() );
 				$error .= sprintf('Allocated %1$d%2$s to docket <a href="/employee/project/view.html?docket=%3$d">%3$d</a>.<br/>', $MC->quantity(), $Paper->units(), $Order->docket() );
 			} elsif ( ! $PA->docket() ) {
 				$error .= $PA->save({ docket=>$Order->docket()});

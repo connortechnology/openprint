@@ -54,7 +54,7 @@ sub html {
 	
 	my $Field = $_[0];
 
-	$html .= '<li class="'.$Field->type().'"><label>'.$Field->description().'</label><span id="field-'.$Field->id().'_container">';
+	$html .= '<li class="'.$Field->type(). ( $Field->required() ? ' required' : '' ) . '"><label>'.$Field->description().'</label><span id="field-'.$Field->id().'_container">';
 	my $value = $_[1] ? $_[1] : ( $_[0]->defaults() ? join(',',@{$_[0]->defaults()}) : '' );
 
 	if ( $Field->type() eq 'checkbox' ) {

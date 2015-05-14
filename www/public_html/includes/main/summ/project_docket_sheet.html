@@ -303,6 +303,7 @@
 			} # endif Web
 				
 			my $net_sheets = $$variable{'Project'}->ordered_quantity();
+			$net_sheets *= $$sig_specs{PageQuantity} if $$sig_specs{PageQuantity};
 			$net_sheets /= $$sig_specs{'txtImposition'.$qty_index} if $$sig_specs{'txtImposition'.$qty_index};
 			my $net_impressions = $net_sheets;
 			my $gross_impressions = $$sig_specs{'hdnImpressionQuantity'.$qty_index};

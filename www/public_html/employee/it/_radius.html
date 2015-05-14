@@ -32,9 +32,9 @@
 			foreach my $Record ( @{$$variable{'Records'}} ) {
 				$html .= sprintf('<tr%1$s>
 						<td class="checkbox"><input type="checkbox" id="record_id" name="record_id" value="%2$d"/></td>
-						<td class="username"><a href="/employee/it/record.html?record_id=%1$d">%3$s</a></td>
-						<td class="attribute"><a href="/employee/it/record.html?record_id=%1$d">%4$s</a></td>
-						<td class="value"><a href="/employee/it/record.html?record_id=%1$d">%5$s</a></td>
+						<td class="username"><a href="/employee/it/radius_record.html?record_id=%2$d">%3$s</a></td>
+						<td class="attribute"><a href="/employee/it/record.html?record_id=%2$d">%4$s</a></td>
+						<td class="value"><a href="/employee/it/record.html?record_id=%2$d">%5$s</a></td>
 					</tr>
 					', $rowclass, $Record->id(), $Record->username(), $Record->attribute(), $Record->value(),);
 				$rowclass = $rowclass ? '' : ' class="colRow"';

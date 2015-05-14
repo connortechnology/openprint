@@ -7,7 +7,12 @@
 	} # end if
 
 	foreach my $k ( sort keys %s ) {
+		if ( $k eq 'ip' ) {
+			my @Hosts = openprint::Host->find( 'ip any' => $s{$k} );
+			$html .= $k . ' = ' . join('<br/>', map { $_->link_to() } @Hosts ) . '<br/>';
+		} else {
 		$html .= "$k = $s{$k}<br/>\n";
+		} 
 	}
 	return $html;
 ) ?>

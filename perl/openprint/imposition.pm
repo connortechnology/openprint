@@ -126,6 +126,14 @@ sub check_setup {
 	my ( $setup, $specs ) = @_;
 
 	return 0 if ! $setup->imposition();
+if ( 
+( $setup->columns() == 1 ) and 
+( $setup->runstyle() eq 'Perfecting' ) and 
+$setup->perfecting_wheel_space() ) {
+	$openprint::log->debug("check)setup no good") if DEBUG;
+	return 0;
+}
+
 
 	my $Equipment = $setup->Press();
 	if ( 0 and $Equipment ) {
@@ -504,7 +512,7 @@ $openprint::log->debug("Colour bar is now $colour_bar") if DEBUG;
 			if ( $bleed_locations{Left} ) {
 				$wheel_space -= 2*$bleed_size;
 			} # end if
-#$openprint::log->debug("Using Double wheel space $$specs{'Perfecting Double Gutter Size'} -> $wheel_space") if DEBUG;
+$openprint::log->debug("Using Double wheel space $$specs{'Perfecting Double Gutter Size'} -> $wheel_space") if DEBUG;
 		} else {
 			$wheel_space = $$specs{'Perfecting Single Gutter Size'};
 			$setup1->perfecting_wheel_space( $wheel_space );
@@ -514,7 +522,7 @@ $openprint::log->debug("Colour bar is now $colour_bar") if DEBUG;
 			if ( $bleed_locations{Left} ) {
 				$wheel_space -= $bleed_size;
 			} # end if
-#$openprint::log->debug("Using Single wheel space $$specs{'Perfecting Single Gutter Size'} -> $wheel_space") if DEBUG;
+$openprint::log->debug("Using Single wheel space $$specs{'Perfecting Single Gutter Size'} -> $wheel_space") if DEBUG;
 		} # end if
 		$wheel_space = 0 if $wheel_space < 0;
 		$openprint::log->debug("Adding " . $wheel_space . " for Perfecting wheel since columns is $$setup1{columns} ") if DEBUG;
@@ -719,7 +727,7 @@ $openprint::log->debug("Not doing dutch because ($$specs{dutch}) or $run_style o
             if ( $bleed_locations{Bottom} ) {
                 $wheel_space -= 2*$bleed_size;
             } # end if
-#$openprint::log->debug("Using Single wheel space $$specs{'Perfecting Double Gutter Size'} -> $wheel_space") if DEBUG;
+$openprint::log->debug("Using Single wheel space $$specs{'Perfecting Double Gutter Size'} -> $wheel_space") if DEBUG;
         } else {
             $wheel_space = $$specs{'Perfecting Single Gutter Size'};
             $setup2->perfecting_wheel_space( $wheel_space );
@@ -729,7 +737,7 @@ $openprint::log->debug("Not doing dutch because ($$specs{dutch}) or $run_style o
             if ( $bleed_locations{Bottom} ) {
                 $wheel_space -= $bleed_size;
             } # end if
-#$openprint::log->debug("Using Single wheel space $$specs{'Perfecting Single Gutter Size'} -> $wheel_space") if DEBUG;
+$openprint::log->debug("Using Single wheel space $$specs{'Perfecting Single Gutter Size'} -> $wheel_space") if DEBUG;
         } # end if
         $wheel_space = 0 if $wheel_space < 0;
         $openprint::log->debug("Adding " . $wheel_space . " for Perfecting wheel since columns is $$setup1{columns} ") if DEBUG;

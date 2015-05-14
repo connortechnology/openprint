@@ -249,20 +249,20 @@ $I->display('In Stitching:') if DEBUG;
 # This doesn't really make sense.  If we are doing printing estimation, then the folding probably isn't going to match.  
 		} else {
 			foreach my $FI ( @{$$I{Folds}} ) {
-						$FI->display() if DEBUG;
+				$FI->display() if DEBUG;
 				my $Fold = $FI->Fold();
 $openprint::log->debug("Fold pq($$FI{page_quantity}) pages($$FI{pages}) ($$Fold{name}) Pockets: $pockets") if DEBUG;
 				if ( $FI->imposition() < $imposition ) {
 					$results{Breakdown} .= "Setting stitching imposition to $$FI{imposition} out because Folding imposition is $$FI{imposition}out<br/>";
 					$imposition = $FI->imposition();
 				}
-if ( ! $$I{Folder} ) {
-				$$I{Folder} = $Fold->Equipment();
-#$openprint::log->debug("Setting folder to " . $$I{Folder}->strid() );
-#} else {
-				#$openprint::log->debug('Folder is ' . $$I{Folder}->strid() );
-}
-#$openprint::log->debug("Adding " . $Fold->pages() . 'x'.$Fold->quantity() );
+				if ( ! $$I{Folder} ) {
+					$$I{Folder} = $Fold->Equipment();
+					#$openprint::log->debug("Setting folder to " . $$I{Folder}->strid() );
+					#} else {
+					#$openprint::log->debug('Folder is ' . $$I{Folder}->strid() );
+				}
+				#$openprint::log->debug("Adding " . $Fold->pages() . 'x'.$Fold->quantity() );
 				$$specs{'txtSignatureQty'.$Fold->pages().'Page-'.$qty_index} += $FI->page_quantity();
 				$pockets += $FI->page_quantity();
 			} # end foreach Fold

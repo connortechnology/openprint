@@ -1,38 +1,5 @@
-<script type="text/javascript" src="<? echo ( hash_link('/javascripts/service.js') ) ?>"></script>
-<script type="text/javascript">
-function calc( formName, force ) {
-	if ( gettingNewPrice && ! force ) {
-		setTimeout( "calc('" + formName + "');", 1000 );
-	} else {
-		remove_div('AlertDiv');
-		gettingNewPrice = true;
-		var form = getFormObj( formName );
-		var h = form.serialize(true);
-		h.callback = 'cbFillUPSResults';
-		new Ajax.Request( '/main/project/_calc.json', { method: 'post', parameters: h, evalScripts: true } );
-	} // end if
-} // end calc()
-
-function cbFillUPSResults( results ) {
-	cbFillResults( results );
-	var form = getFormObj( 'f1' );
-	if ( ( form.elements['NeedPlainCartons'].value > 0 ) && confirm('Your project must be packed in cartons in order to be shipped.  Would you like to add Plain Cartons to your project?' ) ) {
-		addService( 'f1', 'PlainCartons' );
-	} // end if
-}
-function validate_data(formName) {
-	//var form = getFormObj( formName );
-	var text = '';
-	return true;
-} // end function
-</script>
-<? eval (
-	if ( $$variable{'Project'}->quantity1() and $$variable{'Project'}->quantity2() and $$variable{'Project'}->quantity3() ) {
-	$$variable{'Columns'} = 'Three';
-	} else {
-	$$variable{'Columns'} = 'Two';
-	} # end if
-) ?>
+<script type="text/javascript" src="<?hash_link('/javascripts/service.js')?>"></script>
+<script type="text/javascript" src="<?hash_link('shipping.js')?>"></script>
 <div class="Service">
 	<form name="f1" method="post" action="/main/project/view.html">
 		<fieldset><legend>UPS Shipping Services</legend>
@@ -41,7 +8,7 @@ function validate_data(formName) {
 				<label>Country</label>
 				<select name="ToCountry" onchange="calc(this.form.name);">
 					<option value=""> Select </option>
-					<? echo ( ssi::return_countries( $$variable{'ToCountry'} ? $$variable{'ToCountry'} : $session{'Country'} ); ) ?>
+					<? echo ( return_countries( $$variable{'ToCountry'} ? $$variable{'ToCountry'} : $session{'Country'} ); ) ?>
 				</select>
 			</p>
 			<p> 
@@ -50,10 +17,10 @@ function validate_data(formName) {
 			</p>
 			<? else ( $$variable{'Mode'} eq 'Simple' ) ?>
 			<div class="leftColumn">
-				<? echo ( include('/includes/main/proj/shipping_from_address.html'); ) ?>
+				<?include('_shipping_from_address.html') ?>
 			</div>
 			<div class="rightColumn">
-				<? echo ( include('/includes/main/proj/shipping_to_address.html'); ) ?>
+				<?include('_shipping_to_address.html'); ) ?>
 			</div>
 			<? endif ( $$variable{'Mode'} eq 'Simple' ) ?>
 			<p>
@@ -75,37 +42,32 @@ function validate_data(formName) {
 			<? endif ( $$variable{'Mode'} eq 'Simple' ) ?>
 		</fieldset>
 		<fieldset><legend>Results</legend>
-			<p>
-				<label># of items to ship</label>
-				<? eval ( $$variable{'QTYIndex'} = 1 ) ?>
-				<? while ( $$variable{'QTYIndex'} <= 3 ) ?>
-				<? if ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>
-				<span class="<?Columns?>Columns">
-				<input type="number" name="txtQuantity<?QTYIndex?>" value="<? echo ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>" onkeyup="calc(this.form.name);" />
-				</span>
-				<? endif ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>
-				<? eval ( $$variable{'QTYIndex'} += 1 ) ?>
-				<? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
-			</p>
-			<? echo ( include('/includes/main/proj/shipping_packages.html'); ) ?>
-			<p>
-				<label><b>Price: ($)</b></label>
-				<? eval ( $$variable{'QTYIndex'} = 1 ) ?>
-				<? while ( $$variable{'QTYIndex'} <= 3 ) ?>
-				<? if ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>
-				<span class="<?Columns?>Columns">
-				<input type="number" name="txtPrice<?QTYIndex?>" readonly="readonly" onfocus="this.blur();" />
-				</span>
-				<? endif ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>
-				<? eval ( $$variable{'QTYIndex'} += 1 ) ?>
-				<? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
-			</p>
+			<ul>
+			<li><label># of items to ship</label>
+					<? echo (
+						my $html = '';
+						foreach my $qty_index ( $$variable{Project}->quantity_indexes() ) {
+							$html .= '<span class="'.$$variable{Columns}.'Columns">';
+							$html .= input(
+								name	=>	'txtQuantity'.$qty_index,
+								value	=>	$$variable{"txtQuantity$qty_index"},
+								type	=>	'cardinal',
+								oninput	=>	'calc(this.form.name);' );
+								$html .= '</span>';
+						} # end foreach qty_index
+						return $html;
+					) ?>
+			</li>
+			<?include('_shipping_packages.html'); ) ?>
+			<?include('/includes/main/proj/_service_price.html')?>
+			<?include('/includes/main/proj/_breakdown.html') ?>
+			</ul>
 		</fieldset>
 		<hr/>
-		<? echo ( include('/includes/main/proj/add_to_project.html'); ) ?>
+		<?include('/includes/main/proj/add_to_project.html') ?>
 		<input type="hidden" name="ProjectIndex" value="<?ProjectIndex?>"/>
 		<input type="hidden" name="ServiceIndex" value="<?ServiceIndex?>"/>
-		<input type="hidden" name="ServiceType" value="<?ServiceTypeID?>"/>
+		<input type="hidden" name="ServiceType" value="<?ServiceTypeType?>"/>
 		<input type="hidden" name="btnFunction" value="Save Service"/>
 		<input type="hidden" name="ContinueProject" value="Y" />
 		<input type="hidden" name="NeedPlainCartons" />
