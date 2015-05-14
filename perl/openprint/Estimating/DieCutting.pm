@@ -443,7 +443,7 @@ sub signature_calc {
 
 	@$specs{"txtWidth-$form", "txtHeight-$form"} = @$sig_specs{'txtWidth','txtHeight'};
 
-	my %results;
+	my %results = ( Status=>'uncalculated' );
 
 	my @equipment;
 	if ( (defined $$specs{"chkOverrideEquipment-$form-$qty_index"}) and ( $$specs{"chkOverrideEquipment-$form-$qty_index"} eq 'Y' ) ) {
@@ -529,6 +529,7 @@ sub signature_calc {
 
 		} # end foreach sets_of_impositions
 	} # end foreach equipment
+	$results{Status} = 'calculated' if $results{Equipment};
 	return %results;
 } # end sub signature_calc
 
