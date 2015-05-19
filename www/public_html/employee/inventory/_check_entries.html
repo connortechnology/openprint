@@ -3,9 +3,9 @@
 		<th class="Skid">Skid/Roll</th>
 		<th class="RFIDTag">RFIDTag</th>
 		<th class="Quantity">Weight(lbs)</th>
-		<th>Width</th>
-		<th>Diameter</th>
-		<th>Notes</th>
+		<th class="Width">Width</th>
+		<th class="Diameter">Diameter</th>
+		<th class="Notes">Notes</th>
 	</tr>
 <? echo ( 
 	my $html;
@@ -15,27 +15,29 @@
 	my @Contents = openprint::Inventory_Check_Entry->find( ic_id=>$$variable{Check}->id(), order=>'skid_id,rfidtag_id' );
 	foreach my $ICE ( @Contents ) {
 		$html .= sprintf('
-<tr>
+<tr%1$s>
 		<td class="Skid">%2$s</td>
 		<td class="RFIDTag">%3$s</td>
 		<td class="Quantity">%4$s</td>
-		<td>%5$s</td>
-		<td>%6$s</td>
-		<td>%7$s</td>
-	</tr>',
+		<td class="Width">%5$s</td>
+		<td class="Diameter">%6$s</td>
+		<td class="Notes" rowspan="2">%7$s</td>
+	</tr><tr%1$s><td colspan="5">%8$s</td></tr>',
 		$rowclass,
-		$ICE->Skid->link_to(),
-		$ICE->RFIDTag->link_to(),
+		$ICE->Skid()->link_to(),
+		$ICE->RFIDTag()->link_to(),
 		$ICE->quantity(),
 		$ICE->dimension1(),
 		$ICE->dimension2(),
 		$ICE->notes(),
+		join('<br/>', map { $_->Paper()->to_string() } $ICE->Skid()->Contents() ),
 		);
+
 		$total_weight += $ICE->quantity();
 		
+		$rowclass = $rowclass?'':' class="colRow"';
 	} # end foreach ICE
-	$rowclass = $rowclass?'':' class="colRow"';
-	$html .= '<tr class="totals"><td colspan="2"># of items in check: ' . scalar @Contents . '</td><td class="Quantity">'.Number::Format::format_number(int($total_weight)).'</td><td></td><td></td><td></td></tr>';
+	$html .= '<tr class="totals"><td colspan="2"># of items in check: ' . scalar @Contents . '</td><td class="Quantity">'.Number::Format::format_number(int($total_weight)).'lbs</td><td></td><td></td><td></td></tr>';
 	return $html;
 ) ?>
 

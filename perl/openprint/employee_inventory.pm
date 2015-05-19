@@ -2562,6 +2562,10 @@ sub check {
 				my ( $id, $rfid, $quantity, $dimension1, $dimension2, $notes ) = $csv->fields();
 				next if $id eq 'ID';
 
+				if ( $rfid =~ /R(\d+)/ ) {
+					$rfid = $1;
+				}
+
 				my $ICE = new openprint::Inventory_Check_Entry();
 				$variable{error} .= $ICE->save( {
 					ic_id		=>	$Check->id(),
