@@ -1,0 +1,39 @@
+<?include(/includes/error_reporting.html)?>
+<form id="f1" name="f1" method="post" enctype="multipart/form-data" action="check.html?check_id=<?echo($$variable{Check}->id())?>">
+	<input type="hidden" name="action"/>
+	<fieldset><legend> </legend>
+		<div class="column">
+			<ul>
+			<li class="started_on"><label>Started On</label>
+			<? echo ( date_select( 'started_on', $$variable{Check}->started_on() ? $$variable{Check}->started_on() : [ Date::Calc::Today() ] ); ) ?>
+			</li>
+			<li class="ended_on"><label>Ended On</label>
+			<? echo ( date_select( 'ended_on', $$variable{Check}->ended_on() ? $$variable{Check}->ended_on() : [ Date::Calc::Today() ] ); ) ?>
+			</li>
+			<li><label>Name</label><input type="text" name="name" value="<?echo($$variable{Check}->name())?>"/></li>
+			</ul>
+		</div><!-- column -->
+		<div style="float: right;">
+			<? echo ( 
+				my $html;
+				$html .= button( 'save', { onclick=>"f1.elements['action'].value='Save';f1.submit();", text=>'Save' } );
+				if ( $$variable{Check}->id() ) {
+					if ( $$variable{Check}->deleted() ) {
+						$html .= button( 'Destroy', { onclick=>"f1.elements['action'].value='Destroy';f1.submit();" } );
+						$html .= button( 'Undelete', { onclick=>"f1.elements['action'].value='Undelete';f1.submit();" } );
+					} else {
+						$html .= button( 'delete', { onclick=>"if(confirm('You should never do this. You should just check out the contents of the skid.  Are you sure?')){f1.action='skids.html?skid_id=$$variable{Check}{id}';f1.elements['action'].value='Delete';f1.submit();}", text=>'Delete' } );
+					} # end if
+					$html .= input( type=>'file', name=>'import' );
+					$html .= button( 'Import', { onclick=>q`f1.elements['action'].value='Import';f1.submit();` } );
+				} # end if
+				return $html;
+			) ?>
+		</div>
+	</fieldset>
+</form>
+<? if ( $$variable{Check}{id} ) ?>
+<fieldset><legend>Contents</legend>
+	<div id="Entries"><?include(_check_entries.html)?></div>
+</fieldset>
+<? endif ( $$variable{Check}{id} ) ?>

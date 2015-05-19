@@ -2516,5 +2516,68 @@ sub allocation {
 	
 } # end sub allocation
 
+sub checks {
+	_checks();
+	ssi::setup_date_select( '/employee/inventory/checks.html', 'started_on_start', '' );
+	ssi::setup_date_select( '/employee/inventory/checks.html', 'started_on_end', '' );
+} # end sub checks
+
+sub _checks {
+	require openprint::Inventory_Check;
+} # end sub _checks;
+
+sub check {
+	require openprint::Inventory_Check;
+	require openprint::Inventory_Check_Entry;
+
+	my $Check = $variable{Check} = new openprint::Inventory_Check( $param{check_id} );
+	if ( $param{action} eq 'Delete' ) {
+        $variable{error} .= $Check->delete();
+        $variable{ExternalRedirect} = '/employee/inventory/checks.html' if ! $variable{error};
+	} elsif ( $param{action} eq 'Destroy' ) {
+        $variable{error} .= $Check->destroy();
+        $variable{ExternalRedirect} = '/employee/inventory/checks.html' if ! $variable{error};
+    } elsif ( $param{action} eq 'Undelete' ) {
+        $variable{error} .= $Check->undelete();
+        $variable{ExternalRedirect} = '/employee/inventory/checks.html' if ! $variable{error};
+	} elsif ( $param{action} eq 'Save' ) {
+		$param{started_on} = join('-', @param{map{'started_on_'.$_}('year','month','day')} ) if Date::Calc::check_date( @param{map{'started_on_'.$_}('year','month','day')} );
+		$param{ended_on} = join('-', @param{map{'ended_on_'.$_}('year','month','day')} ) if Date::Calc::check_date( @param{map{'ended_on_'.$_}('year','month','day')} );
+		$variable{error} .= $Check->save({
+			name	=>	$param{name},
+			($param{started_on} ? ( started_on	=>	$param{started_on} ) : () ),
+			($param{ended_on} ? ( started_on	=>	$param{ended_on} ) : () ),
+		});
+	} elsif ( $param{action} eq 'Import' ) {
+		if ( ! $$Check{id} ) {
+			$variable{error} .= 'No inventory check selected.<br/>';
+			return;
+		}
+		if ( my $upload = $r->upload('import') ) {
+			require Text::CSV_XS;
+			my $csv = Text::CSV_XS->new();
+			my $io =$upload->io();
+			while ( my $line = <$io> ) {
+				my $status = $csv->parse($line);        # parse a CSV string into fields
+				my ( $id, $rfid, $quantity, $dimension1, $dimension2, $notes ) = $csv->fields();
+				next if $id eq 'ID';
+
+				my $ICE = new openprint::Inventory_Check_Entry();
+				$variable{error} .= $ICE->save( {
+					ic_id		=>	$Check->id(),
+					skid_id		=>	$id,
+					rfidtag_id	=>	$rfid,
+					quantity	=>	$quantity,
+					dimension1	=>	$dimension1,
+					dimension2	=>	$dimension2,
+					notes		=>	$notes,
+				} );
+			} # end while line = <IO>
+		} # end if upload
+
+	} # end if
+
+} # end sub check
+
 1;
 __END__

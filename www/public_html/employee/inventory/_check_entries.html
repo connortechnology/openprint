@@ -1,0 +1,41 @@
+<table class="List">
+	<tr>
+		<th class="Skid">Skid/Roll</th>
+		<th class="RFIDTag">RFIDTag</th>
+		<th class="Quantity">Weight(lbs)</th>
+		<th>Width</th>
+		<th>Diameter</th>
+		<th>Notes</th>
+	</tr>
+<? echo ( 
+	my $html;
+	my $rowclass;
+	my $total_weight;
+
+	my @Contents = openprint::Inventory_Check_Entry->find( ic_id=>$$variable{Check}->id(), order=>'skid_id,rfidtag_id' );
+	foreach my $ICE ( @Contents ) {
+		$html .= sprintf('
+<tr>
+		<td class="Skid">%2$s</td>
+		<td class="RFIDTag">%3$s</td>
+		<td class="Quantity">%4$s</td>
+		<td>%5$s</td>
+		<td>%6$s</td>
+		<td>%7$s</td>
+	</tr>',
+		$rowclass,
+		$ICE->Skid->link_to(),
+		$ICE->RFIDTag->link_to(),
+		$ICE->quantity(),
+		$ICE->dimension1(),
+		$ICE->dimension2(),
+		$ICE->notes(),
+		);
+		$total_weight += $ICE->quantity();
+		
+	} # end foreach ICE
+	$rowclass = $rowclass?'':' class="colRow"';
+	$html .= '<tr class="totals"><td colspan="2"># of items in check: ' . scalar @Contents . '</td><td class="Quantity">'.Number::Format::format_number(int($total_weight)).'</td><td></td><td></td><td></td></tr>';
+	return $html;
+) ?>
+
